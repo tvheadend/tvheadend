@@ -56,6 +56,17 @@ _find_profile(const char *name)
     return codec_find_profile(name);
 }
 
+static TVHAudioCodecProfile *
+_audio_profile(TVHCodecProfile *profile)
+{
+    if (profile &&
+        idnode_is_instance(&profile->idnode,
+                           (idclass_t *)&codec_profile_audio_class)) {
+        return (TVHAudioCodecProfile *)profile;
+    }
+    return NULL;
+}
+
 
 static int
 lang_match(const char *lang, tvh_ssc_t *ssc, int *index, int value)
@@ -105,6 +116,8 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
     int subtitle_index = -1;
     enum AVMediaType media_type;
 
+    aprofile = _audio_profile(self->profiles[AVMEDIA_TYPE_AUDIO]);
+
     for (i = 0; i < ss_src->ss_num_components; i++) {
         if ((ssc = &ss_src->ss_components[i]) == NULL)
             continue;
@@ -117,11 +130,7 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
                 video_index = i;
             break;
         case AVMEDIA_TYPE_AUDIO:
-            profile = self->profiles[media_type];
-            if (profile &&
-                idnode_is_instance(&profile->idnode,
-                                   (idclass_t *)&codec_profile_audio_class)) {
-                aprofile = (TVHAudioCodecProfile *)profile;
+            if (aprofile) {
                 if (lang_match(aprofile->language1, ssc, &audio_pindex[0], i) == 0 &&
                     lang_match(aprofile->language2, ssc, &audio_pindex[1], i) == 0)
                     lang_match(aprofile->language3, ssc, &audio_pindex[2], i);
@@ -157,8 +166,8 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
                 media_type = ssc_get_media_type(ssc);
                 if (media_type != AVMEDIA_TYPE_AUDIO)
                     continue;
-                aprofile = (TVHAudioCodecProfile *)self->profiles[media_type];
-                if (++j >= aprofile->tracks)
+                j++;
+                if (aprofile && j >= aprofile->tracks)
                     break;
             }
         }
@@ -171,8 +180,8 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
             if (media_type != AVMEDIA_TYPE_AUDIO)
                 continue;
             indexes[count++] = i;
-            aprofile = (TVHAudioCodecProfile *)self->profiles[media_type];
-            if (++j >= aprofile->tracks)
+            j++;
+            if (aprofile && j >= aprofile->tracks)
                 break;
         }
     }
