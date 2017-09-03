@@ -177,14 +177,12 @@ tvh_codec_profile_get_name(TVHCodecProfile *self)
 const char *
 tvh_codec_profile_get_title(TVHCodecProfile *self)
 {
-    static char profile_title[TVH_TITLE_LEN];
+    static char __thread profile_title[TVH_TITLE_LEN];
 
     memset(profile_title, 0, sizeof(profile_title));
-    if (
-        str_snprintf(profile_title, sizeof(profile_title),
+    if (str_snprintf(profile_title, sizeof(profile_title),
             (self->description && strcmp(self->description, "")) ? "%s (%s)" : "%s%s",
-            self->name, self->description ? self->description : "")
-       ) {
+            self->name, self->description ? self->description : "")) {
         return NULL;
     }
     return profile_title;
@@ -319,7 +317,7 @@ tvh_codec_profile_audio_get_channel_layouts(TVHCodecProfile *self)
 void
 tvh_codec_profile_remove(TVHCodecProfile *self, int delete)
 {
-    static char uuid[UUID_HEX_SIZE];
+    char uuid[UUID_HEX_SIZE];
 
     memset(uuid, 0, sizeof(uuid));
     idnode_save_check(&self->idnode, delete);

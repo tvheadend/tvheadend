@@ -508,6 +508,8 @@ prop_serialize_value
     htsmsg_add_bool(m, "noui", 1);
   if (opts & PO_HIDDEN)
     htsmsg_add_bool(m, "hidden", 1);
+  if (opts & PO_PHIDDEN)
+    htsmsg_add_bool(m, "phidden", 1);
   if (opts & PO_PASSWORD)
     htsmsg_add_bool(m, "password", 1);
   if (opts & PO_DURATION)

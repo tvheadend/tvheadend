@@ -68,6 +68,8 @@ versioned_artifact() {
     echo "$PWD/$1" >> "$FILELIST"
 }
 
+git status
+
 if [ -f Autobuild/${TARGET}.sh ]; then
     source Autobuild/${TARGET}.sh
 else

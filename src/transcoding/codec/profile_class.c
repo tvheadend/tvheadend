@@ -32,7 +32,7 @@ tvh_codec_base_get_opts(TVHCodec *self, uint32_t opts, int visible)
         opts |= PO_RDONLY;
     }
     else if (visible) {
-        opts &= ~(PO_HIDDEN);
+        opts &= ~(PO_PHIDDEN);
     }
     return opts;
 }
@@ -93,7 +93,7 @@ static htsmsg_t *
 codec_profile_class_save(idnode_t *idnode, char *filename, size_t fsize)
 {
     htsmsg_t *map = htsmsg_create_map();
-    static char uuid[UUID_HEX_SIZE];
+    char uuid[UUID_HEX_SIZE];
     idnode_save(idnode, map);
     if (filename)
       snprintf(filename, fsize, "codec/%s", idnode_uuid_as_str(idnode, uuid));
@@ -257,7 +257,7 @@ const codec_profile_class_t codec_profile_class = {
                 .name     = N_("Profile"),
                 .desc     = N_("Profile."),
                 .group    = 4,
-                .opts     = PO_ADVANCED | PO_HIDDEN,
+                .opts     = PO_ADVANCED | PO_PHIDDEN,
                 .get_opts = codec_profile_class_profile_get_opts,
                 .off      = offsetof(TVHCodecProfile, profile),
                 .list     = codec_profile_class_profile_list,

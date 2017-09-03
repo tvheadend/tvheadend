@@ -90,7 +90,7 @@ tvh_codec_audio_get_list_channel_layouts(TVHAudioCodec *self)
     htsmsg_t *list = NULL, *map = NULL;
     const uint64_t *channel_layouts = self->channel_layouts;
     uint64_t l = 0;
-    static char l_buf[16];
+    char l_buf[16];
     int i;
 
     if (channel_layouts && (list = htsmsg_create_list())) {
@@ -165,19 +165,17 @@ codec_profile_audio_class_language_list(void *obj, const char *lang)
 {
     htsmsg_t *list = htsmsg_create_list();
     lang_code_t *lc = (lang_code_t *)lang_codes;
-    static char lc_buf[128];
+    char lc_buf[128];
 
     while (lc->code2b) {
-        htsmsg_t *map = htsmsg_create_map();
+        htsmsg_t *map = NULL;
         if (!strcmp(lc->code2b, "und")) {
-            htsmsg_add_str(map, "key", "");
-            htsmsg_add_str(map, "val", tvh_gettext_lang(lang, N_("Use original")));
+            map = htsmsg_create_key_val("", tvh_gettext_lang(lang, N_("Use original")));
         }
         else {
             memset(lc_buf, 0, sizeof(lc_buf));
             if (!str_snprintf(lc_buf, sizeof(lc_buf), "%s (%s)", lc->desc, lc->code2b)) {
-                htsmsg_add_str(map, "key", lc->code2b);
-                htsmsg_add_str(map, "val", lc_buf);
+                map = htsmsg_create_key_val(lc->code2b, lc_buf);
             }
             else {
                 htsmsg_destroy(list);
@@ -299,7 +297,7 @@ const codec_profile_class_t codec_profile_audio_class = {
                 .name     = N_("Sample format"),
                 .desc     = N_("Audio sample format."),
                 .group    = 4,
-                .opts     = PO_ADVANCED | PO_HIDDEN,
+                .opts     = PO_ADVANCED | PO_PHIDDEN,
                 .get_opts = codec_profile_audio_class_sample_fmt_get_opts,
                 .off      = offsetof(TVHAudioCodecProfile, sample_fmt),
                 .list     = codec_profile_audio_class_sample_fmt_list,
@@ -311,7 +309,7 @@ const codec_profile_class_t codec_profile_audio_class = {
                 .name     = N_("Sample rate"),
                 .desc     = N_("Samples per second."),
                 .group    = 4,
-                .opts     = PO_ADVANCED | PO_HIDDEN,
+                .opts     = PO_ADVANCED | PO_PHIDDEN,
                 .get_opts = codec_profile_audio_class_sample_rate_get_opts,
                 .off      = offsetof(TVHAudioCodecProfile, sample_rate),
                 .list     = codec_profile_audio_class_sample_rate_list,
@@ -323,7 +321,7 @@ const codec_profile_class_t codec_profile_audio_class = {
                 .name     = N_("Channel layout"),
                 .desc     = N_("Audio channel layout."),
                 .group    = 4,
-                .opts     = PO_ADVANCED | PO_HIDDEN,
+                .opts     = PO_ADVANCED | PO_PHIDDEN,
                 .get_opts = codec_profile_audio_class_channel_layout_get_opts,
                 .off      = offsetof(TVHAudioCodecProfile, channel_layout),
                 .list     = codec_profile_audio_class_channel_layout_list,

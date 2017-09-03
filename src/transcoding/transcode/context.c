@@ -179,13 +179,14 @@ _context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
 // creation
 
 static AVCodecContext *
-tvh_context_alloc_avctx(AVCodec *avcodec)
+tvh_context_alloc_avctx(TVHContext *context, AVCodec *avcodec)
 {
     AVCodecContext *avctx = NULL;
 
     if ((avctx = avcodec_alloc_context3(avcodec))) {
         avctx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
         avctx->refcounted_frames = 1;
+        avctx->opaque = context;
     }
     return avctx;
 }
@@ -203,8 +204,8 @@ tvh_context_setup(TVHContext *self, AVCodec *iavcodec, AVCodec *oavcodec)
                        media_type_name ? media_type_name : "<unknown>");
         return -1;
     }
-    if (!(self->iavctx = tvh_context_alloc_avctx(iavcodec)) ||
-        !(self->oavctx = tvh_context_alloc_avctx(oavcodec)) ||
+    if (!(self->iavctx = tvh_context_alloc_avctx(self, iavcodec)) ||
+        !(self->oavctx = tvh_context_alloc_avctx(self, oavcodec)) ||
         !(self->iavframe = av_frame_alloc()) ||
         !(self->oavframe = av_frame_alloc())) {
         tvh_stream_log(self->stream, LOG_ERR,
@@ -485,6 +486,13 @@ tvh_context_open_filters(TVHContext *self,
                          const char *source_name, const char *source_args,
                          const char *filters, const char *sink_name, ...)
 {
+    static const AVClass logclass = {
+        .class_name = "TVHGraph",
+        .version    = 1,
+    };
+    struct {
+        const AVClass *class;
+    } logctx = { &logclass };
     AVFilter *iavflt = NULL, *oavflt = NULL;
     AVFilterInOut *iavfltio = NULL, *oavfltio = NULL;
     AVBufferSrcParameters *par = NULL;
@@ -577,11 +585,10 @@ tvh_context_open_filters(TVHContext *self,
     }
 
     // additional filtergraph params
-    if (!strcmp("buffer", source_name) && self->oavctx->opaque) { // hmm...
-        AVBufferRef *hw_device_ctx = self->oavctx->opaque;
+    if (!strcmp("buffer", source_name) && self->hw_device_octx) {
         for (i = 0; i < self->avfltgraph->nb_filters; i++) {
             if (!(self->avfltgraph->filters[i]->hw_device_ctx =
-                      av_buffer_ref(hw_device_ctx))) {
+                      av_buffer_ref(self->hw_device_octx))) {
                 ret = -1;
                 goto finish;
             }
@@ -591,7 +598,7 @@ tvh_context_open_filters(TVHContext *self,
     avfilter_graph_set_auto_convert(self->avfltgraph,
                                     AVFILTER_AUTO_CONVERT_NONE);
 
-    if ((ret = avfilter_graph_config(self->avfltgraph, NULL)) < 0) {
+    if ((ret = avfilter_graph_config(self->avfltgraph, &logctx)) < 0) {
         tvh_context_log(self, LOG_ERR, "filters: failed to config filter graph");
     }
 
@@ -720,6 +727,7 @@ tvh_context_destroy(TVHContext *self)
         self->type = NULL;
         self->profile = NULL;
         self->stream = NULL;
+        free(self->hw_accel_device);
         free(self);
         self = NULL;
     }

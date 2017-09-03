@@ -52,20 +52,21 @@ typedef enum {
 #define PO_ADVANCED  (1<<4)  // Property is advanced
 #define PO_EXPERT    (1<<5)  // Property is for experts
 #define PO_NOUI      (1<<6)  // Property should not be presented in the user interface
-#define PO_HIDDEN    (1<<7)  // Property is hidden (by default)
-#define PO_USERAW    (1<<8)  // Only save the RAW (off) value if it exists
-#define PO_SORTKEY   (1<<9)  // Sort using key (not display value)
-#define PO_PASSWORD  (1<<10) // String is a password
-#define PO_DURATION  (1<<11) // For PT_TIME - differentiate between duration and datetime
-#define PO_HEXA      (1<<12) // Hexadecimal value
-#define PO_DATE      (1<<13) // Show date only
-#define PO_LOCALE    (1<<14) // Call tvh_locale_lang on string
-#define PO_LORDER    (1<<15) // Manage order in lists
-#define PO_MULTILINE (1<<16) // Multiline string
-#define PO_PERSIST   (1<<17) // Persistent value (return back on save)
-#define PO_DOC       (1<<18) // Use doc callback instead description if exists
-#define PO_DOC_NLIST (1<<19) // Do not show list in doc
-#define PO_TRIM      (1<<20) // Trim whitespaces (left & right) on load
+#define PO_HIDDEN    (1<<7)  // Property column is hidden (by default)
+#define PO_PHIDDEN   (1<<8)  // Property is permanently hidden
+#define PO_USERAW    (1<<9)  // Only save the RAW (off) value if it exists
+#define PO_SORTKEY   (1<<10) // Sort using key (not display value)
+#define PO_PASSWORD  (1<<11) // String is a password
+#define PO_DURATION  (1<<12) // For PT_TIME - differentiate between duration and datetime
+#define PO_HEXA      (1<<13) // Hexadecimal value
+#define PO_DATE      (1<<14) // Show date only
+#define PO_LOCALE    (1<<15) // Call tvh_locale_lang on string
+#define PO_LORDER    (1<<16) // Manage order in lists
+#define PO_MULTILINE (1<<17) // Multiline string
+#define PO_PERSIST   (1<<18) // Persistent value (return back on save)
+#define PO_DOC       (1<<19) // Use doc callback instead description if exists
+#define PO_DOC_NLIST (1<<20) // Do not show list in doc
+#define PO_TRIM      (1<<21) // Trim whitespaces (left & right) on load
 
 /*
  * min/max/step helpers

@@ -120,7 +120,7 @@ iptv_libav_thread(void *aux)
       tvherror(LS_IPTV, "libav: Failed allocating output stream");
       goto fail;
     }
-    ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
+    ret = avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
     if (ret < 0) {
       tvherror(LS_IPTV, "libav: Failed to copy context from input to output stream codec context: %s", av_err2str(ret));
       goto fail;

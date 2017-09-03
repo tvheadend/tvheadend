@@ -30,8 +30,10 @@ str_add(const char *sep, const char *str)
     char *result = NULL;
 
     if ((result = calloc(1, sep_len + str_len + 1))) {
-        strncpy(result, sep, sep_len);
-        strncat(result, str, str_len);
+        if (str_len > 0) {
+            strncpy(result, sep, sep_len);
+            strncat(result, str, str_len);
+        }
     }
     return result;
 }

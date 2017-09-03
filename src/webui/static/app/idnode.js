@@ -242,7 +242,8 @@ tvheadend.IdNodeField = function(conf)
     this.wronly = conf.wronly;
     this.wronce = conf.wronce;
     this.noui = conf.noui;
-    this.hidden = conf.hidden;
+    this.hidden = conf.hidden || conf.phidden;
+    this.phidden = conf.phidden;
     this.uilevel = conf.expert ? 'expert' : (conf.advanced ? 'advanced' : 'basic');
     this.password = conf.showpwd ? false : conf.password;
     this.duration = conf.duration;
@@ -920,7 +921,7 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
                 ]
             });
         }
-        if (p.hidden) {
+        if (p.phidden) {
             hiddenFields.push(f);
         } else if (p.group && meta && meta.groups) {
             f.tvh_uilevel = p.expert ? 'expert' : (p.advanced ? 'advanced' : 'basic');

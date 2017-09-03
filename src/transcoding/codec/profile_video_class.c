@@ -111,7 +111,7 @@ codec_profile_video_class_deinterlace_set(void *obj, const void *val)
 
     if (self &&
         (avcodec = tvh_codec_profile_get_avcodec((TVHCodecProfile *)self))) {
-        self->deinterlace = (avcodec->id == AV_CODEC_ID_HEVC) ? 1 : *(int *)val;
+        self->deinterlace = *(int *)val;
         return 1;
     }
     return 0;
@@ -180,7 +180,7 @@ const codec_profile_class_t codec_profile_video_class = {
                 .name     = N_("Pixel format"),
                 .desc     = N_("Video pixel format."),
                 .group    = 4,
-                .opts     = PO_ADVANCED | PO_HIDDEN,
+                .opts     = PO_ADVANCED | PO_PHIDDEN,
                 .get_opts = codec_profile_video_class_pix_fmt_get_opts,
                 .off      = offsetof(TVHVideoCodecProfile, pix_fmt),
                 .list     = codec_profile_video_class_pix_fmt_list,
