@@ -17,7 +17,7 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
   if (level != AV_LOG_QUIET &&
       ((level <= AV_LOG_INFO) || (tvhlog_options & TVHLOG_OPT_LIBAV))) {
 
-    class_name = av_default_item_name(ptr);
+    class_name = ptr ? av_default_item_name(ptr) : "";
 
     l1 = strlen(fmt);
     l2 = strlen(class_name);
@@ -26,7 +26,8 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
       return;
 
     strcpy(fmt1, class_name);
-    strcat(fmt1, ": ");
+    if (class_name[0])
+      strcat(fmt1, ": ");
     strcat(fmt1, fmt);
 
     /* remove trailing newline */

@@ -486,6 +486,13 @@ tvh_context_open_filters(TVHContext *self,
                          const char *source_name, const char *source_args,
                          const char *filters, const char *sink_name, ...)
 {
+    static const AVClass logclass = {
+        .class_name = "TVHGraph",
+        .version    = 1,
+    };
+    struct {
+        const AVClass *class;
+    } logctx = { &logclass };
     AVFilter *iavflt = NULL, *oavflt = NULL;
     AVFilterInOut *iavfltio = NULL, *oavfltio = NULL;
     AVBufferSrcParameters *par = NULL;
@@ -591,7 +598,7 @@ tvh_context_open_filters(TVHContext *self,
     avfilter_graph_set_auto_convert(self->avfltgraph,
                                     AVFILTER_AUTO_CONVERT_NONE);
 
-    if ((ret = avfilter_graph_config(self->avfltgraph, NULL)) < 0) {
+    if ((ret = avfilter_graph_config(self->avfltgraph, &logctx)) < 0) {
         tvh_context_log(self, LOG_ERR, "filters: failed to config filter graph");
     }
 
