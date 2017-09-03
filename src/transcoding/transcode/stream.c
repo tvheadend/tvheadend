@@ -142,7 +142,6 @@ tvh_stream_create(TVHTranscoder *transcoder, TVHCodecProfile *profile,
         if (ssc->ssc_gh) {
             pktbuf_ref_inc(ssc->ssc_gh);
         }
-        tvh_stream_log(self, LOG_INFO, "==> Passthrough");
     }
     else if (is_copy < 0 || tvh_stream_setup(self, profile, ssc)) {
         tvh_stream_destroy(self);
