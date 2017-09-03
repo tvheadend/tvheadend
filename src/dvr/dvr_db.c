@@ -1516,6 +1516,7 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
 {
   char buf[512];
   char ubuf[UUID_HEX_SIZE];
+  const char *s;
   dvr_entry_t *de;
   uint32_t count = 0, max_count;
 
@@ -1541,9 +1542,9 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
     }
   }
 
-  snprintf(buf, sizeof(buf), _("Auto recording%s%s"),
-           dae->dae_comment ? ": " : "",
-           dae->dae_comment ?: "");
+  /* Prefer the recording comment or the name of the rule to an empty string */
+  s = dae->dae_comment && *dae->dae_comment ? dae->dae_comment : dae->dae_name;
+  snprintf(buf, sizeof(buf), _("Auto recording%s%s"), s ? ": " : "", s ?: "");
 
   dvr_entry_create_by_event(enabled, idnode_uuid_as_str(&dae->dae_config->dvr_id, ubuf),
                             e, dae->dae_start_extra, dae->dae_stop_extra,
