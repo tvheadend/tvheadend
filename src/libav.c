@@ -226,6 +226,7 @@ libav_is_encoder(AVCodec *codec)
  *
  */
 #if ENABLE_VAAPI
+#ifdef VA_FOURCC_I010
 static void libav_va_log(int severity, const char *msg)
 {
   char *s;
@@ -249,6 +250,7 @@ static void libav_va_info_callback(const char *msg)
 {
   libav_va_log(LOG_INFO, msg);
 }
+#endif
 #endif
 
 /**
