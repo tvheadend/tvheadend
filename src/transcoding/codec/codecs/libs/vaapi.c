@@ -21,11 +21,6 @@
 #include "transcoding/codec/internals.h"
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#if ENABLE_LIBDRM_H
-#include <libdrm/drm.h>
-#else
-#include <drm/drm.h>
-#endif
 
 
 #define AV_DICT_SET_QP(d, v, a) \
@@ -39,6 +34,29 @@ typedef struct {
     int qp;
     int quality;
 } tvh_codec_profile_vaapi_t;
+
+#if defined(__linux__)
+#include <linux/types.h>
+#include <asm/ioctl.h>
+#else
+#include <sys/ioccom.h>
+#include <sys/types.h>
+typedef size_t   __kernel_size_t;
+#endif
+
+typedef struct drm_version {
+   int version_major;        /**< Major version */
+   int version_minor;        /**< Minor version */
+   int version_patchlevel;   /**< Patch level */
+   __kernel_size_t name_len; /**< Length of name buffer */
+   char *name;               /**< Name of driver */
+   __kernel_size_t date_len; /**< Length of date buffer */
+   char *date;               /**< User-space buffer to hold date */
+   __kernel_size_t desc_len; /**< Length of desc buffer */
+   char *desc;               /**< User-space buffer to hold desc */
+} drm_version_t;
+
+#define DRM_IOCTL_VERSION _IOWR('d', 0x00, struct drm_version)
 
 
 static int

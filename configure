@@ -591,7 +591,6 @@ if enabled_or_auto vaapi; then
       check_pkg libva-drm ">=0.38.0" || die "libva-drm not found"
       enable vaapi
       enable hwaccels
-      check_cc_header "libdrm/drm" libdrm_h
     elif enabled vaapi; then
       die "vaapi (Video Acceleration (VA) API for Linux) not found"
     fi
