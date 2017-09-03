@@ -155,14 +155,18 @@ _context_encode(TVHContext *self, AVFrame *avframe)
 static int
 _context_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
 {
+    if ((avpkt->flags & AV_PKT_FLAG_KEY) == 0)
+        return 0;
     if (self->require_meta) {
         if (self->helper && self->helper->meta) {
             self->require_meta = self->helper->meta(self, avpkt, pkt);
+            if (self->require_meta == 0)
+                self->require_meta = 1;
         }
         else if (self->oavctx->extradata_size) {
             pkt->pkt_meta = pktbuf_alloc(self->oavctx->extradata,
                                          self->oavctx->extradata_size);
-            self->require_meta = (pkt->pkt_meta) ? 0 : -1;
+            self->require_meta = (pkt->pkt_meta) ? 1 : -1;
         }
     }
     return (self->require_meta < 0) ? -1 : 0;
@@ -279,6 +283,9 @@ tvh_context_pack(TVHContext *self, AVPacket *avpkt)
              _context_wrap(self, avpkt, pkt)) {
         TVHPKT_CLEAR(pkt);
     }
+    // FIXME: ugly hack
+    if (pkt->pkt_pcr == 0)
+        pkt->pkt_pcr = pkt->pkt_dts;
     return pkt;
 }
 

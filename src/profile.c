@@ -768,6 +768,7 @@ profile_sharer_deliver(profile_chain_t *prch, streaming_message_t *sm)
       n->pkt_pcr -= prch->prch_ts_delta;
       sm->sm_data = n;
     } else {
+      pkt_trace(LS_PROFILE, pkt, "packet drop (delta %"PRId64")", prch->prch_ts_delta);
       streaming_msg_free(sm);
       return;
     }
