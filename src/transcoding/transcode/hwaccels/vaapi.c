@@ -196,6 +196,34 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
                     break;
             }
             break;
+        case AV_CODEC_ID_VP8:
+            switch (avctx->profile) {
+                case FF_PROFILE_UNKNOWN:
+                    check = VAProfileVP8Version0_3;
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case AV_CODEC_ID_VP9:
+            switch (avctx->profile) {
+                case FF_PROFILE_UNKNOWN:
+                case FF_PROFILE_VP9_0:
+                    check = VAProfileVP9Profile0;
+                    break;
+                case FF_PROFILE_VP9_1:
+                    check = VAProfileVP9Profile1;
+                    break;
+                case FF_PROFILE_VP9_2:
+                    check = VAProfileVP9Profile2;
+                    break;
+                case FF_PROFILE_VP9_3:
+                    check = VAProfileVP9Profile3;
+                    break;
+                default:
+                    break;
+            }
+            break;
         default:
             break;
     }

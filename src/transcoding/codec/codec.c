@@ -61,6 +61,7 @@ extern TVHCodec tvh_codec_libopus;
 #if ENABLE_VAAPI
 extern TVHCodec tvh_codec_vaapi_h264;
 extern TVHCodec tvh_codec_vaapi_hevc;
+extern TVHCodec tvh_codec_vaapi_vp8;
 #endif
 
 #if ENABLE_OMX
@@ -275,6 +276,7 @@ tvh_codecs_register()
 #if ENABLE_VAAPI
     tvh_codec_register(&tvh_codec_vaapi_h264);
     tvh_codec_register(&tvh_codec_vaapi_hevc);
+    tvh_codec_register(&tvh_codec_vaapi_vp8);
 #endif
 
 #if ENABLE_OMX

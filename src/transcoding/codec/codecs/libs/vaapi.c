@@ -262,3 +262,45 @@ TVHVideoCodec tvh_codec_vaapi_hevc = {
     .profiles = vaapi_hevc_profiles,
     .profile_init = tvh_codec_profile_video_init,
 };
+
+
+/* vp8_vaapi =============================================================== */
+
+static const AVProfile vaapi_vp8_profiles[] = {
+    { FF_PROFILE_UNKNOWN },
+};
+
+static int
+tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
+                                  AVDictionary **opts)
+{
+    // bit_rate or qp
+    if (self->bit_rate) {
+        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+    }
+    else {
+        AV_DICT_SET_QP(opts, self->qp, 25);
+    }
+    // force zero here, until encoder is fixed
+    AV_DICT_SET_INT(opts, "bf", 0, 0);
+    return 0;
+}
+
+
+static const codec_profile_class_t codec_profile_vaapi_vp8_class = {
+    {
+        .ic_super      = (idclass_t *)&codec_profile_vaapi_class,
+        .ic_class      = "codec_profile_vaapi_vp8",
+        .ic_caption    = N_("vaapi_vp8")
+    },
+    .open = (codec_profile_open_meth)tvh_codec_profile_vaapi_vp8_open,
+};
+
+
+TVHVideoCodec tvh_codec_vaapi_vp8 = {
+    .name     = "vp8_vaapi",
+    .size     = sizeof(tvh_codec_profile_vaapi_t),
+    .idclass  = &codec_profile_vaapi_vp8_class,
+    .profiles = vaapi_vp8_profiles,
+    .profile_init = tvh_codec_profile_video_init,
+};
