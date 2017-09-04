@@ -542,7 +542,7 @@ endif
 ifeq (yes,$(CONFIG_NVENC))
 
 EXTLIBS  += nvenc
-ENCODERS += nvenc_h264 nvenc_hevc
+ENCODERS += h264_nvenc hevc_nvenc
 
 endif
 

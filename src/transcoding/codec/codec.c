@@ -64,6 +64,11 @@ extern TVHCodec tvh_codec_vaapi_hevc;
 extern TVHCodec tvh_codec_vaapi_vp8;
 #endif
 
+#if ENABLE_NVENC
+extern TVHCodec tvh_codec_nvenc_h264;
+extern TVHCodec tvh_codec_nvenc_hevc;
+#endif
+
 #if ENABLE_OMX
 extern TVHCodec tvh_codec_omx_h264;
 #endif
@@ -277,6 +282,11 @@ tvh_codecs_register()
     tvh_codec_register(&tvh_codec_vaapi_h264);
     tvh_codec_register(&tvh_codec_vaapi_hevc);
     tvh_codec_register(&tvh_codec_vaapi_vp8);
+#endif
+
+#if ENABLE_NVENC
+    tvh_codec_register(&tvh_codec_nvenc_h264);
+    tvh_codec_register(&tvh_codec_nvenc_hevc);
 #endif
 
 #if ENABLE_OMX

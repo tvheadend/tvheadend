@@ -499,6 +499,9 @@ endif
 ifeq ($(CONFIG_VAAPI),yes)
 LIBS-CODECS += vaapi
 endif
+ifeq ($(CONFIG_NVENC),yes)
+LIBS-CODECS += nvenc
+endif
 ifeq ($(CONFIG_OMX),yes)
 LIBS-CODECS += omx
 endif
