@@ -37,11 +37,11 @@
 #define tvh_sct_t streaming_component_type_t
 
 
-struct tvh_codec_t;
-typedef struct tvh_codec_t TVHCodec;
+struct tvh_codec;
+typedef struct tvh_codec TVHCodec;
 
-struct tvh_codec_profile_t;
-typedef struct tvh_codec_profile_t TVHCodecProfile;
+struct tvh_codec_profile;
+typedef struct tvh_codec_profile TVHCodecProfile;
 
 
 /* codec_profile_class ====================================================== */
@@ -60,17 +60,17 @@ typedef struct {
 
 /* TVHCodec ================================================================= */
 
-typedef struct tvh_codec_t {
+struct tvh_codec {
     const char *name;
     size_t size;
     const codec_profile_class_t *idclass;
     AVCodec *codec;
     const AVProfile *profiles;
     int (*profile_init)(TVHCodecProfile *, htsmsg_t *conf);
-    SLIST_ENTRY(tvh_codec_t) link;
-} TVHCodec;
+    SLIST_ENTRY(tvh_codec) link;
+};
 
-SLIST_HEAD(TVHCodecs, tvh_codec_t);
+SLIST_HEAD(TVHCodecs, tvh_codec);
 extern struct TVHCodecs tvh_codecs;
 
 const idclass_t *
@@ -87,7 +87,7 @@ tvh_codec_get_title(TVHCodec *self);
 
 extern const codec_profile_class_t codec_profile_class;
 
-typedef struct tvh_codec_profile_t {
+struct tvh_codec_profile {
     idnode_t idnode;
     TVHCodec *codec;
     const char *name;
@@ -97,10 +97,10 @@ typedef struct tvh_codec_profile_t {
     double qscale;
     int profile;
     char *device; // for hardware acceleration
-    LIST_ENTRY(tvh_codec_profile_t) link;
-} TVHCodecProfile;
+    LIST_ENTRY(tvh_codec_profile) link;
+};
 
-LIST_HEAD(TVHCodecProfiles, tvh_codec_profile_t);
+LIST_HEAD(TVHCodecProfiles, tvh_codec_profile);
 extern struct TVHCodecProfiles tvh_codec_profiles;
 
 int

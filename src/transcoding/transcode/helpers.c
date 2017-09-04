@@ -26,7 +26,7 @@
 #include "parsers/parser_hevc.h"
 
 
-SLIST_HEAD(TVHContextHelpers, tvh_context_helper_t);
+SLIST_HEAD(TVHContextHelpers, tvh_context_helper);
 static struct TVHContextHelpers tvh_decoder_helpers;
 static struct TVHContextHelpers tvh_encoder_helpers;
 

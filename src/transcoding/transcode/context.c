@@ -33,7 +33,7 @@ extern TVHContextType TVHVideoContext;
 extern TVHContextType TVHAudioContext;
 
 
-SLIST_HEAD(TVHContextTypes, tvh_context_type_t);
+SLIST_HEAD(TVHContextTypes, tvh_context_type);
 static struct TVHContextTypes tvh_context_types;
 
 

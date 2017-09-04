@@ -42,20 +42,20 @@
 extern TVHCodecProfile *tvh_codec_profile_copy;
 
 
-struct tvh_transcoder_t;
-typedef struct tvh_transcoder_t TVHTranscoder;
+struct tvh_transcoder;
+typedef struct tvh_transcoder TVHTranscoder;
 
-struct tvh_stream_t;
-typedef struct tvh_stream_t TVHStream;
+struct tvh_stream;
+typedef struct tvh_stream TVHStream;
 
-struct tvh_context_type_t;
-typedef struct tvh_context_type_t TVHContextType;
+struct tvh_context_type;
+typedef struct tvh_context_type TVHContextType;
 
-struct tvh_context_t;
-typedef struct tvh_context_t TVHContext;
+struct tvh_context;
+typedef struct tvh_context TVHContext;
 
-struct tvh_context_helper_t;
-typedef struct tvh_context_helper_t TVHContextHelper;
+struct tvh_context_helper;
+typedef struct tvh_context_helper TVHContextHelper;
 
 // post phase _MUST_ be == phase + 1
 typedef enum {
@@ -68,16 +68,16 @@ typedef enum {
 
 /* TVHTranscoder ============================================================ */
 
-SLIST_HEAD(TVHStreams, tvh_stream_t);
+SLIST_HEAD(TVHStreams, tvh_stream);
 
-typedef struct tvh_transcoder_t {
+struct tvh_transcoder {
     tvh_st_t input;
     struct TVHStreams streams;
     uint32_t id;
     tvh_st_t *output;
     TVHCodecProfile *profiles[AVMEDIA_TYPE_NB];
     char *src_codecs[AVMEDIA_TYPE_NB];
-} TVHTranscoder;
+};
 
 int
 tvh_transcoder_deliver(TVHTranscoder *self, th_pkt_t *pkt);
@@ -93,14 +93,14 @@ tvh_transcoder_destroy(TVHTranscoder *self);
 
 /* TVHStream ================================================================ */
 
-typedef struct tvh_stream_t {
+struct tvh_stream {
     TVHTranscoder *transcoder;
     int id;
     int index;
     tvh_sct_t type;
     TVHContext *context;
-    SLIST_ENTRY(tvh_stream_t) link;
-} TVHStream;
+    SLIST_ENTRY(tvh_stream) link;
+};
 
 void
 tvh_stream_stop(TVHStream *self, int flush);
@@ -128,7 +128,7 @@ typedef int (*tvh_context_ship_meth)(TVHContext *, AVPacket *);
 typedef int (*tvh_context_wrap_meth)(TVHContext *, AVPacket *, th_pkt_t *);
 typedef void (*tvh_context_close_meth)(TVHContext *);
 
-typedef struct tvh_context_type_t {
+struct tvh_context_type {
     enum AVMediaType media_type;
     tvh_context_open_meth open;
     tvh_context_decode_meth decode;
@@ -136,8 +136,8 @@ typedef struct tvh_context_type_t {
     tvh_context_ship_meth ship;
     tvh_context_wrap_meth wrap;
     tvh_context_close_meth close;
-    SLIST_ENTRY(tvh_context_type_t) link;
-} TVHContextType;
+    SLIST_ENTRY(tvh_context_type) link;
+};
 
 void
 tvh_context_types_register(void);
@@ -148,7 +148,7 @@ tvh_context_types_forget(void);
 
 /* TVHContext =============================================================== */
 
-typedef struct tvh_context_t {
+struct tvh_context {
     TVHStream *stream;
     TVHCodecProfile *profile;
     TVHContextType *type;
@@ -173,7 +173,7 @@ typedef struct tvh_context_t {
     AVBufferRef *hw_device_ref;
     void *hw_accel_ictx;
     AVBufferRef *hw_device_octx;
-} TVHContext;
+};
 
 int
 tvh_context_get_int_opt(AVDictionary **opts, const char *key, int *value);
@@ -211,14 +211,14 @@ typedef int (*tvh_context_helper_open_meth)(TVHContext *, AVDictionary **);
 typedef th_pkt_t *(*tvh_context_helper_pack_meth)(TVHContext *, AVPacket *);
 typedef int (*tvh_context_helper_meta_meth)(TVHContext *, AVPacket *, th_pkt_t *);
 
-typedef struct tvh_context_helper_t {
+struct tvh_context_helper {
     enum AVMediaType type;
     enum AVCodecID id;
     tvh_context_helper_open_meth open;
     tvh_context_helper_pack_meth pack;
     tvh_context_helper_meta_meth meta;
-    SLIST_ENTRY(tvh_context_helper_t) link;
-} TVHContextHelper;
+    SLIST_ENTRY(tvh_context_helper) link;
+};
 
 TVHContextHelper *
 tvh_decoder_helper_find(const AVCodec *avcodec);
