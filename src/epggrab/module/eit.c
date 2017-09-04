@@ -53,6 +53,7 @@ typedef struct eit_module_t
   eit_pattern_list_t p_snum;
   eit_pattern_list_t p_enum;
   eit_pattern_list_t p_airdate;        ///< Original air date parser
+  eit_pattern_list_t p_scrape_subtitle;
 } eit_module_t;
 
 /* ************************************************************************
@@ -651,8 +652,25 @@ static int _eit_process_event_one
       *save |= epg_episode_set_genre(ee, ev.genre, &changes4);
     if (ev.parental)
       *save |= epg_episode_set_age_rating(ee, ev.parental, &changes4);
-    if (ev.summary)
-      *save |= epg_episode_set_subtitle(ee, ev.summary, &changes4);
+    if (ev.summary) {
+      /* Freeview/Freesat have a subtitle as part of the summary in the format
+       * "subtitle: desc". So try and extract it and use that.
+       * If we can't find a subtitle then default to previous behaviour of
+       * setting the summary as the subtitle.
+       */
+      const char *summary = lang_str_get(ev.summary, ev.default_charset);
+      char buffer[2048];
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), summary, &eit_mod->p_scrape_subtitle)) {
+        tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s' from '%s' using %s on channel '%s'",
+                 buffer, summary, mod->id,
+                 ch ? channel_get_name(ch, channel_blank_name) : "(null)");
+        lang_str_t *ls = lang_str_create2(buffer, ev.default_charset);
+        *save |= epg_episode_set_subtitle(ee, ls, &changes4);
+        lang_str_destroy(ls);
+      } else {
+        *save |= epg_episode_set_subtitle(ee, ev.summary, &changes4);
+      }
+    }
 #if TODO_ADD_EXTRA
     if (ev.extra)
       *save |= epg_episode_set_extra(ee, extra, &changes4);
@@ -1001,6 +1019,7 @@ static int _eit_scrape_load_one ( htsmsg_t *m, eit_module_t* mod )
     eit_pattern_compile_list(&mod->p_snum, htsmsg_get_list(m, "season_num"));
     eit_pattern_compile_list(&mod->p_enum, htsmsg_get_list(m, "episode_num"));
     eit_pattern_compile_list(&mod->p_airdate, htsmsg_get_list(m, "airdate"));
+    eit_pattern_compile_list(&mod->p_scrape_subtitle, htsmsg_get_list(m, "scrape_subtitle"));
     return 1;
 }
 
