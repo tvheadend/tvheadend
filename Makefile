@@ -390,6 +390,7 @@ I18N-C += $(SRCS-MPEGTS-DVB)
 SRCS-MPEGTS-EPG = \
 	src/epggrab/otamux.c\
 	src/epggrab/module/eit.c \
+	src/epggrab/module/eitpatternlist.c \
 	src/epggrab/module/psip.c \
 	src/epggrab/support/freesat_huffman.c \
 	src/epggrab/module/opentv.c
