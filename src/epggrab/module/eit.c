@@ -86,7 +86,8 @@ typedef struct eit_event
  * Forward declarations
  */
 static void _eit_module_load_config(eit_module_t *mod);
-
+static void _eit_scrape_clear(eit_module_t *mod);
+static void _eit_done(void *mod);
 
 /* ************************************************************************
  * Diagnostics
@@ -912,8 +913,7 @@ static int _eit_activate(void *m, int e)
    * activated. This allows user to modify the config files and get
    * them re-read easily.
    */
-  eit_pattern_free_list(&mod->p_snum);
-  eit_pattern_free_list(&mod->p_enum);
+  _eit_scrape_clear(mod);
 
   mod->active = e;
 
@@ -958,6 +958,12 @@ static int _eit_tune
   }
 
   return r;
+}
+
+static void _eit_scrape_clear(eit_module_t *mod)
+{
+  eit_pattern_free_list(&mod->p_snum);
+  eit_pattern_free_list(&mod->p_enum);
 }
 
 static int _eit_scrape_load_one ( htsmsg_t *m, eit_module_t* mod )
@@ -1039,6 +1045,7 @@ static eit_module_t *eit_module_ota_create
   }; \
   static epggrab_ota_module_ops_t name = { \
     .start  = _eit_start, \
+    .done = _eit_done, \
     .activate = _eit_activate, \
     .tune   = _eit_tune, \
     .opaque = &opaque_##name, \
@@ -1062,6 +1069,12 @@ void eit_init ( void )
   EIT_CREATE("nz_freeview", "New Zealand: Freeview", 5, &ops_nz_freeview);
   EIT_CREATE("viasat_baltic", "VIASAT: Baltic", 5, &ops_baltic);
   EIT_CREATE("Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops_bulsat);
+}
+
+void _eit_done ( void *m )
+{
+  eit_module_t *mod = m;
+  _eit_scrape_clear(mod);
 }
 
 void eit_done ( void )
