@@ -960,7 +960,7 @@ static int _eit_tune
   return r;
 }
 
-static int _eit_fixup_load_one ( htsmsg_t *m, eit_module_t* mod )
+static int _eit_scrape_load_one ( htsmsg_t *m, eit_module_t* mod )
 {
     eit_pattern_compile_list(&mod->p_snum, htsmsg_get_list(m, "season_num"));
     eit_pattern_compile_list(&mod->p_enum, htsmsg_get_list(m, "episode_num"));
@@ -974,12 +974,16 @@ static void _eit_module_load_config(eit_module_t *mod)
     return;
   }
 
-  const char config_path[] = "epggrab/eit/fixup/%s";
-  const char *config_file = mod->id;
-
-  /* Attempt to load config file based on grabber id such as
-   * uk_freeview.
+  const char config_path[] = "epggrab/eit/scrape/%s";
+  /* Only use the user config if they have supplied one and it is not empty.
+   * Otherwise we default to using configuration based on the module
+   * name such as "uk_freeview".
    */
+  const char *config_file = mod->scrape_config && *mod->scrape_config ?
+    mod->scrape_config : mod->id;
+
+  tvhinfo(LS_TBL_EIT, "scraper %s attempt to load config \"%s\"", mod->id, config_file);
+
   htsmsg_t *m = hts_settings_load(config_path, config_file);
   char *generic_name = NULL;
   if (!m) {
@@ -988,7 +992,7 @@ static void _eit_module_load_config(eit_module_t *mod)
      * be "uk". This allows config for a country to be shared across
      * two grabbers such as DVB-T and DVB-S.
      */
-    generic_name = strdup(mod->id);
+    generic_name = strdup(config_file);
     if (generic_name) {
       char *underscore = strstr(generic_name, "_");
       if (underscore) {
@@ -1001,14 +1005,14 @@ static void _eit_module_load_config(eit_module_t *mod)
   }
 
   if (m) {
-    const int r = _eit_fixup_load_one(m, mod);
+    const int r = _eit_scrape_load_one(m, mod);
     if (r > 0)
-      tvhinfo(LS_TBL_EIT, "scraper %s loaded config %s", mod->id, config_file);
+      tvhinfo(LS_TBL_EIT, "scraper %s loaded config \"%s\"", mod->id, config_file);
     else
-      tvhwarn(LS_TBL_EIT, "scraper %s failed to load", mod->id);
+      tvhwarn(LS_TBL_EIT, "scraper %s failed to load config \"%s\"", mod->id, config_file);
     htsmsg_destroy(m);
   } else {
-      tvhinfo(LS_TBL_EIT, "no scraper config files loaded for %s", mod->id);
+      tvhinfo(LS_TBL_EIT, "scraper %s no scraper config files found", mod->id);
   }
 
   if (generic_name)

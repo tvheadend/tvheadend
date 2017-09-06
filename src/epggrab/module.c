@@ -225,14 +225,50 @@ const idclass_t epggrab_mod_ota_scraper_class = {
   .ic_super      = &epggrab_mod_ota_class,
   .ic_class      = "epggrab_mod_ota_scraper",
   .ic_caption    = N_("Over-the-air EPG grabber with scraping"),
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name      = N_("EPG behaviour"),
+      .number    = 1,
+    },
+    {
+      .name      = N_("Scrape behaviour"),
+      .number    = 2,
+    },
+    {}
+  },
   .ic_properties = (const property_t[]){
+    {
+      /* The "eit" grabber is used by a number of countries so
+       * we can't ship a config file named "eit" since regex use
+       * in the UK won't be the same as in Italy.
+       *
+       * So, this option allows the user to specify the configuration
+       * file to use from the ones that we do ship without them having
+       * to mess around in the filesystem copying files.
+       *
+       * For example they can simply specify "uk" to use its
+       * configuration file.
+       */
+      .type   = PT_STR,
+      .id     = "scrape_config",
+      .name   = N_("Scraper configuration to use"),
+      .desc   = N_("Configuration containing regular expressions to use for "
+                   "scraping information from the broadcast guide. "
+                   "This can be left blank to use the default or "
+                   "set to one of the Tvheadend configurations from the "
+                   "epggrab/eit/scrape directory such as "
+                   "\"uk\" (without the quotes)."
+                  ),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_config),
+      .group  = 2,
+    },
     {
       .type   = PT_BOOL,
       .id     = "scrape_episode",
       .name   = N_("Scrape Episode"),
       .desc   = N_("Enable/disable scraping episode from the grabber."),
       .off    = offsetof(epggrab_module_ota_scraper_t, scrape_episode),
-      .group  = 1,
+      .group  = 2,
     },
     {}
   }
