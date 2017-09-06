@@ -221,6 +221,23 @@ const idclass_t epggrab_mod_ota_class = {
   }
 };
 
+const idclass_t epggrab_mod_ota_scraper_class = {
+  .ic_super      = &epggrab_mod_ota_class,
+  .ic_class      = "epggrab_mod_ota_scraper",
+  .ic_caption    = N_("Over-the-air EPG grabber with scraping"),
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_episode",
+      .name   = N_("Scrape Episode"),
+      .desc   = N_("Enable/disable scraping episode from the grabber."),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_episode),
+      .group  = 1,
+    },
+    {}
+  }
+};
+
 /* **************************************************************************
  * Generic module routines
  * *************************************************************************/
@@ -591,14 +608,15 @@ epggrab_module_ext_t *epggrab_module_ext_create
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, int subsys, const char *saveid,
-    const char *name, int priority,
+    const char *name, int priority, int with_scraper,
     epggrab_ota_module_ops_t *ops )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
 
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
-                        &epggrab_mod_ota_class,
+                        with_scraper ?
+                          &epggrab_mod_ota_scraper_class : &epggrab_mod_ota_class,
                         id, subsys, saveid, name, priority);
 
   /* Setup */

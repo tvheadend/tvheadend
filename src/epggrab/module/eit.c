@@ -49,7 +49,7 @@ typedef struct eit_private
 /* Provider configuration */
 typedef struct eit_module_t
 {
-  epggrab_module_ota_t  ;      ///< Base struct
+  epggrab_module_ota_scraper_t  ;      ///< Base struct
   eit_pattern_list_t p_snum;
   eit_pattern_list_t p_enum;
 } eit_module_t;
@@ -80,6 +80,13 @@ typedef struct eit_event
   uint8_t           parental;
 
 } eit_event_t;
+
+
+/*
+ * Forward declarations
+ */
+static void _eit_module_load_config(eit_module_t *mod);
+
 
 /* ************************************************************************
  * Diagnostics
@@ -894,6 +901,30 @@ static int _eit_start
   return 0;
 }
 
+static int _eit_activate(void *m, int e)
+{
+  eit_module_t *mod = m;
+  tvhtrace(LS_TBL_EIT, "_eit_activate %s change to %d from %d with scrape_episode of %d", mod->id, e, mod->active, mod->scrape_episode);
+  const int original_status = mod->active;
+
+  /* We expect to be activated/deactivated infrequently so free up the
+   * lists read from the config files and reload when the scraper is
+   * activated. This allows user to modify the config files and get
+   * them re-read easily.
+   */
+  eit_pattern_free_list(&mod->p_snum);
+  eit_pattern_free_list(&mod->p_enum);
+
+  mod->active = e;
+
+  if (e) {
+    _eit_module_load_config(mod);
+  }
+
+  /* Return save if value has changed */
+  return e != original_status;
+}
+
 static int _eit_tune
   ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
@@ -936,18 +967,15 @@ static int _eit_fixup_load_one ( htsmsg_t *m, eit_module_t* mod )
     return 1;
 }
 
-static eit_module_t *eit_module_ota_create
-  ( const char *id, int subsys, const char *saveid,
-    const char *name, int priority,
-    epggrab_ota_module_ops_t *ops )
+static void _eit_module_load_config(eit_module_t *mod)
 {
-  eit_module_t * mod = (eit_module_t *)
-    epggrab_module_ota_create(calloc(1, sizeof(eit_module_t)),
-                              id, subsys, saveid,
-                              name, priority, ops);
+  if (!mod->scrape_episode) {
+    tvhinfo(LS_TBL_EIT, "module %s - scraper disabled by config", mod->id);
+    return;
+  }
 
   const char config_path[] = "epggrab/eit/fixup/%s";
-  const char *config_file = id;
+  const char *config_file = mod->id;
 
   /* Attempt to load config file based on grabber id such as
    * uk_freeview.
@@ -960,7 +988,7 @@ static eit_module_t *eit_module_ota_create
      * be "uk". This allows config for a country to be shared across
      * two grabbers such as DVB-T and DVB-S.
      */
-    generic_name = strdup(id);
+    generic_name = strdup(mod->id);
     if (generic_name) {
       char *underscore = strstr(generic_name, "_");
       if (underscore) {
@@ -975,17 +1003,27 @@ static eit_module_t *eit_module_ota_create
   if (m) {
     const int r = _eit_fixup_load_one(m, mod);
     if (r > 0)
-      tvhinfo(LS_TBL_EIT, "fixup %s loaded %s", id, config_file);
+      tvhinfo(LS_TBL_EIT, "scraper %s loaded config %s", mod->id, config_file);
     else
-      tvhwarn(LS_TBL_EIT, "fixup %s failed", id);
+      tvhwarn(LS_TBL_EIT, "scraper %s failed to load", mod->id);
     htsmsg_destroy(m);
   } else {
-      tvhinfo(LS_TBL_EIT, "no fixup config files loaded for %s", id);
+      tvhinfo(LS_TBL_EIT, "no scraper config files loaded for %s", mod->id);
   }
 
   if (generic_name)
     free(generic_name);
+}
 
+static eit_module_t *eit_module_ota_create
+  ( const char *id, int subsys, const char *saveid,
+    const char *name, int priority,
+    epggrab_ota_module_ops_t *ops )
+{
+  eit_module_t * mod = (eit_module_t *)
+    epggrab_module_ota_create(calloc(1, sizeof(eit_module_t)),
+                              id, subsys, saveid,
+                              name, priority, 1, ops);
   return mod;
 }
 
@@ -997,6 +1035,7 @@ static eit_module_t *eit_module_ota_create
   }; \
   static epggrab_ota_module_ops_t name = { \
     .start  = _eit_start, \
+    .activate = _eit_activate, \
     .tune   = _eit_tune, \
     .opaque = &opaque_##name, \
   }
