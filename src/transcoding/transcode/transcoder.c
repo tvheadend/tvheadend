@@ -109,7 +109,7 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
     TVHAudioCodecProfile *aprofile;
     TVHStream *stream = NULL;
     int indexes[ss_src->ss_num_components];
-    int i, j, count;
+    int i, j, k, count;
     int video_index = -1;
     int audio_index = -1;
     int audio_pindex[3] = { -1, -1, -1 };
@@ -195,11 +195,10 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
         ss->ss_pcr_pid = ss_src->ss_pcr_pid;
         ss->ss_pmt_pid = ss_src->ss_pmt_pid;
         service_source_info_copy(&ss->ss_si, &ss_src->ss_si);
-        ss->ss_num_components = count;
-        for (j = 0; j < count; j++) {
+        for (j = k = 0; j < count; j++) {
             i = indexes[j];
             ssc_src = &ss_src->ss_components[i];
-            ssc = &ss->ss_components[j];
+            ssc = &ss->ss_components[k];
             assert(ssc);
             media_type = ssc_get_media_type(ssc_src);
             assert(media_type != AVMEDIA_TYPE_UNKNOWN);
@@ -214,12 +213,13 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
                 tvh_ssc_log(ssc_src, LOG_INFO, "==> Using profile %s", self,
                             tvh_codec_profile_get_name(profile));
                 SLIST_INSERT_HEAD(&self->streams, stream, link);
+                k++;
             } else {
-                memset(ssc, 0, sizeof(*ssc));
                 indexes[j] = -1;
                 continue;
             }
         }
+        ss->ss_num_components = k;
         for (i = 0; i < ss_src->ss_num_components; i++) {
             for (j = 0; j < count; j++) {
                 if (i == indexes[j])

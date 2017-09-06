@@ -121,7 +121,7 @@ static const codec_profile_class_t codec_profile_libvpx_class = {
                 .opts     = PO_EXPERT,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_libvpx_t, cpu_used),
-                .intextra = INTEXTRA_RANGE(0, 15, 1),
+                .intextra = INTEXTRA_RANGE(-16, 16, 1),
                 .def.i    = 8,
             },
             {

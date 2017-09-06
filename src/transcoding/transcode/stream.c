@@ -43,7 +43,7 @@ tvh_stream_is_copy(TVHCodecProfile *profile, tvh_ssc_t *ssc,
             if (token == NULL)
                 break;
             if (!strcasecmp(token, txtname))
-                return 0; /* copy */
+                return 0; /* do not copy */
         }
     }
 cont:
@@ -86,6 +86,9 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
         return -1;
     }
     self->type = ssc->ssc_type = codec_id2streaming_component_type(ocodec->id);
+    if (ssc->ssc_type == SCT_UNKNOWN) {
+        tvh_stream_log(self, LOG_ERR, "unable to translate AV type %s [%d] to SCT!", ocodec->name, ocodec->id);
+    }
     ssc->ssc_gh = NULL;
     return 0;
 }
