@@ -266,7 +266,7 @@ const idclass_t epggrab_mod_ota_scraper_class = {
       .type   = PT_BOOL,
       .id     = "scrape_episode",
       .name   = N_("Scrape Episode"),
-      .desc   = N_("Enable/disable scraping episode from the grabber."),
+      .desc   = N_("Enable/disable scraping episode details using the grabber."),
       .off    = offsetof(epggrab_module_ota_scraper_t, scrape_episode),
       .group  = 2,
     },
