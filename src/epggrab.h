@@ -31,6 +31,7 @@ typedef struct epggrab_module       epggrab_module_t;
 typedef struct epggrab_module_int   epggrab_module_int_t;
 typedef struct epggrab_module_ext   epggrab_module_ext_t;
 typedef struct epggrab_module_ota   epggrab_module_ota_t;
+typedef struct epggrab_module_ota_scraper   epggrab_module_ota_scraper_t;
 typedef struct epggrab_ota_mux      epggrab_ota_mux_t;
 typedef struct epggrab_ota_map      epggrab_ota_map_t;
 typedef struct epggrab_ota_svc_link epggrab_ota_svc_link_t;
@@ -258,6 +259,16 @@ struct epggrab_module_ota
   int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                   struct mpegts_mux *mm );
   void  *opaque;
+};
+
+/*
+ * Over the air grabber that supports configurable scraping of data.
+ */
+struct epggrab_module_ota_scraper
+{
+  epggrab_module_ota_t             ;      ///< Parent object
+  char                   *scrape_config;  ///< Config to use or blank/NULL for default.
+  int                     scrape_episode; ///< Scrape season/episode from EIT summary
 };
 
 /*

@@ -110,7 +110,7 @@ typedef struct epggrab_ota_module_ops {
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, int subsys, const char *saveid,
-    const char *name, int priority,
+    const char *name, int priority, int with_scraper,
     epggrab_ota_module_ops_t *ops );
 
 /* **************************************************************************
