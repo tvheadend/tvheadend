@@ -52,6 +52,7 @@ typedef struct eit_module_t
   epggrab_module_ota_scraper_t  ;      ///< Base struct
   eit_pattern_list_t p_snum;
   eit_pattern_list_t p_enum;
+  eit_pattern_list_t p_airdate;        ///< Original air date parser
 } eit_module_t;
 
 /* ************************************************************************
@@ -601,6 +602,12 @@ static int _eit_process_event_one
 
   epg_episode_num_t en;
   memset(&en, 0, sizeof(en));
+  /* We use a separate "first_aired_set" variable otherwise
+   * we don't know the difference between a null date and a
+   * programme that happened to start in 1974.
+   */
+  time_t first_aired = 0;
+  int    first_aired_set = 0;
 
   if (ev.summary) {
     /* search for season number */
@@ -613,6 +620,25 @@ static int _eit_process_event_one
     if (eit_pattern_apply_list(buffer, sizeof(buffer), summary, &eit_mod->p_enum))
       if ((en.e_num = atoi(buffer)))
         tvhtrace(LS_TBL_EIT,"  extract episode number %d using %s", en.e_num, mod->id);
+
+    /* Extract original air date year */
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), summary, &eit_mod->p_airdate)) {
+      if (strlen(buffer) == 4) {
+        /* Year component only */
+        const int year = atoi(buffer);
+        if (year) {
+          struct tm airdate;
+          memset(&airdate, 0, sizeof(airdate));
+          airdate.tm_year = year - 1900;
+          /* Remaining fields in airdate can all remain at zero but day
+           * of month is one-based
+           */
+          airdate.tm_mday = 1;
+          first_aired = mktime(&airdate);
+          first_aired_set = 1;
+        }
+      }
+    }
   }
 
   /* Update Episode */
@@ -634,6 +660,9 @@ static int _eit_process_event_one
     /* save any found episode number */
     if (en.s_num || en.e_num || en.p_num)
       *save |= epg_episode_set_epnum(ee, &en, &changes4);
+    if (first_aired_set)
+      *save |= epg_episode_set_first_aired(ee, first_aired, &changes4);
+
     *save |= epg_episode_change_finish(ee, changes4, 0);
   }
 
@@ -964,12 +993,14 @@ static void _eit_scrape_clear(eit_module_t *mod)
 {
   eit_pattern_free_list(&mod->p_snum);
   eit_pattern_free_list(&mod->p_enum);
+  eit_pattern_free_list(&mod->p_airdate);
 }
 
 static int _eit_scrape_load_one ( htsmsg_t *m, eit_module_t* mod )
 {
     eit_pattern_compile_list(&mod->p_snum, htsmsg_get_list(m, "season_num"));
     eit_pattern_compile_list(&mod->p_enum, htsmsg_get_list(m, "episode_num"));
+    eit_pattern_compile_list(&mod->p_airdate, htsmsg_get_list(m, "airdate"));
     return 1;
 }
 
