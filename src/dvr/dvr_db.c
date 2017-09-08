@@ -1542,9 +1542,11 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
     }
   }
 
+  /* Prefer the recording comment or the name of the rule to an empty string */
+  const char *comment_suffix = dae->dae_comment && *dae->dae_comment ? dae->dae_comment : dae->dae_name;
   snprintf(buf, sizeof(buf), _("Auto recording%s%s"),
-           dae->dae_comment ? ": " : "",
-           dae->dae_comment ?: "");
+           comment_suffix ? ": " : "",
+           comment_suffix ?: "");
 
   dvr_entry_create_by_event(enabled, idnode_uuid_as_str(&dae->dae_config->dvr_id, ubuf),
                             e, dae->dae_start_extra, dae->dae_stop_extra,
