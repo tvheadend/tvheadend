@@ -49,14 +49,16 @@ void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_p
 {
   regmatch_t match[2];
   eit_pattern_t *p;
-  int size;
+  ssize_t size;
 
   if (!l) return NULL;
   /* search and report the first match */
   TAILQ_FOREACH(p, l, p_links)
     if (!regexec(&p->compiled, text, 2, match, 0) && match[1].rm_so != -1) {
       size = MIN(match[1].rm_eo - match[1].rm_so, size_buf - 1);
-      while (size > 0 && isspace(text[match[1].rm_so + size - 1]))
+      if (size <= 0)
+        continue;
+      while (isspace(text[match[1].rm_so + size - 1]))
         size--;
       memcpy(buf, text + match[1].rm_so, size);
       buf[size] = '\0';
