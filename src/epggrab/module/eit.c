@@ -53,7 +53,7 @@ typedef struct eit_module_t
   eit_pattern_list_t p_snum;
   eit_pattern_list_t p_enum;
   eit_pattern_list_t p_airdate;        ///< Original air date parser
-  eit_pattern_list_t p_scrape_subtitle;
+  eit_pattern_list_t p_scrape_subtitle;///< Scrape subtitle from summary data
 } eit_module_t;
 
 /* ************************************************************************
@@ -610,7 +610,7 @@ static int _eit_process_event_one
   time_t first_aired = 0;
   int    first_aired_set = 0;
 
-  if (ev.summary) {
+  if (ev.summary && eit_mod->scrape_episode) {
     /* search for season number */
     char buffer[2048];
     const char* summary = lang_str_get(ev.summary, ev.default_charset);
@@ -652,7 +652,7 @@ static int _eit_process_event_one
       *save |= epg_episode_set_genre(ee, ev.genre, &changes4);
     if (ev.parental)
       *save |= epg_episode_set_age_rating(ee, ev.parental, &changes4);
-    if (ev.summary) {
+    if (ev.summary && eit_mod->scrape_subtitle) {
       /* Freeview/Freesat have a subtitle as part of the summary in the format
        * "subtitle: desc". So try and extract it and use that.
        * If we can't find a subtitle then default to previous behaviour of
@@ -668,8 +668,12 @@ static int _eit_process_event_one
         *save |= epg_episode_set_subtitle(ee, ls, &changes4);
         lang_str_destroy(ls);
       } else {
+        /* No subtitle found in summary buffer. */
         *save |= epg_episode_set_subtitle(ee, ev.summary, &changes4);
       }
+    } else {
+      /* Scraping not enabled so set subtitle to be same as summary */
+      *save |= epg_episode_set_subtitle(ee, ev.summary, &changes4);
     }
 #if TODO_ADD_EXTRA
     if (ev.extra)
@@ -952,7 +956,8 @@ static int _eit_start
 static int _eit_activate(void *m, int e)
 {
   eit_module_t *mod = m;
-  tvhtrace(LS_TBL_EIT, "_eit_activate %s change to %d from %d with scrape_episode of %d", mod->id, e, mod->active, mod->scrape_episode);
+  tvhtrace(LS_TBL_EIT, "_eit_activate %s change to %d from %d with scrape_episode of %d and scrape_subtitle of %d",
+           mod->id, e, mod->active, mod->scrape_episode, mod->scrape_subtitle);
   const int original_status = mod->active;
 
   /* We expect to be activated/deactivated infrequently so free up the
@@ -1012,20 +1017,27 @@ static void _eit_scrape_clear(eit_module_t *mod)
   eit_pattern_free_list(&mod->p_snum);
   eit_pattern_free_list(&mod->p_enum);
   eit_pattern_free_list(&mod->p_airdate);
+  eit_pattern_free_list(&mod->p_scrape_subtitle);
 }
 
 static int _eit_scrape_load_one ( htsmsg_t *m, eit_module_t* mod )
 {
+  if (mod->scrape_episode) {
     eit_pattern_compile_list(&mod->p_snum, htsmsg_get_list(m, "season_num"));
     eit_pattern_compile_list(&mod->p_enum, htsmsg_get_list(m, "episode_num"));
     eit_pattern_compile_list(&mod->p_airdate, htsmsg_get_list(m, "airdate"));
+  }
+
+  if (mod->scrape_subtitle) {
     eit_pattern_compile_list(&mod->p_scrape_subtitle, htsmsg_get_list(m, "scrape_subtitle"));
-    return 1;
+  }
+
+  return 1;
 }
 
 static void _eit_module_load_config(eit_module_t *mod)
 {
-  if (!mod->scrape_episode) {
+  if (!mod->scrape_episode && !mod->scrape_subtitle) {
     tvhinfo(LS_TBL_EIT, "module %s - scraper disabled by config", mod->id);
     return;
   }
