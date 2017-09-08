@@ -72,7 +72,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "libx11-xcb-dev"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
