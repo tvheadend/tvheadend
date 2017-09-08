@@ -801,7 +801,7 @@ int
 http_extra_flush(http_connection_t *hc)
 {
   htsbuf_data_t *hd;
-  int r = 0, serr;
+  int r, serr = 0;
 
   if (atomic_add(&hc->hc_extra_insend, 1) != 0)
     goto fin;
@@ -815,7 +815,7 @@ http_extra_flush(http_connection_t *hc)
                MSG_DONTWAIT | (TAILQ_NEXT(hd, hd_link) ? MSG_MORE : 0));
       serr = errno;
     } while (r < 0 && serr == EINTR);
-    if (r + hd->hd_data_off >= hd->hd_data_size) {
+    if (r > 0 && r + hd->hd_data_off >= hd->hd_data_size) {
       atomic_dec(&hc->hc_extra_chunks, 1);
       htsbuf_data_free(&hc->hc_extra, hd);
     } else if (r > 0) {
@@ -826,14 +826,14 @@ http_extra_flush(http_connection_t *hc)
 
     if (r < 0) {
       if (ERRNO_AGAIN(serr))
-        r = 0;
+        serr = 0;
       break;
     }
   }
 
 fin:
   atomic_dec(&hc->hc_extra_insend, 1);
-  return r;
+  return serr;
 }
 
 /**
