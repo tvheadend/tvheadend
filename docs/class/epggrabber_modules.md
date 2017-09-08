@@ -31,3 +31,32 @@ to the grabber that provides you with richer data.
 **Tip**: Don't forget to set the *EIT time offset* for your network(s).
 
 ---
+
+### OTA Scrapper
+
+Some OTA EIT grabber mechanisms support additional scraping options.
+
+The OTA broadcast data often does not have specific dedicated fields
+to describe the programme season, episode, etc. Sometimes this
+information is included in the programme summary.
+
+The scraper configuration files contains regular expressions to scrape
+additional information from the broadcast information.  For example
+the broadcast summary may include the text '(S10 E5)' and the
+configuration file will extract this.
+
+This scraping option does not access or retrieve details from the
+Internet.
+
+Currently only a limited number of configuration files are shipped and
+these are located in the epggrab/eit/scrape directory.
+
+If the "EIT: DVB Grabber" is used then typically you would enter the
+configuration file (such as "uk") and enable relevant tickboxes to
+enable the additional scraping.
+
+If the scraper configuration is not enabled then the default behaviour
+means broadcast information such as summary information will still be
+retrieved.
+
+---

@@ -253,7 +253,9 @@ const idclass_t epggrab_mod_ota_scraper_class = {
       .id     = "scrape_config",
       .name   = N_("Scraper configuration to use"),
       .desc   = N_("Configuration containing regular expressions to use for "
-                   "scraping information from the broadcast guide. "
+                   "scraping additional information from the broadcast guide."
+                   "This option does not access or retrieve details from the "
+                   "Internet."
                    "This can be left blank to use the default or "
                    "set to one of the Tvheadend configurations from the "
                    "epggrab/eit/scrape directory such as "
