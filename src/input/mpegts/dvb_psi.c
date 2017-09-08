@@ -352,7 +352,7 @@ dvb_desc_cable_del
     return NULL;
   }
 
-  dvb_mux_conf_init(&dmc, DVB_SYS_DVBC_ANNEX_A);
+  dvb_mux_conf_init(&dmc, ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_delsys);
 
   dmc.dmc_fe_freq            = frequency * 100;
 
