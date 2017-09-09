@@ -1,0 +1,6 @@
+The directory contains configuration file for general regular
+expressions to be applied to the EPG.
+
+There is a test harness for these files in the development tree at
+support/eitscrape_test.py with test harness files at
+support/testdata/eitscrape.
