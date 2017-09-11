@@ -1694,32 +1694,19 @@ page_dvrfile_preop(http_connection_t *hc, off_t file_start,
                    size_t content_len, void *opaque)
 {
   page_dvrfile_priv_t *priv = opaque;
-  char *str, *basename;
   dvr_entry_t *de;
 
   pthread_mutex_lock(&global_lock);
   priv->tcp_id = http_stream_preop(hc);
   priv->sub = NULL;
   if (priv->tcp_id && !hc->hc_no_output && content_len > 64*1024) {
-    priv->sub = subscription_create(NULL, 1, "HTTP",
-                                    SUBSCRIPTION_NONE, NULL,
-                                    hc->hc_peer_ipstr, hc->hc_username,
-                                    http_arg_get(&hc->hc_args, "User-Agent"));
+    priv->sub = subscription_create_from_file("HTTP", priv->charset,
+                                              priv->fname, hc->hc_peer_ipstr,
+                                              hc->hc_username,
+                                              http_arg_get(&hc->hc_args, "User-Agent"));
     if (priv->sub == NULL) {
       http_stream_postop(priv->tcp_id);
       priv->tcp_id = NULL;
-    } else {
-      str = intlconv_to_utf8safestr(priv->charset, priv->fname, strlen(priv->fname) * 3);
-      if (str == NULL)
-        str = intlconv_to_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
-                                      priv->fname, strlen(priv->fname) * 3);
-      if (str == NULL)
-        str = strdup("error");
-      basename = malloc(strlen(str) + 7 + 1);
-      strcpy(basename, "file://");
-      strcat(basename, str);
-      priv->sub->ths_dvrfile = basename;
-      free(str);
     }
   }
   /* Play count + 1 when write access */
