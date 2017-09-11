@@ -169,7 +169,7 @@ tvh_codec_get_list_profiles(TVHCodec *self);
 
 /* codec_profile_video_class */
 
-typedef struct tvh_codec_video_t {
+typedef struct tvh_codec_video {
     TVHCodec;
     const enum AVPixelFormat *pix_fmts;
 } TVHVideoCodec;
@@ -177,7 +177,7 @@ typedef struct tvh_codec_video_t {
 
 /* codec_profile_audio_class */
 
-typedef struct tvh_codec_audio_t {
+typedef struct tvh_codec_audio {
     TVHCodec;
     const enum AVSampleFormat *sample_fmts;
     const int *sample_rates;
@@ -207,7 +207,7 @@ tvh_codec_profiles_remove(void);
 
 extern const codec_profile_class_t codec_profile_video_class;
 
-typedef struct tvh_codec_profile_video_t {
+typedef struct tvh_codec_profile_video {
     TVHCodecProfile;
     int deinterlace;
     int height;
@@ -222,7 +222,7 @@ typedef struct tvh_codec_profile_video_t {
 
 extern const codec_profile_class_t codec_profile_audio_class;
 
-typedef struct tvh_codec_profile_audio_t {
+typedef struct tvh_codec_profile_audio {
     TVHCodecProfile;
     int tracks;
     const char *language1;
