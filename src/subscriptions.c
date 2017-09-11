@@ -41,6 +41,7 @@
 #include "notify.h"
 #include "atomic.h"
 #include "input.h"
+#include "intlconv.h"
 #include "dbus.h"
 
 struct th_subscription_list subscriptions;
@@ -960,6 +961,39 @@ subscription_create_from_mux(profile_chain_t *prch,
      error, (service_t *)s);
 }
 #endif
+
+/**
+ *
+ */
+th_subscription_t *
+subscription_create_from_file(const char *name,
+                              const char *charset,
+                              const char *filename,
+			      const char *hostname,
+			      const char *username,
+			      const char *client)
+{
+  th_subscription_t *ts;
+  char *str, *url;
+
+  ts = subscription_create(NULL, 1, name,
+                           SUBSCRIPTION_NONE, NULL,
+                           hostname, username, client);
+  if (ts == NULL)
+    return NULL;
+  str = intlconv_to_utf8safestr(charset, filename, strlen(filename) * 3);
+  if (str == NULL)
+    str = intlconv_to_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                                  filename, strlen(filename) * 3);
+  if (str == NULL)
+    str = strdup("error");
+  url = malloc(strlen(str) + 7 + 1);
+  strcpy(url, "file://");
+  strcat(url, str);
+  ts->ths_dvrfile = url;
+  free(str);
+  return ts;
+}
 
 /* **************************************************************************
  * Status monitoring

@@ -240,6 +240,7 @@ typedef struct htsp_file {
   int hf_fd;          // Our file descriptor
   char *hf_path;      // For logging
   uint32_t  hf_de_id; // Associated dvr entry
+  th_subscription_t *hf_subscription;
 } htsp_file_t;
 
 #define HTSP_DEFAULT_QUEUE_DEPTH 500000
@@ -732,6 +733,17 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd, dvr_entry_t *d
   hf->hf_id = ++htsp->htsp_file_id;
   hf->hf_path = strdup(path);
   hf->hf_de_id = de ? idnode_get_short_uuid(&de->de_id) : 0;
+
+  if (de) {
+    const char *charset = de->de_config ? de->de_config->dvr_charset_id : NULL;
+
+    hf->hf_subscription =
+      subscription_create_from_file("HTSP", charset, path,
+                                    htsp->htsp_peername,
+                                    htsp->htsp_granted_access->aa_representative,
+                                    htsp->htsp_clientname);
+  }
+
   LIST_INSERT_HEAD(&htsp->htsp_files, hf, hf_link);
 
   htsmsg_t *rep = htsmsg_create_map();
@@ -769,10 +781,22 @@ static void
 htsp_file_destroy(htsp_file_t *hf)
 {
   tvhdebug(LS_HTSP, "Closed opened file %s", hf->hf_path);
+  LIST_REMOVE(hf, hf_link);
+  if (hf->hf_subscription)
+    subscription_unsubscribe(hf->hf_subscription, UNSUBSCRIBE_FINAL);
   free(hf->hf_path);
   close(hf->hf_fd);
-  LIST_REMOVE(hf, hf_link);
   free(hf);
+}
+
+static void
+htsp_file_update_stats(htsp_file_t *hf, size_t len)
+{
+  th_subscription_t *ts = hf->hf_subscription;
+  if (ts) {
+    subscription_add_bytes_in(ts, len);
+    subscription_add_bytes_out(ts, len);
+  }
 }
 
 /* **************************************************************************
@@ -2801,6 +2825,8 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
     e = N_("Read error");
     goto error;
   }
+
+  htsp_file_update_stats(hf, r);
 
   rep = htsmsg_create_map();
   htsmsg_add_bin(rep, "data", m, r);
