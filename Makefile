@@ -313,6 +313,7 @@ SRCS-2 = \
 	src/api/api_wizard.c
 
 SRCS-2 += \
+        src/parsers/message.c \
 	src/parsers/parsers.c \
 	src/parsers/bitstream.c \
 	src/parsers/parser_h264.c \

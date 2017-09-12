@@ -61,11 +61,34 @@ typedef struct elementary_stream {
 
   TAILQ_ENTRY(elementary_stream) es_link;
   TAILQ_ENTRY(elementary_stream) es_filt_link;
-  int es_position;
+
+  uint32_t es_position;
   struct service *es_service;
 
   streaming_component_type_t es_type;
   int es_index;
+
+  char *es_nicename;
+
+  /* PID related */
+  int16_t es_pid;
+  uint16_t es_parent_pid;    /* For subtitle streams originating from 
+				a teletext stream. this is the pid
+				of the teletext stream */
+  int8_t es_pid_opened;      /* PID is opened */
+  int8_t es_cc;              /* Last CC */
+
+  /* CA ID's on this stream */
+  struct caid_list es_caids;
+
+  /* */
+  int es_delete_me;      /* Temporary flag for deleting streams */
+
+  /* Stream info */
+  int es_frame_duration;
+
+  int es_width;
+  int es_height;
 
   uint16_t es_aspect_num;
   uint16_t es_aspect_den;
@@ -77,72 +100,9 @@ typedef struct elementary_stream {
   uint16_t es_composition_id;
   uint16_t es_ancillary_id;
 
-  int16_t es_pid;
-  uint16_t es_parent_pid;    /* For subtitle streams originating from 
-				a teletext stream. this is the pid
-				of the teletext stream */
-  int8_t es_pid_opened;      /* PID is opened */
-
-  int8_t es_cc;             /* Last CC */
-
-  int es_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
-
-  /* PCR clocks */
-  int64_t  es_last_pcr;
-  int64_t  es_last_pcr_dts;
-
-  /* For service stream packet reassembly */
-
-  sbuf_t es_buf;
-
-  uint8_t  es_incomplete;
-  uint8_t  es_header_mode;
-  uint32_t es_header_offset;
-  uint32_t es_startcond;
-  uint32_t es_startcode;
-  uint32_t es_startcode_offset;
-  int es_parser_state;
-  int es_parser_ptr;
-  void *es_priv;          /* Parser private data */
-
-  sbuf_t es_buf_a;        // Audio packet reassembly
-
-  uint8_t *es_global_data;
-  int es_global_data_len;
-
-  struct th_pkt *es_curpkt;
-  struct streaming_message_queue es_backlog;
-  int64_t es_curpts;
-  int64_t es_curdts;
-  int64_t es_prevdts;
-  int64_t es_nextdts;
-  int es_frame_duration;
-  int es_width;
-  int es_height;
-
-  int es_meta_change;
-
-  /* CA ID's on this stream */
-  struct caid_list es_caids;
-
-  /* */
-
-  int es_delete_me;      /* Temporary flag for deleting streams */
-
   /* Error log limiters */
-
   tvhlog_limit_t es_cc_log;
-  tvhlog_limit_t es_pes_log;
-  tvhlog_limit_t es_pcr_log;
   
-  char *es_nicename;
-
-  /* Teletext subtitle */ 
-  char es_blank; // Last subtitle was blank
-
-  /* SI section processing (horrible hack) */
-  void *es_section;
-
   /* Filter temporary variable */
   uint32_t es_filter;
 
@@ -318,7 +278,6 @@ typedef struct service {
   int s_prio;
   int s_type_user;
   int s_pts_shift; // in ms (may be negative)
-  int s_pcr_boundary;
 
   LIST_ENTRY(service) s_active_link;
 
@@ -498,10 +457,6 @@ typedef struct service {
   streaming_pad_t s_streaming_pad;
 
   tvhlog_limit_t s_tei_log;
-
-  int64_t s_current_pcr;
-  int64_t s_candidate_pcr;
-  uint8_t s_current_pcr_guess;
 
   /*
    * Local channel numbers per bouquet

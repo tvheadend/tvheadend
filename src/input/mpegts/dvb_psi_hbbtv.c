@@ -26,8 +26,9 @@
 /**
  * Extract Hbbtv
  */
-void
-ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
+htsmsg_t *
+ts_recv_hbbtv(mpegts_psi_table_t *mt, elementary_stream_t *st,
+              const uint8_t *buf, int len, int *_sect)
 {
   static const char *visibility_table[4] = {
     "none",
@@ -35,8 +36,6 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     "reserved",
     "all",
   };
-  elementary_stream_t *st = (elementary_stream_t *)mt->mt_opaque;
-  service_t *t = st->es_service;
   mpegts_psi_table_state_t *tst = NULL;
   int r, sect, last, ver, l, l2, l3, dllen, dlen, flags;
   uint8_t tableid = buf[0], dtag;
@@ -45,18 +44,16 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   uint32_t org_id;
   char title[256], name[256], location[256], *str;
   htsmsg_t *map, *apps = NULL, *titles = NULL;
-  void *bin;
-  size_t binlen;
 
   if (tableid != 0x74 || len < 16)
-    return;
+    return NULL;
   app_type = (buf[3] << 8) | buf[4];
   if (app_type & 1) /* testing */
-    return;
+    return NULL;
 
   r = dvb_table_begin(mt, buf + 3, len - 3,
                       tableid, app_type, 5, &tst, &sect, &last, &ver, 0);
-  if (r != 1) return;
+  if (r != 1) return NULL;
 
   p = buf;
   l = len;
@@ -160,28 +157,31 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     goto dvberr;
 
   dvb_table_end(mt, tst, sect);
-
-  if (t->s_hbbtv == NULL)
-    t->s_hbbtv = htsmsg_create_map();
-  if (apps) {
-    snprintf(location, sizeof(location), "%d", sect);
-    htsmsg_set_msg(t->s_hbbtv, location, apps);
-    apps = NULL;
-    service_request_save(t);
-  }
-
-  if (streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET)) {
-    parse_mpeg_ts(t, st, buf, len, 1, 0);
-    if (t->s_hbbtv) {
-      if (!htsmsg_binary_serialize(t->s_hbbtv, &bin, &binlen, 128*1024)) {
-        parse_mpeg_ts(t, st, bin, binlen, 1, 0);
-        free(bin);
-      }
-    }
-  }
+  if (_sect)
+    *_sect = sect;
+  return apps;
 
 dvberr:
   htsmsg_destroy(apps);
   htsmsg_destroy(titles);
-  return;
+  return NULL;
+}
+
+void
+ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
+{
+  elementary_stream_t *st = (elementary_stream_t *)mt->mt_opaque;
+  service_t *t = st->es_service;
+  int sect;
+  htsmsg_t *apps = ts_recv_hbbtv(mt, st, buf, len, &sect);
+  if (apps == NULL)
+    return;
+  if (t->s_hbbtv == NULL)
+    t->s_hbbtv = htsmsg_create_map();
+  if (apps) {
+    char buf[20];
+    snprintf(buf, sizeof(buf), "%d", sect);
+    htsmsg_set_msg(t->s_hbbtv, buf, apps);
+    service_request_save(t);
+  }
 }

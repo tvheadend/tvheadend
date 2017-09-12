@@ -1285,7 +1285,7 @@ static inline int check_height(uint32_t h)
 }
 
 void
-hevc_decode_vps(elementary_stream_t *st, bitstream_t *bs)
+hevc_decode_vps(parser_es_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
   hevc_vps_t *vps;
@@ -1418,7 +1418,7 @@ hevc_decode_vui(hevc_vui_t *vui, bitstream_t *bs)
 }
 
 void
-hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
+hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
   hevc_vps_t *vps;
@@ -1597,7 +1597,7 @@ hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
 }
 
 void
-hevc_decode_pps(elementary_stream_t *st, bitstream_t *bs)
+hevc_decode_pps(parser_es_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
   hevc_pps_t *pps;
@@ -1629,8 +1629,7 @@ hevc_decode_pps(elementary_stream_t *st, bitstream_t *bs)
 }
 
 int
-hevc_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
-                         int *pkttype)
+hevc_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype)
 {
   hevc_private_t *p;
   hevc_vps_t *vps;

@@ -30,110 +30,6 @@ static void ts_remux(mpegts_service_t *t, const uint8_t *tsb, int len, int error
 static void ts_skip(mpegts_service_t *t, const uint8_t *tsb, int len);
 
 /**
- * Extract PCR clocks
- */
-static void ts_recv_pcr(mpegts_service_t *t, const uint8_t *tsb)
-{
-  int64_t pcr;
-  pcr  =  (uint64_t)tsb[6] << 25;
-  pcr |=  (uint64_t)tsb[7] << 17;
-  pcr |=  (uint64_t)tsb[8] << 9;
-  pcr |=  (uint64_t)tsb[9] << 1;
-  pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
-  /* handle the broken info using candidate variable */
-  if (t->s_current_pcr == PTS_UNSET || t->s_current_pcr_guess ||
-      pts_diff(t->s_current_pcr, pcr) <= (int64_t)t->s_pcr_boundary ||
-      (t->s_candidate_pcr != PTS_UNSET &&
-       pts_diff(t->s_candidate_pcr, pcr) <= (int64_t)t->s_pcr_boundary)) {
-    if (pcr != t->s_current_pcr) {
-      if (t->s_current_pcr == PTS_UNSET)
-        tvhtrace(LS_PCR, "%s: initial  : %"PRId64, service_nicename((service_t*)t), pcr);
-      else
-        tvhtrace(LS_PCR, "%s: change   : %"PRId64"%s", service_nicename((service_t*)t), pcr,
-                         t->s_candidate_pcr != PTS_UNSET ? " (candidate)" : "");
-      t->s_current_pcr = pcr;
-      t->s_current_pcr_guess = 0;
-    }
-    t->s_candidate_pcr = PTS_UNSET;
-  } else {
-    tvhtrace(LS_PCR, "%s: candidate: %"PRId64, service_nicename((service_t*)t), pcr);
-    t->s_candidate_pcr = pcr;
-  }
-}
-
-static void ts_recv_pcr_audio
-  (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *buf, int len)
-{
-  int64_t dts, pts, d;
-  int hdr, flags, hlen;
-
-  if (buf[3] != 0xbd && buf[3] != 0xc0)
-    return;
-
-  if (len < 9)
-    return;
-
-  buf  += 6;
-  len  -= 6;
-  hdr   = buf[0];
-  flags = buf[1];
-  hlen  = buf[2];
-  buf  += 3;
-  len  -= 3;
-
-  if (len < hlen || (hdr & 0xc0) != 0x80)
-    return;
-
-  if ((flags & 0xc0) == 0xc0) {
-    if (hlen < 10)
-      return;
-
-    pts = getpts(buf);
-    dts = getpts(buf + 5);
-
-    d = (pts - dts) & PTS_MASK;
-    if (d > 180000) // More than two seconds of PTS/DTS delta, probably corrupt
-      return;
-
-  } else if ((flags & 0xc0) == 0x80) {
-    if (hlen < 5)
-      return;
-
-    dts = pts = getpts(buf);
-  } else
-    return;
-
-  if (st->es_last_pcr == PTS_UNSET) {
-    d = pts_diff(st->es_last_pcr_dts, dts);
-    goto set;
-  }
-
-  if (st->es_last_pcr != t->s_current_pcr) {
-    st->es_last_pcr = t->s_current_pcr;
-    st->es_last_pcr_dts = dts;
-    return;
-  }
-
-  d = pts_diff(st->es_last_pcr_dts, dts);
-  if (d == PTS_UNSET || d < 30000)
-    return;
-  if (d < 10*90000)
-    t->s_current_pcr += d;
-
-set:
-  if (t->s_current_pcr == PTS_UNSET && d != PTS_UNSET && d < 30000) {
-    t->s_current_pcr = (dts - 2*90000) & PTS_MASK;
-    t->s_current_pcr_guess = 1;
-  }
-
-  tvhtrace(LS_PCR, "%s: audio DTS: %"PRId64" dts %"PRId64" [%s/%d]",
-                   service_nicename((service_t*)t), t->s_current_pcr, dts,
-                   streaming_component_type2txt(st->es_type), st->es_pid);
-  st->es_last_pcr = t->s_current_pcr;
-  st->es_last_pcr_dts = dts;
-}
-
-/**
  * Continue processing of transport stream packets
  */
 void
@@ -141,7 +37,7 @@ ts_recv_packet0
   (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb, int len)
 {
   mpegts_service_t *m;
-  int len2, off, pusi, cc, pid, error, errors = 0;
+  int len2, off, cc, pid, error, errors = 0;
   const uint8_t *tsb2;
 
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
@@ -151,7 +47,6 @@ ts_recv_packet0
 
   for (tsb2 = tsb, len2 = len; len2 > 0; tsb2 += 188, len2 -= 188) {
 
-    pusi    = (tsb2[1] >> 6) & 1; /* 0x40 */
     error   = (tsb2[1] >> 7) & 1; /* 0x80 */
     errors += error;
 
@@ -175,34 +70,10 @@ ts_recv_packet0
     if (tsb2[3] & 0xc0) /* scrambled */
       continue;
 
-    if (tsb2[3] & 0x20) {
-      off = tsb2[4] + 5;
-      if (st->es_pid == t->s_pcr_pid && !error && off > 10 &&
-          (tsb2[5] & 0x10) != 0 && off <= 188)
-        ts_recv_pcr(t, tsb2);
-    } else {
-      off = 4;
-    }
-
-    if (pusi && !error && off < 188 - 16 &&
-        tsb2[off] == 0 && tsb2[off+1] == 0 && tsb2[off+2] == 1 &&
-        SCT_ISAUDIO(st->es_type))
-      ts_recv_pcr_audio(t, st, tsb2 + off, 188 - off);
-
     if (st->es_type == SCT_HBBTV) {
       dvb_table_parse(&st->es_psi, "ts", tsb2, 188, 1, 0, ts_recv_hbbtv_cb);
       continue;
     }
-
-    if (!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
-      continue;
-
-    if (st->es_type == SCT_CA || st->es_type == SCT_CAT)
-      continue;
-
-    if (off <= 188 && t->s_status == SERVICE_RUNNING)
-      parse_mpeg_ts((service_t*)t, st, tsb2 + off, 188 - off, pusi, error);
-
   }
 
   if (!t->s_scrambled_pass && (st->es_type == SCT_CA || st->es_type == SCT_CAT))
@@ -258,10 +129,6 @@ ts_recv_skipped0
     }
 
   }
-
-  if(st->es_type != SCT_CA &&
-     streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
-    skip_mpeg_ts((service_t*)t, st, tsb, len);
 
 skip_cc:
   if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))

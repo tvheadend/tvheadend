@@ -2428,7 +2428,7 @@ psi_parse_pmt
 
   lock_assert(&t->s_stream_mutex);
 
-  version = ptr[2] >> 1 & 0x1f;
+  version = (ptr[2] >> 1) & 0x1f;
   pcr_pid = extract_pid(ptr + 5);
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];
   

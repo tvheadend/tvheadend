@@ -34,6 +34,7 @@
 #include "tvheadend.h"
 #include "subscriptions.h"
 #include "streaming.h"
+#include "parsers.h"
 #include "channels.h"
 #include "service.h"
 #include "profile.h"
@@ -740,6 +741,11 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
   mtimer_disarm(&s->ths_remove_timer);
   mtimer_disarm(&s->ths_ca_check_timer);
 
+  if (s->ths_parser) {
+    parser_destroy(s->ths_parser);
+    s->ths_parser = NULL;
+  }
+
   if ((flags & UNSUBSCRIBE_FINAL) != 0 ||
       (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
     subscription_destroy(s);
@@ -764,32 +770,19 @@ subscription_create
   th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
   profile_t *pro = prch ? prch->prch_pro : NULL;
   streaming_target_t *st = prch ? prch->prch_st : NULL;
-  int reject = 0;
   static int tally;
 
   TAILQ_INIT(&s->ths_instances);
-
-  switch (flags & SUBSCRIPTION_TYPE_MASK) {
-  case SUBSCRIPTION_NONE:
-    reject |= SMT_TO_MASK(SMT_PACKET) | SMT_TO_MASK(SMT_MPEGTS);
-    break;
-  case SUBSCRIPTION_MPEGTS:
-    reject |= SMT_TO_MASK(SMT_PACKET);  // Reject parsed frames
-    break;
-  case SUBSCRIPTION_PACKET:
-    reject |= SMT_TO_MASK(SMT_MPEGTS);  // Reject raw mpegts
-    break;
-  default:
-    abort();
-  }
 
   if (!ops) ops = &subscription_input_direct_ops;
   if (!st) {
     st = calloc(1, sizeof(streaming_target_t));
     streaming_target_init(st, &subscription_input_null_ops, s, 0);
+  } else if ((flags & SUBSCRIPTION_TYPE_MASK) == SUBSCRIPTION_PACKET) {
+    st = s->ths_parser = parser_create(st, s);
   }
 
-  streaming_target_init(&s->ths_input, ops, s, reject);
+  streaming_target_init(&s->ths_input, ops, s, 0);
 
   s->ths_prch              = prch && prch->prch_st ? prch : NULL;
   s->ths_title             = strdup(name);

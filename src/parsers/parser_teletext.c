@@ -37,6 +37,7 @@
 #include "streaming.h"
 #include "service.h"
 #include "input.h"
+#include "parsers.h"
 #include "parser_teletext.h"
 
 /**
@@ -65,7 +66,7 @@ typedef struct tt_private {
 
 static void teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm);
 
-static void teletext_rundown_scan(mpegts_service_t *t, tt_private_t *ttp);
+static void teletext_rundown_scan(parser_t *t, tt_private_t *ttp);
 
 #define bitreverse(b) \
 (((b) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
@@ -662,7 +663,7 @@ is_tt_clock(const uint8_t *str)
  *
  */
 static int
-update_tt_clock(mpegts_service_t *t, const uint8_t *buf)
+update_tt_clock(parser_t *t, const uint8_t *buf)
 {
   uint8_t str[10];
   int i;
@@ -676,10 +677,10 @@ update_tt_clock(mpegts_service_t *t, const uint8_t *buf)
     return 0;
 
   ti = tt_construct_unix_time(str);
-  if(t->s_tt_clock == ti)
+  if(t->prs_tt_clock == ti)
     return 0;
 
-  t->s_tt_clock = ti;
+  t->prs_tt_clock = ti;
   //  printf("teletext clock is: %s", ctime(&ti));
   return 1;
 }
@@ -695,8 +696,7 @@ get_cset(uint8_t off)
 }
 
 static int
-extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
-		 tt_mag_t *ttm, int64_t pts)
+extract_subtitle(parser_t *t, parser_es_t *st, tt_mag_t *ttm, int64_t pts)
 {
   int i, j, start, off = 0;
   int k, current_color, is_font_tag_open, use_color_subs = 1;
@@ -796,7 +796,7 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
   th_pkt_t *pkt = pkt_alloc(st->es_type, sub, off, pts, pts, pts);
   pkt->pkt_componentindex = st->es_index;
 
-  streaming_service_deliver((service_t *)t, streaming_msg_create_pkt(pkt));
+  streaming_target_deliver2(t->prs_output, streaming_msg_create_pkt(pkt));
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);
@@ -836,19 +836,21 @@ dump_page(tt_mag_t *ttm)
 
 
 static void
-tt_subtitle_deliver(mpegts_service_t *t, elementary_stream_t *parent, tt_mag_t *ttm)
+tt_subtitle_deliver(parser_t *t, parser_es_t *parent, tt_mag_t *ttm)
 {
-  elementary_stream_t *st;
+  int i;
+  parser_es_t *st;
 
   if(ttm->ttm_current_pts == PTS_UNSET)
     return;
 
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-     if(parent->es_pid == st->es_parent_pid &&
-	ttm->ttm_curpage == st->es_pid -  PID_TELETEXT_BASE) {
-       if (extract_subtitle(t, st, ttm, ttm->ttm_current_pts))
-         ttm->ttm_current_pts++; // Avoid duplicate (non-monotonic) PTS
-     }
+  for (i = 0; i < t->prs_es_count; i++) {
+    st = &t->prs_es[i];
+    if (parent->es_pid == st->es_parent_pid &&
+      ttm->ttm_curpage == st->es_pid -  PID_TELETEXT_BASE) {
+      if (extract_subtitle(t, st, ttm, ttm->ttm_current_pts))
+        ttm->ttm_current_pts++; // Avoid duplicate (non-monotonic) PTS
+    }
   }
 }
 
@@ -856,7 +858,7 @@ tt_subtitle_deliver(mpegts_service_t *t, elementary_stream_t *parent, tt_mag_t *
  *
  */
 static void
-tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
+tt_decode_line(parser_t *t, parser_es_t *st, uint8_t *buf)
 {
   uint8_t mpag, line, s12, c;
   int page, magidx, i;
@@ -914,7 +916,7 @@ tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
     if(update_tt_clock(t, buf + 34))
       teletext_rundown_scan(t, ttp);
 
-    ttm->ttm_current_pts = t->s_current_pcr + (int64_t)t->s_pts_shift * 900;
+    ttm->ttm_current_pts = t->prs_current_pcr + (int64_t)st->es_service->s_pts_shift * 900;
     break;
 
   case 1 ... 23:
@@ -945,7 +947,7 @@ tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
  */
 void
 teletext_input
-  (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *data, int len)
+  (parser_t *t, parser_es_t *st, const uint8_t *data, int len)
 {
   int j;
   uint8_t buf[42];
@@ -1028,14 +1030,22 @@ teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm)
 
 
 static void
-teletext_rundown_scan(mpegts_service_t *t, tt_private_t *ttp)
+teletext_rundown_scan(parser_t *prs, tt_private_t *ttp)
 {
   int i;
   uint8_t *l;
-  time_t now = t->s_tt_clock, start, stop;
+  mpegts_service_t *t;
+  time_t now = prs->prs_tt_clock, start, stop;
   th_commercial_advice_t ca;
 
   if(ttp->ttp_rundown_valid == 0)
+    return;
+
+  if(prs->prs_es_count <= 0)
+    return;
+
+  t = (mpegts_service_t *)prs->prs_es[0].es_service;
+  if(t == NULL)
     return;
 
   if(t->s_dvb_svcname &&
@@ -1057,6 +1067,6 @@ teletext_rundown_scan(mpegts_service_t *t, tt_private_t *ttp)
     stop  = start + tt_time_to_len(l + 32);
     
     if(start <= now && stop > now)
-      t->s_tt_commercial_advice = ca;
+      prs->prs_tt_commercial_advice = ca;
   }
 }

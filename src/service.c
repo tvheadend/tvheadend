@@ -271,24 +271,9 @@ stream_init(elementary_stream_t *st)
 {
   st->es_cc = -1;
 
-  st->es_last_pcr = PTS_UNSET;
-  st->es_last_pcr_dts = PTS_UNSET;
-
-  st->es_incomplete = 0;
-  st->es_header_mode = 0;
-  st->es_parser_state = 0;
-  st->es_startcond = 0xffffffff;
-  st->es_curdts = PTS_UNSET;
-  st->es_curpts = PTS_UNSET;
-  st->es_prevdts = PTS_UNSET;
-
-  st->es_blank = 0;
-
   if (st->es_type == SCT_HBBTV && st->es_psi.mt_name == NULL)
     dvb_table_parse_init(&st->es_psi, "hbbtv", LS_TS, st->es_pid,
                          DVB_HBBTV_BASE, DVB_HBBTV_MASK, st);
-
-  TAILQ_INIT(&st->es_backlog);
 }
 
 
@@ -298,33 +283,7 @@ stream_init(elementary_stream_t *st)
 static void
 stream_clean(elementary_stream_t *st)
 {
-  free(st->es_priv);
-  st->es_priv = NULL;
-
-  /* Clear reassembly buffers */
-
-  streaming_queue_clear(&st->es_backlog);
-
-  st->es_startcode = 0;
-
-  sbuf_free(&st->es_buf);
-  sbuf_free(&st->es_buf_a);
-
-  if(st->es_curpkt != NULL) {
-    pkt_ref_dec(st->es_curpkt);
-    st->es_curpkt = NULL;
-  }
-
-  free(st->es_global_data);
-  st->es_global_data = NULL;
-  st->es_global_data_len = 0;
-
-  free(st->es_section);
-  st->es_section = NULL;
-
   tvhlog_limit_reset(&st->es_cc_log);
-  tvhlog_limit_reset(&st->es_pes_log);
-  tvhlog_limit_reset(&st->es_pcr_log);
 
   if (st->es_psi.mt_name)
     dvb_table_reset(&st->es_psi);
@@ -362,7 +321,6 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
     free(c);
   }
 
-  free(es->es_section);
   free(es->es_nicename);
   free(es);
 }
@@ -707,12 +665,9 @@ service_start(service_t *t, int instance, int weight, int flags,
   t->s_scrambled_seen   = 0;
   t->s_scrambled_pass   = !!(flags & SUBSCRIPTION_NODESCR);
   t->s_start_time       = mclk();
-  t->s_pcr_boundary     = 90000;
 
   pthread_mutex_lock(&t->s_stream_mutex);
   service_build_filter(t);
-  if (service_has_no_audio(t, 1))
-    t->s_pcr_boundary = 6*90000;
   pthread_mutex_unlock(&t->s_stream_mutex);
 
   descrambler_caid_changed(t);
@@ -725,9 +680,6 @@ service_start(service_t *t, int instance, int weight, int flags,
   pthread_mutex_lock(&t->s_stream_mutex);
 
   t->s_status = SERVICE_RUNNING;
-  t->s_current_pcr = PTS_UNSET;
-  t->s_candidate_pcr = PTS_UNSET;
-  t->s_current_pcr_guess = 0;
 
   /**
    * Initialize stream

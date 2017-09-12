@@ -1,6 +1,7 @@
 /*
  *  Packet parsing functions
  *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2014-2017 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,8 +26,6 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "tvheadend.h"
-#include "service.h"
 #include "parsers.h"
 #include "parser_h264.h"
 #include "parser_avc.h"
@@ -66,56 +65,56 @@ pts_no_backlog(int64_t pts)
   return pts_is_backlog(pts) ? (pts & ~PTS_BACKLOG) : pts;
 }
 
-static int parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
+static int parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
                             uint32_t next_startcode, int sc_offset);
 
-static int parse_h264(service_t *t, elementary_stream_t *st, size_t len,
+static int parse_h264(parser_t *t, parser_es_t *st, size_t len,
                       uint32_t next_startcode, int sc_offset);
 
-static int parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
+static int parse_hevc(parser_t *t, parser_es_t *st, size_t len,
                       uint32_t next_startcode, int sc_offset);
 
-typedef int (packet_parser_t)(service_t *t, elementary_stream_t *st, size_t len,
+typedef int (packet_parser_t)(parser_t *t, parser_es_t *st, size_t len,
                               uint32_t next_startcode, int sc_offset);
 
-typedef void (aparser_t)(service_t *t, elementary_stream_t *st, th_pkt_t *pkt);
+typedef void (aparser_t)(parser_t *t, parser_es_t *st, th_pkt_t *pkt);
 
-static void parse_pes(service_t *t, elementary_stream_t *st, const uint8_t *data,
+static void parse_pes(parser_t *t, parser_es_t *st, const uint8_t *data,
                       int len, int start, packet_parser_t *vp);
 
-static void parse_mp4a_data(service_t *t, elementary_stream_t *st, int skip_next_check);
+static void parse_mp4a_data(parser_t *t, parser_es_t *st, int skip_next_check);
 
-static void parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
+static void parse_aac(parser_t *t, parser_es_t *st, const uint8_t *data,
                       int len, int start);
 
-static void parse_subtitles(service_t *t, elementary_stream_t *st, 
+static void parse_subtitles(parser_t *t, parser_es_t *st,
                             const uint8_t *data, int len, int start);
 
-static void parse_teletext(service_t *t, elementary_stream_t *st, 
+static void parse_teletext(parser_t *t, parser_es_t *st,
                            const uint8_t *data, int len, int start);
 
-static void parse_hbbtv(service_t *t, elementary_stream_t *st,
+static void parse_hbbtv(parser_t *t, parser_es_t *st,
                         const uint8_t *data, int len, int start);
 
-static int parse_mpa(service_t *t, elementary_stream_t *st, size_t len,
+static int parse_mpa(parser_t *t, parser_es_t *st, size_t len,
                      uint32_t next_startcode, int sc_offset);
 
-static int parse_mpa123(service_t *t, elementary_stream_t *st);
+static int parse_mpa123(parser_t *t, parser_es_t *st);
 
-static int parse_ac3(service_t *t, elementary_stream_t *st, size_t len,
+static int parse_ac3(parser_t *t, parser_es_t *st, size_t len,
                      uint32_t next_startcode, int sc_offset);
 
-static void parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt);
+static void parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt);
 
-static void parser_deliver_error(service_t *t, elementary_stream_t *st);
+static void parser_deliver_error(parser_t *t, parser_es_t *st);
 
-static int parse_pes_header(service_t *t, elementary_stream_t *st,
+static int parse_pes_header(parser_t *t, parser_es_t *st,
                             const uint8_t *buf, size_t len);
 
-static void parser_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt);
+static void parser_backlog(parser_t *t, parser_es_t *st, th_pkt_t *pkt);
 
-static void parser_do_backlog(service_t *t, elementary_stream_t *st,
-                  void (*pkt_cb)(service_t *t, elementary_stream_t *st, th_pkt_t *pkt),
+static void parser_do_backlog(parser_t *t, parser_es_t *st,
+                  void (*pkt_cb)(parser_t *t, parser_es_t *st, th_pkt_t *pkt),
                   pktbuf_t *meta);
 
 /**
@@ -144,10 +143,10 @@ static inline int data_noise(const uint8_t *data, int len) { return 0; }
 #endif
 
 /**
- * Parse raw mpeg data
+ * Parse raw mpeg data - single TS packet
  */
 void
-parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data, 
+parse_mpeg_ts(parser_t *t, parser_es_t *st, const uint8_t *data,
               int len, int start, int err)
 {
   if(err) {
@@ -204,24 +203,10 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
 }
 
 /**
- * Skip raw mpeg data
- */
-void
-skip_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data, int len)
-{
-  if(len >= 188)
-    sbuf_err(&st->es_buf, len / 188);
-  if(st->es_buf.sb_err > 1000) {
-    parser_deliver_error(t, st);
-    service_send_streaming_status((service_t *)t);
-  }
-}
-
-/**
  * Parse AAC LATM and ADTS
  */
 static void 
-parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
+parse_aac(parser_t *t, parser_es_t *st, const uint8_t *data,
           int len, int start)
 {
   int l, muxlen, p, latm;
@@ -334,7 +319,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
  * derive further information.
  */
 static void
-parse_pes(service_t *t, elementary_stream_t *st, const uint8_t *data, int len,
+parse_pes(parser_t *t, parser_es_t *st, const uint8_t *data, int len,
           int start, packet_parser_t *vp)
 {
   uint_fast32_t sc = st->es_startcond;
@@ -346,8 +331,7 @@ parse_pes(service_t *t, elementary_stream_t *st, const uint8_t *data, int len,
     if (data[0] != 0 && data[1] != 0 && data[2] != 1)
       if (tvhlog_limit(&st->es_pes_log, 10))
         tvhwarn(LS_TS, "%s: Invalid start code %02x:%02x:%02x",
-                service_component_nicename(st),
-                data[0], data[1], data[2]);
+                st->es_nicename, data[0], data[1], data[2]);
     st->es_incomplete = 0;
     if (st->es_header_mode) {
       st->es_buf.sb_ptr = st->es_header_offset;
@@ -467,7 +451,7 @@ found:
  *
  */
 static int
-depacketize(service_t *t, elementary_stream_t *st, size_t len, 
+depacketize(parser_t *t, parser_es_t *st, size_t len,
             uint32_t next_startcode, int sc_offset)
 {
   const uint8_t *buf = st->es_buf.sb_data + sc_offset;
@@ -507,12 +491,12 @@ depacketize(service_t *t, elementary_stream_t *st, size_t len,
  *
  */
 static void
-makeapkt(service_t *t, elementary_stream_t *st, const void *buf,
+makeapkt(parser_t *t, parser_es_t *st, const void *buf,
          int len, int64_t dts, int duration, int channels, int sri)
 {
-  th_pkt_t *pkt = pkt_alloc(st->es_type, buf, len, dts, dts, t->s_current_pcr);
+  th_pkt_t *pkt = pkt_alloc(st->es_type, buf, len, dts, dts, t->prs_current_pcr);
 
-  pkt->pkt_commercial = t->s_tt_commercial_advice;
+  pkt->pkt_commercial = t->prs_tt_commercial_advice;
   pkt->pkt_duration = duration;
   pkt->a.pkt_channels = channels;
   pkt->a.pkt_sri = sri;
@@ -558,7 +542,7 @@ mp4a_valid_frame(const uint8_t *buf)
   return (buf[0] == 0xff) && ((buf[1] & 0xf6) == 0xf0);
 }
 
-static void parse_mp4a_data(service_t *t, elementary_stream_t *st,
+static void parse_mp4a_data(parser_t *t, parser_es_t *st,
                             int skip_next_check)
 {
   int i, len;
@@ -629,7 +613,7 @@ mpa_valid_frame(uint32_t h)
  *
  */
 static int
-parse_mpa123(service_t *t, elementary_stream_t *st)
+parse_mpa123(parser_t *t, parser_es_t *st)
 {
   int i, len, layer, lsf, mpeg25, br, sr, pad;
   int fsize, fsize2, channels, duration;
@@ -685,7 +669,7 @@ ok:
         tvhtrace(LS_PARSER, "mpeg audio version change %02d: val=%d (old=%d)",
                  st->es_index, layer, st->es_audio_version);
         st->es_audio_version = layer;
-        atomic_set(&t->s_pending_restart, 1);
+        atomic_set(&st->es_service->s_pending_restart, 1);
       }
       makeapkt(t, st, buf + i, fsize, dts, duration,
                channels, mpa_sri[(buf[i+2] >> 2) & 3]);
@@ -703,7 +687,7 @@ ok:
  *
  */
 static int 
-parse_mpa(service_t *t, elementary_stream_t *st, size_t ilen,
+parse_mpa(parser_t *t, parser_es_t *st, size_t ilen,
           uint32_t next_startcode, int sc_offset)
 {
   int r;
@@ -782,7 +766,7 @@ ac3_valid_frame(const uint8_t *buf)
 static const char acmodtab[8] = {2,1,2,3,3,4,4,5};
 
 static int 
-parse_ac3(service_t *t, elementary_stream_t *st, size_t ilen,
+parse_ac3(parser_t *t, parser_es_t *st, size_t ilen,
           uint32_t next_startcode, int sc_offset)
 {
   int i, len, count, ver, bsid, fscod, frmsizcod, fsize, fsize2, duration, sri;
@@ -901,7 +885,7 @@ ok:
  * Extract DTS and PTS and update current values in stream
  */
 static int
-parse_pes_header(service_t *t, elementary_stream_t *st, 
+parse_pes_header(parser_t *t, parser_es_t *st,
                  const uint8_t *buf, size_t len)
 {
   int64_t dts, pts, d, d2;
@@ -970,7 +954,7 @@ parse_pes_header(service_t *t, elementary_stream_t *st,
   st->es_curpts = PTS_UNSET;
   if (tvhlog_limit(&st->es_pes_log, 10))
     tvhwarn(LS_TS, "%s Corrupted PES header (errors %zi)",
-            service_component_nicename(st), st->es_pes_log.count);
+            st->es_nicename, st->es_pes_log.count);
   return -1;
 } 
 
@@ -999,7 +983,7 @@ const unsigned int mpeg2video_framedurations[16] = {
  * Parse mpeg2video picture start
  */
 static int
-parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype,
+parse_mpeg2video_pic_start(parser_t *t, parser_es_t *st, int *frametype,
                            bitstream_t *bs)
 {
   int pct;
@@ -1029,7 +1013,7 @@ parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype
  *
  */
 void
-parser_set_stream_vparam(elementary_stream_t *st, int width, int height,
+parser_set_stream_vparam(parser_es_t *st, int width, int height,
                          int duration)
 {
   int need_save = 0;
@@ -1086,7 +1070,7 @@ static const uint8_t mpeg2_aspect[16][2]={
  * Parse mpeg2video sequence start
  */
 static int
-parse_mpeg2video_seq_start(service_t *t, elementary_stream_t *st,
+parse_mpeg2video_seq_start(parser_t *t, parser_es_t *st,
                            bitstream_t *bs)
 {
   int width, height, aspect, duration;
@@ -1132,7 +1116,7 @@ drop_trailing_zeroes(const uint8_t *buf, size_t len)
  *
  */
 static void
-parser_global_data_move(elementary_stream_t *st, const uint8_t *data, size_t len)
+parser_global_data_move(parser_es_t *st, const uint8_t *data, size_t len)
 {
   int len2 = drop_trailing_zeroes(data, len);
 
@@ -1155,7 +1139,7 @@ parser_global_data_move(elementary_stream_t *st, const uint8_t *data, size_t len
  *
  */
 static int
-parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len, 
+parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
                  uint32_t next_startcode, int sc_offset)
 {
   const uint8_t *buf = st->es_buf.sb_data + sc_offset;
@@ -1188,10 +1172,10 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     if(st->es_curpkt != NULL)
       pkt_ref_dec(st->es_curpkt);
 
-    pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->s_current_pcr);
+    pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->prs_current_pcr);
     pkt->v.pkt_frametype = frametype;
     pkt->pkt_duration = st->es_frame_duration;
-    pkt->pkt_commercial = t->s_tt_commercial_advice;
+    pkt->pkt_commercial = t->prs_tt_commercial_advice;
 
     st->es_curpkt = pkt;
 
@@ -1305,7 +1289,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
  *
  */
 static void
-parse_h264_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
+parse_h264_backlog(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
 {
   int len, l2, pkttype = 0, isfield = 0, nal_type;
   const uint8_t *end, *nal_start, *nal_end;
@@ -1346,7 +1330,7 @@ parse_h264_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
 }
 
 static void
-parse_h264_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
+parse_h264_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
 {
   if (pkt->v.pkt_frametype > 0) {
     if (TAILQ_EMPTY(&st->es_backlog)) {
@@ -1370,7 +1354,7 @@ deliver:
 }
 
 static int
-parse_h264(service_t *t, elementary_stream_t *st, size_t len, 
+parse_h264(parser_t *t, parser_es_t *st, size_t len,
            uint32_t next_startcode, int sc_offset)
 {
   const uint8_t *buf = st->es_buf.sb_data + sc_offset;
@@ -1479,11 +1463,11 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
       if (st->es_frame_duration == 0)
         st->es_frame_duration = 1;
 
-      pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->s_current_pcr);
+      pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->prs_current_pcr);
       pkt->v.pkt_frametype = pkttype;
       pkt->v.pkt_field = isfield;
       pkt->pkt_duration = st->es_frame_duration;
-      pkt->pkt_commercial = t->s_tt_commercial_advice;
+      pkt->pkt_commercial = t->prs_tt_commercial_advice;
       st->es_curpkt = pkt;
       break;
 
@@ -1533,7 +1517,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
  *
  */
 static int
-parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
+parse_hevc(parser_t *t, parser_es_t *st, size_t len,
            uint32_t next_startcode, int sc_offset)
 {
   const uint8_t *buf = st->es_buf.sb_data + sc_offset;
@@ -1604,11 +1588,11 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
     if (r > 0)
       return PARSER_APPEND;
 
-    st->es_curpkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->s_current_pcr);
+    st->es_curpkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->prs_current_pcr);
     st->es_curpkt->v.pkt_frametype = pkttype;
     st->es_curpkt->v.pkt_field = 0;
     st->es_curpkt->pkt_duration = st->es_frame_duration;
-    st->es_curpkt->pkt_commercial = t->s_tt_commercial_advice;
+    st->es_curpkt->pkt_commercial = t->prs_tt_commercial_advice;
     break;
 
   case HEVC_NAL_VPS:
@@ -1696,7 +1680,7 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
  * http://broadcasting.ru/pdf-standard-specifications/subtitling/dvb-sub/en300743.v1.2.1.pdf
  */
 static void
-parse_subtitles(service_t *t, elementary_stream_t *st, const uint8_t *data,
+parse_subtitles(parser_t *t, parser_es_t *st, const uint8_t *data,
                 int len, int start)
 {
   th_pkt_t *pkt;
@@ -1749,8 +1733,8 @@ parse_subtitles(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
     // end_of_PES_data_field_marker
     if(buf[psize - 1] == 0xff) {
-      pkt = pkt_alloc(st->es_type, buf, psize - 1, st->es_curpts, st->es_curdts, t->s_current_pcr);
-      pkt->pkt_commercial = t->s_tt_commercial_advice;
+      pkt = pkt_alloc(st->es_type, buf, psize - 1, st->es_curpts, st->es_curdts, t->prs_current_pcr);
+      pkt->pkt_commercial = t->prs_tt_commercial_advice;
       pkt->pkt_err = st->es_buf.sb_err;
       parser_deliver(t, st, pkt);
       sbuf_reset(&st->es_buf, 4000);
@@ -1762,7 +1746,7 @@ parse_subtitles(service_t *t, elementary_stream_t *st, const uint8_t *data,
  * Teletext parser
  */
 static void
-parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
+parse_teletext(parser_t *t, parser_es_t *st, const uint8_t *data,
                int len, int start)
 {
   th_pkt_t *pkt;
@@ -1799,10 +1783,11 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
   psize -= hlen;
   buf = d + 6 + hlen;
   
-  if(psize >= 46 && t->s_current_pcr != PTS_UNSET) {
-    teletext_input((mpegts_service_t *)t, st, buf, psize);
-    pkt = pkt_alloc(st->es_type, buf, psize, t->s_current_pcr, t->s_current_pcr, t->s_current_pcr);
-    pkt->pkt_commercial = t->s_tt_commercial_advice;
+  if(psize >= 46 && t->prs_current_pcr != PTS_UNSET) {
+    teletext_input(t, st, buf, psize);
+    pkt = pkt_alloc(st->es_type, buf, psize,
+                    t->prs_current_pcr, t->prs_current_pcr, t->prs_current_pcr);
+    pkt->pkt_commercial = t->prs_tt_commercial_advice;
     pkt->pkt_err = st->es_buf.sb_err;
     parser_deliver(t, st, pkt);
     sbuf_reset(&st->es_buf, 4000);
@@ -1813,10 +1798,11 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
  * Hbbtv parser (=forwarder)
  */
 static void
-parse_hbbtv(service_t *t, elementary_stream_t *st, const uint8_t *data,
+parse_hbbtv(parser_t *t, parser_es_t *st, const uint8_t *data,
             int len, int start)
 {
-  th_pkt_t *pkt = pkt_alloc(st->es_type, data, len, t->s_current_pcr, t->s_current_pcr, t->s_current_pcr);
+  th_pkt_t *pkt = pkt_alloc(st->es_type, data, len,
+                            t->prs_current_pcr, t->prs_current_pcr, t->prs_current_pcr);
   pkt->pkt_err = st->es_buf.sb_err;
   parser_deliver(t, st, pkt);
 }
@@ -1825,11 +1811,12 @@ parse_hbbtv(service_t *t, elementary_stream_t *st, const uint8_t *data,
  *
  */
 static th_pkt_t *
-parser_error_packet(service_t *t, elementary_stream_t *st, int error)
+parser_error_packet(parser_t *t, parser_es_t *st, int error)
 {
   th_pkt_t *pkt;
 
-  pkt = pkt_alloc(st->es_type, NULL, 0, PTS_UNSET, PTS_UNSET, t->s_current_pcr);
+  pkt = pkt_alloc(st->es_type, NULL, 0,
+                  PTS_UNSET, PTS_UNSET, t->prs_current_pcr);
   pkt->pkt_err = error;
   return pkt;
 }
@@ -1838,7 +1825,7 @@ parser_error_packet(service_t *t, elementary_stream_t *st, int error)
  *
  */
 static void
-parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
+parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
 {
   int64_t d, diff;
 
@@ -1859,7 +1846,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
   if (d > diff || d == PTS_UNSET) {
     if (d != PTS_UNSET && tvhlog_limit(&st->es_pcr_log, 2))
       tvhwarn(LS_PARSER, "%s: DTS and PCR diff is very big (%"PRId64")",
-              service_component_nicename(st), pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
+              st->es_nicename, pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
     pkt_trace(LS_PARSER, pkt, "pcr drop");
     pkt_ref_dec(pkt);
     pkt = parser_error_packet(t, st, 1);
@@ -1876,16 +1863,8 @@ deliver:
     pkt->v.pkt_aspect_den = st->es_aspect_den;
   }
 
-  /**
-   * Input is ok
-   */
-  if (pkt->pkt_payload) {
-    service_set_streaming_status_flags(t, TSS_PACKETS);
-    t->s_streaming_live |= TSS_LIVE;
-  }
-
   /* Forward packet */
-  streaming_service_deliver(t, streaming_msg_create_pkt(pkt));
+  streaming_target_deliver2(t->prs_output, streaming_msg_create_pkt(pkt));
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);
@@ -1896,7 +1875,7 @@ deliver:
  * Deliver errors
  */
 static void
-parser_deliver_error(service_t *t, elementary_stream_t *st)
+parser_deliver_error(parser_t *t, parser_es_t *st)
 {
   th_pkt_t *pkt;
 
@@ -1911,7 +1890,7 @@ parser_deliver_error(service_t *t, elementary_stream_t *st)
  * Do backlog (fix DTS & PTS and reparse slices - frame type, field etc.)
  */
 static void
-parser_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
+parser_backlog(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
 {
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
   TAILQ_INSERT_TAIL(&st->es_backlog, sm, sm_link);
@@ -1931,8 +1910,8 @@ parser_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
 }
 
 static void
-parser_do_backlog(service_t *t, elementary_stream_t *st,
-                  void (*pkt_cb)(service_t *t, elementary_stream_t *st, th_pkt_t *pkt),
+parser_do_backlog(parser_t *t, parser_es_t *st,
+                  void (*pkt_cb)(parser_t *t, parser_es_t *st, th_pkt_t *pkt),
                   pktbuf_t *meta)
 {
   streaming_message_t *sm;

@@ -19,7 +19,82 @@
 #ifndef PARSERS_H
 #define PARSERS_H
 
+#include "tvheadend.h"
+#include "streaming.h"
+#include "subscriptions.h"
 #include "packet.h"
+
+typedef struct parser_es parser_es_t;
+typedef struct parser parser_t;
+
+struct th_subscription;
+
+/* parser elementary stream */
+struct parser_es {
+  elementary_stream_t;
+  /* Parent */
+  parser_t *es_parser;
+  /* State */
+  sbuf_t    es_buf;
+  uint8_t   es_incomplete;
+  uint8_t   es_header_mode;
+  uint32_t  es_header_offset;
+  uint32_t  es_startcond;
+  uint32_t  es_startcode;
+  uint32_t  es_startcode_offset;
+  int       es_parser_state;
+  int       es_parser_ptr;
+  int       es_meta_change;
+  void     *es_priv;          /* Parser private data */
+  sbuf_t    es_buf_a;         /* Audio packet reassembly */
+  uint8_t  *es_global_data;
+  int       es_global_data_len;
+  struct th_pkt *es_curpkt;
+  struct streaming_message_queue es_backlog;
+  tvhlog_limit_t es_pes_log;
+  /* Clocks */
+  int64_t   es_curpts;
+  int64_t   es_curdts;
+  int64_t   es_prevdts;
+  int64_t   es_nextdts;
+  /* Misc */
+  char      es_blank;         /* Teletext: last subtitle was blank */
+  /* PCR clocks */
+  int64_t   es_last_pcr;
+  int64_t   es_last_pcr_dts;
+  tvhlog_limit_t es_pcr_log;
+};
+
+/* parser internal structure */
+struct parser {
+
+  streaming_target_t prs_input;
+
+  streaming_target_t *prs_output;
+
+  th_subscription_t *prs_subscription;
+
+  service_t *prs_service;
+
+  /* Elementary streams */
+  int prs_es_size;
+  int prs_es_count;
+  parser_es_t *prs_es;
+
+  /* Globals */
+  uint16_t prs_pcr_pid;
+
+  /* PCR clocks */
+  int64_t  prs_current_pcr;
+  int64_t  prs_candidate_pcr;
+  int64_t  prs_pcr_boundary;
+  uint8_t  prs_current_pcr_guess;
+
+  /* Teletext */
+  th_commercial_advice_t prs_tt_commercial_advice;
+  time_t prs_tt_clock;   /* Network clock as determined by teletext decoder */
+
+};
 
 static inline int64_t
 getpts(const uint8_t *p)
@@ -42,18 +117,16 @@ getpts(const uint8_t *p)
   }
 }
 
-void parse_mpeg_ts(struct service *t, struct elementary_stream *st,
-		   const uint8_t *data, 
-		   int len, int start, int err);
+streaming_target_t * parser_create(streaming_target_t *output, struct th_subscription *ts);
 
-void skip_mpeg_ts(struct service *t, struct elementary_stream *st,
-                  const uint8_t *data, int len);
+void parser_destroy(streaming_target_t *pad);
 
-void parser_enqueue_packet(struct service *t, struct elementary_stream *st,
-			   th_pkt_t *pkt);
+void parse_mpeg_ts(parser_t *t, parser_es_t *st, const uint8_t *data,
+                   int len, int start, int err);
 
-void parser_set_stream_vparam(struct elementary_stream *st, int width, int height,
-                              int duration);
+void parser_enqueue_packet(struct service *t, parser_es_t *st, th_pkt_t *pkt);
+
+void parser_set_stream_vparam(parser_es_t *st, int width, int height, int duration);
 
 extern const unsigned int mpeg2video_framedurations[16];
 

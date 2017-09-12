@@ -38,11 +38,11 @@
 
 void *h264_nal_deescape(bitstream_t *bs, const uint8_t *data, int size);
 
-int h264_decode_seq_parameter_set(struct elementary_stream *st, bitstream_t *bs);
+int h264_decode_seq_parameter_set(parser_es_t *st, bitstream_t *bs);
 
-int h264_decode_pic_parameter_set(struct elementary_stream *st, bitstream_t *bs);
+int h264_decode_pic_parameter_set(parser_es_t *st, bitstream_t *bs);
 
-int h264_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
+int h264_decode_slice_header(parser_es_t *st, bitstream_t *bs,
 			     int *pkttype, int *isfield);
 
 #endif /* PARSER_H264_H_ */

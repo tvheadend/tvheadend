@@ -38,6 +38,7 @@
 #include "ebml.h"
 #include "lang_codes.h"
 #include "epg.h"
+#include "parsers.h"
 #include "parsers/parser_avc.h"
 #include "parsers/parser_hevc.h"
 #include "muxer_mkv.h"
