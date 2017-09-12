@@ -221,9 +221,9 @@ int http_extra_send_prealloc(http_connection_t *hc, const void *data, size_t dat
 
 static inline void http_send_begin(http_connection_t *hc)
 {
+  atomic_add(&hc->hc_extra_insend, 1);
   if (atomic_get(&hc->hc_extra_chunks) > 0)
     http_extra_flush_partial(hc);
-  atomic_add(&hc->hc_extra_insend, 1);
 }
 
 static inline void http_send_end(http_connection_t *hc)
