@@ -85,6 +85,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
 
   errbuf[0] = '\0';
 
+  memset(&bindip, 0, sizeof(bindip));
   bindip.ss_family = AF_UNSPEC;
   if (bindaddr && bindaddr[0] != '\0') {
     if (tcp_get_ip_from_str(bindaddr, &bindip) == NULL) {
@@ -135,9 +136,10 @@ again:
 
   if (bindip.ss_family != AF_UNSPEC) {
     if (bind(fd, (struct sockaddr *)&bindip, IP_IN_ADDRLEN(bindip)) < 0) {
-      snprintf(errbuf, errbufsize, "Cannot bind to IPv%s addr '%s'",
+      snprintf(errbuf, errbufsize, "Cannot bind to IPv%s addr '%s:%i': %s",
                                    bindip.ss_family == AF_INET6 ? "6" : "4",
-                                   bindaddr);
+                                   bindaddr, htons(IP_PORT(bindip)),
+                                   strerror(errno));
       goto error;
     }
   }
