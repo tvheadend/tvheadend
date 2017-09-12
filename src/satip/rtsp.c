@@ -378,14 +378,13 @@ rtsp_slave_remove
  *
  */
 static void
-rtsp_clean(session_t *rs)
+rtsp_clean(session_t *rs, int clean_mux)
 {
   slave_subscription_t *sub;
 
-  if (rs->state == STATE_PLAY) {
+  if (rs->rtp_handle) {
     satip_rtp_close(rs->rtp_handle);
     rs->rtp_handle = NULL;
-    rs->state = STATE_DESCRIBE;
   }
   if (rs->subs) {
     while ((sub = LIST_FIRST(&rs->slaves)) != NULL)
@@ -396,11 +395,13 @@ rtsp_clean(session_t *rs)
   }
   if (rs->prch.prch_id)
     profile_chain_close(&rs->prch);
-  if (rs->mux && rs->mux_created &&
-      (rtsp_muxcnf != MUXCNF_KEEP || LIST_EMPTY(&rs->mux->mm_services)))
-    rs->mux->mm_delete(rs->mux, 1);
-  rs->mux = NULL;
-  rs->mux_created = 0;
+  if (clean_mux) {
+    if (rs->mux && rs->mux_created &&
+        (rtsp_muxcnf != MUXCNF_KEEP || LIST_EMPTY(&rs->mux->mm_services)))
+      rs->mux->mm_delete(rs->mux, 1);
+    rs->mux = NULL;
+    rs->mux_created = 0;
+  }
 }
 
 /*
@@ -595,7 +596,7 @@ rtsp_start
       }
       goto pids;
     }
-    rtsp_clean(rs);
+    rtsp_clean(rs, 1);
     rs->dmc_tuned = dmc;
     rs->mux = mux;
     rs->mux_created = created;
@@ -626,7 +627,7 @@ pids:
     if (rs->used_weight != weight && weight > 0)
       subscription_set_weight(rs->subs, rs->used_weight = weight);
   }
-  if (cmd != RTSP_CMD_DESCRIBE && rs->state != STATE_PLAY) {
+  if (cmd != RTSP_CMD_DESCRIBE && rs->rtp_handle == NULL) {
     if (rs->mux == NULL)
       goto endclean;
     rs->no_data = 0;
@@ -650,6 +651,8 @@ pids:
     svc->s_update_pids(svc, &rs->pids);
     rs->state = STATE_PLAY;
   } else if (cmd == RTSP_CMD_PLAY) {
+    if (rs->mux == NULL)
+      goto endclean;
     satip_rtp_allow_data(rs->rtp_handle);
   }
   rtsp_manage_descramble(rs);
@@ -657,7 +660,7 @@ pids:
   return 0;
 
 endclean:
-  rtsp_clean(rs);
+  rtsp_clean(rs, 0);
   pthread_mutex_unlock(&global_lock);
   return res;
 }
@@ -1634,7 +1637,7 @@ rtsp_close_session(session_t *rs)
   rs->tcp_data = NULL;
   pthread_mutex_lock(&global_lock);
   mpegts_pid_reset(&rs->pids);
-  rtsp_clean(rs);
+  rtsp_clean(rs, 1);
   mtimer_disarm(&rs->timer);
   pthread_mutex_unlock(&global_lock);
 }
