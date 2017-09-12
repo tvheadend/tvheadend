@@ -54,6 +54,7 @@ OPTIONS=(
   "libopus_static:yes"
   "nvenc:no"
   "vaapi:auto"
+  "mmal:no"
   "omx:no"
   "inotify:auto"
   "epoll:auto"
@@ -552,6 +553,7 @@ if enabled ffmpeg_static; then
     check_cc_header "bcm_host" omx_rpi
     if enabled omx_rpi; then
       CFLAGS="-I/opt/vc/include/IL $OLDCFLAGS"
+      enable mmal
     else
       CFLAGS=$OLDCFLAGS
     fi
