@@ -156,6 +156,7 @@ tvh_stream_create(TVHTranscoder *transcoder, TVHCodecProfile *profile,
     self->id = self->index = ssc->ssc_index;
     self->type = ssc->ssc_type;
     if ((is_copy = tvh_stream_is_copy(profile, ssc, src_codecs)) > 0) {
+        self->is_copy = 1;
         if (ssc->ssc_gh) {
             pktbuf_ref_inc(ssc->ssc_gh);
         }

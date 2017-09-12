@@ -99,6 +99,7 @@ struct tvh_stream {
     int index;
     tvh_sct_t type;
     TVHContext *context;
+    int is_copy;
     SLIST_ENTRY(tvh_stream) link;
 };
 

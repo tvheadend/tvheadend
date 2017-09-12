@@ -210,8 +210,11 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
             }
             *ssc = *ssc_src;
             if ((stream = tvh_stream_create(self, profile, ssc, codecs))) {
-                tvh_ssc_log(ssc_src, LOG_INFO, "==> Using profile %s", self,
-                            tvh_codec_profile_get_name(profile));
+                if (stream->is_copy)
+                  tvh_ssc_log(ssc_src, LOG_INFO, "==> Copy", self);
+                else
+                  tvh_ssc_log(ssc_src, LOG_INFO, "==> Using profile %s", self,
+                              tvh_codec_profile_get_name(profile));
                 SLIST_INSERT_HEAD(&self->streams, stream, link);
                 k++;
             } else {
