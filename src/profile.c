@@ -2091,19 +2091,55 @@ profile_class_pro_vcodec_list(void *o, const char *lang)
   return profile_class_codec_profiles_list(AVMEDIA_TYPE_VIDEO, lang);
 }
 
+static int
+profile_class_src_codec_set(profile_transcode_t *pro,
+                            char **str,
+                            const void *p)
+{
+  char *s = htsmsg_list_2_csv((htsmsg_t *)p, ',', 0);
+  int change = 0;
+  if (s) {
+    change = strcmp(*str ?: "", s) != 0;
+    free(*str);
+    *str = s;
+  }
+  return change;
+}
+
+static const void *
+profile_class_src_codec_get(profile_transcode_t *pro,
+                            char *str)
+{
+  return htsmsg_csv_2_list(str, ',');
+}
+
+static const struct strtab_str profile_class_src_vcodec_tab[] = {
+  { "MPEG2VIDEO",            "MPEG2VIDEO" },
+  { "H264",                  "H264" },
+  { "VP8",                   "VP8" },
+  { "HEVC",                  "HEVC" },
+  { "VP9",                   "VP9" },
+  { "THEORA",                "THEORA" },
+};
+
+static int
+profile_class_src_vcodec_set ( void *obj, const void *p )
+{
+  profile_transcode_t *pro = (profile_transcode_t *)obj;
+  return profile_class_src_codec_set(pro, &pro->pro_src_vcodec, p);
+}
+
+static const void *
+profile_class_src_vcodec_get ( void *obj )
+{
+  profile_transcode_t *pro = (profile_transcode_t *)obj;
+  return profile_class_src_codec_get(pro, pro->pro_src_vcodec);
+}
+
 static htsmsg_t *
 profile_class_src_vcodec_list ( void *o, const char *lang )
 {
-  static const struct strtab_str tab[] = {
-    { "-",                     "" },
-    { "MPEG2VIDEO",            "MPEG2VIDEO" },
-    { "H264",                  "H264" },
-    { "VP8",                   "VP8" },
-    { "HEVC",                  "HEVC" },
-    { "VP9",                   "VP9" },
-    { "THEORA",                "THEORA" },
-  };
-  return strtab2htsmsg_str(tab, 1, lang);
+  return strtab2htsmsg_str(profile_class_src_vcodec_tab, 1, lang);
 }
 
 static htsmsg_t *
@@ -2112,20 +2148,34 @@ profile_class_pro_acodec_list(void *o, const char *lang)
   return profile_class_codec_profiles_list(AVMEDIA_TYPE_AUDIO, lang);
 }
 
+static const struct strtab_str profile_class_src_acodec_tab[] = {
+  { "MPEG2AUDIO",            "MPEG2AUDIO" },
+  { "AC3",                   "AC3" },
+  { "AAC",                   "AAC" },
+  { "MP4A",                  "MP4A" },
+  { "EAC3",                  "EAC3" },
+  { "VORBIS",                "VORBIS" },
+  { "OPUS",                  "OPUS" },
+};
+
+static int
+profile_class_src_acodec_set ( void *obj, const void *p )
+{
+  profile_transcode_t *pro = (profile_transcode_t *)obj;
+  return profile_class_src_codec_set(pro, &pro->pro_src_acodec, p);
+}
+
+static const void *
+profile_class_src_acodec_get ( void *obj )
+{
+  profile_transcode_t *pro = (profile_transcode_t *)obj;
+  return profile_class_src_codec_get(pro, pro->pro_src_acodec);
+}
+
 static htsmsg_t *
 profile_class_src_acodec_list ( void *o, const char *lang )
 {
-  static const struct strtab_str tab[] = {
-    { "-",                     "" },
-    { "MPEG2AUDIO",            "MPEG2AUDIO" },
-    { "AC3",                   "AC3" },
-    { "AAC",                   "AAC" },
-    { "MP4A",                  "MP4A" },
-    { "EAC3",                  "EAC3" },
-    { "VORBIS",                "VORBIS" },
-    { "OPUS",                  "OPUS" },
-  };
-  return strtab2htsmsg_str(tab, 1, lang);
+  return strtab2htsmsg_str(profile_class_src_acodec_tab, 1, lang);
 }
 
 static htsmsg_t *
@@ -2134,15 +2184,29 @@ profile_class_pro_scodec_list(void *o, const char *lang)
   return profile_class_codec_profiles_list(AVMEDIA_TYPE_SUBTITLE, lang);
 }
 
+static const struct strtab_str profile_class_src_scodec_tab[] = {
+  { "DVBSUB",                "DVBSUB" },
+  { "TEXTSUB",               "TEXTSUB" },
+};
+
+static int
+profile_class_src_scodec_set ( void *obj, const void *p )
+{
+  profile_transcode_t *pro = (profile_transcode_t *)obj;
+  return profile_class_src_codec_set(pro, &pro->pro_src_scodec, p);
+}
+
+static const void *
+profile_class_src_scodec_get ( void *obj )
+{
+  profile_transcode_t *pro = (profile_transcode_t *)obj;
+  return profile_class_src_codec_get(pro, pro->pro_src_scodec);
+}
+
 static htsmsg_t *
 profile_class_src_scodec_list ( void *o, const char *lang )
 {
-  static const struct strtab_str tab[] = {
-    { "-",                     "" },
-    { "DVBSUB",                "DVBSUB" },
-    { "TEXTSUB",               "TEXTSUB" },
-  };
-  return strtab2htsmsg_str(tab, 1, lang);
+  return strtab2htsmsg_str(profile_class_src_scodec_tab, 1, lang);
 }
 
 const idclass_t profile_transcode_class =
@@ -2184,15 +2248,12 @@ const idclass_t profile_transcode_class =
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "src_vcodec",
       .name     = N_("Source video codec"),
-      .desc     = N_("Transcode video only if source video codec match. "
-                     "Empty or minus string will ignore source video codec "
-                     "check and continue with transcode. Separate codec names "
-                     "with coma. If no codec match found - transcode with "
-                     "\"copy\" codec, if match found - transcode with video "
-                     "codec defined in this profile."),
-      .off      = offsetof(profile_transcode_t, pro_src_vcodec),
+      .desc     = N_("Transcode video only for selected codecs."),
+      .get      = profile_class_src_vcodec_get,
+      .set      = profile_class_src_vcodec_set,
       .list     = profile_class_src_vcodec_list,
       .opts     = PO_ADVANCED,
       .group    = 2
@@ -2209,15 +2270,12 @@ const idclass_t profile_transcode_class =
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "src_acodec",
       .name     = N_("Source audio codec"),
-      .desc     = N_("Transcode audio only if source audio codec match. "
-                     "Empty or minus string will ignore source audio codec "
-                     "check and continue with transcode. Separate codec names "
-                     "with coma. If no codec match found - transcode with "
-                     "\"copy\" codec, if match found - transcode with audio "
-                     "codec defined in this profile."),
-      .off      = offsetof(profile_transcode_t, pro_src_acodec),
+      .desc     = N_("Transcode audio only for selected codecs."),
+      .get      = profile_class_src_acodec_get,
+      .set      = profile_class_src_acodec_set,
       .list     = profile_class_src_acodec_list,
       .opts     = PO_ADVANCED,
       .group    = 2
@@ -2234,15 +2292,12 @@ const idclass_t profile_transcode_class =
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "src_scodec",
       .name     = N_("Source subtitle codec"),
-      .desc     = N_("Transcode subtitle only if source subtitle codec match. "
-                     "Empty or minus string will ignore source subtitle codec "
-                     "check and continue with transcode. Separate codec names "
-                     "with coma. If no codec match found - transcode with "
-                     "\"copy\" codec, if match found - transcode with subtitle "
-                     "codec defined in this profile."),
-      .off      = offsetof(profile_transcode_t, pro_src_acodec),
+      .desc     = N_("Transcode subtitle only for selected codecs."),
+      .get      = profile_class_src_scodec_get,
+      .set      = profile_class_src_scodec_set,
       .list     = profile_class_src_scodec_list,
       .opts     = PO_ADVANCED,
       .group    = 2

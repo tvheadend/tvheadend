@@ -1278,6 +1278,9 @@ htsmsg_csv_2_list(const char *str, char delim)
           p++;
         }
         *p = '\0';
+      } else {
+        while (tok[0] == ' ')
+          tok++;
       }
       htsmsg_add_str(m, NULL, tok);
       tok = strtok_r(NULL, ",", &saveptr);
