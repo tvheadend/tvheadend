@@ -44,8 +44,9 @@ tvh_stream_is_copy(TVHCodecProfile *profile, tvh_ssc_t *ssc,
             if (token == NULL)
                 break;
             if (!strcasecmp(token, txtname))
-                return 0; /* do not copy */
+                goto cont;
         }
+        return 1;
     }
 cont:
     if (profile == tvh_codec_profile_copy) {
