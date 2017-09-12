@@ -67,6 +67,7 @@ typedef struct session {
   profile_chain_t prch;
   th_subscription_t *subs;
   int rtp_peer_port;
+  int rtp_udp_bound;
   udp_connection_t *udp_rtp;
   udp_connection_t *udp_rtcp;
   void *rtp_handle;
@@ -1401,7 +1402,8 @@ rtsp_process_play(http_connection_t *hc, int cmd)
 
   if (errcode) goto error;
 
-  if (cmd == RTSP_CMD_SETUP && rs->rtp_peer_port != RTSP_TCP_DATA) {
+  if (cmd == RTSP_CMD_SETUP && rs->rtp_peer_port != RTSP_TCP_DATA &&
+      !rs->rtp_udp_bound) {
     if (udp_bind_double(&rs->udp_rtp, &rs->udp_rtcp,
                         LS_SATIPS, "rtsp", "rtcp",
                         rtsp_ip, 0, NULL,
@@ -1412,9 +1414,14 @@ rtsp_process_play(http_connection_t *hc, int cmd)
     }
     if (udp_connect(rs->udp_rtp,  "RTP",  hc->hc_peer_ipstr, rs->rtp_peer_port) ||
         udp_connect(rs->udp_rtcp, "RTCP", hc->hc_peer_ipstr, rs->rtp_peer_port + 1)) {
+      udp_close(rs->udp_rtp);
+      rs->udp_rtp = NULL;
+      udp_close(rs->udp_rtcp);
+      rs->udp_rtcp = NULL;
       errcode = HTTP_STATUS_INTERNAL;
       goto error;
     }
+    rs->rtp_udp_bound = 1;
   }
 
   if (cmd == RTSP_CMD_SETUP && rs->rtp_peer_port == RTSP_TCP_DATA)
@@ -1622,6 +1629,7 @@ rtsp_close_session(session_t *rs)
   rs->udp_rtp = NULL;
   udp_close(rs->udp_rtcp);
   rs->udp_rtcp = NULL;
+  rs->rtp_udp_bound = 0;
   rs->shutdown_on_close = NULL;
   rs->tcp_data = NULL;
   pthread_mutex_lock(&global_lock);
