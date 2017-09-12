@@ -603,8 +603,11 @@ rtsp_start
       goto endclean;
     }
     if (rs->mux == mux && rs->subs) {
-      if (rs->no_data)
+      if (rs->no_data) {
+        tvhwarn(LS_SATIPS, "%i/%s/%i: subscription fails because mux %s can't tune",
+                rs->frontend, rs->session, rs->stream, buf);
         goto endclean;
+      }
       goto pids;
     }
     rtsp_clean(rs, 1);
@@ -1163,7 +1166,7 @@ rtsp_parse_cmd
     rs->stream = stream_id % 0x7fff;
   } else {
     /* don't subscribe to the new mux, if it was already done */
-    if (memcmp(dmc, &rs->dmc_tuned, sizeof(*dmc)) == 0)
+    if (memcmp(dmc, &rs->dmc_tuned, sizeof(*dmc)) == 0 && !rs->no_data)
       *valid = 0;
   }
 
