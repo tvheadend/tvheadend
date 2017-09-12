@@ -807,8 +807,14 @@ http_extra_flush(http_connection_t *hc)
     goto fin;
 
   while (1) {
+    r = -1;
+    serr = 0;
     pthread_mutex_lock(&hc->hc_extra_lock);
+    if (atomic_add(&hc->hc_extra_insend, 0) != 1)
+      goto unlock;
     hd = TAILQ_FIRST(&hc->hc_extra.hq_q);
+    if (hd == NULL)
+      goto unlock;
     do {
       r = send(hc->hc_fd, hd->hd_data + hd->hd_data_off,
                hd->hd_data_size - hd->hd_data_off,
@@ -822,6 +828,7 @@ http_extra_flush(http_connection_t *hc)
       hd->hd_data_off += r;
       hc->hc_extra.hq_size -= r;
     }
+unlock:
     pthread_mutex_unlock(&hc->hc_extra_lock);
 
     if (r < 0) {
@@ -860,13 +867,10 @@ http_extra_flush_partial(http_connection_t *hc)
     htsbuf_data_free(&hc->hc_extra, hd);
   }
   pthread_mutex_unlock(&hc->hc_extra_lock);
-  if (data == NULL)
-    goto finish;
-
-  r = tvh_write(hc->hc_fd, data + off, size - off);
-  free(data);
-
-finish:
+  if (data) {
+    r = tvh_write(hc->hc_fd, data + off, size - off);
+    free(data);
+  }
   atomic_dec(&hc->hc_extra_insend, 1);
   return r;
 }
