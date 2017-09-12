@@ -72,9 +72,9 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
                            (idclass_t *)&codec_profile_video_class)) {
       if (tvh_codec_profile_video_get_hwaccel(profile) > 0) {
         if (icodec_id == AV_CODEC_ID_H264) {
-            icodec = avcodec_find_decoder_by_id("h264_mmal");
+            icodec = avcodec_find_decoder_by_name("h264_mmal");
         } else if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
-            icodec = avcodec_find_decoder_by_id("mpeg2_mmal");
+            icodec = avcodec_find_decoder_by_name("mpeg2_mmal");
         }
       }
     }
