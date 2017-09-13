@@ -50,6 +50,7 @@ typedef struct session {
   int findex;
   int src;
   int state;
+  int playing;
   int weight;
   int used_weight;
   http_connection_t *shutdown_on_close;
@@ -519,7 +520,7 @@ end:
 static int
 rtsp_start
   (http_connection_t *hc, session_t *rs, char *addrbuf,
-   int newmux, int cmd, int oldstate)
+   int newmux, int cmd)
 {
   mpegts_network_t *mn, *mn2;
   dvb_network_t *ln;
@@ -635,7 +636,7 @@ pids:
                       rs->udp_rtcp ? rs->udp_rtcp->fd : -1,
                       rs->findex, rs->src, &rs->dmc_tuned,
                       &rs->pids,
-                      cmd == RTSP_CMD_PLAY || oldstate == STATE_PLAY,
+                      cmd == RTSP_CMD_PLAY || rs->playing,
                       rs->perm_lock, rtsp_no_data, rs);
     if (rs->rtp_handle == NULL) {
       res = HTTP_STATUS_INTERNAL;
@@ -646,6 +647,7 @@ pids:
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
+    rs->playing = 1;
     rs->state = STATE_PLAY;
   } else if (cmd == RTSP_CMD_PLAY) {
     if (rs->mux == NULL)
@@ -892,7 +894,7 @@ parse_transport(http_connection_t *hc)
 static int
 rtsp_parse_cmd
   (http_connection_t *hc, int stream, int cmd,
-   session_t **rrs, int *valid, int *oldstate)
+   session_t **rrs, int *valid)
 {
   session_t *rs = NULL;
   int errcode = HTTP_STATUS_BAD_REQUEST, r, findex = 1, has_args, weight = 0;
@@ -914,7 +916,6 @@ rtsp_parse_cmd
   }
 
   *rrs = NULL;
-  *oldstate = 0;
   mpegts_pid_init(&pids);
   mpegts_pid_init(&addpids);
   mpegts_pid_init(&delpids);
@@ -976,7 +977,6 @@ rtsp_parse_cmd
         *valid = 1;
         goto ok;
       }
-      *oldstate = rs->state;
     }
     r = parse_transport(hc);
     if (r < 0) {
@@ -995,9 +995,6 @@ rtsp_parse_cmd
         errcode = HTTP_STATUS_NOT_FOUND;
       goto end;
     }
-    *oldstate = rs->state;
-    if (rs->mux == NULL)
-      *oldstate = rs->state = STATE_SETUP;
     if (!fe) {
       fe = rs->frontend;
       findex = rs->findex;
@@ -1300,7 +1297,7 @@ rtsp_process_describe(http_connection_t *hc)
   htsbuf_queue_t q;
   char buf[96];
   int r = HTTP_STATUS_BAD_REQUEST;
-  int stream, first = 1, valid, oldstate;
+  int stream, first = 1, valid;
 
   htsbuf_queue_init(&q, 0);
 
@@ -1320,7 +1317,7 @@ rtsp_process_describe(http_connection_t *hc)
       pthread_mutex_unlock(&rtsp_lock);
       goto error;
     }
-    r = rtsp_parse_cmd(hc, stream, RTSP_CMD_DESCRIBE, &rs, &valid, &oldstate);
+    r = rtsp_parse_cmd(hc, stream, RTSP_CMD_DESCRIBE, &rs, &valid);
     if (r) {
       pthread_mutex_unlock(&rtsp_lock);
       goto error;
@@ -1384,7 +1381,7 @@ static int
 rtsp_process_play(http_connection_t *hc, int cmd)
 {
   session_t *rs;
-  int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, oldstate = 0, i, stream;
+  int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, i, stream;
   char buf[256], *u = tvh_strdupa(hc->hc_url);
   http_arg_list_t args;
 
@@ -1398,7 +1395,7 @@ rtsp_process_play(http_connection_t *hc, int cmd)
 
   pthread_mutex_lock(&rtsp_lock);
 
-  errcode = rtsp_parse_cmd(hc, stream, cmd, &rs, &valid, &oldstate);
+  errcode = rtsp_parse_cmd(hc, stream, cmd, &rs, &valid);
 
   if (errcode) goto error;
 
@@ -1427,7 +1424,7 @@ rtsp_process_play(http_connection_t *hc, int cmd)
   if (cmd == RTSP_CMD_SETUP && rs->rtp_peer_port == RTSP_TCP_DATA)
     rs->shutdown_on_close = hc;
 
-  if ((errcode = rtsp_start(hc, rs, hc->hc_peer_ipstr, valid, cmd, oldstate)) != 0)
+  if ((errcode = rtsp_start(hc, rs, hc->hc_peer_ipstr, valid, cmd)) != 0)
     goto error;
 
   if (cmd == RTSP_CMD_SETUP) {
@@ -1624,6 +1621,7 @@ rtsp_close_session(session_t *rs)
 {
   satip_rtp_close(rs->rtp_handle);
   rs->rtp_handle = NULL;
+  rs->playing = 0;
   rs->state = STATE_DESCRIBE;
   udp_close(rs->udp_rtp);
   rs->udp_rtp = NULL;
