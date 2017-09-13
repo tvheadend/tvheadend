@@ -611,7 +611,7 @@ tvh_context_open_filters(TVHContext *self,
 
     if (ret >= 0 && tvhtrace_enabled()) {
         char *graph = avfilter_graph_dump(self->avfltgraph, NULL);
-        char *str, *token, *saveptr;
+        char *str, *token, *saveptr = NULL;
         for (str = graph; ; str = NULL) {
           token = strtok_r(str, "\n", &saveptr);
           if (token == NULL)
