@@ -609,6 +609,18 @@ tvh_context_open_filters(TVHContext *self,
         tvh_context_log(self, LOG_ERR, "filters: failed to config filter graph");
     }
 
+    if (ret >= 0 && tvhtrace_enabled()) {
+        char *graph = avfilter_graph_dump(self->avfltgraph, NULL);
+        char *str, *token, *saveptr;
+        for (str = graph; ; str = NULL) {
+          token = strtok_r(str, "\n", &saveptr);
+          if (token == NULL)
+            break;
+          tvh_context_log(self, LOG_TRACE, "filters dump: %s", token);
+        }
+        av_freep(&graph);
+    }
+
 finish:
     if (par) {
         av_freep(&par);
