@@ -647,9 +647,10 @@ pids:
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
-    rs->playing = 1;
+    rs->playing = cmd == RTSP_CMD_PLAY || rs->playing;
     rs->state = STATE_PLAY;
   } else if (cmd == RTSP_CMD_PLAY) {
+    rs->playing = 1;
     if (rs->mux == NULL)
       goto endclean;
     satip_rtp_allow_data(rs->rtp_handle);
