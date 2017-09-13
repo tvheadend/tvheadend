@@ -36,6 +36,9 @@ void
 vaapi_decode_close_context(AVCodecContext *avctx);
 
 int
+vaapi_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx, char *filter, size_t filter_len);
+
+int
 vaapi_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
 
 
