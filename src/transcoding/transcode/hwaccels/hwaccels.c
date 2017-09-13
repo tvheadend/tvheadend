@@ -77,7 +77,7 @@ hwaccels_decode_get_format(AVCodecContext *avctx,
     for (i = 0; pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
         pix_fmt = pix_fmts[i];
         if ((desc = av_pix_fmt_desc_get(pix_fmt))) {
-            tvhdebug(LS_TRANSCODE, "trying pix_fmt: %s", desc->name);
+            tvhtrace(LS_TRANSCODE, "hwaccels: [%s] trying pix_fmt: %s", avctx->codec->name, desc->name);
             if ((desc->flags & AV_PIX_FMT_FLAG_HWACCEL) &&
                 !hwaccels_decode_setup_context(avctx, pix_fmt)) {
                 break;
