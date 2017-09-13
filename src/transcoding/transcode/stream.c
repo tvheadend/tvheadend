@@ -40,7 +40,7 @@ tvh_stream_is_copy(TVHCodecProfile *profile, tvh_ssc_t *ssc,
         if (codecs == NULL)
             goto cont;
         for (str = codecs; ; str = NULL) {
-            token = strtok_r(str," ,|;" , &saveptr);
+            token = strtok_r(str, " ,|;" , &saveptr);
             if (token == NULL)
                 break;
             if (!strcasecmp(token, txtname))
