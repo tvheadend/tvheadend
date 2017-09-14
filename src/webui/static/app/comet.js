@@ -96,7 +96,9 @@ tvheadend.cometWebsocket = function() {
 };
 
 tvheadend.cometInit = function() {
-    if ("WebSocket" in window) {
+    var isSafari = navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
+                   navigator.userAgent && !navigator.userAgent.match('CriOS');
+    if (!isSafari && ("WebSocket" in window)) {
       var loc = window.location;
       var path = loc.pathname.substring(0, loc.pathname.lastIndexOf("/"));
       tvheadend.wsURI = (loc.protocol === "https:" ? "wss:" : "ws:") + "//" + loc.host + path + "/comet/ws";
