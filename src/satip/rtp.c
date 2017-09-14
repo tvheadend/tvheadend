@@ -33,7 +33,8 @@
 
 #define RTP_PACKETS 128
 #define RTP_PAYLOAD (7*188+12)
-#define RTP_TCP_PAYLOAD (87*188+12+4) /* cca 16kB */
+#define RTP_TCP_MIN_PAYLOAD (7*188+12+4)   /* fit ethernet packet */
+#define RTP_TCP_MAX_PAYLOAD (348*188+12+4) /* cca 64kB */
 #define RTCP_PAYLOAD (1420)
 
 #define RTP_TCP_BUFFER_SIZE (64*1024*1024)
@@ -465,7 +466,7 @@ void *satip_rtp_queue(th_subscription_t *subs,
   satip_rtp_session_t *rtp = calloc(1, sizeof(*rtp));
   size_t len;
   socklen_t socklen;
-  int dscp;
+  int dscp, payload;
 
   if (rtp == NULL)
     return NULL;
@@ -480,7 +481,8 @@ void *satip_rtp_queue(th_subscription_t *subs,
   rtp->subs = subs;
   rtp->sq = sq;
   rtp->hc = hc;
-  rtp->tcp_payload = RTP_TCP_PAYLOAD;
+  payload = satip_server_conf.satip_rtptcpsize * 188 + 12 + 4;
+  rtp->tcp_payload = MINMAX(payload, RTP_TCP_MIN_PAYLOAD, RTP_TCP_MAX_PAYLOAD);
   rtp->tcp_buffer_size = 16*1024*1024;
   rtp->no_data_cb = no_data_cb;
   rtp->no_data_opaque = no_data_opaque;

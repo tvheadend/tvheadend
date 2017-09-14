@@ -593,6 +593,20 @@ static htsmsg_t *satip_server_class_muxcfg_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *satip_server_class_rtptcpsize_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("1316 bytes"),         1316/188 },
+    { N_("2632 bytes"),         2632/188 },
+    { N_("5264 bytes"),         5264/188 },
+    { N_("7896 bytes"),         7896/188 },
+    { N_("16356 bytes"),        16356/188 },
+    { N_("32712 bytes"),        32712/188 },
+    { N_("65424 bytes"),        65424/188 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 CLASS_DOC(satip_server)
 PROP_DOC(satip_muxhandling)
 
@@ -695,6 +709,19 @@ const idclass_t satip_server_class = {
       .off    = offsetof(struct satip_server_conf, satip_muxcnf),
       .list   = satip_server_class_muxcfg_list,
       .opts   = PO_EXPERT | PO_DOC_NLIST,
+      .group  = 1,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_rtptcpsize",
+      .name   = N_("RTP over TCP payload"),
+      .desc   = N_("Select the payload size for RTP contents used "
+                   "in the TCP embedded data mode. Some implementations "
+                   "like ffmpeg and VideoLAN have maximum limit 7896 "
+                   "bytes. The recommended value for tvheadend is "
+                   "16356 or 32712 bytes."),
+      .off    = offsetof(struct satip_server_conf, satip_rtptcpsize),
+      .list   = satip_server_class_rtptcpsize_list,
       .group  = 1,
     },
     {
@@ -896,6 +923,7 @@ void satip_server_init(const char *bindaddr, int rtsp_port)
   http_server_ip = NULL;
   satip_server_bootid = time(NULL);
   satip_server_conf.satip_deviceid = 1;
+  satip_server_conf.satip_rtptcpsize = 7896/188;
 
   satip_server_bindaddr = bindaddr ? strdup(bindaddr) : NULL;
   satip_server_rtsp_port_locked = rtsp_port > 0;
