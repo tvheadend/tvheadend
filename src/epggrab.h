@@ -269,6 +269,7 @@ struct epggrab_module_ota_scraper
   epggrab_module_ota_t             ;      ///< Parent object
   char                   *scrape_config;  ///< Config to use or blank/NULL for default.
   int                     scrape_episode; ///< Scrape season/episode from EIT summary
+  int                     scrape_subtitle;///< Scrape subtitle from EIT summary
 };
 
 /*

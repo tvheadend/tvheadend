@@ -253,7 +253,9 @@ const idclass_t epggrab_mod_ota_scraper_class = {
       .id     = "scrape_config",
       .name   = N_("Scraper configuration to use"),
       .desc   = N_("Configuration containing regular expressions to use for "
-                   "scraping information from the broadcast guide. "
+                   "scraping additional information from the broadcast guide."
+                   "This option does not access or retrieve details from the "
+                   "Internet."
                    "This can be left blank to use the default or "
                    "set to one of the Tvheadend configurations from the "
                    "epggrab/eit/scrape directory such as "
@@ -268,6 +270,19 @@ const idclass_t epggrab_mod_ota_scraper_class = {
       .name   = N_("Scrape Episode"),
       .desc   = N_("Enable/disable scraping episode details using the grabber."),
       .off    = offsetof(epggrab_module_ota_scraper_t, scrape_episode),
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_subtitle",
+      .name   = N_("Scrape Subtitle"),
+      .desc   = N_("Enable/disable scraping subtitle from the programme description. "
+                   "Some broadcasters do not send separate title, subtitle, description, "
+                   "and summary fields. This allows scraping of common subtitle formats "
+                   "from within the broadcast summary field if supported by the "
+                   "configuration file."
+                   ),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_subtitle),
       .group  = 2,
     },
     {}
