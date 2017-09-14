@@ -885,7 +885,7 @@ satip_rtcp_thread(void *aux)
 {
   satip_rtp_session_t *rtp;
   int64_t us;
-  uint8_t msg[RTCP_PAYLOAD+1];
+  uint8_t msg[RTCP_PAYLOAD+1], *msg1;
   char addrbuf[50];
   int r, len, err;
 
@@ -910,8 +910,15 @@ satip_rtcp_thread(void *aux)
         tvhtrace(LS_SATIPS, "RTCP send to %s:%d : %s", addrbuf, ntohs(IP_PORT(rtp->peer2)), msg + 16);
       }
       if (rtp->port == RTSP_TCP_DATA) {
-        err = satip_rtp_tcp_data(rtp, 1, msg, len);
-        r = err ? -1 : 0;
+        msg1 = malloc(len);
+        if (msg1) {
+          memcpy(msg1, msg, len);
+          err = satip_rtp_tcp_data(rtp, 1, msg1, len);
+          r = err ? -1 : 0;
+        } else {
+          r = -1;
+          err = ENOMEM;
+        }
       } else {
         r = sendto(rtp->fd_rtcp, msg, len, 0,
                    (struct sockaddr*)&rtp->peer2,
