@@ -794,22 +794,24 @@ http_extra_flush_partial(http_connection_t *hc)
  *
  */
 int
-http_extra_send(http_connection_t *hc, const void *data, size_t data_len)
+http_extra_send(http_connection_t *hc, const void *data,
+                size_t data_len, int may_discard)
 {
   uint8_t *b = malloc(data_len);
   memcpy(b, data, data_len);
-  return http_extra_send_prealloc(hc, b, data_len);
+  return http_extra_send_prealloc(hc, b, data_len, may_discard);
 }
 
 /**
  *
  */
 int
-http_extra_send_prealloc(http_connection_t *hc, const void *data, size_t data_len)
+http_extra_send_prealloc(http_connection_t *hc, const void *data,
+                         size_t data_len, int may_discard)
 {
   if (data == NULL) return 0;
   pthread_mutex_lock(&hc->hc_extra_lock);
-  if (hc->hc_extra.hq_size <= 1024*1024) {
+  if (!may_discard || hc->hc_extra.hq_size <= 1024*1024) {
     atomic_add(&hc->hc_extra_chunks, 1);
     htsbuf_append_prealloc(&hc->hc_extra, data, data_len);
   } else {

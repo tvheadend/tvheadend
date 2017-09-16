@@ -215,9 +215,11 @@ int http_extra_flush(http_connection_t *hc);
 
 int http_extra_flush_partial(http_connection_t *hc);
 
-int http_extra_send(http_connection_t *hc, const void *data, size_t data_len);
+int http_extra_send(http_connection_t *hc, const void *data,
+                    size_t data_len, int may_discard);
 
-int http_extra_send_prealloc(http_connection_t *hc, const void *data, size_t data_len);
+int http_extra_send_prealloc(http_connection_t *hc, const void *data,
+                             size_t data_len, int may_discard);
 
 static inline void http_send_begin(http_connection_t *hc)
 {
