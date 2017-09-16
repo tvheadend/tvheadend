@@ -268,14 +268,15 @@ found:
 }
 
 static int
-satip_rtp_tcp_data(satip_rtp_session_t *rtp, uint8_t stream, uint8_t *data, size_t data_len)
+satip_rtp_tcp_data(satip_rtp_session_t *rtp, uint8_t stream,
+                   uint8_t *data, size_t data_len, int may_discard)
 {
   assert(data_len <= 0xffff);
   data[0] = '$';
   data[1] = stream;
   data[2] = (data_len - 4) >> 8;
   data[3] = (data_len - 4) & 0xff;
-  return http_extra_send_prealloc(rtp->hc, data, data_len);
+  return http_extra_send_prealloc(rtp->hc, data, data_len, may_discard);
 }
 
 static inline int
@@ -285,7 +286,7 @@ satip_rtp_flush_tcp_data(satip_rtp_session_t *rtp)
   int r = 0;
 
   if (v->iov_len)
-    r = satip_rtp_tcp_data(rtp, 0, v->iov_base, v->iov_len);
+    r = satip_rtp_tcp_data(rtp, 0, v->iov_base, v->iov_len, 1);
   else
     free(v->iov_base);
   v->iov_base = NULL;
@@ -937,7 +938,7 @@ satip_rtcp_thread(void *aux)
         msg1 = malloc(len);
         if (msg1) {
           memcpy(msg1, msg, len);
-          err = satip_rtp_tcp_data(rtp, 1, msg1, len);
+          err = satip_rtp_tcp_data(rtp, 1, msg1, len, 0);
           r = err ? -1 : 0;
         } else {
           r = -1;
