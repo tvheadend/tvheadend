@@ -24,6 +24,7 @@
         "libx11-xcb-dev"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -50,6 +51,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -76,6 +78,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -101,6 +104,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -128,6 +132,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -155,6 +160,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -182,6 +188,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -209,6 +216,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -235,6 +243,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -261,6 +270,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -288,6 +298,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "./configure --disable-dvbscan && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
@@ -315,6 +326,7 @@
         "ccache"
       ],
       "buildcmd": [
+        "git status | grep -e 'typechange' -e 'modified' | awk '{print $2}' | xargs git checkout",
         "./configure --disable-dvbscan && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
