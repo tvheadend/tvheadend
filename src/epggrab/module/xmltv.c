@@ -482,6 +482,104 @@ static int _xmltv_parse_age_rating
 }
 
 /*
+ * Map from an xlmtv_category to a phrase that will match
+ * _epg_genre_names in epg.c.  For example SchedulesDirect category
+ * names for a daytime quiz show are: "series, Game show, Comedy,
+ * Series, Episode". The only category that matches an epg.c genre is
+ * "Comedy", whereas we should also match "Game show". So we map
+ * "Game show" to the genre "Game show / Quiz / Contest".
+ *
+ * If we don't have a mapping then we return the original string.
+ */
+
+/* Mappings from xmltv category in xmltv file to epg genre in epg.c */
+static struct xml_epg_map {
+  const char *xmltv;
+  const char *epg;
+} xml_epg_mapping[] = {
+  /* If adding an entry below then ensure it is sorted.
+   * Note: M-x sort-lines will sort incorrectly due to
+   * speech marks ending the string, such as "Musical"
+   * sorting after "Musical comedy".
+   */
+  { "Adventure", "Adventure / Western / War" },
+  { "Arts/crafts", "Leisure hobbies" },
+  { "Boxing", "Sports" },
+  { "Children", "Children's / Youth programs"},
+  { "Crime", "Detective / Thriller" },
+  { "Crime drama", "Detective / Thriller" },
+  { "Dance", "Music / Ballet / Dance" },
+  { "Dark comedy", "Comedy" },
+  { "Drama", "Movie / Drama" },
+  { "Educational", "Education / Science / Factual topics" },
+  { "Entertainment", "Movie / Drama" },
+  { "Fantasy", "Science fiction / Fantasy / Horror" },
+  { "Feature Film", "Movie / Drama" },
+  { "Game show", "Game show / Quiz / Contest" },
+  { "Home improvement", "Handicraft" },
+  { "Horror", "Science fiction / Fantasy / Horror" },
+  { "Horse", "Equestrian" },
+  { "House/garden", "Leisure hobbies" },
+  { "Interview", "Talk show" },
+  { "Music", "Music / Ballet / Dance" },
+  { "Musical", "Musical / Opera" },
+  { "Musical comedy", "Musical / Opera" },
+  { "Nature", "Nature / Animals / Environment" },
+  { "News", "News / Current affairs" },
+  { "Olympics", "Sports events (Olympic Games, World Cup, etc.)" },
+  { "Opera", "Musical / Opera" },
+  { "Politics", "Social / Political issues / Economics" },
+  { "Reality", "Movie / Drama" },
+  { "Religious", "Serious / Classical / Religious / Historical movie / Drama" },
+  { "Science", "Education / Science / Factual topics" },
+  { "Science fiction", "Science fiction / Fantasy / Horror" },
+  { "Shopping", "Advertisement / Shopping" },
+  { "Short film", "Movie / Drama" },
+  { "Sitcom", "Comedy" },
+  { "Soap", "Soap / Melodrama / Folkloric" },
+  { "Soccer", "Football / Soccer" },
+  { "Sports event", "Sports events (Olympic Games, World Cup, etc.)" },
+  { "Sports non-event", "Sports" },
+  { "Sports talk", "Sports" },
+  { "Swimming", "Water sport" },
+  { "Talk", "Talk show" },
+  { "Technology", "Technology / Natural sciences" },
+  { "Thriller", "Detective / Thriller" },
+  { "Travel", "Tourism / Travel" },
+  { "Variety", "Variety show" },
+  { "Western", "Adventure / Western / War" }
+};
+
+static int
+_xmltv_map_comp_xmltv(const void *m1, const void *m2)
+{
+  const struct xml_epg_map *mi1 = (const struct xml_epg_map *) m1;
+  const struct xml_epg_map *mi2 = (const struct xml_epg_map *) m2;
+  return strcmp(mi1->xmltv, mi2->xmltv);
+}
+
+static const char *
+_xmltv_map_category_to_epg_genre(const char* xmltv_category)
+{
+  static const size_t num_entries = sizeof(xml_epg_mapping)/sizeof(xml_epg_mapping[0]);
+  struct xml_epg_map key;
+  key.xmltv = xmltv_category;
+  struct xml_epg_map *res =
+    bsearch(&key, xml_epg_mapping, num_entries,
+            sizeof(struct xml_epg_map),
+            _xmltv_map_comp_xmltv);
+  if (res) {
+    /* Match so return epg genre */
+    return res->epg;
+  } else {
+    /* No mapping so return unchanged category since it may match an
+     * epg genre.
+     */
+    return xmltv_category;
+  }
+}
+
+/*
  * Parse category list
  */
 static epg_genre_list_t
@@ -493,7 +591,12 @@ static epg_genre_list_t
   HTSMSG_FOREACH(f, tags) {
     if (!strcmp(htsmsg_field_name(f), "category") && (e = htsmsg_get_map_by_field(f))) {
       if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
-      epg_genre_list_add_by_str(egl, htsmsg_get_str(e, "cdata"), NULL);
+      const char *xmltv_category = htsmsg_get_str(e, "cdata");
+      /* Attempt to map xmltv category name to the genre, e.g.,
+       * "Opera" becomes "Musical / Opera".
+       */
+      const char *epg_genre = _xmltv_map_category_to_epg_genre(xmltv_category);
+      epg_genre_list_add_by_str(egl, epg_genre, NULL);
     }
   }
   return egl;
