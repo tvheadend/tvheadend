@@ -101,6 +101,7 @@ int satip_server_http_page(http_connection_t *hc,
 
 int satip_server_match_uuid(const char *uuid);
 
+void satip_server_boot(void);
 void satip_server_init(const char *bindaddr, int rtsp_port);
 void satip_server_register(void);
 void satip_server_done(void);
@@ -111,6 +112,7 @@ static inline int satip_server_match_uuid(const char *uuid) { return 0; }
 
 static inline void satip_server_config_changed(void) { };
 
+static inline void satip_server_boot(void) { };
 static inline void satip_server_init(const char *bindaddr, int rtsp_port) { };
 static inline void satip_server_register(void) { };
 static inline void satip_server_done(void) { };

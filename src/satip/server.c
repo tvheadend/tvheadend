@@ -933,16 +933,20 @@ static void satip_server_save(void)
  * Initialization
  */
 
+void satip_server_boot(void)
+{
+  idclass_register(&satip_server_class);
+
+  satip_server_bootid = time(NULL);
+  satip_server_conf.satip_deviceid = 1;
+  satip_server_conf.satip_rtptcpsize = 7896/188;
+}
+
 void satip_server_init(const char *bindaddr, int rtsp_port)
 {
   pthread_mutex_init(&satip_server_reinit, NULL);
 
-  idclass_register(&satip_server_class);
-
   http_server_ip = NULL;
-  satip_server_bootid = time(NULL);
-  satip_server_conf.satip_deviceid = 1;
-  satip_server_conf.satip_rtptcpsize = 7896/188;
 
   satip_server_bindaddr = bindaddr ? strdup(bindaddr) : NULL;
   satip_server_rtsp_port_locked = rtsp_port > 0;
