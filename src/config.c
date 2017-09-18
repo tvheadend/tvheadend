@@ -1682,6 +1682,8 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
 
   idclass_register(&config_class);
 
+  satip_server_boot();
+
   /* Generate default */
   if (!path) {
     const char *homedir = getenv("HOME");
