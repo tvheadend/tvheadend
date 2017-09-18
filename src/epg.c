@@ -1288,13 +1288,18 @@ void epg_episode_get_epnum ( epg_episode_t *ee, epg_episode_num_t *num )
 
 int epg_episode_number_cmp ( epg_episode_num_t *a, epg_episode_num_t *b )
 {
-  if (a->s_num != b->s_num) {
-    return a->s_num - b->s_num;
-  } else if (a->e_num != b->e_num) {
-    return a->e_num - b->e_num;
-  } else {
-    return a->p_num - b->p_num;
+  if (a->e_num) {
+    if (a->s_num != b->s_num) {
+      return a->s_num - b->s_num;
+    } else if (a->e_num != b->e_num) {
+      return a->e_num - b->e_num;
+    } else {
+      return a->p_num - b->p_num;
+    }
+  } else if (a->text && b->text) {
+    return strcmp(a->text, b->text);
   }
+  return 0;
 }
 
 // WIBNI: this could do with soem proper matching, maybe some form of
