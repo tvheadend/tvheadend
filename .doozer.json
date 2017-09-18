@@ -1,58 +1,6 @@
 {
   "concurrent": false,
   "targets": {
-    "precise-amd64": {
-      "buildenv": "precise-amd64",
-      "builddeps": [
-        "cmake",
-        "git",
-        "build-essential",
-        "pkg-config",
-        "gettext",
-        "libavahi-client-dev",
-        "libssl-dev",
-        "zlib1g-dev",
-        "wget",
-        "bzip2",
-        "git-core",
-        "liburiparser-dev",
-        "libpcre3-dev",
-        "python",
-        "dvb-apps",
-        "debhelper",
-        "ccache"
-      ],
-      "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "precise-i386": {
-      "buildenv": "precise-i386",
-      "builddeps": [
-        "cmake",
-        "git",
-        "build-essential",
-        "pkg-config",
-        "gettext",
-        "libavahi-client-dev",
-        "libssl-dev",
-        "zlib1g-dev",
-        "wget",
-        "bzip2",
-        "git-core",
-        "liburiparser-dev",
-        "libpcre3-dev",
-        "python",
-        "dvb-apps",
-        "debhelper",
-        "ccache"
-      ],
-      "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
     "trusty-amd64": {
       "buildenv": "trusty-amd64",
       "builddeps": [
