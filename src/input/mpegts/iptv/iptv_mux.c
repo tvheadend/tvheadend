@@ -244,6 +244,23 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_satip_dvbt_freq",
       .name     = N_("SAT>IP DVB-T frequency (Hz)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_satip_dvbt_freq),
+      .desc     = N_("For example: 658000000. This frequency is 658Mhz."),
+      .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_U32,
+      .id       = "iptv_satip_dvbc_freq",
+      .name     = N_("SAT>IP DVB-C frequency (Hz)"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_satip_dvbc_freq),
+      .desc     = N_("For example: 312000000. This frequency is 312Mhz."),
+      .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_U32,
+      .id       = "iptv_satip_dvbs_freq",
+      .name     = N_("SAT>IP DVB-S frequency (kHz)"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_satip_dvbs_freq),
+      .desc     = N_("For example: 12610500. This frequency is 12610.5Mhz or 12.6105Ghz."),
       .opts     = PO_ADVANCED
     },
     {

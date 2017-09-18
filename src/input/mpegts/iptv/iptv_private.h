@@ -141,6 +141,8 @@ struct iptv_mux
   char                 *mm_iptv_hdr;
   char                 *mm_iptv_tags;
   uint32_t              mm_iptv_satip_dvbt_freq;
+  uint32_t              mm_iptv_satip_dvbc_freq;
+  uint32_t              mm_iptv_satip_dvbs_freq;
 
   uint32_t              mm_iptv_rtp_seq;
 
