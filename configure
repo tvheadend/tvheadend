@@ -494,13 +494,12 @@ if enabled ffmpeg_static; then
   fi
 
   # nvenc
-  if enabled_or_auto nvenc; then
-    if check_cc_header nvEncodeAPI; then
-      enable nvenc
-    elif enabled nvenc; then
-      die "NVENC library (https://developer.nvidia.com/nvidia-video-codec-sdk) not found"
-    fi
-  fi
+  # latest ffmpeg has own code
+  enable nvenc
+  #if enabled nvenc; then
+  #  check_cc_header nvEncodeAPI || \
+  #    die "NVENC library (https://developer.nvidia.com/nvidia-video-codec-sdk) not found"
+  #fi
 
   # qsv
   if enabled qsv; then
