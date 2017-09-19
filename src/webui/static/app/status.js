@@ -120,14 +120,14 @@ tvheadend.status_subs = function(panel, index)
                 header: _("Service"),
                 dataIndex: 'service',
                 sortable: true
-            }, 
+            },
             {
                 width: 50,
                 id: 'profile',
                 header: _("Profile"),
                 dataIndex: 'profile',
                 sortable: true
-            }, 
+            },
             {
                 width: 50,
                 id: 'start',
@@ -179,7 +179,7 @@ tvheadend.status_subs = function(panel, index)
                 renderer: renderBw
             }
         ]);
-        
+
         function clicked(column, grid, index, e) {
             if (column.dataIndex == 'in' || column.dataIndex == 'out') {
                 var id = grid.getStore().getAt(index).id;
@@ -207,7 +207,7 @@ tvheadend.status_subs = function(panel, index)
                 forceFit: true
             }
         });
-        
+
         dpanel.add(subs);
         dpanel.doLayout(false, true);
     }
@@ -482,7 +482,29 @@ tvheadend.status_streams = function(panel, index)
         }));
 
         grid = new Ext.grid.GridPanel({
-            tbar: ['->', {
+            tbar: [
+            {
+                text: _('Clear all statistics'),
+                iconCls: 'clean',
+                handler: function() {
+                    store = tvheadend.streamStatusStore;
+                    if (!store || store == 'undefined') {
+                        return;
+                    }
+                    clearStat = function(record) {
+                        uuid = record.data.uuid;
+                        if (!uuid || 'undefined') {
+                            return;
+                        }
+                        Ext.Ajax.request({
+                            url: 'api/status/inputclrstats',
+                            params: { uuid: uuid }
+                        });
+                    }
+                    store.each(clearStat)
+                }
+            },
+            '->',{
                 text: _('Help'),
                 iconCls: 'help',
                 handler: function() {
@@ -501,7 +523,7 @@ tvheadend.status_streams = function(panel, index)
             },
             plugins: [actions]
         });
-        
+
         dpanel.add(grid);
         dpanel.doLayout(false, true);
     }
@@ -672,7 +694,7 @@ tvheadend.status_conns = function(panel, index) {
             },
             plugins: [actions]
         });
-        
+
         dpanel.add(grid);
         dpanel.doLayout(false, true);
     }
