@@ -2035,32 +2035,45 @@ const idclass_t config_class = {
   .ic_save       = config_class_save,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("Server"),
+         .name   = N_("Server settings"),
          .number = 1,
       },
       {
-         .name   = N_("Language settings"),
+         .name   = N_("Web interface settings"),
          .number = 2,
       },
       {
-         .name   = N_("Web user interface"),
+         .name   = N_("EPG settings"),
          .number = 3,
       },
       {
-         .name   = N_("DVB scan files"),
+         .name   = N_("Channel icon/Picon settings"),
          .number = 4,
       },
       {
-         .name   = N_("Time update"),
+         .name   = N_("HTTP server settings"),
          .number = 5,
       },
       {
-         .name   = N_("Picon"),
+         .name   = N_("System time update"),
          .number = 6,
+      },
+      {
+         .name   = N_("Misc settings"),
+         .number = 7,
       },
       {}
   },
   .ic_properties = (const property_t[]){
+    {
+      .type   = PT_STR,
+      .id     = "server_name",
+      .name   = N_("Tvheadend server name"),
+      .desc   = N_("Set the name of the server so you can distinguish "
+                   "multiple instances apart."),
+      .off    = offsetof(config_t, server_name),
+      .group  = 1
+    },
     {
       .type   = PT_U32,
       .id     = "version",
@@ -2082,95 +2095,216 @@ const idclass_t config_class = {
     },
     {
       .type   = PT_STR,
-      .id     = "server_name",
-      .name   = N_("Tvheadend server name"),
-      .desc   = N_("Set the name of the server so you can distinguish "
-                   "multiple instances apart."),
-      .off    = offsetof(config_t, server_name),
-      .group  = 1
+      .id     = "language_ui",
+      .name   = N_("Default language"),
+      .desc   = N_("The default language to use if the user "
+                   " language isn't set (in the Access Entries tab)."),
+      .list   = language_get_ui_list,
+      .off    = offsetof(config_t, language_ui),
+      .group  = 2
     },
     {
       .type   = PT_STR,
-      .id     = "http_server_name",
-      .name   = N_("HTTP server name"),
-      .desc   = N_("The server name for 'Server:' HTTP headers."),
-      .off    = offsetof(config_t, http_server_name),
-      .opts   = PO_HIDDEN | PO_EXPERT,
-      .group  = 1
-    },
-    {
-      .type   = PT_STR,
-      .id     = "http_realm_name",
-      .name   = N_("HTTP realm name"),
-      .desc   = N_("The realm name for HTTP authorization."),
-      .off    = offsetof(config_t, realm),
-      .opts   = PO_HIDDEN | PO_EXPERT,
-      .group  = 1
+      .id     = "theme_ui",
+      .name   = N_("Theme"),
+      .desc   = N_("The default web interface theme, if a user-specific "
+                   "one isn't set (in the Access Entries tab)."),
+      .doc    = prop_doc_themes,
+      .list   = theme_get_ui_list,
+      .off    = offsetof(config_t, theme_ui),
+      .opts   = PO_DOC_NLIST,
+      .group  = 2
     },
     {
       .type   = PT_BOOL,
-      .id     = "hbbtv",
-      .name   = N_("Parse HbbTV info"),
-      .desc   = N_("Parse HbbTV information from services."),
-      .off    = offsetof(config_t, hbbtv),
-      .group  = 1
+      .id     = "ui_quicktips",
+      .name   = N_("Tooltips"),
+      .desc   = N_("Enable/Disable web interface mouse-over tooltips."),
+      .off    = offsetof(config_t, ui_quicktips),
+      .opts   = PO_ADVANCED,
+      .group  = 2
     },
     {
       .type   = PT_INT,
       .id     = "uilevel",
-      .name   = N_("User interface level"),
-      .desc   = N_("Sets the default interface view level (next to the "
+      .name   = N_("Default view level"),
+      .desc   = N_("The default interface view level (next to the "
                    "Help button)."),
       .doc    = prop_doc_viewlevel_config,
       .off    = offsetof(config_t, uilevel),
       .list   = config_class_uilevel,
       .opts   = PO_DOC_NLIST,
-      .group  = 1
+      .group  = 2
     },
     {
       .type   = PT_BOOL,
       .id     = "uilevel_nochange",
-      .name   = N_("Persistent user interface level"),
-      .desc   = N_("Prevent users from overriding the user "
-                   "interface level setting, and remove the view level "
-                   "drop-dowm from the interface."),
+      .name   = N_("Persistent view level"),
+      .desc   = N_("Prevent users from overriding the view level "
+                   "setting. This option shows or hides the View level "
+                   "drop-down (next to the Help button)."),
       .off    = offsetof(config_t, uilevel_nochange),
       .opts   = PO_ADVANCED,
-      .group  = 1
+      .group  = 2
     },
     {
       .type   = PT_BOOL,
-      .id     = "ui_quicktips",
-      .name   = N_("User interface quick tips (tooltips)"),
-      .desc   = N_("Enable/disable interface quick tips."),
-      .off    = offsetof(config_t, ui_quicktips),
+      .id     = "caclient_ui",
+      .name   = N_("Conditional Access (for advanced view level)"),
+      .desc   = N_("Enable/Disable the CAs (conditional accesses) tab "
+                   "for the advanced view level. By default, it's "
+                   "visible only to the Expert level."),
+      .off    = offsetof(config_t, caclient_ui),
       .opts   = PO_ADVANCED,
-      .group  = 1
+      .group  = 2
+    },
+    {
+      .type   = PT_STR,
+      .islist = 1,
+      .id     = "info_area",
+      .name   = N_("Information area"),
+      .desc   = N_("Show, hide and sort the various details that "
+                   "appear on the interface next to the About tab."),
+      .set    = config_class_info_area_set,
+      .get    = config_class_info_area_get,
+      .list   = config_class_info_area_list,
+      .opts   = PO_LORDER | PO_ADVANCED | PO_DOC_NLIST,
+      .group  = 2
+    },
+    {
+      .type   = PT_STR,
+      .islist = 1,
+      .id     = "language",
+      .name   = N_("Default language(s)"),
+      .desc   = N_("Select the list of languages (in order of "
+                   "priority) to be used for supplying EPG information "
+                   "to clients that don't provide their own "
+                   "configuration."),
+      .set    = config_class_language_set,
+      .get    = config_class_language_get,
+      .list   = config_class_language_list,
+      .opts   = PO_LORDER,
+      .group  = 3
+    },
+#if ENABLE_ZLIB
+    {
+      .type   = PT_BOOL,
+      .id     = "epg_compress",
+      .name   = N_("Compress EPG database"),
+      .desc   = N_("Compress the EPG database to reduce disk I/O "
+                   "and space."),
+      .off    = offsetof(config_t, epg_compress),
+      .opts   = PO_EXPERT,
+      .def.i  = 1,
+      .group  = 3
+    },
+#endif
+    {
+      .type   = PT_U32,
+      .id     = "epg_cutwindow",
+      .name   = N_("EPG overlap cut"),
+      .desc   = N_("The time window to cut the stop time from the overlapped event in seconds."),
+      .off    = offsetof(config_t, epg_cut_window),
+      .opts   = PO_EXPERT,
+      .group  = 3
+    },
+    {
+      .type   = PT_U32,
+      .id     = "epg_window",
+      .name   = N_("EPG update window"),
+      .desc   = N_("Maximum allowed difference between event start time when "
+                   "the EPG event is changed (in seconds)."),
+      .off    = offsetof(config_t, epg_update_window),
+      .opts   = PO_EXPERT,
+      .group  = 3
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "prefer_picon",
+      .name   = N_("Prefer picons over channel icons"),
+      .desc   = N_("If both a picon and a channel-specific "
+      "(e.g. channelname.jpg) icon are defined, prefer the picon."),
+      .off    = offsetof(config_t, prefer_picon),
+      .opts   = PO_ADVANCED,
+      .group  = 4,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "chiconpath",
+      .name   = N_("Channel icon path"),
+      .desc   = N_("Path to an icon for this channel. This can be "
+                   "named however you wish, as either a local "
+                   "(file://) or remote (http://) image. "
+                   "See Help for more infomation."),
+      .off    = offsetof(config_t, chicon_path),
+      .doc    = prop_doc_config_channelicon_path,
+      .opts   = PO_ADVANCED,
+      .group  = 4,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "chiconscheme",
+      .name   = N_("Channel icon name scheme"),
+      .desc   = N_("Scheme to generate the channel icon names "
+                   "(all lower-case, service name picons etc.)."),
+      .list   = config_class_chiconscheme_list,
+      .doc    = prop_doc_config_channelname_scheme,
+      .off    = offsetof(config_t, chicon_scheme),
+      .opts   = PO_ADVANCED | PO_DOC_NLIST,
+      .group  = 4,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "piconpath",
+      .name   = N_("Picon path"),
+      .desc   = N_("Path to a directory (folder) containing your picon "
+                   "collection. See Help for more detailed "
+                   "information."),
+      .doc    = prop_doc_config_picon_path,
+      .off    = offsetof(config_t, picon_path),
+      .opts   = PO_ADVANCED,
+      .group  = 4,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "piconscheme",
+      .name   = N_("Picon name scheme"),
+      .desc   = N_("Select scheme to generate the picon names "
+                   "(standard, force service type to 1)"),
+      .list   = config_class_piconscheme_list,
+      .doc    = prop_doc_config_picon_servicetype,
+      .off    = offsetof(config_t, picon_scheme),
+      .opts   = PO_ADVANCED | PO_DOC_NLIST,
+      .group  = 4,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "http_server_name",
+      .name   = N_("Server name"),
+      .desc   = N_("The server name for 'Server:' HTTP headers."),
+      .off    = offsetof(config_t, http_server_name),
+      .opts   = PO_HIDDEN | PO_EXPERT,
+      .group  = 5
+    },
+    {
+      .type   = PT_STR,
+      .id     = "http_realm_name",
+      .name   = N_("Realm name"),
+      .desc   = N_("The realm name for HTTP authorization."),
+      .off    = offsetof(config_t, realm),
+      .opts   = PO_HIDDEN | PO_EXPERT,
+      .group  = 5
     },
     {
       .type   = PT_BOOL,
       .id     = "digest",
-      .name   = N_("Use HTTP digest authentication"),
+      .name   = N_("Digest authentication"),
       .desc   = N_("Digest access authentication is intended as a security trade-off. "
                    "It is intended to replace unencrypted HTTP basic access authentication. "
                    "This option should be enabled for standard usage."),
       .off    = offsetof(config_t, digest),
       .opts   = PO_EXPERT,
-      .group  = 1
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "proxy",
-      .name   = N_("Use PROXY protocol & X-Forwarded-For"),
-      .desc   = N_("PROXY protocol is an extension for support incoming "
-                   "TCP connections from a remote server (like a firewall) "
-                   "sending the original IP address of the client. "
-                   "The HTTP header 'X-Forwarded-For' do the same with "
-                   "HTTP connections. Both enable tunneled connections."
-                   "This option should be disabled for standard usage."),
-      .off    = offsetof(config_t, proxy),
-      .opts   = PO_EXPERT,
-      .group  = 1
+      .group  = 5
     },
     {
       .type   = PT_U32,
@@ -2181,12 +2315,26 @@ const idclass_t config_class = {
                    "expire."),
       .off    = offsetof(config_t, cookie_expires),
       .opts   = PO_EXPERT,
-      .group  = 1
+      .group  = 5
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "proxy",
+      .name   = N_("PROXY protocol & X-Forwarded-For"),
+      .desc   = N_("PROXY protocol is an extension for support incoming "
+                   "TCP connections from a remote server (like a firewall) "
+                   "sending the original IP address of the client. "
+                   "The HTTP header 'X-Forwarded-For' do the same with "
+                   "HTTP connections. Both enable tunneled connections."
+                   "This option should be disabled for standard usage."),
+      .off    = offsetof(config_t, proxy),
+      .opts   = PO_EXPERT,
+      .group  = 5
     },
     {
       .type   = PT_STR,
       .id     = "cors_origin",
-      .name   = N_("HTTP CORS origin"),
+      .name   = N_("CORS origin"),
       .desc   = N_("HTTP CORS (cross-origin resource sharing) origin. This "
                    "option is usually set when Tvheadend is behind a "
                    "proxy. Enter a domain (or IP) to allow "
@@ -2194,7 +2342,42 @@ const idclass_t config_class = {
       .set    = config_class_cors_origin_set,
       .off    = offsetof(config_t, cors_origin),
       .opts   = PO_EXPERT,
-      .group  = 1
+      .group  = 5
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "tvhtime_update_enabled",
+      .name   = N_("Update time"),
+      .desc   = N_("Enable system time updates. This will only work if "
+                   "the user running Tvheadend has rights to update "
+                   "the system clock (normally only root)."),
+      .off    = offsetof(config_t, tvhtime_update_enabled),
+      .opts   = PO_EXPERT,
+      .group  = 6,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "tvhtime_ntp_enabled",
+      .name   = N_("Enable NTP driver"),
+      .desc   = N_("This will create an NTP driver (using shmem "
+                   "interface) that you can feed into ntpd. This can "
+                   "be run without root privileges, but generally the "
+                   "performance is not that great."),
+      .off    = offsetof(config_t, tvhtime_ntp_enabled),
+      .opts   = PO_EXPERT,
+      .group  = 6,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "tvhtime_tolerance",
+      .name   = N_("Update tolerance (ms)"),
+      .desc   = N_("Only update the system clock (doesn't affect NTP "
+                   "driver) if the delta between the system clock and "
+                   "DVB time is greater than this. This can help stop "
+                   "excessive oscillations on the system clock."),
+      .off    = offsetof(config_t, tvhtime_tolerance),
+      .opts   = PO_EXPERT,
+      .group  = 6,
     },
     {
       .type   = PT_INT,
@@ -2211,18 +2394,7 @@ const idclass_t config_class = {
       .off    = offsetof(config_t, dscp),
       .list   = config_class_dscp_list,
       .opts   = PO_EXPERT | PO_DOC_NLIST,
-      .group  = 1
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "caclient_ui",
-      .name   = N_("Conditional Access"),
-      .desc   = N_("Enable the CAs (conditional accesses) tab in web user interface "
-                   "for the advanced level. By default, this tab is visible only "
-                   "in the expert level."),
-      .off    = offsetof(config_t, caclient_ui),
-      .opts   = PO_ADVANCED,
-      .group  = 1
+      .group  = 7
     },
     {
       .type   = PT_U32,
@@ -2232,100 +2404,18 @@ const idclass_t config_class = {
                    "there is a delay receiving CA keys. "),
       .off    = offsetof(config_t, descrambler_buffer),
       .opts   = PO_EXPERT,
-      .group  = 1
+      .group  = 7
     },
     {
       .type   = PT_BOOL,
       .id     = "parser_backlog",
-      .name   = N_("Use packet backlog"),
+      .name   = N_("Packet backlog"),
       .desc   = N_("Send previous stream frames to upper layers "
                    "(before frame start is signalled in the stream). "
                    "It may cause issues with some clients / players."),
       .off    = offsetof(config_t, parser_backlog),
       .opts   = PO_EXPERT,
-      .group  = 1
-    },
-    {
-      .type   = PT_STR,
-      .islist = 1,
-      .id     = "language",
-      .name   = N_("Default language(s)"),
-      .desc   = N_("Select the list of languages (in order of "
-                   "priority) to be used for supplying EPG information "
-                   "to clients that don't provide their own "
-                   "configuration."),
-      .set    = config_class_language_set,
-      .get    = config_class_language_get,
-      .list   = config_class_language_list,
-      .opts   = PO_LORDER,
-      .group  = 2
-    },
-#if ENABLE_ZLIB
-    {
-      .type   = PT_BOOL,
-      .id     = "epg_compress",
-      .name   = N_("Compress EPG database"),
-      .desc   = N_("Compress the EPG database to reduce disk I/O "
-                   "and space."),
-      .off    = offsetof(config_t, epg_compress),
-      .opts   = PO_EXPERT,
-      .def.i  = 1,
-      .group  = 2
-    },
-#endif
-    {
-      .type   = PT_U32,
-      .id     = "epg_cutwindow",
-      .name   = N_("EPG overlap cut"),
-      .desc   = N_("The time window to cut the stop time from the overlapped event in seconds."),
-      .off    = offsetof(config_t, epg_cut_window),
-      .opts   = PO_EXPERT,
-      .group  = 2
-    },
-    {
-      .type   = PT_U32,
-      .id     = "epg_window",
-      .name   = N_("EPG update window"),
-      .desc   = N_("Maximum allowed difference between event start time when "
-                   "the EPG event is changed (in seconds)."),
-      .off    = offsetof(config_t, epg_update_window),
-      .opts   = PO_EXPERT,
-      .group  = 2
-    },
-    {
-      .type   = PT_STR,
-      .islist = 1,
-      .id     = "info_area",
-      .name   = N_("Information area"),
-      .desc   = N_("Show, hide and sort the various details that "
-                   "appear on the interface next to the About tab."),
-      .set    = config_class_info_area_set,
-      .get    = config_class_info_area_get,
-      .list   = config_class_info_area_list,
-      .opts   = PO_LORDER | PO_ADVANCED | PO_DOC_NLIST,
-      .group  = 3
-    },
-    {
-      .type   = PT_STR,
-      .id     = "language_ui",
-      .name   = N_("User language"),
-      .desc   = N_("The default language to use if the user "
-                   " language isn't set in the Access Entries tab."),
-      .list   = language_get_ui_list,
-      .off    = offsetof(config_t, language_ui),
-      .group  = 3
-    },
-    {
-      .type   = PT_STR,
-      .id     = "theme_ui",
-      .name   = N_("Theme"),
-      .desc   = N_("The default web interface to use if the user "
-                   " theme isn't set in the Access Entries tab."),
-      .doc    = prop_doc_themes,
-      .list   = theme_get_ui_list,
-      .off    = offsetof(config_t, theme_ui),
-      .opts   = PO_DOC_NLIST,
-      .group  = 3
+      .group  = 7
     },
     {
       .type   = PT_STR,
@@ -2338,101 +2428,15 @@ const idclass_t config_class = {
       .off    = offsetof(config_t, muxconf_path),
       .notify = config_muxconfpath_notify,
       .opts   = PO_ADVANCED,
-      .group  = 4
+      .group  = 7
     },
     {
       .type   = PT_BOOL,
-      .id     = "tvhtime_update_enabled",
-      .name   = N_("Update time"),
-      .desc   = N_("Enable system time updates. This will only work if "
-                   "the user running Tvheadend has rights to update "
-                   "the system clock (normally only root)."),
-      .off    = offsetof(config_t, tvhtime_update_enabled),
-      .opts   = PO_EXPERT,
-      .group  = 5,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "tvhtime_ntp_enabled",
-      .name   = N_("Enable NTP driver"),
-      .desc   = N_("This will create an NTP driver (using shmem "
-                   "interface) that you can feed into ntpd. This can "
-                   "be run without root privileges, but generally the "
-                   "performance is not that great."),
-      .off    = offsetof(config_t, tvhtime_ntp_enabled),
-      .opts   = PO_EXPERT,
-      .group  = 5,
-    },
-    {
-      .type   = PT_U32,
-      .id     = "tvhtime_tolerance",
-      .name   = N_("Update tolerance (ms)"),
-      .desc   = N_("Only update the system clock (doesn't affect NTP "
-                   "driver) if the delta between the system clock and "
-                   "DVB time is greater than this. This can help stop "
-                   "excessive oscillations on the system clock."),
-      .off    = offsetof(config_t, tvhtime_tolerance),
-      .opts   = PO_EXPERT,
-      .group  = 5,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "prefer_picon",
-      .name   = N_("Prefer picons over channel name"),
-      .desc   = N_("If both a picon and a channel-specific "
-      "(e.g. channelname.jpg) icon are defined, prefer the picon."),
-      .off    = offsetof(config_t, prefer_picon),
-      .opts   = PO_ADVANCED,
-      .group  = 6,
-    },
-    {
-      .type   = PT_STR,
-      .id     = "chiconpath",
-      .name   = N_("Channel icon path"),
-      .desc   = N_("Path to an icon for this channel. This can be "
-                   "named however you wish, as either a local "
-                   "(file://) or remote (http://) image. "
-                   "See Help for more infomation."),
-      .off    = offsetof(config_t, chicon_path),
-      .doc    = prop_doc_config_channelicon_path,
-      .opts   = PO_ADVANCED,
-      .group  = 6,
-    },
-    {
-      .type   = PT_INT,
-      .id     = "chiconscheme",
-      .name   = N_("Channel icon name scheme"),
-      .desc   = N_("Scheme to generate the channel icon names "
-                   "(all lower-case, service name picons etc.)."),
-      .list   = config_class_chiconscheme_list,
-      .doc    = prop_doc_config_channelname_scheme,
-      .off    = offsetof(config_t, chicon_scheme),
-      .opts   = PO_ADVANCED | PO_DOC_NLIST,
-      .group  = 6,
-    },
-    {
-      .type   = PT_STR,
-      .id     = "piconpath",
-      .name   = N_("Picon path"),
-      .desc   = N_("Path to a directory (folder) containing your picon "
-                   "collection. See Help for more detailed "
-                   "information."),
-      .doc    = prop_doc_config_picon_path,
-      .off    = offsetof(config_t, picon_path),
-      .opts   = PO_ADVANCED,
-      .group  = 6,
-    },
-    {
-      .type   = PT_INT,
-      .id     = "piconscheme",
-      .name   = N_("Picon name scheme"),
-      .desc   = N_("Select scheme to generate the picon names "
-                   "(standard, force service type to 1)"),
-      .list   = config_class_piconscheme_list,
-      .doc    = prop_doc_config_picon_servicetype,
-      .off    = offsetof(config_t, picon_scheme),
-      .opts   = PO_ADVANCED | PO_DOC_NLIST,
-      .group  = 6,
+      .id     = "hbbtv",
+      .name   = N_("Parse HbbTV info"),
+      .desc   = N_("Parse HbbTV information from services."),
+      .off    = offsetof(config_t, hbbtv),
+      .group  = 7
     },
     {
       .type   = PT_STR,
