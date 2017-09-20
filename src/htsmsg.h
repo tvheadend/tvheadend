@@ -295,7 +295,7 @@ int htsmsg_get_bin(htsmsg_t *msg, const char *name, const void **binp,
  * @return NULL if the field can not be found or not of list type.
  *         Otherwise a htsmsg is returned.
  */
-htsmsg_t *htsmsg_get_list(htsmsg_t *msg, const char *name);
+htsmsg_t *htsmsg_get_list(const htsmsg_t *msg, const char *name);
 
 htsmsg_t *htsmsg_field_get_list(htsmsg_field_t *f);
 
@@ -401,7 +401,7 @@ htsmsg_field_t *htsmsg_field_add(htsmsg_t *msg, const char *name,
 /**
  * Get a field, return NULL if it does not exist
  */
-htsmsg_field_t *htsmsg_field_find(htsmsg_t *msg, const char *name);
+htsmsg_field_t *htsmsg_field_find(const htsmsg_t *msg, const char *name);
 
 /**
  * Get a last field, return NULL if it does not exist
@@ -412,12 +412,12 @@ htsmsg_field_t *htsmsg_field_last(htsmsg_t *msg);
 /**
  * Clone a message.
  */
-htsmsg_t *htsmsg_copy(htsmsg_t *src);
+htsmsg_t *htsmsg_copy(const htsmsg_t *src);
 
 /**
  * Compare a message.
  */
-int htsmsg_cmp(htsmsg_t *m1, htsmsg_t *m2);
+int htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2);
 
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 

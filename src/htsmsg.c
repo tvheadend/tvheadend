@@ -175,7 +175,7 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
  *
  */
 htsmsg_field_t *
-htsmsg_field_find(htsmsg_t *msg, const char *name)
+htsmsg_field_find(const htsmsg_t *msg, const char *name)
 {
   htsmsg_field_t *f;
 
@@ -905,7 +905,7 @@ htsmsg_get_str_multi(htsmsg_t *msg, ...)
  *
  */
 htsmsg_t *
-htsmsg_get_list(htsmsg_t *msg, const char *name)
+htsmsg_get_list(const htsmsg_t *msg, const char *name)
 {
   htsmsg_field_t *f;
 
@@ -1039,7 +1039,7 @@ htsmsg_print(htsmsg_t *msg)
  *
  */
 static void
-htsmsg_copy_i(htsmsg_t *src, htsmsg_t *dst)
+htsmsg_copy_i(const htsmsg_t *src, htsmsg_t *dst)
 {
   htsmsg_field_t *f;
   htsmsg_t *sub;
@@ -1080,7 +1080,7 @@ htsmsg_copy_i(htsmsg_t *src, htsmsg_t *dst)
 }
 
 htsmsg_t *
-htsmsg_copy(htsmsg_t *src)
+htsmsg_copy(const htsmsg_t *src)
 {
   htsmsg_t *dst;
   if (src == NULL) return NULL;
@@ -1093,7 +1093,7 @@ htsmsg_copy(htsmsg_t *src)
  *
  */
 int
-htsmsg_cmp(htsmsg_t *m1, htsmsg_t *m2)
+htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2)
 {
   htsmsg_field_t *f1, *f2;
 
