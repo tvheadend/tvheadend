@@ -431,7 +431,9 @@ streaming_code2txt(int code)
   switch(code) {
   case SM_CODE_OK:
     return N_("OK");
-    
+  case SM_CODE_FORCE_OK:
+    return N_("Forced OK");
+
   case SM_CODE_SOURCE_RECONFIGURED:
     return N_("Source reconfigured");
   case SM_CODE_BAD_SOURCE:

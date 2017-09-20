@@ -510,6 +510,8 @@ typedef enum {
 
 #define SM_CODE_UNDEFINED_ERROR           1
 
+#define SM_CODE_FORCE_OK                  10
+
 #define SM_CODE_SOURCE_RECONFIGURED       100
 #define SM_CODE_BAD_SOURCE                101
 #define SM_CODE_SOURCE_DELETED            102

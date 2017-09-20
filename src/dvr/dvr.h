@@ -589,7 +589,7 @@ int64_t dvr_entry_claenup(dvr_entry_t *de, int64_t requiredBytes);
 
 void dvr_entry_set_rerecord(dvr_entry_t *de, int cmd);
 
-void dvr_entry_move(dvr_entry_t *de, int failed);
+void dvr_entry_move(dvr_entry_t *de, int to_failed);
 
 dvr_entry_t *dvr_entry_stop(dvr_entry_t *de);
 
