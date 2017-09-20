@@ -277,7 +277,8 @@ dvb_desc_sat_del
 
   polarisation = (ptr[6] >> 5) & 0x03;
 
-  dvb_mux_conf_init(&dmc, (ptr[6] & 0x4) ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
+  dvb_mux_conf_init((mpegts_network_t *)mm->mm_network, &dmc,
+                    (ptr[6] & 0x4) ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
 
   dmc.dmc_fe_freq                = frequency;
   dmc.u.dmc_fe_qpsk.orbital_pos  = orbitalpos;
@@ -352,7 +353,8 @@ dvb_desc_cable_del
     return NULL;
   }
 
-  dvb_mux_conf_init(&dmc, ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_delsys);
+  dvb_mux_conf_init((mpegts_network_t *)mm->mm_network, &dmc,
+                    ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_delsys);
 
   dmc.dmc_fe_freq            = frequency * 100;
 
@@ -418,7 +420,7 @@ dvb_desc_terr_del
     return NULL;
   }
 
-  dvb_mux_conf_init(&dmc, DVB_SYS_DVBT);
+  dvb_mux_conf_init((mpegts_network_t *)mm->mm_network, &dmc, DVB_SYS_DVBT);
 
   dmc.dmc_fe_freq                         = frequency * 10;
   dmc.u.dmc_fe_ofdm.bandwidth             = btab[(ptr[4] >> 5) & 0x7];
@@ -2756,7 +2758,10 @@ psi_tables_install ( mpegts_input_t *mi, mpegts_mux_t *mm,
     psi_tables_atsc_t(mm);
     break;
   case DVB_SYS_DVBC_ANNEX_B:
-    psi_tables_atsc_c(mm);
+    if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbc_class))
+      psi_tables_dvb(mm);
+    else
+      psi_tables_atsc_c(mm);
     break;
   case DVB_SYS_NONE:
   case DVB_SYS_DVBH:

@@ -1019,7 +1019,7 @@ rtsp_parse_cmd
     }
   }
 
-  dvb_mux_conf_init(dmc = &rs->dmc, msys);
+  dvb_mux_conf_init(NULL, dmc = &rs->dmc, msys);
 
   mtype = mtype_to_tvh(hc);
   if (mtype == DVB_MOD_NONE) goto end;

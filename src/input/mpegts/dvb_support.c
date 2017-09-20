@@ -719,7 +719,7 @@ const static struct strtab delsystab[] = {
 dvb_str2val(delsys);
 
 int
-dvb_delsys2type ( dvb_fe_delivery_system_t delsys )
+dvb_delsys2type ( mpegts_network_t *ln, dvb_fe_delivery_system_t delsys )
 {
   switch (delsys) {
     case DVB_SYS_DVBC_ANNEX_A:
@@ -736,7 +736,10 @@ dvb_delsys2type ( dvb_fe_delivery_system_t delsys )
     case DVB_SYS_ATSCMH:
       return DVB_TYPE_ATSC_T;
     case DVB_SYS_DVBC_ANNEX_B:
-      return DVB_TYPE_ATSC_C;
+      if (ln && idnode_is_instance(&ln->mn_id, &dvb_network_dvbc_class))
+        return DVB_TYPE_C;
+      else
+        return DVB_TYPE_ATSC_C;
     case DVB_SYS_ISDBT:
       return DVB_TYPE_ISDB_T;
     case DVB_SYS_ISDBC:
@@ -980,10 +983,12 @@ dvb_str2val(plsmode);
 
 
 void
-dvb_mux_conf_init ( dvb_mux_conf_t *dmc, dvb_fe_delivery_system_t delsys )
+dvb_mux_conf_init ( mpegts_network_t *ln,
+                    dvb_mux_conf_t *dmc,
+                    dvb_fe_delivery_system_t delsys )
 {
   memset(dmc, 0, sizeof(*dmc));
-  dmc->dmc_fe_type      = dvb_delsys2type(delsys);
+  dmc->dmc_fe_type      = dvb_delsys2type(ln, delsys);
   dmc->dmc_fe_delsys    = delsys;
   dmc->dmc_fe_inversion = DVB_INVERSION_AUTO;
   dmc->dmc_fe_pilot     = DVB_PILOT_AUTO;
@@ -1020,10 +1025,16 @@ dvb_mux_conf_str_dvbt ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 static int
 dvb_mux_conf_str_dvbc ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
+  const char *delsys;
+  if (dmc->dmc_fe_type == DVB_TYPE_C &&
+      dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B)
+    delsys = "DVB-C/ANNEX_B";
+  else
+    delsys = dvb_delsys2str(dmc->dmc_fe_delsys);
   return
   snprintf(buf, bufsize,
            "%s freq %d sym %d mod %s fec %s",
-           dvb_delsys2str(dmc->dmc_fe_delsys),
+           delsys,
            dmc->dmc_fe_freq,
            dmc->u.dmc_fe_qam.symbol_rate,
            dvb_qam2str(dmc->dmc_fe_modulation),

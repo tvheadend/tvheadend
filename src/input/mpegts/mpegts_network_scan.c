@@ -389,7 +389,7 @@ tsid_lookup:
         mpegts_mux_t *mm = NULL;
 
         mux = malloc(sizeof(dvb_mux_conf_t));
-        dvb_mux_conf_init(mux, dvbs2 ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
+        dvb_mux_conf_init(mn, mux, dvbs2 ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
         mux->dmc_fe_freq = freq;
         mux->u.dmc_fe_qpsk.symbol_rate = symbol;
         mux->u.dmc_fe_qpsk.polarisation = dvb_str2pol(pol);

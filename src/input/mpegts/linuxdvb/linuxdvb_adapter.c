@@ -411,7 +411,7 @@ linuxdvb_adapter_add ( const char *path )
         delsys = DVB_SYS_DVBS;
 
       /* Invalid */
-      if ((type5 = dvb_delsys2type(delsys)) == DVB_TYPE_NONE)
+      if ((type5 = dvb_delsys2type(NULL, delsys)) == DVB_TYPE_NONE)
         continue;
 
       /* Couldn't find */
