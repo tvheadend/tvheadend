@@ -142,11 +142,9 @@ int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
 
   int removed = entry->de_file_removed ||                                               /* Removed by tvheadend */
       (entry->de_sched_state != DVR_MISSED_TIME && dvr_get_filesize(entry, 0) == -1);   /* Removed externally? */
-  int success = entry->de_sched_state == DVR_COMPLETED;
-
-  if (success && entry->de_last_error != SM_CODE_USER_REQUEST)
-      success = entry->de_last_error == SM_CODE_OK &&
-                entry->de_data_errors < DVR_MAX_DATA_ERRORS;
+  int success = entry->de_sched_state == DVR_COMPLETED &&
+      entry->de_last_error == SM_CODE_OK &&
+      entry->de_data_errors < DVR_MAX_DATA_ERRORS;
 
   if ((flags & DVR_FINISHED_REMOVED_SUCCESS) && removed && success)
     return 1;
@@ -645,9 +643,10 @@ dvr_entry_status(dvr_entry_t *de)
       case SM_CODE_INVALID_TARGET:
         return N_("File not created");
       case SM_CODE_USER_ACCESS:
+        return N_("User access error");
       case SM_CODE_USER_LIMIT:
+        return N_("User limit reached");
       case SM_CODE_NO_SPACE:
-      case SM_CODE_USER_REQUEST:
         return streaming_code2txt(de->de_last_error);
       default:
         break;
