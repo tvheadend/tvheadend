@@ -1,0 +1,25 @@
+This directory contains input test files for the EIT scraper
+functionality.  These are run with the eitscrape_test.py which takes
+as input a parser file from support/testdata/eitscrape/ and one of
+these input files.
+
+It then outputs OK or FAIL for every test case.
+
+The format is JSON.
+
+Input:
+- "comment' - explanation for the test if there is something unusual
+      about it such as broadcaster reversing episode and season.
+
+- "summary" - summary field from EIT broadcast that will be scraped.
+
+
+Expected Result:
+
+- 'age', 'airdate', 'comment', 'episode', 'genre', 'season':
+   expected scraped values. "null" is an accepted value such as '"season": null'
+   for cases that should explicitly not set season.
+
+   Currently we do not scrape age (12, 15, 18 etc) or genre but it is
+   included since some broadcasters have this information in the
+   summary and it may be supported in the future.

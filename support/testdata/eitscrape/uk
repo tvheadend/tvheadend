@@ -1,0 +1,70 @@
+{
+"environ" : [
+    {
+        "comment": "This section contains general information about this file to help people guess what regions it affects.",
+        "language": "en",
+        "location": "uk",
+        "description": "UK Freeview DVB-T and Freesat DVB-S configuration.",
+        "eitgrabber": ["uk_freeview", "uk_freesat", "eit"]
+    }
+],
+
+"tests" : [
+    {
+        "summary": "...Title Continuation Here: Lorem Ipsum (S2 Ep1)",
+        "season": "2", "episode": "1",
+        "new_subtitle": null
+    },
+    {
+        "summary": "...TitleContinue. Subtitle Here After Title Continue: Lorem Ipsum. (S1 Ep3)",
+        "season": "1", "episode": "3",
+        "new_subtitle": "Subtitle Here After Title Continue"
+    },
+    {
+        "summary": "Lorem Ipsum. (S1 Ep 21)[S]",
+        "season": "1", "episode": "21"
+    },
+    {
+        "summary": "Lorem Ipsum.. (S7 Ep2/8)  [AD,S]",
+        "season": "7", "episode": "2"
+    },
+    {
+        "summary": "Sub Title Here: Lorem Ipsum. (S1 Ep23)",
+        "season": "1", "episode": "23"
+    },
+    {
+        "summary" : "Lorem Ipsum. (S5, E31)",
+        "season": "5", "episode": "31"
+    },
+    {
+        "summary": "5/6. Sub Title Here?: Lorem Ipsum.. [HD] [AD,S]",
+        "season": null, "episode": "5",
+        "new_subtitle": "Sub Title Here?"
+    },
+    {
+        "summary": "Lorem Ipsum. (S8, ep 5) [S,AD]",
+        "season": "8", "episode": "5"
+    },
+    {
+        "summary": "Subtitle, More Subtitle - Part 1: Lorem Ipsum. (S8 Ep17)",
+        "season": "8", "episode": "17",
+        "new_subtitle" : "Subtitle, More Subtitle - Part 1"
+    },
+    {
+        "comment": "No space between episode's period and start of text.",
+        "summary": "S18 E4.Lorem Ipsum",
+        "season": "18", "episode": "4"
+    },
+    {
+        "summary": "S13, E11. Lorem Ipsum",
+        "season": "13", "episode": "11"
+    },
+    {
+        "summary": "(1979) Lorem Ipsum 1960s Lorem [S]",
+        "airdate": "1979"
+    },
+    {
+        "summary": "Lorem Ipsum (1997)",
+        "airdate": "1997"
+    }
+]}
