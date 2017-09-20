@@ -35,6 +35,7 @@
 #include "epggrab.h"
 #include "imagecache.h"
 #include "notify.h"
+#include "string_list.h"
 
 /* Broadcast hashing */
 #define EPG_HASH_WIDTH 1024
@@ -335,30 +336,36 @@ static int _epg_object_set_str
   return save;
 }
 
-static int _epg_object_set_lang_str
-  ( void *o, lang_str_t **old, const lang_str_t *str,
-    uint32_t *changed, uint32_t cflag )
-{
-  if (!o) return 0;
-  if (changed) *changed |= cflag;
-  if (!*old) {
-    if (!str)
-      return 0;
-  }
-  if (!str) {
-    lang_str_destroy(*old);
-    *old = NULL;
-    _epg_object_set_updated(o);
-    return 1;
-  }
-  if (lang_str_compare(*old, str)) {
-    lang_str_destroy(*old);
-    *old = lang_str_copy(str);
-    _epg_object_set_updated(o);
-    return 1;
-  }
-  return 0;
+/* "Template" for setting objects. */
+#define EPG_OBJECT_SET_FN(FNNAME,TYPE,DESTROY,COMPARE,COPY) \
+static int FNNAME \
+  ( void *o, TYPE **old, const TYPE *new, \
+    uint32_t *changed, uint32_t cflag ) \
+{ \
+  if (!o) return 0; \
+  if (changed) *changed |= cflag; \
+  if (!*old) { \
+    if (!new) \
+      return 0; \
+  } \
+  if (!new) { \
+    DESTROY(*old); \
+    *old = NULL; \
+    _epg_object_set_updated(o); \
+    return 1; \
+  } \
+  if (COMPARE(*old, new)) { \
+    DESTROY(*old); \
+    *old = COPY(new); \
+    _epg_object_set_updated(o); \
+    return 1; \
+  } \
+  return 0; \
 }
+
+
+EPG_OBJECT_SET_FN(_epg_object_set_lang_str,    lang_str_t,    lang_str_destroy,    lang_str_compare,    lang_str_copy)
+#undef EPG_OBJECT_SET_FN
 
 static int _epg_object_set_u8
   ( void *o, uint8_t *old, const uint8_t nval,
