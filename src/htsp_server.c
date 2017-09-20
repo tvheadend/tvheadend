@@ -35,6 +35,7 @@
 #include "descrambler/caid.h"
 #include "notify.h"
 #include "htsmsg_json.h"
+#include "string_list.h"
 #include "lang_codes.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
@@ -1224,6 +1225,17 @@ htsp_build_event
       htsmsg_add_str(out, "summary", str);
   } else if((str = epg_broadcast_get_summary(e, lang)))
     htsmsg_add_str(out, "description", str);
+
+  if (e->credits) {
+    htsmsg_add_msg(out, "credits", htsmsg_copy(e->credits));
+  }
+  if (e->category) {
+    htsmsg_add_msg(out, "category", string_list_to_htsmsg(e->category));
+  }
+  if (e->keyword) {
+    htsmsg_add_msg(out, "keyword", string_list_to_htsmsg(e->keyword));
+  }
+
   if (e->serieslink) {
     htsmsg_add_u32(out, "serieslinkId", e->serieslink->id);
     if (e->serieslink->uri)

@@ -179,6 +179,9 @@ struct epggrab_module_int
   const char                   *args;     ///< Extra arguments
 
   int                           xmltv_chnum;
+  int                           xmltv_scrape_extra; ///< Scrape actors and extra details
+  int                           xmltv_scrape_onto_desc; ///< Include scraped actors
+    ///< and extra details on to programme description for viewing by legacy clients.
 
   /* Handle data */
   char*     (*grab)   ( void *mod );
