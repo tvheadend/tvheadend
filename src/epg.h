@@ -304,6 +304,7 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
 #define EPG_CHANGED_FIRST_AIRED  (1<<(EPG_CHANGED_SLAST+12))
 #define EPG_CHANGED_BRAND        (1<<(EPG_CHANGED_SLAST+13))
 #define EPG_CHANGED_SEASON       (1<<(EPG_CHANGED_SLAST+14))
+#define EPG_CHANGED_COPYRIGHT_YEAR (1<<(EPG_CHANGED_SLAST+15))
 
 /* Episode numbering object - this is for some back-compat and also
  * to allow episode information to be "collated" into easy to use object
@@ -337,7 +338,11 @@ struct epg_episode
   uint8_t                    star_rating;    ///< Star rating
   uint8_t                    age_rating;     ///< Age certificate
   time_t                     first_aired;    ///< Original airdate
-
+  uint16_t                   copyright_year; ///< xmltv DTD gives a tag "date" (separate to previously-shown/first aired).
+                                             ///< This is the date programme was "finished...probably the copyright date."
+                                             ///< We'll call it copyright_year since words like "complete" and "finished"
+                                             ///< sound too similar to dvr recorded functionality. We'll only store the
+                                             ///< year since we only get year not month and day.
   LIST_ENTRY(epg_episode)    blink;         ///< Brand link
   LIST_ENTRY(epg_episode)    slink;         ///< Season link
   epg_brand_t               *brand;         ///< (Grand-)Parent brand
@@ -408,6 +413,9 @@ int epg_episode_set_first_aired
   __attribute__((warn_unused_result));
 int epg_episode_set_star_rating
   ( epg_episode_t *e, uint8_t stars, uint32_t *changed )
+  __attribute__((warn_unused_result));
+int epg_episode_set_copyright_year
+  ( epg_episode_t *e, uint16_t stars, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_age_rating
   ( epg_episode_t *e, uint8_t age, uint32_t *changed )

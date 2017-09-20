@@ -185,6 +185,9 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
     if (ee->age_rating)
       htsmsg_add_u32(m, "ageRating", ee->age_rating);
 
+    if (ee->copyright_year)
+      htsmsg_add_u32(m, "copyrightYear", ee->copyright_year);
+
     /* Content Type */
     m2 = NULL;
     LIST_FOREACH(eg, &ee->genre, link) {
