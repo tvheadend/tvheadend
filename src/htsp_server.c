@@ -1259,6 +1259,8 @@ htsp_build_event
       htsmsg_add_u32(out, "ageRating", ee->age_rating);
     if (ee->star_rating)
       htsmsg_add_u32(out, "starRating", ee->star_rating);
+    if (ee->copyright_year)
+      htsmsg_add_u32(out, "copyrightYear", ee->copyright_year);
     if (ee->first_aired)
       htsmsg_add_s64(out, "firstAired", ee->first_aired);
     epg_episode_get_epnum(ee, &epnum);

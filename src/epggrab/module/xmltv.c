@@ -352,6 +352,36 @@ static int _xmltv_parse_previously_shown
 }
 
 /*
+ * Date finished, typically copyright date.
+ */
+static int _xmltv_parse_date_finished
+  ( epg_episode_t *ee,
+    htsmsg_t *tag, uint32_t *changes )
+{
+  if (!ee || !tag) return 0;
+  const char *str = htsmsg_xml_get_cdata_str(tag, "date");
+  if (str) {
+      /* Technically the date could contain information about month
+       * and even second it was completed.  We only want the four
+       * digit year.
+       */
+      const size_t len = strlen(str);
+      if (len >= 4) {
+          char year_buf[32];
+          strncpy(year_buf, str, 4);
+          year_buf[5] = 0;
+          const uint16_t year = atoi(year_buf);
+          /* Sanity check the year before copying it over. */
+          if (year && year > 1800 && year < 2500) {
+              return epg_episode_set_copyright_year(ee, year, changes);
+          }
+      }
+  }
+  return 0;
+}
+
+
+/*
  * Star rating
  *   <star-rating>
  *     <value>3.3/5</value>
@@ -723,6 +753,8 @@ static int _xmltv_parse_programme_tags
     save3 |= epg_episode_set_epnum(ee, &epnum, &changes3);
 
     save3 |= _xmltv_parse_star_rating(ee, tags, &changes3);
+
+    save3 |= _xmltv_parse_date_finished(ee, tags, &changes3);
 
     save3 |= _xmltv_parse_age_rating(ee, tags, &changes3);
 

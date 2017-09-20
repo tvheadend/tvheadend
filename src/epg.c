@@ -1030,6 +1030,8 @@ int epg_episode_change_finish
     save |= epg_episode_set_age_rating(episode, 0, NULL);
   if (!(changes & EPG_CHANGED_FIRST_AIRED))
     save |= epg_episode_set_first_aired(episode, 0, NULL);
+  if (!(changes & EPG_CHANGED_COPYRIGHT_YEAR))
+    save |= epg_episode_set_copyright_year(episode, 0, NULL);
   return save;
 }
 
@@ -1216,6 +1218,14 @@ int epg_episode_set_star_rating
                             changed, EPG_CHANGED_STAR_RATING);
 }
 
+int epg_episode_set_copyright_year
+  ( epg_episode_t *episode, uint16_t year, uint32_t *changed )
+{
+  if (!episode) return 0;
+  return _epg_object_set_u16(episode, &episode->copyright_year, year,
+                            changed, EPG_CHANGED_COPYRIGHT_YEAR);
+}
+
 int epg_episode_set_age_rating
   ( epg_episode_t *episode, uint8_t age, uint32_t *changed )
 {
@@ -1354,6 +1364,8 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_u32(m, "is_bw", 1);
   if (episode->star_rating)
     htsmsg_add_u32(m, "star_rating", episode->star_rating);
+  if (episode->copyright_year)
+    htsmsg_add_u32(m, "copyright_year", episode->copyright_year);
   if (episode->age_rating)
     htsmsg_add_u32(m, "age_rating", episode->age_rating);
   if (episode->first_aired)
@@ -1427,6 +1439,9 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
 
   if (!htsmsg_get_u32(m, "star_rating", &u32))
     *save |= epg_episode_set_star_rating(ee, u32, &changes);
+
+  if (!htsmsg_get_u32(m, "copyright_year", &u32))
+    *save |= epg_episode_set_copyright_year(ee, u32, &changes);
 
   if (!htsmsg_get_u32(m, "age_rating", &u32))
     *save |= epg_episode_set_age_rating(ee, u32, &changes);

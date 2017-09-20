@@ -106,6 +106,8 @@ tvheadend.epgDetails = function(event) {
     content += '<div class="x-epg-title">' + event.title;
     if (event.subtitle)
         content += "&nbsp;:&nbsp;" + event.subtitle;
+    if (event.copyrightYear)
+        content += "&nbsp;(" + event.copyrightYear + ")";
     content += '</div>';
     if (event.episodeOnscreen)
         content += '<div class="x-epg-title">' + event.episodeOnscreen + '</div>';
@@ -482,6 +484,7 @@ tvheadend.epg = function() {
             { name: 'category' },
             { name: 'keyword' },
             { name: 'ageRating' },
+            { name: 'copyrightYear' },
             { name: 'genre' },
             { name: 'dvrUuid' },
             { name: 'dvrState' },
