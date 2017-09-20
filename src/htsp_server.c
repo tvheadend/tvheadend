@@ -997,6 +997,8 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
       htsmsg_add_str(out, "creator", de->de_creator);
     if(de->de_comment)
       htsmsg_add_str(out, "comment", de->de_comment);
+    if (de->de_copyright_year)
+      htsmsg_add_u32(out, "copyrightYear", de->de_copyright_year);
 
     last = NULL;
     if (!htsmsg_is_empty(de->de_files) && de->de_config) {
