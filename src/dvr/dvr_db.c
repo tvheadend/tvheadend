@@ -983,6 +983,8 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
       lang_str_serialize(e->episode->summary, conf, "description");
     if (e->episode && (s = dvr_entry_get_episode(e, tbuf, sizeof(tbuf))))
       htsmsg_add_str(conf, "episode", s);
+    if (e->episode && e->episode->copyright_year)
+      htsmsg_add_u32(conf, "copyright_year", e->episode->copyright_year);
   } else if (title) {
     l = lang_str_create();
     lang_str_add(l, title, lang, 0);
@@ -3435,6 +3437,14 @@ const idclass_t dvr_entry_class = {
       .list     = dvr_entry_class_content_type_list,
       .off      = offsetof(dvr_entry_t, de_content_type),
       .opts     = PO_RDONLY | PO_SORTKEY,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "copyright_year",
+      .name     = N_("The copyright year of the program."),
+      .desc     = N_("The copyright year of the program."),
+      .off      = offsetof(dvr_entry_t, de_copyright_year),
+      .opts     = PO_RDONLY | PO_EXPERT,
     },
     {
       .type     = PT_U32,
