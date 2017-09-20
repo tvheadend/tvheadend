@@ -64,9 +64,11 @@ lang_str_t     *lang_str_deserialize
 /* Compare */
 int             lang_str_compare ( const lang_str_t *ls1, const lang_str_t *ls2 );
 
-/* Empty */
-int             strempty(const char* c);
-int             lang_str_empty(lang_str_t* str);
+/* Is string empty? */
+int             strempty(const char* c)
+    __attribute__((warn_unused_result));
+int             lang_str_empty(lang_str_t* str)
+    __attribute__((warn_unused_result));
 
 /* Size in bytes */
 size_t          lang_str_size ( const lang_str_t *ls );
