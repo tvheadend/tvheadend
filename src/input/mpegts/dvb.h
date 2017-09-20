@@ -28,6 +28,7 @@
 
 struct mpegts_table;
 struct mpegts_table_state;
+struct mpegts_network;
 struct mpegts_mux;
 struct lang_str;
 
@@ -653,9 +654,10 @@ static inline int dvb_bandwidth( dvb_fe_bandwidth_t bw )
   return bw < 1000 ? 0 : bw * 1000;
 }
 
-int dvb_delsys2type ( enum dvb_fe_delivery_system ds );
+int dvb_delsys2type ( struct mpegts_network *ln, enum dvb_fe_delivery_system ds );
 
-void dvb_mux_conf_init ( dvb_mux_conf_t *dmc, dvb_fe_delivery_system_t delsys );
+void dvb_mux_conf_init ( struct mpegts_network *ln, dvb_mux_conf_t *dmc,
+                         dvb_fe_delivery_system_t delsys );
 
 int dvb_mux_conf_str ( dvb_mux_conf_t *conf, char *buf, size_t bufsize );
 

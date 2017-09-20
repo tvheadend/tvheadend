@@ -296,6 +296,7 @@ dvb_mux_dvbc_class_delsys_enum (void *o, const char *lang)
 {
   htsmsg_t *list = htsmsg_create_list();
   htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DVBC_ANNEX_A));
+  htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DVBC_ANNEX_B));
   htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DVBC_ANNEX_C));
   return list;
 }
@@ -1025,7 +1026,7 @@ dvb_mux_create0
   lm = (dvb_mux_t*)mm;
 
   /* Defaults */
-  dvb_mux_conf_init(&lm->lm_tuning, delsys);
+  dvb_mux_conf_init((mpegts_network_t*)ln, &lm->lm_tuning, delsys);
 
   /* Parent init and load config */
   if (!(mm = mpegts_mux_create0(mm, idc, uuid,

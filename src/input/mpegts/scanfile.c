@@ -134,7 +134,7 @@ scanfile_load_atsc ( dvb_mux_conf_t *mux, const char *line )
 
   r = sscanf(line, "%u %s", &mux->dmc_fe_freq, qam);
   if (r != 2) return 1;
-  dvb_mux_conf_init(mux, DVB_SYS_ATSC);
+  dvb_mux_conf_init(NULL, mux, DVB_SYS_ATSC);
   if ((mux->dmc_fe_modulation = dvb_str2qam(qam)) == -1) return 1;
 
   return 0;
@@ -148,7 +148,7 @@ scanfile_load_dvbt ( dvb_mux_conf_t *mux, const char *line )
 
   if (*line == '2') {
     unsigned int system_id;
-    dvb_mux_conf_init(mux, DVB_SYS_DVBT2);
+    dvb_mux_conf_init(NULL, mux, DVB_SYS_DVBT2);
     r = sscanf(line+1, "%u %s", &mux->dmc_fe_stream_id, bw);
     if (r == 2 && mux->dmc_fe_stream_id < 1000 && strstr(bw, "MHz") == 0) {
       r = sscanf(line+1, "%u %u %u %10s %10s %10s %10s %10s %10s %10s",
@@ -163,7 +163,7 @@ scanfile_load_dvbt ( dvb_mux_conf_t *mux, const char *line )
       if(r != 9) return 1;
     }
   } else {
-    dvb_mux_conf_init(mux, DVB_SYS_DVBT);
+    dvb_mux_conf_init(NULL, mux, DVB_SYS_DVBT);
     r = sscanf(line, "%u %10s %10s %10s %10s %10s %10s %10s",
 	             &mux->dmc_fe_freq, bw, fec, fec2, qam, mode, guard, hier);
     if(r != 8) return 1;
@@ -191,7 +191,7 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
     line++;
   }
 
-  dvb_mux_conf_init(mux, v2 ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
+  dvb_mux_conf_init(NULL, mux, v2 ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
 
   r = sscanf(line, "%u %s %u %s %s %s %d %d %d",
 	           &mux->dmc_fe_freq, pol, &mux->u.dmc_fe_qpsk.symbol_rate,
@@ -224,7 +224,7 @@ scanfile_load_dvbc ( dvb_mux_conf_t *mux, const char *line )
 	           &mux->dmc_fe_freq, &mux->u.dmc_fe_qam.symbol_rate, fec, qam);
   if(r != 4) return 1;
 
-  dvb_mux_conf_init(mux, DVB_SYS_DVBC_ANNEX_A);
+  dvb_mux_conf_init(NULL, mux, DVB_SYS_DVBC_ANNEX_A);
   if ((mux->u.dmc_fe_qam.fec_inner  = dvb_str2fec(fec)) == -1) return 1;
   if ((mux->dmc_fe_modulation       = dvb_str2qam(qam)) == -1) return 1;
 
@@ -515,7 +515,7 @@ scanfile_load_dvbv5
   if (!x || (int)mux->dmc_fe_delsys < 0)
     mux_fail(r, "wrong system '%s'", x);
 
-  dvb_mux_conf_init(mux, mux->dmc_fe_delsys);
+  dvb_mux_conf_init(NULL, mux, mux->dmc_fe_delsys);
 
   if (mux->dmc_fe_delsys == DVB_SYS_DVBT ||
       mux->dmc_fe_delsys == DVB_SYS_DVBT2) {
