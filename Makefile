@@ -253,6 +253,7 @@ SRCS-1 = \
 	src/profile.c \
 	src/bouquet.c \
 	src/lock.c \
+	src/string_list.c \
 	src/wizard.c \
 	src/memoryinfo.c
 SRCS = $(SRCS-1)
