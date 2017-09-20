@@ -1458,6 +1458,10 @@ dvr_thread(void *aux)
        if (sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
 	 // Subscription is restarting, wait for SMT_START
 
+         if(de->de_config->dvr_reconfigure_restart) {
+           muxing = 0;
+         }
+
        } else if(sm->sm_code == 0) {
 	 // Recording is completed
 

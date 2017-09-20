@@ -72,6 +72,7 @@ typedef struct dvr_config {
   uint32_t dvr_warm_time;
   uint32_t dvr_extra_time_pre;
   uint32_t dvr_extra_time_post;
+  int dvr_reconfigure_restart;
   uint32_t dvr_update_window;
   int dvr_running;
   uint32_t dvr_cleanup_threshold_free;
