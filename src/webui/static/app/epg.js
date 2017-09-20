@@ -128,6 +128,54 @@ tvheadend.epgDetails = function(event) {
       content += '<div class="x-epg-desc">' + event.description + '</div>';
     if (event.summary || event.description)
       content += '<hr class="x-epg-hr"/>';
+
+    // Helper function for common code to sort an array, convert to CSV and
+    // return the string to add to the content.
+    function sortAndAddArray(arr, title) {
+      arr.sort();
+      var csv = arr.join(", ");
+      if (csv)
+        return '<div class="x-epg-meta"><span class="x-epg-prefix">' + title + ':</span><span class="x-epg-body">' + csv + '</span></div>';
+      else
+        return '';
+    }
+
+    if (event.credits) {
+      // Our cast (credits) map contains details of actors, writers,
+      // etc. so split in to separate categories for displaying.
+      var castArr = [];
+      var crewArr = [];
+      var directorArr = [];
+      var writerArr = [];
+      var cast = ["actor", "guest", "presenter"];
+      // We use arrays here in case more tags in the future map on to
+      // director/writer, e.g., SchedulesDirect breaks it down in to
+      // writer, writer (adaptation) writer (screenplay), etc. but
+      // currently we just have them all as writer.
+      var director = ["director"];
+      var writer = ["writer"];
+
+      for (key in event.credits) {
+        var type = event.credits[key];
+        if (cast.indexOf(type) != -1)
+          castArr.push(key);
+        else if (director.indexOf(type) != -1)
+          directorArr.push(key);
+        else if (writer.indexOf(type) != -1)
+          writerArr.push(key);
+        else
+          crewArr.push(key);
+      };
+
+      content += sortAndAddArray(castArr, _('Starring'));
+      content += sortAndAddArray(directorArr, _('Director'));
+      content += sortAndAddArray(writerArr, _('Writer'));
+      content += sortAndAddArray(crewArr, _('Crew'));
+    }
+    if (event.keyword)
+      content += sortAndAddArray(event.keyword, _('Keywords'));
+    if (event.category)
+      content += sortAndAddArray(event.category, _('Categories'));
     if (event.starRating)
       content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Star Rating') + ':</span><span class="x-epg-body">' + event.starRating + '</span></div>';
     if (event.ageRating)
@@ -429,6 +477,9 @@ tvheadend.epg = function() {
                 dateFormat: 'U' /* unix time */
             },
             { name: 'starRating' },
+            { name: 'credits' },
+            { name: 'category' },
+            { name: 'keyword' },
             { name: 'ageRating' },
             { name: 'genre' },
             { name: 'dvrUuid' },
