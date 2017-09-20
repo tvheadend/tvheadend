@@ -21,6 +21,7 @@
 #include "webui.h"
 #include "channels.h"
 #include "http.h"
+#include "string_list.h"
 
 /*
  *
@@ -81,6 +82,22 @@ http_xmltv_channel_add(htsbuf_queue_t *hq, const char *hostpath, channel_t *ch)
   htsbuf_append_str(hq, "</channel>\n");
 }
 
+
+/// Write each entry in the string list to the xml queue using the given tag_name.
+static void
+_http_xmltv_programme_write_string_list(htsbuf_queue_t *hq, const string_list_t* sl, const char* tag_name)
+{
+  if (!hq || !sl)
+    return;
+
+  const string_list_item_t *item;
+  RB_FOREACH(item, sl, h_link) {
+    htsbuf_qprintf(hq, "  <%s>", tag_name);
+    htsbuf_append_and_escape_xml(hq, item->id);
+    htsbuf_qprintf(hq, "</%s>\n", tag_name);
+  }
+}
+
 /*
  *
  */
@@ -114,6 +131,18 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</desc>\n");
     }
+  if (ebc->credits) {
+    htsbuf_append_str(hq, "  <credits>\n");
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, ebc->credits) {
+      htsbuf_qprintf(hq, "    <%s>", f->u.str);
+      htsbuf_append_and_escape_xml(hq, f->hmf_name);
+      htsbuf_qprintf(hq, "</%s>\n", f->u.str);
+    }
+    htsbuf_append_str(hq, "  </credits>\n");
+  }
+  _http_xmltv_programme_write_string_list(hq, ebc->category, "category");
+  _http_xmltv_programme_write_string_list(hq, ebc->keyword, "keyword");
   htsbuf_append_str(hq, "</programme>\n");
 }
 
