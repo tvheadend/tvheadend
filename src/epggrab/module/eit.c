@@ -430,6 +430,58 @@ static int _eit_desc_crid
   return 0;
 }
 
+/* Scrape episode data from the broadcast data.
+ * @param text - string from broadcaster to search.
+ * @param eit_mod - our module with regex to use.
+ * @param en - [out] episode data
+ * @param first_aired - [out] airdate
+ * @return Bitmask of changed fields.
+ */
+static uint32_t
+_eit_scrape_episode(const char *str,
+                    eit_module_t *eit_mod,
+                    epg_episode_num_t *en,
+                    time_t *first_aired)
+{
+  if (!str) return 0;
+
+  uint32_t changed = 0;
+  /* search for season number */
+  char buffer[2048];
+  if (eit_pattern_apply_list(buffer, sizeof(buffer), str, &eit_mod->p_snum))
+    if ((en->s_num = atoi(buffer))) {
+      tvhtrace(LS_TBL_EIT,"  extract season number %d using %s", en->s_num, eit_mod->id);
+      changed |= EPG_CHANGED_EPSER_NUM;
+    }
+
+  /* ...for episode number */
+  if (eit_pattern_apply_list(buffer, sizeof(buffer), str, &eit_mod->p_enum))
+    if ((en->e_num = atoi(buffer))) {
+      tvhtrace(LS_TBL_EIT,"  extract episode number %d using %s", en->e_num, eit_mod->id);
+      changed |= EPG_CHANGED_EPNUM_NUM;
+    }
+
+  /* Extract original air date year */
+  if (eit_pattern_apply_list(buffer, sizeof(buffer), str, &eit_mod->p_airdate)) {
+    if (strlen(buffer) == 4) {
+      /* Year component only */
+      const int year = atoi(buffer);
+      if (year) {
+        struct tm airdate;
+        memset(&airdate, 0, sizeof(airdate));
+        airdate.tm_year = year - 1900;
+        /* Remaining fields in airdate can all remain at zero but day
+         * of month is one-based
+         */
+        airdate.tm_mday = 1;
+        *first_aired = mktime(&airdate);
+        changed |= EPG_CHANGED_FIRST_AIRED;
+      }
+    }
+  }
+  return changed;
+}
+
 
 /* ************************************************************************
  * EIT Event
@@ -601,45 +653,28 @@ static int _eit_process_event_one
     ee = epg_episode_find_by_broadcast(ebc, mod, 1, save, &changes4);
   }
 
+  /* Scrape episode from within broadcast data */
   epg_episode_num_t en;
   memset(&en, 0, sizeof(en));
-  /* We use a separate "first_aired_set" variable otherwise
-   * we don't know the difference between a null date and a
-   * programme that happened to start in 1974.
-   */
   time_t first_aired = 0;
-  int    first_aired_set = 0;
+  uint32_t scraped = 0;
 
-  if (ev.summary && eit_mod->scrape_episode) {
-    /* search for season number */
-    char buffer[2048];
-    const char* summary = lang_str_get(ev.summary, ev.default_charset);
-    if (eit_pattern_apply_list(buffer, sizeof(buffer), summary, &eit_mod->p_snum))
-      if ((en.s_num = atoi(buffer)))
-        tvhtrace(LS_TBL_EIT,"  extract season number %d using %s", en.s_num, mod->id);
-    /* ...for episode number */
-    if (eit_pattern_apply_list(buffer, sizeof(buffer), summary, &eit_mod->p_enum))
-      if ((en.e_num = atoi(buffer)))
-        tvhtrace(LS_TBL_EIT,"  extract episode number %d using %s", en.e_num, mod->id);
+  /* We search across all the main fields using the same regex and
+   * merge the results with the last match taking precendence.  So if
+   * EIT has episode in title and a different one in the description
+   * then we use the one from the description.
+   */
+  if (eit_mod->scrape_episode) {
+    if (ev.title)
+      scraped |=  _eit_scrape_episode(lang_str_get(ev.title, ev.default_charset),
+                                      eit_mod, &en, &first_aired);
+    if (ev.desc)
+      scraped |=  _eit_scrape_episode(lang_str_get(ev.desc, ev.default_charset),
+                                      eit_mod, &en, &first_aired);
 
-    /* Extract original air date year */
-    if (eit_pattern_apply_list(buffer, sizeof(buffer), summary, &eit_mod->p_airdate)) {
-      if (strlen(buffer) == 4) {
-        /* Year component only */
-        const int year = atoi(buffer);
-        if (year) {
-          struct tm airdate;
-          memset(&airdate, 0, sizeof(airdate));
-          airdate.tm_year = year - 1900;
-          /* Remaining fields in airdate can all remain at zero but day
-           * of month is one-based
-           */
-          airdate.tm_mday = 1;
-          first_aired = mktime(&airdate);
-          first_aired_set = 1;
-        }
-      }
-    }
+    if (ev.summary)
+      scraped |= _eit_scrape_episode(lang_str_get(ev.summary, ev.default_charset),
+                                     eit_mod, &en, &first_aired);
   }
 
   /* Update Episode */
@@ -682,7 +717,7 @@ static int _eit_process_event_one
     /* save any found episode number */
     if (en.s_num || en.e_num || en.p_num)
       *save |= epg_episode_set_epnum(ee, &en, &changes4);
-    if (first_aired_set)
+    if (scraped & EPG_CHANGED_FIRST_AIRED)
       *save |= epg_episode_set_first_aired(ee, first_aired, &changes4);
 
     *save |= epg_episode_change_finish(ee, changes4, 0);
