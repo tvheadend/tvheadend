@@ -194,9 +194,9 @@ dvr_disk_space_cleanup(dvr_config_t *cfg, int include_active)
   dvfs = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
 
   filesystemId  = tvh_fsid(diskdata.f_fsid);
-  availBytes    = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
+  availBytes    = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
   requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
-  diskBytes     = diskdata.f_bsize * (int64_t)diskdata.f_blocks;
+  diskBytes     = diskdata.f_frsize * (int64_t)diskdata.f_blocks;
   usedBytes     = dvfs->used_size;
   maximalBytes  = MIB(cfg->dvr_cleanup_threshold_used);
   configName    = cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile";
@@ -320,7 +320,7 @@ dvr_disk_space_check()
     {
       dvfs = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
 
-      availBytes = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
+      availBytes = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
       usedBytes = dvfs->used_size;
       requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
       maximalBytes = MIB(cfg->dvr_cleanup_threshold_used);
@@ -385,8 +385,8 @@ dvr_get_disk_space_update(const char *path, int locked)
     pthread_mutex_unlock(&global_lock);
 
   pthread_mutex_lock(&dvr_disk_space_mutex);
-  dvr_bfree = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
-  dvr_btotal = diskdata.f_bsize * (int64_t)diskdata.f_blocks;
+  dvr_bfree = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
+  dvr_btotal = diskdata.f_frsize * (int64_t)diskdata.f_blocks;
   dvr_bused = dvfs ? dvfs->used_size : 0;
   pthread_mutex_unlock(&dvr_disk_space_mutex);
 }
@@ -444,7 +444,7 @@ dvr_vfs_rec_start_check(dvr_config_t *cfg)
   lock_assert(&global_lock);
   if (!cfg || !cfg->dvr_enabled || statvfs(cfg->dvr_storage, &diskdata) == -1)
     return 0;
-  availBytes    = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
+  availBytes    = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
   requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
   maximalBytes  = MIB(cfg->dvr_cleanup_threshold_used);
   dvfs          = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
