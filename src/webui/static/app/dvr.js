@@ -746,7 +746,7 @@ tvheadend.autorec_editor = function(panel, index) {
 
     var list = 'name,title,fulltext,channel,start,start_window,weekdays,' +
                'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,' +
-               'dedup,directory,config_name,comment';
+               'star_rating,dedup,directory,config_name,comment';
     var elist = 'enabled,start_extra,stop_extra,' +
                 (tvheadend.accessUpdate.admin ?
                 list + ',owner,creator' : list) + ',pri,retention,removal,maxcount,maxsched';
@@ -787,6 +787,7 @@ tvheadend.autorec_editor = function(panel, index) {
             removal:      { width: 80 },
             maxcount:     { width: 80 },
             maxsched:     { width: 80 },
+            star_rating:  { width: 80 },
             config_name:  { width: 120 },
             owner:        { width: 100 },
             creator:      { width: 200 },
@@ -807,7 +808,7 @@ tvheadend.autorec_editor = function(panel, index) {
         del: true,
         list: 'enabled,name,title,fulltext,channel,tag,start,start_window,' +
               'weekdays,minduration,maxduration,btype,content_type,cat1,cat2,cat3' +
-              'pri,dedup,directory,config_name,owner,creator,comment',
+              'star_rating,pri,dedup,directory,config_name,owner,creator,comment',
         sort: {
           field: 'name',
           direction: 'ASC'

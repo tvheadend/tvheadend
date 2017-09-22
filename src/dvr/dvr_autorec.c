@@ -266,6 +266,16 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
   }
 
+  /* If we have a dae_star_rating but the episode has no star
+   * rating (zero) then it will not be recorded.  So we do not
+   * have "&& e->episode->star_rating" here.  Conversely, if
+   * dae_star_rating is zero then that means "do not check
+   * star rating of episode".
+   */
+  if (e->episode && dae->dae_star_rating)
+    if (e->episode->star_rating < dae->dae_star_rating)
+      return 0;
+
   /* Do not check title if the event is from the serieslink group */
   if(dae->dae_serieslink == NULL &&
      dae->dae_title != NULL && dae->dae_title[0] != '\0') {
@@ -907,6 +917,47 @@ dvr_autorec_entry_class_season_get(void *o)
   return &prop_ptr;
 }
 
+/** Validate star rating is in range */
+static int
+dvr_autorec_entry_class_star_rating_set(void *o, const void *v)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  const uint16_t *val = (uint16_t*)v;
+  if (*val < 0 || *val > 100)
+    return 0;
+  dae->dae_star_rating = *val;
+  return 1;
+}
+
+static htsmsg_t *
+dvr_autorec_entry_class_star_rating_list ( void *o, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_t *e = htsmsg_create_map();
+  /* No htsmsg_add_u16 so use htsmsg_add_u32 instead */
+  htsmsg_add_u32(e, "key", 0);
+  /* Instead of "Any" we use "No rating needed" since "Any" could
+   * suggest that the programme needs a rating that could be anything,
+   * whereas many programmes have no rating at all.
+   */
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("No rating needed")));
+  htsmsg_add_msg(m, NULL, e);
+
+  uint32_t i;
+  /* We create the list from highest to lowest since you're more
+   * likely to want to record something with a high rating than scroll
+   * through the list to find programmes with a poor rating.
+   */
+  for (i = 100; i > 0 ; i-=5) {
+    e = htsmsg_create_map();
+    htsmsg_add_u32(e, "key", i);
+    htsmsg_add_u32(e, "val", i);
+    htsmsg_add_msg(m, NULL, e);
+  }
+  return m;
+}
+
+
 static int
 dvr_autorec_entry_class_series_link_set(void *o, const void *v)
 {
@@ -1158,6 +1209,18 @@ const idclass_t dvr_autorec_entry_class = {
       .list     = dvr_autorec_entry_class_content_type_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_content_type),
       .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "star_rating",
+      .name     = N_("Star rating"),
+      .desc     = N_("The minimum number of stars the broadcast should have - in "
+                     "other words, only match programs that have at "
+                     "least this rating."),
+      .set      = dvr_autorec_entry_class_star_rating_set,
+      .list     = dvr_autorec_entry_class_star_rating_list,
+      .off      = offsetof(dvr_autorec_entry_t, dae_star_rating),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
