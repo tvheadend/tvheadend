@@ -347,6 +347,13 @@ typedef struct dvr_autorec_entry {
   int dae_fulltext;
   
   uint32_t dae_content_type;
+  /* These categories (mainly from xmltv) such as Cooking, Dog racing, Movie.
+   * This allows user to easily do filtering such as '"Movie" "Martial arts"'
+   * or '"Children" "Animated" "Movie"'
+   */
+  char *dae_cat1;                 /** Simple single category from drop-down selection boxes */
+  char *dae_cat2;                 /** Simple single category from drop-down selection boxes */
+  char *dae_cat3;                 /** Simple single category from drop-down selection boxes */
 
   int dae_start;        /* Minutes from midnight */
   int dae_start_window; /* Minutes (duration) */

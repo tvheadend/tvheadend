@@ -527,7 +527,7 @@ struct epg_broadcast
   lang_str_t                *credits_cached;   ///< Comma separated cast (for regex searching in GUI/autorec). Kept in sync with cast_map
   struct string_list        *category;         ///< Extra categories (typically from xmltv) such as "Western" or "Sumo Wrestling".
                                                ///< These extra categories are often a superset of our EN 300 468 DVB genre.
-                                               ///< Currently not explicitly searchable in GUI.
+                                               ///< Used with drop-down lists in the GUI.
   struct string_list        *keyword;          ///< Extra keywords (typically from xmltv) such as "Wild West" or "Unicorn".
   lang_str_t                *keyword_cached;   ///< Cached CSV version for regex searches.
   RB_ENTRY(epg_broadcast)    sched_link;       ///< Schedule link

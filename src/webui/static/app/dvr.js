@@ -745,7 +745,7 @@ tvheadend.dvr_settings = function(panel, index) {
 tvheadend.autorec_editor = function(panel, index) {
 
     var list = 'name,title,fulltext,channel,start,start_window,weekdays,' +
-               'record,tag,btype,content_type,minduration,maxduration,' +
+               'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,' +
                'dedup,directory,config_name,comment';
     var elist = 'enabled,start_extra,stop_extra,' +
                 (tvheadend.accessUpdate.admin ?
@@ -767,6 +767,9 @@ tvheadend.autorec_editor = function(panel, index) {
             tag:          { width: 200 },
             btype:        { width: 50 },
             content_type: { width: 100 },
+            cat1:         { width: 300 },
+            cat2:         { width: 300 },
+            cat3:         { width: 300 },
             minduration:  { width: 100 },
             maxduration:  { width: 100 },
             weekdays:     { width: 160 },
@@ -803,7 +806,7 @@ tvheadend.autorec_editor = function(panel, index) {
         },
         del: true,
         list: 'enabled,name,title,fulltext,channel,tag,start,start_window,' +
-              'weekdays,minduration,maxduration,btype,content_type,' +
+              'weekdays,minduration,maxduration,btype,content_type,cat1,cat2,cat3' +
               'pri,dedup,directory,config_name,owner,creator,comment',
         sort: {
           field: 'name',

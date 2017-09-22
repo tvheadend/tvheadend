@@ -72,4 +72,8 @@ int string_list_cmp(const string_list_t *m1, const string_list_t *m2)
 /// Deep clone (shares no pointers, so have to string_list_destroy both.
 string_list_t *string_list_copy(const string_list_t *src)
     __attribute__((warn_unused_result));
+
+/// Searching
+int string_list_contains_string(const string_list_t *src, const char *find);
+
 #endif

@@ -172,3 +172,16 @@ string_list_copy(const string_list_t *src)
 
   return ret;
 }
+
+int
+string_list_contains_string(const string_list_t *src, const char *find)
+{
+  string_list_item_t skel;
+  skel.id = (char*)find;
+
+  string_list_item_t *item = RB_FIND(src, &skel, h_link, string_list_item_cmp);
+  /* Can't just return item due to compiler settings preventing ptr to
+   * int conversion
+   */
+  return item != NULL;
+}
