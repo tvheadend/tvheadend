@@ -354,6 +354,7 @@ typedef struct dvr_autorec_entry {
   char *dae_cat1;                 /** Simple single category from drop-down selection boxes */
   char *dae_cat2;                 /** Simple single category from drop-down selection boxes */
   char *dae_cat3;                 /** Simple single category from drop-down selection boxes */
+  uint16_t dae_star_rating;       /** Minimum star rating: we use u16 instead of u8 since no PT_U8 type */
 
   int dae_start;        /* Minutes from midnight */
   int dae_start_window; /* Minutes (duration) */
