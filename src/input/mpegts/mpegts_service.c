@@ -89,7 +89,7 @@ const idclass_t mpegts_service_class =
 {
   .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
-  .ic_caption    = N_("MPEG-TS Service"),
+  .ic_caption    = N_("DVB Inputs - Services"),
   .ic_doc        = tvh_doc_mpegts_service_class,
   .ic_order      = "enabled,channel,svcname",
   .ic_properties = (const property_t[]){

@@ -1,17 +1,18 @@
 This panel lists all the available Terrestrial (DVB-T/T2/ISDB-T/ATSC-T) frontend 
 parameters.
 
-!['DVB-T frontend parameters'](static/img/doc/linuxdvb_frontend_dvbt/tab.png)
+<tvh_include>inc/dvbinputs_table</tvh_include>
 
 ---
 
-### Buttons
+## Device Configuration / Types
 
-The following buttons are available:
+<tvh_include>inc/dvbinputs_type_table</tvh_include>
 
-Button         | Function
----------------|---------
-**Save**       | Save the current configuration.
-<tvh_include>inc/common_button_table_end</tvh_include>
+---
+
+## Buttons
+
+<tvh_include>inc/buttons</tvh_include>
 
 ---
