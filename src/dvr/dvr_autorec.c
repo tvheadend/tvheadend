@@ -30,6 +30,7 @@
 
 #include "tvheadend.h"
 #include "settings.h"
+#include "string_list.h"
 #include "dvr.h"
 #include "epg.h"
 #include "htsp_server.h"
@@ -159,6 +160,9 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_content_type == 0 &&
      (dae->dae_title == NULL ||
      dae->dae_title[0] == '\0') &&
+     (dae->dae_cat1 == NULL || *dae->dae_cat1 == 0) &&
+     (dae->dae_cat2 == NULL || *dae->dae_cat2 == 0) &&
+     (dae->dae_cat3 == NULL || *dae->dae_cat3 == 0) &&
      dae->dae_brand == NULL &&
      dae->dae_season == NULL &&
      dae->dae_minduration <= 0 &&
@@ -208,6 +212,15 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     memset(&ct, 0, sizeof(ct));
     ct.code = dae->dae_content_type;
     if (!epg_genre_list_contains(&e->episode->genre, &ct, 1))
+      return 0;
+  }
+
+  if (e->category) {
+    if (dae->dae_cat1 && *dae->dae_cat1 && !string_list_contains_string(e->category, dae->dae_cat1))
+      return 0;
+    if (dae->dae_cat2 && *dae->dae_cat2 && !string_list_contains_string(e->category, dae->dae_cat2))
+      return 0;
+    if (dae->dae_cat3 && *dae->dae_cat3 && !string_list_contains_string(e->category, dae->dae_cat3))
       return 0;
   }
 
@@ -986,6 +999,16 @@ dvr_autorec_entry_class_btype_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+dvr_autorec_entry_category_list ( void *o, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "channelcategory/list");
+  return m;
+}
+
+
 static uint32_t
 dvr_autorec_entry_class_owner_opts(void *o, uint32_t opts)
 {
@@ -998,6 +1021,28 @@ dvr_autorec_entry_class_owner_opts(void *o, uint32_t opts)
 
 CLASS_DOC(dvrautorec)
 PROP_DOC(duplicate_handling)
+
+/* We provide several category drop-downs to make it easy for user
+ * to select several. So abstract the properties away since they
+ * are nearly identical for each entry.
+ */
+#define CATEGORY_SELECTION_PROP(NUM)                                  \
+  .type     = PT_STR,                                                 \
+  .id       = "cat" #NUM,                                             \
+  .name     = N_("Category " #NUM  " (selection)"),                   \
+  .desc     = N_("The category of the program to look for. The xmltv "\
+                 "providers often supply detailed categories such as "\
+                 "Sitcom, Movie, Track/field, etc. "                  \
+                 "This let you select from categories for current programmes. " \
+                 "It is then combined (AND) with other fields to limit to " \
+                 "programmes that match all categories. "             \
+                 "If this selection list is empty then it means your provider does not " \
+                 "supply programme categories."                       \
+                 ),                                                   \
+  .off      = offsetof(dvr_autorec_entry_t, dae_cat ## NUM),          \
+  .opts     = PO_EXPERT,                                              \
+  .list     = dvr_autorec_entry_category_list
+
 
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
@@ -1045,6 +1090,21 @@ const idclass_t dvr_autorec_entry_class = {
                      "this accepts case-insensitive regular expressions."),
       .set      = dvr_autorec_entry_class_title_set,
       .off      = offsetof(dvr_autorec_entry_t, dae_title),
+    },
+    /* We provide a small number of selection drop-downs. This is to
+     * make it easier for users to see what categories are available and
+     * make it easy to record for example '"Movie" "Martial arts" "Western"'
+     * without user needing a regex, and allowing them to easily see what
+     * categories they have available.
+     */
+    {
+      CATEGORY_SELECTION_PROP(1)
+    },
+    {
+      CATEGORY_SELECTION_PROP(2)
+    },
+    {
+      CATEGORY_SELECTION_PROP(3)
     },
     {
       .type     = PT_BOOL,
