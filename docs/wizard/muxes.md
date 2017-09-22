@@ -1,17 +1,11 @@
 Assign predefined muxes to networks. To save you from manually entering
-muxes, Tvheadend includes predefined mux lists. Please select a list
-for each network below.
+muxes, Tvheadend includes predefined mux lists. Please select an option 
+from the list for each network.
 
+Note, the pre-defined lists are not always up-to-date, this generally 
+isn't a problem provided that one of the muxes - in the predefined list - 
+is active, and contains network information.
 
-**Notes**:
+---
 
-
-* Select the closest transmitter if using an antenna (T); if using
-  cable (C), select your provider; if using satellite (S), the orbital
-  position of the satellite your dish is pointing towards; or if using
-  IPTV, enter the URL to your playlist.
-* If you're unsure as to which list(s) to select you may want to look
-  online for details about the various television reception choices
-  available in your area.
-* Networks already configured will not be shown below.
-* Selecting the wrong list may cause the scan (on the next page) to fail.
+Don't forget to check out the **[Help]** for more info!

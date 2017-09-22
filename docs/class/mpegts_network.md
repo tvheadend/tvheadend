@@ -1,38 +1,41 @@
 A network is the type of carrier for your television signals. Tvheadend
-supports several different types of network, notably:
+supports several different types of network.
 
-* [Network Types](class/mpegts_network)
- * Cable TV, delivered via a cable to your house
-   - [DVB-C](class/dvb_network_dvbc) - common in most of Europe
-   - [ISDB-C](class/dvb_network_isdb_c) - common in Brazil and various other countries throughout south America
-   - [ATSC-C](class/dvb_network_atsc_c) - common in north and central America and parts of south Asia
- * Satellite, any signal coming in via a dish
-   - [DVB-S](class/dvb_network_dvbs) - Available worldwide
-   - [ISDB-S](class/dvb_network_isdb_s) - available worldwide but common in Brazil and various other countries throughout south America
- * Terrestrial, over-the-air broadcasts received through a traditional television aerial
-   - [DVB-T](class/dvb_network_dvbt) - common in most of Europe
-   - [ISDB-T](class/dvb_network_isdb_t) - common in Brazil and various other countries throughout south America
-   - [ATSC-T](class/dvb_network_atsc_t) - common in north and central America
- * IPTV - TV over the Internet via your broadband connection
-   - [IPTV](class/iptv_network)
-   - [IPTV Automatic Network](class/iptv_auto_network) - IPTV using a playlist as the source - **Please read *IPTV Automatic Network - Don't Probe Services* below for important information!**  
+!['Networks' Tab Screenshot](static/img/doc/dvbinputs/dvbinput_networks.png)
+
+<tvh_include>inc/dvbinputs_table</tvh_include>
+
+## Network types
+
+[Return to the index](class/mpegts_network)
+
+Network type                                        | Description
+----------------------------------------------------|-------------------
+**C (Cable)**                                       | **Cable TV, delivered via a cable to your house.**
+[DVB-C](class/dvb_network_dvbc)                     | Common in most of Europe.
+[ISDB-C](class/dvb_network_isdb_c)                  | Common in Brazil and various other countries throughout south America.
+[ATSC-C](class/dvb_network_atsc_c)                  | Common in north and central America and parts of south Asia.
+-                                                   | - 
+**S (Satellite)**                                   | **Satellite, any signal coming in via a dish.**
+[DVB-S](class/dvb_network_dvbs)                     | Available worldwide.
+[ISDB-S](class/dvb_network_isdb_s)                  | Available worldwide but common in Brazil and various other countries throughout south America.
+-                                                   | - 
+**T (Terrestrial)**                                 | Over-the-air broadcasts received through a traditional television aerial/antenna.
+[DVB-T](class/dvb_network_dvbt)                     | Common in most of Europe.
+[ISDB-T](class/dvb_network_isdb_t)                  | Common in Brazil and various other countries throughout south America.
+[ATSC-T](class/dvb_network_atsc_t)                  | Common in north and central America.
+-                                                   | - 
+**IPTV**                                            | **TV over the Internet via your broadband connection.**
+[IPTV](class/iptv_network)                          | Manual IPTV input.
+[IPTV Automatic Network](class/iptv_auto_network)   | IPTV using a playlist as the source - **Please read *IPTV Automatic Network - Don't Probe Services* below for important information!**  
   
-Click the desired network type (above) to see all available 
-[parameters](#items).
-
-!['Networks' Tab Screenshot](static/img/doc/mpegts_network/tab.png)
+Click the desired network type (to see all available [items](#items).
 
 ---
 
-<tvh_include>inc/common_button_table_start</tvh_include>
+## Buttons
 
-<tvh_include>inc/common_button_table_end</tvh_include>
-
-The following tab specific buttons are available: 
-
-Button         | Function
----------------|---------
-**Force Scan** | Force a new scan (i.e. scan all muxes for services) for the selected networks.
+<tvh_include>inc/buttons</tvh_include>
 
 ---
 

@@ -1,52 +1,21 @@
 #### Table of Contents
 
-[Introduction](index)
-* [Overview](overview)
-* [Basic Requirements](requirements)
-* [Features](features)
-
 Getting Started
 
-* [Before you begin (concepts)](before_begin)
-* [Install hardware](install_hardware)
-* [Install Tvheadend](install_tvheadend)
-* [Configure Tvheadend](configure_tvheadend)
+* [Introduction](introduction)
+* [Installation](installation)
+* [Configuring for the First Time](firstconfig)
 
 Web Interface Guide
 
-* [General](webui_general)
-
 * [Electronic Program Guide](epg)
-
-* Digital Video Recorder
-
-  - [Upcoming / Current Recordings](class/dvrentry)
-  - [Finished Recordings](class/dvrentry)
-  - [Failed Recordings](class/dvrentry)
-  - [Removed Recordings](class/dvrentry)
-  - [Auto-recording (Autorecs)](class/dvrautorec)
-  - [Time-based Recording (Timers)](class/dvrtimerec)
+* [Digital Video Recorder](dvr)
 
 * Configuration
 
-  - General
-    * [Base](class/config)
-    * [Image Cache](class/imagecache)
-    * [SAT>IP Server](class/satip_server)
-
-  - Users
-
-    * [Access Entries](class/access)
-    * [Passwords](class/passwd)
-    * [IP Address Block List](class/ipblocking)
-
-  - DVB Inputs
-
-    * [TV Adapters](tv_adapters)
-    * [Networks](class/mpegts_network)
-    * [Muxes](class/mpegts_mux)
-    * [Services](class/mpegts_service)
-    * [Mux Schedulers](class/mpegts_mux_sched)
+  - [General](class/config)
+  - [Users](class/access)
+  - [DVB Inputs](dvbinputs)
 
   - Channel / EPG
 

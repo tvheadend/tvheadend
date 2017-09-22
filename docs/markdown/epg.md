@@ -1,4 +1,17 @@
-## Electronic Program Guide
+# Electronic Program Guide
+
+Contents
+
+* [Overview](#overview)
+* [Filtering (or searching)](#filtering-or-searching-)
+* [Items (grid items)](#items)
+* [Event Details and Recording](#event-details-and-recording)
+* [Auto-recordings](#auto-recordings)
+* [Watching TV and Browser Codec Support](#watching-tv)
+
+---
+
+## Overview
 
 Tvheadend has a built-in Electronic Program Guide. The EPG is an
 in-memory database populated with all the information about events
@@ -12,11 +25,14 @@ based on start time.
 
 ---
 
-### Menu Bar/Buttons
+## Buttons
 
-The following functions are available:
+<tvh_include>inc/buttons</tvh_include>
 
-#### Filtering (or searching)
+---
+
+
+## Filtering (or searching) 
 
 In the EPG top tool bar you can access five input fields. These are used
 to filter/search for events. The form uses implicit AND between the
@@ -25,6 +41,7 @@ displayed.
 
 Filter                     | Function
 ---------------------------| --------
+**All/Now**                | Filter between showing all events (*All*), or those that are currently broadcasting (*Now*). Can be used with the other filters.
 **Search title...**        | Only display events that match the given title.
                            | The filter uses case-insensitive regular expressions. If you don’t know what a regular expression is, this simply means that you can type just parts of the title and filter on that - there’s no need for full, exact matching. If the fulltext checkbox is checked, the title text is matched against title, subtitle, summary and description.
 **Filter channel...**      | Only display events from the selected channel.
@@ -62,20 +79,9 @@ by selecting *‘(Clear filter)’* as appropriate on all except the title
 filter. If you want to clear all filters, just press the *[Reset All]*
 button.
 
-#### Buttons
-
-The following buttons are also available:
-
-Button              | Function
---------------------|----------
-**Reset All**       | Clears all search filters.
-**Watch TV**        | Launches Live TV via HTML5 video (see below).
-**Create Autorec**  | Creates an auto-recording rule based on the current filter criteria (see below).
-**Help**            | Display this help page.
-
 ---
 
-### Grid Items
+## Items
 
 The main grid items have the following functions:
 
@@ -83,12 +89,12 @@ The main grid items have the following functions:
 : Displays the current status of a recording event for this program if 
   one applies: 
 
-Icon                                                   | Description
--------------------------------------------------------|-------------
-![Clock icon](icons/scheduled.png)                     | the program is scheduled for recording
-![Recording icon](icons/rec.png)                       | the program is currently recording
-![Broadcast details icon](icons/broadcast_details.png) | click to call up more detailed information about an event
-![Exclamation icon](icons/exclamation.png)             | the program failed to record
+Icon                                                                  | Description
+----------------------------------------------------------------------|-------------
+![Clock icon](static/img/doc/icons/scheduled.png)                     | the program is scheduled for recording
+![Recording icon](static/img/doc/icons/rec.png)                       | the program is currently recording
+![Broadcast details icon](static/img/doc/icons/broadcast_details.png) | click to call up more detailed information about an event
+![Exclamation icon](static/img/doc/icons/exclamation.png)             | the program failed to record
 
 **Progress**
 : A bar graph display of how far through a program we currently are.
@@ -138,7 +144,7 @@ Icon                                                   | Description
 
 ---
 
-### Event Details and Recording
+## Event Details and Recording
 
 If you click on a single event, a popup will display detailed
 information about the event. It also allows you to schedule the event
@@ -178,7 +184,7 @@ you can open as many detailed information popups as you want.
 
 ---
 
-### Autorecordings
+## Auto-recordings
 
 Should you wish to record all events matching a specific query (to
 record your favourite show every week, for example) you can press the
@@ -191,7 +197,7 @@ channel, tag, or similar.
 
 ---
 
-### Watch TV
+## Watching TV
 
 If you want to watch live TV in the web UI, the *[Watch TV]* button will
 pop up a HTML5 video player, where you can select the channel to watch and a
@@ -199,21 +205,21 @@ stream profile to use. A transcoding stream profile is required to transcode
 the stream to a format that is supported by your browser, as browsers only
 support certain formats and codecs.
 
-#### Supported formats (containers)
+### Supported formats (containers)
 
 Browser | MPEG-TS | MPEG-PS | Matroska | WebM
 ------- | :-----: | :-----: | :------: | :--:
 Google Chrome | ![no](icons/exclamation.png) | ![no](icons/exclamation.png) | ![yes](icons/accept.png) | ![yes](icons/accept.png)
 Mozilla Firefox | ![no](icons/exclamation.png) | ![no](icons/exclamation.png) |  | ![yes](icons/accept.png)
 
-#### Supported video codecs
+### Supported video codecs
 
 Browser | MPEG2 Video | H.264 | VP8
 ------- | :---------: | :---: | :-:
 Google Chrome | ![no](icons/exclamation.png) | ![yes](icons/accept.png) | ![yes](icons/accept.png)
 Mozilla Firefox | ![no](icons/exclamation.png) |  | ![yes](icons/accept.png)
 
-#### Supported audio codecs
+### Supported audio codecs
 
 Browser | MPEG2 Audio | Dolby Digital (AC3) | AAC | Vorbis
 ------- | :---------: | :-----------------: | :-: | :----:
