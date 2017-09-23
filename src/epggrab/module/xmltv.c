@@ -661,21 +661,43 @@ static int _xmltv_parse_channel
   HTSMSG_FOREACH(f, tags) {
     if (!(subtag = htsmsg_field_get_map(f))) continue;
     if (strcmp(f->hmf_name, "display-name") == 0) {
-      int n = 0;
-
       name = htsmsg_get_str(subtag, "cdata");
-      if (chnum && name) {
-        while (isdigit(*(name + n))) n++;
-        if (n > 0) {
-          if (*(name + n) == 0 || (*(name + n) == ' ' && chnum == 1)) {
-            save |= epggrab_channel_set_number(ch, atoi(name), 0);
-            name += n;
-            while (*name == ' ') name++;
-          }
-        }
+      int major = 0;
+      int minor = 0;
+      const char *cur = name;
+
+      /* Some xmltv providers supply a display-name that is the
+       * channel number. So attempt to grab it.
+       */
+
+      /* Check and grab major part of channel number */
+      while (isdigit(*cur))
+        major = (major * 10) + *cur++ - '0';
+
+      /* If a period then it's an atsc-style number of major.minor.
+       * So skip the period and parse the minor.
+       */
+      if (major && *cur == '.') {
+        ++cur;
+        while (isdigit(*cur))
+          minor = (minor * 10) + *cur++ - '0';
       }
-      if (name && *name)
-        htsmsg_add_str_exclusive(dnames, name);
+
+      /* If we have a channel number and then either end of string
+       * or (if chnum is 'first words') a space, then save the channel.
+       * The space is necessary to avoid channels such as "4Music"
+       * being treated as channel number 4.
+       *
+       * We assume channel number has to be >0.
+       */
+      if (major && (!*cur || (*cur == ' ' && chnum == 1))) {
+        save |= epggrab_channel_set_number(ch, major, minor);
+        /* Skip extra spaces between channel number and actual name */
+        while (*cur == ' ') ++cur;
+      }
+
+      if (cur && *cur)
+        htsmsg_add_str_exclusive(dnames, cur);
     }
     else if (strcmp(f->hmf_name, "icon") == 0) {
       if ((attribs = htsmsg_get_map(subtag,  "attrib")) != NULL &&
