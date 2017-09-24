@@ -997,6 +997,20 @@ const idclass_t dvr_config_class = {
       .group    = 1,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "reconfigure-restart",
+      .name     = N_("Restart after reconfigure"),
+      .desc     = N_("Restart the recording if the streams are "
+                     "reconfigured during the recording. "
+                     "Default is unchecked, but try checking this if "
+                     "you have trouble playing the recordings, especially "
+                     ".mkv files and players may have problems."),
+      .off      = offsetof(dvr_config_t, dvr_reconfigure_restart),
+      .opts     = PO_ADVANCED,
+      .def.i    = 1,
+      .group    = 1,
+    },
+    {
       .type     = PT_U32,
       .id       = "epg-update-window",
       .name     = N_("EPG update window"),
