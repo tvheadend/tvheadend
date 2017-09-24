@@ -266,6 +266,7 @@ static htsmsg_t *
 hts_settings_load_path(const char *fullpath, int depth)
 {
   char child[PATH_MAX];
+  const char *name;
   struct filebundle_stat st;
   fb_dirent **namelist, *d;
   htsmsg_t *r, *c;
@@ -285,7 +286,8 @@ hts_settings_load_path(const char *fullpath, int depth)
     r = htsmsg_create_map();
     for(i = 0; i < n; i++) {
       d = namelist[i];
-      if(d->name[0] != '.') {
+      name = d->name;
+      if(name[0] != '.' && name[0] && name[strlen(name)-1] != '~') {
 
         snprintf(child, sizeof(child), "%s/%s", fullpath, d->name);
         if(d->type == FB_DIR && depth > 0) {
