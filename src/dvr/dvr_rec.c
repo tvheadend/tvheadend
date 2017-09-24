@@ -1457,6 +1457,7 @@ dvr_thread(void *aux)
     case SMT_STOP:
        if (sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
 	 // Subscription is restarting, wait for SMT_START
+	 muxing = 0; // reconfigure muxer
 
        } else if(sm->sm_code == 0) {
 	 // Recording is completed
