@@ -104,6 +104,34 @@ static int epggrab_mod_class_type_set(void *o, const void *v)
   return 0;
 }
 
+static htsmsg_t *
+epggrab_module_ota_scrapper_config_list ( void *o, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_t *e = htsmsg_create_map();
+  htsmsg_add_str(e, "key", "");
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("Use default configuration")));
+  htsmsg_add_msg(m, NULL, e);
+  htsmsg_t *config;
+  /* We load all the config so we can get the names of ones that are
+   * valid. This is a bit of overhead but we are rarely called since
+   * this is for the configuration GUI drop-down.
+   */
+  if((config = hts_settings_load_r(1, "epggrab/eit/scrape")) != NULL) {
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, config) {
+      e = htsmsg_create_map();
+      htsmsg_add_str(e, "key", f->hmf_name);
+      htsmsg_add_str(e, "val", f->hmf_name);
+      htsmsg_add_msg(m, NULL, e);
+    }
+    htsmsg_destroy(config);
+  }
+  return m;
+}
+
+
+
 CLASS_DOC(epggrabber_modules)
 PROP_DOC(epggrabber_priority)
 
@@ -262,6 +290,7 @@ const idclass_t epggrab_mod_ota_scraper_class = {
                    "\"uk\" (without the quotes)."
                   ),
       .off    = offsetof(epggrab_module_ota_scraper_t, scrape_config),
+      .list   = epggrab_module_ota_scrapper_config_list,
       .group  = 2,
     },
     {
