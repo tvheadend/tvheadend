@@ -317,4 +317,5 @@ TVHVideoCodec tvh_codec_nvenc_hevc = {
     .idclass  = &codec_profile_nvenc_hevc_class,
     .profiles = nvenc_hevc_profiles,
     .profile_init = tvh_codec_profile_video_init,
+    .profile_destroy = tvh_codec_profile_video_destroy,
 };

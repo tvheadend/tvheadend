@@ -45,7 +45,7 @@ static const uint64_t aac_channel_layouts[] = {
 
 typedef struct {
     TVHAudioCodecProfile;
-    const char *coder;
+    char *coder;
 } tvh_codec_profile_aac_t;
 
 
@@ -122,11 +122,21 @@ static const codec_profile_class_t codec_profile_aac_class = {
 };
 
 
+static void
+tvh_codec_profile_aac_destroy(TVHCodecProfile *_self)
+{
+    tvh_codec_profile_aac_t *self = (tvh_codec_profile_aac_t *)_self;
+    tvh_codec_profile_audio_destroy(_self);
+    free(self->coder);
+}
+
+
 TVHAudioCodec tvh_codec_aac = {
     .name            = "aac",
     .size            = sizeof(tvh_codec_profile_aac_t),
     .idclass         = &codec_profile_aac_class,
     .profiles        = aac_profiles,
     .profile_init    = tvh_codec_profile_audio_init,
+    .profile_destroy = tvh_codec_profile_aac_destroy,
     .channel_layouts = aac_channel_layouts,
 };

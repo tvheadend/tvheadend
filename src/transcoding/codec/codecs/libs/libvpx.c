@@ -149,6 +149,8 @@ TVHVideoCodec tvh_codec_libvpx_vp8 = {
     .name     = "libvpx",
     .size     = sizeof(tvh_codec_profile_libvpx_t),
     .idclass  = &codec_profile_libvpx_class,
+    .profile_init = tvh_codec_profile_video_init,
+    .profile_destroy = tvh_codec_profile_video_destroy,
 };
 
 
@@ -159,4 +161,5 @@ TVHVideoCodec tvh_codec_libvpx_vp9 = {
     .size    = sizeof(tvh_codec_profile_libvpx_t),
     .idclass = &codec_profile_libvpx_class,
     .profile_init = tvh_codec_profile_video_init,
+    .profile_destroy = tvh_codec_profile_video_destroy,
 };

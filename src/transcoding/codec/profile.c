@@ -49,10 +49,18 @@ tvh_codec_profile_alloc(TVHCodec *codec, htsmsg_t *conf)
 static void
 tvh_codec_profile_free(TVHCodecProfile *self)
 {
+    TVHCodec *codec;
+
     if (self) {
-        self->codec = NULL;
+        codec = self->codec;
+        if (codec && codec->profile_destroy) {
+            codec->profile_destroy(self);
+        }
+        free(self->name);
+        free(self->description);
+        free(self->codec_name);
+        free(self->device);
         free(self);
-        self = NULL;
     }
 }
 
@@ -262,6 +270,11 @@ tvh_codec_profile_video_init(TVHCodecProfile *_self, htsmsg_t *conf)
     return 0;
 }
 
+void
+tvh_codec_profile_video_destroy(TVHCodecProfile *_self)
+{
+}
+
 int
 tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self)
 {
@@ -289,6 +302,15 @@ tvh_codec_profile_audio_init(TVHCodecProfile *_self, htsmsg_t *conf)
     self->sample_fmt = AV_SAMPLE_FMT_NONE;
     self->tracks = 1;
     return 0;
+}
+
+void
+tvh_codec_profile_audio_destroy(TVHCodecProfile *_self)
+{
+    TVHAudioCodecProfile *self = (TVHAudioCodecProfile *)_self;
+    free(self->language1);
+    free(self->language2);
+    free(self->language3);
 }
 
 const enum AVSampleFormat *

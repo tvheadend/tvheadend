@@ -2459,8 +2459,11 @@ profile_transcode_free(profile_t *_pro)
 {
   profile_transcode_t *pro = (profile_transcode_t *)_pro;
   free(pro->pro_vcodec);
+  free(pro->pro_src_vcodec);
   free(pro->pro_acodec);
+  free(pro->pro_src_acodec);
   free(pro->pro_scodec);
+  free(pro->pro_src_scodec);
 }
 
 static profile_t *

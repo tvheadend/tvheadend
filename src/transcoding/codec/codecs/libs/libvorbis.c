@@ -96,4 +96,5 @@ TVHAudioCodec tvh_codec_libvorbis = {
     .idclass         = &codec_profile_libvorbis_class,
     .channel_layouts = libvorbis_channel_layouts,
     .profile_init    = tvh_codec_profile_audio_init,
+    .profile_destroy = tvh_codec_profile_audio_destroy,
 };

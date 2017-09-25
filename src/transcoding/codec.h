@@ -67,6 +67,7 @@ struct tvh_codec {
     AVCodec *codec;
     const AVProfile *profiles;
     int (*profile_init)(TVHCodecProfile *, htsmsg_t *conf);
+    void (*profile_destroy)(TVHCodecProfile *);
     SLIST_ENTRY(tvh_codec) link;
 };
 
@@ -90,9 +91,9 @@ extern const codec_profile_class_t codec_profile_class;
 struct tvh_codec_profile {
     idnode_t idnode;
     TVHCodec *codec;
-    const char *name;
-    const char *description;
-    const char *codec_name;
+    char *name;
+    char *description;
+    char *codec_name;
     double bit_rate;
     double qscale;
     int profile;
@@ -131,6 +132,9 @@ tvh_codec_profile_open(TVHCodecProfile *self, AVDictionary **opts);
 int
 tvh_codec_profile_video_init(TVHCodecProfile *_self, htsmsg_t *conf);
 
+void
+tvh_codec_profile_video_destroy(TVHCodecProfile *_self);
+
 int
 tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self);
 
@@ -141,6 +145,9 @@ tvh_codec_profile_video_get_pix_fmts(TVHCodecProfile *self);
 /* audio */
 int
 tvh_codec_profile_audio_init(TVHCodecProfile *_self, htsmsg_t *conf);
+
+void
+tvh_codec_profile_audio_destroy(TVHCodecProfile *_self);
 
 const enum AVSampleFormat *
 tvh_codec_profile_audio_get_sample_fmts(TVHCodecProfile *self);

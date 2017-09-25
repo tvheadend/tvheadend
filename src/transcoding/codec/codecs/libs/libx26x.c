@@ -48,9 +48,9 @@ strlist2htsmsg(const char * const *values)
 
 typedef struct {
     TVHVideoCodecProfile;
-    const char *preset;
-    const char *tune;
-    const char *params;
+    char *preset;
+    char *tune;
+    char *params;
 } tvh_codec_profile_libx26x_t;
 
 
@@ -294,11 +294,23 @@ static const codec_profile_class_t codec_profile_libx265_class = {
 };
 
 
+static void
+tvh_codec_profile_libx265_destroy(TVHCodecProfile *_self)
+{
+    tvh_codec_profile_libx26x_t *self = (tvh_codec_profile_libx26x_t *)_self;
+    tvh_codec_profile_video_destroy(_self);
+    free(self->preset);
+    free(self->tune);
+    free(self->params);
+}
+
+
 TVHVideoCodec tvh_codec_libx265 = {
     .name    = "libx265",
     .size    = sizeof(tvh_codec_profile_libx26x_t),
     .idclass = &codec_profile_libx265_class,
     .profile_init = tvh_codec_profile_video_init,
+    .profile_destroy = tvh_codec_profile_libx265_destroy,
 };
 
 #endif

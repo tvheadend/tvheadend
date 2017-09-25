@@ -33,7 +33,7 @@ typedef struct {
 
 static int
 tvh_codec_profile_omx_open(tvh_codec_profile_omx_t *self, AVDictionary **opts)
-{
+k{
     AV_DICT_SET_FLAGS_GLOBAL_HEADER(opts);
     // bit_rate
     if (self->bit_rate) {
@@ -106,9 +106,19 @@ static const codec_profile_class_t codec_profile_omx_class = {
 
 /* h264_omx ================================================================= */
 
+static void
+tvh_codec_profile_omx_destroy(TVHCodecProfile *_self)
+{
+    tvh_codec_profile_omx_t *self = (tvh_codec_profile_omx_t *)_self;
+    tvh_codec_profile_video_destroy(_self);
+    free(self->libname);
+    free(self->libprefix);
+}
+
 TVHVideoCodec tvh_codec_omx_h264 = {
     .name    = "h264_omx",
     .size    = sizeof(tvh_codec_profile_omx_t),
     .idclass = &codec_profile_omx_class,
     .profile_init = tvh_codec_profile_video_init,
+    .profile_destroy = tvh_codec_profile_omx_destroy,
 };

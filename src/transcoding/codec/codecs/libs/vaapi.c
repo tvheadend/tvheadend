@@ -261,6 +261,7 @@ TVHVideoCodec tvh_codec_vaapi_hevc = {
     .idclass  = &codec_profile_vaapi_hevc_class,
     .profiles = vaapi_hevc_profiles,
     .profile_init = tvh_codec_profile_video_init,
+    .profile_destroy = tvh_codec_profile_video_destroy,
 };
 
 
@@ -303,4 +304,5 @@ TVHVideoCodec tvh_codec_vaapi_vp8 = {
     .idclass  = &codec_profile_vaapi_vp8_class,
     .profiles = vaapi_vp8_profiles,
     .profile_init = tvh_codec_profile_video_init,
+    .profile_destroy = tvh_codec_profile_video_destroy,
 };

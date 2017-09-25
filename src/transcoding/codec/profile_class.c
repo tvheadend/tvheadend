@@ -124,16 +124,26 @@ codec_profile_class_name_set(void *obj, const void *val)
                 tvherror(LS_CODEC, "profile '%s' already exists", name);
             }
             else {
-                if (self->name) {
-                    free((void *)self->name);
-                    self->name = NULL;
-                }
+                free(self->name);
                 self->name = strdup(name);
                 return 1;
             }
         }
     }
     return 0;
+}
+
+
+/* codec_profile_class.name */
+
+static const void *
+codec_profile_class_name_get(void *obj)
+{
+    static const char *type;
+
+    TVHCodec *codec = tvh_codec_profile_get_codec(obj);
+    type = codec ? tvh_codec_get_title(codec) : "<unknown>";
+    return &type;
 }
 
 
@@ -226,8 +236,17 @@ const codec_profile_class_t codec_profile_class = {
             },
             {
                 .type     = PT_STR,
-                .id       = "codec_name",
+                .id       = "codec_title",
                 .name     = N_("Codec"),
+                .desc     = N_("Codec title."),
+                .group    = 1,
+                .opts     = PO_RDONLY | PO_NOSAVE,
+                .get      = codec_profile_class_name_get,
+            },
+            {
+                .type     = PT_STR,
+                .id       = "codec_name",
+                .name     = N_("Codec name"),
                 .desc     = N_("Codec name."),
                 .group    = 1,
                 .opts     = PO_RDONLY,

@@ -22,7 +22,7 @@
 #include "../codec/internals.h"
 
 
-static TVHCodecProfile _codec_profile_copy = { .name = "copy" };
+static TVHCodecProfile _codec_profile_copy = { .name = (char *)"copy" };
 TVHCodecProfile *tvh_codec_profile_copy = &_codec_profile_copy;
 
 
