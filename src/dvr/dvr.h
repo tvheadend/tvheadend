@@ -203,6 +203,7 @@ typedef struct dvr_entry {
   char *de_owner;
   char *de_creator;
   char *de_comment;
+  char *de_uri;                 /* Programme unique ID */
   htsmsg_t *de_files; /* List of all used files */
   char *de_directory; /* Can be set for autorec entries, will override any 
                          directory setting from the configuration */

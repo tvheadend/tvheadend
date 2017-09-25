@@ -990,6 +990,8 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
       htsmsg_add_str(conf, "episode", s);
     if (e->episode && e->episode->copyright_year)
       htsmsg_add_u32(conf, "copyright_year", e->episode->copyright_year);
+    if (e->episode && e->episode->uri)
+      htsmsg_add_str(conf, "uri", e->episode->uri);
   } else if (title) {
     l = lang_str_create();
     lang_str_add(l, title, lang, 0);
@@ -3469,6 +3471,14 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("The recorded file was removed intentionally"),
       .off      = offsetof(dvr_entry_t, de_file_removed),
       .opts     = PO_HIDDEN | PO_NOUI,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "uri",
+      .name     = N_("Program unique ID (from grabber)"),
+      .desc     = N_("Program unique ID (from grabber), such as MV101010101.0000"),
+      .off      = offsetof(dvr_entry_t, de_uri),
+      .opts     = PO_RDONLY | PO_EXPERT
     },
     {
       .type     = PT_STR,
