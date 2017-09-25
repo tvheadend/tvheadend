@@ -722,8 +722,10 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd, dvr_entry_t *d
   struct stat st;
 
   if (fd <= 0) {
+    pthread_mutex_unlock(&global_lock);
     fd = tvh_open(path, O_RDONLY, 0);
     tvhdebug(LS_HTSP, "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
+    pthread_mutex_lock(&global_lock);
     if(fd == -1)
       return htsp_error(htsp, N_("Unable to open file"));
   }
