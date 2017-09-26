@@ -268,11 +268,14 @@ tvheadend.dvr_upcoming = function(panel, index) {
 
     function selected(s, abuttons) {
         var recording = 0;
+        var scheduled = 0;
         s.each(function(s) {
             if (s.data.sched_status.indexOf('recording') == 0)
                 recording++;
+            if (s.data.sched_status.indexOf('scheduled') == 0)
+                scheduled++;
         });
-        abuttons.stop.setDisabled(recording < 1);
+        abuttons.stop.setDisabled(recording < 1 && scheduled < 1);
         abuttons.abort.setDisabled(recording < 1);
     }
 

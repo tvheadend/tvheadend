@@ -2098,7 +2098,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
   dvr_rs_state_t rec_state = de->de_rec_state;
   dvr_autorec_entry_t *dae = de->de_autorec;
 
-  if (!clone)
+  if (!clone && de->de_s)
     dvr_rec_unsubscribe(de);
 
   de->de_dont_reschedule = 1;
@@ -3669,7 +3669,11 @@ dvr_entry_move(dvr_entry_t *de, int failed)
 dvr_entry_t *
 dvr_entry_stop(dvr_entry_t *de)
 {
-  if(de->de_sched_state == DVR_RECORDING) {
+  /* Allow stopping a scheduled item. This will then mark it as file missing.
+   * This is useful if you have auto_rec rule that matches programmes you
+   * don't want to record such as episodes you've already seen.
+   */
+  if(de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_SCHEDULED) {
     dvr_stop_recording(de, SM_CODE_OK, 1, 0);
     return de;
   }
