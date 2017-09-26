@@ -749,6 +749,10 @@
     margin-left: 5px;
 }
 
+.x-epg-duplicate {
+    text-decoration: line-through;
+}
+
 .tv-video-player {
     margin-right: auto;
     margin-left : auto;
