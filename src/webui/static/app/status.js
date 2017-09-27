@@ -493,7 +493,7 @@ tvheadend.status_streams = function(panel, index)
                     }
                     clearStat = function(record) {
                         uuid = record.data.uuid;
-                        if (!uuid || 'undefined') {
+                        if (!uuid) {
                             return;
                         }
                         Ext.Ajax.request({
