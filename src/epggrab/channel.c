@@ -620,6 +620,17 @@ epggrab_channel_class_names_set ( void *obj, const void *p )
   return 0;
 }
 
+static void
+epggrab_channel_class_enabled_notify ( void *obj, const char *lang )
+{
+  epggrab_channel_t *ec = obj;
+  if (!ec->enabled) {
+    epggrab_channel_links_delete(ec, 0);
+  } else {
+    epggrab_channel_updated(ec);
+  }
+}
+
 static const void *
 epggrab_channel_class_channels_get ( void *obj )
 {
@@ -746,6 +757,7 @@ const idclass_t epggrab_channel_class = {
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable EPG data for the entry."),
       .off      = offsetof(epggrab_channel_t, enabled),
+      .notify   = epggrab_channel_class_enabled_notify,
       .group    = 1
     },
     {
