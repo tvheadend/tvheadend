@@ -195,6 +195,21 @@ tvheadend.filesizeRenderer = function(st) {
     }
 }
 
+/** Render an entry differently if it is a duplicate */
+tvheadend.displayWithDuplicateRenderer = function(value, meta, record) {
+    return function() {
+        return function(value, meta, record) {
+            if (value == null)
+                return '';
+            var is_dup = record.data['duplicate'];
+            if (is_dup)
+                return "<span class='x-epg-duplicate'>" + value + "</span>";
+            else
+                return value;
+        }
+    }
+}
+
 /**
  *
  */
@@ -305,6 +320,12 @@ tvheadend.dvr_upcoming = function(panel, index) {
               'start_real,stop_real,duration,pri,filesize,' +
               'sched_status,errors,data_errors,config_name,owner,creator,comment',
         columns: {
+            disp_title: {
+              renderer: tvheadend.displayWithDuplicateRenderer()
+            },
+            disp_subtitle: {
+              renderer: tvheadend.displayWithDuplicateRenderer()
+            },
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
             }
