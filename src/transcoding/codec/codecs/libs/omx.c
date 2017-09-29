@@ -33,7 +33,7 @@ typedef struct {
 
 static int
 tvh_codec_profile_omx_open(tvh_codec_profile_omx_t *self, AVDictionary **opts)
-k{
+{
     AV_DICT_SET_FLAGS_GLOBAL_HEADER(opts);
     // bit_rate
     if (self->bit_rate) {
