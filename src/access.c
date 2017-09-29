@@ -1242,9 +1242,8 @@ access_entry_class_prefix_set(void *o, const void *v)
 static const void *
 access_entry_class_prefix_get(void *o)
 {
-  static const char *ret;
-  ret = access_get_prefix(&((access_entry_t *)o)->ae_ipmasks);
-  return &ret;
+  prop_ptr = access_get_prefix(&((access_entry_t *)o)->ae_ipmasks);
+  return &prop_ptr;
 }
 
 static int
@@ -2167,9 +2166,8 @@ ipblock_entry_class_prefix_set(void *o, const void *v)
 static const void *
 ipblock_entry_class_prefix_get(void *o)
 {
-  static const char *ret;
-  ret = access_get_prefix(&((ipblock_entry_t *)o)->ib_ipmasks);
-  return &ret;
+  prop_ptr = access_get_prefix(&((ipblock_entry_t *)o)->ib_ipmasks);
+  return &prop_ptr;
 }
 
 CLASS_DOC(ipblocking)

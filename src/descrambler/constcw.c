@@ -261,15 +261,13 @@ constcw_class_key_odd_set(void *o, const void *v)
 static const void *
 constcw_class_key_get(void *o, const uint8_t *key)
 {
-  static char buf[64];
-  static const char *ret = buf;
   if (constcw_key_size(o) == 8) {
-    snprintf(buf, sizeof(buf),
+    snprintf(prop_sbuf, PROP_SBUF_LEN,
              "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
              key[0x0], key[0x1], key[0x2], key[0x3],
              key[0x4], key[0x5], key[0x6], key[0x7]);
   } else {
-    snprintf(buf, sizeof(buf),
+    snprintf(prop_sbuf, PROP_SBUF_LEN,
              "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:"
              "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
              key[0x0], key[0x1], key[0x2], key[0x3],
@@ -277,7 +275,7 @@ constcw_class_key_get(void *o, const uint8_t *key)
              key[0x8], key[0x9], key[0xa], key[0xb],
              key[0xc], key[0xd], key[0xe], key[0xf]);
   }
-  return &ret;
+  return &prop_sbuf_ptr;
 }
 
 static const void *

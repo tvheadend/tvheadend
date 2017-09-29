@@ -88,14 +88,13 @@ dvr_timerec_purge_spawn(dvr_timerec_entry_t *dte, int delconf)
 static const char *
 dvr_timerec_title(dvr_timerec_entry_t *dte, struct tm *start)
 {
-  static char buf[256];
   size_t len;
 
   if (dte->dte_title == NULL)
     return _("Unknown");
-  len = strftime(buf, sizeof(buf) - 1, dte->dte_title, start);
-  buf[len] = '\0';
-  return buf;
+  len = strftime(prop_sbuf, PROP_SBUF_LEN-1, dte->dte_title, start);
+  prop_sbuf[len] = '\0';
+  return prop_sbuf;
 }
 
 /**
@@ -401,14 +400,11 @@ dvr_timerec_entry_class_stop_set(void *o, const void *v)
 static const void *
 dvr_timerec_entry_class_time_get(void *o, int tm)
 {
-  static const char *ret;
-  static char buf[16];
   if (tm >= 0)
-    snprintf(buf, sizeof(buf), "%02d:%02d", tm / 60, tm % 60);
+    snprintf(prop_sbuf, PROP_SBUF_LEN, "%02d:%02d", tm / 60, tm % 60);
   else
-    strncpy(buf, N_("Any"), 16);
-  ret = buf;
-  return &ret;
+    strncpy(prop_sbuf, N_("Any"), 16);
+  return &prop_sbuf_ptr;
 }
 
 static const void *

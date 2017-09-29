@@ -1886,9 +1886,7 @@ static const void *
 caclient_cccam_nodeid_get(void *o)
 {
   cccam_t *cccam = o;
-  static char buf[64];
-  static const char *ret = buf;
-  snprintf(buf, sizeof(buf),
+  snprintf(prop_sbuf, PROP_SBUF_LEN,
            "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
            cccam->cccam_nodeid[0x0],
            cccam->cccam_nodeid[0x1],
@@ -1898,7 +1896,7 @@ caclient_cccam_nodeid_get(void *o)
            cccam->cccam_nodeid[0x5],
            cccam->cccam_nodeid[0x6],
            cccam->cccam_nodeid[0x7]);
-  return &ret;
+  return &prop_sbuf_ptr;
 }
 
 

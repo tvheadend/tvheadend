@@ -878,14 +878,13 @@ bouquet_class_chtag_notify ( void *obj, const char *lang )
 static const void *
 bouquet_class_chtag_ref_get ( void *obj )
 {
-  static const char *buf;
   bouquet_t *bq = obj;
 
   if (bq->bq_chtag_ptr)
-    buf = idnode_uuid_as_str(&bq->bq_chtag_ptr->ct_id, prop_sbuf);
+    idnode_uuid_as_str(&bq->bq_chtag_ptr->ct_id, prop_sbuf);
   else
-    buf = "";
-  return &buf;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static char *

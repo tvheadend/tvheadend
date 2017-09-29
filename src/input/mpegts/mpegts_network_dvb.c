@@ -57,8 +57,8 @@ dvb_network_class_delete ( idnode_t *in )
 static const void *
 dvb_network_class_scanfile_get ( void *o )
 {
-  static const char *s = NULL;
-  return &s;
+  prop_ptr = NULL;
+  return &prop_ptr;
 }
 
 void
@@ -180,15 +180,10 @@ static const void *
 dvb_network_class_orbital_pos_get ( void *o )
 {
   dvb_network_t *ln = o;
-  static char buf[16];
-  static const char *s;
-  s = NULL;
-  if (ln->mn_satpos != INT_MAX) {
-    dvb_sat_position_to_str(ln->mn_satpos, buf, sizeof(buf));
-    s = buf;
-  } else
-    s = "";
-  return &s;
+  prop_sbuf[0] = '\0';
+  if (ln->mn_satpos != INT_MAX)
+    dvb_sat_position_to_str(ln->mn_satpos, prop_sbuf, PROP_SBUF_LEN);
+  return &prop_sbuf_ptr;
 }
 
 static int

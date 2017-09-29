@@ -632,14 +632,11 @@ dvr_autorec_entry_class_start_window_set(void *o, const void *v)
 static const void *
 dvr_autorec_entry_class_time_get(void *o, int tm)
 {
-  static const char *ret;
-  static char buf[16];
   if (tm >= 0)
-    snprintf(buf, sizeof(buf), "%02d:%02d", tm / 60, tm % 60);
+    snprintf(prop_sbuf, PROP_SBUF_LEN, "%02d:%02d", tm / 60, tm % 60);
   else
-    strncpy(buf, N_("Any"), 16);
-  ret = buf;
-  return &ret;
+    strncpy(prop_sbuf, N_("Any"), 16);
+  return &prop_sbuf_ptr;
 }
 
 static const void *
@@ -852,13 +849,11 @@ dvr_autorec_entry_class_brand_set(void *o, const void *v)
 static const void *
 dvr_autorec_entry_class_brand_get(void *o)
 {
-  static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  if (dae->dae_brand)
-    ret = dae->dae_brand->uri;
-  else
-    ret = "";
-  return &ret;
+  prop_ptr = dae->dae_brand ? dae->dae_brand->uri : NULL;
+  if (prop_ptr == NULL)
+    prop_ptr = "";
+  return &prop_ptr;
 }
 
 static int
@@ -888,13 +883,11 @@ dvr_autorec_entry_class_season_set(void *o, const void *v)
 static const void *
 dvr_autorec_entry_class_season_get(void *o)
 {
-  static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  if (dae->dae_season)
-    ret = dae->dae_season->uri;
-  else
-    ret = "";
-  return &ret;
+  prop_ptr = dae->dae_season ? dae->dae_season->uri : NULL;
+  if (prop_ptr == NULL)
+    prop_ptr = "";
+  return &prop_ptr;
 }
 
 static int
@@ -924,13 +917,11 @@ dvr_autorec_entry_class_series_link_set(void *o, const void *v)
 static const void *
 dvr_autorec_entry_class_series_link_get(void *o)
 {
-  static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  if (dae->dae_serieslink)
-    ret = dae->dae_serieslink->uri;
-  else
-    ret = "";
-  return &ret;
+  prop_ptr = dae->dae_serieslink ? dae->dae_serieslink->uri : NULL;
+  if (prop_ptr == NULL)
+    prop_ptr = "";
+  return &prop_ptr;
 }
 
 static htsmsg_t *

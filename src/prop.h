@@ -128,7 +128,8 @@ typedef struct property {
 
 #define PROP_SBUF_LEN 4096
 extern char prop_sbuf[PROP_SBUF_LEN];
-extern char *prop_sbuf_ptr;
+extern const char *prop_sbuf_ptr;
+extern const char *prop_ptr;
 
 const property_t *prop_find(const property_t *p, const char *name);
 

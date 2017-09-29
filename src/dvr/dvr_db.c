@@ -2599,11 +2599,9 @@ dvr_entry_class_config_name_rend(void *o, const char *lang)
 static const void *
 dvr_entry_class_filename_get(void *o)
 {
-  static const char *ret;
   dvr_entry_t *de = (dvr_entry_t *)o;
-  const char *s = dvr_get_filename(de);
-  ret = s ?: "";
-  return &ret;
+  prop_ptr = dvr_get_filename(de) ?: "";
+  return &prop_ptr;
 }
 
 static int
@@ -2681,13 +2679,12 @@ dvr_entry_class_channel_name_set(void *o, const void *v)
 static const void *
 dvr_entry_class_channel_name_get(void *o)
 {
-  static const char *ret;
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_channel)
-    ret = channel_get_name(de->de_channel, channel_blank_name);
+    prop_ptr = channel_get_name(de->de_channel, channel_blank_name);
   else
-    ret = de->de_channel_name;
-  return &ret;
+    prop_ptr = de->de_channel_name;
+  return &prop_ptr;
 }
 
 static int
@@ -2798,19 +2795,17 @@ dvr_entry_class_autorec_get(void *o)
 static const void *
 dvr_entry_class_autorec_caption_get(void *o)
 {
-  static const char *ret;
   dvr_entry_t *de = (dvr_entry_t *)o;
   dvr_autorec_entry_t *dae = de->de_autorec;
   if (dae) {
-    ret = prop_sbuf;
     snprintf(prop_sbuf, PROP_SBUF_LEN, "%s%s%s%s",
              dae->dae_name ?: "",
              dae->dae_comment ? " (" : "",
              dae->dae_comment,
              dae->dae_comment ? ")" : "");
   } else
-    ret = "";
-  return &ret;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static int
@@ -2838,32 +2833,28 @@ dvr_entry_class_timerec_set(void *o, const void *v)
 static const void *
 dvr_entry_class_timerec_get(void *o)
 {
-  static const char *ret;
-  char ubuf[UUID_HEX_SIZE];
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_timerec)
-    ret = idnode_uuid_as_str(&de->de_timerec->dte_id, ubuf);
+    idnode_uuid_as_str(&de->de_timerec->dte_id, prop_sbuf);
   else
-    ret = "";
-  return &ret;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static const void *
 dvr_entry_class_timerec_caption_get(void *o)
 {
-  static const char *ret;
   dvr_entry_t *de = (dvr_entry_t *)o;
   dvr_timerec_entry_t *dte = de->de_timerec;
   if (dte) {
-    ret = prop_sbuf;
     snprintf(prop_sbuf, PROP_SBUF_LEN, "%s%s%s%s",
              dte->dte_name ?: "",
              dte->dte_comment ? " (" : "",
              dte->dte_comment,
              dte->dte_comment ? ")" : "");
   } else
-    ret = "";
-  return &ret;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static int
@@ -2879,14 +2870,12 @@ dvr_entry_class_parent_set(void *o, const void *v)
 static const void *
 dvr_entry_class_parent_get(void *o)
 {
-  static const char *ret;
-  char ubuf[UUID_HEX_SIZE];
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_parent)
-    ret = idnode_uuid_as_str(&de->de_parent->de_id, ubuf);
+    idnode_uuid_as_str(&de->de_parent->de_id, prop_sbuf);
   else
-    ret = "";
-  return &ret;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static int
@@ -2902,14 +2891,12 @@ dvr_entry_class_child_set(void *o, const void *v)
 static const void *
 dvr_entry_class_child_get(void *o)
 {
-  static const char *ret;
-  char ubuf[UUID_HEX_SIZE];
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_child)
-    ret = idnode_uuid_as_str(&de->de_child->de_id, ubuf);
+    idnode_uuid_as_str(&de->de_child->de_id, prop_sbuf);
   else
-    ret = "";
-  return &ret;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static int
@@ -2957,14 +2944,13 @@ static const void *
 dvr_entry_class_disp_title_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  static const char *s;
-  s = "";
-  if (de->de_title) {
-    s = lang_str_get(de->de_title, idnode_lang(o));
-    if (s == NULL)
-      s = "";
-  }
-  return &s;
+  if (de->de_title)
+    prop_ptr = lang_str_get(de->de_title, idnode_lang(o));
+  else
+    prop_ptr = NULL;
+  if (prop_ptr == NULL)
+    prop_ptr = "";
+  return &prop_ptr;
 }
 
 static int
@@ -2988,28 +2974,26 @@ static const void *
 dvr_entry_class_disp_subtitle_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  static const char *s;
-  s = "";
-  if (de->de_subtitle) {
-    s = lang_str_get(de->de_subtitle, idnode_lang(o));
-    if (s == NULL)
-      s = "";
-  }
-  return &s;
+  if (de->de_subtitle)
+    prop_ptr = lang_str_get(de->de_subtitle, idnode_lang(o));
+  else
+    prop_ptr = NULL;
+  if (prop_ptr == NULL)
+    prop_ptr = "";
+  return &prop_ptr;
 }
 
 static const void *
 dvr_entry_class_disp_description_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  static const char *s;
-  s = "";
-  if (de->de_desc) {
-    s = lang_str_get(de->de_desc, idnode_lang(o));
-    if (s == NULL)
-      s = "";
-  }
-  return &s;
+  if (de->de_desc)
+    prop_ptr = lang_str_get(de->de_desc, idnode_lang(o));
+  else
+    prop_ptr = NULL;
+  if (prop_ptr == NULL)
+    prop_ptr = "";
+  return &prop_ptr;
 }
 
 static const void *
@@ -3076,24 +3060,18 @@ static const void *
 dvr_entry_class_status_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  static const char *s;
-  static char buf[100];
-  strncpy(buf, dvr_entry_status(de), sizeof(buf));
-  buf[sizeof(buf)-1] = '\0';
-  s = buf;
-  return &s;
+  strncpy(prop_sbuf, dvr_entry_status(de), PROP_SBUF_LEN);
+  prop_sbuf[PROP_SBUF_LEN-1] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static const void *
 dvr_entry_class_sched_status_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  static const char *s;
-  static char buf[100];
-  strncpy(buf, dvr_entry_schedstatus(de), sizeof(buf));
-  buf[sizeof(buf)-1] = '\0';
-  s = buf;
-  return &s;
+  strncpy(prop_sbuf, dvr_entry_schedstatus(de), PROP_SBUF_LEN);
+  prop_sbuf[PROP_SBUF_LEN-1] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static const void *
@@ -3101,13 +3079,14 @@ dvr_entry_class_channel_icon_url_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   channel_t *ch = de->de_channel;
-  static const char *s;
   if (ch == NULL) {
-    s = "";
-  } else if ((s = channel_get_icon(ch)) == NULL) {
-    s = "";
+    prop_ptr = NULL;
+  } else {
+    prop_ptr = channel_get_icon(ch);
   }
-  return &s;
+  if (prop_ptr == NULL)
+    prop_ptr = "";
+  return &prop_ptr;
 }
 
 static const void *

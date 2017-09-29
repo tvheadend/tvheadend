@@ -281,13 +281,12 @@ linuxdvb_frontend_dvbs_class_satconf_set ( void *self, const void *str )
 static const void *
 linuxdvb_frontend_dvbs_class_satconf_get ( void *self )
 {
-  static const char *s;
   linuxdvb_frontend_t *lfe = self;
   if (lfe->lfe_satconf)
-    s = lfe->lfe_satconf->ls_type;
+    prop_ptr = lfe->lfe_satconf->ls_type;
   else
-    s = NULL;
-  return &s;
+    prop_ptr = NULL;
+  return &prop_ptr;
 }
 
 static htsmsg_t *

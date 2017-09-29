@@ -184,11 +184,11 @@ static const char *
 caclient_class_get_title ( idnode_t *in, const char *lang )
 {
   caclient_t *cac = (caclient_t *)in;
-  static char buf[32];
   if (cac->cac_name && cac->cac_name[0])
     return cac->cac_name;
-  snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, N_("CA client %i")), cac->cac_index);
-  return buf;
+  snprintf(prop_sbuf, PROP_SBUF_LEN,
+           tvh_gettext_lang(lang, N_("CA client %i")), cac->cac_index);
+  return prop_sbuf;
 }
 
 static void
@@ -242,9 +242,8 @@ static const void *
 caclient_class_status_get(void *o)
 {
   caclient_t *cac = o;
-  static const char *ret;
-  ret = caclient_get_status(cac);
-  return &ret;
+  prop_ptr = caclient_get_status(cac);
+  return &prop_ptr;
 }
 
 CLASS_DOC(caclient)
