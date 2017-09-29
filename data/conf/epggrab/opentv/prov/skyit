@@ -18,14 +18,17 @@
   "season_num": [
     "([0-9]+)'?a? Stagione +Ep\\. ?[0-9]+[a-z]?",
     "([0-9]+)'?a? Stagione -? ?Puntata ?[0-9]+",
-    "([0-9]+)'?a? Stagione"
+    "([0-9]+)'?a? Stagione",
+    "S([0-9]+) Ep[0-9]+"
   ],
   "episode_num": [
     "[0-9]+'?a? Stagione +Ep\\. ?([0-9]+)[a-z]?",
     "[0-9]+'?a? Stagione -? ?Puntata ?([0-9]+)",
     "^ *Ep\\. ?([0-9]+)[a-z]?",
     "^ *Puntata ?([0-9]+)",
-    " Ep\\. ?([0-9]+) -"
+    " Ep\\. ?([0-9]+) -",
+    "S[0-9]+ Ep([0-9]+)",
+    "Ep([0-9]+) ?- ?"
   ],
   "part_num": [
     "[0-9]+'?a? Stagione +Ep\\. ?[0-9]+([a-z]?)",
@@ -35,7 +38,8 @@
     "[0-9]+'?a? Stagione +Ep\\. ?[0-9]+[A-Za-z]? -? ?'(([^']*(' [^A-Z0-9-])?('[^ '])?)+)'",
     "Ep\\. ?[0-9]+[A-Za-z]? -? ?'(([^']*(' [^A-Z0-9-])?('[^ '])?)+)'",
     "[0-9]+'?a? Stagione -? ?'(([^']*(' [^A-Z0-9-])?('[^ '])?)+)'",
-    "[0-9]+'?a? Stagione -? ?Puntata ?[0-9]+[A-Za-z]? \"\" *([^\"]+) *\"\""
+    "[0-9]+'?a? Stagione -? ?Puntata ?[0-9]+[A-Za-z]? \"\" *([^\"]+) *\"\"",
+    "S[0-9]+ Ep[0-9]+ ?(.*) - ?"
   ],
   "cleanup_title": [
     "^ *(.*) *- *1\\^TV *$",
@@ -54,6 +58,8 @@
     "Puntata 5 ...",
     "Ep.4 - 'Title' ...",
     "7 Stagione Puntata 8 \"\" Title \"\" ...",
-    "In diretta, Ep.1 - Prossimo Ep. Gio 29 OTT 21:10. ..."
+    "In diretta, Ep.1 - Prossimo Ep. Gio 29 OTT 21:10. ...",
+    "S2 Ep5 Conseguenze - Un uomo",
+    "Ep80 - Vari personaggi.."
   ]
 }
