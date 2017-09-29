@@ -245,8 +245,8 @@ channel_class_set_name ( void *o, const void *p )
 static const void *
 channel_class_get_name ( void *o )
 {
-  prop_str = channel_get_name(o);
-  return &prop_str;
+  prop_ptr = channel_get_name(o);
+  return &prop_ptr;
 }
 
 static const void *

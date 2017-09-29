@@ -2665,7 +2665,7 @@ dvr_entry_class_channel_name_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_channel)
-    prop_str = channel_get_name(de->de_channel);
+    prop_ptr = channel_get_name(de->de_channel);
   else
     prop_ptr = de->de_channel_name;
   return &prop_ptr;
