@@ -1355,10 +1355,9 @@ linuxdvb_satconf_ele_class_lnbtype_set ( void *o, const void *p )
 static const void *
 linuxdvb_satconf_ele_class_lnbtype_get ( void *o )
 {
-  static const char *s;
   linuxdvb_satconf_ele_t *ls = o;
-  s = ls->lse_lnb ? ls->lse_lnb->ld_type : NULL;
-  return &s;
+  prop_ptr = ls->lse_lnb ? ls->lse_lnb->ld_type : NULL;
+  return &prop_ptr;
 }
 
 static int
@@ -1375,10 +1374,9 @@ linuxdvb_satconf_ele_class_en50494type_set ( void *o, const void *p )
 static const void *
 linuxdvb_satconf_ele_class_en50494type_get ( void *o )
 {
-  static const char *s;
   linuxdvb_satconf_ele_t *ls = o;
-  s = ls->lse_en50494 ? ls->lse_en50494->ld_type : NULL;
-  return &s;
+  prop_ptr = ls->lse_en50494 ? ls->lse_en50494->ld_type : NULL;
+  return &prop_ptr;
 }
 
 static int
@@ -1396,10 +1394,9 @@ linuxdvb_satconf_ele_class_switchtype_set ( void *o, const void *p )
 static const void *
 linuxdvb_satconf_ele_class_switchtype_get ( void *o )
 {
-  static const char *s;
   linuxdvb_satconf_ele_t *ls = o;
-  s = ls->lse_switch ? ls->lse_switch->ld_type : NULL;
-  return &s;
+  prop_ptr = ls->lse_switch ? ls->lse_switch->ld_type : NULL;
+  return &prop_ptr;
 }
 
 static int
@@ -1417,10 +1414,9 @@ linuxdvb_satconf_ele_class_rotortype_set ( void *o, const void *p )
 static const void *
 linuxdvb_satconf_ele_class_rotortype_get ( void *o )
 {
-  static const char *s;
   linuxdvb_satconf_ele_t *ls = o;
-  s = ls->lse_rotor ? ls->lse_rotor->ld_type : NULL;
-  return &s;
+  prop_ptr = ls->lse_rotor ? ls->lse_rotor->ld_type : NULL;
+  return &prop_ptr;
 }
 
 static const char *

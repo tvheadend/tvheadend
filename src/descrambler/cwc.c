@@ -1810,9 +1810,7 @@ static const void *
 caclient_cwc_class_deskey_get(void *o)
 {
   cwc_t *cwc = o;
-  static char buf[64];
-  static const char *ret = buf;
-  snprintf(buf, sizeof(buf),
+  snprintf(prop_sbuf, PROP_SBUF_LEN,
            "%02x:%02x:%02x:%02x:%02x:%02x:%02x:"
            "%02x:%02x:%02x:%02x:%02x:%02x:%02x",
            cwc->cwc_confedkey[0x0],
@@ -1829,7 +1827,7 @@ caclient_cwc_class_deskey_get(void *o)
            cwc->cwc_confedkey[0xb],
            cwc->cwc_confedkey[0xc],
            cwc->cwc_confedkey[0xd]);
-  return &ret;
+  return &prop_sbuf_ptr;
 }
 
 const idclass_t caclient_cwc_class =

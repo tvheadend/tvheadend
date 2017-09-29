@@ -49,10 +49,9 @@ extern const idclass_t mpegts_mux_class;
 static const void * \
 dvb_mux_##c##_class_##l##_get (void *o)\
 {\
-  static const char *s;\
   dvb_mux_t *lm = o;\
-  s = dvb_##t##2str(lm->lm_tuning.dmc_fe_##f);\
-  return &s;\
+  prop_ptr = dvb_##t##2str(lm->lm_tuning.dmc_fe_##f);\
+  return &prop_ptr;\
 }\
 static int \
 dvb_mux_##c##_class_##l##_set (void *o, const void *v)\
@@ -77,10 +76,9 @@ dvb_mux_##c##_class_##l##_enum (void *o, const char *lang)\
 static const void * \
 dvb_mux_##c##_class_##l##_get (void *o)\
 {\
-  static const char *s;\
   dvb_mux_t *lm = o;\
-  s = dvb_##t##2str(lm->lm_tuning.u.dmc_fe_##f.p);\
-  return &s;\
+  prop_ptr = dvb_##t##2str(lm->lm_tuning.u.dmc_fe_##f.p);\
+  return &prop_ptr;\
 }\
 static int \
 dvb_mux_##c##_class_##l##_set (void *o, const void *v)\
@@ -113,10 +111,9 @@ dvb_mux_##c##_class_##l##_enum (void *o, const char *lang)\
 static const void *
 dvb_mux_class_delsys_get (void *o)
 {
-  static const char *s;
   dvb_mux_t *lm = o;
-  s = dvb_delsys2str(lm->lm_tuning.dmc_fe_delsys);
-  return &s;
+  prop_ptr = dvb_delsys2str(lm->lm_tuning.dmc_fe_delsys);
+  return &prop_ptr;
 }
 
 static int

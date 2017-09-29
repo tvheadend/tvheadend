@@ -203,9 +203,8 @@ channel_class_icon_notify ( void *obj, const char *lang )
 static const void *
 channel_class_get_icon ( void *obj )
 {
-  static const char *s;
-  s = channel_get_icon(obj);
-  return &s;
+  prop_ptr = channel_get_icon(obj);
+  return &prop_ptr;
 }
 
 static const char *
@@ -246,9 +245,8 @@ channel_class_set_name ( void *o, const void *p )
 static const void *
 channel_class_get_name ( void *o )
 {
-  static const char *s;
-  s = channel_get_name(o);
-  return &s;
+  prop_str = channel_get_name(o);
+  return &prop_str;
 }
 
 static const void *
@@ -1418,9 +1416,8 @@ channel_tag_class_icon_notify ( void *obj, const char *lang )
 static const void *
 channel_tag_class_get_icon ( void *obj )
 {
-  static const char *s;
-  s = channel_tag_get_icon(obj);
-  return &s;
+  prop_ptr = channel_tag_get_icon(obj);
+  return &prop_ptr;
 }
 
 /* exported for others */
