@@ -1597,7 +1597,7 @@ idnode_slist_rend ( idnode_t *in, idnode_slist_t *options, const char *lang )
      tvh_strlcatf(prop_sbuf, PROP_SBUF_LEN, l, "%s%s", prop_sbuf[0] ? "," : "",
                    tvh_gettext_lang(lang, options->name));
   }
-  return prop_sbuf_ptr;
+  return prop_sbuf;
 }
 
 /* **************************************************************************
