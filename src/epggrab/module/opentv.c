@@ -525,7 +525,7 @@ skip_chnum:
         ilm = NULL;
       }
       
-      if (!ilm)
+      if (!ilm && ec->enabled)
         epggrab_channel_link(ec, ch, NULL);
       save |= epggrab_channel_set_number(ec, cnum, 0);
     }

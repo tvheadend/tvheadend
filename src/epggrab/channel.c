@@ -410,7 +410,7 @@ void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf, int rb_remove 
   idnode_save_check(&ec->idnode, delconf);
 
   /* Already linked */
-  epggrab_channel_links_delete(ec, 0);
+  epggrab_channel_links_delete(ec, 1);
   if (rb_remove)
     RB_REMOVE(&ec->mod->channels, ec, link);
   TAILQ_REMOVE(&epggrab_channel_entries, ec, all_link);
@@ -625,7 +625,7 @@ epggrab_channel_class_enabled_notify ( void *obj, const char *lang )
 {
   epggrab_channel_t *ec = obj;
   if (!ec->enabled) {
-    epggrab_channel_links_delete(ec, 0);
+    epggrab_channel_links_delete(ec, 1);
   } else {
     epggrab_channel_updated(ec);
   }
