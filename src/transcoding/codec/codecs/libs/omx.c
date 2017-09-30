@@ -25,8 +25,8 @@
 
 typedef struct {
     TVHVideoCodecProfile;
-    const char *libname;
-    const char *libprefix;
+    char *libname;
+    char *libprefix;
     int zerocopy;
 } tvh_codec_profile_omx_t;
 
