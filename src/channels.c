@@ -579,6 +579,68 @@ channel_find_by_name ( const char *name )
   return ch;
 }
 
+
+/// Copy name without space and HD suffix, lowercase in to a new
+/// buffer
+static char *
+channel_make_fuzzy_name(const char *name)
+{
+  if (!name) return NULL;
+  const size_t len = strlen(name);
+  char *fuzzy_name = malloc(len + 1);
+  char *ch_fuzzy = fuzzy_name;
+  const char *ch = name;
+
+  for (; *ch ; ++ch) {
+    /* Strip trailing 'HD'. */
+    if (*ch == 'H' && *(ch+1) == 'D' && *(ch+2) == 0)
+      break;
+
+    if (!isspace(*ch)) {
+      *ch_fuzzy++ = tolower(*ch);
+    }
+  }
+  /* Terminate the string */
+  *ch_fuzzy = 0;
+  return fuzzy_name;
+}
+
+channel_t *
+channel_find_by_name_fuzzy ( const char *name )
+{
+  channel_t *ch;
+  const char *s;
+
+  if (name == NULL)
+    return NULL;
+
+  char *fuzzy_name = channel_make_fuzzy_name(name);
+
+  CHANNEL_FOREACH(ch) {
+    if (!ch->ch_enabled) continue;
+    s = channel_get_name(ch, NULL);
+    if (s == NULL) continue;
+    /* We need case insensitive since historical constraints means we
+     * often have channels with slightly different case on DVB-T vs
+     * DVB-S such as 'One' and 'ONE'.
+     */
+    if (strcasecmp(s, name) == 0) break;
+    if (strcasecmp(s, fuzzy_name) == 0) break;
+
+    /* If here, we don't have an obvious match, so we need to fixup
+     * the ch name to see if it then matches. We can use strcmp
+     * since both names are already lowercased.
+     */
+    char *s_fuzzy_name = channel_make_fuzzy_name(s);
+    const int is_match = !strcmp(s_fuzzy_name, fuzzy_name);
+    free(s_fuzzy_name);
+    if (is_match) break;
+  }
+
+  free(fuzzy_name);
+  return ch;
+}
+
 channel_t *
 channel_find_by_id ( uint32_t i )
 {

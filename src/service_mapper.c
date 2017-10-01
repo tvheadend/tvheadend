@@ -224,8 +224,13 @@ service_mapper_process
 
   /* Find existing channel */
   name = service_get_channel_name(s);
-  if (!bq && conf->merge_same_name && name && *name)
+  if (!bq && conf->merge_same_name && name && *name) {
+    /* Try exact match first */
     chn = channel_find_by_name(name);
+    if (!chn && conf->merge_same_name_fuzzy) {
+      chn = channel_find_by_name_fuzzy(name);
+    }
+  }
   if (!chn) {
     chn = channel_create(NULL, NULL, NULL);
     chn->ch_bouquet = bq;
@@ -526,6 +531,19 @@ static const idclass_t service_mapper_conf_class = {
       .name   = N_("Merge same name"),
       .desc   = N_("Merge services with the same name into one channel."),
       .off    = offsetof(service_mapper_t, d.merge_same_name),
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "merge_same_name_fuzzy",
+      .name   = N_("Use fuzzy mapping if merging same name"),
+      .desc   = N_("If merge same name is enabled then "
+                   "merge services with the same name into one channel but "
+                   "using fuzzy logic such as ignoring whitespace, case and "
+                   "some channel suffixes such as HD. So 'Channel 5+1', "
+                   "'Channel 5 +1', 'Channel 5+1HD' and 'Channel 5 +1HD' would "
+                   "all merge in to the same channel. The exact name chosen "
+                   "depends on the order the channels are mapped."),
+      .off    = offsetof(service_mapper_t, d.merge_same_name_fuzzy),
     },
     {
       .type   = PT_BOOL,
