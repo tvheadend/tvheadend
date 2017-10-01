@@ -130,6 +130,13 @@ channel_t *channel_create0
 void channel_delete(channel_t *ch, int delconf);
 
 channel_t *channel_find_by_name(const char *name);
+/// Apply fuzzy matching when finding a channel such as ignoring
+/// whitespace, case, and stripping HD suffix. This means that
+/// 'Channel 5+1', 'Channel 5 +1', 'Channel 5+1HD' and
+/// 'Channel 5 +1HD' can all be merged together.
+/// Since channel names aren't unique, this returns the
+/// first match (similar to channel_find_by_name).
+channel_t *channel_find_by_name_fuzzy(const char *name);
 #define channel_find_by_uuid(u)\
   (channel_t*)idnode_find(u, &channel_class, NULL)
 
