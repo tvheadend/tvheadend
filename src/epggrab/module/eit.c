@@ -854,7 +854,7 @@ _eit_callback
   /* Get transport stream */
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
-  if (tableid == 0x4f || tableid >= 0x60) {
+  if (tableid == 0x4f || tableid >= 0x60 || tableid == 0x50 || tableid == 0x4E) {
     mm = mpegts_network_find_mux(mm->mm_network, onid, tsid, 1);
   } else {
     if ((mm->mm_tsid != tsid || mm->mm_onid != onid) &&
@@ -1159,6 +1159,7 @@ void eit_init ( void )
   EIT_OPS(ops_nz_freeview, 0, EIT_CONV_HUFFMAN, EIT_SPEC_NZ_FREEVIEW);
   EIT_OPS(ops_baltic, 0x39, 0, 0);
   EIT_OPS(ops_bulsat, 0x12b, 0, 0);
+  EIT_OPS(ops_uk_cable, 0x2bc, 0, 0);
 
   EIT_CREATE("eit", "EIT: DVB Grabber", 1, &ops);
   EIT_CREATE("uk_freesat", "UK: Freesat", 5, &ops_uk_freesat);
@@ -1166,6 +1167,7 @@ void eit_init ( void )
   EIT_CREATE("nz_freeview", "New Zealand: Freeview", 5, &ops_nz_freeview);
   EIT_CREATE("viasat_baltic", "VIASAT: Baltic", 5, &ops_baltic);
   EIT_CREATE("Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops_bulsat);
+  EIT_CREATE("uk_cable", "UK: Cable", 5, &ops_uk_cable);
 }
 
 void _eit_done ( void *m )
