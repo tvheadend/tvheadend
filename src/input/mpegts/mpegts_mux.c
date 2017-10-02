@@ -745,9 +745,6 @@ mpegts_mux_do_stop ( mpegts_mux_t *mm, int delconf )
   while ((s = LIST_FIRST(&mm->mm_services))) {
     service_destroy((service_t*)s, delconf);
   }
-
-  /* Stop PID timer */
-  mtimer_disarm(&mm->mm_update_pids_timer);
 }
 
 void
@@ -865,6 +862,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
     return;
 
   mi->mi_stopping_mux(mi, mmi);
+  mtimer_disarm(&mm->mm_update_pids_timer); /* Stop PID timer */
   mi->mi_stop_mux(mi, mmi);
   mi->mi_stopped_mux(mi, mmi);
 
