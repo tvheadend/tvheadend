@@ -312,8 +312,8 @@ static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
     _epg_object_set_updated(eo);
     eo->updated = s64;
   }
-  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] deserialize",
-           eo, eo->id, eo->type, eo->uri);
+  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s, %s, %s] deserialize",
+           eo, eo->id, eo->type, eo->uri, s, eo->grabber ? eo->grabber->id : NULL);
   return eo;
 }
 
