@@ -852,7 +852,7 @@ _eit_callback
     st->sections[sa/32] &= ~mask;
   }
   
-  /* UK Cable: EPG data for services in other transponders is transmitted 
+  /* UK Cable Virgin: EPG data for services in other transponders is transmitted 
   // in the 'actual' transpoder table IDs */
   if (spec == EIT_SPEC_UK_CABLE_VIRGIN && (tableid == 0x50 || tableid == 0x4E)) {
     mm = mpegts_network_find_mux(mm->mm_network, onid, tsid, 1);
