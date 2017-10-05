@@ -1006,6 +1006,8 @@ dvr_autorec_entry_class_dedup_list ( void *o, const char *lang )
   static const struct strtab tab[] = {
     { N_("Record all"),
         DVR_AUTOREC_RECORD_ALL },
+    { N_("All: Record if EPG/XMLTV indicates it is a unique programme"),
+        DVR_AUTOREC_RECORD_UNIQUE },
     { N_("All: Record if different episode number"),
         DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER },
     { N_("All: Record if different subtitle"),

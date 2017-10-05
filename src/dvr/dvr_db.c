@@ -1038,9 +1038,12 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
     *tbuf = 0;
 
   tvhinfo(LS_DVR, "entry %s \"%s\" on \"%s\" starting at %s, "
+         "with broadcast id \"%s\", "
 	 "scheduled for recording by \"%s\"",
          idnode_uuid_as_str(&de->de_id, ubuf),
-	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf, creator ?: "");
+         lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf,
+         de->de_uri ? de->de_uri : "<noid>",
+         creator ?: "");
 
   idnode_changed(&de->de_id);
   return de;
@@ -1377,12 +1380,169 @@ static int _dvr_duplicate_per_day(dvr_entry_t *de, dvr_entry_t *de2, void **aux)
          de1_start->tm_yday == de2_start.tm_yday;
 }
 
+/// Does the de have a crid programid?
+static int is_uri_crid(const dvr_entry_t *de)
+{
+    return de && de->de_uri && !strncmp(de->de_uri, "crid://", 7);
+}
+
+/// Is the uri in the de one that is suitable for de-dup. See Issue
+/// #4652 for details.
+/// @return NULL if no id suitable, else the id that can be used for dedup.
+static const char *_dvr_duplicate_get_dedup_program_id(const dvr_entry_t *de)
+{
+  if (!de) return 0;
+
+  const char *ep_uri = de->de_uri;
+  if (!ep_uri) return NULL;
+
+  /* Only want to dedup on crid (unique broadcast id) or dd-progid
+   * (unique xmltvid).
+   */
+
+  /* It's a crid? If so, we can use the id as the unique indicator */
+  if (is_uri_crid(de))
+    return ep_uri + 7;          /* +7 to skip past crid:// */
+
+  if (!strncmp(ep_uri, "ddprogid://", 11)) {
+    /* Unfortunately, we prepend the grabber to the id, which can be "xmltv"
+     * or "/usr/bin/tv_grab_combiner"! Since the ddprogid can't contain /
+     * we can just return the last component.
+     */
+    const char *last = strrchr(ep_uri, '/');
+    /* "Can't" happen since by definition ddprogid:// must contain a slash */
+    if (!last) return ep_uri;
+    /* Return the bit after the last slash. */
+    return last+1;              /* +1 to skip '/' */
+  }
+  /* Must be an internal tvh:// id or some other id we consider not unique */
+  return NULL;
+}
+
+/// @return 1 if dup.
+static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void **aux)
+{
+  enum { NOT_DUP = 0, DUP = 1 };
+  /* We should always have entries so if something is wrong it is a dup */
+  if (!de1 || !de2) return DUP;
+
+  const char *progid1  = _dvr_duplicate_get_dedup_program_id(de1);
+  const char *progid2  = _dvr_duplicate_get_dedup_program_id(de2);
+  if (progid1 && progid2 && !strcmp(progid1, progid2)) return DUP;
+
+  const lang_str_t *title1 = de1->de_title;
+  const lang_str_t *title2 = de2->de_title;
+
+  if (!title1 || !title2) return NOT_DUP;
+
+  /* Titles not equal? Can't be a dup then */
+  if (lang_str_compare(de1->de_title, de2->de_title)) return NOT_DUP;
+
+  /* Season and/or episode is stored in episode. But the numbers are
+   * not saved separately. We want to dup match only if both season
+   * AND episode are present since OTA often have just "Ep 1" without
+   * giving the season.
+   */
+  const char *s_ep1 = de1->de_episode;
+  const char *s_ep2 = de2->de_episode;
+
+  /* Are season AND episode both in the string? */
+  const int is_s_and_ep1 = s_ep1 && strstr(s_ep1, "Season") && strstr(s_ep1, "Episode");
+  const int is_s_and_ep2 = s_ep2 && strstr(s_ep2, "Season") && strstr(s_ep2, "Episode");
+
+  /* Season and episode are the same (for the same title) so must be a DUP.
+   * If they differ then must not be a DUP.
+   *
+   * We only compare up to the character before the slash since the
+   * default display is "Season X.Episode Y/Z" for xmltv, but OTA
+   * rarely has the Z component which means that we will frequently
+   * fail to match xmltv vs OTA unless we compare only the season and
+   * episode components and ignore the total number of episodes
+   * component.
+   */
+  if (is_s_and_ep1 && is_s_and_ep2) {
+    const char *slash = strchr(s_ep1, '/');
+    const ssize_t num_char = slash ? slash - s_ep1 : strlen(s_ep1);
+    return strncmp(s_ep1, s_ep2, num_char) == 0 ? DUP : NOT_DUP;
+  }
+
+  /* Only one has season and episode? Then can't be a dup with the
+   * other one that doesn't have season+episode
+   */
+  if ((is_s_and_ep1 && !is_s_and_ep2) || (!is_s_and_ep1 && is_s_and_ep2)) return NOT_DUP;
+
+  /* Now, near the end, we can check for unequal programme ids. We do
+   * this check relatively late since we want dup checking above to
+   * match semantically the same episodes to allow previous dvr log
+   * entries (before functionality of id was introduced) to be matched
+   * against new entries.
+   *
+   * But only do this check for OTA if they both have the same
+   * authority. This is because some broadcasters put the same episode
+   * on two regional channels with identical details but different
+   * crid authority. So if authority is different then we ignore
+   * the crid completely, but if authority is the same then the
+   * crid can be checked.
+   */
+
+  const int is_uri_crid1 = is_uri_crid(de1);
+  const int is_uri_crid2 = is_uri_crid(de2);
+  const int is_both_crid = is_uri_crid1 && is_uri_crid2;
+  int is_same_authority = 1;
+  if (is_both_crid) {
+    /* If both entries have a crid (OTA) then check if they are from
+     * the same authority. This is the bit before the final slash.
+     *
+     * So:
+     * crid://a.com/44
+     * 012345678901234
+     * So reverse slash would find the char at id+12 so +1 for len
+     * to include the slash itself.
+     */
+    const char *slash = strchr(progid1, '/');
+    const ssize_t num_char = slash ? slash + 1 - progid1 : 0;
+    is_same_authority = !strncmp(progid1, progid2, num_char);
+  }
+
+  const int do_progid_check =
+    (!is_uri_crid1 && !is_uri_crid2) ||    /* e.g., xmltv */
+    (is_both_crid && is_same_authority) || /* e.g, OTA on same broadcaster */
+    (is_uri_crid1 && !is_uri_crid2) ||     /* e.g., OTA vs xmltv channel */
+    (!is_uri_crid1 && is_uri_crid2);
+
+  /* And we can finally here do 'different programme id'
+   * check. Programme id identical check is done first, but non-identical
+   * check is done late since some broadcasters put different programme id
+   * for different region broadcasts so we want to match on episode details
+   * first.
+   */
+  if (do_progid_check && progid1 && progid2 && strcmp(progid1, progid2)) return NOT_DUP;
+
+  /* Only one side has an id? We do nothing for this case since programmes in old dvr/log
+   * don't have a programid persisted.
+   *
+   * if (!progid1 || !progid2) return NOT_DUP;
+   */
+
+  /* Identical subtitle AND identical description so maybe identical episode.
+   * Some daytime OTA programmes have identical everything, but thankfully have
+   * different crid so would be NOT_DUP at first check. But if everything is
+   * identical then user should resort to using ONCE_PER_DAY rules, etc.
+   */
+  if (!lang_str_compare(de1->de_subtitle, de2->de_subtitle) && !lang_str_compare(de1->de_desc, de2->de_desc))
+    return DUP;
+
+  /* If all tests have finished then we assume not a dup */
+  return NOT_DUP;
+}
+
 /**
  *
  */
 static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
 {
   static _dvr_duplicate_fcn_t fcns[] = {
+    [DVR_AUTOREC_RECORD_UNIQUE]                    = _dvr_duplicate_unique_match,
     [DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER]  = _dvr_duplicate_epnum,
     [DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER] = _dvr_duplicate_epnum,
     [DVR_AUTOREC_LRECORD_DIFFERENT_TITLE]          = _dvr_duplicate_title,
@@ -1414,6 +1574,8 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
   switch (record) {
     case DVR_AUTOREC_RECORD_ALL:
       return NULL;
+    case DVR_AUTOREC_RECORD_UNIQUE:
+      break;
     case DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER:
     case DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER:
       if (strempty(de->de_episode))
@@ -1449,7 +1611,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
 
   assert(match);
 
-  if (record < DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER) {
+  if (record < DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER || record == DVR_AUTOREC_RECORD_UNIQUE) {
     LIST_FOREACH(de2, &dvrentries, de_global_link) {
       if (de == de2)
         continue;

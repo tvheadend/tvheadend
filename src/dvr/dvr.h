@@ -302,6 +302,7 @@ typedef struct dvr_entry {
 
 typedef enum {
   DVR_AUTOREC_RECORD_ALL = 0,
+  DVR_AUTOREC_RECORD_UNIQUE = 14, /// Unique episode in EPG/XMLTV, typically used for movies/series, and not useful for news or sport.
   DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER = 1,
   DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE = 2,
   DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION = 3,
@@ -315,7 +316,7 @@ typedef enum {
   DVR_AUTOREC_LRECORD_ONCE_PER_MONTH = 13,
   DVR_AUTOREC_LRECORD_ONCE_PER_WEEK = 10,
   DVR_AUTOREC_LRECORD_ONCE_PER_DAY = 11,
-  /* last free value == 14 */
+  /* first free value == 15 */
 } dvr_autorec_dedup_t;
 
 typedef enum {
