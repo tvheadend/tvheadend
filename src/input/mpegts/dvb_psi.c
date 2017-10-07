@@ -94,14 +94,15 @@ psi_parse_pmt(mpegts_table_t *mt, mpegts_service_t *t,
 static inline uint16_t
 extract_2byte(const uint8_t *ptr)
 {
-  return (ptr[0] << 8) | ptr[1];
+  return (((uint16_t)ptr[0]) << 8) | ptr[1];
 }
 
 
-static inline uint16_t
+static inline uint32_t
 extract_4byte(const uint8_t *ptr)
 {
-  return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
+  return (((uint32_t)ptr[0]) << 24) | (((uint32_t)ptr[1]) << 16) |
+         (((uint32_t)ptr[2]) << 8) | ptr[3];
 }
 
 
@@ -242,7 +243,7 @@ static mpegts_mux_t *
 dvb_desc_sat_del
   (mpegts_table_t *mt, mpegts_mux_t *mm,
    uint16_t onid, uint16_t tsid,
-   const uint8_t *ptr, int len, int force )
+   const uint8_t *ptr, int len, int force)
 {
   int frequency, symrate, polarisation, orbitalpos;
   dvb_mux_conf_t dmc;
@@ -252,12 +253,8 @@ dvb_desc_sat_del
   if(len < 11) return NULL;
 
   /* Extract data */
-  frequency = 
-    (bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 + 
-     bcdtoint(ptr[2]) * 100     + bcdtoint(ptr[3])) * 10;
-  symrate =
-    bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
-    bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
+  frequency = bcdtoint4(ptr);
+  symrate   = bcdtoint41(ptr + 7);
   if (!frequency) {
     tvhtrace(mt->mt_subsys, "%s: dvb-s frequency error", mt->mt_name);
     return NULL;
@@ -280,7 +277,7 @@ dvb_desc_sat_del
   dvb_mux_conf_init((mpegts_network_t *)mm->mm_network, &dmc,
                     (ptr[6] & 0x4) ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
 
-  dmc.dmc_fe_freq                = frequency;
+  dmc.dmc_fe_freq                = frequency * 10;
   dmc.u.dmc_fe_qpsk.orbital_pos  = orbitalpos;
   dmc.u.dmc_fe_qpsk.polarisation = polarisation;
 
@@ -323,27 +320,25 @@ static mpegts_mux_t *
 dvb_desc_cable_del
   (mpegts_table_t *mt, mpegts_mux_t *mm,
    uint16_t onid, uint16_t tsid,
-   const uint8_t *ptr, int len )
+   const uint8_t *ptr, int len)
 {
   int frequency, symrate;
   dvb_mux_conf_t dmc;
   char buf[128];
 
-  static const dvb_fe_modulation_t qtab [6] = {
-    DVB_MOD_QAM_AUTO, DVB_MOD_QAM_16, DVB_MOD_QAM_32, DVB_MOD_QAM_64,
-    DVB_MOD_QAM_128,  DVB_MOD_QAM_256
+  static const dvb_fe_modulation_t qtab [16] = {
+    DVB_MOD_QAM_AUTO, DVB_MOD_QAM_16,   DVB_MOD_QAM_32,   DVB_MOD_QAM_64,
+    DVB_MOD_QAM_128,  DVB_MOD_QAM_256,  DVB_MOD_QAM_AUTO, DVB_MOD_QAM_AUTO,
+    DVB_MOD_QAM_AUTO, DVB_MOD_QAM_AUTO, DVB_MOD_QAM_AUTO, DVB_MOD_QAM_AUTO,
+    DVB_MOD_QAM_AUTO, DVB_MOD_QAM_AUTO, DVB_MOD_QAM_AUTO, DVB_MOD_QAM_AUTO
   };
 
   /* Not enough data */
   if(len < 11) return NULL;
 
   /* Extract data */
-  frequency  =
-    bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 + 
-    bcdtoint(ptr[2]) * 100     + bcdtoint(ptr[3]);
-  symrate    =
-    bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
-    bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
+  frequency  = bcdtoint4(ptr);
+  symrate    = bcdtoint41(ptr + 7);
   if (!frequency) {
     tvhtrace(mt->mt_subsys, "%s: dvb-c frequency error", mt->mt_name);
     return NULL;
@@ -357,12 +352,8 @@ dvb_desc_cable_del
                     ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_delsys);
 
   dmc.dmc_fe_freq            = frequency * 100;
-
   dmc.u.dmc_fe_qam.symbol_rate  = symrate * 100;
-  if((ptr[6] & 0x0f) >= sizeof(qtab))
-    dmc.dmc_fe_modulation    = DVB_MOD_QAM_AUTO;
-  else
-    dmc.dmc_fe_modulation    = qtab[ptr[6] & 0x0f];
+  dmc.dmc_fe_modulation      = qtab[ptr[6] & 0x0f];
   dmc.u.dmc_fe_qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
   /* Debug */
@@ -380,7 +371,7 @@ static mpegts_mux_t *
 dvb_desc_terr_del
   (mpegts_table_t *mt, mpegts_mux_t *mm,
    uint16_t onid, uint16_t tsid,
-   const uint8_t *ptr, int len )
+   const uint8_t *ptr, int len)
 {
   static const dvb_fe_bandwidth_t btab [8] = {
     DVB_BANDWIDTH_8_MHZ, DVB_BANDWIDTH_7_MHZ,
@@ -415,7 +406,7 @@ dvb_desc_terr_del
 
   /* Extract data */
   frequency     = extract_4byte(ptr);
-  if (frequency < 1000000 || frequency > 200000000) {
+  if (frequency < 50000000 || frequency > 1000000000) {
     tvhtrace(mt->mt_subsys, "%s: dvb-t frequency error (%d)", mt->mt_name, frequency);
     return NULL;
   }
@@ -438,6 +429,42 @@ dvb_desc_terr_del
   
   /* Create */
   return mm->mm_network->mn_create_mux(mm->mm_network, mm, onid, tsid, &dmc, 0);
+}
+
+/*
+ * Frequency list delivery descriptor
+ */
+static void
+dvb_desc_freq_list
+  (mpegts_table_t *mt, mpegts_mux_t *mm, const uint8_t *ptr, int len)
+{
+  static const char *clat[4] = { "unknown", "sat", "cable", "terr" };
+  int i, j, ctype;
+  uint32_t frequency;
+  if (len < 8)
+    return;
+  ctype = ptr[0] & 0x03;
+  ptr++;
+  len--;
+  for (i = j = 0; len > 3; i++, ptr += 4, len -= 4) {
+    switch (ctype) {
+    case 1: /* satellite */
+      frequency = 10 * bcdtoint4(ptr);
+      break;
+    case 2: /* cable */
+      frequency = 100 * bcdtoint4(ptr);
+      break;
+    case 3: /* terresterial */
+      frequency = 10 * extract_4byte(ptr);
+      break;
+    default:
+      frequency = 0;
+      break;
+    }
+    if (frequency == 0)
+      continue;
+    tvhtrace(mt->mt_subsys, "%s:      %s center freq %d: %u", mt->mt_name, clat[ctype], i, frequency);
+  }
 }
  
 #endif /* ENABLE_MPEGTS_DVB */
@@ -1251,29 +1278,34 @@ dvb_nit_mux
     bi = NULL;
 
   mn = mux ? mux->mm_network : mm->mm_network;
-  charset = dvb_charset_find(mn, mux, NULL);
+  charset = discovery ? NULL : dvb_charset_find(mn, mux, NULL);
 
-  if (mux)
-    mpegts_mux_nice_name(mux, buf, sizeof(buf));
-  else
-    strcpy(buf, "<none>");
-  tvhdebug(mt->mt_subsys, "%s:  onid %04X (%d) tsid %04X (%d) mux %s%s",
-           mt->mt_name, onid, onid, tsid, tsid, buf, discovery ? " (discovery)" : "");
+  if (!discovery || tvhtrace_enabled()) {
+    if (mux)
+      mpegts_mux_nice_name(mux, buf, sizeof(buf));
+    else
+      strcpy(buf, "<none>");
+    tvhlog(discovery ? LOG_TRACE : LOG_DEBUG,
+           mt->mt_subsys, "%s:  onid %04X (%d) tsid %04X (%d) mux %s%s",
+           mt->mt_name, onid, onid, tsid, tsid, buf,
+           discovery ? " (discovery)" : "");
+  }
 
   DVB_DESC_FOREACH(mt, lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
     tvhtrace(mt->mt_subsys, "%s:    dtag %02X dlen %d", mt->mt_name, dtag, dlen);
 
 #if ENABLE_MPEGTS_DVB
     /* Limit delivery descriptiors only in the discovery phase */
-    if (discovery &&
+    if (discovery > 0 &&
         dtag != DVB_DESC_SAT_DEL &&
         dtag != DVB_DESC_CABLE_DEL &&
-        dtag != DVB_DESC_TERR_DEL)
+        dtag != DVB_DESC_TERR_DEL &&
+        dtag != DVB_DESC_FREQ_LIST)
       continue;
 #endif
 
     /* User-defined */
-    if (mt->mt_mux_cb && mux) {
+    if (!discovery && mt->mt_mux_cb && mux) {
       int i = 0;
       while (mt->mt_mux_cb[i].cb) {
         if (mt->mt_mux_cb[i].tag == dtag)
@@ -1298,7 +1330,7 @@ dvb_nit_mux
     case DVB_DESC_SAT_DEL:
     case DVB_DESC_CABLE_DEL:
     case DVB_DESC_TERR_DEL:
-      if (discovery) {
+      if (discovery > 0) {
         if (dtag == DVB_DESC_SAT_DEL)
           mux = dvb_desc_sat_del(mt, mm, onid, tsid, dptr, dlen,
                                  tableid == DVB_FASTSCAN_NIT_BASE);
@@ -1313,6 +1345,10 @@ dvb_nit_mux
             dvb_fs_mux_add(mt, mm, mux);
         }
       }
+      break;
+    case DVB_DESC_FREQ_LIST:
+      if (discovery)
+        dvb_desc_freq_list(mt, mm, dptr, dlen);
       break;
 #endif
 
