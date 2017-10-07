@@ -214,7 +214,21 @@ struct lang_str *atsc_get_string
 
 /* Conversion */
 
-#define bcdtoint(i) ((((i & 0xf0) >> 4) * 10) + (i & 0x0f))
+static inline uint32_t bcdtoint(const uint32_t i) {
+  return ((((i & 0xf0) >> 4) * 10) + (i & 0x0f));
+}
+static inline uint32_t bcdtoint4(const uint8_t *ptr) {
+  return (bcdtoint(ptr[0]) * 1000000) +
+         (bcdtoint(ptr[1]) * 10000) +
+         (bcdtoint(ptr[2]) * 100) +
+         bcdtoint(ptr[3]);
+}
+static inline uint32_t bcdtoint41(const uint8_t *ptr) {
+  return (bcdtoint(ptr[0]) * 100000) +
+         (bcdtoint(ptr[1]) * 1000) +
+         (bcdtoint(ptr[2]) * 10) +
+         ((ptr[3]) >> 4);
+}
 
 htsmsg_t *dvb_timezone_enum(void *p, const char *lang);
 
