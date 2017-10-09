@@ -444,7 +444,7 @@ static inline int dvr_config_is_valid(dvr_config_t *cfg)
   { return cfg->dvr_valid; }
 
 static inline int dvr_config_is_default(dvr_config_t *cfg)
-  { return cfg->dvr_config_name == NULL || cfg->dvr_config_name[0] == '\0'; }
+  { return tvh_str_default(cfg->dvr_config_name, NULL)  == NULL; }
 
 dvr_config_t *dvr_config_find_by_name(const char *name);
 

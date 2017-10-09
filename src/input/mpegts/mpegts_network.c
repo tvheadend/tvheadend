@@ -317,7 +317,7 @@ static void
 mpegts_network_display_name
   ( mpegts_network_t *mn, char *buf, size_t len )
 {
-  strncpy(buf, mn->mn_network_name ?: "unknown", len);
+  strncpy(buf, tvh_str_default(mn->mn_network_name, "unknown"), len);
 }
 
 static htsmsg_t *
@@ -485,7 +485,7 @@ mpegts_network_set_network_name
 {
   char buf[256];
   int save = 0;
-  if (mn->mn_network_name == NULL || mn->mn_network_name[0] == '\0') {
+  if (tvh_str_default(mn->mn_network_name, NULL) == NULL) {
     if (name && name[0] && strcmp(name, mn->mn_network_name ?: "")) {
       tvh_str_update(&mn->mn_network_name, name);
       mn->mn_display_name(mn, buf, sizeof(buf));

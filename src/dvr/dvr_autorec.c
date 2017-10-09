@@ -817,8 +817,7 @@ dvr_autorec_entry_class_brand_set(void *o, const void *v)
   int save;
   epg_brand_t *brand;
 
-  if (v && *(char *)v == '\0')
-    v = NULL;
+  v = tvh_str_default(v, NULL);
   brand = v ? epg_brand_find_by_uri(v, NULL, 1, &save, NULL) : NULL;
   if (brand && dae->dae_brand != brand) {
     if (dae->dae_brand)
@@ -851,8 +850,7 @@ dvr_autorec_entry_class_season_set(void *o, const void *v)
   int save;
   epg_season_t *season;
 
-  if (v && *(char *)v == '\0')
-    v = NULL;
+  v = tvh_str_default(v, NULL);
   season = v ? epg_season_find_by_uri(v, NULL, 1, &save, NULL) : NULL;
   if (season && dae->dae_season != season) {
     if (dae->dae_season)
@@ -885,8 +883,7 @@ dvr_autorec_entry_class_series_link_set(void *o, const void *v)
   int save;
   epg_serieslink_t *sl;
 
-  if (v && *(char *)v == '\0')
-    v = NULL;
+  v = tvh_str_default(v, NULL);
   sl = v ? epg_serieslink_find_by_uri(v, NULL, 1, &save, NULL) : NULL;
   if (sl && dae->dae_serieslink != sl) {
     if (dae->dae_serieslink)

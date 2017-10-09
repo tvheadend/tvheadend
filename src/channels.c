@@ -113,7 +113,7 @@ channel_class_autoname_set ( void *obj, const void *p )
   const char *s;
   int b = *(int *)p;
   if (ch->ch_autoname != b) {
-    if (b == 0 && (!ch->ch_name || *ch->ch_name == '\0')) {
+    if (b == 0 && tvh_str_default(ch->ch_name, NULL) == NULL) {
       s = channel_get_name(ch);
       free(ch->ch_name);
       ch->ch_name = strdup(s);
@@ -797,7 +797,7 @@ channel_get_icon ( channel_t *ch )
   uint32_t id, i, pick, prefer = config.prefer_picon ? 1 : 0;
   char c;
 
-  if (icon && *icon == '\0')
+  if (tvh_str_default(icon, NULL) == NULL)
     icon = NULL;
 
   /*
@@ -1533,7 +1533,7 @@ channel_tag_find_by_name(const char *name, int create)
 {
   channel_tag_t *ct;
 
-  if (name == NULL || *name == '\0')
+  if (tvh_str_default(name, NULL) == NULL)
     return NULL;
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link)

@@ -2414,11 +2414,11 @@ dvr_entry_class_get_title (idnode_t *self, const char *lang)
   dvr_entry_t *de = (dvr_entry_t *)self;
   const char *s;
   s = lang_str_get(de->de_title, lang);
-  if (s == NULL || s[0] == '\0') {
+  if (tvh_str_default(s, NULL) == NULL) {
     s = lang ? lang_str_get(de->de_title, NULL) : NULL;
-    if (s == NULL || s[0] == '\0') {
+    if (tvh_str_default(s, NULL) == NULL) {
       s = lang ? lang_str_get(de->de_desc, lang) : NULL;
-      if (s == NULL || s[0] == '\0')
+      if (tvh_str_default(s, NULL) == NULL)
         s = lang_str_get(de->de_desc, NULL);
     }
   }
@@ -2910,8 +2910,7 @@ dvr_entry_class_disp_title_set(void *o, const void *v)
   dvr_entry_t *de = (dvr_entry_t *)o;
   const char *lang = idnode_lang(&de->de_id);
   const char *s = "";
-  if (v == NULL || *((char *)v) == '\0')
-    v = "UnknownTitle";
+  v = tvh_str_default(v, "UnknownTitle");
   if (de->de_title)
     s = lang_str_get(de->de_title, lang);
   if (strcmp(s, v)) {
@@ -2940,8 +2939,7 @@ dvr_entry_class_disp_subtitle_set(void *o, const void *v)
   dvr_entry_t *de = (dvr_entry_t *)o;
   const char *lang = idnode_lang(o);
   const char *s = "";
-  if (v == NULL || *((char *)v) == '\0')
-    v = "UnknownSubtitle";
+  v = tvh_str_default(v, "UnknownSubtitle");
   if (de->de_subtitle)
     s = lang_str_get(de->de_subtitle, lang);
   if (strcmp(s, v)) {

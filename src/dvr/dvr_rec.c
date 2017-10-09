@@ -688,7 +688,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     return -1;
 
   cfg = de->de_config;
-  if (cfg->dvr_storage == NULL || *(cfg->dvr_storage) == '\0')
+  if (tvh_str_default(cfg->dvr_storage, NULL) == NULL)
     return -1;
 
   dir_dosubs = de->de_directory == NULL ||
@@ -756,7 +756,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   filename[j = 0] = '\0';
   while (1) {
     dirsep = dvr_find_next_path_component(x);
-    if (dirsep == NULL || *dirsep == '\0')
+    if (tvh_str_default(dirsep, NULL) == NULL)
       break;
     *(dirsep - 1) = '\0';
     if (*x) {

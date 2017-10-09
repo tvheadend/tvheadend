@@ -367,9 +367,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   }
 
   if(rc == HTTP_STATUS_UNAUTHORIZED) {
-    const char *realm = config.realm;
-    if (realm == NULL || realm[0] == '\0')
-      realm = "tvheadend";
+    const char *realm = tvh_str_default(config.realm, "tvheadend");
     if (config.digest) {
       if (hc->hc_nonce == NULL)
         hc->hc_nonce = http_get_nonce();
@@ -927,7 +925,7 @@ http_verify_prepare(http_connection_t *hc, struct http_verify_structure *v)
     }
 
     m = md5sum(all, 1);
-    if (qop == NULL || *qop == '\0') {
+    if (tvh_str_default(qop, NULL) == NULL) {
       snprintf(all, sizeof(all), "%s:%s", hc->hc_nonce, m);
       goto set;
     } else {

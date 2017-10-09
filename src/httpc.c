@@ -619,7 +619,7 @@ error:
   }
   htsbuf_append_str(&q, s);
   htsbuf_append(&q, " ", 1);
-  if (path == NULL || path[0] == '\0')
+  if (tvh_str_default(path, NULL) == NULL)
     path = "/";
   htsbuf_append_str(&q, path);
   if (query && query[0] != '\0') {
@@ -1284,8 +1284,8 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
 
   lock_assert(&hc->hc_mutex);
 
-  if (u->scheme == NULL || u->scheme[0] == '\0' ||
-      u->host == NULL || u->host[0] == '\0' ||
+  if (tvh_str_default(u->scheme, NULL) == NULL ||
+      tvh_str_default(u->host, NULL) == NULL ||
       u->port < 0) {
     tvherror(LS_HTTPC, "Invalid url '%s'", u->raw);
     return -EINVAL;
@@ -2019,7 +2019,7 @@ http_client_testsuite_run( void )
     } else if (strncmp(s, "Command=", 8) == 0) {
       if (strcmp(s + 8, "EXIT") == 0)
         break;
-      if (u1.host == NULL || u1.host[0] == '\0') {
+      if (tvh_str_default(u1.host, NULL) == NULL) {
         fprintf(stderr, "HTTPCTS: Define URL\n");
         goto fatal;
       }

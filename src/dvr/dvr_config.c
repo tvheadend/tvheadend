@@ -78,13 +78,13 @@ dvr_config_find_by_name_default(const char *name)
     dvrdefaultconfig = cfg;
   }
 
-  if (name == NULL || *name == '\0')
+  if (tvh_str_default(name, NULL) == NULL)
     return dvrdefaultconfig;
 
   cfg = dvr_config_find_by_name(name);
 
   if (cfg == NULL) {
-    if (name && *name)
+    if (tvh_str_default(name, NULL))
       tvhwarn(LS_DVR, "Configuration '%s' not found, using default", name);
     cfg = dvrdefaultconfig;
   } else if (!cfg->dvr_enabled) {
@@ -624,7 +624,7 @@ dvr_config_class_name_set(void *o, const void *v)
   if (dvr_config_is_default(cfg) && dvr_config_is_valid(cfg))
     return 0;
   if (strcmp(cfg->dvr_config_name, v ?: "")) {
-    if (dvr_config_is_valid(cfg) && (v == NULL || *(char *)v == '\0'))
+    if (dvr_config_is_valid(cfg) && tvh_str_default(v, NULL) == NULL)
       return 0;
     free(cfg->dvr_config_name);
     cfg->dvr_config_name = strdup(v ?: "");

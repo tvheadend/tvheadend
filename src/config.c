@@ -1751,7 +1751,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
 #endif
   }
   htsmsg_destroy(config2);
-  if (config.server_name == NULL || config.server_name[0] == '\0')
+  if (tvh_str_default(config.server_name, NULL) == NULL)
     config.server_name = strdup("Tvheadend");
   if (!config_scanfile_ok)
     config_muxconfpath_notify(&config.idnode, NULL);
@@ -2406,21 +2406,15 @@ const idclass_t config_class = {
 
 const char *config_get_server_name ( void )
 {
-  return config.server_name ?: "Tvheadend";
+  return tvh_str_default(config.server_name, "Tvheadend");
 }
 
 const char *config_get_language ( void )
 {
-  const char *s = config.language;
-  if (s == NULL || *s == '\0')
-    return "eng";
-  return s;
+  return tvh_str_default(config.language, "eng");
 }
 
 const char *config_get_language_ui ( void )
 {
-  const char *s = config.language_ui;
-  if (s == NULL || *s == '\0')
-    return NULL;
-  return s;
+  return tvh_str_default(config.language_ui, NULL);
 }
