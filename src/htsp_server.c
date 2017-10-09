@@ -67,7 +67,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 29
+#define HTSP_PROTO_VERSION 30
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -943,6 +943,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   const char *s = NULL, *error = NULL, *subscriptionError = NULL;
   const char *p, *last;
   int64_t fsize = -1;
+  uint32_t u32;
   char ubuf[UUID_HEX_SIZE];
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
@@ -975,7 +976,12 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
           dvr_entry_get_removal_days(de) : dvr_entry_get_retention_days(de));
 
     htsmsg_add_u32(out, "removal",     dvr_entry_get_removal_days(de));
-    htsmsg_add_u32(out, "priority",    de->de_pri);
+    u32 = de->de_pri;
+    if (htsp->htsp_version < 30 && u32 > DVR_PRIO_UNIMPORTANT)
+      u32 = de->de_config->dvr_pri;
+    else if (u32 == DVR_PRIO_NOTSET)
+      u32 = DVR_PRIO_NORMAL;
+    htsmsg_add_u32(out, "priority",    u32);
     htsmsg_add_u32(out, "contentType", de->de_content_type);
 
     if (de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_COMPLETED) {
