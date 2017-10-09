@@ -635,8 +635,20 @@ const idclass_t satip_server_class = {
          .number = 1,
       },
       {
-         .name   = N_("Exported tuners"),
+         .name   = N_("NAT"),
          .number = 2,
+      },
+      {
+         .name   = N_("Signal"),
+         .number = 3,
+      },
+      {
+         .name   = N_("Exported tuners"),
+         .number = 4,
+      },
+      {
+         .name   = N_("Other"),
+         .number = 5,
       },
       {}
   },
@@ -678,16 +690,6 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
-      .type   = PT_BOOL,
-      .id     = "satip_restrict_pids_all",
-      .name   = N_("Restrict \"pids=all\""),
-      .desc   = N_("Replace the full Transport Stream with a range "
-                   "0x00-0x02,0x10-0x1F,0x1FFB pids only."),
-      .off    = offsetof(struct satip_server_conf, satip_restrict_pids_all),
-      .opts   = PO_EXPERT,
-      .group  = 1,
-    },
-    {
       .type   = PT_INT,
       .id     = "satip_weight",
       .name   = N_("Subscription weight"),
@@ -715,27 +717,6 @@ const idclass_t satip_server_class = {
                    "mux."),
       .off    = offsetof(struct satip_server_conf, satip_descramble),
       .opts   = PO_ADVANCED,
-      .group  = 1,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "satip_rewrite_pmt",
-      .name   = N_("Rewrite PMT"),
-      .desc   = N_("Rewrite Program Map Table (PMT) packets "
-                   "to only include information about the currently "
-                   "streamed service."),
-      .off    = offsetof(struct satip_server_conf, satip_rewrite_pmt),
-      .opts   = PO_EXPERT,
-      .group  = 1,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "satip_drop_fe",
-      .name   = N_("Drop \"fe=\" parameter"),
-      .desc   = N_("Discard the frontend parameter in RTSP requests, "
-                   "as some clients incorretly use it."),
-      .off    = offsetof(struct satip_server_conf, satip_drop_fe),
-      .opts   = PO_EXPERT,
       .group  = 1,
     },
     {
@@ -771,7 +752,7 @@ const idclass_t satip_server_class = {
                    "translation (NAT). Asterisk (*) means accept all IP addresses."),
       .off    = offsetof(struct satip_server_conf, satip_nat_ip),
       .opts   = PO_EXPERT,
-      .group  = 1,
+      .group  = 2,
     },
     {
       .type   = PT_INT,
@@ -781,26 +762,7 @@ const idclass_t satip_server_class = {
                    "(0 = use the same local port)."),
       .off    = offsetof(struct satip_server_conf, satip_nat_rtsp),
       .opts   = PO_EXPERT,
-      .group  = 1,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "satip_nom3u",
-      .name   = N_("Disable X_SATIPM3U tag"),
-      .desc   = N_("Do not send X_SATIPM3U information in the XML description to clients."),
-      .off    = offsetof(struct satip_server_conf, satip_nom3u),
-      .opts   = PO_EXPERT,
-      .group  = 1,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "satip_notcp_mode",
-      .name   = N_("Disable RTP/AVP/TCP support"),
-      .desc   = N_("Remove server support for RTP/AVP/TCP transfer mode "
-                   "(embedded data in the RTSP session)."),
-      .off    = offsetof(struct satip_server_conf, satip_notcp_mode),
-      .opts   = PO_EXPERT,
-      .group  = 1,
+      .group  = 2,
     },
     {
       .type   = PT_U32,
@@ -809,7 +771,7 @@ const idclass_t satip_server_class = {
       .desc   = N_("Signal level for IPTV sources (0-240)."),
       .off    = offsetof(struct satip_server_conf, satip_iptv_sig_level),
       .opts   = PO_EXPERT,
-      .group  = 1,
+      .group  = 3,
       .def.u32 = 220,
     },
     {
@@ -819,7 +781,7 @@ const idclass_t satip_server_class = {
       .desc   = N_("Force signal level for all streaming (1-240, 0=do not use)."),
       .off    = offsetof(struct satip_server_conf, satip_force_sig_level),
       .opts   = PO_EXPERT,
-      .group  = 1,
+      .group  = 3,
     },
     {
       .type   = PT_INT,
@@ -827,7 +789,7 @@ const idclass_t satip_server_class = {
       .name   = N_("DVB-S"),
       .desc   = N_("The number of DVB-S (Satellite) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbs),
-      .group  = 2,
+      .group  = 4,
     },
     {
       .type   = PT_INT,
@@ -835,7 +797,7 @@ const idclass_t satip_server_class = {
       .name   = N_("DVB-S2"),
       .desc   = N_("The number of DVB-S2 (Satellite) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbs2),
-      .group  = 2,
+      .group  = 4,
     },
     {
       .type   = PT_INT,
@@ -843,7 +805,7 @@ const idclass_t satip_server_class = {
       .name   = N_("DVB-T"),
       .desc   = N_("The number of DVB-T (Terresterial) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbt),
-      .group  = 2,
+      .group  = 4,
     },
     {
       .type   = PT_INT,
@@ -851,7 +813,7 @@ const idclass_t satip_server_class = {
       .name   = N_("DVB-T2"),
       .desc   = N_("The number of DVB-T2 (Terresterial) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbt2),
-      .group  = 2,
+      .group  = 4,
     },
     {
       .type   = PT_INT,
@@ -859,7 +821,7 @@ const idclass_t satip_server_class = {
       .name   = N_("DVB-C"),
       .desc   = N_("The number of DVB-C (Cable) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbc),
-      .group  = 2,
+      .group  = 4,
     },
     {
       .type   = PT_INT,
@@ -867,7 +829,7 @@ const idclass_t satip_server_class = {
       .name   = N_("DVB-C2"),
       .desc   = N_("The number of DVB-C2 (Cable) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbc2),
-      .group  = 2,
+      .group  = 4,
     },
     {
       .type   = PT_INT,
@@ -875,7 +837,7 @@ const idclass_t satip_server_class = {
       .name   = N_("ATSC-T"),
       .desc   = N_("The number of ATSC-T (Terresterial) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_atsc_t),
-      .group  = 2,
+      .group  = 4,
     },
     {
       .type   = PT_INT,
@@ -883,7 +845,57 @@ const idclass_t satip_server_class = {
       .name   = N_("ATSC-C"),
       .desc   = N_("The number of ATSC-C (Cable/AnnexB) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_atsc_c),
-      .group  = 2,
+      .group  = 4,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_rewrite_pmt",
+      .name   = N_("Rewrite PMT"),
+      .desc   = N_("Rewrite Program Map Table (PMT) packets "
+                   "to only include information about the currently "
+                   "streamed service."),
+      .off    = offsetof(struct satip_server_conf, satip_rewrite_pmt),
+      .opts   = PO_EXPERT,
+      .group  = 5,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_nom3u",
+      .name   = N_("Disable X_SATIPM3U tag"),
+      .desc   = N_("Do not send X_SATIPM3U information in the XML description to clients."),
+      .off    = offsetof(struct satip_server_conf, satip_nom3u),
+      .opts   = PO_EXPERT,
+      .group  = 5,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_notcp_mode",
+      .name   = N_("Disable RTP/AVP/TCP support"),
+      .desc   = N_("Remove server support for RTP/AVP/TCP transfer mode "
+                   "(embedded data in the RTSP session)."),
+      .off    = offsetof(struct satip_server_conf, satip_notcp_mode),
+      .opts   = PO_EXPERT,
+      .group  = 5,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_restrict_pids_all",
+      .name   = N_("Restrict \"pids=all\""),
+      .desc   = N_("Replace the full Transport Stream with a range "
+                   "0x00-0x02,0x10-0x1F,0x1FFB pids only."),
+      .off    = offsetof(struct satip_server_conf, satip_restrict_pids_all),
+      .opts   = PO_EXPERT,
+      .group  = 5,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_drop_fe",
+      .name   = N_("Drop \"fe=\" parameter"),
+      .desc   = N_("Discard the frontend parameter in RTSP requests, "
+                   "as some clients incorretly use it."),
+      .off    = offsetof(struct satip_server_conf, satip_drop_fe),
+      .opts   = PO_EXPERT,
+      .group  = 5,
     },
     {}
   },
