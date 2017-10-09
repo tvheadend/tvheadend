@@ -239,6 +239,58 @@
         "support/bintray.py publish filelist.txt"
       ]
     },
+    "raspbian-jessie": {
+      "buildenv": "raspbian-jessie",
+      "builddeps": [
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre3-dev",
+        "python",
+        "dvb-apps",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianjessie-armhf -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "raspbian-stretch": {
+      "buildenv": "raspbian-stretch",
+      "builddeps": [
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre2-dev",
+        "python",
+        "dvb-apps",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianstretch-armhf -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
     "xenial-arm64": {
       "buildenv": "xenial-arm64",
       "builddeps": [
