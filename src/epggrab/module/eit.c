@@ -42,8 +42,9 @@ typedef struct eit_private
 
 #define EIT_CONV_HUFFMAN     1
 
-#define EIT_SPEC_UK_FREESAT  1
-#define EIT_SPEC_NZ_FREEVIEW 2
+#define EIT_SPEC_UK_FREESAT         1
+#define EIT_SPEC_NZ_FREEVIEW        2
+#define EIT_SPEC_UK_CABLE_VIRGIN    3
 
 
 /* Provider configuration */
@@ -850,6 +851,14 @@ _eit_callback
     mask <<= (24 - (sa % 32));
     st->sections[sa/32] &= ~mask;
   }
+  
+  /* UK Cable Virgin: EPG data for services in other transponders is transmitted 
+  // in the 'actual' transpoder table IDs */
+  if (spec == EIT_SPEC_UK_CABLE_VIRGIN && (tableid == 0x50 || tableid == 0x4E)) {
+    mm = mpegts_network_find_mux(mm->mm_network, onid, tsid, 1);
+  }
+  if(!mm)
+    goto done;
 
   /* Get transport stream */
   // Note: tableid=0x4f,0x60-0x6f is other TS
@@ -1159,6 +1168,7 @@ void eit_init ( void )
   EIT_OPS(ops_nz_freeview, 0, EIT_CONV_HUFFMAN, EIT_SPEC_NZ_FREEVIEW);
   EIT_OPS(ops_baltic, 0x39, 0, 0);
   EIT_OPS(ops_bulsat, 0x12b, 0, 0);
+  EIT_OPS(ops_uk_cable_virgin, 0x2bc, 0, EIT_SPEC_UK_CABLE_VIRGIN);
 
   EIT_CREATE("eit", "EIT: DVB Grabber", 1, &ops);
   EIT_CREATE("uk_freesat", "UK: Freesat", 5, &ops_uk_freesat);
@@ -1166,6 +1176,7 @@ void eit_init ( void )
   EIT_CREATE("nz_freeview", "New Zealand: Freeview", 5, &ops_nz_freeview);
   EIT_CREATE("viasat_baltic", "VIASAT: Baltic", 5, &ops_baltic);
   EIT_CREATE("Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops_bulsat);
+  EIT_CREATE("uk_cable_virgin", "UK: Cable Virgin", 5, &ops_uk_cable_virgin);
 }
 
 void _eit_done ( void *m )
