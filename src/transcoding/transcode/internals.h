@@ -42,19 +42,10 @@
 extern TVHCodecProfile *tvh_codec_profile_copy;
 
 
-struct tvh_transcoder;
 typedef struct tvh_transcoder TVHTranscoder;
-
-struct tvh_stream;
 typedef struct tvh_stream TVHStream;
-
-struct tvh_context_type;
 typedef struct tvh_context_type TVHContextType;
-
-struct tvh_context;
 typedef struct tvh_context TVHContext;
-
-struct tvh_context_helper;
 typedef struct tvh_context_helper TVHContextHelper;
 
 // post phase _MUST_ be == phase + 1

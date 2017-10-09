@@ -36,13 +36,8 @@
 #define tvh_ssc_t streaming_start_component_t
 #define tvh_sct_t streaming_component_type_t
 
-
-struct tvh_codec;
 typedef struct tvh_codec TVHCodec;
-
-struct tvh_codec_profile;
 typedef struct tvh_codec_profile TVHCodecProfile;
-
 
 /* codec_profile_class ====================================================== */
 
