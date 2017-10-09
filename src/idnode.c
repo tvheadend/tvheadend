@@ -309,18 +309,20 @@ static char *
 idnode_get_display
   ( idnode_t *self, const property_t *p, const char *lang )
 {
+  char *r = NULL;
   if (p) {
     if (p->rend)
-      return p->rend(self, lang);
+      r = p->rend(self, lang);
     else if (p->islist) {
       htsmsg_t *l = (htsmsg_t*)p->get(self);
-      if (l)
-        return htsmsg_list_2_csv(l, ',', 1);
+      if (l) {
+        r = htsmsg_list_2_csv(l, ',', 1);
+        htsmsg_destroy(l);
+      }
     } else if (p->list) {
       htsmsg_t *l = p->list(self, lang), *m;
       htsmsg_field_t *f;
       uint32_t k, v;
-      char *r = NULL;
       const char *s;
       if (l && !idnode_get_u32(self, p->id, &v))
         HTSMSG_FOREACH(f, l) {
@@ -333,10 +335,9 @@ idnode_get_display
           }
         }
       htsmsg_destroy(l);
-      return r;
     }
   }
-  return NULL;
+  return r;
 }
 
 /*
@@ -702,12 +703,12 @@ idnode_cmp_sort
   /* Get display string */
   if (p->islist || (p->list && !(p->opts & PO_SORTKEY))) {
     int r;
-    char *stra = idnode_get_display(ina, p, sort->lang);
-    char *strb = idnode_get_display(inb, p, sort->lang);
+    char *stra = idnode_get_display(ina, p, sort->lang) ?: "";
+    char *strb = idnode_get_display(inb, p, sort->lang) ?: "";
     if (sort->dir == IS_ASC)
-      r = strcmp(stra ?: "", strb ?: "");
+      r = strcmp(stra, strb);
     else
-      r = strcmp(strb ?: "", stra ?: "");
+      r = strcmp(strb, stra);
     free(stra);
     free(strb);
     return r;
@@ -1583,7 +1584,7 @@ idnode_slist_rend ( idnode_t *in, idnode_slist_t *options, const char *lang )
      tvh_strlcatf(prop_sbuf, PROP_SBUF_LEN, l, "%s%s", prop_sbuf[0] ? "," : "",
                    tvh_gettext_lang(lang, options->name));
   }
-  return prop_sbuf;
+  return strdup(prop_sbuf);
 }
 
 /* **************************************************************************
