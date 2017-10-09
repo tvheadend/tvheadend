@@ -703,12 +703,12 @@ idnode_cmp_sort
   /* Get display string */
   if (p->islist || (p->list && !(p->opts & PO_SORTKEY))) {
     int r;
-    char *stra = idnode_get_display(ina, p, sort->lang) ?: "";
-    char *strb = idnode_get_display(inb, p, sort->lang) ?: "";
+    char *stra = idnode_get_display(ina, p, sort->lang);
+    char *strb = idnode_get_display(inb, p, sort->lang);
     if (sort->dir == IS_ASC)
-      r = strcmp(stra, strb);
+      r = strcmp(stra ?: "", strb ?: "");
     else
-      r = strcmp(strb, stra);
+      r = strcmp(strb ?: "", stra ?: "");
     free(stra);
     free(strb);
     return r;
