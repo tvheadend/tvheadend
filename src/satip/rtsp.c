@@ -1289,7 +1289,8 @@ rtsp_describe_session(session_t *rs, htsbuf_queue_t *q)
   char buf[4096];
 
   htsbuf_qprintf(q, "a=control:stream=%d\r\n", rs->stream);
-  htsbuf_append_str(q, "a=tool:tvheadend\r\n");
+  htsbuf_qprintf(q, "a=tool:%s\r\n",
+                    tvh_str_default(config.http_server_name, "HTS/tvheadend"));
   htsbuf_append_str(q, "m=video 0 RTP/AVP 33\r\n");
   if (strchr(rtsp_ip, ':'))
     htsbuf_append_str(q, "c=IN IP6 ::0\r\n");
