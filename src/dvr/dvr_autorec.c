@@ -275,6 +275,12 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       if (!ls && e->description)
         RB_FOREACH(ls, e->description, link)
           if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+      if (!ls && e->credits_cached)
+        RB_FOREACH(ls, e->credits_cached, link)
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+      if (!ls && e->keyword_cached)
+        RB_FOREACH(ls, e->keyword_cached, link)
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
     }
     if (!ls) return 0;
   }

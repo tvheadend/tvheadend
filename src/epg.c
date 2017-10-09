@@ -35,6 +35,7 @@
 #include "epggrab.h"
 #include "imagecache.h"
 #include "notify.h"
+#include "string_list.h"
 
 /* Broadcast hashing */
 #define EPG_HASH_WIDTH 1024
@@ -335,30 +336,38 @@ static int _epg_object_set_str
   return save;
 }
 
-static int _epg_object_set_lang_str
-  ( void *o, lang_str_t **old, const lang_str_t *str,
-    uint32_t *changed, uint32_t cflag )
-{
-  if (!o) return 0;
-  if (changed) *changed |= cflag;
-  if (!*old) {
-    if (!str)
-      return 0;
-  }
-  if (!str) {
-    lang_str_destroy(*old);
-    *old = NULL;
-    _epg_object_set_updated(o);
-    return 1;
-  }
-  if (lang_str_compare(*old, str)) {
-    lang_str_destroy(*old);
-    *old = lang_str_copy(str);
-    _epg_object_set_updated(o);
-    return 1;
-  }
-  return 0;
+/* "Template" for setting objects. */
+#define EPG_OBJECT_SET_FN(FNNAME,TYPE,DESTROY,COMPARE,COPY) \
+static int FNNAME \
+  ( void *o, TYPE **old, const TYPE *new, \
+    uint32_t *changed, uint32_t cflag ) \
+{ \
+  if (!o) return 0; \
+  if (changed) *changed |= cflag; \
+  if (!*old) { \
+    if (!new) \
+      return 0; \
+  } \
+  if (!new) { \
+    DESTROY(*old); \
+    *old = NULL; \
+    _epg_object_set_updated(o); \
+    return 1; \
+  } \
+  if (COMPARE(*old, new)) { \
+    DESTROY(*old); \
+    *old = COPY(new); \
+    _epg_object_set_updated(o); \
+    return 1; \
+  } \
+  return 0; \
 }
+
+
+EPG_OBJECT_SET_FN(_epg_object_set_lang_str,    lang_str_t,    lang_str_destroy,    lang_str_compare,    lang_str_copy)
+EPG_OBJECT_SET_FN(_epg_object_set_string_list, string_list_t, string_list_destroy, string_list_cmp,     string_list_copy)
+EPG_OBJECT_SET_FN(_epg_object_set_htsmsg,      htsmsg_t,      htsmsg_destroy,      htsmsg_cmp,          htsmsg_copy)
+#undef EPG_OBJECT_SET_FN
 
 static int _epg_object_set_u8
   ( void *o, uint8_t *old, const uint8_t nval,
@@ -1021,6 +1030,8 @@ int epg_episode_change_finish
     save |= epg_episode_set_age_rating(episode, 0, NULL);
   if (!(changes & EPG_CHANGED_FIRST_AIRED))
     save |= epg_episode_set_first_aired(episode, 0, NULL);
+  if (!(changes & EPG_CHANGED_COPYRIGHT_YEAR))
+    save |= epg_episode_set_copyright_year(episode, 0, NULL);
   return save;
 }
 
@@ -1207,6 +1218,14 @@ int epg_episode_set_star_rating
                             changed, EPG_CHANGED_STAR_RATING);
 }
 
+int epg_episode_set_copyright_year
+  ( epg_episode_t *episode, uint16_t year, uint32_t *changed )
+{
+  if (!episode) return 0;
+  return _epg_object_set_u16(episode, &episode->copyright_year, year,
+                            changed, EPG_CHANGED_COPYRIGHT_YEAR);
+}
+
 int epg_episode_set_age_rating
   ( epg_episode_t *episode, uint8_t age, uint32_t *changed )
 {
@@ -1345,6 +1364,8 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_u32(m, "is_bw", 1);
   if (episode->star_rating)
     htsmsg_add_u32(m, "star_rating", episode->star_rating);
+  if (episode->copyright_year)
+    htsmsg_add_u32(m, "copyright_year", episode->copyright_year);
   if (episode->age_rating)
     htsmsg_add_u32(m, "age_rating", episode->age_rating);
   if (episode->first_aired)
@@ -1418,6 +1439,9 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
 
   if (!htsmsg_get_u32(m, "star_rating", &u32))
     *save |= epg_episode_set_star_rating(ee, u32, &changes);
+
+  if (!htsmsg_get_u32(m, "copyright_year", &u32))
+    *save |= epg_episode_set_copyright_year(ee, u32, &changes);
 
   if (!htsmsg_get_u32(m, "age_rating", &u32))
     *save |= epg_episode_set_age_rating(ee, u32, &changes);
@@ -1876,6 +1900,11 @@ static void _epg_broadcast_destroy ( void *eo )
   if (ebc->serieslink)  _epg_serieslink_rem_broadcast(ebc->serieslink, ebc);
   if (ebc->summary)     lang_str_destroy(ebc->summary);
   if (ebc->description) lang_str_destroy(ebc->description);
+  if (ebc->credits)     htsmsg_destroy(ebc->credits);
+  if (ebc->credits_cached) lang_str_destroy(ebc->credits_cached);
+  if (ebc->category)    string_list_destroy(ebc->category);
+  if (ebc->keyword)     string_list_destroy(ebc->keyword);
+  if (ebc->keyword_cached) lang_str_destroy(ebc->keyword_cached);
   _epg_object_destroy(eo, NULL);
   free(ebc);
 }
@@ -1972,6 +2001,12 @@ int epg_broadcast_change_finish
     save |= epg_broadcast_set_summary(broadcast, NULL, NULL);
   if (!(changes & EPG_CHANGED_DESCRIPTION))
     save |= epg_broadcast_set_description(broadcast, NULL, NULL);
+  if (!(changes & EPG_CHANGED_CREDITS))
+    save |= epg_broadcast_set_credits(broadcast, NULL, NULL);
+  if (!(changes & EPG_CHANGED_CATEGORY))
+    save |= epg_broadcast_set_category(broadcast, NULL, NULL);
+  if (!(changes & EPG_CHANGED_KEYWORD))
+    save |= epg_broadcast_set_keyword(broadcast, NULL, NULL);
   return save;
 }
 
@@ -1997,6 +2032,9 @@ epg_broadcast_t *epg_broadcast_clone
     *save |= epg_broadcast_set_is_new(ebc, src->is_new, &changes);
     *save |= epg_broadcast_set_is_repeat(ebc, src->is_repeat, &changes);
     *save |= epg_broadcast_set_summary(ebc, src->summary, &changes);
+    *save |= epg_broadcast_set_credits(ebc, src->credits, &changes);
+    *save |= epg_broadcast_set_category(ebc, src->category, &changes);
+    *save |= epg_broadcast_set_keyword(ebc, src->keyword, &changes);
     *save |= epg_broadcast_set_description(ebc, src->description, &changes);
     *save |= epg_broadcast_set_serieslink(ebc, src->serieslink, &changes);
     *save |= epg_broadcast_set_episode(ebc, src->episode, &changes);
@@ -2170,6 +2208,72 @@ int epg_broadcast_set_description
                                   changed, EPG_CHANGED_DESCRIPTION);
 }
 
+int epg_broadcast_set_credits
+( epg_broadcast_t *b, htsmsg_t *credits, uint32_t *changed )
+{
+  if (!b) return 0;
+  const int mod = _epg_object_set_htsmsg(b, &b->credits, credits, changed, EPG_CHANGED_CREDITS);
+  if (mod) {
+      /* Copy in to cached csv for regex searching in autorec/GUI.
+       * We use just one string (rather than regex across each entry
+       * separately) so you could do a regex of "Douglas.*Stallone"
+       * to match the movies with the two actors.
+       */
+      if (!b->credits_cached) {
+          b->credits_cached = lang_str_create();
+      }
+      lang_str_set(&b->credits_cached, "", NULL);
+
+      if (b->credits) {
+        int add_sep = 0;
+        htsmsg_field_t *f;
+        HTSMSG_FOREACH(f, b->credits) {
+          if (add_sep) {
+            lang_str_append(b->credits_cached, ", ", NULL);
+          } else {
+            add_sep = 1;
+          }
+          lang_str_append(b->credits_cached, f->hmf_name, NULL);
+        }
+      } else {
+        if (b->credits_cached) {
+          lang_str_destroy(b->credits_cached);
+          b->credits_cached = NULL;
+        }
+      }
+  }
+  return mod;
+}
+
+int epg_broadcast_set_category
+( epg_broadcast_t *b, string_list_t *msg, uint32_t *changed )
+{
+  if (!b) return 0;
+  return _epg_object_set_string_list(b, &b->category, msg, changed, EPG_CHANGED_CATEGORY);
+}
+
+int epg_broadcast_set_keyword
+( epg_broadcast_t *b, string_list_t *msg, uint32_t *changed )
+{
+  if (!b) return 0;
+  const int mod = _epg_object_set_string_list(b, &b->keyword, msg, changed, EPG_CHANGED_KEYWORD);
+  if (mod) {
+    /* Copy in to cached csv for regex searching in autorec/GUI. */
+    if (msg) {
+      /* 1==>human readable */
+      char *str = string_list_2_csv(msg, ',', 1);
+      lang_str_set(&b->keyword_cached, str, NULL);
+      free(str);
+    } else {
+      if (b->keyword_cached) {
+        lang_str_destroy(b->keyword_cached);
+        b->keyword_cached = NULL;
+      }
+    }
+  }
+  return mod;
+}
+
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
 {
   if ( !broadcast ) return NULL;
@@ -2192,6 +2296,18 @@ const char *epg_broadcast_get_summary ( epg_broadcast_t *b, const char *lang )
 {
   if (!b || !b->summary) return NULL;
   return lang_str_get(b->summary, lang);
+}
+
+const char *epg_broadcast_get_credits_cached ( epg_broadcast_t *b, const char *lang)
+{
+  if (!b || !b->credits_cached) return NULL;
+  return lang_str_get(b->credits_cached, lang);
+}
+
+const char *epg_broadcast_get_keyword_cached ( epg_broadcast_t *b, const char *lang)
+{
+  if (!b || !b->keyword_cached) return NULL;
+  return lang_str_get(b->keyword_cached, lang);
 }
 
 const char *epg_broadcast_get_description ( epg_broadcast_t *b, const char *lang )
@@ -2236,6 +2352,15 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
     lang_str_serialize(broadcast->summary, m, "summary");
   if (broadcast->description)
     lang_str_serialize(broadcast->description, m, "description");
+  if (broadcast->credits)
+      htsmsg_add_msg(m, "credits", htsmsg_copy(broadcast->credits));
+  /* No need to serialize credits_cached since it is rebuilt from credits. */
+  if (broadcast->category)
+    string_list_serialize(broadcast->category, m, "category");
+  if (broadcast->keyword)
+    string_list_serialize(broadcast->keyword, m, "keyword");
+  /* No need to serialize keyword_cached since it is rebuilt from keyword */
+
   if (broadcast->serieslink)
     htsmsg_add_str(m, "serieslink", broadcast->serieslink->uri);
   
@@ -2250,6 +2375,8 @@ epg_broadcast_t *epg_broadcast_deserialize
   epg_episode_t *ee;
   epg_serieslink_t *esl;
   lang_str_t *ls;
+  htsmsg_t *hm;
+  string_list_t *sl;
   const char *str;
   uint32_t eid, u32, changes = 0, changes2 = 0;
   int64_t start, stop;
@@ -2309,6 +2436,18 @@ epg_broadcast_t *epg_broadcast_deserialize
   if ((ls = lang_str_deserialize(m, "description"))) {
     *save |= epg_broadcast_set_description(ebc, ls, &changes);
     lang_str_destroy(ls);
+  }
+
+  if ((hm = htsmsg_get_map(m, "credits"))) {
+      *save |= epg_broadcast_set_credits(ebc, hm, &changes);
+  }
+
+  if ((sl = string_list_deserialize(m, "keyword"))) {
+      *save |= epg_broadcast_set_keyword(ebc, sl, &changes);
+  }
+
+  if ((sl = string_list_deserialize(m, "category"))) {
+      *save |= epg_broadcast_set_category(ebc, sl, &changes);
   }
 
   /* Series link */
@@ -2776,7 +2915,13 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
             regex_match(&eq->stitle_re, s)) {
           if ((s = epg_broadcast_get_description(e, lang)) == NULL ||
               regex_match(&eq->stitle_re, s)) {
-            return;
+            if ((s = epg_broadcast_get_credits_cached(e, lang)) == NULL ||
+                regex_match(&eq->stitle_re, s)) {
+              if ((s = epg_broadcast_get_keyword_cached(e, lang)) == NULL ||
+                  regex_match(&eq->stitle_re, s)) {
+                return;
+              }
+            }
           }
         }
       }

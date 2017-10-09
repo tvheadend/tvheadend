@@ -30,6 +30,7 @@
 struct channel;
 struct channel_tag;
 struct epggrab_module;
+struct string_list;
 
 /*
  * Map/List types
@@ -126,6 +127,9 @@ typedef enum epg_object_type
 #define EPG_CHANGED_SUMMARY       (1<<3)
 #define EPG_CHANGED_DESCRIPTION   (1<<4)
 #define EPG_CHANGED_IMAGE         (1<<5)
+#define EPG_CHANGED_CREDITS       (1<<6)
+#define EPG_CHANGED_CATEGORY      (1<<7)
+#define EPG_CHANGED_KEYWORD       (1<<8)
 #define EPG_CHANGED_SLAST         2
 
 typedef struct epg_object_ops {
@@ -300,6 +304,7 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
 #define EPG_CHANGED_FIRST_AIRED  (1<<(EPG_CHANGED_SLAST+12))
 #define EPG_CHANGED_BRAND        (1<<(EPG_CHANGED_SLAST+13))
 #define EPG_CHANGED_SEASON       (1<<(EPG_CHANGED_SLAST+14))
+#define EPG_CHANGED_COPYRIGHT_YEAR (1<<(EPG_CHANGED_SLAST+15))
 
 /* Episode numbering object - this is for some back-compat and also
  * to allow episode information to be "collated" into easy to use object
@@ -333,7 +338,11 @@ struct epg_episode
   uint8_t                    star_rating;    ///< Star rating
   uint8_t                    age_rating;     ///< Age certificate
   time_t                     first_aired;    ///< Original airdate
-
+  uint16_t                   copyright_year; ///< xmltv DTD gives a tag "date" (separate to previously-shown/first aired).
+                                             ///< This is the date programme was "finished...probably the copyright date."
+                                             ///< We'll call it copyright_year since words like "complete" and "finished"
+                                             ///< sound too similar to dvr recorded functionality. We'll only store the
+                                             ///< year since we only get year not month and day.
   LIST_ENTRY(epg_episode)    blink;         ///< Brand link
   LIST_ENTRY(epg_episode)    slink;         ///< Season link
   epg_brand_t               *brand;         ///< (Grand-)Parent brand
@@ -404,6 +413,9 @@ int epg_episode_set_first_aired
   __attribute__((warn_unused_result));
 int epg_episode_set_star_rating
   ( epg_episode_t *e, uint8_t stars, uint32_t *changed )
+  __attribute__((warn_unused_result));
+int epg_episode_set_copyright_year
+  ( epg_episode_t *e, uint16_t stars, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_age_rating
   ( epg_episode_t *e, uint8_t age, uint32_t *changed )
@@ -511,7 +523,13 @@ struct epg_broadcast
   /* Broadcast level text */
   lang_str_t                *summary;          ///< Summary
   lang_str_t                *description;      ///< Description
-
+  htsmsg_t                  *credits;          ///< Cast/Credits map of name -> role type (actor, presenter, director, etc).
+  lang_str_t                *credits_cached;   ///< Comma separated cast (for regex searching in GUI/autorec). Kept in sync with cast_map
+  struct string_list        *category;         ///< Extra categories (typically from xmltv) such as "Western" or "Sumo Wrestling".
+                                               ///< These extra categories are often a superset of our EN 300 468 DVB genre.
+                                               ///< Currently not explicitly searchable in GUI.
+  struct string_list        *keyword;          ///< Extra keywords (typically from xmltv) such as "Wild West" or "Unicorn".
+  lang_str_t                *keyword_cached;   ///< Cached CSV version for regex searches.
   RB_ENTRY(epg_broadcast)    sched_link;       ///< Schedule link
   LIST_ENTRY(epg_broadcast)  ep_link;          ///< Episode link
   epg_episode_t             *episode;          ///< Episode shown
@@ -578,6 +596,15 @@ int epg_broadcast_set_summary
 int epg_broadcast_set_description
   ( epg_broadcast_t *b, const lang_str_t *str, uint32_t *changed )
   __attribute__((warn_unused_result));
+int epg_broadcast_set_credits
+( epg_broadcast_t *b, htsmsg_t* msg, uint32_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_category
+( epg_broadcast_t *b, struct string_list* msg, uint32_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_keyword
+( epg_broadcast_t *b, struct string_list* msg, uint32_t *changed )
+  __attribute__((warn_unused_result));
 int epg_broadcast_set_serieslink
   ( epg_broadcast_t *b, epg_serieslink_t *sl, uint32_t *changed )
   __attribute__((warn_unused_result));
@@ -591,6 +618,11 @@ const char *epg_broadcast_get_subtitle
 const char *epg_broadcast_get_summary
   ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_description
+  ( epg_broadcast_t *b, const char *lang );
+/* Get the cached (csv) version for regex searching */
+const char *epg_broadcast_get_credits_cached
+  ( epg_broadcast_t *b, const char *lang );
+const char *epg_broadcast_get_keyword_cached
   ( epg_broadcast_t *b, const char *lang );
 
 /* Serialization */

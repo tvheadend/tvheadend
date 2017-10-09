@@ -35,6 +35,7 @@
 #include "spawn.h"
 #include "file.h"
 #include "htsstr.h"
+#include "string_list.h"
 
 #include "lang_str.h"
 #include "epg.h"
@@ -351,6 +352,36 @@ static int _xmltv_parse_previously_shown
 }
 
 /*
+ * Date finished, typically copyright date.
+ */
+static int _xmltv_parse_date_finished
+  ( epg_episode_t *ee,
+    htsmsg_t *tag, uint32_t *changes )
+{
+  if (!ee || !tag) return 0;
+  const char *str = htsmsg_xml_get_cdata_str(tag, "date");
+  if (str) {
+      /* Technically the date could contain information about month
+       * and even second it was completed.  We only want the four
+       * digit year.
+       */
+      const size_t len = strlen(str);
+      if (len >= 4) {
+          char year_buf[32];
+          strncpy(year_buf, str, 4);
+          year_buf[5] = 0;
+          const uint16_t year = atoi(year_buf);
+          /* Sanity check the year before copying it over. */
+          if (year && year > 1800 && year < 2500) {
+              return epg_episode_set_copyright_year(ee, year, changes);
+          }
+      }
+  }
+  return 0;
+}
+
+
+/*
  * Star rating
  *   <star-rating>
  *     <value>3.3/5</value>
@@ -380,7 +411,15 @@ static int _xmltv_parse_star_rating
 /*
  * Tries to get age ratingform <rating> element.
  * Expects integer representing minimal age of watcher.
- * Other rating types (non-integer, for example MPAA or VCHIP) are ignored.
+ * Other rating types (non-integer, for example MPAA or VCHIP) are
+ * mostly ignored, but we have some basic mappings for common
+ * ratings such as TV-MA which may only be the only ratings for
+ * some movies.
+ *
+ * We use the first rating that we find that returns a usable age.  Of
+ * course that means some programmes might not have the rating you
+ * expect for your country. For example one episode of a cooking
+ * programme has BBFC 18 but VCHIP TV-G.
  *
  * Attribute system is ignored.
  *
@@ -388,9 +427,8 @@ static int _xmltv_parse_star_rating
  * <rating system="pl"><value>16</value></rating>
  *
  * Currently non-working example:
- *    <rating system="MPAA">
- *     <value>PG</value>
- *     <icon src="pg_symbol.png" />
+ *    <rating system="CSA">
+ *     <value>-12</value>
  *   </rating>
  *
  * TODO - support for other rating systems:
@@ -406,13 +444,36 @@ static int _xmltv_parse_age_rating
   const char *s1;
 
   if (!ee || !body) return 0;
-  if (!(rating = htsmsg_get_map(body, "rating"))) return 0;
-  if (!(tags  = htsmsg_get_map(rating, "tags"))) return 0;
-  if (!(s1 = htsmsg_xml_get_cdata_str(tags, "value"))) return 0;
 
-  age = atoi(s1);
-
-  return epg_episode_set_age_rating(ee, age, changes);
+  htsmsg_field_t *f;
+  HTSMSG_FOREACH(f, body) {
+    if (!strcmp(f->hmf_name, "rating") && (rating = htsmsg_get_map_by_field(f))) {
+      if ((tags  = htsmsg_get_map(rating, "tags"))) {
+        if ((s1 = htsmsg_xml_get_cdata_str(tags, "value"))) {
+          /* We map some common ratings since some movies only
+           * have one of these flags rather than an age rating.
+           */
+          if (!strcmp(s1, "TV-G") || !strcmp(s1, "U"))
+            age = 3;
+          else if (!strcmp(s1, "TV-Y7") || !strcmp(s1, "PG"))
+            age = 7;
+          else if (!strcmp(s1, "TV-14"))
+            age = 14;
+          else if (!strcmp(s1, "TV-MA"))
+            age = 17;
+          else
+            age = atoi(s1);
+          /* Since age is uint8_t it means some rating systems can
+           * underflow and become very large, for example CSA has age
+           * rating of -10.
+           */
+          if (age > 0 && age < 22)
+            return epg_episode_set_age_rating(ee, age, changes);
+        }
+      }
+    }
+  }
+  return 0;
 }
 
 /*
@@ -454,6 +515,80 @@ _xmltv_parse_lang_str ( lang_str_t **ls, htsmsg_t *tags, const char *tname )
   }
 }
 
+/// Make a string list from the contents of all tags in the message
+/// that have tagname.
+__attribute__((warn_unused_result))
+static string_list_t *
+ _xmltv_make_str_list_from_matching(htsmsg_t *tags, const char *tagname)
+{
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  string_list_t *tag_list = NULL;
+
+  HTSMSG_FOREACH(f, tags) {
+    if (!strcmp(f->hmf_name, tagname) && (e = htsmsg_get_map_by_field(f))) {
+      const char *str = htsmsg_get_str(e, "cdata");
+      if (str && *str) {
+        if (!tag_list) tag_list = string_list_create();
+        string_list_insert(tag_list, str);
+      }
+    }
+  }
+
+  return tag_list;
+}
+
+
+/// Parse credits from the message tags and store the name/type (such
+/// as actor, director) in to out_credits (created if necessary).
+/// Also return a string list of the names only.
+///
+/// Sample input:
+/// <credits>
+///   <actor role="Bob">Fred Foo</actor>
+///   <actor role="Walt">Vic Vicson</actor>
+///   <director>Simon Scott</director>
+/// </credits>
+///
+/// Returns string list of {"Fred Foo", "Simon Scott", "Vic Vicson"} and
+/// out_credits containing the names and actor/director.
+__attribute__((warn_unused_result))
+static string_list_t *
+_xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
+{
+  htsmsg_t *credits = htsmsg_get_map(tags, "credits");
+  if (!credits)
+    return NULL;
+  htsmsg_t *credits_tags;
+  if (!(credits_tags  = htsmsg_get_map(credits, "tags")))
+    return NULL;
+
+  string_list_t *credits_names = NULL;
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+
+  HTSMSG_FOREACH(f, credits_tags) {
+    if ((!strcmp(f->hmf_name, "actor") ||
+         !strcmp(f->hmf_name, "director") ||
+         !strcmp(f->hmf_name, "guest") ||
+         !strcmp(f->hmf_name, "presenter") ||
+         !strcmp(f->hmf_name, "writer")
+         ) &&
+        (e = htsmsg_get_map_by_field(f)))  {
+      const char* str = htsmsg_get_str(e, "cdata");
+      if (str) {
+        if (!credits_names) credits_names = string_list_create();
+        string_list_insert(credits_names, str);
+
+        if (!*out_credits) *out_credits = htsmsg_create_map();
+        htsmsg_add_str(*out_credits, str, f->hmf_name);
+      }
+    }
+  }
+
+  return credits_names;
+}
+
 /**
  * Parse tags inside of a programme
  */
@@ -462,6 +597,8 @@ static int _xmltv_parse_programme_tags
    time_t start, time_t stop, const char *icon,
    epggrab_stats_t *stats)
 {
+  const int scrape_extra = ((epggrab_module_ext_t *)mod)->xmltv_scrape_extra;
+  const int scrape_onto_desc = ((epggrab_module_ext_t *)mod)->xmltv_scrape_onto_desc;
   int save = 0, save2 = 0, save3 = 0;
   epg_episode_t *ee = NULL;
   epg_serieslink_t *es = NULL;
@@ -488,8 +625,64 @@ static int _xmltv_parse_programme_tags
 
   /* Description (wait for episode first) */
   _xmltv_parse_lang_str(&desc, tags, "desc");
-  if (desc)
+
+  /* If user has requested it then retrieve additional information
+   * from programme such as credits and keywords.
+   */
+  if (scrape_extra || scrape_onto_desc) {
+    htsmsg_t      *credits        = NULL;
+    string_list_t *credits_names  = _xmltv_parse_credits(&credits, tags);
+    string_list_t *category       = _xmltv_make_str_list_from_matching(tags, "category");
+    string_list_t *keyword        = _xmltv_make_str_list_from_matching(tags, "keyword");
+
+    if (scrape_extra && credits) {
+      save3 |= epg_broadcast_set_credits(ebc, credits, &changes);
+    }
+
+    if (scrape_extra && category) {
+      save3 |= epg_broadcast_set_category(ebc, category, &changes);
+    }
+
+    if (scrape_extra && keyword) {
+      save3 |= epg_broadcast_set_keyword(ebc, keyword, &changes);
+    }
+
+    /* Convert the string list VAR to a human-readable csv and append
+     * it to the desc with a prefix of NAME.
+     */
+#define APPENDIT(VAR,NAME) \
+    if (VAR) { \
+      char *str = string_list_2_csv(VAR, ',', 1); \
+      if (str) {                                  \
+        lang_str_append(desc, "\n\n", NULL);      \
+        lang_str_append(desc, NAME, NULL);        \
+        lang_str_append(desc, str, NULL);         \
+        free(str);                                \
+      }                                           \
+    }
+
+    /* Append the details on to the description, mainly for legacy
+     * clients. This allow you to view the details in the description
+     * on old boxes/tablets that don't parse the newer fields or
+     * don't display them.
+     */
+    if (desc && scrape_onto_desc) {
+      APPENDIT(credits_names, N_("Credits: "));
+      APPENDIT(category, N_("Categories: "));
+      APPENDIT(keyword, N_("Keywords: "));
+    }
+
+    if (credits)          htsmsg_destroy(credits);
+    if (credits_names)    string_list_destroy(credits_names);
+    if (category)         string_list_destroy(category);
+    if (keyword)          string_list_destroy(keyword);
+
+#undef APPENDIT
+  } /* desc */
+
+  if (desc) {
     save3 |= epg_broadcast_set_description(ebc, desc, &changes);
+  } /* desc */
 
   /* summary */
   _xmltv_parse_lang_str(&summary, tags, "summary");
@@ -561,6 +754,8 @@ static int _xmltv_parse_programme_tags
 
     save3 |= _xmltv_parse_star_rating(ee, tags, &changes3);
 
+    save3 |= _xmltv_parse_date_finished(ee, tags, &changes3);
+
     save3 |= _xmltv_parse_age_rating(ee, tags, &changes3);
 
     if (icon)
@@ -583,7 +778,6 @@ static int _xmltv_parse_programme_tags
   if (subtitle) lang_str_destroy(subtitle);
   if (desc)     lang_str_destroy(desc);
   if (summary)  lang_str_destroy(summary);
-  
   return save | save2 | save3;
 }
 
@@ -786,6 +980,29 @@ static int _xmltv_parse
   N_("Try to obtain channel numbers from the display-name xml tag. " \
      "If the first word is number, it is used as the channel number.")
 
+#define SCRAPE_EXTRA_NAME N_("Scrape credits and extra information")
+#define SCRAPE_EXTRA_DESC \
+  N_("Obtain list of credits (actors, etc.), keywords and extra information from the xml tags (if available). "  \
+     "Some xmltv providers supply a list of actors and additional keywords to " \
+     "describe programmes. This option will retrieve this additional information. " \
+     "This can be very detailed (20+ actors per movie) " \
+     "and will take a lot of memory and resources on this box, and will " \
+     "pass this information to your client machines and GUI too, using " \
+     "memory and resources on those boxes too. " \
+     "Do not enable on low-spec machines.")
+
+#define SCRAPE_ONTO_DESC_NAME N_("Alter programme description to include detailed information")
+#define SCRAPE_ONTO_DESC_DESC \
+  N_("If enabled then this will alter the programme descriptions to " \
+     "include information about actors, keywords and categories (if available from the xmltv file). " \
+     "This is useful for legacy clients that can not parse newer Tvheadend messages " \
+     "containing this information or do not display the information. "\
+     "For example the modified description might include 'Starring: Lorem Ipsum'. " \
+     "The description is altered for all clients, both legacy, modern, and GUI. "\
+     "Enabling scraping of detailed information can use significant resources (memory and CPU). "\
+     "You should not enable this if you use 'duplicate detect if different description' " \
+     "since the descriptions will change due to added information.")
+
 static htsmsg_t *
 xmltv_dn_chnum_list ( void *o, const char *lang )
 {
@@ -812,6 +1029,22 @@ const idclass_t epggrab_mod_int_xmltv_class = {
       .opts   = PO_DOC_NLIST,
       .group  = 1
     },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_extra",
+      .name   = SCRAPE_EXTRA_NAME,
+      .desc   = SCRAPE_EXTRA_DESC,
+      .off    = offsetof(epggrab_module_int_t, xmltv_scrape_extra),
+      .group  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_onto_desc",
+      .name   = SCRAPE_ONTO_DESC_NAME,
+      .desc   = SCRAPE_ONTO_DESC_DESC,
+      .off    = offsetof(epggrab_module_int_t, xmltv_scrape_onto_desc),
+      .group  = 1
+    },
     {}
   }
 };
@@ -828,6 +1061,22 @@ const idclass_t epggrab_mod_ext_xmltv_class = {
       .desc   = DN_CHNUM_DESC,
       .off    = offsetof(epggrab_module_ext_t, xmltv_chnum),
       .opts   = PO_DOC_NLIST,
+      .group  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_extra",
+      .name   = SCRAPE_EXTRA_NAME,
+      .desc   = SCRAPE_EXTRA_DESC,
+      .off    = offsetof(epggrab_module_int_t, xmltv_scrape_extra),
+      .group  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_onto_desc",
+      .name   = SCRAPE_ONTO_DESC_NAME,
+      .desc   = SCRAPE_ONTO_DESC_DESC,
+      .off    = offsetof(epggrab_module_int_t, xmltv_scrape_onto_desc),
       .group  = 1
     },
     {}

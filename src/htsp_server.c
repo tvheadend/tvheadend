@@ -35,6 +35,7 @@
 #include "descrambler/caid.h"
 #include "notify.h"
 #include "htsmsg_json.h"
+#include "string_list.h"
 #include "lang_codes.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
@@ -996,6 +997,8 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
       htsmsg_add_str(out, "creator", de->de_creator);
     if(de->de_comment)
       htsmsg_add_str(out, "comment", de->de_comment);
+    if (de->de_copyright_year)
+      htsmsg_add_u32(out, "copyrightYear", de->de_copyright_year);
 
     last = NULL;
     if (!htsmsg_is_empty(de->de_files) && de->de_config) {
@@ -1224,6 +1227,17 @@ htsp_build_event
       htsmsg_add_str(out, "summary", str);
   } else if((str = epg_broadcast_get_summary(e, lang)))
     htsmsg_add_str(out, "description", str);
+
+  if (e->credits) {
+    htsmsg_add_msg(out, "credits", htsmsg_copy(e->credits));
+  }
+  if (e->category) {
+    htsmsg_add_msg(out, "category", string_list_to_htsmsg(e->category));
+  }
+  if (e->keyword) {
+    htsmsg_add_msg(out, "keyword", string_list_to_htsmsg(e->keyword));
+  }
+
   if (e->serieslink) {
     htsmsg_add_u32(out, "serieslinkId", e->serieslink->id);
     if (e->serieslink->uri)
@@ -1247,6 +1261,8 @@ htsp_build_event
       htsmsg_add_u32(out, "ageRating", ee->age_rating);
     if (ee->star_rating)
       htsmsg_add_u32(out, "starRating", ee->star_rating);
+    if (ee->copyright_year)
+      htsmsg_add_u32(out, "copyrightYear", ee->copyright_year);
     if (ee->first_aired)
       htsmsg_add_s64(out, "firstAired", ee->first_aired);
     epg_episode_get_epnum(ee, &epnum);
