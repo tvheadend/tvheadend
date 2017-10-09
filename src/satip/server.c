@@ -111,7 +111,8 @@ satip_server_http_xml(http_connection_t *hc)
 </device>\n\
 </root>\n"
 
-  char buf[sizeof(MSG) + 1024], buf2[64];
+  char buf[sizeof(MSG) + 1024], buf2[64], purl[128];
+  const char *cs;
   char *devicelist = NULL;
   htsbuf_queue_t q;
   mpegts_network_t *mn;
@@ -201,6 +202,19 @@ satip_server_http_xml(http_connection_t *hc)
   if (!hts_settings_buildpath(buf, sizeof(buf), "satip.m3u"))
     satipm3u = access(buf, R_OK) == 0;
 
+  if (satip_server_conf.satip_nom3u) {
+    purl[0] = '\0';
+  } else {
+    if (satipm3u) {
+      cs = "satip_server/satip.m3u";
+    } else {
+      cs = "playlist/satip/channels";
+    }
+    snprintf(purl, sizeof(purl),
+             "<satip:X_SATIPM3U xmlns:satip=\"urn:ses-com:satip\">%s/%s</satip:X_SATIPM3U>\n",
+             tvheadend_webroot ?: "", cs);
+  }
+
   snprintf(buf, sizeof(buf), MSG,
            config_get_server_name(),
            buf2, tvheadend_version,
@@ -210,11 +224,7 @@ satip_server_http_xml(http_connection_t *hc)
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,
-           devicelist ?: "",
-           satip_server_conf.satip_nom3u ? "" :
-             (satipm3u ?
-               "<satip:X_SATIPM3U xmlns:satip=\"urn:ses-com:satip\">/satip_server/satip.m3u</satip:X_SATIPM3U>\n" :
-               "<satip:X_SATIPM3U xmlns:satip=\"urn:ses-com:satip\">/playlist/satip/channels</satip:X_SATIPM3U>\n"));
+           devicelist ?: "", purl);
 
   free(devicelist);
 
@@ -323,7 +333,7 @@ satips_upnp_send_announce(void)
 NOTIFY * HTTP/1.1\r\n\
 HOST: 239.255.255.250:1900\r\n\
 CACHE-CONTROL: max-age=%d\r\n\
-LOCATION: http://%s:%i/satip_server/desc.xml\r\n\
+LOCATION: http://%s:%i%s/satip_server/desc.xml\r\n\
 NT: %s\r\n\
 NTS: ssdp:alive\r\n\
 SERVER: unix/1.0 UPnP/1.1 TVHeadend/%s\r\n\
@@ -362,7 +372,8 @@ DEVICEID.SES.COM: %d\r\n\r\n"
     }
 
     snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
-             http_server_ip, http_server_port, nt, tvheadend_version,
+             http_server_ip, http_server_port, tvheadend_webroot ?: "",
+             nt, tvheadend_version,
              satip_server_conf.satip_uuid, usn2, (long)satip_server_bootid,
              satip_server_deviceid);
 
@@ -382,7 +393,7 @@ satips_upnp_send_discover_reply
 HTTP/1.1 200 OK\r\n\
 CACHE-CONTROL: max-age=%d\r\n\
 EXT:\r\n\
-LOCATION: http://%s:%i/satip_server/desc.xml\r\n\
+LOCATION: http://%s:%i%s/satip_server/desc.xml\r\n\
 SERVER: unix/1.0 UPnP/1.1 TVHeadend/%s\r\n\
 ST: urn:ses-com:device:SatIPServer:1\r\n\
 USN: uuid:%s::urn:ses-com:device:SatIPServer:1\r\n\
@@ -403,7 +414,8 @@ CONFIGID.UPNP.ORG: 0\r\n"
   }
 
   snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
-           http_server_ip, http_server_port, tvheadend_version,
+           http_server_ip, http_server_port, tvheadend_webroot ?: "",
+           tvheadend_version,
            satip_server_conf.satip_uuid, (long)satip_server_bootid);
 
   htsbuf_queue_init(&q, 0);
