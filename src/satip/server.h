@@ -63,6 +63,7 @@ struct satip_server_conf {
   int satip_atsc_t;
   int satip_atsc_c;
   char *satip_nat_ip;
+  int satip_nat_rtsp;
 };
 
 extern struct satip_server_conf satip_server_conf;
@@ -93,7 +94,7 @@ int satip_rtsp_delsys(int fe, int *findex, const char **ftype);
 
 void satip_server_rtsp_init(const char *bindaddr, int port,
                             int descramble, int rewrite_pmt, int muxcnf,
-                            const char *nat_ip);
+                            const char *nat_ip, int nat_port);
 void satip_server_rtsp_register(void);
 void satip_server_rtsp_done(void);
 

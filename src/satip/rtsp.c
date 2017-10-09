@@ -81,6 +81,7 @@ static uint16_t stream_id;
 static char *rtsp_ip = NULL;
 static char *rtsp_nat_ip = NULL;
 static int rtsp_port = -1;
+static int rtsp_nat_port = -1;
 static int rtsp_descramble = 1;
 static int rtsp_rewrite_pmt = 0;
 static int rtsp_muxcnf = MUXCNF_AUTO;
@@ -252,6 +253,7 @@ static char *
 rtsp_check_urlbase(char *u)
 {
   char *p, *s;
+  int t;
 
   if (*u == '/' || strncmp(u, "stream=", 7) == 0)
     return u;
@@ -264,8 +266,11 @@ rtsp_check_urlbase(char *u)
     *p = '\0';
   if ((s = strchr(u, ':')) != NULL) {
     *s = '\0';
-    if (atoi(s + 1) != rtsp_port)
-      return NULL;
+    t = atoi(s + 1);
+    if (t != rtsp_port) {
+      if (rtsp_nat_port <= 0 || t != rtsp_nat_port)
+        return NULL;
+    }
   } else {
 #if 0 /* VLC is broken */
     if (rtsp_port != 554)
@@ -1693,7 +1698,7 @@ rtsp_close_sessions(void)
  */
 void satip_server_rtsp_init
   (const char *bindaddr, int port, int descramble, int rewrite_pmt, int muxcnf,
-   const char *nat_ip)
+   const char *nat_ip, int nat_port)
 {
   static tcp_server_ops_t ops = {
     .start  = rtsp_serve,
@@ -1726,6 +1731,7 @@ void satip_server_rtsp_init
   s = rtsp_nat_ip;
   rtsp_nat_ip = nat_ip ? strdup(nat_ip) : NULL;
   free(s);
+  rtsp_nat_port = nat_port;
   if (!rtsp_server)
     rtsp_server = tcp_server_create(LS_SATIPS, "SAT>IP RTSP", bindaddr, port, &ops, NULL);
   if (reg)
@@ -1748,6 +1754,7 @@ void satip_server_rtsp_done(void)
   pthread_mutex_lock(&global_lock);
   rtsp_server = NULL;
   rtsp_port = -1;
+  rtsp_nat_port = -1;
   free(rtsp_ip);
   free(rtsp_nat_ip);
   rtsp_ip = rtsp_nat_ip = NULL;
