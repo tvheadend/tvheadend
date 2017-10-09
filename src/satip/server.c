@@ -764,6 +764,16 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
+      .type   = PT_INT,
+      .id     = "satip_nat_rtsp",
+      .name   = N_("External RTSP port (NAT)"),
+      .desc   = N_("Enter external PORT if behind Forwarding redirection."
+                   "(0 = use the same local port)."),
+      .off    = offsetof(struct satip_server_conf, satip_nat_rtsp),
+      .opts   = PO_EXPERT,
+      .group  = 1,
+    },
+    {
       .type   = PT_BOOL,
       .id     = "satip_nom3u",
       .name   = N_("Disable X_SATIPM3U tag"),
@@ -878,6 +888,7 @@ static void satip_server_init_common(const char *prefix, int announce)
   char http_ip[128];
   int descramble, rewrite_pmt, muxcnf;
   char *nat_ip;
+  int nat_port;
 
   if (satip_server_rtsp_port <= 0)
     return;
@@ -900,13 +911,14 @@ static void satip_server_init_common(const char *prefix, int announce)
   rewrite_pmt = satip_server_conf.satip_rewrite_pmt;
   muxcnf = satip_server_conf.satip_muxcnf;
   nat_ip = strdup(satip_server_conf.satip_nat_ip ?: "");
+  nat_port = satip_server_conf.satip_nat_rtsp ?: satip_server_rtsp_port;
 
   if (announce)
     pthread_mutex_unlock(&global_lock);
 
   pthread_mutex_lock(&satip_server_reinit);
 
-  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf, nat_ip);
+  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf, nat_ip, nat_port);
   satip_server_info(prefix, descramble, muxcnf);
 
   if (announce)
