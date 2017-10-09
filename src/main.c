@@ -1000,7 +1000,10 @@ main(int argc, char **argv)
     }
     if (tmp[strlen(tmp)-1] == '/')
       tmp[strlen(tmp)-1] = '\0';
-    tvheadend_webroot = tmp;
+    if (tmp[0])
+      tvheadend_webroot = tmp;
+    else
+      free(tmp);
   }
   tvheadend_webui_debug = opt_uidebug;
 
@@ -1371,6 +1374,7 @@ main(int argc, char **argv)
   if (opt_dbus) dbus_shutdown();
 #endif
   tvh_gettext_done();
+  free((char *)tvheadend_webroot);
   return 0;
 }
 
