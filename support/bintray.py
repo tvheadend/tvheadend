@@ -351,11 +351,11 @@ def test_filename():
 
 def main(argv):
     global DEBUG
-    if argv[1] == '--test-filename':
+    if len(argv) > 1 and argv[1] == '--test-filename':
         return test_filename()
     if not BINTRAY_USER or not BINTRAY_PASS:
         error(2, 'No credentals')
-    if argv[1] == '--debug':
+    if len(argv) > 1 and argv[1] == '--debug':
         DEBUG=1
         argv.pop(0)
     cmd = 'do_' + (len(argv) > 1 and argv[1] or 'unknown')
