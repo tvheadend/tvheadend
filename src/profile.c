@@ -2556,7 +2556,7 @@ transcoder_create:
         (void)profile_create(NULL, e, 1);
       } else if (pro && idnode_is_instance(&pro->pro_id, &profile_transcode_class)) {
         profile_transcode_t *prot = (profile_transcode_t *)pro;
-        if (prot->pro_vcodec == NULL || prot->pro_vcodec[0] == '\0') {
+        if (tvh_str_default(prot->pro_vcodec, NULL) == NULL) {
           profile_delete(pro, 1);
           goto transcoder_create;
         }

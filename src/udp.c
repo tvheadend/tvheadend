@@ -110,7 +110,8 @@ static int
 udp_get_ifindex( const char *ifname )
 {
   unsigned int r;
-  if (ifname == NULL || *ifname == '\0')
+
+  if (tvh_str_default(ifname, NULL) == NULL)
     return 0;
 
   r = if_nametoindex(ifname);
@@ -124,7 +125,7 @@ udp_get_ifaddr( int fd, const char *ifname, struct in_addr *addr )
 {
   struct ifreq ifreq;
 
-  if (ifname == NULL || *ifname == '\0')
+  if (tvh_str_default(ifname, NULL) == NULL)
     return -1;
   
   memset(&ifreq, 0, sizeof(ifreq));

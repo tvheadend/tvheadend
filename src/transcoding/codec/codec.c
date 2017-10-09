@@ -159,7 +159,7 @@ tvh_codec_register(TVHCodec *self)
     static const size_t min_size = sizeof(TVHCodecProfile);
     AVCodec *codec = NULL;
 
-    if (!self->name || self->name[0] == '\0' ||
+    if (tvh_str_default(self->name, NULL) == NULL ||
         self->size < min_size || !self->idclass) {
         tvherror(LS_CODEC, "incomplete/wrong definition for '%s' codec",
                  self->name ? self->name : "<missing name>");

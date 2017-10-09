@@ -666,6 +666,10 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 #define MINMAX(a,mi,ma) MAX(mi, MIN(ma, a))
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
+static inline const char *tvh_str_default(const char *s, const char *dflt)
+{
+  return s && s[0] ? s : dflt;
+}
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
 

@@ -57,7 +57,7 @@ tvhva_init(const char *device)
 {
     TVHVADevice *vad;
 
-    if (device == NULL || *device == '\0')
+    if (tvh_str_default(device, NULL) == NULL)
         device = "/dev/dri/renderD128";
     LIST_FOREACH(vad, &tvhva_devices, link) {
         if (strcmp(vad->hw_device_name, device) == 0)

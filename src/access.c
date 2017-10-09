@@ -300,10 +300,10 @@ access_get_theme(access_t *a)
 {
   if (a == NULL)
     return "blue";
-  if (a->aa_theme == NULL || a->aa_theme[0] == '\0') {
-    if (config.theme_ui == NULL || config.theme_ui[0] == '\0')
+  if (tvh_str_default(a->aa_theme, NULL) == NULL) {
+    if (tvh_str_default(config.theme_ui, NULL) == NULL)
       return "blue";
-     return config.theme_ui;
+    return config.theme_ui;
   }
   return a->aa_theme;
 }
@@ -685,7 +685,7 @@ access_get(struct sockaddr_storage *src, const char *username, verify_callback_t
 {
   access_t *a = access_alloc();
   access_entry_t *ae;
-  int nouser = username == NULL || username[0] == '\0';
+  int nouser = tvh_str_default(username, NULL) == NULL;
 
   if (!access_noacl && access_ip_blocked(src))
     return a;

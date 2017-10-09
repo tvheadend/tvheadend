@@ -77,9 +77,7 @@ static const char *epggrab_mod_class_title(idnode_t *self, const char *lang)
 {
   epggrab_module_t *mod = (epggrab_module_t *)self;
   const char *s1 = tvh_gettext_lang(lang, epggrab_module_type(mod));
-  const char *s2 = mod->name;
-  if (s2 == NULL || s2[0] == '\0')
-    s2 = mod->id;
+  const char *s2 = tvh_str_default(mod->name, mod->id);
   snprintf(prop_sbuf, PROP_SBUF_LEN, "%s: %s", s1, s2);
   return prop_sbuf;
 }
