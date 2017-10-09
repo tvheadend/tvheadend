@@ -2458,6 +2458,11 @@ const char *config_get_server_name ( void )
   return tvh_str_default(config.server_name, "Tvheadend");
 }
 
+const char *config_get_http_server_name ( void )
+{
+  return tvh_str_default(config.http_server_name, "HTS/tvheadend");
+}
+
 const char *config_get_language ( void )
 {
   return tvh_str_default(config.language, "eng");

@@ -73,6 +73,7 @@ void        config_init    ( int backup );
 void        config_done    ( void );
 
 const char *config_get_server_name ( void );
+const char *config_get_http_server_name ( void );
 const char *config_get_language    ( void );
 const char *config_get_language_ui ( void );
 
