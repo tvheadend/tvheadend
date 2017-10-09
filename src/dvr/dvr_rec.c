@@ -53,7 +53,7 @@ const static int prio2weight[6] = {
   [DVR_PRIO_NORMAL]      = 300,
   [DVR_PRIO_LOW]         = 200,
   [DVR_PRIO_UNIMPORTANT] = 100,
-  [DVR_PRIO_NOTSET]      = 0,
+  [DVR_PRIO_NOTSET]      = 300, /* as DVR_PRIO_NORMAL */
 };
 
 /**
