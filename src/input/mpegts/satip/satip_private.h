@@ -134,6 +134,7 @@ struct satip_frontend
   char                      *sf_type_override;
   int                        sf_master;
   int                        sf_udp_rtp_port;
+  int                        sf_transport_mode;
   int                        sf_play2;
   int                        sf_tdelay;
   int                        sf_grace_period;

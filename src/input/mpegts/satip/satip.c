@@ -198,10 +198,14 @@ static const char *satip_tunercfg_tab[] = {
   "DVBS2-2,DVBT-2",
   "DVBT-1,DVBS2-1",
   "DVBT-2,DVBS2-2",
-  "DVBS2-1,DVB-C1",
-  "DVBS2-2,DVB-C2",
+  "DVBS2-1,DVBC-1",
+  "DVBS2-2,DVBC-2",
   "DVBC-1,DVBS2-1",
   "DVBC-2,DVBS2-2",
+  "DVBS2-4,DVBT-2",
+  "DVBS2-4,DVBC-2",
+  "DVBS2-4,DVBT-2,DVBC-2",
+  "DVBS2-8,DVBT-4,DVBC-4",
   NULL
 };
 
@@ -257,9 +261,10 @@ const idclass_t satip_device_class =
     {
       .type     = PT_BOOL,
       .id       = "tcp_mode",
-      .name     = N_("RTP/AVP/TCP (embedded data)"),
-      .desc     = N_("Enable or disable RTP/AVP/TCP transfer mode "
-                     "(embedded data in the RTSP session) support."),
+      .name     = N_("RTP/AVP/TCP transport supported"),
+      .desc     = N_("The server suports the Interlaved TCP transfer mode "
+                     "(embedded data in the RTSP session). And this option "
+                     "enables this mode in all tuners by default."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_tcp_mode),
     },

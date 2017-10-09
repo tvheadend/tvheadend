@@ -29,6 +29,15 @@
 #include <sys/socket.h>
 #endif
 
+
+typedef enum rtp_transport_mode
+{
+  RTP_SERVER_DEFAULT,     // Use server configuretion
+  RTP_UDP,                // Use regular RTP
+  RTP_INTERLEAVED,        // Use Interleaved RTP/AVP/TCP
+} rtp_transport_mode_t;
+
+
 /*
  *
  */
@@ -136,6 +145,17 @@ satip_frontend_class_override_enum( void * p, const char *lang )
   return m;
 }
 
+static htsmsg_t *
+satip_frontend_transport_mode_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Default server config"),    RTP_SERVER_DEFAULT },
+    { N_("RTP over UDP"),             RTP_UDP },
+    { N_("TCP Interleaved"),          RTP_INTERLEAVED },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 CLASS_DOC(satip_frontend)
 
 const idclass_t satip_frontend_class =
@@ -153,6 +173,15 @@ const idclass_t satip_frontend_class =
       .desc     = N_("SAT->IP frontend number."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_frontend_t, sf_number),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "transport_mode",
+      .name     = N_("Transport mode"),
+      .desc     = N_("Select the transport used for this tuner."),
+      .list     = satip_frontend_transport_mode_list,
+      .off      = offsetof(satip_frontend_t, sf_transport_mode),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_INT,
@@ -1569,7 +1598,9 @@ new_tune:
   seq         = -1;
   lfe->sf_seq = -1;
   play2       = 1;
-  rtsp_flags  = lfe->sf_device->sd_tcp_mode ? SATIP_SETUP_TCP : 0;
+  rtsp_flags  = lfe->sf_device->sd_tcp_mode;
+  if (lfe->sf_transport_mode != RTP_SERVER_DEFAULT)
+    rtsp_flags = lfe->sf_transport_mode == RTP_INTERLEAVED ? SATIP_SETUP_TCP : 0;
 
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
     if (udp_bind_double(&rtp, &rtcp,
