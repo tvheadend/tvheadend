@@ -857,7 +857,16 @@ parse_pids(char *p, mpegts_apids_t *pids)
     if (x == NULL)
       break;
     if (strcmp(x, "all") == 0) {
-      pids->all = 1;
+      if (satip_server_conf.satip_restrict_pids_all) {
+        pids->all = 0;
+        for (pid = 1; pid <= 2; pid++) /* CAT, TSDT */
+           mpegts_pid_add(pids, pid, MPS_WEIGHT_RAW);
+        for (pid = 0x10; pid < 0x20; pid++) /* NIT ... SIT */
+           mpegts_pid_add(pids, pid, MPS_WEIGHT_RAW);
+        mpegts_pid_add(pids, 0x1ffb, MPS_WEIGHT_RAW); /* ATSC */
+      } else {
+        pids->all = 1;
+      }
     } else {
       pids->all = 0;
       pid = atoi(x);

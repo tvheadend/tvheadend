@@ -678,6 +678,16 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "satip_restrict_pids_all",
+      .name   = N_("Restrict \"pids=all\""),
+      .desc   = N_("Replace the full Transport Stream with a range "
+                   "0x00-0x02,0x10-0x1F,0x1FFB pids only."),
+      .off    = offsetof(struct satip_server_conf, satip_restrict_pids_all),
+      .opts   = PO_EXPERT,
+      .group  = 1,
+    },
+    {
       .type   = PT_INT,
       .id     = "satip_weight",
       .name   = N_("Subscription weight"),
