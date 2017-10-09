@@ -729,6 +729,16 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "satip_drop_fe",
+      .name   = N_("Drop \"fe=\" parameter"),
+      .desc   = N_("Discard the frontend parameter in RTSP requests, "
+                   "as some clients incorretly use it."),
+      .off    = offsetof(struct satip_server_conf, satip_drop_fe),
+      .opts   = PO_EXPERT,
+      .group  = 1,
+    },
+    {
       .type   = PT_INT,
       .id     = "satip_muxcnf",
       .name   = N_("Mux handling"),

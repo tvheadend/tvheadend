@@ -949,6 +949,7 @@ rtsp_parse_cmd
   has_args = !TAILQ_EMPTY(&hc->hc_req_args);
 
   fe = atoi(http_arg_get_remove(&hc->hc_req_args, "fe") ?: 0);
+  fe = satip_server_conf.satip_drop_fe ? 0 : fe;
   s = http_arg_get_remove(&hc->hc_req_args, "addpids");
   if (parse_pids(s, &addpids)) goto end;
   s = http_arg_get_remove(&hc->hc_req_args, "delpids");
