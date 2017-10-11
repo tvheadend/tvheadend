@@ -2995,6 +2995,17 @@ dvr_entry_class_channel_icon_url_get(void *o)
 }
 
 static const void *
+dvr_entry_class_image_url_get(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  static const char *s = "";
+  if (!de->de_bcast || !de->de_bcast->episode || !de->de_bcast->episode->image)
+      return &s;
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", de->de_bcast->episode->image);
+  return &prop_sbuf_ptr;
+}
+
+static const void *
 dvr_entry_class_duplicate_get(void *o)
 {
   static time_t null = 0;
@@ -3167,6 +3178,14 @@ const idclass_t dvr_entry_class = {
       .set      = dvr_entry_class_channel_name_set,
       .off      = offsetof(dvr_entry_t, de_channel_name),
       .opts     = PO_RDONLY,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "image", /* Name chosen to be compatible with api_epg */
+      .name     = N_("Episode image"),
+      .desc     = N_("Episode image."),
+      .get      = dvr_entry_class_image_url_get,
+      .opts     = PO_HIDDEN | PO_RDONLY | PO_NOSAVE | PO_NOUI,
     },
     {
       .type     = PT_LANGSTR,

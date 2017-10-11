@@ -23,6 +23,7 @@ tvheadend.dvrDetails = function(uuid) {
         var duplicate = params[11].value;
         var autorec_caption = params[12].value;
         var timerec_caption = params[13].value;
+        var image = params[14].value;
         var content = '';
         var but;
 
@@ -54,6 +55,10 @@ tvheadend.dvrDetails = function(uuid) {
             content += '</div>'; /* x-epg-left */
             content += '<div class="x-epg-bottom">';
         }
+        if (image != null && image.length > 0) {
+          content += '<img class="x-epg-image" src="' + image + '">';
+        }
+
         content += '<hr class="x-epg-hr"/>';
         if (desc) {
             content += '<div class="x-epg-desc">' + desc + '</div>';
@@ -118,7 +123,7 @@ tvheadend.dvrDetails = function(uuid) {
             uuid: uuid,
             list: 'channel_icon,disp_title,disp_subtitle,episode,start_real,stop_real,' +
                   'duration,disp_description,status,filesize,comment,duplicate,' +
-                  'autorec_caption,timerec_caption'
+                  'autorec_caption,timerec_caption,image'
         },
         success: function(d) {
             d = json_decode(d);
@@ -302,6 +307,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         del: true,
         list: 'enabled,duplicate,disp_title,disp_subtitle,episode,channel,' +
+              'image,' +
               'start_real,stop_real,duration,pri,filesize,' +
               'sched_status,errors,data_errors,config_name,owner,creator,comment',
         columns: {
