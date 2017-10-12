@@ -193,7 +193,7 @@ const idclass_t mpegts_service_class =
       .id       = "dvb_ignore_eit",
       .name     = N_("Ignore EPG (EIT)"),
       .desc     = N_("Enable or disable ignoring of Event Information "
-                     "Table (EIT) data on this mux."),
+                     "Table (EIT) data for this service."),
       .off      = offsetof(mpegts_service_t, s_dvb_ignore_eit),
       .opts     = PO_EXPERT,
     },
