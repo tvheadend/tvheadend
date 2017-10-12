@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "settings.h"
 
@@ -1419,6 +1420,38 @@ static const char *_dvr_duplicate_get_dedup_program_id(const dvr_entry_t *de)
   return NULL;
 }
 
+/// Expect season and episode from an input string of
+/// "Season A/B.Episode Y/Z"
+/// or "Season A.Episode Y/Z"
+/// or "Season A.Episode Y"
+/// or some combination.
+static int64_t extract_season_episode(const char* ep)
+{
+  /* Go to first digit of season */
+  const char *ch = ep;
+  while (*ch && !isdigit(*ch))
+    ++ch;
+
+  /* atoi on the season */
+  int s=0;
+  while (isdigit(*ch))
+    s = (s  * 10) + (*ch++ - '0');
+
+  /* Now we're either on / or . */
+  while (*ch &&  *ch != '.')
+      ++ch;
+
+  /* Now we're on Episode */
+  while (*ch && !isdigit(*ch))
+    ++ch;
+  int e=0;
+  while (isdigit(*ch))
+    e = (e * 10) + (*ch++ - '0');
+
+  /* Now combine it together */
+  return ((int64_t)s) << 32 | e;
+}
+
 /// @return 1 if dup.
 static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void **aux)
 {
@@ -1459,11 +1492,14 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
    * fail to match xmltv vs OTA unless we compare only the season and
    * episode components and ignore the total number of episodes
    * component.
+   *
+   * Newer tv_grab gives "Season X/X.Episode Y/Z" so we have to
+   * be careful with the compare.
    */
   if (is_s_and_ep1 && is_s_and_ep2) {
-    const char *slash = strchr(s_ep1, '/');
-    const ssize_t num_char = slash ? slash - s_ep1 : strlen(s_ep1);
-    return strncmp(s_ep1, s_ep2, num_char) == 0 ? DUP : NOT_DUP;
+    const int64_t sepnum1 = extract_season_episode(s_ep1);
+    const int64_t sepnum2 = extract_season_episode(s_ep2);
+    return sepnum1 == sepnum2 ? DUP : NOT_DUP;
   }
 
   /* Only one has season and episode? Then can't be a dup with the
