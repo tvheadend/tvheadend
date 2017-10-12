@@ -226,7 +226,7 @@ _dvr_inotify_find
  */
 static void
 _dvr_inotify_moved
-  ( int fd, const char *from, const char *to )
+  ( int from_fd, const char *from, const char *to, int to_fd )
 {
   dvr_inotify_filename_t *dif;
   dvr_inotify_entry_t *die;
@@ -236,7 +236,7 @@ _dvr_inotify_moved
   htsmsg_t *m = NULL;
   htsmsg_field_t *f = NULL;
 
-  if (!(die = _dvr_inotify_find(fd)))
+  if (!(die = _dvr_inotify_find(from_fd)))
     return;
 
   snprintf(path, sizeof(path), "%s/%s", die->path, from);
@@ -260,7 +260,19 @@ _dvr_inotify_moved
     return;
 
   if (f && m) {
+    /* "to" will be NULL on a delete */
     if (to) {
+      /* If we have moved to another directory we are inotify watching
+       * then we get an fd for the directory we are moving to which is
+       * different to the one we are moving from. So fetch the
+       * directory details for that.
+       */
+      if (to_fd != -1 && to_fd != from_fd) {
+        if (!(die = _dvr_inotify_find(to_fd))) {
+          tvhdebug(LS_DVR, "Failed to _dvr_inotify_find for fd: %d", to_fd);
+          return;
+        }
+      }
       snprintf(path, sizeof(path), "%s/%s", die->path, to);
       htsmsg_set_str(m, "filename", path);
       idnode_changed(&de->de_id);
@@ -283,7 +295,7 @@ static void
 _dvr_inotify_delete
   ( int fd, const char *path )
 {
-  _dvr_inotify_moved(fd, path, NULL);
+  _dvr_inotify_moved(fd, path, NULL, -1);
 }
 
 /*
@@ -296,7 +308,7 @@ _dvr_inotify_moved_all
   dvr_inotify_filename_t *f;
   dvr_inotify_entry_t *die;
   dvr_entry_t *de;
-  
+
   if (!(die = _dvr_inotify_find(fd)))
     return;
 
@@ -359,7 +371,7 @@ void* _dvr_inotify_thread ( void *p )
         continue;
 
       } else if ((ev->mask & IN_MOVED_TO) && from && ev->cookie == cookie) {
-        _dvr_inotify_moved(ev->wd, from, ev->name);
+        _dvr_inotify_moved(fromfd, from, ev->name, ev->wd);
         from = NULL;
       
       /* Removed */
@@ -376,13 +388,14 @@ void* _dvr_inotify_thread ( void *p )
       }
 
       if (from) {
-        _dvr_inotify_moved(fromfd, from, NULL);
+        _dvr_inotify_moved(fromfd, from, NULL, -1);
         from   = NULL;
         cookie = 0;
       }
     }
-    if (from)
-      _dvr_inotify_moved(fromfd, from, NULL);
+    if (from) {
+      _dvr_inotify_moved(fromfd, from, NULL, -1);
+    }
     pthread_mutex_unlock(&global_lock);
   }
 
