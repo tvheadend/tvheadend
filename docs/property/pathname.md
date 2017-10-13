@@ -19,6 +19,7 @@ Format    | Description                                      | Example
 `$x`      | Filename extension (from the active stream muxer | mkv
 `%F`      | ISO 8601 date format                             | 2011-03-19
 `%R`      | The time in 24-hour notation                     | 14:12
+
 The format strings `$t`,`$s`,`%e`,`$c` also have delimiter variants such as 
 `$ t` (space after the dollar character), `$-t`, `$_t`,
 `$.t`, `$,t`, `$;t`. In these cases, the delimiter is applied 
