@@ -112,14 +112,20 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
   dvr_inotify_filename_t *dif;
   dvr_inotify_entry_t *e;
   const char *filename;
-  char *path;
   int fd = atomic_get(&_inot_fd);
 
   filename = htsmsg_get_str(m, "filename");
   if (filename == NULL || fd < 0)
     return;
 
-  path = tvh_strdupa(filename);
+  char path[PATH_MAX];
+  /* Since filename might be inside a symlinked directory
+   * we want to get the true name otherwise when we move
+   * a file we will not match correctly since some files
+   * may point to /mnt/a/z.ts and some to /mnt/b/z.ts
+   */
+  if (!realpath(filename, path))
+    return;
 
   SKEL_ALLOC(dvr_inotify_entry_skel);
   dvr_inotify_entry_skel->path = dirname(path);
@@ -143,6 +149,9 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
       tvherror(LS_DVR, "failed to add inotify watch to %s (err=%s)",
                e->path, strerror(errno));
       dvr_inotify_del(de);
+    } else {
+      tvhdebug(LS_DVR, "adding inotify watch to %s (fd=%d)",
+               e->path, e->fd);
     }
 
   }
@@ -240,6 +249,7 @@ _dvr_inotify_moved
     return;
 
   snprintf(path, sizeof(path), "%s/%s", die->path, from);
+  tvhdebug(LS_DVR, "inotify: moved from_fd: %d path: \"%s\" to: \"%s\" to_fd: %d", from_fd, path, to?:"<none>", to_fd);
 
   de = NULL;
   LIST_FOREACH(dif, &die->entries, link) {
@@ -249,8 +259,34 @@ _dvr_inotify_moved
     HTSMSG_FOREACH(f, de->de_files)
       if ((m = htsmsg_field_get_map(f)) != NULL) {
         filename = htsmsg_get_str(m, "filename");
-        if (filename && !strcmp(path, filename))
+        if (!filename)
+          continue;
+
+        /* Simple case of names match */
+        if (!strcmp(path, filename))
           break;
+
+        /* Otherwise get the real path (after symlinks)
+         * and compare that.
+         *
+         * This is made far more complicated since the
+         * file has already disappeared so we can't realpath
+         * on it, so we need to realpath on the directory
+         * it _was_ in, append the filename part and then
+         * compare against the realpath of the path we
+         * were given by inotify.
+         */
+        char *dir = tvh_strdupa(filename);
+        dir = dirname(dir);
+        char realdir[PATH_MAX];
+        if (realpath(dir, realdir)) {
+          char *file = tvh_strdupa(filename);
+          file = basename(file);
+          char complete[PATH_MAX];
+          snprintf(complete, sizeof complete, "%s/%s", realdir, file);
+          if (!strcmp(path, complete))
+            break;
+        }
       }
     if (f)
       break;
@@ -273,8 +309,11 @@ _dvr_inotify_moved
           return;
         }
       }
-      snprintf(path, sizeof(path), "%s/%s", die->path, to);
-      htsmsg_set_str(m, "filename", path);
+      char new_path[PATH_MAX];
+      snprintf(new_path, sizeof(path), "%s/%s", die->path, to);
+      char ubuf[UUID_HEX_SIZE];
+      tvhdebug(LS_DVR, "inotify: moved from name: \"%s\" to: \"%s\" for \"%s\"", path, new_path, idnode_uuid_as_str(&de->de_id, ubuf));
+      htsmsg_set_str(m, "filename", new_path);
       idnode_changed(&de->de_id);
     } else {
       htsmsg_field_destroy(de->de_files, f);
