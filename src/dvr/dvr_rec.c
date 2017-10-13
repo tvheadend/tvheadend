@@ -359,8 +359,8 @@ dvr_sub_episode(const char *id, const char *fmt, const void *aux, char *tmp, siz
 static const char *
 _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen, int with_genre_subdir)
 {
-  char date_buf[MAX(PATH_MAX, 512)] = { 0 };
-  char episode_buf[MAX(PATH_MAX, 512)] = { 0 };
+  char date_buf[512] = { 0 };
+  char episode_buf[512] = { 0 };
   const dvr_entry_t *de = aux;
   /* Can't be const due to call to epg_episode_number_format */
   /*const*/ epg_episode_t *episode = de->de_bcast ? de->de_bcast->episode : 0;
@@ -379,8 +379,8 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
     subtitle = desc = NULL;
   }
 
-  char title_buf[MAX(PATH_MAX, 512)] = { 0 };
-  char subtitle_buf[MAX(PATH_MAX, 512)] = { 0 };
+  char title_buf[512] = { 0 };
+  char subtitle_buf[512] = { 0 };
   /* Copy a cleaned version in to our buffers.
    * Since dvr_clean_directory_separator _can_ modify source if source!=dest
    * it means we have to remove our const when we call it.
