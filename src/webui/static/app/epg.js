@@ -417,7 +417,7 @@ tvheadend.epg = function() {
         new tvheadend.VideoPlayer(item.data.channelUuid);
     };
 
-    var actions = new Ext.ux.grid.RowActions({
+    var eventdetails = new Ext.ux.grid.RowActions({
         id: 'details',
         header: _('Details'),
         tooltip: _('Details'),
@@ -437,14 +437,23 @@ tvheadend.epg = function() {
                 cb: detailsfcn
             },
             {
+                iconIndex: 'dvrState'
+            }
+        ]
+    });
+
+    var eventactions = new Ext.ux.grid.RowActions({
+        id: 'eventactions',
+        header: _('Actions'),
+        tooltip: _('Actions'),
+        width: 67,
+        dataIndex: 'actions',
+        actions: [
+            {
                 iconCls: 'watchTv',
                 qtip: _('Watch TV'),
                 cb: watchfcn
-            },
-            {
-                iconIndex: 'dvrState'
             }
-                                                                                                          
         ]
     });
 
@@ -557,7 +566,8 @@ tvheadend.epg = function() {
     var epgCm = new Ext.grid.ColumnModel({
         defaultSortable: true,
         columns: [
-            actions,
+            eventdetails,
+            eventactions,
             new Ext.ux.grid.ProgressColumn({
                 width: 100,
                 header: _("Progress"),
@@ -1032,7 +1042,7 @@ tvheadend.epg = function() {
         stateId: 'epggrid',
         enableDragDrop: false,
         cm: epgCm,
-        plugins: [filter, actions],
+        plugins: [filter, eventdetails, eventactions],
         title: _('Electronic Program Guide'),
         iconCls: 'epg',
         store: epgStore,
@@ -1050,7 +1060,7 @@ tvheadend.epg = function() {
                    state.filters = {};
                    /* Otherwise this non-resizable column will not expand to newly set width */
                    if (state.columns)
-                       state.columns[0].width = actions.width;
+                       state.columns[0].width = eventdetails.width;
                }
             }
         }
