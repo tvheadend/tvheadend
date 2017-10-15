@@ -91,7 +91,7 @@ LIBFDKAAC_SHA1 = 9215d19bdd911954fd5bc879c707ab571716ba0d
 
 LIBOPUS        = opus-1.2.1
 LIBOPUS_TB     = $(LIBOPUS).tar.gz
-LIBOPUS_URL    = http://downloads.xiph.org/releases/opus/$(LIBOPUS_TB)
+LIBOPUS_URL    = https://archive.mozilla.org/pub/opus/$(LIBOPUS_TB)
 LIBOPUS_SHA1   = 35d108ca9d6a8d05e52d06c5421a5f95b39fdac9
 
 FFMPEG         = ffmpeg-3.4
