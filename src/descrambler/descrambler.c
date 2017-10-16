@@ -273,9 +273,6 @@ descrambler_init ( void )
   ffdecsa_init();
 #endif
   caclient_init();
-#if ENABLE_LINUXDVB_CA
-  dvbcam_init();
-#endif
 
   if ((c = hts_settings_load("descrambler")) != NULL) {
     m = htsmsg_get_list(c, "caid");
@@ -402,10 +399,6 @@ descrambler_service_start ( service_t *t )
   if (t->s_dvb_forcecaid != 0xffff)
     caclient_start(t);
 
-#if ENABLE_LINUXDVB_CA
-  dvbcam_service_start(t);
-#endif
-
   if (t->s_dvb_forcecaid == 0xffff) {
     pthread_mutex_lock(&t->s_stream_mutex);
     descrambler_external(t, 1);
@@ -422,10 +415,6 @@ descrambler_service_stop ( service_t *t )
   th_descrambler_data_t *dd;
   void *p;
   int i;
-
-#if ENABLE_LINUXDVB_CA
-  dvbcam_service_stop(t);
-#endif
 
   while ((td = LIST_FIRST(&t->s_descramblers)) != NULL)
     td->td_stop(td);

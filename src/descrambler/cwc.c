@@ -1637,7 +1637,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
 
   LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
 
-  descrambler_change_keystate((th_descrambler_t *)td, DS_READY, 0);
+  descrambler_change_keystate(td, DS_READY, 0);
 
 add:
   i = 0;

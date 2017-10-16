@@ -25,6 +25,7 @@
 struct mpegts_mux;
 
 extern const idclass_t caclient_class;
+extern const idclass_t caclient_dvbcam_class;
 extern const idclass_t caclient_cwc_class;
 extern const idclass_t caclient_cccam_class;
 extern const idclass_t caclient_capmt_class;
@@ -75,6 +76,8 @@ void caclient_caid_update(struct mpegts_mux *mux,
 void caclient_set_status(caclient_t *cac, caclient_status_t status);
 const char *caclient_get_status(caclient_t *cac);
 
+void caclient_foreach(void (*cb)(caclient_t *));
+
 void caclient_init(void);
 void caclient_done(void);
 
@@ -83,6 +86,7 @@ void tsdebugcw_new_keys(struct service *t, int type, uint16_t pid, uint8_t *odd,
 void tsdebugcw_go(void);
 void tsdebugcw_init(void);
 
+caclient_t *dvbcam_create(void);
 caclient_t *cwc_create(void);
 caclient_t *cccam_create(void);
 caclient_t *capmt_create(void);

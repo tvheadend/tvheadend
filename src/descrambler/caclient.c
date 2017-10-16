@@ -21,6 +21,9 @@
 #include "caclient.h"
 
 const idclass_t *caclient_classes[] = {
+#if ENABLE_LINUXDVB_CA
+  &caclient_dvbcam_class,
+#endif
 #if ENABLE_CWC
   &caclient_cwc_class,
 #endif
@@ -97,6 +100,10 @@ caclient_create
     tvherror(LS_CACLIENT, "unknown class %s!", s);
     return NULL;
   }
+#if ENABLE_LINUXDVB_CA
+  if (c == &caclient_dvbcam_class)
+    cac = dvbcam_create();
+#endif
 #if ENABLE_CWC
   if (c == &caclient_cwc_class)
     cac = cwc_create();
@@ -359,6 +366,17 @@ caclient_get_status(caclient_t *cac)
   }
 }
 
+void
+caclient_foreach(void (*cb)(caclient_t *))
+{
+  caclient_t *cac;
+
+  pthread_mutex_lock(&caclients_mutex);
+  TAILQ_FOREACH(cac, &caclients, cac_link)
+    cb(cac);
+  pthread_mutex_unlock(&caclients_mutex);
+}
+
 /*
  *  Initialize
  */
@@ -387,6 +405,25 @@ caclient_init(void)
     caclient_create(f->hmf_name, e, 0);
   }
   htsmsg_destroy(c);
+
+#if ENABLE_LINUXDVB_CA
+  {
+    caclient_t *cac;
+    pthread_mutex_lock(&caclients_mutex);
+    TAILQ_FOREACH(cac, &caclients, cac_link)
+      if (idnode_is_instance(&cac->cac_id, &caclient_dvbcam_class))
+        break;
+    pthread_mutex_unlock(&caclients_mutex);
+    if (cac == NULL) {
+      c = htsmsg_create_map();
+      htsmsg_add_str(c, "class", "caclient_dvbcam");
+      htsmsg_add_bool(c, "enabled", 1);
+      htsmsg_add_str(c, "name", "Linux DVB CAM (CI/CI+)");
+      htsmsg_add_str(c, "comment", "Hardware descrambling using Linux DVB CAM devices");
+      caclient_create(NULL, c, 1);
+    }
+  }
+#endif
 }
 
 void
