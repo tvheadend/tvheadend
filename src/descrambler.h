@@ -85,7 +85,9 @@ typedef struct th_descrambler_key {
 } th_descrambler_key_t;
 
 typedef struct th_descrambler_runtime {
+  th_descrambler_t *dr_descrambler;
   struct service *dr_service;
+  int    (*dr_descramble)(struct th_descrambler *d, const uint8_t *tsb, int len);
   int      dr_ca_count;
   int      dr_ca_resolved;
   int      dr_ca_failed;

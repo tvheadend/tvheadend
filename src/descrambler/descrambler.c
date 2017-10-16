@@ -1011,12 +1011,21 @@ descrambler_descramble ( service_t *t,
 
   lock_assert(&t->s_stream_mutex);
 
-  if (dr == NULL || dr->dr_external) {
+  if (dr == NULL) {
     if ((tsb[3] & 0x80) == 0) {
       ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
       return 1;
     }
-    return dr && dr->dr_external ? 1 : -1;
+    return -1;
+  }
+
+  if (dr->dr_descramble)
+    return dr->dr_descramble(dr->dr_descrambler, tsb, len);
+
+  if (dr->dr_external) {
+    if ((tsb[3] & 0x80) == 0)
+      ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
+    return 1;
   }
 
   if (!dr->dr_key_multipid) {
