@@ -563,7 +563,7 @@ try_again:
     c2 = aa->aa_conn_limit_streaming ? used >= aa->aa_conn_limit_streaming : -1;
 
     if (c1 && c2) {
-      if (started + sec2mono(3) < mclk()) {
+      if (started + sec2mono(5) < mclk()) {
         tvherror(LS_TCP, "multiple connections are not allowed for user '%s' from '%s' "
                         "(limit %u, streaming limit %u, active streaming %u, DVR %u)",
                  aa->aa_username ?: "", aa->aa_representative ?: "",
@@ -574,7 +574,7 @@ try_again:
       pthread_mutex_unlock(&global_lock);
       tvh_safe_usleep(250000);
       pthread_mutex_lock(&global_lock);
-      if (tvheadend_is_running())
+      if (!tcp_socket_dead(fd) && tvheadend_is_running())
         goto try_again;
       return NULL;
     }
