@@ -101,9 +101,12 @@ endif
 
 FFMPEG_PREFIX := $(BUILDDIR)/ffmpeg/build/ffmpeg
 FFMPEG_LIBDIR := $(FFMPEG_PREFIX)/lib
+FFMPEG_INCDIR := $(FFMPEG_PREFIX)/include
 FFMPEG_CONFIG := \
     PKG_CONFIG_LIBDIR=$(FFMPEG_LIBDIR)/pkgconfig $(PKG_CONFIG) \
-    --define-variable=prefix=$(FFMPEG_PREFIX) --static
+    --define-variable=prefix=$(FMPEG_PREFIX) \
+    --define-variable=includedir=$(FFMPEG_INCDIR) \
+    --define-variable=libdir=$(FFMPEG_LIBDIR) --static
 
 ifeq ($(CONFIG_LIBX264_STATIC),yes)
 FFMPEG_DEPS += libx264
