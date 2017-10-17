@@ -6,8 +6,6 @@
 
 !['IP Blocking' Tab](static/img/doc/users/ipblocking_tab.png)
 
-<tvh_include>inc/users_table</tvh_include>
-
 ### Notes on IP Blocking
 
 * You must enter a network prefix to block. For example, to block just `192.168.6.66`

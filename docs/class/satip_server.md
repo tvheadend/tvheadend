@@ -1,14 +1,10 @@
 <tvh_include>inc/config_contents</tvh_include>
 
-* [Configure Tvheadend as a SAT>IP Server (Basic Guide)](#configure-tvheadend-as-a-sat-ip-server-basic-guide-)
-
 ---
 
 <tvh_include>inc/config_overview</tvh_include>
 
 !['SAT\>IP Config tab'](static/img/doc/config/satip_server.png)
-
-<tvh_include>inc/config_table</tvh_include>
 
 <tvh_include>inc/config_notes</tvh_include>
 

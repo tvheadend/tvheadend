@@ -1,13 +1,13 @@
 # Electronic Program Guide
 
-Contents
-
-* [Overview](#overview)
-* [Filtering (or searching)](#filtering-or-searching-)
-* [Items (grid items)](#items)
-* [Event Details and Recording](#event-details-and-recording)
-* [Auto-recordings](#auto-recordings)
-* [Watching TV and Browser Codec Support](#watching-tv)
+Contents                                                               | Description
+-----------------------------------------------------------------------|--------------------------------------------
+[Overview](#overview)                                                  | EPG overview
+[Filtering (or searching)](#filtering-or-searching-)                   | Filtering the EPG
+[Items (grid items)](#items)                                           | EPG tab items
+[Event Details and Recording](#event-details-and-recording)            | Program event details and recording
+[Auto-recordings](#auto-recordings)                                    | Auto-recording
+[Watching TV and Browser Codec Support](#watching-tv)                  | Watching TV and browser codec support 
 
 ---
 

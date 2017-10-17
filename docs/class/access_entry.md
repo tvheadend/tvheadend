@@ -6,8 +6,6 @@
 
 !['Access Entries' Tab](static/img/doc/users/access_entries_tab.png)
 
-<tvh_include>inc/users_table</tvh_include>
-
 ### Notes on Access Entries
 
 * Wildcard (anonymous) accounts (that require no username or password) 
@@ -15,7 +13,9 @@ can be created by entering an asterisk `*` in the username/password field.
 These accounts are matched using the network prefix *(Allowed networks)*, 
 acting similar to a username.
 
-* The order of entries is **extremely** important! It's recommended 
+* Tvheadend verifies access by scanning through all enabled access control
+entries in sequence, from the top of the list to the bottom.
+The order of entries is **extremely** important! It's recommended 
 that you put wildcard (anonymous) accounts at top and all others 
 (with special permissions) at the bottom. 
 

@@ -380,7 +380,7 @@ PROP_DOC(runningstate)
 
 const idclass_t channel_class = {
   .ic_class      = "channel",
-  .ic_caption    = N_("Channels"),
+  .ic_caption    = N_("Channels / EPG - Channels"),
   .ic_doc        = tvh_doc_channel_class,
   .ic_event      = "channel",
   .ic_changed    = channel_class_changed,
@@ -1542,7 +1542,7 @@ CLASS_DOC(channeltag)
 
 const idclass_t channel_tag_class = {
   .ic_class      = "channeltag",
-  .ic_caption    = N_("Channel Tags"),
+  .ic_caption    = N_("Channels / EPG - Channel Tags"),
   .ic_doc        = tvh_doc_channeltag_class,
   .ic_event      = "channeltag",
   .ic_changed    = channel_tag_class_changed,
