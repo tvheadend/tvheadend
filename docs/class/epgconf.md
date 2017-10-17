@@ -1,21 +1,18 @@
-This tab is used to configure the Electronic Program Guide (EPG) 
-[grabbing](class/epggrab_mod) capabilities.
-
-!['EPG Grabber Configuration'](static/img/doc/epgconf/tab.png)
+<tvh_include>inc/channels_contents</tvh_include>
 
 ---
 
-### Menu Bar/Buttons
+# Overview
 
-The following functions are available:
+This tab is used to configure the Electronic Program Guide (EPG) 
+[grabbing](class/epggrab_mod) capabilities.
 
-Button                           | Function
----------------------------------|-------------------
-**Save**                         | Save any changes made to the tab.
-**Undo**                         | Revert any changes made since the last save.
-**Trigger OTA EPG Grabber**      | Force an immediate tune to the OTA EPG mux(es) to request EPG updates.
-**Re-run Internal EPG Grabbers** | Re-run all enabled [grabbers](class/epggrab_mod).
+!['EPG Grabber Configuration'](static/img/doc/channel/epgconf_tab.png)
 
-<tvh_include>inc/common_button_table_end</tvh_include>
+---
+
+## Buttons
+
+<tvh_include>inc/buttons</tvh_include>
 
 ---

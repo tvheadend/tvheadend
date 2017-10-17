@@ -1,9 +1,9 @@
 # Configuring for the First Time
 
-Contents 
-
-* [Using the Wizard](#using-the-wizard)
-* [Manual Set-up](#manual-set-up)
+Contents                                            | Description
+----------------------------------------------------|-----------------------------
+[Using the Wizard](#using-the-wizard)               | Getting to know the first-time-user wizard
+[Manual Set-up](#manual-set-up)                     | Set-up Tvheadend manually
 
 ---
 

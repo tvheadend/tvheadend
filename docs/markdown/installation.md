@@ -1,10 +1,10 @@
 # Installation
 
-Contents
-
-* [Basic Requirements](#basic-requirements)
-* [Install Your Tuners](#install-your-tuners)
-* [Install Tvheadend](#install-tvheadend)
+Contents                                                 | Description
+---------------------------------------------------------|------------------------------------ 
+[Basic Requirements](#basic-requirements)                | What's needed to run Tvheadend
+[Install Your Tuners](#install-your-tuners)              | Installing and setting up your hardware
+[Install Tvheadend](#install-tvheadend)                  | Where to get Tvheadend and how-to install it
 
 ---
 

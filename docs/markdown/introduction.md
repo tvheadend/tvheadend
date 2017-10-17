@@ -1,12 +1,12 @@
 # Introduction
 
-Contents
-
-* [Overview](#overview)
-* [Features](#features)
-* [Before You Begin](#before-you-begin)
-* [Using the Interface](#using-the-interface)
-* [About This Guide](#about-this-guide)
+Contents                                          | Description
+--------------------------------------------------|--------------------------
+[Overview](#overview)                             | Overview of Tvheadend
+[Features](#features)                             | List of features
+[Before you Begin](#before-you-begin)             | Useful information you'll need to know before using Tvheadend
+[Using the Interface](#using-the-interface)       | Getting to grips with the interface
+[About This Guide](#about-this-guide)             | About this guide and where to get help if you're stuck
 
 ---
 
@@ -112,7 +112,7 @@ clients may also be available).
 
 ---
 
-## Before You Begin
+## Before you Begin
 
 There are some basic concepts that will make life much easier if you
 understand them from the outset.

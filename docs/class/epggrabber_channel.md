@@ -1,18 +1,17 @@
-This tab displays EPG data used by channels.
-
-!['EPG Grabber Channels Tab'](static/img/doc/epggrabber_channel/tab.png)
+<tvh_include>inc/channels_contents</tvh_include>
 
 ---
 
-### Menu Bar/Buttons
+## Overview 
 
-The following functions are available:
+This tab displays EPG data used by channels.
 
-Button                      | Function
-----------------------------|-------------------
-**Save**                    | Save any changes made to the grid.
-**Undo**                    | Revert any changes made since the last save.
-**Delete**                  | Delete the selected grid entries.
-**Edit**                    | Edit the selected grid entries.
+!['EPG Grabber Channels Tab'](static/img/doc/channel/grabber_channels_tab.png)
+
+---
+
+## Buttons
+
+<tvh_include>inc/buttons</tvh_include>
 
 ---

@@ -6,8 +6,6 @@
 
 !['Passwords' Tab](static/img/doc/users/passwords_tab.png)
 
-<tvh_include>inc/users_table</tvh_include>
-
 ### Notes on Passwords
 
 * For a password to apply to an account, the username entered must match 

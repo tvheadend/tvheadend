@@ -1,3 +1,13 @@
+Contents                                   | Description
+-------------------------------------------|------------------------
+[Overview](#overview)                      | Tab overview
+[Service information](#service-information)| How to display service information
+[Items/Properties](#items)                 | Items and Properties
+
+---
+
+## Overview
+
 Services are automatically pulled from muxes and can be mapped to Channels.
 
 !['Services'](static/img/doc/dvbinputs/dvbinput_service.png)

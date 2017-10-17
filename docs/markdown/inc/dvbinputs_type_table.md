@@ -1,5 +1,3 @@
-
-
 Type                                                   | Description
 -------------------------------------------------------|--------------------------------------------
 **Frontends**                                          | **Where you configure the frontend, whether or not it's enabled etc.**
@@ -14,7 +12,6 @@ Type                                                   | Description
 [ISDB-C](class/linuxdvb_frontend_isdb_c)               | The master ISDB-C frontend (most ISDB-C tuners use this type).
 [DVB-S (SAT>IP Master)](class/satip_frontend_dvbs)     | The master SAT>IP DVB-S/S2 frontend (most SAT>IP DVB-S tuners use this type).
 [DVB-S (SAT>IP Slave)](class/satip_frontend_dvbs_slave)| A slave frontend (can be used to link with a master, mainly used for buggy drivers or frontends that share an input).
- -                                                     | - 
 **Satellite Configuration**                            | **Where you configure various settings related to your DVB-S tuners.**
 [Universal LNB](class/linuxdvb_satconf_lnbonly)        | Universal LNB - most DVB-S tuners.
 [2 Port](class/linuxdvb_satconf_2port)                 | 2 Port configuration.

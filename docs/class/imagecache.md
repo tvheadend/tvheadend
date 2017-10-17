@@ -6,8 +6,6 @@
 
 !['Image cache'](static/img/doc/config/imagecache.png)
 
-<tvh_include>inc/config_table</tvh_include>
-
 <tvh_include>inc/config_notes</tvh_include>
 
 ---

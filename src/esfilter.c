@@ -619,7 +619,7 @@ const idclass_t esfilter_class = {
 const idclass_t esfilter_class_video = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_video",
-  .ic_caption    = N_("Video Stream Filter"),
+  .ic_caption    = N_("Stream Filters - Video"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -713,7 +713,7 @@ const idclass_t esfilter_class_video = {
 const idclass_t esfilter_class_audio = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_audio",
-  .ic_caption    = N_("Audio Stream Filter"),
+  .ic_caption    = N_("Stream Filters - Audio"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -808,7 +808,7 @@ const idclass_t esfilter_class_audio = {
 const idclass_t esfilter_class_teletext = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_teletext",
-  .ic_caption    = N_("Teletext Stream Filter"),
+  .ic_caption    = N_("Stream Filters - Teletext"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -903,7 +903,7 @@ const idclass_t esfilter_class_teletext = {
 const idclass_t esfilter_class_subtit = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_subtit",
-  .ic_caption    = N_("Subtitle Stream Filter"),
+  .ic_caption    = N_("Stream Filters - Subtitles"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -998,7 +998,7 @@ const idclass_t esfilter_class_subtit = {
 const idclass_t esfilter_class_ca = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_ca",
-  .ic_caption    = N_("CA Stream Filter"),
+  .ic_caption    = N_("Stream Filters - CA"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -1103,7 +1103,7 @@ const idclass_t esfilter_class_ca = {
 const idclass_t esfilter_class_other = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_other",
-  .ic_caption    = N_("Other Stream Filter"),
+  .ic_caption    = N_("Stream Filters - Other"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
