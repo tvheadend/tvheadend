@@ -472,6 +472,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
    */
 
   size_t offset = 0;
+  const dvr_config_t *config = de->de_config;
 
   if (is_movie) {
     /* TV movies are probably best saved in one folder rather than
@@ -485,7 +486,12 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
      *   "title (yyyy)"                     (without genre_subdir)
      *   "title"                            (without genre_subdir, no airdate)
      */
-    if (with_genre_subdir)   tvh_strlcatf(tmp, tmplen, offset, "tvmovies/");
+    if (with_genre_subdir) {
+      const char *subdir = config && config->dvr_format_tvmovies_subdir && *config->dvr_format_tvmovies_subdir ?
+        config->dvr_format_tvmovies_subdir : "tvmovies";
+      tvh_strlcatf(tmp, tmplen, offset, "%s/", subdir);
+    }
+
     if (*title_buf)          tvh_strlcatf(tmp, tmplen, offset, "%s", title_buf);
     /* Movies don't have anything relevant in sub-titles field so
      * anything there should be ignored. I think some channels store a
@@ -507,7 +513,11 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
      *   "title - subtitle_2001-05-04"             (without genre_subdir, long running show)
      *   "title - subtitle"                        (without genre_subdir, no epg info on show)
      */
-    if (with_genre_subdir) tvh_strlcatf(tmp, tmplen, offset, "tvshows/");
+    if (with_genre_subdir) {
+      const char *subdir = config && config->dvr_format_tvshows_subdir && *config->dvr_format_tvshows_subdir ?
+                config->dvr_format_tvshows_subdir : "tvshows";
+      tvh_strlcatf(tmp, tmplen, offset, "%s/", subdir);
+    }
     if (*title_buf)        tvh_strlcatf(tmp, tmplen, offset, "%s/%s", title_buf, title_buf);
     if (*episode_buf)      tvh_strlcatf(tmp, tmplen, offset, " - %s", episode_buf);
     if (*subtitle_buf)     tvh_strlcatf(tmp, tmplen, offset, " - %s", subtitle_buf);
