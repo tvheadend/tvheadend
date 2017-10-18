@@ -96,6 +96,8 @@ typedef struct dvr_config {
   int dvr_skip_commercials;
   int dvr_subtitle_in_title;
   int dvr_windows_compatible_filenames;
+  char *dvr_format_tvmovies_subdir;
+  char *dvr_format_tvshows_subdir;
 
   struct dvr_entry_list dvr_entries;
   struct dvr_autorec_entry_list dvr_autorec_entries;
