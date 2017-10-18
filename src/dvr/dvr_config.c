@@ -189,6 +189,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_cleanup_threshold_free = 1000; // keep 1000 MiB of free space on disk by default
   cfg->dvr_cleanup_threshold_used = 0;    // disabled
   cfg->dvr_autorec_max_count = 50;
+  cfg->dvr_format_tvmovies_subdir = strdup("tvmovies");
+  cfg->dvr_format_tvshows_subdir = strdup("tvshows");
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_SYSTEM;
@@ -1309,12 +1311,12 @@ const idclass_t dvr_config_class = {
       .id       = "format-tvmovies-subdir",
       .name     = N_("Subdirectory for tvmovies for $q format specifier"),
       .desc     = N_("Subdirectory to use for tvmovies when using the $q specifier. "
-                     "Default value is \"tvmovies\". "
                      "This can contain any alphanumeric "
                      "characters (A-Za-z0-9). Other characters may be supported depending "
                      "on your OS and filesystem."
                      ),
       .off      = offsetof(dvr_config_t, dvr_format_tvmovies_subdir),
+      .def.s    = "tvmovies",
       .opts     = PO_ADVANCED,
       .group    = 6,
     },
@@ -1323,12 +1325,12 @@ const idclass_t dvr_config_class = {
       .id       = "format-tvshows-subdir",
       .name     = N_("Subdirectory for tvshows for $q format specifier"),
       .desc     = N_("Subdirectory to use for tvshows when using the $q specifier. "
-                     "Default value is \"tvshows\". "
                      "This can contain any alphanumeric "
                      "characters (A-Za-z0-9). Other characters may be supported depending "
                      "on your OS and filesystem."
                     ),
       .off      = offsetof(dvr_config_t, dvr_format_tvshows_subdir),
+      .def.s    = "tvshows",
       .opts     = PO_ADVANCED,
       .group    = 6,
     },
