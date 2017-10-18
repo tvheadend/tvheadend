@@ -1203,6 +1203,8 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
       *_de = dvr_entry_clone(de);
     dvr_thread_global_unlock(de);
     de = *_de;
+  } else {
+    ret = 1;
   }
 
   if (!*started) {
