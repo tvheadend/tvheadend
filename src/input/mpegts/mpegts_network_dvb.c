@@ -754,8 +754,11 @@ dvb_network_create_mux
       save |= COMPAREN(u.dmc_fe_qpsk.fec_inner, CBIT_FEC_INNER);
       break;
     case DVB_TYPE_C:
+    case DVB_TYPE_ATSC_C:
       save |= COMPARE(u.dmc_fe_qam.symbol_rate, CBIT_RATE);
       save |= COMPAREN(u.dmc_fe_qam.fec_inner, CBIT_FEC_INNER);
+      break;
+    case DVB_TYPE_ATSC_T:
       break;
     default:
       abort();
