@@ -1184,8 +1184,9 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
   profile_chain_t *prch = de->de_chain;
   int ret = 0;
 
-  if (*started &&
-      muxer_reconfigure(prch->prch_muxer, ss) < 0) {
+  if (*started) {
+    if (muxer_reconfigure(prch->prch_muxer, ss) >= 0)
+      return 1;
     tvhwarn(LS_DVR, "Unable to reconfigure \"%s\"",
             dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL));
 
@@ -1203,8 +1204,6 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
       *_de = dvr_entry_clone(de);
     dvr_thread_global_unlock(de);
     de = *_de;
-  } else {
-    ret = 1;
   }
 
   if (!*started) {
