@@ -376,7 +376,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
      * put in to both subtitle and description. So we really don't
      * want this to be used as the subtitle field.
      */
-    subtitle = desc = NULL;
+    subtitle = NULL;
   }
 
   char title_buf[512] = { 0 };
