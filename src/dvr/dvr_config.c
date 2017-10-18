@@ -264,6 +264,8 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
   free(cfg->dvr_preproc);
   free(cfg->dvr_postproc);
   free(cfg->dvr_postremove);
+  free(cfg->dvr_format_tvmovies_subdir);
+  free(cfg->dvr_format_tvshows_subdir);
   free(cfg);
 }
 
@@ -1299,6 +1301,34 @@ const idclass_t dvr_config_class = {
                      "or converted."),
       .doc      = prop_doc_dvrconfig_windows,
       .off      = offsetof(dvr_config_t, dvr_windows_compatible_filenames),
+      .opts     = PO_ADVANCED,
+      .group    = 6,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "format-tvmovies-subdir",
+      .name     = N_("Subdirectory for tvmovies for $q format specifier"),
+      .desc     = N_("Subdirectory to use for tvmovies when using the $q specifier. "
+                     "Default value is \"tvmovies\". "
+                     "This can contain any alphanumeric "
+                     "characters (A-Za-z0-9). Other characters may be supported depending "
+                     "on your OS and filesystem."
+                     ),
+      .off      = offsetof(dvr_config_t, dvr_format_tvmovies_subdir),
+      .opts     = PO_ADVANCED,
+      .group    = 6,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "format-tvshows-subdir",
+      .name     = N_("Subdirectory for tvshows for $q format specifier"),
+      .desc     = N_("Subdirectory to use for tvshows when using the $q specifier. "
+                     "Default value is \"tvshows\". "
+                     "This can contain any alphanumeric "
+                     "characters (A-Za-z0-9). Other characters may be supported depending "
+                     "on your OS and filesystem."
+                    ),
+      .off      = offsetof(dvr_config_t, dvr_format_tvshows_subdir),
       .opts     = PO_ADVANCED,
       .group    = 6,
     },
