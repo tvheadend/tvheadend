@@ -508,6 +508,20 @@ api_dvr_entry_file_moved
   return 0;
 }
 
+static int
+api_dvr_diskspace
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int64_t free, used, total;
+  int ret;
+  if (!(ret = dvr_get_disk_space(&free, &used, &total))) {
+    *resp = htsmsg_create_map();
+    htsmsg_add_s64(*resp, "freediskspace", free);
+    htsmsg_add_s64(*resp, "useddiskspace", used);
+  }
+  return ret;
+}
+
 
 void api_dvr_init ( void )
 {
@@ -544,6 +558,7 @@ void api_dvr_init ( void )
     { "dvr/timerec/class",         ACCESS_RECORDER, api_idnode_class, (void*)&dvr_timerec_entry_class },
     { "dvr/timerec/grid",          ACCESS_RECORDER, api_idnode_grid,  api_dvr_timerec_grid },
     { "dvr/timerec/create",        ACCESS_RECORDER, api_dvr_timerec_create, NULL },
+    { "dvr/diskspace",             ACCESS_RECORDER, api_dvr_diskspace, NULL },
 
     { NULL },
   };
