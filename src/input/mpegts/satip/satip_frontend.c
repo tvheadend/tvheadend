@@ -2047,7 +2047,7 @@ new_tune:
     }
 
     for (i = 0, unc = 0; i < tc; i++) {
-      if (satip_frontend_rtp_decode(lfe, &seq, &unc, iovec[i].iov_base + 4, iovec[i].iov_len - 4) == 0)
+      if (satip_frontend_rtp_decode(lfe, &seq, &unc, iovec[i].iov_base, iovec[i].iov_len) == 0)
         continue;
     }
     pthread_mutex_lock(&lfe->sf_dvr_lock);
