@@ -526,9 +526,11 @@ DEPS-LIBAV = \
 	src/tvhlog.c
 SRCS-LIBAV = \
 	src/libav.c \
-	src/input/mpegts/iptv/iptv_libav.c \
 	src/muxer/muxer_libav.c \
 	src/api/api_codec.c
+ifeq ($(CONFIG_IPTV),yes)
+SRCS-LIBAV += src/input/mpegts/iptv/iptv_libav.c
+endif
 SRCS-LIBAV += $(wildcard src/transcoding/*.c)
 SRCS-LIBAV += $(wildcard src/transcoding/transcode/*.c)
 SRCS-LIBAV += $(SRCS-HWACCELS)
