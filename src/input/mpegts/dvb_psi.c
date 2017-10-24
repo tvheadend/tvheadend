@@ -2261,6 +2261,12 @@ psi_desc_ca(mpegts_table_t *mt, mpegts_service_t *t, const uint8_t *buffer, int 
        provid = size < 4 ? 0 : buffer[4];
     }
     break;
+  case 0x1800: // Nagra
+    if (size == 0x7)
+      provid = extract_2byte(buffer + 5);
+    else
+      provid = 0;
+    break;
   default:
     provid = 0;
     break;
