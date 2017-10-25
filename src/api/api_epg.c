@@ -528,12 +528,12 @@ api_epg_alternative
   epg_broadcast_t *e;
   char *lang;
 
-  if (!htsmsg_get_u32(args, "eventId", &id))
+  if (htsmsg_get_u32(args, "eventId", &id))
     return -EINVAL;
 
   /* Main Job */
-  pthread_mutex_lock(&global_lock);
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
+  pthread_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
   if (e && e->episode)
     api_epg_episode_broadcasts(perm, l, lang, e->episode, &entries, e);
@@ -558,12 +558,12 @@ api_epg_related
   epg_episode_t *ep, *ep2;
   char *lang;
   
-  if (!htsmsg_get_u32(args, "eventId", &id))
+  if (htsmsg_get_u32(args, "eventId", &id))
     return -EINVAL;
 
   /* Main Job */
-  pthread_mutex_lock(&global_lock);
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
+  pthread_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
   ep = e ? e->episode : NULL;
   if (ep && ep->brand) {
