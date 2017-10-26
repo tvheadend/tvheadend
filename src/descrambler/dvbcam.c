@@ -385,6 +385,7 @@ caclient_t *dvbcam_create(void)
   dc->cac_start        = dvbcam_service_start;
   dc->cac_conf_changed = dvbcam_conf_changed;
   dc->cac_caid_update  = dvbcam_caid_update;
+  dc->limit            = 1;
   return (caclient_t *)dc;
 }
 
