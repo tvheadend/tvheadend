@@ -19,6 +19,7 @@
 #include "tvheadend.h"
 #include "settings.h"
 #include "caclient.h"
+#include "dvbcam.h"
 
 const idclass_t *caclient_classes[] = {
 #if ENABLE_LINUXDVB_CA
@@ -397,18 +398,20 @@ caclient_init(void)
   for (r = caclient_classes; *r; r++)
     idclass_register(*r);
 
-  if (!(c = hts_settings_load("caclient")))
-    return;
-  HTSMSG_FOREACH(f, c) {
-    if (!(e = htsmsg_field_get_map(f)))
-      continue;
-    caclient_create(f->hmf_name, e, 0);
+  if ((c = hts_settings_load("caclient"))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
+      caclient_create(f->hmf_name, e, 0);
+    }
+    htsmsg_destroy(c);
   }
-  htsmsg_destroy(c);
 
 #if ENABLE_LINUXDVB_CA
   {
     caclient_t *cac;
+
+    dvbcam_init();
     pthread_mutex_lock(&caclients_mutex);
     TAILQ_FOREACH(cac, &caclients, cac_link)
       if (idnode_is_instance(&cac->cac_id, &caclient_dvbcam_class))
