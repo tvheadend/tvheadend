@@ -298,7 +298,9 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
       if (c->use)
         TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link)
           if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid))
-            break;
+            goto end_of_search_for_cam;
+
+end_of_search_for_cam:
 
   if (ac == NULL)
     goto end;
