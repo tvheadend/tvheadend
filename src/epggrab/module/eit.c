@@ -619,6 +619,12 @@ static int _eit_process_event_one
 
   *save |= epg_broadcast_set_dvb_eid(ebc, eid, &changes2);
 
+  /* If dvb_eid is different in EIT to EPG update any DVR entries */
+  if (ebc->dvb_eid != eid) {
+    dvr_update_dvb_id(ebc, ebc->dvb_eid, eid);
+  }
+  
+  
   /* Summary/Description */
   if (ev.summary)
     *save |= epg_broadcast_set_summary(ebc, ev.summary, &changes2);
