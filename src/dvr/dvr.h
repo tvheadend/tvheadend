@@ -590,6 +590,8 @@ void dvr_event_updated(epg_broadcast_t *e);
 
 void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t running);
 
+void dvr_update_dvb_id(epg_broadcast_t *e, uint16_t old_eid, uint16_t new_eid);
+
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
 static inline dvr_entry_t *dvr_entry_find_by_uuid(const char *uuid)
