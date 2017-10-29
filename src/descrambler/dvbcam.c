@@ -289,7 +289,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
     count++;
   }
 
-  if (dc->limit <= count)
+  if (dc->limit > 0 && dc->limit <= count)
     goto end;
 
   /* check all elementary streams for CAIDs and find CAM */
