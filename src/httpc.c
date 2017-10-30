@@ -1026,9 +1026,12 @@ retry:
   }
 
   if (hc->hc_rsize < r + hc->hc_rpos) {
-    if (hc->hc_rsize + r > hc->hc_io_size + 20*1024)
+    if (hc->hc_rpos + r > hc->hc_io_size + 20*1024) {
+      tvhtrace(LS_HTTPC, "%04X: overflow, buf %zd pos %zd read %zd io %zd",
+               shortid(hc), hc->hc_rsize, hc->hc_rpos, r, hc->hc_io_size);
       return http_client_flush(hc, -EMSGSIZE);
-    hc->hc_rsize += r;
+    }
+    hc->hc_rsize += hc->hc_rpos + r + 4*1024;
     hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize + 1);
   }
   memcpy(hc->hc_rbuf + hc->hc_rpos, buf, r);
