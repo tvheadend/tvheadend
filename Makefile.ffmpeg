@@ -49,15 +49,15 @@ YASM_TB        = $(YASM).tar.gz
 YASM_URL       = http://www.tortall.net/projects/yasm/releases/$(YASM_TB)
 YASM_SHA1      = b7574e9f0826bedef975d64d3825f75fbaeef55e
 
-LIBX264        = x264-snapshot-20170515-2245
+LIBX264        = x264-snapshot-20170717-2245
 LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1   = 8079e472b3af5d54a20a8907d364b615a67fa6f2
+LIBX264_SHA1   = 1905ef0bf257c0f12eac0ed00ec18fbaa0b7d43f
 
-LIBX265        = x265_2.4
+LIBX265        = x265_2.5
 LIBX265_TB     = $(LIBX265).tar.gz
 LIBX265_URL    = http://ftp.videolan.org/videolan/x265/$(LIBX265_TB)
-LIBX265_SHA1   = f8bfb348defa86fbfdce4dcc1d0c48c855e0e987
+LIBX265_SHA1   = 239e51560a6bdde934142f1c6f884d6e37cbe755
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
 else
