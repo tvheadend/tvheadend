@@ -995,6 +995,8 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
       htsmsg_add_u32(conf, "copyright_year", e->episode->copyright_year);
     if (e->episode && e->episode->uri)
       htsmsg_add_str(conf, "uri", e->episode->uri);
+    if (e->episode && e->episode->image)
+      htsmsg_add_str(conf, "image", e->episode->image);
   } else if (title) {
     l = lang_str_create();
     lang_str_add(l, title, lang, 0);
@@ -3298,6 +3300,11 @@ static const void *
 dvr_entry_class_image_url_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
+  if (de->de_image) {
+    prop_ptr = de->de_image;
+    return &prop_ptr;
+  }
+
   static const char *s = "";
   if (!de->de_bcast || !de->de_bcast->episode || !de->de_bcast->episode->image)
       return &s;
@@ -3485,7 +3492,8 @@ const idclass_t dvr_entry_class = {
       .name     = N_("Episode image"),
       .desc     = N_("Episode image."),
       .get      = dvr_entry_class_image_url_get,
-      .opts     = PO_HIDDEN | PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .off      = offsetof(dvr_entry_t, de_image),
+      .opts     = PO_HIDDEN,
     },
     {
       .type     = PT_LANGSTR,
