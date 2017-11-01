@@ -9,6 +9,7 @@ import os, sys, time
 pids = {}
 pids_cc = {}
 pids_cc_err = {}
+pids_scrambled = {}
 
 # Open file
 fp = open(sys.argv[1])
@@ -32,6 +33,11 @@ while True:
   if pid == 0x1fff:
     continue
   cc = tsb[3]
+  if cc & 0xc0:
+    if pid not in pids_scrambled:
+      pids_scrambled[pid] = 1
+    else:
+      pids_scrambled[pid] += 1
   if cc & 0x10:
     cc &= 0x0f
     if pid in pids_cc and pids_cc[pid] != cc:
@@ -47,4 +53,6 @@ ks = pids.keys()
 ks.sort()
 for k in ks:
 #  if pids[k] <= int(sys.argv[2]): continue
-  print '%04X (%4d) - %d (err %d)' % (k, k, pids[k], k in pids_cc_err and pids_cc_err[k] or 0)
+  print '%04X (%4d) - %d (err %d, scr %d)' % (k, k, pids[k], \
+        k in pids_cc_err and pids_cc_err[k] or 0,
+        k in pids_scrambled and pids_scrambled[k] or 0)
