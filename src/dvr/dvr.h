@@ -228,6 +228,7 @@ typedef struct dvr_entry {
   /**
    * EPG information / links
    */
+  LIST_ENTRY(dvr_entry) de_bcast_link;
   epg_broadcast_t *de_bcast;
   char *de_episode;
 

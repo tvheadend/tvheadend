@@ -1906,6 +1906,7 @@ static void _epg_broadcast_destroy ( void *eo )
   if (ebc->keyword)     string_list_destroy(ebc->keyword);
   if (ebc->keyword_cached) lang_str_destroy(ebc->keyword_cached);
   _epg_object_destroy(eo, NULL);
+  assert(LIST_EMPTY(&ebc->dvr_entries));
   free(ebc);
 }
 

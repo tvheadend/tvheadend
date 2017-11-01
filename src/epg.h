@@ -29,6 +29,7 @@
  */
 struct channel;
 struct channel_tag;
+struct dvr_entry;
 struct epggrab_module;
 struct string_list;
 
@@ -537,6 +538,8 @@ struct epg_broadcast
   epg_serieslink_t          *serieslink;       ///< SeriesLink;
   struct channel            *channel;          ///< Channel being broadcast on
 
+  /* DVR */
+  LIST_HEAD(, dvr_entry)     dvr_entries;      ///< Associated DVR entries
 };
 
 /* Lookup */

@@ -231,6 +231,7 @@ dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
     if (de->de_bcast) {
       snprintf(id, sizeof(id), "%u", de->de_bcast->id);
       dvr_entry_trace(de, "unassign broadcast %s", id);
+      LIST_REMOVE(de, de_bcast_link);
       de->de_bcast->ops->putref((epg_object_t*)de->de_bcast);
       notify_delayed(id, "epg", "dvr_delete");
       de->de_bcast = NULL;
@@ -239,6 +240,7 @@ dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
     if (bcast) {
       bcast->ops->getref((epg_object_t*)bcast);
       de->de_bcast = bcast;
+      LIST_INSERT_HEAD(&bcast->dvr_entries, de, de_bcast_link);
       snprintf(id, sizeof(id), "%u", bcast->id);
       dvr_entry_trace(de, "assign broadcast %s", id);
       notify_delayed(id, "epg", "dvr_update");
@@ -2265,27 +2267,26 @@ void dvr_event_updated(epg_broadcast_t *e)
 
   if (e->channel == NULL)
     return;
-  LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
-    if (de->de_bcast != e)
-      continue;
+  LIST_FOREACH(de, &e->dvr_entries, de_bcast_link) {
+    assert(de->de_bcast == e);
     _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
                       NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
     found++;
   }
-  if (found == 0) {
-    LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
-      if (de->de_sched_state != DVR_SCHEDULED) continue;
-      if (de->de_bcast) continue;
-      if (dvr_entry_fuzzy_match(de, e, e->dvb_eid,
-                                de->de_config->dvr_update_window)) {
-        dvr_entry_trace_time2(de, "start", e->start, "stop", e->stop,
-                              "link to event %s on %s",
-                              epg_broadcast_get_title(e, NULL),
-                              channel_get_name(e->channel, channel_blank_name));
-        _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
-                          NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
-        break;
-      }
+  if (found)
+    return;
+  LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
+    if (de->de_sched_state != DVR_SCHEDULED) continue;
+    if (de->de_bcast) continue;
+    if (dvr_entry_fuzzy_match(de, e, e->dvb_eid,
+                              de->de_config->dvr_update_window)) {
+      dvr_entry_trace_time2(de, "start", e->start, "stop", e->stop,
+                            "link to event %s on %s",
+                            epg_broadcast_get_title(e, NULL),
+                            channel_get_name(e->channel, channel_blank_name));
+      _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
+                        NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
+      break;
     }
   }
 }
