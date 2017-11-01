@@ -245,10 +245,11 @@ dvbcam_service_destroy(th_descrambler_t *td)
   pthread_mutex_lock(&dvbcam_mutex);
   ac = as->ac;
   if (as->last_pmt) {
-    linuxdvb_ca_enqueue_capmt(ac->ca, ac->slot, as->last_pmt,
-                              as->last_pmt_len,
-                              CA_LIST_MANAGEMENT_UPDATE,
-                              CA_PMT_CMD_ID_NOT_SELECTED);
+    if (ac)
+      linuxdvb_ca_enqueue_capmt(ac->ca, ac->slot, as->last_pmt,
+                                as->last_pmt_len,
+                                CA_LIST_MANAGEMENT_UPDATE,
+                                CA_PMT_CMD_ID_NOT_SELECTED);
     free(as->last_pmt);
     do_active_programs = 1;
   }
