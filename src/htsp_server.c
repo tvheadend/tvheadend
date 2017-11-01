@@ -1003,8 +1003,13 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
       htsmsg_add_str(out, "creator", de->de_creator);
     if(de->de_comment)
       htsmsg_add_str(out, "comment", de->de_comment);
-    if(de->de_image && *de->de_image)
-      htsmsg_add_str(out, "image", de->de_image);
+    /* We use the accessor since it will also try to get
+     * an image from current EPG if recording does not have
+     * an associated image.
+     */
+    const char *image = dvr_entry_class_image_url_get(de);
+    if(image && *image)
+      htsmsg_add_str(out, "image", image);
     if (de->de_copyright_year)
       htsmsg_add_u32(out, "copyrightYear", de->de_copyright_year);
 

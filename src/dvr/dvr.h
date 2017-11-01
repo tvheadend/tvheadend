@@ -688,6 +688,7 @@ htsmsg_t * dvr_autorec_entry_class_time_list(void *o, const char *null);
 htsmsg_t * dvr_autorec_entry_class_weekdays_get(uint32_t weekdays);
 htsmsg_t * dvr_autorec_entry_class_weekdays_list (void *o, const char *list);
 char * dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays, const char *lang);
+const char *dvr_entry_class_image_url_get(const dvr_entry_t *o);
 
 void dvr_autorec_check_event(epg_broadcast_t *e);
 void dvr_autorec_check_brand(epg_brand_t *b);
