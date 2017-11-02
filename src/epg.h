@@ -62,15 +62,11 @@ extern int epg_in_load;
  *
  */
 typedef enum {
-  EPG_SOURCE_NONE   = 0,
-  EPG_SOURCE_EIT    = 1,
-} epg_source_t;
-
-typedef enum {
-  EPG_RUNNING_STOP  = 0,
-  EPG_RUNNING_WARM  = 1,
-  EPG_RUNNING_NOW   = 2,
-  EPG_RUNNING_PAUSE = 3,
+  EPG_RUNNING_NOTSET = 0,
+  EPG_RUNNING_STOP   = 1,
+  EPG_RUNNING_WARM   = 2,
+  EPG_RUNNING_NOW    = 3,
+  EPG_RUNNING_PAUSE  = 4,
 } epg_running_t;
 
 /* ************************************************************************
@@ -520,6 +516,7 @@ struct epg_broadcast
   uint8_t                    is_new;           ///< New series / file premiere
   uint8_t                    is_repeat;        ///< Repeat screening
   uint8_t                    running;          ///< EPG running flag
+  uint8_t                    update_running;   ///< new EPG running flag
 
   /* Broadcast level text */
   lang_str_t                *summary;          ///< Summary
@@ -556,12 +553,13 @@ int epg_broadcast_change_finish( epg_broadcast_t *b, uint32_t changed, int merge
 /* Special */
 epg_broadcast_t *epg_broadcast_clone
   ( struct channel *channel, epg_broadcast_t *src, int *save );
-void epg_broadcast_notify_running
-  ( epg_broadcast_t *b, epg_source_t esrc, epg_running_t running );
 
 /* Mutators */
 int epg_broadcast_set_dvb_eid
   ( epg_broadcast_t *b, uint16_t dvb_eid, uint32_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_running
+  ( epg_broadcast_t *b, epg_running_t running )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_episode
   ( epg_broadcast_t *b, epg_episode_t *e, uint32_t *changed )

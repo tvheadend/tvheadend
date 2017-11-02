@@ -2294,13 +2294,13 @@ void dvr_event_updated(epg_broadcast_t *e)
 /**
  * Event running status is updated
  */
-void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t running)
+void dvr_event_running(epg_broadcast_t *e, epg_running_t running)
 {
   dvr_entry_t *de;
   const char *srcname;
   char ubuf[UUID_HEX_SIZE];
 
-  if (esrc != EPG_SOURCE_EIT || e->dvb_eid == 0 || e->channel == NULL)
+  if (e->dvb_eid == 0 || e->channel == NULL)
     return;
   tvhtrace(LS_DVR, "dvr event running check for %s on %s running %d",
            epg_broadcast_get_title(e, NULL),

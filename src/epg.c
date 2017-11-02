@@ -1910,6 +1910,28 @@ static void _epg_broadcast_destroy ( void *eo )
   free(ebc);
 }
 
+static void _epg_broadcast_update_running ( epg_broadcast_t *broadcast )
+{
+  channel_t *ch;
+  epg_broadcast_t *now;
+  int orunning = broadcast->running;
+
+  broadcast->running = broadcast->update_running;
+  ch = broadcast->channel;
+  now = ch ? ch->ch_epg_now : NULL;
+  if (broadcast->update_running == EPG_RUNNING_STOP) {
+    if (now == broadcast && orunning == broadcast->running)
+      broadcast->stop = gclk() - 1;
+  } else {
+    if (broadcast != now && now) {
+      now->running = EPG_RUNNING_STOP;
+      dvr_event_running(now, EPG_RUNNING_STOP);
+    }
+  }
+  dvr_event_running(broadcast, broadcast->running);
+  broadcast->update_running = EPG_RUNNING_NOTSET;
+}
+
 static void _epg_broadcast_updated ( void *eo )
 {
   epg_broadcast_t *ebc = eo;
@@ -1929,6 +1951,8 @@ static void _epg_broadcast_updated ( void *eo )
   }
   if (ebc->channel) {
     dvr_event_updated(eo);
+    if (ebc->update_running != EPG_RUNNING_NOTSET)
+      _epg_broadcast_update_running(ebc);
     dvr_autorec_check_event(eo);
     channel_event_updated(eo);
   }
@@ -2059,26 +2083,12 @@ epg_broadcast_t *epg_broadcast_find_by_eid ( channel_t *ch, uint16_t eid )
   return NULL;
 }
 
-void epg_broadcast_notify_running
-  ( epg_broadcast_t *broadcast, epg_source_t esrc, epg_running_t running )
+int epg_broadcast_set_running
+  ( epg_broadcast_t *broadcast, epg_running_t running )
 {
-  channel_t *ch;
-  epg_broadcast_t *now;
-  int orunning = broadcast->running;
-
-  broadcast->running = running;
-  ch = broadcast->channel;
-  now = ch ? ch->ch_epg_now : NULL;
-  if (running == EPG_RUNNING_STOP) {
-    if (now == broadcast && orunning == broadcast->running)
-      broadcast->stop = gclk() - 1;
-  } else {
-    if (broadcast != now && now) {
-      now->running = EPG_RUNNING_STOP;
-      dvr_event_running(now, esrc, EPG_RUNNING_STOP);
-    }
-  }
-  dvr_event_running(broadcast, esrc, running);
+  int save = running != broadcast->running;
+  broadcast->update_running = running;
+  return save;
 }
 
 int epg_broadcast_set_episode 

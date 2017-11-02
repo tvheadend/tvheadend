@@ -746,7 +746,7 @@ tidy:
       case 4:  run = EPG_RUNNING_NOW;   break;
       default: run = EPG_RUNNING_STOP;  break;
       }
-      epg_broadcast_notify_running(ebc, EPG_SOURCE_EIT, run);
+      *save |= epg_broadcast_set_running(ebc, run);
     } else if (sect == 1 && running != 2 && running != 3 && running != 4) {
     }
   }

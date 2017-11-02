@@ -589,7 +589,7 @@ void dvr_event_removed(epg_broadcast_t *e);
 
 void dvr_event_updated(epg_broadcast_t *e);
 
-void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t running);
+void dvr_event_running(epg_broadcast_t *e, epg_running_t running);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
