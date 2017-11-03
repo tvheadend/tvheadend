@@ -611,8 +611,7 @@ typedef struct {
 typedef struct streaming_target {
   LIST_ENTRY(streaming_target) st_link;
   streaming_pad_t *st_pad;               /* Source we are linked to */
-
- streaming_ops_t st_ops;
+  streaming_ops_t st_ops;
   void *st_opaque;
   int st_reject_filter;
 } streaming_target_t;
