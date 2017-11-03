@@ -108,10 +108,8 @@ subscription_link_service(th_subscription_t *s, service_t *t)
   // Link to service output
   streaming_target_connect(&t->s_streaming_pad, &s->ths_input);
 
-  streaming_pad_deliver(&t->s_streaming_pad,
-                        streaming_msg_create_code(SMT_GRACE,
-                                                  s->ths_postpone +
-                                                    t->s_grace_delay));
+  sm = streaming_msg_create_code(SMT_GRACE, s->ths_postpone + t->s_grace_delay);
+  streaming_service_deliver(t, sm);
 
   if(s->ths_start_message != NULL && t->s_streaming_status & TSS_PACKETS) {
 

@@ -1893,7 +1893,7 @@ deliver:
   }
 
   /* Forward packet */
-  streaming_pad_deliver(&t->s_streaming_pad, streaming_msg_create_pkt(pkt));
+  streaming_service_deliver(t, streaming_msg_create_pkt(pkt));
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);

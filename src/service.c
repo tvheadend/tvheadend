@@ -1423,11 +1423,11 @@ service_servicetype_txt ( service_t *s )
 void
 service_send_streaming_status(service_t *t)
 {
+  streaming_message_t *sm;
   lock_assert(&t->s_stream_mutex);
 
-  streaming_pad_deliver(&t->s_streaming_pad,
-                        streaming_msg_create_code(SMT_SERVICE_STATUS,
-                                                  t->s_streaming_status));
+  sm = streaming_msg_create_code(SMT_SERVICE_STATUS, t->s_streaming_status);
+  streaming_service_deliver(t, sm);
 }
 
 /**
@@ -1467,6 +1467,7 @@ service_set_streaming_status_flags_(service_t *t, int set)
 void
 service_restart(service_t *t)
 {
+  streaming_message_t *sm;
   int had_components;
 
   if(t->s_type != STYPE_STD)
@@ -1480,19 +1481,16 @@ service_restart(service_t *t)
   service_build_filter(t);
 
   if(TAILQ_FIRST(&t->s_filt_components) != NULL) {
-    if (had_components)
-      streaming_pad_deliver(&t->s_streaming_pad,
-                            streaming_msg_create_code(SMT_STOP,
-                                                      SM_CODE_SOURCE_RECONFIGURED));
-
-    streaming_pad_deliver(&t->s_streaming_pad,
-                          streaming_msg_create_data(SMT_START,
-                                                    service_build_stream_start(t)));
+    if (had_components) {
+      sm = streaming_msg_create_code(SMT_STOP, SM_CODE_SOURCE_RECONFIGURED);
+      streaming_service_deliver(t, sm);
+    }
+    sm = streaming_msg_create_data(SMT_START, service_build_stream_start(t));
+    streaming_pad_deliver(&t->s_streaming_pad, sm);
     t->s_running = 1;
   } else {
-    streaming_pad_deliver(&t->s_streaming_pad,
-                          streaming_msg_create_code(SMT_STOP,
-                                                    SM_CODE_NO_SERVICE));
+    sm = streaming_msg_create_code(SMT_STOP, SM_CODE_NO_SERVICE);
+    streaming_service_deliver(t, sm);
     t->s_running = 0;
   }
 

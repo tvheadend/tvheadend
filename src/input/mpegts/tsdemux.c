@@ -438,11 +438,11 @@ ts_flush(mpegts_service_t *t, sbuf_t *sb)
 
   sm.sm_type = SMT_MPEGTS;
   sm.sm_data = pb;
-  streaming_pad_deliver(&t->s_streaming_pad, streaming_msg_clone(&sm));
+  streaming_service_deliver((service_t *)t, streaming_msg_clone(&sm));
 
   pktbuf_ref_dec(pb);
 
-  service_set_streaming_status_flags((service_t*)t, TSS_PACKETS);
+  service_set_streaming_status_flags((service_t *)t, TSS_PACKETS);
   t->s_streaming_live |= TSS_LIVE;
 
   sbuf_reset(sb, 2*TS_REMUX_BUFSIZE);

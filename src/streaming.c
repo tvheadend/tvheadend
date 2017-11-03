@@ -423,6 +423,15 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
 /**
  *
  */
+void
+streaming_service_deliver(service_t *t, streaming_message_t *sm)
+{
+  streaming_pad_deliver(&t->s_streaming_pad, sm);
+}
+
+/**
+ *
+ */
 const char *
 streaming_code2txt(int code)
 {

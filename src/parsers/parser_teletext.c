@@ -796,7 +796,7 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
   th_pkt_t *pkt = pkt_alloc(st->es_type, sub, off, pts, pts, pts);
   pkt->pkt_componentindex = st->es_index;
 
-  streaming_pad_deliver(&t->s_streaming_pad, streaming_msg_create_pkt(pkt));
+  streaming_service_deliver((service_t *)t, streaming_msg_create_pkt(pkt));
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);

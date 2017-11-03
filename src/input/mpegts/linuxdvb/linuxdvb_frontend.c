@@ -1220,7 +1220,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
   LIST_FOREACH(s, &mmi->mmi_mux->mm_transports, s_active_link) {
     pthread_mutex_lock(&s->s_stream_mutex);
-    streaming_pad_deliver(&s->s_streaming_pad, streaming_msg_clone(&sm));
+    streaming_service_deliver(s, streaming_msg_clone(&sm));
     pthread_mutex_unlock(&s->s_stream_mutex);
   }
 }

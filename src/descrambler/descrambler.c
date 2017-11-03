@@ -465,7 +465,7 @@ descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di )
   sm = streaming_msg_create(SMT_DESCRAMBLE_INFO);
   sm->sm_data = di;
 
-  streaming_pad_deliver(&t->s_streaming_pad, sm);
+  streaming_service_deliver((service_t *)t, sm);
 }
 
 static void

@@ -91,6 +91,8 @@ void streaming_target_disconnect(streaming_pad_t *sp, streaming_target_t *st);
 
 void streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm);
 
+void streaming_service_deliver(service_t *t, streaming_message_t *sm);
+
 void streaming_msg_free(streaming_message_t *sm);
 
 streaming_message_t *streaming_msg_clone(streaming_message_t *src);
