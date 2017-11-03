@@ -671,7 +671,7 @@ parse_mpa123(service_t *t, elementary_stream_t *st)
     default: fsize = 0;
     }
 
-    if (fsize && st->es_audio_version != layer) {
+    if (fsize && st->es_audio_version < layer) {
       st->es_audio_version = layer;
       atomic_set(&t->s_pending_restart, 1);
     }
@@ -1065,7 +1065,8 @@ parser_set_stream_vparam(elementary_stream_t *st, int width, int height,
     st->es_width = width;
     st->es_height = height;
     st->es_frame_duration = duration;
-    service_request_save(st->es_service, 1);
+    service_request_save(st->es_service, 0);
+    atomic_set(&st->es_service->s_pending_restart, 1);
   }
 }
 

@@ -1460,23 +1460,16 @@ service_set_streaming_status_flags_(service_t *t, int set)
 }
 
 /**
- * Restart output on a service.
+ * Restart output on a service (streams only).
  * Happens if the stream composition changes.
  * (i.e. an AC3 stream disappears, etc)
  */
 void
-service_restart(service_t *t)
+service_restart_streams(service_t *t)
 {
   streaming_message_t *sm;
-  int had_components;
-
-  if(t->s_type != STYPE_STD)
-    goto refresh;
-
-  pthread_mutex_lock(&t->s_stream_mutex);
-
-  had_components = TAILQ_FIRST(&t->s_filt_components) != NULL &&
-                   t->s_running;
+  int had_components = TAILQ_FIRST(&t->s_filt_components) != NULL &&
+                       t->s_running;
 
   service_build_filter(t);
 
@@ -1493,13 +1486,25 @@ service_restart(service_t *t)
     streaming_service_deliver(t, sm);
     t->s_running = 0;
   }
+}
 
-  pthread_mutex_unlock(&t->s_stream_mutex);
+/**
+ * Restart output on a service.
+ * Happens if the stream composition changes.
+ * (i.e. an AC3 stream disappears, etc)
+ */
+void
+service_restart(service_t *t)
+{
+  if (t->s_type == STYPE_STD) {
+    pthread_mutex_lock(&t->s_stream_mutex);
+    service_restart_streams(t);
+    pthread_mutex_unlock(&t->s_stream_mutex);
 
-  descrambler_caid_changed(t);
+    descrambler_caid_changed(t);
+  }
 
-refresh:
-  if(t->s_refresh_feed != NULL)
+  if (t->s_refresh_feed != NULL)
     t->s_refresh_feed(t);
 
   descrambler_service_start(t);

@@ -2660,7 +2660,7 @@ psi_parse_pmt
      update&PMT_UPDATE_CAID_PID          ? ", CAID PID changed":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
     
-    service_request_save((service_t*)t, 1);
+    service_request_save((service_t*)t, 0);
 
     // Only restart if something that our clients worry about did change
     if(update & ~(PMT_UPDATE_NEW_CA_STREAM |
@@ -2677,11 +2677,6 @@ psi_parse_pmt
     dvb_service_autoenable(t, "PAT and PMT");
     t->s_verified = 1;
   }
-
-  /* FIXME: Move pending_restart handling to another place? */
-  if (atomic_set(&t->s_pending_restart, 0) && !ret)
-    tvhdebug(mt->mt_subsys, "%s: Service \"%s\" forced restart",
-             mt->mt_name, service_nicename((service_t*)t));
 
   *_update = update;
   return ret;

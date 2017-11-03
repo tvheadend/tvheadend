@@ -617,6 +617,8 @@ struct streaming_start *service_build_stream_start(service_t *t);
 
 void service_restart(service_t *t);
 
+void service_restart_streams(service_t *t);
+
 void service_stream_destroy(service_t *t, elementary_stream_t *st);
 
 void service_request_save(service_t *t, int restart);

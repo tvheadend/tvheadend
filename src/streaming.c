@@ -426,6 +426,8 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
 void
 streaming_service_deliver(service_t *t, streaming_message_t *sm)
 {
+  if (atomic_set(&t->s_pending_restart, 0))
+    service_restart_streams(t);
   streaming_pad_deliver(&t->s_streaming_pad, sm);
 }
 

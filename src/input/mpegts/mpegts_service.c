@@ -462,7 +462,6 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
 
   /* Validate */
   assert(s->s_source_type == S_MPEG_TS);
-  lock_assert(&global_lock);
 
   /* Update */
   memset(si, 0, sizeof(struct source_info));
