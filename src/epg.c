@@ -179,16 +179,20 @@ static int _epg_object_putref ( void *o )
   return 0;
 }
 
-static void _epg_object_set_updated ( void *o )
+static void _epg_object_set_updated0 ( void *o )
 {
   epg_object_t *eo = o;
-  if (!eo->_updated) {
-    tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] updated",
-             eo, eo->id, eo->type, eo->uri);
-    eo->_updated = 1;
-    eo->updated  = gclk();
-    LIST_INSERT_HEAD(&epg_object_updated, eo, up_link);
-  }
+  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] updated",
+           eo, eo->id, eo->type, eo->uri);
+  eo->_updated = 1;
+  eo->updated  = gclk();
+  LIST_INSERT_HEAD(&epg_object_updated, eo, up_link);
+}
+
+static inline void _epg_object_set_updated ( void *o )
+{
+  if (!((epg_object_t *)o)->_updated)
+    _epg_object_set_updated0(o);
 }
 
 static int _epg_object_can_remove ( void *_old, void *_new )
@@ -2086,8 +2090,12 @@ epg_broadcast_t *epg_broadcast_find_by_eid ( channel_t *ch, uint16_t eid )
 int epg_broadcast_set_running
   ( epg_broadcast_t *broadcast, epg_running_t running )
 {
-  int save = running != broadcast->running;
-  broadcast->update_running = running;
+  int save = 0;
+  if (running != broadcast->running) {
+    broadcast->update_running = running;
+    _epg_object_set_updated(broadcast);
+    save = 1;
+  }
   return save;
 }
 
