@@ -195,7 +195,11 @@ tsfix_stop(tsfix_t *tf)
 static void
 tsfix_packet_drop(tfstream_t *tfs, th_pkt_t *pkt, const char *reason)
 {
-  pkt_trace(LS_TSFIX, pkt, "drop");
+  if (tvhtrace_enabled()) {
+    char buf[64];
+    snprintf(buf, sizeof(buf), "drop %s", reason);
+    pkt_trace(LS_TSFIX, pkt, buf);
+  }
   pkt_ref_dec(pkt);
 }
 
@@ -539,14 +543,17 @@ compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 static void
 tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 {
-  th_pkt_t *pkt = pkt_copy_shallow(sm->sm_data);
-  tfstream_t *tfs = tfs_find(tf, pkt), *tfs2;
-  streaming_msg_free(sm);
+  th_pkt_t *pkt;
+  tfstream_t *tfs, *tfs2;
   int64_t diff, diff2, threshold;
   int r;
 
+  pkt = pkt_copy_shallow(sm->sm_data);
+  tfs = tfs_find(tf, pkt);
+  streaming_msg_free(sm);
+
   if (tfs == NULL || mclk() < tf->tf_start_time) {
-    pkt_ref_dec(pkt);
+    tsfix_packet_drop(tfs, pkt, "start time");
     return;
   }
 
