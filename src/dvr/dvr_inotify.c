@@ -112,13 +112,13 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
   dvr_inotify_filename_t *dif;
   dvr_inotify_entry_t *e;
   const char *filename;
+  char path[PATH_MAX];
   int fd = atomic_get(&_inot_fd);
 
   filename = htsmsg_get_str(m, "filename");
   if (filename == NULL || fd < 0)
     return;
 
-  char path[PATH_MAX];
   /* Since filename might be inside a symlinked directory
    * we want to get the true name otherwise when we move
    * a file we will not match correctly since some files
@@ -244,6 +244,10 @@ _dvr_inotify_moved
   const char *filename;
   htsmsg_t *m = NULL;
   htsmsg_field_t *f = NULL;
+  char realdir[PATH_MAX];
+  char new_path[PATH_MAX];
+  char ubuf[UUID_HEX_SIZE];
+  char *dir = NULL;
 
   if (!(die = _dvr_inotify_find(from_fd)))
     return;
@@ -276,13 +280,12 @@ _dvr_inotify_moved
          * compare against the realpath of the path we
          * were given by inotify.
          */
-        char *dir = tvh_strdupa(filename);
+        dir = tvh_strdupa(filename);
         dir = dirname(dir);
-        char realdir[PATH_MAX];
         if (realpath(dir, realdir)) {
+          char complete[PATH_MAX];
           char *file = tvh_strdupa(filename);
           file = basename(file);
-          char complete[PATH_MAX];
           snprintf(complete, sizeof complete, "%s/%s", realdir, file);
           if (!strcmp(path, complete))
             break;
@@ -309,9 +312,7 @@ _dvr_inotify_moved
           return;
         }
       }
-      char new_path[PATH_MAX];
       snprintf(new_path, sizeof(path), "%s/%s", die->path, to);
-      char ubuf[UUID_HEX_SIZE];
       tvhdebug(LS_DVR, "inotify: moved from name: \"%s\" to: \"%s\" for \"%s\"", path, new_path, idnode_uuid_as_str(&de->de_id, ubuf));
       htsmsg_set_str(m, "filename", new_path);
       idnode_changed(&de->de_id);
