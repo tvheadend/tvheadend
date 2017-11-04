@@ -554,6 +554,7 @@ lav_muxer_add_marker(muxer_t* m)
 static int
 lav_muxer_close(muxer_t *m)
 {
+  AVFormatContext *oc;
   int ret = 0;
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
@@ -563,6 +564,11 @@ lav_muxer_close(muxer_t *m)
     lm->m_errors++;
     ret = -1;
   }
+
+  oc = lm->lm_oc;
+  avio_close(oc->pb);
+  oc->pb=NULL;
+
   return ret;
 }
 
@@ -585,11 +591,6 @@ lav_muxer_destroy(muxer_t *m)
   if (lm->lm_oc) {
     for(i=0; i<lm->lm_oc->nb_streams; i++)
       av_freep(&lm->lm_oc->streams[i]->codec->extradata);
-  }
-
-  if(lm->lm_oc && lm->lm_oc->pb) {
-    av_freep(&lm->lm_oc->pb->buffer);
-    av_freep(&lm->lm_oc->pb);
   }
 
   if(lm->lm_oc) {
