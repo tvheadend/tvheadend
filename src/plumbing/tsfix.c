@@ -571,13 +571,17 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
         break;
       }
     tf->tf_tsref = pkt->pkt_dts & PTS_MASK;
+    if (pts_is_greater_or_equal(pkt->pkt_pcr, pkt->pkt_dts) > 0)
+      tf->tf_tsref = pkt->pkt_pcr & PTS_MASK;
     diff = diff2 = tsfix_backlog_diff(tf);
     if (diff > threshold) {
       if (diff > 160000)
         diff = 160000;
       tf->tf_tsref = (tf->tf_tsref - diff) % PTS_MASK;
-      tvhtrace(LS_TSFIX, "reference clock set to %"PRId64" (backlog %"PRId64")", tf->tf_tsref, diff2);
+      tvhtrace(LS_TSFIX, "reference clock set to %"PRId64" (dts %"PRId64" pcr %"PRId64" backlog %"PRId64")", tf->tf_tsref, pkt->pkt_dts, pkt->pkt_pcr, diff2);
       tsfix_backlog(tf);
+    } else {
+      tvhtrace(LS_TSFIX, "reference clock set to %"PRId64" (dts %"PRId64" pcr %"PRId64" backlog %"PRId64")", tf->tf_tsref, pkt->pkt_dts, pkt->pkt_pcr, diff2);
     }
   } else if (txfix_need_to_update_ref(tf, tfs, pkt)) {
     r = tsfix_update_ref(tf, tfs, pkt);
