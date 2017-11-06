@@ -7,7 +7,7 @@
  *  Copyright (C) 2012 John Törnblom
  *
  *  code merge, fixes, enhancements
- *  Copyright (C) 2014,2015 Jaroslav Kysela
+ *  Copyright (C) 2014,2015,2016,2017 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1018,7 +1018,7 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
 {
   int64_t pts = pkt->pkt_pts, delta, nxt;
   unsigned char c_delta_flags[3];
-  int video = SCT_ISVIDEO(pkt->pkt_type);
+  int video = t->tracktype == 1;
   int keyframe = 0, skippable = 0;
 
   if (video) {
