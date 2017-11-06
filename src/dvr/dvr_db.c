@@ -3295,16 +3295,23 @@ static const void *
 dvr_entry_class_image_url_get_as_property(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
+  static const char *s = "";
+  /* We prefer the image from the broadcast to the one currently
+   * persisted.  This is because a programme scheduled far in the
+   * future may have a generic image that will be updated nearer the
+   * broadcast date with a more specific image.
+   */
+  if (de->de_bcast && de->de_bcast->episode && de->de_bcast->episode->image) {
+    snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", de->de_bcast->episode->image);
+    return &prop_sbuf_ptr;
+  }
+
   if (de->de_image) {
     prop_ptr = de->de_image;
     return &prop_ptr;
   }
 
-  static const char *s = "";
-  if (!de->de_bcast || !de->de_bcast->episode || !de->de_bcast->episode->image)
-      return &s;
-  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", de->de_bcast->episode->image);
-  return &prop_sbuf_ptr;
+  return &s;
 }
 
 const char *
@@ -3501,7 +3508,7 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Episode image."),
       .get      = dvr_entry_class_image_url_get_as_property,
       .off      = offsetof(dvr_entry_t, de_image),
-      .opts     = PO_HIDDEN,
+      .opts     = PO_HIDDEN | PO_RDONLY,
     },
     {
       .type     = PT_LANGSTR,
