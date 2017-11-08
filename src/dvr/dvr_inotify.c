@@ -247,7 +247,7 @@ _dvr_inotify_moved
   char realdir[PATH_MAX];
   char new_path[PATH_MAX];
   char ubuf[UUID_HEX_SIZE];
-  char *dir = NULL;
+  char *file, *dir = NULL;
 
   if (!(die = _dvr_inotify_find(from_fd)))
     return;
@@ -283,11 +283,9 @@ _dvr_inotify_moved
         dir = tvh_strdupa(filename);
         dir = dirname(dir);
         if (realpath(dir, realdir)) {
-          char complete[PATH_MAX];
-          char *file = tvh_strdupa(filename);
           file = basename(file);
-          snprintf(complete, sizeof complete, "%s/%s", realdir, file);
-          if (!strcmp(path, complete))
+          snprintf(new_path, sizeof(new_path), "%s/%s", realdir, file);
+          if (!strcmp(path, new_path))
             break;
         }
       }
