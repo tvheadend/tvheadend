@@ -2390,6 +2390,24 @@ void dvr_event_running(epg_broadcast_t *e, epg_running_t running)
 }
 
 /**
+ * Update dvr_eid 
+ */
+void dvr_update_dvb_id(epg_broadcast_t *e, uint16_t old_eid, uint16_t new_eid)
+{
+  dvr_entry_t *de;
+
+  LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
+    if (de->de_dvb_eid == old_eid) {
+      de->de_dvb_eid = new_eid;
+      dvr_entry_changed_notify(de);
+      tvhtrace(LS_DVR, "Update dvb eid for %s on %s",
+               epg_broadcast_get_title(e, NULL),
+               channel_get_name(e->channel, channel_blank_name));
+    }
+  }
+}
+
+/**
  *
  */
 void
