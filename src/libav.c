@@ -270,8 +270,10 @@ libav_vaapi_init(void)
 {
 #if ENABLE_VAAPI
 #ifdef VA_FOURCC_I010
+#if !VA_CHECK_VERSION(1, 0, 0)
   vaSetErrorCallback(libav_va_error_callback);
   vaSetInfoCallback(libav_va_info_callback);
+#endif
 #endif
 #endif
 }
