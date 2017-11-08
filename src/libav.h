@@ -65,7 +65,7 @@ void libav_done(void);
 #else
 
 static inline void libav_set_loglevel(void) { };
-static inline void libav_vaapi_init_context(void *) { };
+static inline void libav_vaapi_init_context(void *context) { };
 static inline void libav_init(void) { };
 static inline void libav_done(void) { };
 
