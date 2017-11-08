@@ -283,7 +283,7 @@ _dvr_inotify_moved
         dir = tvh_strdupa(filename);
         dir = dirname(dir);
         if (realpath(dir, realdir)) {
-          file = basename(file);
+          file = basename(tvh_strdupa(filename));
           snprintf(new_path, sizeof(new_path), "%s/%s", realdir, file);
           if (!strcmp(path, new_path))
             break;
