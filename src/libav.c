@@ -242,12 +242,20 @@ static void libav_va_log(int severity, const char *msg)
   tvhlog(severity, LS_VAAPI, "%s", s);
 }
 
+#if VA_CHECK_VERSION(1, 0, 0)
+static void libav_va_error_callback(void *context, const char *msg)
+#else
 static void libav_va_error_callback(const char *msg)
+#endif
 {
   libav_va_log(LOG_ERR, msg);
 }
 
+#if VA_CHECK_VERSION(1, 0, 0)
+static void libav_va_info_callback(void *context, const char *msg)
+#else
 static void libav_va_info_callback(const char *msg)
+#endif
 {
   libav_va_log(LOG_INFO, msg);
 }
@@ -264,6 +272,22 @@ libav_vaapi_init(void)
 #ifdef VA_FOURCC_I010
   vaSetErrorCallback(libav_va_error_callback);
   vaSetInfoCallback(libav_va_info_callback);
+#endif
+#endif
+}
+
+/**
+ *
+ */
+void
+libav_vaapi_init_context(void *context)
+{
+#if ENABLE_VAAPI
+#ifdef VA_FOURCC_I010
+#if VA_CHECK_VERSION(1, 0, 0)
+  vaSetErrorCallback(context, libav_va_error_callback, NULL);
+  vaSetInfoCallback(context, libav_va_info_callback, NULL);
+#endif
 #endif
 #endif
 }

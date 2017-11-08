@@ -409,6 +409,9 @@ tvhva_context_setup(TVHVAContext *self, AVCodecContext *avctx)
     if (!(self->display = tvhva_context_display(self, avctx))) {
         return -1;
     }
+
+    libav_vaapi_init_context(self->display);
+
     if ((profile = tvhva_context_profile(self, avctx)) == VAProfileNone ||
         tvhva_context_check_profile(self, profile)) {
         tvherror(LS_VAAPI, "%s: unsupported codec: %s and/or profile: %s",
