@@ -2005,6 +2005,10 @@ static dvr_entry_t *_dvr_entry_update
       updated = 1;
       dvr_entry_set_timer(de);
     }
+    if (e && e->dvb_eid != de->de_dvb_eid) {
+      de->de_dvb_eid = e->dvb_eid;
+      save |= DVR_UPDATED_EID;
+    }
     if (de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_COMPLETED) {
       if (playcount >= 0 && playcount != de->de_playcount) {
         de->de_playcount = playcount;
