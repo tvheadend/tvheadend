@@ -112,14 +112,20 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
   dvr_inotify_filename_t *dif;
   dvr_inotify_entry_t *e;
   const char *filename;
-  char *path;
+  char path[PATH_MAX];
   int fd = atomic_get(&_inot_fd);
 
   filename = htsmsg_get_str(m, "filename");
   if (filename == NULL || fd < 0)
     return;
 
-  path = tvh_strdupa(filename);
+  /* Since filename might be inside a symlinked directory
+   * we want to get the true name otherwise when we move
+   * a file we will not match correctly since some files
+   * may point to /mnt/a/z.ts and some to /mnt/b/z.ts
+   */
+  if (!realpath(filename, path))
+    return;
 
   SKEL_ALLOC(dvr_inotify_entry_skel);
   dvr_inotify_entry_skel->path = dirname(path);
@@ -143,6 +149,9 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
       tvherror(LS_DVR, "failed to add inotify watch to %s (err=%s)",
                e->path, strerror(errno));
       dvr_inotify_del(de);
+    } else {
+      tvhdebug(LS_DVR, "adding inotify watch to %s (fd=%d)",
+               e->path, e->fd);
     }
 
   }
@@ -226,7 +235,7 @@ _dvr_inotify_find
  */
 static void
 _dvr_inotify_moved
-  ( int fd, const char *from, const char *to )
+  ( int from_fd, const char *from, const char *to, int to_fd )
 {
   dvr_inotify_filename_t *dif;
   dvr_inotify_entry_t *die;
@@ -235,11 +244,16 @@ _dvr_inotify_moved
   const char *filename;
   htsmsg_t *m = NULL;
   htsmsg_field_t *f = NULL;
+  char realdir[PATH_MAX];
+  char new_path[PATH_MAX];
+  char ubuf[UUID_HEX_SIZE];
+  char *dir = NULL;
 
-  if (!(die = _dvr_inotify_find(fd)))
+  if (!(die = _dvr_inotify_find(from_fd)))
     return;
 
   snprintf(path, sizeof(path), "%s/%s", die->path, from);
+  tvhdebug(LS_DVR, "inotify: moved from_fd: %d path: \"%s\" to: \"%s\" to_fd: %d", from_fd, path, to?:"<none>", to_fd);
 
   de = NULL;
   LIST_FOREACH(dif, &die->entries, link) {
@@ -249,8 +263,33 @@ _dvr_inotify_moved
     HTSMSG_FOREACH(f, de->de_files)
       if ((m = htsmsg_field_get_map(f)) != NULL) {
         filename = htsmsg_get_str(m, "filename");
-        if (filename && !strcmp(path, filename))
+        if (!filename)
+          continue;
+
+        /* Simple case of names match */
+        if (!strcmp(path, filename))
           break;
+
+        /* Otherwise get the real path (after symlinks)
+         * and compare that.
+         *
+         * This is made far more complicated since the
+         * file has already disappeared so we can't realpath
+         * on it, so we need to realpath on the directory
+         * it _was_ in, append the filename part and then
+         * compare against the realpath of the path we
+         * were given by inotify.
+         */
+        dir = tvh_strdupa(filename);
+        dir = dirname(dir);
+        if (realpath(dir, realdir)) {
+          char complete[PATH_MAX];
+          char *file = tvh_strdupa(filename);
+          file = basename(file);
+          snprintf(complete, sizeof complete, "%s/%s", realdir, file);
+          if (!strcmp(path, complete))
+            break;
+        }
       }
     if (f)
       break;
@@ -260,9 +299,22 @@ _dvr_inotify_moved
     return;
 
   if (f && m) {
+    /* "to" will be NULL on a delete */
     if (to) {
-      snprintf(path, sizeof(path), "%s/%s", die->path, to);
-      htsmsg_set_str(m, "filename", path);
+      /* If we have moved to another directory we are inotify watching
+       * then we get an fd for the directory we are moving to which is
+       * different to the one we are moving from. So fetch the
+       * directory details for that.
+       */
+      if (to_fd != -1 && to_fd != from_fd) {
+        if (!(die = _dvr_inotify_find(to_fd))) {
+          tvhdebug(LS_DVR, "Failed to _dvr_inotify_find for fd: %d", to_fd);
+          return;
+        }
+      }
+      snprintf(new_path, sizeof(path), "%s/%s", die->path, to);
+      tvhdebug(LS_DVR, "inotify: moved from name: \"%s\" to: \"%s\" for \"%s\"", path, new_path, idnode_uuid_as_str(&de->de_id, ubuf));
+      htsmsg_set_str(m, "filename", new_path);
       idnode_changed(&de->de_id);
     } else {
       htsmsg_field_destroy(de->de_files, f);
@@ -283,7 +335,7 @@ static void
 _dvr_inotify_delete
   ( int fd, const char *path )
 {
-  _dvr_inotify_moved(fd, path, NULL);
+  _dvr_inotify_moved(fd, path, NULL, -1);
 }
 
 /*
@@ -296,7 +348,7 @@ _dvr_inotify_moved_all
   dvr_inotify_filename_t *f;
   dvr_inotify_entry_t *die;
   dvr_entry_t *de;
-  
+
   if (!(die = _dvr_inotify_find(fd)))
     return;
 
@@ -359,7 +411,7 @@ void* _dvr_inotify_thread ( void *p )
         continue;
 
       } else if ((ev->mask & IN_MOVED_TO) && from && ev->cookie == cookie) {
-        _dvr_inotify_moved(ev->wd, from, ev->name);
+        _dvr_inotify_moved(fromfd, from, ev->name, ev->wd);
         from = NULL;
       
       /* Removed */
@@ -376,13 +428,14 @@ void* _dvr_inotify_thread ( void *p )
       }
 
       if (from) {
-        _dvr_inotify_moved(fromfd, from, NULL);
+        _dvr_inotify_moved(fromfd, from, NULL, -1);
         from   = NULL;
         cookie = 0;
       }
     }
-    if (from)
-      _dvr_inotify_moved(fromfd, from, NULL);
+    if (from) {
+      _dvr_inotify_moved(fromfd, from, NULL, -1);
+    }
     pthread_mutex_unlock(&global_lock);
   }
 
