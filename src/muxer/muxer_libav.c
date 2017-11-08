@@ -401,6 +401,7 @@ lav_muxer_open_file(muxer_t *m, const char *filename)
   char buf[256];
   int r;
 
+  lm->lm_fd = -1;
   oc = lm->lm_oc;
   snprintf(oc->filename, sizeof(oc->filename), "%s", filename);
 
@@ -566,8 +567,13 @@ lav_muxer_close(muxer_t *m)
   }
 
   oc = lm->lm_oc;
-  avio_close(oc->pb);
-  oc->pb=NULL;
+  if (lm->lm_fd >= 0) {
+    av_freep(&oc->pb->buffer);
+    avio_context_free(&oc->pb);
+    lm->lm_fd = -1;
+  } else {
+    avio_closep(&oc->pb);
+  }
 
   return ret;
 }
