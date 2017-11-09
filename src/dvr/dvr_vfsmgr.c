@@ -50,17 +50,17 @@ static tasklet_t dvr_disk_space_tasklet;
  *
  */
 static dvr_vfs_t *
-dvr_vfs_find(dvr_vfs_t *old, tvh_fsid_t id)
+dvr_vfs_find(dvr_vfs_t *old, tvh_fsid_t *id)
 {
   dvr_vfs_t *dv;
 
-  if (old && old->fsid == id)
+  if (old && tvh_vfs_fsid_match(&old->fsid, id))
     return old;
   LIST_FOREACH(dv, &dvrvfs_list, link)
-    if (dv->fsid == id)
+    if (tvh_vfs_fsid_match(&dv->fsid, id))
       return dv;
   dv = calloc(1, sizeof(*dv));
-  dv->fsid = id;
+  dv->fsid = *id;
   LIST_INSERT_HEAD(&dvrvfs_list, dv, link);
   return dv;
 }
@@ -69,9 +69,19 @@ static dvr_vfs_t *
 dvr_vfs_find1(dvr_vfs_t *old, htsmsg_t *m)
 {
   int64_t v;
+  tvh_fsid_t fsid;
+  const char *s;
 
-  if (!htsmsg_get_s64(m, "fsid", &v))
-    return dvr_vfs_find(old, v);
+  if (!htsmsg_get_s64(m, "fsid", &v)) {
+    fsid.fsid = v;
+    fsid.id[0] = '\0';
+    return dvr_vfs_find(old, &fsid);
+  } else if ((s = htsmsg_get_str(m, "fsid0")) != NULL) {
+    fsid.fsid = 0;
+    strncpy(fsid.id, s, sizeof(fsid.id)-1);
+    fsid.id[sizeof(fsid.id)-1] = '\0';
+    return dvr_vfs_find(old, &fsid);
+  }
   return NULL;
 }
 
@@ -83,11 +93,11 @@ dvr_vfs_refresh_entry(dvr_entry_t *de)
 {
   htsmsg_field_t *f;
   htsmsg_t *m;
-  struct statvfs vst;
   struct stat st;
   dvr_vfs_t *vfs = NULL;
   uint64_t size;
   const char *filename;
+  tvh_fsid_t fsid;
 
   lock_assert(&global_lock);
   if (de->de_files == NULL)
@@ -100,14 +110,18 @@ dvr_vfs_refresh_entry(dvr_entry_t *de)
         vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
       }
       filename = htsmsg_get_str(m, "filename");
-      if(filename == NULL ||
-         statvfs(filename, &vst) < 0 || stat(filename, &st) < 0) {
+      if (filename == NULL || stat(filename, &st) < 0) {
         tvherror(LS_DVR, "unable to stat file '%s'", filename);
         goto rem;
       }
-      vfs = dvr_vfs_find(vfs, tvh_fsid(vst.f_fsid));
+      if (tvh_vfs_fsid_build(filename, NULL, &fsid))
+        goto rem;
+      vfs = dvr_vfs_find(vfs, &fsid);
       if (vfs && st.st_size >= 0) {
-        htsmsg_set_s64(m, "fsid", tvh_fsid(vst.f_fsid));
+        if (fsid.fsid != 0)
+          htsmsg_set_s64(m, "fsid", fsid.fsid);
+        else
+          htsmsg_set_str(m, "fsid0", fsid.id);
         htsmsg_set_s64(m, "size", st.st_size);
         vfs->used_size += st.st_size;
       } else {
@@ -180,20 +194,22 @@ dvr_disk_space_cleanup(dvr_config_t *cfg, int include_active)
   time_t stoptime;
   int64_t requiredBytes, maximalBytes, availBytes, usedBytes, diskBytes;
   int64_t clearedBytes = 0, fileSize;
-  tvh_fsid_t filesystemId;
   struct statvfs diskdata;
   struct tm tm;
   int loops = 0;
   char tbuf[64];
   const char *configName;
   dvr_vfs_t *dvfs;
+  tvh_fsid_t fsid, fsid2;
 
-  if (!cfg || !cfg->dvr_enabled || statvfs(cfg->dvr_storage, &diskdata) == -1)
+  if (!cfg || !cfg->dvr_enabled)
     return -1;
 
-  dvfs = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
+  if (tvh_vfs_fsid_build(cfg->dvr_storage, &diskdata, &fsid))
+    return -1;
 
-  filesystemId  = tvh_fsid(diskdata.f_fsid);
+  dvfs = dvr_vfs_find(NULL, &fsid);
+
   availBytes    = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
   requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
   diskBytes     = diskdata.f_frsize * (int64_t)diskdata.f_blocks;
@@ -237,12 +253,12 @@ dvr_disk_space_cleanup(dvr_config_t *cfg, int include_active)
       if (dvr_get_filename(de) == NULL || dvr_get_filesize(de, DVR_FILESIZE_TOTAL) <= 0)
         continue;
 
-      if(statvfs(dvr_get_filename(de), &diskdata) == -1)
+      if (tvh_vfs_fsid_build(dvr_get_filename(de), NULL, &fsid2))
         continue;
 
       /* Checking for the same config is useless as it's storage path might be changed meanwhile */
       /* Check for the same file system instead */
-      if (filesystemId == 0 || tvh_fsid(diskdata.f_fsid) != filesystemId)
+      if (tvh_vfs_fsid_match(&fsid, &fsid2) == 0)
         continue;
 
       oldest = de; // the oldest one until now
@@ -303,6 +319,7 @@ dvr_disk_space_check()
   int64_t requiredBytes, maximalBytes, availBytes, usedBytes;
   int idx = 0, cleanupDone = 0;
   dvr_vfs_t *dvfs;
+  tvh_fsid_t fsid;
 
   pthread_mutex_lock(&global_lock);
 
@@ -313,48 +330,51 @@ dvr_disk_space_check()
   LIST_FOREACH(cfg, &dvrconfigs, config_link) {
     idx++;
 
-    if (cfg->dvr_enabled &&
-        !cleanupDone &&
-        idx >= dvr_disk_space_config_idx &&
-        statvfs(cfg->dvr_storage, &diskdata) != -1)
-    {
-      dvfs = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
+    if (!cfg->dvr_enabled)
+      continue;
+    if (cleanupDone)
+      continue;
+    if (idx < dvr_disk_space_config_idx)
+      continue;
+    if (tvh_vfs_fsid_build(cfg->dvr_storage, &diskdata, &fsid))
+      continue;
 
-      availBytes = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
-      usedBytes = dvfs->used_size;
-      requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
-      maximalBytes = MIB(cfg->dvr_cleanup_threshold_used);
+    dvfs = dvr_vfs_find(NULL, &fsid);
 
-      if (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used)) {
-        LIST_FOREACH(de, &dvrentries, de_global_link) {
+    availBytes = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
+    usedBytes = dvfs->used_size;
+    requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
+    maximalBytes = MIB(cfg->dvr_cleanup_threshold_used);
 
-          /* only start cleanup if we are actually writing files right now */
-          if (de->de_sched_state != DVR_RECORDING || !de->de_config || de->de_config != cfg)
-            continue;
+    if (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used)) {
+      LIST_FOREACH(de, &dvrentries, de_global_link) {
 
-          if (availBytes < requiredBytes) {
-            tvhwarn(LS_DVR,"running out of free disk space for dvr config \"%s\", required free space \"%"PRId64" MiB\", current free space \"%"PRId64" MiB\"",
-                    cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile",
-                    TOMIB(requiredBytes), TOMIB(availBytes));
-          } else {
-            tvhwarn(LS_DVR,"running out of used disk space for dvr config \"%s\", required used space \"%"PRId64" MiB\", current used space \"%"PRId64" MiB\"",
-                    cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile",
-                    TOMIB(maximalBytes), TOMIB(usedBytes));
-          }
+        /* only start cleanup if we are actually writing files right now */
+        if (de->de_sched_state != DVR_RECORDING || !de->de_config || de->de_config != cfg)
+          continue;
 
-          /* only cleanup one directory at the time as the system needs time to delete the actual files */
-          dvr_disk_space_cleanup(de->de_config, 1);
-          cleanupDone = 1;
-          dvr_disk_space_config_idx = idx;
-          break;
+        if (availBytes < requiredBytes) {
+          tvhwarn(LS_DVR,"running out of free disk space for dvr config \"%s\", required free space \"%"PRId64" MiB\", current free space \"%"PRId64" MiB\"",
+                  cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile",
+                  TOMIB(requiredBytes), TOMIB(availBytes));
+        } else {
+          tvhwarn(LS_DVR,"running out of used disk space for dvr config \"%s\", required used space \"%"PRId64" MiB\", current used space \"%"PRId64" MiB\"",
+                  cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile",
+                  TOMIB(maximalBytes), TOMIB(usedBytes));
         }
-        if (!cleanupDone)
-          goto checking;
-      } else {
-checking:
-        tvhtrace(LS_DVR, "checking free and used disk space for config \"%s\" : OK",
-               cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile");
+
+        /* only cleanup one directory at the time as the system needs time to delete the actual files */
+        dvr_disk_space_cleanup(de->de_config, 1);
+        cleanupDone = 1;
+        dvr_disk_space_config_idx = idx;
+        break;
       }
+      if (!cleanupDone)
+        goto checking;
+    } else {
+checking:
+      tvhtrace(LS_DVR, "checking free and used disk space for config \"%s\" : OK",
+             cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile");
     }
   }
 
@@ -374,13 +394,14 @@ dvr_get_disk_space_update(const char *path, int locked)
 {
   struct statvfs diskdata;
   dvr_vfs_t *dvfs;
+  tvh_fsid_t fsid;
 
-  if(statvfs(path, &diskdata) == -1)
+  if (tvh_vfs_fsid_build(path, &diskdata, &fsid))
     return;
 
   if (!locked)
     pthread_mutex_lock(&global_lock);
-  dvfs = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
+  dvfs = dvr_vfs_find(NULL, &fsid);
   if (!locked)
     pthread_mutex_unlock(&global_lock);
 
@@ -439,15 +460,19 @@ dvr_vfs_rec_start_check(dvr_config_t *cfg)
 {
   struct statvfs diskdata;
   dvr_vfs_t *dvfs;
+  tvh_fsid_t fsid;
   int64_t availBytes, requiredBytes, usedBytes, maximalBytes, cleanedBytes;
 
   lock_assert(&global_lock);
-  if (!cfg || !cfg->dvr_enabled || statvfs(cfg->dvr_storage, &diskdata) == -1)
+  if (!cfg || !cfg->dvr_enabled)
     return 0;
+  if (tvh_vfs_fsid_build(cfg->dvr_storage, &diskdata, &fsid))
+    return 0;
+
   availBytes    = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
   requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
   maximalBytes  = MIB(cfg->dvr_cleanup_threshold_used);
-  dvfs          = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
+  dvfs          = dvr_vfs_find(NULL, &fsid);
   usedBytes     = dvfs->used_size;
 
   if (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used)) {

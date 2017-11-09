@@ -208,6 +208,7 @@ SRCS-1 = \
 	src/prop.c \
 	src/utils.c \
 	src/wrappers.c \
+	src/tvhvfs.c \
 	src/access.c \
 	src/tcp.c \
 	src/udp.c \
