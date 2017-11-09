@@ -564,7 +564,11 @@ lav_muxer_close(muxer_t *m)
   oc = lm->lm_oc;
   if (lm->lm_fd >= 0) {
     av_freep(&oc->pb->buffer);
+#if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(57, 80, 100)
     avio_context_free(&oc->pb);
+#else
+    av_freep(&oc->pb);
+#endif
     lm->lm_fd = -1;
   } else {
     avio_closep(&oc->pb);
