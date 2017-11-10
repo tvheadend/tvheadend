@@ -291,6 +291,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
     .check_availability = 0,
     .encrypted          = 1,
     .merge_same_name    = 0,
+    .merge_same_name_fuzzy = 0,
     .type_tags          = 0,
     .provider_tags      = 0,
     .network_tags       = 0
@@ -313,6 +314,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
   if (!ilm) {
     sm_conf.encrypted = bq->bq_mapencrypted;
     sm_conf.merge_same_name = bq->bq_mapmergename;
+    sm_conf.merge_same_name_fuzzy = bq->bq_mapmergefuzzy;
     sm_conf.type_tags = bq->bq_chtag_type_tags;
     sm_conf.provider_tags = bq->bq_chtag_provider_tags;
     sm_conf.network_tags = bq->bq_chtag_network_tags;
@@ -747,6 +749,11 @@ static idnode_slist_t bouquest_class_mapopt_slist[] = {
     .id   = "merge_name",
     .name = N_("Merge same name"),
     .off  = offsetof(bouquet_t, bq_mapmergename),
+  },
+  {
+    .id   = "merge_same_name_fuzzy",
+    .name = N_("Use fuzzy mapping if merging same name"),
+    .off  = offsetof(bouquet_t, bq_mapmergefuzzy),
   },
   {}
 };
