@@ -453,6 +453,16 @@ const idclass_t linuxdvb_frontend_isdb_s_class =
   }
 };
 
+const idclass_t linuxdvb_frontend_dtmb_class =
+{
+  .ic_super      = &linuxdvb_frontend_class,
+  .ic_class      = "linuxdvb_frontend_dab",
+  .ic_caption    = N_("TV Adapters - DTMB Frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
 const idclass_t linuxdvb_frontend_dab_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
@@ -1741,6 +1751,7 @@ linuxdvb_frontend_tune0
   p.inversion                = TR(inversion, inv_tbl, INVERSION_AUTO);
   switch (dmc->dmc_fe_type) {
   case DVB_TYPE_T:
+  case DVB_TYPE_DTMB:
 #define _OFDM(xyz) p.u.ofdm.xyz
     _OFDM(bandwidth)         = TRU(ofdm.bandwidth, bw_tbl, BANDWIDTH_AUTO);
     _OFDM(code_rate_HP)      = TRU(ofdm.code_rate_HP, fec_tbl, FEC_AUTO);
@@ -1809,7 +1820,7 @@ linuxdvb_frontend_tune0
   S2CMD(DTV_INVERSION,       p.inversion);
 
   /* DVB-T */
-  if (lfe->lfe_type == DVB_TYPE_T) {
+  if (lfe->lfe_type == DVB_TYPE_T || lfe->lfe_type == DVB_TYPE_DTMB) {
     S2CMD(DTV_BANDWIDTH_HZ,      dvb_bandwidth(dmc->u.dmc_fe_ofdm.bandwidth));
 #if DVB_VER_ATLEAST(5,1)
     S2CMD(DTV_CODE_RATE_HP,      p.u.ofdm.code_rate_HP);
@@ -2101,6 +2112,8 @@ linuxdvb_frontend_create
     idc = &linuxdvb_frontend_isdb_c_class;
   else if (type == DVB_TYPE_ISDB_S)
     idc = &linuxdvb_frontend_isdb_s_class;
+  else if (type == DVB_TYPE_DTMB)
+    idc = &linuxdvb_frontend_dtmb_class;
   else if (type == DVB_TYPE_DAB)
     idc = &linuxdvb_frontend_dab_class;
   else {

@@ -140,6 +140,8 @@ dvb_network_class_scanfile_list0
     type = "isdb-c";
   else if (clazz == &dvb_network_isdb_s_class)
     type = "isdb-s";
+  else if (clazz == &dvb_network_dtmb_class)
+    type = "dtmb";
   else if (clazz == &dvb_network_dab_class)
     type = "dab";
   else
@@ -174,6 +176,7 @@ SCANFILE_LIST(atsc_c);
 SCANFILE_LIST(isdb_t);
 SCANFILE_LIST(isdb_c);
 SCANFILE_LIST(isdb_s);
+SCANFILE_LIST(dtmb);
 SCANFILE_LIST(dab);
 
 static const void *
@@ -424,6 +427,29 @@ const idclass_t dvb_network_isdb_s_class =
   }
 };
 
+const idclass_t dvb_network_dtmb_class =
+{
+  .ic_super      = &dvb_network_class,
+  .ic_class      = "dvb_network_dtmb",
+  .ic_caption    = N_("DTMB Network"),
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of DTMB muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
+      .set      = dvb_network_class_scanfile_set,
+      .get      = dvb_network_class_scanfile_get,
+      .list     = dvb_network_class_scanfile_list_dtmb,
+      .opts     = PO_NOSAVE,
+    },
+    {}
+  }
+};
+
 const idclass_t dvb_network_dab_class =
 {
   .ic_super      = &dvb_network_class,
@@ -465,6 +491,7 @@ dvb_network_check_symbol_rate( dvb_mux_t *lm, dvb_mux_conf_t *dmc, int deltar )
 {
   switch (dmc->dmc_fe_type) {
   case DVB_TYPE_T:
+  case DVB_TYPE_DTMB:
     return dvb_network_check_bandwidth(lm->lm_tuning.u.dmc_fe_ofdm.bandwidth,
                                        dmc->u.dmc_fe_ofdm.bandwidth);
   case DVB_TYPE_C:
@@ -607,6 +634,8 @@ dvb_network_mux_class
     return &dvb_mux_isdb_c_class;
   if (idnode_is_instance(&mn->mn_id, &dvb_network_isdb_s_class))
     return &dvb_mux_isdb_s_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_dtmb_class))
+    return &dvb_mux_dtmb_class;
   if (idnode_is_instance(&mn->mn_id, &dvb_network_dab_class))
     return &dvb_mux_dab_class;
   return NULL;
@@ -668,6 +697,7 @@ dvb_network_create_mux
     save |= cls == &dvb_mux_dvbs_class && dmc->dmc_fe_type == DVB_TYPE_S;
     save |= cls == &dvb_mux_atsc_t_class && dmc->dmc_fe_type == DVB_TYPE_ATSC_T;
     save |= cls == &dvb_mux_atsc_c_class && dmc->dmc_fe_type == DVB_TYPE_ATSC_C;
+    save |= cls == &dvb_mux_dtmb_class && dmc->dmc_fe_type == DVB_TYPE_DTMB;
     if (save && dmc->dmc_fe_type == DVB_TYPE_S) {
       satpos = dvb_network_get_orbital_pos(mn);
       /* do not allow to mix satellite positions */
@@ -737,6 +767,7 @@ dvb_network_create_mux
     save |= COMPAREN(dmc_fe_pilot, CBIT_PILOT);
     switch (dmc->dmc_fe_type) {
     case DVB_TYPE_T:
+    case DVB_TYPE_DTMB:
       save |= COMPARE(dmc_fe_stream_id, CBIT_STREAM_ID);
       save |= COMPAREN(u.dmc_fe_ofdm.bandwidth, CBIT_BANDWIDTH);
       save |= COMPAREN(u.dmc_fe_ofdm.hierarchy_information, CBIT_HIERARCHY);
@@ -972,6 +1003,8 @@ const idclass_t *dvb_network_class_by_fe_type(dvb_fe_type_t type)
     return &dvb_network_isdb_c_class;
   else if (type == DVB_TYPE_ISDB_S)
     return &dvb_network_isdb_s_class;
+  else if (type == DVB_TYPE_DTMB)
+    return &dvb_network_dtmb_class;
   else if (type == DVB_TYPE_DAB)
     return &dvb_network_dab_class;
 
@@ -996,6 +1029,8 @@ dvb_fe_type_t dvb_fe_type_by_network_class(const idclass_t *idc)
     return DVB_TYPE_ISDB_C;
   else if (idc == &dvb_network_isdb_s_class)
     return DVB_TYPE_ISDB_S;
+  else if (idc == &dvb_network_dtmb_class)
+    return DVB_TYPE_DTMB;
   else if (idc == &dvb_network_dab_class)
     return DVB_TYPE_DAB;
 

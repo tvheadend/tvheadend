@@ -53,6 +53,7 @@ extern const idclass_t dvb_network_atsc_c_class;
 extern const idclass_t dvb_network_isdb_t_class;
 extern const idclass_t dvb_network_isdb_c_class;
 extern const idclass_t dvb_network_isdb_s_class;
+extern const idclass_t dvb_network_dtmb_class;
 extern const idclass_t dvb_network_dab_class;
 
 void dvb_network_init ( void );
@@ -90,6 +91,7 @@ extern const idclass_t dvb_mux_atsc_c_class;
 extern const idclass_t dvb_mux_isdb_t_class;
 extern const idclass_t dvb_mux_isdb_c_class;
 extern const idclass_t dvb_mux_isdb_s_class;
+extern const idclass_t dvb_mux_dtmb_class;
 extern const idclass_t dvb_mux_dab_class;
 
 dvb_mux_t *dvb_mux_create0

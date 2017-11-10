@@ -416,6 +416,7 @@ typedef enum dvb_fe_type {
   DVB_TYPE_ISDB_T,              /* terrestrial - japan, brazil */
   DVB_TYPE_ISDB_C,              /* cable - japan, brazil */
   DVB_TYPE_ISDB_S,              /* satellite - japan, brazil */
+  DVB_TYPE_DTMB,                /* DTMB - china, cuba, hong kong, macau */
   DVB_TYPE_DAB,                 /* digital radio (europe) */
   DVB_TYPE_LAST = DVB_TYPE_DAB
 } dvb_fe_type_t;

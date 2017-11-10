@@ -728,7 +728,6 @@ dvb_delsys2type ( mpegts_network_t *ln, dvb_fe_delivery_system_t delsys )
     case DVB_SYS_DVBT:
     case DVB_SYS_DVBT2:
     case DVB_SYS_TURBO:
-    case DVB_SYS_DTMB:
       return DVB_TYPE_T;
     case DVB_SYS_DVBS:
     case DVB_SYS_DVBS2:
@@ -747,6 +746,8 @@ dvb_delsys2type ( mpegts_network_t *ln, dvb_fe_delivery_system_t delsys )
       return DVB_TYPE_ISDB_C;
     case DVB_SYS_ISDBS:
       return DVB_TYPE_ISDB_S;
+    case DVB_SYS_DTMB:
+      return DVB_TYPE_DTMB;
     case DVB_SYS_DAB:
       return DVB_TYPE_DAB;
     default:
