@@ -180,6 +180,7 @@ dvb_mux_dvbt_class_delsys_enum (void *o, const char *lang)
   htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DVBT));
   htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DVBT2));
   htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_TURBO));
+  htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DTMB));
   return list;
 }
 
