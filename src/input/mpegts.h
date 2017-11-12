@@ -611,8 +611,8 @@ struct mpegts_service
    */
 
   /**
-   * When a subscription request SMT_MPEGTS, chunk them togeather 
-   * in order to recude load.
+   * When a subscription request SMT_MPEGTS, chunk them together
+   * in order to reduce load.
    */
   sbuf_t s_tsbuf;
   int64_t s_tsbuf_last;
