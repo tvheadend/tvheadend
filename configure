@@ -75,6 +75,7 @@ OPTIONS=(
   "slow_memoryinfo:no"
   "libsystemd_daemon:no"
   "bintray_cache:yes"
+  "ddci:no"
 )
 
 #
@@ -642,6 +643,13 @@ if enabled linuxdvb; then
   if enabled libdvben50221; then
     LDFLAGS="$LDFLAGS -ldvben50221 -ldvbapi -lucsi"
     enable linuxdvb_ca
+  fi
+fi
+
+# DD CI support
+if enabled ddci; then
+  if disabled linuxdvb_ca; then
+    die "DD CI requires linuxdvb_ca (linuxdvb libdvben50221) (use --disable-ddci)"
   fi
 fi
 
