@@ -577,6 +577,11 @@ SRCS-DVBCAM = \
 SRCS-${CONFIG_LINUXDVB_CA} += $(SRCS-DVBCAM)
 I18N-C += $(SRCS-DVBCAM)
 
+SRCS-DDCI = \
+	src/input/mpegts/linuxdvb/linuxdvb_ddci.c
+SRCS-${CONFIG_DDCI} += $(SRCS-DDCI)
+I18N-C += $(SRCS-DDCI)
+
 # TSDEBUGCW
 SRCS-TSDEBUG = \
 	src/input/mpegts/mpegts_tsdebug.c \

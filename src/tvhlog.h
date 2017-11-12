@@ -195,6 +195,9 @@ enum {
   LS_TSDEBUG,
   LS_CODEC,
   LS_VAAPI,
+#if ENABLE_DDCI
+  LS_DDCI,
+#endif
   LS_LAST     /* keep this last */
 };
 
