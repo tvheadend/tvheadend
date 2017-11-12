@@ -130,8 +130,13 @@ linuxdvb_ca_class_enabled_notify ( void *p, const char *lang )
       lca->lca_ca_fd = tvh_open(lca->lca_ca_path, O_RDWR | O_NONBLOCK, 0);
       tvhtrace(LS_LINUXDVB, "opening ca%u %s (fd %d)",
                lca->lca_number, lca->lca_ca_path, lca->lca_ca_fd);
-      if (lca->lca_ca_fd >= 0)
+      if (lca->lca_ca_fd >= 0) {
+#if ENABLE_DDCI
+        if (lca->lddci)
+          linuxdvb_ddci_open(lca->lddci);
+#endif
         mtimer_arm_rel(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, ms2mono(250));
+      }
     }
   } else {
     tvhtrace(LS_LINUXDVB, "closing ca%u %s (fd %d)",
@@ -151,6 +156,10 @@ linuxdvb_ca_class_enabled_notify ( void *p, const char *lang )
 
       close(lca->lca_ca_fd);
       lca->lca_ca_fd = -1;
+#if ENABLE_DDCI
+      if (lca->lddci)
+        linuxdvb_ddci_close(lca->lddci);
+#endif
     }
 
     idnode_notify_title_changed(&lca->lca_id, lang);
@@ -790,7 +799,8 @@ linuxdvb_ca_monitor ( void *aux )
 
 linuxdvb_ca_t *
 linuxdvb_ca_create
-  ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number, const char *ca_path)
+  ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number, const char *ca_path,
+    const char *ci_path)
 {
   linuxdvb_ca_t *lca;
   char id[6];
@@ -803,6 +813,11 @@ linuxdvb_ca_create
   lca->lca_ca_fd = -1;
   lca->lca_capmt_interval = 100;
   lca->lca_capmt_query_interval = 1200;
+
+#if ENABLE_DDCI
+  if (ci_path)
+    lca->lddci = linuxdvb_ddci_create(lca, ci_path);
+#endif
 
   /* Internal config ID */
   snprintf(id, sizeof(id), "ca%u", number);

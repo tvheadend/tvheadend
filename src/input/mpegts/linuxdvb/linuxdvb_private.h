@@ -435,7 +435,8 @@ int linuxdvb2tvh_delsys ( int delsys );
 
 linuxdvb_ca_t *
 linuxdvb_ca_create
-  ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number, const char *ca_path);
+  ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number, const char *ca_path,
+    const char *ci_path );
 
 void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *m );
 
