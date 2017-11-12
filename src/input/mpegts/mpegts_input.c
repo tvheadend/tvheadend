@@ -23,6 +23,9 @@
 #include "notify.h"
 #include "dbus.h"
 #include "memoryinfo.h"
+#if ENABLE_DDCI
+#include "descrambler/dvbcam.h"
+#endif
 
 memoryinfo_t mpegts_input_queue_memoryinfo = { .my_name = "MPEG-TS input queue" };
 memoryinfo_t mpegts_input_table_memoryinfo = { .my_name = "MPEG-TS table queue" };
@@ -723,6 +726,12 @@ mpegts_input_open_service
   mpegts_apids_t *pids;
   mpegts_apid_t *p;
   int i, reopen = !init;
+#if ENABLE_DDCI
+  int is_ddci = dvbcam_is_ddci((service_t*)s);
+#define IS_DDCI  is_ddci
+#else
+#define IS_DDCI  0
+#endif
 
   /* Add to list */
   pthread_mutex_lock(&mi->mi_output_lock);
@@ -739,11 +748,11 @@ mpegts_input_open_service
 
     mpegts_input_open_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s, reopen);
     mpegts_input_open_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s, reopen);
-    if (s->s_scrambled_pass)
+    if (IS_DDCI || s->s_scrambled_pass)
       mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, s, reopen);
     /* Open only filtered components here */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
-      if ((s->s_scrambled_pass || st->es_type != SCT_CA) &&
+      if ((IS_DDCI || s->s_scrambled_pass || st->es_type != SCT_CA) &&
           st->es_pid != s->s_pmt_pid && st->es_pid != s->s_pcr_pid) {
         st->es_pid_opened = 1;
         mpegts_input_open_pid(mi, mm, st->es_pid, MPS_SERVICE, mpegts_mps_weight(st), s, reopen);
@@ -778,7 +787,7 @@ no_pids:
       mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK,
                        dvb_pmt_callback, s, "pmt", LS_TBL_BASE,
                        MT_CRC, s->s_pmt_pid, MPS_WEIGHT_PMT);
-    if (s->s_scrambled_pass && (flags & SUBSCRIPTION_EMM) != 0) {
+    if (IS_DDCI || (s->s_scrambled_pass && (flags & SUBSCRIPTION_EMM) != 0)) {
       s->s_cat_mon =
         mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK,
                          mpegts_input_cat_pass_callback, s, "cat",
@@ -795,6 +804,12 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 {
   mpegts_mux_t *mm = s->s_dvb_mux;
   elementary_stream_t *st;
+#if ENABLE_DDCI
+  int is_ddci = dvbcam_is_ddci((service_t*)s);
+#define IS_DDCI  is_ddci
+#else
+#define IS_DDCI  0
+#endif
 
   /* Close PMT/CAT tables */
   if (s->s_type == STYPE_STD) {
@@ -820,7 +835,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 
     mpegts_input_close_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s);
     mpegts_input_close_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s);
-    if (s->s_scrambled_pass)
+    if (IS_DDCI || s->s_scrambled_pass)
       mpegts_input_close_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, s);
     /* Close all opened PIDs (the component filter may be changed at runtime) */
     TAILQ_FOREACH(st, &s->s_components, es_link) {
