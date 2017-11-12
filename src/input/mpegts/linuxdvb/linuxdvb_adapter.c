@@ -40,6 +40,10 @@
 #define CA_PATH  "%s/ca%d"
 #define DVR_PATH "%s/dvr%d"
 #define DMX_PATH "%s/demux%d"
+#define CI_PATH  "%s/ci%d"
+#define SEC_PATH "%s/sec%d"
+
+#define MAX_DEV_OPEN_ATTEMPTS 20
 
 /* ***************************************************************************
  * DVB Adapter
@@ -299,19 +303,55 @@ linuxdvb_get_systems(int fd, struct dtv_property *_cmd)
 }
 #endif
 
+#if ENABLE_DDCI
+/* ret:  0 .. DDCI found and usable
+ *      -1 .. DDCI found but not usable
+ *      -2 .. DDCI not found
+ */
+static int
+linuxdvb_check_ddci ( const char *ci_path )
+{
+  int j, fd, ret = -2;
+
+  tvhtrace(LS_DDCI, "checking for DDCI %s", ci_path);
+
+  /* check existence */
+  if (!access(ci_path, R_OK | W_OK)) {
+    for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
+      if ((fd = tvh_open(ci_path, O_WRONLY, 0)) >= 0) break;
+      tvh_safe_usleep(100000);
+    }
+    if (fd >= 0) {
+      close(fd);
+      tvhinfo(LS_DDCI, "DDCI found %s", ci_path);
+      ret = 0;
+    }
+    else {
+      ret = -1;
+      tvherror(LS_DDCI, "unable to open %s", ci_path);
+    }
+  }
+  return ret;
+}
+#endif /* ENABLE_DDCI */
+
 /*
  * Add adapter by path
  */
 static void
 linuxdvb_adapter_add ( const char *path )
 {
-#define MAX_DEV_OPEN_ATTEMPTS 20
   extern int linuxdvb_adapter_mask;
   int a, i, j, r, fd;
   char fe_path[512], dmx_path[512], dvr_path[512], name[132];
 #if ENABLE_LINUXDVB_CA
   char ca_path[512];
   htsmsg_t *caconf = NULL;
+  const char *ci_found = NULL;
+#if ENABLE_DDCI
+  linuxdvb_adapter_t *la_fe = NULL;
+  char ci_path[512];
+#endif
 #endif
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
@@ -324,6 +364,8 @@ linuxdvb_adapter_add ( const char *path )
   struct dtv_property cmd;
   linuxdvb_frontend_t *lfe;
 #endif
+
+  tvhtrace(LS_LINUXDVB, "scanning adapter %s", path);
 
   /* Validate the path */
   if (sscanf(path, "/dev/dvb/adapter%d", &a) != 1)
@@ -437,6 +479,36 @@ linuxdvb_adapter_add ( const char *path )
 
   /* Process each CA device */
 #if ENABLE_LINUXDVB_CA
+  /* A normal DVB card with hard wired CI interface creates the caX device in
+   * the same adapter directory than the frontendX device.
+   * The Digital Device CI interfaces do the same, when the driver is started
+   * with adapter_alloc=3. This parameter is used together with the redirect
+   * feature of the DD CI to inform user mode applications, that the caX device
+   * is hard wired to the DVB tuner. This means the special DDCI feature must
+   * not be activated, when the caX and the frontedX device are present in the
+   * same adapter directory.
+   *
+   * The normal use case for the DD CI is a stand alone CI interface, which can
+   * be used by any tuner in the system, which is not limited to Digital Devices
+   * hardware.
+   * This is the default mode of the driver or started with adapter_alloc=0
+   * parameter. In this mode the caX device is created in a dedicated adapter
+   * directory.
+   *
+   * In both modes also a secX or ciX device is create additionally. In the
+   * first mode (adapter_alloc=3 and redirect) this shall be ignored. In the
+   * second mode it needs to be associated with the caX device and later on
+   * used to send/receive the crypted/decrypted TS stream to/from the CAM.
+   *
+   */
+
+#if ENABLE_DDCI
+  /* remember, if la exists already, which means DD CI is hard wired to the
+   * tuner
+   */
+  la_fe = la;
+#endif
+
   for (i = 0; i < 32; i++) {
     snprintf(ca_path, sizeof(ca_path), CA_PATH, path, i);
     if (access(ca_path, R_OK | W_OK)) continue;
@@ -457,6 +529,34 @@ linuxdvb_adapter_add ( const char *path )
       continue;
     }
 
+#if ENABLE_DDCI
+    /* check for DD CI only, if no frontend was found (stand alone mode) */
+    if (!la_fe) {
+      int ddci_ret;
+
+      /* DD driver uses ciX */
+      snprintf(ci_path, sizeof(ci_path), CI_PATH, path, i);
+      ddci_ret = linuxdvb_check_ddci ( ci_path );
+      if (ddci_ret == -2 ) {
+        /* Mainline driver uses secX */
+        snprintf(ci_path, sizeof(ci_path), SEC_PATH, path, i);
+        ddci_ret = linuxdvb_check_ddci ( ci_path );
+      }
+
+      /* The DD CI device have not been found, or was not usable, so we
+       * ignore the whole caX device also, because we are in DD CI stand alone
+       * mode and this requires a working ciX/secX device.
+       * It would be possible to check for -1 so that it get ignored only in
+       * case of an open error.
+       */
+      if (ddci_ret) {
+        tvherror(LS_LINUXDVB, "ignoring DDCI %s", ca_path);
+        continue;
+      }
+      ci_found = ci_path;
+    }
+#endif /* ENABLE_DDCI */
+
     pthread_mutex_lock(&global_lock);
 
     if (!la) {
@@ -471,10 +571,10 @@ linuxdvb_adapter_add ( const char *path )
     if (conf)
       caconf = htsmsg_get_map(conf, "ca_devices");
 
-    linuxdvb_ca_create(caconf, la, i, ca_path);
+    linuxdvb_ca_create(caconf, la, i, ca_path, ci_found);
     pthread_mutex_unlock(&global_lock);
   }
-#endif
+#endif /* ENABLE_LINUXDVB_CA */
 
   /* Cleanup */
   if (conf)
