@@ -269,6 +269,12 @@ int test(void)
 }
 ' -liconv
 
+if enabled libiconv; then
+  printf "    ^ using external iconv library\n"
+else
+  printf "    ^ using build-in glibc iconv routines\n"
+fi
+
 if enabled_or_auto dvben50221; then
   check_cc_snippet libdvben50221 '
   #include <libdvben50221/en50221_session.h>
