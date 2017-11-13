@@ -542,7 +542,7 @@ profile_find_by_list
   }
   if (!res) {
     res = profile_find_by_name((sflags & SUBSCRIPTION_HTSP) ? "htsp" : NULL, NULL);
-    if (!profile_verify(res, flags))
+    if (!profile_verify(res, sflags))
       tvherror(LS_PROFILE, "unable to select a working profile (asked '%s' alt '%s')", name, alt);
   }
   return res;
