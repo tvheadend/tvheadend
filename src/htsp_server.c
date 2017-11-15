@@ -816,6 +816,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   epg_broadcast_t *now, *next = NULL;
   int64_t chnum = channel_get_number(ch);
   const char *icon;
+  char buf[64];
 
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *tags = htsmsg_create_list();
@@ -849,7 +850,6 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
     } else {
       if (htsp->htsp_version < 15) {
         /* older clients expects '/imagecache/' */
-        static char buf[64];
         if (strncmp(icon, "imagecache/", 11) == 0) {
           snprintf(buf, sizeof(buf), "/%s", icon);
           icon = buf;
