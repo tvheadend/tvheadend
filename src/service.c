@@ -792,9 +792,26 @@ service_find_instance
         }
       }
     }
-    /* find a valid instance */
+    /* find a valid instance, no error and "user" idle */
     TAILQ_FOREACH(si, sil, si_link)
-      if (!si->si_error) break;
+      if (si->si_weight < SUBSCRIPTION_PRIO_MIN && si->si_error == 0) break;
+    /* UHD->HD fallback and SD->HD fallback */
+    if (si == NULL && pro &&
+        (pro->pro_svfilter == PROFILE_SVF_UHD ||
+         pro->pro_svfilter == PROFILE_SVF_SD)) {
+      LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+        s = (service_t *)ilm->ilm_in1;
+        if (s->s_is_enabled(s, flags) && service_is_hdtv(s)) {
+          r1 = s->s_enlist(s, ti, sil, flags, weight);
+          if (r1 && r == 0)
+            r = r1;
+        }
+      }
+      /* find a valid instance, no error and "user" idle */
+      TAILQ_FOREACH(si, sil, si_link)
+        if (si->si_weight < SUBSCRIPTION_PRIO_MIN && si->si_error == 0) break;
+    }
+    /* fallback, enlist all instances */
     if (si == NULL) {
       LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
         s = (service_t *)ilm->ilm_in1;
