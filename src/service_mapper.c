@@ -224,14 +224,23 @@ service_mapper_process
 
   /* Find existing channel */
   name = service_get_channel_name(s);
-  if (!bq && conf->merge_same_name && name && *name) {
+  if (conf->merge_same_name && name && *name) {
     /* Try exact match first */
-    chn = channel_find_by_name(name);
+    chn = channel_find_by_name_and_bouquet(name, bq);
     if (!chn && conf->merge_same_name_fuzzy) {
-      chn = channel_find_by_name_fuzzy(name);
+      chn = channel_find_by_name_bouquet_fuzzy(name, bq);
     }
   }
-  if (!chn) {
+  /* If using bouquets then we want to only merge
+   * with channels on the same bouquet. This is because
+   * you can disable all channels on a bouquet through
+   * the bouquet menu so if we merged between bouquets then
+   * you'd get odd results.
+   *
+   * The chn should already be for the correct bouquet
+   * but we'll safety-check here.
+   */
+  if (!chn || (bq && chn->ch_bouquet != bq)) {
     chn = channel_create(NULL, NULL, NULL);
     chn->ch_bouquet = bq;
   }
