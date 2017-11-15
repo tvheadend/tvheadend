@@ -17,6 +17,7 @@
  */
 
 #include <assert.h>
+#include <ctype.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -206,6 +207,7 @@ service_mapper_process
 {
   channel_t *chn = NULL;
   const char *name, *tagname;
+  char *tidy_name = NULL;
   htsmsg_field_t *f;
   htsmsg_t *m;
 
@@ -224,6 +226,40 @@ service_mapper_process
 
   /* Find existing channel */
   name = service_get_channel_name(s);
+
+  if (conf->tidy_channel_name && name) {
+    size_t len = strlen(name);
+    if (len > 2) {
+      // E.g.,
+      // 012345
+      // 5 UHD\0 len=5, UHD at pos 2 (5-3)
+      // 5 HD\0  len=4,  HD at pos 2 (4-2)
+      // 4HD\0   len=3,  HD at pos 1 (3-2)
+      // 4\0     len=1
+      if (name[len-2] == 'H' && name[len-1] == 'D') {
+        /* Ends in HD but does it end in UHD? */
+        tidy_name = tvh_strdupa(name);
+        if (len > 3 && name[len-3] == 'U')
+          tidy_name[len-3] = 0;
+        else
+          tidy_name[len-2] = 0;
+        len = strlen(tidy_name);
+        /* Strip any trailing space such as '5 HD' should become
+         * '5'  not '5 '.
+         */
+        if (len && isspace(tidy_name[len-1]))
+          tidy_name[len-1] = 0;
+
+        tvhdebug(bq ? LS_BOUQUET : LS_SERVICE_MAPPER,
+                 "%s: generated tidy_name [%s] from [%s]",
+                 s->s_nicename, tidy_name, name);
+
+        /* Assign tidy_name so we use it for rest of function */
+        name = tidy_name;
+      }
+    }
+  }
+
   if (conf->merge_same_name && name && *name) {
     /* Try exact match first */
     chn = channel_find_by_name_and_bouquet(name, bq);
@@ -249,6 +285,22 @@ service_mapper_process
   if (chn) {
     const char *prov;
     service_mapper_link(s, chn, chn);
+
+    /* We have to set tidy name here (not in channel_create) because
+     * the service_mapper_link alters the detected channel name when
+     * we merge a channel. So, on the initial create the
+     * channel_create could be given a channel name (such as mapping
+     * "5 HD" to "5") and a subsequent merge of "5" would be ok since
+     * we wanted HD stripped. But if the order were reversed and we
+     * found "5" first and then "5 HD" then we don't channel_create
+     * for "5 HD" and the service_mapper_link then uses "5 HD" as the
+     * name.
+     *
+     * We only set the name if we explicitly have a tidy name.
+     * Otherwise we let channel use the defaults.
+     */
+    if (tidy_name && *tidy_name)
+      channel_set_name(chn, tidy_name);
 
     /* Type tags */
     if (conf->type_tags) {
@@ -554,6 +606,17 @@ static const idclass_t service_mapper_conf_class = {
                    "all merge in to the same channel. The exact name chosen "
                    "depends on the order the channels are mapped."),
       .off    = offsetof(service_mapper_t, d.merge_same_name_fuzzy),
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "tidy_channel_name",
+      .name   = N_("Tidy the channel name such as removing trailing HD text"),
+      .desc   = N_("Some broadcasters distinguish channels by appending "
+                   "descriptors such as 'HD'. This option strips those "
+                   "so 'Channel 4 HD' would be named 'Channel 4'. "
+                   "Note that xmltv settings may try and match by channel name "
+                   "so changing a channel name may require manual xmltv mapping."),
+      .off    = offsetof(service_mapper_t, d.tidy_channel_name),
     },
     {
       .type   = PT_BOOL,
