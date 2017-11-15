@@ -29,21 +29,17 @@ tvh_stream_is_copy(TVHCodecProfile *profile, tvh_ssc_t *ssc,
                    const char *src_codecs)
 {
     const char *txtname;
-    char *codecs, *str, *token, *saveptr;
+    htsmsg_t *list;
+    int r;
 
     /* if the source codec is in the list, do the stream copy only */
     if (src_codecs && *src_codecs != '\0' && *src_codecs != '-') {
-        txtname = streaming_component_type2txt(ssc->ssc_type);
-        if (txtname == NULL)
-            goto cont;
-        codecs = tvh_strdupa(src_codecs);
-        if (codecs == NULL)
-            goto cont;
-        for (str = codecs; ; str = NULL) {
-            token = strtok_r(str, " ,|;" , &saveptr);
-            if (token == NULL)
-                break;
-            if (!strcasecmp(token, txtname))
+        list = htsmsg_csv_2_list(src_codecs, ',');
+        if (list) {
+            txtname = streaming_component_type2txt(ssc->ssc_type);
+            r = htsmsg_is_string_in_list(list, txtname);
+            htsmsg_destroy(list);
+            if (r)
                 goto cont;
         }
         return 1;
