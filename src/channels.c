@@ -585,7 +585,7 @@ channel_find_by_name(const char *name)
   return channel_find_by_name_and_bouquet(name, NULL);
 }
 
-/// Copy name without space and HD suffix, lowercase in to a new
+/// Copy name without space and (U)HD suffix, lowercase in to a new
 /// buffer
 static char *
 channel_make_fuzzy_name(const char *name)
@@ -599,6 +599,9 @@ channel_make_fuzzy_name(const char *name)
   for (; *ch ; ++ch) {
     /* Strip trailing 'HD'. */
     if (*ch == 'H' && *(ch+1) == 'D' && *(ch+2) == 0)
+      break;
+    /* Strip trailing 'UHD'. */
+    if (*ch == 'U' && *(ch+1) == 'H' && *(ch+2) == 'D' && *(ch+3) == 0)
       break;
 
     if (!isspace(*ch)) {
