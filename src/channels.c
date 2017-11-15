@@ -562,7 +562,7 @@ const idclass_t channel_class = {
 // Note: since channel names are no longer unique this method will simply
 //       return the first entry encountered, so could be somewhat random
 channel_t *
-channel_find_by_name ( const char *name )
+channel_find_by_name_and_bouquet ( const char *name, const struct bouquet *bq )
 {
   channel_t *ch;
   const char *s;
@@ -573,11 +573,17 @@ channel_find_by_name ( const char *name )
     if (!ch->ch_enabled) continue;
     s = channel_get_name(ch, NULL);
     if (s == NULL) continue;
+    if (bq && ch->ch_bouquet != bq) continue;
     if (strcmp(s, name) == 0) break;
   }
   return ch;
 }
 
+channel_t *
+channel_find_by_name(const char *name)
+{
+  return channel_find_by_name_and_bouquet(name, NULL);
+}
 
 /// Copy name without space and HD suffix, lowercase in to a new
 /// buffer
@@ -605,7 +611,7 @@ channel_make_fuzzy_name(const char *name)
 }
 
 channel_t *
-channel_find_by_name_fuzzy ( const char *name )
+channel_find_by_name_bouquet_fuzzy ( const char *name, const struct bouquet *bq )
 {
   channel_t *ch;
   const char *s;
@@ -617,6 +623,7 @@ channel_find_by_name_fuzzy ( const char *name )
 
   CHANNEL_FOREACH(ch) {
     if (!ch->ch_enabled) continue;
+    if (bq && ch->ch_bouquet != bq) continue;
     s = channel_get_name(ch, NULL);
     if (s == NULL) continue;
     /* We need case insensitive since historical constraints means we
@@ -1628,7 +1635,6 @@ channel_tag_find_by_name(const char *name, int create)
   idnode_changed(&ct->ct_id);
   return ct;
 }
-
 
 /**
  *

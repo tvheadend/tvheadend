@@ -129,6 +129,7 @@ channel_t *channel_create0
 
 void channel_delete(channel_t *ch, int delconf);
 
+channel_t *channel_find_by_name_and_bouquet(const char *name, const struct bouquet *bq);
 channel_t *channel_find_by_name(const char *name);
 /// Apply fuzzy matching when finding a channel such as ignoring
 /// whitespace, case, and stripping HD suffix. This means that
@@ -136,7 +137,8 @@ channel_t *channel_find_by_name(const char *name);
 /// 'Channel 5 +1HD' can all be merged together.
 /// Since channel names aren't unique, this returns the
 /// first match (similar to channel_find_by_name).
-channel_t *channel_find_by_name_fuzzy(const char *name);
+/// @param bouquet - Bouquet to use: can be NULL
+channel_t *channel_find_by_name_bouquet_fuzzy(const char *name, const struct bouquet *bq);
 #define channel_find_by_uuid(u)\
   (channel_t*)idnode_find(u, &channel_class, NULL)
 
