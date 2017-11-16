@@ -982,7 +982,7 @@ descrambler_descramble ( service_t *t,
   th_descrambler_runtime_t *dr = t->s_descramble;
   th_descrambler_key_t *tk;
   th_descrambler_data_t *dd, *dd_next;
-  int len2, len3, r, flush_data = 0;
+  int len2, len3, r, flush_data;
   uint32_t dbuflen;
   const uint8_t *tsb2;
   int64_t now;
@@ -1013,6 +1013,7 @@ descrambler_descramble ( service_t *t,
       return 1;
     }
 
+  flush_data = 0;
   if (dr->dr_ca_resolved > 0) {
 
     /* process the queued TS packets or key updates */
