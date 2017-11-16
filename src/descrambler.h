@@ -87,7 +87,8 @@ typedef struct th_descrambler_key {
 typedef struct th_descrambler_runtime {
   th_descrambler_t *dr_descrambler;
   struct service *dr_service;
-  int    (*dr_descramble)(struct th_descrambler *td, const uint8_t *tsb, int len);
+  int    (*dr_descramble)(struct service *t, struct elementary_stream *st,
+                          const uint8_t *tsb, int len);
   int      dr_ca_count;
   int      dr_ca_resolved;
   int      dr_ca_failed;
@@ -186,7 +187,6 @@ void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
 int  descrambler_resolved      ( struct service *t, th_descrambler_t *ignore );
-void descrambler_external      ( struct service *t, int state );
 int  descrambler_multi_pid     ( th_descrambler_t *t );
 void descrambler_keys          ( th_descrambler_t *t, int type, uint16_t pid,
                                  const uint8_t *even, const uint8_t *odd );
@@ -195,6 +195,8 @@ void descrambler_notify        ( th_descrambler_t *t,
                                  const char *cardsystem, uint16_t pid, uint32_t ecmtime,
                                  uint16_t hops, const char *reader, const char *from,
                                  const char *protocol );
+int  descrambler_pass          ( struct service *t, struct elementary_stream *st,
+                                 const uint8_t *tsb, int len );
 int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,
                                  const uint8_t *tsb, int len );

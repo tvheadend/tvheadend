@@ -25,6 +25,7 @@
 #include "input.h"
 
 #include "dvbcam.h"
+#include "input/mpegts/tsdemux.h"
 #include "input/mpegts/linuxdvb/linuxdvb_private.h"
 
 #if ENABLE_LINUXDVB_CA
@@ -266,11 +267,10 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
     list_mgmt = CA_LIST_MANAGEMENT_UPDATE;
   } else {
     list_mgmt = ac->active_programs ? CA_LIST_MANAGEMENT_ADD :
-                                    CA_LIST_MANAGEMENT_ONLY;
+                                      CA_LIST_MANAGEMENT_ONLY;
     ac->active_programs++;
   }
 
-  descrambler_external((service_t *)s, 1);
   linuxdvb_ca_enqueue_capmt(ac->ca, ac->slot, as->last_pmt, as->last_pmt_len,
                             list_mgmt, CA_PMT_CMD_ID_OK_DESCRAMBLING);
 done:
@@ -315,9 +315,10 @@ dvbcam_service_destroy(th_descrambler_t *td)
 
 #if ENABLE_DDCI
 static int
-dvbcam_descramble(struct th_descrambler *td, const uint8_t *tsb, int len)
+dvbcam_descramble_ddci(service_t *t, elementary_stream_t *st, const uint8_t *tsb, int len)
 {
-  dvbcam_active_service_t   *as = (dvbcam_active_service_t *)td;
+  th_descrambler_runtime_t  *dr = ((mpegts_service_t *)t)->s_descramble;
+  dvbcam_active_service_t   *as = (dvbcam_active_service_t *)dr->dr_descrambler;
   linuxdvb_ddci_t           *lddci = as->ac->ca->lddci;
 
   linuxdvb_ddci_put(lddci, tsb, len);
@@ -333,6 +334,8 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   dvbcam_active_cam_t *ac = NULL;
   th_descrambler_t *td;
   elementary_stream_t *st;
+  th_descrambler_runtime_t *dr;
+  mpegts_mux_t *mm;
   caid_t *c = NULL;
   int count = 0;
   char buf[128];
@@ -391,17 +394,15 @@ end_of_search_for_cam:
   td->td_nicename = strdup(buf);
   td->td_service = t;
   td->td_stop = dvbcam_service_destroy;
+  dr = t->s_descramble;
+  dr->dr_descrambler = td;
+  dr->dr_descramble = descrambler_pass;
 #if ENABLE_DDCI
   if (ac->ca->lddci) {
-    th_descrambler_runtime_t *dr = t->s_descramble;
-    mpegts_mux_t *mm;
-
     /* assign the service to the DD CI CAM */
     linuxdvb_ddci_assign(ac->ca->lddci, t);
-    if (dr) {
-      dr->dr_descrambler = td;
-      dr->dr_descramble = dvbcam_descramble;
-    }
+    dr->dr_descramble = dvbcam_descramble_ddci;
+    /* open ECM PID */
     assert(c);
     mm = ((mpegts_service_t *)t)->s_dvb_mux;
     mpegts_input_open_service_pid(mm->mm_active->mmi_input, mm, t,
