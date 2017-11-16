@@ -335,9 +335,10 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   th_descrambler_t *td;
   elementary_stream_t *st;
   th_descrambler_runtime_t *dr;
+  mpegts_input_t *mi;
   mpegts_mux_t *mm;
   caid_t *c = NULL;
-  int count = 0;
+  int count = 0, pid = -1;
   char buf[128];
 
   if (!cac->cac_enabled)
@@ -404,9 +405,7 @@ end_of_search_for_cam:
     dr->dr_descramble = dvbcam_descramble_ddci;
     /* open ECM PID */
     assert(c);
-    mm = ((mpegts_service_t *)t)->s_dvb_mux;
-    mpegts_input_open_service_pid(mm->mm_active->mmi_input, mm, t,
-                                  SCT_CA, c->pid, MPS_WEIGHT_CA, 1);
+    pid = c->pid;
   }
 #endif
   descrambler_change_keystate(td, DS_READY, 0);
@@ -419,6 +418,19 @@ end_of_search_for_cam:
 end:
   pthread_mutex_unlock(&dvbcam_mutex);
   pthread_mutex_unlock(&t->s_stream_mutex);
+
+  if (pid >= 0) {
+    mm = ((mpegts_service_t *)t)->s_dvb_mux;
+    mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
+    if (mi) {
+      pthread_mutex_lock(&mi->mi_output_lock);
+      pthread_mutex_lock(&t->s_stream_mutex);
+      mpegts_input_open_service_pid(mi, mm, t,
+                                    SCT_CA, c->pid, MPS_WEIGHT_CA, 1);
+      pthread_mutex_unlock(&t->s_stream_mutex);
+      pthread_mutex_unlock(&mi->mi_output_lock);
+    }
+  }
 }
 
 /*
