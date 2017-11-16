@@ -98,6 +98,7 @@ profile_create
   }
   LIST_INIT(&pro->pro_dvr_configs);
   LIST_INIT(&pro->pro_accesses);
+  pro->pro_swservice = 1;
   pro->pro_contaccess = 1;
   pro->pro_ca_timeout = 2000;
   if (idnode_insert(&pro->pro_id, uuid, pb->clazz, 0)) {
