@@ -23,10 +23,6 @@
 #include "input.h"
 #include "parsers/parser_teletext.h"
 #include "tsdemux.h"
-#if ENABLE_DDCI
-#include "input/mpegts/linuxdvb/linuxdvb_private.h"
-#include "descrambler/dvbcam.h"
-#endif
 
 #define TS_REMUX_BUFSIZE (188 * 100)
 
@@ -209,10 +205,8 @@ ts_recv_packet0
 
   }
 
-#if ENABLE_DDCI
-  if (dvbcam_is_ddci((service_t*)t) && st->es_type == SCT_CA)
+  if (!t->s_scrambled_pass && st->es_type == SCT_CA)
     return;
-#endif
 
 skip_cc:
   if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
@@ -296,10 +290,6 @@ ts_recv_packet1
   int_fast16_t pid;
   uint_fast8_t scrambled, error = 0;
   int r;
-#if ENABLE_DDCI
-  int ddci_required = 0;
-#endif
-
   
   /* Error */
   if (tsb[1] & 0x80)
@@ -337,23 +327,8 @@ ts_recv_packet1
   if(!error)
     service_set_streaming_status_flags((service_t*)t, TSS_INPUT_SERVICE);
 
-#if ENABLE_DDCI
-  /* FIXME: Maybe it is better to store the lddci pointer in service_t instead
-   *        of checking it with dvbcam_is_ddci, which requires a lot of pointer
-   *        access to be done for each ts_recv_packet1 execution.
-   */
-  if (dvbcam_is_ddci((service_t*)t))
-    ddci_required = linuxdvb_ddci_require_descramble((service_t*)t, pid, st );
-
-#define DDCI_REQUIRED  ddci_required
-#else
-#define DDCI_REQUIRED  0
-#endif
-
   scrambled = t->s_scrambled_seen;
-  if(!t->s_scrambled_pass &&
-     ((tsb[3] & 0xc0) || DDCI_REQUIRED ||
-      (scrambled && st && st->es_type != SCT_CA))) {
+  if(!t->s_scrambled_pass && ((tsb[3] & 0xc0) || scrambled)) {
 
     /**
      * Lock for descrambling, but only if packet was not in error
