@@ -997,13 +997,19 @@ void mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *c );
 void mpegts_input_flush_mux ( mpegts_input_t *mi, mpegts_mux_t *mm );
 
 mpegts_pid_t * mpegts_input_open_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner, int reopen );
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight,
+    void *owner, int reopen );
 
 int mpegts_input_close_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner );
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight,
+    void *owner );
 
 void mpegts_input_close_pids
   ( mpegts_input_t *mi, mpegts_mux_t *mm, void *owner, int all );
+
+int mpegts_input_open_service_pid
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, service_t *s,
+    streaming_component_type_t stype, int pid, int weight, int create );
 
 #if ENABLE_TSDEBUG
 
