@@ -394,11 +394,11 @@ descrambler_service_start ( service_t *t )
       tvhtrace(LS_DESCRAMBLER, "using multipid for \"%s\"", t->s_nicename);
     dr->dr_skip = 0;
     dr->dr_force_skip = 0;
+    if (t->s_dvb_forcecaid == 0xffff)
+      dr->dr_descramble = descrambler_pass;
   }
 
-  if (t->s_dvb_forcecaid == 0xffff)
-    dr->dr_descramble = descrambler_pass;
-  else
+  if (t->s_dvb_forcecaid != 0xffff)
     caclient_start(t);
 }
 
