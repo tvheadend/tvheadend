@@ -176,6 +176,10 @@ int channel_tag_access(channel_tag_t *ct, struct access *a, int disabled);
 
 const char *channel_get_name ( channel_t *ch, const char *blank );
 int channel_set_name ( channel_t *ch, const char *name );
+/// User API convenience function to rename all channels that
+/// match "from". Lock must be held prior to call.
+/// @return number channels that matched "from".
+int channel_rename_and_save ( const char *from, const char *to );
 
 #define CHANNEL_SPLIT ((int64_t)1000000)
 
