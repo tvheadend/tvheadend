@@ -31,6 +31,11 @@ void dvbcam_register_cam(struct linuxdvb_ca *lca, uint8_t slot, uint16_t * caids
 void dvbcam_unregister_cam(struct linuxdvb_ca *lca, uint8_t slot);
 void dvbcam_pmt_data(struct mpegts_service *s, const uint8_t *ptr, int len);
 
+#if ENABLE_DDCI
+struct service;
+int dvbcam_is_ddci(struct service *t);
+#endif
+
 #endif
 
 #endif /* __DVBCAM_H__ */

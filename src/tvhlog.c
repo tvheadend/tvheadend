@@ -171,6 +171,10 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_TSDEBUG]       = { "tsdebug",       N_("MPEG-TS Input Debug") },
   [LS_CODEC]         = { "codec",         N_("Codec") },
   [LS_VAAPI]         = { "vaapi",         N_("VA-API") },
+#if ENABLE_DDCI
+  [LS_DDCI]          = { "ddci",          N_("DD-CI") },
+#endif
+
 };
 
 static void
@@ -226,7 +230,7 @@ tvhlog_set_subsys ( bitops_ulong_t *c, const char *subsys )
           break;
         }
       if (i >= LS_LAST)
-        tvherror(LS_CONFIG, "uknown subsystem '%s'", t);
+        tvherror(LS_CONFIG, "unkown subsystem '%s'", t);
     }
 next:
     t = strtok_r(NULL, ",", &r);

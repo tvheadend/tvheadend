@@ -55,6 +55,9 @@ typedef struct linuxdvb_frontend    linuxdvb_frontend_t;
 typedef struct linuxdvb_ca          linuxdvb_ca_t;
 typedef struct linuxdvb_ca_capmt    linuxdvb_ca_capmt_t;
 #endif
+#if ENABLE_DDCI
+typedef struct linuxdvb_ddci        linuxdvb_ddci_t;
+#endif
 typedef struct linuxdvb_satconf     linuxdvb_satconf_t;
 typedef struct linuxdvb_satconf_ele linuxdvb_satconf_ele_t;
 typedef struct linuxdvb_diseqc      linuxdvb_diseqc_t;
@@ -215,6 +218,10 @@ struct linuxdvb_ca
   int                      lca_state;
   const char               *lca_state_str;
   linuxdvb_ca_capmt_queue_t lca_capmt_queue;
+#if ENABLE_DDCI
+  linuxdvb_ddci_t          *lddci;
+#endif
+
   /*
    * CAM module info
    */
@@ -428,13 +435,47 @@ int linuxdvb2tvh_delsys ( int delsys );
 
 linuxdvb_ca_t *
 linuxdvb_ca_create
-  ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number, const char *ca_path);
+  ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number, const char *ca_path,
+    const char *ci_path );
 
 void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *m );
 
 void
 linuxdvb_ca_enqueue_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr,
                           int len, uint8_t list_mgmt, uint8_t cmd_id);
+
+#endif
+
+#if ENABLE_DDCI
+
+linuxdvb_ddci_t *
+linuxdvb_ddci_create ( linuxdvb_ca_t *lca, const char *ci_path);
+int
+linuxdvb_ddci_open ( linuxdvb_ddci_t *lddci );
+void
+linuxdvb_ddci_close ( linuxdvb_ddci_t *lddci );
+void
+linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, const uint8_t *tsb, int len );
+/* Un/Assign the service to DD CI CAM.
+ * If t is NULL, the service is unassigned.
+ *
+ *  ret: 0 .. un/assigned
+ *       1 .. assigned, but it was already assigned to another service
+ */
+int
+linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t );
+int
+linuxdvb_ddci_is_assigned ( linuxdvb_ddci_t *lddci );
+/* Checks if the given PID needs to be sent to the CAM (descrambler).
+ * This will check for special PIDs only. Scrambled packets (scrambled bits set)
+ * data needs to be forwarded in any case to the CAM.
+ *
+ *  ret:  0 .. not required
+ *       >0 .. PID is required by the CAM
+ */
+int
+linuxdvb_ddci_require_descramble
+  ( service_t *t, int_fast16_t pid, elementary_stream_t *st );
 
 #endif
 
