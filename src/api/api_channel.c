@@ -96,6 +96,23 @@ api_channel_create
 }
 
 static int
+api_channel_rename
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  const char *from, *to;
+  if (!(from = htsmsg_get_str(args, "from")))
+    return -EINVAL;
+  if (!(to = htsmsg_get_str(args, "to")))
+    return -EINVAL;
+  /* We need the lock since we are altering details */
+  pthread_mutex_lock(&global_lock);
+  const int num_match = channel_rename_and_save(from, to);
+  pthread_mutex_unlock(&global_lock);
+
+  return num_match > 0 ? 0 : -ENOENT;
+}
+
+static int
 api_channel_tag_list
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
@@ -205,6 +222,7 @@ void api_channel_init ( void )
     { "channel/grid",    ACCESS_ANONYMOUS, api_idnode_grid,  api_channel_grid },
     { "channel/list",    ACCESS_ANONYMOUS, api_channel_list, NULL },
     { "channel/create",  ACCESS_ADMIN,     api_channel_create, NULL },
+    { "channel/rename",  ACCESS_ADMIN,     api_channel_rename, NULL }, /* User convenience function */
 
     { "channeltag/class",ACCESS_ANONYMOUS, api_idnode_class, (void*)&channel_tag_class },
     { "channeltag/grid", ACCESS_ANONYMOUS, api_idnode_grid,  api_channel_tag_grid },

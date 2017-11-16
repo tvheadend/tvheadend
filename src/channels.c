@@ -783,6 +783,30 @@ channel_set_name ( channel_t *ch, const char *name )
   return save;
 }
 
+int
+channel_rename_and_save ( const char *from, const char *to )
+{
+  channel_t *ch;
+  const char *s;
+  int num_match = 0;
+
+  if (!from || !to || !*from || !*to)
+    return 0;
+
+  CHANNEL_FOREACH(ch) {
+    if (!ch->ch_enabled) continue;
+    s = channel_get_name(ch, NULL);
+    if (s == NULL) continue;
+    if (strcmp(s, from) == 0) {
+      ++num_match;
+      if (channel_set_name(ch, to)) {
+        idnode_changed(&ch->ch_id);
+      }
+    }
+  }
+  return num_match;
+}
+
 int64_t
 channel_get_number ( channel_t *ch )
 {
