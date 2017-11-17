@@ -732,6 +732,17 @@ mpegts_input_cat_pass_callback
 }
 
 void
+mpegts_input_open_cat_monitor
+  ( mpegts_mux_t *mm, mpegts_service_t *s )
+{
+  s->s_cat_mon =
+    mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK,
+                     mpegts_input_cat_pass_callback, s, "cat",
+                     LS_TBL_BASE, MT_QUICKREQ | MT_CRC, DVB_CAT_PID,
+                     MPS_WEIGHT_CAT);
+}
+
+void
 mpegts_input_open_service
   ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init, int weight )
 {
@@ -795,13 +806,8 @@ no_pids:
       mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK,
                        dvb_pmt_callback, s, "pmt", LS_TBL_BASE,
                        MT_CRC, s->s_pmt_pid, MPS_WEIGHT_PMT);
-    if (s->s_scrambled_pass && (flags & SUBSCRIPTION_EMM) != 0) {
-      s->s_cat_mon =
-        mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK,
-                         mpegts_input_cat_pass_callback, s, "cat",
-                         LS_TBL_BASE, MT_QUICKREQ | MT_CRC, DVB_CAT_PID,
-                         MPS_WEIGHT_CAT);
-    }
+    if (s->s_scrambled_pass && (flags & SUBSCRIPTION_EMM) != 0)
+      mpegts_input_open_cat_monitor(mm, s);
   }
 
   mpegts_mux_update_pids(mm);
@@ -821,6 +827,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
       mpegts_table_destroy(s->s_cat_mon);
   }
   s->s_pmt_mon = NULL;
+  s->s_cat_mon = NULL;
 
   /* Remove from list */
   pthread_mutex_lock(&mi->mi_output_lock);
