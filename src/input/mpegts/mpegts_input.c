@@ -767,8 +767,10 @@ mpegts_input_open_service
 
     mpegts_input_open_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s, reopen);
     mpegts_input_open_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s, reopen);
-    if (s->s_scrambled_pass)
+    if (s->s_scrambled_pass) {
       mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, s, reopen);
+      s->s_cat_opened = 1;
+    }
     /* Open only filtered components here */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
       if ((s->s_scrambled_pass || st->es_type != SCT_CA) &&
@@ -844,8 +846,10 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 
     mpegts_input_close_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s);
     mpegts_input_close_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s);
-    if (s->s_scrambled_pass)
+    if (s->s_cat_opened) {
       mpegts_input_close_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, s);
+      s->s_cat_opened = 0;
+    }
     /* Close all opened PIDs (the component filter may be changed at runtime) */
     TAILQ_FOREACH(st, &s->s_components, es_link) {
       if (st->es_pid_opened) {

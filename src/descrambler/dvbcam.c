@@ -425,6 +425,8 @@ end:
     if (mi) {
       pthread_mutex_lock(&mi->mi_output_lock);
       pthread_mutex_lock(&t->s_stream_mutex);
+      mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, t, 0);
+      ((mpegts_service_t *)t)->s_cat_opened = 1;
       mpegts_input_open_cat_monitor(mm, (mpegts_service_t *)t);
       mpegts_input_open_service_pid(mi, mm, t,
                                     SCT_CA, c->pid, MPS_WEIGHT_CA, 1);

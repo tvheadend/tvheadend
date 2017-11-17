@@ -626,6 +626,7 @@ struct mpegts_service
    * PMT/CAT monitoring
    */
 
+  uint8_t s_cat_opened;
   mpegts_table_t *s_pmt_mon; ///< Table entry for monitoring PMT
   mpegts_table_t *s_cat_mon; ///< Table entry for monitoring CAT
 
