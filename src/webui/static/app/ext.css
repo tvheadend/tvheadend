@@ -667,6 +667,13 @@
     margin: 0;
 }
 
+.x-epg-icons {
+    float: left;
+    font-size: 20px;
+    margin-left: 0.5em;
+    letter-spacing: 0.2em;
+}
+
 .x-epg-title {
     margin: 5px;
     padding: 5px;

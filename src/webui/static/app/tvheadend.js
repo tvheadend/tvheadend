@@ -43,6 +43,264 @@ tvheadend.fromCSV = function(s) {
     return r;
 }
 
+// We have "major" and "minor" mappings since we want things like
+// "Movie" to be preferred to minor elements such as "Comedy" so we
+// always end up displaying "Movie-Comedy" rather than having "Movie"
+// sometimes hidden in middle of other icons.
+//
+// Although we can insert the characters here, we use the hex
+// values because editors don't always work well with these
+// characters.
+//
+// The comments refer to the official unicode name
+//
+// These categories should _not_ be subject to internationalization
+// since many non-English xmltv providers appear to supply English
+// words for categories, presumably for compatibility with
+// mapping to a genre.
+var catmap_major = {
+  "movie" : "&#x1f39e;",        // Film frames
+  "news" : "&#x1f4f0;",         // Newspaper
+  "series" : "&#x1f4fa;",       // Television
+  "sports" : "&#x1f3c5;",       // Sports medal
+};
+
+var catmap_minor = {
+  // These are taken from the frequent categories in SD and then
+  // sorted by name. They display reasonably well on a modern
+  // font.
+  "action" : "&#x1f3f9;",          // Bow and Arrow
+  "adults only" : "&#x1f51e;",     // No one under eighteen symbol
+  "adventure" : "&#x1f3f9;",       // Bow and Arrow
+  "animals" : "&#x1f43e;",         // Paw prints
+  "animated" : "&#x270f;&#xFE0F;", // Pencil
+  "art" : "&#x1f3a8;",             // Artist pallette
+  "auction" : "&#x1f4b8",          // Money with wings
+  "auto racing" : "&#x1f3ce;",     // Racing car
+  "auto" : "&#x1f3ce;",            // Racing car
+  "baseball" : "&#x26BE;",         // Baseball
+  "basketball" : "&#1f3c0;",       // Basketball and hoop
+  "boxing" : "&#x1f94a;",          // Boxing glove
+  "bus./financial" : "&#x1f4c8;",  // Chart with upwards trend
+  "children" : "&#x1f476;",        // Baby
+  "comedy" : "&#x1f600;",          // Grinning face
+  "computers" : "&#x1f4bb;",       // Personal computer
+  "community" : "&#x1f46a;",       // Family
+  "cooking" : "&#x1f52a;",         // Cooking knife
+  "crime drama" : "&#x1f46e;",     // Police officer
+  "dance" : "&#x1f483;",           // Dancer
+  "educational" : "&#x1f393;",     // Graduation cap
+  "fantasy" : "&#x1f984;",         // Unicorn face
+  "fashion" : "&#x1f460;",         // High heeled shoe
+  "figure skating" : "&#x26F8;",   // Ice skate
+  "fishing" : "&#x1f3a3;",         // Fishing pole and fish
+  "football" : "&#x1f3c8;",        // American Football (not soccer)
+  "game show" : "&#x1f3b2;",       // Game die
+  "gymnastics" : "&#x1f938",       // Person doing cartwheel
+  "history" : "&#x1f3f0;",         // Castle
+  "holiday" : "&#x1f6eb;",         // Airplane departure
+  "horror" : "&#x1f480;",          // Skull
+  "horse" : "&#x1f434;",           // Horse face
+  "house/garden" : "&#x1f3e1;",    // House with garden
+  "interview" : "&#x1f4ac;",       // Speech balloon
+  "law" : "&#x1f46e;",             // Police officer
+  "martial arts" : "&#x1f94b;",    // Martial arts uniform
+  "medical" : "&#x1f691;",         // Ambulance
+  "military" : "&#x1f396;",        // Military medal
+  "miniseries" : "&#x1f517;",      // Link symbol
+  "motorcycle" : "&#x1f3cd;",      // Racing motorcycle
+  "music" : "&#x1f3b5;",           // Musical note
+  "musical" : "&#x1f3b5;",         // Musical note
+  "mystery" : "&#x1f50d",          // Left pointing magnifying glass
+  "nature" : "&#x1f418;",          // Elephant
+  "paranormal" : "&#x1f47b;",      // Ghost
+  "poker" : "&#x1f0b1;",           // Playing card ace of hearts
+  "politics" : "&#x1f5f3;",        // Ballot box with ballot
+  "pro wrestling" : "&#x1f93c;",   // Wrestlers
+  "reality" : "&#x1f4f8;",         // Camera with flash
+  "religious" : "&#x1f6d0;",       // Place of worship
+  "romance" : "&#x2764;&#xfe0f;",  // Red Heart
+  "romantic comedy" : "&#x2764;&#xfe0f;", // Red Heart
+  "science fiction" : "&#x1f47d;", // Extraterrestrial alien
+  "science" : "&#x1f52c;",         // Microscope
+  "shopping" : "&#x1f6cd;",        // Shopping bags
+  "sitcom": "&#x1f600;",           // Grinning face
+  "skiing" : "&#x26f7;",           // Skier
+  "soap" : "&#x1f754;",            // Alchemical symbol for soap
+  "soccer" : "&#x26BD;",           // Soccer ball
+  "sports talk" : "&#x1f4ac;",     // Speech balloon
+  "spy": "&#x1f575;",              // Spy
+  "standup" : "&#x1f3a4;",         // Microphone
+  "swimming" : "&#x1f3ca;",        // Swimmer
+  "talk" : "&#x1f4ac;",            // Speech balloon
+  "technology" : "&#x1f4bb;",      // Personal computer
+  "tennis" : "&#x1f3be;",          // Tennis racquet and ball
+  "theater" : "&#1f3ad;",          // Performing arts
+  "travel" : "&#x1f6eb;",          // Airplane departure
+  "war" : "&#x1f396;",             // Military medal
+  "weather" : "&#x26c5;",          // Sun behind cloud
+  "weightlifting" : "&#x1f3cb;",   // Person lifting weights
+  "western" : "&#x1f335;",         // Cactus
+};
+
+//  These are mappings for OTA genres
+var genre_major = {
+  // And genre major-numbers in hex
+  "10" : "&#x1f4fa;",           // Television: can't distinguish movie / tv
+  "20" : "&#x1f4f0;",           // Newspaper
+  "30" : "&#x1f3b2;",           // Game die
+  "40" : "&#x1f3c5;",           // Sports medal
+  "50" : "&#x1f476;",           // Baby
+  "60" : "&#x1f3b5;",           // Musical note
+  "70" : "&#x1f3ad;",           // Performing arts
+  "80" : "&#x1f5f3;",           // Ballot box with ballot
+  "90" : "&#x1f393;",           // Graduation cap
+  "a0" : "&#x26fa;",            // Tent
+};
+
+var genre_minor = {
+  "11" : "&#x1f575;",           // Spy
+  "12" : "&#x1f3f9;",           // Bow and Arrow
+  "13" : "&#x1f47d;",           // Extraterrestrial alien
+  "14" : "&#x1f600;",           // Grinning face
+  "15" : "&#x1f754;",           // Alchemical symbol for soap
+  "16" : "&#x2764;&#xfe0f;",    // Red Heart
+  "18" : "&#x1f51e;",           // No one under eighteen symbol
+  "33" : "&#x1f4ac;",           // Speech balloon
+  "43" : "&#x26bd;",            // Soccer ball
+  "44" : "&#x1f3be;",           // Tennis racquet and ball
+  "73" : "&#x1f6d0;",           // Place of worship
+  "91" : "&#x1f418;",           // Elephant
+  "a1" : "&#x1f6eb;",           // Airplane departure
+  "a5" : "&#x1f52a;",           // Cooking knife
+  "a6" : "&#x1f6d2;",           // Shopping trolley
+  "a7" : "&#x1f3e1;",           // House with garden
+};
+
+tvheadend.uniqueArray = function(arr) {
+  var unique = [];
+  for ( var i = 0 ; i < arr.length ; ++i ) {
+    if ( unique.indexOf(arr[i]) == -1 )
+      unique.push(arr[i]);
+  }
+  return unique;
+}
+
+
+tvheadend.getContentTypeIcons = function(rec) {
+  var ret_major = [];
+  var ret_minor = [];
+  var cat = rec.category
+  if (cat && cat.length) {
+    cat.sort();
+    for ( var i = 0 ; i < cat.length ; ++i ) {
+      var v = cat[i];
+      v = v.toLowerCase();
+      var l = catmap_major[v];
+      if (l) ret_major.push(l);
+      l = catmap_minor[v];
+      if (l) ret_minor.push(l)
+    }
+  } else {
+    // Genre code
+    var gen = rec.genre;
+    if (gen) {
+      for (var i = 0; i < gen.length; ++i) {
+        var genre = parseInt(gen[i]);
+        if (genre) {
+          // Convert number to hex to make lookup easier to
+          // cross-reference with epg.c
+          var l = genre_major[(genre & 0xf0).toString(16)];
+          if (l) ret_major.push(l);
+          l = genre_minor[genre.toString(16)];
+          if (l) ret_minor.push(l)
+        }
+      }
+    }
+  }
+
+  var ret = "";
+  if (rec.new)
+    ret += "&#x1f195;";         // Squared New
+  return ret + tvheadend.uniqueArray(ret_major).join("") + tvheadend.uniqueArray(ret_minor).join("");
+}
+
+tvheadend.displayCategoryIcon = function(value, meta, record, ri, ci, store) {
+  if (value == null)
+    return '';
+  var icons = tvheadend.getContentTypeIcons(record.data);
+  if (icons.length < 1) return '';
+  return icons;
+}
+
+tvheadend.contentTypeAction = {
+  width: 75,
+  id: 'category',
+  header: _("Content Type"),
+  tooltip: _("Content Type"),
+  dataIndex: 'category',
+  renderer: tvheadend.displayCategoryIcon,
+};
+
+tvheadend.getDisplayTitle = function(title, record) {
+  if (!title) return title;
+  var year = record.data['copyright_year'];
+  if (year)
+    title += " (" + year + ")";
+  return title;
+}
+
+// Helper function for common code to sort an array, convert to CSV and
+// return the string to add to the content.
+tvheadend.sortAndAddArray = function (arr, title) {
+  arr.sort();
+  var csv = arr.join(", ");
+  if (csv)
+    return '<div class="x-epg-meta"><span class="x-epg-prefix">' + title + ':</span><span class="x-epg-desc">' + csv + '</span></div>';
+  else
+    return '';
+}
+
+tvheadend.getDisplayCredits = function(credits) {
+  if (!credits)
+    return "";
+  if (credits instanceof Array)
+    return "";
+
+  var content = "";
+  // Our cast (credits) map contains details of actors, writers,
+  // etc. so split in to separate categories for displaying.
+  var castArr = [];
+  var crewArr = [];
+  var directorArr = [];
+  var writerArr = [];
+  var cast = ["actor", "guest", "presenter"];
+  // We use arrays here in case more tags in the future map on to
+  // director/writer, e.g., SchedulesDirect breaks it down in to
+  // writer, writer (adaptation) writer (screenplay), etc. but
+  // currently we just have them all as writer.
+  var director = ["director"];
+  var writer = ["writer"];
+
+  for (var key in credits) {
+    var type = credits[key];
+    if (cast.indexOf(type) != -1)
+      castArr.push(key);
+    else if (director.indexOf(type) != -1)
+      directorArr.push(key);
+    else if (writer.indexOf(type) != -1)
+      writerArr.push(key);
+    else
+      crewArr.push(key);
+  };
+
+  content += tvheadend.sortAndAddArray(castArr, _('Starring'));
+  content += tvheadend.sortAndAddArray(directorArr, _('Director'));
+  content += tvheadend.sortAndAddArray(writerArr, _('Writer'));
+  content += tvheadend.sortAndAddArray(crewArr, _('Crew'));
+  return content;
+}
+
 /**
  * Change uilevel
  */
@@ -472,6 +730,48 @@ tvheadend.niceDate = function(dt) {
     return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.language, {weekday: 'long'}) + '</div>' +
            '<div class="x-nice-date">' + d.toLocaleDateString() + '</div>' +
            '<div class="x-nice-time">' + d.toLocaleTimeString() + '</div>';
+}
+
+/* Date format when time is not needed, e.g., first_aired time is
+ * often 00:00.  Also takes a reference date so if the dt can be made
+ * nicer such as "Previous day" then we will use that instead.
+ */
+tvheadend.niceDateYearMonth = function(dt, refdate) {
+    var d = new Date(dt);
+    // If we have a reference date then we try and make the
+    // date nicer.
+    if  (refdate) {
+      var rd = new Date(refdate);
+      if (rd.getYear()  == d.getYear() &&
+          rd.getMonth() == d.getMonth() &&
+          rd.getDate()  == d.getDate()) {
+          var when;
+          if (rd.getHours()   == d.getHours() &&
+              rd.getMinutes() == d.getMinutes()) {
+              when = _("Premiere");
+          } else {
+              when = _("Same day");
+          }
+          return '<div class="x-nice-dayofweek">' + when + '</div>';
+      } else {
+        // Determine if it is previous day. We can't just subtract
+        // timestamps since a programme on at 8pm could have
+        // a previous shown timestamp of 00:00 on previous day,
+        // so would be > 86400 seconds ago. So, create temporary
+        // dates with timestamps of 00:00 and compare those.
+        var d0 = new Date(d);
+        var rd0 = new Date(rd);
+        d0.setHours(0);
+        d0.setMinutes(0);
+        rd0.setHours(0);
+        rd0.setMinutes(0);
+        if (Math.abs(d0 - rd0) <= (24 * 60 * 60 * 1000)) {
+          return '<div class="x-nice-dayofweek">' + _("Previous day") + '</div>';
+        }
+      }
+    }
+    return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.language, {weekday: 'long'}) + '</div>' +
+           '<div class="x-nice-date">' + d.toLocaleDateString() + '</div>';
 }
 
 /*
