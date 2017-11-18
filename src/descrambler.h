@@ -145,14 +145,13 @@ typedef struct descrambler_table {
 /**
  * List of CA ids
  */
-#define CAID_REMOVE_ME ((uint16_t)-1)
-
 typedef struct caid {
   LIST_ENTRY(caid) link;
 
   uint16_t pid;
   uint16_t caid;
   uint32_t providerid;
+  uint8_t  delete_me;
   uint8_t  use;
   uint8_t  filter;
 

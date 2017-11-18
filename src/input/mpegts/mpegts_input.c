@@ -631,7 +631,7 @@ mpegts_input_close_pid
   return 0;
 }
 
-int
+elementary_stream_t *
 mpegts_input_open_service_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm,
     service_t *s, streaming_component_type_t stype,
@@ -644,7 +644,7 @@ mpegts_input_open_service_pid
   es = NULL;
   if (service_stream_find((service_t *)s, pid) == NULL) {
     if (!create)
-      return -1;
+      return NULL;
     es = service_stream_create(s, pid, stype);
     es->es_pid_opened = 1;
   }
@@ -652,7 +652,7 @@ mpegts_input_open_service_pid
     mpegts_input_open_pid(mi, mm, pid,
                           MPS_SERVICE, weight, s, 0);
   }
-  return 0;
+  return es;
 }
 
 static void
@@ -686,6 +686,8 @@ mpegts_input_cat_pass_callback
   mpegts_psi_table_state_t *st  = NULL;
   service_t                *s   = mt->mt_opaque;
   mpegts_input_t           *mi;
+  elementary_stream_t      *es, *next;
+  caid_t                   *c, *cn;
 
   /* Start */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
@@ -696,6 +698,19 @@ mpegts_input_cat_pass_callback
 
   /* Send CAT data for descramblers */
   descrambler_cat_data(mm, ptr, len);
+
+  mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
+  if (mi == NULL) goto fin;
+
+  pthread_mutex_lock(&mi->mi_output_lock);
+  pthread_mutex_lock(&s->s_stream_mutex);
+
+  TAILQ_FOREACH(es, &s->s_components, es_link) {
+    if (es->es_type != SCT_CAT) continue;
+    es->es_delete_me = 1;
+    LIST_FOREACH(c, &es->es_caids, link)
+      c->delete_me = 1;
+  }
 
   while(len > 2) {
     dtag = *ptr++;
@@ -709,13 +724,28 @@ mpegts_input_cat_pass_callback
           pid  = ((ptr[2] & 0x1f) << 8) | ptr[3];
           tvhdebug(LS_TBL_BASE, "cat:  pass: caid %04X (%d) pid %04X (%d)",
                    (uint16_t)caid, (uint16_t)caid, pid, pid);
-          mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
-          if (mi) {
-            pthread_mutex_lock(&mi->mi_output_lock);
-            pthread_mutex_lock(&s->s_stream_mutex);
-            mpegts_input_open_service_pid(mi, mm, s, SCT_CA, pid, MPS_WEIGHT_CAT, 1);
-            pthread_mutex_unlock(&s->s_stream_mutex);
-            pthread_mutex_unlock(&mi->mi_output_lock);
+          es = mpegts_input_open_service_pid(mi, mm, s, SCT_CAT, pid,
+                                             MPS_WEIGHT_CAT, 1);
+          if (es) {
+            LIST_FOREACH(c, &es->es_caids, link) {
+              if (c->pid == pid) {
+                c->caid = caid;
+                c->delete_me = 0;
+                es->es_delete_me = 0;
+                break;
+              }
+            }
+            if (c == NULL) {
+              c = malloc(sizeof(caid_t));
+              c->caid = caid;
+              c->providerid = 0;
+              c->use = 1;
+              c->pid = pid;
+              c->delete_me = 0;
+              c->filter = 0;
+              LIST_INSERT_HEAD(&es->es_caids, c, link);
+              es->es_delete_me = 0;
+            }
           }
         }
         break;
@@ -727,7 +757,25 @@ mpegts_input_cat_pass_callback
     len -= dlen;
   }
 
+  for (es = TAILQ_FIRST(&s->s_components); es != NULL; es = next) {
+    next = TAILQ_NEXT(es, es_link);
+    if (es->es_type != SCT_CAT) continue;
+    for (c = LIST_FIRST(&es->es_caids); c != NULL; c = cn) {
+      cn = LIST_NEXT(c, link);
+      if (cn->delete_me) {
+        LIST_REMOVE(c, link);
+        free(c);
+      }
+      if (es->es_delete_me)
+        service_stream_destroy(s, es);
+    }
+  }
+
+  pthread_mutex_unlock(&s->s_stream_mutex);
+  pthread_mutex_unlock(&mi->mi_output_lock);
+
   /* Finish */
+fin:
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 

@@ -2080,12 +2080,12 @@ void service_save ( service_t *t, htsmsg_t *m )
       caid_t *c;
       htsmsg_t *v = htsmsg_create_list();
       LIST_FOREACH(c, &st->es_caids, link) {
-	      htsmsg_t *caid = htsmsg_create_map();
+        htsmsg_t *caid = htsmsg_create_map();
 
-	      htsmsg_add_u32(caid, "caid", c->caid);
-	      if(c->providerid)
-	        htsmsg_add_u32(caid, "providerid", c->providerid);
-	      htsmsg_add_msg(v, NULL, caid);
+        htsmsg_add_u32(caid, "caid", c->caid);
+        if(c->providerid)
+          htsmsg_add_u32(caid, "providerid", c->providerid);
+        htsmsg_add_msg(v, NULL, caid);
       }
 
       htsmsg_add_msg(sub, "caidlist", v);
@@ -2183,6 +2183,7 @@ add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
   c->pid = 0;
   c->use = 1;
   c->filter = 0;
+  c->delete_me = 0;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
 }
 

@@ -572,6 +572,7 @@ static struct strtab streamtypetab[] = {
   { "HBBTV",      SCT_HBBTV },
   { "THEORA",     SCT_THEORA },
   { "OPUS",       SCT_OPUS },
+  { "CAT",        SCT_CAT },
 };
 
 /**

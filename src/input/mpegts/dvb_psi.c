@@ -2197,6 +2197,7 @@ psi_desc_add_ca
       if (c->pid > 0 && c->pid != pid)
         r |= PMT_UPDATE_CAID_PID;
       c->pid = pid;
+      c->delete_me = 0;
 
       if(c->providerid != provid) {
         c->providerid = provid;
@@ -2212,6 +2213,8 @@ psi_desc_add_ca
   c->providerid = provid;
   c->use = 1;
   c->pid = pid;
+  c->delete_me = 0;
+  c->filter = 0;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
   r |= PMT_UPDATE_NEW_CAID;
   return r;
@@ -2378,7 +2381,7 @@ psi_parse_pmt
     st->es_delete_me = 1;
 
     LIST_FOREACH(c, &st->es_caids, link)
-      c->pid = CAID_REMOVE_ME;
+      c->delete_me = 1;
   }
 
   // Common descriptors
@@ -2621,7 +2624,7 @@ psi_parse_pmt
 
     for(c = LIST_FIRST(&st->es_caids); c != NULL; c = cn) {
       cn = LIST_NEXT(c, link);
-      if (c->pid == CAID_REMOVE_ME) {
+      if (c->delete_me) {
         LIST_REMOVE(c, link);
         free(c);
         update |= PMT_UPDATE_CAID_DELETED;

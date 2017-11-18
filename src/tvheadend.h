@@ -305,7 +305,8 @@ typedef enum {
   SCT_HBBTV,
   SCT_THEORA,
   SCT_OPUS,
-  SCT_LAST = SCT_OPUS
+  SCT_CAT,     /* MPEG-TS CAT (EMM) data */
+  SCT_LAST = SCT_CAT
 } streaming_component_type_t;
 
 #define SCT_MASK(t) (1 << (t))

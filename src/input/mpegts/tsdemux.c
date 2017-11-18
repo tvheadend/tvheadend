@@ -192,7 +192,7 @@ ts_recv_packet0
     if (!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
       continue;
 
-    if (st->es_type == SCT_CA)
+    if (st->es_type == SCT_CA || st->es_type == SCT_CAT)
       continue;
 
     if (st->es_type == SCT_HBBTV) {
@@ -205,7 +205,7 @@ ts_recv_packet0
 
   }
 
-  if (!t->s_scrambled_pass && st->es_type == SCT_CA)
+  if (!t->s_scrambled_pass && (st->es_type == SCT_CA || st->es_type == SCT_CAT))
     return;
 
 skip_cc:
