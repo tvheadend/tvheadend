@@ -24,6 +24,12 @@ tvheadend.dvrDetails = function(uuid) {
         var autorec_caption = params[12].value;
         var timerec_caption = params[13].value;
         var image = params[14].value;
+        var copyright_year = params[15].value;
+        var credits = params[16].value;
+        var keyword = params[17].value;
+        var category = params[18].value;
+        var first_aired = params[19].value;
+        var genre = params[20].value;
         var content = '';
         var but;
 
@@ -39,8 +45,14 @@ tvheadend.dvrDetails = function(uuid) {
         if (duplicate)
             content += '<div class="x-epg-meta"><font color="red"><span class="x-epg-prefix">' + _('Will be skipped') + '<br>' + _('because it is a rerun of:') + '</span>' + tvheadend.niceDate(duplicate * 1000) + '</font></div>';
 
+        var icons = tvheadend.getContentTypeIcons({"category" : category, "genre" : genre});
+        if (icons)
+            content += '<div class="x-epg-icons">' + icons + '</div>';
+        var displayTitle = title;
+        if (copyright_year)
+            displayTitle += "&nbsp;(" + copyright_year + ")";
         if (title)
-            content += '<div class="x-epg-title">' + title + '</div>';
+            content += '<div class="x-epg-title">' + displayTitle + '</div>';
         if (subtitle)
             content += '<div class="x-epg-title">' + subtitle + '</div>';
         if (episode)
@@ -49,6 +61,9 @@ tvheadend.dvrDetails = function(uuid) {
             content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Scheduled Start Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(start_real * 1000) + '</span></div>';
         if (stop_real)
             content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Scheduled Stop Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(stop_real * 1000) + '</span></div>';
+        /* We have to *1000 here (and not in epg.js) since Date requires ms and epgStore has it already converted */
+        if (first_aired)
+            content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('First Aired') + ':</span><span class="x-epg-body">' + tvheadend.niceDateYearMonth(first_aired * 1000, start_real * 1000) + '</span></div>';
         if (duration)
             content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Duration') + ':</span><span class="x-epg-body">' + parseInt(duration / 60) + ' ' + _('min') + '</span></div>';
         if (chicon) {
@@ -64,6 +79,11 @@ tvheadend.dvrDetails = function(uuid) {
             content += '<div class="x-epg-desc">' + desc + '</div>';
             content += '<hr class="x-epg-hr"/>';
         }
+        content += tvheadend.getDisplayCredits(credits);
+        if (keyword)
+          content += tvheadend.sortAndAddArray(keyword, _('Keywords'));
+        if (category)
+          content += tvheadend.sortAndAddArray(category, _('Categories'));
         if (status)
             content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Status') + ':</span><span class="x-epg-body">' + status + '</span></div>';
         if (filesize)
@@ -123,7 +143,8 @@ tvheadend.dvrDetails = function(uuid) {
             uuid: uuid,
             list: 'channel_icon,disp_title,disp_subtitle,episode,start_real,stop_real,' +
                   'duration,disp_description,status,filesize,comment,duplicate,' +
-                  'autorec_caption,timerec_caption,image'
+                  'autorec_caption,timerec_caption,image,copyright_year,credits,keyword,category,' +
+                  'first_aired,genre',
         },
         success: function(d) {
             d = json_decode(d);
@@ -200,19 +221,42 @@ tvheadend.filesizeRenderer = function(st) {
     }
 }
 
+
+tvheadend.displayDuplicate = function(value, meta, record) {
+  if (value == null)
+    return '';
+  var is_dup = record.data['duplicate'];
+  if (is_dup)
+    return "<span class='x-epg-duplicate'>" + value + "</span>";
+  else
+    return value;
+}
+
 /** Render an entry differently if it is a duplicate */
 tvheadend.displayWithDuplicateRenderer = function(value, meta, record) {
     return function() {
         return function(value, meta, record) {
-            if (value == null)
-                return '';
-            var is_dup = record.data['duplicate'];
-            if (is_dup)
-                return "<span class='x-epg-duplicate'>" + value + "</span>";
-            else
-                return value;
+          return tvheadend.displayDuplicate(value, meta, record);
         }
     }
+}
+
+tvheadend.displayWithYearAndDuplicateRenderer = function(value, meta, record) {
+  return function() {
+    return function(value, meta, record) {
+      value = tvheadend.getDisplayTitle(value, record);
+      return tvheadend.displayDuplicate(value, meta, record);
+    }
+  }
+}
+
+tvheadend.displayWithYearRenderer = function(value, meta, record) {
+  return function() {
+    return function(value, meta, record) {
+      value = tvheadend.getDisplayTitle(value, record);
+      return value;
+    }
+  }
 }
 
 /**
@@ -321,19 +365,34 @@ tvheadend.dvr_upcoming = function(panel, index) {
             }
         },
         del: true,
-        list: 'enabled,duplicate,disp_title,disp_subtitle,episode,channel,' +
+        list: 'category,enabled,duplicate,disp_title,disp_subtitle,episode,channel,' +
               'image,' +
+              'copyright_year,' +
               'start_real,stop_real,duration,pri,filesize,' +
-              'sched_status,errors,data_errors,config_name,owner,creator,comment',
+              'sched_status,errors,data_errors,config_name,owner,creator,comment,genre',
         columns: {
             disp_title: {
-              renderer: tvheadend.displayWithDuplicateRenderer()
+              renderer: tvheadend.displayWithYearAndDuplicateRenderer()
             },
             disp_subtitle: {
               renderer: tvheadend.displayWithDuplicateRenderer()
             },
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
+            },
+            genre : {
+                renderer: function(vals, meta, record) {
+                    return function(vals, meta, record) {
+                      var r = [];
+                      Ext.each(vals, function(v) {
+                        v = tvheadend.contentGroupFullLookupName(v);
+                        if (v)
+                          r.push(v);
+                      });
+                      if (r.length < 1) return "";
+                      return r.join(',');
+                  }
+                }
             }
         },
         sort: {
@@ -341,7 +400,10 @@ tvheadend.dvr_upcoming = function(panel, index) {
           direction: 'ASC'
         },
         plugins: [actions],
-        lcol: [actions],
+        lcol: [
+            actions,
+            tvheadend.contentTypeAction,
+        ],
         tbar: [stopButton, abortButton],
         selected: selected,
         beforeedit: beforeedit
@@ -485,8 +547,12 @@ tvheadend.dvr_finished = function(panel, index) {
         del: false,
         list: 'disp_title,disp_subtitle,episode,channelname,' +
               'start_real,stop_real,duration,filesize,' +
-              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
+              'copyright_year,' +
+              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,',
         columns: {
+            disp_title: {
+              renderer: tvheadend.displayWithYearRenderer(),
+            },
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
             }
@@ -621,9 +687,14 @@ tvheadend.dvr_failed = function(panel, index) {
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
         list: 'disp_title,disp_subtitle,episode,channelname,' +
+              'image,' +
+              'copyright_year,' +
               'start_real,stop_real,duration,filesize,status,' +
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
         columns: {
+            disp_title: {
+              renderer: tvheadend.displayWithYearRenderer(),
+            },
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
             }
@@ -706,8 +777,15 @@ tvheadend.dvr_removed = function(panel, index) {
         edit: { params: { list: tvheadend.admin ? "retention,owner,comment" : "retention,comment" } },
         del: true,
         list: 'disp_title,disp_subtitle,episode,channelname,' +
+              'image,' +
+              'copyright_year,' +
               'start_real,stop_real,duration,status,' +
               'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
+        columns: {
+            disp_title: {
+              renderer: tvheadend.displayWithYearRenderer(),
+            },
+        },
         sort: {
           field: 'start_real',
           direction: 'ASC'
