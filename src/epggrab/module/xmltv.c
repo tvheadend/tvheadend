@@ -60,6 +60,7 @@ static time_t _xmltv_str2time(const char *in)
   char str[32];
 
   memset(&tm, 0, sizeof(tm));
+  tm.tm_mday = 1;               /* Day is one-based not zero-based */
   strncpy(str, in, sizeof(str));
   str[sizeof(str)-1] = '\0';
 
@@ -82,12 +83,19 @@ static time_t _xmltv_str2time(const char *in)
 	     &tm.tm_year, &tm.tm_mon, &tm.tm_mday,
 	     &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
 
-  /* adjust */
-  tm.tm_mon  -= 1;
-  tm.tm_year -= 1900;
+  /* Time "can be 'YYYYMMDDhhmmss' or some initial substring...you can
+   * have 'YYYYMM'" according to DTD. The imprecise dates are used
+   * for previously-shown.
+   *
+   * r is number of fields parsed (1-based). We have to adjust fields
+   * if they have been parsed since timegm has some fields based
+   * differently to others.
+   */
+  if (r > 1) tm.tm_mon  -= 1;
+  if (r > 0) tm.tm_year -= 1900;
   tm.tm_isdst = -1;
 
-  if (r >= 5) {
+  if (r > 0) {
     return timegm(&tm) - tz;
   } else {
     return 0;
