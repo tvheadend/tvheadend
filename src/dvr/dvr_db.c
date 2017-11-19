@@ -3343,6 +3343,15 @@ dvr_entry_class_duplicate_get(void *o)
 }
 
 static const void *
+dvr_entry_class_first_aired_get(void *o)
+{
+  static time_t null = 0;
+  const dvr_entry_t *de = (const dvr_entry_t *)o;
+  return de && de->de_bcast && de->de_bcast->episode ?
+    &de->de_bcast->episode->first_aired : &null;
+}
+
+static const void *
 dvr_entry_class_category_get(void *o)
 {
   const dvr_entry_t *de = (dvr_entry_t *)o;
@@ -3895,6 +3904,14 @@ const idclass_t dvr_entry_class = {
       .name     = N_("Rerun of"),
       .desc     = N_("Name (or date) of program the entry is a rerun of."),
       .get      = dvr_entry_class_duplicate_get,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_ADVANCED,
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "first_aired",
+      .name     = N_("First aired"),
+      .desc     = N_("Time when the program was first aired"),
+      .get      = dvr_entry_class_first_aired_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_ADVANCED,
     },
     {
