@@ -50,6 +50,12 @@ typedef struct dvbcam_active_service {
   uint16_t             caid;
   dvbcam_active_cam_t *ac;
   mpegts_apids_t       ecm_pids;
+  uint8_t             *cat_data;
+  int                  cat_data_len;
+  mpegts_apids_t       cat_pids;
+#if ENABLE_DDCI
+  int                  is_ddci;
+#endif
 } dvbcam_active_service_t;
 
 typedef struct dvbcam {
@@ -311,6 +317,8 @@ dvbcam_service_destroy(th_descrambler_t *td)
         ac->active_programs--;
   }
   mpegts_pid_done(&as->ecm_pids);
+  mpegts_pid_done(&as->cat_pids);
+  free(as->cat_data);
   free(as);
   pthread_mutex_unlock(&dvbcam_mutex);
 }
@@ -327,16 +335,6 @@ dvbcam_descramble_ddci(service_t *t, elementary_stream_t *st, const uint8_t *tsb
 
   return 1;
 }
-
-#if 0
-static void
-dvbcam_caid_change_ddci(th_descrambler_t *td)
-{
-  tvhwarning(LS_DVBCAM, "FIXME: implement dvbcam_caid_change_ddci");
-
-}
-#endif
-
 #endif /* ENABLE_DDCI */
 
 /*
@@ -358,7 +356,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
 #if ENABLE_DDCI
   mpegts_input_t *mi;
   mpegts_mux_t *mm;
-  int ddci_cam = 0, i;
+  int i;
   mpegts_apids_t ecm_pids;
   mpegts_apids_t ecm_to_open;
   mpegts_apids_t ecm_to_close;
@@ -436,6 +434,7 @@ end_of_search_for_cam:
   as->ac = ac;
   as->caid = c->caid;
   mpegts_pid_init(&as->ecm_pids);
+  mpegts_pid_init(&as->cat_pids);
 
   td = (th_descrambler_t *)as;
   snprintf(buf, sizeof(buf), "dvbcam-%i-%i-%04X",
@@ -451,11 +450,7 @@ end_of_search_for_cam:
     /* assign the service to the DD CI CAM */
     linuxdvb_ddci_assign(ac->ca->lddci, t);
     dr->dr_descramble = dvbcam_descramble_ddci;
-
-    /* add CAT (EMM) handler */
-    // td->td_caid_change = dvbcam_caid_change_ddci;
-
-    ddci_cam = 1;
+    as->is_ddci = 1;
   }
 #endif
   descrambler_change_keystate(td, DS_READY, 0);
@@ -485,8 +480,7 @@ end:
   pthread_mutex_unlock(&t->s_stream_mutex);
 
 #if ENABLE_DDCI
-
-  if (ddci_cam) {
+  if (as && as->is_ddci) {
     mm = ((mpegts_service_t *)t)->s_dvb_mux;
     mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
     if (mi) {
@@ -496,13 +490,12 @@ end:
       ((mpegts_service_t *)t)->s_cat_opened = 1;
       for (i = 0; i < ecm_to_open.count; i++)
         mpegts_input_open_pid(mi, mm, ecm_to_open.pids[i].pid, MPS_SERVICE,
-                             MPS_WEIGHT_CAT, t, 0);
+                             MPS_WEIGHT_CA, t, 0);
       for (i = 0; i < ecm_to_close.count; i++)
         mpegts_input_close_pid(mi, mm, ecm_to_close.pids[i].pid, MPS_SERVICE,
-                               MPS_WEIGHT_CAT, t);
+                               MPS_WEIGHT_CA, t);
       pthread_mutex_unlock(&t->s_stream_mutex);
       pthread_mutex_unlock(&mi->mi_output_lock);
-      mpegts_input_open_cat_monitor(mm, (mpegts_service_t *)t);
       mpegts_mux_update_pids(mm);
     }
   }
@@ -523,9 +516,95 @@ dvbcam_free(caclient_t *cac)
 /*
  *
  */
+typedef struct __cat_update {
+  mpegts_service_t *service;
+  mpegts_apids_t to_open;
+  mpegts_apids_t to_close;
+} __cat_update_t;
+
+/*
+ *
+ */
 static void
-dvbcam_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint16_t pid, int valid)
+dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int len)
 {
+#if ENABLE_DDCI
+  __cat_update_t services[32], *sp;
+  int i, services_count;
+  dvbcam_active_service_t *as;
+  mpegts_apids_t pids;
+  const uint8_t *data1;
+  int len1;
+  uint8_t dtag;
+  uint8_t dlen;
+  uint16_t caid;
+  uint16_t pid;
+  mpegts_input_t *mi;
+
+  if (len <= 0)
+    return;
+
+  services_count = 0;
+  pthread_mutex_lock(&dvbcam_mutex);
+  /* is there already a CAM associated to the service? */
+  TAILQ_FOREACH(as, &dvbcam_active_services, global_link) {
+    if (!as->is_ddci) continue;
+    if (as->caid == 0) continue;
+    if (((mpegts_service_t *)as->td_service)->s_dvb_mux != mux) continue;
+    if (len == as->cat_data_len) continue;
+    if (memcmp(data, as->cat_data, len) == 0) continue;
+    free(as->cat_data);
+    as->cat_data = malloc(len);
+    memcpy(as->cat_data, data, len);
+    if (services_count < ARRAY_SIZE(services)) {
+      sp = &services[services_count++];
+      sp->service = (mpegts_service_t *)as->td_service;
+      mpegts_pid_init(&sp->to_open);
+      mpegts_pid_init(&sp->to_close);
+      mpegts_pid_init(&pids);
+      data1 = data;
+      len1  = len;
+      while (len1 > 2) {
+        dtag = *data1++;
+        dlen = *data1++;
+        len1 -= 2;
+        if (dtag == DVB_DESC_CA && len1 >= 4 && dlen >= 4) {
+          caid =  (data1[0] << 8) | data1[1];
+          pid  = ((data1[2] << 8) | data1[3]) & 0x1fff;
+          if (caid == as->caid && pid != 0)
+            mpegts_pid_add(&pids, pid, 0);
+        }
+        data1 += dlen;
+        len1  -= dlen;
+      }
+      mpegts_pid_compare(&pids, &as->cat_pids, &sp->to_open, &sp->to_close);
+      mpegts_pid_copy(&as->cat_pids, &pids);
+      mpegts_pid_done(&pids);
+    } else
+      tvherror(LS_DVBCAM, "CAT update error (array overflow)");
+  }
+  pthread_mutex_unlock(&dvbcam_mutex);
+
+  if (services_count > 0) {
+    mi = mux->mm_active ? mux->mm_active->mmi_input : NULL;
+    if (mi) {
+      pthread_mutex_lock(&mi->mi_output_lock);
+      pthread_mutex_lock(&sp->service->s_stream_mutex);
+      for (i = 0; i < services_count; i++) {
+        sp = &services[i];
+        for (i = 0; i < sp->to_open.count; i++)
+          mpegts_input_open_pid(mi, mux, sp->to_open.pids[i].pid, MPS_SERVICE,
+                               MPS_WEIGHT_CAT, sp->service, 0);
+        for (i = 0; i < sp->to_close.count; i++)
+          mpegts_input_close_pid(mi, mux, sp->to_close.pids[i].pid, MPS_SERVICE,
+                                 MPS_WEIGHT_CAT, sp->service);
+      }
+      pthread_mutex_unlock(&sp->service->s_stream_mutex);
+      pthread_mutex_unlock(&mi->mi_output_lock);
+      mpegts_mux_update_pids(mux);
+    }
+  }
+#endif
 }
 
 /**
@@ -566,7 +645,7 @@ caclient_t *dvbcam_create(void)
   dc->cac_free         = dvbcam_free;
   dc->cac_start        = dvbcam_service_start;
   dc->cac_conf_changed = dvbcam_conf_changed;
-  dc->cac_caid_update  = dvbcam_caid_update;
+  dc->cac_cat_update   = dvbcam_cat_update;
   return (caclient_t *)dc;
 }
 
