@@ -2248,6 +2248,7 @@ void service_load ( service_t *t, htsmsg_t *c )
   elementary_stream_t *st;
   streaming_component_type_t type;
   const char *v;
+  int shared_pcr = 0;
 
   idnode_load(&t->s_id, c);
 
@@ -2286,6 +2287,9 @@ void service_load ( service_t *t, htsmsg_t *c )
 
       if(htsmsg_get_u32(c, "pid", &pid))
         continue;
+
+      if(pid > 0 && t->s_pcr_pid > 0 && pid == t->s_pcr_pid)
+        shared_pcr = 1;
 
       st = service_stream_create(t, pid, type);
 
@@ -2330,6 +2334,8 @@ void service_load ( service_t *t, htsmsg_t *c )
       }
     }
   }
+  if (!shared_pcr)
+    service_stream_create(t, t->s_pcr_pid, SCT_PCR);
   sort_elementary_streams(t);
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
