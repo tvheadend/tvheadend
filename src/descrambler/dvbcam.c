@@ -39,6 +39,7 @@ typedef struct dvbcam_active_cam {
   linuxdvb_ca_t       *ca;
   uint8_t              slot;
   int                  active_programs;
+  int                  allocated_programs;
 } dvbcam_active_cam_t;
 
 typedef struct dvbcam_active_service {
@@ -316,6 +317,7 @@ dvbcam_service_destroy(th_descrambler_t *td)
       if (as->ac == ac)
         ac->active_programs--;
   }
+  ac->allocated_programs--;
   mpegts_pid_done(&as->ecm_pids);
   mpegts_pid_done(&as->cat_pids);
   free(as->cat_data);
@@ -403,7 +405,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
       TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link)
         if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid)) {
           /* limit the concurrent service decoders per CAM */
-          if (dc->limit > 0 && ac->active_programs <= dc->limit)
+          if (dc->limit > 0 && ac->allocated_programs <= dc->limit)
             continue;
 
 #if ENABLE_DDCI
@@ -422,6 +424,8 @@ end_of_search_for_cam:
 
   if ((as = calloc(1, sizeof(*as))) == NULL)
     goto end;
+
+  ac->allocated_programs++;
 
   as->ac = ac;
   as->caid = c->caid;
