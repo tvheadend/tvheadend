@@ -328,7 +328,7 @@ ts_recv_packet1
     service_set_streaming_status_flags((service_t*)t, TSS_INPUT_SERVICE);
 
   scrambled = t->s_scrambled_seen;
-  if(!t->s_scrambled_pass && ((tsb[3] & 0xc0) || scrambled)) {
+  if(!t->s_scrambled_pass && ((tsb[3] & 0xc0) || (st && scrambled))) {
 
     /**
      * Lock for descrambling, but only if packet was not in error
