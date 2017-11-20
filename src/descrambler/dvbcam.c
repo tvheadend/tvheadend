@@ -31,7 +31,6 @@
 #if ENABLE_LINUXDVB_CA
 
 #define CAIDS_PER_CA_SLOT   16
-#define MAX_ECM_PIDS        16   // max opened ECM PIDs
 
 typedef struct dvbcam_active_cam {
   TAILQ_ENTRY(dvbcam_active_cam) global_link;
@@ -42,11 +41,6 @@ typedef struct dvbcam_active_cam {
   int                  active_programs;
 } dvbcam_active_cam_t;
 
-typedef struct dvbcam_ecm_pids {
-  uint16_t             pids[MAX_ECM_PIDS];
-  int                  num_pids;
-} dvbcam_ecm_pids_t;
-
 typedef struct dvbcam_active_service {
   th_descrambler_t;
   TAILQ_ENTRY(dvbcam_active_service) global_link;
@@ -55,7 +49,7 @@ typedef struct dvbcam_active_service {
   int                  last_pmt_len;
   uint16_t             caid;
   dvbcam_active_cam_t *ac;
-  dvbcam_ecm_pids_t    ecm_open;
+  mpegts_apids_t       ecm_pids;
 } dvbcam_active_service_t;
 
 typedef struct dvbcam {
@@ -316,6 +310,7 @@ dvbcam_service_destroy(th_descrambler_t *td)
       if (as->ac == ac)
         ac->active_programs--;
   }
+  mpegts_pid_done(&as->ecm_pids);
   free(as);
   pthread_mutex_unlock(&dvbcam_mutex);
 }
@@ -331,74 +326,6 @@ dvbcam_descramble_ddci(service_t *t, elementary_stream_t *st, const uint8_t *tsb
     linuxdvb_ddci_put(as->ac->ca->lddci, tsb, len);
 
   return 1;
-}
-
-static void
-dvbcam_ecm_pid_update
-  (dvbcam_active_service_t *as, service_t *t, dvbcam_ecm_pids_t *new_ecm_pids)
-{
-  mpegts_mux_t *mm;
-  mpegts_input_t *mi;
-  int i, j, pid;
-  dvbcam_ecm_pids_t ecm_pids_to_open;
-  dvbcam_ecm_pids_t ecm_pids_to_close;
-
-  if (new_ecm_pids->num_pids == 0) return;
-
-  /* due to the mutex lock order, we need two helper arrays
-   * to be filled with locked dvbcam mutex and executed at the end with
-   * unlocked dvbcam  mutex
-   */
-  memset(&ecm_pids_to_open, 0, sizeof(ecm_pids_to_open));
-  memset(&ecm_pids_to_close, 0, sizeof(ecm_pids_to_close));
-
-  pthread_mutex_lock(&dvbcam_mutex);
-
-  for (i = 0; i < new_ecm_pids->num_pids; i++) {
-    pid = new_ecm_pids->pids[i];
-
-    /* Clear out already opened PIDs, so that they don't get closed in
-     * the next step
-     */
-    for (j = 0; j < as->ecm_open.num_pids; j++)
-      if (as->ecm_open.pids[j] == pid) {
-        as->ecm_open.pids[j] = 0;
-        break;
-      }
-
-    /* Not found -> New PID */
-    if (j == as->ecm_open.num_pids)
-      ecm_pids_to_open.pids[ecm_pids_to_open.num_pids++] = pid;
-  }
-
-  /* close old PIDs (list contains only no longer used PIDs) */
-  for (i = 0; i < as->ecm_open.num_pids; i++) {
-    pid = as->ecm_open.pids[i];
-    if (pid)
-      ecm_pids_to_close.pids[ecm_pids_to_close.num_pids++] = pid;
-  }
-
-  /* save new open PIDs list */
-  as->ecm_open = *new_ecm_pids;
-
-  pthread_mutex_unlock(&dvbcam_mutex);
-
-  mm = ((mpegts_service_t *)t)->s_dvb_mux;;
-  mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
-  if (mi) {
-    pthread_mutex_lock(&mi->mi_output_lock);
-    pthread_mutex_lock(&t->s_stream_mutex);
-
-    for (i = 0; i < ecm_pids_to_open.num_pids; i++)
-      mpegts_input_open_pid(mi, mm, ecm_pids_to_open.pids[i], MPS_SERVICE,
-                           MPS_WEIGHT_CAT, t, 0);
-    for (i = 0; i < ecm_pids_to_close.num_pids; i++)
-      mpegts_input_close_pid(mi, mm, ecm_pids_to_close.pids[i], MPS_SERVICE,
-                             MPS_WEIGHT_CAT, t);
-
-    pthread_mutex_unlock(&t->s_stream_mutex);
-    pthread_mutex_unlock(&mi->mi_output_lock);
-  }
 }
 
 #if 0
@@ -431,8 +358,10 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
 #if ENABLE_DDCI
   mpegts_input_t *mi;
   mpegts_mux_t *mm;
-  int ddci_cam = 0;
-  dvbcam_ecm_pids_t new_ecm_pids;
+  int ddci_cam = 0, i;
+  mpegts_apids_t ecm_pids;
+  mpegts_apids_t ecm_to_open;
+  mpegts_apids_t ecm_to_close;
 #endif
 
   if (!cac->cac_enabled)
@@ -441,7 +370,9 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   tvhtrace(LS_DVBCAM, "start service %p", t);
 
 #if ENABLE_DDCI
-  memset(&new_ecm_pids,0,sizeof(new_ecm_pids));
+  mpegts_pid_init(&ecm_pids);
+  mpegts_pid_init(&ecm_to_open);
+  mpegts_pid_init(&ecm_to_close);
 #endif
 
   pthread_mutex_lock(&t->s_stream_mutex);
@@ -473,25 +404,27 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   */
 
   /* check all elementary streams for CAIDs and find CAM */
-  TAILQ_FOREACH(st, &t->s_filt_components, es_link)
-    LIST_FOREACH(c, &st->es_caids, link)
-      if (c->use)
-        TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link)
-          if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid)) {
-            /* FIXME: The limit check needs to be per CAM, so we need to find
-             *        another CAM if the fund one is on limit.
-             */
+  TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
+    if (st->es_type != SCT_CA) continue;
+    LIST_FOREACH(c, &st->es_caids, link) {
+      if (!c->use) continue;
+      TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link)
+        if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid)) {
+          /* FIXME: The limit check needs to be per CAM, so we need to find
+           *        another CAM if the fund one is on limit.
+           */
 
 #if ENABLE_DDCI
-            /* currently we allow only one service per DD CI */
-            if (ac->ca->lddci && linuxdvb_ddci_is_assigned(ac->ca->lddci)) {
-              continue;
-            }
+          /* currently we allow only one service per DD CI */
+          if (ac->ca->lddci && linuxdvb_ddci_is_assigned(ac->ca->lddci))
+            continue;
 #endif
-            goto end_of_search_for_cam;
-          }
+          goto end_of_search_for_cam;
+        }
+    }
+  }
 
-  end_of_search_for_cam:
+end_of_search_for_cam:
   if (ac == NULL) {
     service_set_streaming_status_flags(t, TSS_NO_DESCRAMBLER);
     goto end;
@@ -502,6 +435,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
 
   as->ac = ac;
   as->caid = c->caid;
+  mpegts_pid_init(&as->ecm_pids);
 
   td = (th_descrambler_t *)as;
   snprintf(buf, sizeof(buf), "dvbcam-%i-%i-%04X",
@@ -518,7 +452,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
     linuxdvb_ddci_assign(ac->ca->lddci, t);
     dr->dr_descramble = dvbcam_descramble_ddci;
 
-    /* add ECM handler */
+    /* add CAT (EMM) handler */
     // td->td_caid_change = dvbcam_caid_change_ddci;
 
     ddci_cam = 1;
@@ -534,18 +468,16 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
 update_pid:
 #if ENABLE_DDCI
   /* open all ECM PIDs */
-  TAILQ_FOREACH(st, &t->s_filt_components, es_link)
+  TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
+    if (st->es_type != SCT_CA) continue;
     LIST_FOREACH(c, &st->es_caids, link) {
-      if (c->use == 0) continue;
-      if (st->es_type != SCT_CA) continue;
+      if (!c->use) continue;
       if (as->caid != c->caid) continue;
-      if (!DESCRAMBLER_ECM_PID(st->es_pid)) continue;
-      if (new_ecm_pids.num_pids < MAX_ECM_PIDS) {
-        new_ecm_pids.pids[new_ecm_pids.num_pids++] = st->es_pid;
-      }
-      else
-        tvhwarn(LS_DVBCAM, "Table for new ECM PIDs too small!");
+      mpegts_pid_add(&ecm_pids, st->es_pid, 0);
+    }
   }
+  mpegts_pid_compare(&ecm_pids, &as->ecm_pids, &ecm_to_open, &ecm_to_close);
+  mpegts_pid_copy(&as->ecm_pids, &ecm_pids);
 #endif
 
 end:
@@ -553,8 +485,6 @@ end:
   pthread_mutex_unlock(&t->s_stream_mutex);
 
 #if ENABLE_DDCI
-
-  dvbcam_ecm_pid_update(as, t, &new_ecm_pids);
 
   if (ddci_cam) {
     mm = ((mpegts_service_t *)t)->s_dvb_mux;
@@ -564,12 +494,21 @@ end:
       pthread_mutex_lock(&t->s_stream_mutex);
       mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, t, 0);
       ((mpegts_service_t *)t)->s_cat_opened = 1;
+      for (i = 0; i < ecm_to_open.count; i++)
+        mpegts_input_open_pid(mi, mm, ecm_to_open.pids[i].pid, MPS_SERVICE,
+                             MPS_WEIGHT_CAT, t, 0);
+      for (i = 0; i < ecm_to_close.count; i++)
+        mpegts_input_close_pid(mi, mm, ecm_to_close.pids[i].pid, MPS_SERVICE,
+                               MPS_WEIGHT_CAT, t);
       pthread_mutex_unlock(&t->s_stream_mutex);
       pthread_mutex_unlock(&mi->mi_output_lock);
       mpegts_input_open_cat_monitor(mm, (mpegts_service_t *)t);
       mpegts_mux_update_pids(mm);
     }
   }
+  mpegts_pid_done(&ecm_to_close);
+  mpegts_pid_done(&ecm_to_open);
+  mpegts_pid_done(&ecm_pids);
 #endif
 }
 
