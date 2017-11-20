@@ -426,11 +426,11 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   th_descrambler_t *td;
   elementary_stream_t *st;
   th_descrambler_runtime_t *dr;
-  mpegts_input_t *mi;
-  mpegts_mux_t *mm;
   caid_t *c = NULL;
   char buf[128];
 #if ENABLE_DDCI
+  mpegts_input_t *mi;
+  mpegts_mux_t *mm;
   int ddci_cam = 0;
   dvbcam_ecm_pids_t new_ecm_pids;
 #endif
@@ -440,7 +440,9 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
 
   tvhtrace(LS_DVBCAM, "start service %p", t);
 
+#if ENABLE_DDCI
   memset(&new_ecm_pids,0,sizeof(new_ecm_pids));
+#endif
 
   pthread_mutex_lock(&t->s_stream_mutex);
   pthread_mutex_lock(&dvbcam_mutex);
