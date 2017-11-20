@@ -3,6 +3,8 @@ Contents                               | Description
 [Overview](#overview)                  | Tab overview
 [Items/Properties](#items)             | Items and Properties
 
+[Return to DVB Inputs](dvbinputs)
+
 ---
 
 ## Overview
@@ -22,4 +24,3 @@ streams - so an IP address, in effect.
 <tvh_include>inc/buttons</tvh_include>
 
 ---
-

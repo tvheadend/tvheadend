@@ -3,6 +3,8 @@ Contents                               | Description
 [Overview](#overview)                  | Tab overview
 [Items/Properties](#items)             | Items and Properties
 
+[Return to DVB Inputs](dvbinputs)
+
 ---
 
 ## Overview
@@ -19,4 +21,3 @@ useful to get EPG, services or access rights updates.
 <tvh_include>inc/buttons</tvh_include>
 
 ---
-

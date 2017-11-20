@@ -5,3 +5,5 @@ Contents                                                    | Description
 [Force Scanning](#force-scanning)                           | Force scanning a network
 [Service Probing (IPTV only)](#service-probing-iptv-only-)  | Service probing information (IPTV only)
 [Items/Properties](#items)                                  | Items and properties
+
+[Return to DVB Inputs](dvbinputs)
