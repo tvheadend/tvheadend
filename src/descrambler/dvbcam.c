@@ -382,11 +382,9 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
       goto update_pid;
   }
 
-  /* FIXME: The limit check needs to be done per CAM instance.
-   *        Have to check if dvbcam_t struct is created per CAM
-   *        or once per class before we can implement this correctly.
-
-   * FIXME: This might be removed or implemented differently in case of
+  /*
+   * FIXME: Service limit for DDCI.
+   *        This might be removed or implemented differently in case of
    *        MCD/MTD. VDR asks the CAM with a query if the CAM can decode another
    *        PID.
    *        Note: A CAM has decoding slots, which are used up by each PID which
@@ -395,11 +393,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
    *              resulting in more or less occupied CAM decoding slots. So the
    *              simple limit approach might not work or some decoding slots
    *              remain unused.
-
-  if (dc->limit > 0 && dc->limit <= count)
-    goto end;
-
-  */
+   */
 
   /* check all elementary streams for CAIDs and find CAM */
   TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
@@ -408,9 +402,9 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
       if (!c->use) continue;
       TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link)
         if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid)) {
-          /* FIXME: The limit check needs to be per CAM, so we need to find
-           *        another CAM if the fund one is on limit.
-           */
+          /* limit the concurrent service decoders per CAM */
+          if (dc->limit > 0 && ac->active_programs <= dc->limit)
+            continue;
 
 #if ENABLE_DDCI
           /* currently we allow only one service per DD CI */
@@ -632,7 +626,7 @@ const idclass_t caclient_dvbcam_class =
       .type     = PT_INT,
       .id       = "limit",
       .name     = N_("Service limit"),
-      .desc     = N_("Limit of concurrent descrambled services (total)."),
+      .desc     = N_("Limit of concurrent descrambled services (per one CAM)."),
       .off      = offsetof(dvbcam_t, limit),
     },
     {}
