@@ -1481,6 +1481,7 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
 
   tvhtrace(LS_DESCRAMBLER, "CAT data (len %d)", len);
   tvhlog_hexdump(LS_DESCRAMBLER, data, len);
+  caclient_cat_update(mux, data, len);
   pthread_mutex_lock(&mux->mm_descrambler_lock);
   TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link)
     emm->to_be_removed = 1;

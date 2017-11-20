@@ -333,7 +333,23 @@ caclient_start ( struct service *t )
 }
 
 void
-caclient_caid_update(struct mpegts_mux *mux, uint16_t caid, uint16_t pid, int valid)
+caclient_cat_update
+  ( struct mpegts_mux *mux, const uint8_t *data, int len )
+{
+  caclient_t *cac;
+
+  lock_assert(&global_lock);
+
+  pthread_mutex_lock(&caclients_mutex);
+  TAILQ_FOREACH(cac, &caclients, cac_link)
+    if (cac->cac_cat_update && cac->cac_enabled)
+      cac->cac_cat_update(cac, mux, data, len);
+  pthread_mutex_unlock(&caclients_mutex);
+}
+
+void
+caclient_caid_update
+  ( struct mpegts_mux *mux, uint16_t caid, uint16_t pid, int valid )
 {
   caclient_t *cac;
 
