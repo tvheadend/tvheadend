@@ -182,6 +182,7 @@ struct epggrab_module_int
   int                           xmltv_scrape_extra; ///< Scrape actors and extra details
   int                           xmltv_scrape_onto_desc; ///< Include scraped actors
     ///< and extra details on to programme description for viewing by legacy clients.
+  int                           xmltv_use_category_not_genre; ///< Use category tags and don't map to DVB genres.
 
   /* Handle data */
   char*     (*grab)   ( void *mod );
