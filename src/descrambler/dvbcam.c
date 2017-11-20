@@ -417,10 +417,8 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   }
 
 end_of_search_for_cam:
-  if (ac == NULL) {
-    service_set_streaming_status_flags(t, TSS_NO_DESCRAMBLER);
+  if (ac == NULL)
     goto end;
-  }
 
   if ((as = calloc(1, sizeof(*as))) == NULL)
     goto end;
