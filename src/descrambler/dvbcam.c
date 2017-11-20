@@ -475,7 +475,6 @@ update_pid:
   mpegts_pid_copy(&as->ecm_pids, &ecm_pids);
 #endif
 
-end:
   pthread_mutex_unlock(&dvbcam_mutex);
   pthread_mutex_unlock(&t->s_stream_mutex);
 
@@ -503,6 +502,11 @@ end:
   mpegts_pid_done(&ecm_to_open);
   mpegts_pid_done(&ecm_pids);
 #endif
+  return;
+
+end:
+  pthread_mutex_unlock(&dvbcam_mutex);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 /*
