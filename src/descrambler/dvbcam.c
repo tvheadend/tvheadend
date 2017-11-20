@@ -30,7 +30,8 @@
 
 #if ENABLE_LINUXDVB_CA
 
-#define CAIDS_PER_CA_SLOT	16
+#define CAIDS_PER_CA_SLOT   16
+#define MAX_ECM_PIDS        16   // max opened ECM PIDs
 
 typedef struct dvbcam_active_cam {
   TAILQ_ENTRY(dvbcam_active_cam) global_link;
@@ -41,6 +42,11 @@ typedef struct dvbcam_active_cam {
   int                  active_programs;
 } dvbcam_active_cam_t;
 
+typedef struct dvbcam_ecm_pids {
+  uint16_t             pids[MAX_ECM_PIDS];
+  int                  num_pids;
+} dvbcam_ecm_pids_t;
+
 typedef struct dvbcam_active_service {
   th_descrambler_t;
   TAILQ_ENTRY(dvbcam_active_service) global_link;
@@ -49,6 +55,7 @@ typedef struct dvbcam_active_service {
   int                  last_pmt_len;
   uint16_t             caid;
   dvbcam_active_cam_t *ac;
+  dvbcam_ecm_pids_t    ecm_open;
 } dvbcam_active_service_t;
 
 typedef struct dvbcam {
@@ -319,13 +326,97 @@ dvbcam_descramble_ddci(service_t *t, elementary_stream_t *st, const uint8_t *tsb
 {
   th_descrambler_runtime_t  *dr = ((mpegts_service_t *)t)->s_descramble;
   dvbcam_active_service_t   *as = (dvbcam_active_service_t *)dr->dr_descrambler;
-  linuxdvb_ddci_t           *lddci = as->ac->ca->lddci;
 
-  linuxdvb_ddci_put(lddci, tsb, len);
+  if (as->ac != NULL)
+    linuxdvb_ddci_put(as->ac->ca->lddci, tsb, len);
+
   return 1;
+}
+
+static void
+dvbcam_ecm_pid_update
+  (dvbcam_active_service_t *as, service_t *t, dvbcam_ecm_pids_t *new_ecm_pids)
+{
+  mpegts_mux_t *mm;
+  mpegts_input_t *mi;
+  int i, j, pid;
+  dvbcam_ecm_pids_t ecm_pids_to_open;
+  dvbcam_ecm_pids_t ecm_pids_to_close;
+
+  if (new_ecm_pids->num_pids == 0) return;
+
+  /* due to the mutex lock order, we need two helper arrays
+   * to be filled with locked dvbcam mutex and executed at the end with
+   * unlocked dvbcam  mutex
+   */
+  memset(&ecm_pids_to_open, 0, sizeof(ecm_pids_to_open));
+  memset(&ecm_pids_to_close, 0, sizeof(ecm_pids_to_close));
+
+  pthread_mutex_lock(&dvbcam_mutex);
+
+  for (i = 0; i < new_ecm_pids->num_pids; i++) {
+    pid = new_ecm_pids->pids[i];
+
+    /* Clear out already opened PIDs, so that they don't get closed in
+     * the next step
+     */
+    for (j = 0; j < as->ecm_open.num_pids; j++)
+      if (as->ecm_open.pids[j] == pid) {
+        as->ecm_open.pids[j] = 0;
+        break;
+      }
+
+    /* Not found -> New PID */
+    if (j == as->ecm_open.num_pids)
+      ecm_pids_to_open.pids[ecm_pids_to_open.num_pids++] = pid;
+  }
+
+  /* close old PIDs (list contains only no longer used PIDs) */
+  for (i = 0; i < as->ecm_open.num_pids; i++) {
+    pid = as->ecm_open.pids[i];
+    if (pid)
+      ecm_pids_to_close.pids[ecm_pids_to_close.num_pids++] = pid;
+  }
+
+  /* save new open PIDs list */
+  as->ecm_open = *new_ecm_pids;
+
+  pthread_mutex_unlock(&dvbcam_mutex);
+
+  mm = ((mpegts_service_t *)t)->s_dvb_mux;;
+  mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
+  if (mi) {
+    pthread_mutex_lock(&mi->mi_output_lock);
+    pthread_mutex_lock(&t->s_stream_mutex);
+
+    for (i = 0; i < ecm_pids_to_open.num_pids; i++)
+      mpegts_input_open_pid(mi, mm, ecm_pids_to_open.pids[i], MPS_SERVICE,
+                           MPS_WEIGHT_CAT, t, 0);
+    for (i = 0; i < ecm_pids_to_close.num_pids; i++)
+      mpegts_input_close_pid(mi, mm, ecm_pids_to_close.pids[i], MPS_SERVICE,
+                             MPS_WEIGHT_CAT, t);
+
+    pthread_mutex_unlock(&t->s_stream_mutex);
+    pthread_mutex_unlock(&mi->mi_output_lock);
+  }
+}
+
+#if 0
+static void
+dvbcam_caid_change_ddci(th_descrambler_t *td)
+{
+  tvhwarning(LS_DVBCAM, "FIXME: implement dvbcam_caid_change_ddci");
+
 }
 #endif
 
+#endif /* ENABLE_DDCI */
+
+/*
+ * This routine is called from two places
+ * a) start a new service
+ * b) restart a running service with possible caid changes
+ */
 static void
 dvbcam_service_start(caclient_t *cac, service_t *t)
 {
@@ -335,53 +426,76 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   th_descrambler_t *td;
   elementary_stream_t *st;
   th_descrambler_runtime_t *dr;
+  caid_t *c = NULL;
+  char buf[128];
+#if ENABLE_DDCI
   mpegts_input_t *mi;
   mpegts_mux_t *mm;
-  caid_t *c = NULL;
-  int count = 0, pid = -1;
-  char buf[128];
+  int ddci_cam = 0;
+  dvbcam_ecm_pids_t new_ecm_pids;
+#endif
 
   if (!cac->cac_enabled)
     return;
 
   tvhtrace(LS_DVBCAM, "start service %p", t);
 
+#if ENABLE_DDCI
+  memset(&new_ecm_pids,0,sizeof(new_ecm_pids));
+#endif
+
   pthread_mutex_lock(&t->s_stream_mutex);
   pthread_mutex_lock(&dvbcam_mutex);
 
+  /* is there already a CAM associated to the service? */
   TAILQ_FOREACH(as, &dvbcam_active_services, global_link) {
     if (as->td_service == t)
-      goto end;
-    count++;
+      goto update_pid;
   }
 
-  /* FIXME: This should be removed or implemented differently in case of
+  /* FIXME: The limit check needs to be done per CAM instance.
+   *        Have to check if dvbcam_t struct is created per CAM
+   *        or once per class before we can implement this correctly.
+
+   * FIXME: This might be removed or implemented differently in case of
    *        MCD/MTD. VDR asks the CAM with a query if the CAM can decode another
    *        PID.
-   */
+   *        Note: A CAM has decoding slots, which are used up by each PID which
+   *              gets decoded. This are Audio, Video, Teletext, ..., depending
+   *              of the decoded program this can be more or less PIDs,
+   *              resulting in more or less occupied CAM decoding slots. So the
+   *              simple limit approach might not work or some decoding slots
+   *              remain unused.
+
   if (dc->limit > 0 && dc->limit <= count)
     goto end;
+
+  */
 
   /* check all elementary streams for CAIDs and find CAM */
   TAILQ_FOREACH(st, &t->s_filt_components, es_link)
     LIST_FOREACH(c, &st->es_caids, link)
       if (c->use)
         TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link)
-          if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid))
-            goto end_of_search_for_cam;
-
-end_of_search_for_cam:
-
-  if (ac == NULL)
-    goto end;
+          if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid)) {
+            /* FIXME: The limit check needs to be per CAM, so we need to find
+             *        another CAM if the fund one is on limit.
+             */
 
 #if ENABLE_DDCI
-  /* currently we allow only one service per DD CI */
-  if (ac->ca->lddci && linuxdvb_ddci_is_assigned(ac->ca->lddci)) {
+            /* currently we allow only one service per DD CI */
+            if (ac->ca->lddci && linuxdvb_ddci_is_assigned(ac->ca->lddci)) {
+              continue;
+            }
+#endif
+            goto end_of_search_for_cam;
+          }
+
+  end_of_search_for_cam:
+  if (ac == NULL) {
     service_set_streaming_status_flags(t, TSS_NO_DESCRAMBLER);
     goto end;
   }
-#endif
 
   if ((as = calloc(1, sizeof(*as))) == NULL)
     goto end;
@@ -403,9 +517,11 @@ end_of_search_for_cam:
     /* assign the service to the DD CI CAM */
     linuxdvb_ddci_assign(ac->ca->lddci, t);
     dr->dr_descramble = dvbcam_descramble_ddci;
-    /* open ECM PID */
-    assert(c);
-    pid = c->pid;
+
+    /* add ECM handler */
+    // td->td_caid_change = dvbcam_caid_change_ddci;
+
+    ddci_cam = 1;
   }
 #endif
   descrambler_change_keystate(td, DS_READY, 0);
@@ -415,11 +531,32 @@ end_of_search_for_cam:
   LIST_INSERT_HEAD(&dc->services, as, dvbcam_link);
   TAILQ_INSERT_TAIL(&dvbcam_active_services, as, global_link);
 
+update_pid:
+#if ENABLE_DDCI
+  /* open all ECM PIDs */
+  TAILQ_FOREACH(st, &t->s_filt_components, es_link)
+    LIST_FOREACH(c, &st->es_caids, link) {
+      if (c->use == 0) continue;
+      if (st->es_type != SCT_CA) continue;
+      if (as->caid != c->caid) continue;
+      if (!DESCRAMBLER_ECM_PID(st->es_pid)) continue;
+      if (new_ecm_pids.num_pids < MAX_ECM_PIDS) {
+        new_ecm_pids.pids[new_ecm_pids.num_pids++] = st->es_pid;
+      }
+      else
+        tvhwarn(LS_DVBCAM, "Table for new ECM PIDs too small!");
+  }
+#endif
+
 end:
   pthread_mutex_unlock(&dvbcam_mutex);
   pthread_mutex_unlock(&t->s_stream_mutex);
 
-  if (pid >= 0) {
+#if ENABLE_DDCI
+
+  dvbcam_ecm_pid_update(as, t, &new_ecm_pids);
+
+  if (ddci_cam) {
     mm = ((mpegts_service_t *)t)->s_dvb_mux;
     mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
     if (mi) {
@@ -427,14 +564,13 @@ end:
       pthread_mutex_lock(&t->s_stream_mutex);
       mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, t, 0);
       ((mpegts_service_t *)t)->s_cat_opened = 1;
-      mpegts_input_open_service_pid(mi, mm, t,
-                                    SCT_CA, c->pid, MPS_WEIGHT_CA, 1);
       pthread_mutex_unlock(&t->s_stream_mutex);
       pthread_mutex_unlock(&mi->mi_output_lock);
       mpegts_input_open_cat_monitor(mm, (mpegts_service_t *)t);
       mpegts_mux_update_pids(mm);
     }
   }
+#endif
 }
 
 /*
@@ -451,7 +587,6 @@ dvbcam_free(caclient_t *cac)
 static void
 dvbcam_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint16_t pid, int valid)
 {
-
 }
 
 /**
