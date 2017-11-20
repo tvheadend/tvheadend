@@ -632,6 +632,7 @@ const idclass_t esfilter_class_video = {
       .set      = esfilter_class_type_set_video,
       .list     = esfilter_class_type_enum_video,
       .rend     = esfilter_class_type_rend,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -726,6 +727,7 @@ const idclass_t esfilter_class_audio = {
       .set      = esfilter_class_type_set_audio,
       .list     = esfilter_class_type_enum_audio,
       .rend     = esfilter_class_type_rend,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -821,6 +823,7 @@ const idclass_t esfilter_class_teletext = {
       .set      = esfilter_class_type_set_teletext,
       .list     = esfilter_class_type_enum_teletext,
       .rend     = esfilter_class_type_rend,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -1011,6 +1014,7 @@ const idclass_t esfilter_class_ca = {
       .set      = esfilter_class_type_set_ca,
       .list     = esfilter_class_type_enum_ca,
       .rend     = esfilter_class_type_rend,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -1021,6 +1025,7 @@ const idclass_t esfilter_class_ca = {
       .get      = esfilter_class_caid_get,
       .set      = esfilter_class_caid_set,
       .list     = esfilter_class_caid_enum,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -1031,6 +1036,7 @@ const idclass_t esfilter_class_ca = {
       .get      = esfilter_class_caprovider_get,
       .set      = esfilter_class_caprovider_set,
       .list     = esfilter_class_caprovider_enum,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -1116,6 +1122,7 @@ const idclass_t esfilter_class_other = {
       .set      = esfilter_class_type_set_other,
       .list     = esfilter_class_type_enum_other,
       .rend     = esfilter_class_type_rend,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,

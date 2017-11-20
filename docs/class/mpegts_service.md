@@ -4,6 +4,8 @@ Contents                                   | Description
 [Service information](#service-information)| How to display service information
 [Items/Properties](#items)                 | Items and Properties
 
+[Return to DVB Inputs](dvbinputs)
+
 ---
 
 ## Overview

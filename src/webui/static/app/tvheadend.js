@@ -385,6 +385,7 @@ tvheadend.mdhelp = function(pagename) {
 
     var parse = function(text) {
         var renderer = new marked.Renderer;
+        var lastanchor = null;
         renderer.link = function(href, title, text) {
             var x = href.indexOf('#');
             if (href.indexOf(':/') === -1 && (x === -1 || x > 1)) {
@@ -439,7 +440,7 @@ tvheadend.mdhelp = function(pagename) {
         }
 
         var bodyid = Ext.id();
-        var text = '<div id="' + bodyid + '">';
+        var text = '<div id="jump"></div><div id="' + bodyid + '">';
         if (tvheadend.docs_toc || history)
             text += '<div class="hts-doc-toc">' + history + tvheadend.docs_toc + '</div>';
         text += '<div class="hts-doc-text">' + parse(mdtext) + '</div>';
@@ -485,12 +486,21 @@ tvheadend.mdhelp = function(pagename) {
         }
 
         var win = new Ext.Window({
-            title: _('Help for') + ' ' + title,
+            title: title,
             iconCls: 'help',
             layout: 'fit',
             width: 900,
             height: 400,
             constrainHeader: true,
+            bbar: [
+            {
+                iconCls: 'moveup',
+                text: _('Back to top'),
+                tooltip: _('Back to top'),
+                handler: function() {
+                    document.getElementById('jump').scrollIntoView();
+                },
+            }],
             items: [content],
             listeners: {
                 render: function(win) {
@@ -542,24 +552,25 @@ tvheadend.mdhelp = function(pagename) {
     var helpfailuremsg = function() {
         Ext.MessageBox.show({
             title:_('Error'),
-            msg: _('There was a problem displaying the Help!') + '<br>' + 
-                 _('Please check Tvheadend is running and try again.'), 
+            msg: _('There was a problem displaying the Help!') + '<br>' +
+                 _('Please check Tvheadend is running and try again.'),
             buttons: Ext.Msg.OK,
             icon: Ext.MessageBox.ERROR,
         });
     }
-    
-    var helppagefail = function() { 
+
+    var helppagefail = function() {
         title = _('Not Available');
-        msg = _('There is no documentation associated with the Help button pressed, or there was an problem loading the page.\n\n') + 
-              _('Please take a look at the other Help pages (Table of Contents). If you still can\'t find what you\'re ') + 
-              _('looking for please see the [Wiki](http://tvheadend.org/projects/tvheadend/wiki) ') + 
+        msg = _('There\'s no documentation available, or there was a problem loading the page.\n\n') +
+              _('**You\'ll also see this page if you try and view documentation (for a feature) not included with your version of Tvheadend.**\n\n\n\n') +
+              _('Please take a look at the other Help pages (Table of Contents), if you still can\'t find what you\'re ') +
+              _('looking for please see the [Wiki](http://tvheadend.org/projects/tvheadend/wiki) ') +
               _('or join the [IRC channel on freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).');
-              
+
         // Fake the result.
         result = [];
         result['responseText'] = "## " + title + '\n\n' + msg;
-        
+
         // Load the TOC.
         if (!tvheadend.docs_toc) {
             Ext.Ajax.request({
@@ -648,7 +659,7 @@ tvheadend.AjaxUUID = function(sel, conf)
             conf.params = {};
         conf.params.uuid = Ext.encode(uuids);
         tvheadend.Ajax(conf);
-    }    
+    }
 }
 
 tvheadend.loading = function(on) {
@@ -840,7 +851,7 @@ tvheadend.VideoPlayer = function(channelId) {
     var videoPlayer = new tv.ui.VideoPlayer({
         params: { }
     });
-    
+
     var initialChannelName;
     if (channelId) {
         var record = tvheadend.channels.getById(channelId);
@@ -992,7 +1003,7 @@ tvheadend.VideoPlayer = function(channelId) {
             videoPlayer.zapTo(channelId);
         }
     });
-    
+
     win.on('close', function() {
         videoPlayer.stop();
     });

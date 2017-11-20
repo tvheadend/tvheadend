@@ -114,12 +114,12 @@ md_props(htsbuf_queue_t *hq, htsmsg_t *m, const char *lang, int nl)
     if (!s) continue;
     if (first) {
       nl = md_nl(hq, nl);
-      htsbuf_append_str(hq, "#### ");
+      htsbuf_append_str(hq, "### ");
       htsbuf_append_str(hq, tvh_gettext_lang(lang, N_("Items")));
       md_nl(hq, 1);
       md_nl(hq, 1);
-      htsbuf_append_str(hq, tvh_gettext_lang(lang, N_("The items have the following functions:")));
-      md_nl(hq, 1);
+      //htsbuf_append_str(hq, tvh_gettext_lang(lang, N_("The items have the following functions:")));
+      //md_nl(hq, 1);
       first = 0;
     }
     nl = md_nl(hq, nl);
