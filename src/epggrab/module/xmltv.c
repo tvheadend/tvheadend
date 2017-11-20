@@ -607,6 +607,7 @@ static int _xmltv_parse_programme_tags
 {
   const int scrape_extra = ((epggrab_module_ext_t *)mod)->xmltv_scrape_extra;
   const int scrape_onto_desc = ((epggrab_module_ext_t *)mod)->xmltv_scrape_onto_desc;
+  const int use_category_not_genre = ((epggrab_module_int_t *)mod)->xmltv_use_category_not_genre;
   int save = 0, save2 = 0, save3 = 0;
   epg_episode_t *ee = NULL;
   epg_serieslink_t *es = NULL;
@@ -752,7 +753,7 @@ static int _xmltv_parse_programme_tags
     if (subtitle)
       save3 |= epg_episode_set_subtitle(ee, subtitle, &changes3);
 
-    if ((egl = _xmltv_parse_categories(tags))) {
+    if (!use_category_not_genre && (egl = _xmltv_parse_categories(tags))) {
       save3 |= epg_episode_set_genre(ee, egl, &changes3);
       epg_genre_list_destroy(egl);
     }
@@ -1013,6 +1014,16 @@ static int _xmltv_parse
      "You should not enable this if you use 'duplicate detect if different description' " \
      "since the descriptions will change due to added information.")
 
+#define USE_CATEGORY_NOT_GENRE_NAME N_("Use category instead of genre")
+#define USE_CATEGORY_NOT_GENRE_DESC \
+  N_("Some xmltv providers supply multiple category tags, however mapping "\
+     "to genres is imprecise and many categories have no genre mapping "\
+     "at all. Some frontends will only pass through categories " \
+     "unchanged if there is no genre so for these we can " \
+     "avoid the genre mappings and only use categories. " \
+     "If this option is not ticked then we continue to map " \
+     "xmltv categories to genres and supply both to clients.")
+
 static htsmsg_t *
 xmltv_dn_chnum_list ( void *o, const char *lang )
 {
@@ -1055,6 +1066,14 @@ const idclass_t epggrab_mod_int_xmltv_class = {
       .off    = offsetof(epggrab_module_int_t, xmltv_scrape_onto_desc),
       .group  = 1
     },
+    {
+      .type   = PT_BOOL,
+      .id     = "use_category_not_genre",
+      .name   = USE_CATEGORY_NOT_GENRE_NAME,
+      .desc   = USE_CATEGORY_NOT_GENRE_DESC,
+      .off    = offsetof(epggrab_module_int_t, xmltv_use_category_not_genre),
+      .group  = 1
+    },
     {}
   }
 };
@@ -1087,6 +1106,14 @@ const idclass_t epggrab_mod_ext_xmltv_class = {
       .name   = SCRAPE_ONTO_DESC_NAME,
       .desc   = SCRAPE_ONTO_DESC_DESC,
       .off    = offsetof(epggrab_module_int_t, xmltv_scrape_onto_desc),
+      .group  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "use_category_not_genre",
+      .name   = USE_CATEGORY_NOT_GENRE_NAME,
+      .desc   = USE_CATEGORY_NOT_GENRE_DESC,
+      .off    = offsetof(epggrab_module_int_t, xmltv_use_category_not_genre),
       .group  = 1
     },
     {}
