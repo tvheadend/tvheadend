@@ -1065,14 +1065,14 @@ service_create0
     const idclass_t *class, const char *uuid,
     int source_type, htsmsg_t *conf )
 {
+  lock_assert(&global_lock);
+
   if (idnode_insert(&t->s_id, uuid, class, 0)) {
     if (uuid)
       tvherror(LS_SERVICE, "invalid uuid '%s'", uuid);
     free(t);
     return NULL;
   }
-
-  lock_assert(&global_lock);
 
   if (service_type == STYPE_RAW)
     TAILQ_INSERT_TAIL(&service_raw_all, t, s_all_link);
@@ -1183,7 +1183,6 @@ service_make_nicename(service_t *t)
     service_stream_make_nicename(t, st);
 }
 
-
 /**
  * Add a new stream to a service
  */
@@ -1228,8 +1227,6 @@ service_stream_create(service_t *t, int pid,
   return st;
 }
 
-
-
 /**
  * Find an elementary stream in a service
  */
@@ -1264,6 +1261,32 @@ service_stream_type_find(service_t *t, streaming_component_type_t type)
     if(st->es_type == type)
       return st;
   return NULL;
+}
+
+/**
+ *
+ */
+elementary_stream_t *
+service_stream_type_modify(service_t *t, int pid,
+                           streaming_component_type_t type)
+{
+  elementary_stream_t *es = service_stream_type_find(t, type);
+  if (!es)
+    return service_stream_create(t, pid, type);
+  if (es->es_pid != pid)
+    es->es_pid = pid;
+  return es;
+}
+
+/**
+ *
+ */
+void
+service_stream_type_destroy(service_t *t, streaming_component_type_t type)
+{
+  elementary_stream_t *es = service_stream_type_find(t, type);
+  if (es)
+    service_stream_destroy(t, es);
 }
 
 /**
@@ -2252,6 +2275,7 @@ void service_load ( service_t *t, htsmsg_t *c )
 
   idnode_load(&t->s_id, c);
 
+  pthread_mutex_lock(&t->s_stream_mutex);
   if(!htsmsg_get_s32(c, "verified", &s32))
     t->s_verified = s32;
   else
@@ -2271,7 +2295,6 @@ void service_load ( service_t *t, htsmsg_t *c )
     }
   }
 
-  pthread_mutex_lock(&t->s_stream_mutex);
   m = htsmsg_get_list(c, "stream");
   if (m) {
     HTSMSG_FOREACH(f, m) {
@@ -2335,7 +2358,9 @@ void service_load ( service_t *t, htsmsg_t *c )
     }
   }
   if (!shared_pcr)
-    service_stream_create(t, t->s_pcr_pid, SCT_PCR);
+    service_stream_type_modify(t, t->s_pcr_pid, SCT_PCR);
+  else
+    service_stream_type_destroy(t, SCT_PCR);
   sort_elementary_streams(t);
   pthread_mutex_unlock(&t->s_stream_mutex);
 }

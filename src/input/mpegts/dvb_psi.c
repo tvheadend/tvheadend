@@ -2183,7 +2183,8 @@ psi_desc_add_ca
   tvhdebug(mt->mt_subsys, "%s:  caid %04X (%s) provider %08X pid %04X",
            mt->mt_name, caid, caid2name(caid), provid, pid);
 
-  if((st = service_stream_find((service_t*)t, pid)) == NULL) {
+  st = service_stream_find((service_t*)t, pid);
+  if (st == NULL || st->es_type != SCT_CA) {
     st = service_stream_create((service_t*)t, pid, SCT_CA);
     r |= PMT_UPDATE_NEW_CA_STREAM;
   }
@@ -2302,13 +2303,12 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
       // higher than normal MPEG TS (0x2000 ++)
       int pid = DVB_TELETEXT_BASE + page;
     
-      if((st = service_stream_find((service_t*)t, pid)) == NULL) {
+      st = service_stream_find((service_t*)t, pid);
+      if (st == NULL || st->es_type != SCT_TEXTSUB) {
         r |= PMT_UPDATE_NEW_STREAM;
         st = service_stream_create((service_t*)t, pid, SCT_TEXTSUB);
-        st->es_delete_me = 1;
       }
 
-  
       lang = lang_code_get2((const char*)ptr, 3);
       if(memcmp(st->es_lang,lang,3)) {
         r |= PMT_UPDATE_LANGUAGE;
@@ -2544,9 +2544,10 @@ psi_parse_pmt
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
     
-    if(hts_stream_type != SCT_UNKNOWN) {
+    if (hts_stream_type != SCT_UNKNOWN) {
 
-      if((st = service_stream_find((service_t*)t, pid)) == NULL) {
+      st = service_stream_find((service_t*)t, pid);
+      if (st == NULL || st->es_type != hts_stream_type) {
         update |= PMT_UPDATE_NEW_STREAM;
         st = service_stream_create((service_t*)t, pid, hts_stream_type);
       }
@@ -2610,11 +2611,7 @@ psi_parse_pmt
 
   /* Handle PCR 'elementary stream' */
   if (!pcr_shared) {
-    st = service_stream_type_find((service_t *)t, SCT_PCR);
-    if (st)
-      st->es_pid = t->s_pcr_pid;
-    else
-      st = service_stream_create((service_t*)t, t->s_pcr_pid, SCT_PCR);
+    st = service_stream_type_modify((service_t *)t, t->s_pcr_pid, SCT_PCR);
     st->es_delete_me = 0;
   }
 

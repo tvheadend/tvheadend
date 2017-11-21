@@ -566,6 +566,10 @@ service_stream_type_find(service_t *t, streaming_component_type_t type);
 elementary_stream_t *service_stream_create(service_t *t, int pid,
 				     streaming_component_type_t type);
 
+elementary_stream_t *
+service_stream_type_modify(service_t *t, int pid,
+                           streaming_component_type_t type);
+
 void service_settings_write(service_t *t);
 
 const char *service_servicetype_txt(service_t *t);
@@ -620,6 +624,8 @@ void service_restart(service_t *t);
 void service_restart_streams(service_t *t);
 
 void service_stream_destroy(service_t *t, elementary_stream_t *st);
+
+void service_stream_type_destroy(service_t *t, streaming_component_type_t type);
 
 void service_request_save(service_t *t, int restart);
 

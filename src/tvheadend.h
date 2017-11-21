@@ -285,14 +285,17 @@ typedef enum {
   SCT_NONE = -1,
   SCT_UNKNOWN = 0,
   SCT_RAW = 1,
-  SCT_PCR,
+  SCT_PCR,     /* MPEG-TS PCR data */
+  SCT_CAT,     /* MPEG-TS CAT (EMM) data */
+  SCT_CA,      /* MPEG-TS ECM data */
+  SCT_HBBTV,   /* HBBTV info */
+  /* standard codecs */
   SCT_MPEG2VIDEO,
   SCT_MPEG2AUDIO,
   SCT_H264,
   SCT_AC3,
   SCT_TELETEXT,
   SCT_DVBSUB,
-  SCT_CA,
   SCT_AAC,     /* AAC-LATM in MPEG-TS, ADTS + AAC in packet form */
   SCT_MPEGTS,
   SCT_TEXTSUB,
@@ -302,11 +305,9 @@ typedef enum {
   SCT_VORBIS,
   SCT_HEVC,
   SCT_VP9,
-  SCT_HBBTV,
   SCT_THEORA,
   SCT_OPUS,
-  SCT_CAT,     /* MPEG-TS CAT (EMM) data */
-  SCT_LAST = SCT_CAT
+  SCT_LAST = SCT_OPUS
 } streaming_component_type_t;
 
 #define SCT_MASK(t) (1 << (t))

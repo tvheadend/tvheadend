@@ -785,6 +785,10 @@ mpegts_service_create0
 
   /* defaults for older version */
   s->s_dvb_created = dispatch_clock;
+  if (!conf) {
+    if (sid)     s->s_dvb_service_id = sid;
+    if (pmt_pid) s->s_pmt_pid = pmt_pid;
+  }
 
   if (service_create0((service_t*)s, STYPE_STD, class, uuid,
                       S_MPEG_TS, conf) == NULL)
@@ -792,10 +796,7 @@ mpegts_service_create0
 
   /* Create */
   sbuf_init(&s->s_tsbuf);
-  if (!conf) {
-    if (sid)     s->s_dvb_service_id = sid;
-    if (pmt_pid) s->s_pmt_pid        = pmt_pid;
-  } else {
+  if (conf) {
     if (s->s_dvb_last_seen > gclk()) /* sanity check */
       s->s_dvb_last_seen = gclk();
   }
