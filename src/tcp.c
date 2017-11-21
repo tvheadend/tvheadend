@@ -34,6 +34,8 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
 
 #include "tvheadend.h"
 #include "tcp.h"
@@ -67,6 +69,121 @@ socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize)
       snprintf(errbuf, errbufsize, "IP_TOS failed: %s", strerror(errno));
     return -1;
   }
+  return 0;
+}
+
+/**
+ *
+ */
+inline int
+check_equal_v4(const struct in_addr * a,
+               const struct in_addr * b)
+{
+  return (a->s_addr == b->s_addr);
+}
+
+/**
+ *
+ */
+inline int
+check_equal_v6(const struct in6_addr * a,
+               const struct in6_addr * b)
+{
+  return (memcmp(a->s6_addr, b->s6_addr, 16) == 0) ? 1 : 0;
+}
+
+/**
+ *
+ */
+inline int
+check_in_network_v4(const struct in_addr * network,
+                    const struct in_addr * mask,
+                    const struct in_addr * address)
+{
+  return ((address->s_addr & mask->s_addr) == (network->s_addr & mask->s_addr));
+}
+
+/**
+ *
+ */
+inline int
+check_in_network_v6(const struct in6_addr * network,
+                    const struct in6_addr * mask,
+                    const struct in6_addr * address)
+{
+  unsigned int i;
+  for (i=0; i<sizeof(struct in6_addr)/sizeof (int); i++)
+    if ( ((((int *) address)[i] & ((int *) mask)[i])) !=
+          (((int *) network)[i] & ((int *) mask)[i])) {
+      return 0;
+    }
+  return 1;
+}
+
+/**
+ *
+ */
+inline int
+check_is_any_v4(const struct in_addr * address)
+{
+  return (address->s_addr == INADDR_ANY);
+}
+
+/**
+ *
+ */
+inline int
+check_is_any_v6(const struct in6_addr * address)
+{
+  return (check_equal_v6(address,&in6addr_any));
+}
+
+/**
+ *
+ */
+int
+check_is_local_address(const struct sockaddr_storage *peer, const struct sockaddr_storage *local)
+{
+  struct ifaddrs *iflist, *ifdev = NULL;
+  struct sockaddr_storage *ifaddr, *ifnetmask;
+  int any_address = 0;
+
+  if ( (local->ss_family == AF_INET  && check_is_any_v4(&((struct sockaddr_in *)local)->sin_addr) ) ||
+       (local->ss_family == AF_INET6 && check_is_any_v6(&((struct sockaddr_in6 *)local)->sin6_addr) ) ) {
+     any_address = 1;
+  }
+  tvhdebug(LS_SATIPS, "tcp_is_local_address(): ANY=%i",any_address);
+
+  // Note: Not all platforms have getifaddrs()
+  //       See http://docs.freeswitch.org/switch__utils_8c_source.html
+  if (!local || !peer || getifaddrs(&iflist) < 0) return 0;
+
+  for (ifdev = iflist; ifdev; ifdev = ifdev->ifa_next) {
+    ifaddr = (struct sockaddr_storage *)(ifdev->ifa_addr);
+    ifnetmask = (struct sockaddr_storage *)(ifdev->ifa_netmask);
+
+    if (ifaddr && ifnetmask && ifaddr->ss_family == local->ss_family && ifaddr->ss_family == peer->ss_family) {
+
+      if (ifaddr->ss_family == AF_INET) {
+        if ((any_address || check_equal_v4( &((struct sockaddr_in *)ifaddr)->sin_addr, &((struct sockaddr_in *)local)->sin_addr ))
+            && check_in_network_v4( &((struct sockaddr_in *)ifaddr)->sin_addr,
+                                    &((struct sockaddr_in *)ifnetmask)->sin_addr,
+                                    &((struct sockaddr_in *)peer)->sin_addr) ) {
+          freeifaddrs(iflist);
+          return 1;
+        }
+      } else if (ifaddr->ss_family == AF_INET6) {
+        if ((any_address || check_equal_v6( &((struct sockaddr_in6 *)ifaddr)->sin6_addr, &((struct sockaddr_in6 *)local)->sin6_addr ))
+            && check_in_network_v6( &((struct sockaddr_in6 *)ifaddr)->sin6_addr,
+                                    &((struct sockaddr_in6 *)ifnetmask)->sin6_addr,
+                                    &((struct sockaddr_in6 *)peer)->sin6_addr) ) {
+          freeifaddrs(iflist);
+          return 1;
+        }
+      }
+    }
+  }
+  freeifaddrs(iflist);
   return 0;
 }
 

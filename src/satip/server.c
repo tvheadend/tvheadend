@@ -777,6 +777,19 @@ const idclass_t satip_server_class = {
       .group  = 2,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "satip_nat_name_force",
+      .name   = N_("Force RTSP announcement of the external (NAT) ip:port"),
+      .desc   = N_("Advertise only NAT address and port in RTSP commands,"
+                   "even for local connections."),
+      .off    = offsetof(struct satip_server_conf, satip_nat_name_force),
+      .opts   = PO_EXPERT,
+      .group  = 2,
+    },
+
+
+
+    {
       .type   = PT_U32,
       .id     = "satip_iptv_sig_level",
       .name   = N_("IPTV signal level"),

@@ -58,6 +58,18 @@ void tcp_server_preinit(int opt_ipv6);
 void tcp_server_init(void);
 void tcp_server_done(void);
 
+int check_equal_v4(const struct in_addr * a, const struct in_addr * b);
+int check_equal_v6(const struct in6_addr * a, const struct in6_addr * b);
+int check_in_network_v4(const struct in_addr * network,
+                    const struct in_addr * mask,
+                    const struct in_addr * address);
+int check_in_network_v6(const struct in6_addr * network,
+                    const struct in6_addr * mask,
+                    const struct in6_addr * address);
+int check_is_any_v4(const struct in_addr * address);
+int check_is_any_v6(const struct in6_addr * address);
+int check_is_local_address(const struct sockaddr_storage *peer, const struct sockaddr_storage *local);
+
 int socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize);
 
 int tcp_connect(const char *hostname, int port, const char *bindaddr,

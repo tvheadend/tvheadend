@@ -65,6 +65,7 @@ struct satip_server_conf {
   int satip_atsc_c;
   char *satip_nat_ip;
   int satip_nat_rtsp;
+  int satip_nat_name_force;
 };
 
 extern struct satip_server_conf satip_server_conf;

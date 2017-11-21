@@ -92,6 +92,7 @@ static pthread_mutex_t rtsp_lock;
 static void rtsp_close_session(session_t *rs);
 static void rtsp_free_session(session_t *rs);
 
+static char any_ip[] = "127.0.0.1\0";
 
 /*
  *
@@ -314,6 +315,44 @@ rtsp_parse_args(http_connection_t *hc, char *u)
   }
   http_parse_args(&hc->hc_req_args, u);
   return stream;
+}
+
+/*
+ *
+ */
+static inline int
+rtsp_announced_port(struct sockaddr_storage *peer, struct sockaddr_storage *self)
+{
+  int used_port = 0;
+
+  if (satip_server_conf.satip_nat_name_force || !check_is_local_address(peer,self)) {
+    used_port = (rtsp_nat_port > 0)? rtsp_nat_port : rtsp_port;
+  } else {
+    used_port = rtsp_port;
+  }
+
+  return used_port;
+}
+
+/*
+ *
+ */
+static inline char *
+rtsp_announced_ip(struct sockaddr_storage *peer, struct sockaddr_storage *self)
+{
+  char *used_ip;
+
+  if (satip_server_conf.satip_nat_name_force || !check_is_local_address(peer,self)) {
+    used_ip = rtsp_nat_ip;
+  } else {
+    used_ip = rtsp_ip;
+  }
+
+  if (used_ip[0] == '*' || used_ip[0] == '\0' || used_ip == NULL) {
+    used_ip = any_ip;
+  }
+
+  return used_ip;
 }
 
 /*
@@ -1322,9 +1361,9 @@ rtsp_process_describe(http_connection_t *hc)
   char *u = tvh_strdupa(hc->hc_url);
   session_t *rs;
   htsbuf_queue_t q;
-  char buf[96];
+  char buf[96], *used_ip = NULL;
   int r = HTTP_STATUS_BAD_REQUEST;
-  int stream, first = 1, valid;
+  int stream, first = 1, valid, used_port;
 
   htsbuf_queue_init(&q, 0);
 
@@ -1381,10 +1420,16 @@ rtsp_process_describe(http_connection_t *hc)
   http_arg_init(&args);
   if (hc->hc_session)
     http_arg_set(&args, "Session", hc->hc_session);
-  if (stream > 0)
-    snprintf(buf, sizeof(buf), "rtsp://%s/stream=%i", rtsp_ip, stream);
+  used_port = rtsp_announced_port(hc->hc_peer,hc->hc_self);
+  used_ip = rtsp_announced_ip(hc->hc_peer,hc->hc_self);
+  if ((stream > 0) && (used_port != 554))
+    snprintf(buf, sizeof(buf), "rtsp://%s:%d/stream=%i", used_ip, used_port, stream);
+  else if ((stream > 0) && (used_port == 554))
+    snprintf(buf, sizeof(buf), "rtsp://%s/stream=%i", used_ip, stream);
+  else if (used_port != 554)
+    snprintf(buf, sizeof(buf), "rtsp://%s:%d", used_ip, used_port);
   else
-    snprintf(buf, sizeof(buf), "rtsp://%s", rtsp_ip);
+    snprintf(buf, sizeof(buf), "rtsp://%s", used_ip);
   http_arg_set(&args, "Content-Base", buf);
   http_send_begin(hc);
   http_send_header(hc, HTTP_STATUS_OK, "application/sdp", q.hq_size,
@@ -1408,8 +1453,8 @@ static int
 rtsp_process_play(http_connection_t *hc, int cmd)
 {
   session_t *rs;
-  int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, i, stream;
-  char buf[256], *u = tvh_strdupa(hc->hc_url);
+  int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, i, stream, used_port;
+  char buf[256], *u = tvh_strdupa(hc->hc_url), *used_ip = NULL;
   http_arg_list_t args;
 
   http_arg_init(&args);
@@ -1467,10 +1512,12 @@ rtsp_process_play(http_connection_t *hc, int cmd)
     snprintf(buf, sizeof(buf), "%d", rs->stream);
     http_arg_set(&args, "com.ses.streamID", buf);
   } else {
-    if (rtsp_port != 554)
-      snprintf(buf, sizeof(buf), "url=rtsp://%s:%d/stream=%d", rtsp_ip, rtsp_port, rs->stream);
+    used_port = rtsp_announced_port(hc->hc_peer,hc->hc_self);
+    used_ip = rtsp_announced_ip(hc->hc_peer,hc->hc_self);
+    if (used_port != 554)
+      snprintf(buf, sizeof(buf), "url=rtsp://%s:%d/stream=%d", used_ip, used_port, rs->stream);
     else
-      snprintf(buf, sizeof(buf), "url=rtsp://%s/stream=%d", rtsp_ip, rs->stream);
+      snprintf(buf, sizeof(buf), "url=rtsp://%s/stream=%d", used_ip, rs->stream);
     http_arg_set(&args, "RTP-Info", buf);
   }
 
