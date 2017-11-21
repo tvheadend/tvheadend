@@ -605,8 +605,8 @@ static int _xmltv_parse_programme_tags
    time_t start, time_t stop, const char *icon,
    epggrab_stats_t *stats)
 {
-  const int scrape_extra = ((epggrab_module_ext_t *)mod)->xmltv_scrape_extra;
-  const int scrape_onto_desc = ((epggrab_module_ext_t *)mod)->xmltv_scrape_onto_desc;
+  const int scrape_extra = ((epggrab_module_int_t *)mod)->xmltv_scrape_extra;
+  const int scrape_onto_desc = ((epggrab_module_int_t *)mod)->xmltv_scrape_onto_desc;
   const int use_category_not_genre = ((epggrab_module_int_t *)mod)->xmltv_use_category_not_genre;
   int save = 0, save2 = 0, save3 = 0;
   epg_episode_t *ee = NULL;
