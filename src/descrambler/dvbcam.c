@@ -405,7 +405,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
       TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link)
         if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid)) {
           /* limit the concurrent service decoders per CAM */
-          if (dc->limit > 0 && ac->allocated_programs <= dc->limit)
+          if (dc->limit > 0 && ac->allocated_programs >= dc->limit)
             continue;
 
 #if ENABLE_DDCI
