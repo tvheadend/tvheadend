@@ -77,7 +77,8 @@ socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize)
  */
 int
 ip_check_is_local_address
-  (const struct sockaddr_storage *peer, const struct sockaddr_storage *local)
+  (const struct sockaddr_storage *peer, const struct sockaddr_storage *local,
+   struct sockaddr_storage *used_local)
 {
   struct ifaddrs *iflist, *ifdev = NULL;
   struct sockaddr_storage *ifaddr, *ifnetmask;
@@ -100,6 +101,11 @@ ip_check_is_local_address
     if (ifaddr->ss_family != local->ss_family) continue;
     if (!any_address && !ip_check_equal(ifaddr, local)) continue;
     ret = !!ip_check_in_network_v4(ifaddr, ifnetmask, peer);
+    if (ret) {
+      if (used_local)
+        memcpy(used_local, ifaddr, sizeof(struct sockaddr));
+      break;
+    }
   }
   freeifaddrs(iflist);
   return ret;

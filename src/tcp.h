@@ -104,7 +104,9 @@ static inline int ip_check_is_any(const struct sockaddr_storage *address)
   { return address->ss_family == AF_INET ? ip_check_is_any_v4(address) :
            (address->ss_family == AF_INET6 ? ip_check_is_any_v6(address) : 0); }
 
-int ip_check_is_local_address(const struct sockaddr_storage *peer, const struct sockaddr_storage *local);
+int ip_check_is_local_address(const struct sockaddr_storage *peer,
+                              const struct sockaddr_storage *local,
+                              struct sockaddr_storage *used_local);
 
 int socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize);
 
