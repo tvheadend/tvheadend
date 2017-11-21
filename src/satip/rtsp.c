@@ -325,9 +325,7 @@ rtsp_conn_ip(http_connection_t *hc, char *buf, size_t buflen, int *port)
   int used_port = rtsp_port;
 
   if (rtsp_nat_ip[0] == '\0')
-    return rtsp_ip;
-  used_ip = rtsp_ip;
-  used_port = rtsp_port;
+    goto end;
   if (satip_server_conf.satip_nat_name_force ||
       !ip_check_is_local_address(hc->hc_peer, hc->hc_self)) {
     used_ip = rtsp_nat_ip;
@@ -340,7 +338,8 @@ rtsp_conn_ip(http_connection_t *hc, char *buf, size_t buflen, int *port)
     used_ip = buf;
   }
 
-  *port = used_port;
+end:
+  *port = used_port > 0 ? used_port : 554;
   return used_ip;
 }
 
