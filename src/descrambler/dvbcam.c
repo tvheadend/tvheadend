@@ -535,7 +535,6 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
   mpegts_apids_t pids;
   const uint8_t *data1;
   int len1;
-  uint8_t dtag;
   uint8_t dlen;
   uint16_t caid;
   uint16_t pid;
@@ -546,16 +545,18 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
 
   services_count = 0;
   pthread_mutex_lock(&dvbcam_mutex);
-  /* is there already a CAM associated to the service? */
+  /* look for CAID in all services */
   TAILQ_FOREACH(as, &dvbcam_active_services, global_link) {
     if (!as->is_ddci) continue;
     if (as->caid == 0) continue;
     if (((mpegts_service_t *)as->td_service)->s_dvb_mux != mux) continue;
-    if (len == as->cat_data_len) continue;
-    if (memcmp(data, as->cat_data, len) == 0) continue;
+    if (len == as->cat_data_len &&
+        memcmp(data, as->cat_data, len) == 0)
+      continue;
     free(as->cat_data);
     as->cat_data = malloc(len);
     memcpy(as->cat_data, data, len);
+    as->cat_data_len = len;
     if (services_count < ARRAY_SIZE(services)) {
       sp = &services[services_count++];
       sp->service = (mpegts_service_t *)as->td_service;
@@ -598,6 +599,8 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
         for (i = 0; i < sp->to_close.count; i++)
           mpegts_input_close_pid(mi, mux, sp->to_close.pids[i].pid, MPS_SERVICE,
                                  MPS_WEIGHT_CAT, sp->service);
+        mpegts_pid_done(&sp->to_open);
+        mpegts_pid_done(&sp->to_close);
       }
       pthread_mutex_unlock(&sp->service->s_stream_mutex);
       pthread_mutex_unlock(&mi->mi_output_lock);
