@@ -325,7 +325,7 @@ rtsp_announced_port(struct sockaddr_storage *peer, struct sockaddr_storage *self
 {
   int used_port = 0;
 
-  if (satip_server_conf.satip_nat_name_force || !check_is_local_address(peer,self)) {
+  if (satip_server_conf.satip_nat_name_force || !ip_check_is_local_address(peer,self)) {
     used_port = (rtsp_nat_port > 0)? rtsp_nat_port : rtsp_port;
   } else {
     used_port = rtsp_port;
@@ -342,7 +342,7 @@ rtsp_announced_ip(struct sockaddr_storage *peer, struct sockaddr_storage *self)
 {
   char *used_ip;
 
-  if (satip_server_conf.satip_nat_name_force || !check_is_local_address(peer,self)) {
+  if (satip_server_conf.satip_nat_name_force || !ip_check_is_local_address(peer,self)) {
     used_ip = rtsp_nat_ip;
   } else {
     used_ip = rtsp_ip;
