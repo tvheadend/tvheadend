@@ -86,10 +86,13 @@ ip_check_is_local_address
 
   // Note: Not all platforms have getifaddrs()
   //       See http://docs.freeswitch.org/switch__utils_8c_source.html
-  if (!local || !peer || getifaddrs(&iflist) < 0)
+  if (!local || !peer)
     return 0;
 
   if (peer->ss_family != local->ss_family)
+    return 0;
+
+  if (getifaddrs(&iflist) < 0)
     return 0;
 
   any_address = ip_check_is_any(local);
