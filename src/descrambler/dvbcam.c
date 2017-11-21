@@ -313,11 +313,14 @@ dvbcam_service_destroy(th_descrambler_t *td)
   LIST_REMOVE(td, td_service_link);
   TAILQ_REMOVE(&dvbcam_active_services, as, global_link);
   if (do_active_programs) {
-    TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link)
-      if (as->ac == ac)
+    TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link) {
+      if (as->ac == ac) {
         ac->active_programs--;
+        ac->allocated_programs--;
+        break;
+      }
+    }
   }
-  ac->allocated_programs--;
   mpegts_pid_done(&as->ecm_pids);
   mpegts_pid_done(&as->cat_pids);
   free(as->cat_data);
