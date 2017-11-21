@@ -319,25 +319,30 @@ rtsp_parse_args(http_connection_t *hc, char *u)
  *
  */
 static inline const char *
-rtsp_conn_ip(http_connection_t *hc, int *port)
+rtsp_conn_ip(http_connection_t *hc, char *buf, size_t buflen, int *port)
 {
   const char *used_ip = rtsp_ip;
-  int used_port = rtsp_port;
+  int used_port = rtsp_port, local;
   struct sockaddr_storage self;
 
   if (rtsp_nat_ip[0] == '\0')
     goto end;
   self = *hc->hc_self;
   /* note: call ip_check at first to initialize self (ip any) */
-  if (!ip_check_is_local_address(hc->hc_peer, hc->hc_self, &self) ||
-      satip_server_conf.satip_nat_name_force) {
+  local = ip_check_is_local_address(hc->hc_peer, hc->hc_self, &self);
+  if (local || satip_server_conf.satip_nat_name_force) {
     used_ip = rtsp_nat_ip;
     if (rtsp_nat_port > 0)
       used_port = rtsp_nat_port;
   }
 
   if (used_ip[0] == '*' || used_ip[0] == '\0' || used_ip == NULL) {
-    used_ip = "127.0.0.1";
+    if (local) {
+      tcp_get_str_from_ip(&self, buf, buflen);
+      used_ip = buf;
+    } else {
+      used_ip = "127.0.0.1";
+    }
   }
 
 end:
@@ -1351,7 +1356,7 @@ rtsp_process_describe(http_connection_t *hc)
   char *u = tvh_strdupa(hc->hc_url);
   session_t *rs;
   htsbuf_queue_t q;
-  char buf[96];
+  char buf[96], buf1[46];
   const char *used_ip = NULL;
   int r = HTTP_STATUS_BAD_REQUEST;
   int stream, first = 1, valid, used_port;
@@ -1411,7 +1416,7 @@ rtsp_process_describe(http_connection_t *hc)
   http_arg_init(&args);
   if (hc->hc_session)
     http_arg_set(&args, "Session", hc->hc_session);
-  used_ip = rtsp_conn_ip(hc, &used_port);
+  used_ip = rtsp_conn_ip(hc, buf1, sizeof(buf1), &used_port);
   if ((stream > 0) && (used_port != 554))
     snprintf(buf, sizeof(buf), "rtsp://%s:%d/stream=%i", used_ip, used_port, stream);
   else if ((stream > 0) && (used_port == 554))
@@ -1444,7 +1449,7 @@ rtsp_process_play(http_connection_t *hc, int cmd)
 {
   session_t *rs;
   int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, i, stream, used_port;
-  char buf[256], *u = tvh_strdupa(hc->hc_url);
+  char buf[256], buf1[46], *u = tvh_strdupa(hc->hc_url);
   const char *used_ip = NULL;
   http_arg_list_t args;
 
@@ -1503,7 +1508,7 @@ rtsp_process_play(http_connection_t *hc, int cmd)
     snprintf(buf, sizeof(buf), "%d", rs->stream);
     http_arg_set(&args, "com.ses.streamID", buf);
   } else {
-    used_ip = rtsp_conn_ip(hc, &used_port);
+    used_ip = rtsp_conn_ip(hc, buf1, sizeof(buf1), &used_port);
     if (used_port != 554)
       snprintf(buf, sizeof(buf), "url=rtsp://%s:%d/stream=%d", used_ip, used_port, rs->stream);
     else
