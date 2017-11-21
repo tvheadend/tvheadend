@@ -328,7 +328,7 @@ ts_recv_packet1
     service_set_streaming_status_flags((service_t*)t, TSS_INPUT_SERVICE);
 
   scrambled = t->s_scrambled_seen;
-  if(!t->s_scrambled_pass && ((tsb[3] & 0xc0) || (st && scrambled))) {
+  if(!t->s_scrambled_pass && ((tsb[3] & 0xc0) || scrambled)) {
 
     /**
      * Lock for descrambling, but only if packet was not in error
@@ -371,8 +371,8 @@ ts_recv_packet2(mpegts_service_t *t, const uint8_t *tsb, int len)
   for ( ; len > 0; tsb += len2, len -= len2 ) {
     len2 = mpegts_word_count(tsb, len, 0xFF9FFFD0);
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-    if((st = service_stream_find((service_t*)t, pid)) != NULL)
-      ts_recv_packet0(t, st, tsb, len2);
+    st = service_stream_find((service_t*)t, pid);
+    ts_recv_packet0(t, st, tsb, len2);
   }
 }
 
