@@ -3390,6 +3390,20 @@ dvr_entry_class_keyword_get(void *o)
   return l;
 }
 
+static const void *
+dvr_entry_class_genre_get(void *o)
+{
+  const dvr_entry_t *de = (dvr_entry_t *)o;
+  htsmsg_t *l = htsmsg_create_list();
+  if (de->de_bcast && de->de_bcast->episode) {
+    epg_genre_t *eg;
+    LIST_FOREACH(eg, &de->de_bcast->episode->genre, link) {
+      htsmsg_add_u32(l, NULL, eg->code);
+    }
+  }
+  return l;
+}
+
 htsmsg_t *
 dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step, const char *lang)
 {
@@ -3947,6 +3961,15 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Extra keywords, typically from xmltv"),
       .get      = dvr_entry_class_keyword_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI
+    },
+    {
+      .type     = PT_STR,
+      .islist   = 1,
+      .id       = "genre",
+      .name     = N_("Genre"),
+      .desc     = N_("Genre of program"),
+      .get      = dvr_entry_class_genre_get,
+      .opts     = PO_RDONLY | PO_NOSAVE,
     },
     {}
   }
