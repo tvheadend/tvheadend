@@ -46,6 +46,7 @@ typedef enum {
     DS_READY,
     DS_RESOLVED,
     DS_FORBIDDEN,
+    DS_FATAL,
     DS_IDLE
 } th_descrambler_keystate_t;
 
@@ -92,6 +93,7 @@ typedef struct th_descrambler_runtime {
   int      dr_ca_count;
   int      dr_ca_resolved;
   int      dr_ca_failed;
+  int      dr_ca_fatal;
   uint32_t dr_external:1;
   uint32_t dr_skip:1;
   uint32_t dr_quick_ecm:1;

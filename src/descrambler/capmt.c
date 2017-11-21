@@ -193,6 +193,10 @@ typedef struct capmt_service {
   /* Elementary stream types */
   uint8_t ct_types[MAX_PIDS];
   uint8_t ct_type_sok[MAX_PIDS];
+
+  /* OK flag - seems that descrambling is going on */
+  uint8_t ct_ok_flag;
+  mtimer_t ct_ok_timer;
 } capmt_service_t;
 
 /**
@@ -840,6 +844,8 @@ capmt_service_destroy(th_descrambler_t *td)
            "%s: Removing CAPMT Server from service \"%s\" on adapter %d",
            capmt_name(capmt), s->s_dvb_svcname, ct->ct_adapter);
 
+  mtimer_disarm(&ct->ct_ok_timer);
+
   pthread_mutex_lock(&capmt->capmt_mutex);
 
   /* send stop to client */
@@ -942,10 +948,10 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       if (cce->cce_ecmpid == pid) {
         flags = CAPMT_MSG_FAST;
         t = cce->cce_service;
-        break;
+        goto service_found;
       }
-    if (t) break;
   }
+service_found:
   if (t) {
     dmx_filter_t *pf = (dmx_filter_t *)sbuf_peek(sb, offset + 4);
     /* OK, probably ECM, but sometimes, it's shared */
@@ -958,9 +964,13 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     if (i < DMX_FILTER_SIZE ||
         pf->mode[0] ||
         (pf->filter[0] & 0xf0) != 0x80 ||
-        (pf->mask[0] & 0xf0) != 0xf0)
+        (pf->mask[0] & 0xf0) != 0xf0) {
       t = NULL;
+      flags = 0;
+    }
   }
+  if (t)
+    ct->ct_ok_flag = 1;
 
   cf->adapter = adapter;
   filter = &cf->dmx[filter_index];
@@ -1121,6 +1131,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
         if (pid == 0) break;
         if (pid == pids[i]) {
           if (multipid) {
+            ct->ct_ok_flag = 1;
             descrambler_keys((th_descrambler_t *)ct, type, pid, even, odd);
             continue;
           } else if (ct->ct_type_sok[j])
@@ -1131,6 +1142,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
     continue;
 
 found:
+    ct->ct_ok_flag = 1;
     descrambler_keys((th_descrambler_t *)ct, type, pid, even, odd);
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
@@ -2128,6 +2140,15 @@ capmt_caid_change(th_descrambler_t *td)
 }
 
 static void
+capmt_ok_timer_cb(void *aux)
+{
+  capmt_service_t *ct = aux;
+
+  if (!ct->ct_ok_flag)
+    descrambler_change_keystate((th_descrambler_t *)ct, DS_FATAL, 1);
+}
+
+static void
 capmt_send_request(capmt_service_t *ct, int lm)
 {
   capmt_t *capmt = ct->ct_capmt;
@@ -2290,6 +2311,8 @@ capmt_send_request(capmt_service_t *ct, int lm)
              capmt_name(capmt), t->s_dvb_svcname);
 
   capmt_queue_msg(capmt, adapter_num, sid, buf, pos, 0);
+
+  mtimer_arm_rel(&ct->ct_ok_timer, capmt_ok_timer_cb, ct, sec2mono(3)/2);
 }
 
 static void

@@ -535,6 +535,7 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
   mpegts_apids_t pids;
   const uint8_t *data1;
   int len1;
+  uint8_t dtag;
   uint8_t dlen;
   uint16_t caid;
   uint16_t pid;

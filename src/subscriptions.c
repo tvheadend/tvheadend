@@ -613,7 +613,7 @@ subscription_input(void *opaque, streaming_message_t *sm)
   }
 
   if (sm->sm_type == SMT_SERVICE_STATUS &&
-      (sm->sm_code & (TSS_TUNING|TSS_TIMEOUT|TSS_CA_CHECK))) {
+      (sm->sm_code & (TSS_TUNING|TSS_TIMEOUT|TSS_NO_DESCRAMBLER|TSS_CA_CHECK))) {
     error = tss2errcode(sm->sm_code);
     if (error != SM_CODE_OK)
       if (error != SM_CODE_NO_ACCESS ||

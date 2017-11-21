@@ -1840,14 +1840,14 @@ service_tss2text(int flags)
 int
 tss2errcode(int tss)
 {
+  if(tss & TSS_NO_DESCRAMBLER)
+    return SM_CODE_NO_DESCRAMBLER;
+
   if(tss & TSS_NO_ACCESS)
     return SM_CODE_NO_ACCESS;
 
   if(tss & TSS_TUNING)
     return SM_CODE_TUNING_FAILED;
-
-  if(tss & TSS_NO_DESCRAMBLER)
-    return SM_CODE_NO_DESCRAMBLER;
 
   if(tss & (TSS_GRACEPERIOD|TSS_TIMEOUT))
     return SM_CODE_NO_INPUT;
