@@ -435,14 +435,13 @@ static int _eit_desc_crid
  * @param text - string from broadcaster to search.
  * @param eit_mod - our module with regex to use.
  * @param en - [out] episode data
- * @param first_aired - [out] airdate
  * @return Bitmask of changed fields.
  */
 static uint32_t
 _eit_scrape_episode(const char *str,
                     eit_module_t *eit_mod,
                     epg_episode_num_t *en,
-                    time_t *first_aired)
+                    uint16_t *copyright_year)
 {
   if (!str) return 0;
 
@@ -465,19 +464,12 @@ _eit_scrape_episode(const char *str,
   /* Extract original air date year */
   if (eit_pattern_apply_list(buffer, sizeof(buffer), str, &eit_mod->p_airdate)) {
     if (strlen(buffer) == 4) {
-      /* Year component only */
+      /* Year component only, so assume it is the copyright year. */
       const int year = atoi(buffer);
       if (year) {
-        struct tm airdate;
-        memset(&airdate, 0, sizeof(airdate));
-        airdate.tm_year = year - 1900;
-        /* Remaining fields in airdate can all remain at zero but day
-         * of month is one-based
-         */
-        airdate.tm_mday = 1;
-        *first_aired = mktime(&airdate);
-        changed |= EPG_CHANGED_FIRST_AIRED;
-      }
+        *copyright_year = year;
+        changed |= EPG_CHANGED_COPYRIGHT_YEAR;
+     }
     }
   }
   return changed;
@@ -659,6 +651,7 @@ static int _eit_process_event_one
   memset(&en, 0, sizeof(en));
   time_t first_aired = 0;
   uint32_t scraped = 0;
+  uint16_t copyright_year = 0;
 
   /* We search across all the main fields using the same regex and
    * merge the results with the last match taking precendence.  So if
@@ -668,14 +661,14 @@ static int _eit_process_event_one
   if (eit_mod->scrape_episode) {
     if (ev.title)
       scraped |=  _eit_scrape_episode(lang_str_get(ev.title, ev.default_charset),
-                                      eit_mod, &en, &first_aired);
+                                      eit_mod, &en, &copyright_year);
     if (ev.desc)
       scraped |=  _eit_scrape_episode(lang_str_get(ev.desc, ev.default_charset),
-                                      eit_mod, &en, &first_aired);
+                                      eit_mod, &en, &copyright_year);
 
     if (ev.summary)
       scraped |= _eit_scrape_episode(lang_str_get(ev.summary, ev.default_charset),
-                                     eit_mod, &en, &first_aired);
+                                     eit_mod, &en, &copyright_year);
   }
 
   /* Update Episode */
@@ -720,6 +713,8 @@ static int _eit_process_event_one
       *save |= epg_episode_set_epnum(ee, &en, &changes4);
     if (scraped & EPG_CHANGED_FIRST_AIRED)
       *save |= epg_episode_set_first_aired(ee, first_aired, &changes4);
+    if (scraped & EPG_CHANGED_COPYRIGHT_YEAR)
+      *save |= epg_episode_set_copyright_year(ee, copyright_year, &changes4);
 
     *save |= epg_episode_change_finish(ee, changes4, 0);
   }
