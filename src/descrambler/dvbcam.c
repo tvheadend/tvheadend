@@ -385,10 +385,10 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   th_descrambler_runtime_t *dr;
   caid_t *c = NULL;
   char buf[128];
+  int i, j;
 #if ENABLE_DDCI
   mpegts_input_t *mi;
   mpegts_mux_t *mm;
-  int i, j;
   mpegts_apids_t ecm_pids;
   mpegts_apids_t ecm_to_open;
   mpegts_apids_t ecm_to_close;
