@@ -107,7 +107,9 @@ tvheadend.epgDetails = function(event) {
     if (icons)
         content += '<div class="x-epg-icons">' + icons + '</div>';
     content += '<div class="x-epg-title">' + event.title;
-    if (event.subtitle)
+    // Some OTA have the same subtitle and summary so don't display subtitle
+    // since summary can be long.
+    if (event.subtitle && (!event.summary || (event.summary && event.subtitle != event.summary)))
         content += "&nbsp;:&nbsp;" + event.subtitle;
     if (event.copyright_year)
         content += "&nbsp;(" + event.copyright_year + ")";

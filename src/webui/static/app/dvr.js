@@ -53,7 +53,7 @@ tvheadend.dvrDetails = function(uuid) {
             displayTitle += "&nbsp;(" + copyright_year + ")";
         if (title)
             content += '<div class="x-epg-title">' + displayTitle + '</div>';
-        if (subtitle)
+        if (subtitle && (!desc || (desc && subtitle != desc)))
             content += '<div class="x-epg-title">' + subtitle + '</div>';
         if (episode)
             content += '<div class="x-epg-title">' + episode + '</div>';
