@@ -25,7 +25,7 @@ tvheadend.caclient = function(panel, index) {
     var list = 'enabled,name,username,password,hostname,mode,camdfilename,' +
                'port,cwmode,deskey,emm,emmex,caid,providerid,tsid,sid,' +
                'key_even,key_odd,keepalive_interval,comment,nodeid,version,' +
-               'limit';
+               'limit,caid_select,caid_list';
 
     tvheadend.idnode_form_grid(panel, {
         clazz: 'caclient',

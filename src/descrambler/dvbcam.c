@@ -30,6 +30,10 @@
 
 #if ENABLE_LINUXDVB_CA
 
+#define DVBCAM_SEL_ALL      0
+#define DVBCAM_SEL_FIRST    1
+#define DVBCAM_SEL_LAST     2
+
 #define CAIDS_PER_CA_SLOT   16
 
 typedef struct dvbcam_active_cam {
@@ -48,7 +52,7 @@ typedef struct dvbcam_active_service {
   LIST_ENTRY(dvbcam_active_service)  dvbcam_link;
   uint8_t             *last_pmt;
   int                  last_pmt_len;
-  uint16_t             caid;
+  uint16_t             caid_list[32];
   dvbcam_active_cam_t *ac;
   mpegts_apids_t       ecm_pids;
   uint8_t             *cat_data;
@@ -63,6 +67,8 @@ typedef struct dvbcam {
   caclient_t;
   LIST_HEAD(,dvbcam_active_service) services;
   int limit;
+  int caid_select;
+  uint16_t caid_list[32];
 } dvbcam_t;
 
 TAILQ_HEAD(,dvbcam_active_service) dvbcam_active_services;
@@ -92,7 +98,29 @@ dvbcam_status_update(void)
   caclient_foreach(dvbcam_status_update0);
 }
 
+/*
+ *
+ */
 #if ENABLE_DDCI
+/*
+ *
+ */
+static int
+dvbcam_service_check_caid(dvbcam_active_service_t *as, uint16_t caid)
+{
+  uint16_t caid1;
+  int i;
+
+  for (i = 0; i < ARRAY_SIZE(as->caid_list); i++) {
+    caid1 = as->caid_list[i];
+    if (caid1 == 0)
+      return 0;
+    if (caid1 == caid)
+      return 1;
+  }
+  return 0;
+}
+
 static void
 dvbcam_unregister_ddci(dvbcam_active_cam_t *ac, dvbcam_active_service_t *as)
 {
@@ -360,7 +388,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
 #if ENABLE_DDCI
   mpegts_input_t *mi;
   mpegts_mux_t *mm;
-  int i;
+  int i, j;
   mpegts_apids_t ecm_pids;
   mpegts_apids_t ecm_to_open;
   mpegts_apids_t ecm_to_close;
@@ -399,24 +427,35 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
    *              remain unused.
    */
 
-  /* check all elementary streams for CAIDs and find CAM */
-  TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
-    if (st->es_type != SCT_CA) continue;
-    LIST_FOREACH(c, &st->es_caids, link) {
-      if (!c->use) continue;
-      if (t->s_dvb_forcecaid && t->s_dvb_forcecaid != c->caid) continue;
-      TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link) {
-        if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid)) {
-          /* limit the concurrent service decoders per CAM */
-          if (dc->limit > 0 && ac->allocated_programs >= dc->limit)
-            continue;
-
-#if ENABLE_DDCI
-          /* currently we allow only one service per DD CI */
-          if (ac->ca->lddci && linuxdvb_ddci_is_assigned(ac->ca->lddci))
-            continue;
-#endif
-          goto end_of_search_for_cam;
+  /* check all or filtered elementary streams for CAIDs and find CAM */
+  for (i = 0; i < ARRAY_SIZE(dc->caid_list); i++) {
+    if (dc->caid_list[0]) {
+      if (dc->caid_list[i] == 0)
+        break;
+    } else {
+      if (i > 0)
+        break;
+    }
+    TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
+      if (st->es_type != SCT_CA) continue;
+      LIST_FOREACH(c, &st->es_caids, link) {
+        if (!c->use) continue;
+        if (t->s_dvb_forcecaid && t->s_dvb_forcecaid != c->caid) continue;
+        if (dc->caid_list[0] && dc->caid_list[i] != c->caid) continue;
+        TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link) {
+          if (dvbcam_ca_lookup(ac,
+                               ((mpegts_service_t *)t)->s_dvb_active_input,
+                               c->caid)) {
+            /* limit the concurrent service decoders per CAM */
+            if (dc->limit > 0 && ac->allocated_programs >= dc->limit)
+              continue;
+  #if ENABLE_DDCI
+            /* currently we allow only one service per DD CI */
+            if (ac->ca->lddci && linuxdvb_ddci_is_assigned(ac->ca->lddci))
+              continue;
+  #endif
+            goto end_of_search_for_cam;
+          }
         }
       }
     }
@@ -432,13 +471,43 @@ end_of_search_for_cam:
   ac->allocated_programs++;
 
   as->ac = ac;
-  as->caid = c->caid;
+
+  if (dc->caid_select == DVBCAM_SEL_FIRST ||
+      dc->caid_list[0] == 0 ||
+      t->s_dvb_forcecaid) {
+    as->caid_list[0] = c->caid;
+    as->caid_list[1] = 0;
+  } else {
+    for (i = j = 0; i < ARRAY_SIZE(dc->caid_list); i++) {
+      if (dc->caid_list[i] == 0)
+        break;
+      TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
+        if (st->es_type != SCT_CA) continue;
+        LIST_FOREACH(c, &st->es_caids, link) {
+          if (i >= ARRAY_SIZE(as->caid_list)) {
+            tvherror(LS_DVBCAM, "CAID service list overflow");
+            break;
+          }
+          if (!c->use) continue;
+          if (!dvbcam_ca_lookup(ac,
+                                ((mpegts_service_t *)t)->s_dvb_active_input,
+                                c->caid)) continue;
+          as->caid_list[j++] = c->caid;
+        }
+      }
+    }
+    if (j < ARRAY_SIZE(as->caid_list))
+      as->caid_list[j] = 0;
+    if (dc->caid_select == DVBCAM_SEL_LAST && j > 0)
+      as->caid_list[0] = as->caid_list[j-1];
+  }
+
   mpegts_pid_init(&as->ecm_pids);
   mpegts_pid_init(&as->cat_pids);
 
   td = (th_descrambler_t *)as;
   snprintf(buf, sizeof(buf), "dvbcam-%i-%i-%04X",
-           ac->ca->lca_number, (int)ac->slot, (int)as->caid);
+           ac->ca->lca_number, (int)ac->slot, (int)as->caid_list[0]);
   td->td_nicename = strdup(buf);
   td->td_service = t;
   td->td_stop = dvbcam_service_destroy;
@@ -462,13 +531,13 @@ end_of_search_for_cam:
 
 update_pid:
 #if ENABLE_DDCI
-  /* open all ECM PIDs */
+  /* open selected ECM PIDs */
   TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
     if (st->es_type != SCT_CA) continue;
     LIST_FOREACH(c, &st->es_caids, link) {
       if (!c->use) continue;
-      if (as->caid != c->caid) continue;
-      mpegts_pid_add(&ecm_pids, st->es_pid, 0);
+      if (dvbcam_service_check_caid(as, c->caid))
+        mpegts_pid_add(&ecm_pids, st->es_pid, 0);
     }
   }
   mpegts_pid_compare(&ecm_pids, &as->ecm_pids, &ecm_to_open, &ecm_to_close);
@@ -553,7 +622,7 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
   /* look for CAID in all services */
   TAILQ_FOREACH(as, &dvbcam_active_services, global_link) {
     if (!as->is_ddci) continue;
-    if (as->caid == 0) continue;
+    if (as->caid_list[0] == 0) continue;
     if (((mpegts_service_t *)as->td_service)->s_dvb_mux != mux) continue;
     if (len == as->cat_data_len &&
         memcmp(data, as->cat_data, len) == 0)
@@ -577,7 +646,7 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
         if (dtag == DVB_DESC_CA && len1 >= 4 && dlen >= 4) {
           caid =  (data1[0] << 8) | data1[1];
           pid  = ((data1[2] << 8) | data1[3]) & 0x1fff;
-          if (caid == as->caid && pid != 0)
+          if (dvbcam_service_check_caid(as, caid) && pid != 0)
             mpegts_pid_add(&pids, pid, 0);
         }
         data1 += dlen;
@@ -626,6 +695,73 @@ dvbcam_conf_changed(caclient_t *cac)
 /*
  *
  */
+static htsmsg_t *
+caclient_dvbcam_class_caid_selection_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("All CAIDs"),           DVBCAM_SEL_ALL },
+    { N_("First hit"),           DVBCAM_SEL_FIRST },
+    { N_("Last hit"),            DVBCAM_SEL_LAST },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
+static int
+caclient_dvbcam_class_caid_list_set( void *obj, const void *p )
+{
+  dvbcam_t *dc = obj;
+  htsmsg_t *list = htsmsg_csv_2_list((const char *)p, ',');
+  const char *s;
+  htsmsg_field_t *f;
+  uint16_t caid_list[ARRAY_SIZE(dc->caid_list)];
+  int caid, index = 0, change = 0;
+
+  dc->caid_list[0] = 0;
+  if (list == NULL)
+    return 0;
+  HTSMSG_FOREACH(f, list) {
+    if (index >= ARRAY_SIZE(dc->caid_list)) {
+      tvherror(LS_DVBCAM, "CAID list overflow");
+      break;
+    }
+    s = htsmsg_field_get_str(f);
+    if (s) {
+      caid = strtol(s, NULL, 16);
+      if (caid > 0 && caid < 0xFFFF) {
+        if (caid != dc->caid_list[index])
+          change = 1;
+        caid_list[index++] = caid;
+      }
+    }
+  }
+  htsmsg_destroy(list);
+  if (index < ARRAY_SIZE(dc->caid_list))
+    dc->caid_list[index] = 0;
+  if (change)
+    memcpy(dc->caid_list, caid_list, index * sizeof(caid_list[0]));
+  return change;
+}
+
+static const void *
+caclient_dvbcam_class_caid_list_get( void *obj )
+{
+  dvbcam_t *dc = obj;
+  size_t l = 0;
+  int index;
+
+  prop_sbuf[0] = '\0';
+  for (index = 0; index < ARRAY_SIZE(dc->caid_list); index++) {
+    if (dc->caid_list[index] == 0)
+      break;
+    tvh_strlcatf(prop_sbuf, PROP_SBUF_LEN, l, "%s%04X",
+                 index > 0 ? "," : "", dc->caid_list[index]);
+  }
+  return &prop_sbuf_ptr;
+}
+
+/*
+ *
+ */
 const idclass_t caclient_dvbcam_class =
 {
   .ic_super      = &caclient_class,
@@ -638,6 +774,23 @@ const idclass_t caclient_dvbcam_class =
       .name     = N_("Service limit"),
       .desc     = N_("Limit of concurrent descrambled services (per one CAM)."),
       .off      = offsetof(dvbcam_t, limit),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "caid_select",
+      .name     = N_("CAID selection"),
+      .desc     = N_("Selection method for CAID"),
+      .list     = caclient_dvbcam_class_caid_selection_list,
+      .off      = offsetof(dvbcam_t, caid_select),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "caid_list",
+      .name     = N_("CAID filter list"),
+      .desc     = N_("A list of allowed CAIDs (hexa format, comma separated). "
+                     "E.g. '0D00,0F00,0100'."),
+      .set      = caclient_dvbcam_class_caid_list_set,
+      .get      = caclient_dvbcam_class_caid_list_get,
     },
     {}
   }
