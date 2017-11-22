@@ -188,7 +188,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
     if (ee->first_aired)
       htsmsg_add_s64(m, "first_aired", ee->first_aired);
     if (ee->copyright_year)
-      htsmsg_add_u32(m, "copyrightYear", ee->copyright_year);
+      htsmsg_add_u32(m, "copyright_year", ee->copyright_year);
 
     /* Content Type */
     m2 = NULL;
