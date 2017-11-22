@@ -404,7 +404,8 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
     if (st->es_type != SCT_CA) continue;
     LIST_FOREACH(c, &st->es_caids, link) {
       if (!c->use) continue;
-      TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link)
+      if (t->s_dvb_forcecaid && t->s_dvb_forcecaid != c->caid) continue;
+      TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link) {
         if (dvbcam_ca_lookup(ac, ((mpegts_service_t *)t)->s_dvb_active_input, c->caid)) {
           /* limit the concurrent service decoders per CAM */
           if (dc->limit > 0 && ac->allocated_programs >= dc->limit)
@@ -417,6 +418,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
 #endif
           goto end_of_search_for_cam;
         }
+      }
     }
   }
 
