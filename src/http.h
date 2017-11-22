@@ -136,6 +136,7 @@ typedef struct http_connection {
   char *hc_peer_ipstr;
   struct sockaddr_storage *hc_self;
   char *hc_representative;
+  struct sockaddr_storage *hc_local_ip;
 
   pthread_mutex_t  *hc_paths_mutex;
   http_path_list_t *hc_paths;
@@ -143,7 +144,6 @@ typedef struct http_connection {
 
   char *hc_url;
   char *hc_url_orig;
-  int hc_keep_alive;
 
   htsbuf_queue_t  hc_reply;
 
@@ -166,12 +166,15 @@ typedef struct http_connection {
   char *hc_nonce;
   access_t *hc_access;
 
-  struct config_head *hc_user_config;
-
-  int hc_no_output;
-  int hc_shutdown;
+  /* RTSP */
   uint64_t hc_cseq;
   char *hc_session;
+
+  /* Flags */
+  uint8_t hc_keep_alive;
+  uint8_t hc_no_output;
+  uint8_t hc_shutdown;
+  uint8_t hc_is_local_ip;   /*< a connection from the local network */
 
   /* Support for HTTP POST */
   
@@ -263,6 +266,8 @@ int http_websocket_read(http_connection_t *hc, htsmsg_t **_res, int timeout);
 void http_serve_requests(http_connection_t *hc);
 
 void http_cancel(void *opaque);
+
+int http_check_local_ip(http_connection_t *hc);
 
 typedef int (http_callback_t)(http_connection_t *hc, 
 			      const char *remain, void *opaque);

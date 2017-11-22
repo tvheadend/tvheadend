@@ -95,6 +95,14 @@ static void rtsp_free_session(session_t *rs);
 /*
  *
  */
+static inline int rtsp_is_nat_active(void)
+{
+  return rtsp_nat_ip[0] != '\0';
+}
+
+/*
+ *
+ */
 int
 satip_rtsp_delsys(int fe, int *findex, const char **ftype)
 {
@@ -279,9 +287,10 @@ rtsp_check_urlbase(char *u)
   if (strcmp(u, rtsp_ip)) {
     if (rtsp_nat_ip == NULL)
       return NULL;
-    if (rtsp_nat_ip[0] != '*')
-      if (rtsp_nat_ip[0] == '\0' || strcmp(u, rtsp_nat_ip))
+    if (rtsp_is_nat_active()) {
+      if (rtsp_nat_ip[0] != '*' && strcmp(u, rtsp_nat_ip))
         return NULL;
+    }
   }
   return p ? p + 1 : u + strlen(u);
 }
@@ -323,13 +332,11 @@ rtsp_conn_ip(http_connection_t *hc, char *buf, size_t buflen, int *port)
 {
   const char *used_ip = rtsp_ip;
   int used_port = rtsp_port, local;
-  struct sockaddr_storage self;
 
-  if (rtsp_nat_ip[0] == '\0')
+  if (!rtsp_is_nat_active())
     goto end;
-  self = *hc->hc_self;
-  /* note: call ip_check at first to initialize self (ip any) */
-  local = ip_check_is_local_address(hc->hc_peer, hc->hc_self, &self);
+  /* note: it initializes hc->hc_local_ip, too */
+  local = http_check_local_ip(hc) > 0;
   if (local || satip_server_conf.satip_nat_name_force) {
     used_ip = rtsp_nat_ip;
     if (rtsp_nat_port > 0)
@@ -338,7 +345,7 @@ rtsp_conn_ip(http_connection_t *hc, char *buf, size_t buflen, int *port)
 
   if (used_ip[0] == '*' || used_ip[0] == '\0' || used_ip == NULL) {
     if (local) {
-      tcp_get_str_from_ip(&self, buf, buflen);
+      tcp_get_str_from_ip(hc->hc_local_ip, buf, buflen);
       used_ip = buf;
     } else {
       used_ip = "127.0.0.1";
