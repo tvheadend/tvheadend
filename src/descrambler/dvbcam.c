@@ -662,7 +662,7 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
           caid =  (data1[0] << 8) | data1[1];
           pid  = ((data1[2] << 8) | data1[3]) & 0x1fff;
           if (dvbcam_service_check_caid(as, caid) && pid != 0) {
-            tvhtrace(LS_DVBCAM, "%p: add ECM PID %d (%04X) for CAID %04X",
+            tvhtrace(LS_DVBCAM, "%p: add EMM PID %d (%04X) for CAID %04X",
                                 sp->service, pid, pid, caid);
             mpegts_pid_add(&pids, pid, 0);
           }
