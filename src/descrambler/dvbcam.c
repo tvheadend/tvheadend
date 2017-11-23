@@ -737,9 +737,10 @@ caclient_dvbcam_class_caid_list_set( void *obj, const void *p )
   const char *s;
   htsmsg_field_t *f;
   uint16_t caid_list[ARRAY_SIZE(dc->caid_list)];
-  int caid, index = 0, change = 0;
+  int caid, idx, index = 0, change = 0;
 
-  dc->caid_list[0] = 0;
+  for (idx = 0; dc->caid_list[idx] && idx < ARRAY_SIZE(dc->caid_list); idx++);
+
   if (list == NULL)
     return 0;
   HTSMSG_FOREACH(f, list) {
@@ -762,7 +763,7 @@ caclient_dvbcam_class_caid_list_set( void *obj, const void *p )
     dc->caid_list[index] = 0;
   if (change)
     memcpy(dc->caid_list, caid_list, index * sizeof(caid_list[0]));
-  return change;
+  return change || index != idx;
 }
 
 static const void *
