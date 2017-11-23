@@ -475,7 +475,6 @@ end_of_search_for_cam:
   as->ac = ac;
 
   if (dc->caid_select == DVBCAM_SEL_FIRST ||
-      dc->caid_list[0] == 0 ||
       t->s_dvb_forcecaid) {
     as->caid_list[0] = c->caid;
     as->caid_list[1] = 0;
@@ -483,8 +482,13 @@ end_of_search_for_cam:
                         ac->ca->lca_name, t, as->caid_list[0]);
   } else {
     for (i = j = 0; i < ARRAY_SIZE(dc->caid_list); i++) {
-      if (dc->caid_list[i] == 0)
-        break;
+      if (dc->caid_list[0]) {
+        if (dc->caid_list[i] == 0)
+          break;
+      } else {
+        if (i > 0)
+          break;
+      }
       TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
         if (st->es_type != SCT_CA) continue;
         LIST_FOREACH(c, &st->es_caids, link) {
@@ -494,12 +498,13 @@ end_of_search_for_cam:
             break;
           }
           if (!c->use) continue;
-          if (c->caid != dc->caid_list[i]) continue;
+          if (dc->caid_list[0] && c->caid != dc->caid_list[i]) continue;
           if (!dvbcam_ca_lookup(ac,
                                 ((mpegts_service_t *)t)->s_dvb_active_input,
                                 c->caid)) continue;
-          tvhtrace(LS_DVBCAM, "%s/%p: add CAID %04X to selection",
-                              ac->ca->lca_name, t, c->caid);
+          if (dc->caid_select != DVBCAM_SEL_LAST)
+            tvhtrace(LS_DVBCAM, "%s/%p: add CAID %04X to selection",
+                                ac->ca->lca_name, t, c->caid);
           as->caid_list[j++] = c->caid;
         }
       }
@@ -509,7 +514,7 @@ end_of_search_for_cam:
     if (dc->caid_select == DVBCAM_SEL_LAST && j > 0) {
       as->caid_list[0] = as->caid_list[j-1];
       as->caid_list[1] = 0;
-      tvhtrace(LS_DVBCAM, "%s/%p: first CAID %04X selected",
+      tvhtrace(LS_DVBCAM, "%s/%p: last CAID %04X selected",
                           ac->ca->lca_name, t, as->caid_list[0]);
     }
   }
