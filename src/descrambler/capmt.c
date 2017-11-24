@@ -927,6 +927,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   mpegts_service_t *t;
   capmt_caid_ecm_t *cce;
   int i, flags = 0, add = 0;
+  uint16_t caid;
 
   tvhtrace(LS_CAPMT, "%s: setting filter: adapter=%d, demux=%d, filter=%d, pid=%d",
            capmt_name(capmt), adapter, demux_index, filter_index, pid);
@@ -943,17 +944,20 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   /* ECM messages have the higher priority */
   t = NULL;
+  caid = 0;
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
     LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
       if (cce->cce_ecmpid == pid) {
         flags = CAPMT_MSG_FAST;
         t = cce->cce_service;
+        caid = cce->cce_caid;
         goto service_found;
       }
   }
 service_found:
   if (t) {
     dmx_filter_t *pf = (dmx_filter_t *)sbuf_peek(sb, offset + 4);
+    uint8_t f0, m0;
     /* OK, probably ECM, but sometimes, it's shared */
     /* Inspect the filter */
     for (i = 1; i < DMX_FILTER_SIZE; i++) {
@@ -961,14 +965,14 @@ service_found:
       if (pf->filter[i]) break;
       if (pf->mask[i]) break;
     }
-    if (i < DMX_FILTER_SIZE ||
-        pf->mode[0] ||
-        (pf->filter[0] & 0xf0) != 0x80 ||
-        (pf->mask[0] & 0xf0) != 0xf0) {
-      t = NULL;
-      flags = 0;
-    }
+    if (i >= DMX_FILTER_SIZE) goto cont;
+    if (pf->mode[0]) goto cont;
+    f0 = pf->filter[0];
+    m0 = pf->filter[1];
+    if ((f0 & 0xf0) == 0x80 && (m0 & 0xf0) == 0xf0) goto cont;
+    if (caid == 0x4a30 && f0 == 0x50 && m0 == 0xff) goto cont; /* DVN */
   }
+cont:
   if (t)
     ct->ct_ok_flag = 1;
 

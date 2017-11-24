@@ -1279,8 +1279,8 @@ descrambler_table_callback
                 }
               }
             }
-            tvhtrace(LS_DESCRAMBLER, "ECM message %02x (section %d, len %d, pid %d) for service \"%s\"",
-                     ptr[0], des->number, len, mt->mt_pid, t->s_dvb_svcname);
+            tvhtrace(LS_DESCRAMBLER, "ECM message %02x:%02x (section %d, len %d, pid %d) for service \"%s\"",
+                     ptr[0], ptr[1], des->number, len, mt->mt_pid, t->s_dvb_svcname);
           }
           pthread_mutex_unlock(&t->s_stream_mutex);
         } else
