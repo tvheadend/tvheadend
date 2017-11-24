@@ -593,6 +593,7 @@ emm_reass_init(emm_reass_t *ra, uint16_t caid)
   ra->type = detect_card_type(caid);
   switch (ra->type) {
   case CARD_CONAX:       ra->do_emm = emm_conax;        break;
+  case CARD_BETACRYPT:   /* really? */
   case CARD_IRDETO:      ra->do_emm = emm_irdeto;       break;
   case CARD_SECA:        ra->do_emm = emm_seca;         break;
   case CARD_VIACCESS:    ra->do_emm = emm_viaccess;     break;

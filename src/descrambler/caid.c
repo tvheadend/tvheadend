@@ -59,8 +59,11 @@ static struct caid_tab caidnametab[] = {
   { "StarGuide",        0x2400, 0xff00 },
   { "Mentor",           0x2500, 0xff00 },
   { "EBU",              0x2600, 0xff00 },
+  { "DRECrypt ",        0x2710, 0xffff },
   { "GI",               0x4700, 0xff00 },
   { "Telemann",         0x4800, 0xff00 },
+  { "TongFang",         0x4a02, 0xffff },
+  { "DVN",              0x4a30, 0xffff },
   { "DGCrypt",          0x4abf, 0xffff },
   { "XCrypt",           0x4ad0, 0xfffe },
   { "StreamGuard",      0x4ad2, 0xffff },
@@ -71,8 +74,7 @@ static struct caid_tab caidnametab[] = {
   { "Griffin",          0x5500, 0xffe0 },
   { "Bulcrypt",         0x5581, 0xffff },
   { "Verimatrix",       0x5601, 0xffff },
-  { "DRECrypt",         0x7be0, 0xffff },
-  { "DRECrypt2",        0x7be1, 0xffff },
+  { "DRECrypt",         0x7be0, 0xfffe },
 };
 
 const char *
@@ -126,33 +128,44 @@ detect_card_type(const uint16_t caid)
   uint8_t c_sys = caid >> 8;
 
   switch(caid) {
+    case 0x2710:
+      return CARD_DRE;
+    case 0x4a02:
+      return CARD_TONGFANG;
+    case 0x4ae1:
+    case 0x4ae2:
+      return CARD_DRE;
+    case 0x4a30:
+      return CARD_DVN;
     case 0x4ad2:
       return CARD_STREAMGUARD;
-    case 0x5581:
     case 0x4aee:
       return CARD_BULCRYPT;
+    case 0x4b00 ... 0x4bff:
+      return CARD_TONGFANG;
     case 0x5500 ... 0x551a:
       return CARD_GRIFFIN;
+    case 0x5581:
+      return CARD_BULCRYPT;
   }
   
   switch(c_sys) {
-    case 0x17:
-    case 0x06:
-      return CARD_IRDETO;
-    case 0x05:
-      return CARD_VIACCESS;
-    case 0x0b:
-      return CARD_CONAX;
     case 0x01:
       return CARD_SECA;
-    case 0x4a:
-      return CARD_DRE;
-    case 0x18:
-      return CARD_NAGRA;
+    case 0x05:
+      return CARD_VIACCESS;
+    case 0x06:
+      return CARD_IRDETO;
     case 0x09:
       return CARD_NDS;
+    case 0x0b:
+      return CARD_CONAX;
     case 0x0d:
       return CARD_CRYPTOWORKS;
+    case 0x17:
+      return CARD_BETACRYPT;
+    case 0x18:
+      return CARD_NAGRA;
     default:
       return CARD_UNKNOWN;
   }
