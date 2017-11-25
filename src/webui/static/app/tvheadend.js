@@ -229,7 +229,7 @@ tvheadend.getContentTypeIcons = function(rec) {
   }
 
   var ret = "";
-  if (rec.new)
+  if ('new' in rec && rec.new)
     ret += "&#x1f195;";         // Squared New
   return ret + tvheadend.uniqueArray(ret_major).join("") + tvheadend.uniqueArray(ret_minor).join("");
 }
