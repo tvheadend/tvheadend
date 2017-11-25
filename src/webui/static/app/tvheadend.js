@@ -201,7 +201,16 @@ tvheadend.getContentTypeIcons = function(rec) {
       l = catmap_minor[v];
       if (l) ret_minor.push(l)
     }
-  } else {
+  }
+
+  // If we have not mapped any categories, either
+  // due to only having OTA genres or due to categories
+  // not generating any matches, then check the genres.
+  // By default we don't do both category and genre
+  // mappings if we matched any categories since
+  // category mappings are normally more specific
+  // than genres.
+  if (ret_major.length == 0 && ret_minor.length == 0) {
     // Genre code
     var gen = rec.genre;
     if (gen) {
@@ -220,7 +229,7 @@ tvheadend.getContentTypeIcons = function(rec) {
   }
 
   var ret = "";
-  if (rec.new)
+  if ('new' in rec && rec.new)
     ret += "&#x1f195;";         // Squared New
   return ret + tvheadend.uniqueArray(ret_major).join("") + tvheadend.uniqueArray(ret_minor).join("");
 }
