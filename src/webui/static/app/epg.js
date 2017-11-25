@@ -164,7 +164,7 @@ tvheadend.epgDetails = function(event) {
       tags.push(_('UHDTV'));
     else if (event.hd > 0)
       tags.push(_('HDTV'));
-    if ('new' in event)
+    if ('new' in event && event.new)
       tags.push(_('New#EPG').split('#')[0]);
     if (event.repeat)
       tags.push(_('Repeat#EPG').split('#')[0]);
