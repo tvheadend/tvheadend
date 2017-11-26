@@ -292,6 +292,7 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
   char buf[4096];
   const char *gzip = NULL;
   int nogzip = 0;
+  int maxage = 10;              /* Default age */
 
   if(_remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -316,10 +317,14 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
       content = "text/css; charset=UTF-8";
     else if(!strcmp(postfix, "git"))
       nogzip = 1;
-    else if(!strcmp(postfix, "jpg"))
+    else if(!strcmp(postfix, "jpg") || !strcmp(postfix, "png")) {
       nogzip = 1;
-    else if(!strcmp(postfix, "png"))
-      nogzip = 1;
+      /* Increase amount of time in seconds that a client can cache
+       * images since they rarely change. This avoids clients
+       * requesting category icons frequently.
+       */
+      maxage = 60 * 60;
+    }
   }
 
   fb_file *fp = fb_open(path, 0, (nogzip || gzip) ? 0 : 1);
@@ -332,7 +337,7 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
     gzip = "gzip";
 
   http_send_begin(hc);
-  http_send_header(hc, 200, content, size, gzip, NULL, 10, 0, NULL, NULL);
+  http_send_header(hc, 200, content, size, gzip, NULL, maxage, 0, NULL, NULL);
   while (!fb_eof(fp)) {
     ssize_t c = fb_read(fp, buf, sizeof(buf));
     if (c < 0) {
