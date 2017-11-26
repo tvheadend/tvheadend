@@ -410,8 +410,10 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
 
   /* is there already a CAM associated to the service? */
   TAILQ_FOREACH(as, &dvbcam_active_services, global_link) {
-    if (as->td_service == t)
+    if (as->td_service == t) {
+      ac = as->ac;
       goto update_pid;
+    }
   }
 
   /*
