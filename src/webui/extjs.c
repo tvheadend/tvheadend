@@ -205,7 +205,9 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<p>%s \n\
 <a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. \
 %s <a target=\"_blank\" href=\"http://www.famfamfam.com/lab/icons/silk/\">\
-FamFamFam</a>\n\
+FamFamFam</a>, "\
+"<a target=\"_blank\" href=\"https://www.google.com/get/noto/help/emoji/\">Google Noto Color Emoji</a> "\
+"<a target=\"_blank\" href=\"https://raw.githubusercontent.com/googlei18n/noto-emoji/master/LICENSE\">(Apache Licence v2.0)</a>\n\
 </p>\n",
     tvh_gettext_lang(lang, N_("Based on software from")),
     tvh_gettext_lang(lang, N_("Icons from")));

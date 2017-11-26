@@ -45,7 +45,7 @@ tvheadend.dvrDetails = function(uuid) {
         if (duplicate)
             content += '<div class="x-epg-meta"><font color="red"><span class="x-epg-prefix">' + _('Will be skipped') + '<br>' + _('because it is a rerun of:') + '</span>' + tvheadend.niceDate(duplicate * 1000) + '</font></div>';
 
-        var icons = tvheadend.getContentTypeIcons({"category" : category, "genre" : genre});
+        var icons = tvheadend.getContentTypeIcons({"category" : category, "genre" : genre}, "x-dialog-category-large-icon");
         if (icons)
             content += '<div class="x-epg-icons">' + icons + '</div>';
         var displayTitle = title;
