@@ -48,133 +48,145 @@ tvheadend.fromCSV = function(s) {
 // always end up displaying "Movie-Comedy" rather than having "Movie"
 // sometimes hidden in middle of other icons.
 //
-// Although we can insert the characters here, we use the hex
-// values because editors don't always work well with these
-// characters.
-//
-// The comments refer to the official unicode name
+// The names they map on to refer to the official unicode names
+// for the characters. These are used so if we change between
+// fonts it is easy to re-map them to a new font.
 //
 // These categories should _not_ be subject to internationalization
 // since many non-English xmltv providers appear to supply English
 // words for categories, presumably for compatibility with
 // mapping to a genre.
 var catmap_major = {
-  "movie" : "&#x1f39e;",        // Film frames
-  "news" : "&#x1f4f0;",         // Newspaper
-  "series" : "&#x1f4fa;",       // Television
-  "sports" : "&#x1f3c5;",       // Sports medal
+  "movie" : "clapper_board",
+  "news" : "newspaper",
+  "radio" : "radio",
+  "series" : "television",
+  "sports" : "sports_medal",
 };
 
 var catmap_minor = {
   // These are taken from the frequent categories in SD and then
-  // sorted by name. They display reasonably well on a modern
-  // font.
-  "action" : "&#x1f3f9;",          // Bow and Arrow
-  "adults only" : "&#x1f51e;",     // No one under eighteen symbol
-  "adventure" : "&#x1f3f9;",       // Bow and Arrow
-  "animals" : "&#x1f43e;",         // Paw prints
-  "animated" : "&#x270f;&#xFE0F;", // Pencil
-  "art" : "&#x1f3a8;",             // Artist pallette
-  "auction" : "&#x1f4b8",          // Money with wings
-  "auto racing" : "&#x1f3ce;",     // Racing car
-  "auto" : "&#x1f3ce;",            // Racing car
-  "baseball" : "&#x26BE;",         // Baseball
-  "basketball" : "&#1f3c0;",       // Basketball and hoop
-  "boxing" : "&#x1f94a;",          // Boxing glove
-  "bus./financial" : "&#x1f4c8;",  // Chart with upwards trend
-  "children" : "&#x1f476;",        // Baby
-  "comedy" : "&#x1f600;",          // Grinning face
-  "computers" : "&#x1f4bb;",       // Personal computer
-  "community" : "&#x1f46a;",       // Family
-  "cooking" : "&#x1f52a;",         // Cooking knife
-  "crime drama" : "&#x1f46e;",     // Police officer
-  "dance" : "&#x1f483;",           // Dancer
-  "educational" : "&#x1f393;",     // Graduation cap
-  "fantasy" : "&#x1f984;",         // Unicorn face
-  "fashion" : "&#x1f460;",         // High heeled shoe
-  "figure skating" : "&#x26F8;",   // Ice skate
-  "fishing" : "&#x1f3a3;",         // Fishing pole and fish
-  "football" : "&#x1f3c8;",        // American Football (not soccer)
-  "game show" : "&#x1f3b2;",       // Game die
-  "gymnastics" : "&#x1f938",       // Person doing cartwheel
-  "history" : "&#x1f3f0;",         // Castle
-  "holiday" : "&#x1f6eb;",         // Airplane departure
-  "horror" : "&#x1f480;",          // Skull
-  "horse" : "&#x1f434;",           // Horse face
-  "house/garden" : "&#x1f3e1;",    // House with garden
-  "interview" : "&#x1f4ac;",       // Speech balloon
-  "law" : "&#x1f46e;",             // Police officer
-  "martial arts" : "&#x1f94b;",    // Martial arts uniform
-  "medical" : "&#x1f691;",         // Ambulance
-  "military" : "&#x1f396;",        // Military medal
-  "miniseries" : "&#x1f517;",      // Link symbol
-  "motorcycle" : "&#x1f3cd;",      // Racing motorcycle
-  "music" : "&#x1f3b5;",           // Musical note
-  "musical" : "&#x1f3b5;",         // Musical note
-  "mystery" : "&#x1f50d",          // Left pointing magnifying glass
-  "nature" : "&#x1f418;",          // Elephant
-  "paranormal" : "&#x1f47b;",      // Ghost
-  "poker" : "&#x1f0b1;",           // Playing card ace of hearts
-  "politics" : "&#x1f5f3;",        // Ballot box with ballot
-  "pro wrestling" : "&#x1f93c;",   // Wrestlers
-  "reality" : "&#x1f4f8;",         // Camera with flash
-  "religious" : "&#x1f6d0;",       // Place of worship
-  "romance" : "&#x2764;&#xfe0f;",  // Red Heart
-  "romantic comedy" : "&#x2764;&#xfe0f;", // Red Heart
-  "science fiction" : "&#x1f47d;", // Extraterrestrial alien
-  "science" : "&#x1f52c;",         // Microscope
-  "shopping" : "&#x1f6cd;",        // Shopping bags
-  "sitcom": "&#x1f600;",           // Grinning face
-  "skiing" : "&#x26f7;",           // Skier
-  "soap" : "&#x1f754;",            // Alchemical symbol for soap
-  "soccer" : "&#x26BD;",           // Soccer ball
-  "sports talk" : "&#x1f4ac;",     // Speech balloon
-  "spy": "&#x1f575;",              // Spy
-  "standup" : "&#x1f3a4;",         // Microphone
-  "swimming" : "&#x1f3ca;",        // Swimmer
-  "talk" : "&#x1f4ac;",            // Speech balloon
-  "technology" : "&#x1f4bb;",      // Personal computer
-  "tennis" : "&#x1f3be;",          // Tennis racquet and ball
-  "theater" : "&#1f3ad;",          // Performing arts
-  "travel" : "&#x1f6eb;",          // Airplane departure
-  "war" : "&#x1f396;",             // Military medal
-  "weather" : "&#x26c5;",          // Sun behind cloud
-  "weightlifting" : "&#x1f3cb;",   // Person lifting weights
-  "western" : "&#x1f335;",         // Cactus
+  // sorted by name.
+  "action" : "collision_symbol",
+  "adults only" : "no_one_under_eighteen_symbol",
+  "adventure" : "bow_and_arrow",
+  "animals" : "paw_prints",
+  "animated" : "pencil",
+  "art" : "artist_pallette",
+  "auction" : "money_with_wings",
+  "auto racing" : "racing_car",
+  "auto" : "automobile",
+  "baseball" : "baseball",
+  "basketball" : "basketball_and_hoop",
+  "boxing" : "boxing_glove",
+  "bus./financial" : "chart_with_upwards_trend",
+  "children" : "baby",
+  "comedy" : "face_with_tears_of_joy",
+  "computers" : "personal_computer",
+  "community" : "family",
+  "cooking" : "cooking",
+  "crime drama" : "police_officer",
+  "dance" : "dancer",
+  "educational" : "graduation_cap",
+  "fantasy" : "unicorn_face",
+  "fashion" : "high_heeled_shoe",
+  "figure skating" : "ice_skate",
+  "fishing" : "fishing_pole_and_fish",
+  "football" : "american_football", // American Football (not soccer)
+  "game show" : "game_die",
+  "gymnastics" : "person_doing_cartwheel",
+  "history" : "castle",
+  "holiday" : "airplane",
+  "home improvement" : "construction_worker",
+  "horror" : "skull",
+  "horse" : "horse_face",
+  "house/garden" : "house_with_garden",
+  "interview" : "speaking_head_in_silhouette",
+  "law" : "police_officer",
+  "martial arts" : "martial_arts_uniform",
+  "medical" : "ambulance",
+  "military" : "military_medal",
+  "miniseries" : "link_symbol",
+  "mixed martial arts" : "martial_arts_uniform",
+  "motorcycle" : "racing_motorcycle",
+  "music" : "musical_note",
+  "musical" : "musical_note",
+  "mystery" : "left_pointing_magnifying_glass",
+  "nature" : "elephant",
+  "paranormal" : "ghost",
+  "poker" : "spade_suit",
+  "politics" : "ballot_box_with_ballot",
+  "pro wrestling" : "wrestlers",
+  "reality" : "selfie",
+  "religious" : "place_of_worship",
+  "romance" : "red_heart",
+  "romantic comedy" : "red_heart",
+  "science fiction" : "extraterrestrial_alien",
+  "science" : "microscope",
+  "shopping" : "shopping_trolley",
+  "sitcom": "grinning_face",
+  "skiing" : "skier",
+  "soap" : "couch_and_lamp",
+  "soccer" : "soccer_ball",
+  "sports talk" : "speaking_head_in_silhouette",
+  "spy": "spy",
+  "standup" : "microphone",
+  "swimming" : "swimmer",
+  "talk" : "speaking_head_in_silhouette",
+  "technology" : "personal_computer",
+  "tennis" : "tennis_racquet_and_ball",
+  "theater" : "performing_arts",
+  "travel" : "airplane",
+  "war" : "military_medal",
+  "weather" : "sun_behind_cloud",
+  "weightlifting" : "person_lifting_weights",
+  "western" : "cactus",
 };
 
 //  These are mappings for OTA genres
 var genre_major = {
   // And genre major-numbers in hex
-  "10" : "&#x1f4fa;",           // Television: can't distinguish movie / tv
-  "20" : "&#x1f4f0;",           // Newspaper
-  "30" : "&#x1f3b2;",           // Game die
-  "40" : "&#x1f3c5;",           // Sports medal
-  "50" : "&#x1f476;",           // Baby
-  "60" : "&#x1f3b5;",           // Musical note
-  "70" : "&#x1f3ad;",           // Performing arts
-  "80" : "&#x1f5f3;",           // Ballot box with ballot
-  "90" : "&#x1f393;",           // Graduation cap
-  "a0" : "&#x26fa;",            // Tent
+  "10" : "television",           // Television: can't distinguish movie / tv
+  "20" : "newspaper",
+  "30" : "game_die",
+  "40" : "sports_medal",
+  "50" : "baby",
+  "60" : "musical_note",
+  "70" : "performing_arts",
+  "80" : "ballot_box_with_ballot",
+  "90" : "graduation_cap",
+  "a0" : "beach_with_umbrella",
 };
 
 var genre_minor = {
-  "11" : "&#x1f575;",           // Spy
-  "12" : "&#x1f3f9;",           // Bow and Arrow
-  "13" : "&#x1f47d;",           // Extraterrestrial alien
-  "14" : "&#x1f600;",           // Grinning face
-  "15" : "&#x1f754;",           // Alchemical symbol for soap
-  "16" : "&#x2764;&#xfe0f;",    // Red Heart
-  "18" : "&#x1f51e;",           // No one under eighteen symbol
-  "33" : "&#x1f4ac;",           // Speech balloon
-  "43" : "&#x26bd;",            // Soccer ball
-  "44" : "&#x1f3be;",           // Tennis racquet and ball
-  "73" : "&#x1f6d0;",           // Place of worship
-  "91" : "&#x1f418;",           // Elephant
-  "a1" : "&#x1f6eb;",           // Airplane departure
-  "a5" : "&#x1f52a;",           // Cooking knife
-  "a6" : "&#x1f6d2;",           // Shopping trolley
-  "a7" : "&#x1f3e1;",           // House with garden
+  "11" : "spy",
+  "12" : "bow_and_arrow",
+  "13" : "extraterrestrial_alien",
+  "14" : "face_with_tears_of_joy",
+  "15" : "couch_and_lamp",
+  "16" : "red_heart",
+  "18" : "no_one_under_eighteen_symbol",
+  "24" : "speaking_head_in_silhouette",
+  "33" : "speaking_head_in_silhouette",
+  "43" : "soccer_ball",
+  "44" : "tennis_racquet_and_ball",
+  "47" : "racing_motorcycle",
+  "4a" : "horse_face",
+  "4b" : "martial_arts_uniform",
+  "73" : "place_of_worship",
+  "76" : "clapper_board",
+  "77" : "clapper_board",
+  "7b" : "high_heeled_shoe",
+  "91" : "elephant",
+  "92" : "personal_computer",
+  "93" : "ambulance",
+  "94" : "airplane",
+  "a1" : "airplane",
+  "a3" : "automobile",
+  "a4" : "person_in_lotus_position",
+  "a5" : "cooking",
+  "a6" : "shopping_trolley",
+  "a7" : "house_with_garden",
 };
 
 tvheadend.uniqueArray = function(arr) {
@@ -186,8 +198,22 @@ tvheadend.uniqueArray = function(arr) {
   return unique;
 }
 
+// For the images in "arr", generate an image path
+// to the hires icons.
+// So "baseball" might be mapped to img src=static/icons/hires/baseball.png.
+tvheadend.applyHighResIconPath = function(arr) {
+  var ret = [];
+  for ( var i = 0 ; i < arr.length ; ++i ) {
+    var elem = arr[i];
+    if (!elem)
+      continue;
+    var img = '<img src="static/icons/hires/' + elem + '.png">';
+    ret.push(img);
+  }
+  return ret;
+}
 
-tvheadend.getContentTypeIcons = function(rec) {
+tvheadend.getContentTypeIcons = function(rec, style) {
   var ret_major = [];
   var ret_minor = [];
   var cat = rec.category
@@ -228,10 +254,23 @@ tvheadend.getContentTypeIcons = function(rec) {
     }
   }
 
-  var ret = "";
+  var ret_new = [];
   if ('new' in rec && rec.new)
-    ret += "&#x1f195;";         // Squared New
-  return ret + tvheadend.uniqueArray(ret_major).join("") + tvheadend.uniqueArray(ret_minor).join("");
+    ret_new = ["squared_new"];
+
+  // If user hasn't specified a style then we provide
+  // a default style which has small icons to be consistent
+  // with other icons.
+  if (!style)
+    style = "x-grid-category-icon";
+
+  // Now map the icon names to the appropriate path in the server.
+  // So given 'skier' we will map it to an img tag with the
+  // src pointing to ..../skier.png
+  return '<span class="' + style + '">' +
+    tvheadend.applyHighResIconPath(ret_new).join("") +
+    tvheadend.applyHighResIconPath(tvheadend.uniqueArray(ret_major)).join("") +
+    tvheadend.applyHighResIconPath(tvheadend.uniqueArray(ret_minor)).join("") + '</span>';
 }
 
 tvheadend.displayCategoryIcon = function(value, meta, record, ri, ci, store) {

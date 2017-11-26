@@ -1,0 +1,12 @@
+These fonts are used for displaying icons in the UI.
+
+Currently this uses the Google noto font with mappings
+in the tvheadend.js.
+
+If adding more mappings then see the icon list at:
+https://www.google.com/get/noto/help/emoji/
+
+The names of the files are based on the official unicode name.
+In Emacs you could use "M-x insert-char" to insert the character
+and then "M-x describe-char" to describe it and it will tell
+you the official name.

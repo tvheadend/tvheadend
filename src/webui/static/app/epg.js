@@ -103,7 +103,7 @@ tvheadend.epgDetails = function(event) {
 
     if (chicon)
         content += '<div class="x-epg-left">';
-    var icons = tvheadend.getContentTypeIcons(event);
+    var icons = tvheadend.getContentTypeIcons(event, "x-dialog-category-large-icon");
     if (icons)
         content += '<div class="x-epg-icons">' + icons + '</div>';
     content += '<div class="x-epg-title">' + event.title;
