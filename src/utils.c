@@ -33,6 +33,7 @@
 
 #include "tvheadend.h"
 #include "tvh_endian.h"
+#include "sbuf.h"
 
 /**
  * CRC32 

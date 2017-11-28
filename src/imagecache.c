@@ -32,7 +32,7 @@
 #include "tvheadend.h"
 #include "filebundle.h"
 #include "imagecache.h"
-#include "queue.h"
+#include "sbuf.h"
 #include "redblack.h"
 #include "notify.h"
 #include "prop.h"

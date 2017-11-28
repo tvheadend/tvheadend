@@ -21,6 +21,7 @@
 #define __DOWNLOAD__
 
 #include "http.h"
+#include "sbuf.h"
 
 typedef struct download {
   int   subsys;

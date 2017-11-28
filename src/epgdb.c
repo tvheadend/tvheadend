@@ -26,7 +26,7 @@
 #include <setjmp.h>
 
 #include "tvheadend.h"
-#include "queue.h"
+#include "sbuf.h"
 #include "htsmsg_binary.h"
 #include "settings.h"
 #include "channels.h"

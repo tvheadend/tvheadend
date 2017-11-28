@@ -24,6 +24,7 @@
 
 #include "tvheadend.h"
 #include "packet.h"
+#include "sbuf.h"
 
 const uint8_t * avc_find_startcode(const uint8_t *p, const uint8_t *end);
 

@@ -19,6 +19,7 @@
 #ifndef SERVICE_H__
 #define SERVICE_H__
 
+#include "sbuf.h"
 #include "htsmsg.h"
 #include "idnode.h"
 #include "profile.h"

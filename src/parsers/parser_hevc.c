@@ -37,6 +37,7 @@
  */
 
 #include "tvheadend.h"
+#include "sbuf.h"
 #include "parsers.h"
 #include "parser_hevc.h"
 #include "parser_avc.h"
