@@ -1612,7 +1612,7 @@ linuxdvb_satconf_ele_create0
 }
 
 void
-linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf )
+linuxdvb_satconf_destroy ( linuxdvb_satconf_t *ls, int delconf )
 {
   linuxdvb_satconf_ele_t *lse, *nxt;
   char ubuf[UUID_HEX_SIZE];

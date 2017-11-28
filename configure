@@ -66,7 +66,6 @@ OPTIONS=(
   "bundle:no"
   "pngquant:no"
   "dvbcsa:no"
-  "dvben50221:auto"
   "kqueue:no"
   "dbus_1:auto"
   "android:no"
@@ -282,23 +281,6 @@ else
   printf "    ^ using build-in glibc iconv routines\n"
 fi
 
-if enabled_or_auto dvben50221; then
-  check_cc_snippet libdvben50221 '
-  #include <libdvben50221/en50221_session.h>
-  #define TEST test
-  int test(void)
-  {
-    struct en50221_transport_layer *tl = en50221_tl_create(5, 32);
-    return 0;
-  }
-  ' '-ldvben50221 -ldvbapi -lucsi'
-  if enabled libdvben50221; then
-    enable dvben50221
-  else
-    disable dvben50221
-  fi
-fi
-
 check_cc_snippet ifnames '
 #include <net/if.h>
 int test(void)
@@ -354,6 +336,7 @@ check_cc_header 'linux/dvb/version' linuxdvbapi
 if enabled_or_auto linuxdvb; then
   if enabled linuxdvbapi; then
     enable linuxdvb
+    enable linuxdvb_ca
   elif enabled linuxdvb; then
     die "Linux DVB API not found (use --disable-linuxdvb)"
   fi
@@ -639,23 +622,6 @@ if enabled cwc || enabled cccam || enabled capmt || enabled constcw; then
      check_cc_lib    dvbcsa dvbcsa_l) ||\
     die "Failed to find dvbcsa support (use --disable-dvbcsa)"
     LDFLAGS="$LDFLAGS -ldvbcsa"
-  fi
-fi
-
-#
-# libdvben50221
-#
-if enabled linuxdvb; then
-  if enabled libdvben50221; then
-    LDFLAGS="$LDFLAGS -ldvben50221 -ldvbapi -lucsi"
-    enable linuxdvb_ca
-  fi
-fi
-
-# DD CI support
-if enabled ddci; then
-  if disabled linuxdvb_ca; then
-    die "DD CI requires linuxdvb_ca (linuxdvb libdvben50221) (use --disable-ddci)"
   fi
 fi
 

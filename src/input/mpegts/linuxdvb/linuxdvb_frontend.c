@@ -269,7 +269,7 @@ linuxdvb_frontend_dvbs_class_satconf_set ( void *self, const void *str )
   if (lfe->lfe_satconf) {
     if (!strcmp(str, lfe->lfe_satconf->ls_type))
       return 0;
-    linuxdvb_satconf_delete(lfe->lfe_satconf, 1);
+    linuxdvb_satconf_destroy(lfe->lfe_satconf, 1);
   }
   conf = htsmsg_create_map();
   htsmsg_add_str(conf, "type", str);
@@ -2039,7 +2039,7 @@ linuxdvb_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang 
       htsmsg_add_msg(elems, NULL, elem);
       htsmsg_add_msg(conf, "elements", elems);
       if (lfe->lfe_satconf) {
-        linuxdvb_satconf_delete(lfe->lfe_satconf, 0);
+        linuxdvb_satconf_destroy(lfe->lfe_satconf, 0);
         lfe->lfe_satconf = NULL;
       }
       lfe->lfe_satconf = linuxdvb_satconf_create(lfe, conf);
@@ -2129,8 +2129,7 @@ linuxdvb_frontend_create
   lfe->lfe_number = number;
   lfe->lfe_type   = type;
   lfe->lfe_master = muuid ? strdup(muuid) : NULL;
-  strncpy(lfe->lfe_name, name, sizeof(lfe->lfe_name));
-  lfe->lfe_name[sizeof(lfe->lfe_name)-1] = '\0';
+  lfe->lfe_name   = strdup(name);
   lfe->lfe_ibuf_size = 188000;
   lfe->lfe_status_period = 1000;
   lfe->lfe_pids_max = 32;
@@ -2228,8 +2227,10 @@ linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *fe )
 }
 
 void
-linuxdvb_frontend_delete ( linuxdvb_frontend_t *lfe )
+linuxdvb_frontend_destroy ( linuxdvb_frontend_t *lfe )
 {
+  char *name;
+
   lock_assert(&global_lock);
 
   /* Ensure we're stopped */
@@ -2251,13 +2252,16 @@ linuxdvb_frontend_delete ( linuxdvb_frontend_t *lfe )
   free(lfe->lfe_dmx_path);
   free(lfe->lfe_dvr_path);
   free(lfe->lfe_master);
+  name = lfe->lfe_name;
 
   /* Delete satconf */
   if (lfe->lfe_satconf)
-    linuxdvb_satconf_delete(lfe->lfe_satconf, 0);
+    linuxdvb_satconf_destroy(lfe->lfe_satconf, 0);
 
   /* Finish */
   mpegts_input_delete((mpegts_input_t*)lfe, 0);
+
+  free(name);
 }
 
 /******************************************************************************

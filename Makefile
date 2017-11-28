@@ -572,6 +572,9 @@ I18N-C += $(SRCS-CONSTCW)
 
 # DVB CAM
 SRCS-DVBCAM = \
+        src/input/mpegts/en50221/en50221.c \
+        src/input/mpegts/en50221/en50221_apps.c \
+        src/input/mpegts/en50221/en50221_capmt.c \
 	src/input/mpegts/linuxdvb/linuxdvb_ca.c \
 	src/descrambler/dvbcam.c
 SRCS-${CONFIG_LINUXDVB_CA} += $(SRCS-DVBCAM)

@@ -75,6 +75,9 @@
 #include "packet.h"
 #include "streaming.h"
 #include "memoryinfo.h"
+#if CONFIG_LINUXDVB_CA
+#include "input/mpegts/en50221/en50221.h"
+#endif
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
@@ -1194,6 +1197,10 @@ main(int argc, char **argv)
 
   tvhthread_create(&mtimer_tick_tid, NULL, mtimer_tick_thread, NULL, "mtick");
   tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
+
+#if CONFIG_LINUXDVB_CA
+  en50221_register_apps();
+#endif
 
   tvhftrace(LS_MAIN, streaming_init);
   tvhftrace(LS_MAIN, tvh_hardware_init);

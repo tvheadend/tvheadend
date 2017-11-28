@@ -18,7 +18,6 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache",
         "libx11-xcb-dev"
@@ -45,7 +44,6 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -71,7 +69,6 @@
         "liburiparser-dev",
         "libpcre2-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -96,7 +93,6 @@
         "liburiparser-dev",
         "libpcre2-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -123,7 +119,6 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -150,7 +145,6 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -177,7 +171,6 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -204,7 +197,6 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -230,7 +222,6 @@
         "liburiparser-dev",
         "libpcre2-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -256,7 +247,6 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -282,7 +272,6 @@
         "liburiparser-dev",
         "libpcre2-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
@@ -308,7 +297,6 @@
         "liburiparser-dev",
         "libpcre2-dev",
         "python",
-        "dvb-apps",
         "debhelper",
         "ccache"
       ],
