@@ -15,10 +15,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/sysmacros.h>
-#include <sys/stat.h>
 #include "tvheadend.h"
 #include "tvhvfs.h"
+#if !defined(PLATFORM_DARWIN) && !defined(PLATFORM_FREEBSD)
+#include <sys/sysmacros.h>
+#endif
+#include <sys/stat.h>
 
 int tvh_vfs_fsid_build(const char *path, struct statvfs *vfs, tvh_fsid_t *dst)
 {
