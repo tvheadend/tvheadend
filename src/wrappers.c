@@ -197,6 +197,10 @@ tvhthread_renice(int value)
   pid_t tid;
   tid = gettid();
   ret = setpriority(PRIO_PROCESS, tid, value);
+#elif defined(PLATFORM_DARWIN)
+  /* Currently not possible */
+#elif defined(PLATFORM_FREEBSD)
+  /* Currently not possible */
 #else
 #warning "Implement renice for your platform!"
 #endif
@@ -232,11 +236,20 @@ tvh_cond_init
 
   pthread_condattr_t attr;
   pthread_condattr_init(&attr);
+#if defined(PLATFORM_DARWIN)
+  /*
+   * pthread_condattr_setclock() not supported on platform Darwin.
+   * We use pthread_cond_timedwait_relative_np() which doesn't
+   * need it.
+   */
+   r = 0;
+#else
   r = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
   if (r) {
     fprintf(stderr, "Unable to set monotonic clocks for conditions! (%d)", r);
     abort();
   }
+#endif
   return pthread_cond_init(&cond->cond, &attr);
 }
 
@@ -268,11 +281,24 @@ int
 tvh_cond_timedwait
   ( tvh_cond_t *cond, pthread_mutex_t *mutex, int64_t monoclock )
 {
+#if defined(PLATFORM_DARWIN)
+  /* Use a relative timedwait implementation */
+  int64_t now = getmonoclock();
+  int64_t relative = monoclock - now;
+
+  struct timespec ts;
+  ts.tv_sec  = relative / MONOCLOCK_RESOLUTION;
+  ts.tv_nsec = (relative % MONOCLOCK_RESOLUTION) *
+               (1000000000ULL/MONOCLOCK_RESOLUTION);
+
+  return pthread_cond_timedwait_relative_np(&cond->cond, mutex, &ts);
+#else
   struct timespec ts;
   ts.tv_sec = monoclock / MONOCLOCK_RESOLUTION;
   ts.tv_nsec = (monoclock % MONOCLOCK_RESOLUTION) *
                (1000000000ULL/MONOCLOCK_RESOLUTION);
   return pthread_cond_timedwait(&cond->cond, mutex, &ts);
+#endif
 }
 
 /*
@@ -299,6 +325,9 @@ tvh_safe_usleep(int64_t us)
 int64_t
 tvh_usleep(int64_t us)
 {
+#if defined(PLATFORM_DARWIN)
+  return usleep(us);
+#else
   struct timespec ts;
   int64_t val;
   int r;
@@ -311,11 +340,18 @@ tvh_usleep(int64_t us)
   if (ERRNO_AGAIN(r))
     return val;
   return r ? -r : 0;
+#endif
 }
 
 int64_t
 tvh_usleep_abs(int64_t us)
 {
+#if defined(PLATFORM_DARWIN)
+  /* Convert to relative wait */
+  int64_t now = getmonoclock();
+  int64_t relative = us - now;
+  return tvh_usleep(relative);
+#else
   struct timespec ts;
   int64_t val;
   int r;
@@ -328,6 +364,7 @@ tvh_usleep_abs(int64_t us)
   if (ERRNO_AGAIN(r))
     return val;
   return r ? -r : 0;
+#endif
 }
 
 /*
