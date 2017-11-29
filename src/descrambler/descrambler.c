@@ -985,7 +985,7 @@ descrambler_descramble ( service_t *t,
   th_descrambler_runtime_t *dr = t->s_descramble;
   th_descrambler_key_t *tk;
   th_descrambler_data_t *dd, *dd_next;
-  int len2, len3, r, flush_data;
+  int len2, len3, r, flush_data, update_tk;
   uint32_t dbuflen;
   const uint8_t *tsb2;
   int64_t now;
@@ -1010,12 +1010,13 @@ descrambler_descramble ( service_t *t,
   } else {
     tk = key_find_struct(dr, NULL, tsb, t);
   }  
-  if ((tk == NULL || tk->key_csa.csa_type == DESCRAMBLER_NONE) && dr->dr_queue_total == 0)
-    if ((tsb[3] & 0x80) == 0) {
+  if (tk == NULL || tk->key_csa.csa_type == DESCRAMBLER_NONE)
+    if (dr->dr_queue_total == 0 && (tsb[3] & 0x80) == 0) {
       ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
       return 1;
     }
 
+  update_tk = 0;
   flush_data = 0;
   if (dr->dr_ca_resolved > 0) {
 
@@ -1031,7 +1032,12 @@ descrambler_descramble ( service_t *t,
       }
       if (len2 == 0)
         goto dd_destroy;
+      if ((tsb2[3] & 0x80) == 0) {
+        ts_recv_packet0((mpegts_service_t *)t, st, tsb2, len2);
+        goto dd_destroy;
+      }
       if (dr->dr_key_multipid) {
+        update_tk = 1;
         tk = key_find_struct(dr, tk, tsb2, t);
         if (tk == NULL) {
           if (t->s_start_time + 3000000 < mclk() &&
@@ -1095,15 +1101,16 @@ doit:
         service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
 dd_destroy:
       descrambler_data_destroy(dr, dd, 0);
-      if (dr->dr_key_multipid) {
-        tk = key_find_struct(dr, tk, tsb, t);
-        if (tk == NULL) {
-          if ((tsb[3] & 0x80) == 0) {
-            ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
-            return 1;
-          }
-          goto next;
+    }
+
+    if (update_tk) {
+      tk = key_find_struct(dr, tk, tsb, t);
+      if (tk == NULL) {
+        if ((tsb[3] & 0x80) == 0) {
+          ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
+          return 1;
         }
+        goto next;
       }
     }
 
