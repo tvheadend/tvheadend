@@ -65,7 +65,7 @@ static void create_services(AvahiClient *c);
 static inline int
 avahi_required(void)
 {
-  return http_webui_port > 0 || tvheadend_htsp_port > 0;
+  return tvheadend_webui_port > 0 || tvheadend_htsp_port > 0;
 }
 
 static void
