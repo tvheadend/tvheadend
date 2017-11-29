@@ -39,6 +39,7 @@
 #include "notify.h"
 #include "channels.h"
 #include "config.h"
+#include "compat.h"
 
 #if ENABLE_ANDROID
 #include <sys/socket.h>
