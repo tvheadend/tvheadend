@@ -20,12 +20,7 @@ static inline size_t
 tvh_iconv(iconv_t cd, char **inbuf, size_t *inbytesleft,
                       char **outbuf, size_t *outbytesleft)
 {
-#ifdef PLATFORM_FREEBSD
-  return iconv(cd, (const char **)inbuf, inbytesleft,
-                   (const char **)outbuf, outbytesleft);
-#else
   return iconv(cd, inbuf, inbytesleft, outbuf, outbytesleft);
-#endif
 }
 
 void
