@@ -478,7 +478,7 @@ I18N-C += $(SRCS-AVAHI)
 # Bonjour
 SRCS-BONJOUR = \
 	src/bonjour.c
-SRCS-$(CONFIG_BONJOUR) = $(SRCS-BONJOUR)
+SRCS-$(CONFIG_BONJOUR) += $(SRCS-BONJOUR)
 I18N-C += $(SRCS-BONJOUR)
 
 # codecs
