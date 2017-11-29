@@ -194,7 +194,7 @@ rtsp_new_session(const char *ipstr, int delsys, uint32_t nsession, int session)
                 satip_server_conf.satip_max_sessions);
       return NULL;
     }
-    if (strcmp(rs->peer_ipstr, ipstr) == 0 && --count_i == 0) {
+    if (strcmp(rs->peer_ipstr, ipstr) == 0 && --count_u == 0) {
       tvhnotice(LS_SATIPS, "Max number (%i) of active RTSP sessions per user (IP: %s).",
                 satip_server_conf.satip_max_user_connections, strdup(ipstr));
       return NULL;
