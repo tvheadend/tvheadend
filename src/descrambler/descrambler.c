@@ -71,6 +71,7 @@ static inline int extractpid(const uint8_t *tsb)
   return (tsb[1] & 0x1f) << 8 | tsb[2];
 }
 
+#if DEBUG2
 static inline const char *keystr(const uint8_t *tsb)
 {
   uint8_t b = tsb[3];
@@ -78,6 +79,7 @@ static inline const char *keystr(const uint8_t *tsb)
     return (b & 0x40) ? "odd" : "even";
   return (b & 0x40) ? "none2" : "none";
 }
+#endif
 
 /*
  *
