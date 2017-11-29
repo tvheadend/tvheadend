@@ -40,6 +40,7 @@
 #include "channels.h"
 #include "config.h"
 #include "htsmsg_json.h"
+#include "compat.h"
 
 #if ENABLE_ANDROID
 #include <sys/socket.h>
