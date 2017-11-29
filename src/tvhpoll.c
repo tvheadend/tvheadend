@@ -131,6 +131,9 @@ int tvhpoll_add
            evs[i].fd, rc);
         return -1;
       }
+    } else {
+      EV_SET(tp->ev+i, evs[i].fd, EVFILT_WRITE,  EV_DELETE, 0, 0, NULL);
+      kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
     }
     if (evs[i].events & TVHPOLL_IN){
       EV_SET(tp->ev+i, evs[i].fd, EVFILT_READ, EV_ADD, 0, 0, (intptr_t*)evs[i].data.u64);
@@ -139,6 +142,9 @@ int tvhpoll_add
         tvherror(LS_TVHPOLL, "failed to add kqueue READ filter [%d|%d]", evs[i].fd, rc);
         return -1;
       }
+    } else {
+      EV_SET(tp->ev+i, evs[i].fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+      kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
     }
   }
   return 0;
