@@ -26,8 +26,8 @@
 #include <CoreServices/CoreServices.h>
 
 typedef struct {
-  char *key;
-  char *value;
+  const char *key;
+  const char *value;
 } txt_rec_t;
 
 pthread_t bonjour_tid;
@@ -43,7 +43,7 @@ bonjour_callback(CFNetServiceRef theService, CFStreamError* error, void* info)
 }
 
 static void
-bonjour_start_service(CFNetServiceRef *svc, char *service_type,
+bonjour_start_service(CFNetServiceRef *svc, const char *service_type,
                       uint32_t port, txt_rec_t *txt)
 {
   CFStringRef str;
