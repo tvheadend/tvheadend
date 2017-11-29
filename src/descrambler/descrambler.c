@@ -1095,14 +1095,20 @@ doit:
         service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
 dd_destroy:
       descrambler_data_destroy(dr, dd, 0);
+      if (dr->dr_key_multipid) {
+        tk = key_find_struct(dr, tk, tsb, t);
+        if (tk == NULL) {
+          if ((tsb[3] & 0x80) == 0) {
+            ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
+            return 1;
+          }
+          goto next;
+        }
+      }
     }
 
     /* check for key change */
     ki = tsb[3];
-    if (dr->dr_key_multipid) {
-      tk = key_find_struct(dr, tk, tsb, t);
-      if (tk == NULL) goto next;
-    }
     if ((ki & 0x80) != 0x00) {
       if (key_valid(tk, ki) == 0) {
         if (!key_started(dr, ki) && tvhlog_limit(&dr->dr_loglimit_key, 10))
