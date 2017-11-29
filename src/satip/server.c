@@ -873,6 +873,26 @@ const idclass_t satip_server_class = {
       .group  = 4,
     },
     {
+      .type   = PT_INT,
+      .id     = "satip_max_sessions",
+      .name   = N_("Max Sessions"),
+      .desc   = N_("The maximum number of active RTSP sessions "
+                   "(if 0 no limit)."),
+      .off    = offsetof(struct satip_server_conf, satip_max_sessions),
+      .opts   = PO_ADVANCED,
+      .group  = 4,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_max_user_connections",
+      .name   = N_("Max User connections"),
+      .desc   = N_("The maximum concurrent RTSP connections from the "
+                   "same IP address (if 0 no limit)."),
+      .off    = offsetof(struct satip_server_conf, satip_max_user_connections),
+      .opts   = PO_ADVANCED,
+      .group  = 4,
+    },
+    {
       .type   = PT_BOOL,
       .id     = "satip_rewrite_pmt",
       .name   = N_("Rewrite PMT"),

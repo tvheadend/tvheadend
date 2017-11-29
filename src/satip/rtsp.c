@@ -183,8 +183,25 @@ result:
 static struct session *
 rtsp_new_session(const char *ipstr, int delsys, uint32_t nsession, int session)
 {
-  struct session *rs = calloc(1, sizeof(*rs));
+  struct session *rs = NULL;
+  int count_s = satip_server_conf.satip_max_sessions;
+  int count_u = satip_server_conf.satip_max_user_connections;
 
+  if (count_s > 0 || count_u > 0)
+  TAILQ_FOREACH(rs, &rtsp_sessions, link) {
+    if (--count_s == 0) {
+      tvhnotice(LS_SATIPS, "Max number (%i) of active RTSP sessions reached.",
+                satip_server_conf.satip_max_sessions);
+      return NULL;
+    }
+    if (strcmp(rs->peer_ipstr, ipstr) == 0 && --count_i == 0) {
+      tvhnotice(LS_SATIPS, "Max number (%i) of active RTSP sessions per user (IP: %s).",
+                satip_server_conf.satip_max_user_connections, strdup(ipstr));
+      return NULL;
+    }
+  }
+
+  rs = calloc(1, sizeof(*rs));
   if (rs == NULL)
     return NULL;
 
@@ -1024,12 +1041,14 @@ rtsp_parse_cmd
   if (cmd == RTSP_CMD_SETUP) {
     if (!rs) {
       rs = rtsp_new_session(hc->hc_peer_ipstr, msys, 0, -1);
+      if (rs == NULL) goto end;
       if (delsys == DVB_SYS_NONE) goto end;
       if (msys == DVB_SYS_NONE) goto end;
       if (!(*valid)) goto end;
       alloc_stream_id = 1;
     } else if (stream != rs->stream) {
       rs = rtsp_new_session(hc->hc_peer_ipstr, msys, rs->nsession, stream);
+      if (rs == NULL) goto end;
       if (delsys == DVB_SYS_NONE) goto end;
       if (msys == DVB_SYS_NONE) goto end;
       if (!(*valid)) goto end;
