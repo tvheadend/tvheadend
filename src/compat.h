@@ -39,6 +39,10 @@
 #define inotify_init1(IN_CLOEXEC) inotify_init()
 #endif
 
+#if (defined(PLATFORM_DARWIN) || defined(PLATFORM_FREEBSD)) && !defined(MSG_MORE)
+#define MSG_MORE 0
+#endif
+
 #endif /* TVH_COMPAT_H */
 
 #ifdef COMPAT_IPTOS
