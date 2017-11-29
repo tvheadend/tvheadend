@@ -75,6 +75,7 @@
 #include "packet.h"
 #include "streaming.h"
 #include "memoryinfo.h"
+#include "watchdog.h"
 #if CONFIG_LINUXDVB_CA
 #include "input/mpegts/en50221/en50221.h"
 #endif
@@ -1256,6 +1257,8 @@ main(int argc, char **argv)
 
   pthread_mutex_unlock(&global_lock);
 
+  tvhftrace(LS_MAIN, watchdog_init);
+
   /**
    * Wait for SIGTERM / SIGINT, but only in this thread
    */
@@ -1382,6 +1385,8 @@ main(int argc, char **argv)
 #endif
   tvh_gettext_done();
   free((char *)tvheadend_webroot);
+
+  tvhftrace(LS_MAIN, watchdog_done);
   return 0;
 }
 
