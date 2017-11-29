@@ -33,6 +33,12 @@ typedef struct {
 pthread_t bonjour_tid;
 CFNetServiceRef svc_http, svc_htsp;
 
+static inline int
+bonjour_required(void)
+{
+  return http_webui_port > 0 || tvheadend_htsp_port > 0;
+}
+
 static void
 bonjour_callback(CFNetServiceRef theService, CFStreamError* error, void* info)
 {  
@@ -107,7 +113,9 @@ bonjour_init(void)
     { "path", tvheadend_webroot ? tvheadend_webroot : "/" },
     { .key = NULL }
   };
-  
+
+  if (!bonjour_required())
+    return;
   bonjour_start_service(&svc_http, "_http._tcp", tvheadend_webui_port, 
                         txt_rec_http);
 
@@ -117,6 +125,8 @@ bonjour_init(void)
 void
 bonjour_done(void)
 {
+  if (!bonjour_required())
+    return;
   bonjour_stop_service(&svc_http);
   bonjour_stop_service(&svc_htsp);
 }

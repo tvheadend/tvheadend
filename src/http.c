@@ -1993,8 +1993,10 @@ http_server_init(const char *bindaddr)
     .cancel = http_cancel
   };
   RB_INIT(&http_nonces);
-  http_server = tcp_server_create(LS_HTTP, "HTTP", bindaddr, tvheadend_webui_port, &ops, NULL);
-  atomic_set(&http_server_running, 1);
+  if (tvheadend_webui_port > 0) {
+    http_server = tcp_server_create(LS_HTTP, "HTTP", bindaddr, tvheadend_webui_port, &ops, NULL);
+    atomic_set(&http_server_running, 1);
+  }
 }
 
 void

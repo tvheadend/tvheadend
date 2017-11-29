@@ -3495,8 +3495,9 @@ htsp_init(const char *bindaddr)
     .stop   = NULL,
     .cancel = htsp_server_cancel
   };
-  htsp_server = tcp_server_create(LS_HTSP, "HTSP", bindaddr, tvheadend_htsp_port, &ops, NULL);
-  if(tvheadend_htsp_port_extra)
+  if (tvheadend_htsp_port > 0)
+    htsp_server = tcp_server_create(LS_HTSP, "HTSP", bindaddr, tvheadend_htsp_port, &ops, NULL);
+  if (tvheadend_htsp_port_extra > 0)
     htsp_server_2 = tcp_server_create(LS_HTSP, "HTSP2", bindaddr, tvheadend_htsp_port_extra, &ops, NULL);
 }
 
@@ -3506,7 +3507,8 @@ htsp_init(const char *bindaddr)
 void
 htsp_register(void)
 {
-  tcp_server_register(htsp_server);
+  if (htsp_server)
+    tcp_server_register(htsp_server);
   if (htsp_server_2)
     tcp_server_register(htsp_server_2);
 }

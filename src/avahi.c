@@ -62,6 +62,12 @@ static int avahi_do_restart = 0;
 
 static void create_services(AvahiClient *c);
 
+static inline int
+avahi_required(void)
+{
+  return http_webui_port > 0 || tvheadend_htsp_port > 0;
+}
+
 static void
 entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, 
 		     void *userdata)
@@ -123,7 +129,7 @@ create_services(AvahiClient *c)
   if (!group)
     if (!(group = avahi_entry_group_new(c, entry_group_callback, NULL))) {
       tvherror(LS_AVAHI,
-	       "avahi_enty_group_new() failed: %s", 
+	       "avahi_entry_group_new() failed: %s",
 	        avahi_strerror(avahi_client_errno(c)));
       goto fail;
     }
@@ -135,47 +141,52 @@ create_services(AvahiClient *c)
      tvhdebug(LS_AVAHI, "Adding service '%s'", name);
 
     /* Add the service for HTSP */
-    if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
-					     AVAHI_PROTO_UNSPEC, 0, name, 
-					     "_htsp._tcp", NULL, NULL,tvheadend_htsp_port,
-					     NULL)) < 0) {
+    if (tvheadend_htsp_port > 0) {
+      if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC,
+                                               AVAHI_PROTO_UNSPEC, 0, name,
+                                               "_htsp._tcp", NULL, NULL,
+                                               tvheadend_htsp_port,
+                                               NULL)) < 0) {
 
-      if (ret == AVAHI_ERR_COLLISION)
-	goto collision;
+        if (ret == AVAHI_ERR_COLLISION)
+          goto collision;
 
-      tvherror(LS_AVAHI,
-	       "Failed to add _htsp._tcp service: %s", 
-               avahi_strerror(ret));
-      goto fail;
-    }
-
-    if (tvheadend_webroot) {
-      path = malloc(strlen(tvheadend_webroot) + 6);
-      sprintf(path, "path=%s", tvheadend_webroot);
-    } else {
-      path = strdup("path=/");
+        tvherror(LS_AVAHI,
+                 "Failed to add _htsp._tcp service: %s",
+                 avahi_strerror(ret));
+        goto fail;
+      }
     }
 
     /* Add the service for HTTP */
-    if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
-					     AVAHI_PROTO_UNSPEC, 0, name, 
-					     "_http._tcp", NULL, NULL, tvheadend_webui_port,
-					     path,
-					     NULL)) < 0) {
+    if (tvheadend_webui_port > 0) {
+      if (tvheadend_webroot) {
+        path = malloc(strlen(tvheadend_webroot) + 6);
+        sprintf(path, "path=%s", tvheadend_webroot);
+      } else {
+        path = strdup("path=/");
+      }
 
-      if (ret == AVAHI_ERR_COLLISION)
-	goto collision;
+      if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC,
+                                               AVAHI_PROTO_UNSPEC, 0, name,
+                                               "_http._tcp", NULL, NULL, tvheadend_webui_port,
+                                               path,
+                                               NULL)) < 0) {
 
-      tvherror(LS_AVAHI,
-	       "Failed to add _http._tcp service: %s", 
-	       avahi_strerror(ret));
-      goto fail;
+        if (ret == AVAHI_ERR_COLLISION)
+          goto collision;
+
+        tvherror(LS_AVAHI,
+                 "Failed to add _http._tcp service: %s",
+                 avahi_strerror(ret));
+        goto fail;
+      }
     }
 
     /* Tell the server to register the service */
     if ((ret = avahi_entry_group_commit(group)) < 0) {
       tvherror(LS_AVAHI,
-	       "Failed to commit entry group: %s", 
+	       "Failed to commit entry group: %s",
                avahi_strerror(ret));
       goto fail;
     }
@@ -299,12 +310,16 @@ pthread_t avahi_tid;
 void
 avahi_init(void)
 {
+  if (!avahi_required())
+    return;
   tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL, "avahi");
 }
 
 void
 avahi_done(void)
 {
+  if (!avahi_required())
+    return;
   avahi_simple_poll_quit(avahi_asp);
   pthread_kill(avahi_tid, SIGTERM);
   pthread_join(avahi_tid, NULL);
@@ -314,6 +329,8 @@ avahi_done(void)
 void
 avahi_restart(void)
 {
+  if (!avahi_required())
+    return;
   avahi_do_restart = 1;
   avahi_simple_poll_quit(avahi_asp);
 }
