@@ -1680,7 +1680,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
       sendfile(fd, hc->hc_fd, 0, chunk, NULL, &r, 0);
 #elif defined(PLATFORM_DARWIN)
       r = chunk;
-      sendfile(fd, hc->hc_fd, 0, NULL, &r, 0);
+      sendfile(fd, hc->hc_fd, 0, &r, NULL, 0);
 #endif
       if(r < 0) {
         ret = -1;
