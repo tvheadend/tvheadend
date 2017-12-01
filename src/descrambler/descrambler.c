@@ -1035,7 +1035,7 @@ descrambler_descramble ( service_t *t,
       if (len2 == 0)
         goto dd_destroy;
       if ((tsb2[3] & 0x80) == 0) {
-        ts_recv_packet0((mpegts_service_t *)t, st, tsb2, len2);
+        ts_recv_packet2((mpegts_service_t *)t, tsb2, len2);
         goto dd_destroy;
       }
       if (dr->dr_key_multipid) {
