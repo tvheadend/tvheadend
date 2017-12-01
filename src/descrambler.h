@@ -105,6 +105,7 @@ typedef struct th_descrambler_runtime {
   int64_t  dr_last_err;
   int64_t  dr_force_skip;
   th_descrambler_key_t dr_keys[DESCRAMBLER_MAX_KEYS];
+  th_descrambler_key_t *dr_key_last;
   TAILQ_HEAD(, th_descrambler_data) dr_queue;
   uint32_t dr_queue_total;
   uint32_t dr_paritycheck;
