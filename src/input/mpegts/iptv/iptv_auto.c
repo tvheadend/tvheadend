@@ -69,6 +69,8 @@ static void
 iptv_auto_network_process_m3u_item(iptv_network_t *in,
                                    const char *last_url,
                                    const http_arg_list_t *remove_args,
+                                   const http_arg_list_t *ignore_args,
+                                   int ignore_path,
                                    int64_t chnum, htsmsg_t *item,
                                    int *total, int *count)
 {
@@ -76,13 +78,14 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   htsmsg_field_t *f;
   mpegts_mux_t *mm;
   iptv_mux_t *im;
-  url_t u;
+  url_t u, u2;
   int change, epgcfg;
   http_arg_list_t args;
   http_arg_t *ra1, *ra2, *ra2_next;
   size_t l;
   int64_t chnum2, vlcprog;
   const char *url, *name, *logo, *epgid, *tags;
+  char *s;
   char custom[512], name2[128], buf[32], *n;
 
   url = htsmsg_get_str(item, "m3u-url");
@@ -131,6 +134,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   }
 
   urlinit(&u);
+  urlinit(&u2);
   custom[0] = '\0';
 
   if (strncmp(url, "pipe://", 7) == 0)
@@ -169,6 +173,37 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       url = u.raw;
   }
 
+  /* remove requested arguments to ignore */
+  if (!http_args_empty(ignore_args) || ignore_path > 0) {
+    urlcopy(&u2, &u);
+    if (!http_args_empty(ignore_args)) {
+      http_arg_init(&args);
+      http_parse_args(&args, u2.query);
+      TAILQ_FOREACH(ra1, ignore_args, link)
+        for (ra2 = TAILQ_FIRST(&args); ra2; ra2 = ra2_next) {
+          ra2_next = TAILQ_NEXT(ra2, link);
+          if (strcmp(ra1->key, ra2->key) == 0)
+            http_arg_remove(&args, ra2);
+        }
+      free(u2.query);
+      u2.query = http_arg_get_query(&args);
+      http_arg_flush(&args);
+    }
+    if (ignore_path > 0 && u2.path) {
+      for (; ignore_path > 0; ignore_path--) {
+        s = strrchr(u2.path, '/');
+        if (s)
+          s = '\0';
+      }
+    }
+    if (!urlrecompose(&u2)) {
+      urlreset(&u2);
+      u2 = u;
+    }
+  } else {
+    u2 = u;
+  }
+
 skip_url:
   if (last_url) {
     if (name[0])
@@ -181,7 +216,7 @@ skip_url:
 
   LIST_FOREACH(mm, &in->mn_muxes, mm_network_link) {
     im = (iptv_mux_t *)mm;
-    if (strcmp(im->mm_iptv_url ?: "", url) == 0) {
+    if (strcmp(im->mm_iptv_url_cmpid ?: "", u2.raw) == 0) {
       im->im_delete_flag = 0;
       if (strcmp(im->mm_iptv_svcname ?: "", name)) {
         free(im->mm_iptv_svcname);
@@ -232,6 +267,7 @@ skip_url:
 
   conf = htsmsg_create_map();
   htsmsg_add_str(conf, "iptv_url", url);
+  htsmsg_add_str(conf, "iptv_url_cmpid", u2.raw);
   if (n)
     htsmsg_add_str(conf, "iptv_muxname", n);
   if (name)
@@ -269,6 +305,8 @@ skip_url:
   }
 
 end:
+  if (u.raw != u2.raw)
+    urlreset(&u2);
   urlreset(&u);
 }
 
@@ -280,6 +318,8 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
                               const char *last_url,
                               const char *host_url,
                               http_arg_list_t *remove_args,
+                              http_arg_list_t *ignore_args,
+                              int ignore_path,
                               int64_t chnum)
 {
   int total = 0, count = 0;
@@ -292,9 +332,8 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
   HTSMSG_FOREACH(f, items) {
     if ((item = htsmsg_field_get_map(f)) == NULL) continue;
     iptv_auto_network_process_m3u_item(in, last_url,
-                                       remove_args, chnum,
-                                       item,
-                                       &total, &count);
+                                       remove_args, ignore_args, ignore_path,
+                                       chnum, item, &total, &count);
     
   }
   htsmsg_destroy(m);
@@ -317,8 +356,8 @@ iptv_auto_network_process(void *aux, const char *last_url,
   iptv_network_t *in = ap->in_network;
   mpegts_mux_t *mm, *mm2;
   int r = -1, count, n, i;
-  http_arg_list_t remove_args;
-  char *argv[10];
+  http_arg_list_t remove_args, ignore_args;
+  char *argv[32];
 
   /* note that we know that data are terminated with '\0' */
 
@@ -326,10 +365,17 @@ iptv_auto_network_process(void *aux, const char *last_url,
     return -1;
 
   http_arg_init(&remove_args);
-  if (in->in_remove_args && in->in_remove_args) {
+  if (in->in_remove_args) {
     n = http_tokenize(in->in_remove_args, argv, ARRAY_SIZE(argv), -1);
     for (i = 0; i < n; i++)
-      http_arg_set(&remove_args, argv[i], "1");
+      http_arg_set(&remove_args, argv[i], NULL);
+  }
+
+  http_arg_init(&ignore_args);
+  if (in->in_ignore_args) {
+    n = http_tokenize(in->in_ignore_args, argv, ARRAY_SIZE(argv), -1);
+    for (i = 0; i < n; i++)
+      http_arg_set(&ignore_args, argv[i], NULL);
   }
 
   LIST_FOREACH(mm, &in->mn_muxes, mm_network_link)
@@ -339,7 +385,9 @@ iptv_auto_network_process(void *aux, const char *last_url,
 
   if (!strncmp(data, "#EXTM3U", 7))
     r = iptv_auto_network_process_m3u(in, data, last_url, host_url,
-                                      &remove_args, in->in_channel_number);
+                                      &remove_args, &ignore_args,
+                                      in->in_ignore_path,
+                                      in->in_channel_number);
 
   http_arg_flush(&remove_args);
 

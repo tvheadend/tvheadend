@@ -126,6 +126,13 @@ const idclass_t iptv_mux_class =
       .opts     = PO_MULTILINE
     },
     {
+      .type     = PT_STR,
+      .id       = "iptv_url_cmpid",
+      .name     = N_("URL for comparison"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_url_cmpid),
+      .opts     = PO_MULTILINE | PO_HIDDEN | PO_NOUI,
+    },
+    {
       .type     = PT_BOOL,
       .id       = "iptv_substitute",
       .name     = N_("Substitute formatters"),

@@ -91,6 +91,8 @@ struct iptv_network
   char    *in_icon_url_sane;
   int      in_ssl_peer_verify;
   char    *in_remove_args;
+  char    *in_ignore_args;
+  int      in_ignore_path;
   int      in_tsid_accept_zero_value;
   int      in_libav;
 
@@ -112,6 +114,7 @@ struct iptv_mux
   char                 *mm_iptv_url;
   char                 *mm_iptv_url_sane;
   char                 *mm_iptv_url_raw;
+  char                 *mm_iptv_url_cmpid;
   char                 *mm_iptv_interface;
 
   int                   mm_iptv_substitute;

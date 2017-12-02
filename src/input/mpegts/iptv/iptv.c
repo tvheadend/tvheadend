@@ -908,10 +908,32 @@ const idclass_t iptv_auto_network_class = {
       .type     = PT_STR,
       .id       = "remove_args",
       .name     = N_("Remove HTTP arguments"),
-      .desc     = N_("Key and value pairs to remove from the query "
+      .desc     = N_("Argument names to remove from the query "
                      "string in the URL."),
       .off      = offsetof(iptv_network_t, in_remove_args),
       .def.s    = "ticket",
+      .opts     = PO_EXPERT
+    },
+    {
+      .type     = PT_STR,
+      .id       = "ignore_args",
+      .name     = N_("Ignore HTTP arguments"),
+      .desc     = N_("Argument names to remove from the query "
+                     "string in the URL when the identical "
+                     "source is compared."),
+      .off      = offsetof(iptv_network_t, in_ignore_args),
+      .def.s    = "",
+      .opts     = PO_EXPERT
+    },
+    {
+      .type     = PT_INT,
+      .id       = "ignore_path",
+      .name     = N_("Ignore path components"),
+      .desc     = N_("Ignore last components in path. The defined count "
+                     "of last path components separated by / are removed "
+                     "when the identical source is compared."),
+      .off      = offsetof(iptv_network_t, in_ignore_path),
+      .def.s    = "",
       .opts     = PO_EXPERT
     },
     {}
