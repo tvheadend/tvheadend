@@ -848,6 +848,8 @@ iptv_auto_network_class_charset_list(void *o, const char *lang)
   return m;
 }
 
+PROP_DOC(ignore_path)
+
 const idclass_t iptv_auto_network_class = {
   .ic_super      = &iptv_network_class,
   .ic_class      = "iptv_auto_network",
@@ -878,7 +880,7 @@ const idclass_t iptv_auto_network_class = {
       .intextra = CHANNEL_SPLIT,
       .id       = "channel_number",
       .name     = N_("Channel numbers from"),
-      .desc     = N_("Lowest starting channel number."),
+      .desc     = N_("Lowest starting channel number (when mapping). "),
       .off      = offsetof(iptv_network_t, in_channel_number),
     },
     {
@@ -902,6 +904,7 @@ const idclass_t iptv_auto_network_class = {
       .type     = PT_BOOL,
       .id       = "tsid_zero",
       .name     = N_("Accept zero value for TSID"),
+      .desc     = N_("Accept transport ID if zero."),
       .off      = offsetof(iptv_network_t, in_tsid_accept_zero_value),
     },
     {
@@ -931,9 +934,10 @@ const idclass_t iptv_auto_network_class = {
       .name     = N_("Ignore path components"),
       .desc     = N_("Ignore last components in path. The defined count "
                      "of last path components separated by / are removed "
-                     "when the identical source is compared."),
+                     "when the identical source is compared - see Help for a detailed explanation."),
+      .doc      = prop_doc_ignore_path,
       .off      = offsetof(iptv_network_t, in_ignore_path),
-      .def.s    = "",
+      .def.s    = 0,
       .opts     = PO_EXPERT
     },
     {}
