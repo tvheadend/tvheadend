@@ -54,6 +54,36 @@ urlcopy ( url_t *dst, const url_t *src )
   dst->raw    = strdup(src->raw);
 }
 
+int
+urlrecompose( url_t *url )
+{
+  size_t len;
+  char *raw, port[16];
+
+  len = strlen(url->scheme) + 4 +
+        (url->user && url->pass ?
+         ((url->user ? strlen(url->user) + 2 : 0) +
+          (url->pass ? strlen(url->pass) : 0)) : 0
+        ) +
+        strlen(url->host) +
+        (url->port > 0 ? 6 : 0) +
+        (url->path ? strlen(url->path) : 0) +
+        (url->query ? strlen(url->query) : 0);
+  raw = malloc(len);
+  if (raw == NULL)
+    return -ENOMEM;
+  if (url->port > 0 && url->port <= 65535)
+    snprintf(port, sizeof(port), ":%d", url->port);
+  snprintf(raw, len, "%s%s%s%s%s%s%s",
+           url->scheme ?: "", url->scheme ? "://" : "",
+           url->host ?: "", port,
+           url->path ?: "",
+           (url->query && url->query[0]) ? "?" : "",
+           url->query ?: "");
+  url->raw = raw;
+  return 0;
+}
+
 /* Use liburiparser if available */
 #if ENABLE_URIPARSER
 #include <uriparser/Uri.h>

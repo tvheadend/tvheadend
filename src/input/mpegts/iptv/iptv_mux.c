@@ -41,8 +41,6 @@ int
 iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int allow_pipe )
 {
   const char *x;
-  char *buf, port[16] = "";
-  size_t len;
   url_t u;
 
   if (strcmp(str ?: "", *url ?: "") == 0)
@@ -65,21 +63,8 @@ iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int
     return 1;
   }
   urlinit(&u);
-  if (!urlparse(str, &u)) {
-    len = (u.scheme ? strlen(u.scheme) + 3 : 0) +
-          (u.host ? strlen(u.host) + 1 : 0) +
-          /* port */ 16 +
-          (u.path ? strlen(u.path) + 1 : 0) +
-          (u.query ? strlen(u.query) + 2 : 0);
-    buf = alloca(len);
-    if (u.port > 0 && u.port <= 65535)
-      snprintf(port, sizeof(port), ":%d", u.port);
-    snprintf(buf, len, "%s%s%s%s%s%s%s",
-             u.scheme ?: "", u.scheme ? "://" : "",
-             u.host ?: "", port,
-             u.path ?: "", (u.query && u.query[0]) ? "?" : "",
-             u.query ?: "");
-    iptv_url_set0(url, sane_url, str, buf);
+  if (!urlparse(str, &u) && !urlrecompose(&u)) {
+    iptv_url_set0(url, sane_url, u.raw, str);
     urlreset(&u);
     return 1;
   } else {

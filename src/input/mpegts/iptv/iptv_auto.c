@@ -84,7 +84,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   size_t l;
   int64_t chnum2, vlcprog;
   const char *url, *name, *logo, *epgid, *tags;
-  char url2[512], custom[512], name2[128], buf[32], *n;
+  char custom[512], name2[128], buf[32], *n;
 
   url = htsmsg_get_str(item, "m3u-url");
 
@@ -181,18 +181,8 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       htsbuf_queue_flush(&q);
     }
     http_arg_flush(&args);
-    l = 0;
-    tvh_strlcatf(url2, sizeof(url2), l, "%s://", u.scheme);
-    if (u.user && u.user[0] && u.pass && u.pass[0])
-      tvh_strlcatf(url2, sizeof(url2), l, "%s:%s@", u.user, u.pass);
-    tvh_strlcatf(url2, sizeof(url2), l, "%s", u.host);
-    if (u.port > 0)
-      tvh_strlcatf(url2, sizeof(url2), l, ":%d", u.port);
-    if (u.path)
-      tvh_strlcatf(url2, sizeof(url2), l, "%s", u.path);
-    if (u.query)
-      tvh_strlcatf(url2, sizeof(url2), l, "?%s", u.query);
-    url = url2;
+    if (!urlrecompose(&u))
+      url = u.raw;
   }
 
 skip_url:
