@@ -60,12 +60,12 @@ urlrecompose( url_t *url )
   size_t len;
   char *raw, port[16];
 
-  len = strlen(url->scheme) + 4 +
+  len = (url->scheme ? strlen(url->scheme) : 0) + 4 +
         (url->user && url->pass ?
          ((url->user ? strlen(url->user) + 2 : 0) +
           (url->pass ? strlen(url->pass) : 0)) : 0
         ) +
-        strlen(url->host) +
+        (url->host ? strlen(url->host) : 0) +
         (url->port > 0 ? 6 : 0) +
         (url->path ? strlen(url->path) : 0) +
         (url->query ? strlen(url->query) : 0);
@@ -74,12 +74,15 @@ urlrecompose( url_t *url )
     return -ENOMEM;
   if (url->port > 0 && url->port <= 65535)
     snprintf(port, sizeof(port), ":%d", url->port);
+  else
+    port[0] = '\0';
   snprintf(raw, len, "%s%s%s%s%s%s%s",
            url->scheme ?: "", url->scheme ? "://" : "",
            url->host ?: "", port,
            url->path ?: "",
            (url->query && url->query[0]) ? "?" : "",
            url->query ?: "");
+  free(url->raw);
   url->raw = raw;
   return 0;
 }
