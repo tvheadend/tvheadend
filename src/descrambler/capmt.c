@@ -684,7 +684,8 @@ capmt_queue_msg
   if (flags & CAPMT_MSG_CLEAR) {
     for (msg = TAILQ_FIRST(&capmt->capmt_writeq); msg; msg = msg2) {
       msg2 = TAILQ_NEXT(msg, cm_link);
-      if (msg->cm_sid == sid) {
+      if ((adapter == 0xff || msg->cm_adapter == adapter) &&
+          (sid == 0 || msg->cm_sid == sid)) {
         TAILQ_REMOVE(&capmt->capmt_writeq, msg, cm_link);
         sbuf_free(&msg->cm_sb);
         free(msg);
@@ -823,9 +824,9 @@ capmt_send_stop_descrambling(capmt_t *capmt, uint8_t demuxer)
     0x83,
     0x02,
     0x00,
-    demuxer, /* 0xFF is wildcard demux id */
+    demuxer /* 0xFF is wildcard demux id */
   };
-  capmt_write_msg(capmt, 0, 0, buf, 8);
+  capmt_queue_msg(capmt, demuxer, 0, buf, ARRAY_SIZE(buf), CAPMT_MSG_CLEAR);
 }
 
 /**
@@ -912,7 +913,7 @@ capmt_filter_data(capmt_t *capmt, uint8_t adapter, uint8_t demux_index,
   buf[5] = filter_index;
   memcpy(buf + 6, data, len);
   if (len - 3 == ((((uint16_t)buf[7] << 8) | buf[8]) & 0xfff))
-    capmt_queue_msg(capmt, adapter, 0, buf, len + 6, flags);
+    capmt_queue_msg(capmt, adapter, 0x10000, buf, len + 6, flags);
 }
 
 static void
@@ -2315,8 +2316,6 @@ capmt_send_request(capmt_service_t *ct, int lm)
              capmt_name(capmt), t->s_dvb_svcname);
 
   capmt_queue_msg(capmt, adapter_num, sid, buf, pos, 0);
-
-  mtimer_arm_rel(&ct->ct_ok_timer, capmt_ok_timer_cb, ct, sec2mono(3)/2);
 }
 
 static void
@@ -2345,11 +2344,10 @@ capmt_enumerate_services(capmt_t *capmt, int force)
     if (capmt_oscam_netproto(capmt)) {
       capmt_send_stop_descrambling(capmt, 0xff);
       capmt_pid_flush(capmt);
-    }
-    else
+    } else {
       capmt_socket_close(capmt, 0);
-  }
-  else if (force || (res_srv_count != all_srv_count)) {
+    }
+  } else if (force || (res_srv_count != all_srv_count)) {
     LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
       if (all_srv_count == i + 1)
         lm |= CAPMT_LIST_LAST;
@@ -2487,6 +2485,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
   tvh_cond_signal(&capmt->capmt_cond, 0);
 
 fin:
+  mtimer_arm_rel(&ct->ct_ok_timer, capmt_ok_timer_cb, ct, sec2mono(3)/2);
   pthread_mutex_unlock(&t->s_stream_mutex);
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
