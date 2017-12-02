@@ -80,7 +80,6 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   int change, epgcfg;
   http_arg_list_t args;
   http_arg_t *ra1, *ra2, *ra2_next;
-  htsbuf_queue_t q;
   size_t l;
   int64_t chnum2, vlcprog;
   const char *url, *name, *logo, *epgid, *tags;
@@ -164,22 +163,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
           http_arg_remove(&args, ra2);
       }
     free(u.query);
-    u.query = NULL;
-    if (!http_args_empty(&args)) {
-      htsbuf_queue_init(&q, 0);
-      TAILQ_FOREACH(ra1, &args, link) {
-        if (!htsbuf_empty(&q))
-          htsbuf_append(&q, "&", 1);
-        htsbuf_append_and_escape_url(&q, ra1->key);
-        if (ra1->val) {
-          htsbuf_append(&q, "=", 1);
-          htsbuf_append_and_escape_url(&q, ra1->val);
-        }
-      }
-      free(u.query);
-      u.query = htsbuf_to_string(&q);
-      htsbuf_queue_flush(&q);
-    }
+    u.query = http_arg_get_query(&args);
     http_arg_flush(&args);
     if (!urlrecompose(&u))
       url = u.raw;

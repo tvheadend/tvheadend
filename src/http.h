@@ -190,20 +190,22 @@ int http_str2cmd(const char *str);
 const char *http_ver2str(int val);
 int http_str2ver(const char *str);
 
-static inline void http_arg_init(struct http_arg_list *list)
+static inline void http_arg_init(http_arg_list_t *list)
 {
   TAILQ_INIT(list);
 }
 
-void http_arg_remove(struct http_arg_list *list, struct http_arg *arg);
-void http_arg_flush(struct http_arg_list *list);
+void http_arg_remove(http_arg_list_t *list, struct http_arg *arg);
+void http_arg_flush(http_arg_list_t *list);
 
-char *http_arg_get(struct http_arg_list *list, const char *name);
-char *http_arg_get_remove(struct http_arg_list *list, const char *name);
+char *http_arg_get(http_arg_list_t *list, const char *name);
+char *http_arg_get_remove(http_arg_list_t *list, const char *name);
 
-void http_arg_set(struct http_arg_list *list, const char *key, const char *val);
+void http_arg_set(http_arg_list_t *list, const char *key, const char *val);
 
-static inline int http_args_empty(const struct http_arg_list *list) { return TAILQ_EMPTY(list); }
+char *http_arg_get_query(http_arg_list_t *list);
+
+static inline int http_args_empty(const http_arg_list_t *list) { return TAILQ_EMPTY(list); }
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
