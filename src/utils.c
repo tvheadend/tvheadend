@@ -291,6 +291,38 @@ put_utf8(char *out, int c)
   return 6;
 }
 
+char *utf8_lowercase_inplace(char *s)
+{
+  char *r = s;
+  uint8_t c;
+
+  for ( ; *s; s++) {
+    /* FIXME: this is really wrong version of lowercase for utf-8 */
+    /* but it's a deep issue with the different locale handling */
+    c = (uint8_t)*s;
+    if (c & 0x80) {
+      if ((c & 0xe0) == 0xc0) {
+        s++;
+        continue;
+      } else if ((c & 0xf0) == 0xe0) {
+        s++;
+        if (*s) s++;
+      } else if ((c & 0xf8) == 0xf0) {
+        s++;
+        if (*s) s++;
+        if (*s) s++;
+      }
+    }
+    if (c >= 'A' && c <= 'Z')
+      *(char *)s = c - 'A' + 'a';
+  }
+  return r;
+}
+
+/**
+ *
+ */
+
 static void
 sbuf_alloc_fail(int len)
 {

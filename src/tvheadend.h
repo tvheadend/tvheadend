@@ -765,6 +765,8 @@ char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size);
 
 int put_utf8(char *out, int c);
 
+char *utf8_lowercase_inplace(char *s);
+
 static inline int64_t ts_rescale(int64_t ts, int tb)
 {
   //  return (ts * tb + (tb / 2)) / 90000LL;

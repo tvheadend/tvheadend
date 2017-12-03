@@ -4,8 +4,9 @@ The following placeholders are available:
 
 Placeholder | Function
 :----------:| --------
-**%C**      | The transliterated channel name in in URL encoded ASCII with safe characters only - `WDR Köln :<>|*?'"` will be `WDR%20Koln%20________`
-**%c**      | The channel name (URL encoded UTF-8)
+**%C**      | The transliterated channel name in URL encoded ASCII with safe characters only - `WDR Köln :<>*?'"` will be `WDR%20Koln%20________`
+**%c**      | The transliterated channel name in URL encoded ASCII
+**%U**      | UTF-8 encoded URL
 
 Example: `file:///tmp/icons/%C.png` or `http://example.com/%c.png`
 
