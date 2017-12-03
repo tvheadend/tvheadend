@@ -832,8 +832,7 @@ channel_get_icon ( channel_t *ch )
       chi = strdup(chicon);
 
       /* Check for and replace placeholders */
-      if ((send = strstr(chi, "%C"))) {
-
+      if ((send = strstr(chi, "%C")) || (send = strstr(chi, "%c"))) {
         sname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
                                      chname, strlen(chname) * 2);
         if (sname == NULL)
@@ -848,34 +847,24 @@ channel_get_icon ( channel_t *ch )
           s = sname;
           while (s && *s) {
             c = *s;
-            if (c > 122 || strchr(":<>|*?'\"", c) != NULL)
+            if (send[1] == 'C' && (c > 122 || strchr(":<>|*?'\"", c) != NULL))
               *(char *)s = '_';
             else if (config.chicon_scheme == CHICON_LOWERCASE && c >= 'A' && c <= 'Z')
               *(char *)s = c - 'A' + 'a';
             s++;
           }
         }
-
-      } else if ((send = strstr(chi, "%c"))) {
-
-        sname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
-                                     chname, strlen(chname) * 2);
-
+      } else if ((send = strstr(chi, "%U"))) {
         if (sname == NULL)
           sname = strdup(chname);
 
         if (config.chicon_scheme == CHICON_LOWERCASE) {
-          for (s = sname; *s; s++) {
-            c = *s;
-            if (c >= 'A' && c <= 'Z')
-              *(char *)s = c - 'A' + 'a';
-          }
+          utf8_lowercase_inplace((char *)sname);
         } else if (config.chicon_scheme == CHICON_SVCNAME) {
           s = svcnamepicons(sname);
           free((char *)sname);
           sname = (char *)s;
         }
-
       } else {
         buf[0] = '\0';
         sname = NULL;
