@@ -2,7 +2,7 @@
 
 ---
 
-# Overview
+## Overview
 
 This tab allows you to manage the codec settings used by stream profiles. 
 
@@ -15,4 +15,3 @@ This tab allows you to manage the codec settings used by stream profiles.
 <tvh_include>inc/buttons</tvh_include>
 
 ---
-

@@ -18,18 +18,8 @@ Web Interface Guide
   - [DVB Inputs](dvbinputs)
   - [Channel / EPG](class/channel)
   - [Stream](class/profile)
-  - Recording
-
-    * [Digital Video Recorder Profiles](class/dvrconfig)
-    * [Timeshift](class/timeshift)
-
-  - Conditional Access (CA)
-
-    * [CAPMT (Linux Network DVBAPI)](class/caclient_capmt)
-    * [Code word client (newcamd)](class/caclient_cwc)
-    * [DES constant code word client](class/caclient_ccw_des)
-    * [AES constant code word client](class/caclient_ccw_aes)
-
+  - [Recording (Profiles/Timeshift)](class/dvrconfig)
+  - [Conditional Access (CA)](class/caclient)
   - [Debugging](class/tvhlog_conf)
 
   - Status

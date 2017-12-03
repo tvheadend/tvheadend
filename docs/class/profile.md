@@ -2,7 +2,7 @@
 
 ---
 
-# Overview
+## Overview
 
 Stream Profiles are the settings for output formats. These are used for Live TV
 streaming and recordings. The profiles can be assigned through Access Entries,

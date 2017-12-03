@@ -2577,14 +2577,14 @@ caclient_capmt_class_cwmode_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
-CLASS_DOC(caclient_capmt)
+CLASS_DOC(caclient)
 
 const idclass_t caclient_capmt_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_capmt",
   .ic_caption    = N_("CAPMT (Linux Network DVBAPI)"),
-  .ic_doc        = tvh_doc_caclient_capmt_class,
+  .ic_doc        = tvh_doc_caclient_class,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
@@ -2594,6 +2594,7 @@ const idclass_t caclient_capmt_class =
       .off      = offsetof(capmt_t, capmt_oscam),
       .list     = caclient_capmt_class_oscam_mode_list,
       .def.i    = CAPMT_OSCAM_NET_PROTO,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -2619,6 +2620,7 @@ const idclass_t caclient_capmt_class =
       .off      = offsetof(capmt_t, capmt_cwmode),
       .list     = caclient_capmt_class_cwmode_list,
       .def.i    = CAPMT_CWMODE_AUTO,
+      .opts     = PO_DOC_NLIST,
     },
     { }
   }

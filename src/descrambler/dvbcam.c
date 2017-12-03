@@ -847,6 +847,7 @@ const idclass_t caclient_dvbcam_class =
       .desc     = N_("Selection method for CAID"),
       .list     = caclient_dvbcam_class_caid_selection_list,
       .off      = offsetof(dvbcam_t, caid_select),
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
