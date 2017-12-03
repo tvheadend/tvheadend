@@ -873,7 +873,7 @@ key_valid ( th_descrambler_key_t *tk, uint8_t ki )
 {
   /* 0x40 (for even) or 0x80 (for odd) */
   uint8_t mask = ((ki & 0x40) + 0x40);
-  return tk->key_valid & mask;
+  return tk && (tk->key_valid & mask);
 }
 
 static inline int
