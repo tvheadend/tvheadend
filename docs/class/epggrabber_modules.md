@@ -2,7 +2,7 @@
 
 ---
 
-# Overview
+## Overview
 
 This tab is used to configure the Electronic Program Guide (EPG) 
 grabber modules. Tvheadend supports a variety of different EPG 

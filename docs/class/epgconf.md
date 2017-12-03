@@ -2,7 +2,7 @@
 
 ---
 
-# Overview
+## Overview
 
 This tab is used to configure the Electronic Program Guide (EPG) 
 [grabbing](class/epggrab_mod) capabilities.

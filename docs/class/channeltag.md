@@ -2,7 +2,7 @@
 
 ---
 
-# Overview
+## Overview
 
 This tab is used to configure channel tags. Tags are used to define a 
 set of channels - to group them, to aid searches, and similar. 

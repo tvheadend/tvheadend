@@ -1971,6 +1971,7 @@ const idclass_t caclient_cccam_class =
       .off      = offsetof(cccam_t, cccam_version),
       .list     = caclient_cccam_class_cccam_version_list,
       .def.i    = CCCAM_VERSION_2_3_0,
+      .opts     = PO_DOC_NLIST,
     },
 #if 0
     {
@@ -2019,4 +2020,3 @@ caclient_t *cccam_create(void)
   cccam->cccam_version = CCCAM_VERSION_2_3_0;
   return (caclient_t *)cccam;
 }
-

@@ -2,7 +2,7 @@
 
 ---
 
-# Overview
+## Overview
 
 This tab allows you to define rules that filter and order various 
 elementary streams. 
