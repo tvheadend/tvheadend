@@ -912,6 +912,7 @@ old_key_flush ( th_descrambler_runtime_t *dr, service_t *t )
   th_descrambler_key_t *tk = dr->dr_key_last;
 
   if (tk) {
+    debug2("%p: key[%d] flush1", dr, tk->key_pid);
     tk->key_csa.csa_flush(&tk->key_csa, (mpegts_service_t *)t);
     dr->dr_key_last = NULL;
   }
@@ -922,7 +923,7 @@ key_flush( th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, uint8_t chang
 {
   if (!changed)
     return;
-  debug2("%p: key[%d] flush", dr, tk->key_pid);
+  debug2("%p: key[%d] flush2", dr, tk->key_pid);
   tk->key_csa.csa_flush(&tk->key_csa, (mpegts_service_t *)t);
   /* update the keys */
   if (changed & 1) {
@@ -1028,10 +1029,12 @@ descrambler_descramble ( service_t *t,
 
   if (dr->dr_queue_total == 0 && (tsb[3] & 0x80) == 0) {
     if (tk && tk->key_csa.csa_type != DESCRAMBLER_NONE) {
+      debug2("%p: descramble0 %d, %s[%d]", dr, len, keystr(tsb), extractpid(tsb));
       tk->key_csa.csa_descramble(&tk->key_csa, (mpegts_service_t *)t, tsb, len);
       dr->dr_key_last = tk;
     } else {
       old_key_flush(dr, t);
+      debug2("%p: direct0 %d, %s[%d]", dr, len, keystr(tsb), extractpid(tsb));
       ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
     }
     return 1;
@@ -1054,7 +1057,18 @@ descrambler_descramble ( service_t *t,
       if (len2 == 0)
         goto dd_destroy;
       if ((tsb2[3] & 0x80) == 0) {
-        ts_recv_packet2((mpegts_service_t *)t, tsb2, len2);
+        if (tk == NULL) {
+          tk = dr->dr_key_last;
+          update_tk = 1;
+        }
+        if (tk) {
+          debug2("%p: descramble1 %d, %s[%d]", dr, len2, keystr(tsb2), extractpid(tsb2));
+          tk->key_csa.csa_descramble(&tk->key_csa, (mpegts_service_t *)t, tsb2, len2);
+          dr->dr_key_last = tk;
+        } else {
+          debug2("%p: direct1 %d, %s[%d]", dr, len2, keystr(tsb2), extractpid(tsb2));
+          ts_recv_packet2((mpegts_service_t *)t, tsb2, len2);
+        }
         goto dd_destroy;
       }
       if (dr->dr_key_multipid) {
@@ -1115,7 +1129,7 @@ descrambler_descramble ( service_t *t,
         }
 doit:
         len3 = mpegts_word_count(tsb2, len2, 0xFF0000C0);
-        debug2("%p: descramble3 %d, %s[%d]", dr, len3, keystr(tsb2), extractpid(tsb2));
+        debug2("%p: descramble2 %d, %s[%d]", dr, len3, keystr(tsb2), extractpid(tsb2));
         tk->key_csa.csa_descramble(&tk->key_csa, (mpegts_service_t *)t, tsb2, len3);
         dr->dr_key_last = tk;
       }
@@ -1153,7 +1167,7 @@ dd_destroy:
       }
     }
     dr->dr_skip = 1;
-    debug2("%p: descramble %d, %s[%d]", dr, len, keystr(tsb), extractpid(tsb));
+    debug2("%p: descramble3 %d, %s[%d]", dr, len, keystr(tsb), extractpid(tsb));
     tk->key_csa.csa_descramble(&tk->key_csa, (mpegts_service_t *)t, tsb, len);
     dr->dr_key_last = tk;
     service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
