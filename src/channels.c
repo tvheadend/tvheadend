@@ -964,8 +964,7 @@ channel_get_icon ( channel_t *ch )
           }
         }
       } else if ((send = strstr(chi, "%U"))) {
-        if (sname == NULL)
-          sname = strdup(chname);
+        sname = strdup(chname);
 
         if (config.chicon_scheme == CHICON_LOWERCASE) {
           utf8_lowercase_inplace((char *)sname);
