@@ -680,6 +680,7 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
 
   /* delete */
   free(in->in_remove_args);
+  free(in->in_ignore_args);
   free(in->in_ctx_charset);
   mpegts_network_delete(mn, delconf);
 

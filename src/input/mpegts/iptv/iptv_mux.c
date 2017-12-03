@@ -305,6 +305,7 @@ iptv_mux_free ( mpegts_mux_t *mm )
   free(im->mm_iptv_url);
   free(im->mm_iptv_url_sane);
   free(im->mm_iptv_url_raw);
+  free(im->mm_iptv_url_cmpid);
   free(im->mm_iptv_muxname);
   free(im->mm_iptv_interface);
   free(im->mm_iptv_svcname);
