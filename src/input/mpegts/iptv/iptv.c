@@ -938,7 +938,7 @@ const idclass_t iptv_auto_network_class = {
                      "when the identical source is compared - see Help for a detailed explanation."),
       .doc      = prop_doc_ignore_path,
       .off      = offsetof(iptv_network_t, in_ignore_path),
-      .def.s    = 0,
+      .def.i    = 0,
       .opts     = PO_EXPERT
     },
     {}
