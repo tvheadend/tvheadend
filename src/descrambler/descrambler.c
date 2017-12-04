@@ -1157,7 +1157,7 @@ dd_destroy:
         if (!key_started(dr, ki) && tvhlog_limit(&dr->dr_loglimit_key, 10))
           tvhwarn(LS_DESCRAMBLER, "%s %s stream key[%d] is not valid",
                    ((mpegts_service_t *)t)->s_dvb_svcname,
-                   (ki & 0x40) ? "odd" : "even", tk->key_pid);
+                   (ki & 0x40) ? "odd" : "even", extractpid(tsb));
         goto next;
       }
       if (key_changed(dr, tk, ki, mclk())) {
