@@ -1,26 +1,26 @@
-## Status - Connections
+# Status - Connections
+
+<tvh_include>inc/status_contents</tvh_include>
+
+---
+
+## Overview
 
 This tab shows information about all active connections.
 
 This is a read-only tab; nothing is configurable.
 
-!['Status - Subscriptions' Tab](static/img/doc/status_connections/tab.png)
+!['Status - Connections' Tab](static/img/doc/status/connections.png)
 
 ---
 
-### Menu Bar/Buttons
+## Buttons
 
-The following functions are available:
-
-Button     | Function
------------|---------
-**Help**   | Display this help page.
+<tvh_include>inc/buttons</tvh_include>
 
 ---
 
-### Grid Items
-
-The main grid items have the following functions:
+## Items
 
 **Cancel Icon !['Cancel'](static/icons/cancel.png)**
 : Forcefully kill the connection. Note that many applications such as Kodi will automatically reconnect when a connection is dropped.

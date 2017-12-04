@@ -1,26 +1,26 @@
-## Status - Stream
+# Status - Stream
+
+<tvh_include>inc/status_contents</tvh_include>
+
+---
+
+## Overview
 
 This tab shows information about all currently-open streams.
 
 This is a read-only tab; nothing is configurable.
 
-!['Status - Stream' Tab](static/img/doc/status_stream/tab.png)
+!['Status - Stream' Tab](static/img/doc/status/stream.png)
 
 ---
 
-### Menu Bar/Buttons
+## Buttons
 
-The following functions are available:
-
-Button        | Function
---------------|---------
-**Help**      | Display this help page.
+<tvh_include>inc/buttons</tvh_include>
 
 ---
 
-### Items
-
-The main grid items have the following functions:
+## Items
 
 **Sweep/Clean Icon !['Status - Stream' Tab](static/icons/clean.png)**
 : Clear all "Uncorrected Blocks", "BER", etc stats. 
@@ -64,4 +64,3 @@ the value here can sometimes be ambiguous.
 **Signal Strength**
 : The signal strength as reported by the device, note that not all devices 
 supply correct signal information, the value here can sometimes be ambiguous
-
