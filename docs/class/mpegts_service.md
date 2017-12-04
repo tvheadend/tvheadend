@@ -1,10 +1,5 @@
-Contents                                   | Description
--------------------------------------------|------------------------
-[Overview](#overview)                      | Tab overview
-[Service information](#service-information)| How to display service information
-[Items/Properties](#items)                 | Items and Properties
 
-[Return to DVB Inputs](dvbinputs)
+<tvh_include>inc/service_contents</tvh_include>
 
 ---
 

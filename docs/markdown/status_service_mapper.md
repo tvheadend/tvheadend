@@ -1,10 +1,16 @@
-## Service Mapper 
+# Service Mapper 
+
+<tvh_include>inc/status_contents</tvh_include>
+
+---
+
+# Overview
 
 This tab shows information about current service mapping activity. 
 
 This is a read-only tab; nothing is configurable. 
 
-!['Status - Subscriptions' Tab](static/img/doc/status_service_mapper/tab.png) 
+!['Status - Service mapper'](static/img/doc/status/service_mapper.png) 
 
 
 The [Map services to channels](class/service_mapper) dialog 
@@ -12,17 +18,7 @@ determines how services are mapped.
 
 ---
 
-### Menu Bar/Buttons
-
-The following functions are available:
-
-Button     | Function
------------|---------
-**Help**   | Display this help page.
-
----
-
-### Items
+## Items
 
 **Mapped** 
 : Number of services mapped. 

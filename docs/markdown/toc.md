@@ -21,14 +21,7 @@ Web Interface Guide
   - [Recording (Profiles/Timeshift)](class/dvrconfig)
   - [Conditional Access (CA)](class/caclient)
   - [Debugging](class/tvhlog_conf)
-
-  - Status
-
-    * [Stream](status_stream)
-    * [Subscriptions](status_subscriptions)
-    * [Connections](status_connections)
-    * [Server Mapper](status_service_mapper)
-    
+  - [Status](status_stream)
   - [About](webui_about)
 
 Appendices
