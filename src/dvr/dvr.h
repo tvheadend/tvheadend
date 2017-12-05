@@ -325,8 +325,9 @@ typedef enum {
 
 typedef enum {
   DVR_AUTOREC_BTYPE_ALL = 0,
-  DVR_AUTOREC_BTYPE_NEW = 1,
-  DVR_AUTOREC_BTYPE_REPEAT = 2
+  DVR_AUTOREC_BTYPE_NEW_OR_UNKNOWN = 1,
+  DVR_AUTOREC_BTYPE_REPEAT = 2,
+  DVR_AUTOREC_BTYPE_NEW = 3,
 } dvr_autorec_btype_t;
 
 /**
