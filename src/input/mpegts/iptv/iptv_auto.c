@@ -84,7 +84,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   http_arg_t *ra1, *ra2, *ra2_next;
   size_t l;
   int64_t chnum2, vlcprog;
-  const char *url, *name, *logo, *epgid, *tags;
+  const char *url, *url2, *name, *logo, *epgid, *tags;
   char *s;
   char custom[512], name2[128], buf[32], *n;
 
@@ -135,6 +135,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
 
   urlinit(&u);
   urlinit(&u2);
+  url2 = url;
   custom[0] = '\0';
 
   if (strncmp(url, "pipe://", 7) == 0)
@@ -170,7 +171,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     u.query = http_arg_get_query(&args);
     http_arg_flush(&args);
     if (!urlrecompose(&u))
-      url = u.raw;
+      url = url2 = u.raw;
   }
 
   /* remove requested arguments to ignore */
@@ -196,12 +197,8 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
           s = '\0';
       }
     }
-    if (!urlrecompose(&u2)) {
-      urlreset(&u2);
-      u2 = u;
-    }
-  } else {
-    u2 = u;
+    if (!urlrecompose(&u2))
+      url2 = u2.raw;
   }
 
 skip_url:
@@ -216,7 +213,7 @@ skip_url:
 
   LIST_FOREACH(mm, &in->mn_muxes, mm_network_link) {
     im = (iptv_mux_t *)mm;
-    if (strcmp(im->mm_iptv_url_cmpid ?: "", u2.raw) == 0) {
+    if (strcmp(im->mm_iptv_url_cmpid ?: "", url2) == 0) {
       im->im_delete_flag = 0;
       change = 0;
       if (strcmp(im->mm_iptv_svcname ?: "", name)) {
@@ -268,7 +265,7 @@ skip_url:
 
   conf = htsmsg_create_map();
   htsmsg_add_str(conf, "iptv_url", url);
-  htsmsg_add_str(conf, "iptv_url_cmpid", u2.raw);
+  htsmsg_add_str(conf, "iptv_url_cmpid", url2);
   if (n)
     htsmsg_add_str(conf, "iptv_muxname", n);
   if (name)
