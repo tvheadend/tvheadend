@@ -2927,6 +2927,10 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
     }
     if (!r) return;
   }
+  if (eq->new_only) {
+    if (!e->is_new)
+      return;
+  }
   if (fulltext) {
     if ((s = epg_episode_get_title(ep, lang)) == NULL ||
         regex_match(&eq->stitle_re, s)) {
