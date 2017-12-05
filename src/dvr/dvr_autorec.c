@@ -222,6 +222,11 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
     if (dae->dae_cat3 && *dae->dae_cat3 && !string_list_contains_string(e->category, dae->dae_cat3))
       return 0;
+  } else if ((dae->dae_cat1 && *dae->dae_cat1) ||
+             (dae->dae_cat2 && *dae->dae_cat2) ||
+             (dae->dae_cat3 && *dae->dae_cat3)) {
+    /* No category in event but autorec has category, so no match. */
+    return 0;
   }
 
   if(dae->dae_start >= 0 && dae->dae_start_window >= 0 &&
