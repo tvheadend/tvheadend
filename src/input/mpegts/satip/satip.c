@@ -537,12 +537,12 @@ satip_device_calc_bin_uuid( uint8_t *uuid, const char *satip_uuid )
 }
 
 static void
-satip_device_calc_uuid( tvh_uuid_t *uuid, const char *satip_uuid )
+satip_device_calc_uuid( char *uuid, const char *satip_uuid )
 {
   uint8_t uuidbin[20];
 
   sha1_calc(uuidbin, (const uint8_t *)satip_uuid, strlen(satip_uuid), NULL, 0);
-  bin2hex(uuid->hex, sizeof(uuid->hex), uuidbin, sizeof(uuidbin));
+  bin2hex(uuid, UUID_HEX_SIZE, uuidbin, sizeof(uuidbin));
 }
 
 static void
@@ -590,7 +590,7 @@ static satip_device_t *
 satip_device_create( satip_device_info_t *info )
 {
   satip_device_t *sd = calloc(1, sizeof(satip_device_t));
-  tvh_uuid_t uuid;
+  char uhex[UUID_HEX_SIZE];
   htsmsg_t *conf = NULL, *feconf = NULL;
   char *argv[10], *tunercfg;
   int i, j, n, m, fenum, v2, save = 0;
@@ -599,9 +599,9 @@ satip_device_create( satip_device_info_t *info )
 
   sd->sd_inload = 1;
 
-  satip_device_calc_uuid(&uuid, info->uuid);
+  satip_device_calc_uuid(uhex, info->uuid);
 
-  conf = hts_settings_load("input/satip/adapters/%s", uuid.hex);
+  conf = hts_settings_load("input/satip/adapters/%s", uhex);
 
   /* some sane defaults */
   sd->sd_fast_switch = 1;
@@ -613,7 +613,7 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_dbus_allow  = 1;
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
-                            uuid.hex, conf)) {
+                            uhex, conf)) {
     /* Note: sd is freed in above fcn */
     return NULL;
   }

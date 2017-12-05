@@ -104,7 +104,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   in->in_class = class;
   do {
 
-    if (uuid_init_bin(&u, uuid)) {
+    if (uuid_set(&u, uuid)) {
       in->in_class = NULL;
       return -1;
     }

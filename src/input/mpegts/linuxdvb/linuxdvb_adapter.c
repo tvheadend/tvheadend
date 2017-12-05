@@ -198,7 +198,6 @@ linuxdvb_adapter_create
   la->la_rootpath   = strdup(path);
   la->la_name       = strdup(buf);
   la->la_dvb_number = number;
-
   /* Callbacks */
   la->la_is_enabled = linuxdvb_adapter_is_enabled;
 
@@ -215,22 +214,23 @@ linuxdvb_adapter_new(const char *path, int a, const char *name,
   linuxdvb_adapter_t *la;
   SHA_CTX sha1;
   uint8_t uuidbin[20];
-  tvh_uuid_t uuid;
+  char uhex[UUID_HEX_SIZE];
 
   /* Create hash for adapter */
   SHA1_Init(&sha1);
   SHA1_Update(&sha1, (void*)path,     strlen(path));
   SHA1_Update(&sha1, (void*)name,     strlen(name));
   SHA1_Final(uuidbin, &sha1);
-  bin2hex(uuid.hex, sizeof(uuid.hex), uuidbin, sizeof(uuidbin));
+
+  bin2hex(uhex, sizeof(uhex), uuidbin, sizeof(uuidbin));
 
   /* Load config */
-  *conf = hts_settings_load("input/linuxdvb/adapters/%s", uuid.hex);
+  *conf = hts_settings_load("input/linuxdvb/adapters/%s", uhex);
   if (*conf == NULL)
     *save = 1;
 
   /* Create */
-  if (!(la = linuxdvb_adapter_create(uuid.hex, *conf, path, a, display_name))) {
+  if (!(la = linuxdvb_adapter_create(uhex, *conf, path, a, display_name))) {
     htsmsg_destroy(*conf);
     *conf = NULL;
     return NULL;

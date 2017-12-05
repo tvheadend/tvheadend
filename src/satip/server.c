@@ -1071,7 +1071,7 @@ void satip_server_register(void)
 
   if (satip_server_conf.satip_uuid == NULL) {
     /* This is not UPnP complaint UUID */
-    if (uuid_init_bin(&u, NULL)) {
+    if (uuid_set(&u, NULL)) {
       tvherror(LS_SATIPS, "Unable to create UUID");
       return;
     }

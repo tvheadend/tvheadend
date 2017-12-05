@@ -113,6 +113,7 @@ config_migrate_v1_dvb_svcs
   ( const char *name, const char *netu, const char *muxu, htsmsg_t *channels )
 {
   tvh_uuid_t svcu;
+  char ubuf[UUID_HEX_SIZE];
   htsmsg_t *c, *e, *svc;
   htsmsg_field_t *f;
   const char *str;
@@ -123,7 +124,7 @@ config_migrate_v1_dvb_svcs
       if (!(e = htsmsg_field_get_map(f))) continue;
 
       svc = htsmsg_create_map();
-      uuid_init_hex(&svcu, NULL);
+      uuid_set(&svcu, NULL);
       if (!htsmsg_get_u32(e, "service_id", &u32))
         htsmsg_add_u32(svc, "sid", u32);
       if ((str = htsmsg_get_str(e, "servicename")))
@@ -144,11 +145,11 @@ config_migrate_v1_dvb_svcs
       // TODO: dvb_eit_enable
 
       hts_settings_save(svc, "input/linuxdvb/networks/%s/muxes/%s/services/%s",
-                        netu, muxu, svcu.hex);
+                        netu, muxu, uuid_get_hex(&svcu, ubuf));
 
       /* Map to channel */
       if ((str = htsmsg_get_str(e, "channelname")))
-        config_migrate_v1_chn_add_svc(channels, str, svcu.hex);
+        config_migrate_v1_chn_add_svc(channels, str, ubuf);
     }
     htsmsg_destroy(c);
   }
@@ -163,6 +164,7 @@ config_migrate_v1_dvb_network
 {
   int i;
   tvh_uuid_t netu, muxu;
+  char ubuf[UUID_HEX_SIZE], ubuf2[UUID_HEX_SIZE];
   htsmsg_t *e, *net, *mux, *tun;
   htsmsg_field_t *f;
   const char *str, *type;
@@ -185,7 +187,7 @@ config_migrate_v1_dvb_network
   type = str;
 
   /* Create network entry */
-  uuid_init_hex(&netu, NULL);
+  uuid_set(&netu, NULL);
   net = htsmsg_create_map();
   if (!strcmp(str, "ATSC"))
     htsmsg_add_str(net, "class", "linuxdvb_network_atsc");
@@ -255,18 +257,20 @@ config_migrate_v1_dvb_network
       htsmsg_add_str(mux, "delsys", "DVBT");
 
     /* Save */
-    uuid_init_hex(&muxu, NULL);
+    uuid_set(&muxu, NULL);
     hts_settings_save(mux, "input/linuxdvb/networks/%s/muxes/%s/config",
-                      netu.hex, muxu.hex);
+                      uuid_get_hex(&netu, ubuf),
+                      uuid_get_hex(&muxu, ubuf2));
     htsmsg_destroy(mux);
 
     /* Services */
-    config_migrate_v1_dvb_svcs(f->hmf_name, netu.hex, muxu.hex, channels);
+    config_migrate_v1_dvb_svcs(f->hmf_name, ubuf, ubuf2, channels);
   }
 
   /* Add properties derived from network */
   htsmsg_add_str(net, "networkname", name);
-  hts_settings_save(net, "input/linuxdvb/networks/%s/config", netu.hex);
+  hts_settings_save(net, "input/linuxdvb/networks/%s/config",
+                    uuid_get_hex(&netu, ubuf));
   htsmsg_destroy(net);
 }
 
@@ -350,6 +354,10 @@ config_migrate_v1 ( void )
   uint32_t u32;
   const char *str;
   char buf[1024];
+  char ubufc[UUID_HEX_SIZE];
+  char ubufn[UUID_HEX_SIZE];
+  char ubufm[UUID_HEX_SIZE];
+  char ubufs[UUID_HEX_SIZE];
   htsmsg_t *channels = htsmsg_create_map();
 
   /* Channels */
@@ -358,10 +366,10 @@ config_migrate_v1 ( void )
       if (!(e = htsmsg_field_get_map(f))) continue;
 
       /* Build entry */
-      uuid_init_hex(&chnu, NULL);
+      uuid_set(&chnu, NULL);
       m = htsmsg_create_map();
       htsmsg_add_u32(m, "channelid", atoi(f->hmf_name));
-      htsmsg_add_str(m, "uuid", chnu.hex);
+      htsmsg_add_str(m, "uuid", uuid_get_hex(&chnu, ubufc));
       htsmsg_add_msg(m, "services", htsmsg_create_list());
       if (!htsmsg_get_u32(e, "dvr_extra_time_pre", &u32))
         htsmsg_add_u32(m, "dvr_pre_time", u32);
@@ -386,14 +394,15 @@ config_migrate_v1 ( void )
   if ((c = hts_settings_load_r(1, "iptvservices"))) {
 
     /* Create a network */
-    uuid_init_hex(&netu, NULL);
+    uuid_set(&netu, NULL);
     m = htsmsg_create_map();
     htsmsg_add_str(m, "networkname",    "IPTV Network");
     htsmsg_add_u32(m, "skipinitscan",   1);
     htsmsg_add_u32(m, "autodiscovery",  0);
     htsmsg_add_u32(m, "max_streams",    0);
     htsmsg_add_u32(m, "max_bandwidth",  0);
-    hts_settings_save(m, "input/iptv/networks/%s/config", netu.hex);
+    hts_settings_save(m, "input/iptv/networks/%s/config",
+                      uuid_get_hex(&netu, ubufn));
     htsmsg_destroy(m);
 
     /* Process services */
@@ -403,7 +412,7 @@ config_migrate_v1 ( void )
       if (htsmsg_get_u32(e, "port", &u32))      continue;
 
       /* Create mux entry */
-      uuid_init_hex(&muxu, NULL);
+      uuid_set(&muxu, NULL);
       m = htsmsg_create_map();
       snprintf(buf, sizeof(buf), "udp://%s:%d", str, u32);
       htsmsg_add_str(m, "iptv_url", buf);
@@ -415,11 +424,12 @@ config_migrate_v1 ( void )
                      !!htsmsg_get_u32_or_default(e, "disabled", 0));
       htsmsg_add_u32(m, "initscan", 1);
       hts_settings_save(m, "input/iptv/networks/%s/muxes/%s/config",
-                        netu.hex, muxu.hex);
+                        ubufn, uuid_get_hex(&muxu, ubufm));
       htsmsg_destroy(m);
 
       /* Create svc entry */
-      uuid_init_hex(&svcu, NULL);
+      uuid_set(&svcu, NULL);
+      uuid_get_hex(&svcu, ubufs);
       m = htsmsg_create_map();
       if (!htsmsg_get_u32(e, "pmt", &u32))
         htsmsg_add_u32(m, "pmt", u32);
@@ -429,10 +439,10 @@ config_migrate_v1 ( void )
         htsmsg_add_u32(m, "disabled", u32);
       if ((str = htsmsg_get_str(e, "channelname"))) {
         htsmsg_add_str(m, "svcname", str);
-        config_migrate_v1_chn_add_svc(channels, str, svcu.hex);
+        config_migrate_v1_chn_add_svc(channels, str, ubufs);
       }
       hts_settings_save(m, "input/iptv/networks/%s/muxes/%s/services/%s",
-                        netu.hex, muxu.hex, svcu.hex);
+                        ubufn, ubufm, ubufs);
       htsmsg_destroy(m);
     }
 
@@ -474,25 +484,27 @@ config_migrate_v2 ( void )
 {
   htsmsg_t *m;
   tvh_uuid_t u;
+  char ubuf[UUID_HEX_SIZE];
   char src[1024], dst[1024];
 
   /* Do we have IPTV config to migrate ? */
   if (hts_settings_exists("input/iptv/muxes")) {
     
     /* Create a dummy network */
-    uuid_init_hex(&u, NULL);
+    uuid_set(&u, NULL);
+    uuid_get_hex(&u, ubuf);
     m = htsmsg_create_map();
     htsmsg_add_str(m, "networkname", "IPTV Network");
     htsmsg_add_u32(m, "skipinitscan", 1);
     htsmsg_add_u32(m, "autodiscovery", 0);
-    hts_settings_save(m, "input/iptv/networks/%s/config", u.hex);
+    hts_settings_save(m, "input/iptv/networks/%s/config", ubuf);
     htsmsg_destroy(m);
 
     /* Move muxes */
     hts_settings_buildpath(src, sizeof(src),
                            "input/iptv/muxes");
     hts_settings_buildpath(dst, sizeof(dst),
-                           "input/iptv/networks/%s/muxes", u.hex);
+                           "input/iptv/networks/%s/muxes", ubuf);
     rename(src, dst);
   }
 }
@@ -659,6 +671,7 @@ config_migrate_simple ( const char *dir, htsmsg_t *list,
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
   tvh_uuid_t u;
+  char ubuf[UUID_HEX_SIZE];
   uint32_t index = 1, id;
 
   if (!(c = hts_settings_load(dir)))
@@ -666,7 +679,8 @@ config_migrate_simple ( const char *dir, htsmsg_t *list,
 
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f))) continue;
-    uuid_init_hex(&u, NULL);
+    uuid_set(&u, NULL);
+    uuid_get_hex(&u, ubuf);
     if (htsmsg_get_u32(e, "id", &id))
       id = 0;
     else if (list) {
@@ -674,14 +688,14 @@ config_migrate_simple ( const char *dir, htsmsg_t *list,
       char buf[16];
       snprintf(buf, sizeof(buf), "%d", id);
       htsmsg_add_str(m, "id", buf);
-      htsmsg_add_str(m, "uuid", u.hex);
+      htsmsg_add_str(m, "uuid", ubuf);
       htsmsg_add_msg(list, NULL, m);
     }
     htsmsg_delete_field(e, "id");
     htsmsg_add_u32(e, "index", index++);
     if (modify)
-      modify(e, id, u.hex, aux);
-    hts_settings_save(e, "%s/%s", dir, u.hex);
+      modify(e, id, ubuf, aux);
+    hts_settings_save(e, "%s/%s", dir, ubuf);
     hts_settings_remove("%s/%s", dir, f->hmf_name);
   }
 
@@ -798,7 +812,7 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *a
   uint32_t u32;
 
   htsmsg_delete_field(c, "index");
-  if (chname == NULL || (chuuid != NULL && uuid_init_bin(&uuid0, chuuid))) {
+  if (chname == NULL || (chuuid != NULL && uuid_set(&uuid0, chuuid))) {
     chname = strdup(chuuid ?: "");
     htsmsg_delete_field(c, "channelname");
     htsmsg_delete_field(c, "channel");
@@ -834,6 +848,7 @@ config_migrate_v9 ( void )
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
   tvh_uuid_t u;
+  char ubuf[UUID_HEX_SIZE];
 
   config_migrate_simple("autorec", list, config_modify_autorec, NULL);
   config_migrate_simple("dvr/log", NULL, config_modify_dvr_log, list);
@@ -845,9 +860,9 @@ config_migrate_v9 ( void )
       if (!(e = htsmsg_field_get_map(f))) continue;
       if (strcmp(f->hmf_name, "config")) continue;
       htsmsg_add_str(e, "name", f->hmf_name + 6);
-      uuid_init_hex(&u, NULL);
+      uuid_set(&u, NULL);
       hts_settings_remove("dvr/%s", f->hmf_name);
-      hts_settings_save(e, "dvr/config/%s", u.hex);
+      hts_settings_save(e, "dvr/config/%s", uuid_get_hex(&u, ubuf));
     }
     /* step 2: reset (without "config") */
     HTSMSG_FOREACH(f, c) {
@@ -855,9 +870,9 @@ config_migrate_v9 ( void )
       if (strcmp(f->hmf_name, "config") == 0) continue;
       if (strncmp(f->hmf_name, "config", 6)) continue;
       htsmsg_add_str(e, "name", f->hmf_name + 6);
-      uuid_init_hex(&u, NULL);
+      uuid_set(&u, NULL);
       hts_settings_remove("dvr/%s", f->hmf_name);
-      hts_settings_save(e, "dvr/config/%s", u.hex);
+      hts_settings_save(e, "dvr/config/%s", uuid_get_hex(&u, ubuf));
     }
     htsmsg_destroy(c);
   }
@@ -1243,6 +1258,7 @@ config_migrate_v19 ( void )
   htsmsg_field_t *f;
   const char *username, *passwd;
   tvh_uuid_t u;
+  char ubuf[UUID_HEX_SIZE];
 
   if ((c = hts_settings_load("accesscontrol")) != NULL) {
     HTSMSG_FOREACH(f, c) {
@@ -1254,8 +1270,8 @@ config_migrate_v19 ( void )
       m = htsmsg_create_map();
       htsmsg_add_str(m, "username", username);
       htsmsg_add_str(m, "password2", passwd);
-      uuid_init_hex(&u, NULL);
-      hts_settings_save(m, "passwd/%s", u.hex);
+      uuid_set(&u, NULL);
+      hts_settings_save(m, "passwd/%s", uuid_get_hex(&u, ubuf));
       htsmsg_delete_field(e, "password2");
       hts_settings_save(e, "accesscontrol/%s", f->hmf_name);
     }
@@ -1367,6 +1383,7 @@ config_migrate_v23_one ( const char *modname )
   uint32_t maj, min;
   int64_t num;
   tvh_uuid_t u;
+  char ubuf[UUID_HEX_SIZE];
 
   if ((c = hts_settings_load_r(1, "epggrab/%s/channels", modname)) != NULL) {
     HTSMSG_FOREACH(f, c) {
@@ -1381,9 +1398,9 @@ config_migrate_v23_one ( const char *modname )
         htsmsg_add_s64(n, "lcn", num);
       htsmsg_delete_field(n, "major");
       htsmsg_delete_field(n, "minor");
-      uuid_init_hex(&u, NULL);
+      uuid_set(&u, NULL);
       hts_settings_remove("epggrab/%s/channels/%s", modname, f->hmf_name);
-      hts_settings_save(n, "epggrab/%s/channels/%s", modname, u.hex);
+      hts_settings_save(n, "epggrab/%s/channels/%s", modname, uuid_get_hex(&u, ubuf));
       htsmsg_destroy(n);
     }
     htsmsg_destroy(c);

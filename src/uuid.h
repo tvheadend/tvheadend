@@ -29,10 +29,7 @@ extern uint8_t ___uuid_empty[UUID_BIN_SIZE];
 
 /* Structure to hold UUID */
 typedef struct uuid {
-  union {
-    uint8_t bin[UUID_BIN_SIZE];
-    char    hex[UUID_HEX_SIZE];
-  };
+  uint8_t bin[UUID_BIN_SIZE];
 } tvh_uuid_t;
 
 /* Initialise subsystem */
@@ -41,25 +38,11 @@ void uuid_init ( void );
 /* Random bytes */
 void uuid_random ( uint8_t *buf, size_t bufsize );
 
-/* Initialise binary */
-int uuid_init_bin ( tvh_uuid_t *u, const char *str );
+/* Set uuid */
+int uuid_set ( tvh_uuid_t *u, const char *str );
 
-/* Initialise hex string */
-int uuid_init_hex ( tvh_uuid_t *u, const char *str );
-
-/**
- * Convert bin to hex string
- *
- * Note: conversion is done such that a and b can be the same
- */
-int uuid_bin2hex  ( const tvh_uuid_t *a, tvh_uuid_t *b );
-
-/**
- * Convert hex string to bin (in place)
- *
- * Note: conversion is done such that a and b can be the same
- */
-int uuid_hex2bin  ( const tvh_uuid_t *a, tvh_uuid_t *b );
+/* Get hexa uuid, str must have length at least UUID_HEX_SIZE */
+char *uuid_get_hex ( const tvh_uuid_t *u, char *dst );
 
 /**
  * Copy
@@ -86,7 +69,7 @@ static inline int uuid_empty ( const tvh_uuid_t *a )
 }
 
 /**
- * Valid hex uuid
+ * Validate the hexadecimal representation of uuid
  */
 int uuid_hexvalid ( const char *uuid );
 

@@ -114,15 +114,19 @@ uuid_random ( uint8_t *buf, size_t bufsize )
 
 /* Initialise binary */
 int
-uuid_init_bin ( tvh_uuid_t *u, const char *str )
+uuid_set ( tvh_uuid_t *u, const char *str )
 {
-  memset(u, 0, sizeof(tvh_uuid_t));
   if (str) {
     if (strlen(str) != UUID_HEX_SIZE - 1) {
-      tvherror(LS_UUID, "wrong uuid size");
+      memset(u, 0, sizeof(*u));
+      tvherror(LS_UUID, "wrong uuid string size (%zd)", strlen(str));
       return -EINVAL;
     }
-    return hex2bin(u->bin, sizeof(u->bin), str);
+    if (hex2bin(u->bin, sizeof(u->bin), str)) {
+      memset(u, 0, sizeof(*u));
+      tvherror(LS_UUID, "wrong uuid string '%s'", str);
+      return -EINVAL;
+    }
   } else if (read(fd, u->bin, sizeof(u->bin)) != sizeof(u->bin)) {
     tvherror(LS_UUID, "failed to read from %s", RANDOM_PATH);
     return -EINVAL;
@@ -131,39 +135,15 @@ uuid_init_bin ( tvh_uuid_t *u, const char *str )
 }
 
 /* Initialise hex string */
-int
-uuid_init_hex ( tvh_uuid_t *u, const char *str )
+char *
+uuid_get_hex ( const tvh_uuid_t *u, char *dst )
 {
-  tvh_uuid_t tmp;
-  if (uuid_init_bin(&tmp, str))
-    return 1;
-  return uuid_bin2hex(&tmp, u);
+  assert(dst);
+  bin2hex(dst, UUID_HEX_SIZE, u->bin, sizeof(u->bin));
+  return dst;
 }
 
-/* Convert bin to hex string */
-int
-uuid_bin2hex ( const tvh_uuid_t *a, tvh_uuid_t *b )
-{
-  tvh_uuid_t tmp;
-  memset(&tmp, 0, sizeof(tmp));
-  bin2hex(tmp.hex, sizeof(tmp.hex), a->bin, sizeof(a->bin));
-  memcpy(b, &tmp, sizeof(tmp));
-  return 0;
-}
-
-/* Convert hex string to bin (in place) */
-int
-uuid_hex2bin ( const tvh_uuid_t *a, tvh_uuid_t *b )
-{ 
-  tvh_uuid_t tmp;
-  memset(&tmp, 0, sizeof(tmp));
-  if (hex2bin(tmp.bin, sizeof(tmp.bin), a->hex))
-    return 1;
-  memcpy(b, &tmp, sizeof(tmp));
-  return 0;
-}
-
-/* Validate hex string */
+/* Validate the hexadecimal representation of uuid */
 int
 uuid_hexvalid ( const char *uuid )
 {
