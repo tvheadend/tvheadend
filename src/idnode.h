@@ -217,6 +217,7 @@ void          idnode_movedown     (idnode_t *in);
 void          idnode_changed      (idnode_t *in);
 
 void         *idnode_find    (const char *uuid, const idclass_t *idc, const idnodes_rb_t *nodes);
+void         *idnode_find0   (tvh_uuid_t *uuid, const idclass_t *idc, const idnodes_rb_t *nodes);
 idnode_set_t *idnode_find_all(const idclass_t *idc, const idnodes_rb_t *nodes);
 
 

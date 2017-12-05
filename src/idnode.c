@@ -608,22 +608,17 @@ idnode_domain(const idclass_t *idc)
   }
 }
 
-void *
-idnode_find ( const char *uuid, const idclass_t *idc, const idnodes_rb_t *domain )
+static idnode_t *
+idnode_find_ ( idnode_t *skel, const idclass_t *idc, const idnodes_rb_t *domain )
 {
-  idnode_t skel, *r;
+  idnode_t *r;
 
-  tvhtrace(LS_IDNODE, "find node %s class %s", uuid, idc ? idc->ic_class : NULL);
-  if(uuid == NULL || strlen(uuid) != UUID_HEX_SIZE - 1)
-    return NULL;
-  if(hex2bin(skel.in_uuid.bin, sizeof(skel.in_uuid.bin), uuid))
-    return NULL;
   if (domain == NULL)
     domain = idnode_domain(idc);
   if (domain == NULL)
-    r = RB_FIND(&idnodes, &skel, in_link, in_cmp);
+    r = RB_FIND(&idnodes, skel, in_link, in_cmp);
   else
-    r = RB_FIND(domain, &skel, in_domain_link, in_cmp);
+    r = RB_FIND(domain, skel, in_domain_link, in_cmp);
   if(r != NULL && idc != NULL) {
     const idclass_t *c = r->in_class;
     for(;c != NULL; c = c->ic_super) {
@@ -633,6 +628,29 @@ idnode_find ( const char *uuid, const idclass_t *idc, const idnodes_rb_t *domain
     return NULL;
   }
   return r;
+}
+
+void *
+idnode_find0 ( tvh_uuid_t *uuid, const idclass_t *idc, const idnodes_rb_t *domain )
+{
+  char buf[UUID_HEX_SIZE];
+  idnode_t skel;
+  skel.in_uuid = *uuid;
+  tvhtrace(LS_IDNODE, "find node %s class %s",
+           uuid_get_hex(uuid, buf), idc ? idc->ic_class : NULL);
+  return idnode_find_(&skel, idc, domain);
+}
+
+void *
+idnode_find ( const char *uuid, const idclass_t *idc, const idnodes_rb_t *domain )
+{
+  idnode_t skel;
+  tvhtrace(LS_IDNODE, "find node %s class %s", uuid, idc ? idc->ic_class : NULL);
+  if(uuid == NULL || strlen(uuid) != UUID_HEX_SIZE - 1)
+    return NULL;
+  if(hex2bin(skel.in_uuid.bin, sizeof(skel.in_uuid.bin), uuid))
+    return NULL;
+  return idnode_find_(&skel, idc, domain);
 }
 
 idnode_set_t *
