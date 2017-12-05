@@ -155,3 +155,47 @@ uuid_hexvalid ( const char *uuid )
       return 0;
   return 1;
 }
+
+/* Init uuid set */
+void
+uuid_set_init( tvh_uuid_set_t *us, uint32_t alloc_chunk )
+{
+  memset(us, 0, sizeof(*us));
+  us->us_alloc_chunk = alloc_chunk ?: 10;
+}
+
+/* Add an uuid to set */
+tvh_uuid_t *
+uuid_set_add ( tvh_uuid_set_t *us, const tvh_uuid_t *u ) 
+{
+  tvh_uuid_t *nu;
+
+  if (us->us_count >= us->us_size) {
+    nu = realloc(us->us_array, sizeof(*u) * (us->us_size + us->us_alloc_chunk));
+    if (nu == NULL)
+      return NULL;
+    us->us_size += us->us_alloc_chunk;
+  }
+  nu = &us->us_array[us->us_count++];
+  *nu = *u;
+  return nu;
+}
+
+/* Free uuid set */
+void
+uuid_set_free ( tvh_uuid_set_t *us )
+{
+  if (us) {
+    free(us->us_array);
+  }
+}
+
+/* Destroy uuid set */
+void
+uuid_set_destroy ( tvh_uuid_set_t *us )
+{
+  if (us) {
+    uuid_set_free(us);
+    free(us);
+  }
+}

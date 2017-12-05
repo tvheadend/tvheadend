@@ -32,6 +32,14 @@ typedef struct uuid {
   uint8_t bin[UUID_BIN_SIZE];
 } tvh_uuid_t;
 
+/* Structure for the uuid set */
+typedef struct uuid_set {
+  tvh_uuid_t *us_array;
+  uint32_t us_count;
+  uint32_t us_size;
+  uint32_t us_alloc_chunk;
+} tvh_uuid_set_t;
+
 /* Initialise subsystem */
 void uuid_init ( void );
 
@@ -72,6 +80,40 @@ static inline int uuid_empty ( const tvh_uuid_t *a )
  * Validate the hexadecimal representation of uuid
  */
 int uuid_hexvalid ( const char *uuid );
+
+/**
+ *
+ */
+void uuid_set_init( tvh_uuid_set_t *us, uint32_t alloc_chunk );
+
+/**
+ *
+ */
+tvh_uuid_t *uuid_set_add( tvh_uuid_set_t *us, const tvh_uuid_t *u );
+
+/**
+ *
+ */
+void uuid_set_free( tvh_uuid_set_t *us );
+
+/**
+ *
+ */
+void uuid_set_destroy( tvh_uuid_set_t *us );
+
+/**
+ *
+ */
+static inline int uuid_set_empty( tvh_uuid_set_t *us )
+  { return us->us_count == 0; }
+
+/**
+ *
+ */
+#define UUID_SET_FOREACH(u, us, u32) \
+  if ((us)->us_count > 0) \
+    for ((u32) = 0, (u) = (us)->us_array; \
+         (u32) < (us)->us_count; (u32)++, (u)++)
 
 /**
  * Hex string to binary
