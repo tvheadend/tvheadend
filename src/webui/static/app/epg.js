@@ -10,6 +10,27 @@ tvheadend.ContentGroupStore = tvheadend.idnode_get_enum({
     }
 });
 
+insertCategoryClearOption = function( scope, records, options ){
+    var placeholder = Ext.data.Record.create(['key', 'val']);
+    scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
+};
+
+tvheadend.category = tvheadend.idnode_get_enum({
+    url: 'api/channelcategory/list',
+    event: 'channelcategory',
+    listeners: {
+        'load': function(scope, records, options) {
+          insertCategoryClearOption(scope, records, options);
+          // If we have categories then we create the category
+          // search toolbar.
+          if (records.length) {
+            tvheadend.createToolbar2();
+          }
+        }
+    }
+});
+
+
 tvheadend.contentGroupLookupName = function(code) {
     ret = "";
     if (!code)
@@ -774,6 +795,59 @@ tvheadend.epg = function() {
 
     });
 
+    /// "cat" is the name of the category field.
+    /// We have to pass the name, not the field, since the
+    /// field is deleted and re-created inside clear filter.
+    function createFilterCat(clearFilter, cat) {
+      var filter = new Ext.form.ComboBox({
+        loadingText: _('Loading...'),
+        width: 200,
+        displayField: 'val',
+        store: tvheadend.category,
+        mode: 'local',
+        editable: true,
+        forceSelection: true,
+        triggerAction: 'all',
+        typeAhead: true,
+        emptyText: _('Filter category...'),
+        listeners: {
+            blur: function () {
+                if(this.getRawValue() == "" ) {
+                    clearFilter();
+                    epgView.reset();
+                }
+            }
+        }
+      });
+      filter.on('select', function(c, r) {
+        if (r.data.key == -1)
+            clearFilter();
+        else if (epgStore.baseParams[cat] !== r.data.key)
+            epgStore.baseParams[cat] = r.data.key;
+        epgView.reset();
+      });
+      return filter;
+    }
+
+    clearCat1Filter = function() {
+        delete epgStore.baseParams.cat1;
+        epgFilterCat1.setValue("");
+    }
+
+    clearCat2Filter = function() {
+        delete epgStore.baseParams.cat2;
+        epgFilterCat2.setValue("");
+    }
+
+    clearCat3Filter = function() {
+        delete epgStore.baseParams.cat3;
+        epgFilterCat3.setValue("");
+    }
+
+    var epgFilterCat1 = createFilterCat(clearCat1Filter, "cat1");
+    var epgFilterCat2 = createFilterCat(clearCat2Filter, "cat2");
+    var epgFilterCat3 = createFilterCat(clearCat3Filter, "cat3");
+
     // Content groups
 
     var epgFilterContentGroup = new Ext.form.ComboBox({
@@ -867,6 +941,9 @@ tvheadend.epg = function() {
         clearChannelTagsFilter();
         clearDurationFilter();
         clearContentGroupFilter();
+        clearCat1Filter();
+        clearCat2Filter();
+        clearCat3Filter();
         filter.clearFilters();
         delete epgStore.sortInfo;
         epgView.reset();
@@ -1043,6 +1120,18 @@ tvheadend.epg = function() {
         epgView.reset();
     });
 
+    /* Extra toolbar. Only created if we have categories on the server */
+    tvheadend.createToolbar2 = function() {
+        var tbar2 = new Ext.Toolbar({
+          items: [
+              epgFilterCat1, '-',
+              epgFilterCat2, '-',
+              epgFilterCat3, '-',
+          ]
+        });
+        panel.add(tbar2);
+    }
+
     /**
      * Listener for EPG and DVR notifications.
      * We want to update the EPG grid when a recording is finished/deleted etc.
@@ -1155,6 +1244,12 @@ tvheadend.epg = function() {
         var duration = epgStore.baseParams.durationMin ?
                 tvheadend.durationLookupRange(epgStore.baseParams.durationMin)
                 : "<i>" + _("Don't care") + "</i>";
+        var cat1 = epgStore.baseParams.cat1 ?
+                '<div class="x-smallhdr">' + _('Category') + ':</div>' + epgStore.baseParams.cat1 + '<br>' : "";
+        var cat2 = epgStore.baseParams.cat2 ?
+                '<div class="x-smallhdr">' + _('Category') + ':</div>' + epgStore.baseParams.cat2 + '<br>' : "";
+        var cat3 = epgStore.baseParams.cat3 ?
+                '<div class="x-smallhdr">' + _('Category') + ':</div>' + epgStore.baseParams.cat3 + '<br>' : "";
 
         Ext.MessageBox.confirm(_('Auto Recorder'), _('This will create an automatic rule that '
                 + 'continuously scans the EPG for programs '
@@ -1164,6 +1259,7 @@ tvheadend.epg = function() {
                 + '<div class="x-smallhdr">' + _('Tag') + ':</div>' + tag + '<br>'
                 + '<div class="x-smallhdr">' + _('Genre') + ':</div>' + contentType + '<br>'
                 + '<div class="x-smallhdr">' + _('Duration') + ':</div>' + duration + '<br>'
+                + cat1 + cat2 + cat3
                 + '<br><br>'
                 + sprintf(_('Currently this will match (and record) %d events.'), epgStore.getTotalCount())
                 + ' ' + 'Are you sure?',
@@ -1187,6 +1283,9 @@ tvheadend.epg = function() {
         if (params.contentType) conf.content_type = params.contentType;
         if (params.durationMin) conf.minduration = params.durationMin;
         if (params.durationMax) conf.maxduration = params.durationMax;
+        if (params.cat1) conf.cat1 = params.cat1;
+        if (params.cat2) conf.cat2 = params.cat2;
+        if (params.cat3) conf.cat3 = params.cat3;
         Ext.Ajax.request({
             url: 'api/dvr/autorec/create',
             params: { conf: Ext.encode(conf) }

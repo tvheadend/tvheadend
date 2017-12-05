@@ -2917,6 +2917,28 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
     if (_eq_comp_num(&eq->channel_num, channel_get_number(e->channel))) return;
   if (eq->channel_name.comp != EC_NO)
     if (_eq_comp_str(&eq->channel_name, channel_get_name(e->channel, NULL))) return;
+  if (eq->cat1 && *eq->cat1) {
+      /* No category? Can't match our requested category */
+      if (!e->category)
+          return;
+      if (!string_list_contains_string(e->category, eq->cat1))
+          return;
+  }
+  if (eq->cat2 && *eq->cat2) {
+      /* No category? Can't match our requested category */
+      if (!e->category)
+          return;
+      if (!string_list_contains_string(e->category, eq->cat2))
+          return;
+  }
+  if (eq->cat3 && *eq->cat3) {
+      /* No category? Can't match our requested category */
+      if (!e->category)
+          return;
+      if (!string_list_contains_string(e->category, eq->cat3))
+          return;
+  }
+
   if (eq->genre_count) {
     epg_genre_t genre;
     uint32_t i, r = 0;
@@ -3277,6 +3299,10 @@ fin:
   free(eq->channel); eq->channel = NULL;
   free(eq->channel_tag); eq->channel_tag = NULL;
   free(eq->stitle); eq->stitle = NULL;
+  free(eq->cat1); eq->cat1 = NULL;
+  free(eq->cat2); eq->cat2 = NULL;
+  free(eq->cat3); eq->cat3 = NULL;
+
   if (eq->genre != eq->genre_static)
     free(eq->genre);
   eq->genre = NULL;

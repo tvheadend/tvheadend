@@ -697,6 +697,9 @@ typedef struct epg_query {
   uint32_t          genre_count;
   uint8_t          *genre;
   uint8_t           genre_static[16];
+  char             *cat1;
+  char             *cat2;
+  char             *cat3;
 
   enum {
     ESK_START,
