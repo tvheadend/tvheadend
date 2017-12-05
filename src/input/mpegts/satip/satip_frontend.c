@@ -1300,11 +1300,7 @@ satip_frontend_extra_shutdown
 
   rtsp->hc_rtsp_session = strdup((char *)session);
 
-  memset(&ev, 0, sizeof(ev));
-  ev.events           = TVHPOLL_IN;
-  ev.fd               = rtsp->hc_fd;
-  ev.data.ptr         = rtsp;
-  tvhpoll_add(efd, &ev, 1);
+  tvhpoll_add1(efd, rtsp->hc_fd, TVHPOLL_IN, rtsp);
   rtsp->hc_efd = efd;
 
   snprintf(b, sizeof(b), "/stream=%li", stream_id);
@@ -1402,22 +1398,9 @@ satip_frontend_close_rtsp
   ( satip_frontend_t *lfe, const char *name, tvhpoll_t *efd,
     http_client_t *rtsp, satip_tune_req_t *tr )
 {
-  tvhpoll_event_t ev;
-
-  memset(&ev, 0, sizeof(ev));
-  ev.events   = TVHPOLL_IN;
-  ev.fd       = lfe->sf_dvr_pipe.rd;
-  ev.data.ptr = NULL;
-  tvhpoll_rem(efd, &ev, 1);
-
+  tvhpoll_rem1(efd, lfe->sf_dvr_pipe.rd);
   satip_frontend_shutdown(lfe, name, rtsp, tr, efd);
-
-  memset(&ev, 0, sizeof(ev));
-  ev.events   = TVHPOLL_IN;
-  ev.fd       = lfe->sf_dvr_pipe.rd;
-  ev.data.ptr = NULL;
-  tvhpoll_add(efd, &ev, 1);
-
+  tvhpoll_add1(efd, lfe->sf_dvr_pipe.rd, TVHPOLL_IN, NULL);
   http_client_close(rtsp);
 }
 
@@ -1598,11 +1581,7 @@ new_tune:
   if (rtsp)
     rtsp->hc_rtp_data_received = NULL;
 
-  memset(ev, 0, sizeof(ev));
-  ev[0].events             = TVHPOLL_IN;
-  ev[0].fd                 = lfe->sf_dvr_pipe.rd;
-  ev[0].data.ptr           = NULL;
-  tvhpoll_add(efd, ev, 1);
+  tvhpoll_add1(efd, lfe->sf_dvr_pipe.rd, TVHPOLL_IN, NULL);
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   lfe->sf_display_name = buf;
@@ -2064,21 +2043,13 @@ new_tune:
   udp_multirecv_free(&um);
   lfe->sf_curmux = NULL;
 
+  memset(ev, 0, sizeof(&ev));
   nfds = 0;
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
-    ev[nfds].events             = TVHPOLL_IN;
-    ev[nfds].fd                 = rtp->fd;
-    ev[nfds].data.ptr           = rtp;
-    nfds++;
-    ev[nfds].events             = TVHPOLL_IN;
-    ev[nfds].fd                 = rtcp->fd;
-    ev[nfds].data.ptr           = rtcp;
-    nfds++;
+    ev[nfds++].fd = rtp->fd;
+    ev[nfds++].fd = rtcp->fd;
   }
-  ev[nfds].events             = TVHPOLL_IN;
-  ev[nfds].fd                 = lfe->sf_dvr_pipe.rd;
-  ev[nfds].data.ptr           = NULL;
-  nfds++;
+  ev[nfds++].fd = lfe->sf_dvr_pipe.rd;
   tvhpoll_rem(efd, ev, nfds);
 
   if (exit_flag) {

@@ -153,6 +153,16 @@ int tvhpoll_add
 #endif
 }
 
+int tvhpoll_add1
+  ( tvhpoll_t *tp, int fd, int events, void *ptr )
+{
+  tvhpoll_event_t ev = { 0 };
+  ev.fd = fd;
+  ev.events = events;
+  ev.data.ptr = ptr;
+  return tvhpoll_add(tp, &ev, 1);
+}
+
 int tvhpoll_rem
   ( tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num )
 {
@@ -170,6 +180,14 @@ int tvhpoll_rem
 #else
 #endif
   return 0;
+}
+
+int tvhpoll_rem1
+  ( tvhpoll_t *tp, int fd )
+{
+  tvhpoll_event_t ev = { 0 };
+  ev.fd = fd;
+  return tvhpoll_rem(tp, &ev, 1);
 }
 
 int tvhpoll_wait

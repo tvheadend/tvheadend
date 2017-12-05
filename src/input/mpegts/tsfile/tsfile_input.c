@@ -67,11 +67,8 @@ tsfile_input_thread ( void *aux )
   if (fd == -1) return NULL;
   
   /* Polling */
-  memset(&ev, 0, sizeof(ev));
   efd = tvhpoll_create(2);
-  ev.events          = TVHPOLL_IN;
-  ev.fd = ev.data.fd = mi->ti_thread_pipe.rd;
-  tvhpoll_add(efd, &ev, 1);
+  tvhpoll_add1(efd, mi->ti_thread_pipe.rd, TVHPOLL_IN, NULL);
 
   /* Alloc memory */
   sbuf_init_fixed(&buf, 18800);

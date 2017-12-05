@@ -491,15 +491,10 @@ iptv_input_thread ( void *aux )
 void
 iptv_input_pause_handler ( iptv_mux_t *im, int pause )
 {
-  tvhpoll_event_t ev = { 0 };
-
-  ev.fd       = im->mm_iptv_fd;
-  ev.events   = TVHPOLL_IN;
-  ev.data.ptr = im;
   if (pause)
-    tvhpoll_rem(iptv_poll, &ev, 1);
+    tvhpoll_rem1(iptv_poll, im->mm_iptv_fd);
   else
-    tvhpoll_add(iptv_poll, &ev, 1);
+    tvhpoll_add1(iptv_poll, im->mm_iptv_fd, TVHPOLL_IN, im);
 }
 
 void
@@ -584,16 +579,11 @@ int
 iptv_input_fd_started ( iptv_mux_t *im )
 {
   char buf[256];
-  tvhpoll_event_t ev = { 0 };
 
   /* Setup poll */
   if (im->mm_iptv_fd > 0) {
-    ev.fd       = im->mm_iptv_fd;
-    ev.events   = TVHPOLL_IN;
-    ev.data.ptr = im;
-
     /* Error? */
-    if (tvhpoll_add(iptv_poll, &ev, 1) == -1) {
+    if (tvhpoll_add1(iptv_poll, im->mm_iptv_fd, TVHPOLL_IN, im) < 0) {
       mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
       tvherror(LS_IPTV, "%s - failed to add to poll q", buf);
       close(im->mm_iptv_fd);
@@ -604,12 +594,8 @@ iptv_input_fd_started ( iptv_mux_t *im )
 
   /* Setup poll2 */
   if (im->mm_iptv_fd2 > 0) {
-    ev.fd       = im->mm_iptv_fd2;
-    ev.events   = TVHPOLL_IN;
-    ev.data.ptr = im;
-
     /* Error? */
-    if (tvhpoll_add(iptv_poll, &ev, 1) == -1) {
+    if (tvhpoll_add1(iptv_poll, im->mm_iptv_fd2, TVHPOLL_IN, im) < 0) {
       mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
       tvherror(LS_IPTV, "%s - failed to add to poll q (2)", buf);
       close(im->mm_iptv_fd2);

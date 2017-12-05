@@ -199,11 +199,7 @@ again:
       tvhpoll_t *efd;
 
       efd = tvhpoll_create(1);
-      memset(&ev, 0, sizeof(ev));
-      ev.events   = TVHPOLL_OUT;
-      ev.fd       = fd;
-      ev.data.ptr = &fd;
-      tvhpoll_add(efd, &ev, 1);
+      tvhpoll_add1(efd, fd, TVHPOLL_OUT, &fd);
 
       /* minimal timeout is one second */
       if (timeout < 1)
@@ -976,17 +972,11 @@ tcp_server_create
 void tcp_server_register(void *server)
 {
   tcp_server_t *ts = server;
-  tvhpoll_event_t ev;
 
   if (ts == NULL)
     return;
 
-  memset(&ev, 0, sizeof(ev));
-
-  ev.fd       = ts->serverfd;
-  ev.events   = TVHPOLL_IN;
-  ev.data.ptr = ts;
-  tvhpoll_add(tcp_server_poll, &ev, 1);
+  tvhpoll_add1(tcp_server_poll, ts->serverfd, TVHPOLL_IN, ts);
 }
 
 /**
@@ -996,17 +986,12 @@ void
 tcp_server_delete(void *server)
 {
   tcp_server_t *ts = server;
-  tvhpoll_event_t ev;
   char c = 'D';
 
   if (server == NULL)
     return;
 
-  memset(&ev, 0, sizeof(ev));
-  ev.fd       = ts->serverfd;
-  ev.events   = TVHPOLL_IN;
-  ev.data.ptr = ts;
-  tvhpoll_rem(tcp_server_poll, &ev, 1);
+  tvhpoll_rem1(tcp_server_poll, ts->serverfd);
   close(ts->serverfd);
   ts->serverfd = -1;
   LIST_INSERT_HEAD(&tcp_server_delete_list, ts, link);
@@ -1170,15 +1155,10 @@ tcp_server_preinit(int opt_ipv6)
 void
 tcp_server_init(void)
 {
-  tvhpoll_event_t ev;
   tvh_pipe(O_NONBLOCK, &tcp_server_pipe);
   tcp_server_poll = tvhpoll_create(10);
 
-  memset(&ev, 0, sizeof(ev));
-  ev.fd       = tcp_server_pipe.rd;
-  ev.events   = TVHPOLL_IN;
-  ev.data.ptr = &tcp_server_pipe;
-  tvhpoll_add(tcp_server_poll, &ev, 1);
+  tvhpoll_add1(tcp_server_poll, tcp_server_pipe.rd, TVHPOLL_IN, &tcp_server_pipe);
 
   atomic_set(&tcp_server_running, 1);
   tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL, "tcp-loop");

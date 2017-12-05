@@ -604,10 +604,7 @@ linuxdvb_ddci_read_thread ( void *arg )
 
   /* Setup poll */
   efd = tvhpoll_create(1);
-  memset(ev, 0, sizeof(ev));
-  ev[0].events             = TVHPOLL_IN;
-  ev[0].fd = ev[0].data.fd = fd;
-  tvhpoll_add(efd, ev, 1);
+  tvhpoll_add1(efd, fd, TVHPOLL_IN, NULL);
 
   /* Allocate memory */
   sbuf_init_fixed(&sb, MINMAX(ddci_rd_thread->lddci_cfg_recv_buffer_sz,

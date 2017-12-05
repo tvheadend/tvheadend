@@ -158,10 +158,7 @@ http_client_shutdown ( http_client_t *hc, int force, int reconnect )
       return;
   }
   if (hc->hc_efd) {
-    tvhpoll_event_t ev;
-    memset(&ev, 0, sizeof(ev));
-    ev.fd       = hc->hc_fd;
-    tvhpoll_rem(hc->hc_efd, &ev, 1);
+    tvhpoll_rem1(hc->hc_efd, hc->hc_fd);
     if (hc->hc_efd == http_poll && !reconnect) {
       pthread_mutex_lock(&http_lock);
       TAILQ_REMOVE(&http_clients, hc, hc_link);
@@ -192,23 +189,15 @@ static void
 http_client_poll_dir ( http_client_t *hc, int in, int out )
 {
   int events = (in ? TVHPOLL_IN : 0) | (out ? TVHPOLL_OUT : 0);
-  tvhpoll_event_t ev;
   if (hc->hc_efd) {
     if (events == 0 && hc->hc_pause) {
       tvhtrace(LS_HTTPC, "%04X: pausing input", shortid(hc));
       if (hc->hc_pevents_pause == 0)
         hc->hc_pevents_pause = hc->hc_pevents;
-      memset(&ev, 0, sizeof(ev));
-      ev.fd       = hc->hc_fd;
-      ev.data.ptr = hc;
-      tvhpoll_rem(hc->hc_efd, &ev, 1);
+      tvhpoll_rem1(hc->hc_efd, hc->hc_fd);
     } else if (hc->hc_pevents != events) {
       tvhtrace(LS_HTTPC, "%04X: add poll for input%s (%x)", shortid(hc), out ? " and output" : "", events);
-      memset(&ev, 0, sizeof(ev));
-      ev.fd       = hc->hc_fd;
-      ev.events   = events | TVHPOLL_IN;
-      ev.data.ptr = hc;
-      tvhpoll_add(hc->hc_efd, &ev, 1);
+      tvhpoll_add1(hc->hc_efd, hc->hc_fd, events | TVHPOLL_IN, hc);
     }
   }
   hc->hc_pevents = events;
@@ -1614,7 +1603,6 @@ void
 http_client_close ( http_client_t *hc )
 {
   http_client_wcmd_t *wcmd;
-  tvhpoll_event_t ev;
 
   if (hc == NULL)
     return;
@@ -1625,9 +1613,7 @@ http_client_close ( http_client_t *hc )
     while (hc->hc_running)
       tvh_cond_wait(&http_cond, &http_lock);
     if (hc->hc_efd) {
-      memset(&ev, 0, sizeof(ev));
-      ev.fd = hc->hc_fd;
-      tvhpoll_rem(hc->hc_efd, &ev, 1);
+      tvhpoll_rem1(hc->hc_efd, hc->hc_fd);
       TAILQ_REMOVE(&http_clients, hc, hc_link);
       hc->hc_efd = NULL;
     }
@@ -1674,8 +1660,6 @@ pthread_t http_client_tid;
 void
 http_client_init ( const char *user_agent )
 {
-  tvhpoll_event_t ev;
-
   http_user_agent = user_agent ? strdup(user_agent) : NULL;
 
   /* Setup list */
@@ -1688,11 +1672,7 @@ http_client_init ( const char *user_agent )
 
   /* Setup poll */
   http_poll   = tvhpoll_create(10);
-  memset(&ev, 0, sizeof(ev));
-  ev.fd       = http_pipe.rd;
-  ev.events   = TVHPOLL_IN;
-  ev.data.ptr = &http_pipe;
-  tvhpoll_add(http_poll, &ev, 1);
+  tvhpoll_add1(http_poll, http_pipe.rd, TVHPOLL_IN, &http_pipe);
 
   /* Setup thread */
   atomic_set(&http_running, 1);
