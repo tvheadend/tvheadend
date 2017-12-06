@@ -598,13 +598,13 @@ int epg_broadcast_set_description
   ( epg_broadcast_t *b, const lang_str_t *str, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_credits
-( epg_broadcast_t *b, htsmsg_t* msg, uint32_t *changed )
+( epg_broadcast_t *b, const htsmsg_t* msg, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_category
-( epg_broadcast_t *b, struct string_list* msg, uint32_t *changed )
+( epg_broadcast_t *b, const struct string_list* msg, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_keyword
-( epg_broadcast_t *b, struct string_list* msg, uint32_t *changed )
+( epg_broadcast_t *b, const struct string_list* msg, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_serieslink
   ( epg_broadcast_t *b, epg_serieslink_t *sl, uint32_t *changed )

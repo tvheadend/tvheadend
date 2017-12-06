@@ -2228,7 +2228,7 @@ int epg_broadcast_set_description
 }
 
 int epg_broadcast_set_credits
-( epg_broadcast_t *b, htsmsg_t *credits, uint32_t *changed )
+( epg_broadcast_t *b, const htsmsg_t *credits, uint32_t *changed )
 {
   if (!b) return 0;
   const int mod = _epg_object_set_htsmsg(b, &b->credits, credits, changed, EPG_CHANGED_CREDITS);
@@ -2265,14 +2265,14 @@ int epg_broadcast_set_credits
 }
 
 int epg_broadcast_set_category
-( epg_broadcast_t *b, string_list_t *msg, uint32_t *changed )
+( epg_broadcast_t *b, const string_list_t *msg, uint32_t *changed )
 {
   if (!b) return 0;
   return _epg_object_set_string_list(b, &b->category, msg, changed, EPG_CHANGED_CATEGORY);
 }
 
 int epg_broadcast_set_keyword
-( epg_broadcast_t *b, string_list_t *msg, uint32_t *changed )
+( epg_broadcast_t *b, const string_list_t *msg, uint32_t *changed )
 {
   if (!b) return 0;
   const int mod = _epg_object_set_string_list(b, &b->keyword, msg, changed, EPG_CHANGED_KEYWORD);
@@ -2463,10 +2463,12 @@ epg_broadcast_t *epg_broadcast_deserialize
 
   if ((sl = string_list_deserialize(m, "keyword"))) {
       *save |= epg_broadcast_set_keyword(ebc, sl, &changes);
+      string_list_destroy(sl);
   }
 
   if ((sl = string_list_deserialize(m, "category"))) {
       *save |= epg_broadcast_set_category(ebc, sl, &changes);
+      string_list_destroy(sl);
   }
 
   /* Series link */
