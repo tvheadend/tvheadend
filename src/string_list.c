@@ -46,7 +46,9 @@ string_list_destroy(string_list_t *l)
   while ((item = RB_FIRST(l))) {
     RB_REMOVE(l, item, h_link);
     free(item->id);
+    free(item);
   }
+  free(l);
 }
 
 static inline int

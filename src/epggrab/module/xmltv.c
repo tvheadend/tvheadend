@@ -734,6 +734,8 @@ static int _xmltv_parse_programme_tags
    */
   if (uri) {
     ee = epg_episode_find_by_uri(uri, mod, 1, &save3, &changes3);
+    free(uri);
+    uri = NULL;
   } else {
     ee = epg_episode_find_by_broadcast(ebc, mod, 1, &save3, &changes3);
   }
