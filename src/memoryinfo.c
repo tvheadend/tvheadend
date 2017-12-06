@@ -23,10 +23,11 @@
 
 struct memoryinfo_list memoryinfo_entries;
 
-static const char *
-service_class_get_title ( idnode_t *self, const char *lang )
+static void
+service_class_get_title
+  ( idnode_t *self, const char *lang, char *dst, size_t dstsize )
 {
-  return ((memoryinfo_t *)self)->my_name;
+  snprintf(dst, dstsize, "%s", ((memoryinfo_t *)self)->my_name);
 }
 
 CLASS_DOC(memoryinfo)

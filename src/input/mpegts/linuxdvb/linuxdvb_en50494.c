@@ -64,18 +64,20 @@
 /* prevention of self raised DiSEqC collisions */
 static pthread_mutex_t linuxdvb_en50494_lock;
 
-static const char *
-linuxdvb_en50494_class_get_title ( idnode_t *o, const char *lang )
+static void
+linuxdvb_en50494_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
 {
-  static const char *title = N_("Unicable I (EN50494)");
-  return tvh_gettext_lang(lang, title);
+  const char *title = N_("Unicable I (EN50494)");
+  snprintf(dst, dstsize, "%s", tvh_gettext_lang(lang, title));
 }
 
-static const char *
-linuxdvb_en50607_class_get_title ( idnode_t *o, const char *lang )
+static void
+linuxdvb_en50607_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
 {
-  static const char *title = N_("Unicable II (EN50607)");
-  return tvh_gettext_lang(lang, title);
+  const char *title = N_("Unicable II (EN50607)");
+  snprintf(dst, dstsize, "%s", tvh_gettext_lang(lang, title));
 }
 
 static htsmsg_t *

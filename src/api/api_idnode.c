@@ -177,7 +177,7 @@ api_idnode_load_by_class0
   idnode_set_t    *is;
   idnode_t        *in;
   htsmsg_t        *l, *e;
-  char ubuf[UUID_HEX_SIZE];
+  char ubuf[UUID_HEX_SIZE], buf[384];
 
   // TODO: this only works if pass as integer
   _enum = htsmsg_get_bool_or_default(args, "enum", 0);
@@ -197,7 +197,7 @@ api_idnode_load_by_class0
       /* Name/UUID only */
       if (_enum) {
         e = htsmsg_create_key_val(idnode_uuid_as_str(in, ubuf),
-                                  idnode_get_title(in, perm->aa_lang_ui));
+                                  idnode_get_title(in, perm->aa_lang_ui, buf, sizeof(buf)));
 
       /* Full record */
       } else {

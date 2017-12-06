@@ -83,15 +83,15 @@ static pthread_t tvhdhomerun_discovery_tid;
 static pthread_mutex_t tvhdhomerun_discovery_lock;
 static tvh_cond_t tvhdhomerun_discovery_cond;
 
-static const char *
-tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
+static void
+tvhdhomerun_device_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
   tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)in;
   char ip[64];
   tcp_get_str_from_ip(&hd->hd_info.ip_address, ip, sizeof(ip));
-  snprintf(prop_sbuf, PROP_SBUF_LEN,
+  snprintf(dst, dstsize,
            "%s - %s", hd->hd_info.friendlyname, ip);
-  return prop_sbuf;
 }
 
 static const void *

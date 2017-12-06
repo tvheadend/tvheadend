@@ -681,14 +681,16 @@ bouquet_class_delete(idnode_t *self)
   bouquet_delete((bouquet_t *)self);
 }
 
-static const char *
-bouquet_class_get_title (idnode_t *self, const char *lang)
+static void
+bouquet_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   bouquet_t *bq = (bouquet_t *)self;
 
   if (bq->bq_comment && bq->bq_comment[0] != '\0')
-    return bq->bq_comment;
-  return bq->bq_name ?: "";
+    snprintf(dst, dstsize, "%s", bq->bq_comment);
+  else
+    snprintf(dst, dstsize, "%s", bq->bq_name ?: "");
 }
 
 /* exported for others */

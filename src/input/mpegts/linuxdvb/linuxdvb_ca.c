@@ -162,7 +162,7 @@ linuxdvb_ca_class_enabled_notify ( void *p, const char *lang )
 #endif
     }
 
-    idnode_notify_title_changed(&lca->lca_id, lang);
+    idnode_notify_title_changed(&lca->lca_id);
   }
 }
 
@@ -175,20 +175,18 @@ linuxdvb_ca_class_high_bitrate_notify ( void *p, const char *lang )
                                  CIPLUS13_DATA_RATE_72_MBPS);
 }
 
-static const char *
-linuxdvb_ca_class_get_title ( idnode_t *in, const char *lang )
+static void
+linuxdvb_ca_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
   linuxdvb_ca_t *lca = (linuxdvb_ca_t *) in;
-  static char buf[256];
   if (!lca->lca_enabled)
-    snprintf(buf, sizeof(buf), "ca%u: disabled", lca->lca_number);
+    snprintf(dst, dstsize, "ca%u: disabled", lca->lca_number);
   else if (lca->lca_state == CA_SLOT_STATE_EMPTY)
-    snprintf(buf, sizeof(buf), "ca%u: slot empty", lca->lca_number);
+    snprintf(dst, dstsize, "ca%u: slot empty", lca->lca_number);
   else
-    snprintf(buf, sizeof(buf), "ca%u: %s (%s)", lca->lca_number,
-           lca->lca_cam_menu_string, lca->lca_state_str);
-
-  return buf;
+    snprintf(dst, dstsize, "ca%u: %s (%s)", lca->lca_number,
+            lca->lca_cam_menu_string, lca->lca_state_str);
 }
 
 static const void *
@@ -529,7 +527,7 @@ linuxdvb_ca_ai_callback(void *arg, uint8_t slot_id, uint16_t session_num,
     snprintf(lca->lca_cam_menu_string, sizeof(lca->lca_cam_menu_string),
              "%.*s", menu_string_len, menu_string);
 
-    idnode_notify_title_changed(&lca->lca_id, NULL);
+    idnode_notify_title_changed(&lca->lca_id);
 
     return 0;
 }
@@ -804,7 +802,7 @@ linuxdvb_ca_monitor ( void *aux )
   if (lca->lca_state != state) {
     tvhnotice(LS_LINUXDVB, "%s: CAM slot %u status changed to %s",
                            lca->lca_name, csi.num, lca->lca_state_str);
-    idnode_notify_title_changed(&lca->lca_id, NULL);
+    idnode_notify_title_changed(&lca->lca_id);
     lca->lca_state = state;
   }
 

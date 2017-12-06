@@ -314,12 +314,11 @@ mpegts_mux_class_delete ( idnode_t *self )
   if (mm->mm_delete) mm->mm_delete(mm, 1);
 }
 
-static const char *
-mpegts_mux_class_get_title ( idnode_t *self, const char *lang )
+static void
+mpegts_mux_class_get_title
+  ( idnode_t *self, const char *lang, char *dst, size_t dstsize )
 {
-  static __thread char buf[256];
-  mpegts_mux_nice_name((mpegts_mux_t*)self, buf, sizeof(buf));
-  return buf;
+  mpegts_mux_nice_name((mpegts_mux_t*)self, dst, dstsize);
 }
 
 static const void *

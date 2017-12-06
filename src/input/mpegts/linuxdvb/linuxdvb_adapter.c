@@ -103,11 +103,12 @@ linuxdvb_adapter_class_get_childs ( idnode_t *in )
   return is;
 }
 
-static const char *
-linuxdvb_adapter_class_get_title ( idnode_t *in, const char *lang )
+static void
+linuxdvb_adapter_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
-  return la->la_name ?: la->la_rootpath;
+  snprintf(dst, dstsize, "%s", la->la_name ?: la->la_rootpath);
 }
 
 static const void *

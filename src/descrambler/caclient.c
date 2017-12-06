@@ -188,15 +188,17 @@ caclient_class_save ( idnode_t *in, char *filename, size_t fsize )
   return c;
 }
 
-static const char *
-caclient_class_get_title ( idnode_t *in, const char *lang )
+static void
+caclient_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
   caclient_t *cac = (caclient_t *)in;
-  if (cac->cac_name && cac->cac_name[0])
-    return cac->cac_name;
-  snprintf(prop_sbuf, PROP_SBUF_LEN,
-           tvh_gettext_lang(lang, N_("CA client %i")), cac->cac_index);
-  return prop_sbuf;
+  if (cac->cac_name && cac->cac_name[0]) {
+    snprintf(dst, dstsize, "%s", cac->cac_name);
+  } else {
+    snprintf(dst, dstsize,
+             tvh_gettext_lang(lang, N_("CA client %i")), cac->cac_index);
+  }
 }
 
 static void
@@ -297,7 +299,7 @@ const idclass_t caclient_class =
       .name     = N_("Client name"),
       .desc     = N_("Name of the client."),
       .off      = offsetof(caclient_t, cac_name),
-      .notify   = idnode_notify_title_changed,
+      .notify   = idnode_notify_title_changed_lang,
     },
     {
       .type     = PT_STR,

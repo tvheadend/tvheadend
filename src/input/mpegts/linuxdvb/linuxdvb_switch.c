@@ -98,13 +98,12 @@ linuxdvb_switch_class_toneburst_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
-static const char *
-linuxdvb_switch_class_get_title ( idnode_t *o, const char *lang )
+static void
+linuxdvb_switch_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
 {
-  static char buf[256];
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
-  snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, N_("Switch: %s")), ld->ld_type);
-  return buf;
+  snprintf(dst, dstsize, tvh_gettext_lang(lang, N_("Switch: %s")), ld->ld_type);
 }
 
 extern const idclass_t linuxdvb_diseqc_class;

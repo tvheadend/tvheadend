@@ -260,6 +260,8 @@ typedef struct capmt {
 
   pthread_t capmt_tid;
 
+  char capmt_name[128];
+
   /* from capmt configuration */
   char *capmt_sockfile;
   int   capmt_port;
@@ -308,7 +310,8 @@ static void capmt_send_client_info(capmt_t *capmt);
 static inline const char *
 capmt_name(capmt_t *capmt)
 {
-  return idnode_get_title(&capmt->cac_id, NULL);
+  return idnode_get_title(&capmt->cac_id, NULL,
+                          capmt->capmt_name, sizeof(capmt->capmt_name));
 }
 
 static inline int
@@ -1922,7 +1925,7 @@ capmt_thread(void *aux)
       d = 60;
     }
 
-    tvhinfo(LS_CAPMT, "%s: Automatic reconnection attempt in in %d seconds", idnode_get_title(&capmt->cac_id, NULL), d);
+    tvhinfo(LS_CAPMT, "%s: Automatic reconnection attempt in in %d seconds", capmt_name(capmt), d);
 
     mono = mclk() + sec2mono(d);
     do {

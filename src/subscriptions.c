@@ -1069,7 +1069,8 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
     if (s->ths_prch != NULL) {
       pro = s->ths_prch->prch_pro;
       if (pro)
-        htsmsg_add_str(m, "profile", idnode_get_title(&pro->pro_id, lang));
+        htsmsg_add_str(m, "profile",
+                       idnode_get_title(&pro->pro_id, lang, buf, sizeof(buf)));
     }
 
   } else if(s->ths_dvrfile != NULL)

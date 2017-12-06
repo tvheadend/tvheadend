@@ -147,13 +147,14 @@ linuxdvb_satconf_class_network_getset(1);
 linuxdvb_satconf_class_network_getset(2);
 linuxdvb_satconf_class_network_getset(3);
 
-static const char *
-linuxdvb_satconf_class_get_title ( idnode_t *p, const char *lang )
+static void
+linuxdvb_satconf_class_get_title
+  ( idnode_t *p, const char *lang, char *dst, size_t dstsize )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)p;
   struct linuxdvb_satconf_type *lst =
     linuxdvb_satconf_type_find(ls->ls_type);
-  return lst ? lst->name : ls->ls_type;
+  snprintf(dst, dstsize, "%s", lst ? lst->name : ls->ls_type);
 }
 
 static void
@@ -1419,10 +1420,11 @@ linuxdvb_satconf_ele_class_rotortype_get ( void *o )
   return &prop_ptr;
 }
 
-static const char *
-linuxdvb_satconf_ele_class_get_title ( idnode_t *o, const char *lang )
+static void
+linuxdvb_satconf_ele_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
 {
-  return ((linuxdvb_satconf_ele_t *)o)->lse_name;
+  snprintf(dst, dstsize, "%s", ((linuxdvb_satconf_ele_t *)o)->lse_name);
 }
 
 static idnode_set_t *
@@ -1487,7 +1489,7 @@ const idclass_t linuxdvb_satconf_ele_class =
       .id       = "displayname",
       .name     = N_("Name"),
       .off      = offsetof(linuxdvb_satconf_ele_t, lse_name),
-      .notify   = idnode_notify_title_changed,
+      .notify   = idnode_notify_title_changed_lang,
     },
     {
       .type     = PT_INT,
@@ -1630,11 +1632,12 @@ linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf )
  * DiseqC
  *****************************************************************************/
 
-static const char *
-linuxdvb_diseqc_class_get_title ( idnode_t *o, const char *lang )
+static void
+linuxdvb_diseqc_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
 {
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
-  return ld->ld_type;
+  snprintf(dst, dstsize, "%s", ld->ld_type);
 }
 
 static void

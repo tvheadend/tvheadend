@@ -2634,8 +2634,9 @@ dvr_entry_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write)
   return 0;
 }
 
-static const char *
-dvr_entry_class_get_title (idnode_t *self, const char *lang)
+static void
+dvr_entry_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   dvr_entry_t *de = (dvr_entry_t *)self;
   const char *s;
@@ -2648,7 +2649,7 @@ dvr_entry_class_get_title (idnode_t *self, const char *lang)
         s = lang_str_get(de->de_desc, NULL);
     }
   }
-  return s;
+  snprintf(dst, dstsize, "%s", s);
 }
 
 static int

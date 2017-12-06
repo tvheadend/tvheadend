@@ -73,13 +73,13 @@ epggrab_module_get_status(epggrab_module_t *mod)
  * Class
  */
 
-static const char *epggrab_mod_class_title(idnode_t *self, const char *lang)
+static void epggrab_mod_class_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   epggrab_module_t *mod = (epggrab_module_t *)self;
   const char *s1 = tvh_gettext_lang(lang, epggrab_module_type(mod));
   const char *s2 = tvh_str_default(mod->name, mod->id);
-  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s: %s", s1, s2);
-  return prop_sbuf;
+  snprintf(dst, dstsize, "%s: %s", s1, s2);
 }
 
 static void

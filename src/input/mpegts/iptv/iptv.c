@@ -84,10 +84,11 @@ iptv_handler_find ( const char *scheme )
  * IPTV input
  * *************************************************************************/
 
-static const char *
-iptv_input_class_get_title ( idnode_t *self, const char *lang )
+static void
+iptv_input_class_get_title
+  ( idnode_t *self, const char *lang, char *dst, size_t dstsize )
 {
-  return tvh_gettext_lang(lang, N_("IPTV"));
+  snprintf(dst, dstsize, "%s", tvh_gettext_lang(lang, N_("IPTV")));
 }
 
 extern const idclass_t mpegts_input_class;
@@ -516,6 +517,7 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
   iptv_network_t *in = (iptv_network_t*)im->mm_network;
   mpegts_mux_instance_t *mmi;
   mpegts_pcr_t pcr;
+  char buf[384];
   int64_t s64;
 
   pcr.pcr_first = PTS_UNSET;
@@ -528,7 +530,7 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
         in->in_bps > in->in_max_bandwidth * 1024) {
       if (!in->in_bw_limited) {
         tvhinfo(LS_IPTV, "%s bandwidth limited exceeded",
-                idnode_get_title(&in->mn_id, NULL));
+                idnode_get_title(&in->mn_id, NULL, buf, sizeof(buf)));
         in->in_bw_limited = 1;
       }
     }

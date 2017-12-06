@@ -96,10 +96,12 @@ service_class_channel_set
                           service_mapper_create);
 }
 
-static const char *
-service_class_get_title ( idnode_t *self, const char *lang )
+static void
+service_class_get_title
+  ( idnode_t *self, const char *lang, char *dst, size_t dstsize )
 {
-  return service_get_full_channel_name((service_t *)self);
+  snprintf(dst, dstsize, "%s",
+           service_get_full_channel_name((service_t *)self) ?: "");
 }
 
 static const void *

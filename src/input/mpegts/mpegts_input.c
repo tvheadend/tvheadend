@@ -57,13 +57,12 @@ mpegts_input_dbus_notify(mpegts_input_t *mi, int64_t subs)
  * Class definition
  * *************************************************************************/
 
-static const char *
-mpegts_input_class_get_title ( idnode_t *in, const char *lang )
+static void
+mpegts_input_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
-  static char buf[512];
   mpegts_input_t *mi = (mpegts_input_t*)in;
-  mi->mi_display_name(mi, buf, sizeof(buf));
-  return buf;
+  mi->mi_display_name(mi, dst, dstsize);
 }
 
 const void *
@@ -121,11 +120,15 @@ mpegts_input_class_network_rend ( void *obj, const char *lang )
 {
   char *str;
   mpegts_network_link_t *mnl;  
+  mpegts_network_t *mn;
   mpegts_input_t *mi = obj;
   htsmsg_t        *l = htsmsg_create_list();
+  char buf[384];
 
-  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
-    htsmsg_add_str(l, NULL, idnode_get_title(&mnl->mnl_network->mn_id, lang));
+  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link) {
+    mn = mnl->mnl_network;
+    htsmsg_add_str(l, NULL, idnode_get_title(&mn->mn_id, lang, buf, sizeof(buf)));
+  }
 
   str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
@@ -197,7 +200,7 @@ mpegts_input_class_linked_enum( void * self, const char *lang )
 {
   mpegts_input_t *mi = self, *mi2;
   tvh_input_t *ti;
-  char ubuf[UUID_HEX_SIZE];
+  char ubuf[UUID_HEX_SIZE], buf[384];
   htsmsg_t *m = htsmsg_create_list();
   htsmsg_t *e = htsmsg_create_key_val("", tvh_gettext_lang(lang, N_("Not linked")));
   htsmsg_add_msg(m, NULL, e);
@@ -206,7 +209,7 @@ mpegts_input_class_linked_enum( void * self, const char *lang )
       mi2 = (mpegts_input_t *)ti;
       if (mi2 != mi) {
         e = htsmsg_create_key_val(idnode_uuid_as_str(&ti->ti_id, ubuf),
-                                  idnode_get_title(&mi2->ti_id, lang));
+                                  idnode_get_title(&mi2->ti_id, lang, buf, sizeof(buf)));
         htsmsg_add_msg(m, NULL, e);
       }
   }
@@ -271,7 +274,7 @@ const idclass_t mpegts_input_class =
       .name     = N_("Name"),
       .desc     = N_("Name of the tuner/adapter."),
       .off      = offsetof(mpegts_input_t, mi_name),
-      .notify   = idnode_notify_title_changed,
+      .notify   = idnode_notify_title_changed_lang,
     },
     {
       .type     = PT_BOOL,

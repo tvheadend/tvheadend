@@ -682,13 +682,16 @@ dvr_config_class_profile_rend(void *o, const char *lang)
   return NULL;
 }
 
-static const char *
-dvr_config_class_get_title (idnode_t *self, const char *lang)
+static void
+dvr_config_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   dvr_config_t *cfg = (dvr_config_t *)self;
-  if (!dvr_config_is_default(cfg))
-    return cfg->dvr_config_name;
-  return N_("(Default profile)");
+  if (!dvr_config_is_default(cfg)) {
+    snprintf(dst, dstsize, "%s", cfg->dvr_config_name);
+  } else {
+    snprintf(dst, dstsize, "%s", tvh_gettext_lang(lang, N_("(Default profile)")));
+  }
 }
 
 static int

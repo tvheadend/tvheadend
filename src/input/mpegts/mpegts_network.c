@@ -41,15 +41,14 @@ mpegts_network_class_save
   return NULL;
 }
 
-static const char *
-mpegts_network_class_get_title ( idnode_t *in, const char *lang )
+static void
+mpegts_network_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
-  static char buf[256];
   mpegts_network_t *mn = (mpegts_network_t*)in;
-  *buf = 0;
+  *dst = 0;
   if (mn->mn_display_name)
-    mn->mn_display_name(mn, buf, sizeof(buf));
-  return buf;
+    mn->mn_display_name(mn, dst, dstsize);
 }
 
 static const void *
@@ -176,7 +175,7 @@ const idclass_t mpegts_network_class =
       .name     = N_("Network name"),
       .desc     = N_("Name of the network."),
       .off      = offsetof(mpegts_network_t, mn_network_name),
-      .notify   = idnode_notify_title_changed,
+      .notify   = idnode_notify_title_changed_lang,
     },
     {
       .type     = PT_STR,

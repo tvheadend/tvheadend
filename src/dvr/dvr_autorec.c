@@ -506,8 +506,9 @@ dvr_autorec_entry_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write
   return 0;
 }
 
-static const char *
-dvr_autorec_entry_class_get_title (idnode_t *self, const char *lang)
+static void
+dvr_autorec_entry_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
   const char *s = "";
@@ -515,7 +516,7 @@ dvr_autorec_entry_class_get_title (idnode_t *self, const char *lang)
     s = dae->dae_name;
   else if (dae->dae_comment && dae->dae_comment[0] != '\0')
     s = dae->dae_comment;
-  return s;
+  snprintf(dst, dstsize, "%s", s);
 }
 
 static int

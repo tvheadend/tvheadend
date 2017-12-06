@@ -215,13 +215,6 @@ esfilter_class_save(idnode_t *self, char *filename, size_t fsize)
   return c;
 }
 
-static const char *
-esfilter_class_get_title(idnode_t *self, const char *lang)
-{
-  esfilter_t *esf = (esfilter_t *)self;
-  return idnode_uuid_as_str(&esf->esf_id, prop_sbuf);
-}
-
 static void
 esfilter_class_delete(idnode_t *self)
 {
@@ -594,7 +587,6 @@ const idclass_t esfilter_class = {
   .ic_event      = "esfilter",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = esfilter_class_save,
-  .ic_get_title  = esfilter_class_get_title,
   .ic_delete     = esfilter_class_delete,
   .ic_moveup     = esfilter_class_moveup,
   .ic_movedown   = esfilter_class_movedown,

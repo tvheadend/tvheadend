@@ -524,9 +524,27 @@ comet_mailbox_rewrite_str(htsmsg_t *m, const char *key, const char *lang)
 }
 
 static void
+comet_mailbox_rewrite_title(htsmsg_t *m, const char *lang)
+{
+  idnode_t *in;
+  const char *s = htsmsg_get_str(m, "uuid");
+  char buf[384];
+  if (s) {
+    idnode_lock();
+    in = idnode_find(s, NULL, NULL);
+    if (in)
+      htsmsg_set_str(m, "text", idnode_get_title(in, lang, buf, sizeof(buf)));
+    idnode_unlock();
+  }
+}
+
+static void
 comet_mailbox_rewrite_msg(int rewrite, htsmsg_t *m, const char *lang)
 {
   switch (rewrite) {
+  case NOTIFY_REWRITE_TITLE:
+    comet_mailbox_rewrite_title(m, lang);
+    break;
   case NOTIFY_REWRITE_SUBSCRIPTIONS:
     comet_mailbox_rewrite_str(m, "state", lang);
     break;

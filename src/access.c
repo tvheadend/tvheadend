@@ -1213,23 +1213,25 @@ access_entry_class_movedown(idnode_t *self)
   }
 }
 
-static const char *
-access_entry_class_get_title (idnode_t *self, const char *lang)
+static void
+access_entry_class_get_title
+  (idnode_t *self, const char *lang, char *buf, size_t dstsize)
 {
   access_entry_t *ae = (access_entry_t *)self;
-  const char *s = ae->ae_username;
 
   if (ae->ae_comment && ae->ae_comment[0] != '\0') {
     if (ae->ae_username && ae->ae_username[0]) {
-      snprintf(prop_sbuf, PROP_SBUF_LEN, "%s (%s)", ae->ae_username, ae->ae_comment);
-      s = prop_sbuf;
+      snprintf(buf, dstsize, "%s (%s)", ae->ae_username, ae->ae_comment);
+      return;
     } else {
-      s = ae->ae_comment;
+      snprintf(buf, dstsize, "%s", ae->ae_comment);
+      return;
     }
   }
-  if (s == NULL || *s == '\0')
-    s = "";
-  return s;
+  if (ae->ae_username && ae->ae_username[0] != '\0')
+    snprintf(buf, dstsize, "%s", ae->ae_username);
+  else
+    buf[0] = '\0';
 }
 
 static int
@@ -1966,14 +1968,17 @@ passwd_entry_class_delete(idnode_t *self)
   passwd_entry_destroy(pw, 1);
 }
 
-static const char *
-passwd_entry_class_get_title (idnode_t *self, const char *lang)
+static void
+passwd_entry_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   passwd_entry_t *pw = (passwd_entry_t *)self;
 
-  if (pw->pw_comment && pw->pw_comment[0] != '\0')
-    return pw->pw_comment;
-  return pw->pw_username ?: "";
+  if (pw->pw_comment && pw->pw_comment[0] != '\0') {
+    snprintf(dst, dstsize, "%s", pw->pw_comment);
+  } else {
+    snprintf(dst, dstsize, "%s", pw->pw_username ?: "");
+  }
 }
 
 static int
@@ -2136,14 +2141,16 @@ ipblock_entry_class_save(idnode_t *self, char *filename, size_t fsize)
   return c;
 }
 
-static const char *
-ipblock_entry_class_get_title (idnode_t *self, const char *lang)
+static void
+ipblock_entry_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   ipblock_entry_t *ib = (ipblock_entry_t *)self;
 
   if (ib->ib_comment && ib->ib_comment[0] != '\0')
-    return ib->ib_comment;
-  return N_("IP blocking");
+    snprintf(dst, dstsize, "%s", ib->ib_comment);
+  else
+    snprintf(dst, dstsize, "%s", tvh_gettext_lang(lang, N_("IP blocking")));
 }
 
 static void

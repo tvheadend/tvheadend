@@ -171,14 +171,12 @@ satip_device_class_get_childs ( idnode_t *in )
   return is;
 }
 
-static const char *
-satip_device_class_get_title( idnode_t *in, const char *lang )
+static void
+satip_device_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
-  static char buf[256];
   satip_device_t *sd = (satip_device_t *)in;
-  snprintf(buf, sizeof(buf),
-           "%s - %s", sd->sd_info.friendlyname, sd->sd_info.addr);
-  return buf;
+  snprintf(dst, dstsize, "%s - %s", sd->sd_info.friendlyname, sd->sd_info.addr);
 }
 
 static const char *satip_tunercfg_tab[] = {

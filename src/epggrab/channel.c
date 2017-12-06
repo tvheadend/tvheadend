@@ -539,14 +539,14 @@ epggrab_channel_is_ota ( epggrab_channel_t *ec )
  * Class
  */
 
-static const char *
-epggrab_channel_class_get_title(idnode_t *self, const char *lang)
+static void
+epggrab_channel_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   epggrab_channel_t *ec = (epggrab_channel_t*)self;
 
-  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s: %s (%s)",
+  snprintf(dst, dstsize, "%s: %s (%s)",
            ec->name ?: ec->id, ec->id, ec->mod->name);
-  return prop_sbuf;
 }
 
 static htsmsg_t *

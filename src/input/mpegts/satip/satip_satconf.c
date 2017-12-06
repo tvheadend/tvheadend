@@ -317,10 +317,11 @@ satip_satconf_class_network_rend( void *o, const char *lang )
   return str;
 }
 
-static const char *
-satip_satconf_class_get_title ( idnode_t *o, const char *lang )
+static void
+satip_satconf_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t size )
 {
-  return ((satip_satconf_t *)o)->sfc_name;
+  snprintf(dst, size, "%s", ((satip_satconf_t *)o)->sfc_name);
 }
 
 static void
@@ -362,7 +363,7 @@ const idclass_t satip_satconf_class =
       .name     = N_("Name"),
       .desc     = N_("Set the display name."),
       .off      = offsetof(satip_satconf_t, sfc_name),
-      .notify   = idnode_notify_title_changed,
+      .notify   = idnode_notify_title_changed_lang,
     },
     {
       .type     = PT_INT,

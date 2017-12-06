@@ -167,14 +167,16 @@ profile_class_save ( idnode_t *in, char *filename, size_t fsize )
   return c;
 }
 
-static const char *
-profile_class_get_title ( idnode_t *in, const char *lang )
+static void
+profile_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
   profile_t *pro = (profile_t *)in;
-  if (pro->pro_name && pro->pro_name[0])
-    return pro->pro_name;
-  snprintf(prop_sbuf, sizeof(prop_sbuf), "%s", idclass_get_caption(in->in_class, lang));
-  return prop_sbuf;
+  if (pro->pro_name && pro->pro_name[0]) {
+    snprintf(dst, dstsize, "%s", pro->pro_name);
+  } else {
+    snprintf(dst, dstsize, "%s", idclass_get_caption(in->in_class, lang));
+  }
 }
 
 static void
@@ -331,7 +333,7 @@ const idclass_t profile_class =
       .desc     = N_("The name of the profile."),
       .off      = offsetof(profile_t, pro_name),
       .get_opts = profile_class_name_opts,
-      .notify   = idnode_notify_title_changed,
+      .notify   = idnode_notify_title_changed_lang,
       .group    = 1
     },
     {

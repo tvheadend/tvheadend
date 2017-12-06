@@ -79,7 +79,7 @@ struct idclass {
 
   /* Callbacks */
   idnode_set_t   *(*ic_get_childs) (idnode_t *self);
-  const char     *(*ic_get_title)  (idnode_t *self, const char *lang);
+  void            (*ic_get_title)  (idnode_t *self, const char *lang, char *dst, size_t dstsize);
   void            (*ic_changed)    (idnode_t *self);
   htsmsg_t       *(*ic_save)       (idnode_t *self, char *filename, size_t fsize);
   void            (*ic_load)       (idnode_t *self, htsmsg_t *conf);
@@ -194,10 +194,16 @@ typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;
 
 extern idnode_t tvhlog_conf;
 extern const idclass_t tvhlog_conf_class;
+extern pthread_mutex_t idnode_mutex;
 
 void idnode_boot(void);
 void idnode_init(void);
 void idnode_done(void);
+
+static inline void idnode_lock(void)
+  { pthread_mutex_lock(&idnode_mutex); }
+static inline void idnode_unlock(void)
+  { pthread_mutex_unlock(&idnode_mutex); }
 
 #define IDNODE_SHORT_UUID (1<<0)
 
@@ -207,7 +213,7 @@ void idnode_unlink(idnode_t *in);
 uint32_t      idnode_get_short_uuid (const idnode_t *in);
 const char   *idnode_uuid_as_str  (const idnode_t *in, char *buf);
 idnode_set_t *idnode_get_childs   (idnode_t *in);
-const char   *idnode_get_title    (idnode_t *in, const char *lang);
+const char   *idnode_get_title    (idnode_t *in, const char *lang, char *dst, size_t dstsize);
 int           idnode_is_leaf      (idnode_t *in);
 int           idnode_is_instance  (idnode_t *in, const idclass_t *idc);
 void          idnode_delete       (idnode_t *in);
@@ -223,7 +229,11 @@ idnode_set_t *idnode_find_all(const idclass_t *idc, const idnodes_rb_t *nodes);
 
 void idnode_notify (idnode_t *in, const char *action);
 void idnode_notify_changed (void *in);
-void idnode_notify_title_changed (void *in, const char *lang);
+void idnode_notify_title_changed (void *in);
+void idnode_notify_title_changed_lang (void *in, const char *lang);
+
+void idnode_lnotify_changed (void *in);
+void idnode_lnotify_title_changed (void *in);
 
 void idclass_register ( const idclass_t *idc );
 const idclass_t *idclass_find ( const char *name );

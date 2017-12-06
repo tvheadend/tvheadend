@@ -36,6 +36,8 @@ typedef struct constcw_service {
 typedef struct constcw {
   caclient_t;
 
+  char     ccw_name[128];
+
   /* From configuration */
   uint16_t ccw_caid;           /* CA ID */
   uint32_t ccw_providerid;     /* CA provider ID */
@@ -52,7 +54,8 @@ typedef struct constcw {
 static const char *
 constcw_name(constcw_t *ccw)
 {
-  return idnode_get_title(&ccw->cac_id, NULL);
+  return idnode_get_title(&ccw->cac_id, NULL,
+                          ccw->ccw_name, sizeof(ccw->ccw_name));
 }
 
 /**

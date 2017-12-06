@@ -217,10 +217,13 @@ channel_class_get_icon ( void *obj )
   return &prop_ptr;
 }
 
-static const char *
-channel_class_get_title ( idnode_t *self, const char *lang )
+static void
+channel_class_get_title
+  ( idnode_t *self, const char *lang, char *dst, size_t dstsize )
 {
-  return channel_get_name((channel_t*)self, tvh_gettext_lang(lang, channel_blank_name));
+  const char *s = channel_get_name((channel_t*)self,
+                                   tvh_gettext_lang(lang, channel_blank_name));
+  snprintf(dst, dstsize, "%s", s);
 }
 
 /* exported for others */
@@ -1500,11 +1503,12 @@ channel_tag_class_delete(idnode_t *self)
   channel_tag_destroy((channel_tag_t *)self, 1);
 }
 
-static const char *
-channel_tag_class_get_title (idnode_t *self, const char *lang)
+static void
+channel_tag_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   channel_tag_t *ct = (channel_tag_t *)self;
-  return ct->ct_name ?: "";
+  snprintf(dst, dstsize, "%s", ct->ct_name ?: "");
 }
 
 static void
