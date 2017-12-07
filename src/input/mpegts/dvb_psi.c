@@ -2230,11 +2230,18 @@ psi_desc_ca(mpegts_table_t *mt, mpegts_service_t *t, const uint8_t *buffer, int 
   int r = 0;
   int i;
   uint32_t provid = 0;
-  uint16_t caid = extract_2byte(buffer);
-  uint16_t pid = extract_pid(buffer + 2);
+  uint16_t caid, pid;
+
+  if (size < 4)
+    return 0;
+
+  caid = extract_2byte(buffer);
+  pid = extract_pid(buffer + 2);
 
   switch (caid & 0xFF00) {
   case 0x0100: // SECA/Mediaguard
+    if (size < 6)
+      return 0;
     provid = extract_2byte(buffer + 4);
 
     //Add extra providers, if any
