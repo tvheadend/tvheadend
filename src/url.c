@@ -59,7 +59,8 @@ urlrecompose( url_t *url )
 {
   size_t len;
   char *raw, port[16];
-  const int auth = url->user && url->pass;
+  const int auth = url->user && url->user[0] &&
+                   url->pass && url->pass[0];
 
   len = (url->scheme ? strlen(url->scheme) : 0) + 4 +
         (auth ? (strlen(url->user) + strlen(url->pass) + 2) : 0) +
