@@ -1109,6 +1109,7 @@ dvb_pmt_callback
   mpegts_psi_table_state_t *st  = NULL;
 
   /* Start */
+  if (len < 2) return -1;
   sid = extract_svcid(ptr);
   r   = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                         tableid, sid, 9, &st, &sect, &last, &ver);
@@ -1447,6 +1448,7 @@ dvb_nit_callback
   dvb_bat_id_t *bi = NULL;
 
   /* Net/Bat ID */
+  if (len < 2) return -1;
   nbid = extract_2byte(ptr);
 
   /* Begin */
@@ -1779,6 +1781,7 @@ dvb_sdt_callback
   mpegts_psi_table_state_t *st  = NULL;
 
   /* Begin */
+  if (len < 8) return -1;
   tsid    = extract_onid(ptr);
   onid    = extract_tsid(ptr + 5);
   extraid = ((int)onid) << 16 | tsid;
@@ -1840,6 +1843,7 @@ atsc_vct_callback
   if (tableid != 0xc8 && tableid != 0xc9) return -1;
 
   /* Extra ID */
+  if (len < 2) return -1;
   tsid    = extract_tsid(ptr);
   extraid = tsid;
 
@@ -1953,6 +1957,7 @@ atsc_stt_callback
   if (tableid != DVB_ATSC_STT_BASE) return -1;
 
   /* Extra ID */
+  if (len < 2) return -1;
   extraid = extract_2byte(ptr);
 
   /* Begin */
@@ -2134,6 +2139,7 @@ dvb_fs_sdt_callback
   mpegts_psi_table_state_t *st = NULL;
 
   /* Fastscan ID */
+  if (len < 2) return -1;
   nbid = extract_2byte(ptr);
 
   /* Begin */
