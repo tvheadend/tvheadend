@@ -454,8 +454,8 @@ comet_mailbox_ws(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   pthread_mutex_lock(&comet_mutex);
-  if (atomic_get(&comet_running))
-    cmb->cmb_refcount--;
+  assert(cmb->cmb_refcount > 0);
+  cmb->cmb_refcount--;
   cmb->cmb_last_used = mclk();
   pthread_mutex_unlock(&comet_mutex);
 
