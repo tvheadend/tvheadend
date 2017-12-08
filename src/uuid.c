@@ -174,6 +174,7 @@ uuid_set_add ( tvh_uuid_set_t *us, const tvh_uuid_t *u )
     nu = realloc(us->us_array, sizeof(*u) * (us->us_size + us->us_alloc_chunk));
     if (nu == NULL)
       return NULL;
+    us->us_array = nu;
     us->us_size += us->us_alloc_chunk;
   }
   nu = &us->us_array[us->us_count++];
@@ -188,6 +189,8 @@ uuid_set_free ( tvh_uuid_set_t *us )
   if (us) {
     free(us->us_array);
   }
+  us->us_size = 0;
+  us->us_count = 0;
 }
 
 /* Destroy uuid set */
