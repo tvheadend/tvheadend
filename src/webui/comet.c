@@ -490,8 +490,6 @@ comet_done(void)
 
   pthread_mutex_lock(&comet_mutex);
   atomic_set(&comet_running, 0);
-  while ((cmb = LIST_FIRST(&mailboxes)) != NULL)
-    cmb_destroy(cmb);
   tvh_cond_signal(&comet_cond, 1);
   pthread_mutex_unlock(&comet_mutex);
 
@@ -503,6 +501,9 @@ comet_done(void)
   }
 
   tvh_cond_destroy(&comet_cond);
+
+  while ((cmb = LIST_FIRST(&mailboxes)) != NULL)
+    cmb_destroy(cmb);
 
   pthread_mutex_lock(&global_lock);
   memoryinfo_unregister(&comet_memoryinfo);
