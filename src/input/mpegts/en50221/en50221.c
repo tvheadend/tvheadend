@@ -462,8 +462,7 @@ en50221_slot_initiate_connection(en50221_slot_t *cil)
 static int en50221_slot_connection_initiated(en50221_slot_t *cil)
 {
   cil->cil_initiate_connection = 0;
-  return en50221_transport_pdu_write(cil->cil_transport, cil, cil->cil_tcnum,
-                                     CICAM_T_RCV, NULL, 0);
+  return 0;
 }
 
 static en50221_app_t *
