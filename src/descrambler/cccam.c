@@ -1111,7 +1111,7 @@ cccam_send_cli_data(cccam_t *cccam)
   memcpy(buf + 20, cccam->cccam_nodeid, 8);
   buf[28] = 0; // TODO: wantemus = 1;
   memcpy(buf + 29, cccam_version_str[cccam->cccam_version], 32);
-  memcpy(buf + 61, "tvh", 32); // build number (ascii)
+  memcpy(buf + 61, "tvh", 3); // build number (ascii)
   cccam_send_msg(cccam, MSG_CLI_DATA, buf, 20 + 8 + 1 + 64, 0, 0, 0);
 }
 
