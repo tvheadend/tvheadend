@@ -107,7 +107,7 @@ int en50221_capmt_build
    const uint8_t *pmt, size_t pmtlen,
    uint8_t **capmt, size_t *capmtlen)
 {
-  uint8_t *d, *x, *y, dtag, dlen, cmd_id;
+  uint8_t *d = NULL, *x, *y, dtag, dlen, cmd_id;
   const uint8_t *p;
   uint16_t l, caid, pid;
   size_t tl;
@@ -224,7 +224,7 @@ int en50221_capmt_build_query
   (const uint8_t *capmt, size_t capmtlen,
    uint8_t **dst, size_t *dstlen)
 {
-  uint8_t *d, *x;
+  uint8_t *d = NULL, *x;
   uint16_t l;
   size_t tl;
   const uint8_t *p, *n;
