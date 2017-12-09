@@ -475,6 +475,10 @@ api_epg_grid
 
   epg_query_free(&eq);
   free(lang);
+  if (eq.lang)        free(eq.lang);
+  if (eq.stitle)      free(eq.stitle);
+  if (eq.channel)     free(eq.channel);
+  if (eq.channel_tag) free(eq.channel_tag);
 
   /* Build response */
   *resp = htsmsg_create_map();
