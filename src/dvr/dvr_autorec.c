@@ -182,9 +182,11 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   }
 
   if(dae->dae_btype != DVR_AUTOREC_BTYPE_ALL) {
-    if (dae->dae_btype == DVR_AUTOREC_BTYPE_NEW && e->is_repeat)
+    if (dae->dae_btype == DVR_AUTOREC_BTYPE_NEW_OR_UNKNOWN && e->is_repeat)
       return 0;
-    if (dae->dae_btype == DVR_AUTOREC_BTYPE_REPEAT && e->is_repeat == 0)
+    else if (dae->dae_btype == DVR_AUTOREC_BTYPE_NEW && !e->is_new)
+      return 0;
+    else if (dae->dae_btype == DVR_AUTOREC_BTYPE_REPEAT && e->is_repeat == 0)
       return 0;
   }
 
@@ -1046,6 +1048,8 @@ dvr_autorec_entry_class_btype_list ( void *o, const char *lang )
     { N_("Any"),
         DVR_AUTOREC_BTYPE_ALL },
     { N_("New / premiere / unknown"),
+        DVR_AUTOREC_BTYPE_NEW_OR_UNKNOWN },
+    { N_("New / premiere"),
         DVR_AUTOREC_BTYPE_NEW },
     { N_("Repeated"),
         DVR_AUTOREC_BTYPE_REPEAT },
