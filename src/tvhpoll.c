@@ -198,7 +198,6 @@ int tvhpoll_wait
 #if ENABLE_EPOLL
   nfds = epoll_wait(tp->fd, tp->ev, num, ms);
   for (i = 0; i < nfds; i++) {
-    evs[i].fd       = tp->ev[i].data.fd;
     evs[i].data.u64 = tp->ev[i].data.u64;
     evs[i].events   = 0;
     if (tp->ev[i].events & EPOLLIN)  evs[i].events |= TVHPOLL_IN;
