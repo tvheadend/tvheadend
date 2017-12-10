@@ -625,7 +625,6 @@ linuxdvb_ddci_read_thread ( void *arg )
 
     nfds = tvhpoll_wait(efd, ev, 1, 150);
     if (nfds <= 0) continue;
-    assert(ev[0].data.fd == fd);
 
     /* Read */
     errno = 0;
