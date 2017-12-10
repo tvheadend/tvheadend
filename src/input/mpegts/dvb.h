@@ -26,6 +26,9 @@
 #ifndef __TVH_DVB_SUPPORT_H__
 #define __TVH_DVB_SUPPORT_H__
 
+#include "queue.h"
+#include "redblack.h"
+
 struct mpegts_table;
 struct mpegts_table_state;
 struct mpegts_network;

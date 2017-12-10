@@ -22,6 +22,7 @@
 #include <time.h>
 #include "tvhlog.h"
 #include "en50221.h"
+#include "input/mpegts/dvb.h"
 #include "descrambler/caid.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
@@ -460,20 +461,6 @@ en50221_app_mmi_destroy
   app->cia_enquiry = NULL;
 }
 
-static void
-strcopy(char *dst, const uint8_t *p, size_t l)
-{
-  /* FIXME: use intlconv here for the utf8 conversion? */
-  for (; l > 0 && (*p < ' ' || *p > 0x7f); p++, l--);
-  for (; l > 0; p++, l--) {
-    if (*p == 0x8a)
-      *(dst++) = '\n';
-    else if (*p >= ' ' && *p < 0x80)
-      *(dst++) = *p;
-  }
-  *dst = '\0';
-}
-
 static int
 getmenutext
   (en50221_app_mmi_t *app, const char *key, int list, const uint8_t **_p, size_t *_l)
@@ -501,9 +488,8 @@ getmenutext
   if (r < 0)
     return r;
   if (l2 > 0) {
-    txt = alloca(l2 + 1);
-    strcopy(txt, p2, l2);
-    if (txt[0]) {
+    txt = alloca(l2 * 2 + 1);
+    if (dvb_get_string(txt, l2 * 2 + 1, p2, l2, NULL, NULL) > 0 && txt[0]) {
       if (list) {
         c = htsmsg_get_list(app->cia_menu, key);
         if (c == NULL) {
@@ -518,8 +504,8 @@ getmenutext
       }
     }
   }
-  *_p = p2 + l;
-  *_l = l - (p2 - p);
+  *_p = p2 + l2;
+  *_l = l - l2 - (p2 - p);
   return 0;
 }
 
@@ -571,9 +557,9 @@ en50221_app_mmi_handle
         htsmsg_add_bool(app->cia_enquiry, "blind", 1);
       if (data[1]) /* expected length */
         htsmsg_add_s64(app->cia_enquiry, "explen", data[1]);
-      txt = alloca(datalen - 2 + 1);
-      strcopy(txt, data + 2, datalen - 2);
-      if (txt[0])
+      txt = alloca(datalen * 2 + 1);
+      if (dvb_get_string(txt, datalen * 2 + 1, data + 2, datalen - 2,
+                         NULL, NULL) > 0 && txt[0])
         htsmsg_add_str(app->cia_enquiry, "text", txt);
       tvhtrace(LS_EN50221, "%s: enquiry data %02x %02x '%s'",
                            app->cia_name, data[0], data[1], txt);
