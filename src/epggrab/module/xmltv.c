@@ -380,7 +380,7 @@ static int _xmltv_parse_date_finished
           year_buf[5] = 0;
           const uint16_t year = atoi(year_buf);
           /* Sanity check the year before copying it over. */
-          if (year && year > 1800 && year < 2500) {
+          if (year > 1800 && year < 2500) {
               return epg_episode_set_copyright_year(ee, year, changes);
           }
       }
