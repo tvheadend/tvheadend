@@ -107,7 +107,7 @@ int en50221_capmt_build
    const uint8_t *pmt, size_t pmtlen,
    uint8_t **capmt, size_t *capmtlen)
 {
-  uint8_t *d = NULL, *x, *y, dtag, dlen, cmd_id;
+  uint8_t *d, *x, *y, dtag, dlen, cmd_id;
   const uint8_t *p;
   uint16_t l, caid, pid;
   size_t tl;
@@ -224,13 +224,13 @@ int en50221_capmt_build_query
   (const uint8_t *capmt, size_t capmtlen,
    uint8_t **dst, size_t *dstlen)
 {
-  uint8_t *d = NULL, *x;
+  uint8_t *d, *x;
   uint16_t l;
   size_t tl;
   const uint8_t *p, *n;
 
   if (capmtlen < 6)
-    goto reterr;
+    return -EINVAL;
   l = extract_len12(capmt + 4);
   if (l + 6 > capmtlen)
     return -EINVAL;
@@ -240,22 +240,24 @@ int en50221_capmt_build_query
   
   p  = capmt + 6;
   n  = p + l;
-  tl = capmtlen - l + 6;
+  tl = capmtlen - l - 6;
 
   if (l > 0) {
     x = d + (p - capmt);
     x[0] = EN50221_CAPMT_CMD_QUERY;
   }
-    
+
   while (tl >= 5) {
     l = extract_len12(n + 3);
+    if (l + 5 > tl)
+      return -EINVAL;
     if (l > 0) {
       if (l < 7)
         goto reterr;
       x = d + (n - capmt);
       x[5] = EN50221_CAPMT_CMD_QUERY;
     }
-    p  += 5 + l;
+    n  += 5 + l;
     tl -= 5 + l;
   }
   if (tl)

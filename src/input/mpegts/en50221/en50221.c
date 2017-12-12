@@ -652,7 +652,7 @@ en50221_slot_monitor(en50221_slot_t *cil, int64_t clock)
   int r;
 
   LIST_FOREACH(cia, &cil->cil_apps, cia_link) {
-    if (cil->cil_monitor_read + ms2mono(300) < mclk()) {
+    if (cil->cil_monitor_read + ms2mono(500) < mclk()) {
       tvherror(LS_EN50221, "%s: communication stalled for more than 500ms",
                cil->cil_name);
       return -ENXIO;
