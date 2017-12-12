@@ -77,6 +77,7 @@ ca_slot_state2str(ca_slot_state_t v)
 
 typedef enum {
   CA_WRITE_CMD_CAPMT = 0,
+  CA_WRITE_CMD_CAPMT_QUERY,
   CA_WRITE_CMD_PCMCIA_RATE,
 } ca_write_cmd_t;
 
@@ -180,6 +181,18 @@ static void
 linuxdvb_ca_close_fd( linuxdvb_transport_t *lcat, int reset )
 {
   const int fd = lcat->lcat_ca_fd;
+  linuxdvb_ca_t *lca;
+  linuxdvb_ca_write_t *lcw;
+
+  pthread_mutex_lock(&linuxdvb_capmt_mutex);
+  LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
+    while ((lcw = TAILQ_FIRST(&lca->lca_write_queue)) != NULL) {
+      TAILQ_REMOVE(&lca->lca_write_queue, lcw, lcw_link);
+      free(lcw);
+    }
+  }
+  pthread_mutex_unlock(&linuxdvb_capmt_mutex);
+
   if (fd < 0)
     return;
   if (ioctl(fd, CA_RESET, NULL))
@@ -202,14 +215,22 @@ linuxdvb_ca_process_cmd
   ( linuxdvb_ca_t *lca, linuxdvb_ca_write_t *lcw, en50221_slot_t *slot )
 {
   int r = 0;
+  int interval = lca->lca_capmt_interval;
 
   switch (lcw->cmd) {
+  case CA_WRITE_CMD_CAPMT_QUERY:
+    interval = lca->lca_capmt_query_interval;
+    /* Fall thru */
   case CA_WRITE_CMD_CAPMT:
+    if (lca->lca_capmt_blocked >= mclk())
+      return 1;
     if (lcw->len > 0) {
       r = en50221_send_capmt(slot, lcw->data, lcw->len);
       if (r < 0)
-        tvherror(LS_EN50221, "%s: unable to write pcmcia data rate (%d)",
+        tvherror(LS_EN50221, "%s: unable to write capmt (%d)",
                  lca->lca_name, r);
+      else if (interval > 0)
+        lca->lca_capmt_blocked = mclk() + ms2mono(interval);
     }
     break;
   case CA_WRITE_CMD_PCMCIA_RATE:
@@ -235,7 +256,7 @@ linuxdvb_ca_thread ( void *aux )
   uint8_t buf[8192], *pbuf;
   ssize_t l;
   int64_t tm, tm2;
-  int r, monitor, quit = 0;
+  int r, monitor, quit = 0, waitms;
   linuxdvb_ca_write_t *lcw;
   en50221_slot_t *slot;
   
@@ -243,6 +264,7 @@ linuxdvb_ca_thread ( void *aux )
   ev = malloc(sizeof(*ev) * evsize);
   poll = tvhpoll_create(ARRAY_SIZE(ev) + 1);
   tm = mclk();
+  waitms = 250;
   while (tvheadend_running && !quit) {
     evp = ev;
     evp->fd = linuxdvb_ca_pipe.rd;
@@ -283,7 +305,7 @@ linuxdvb_ca_thread ( void *aux )
     pthread_mutex_unlock(&linuxdvb_ca_mutex);
     tvhpoll_add(poll, ev, evcnt);
 
-    r = tvhpoll_wait(poll, ev, evcnt, 250);
+    r = tvhpoll_wait(poll, ev, evcnt, waitms);
     if (r < 0 && ERRNO_AGAIN(errno))
       continue;
 
@@ -335,6 +357,7 @@ linuxdvb_ca_thread ( void *aux )
         }
       }
     }
+    waitms = 250;
     LIST_FOREACH(lcat, &linuxdvb_all_transports, lcat_all_link) {
       if (lcat->lcat_ca_fd < 0) continue;
       if (monitor) {
@@ -362,10 +385,22 @@ linuxdvb_ca_thread ( void *aux )
             if (r < 0) {
               lcat->lcat_fatal_time = mclk();
               linuxdvb_ca_close_fd(lcat, 1);
+            } else if (r > 0) {
+              pthread_mutex_lock(&linuxdvb_capmt_mutex);
+              TAILQ_INSERT_HEAD(&lca->lca_write_queue, lcw, lcw_link);
+              pthread_mutex_unlock(&linuxdvb_capmt_mutex);
+            } else {
+              free(lcw);
             }
+          } else {
+            free(lcw);
           }
-          free(lcw);
         }
+        tm2 = lca->lca_capmt_blocked - mclk();
+        if (tm2 > 0 && mono2ms(tm2) < waitms)
+          waitms = mono2ms(tm2);
+        else if (tm2 > -2000)
+          waitms = 1;
       }
     }
     pthread_mutex_unlock(&linuxdvb_ca_mutex);
@@ -559,19 +594,19 @@ const idclass_t linuxdvb_ca_class =
       .type     = PT_INT,
       .id       = "capmt_interval",
       .name     = N_("CAPMT interval (ms)"),
-      .desc     = N_("CAPMT interval (in ms)."),
+      .desc     = N_("A delay between CAPMT commands (in ms)."),
       .off      = offsetof(linuxdvb_ca_t, lca_capmt_interval),
       .opts     = PO_ADVANCED,
-      .def.i    = 100,
+      .def.i    = 0,
     },
     {
       .type     = PT_INT,
       .id       = "capmt_query_interval",
       .name     = N_("CAPMT query interval (ms)"),
-      .desc     = N_("CAPMT query interval (ms)."),
+      .desc     = N_("A delay before CAPMT after CAPMT query command (ms)."),
       .off      = offsetof(linuxdvb_ca_t, lca_capmt_query_interval),
       .opts     = PO_ADVANCED,
-      .def.i    = 1200,
+      .def.i    = 300,
     },
     {
       .type     = PT_BOOL,
@@ -628,6 +663,7 @@ linuxdvb_ca_create
   lca->lca_slotnum = slotnum;
   snprintf(buf, sizeof(buf), "dvbca%d-%d", lcat->lcat_number, slotnum);
   lca->lca_name = strdup(buf);
+  lca->lca_capmt_query_interval = 300;
   TAILQ_INIT(&lca->lca_write_queue);
 
   /* Internal config ID */
@@ -1032,7 +1068,7 @@ linuxdvb_ca_enqueue_capmt
 
   if (descramble && lca->lca_capmt_query &&
       !en50221_capmt_build_query(capmt, capmtlen, &capmt2, &capmtlen2)) {
-    if (!linuxdvb_ca_write_cmd(lca, CA_WRITE_CMD_CAPMT, capmt2, capmtlen2)) {
+    if (!linuxdvb_ca_write_cmd(lca, CA_WRITE_CMD_CAPMT_QUERY, capmt2, capmtlen2)) {
       tvhtrace(LS_EN50221, "%s: CAPMT enqueued query (len %zd)", lca->lca_name, capmtlen2);
       en50221_capmt_dump(LS_EN50221, lca->lca_name, capmt2, capmtlen2);
       free(capmt2);

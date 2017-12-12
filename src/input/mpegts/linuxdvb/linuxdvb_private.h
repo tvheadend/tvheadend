@@ -203,6 +203,7 @@ struct linuxdvb_ca
   int                       lca_capmt_query;
   int                       lca_capmt_interval;
   int                       lca_capmt_query_interval;
+  int64_t                   lca_capmt_blocked;
   pthread_t                 lca_en50221_thread;
   int                       lca_en50221_thread_running;
 
