@@ -237,7 +237,7 @@ dvr_entry_set_state(dvr_entry_t *de, dvr_entry_sched_state_t state,
 /*
  *
  */
-static int
+int
 dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
 {
   char id[16];
@@ -2591,6 +2591,19 @@ dosave:
                lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
                updated ? " Timer" : "",
                dvr_updated_str(buf, sizeof(buf), save));
+    }
+    /* The updates could mean the autorec rule no longer matches the event,
+     * so we have to destroy the de and the conf and let the autorec rule
+     * re-create when it next matches.
+     *
+     * If de is not scheduled (i.e., recording) then do nothing with the
+     * rule since don't want to cancel items that are recording.
+     * Also if no event then this autorec can't match it so we should delete
+     * it.
+     */
+    if (dvr_autorec_entry_can_be_purged(de)) {
+        dvr_entry_assign_broadcast(de, NULL);
+        dvr_entry_destroy(de, 1);
     }
   }
 
@@ -4964,6 +4977,13 @@ dvr_entry_init(void)
     }
     htsmsg_destroy(l);
   }
+  /* We update the autorec entries so any that are no longer matching
+   * the current schedule get deleted. This avoids the problem where
+   * autorec entries remain even when user has deleted the epgdb
+   * or modified their settings between runs.
+   */
+  tvhinfo(LS_DVR, "Purging obsolete autorec entries for current schedule");
+  dvr_autorec_purge_obsolete_timers();
   dvr_in_init = 0;
   /* process parent/child mapping */
   HTSMSG_FOREACH(f, rere) {

@@ -94,6 +94,60 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del, int disabled)
   return bcast;
 }
 
+
+/**
+ * If autorec entry no longer matches autorec rule then it can be purged.
+ * @return 1 if it can be purged
+ */
+int
+dvr_autorec_entry_can_be_purged(const dvr_entry_t *de)
+{
+  /* Not an autorec so ignore */
+  if (!de->de_autorec)
+    return 0;
+
+  /* Entry is not scheduled (for example finished) so can not be purged */
+  if (de->de_sched_state != DVR_SCHEDULED)
+    return 0;
+
+  /* No broadcast matched when entry was reloaded from dvr/log */
+  if (!de->de_bcast)
+    return 1;
+
+  /* Confirm autorec still matches the broadcast */
+  return !dvr_autorec_cmp(de->de_autorec, de->de_bcast);
+}
+
+/**
+ * Purge any dvr_entry for autorec entries that
+ * no longer match the current schedule.
+ */
+void
+dvr_autorec_purge_obsolete_timers(void)
+{
+  dvr_entry_t *de;
+  int num_purged = 0;
+
+  LIST_FOREACH(de, &dvrentries, de_global_link) {
+    if (dvr_autorec_entry_can_be_purged(de)) {
+      char ubuf[UUID_HEX_SIZE];
+      char t1buf[32], t2buf[32];
+      tvhinfo(LS_DVR, "Entry %s can be purged for \"%s\" start %s stop %s",
+              idnode_uuid_as_str(&de->de_id, ubuf),
+              lang_str_get(de->de_title, NULL),
+              gmtime2local(de->de_start, t1buf, sizeof(t1buf)),
+              gmtime2local(de->de_stop, t2buf, sizeof(t2buf)));
+
+      dvr_entry_assign_broadcast(de, NULL);
+      dvr_entry_destroy(de, 1);
+      ++num_purged;
+    }
+  }
+  if (num_purged)
+    tvhinfo(LS_DVR, "Purged %d autorec entries that no longer match schedule", num_purged);
+}
+
+
 /**
  * Handle maxcount
  */
@@ -133,13 +187,14 @@ dvr_autorec_completed(dvr_autorec_entry_t *dae, int error_code)
 /**
  * return 1 if the event 'e' is matched by the autorec rule 'dae'
  */
-static int
-autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
+int
+dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
   idnode_list_mapping_t *ilm;
   dvr_config_t *cfg;
   double duration;
 
+  if (!e) return 0;
   if (!e->channel) return 0;
   if(dae->dae_enabled == 0 || dae->dae_weekdays == 0)
     return 0;
@@ -1461,7 +1516,7 @@ dvr_autorec_check_event(epg_broadcast_t *e)
   if (e->channel && !e->channel->ch_enabled)
     return;
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if(autorec_cmp(dae, e))
+    if(dvr_autorec_cmp(dae, e))
       dvr_entry_create_by_autorec(1, e, dae);
   // Note: no longer updating event here as it will be done from EPG
   //       anyway
@@ -1483,7 +1538,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
   CHANNEL_FOREACH(ch) {
     if (!ch->ch_enabled) continue;
     RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
-      if(autorec_cmp(dae, e)) {
+      if(dvr_autorec_cmp(dae, e)) {
         enabled = 1;
         if (disabled) {
           for (p = disabled; *p && *p != e; p++);

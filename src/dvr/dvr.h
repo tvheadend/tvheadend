@@ -608,6 +608,7 @@ void dvr_event_removed(epg_broadcast_t *e);
 void dvr_event_updated(epg_broadcast_t *e);
 
 void dvr_event_running(epg_broadcast_t *e, epg_running_t running);
+int dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
@@ -718,8 +719,15 @@ void dvr_autorec_init(void);
 void dvr_autorec_done(void);
 
 void dvr_autorec_update(void);
-/// Check autorec timers after a short delay.
+/* Check autorec timers after a short delay. */
 void dvr_autorec_async_reschedule(void);
+
+/* @return 1 if the event 'e' is matched by the autorec rule 'dae' */
+int dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e);
+/* Purge any autorec timers that are obsolete since they no longer match any events. */
+void dvr_autorec_purge_obsolete_timers(void);
+/* @return 1 if entry is an autorec and can be purged since it no longer matches its event. */
+int dvr_autorec_entry_can_be_purged(const dvr_entry_t *de);
 
 static inline int
   dvr_autorec_entry_verify(dvr_autorec_entry_t *dae, access_t *a, int readonly)
