@@ -900,6 +900,7 @@ static int linuxdvb_ca_ops_menu
   char *s = htsmsg_json_serialize_to_str(menu, 0);
   tvhinfo(LS_EN50221, "%s: ops menu: %s", lca->lca_name, s);
   free(s);
+  en50221_mmi_close(slot);
   return 0;
 }
 
