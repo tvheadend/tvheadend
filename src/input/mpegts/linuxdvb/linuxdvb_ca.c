@@ -159,12 +159,14 @@ linuxdvb_ca_open_fd( linuxdvb_transport_t *lcat )
   tvhtrace(LS_EN50221, "%s: opening %s (fd %d)",
            lcat->lcat_name, lcat->lcat_ca_path, fd);
   if (fd >= 0) {
-    LIST_FOREACH(lca, &lcat->lcat_slots, lca_link)
+    LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
+      lca->lca_capmt_blocked = 0;
       if ((r = linuxdvb_ca_slot_info(fd, lcat, lca)) < 0) {
         close(fd);
         lcat->lcat_ca_fd = -1;
         return r;
       }
+    }
     lcat->lcat_ca_fd = fd;
 #if ENABLE_DDCI
     if (lcat->lddci)
@@ -256,7 +258,7 @@ linuxdvb_ca_thread ( void *aux )
   uint8_t buf[8192], *pbuf;
   ssize_t l;
   int64_t tm, tm2;
-  int r, monitor, quit = 0, waitms;
+  int r, monitor, quit = 0, cquit, waitms;
   linuxdvb_ca_write_t *lcw;
   en50221_slot_t *slot;
   
@@ -370,14 +372,17 @@ linuxdvb_ca_thread ( void *aux )
         }
       }
       LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
-        while (1) {
+        cquit = 0;
+        while (!cquit) {
           pthread_mutex_lock(&linuxdvb_capmt_mutex);
           lcw = TAILQ_FIRST(&lca->lca_write_queue);
           if (lcw)
             TAILQ_REMOVE(&lca->lca_write_queue, lcw, lcw_link);
           pthread_mutex_unlock(&linuxdvb_capmt_mutex);
-          if (lcw == NULL)
+          if (lcw == NULL) {
+            lca->lca_capmt_blocked = 0;
             break;
+          }
           slot = en50221_transport_find_slot(lcat->lcat_transport,
                                              lca->lca_slotnum);
           if (slot) {
@@ -389,6 +394,7 @@ linuxdvb_ca_thread ( void *aux )
               pthread_mutex_lock(&linuxdvb_capmt_mutex);
               TAILQ_INSERT_HEAD(&lca->lca_write_queue, lcw, lcw_link);
               pthread_mutex_unlock(&linuxdvb_capmt_mutex);
+              cquit = 1;
             } else {
               free(lcw);
             }
@@ -397,9 +403,10 @@ linuxdvb_ca_thread ( void *aux )
           }
         }
         tm2 = lca->lca_capmt_blocked - mclk();
-        if (tm2 > 0 && mono2ms(tm2) < waitms)
-          waitms = mono2ms(tm2);
-        else if (tm2 > -2000)
+        if (tm2 > 0) {
+          if (mono2ms(tm2) < waitms)
+            waitms = mono2ms(tm2);
+        } else if (tm2 > -sec2mono(2))
           waitms = 1;
       }
     }
