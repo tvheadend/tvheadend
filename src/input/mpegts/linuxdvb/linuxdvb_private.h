@@ -217,7 +217,7 @@ struct linuxdvb_ca
   uint8_t                   lca_slotnum;
   char                     *lca_name;
   int                       lca_state;
-  char                     *lca_cam_menu_string;
+  char                     *lca_modulename;
   linuxdvb_ca_write_queue_t lca_write_queue;
 
   /*

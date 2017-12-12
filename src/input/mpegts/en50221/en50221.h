@@ -156,6 +156,8 @@ struct en50221_ops {
   int (*cihw_apdu_write)(void *aux, en50221_slot_t *slot,
                          const uint8_t *data, size_t datalen);
   /* software level ops */
+  int (*cisw_appinfo)(void *aux, en50221_slot_t *slot, uint8_t ver,
+                      char *name, uint8_t type, uint16_t manufacturer, uint16_t code);
   int (*cisw_pcmcia_data_rate)(void *aux, en50221_slot_t *slot, uint8_t *rate);
   int (*cisw_caids)(void *aux, en50221_slot_t *slot, uint16_t *list, int listcount);
   int (*cisw_ca_close)(void *aux, en50221_slot_t *slot);

@@ -177,6 +177,12 @@ uint64_t test(time_t *ptr){
 return __sync_fetch_and_add(ptr, 1);
 }'
 
+check_cc_snippet atomic_ptr '#include <stdint.h>
+#include <time.h>
+void *test(void * volatile *ptr){
+return __sync_fetch_and_add(ptr, (void *)1);
+}'
+
 check_cc_snippet bitops64 '#include <stdint.h>
 int test(void){
   int l = sizeof(long);

@@ -21,6 +21,8 @@
 #include <stdint.h>
 #include <time.h>
 
+typedef void * volatile * atomic_refptr_t;
+
 extern pthread_mutex_t atomic_lock;
 
 /*
@@ -259,6 +261,21 @@ atomic_exchange_time_t(volatile time_t *ptr, time_t val)
 #endif
 }
 
+static inline void *
+atomic_exchange_ptr(atomic_refptr_t ptr, void *val)
+{
+#if ENABLE_ATOMIC_PTR
+  return  __sync_lock_test_and_set(ptr, val);
+#else
+  void *ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
 /*
  * Atomic get operation
  */
@@ -313,6 +330,12 @@ static inline time_t
 atomic_set_time_t(volatile time_t *ptr, time_t val)
 {
   return atomic_exchange_time_t(ptr, val);
+}
+
+static inline void *
+atomic_set_ptr(atomic_refptr_t ptr, void *val)
+{
+  return atomic_exchange_ptr(ptr, val);
 }
 
 /*

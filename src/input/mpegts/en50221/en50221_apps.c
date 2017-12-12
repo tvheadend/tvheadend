@@ -356,11 +356,12 @@ en50221_app_appinfo_handle
     r = en50221_extract_len(data + 5, datalen - 5, &p, &l, app->cia_name, "appinfo");
     if (r < 0)
       return -ENXIO;
-    s = alloca(l + 1);
-    strncpy(s, (const char *)p, l);
-    s[l] = '\0';
+    s = alloca(l * 2 + 1);
+    if (dvb_get_string(s, l * 2 + 1, p, l, NULL, NULL) < 0)
+      return -ENXIO;
     tvhinfo(LS_EN50221, "%s: CAM INFO: %s, %02X, %04X, %04X", app->cia_name, s, type, manufacturer, code);
     app->cia_info_version = atag & 0x3f;
+    CICAM_CALL_APP_CB(app, cisw_appinfo, atag & 0x3f, s, type, manufacturer, code);
     if (app->cia_info_version >= 3) /* at least CI+ v1.3 */
       if (CICAM_CALL_APP_CB(app, cisw_pcmcia_data_rate, &rate) >= 0)
         return en50221_app_pdu_send((en50221_app_t *)app, CICAM_AOT_PCMCIA_DATA_RATE, &rate, 1, 0);

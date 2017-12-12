@@ -469,7 +469,7 @@ linuxdvb_ca_class_get_title
              tvh_gettext_lang(lang, s));
   } else {
     snprintf(dst, dstsize, "ca%u-%u: %s (%s)", anum, snum,
-             lca->lca_cam_menu_string ?: "",
+             lca->lca_modulename ?: "",
              tvh_gettext_lang(lang, ca_slot_state2str(state)));
   }
 }
@@ -677,7 +677,7 @@ static void linuxdvb_ca_destroy( linuxdvb_ca_t *lca )
   idnode_unlink(&lca->lca_id);
   free(lca->lca_pin_str);
   free(lca->lca_pin_match_str);
-  free(lca->lca_cam_menu_string);
+  free(lca->lca_modulename);
   free(lca->lca_name);
   free(lca);
 }
@@ -818,6 +818,17 @@ static int linuxdvb_ca_ops_pcmcia_data_rate
   return 0;
 }
 
+static int linuxdvb_ca_ops_appinfo
+  (void *aux, en50221_slot_t *slot, uint8_t ver,
+   char *name, uint8_t type, uint16_t manufacturer, uint16_t code)
+{
+  linuxdvb_transport_t *lcat = aux;
+  linuxdvb_ca_t *lca = linuxdvb_ca_find_slot(lcat, slot);
+  if (lca)
+    free(atomic_set_ptr((atomic_refptr_t)&lca->lca_modulename, strdup(name)));
+  return 0;
+}
+
 static int linuxdvb_ca_ops_caids
   ( void *aux, en50221_slot_t *slot, uint16_t *list, int listsize )
 {
@@ -890,6 +901,7 @@ static en50221_ops_t linuxdvb_ca_ops = {
   .cihw_cam_is_ready = linuxdvb_ca_ops_cam_is_ready,
   .cihw_pdu_write = linuxdvb_ca_ops_pdu_write,
   .cihw_apdu_write = linuxdvb_ca_ops_apdu_write,
+  .cisw_appinfo = linuxdvb_ca_ops_appinfo,
   .cisw_pcmcia_data_rate = linuxdvb_ca_ops_pcmcia_data_rate,
   .cisw_caids = linuxdvb_ca_ops_caids,
   .cisw_ca_close = linuxdvb_ca_ops_ca_close,
