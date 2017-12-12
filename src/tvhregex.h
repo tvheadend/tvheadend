@@ -54,7 +54,7 @@ typedef struct {
 #endif
 } tvh_regex_t;
 
-static inline int regex_match(tvh_regex_t *regex, const char *str)
+static inline int regex_match(const tvh_regex_t *regex, const char *str)
 {
 #if ENABLE_PCRE
   int vec[30];
