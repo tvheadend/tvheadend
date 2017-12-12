@@ -2482,7 +2482,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
   tvh_cond_signal(&capmt->capmt_cond, 0);
 
 fin:
-  mtimer_arm_rel(&ct->ct_ok_timer, capmt_ok_timer_cb, ct, sec2mono(3)/2);
+  if (ct)
+    mtimer_arm_rel(&ct->ct_ok_timer, capmt_ok_timer_cb, ct, sec2mono(3)/2);
   pthread_mutex_unlock(&t->s_stream_mutex);
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
