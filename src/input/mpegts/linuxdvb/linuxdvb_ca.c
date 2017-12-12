@@ -39,6 +39,8 @@
 #include "descrambler/caid.h"
 #include "descrambler/dvbcam.h"
 
+#define TRANSPORT_RECOVERY 4 /* in seconds */
+
 static pthread_mutex_t linuxdvb_ca_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t linuxdvb_capmt_mutex = PTHREAD_MUTEX_INITIALIZER;
 static th_pipe_t linuxdvb_ca_pipe;
@@ -114,13 +116,17 @@ linuxdvb_ca_slot_info( int fd, linuxdvb_transport_t *lcat, linuxdvb_ca_t *lca )
     return -EIO;
   }
   if (csi.flags & CA_CI_MODULE_READY) {
-    state = CA_SLOT_STATE_MODULE_INIT;
-    slot = en50221_transport_find_slot(lcat->lcat_transport, lca->lca_slotnum);
-    if (slot) {
-      if (slot->cil_ready)
-        state = CA_SLOT_STATE_MODULE_CONNECTED;
-      if (slot->cil_caid_list)
-        state = CA_SLOT_STATE_MODULE_READY;
+    if (lcat->lcat_fatal_time + sec2mono(TRANSPORT_RECOVERY) < mclk()) {
+      state = CA_SLOT_STATE_MODULE_INIT;
+      slot = en50221_transport_find_slot(lcat->lcat_transport, lca->lca_slotnum);
+      if (slot) {
+        if (slot->cil_ready)
+          state = CA_SLOT_STATE_MODULE_CONNECTED;
+        if (slot->cil_caid_list)
+          state = CA_SLOT_STATE_MODULE_READY;
+      }
+    } else {
+      state = CA_SLOT_STATE_MODULE_PRESENT;
     }
   } else if (csi.flags & CA_CI_MODULE_PRESENT)
     state = CA_SLOT_STATE_MODULE_PRESENT;
@@ -171,7 +177,7 @@ linuxdvb_ca_open_fd( linuxdvb_transport_t *lcat )
 }
 
 static void
-linuxdvb_ca_close_fd( linuxdvb_transport_t *lcat )
+linuxdvb_ca_close_fd( linuxdvb_transport_t *lcat, int reset )
 {
   const int fd = lcat->lcat_ca_fd;
   if (fd < 0)
@@ -187,13 +193,15 @@ linuxdvb_ca_close_fd( linuxdvb_transport_t *lcat )
   tvhtrace(LS_EN50221, "%s: close %s (fd %d)",
            lcat->lcat_name, lcat->lcat_ca_path, fd);
   close(fd);
+  if (reset)
+    en50221_transport_reset(lcat->lcat_transport);
 }
 
-static void
+static int
 linuxdvb_ca_process_cmd
   ( linuxdvb_ca_t *lca, linuxdvb_ca_write_t *lcw, en50221_slot_t *slot )
 {
-  int r;
+  int r = 0;
 
   switch (lcw->cmd) {
   case CA_WRITE_CMD_CAPMT:
@@ -213,6 +221,7 @@ linuxdvb_ca_process_cmd
     }
     break;
   }
+  return r;
 }
 
 static void *
@@ -246,11 +255,13 @@ linuxdvb_ca_thread ( void *aux )
       if (lcat->lcat_ca_fd < 0) {
         if (!lcat->lcat_enabled)
           continue;
+        if (lcat->lcat_fatal_time + sec2mono(TRANSPORT_RECOVERY) > mclk())
+          continue;
         if (linuxdvb_ca_open_fd(lcat))
           continue;
       } else if (!lcat->lcat_enabled) {
         if (lcat->lcat_ca_fd >= 0)
-          linuxdvb_ca_close_fd(lcat);
+          linuxdvb_ca_close_fd(lcat, 1);
         continue;
       }
       if (evcnt == evsize) {
@@ -306,16 +317,19 @@ linuxdvb_ca_thread ( void *aux )
         }
         if (l < 5 && !(l < 0 && ERRNO_AGAIN(r))) {
           tvhtrace(LS_EN50221, "%s: unable to read from device %s: %s",
-                   lcat->lcat_name, lcat->lcat_ca_path, strerror(errno));
-          linuxdvb_ca_close_fd(lcat);
+                   lcat->lcat_name, lcat->lcat_ca_path, strerror(r));
+          lcat->lcat_fatal_time = mclk();
+          linuxdvb_ca_close_fd(lcat, 1);
           break;
         }
         if (l > 0 && buf[1]) {
           r = en50221_transport_read(lcat->lcat_transport,
                                      buf[0], buf[1], buf + 2, l - 2);
           if (r < 0) {
-            tvhtrace(LS_EN50221, "%s: transport read failed (%d)",
-                     lcat->lcat_name, r);
+            tvhtrace(LS_EN50221, "%s: transport read failed: %s",
+                     lcat->lcat_name, strerror(-r));
+            lcat->lcat_fatal_time = mclk();
+            linuxdvb_ca_close_fd(lcat, 1);
             break;
           }
         }
@@ -323,8 +337,15 @@ linuxdvb_ca_thread ( void *aux )
     }
     LIST_FOREACH(lcat, &linuxdvb_all_transports, lcat_all_link) {
       if (lcat->lcat_ca_fd < 0) continue;
-      if (monitor)
-        en50221_transport_monitor(lcat->lcat_transport, tm);
+      if (monitor) {
+        r = en50221_transport_monitor(lcat->lcat_transport, tm);
+        if (r < 0) {
+          tvhtrace(LS_EN50221, "%s: monitor failed for device %s: %s",
+                   lcat->lcat_name, lcat->lcat_ca_path, strerror(-r));
+          lcat->lcat_fatal_time = mclk();
+          linuxdvb_ca_close_fd(lcat, 1);
+        }
+      }
       LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
         while (1) {
           pthread_mutex_lock(&linuxdvb_capmt_mutex);
@@ -336,8 +357,13 @@ linuxdvb_ca_thread ( void *aux )
             break;
           slot = en50221_transport_find_slot(lcat->lcat_transport,
                                              lca->lca_slotnum);
-          if (slot)
-            linuxdvb_ca_process_cmd(lca, lcw, slot);
+          if (slot) {
+            r = linuxdvb_ca_process_cmd(lca, lcw, slot);
+            if (r < 0) {
+              lcat->lcat_fatal_time = mclk();
+              linuxdvb_ca_close_fd(lcat, 1);
+            }
+          }
           free(lcw);
         }
       }
@@ -690,7 +716,7 @@ static linuxdvb_ca_t *linuxdvb_ca_find_slot
 static int linuxdvb_ca_ops_reset( void *aux )
 {
   linuxdvb_transport_t *lcat = aux;
-  linuxdvb_ca_close_fd(lcat);
+  linuxdvb_ca_close_fd(lcat, 0);
   return 0;
 }
 
@@ -923,8 +949,8 @@ void linuxdvb_transport_destroy ( linuxdvb_transport_t *lcat )
 #if ENABLE_DDCI
   linuxdvb_ddci_destroy(lcat->lddci);
 #endif
+  linuxdvb_ca_close_fd(lcat, 0);
   en50221_transport_destroy(lcat->lcat_transport);
-  linuxdvb_ca_close_fd(lcat);
   free(lcat->lcat_ca_path);
   free(lcat->lcat_name);
   free(lcat);

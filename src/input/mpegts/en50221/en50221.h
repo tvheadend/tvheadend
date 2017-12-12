@@ -132,6 +132,7 @@ struct en50221_slot {
   uint8_t cil_apdu_only;
   uint8_t cil_initiate_connection;
   uint16_t cil_last_session_number;
+  int64_t cil_monitor_read;
   TAILQ_HEAD(,en50221_slot_wmsg) cil_write_queue;
   LIST_HEAD(, en50221_app) cil_apps;
 };

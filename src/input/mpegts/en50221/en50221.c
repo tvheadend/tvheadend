@@ -249,6 +249,8 @@ int en50221_transport_read(en50221_transport_t *cit,
                          cit->cit_name, slotnum);
     return en50221_transport_broken(cit, data, datalen);
   }
+  if (datalen > 0)
+    slot->cil_monitor_read = mclk();
 
   p = data;
   end = data + datalen;
@@ -268,8 +270,8 @@ int en50221_transport_read(en50221_transport_t *cit,
     switch (tag) {
     case CICAM_T_SB:
       if (slot->cil_ready == 0) {
-        tvherror(LS_EN50221, "%s: received sb but slot is not ready", cit->cit_name);
-        return en50221_transport_broken(cit, data, datalen);
+        tvhwarn(LS_EN50221, "%s: received sb but slot is not ready", cit->cit_name);
+        break;
       }
       /* data are waiting? tell CAM that we can receive them or flush the write queue */
       if (l == 2) {
@@ -293,6 +295,10 @@ int en50221_transport_read(en50221_transport_t *cit,
       break;
     case CICAM_T_DATA_MORE:
     case CICAM_T_DATA_LAST:
+      if (slot->cil_ready == 0) {
+        tvhwarn(LS_EN50221, "%s: received data but slot is not ready", cit->cit_name);
+        break;
+      }
       if (l > 1) {
         p++; l--; /* what's this byte? tcnum? */
         if (tag == CICAM_T_DATA_LAST) {
@@ -334,7 +340,9 @@ int en50221_transport_monitor(en50221_transport_t *cit, int64_t clock)
     if (cit->cit_ops->cihw_cam_is_ready(cit->cit_ops_aux, slot) > 0) {
       if (slot->cil_ready == 0 && slot->cil_initiate_connection == 0)
         en50221_slot_initiate_connection(slot);
-      en50221_slot_monitor(slot, clock);
+      r = en50221_slot_monitor(slot, clock);
+      if (r < 0)
+        return r;
     } else {
       en50221_slot_reset(slot);
     }
@@ -359,6 +367,7 @@ en50221_slot_create
   slot->cil_name = strdup(buf);
   slot->cil_transport = cit;
   slot->cil_number = number;
+  slot->cil_monitor_read = mclk();
   TAILQ_INIT(&slot->cil_write_queue);
   LIST_INSERT_HEAD(&cit->cit_slots, slot, cil_link);
   if (cil)
@@ -379,6 +388,9 @@ static void
 en50221_slot_destroy(en50221_slot_t *cil)
 {
   en50221_slot_wmsg_t *wmsg;
+
+  if (cil == NULL)
+    return;
   en50221_slot_applications_destroy(cil);
   while ((wmsg = TAILQ_FIRST(&cil->cil_write_queue)) != NULL) {
     TAILQ_REMOVE(&cil->cil_write_queue, wmsg, link);
@@ -640,6 +652,11 @@ en50221_slot_monitor(en50221_slot_t *cil, int64_t clock)
   int r;
 
   LIST_FOREACH(cia, &cil->cil_apps, cia_link) {
+    if (cil->cil_monitor_read + ms2mono(300) < mclk()) {
+      tvherror(LS_EN50221, "%s: communication stalled for more than 500ms",
+               cil->cil_name);
+      return -ENXIO;
+    }
     r = en50221_app_monitor(cia, clock);
     if (r < 0)
       return r;
@@ -692,7 +709,11 @@ static int en50221_create_app
 static void
 en50221_app_destroy(en50221_app_t *cia)
 {
-  en50221_app_prop_t *prop = cia->cia_prop;
+  en50221_app_prop_t *prop;
+
+  if (cia == NULL)
+    return;
+  prop = cia->cia_prop;
   LIST_REMOVE(cia, cia_link);
   if (prop && prop->ciap_destroy)
     prop->ciap_destroy(cia);

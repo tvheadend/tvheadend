@@ -176,6 +176,7 @@ struct linuxdvb_transport
   int                             lcat_ca_fd;
   int                             lcat_fatal;
   int                             lcat_enabled;
+  int64_t                         lcat_fatal_time;
 
 #if ENABLE_DDCI
   linuxdvb_ddci_t                *lddci;
