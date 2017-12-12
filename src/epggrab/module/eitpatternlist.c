@@ -56,16 +56,14 @@ void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_p
   TAILQ_FOREACH(p, l, p_links)
     if (!regexec(&p->compiled, text, 2, match, 0) && match[1].rm_so != -1) {
       size = MIN(match[1].rm_eo - match[1].rm_so, size_buf - 1);
-      if (size <= 0)
-        continue;
-      while (isspace(text[match[1].rm_so + size - 1]))
-        size--;
-      memcpy(buf, text + match[1].rm_so, size);
-      buf[size] = '\0';
-      if (size) {
-         tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches with '%s'", p->text, buf);
-         return buf;
+      if (size > 0) {
+        while (isspace(text[match[1].rm_so + size - 1]))
+          size--;
+        memcpy(buf, text + match[1].rm_so, size);
       }
+      buf[size] = '\0';
+      tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches with '%s'", p->text, buf);
+      return buf;
     }
   return NULL;
 }
