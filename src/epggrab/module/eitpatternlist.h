@@ -38,5 +38,11 @@ void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l );
  * Return the buf or NULL if no match.
  */
 void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_pattern_list_t *l);
+/* As eit_pattern_apply_list(), but return up to 2 matches.
+ * buf[0] & size_buf[0] are the first match, buf[1] & size_buf[1] the second.
+ * If no second match is found, set buf[1] to NULL.
+ * Return the first buf or NULL if no match.
+ */
+void *eit_pattern_apply_list_2(char *buf[2], size_t size_buf[2], const char *text, eit_pattern_list_t *l);
 void eit_pattern_free_list ( eit_pattern_list_t *l );
 #endif

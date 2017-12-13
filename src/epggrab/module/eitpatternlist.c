@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <ctype.h>
 #include "tvheadend.h"
 #include "eitpatternlist.h"
@@ -47,23 +48,45 @@ void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l )
 
 void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_pattern_list_t *l)
 {
-  regmatch_t match[2];
+    char *b[2] = { buf, NULL };
+    size_t s[2] = { size_buf, 0 };
+    return eit_pattern_apply_list_2(b, s, text, l);
+}
+
+void *eit_pattern_apply_list_2(char *buf[2], size_t size_buf[2], const char *text, eit_pattern_list_t *l)
+{
+  regmatch_t match[3];
   eit_pattern_t *p;
   ssize_t size;
+
+  assert(buf[0]);
+  assert(text);
 
   if (!l) return NULL;
   /* search and report the first match */
   TAILQ_FOREACH(p, l, p_links)
-    if (!regexec(&p->compiled, text, 2, match, 0) && match[1].rm_so != -1) {
-      size = MIN(match[1].rm_eo - match[1].rm_so, size_buf - 1);
+    if (!regexec(&p->compiled, text, 3, match, 0) && match[1].rm_so != -1) {
+      size = MIN(match[1].rm_eo - match[1].rm_so, size_buf[0] - 1);
       if (size > 0) {
         while (isspace(text[match[1].rm_so + size - 1]))
           size--;
-        memcpy(buf, text + match[1].rm_so, size);
+        memcpy(buf[0], text + match[1].rm_so, size);
       }
-      buf[size] = '\0';
-      tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches with '%s'", p->text, buf);
-      return buf;
+      buf[0][size] = '\0';
+      if (match[2].rm_so != -1 && buf[1]) {
+          size = MIN(match[2].rm_eo - match[2].rm_so, size_buf[1] - 1);
+          if (size > 0) {
+              while (isspace(text[match[2].rm_so + size - 1]))
+                  size--;
+              memcpy(buf[1], text + match[2].rm_so, size);
+          }
+          buf[1][size] = '\0';
+          tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches with '%s' & '%s'", p->text, buf[0], buf[1]);
+      } else {
+          buf[1] = NULL;
+          tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches with '%s'", p->text, buf[0]);
+      }
+      return buf[0];
     }
   return NULL;
 }

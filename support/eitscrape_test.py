@@ -59,14 +59,14 @@ class EITScrapeTest(object):
     self.num_failed = 0;
     self.num_ok = 0;
 
-  def run_test_case_i(self, text, reg, expect, testing):
+  def run_test_case_i(self, text, reg, expect, testing, match=1):
     """Run a test case for text using the regular expression lists in reg,
     expecting the result of a match to be expect while running a test
     case for the string testing."""
     for iter in reg:
       m = iter.search(text)
       if (m is not None):
-        result = m.group(1)
+        result = m.group(match)
         if result == expect:
           print 'OK: Got correct result of "%s" testing "%s" for "%s" using "%s"' % (result, testing, text, iter.pattern)
           self.num_ok = self.num_ok + 1
@@ -99,7 +99,7 @@ class EITScrapeTest(object):
       if key in ('age', 'genre'):
         print 'Test case contains key "%s" which is not currently tested for "%s"' % (key, test)
 
-      if key not in ('age', 'airdate', 'comment', 'episode', 'genre', 'new_subtitle', 'season', 'summary'):
+      if key not in ('age', 'airdate', 'comment', 'episode', 'genre', 'new_subtitle', 'new_summary', 'season', 'summary'):
         print 'Test case contains invalid key "%s" (possible typo) for "%s"' % (key, test)
         raise SyntaxWarning('Test case contains invalid/unknown key "%s" (possible typo) for "%s"' % (key, test))
 
@@ -116,6 +116,8 @@ class EITScrapeTest(object):
       self.run_test_case_i(text, airdate_reg, test['airdate'], "airdate")
     if test.has_key('new_subtitle'):
       self.run_test_case_i(text, subtitle_reg, test['new_subtitle'], "new_subtitle")
+    if test.has_key('new_summary'):
+      self.run_test_case_i(text, subtitle_reg, test['new_summary'], "new_summary", match=2)
 
 
 
