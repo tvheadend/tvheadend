@@ -703,13 +703,21 @@ static int _eit_process_event_one
        */
       const char *summary = lang_str_get(ev.summary, ev.default_charset);
       char buffer[2048];
-      if (eit_pattern_apply_list(buffer, sizeof(buffer), summary, &eit_mod->p_scrape_subtitle)) {
+      char buffer2[2048];
+      char *bufs[2] = { buffer, buffer2 };
+      size_t sizes[2] = { sizeof(buffer), sizeof(buffer2) };
+      if (eit_pattern_apply_list_2(bufs, sizes, summary, &eit_mod->p_scrape_subtitle)) {
         tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s' from '%s' using %s on channel '%s'",
                  buffer, summary, mod->id,
                  ch ? channel_get_name(ch, channel_blank_name) : "(null)");
         lang_str_t *ls = lang_str_create2(buffer, ev.default_charset);
         *save |= epg_episode_set_subtitle(ee, ls, &changes4);
         lang_str_destroy(ls);
+        if (bufs[1]) {
+            ls = lang_str_create2(buffer2, ev.default_charset);
+            *save |= epg_broadcast_set_summary(ebc, ls, &changes2);
+            lang_str_destroy(ls);
+        }
       } else {
         /* No subtitle found in summary buffer. */
         *save |= epg_episode_set_subtitle(ee, ev.summary, &changes4);
