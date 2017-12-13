@@ -457,10 +457,10 @@ linuxdvb_ddci_wr_thread_stop ( linuxdvb_ddci_wr_thread_t *ddci_wr_thread )
   /* See function linuxdvb_ddci_wr_thread_buffer_put why we lock here.
    */
 
-  pthread_mutex_lock(&(LDDCI_TO_THREAD(ddci_wr_thread))->lddci_thread_lock);
+  pthread_mutex_lock(&ddci_wr_thread->lddci_thread_lock);
   linuxdvb_ddci_thread_stop(LDDCI_TO_THREAD(ddci_wr_thread));
   linuxdvb_ddci_send_buffer_clear(&ddci_wr_thread->lddci_send_buffer);
-  pthread_mutex_unlock(&(LDDCI_TO_THREAD(ddci_wr_thread))->lddci_thread_lock);
+  pthread_mutex_unlock(&ddci_wr_thread->lddci_thread_lock);
 }
 
 static inline void
@@ -475,10 +475,10 @@ linuxdvb_ddci_wr_thread_buffer_put
    * linuxdvb_ddci_wr_thread_start will then re-init the queue and the wrongly
    * stored data is lost -> memory leak.
    */
-  pthread_mutex_lock(&(LDDCI_TO_THREAD(ddci_wr_thread))->lddci_thread_lock);
+  pthread_mutex_lock(&ddci_wr_thread->lddci_thread_lock);
   if (linuxdvb_ddci_thread_running(LDDCI_TO_THREAD(ddci_wr_thread)))
     linuxdvb_ddci_send_buffer_put(&ddci_wr_thread->lddci_send_buffer, tsb, len );
-  pthread_mutex_unlock(&(LDDCI_TO_THREAD(ddci_wr_thread))->lddci_thread_lock);
+  pthread_mutex_unlock(&ddci_wr_thread->lddci_thread_lock);
 }
 
 
