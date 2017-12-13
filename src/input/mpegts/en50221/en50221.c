@@ -33,7 +33,6 @@
 static int en50221_slot_create
   (en50221_transport_t *cit, uint8_t number, en50221_slot_t **cil);
 static void en50221_slot_destroy(en50221_slot_t *cil);
-static int en50221_slot_initiate_connection(en50221_slot_t *cil);
 static int en50221_slot_connection_initiated(en50221_slot_t *cil);
 static void en50221_slot_reset(en50221_slot_t *cil);
 static int en50221_slot_trigger_write_queue(en50221_slot_t *cil);
@@ -269,6 +268,12 @@ int en50221_transport_read(en50221_transport_t *cit,
     }
     switch (tag) {
     case CICAM_T_SB:
+      if (slot->cil_closing) {
+        r = en50221_slot_trigger_write_queue(slot);
+        if (r < 0)
+          return en50221_transport_broken(cit, data, datalen);
+        break;
+      }
       if (slot->cil_ready == 0) {
         tvhwarn(LS_EN50221, "%s: received sb but slot is not ready", cit->cit_name);
         break;
@@ -338,13 +343,12 @@ int en50221_transport_monitor(en50221_transport_t *cit, int64_t clock)
   }
   LIST_FOREACH(slot, &cit->cit_slots, cil_link) {
     if (cit->cit_ops->cihw_cam_is_ready(cit->cit_ops_aux, slot) > 0) {
-      if (slot->cil_ready == 0 && slot->cil_initiate_connection == 0)
-        en50221_slot_initiate_connection(slot);
+      en50221_slot_enable(slot);
       r = en50221_slot_monitor(slot, clock);
       if (r < 0)
         return r;
     } else {
-      en50221_slot_reset(slot);
+      en50221_slot_disable(slot);
     }
   }
   return 0;
@@ -385,7 +389,7 @@ en50221_slot_applications_destroy(en50221_slot_t *cil)
 }
 
 static void
-en50221_slot_destroy(en50221_slot_t *cil)
+en50221_slot_clear(en50221_slot_t *cil)
 {
   en50221_slot_wmsg_t *wmsg;
 
@@ -396,6 +400,12 @@ en50221_slot_destroy(en50221_slot_t *cil)
     TAILQ_REMOVE(&cil->cil_write_queue, wmsg, link);
     free(wmsg);
   }
+}
+
+static void
+en50221_slot_destroy(en50221_slot_t *cil)
+{
+  en50221_slot_clear(cil);
   LIST_REMOVE(cil, cil_link);
   free(cil->cil_name);
   free(cil);
@@ -404,9 +414,10 @@ en50221_slot_destroy(en50221_slot_t *cil)
 static void
 en50221_slot_reset(en50221_slot_t *cil)
 {
-  en50221_slot_applications_destroy(cil);
+  en50221_slot_clear(cil);
   cil->cil_ready = 0;
   cil->cil_initiate_connection = 0;
+  cil->cil_closing = 0;
   cil->cil_tcnum = 0;
 }
 
@@ -443,6 +454,8 @@ static int en50221_slot_trigger_write_queue(en50221_slot_t *cil)
                                       CICAM_T_DATA_LAST, NULL, 0);
     }
   }
+  if (cil->cil_closing && TAILQ_EMPTY(&cil->cil_write_queue))
+    cil->cil_closing = 0;
   return r;
 }
 
@@ -469,6 +482,32 @@ en50221_slot_initiate_connection(en50221_slot_t *cil)
     return r;
   cil->cil_initiate_connection = 1;
   return en50221_slot_trigger_write_queue(cil);
+}
+
+int
+en50221_slot_enable(en50221_slot_t *cil)
+{
+  if (!cil->cil_enabled) {
+    en50221_slot_reset(cil);
+    cil->cil_enabled = 1;
+    return en50221_slot_initiate_connection(cil);
+  }
+  return 0;
+}
+
+int
+en50221_slot_disable(en50221_slot_t *cil)
+{
+  if (cil->cil_enabled) {
+    en50221_slot_reset(cil);
+    cil->cil_enabled = 0;
+    if (!cil->cil_apdu_only) {
+      en50221_slot_pdu_send(cil, CICAM_T_DELETE_TC, NULL, 0, 1);
+      cil->cil_closing = 1;
+      tvhtrace(LS_EN50221, "%s: closing", cil->cil_name);
+    }
+  }
+  return 0;
 }
 
 static int en50221_slot_connection_initiated(en50221_slot_t *cil)

@@ -127,10 +127,12 @@ struct en50221_slot {
   char *cil_name;
   uint8_t cil_number;
   uint8_t cil_tcnum;
+  uint8_t cil_enabled;
   uint8_t cil_ready;
   uint8_t cil_caid_list;
   uint8_t cil_apdu_only;
   uint8_t cil_initiate_connection;
+  uint8_t cil_closing;
   uint16_t cil_last_session_number;
   int64_t cil_monitor_read;
   TAILQ_HEAD(,en50221_slot_wmsg) cil_write_queue;
@@ -185,6 +187,8 @@ int en50221_transport_read(en50221_transport_t *cit,
 en50221_app_t *
 en50221_slot_find_application(en50221_slot_t *cil,
                               uint32_t resource_id, uint32_t mask);
+int en50221_slot_enable(en50221_slot_t *cil);
+int en50221_slot_disable(en50221_slot_t *cil);
 
 /*
  *
