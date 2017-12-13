@@ -1159,6 +1159,8 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                                 conf.win.close();
                             if (conf.postsave)
                                 conf.postsave(conf, node);
+                            form.trackResetOnLoad = true;
+                            form.setValues(node);
                         }
                     });
                 } else {
@@ -2450,8 +2452,11 @@ tvheadend.idnode_form_grid = function(panel, conf)
                     values = current.editor.getForm().getFieldValues();
                 roweditor_destroy();
                 roweditor(select.getSelected());
-                if (values && current)
-                    current.editor.getForm().setValues(values);
+                if (values && current) {
+                    var form = current.editor.getForm();
+                    form.trackResetOnLoad = true;
+                    form.setValues(values);
+                }
             });
             buttons.push('->');
             buttons.push(abuttons.uilevel);
@@ -2883,8 +2888,11 @@ tvheadend.idnode_simple = function(panel, conf)
             form_destroy();
             if (lastdata) {
                 current = form_build(lastdata);
-                if (values && current)
-                     current.getForm().setValues(values);
+                if (values && current) {
+                     var form = current.getForm();
+                     form.trackResetOnLoad = true;
+                     form.setValues(values);
+                }
                 if (current) {
                      mpanel.add(current);
                      mpanel.doLayout();
