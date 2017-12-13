@@ -1,15 +1,24 @@
-This panel displays all available SAT>IP 
-DVB-T/DVB-S/DVB-C/ATSC-T/ATSC-C frontend parameters.
+<tvh_include>inc/linuxdvb_contents</tvh_include>
 
 ---
 
-### Buttons
+## Overview
 
-The following buttons are available:
+This panel displays all available SAT>IP 
+DVB-T/DVB-S/DVB-C/ATSC-T/ATSC-C frontend parameters.
 
-Button         | Function
----------------|---------
-**Save**       | Save the current configuration.
-<tvh_include>inc/common_button_table_end</tvh_include>
+<tvh_include>inc/dvbinputs_table</tvh_include>
+
+---
+
+## Buttons
+
+<tvh_include>inc/buttons</tvh_include>
+
+---
+
+## Device Types and Configuration
+
+<tvh_include>inc/dvbinputs_type_table</tvh_include>
 
 ---

@@ -135,7 +135,7 @@ PROP_DOC(epggrabber_priority)
 
 const idclass_t epggrab_mod_class = {
   .ic_class      = "epggrab_mod",
-  .ic_caption    = N_("EPG Grabber"),
+  .ic_caption    = N_("Channels / EPG - EPG Grabber Modules"),
   .ic_doc        = tvh_doc_epggrabber_modules_class,
   .ic_event      = "epggrab_mod",
   .ic_perm_def   = ACCESS_ADMIN,
@@ -241,7 +241,7 @@ const idclass_t epggrab_mod_ext_class = {
 const idclass_t epggrab_mod_ota_class = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_ota",
-  .ic_caption    = N_("Over-the-air EPG grabber"),
+  .ic_caption    = N_("EPG - Over-the-air EPG Grabber"),
   .ic_properties = (const property_t[]){
     {}
   }

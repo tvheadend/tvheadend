@@ -1,23 +1,19 @@
+<tvh_include>inc/recording_contents</tvh_include>
+
+---
+
+## Overview
+
 This tab is used to configure operation of the Digital Video Recorder.
 It is not used for scheduling or administration of individual
 recordings.
 
-!['Digital Video Recorder Profiles' Tab 1](static/img/doc/dvrconfig/tab.png)
+!['Digital Video Recorder Profiles' Tab 1](static/img/doc/recordings/dvrprofiles.png)
 
 ---
 
-### Menu Bar/Buttons
+## Buttons
 
-The following functions are available:
-
-Button              | Function
---------------------|---------
-**Save**            | Save any changes made to the selected profile.
-**Undo**            | Undo any changes made to the selected profile since the last save.
-**Add**             | Add a new profile.
-**Delete**          | Delete an existing profile.
-**Clone**           | Clone the currently selected profile.
-
-<tvh_include>inc/common_button_table_end</tvh_include>
+<tvh_include>inc/buttons</tvh_include>
 
 ---

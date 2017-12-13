@@ -1,6 +1,12 @@
+<tvh_include>inc/channels_contents</tvh_include>
+
+---
+
+## Overview
+
 Bouquets are broadcaster-defined groupings and orders of channels.
 
-!['Bouqets' Tab](static/img/doc/bouquet/tab.png)
+!['Bouqets' Tab](static/img/doc/channel/bouquet_tab.png)
 
 To use bouquets, ensure to add and scan all available muxes using the
 predefined muxes or manual configuration.
@@ -19,27 +25,7 @@ You may import your own bouquet using enigma2 (.tv) formatted files.
 
 ---
 
-<tvh_include>inc/common_button_table_start</tvh_include>
-
-<tvh_include>inc/common_button_table_end</tvh_include>
-
-The following tab specific buttons are available: 
-
-Button         | Function
----------------|---------
-**Force Scan** | Rescan the selected mux for changes to the bouquet.
-
----
-
-### Example
-
-!['Add Bouquet Dialog'](static/img/doc/bouquet/add.png)
-
-Note that the URL must begin with `file://` or `http(s)://`.
-
----
-
-### Detaching Channels
+## Detaching Channels
 
 If you're mapping another service to a channel created by a bouquet you 
 must first detach the channel to prevent unexpected 
@@ -47,7 +33,7 @@ changes, you can do this by selecting the desired channels from within
 the grid and then pressing the *Detach selected channels from bouquet* 
 option from the *[Map services]* button.
 
-!['Map All Services'](static/img/doc/bouquet/detach.png)
+!['Map All Services'](static/img/doc/channel/detach_bouquet.png)
 
 If you do not detach channel(s) before mapping additional 
 services the following changes can occur..

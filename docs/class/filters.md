@@ -1,24 +1,32 @@
+<tvh_include>inc/stream_contents</tvh_include>
+
+---
+
+## Overview
+
 This tab allows you to define rules that filter and order various 
 elementary streams. 
 
-!['Stream filters'](static/img/doc/filters/tab.png)
+!['Stream filters'](static/img/doc/stream/stream_filters_tab.png)
+
+Filter type                                            | Description
+-------------------------------------------------------|-----------------------
+[Video Stream Filters](class/esfilter_video)           | Video stream filter.
+[Audio Stream Filters](class/esfilter_audio)           | Audio stream filter.
+[Teletext Stream Filters](class/esfilter_teletext)     | Teletext stream filter.
+[Subtitle Stream Filters](class/esfilter_subtit)       | Subtitle stream filter.
+[CA Stream Filters](class/esfilter_ca)                 | Conditional Access (CA) stream filter.
+[Other Stream Filters](class/esfilter_other)           | Other stream filter.
 
 ---
 
-<tvh_include>inc/common_button_table_start</tvh_include>
+## Buttons
 
-<tvh_include>inc/common_button_table_end</tvh_include>
-
-Tab specific functions:
-
-Button                 | Function
------------------------|---------
-**Move Up**            | Move the selected entry up the grid.
-**Move Down**          | Move the selected entry down the grid. 
+<tvh_include>inc/buttons</tvh_include>
 
 ---
 
-### Filter Basics
+## Filter Basics
 
 * Each rule is executed in sequence (as displayed in the grid). 
 * If a rule removes a stream, it will not be available to other rules
@@ -32,19 +40,15 @@ already filtered out by another rule.
 * USE / EMPTY rules have precedence against IGNORE (if the stream is 
 already selected - it cannot be ignored).
 
----
-
 ### Visual Verification of Filtering
 
 For visual verification of filtering, there is the service 
 info dialog in the [Services](class/mpegts_service) tab. 
 This dialog shows the received PIDs and filtered PIDs in one window.
 
----
-
 ### Filtering out a Stream
 
-!['Removing a stream'](static/img/doc/filters/example.png)
+!['Removing a stream'](static/img/doc/stream/stream_filter_example.png)
 
 Here we're removing the Bulgarian language audio from the 
 input (first rule). However, if Bulgarian is the only language 

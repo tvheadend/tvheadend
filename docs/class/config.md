@@ -1,19 +1,17 @@
-This tabs allow configuration of several general parameters that affect
-the core Tvheadend functionality.
-
-!['General Base' Tab Screenshot 1](static/img/doc/config/tab.png)
+<tvh_include>inc/config_contents</tvh_include>
 
 ---
 
-### Menu Bar/Buttons
+<tvh_include>inc/config_overview</tvh_include>
 
-The following functions are available:
+!['General Base'](static/img/doc/config/base.png)
 
-Button                 | Function
------------------------|-------------------
-**Save**       | Save the current configuration.
-**Undo**       | Undo changes since the last save.
-**Start wizard**       | Display the first-run set-up wizard.
-<tvh_include>inc/common_button_table_end</tvh_include>
+<tvh_include>inc/config_notes</tvh_include>
+
+---
+
+## Buttons
+
+<tvh_include>inc/buttons</tvh_include>
 
 ---

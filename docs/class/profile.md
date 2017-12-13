@@ -1,40 +1,33 @@
-Stream Profiles are the settings for output formats. These are used for Live TV
-streaming and recordings. The profiles are assigned through 
-the [Access Entries](class/access),
-DVR Profiles or as parameter for HTTP Streaming.
-
-!['Stream Profiles'](static/img/doc/profile/tab.png)
-
-* Types
- * Built-in
-   - [HTSP Profile](class/profile-htsp)
-   - [MPEG-TS Pass-thru Profile](class/profile-mpegts)
-   - [Matroska Profile](class/profile-matroska)
-
- * Requires Tvheadend to be built with transcoding/ffmpeg enabled.
-   - [MPEG-TS/libav Profile](class/profile-libav-mpegts)
-   - [Matroska/libav Profile](class/profile-libav-matroska)
-   - [MP4/libav Profile](class/profile-libav-mp4)
-   - [Transcode Profile](class/profile-transcode)
-   
-If you do not have a build of Tvheadend with transcoding enabled 
-some of the above profiles (and their associated Help pages) will not 
-be available.
+<tvh_include>inc/stream_contents</tvh_include>
 
 ---
 
-### Menu Bar/Buttons
+## Overview
 
-The following functions are available:
+Stream Profiles are the settings for output formats. These are used for Live TV
+streaming and recordings. The profiles can be assigned through Access Entries,
+DVR Profiles or as parameter for HTTP Streaming.
 
-Button              | Function
---------------------|---------
-**Save**            | Save any changes made to the selected configuration.
-**Undo**            | Undo any changes made to the selected configuration since the last save.
-**Add**             | Add a new profile.
-**Delete**          | Delete the selected entry.
-**Clone**           | Clone the currently selected profile.
+!['Stream Profiles'](static/img/doc/stream/stream_profiles_tab.png)
 
-<tvh_include>inc/common_button_table_end</tvh_include>
+Type                                               | Description 
+-------------------------------------------------------------------|-------------
+**Built-in**                                                       | **These profiles are always available.**
+[HTSP Profile](class/profile-htsp)                                 | The HTSP profile, generally used with HTSP clients such as Kodi and Movian.
+[MPEG-TS Pass-thru Profile](class/profile-mpegts)                  | MPEG-TS pass-thru, this is a simple profile that just passes on the data received, can be configured to remove unneeded data packets.
+[MPEG-TS Spawn](class/profile-mpegts-spawn)                        | Pipe stream out to script/binary for transcoding. Spawned script/binary must pipe the output back in as MPEG-TS.
+[Matroska Profile](class/profile-matroska)                         | A general Matroska container profile.
+[Audio Profile](class/profile-audio)                               | An audio-only profile.
+**FFMPEG**                                                         | **The following profiles (and their help docs) require Tvheadend to be built with transcoding/ffmpeg enabled.**
+[MPEG-TS/libav Profile](class/profile-libav-mpegts)                | MPEG-TS profile.
+[Matroska/libav Profile](class/profile-libav-matroska)             | Matroska profile.
+[MP4/libav Profile](class/profile-libav-mp4)                       | MP4 profile.
+[Transcode Profile](class/profile-transcode)                       | General avlib profile.
+
+---
+
+## Buttons
+
+<tvh_include>inc/buttons</tvh_include>
 
 ---

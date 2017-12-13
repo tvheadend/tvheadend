@@ -252,7 +252,7 @@ PROP_DOC(cron)
 const idclass_t epggrab_class = {
   .ic_snode      = &epggrab_conf.idnode,
   .ic_class      = "epggrab",
-  .ic_caption    = N_("EPG Grabber Configuration"),
+  .ic_caption    = N_("Channels / EPG - EPG Grabber Configuration"),
   .ic_doc        = tvh_doc_epgconf_class,
   .ic_event      = "epggrab",
   .ic_perm_def   = ACCESS_ADMIN,

@@ -125,7 +125,7 @@ PROP_DOC(cron)
 const idclass_t mpegts_mux_sched_class =
 {
   .ic_class      = "mpegts_mux_sched",
-  .ic_caption    = N_("Mux Scheduler"),
+  .ic_caption    = N_("DVB Inputs - Mux Schedulers"),
   .ic_event      = "mpegts_mux_sched",
   .ic_doc        = tvh_doc_mpegts_mux_sched_class,
   .ic_changed    = mpegts_mux_sched_class_changed,

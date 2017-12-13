@@ -1,17 +1,17 @@
-This tab is used to configure timeshift properties.
-
-!['Timeshift Tab'](static/img/doc/timeshift/tab.png)
+<tvh_include>inc/recording_contents</tvh_include>
 
 ---
 
-### Menu Bar/Buttons
+## Overview
 
-The following functions are available:
+This tab is used to configure timeshift properties.
 
-Button     | Function
------------|---------
-**Save**   | Save the current configuration.
-**Undo**   | Revert the changes made since last save.
-<tvh_include>inc/common_button_table_end</tvh_include>
+!['Timeshift Tab'](static/img/doc/recordings/timeshift.png)
+
+---
+
+## Buttons
+
+<tvh_include>inc/buttons</tvh_include>
 
 ---
