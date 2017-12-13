@@ -95,6 +95,7 @@ struct iptv_network
   int      in_ignore_path;
   int      in_tsid_accept_zero_value;
   int      in_libav;
+  int64_t  in_bandwidth_clock;
 
   void    *in_auto; /* private structure for auto-network */
 };

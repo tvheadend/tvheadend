@@ -513,7 +513,6 @@ iptv_input_recv_flush ( iptv_mux_t *im )
 int
 iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
 {
-  static time_t t1 = 0, t2;
   iptv_network_t *in = (iptv_network_t*)im->mm_network;
   mpegts_mux_instance_t *mmi;
   mpegts_pcr_t pcr;
@@ -524,8 +523,8 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
   pcr.pcr_last  = PTS_UNSET;
   pcr.pcr_pid   = im->im_pcr_pid;
   in->in_bps += len * 8;
-  time(&t2);
-  if (t2 != t1) {
+  s64 = mclk();
+  if (mono2sec(in->in_bandwidth_clock) != mono2sec(s64)) {
     if (in->in_max_bandwidth &&
         in->in_bps > in->in_max_bandwidth * 1024) {
       if (!in->in_bw_limited) {
@@ -535,7 +534,7 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
       }
     }
     in->in_bps = 0;
-    t1 = t2;
+    in->in_bandwidth_clock = s64;
   }
 
   /* Pass on, but with timing */
