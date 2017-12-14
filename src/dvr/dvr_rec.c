@@ -1466,12 +1466,13 @@ dvr_thread(void *aux)
   th_pkt_t *pkt, *pkt2, *pkt3;
   streaming_start_t *ss = NULL;
   int run = 1, started = 0, muxing = 0, comm_skip, rs;
-  int epg_running = 0, epg_pause = 0;
+  int epg_running = 0, old_epg_running, epg_pause = 0;
   int commercial = COMMERCIAL_UNKNOWN;
   int running_disabled;
   int64_t packets = 0, dts_offset = PTS_UNSET;
   time_t real_start, start_time = 0, running_start = 0, running_stop = 0;
   char *postproc;
+  char ubuf[UUID_HEX_SIZE];
 
   if (!dvr_thread_global_lock(de, &run))
     return NULL;
@@ -1479,6 +1480,8 @@ dvr_thread(void *aux)
   postproc  = de->de_config->dvr_postproc ? strdup(de->de_config->dvr_postproc) : NULL;
   running_disabled = dvr_entry_get_epg_running(de) <= 0;
   real_start = dvr_entry_get_start_time(de, 0);
+  tvhtrace(LS_DVR, "%s - recoding thread started for \"%s\"",
+           idnode_uuid_as_str(&de->de_id, ubuf), lang_str_get(de->de_title, NULL));
   dvr_thread_global_unlock(de);
 
   TAILQ_INIT(&backlog);
@@ -1492,6 +1495,7 @@ dvr_thread(void *aux)
     }
     streaming_queue_remove(sq, sm);
 
+    old_epg_running = epg_running;
     if (running_disabled) {
       epg_running = real_start <= gclk();
     } else if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
@@ -1514,6 +1518,9 @@ dvr_thread(void *aux)
         epg_running = 0;
       }
     }
+    if (epg_running != old_epg_running)
+      tvhtrace(LS_DVR, "%s - running flag changed from %d to %d",
+               idnode_uuid_as_str(&de->de_id, ubuf), old_epg_running, epg_running);
 
     pthread_mutex_unlock(&sq->sq_mutex);
 
@@ -1551,9 +1558,11 @@ dvr_thread(void *aux)
       if (ss == NULL)
         break;
 
-      if (muxing == 0 &&
-          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
-        break;
+      if (muxing == 0) {
+        if (!dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
+          break;
+        tvhtrace(LS_DVR, "%s - muxing activated", idnode_uuid_as_str(&de->de_id, ubuf));
+      }
 
       muxing = 1;
       while ((sm2 = TAILQ_FIRST(&backlog)) != NULL) {
@@ -1618,9 +1627,11 @@ dvr_thread(void *aux)
         if (muxing) muxer_add_marker(prch->prch_muxer);
       }
 
-      if (muxing == 0 &&
-          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
-        break;
+      if (muxing == 0) {
+        if (!dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
+          break;
+        tvhtrace(LS_DVR, "%s - muxing activated", idnode_uuid_as_str(&de->de_id, ubuf));
+      }
 
       muxing = 1;
       while ((sm2 = TAILQ_FIRST(&backlog)) != NULL) {
@@ -1688,13 +1699,7 @@ fin:
 
       } else if (sm->sm_code & TSS_ERRORS) {
 
-	int code = SM_CODE_UNDEFINED_ERROR;
-
-	if(sm->sm_code & TSS_NO_DESCRAMBLER)
-	  code = SM_CODE_NO_DESCRAMBLER;
-
-	if(sm->sm_code & TSS_NO_ACCESS)
-	  code = SM_CODE_NO_ACCESS;
+	int code = tss2errcode(sm->sm_code);
 
 	if(de->de_last_error != code) {
 	  dvr_rec_set_state(de, DVR_RS_ERROR, code);
