@@ -1095,22 +1095,27 @@ dvr_entry_create_htsp(int enabled, const char *config_uuid,
  */
 static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
 {
+  time_t segment_stop_extra, start, stop, maximum_stop_time;
+  int max_progs_to_check;
+  epg_broadcast_t *e, *next;
+  const char *ep_uri, *next_uri;
+
   if (!de)
     return 0;
 
   /* Return any cached value we have previous calculated. */
-  time_t segment_stop_extra = de->de_segment_stop_extra;
+  segment_stop_extra = de->de_segment_stop_extra;
   if (segment_stop_extra) {
     return segment_stop_extra;
   }
 
   /* If we have no broadcast data then can not search for matches */
-  epg_broadcast_t *e = de->de_bcast;
+  e = de->de_bcast;
   if (!e) {
     return 0;
   }
 
-  const char *ep_uri = e->episode->uri;
+  ep_uri = e->episode->uri;
 
   /* If not a segmented programme then no segment extra time */
   if (!ep_uri || strncmp(ep_uri, "crid://", 7) || !strstr(ep_uri, "#"))
@@ -1140,16 +1145,15 @@ static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
     MAX_STOP_TIME = 9 * 60 * 60
   };
 
-  const time_t start = e->start;
-  const time_t stop  = e->stop;
-  const time_t maximum_stop_time = start + MAX_STOP_TIME;
-  int max_progs_to_check = 10;
-  epg_broadcast_t *next;
+  start = e->start;
+  stop  = e->stop;
+  maximum_stop_time = start + MAX_STOP_TIME;
+  max_progs_to_check = 10;
   for (next = epg_broadcast_get_next(e);
        --max_progs_to_check && stop < maximum_stop_time &&
          next && next->episode && next->start < stop + THREE_HOURS;
        next = epg_broadcast_get_next(next)) {
-    const char *next_uri = next->episode->uri;
+    next_uri = next->episode->uri;
     if (next_uri && strcmp(ep_uri, next_uri) == 0) {
       /* Identical CRID+IMI. So that means that programme is a
        * segment part of this programme. So extend our stop time
@@ -1162,8 +1166,7 @@ static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
   }
 
   /* Cache the value */
-  de->de_segment_stop_extra = segment_stop_extra;
-  return segment_stop_extra;
+  return de->de_segment_stop_extra = segment_stop_extra;
 }
 
 
@@ -2338,13 +2341,13 @@ void dvr_event_running(epg_broadcast_t *e, epg_running_t running)
         atomic_add(&de->de_running_change, 1);
       }
       if (dvr_entry_get_start_time(de, 1) > gclk()) {
-        atomic_set_time_t(&de->de_start, gclk());
-        atomic_add(&de->de_running_change, 1);
-        dvr_entry_set_timer(de);
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG start",
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel, channel_blank_name));
+        atomic_set_time_t(&de->de_start, gclk());
+        atomic_add(&de->de_running_change, 1);
+        dvr_entry_set_timer(de);
       }
     } else if ((running == EPG_RUNNING_STOP && de->de_dvb_eid == e->dvb_eid) ||
                 running == EPG_RUNNING_NOW) {
@@ -2378,11 +2381,11 @@ void dvr_event_running(epg_broadcast_t *e, epg_running_t running)
       atomic_set_time_t(&de->de_running_pause, 0);
       if (de->de_sched_state == DVR_RECORDING && de->de_running_start) {
         if (dvr_entry_get_epg_running(de)) {
-          dvr_stop_recording(de, SM_CODE_OK, 0, 0);
           tvhdebug(LS_DVR, "dvr entry %s %s %s on %s - EPG stop",
                    idnode_uuid_as_str(&de->de_id, ubuf), srcname,
                    epg_broadcast_get_title(e, NULL),
                    channel_get_name(de->de_channel, channel_blank_name));
+          dvr_stop_recording(de, SM_CODE_OK, 0, 0);
         }
       }
     } else if (running == EPG_RUNNING_PAUSE && de->de_dvb_eid == e->dvb_eid) {
@@ -2454,10 +2457,9 @@ dvr_timer_stop_recording(void *aux)
                         "stop recording timer called");
   /* EPG thinks that the program is running */
   if (de->de_segment_stop_extra) {
-    const time_t now = gclk();
     const time_t stop = dvr_entry_get_stop_time(de);
-    tvhinfo(LS_DVR, "dvr_timer_stop_recording - forcing stop of programme \"%s\" on \"%s\" due to exceeding stop time with running_start %"PRId64" and running_stop %"PRId64" segment stop %"PRId64" now %"PRId64" stop %"PRId64,
-            lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), (int64_t)de->de_running_start, (int64_t)de->de_running_stop, (int64_t)de->de_segment_stop_extra, (int64_t)now, (int64_t)stop);
+    dvr_entry_trace_time2(de, "running start", de->de_running_start, "running stop", de->de_running_stop, "forcing stop");
+    dvr_entry_trace_time1(de, "stop", stop, "forcing stop - segment extra %"PRId64, (int64_t)de->de_segment_stop_extra);
     /* no-op. We fall through to the final dvr_stop_recording below.
     * This path is here purely to get a log.
     */
@@ -2476,6 +2478,7 @@ dvr_timer_stop_recording(void *aux)
 static void
 dvr_entry_start_recording(dvr_entry_t *de, int clone)
 {
+  time_t stop;
   int r;
 
   if (!de->de_enabled) {
@@ -2505,12 +2508,11 @@ dvr_entry_start_recording(dvr_entry_t *de, int clone)
    * further segments enter the EIT window.
    */
   de->de_segment_stop_extra = 0;
-  const time_t stop = dvr_entry_get_stop_time(de);
-  tvhinfo(LS_DVR, "About to set stop timer for \"%s\" on \"%s\" at start %"PRId64" and original stop %"PRId64" and overall stop at %"PRId64,
-          lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), (int64_t)de->de_start, (int64_t)de->de_stop, (int64_t)stop);
+  stop = dvr_entry_get_stop_time(de);
 
-  gtimer_arm_absn(&de->de_timer, dvr_timer_stop_recording, de,
-                  dvr_entry_get_stop_time(de));
+  dvr_entry_trace_time2(de, "original stop", de->de_stop, "stop", stop, "stop timer set");
+
+  gtimer_arm_absn(&de->de_timer, dvr_timer_stop_recording, de, stop);
 }
 
 
