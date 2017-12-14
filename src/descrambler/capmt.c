@@ -69,12 +69,12 @@ typedef struct dmx_filter {
 
 #define DVBAPI_PROTOCOL_VERSION     2
 
-#define CA_SET_DESCR       0x40106f86
+#define CA_SET_DESCR_      0x40106f86
 #define CA_SET_DESCR_X     0x866f1040
 #define CA_SET_DESCR_AES   0x40106f87
 #define CA_SET_DESCR_AES_X 0x876f1040
 #define CA_SET_DESCR_MODE  0x400c6f88
-#define CA_SET_PID         0x40086f87
+#define CA_SET_PID_        0x40086f87
 #define CA_SET_PID_X       0x876f0840
 #define DMX_STOP           0x00006f2a
 #define DMX_STOP_X         0x2a6f0000
@@ -1240,9 +1240,9 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
     }
   }
   sb->sb_err = 1; /* "first seen" flag for the moment */
-  if (cmd == CA_SET_PID)
+  if (cmd == CA_SET_PID_)
     return 4 + 8 + adapter_byte;
-  else if (cmd == CA_SET_DESCR)
+  else if (cmd == CA_SET_DESCR_)
     return 4 + 16 + adapter_byte;
   else if (cmd == CA_SET_DESCR_AES)
     return 4 + 32 + adapter_byte;
@@ -1291,7 +1291,7 @@ capmt_peek_str(sbuf_t *sb, int *offset)
 static void
 capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int offset)
 {
-  if (cmd == CA_SET_PID) {
+  if (cmd == CA_SET_PID_) {
 
     uint32_t pid   = sbuf_peek_u32(sb, offset + 0);
     int32_t  index = sbuf_peek_s32(sb, offset + 4);
@@ -1330,7 +1330,7 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
       tvherror(LS_CAPMT, "%s: Invalid index %d in CA_SET_PID (%d) for adapter %d", capmt_name(capmt), index, MAX_INDEX, adapter);
     }
 
-  } else if (cmd == CA_SET_DESCR) {
+  } else if (cmd == CA_SET_DESCR_) {
 
     int32_t index  = sbuf_peek_s32(sb, offset + 0);
     int32_t parity = sbuf_peek_s32(sb, offset + 4);

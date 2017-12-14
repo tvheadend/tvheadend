@@ -27,6 +27,7 @@
 #include "dvbcam.h"
 #include "input/mpegts/tsdemux.h"
 #include "input/mpegts/linuxdvb/linuxdvb_private.h"
+#include "input/mpegts/en50221/en50221_capmt.h"
 
 #if ENABLE_LINUXDVB_CA
 
@@ -38,28 +39,28 @@
 
 typedef struct dvbcam_active_cam {
   TAILQ_ENTRY(dvbcam_active_cam) global_link;
-  uint16_t             caids[CAIDS_PER_CA_SLOT];
-  int                  num_caids;
-  linuxdvb_ca_t       *ca;
-  uint8_t              slot;
-  int                  active_programs;
-  int                  allocated_programs;
+  uint16_t              caids[CAIDS_PER_CA_SLOT];
+  int                   num_caids;
+  linuxdvb_ca_t        *ca;
+  uint8_t               slot;
+  int                   active_programs;
+  int                   allocated_programs;
 } dvbcam_active_cam_t;
 
 typedef struct dvbcam_active_service {
   th_descrambler_t;
   TAILQ_ENTRY(dvbcam_active_service) global_link;
   LIST_ENTRY(dvbcam_active_service)  dvbcam_link;
-  uint8_t             *last_pmt;
-  int                  last_pmt_len;
-  uint16_t             caid_list[32];
-  dvbcam_active_cam_t *ac;
-  mpegts_apids_t       ecm_pids;
-  uint8_t             *cat_data;
-  int                  cat_data_len;
-  mpegts_apids_t       cat_pids;
+  uint8_t              *last_pmt;
+  int                   last_pmt_len;
+  uint16_t              caid_list[32];
+  dvbcam_active_cam_t  *ac;
+  mpegts_apids_t        ecm_pids;
+  uint8_t              *cat_data;
+  int                   cat_data_len;
+  mpegts_apids_t        cat_pids;
 #if ENABLE_DDCI
-  int                  is_ddci;
+  linuxdvb_ddci_t      *lddci;
 #endif
 } dvbcam_active_service_t;
 
@@ -124,13 +125,19 @@ dvbcam_service_check_caid(dvbcam_active_service_t *as, uint16_t caid)
 static void
 dvbcam_unregister_ddci(dvbcam_active_cam_t *ac, dvbcam_active_service_t *as)
 {
-  if (ac && ac->ca->lddci) {
+  linuxdvb_ddci_t *lddci;
+
+  if (ac == NULL)
+    return;
+  lddci = as->lddci;
+  if (lddci) {
     th_descrambler_t *td = (th_descrambler_t *)as;
     service_t *t = td->td_service;
     th_descrambler_runtime_t *dr = t->s_descramble;
 
     /* unassign the service from the DD CI CAM */
-    linuxdvb_ddci_assign(ac->ca->lddci, NULL);
+    as->lddci = NULL;
+    linuxdvb_ddci_assign(lddci, NULL);
     if (dr) {
       dr->dr_descrambler = NULL;
       dr->dr_descramble = NULL;
@@ -141,16 +148,13 @@ dvbcam_unregister_ddci(dvbcam_active_cam_t *ac, dvbcam_active_service_t *as)
 int
 dvbcam_is_ddci(struct service *t)
 {
-  th_descrambler_runtime_t  *dr = t->s_descramble;
+  th_descrambler_runtime_t *dr = t->s_descramble;
   int ret = 0;
 
   if (dr) {
     dvbcam_active_service_t  *as = (dvbcam_active_service_t *)dr->dr_descrambler;
-
-    if (as && as->ac) {
-      linuxdvb_ddci_t        *lddci = as->ac->ca->lddci;
-      ret = lddci != NULL;
-    }
+    if (as && as->ac)
+      ret = as->lddci != NULL;
   }
   return ret;
 }
@@ -160,53 +164,60 @@ dvbcam_is_ddci(struct service *t)
  *
  */
 void
-dvbcam_register_cam(linuxdvb_ca_t * lca, uint8_t slot, uint16_t * caids,
+dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
                     int num_caids)
 {
   dvbcam_active_cam_t *ac, *ac_first;
+  int registered = 0;
 
-  tvhtrace(LS_DVBCAM, "register cam ca %p slot %u num_caids %u",
-           lca, slot, num_caids);
-
-  num_caids = MIN(CAIDS_PER_CA_SLOT, num_caids);
-
-  if ((ac = calloc(1, sizeof(*ac))) == NULL)
-  	return;
-
-  ac->ca = lca;
-  ac->slot = slot;
-  memcpy(ac->caids, caids, num_caids * sizeof(uint16_t));
-  ac->num_caids = num_caids;
+  tvhtrace(LS_DVBCAM, "register cam %p num_caids %u", lca->lca_name, num_caids);
 
   pthread_mutex_lock(&dvbcam_mutex);
 
+  TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link) {
+    if (ac->ca == lca) {
+      registered = 1;
+      break;
+    }
+  }
+  if (ac == NULL) {
+    if ((ac = calloc(1, sizeof(*ac))) == NULL)
+      return;
+    ac->ca = lca;
+  }
+
+  num_caids = MIN(CAIDS_PER_CA_SLOT, num_caids);
+
+  memcpy(ac->caids, caids, num_caids * sizeof(uint16_t));
+  ac->num_caids = num_caids;
+
   ac_first = TAILQ_FIRST(&dvbcam_active_cams);
-  TAILQ_INSERT_TAIL(&dvbcam_active_cams, ac, global_link);
+  if (!registered)
+    TAILQ_INSERT_TAIL(&dvbcam_active_cams, ac, global_link);
 
   if (ac_first == NULL)
     dvbcam_status_update();
 
   pthread_mutex_unlock(&dvbcam_mutex);
-
 }
 
 /*
  *
  */
 void
-dvbcam_unregister_cam(linuxdvb_ca_t * lca, uint8_t slot)
+dvbcam_unregister_cam(linuxdvb_ca_t *lca)
 {
   dvbcam_active_cam_t *ac, *ac_next;
   dvbcam_active_service_t *as;
 
-  tvhtrace(LS_DVBCAM, "unregister cam lca %p slot %u", lca, slot);
+  tvhtrace(LS_DVBCAM, "unregister cam %s", lca->lca_name);
 
   pthread_mutex_lock(&dvbcam_mutex);
 
   /* delete entry */
   for (ac = TAILQ_FIRST(&dvbcam_active_cams); ac != NULL; ac = ac_next) {
     ac_next = TAILQ_NEXT(ac, global_link);
-    if (ac->ca == lca && ac->slot == slot) {
+    if (ac->ca == lca) {
       TAILQ_REMOVE(&dvbcam_active_cams, ac, global_link);
       /* remove pointer to this CAM in all active services */
       TAILQ_FOREACH(as, &dvbcam_active_services, global_link)
@@ -234,6 +245,7 @@ dvbcam_ca_lookup(dvbcam_active_cam_t *ac, mpegts_input_t *input, uint16_t caid)
 {
   extern const idclass_t linuxdvb_frontend_class;
   linuxdvb_frontend_t *lfe = NULL;
+  linuxdvb_transport_t *lcat;
   int i;
 
   if (ac->ca == NULL)
@@ -242,10 +254,11 @@ dvbcam_ca_lookup(dvbcam_active_cam_t *ac, mpegts_input_t *input, uint16_t caid)
   if (idnode_is_instance(&input->ti_id, &linuxdvb_frontend_class))
     lfe = (linuxdvb_frontend_t*)input;
 
+  lcat = ac->ca->lca_transport;
 #if ENABLE_DDCI
-  if (!ac->ca->lddci)
+  if (!lcat->lddci)
 #endif
-  if (lfe == NULL || ac->ca->lca_adapter != lfe->lfe_adapter)
+  if (lfe == NULL || lcat->lcat_adapter != lfe->lfe_adapter)
     return 0;
 
   for (i = 0; i < ac->num_caids; i++)
@@ -263,8 +276,9 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
 {
   dvbcam_active_cam_t *ac;
   dvbcam_active_service_t *as;
-  uint8_t list_mgmt;
-  int is_update = 0;
+  int bcmd, is_update = 0, r;
+  uint8_t *capmt;
+  size_t capmt_len;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   pthread_mutex_lock(&dvbcam_mutex);
@@ -275,13 +289,13 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
       break;
 
   if (as == NULL) {
-    tvhtrace(LS_DVBCAM, "cannot find active service entry");
+    tvhtrace(LS_DVBCAM, "%s: cannot find active service entry", s->s_nicename);
     goto done;
   }
 
   ac = as->ac;
   if (!ac) {
-    tvhtrace(LS_DVBCAM, "cannot find active cam entry");
+    tvhtrace(LS_DVBCAM, "%s: cannot find active cam entry", s->s_nicename);
     goto done;
   }
 
@@ -300,15 +314,25 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
   /* if this is update just send updated CAPMT to CAM */
   if (is_update) {
     tvhtrace(LS_DVBCAM, "CAPMT sent to CAM (update)");
-    list_mgmt = CA_LIST_MANAGEMENT_UPDATE;
+    bcmd = EN50221_CAPMT_BUILD_UPDATE;
   } else {
-    list_mgmt = ac->active_programs ? CA_LIST_MANAGEMENT_ADD :
-                                      CA_LIST_MANAGEMENT_ONLY;
+    if (ac->active_programs)
+      bcmd = EN50221_CAPMT_BUILD_ADD;
+    else
+      bcmd = EN50221_CAPMT_BUILD_ONLY;
     ac->active_programs++;
   }
 
-  linuxdvb_ca_enqueue_capmt(ac->ca, ac->slot, as->last_pmt, as->last_pmt_len,
-                            list_mgmt, CA_PMT_CMD_ID_OK_DESCRAMBLING);
+  r = en50221_capmt_build(s, bcmd,
+                          s->s_dvb_service_id,
+                          as->last_pmt, as->last_pmt_len,
+                          &capmt, &capmt_len);
+  if (r >= 0) {
+    linuxdvb_ca_enqueue_capmt(ac->ca, capmt, capmt_len, 1);
+    free(capmt);
+  } else {
+    tvherror(LS_DVBCAM, "CAPMT unable to build");
+  }
 done:
   pthread_mutex_unlock(&dvbcam_mutex);
   pthread_mutex_unlock(&s->s_stream_mutex);
@@ -319,16 +343,27 @@ dvbcam_service_destroy(th_descrambler_t *td)
 {
   dvbcam_active_service_t *as = (dvbcam_active_service_t *)td;
   dvbcam_active_cam_t *ac;
-  int do_active_programs = 0;
+  mpegts_service_t *s;
+  int do_active_programs = 0, r;
+  uint8_t *capmt;
+  size_t capmt_len;
 
   pthread_mutex_lock(&dvbcam_mutex);
   ac = as->ac;
   if (as->last_pmt) {
-    if (ac)
-      linuxdvb_ca_enqueue_capmt(ac->ca, ac->slot, as->last_pmt,
-                                as->last_pmt_len,
-                                CA_LIST_MANAGEMENT_UPDATE,
-                                CA_PMT_CMD_ID_NOT_SELECTED);
+    if (ac) {
+      s = (mpegts_service_t *)td->td_service;
+      r = en50221_capmt_build(s, EN50221_CAPMT_BUILD_DELETE,
+                              s->s_dvb_service_id,
+                              as->last_pmt, as->last_pmt_len,
+                              &capmt, &capmt_len);
+      if (r >= 0) {
+        linuxdvb_ca_enqueue_capmt(ac->ca, capmt, capmt_len, 0);
+        free(capmt);
+      } else {
+        tvherror(LS_DVBCAM, "CAPMT unable to build (destroy)");
+      }
+    }
     free(as->last_pmt);
     do_active_programs = 1;
   }
@@ -348,11 +383,12 @@ dvbcam_service_destroy(th_descrambler_t *td)
       break;
     }
   }
+  pthread_mutex_unlock(&dvbcam_mutex);
   mpegts_pid_done(&as->ecm_pids);
   mpegts_pid_done(&as->cat_pids);
   free(as->cat_data);
+  free(as->td_nicename);
   free(as);
-  pthread_mutex_unlock(&dvbcam_mutex);
 }
 
 #if ENABLE_DDCI
@@ -363,7 +399,7 @@ dvbcam_descramble_ddci(service_t *t, elementary_stream_t *st, const uint8_t *tsb
   dvbcam_active_service_t   *as = (dvbcam_active_service_t *)dr->dr_descrambler;
 
   if (as->ac != NULL)
-    linuxdvb_ddci_put(as->ac->ca->lddci, tsb, len);
+    linuxdvb_ddci_put(as->ac->ca->lca_transport->lddci, tsb, len);
 
   return 1;
 }
@@ -392,6 +428,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   mpegts_apids_t ecm_pids;
   mpegts_apids_t ecm_to_open;
   mpegts_apids_t ecm_to_close;
+  linuxdvb_transport_t *lcat;
 #endif
 
   if (!cac->cac_enabled)
@@ -453,7 +490,8 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
               continue;
   #if ENABLE_DDCI
             /* currently we allow only one service per DD CI */
-            if (ac->ca->lddci && linuxdvb_ddci_is_assigned(ac->ca->lddci))
+            lcat = ac->ca->lca_transport;
+            if (lcat->lddci && linuxdvb_ddci_is_assigned(lcat->lddci))
               continue;
   #endif
             tvhtrace(LS_DVBCAM, "%s/%p: match CAID %04X PID %d (%04X)",
@@ -526,7 +564,7 @@ end_of_search_for_cam:
 
   td = (th_descrambler_t *)as;
   snprintf(buf, sizeof(buf), "dvbcam-%i-%i-%04X",
-           ac->ca->lca_number, (int)ac->slot, (int)as->caid_list[0]);
+           ac->ca->lca_adapnum, ac->ca->lca_slotnum, (int)as->caid_list[0]);
   td->td_nicename = strdup(buf);
   td->td_service = t;
   td->td_stop = dvbcam_service_destroy;
@@ -534,11 +572,12 @@ end_of_search_for_cam:
   dr->dr_descrambler = td;
   dr->dr_descramble = descrambler_pass;
 #if ENABLE_DDCI
-  if (ac->ca->lddci) {
+  lcat = ac->ca->lca_transport;
+  if (lcat->lddci) {
     /* assign the service to the DD CI CAM */
-    linuxdvb_ddci_assign(ac->ca->lddci, t);
+    linuxdvb_ddci_assign(lcat->lddci, t);
     dr->dr_descramble = dvbcam_descramble_ddci;
-    as->is_ddci = 1;
+    as->lddci = lcat->lddci;
   }
 #endif
   descrambler_change_keystate(td, DS_READY, 0);
@@ -570,7 +609,7 @@ update_pid:
   pthread_mutex_unlock(&t->s_stream_mutex);
 
 #if ENABLE_DDCI
-  if (as && as->is_ddci) {
+  if (as && as->lddci) {
     mm = ((mpegts_service_t *)t)->s_dvb_mux;
     mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
     if (mi) {
@@ -643,7 +682,7 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
   pthread_mutex_lock(&dvbcam_mutex);
   /* look for CAID in all services */
   TAILQ_FOREACH(as, &dvbcam_active_services, global_link) {
-    if (!as->is_ddci) continue;
+    if (!as->lddci) continue;
     if (as->caid_list[0] == 0) continue;
     if (((mpegts_service_t *)as->td_service)->s_dvb_mux != mux) continue;
     if (len == as->cat_data_len &&

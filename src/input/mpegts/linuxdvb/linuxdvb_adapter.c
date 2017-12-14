@@ -56,7 +56,7 @@ linuxdvb_adapter_class_save ( idnode_t *in, char *filename, size_t fsize )
   htsmsg_t *m, *l;
   linuxdvb_frontend_t *lfe;
 #if ENABLE_LINUXDVB_CA
-  linuxdvb_ca_t *lca;
+  linuxdvb_transport_t *lcat;
 #endif
   char ubuf[UUID_HEX_SIZE];
 
@@ -73,8 +73,8 @@ linuxdvb_adapter_class_save ( idnode_t *in, char *filename, size_t fsize )
     /* CAs */
   #if ENABLE_LINUXDVB_CA
     l = htsmsg_create_map();
-    LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
-      linuxdvb_ca_save(lca, l);
+    LIST_FOREACH(lcat, &la->la_ca_transports, lcat_link)
+      linuxdvb_transport_save(lcat, l);
     htsmsg_add_msg(m, "ca_devices", l);
   #endif
 
@@ -90,6 +90,7 @@ linuxdvb_adapter_class_get_childs ( idnode_t *in )
 {
   linuxdvb_frontend_t *lfe;
 #if ENABLE_LINUXDVB_CA
+  linuxdvb_transport_t *lcat;
   linuxdvb_ca_t *lca;
 #endif
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
@@ -97,8 +98,9 @@ linuxdvb_adapter_class_get_childs ( idnode_t *in )
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
     idnode_set_add(is, &lfe->ti_id, NULL, NULL);
 #if ENABLE_LINUXDVB_CA
-  LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
-    idnode_set_add(is, &lca->lca_id, NULL, NULL);
+  LIST_FOREACH(lcat, &la->la_ca_transports, lcat_link)
+    LIST_FOREACH(lca, &lcat->lcat_slots, lca_link)
+      idnode_set_add(is, &lca->lca_id, NULL, NULL);
 #endif
   return is;
 }
@@ -116,18 +118,21 @@ linuxdvb_adapter_class_active_get ( void *obj )
 {
   static int active;
 #if ENABLE_LINUXDVB_CA
+  linuxdvb_transport_t *lcat;
   linuxdvb_ca_t *lca;
 #endif
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)obj;
   active = la->la_is_enabled(la);
 #if ENABLE_LINUXDVB_CA
   if (!active) {
-    LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
-      if (lca->lca_enabled) {
-        active = 1;
-        break;
-      }
+    LIST_FOREACH(lcat, &la->la_ca_transports, lcat_link)
+      LIST_FOREACH(lca, &lcat->lcat_slots, lca_link)
+        if (lca->lca_enabled) {
+          active = 1;
+          goto caok;
+        }
   }
+caok:
 #endif
   return &active;
 }
@@ -346,6 +351,7 @@ linuxdvb_adapter_add ( const char *path )
   int a, i, j, r, fd;
   char fe_path[512], dmx_path[512], dvr_path[512], name[132];
 #if ENABLE_LINUXDVB_CA
+  linuxdvb_transport_t *lcat;
   char ca_path[512];
   htsmsg_t *caconf = NULL;
   const char *ci_found = NULL;
@@ -356,6 +362,7 @@ linuxdvb_adapter_add ( const char *path )
 #endif
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
+  ca_caps_t cac;
   htsmsg_t *conf = NULL, *feconf = NULL;
   int save = 0;
   dvb_fe_type_t type;
@@ -523,10 +530,21 @@ linuxdvb_adapter_add ( const char *path )
       tvherror(LS_LINUXDVB, "unable to open %s", ca_path);
       continue;
     }
+    memset(&cac, 0, sizeof(cac));
     r = ioctl(fd, CA_RESET, NULL);
+    if (r == 0)
+      r = ioctl(fd, CA_GET_CAP, &cac);
     close(fd);
     if(r) {
       tvherror(LS_LINUXDVB, "unable to query %s", ca_path);
+      continue;
+    }
+    if(cac.slot_num == 0) {
+      tvherror(LS_LINUXDVB, "CAM %s has no slots", ca_path);
+      continue;
+    }
+    if((cac.slot_type & (CA_CI_LINK|CA_CI)) == 0) {
+      tvherror(LS_LINUXDVB, "unsupported CAM type %08x", cac.slot_type);
       continue;
     }
 
@@ -565,14 +583,18 @@ linuxdvb_adapter_add ( const char *path )
       la = linuxdvb_adapter_new(path, a, ca_path, name, &conf, &save);
       if (la == NULL) {
         tvherror(LS_LINUXDVB, "failed to create %s", path);
-        return; // Note: save to return here as global_lock is held
+        continue;
       }
     }
 
     if (conf)
       caconf = htsmsg_get_map(conf, "ca_devices");
 
-    linuxdvb_ca_create(caconf, la, i, ca_path, ci_found);
+    lcat = linuxdvb_transport_create(la, cac.slot_num, ca_path, ci_found);
+    if (lcat) {
+      for (j = 0; j < cac.slot_num; j++)
+        linuxdvb_ca_create(caconf, lcat, j);
+    }
     pthread_mutex_unlock(&global_lock);
   }
 #endif /* ENABLE_LINUXDVB_CA */
@@ -620,7 +642,10 @@ static void
 linuxdvb_adapter_del ( const char *path )
 {
   int a;
-  linuxdvb_frontend_t *lfe, *next;
+  linuxdvb_frontend_t *lfe, *lfe_next;
+#if ENABLE_LINUXDVB_CA
+  linuxdvb_transport_t *lcat, *lcat_next;
+#endif
   linuxdvb_adapter_t *la = NULL;
   tvh_hardware_t *th;
 
@@ -636,10 +661,18 @@ linuxdvb_adapter_del ( const char *path )
     idnode_save_check(&la->th_id, 0);
   
     /* Delete the frontends */
-    for (lfe = LIST_FIRST(&la->la_frontends); lfe != NULL; lfe = next) {
-      next = LIST_NEXT(lfe, lfe_link);
-      linuxdvb_frontend_delete(lfe);
+    for (lfe = LIST_FIRST(&la->la_frontends); lfe != NULL; lfe = lfe_next) {
+      lfe_next = LIST_NEXT(lfe, lfe_link);
+      linuxdvb_frontend_destroy(lfe);
     }
+    
+#if ENABLE_LINUXDVB_CA
+    /* Delete the CA devices */
+    for (lcat = LIST_FIRST(&la->la_ca_transports); lcat != NULL; lcat = lcat_next) {
+      lcat_next = LIST_NEXT(lcat, lcat_link);
+      linuxdvb_transport_destroy(lcat);
+    }
+#endif
 
     /* Free memory */
     free(la->la_rootpath);
@@ -762,6 +795,7 @@ linuxdvb_adapter_init ( void )
 
 #if ENABLE_LINUXDVB_CA
   idclass_register(&linuxdvb_ca_class);
+  linuxdvb_ca_init();
 #endif
 
   /* Install monitor on /dev */
@@ -792,5 +826,8 @@ linuxdvb_adapter_done ( void )
       linuxdvb_adapter_del(la->la_rootpath);
     }
   }
+#if ENABLE_LINUXDVB_CA
+  linuxdvb_ca_done();
+#endif
   pthread_mutex_unlock(&global_lock);
 }
