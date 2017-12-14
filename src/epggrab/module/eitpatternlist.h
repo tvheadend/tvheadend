@@ -19,8 +19,8 @@
 #ifndef __EITPATTERN_LIST__
 #define __EITPATTERN_LIST__
 
-#include <regex.h>
 #include "queue.h"
+#include "tvhregex.h"
 
 typedef struct eit_pattern
 {

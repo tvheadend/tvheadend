@@ -1,5 +1,6 @@
 #define __USE_GNU
 #include "tvheadend.h"
+#include <assert.h>
 #include <fcntl.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
@@ -447,6 +448,7 @@ void regex_free(tvh_regex_t *regex)
   pcre_free(regex->re_code);
   regex->re_extra = NULL;
   regex->re_code = NULL;
+  regex->re_text = NULL;
 #elif ENABLE_PCRE2
   pcre2_jit_stack_free(regex->re_jit_stack);
   pcre2_match_data_free(regex->re_match);
@@ -458,20 +460,23 @@ void regex_free(tvh_regex_t *regex)
   regex->re_jit_stack = NULL;
 #else
   regfree(&regex->re_code);
+  regex->re_text = NULL;
 #endif
 }
 
-int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
+int regex_compile(tvh_regex_t *regex, const char *re_str, int flags, int subsys)
 {
 #if ENABLE_PCRE
   const char *estr;
   int eoff;
+  int options = PCRE_UTF8;
+  if (flags & TVHREGEX_CASELESS)
+    options |= PCRE_CASELESS;
 #if PCRE_STUDY_JIT_COMPILE
   regex->re_jit_stack = NULL;
 #endif
   regex->re_extra = NULL;
-  regex->re_code = pcre_compile(re_str, PCRE_CASELESS | PCRE_UTF8,
-                                &estr, &eoff, NULL);
+  regex->re_code = pcre_compile(re_str, options, &estr, &eoff, NULL);
   if (regex->re_code == NULL) {
     tvherror(subsys, "Unable to compile PCRE '%s': %s", re_str, estr);
   } else {
@@ -494,18 +499,21 @@ int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
   int ecode;
   PCRE2_SIZE eoff;
   size_t jsz;
+  uint32_t options;
   assert(regex->re_jit_stack == NULL);
   regex->re_jit_stack = NULL;
   regex->re_match = NULL;
   regex->re_mcontext = pcre2_match_context_create(NULL);
-  regex->re_code = pcre2_compile((PCRE2_SPTR8)re_str, -1,
-                                 PCRE2_CASELESS | PCRE2_UTF,
+  options = PCRE2_UTF;
+  if (flags & TVHREGEX_CASELESS)
+    options |= PCRE2_CASELESS;
+  regex->re_code = pcre2_compile((PCRE2_SPTR8)re_str, -1, options,
                                  &ecode, &eoff, NULL);
   if (regex->re_code == NULL) {
     (void)pcre2_get_error_message(ecode, ebuf, 120);
     tvherror(subsys, "Unable to compile PCRE2 '%s': %s", re_str, ebuf);
   } else {
-    regex->re_match = pcre2_match_data_create(20, NULL);
+    regex->re_match = pcre2_match_data_create(TVHREGEX_MAX_MATCHES, NULL);
     if (re_str[0] && pcre2_jit_compile(regex->re_code, PCRE2_JIT_COMPLETE) >= 0) {
       jsz = 0;
       if (pcre2_pattern_info(regex->re_code, PCRE2_INFO_JITSIZE, &jsz) >= 0 && jsz > 0) {
@@ -518,10 +526,76 @@ int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
   }
   return -1;
 #else
-  if (!regcomp(&regex->re_code, re_str,
-               REG_ICASE | REG_EXTENDED | REG_NOSUB))
+  int options = REG_EXTENDED;
+  if (flags & TVHREGEX_CASELESS)
+    options |= REG_ICASE;
+  if (!regcomp(&regex->re_code, re_str, options))
     return 0;
   tvherror(subsys, "Unable to compile regex '%s'", re_str);
   return -1;
+#endif
+}
+
+int regex_match(tvh_regex_t *regex, const char *str)
+{
+#if ENABLE_PCRE
+  regex->re_text = str;
+  regex->re_matches =
+    pcre_exec(regex->re_code, regex->re_extra,
+              str, strlen(str), 0, 0, regex->re_match, TVHREGEX_MAX_MATCHES * 3);
+  return regex->re_matches < 0;
+#elif ENABLE_PCRE2
+  return pcre2_match(regex->re_code, (PCRE2_SPTR8)str, -1, 0, 0,
+                     regex->re_match, regex->re_mcontext) <= 0;
+#else
+  regex->re_text = str;
+  return regexec(&regex->re_code, str, TVHREGEX_MAX_MATCHES, regex->re_match, 0);
+#endif
+}
+
+int regex_match_substring(tvh_regex_t *regex, unsigned number, char *buf, size_t size_buf)
+{
+  assert(buf);
+  if (number >= TVHREGEX_MAX_MATCHES)
+    return -2;
+#if ENABLE_PCRE
+  return pcre_copy_substring(regex->re_text, regex->re_match,
+                             (regex->re_matches == 0)
+                             ? TVHREGEX_MAX_MATCHES
+                             : regex->re_matches,
+                             number, buf, size_buf) < 0;
+#elif ENABLE_PCRE2
+  PCRE2_SIZE psiz = size_buf;
+  return pcre2_substring_copy_bynumber(regex->re_match, number, (PCRE2_UCHAR8*)buf, &psiz);
+#else
+  if (regex->re_match[number].rm_so == -1)
+    return -1;
+  ssize_t size = regex->re_match[number].rm_eo - regex->re_match[number].rm_so;
+  if (size < 0 || size > (size_buf - 1))
+    return -1;
+  memcpy(buf, regex->re_text + regex->re_match[number].rm_so, size);
+  buf[size] = '\0';
+  return 0;
+#endif
+}
+
+int regex_match_substring_length(tvh_regex_t *regex, unsigned number)
+{
+  if (number >= TVHREGEX_MAX_MATCHES)
+    return -2;
+#if ENABLE_PCRE
+  if (number >= regex->re_matches)
+    return -1;
+  if (regex->re_match[number * 2] == -1)
+    return -1;
+  return regex->re_match[number * 2 + 1] - regex->re_match[number * 2];
+#elif ENABLE_PCRE2
+  PCRE2_SIZE len;
+  int rc = pcre2_substring_length_bynumber(regex->re_match, number, &len);
+  return (!rc) ? len : -1;
+#else
+  if (regex->re_match[number].rm_so == -1)
+    return -1;
+  return regex->re_match[number].rm_eo - regex->re_match[number].rm_so;
 #endif
 }
