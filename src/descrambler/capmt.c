@@ -99,6 +99,7 @@ typedef struct dmx_filter {
 // ca_pmt_descriptor types
 #define CAPMT_DESC_ENIGMA  0x81
 #define CAPMT_DESC_DEMUX   0x82
+#define CAPMT_DESC_ADAPTER 0x83
 #define CAPMT_DESC_PID     0x84
 
 // message type
@@ -2197,16 +2198,6 @@ capmt_send_request(capmt_service_t *ct, int lm)
   buf[pos++] = 1; /* OK DESCRAMBLING, skipped for parse_descriptors, but */
                   /* mandatory for getDemuxOptions() */
 
-  /* build program info tags */
-
-  if (capmt->capmt_oscam != CAPMT_OSCAM_SO_WRAPPER) {
-    /* build SI tag */
-    buf[pos++] = CAPMT_DESC_DEMUX;
-    buf[pos++] = 2;
-    buf[pos++] = 0;
-    buf[pos++] = adapter_num;
-  }
-
   /* build SI tag */
   buf[pos++] = CAPMT_DESC_ENIGMA;
   buf[pos++] = 8;
@@ -2219,19 +2210,24 @@ capmt_send_request(capmt_service_t *ct, int lm)
   buf[pos++] = onid >> 8;
   buf[pos++] = onid;
 
-  if (capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER) {
-    /* build SI tag */
-    buf[pos++] = CAPMT_DESC_DEMUX;
-    buf[pos++] = 2;
-    buf[pos++] = 1 << adapter_num;
-    buf[pos++] = adapter_num;
-  }
+  /* build SI tag */
+  buf[pos++] = CAPMT_DESC_DEMUX;
+  buf[pos++] = 2;
+  buf[pos++] = 1 << adapter_num;
+  buf[pos++] = capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER ? adapter_num : 0;
 
   /* build SI tag */
   buf[pos++] = CAPMT_DESC_PID;
   buf[pos++] = 2;
   buf[pos++] = pmtpid >> 8;
   buf[pos++] = pmtpid;
+
+  if (capmt->capmt_oscam != CAPMT_OSCAM_SO_WRAPPER) {
+    /* build SI tag */
+    buf[pos++] = CAPMT_DESC_ADAPTER;
+    buf[pos++] = 1;
+    buf[pos++] = adapter_num;
+  }
 
   capmt_caid_ecm_t *cce2;
   LIST_FOREACH(cce2, &ct->ct_caid_ecm, cce_link) {
