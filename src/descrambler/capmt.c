@@ -404,7 +404,7 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid, uint32_t flags)
 
   lock_assert(&capmt->capmt_mutex);
 
-  if (pid <= 0)
+  if (pid < 0)
     return;
   for (i = 0; i < MAX_PIDS; i++) {
     o = &ca->ca_pids[i];
@@ -825,6 +825,20 @@ capmt_send_stop_descrambling(capmt_t *capmt, uint8_t demuxer)
 }
 
 /**
+ *
+ */
+static void
+capmt_init_demuxes(capmt_t *capmt)
+{
+  int i, j;
+
+  memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
+  for (i = 0; i < MAX_INDEX; i++)
+    for (j = 0; j < MAX_FILTER; j++)
+      capmt->capmt_demuxes.filters[i].dmx[j].pid = PID_UNUSED;
+}
+
+/**
  * global_lock is held
  */
 static void 
@@ -871,7 +885,7 @@ capmt_service_destroy(th_descrambler_t *td)
   }
 
   if (LIST_EMPTY(&capmt->capmt_services))
-    memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
+    capmt_init_demuxes(capmt);
 
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
@@ -974,7 +988,7 @@ cont:
 
   cf->adapter = adapter;
   filter = &cf->dmx[filter_index];
-  if (!filter->pid) {
+  if (filter->pid == PID_UNUSED) {
     add = 1;
   } else if (pid != filter->pid || flags != filter->flags) {
     capmt_pid_remove(capmt, adapter, filter->pid, filter->flags);
@@ -1026,10 +1040,11 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     goto end;
   flags = filter->flags;
   memset(filter, 0, sizeof(*filter));
+  filter->pid = PID_UNUSED;
   capmt_pid_remove(capmt, adapter, pid, flags);
   /* short the max values */
   filter_index = cf->max - 1;
-  while (filter_index != 255 && cf->dmx[filter_index].pid == 0)
+  while (filter_index != 255 && cf->dmx[filter_index].pid == PID_UNUSED)
     filter_index--;
   cf->max = filter_index == 255 ? 0 : filter_index + 1;
   demux_index = capmt->capmt_demuxes.max - 1;
@@ -1819,7 +1834,7 @@ capmt_thread(void *aux)
       capmt->capmt_sock[i] = -1;
       capmt->capmt_sock_reconnect[i] = 0;
     }
-    memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
+    capmt_init_demuxes(capmt);
 
     /* Accessible */
     if (capmt->capmt_sockfile && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
