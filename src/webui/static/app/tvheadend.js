@@ -284,8 +284,8 @@ tvheadend.displayCategoryIcon = function(value, meta, record, ri, ci, store) {
 tvheadend.contentTypeAction = {
   width: 75,
   id: 'category',
-  header: _("Content Type"),
-  tooltip: _("Content Type"),
+  header: _("Content Icons"),
+  tooltip: _("Content Icons"),
   dataIndex: 'category',
   renderer: tvheadend.displayCategoryIcon,
 };
