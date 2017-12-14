@@ -583,7 +583,7 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
     if (dae->dae_title)
       autorec_regfree(dae);
     dae->dae_error = 0;
-    if (!regex_compile(&dae->dae_title_regex, title, LS_DVR))
+    if (!regex_compile(&dae->dae_title_regex, title, TVHREGEX_CASELESS, LS_DVR))
       dae->dae_title = strdup(title);
     else
       dae->dae_error = 1;
