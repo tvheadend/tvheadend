@@ -104,6 +104,7 @@ typedef struct epggrab_ota_module_ops {
     void (*done)     (void *m);
     int  (*tune)     (epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                       struct mpegts_mux *mm);
+    void (*process_data) (void *m, void *data, uint32_t len);
     void  *opaque;
 } epggrab_ota_module_ops_t;
 

@@ -39,17 +39,21 @@
 #include "cron.h"
 
 /* Thread protection */
-static int            epggrab_confver;
-pthread_mutex_t       epggrab_mutex;
-static pthread_cond_t epggrab_cond;
-int                   epggrab_running;
+static int             epggrab_confver;
+pthread_mutex_t        epggrab_mutex;
+static pthread_cond_t  epggrab_cond;
+static pthread_mutex_t epggrab_data_mutex;
+static pthread_cond_t  epggrab_data_cond;
+int                    epggrab_running;
+
+static TAILQ_HEAD(, epggrab_module) epggrab_data_modules;
 
 /* Config */
-epggrab_module_list_t epggrab_modules;
+epggrab_module_list_t  epggrab_modules;
 
-gtimer_t              epggrab_save_timer;
+gtimer_t               epggrab_save_timer;
 
-static cron_multi_t  *epggrab_cron_multi;
+static cron_multi_t   *epggrab_cron_multi;
 
 /* **************************************************************************
  * Internal Grab Thread
@@ -83,7 +87,7 @@ static void _epggrab_module_grab ( epggrab_module_int_t *mod )
 /*
  * Thread (for internal grabbing)
  */
-static void* _epggrab_internal_thread ( void* p )
+static void *_epggrab_internal_thread( void *aux )
 {
   epggrab_module_t *mod;
   int err, confver = -1; // force first run
@@ -141,6 +145,74 @@ epggrab_rerun_internal(void)
 {
   epggrab_confver++;
   pthread_cond_signal(&epggrab_cond);
+}
+
+/*
+ * Thread (for data queue processing)
+ */
+static void *_epggrab_data_thread( void *aux )
+{
+  epggrab_module_t *mod;
+  epggrab_queued_data_t *eq;
+
+  /* Time for other jobs */
+  while (atomic_get(&epggrab_running)) {
+    pthread_mutex_lock(&epggrab_data_mutex);
+    do {
+      eq = NULL;
+      mod = TAILQ_FIRST(&epggrab_data_modules);
+      if (mod) {
+        eq = TAILQ_FIRST(&mod->data_queue);
+        if (eq) {
+          TAILQ_REMOVE(&mod->data_queue, eq, eq_link);
+          if (TAILQ_EMPTY(&mod->data_queue))
+            TAILQ_REMOVE(&epggrab_data_modules, mod, qlink);
+        }
+      }
+      if (eq == NULL) {
+        while (atomic_get(&epggrab_running))
+          pthread_cond_wait(&epggrab_cond, &epggrab_data_mutex);
+      }
+    } while (eq == NULL && atomic_get(&epggrab_running));
+    pthread_mutex_unlock(&epggrab_data_mutex);
+    mod->process_data(mod, eq->eq_data, eq->eq_len);
+    free(eq);
+  }
+  pthread_mutex_lock(&epggrab_data_mutex);
+  while ((mod = TAILQ_FIRST(&epggrab_data_modules)) != NULL) {
+    while ((eq = TAILQ_FIRST(&mod->data_queue)) != NULL) {
+      TAILQ_REMOVE(&mod->data_queue, eq, eq_link);
+      free(eq);
+    }
+    TAILQ_REMOVE(&epggrab_data_modules, mod, qlink);
+  }
+  pthread_mutex_unlock(&epggrab_data_mutex);
+  return NULL;
+}
+
+void epggrab_queue_data(epggrab_module_t *mod,
+                        const void *data1, uint32_t len1,
+                        const void *data2, uint32_t len2)
+{
+  epggrab_queued_data_t *eq;
+
+  if (!atomic_get(&epggrab_running))
+    return;
+  eq = malloc(sizeof(*eq) + len1 + len2);
+  if (eq == NULL)
+    return;
+  eq->eq_len = len1 + len2;
+  if (len1)
+    memcpy(eq->eq_data, data1, len1);
+  if (len2)
+    memcpy(eq->eq_data + len1, data2, len2);
+  pthread_mutex_lock(&epggrab_data_mutex);
+  TAILQ_INSERT_TAIL(&mod->data_queue, eq, eq_link);
+  if (TAILQ_EMPTY(&mod->data_queue)) {
+    pthread_cond_signal(&epggrab_data_cond);
+    TAILQ_INSERT_TAIL(&epggrab_data_modules, mod, qlink);
+  }
+  pthread_mutex_unlock(&epggrab_data_mutex);
 }
 
 /* **************************************************************************
@@ -401,6 +473,7 @@ void epggrab_resched ( void )
  * Initialise
  */
 pthread_t      epggrab_tid;
+pthread_t      epggrab_data_tid;
 
 void epggrab_init ( void )
 {
@@ -415,6 +488,8 @@ void epggrab_init ( void )
 
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
+
+  TAILQ_INIT(&epggrab_data_modules);
 
   idclass_register(&epggrab_class);
   idclass_register(&epggrab_mod_class);
@@ -446,9 +521,10 @@ void epggrab_init ( void )
   /* Post-init for OTA subsystem */
   epggrab_ota_post();
 
-  /* Start internal grab thread */
+  /* Start internal and data queue grab thread */
   atomic_set(&epggrab_running, 1);
   tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL, "epggrabi");
+  tvhthread_create(&epggrab_data_tid, NULL, _epggrab_data_thread, NULL, "epggrabd");
 }
 
 /*
@@ -460,7 +536,9 @@ void epggrab_done ( void )
 
   atomic_set(&epggrab_running, 0);
   pthread_cond_signal(&epggrab_cond);
+  pthread_cond_signal(&epggrab_data_cond);
   pthread_join(epggrab_tid, NULL);
+  pthread_join(epggrab_data_tid, NULL);
 
   pthread_mutex_lock(&global_lock);
   while ((mod = LIST_FIRST(&epggrab_modules)) != NULL) {

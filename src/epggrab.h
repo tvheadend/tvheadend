@@ -27,6 +27,7 @@
  * Typedefs/Forward decls
  * *************************************************************************/
 
+typedef struct epggrab_queued_data  epggrab_queued_data_t;
 typedef struct epggrab_module       epggrab_module_t;
 typedef struct epggrab_module_int   epggrab_module_int_t;
 typedef struct epggrab_module_ext   epggrab_module_ext_t;
@@ -140,12 +141,23 @@ int epggrab_channel_is_ota ( epggrab_channel_t *ec );
  * *************************************************************************/
 
 /*
+ * Data queue
+ */
+struct epggrab_queued_data
+{
+  TAILQ_ENTRY(epggrab_queued_data) eq_link;
+  uint32_t                         eq_len;
+  uint8_t                          eq_data[0]; ///< Data are allocated at the end of structure
+};
+
+/*
  * Grabber base class
  */
 struct epggrab_module
 {
   idnode_t                     idnode;
   LIST_ENTRY(epggrab_module)   link;      ///< Global list link
+  TAILQ_ENTRY(epggrab_module)  qlink;     ///< Queued data link
 
   enum {
     EPGGRAB_OTA,
@@ -161,11 +173,16 @@ struct epggrab_module
   int                          priority;  ///< Priority of the module
   epggrab_channel_tree_t       channels;  ///< Channel list
 
+  TAILQ_HEAD(, epggrab_queued_data) data_queue;
+
   /* Activate */
-  int       (*activate) ( void *m, int activate );
+  int       (*activate)( void *m, int activate );
 
   /* Free */
-  void      (*done)    ( void *m );
+  void      (*done)( void *m );
+
+  /* Process queued data */
+  void      (*process_data)( void *m, void *data, uint32_t len );
 };
 
 /*
@@ -308,6 +325,13 @@ extern struct epggrab_channel_queue epggrab_channel_entries;
 epggrab_module_t* epggrab_module_find_by_id ( const char *id );
 const char * epggrab_module_type(epggrab_module_t *mod);
 const char * epggrab_module_get_status(epggrab_module_t *mod);
+
+/*
+ * Data queue
+ */
+void epggrab_queue_data(epggrab_module_t *mod,
+                        const void *data1, uint32_t len1,
+                        const void *data2, uint32_t len2);
 
 /* **************************************************************************
  * Setup/Configuration

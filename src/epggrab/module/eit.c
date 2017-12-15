@@ -46,6 +46,14 @@ typedef struct eit_private
 #define EIT_SPEC_NZ_FREEVIEW        2
 #define EIT_SPEC_UK_CABLE_VIRGIN    3
 
+/* Queued data structure */
+typedef struct eit_data_t
+{
+  tvh_uuid_t svc_uuid;
+  int        tableid;
+  int        sect;
+  int        local_time;
+} eit_data_t;
 
 /* Provider configuration */
 typedef struct eit_module_t
@@ -73,7 +81,9 @@ typedef struct eit_event
 
   const char       *default_charset;
 
+#if TODO_ADD_EXTRA
   htsmsg_t         *extra;
+#endif
 
   epg_genre_list_t *genre;
 
@@ -792,12 +802,41 @@ static int _eit_process_event
   return 12 + (((ptr[10] & 0x0f) << 8) | ptr[11]);
 }
 
+static void
+_eit_process_data(void *m, void *data, uint32_t len)
+{
+  int save = 0, resched = 0;
+  eit_data_t ed;
+  mpegts_service_t *svc;
+
+  assert(len >= sizeof(ed));
+  memcpy(&ed, data, sizeof(ed));
+  data += sizeof(ed);
+  len -= sizeof(ed);
+  svc = (mpegts_service_t *)service_find0(&ed.svc_uuid);
+  if (svc == NULL)
+    return;
+  pthread_mutex_lock(&global_lock);
+  while (len) {
+    int r;
+    if ((r = _eit_process_event(m, ed.tableid, ed.sect, svc, data, len,
+                                ed.local_time, &resched, &save)) < 0)
+      break;
+    assert(r > 0);
+    len -= r;
+    data += r;
+  }
+  pthread_mutex_unlock(&global_lock);
+
+  if (save)    epg_updated();
+  if (resched) epggrab_resched();
+}
 
 static int
 _eit_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r, sect, last, ver, save, resched, spec;
+  int r, sect, last, ver, spec;
   uint8_t  seg;
   uint16_t onid, tsid, sid;
   uint32_t extraid;
@@ -808,6 +847,7 @@ _eit_callback
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_psi_table_state_t *st;
   th_subscription_t    *ths;
+  eit_data_t            data;
   char ubuf[UUID_HEX_SIZE];
 
   if (!epggrab_ota_running)
@@ -928,25 +968,17 @@ svc_ok:
   if (svc->s_dvb_ignore_eit)
     goto done;
 
-  /* Process events */
-  save = resched = 0;
+  /* Queue events */
   len -= 11;
   ptr += 11;
-  while (len) {
-    int r;
-    if ((r = _eit_process_event(mod, tableid, sect, svc, ptr, len,
-                                mm->mm_network->mn_localtime,
-                                &resched, &save)) < 0)
-      break;
-    assert(r > 0);
-    len -= r;
-    ptr += r;
+  if (len >= 12) {
+    data.tableid = tableid;
+    data.sect = sect;
+    data.svc_uuid = svc->s_id.in_uuid;
+    data.local_time = mm->mm_network->mn_localtime;
+    epggrab_queue_data(mod, &data, sizeof(data), ptr, len);
   }
 
-  /* Update EPG */
-  if (resched) epggrab_resched();
-  if (save)    epg_updated();
-  
 done:
   r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 complete:
@@ -1172,6 +1204,7 @@ static eit_module_t *eit_module_ota_create
     .start  = _eit_start, \
     .done = _eit_done, \
     .activate = _eit_activate, \
+    .process_data = _eit_process_data, \
     .tune   = _eit_tune, \
     .opaque = &opaque_##name, \
   }
