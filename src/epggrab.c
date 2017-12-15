@@ -175,8 +175,10 @@ static void *_epggrab_data_thread( void *aux )
       }
     } while (eq == NULL && atomic_get(&epggrab_running));
     pthread_mutex_unlock(&epggrab_data_mutex);
-    mod->process_data(mod, eq->eq_data, eq->eq_len);
-    free(eq);
+    if (eq) {
+      mod->process_data(mod, eq->eq_data, eq->eq_len);
+      free(eq);
+    }
   }
   pthread_mutex_lock(&epggrab_data_mutex);
   while ((mod = TAILQ_FIRST(&epggrab_data_modules)) != NULL) {
