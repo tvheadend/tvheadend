@@ -505,7 +505,7 @@ static int _eit_process_event_one
   ( epggrab_module_t *mod, int tableid, int sect,
     mpegts_service_t *svc, channel_t *ch,
     const uint8_t *ptr, int len,
-    int local, int *resched, int *save )
+    int local, int *save )
 {
   eit_module_t* eit_mod = (eit_module_t*)mod;
   int dllen, save2 = 0, rsonly = 0;
@@ -551,10 +551,8 @@ static int _eit_process_event_one
   }
 
   /* Mark re-schedule detect (only now/next) */
-  if (!rsonly) {
-    if (save2 && tableid < 0x50) *resched = 1;
+  if (!rsonly)
     *save |= save2;
-  }
 
   /* Process tags */
   memset(&ev, 0, sizeof(ev));
@@ -785,7 +783,7 @@ tidy:
 static int _eit_process_event
   ( epggrab_module_t *mod, int tableid, int sect,
     mpegts_service_t *svc, const uint8_t *ptr, int len,
-    int local, int *resched, int *save )
+    int local, int *save )
 {
   idnode_list_mapping_t *ilm;
   channel_t *ch;
@@ -796,7 +794,7 @@ static int _eit_process_event
     ch = (channel_t *)ilm->ilm_in2;
     if (!ch->ch_enabled || ch->ch_epg_parent) continue;
     if (_eit_process_event_one(mod, tableid, sect, svc, ch,
-                               ptr, len, local, resched, save) < 0)
+                               ptr, len, local, save) < 0)
       return -1;
   }
   return 12 + (((ptr[10] & 0x0f) << 8) | ptr[11]);
@@ -805,7 +803,7 @@ static int _eit_process_event
 static void
 _eit_process_data(void *m, void *data, uint32_t len)
 {
-  int save = 0, resched = 0;
+  int save = 0;
   eit_data_t ed;
   mpegts_service_t *svc;
 
@@ -820,7 +818,7 @@ _eit_process_data(void *m, void *data, uint32_t len)
   while (len) {
     int r;
     if ((r = _eit_process_event(m, ed.tableid, ed.sect, svc, data, len,
-                                ed.local_time, &resched, &save)) < 0)
+                                ed.local_time, &save)) < 0)
       break;
     assert(r > 0);
     len -= r;
@@ -829,7 +827,6 @@ _eit_process_data(void *m, void *data, uint32_t len)
   pthread_mutex_unlock(&global_lock);
 
   if (save)    epg_updated();
-  if (resched) epggrab_resched();
 }
 
 static int

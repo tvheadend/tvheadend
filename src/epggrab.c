@@ -463,13 +463,6 @@ int epggrab_activate_module ( epggrab_module_t *mod, int a )
 }
 
 /*
- * TODO: implement this
- */
-void epggrab_resched ( void )
-{
-}
-
-/*
  * Initialise
  */
 pthread_t      epggrab_tid;
