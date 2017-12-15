@@ -1296,7 +1296,7 @@ bouquet_service_resolve(void)
         if ((e = htsmsg_field_get_map(f)) == NULL) continue;
         lcn = htsmsg_get_s64_or_default(e, "lcn", 0);
         tag = htsmsg_get_str(e, "tag");
-        s = service_find_by_identifier(f->hmf_name);
+        s = service_find_by_uuid(f->hmf_name);
         if (s)
           bouquet_add_service(bq, s, lcn, tag);
       }

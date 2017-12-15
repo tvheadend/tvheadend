@@ -66,7 +66,7 @@ static void _epgdb_v1_process ( htsmsg_t *c, epggrab_stats_t *stats )
 
   /* Check key info */
   if(htsmsg_get_u32(c, "ch_id", &ch_id)) return;
-  if((ch = channel_find_by_identifier(ch_id)) == NULL) return;
+  if((ch = channel_find_by_id(ch_id)) == NULL) return;
   if(htsmsg_get_u32(c, "start", &e_start)) return;
   if(htsmsg_get_u32(c, "stop", &e_stop)) return;
   if(!(title = htsmsg_get_str(c, "title"))) return;

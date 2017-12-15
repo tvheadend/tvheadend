@@ -1659,7 +1659,7 @@ channel_tag_find_by_name(const char *name, int create)
  *
  */
 channel_tag_t *
-channel_tag_find_by_identifier(uint32_t id) {
+channel_tag_find_by_id(uint32_t id) {
   channel_tag_t *ct;
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link) {

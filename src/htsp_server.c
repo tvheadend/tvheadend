@@ -701,7 +701,7 @@ htsp_channel_tag_get_identifier(channel_tag_t *ct)
 }
 
 static channel_tag_t *
-htsp_channel_tag_find_by_identifier(htsp_connection_t *htsp, uint32_t id)
+htsp_channel_tag_find_by_id(htsp_connection_t *htsp, uint32_t id)
 {
   channel_tag_t *ct;
 
@@ -1752,7 +1752,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
       eq.channel = strdup(idnode_uuid_as_str(&ch->ch_id, ubuf));
   }
   if(!(htsmsg_get_u32(in, "tagId", &u32))) {
-    if (!(ct = htsp_channel_tag_find_by_identifier(htsp, u32)))
+    if (!(ct = htsp_channel_tag_find_by_id(htsp, u32)))
       return htsp_error(htsp, N_("Channel tag does not exist"));
     else
       eq.channel_tag = strdup(idnode_uuid_as_str(&ct->ct_id, ubuf));

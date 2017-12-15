@@ -123,7 +123,7 @@ api_service_streams
   pthread_mutex_lock(&global_lock);
 
   /* Couldn't find */
-  if (!(s = service_find(uuid))) {
+  if (!(s = service_find_by_uuid(uuid))) {
     pthread_mutex_unlock(&global_lock);
     return EINVAL;
   }

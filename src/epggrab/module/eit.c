@@ -811,7 +811,7 @@ _eit_process_data(void *m, void *data, uint32_t len)
   memcpy(&ed, data, sizeof(ed));
   data += sizeof(ed);
   len -= sizeof(ed);
-  svc = (mpegts_service_t *)service_find0(&ed.svc_uuid);
+  svc = (mpegts_service_t *)service_find_by_uuid0(&ed.svc_uuid);
   if (svc == NULL)
     return;
   pthread_mutex_lock(&global_lock);

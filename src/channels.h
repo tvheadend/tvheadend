@@ -156,7 +156,7 @@ channel_tag_t *channel_tag_create(const char *uuid, htsmsg_t *conf);
 
 channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 
-channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
+channel_tag_t *channel_tag_find_by_id(uint32_t id);
 
 static inline channel_tag_t *channel_tag_find_by_uuid(const char *uuid)
   {  return (channel_tag_t*)idnode_find(uuid, &channel_tag_class, NULL); }

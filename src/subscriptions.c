@@ -1284,7 +1284,7 @@ dummy_retry(void *opaque)
 void
 subscription_dummy_join(const char *id, int first)
 {
-  service_t *t = service_find_by_identifier(id);
+  service_t *t = service_find_by_uuid(id);
   profile_chain_t *prch;
   streaming_target_t *st;
   th_subscription_t *s;
