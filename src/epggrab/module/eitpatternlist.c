@@ -22,7 +22,7 @@
 #include "eitpatternlist.h"
 #include "htsmsg.h"
 
-void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l )
+void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l, int flags )
 {
   eit_pattern_t *pattern;
   htsmsg_field_t *f;
@@ -35,7 +35,7 @@ void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l )
     if (s == NULL) continue;
     pattern = calloc(1, sizeof(eit_pattern_t));
     pattern->text = strdup(s);
-    if (regex_compile(&pattern->compiled, pattern->text, 0, LS_EPGGRAB)) {
+    if (regex_compile(&pattern->compiled, pattern->text, flags, LS_EPGGRAB)) {
       tvhwarn(LS_EPGGRAB, "error compiling pattern \"%s\"", pattern->text);
       free(pattern->text);
       free(pattern);
@@ -44,6 +44,21 @@ void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l )
       TAILQ_INSERT_TAIL(list, pattern, p_links);
     }
   }
+}
+
+void eit_pattern_compile_named_list ( eit_pattern_list_t *list, htsmsg_t *m, const char *key)
+{
+#if defined(TVHREGEX_TYPE)
+  htsmsg_t *m_alt = htsmsg_get_map(m, TVHREGEX_TYPE);
+  if (m_alt) {
+    htsmsg_t *res = htsmsg_get_list(m_alt, key);
+    if (res) {
+      eit_pattern_compile_list(list, res, 0);
+      return;
+    }
+  }
+#endif
+  eit_pattern_compile_list(list, htsmsg_get_list(m, key), TVHREGEX_POSIX);
 }
 
 void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_pattern_list_t *l)

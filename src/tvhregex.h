@@ -26,21 +26,24 @@
 #  define PCRE_STUDY_JIT_COMPILE 0
 #  endif
 
+#define TVHREGEX_TYPE           "pcre"
+
 #elif ENABLE_PCRE2
 
 #  define PCRE2_CODE_UNIT_WIDTH 8
 #  include <pcre2.h>
 
-#else
-
-#  include <regex.h>
+#define TVHREGEX_TYPE           "pcre2"
 
 #endif
+
+#  include <regex.h>
 
 #define TVHREGEX_MAX_MATCHES    10
 
 /* Compile flags */
-#define TVHREGEX_CASELESS       1
+#define TVHREGEX_POSIX          1       /* Use POSIX regex engine */
+#define TVHREGEX_CASELESS       2       /* Use case-insensitive matching */
 
 typedef struct {
 #if ENABLE_PCRE
@@ -57,10 +60,12 @@ typedef struct {
   pcre2_match_data *re_match;
   pcre2_match_context *re_mcontext;
   pcre2_jit_stack *re_jit_stack;
-#else
-  regex_t re_code;
-  regmatch_t re_match[TVHREGEX_MAX_MATCHES];
-  const char *re_text;
+#endif
+  regex_t re_posix_code;
+  regmatch_t re_posix_match[TVHREGEX_MAX_MATCHES];
+  const char *re_posix_text;
+#if ENABLE_PCRE || ENABLE_PCRE2
+  int is_posix;
 #endif
 } tvh_regex_t;
 
