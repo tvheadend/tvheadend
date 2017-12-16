@@ -48,9 +48,9 @@ void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l )
 
 void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_pattern_list_t *l)
 {
-    char *b[2] = { buf, NULL };
-    size_t s[2] = { size_buf, 0 };
-    return eit_pattern_apply_list_2(b, s, text, l);
+  char *b[2] = { buf, NULL };
+  size_t s[2] = { size_buf, 0 };
+  return eit_pattern_apply_list_2(b, s, text, l);
 }
 
 void *eit_pattern_apply_list_2(char *buf[2], size_t size_buf[2], const char *text, eit_pattern_list_t *l)

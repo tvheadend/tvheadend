@@ -26,10 +26,15 @@ typedef struct eit_pattern
 {
   char                        *text;
   regex_t                     compiled;
-  TAILQ_ENTRY(eit_pattern) p_links;
+  TAILQ_ENTRY(eit_pattern)    p_links;
 } eit_pattern_t;
+
 TAILQ_HEAD(eit_pattern_list, eit_pattern);
 typedef struct eit_pattern_list eit_pattern_list_t;
+
+/* is list empty? */
+static inline int eit_pattern_list_empty ( eit_pattern_list_t *list )
+  { return TAILQ_EMPTY(list); }
 
 /* Compile a regular expression pattern from a message */
 void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l );

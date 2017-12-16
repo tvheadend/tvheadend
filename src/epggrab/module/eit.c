@@ -78,6 +78,7 @@ typedef struct eit_event
   char              suri[257];
   
   lang_str_t       *title;
+  lang_str_t       *subtitle;
   lang_str_t       *summary;
   lang_str_t       *desc;
 
@@ -89,11 +90,17 @@ typedef struct eit_event
 
   epg_genre_list_t *genre;
 
+  epg_episode_num_t en;
+
   uint8_t           hd, ws;
   uint8_t           ad, st, ds;
   uint8_t           bw;
 
   uint8_t           parental;
+
+  uint8_t           is_new;
+  time_t            first_aired;
+  uint16_t          copyright_year;
 
 } eit_event_t;
 
@@ -441,60 +448,98 @@ static int _eit_desc_crid
   return 0;
 }
 
-/* Scrape episode data from the broadcast data.
- * @param text - string from broadcaster to search.
- * @param eit_mod - our module with regex to use.
- * @param en - [out] episode data
- * @param copyright_year [out] - copyright year
- * @param is_new [out] - is episode new
- * @return Bitmask of changed fields.
+/*
+ *
  */
-static uint32_t
-_eit_scrape_episode(const char *str,
-                    eit_module_t *eit_mod,
-                    epg_episode_num_t *en,
-                    uint16_t *copyright_year,
-                    uint8_t *is_new)
+static int positive_atoi(const char *s)
 {
-  if (!str) return 0;
+  int i = atoi(s);
+  return i >= 0 ? i : 0;
+}
 
-  uint32_t changed = 0;
-  /* search for season number */
+/* Scrape episode data from the broadcast data.
+ * @param text - string from broadcaster to search for all languages.
+ * @param eit_mod - our module with regex to use.
+ * @param ev - [out] modified event data.
+ */
+static void
+_eit_scrape_episode(lang_str_t *str,
+                    eit_module_t *eit_mod,
+                    eit_event_t *ev)
+{
+  lang_str_ele_t *se;
   char buffer[2048];
-  if (eit_pattern_apply_list(buffer, sizeof(buffer), str, &eit_mod->p_snum))
-    if ((en->s_num = atoi(buffer))) {
-      tvhtrace(LS_TBL_EIT,"  extract season number %d using %s", en->s_num, eit_mod->id);
-      changed |= EPG_CHANGED_EPSER_NUM;
-    }
+
+  if (!str) return;
+
+  /* search for season number */
+  RB_FOREACH(se, str, link) {
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_snum))
+      if ((ev->en.s_num = positive_atoi(buffer))) {
+        tvhtrace(LS_TBL_EIT,"  extract season number %d using %s", ev->en.s_num, eit_mod->id);
+        break;
+      }
+  }
 
   /* ...for episode number */
-  if (eit_pattern_apply_list(buffer, sizeof(buffer), str, &eit_mod->p_enum))
-    if ((en->e_num = atoi(buffer))) {
-      tvhtrace(LS_TBL_EIT,"  extract episode number %d using %s", en->e_num, eit_mod->id);
-      changed |= EPG_CHANGED_EPNUM_NUM;
-    }
+  RB_FOREACH(se, str, link) {
+   if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_enum))
+     if ((ev->en.e_num = positive_atoi(buffer))) {
+       tvhtrace(LS_TBL_EIT,"  extract episode number %d using %s", ev->en.e_num, eit_mod->id);
+       break;
+     }
+  }
 
   /* Extract original air date year */
-  if (eit_pattern_apply_list(buffer, sizeof(buffer), str, &eit_mod->p_airdate)) {
-    if (strlen(buffer) == 4) {
-      /* Year component only, so assume it is the copyright year. */
-      const int year = atoi(buffer);
-      if (year) {
-        *copyright_year = year;
-        changed |= EPG_CHANGED_COPYRIGHT_YEAR;
-     }
+  RB_FOREACH(se, str, link) {
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_airdate)) {
+      if (strlen(buffer) == 4) {
+        /* Year component only, so assume it is the copyright year. */
+        ev->copyright_year = positive_atoi(buffer);
+        break;
+      }
     }
   }
 
   /* Extract is_new flag. Any match is assumed to mean "new" */
-  if (eit_pattern_apply_list(buffer, sizeof(buffer), str, &eit_mod->p_is_new)) {
-    *is_new = 1;
-    changed |= EPG_CHANGED_IS_NEW;
+  RB_FOREACH(se, str, link) {
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_is_new)) {
+      ev->is_new = 1;
+      break;
+    }
   }
-
-  return changed;
 }
 
+/* Scrape subtitle data from the broadcast data.
+ * @param text - string from broadcaster to search for all languages.
+ * @param eit_mod - our module with regex to use.
+ * @param ev - [out] modified event data.
+ */
+static void
+_eit_scrape_subtitle(eit_module_t *eit_mod,
+                     eit_event_t *ev)
+{
+  lang_str_ele_t *se;
+  char buffer1[2048];
+  char buffer2[2048];
+  char *bufs[2] = { buffer1, buffer2 };
+  size_t sizes[2] = { sizeof(buffer1), sizeof(buffer2) };
+
+  /* Freeview/Freesat have a subtitle as part of the summary in the format
+   * "subtitle: desc". So try and extract it and use that.
+   * If we can't find a subtitle then default to previous behaviour of
+   * setting the summary as the subtitle.
+   */
+  RB_FOREACH(se, ev->summary, link) {
+    if (eit_pattern_apply_list_2(bufs, sizes, se->str, &eit_mod->p_scrape_subtitle)) {
+      tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s'/'%s' from '%s' using %s",
+               buffer1, buffer2, se->str, eit_mod->id);
+      lang_str_set(&ev->subtitle, buffer1, se->lang);
+      if (bufs[1])
+        lang_str_set(&ev->summary, buffer2, se->lang);
+    }
+  }
+}
 
 /* ************************************************************************
  * EIT Event
@@ -507,7 +552,6 @@ static int _eit_process_event_one
     const uint8_t *ptr, int len,
     int local, int *save )
 {
-  eit_module_t* eit_mod = (eit_module_t*)mod;
   int save2 = 0, rsonly = 0;
   time_t start, stop;
   uint16_t eid;
@@ -546,7 +590,7 @@ static int _eit_process_event_one
 
   if (rsonly) {
     if (!ev->title)
-      goto tidy;
+      goto running;
     memset(&_ebc, 0, sizeof(_ebc));
     if (*ev->suri)
       if ((es = epg_serieslink_find_by_uri(ev->suri, mod, 0, 0, NULL)))
@@ -565,7 +609,7 @@ static int _eit_process_event_one
 
     ebc = epg_match_now_next(ch, &_ebc);
     tvhtrace(mod->subsys, "%s:  running state only ebc=%p", svc->s_dvb_svcname ?: "(null)", ebc);
-    goto tidy;
+    goto running;
   } else {
     *save = save2;
   }
@@ -614,34 +658,18 @@ static int _eit_process_event_one
   /* Scrape episode from within broadcast data */
   epg_episode_num_t en;
   memset(&en, 0, sizeof(en));
-  time_t first_aired = 0;
-  uint32_t scraped = 0;
-  uint16_t copyright_year = 0;
-  uint8_t  is_new = 0;
 
   /* We search across all the main fields using the same regex and
    * merge the results with the last match taking precendence.  So if
    * EIT has episode in title and a different one in the description
    * then we use the one from the description.
    */
-  if (eit_mod->scrape_episode) {
-    if (ev->title)
-      scraped |=  _eit_scrape_episode(lang_str_get(ev->title, ev->default_charset),
-                                      eit_mod, &en, &copyright_year, &is_new);
-    if (ev->desc)
-      scraped |=  _eit_scrape_episode(lang_str_get(ev->desc, ev->default_charset),
-                                      eit_mod, &en, &copyright_year, &is_new);
-
-    if (ev->summary)
-      scraped |= _eit_scrape_episode(lang_str_get(ev->summary, ev->default_charset),
-                                     eit_mod, &en, &copyright_year, &is_new);
-  }
 
   /* Update Episode */
   if (ee) {
     *save |= epg_broadcast_set_episode(ebc, ee, &changes2);
-    if (scraped & EPG_CHANGED_IS_NEW)
-      *save |= epg_broadcast_set_is_new(ebc, is_new, &changes2);
+    if (ev->is_new > 0)
+      *save |= epg_broadcast_set_is_new(ebc, ev->is_new - 1, &changes2);
     *save |= epg_episode_set_is_bw(ee, ev->bw, &changes4);
     if (ev->title)
       *save |= epg_episode_set_title(ee, ev->title, &changes4);
@@ -649,37 +677,10 @@ static int _eit_process_event_one
       *save |= epg_episode_set_genre(ee, ev->genre, &changes4);
     if (ev->parental)
       *save |= epg_episode_set_age_rating(ee, ev->parental, &changes4);
-    if (ev->summary && eit_mod->scrape_subtitle) {
-      /* Freeview/Freesat have a subtitle as part of the summary in the format
-       * "subtitle: desc". So try and extract it and use that.
-       * If we can't find a subtitle then default to previous behaviour of
-       * setting the summary as the subtitle.
-       */
-      const char *summary = lang_str_get(ev->summary, ev->default_charset);
-      char buffer[2048];
-      char buffer2[2048];
-      char *bufs[2] = { buffer, buffer2 };
-      size_t sizes[2] = { sizeof(buffer), sizeof(buffer2) };
-      if (eit_pattern_apply_list_2(bufs, sizes, summary, &eit_mod->p_scrape_subtitle)) {
-        tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s' from '%s' using %s on channel '%s'",
-                 buffer, summary, mod->id,
-                 ch ? channel_get_name(ch, channel_blank_name) : "(null)");
-        lang_str_t *ls = lang_str_create2(buffer, ev->default_charset);
-        *save |= epg_episode_set_subtitle(ee, ls, &changes4);
-        lang_str_destroy(ls);
-        if (bufs[1]) {
-            ls = lang_str_create2(buffer2, ev->default_charset);
-            *save |= epg_broadcast_set_summary(ebc, ls, &changes2);
-            lang_str_destroy(ls);
-        }
-      } else {
-        /* No subtitle found in summary buffer. */
-        *save |= epg_episode_set_subtitle(ee, ev->summary, &changes4);
-      }
-    } else {
-      /* Scraping not enabled so set subtitle to be same as summary */
+    if (ev->subtitle)
+      *save |= epg_episode_set_subtitle(ee, ev->subtitle, &changes4);
+    else if (ev->summary)
       *save |= epg_episode_set_subtitle(ee, ev->summary, &changes4);
-    }
 #if TODO_ADD_EXTRA
     if (ev->extra)
       *save |= epg_episode_set_extra(ee, extra, &changes4);
@@ -687,18 +688,17 @@ static int _eit_process_event_one
     /* save any found episode number */
     if (en.s_num || en.e_num || en.p_num)
       *save |= epg_episode_set_epnum(ee, &en, &changes4);
-    if (scraped & EPG_CHANGED_FIRST_AIRED)
-      *save |= epg_episode_set_first_aired(ee, first_aired, &changes4);
-    if (scraped & EPG_CHANGED_COPYRIGHT_YEAR)
-      *save |= epg_episode_set_copyright_year(ee, copyright_year, &changes4);
-
+    if (ev->first_aired > 0)
+      *save |= epg_episode_set_first_aired(ee, ev->first_aired, &changes4);
+    if (ev->copyright_year > 0)
+      *save |= epg_episode_set_copyright_year(ee, ev->copyright_year, &changes4);
     *save |= epg_episode_change_finish(ee, changes4, 0);
   }
 
   *save |= epg_broadcast_change_finish(ebc, changes2, 0);
 
 
-tidy:
+running:
   /* use running flag only for current broadcast */
   if (ebc && running && tableid == 0x4e) {
     if (sect == 0) {
@@ -722,6 +722,7 @@ static int _eit_process_event
     eit_data_t *ed, const uint8_t *ptr0, int len0,
     int local, int *save )
 {
+  eit_module_t *eit_mod = (eit_module_t *)mod;
   idnode_list_mapping_t *ilm;
   mpegts_service_t *svc;
   channel_t *ch;
@@ -781,6 +782,19 @@ static int _eit_process_event
     ptr   += dlen;
   }
 
+  /* Do all scraping here, outside the global lock */
+  if (eit_mod->scrape_episode) {
+    if (ev.title)
+      _eit_scrape_episode(ev.title, eit_mod, &ev);
+    if (ev.desc)
+      _eit_scrape_episode(ev.desc, eit_mod, &ev);
+    if (ev.summary)
+      _eit_scrape_episode(ev.summary, eit_mod, &ev);
+  }
+
+  if (ev.summary && eit_mod->scrape_subtitle)
+    _eit_scrape_subtitle(eit_mod, &ev);
+
   pthread_mutex_lock(&global_lock);
   svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
   if (svc) {
@@ -796,12 +810,13 @@ static int _eit_process_event
   pthread_mutex_unlock(&global_lock);
 
 #if TODO_ADD_EXTRA
-  if (ev.extra)   htsmsg_destroy(ev.extra);
+  if (ev.extra)    htsmsg_destroy(ev.extra);
 #endif
-  if (ev.genre)   epg_genre_list_destroy(ev.genre);
-  if (ev.title)   lang_str_destroy(ev.title);
-  if (ev.summary) lang_str_destroy(ev.summary);
-  if (ev.desc)    lang_str_destroy(ev.desc);
+  if (ev.genre)    epg_genre_list_destroy(ev.genre);
+  if (ev.title)    lang_str_destroy(ev.title);
+  if (ev.subtitle) lang_str_destroy(ev.subtitle);
+  if (ev.summary)  lang_str_destroy(ev.summary);
+  if (ev.desc)     lang_str_destroy(ev.desc);
 
   if (ilm)
     return -1;
