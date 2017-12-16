@@ -956,11 +956,11 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   mod->channel  = _pid_list_to_array(cl);
   mod->title    = _pid_list_to_array(tl);
   mod->summary  = _pid_list_to_array(sl);
-  eit_pattern_compile_list(&mod->p_snum, htsmsg_get_list(m, "season_num"));
-  eit_pattern_compile_list(&mod->p_enum, htsmsg_get_list(m, "episode_num"));
-  eit_pattern_compile_list(&mod->p_pnum, htsmsg_get_list(m, "part_num"));
-  eit_pattern_compile_list(&mod->p_subt, htsmsg_get_list(m, "subtitle"));
-  eit_pattern_compile_list(&mod->p_cleanup_title, htsmsg_get_list(m, "cleanup_title"));
+  eit_pattern_compile_named_list(&mod->p_snum, m, "season_num");
+  eit_pattern_compile_named_list(&mod->p_enum, m, "episode_num");
+  eit_pattern_compile_named_list(&mod->p_pnum, m, "part_num");
+  eit_pattern_compile_named_list(&mod->p_subt, m, "subtitle");
+  eit_pattern_compile_named_list(&mod->p_cleanup_title, m, "cleanup_title");
 
   return 1;
 }

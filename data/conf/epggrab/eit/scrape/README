@@ -41,14 +41,36 @@ EPG summary is not changed.
 Regular expression engine
 -------------------------
 
-If the PCRE or PCRE2 library is found during configuration, that library
-is used for regular expression matching. Otherwise, the default C library
-POSIX regular expression handling is used, and the regular expressions
-treated as extended POSIX regular expressions.
+The top level regular expressions are POSIX regular expressions, and are
+executed using the C runtime library regular expression functions. The
+expressions are treated as extended POSIX regular expressions.
 
-If a regular expression is intended for universal use, you need to be careful
-to ensure that it works as expected on PCRE and POSIX engines. A useful
-reference is at http://www.regular-expressions.info/refbasic.html.
+If either the PCRE or the PCRE2 library are found during configuration,
+that library can be used for regular expression matching. If both are
+found, PCRE2 is used.
+
+Because there are differences in regular expression facilities and
+handling between POSIX, PCRE and PCRE2, you must specify an alternate
+regular expression appropriate for the engine. Alternate regular
+expressions are held as members of a top-level object "pcre" or "pcre2".
+For example:
+
+{
+  "scrape_subtitle": [
+      "^[.][.][.][^:.]*[.:] ([^.0-9][^:]*): ",
+      "^[0-9]+/[0-9]+[.] +([^:]*): ",
+      "^([^.0-9][^:]+): "
+  ],
+  "pcre": {
+      "scrape_subtitle": [
+          "^(?:[.][.][.][^:.]*[.:] +|[0-9]+/[0-9]+[.] +)?([^.0-9][^:]*): "
+      ]
+  }
+}
+
+A useful reference on the differences between POSIX, PCRE and PCRE2
+regular expressions is at
+http://www.regular-expressions.info/refbasic.html.
 
 Testing
 -------

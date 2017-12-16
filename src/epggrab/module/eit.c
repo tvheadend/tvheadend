@@ -1193,14 +1193,14 @@ static void _eit_scrape_clear(eit_module_t *mod)
 static int _eit_scrape_load_one ( htsmsg_t *m, eit_module_t* mod )
 {
   if (mod->scrape_episode) {
-    eit_pattern_compile_list(&mod->p_snum, htsmsg_get_list(m, "season_num"));
-    eit_pattern_compile_list(&mod->p_enum, htsmsg_get_list(m, "episode_num"));
-    eit_pattern_compile_list(&mod->p_airdate, htsmsg_get_list(m, "airdate"));
-    eit_pattern_compile_list(&mod->p_is_new, htsmsg_get_list(m, "is_new"));
+    eit_pattern_compile_named_list(&mod->p_snum, m, "season_num");
+    eit_pattern_compile_named_list(&mod->p_enum, m, "episode_num");
+    eit_pattern_compile_named_list(&mod->p_airdate, m, "airdate");
+    eit_pattern_compile_named_list(&mod->p_is_new, m, "is_new");
   }
 
   if (mod->scrape_subtitle) {
-    eit_pattern_compile_list(&mod->p_scrape_subtitle, htsmsg_get_list(m, "scrape_subtitle"));
+    eit_pattern_compile_named_list(&mod->p_scrape_subtitle, m, "scrape_subtitle");
   }
 
   return 1;
