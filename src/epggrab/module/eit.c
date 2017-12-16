@@ -47,12 +47,14 @@ typedef struct eit_private
 #define EIT_SPEC_UK_CABLE_VIRGIN    3
 
 /* Queued data structure */
-typedef struct eit_data_t
+typedef struct eit_data
 {
   tvh_uuid_t svc_uuid;
+  uint16_t   onid;
   int        tableid;
   int        sect;
   int        local_time;
+  char       cridauth[64];
 } eit_data_t;
 
 /* Provider configuration */
@@ -385,7 +387,7 @@ static int _eit_desc_parental
  */
 static int _eit_desc_crid
   ( epggrab_module_t *mod, const uint8_t *ptr, int len,
-    eit_event_t *ev, mpegts_service_t *svc )
+    eit_event_t *ev, eit_data_t *ed )
 {
   int r;
   uint8_t type;
@@ -420,16 +422,13 @@ static int _eit_desc_crid
         if (strstr(buf, "crid://") == buf) {
           strncpy(crid, buf, clen);
           crid[clen-1] = '\0';
-        } else if ( *buf != '/' ) {
+        } else if (*buf != '/') {
           snprintf(crid, clen, "crid://%s", buf);
         } else {
-          const char *defauth = svc->s_dvb_cridauth;
-          if (!defauth)
-            defauth = svc->s_dvb_mux->mm_crid_authority;
-          if (defauth)
-            snprintf(crid, clen, "crid://%s%s", defauth, buf);
+          if (ed->cridauth)
+            snprintf(crid, clen, "crid://%s%s", ed->cridauth, buf);
           else
-            snprintf(crid, clen, "crid://onid-%d%s", svc->s_dvb_mux->mm_onid, buf);
+            snprintf(crid, clen, "crid://onid-%d%s", ed->onid, buf);
         }
       }
 
@@ -504,19 +503,19 @@ _eit_scrape_episode(const char *str,
 static int _eit_process_event_one
   ( epggrab_module_t *mod, int tableid, int sect,
     mpegts_service_t *svc, channel_t *ch,
+    eit_event_t *ev,
     const uint8_t *ptr, int len,
     int local, int *save )
 {
   eit_module_t* eit_mod = (eit_module_t*)mod;
-  int dllen, save2 = 0, rsonly = 0;
+  int save2 = 0, rsonly = 0;
   time_t start, stop;
   uint16_t eid;
-  uint8_t dtag, dlen, running;
+  uint8_t running;
   epg_broadcast_t *ebc, _ebc;
   epg_episode_t *ee = NULL, _ee;
   epg_serieslink_t *es;
   epg_running_t run;
-  eit_event_t ev;
   lang_str_t *title_copy = NULL;
   uint32_t changes2 = 0, changes3 = 0, changes4 = 0;
   char tm1[32], tm2[32];
@@ -528,11 +527,6 @@ static int _eit_process_event_one
                   bcdtoint(ptr[8] & 0xff) * 60 +
                   bcdtoint(ptr[9] & 0xff);
   running = (ptr[10] >> 5) & 0x07;
-  dllen = ((ptr[10] & 0x0f) << 8) | ptr[11];
-
-  len -= 12;
-  ptr += 12;
-  if ( len < dllen ) return -1;
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes2);
@@ -550,16 +544,203 @@ static int _eit_process_event_one
       return 0;
   }
 
-  /* Mark re-schedule detect (only now/next) */
-  if (!rsonly)
-    *save |= save2;
+  if (rsonly) {
+    if (!ev->title)
+      goto tidy;
+    memset(&_ebc, 0, sizeof(_ebc));
+    if (*ev->suri)
+      if ((es = epg_serieslink_find_by_uri(ev->suri, mod, 0, 0, NULL)))
+        _ebc.serieslink = es;
+    
+    if (*ev->uri && (ee = epg_episode_find_by_uri(ev->uri, mod, 0, 0, NULL))) {
+      _ee = *ee;
+    } else {
+      memset(&_ee, 0, sizeof(_ee));
+    }
+    _ebc.episode = &_ee;
+    _ebc.dvb_eid = eid;
+    _ebc.start = start;
+    _ebc.stop = stop;
+    _ee.title = title_copy = lang_str_copy(ev->title);
 
-  /* Process tags */
+    ebc = epg_match_now_next(ch, &_ebc);
+    tvhtrace(mod->subsys, "%s:  running state only ebc=%p", svc->s_dvb_svcname ?: "(null)", ebc);
+    goto tidy;
+  } else {
+    *save = save2;
+  }
+
+  /*
+   * Broadcast
+   */
+
+  *save |= epg_broadcast_set_dvb_eid(ebc, eid, &changes2);
+
+  /* Summary/Description */
+  if (ev->summary)
+    *save |= epg_broadcast_set_summary(ebc, ev->summary, &changes2);
+  if (ev->desc)
+    *save |= epg_broadcast_set_description(ebc, ev->desc, &changes2);
+
+  /* Broadcast Metadata */
+  *save |= epg_broadcast_set_is_hd(ebc, ev->hd, &changes2);
+  *save |= epg_broadcast_set_is_widescreen(ebc, ev->ws, &changes2);
+  *save |= epg_broadcast_set_is_audio_desc(ebc, ev->ad, &changes2);
+  *save |= epg_broadcast_set_is_subtitled(ebc, ev->st, &changes2);
+  *save |= epg_broadcast_set_is_deafsigned(ebc, ev->ds, &changes2);
+
+  /*
+   * Series link
+   */
+
+  if (*ev->suri) {
+    if ((es = epg_serieslink_find_by_uri(ev->suri, mod, 1, save, &changes3))) {
+      *save |= epg_broadcast_set_serieslink(ebc, es, &changes2);
+      *save |= epg_serieslink_change_finish(es, changes3, 0);
+    }
+  }
+
+  /*
+   * Episode
+   */
+
+  /* Find episode */
+  if (*ev->uri) {
+    ee = epg_episode_find_by_uri(ev->uri, mod, 1, save, &changes4);
+  } else {
+    ee = epg_episode_find_by_broadcast(ebc, mod, 1, save, &changes4);
+  }
+
+  /* Scrape episode from within broadcast data */
+  epg_episode_num_t en;
+  memset(&en, 0, sizeof(en));
+  time_t first_aired = 0;
+  uint32_t scraped = 0;
+  uint16_t copyright_year = 0;
+  uint8_t  is_new = 0;
+
+  /* We search across all the main fields using the same regex and
+   * merge the results with the last match taking precendence.  So if
+   * EIT has episode in title and a different one in the description
+   * then we use the one from the description.
+   */
+  if (eit_mod->scrape_episode) {
+    if (ev->title)
+      scraped |=  _eit_scrape_episode(lang_str_get(ev->title, ev->default_charset),
+                                      eit_mod, &en, &copyright_year, &is_new);
+    if (ev->desc)
+      scraped |=  _eit_scrape_episode(lang_str_get(ev->desc, ev->default_charset),
+                                      eit_mod, &en, &copyright_year, &is_new);
+
+    if (ev->summary)
+      scraped |= _eit_scrape_episode(lang_str_get(ev->summary, ev->default_charset),
+                                     eit_mod, &en, &copyright_year, &is_new);
+  }
+
+  /* Update Episode */
+  if (ee) {
+    *save |= epg_broadcast_set_episode(ebc, ee, &changes2);
+    if (scraped & EPG_CHANGED_IS_NEW)
+      *save |= epg_broadcast_set_is_new(ebc, is_new, &changes2);
+    *save |= epg_episode_set_is_bw(ee, ev->bw, &changes4);
+    if (ev->title)
+      *save |= epg_episode_set_title(ee, ev->title, &changes4);
+    if (ev->genre)
+      *save |= epg_episode_set_genre(ee, ev->genre, &changes4);
+    if (ev->parental)
+      *save |= epg_episode_set_age_rating(ee, ev->parental, &changes4);
+    if (ev->summary && eit_mod->scrape_subtitle) {
+      /* Freeview/Freesat have a subtitle as part of the summary in the format
+       * "subtitle: desc". So try and extract it and use that.
+       * If we can't find a subtitle then default to previous behaviour of
+       * setting the summary as the subtitle.
+       */
+      const char *summary = lang_str_get(ev->summary, ev->default_charset);
+      char buffer[2048];
+      char buffer2[2048];
+      char *bufs[2] = { buffer, buffer2 };
+      size_t sizes[2] = { sizeof(buffer), sizeof(buffer2) };
+      if (eit_pattern_apply_list_2(bufs, sizes, summary, &eit_mod->p_scrape_subtitle)) {
+        tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s' from '%s' using %s on channel '%s'",
+                 buffer, summary, mod->id,
+                 ch ? channel_get_name(ch, channel_blank_name) : "(null)");
+        lang_str_t *ls = lang_str_create2(buffer, ev->default_charset);
+        *save |= epg_episode_set_subtitle(ee, ls, &changes4);
+        lang_str_destroy(ls);
+        if (bufs[1]) {
+            ls = lang_str_create2(buffer2, ev->default_charset);
+            *save |= epg_broadcast_set_summary(ebc, ls, &changes2);
+            lang_str_destroy(ls);
+        }
+      } else {
+        /* No subtitle found in summary buffer. */
+        *save |= epg_episode_set_subtitle(ee, ev->summary, &changes4);
+      }
+    } else {
+      /* Scraping not enabled so set subtitle to be same as summary */
+      *save |= epg_episode_set_subtitle(ee, ev->summary, &changes4);
+    }
+#if TODO_ADD_EXTRA
+    if (ev->extra)
+      *save |= epg_episode_set_extra(ee, extra, &changes4);
+#endif
+    /* save any found episode number */
+    if (en.s_num || en.e_num || en.p_num)
+      *save |= epg_episode_set_epnum(ee, &en, &changes4);
+    if (scraped & EPG_CHANGED_FIRST_AIRED)
+      *save |= epg_episode_set_first_aired(ee, first_aired, &changes4);
+    if (scraped & EPG_CHANGED_COPYRIGHT_YEAR)
+      *save |= epg_episode_set_copyright_year(ee, copyright_year, &changes4);
+
+    *save |= epg_episode_change_finish(ee, changes4, 0);
+  }
+
+  *save |= epg_broadcast_change_finish(ebc, changes2, 0);
+
+
+tidy:
+  /* use running flag only for current broadcast */
+  if (ebc && running && tableid == 0x4e) {
+    if (sect == 0) {
+      switch (running) {
+      case 2:  run = EPG_RUNNING_WARM;  break;
+      case 3:  run = EPG_RUNNING_PAUSE; break;
+      case 4:  run = EPG_RUNNING_NOW;   break;
+      default: run = EPG_RUNNING_STOP;  break;
+      }
+      *save |= epg_broadcast_set_running(ebc, run);
+    } else if (sect == 1 && running != 2 && running != 3 && running != 4) {
+    }
+  }
+
+  if (title_copy) lang_str_destroy(title_copy);
+  return 0;
+}
+
+static int _eit_process_event
+  ( epggrab_module_t *mod, int tableid, int sect,
+    eit_data_t *ed, const uint8_t *ptr0, int len0,
+    int local, int *save )
+{
+  idnode_list_mapping_t *ilm;
+  mpegts_service_t *svc;
+  channel_t *ch;
+  eit_event_t ev;
+  const uint8_t *ptr = ptr0;
+  int r, len = len0;
+  uint8_t dtag, dlen;
+  int dllen;
+
+  if (len < 12) return -1;
+
+  dllen = ((ptr[10] & 0x0f) << 8) | ptr[11];
+  len0 -= 12;
+  ptr0 += 12;
+
+  if (len0 < dllen) return -1;
+
   memset(&ev, 0, sizeof(ev));
-  ev.default_charset = dvb_charset_find(NULL, NULL, svc);
-
   while (dllen > 2) {
-    int r;
     dtag = ptr[0];
     dlen = ptr[1];
 
@@ -587,7 +768,7 @@ static int _eit_process_event_one
         r = _eit_desc_parental(mod, ptr, dlen, &ev);
         break;
       case DVB_DESC_CRID:
-        r = _eit_desc_crid(mod, ptr, dlen, &ev, svc);
+        r = _eit_desc_crid(mod, ptr, dlen, &ev, ed);
         break;
       default:
         r = 0;
@@ -600,160 +781,20 @@ static int _eit_process_event_one
     ptr   += dlen;
   }
 
-  if (rsonly) {
-    if (!ev.title)
-      goto tidy;
-    memset(&_ebc, 0, sizeof(_ebc));
-    if (*ev.suri)
-      if ((es = epg_serieslink_find_by_uri(ev.suri, mod, 0, 0, NULL)))
-        _ebc.serieslink = es;
-    
-    if (*ev.uri && (ee = epg_episode_find_by_uri(ev.uri, mod, 0, 0, NULL))) {
-      _ee = *ee;
-    } else {
-      memset(&_ee, 0, sizeof(_ee));
-    }
-    _ebc.episode = &_ee;
-    _ebc.dvb_eid = eid;
-    _ebc.start = start;
-    _ebc.stop = stop;
-    _ee.title = title_copy = lang_str_copy(ev.title);
-
-    ebc = epg_match_now_next(ch, &_ebc);
-    tvhtrace(mod->subsys, "%s:  running state only ebc=%p", svc->s_dvb_svcname ?: "(null)", ebc);
-    goto tidy;
-  }
-
-  /*
-   * Broadcast
-   */
-
-  *save |= epg_broadcast_set_dvb_eid(ebc, eid, &changes2);
-
-  /* Summary/Description */
-  if (ev.summary)
-    *save |= epg_broadcast_set_summary(ebc, ev.summary, &changes2);
-  if (ev.desc)
-    *save |= epg_broadcast_set_description(ebc, ev.desc, &changes2);
-
-  /* Broadcast Metadata */
-  *save |= epg_broadcast_set_is_hd(ebc, ev.hd, &changes2);
-  *save |= epg_broadcast_set_is_widescreen(ebc, ev.ws, &changes2);
-  *save |= epg_broadcast_set_is_audio_desc(ebc, ev.ad, &changes2);
-  *save |= epg_broadcast_set_is_subtitled(ebc, ev.st, &changes2);
-  *save |= epg_broadcast_set_is_deafsigned(ebc, ev.ds, &changes2);
-
-  /*
-   * Series link
-   */
-
-  if (*ev.suri) {
-    if ((es = epg_serieslink_find_by_uri(ev.suri, mod, 1, save, &changes3))) {
-      *save |= epg_broadcast_set_serieslink(ebc, es, &changes2);
-      *save |= epg_serieslink_change_finish(es, changes3, 0);
+  pthread_mutex_lock(&global_lock);
+  svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
+  if (svc) {
+    ev.default_charset = dvb_charset_find(NULL, NULL, svc);
+    LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
+      ch = (channel_t *)ilm->ilm_in2;
+      if (!ch->ch_enabled || ch->ch_epg_parent) continue;
+      if (_eit_process_event_one(mod, tableid, sect, svc, ch,
+                                 &ev, ptr0, len0, local, save) < 0)
+        break;
     }
   }
+  pthread_mutex_unlock(&global_lock);
 
-  /*
-   * Episode
-   */
-
-  /* Find episode */
-  if (*ev.uri) {
-    ee = epg_episode_find_by_uri(ev.uri, mod, 1, save, &changes4);
-  } else {
-    ee = epg_episode_find_by_broadcast(ebc, mod, 1, save, &changes4);
-  }
-
-  /* Scrape episode from within broadcast data */
-  epg_episode_num_t en;
-  memset(&en, 0, sizeof(en));
-  time_t first_aired = 0;
-  uint32_t scraped = 0;
-  uint16_t copyright_year = 0;
-  uint8_t  is_new = 0;
-
-  /* We search across all the main fields using the same regex and
-   * merge the results with the last match taking precendence.  So if
-   * EIT has episode in title and a different one in the description
-   * then we use the one from the description.
-   */
-  if (eit_mod->scrape_episode) {
-    if (ev.title)
-      scraped |=  _eit_scrape_episode(lang_str_get(ev.title, ev.default_charset),
-                                      eit_mod, &en, &copyright_year, &is_new);
-    if (ev.desc)
-      scraped |=  _eit_scrape_episode(lang_str_get(ev.desc, ev.default_charset),
-                                      eit_mod, &en, &copyright_year, &is_new);
-
-    if (ev.summary)
-      scraped |= _eit_scrape_episode(lang_str_get(ev.summary, ev.default_charset),
-                                     eit_mod, &en, &copyright_year, &is_new);
-  }
-
-  /* Update Episode */
-  if (ee) {
-    *save |= epg_broadcast_set_episode(ebc, ee, &changes2);
-    if (scraped & EPG_CHANGED_IS_NEW)
-      *save |= epg_broadcast_set_is_new(ebc, is_new, &changes2);
-    *save |= epg_episode_set_is_bw(ee, ev.bw, &changes4);
-    if (ev.title)
-      *save |= epg_episode_set_title(ee, ev.title, &changes4);
-    if (ev.genre)
-      *save |= epg_episode_set_genre(ee, ev.genre, &changes4);
-    if (ev.parental)
-      *save |= epg_episode_set_age_rating(ee, ev.parental, &changes4);
-    if (ev.summary && eit_mod->scrape_subtitle) {
-      /* Freeview/Freesat have a subtitle as part of the summary in the format
-       * "subtitle: desc". So try and extract it and use that.
-       * If we can't find a subtitle then default to previous behaviour of
-       * setting the summary as the subtitle.
-       */
-      const char *summary = lang_str_get(ev.summary, ev.default_charset);
-      char buffer[2048];
-      char buffer2[2048];
-      char *bufs[2] = { buffer, buffer2 };
-      size_t sizes[2] = { sizeof(buffer), sizeof(buffer2) };
-      if (eit_pattern_apply_list_2(bufs, sizes, summary, &eit_mod->p_scrape_subtitle)) {
-        tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s' from '%s' using %s on channel '%s'",
-                 buffer, summary, mod->id,
-                 ch ? channel_get_name(ch, channel_blank_name) : "(null)");
-        lang_str_t *ls = lang_str_create2(buffer, ev.default_charset);
-        *save |= epg_episode_set_subtitle(ee, ls, &changes4);
-        lang_str_destroy(ls);
-        if (bufs[1]) {
-            ls = lang_str_create2(buffer2, ev.default_charset);
-            *save |= epg_broadcast_set_summary(ebc, ls, &changes2);
-            lang_str_destroy(ls);
-        }
-      } else {
-        /* No subtitle found in summary buffer. */
-        *save |= epg_episode_set_subtitle(ee, ev.summary, &changes4);
-      }
-    } else {
-      /* Scraping not enabled so set subtitle to be same as summary */
-      *save |= epg_episode_set_subtitle(ee, ev.summary, &changes4);
-    }
-#if TODO_ADD_EXTRA
-    if (ev.extra)
-      *save |= epg_episode_set_extra(ee, extra, &changes4);
-#endif
-    /* save any found episode number */
-    if (en.s_num || en.e_num || en.p_num)
-      *save |= epg_episode_set_epnum(ee, &en, &changes4);
-    if (scraped & EPG_CHANGED_FIRST_AIRED)
-      *save |= epg_episode_set_first_aired(ee, first_aired, &changes4);
-    if (scraped & EPG_CHANGED_COPYRIGHT_YEAR)
-      *save |= epg_episode_set_copyright_year(ee, copyright_year, &changes4);
-
-    *save |= epg_episode_change_finish(ee, changes4, 0);
-  }
-
-  *save |= epg_broadcast_change_finish(ebc, changes2, 0);
-
-
-tidy:
-  /* Tidy up */
 #if TODO_ADD_EXTRA
   if (ev.extra)   htsmsg_destroy(ev.extra);
 #endif
@@ -762,71 +803,36 @@ tidy:
   if (ev.summary) lang_str_destroy(ev.summary);
   if (ev.desc)    lang_str_destroy(ev.desc);
 
-  /* use running flag only for current broadcast */
-  if (ebc && running && tableid == 0x4e) {
-    if (sect == 0) {
-      switch (running) {
-      case 2:  run = EPG_RUNNING_WARM;  break;
-      case 3:  run = EPG_RUNNING_PAUSE; break;
-      case 4:  run = EPG_RUNNING_NOW;   break;
-      default: run = EPG_RUNNING_STOP;  break;
-      }
-      *save |= epg_broadcast_set_running(ebc, run);
-    } else if (sect == 1 && running != 2 && running != 3 && running != 4) {
-    }
-  }
-
-  if (title_copy) lang_str_destroy(title_copy);
-  return 0;
-}
-
-static int _eit_process_event
-  ( epggrab_module_t *mod, int tableid, int sect,
-    mpegts_service_t *svc, const uint8_t *ptr, int len,
-    int local, int *save )
-{
-  idnode_list_mapping_t *ilm;
-  channel_t *ch;
-
-  if ( len < 12 ) return -1;
-
-  LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
-    ch = (channel_t *)ilm->ilm_in2;
-    if (!ch->ch_enabled || ch->ch_epg_parent) continue;
-    if (_eit_process_event_one(mod, tableid, sect, svc, ch,
-                               ptr, len, local, save) < 0)
-      return -1;
-  }
+  if (ilm)
+    return -1;
   return 12 + (((ptr[10] & 0x0f) << 8) | ptr[11]);
 }
 
 static void
 _eit_process_data(void *m, void *data, uint32_t len)
 {
-  int save = 0;
+  int save = 0, r;
   eit_data_t ed;
-  mpegts_service_t *svc;
 
   assert(len >= sizeof(ed));
   memcpy(&ed, data, sizeof(ed));
   data += sizeof(ed);
   len -= sizeof(ed);
-  svc = (mpegts_service_t *)service_find_by_uuid0(&ed.svc_uuid);
-  if (svc == NULL)
-    return;
-  pthread_mutex_lock(&global_lock);
+
   while (len) {
-    int r;
-    if ((r = _eit_process_event(m, ed.tableid, ed.sect, svc, data, len,
-                                ed.local_time, &save)) < 0)
+    if ((r = _eit_process_event(m, ed.tableid, ed.sect, &ed,
+                                data, len, ed.local_time, &save)) < 0)
       break;
     assert(r > 0);
     len -= r;
     data += r;
   }
-  pthread_mutex_unlock(&global_lock);
 
-  if (save)    epg_updated();
+  if (save) {
+    pthread_mutex_lock(&global_lock);
+    epg_updated();
+    pthread_mutex_unlock(&global_lock);
+  }
 }
 
 static int
@@ -845,6 +851,7 @@ _eit_callback
   mpegts_psi_table_state_t *st;
   th_subscription_t    *ths;
   eit_data_t            data;
+  const char           *cridauth;
   char ubuf[UUID_HEX_SIZE];
 
   if (!epggrab_ota_running)
@@ -972,7 +979,19 @@ svc_ok:
     data.tableid = tableid;
     data.sect = sect;
     data.svc_uuid = svc->s_id.in_uuid;
+    data.onid = onid;
     data.local_time = mm->mm_network->mn_localtime;
+    cridauth = svc->s_dvb_cridauth;
+    if (!cridauth)
+      cridauth = svc->s_dvb_mux->mm_crid_authority;
+    if (cridauth) {
+      if (strlen(cridauth) + 1 > sizeof(data.cridauth))
+        tvherror(LS_TBL_EIT, "cridauth overflow");
+      strncpy(data.cridauth, cridauth, sizeof(data.cridauth)-1);
+      data.cridauth[sizeof(cridauth)-1] = '\0';
+    } else {
+      data.cridauth[0] = '\0';
+    }
     epggrab_queue_data(mod, &data, sizeof(data), ptr, len);
   }
 
