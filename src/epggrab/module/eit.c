@@ -727,18 +727,18 @@ static int _eit_process_event
   mpegts_service_t *svc;
   channel_t *ch;
   eit_event_t ev;
-  const uint8_t *ptr = ptr0;
-  int r, len = len0;
+  const uint8_t *ptr;
+  int r, len;
   uint8_t dtag, dlen;
   int dllen;
 
-  if (len < 12) return -1;
+  if (len0 < 12) return -1;
 
-  dllen = ((ptr[10] & 0x0f) << 8) | ptr[11];
-  len0 -= 12;
-  ptr0 += 12;
+  dllen = ((ptr0[10] & 0x0f) << 8) | ptr0[11];
+  len = len0 - 12;
+  ptr = ptr0 + 12;
 
-  if (len0 < dllen) return -1;
+  if (len < dllen) return -1;
 
   memset(&ev, 0, sizeof(ev));
   while (dllen > 2) {
@@ -820,7 +820,7 @@ static int _eit_process_event
 
   if (ilm)
     return -1;
-  return 12 + (((ptr[10] & 0x0f) << 8) | ptr[11]);
+  return 12 + (((ptr0[10] & 0x0f) << 8) | ptr0[11]);
 }
 
 static void
