@@ -171,7 +171,7 @@ static void *_epggrab_data_thread( void *aux )
       }
       if (eq == NULL) {
         while (atomic_get(&epggrab_running))
-          pthread_cond_wait(&epggrab_cond, &epggrab_data_mutex);
+          pthread_cond_wait(&epggrab_data_cond, &epggrab_data_mutex);
       }
     } while (eq == NULL && atomic_get(&epggrab_running));
     pthread_mutex_unlock(&epggrab_data_mutex);

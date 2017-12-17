@@ -334,6 +334,7 @@ epggrab_module_t *epggrab_module_create
   skel->name     = strdup(name);
   skel->priority = priority;
   RB_INIT(&skel->channels);
+  TAILQ_INIT(&skel->data_queue);
 
   /* Insert */
   assert(!epggrab_module_find_by_id(id));
