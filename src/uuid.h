@@ -123,6 +123,6 @@ int hex2bin ( uint8_t *buf, size_t buflen, const char *hex );
 /**
  * Binary to hex string
  */
-void bin2hex ( char *dst, size_t dstlen, const uint8_t *src, size_t srclen );
+char *bin2hex ( char *dst, size_t dstlen, const uint8_t *src, size_t srclen );
 
 #endif /* __TVH_UUID_H__ */

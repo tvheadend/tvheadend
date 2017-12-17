@@ -76,17 +76,19 @@ hex2bin(uint8_t *buf, size_t buflen, const char *str)
 /**
  *
  */
-void
+char *
 bin2hex(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
 {
+  static const char table[] = "0123456789abcdef";
   while(dstlen > 2 && srclen > 0) {
-    *dst++ = "0123456789abcdef"[*src >> 4];
-    *dst++ = "0123456789abcdef"[*src & 0xf];
+    *dst++ = table[*src >> 4];
+    *dst++ = table[*src & 0xf];
     src++;
     srclen--;
     dstlen -= 2;
   }
   *dst = 0;
+  return dst;
 }
 
 /* **************************************************************************
