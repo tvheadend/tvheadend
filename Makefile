@@ -188,6 +188,7 @@ BUNDLE_FLAGS = ${BUNDLE_FLAGS-yes}
 MKBUNDLE = $(PYTHON) $(ROOTDIR)/support/mkbundle
 XGETTEXT2 ?= $(XGETTEXT) --language=C --from-code=utf-8 --add-comments=/ -k_ -kN_ -s
 MSGMERGE ?= msgmerge
+GENRE2HEADER = $(PYTHON) $(ROOTDIR)/support/genre2struct
 
 #
 # Debug/Output
@@ -705,7 +706,7 @@ reconfigure:
 	$(ROOTDIR)/configure $(CONFIGURE_ARGS)
 
 # Binary
-${PROG}: .config.mk make_webui $(OBJS)
+${PROG}: .config.mk $(BUILDDIR)/xmltv_genre_autogen.h make_webui $(OBJS)
 	$(pCC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object
@@ -830,6 +831,9 @@ $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 $(BUILDDIR)/bundle.c: $(DVBSCAN-yes) make_webui
 	@mkdir -p $(dir $@)
 	$(pMKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
+
+$(BUILDDIR)/xmltv_genre_autogen.h: src/epggrab/module/xmltvgenre.csv
+	$(GENRE2HEADER) $< > $@.tmp && mv $@.tmp $@
 
 .PHONY: make_webui
 make_webui:

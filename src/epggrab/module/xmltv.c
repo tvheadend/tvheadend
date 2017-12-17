@@ -497,57 +497,7 @@ static struct xml_epg_map {
   const char *xmltv;
   const char *epg;
 } xml_epg_mapping[] = {
-  /* If adding an entry below then ensure it is sorted.
-   * Note: M-x sort-lines will sort incorrectly due to
-   * speech marks ending the string, such as "Musical"
-   * sorting after "Musical comedy".
-   */
-  { "Adventure", "Adventure / Western / War" },
-  { "Arts/crafts", "Leisure hobbies" },
-  { "Boxing", "Sports" },
-  { "Children", "Children's / Youth programs"},
-  { "Crime", "Detective / Thriller" },
-  { "Crime drama", "Detective / Thriller" },
-  { "Dance", "Music / Ballet / Dance" },
-  { "Dark comedy", "Comedy" },
-  { "Drama", "Movie / Drama" },
-  { "Educational", "Education / Science / Factual topics" },
-  { "Entertainment", "Movie / Drama" },
-  { "Fantasy", "Science fiction / Fantasy / Horror" },
-  { "Feature Film", "Movie / Drama" },
-  { "Game show", "Game show / Quiz / Contest" },
-  { "Home improvement", "Handicraft" },
-  { "Horror", "Science fiction / Fantasy / Horror" },
-  { "Horse", "Equestrian" },
-  { "House/garden", "Leisure hobbies" },
-  { "Interview", "Talk show" },
-  { "Music", "Music / Ballet / Dance" },
-  { "Musical", "Musical / Opera" },
-  { "Musical comedy", "Musical / Opera" },
-  { "Nature", "Nature / Animals / Environment" },
-  { "News", "News / Current affairs" },
-  { "Olympics", "Sports events (Olympic Games, World Cup, etc.)" },
-  { "Opera", "Musical / Opera" },
-  { "Politics", "Social / Political issues / Economics" },
-  { "Reality", "Movie / Drama" },
-  { "Religious", "Serious / Classical / Religious / Historical movie / Drama" },
-  { "Science", "Education / Science / Factual topics" },
-  { "Science fiction", "Science fiction / Fantasy / Horror" },
-  { "Shopping", "Advertisement / Shopping" },
-  { "Short film", "Movie / Drama" },
-  { "Sitcom", "Comedy" },
-  { "Soap", "Soap / Melodrama / Folkloric" },
-  { "Soccer", "Football / Soccer" },
-  { "Sports event", "Sports events (Olympic Games, World Cup, etc.)" },
-  { "Sports non-event", "Sports" },
-  { "Sports talk", "Sports" },
-  { "Swimming", "Water sport" },
-  { "Talk", "Talk show" },
-  { "Technology", "Technology / Natural sciences" },
-  { "Thriller", "Detective / Thriller" },
-  { "Travel", "Tourism / Travel" },
-  { "Variety", "Variety show" },
-  { "Western", "Adventure / Western / War" }
+#include "xmltv_genre_autogen.h"
 };
 
 static int
