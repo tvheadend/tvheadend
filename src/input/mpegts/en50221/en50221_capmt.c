@@ -167,16 +167,15 @@ int en50221_capmt_build
   put_len12(d + 4, x - d - 6); /* update length */
 
   while (tl >= 5) {
-    y = x;
     l = extract_len12(p + 3);
     if (l + 5 > tl)
       goto reterr;
     pid = extract_pid(p + 1);
-    memcpy(x, p, 3); /* stream type, PID */
     p  += 5;
     tl -= 5;
-    x  += 5;
     if (en50221_capmt_check_pid(s, pid)) {
+      memcpy(y = x, p, 3); /* stream type, PID */
+      x += 5;
       first = 1;
       while (l > 1) {
         dtag = p[0];
@@ -199,12 +198,12 @@ int en50221_capmt_build
       }
       if (l)
         return -EINVAL;
+      y[3] = 0xf0;
+      put_len12(y + 3, x - y - 5);
     } else {
       p  += l;
       tl -= l;
     }
-    y[3] = 0xf0;
-    put_len12(y + 3, x - y - 5);
   }
 
   *capmt = d;
@@ -281,6 +280,7 @@ void en50221_capmt_dump
   uint16_t l, caid, pid;
   uint8_t dtag, dlen, stype;
   const uint8_t *p;
+  char hbuf[257];
 
   if (capmtlen < 6) {
     tvhtrace(subsys, "%s: CAPMT short length %zd", prefix, capmtlen);
@@ -309,8 +309,9 @@ void en50221_capmt_dump
         tvhtrace(subsys, "%s:   CAPMT wrong CA descriptor length %d (2)", prefix, l);
       } else {
         caid = extract_2byte(p + 2);
-        pid  = extract_pid(p + 3);
-        tvhtrace(subsys, "%s:   CAPMT CA descriptor caid %04X pid %04x length %d", prefix, caid, pid, dlen);
+        pid  = extract_pid(p + 4);
+        tvhtrace(subsys, "%s:   CAPMT CA descriptor caid %04X pid %04x length %d (%s)",
+                         prefix, caid, pid, dlen, bin2hex(hbuf, sizeof(hbuf), p + 6, l - 4));
       }
       p += dlen + 2;
       l -= dlen + 2;
@@ -339,8 +340,9 @@ void en50221_capmt_dump
           tvhtrace(subsys, "%s:     CAPMT ES wrong CA descriptor length %d (2)", prefix, l);
         } else {
           caid = extract_2byte(p + 2);
-          pid  = extract_pid(p + 3);
-          tvhtrace(subsys, "%s:     CAPMT ES CA descriptor caid %04X pid %04x length %d", prefix, caid, pid, dlen);
+          pid  = extract_pid(p + 4);
+          tvhtrace(subsys, "%s:     CAPMT ES CA descriptor caid %04X pid %04x length %d (%s)",
+                           prefix, caid, pid, dlen, bin2hex(hbuf, sizeof(hbuf), p + 6, l - 4));
         }
         p += dlen + 2;
         l -= dlen + 2;
