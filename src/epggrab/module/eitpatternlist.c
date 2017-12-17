@@ -63,13 +63,6 @@ void eit_pattern_compile_named_list ( eit_pattern_list_t *list, htsmsg_t *m, con
   eit_pattern_compile_list(list, htsmsg_get_list(m, key), TVHREGEX_POSIX);
 }
 
-void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_pattern_list_t *l)
-{
-  char *b[2] = { buf, NULL };
-  size_t s[2] = { size_buf, 0 };
-  return eit_pattern_apply_list_2(b, s, text, l);
-}
-
 static void rtrim(char *buf)
 {
   size_t len = strlen(buf);
@@ -78,27 +71,29 @@ static void rtrim(char *buf)
   buf[len] = '\0';
 }
 
-void *eit_pattern_apply_list_2(char *buf[2], size_t size_buf[2], const char *text, eit_pattern_list_t *l)
+void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_pattern_list_t *l)
 {
   eit_pattern_t *p;
+  char matchbuf[2048];
 
-  assert(buf[0]);
+  assert(buf);
   assert(text);
 
   if (!l) return NULL;
-  /* search and report the first match */
+
+  /* search and concatenate all subgroup matches - there must be at least one */
   TAILQ_FOREACH(p, l, p_links)
     if (!regex_match(&p->compiled, text) &&
-        !regex_match_substring(&p->compiled, 1, buf[0], size_buf[0])) {
-      rtrim(buf[0]);
-      if (buf[1] && !regex_match_substring(&p->compiled, 2, buf[1], size_buf[1])) {
-        rtrim(buf[1]);
-        tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches with '%s' & '%s'", p->text, buf[0], buf[1]);
-      } else {
-        buf[1] = NULL;
-        tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches with '%s'", p->text, buf[0]);
+        !regex_match_substring(&p->compiled, 1, buf, size_buf)) {
+      for (int matchno = 2; ; ++matchno) {
+        if (regex_match_substring(&p->compiled, matchno, matchbuf, sizeof(matchbuf)))
+          break;
+        size_t len = strlen(buf);
+        strncat(buf, matchbuf, size_buf - len - 1);
       }
-      return buf[0];
+      rtrim(buf);
+      tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches with '%s'", p->text, buf);
+      return buf;
     }
   return NULL;
 }

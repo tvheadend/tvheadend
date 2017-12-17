@@ -301,6 +301,19 @@ const idclass_t epggrab_mod_ota_scraper_class = {
     },
     {
       .type   = PT_BOOL,
+      .id     = "scrape_title",
+      .name   = N_("Scrape Title"),
+      .desc   = N_("Enable/disable scraping title from the programme title and description. "
+                   "Some broadcasters can split the title over the separate title, "
+                   "and summary fields. This allows scraping of common split title formats "
+                   "from within the broadcast title and summary field if supported by the "
+                   "configuration file."
+                   ),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_title),
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
       .id     = "scrape_subtitle",
       .name   = N_("Scrape Subtitle"),
       .desc   = N_("Enable/disable scraping subtitle from the programme description. "
@@ -310,6 +323,19 @@ const idclass_t epggrab_mod_ota_scraper_class = {
                    "configuration file."
                    ),
       .off    = offsetof(epggrab_module_ota_scraper_t, scrape_subtitle),
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_summary",
+      .name   = N_("Scrape Summary"),
+      .desc   = N_("Enable/disable scraping summary from the programme description. "
+                   "Some broadcasters do not send separate title, subtitle, description, "
+                   "and summary fields. This allows scraping of a modified summary "
+                   "from within the broadcast summary field if supported by the "
+                   "configuration file."
+                   ),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_summary),
       .group  = 2,
     },
     {}
