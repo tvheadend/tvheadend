@@ -37,6 +37,7 @@
 #include "file.h"
 #include "service.h"
 #include "cron.h"
+#include "memoryinfo.h"
 
 /* Thread protection */
 static int             epggrab_confver;
@@ -47,6 +48,8 @@ static pthread_cond_t  epggrab_data_cond;
 int                    epggrab_running;
 
 static TAILQ_HEAD(, epggrab_module) epggrab_data_modules;
+
+static memoryinfo_t epggrab_data_memoryinfo = { .my_name = "EPG grabber data queue" };
 
 /* Config */
 epggrab_module_list_t  epggrab_modules;
@@ -177,6 +180,7 @@ static void *_epggrab_data_thread( void *aux )
     pthread_mutex_unlock(&epggrab_data_mutex);
     if (eq) {
       mod->process_data(mod, eq->eq_data, eq->eq_len);
+      memoryinfo_free(&epggrab_data_memoryinfo, sizeof(*eq) + eq->eq_len);
       free(eq);
     }
   }
@@ -184,6 +188,7 @@ static void *_epggrab_data_thread( void *aux )
   while ((mod = TAILQ_FIRST(&epggrab_data_modules)) != NULL) {
     while ((eq = TAILQ_FIRST(&mod->data_queue)) != NULL) {
       TAILQ_REMOVE(&mod->data_queue, eq, eq_link);
+      memoryinfo_free(&epggrab_data_memoryinfo, sizeof(*eq) + eq->eq_len);
       free(eq);
     }
     TAILQ_REMOVE(&epggrab_data_modules, mod, qlink);
@@ -197,10 +202,12 @@ void epggrab_queue_data(epggrab_module_t *mod,
                         const void *data2, uint32_t len2)
 {
   epggrab_queued_data_t *eq;
+  size_t len;
 
   if (!atomic_get(&epggrab_running))
     return;
-  eq = malloc(sizeof(*eq) + len1 + len2);
+  len = sizeof(*eq) + len1 + len2;
+  eq = malloc(len);
   if (eq == NULL)
     return;
   eq->eq_len = len1 + len2;
@@ -208,6 +215,7 @@ void epggrab_queue_data(epggrab_module_t *mod,
     memcpy(eq->eq_data, data1, len1);
   if (len2)
     memcpy(eq->eq_data + len1, data2, len2);
+  memoryinfo_alloc(&epggrab_data_memoryinfo, len);
   pthread_mutex_lock(&epggrab_data_mutex);
   TAILQ_INSERT_TAIL(&mod->data_queue, eq, eq_link);
   if (TAILQ_EMPTY(&mod->data_queue)) {
@@ -472,6 +480,8 @@ pthread_t      epggrab_data_tid;
 
 void epggrab_init ( void )
 {
+  memoryinfo_register(&epggrab_data_memoryinfo);
+
   /* Defaults */
   epggrab_conf.cron               = NULL;
   epggrab_conf.channel_rename     = 0;
@@ -562,5 +572,6 @@ void epggrab_done ( void )
   free(epggrab_conf.ota_cron);
   epggrab_conf.ota_cron = NULL;
   epggrab_channel_done();
+  memoryinfo_unregister(&epggrab_data_memoryinfo);
   pthread_mutex_unlock(&global_lock);
 }
