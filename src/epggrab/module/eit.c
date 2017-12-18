@@ -1246,8 +1246,8 @@ static eit_module_t *eit_module_ota_create
 {
   eit_module_t * mod = (eit_module_t *)
     epggrab_module_ota_create(calloc(1, sizeof(eit_module_t)),
-                              id, subsys, saveid,
-                              name, priority, 1, ops);
+                              id, subsys, saveid, name, priority,
+                              &epggrab_mod_ota_scraper_class, ops);
   return mod;
 }
 

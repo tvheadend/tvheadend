@@ -687,15 +687,14 @@ epggrab_module_ext_t *epggrab_module_ext_create
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, int subsys, const char *saveid,
-    const char *name, int priority, int with_scraper,
-    epggrab_ota_module_ops_t *ops )
+    const char *name, int priority, const idclass_t *idclass,
+    const epggrab_ota_module_ops_t *ops )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
 
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
-                        with_scraper ?
-                          &epggrab_mod_ota_scraper_class : &epggrab_mod_ota_class,
+                        idclass ?: &epggrab_mod_ota_class,
                         id, subsys, saveid, name, priority);
 
   /* Setup */

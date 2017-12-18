@@ -111,8 +111,9 @@ typedef struct epggrab_ota_module_ops {
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, int subsys, const char *saveid,
-    const char *name, int priority, int with_scraper,
-    epggrab_ota_module_ops_t *ops );
+    const char *name, int priority,
+    const idclass_t *idclass,
+    const epggrab_ota_module_ops_t *ops );
 
 /* **************************************************************************
  * OTA mux link routines
@@ -196,6 +197,7 @@ extern const idclass_t epggrab_mod_ext_class;
 extern const idclass_t epggrab_mod_ext_pyepg_class;
 extern const idclass_t epggrab_mod_ext_xmltv_class;
 extern const idclass_t epggrab_mod_ota_class;
+extern const idclass_t epggrab_mod_ota_scraper_class;
 
 /* **************************************************************************
  * Module setup(s)
