@@ -561,6 +561,8 @@ typedef enum {
 #define SM_CODE_NO_INPUT                  402
 #define SM_CODE_NO_SPACE                  403
 
+#define SM_CODE_PREVIOUSLY_RECORDED       500
+
 typedef enum
 {
   SIGNAL_UNKNOWN,
