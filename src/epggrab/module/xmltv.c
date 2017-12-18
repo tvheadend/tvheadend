@@ -630,7 +630,7 @@ static int _xmltv_parse_programme_tags
   if (!(ebc = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save, &changes)))
     return 0;
   stats->broadcasts.total++;
-  if (save) stats->broadcasts.created++;
+  if (save && changes & EPG_CHANGED_CREATE) stats->broadcasts.created++;
 
   /* Description (wait for episode first) */
   _xmltv_parse_lang_str(&desc, tags, "desc");
@@ -727,7 +727,7 @@ static int _xmltv_parse_programme_tags
     }
     free(suri);
     if (es) stats->seasons.total++;
-    if (save2) stats->seasons.created++;
+    if (save2 && changes2 & EPG_CHANGED_CREATE) stats->seasons.created++;
   }
 
   /*
@@ -742,7 +742,11 @@ static int _xmltv_parse_programme_tags
   }
   save |= epg_broadcast_set_episode(ebc, ee, &changes);
   if (ee)    stats->episodes.total++;
-  if (save3) stats->episodes.created++;
+  /* save3 is always set by epg_episode_find_by_uri call to
+   * _epg_object_set_grabber so need to also check for
+   * EPG_CHANGED_CREATE.
+   */
+  if (save3 && changes3 & EPG_CHANGED_CREATE) stats->episodes.created++;
 
   if (ee) {
     _xmltv_parse_lang_str(&title, tags, "title");
@@ -780,9 +784,16 @@ static int _xmltv_parse_programme_tags
   save |= epg_broadcast_change_finish(ebc, changes, 0);
 
   /* Stats */
-  if (save)  stats->broadcasts.modified++;
-  if (save2) stats->seasons.modified++;
-  if (save3) stats->episodes.modified++;
+  /* The "changes" variable actually track all fields that
+   * exist in the message rather than ones explicitly modified.
+   * So a file that contained "title a" and replayed a day later
+   * and still says "title a" will be reported as modified since
+   * the field exists in the message. This then means that the
+   * "save" variable then indicate the record was modified.
+   */
+  if (save &&  !(changes  & EPG_CHANGED_CREATE))  stats->broadcasts.modified++;
+  if (save2 && !(changes2 & EPG_CHANGED_CREATE))  stats->seasons.modified++;
+  if (save3 && !(changes3 && EPG_CHANGED_CREATE)) stats->episodes.modified++;
 
   /* Cleanup */
   if (title)    lang_str_destroy(title);
