@@ -720,7 +720,7 @@ running:
 static int _eit_process_event
   ( epggrab_module_t *mod, int tableid, int sect,
     eit_data_t *ed, const uint8_t *ptr0, int len0,
-    int local, int *save )
+    int local, int *save, int lock )
 {
   eit_module_t *eit_mod = (eit_module_t *)mod;
   idnode_list_mapping_t *ilm;
@@ -795,7 +795,8 @@ static int _eit_process_event
   if (ev.summary && eit_mod->scrape_subtitle)
     _eit_scrape_subtitle(eit_mod, &ev);
 
-  pthread_mutex_lock(&global_lock);
+  if (lock)
+    pthread_mutex_lock(&global_lock);
   svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
   if (svc) {
     ev.default_charset = dvb_charset_find(NULL, NULL, svc);
@@ -807,7 +808,8 @@ static int _eit_process_event
         break;
     }
   }
-  pthread_mutex_unlock(&global_lock);
+  if (lock)
+    pthread_mutex_unlock(&global_lock);
 
 #if TODO_ADD_EXTRA
   if (ev.extra)    htsmsg_destroy(ev.extra);
@@ -836,7 +838,7 @@ _eit_process_data(void *m, void *data, uint32_t len)
 
   while (len) {
     if ((r = _eit_process_event(m, ed.tableid, ed.sect, &ed,
-                                data, len, ed.local_time, &save)) < 0)
+                                data, len, ed.local_time, &save, 1)) < 0)
       break;
     assert(r > 0);
     len -= r;
@@ -848,6 +850,24 @@ _eit_process_data(void *m, void *data, uint32_t len)
     epg_updated();
     pthread_mutex_unlock(&global_lock);
   }
+}
+
+static void
+_eit_process_immediate(void *m, const void *ptr, uint32_t len, eit_data_t *ed)
+{
+  int save = 0, r;
+
+  while (len) {
+    if ((r = _eit_process_event(m, ed->tableid, ed->sect, ed,
+                                ptr, len, ed->local_time, &save, 0)) < 0)
+      break;
+    assert(r > 0);
+    len -= r;
+    ptr += r;
+  }
+
+  if (save)
+    epg_updated();
 }
 
 static int
@@ -1007,7 +1027,13 @@ svc_ok:
     } else {
       data.cridauth[0] = '\0';
     }
-    epggrab_queue_data(mod, &data, sizeof(data), ptr, len);
+    if (tableid == 0x4e) {
+      /* handle running state immediately */
+      _eit_process_immediate(mod, ptr, len, &data);
+    } else {
+      /* handle those data later */
+      epggrab_queue_data(mod, &data, sizeof(data), ptr, len);
+    }
   }
 
 done:
