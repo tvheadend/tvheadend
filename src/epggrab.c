@@ -528,7 +528,7 @@ void epggrab_init ( void )
   /* Start internal and data queue grab thread */
   atomic_set(&epggrab_running, 1);
   tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL, "epggrabi");
-  tvhthread_create(&epggrab_data_tid, NULL, _epggrab_data_thread, NULL, "epggrabd");
+  tvhthread_create(&epggrab_data_tid, NULL, _epggrab_data_thread, NULL, "epgdata");
 }
 
 /*
