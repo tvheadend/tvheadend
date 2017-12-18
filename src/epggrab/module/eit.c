@@ -61,6 +61,7 @@ typedef struct eit_data
 typedef struct eit_module_t
 {
   epggrab_module_ota_scraper_t  ;      ///< Base struct
+  int running_immediate;               ///< Handle quickly the events from the current table
   eit_pattern_list_t p_snum;
   eit_pattern_list_t p_enum;
   eit_pattern_list_t p_airdate;        ///< Original air date parser
@@ -1027,7 +1028,7 @@ svc_ok:
     } else {
       data.cridauth[0] = '\0';
     }
-    if (tableid == 0x4e) {
+    if (((eit_module_t *)mod)->running_immediate && tableid == 0x4e) {
       /* handle running state immediately */
       _eit_process_immediate(mod, ptr, len, &data);
     } else {
@@ -1239,6 +1240,26 @@ static void _eit_module_load_config(eit_module_t *mod)
     free(generic_name);
 }
 
+static const idclass_t epggrab_mod_eit_class = {
+  .ic_super      = &epggrab_mod_ota_scraper_class,
+  .ic_class      = "epggrab_mod_eit",
+  .ic_caption    = N_("Over-the-air EIT EPG grabber"),
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_BOOL,
+      .id     = "running_immediate",
+      .name   = N_("Running state immediately"),
+      .desc   = N_("Handle the running state (EITp/f) immediately. "
+                   "Usually, keep this off. It might increase "
+                   "the recordings accuracy on very slow systems."),
+      .off    = offsetof(eit_module_t, running_immediate),
+      .group  = 1,
+      .opts   = PO_EXPERT,
+    },
+    {}
+  }
+};
+
 static eit_module_t *eit_module_ota_create
   ( const char *id, int subsys, const char *saveid,
     const char *name, int priority,
@@ -1247,7 +1268,7 @@ static eit_module_t *eit_module_ota_create
   eit_module_t * mod = (eit_module_t *)
     epggrab_module_ota_create(calloc(1, sizeof(eit_module_t)),
                               id, subsys, saveid, name, priority,
-                              &epggrab_mod_ota_scraper_class, ops);
+                              &epggrab_mod_eit_class, ops);
   return mod;
 }
 
