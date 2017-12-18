@@ -183,11 +183,11 @@ en50221_transport_pdu_write(en50221_transport_t *cit,
     buf[1] = datalen & 0x7f;
     hlen = 2;
   } else if (datalen < 0x100) {
-    buf[1] = 0x82;
+    buf[1] = 0x81;
     buf[2] = datalen & 0xff;
     hlen = 3;
   } else if (datalen < 0x10000) {
-    buf[1] = 0x83;
+    buf[1] = 0x82;
     buf[2] = datalen >> 8;
     buf[3] = datalen & 0xff;
     hlen = 4;
