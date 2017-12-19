@@ -134,13 +134,12 @@ dvr_entry_trace_time2_(const char *file, int line,
 int dvr_entry_is_upcoming(dvr_entry_t *entry)
 {
   dvr_entry_sched_state_t state = entry->de_sched_state;
-		return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
+	return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
 }
 
 int dvr_entry_is_duplicate(dvr_entry_t *entry)
 {
 	dvr_entry_sched_state_t state = entry->de_sched_state;
-
 	if (_dvr_duplicate_event(entry) == 0){
 		return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
 	}else return 0;
