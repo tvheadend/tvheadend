@@ -57,6 +57,8 @@ static void dvr_timer_stop_recording(void *aux);
 static int dvr_entry_rerecord(dvr_entry_t *de);
 static time_t dvr_entry_get_segment_stop_extra(dvr_entry_t *de);
 
+static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de);
+
 /*
  *
  */
@@ -132,7 +134,16 @@ dvr_entry_trace_time2_(const char *file, int line,
 int dvr_entry_is_upcoming(dvr_entry_t *entry)
 {
   dvr_entry_sched_state_t state = entry->de_sched_state;
-  return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
+		return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
+}
+
+int dvr_entry_is_duplicate(dvr_entry_t *entry)
+{
+	dvr_entry_sched_state_t state = entry->de_sched_state;
+
+	if (_dvr_duplicate_event(entry) == 0){
+		return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
+	}else return 0;
 }
 
 int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
@@ -4191,6 +4202,35 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
   }
 
   return de;
+}
+
+static void
+dvr_entry_add_previously_recorded(dvr_entry_t *de)
+{
+	de->de_dont_reschedule = 1; // Set as not reschedule
+	de->de_file_removed = 1; // Set as file removed
+	de->de_start = gclk(); // Need in case you want to record it again after.
+	de->de_stop = gclk() + 1000;
+	dvr_entry_completed(de, SM_CODE_OK); // mark as completed
+	idnode_changed(&de->de_id);
+
+	dvr_entry_retention_timer(de);
+
+	htsp_dvr_entry_update(de);
+	idnode_notify_changed(&de->de_id);
+
+	tvhinfo(LS_DVR, "\"%s\" on \"%s\": "
+			"set as previously recorded",
+			lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
+}
+
+/**
+ * Add a schedule as previously recorded
+ */
+void
+dvr_entry_previously_recorded(dvr_entry_t *de)
+{
+  dvr_entry_add_previously_recorded(de);
 }
 
 /**

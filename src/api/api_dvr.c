@@ -87,6 +87,17 @@ api_dvr_entry_grid_upcoming
 }
 
 static void
+api_dvr_entry_grid_duplicate
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+{
+  dvr_entry_t *de;
+
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    if (dvr_entry_is_duplicate(de))
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
+}
+
+static void
 api_dvr_entry_grid_finished
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
@@ -335,6 +346,21 @@ api_dvr_entry_remove
 }
 
 static void
+api_dvr_previouslyrecorded(access_t *perm, idnode_t *self)
+{
+  dvr_entry_t *de = (dvr_entry_t *)self;
+  if (de->de_sched_state == DVR_SCHEDULED)
+    dvr_entry_previously_recorded(de);
+}
+
+static int
+api_dvr_entry_previouslyrecorded
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(&dvr_entry_class, perm, args, resp, api_dvr_previouslyrecorded, "remove", 0);
+}
+
+static void
 api_dvr_move_finished(access_t *perm, idnode_t *self)
 {
   dvr_entry_move((dvr_entry_t *)self, 0);
@@ -521,6 +547,7 @@ void api_dvr_init ( void )
     { "dvr/entry/class",           ACCESS_RECORDER, api_idnode_class, (void*)&dvr_entry_class },
     { "dvr/entry/grid",            ACCESS_RECORDER, api_idnode_grid, api_dvr_entry_grid },
     { "dvr/entry/grid_upcoming",   ACCESS_RECORDER, api_idnode_grid, api_dvr_entry_grid_upcoming },
+    { "dvr/entry/grid_duplicate",  ACCESS_RECORDER, api_idnode_grid, api_dvr_entry_grid_duplicate },
     { "dvr/entry/grid_finished",   ACCESS_RECORDER, api_idnode_grid, api_dvr_entry_grid_finished },
     { "dvr/entry/grid_failed",     ACCESS_RECORDER, api_idnode_grid, api_dvr_entry_grid_failed },
     { "dvr/entry/grid_removed",    ACCESS_RECORDER, api_idnode_grid, api_dvr_entry_grid_removed },
@@ -531,6 +558,7 @@ void api_dvr_init ( void )
     { "dvr/entry/rerecord/allow",  ACCESS_RECORDER, api_dvr_entry_rerecord_allow, NULL },
     { "dvr/entry/stop",            ACCESS_RECORDER, api_dvr_entry_stop, NULL },   /* Stop active recording gracefully */
     { "dvr/entry/cancel",          ACCESS_RECORDER, api_dvr_entry_cancel, NULL }, /* Cancel scheduled or active recording */
+    { "dvr/entry/previouslyrecorded", ACCESS_RECORDER, api_dvr_entry_previouslyrecorded, NULL }, /* Add selected schedules as previously recorded */
     { "dvr/entry/remove",          ACCESS_RECORDER, api_dvr_entry_remove, NULL }, /* Remove recorded files from storage */
     { "dvr/entry/filemoved",       ACCESS_ADMIN,    api_dvr_entry_file_moved, NULL },
     { "dvr/entry/move/finished",   ACCESS_RECORDER, api_dvr_entry_move_finished, NULL },
