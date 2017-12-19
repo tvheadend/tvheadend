@@ -459,7 +459,7 @@ static int positive_atoi(const char *s)
 }
 
 /* Scrape episode data from the broadcast data.
- * @param text - string from broadcaster to search for all languages.
+ * @param str - string from broadcaster to search for all languages.
  * @param eit_mod - our module with regex to use.
  * @param ev - [out] modified event data.
  */
@@ -521,6 +521,7 @@ _eit_scrape_subtitle(eit_module_t *eit_mod,
                      eit_event_t *ev)
 {
   lang_str_ele_t *se;
+  lang_str_t *ls;
   char buffer1[2048];
   char buffer2[2048];
   char *bufs[2] = { buffer1, buffer2 };
@@ -531,15 +532,20 @@ _eit_scrape_subtitle(eit_module_t *eit_mod,
    * If we can't find a subtitle then default to previous behaviour of
    * setting the summary as the subtitle.
    */
+  ls = lang_str_create();
   RB_FOREACH(se, ev->summary, link) {
     if (eit_pattern_apply_list_2(bufs, sizes, se->str, &eit_mod->p_scrape_subtitle)) {
       tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s'/'%s' from '%s' using %s",
                buffer1, buffer2, se->str, eit_mod->id);
       lang_str_set(&ev->subtitle, buffer1, se->lang);
       if (bufs[1])
-        lang_str_set(&ev->summary, buffer2, se->lang);
+        lang_str_set(&ls, buffer2, se->lang);
     }
   }
+  RB_FOREACH(se, ls, link) {
+      lang_str_set(&ev->summary, se->str, se->lang);
+  }
+  lang_str_destroy(ls);
 }
 
 /* ************************************************************************
@@ -656,16 +662,6 @@ static int _eit_process_event_one
     ee = epg_episode_find_by_broadcast(ebc, mod, 1, save, &changes4);
   }
 
-  /* Scrape episode from within broadcast data */
-  epg_episode_num_t en;
-  memset(&en, 0, sizeof(en));
-
-  /* We search across all the main fields using the same regex and
-   * merge the results with the last match taking precendence.  So if
-   * EIT has episode in title and a different one in the description
-   * then we use the one from the description.
-   */
-
   /* Update Episode */
   if (ee) {
     *save |= epg_broadcast_set_episode(ebc, ee, &changes2);
@@ -687,8 +683,8 @@ static int _eit_process_event_one
       *save |= epg_episode_set_extra(ee, extra, &changes4);
 #endif
     /* save any found episode number */
-    if (en.s_num || en.e_num || en.p_num)
-      *save |= epg_episode_set_epnum(ee, &en, &changes4);
+    if (ev->en.s_num || ev->en.e_num || ev->en.p_num)
+      *save |= epg_episode_set_epnum(ee, &ev->en, &changes4);
     if (ev->first_aired > 0)
       *save |= epg_episode_set_first_aired(ee, ev->first_aired, &changes4);
     if (ev->copyright_year > 0)
@@ -783,7 +779,13 @@ static int _eit_process_event
     ptr   += dlen;
   }
 
-  /* Do all scraping here, outside the global lock */
+  /* Do all scraping here, outside the global lock.
+   *
+   * We search across all the main fields using the same regex and
+   * merge the results with the last match taking precendence.  So if
+   * EIT has episode in title and a different one in the description
+   * then we use the one from the description.
+   */
   if (eit_mod->scrape_episode) {
     if (ev.title)
       _eit_scrape_episode(ev.title, eit_mod, &ev);
