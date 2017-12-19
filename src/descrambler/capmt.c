@@ -2175,7 +2175,9 @@ capmt_send_request(capmt_service_t *ct, int lm)
   uint16_t pmtpid = t->s_pmt_pid;
   uint16_t transponder = t->s_dvb_mux->mm_tsid;
   uint16_t onid = t->s_dvb_mux->mm_onid;
-  int adapter_num = ct->ct_adapter;
+  const int adapter_num = ct->ct_adapter;
+  const int wrapper = capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER;
+  const int pc_desc = !wrapper && adapter_num >= 8;
   int i;
 
   /* buffer for capmt */
@@ -2198,6 +2200,14 @@ capmt_send_request(capmt_service_t *ct, int lm)
   buf[pos++] = 1; /* OK DESCRAMBLING, skipped for parse_descriptors, but */
                   /* mandatory for getDemuxOptions() */
 
+  if (pc_desc) {
+    /* build SI tag */
+    buf[pos++] = CAPMT_DESC_DEMUX;
+    buf[pos++] = 2;
+    buf[pos++] = 0;
+    buf[pos++] = adapter_num;
+  }
+
   /* build SI tag */
   buf[pos++] = CAPMT_DESC_ENIGMA;
   buf[pos++] = 8;
@@ -2211,10 +2221,12 @@ capmt_send_request(capmt_service_t *ct, int lm)
   buf[pos++] = onid;
 
   /* build SI tag */
-  buf[pos++] = CAPMT_DESC_DEMUX;
-  buf[pos++] = 2;
-  buf[pos++] = 1 << adapter_num;
-  buf[pos++] = capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER ? adapter_num : 0;
+  if (wrapper || !pc_desc) {
+    buf[pos++] = CAPMT_DESC_DEMUX;
+    buf[pos++] = 2;
+    buf[pos++] = 1 << adapter_num;
+    buf[pos++] = wrapper ? adapter_num : 0;
+  }
 
   /* build SI tag */
   buf[pos++] = CAPMT_DESC_PID;
@@ -2222,7 +2234,7 @@ capmt_send_request(capmt_service_t *ct, int lm)
   buf[pos++] = pmtpid >> 8;
   buf[pos++] = pmtpid;
 
-  if (capmt->capmt_oscam != CAPMT_OSCAM_SO_WRAPPER) {
+  if (!wrapper && !pc_desc) {
     /* build SI tag */
     buf[pos++] = CAPMT_DESC_ADAPTER;
     buf[pos++] = 1;
