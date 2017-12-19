@@ -224,12 +224,12 @@
     background-image: url(../icons/delete.png) !important;
 }
 
-.previouslyrecorded {
+.prevrec {
     background-image: url(../icons/accept.png) !important;
 }
 
-.showskipped {
-    background-image: url(../icons/other_filters.png) !important;
+.duprec {
+    background-image: url(../icons/control_repeat_blue.png) !important;
 }
 
 .cancel {

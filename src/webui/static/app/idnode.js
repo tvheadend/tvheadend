@@ -1727,6 +1727,7 @@ tvheadend.idnode_grid = function(panel, conf)
         /* Store */
         var params = {};
         if (conf.all) params['all'] = 1;
+        if (conf.extraParams) conf.extraParams(params);
         store = new Ext.data.JsonStore({
             root: 'entries',
             url: conf.gridURL || (conf.url + '/grid'),

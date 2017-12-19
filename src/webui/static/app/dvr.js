@@ -223,13 +223,13 @@ tvheadend.filesizeRenderer = function(st) {
 
 
 tvheadend.displayDuplicate = function(value, meta, record) {
-  if (value == null)
-    return '';
-  var is_dup = record.data['duplicate'];
-  if (is_dup)
-    return "<span class='x-epg-duplicate'>" + value + "</span>";
-  else
-    return value;
+    if (value == null)
+        return '';
+    var is_dup = record.data['duplicate'];
+    if (is_dup)
+        return "<span class='x-epg-duplicate'>" + value + "</span>";
+    else
+        return value;
 }
 
 /** Render an entry differently if it is a duplicate */
@@ -242,21 +242,40 @@ tvheadend.displayWithDuplicateRenderer = function(value, meta, record) {
 }
 
 tvheadend.displayWithYearAndDuplicateRenderer = function(value, meta, record) {
-  return function() {
-    return function(value, meta, record) {
-      value = tvheadend.getDisplayTitle(value, record);
-      return tvheadend.displayDuplicate(value, meta, record);
+    return function() {
+        return function(value, meta, record) {
+            value = tvheadend.getDisplayTitle(value, record);
+            return tvheadend.displayDuplicate(value, meta, record);
+        }
     }
-  }
 }
 
 tvheadend.displayWithYearRenderer = function(value, meta, record) {
-  return function() {
-    return function(value, meta, record) {
-      value = tvheadend.getDisplayTitle(value, record);
-      return value;
+    return function() {
+        return function(value, meta, record) {
+            value = tvheadend.getDisplayTitle(value, record);
+            return value;
+        }
     }
-  }
+}
+
+tvheadend.dvrButtonFcn = function(store, select, _url, q) {
+    var r = select.getSelections();
+    if (r && r.length > 0) {
+        var uuids = [];
+        for (var i = 0; i < r.length; i++)
+            uuids.push(r[i].id);
+        tvheadend.AjaxConfirm({
+            url: _url,
+            params: {
+                uuid: Ext.encode(uuids)
+            },
+            success: function(d) {
+                store.reload();
+            },
+            question: q,
+        });
+    }
 }
 
 /**
@@ -269,6 +288,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
     var elist = 'enabled,' +
                 (tvheadend.accessUpdate.admin ?
                 list + ',owner,creator' : list) + ',retention,removal';
+    var duplicates = 0;
+    var buttonFcn = tvheadend.dvrButtonFcn;
 
     var stopButton = {
         name: 'stop',
@@ -281,22 +302,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
             });
         },
         callback: function(conf, e, store, select) {
-            var r = select.getSelections();
-            if (r && r.length > 0) {
-                var uuids = [];
-                for (var i = 0; i < r.length; i++)
-                    uuids.push(r[i].id);
-                tvheadend.AjaxConfirm({
-                    url: 'api/dvr/entry/stop',
-                    params: {
-                        uuid: Ext.encode(uuids)
-                    },
-                    success: function(d) {
-                        store.reload();
-                    },
-                    question: _('Do you really want to gracefully stop/unschedule the selection?')
-                });
-            }
+            buttonFcn(store, select, 'api/dvr/entry/stop',
+                      _('Do you really want to gracefully stop/unschedule the selection?'));
         }
     };
 
@@ -311,77 +318,43 @@ tvheadend.dvr_upcoming = function(panel, index) {
             });
         },
         callback: function(conf, e, store, select) {
-            var r = select.getSelections();
-            if (r && r.length > 0) {
-                var uuids = [];
-                for (var i = 0; i < r.length; i++)
-                    uuids.push(r[i].id);
-                tvheadend.AjaxConfirm({
-                    url: 'api/dvr/entry/cancel',
-                    params: {
-                        uuid: Ext.encode(uuids)
-                    },
-                    success: function(d) {
-                        store.reload();
-                    },
-                    question: _('Do you really want to abort/unschedule the selection?')
-                });
-            }
+            buttonFcn(store, select, 'api/dvr/entry/cancel',
+                      _('Do you really want to abort/unschedule the selection?'));
         }
     };
 
-    var previouslyrecordedButton = {
-        name: 'previouslyrecorded',
+    var prevrecButton = {
+        name: 'prevrec',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Add as recorded the selected program'),
-                iconCls: 'previouslyrecorded',
-                text: _('Add as recorded'),
+                tooltip: _('Toggle the previously recorded state.'),
+                iconCls: 'prevrec',
+                text: _('Previously recorded'),
                 disabled: true
             });
         },
         callback: function(conf, e, store, select) {
-            var r = select.getSelections();
-            if (r && r.length > 0) {
-                var uuids = [];
-                for (var i = 0; i < r.length; i++)
-                    uuids.push(r[i].id);
-                tvheadend.AjaxConfirm({
-                    url: 'api/dvr/entry/previouslyrecorded',
-                    params: {
-                        uuid: Ext.encode(uuids)
-                    },
-                    success: function(d) {
-                        store.reload();
-                    },
-										question: _('Do you really want to add the selected recordings as previosly recorded?')
-                });
-            }
+            buttonFcn(store, select, 'api/dvr/entry/prevrec/toggle',
+                      _('Do you really want to toggle the previously recorded state for the selected recordings?'));
         }
     };
 
-		var showSkippedButton = {
-				name: 'showskipped',
-				builder: function() {
-						return new Ext.Toolbar.Button({
-								tooltip: _('Show / hide skipped recordings'),
-								iconCls: 'showskipped',
-								text: _('View skipped recordings'),
-								disabled: false,
-								pressed: false,
-								enableToggle: true
-						});
-				},
-				callback: function(conf, e, store) {
-						if (store.proxy.url === 'api/dvr/entry/grid_duplicate'){
-							store.proxy.setUrl('api/dvr/entry/grid_upcoming',true);
-							store.load();
-						}else{
-							store.proxy.setUrl('api/dvr/entry/grid_duplicate',true);
-							store.load();
-					}
-				}
-		};
+    var dupButton = {
+        name: 'dup',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Toggle the view of the duplicate DVR entries.'),
+                iconCls: 'duprec',
+                text: _('Show duplicates')
+            });
+        },
+        callback: function(conf, e, store, select) {
+            duplicates ^= 1;
+            this.setText(duplicates ? _('Hide duplicates') : _('Show duplicates'));
+            store.baseParams.duplicates = duplicates;
+            store.reload();
+        }
+    };
 
     function selected(s, abuttons) {
         var recording = 0;
@@ -391,7 +364,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         });
         abuttons.stop.setDisabled(recording < 1);
         abuttons.abort.setDisabled(recording < 1);
-        abuttons.previouslyrecorded.setDisabled(recording >= 1);
+        abuttons.prevrec.setDisabled(recording >= 1);
     }
 
     function beforeedit(e, grid) {
@@ -401,11 +374,14 @@ tvheadend.dvr_upcoming = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
-        gridURL: 'api/dvr/entry/grid_duplicate',
+        gridURL: 'api/dvr/entry/grid_upcoming',
         titleS: _('Upcoming Recording'),
         titleP: _('Upcoming / Current Recordings'),
         iconCls: 'upcomingRec',
         tabIndex: index,
+        extraParams: function(params) {
+            params.duplicates = duplicates
+        },
         add: {
             url: 'api/dvr/entry',
             params: {
@@ -434,7 +410,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
             },
-            genre : {
+            genre: {
                 renderer: function(vals, meta, record) {
                     return function(vals, meta, record) {
                       var r = [];
@@ -458,7 +434,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
             actions,
             tvheadend.contentTypeAction,
         ],
-        tbar: [stopButton, abortButton, previouslyrecordedButton, showSkippedButton],
+        tbar: [stopButton, abortButton, prevrecButton, dupButton],
         selected: selected,
         beforeedit: beforeedit
     });
@@ -472,6 +448,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
 tvheadend.dvr_finished = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
+    var buttonFcn = tvheadend.dvrButtonFcn;
 
     var downloadButton = {
         name: 'download',
@@ -503,21 +480,7 @@ tvheadend.dvr_finished = function(panel, index) {
             });
         },
         callback: function(conf, e, store, select) {
-            var r = select.getSelections();
-            if (r && r.length > 0) {
-                var uuids = [];
-                for (var i = 0; i < r.length; i++)
-                    uuids.push(r[i].id);
-                tvheadend.Ajax({
-                    url: 'api/dvr/entry/rerecord/toggle',
-                    params: {
-                        uuid: Ext.encode(uuids)
-                    },
-                    success: function(d) {
-                        store.reload();
-                    }
-                });
-            }
+            buttonFcn(store, select, 'api/dvr/entry/rerecord/toggle');
         }
     };
 
@@ -532,21 +495,7 @@ tvheadend.dvr_finished = function(panel, index) {
             });
         },
         callback: function(conf, e, store, select) {
-            var r = select.getSelections();
-            if (r && r.length > 0) {
-                var uuids = [];
-                for (var i = 0; i < r.length; i++)
-                    uuids.push(r[i].id);
-                tvheadend.Ajax({
-                    url: 'api/dvr/entry/move/failed',
-                    params: {
-                        uuid: Ext.encode(uuids)
-                    },
-                    success: function(d) {
-                        store.reload();
-                    }
-                });
-            }
+            buttonFcn(store, select, 'api/dvr/entry/move/failed');
         }
     };
     
@@ -561,22 +510,8 @@ tvheadend.dvr_finished = function(panel, index) {
             });
         },
         callback: function(conf, e, store, select) {
-            var r = select.getSelections();
-            if (r && r.length > 0) {
-                var uuids = [];
-                for (var i = 0; i < r.length; i++)
-                    uuids.push(r[i].id);
-                tvheadend.AjaxConfirm({
-                    url: 'api/dvr/entry/remove',
-                    params: {
-                        uuid: Ext.encode(uuids)
-                    },
-                    success: function(d) {
-                        store.reload();
-                    },
-                    question: _('Do you really want to remove the selected recordings from storage?')   
-                });
-            }
+            buttonFcn(store, select, 'api/dvr/entry/remove',
+                      _('Do you really want to remove the selected recordings from storage?'));
         }
     };
 
@@ -642,6 +577,7 @@ tvheadend.dvr_finished = function(panel, index) {
 tvheadend.dvr_failed = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
+    var buttonFcn = tvheadend.dvrButtonFcn;
 
     var downloadButton = {
         name: 'download',
@@ -673,21 +609,7 @@ tvheadend.dvr_failed = function(panel, index) {
             });
         },
         callback: function(conf, e, store, select) {
-            var r = select.getSelections();
-            if (r && r.length > 0) {
-                var uuids = [];
-                for (var i = 0; i < r.length; i++)
-                    uuids.push(r[i].id);
-                tvheadend.Ajax({
-                    url: 'api/dvr/entry/rerecord/toggle',
-                    params: {
-                        uuid: Ext.encode(uuids)
-                    },
-                    success: function(d) {
-                        store.reload();
-                    }
-                });
-            }
+            buttonFcn(store, select, 'api/dvr/entry/rerecord/toggle');
         }
     };
 
@@ -702,21 +624,7 @@ tvheadend.dvr_failed = function(panel, index) {
             });
         },
         callback: function(conf, e, store, select) {
-            var r = select.getSelections();
-            if (r && r.length > 0) {
-                var uuids = [];
-                for (var i = 0; i < r.length; i++)
-                    uuids.push(r[i].id);
-                tvheadend.Ajax({
-                    url: 'api/dvr/entry/move/finished',
-                    params: {
-                        uuid: Ext.encode(uuids)
-                    },
-                    success: function(d) {
-                        store.reload();
-                    }
-                });
-            }
+            buttonFcn(store, select, 'api/dvr/entry/move/finished');
         }
     };
 
@@ -784,6 +692,7 @@ tvheadend.dvr_failed = function(panel, index) {
 tvheadend.dvr_removed = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
+    var buttonFcn = tvheadend.dvrButtonFcn;
 
     var rerecordButton = {
         name: 'rerecord',
@@ -796,21 +705,7 @@ tvheadend.dvr_removed = function(panel, index) {
             });
         },
         callback: function(conf, e, store, select) {
-            var r = select.getSelections();
-            if (r && r.length > 0) {
-                var uuids = [];
-                for (var i = 0; i < r.length; i++)
-                    uuids.push(r[i].id);
-                tvheadend.Ajax({
-                    url: 'api/dvr/entry/rerecord/toggle',
-                    params: {
-                        uuid: Ext.encode(uuids)
-                    },
-                    success: function(d) {
-                        store.reload();
-                    }
-                });
-            }
+            buttonFcn(store, select, 'api/dvr/entry/rerecord/toggle');
         }
     };
 

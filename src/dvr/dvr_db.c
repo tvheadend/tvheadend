@@ -134,15 +134,15 @@ dvr_entry_trace_time2_(const char *file, int line,
 int dvr_entry_is_upcoming(dvr_entry_t *entry)
 {
   dvr_entry_sched_state_t state = entry->de_sched_state;
-	return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
+  return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
 }
 
-int dvr_entry_is_duplicate(dvr_entry_t *entry)
+int dvr_entry_is_upcoming_nodup(dvr_entry_t *entry)
 {
-	dvr_entry_sched_state_t state = entry->de_sched_state;
-	if (_dvr_duplicate_event(entry) == 0){
-		return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
-	}else return 0;
+  dvr_entry_sched_state_t state = entry->de_sched_state;
+  if (_dvr_duplicate_event(entry))
+    return 0;
+  return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
 }
 
 int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
@@ -659,10 +659,9 @@ dvr_entry_status(dvr_entry_t *de)
       case SM_CODE_INVALID_TARGET:
         return N_("File not created");
       case SM_CODE_USER_ACCESS:
-        return N_("User access error");
       case SM_CODE_USER_LIMIT:
-        return N_("User limit reached");
       case SM_CODE_NO_SPACE:
+      case SM_CODE_PREVIOUSLY_RECORDED:
         return streaming_code2txt(de->de_last_error);
       default:
         break;
@@ -4203,33 +4202,42 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
   return de;
 }
 
-static void
-dvr_entry_add_previously_recorded(dvr_entry_t *de)
-{
-	de->de_dont_reschedule = 1; // Set as not reschedule
-	de->de_file_removed = 1; // Set as file removed
-	de->de_start = gclk(); // Need in case you want to record it again after.
-	de->de_stop = gclk() + 1000;
-	dvr_entry_completed(de, SM_CODE_OK); // mark as completed
-	idnode_changed(&de->de_id);
-
-	dvr_entry_retention_timer(de);
-
-	htsp_dvr_entry_update(de);
-	idnode_notify_changed(&de->de_id);
-
-	tvhinfo(LS_DVR, "\"%s\" on \"%s\": "
-			"set as previously recorded",
-			lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
-}
-
-/**
- * Add a schedule as previously recorded
+/*
+ * Toggle/set/unset previously recorded state
  */
 void
-dvr_entry_previously_recorded(dvr_entry_t *de)
+dvr_entry_set_prevrec(dvr_entry_t *de, int cmd)
 {
-  dvr_entry_add_previously_recorded(de);
+  if (de->de_sched_state == DVR_RECORDING)
+    return;
+
+  if (cmd < 0) /* toggle */
+    cmd = de->de_dont_reschedule ? 0 : 1;
+
+  if (cmd == !!de->de_dont_reschedule)
+    return;
+
+  if (cmd) {
+    de->de_dont_reschedule = 1;
+    de->de_dont_rerecord = 1;
+    de->de_file_removed = 1;
+    dvr_entry_completed(de, SM_CODE_PREVIOUSLY_RECORDED);
+  } else {
+    de->de_dont_reschedule = 0;
+    de->de_dont_rerecord = 0;
+    de->de_file_removed = 0;
+    dvr_entry_set_timer(de);
+  }
+
+  dvr_entry_retention_timer(de);
+
+  htsp_dvr_entry_update(de);
+  idnode_notify_changed(&de->de_id);
+
+  tvhinfo(LS_DVR, "\"%s\" on \"%s\": "
+                  "%sset as previously recorded",
+                  lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+                  cmd ? "" : "un");
 }
 
 /**
