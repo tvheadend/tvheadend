@@ -521,6 +521,7 @@ _eit_scrape_subtitle(eit_module_t *eit_mod,
                      eit_event_t *ev)
 {
   lang_str_ele_t *se;
+  lang_str_t *ls;
   char buffer1[2048];
   char buffer2[2048];
   char *bufs[2] = { buffer1, buffer2 };
@@ -531,15 +532,20 @@ _eit_scrape_subtitle(eit_module_t *eit_mod,
    * If we can't find a subtitle then default to previous behaviour of
    * setting the summary as the subtitle.
    */
+  ls = lang_str_create();
   RB_FOREACH(se, ev->summary, link) {
     if (eit_pattern_apply_list_2(bufs, sizes, se->str, &eit_mod->p_scrape_subtitle)) {
       tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s'/'%s' from '%s' using %s",
                buffer1, buffer2, se->str, eit_mod->id);
       lang_str_set(&ev->subtitle, buffer1, se->lang);
       if (bufs[1])
-        lang_str_set(&ev->summary, buffer2, se->lang);
+        lang_str_set(&ls, buffer2, se->lang);
     }
   }
+  RB_FOREACH(se, ls, link) {
+      lang_str_set(&ev->summary, se->str, se->lang);
+  }
+  lang_str_destroy(ls);
 }
 
 /* ************************************************************************
