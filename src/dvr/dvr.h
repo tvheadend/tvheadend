@@ -622,6 +622,8 @@ void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord);
 
 void dvr_entry_cancel_remove(dvr_entry_t *de, int rerecord);
 
+void dvr_entry_previously_recorded(dvr_entry_t *de);
+
 int dvr_entry_file_moved(const char *src, const char *dst);
 
 void dvr_entry_destroy(dvr_entry_t *de, int delconf);
@@ -634,6 +636,7 @@ htsmsg_t *dvr_entry_class_retention_list ( void *o, const char *lang );
 htsmsg_t *dvr_entry_class_removal_list ( void *o, const char *lang );
 
 int dvr_entry_is_upcoming(dvr_entry_t *entry);
+int dvr_entry_is_duplicate(dvr_entry_t *entry);
 int dvr_entry_is_finished(dvr_entry_t *entry, int flags);
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
