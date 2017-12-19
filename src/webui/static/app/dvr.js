@@ -330,6 +330,59 @@ tvheadend.dvr_upcoming = function(panel, index) {
         }
     };
 
+    var previouslyrecordedButton = {
+        name: 'previouslyrecorded',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Add as recorded the selected program'),
+                iconCls: 'previouslyrecorded',
+                text: _('Add as recorded'),
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.AjaxConfirm({
+                    url: 'api/dvr/entry/previouslyrecorded',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },
+                    success: function(d) {
+                        store.reload();
+                    },
+										question: _('Do you really want to add the selected recordings as previosly recorded?')
+                });
+            }
+        }
+    };
+
+		var showSkippedButton = {
+				name: 'showskipped',
+				builder: function() {
+						return new Ext.Toolbar.Button({
+								tooltip: _('Show / hide skipped recordings'),
+								iconCls: 'showskipped',
+								text: _('View skipped recordings'),
+								disabled: false,
+								pressed: false,
+								enableToggle: true
+						});
+				},
+				callback: function(conf, e, store) {
+						if (store.proxy.url === 'api/dvr/entry/grid_duplicate'){
+							store.proxy.setUrl('api/dvr/entry/grid_upcoming',true);
+							store.load();
+						}else{
+							store.proxy.setUrl('api/dvr/entry/grid_duplicate',true);
+							store.load();
+					}
+				}
+		};
+
     function selected(s, abuttons) {
         var recording = 0;
         s.each(function(s) {
@@ -338,6 +391,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         });
         abuttons.stop.setDisabled(recording < 1);
         abuttons.abort.setDisabled(recording < 1);
+        abuttons.previouslyrecorded.setDisabled(recording >= 1);
     }
 
     function beforeedit(e, grid) {
@@ -347,7 +401,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
-        gridURL: 'api/dvr/entry/grid_upcoming',
+        gridURL: 'api/dvr/entry/grid_duplicate',
         titleS: _('Upcoming Recording'),
         titleP: _('Upcoming / Current Recordings'),
         iconCls: 'upcomingRec',
@@ -404,7 +458,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
             actions,
             tvheadend.contentTypeAction,
         ],
-        tbar: [stopButton, abortButton],
+        tbar: [stopButton, abortButton, previouslyrecordedButton, showSkippedButton],
         selected: selected,
         beforeedit: beforeedit
     });
@@ -759,7 +813,7 @@ tvheadend.dvr_removed = function(panel, index) {
             }
         }
     };
-    
+
     function selected(s, abuttons) {
         var r = s.getSelections();
         abuttons.rerecord.setDisabled(r.length <= 0);
