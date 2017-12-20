@@ -1736,7 +1736,7 @@ page_dvrfile_preop(http_connection_t *hc, off_t file_start,
       de = dvr_entry_find_by_id(atoi(priv->uuid));
     if (de && !dvr_entry_verify(de, hc->hc_access, 0)) {
       de->de_playcount = de->de_playcount + 1;
-      dvr_entry_changed_notify(de);
+      dvr_entry_changed(de);
     }
   }
   pthread_mutex_unlock(&global_lock);

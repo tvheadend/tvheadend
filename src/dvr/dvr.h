@@ -645,7 +645,7 @@ int dvr_entry_is_upcoming_nodup(dvr_entry_t *entry);
 int dvr_entry_is_finished(dvr_entry_t *entry, int flags);
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
-void dvr_entry_changed_notify(dvr_entry_t *de);
+void dvr_entry_changed(dvr_entry_t *de);
 
 void dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre);
 

@@ -2898,7 +2898,7 @@ htsp_method_file_close(htsp_connection_t *htsp, htsmsg_t *in)
       save = 1;
     }
     if (save)
-      dvr_entry_changed_notify(de);
+      dvr_entry_changed(de);
   }
 
   pthread_mutex_unlock(&global_lock);

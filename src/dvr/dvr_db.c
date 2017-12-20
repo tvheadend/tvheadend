@@ -197,7 +197,7 @@ dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly)
  *
  */
 void
-dvr_entry_changed_notify(dvr_entry_t *de)
+dvr_entry_changed(dvr_entry_t *de)
 {
   idnode_changed(&de->de_id);
   htsp_dvr_entry_update(de);
@@ -272,7 +272,7 @@ dvr_entry_dont_rerecord(dvr_entry_t *de, int dont_rerecord)
   if (de->de_dont_rerecord ? 1 : 0 != dont_rerecord) {
     dvr_entry_trace(de, "don't rerecord change %d", dont_rerecord);
     de->de_dont_rerecord = dont_rerecord;
-    dvr_entry_changed_notify(de);
+    dvr_entry_changed(de);
   }
 }
 
@@ -567,7 +567,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
       return;
     }
     if (save)
-      dvr_entry_changed_notify(de);
+      dvr_entry_changed(de);
   }
 
   if (retention < DVR_RET_ONREMOVE &&
@@ -2168,7 +2168,7 @@ static dvr_entry_t *_dvr_entry_update
   /* Save changes */
 dosave:
   if (save) {
-    dvr_entry_changed_notify(de);
+    dvr_entry_changed(de);
     if (tvhlog_limit(&de->de_update_limit, 60)) {
       tvhinfo(LS_DVR, "\"%s\" on \"%s\": Updated%s (%s)",
               lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
@@ -4232,7 +4232,7 @@ dvr_entry_set_prevrec(dvr_entry_t *de, int cmd)
 
   dvr_entry_retention_timer(de);
 
-  dvr_entry_changed_notify(de);
+  dvr_entry_changed(de);
 
   tvhinfo(LS_DVR, "\"%s\" on \"%s\": "
                   "%sset as previously recorded",
@@ -4261,7 +4261,7 @@ dvr_entry_cancel_delete_remove(dvr_entry_t *de, int rerecord, int _delete)
     if (_delete || dvr_entry_delete_retention_expired(de)) /* In case retention was postponed (retention < removal) */
       dvr_entry_destroy(de, 1);                            /* Delete database */
     else if (save) {
-      dvr_entry_changed_notify(de);
+      dvr_entry_changed(de);
       dvr_entry_retention_timer(de);                       /* As retention timer depends on file removal */
     }
     break;
