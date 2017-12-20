@@ -152,13 +152,14 @@ int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
   if (!flags || (flags & DVR_FINISHED_ALL))
     return 1;
 
-  int removed = entry->de_file_removed ||                                               /* Removed by tvheadend */
-      (entry->de_sched_state != DVR_MISSED_TIME && dvr_get_filesize(entry, 0) == -1);   /* Removed externally? */
+  int removed = entry->de_file_removed ||                       /* Removed by tvheadend */
+                (entry->de_sched_state != DVR_MISSED_TIME &&
+                 dvr_get_filesize(entry, 0) < 0);		/* Removed externally? */
   int success = entry->de_sched_state == DVR_COMPLETED;
 
-  if (success && entry->de_last_error != SM_CODE_FORCE_OK)
-      success = entry->de_last_error == SM_CODE_OK &&
-                entry->de_data_errors < DVR_MAX_DATA_ERRORS;
+  if (success && !dvr_entry_is_completed_ok(entry))
+    success = entry->de_last_error == SM_CODE_OK &&
+              entry->de_data_errors < DVR_MAX_DATA_ERRORS;
 
   if ((flags & DVR_FINISHED_REMOVED_SUCCESS) && removed && success)
     return 1;
@@ -666,7 +667,7 @@ dvr_entry_status(dvr_entry_t *de)
       default:
         break;
     }
-    if (dvr_get_filesize(de, 0) == -1 && !de->de_file_removed)
+    if (dvr_get_filesize(de, 0) < 0 && !de->de_file_removed)
       return N_("File missing");
     if(de->de_last_error != SM_CODE_FORCE_OK &&
        de->de_data_errors >= DVR_MAX_DATA_ERRORS) /* user configurable threshold? */
@@ -705,8 +706,8 @@ dvr_entry_schedstatus(dvr_entry_t *de)
     break;
   case DVR_COMPLETED:
     s = "completed";
-    if(de->de_last_error ||
-      (dvr_get_filesize(de, 0) == -1 && !de->de_file_removed))
+    if(!dvr_entry_is_completed_ok(de) ||
+       (dvr_get_filesize(de, 0) < 0 && !de->de_file_removed))
       s = "completedError";
     rerecord = de->de_dont_rerecord ? 0 : dvr_entry_get_rerecord_errors(de);
     if(rerecord && (de->de_errors || de->de_data_errors > rerecord))
@@ -1264,7 +1265,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
         dvr_entry_cancel_delete(de2, 1);
       }
     } else if (de->de_sched_state == DVR_COMPLETED) {
-      if(dvr_get_filesize(de, 0) == -1) {
+      if(dvr_get_filesize(de, 0) < 0) {
 delete_me:
         dvr_entry_cancel_delete(de, 0);
         dvr_entry_rerecord(de2);
@@ -4231,8 +4232,7 @@ dvr_entry_set_prevrec(dvr_entry_t *de, int cmd)
 
   dvr_entry_retention_timer(de);
 
-  htsp_dvr_entry_update(de);
-  idnode_notify_changed(&de->de_id);
+  dvr_entry_changed_notify(de);
 
   tvhinfo(LS_DVR, "\"%s\" on \"%s\": "
                   "%sset as previously recorded",
