@@ -463,6 +463,8 @@ streaming_code2txt(int code)
     return N_("Weak stream");
   case SM_CODE_USER_REQUEST:
     return N_("User request");
+  case SM_CODE_PREVIOUSLY_RECORDED:
+    return N_("Previously recorded");
 
   case SM_CODE_NO_FREE_ADAPTER:
     return N_("No free adapter");
