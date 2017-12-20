@@ -28,7 +28,7 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 #define BYTE4BE(w) \
-  ((w >> 24) & 0xff), ((w >> 16) & 0xff), ((w >> 8) & 0xff), (w & 0xff)
+  (((w) >> 24) & 0xff), (((w) >> 16) & 0xff), (((w) >> 8) & 0xff), ((w) & 0xff)
 
 /*
  *
@@ -71,10 +71,13 @@ en50221_app_resman_handle
   en50221_app_resman_t *app = self;
   static const uint8_t resources[] = {
     BYTE4BE(CICAM_RI_RESOURCE_MANAGER),
-    BYTE4BE(CICAM_RI_APPLICATION_INFORMATION),
+    BYTE4BE(CICAM_RI_MMI),
     BYTE4BE(CICAM_RI_CONDITIONAL_ACCESS_SUPPORT),
     BYTE4BE(CICAM_RI_DATE_TIME),
-    BYTE4BE(CICAM_RI_MMI)
+    BYTE4BE(CICAM_RI_APPLICATION_INFORMATION),
+    BYTE4BE(CICAM_RI_APPLICATION_INFORMATION+1),
+    BYTE4BE(CICAM_RI_APPLICATION_INFORMATION+2),
+    BYTE4BE(CICAM_RI_APPLICATION_INFORMATION+4),
   };
   if (atag == CICAM_AOT_PROFILE_ENQ) {
     tvhtrace(LS_EN50221, "%s: profile enq reply sent", app->cia_name);
