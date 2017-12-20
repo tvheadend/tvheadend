@@ -174,7 +174,7 @@ int en50221_capmt_build
     p  += 5;
     tl -= 5;
     if (en50221_capmt_check_pid(s, pid)) {
-      memcpy(y = x, p, 3); /* stream type, PID */
+      memcpy(y = x, p - 5, 3); /* stream type, PID */
       x += 5;
       first = 1;
       while (l > 1) {
