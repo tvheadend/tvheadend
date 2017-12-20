@@ -311,7 +311,7 @@ void en50221_capmt_dump
         caid = extract_2byte(p + 2);
         pid  = extract_pid(p + 4);
         tvhtrace(subsys, "%s:   CAPMT CA descriptor caid %04X pid %04x length %d (%s)",
-                         prefix, caid, pid, dlen, bin2hex(hbuf, sizeof(hbuf), p + 6, l - 4));
+                         prefix, caid, pid, dlen, bin2hex(hbuf, sizeof(hbuf), p + 6, dlen - 4));
       }
       p += dlen + 2;
       l -= dlen + 2;
@@ -342,7 +342,7 @@ void en50221_capmt_dump
           caid = extract_2byte(p + 2);
           pid  = extract_pid(p + 4);
           tvhtrace(subsys, "%s:     CAPMT ES CA descriptor caid %04X pid %04x length %d (%s)",
-                           prefix, caid, pid, dlen, bin2hex(hbuf, sizeof(hbuf), p + 6, l - 4));
+                           prefix, caid, pid, dlen, bin2hex(hbuf, sizeof(hbuf), p + 6, dlen - 4));
         }
         p += dlen + 2;
         l -= dlen + 2;

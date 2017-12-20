@@ -80,6 +80,7 @@ char *
 bin2hex(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
 {
   static const char table[] = "0123456789abcdef";
+  char *ret = dst;
   while(dstlen > 2 && srclen > 0) {
     *dst++ = table[*src >> 4];
     *dst++ = table[*src & 0xf];
@@ -88,7 +89,7 @@ bin2hex(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
     dstlen -= 2;
   }
   *dst = 0;
-  return dst;
+  return ret;
 }
 
 /* **************************************************************************
