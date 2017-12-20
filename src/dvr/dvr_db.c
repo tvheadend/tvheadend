@@ -157,7 +157,7 @@ int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
   int success = entry->de_sched_state == DVR_COMPLETED;
 
   if (success && entry->de_last_error != SM_CODE_FORCE_OK)
-      success = entry->de_last_error == SM_CODE_OK &&
+      success = (entry->de_last_error == SM_CODE_OK || entry->de_last_error == SM_CODE_PREVIOUSLY_RECORDED) &&
                 entry->de_data_errors < DVR_MAX_DATA_ERRORS;
 
   if ((flags & DVR_FINISHED_REMOVED_SUCCESS) && removed && success)
@@ -658,10 +658,11 @@ dvr_entry_status(dvr_entry_t *de)
     switch(de->de_last_error) {
       case SM_CODE_INVALID_TARGET:
         return N_("File not created");
+      case SM_CODE_PREVIOUSLY_RECORDED:
+        return N_("Previously Recorded");
       case SM_CODE_USER_ACCESS:
       case SM_CODE_USER_LIMIT:
       case SM_CODE_NO_SPACE:
-      case SM_CODE_PREVIOUSLY_RECORDED:
         return streaming_code2txt(de->de_last_error);
       default:
         break;
@@ -711,6 +712,8 @@ dvr_entry_schedstatus(dvr_entry_t *de)
     rerecord = de->de_dont_rerecord ? 0 : dvr_entry_get_rerecord_errors(de);
     if(rerecord && (de->de_errors || de->de_data_errors > rerecord))
       s = "completedRerecord";
+    if(de->de_last_error == SM_CODE_PREVIOUSLY_RECORDED)
+      s = "completed";
     break;
   case DVR_MISSED_TIME:
     s = "completedError";
@@ -4222,6 +4225,7 @@ dvr_entry_set_prevrec(dvr_entry_t *de, int cmd)
     de->de_dont_rerecord = 1;
     de->de_file_removed = 1;
     dvr_entry_completed(de, SM_CODE_PREVIOUSLY_RECORDED);
+    idnode_changed(&de->de_id);
   } else {
     de->de_dont_reschedule = 0;
     de->de_dont_rerecord = 0;
