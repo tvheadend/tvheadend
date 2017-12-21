@@ -738,6 +738,9 @@ static int _eit_process_event
   if (len < dllen) return -1;
 
   memset(&ev, 0, sizeof(ev));
+  svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
+  if (svc)
+    ev.default_charset = dvb_charset_find(NULL, NULL, svc);
   while (dllen > 2) {
     dtag = ptr[0];
     dlen = ptr[1];
@@ -800,9 +803,7 @@ static int _eit_process_event
 
   if (lock)
     pthread_mutex_lock(&global_lock);
-  svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
   if (svc) {
-    ev.default_charset = dvb_charset_find(NULL, NULL, svc);
     LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
       ch = (channel_t *)ilm->ilm_in2;
       if (!ch->ch_enabled || ch->ch_epg_parent) continue;
