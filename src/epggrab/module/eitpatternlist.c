@@ -75,6 +75,7 @@ void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_p
 {
   eit_pattern_t *p;
   char matchbuf[2048];
+  int matchno;
 
   assert(buf);
   assert(text);
@@ -85,7 +86,7 @@ void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_p
   TAILQ_FOREACH(p, l, p_links)
     if (!regex_match(&p->compiled, text) &&
         !regex_match_substring(&p->compiled, 1, buf, size_buf)) {
-      for (int matchno = 2; ; ++matchno) {
+      for (matchno = 2; ; ++matchno) {
         if (regex_match_substring(&p->compiled, matchno, matchbuf, sizeof(matchbuf)))
           break;
         size_t len = strlen(buf);
