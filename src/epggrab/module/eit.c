@@ -54,7 +54,9 @@ typedef struct eit_data
   int        tableid;
   int        sect;
   int        local_time;
-  char       cridauth[64];
+  uint16_t   charset_len;
+  uint16_t   cridauth_len;
+  uint8_t    data[0];
 } eit_data_t;
 
 /* Provider configuration */
@@ -433,8 +435,8 @@ static int _eit_desc_crid
         } else if (*buf != '/') {
           snprintf(crid, clen, "crid://%s", buf);
         } else {
-          if (ed->cridauth)
-            snprintf(crid, clen, "crid://%s%s", ed->cridauth, buf);
+          if (ed->cridauth_len)
+            snprintf(crid, clen, "crid://%s%s", ed->data, buf);
           else
             snprintf(crid, clen, "crid://onid-%d%s", ed->onid, buf);
         }
@@ -715,15 +717,18 @@ running:
 }
 
 static int _eit_process_event
-  ( epggrab_module_t *mod, int tableid, int sect,
-    eit_data_t *ed, const uint8_t *ptr0, int len0,
-    int local, int *save, int lock )
+  ( epggrab_module_t *mod, eit_data_t *ed,
+    const uint8_t *ptr0, int len0,
+    int *save, int lock )
 {
   eit_module_t *eit_mod = (eit_module_t *)mod;
   idnode_list_mapping_t *ilm;
   mpegts_service_t *svc;
   channel_t *ch;
   eit_event_t ev;
+  const int tableid = ed->tableid;
+  const int sect = ed->sect;
+  const int local = ed->local_time;
   const uint8_t *ptr;
   int r, len;
   uint8_t dtag, dlen;
@@ -738,6 +743,8 @@ static int _eit_process_event
   if (len < dllen) return -1;
 
   memset(&ev, 0, sizeof(ev));
+  if (ed->charset_len)
+    ev.default_charset = (char *)ed->data + ed->cridauth_len;
   while (dllen > 2) {
     dtag = ptr[0];
     dlen = ptr[1];
@@ -802,7 +809,6 @@ static int _eit_process_event
     pthread_mutex_lock(&global_lock);
   svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
   if (svc) {
-    ev.default_charset = dvb_charset_find(NULL, NULL, svc);
     LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
       ch = (channel_t *)ilm->ilm_in2;
       if (!ch->ch_enabled || ch->ch_epg_parent) continue;
@@ -832,16 +838,17 @@ static void
 _eit_process_data(void *m, void *data, uint32_t len)
 {
   int save = 0, r;
-  eit_data_t ed;
+  size_t hlen;
+  eit_data_t *ed = data;
 
   assert(len >= sizeof(ed));
-  memcpy(&ed, data, sizeof(ed));
-  data += sizeof(ed);
-  len -= sizeof(ed);
+  hlen = sizeof(*ed) + ed->cridauth_len + ed->charset_len;
+  assert(len >= hlen);
+  data += hlen;
+  len -= hlen;
 
   while (len) {
-    if ((r = _eit_process_event(m, ed.tableid, ed.sect, &ed,
-                                data, len, ed.local_time, &save, 1)) < 0)
+    if ((r = _eit_process_event(m, ed, data, len, &save, 1)) < 0)
       break;
     assert(r > 0);
     len -= r;
@@ -861,8 +868,7 @@ _eit_process_immediate(void *m, const void *ptr, uint32_t len, eit_data_t *ed)
   int save = 0, r;
 
   while (len) {
-    if ((r = _eit_process_event(m, ed->tableid, ed->sect, ed,
-                                ptr, len, ed->local_time, &save, 0)) < 0)
+    if ((r = _eit_process_event(m, ed, ptr, len, &save, 0)) < 0)
       break;
     assert(r > 0);
     len -= r;
@@ -888,8 +894,9 @@ _eit_callback
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_psi_table_state_t *st;
   th_subscription_t    *ths;
-  eit_data_t            data;
-  const char           *cridauth;
+  eit_data_t           *data;
+  const char           *cridauth, *charset;
+  int                   cridauth_len, charset_len, data_len;
   char ubuf[UUID_HEX_SIZE];
 
   if (!epggrab_ota_running)
@@ -1014,28 +1021,37 @@ svc_ok:
   len -= 11;
   ptr += 11;
   if (len >= 12) {
-    data.tableid = tableid;
-    data.sect = sect;
-    data.svc_uuid = svc->s_id.in_uuid;
-    data.onid = onid;
-    data.local_time = mm->mm_network->mn_localtime;
     cridauth = svc->s_dvb_cridauth;
     if (!cridauth)
       cridauth = svc->s_dvb_mux->mm_crid_authority;
-    if (cridauth) {
-      if (strlen(cridauth) + 1 > sizeof(data.cridauth))
-        tvherror(LS_TBL_EIT, "cridauth overflow");
-      strncpy(data.cridauth, cridauth, sizeof(data.cridauth)-1);
-      data.cridauth[sizeof(cridauth)-1] = '\0';
+    cridauth_len = cridauth ? strlen(cridauth) + 1 : 0;
+    charset = dvb_charset_find(NULL, NULL, svc);
+    charset_len = charset ? strlen(charset) + 1 : 0;
+    data_len = sizeof(*data) + cridauth_len + charset_len;
+    data = alloca(data_len);
+    data->tableid = tableid;
+    data->sect = sect;
+    data->svc_uuid = svc->s_id.in_uuid;
+    data->onid = onid;
+    data->local_time = mm->mm_network->mn_localtime;
+    if (cridauth_len) {
+      data->cridauth_len = cridauth_len;
+      memcpy(data->data, cridauth, cridauth_len);
     } else {
-      data.cridauth[0] = '\0';
+      data->cridauth_len = 0;
+    }
+    if (charset_len) {
+      data->charset_len = charset_len;
+      memcpy(data->data + cridauth_len, charset, charset_len);
+    } else {
+      data->charset_len = 0;
     }
     if (((eit_module_t *)mod)->running_immediate && tableid == 0x4e) {
       /* handle running state immediately */
-      _eit_process_immediate(mod, ptr, len, &data);
+      _eit_process_immediate(mod, ptr, len, data);
     } else {
       /* handle those data later */
-      epggrab_queue_data(mod, &data, sizeof(data), ptr, len);
+      epggrab_queue_data(mod, data, data_len, ptr, len);
     }
   }
 
