@@ -1196,7 +1196,7 @@ destroy:
  * Dump request
  */
 static void
-dump_request(http_connection_t *hc)
+dump_request(http_connection_t *hc, int subsys)
 {
   char buf[2048] = "";
   http_arg_t *ra;
@@ -1216,7 +1216,7 @@ dump_request(http_connection_t *hc)
   if (!first)
     tvh_strlcatf(buf, sizeof(buf), ptr, "}}");
 
-  tvhtrace(LS_HTTP, "%s %s %s%s", http_ver2str(hc->hc_version),
+  tvhtrace(subsys, "%s %s %s%s", http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, buf);
 }
 
@@ -1244,7 +1244,7 @@ http_cmd_get(http_connection_t *hc)
   char *args;
 
   if (tvhtrace_enabled())
-    dump_request(hc);
+    dump_request(hc, LS_HTTP);
 
   if (!http_resolve(hc, &hp, &remain, &args)) {
     http_error(hc, HTTP_STATUS_NOT_FOUND);
@@ -1310,7 +1310,7 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
   }
 
   if (tvhtrace_enabled())
-    dump_request(hc);
+    dump_request(hc, LS_HTTP);
 
   if (!http_resolve(hc, &hp, &remain, &args)) {
     http_error(hc, HTTP_STATUS_NOT_FOUND);
@@ -1450,7 +1450,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
     if (tvhtrace_enabled())
-      dump_request(hc);
+      dump_request(hc, LS_SATIPS);
     if (hc->hc_cseq)
       rval = hc->hc_process(hc, spill);
     else
