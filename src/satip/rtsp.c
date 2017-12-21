@@ -80,6 +80,7 @@ static uint32_t session_number;
 static uint16_t stream_id;
 static char *rtsp_ip = NULL;
 static char *rtsp_nat_ip = NULL;
+static char *rtp_src_ip = NULL;
 static int rtsp_port = -1;
 static int rtsp_nat_port = -1;
 static int rtsp_descramble = 1;
@@ -1497,7 +1498,7 @@ rtsp_process_play(http_connection_t *hc, int cmd)
       !rs->rtp_udp_bound) {
     if (udp_bind_double(&rs->udp_rtp, &rs->udp_rtcp,
                         LS_SATIPS, "rtsp", "rtcp",
-                        rtsp_ip, 0, NULL,
+                        (rtp_src_ip != NULL && rtp_src_ip[0] != '\0') ? rtp_src_ip : rtsp_ip, 0, NULL,
                         4*1024, 4*1024,
                         RTP_BUFSIZE, RTCP_BUFSIZE)) {
       errcode = HTTP_STATUS_INTERNAL;
@@ -1767,7 +1768,7 @@ rtsp_close_sessions(void)
  */
 void satip_server_rtsp_init
   (const char *bindaddr, int port, int descramble, int rewrite_pmt, int muxcnf,
-   const char *nat_ip, int nat_port)
+   const char *rtp_src, const char *nat_ip, int nat_port)
 {
   static tcp_server_ops_t ops = {
     .start  = rtsp_serve,
@@ -1797,6 +1798,9 @@ void satip_server_rtsp_init
   rtsp_descramble = descramble;
   rtsp_rewrite_pmt = rewrite_pmt;
   rtsp_muxcnf = muxcnf;
+  s = rtp_src_ip;
+  rtp_src_ip = rtp_src ? strdup(rtp_src) : NULL;
+  free(s);
   s = rtsp_nat_ip;
   rtsp_nat_ip = nat_ip ? strdup(nat_ip) : NULL;
   free(s);
@@ -1825,8 +1829,9 @@ void satip_server_rtsp_done(void)
   rtsp_port = -1;
   rtsp_nat_port = -1;
   free(rtsp_ip);
+  free(rtp_src_ip);
   free(rtsp_nat_ip);
-  rtsp_ip = rtsp_nat_ip = NULL;
+  rtsp_ip = rtp_src_ip = rtsp_nat_ip = NULL;
   satip_rtp_done();
   pthread_mutex_unlock(&global_lock);
 }
