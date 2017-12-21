@@ -50,6 +50,8 @@ void eit_pattern_compile_named_list ( eit_pattern_list_t *list, htsmsg_t *m, con
 {
 #if defined(TVHREGEX_TYPE)
   htsmsg_t *m_alt = htsmsg_get_map(m, TVHREGEX_TYPE);
+  if (!m_alt)
+    m_alt = htsmsg_get_map(m, "pcre");
   if (m_alt) {
     htsmsg_t *res = htsmsg_get_list(m_alt, key);
     if (res) {

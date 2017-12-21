@@ -134,7 +134,10 @@ def main(argv):
   group = parser.add_mutually_exclusive_group()
   group.add_argument('--pcre', dest='engine',
                      action='store_const', const='pcre',
-                     help='test PCRE regular expressions if available')
+                     help='test PCRE common regular expressions if available')
+  group.add_argument('--pcre1', dest='engine',
+                     action='store_const', const='pcre1',
+                     help='test PCRE1 regular expressions if available')
   group.add_argument('--pcre2', dest='engine',
                      action='store_const', const='pcre2',
                      help='test PCRE2 regular expressions if available')

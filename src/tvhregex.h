@@ -26,7 +26,7 @@
 #  define PCRE_STUDY_JIT_COMPILE 0
 #  endif
 
-#define TVHREGEX_TYPE           "pcre"
+#define TVHREGEX_TYPE           "pcre1"
 
 #elif ENABLE_PCRE2
 
