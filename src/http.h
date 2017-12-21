@@ -131,6 +131,7 @@ typedef enum http_wsop {
 } http_wsop_t;
 
 typedef struct http_connection {
+  int hc_subsys;
   int hc_fd;
   struct sockaddr_storage *hc_peer;
   char *hc_peer_ipstr;

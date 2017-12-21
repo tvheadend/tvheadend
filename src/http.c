@@ -657,7 +657,7 @@ http_error(http_connection_t *hc, int error)
       level = LOG_DEBUG;
     else if (error == HTTP_STATUS_BAD_REQUEST || error > HTTP_STATUS_UNAUTHORIZED)
       level = LOG_ERR;
-    tvhlog(level, LS_HTTP, "%s: %s %s %s -- %d",
+    tvhlog(level, hc->hc_subsys, "%s: %s %s %s -- %d",
 	   hc->hc_peer_ipstr, http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, error);
   }
@@ -952,7 +952,7 @@ http_access_verify_ticket(http_connection_t *hc)
   hc->hc_access = access_ticket_verify2(ticket_id, hc->hc_url);
   if (hc->hc_access == NULL)
     return;
-  tvhinfo(LS_HTTP, "%s: using ticket %s for %s",
+  tvhinfo(hc->hc_subsys, "%s: using ticket %s for %s",
 	  hc->hc_peer_ipstr, ticket_id, hc->hc_url);
 }
 
@@ -1196,7 +1196,7 @@ destroy:
  * Dump request
  */
 static void
-dump_request(http_connection_t *hc, int subsys)
+dump_request(http_connection_t *hc)
 {
   char buf[2048] = "";
   http_arg_t *ra;
@@ -1216,7 +1216,7 @@ dump_request(http_connection_t *hc, int subsys)
   if (!first)
     tvh_strlcatf(buf, sizeof(buf), ptr, "}}");
 
-  tvhtrace(subsys, "%s %s %s%s", http_ver2str(hc->hc_version),
+  tvhtrace(hc->hc_subsys, "%s %s %s%s", http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, buf);
 }
 
@@ -1244,7 +1244,7 @@ http_cmd_get(http_connection_t *hc)
   char *args;
 
   if (tvhtrace_enabled())
-    dump_request(hc, LS_HTTP);
+    dump_request(hc);
 
   if (!http_resolve(hc, &hp, &remain, &args)) {
     http_error(hc, HTTP_STATUS_NOT_FOUND);
@@ -1310,7 +1310,7 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
   }
 
   if (tvhtrace_enabled())
-    dump_request(hc, LS_HTTP);
+    dump_request(hc);
 
   if (!http_resolve(hc, &hp, &remain, &args)) {
     http_error(hc, HTTP_STATUS_NOT_FOUND);
@@ -1450,7 +1450,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
     if (tvhtrace_enabled())
-      dump_request(hc, LS_SATIPS);
+      dump_request(hc);
     if (hc->hc_cseq)
       rval = hc->hc_process(hc, spill);
     else
@@ -1863,7 +1863,7 @@ http_serve_requests(http_connection_t *hc)
      * Format: 'PROXY TCP4 192.168.0.1 192.168.0.11 56324 9981\r\n'
      *                     SRC-ADDRESS DST-ADDRESS  SPORT DPORT */
     if (config.proxy && strncmp(cmdline, "PROXY ", 6) == 0) {
-      tvhtrace(LS_HTTP, "[PROXY] PROXY protocol detected! cmdline='%s'", cmdline);
+      tvhtrace(hc->hc_subsys, "[PROXY] PROXY protocol detected! cmdline='%s'", cmdline);
 
       argv[0] = cmdline;
       s = cmdline + 6;
@@ -1901,7 +1901,7 @@ http_serve_requests(http_connection_t *hc)
 
       /* Don't care about DST-ADDRESS, SRC-PORT & DST-PORT
          All it's OK, push the original client IP */
-      tvhtrace(LS_HTTP, "[PROXY] Original source='%s'", s);
+      tvhtrace(hc->hc_subsys, "[PROXY] Original source='%s'", s);
       http_arg_set(&hc->hc_args, "X-Forwarded-For", s);
       free(argv[0]);
     }
@@ -1983,6 +1983,7 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   memset(&hc, 0, sizeof(http_connection_t));
   *opaque = &hc;
 
+  hc.hc_subsys  = LS_HTTP;
   hc.hc_fd      = fd;
   hc.hc_peer    = peer;
   hc.hc_self    = self;

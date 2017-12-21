@@ -1685,6 +1685,7 @@ rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   /* Note: global_lock held on entry */
   pthread_mutex_unlock(&global_lock);
 
+  hc.hc_subsys  = LS_SATIPS;
   hc.hc_fd      = fd;
   hc.hc_peer    = peer;
   hc.hc_self    = self;
