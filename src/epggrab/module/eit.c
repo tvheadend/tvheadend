@@ -63,6 +63,7 @@ typedef struct eit_data
 typedef struct eit_module_t
 {
   epggrab_module_ota_scraper_t  ;      ///< Base struct
+  int subtitle_summary;
   int running_immediate;               ///< Handle quickly the events from the current table
   eit_pattern_list_t p_snum;
   eit_pattern_list_t p_enum;
@@ -701,7 +702,7 @@ static int _eit_process_event_one
       *save |= epg_episode_set_age_rating(ee, ev->parental, &changes4);
     if (ev->subtitle)
       *save |= epg_episode_set_subtitle(ee, ev->subtitle, &changes4);
-    else if (ev->summary)
+    else if (((eit_module_t *)mod)->subtitle_summary && ev->summary)
       *save |= epg_episode_set_subtitle(ee, ev->summary, &changes4);
 #if TODO_ADD_EXTRA
     if (ev->extra)
@@ -1295,6 +1296,15 @@ static const idclass_t epggrab_mod_eit_class = {
   .ic_class      = "epggrab_mod_eit",
   .ic_caption    = N_("Over-the-air EIT EPG grabber"),
   .ic_properties = (const property_t[]){
+    {
+      .type   = PT_BOOL,
+      .id     = "subtitle_summary",
+      .name   = N_("Set subtitle to summary"),
+      .desc   = N_("If the subtitle is not scraped, set it to the summary text."),
+      .off    = offsetof(eit_module_t, subtitle_summary),
+      .group  = 1,
+      .opts   = PO_EXPERT,
+    },
     {
       .type   = PT_BOOL,
       .id     = "running_immediate",
