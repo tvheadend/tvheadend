@@ -793,7 +793,7 @@ static int _xmltv_parse_programme_tags
    */
   if (save &&  !(changes  & EPG_CHANGED_CREATE))  stats->broadcasts.modified++;
   if (save2 && !(changes2 & EPG_CHANGED_CREATE))  stats->seasons.modified++;
-  if (save3 && !(changes3 && EPG_CHANGED_CREATE)) stats->episodes.modified++;
+  if (save3 && !(changes3 & EPG_CHANGED_CREATE))  stats->episodes.modified++;
 
   /* Cleanup */
   if (title)    lang_str_destroy(title);
