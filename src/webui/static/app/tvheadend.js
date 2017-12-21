@@ -639,14 +639,16 @@ tvheadend.Ajax = function(conf) {
 };
 
 tvheadend.AjaxConfirm = function(conf) {
-    Ext.MessageBox.confirm(
-        conf.title || _('Message'),
-        conf.question || _('Do you really want to delete the selection?'),
-        function (btn) {
-            if (btn == 'yes')
-                tvheadend.Ajax(conf);
-        }
-    );
+    if (conf.question){
+	    Ext.MessageBox.confirm(
+	        conf.title || _('Message'),
+	        conf.question || _('Do you really want to delete the selection?'),
+	        function (btn) {
+	            if (btn == 'yes')
+	                tvheadend.Ajax(conf);
+	        }
+	    );
+    }else tvheadend.Ajax(conf);
 };
 
 tvheadend.AjaxUUID = function(sel, conf)
