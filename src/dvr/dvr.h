@@ -501,7 +501,8 @@ static inline int dvr_entry_is_valid(dvr_entry_t *de)
 
 static inline int dvr_entry_is_completed_ok(dvr_entry_t *de)
   { assert(de->de_sched_state == DVR_COMPLETED);
-    return de->de_last_error == SM_CODE_FORCE_OK ||
+    return de->de_last_error == SM_CODE_OK ||
+           de->de_last_error == SM_CODE_FORCE_OK ||
            de->de_last_error == SM_CODE_PREVIOUSLY_RECORDED; }
 
 char *dvr_entry_get_retention_string ( dvr_entry_t *de );
