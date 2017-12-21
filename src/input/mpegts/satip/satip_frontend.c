@@ -1304,6 +1304,7 @@ satip_frontend_extra_shutdown
   rtsp->hc_efd = efd;
 
   snprintf(b, sizeof(b), "/stream=%li", stream_id);
+  tvhtrace(LS_SATIP, "TEARDOWN request for session %s stream id %li", session, stream_id);
   r = rtsp_teardown(rtsp, b, NULL);
   if (r < 0) {
     tvhtrace(LS_SATIP, "bad shutdown for session %s stream id %li", session, stream_id);
@@ -1994,6 +1995,7 @@ new_tune:
     if (rtsp->hc_ping_time + sec2mono(rtsp->hc_rtp_timeout / 2) < mclk() &&
         rtsp->hc_cmd == HTTP_CMD_NONE) {
       rtsp_options(rtsp);
+      tvhtrace(LS_SATIP, "%s - OPTIONS request", buf);
       reply = 1;
     }
 

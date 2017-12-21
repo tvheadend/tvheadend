@@ -233,7 +233,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       strcat(buf, ",21");
   } else if (flags & SATIP_SETUP_PIDS21)
     strcat(buf, "&pids=21");
-  tvhtrace(LS_SATIP, "setup params - %s", buf);
+  tvhtrace(LS_SATIP, "SETUP params - %s", buf);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);
@@ -309,6 +309,7 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);
   query = htsbuf_to_string(&q);
+  tvhtrace(LS_SATIP, "PLAY params - %s", query);
   r = rtsp_play(hc, stream, query);
   free(query);
   if (r >= 0 && split) {
