@@ -30,8 +30,8 @@ struct mpegts_service;
 
 int en50221_capmt_build
   (struct mpegts_service *s,
-   int bcmd, uint16_t svcid, const uint8_t *pmt, size_t pmtlen,
-   uint8_t **capmt, size_t *capmtlen);
+   int bcmd, uint16_t svcid, const uint16_t *caids, int caids_count,
+   const uint8_t *pmt, size_t pmtlen, uint8_t **capmt, size_t *capmtlen);
 
 int en50221_capmt_build_query(const uint8_t *capmt, size_t capmtlen,
                               uint8_t **dst, size_t *dstlen);

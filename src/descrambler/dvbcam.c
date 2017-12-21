@@ -40,7 +40,7 @@
 typedef struct dvbcam_active_cam {
   TAILQ_ENTRY(dvbcam_active_cam) global_link;
   uint16_t              caids[CAIDS_PER_CA_SLOT];
-  int                   num_caids;
+  int                   caids_count;
   linuxdvb_ca_t        *ca;
   uint8_t               slot;
   int                   active_programs;
@@ -165,12 +165,12 @@ dvbcam_is_ddci(struct service *t)
  */
 void
 dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
-                    int num_caids)
+                    int caids_count)
 {
   dvbcam_active_cam_t *ac, *ac_first;
   int registered = 0;
 
-  tvhtrace(LS_DVBCAM, "register cam %p num_caids %u", lca->lca_name, num_caids);
+  tvhtrace(LS_DVBCAM, "register cam %p caids_count %u", lca->lca_name, caids_count);
 
   pthread_mutex_lock(&dvbcam_mutex);
 
@@ -186,10 +186,10 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
     ac->ca = lca;
   }
 
-  num_caids = MIN(CAIDS_PER_CA_SLOT, num_caids);
+  caids_count = MIN(CAIDS_PER_CA_SLOT, caids_count);
 
-  memcpy(ac->caids, caids, num_caids * sizeof(uint16_t));
-  ac->num_caids = num_caids;
+  memcpy(ac->caids, caids, caids_count * sizeof(uint16_t));
+  ac->caids_count = caids_count;
 
   ac_first = TAILQ_FIRST(&dvbcam_active_cams);
   if (!registered)
@@ -261,7 +261,7 @@ dvbcam_ca_lookup(dvbcam_active_cam_t *ac, mpegts_input_t *input, uint16_t caid)
   if (lfe == NULL || lcat->lcat_adapter != lfe->lfe_adapter)
     return 0;
 
-  for (i = 0; i < ac->num_caids; i++)
+  for (i = 0; i < ac->caids_count; i++)
     if (ac->caids[i] == caid)
       return 1;
 
@@ -325,6 +325,7 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
 
   r = en50221_capmt_build(s, bcmd,
                           s->s_dvb_service_id,
+                          ac->caids, ac->caids_count,
                           as->last_pmt, as->last_pmt_len,
                           &capmt, &capmt_len);
   if (r >= 0) {
@@ -355,6 +356,7 @@ dvbcam_service_destroy(th_descrambler_t *td)
       s = (mpegts_service_t *)td->td_service;
       r = en50221_capmt_build(s, EN50221_CAPMT_BUILD_DELETE,
                               s->s_dvb_service_id,
+                              ac->caids, ac->caids_count,
                               as->last_pmt, as->last_pmt_len,
                               &capmt, &capmt_len);
       if (r >= 0) {

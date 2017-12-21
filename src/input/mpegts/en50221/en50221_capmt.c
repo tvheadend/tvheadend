@@ -83,10 +83,18 @@ static int en50221_capmt_check_pid
 }
 
 static int en50221_capmt_check_caid
-  (mpegts_service_t *s, uint16_t pid, uint16_t caid)
+  (mpegts_service_t *s, uint16_t pid, uint16_t caid,
+   const uint16_t *caids, int caids_count)
 {
   elementary_stream_t *st;
   caid_t *c;
+
+  for (; caids_count > 0; caids++, caids_count--)
+    if (caid == *caids)
+      break;
+
+  if (caids_count == 0)
+    return 0;
 
   TAILQ_FOREACH(st, &s->s_filt_components, es_link) {
     if (st->es_type != SCT_CA) continue;
@@ -104,6 +112,7 @@ static int en50221_capmt_check_caid
 
 int en50221_capmt_build
   (mpegts_service_t *s, int bcmd, uint16_t svcid,
+   const uint16_t *caids, int caids_count,
    const uint8_t *pmt, size_t pmtlen,
    uint8_t **capmt, size_t *capmtlen)
 {
@@ -149,7 +158,7 @@ int en50221_capmt_build
     if (dtag == DVB_DESC_CA && dlen >= 4) {
       caid = extract_2byte(p + 2);
       pid  = extract_pid(p + 4);
-      if (en50221_capmt_check_caid(s, pid, caid)) {
+      if (en50221_capmt_check_caid(s, pid, caid, caids, caids_count)) {
         if (first) {
           *x++ = cmd_id;
           first = 0;
@@ -183,7 +192,7 @@ int en50221_capmt_build
         if (dtag == DVB_DESC_CA && dlen >= 4) {
           caid = extract_2byte(p + 2);
           pid  = extract_pid(p + 4);
-          if (en50221_capmt_check_caid(s, pid, caid)) {
+          if (en50221_capmt_check_caid(s, pid, caid, caids, caids_count)) {
             if (first) {
               *x++ = cmd_id;
               first = 0;
