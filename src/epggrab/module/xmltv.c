@@ -630,7 +630,7 @@ static int _xmltv_parse_programme_tags
   if (!(ebc = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save, &changes)))
     return 0;
   stats->broadcasts.total++;
-  if (save && changes & EPG_CHANGED_CREATE) stats->broadcasts.created++;
+  if (save && (changes & EPG_CHANGED_CREATE)) stats->broadcasts.created++;
 
   /* Description (wait for episode first) */
   _xmltv_parse_lang_str(&desc, tags, "desc");
@@ -727,7 +727,7 @@ static int _xmltv_parse_programme_tags
     }
     free(suri);
     if (es) stats->seasons.total++;
-    if (save2 && changes2 & EPG_CHANGED_CREATE) stats->seasons.created++;
+    if (save2 && (changes2 & EPG_CHANGED_CREATE)) stats->seasons.created++;
   }
 
   /*
@@ -746,7 +746,7 @@ static int _xmltv_parse_programme_tags
    * _epg_object_set_grabber so need to also check for
    * EPG_CHANGED_CREATE.
    */
-  if (save3 && changes3 & EPG_CHANGED_CREATE) stats->episodes.created++;
+  if (save3 && (changes3 & EPG_CHANGED_CREATE)) stats->episodes.created++;
 
   if (ee) {
     _xmltv_parse_lang_str(&title, tags, "title");
