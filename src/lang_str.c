@@ -199,9 +199,21 @@ change1:
   return 1;
 }
 
+/* Set new string with update check */
+int lang_str_set_multi
+  ( lang_str_t **dst, const lang_str_t *src )
+{
+  int changed = 0;
+  lang_str_ele_t *e;
+  RB_FOREACH(e, src, link) {
+    changed |= lang_str_set(dst, e->str, e->lang);
+  }
+  return changed;
+}
+
 /* Set new strings with update check */
 int lang_str_set2
-  ( lang_str_t **dst, lang_str_t *src )
+  ( lang_str_t **dst, const lang_str_t *src )
 {
   if (*dst) {
     if (!lang_str_compare(*dst, src))
