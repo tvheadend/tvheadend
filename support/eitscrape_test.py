@@ -52,7 +52,7 @@ import os, sys
 import pprint
 import json
 import re
-
+import argparse
 
 class EITScrapeTest(object):
   def __init__(self):
@@ -119,48 +119,41 @@ class EITScrapeTest(object):
     if test.has_key('new_summary'):
       self.run_test_case_i(text, subtitle_reg, test['new_summary'], "new_summary", match=2)
 
-
+def get_regs(parser, engine, key):
+  try:
+    l = parser[engine][key]
+  except KeyError:
+    l = parser[key]
+  res = []
+  for reg in l:
+    res.append(re.compile(reg))
+  return res
 
 def main(argv):
-  if len(argv) < 3:
-    sys.exit('Usage: %s scrapperfile scrappertestfile' % argv[0])
+  parser = argparse.ArgumentParser(description='Test scraper regular expressions')
+  group = parser.add_mutually_exclusive_group()
+  group.add_argument('--pcre', dest='engine',
+                     action='store_const', const='pcre',
+                     help='test PCRE regular expressions if available')
+  group.add_argument('--pcre2', dest='engine',
+                     action='store_const', const='pcre2',
+                     help='test PCRE2 regular expressions if available')
+  parser.add_argument('scraperfile', type=argparse.FileType('r'))
+  parser.add_argument('scrapertestfile', type=argparse.FileType('r'))
+  args = parser.parse_args()
 
-  if not os.path.exists(argv[1]):
-    sys.exit('ERROR: scrapperfile "%s" was not found!' % argv[1])
-  if not os.path.exists(sys.argv[2]):
-    sys.exit('ERROR: scrappertestfile "%s" was not found!' % argv[2])
-
-  print "Opening Parser file " + argv[1]
-  fp = open(argv[1], 'r')
-  parser = json.load(fp)
+  print(args.engine)
+  parser = json.load(args.scraperfile)
   pprint.pprint(parser, indent=2)
 
   # Compile the regular expressions that we will use.
-  sn_reg = []
-  if parser.has_key('season_num'):
-    sn = parser['season_num']
-    for reg in sn: sn_reg.append(re.compile(reg))
-
-  en_reg = []
-  if parser.has_key('episode_num'):
-    en = parser['episode_num']
-    for reg in en: en_reg.append(re.compile(reg))
-
-  airdate_reg = []
-  if parser.has_key('airdate'):
-    airdate = parser['airdate']
-    for reg in airdate: airdate_reg.append(re.compile(reg))
-
-  subtitle_reg = []
-  if parser.has_key('scrape_subtitle'):
-    subtitle = parser['scrape_subtitle']
-    for reg in subtitle:
-      subtitle_reg.append(re.compile(reg))
+  sn_reg = get_regs(parser, args.engine, 'season_num')
+  en_reg = get_regs(parser, args.engine, 'episode_num')
+  airdate_reg = get_regs(parser, args.engine, 'airdate')
+  subtitle_reg = get_regs(parser, args.engine, 'scrape_subtitle')
 
   # Now parse the test file which is a JSON input file
-  print "Opening test input file " + argv[2]
-  fp = open(argv[2], 'r')
-  tests = json.load(fp)
+  tests = json.load(args.scrapertestfile)
 
   # And run the tests
   tester = EITScrapeTest()

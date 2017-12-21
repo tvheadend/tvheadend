@@ -3016,7 +3016,7 @@ static int
 _eq_init_str( epg_filter_str_t *f )
 {
   if (f->comp != EC_RE) return 0;
-  return regex_compile(&f->re, f->str, LS_EPG);
+  return regex_compile(&f->re, f->str, TVHREGEX_CASELESS, LS_EPG);
 }
 
 static void
@@ -3220,7 +3220,7 @@ epg_query ( epg_query_t *eq, access_t *perm )
   if (_eq_init_str(&eq->channel_name)) goto fin;
 
   if (eq->stitle)
-    if (regex_compile(&eq->stitle_re, eq->stitle, LS_EPG))
+    if (regex_compile(&eq->stitle_re, eq->stitle, TVHREGEX_CASELESS, LS_EPG))
       goto fin;
 
   channel = channel_find_by_uuid(eq->channel) ?:

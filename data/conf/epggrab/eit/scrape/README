@@ -1,6 +1,84 @@
 The directory contains configuration file for general regular
 expressions to be applied to the EPG.
 
+Configuration file format
+-------------------------
+
+A configuration file is in JSON format. Possible members of the top-level
+object are:
+
+* season_num
+* episode_num
+* airdate
+* is_new
+* scrape_subtitle
+
+Each member's value is a list of regular expressions. Each regular
+expression must contain at least one sub-pattern, i.e. a pattern
+enclosed in (). Input data is matched against the first regex in the
+list. If no match is found, the second regex is tried, and so on until
+a match is found or the list exhausted.
+
+For each EPG episode, the title, description and summary are matched
+in turn against the season_num, episode_num, airdate and is_new regexes.
+
+- season_num converts the contents of the first sub-pattern to an integer,
+  and if successful sets the EPG season number.
+- episode_num converts the contents of the first sub-pattern to an integer,
+  and if successful sets the EPG eipsode number.
+- airdate converts the contents of the first sub-pattern to an integer,
+  and if successful sets the EPG copyright year.
+- is_new sets the EPG is_new flag on any match. Remember the regexp must
+  have one sub-pattern to make a successful match; in this case the content
+  of the sub-pattern is ignored.
+
+Finally, the summary only is matched against the scrape_subtitle regexs.
+On an match, the EPG subtitle is set to the contents of the first sub-pattern.
+If a second sub-pattern is present in the regex, the EPG summary is set to
+the contents of that sub-pattern. If no second sub-pattern is present, the
+EPG summary is not changed.
+
+Regular expression engine
+-------------------------
+
+The top level regular expressions are POSIX regular expressions, and are
+executed using the C runtime library regular expression functions. The
+expressions are treated as extended POSIX regular expressions.
+
+If either the PCRE or the PCRE2 library are found during configuration,
+that library can be used for regular expression matching. If both are
+found, PCRE2 is used.
+
+Because there are differences in regular expression facilities and
+handling between POSIX, PCRE and PCRE2, you must specify an alternate
+regular expression appropriate for the engine. Alternate regular
+expressions are held as members of a top-level object "pcre" or "pcre2".
+For example:
+
+{
+  "scrape_subtitle": [
+      "^[.][.][.][^:.]*[.:] ([^.0-9][^:]*): ",
+      "^[0-9]+/[0-9]+[.] +([^:]*): ",
+      "^([^.0-9][^:]+): "
+  ],
+  "pcre": {
+      "scrape_subtitle": [
+          "^(?:[.][.][.][^:.]*[.:] +|[0-9]+/[0-9]+[.] +)?([^.0-9][^:]*): "
+      ]
+  }
+}
+
+A useful reference on the differences between POSIX, PCRE and PCRE2
+regular expressions is at
+http://www.regular-expressions.info/refbasic.html.
+
+Testing
+-------
+
 There is a test harness for these files in the development tree at
 support/eitscrape_test.py with test harness files at
 support/testdata/eitscrape.
+
+WARNING: The test harness uses Python's re regular expression handling.
+Python regular expressions are neither POSIX nor PCRE, though in general
+they are closer to PCRE than POSIX.

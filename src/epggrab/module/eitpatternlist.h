@@ -19,13 +19,13 @@
 #ifndef __EITPATTERN_LIST__
 #define __EITPATTERN_LIST__
 
-#include <regex.h>
 #include "queue.h"
+#include "tvhregex.h"
 
 typedef struct eit_pattern
 {
   char                        *text;
-  regex_t                     compiled;
+  tvh_regex_t                 compiled;
   TAILQ_ENTRY(eit_pattern)    p_links;
 } eit_pattern_t;
 
@@ -37,7 +37,9 @@ static inline int eit_pattern_list_empty ( eit_pattern_list_t *list )
   { return TAILQ_EMPTY(list); }
 
 /* Compile a regular expression pattern from a message */
-void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l );
+void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l, int flags );
+/* Compile a regular expression pattern from a named message, applying message location conventions */
+void eit_pattern_compile_named_list ( eit_pattern_list_t *list, htsmsg_t *m, const char *key);
 /* Apply the compiled pattern to text. If it matches then return the
  * match in buf which is of size size_buf.
  * Return the buf or NULL if no match.
