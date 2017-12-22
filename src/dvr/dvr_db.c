@@ -157,9 +157,12 @@ int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
                  dvr_get_filesize(entry, 0) < 0);		/* Removed externally? */
   int success = entry->de_sched_state == DVR_COMPLETED;
 
-  if (success && !dvr_entry_is_completed_ok(entry))
-    success = entry->de_last_error == SM_CODE_OK &&
-              entry->de_data_errors < DVR_MAX_DATA_ERRORS;
+  if (success) {
+    if (entry->de_last_error == SM_CODE_OK)
+      success = entry->de_data_errors < DVR_MAX_DATA_ERRORS;
+    else
+      success = dvr_entry_is_completed_ok(entry);
+  }
 
   if ((flags & DVR_FINISHED_REMOVED_SUCCESS) && removed && success)
     return 1;
