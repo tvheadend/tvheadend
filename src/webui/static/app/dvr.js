@@ -265,16 +265,21 @@ tvheadend.dvrButtonFcn = function(store, select, _url, q) {
         var uuids = [];
         for (var i = 0; i < r.length; i++)
             uuids.push(r[i].id);
-        tvheadend.AjaxConfirm({
+        var c = {
             url: _url,
             params: {
                 uuid: Ext.encode(uuids)
             },
             success: function(d) {
                 store.reload();
-            },
-            question: q,
-        });
+            }
+        };
+        if (q) {
+            c.question = q;
+            tvheadend.AjaxConfirm(c);
+        } else {
+            tvheadend.Ajax(c);
+        }
     }
 }
 
