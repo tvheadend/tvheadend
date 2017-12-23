@@ -870,8 +870,7 @@ satip_frontend_update_pids
           mpegts_pid_add(&tr->sf_pids, mp->mp_pid, mps->mps_weight);
       }
     }
-    if (lfe->sf_device->sd_pids0)
-      mpegts_pid_add(&tr->sf_pids, 0, MPS_WEIGHT_PMT_SCAN);
+    mpegts_pid_add(&tr->sf_pids, 0, MPS_WEIGHT_PMT_SCAN);
     if (lfe->sf_device->sd_pids21)
       mpegts_pid_add(&tr->sf_pids, 21, MPS_WEIGHT_PMT_SCAN);
   }
@@ -1066,8 +1065,8 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 {
   satip_tune_req_t *tr;
   satip_device_t *sd = lfe->sf_device;
-  char *add, *del;
-  int i, j, r;
+  char *setup = NULL, *add = NULL, *del = NULL;
+  int i, j, r, pid;
   int max_pids_len = sd->sd_pids_len;
   int max_pids_count = sd->sd_pids_max;
   mpegts_apids_t wpid, padd, pdel;
@@ -1090,10 +1089,7 @@ all:
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
     if (i)
       goto skip;
-
-    tr->sf_weight_tuned = tr->sf_weight;
-    r = satip_rtsp_play(rtsp, "all", NULL, NULL, max_pids_len, tr->sf_weight);
-    r = r == 0 ? 1 : r;
+    setup = (char *)"all";
 
   } else if (!sd->sd_pids_deladd ||
              tr->sf_pids_tuned.all ||
@@ -1107,21 +1103,17 @@ all:
     }
 
     j = MIN(wpid.count, max_pids_count);
-    add = alloca(1 + j * 5);
-    add[0] = '\0';
+    setup = alloca(1 + j * 5);
+    setup[0] = '\0';
     for (i = 0; i < j; i++)
-      sprintf(add + strlen(add), ",%i", wpid.pids[i].pid);
+      sprintf(setup + strlen(setup), ",%i", wpid.pids[i].pid);
     mpegts_pid_copy(&tr->sf_pids_tuned, &wpid);
     tr->sf_pids_tuned.all = 0;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
     mpegts_pid_done(&wpid);
 
-    if (!j || add[0] == '\0')
+    if (!j || setup[0] == '\0')
       goto skip;
-
-    tr->sf_weight_tuned = tr->sf_weight;
-    r = satip_rtsp_play(rtsp, add, NULL, NULL, max_pids_len, tr->sf_weight);
-    r = r == 0 ? 1 : r;
 
   } else {
 
@@ -1139,13 +1131,17 @@ all:
     add[0] = del[0] = '\0';
 
     for (i = 0; i < pdel.count; i++) {
-      sprintf(del + strlen(del), ",%i", pdel.pids[i].pid);
-      mpegts_pid_del(&tr->sf_pids_tuned, pdel.pids[i].pid, pdel.pids[i].weight);
+      pid = pdel.pids[i].pid;
+      if (pid != DVB_PAT_PID)
+        sprintf(del + strlen(del), ",%i", pid);
     }
 
     j = MIN(padd.count, max_pids_count);
-    for (i = 0; i < j; i++)
-      sprintf(add + strlen(add), ",%i", padd.pids[i].pid);
+    for (i = 0; i < j; i++) {
+      pid = padd.pids[i].pid;
+      if (pid != DVB_PAT_PID)
+        sprintf(add + strlen(add), ",%i", pid);
+    }
 
     mpegts_pid_copy(&tr->sf_pids_tuned, &wpid);
     tr->sf_pids_tuned.all = 0;
@@ -1157,11 +1153,11 @@ all:
 
     if (add[0] == '\0' && del[0] == '\0')
       goto skip;
-
-    tr->sf_weight_tuned = tr->sf_weight;
-    r = satip_rtsp_play(rtsp, NULL, add, del, max_pids_len, tr->sf_weight);
-    r = r == 0 ? 1 : r;
   }
+
+  tr->sf_weight_tuned = tr->sf_weight;
+  r = satip_rtsp_play(rtsp, setup, add, del, max_pids_len, tr->sf_weight);
+  r = r == 0 ? 1 : r;
 
   if (r < 0)
     tvherror(LS_SATIP, "%s - failed to modify pids: %s", name, strerror(-r));
@@ -1808,8 +1804,6 @@ new_tune:
   rtsp->hc_efd = efd;
 
   position = lfe_master->sf_position;
-  if (lfe->sf_device->sd_pids0)
-    rtsp_flags |= SATIP_SETUP_PIDS0;
   if (lfe->sf_device->sd_pilot_on)
     rtsp_flags |= SATIP_SETUP_PILOT_ON;
   if (lfe->sf_device->sd_pids21)
