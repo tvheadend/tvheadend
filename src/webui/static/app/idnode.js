@@ -1626,6 +1626,7 @@ tvheadend.idnode_grid = function(panel, conf)
     var event = null;
     var auto = null;
     var idnode = null;
+    var groupreader = null;
 
     var update = function(o) {
         if ((o.create || o.moveup || o.movedown || 'delete' in o) && auto.getValue()) {
@@ -1728,18 +1729,36 @@ tvheadend.idnode_grid = function(panel, conf)
         var params = {};
         if (conf.all) params['all'] = 1;
         if (conf.extraParams) conf.extraParams(params);
-        store = new Ext.data.JsonStore({
+        groupreader = new Ext.data.JsonReader({
+            totalProperty: 'total',
             root: 'entries',
+            fields: fields,
+            idProperty: 'uuid'
+        });
+
+        store = new Ext.data.GroupingStore({
             url: conf.gridURL || (conf.url + '/grid'),
             baseParams: params,
             autoLoad: true,
             id: 'uuid',
-            totalProperty: 'total',
-            fields: fields,
-            remoteSort: true,
+            remoteSort: true, //  We lost multi sort at server side :-(, maybe perexg has a better idea
+            reader: groupreader,
+            remoteGroup: true,
+            groupField: 'disp_title',
+            groupDir: 'ASC',
+            groupOnSort: false,
+            /*multiSort: true,
+            multiSortInfo:{
+               sorters: [{field : 'disp_title', direction : 'ASC'},
+                         conf.sort ? conf.sort : null],
+               direction: 'ASC'
+            },*/
             pruneModifiedRecords: true,
             sortInfo: conf.sort ? conf.sort : null
         });
+
+        if (!conf.grouping)
+            store.clearGrouping();
 
         /* Model */
         var model = new Ext.grid.ColumnModel({
@@ -2086,6 +2105,7 @@ tvheadend.idnode_grid = function(panel, conf)
 
         plugins.push(filter);
         var gconf = {
+            id: 'idnode_grid',
             stateful: true,
             stateId: conf.gridURL || conf.url,
             stripeRows: true,
@@ -2093,9 +2113,13 @@ tvheadend.idnode_grid = function(panel, conf)
             cm: model,
             selModel: select,
             plugins: plugins,
-            viewConfig: {
-                forceFit: true
-            },
+            view: new Ext.grid.GroupingView({
+                forceFit: true,
+                startCollapsed: true,
+                showGroupName: false,
+                // custom grouping text template to display the number of recordings per group
+                groupTextTpl: '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Recordings" : "Recording"]})'
+            }),
             keys: {
                 key: 'a',
                 ctrl: true,
@@ -2113,7 +2137,10 @@ tvheadend.idnode_grid = function(panel, conf)
             page.changePage(0);
         });
         if (conf.beforeedit)
-          grid.on('beforeedit', conf.beforeedit);
+            grid.on('beforeedit', conf.beforeedit);
+
+        if (fields.indexOf('duplicate') !== -1)
+            grid.getColumnModel().setHidden(3, true);
 
         dpanel.add(grid);
         dpanel.doLayout(false, true);

@@ -355,6 +355,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         callback: function(conf, e, store, select) {
             duplicates ^= 1;
+            Ext.getCmp('idnode_grid').getColumnModel().setHidden(3, !duplicates);
+            Ext.getCmp('idnode_grid').getBottomToolbar().changePage(0);
             this.setText(duplicates ? _('Hide duplicates') : _('Show duplicates'));
             store.baseParams.duplicates = duplicates;
             store.reload();
@@ -570,7 +572,8 @@ tvheadend.dvr_finished = function(panel, index) {
                 }
             }],
         tbar: [removeButton, downloadButton, rerecordButton, moveButton],
-        selected: selected
+        selected: selected,
+        grouping: true
     });
 
     return panel;
@@ -668,7 +671,7 @@ tvheadend.dvr_failed = function(panel, index) {
         },
         sort: {
           field: 'start_real',
-          direction: 'ASC'
+          direction: 'DESC'
         },
         plugins: [actions],
         lcol: [
@@ -742,7 +745,7 @@ tvheadend.dvr_removed = function(panel, index) {
         },
         sort: {
           field: 'start_real',
-          direction: 'ASC'
+          direction: 'DESC'
         },
         plugins: [actions],
         lcol: [actions],
