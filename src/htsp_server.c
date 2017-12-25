@@ -1056,8 +1056,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     fsize = dvr_get_filesize(de, DVR_FILESIZE_UPDATE);
     if (fsize < 0)
       error = "File missing";
-    else if(de->de_last_error != SM_CODE_OK &&
-            de->de_last_error != SM_CODE_FORCE_OK)
+    else if(!dvr_entry_is_completed_ok(de))
       error = streaming_code2txt(de->de_last_error);
     break;
   case DVR_MISSED_TIME:
