@@ -1410,9 +1410,7 @@ cccam_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   mpegts_service_t *t = (mpegts_service_t*)ct->td_service;
   uint16_t sid = t->s_dvb_service_id;
   cccam_t *cccam = ct->cs_cccam;
-
-  int channel;
-  int section;
+  int channel, section, ecm;
   ecm_pid_t *ep;
   ecm_section_t *es;
   char chaninfo[32];
@@ -1498,69 +1496,65 @@ found:
   caid = c->caid;
   provid = c->providerid;
 
-  switch(data[0]) {
-    case 0x80:
-    case 0x81:
-      /* ECM */
+  ecm = data[0] == 0x80 || data[0] == 0x81;
+  if (pcard->cs_ra.caid == 0x4a30) ecm |= data[0] == 0x50; /* DVN */
 
-      if((pcard->cs_ra.caid >> 8) == 6) {
-        ep->ep_last_section = data[5];
-        section = data[4];
+  if (ecm) {
+    if((pcard->cs_ra.caid >> 8) == 6) {
+      ep->ep_last_section = data[5];
+      section = data[4];
 
-      } else {
-        ep->ep_last_section = 0;
-        section = 0;
-      }
+    } else {
+      ep->ep_last_section = 0;
+      section = 0;
+    }
 
-      channel = pid;
-      snprintf(chaninfo, sizeof(chaninfo), " (PID %d)", channel);
+    channel = pid;
+    snprintf(chaninfo, sizeof(chaninfo), " (PID %d)", channel);
 
-      LIST_FOREACH(es, &ep->ep_sections, es_link)
-        if (es->es_section == section)
-          break;
-      if (es == NULL) {
-        es = calloc(1, sizeof(ecm_section_t));
-        es->es_section = section;
-        LIST_INSERT_HEAD(&ep->ep_sections, es, es_link);
-      }
-
-      if(cccam->cccam_fd == -1) {
-        // New key, but we are not connected (anymore), can not descramble
-        descrambler_change_keystate((th_descrambler_t *)ct, DS_READY, 0);
+    LIST_FOREACH(es, &ep->ep_sections, es_link)
+      if (es->es_section == section)
         break;
-      }
+    if (es == NULL) {
+      es = calloc(1, sizeof(ecm_section_t));
+      es->es_section = section;
+      LIST_INSERT_HEAD(&ep->ep_sections, es, es_link);
+    }
 
-      if (es->es_keystate == ES_FORBIDDEN || es->es_keystate == ES_IDLE)
-        break;
+    if(cccam->cccam_fd == -1) {
+      // New key, but we are not connected (anymore), can not descramble
+      descrambler_change_keystate((th_descrambler_t *)ct, DS_READY, 0);
+      goto end;
+    }
 
-      es->es_caid = caid;
-      es->es_provid = provid;
-      es->es_channel = channel;
-      es->es_pending = 1;
-      es->es_resolved = 0;
+    if (es->es_keystate == ES_FORBIDDEN || es->es_keystate == ES_IDLE)
+      goto end;
 
-      if(ct->cs_channel >= 0 && channel != -1 &&
-         ct->cs_channel != channel) {
-        tvhdebug(LS_CCCAM, "Filtering ECM (PID %d)", channel);
-        goto end;
-      }
+    es->es_caid = caid;
+    es->es_provid = provid;
+    es->es_channel = channel;
+    es->es_pending = 1;
+    es->es_resolved = 0;
 
-      //tvhtrace(LS_CCCAM, "send ecm: len=%d sid=%04x caid=%04x provid=%06x", len, sid, caid, provid);
-      //tvhlog_hexdump(LS_CCCAM, data, len);
+    if(ct->cs_channel >= 0 && channel != -1 &&
+       ct->cs_channel != channel) {
+      tvhdebug(LS_CCCAM, "Filtering ECM (PID %d)", channel);
+      goto end;
+    }
 
-      es->es_seq = cccam_send_ecm(cccam, data, len, sid, caid, provid, pcard->id);
+    //tvhtrace(LS_CCCAM, "send ecm: len=%d sid=%04x caid=%04x provid=%06x", len, sid, caid, provid);
+    //tvhlog_hexdump(LS_CCCAM, data, len);
 
-      tvhdebug(LS_CCCAM,
-               "Sending ECM%s section=%d/%d, for service \"%s\" (seqno: %d)",
-               chaninfo, section, ep->ep_last_section, t->s_dvb_svcname, es->es_seq);
-      es->es_time = getfastmonoclock();
-      break;
+    es->es_seq = cccam_send_ecm(cccam, data, len, sid, caid, provid, pcard->id);
 
-    default:
-      /* TODO: EMM */
-      //if (cccam->cccam_forward_emm)
-      //  cccam_send_msg(cccam, data, len, sid, 1, 0, 0);
-      break;
+    tvhdebug(LS_CCCAM,
+             "Sending ECM%s section=%d/%d, for service \"%s\" (seqno: %d)",
+             chaninfo, section, ep->ep_last_section, t->s_dvb_svcname, es->es_seq);
+    es->es_time = getfastmonoclock();
+  } else {
+    /* TODO: EMM */
+    //if (cccam->cccam_forward_emm)
+    //  cccam_send_msg(cccam, data, len, sid, 1, 0, 0);
   }
 
 end:
