@@ -1736,6 +1736,10 @@ tvheadend.idnode_grid = function(panel, conf)
             idProperty: 'uuid'
         });
 
+        var groupField = false;
+        if (conf.groupField)
+            groupField = conf.groupField;
+
         store = new Ext.data.GroupingStore({
             url: conf.gridURL || (conf.url + '/grid'),
             baseParams: params,
@@ -1744,7 +1748,7 @@ tvheadend.idnode_grid = function(panel, conf)
             remoteSort: true, //  We lost multi sort at server side :-(, maybe perexg has a better idea
             reader: groupreader,
             remoteGroup: true,
-            groupField: 'disp_title',
+            groupField: groupField,
             groupDir: 'ASC',
             groupOnSort: false,
             /*multiSort: true,
@@ -2105,7 +2109,6 @@ tvheadend.idnode_grid = function(panel, conf)
 
         plugins.push(filter);
         var gconf = {
-            id: 'idnode_grid',
             stateful: true,
             stateId: conf.gridURL || conf.url,
             stripeRows: true,
@@ -2139,8 +2142,10 @@ tvheadend.idnode_grid = function(panel, conf)
         if (conf.beforeedit)
             grid.on('beforeedit', conf.beforeedit);
 
-        if (fields.indexOf('duplicate') !== -1)
-            grid.getColumnModel().setHidden(3, true);
+        if (conf.hideColumn){
+            var columnId = grid.getColumnModel().findColumnIndex(conf.hideColumn);
+            grid.getColumnModel().setHidden(columnId, true);
+        }
 
         dpanel.add(grid);
         dpanel.doLayout(false, true);

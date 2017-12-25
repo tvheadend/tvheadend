@@ -355,8 +355,9 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         callback: function(conf, e, store, select) {
             duplicates ^= 1;
-            Ext.getCmp('idnode_grid').getColumnModel().setHidden(3, !duplicates);
-            Ext.getCmp('idnode_grid').getBottomToolbar().changePage(0);
+            var columnId = select.grid.colModel.findColumnIndex('duplicate');
+            select.grid.colModel.setHidden(columnId, !duplicates);
+            select.grid.bottomToolbar.changePage(0);
             this.setText(duplicates ? _('Hide duplicates') : _('Show duplicates'));
             store.baseParams.duplicates = duplicates;
             store.reload();
@@ -443,7 +444,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
         ],
         tbar: [stopButton, abortButton, prevrecButton, dupButton],
         selected: selected,
-        beforeedit: beforeedit
+        beforeedit: beforeedit,
+        hideColumn: 'duplicate'
     });
 
     return panel;
@@ -573,7 +575,8 @@ tvheadend.dvr_finished = function(panel, index) {
             }],
         tbar: [removeButton, downloadButton, rerecordButton, moveButton],
         selected: selected,
-        grouping: true
+        grouping: true,
+        groupField: 'disp_title'
     });
 
     return panel;
