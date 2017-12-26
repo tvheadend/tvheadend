@@ -1425,9 +1425,6 @@ cccam_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if(len > 4096)
     return;
 
-  if((data[0] & 0xf0) != 0x80)
-    return;
-
   pthread_mutex_lock(&cccam->cccam_mutex);
   pthread_mutex_lock(&t->s_stream_mutex);
 
