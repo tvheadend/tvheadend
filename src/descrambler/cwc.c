@@ -529,7 +529,7 @@ cwc_new_card(cwc_t *cwc, uint16_t caid, uint8_t *ua,
       memcpy(ep->sa, psa[i], 8);
   }
 
-  n = caid2name(caid & 0xff00) ?: "Unknown";
+  n = caid2name(caid) ?: "Unknown";
 
   if (ua) {
     tvhinfo(LS_CWC, "%s:%i: Connected as user %s "

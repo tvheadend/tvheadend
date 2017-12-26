@@ -422,7 +422,7 @@ cccam_new_card(cccam_t *cccam, uint8_t *buf, uint8_t *ua,
       memcpy(ep->sa, psa[i], 8);
   }
 
-  n = caid2name(caid & 0xff00) ?: "Unknown";
+  n = caid2name(caid) ?: "Unknown";
 
   if (ua) {
     tvhinfo(LS_CCCAM, "%s:%i: Connected as user %s "
