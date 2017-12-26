@@ -295,6 +295,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
                 list + ',owner,creator' : list) + ',retention,removal';
     var duplicates = 0;
     var buttonFcn = tvheadend.dvrButtonFcn;
+    var columnId = null;
 
     var stopButton = {
         name: 'stop',
@@ -355,7 +356,6 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         callback: function(conf, e, store, select) {
             duplicates ^= 1;
-            var columnId = select.grid.colModel.findColumnIndex('duplicate');
             select.grid.colModel.setHidden(columnId, !duplicates);
             select.grid.bottomToolbar.changePage(0);
             this.setText(duplicates ? _('Hide duplicates') : _('Show duplicates'));
@@ -378,6 +378,11 @@ tvheadend.dvr_upcoming = function(panel, index) {
     function beforeedit(e, grid) {
         if (e.record.data.sched_status == 'recording')
             return false;
+    }
+
+    function viewready(grid) {
+       columnId = grid.colModel.findColumnIndex('duplicate');
+       grid.colModel.setHidden(columnId, true);
     }
 
     tvheadend.idnode_grid(panel, {
@@ -445,7 +450,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         tbar: [stopButton, abortButton, prevrecButton, dupButton],
         selected: selected,
         beforeedit: beforeedit,
-        hideColumn: 'duplicate'
+        viewready: viewready
     });
 
     return panel;

@@ -1626,7 +1626,7 @@ tvheadend.idnode_grid = function(panel, conf)
     var event = null;
     var auto = null;
     var idnode = null;
-    var groupreader = null;
+    var groupReader = null;
 
     var update = function(o) {
         if ((o.create || o.moveup || o.movedown || 'delete' in o) && auto.getValue()) {
@@ -1729,16 +1729,13 @@ tvheadend.idnode_grid = function(panel, conf)
         var params = {};
         if (conf.all) params['all'] = 1;
         if (conf.extraParams) conf.extraParams(params);
-        groupreader = new Ext.data.JsonReader({
+
+        groupReader = new Ext.data.JsonReader({
             totalProperty: 'total',
             root: 'entries',
             fields: fields,
             idProperty: 'uuid'
         });
-
-        var groupField = false;
-        if (conf.groupField)
-            groupField = conf.groupField;
 
         store = new Ext.data.GroupingStore({
             url: conf.gridURL || (conf.url + '/grid'),
@@ -1746,9 +1743,9 @@ tvheadend.idnode_grid = function(panel, conf)
             autoLoad: true,
             id: 'uuid',
             remoteSort: true, //  We lost multi sort at server side :-(, maybe perexg has a better idea
-            reader: groupreader,
+            reader: groupReader,
             remoteGroup: true,
-            groupField: groupField,
+            groupField: conf.groupField ? conf.groupField : false,
             groupDir: 'ASC',
             groupOnSort: false,
             /*multiSort: true,
@@ -1760,9 +1757,6 @@ tvheadend.idnode_grid = function(panel, conf)
             pruneModifiedRecords: true,
             sortInfo: conf.sort ? conf.sort : null
         });
-
-        if (!conf.grouping)
-            store.clearGrouping();
 
         /* Model */
         var model = new Ext.grid.ColumnModel({
@@ -2139,13 +2133,12 @@ tvheadend.idnode_grid = function(panel, conf)
         grid.on('filterupdate', function() {
             page.changePage(0);
         });
+
         if (conf.beforeedit)
             grid.on('beforeedit', conf.beforeedit);
 
-        if (conf.hideColumn){
-            var columnId = grid.getColumnModel().findColumnIndex(conf.hideColumn);
-            grid.getColumnModel().setHidden(columnId, true);
-        }
+        if (conf.viewready)
+            grid.on('viewready', conf.viewready);
 
         dpanel.add(grid);
         dpanel.doLayout(false, true);
