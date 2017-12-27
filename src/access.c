@@ -161,7 +161,7 @@ access_ticket_create(const char *resource, access_t *a)
   at->at_access = access_copy(a);
   at->at_timer.mti_expire = mclk() + lifetime;
 
-  i = TAILQ_FIRST(&access_tickets) != NULL;
+  i = TAILQ_EMPTY(&access_tickets);
 
   TAILQ_INSERT_TAIL(&access_tickets, at, at_link);
 
