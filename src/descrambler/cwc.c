@@ -164,14 +164,6 @@ typedef struct cwc_message {
   uint8_t cm_data[CWS_NETMSGSIZE];
 } cwc_message_t;
 
-/**
- *
- */
-typedef struct cwc_provider {
-  uint32_t id;
-  uint8_t sa[8];
-} cwc_provider_t;
-
 struct cwc;
 
 typedef struct cs_card_data {
