@@ -79,7 +79,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   mpegts_mux_t *mm;
   iptv_mux_t *im;
   url_t u, u2;
-  int change, epgcfg;
+  int change, epgcfg, muxprio, smuxprio;
   http_arg_list_t args;
   http_arg_t *ra1, *ra2, *ra2_next;
   size_t l;
@@ -103,6 +103,10 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
 
   epgid = htsmsg_get_str(item, "tvh-chnum");
   chnum2 = epgid ? prop_intsplit_from_str(epgid, CHANNEL_SPLIT) : 0;
+
+  htsmsg_get_s32(item, "tvh-prio", &muxprio);
+  htsmsg_get_s32(item, "tvh-sprio", &smuxprio);
+
   if (chnum2 > 0) {
     chnum += chnum2;
   } else if (chnum) {
@@ -255,6 +259,14 @@ skip_url:
         im->mm_epg = epgcfg;
         change = 1;
       }
+      if (im->mm_iptv_priority != muxprio) {
+        im->mm_iptv_priority = muxprio;
+        change = 1;
+      }
+      if (im->mm_iptv_streaming_priority != smuxprio) {
+        im->mm_iptv_streaming_priority = smuxprio;
+        change = 1;
+      }
       if (change)
         idnode_notify_changed(&im->mm_id);
       (*total)++;
@@ -292,6 +304,10 @@ skip_url:
   if (!htsmsg_get_s64(item, "vlc-program", &vlcprog) &&
       vlcprog > 1 && vlcprog < 8191)
     htsmsg_add_s32(conf, "sid_filter", vlcprog);
+  if (muxprio)
+    htsmsg_add_s32(conf, "priority", muxprio);
+  if (smuxprio)
+    htsmsg_add_s32(conf, "spriority", smuxprio);
 
   im = iptv_mux_create0(in, NULL, conf);
   htsmsg_destroy(conf);
