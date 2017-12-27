@@ -42,9 +42,14 @@ emm_cache_insert(emm_reass_t *ra, uint32_t crc)
 static int
 emm_cache_lookup(emm_reass_t *ra, uint32_t crc)
 {
-  int i;
+  int i, off;
+
+  off = ra->emm_cache_write - ra->emm_cache_count;
+  if (off < 0)
+    off += EMM_CACHE_SIZE;
+  assert(off >= 0);
   for (i = 0; i < ra->emm_cache_count; i++)
-    if (ra->emm_cache[i] == crc)
+    if (ra->emm_cache[(off + i) & EMM_CACHE_MASK] == crc)
       return 1;
   return 0;
 }
@@ -58,17 +63,17 @@ emm_conax
    emm_send_t send, void *aux)
 {
   emm_provider_t *ep;
-  int i;
+  int i, match = 0;
 
-  if (len < 10)
-    return;
   if (data[0] == 0x82) {
-    PROVIDERS_FOREACH(ra, i, ep)
-      if (memcmp(&data[3], &ep->sa[1], 7) == 0) {
-        send(aux, data, len, mux);
-        break;
-      }
+    if (len >= 10) {
+      PROVIDERS_FOREACH(ra, i, ep)
+        if (memcmp(&data[3], &ep->sa[1], 7) == 0)
+          break;
+    }
   }
+  if (match)
+    send(aux, data, len, mux);
 }
 
 /**
@@ -129,18 +134,17 @@ emm_seca
     return;
 
   if (data[0] == 0x82) {         // unique emm
-    if (len < 9)
-      return;
-    match = memcmp(&data[3], &ra->ua[2], 6) == 0;
+    if (len >= 9)
+      match = memcmp(&data[3], &ra->ua[2], 6) == 0;
   } else if (data[0] == 0x84) {  // shared emm
-    if (len < 8)
-      return;
-    /* XXX this part is untested but should do no harm */
-    PROVIDERS_FOREACH(ra, i, ep)
-      if (memcmp(&data[5], &ep->sa[5], 3) == 0) {
-        match = 1;
-        break;
-      }
+    if (len >= 8) {
+      /* XXX this part is untested but should do no harm */
+      PROVIDERS_FOREACH(ra, i, ep)
+        if (memcmp(&data[5], &ep->sa[5], 3) == 0) {
+          match = 1;
+          break;
+        }
+    }
   } else if (data[0] == 0x83) {  // global emm -> seca3
     match = 1;
   }
@@ -358,16 +362,17 @@ emm_dre
     return;
 
   if (data[0] == 0x87) {
-    if (len < 7)
-      return;
-    match = memcmp(&data[3], &ra->ua[4], 4) == 0;
+    if (len >= 7)
+      match = memcmp(&data[3], &ra->ua[4], 4) == 0;
   } else if (data[0] == 0x86) {
-    PROVIDERS_FOREACH(ra, i, ep)
-      if (memcmp(&data[40], &ep->sa[4], 4) == 0) {
-   /* if (memcmp(&data[3], &ep->sa[4], 1) == 0) { */
-        match = 1;
-        break;
-      }
+    if (len >= 44) {
+      PROVIDERS_FOREACH(ra, i, ep)
+        if (memcmp(&data[40], &ep->sa[4], 4) == 0) {
+     /* if (memcmp(&data[3], &ep->sa[4], 1) == 0) { */
+          match = 1;
+          break;
+        }
+    }
   }
 
   if (match)
@@ -383,12 +388,14 @@ emm_nagra
   uint8_t hexserial[4];
 
   if (data[0] == 0x83) {        // unique|shared
-    hexserial[0] = data[5];
-    hexserial[1] = data[4];
-    hexserial[2] = data[3];
-    hexserial[3] = data[6];
-    if (memcmp(hexserial, &ra->ua[4], (data[7] == 0x10) ? 3 : 4) == 0)
-      match = 1;
+    if (len >= 8) {
+      hexserial[0] = data[5];
+      hexserial[1] = data[4];
+      hexserial[2] = data[3];
+      hexserial[3] = data[6];
+      if (memcmp(hexserial, &ra->ua[4], (data[7] == 0x10) ? 3 : 4) == 0)
+        match = 1;
+    }
   } else if (data[0] == 0x82) { // global
     match = 1;
   }
@@ -412,10 +419,12 @@ emm_nds
   emmtype      = (data[3] & 0xC0) >> 6;
 
   if (emmtype == 1 || emmtype == 2) { // unique|shared
-    for (i = 0; i < serial_count; i++) {
-      if (memcmp(&data[i * 4 + 4], &ra->ua[4], 5 - emmtype) == 0) {
-        match = 1;
-        break;
+    if (len >= serial_count * 4 + 4) {
+      for (i = 0; i < serial_count; i++) {
+        if (memcmp(&data[i * 4 + 4], &ra->ua[4], 5 - emmtype) == 0) {
+          match = 1;
+          break;
+        }
       }
     }
   } else if (emmtype == 0) {          // global
@@ -444,14 +453,16 @@ emm_streamguard
   tvhinfo(LS_CWC, "emm_streamguard streamguard card data emm get,here lots of works todo...");
 
   if (data[0] == 0x87) {
-    match = memcmp(&data[3], &ra->ua[4], 4) == 0;
+    match = len >= 7 && memcmp(&data[3], &ra->ua[4], 4) == 0;
   } else if (data[0] == 0x86) {
-    PROVIDERS_FOREACH(ra, i, ep)
-      if (memcmp(&data[40], &ep->sa[4], 4) == 0) {
-   /* if (memcmp(&data[3], &cwc->cwc_providers[i].sa[4], 1) == 0) { */
-        match = 1;
-        break;
-      }
+    if (len >= 44) {
+      PROVIDERS_FOREACH(ra, i, ep)
+        if (memcmp(&data[40], &ep->sa[4], 4) == 0) {
+     /* if (memcmp(&data[3], &cwc->cwc_providers[i].sa[4], 1) == 0) { */
+          match = 1;
+          break;
+        }
+    }
   }
 
   if (match)
