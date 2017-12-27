@@ -213,7 +213,7 @@ skip_url:
 
   LIST_FOREACH(mm, &in->mn_muxes, mm_network_link) {
     im = (iptv_mux_t *)mm;
-    if (strcmp(im->mm_iptv_url_cmpid ?: "", url2) == 0) {
+    if (strcmp(im->mm_iptv_url_cmpid ?: (im->mm_iptv_url ?: ""), url2) == 0) {
       im->im_delete_flag = 0;
       change = 0;
       if (strcmp(im->mm_iptv_svcname ?: "", name)) {
