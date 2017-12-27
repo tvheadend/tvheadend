@@ -104,8 +104,8 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   epgid = htsmsg_get_str(item, "tvh-chnum");
   chnum2 = epgid ? prop_intsplit_from_str(epgid, CHANNEL_SPLIT) : 0;
 
-  htsmsg_get_s32(item, "tvh-prio", &muxprio);
-  htsmsg_get_s32(item, "tvh-sprio", &smuxprio);
+  muxprio = htsmsg_get_s32_or_default(item, "tvh-prio", 0);
+  smuxprio = htsmsg_get_s32_or_default(item, "tvh-sprio", 0);
 
   if (chnum2 > 0) {
     chnum += chnum2;
