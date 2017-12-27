@@ -24,7 +24,7 @@ of the match is the contents of all the sub-patterns in the regular
 expression concatenated together.
 
 For each EPG episode, the title, description and summary are matched
-in turn against the season_num, episode_num, airdate and is_new regexes.
+in turn against the season_num, episode_num, airdate and is_new regex lists.
 
 - season_num converts the contents of the match result to an integer,
   and if successful sets the EPG season number.
@@ -37,14 +37,56 @@ in turn against the season_num, episode_num, airdate and is_new regexes.
   the match result is ignored.
 
 Next, a combined title/summary text is made by joining the title, a space,
-and the summary. The combined text is matched against the scrape_title regex.
-On a match, the EPG title is set to the match result.
+and the summary. The combined text is matched against the scrape_title regex
+list. On a match, the EPG title is set to the match result.
 
-Then the summary is matched against the scrape_subtitle regex. On a match,
+Then the summary is matched against the scrape_subtitle regex list. On a match,
 the EPG subtitle is set to the match result.
 
-Finally, the summary is matched against the scrape_summary regex. On a match,
-the EPG summary is set to the match result.
+Finally, the summary is matched against the scrape_summary regex list. On a
+match, the EPG summary is set to the match result.
+
+Filtering regular expressions
+-----------------------------
+
+Any regular expression in a list can be marked as a filtering regular
+expression. If the regular expression is marked as a filter, and it matches
+the input text, then the match result is not returned as a result, but
+instead replaces the original text to match, and matching continues with the
+next regular expression in the list. If a filter regular expression does
+not match, matching moves to the next regular expression in the list as
+usual.
+
+To mark a regular expression as a filter, it must be specified with an
+expanded definition with a "pattern" component. This is the regular expression
+pattern. It may also have an optional numeric "filter" component. If present,
+and not 0, the regular expression is a filter.
+
+For example, in the following list, the first regex is a filter that
+removes any first sentence starting "...". The following regexs see
+only the text following that sentence.
+
+{
+  "scrape_subtitle": [
+      {
+          "pattern": "^[.][.][.][^:.?!]*[.:?!] +(.*)",
+          "filter": 1
+      },
+      {
+          "pattern": "^[0-9]+/[0-9]+[.] +(.*)",
+          "filter": 1
+      },
+      "^([^:]+): "
+  ]
+}
+
+Given any of the following input texts, the above regex list matches
+'Subtitle here':
+
+...Continued title. 1/6. Subtitle here: rest of summary
+...Continued title. Subtitle here: rest of summary
+1/6. Subtitle here: rest of summary
+Subtitle here: rest of summary
 
 Regular expression engine
 -------------------------

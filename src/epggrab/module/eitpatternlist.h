@@ -26,6 +26,7 @@ typedef struct eit_pattern
 {
   char                        *text;
   tvh_regex_t                 compiled;
+  int                         filter;
   TAILQ_ENTRY(eit_pattern)    p_links;
 } eit_pattern_t;
 

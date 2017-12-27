@@ -64,11 +64,16 @@ except ImportError:
 class Regex(object):
   def __init__(self, engine, regex):
     self.engine = engine
-    self.regex = regex
+    if isinstance(regex, dict):
+      self.regex = regex["pattern"]
+      self.re_is_filter = (regex["filter"] != 0)
+    else:
+      self.regex = regex
+      self.re_is_filter = False
     flags = re_base_flag
     if not engine:
       flags |= re_posix_flag
-    self.regcomp = re.compile(regex, flags)
+    self.regcomp = re.compile(self.regex, flags)
 
   def search(self, text):
     match = self.regcomp.search(text)
@@ -101,6 +106,9 @@ class EITScrapeTest(object):
     for regex in regexes:
       result = regex.search(text)
       if result is not None:
+        if regex.re_is_filter:
+          text = result
+          continue
         if result == expect:
           print 'OK: Got correct result of "{result}" testing "{testing}" for "{text}" using "{pattern}"'.format(result=result, testing=testing, text=text, pattern=regex.text())
           self.num_ok = self.num_ok + 1
