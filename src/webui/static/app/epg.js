@@ -542,6 +542,14 @@ tvheadend.epg = function() {
         return value;
     }
 
+    function renderTextSubtitle(value, meta, record) {
+        setMetaAttr(meta, record);
+
+        if (!value)
+          value = record.data.summary;
+        return value;
+    }
+
     function renderTextLookup(value, meta, record) {
         setMetaAttr(meta, record, value);
         if (!value) return "";
@@ -600,10 +608,10 @@ tvheadend.epg = function() {
             {
                 width: 250,
                 id: 'subtitle',
-                header: _("Subtitle"),
-                tooltip: _("Subtitle"),
+                header: _("Subtitle or summary"),
+                tooltip: _("Subtitle or summary"),
                 dataIndex: 'subtitle',
-                renderer: renderText
+                renderer: renderTextSubtitle
             },
             {
                 width: 100,
