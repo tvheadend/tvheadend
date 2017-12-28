@@ -1415,7 +1415,7 @@ found:
   caid = c->caid;
   provid = c->providerid;
 
-  ecm = data[0] == 0x80 || data[1] == 0x81;
+  ecm = data[0] == 0x80 || data[0] == 0x81;
   if (pcard->cs_ra.caid == 0x4a30) ecm |= data[0] == 0x50; /* DVN */
 
   if (ecm) {
