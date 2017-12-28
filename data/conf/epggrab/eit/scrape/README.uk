@@ -1,0 +1,61 @@
+Scrapers for UK Freeview/Freesat
+================================
+
+The 'uk' scraper set provides scrapers for use with UK Freeview DVB-T
+and Freesat DVB-S EPG.
+
+The title, subtitle and summary scrapers are designed to work together, so
+for best results, all three should be enabled. They try to ensure that when
+text is selected for use in, say, the title, it is not selected for the
+subtitle or the summary. In other words, the same text should not be repeated
+in other fields.
+
+The title, subtitle and text patterns attempt to populate the title,
+subtitle and summary from the EIT title and summary fields.
+
+1. If a title ends '...' and the summary starts '...', the start of the
+   summary is treated as a continuation of the title. The first sentence
+   is extracted and joined to the title with a space. The '...' are removed.
+   The used sentence is removed from the subtitle and summary.
+
+2. If the summary starts with a clause ending ':', or a short sentence
+   of between 4 and 70 characters, that is used as the subtitle.
+   It may be preceded by an episode number or New flag.
+
+3. Remaining text is used as the summary.
+
+POSIX and PCRE
+--------------
+
+TvHeadend is often compiled with the PCRE regular expression library;
+for example, this is the case in the distributed Debian packages. If so,
+alternate PCRE regular expressions are provided. These use PCRE facilities,
+notably lookbehinds and non-capturing groups, to attempt a little more
+sophistication in scraping.
+
+1. If episode and New flag occur at the start of the input summary data,
+   the scraped summary will contain both. With POSIX only the last is retained.
+
+2. A '.' followed by a space only marks the end of a sentence if it
+   does not occur in a small set of known patterns, e.g. Dr. or Ms.,
+   or if it does not follow a character preceded by another '.'. In
+   other words, an acronym such as 'S.H.I.E.L.D.' will not terminate
+   a sentence.
+
+Tests
+-----
+
+Test data is provided under support/eitscrape. Tests can be run from the
+support directory. Test the PCRE patterns with:
+
+tvheadend/support$ ./eitscrape_test.py --pcre ../data/conf/epggrab/eit/scrape/uk testdata/eitscrape/uk
+
+and the POSIX patterns with:
+
+tvheadend/support$ ./eitscrape_test.py ../data/conf/epggrab/eit/scrape/uk testdata/eitscrape/uk
+
+NOTE: To test the PCRE patterns, you MUST have the Python 'regex' package
+installed. On Debian-derived systems, this is packaged as 'python-regex'.
+The default Python 're' package is not sufficiently compatible with PCRE;
+specifically, it does not permit variable-length lookbehinds, and so fails
+to compile the PCRE patterns.
