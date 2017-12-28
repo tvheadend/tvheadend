@@ -66,10 +66,21 @@ class Regex(object):
     self.engine = engine
     if isinstance(regex, dict):
       self.regex = regex["pattern"]
-      self.re_is_filter = (regex["filter"] != 0)
+      try:
+        self.re_is_filter = (regex["filter"] != 0)
+      except KeyError:
+        self.re_is_filter = False
+      try:
+        if isinstance(regex["lang"], str):
+          self.lang = [ regex["lang"] ]
+        else:
+          self.lang = regex["lang"]
+      except KeyError:
+        self.lang = None
     else:
       self.regex = regex
       self.re_is_filter = False
+      self.lang = None
     flags = re_base_flag
     if not engine:
       flags |= re_posix_flag
@@ -99,11 +110,13 @@ class EITScrapeTest(object):
     self.num_failed = 0;
     self.num_ok = 0;
 
-  def run_test_case_i(self, text, regexes, expect, testing):
+  def run_test_case_i(self, text, lang, regexes, expect, testing):
     """Run a test case for text using the regular expression lists in reg,
     expecting the result of a match to be expect while running a test
     case for the string testing."""
     for regex in regexes:
+      if lang and regex.lang and lang not in regex.lang:
+        continue
       result = regex.search(text)
       if result is not None:
         if regex.re_is_filter:
@@ -138,7 +151,7 @@ class EITScrapeTest(object):
       canonical, _, for_engine = key.partition(':')
       if for_engine and for_engine != engine:
         continue
-      if canonical in ('comment', 'summary', 'title'):
+      if canonical in ('comment', 'summary', 'title', 'language'):
         continue
       if canonical in ('age', 'genre'):
         print 'Test case contains key "{key}" which is not currently tested for "{test}"'.format(key=key, test=test)
@@ -158,8 +171,12 @@ class EITScrapeTest(object):
       text = test['summary']
       if canonical == 'new_title':
         text = test['title'] + ' ' + text
+      if 'language' in test:
+        lang = test['language']
+      else:
+        lang = None
       if regexes[canonical]:
-        self.run_test_case_i(text, regexes[canonical], test[key], key)
+        self.run_test_case_i(text, lang, regexes[canonical], test[key], key)
       else:
         print 'FAIL: no regex defined for key "{key}"'.format(key=canonical)
         self.num_failed = self.num_failed + 1

@@ -122,6 +122,38 @@ A useful reference on the differences between POSIX, PCRE and PCRE2
 regular expressions is at
 http://www.regular-expressions.info/refbasic.html.
 
+Languages
+---------
+
+By default, regular expressions are applied to input text in any language.
+You can specify that a regular expression is appropriate only for a
+particular language or group of languages by using an expanded definition
+with a "lang" component. This component may be either a string with a single
+language identifier, or a list of language identifier strings. For
+example:
+
+{
+  "scrape_subtitle": [
+      {
+          "pattern": "^[.][.][.][^:.?!]*[.:?!] +(.*)",
+          "lang": "eng"
+      },
+      {
+          "pattern": "^[0-9]+/[0-9]+[.] +(.*)",
+          "lang": ["eng", "fre"]
+      },
+      "^([^:]+): "
+  ]
+}
+
+If the regular expression is marked with a language or group of languages,
+and the input text language does not match one of those specified for
+the regular expression, the regular expression is ignored and processing
+continues with the next regular expression in the list.
+
+Language codes must be 3 character ISO 639-2 B codes as listed in
+src/lang_codes.c.
+
 Testing
 -------
 
