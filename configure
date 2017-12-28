@@ -19,6 +19,7 @@ test -z "$PKG_CONFIG" && PKG_CONFIG=pkg-config
 OPTIONS=(
   "pie:yes"
   "ccdebug:no"
+  "cardclient:auto"
   "cwc:yes"
   "cccam:yes"
   "capmt:yes"
@@ -616,6 +617,13 @@ if enabled_or_auto inotify; then
   elif enabled inotify; then
     die "Inotify support not found (use --disable-inotify)"
   fi
+fi
+
+#
+# common card client
+#
+if enabled cwc || enabled cccam; then
+  enable cardclient
 fi
 
 #

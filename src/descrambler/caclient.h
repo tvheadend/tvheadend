@@ -26,6 +26,7 @@ struct mpegts_mux;
 
 extern const idclass_t caclient_class;
 extern const idclass_t caclient_dvbcam_class;
+extern const idclass_t caclient_cc_class;
 extern const idclass_t caclient_cwc_class;
 extern const idclass_t caclient_cccam_class;
 extern const idclass_t caclient_capmt_class;

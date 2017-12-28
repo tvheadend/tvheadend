@@ -245,6 +245,23 @@ mpegts_pid_copy(mpegts_apids_t *dst, mpegts_apids_t *src)
 }
 
 int
+mpegts_pid_cmp(mpegts_apids_t *a, mpegts_apids_t *b)
+{
+  int i;
+  mpegts_apid_t *p1, *p2;
+
+  if (a->count != b->count)
+    return a->count - b->count;
+  for (i = 0; i < a->count; i++) {
+    p1 = &a->pids[i];
+    p2 = &b->pids[i];
+    if (p1->pid != p2->pid)
+      return p1->pid - p2->pid;
+  }
+  return 0;
+}
+
+int
 mpegts_pid_compare(mpegts_apids_t *dst, mpegts_apids_t *src,
                    mpegts_apids_t *add, mpegts_apids_t *del)
 {

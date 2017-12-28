@@ -545,10 +545,16 @@ SRCS-TVHCSA = \
 SRCS-${CONFIG_TVHCSA} += $(SRCS-TVHCSA)
 I18N-C += $(SRCS-TVHCSA)
 
+# Cardclient
+SRCS-CARDCLIENT = \
+        src/descrambler/cclient.c \
+	src/descrambler/emm_reass.c
+SRCS-${CONFIG_CARDCLIENT} += $(SRCS-CARDCLIENT)
+I18N-C += $(SRCS-CARDCLIENT)
+
 # CWC
 SRCS-CWC = \
-	src/descrambler/cwc.c \
-	src/descrambler/emm_reass.c
+	src/descrambler/cwc.c
 SRCS-${CONFIG_CWC} += $(SRCS-CWC)
 I18N-C += $(SRCS-CWC)
 
