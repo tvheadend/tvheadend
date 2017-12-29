@@ -136,6 +136,7 @@ typedef struct cclient {
   caclient_t;
 
   int cc_subsys;
+  char *cc_name;
   const char *cc_id;
 
   /* Callbacks */

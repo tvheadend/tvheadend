@@ -69,30 +69,28 @@ cc_new_card(cclient_t *cc, uint16_t caid, uint8_t *ua,
   n = caid2name(caid) ?: "Unknown";
 
   if (ua) {
-    tvhinfo(cc->cc_subsys, "%s:%i: Connected as user %s "
+    tvhinfo(cc->cc_subsys, "%s: Connected as user %s "
             "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
             "with %d provider%s",
-            cc->cc_hostname, cc->cc_port,
-            cc->cc_username, n, caid,
+            cc->cc_name, cc->cc_username, n, caid,
             ua[0], ua[1], ua[2], ua[3], ua[4], ua[5], ua[6], ua[7],
             pcount, pcount > 1 ? "s" : "");
   } else {
-    tvhinfo(cc->cc_subsys, "%s:%i: Connected as user %s "
+    tvhinfo(cc->cc_subsys, "%s: Connected as user %s "
             "to a %s-card [0x%04x] with %d provider%s",
-            cc->cc_hostname, cc->cc_port,
-            cc->cc_username, n, caid,
+            cc->cc_name, cc->cc_username, n, caid,
             pcount, pcount > 1 ? "s" : "");
   }
 
   for (i = 0, ep = pcard->cs_ra.providers; i < pcount; i++, ep++) {
     if (psa) {
       sa = ep->sa;
-      tvhinfo(cc->cc_subsys, "%s:%i: Provider ID #%d: 0x%04x:0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
-              cc->cc_hostname, cc->cc_port, i + 1, caid, ep->id,
+      tvhinfo(cc->cc_subsys, "%s: Provider ID #%d: 0x%04x:0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
+              cc->cc_name, i + 1, caid, ep->id,
               sa[0], sa[1], sa[2], sa[3], sa[4], sa[5], sa[6], sa[7]);
     } else {
-      tvhinfo(cc->cc_subsys, "%s:%i: Provider ID #%d: 0x%04x:0x%06x",
-              cc->cc_hostname, cc->cc_port, i + 1, caid, ep->id);
+      tvhinfo(cc->cc_subsys, "%s: Provider ID #%d: 0x%04x:0x%06x",
+              cc->cc_name, i + 1, caid, ep->id);
     }
   }
 
@@ -181,16 +179,16 @@ cc_ecm_reply(cc_service_t *ct, cc_ecm_section_t *es,
 
     if (es->es_nok >= CC_MAX_NOKS) {
       tvhdebug(cc->cc_subsys,
-              "Too many NOKs[%i] for service \"%s\"%s from %s",
-              es->es_section, t->s_dvb_svcname, chaninfo, ct->td_nicename);
+               "%s: Too many NOKs[%i] for service \"%s\"%s from %s",
+               cc->cc_name, es->es_section, t->s_dvb_svcname, chaninfo, ct->td_nicename);
       es->es_keystate = ES_FORBIDDEN;
       goto forbid;
     }
 
     if (descrambler_resolved((service_t *)t, (th_descrambler_t *)ct)) {
       tvhdebug(cc->cc_subsys,
-              "NOK[%i] from %s: Already has a key for service \"%s\"",
-               es->es_section, ct->td_nicename, t->s_dvb_svcname);
+              "%s: NOK[%i] from %s: Already has a key for service \"%s\"",
+               cc->cc_name, es->es_section, ct->td_nicename, t->s_dvb_svcname);
       es->es_nok = CC_MAX_NOKS; /* do not send more ECM requests */
       es->es_keystate = ES_IDLE;
       if (ct->td_keystate == DS_READY)
@@ -198,9 +196,9 @@ cc_ecm_reply(cc_service_t *ct, cc_ecm_section_t *es,
     }
 
     tvhdebug(cc->cc_subsys,
-             "Received NOK[%i] for service \"%s\"%s "
+             "%s: Received NOK[%i] for service \"%s\"%s "
              "(seqno: %d Req delay: %"PRId64" ms)",
-             es->es_section, t->s_dvb_svcname, chaninfo, seq, delay);
+             cc->cc_name, es->es_section, t->s_dvb_svcname, chaninfo, seq, delay);
 
 forbid:
     i = 0;
@@ -226,9 +224,9 @@ forbid:
 
     if (ep == NULL) { /* !UNKNOWN && !RESOLVED */
       tvherror(cc->cc_subsys,
-               "Can not descramble service \"%s\", access denied (seqno: %d "
+               "%s: Can not descramble service \"%s\", access denied (seqno: %d "
                "Req delay: %"PRId64" ms) from %s",
-               t->s_dvb_svcname, seq, delay, ct->td_nicename);
+               cc->cc_name, t->s_dvb_svcname, seq, delay, ct->td_nicename);
       descrambler_change_keystate((th_descrambler_t *)ct, DS_FORBIDDEN, 1);
       ct->ecm_state = ECM_RESET;
       /* this pid is not valid, force full scan */
@@ -247,20 +245,20 @@ forbid:
        (t->s_dvb_prefcapid != ct->cs_capid &&
         t->s_dvb_prefcapid_lock == PREFCAPID_OFF)) {
       t->s_dvb_prefcapid = ct->cs_capid;
-      tvhdebug(cc->cc_subsys, "Saving prefered PID %d for %s",
-                              t->s_dvb_prefcapid, ct->td_nicename);
+      tvhdebug(cc->cc_subsys, "%s: Saving prefered PID %d for %s",
+               cc->cc_name, t->s_dvb_prefcapid, ct->td_nicename);
       service_request_save((service_t*)t, 0);
     }
 
     tvhdebug(cc->cc_subsys,
-             "Received ECM reply%s for service \"%s\" [%d] "
+             "%s: Received ECM reply%s for service \"%s\" [%d] "
              "(seqno: %d Req delay: %"PRId64" ms)",
-             chaninfo, t->s_dvb_svcname, es->es_section, seq, delay);
+             cc->cc_name, chaninfo, t->s_dvb_svcname, es->es_section, seq, delay);
 
     if(es->es_keystate != ES_RESOLVED)
       tvhdebug(cc->cc_subsys,
-               "Obtained DES keys for service \"%s\" in %"PRId64" ms, from %s",
-               t->s_dvb_svcname, delay, ct->td_nicename);
+               "%s: Obtained DES keys for service \"%s\" in %"PRId64" ms, from %s",
+               cc->cc_name, t->s_dvb_svcname, delay, ct->td_nicename);
     es->es_keystate = ES_RESOLVED;
     es->es_resolved = 1;
 
@@ -330,7 +328,8 @@ cc_read(cclient_t *cc, void *buf, size_t len, int timeout)
   pthread_mutex_lock(&cc->cc_mutex);
 
   if (r && tvheadend_is_running())
-    tvhwarn(cc->cc_subsys, "read error %d (%s)", r, strerror(r));
+    tvhwarn(cc->cc_subsys, "%s: read error %d (%s)",
+            cc->cc_name, r, strerror(r));
 
   if(cc_must_break(cc))
     return ECONNABORTED;
@@ -344,8 +343,8 @@ cc_read(cclient_t *cc, void *buf, size_t len, int timeout)
 void
 cc_write_message(cclient_t *cc, cc_message_t *msg, int enq)
 {
-  tvhtrace(cc->cc_subsys, "%s:%i: sending message len %u enq %d",
-           cc->cc_hostname, cc->cc_port, msg->cm_len, enq);
+  tvhtrace(cc->cc_subsys, "%s: sending message len %u enq %d",
+           cc->cc_name, msg->cm_len, enq);
   tvhlog_hexdump(cc->cc_subsys, msg->cm_data, msg->cm_len);
 
   if (enq) {
@@ -355,7 +354,8 @@ cc_write_message(cclient_t *cc, cc_message_t *msg, int enq)
     pthread_mutex_unlock(&cc->cc_writer_mutex);
   } else {
     if (tvh_write(cc->cc_fd, msg->cm_data, msg->cm_len))
-      tvhinfo(cc->cc_subsys, "write error %s", strerror(errno));
+      tvhinfo(cc->cc_subsys, "%s: write error %s",
+              cc->cc_name, strerror(errno));
     free(msg);
   }
 }
@@ -380,7 +380,8 @@ cc_writer_thread(void *aux)
       pthread_mutex_unlock(&cc->cc_writer_mutex);
       //      int64_t ts = getfastmonoclock();
       if (tvh_write(cc->cc_fd, cm->cm_data, cm->cm_len))
-        tvhinfo(cc->cc_subsys, "write error %s", strerror(errno));
+        tvhinfo(cc->cc_subsys, "%s: write error %s",
+                cc->cc_name, strerror(errno));
       //      printf("Write took %lld usec\n", getfastmonoclock() - ts);
       free(cm);
       pthread_mutex_lock(&cc->cc_writer_mutex);
@@ -442,7 +443,7 @@ cc_session(cclient_t *cc)
     if (cc->cc_read(cc))
       break;
   }
-  tvhdebug(cc->cc_subsys, "session thread exiting");
+  tvhdebug(cc->cc_subsys, "%s: session exiting", cc->cc_name);
 
   /**
    * Collect the writer thread
@@ -451,7 +452,7 @@ cc_session(cclient_t *cc)
   cc->cc_writer_running = 0;
   tvh_cond_signal(&cc->cc_writer_cond, 0);
   pthread_join(writer_thread_id, NULL);
-  tvhdebug(cc->cc_subsys, "Write thread joined");
+  tvhdebug(cc->cc_subsys, "%s: Write thread joined", cc->cc_name);
 }
 
 /**
@@ -463,6 +464,7 @@ cc_thread(void *aux)
   cclient_t *cc = aux;
   int fd, d, r;
   char errbuf[100];
+  char name[256];
   char hostname[256];
   int port;
   int attempts = 0;
@@ -475,10 +477,13 @@ cc_thread(void *aux)
     cc_invalidate_cards(cc);
     caclient_set_status((caclient_t *)cc, CACLIENT_STATUS_READY);
     
+    snprintf(name, sizeof(name), "%s:%d", cc->cc_hostname, cc->cc_port);
+    cc->cc_name = name;
+
     snprintf(hostname, sizeof(hostname), "%s", cc->cc_hostname);
     port = cc->cc_port;
 
-    tvhinfo(cc->cc_subsys, "Attemping to connect to %s:%d", hostname, port);
+    tvhinfo(cc->cc_subsys, "%s: Attemping to connect to server", cc->cc_name);
 
     pthread_mutex_unlock(&cc->cc_mutex);
 
@@ -489,8 +494,7 @@ cc_thread(void *aux)
     if(fd == -1) {
       attempts++;
       tvhinfo(cc->cc_subsys,
-              "%s:%d: Connection failed: %s",
-              hostname, port, errbuf);
+              "%s: Connection failed: %s", cc->cc_name, errbuf);
     } else {
 
       if(cc->cc_running == 0) {
@@ -498,7 +502,7 @@ cc_thread(void *aux)
         break;
       }
 
-      tvhinfo(cc->cc_subsys, "%s:%i: Connected", hostname, port);
+      tvhinfo(cc->cc_subsys, "%s: Connected", cc->cc_name);
       attempts = 0;
 
       cc->cc_fd = fd;
@@ -508,7 +512,7 @@ cc_thread(void *aux)
 
       cc->cc_fd = -1;
       close(fd);
-      tvhinfo(cc->cc_subsys, "%s:%i: Disconnected", hostname, port);
+      tvhinfo(cc->cc_subsys, "%s: Disconnected", cc->cc_name);
     }
 
     if(cc->cc_running == 0) continue;
@@ -522,8 +526,8 @@ cc_thread(void *aux)
     d = 3;
 
     tvhinfo(cc->cc_subsys,
-            "%s:%i: Automatic connection attempt in %d seconds",
-            cc->cc_hostname, cc->cc_port, d-1);
+            "%s: Automatic connection attempt in %d seconds",
+            cc->cc_name, d-1);
 
     mono = mclk() + sec2mono(d);
     do {
@@ -533,7 +537,7 @@ cc_thread(void *aux)
     } while (ERRNO_AGAIN(r));
   }
 
-  tvhinfo(cc->cc_subsys, "%s:%i inactive", cc->cc_hostname, cc->cc_port);
+  tvhinfo(cc->cc_subsys, "%s: Inactive, thread exit", cc->cc_name);
   cc_free_cards(cc);
   pthread_mutex_unlock(&cc->cc_mutex);
   return NULL;
@@ -567,18 +571,17 @@ cc_emm_set_allowed(cclient_t *cc, int emm_allowed)
 
   if (!emm_allowed) {
     tvhinfo(cc->cc_subsys,
-            "%s:%i: Will not forward EMMs (not allowed by server)",
-            cc->cc_hostname, cc->cc_port);
+            "%s: Will not forward EMMs (not allowed by server)",
+            cc->cc_name);
   } else {
     LIST_FOREACH(pcard, &cc->cc_cards, cs_card)
       if (pcard->cs_ra.type != CARD_UNKNOWN) break;
     if (pcard) {
-      tvhinfo(cc->cc_subsys, "%s:%i: Will forward EMMs",
-              cc->cc_hostname, cc->cc_port);
+      tvhinfo(cc->cc_subsys, "%s: Will forward EMMs", cc->cc_name);
     } else {
       tvhinfo(cc->cc_subsys,
-             "%s:%i: Will not forward EMMs (unsupported CA system)",
-              cc->cc_hostname, cc->cc_port);
+              "%s: Will not forward EMMs (unsupported CA system)",
+              cc->cc_name);
       emm_allowed = 0;
     }
   }
@@ -594,7 +597,8 @@ cc_emm_send(void *aux, const uint8_t *radata, int ralen, void *mux)
   cc_card_data_t *pcard = aux;
   cclient_t *cc = pcard->cs_client;
 
-  tvhtrace(cc->cc_subsys, "sending EMM for %04x mux %p", pcard->cs_ra.caid, mux);
+  tvhtrace(cc->cc_subsys, "%s: sending EMM for %04x mux %p",
+           cc->cc_name, pcard->cs_ra.caid, mux);
   tvhlog_hexdump(cc->cc_subsys, radata, ralen);
   cc->cc_send_emm(cc, NULL, pcard, 0, radata, ralen);
 }
@@ -671,8 +675,8 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
     ct->ecm_state = ECM_INIT;
     ct->cs_capid = -1;
     t->s_dvb_prefcapid = 0;
-    tvhdebug(cc->cc_subsys, "%s:%i: Reset after unexpected or no reply for service \"%s\"",
-             cc->cc_hostname, cc->cc_port, t->s_dvb_svcname);
+    tvhdebug(cc->cc_subsys, "%s: Reset after unexpected or no reply for service \"%s\"",
+             cc->cc_name, t->s_dvb_svcname);
   }
 
   LIST_FOREACH(ep, &ct->cs_pids, ep_link)
@@ -681,8 +685,7 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if(ep == NULL) {
     if (ct->ecm_state == ECM_INIT) {
       // Validate prefered ECM PID
-      tvhdebug(cc->cc_subsys, "%s:%i: ECM state INIT",
-               cc->cc_hostname, cc->cc_port);
+      tvhdebug(cc->cc_subsys, "%s: ECM state INIT", cc->cc_name);
 
       if(t->s_dvb_prefcapid_lock != PREFCAPID_OFF) {
         st = service_stream_find((service_t*)t, t->s_dvb_prefcapid);
@@ -693,9 +696,8 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
                  pcard->cs_ra.caid == c->caid &&
                  verify_provider(pcard, c->providerid))
                 goto prefcapid_ok;
-        tvhdebug(cc->cc_subsys, "%s:%i: Invalid prefered ECM (PID %d) found for service \"%s\"",
-                 cc->cc_hostname, cc->cc_port,
-                 t->s_dvb_prefcapid, t->s_dvb_svcname);
+        tvhdebug(cc->cc_subsys, "%s: Invalid prefered ECM (PID %d) found for service \"%s\"",
+                 cc->cc_name, cc->cc_port, t->s_dvb_svcname);
         t->s_dvb_prefcapid = 0;
       }
 
@@ -705,9 +707,8 @@ prefcapid_ok:
         ep = calloc(1, sizeof(cc_ecm_pid_t));
         ep->ep_capid = pid;
         LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
-        tvhdebug(cc->cc_subsys, "%s:%i: Insert %s ECM (PID %d) for service \"%s\"",
-                 cc->cc_hostname, cc->cc_port,
-                 t->s_dvb_prefcapid ? "preferred" : "new", pid, t->s_dvb_svcname);
+        tvhdebug(cc->cc_subsys, "%s: Insert %s ECM (PID %d) for service \"%s\"",
+                 cc->cc_name, t->s_dvb_prefcapid ? "preferred" : "new", pid, t->s_dvb_svcname);
       }
     }
     if(ep == NULL)
@@ -770,22 +771,22 @@ found:
     es->es_resolved = 0;
 
     if(ct->cs_capid >= 0 && capid > 0 && ct->cs_capid != capid) {
-      tvhdebug(cc->cc_subsys, "%s:%i: Filtering ECM (PID %d)",
-               cc->cc_hostname, cc->cc_port, capid);
+      tvhdebug(cc->cc_subsys, "%s: Filtering ECM (PID %d)",
+               cc->cc_name, capid);
       goto end;
     }
 
     es->es_seq = cc->cc_send_ecm(cc, ct, es, pcard, data, len);
 
     tvhdebug(cc->cc_subsys,
-             "%s:%i: Sending ECM%s section=%d/%d, for service \"%s\" (seqno: %d)",
-             cc->cc_hostname, cc->cc_port, chaninfo, section,
+             "%s: Sending ECM%s section=%d/%d, for service \"%s\" (seqno: %d)",
+             cc->cc_name, chaninfo, section,
              ep->ep_last_section, t->s_dvb_svcname, es->es_seq);
     es->es_time = getfastmonoclock();
   } else {
     if (cc->cc_forward_emm && data[0] >= 0x82 && data[0] <= 0x92) {
-      tvhtrace(cc->cc_subsys, "%s:%i: sending EMM for %04X:%06X service \"%s\"",
-               cc->cc_hostname, cc->cc_port, pcard->cs_ra.caid, provid,
+      tvhtrace(cc->cc_subsys, "%s: sending EMM for %04X:%06X service \"%s\"",
+               cc->cc_name, pcard->cs_ra.caid, provid,
                t->s_dvb_svcname);
       tvhlog_hexdump(cc->cc_subsys, data, len);
       cc->cc_send_emm(cc, ct, pcard, provid, data, len);
@@ -931,7 +932,8 @@ cc_service_start(caclient_t *cac, service_t *t)
   ct->ecm_state        = ECM_INIT;
 
   td                   = (th_descrambler_t *)ct;
-  snprintf(buf, sizeof(buf), "cc-%s-%i-%04X", cc->cc_hostname, cc->cc_port, pcard->cs_ra.caid);
+  snprintf(buf, sizeof(buf), "%s-%s-%04X",
+           cc->cc_id, cc->cc_name, pcard->cs_ra.caid);
   td->td_nicename      = strdup(buf);
   td->td_service       = t;
   td->td_stop          = cc_service_destroy;
@@ -966,8 +968,8 @@ add:
   }
 
   if (reuse != 1)
-    tvhdebug(cc->cc_subsys, "%s %susing CWC %s:%d",
-             service_nicename(t), reuse ? "re" : "", cc->cc_hostname, cc->cc_port);
+    tvhdebug(cc->cc_subsys, "%s: %s %susing CWC %s:%d",
+             cc->cc_name, service_nicename(t), reuse ? "re" : "", cc->cc_hostname, cc->cc_port);
 
 end:
   pthread_mutex_unlock(&t->s_stream_mutex);
@@ -1002,8 +1004,8 @@ cc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint16_t pid, 
   cc_card_data_t *pcard;
 
   tvhtrace(cc->cc_subsys,
-           "caid update event - client %s mux %p caid %04x (%i) pid %04x (%i) valid %i",
-           cac->cac_name, mux, caid, caid, pid, pid, valid);
+           "%s: caid update event - client %s mux %p caid %04x (%i) pid %04x (%i) valid %i",
+           cc->cc_name, cac->cac_name, mux, caid, caid, pid, pid, valid);
   pthread_mutex_lock(&cc->cc_mutex);
   if (valid < 0 || cc->cc_running) {
     LIST_FOREACH(pcard, &cc->cc_cards, cs_card) {
@@ -1061,6 +1063,10 @@ cc_conf_changed(caclient_t *cac)
     pthread_kill(tid, SIGHUP);
     pthread_join(tid, NULL);
     caclient_set_status(cac, CACLIENT_STATUS_NONE);
+    pthread_mutex_lock(&cc->cc_mutex);
+    free(cc->cc_name);
+    cc->cc_name = NULL;
+    pthread_mutex_unlock(&cc->cc_mutex);    
   }
 }
 

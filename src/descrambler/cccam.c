@@ -271,7 +271,7 @@ cccam_handle_keys(cccam_t *cccam, cc_service_t *ct, cc_ecm_section_t *es,
   dcw_even = buf[1] == MSG_ECM_REQUEST ? _dcw : NULL;
   dcw_odd  = buf[1] == MSG_ECM_REQUEST ? _dcw + 8 : NULL;
 
-  tvhtrace(cccam->cc_subsys, "HEADER:");
+  tvhtrace(cccam->cc_subsys, "%s: HEADER:", cccam->cc_name);
   tvhlog_hexdump(cccam->cc_subsys, buf, 4);
 
   cc_ecm_reply(ct, es, DESCRAMBLER_CSA_CBC, dcw_even, dcw_odd, seq);
@@ -292,30 +292,26 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
   if (len < 4)
     return -1;
 
-  tvhtrace(cccam->cc_subsys, "%s:%i: response msg type=%d, response:",
-           cccam->cc_hostname, cccam->cc_port, buf[1]);
+  tvhtrace(cccam->cc_subsys, "%s: response msg type=%d, response:",
+           cccam->cc_name, buf[1]);
   tvhlog_hexdump(cccam->cc_subsys, buf, len);
 
   switch (buf[1]) {
     case MSG_NEW_CARD_SIDINFO:
     case MSG_NEW_CARD:
-      tvhtrace(cccam->cc_subsys, "%s:%i: add card message received",
-               cccam->cc_hostname, cccam->cc_port);
+      tvhtrace(cccam->cc_subsys, "%s: add card message received", cccam->cc_name);
       cccam_decode_card_data_reply(cccam, buf);
       break;
     case MSG_CARD_REMOVED:
-      tvhtrace(cccam->cc_subsys, "%s:%i: del card message received",
-               cccam->cc_hostname, cccam->cc_port);
+      tvhtrace(cccam->cc_subsys, "%s: del card message received", cccam->cc_name);
       break;
     case MSG_KEEPALIVE:
-      tvhtrace(cccam->cc_subsys, "%s:%i: keepalive",
-               cccam->cc_hostname, cccam->cc_port);
+      tvhtrace(cccam->cc_subsys, "%s: keepalive", cccam->cc_name);
       break;
     case MSG_EMM_REQUEST:   /* emm ack */
       //cccam_send_msg(cccam, MSG_EMM_REQUEST, NULL, 0, 0, 0, 0);
       //sem_post(&cccam->ecm_mutex);
-      tvhtrace(cccam->cc_subsys, "%s:%i: EMM message ACK received",
-               cccam->cc_hostname, cccam->cc_port);
+      tvhtrace(cccam->cc_subsys, "%s: EMM message ACK received", cccam->cc_name);
       break;
     case MSG_ECM_NOK1:      /* retry */
     case MSG_ECM_NOK2:      /* decode failed */
@@ -329,8 +325,8 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
               if (es->es_resolved) {
                 mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
                 tvhdebug(cccam->cc_subsys,
-                         "%s:%i: Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
-                         cccam->cc_hostname, cccam->cc_port,
+                         "%s: Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
+                         cccam->cc_name,
                          es->es_pending ? "duplicate " : "",
                          ep->ep_capid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
                 return 0;
@@ -340,22 +336,24 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
                 return 0;
               }
             }
-      tvhwarn(cccam->cc_subsys, "Got unexpected ECM reply (seqno: %d)", seq);
+      tvhwarn(cccam->cc_subsys, "%s: Got unexpected ECM reply (seqno: %d)",
+              cccam->cc_name, seq);
       break;
 
     }
     case MSG_SRV_DATA:
-      tvhinfo(cccam->cc_subsys, "%s:%i: CCcam server version %s nodeid=%02x%02x%02x%02x%02x%02x%02x%02x",
-              cccam->cc_hostname, cccam->cc_port, buf + 12,
+      tvhinfo(cccam->cc_subsys,
+              "%s: CCcam server version %s nodeid=%02x%02x%02x%02x%02x%02x%02x%02x",
+              cccam->cc_name, buf + 12,
               buf[4], buf[5], buf[6], buf[7], buf[8], buf[9], buf[10], buf[11]);
       break;
     case MSG_CLI_DATA:
-      tvhinfo(cccam->cc_subsys, "%s:%i: CCcam server authentication completed",
-              cccam->cc_hostname, cccam->cc_port);
+      tvhinfo(cccam->cc_subsys, "%s: CCcam server authentication completed",
+              cccam->cc_name);
       break;
     default:
-      tvhwarn(cccam->cc_subsys, "%s:%i: Unknown message received",
-              cccam->cc_hostname, cccam->cc_port);
+      tvhwarn(cccam->cc_subsys, "%s: Unknown message received",
+              cccam->cc_name);
       break;
   }
   return 0;
@@ -374,24 +372,22 @@ cccam_read_message(cccam_t *cccam, const char *state, uint8_t *buf, int len, int
   ret = tcp_read_timeout(cccam->cc_fd, buf, 4, timeout);
   pthread_mutex_lock(&cccam->cc_mutex);
   if (ret) {
-    tvhdebug(cccam->cc_subsys, "%s:%i: recv error %d or timeout",
-             cccam->cc_hostname, cccam->cc_port, ret);
+    tvhdebug(cccam->cc_subsys, "%s: recv error %d or timeout",
+             cccam->cc_name, ret);
     return -1;
   }
   cccam_decrypt(&cccam->recvblock, buf, 4);
   msglen = (buf[2] << 8) | buf[3];
   if (msglen > 0) {
     if (msglen > len - 2) {
-      tvhdebug(cccam->cc_subsys, "%s:%i: received message too large",
-               cccam->cc_hostname, cccam->cc_port);
+      tvhdebug(cccam->cc_subsys, "%s: received message too large", cccam->cc_name);
       return -1;
     }
     pthread_mutex_unlock(&cccam->cc_mutex);
     ret = tcp_read_timeout(cccam->cc_fd, buf + 4, msglen, 5000);
     pthread_mutex_lock(&cccam->cc_mutex);
     if (ret) {
-      tvhdebug(cccam->cc_subsys, "%s:%i: timeout reading message",
-               cccam->cc_hostname, cccam->cc_port);
+      tvhdebug(cccam->cc_subsys, "%s: timeout reading message", cccam->cc_name);
       return -1;
     }
     cccam_decrypt(&cccam->recvblock, buf + 4, msglen);
@@ -449,7 +445,7 @@ cccam_send_ka(void *cc)
   buf[2] = 0;
   buf[3] = 0;
 
-  tvhdebug(cccam->cc_subsys, "send keepalive");
+  tvhdebug(cccam->cc_subsys, "%s: send keepalive", cccam->cc_name);
   cccam_send_msg(cccam, MSG_NO_HEADER, buf, 4, 0, 0, 0);
 }
 
@@ -468,7 +464,7 @@ sha1_make_login_key(cccam_t *cccam, uint8_t *buf)
   SHA1_Update(&sha1, buf, 16);
   SHA1_Final(hash, &sha1);
 
-  tvhdebug(cccam->cc_subsys, "sha1 hash:");
+  tvhdebug(cccam->cc_subsys, "%s: sha1 hash:", cccam->cc_name);
   tvhlog_hexdump(cccam->cc_subsys, hash, sizeof(hash));
 
   cccam_crypt_init(&cccam->recvblock, hash, 20);
@@ -513,19 +509,19 @@ cccam_send_login(cccam_t *cccam)
   cccam_send_msg(cccam, MSG_NO_HEADER, buf, 6, 0, 0, 0);
 
   if (cc_read((cclient_t *)cccam, data, 20, 5000)) {
-    tvherror(cccam->cc_subsys, "login failed, pwd ack not received");
+    tvherror(cccam->cc_subsys, "%s: login failed, pwd ack not received", cccam->cc_name);
     return -2;
   }
 
   cccam_decrypt(&cccam->recvblock, data, 20);
-  tvhdebug(cccam->cc_subsys, "login ack, response:");
+  tvhdebug(cccam->cc_subsys, "%s: login ack, response:", cccam->cc_name);
   tvhlog_hexdump(cccam->cc_subsys, data, 20);
 
   if (memcmp(data, "CCcam", 5)) {
-    tvherror(cccam->cc_subsys, "login failed, usr/pwd invalid");
+    tvherror(cccam->cc_subsys, "%s: login failed, usr/pwd invalid", cccam->cc_name);
     return -2;
   } else {
-    tvhinfo(cccam->cc_subsys, "login succeeded");
+    tvhinfo(cccam->cc_subsys, "%s: login succeeded", cccam->cc_name);
   }
 
   return 0;
@@ -562,12 +558,10 @@ cccam_init_session(void *cc)
    * Get init seed
    */
   if((r = cc_read(cc, buf, 16, 5000))) {
-    tvhinfo(cccam->cc_subsys, "%s:%i: init error (no init seed received)",
-            cccam->cc_hostname, cccam->cc_port);
+    tvhinfo(cccam->cc_subsys, "%s: init error (no init seed received)", cccam->cc_name);
     return -1;
   }
-  tvhtrace(cccam->cc_subsys, "%s:%d: init seed received:",
-           cccam->cc_hostname, cccam->cc_port);
+  tvhtrace(cccam->cc_subsys, "%s: init seed received:", cccam->cc_name);
   tvhlog_hexdump(cccam->cc_subsys, buf, 16);
 
   /* check for oscam-cccam */
@@ -578,8 +572,7 @@ cccam_init_session(void *cc)
     sum += buf[i];
   }
   if (sum == recv_sum)
-    tvhinfo(cccam->cc_subsys, "%s:%i: oscam server detected",
-            cccam->cc_hostname, cccam->cc_port);
+    tvhinfo(cccam->cc_subsys, "%s: oscam server detected", cccam->cc_name);
 
   sha1_make_login_key(cccam, buf);
 
@@ -609,8 +602,7 @@ cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
   int seq;
 
   if (len > 255) {
-    tvherror(cccam->cc_subsys, "%s:%i: ECM too big (%d bytes)",
-             cccam->cc_hostname, cccam->cc_port, len);
+    tvherror(cccam->cc_subsys, "%s: ECM too big (%d bytes)", cccam->cc_name, len);
     return 0;
   }
 
@@ -653,8 +645,8 @@ cccam_send_emm(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
   int seq;
 
   if (len > 255) {
-    tvherror(cccam->cc_subsys, "%s:%i: EMM too big (%d bytes)",
-             cccam->cc_hostname, cccam->cc_port, len);
+    tvherror(cccam->cc_subsys, "%s: EMM too big (%d bytes)",
+             cccam->cc_name, len);
     return;
   }
 

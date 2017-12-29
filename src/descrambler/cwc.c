@@ -319,16 +319,14 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   len -= 12;
 
   if(len < 3) {
-    tvhinfo(cwc->cc_subsys, "%s:%i: Invalid card data reply",
-            cwc->cc_hostname, cwc->cc_port);
+    tvhinfo(cwc->cc_subsys, "%s: Invalid card data reply", cwc->cc_name);
     return -1;
   }
 
   plen = (msg[1] & 0xf) << 8 | msg[2];
 
   if(plen < 14) {
-    tvhinfo(cwc->cc_subsys, "%s:%i: Invalid card data reply (message)",
-            cwc->cc_hostname, cwc->cc_port);
+    tvhinfo(cwc->cc_subsys, "%s: Invalid card data reply (message)", cwc->cc_name);
     return -1;
   }
 
@@ -338,8 +336,8 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   plen -= 12;
 
   if(plen < nprov * 11) {
-    tvhinfo(cwc->cc_subsys, "%s:%i: Invalid card data reply (provider list)",
-            cwc->cc_hostname, cwc->cc_port);
+    tvhinfo(cwc->cc_subsys, "%s: Invalid card data reply (provider list)",
+            cwc->cc_name);
     return -1;
   }
 
@@ -410,7 +408,8 @@ handle_ecm_reply(cc_service_t *ct, cc_ecm_section_t *es,
       off = 16;
       type = DESCRAMBLER_AES128_ECB;
     } else {
-      tvherror(cwc->cc_subsys, "wrong ECM reply length %d", len);
+      tvherror(cwc->cc_subsys, "%s: wrong ECM reply length %d",
+               cwc->cc_name, len);
       return;
     }
     cc_ecm_reply(ct, es, type, msg + 3, msg + 3 + off, seq);
@@ -436,7 +435,8 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
     case 0x80:
     case 0x81:
       if (len < 12) {
-        tvherror(cwc->cc_subsys, "wrong 0x%02X length %d", msgtype, len);
+        tvherror(cwc->cc_subsys, "%s: wrong 0x%02X length %d",
+                 cwc->cc_name, msgtype, len);
         return -1;
       }
       seq = (msg[2] << 8) | msg[3];
@@ -449,7 +449,8 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
               if (es->es_resolved) {
                 mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
                 tvhdebug(cwc->cc_subsys,
-                         "Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
+                         "%s: Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
+                         cwc->cc_name,
                          es->es_pending ? "duplicate " : "",
                          ep->ep_capid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
                 return 0;
@@ -459,12 +460,13 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
                 return 0;
               }
             }
-      tvhwarn(cwc->cc_subsys, "Got unexpected ECM reply (seqno: %d, len: %d)", seq, len);
+      tvhwarn(cwc->cc_subsys, "%s: Got unexpected ECM reply (seqno: %d, len: %d)",
+              cwc->cc_name, seq, len);
       break;
 
     case 0xD3:
       if (len < 16) {
-        tvherror(cwc->cc_subsys, "wrong 0xD3 length %d", len);
+        tvherror(cwc->cc_subsys, "%s: wrong 0xD3 length %d", cwc->cc_name, len);
         return -1;
       }
 
@@ -472,14 +474,14 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 
       if (caid){
         if(len < 3) {
-          tvhinfo(cwc->cc_subsys, "Invalid card data reply");
+          tvhinfo(cwc->cc_subsys, "%s: Invalid card data reply", cwc->cc_name);
           return -1;
         }
 
         plen = (msg[1] & 0xf) << 8 | msg[2];
 
         if(plen < 14) {
-          tvhinfo(cwc->cc_subsys, "Invalid card data reply (message)");
+          tvhinfo(cwc->cc_subsys, "%s: Invalid card data reply (message)", cwc->cc_name);
           return -1;
         }
 
@@ -502,16 +504,16 @@ cwc_read_message
 
   if((r = cc_read((cclient_t *)cwc, buf, 2, timeout))) {
     if (tvheadend_is_running())
-      tvhinfo(cwc->cc_subsys, "%s:%i: %s: Read error (header): %s",
-              cwc->cc_hostname, cwc->cc_port, state, strerror(r));
+      tvhinfo(cwc->cc_subsys, "%s: %s: Read error (header): %s",
+              cwc->cc_name, state, strerror(r));
     return -1;
   }
 
   msglen = (buf[0] << 8) | buf[1];
   if(msglen > len) {
     if (tvheadend_is_running())
-      tvhinfo(cwc->cc_subsys, "%s:%i: %s: Invalid message size: %d",
-              cwc->cc_hostname, cwc->cc_port, state, msglen);
+      tvhinfo(cwc->cc_subsys, "%s: %s: Invalid message size: %d",
+              cwc->cc_name, state, msglen);
     return -1;
   }
 
@@ -520,14 +522,14 @@ cwc_read_message
 
   if((r = cc_read((cclient_t *)cwc, buf + 2, msglen, 1000))) {
     if (tvheadend_is_running())
-      tvhinfo(cwc->cc_subsys, "%s:%i: %s: Read error: %s",
-              cwc->cc_hostname, cwc->cc_port, state, strerror(r));
+      tvhinfo(cwc->cc_subsys, "%s: %s: Read error: %s",
+              cwc->cc_name, state, strerror(r));
     return -1;
   }
 
   if((msglen = des_decrypt(buf, msglen + 2, cwc)) < 15) {
-    tvhinfo(cwc->cc_subsys, "%s:%i: %s: Decrypt failed",
-            cwc->cc_hostname, cwc->cc_port, state);
+    tvhinfo(cwc->cc_subsys, "%s: %s: Decrypt failed",
+            cwc->cc_name, state);
     return -1;
   }
 
@@ -548,8 +550,8 @@ cwc_init_session(void *cc)
    * Get login key
    */
   if ((r = cc_read((cclient_t *)cwc, buf, 14, 5000))) {
-    tvhinfo(cwc->cc_subsys, "%s:%i: No login key received: %s",
-            cwc->cc_hostname, cwc->cc_port, strerror(r));
+    tvhinfo(cwc->cc_subsys, "%s: No login key received: %s",
+            cwc->cc_name, strerror(r));
     return -1;
   }
 
@@ -565,8 +567,7 @@ cwc_init_session(void *cc)
     return -1;
 
   if(buf[12] != MSG_CLIENT_2_SERVER_LOGIN_ACK) {
-    tvhinfo(cwc->cc_subsys, "%s:%i: Login failed",
-            cwc->cc_hostname, cwc->cc_port);
+    tvhinfo(cwc->cc_subsys, "%s: Login failed", cwc->cc_name);
     return -1;
   }
 
@@ -580,8 +581,7 @@ cwc_init_session(void *cc)
     return -1;
 
   if (buf[12] != MSG_CARD_DATA) {
-    tvhinfo(cwc->cc_subsys, "%s:%i: Card data request failed",
-            cwc->cc_hostname, cwc->cc_port);
+    tvhinfo(cwc->cc_subsys, "%s: Card data request failed", cwc->cc_name);
     return -1;
   }
 
