@@ -17,11 +17,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <fcntl.h>
 #include <signal.h>
 #include <pthread.h>
 #include "tvheadend.h"
 #include "tcp.h"
 #include "cclient.h"
+#include "tvhpoll.h"
 
 static void cc_service_pid_free(cc_service_t *ct);
 
@@ -331,7 +333,7 @@ cc_read(cclient_t *cc, void *buf, size_t len, int timeout)
     tvhwarn(cc->cc_subsys, "%s: read error %d (%s)",
             cc->cc_name, r, strerror(r));
 
-  if(cc_must_break(cc))
+  if (cc_must_break(cc))
     return ECONNABORTED;
 
   return r;
@@ -348,10 +350,14 @@ cc_write_message(cclient_t *cc, cc_message_t *msg, int enq)
   tvhlog_hexdump(cc->cc_subsys, msg->cm_data, msg->cm_len);
 
   if (enq) {
-    pthread_mutex_lock(&cc->cc_writer_mutex);
-    TAILQ_INSERT_TAIL(&cc->cc_writeq, msg, cm_link);
-    tvh_cond_signal(&cc->cc_writer_cond, 0);
-    pthread_mutex_unlock(&cc->cc_writer_mutex);
+    pthread_mutex_lock(&cc->cc_mutex);
+    if (cc->cc_write_running) {
+      TAILQ_INSERT_TAIL(&cc->cc_writeq, msg, cm_link);
+      tvh_nonblock_write(cc->cc_pipe.wr, "w", 1);
+    } else {
+      free(msg);
+    }
+    pthread_mutex_unlock(&cc->cc_mutex);
   } else {
     if (tvh_write(cc->cc_fd, msg->cm_data, msg->cm_len))
       tvhinfo(cc->cc_subsys, "%s: write error %s",
@@ -363,59 +369,17 @@ cc_write_message(cclient_t *cc, cc_message_t *msg, int enq)
 /**
  *
  */
-static void *
-cc_writer_thread(void *aux)
-{
-  cclient_t *cc = aux;
-  cc_message_t *cm;
-  int64_t mono;
-  int r;
-
-  pthread_mutex_lock(&cc->cc_writer_mutex);
-
-  while(cc->cc_writer_running) {
-
-    if((cm = TAILQ_FIRST(&cc->cc_writeq)) != NULL) {
-      TAILQ_REMOVE(&cc->cc_writeq, cm, cm_link);
-      pthread_mutex_unlock(&cc->cc_writer_mutex);
-      //      int64_t ts = getfastmonoclock();
-      if (tvh_write(cc->cc_fd, cm->cm_data, cm->cm_len))
-        tvhinfo(cc->cc_subsys, "%s: write error %s",
-                cc->cc_name, strerror(errno));
-      //      printf("Write took %lld usec\n", getfastmonoclock() - ts);
-      free(cm);
-      pthread_mutex_lock(&cc->cc_writer_mutex);
-      continue;
-    }
-
-
-    /* If nothing is to be sent in keepalive interval seconds we
-       need to send a keepalive */
-    mono = mclk() + sec2mono(cc->cc_keepalive_interval);
-    do {
-      r = tvh_cond_timedwait(&cc->cc_writer_cond, &cc->cc_writer_mutex, mono);
-      if(r == ETIMEDOUT) {
-        if (cc->cc_keepalive)
-          cc->cc_keepalive(cc);
-        break;
-      }
-    } while (ERRNO_AGAIN(r));
-  }
-
-  pthread_mutex_unlock(&cc->cc_writer_mutex);
-  return NULL;
-}
-
-
-
-/**
- *
- */
 static void
 cc_session(cclient_t *cc)
 {
-  char buf[32];
-  pthread_t writer_thread_id;
+  tvhpoll_t *poll;
+  tvhpoll_event_t ev;
+  char buf[16];
+  sbuf_t rbuf;
+  cc_message_t *cm;
+  ssize_t len;
+  int64_t mono;
+  int r;
 
   if (cc->cc_init_session(cc))
     return;
@@ -429,30 +393,46 @@ cc_session(cclient_t *cc)
   /**
    * We do all requests from now on in a separate thread
    */
-  cc->cc_writer_running = 1;
-  tvh_cond_init(&cc->cc_writer_cond);
-  pthread_mutex_init(&cc->cc_writer_mutex, NULL);
   TAILQ_INIT(&cc->cc_writeq);
-  snprintf(buf, sizeof(buf), "%s-writer", cc->cc_id);
-  tvhthread_create(&writer_thread_id, NULL, cc_writer_thread, cc, buf);
+  cc->cc_write_running = 1;
+  sbuf_init(&rbuf);
 
   /**
    * Mainloop
    */
-  while(!cc_must_break(cc)) {
-    if (cc->cc_read(cc))
-      break;
+  poll = tvhpoll_create(1);
+  tvhpoll_add1(poll, cc->cc_pipe.rd, TVHPOLL_IN, &cc->cc_pipe);
+  tvhpoll_add1(poll, cc->cc_fd, TVHPOLL_IN, &cc->cc_fd);
+  mono = mclk() + sec2mono(cc->cc_keepalive_interval);
+  while (!cc_must_break(cc)) {
+    pthread_mutex_unlock(&cc->cc_mutex);
+    r = tvhpoll_wait(poll, &ev, 1, 1000);
+    pthread_mutex_lock(&cc->cc_mutex);
+    if (r < 0 && ERRNO_AGAIN(errno))
+      continue;
+    if (ev.data.ptr == &cc->cc_pipe)
+      read(cc->cc_pipe.rd, buf, sizeof(buf));
+    else if (ev.data.ptr == &cc->cc_fd) {
+      len = sbuf_read(&rbuf, cc->cc_fd);
+      if (len > 0 && cc->cc_read(cc, &rbuf))
+        break;
+    } else {
+      abort();
+    }
+    if ((cm = TAILQ_FIRST(&cc->cc_writeq)) != NULL) {
+      if (tvh_nonblock_write(cc->cc_fd, cm->cm_data, cm->cm_len))
+        break;
+    }
+    if (mono < mclk()) {
+      mono = mclk();
+      if (cc->cc_keepalive)
+        cc->cc_keepalive(cc);
+    }
   }
   tvhdebug(cc->cc_subsys, "%s: session exiting", cc->cc_name);
-
-  /**
-   * Collect the writer thread
-   */
+  tvhpoll_destroy(poll);
+  sbuf_free(&rbuf);
   shutdown(cc->cc_fd, SHUT_RDWR);
-  cc->cc_writer_running = 0;
-  tvh_cond_signal(&cc->cc_writer_cond, 0);
-  pthread_join(writer_thread_id, NULL);
-  tvhdebug(cc->cc_subsys, "%s: Write thread joined", cc->cc_name);
 }
 
 /**
@@ -622,7 +602,7 @@ cc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
   cc = pcard->cs_client;
   pthread_mutex_lock(&cc->cc_mutex);
   mux = pcard->cs_mux;
-  if (pcard->cs_running && cc->cc_forward_emm && cc->cc_writer_running) {
+  if (pcard->cs_running && cc->cc_forward_emm && cc->cc_write_running) {
     if (cc->cc_emmex) {
       if (cc->cc_emm_mux && cc->cc_emm_mux != mux) {
         if (cc->cc_emm_update_time + sec2mono(25) > mclk())
@@ -1041,6 +1021,7 @@ cc_conf_changed(caclient_t *cac)
     }
     if (!cc->cc_running) {
       cc->cc_running = 1;
+      tvh_pipe(O_NONBLOCK, &cc->cc_pipe);
       tvhthread_create(&cc->cc_tid, NULL, cc_thread, cc, "cc");
       return;
     }
@@ -1060,8 +1041,10 @@ cc_conf_changed(caclient_t *cac)
     if (cc->cc_fd >= 0)
       shutdown(cc->cc_fd, SHUT_RDWR);
     pthread_mutex_unlock(&cc->cc_mutex);
+    tvh_write(cc->cc_pipe.wr, "q", 1);
     pthread_kill(tid, SIGHUP);
     pthread_join(tid, NULL);
+    tvh_pipe_close(&cc->cc_pipe);
     caclient_set_status(cac, CACLIENT_STATUS_NONE);
     pthread_mutex_lock(&cc->cc_mutex);
     free(cc->cc_name);

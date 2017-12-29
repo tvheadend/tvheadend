@@ -17,6 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "tvheadend.h"
 #include "caclient.h"
 #include "descrambler.h"
 #include "emm_reass.h"
@@ -142,7 +143,7 @@ typedef struct cclient {
   /* Callbacks */
   void *(*cc_alloc_service)(void *cc);
   int (*cc_init_session)(void *cc);
-  int (*cc_read)(void *cc);
+  int (*cc_read)(void *cc, sbuf_t *sbuf);
   void (*cc_keepalive)(void *cc);
   uint32_t (*cc_send_ecm)(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
                           cc_card_data_t *pcard, const uint8_t *data, int len);
@@ -158,6 +159,7 @@ typedef struct cclient {
   pthread_t cc_tid;
   tvh_cond_t cc_cond;
   pthread_mutex_t cc_mutex;
+  th_pipe_t cc_pipe;
 
   /* Database */
   LIST_HEAD(, cc_service) cc_services;
@@ -166,9 +168,7 @@ typedef struct cclient {
   /* Writer */
   int cc_seq;
   TAILQ_HEAD(, cc_message) cc_writeq;
-  pthread_mutex_t cc_writer_mutex;
-  tvh_cond_t cc_writer_cond;
-  uint8_t cc_writer_running;
+  uint8_t cc_write_running;
 
   /* Emm forwarding */
   int cc_forward_emm;

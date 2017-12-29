@@ -102,6 +102,25 @@ tvh_write(int fd, const void *buf, size_t len)
   return len ? 1 : 0;
 }
 
+int
+tvh_nonblock_write(int fd, const void *buf, size_t len)
+{
+  ssize_t c;
+
+  while (len) {
+    c = write(fd, buf, len);
+    if (c < 0) {
+      if (errno == EINTR)
+        continue;
+      break;
+    }
+    len -= c;
+    buf += c;
+  }
+
+  return len ? 1 : 0;
+}
+
 FILE *
 tvh_fopen(const char *filename, const char *mode)
 {

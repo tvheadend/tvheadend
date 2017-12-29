@@ -363,34 +363,23 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
  *
  */
 static int
-cccam_read_message(cccam_t *cccam, const char *state, uint8_t *buf, int len, int timeout)
+cccam_read_message0(cccam_t *cccam, const char *state, sbuf_t *rbuf, int timeout)
 {
-  int32_t ret;
   uint16_t msglen;
+  uint8_t hdr[4];
+  struct cccam_crypt_block block;
 
-  pthread_mutex_unlock(&cccam->cc_mutex);
-  ret = tcp_read_timeout(cccam->cc_fd, buf, 4, timeout);
-  pthread_mutex_lock(&cccam->cc_mutex);
-  if (ret) {
-    tvhdebug(cccam->cc_subsys, "%s: recv error %d or timeout",
-             cccam->cc_name, ret);
-    return -1;
-  }
-  cccam_decrypt(&cccam->recvblock, buf, 4);
-  msglen = (buf[2] << 8) | buf[3];
-  if (msglen > 0) {
-    if (msglen > len - 2) {
-      tvhdebug(cccam->cc_subsys, "%s: received message too large", cccam->cc_name);
-      return -1;
-    }
-    pthread_mutex_unlock(&cccam->cc_mutex);
-    ret = tcp_read_timeout(cccam->cc_fd, buf + 4, msglen, 5000);
-    pthread_mutex_lock(&cccam->cc_mutex);
-    if (ret) {
-      tvhdebug(cccam->cc_subsys, "%s: timeout reading message", cccam->cc_name);
-      return -1;
-    }
-    cccam_decrypt(&cccam->recvblock, buf + 4, msglen);
+  if (rbuf->sb_ptr < 4)
+    return 0;
+  block = cccam->recvblock;
+  memcpy(hdr, rbuf->sb_data, 4);
+  cccam_decrypt(&cccam->recvblock, hdr, 4);
+  msglen = (hdr[2] << 8) | hdr[3];
+  if (rbuf->sb_ptr >= msglen + 4) {
+    memcpy(rbuf->sb_data, hdr, 4);
+    cccam_decrypt(&cccam->recvblock, rbuf->sb_data + 4, msglen);
+  } else {
+    cccam->recvblock = block;
   }
   return msglen + 4;
 }
@@ -674,15 +663,21 @@ cccam_send_emm(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
  *
  */
 static int
-cccam_read(void *cc)
+cccam_read(void *cc, sbuf_t *rbuf)
 {
   cccam_t *cccam = cc;
-  uint8_t buf[CCCAM_NETMSGSIZE];
   const int ka_interval = cccam->cc_keepalive_interval * 2 * 1000;
-  int r = cccam_read_message(cccam, "Decoderloop", buf, sizeof(buf), ka_interval);
+  int r = cccam_read_message0(cccam, "Decoderloop", rbuf, ka_interval);
   if (r < 0)
     return -1;
-  return cccam_running_reply(cccam, buf, r);
+  if (r > 0) {
+    int ret = cccam_running_reply(cccam, rbuf->sb_data, r);
+    if (ret > 0)
+      sbuf_cut(rbuf, r);
+    if (ret < 0)
+      return -1;
+  }
+  return 0;
 }
 
 /**

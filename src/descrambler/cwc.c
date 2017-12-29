@@ -497,12 +497,37 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
  *
  */
 static int
+cwc_read_message0
+  (cwc_t *cwc, const char *state, sbuf_t *rbuf, int timeout)
+{
+  int msglen;
+
+  if (rbuf->sb_ptr < 2)
+    return 0;
+
+  msglen = (rbuf->sb_data[0] << 8) | rbuf->sb_data[1];
+  if(rbuf->sb_ptr < 2 + msglen)
+    return 0;
+
+  if((msglen = des_decrypt(rbuf->sb_data, msglen + 2, cwc)) < 15) {
+    tvhinfo(cwc->cc_subsys, "%s: %s: Decrypt failed",
+            cwc->cc_name, state);
+    return -1;
+  }
+
+  return msglen;
+}
+
+/**
+ *
+ */
+static int
 cwc_read_message
   (cwc_t *cwc, const char *state, uint8_t *buf, int len, int timeout)
 {
   int msglen, r;
 
-  if((r = cc_read((cclient_t *)cwc, buf, 2, timeout))) {
+  if ((r = cc_read((cclient_t *)cwc, buf, 2, timeout))) {
     if (tvheadend_is_running())
       tvhinfo(cwc->cc_subsys, "%s: %s: Read error (header): %s",
               cwc->cc_name, state, strerror(r));
@@ -510,7 +535,7 @@ cwc_read_message
   }
 
   msglen = (buf[0] << 8) | buf[1];
-  if(msglen > len) {
+  if (msglen > len) {
     if (tvheadend_is_running())
       tvhinfo(cwc->cc_subsys, "%s: %s: Invalid message size: %d",
               cwc->cc_name, state, msglen);
@@ -520,14 +545,14 @@ cwc_read_message
   /* We expect the rest of the message to arrive fairly quick,
      so just wait 1 second here */
 
-  if((r = cc_read((cclient_t *)cwc, buf + 2, msglen, 1000))) {
+  if ((r = cc_read((cclient_t *)cwc, buf + 2, msglen, 1000))) {
     if (tvheadend_is_running())
       tvhinfo(cwc->cc_subsys, "%s: %s: Read error: %s",
               cwc->cc_name, state, strerror(r));
     return -1;
   }
 
-  if((msglen = des_decrypt(buf, msglen + 2, cwc)) < 15) {
+  if ((msglen = des_decrypt(buf, msglen + 2, cwc)) < 15) {
     tvhinfo(cwc->cc_subsys, "%s: %s: Decrypt failed",
             cwc->cc_name, state);
     return -1;
@@ -563,10 +588,10 @@ cwc_init_session(void *cc)
   if (cwc_send_login(cwc))
     return -1;
   
-  if(cwc_read_message(cwc, "Wait login response", buf, sizeof(buf), 5000) < 0)
+  if (cwc_read_message(cwc, "Wait login response", buf, sizeof(buf), 5000) < 0)
     return -1;
 
-  if(buf[12] != MSG_CLIENT_2_SERVER_LOGIN_ACK) {
+  if (buf[12] != MSG_CLIENT_2_SERVER_LOGIN_ACK) {
     tvhinfo(cwc->cc_subsys, "%s: Login failed", cwc->cc_name);
     return -1;
   }
@@ -577,7 +602,7 @@ cwc_init_session(void *cc)
    * Request card data
    */
   cwc_send_data_req(cwc);
-  if((r = cwc_read_message(cwc, "Request card data", buf, sizeof(buf), 5000)) < 0)
+  if ((r = cwc_read_message(cwc, "Request card data", buf, sizeof(buf), 5000)) < 0)
     return -1;
 
   if (buf[12] != MSG_CARD_DATA) {
@@ -594,17 +619,24 @@ cwc_init_session(void *cc)
  *
  */
 static int
-cwc_read(void *cc)
+cwc_read(void *cc, sbuf_t *rbuf)
 {
   cwc_t *cwc = cc;
-  uint8_t buf[CWS_NETMSGSIZE];
   const int ka_interval = cwc->cc_keepalive_interval * 2 * 1000;
-  int r = cwc_read_message(cwc, "Decoderloop", buf, sizeof(buf), ka_interval);
+  int r = cwc_read_message0(cwc, "DecoderLoop", rbuf, ka_interval);
   if (r < 0)
     return -1;
-  if (r > 12)
-    return cwc_running_reply(cwc, buf[12], buf, r);
-  return -1;
+  if (r > 12) {
+    int ret = cwc_running_reply(cwc, rbuf->sb_data[12], rbuf->sb_data, r);
+    if (ret > 0)
+      sbuf_cut(rbuf, r);
+    if (ret < 0)
+      return -1;
+    return 0;
+  }
+  if (r > 0)
+    return -1;
+  return 0;
 }
 
 /**

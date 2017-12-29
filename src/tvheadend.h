@@ -733,6 +733,8 @@ void tvh_pipe_close(th_pipe_t *pipe);
 
 int tvh_write(int fd, const void *buf, size_t len);
 
+int tvh_nonblock_write(int fd, const void *buf, size_t len);
+
 FILE *tvh_fopen(const char *filename, const char *mode);
 
 void hexdump(const char *pfx, const uint8_t *data, int len);
