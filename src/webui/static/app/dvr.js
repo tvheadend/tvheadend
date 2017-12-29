@@ -529,6 +529,30 @@ tvheadend.dvr_finished = function(panel, index) {
         }
     };
 
+    var groupingButton = {
+        name: 'grouping',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('When enabled, group the recordings by the selected column.'),
+                iconCls: 'duprec',
+                text: _('Enable grouping')
+            });
+        },
+        callback: function(conf, e, store, select) {
+            this.setText(store.groupField ? _('Enable grouping') : _('Disable grouping'));
+            if (!store.groupField){
+                select.grid.view.enableGrouping = true;
+                select.grid.store.groupBy(store.sortInfo.field);
+                select.grid.fireEvent('groupchange', select.grid, store.getGroupState());
+                select.grid.view.refresh();
+            }else{
+                store.clearGrouping();
+                select.grid.view.enableGrouping = false;
+                select.grid.fireEvent('groupchange', select.grid, null);
+            }
+        }
+    };
+
     function selected(s, abuttons) {
         var r = s.getSelections();
         var b = r.length > 0 && r[0].data.filesize > 0;
@@ -536,6 +560,11 @@ tvheadend.dvr_finished = function(panel, index) {
         abuttons.rerecord.setDisabled(!b);
         abuttons.move.setDisabled(!b);
         abuttons.remove.setDisabled(!b);
+    }
+
+    function viewready(grid) {
+        var buttonIndex = grid.topToolbar.items.findIndex('text','Enable grouping');
+        grid.topToolbar.items.item(buttonIndex).setText(grid.store.groupField ? _('Disable grouping') : _('Enable grouping'));
     }
 
     tvheadend.idnode_grid(panel, {
@@ -578,10 +607,9 @@ tvheadend.dvr_finished = function(panel, index) {
                     return tvheadend.playLink('play/dvrfile/' + r.id, title);
                 }
             }],
-        tbar: [removeButton, downloadButton, rerecordButton, moveButton],
+        tbar: [removeButton, downloadButton, rerecordButton, moveButton, groupingButton],
         selected: selected,
-        grouping: true,
-        groupField: 'disp_title'
+        viewready: viewready
     });
 
     return panel;

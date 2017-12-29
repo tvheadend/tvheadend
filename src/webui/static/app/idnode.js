@@ -1747,7 +1747,7 @@ tvheadend.idnode_grid = function(panel, conf)
             remoteGroup: true,
             groupField: conf.groupField ? conf.groupField : false,
             groupDir: 'ASC',
-            groupOnSort: false,
+            groupOnSort: true,
             /*multiSort: true,
             multiSortInfo:{
                sorters: [{field : 'disp_title', direction : 'ASC'},
