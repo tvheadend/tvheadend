@@ -534,7 +534,7 @@ tvheadend.dvr_finished = function(panel, index) {
         builder: function() {
             return new Ext.Toolbar.Button({
                 tooltip: _('When enabled, group the recordings by the selected column.'),
-                iconCls: 'duprec',
+                iconCls: 'grouping',
                 text: _('Enable grouping')
             });
         },

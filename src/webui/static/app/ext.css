@@ -232,6 +232,10 @@
     background-image: url(../icons/control_repeat_blue.png) !important;
 }
 
+.grouping {
+    background-image: url(../icons/control_repeat_blue.png) !important;
+}
+
 .cancel {
     background-image: url(../icons/cancel.png) !important;
 }
