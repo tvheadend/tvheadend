@@ -76,6 +76,7 @@ OPTIONS=(
   "libsystemd_daemon:no"
   "bintray_cache:yes"
   "ddci:yes"
+  "ddci_mcd:no"
   "cclang_threadsan:no"
   "gperftools:no"
 )
@@ -739,6 +740,15 @@ if enabled_or_auto libsystemd_daemon; then
     enable libsystemd_daemon
   elif enabled libsystemd_daemon; then
     die "libsystemd-daemon development support not found (use --disable-systemd_daemon)"
+  fi
+fi
+
+#
+# ddci
+#
+if enabled ddci_mcd ; then
+  if disabled ddci; then
+    enable ddci
   fi
 fi
 
