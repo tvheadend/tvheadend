@@ -27,14 +27,9 @@
 typedef struct tvhpoll tvhpoll_t;
 typedef struct tvhpoll_event
 {
-  int  fd; // input
-  int  events;
-  union {
-    void     *ptr;
-    uint64_t u64;
-    uint32_t u32;
-    int      fd;
-  } data;
+  int         fd; // input
+  uint32_t    events;
+  void       *ptr;
 } tvhpoll_event_t;
 
 #define TVHPOLL_IN  0x01

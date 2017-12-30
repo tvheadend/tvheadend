@@ -1389,10 +1389,12 @@ linuxdvb_frontend_input_thread ( void *aux )
   /* Setup poll */
   efd = tvhpoll_create(2);
   memset(ev, 0, sizeof(ev));
-  ev[0].events             = TVHPOLL_IN;
-  ev[0].fd = ev[0].data.fd = dvr;
-  ev[1].events             = TVHPOLL_IN;
-  ev[1].fd = ev[1].data.fd = lfe->lfe_dvr_pipe.rd;
+  ev[0].events = TVHPOLL_IN;
+  ev[0].fd     = dvr;
+  ev[0].ptr    = lfe;
+  ev[1].events = TVHPOLL_IN;
+  ev[1].fd     = lfe->lfe_dvr_pipe.rd;
+  ev[1].ptr    = &lfe->lfe_dvr_pipe;
   tvhpoll_add(efd, ev, 2);
 
   /* Allocate memory */
@@ -1414,7 +1416,7 @@ linuxdvb_frontend_input_thread ( void *aux )
       }
     }
     if (nfds < 1) continue;
-    if (ev[0].data.fd == lfe->lfe_dvr_pipe.rd) {
+    if (ev[0].ptr == &lfe->lfe_dvr_pipe) {
       if (read(lfe->lfe_dvr_pipe.rd, &b, 1) > 0) {
         if (b == 'c')
           linuxdvb_update_pids(lfe, name, &tuned, pids, ARRAY_SIZE(pids));
@@ -1423,7 +1425,7 @@ linuxdvb_frontend_input_thread ( void *aux )
       }
       continue;
     }
-    if (ev[0].data.fd != dvr) break;
+    if (ev[0].ptr != lfe) break;
 
     nodata = 50;
     lfe->lfe_nodata = 0;

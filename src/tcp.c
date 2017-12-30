@@ -743,7 +743,7 @@ tcp_server_loop(void *aux)
 
     if (r == 0) continue;
 
-    if (ev.data.ptr == &tcp_server_pipe) {
+    if (ev.ptr == &tcp_server_pipe) {
       r = read(tcp_server_pipe.rd, &c, 1);
       if (r > 0) {
 next:
@@ -764,7 +764,7 @@ next:
       continue;
     }
 
-    ts = ev.data.ptr;
+    ts = ev.ptr;
 
     if(ev.events & TVHPOLL_HUP) {
       close(ts->serverfd);

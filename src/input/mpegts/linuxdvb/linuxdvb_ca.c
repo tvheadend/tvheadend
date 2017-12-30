@@ -298,7 +298,7 @@ linuxdvb_ca_thread ( void *aux )
     evp = ev;
     evp->fd = linuxdvb_ca_pipe.rd;
     evp->events = TVHPOLL_IN;
-    evp->data.ptr = &linuxdvb_ca_pipe;
+    evp->ptr = &linuxdvb_ca_pipe;
     evp++;
     evcnt = 1;
     pthread_mutex_lock(&linuxdvb_ca_mutex);
@@ -340,7 +340,7 @@ linuxdvb_ca_thread ( void *aux )
       }
       evp->fd = lcat->lcat_ca_fd;
       evp->events = TVHPOLL_IN;
-      evp->data.ptr = lcat;
+      evp->ptr = lcat;
       evp++;
       evcnt++;
     }
@@ -357,7 +357,7 @@ linuxdvb_ca_thread ( void *aux )
     if (monitor)
       tm = tm2;
     for (evp = ev; evcnt > 0; evp++, evcnt--) {
-      if (evp->data.ptr == &linuxdvb_ca_pipe) {
+      if (evp->ptr == &linuxdvb_ca_pipe) {
         do {
           l = read(linuxdvb_ca_pipe.rd, buf, sizeof(buf));
         } while (l < 0 && errno == EINTR);
@@ -371,7 +371,7 @@ linuxdvb_ca_thread ( void *aux )
       }
       LIST_FOREACH(lcat, &linuxdvb_all_transports, lcat_all_link) {
         if (lcat->lcat_ca_fd < 0) continue;
-        if (lcat != evp->data.ptr) continue;
+        if (lcat != evp->ptr) continue;
         do {
           l = read(lcat->lcat_ca_fd, buf, sizeof(buf));
         } while (l < 0 && (r = errno) == EINTR);

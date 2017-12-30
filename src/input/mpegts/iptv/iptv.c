@@ -459,7 +459,7 @@ iptv_input_thread ( void *aux )
     } else if ( nfds == 0 ) {
       continue;
     }
-    im = ev.data.ptr;
+    im = ev.ptr;
     r  = 0;
 
     pthread_mutex_lock(&iptv_lock);

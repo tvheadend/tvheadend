@@ -1409,7 +1409,7 @@ http_client_thread ( void *p )
       if (atomic_get(&http_running) && !ERRNO_AGAIN(errno))
         tvherror(LS_HTTPC, "tvhpoll_wait() error");
     } else if (n > 0) {
-      if (&http_pipe == ev.data.ptr) {
+      if (&http_pipe == ev.ptr) {
         if (read(http_pipe.rd, &c, 1) == 1) {
           /* end-of-task */
           break;
@@ -1418,7 +1418,7 @@ http_client_thread ( void *p )
       }
       pthread_mutex_lock(&http_lock);
       TAILQ_FOREACH(hc, &http_clients, hc_link)
-        if (hc == ev.data.ptr)
+        if (hc == ev.ptr)
           break;
       if (hc == NULL) {
         pthread_mutex_unlock(&http_lock);
@@ -2058,7 +2058,7 @@ rep:
         }
         if (r != 1)
           continue;
-        if (ev.data.ptr != hc) {
+        if (ev.ptr != hc) {
           fprintf(stderr, "HTTPCTS: Poll returned a wrong value\n");
           goto fatal;
         }

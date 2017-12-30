@@ -1602,7 +1602,7 @@ new_tune:
     }
     if (nfds <= 0) continue;
 
-    if (ev[0].data.ptr == NULL) {
+    if (ev[0].ptr == NULL) {
       c = read(lfe->sf_dvr_pipe.rd, b, 1);
       if (c == 1) {
         if (b[0] == 'e') {
@@ -1616,7 +1616,7 @@ new_tune:
       }
     }
 
-    if (rtsp && ev[0].data.ptr == rtsp) {
+    if (rtsp && ev[0].ptr == rtsp) {
       r = http_client_run(rtsp);
       if (r < 0) {
         http_client_close(rtsp);
@@ -1727,7 +1727,7 @@ new_tune:
     if (nfds < 0) continue;
     if (nfds == 0) break;
 
-    if (ev[0].data.ptr == NULL) {
+    if (ev[0].ptr == NULL) {
       c = read(lfe->sf_dvr_pipe.rd, b, 1);
       if (c == 1) {
         if (b[0] == 'c') {
@@ -1750,7 +1750,7 @@ new_tune:
       goto done;
     }
 
-    if (ev[0].data.ptr == rtsp) {
+    if (ev[0].ptr == rtsp) {
       tc = 0;
       r = http_client_run(rtsp);
       if (r < 0) {
@@ -1782,22 +1782,22 @@ new_tune:
   memset(ev, 0, sizeof(ev));
   nfds = 0;
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
-    ev[nfds].events    = TVHPOLL_IN;
-    ev[nfds].fd        = rtp->fd;
-    ev[nfds].data.ptr  = rtp;
+    ev[nfds].events = TVHPOLL_IN;
+    ev[nfds].fd     = rtp->fd;
+    ev[nfds].ptr    = rtp;
     nfds++;
-    ev[nfds].events    = TVHPOLL_IN;
-    ev[nfds].fd        = rtcp->fd;
-    ev[nfds].data.ptr  = rtcp;
+    ev[nfds].events = TVHPOLL_IN;
+    ev[nfds].fd     = rtcp->fd;
+    ev[nfds].ptr    = rtcp;
     nfds++;
   } else {
     rtsp->hc_io_size           = 128 * 1024;
     rtsp->hc_rtp_data_received = satip_frontend_rtp_data_received;
   }
   if (i) {
-    ev[nfds].events    = TVHPOLL_IN;
-    ev[nfds].fd        = rtsp->hc_fd;
-    ev[nfds].data.ptr  = rtsp;
+    ev[nfds].events = TVHPOLL_IN;
+    ev[nfds].fd     = rtsp->hc_fd;
+    ev[nfds].ptr    = rtsp;
     nfds++;
   }
   tvhpoll_add(efd, ev, nfds);
@@ -1845,7 +1845,7 @@ new_tune:
         break;
     }
 
-    if (nfds > 0 && ev[0].data.ptr == NULL) {
+    if (nfds > 0 && ev[0].ptr == NULL) {
       c = read(lfe->sf_dvr_pipe.rd, b, 1);
       if (c == 1) {
         if (b[0] == 'c') {
@@ -1878,7 +1878,7 @@ new_tune:
 
     if (nfds < 1) continue;
 
-    if (ev[0].data.ptr == rtsp) {
+    if (ev[0].ptr == rtsp) {
       r = http_client_run(rtsp);
       if (r < 0) {
         if (rtsp->hc_code == 404 && session[0]) {
@@ -1993,7 +1993,7 @@ new_tune:
       reply = 1;
     }
 
-    if (ev[0].data.ptr == rtcp) {
+    if (ev[0].ptr == rtcp) {
       c = recv(rtcp->fd, b, sizeof(b), MSG_DONTWAIT);
       if (c > 0) {
         pthread_mutex_lock(&lfe->sf_dvr_lock);
@@ -2004,7 +2004,7 @@ new_tune:
       continue;
     }
     
-    if (ev[0].data.ptr != rtp)
+    if (ev[0].ptr != rtp)
       continue;     
 
     tc = udp_multirecv_read(&um, rtp->fd, RTP_PKTS, &iovec);

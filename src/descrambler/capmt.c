@@ -1537,7 +1537,7 @@ handle_ca0(capmt_t *capmt)
 
     for (i = 0; i < nfds; i++) {
 
-      if (ev[i].data.ptr == &capmt->capmt_pipe) {
+      if (ev[i].ptr == &capmt->capmt_pipe) {
         ret = read(capmt->capmt_pipe.rd, buf, 1);
         if (ret == 1 && buf[0] == 'c') {
           capmt_flush_queue(capmt, 0);
@@ -1549,7 +1549,7 @@ handle_ca0(capmt_t *capmt)
         continue;
       }
 
-      adapter = ev[i].data.ptr;
+      adapter = ev[i].ptr;
       if (adapter == NULL)
         continue;
 
@@ -1634,7 +1634,7 @@ handle_single(capmt_t *capmt)
     if (nfds <= 0)
       continue;
 
-    if (ev.data.ptr == &capmt->capmt_pipe) {
+    if (ev.ptr == &capmt->capmt_pipe) {
       ret = read(capmt->capmt_pipe.rd, buf, 1);
       if (ret == 1 && buf[0] == 'c') {
         capmt_flush_queue(capmt, 0);

@@ -410,9 +410,9 @@ cc_session(cclient_t *cc)
     pthread_mutex_lock(&cc->cc_mutex);
     if (r < 0 && ERRNO_AGAIN(errno))
       continue;
-    if (ev.data.ptr == &cc->cc_pipe)
+    if (ev.ptr == &cc->cc_pipe)
       read(cc->cc_pipe.rd, buf, sizeof(buf));
-    else if (ev.data.ptr == &cc->cc_fd) {
+    else if (ev.ptr == &cc->cc_fd) {
       len = sbuf_read(&rbuf, cc->cc_fd);
       if (len > 0 && cc->cc_read(cc, &rbuf))
         break;

@@ -120,12 +120,12 @@ spawn_pipe_thread(void *aux)
   int nfds;
 
   memset(ev, 0, sizeof(ev));
-  ev[0].events   = TVHPOLL_IN;
-  ev[0].fd       = spawn_pipe_info.rd;
-  ev[0].data.ptr = &spawn_pipe_info;
-  ev[1].events   = TVHPOLL_IN;
-  ev[1].fd       = spawn_pipe_error.rd;
-  ev[1].data.ptr = &spawn_pipe_error;
+  ev[0].events = TVHPOLL_IN;
+  ev[0].fd     = spawn_pipe_info.rd;
+  ev[0].ptr    = &spawn_pipe_info;
+  ev[1].events = TVHPOLL_IN;
+  ev[1].fd     = spawn_pipe_error.rd;
+  ev[1].ptr    = &spawn_pipe_error;
   tvhpoll_add(efd, ev, 2);
 
   while (atomic_get(&spawn_pipe_running)) {

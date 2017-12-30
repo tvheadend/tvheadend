@@ -386,7 +386,7 @@ dbus_server_thread(void *aux)
       continue;
     }
 
-    if (ev.data.ptr == &dbus_pipe) {
+    if (ev.ptr == &dbus_pipe) {
       if (read(dbus_pipe.rd, &c, 1) == 1) {
         if (c == 's')
           dbus_flush_queue(notify);

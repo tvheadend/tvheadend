@@ -104,10 +104,9 @@ int tvhpoll_add
 {
   int i, rc;
 #if ENABLE_EPOLL
-  struct epoll_event ev;
   for (i = 0; i < num; i++) {
-    memset(&ev, 0, sizeof(ev));
-    ev.data.u64 = evs[i].data.u64;
+    struct epoll_event ev = { 0 };
+    ev.data.ptr = evs[i].ptr;
     if (evs[i].events & TVHPOLL_IN)  ev.events |= EPOLLIN;
     if (evs[i].events & TVHPOLL_OUT) ev.events |= EPOLLOUT;
     if (evs[i].events & TVHPOLL_PRI) ev.events |= EPOLLPRI;
@@ -124,7 +123,7 @@ int tvhpoll_add
   tvhpoll_alloc(tp, num);
   for (i = 0; i < num; i++) {
     if (evs[i].events & TVHPOLL_OUT){
-      EV_SET(tp->ev+i, evs[i].fd, EVFILT_WRITE, EV_ADD, 0, 0, (intptr_t*)evs[i].data.u64);
+      EV_SET(tp->ev+i, evs[i].fd, EVFILT_WRITE, EV_ADD, 0, 0, evs[i].ptr);
       rc = kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
       if (rc == -1) {
         tvherror(LS_TVHPOLL, "failed to add kqueue WRITE filter [%d|%d]",
@@ -136,7 +135,7 @@ int tvhpoll_add
       kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
     }
     if (evs[i].events & TVHPOLL_IN){
-      EV_SET(tp->ev+i, evs[i].fd, EVFILT_READ, EV_ADD, 0, 0, (intptr_t*)evs[i].data.u64);
+      EV_SET(tp->ev+i, evs[i].fd, EVFILT_READ, EV_ADD, 0, 0, evs[i].ptr);
       rc = kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
       if (rc == -1) {
         tvherror(LS_TVHPOLL, "failed to add kqueue READ filter [%d|%d]", evs[i].fd, rc);
@@ -159,7 +158,7 @@ int tvhpoll_add1
   tvhpoll_event_t ev = { 0 };
   ev.fd = fd;
   ev.events = events;
-  ev.data.ptr = ptr;
+  ev.ptr = ptr;
   return tvhpoll_add(tp, &ev, 1);
 }
 
@@ -198,13 +197,16 @@ int tvhpoll_wait
 #if ENABLE_EPOLL
   nfds = epoll_wait(tp->fd, tp->ev, num, ms);
   for (i = 0; i < nfds; i++) {
-    evs[i].data.u64 = tp->ev[i].data.u64;
-    evs[i].events   = 0;
-    if (tp->ev[i].events & EPOLLIN)  evs[i].events |= TVHPOLL_IN;
-    if (tp->ev[i].events & EPOLLOUT) evs[i].events |= TVHPOLL_OUT;
-    if (tp->ev[i].events & EPOLLERR) evs[i].events |= TVHPOLL_ERR;
-    if (tp->ev[i].events & EPOLLPRI) evs[i].events |= TVHPOLL_PRI;
-    if (tp->ev[i].events & EPOLLHUP) evs[i].events |= TVHPOLL_HUP;
+    uint32_t events1 = tp->ev[i].events;
+    uint32_t events2 = 0;
+    if (events1 & EPOLLIN)  events2 |= TVHPOLL_IN;
+    if (events1 & EPOLLOUT) events2 |= TVHPOLL_OUT;
+    if (events1 & EPOLLERR) events2 |= TVHPOLL_ERR;
+    if (events1 & EPOLLPRI) events2 |= TVHPOLL_PRI;
+    if (events1 & EPOLLHUP) events2 |= TVHPOLL_HUP;
+    evs[i].events = events2;
+    evs[i].fd  = -1;
+    evs[i].ptr = tp->ev[i].data.ptr;
   }
 #elif ENABLE_KQUEUE
   struct timespec tm, *to = NULL;
@@ -215,13 +217,14 @@ int tvhpoll_wait
   }
   nfds = kevent(tp->fd, NULL, 0, tp->ev, num, to);
   for (i = 0; i < nfds; i++) {
-    evs[i].fd       = tp->ev[i].ident;
-    evs[i].events   = 0;
-    evs[i].data.u64 = (intptr_t)tp->ev[i].udata;
-    if (tp->ev[i].filter == EVFILT_WRITE) evs[i].events |= TVHPOLL_OUT;
-    if (tp->ev[i].filter == EVFILT_READ)  evs[i].events |= TVHPOLL_IN;
-    if (tp->ev[i].flags  & EV_ERROR)     evs[i].events |= TVHPOLL_ERR;
-    if (tp->ev[i].flags  & EV_EOF)       evs[i].events |= TVHPOLL_HUP;
+    uint32_t events2 = 0;
+    if (tp->ev[i].filter == EVFILT_WRITE) events2 |= TVHPOLL_OUT;
+    if (tp->ev[i].filter == EVFILT_READ)  events2 |= TVHPOLL_IN;
+    if (tp->ev[i].flags  & EV_ERROR)      events2 |= TVHPOLL_ERR;
+    if (tp->ev[i].flags  & EV_EOF)        events2 |= TVHPOLL_HUP;
+    evs[i].events = events2;
+    evs[i].fd  = -1; /* tp->ev[i].ident */;
+    evs[i].ptr = tp->ev[i].udata;
   }
 #else
 #endif
