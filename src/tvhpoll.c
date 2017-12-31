@@ -121,30 +121,31 @@ int tvhpoll_add
   }
   return 0;
 #elif ENABLE_KQUEUE
-  tvhpoll_alloc(tp, num);
+  struct kevent ev;
   for (i = 0; i < num; i++) {
     if (evs[i].events & TVHPOLL_OUT){
-      EV_SET(tp->ev+i, evs[i].fd, EVFILT_WRITE, EV_ADD, 0, 0, (intptr_t*)evs[i].data.u64);
-      rc = kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
+      EV_SET(&ev, evs[i].fd, EVFILT_WRITE, EV_ADD, 0, 0, evs[i].data.ptr);
+      rc = kevent(tp->fd, &ev, 1, NULL, 0, NULL);
       if (rc == -1) {
         tvherror(LS_TVHPOLL, "failed to add kqueue WRITE filter [%d|%d]",
-           evs[i].fd, rc);
+                 evs[i].fd, rc);
         return -1;
       }
     } else {
-      EV_SET(tp->ev+i, evs[i].fd, EVFILT_WRITE,  EV_DELETE, 0, 0, NULL);
-      kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
+      EV_SET(&ev, evs[i].fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+      kevent(tp->fd, &ev, 1, NULL, 0, NULL);
     }
-    if (evs[i].events & TVHPOLL_IN){
-      EV_SET(tp->ev+i, evs[i].fd, EVFILT_READ, EV_ADD, 0, 0, (intptr_t*)evs[i].data.u64);
-      rc = kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
+    if (evs[i].events & TVHPOLL_IN) {
+      EV_SET(&ev, evs[i].fd, EVFILT_READ, EV_ADD, 0, 0, evs[i].data.ptr);
+      rc = kevent(tp->fd, &ev, 1, NULL, 0, NULL);
       if (rc == -1) {
-        tvherror(LS_TVHPOLL, "failed to add kqueue READ filter [%d|%d]", evs[i].fd, rc);
+        tvherror(LS_TVHPOLL, "failed to add kqueue READ filter [%d|%d]",
+                 evs[i].fd, rc);
         return -1;
       }
     } else {
-      EV_SET(tp->ev+i, evs[i].fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-      kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
+      EV_SET(&ev, evs[i].fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+      kevent(tp->fd, &ev, 1, NULL, 0, NULL);
     }
   }
   return 0;
@@ -162,11 +163,11 @@ int tvhpoll_rem
     epoll_ctl(tp->fd, EPOLL_CTL_DEL, evs[i].fd, NULL);
 #elif ENABLE_KQUEUE
   int i;
-  for (i = 0; i < num; i++) {
-    EV_SET(tp->ev+i, evs[i].fd, 0, EV_DELETE, 0, 0, NULL);
-    if (kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL) == -1)
-      return -1;
-  }
+  struct kevent *ev = alloca(EV_SIZE * num);
+  for (i = 0; i < num; i++)
+    EV_SET(ev+i, evs[i].fd, 0, EV_DELETE, 0, 0, NULL);
+  if (kevent(tp->fd, ev, num, NULL, 0, NULL) == -1)
+    return -1;
 #else
 #endif
   return 0;
