@@ -40,8 +40,9 @@ typedef struct tvhpoll_event
 
 tvhpoll_t *tvhpoll_create(size_t num);
 void tvhpoll_destroy(tvhpoll_t *tp);
+int tvhpoll_set(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
 int tvhpoll_add(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
-int tvhpoll_add1(tvhpoll_t *tp, int fd, int events, void *ptr);
+int tvhpoll_add1(tvhpoll_t *tp, int fd, uint32_t events, void *ptr);
 int tvhpoll_rem(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
 int tvhpoll_rem1(tvhpoll_t *tp, int fd);
 int tvhpoll_wait(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num, int ms);
