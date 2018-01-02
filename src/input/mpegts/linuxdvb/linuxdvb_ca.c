@@ -345,7 +345,7 @@ linuxdvb_ca_thread ( void *aux )
       evcnt++;
     }
     pthread_mutex_unlock(&linuxdvb_ca_mutex);
-    tvhpoll_add(poll, ev, evcnt);
+    tvhpoll_set(poll, ev, evcnt);
 
     r = tvhpoll_wait(poll, ev, evcnt, waitms);
     if (r < 0 && ERRNO_AGAIN(errno))
