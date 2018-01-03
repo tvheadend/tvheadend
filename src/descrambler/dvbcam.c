@@ -834,6 +834,17 @@ const idclass_t caclient_dvbcam_class =
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_dvbcam",
   .ic_caption    = N_("Linux DVB CAM Client"),
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Client"),
+      .number = 1,
+    },
+    {
+      .name   = N_("Common Interface"),
+      .number = 2,
+    },
+    {}
+  },
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
@@ -841,6 +852,7 @@ const idclass_t caclient_dvbcam_class =
       .name     = N_("Service limit"),
       .desc     = N_("Limit of concurrent descrambled services (per one CAM)."),
       .off      = offsetof(dvbcam_t, limit),
+      .group    = 2,
     },
     {
       .type     = PT_INT,
@@ -850,6 +862,7 @@ const idclass_t caclient_dvbcam_class =
       .list     = caclient_dvbcam_class_caid_selection_list,
       .off      = offsetof(dvbcam_t, caid_select),
       .opts     = PO_DOC_NLIST,
+      .group    = 2,
     },
     {
       .type     = PT_STR,
@@ -859,6 +872,7 @@ const idclass_t caclient_dvbcam_class =
                      "E.g. '0D00,0F00,0100'."),
       .set      = caclient_dvbcam_class_caid_list_set,
       .get      = caclient_dvbcam_class_caid_list_get,
+      .group    = 2,
     },
     {}
   }

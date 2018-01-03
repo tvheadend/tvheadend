@@ -775,7 +775,7 @@ const idclass_t caclient_cccam_class =
       .desc     = N_("Client node ID. Leave field empty to generate a random ID."),
       .set      = caclient_cccam_nodeid_set,
       .get      = caclient_cccam_nodeid_get,
-      .group    = 1,
+      .group    = 2,
     },
     {
       .type     = PT_INT,
@@ -786,7 +786,7 @@ const idclass_t caclient_cccam_class =
       .list     = caclient_cccam_class_cccam_version_list,
       .def.i    = CCCAM_VERSION_2_3_0,
       .opts     = PO_DOC_NLIST,
-      .group    = 1,
+      .group    = 2,
     },
     {
       .type     = PT_INT,
@@ -795,7 +795,7 @@ const idclass_t caclient_cccam_class =
       .desc     = N_("Keepalive interval in seconds"),
       .off      = offsetof(cccam_t, cc_keepalive_interval),
       .def.i    = CCCAM_KEEPALIVE_INTERVAL,
-      .group    = 3,
+      .group    = 4,
     },
     { }
   }

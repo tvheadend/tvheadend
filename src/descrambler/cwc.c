@@ -773,7 +773,7 @@ const idclass_t caclient_cwc_class =
       .get      = caclient_cwc_class_deskey_get,
       .opts     = PO_PASSWORD,
       .def.s    = "00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d",
-      .group    = 1,
+      .group    = 2,
     },
     { }
   }

@@ -1063,16 +1063,20 @@ const idclass_t caclient_cc_class =
   .ic_caption    = N_("Card client"),
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Login information"),
+      .name   = N_("Client"),
       .number = 1,
     },
     {
-      .name   = N_("EMM"),
+      .name   = N_("Login information"),
       .number = 2,
     },
     {
-      .name   = N_("Connection"),
+      .name   = N_("EMM"),
       .number = 3,
+    },
+    {
+      .name   = N_("Connection"),
+      .number = 4,
     },
     {}
   },
@@ -1084,7 +1088,7 @@ const idclass_t caclient_cc_class =
       .desc     = N_("Login username."),
       .off      = offsetof(cclient_t, cc_username),
       .opts     = PO_TRIM,
-      .group    = 1,
+      .group    = 2,
     },
     {
       .type     = PT_STR,
@@ -1093,7 +1097,7 @@ const idclass_t caclient_cc_class =
       .desc     = N_("Login password."),
       .off      = offsetof(cclient_t, cc_password),
       .opts     = PO_PASSWORD,
-      .group    = 1,
+      .group    = 2,
     },
     {
       .type     = PT_STR,
@@ -1103,7 +1107,7 @@ const idclass_t caclient_cc_class =
       .off      = offsetof(cclient_t, cc_hostname),
       .def.s    = "localhost",
       .opts     = PO_TRIM,
-      .group    = 1,
+      .group    = 2,
     },
     {
       .type     = PT_INT,
@@ -1111,7 +1115,7 @@ const idclass_t caclient_cc_class =
       .name     = N_("Port"),
       .desc     = N_("Port to connect to."),
       .off      = offsetof(cclient_t, cc_port),
-      .group    = 1,
+      .group    = 2,
     },
     {
       .type     = PT_BOOL,
@@ -1120,7 +1124,7 @@ const idclass_t caclient_cc_class =
       .desc     = N_("Enable/disable offering of Entitlement Management Message updates."),
       .off      = offsetof(cclient_t, cc_emm),
       .def.i    = 1,
-      .group    = 2,
+      .group    = 3,
     },
     {
       .type     = PT_BOOL,
@@ -1129,7 +1133,7 @@ const idclass_t caclient_cc_class =
       .desc     = N_("Update Entitlement Management Messages from one mux only."),
       .off      = offsetof(cclient_t, cc_emmex),
       .def.i    = 1,
-      .group    = 2,
+      .group    = 3,
     },
     {
       .type     = PT_INT,
@@ -1138,7 +1142,7 @@ const idclass_t caclient_cc_class =
       .desc     = N_("Keepalive interval in seconds"),
       .off      = offsetof(cclient_t, cc_keepalive_interval),
       .def.i    = CC_KEEPALIVE_INTERVAL,
-      .group    = 3,
+      .group    = 4,
     },
     { }
   }

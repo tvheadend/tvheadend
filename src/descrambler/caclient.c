@@ -270,6 +270,13 @@ const idclass_t caclient_class =
   .ic_delete     = caclient_class_delete,
   .ic_moveup     = caclient_class_moveup,
   .ic_movedown   = caclient_class_movedown,
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Client"),
+      .number = 1,
+    },
+    {}
+  },
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -278,6 +285,7 @@ const idclass_t caclient_class =
       .opts     = PO_RDONLY | PO_HIDDEN | PO_NOUI,
       .get      = caclient_class_class_get,
       .set      = caclient_class_class_set,
+      .group    = 1,
     },
     {
       .type     = PT_INT,
@@ -285,6 +293,7 @@ const idclass_t caclient_class =
       .name     = N_("Index"),
       .opts     = PO_RDONLY | PO_HIDDEN | PO_NOUI,
       .off      = offsetof(caclient_t, cac_index),
+      .group    = 1,
     },
     {
       .type     = PT_BOOL,
@@ -292,6 +301,7 @@ const idclass_t caclient_class =
       .name     = N_("Enabled"),
       .desc     = N_("Enable/Disable CA client."),
       .off      = offsetof(caclient_t, cac_enabled),
+      .group    = 1,
     },
     {
       .type     = PT_STR,
@@ -300,6 +310,7 @@ const idclass_t caclient_class =
       .desc     = N_("Name of the client."),
       .off      = offsetof(caclient_t, cac_name),
       .notify   = idnode_notify_title_changed_lang,
+      .group    = 1,
     },
     {
       .type     = PT_STR,
@@ -307,6 +318,7 @@ const idclass_t caclient_class =
       .name     = N_("Comment"),
       .desc     = N_("Free-form text field, enter whatever you like."),
       .off      = offsetof(caclient_t, cac_comment),
+      .group    = 1,
     },
     {
       .type     = PT_STR,
@@ -314,6 +326,7 @@ const idclass_t caclient_class =
       .name     = N_("Status"),
       .get      = caclient_class_status_get,
       .opts     = PO_RDONLY | PO_HIDDEN | PO_NOSAVE | PO_NOUI,
+      .group    = 1,
     },
     { }
   }
