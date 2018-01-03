@@ -293,7 +293,7 @@ cwc_send_ka(void *cc)
   buf[1] = 0;
   buf[2] = 0;
 
-  cwc_send_msg(cwc, buf, 3, 0, 0, 0, 0);
+  cwc_send_msg(cwc, buf, 3, 0, 1, 0, 0);
 }
 
 /**

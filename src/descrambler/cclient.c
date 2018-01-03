@@ -441,7 +441,7 @@ cc_session(cclient_t *cc)
       free(cm);
     }
     if (mono < mclk()) {
-      mono = mclk();
+      mono = mclk() + sec2mono(cc->cc_keepalive_interval);
       if (cc->cc_keepalive)
         cc->cc_keepalive(cc);
     }

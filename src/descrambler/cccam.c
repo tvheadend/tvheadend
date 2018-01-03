@@ -70,7 +70,12 @@ typedef enum {
 
 static const char *cccam_version_str[CCCAM_VERSION_COUNT] = {
   "2.0.11", "2.1.1", "2.1.2", "2.1.3",
-  "2.1.4", "2.2.0", "2.2.1", "2.3.0"
+  "2.1.4",  "2.2.0", "2.2.1", "2.3.0",
+};
+
+static const char *cccam_build_str[CCCAM_VERSION_COUNT] = {
+  "2892",   "2971",  "3094",  "3165",
+  "3191",   "3290",  "3316",  "3367",
 };
 
 /**
@@ -95,6 +100,8 @@ typedef struct cccam {
   int cccam_extended;
   int cccam_version;
   uint8_t cccam_oscam;
+  uint8_t cccam_sendsleep;
+  uint8_t cccam_cansid;
 
   struct cccam_crypt_block sendblock;
   struct cccam_crypt_block recvblock;
@@ -104,6 +111,25 @@ typedef struct cccam {
 
 static const uint8_t cccam_str[] = "CCcam";
 
+static void cccam_send_oscam_extended(cccam_t *cccam);
+
+/**
+ *
+ */
+static inline const char *cccam_get_version_str(cccam_t *cccam)
+{
+  int ver = MINMAX(cccam->cccam_version, 0, ARRAY_SIZE(cccam_version_str) - 1);
+  return cccam_version_str[ver];
+}
+
+/**
+ *
+ */
+static inline const char *cccam_get_build_str(cccam_t *cccam)
+{
+  int ver = MINMAX(cccam->cccam_version, 0, ARRAY_SIZE(cccam_version_str) - 1);
+  return cccam_build_str[ver];
+}
 
 /**
  *
@@ -207,6 +233,48 @@ cccam_decrypt_cw(uint8_t *nodeid, uint32_t card_id, uint8_t *cws)
 /**
  *
  */
+static int
+cccam_oscam_check(cccam_t *cccam, uint8_t *buf)
+{
+  if (!cccam->cccam_oscam) {
+    uint16_t sum = 0x1234;
+    uint16_t recv_sum = (buf[14] << 8) | buf[15];
+    int32_t i;
+    for (i = 0; i < 14; i++)
+      sum += buf[i];
+    tvhtrace(cccam->cc_subsys, "%s: oscam check sum %04X recv sum %04X",
+             cccam->cc_name, sum, recv_sum);
+    cccam->cccam_oscam = sum == recv_sum;
+    if (cccam->cccam_oscam)
+      tvhinfo(cccam->cc_subsys, "%s: oscam server detected", cccam->cc_name);
+  }
+  return cccam->cccam_oscam;
+}
+
+/**
+ *
+ */
+static int
+cccam_oscam_nodeid_check(cccam_t *cccam, uint8_t *buf)
+{
+  if (!cccam->cccam_oscam) {
+    uint16_t sum = 0x1234;
+    uint16_t recv_sum = (buf[6] << 8) | buf[7];
+    int32_t i;
+    for (i = 0; i < 6; i++)
+      sum += buf[i];
+    tvhtrace(cccam->cc_subsys, "%s: oscam nodeid check sum %04X recv sum %04X",
+             cccam->cc_name, sum, recv_sum);
+    cccam->cccam_oscam = sum == recv_sum;
+    if (cccam->cccam_oscam)
+      tvhinfo(cccam->cc_subsys, "%s: oscam server detected", cccam->cc_name);
+  }
+  return cccam->cccam_oscam;
+}
+
+/**
+ *
+ */
 static inline uint8_t *
 cccam_set_ua(uint8_t *dst, uint8_t *src)
 {
@@ -278,10 +346,33 @@ cccam_handle_keys(cccam_t *cccam, cc_service_t *ct, cc_ecm_section_t *es,
   dcw_even = buf[1] == MSG_ECM_REQUEST ? _dcw : NULL;
   dcw_odd  = buf[1] == MSG_ECM_REQUEST ? _dcw + 8 : NULL;
 
-  tvhtrace(cccam->cc_subsys, "%s: HEADER:", cccam->cc_name);
+  tvhtrace(cccam->cc_subsys, "%s: HEADER", cccam->cc_name);
   tvhlog_hexdump(cccam->cc_subsys, buf, 4);
 
   cc_ecm_reply(ct, es, DESCRAMBLER_CSA_CBC, dcw_even, dcw_odd, seq);
+}
+
+/**
+ *
+ */
+static void
+cccam_handle_partner(cccam_t *cccam, uint8_t *msg)
+{
+  char *saveptr;
+  char *p;
+  tvhtrace(cccam->cc_subsys, "%s: partner string: '%s'\n",
+           cccam->cc_name, (char *)msg);
+  p = strtok_r((char *)msg, "[", &saveptr);
+  while (p) {
+    if ((p = strtok_r(NULL, ",]", &saveptr)) == NULL)
+      break;
+    if (strncmp(p, "EXT", 3) == 0)
+      cccam->cccam_extended = 1;
+    else if (strncmp(p, "SID", 3) == 0)
+      cccam->cccam_cansid = 1;
+    else if (strncmp(p, "SLP", 3) == 0)
+      cccam->cccam_sendsleep = 1;
+  }
 }
 
 /**
@@ -299,7 +390,7 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
   if (len < 4)
     return -1;
 
-  tvhtrace(cccam->cc_subsys, "%s: response msg type=%d, response:",
+  tvhtrace(cccam->cc_subsys, "%s: response msg type=%d, response",
            cccam->cc_name, buf[1]);
   tvhlog_hexdump(cccam->cc_subsys, buf, len);
 
@@ -322,8 +413,20 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
       break;
     case MSG_ECM_NOK1:      /* retry */
     case MSG_ECM_NOK2:      /* decode failed */
+      if (len >= 2 && len < 8)
+        goto req;
+      if (len > 5) {
+        /* partner detection */
+        if (len >= 12 && strncmp((char *)buf + 4, "PARTNER:", 8) == 0) {
+          cccam_handle_partner(cccam, buf + 4);
+        } else {
+          goto req;
+        }
+      }
+      break;
     //case MSG_CMD_05:      /* ? */
     case MSG_ECM_REQUEST: { /* request reply */
+req:
       seq = buf[0];
       LIST_FOREACH(ct, &cccam->cc_services, cs_link)
         LIST_FOREACH(ep, &ct->cs_pids, ep_link)
@@ -349,10 +452,17 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
 
     }
     case MSG_SRV_DATA:
-      tvhinfo(cccam->cc_subsys,
-              "%s: CCcam server version %s nodeid=%02x%02x%02x%02x%02x%02x%02x%02x",
-              cccam->cc_name, buf + 12,
-              buf[4], buf[5], buf[6], buf[7], buf[8], buf[9], buf[10], buf[11]);
+      if (len == 0x4c) {
+        tvhinfo(cccam->cc_subsys,
+                "%s: CCcam server version %s nodeid=%02x%02x%02x%02x%02x%02x%02x%02x",
+                cccam->cc_name, buf + 12,
+                buf[4], buf[5], buf[6], buf[7], buf[8], buf[9], buf[10], buf[11]);
+        if (cccam_oscam_nodeid_check(cccam, buf + 4))
+          cccam_send_oscam_extended(cccam);
+      } else {
+        tvhtrace(cccam->cc_subsys, "%s: SRV_DATA: unknown length %d",
+                 cccam->cc_name, len);
+      }
       break;
     case MSG_CLI_DATA:
       tvhinfo(cccam->cc_subsys, "%s: CCcam server authentication completed",
@@ -444,7 +554,21 @@ cccam_send_ka(void *cc)
   buf[3] = 0;
 
   tvhdebug(cccam->cc_subsys, "%s: send keepalive", cccam->cc_name);
-  cccam_send_msg(cccam, MSG_NO_HEADER, buf, 4, 0, 0, 0);
+  cccam_send_msg(cccam, MSG_NO_HEADER, buf, 4, 1, 0, 0);
+}
+
+/**
+ * Send keep alive
+ */
+static void
+cccam_send_oscam_extended(cccam_t *cccam)
+{
+  char buf[256];
+  tvhdebug(cccam->cc_subsys, "%s: send oscam extended", cccam->cc_name);
+  snprintf(buf, sizeof(buf), "PARTNER: OSCam v%s, build r%s (%s) [EXT,SID,SLP]",
+           cccam_get_version_str(cccam), cccam_get_build_str(cccam),
+           "unknown");
+  cccam_send_msg(cccam, MSG_ECM_NOK1, (uint8_t *)buf, strlen(buf) + 1, 1, 0, 0);
 }
 
 /**
@@ -530,30 +654,14 @@ cccam_send_cli_data(cccam_t *cccam)
 {
   const int32_t size = 20 + 8 + 6 + 26 + 4 + 28 + 1;
   uint8_t buf[size];
-  int ver;
 
   memset(buf, 0, sizeof(buf));
   strncpy((char *)buf, cccam->cc_username ?: "", 20);
   memcpy(buf + 20, cccam->cccam_nodeid, 8);
   buf[28] = 0; // TODO: wantemus = 1;
-  ver = MINMAX(cccam->cccam_version, 0, ARRAY_SIZE(cccam_version_str) - 1);
-  strncpy((char *)buf + 29, cccam_version_str[ver], 31);
+  strncpy((char *)buf + 29, cccam_get_version_str(cccam), 31);
   memcpy(buf + 61, "tvh", 3); // build number (ascii)
   cccam_send_msg(cccam, MSG_CLI_DATA, buf, size, 0, 0, 0);
-}
-
-/**
- *
- */
-static int
-cccam_oscam_check(uint8_t *buf)
-{
-  uint16_t sum = 0x1234;
-  uint16_t recv_sum = (buf[14] << 8) | buf[15];
-  int32_t i;
-  for (i = 0; i < 14; i++)
-    sum += buf[i];
-  return sum == recv_sum;
 }
 
 /**
@@ -585,8 +693,12 @@ static int
 cccam_init_session(void *cc)
 {
   cccam_t *cccam = cc;
-  uint8_t buf[16];
+  uint8_t buf[256];
   int r;
+
+  cccam->cccam_extended = 0;
+  cccam->cccam_sendsleep = 0;
+  cccam->cccam_cansid = 0;
 
   /**
    * Get init seed
@@ -598,10 +710,7 @@ cccam_init_session(void *cc)
   }
 
   /* check for oscam-cccam */
-  if (cccam_oscam_check(buf)) {
-    tvhinfo(cccam->cc_subsys, "%s: oscam server detected", cccam->cc_name);
-    cccam->cccam_oscam = 1;
-  }
+  cccam_oscam_check(cccam, buf);
 
   sha1_make_login_key(cccam, buf);
 
