@@ -27,6 +27,18 @@
 
 static void cc_service_pid_free(cc_service_t *ct);
 
+/**
+ *
+ */
+static int
+cc_check_empty(const uint8_t *str, int len)
+{
+  while (len--) {
+    if (*str) return 0;
+    str++;
+  }
+  return 1;
+}
 
 /**
  *
@@ -51,10 +63,13 @@ cc_new_card(cclient_t *cc, uint16_t caid, uint8_t *ua,
     allocated = 1;
   }
 
-  if (ua)
+  if (ua) {
     memcpy(pcard->cs_ra.ua, ua, 8);
-  else
+    if (cc_check_empty(ua, 8))
+      ua = NULL;
+  } else {
     memset(pcard->cs_ra.ua, 0, 8);
+  }
 
   free(pcard->cs_ra.providers);
   pcard->cs_ra.providers_count = pcount;
@@ -85,7 +100,7 @@ cc_new_card(cclient_t *cc, uint16_t caid, uint8_t *ua,
   }
 
   for (i = 0, ep = pcard->cs_ra.providers; i < pcount; i++, ep++) {
-    if (psa) {
+    if (psa && !cc_check_empty(ep->sa, 8)) {
       sa = ep->sa;
       tvhinfo(cc->cc_subsys, "%s: Provider ID #%d: 0x%04x:0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
               cc->cc_name, i + 1, caid, ep->id,
