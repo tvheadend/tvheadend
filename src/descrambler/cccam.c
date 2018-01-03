@@ -52,6 +52,11 @@ typedef enum {
 } cccam_msg_type_t;
 
 typedef enum {
+  CCCAM_EXTENDED_NONE = 0,
+  CCCAM_EXTENDED_EXT = 1,
+} cccam_extended_t;
+
+typedef enum {
   CCCAM_VERSION_2_0_11 = 0,
   CCCAM_VERSION_2_1_1,
   CCCAM_VERSION_2_1_2,
@@ -86,6 +91,8 @@ typedef struct cccam {
 
   /* From configuration */
   uint8_t cccam_nodeid[8];
+  int cccam_extended_conf;
+  int cccam_extended;
   int cccam_version;
   uint8_t cccam_oscam;
 
@@ -539,6 +546,42 @@ cccam_send_cli_data(cccam_t *cccam)
  *
  */
 static int
+cccam_oscam_check(uint8_t *buf)
+{
+  uint16_t sum = 0x1234;
+  uint16_t recv_sum = (buf[14] << 8) | buf[15];
+  int32_t i;
+  for (i = 0; i < 14; i++)
+    sum += buf[i];
+  return sum == recv_sum;
+}
+
+/**
+ *
+ */
+static void
+cccam_oscam_update_idnode(cccam_t *cccam)
+{
+  uint8_t p[8];
+  uint16_t sum = 0x1234;
+  int32_t i;
+
+  memcpy(p, cccam->cccam_nodeid, 4);
+  p[4] = 'T'; /* identify ourselves as TVH */
+  p[5] = 0xaa;
+  for (i = 0; i < 5; i++)
+    p[5] ^= p[i];
+  for (i = 0; i < 6; i++)
+    sum += p[i];
+  p[6] = sum >> 8;
+  p[7] = sum;
+  memcpy(cccam->cccam_nodeid, p, 8);
+}
+
+/**
+ *
+ */
+static int
 cccam_init_session(void *cc)
 {
   cccam_t *cccam = cc;
@@ -555,13 +598,7 @@ cccam_init_session(void *cc)
   }
 
   /* check for oscam-cccam */
-  uint16_t sum = 0x1234;
-  uint16_t recv_sum = (buf[14] << 8) | buf[15];
-  int32_t i;
-  for(i = 0; i < 14; i++) {
-    sum += buf[i];
-  }
-  if (sum == recv_sum) {
+  if (cccam_oscam_check(buf)) {
     tvhinfo(cccam->cc_subsys, "%s: oscam server detected", cccam->cc_name);
     cccam->cccam_oscam = 1;
   }
@@ -693,6 +730,22 @@ cccam_read(void *cc, sbuf_t *rbuf)
 /**
  *
  */
+static void
+cccam_conf_changed(caclient_t *cac)
+{
+  cccam_t *cccam = (cccam_t *)cac;
+
+  /**
+   * Update nodeid for the oscam extended mode
+   */
+  if (cccam->cccam_extended_conf == CCCAM_EXTENDED_EXT)
+    cccam_oscam_update_idnode(cccam);
+  cc_conf_changed(cac);
+}
+
+/**
+ *
+ */
 static int
 nibble(char c)
 {
@@ -754,6 +807,15 @@ caclient_cccam_nodeid_get(void *o)
   return &prop_sbuf_ptr;
 }
 
+static htsmsg_t *
+caclient_cccam_class_cccam_extended_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("None"), CCCAM_EXTENDED_NONE },
+    { N_("Oscam-EXT"), CCCAM_EXTENDED_EXT },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
 
 static htsmsg_t *
 caclient_cccam_class_cccam_version_list ( void *o, const char *lang )
@@ -771,7 +833,6 @@ caclient_cccam_class_cccam_version_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
-
 const idclass_t caclient_cccam_class =
 {
   .ic_super      = &caclient_cc_class,
@@ -785,6 +846,17 @@ const idclass_t caclient_cccam_class =
       .desc     = N_("Client node ID. Leave field empty to generate a random ID."),
       .set      = caclient_cccam_nodeid_set,
       .get      = caclient_cccam_nodeid_get,
+      .group    = 2,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "extended",
+      .name     = N_("Extended mode"),
+      .desc     = N_("Extended mode settings."),
+      .off      = offsetof(cccam_t, cccam_extended_conf),
+      .list     = caclient_cccam_class_cccam_extended_list,
+      .def.i    = CCCAM_EXTENDED_EXT,
+      .opts     = PO_DOC_NLIST,
       .group    = 2,
     },
     {
@@ -825,7 +897,7 @@ caclient_t *cccam_create(void)
   tvh_cond_init(&cccam->cc_cond);
   cccam->cac_free         = cc_free;
   cccam->cac_start        = cc_service_start;
-  cccam->cac_conf_changed = cc_conf_changed;
+  cccam->cac_conf_changed = cccam_conf_changed;
   cccam->cac_caid_update  = cc_caid_update;
   cccam->cc_keepalive_interval = CCCAM_KEEPALIVE_INTERVAL;
   cccam->cccam_version    = CCCAM_VERSION_2_3_0;
