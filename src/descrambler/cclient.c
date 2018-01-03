@@ -232,7 +232,8 @@ forbid:
       descrambler_change_keystate((th_descrambler_t *)ct, DS_FORBIDDEN, 1);
       ct->ecm_state = ECM_RESET;
       /* this pid is not valid, force full scan */
-      if (t->s_dvb_prefcapid == ct->cs_capid && t->s_dvb_prefcapid_lock == PREFCAPID_OFF)
+      if (t->s_dvb_prefcapid == ct->cs_capid &&
+          t->s_dvb_prefcapid_lock == PREFCAPID_OFF)
         t->s_dvb_prefcapid = 0;
     }
     return;
@@ -336,6 +337,8 @@ cc_read(cclient_t *cc, void *buf, size_t len, int timeout)
   if (cc_must_break(cc))
     return ECONNABORTED;
 
+  tvhtrace(cc->cc_subsys, "%s: read len %zd", cc->cc_name, len);
+  tvhlog_hexdump(cc->cc_subsys, buf, len);
   return r;
 }
 
@@ -345,22 +348,20 @@ cc_read(cclient_t *cc, void *buf, size_t len, int timeout)
 void
 cc_write_message(cclient_t *cc, cc_message_t *msg, int enq)
 {
-  tvhtrace(cc->cc_subsys, "%s: sending message len %u enq %d",
-           cc->cc_name, msg->cm_len, enq);
-  tvhlog_hexdump(cc->cc_subsys, msg->cm_data, msg->cm_len);
-
   if (enq) {
-    pthread_mutex_lock(&cc->cc_mutex);
+    lock_assert(&cc->cc_mutex);
     if (cc->cc_write_running) {
       TAILQ_INSERT_TAIL(&cc->cc_writeq, msg, cm_link);
       tvh_nonblock_write(cc->cc_pipe.wr, "w", 1);
     } else {
       free(msg);
     }
-    pthread_mutex_unlock(&cc->cc_mutex);
   } else {
+    tvhtrace(cc->cc_subsys, "%s: sending message len %u",
+             cc->cc_name, msg->cm_len);
+    tvhlog_hexdump(cc->cc_subsys, msg->cm_data, msg->cm_len);
     if (tvh_write(cc->cc_fd, msg->cm_data, msg->cm_len))
-      tvhinfo(cc->cc_subsys, "%s: write error %s",
+      tvhinfo(cc->cc_subsys, "%s: write error: %s",
               cc->cc_name, strerror(errno));
     free(msg);
   }
@@ -408,20 +409,36 @@ cc_session(cclient_t *cc)
     pthread_mutex_unlock(&cc->cc_mutex);
     r = tvhpoll_wait(poll, &ev, 1, 1000);
     pthread_mutex_lock(&cc->cc_mutex);
+    if (r == 0)
+      continue;
     if (r < 0 && ERRNO_AGAIN(errno))
       continue;
-    if (ev.ptr == &cc->cc_pipe)
+    if (r < 0)
+      break;
+    if (ev.ptr == &cc->cc_pipe) {
       read(cc->cc_pipe.rd, buf, sizeof(buf));
-    else if (ev.ptr == &cc->cc_fd) {
+    } else if (ev.ptr == &cc->cc_fd) {
+      sbuf_alloc(&rbuf, 1024);
       len = sbuf_read(&rbuf, cc->cc_fd);
-      if (len > 0 && cc->cc_read(cc, &rbuf))
-        break;
+      if (len > 0) {
+        tvhtrace(cc->cc_subsys, "%s: read len %zd", cc->cc_name, len);
+        tvhlog_hexdump(cc->cc_subsys, rbuf.sb_data + rbuf.sb_ptr - len, len);
+        if (cc->cc_read(cc, &rbuf))
+          break;
+      }
     } else {
       abort();
     }
     if ((cm = TAILQ_FIRST(&cc->cc_writeq)) != NULL) {
-      if (tvh_nonblock_write(cc->cc_fd, cm->cm_data, cm->cm_len))
+      TAILQ_REMOVE(&cc->cc_writeq, cm, cm_link);
+      tvhtrace(cc->cc_subsys, "%s: sending queued message len %u",
+               cc->cc_name, cm->cm_len);
+      tvhlog_hexdump(cc->cc_subsys, cm->cm_data, cm->cm_len);
+      if (tvh_nonblock_write(cc->cc_fd, cm->cm_data, cm->cm_len)) {
+        free(cm);
         break;
+      }
+      free(cm);
     }
     if (mono < mclk()) {
       mono = mclk();
@@ -519,6 +536,7 @@ cc_thread(void *aux)
 
   tvhinfo(cc->cc_subsys, "%s: Inactive, thread exit", cc->cc_name);
   cc_free_cards(cc);
+  cc->cc_name = NULL;
   pthread_mutex_unlock(&cc->cc_mutex);
   return NULL;
 }
@@ -639,7 +657,7 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if (data == NULL)
     return;
 
-  if(len > 4096)
+  if (len > 4096)
     return;
 
   pthread_mutex_lock(&cc->cc_mutex);
@@ -653,7 +671,7 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
     cc_service_pid_free(ct);
     /* move to init state */
     ct->ecm_state = ECM_INIT;
-    ct->cs_capid = -1;
+    ct->cs_capid = 0xffff;
     t->s_dvb_prefcapid = 0;
     tvhdebug(cc->cc_subsys, "%s: Reset after unexpected or no reply for service \"%s\"",
              cc->cc_name, t->s_dvb_svcname);
@@ -711,7 +729,7 @@ found:
   caid = c->caid;
   provid = c->providerid;
 
-  ecm = data[0] == 0x80 || data[1] == 0x81;
+  ecm = data[0] == 0x80 || data[0] == 0x81;
   if (pcard->cs_ra.caid == 0x4a30) ecm |= data[0] == 0x50; /* DVN */
 
   if (ecm) {
@@ -750,16 +768,17 @@ found:
     es->es_pending = 1;
     es->es_resolved = 0;
 
-    if(ct->cs_capid >= 0 && capid > 0 && ct->cs_capid != capid) {
-      tvhdebug(cc->cc_subsys, "%s: Filtering ECM (PID %d)",
-               cc->cc_name, capid);
+    if (ct->cs_capid != 0xffff && ct->cs_capid > 0 &&
+       capid > 0 && ct->cs_capid != capid) {
+      tvhdebug(cc->cc_subsys, "%s: Filtering ECM (PID %d), using PID %d",
+               cc->cc_name, capid, ct->cs_capid);
       goto end;
     }
 
     es->es_seq = cc->cc_send_ecm(cc, ct, es, pcard, data, len);
 
     tvhdebug(cc->cc_subsys,
-             "%s: Sending ECM%s section=%d/%d, for service \"%s\" (seqno: %d)",
+             "%s: Sending ECM%s section=%d/%d for service \"%s\" (seqno: %d)",
              cc->cc_name, chaninfo, section,
              ep->ep_last_section, t->s_dvb_svcname, es->es_seq);
     es->es_time = getfastmonoclock();
@@ -808,6 +827,7 @@ cc_service_destroy0(th_descrambler_t *td)
 
   for (i = 0; i < ct->cs_epids.count; i++)
     descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids.pids[i].pid);
+  mpegts_pid_done(&ct->cs_epids);
 
   cc_service_pid_free(ct);
 
@@ -907,7 +927,7 @@ cc_service_start(caclient_t *cac, service_t *t)
     ct = calloc(1, sizeof(*ct));
   }
   ct->cs_client        = cc;
-  ct->cs_capid         = -1;
+  ct->cs_capid         = 0xffff;
   ct->cs_mux           = ((mpegts_service_t *)t)->s_dvb_mux;
   ct->ecm_state        = ECM_INIT;
 
@@ -943,7 +963,7 @@ add:
                          cc_table_input, t);
 
   if (reuse & 2) {
-    ct->cs_capid = -1;
+    ct->cs_capid = 0xffff;
     ct->ecm_state = ECM_INIT;
   }
 
@@ -1013,6 +1033,7 @@ cc_conf_changed(caclient_t *cac)
 {
   cclient_t *cc = (cclient_t *)cac;
   pthread_t tid;
+  cc_message_t *cm;
 
   if (cac->cac_enabled) {
     if (cc->cc_hostname == NULL || cc->cc_hostname[0] == '\0') {
@@ -1046,10 +1067,10 @@ cc_conf_changed(caclient_t *cac)
     pthread_join(tid, NULL);
     tvh_pipe_close(&cc->cc_pipe);
     caclient_set_status(cac, CACLIENT_STATUS_NONE);
-    pthread_mutex_lock(&cc->cc_mutex);
-    free(cc->cc_name);
-    cc->cc_name = NULL;
-    pthread_mutex_unlock(&cc->cc_mutex);    
+    while ((cm = TAILQ_FIRST(&cc->cc_writeq)) != NULL) {
+      TAILQ_REMOVE(&cc->cc_writeq, cm, cm_link);
+      free(cm);
+    }
   }
 }
 

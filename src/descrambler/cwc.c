@@ -123,11 +123,9 @@ des_key_spread(uint8_t *normal, uint8_t *spread)
 static int
 des_encrypt(uint8_t *buffer, int len, cwc_t *cwc)
 {
-  uint8_t checksum = 0;
-  uint8_t noPadBytes;
-  uint8_t padBytes[7];
+  uint8_t checksum = 0, *ptr, noPadBytes, padBytes[7];
   DES_cblock ivec;
-  uint16_t i;
+  int i;
 
   noPadBytes = (8 - ((len - 1) % 8)) % 8;
   if (len + noPadBytes + 1 >= CWS_NETMSGSIZE-8) return -1;
@@ -138,17 +136,13 @@ des_encrypt(uint8_t *buffer, int len, cwc_t *cwc)
   uuid_random((uint8_t *)ivec, 8);
   memcpy(buffer+len, ivec, 8);
   for (i = 2; i < len; i += 8) {
-    DES_ncbc_encrypt(buffer+i, buffer+i, 8,  &cwc->cwc_k1, &ivec, 1);
-
-    DES_ecb_encrypt((DES_cblock *)(buffer+i), (DES_cblock *)(buffer+i),
-                    &cwc->cwc_k2, 0);
-
-    DES_ecb_encrypt((DES_cblock *)(buffer+i), (DES_cblock *)(buffer+i),
-                    &cwc->cwc_k1, 1);
-    memcpy(ivec, buffer+i, 8);
+    ptr = buffer + i;
+    DES_ncbc_encrypt(ptr, ptr, 8, &cwc->cwc_k1, &ivec, 1);
+    DES_ecb_encrypt((DES_cblock *)ptr, (DES_cblock *)ptr, &cwc->cwc_k2, 0);
+    DES_ecb_encrypt((DES_cblock *)ptr, (DES_cblock *)ptr, &cwc->cwc_k1, 1);
+    memcpy(ivec, ptr, 8);
   }
-  len += 8;
-  return len;
+  return len + 8;
 }
 
 /**
@@ -157,26 +151,22 @@ des_encrypt(uint8_t *buffer, int len, cwc_t *cwc)
 static int 
 des_decrypt(uint8_t *buffer, int len, cwc_t *cwc)
 {
-  DES_cblock ivec;
-  DES_cblock nextIvec;
+  DES_cblock ivec, nextIvec;
+  uint8_t *ptr, checksum = 0;;
   int i;
-  uint8_t checksum = 0;
 
   if ((len-2) % 8 || (len-2) < 16) return -1;
   len -= 8;
   memcpy(nextIvec, buffer+len, 8);
-  for (i = 2; i < len; i += 8)
-    {
-      memcpy(ivec, nextIvec, 8);
-      memcpy(nextIvec, buffer+i, 8);
-
-      DES_ecb_encrypt((DES_cblock *)(buffer+i), (DES_cblock *)(buffer+i),
-                      &cwc->cwc_k1, 0);
-      DES_ecb_encrypt((DES_cblock *)(buffer+i), (DES_cblock *)(buffer+i),
-                      &cwc->cwc_k2, 1);
-
-      DES_ncbc_encrypt(buffer+i, buffer+i, 8,  &cwc->cwc_k1, &ivec, 0);
-    } 
+  for (i = 2; i < len; i += 8) {
+    ptr = buffer + i;
+    memcpy(ivec, nextIvec, 8);
+    memcpy(nextIvec, ptr, 8);
+    DES_ecb_encrypt((DES_cblock *)ptr, (DES_cblock *)ptr, &cwc->cwc_k1, 0);
+    DES_ecb_encrypt((DES_cblock *)ptr, (DES_cblock *)ptr, &cwc->cwc_k2, 1);
+    DES_ncbc_encrypt(ptr, ptr, 8, &cwc->cwc_k1, &ivec, 0);
+  } 
+  tvhlog_hexdump(cwc->cc_subsys, buffer, len);
   for (i = 2; i < len; i++) checksum ^= buffer[i];
   if (checksum) return -1;
   return len;
@@ -234,7 +224,8 @@ cwc_send_msg(void *cc, const uint8_t *msg, size_t len,
   if (len < 3)
     return -1;
 
-  cm = malloc(sizeof(cc_message_t) + 12 + len);
+  /* note: the last 10 bytes is pad/checksum for des_encrypt() */
+  cm = malloc(sizeof(cc_message_t) + 12 + len + 10);
 
   if (cm == NULL)
     return -1;
@@ -402,9 +393,9 @@ handle_ecm_reply(cc_service_t *ct, cc_ecm_section_t *es,
     cc_ecm_reply(ct, es, DESCRAMBLER_NONE, NULL, NULL, seq);
   } else {
     type = DESCRAMBLER_CSA_CBC;
-    if (len == 3 + 8 + 8) {
+    if (len <= 22) {
       off = 8;
-    } else if (len == 3 + 16 + 16) {
+    } else if (len <= 40) {
       off = 16;
       type = DESCRAMBLER_AES128_ECB;
     } else {
@@ -498,7 +489,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
  */
 static int
 cwc_read_message0
-  (cwc_t *cwc, const char *state, sbuf_t *rbuf, int timeout)
+  (cwc_t *cwc, const char *state, sbuf_t *rbuf, int *rsize, int timeout)
 {
   int msglen;
 
@@ -509,11 +500,15 @@ cwc_read_message0
   if(rbuf->sb_ptr < 2 + msglen)
     return 0;
 
+  *rsize = msglen + 2;
   if((msglen = des_decrypt(rbuf->sb_data, msglen + 2, cwc)) < 15) {
     tvhinfo(cwc->cc_subsys, "%s: %s: Decrypt failed",
             cwc->cc_name, state);
     return -1;
   }
+
+  tvhtrace(LS_CWC, "%s: decrypted message", cwc->cc_name);
+  tvhlog_hexdump(cwc->cc_subsys, rbuf->sb_data, msglen + 2);
 
   return msglen;
 }
@@ -557,6 +552,9 @@ cwc_read_message
             cwc->cc_name, state);
     return -1;
   }
+
+  tvhtrace(LS_CWC, "%s: decrypted message", cwc->cc_name);
+  tvhlog_hexdump(cwc->cc_subsys, buf, msglen + 2);
 
   return msglen;
 }
@@ -623,19 +621,22 @@ cwc_read(void *cc, sbuf_t *rbuf)
 {
   cwc_t *cwc = cc;
   const int ka_interval = cwc->cc_keepalive_interval * 2 * 1000;
-  int r = cwc_read_message0(cwc, "DecoderLoop", rbuf, ka_interval);
-  if (r < 0)
-    return -1;
-  if (r > 12) {
-    int ret = cwc_running_reply(cwc, rbuf->sb_data[12], rbuf->sb_data, r);
-    if (ret > 0)
-      sbuf_cut(rbuf, r);
-    if (ret < 0)
+  int r, rsize;
+
+  while (1) {
+    r = cwc_read_message0(cwc, "DecoderLoop", rbuf, &rsize, ka_interval);
+    if (r == 0)
+      break;
+    if (r < 0)
       return -1;
-    return 0;
+    if (r > 12) {
+      if (cwc_running_reply(cwc, rbuf->sb_data[12], rbuf->sb_data, r) < 0)
+        return -1;
+      sbuf_cut(rbuf, rsize);
+    } else if (r > 0) {
+      return -1;
+    }
   }
-  if (r > 0)
-    return -1;
   return 0;
 }
 

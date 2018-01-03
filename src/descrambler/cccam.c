@@ -667,15 +667,20 @@ cccam_read(void *cc, sbuf_t *rbuf)
 {
   cccam_t *cccam = cc;
   const int ka_interval = cccam->cc_keepalive_interval * 2 * 1000;
-  int r = cccam_read_message0(cccam, "Decoderloop", rbuf, ka_interval);
-  if (r < 0)
-    return -1;
-  if (r > 0) {
-    int ret = cccam_running_reply(cccam, rbuf->sb_data, r);
-    if (ret > 0)
-      sbuf_cut(rbuf, r);
-    if (ret < 0)
+  int r;
+
+  while (1) {
+    r = cccam_read_message0(cccam, "Decoderloop", rbuf, ka_interval);
+    if (r == 0)
+      break;
+    if (r < 0)
       return -1;
+    if (r > 0) {
+      int ret = cccam_running_reply(cccam, rbuf->sb_data, r);
+      if (ret < 0)
+        return -1;
+      sbuf_cut(rbuf, r);
+    }
   }
   return 0;
 }
