@@ -330,13 +330,13 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!im && cmb->cmb_messages == NULL) {
     mono = mclk() + sec2mono(10);
-    comet_waiting++;
+    atomic_add(&comet_waiting, 1);
     do {
       e = tvh_cond_timedwait(&comet_cond, &comet_mutex, mono);
       if (e == ETIMEDOUT)
         break;
     } while (ERRNO_AGAIN(e));
-    comet_waiting--;
+    atomic_dec(&comet_waiting, 1);
     if (!atomic_get(&comet_running)) {
       pthread_mutex_unlock(&comet_mutex);
       return HTTP_STATUS_BAD_REQUEST;
@@ -435,6 +435,7 @@ comet_mailbox_ws(http_connection_t *hc, const char *remain, void *opaque)
   cmb = comet_find_mailbox(hc, cometid, lang, 1);
   if (cmb)
     cmb->cmb_refcount++;
+  atomic_add(&comet_waiting, 1);
   pthread_mutex_unlock(&comet_mutex);
   if (!cmb)
     return -1;
@@ -457,6 +458,7 @@ comet_mailbox_ws(http_connection_t *hc, const char *remain, void *opaque)
   assert(cmb->cmb_refcount > 0);
   cmb->cmb_refcount--;
   cmb->cmb_last_used = mclk();
+  atomic_dec(&comet_waiting, 1);
   pthread_mutex_unlock(&comet_mutex);
 
   return res;
@@ -474,7 +476,7 @@ comet_init(void)
   pthread_mutex_lock(&comet_mutex);
   tvh_cond_init(&comet_cond);
   atomic_set(&comet_running, 1);
-  comet_waiting = 0;
+  atomic_set(&comet_waiting, 0);
   pthread_mutex_unlock(&comet_mutex);
   hp = http_path_add("/comet/ws", NULL, comet_mailbox_ws, ACCESS_WEB_INTERFACE);
   hp->hp_flags = HTTP_PATH_WEBSOCKET;
@@ -486,19 +488,14 @@ void
 comet_done(void)
 {
   comet_mailbox_t *cmb;
-  int waiting;
 
   pthread_mutex_lock(&comet_mutex);
   atomic_set(&comet_running, 0);
   tvh_cond_signal(&comet_cond, 1);
   pthread_mutex_unlock(&comet_mutex);
 
-  waiting = 1;
-  while (waiting) {
-    pthread_mutex_lock(&comet_mutex);
-    waiting = comet_waiting;
-    pthread_mutex_unlock(&comet_mutex);
-  }
+  while (atomic_get(&comet_waiting))
+    tvh_usleep(10000);
 
   tvh_cond_destroy(&comet_cond);
 
