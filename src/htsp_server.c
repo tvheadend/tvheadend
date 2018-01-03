@@ -932,7 +932,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   htsmsg_field_t *f;
   const char *s = NULL, *error = NULL, *subscriptionError = NULL;
   const char *p, *last;
-  int64_t fsize = -1;
+  int64_t fsize = -1, start, stop;
   uint32_t u32;
   char ubuf[UUID_HEX_SIZE];
 
@@ -1005,6 +1005,11 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
           info = htsmsg_get_list(m, "info");
           if (info)
             htsmsg_set_msg(e, "info", htsmsg_copy(info));
+          if (!htsmsg_get_s64(m, "start", &start))
+            htsmsg_set_s64(e, "start", start);
+          if (!htsmsg_get_s64(m, "stop", &stop))
+            htsmsg_set_s64(e, "stop", stop);
+
           htsmsg_add_msg(l, NULL, e);
         }
       }
