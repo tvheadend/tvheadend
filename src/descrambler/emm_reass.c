@@ -616,7 +616,7 @@ emm_reass_done(emm_reass_t *ra)
   PROVIDERS_FOREACH(ra, i, ep) {
     if (ra->type == CARD_VIACCESS) {
       free(EP_VIACCESS(ep, 0).shared_emm);
-      free(EP_VIACCESS(ep, 0).shared_emm);
+      free(EP_VIACCESS(ep, 1).shared_emm);
     }
   }
   free(ra->providers);
