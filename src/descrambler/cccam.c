@@ -87,6 +87,7 @@ typedef struct cccam {
   /* From configuration */
   uint8_t cccam_nodeid[8];
   int cccam_version;
+  uint8_t cccam_oscam;
 
   struct cccam_crypt_block sendblock;
   struct cccam_crypt_block recvblock;
@@ -116,9 +117,8 @@ cccam_crypt_xor(uint8_t *buf)
 
   for (i = 0; i < 8; i++) {
     buf[i + 8] = i * buf[i];
-    if (i <= 5) {
+    if (i <= 5)
       buf[i] ^= cccam_str[i];
-    }
   }
 }
 
@@ -378,10 +378,11 @@ cccam_read_message0(cccam_t *cccam, const char *state, sbuf_t *rbuf, int timeout
   if (rbuf->sb_ptr >= msglen + 4) {
     memcpy(rbuf->sb_data, hdr, 4);
     cccam_decrypt(&cccam->recvblock, rbuf->sb_data + 4, msglen);
+    return msglen + 4;
   } else {
     cccam->recvblock = block;
+    return 0;
   }
-  return msglen + 4;
 }
 
 /**
@@ -406,14 +407,15 @@ cccam_send_msg(cccam_t *cccam, cccam_msg_type_t cmd,
     memcpy(netbuf, buf, len);
   } else {
     netbuf[0] = seq;
-    netbuf[1] = cmd & 0xff;
+    netbuf[1] = cmd;
     netbuf[2] = len >> 8;
-    netbuf[3] = len & 0xff;
+    netbuf[3] = len;
     if (buf)
       memcpy(netbuf + 4, buf, len);
     len += 4;
   }
 
+  cccam_encrypt(&cccam->sendblock, cm->cm_data, len);
   cm->cm_len = len;
   cc_write_message((cclient_t *)cccam, cm, enq);
 
@@ -453,17 +455,17 @@ sha1_make_login_key(cccam_t *cccam, uint8_t *buf)
   SHA1_Update(&sha1, buf, 16);
   SHA1_Final(hash, &sha1);
 
-  tvhdebug(cccam->cc_subsys, "%s: sha1 hash:", cccam->cc_name);
+  tvhdebug(cccam->cc_subsys, "%s: sha1 hash", cccam->cc_name);
   tvhlog_hexdump(cccam->cc_subsys, hash, sizeof(hash));
 
-  cccam_crypt_init(&cccam->recvblock, hash, 20);
+  cccam_crypt_init(&cccam->recvblock, hash, sizeof(hash));
   cccam_decrypt(&cccam->recvblock, buf, 16);
 
   cccam_crypt_init(&cccam->sendblock, buf, 16);
-  cccam_decrypt(&cccam->sendblock, hash, 20);
+  cccam_decrypt(&cccam->sendblock, hash, sizeof(hash));
 
   // send crypted hash to server
-  cccam_send_msg(cccam, MSG_NO_HEADER, hash, 20, 0, 0, 0);
+  cccam_send_msg(cccam, MSG_NO_HEADER, hash, sizeof(hash), 0, 0, 0);
 }
 
 /**
@@ -472,40 +474,37 @@ sha1_make_login_key(cccam_t *cccam, uint8_t *buf)
 static int
 cccam_send_login(cccam_t *cccam)
 {
-  uint8_t buf[CCCAM_NETMSGSIZE];
-  size_t ul;
-  char pwd[255];
-  uint8_t data[20];
+  uint8_t buf[20], data[20], *pwd;
+  size_t l;
 
   if (cccam->cc_username == NULL)
     return 1;
 
-  ul = strlen(cccam->cc_username) + 1;
-  if (ul > 128)
-    return 1;
+  l = MIN(strlen(cccam->cc_username), 20);
 
   /* send username */
-  memset(buf, 0, CCCAM_NETMSGSIZE);
-  memcpy(buf, cccam->cc_username, ul);
+  memset(buf + l, 0, 20 - l);
+  memcpy(buf, cccam->cc_username, l);
   cccam_send_msg(cccam, MSG_NO_HEADER, buf, 20, 0, 0, 0);
 
   /* send password 'xored' with CCcam */
-  memset(buf, 0, CCCAM_NETMSGSIZE);
-  memset(pwd, 0, sizeof(pwd));
   memcpy(buf, cccam_str, 5);
-  strncpy(pwd, cccam->cc_password, sizeof(pwd) - 1);
-  cccam_encrypt(&cccam->sendblock, (uint8_t *) pwd, strlen(pwd));
+  buf[5] = 0;
+  if (cccam->cc_password && cccam->cc_password[0]) {
+    l = strlen(cccam->cc_password);
+    pwd = alloca(l + 1);
+    strcpy((char *)pwd, cccam->cc_password);
+    cccam_encrypt(&cccam->sendblock, pwd, l);
+  }
   cccam_send_msg(cccam, MSG_NO_HEADER, buf, 6, 0, 0, 0);
 
+  tvhdebug(cccam->cc_subsys, "%s: login response", cccam->cc_name);
   if (cc_read((cclient_t *)cccam, data, 20, 5000)) {
     tvherror(cccam->cc_subsys, "%s: login failed, pwd ack not received", cccam->cc_name);
     return -2;
   }
 
   cccam_decrypt(&cccam->recvblock, data, 20);
-  tvhdebug(cccam->cc_subsys, "%s: login ack, response:", cccam->cc_name);
-  tvhlog_hexdump(cccam->cc_subsys, data, 20);
-
   if (memcmp(data, "CCcam", 5)) {
     tvherror(cccam->cc_subsys, "%s: login failed, usr/pwd invalid", cccam->cc_name);
     return -2;
@@ -522,15 +521,18 @@ cccam_send_login(cccam_t *cccam)
 static void
 cccam_send_cli_data(cccam_t *cccam)
 {
-  uint8_t buf[CCCAM_NETMSGSIZE];
+  const int32_t size = 20 + 8 + 6 + 26 + 4 + 28 + 1;
+  uint8_t buf[size];
+  int ver;
 
-  memset(buf, 0, CCCAM_NETMSGSIZE);
-  memcpy(buf, cccam->cc_username, 20);
+  memset(buf, 0, sizeof(buf));
+  strncpy((char *)buf, cccam->cc_username ?: "", 20);
   memcpy(buf + 20, cccam->cccam_nodeid, 8);
   buf[28] = 0; // TODO: wantemus = 1;
-  strncpy((char *)buf + 29, cccam_version_str[cccam->cccam_version], 31);
+  ver = MINMAX(cccam->cccam_version, 0, ARRAY_SIZE(cccam_version_str) - 1);
+  strncpy((char *)buf + 29, cccam_version_str[ver], 31);
   memcpy(buf + 61, "tvh", 3); // build number (ascii)
-  cccam_send_msg(cccam, MSG_CLI_DATA, buf, 20 + 8 + 1 + 64, 0, 0, 0);
+  cccam_send_msg(cccam, MSG_CLI_DATA, buf, size, 0, 0, 0);
 }
 
 /**
@@ -540,18 +542,17 @@ static int
 cccam_init_session(void *cc)
 {
   cccam_t *cccam = cc;
-  uint8_t buf[CCCAM_NETMSGSIZE];
+  uint8_t buf[16];
   int r;
 
   /**
    * Get init seed
    */
+  tvhtrace(cccam->cc_subsys, "%s: init seed", cccam->cc_name);
   if((r = cc_read(cc, buf, 16, 5000))) {
     tvhinfo(cccam->cc_subsys, "%s: init error (no init seed received)", cccam->cc_name);
     return -1;
   }
-  tvhtrace(cccam->cc_subsys, "%s: init seed received:", cccam->cc_name);
-  tvhlog_hexdump(cccam->cc_subsys, buf, 16);
 
   /* check for oscam-cccam */
   uint16_t sum = 0x1234;
@@ -560,8 +561,10 @@ cccam_init_session(void *cc)
   for(i = 0; i < 14; i++) {
     sum += buf[i];
   }
-  if (sum == recv_sum)
+  if (sum == recv_sum) {
     tvhinfo(cccam->cc_subsys, "%s: oscam server detected", cccam->cc_name);
+    cccam->cccam_oscam = 1;
+  }
 
   sha1_make_login_key(cccam, buf);
 
@@ -585,7 +588,7 @@ cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
 {
   mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
   cccam_t *cccam = cc;
-  uint8_t buf[CCCAM_NETMSGSIZE-4];
+  uint8_t *buf;
   uint16_t caid, sid;
   uint32_t provid, card_id;
   int seq;
@@ -602,6 +605,7 @@ cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
   es->cccam.es_card_id = card_id;
   sid = t->s_dvb_service_id;
 
+  buf = alloca(len + 13);
   buf[ 0] = caid >> 8;
   buf[ 1] = caid & 0xff;
   buf[ 2] = provid >> 24;
@@ -628,7 +632,7 @@ cccam_send_emm(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
                uint32_t provid, const uint8_t *msg, int len)
 {
   cccam_t *cccam = cc;
-  unsigned char buf[CCCAM_NETMSGSIZE-4];
+  uint8_t *buf;
   uint16_t caid;
   uint32_t card_id;
   int seq;
@@ -643,6 +647,7 @@ cccam_send_emm(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
   caid = pcard->cs_ra.caid;
   card_id = pcard->cccam.cs_id;  
 
+  buf = alloca(len + 12);
   buf[ 0] = caid >> 8;
   buf[ 1] = caid & 0xff;
   buf[ 2] = 0;
@@ -769,7 +774,7 @@ caclient_cccam_class_cccam_version_list ( void *o, const char *lang )
 
 const idclass_t caclient_cccam_class =
 {
-  .ic_super      = &caclient_class,
+  .ic_super      = &caclient_cc_class,
   .ic_class      = "caclient_cccam",
   .ic_caption    = N_("CCcam"),
   .ic_properties = (const property_t[]){
