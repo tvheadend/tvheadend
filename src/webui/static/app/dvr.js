@@ -381,8 +381,13 @@ tvheadend.dvr_upcoming = function(panel, index) {
     }
 
     function viewready(grid) {
-       columnId = grid.colModel.findColumnIndex('duplicate');
-       grid.colModel.setHidden(columnId, true);
+        if(!grid.store.baseParams.duplicates){
+            columnId = grid.colModel.findColumnIndex('duplicate');
+            grid.colModel.setHidden(columnId, true);
+        }else{
+            var buttonIndex = grid.topToolbar.items.findIndex('text','Show duplicates');
+            grid.topToolbar.items.item(buttonIndex).setText(_('Hide duplicates'));
+        }
     }
 
     tvheadend.idnode_grid(panel, {
