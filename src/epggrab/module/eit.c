@@ -480,7 +480,7 @@ _eit_scrape_episode(lang_str_t *str,
 
   /* search for season number */
   RB_FOREACH(se, str, link) {
-    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_snum))
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_snum))
       if ((ev->en.s_num = positive_atoi(buffer))) {
         tvhtrace(LS_TBL_EIT,"  extract season number %d using %s", ev->en.s_num, eit_mod->id);
         break;
@@ -489,7 +489,7 @@ _eit_scrape_episode(lang_str_t *str,
 
   /* ...for episode number */
   RB_FOREACH(se, str, link) {
-   if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_enum))
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_enum))
      if ((ev->en.e_num = positive_atoi(buffer))) {
        tvhtrace(LS_TBL_EIT,"  extract episode number %d using %s", ev->en.e_num, eit_mod->id);
        break;
@@ -498,7 +498,7 @@ _eit_scrape_episode(lang_str_t *str,
 
   /* Extract original air date year */
   RB_FOREACH(se, str, link) {
-    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_airdate)) {
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_airdate)) {
       if (strlen(buffer) == 4) {
         /* Year component only, so assume it is the copyright year. */
         ev->copyright_year = positive_atoi(buffer);
@@ -509,7 +509,7 @@ _eit_scrape_episode(lang_str_t *str,
 
   /* Extract is_new flag. Any match is assumed to mean "new" */
   RB_FOREACH(se, str, link) {
-    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_is_new)) {
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_is_new)) {
       ev->is_new = 1;
       break;
     }
@@ -540,7 +540,7 @@ _eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
     RB_FOREACH(se, ev->title, link) {
       snprintf(title_summary, sizeof(title_summary), "%s %s",
                se->str, lang_str_get(ev->summary, se->lang));
-      if (eit_pattern_apply_list(buffer, sizeof(buffer), title_summary, &eit_mod->p_scrape_title)) {
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), title_summary, se->lang, &eit_mod->p_scrape_title)) {
         tvhtrace(LS_TBL_EIT, "  scrape title '%s' from '%s' using %s",
                  buffer, title_summary, eit_mod->id);
         lang_str_set(&ls, buffer, se->lang);
@@ -552,7 +552,7 @@ _eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
 
   if (eit_mod->scrape_subtitle) {
     RB_FOREACH(se, ev->summary, link) {
-      if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_scrape_subtitle)) {
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_scrape_subtitle)) {
         tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s' from '%s' using %s",
                  buffer, se->str, eit_mod->id);
         lang_str_set(&ev->subtitle, buffer, se->lang);
@@ -563,7 +563,7 @@ _eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
   if (eit_mod->scrape_summary) {
     lang_str_t *ls = lang_str_create();
     RB_FOREACH(se, ev->summary, link) {
-      if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, &eit_mod->p_scrape_summary)) {
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_scrape_summary)) {
         tvhtrace(LS_TBL_EIT, "  scrape summary '%s' from '%s' using %s",
                  buffer, se->str, eit_mod->id);
         lang_str_set(&ls, buffer, se->lang);

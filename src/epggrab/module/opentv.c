@@ -371,7 +371,7 @@ opentv_parse_event_section_one
         tvhdebug(LS_OPENTV, "    title '%s'", ev.title);
 
         /* try to cleanup the title */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.title, &mod->p_cleanup_title)) {
+        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.title, lang, &mod->p_cleanup_title)) {
           tvhtrace(LS_OPENTV, "  clean title '%s'", buffer);
           s = buffer;
         } else {
@@ -392,15 +392,15 @@ opentv_parse_event_section_one
 
         memset(&en, 0, sizeof(en));
         /* search for season number */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, &mod->p_snum))
+        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_snum))
           if ((en.s_num = atoi(buffer)))
             tvhtrace(LS_OPENTV,"  extract season number %d", en.s_num);
         /* ...for episode number */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, &mod->p_enum))
+        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_enum))
           if ((en.e_num = atoi(buffer)))
             tvhtrace(LS_OPENTV,"  extract episode number %d", en.e_num);
         /* ...for part number */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, &mod->p_pnum)) {
+        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_pnum)) {
           if (buffer[0] >= 'a' && buffer[0] <= 'z')
             en.p_num = buffer[0] - 'a' + 1;
           else
@@ -414,7 +414,7 @@ opentv_parse_event_section_one
           save |= epg_episode_set_epnum(ee, &en, &changes3);
 
         /* ...for subtitle */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, &mod->p_subt)) {
+        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_subt)) {
           tvhtrace(LS_OPENTV, "  extract subtitle '%s'", buffer);
           ls = lang_str_create2(buffer, lang);
           save |= epg_episode_set_subtitle(ee, ls, &changes3);

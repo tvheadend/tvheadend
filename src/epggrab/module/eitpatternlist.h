@@ -27,6 +27,7 @@ typedef struct eit_pattern
   char                        *text;
   tvh_regex_t                 compiled;
   int                         filter;
+  char                        *langs;
   TAILQ_ENTRY(eit_pattern)    p_links;
 } eit_pattern_t;
 
@@ -45,6 +46,6 @@ void eit_pattern_compile_named_list ( eit_pattern_list_t *list, htsmsg_t *m, con
  * match in buf which is of size size_buf.
  * Return the buf or NULL if no match.
  */
-void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_pattern_list_t *l);
+void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, const char *lang, eit_pattern_list_t *l);
 void eit_pattern_free_list ( eit_pattern_list_t *l );
 #endif
