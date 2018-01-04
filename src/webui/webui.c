@@ -1790,6 +1790,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   priv.fname = tvh_strdupa(filename);
   priv.content = muxer_container_filename2mime(priv.fname, 1);
   priv.charset = de->de_config ? de->de_config->dvr_charset_id : NULL;
+  priv.tcp_id = NULL;
+  priv.sub = NULL;
 
   pthread_mutex_unlock(&global_lock);
 
