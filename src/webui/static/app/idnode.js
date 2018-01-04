@@ -1618,6 +1618,7 @@ tvheadend.idnode_grid = function(panel, conf)
     var event = null;
     var auto = null;
     var idnode = null;
+    var groupReader = null;
 
     var update = function(o) {
         if ((o.create || o.moveup || o.movedown || 'delete' in o) && auto.getValue()) {
@@ -1720,15 +1721,31 @@ tvheadend.idnode_grid = function(panel, conf)
         var params = {};
         if (conf.all) params['all'] = 1;
         if (conf.extraParams) conf.extraParams(params);
-        store = new Ext.data.JsonStore({
+
+        groupReader = new Ext.data.JsonReader({
+            totalProperty: 'total',
             root: 'entries',
+            fields: fields,
+            idProperty: 'uuid'
+        });
+
+        store = new Ext.data.GroupingStore({
             url: conf.gridURL || (conf.url + '/grid'),
             baseParams: params,
             autoLoad: true,
             id: 'uuid',
-            totalProperty: 'total',
-            fields: fields,
-            remoteSort: true,
+            remoteSort: true, //  We lost multi sort at server side :-(, maybe perexg has a better idea
+            reader: groupReader,
+            remoteGroup: true,
+            groupField: conf.groupField ? conf.groupField : false,
+            groupDir: 'ASC',
+            groupOnSort: true,
+            /*multiSort: true,
+            multiSortInfo:{
+               sorters: [{field : 'disp_title', direction : 'ASC'},
+                         conf.sort ? conf.sort : null],
+               direction: 'ASC'
+            },*/
             pruneModifiedRecords: true,
             sortInfo: conf.sort ? conf.sort : null
         });
@@ -2085,9 +2102,13 @@ tvheadend.idnode_grid = function(panel, conf)
             cm: model,
             selModel: select,
             plugins: plugins,
-            viewConfig: {
-                forceFit: true
-            },
+            view: new Ext.grid.GroupingView({
+                forceFit: true,
+                startCollapsed: true,
+                showGroupName: false,
+                // custom grouping text template to display the number of recordings per group
+                groupTextTpl: '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Recordings" : "Recording"]})'
+            }),
             keys: {
                 key: 'a',
                 ctrl: true,
@@ -2104,8 +2125,12 @@ tvheadend.idnode_grid = function(panel, conf)
         grid.on('filterupdate', function() {
             page.changePage(0);
         });
+
         if (conf.beforeedit)
-          grid.on('beforeedit', conf.beforeedit);
+            grid.on('beforeedit', conf.beforeedit);
+
+        if (conf.viewready)
+            grid.on('viewready', conf.viewready);
 
         dpanel.add(grid);
         dpanel.doLayout(false, true);
