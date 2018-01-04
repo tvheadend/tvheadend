@@ -412,7 +412,6 @@ tvheadend.IdNodeField = function(conf)
     this.editor = function(conf)
     {
         var cons = null;
-        var combo = false;
 
         /* Editable? */
         var d = this.rdonly;
@@ -447,7 +446,7 @@ tvheadend.IdNodeField = function(conf)
                 c['fromLegend'] = _('Available');
 
             } else {
-                cons = Ext.form.ComboBox;
+                cons = Ext.ux.form.ComboAny;
                 if (this.list) {
                     cons = Ext.ux.form.LovCombo;
                     c['checkField'] = 'checked_' + this.id;
@@ -460,8 +459,6 @@ tvheadend.IdNodeField = function(conf)
                 c['forceSelection'] = false;
                 c['triggerAction'] = 'all';
                 c['emptyText'] = _('Select {0} ...').replace('{0}', this.text);
-
-                combo = true;
             }
 
             /* Single */
@@ -509,10 +506,7 @@ tvheadend.IdNodeField = function(conf)
             }
         }
 
-        var r = new cons(c);
-        if (combo)
-            r.doQuery = tvheadend.doQueryAnyMatch;
-        return r;
+        return new cons(c);
     };
 };
 
@@ -694,7 +688,7 @@ tvheadend.idnode_editor_field = function(f, conf)
 
     /* Enumerated (combobox) type */
     } else if (f['enum']) {
-        var cons = Ext.form.ComboBox;
+        var cons = Ext.ux.form.ComboAny;
         if (f.list)
             cons = Ext.ux.form.LovCombo;
         var st = tvheadend.idnode_enum_store(f);
@@ -719,8 +713,6 @@ tvheadend.idnode_editor_field = function(f, conf)
                 }
             }
         });
-
-        r.doQuery = tvheadend.doQueryAnyMatch;
 
         if (st.on) {
             var fn = function() {

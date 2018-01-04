@@ -695,52 +695,8 @@ tvheadend.PagingToolbarConf = function(conf, title, auto, count)
 }
 
 /*
- * Any Match option in ComboBox queries
- * This query is identical as in extjs-all.js
- * except one
- */
-tvheadend.doQueryAnyMatch = function(q, forceAll) {
-    q = Ext.isEmpty(q) ? '' : q;
-    var qe = {
-        query: q,
-        forceAll: forceAll,
-        combo: this,
-        cancel:false
-    };
-
-    if (this.fireEvent('beforequery', qe) === false || qe.cancel)
-        return false;
-
-    q = qe.query;
-    forceAll = qe.forceAll;
-    if (forceAll === true || (q.length >= this.minChars)) {
-        if (this.lastQuery !== q) {
-            this.lastQuery = q;
-            if (this.mode == 'local') {
-                this.selectedIndex = -1;
-                if (forceAll) {
-                    this.store.clearFilter();
-                } else {
-                    /* supply the anyMatch option (last param) */
-                    this.store.filter(this.displayField, q, true);
-                }
-                this.onLoad();
-            } else {
-                this.store.baseParams[this.queryParam] = q;
-                this.store.load({ params: this.getParams(q) });
-                this.expand();
-            }
-        } else {
-            this.selectedIndex = -1;
-            this.onLoad();
-        }
-    }
-}
-
-/*
  * Replace one entry
  */
-
 tvheadend.replace_entry = function(r, d) {
     if (!r) return;
     var dst = r.data;
@@ -858,7 +814,7 @@ tvheadend.VideoPlayer = function(channelId) {
         initialChannelName = record.data.val;
     }
 
-    var selectChannel = new Ext.form.ComboBox({
+    var selectChannel = new Ext.ux.form.ComboAny({
         loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
@@ -897,7 +853,7 @@ tvheadend.VideoPlayer = function(channelId) {
         });
     }
 
-    var selectProfile = new Ext.form.ComboBox({
+    var selectProfile = new Ext.ux.form.ComboAny({
         loadingText: _('Loading...'),
         width: 150,
         displayField: 'val',

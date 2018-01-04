@@ -273,7 +273,7 @@ tvheadend.epgDetails = function(event) {
           }));
         }
 
-        var confcombo = new Ext.form.ComboBox({
+        var confcombo = new Ext.ux.form.ComboAny({
             store: store,
             triggerAction: 'all',
             mode: 'local',
@@ -762,7 +762,7 @@ tvheadend.epg = function() {
 
     // Channels, uses global store
 
-    var epgFilterChannels = new Ext.form.ComboBox({
+    var epgFilterChannels = new Ext.ux.form.ComboAny({
         loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
@@ -785,7 +785,7 @@ tvheadend.epg = function() {
 
     // Tags, uses global store
 
-    var epgFilterChannelTags = new Ext.form.ComboBox({
+    var epgFilterChannelTags = new Ext.ux.form.ComboAny({
         loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
@@ -811,7 +811,7 @@ tvheadend.epg = function() {
     /// We have to pass the name, not the field, since the
     /// field is deleted and re-created inside clear filter.
     function createFilterCat(clearFilter, cat) {
-      var filter = new Ext.form.ComboBox({
+      var filter = new Ext.ux.form.ComboAny({
         loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
@@ -862,7 +862,7 @@ tvheadend.epg = function() {
 
     // Content groups
 
-    var epgFilterContentGroup = new Ext.form.ComboBox({
+    var epgFilterContentGroup = new Ext.ux.form.ComboAny({
         loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
@@ -883,7 +883,7 @@ tvheadend.epg = function() {
         }
     });
 
-    var epgFilterDuration = new Ext.form.ComboBox({
+    var epgFilterDuration = new Ext.ux.form.ComboAny({
         loadingText: _('Loading...'),
         width: 150,
         displayField: 'label',
