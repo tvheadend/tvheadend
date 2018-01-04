@@ -541,9 +541,9 @@ prop_serialize_value
 
   /* Split integer value */
   if (pl->intextra) {
-    if (INTEXTRA_IS_SPLIT(pl->intextra))
+    if (INTEXTRA_IS_SPLIT(pl->intextra)) {
       htsmsg_add_u32(m, "intsplit", pl->intextra);
-    else {
+    } else {
       htsmsg_add_s32(m, "intmax", INTEXTRA_GET_MAX(pl->intextra));
       htsmsg_add_s32(m, "intmin", INTEXTRA_GET_MIN(pl->intextra));
       htsmsg_add_s32(m, "intstep", INTEXTRA_GET_STEP(pl->intextra));

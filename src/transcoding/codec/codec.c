@@ -30,6 +30,7 @@ extern TVHCodec tvh_codec_mpeg2video;
 extern TVHCodec tvh_codec_mp2;
 extern TVHCodec tvh_codec_aac;
 extern TVHCodec tvh_codec_vorbis;
+extern TVHCodec tvh_codec_flac;
 
 #if ENABLE_LIBX264
 extern TVHCodec tvh_codec_libx264;
@@ -251,6 +252,7 @@ tvh_codecs_register()
     tvh_codec_register(&tvh_codec_mp2);
     tvh_codec_register(&tvh_codec_aac);
     tvh_codec_register(&tvh_codec_vorbis);
+    tvh_codec_register(&tvh_codec_flac);
 
 #if ENABLE_LIBX264
     tvh_codec_register(&tvh_codec_libx264);
