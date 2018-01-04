@@ -591,7 +591,7 @@ cc_session(cclient_t *cc)
     if (r < 0)
       break;
     if (ev.ptr == &cc->cc_pipe) {
-      read(cc->cc_pipe.rd, buf, sizeof(buf));
+      (void)read(cc->cc_pipe.rd, buf, sizeof(buf));
     } else if (ev.ptr == &cc->cc_fd) {
       sbuf_alloc(&rbuf, 1024);
       len = sbuf_read(&rbuf, cc->cc_fd);
