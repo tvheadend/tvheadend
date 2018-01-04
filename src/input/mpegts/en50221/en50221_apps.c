@@ -165,7 +165,7 @@ en50221_app_ca_handle
     buf[0] = buf[1] = '\0';
     for (i = 0; i < count; ) {
       for (j = 0, c = 0; j < 4 && i < count; i++, j++) {
-        caid = app->cia_caids[0];
+        caid = app->cia_caids[i];
         tvh_strlcatf(buf, sizeof(buf), c, " %04X (%s)", caid, caid2name(caid));
       }
       tvhinfo(LS_EN50221, "%s: CAM supported CAIDs: %s", app->cia_name, buf + 1);
