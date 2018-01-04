@@ -181,6 +181,12 @@ int channel_set_name ( channel_t *ch, const char *name );
 /// @return number channels that matched "from".
 int channel_rename_and_save ( const char *from, const char *to );
 
+#define CHANNEL_ENAME_NUMBERS (1<<0)
+#define CHANNEL_ENAME_SOURCES (1<<1)
+
+char *channel_get_ename ( channel_t *ch, char *dst, size_t dstlen,
+                          const char *blank, uint32_t flags );
+
 #define CHANNEL_SPLIT ((int64_t)1000000)
 
 static inline uint32_t channel_get_major ( int64_t chnum ) { return chnum / CHANNEL_SPLIT; }
@@ -188,6 +194,8 @@ static inline uint32_t channel_get_minor ( int64_t chnum ) { return chnum % CHAN
 
 int64_t channel_get_number ( channel_t *ch );
 int channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor );
+
+char *channel_get_source ( channel_t *ch, char *dst, size_t dstlen );
 
 const char *channel_get_icon ( channel_t *ch );
 int channel_set_icon ( channel_t *ch, const char *icon );

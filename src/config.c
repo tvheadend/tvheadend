@@ -1697,6 +1697,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config.epg_update_window = 24*3600;
   config_scanfile_ok = 0;
   config.theme_ui = strdup("blue");
+  config.chname_num = 1;
 
   idclass_register(&config_class);
 
@@ -2186,6 +2187,23 @@ const idclass_t config_class = {
       .get    = config_class_info_area_get,
       .list   = config_class_info_area_list,
       .opts   = PO_LORDER | PO_ADVANCED | PO_DOC_NLIST,
+      .group  = 2
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "chname_num",
+      .name   = N_("Channel name with numbers"),
+      .desc   = N_("Add channel numbers to the channel name list"),
+      .off    = offsetof(config_t, chname_num),
+      .group  = 2,
+      .def.i  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "chname_src",
+      .name   = N_("Channel name with sources"),
+      .desc   = N_("Add sources (like DVB-T string) to the channel name list"),
+      .off    = offsetof(config_t, chname_src),
       .group  = 2
     },
     {

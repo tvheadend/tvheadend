@@ -58,25 +58,21 @@ tvheadend.contentGroupFullLookupName = function(code) {
 };
 
 tvheadend.channelLookupName = function(key) {
-    channelString = "";
-
-    var index = tvheadend.channels.find('key', key);
-
+    var s = "";
+    var channels = tvheadend.getChannels();
+    var index = channels.find('key', key);
     if (index !== -1)
-        var channelString = tvheadend.channels.getAt(index).get('val');
-
-    return channelString;
+        s = channels.getAt(index).get('val');
+    return s;
 };
 
 tvheadend.channelTagLookupName = function(key) {
-    tagString = "";
-
-    var index = tvheadend.channelTags.find('key', key);
-
+    var s = "";
+    var tags = tvheadend.getChannelTags();
+    var index = tvheadend.tags.find('key', key);
     if (index !== -1)
-        var tagString = tvheadend.channelTags.getAt(index).get('val');
-
-    return tagString;
+        s = tags.getAt(index).get('val');
+    return s;
 };
 
 // Store for duration filters - EPG, autorec dialog and autorec rules in the DVR grid
@@ -766,7 +762,7 @@ tvheadend.epg = function() {
         loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
-        store: tvheadend.channels,
+        store: tvheadend.getChannels(),
         mode: 'local',
         editable: true,
         forceSelection: true,
@@ -789,7 +785,7 @@ tvheadend.epg = function() {
         loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
-        store: tvheadend.channelTags,
+        store: tvheadend.getChannelTags(),
         mode: 'local',
         editable: true,
         forceSelection: true,

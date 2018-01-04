@@ -33,15 +33,18 @@ api_channel_is_all(access_t *perm, htsmsg_t *args)
          !access_verify2(perm, ACCESS_ADMIN);
 }
 
-// TODO: this will need converting to an idnode system
 static int
 api_channel_list
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   channel_t *ch;
   htsmsg_t *l;
-  int cfg = api_channel_is_all(perm, args);
-  char buf[128], ubuf[UUID_HEX_SIZE];
+  const int cfg = api_channel_is_all(perm, args);
+  const int numbers = htsmsg_get_s32_or_default(args, "numbers", 0);
+  const int sources = htsmsg_get_s32_or_default(args, "sources", 0);
+  const int flags = (numbers ? CHANNEL_ENAME_NUMBERS : 0) |
+                    (sources ? CHANNEL_ENAME_SOURCES : 0);
+  char buf[128], buf1[128], ubuf[UUID_HEX_SIZE];
   const char *name, *blank;
 
   blank = tvh_gettext_lang(perm->aa_lang_ui, channel_blank_name);
@@ -50,10 +53,11 @@ api_channel_list
   CHANNEL_FOREACH(ch) {
     if (!cfg && !channel_access(ch, perm, 0)) continue;
     if (!ch->ch_enabled) {
-      snprintf(buf, sizeof(buf), "{%s}", channel_get_name(ch, blank));
+      snprintf(buf, sizeof(buf), "{%s}",
+               channel_get_ename(ch, buf1, sizeof(buf1), blank, flags));
       name = buf;
     } else {
-      name = channel_get_name(ch, blank);
+      name = channel_get_ename(ch, buf1, sizeof(buf1), blank, flags);
     }
     htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&ch->ch_id, ubuf), name));
   }

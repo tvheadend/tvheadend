@@ -43,6 +43,8 @@ typedef struct config {
   char *http_server_name;
   char *language;
   char *info_area;
+  int chname_num;
+  int chname_src;
   char *language_ui;
   char *theme_ui;
   char *muxconf_path;

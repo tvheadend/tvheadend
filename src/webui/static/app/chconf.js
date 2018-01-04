@@ -1,24 +1,38 @@
-tvheadend.channelTags = tvheadend.idnode_get_enum({
-    url: 'api/channeltag/list',
-    event: 'channeltag',
-    listeners: {
-        'load': function(scope, records, options) {
-            var placeholder = Ext.data.Record.create(['key', 'val']);
-            scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
+tvheadend.getChannelTags = function() {
+    if (tvheadend._chtags)
+        return tvheadend._chtags;
+    tvheadend._chtags = tvheadend.idnode_get_enum({
+        url: 'api/channeltag/list',
+        event: 'channeltag',
+        listeners: {
+            'load': function(scope, records, options) {
+                var placeholder = Ext.data.Record.create(['key', 'val']);
+                scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
+            }
         }
-    }
-});
+    });
+    return tvheadend._chtags;
+}
 
-tvheadend.channels = tvheadend.idnode_get_enum({
-    url: 'api/channel/list',
-    event: 'channel',
-    listeners: {
-        'load': function(scope, records, options) {
-            var placeholder = Ext.data.Record.create(['key', 'val']);
-            scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
+tvheadend.getChannels = function() {
+    if (tvheadend._channels)
+        return tvheadend._channels;
+    tvheadend._channels = tvheadend.idnode_get_enum({
+        url: 'api/channel/list',
+        params: {
+            'numbers': tvheadend.chname_num,
+            'sources': tvheadend.chname_src,
+        },
+        event: 'channel',
+        listeners: {
+            'load': function(scope, records, options) {
+                var placeholder = Ext.data.Record.create(['key', 'val']);
+                scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
+            }
         }
-    }
-});
+    });
+    return tvheadend._channels;
+}
 
 tvheadend.channel_tab = function(panel, index)
 {

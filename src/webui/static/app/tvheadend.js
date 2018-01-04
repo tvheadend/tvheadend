@@ -6,6 +6,8 @@ tvheadend.dialog = null;
 tvheadend.uilevel = 'expert';
 tvheadend.uilevel_nochange = false;
 tvheadend.quicktips = true;
+tvheadend.chname_num = true;
+tvheadend.chname_src = false;
 tvheadend.wizard = null;
 tvheadend.docs_toc = null;
 tvheadend.doc_history = [];
@@ -810,7 +812,7 @@ tvheadend.VideoPlayer = function(channelId) {
 
     var initialChannelName;
     if (channelId) {
-        var record = tvheadend.channels.getById(channelId);
+        var record = tvheadend.getChannels().getById(channelId);
         initialChannelName = record.data.val;
     }
 
@@ -818,7 +820,7 @@ tvheadend.VideoPlayer = function(channelId) {
         loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
-        store: tvheadend.channels,
+        store: tvheadend.getChannels(),
         mode: 'local',
         editable: true,
         triggerAction: 'all',
@@ -976,12 +978,14 @@ function diskspaceUpdate(o) {
  * This function creates top level tabs based on access so users without
  * access to subsystems won't see them.
  *
- * Obviosuly, access is verified in the server too.
+ * Obviously, access is verified in the server too.
  */
 function accessUpdate(o) {
     tvheadend.accessUpdate = o;
     if (!tvheadend.capabilities)
         return;
+
+    var panel = tvheadend.rootTabPanel;
 
     tvheadend.admin = o.admin == true;
 
@@ -992,18 +996,20 @@ function accessUpdate(o) {
         tvheadend.theme = o.theme;
 
     tvheadend.quicktips = o.quicktips ? true : false;
+    tvheadend.chname_num = o.chname_num ? 1 : 0;
+    tvheadend.chname_src = o.chname_src ? 1 : 0;
 
     if (o.uilevel_nochange)
         tvheadend.uilevel_nochange = true;
 
     if ('info_area' in o)
-        tvheadend.rootTabPanel.setInfoArea(o.info_area);
+        panel.setInfoArea(o.info_area);
     if ('username' in o)
-        tvheadend.rootTabPanel.setLogin(o.username);
+        panel.setLogin(o.username);
     if ('address' in o)
-        tvheadend.rootTabPanel.setAddress(o.address);
+        panel.setAddress(o.address);
     if ('freediskspace' in o && 'useddiskspace' in o && 'totaldiskspace' in o)
-        tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.useddiskspace, o.totaldiskspace);
+        panel.setDiskSpace(o.freediskspace, o.useddiskspace, o.totaldiskspace);
 
     if ('cookie_expires' in o && o.cookie_expires > 0)
         tvheadend.cookieProvider.expires =
@@ -1012,9 +1018,15 @@ function accessUpdate(o) {
     if (tvheadend.autorecButton)
         tvheadend.autorecButton.setDisabled(o.dvr != true);
 
+    if (tvheadend.epgpanel == null) {
+        tvheadend.epgpanel = tvheadend.epg();
+        panel.add(tvheadend.epgpanel);
+        panel.setActiveTab(0);
+    }
+
     if (o.dvr == true && tvheadend.dvrpanel == null) {
         tvheadend.dvrpanel = tvheadend.dvr();
-        tvheadend.rootTabPanel.add(tvheadend.dvrpanel);
+        panel.add(tvheadend.dvrpanel);
     }
 
     if (o.admin == true && tvheadend.confpanel == null) {
@@ -1148,14 +1160,14 @@ function accessUpdate(o) {
         }
 
         /* Finish */
-        tvheadend.rootTabPanel.add(cp);
+        panel.add(cp);
         tvheadend.confpanel = cp;
         cp.doLayout();
     }
 
     if (o.admin == true && tvheadend.statuspanel == null) {
         tvheadend.statuspanel = new tvheadend.status;
-        tvheadend.rootTabPanel.add(tvheadend.statuspanel);
+        panel.add(tvheadend.statuspanel);
     }
 
     if (tvheadend.aboutPanel == null) {
@@ -1167,10 +1179,10 @@ function accessUpdate(o) {
             iconCls: 'info',
             autoLoad: 'about.html'
         });
-        tvheadend.rootTabPanel.add(tvheadend.aboutPanel);
+        panel.add(tvheadend.aboutPanel);
     }
 
-    tvheadend.rootTabPanel.doLayout();
+    panel.doLayout();
 
     if (o.wizard)
         tvheadend.wizard_start(o.wizard);
@@ -1362,9 +1374,7 @@ tvheadend.app = function() {
             });
 
             tvheadend.rootTabPanel = new tvheadend.RootTabPanel({
-                region: 'center',
-                activeTab: 0,
-                items: [tvheadend.epg()]
+                region: 'center'
             });
 
             var viewport = new Ext.Viewport({

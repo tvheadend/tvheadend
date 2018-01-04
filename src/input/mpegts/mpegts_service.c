@@ -546,6 +546,24 @@ mpegts_service_channel_name ( service_t *s )
 }
 
 static const char *
+mpegts_service_source ( service_t *s )
+{
+  mpegts_service_t *ms = (mpegts_service_t*)s;
+  const idclass_t *mux_idc = ms->s_dvb_mux->mm_id.in_class;
+  if (mux_idc == &dvb_mux_dvbs_class)   return "DVB-S";
+  if (mux_idc == &dvb_mux_dvbc_class)   return "DVB-C";
+  if (mux_idc == &dvb_mux_dvbt_class)   return "DVB-T";
+  if (mux_idc == &dvb_mux_atsc_t_class) return "ATSC-T";
+  if (mux_idc == &dvb_mux_atsc_c_class) return "ATSC-C";
+  if (mux_idc == &dvb_mux_isdb_t_class) return "ISDB-T";
+  if (mux_idc == &dvb_mux_isdb_c_class) return "ISDB-C";
+  if (mux_idc == &dvb_mux_isdb_s_class) return "ISDB-S";
+  if (mux_idc == &dvb_mux_dtmb_class)   return "DTMB";
+  if (mux_idc == &dvb_mux_dab_class)    return "DAB";
+  return NULL;
+}
+
+static const char *
 mpegts_service_provider_name ( service_t *s )
 {
   return ((mpegts_service_t*)s)->s_dvb_provider;
@@ -817,6 +835,7 @@ mpegts_service_create0
   s->s_grace_period   = mpegts_service_grace_period;
   s->s_channel_number = mpegts_service_channel_number;
   s->s_channel_name   = mpegts_service_channel_name;
+  s->s_source         = mpegts_service_source;
   s->s_provider_name  = mpegts_service_provider_name;
   s->s_channel_icon   = mpegts_service_channel_icon;
   s->s_mapped         = mpegts_service_mapped;
@@ -1102,6 +1121,7 @@ mpegts_service_create_raw ( mpegts_mux_t *mm )
   s->s_grace_period   = mpegts_service_grace_period;
   s->s_channel_number = mpegts_service_channel_number;
   s->s_channel_name   = mpegts_service_channel_name;
+  s->s_source         = mpegts_service_source;
   s->s_provider_name  = mpegts_service_provider_name;
   s->s_channel_icon   = mpegts_service_channel_icon;
   s->s_mapped         = mpegts_service_mapped;

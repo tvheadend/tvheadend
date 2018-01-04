@@ -236,6 +236,10 @@ channel_class_get_list(void *o, const char *lang)
   htsmsg_add_str(m, "uri",   "channel/list");
   htsmsg_add_str(m, "event", "channel");
   htsmsg_add_u32(p, "all",  1);
+  if (config.chname_num)
+    htsmsg_add_u32(p, "numbers", 1);
+  if (config.chname_src)
+    htsmsg_add_u32(p, "sources", 1);
   htsmsg_add_msg(m, "params", p);
   return m;
 }
@@ -773,6 +777,39 @@ channel_get_name ( channel_t *ch, const char *blank )
   return blank;
 }
 
+char *
+channel_get_ename
+  ( channel_t *ch, char *dst, size_t dstlen, const char *blank, uint32_t flags )
+{
+  size_t l = 0;
+  int64_t number;
+  char buf[128];
+  const char *s;
+
+  dst[0] = '\0';
+  if (flags & CHANNEL_ENAME_NUMBERS) {
+    number = channel_get_number(ch);
+    if (number > 0) {
+      if (number % CHANNEL_SPLIT) {
+        tvh_strlcatf(dst, dstlen, l, "%u.%u",
+                     channel_get_major(number),
+                     channel_get_minor(number));
+      } else {
+        tvh_strlcatf(dst, dstlen, l, "%u", channel_get_major(number));
+      }
+    }
+  }
+  s = channel_get_name(ch, blank);
+  if (s)
+    tvh_strlcatf(dst, dstlen, l, "%s%s", l > 0 ? " " : "", s);
+  if (flags & CHANNEL_ENAME_SOURCES) {
+    s = channel_get_source(ch, buf, sizeof(buf));
+    if (s)
+      tvh_strlcatf(dst, dstlen, l, "%s[%s]", l > 0 ? " " : "", s);
+  }
+  return dst;
+}
+
 int
 channel_set_name ( channel_t *ch, const char *name )
 {
@@ -850,6 +887,19 @@ channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor )
     save = 1;
   }
   return save;
+}
+
+char *
+channel_get_source ( channel_t *ch, char *dst, size_t dstlen )
+{
+  const char *s;
+  idnode_list_mapping_t *ilm;
+  size_t l = 0;
+  dst[0] = '\0';
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link)
+    if ((s = service_get_source((service_t *)ilm->ilm_in1)))
+      tvh_strlcatf(dst, dstlen, l, "%s%s", l > 0 ? "," : "", s);
+  return l > 0 ? dst : NULL;
 }
 
 static char *

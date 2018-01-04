@@ -2019,6 +2019,16 @@ service_get_channel_number ( service_t *s )
 }
 
 /*
+ * Get source identificator for service
+ */
+const char *
+service_get_source ( service_t *s )
+{
+  if (s->s_source) return s->s_source(s);
+  return 0;
+}
+
+/*
  * Get name for channel from service
  */
 const char *
