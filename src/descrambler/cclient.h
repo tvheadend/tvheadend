@@ -203,6 +203,9 @@ void cc_ecm_reply
   (cc_service_t *ct, cc_ecm_section_t *es, int key_type,
    uint8_t *key_even, uint8_t *key_odd, int seq);
 
+cc_ecm_section_t *cc_find_pending_section
+  (cclient_t *cc, uint32_t seq, cc_service_t **ct);
+
 void cc_write_message(cclient_t *cc, cc_message_t *msg, int enq);
 int cc_read(cclient_t *cc, void *buf, size_t len, int timeout);
 

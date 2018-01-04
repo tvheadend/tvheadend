@@ -415,7 +415,6 @@ static int
 cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 {
   cc_service_t *ct;
-  cc_ecm_pid_t *ep;
   cc_ecm_section_t *es;
   uint16_t seq;
   int plen;
@@ -433,26 +432,9 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
       seq = (msg[2] << 8) | msg[3];
       len -= 12;
       msg += 12;
-      LIST_FOREACH(ct, &cwc->cc_services, cs_link)
-        LIST_FOREACH(ep, &ct->cs_pids, ep_link)
-          LIST_FOREACH(es, &ep->ep_sections, es_link)
-            if(es->es_seq == seq) {
-              if (es->es_resolved) {
-                mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
-                tvhdebug(cwc->cc_subsys,
-                         "%s: Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
-                         cwc->cc_name,
-                         es->es_pending ? "duplicate " : "",
-                         ep->ep_capid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
-                return 0;
-              }
-              if (es->es_pending) {
-                handle_ecm_reply(ct, es, msg, len, seq);
-                return 0;
-              }
-            }
-      tvhwarn(cwc->cc_subsys, "%s: Got unexpected ECM reply (seqno: %d, len: %d)",
-              cwc->cc_name, seq, len);
+      es = cc_find_pending_section((cclient_t *)cwc, seq, &ct);
+      if (es)
+        handle_ecm_reply(ct, es, msg, len, seq);
       break;
 
     case 0xD3:

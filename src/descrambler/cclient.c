@@ -296,6 +296,41 @@ forbid:
 /**
  *
  */
+cc_ecm_section_t *
+cc_find_pending_section(cclient_t *cc, uint32_t seq, cc_service_t **_ct)
+{
+  cc_service_t *ct;
+  cc_ecm_pid_t *ep;
+  cc_ecm_section_t *es;
+
+  if (_ct) *_ct = NULL;
+  LIST_FOREACH(ct, &cc->cc_services, cs_link)
+    LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+      LIST_FOREACH(es, &ep->ep_sections, es_link)
+        if(es->es_seq == seq) {
+          if (es->es_resolved) {
+            mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
+            tvhdebug(cc->cc_subsys,
+                     "%s: Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
+                     cc->cc_name,
+                     es->es_pending ? "duplicate " : "",
+                     ep->ep_capid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
+            if (_ct) *_ct = ct;
+            return NULL;
+          }
+          if (es->es_pending) {
+            if (_ct) *_ct = ct;
+            return es;
+          }
+        }
+  tvhwarn(cc->cc_subsys, "%s: Got unexpected ECM reply (seqno: %d)",
+          cc->cc_name, seq);
+  return NULL;
+}
+
+/**
+ *
+ */
 static void
 cc_invalidate_cards(cclient_t *cc)
 {

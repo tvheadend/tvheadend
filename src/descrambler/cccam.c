@@ -99,9 +99,12 @@ typedef struct cccam {
   int cccam_extended_conf;
   int cccam_extended;
   int cccam_version;
+
   uint8_t cccam_oscam;
   uint8_t cccam_sendsleep;
   uint8_t cccam_cansid;
+
+  uint8_t cccam_busy;
 
   struct cccam_crypt_block sendblock;
   struct cccam_crypt_block recvblock;
@@ -129,6 +132,27 @@ static inline const char *cccam_get_build_str(cccam_t *cccam)
 {
   int ver = MINMAX(cccam->cccam_version, 0, ARRAY_SIZE(cccam_version_str) - 1);
   return cccam_build_str[ver];
+}
+
+/**
+ *
+ */
+static inline int cccam_set_busy(cccam_t *cccam)
+{
+  if (cccam->cccam_extended)
+    return 0;
+  if (cccam->cccam_busy)
+    return 1;
+  cccam->cccam_busy = 1;
+  return 0;
+}
+
+/**
+ *
+ */
+static inline void cccam_unset_busy(cccam_t *cccam)
+{
+  cccam->cccam_busy = 0;
 }
 
 /**
@@ -360,8 +384,6 @@ cccam_handle_partner(cccam_t *cccam, uint8_t *msg)
 {
   char *saveptr;
   char *p;
-  tvhtrace(cccam->cc_subsys, "%s: partner string: '%s'\n",
-           cccam->cc_name, (char *)msg);
   p = strtok_r((char *)msg, "[", &saveptr);
   while (p) {
     if ((p = strtok_r(NULL, ",]", &saveptr)) == NULL)
@@ -373,6 +395,10 @@ cccam_handle_partner(cccam_t *cccam, uint8_t *msg)
     else if (strncmp(p, "SLP", 3) == 0)
       cccam->cccam_sendsleep = 1;
   }
+  tvhinfo(cccam->cc_subsys, "server supports extended capabilities%s%s%s",
+           cccam->cccam_extended ? " EXT" : "",
+           cccam->cccam_cansid ? " SID" : "",
+           cccam->cccam_sendsleep ? " SLP" : "");
 }
 
 /**
@@ -383,7 +409,6 @@ static int
 cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
 {
   cc_service_t *ct;
-  cc_ecm_pid_t *ep;
   cc_ecm_section_t *es;
   uint8_t seq;
 
@@ -407,14 +432,16 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
       tvhtrace(cccam->cc_subsys, "%s: keepalive", cccam->cc_name);
       break;
     case MSG_EMM_REQUEST:   /* emm ack */
-      //cccam_send_msg(cccam, MSG_EMM_REQUEST, NULL, 0, 0, 0, 0);
-      //sem_post(&cccam->ecm_mutex);
       tvhtrace(cccam->cc_subsys, "%s: EMM message ACK received", cccam->cc_name);
+      cccam_unset_busy(cccam);
+      break;
+    case MSG_SLEEPSEND:
+      tvhtrace(cccam->cc_subsys, "%s: Sleep send received", cccam->cc_name);
+      if (len >= 5) goto req;
       break;
     case MSG_ECM_NOK1:      /* retry */
     case MSG_ECM_NOK2:      /* decode failed */
-      if (len >= 2 && len < 8)
-        goto req;
+      if (len >= 2 && len < 8) goto req;
       if (len > 5) {
         /* partner detection */
         if (len >= 12 && strncmp((char *)buf + 4, "PARTNER:", 8) == 0) {
@@ -427,29 +454,12 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
     //case MSG_CMD_05:      /* ? */
     case MSG_ECM_REQUEST: { /* request reply */
 req:
-      seq = buf[0];
-      LIST_FOREACH(ct, &cccam->cc_services, cs_link)
-        LIST_FOREACH(ep, &ct->cs_pids, ep_link)
-          LIST_FOREACH(es, &ep->ep_sections, es_link)
-            if(es->es_seq == seq) {
-              if (es->es_resolved) {
-                mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
-                tvhdebug(cccam->cc_subsys,
-                         "%s: Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
-                         cccam->cc_name,
-                         es->es_pending ? "duplicate " : "",
-                         ep->ep_capid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
-                return 0;
-              }
-              if (es->es_pending) {
-                cccam_handle_keys(cccam, ct, es, buf, len, seq);
-                return 0;
-              }
-            }
-      tvhwarn(cccam->cc_subsys, "%s: Got unexpected ECM reply (seqno: %d)",
-              cccam->cc_name, seq);
-      break;
-
+      seq = cccam->cccam_extended ? buf[0] : 1;
+      es = cc_find_pending_section((cclient_t *)cccam, seq, &ct);
+      if (es)
+        cccam_handle_keys(cccam, ct, es, buf, len, seq);
+      cccam_unset_busy(cccam);
+      return 0;
     }
     case MSG_SRV_DATA:
       if (len == 0x4c) {
@@ -523,7 +533,7 @@ cccam_send_msg(cccam_t *cccam, cccam_msg_type_t cmd,
   if (cmd == MSG_NO_HEADER) {
     memcpy(netbuf, buf, len);
   } else {
-    netbuf[0] = seq;
+    netbuf[0] = cccam->cccam_extended ? seq : 0;
     netbuf[1] = cmd;
     netbuf[2] = len >> 8;
     netbuf[3] = len;
@@ -696,6 +706,7 @@ cccam_init_session(void *cc)
   uint8_t buf[256];
   int r;
 
+  cccam->cccam_oscam = 0;
   cccam->cccam_extended = 0;
   cccam->cccam_sendsleep = 0;
   cccam->cccam_cansid = 0;
@@ -744,6 +755,12 @@ cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
     return 0;
   }
 
+  if (cccam_set_busy(cccam)) {
+    tvhinfo(cccam->cc_subsys, "%s: Ignore ECM request %02X (server is busy)",
+            cccam->cc_name, msg[0]);
+    return 0;
+  }
+
   seq = atomic_add(&cccam->cc_seq, 1);
   caid = es->es_caid;
   provid = es->es_provid;
@@ -789,6 +806,12 @@ cccam_send_emm(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
     return;
   }
 
+  if (cccam_set_busy(cccam)) {
+    tvhinfo(cccam->cc_subsys, "%s: Ignore EMM request %02X (server is busy)",
+            cccam->cc_name, msg[0]);
+    return;
+  }
+
   seq = atomic_add(&cccam->cc_seq, 1);
   caid = pcard->cs_ra.caid;
   card_id = pcard->cccam.cs_id;  
@@ -807,6 +830,9 @@ cccam_send_emm(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
   buf[10] = card_id & 0xff;
   buf[11] = len;
   memcpy(buf + 12, msg, len);
+
+  cccam_set_busy(cccam);
+
   cccam_send_msg(cccam, MSG_EMM_REQUEST, buf, 12 + len, 1, seq, card_id);
 }
 
