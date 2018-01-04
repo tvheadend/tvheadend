@@ -363,15 +363,16 @@ cccam_handle_keys(cccam_t *cccam, cc_service_t *ct, cc_ecm_section_t *es,
 {
   uint8_t *dcw_even, *dcw_odd, _dcw[16];
 
-  cccam_decrypt_cw(cccam->cccam_nodeid, es->cccam.es_card_id, buf + 4);
-  memcpy(_dcw, buf + 4, 16);
-  cccam_decrypt(&cccam->recvblock, buf + 4, len - 4);
+  if (!cccam->cccam_extended) {
+    cccam_decrypt_cw(cccam->cccam_nodeid, es->cccam.es_card_id, buf + 4);
+    memcpy(_dcw, buf + 4, 16);
+    cccam_decrypt(&cccam->recvblock, buf + 4, len - 4);
+  } else {
+    memcpy(_dcw, buf + 4, 16);
+  }
 
   dcw_even = buf[1] == MSG_ECM_REQUEST ? _dcw : NULL;
   dcw_odd  = buf[1] == MSG_ECM_REQUEST ? _dcw + 8 : NULL;
-
-  tvhtrace(cccam->cc_subsys, "%s: HEADER", cccam->cc_name);
-  tvhlog_hexdump(cccam->cc_subsys, buf, 4);
 
   cc_ecm_reply(ct, es, DESCRAMBLER_CSA_CBC, dcw_even, dcw_odd, seq);
 }
@@ -395,10 +396,11 @@ cccam_handle_partner(cccam_t *cccam, uint8_t *msg)
     else if (strncmp(p, "SLP", 3) == 0)
       cccam->cccam_sendsleep = 1;
   }
-  tvhinfo(cccam->cc_subsys, "server supports extended capabilities%s%s%s",
-           cccam->cccam_extended ? " EXT" : "",
-           cccam->cccam_cansid ? " SID" : "",
-           cccam->cccam_sendsleep ? " SLP" : "");
+  tvhinfo(cccam->cc_subsys, "%s: server supports extended capabilities%s%s%s",
+          cccam->cc_name,
+          cccam->cccam_extended ? " EXT" : "",
+          cccam->cccam_cansid ? " SID" : "",
+          cccam->cccam_sendsleep ? " SLP" : "");
 }
 
 /**
