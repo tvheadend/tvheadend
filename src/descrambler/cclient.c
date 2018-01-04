@@ -25,9 +25,7 @@
 #include "cclient.h"
 #include "tvhpoll.h"
 
-static void cc_service_pid_free(cc_service_t *ct);
-
-/**
+/*
  *
  */
 static int
@@ -43,23 +41,97 @@ cc_check_empty(const uint8_t *str, int len)
 /**
  *
  */
+static void
+cc_free_ecm_section(cc_ecm_section_t *es)
+{
+  LIST_REMOVE(es, es_link);
+  free(es);
+}
+
+/**
+ *
+ */
+static void
+cc_free_ecm_pid(cc_ecm_pid_t *ep)
+{
+  cc_ecm_section_t *es;
+  while ((es = LIST_FIRST(&ep->ep_sections)) != NULL)
+    cc_free_ecm_section(es);
+  LIST_REMOVE(ep, ep_link);
+  free(ep);
+}
+
+/**
+ *
+ */
+static void
+cc_service_ecm_pid_free(cc_service_t *ct)
+{
+  cc_ecm_pid_t *ep;
+
+  while((ep = LIST_FIRST(&ct->cs_ecm_pids)) != NULL)
+    cc_free_ecm_pid(ep);
+}
+
+/**
+ *
+ */
+static void
+cc_free_card(cc_card_data_t *cd)
+{
+  LIST_REMOVE(cd, cs_card);
+  descrambler_close_emm(cd->cs_mux, cd, cd->cs_ra.caid);
+  emm_reass_done(&cd->cs_ra);
+  free(cd);
+}
+
+/**
+ *
+ */
+static void
+cc_free_cards(cclient_t *cc)
+{
+  cc_card_data_t *cd;
+
+  while((cd = LIST_FIRST(&cc->cc_cards)) != NULL)
+    cc_free_card(cd);
+}
+
+/**
+ *
+ */
+char *
+cc_get_card_name(cc_card_data_t *pcard, char *buf, size_t buflen)
+{
+  snprintf(buf, buflen, "ID:%08x CAID:%04x with %d provider%s",
+           pcard->cs_id, pcard->cs_ra.caid, pcard->cs_ra.providers_count,
+           pcard->cs_ra.providers_count != 1 ? "s" : "");
+  return buf;
+}
+
+/**
+ *
+ */
 cc_card_data_t *
-cc_new_card(cclient_t *cc, uint16_t caid, uint8_t *ua,
+cc_new_card(cclient_t *cc, uint16_t caid, uint32_t cardid, uint8_t *ua,
             int pcount, uint8_t **pid, uint8_t **psa)
 {
   cc_card_data_t *pcard = NULL;
   emm_provider_t *ep;
   const char *n;
   const uint8_t *id, *sa;
-  int i, allocated = 0;
+  int i, j, c, allocated = 0;
+  char buf[256];
 
   LIST_FOREACH(pcard, &cc->cc_cards, cs_card)
-    if (pcard->cs_ra.caid == caid)
+    if (pcard->cs_ra.caid == caid &&
+        pcard->cs_id == cardid)
       break;
 
   if (pcard == NULL) {
     pcard = calloc(1, sizeof(cc_card_data_t));
     emm_reass_init(&pcard->cs_ra, caid);
+    pcard->cs_id = cardid;
     allocated = 1;
   }
 
@@ -87,30 +159,44 @@ cc_new_card(cclient_t *cc, uint16_t caid, uint8_t *ua,
 
   if (ua) {
     tvhinfo(cc->cc_subsys, "%s: Connected as user %s "
-            "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
+            "to a %s-card-%08x [CAID:%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
             "with %d provider%s",
-            cc->cc_name, cc->cc_username, n, caid,
+            cc->cc_name, cc->cc_username, n, cardid, caid,
             ua[0], ua[1], ua[2], ua[3], ua[4], ua[5], ua[6], ua[7],
-            pcount, pcount > 1 ? "s" : "");
+            pcount, pcount != 1 ? "s" : "");
   } else {
     tvhinfo(cc->cc_subsys, "%s: Connected as user %s "
-            "to a %s-card [0x%04x] with %d provider%s",
-            cc->cc_name, cc->cc_username, n, caid,
-            pcount, pcount > 1 ? "s" : "");
+            "to a %s-card-%08x [CAID:%04x] with %d provider%s",
+            cc->cc_name, cc->cc_username, n, cardid, caid,
+            pcount, pcount != 1 ? "s" : "");
   }
 
-  for (i = 0, ep = pcard->cs_ra.providers; i < pcount; i++, ep++) {
+  buf[0] = '\0';
+  for (i = j = c = 0, ep = pcard->cs_ra.providers; i < pcount; i++, ep++) {
     if (psa && !cc_check_empty(ep->sa, 8)) {
       sa = ep->sa;
-      tvhinfo(cc->cc_subsys, "%s: Provider ID #%d: 0x%04x:0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
-              cc->cc_name, i + 1, caid, ep->id,
-              sa[0], sa[1], sa[2], sa[3], sa[4], sa[5], sa[6], sa[7]);
+      if (buf[0]) {
+        tvhdebug(cc->cc_subsys, "%s: Providers: ID:%08x CAID:%04X:[%s]",
+                 cc->cc_name, cardid, caid, buf);
+        buf[0] = '\0';
+        c = 0;
+      }
+      tvhdebug(cc->cc_subsys, "%s: Provider ID #%d: 0x%04x:0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
+               cc->cc_name, i + 1, caid, ep->id,
+               sa[0], sa[1], sa[2], sa[3], sa[4], sa[5], sa[6], sa[7]);
     } else {
-      tvhinfo(cc->cc_subsys, "%s: Provider ID #%d: 0x%04x:0x%06x",
-              cc->cc_name, i + 1, caid, ep->id);
+      tvh_strlcatf(buf, sizeof(buf), c, "%s0x%06x", c > 0 ? "," : "", ep->id);
+      if (++j > 5) {
+        tvhdebug(cc->cc_subsys, "%s: Providers: ID:%08x CAID:%04X:[%s]",
+                 cc->cc_name, cardid, caid, buf);
+        buf[0] = '\0';
+        c = j = 0;
+      }
     }
   }
-
+  if (j > 0)
+    tvhdebug(cc->cc_subsys, "%s: Providers: ID:%08x CAID:%04X:[%s]",
+             cc->cc_name, cardid, caid, buf);
   if (cc->cc_emm && ua) {
     ua = pcard->cs_ra.ua;
     i = ua[0] || ua[1] || ua[2] || ua[3] ||
@@ -128,6 +214,61 @@ cc_new_card(cclient_t *cc, uint16_t caid, uint8_t *ua,
 /**
  *
  */
+void
+cc_remove_card(cclient_t *cc, cc_card_data_t *pcard)
+{
+  cc_service_t *ct;
+  cc_ecm_pid_t *ep, *epn;
+  cc_ecm_section_t *es, *esn;
+  emm_provider_t *emmp;
+  char buf[256];
+  int i;
+
+  tvhinfo(cc->cc_subsys, "%s: card %s removed", cc->cc_name,
+          cc_get_card_name(pcard, buf, sizeof(buf)));
+
+  /* invalidate all requests */
+  LIST_FOREACH(ct, &cc->cc_services, cs_link) {
+    for (ep = LIST_FIRST(&ct->cs_ecm_pids); ep; ep = epn) {
+      epn = LIST_NEXT(ep, ep_link);
+      for (es = LIST_FIRST(&ep->ep_sections); es; es = esn) {
+        esn = LIST_NEXT(es, es_link);
+        if (es->es_caid == pcard->cs_ra.caid) {
+          emmp = pcard->cs_ra.providers;
+          for (i = 0; i < pcard->cs_ra.providers_count; i++, emmp++)
+            if (emmp->id == es->es_provid) {
+              cc_free_ecm_section(es);
+              break;
+            }
+          }
+        }
+        es = esn;
+      }
+      if (LIST_EMPTY(&ep->ep_sections))
+        cc_free_ecm_pid(ep);
+    }
+
+  cc_free_card(pcard);
+}
+
+/**
+ *
+ */
+void
+cc_remove_card_by_id(cclient_t *cc, uint32_t id)
+{
+  cc_card_data_t *pcard;
+
+  LIST_FOREACH(pcard, &cc->cc_cards, cs_card)
+    if (pcard->cs_id == id) {
+      cc_remove_card(cc, pcard);
+      break;
+    }
+}
+
+/**
+ *
+ */
 static int
 cc_ecm_reset(th_descrambler_t *th)
 {
@@ -138,7 +279,7 @@ cc_ecm_reset(th_descrambler_t *th)
 
   pthread_mutex_lock(&cc->cc_mutex);
   descrambler_change_keystate(th, DS_READY, 1);
-  LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+  LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link)
     LIST_FOREACH(es, &ep->ep_sections, es_link)
       es->es_keystate = ES_UNKNOWN;
   ct->ecm_state = ECM_RESET;
@@ -158,7 +299,7 @@ cc_ecm_idle(th_descrambler_t *th)
   cc_ecm_section_t *es;
 
   pthread_mutex_lock(&cc->cc_mutex);
-  LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+  LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link)
     LIST_FOREACH(es, &ep->ep_sections, es_link)
       es->es_keystate = ES_IDLE;
   ct->ecm_state = ECM_RESET;
@@ -219,7 +360,7 @@ cc_ecm_reply(cc_service_t *ct, cc_ecm_section_t *es,
 
 forbid:
     i = 0;
-    LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+    LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link)
       LIST_FOREACH(es2, &ep->ep_sections, es_link)
         if(es2 && es2 != es && es2->es_nok == 0) {
           if (es2->es_pending)
@@ -230,7 +371,7 @@ forbid:
       return;
     
     es->es_keystate = ES_FORBIDDEN;
-    LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
+    LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link) {
       LIST_FOREACH(es2, &ep->ep_sections, es_link)
         if (es2->es_keystate == ES_UNKNOWN ||
             es2->es_keystate == ES_RESOLVED)
@@ -305,7 +446,7 @@ cc_find_pending_section(cclient_t *cc, uint32_t seq, cc_service_t **_ct)
 
   if (_ct) *_ct = NULL;
   LIST_FOREACH(ct, &cc->cc_services, cs_link)
-    LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+    LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link)
       LIST_FOREACH(es, &ep->ep_sections, es_link)
         if(es->es_seq == seq) {
           if (es->es_resolved) {
@@ -338,22 +479,6 @@ cc_invalidate_cards(cclient_t *cc)
 
   LIST_FOREACH(cd, &cc->cc_cards, cs_card)
     cd->cs_running = 0;
-}
-
-/**
- *
- */
-static void
-cc_free_cards(cclient_t *cc)
-{
-  cc_card_data_t *cd;
-
-  while((cd = LIST_FIRST(&cc->cc_cards)) != NULL) {
-    LIST_REMOVE(cd, cs_card);
-    descrambler_close_emm(cd->cs_mux, cd, cd->cs_ra.caid);
-    emm_reass_done(&cd->cs_ra);
-    free(cd);
-  }
 }
 
 /**
@@ -549,7 +674,7 @@ cc_thread(void *aux)
         break;
       }
 
-      tvhinfo(cc->cc_subsys, "%s: Connected", cc->cc_name);
+      tvhdebug(cc->cc_subsys, "%s: Connected", cc->cc_name);
       attempts = 0;
 
       cc->cc_fd = fd;
@@ -718,7 +843,7 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
 
   if (ct->ecm_state == ECM_RESET) {
     /* clean all */
-    cc_service_pid_free(ct);
+    cc_service_ecm_pid_free(ct);
     /* move to init state */
     ct->ecm_state = ECM_INIT;
     ct->cs_capid = 0xffff;
@@ -727,7 +852,7 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
              cc->cc_name, t->s_dvb_svcname);
   }
 
-  LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+  LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link)
     if(ep->ep_capid == pid) break;
 
   if(ep == NULL) {
@@ -754,7 +879,7 @@ prefcapid_ok:
          t->s_dvb_prefcapid_lock == PREFCAPID_OFF) {
         ep = calloc(1, sizeof(cc_ecm_pid_t));
         ep->ep_capid = pid;
-        LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
+        LIST_INSERT_HEAD(&ct->cs_ecm_pids, ep, ep_link);
         tvhdebug(cc->cc_subsys, "%s: Insert %s ECM (PID %d) for service \"%s\"",
                  cc->cc_name, t->s_dvb_prefcapid ? "preferred" : "new", pid, t->s_dvb_svcname);
       }
@@ -838,32 +963,13 @@ found:
                cc->cc_name, pcard->cs_ra.caid, provid,
                t->s_dvb_svcname);
       tvhlog_hexdump(cc->cc_subsys, data, len);
-      cc->cc_send_emm(cc, ct, pcard, provid, data, len);
+      emm_filter(&pcard->cs_ra, data, len, t->s_dvb_mux, cc_emm_send, pcard);
     }
   }
 
 end:
   pthread_mutex_unlock(&t->s_stream_mutex);
   pthread_mutex_unlock(&cc->cc_mutex);
-}
-
-/**
- * cc_mutex is held
- */
-static void
-cc_service_pid_free(cc_service_t *ct)
-{
-  cc_ecm_pid_t *ep;
-  cc_ecm_section_t *es;
-
-  while((ep = LIST_FIRST(&ct->cs_pids)) != NULL) {
-    while ((es = LIST_FIRST(&ep->ep_sections)) != NULL) {
-      LIST_REMOVE(es, es_link);
-      free(es);
-    }
-    LIST_REMOVE(ep, ep_link);
-    free(ep);
-  }
 }
 
 /**
@@ -879,7 +985,7 @@ cc_service_destroy0(th_descrambler_t *td)
     descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids.pids[i].pid);
   mpegts_pid_done(&ct->cs_epids);
 
-  cc_service_pid_free(ct);
+  cc_service_ecm_pid_free(ct);
 
   LIST_REMOVE(td, td_service_link);
 

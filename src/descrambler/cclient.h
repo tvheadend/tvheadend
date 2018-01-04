@@ -44,6 +44,7 @@ typedef struct cc_ecm_section {
 
   int      es_section;
 
+  uint32_t es_card_id;
   uint16_t es_capid;
   uint16_t es_caid;
   uint32_t es_provid;
@@ -53,12 +54,6 @@ typedef struct cc_ecm_section {
   uint8_t  es_pending;
   uint8_t  es_resolved;
   int64_t  es_time;  // time request was sent
-
-  union {
-    struct {
-      uint32_t es_card_id;
-    } cccam;
-  };
 
 } cc_ecm_section_t;
 
@@ -98,7 +93,7 @@ typedef struct cc_service {
     ECM_RESET
   } ecm_state;
 
-  LIST_HEAD(, cc_ecm_pid) cs_pids;
+  LIST_HEAD(, cc_ecm_pid) cs_ecm_pids;
 
 } cc_service_t;
 
@@ -116,13 +111,13 @@ typedef struct cc_message {
  */
 typedef struct cc_card_data {
   LIST_ENTRY(cc_card_data) cs_card;
+  uint32_t      cs_id;
   emm_reass_t   cs_ra;
   void         *cs_client;
   mpegts_mux_t *cs_mux;
   uint8_t       cs_running;
   union {
     struct {
-      uint32_t  cs_id;
       uint32_t  cs_remote_id;
       uint8_t   cs_hop;
       uint8_t   cs_reshare;
@@ -195,9 +190,13 @@ typedef struct cclient {
 static inline int cc_must_break(cclient_t *cc)
  { return !cc->cc_running || !cc->cac_enabled || cc->cc_reconfigure; }
 
+char *cc_get_card_name(cc_card_data_t *pcard, char *buf, size_t buflen);
 cc_card_data_t *cc_new_card
-  (cclient_t *cc, uint16_t caid, uint8_t *ua, int pcount, uint8_t **pid, uint8_t **psa);
+  (cclient_t *cc, uint16_t caid, uint32_t cardid,
+   uint8_t *ua, int pcount, uint8_t **pid, uint8_t **psa);
 void cc_emm_set_allowed(cclient_t *cc, int emm_allowed);
+void cc_remove_card(cclient_t *cc, cc_card_data_t *pcard);
+void cc_remove_card_by_id(cclient_t *cc, uint32_t card_id);
 
 void cc_ecm_reply
   (cc_service_t *ct, cc_ecm_section_t *es, int key_type,

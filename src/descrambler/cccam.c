@@ -343,9 +343,10 @@ cccam_decode_card_data_reply(cccam_t *cccam, uint8_t *msg)
 
   caclient_set_status((caclient_t *)cccam, CACLIENT_STATUS_CONNECTED);
   cccam_set_ua(ua, msg + 16);
-  pcard = cc_new_card((cclient_t *)cccam, (msg[12] << 8) | msg[13], ua, nprov, pid, psa);
+  pcard = cc_new_card((cclient_t *)cccam, (msg[12] << 8) | msg[13],
+                      (msg[4] << 24) | (msg[5] << 16) | (msg[6] << 8) | msg[7],
+                      ua, nprov, pid, psa);
   if (pcard) {
-    pcard->cccam.cs_id = (msg[4] << 24) | (msg[5] << 16) | (msg[6] << 8) | msg[7];
     pcard->cccam.cs_remote_id = (msg[8] << 24) | (msg[9] << 16) | (msg[10] << 8) | msg[11];
     pcard->cccam.cs_hop = msg[14];
     pcard->cccam.cs_reshare = msg[15];
@@ -364,7 +365,7 @@ cccam_handle_keys(cccam_t *cccam, cc_service_t *ct, cc_ecm_section_t *es,
   uint8_t *dcw_even, *dcw_odd, _dcw[16];
 
   if (!cccam->cccam_extended) {
-    cccam_decrypt_cw(cccam->cccam_nodeid, es->cccam.es_card_id, buf + 4);
+    cccam_decrypt_cw(cccam->cccam_nodeid, es->es_card_id, buf + 4);
     memcpy(_dcw, buf + 4, 16);
     cccam_decrypt(&cccam->recvblock, buf + 4, len - 4);
   } else {
@@ -412,6 +413,7 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
 {
   cc_service_t *ct;
   cc_ecm_section_t *es;
+  uint32_t cardid;
   uint8_t seq;
 
   if (len < 4)
@@ -428,7 +430,11 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
       cccam_decode_card_data_reply(cccam, buf);
       break;
     case MSG_CARD_REMOVED:
-      tvhtrace(cccam->cc_subsys, "%s: del card message received", cccam->cc_name);
+      if (len >= 8) {
+        cardid = (buf[4] << 24) | (buf[5] << 16) | (buf[6] << 8) | buf[7];
+        tvhtrace(cccam->cc_subsys, "%s: del card %08X message received", cccam->cc_name, cardid);
+        cc_remove_card_by_id((cclient_t *)cccam, cardid);
+      }
       break;
     case MSG_KEEPALIVE:
       tvhtrace(cccam->cc_subsys, "%s: keepalive", cccam->cc_name);
@@ -766,8 +772,8 @@ cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
   seq = atomic_add(&cccam->cc_seq, 1);
   caid = es->es_caid;
   provid = es->es_provid;
-  card_id = pcard->cccam.cs_id;
-  es->cccam.es_card_id = card_id;
+  card_id = pcard->cs_id;
+  es->es_card_id = card_id;
   sid = t->s_dvb_service_id;
 
   buf = alloca(len + 13);
@@ -816,7 +822,7 @@ cccam_send_emm(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
 
   seq = atomic_add(&cccam->cc_seq, 1);
   caid = pcard->cs_ra.caid;
-  card_id = pcard->cccam.cs_id;  
+  card_id = pcard->cs_id;
 
   buf = alloca(len + 12);
   buf[ 0] = caid >> 8;
