@@ -2107,7 +2107,9 @@ tvheadend.idnode_grid = function(panel, conf)
                 startCollapsed: true,
                 showGroupName: false,
                 // custom grouping text template to display the number of recordings per group
-                groupTextTpl: '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Recordings" : "Recording"]})'
+                groupTextTpl: conf.viewTpl ||
+                              '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "' +
+                              _('Items') + '" : "' + _('Item') + '"]})'
             }),
             keys: {
                 key: 'a',

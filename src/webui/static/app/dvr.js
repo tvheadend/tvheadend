@@ -345,6 +345,10 @@ tvheadend.dvr_upcoming = function(panel, index) {
         }
     };
 
+    function updateDupText(button, dup) {
+        button.setText(dup ? _('Hide duplicates') : _('Show duplicates'));
+    }
+
     var dupButton = {
         name: 'dup',
         builder: function() {
@@ -358,7 +362,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
             duplicates ^= 1;
             select.grid.colModel.setHidden(columnId, !duplicates);
             select.grid.bottomToolbar.changePage(0);
-            this.setText(duplicates ? _('Hide duplicates') : _('Show duplicates'));
+            updateDupText(this, duplicates);
             store.baseParams.duplicates = duplicates;
             store.reload();
         }
@@ -381,12 +385,11 @@ tvheadend.dvr_upcoming = function(panel, index) {
     }
 
     function viewready(grid) {
-        if(!grid.store.baseParams.duplicates){
+        var d = grid.store.baseParams.duplicates;
+        updateDupText(grid.abuttons['dup'], d);
+        if (!d) {
             columnId = grid.colModel.findColumnIndex('duplicate');
             grid.colModel.setHidden(columnId, true);
-        }else{
-            var buttonIndex = grid.topToolbar.items.findIndex('text','Show duplicates');
-            grid.topToolbar.items.item(buttonIndex).setText(_('Hide duplicates'));
         }
     }
 
@@ -534,6 +537,10 @@ tvheadend.dvr_finished = function(panel, index) {
         }
     };
 
+    function groupingText(field) {
+        return field ? _('Enable grouping') : _('Disable grouping');
+    }
+
     var groupingButton = {
         name: 'grouping',
         builder: function() {
@@ -544,7 +551,7 @@ tvheadend.dvr_finished = function(panel, index) {
             });
         },
         callback: function(conf, e, store, select) {
-            this.setText(store.groupField ? _('Enable grouping') : _('Disable grouping'));
+            this.setText(groupingText(store.groupField));
             if (!store.groupField){
                 select.grid.view.enableGrouping = true;
                 select.grid.store.groupBy(store.sortInfo.field);
@@ -568,8 +575,7 @@ tvheadend.dvr_finished = function(panel, index) {
     }
 
     function viewready(grid) {
-        var buttonIndex = grid.topToolbar.items.findIndex('text','Enable grouping');
-        grid.topToolbar.items.item(buttonIndex).setText(grid.store.groupField ? _('Disable grouping') : _('Enable grouping'));
+        grid.abuttons['grouping'].setText(groupingText(!grid.store.groupField));
     }
 
     tvheadend.idnode_grid(panel, {
@@ -580,7 +586,12 @@ tvheadend.dvr_finished = function(panel, index) {
         titleP: _('Finished Recordings'),
         iconCls: 'finishedRec',
         tabIndex: index,
-        edit: { params: { list: tvheadend.admin ? "playcount,retention,removal,owner,comment" : "retention,removal,comment" } },
+        edit: {
+            params: {
+                list: tvheadend.admin ? "playcount,retention,removal,owner,comment" :
+                                        "retention,removal,comment"
+            }
+        },
         del: false,
         list: 'disp_title,disp_subtitle,episode,channelname,' +
               'start_real,stop_real,duration,filesize,' +
@@ -595,8 +606,8 @@ tvheadend.dvr_finished = function(panel, index) {
             }
         },
         sort: {
-          field: 'start_real',
-          direction: 'ASC'
+            field: 'start_real',
+            direction: 'ASC'
         },
         plugins: [actions],
         lcol: [
@@ -614,7 +625,9 @@ tvheadend.dvr_finished = function(panel, index) {
             }],
         tbar: [removeButton, downloadButton, rerecordButton, moveButton, groupingButton],
         selected: selected,
-        viewready: viewready
+        viewready: viewready,
+        viewTpl: '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "' +
+                  _('Recordings') + '" : "' + _('Recording') + '"]})'
     });
 
     return panel;
