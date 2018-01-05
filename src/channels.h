@@ -30,7 +30,9 @@ RB_HEAD(channel_tree, channel);
 TAILQ_HEAD(channel_tag_queue, channel_tag);
 
 extern struct channel_tag_queue channel_tags;
+extern int                      channel_tags_count;
 extern struct channel_tree      channels;
+extern int                      channels_count;
 
 #define CHANNEL_FOREACH(ch) RB_FOREACH(ch, &channels, ch_link)
 
@@ -205,5 +207,12 @@ const char *channel_get_epgid ( channel_t *ch );
 #define channel_get_uuid(ch,ub) idnode_uuid_as_str(&(ch)->ch_id, ub)
 
 #define channel_get_id(ch)    idnode_get_short_uuid((&(ch)->ch_id))
+
+channel_t **channel_get_sorted_list
+  ( const char *sort_type, int *_count ) ;
+channel_t **channel_get_sorted_list_for_tag
+  ( const char *sort_type, channel_tag_t *tag, int *_count );
+channel_tag_t **channel_tag_get_sorted_list
+  ( const char *sort_type, int *_count );
 
 #endif /* CHANNELS_H */

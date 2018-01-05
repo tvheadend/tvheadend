@@ -61,8 +61,6 @@
 #include <sys/socket.h>
 #endif
 
-typedef int (sortfcn_t)(const void *, const void *);
-
 enum {
   PLAYLIST_M3U,
   PLAYLIST_E2,
@@ -70,75 +68,6 @@ enum {
 };
 
 static int webui_xspf;
-
-/*
- *
- */
-static int
-http_channel_playlist_cmp(const void *a, const void *b)
-{
-  int r;
-  channel_t *c1 = *(channel_t **)a, *c2 = *(channel_t **)b;
-  int64_t n1 = channel_get_number(c1), n2 = channel_get_number(c2);
-  if (n1 > n2)
-    r = 1;
-  else if (n1 < n2)
-    r = -1;
-  else
-    r = strcasecmp(channel_get_name(c1, ""), channel_get_name(c2, ""));
-  return r;
-}
-
-static int
-http_channel_playlist_cmp2(const void *a, const void *b)
-{
-  channel_t *c1 = *(channel_t **)a, *c2 = *(channel_t **)b;
-  return strcasecmp(channel_get_name(c1, ""), channel_get_name(c2, ""));
-}
-
-static sortfcn_t *http_channel_playlist_sfcn(http_connection_t *hc)
-{
-  const char *sorttype = http_arg_get(&hc->hc_req_args, "sort");
-  if (sorttype) {
-    if (!strcmp(sorttype, "numname"))
-      return &http_channel_playlist_cmp;
-    if (!strcmp(sorttype, "name"))
-      return &http_channel_playlist_cmp2;
-  }
-  return &http_channel_playlist_cmp;
-}
-
-/*
- *
- */
-static int
-http_channel_tag_playlist_cmp(const void *a, const void *b)
-{
-  channel_tag_t *ct1 = *(channel_tag_t **)a, *ct2 = *(channel_tag_t **)b;
-  int r = ct1->ct_index - ct2->ct_index;
-  if (r == 0)
-    r = strcasecmp(ct1->ct_name, ct2->ct_name);
-  return r;
-}
-
-static int
-http_channel_tag_playlist_cmp2(const void *a, const void *b)
-{
-  channel_tag_t *ct1 = *(channel_tag_t **)a, *ct2 = *(channel_tag_t **)b;
-  return strcasecmp(ct1->ct_name, ct2->ct_name);
-}
-
-static sortfcn_t *http_channel_tag_playlist_sfcn(http_connection_t *hc)
-{
-  const char *sorttype = http_arg_get(&hc->hc_req_args, "sort");
-  if (sorttype) {
-    if (!strcmp(sorttype, "idxname"))
-      return &http_channel_tag_playlist_cmp;
-    if (!strcmp(sorttype, "name"))
-      return &http_channel_tag_playlist_cmp2;
-  }
-  return &http_channel_tag_playlist_cmp;
-}
 
 /**
  *
@@ -678,40 +607,22 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
 {
   htsbuf_queue_t *hq;
   char buf[255], ubuf[UUID_HEX_SIZE];
-  idnode_list_mapping_t *ilm;
   char *profile, *hostpath;
-  const char *name, *blank;
+  const char *name, *blank, *sort;
   const char *lang = hc->hc_access->aa_lang_ui;
   channel_t *ch;
   channel_t **chlist;
-  int idx = 0, count = 0;
+  int idx, count = 0;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
   hq = &hc->hc_reply;
-
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
   hostpath = http_get_hostpath(hc);
-
-  LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
-    ch = (channel_t *)ilm->ilm_in2;
-    if (ch->ch_enabled)
-      count++;
-  }
-
-  chlist = malloc(count * sizeof(channel_t *));
-
-  LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
-    ch = (channel_t *)ilm->ilm_in2;
-    if (ch->ch_enabled)
-      chlist[idx++] = ch;
-  }
-
-  assert(idx == count);
-
-  qsort(chlist, count, sizeof(channel_t *), http_channel_playlist_sfcn(hc));
+  sort = http_arg_get(&hc->hc_req_args, "sort");
+  chlist = channel_get_sorted_list_for_tag(sort, tag, &count);
 
   if (pltype == PLAYLIST_M3U)
     htsbuf_append_str(hq, "#EXTM3U\n");
@@ -738,7 +649,6 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
   }
 
   free(chlist);
-
   free(hostpath);
   free(profile);
   return 0;
@@ -758,11 +668,11 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
   channel_t *ch;
   channel_t **chlist;
   int labelidx = 0;
-  int idx = 0, count = 0;
-  int chidx = 0, chcount = 0;
+  int idx, count = 0;
+  int chidx, chcount = 0;
   char *profile, *hostpath;
   const char *lang = hc->hc_access->aa_lang_ui;
-  const char *blank;
+  const char *blank, *sort;
   idnode_list_mapping_t *ilm;
 
   if(hc->hc_access == NULL ||
@@ -770,39 +680,13 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
     return HTTP_STATUS_UNAUTHORIZED;
 
   hq = &hc->hc_reply;
-
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
-
   hostpath = http_get_hostpath(hc);
-
-  TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if(ct->ct_enabled && !ct->ct_internal)
-      count++;
-
-  ctlist = malloc(count * sizeof(channel_tag_t *));
-
-  TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if(ct->ct_enabled && !ct->ct_internal)
-      ctlist[idx++] = ct;
-
-  assert(idx == count);
-
-  qsort(ctlist, count, sizeof(channel_tag_t *), http_channel_tag_playlist_sfcn(hc));
+  sort = http_arg_get(&hc->hc_req_args, "sort");
+  ctlist = channel_tag_get_sorted_list(sort, &count);
 
   if (pltype == PLAYLIST_E2 || pltype == PLAYLIST_SATIP_M3U) {
-    CHANNEL_FOREACH(ch)
-      if (ch->ch_enabled)
-        chcount++;
-
-    chlist = malloc(chcount * sizeof(channel_t *));
-
-    CHANNEL_FOREACH(ch)
-      if (ch->ch_enabled)
-        chlist[chidx++] = ch;
-
-    assert(chidx == chcount);
-
-    qsort(chlist, chcount, sizeof(channel_t *), http_channel_playlist_sfcn(hc));
+    chlist = channel_get_sorted_list(sort, &chcount);
   } else {
     chlist = NULL;
   }
@@ -811,7 +695,6 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
   htsbuf_append_str(hq, pltype == PLAYLIST_E2 ? "#NAME Tvheadend Channels\n" : "#EXTM3U\n");
   for (idx = 0; idx < count; idx++) {
     ct = ctlist[idx];
-
     if (pltype == PLAYLIST_M3U) {
       snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
       http_m3u_playlist_add(hq, hostpath, buf, profile, ct->ct_name,
@@ -859,7 +742,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
   channel_t **chlist;
   int idx = 0, count = 0;
   char *profile, *hostpath;
-  const char *name, *blank;
+  const char *name, *blank, *sort;
   const char *lang = hc->hc_access->aa_lang_ui;
 
   if(hc->hc_access == NULL ||
@@ -870,22 +753,10 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
   hostpath = http_get_hostpath(hc);
-
-  CHANNEL_FOREACH(ch)
-    if (ch->ch_enabled)
-      count++;
-
-  chlist = malloc(count * sizeof(channel_t *));
-
-  CHANNEL_FOREACH(ch)
-    if (ch->ch_enabled)
-      chlist[idx++] = ch;
-
-  assert(idx == count);
-
-  qsort(chlist, count, sizeof(channel_t *), http_channel_playlist_sfcn(hc));
-
+  sort = http_arg_get(&hc->hc_req_args, "sort");
+  chlist = channel_get_sorted_list(sort, &count);
   blank = tvh_gettext_lang(lang, channel_blank_name);
+
   htsbuf_append_str(hq, pltype == PLAYLIST_E2 ? "#NAME Tvheadend Channels\n" : "#EXTM3U\n");
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
@@ -909,7 +780,6 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
   }
 
   free(chlist);
-
   free(hostpath);
   free(profile);
   return 0;
@@ -1649,7 +1519,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
   content_len = file_end - file_start+1;
   
   sprintf(range_buf, "bytes %jd-%jd/%jd",
-    file_start, file_end, (intmax_t)st.st_size);
+          file_start, file_end, (intmax_t)st.st_size);
 
   if(file_start > 0)
     if (lseek(fd, file_start, SEEK_SET) != file_start) {
@@ -1667,8 +1537,8 @@ http_serve_file(http_connection_t *hc, const char *fname,
 
   http_send_begin(hc);
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
-       content, content_len, NULL, NULL, 10, 
-       range ? range_buf : NULL, disposition, NULL);
+                   content, content_len, NULL, NULL, 10,
+                   range ? range_buf : NULL, disposition, NULL);
 
   ret = 0;
   if(!hc->hc_no_output) {
