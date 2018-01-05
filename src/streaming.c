@@ -555,13 +555,15 @@ static struct strtab streamtypetab[] = {
   { "UNKNOWN",    SCT_UNKNOWN },
   { "RAW",        SCT_RAW },
   { "PCR",        SCT_PCR },
+  { "CAT",        SCT_CAT },
+  { "CA",         SCT_CA },
+  { "HBBTV",      SCT_HBBTV },
   { "MPEG2VIDEO", SCT_MPEG2VIDEO },
   { "MPEG2AUDIO", SCT_MPEG2AUDIO },
   { "H264",       SCT_H264 },
   { "AC3",        SCT_AC3 },
   { "TELETEXT",   SCT_TELETEXT },
   { "DVBSUB",     SCT_DVBSUB },
-  { "CA",         SCT_CA },
   { "AAC",        SCT_AAC },
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
@@ -571,10 +573,9 @@ static struct strtab streamtypetab[] = {
   { "VORBIS",     SCT_VORBIS },
   { "HEVC",       SCT_HEVC },
   { "VP9",        SCT_VP9 },
-  { "HBBTV",      SCT_HBBTV },
   { "THEORA",     SCT_THEORA },
   { "OPUS",       SCT_OPUS },
-  { "CAT",        SCT_CAT },
+  { "FLAC",       SCT_FLAC },
 };
 
 /**

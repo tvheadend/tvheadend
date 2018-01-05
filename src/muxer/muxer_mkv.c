@@ -359,6 +359,11 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
       codec_id = "A_OPUS";
       break;
 
+    case SCT_FLAC:
+      tracktype = 2;
+      codec_id = "A_FLAC";
+      break;
+
     case SCT_DVBSUB:
       if (mk->dvbsub_skip)
         goto disable;

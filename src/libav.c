@@ -199,6 +199,9 @@ codec_id2streaming_component_type(enum AVCodecID id)
   case AV_CODEC_ID_DVB_TELETEXT:
     type = SCT_TELETEXT;
     break;
+  case AV_CODEC_ID_FLAC:
+    type = SCT_FLAC;
+    break;
   case AV_CODEC_ID_NONE:
     type = SCT_NONE;
     break;

@@ -307,7 +307,8 @@ typedef enum {
   SCT_VP9,
   SCT_THEORA,
   SCT_OPUS,
-  SCT_LAST = SCT_OPUS
+  SCT_FLAC,
+  SCT_LAST = SCT_FLAC
 } streaming_component_type_t;
 
 #define SCT_MASK(t) (1 << (t))
@@ -319,7 +320,7 @@ typedef enum {
 #define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
 			(t) == SCT_AAC  || (t) == SCT_MP4A || \
 			(t) == SCT_EAC3 || (t) == SCT_VORBIS || \
-			(t) == SCT_OPUS)
+			(t) == SCT_OPUS || (t) == SCT_FLAC)
 
 #define SCT_ISAV(t) (SCT_ISVIDEO(t) || SCT_ISAUDIO(t))
 
