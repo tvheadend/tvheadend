@@ -209,7 +209,7 @@ const char *channel_get_epgid ( channel_t *ch );
 #define channel_get_id(ch)    idnode_get_short_uuid((&(ch)->ch_id))
 
 channel_t **channel_get_sorted_list
-  ( const char *sort_type, int *_count ) ;
+  ( const char *sort_type, int all, int *_count ) ;
 channel_t **channel_get_sorted_list_for_tag
   ( const char *sort_type, channel_tag_t *tag, int *_count );
 channel_tag_t **channel_tag_get_sorted_list

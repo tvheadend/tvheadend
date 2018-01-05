@@ -24,6 +24,7 @@ tvheadend.getChannels = function() {
             'sources': tvheadend.chname_src,
         },
         event: 'channel',
+        stype: 'none',
         listeners: {
             'load': function(scope, records, options) {
                 var placeholder = Ext.data.Record.create(['key', 'val']);

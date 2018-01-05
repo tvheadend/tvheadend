@@ -686,7 +686,7 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
   ctlist = channel_tag_get_sorted_list(sort, &count);
 
   if (pltype == PLAYLIST_E2 || pltype == PLAYLIST_SATIP_M3U) {
-    chlist = channel_get_sorted_list(sort, &chcount);
+    chlist = channel_get_sorted_list(sort, 0, &chcount);
   } else {
     chlist = NULL;
   }
@@ -754,7 +754,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
   hostpath = http_get_hostpath(hc);
   sort = http_arg_get(&hc->hc_req_args, "sort");
-  chlist = channel_get_sorted_list(sort, &count);
+  chlist = channel_get_sorted_list(sort, 0, &count);
   blank = tvh_gettext_lang(lang, channel_blank_name);
 
   htsbuf_append_str(hq, pltype == PLAYLIST_E2 ? "#NAME Tvheadend Channels\n" : "#EXTM3U\n");

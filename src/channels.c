@@ -1300,13 +1300,13 @@ static sortfcn_t *channel_sort_fcn(const char *sort_type)
 }
 
 channel_t **
-channel_get_sorted_list(const char *sort_type, int *_count)
+channel_get_sorted_list(const char *sort_type, int all, int *_count)
 {
   int count = 0;
   channel_t *ch, **chlist = malloc(channels_count * sizeof(channel_t *));
 
   CHANNEL_FOREACH(ch)
-    if (ch->ch_enabled)
+    if (all || ch->ch_enabled)
       chlist[count++] = ch;
 
   assert(count <= channels_count);
