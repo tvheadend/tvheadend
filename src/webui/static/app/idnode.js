@@ -2106,6 +2106,7 @@ tvheadend.idnode_grid = function(panel, conf)
         });
         if (conf.beforeedit)
           grid.on('beforeedit', conf.beforeedit);
+        grid.abuttons = abuttons;
 
         dpanel.add(grid);
         dpanel.doLayout(false, true);
