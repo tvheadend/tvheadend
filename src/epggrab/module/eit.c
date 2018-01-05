@@ -746,7 +746,7 @@ static int _eit_process_event
     int *save, int lock )
 {
   eit_module_t *eit_mod = (eit_module_t *)mod;
-  idnode_list_mapping_t *ilm;
+  idnode_list_mapping_t *ilm = NULL;
   mpegts_service_t *svc;
   channel_t *ch;
   eit_event_t ev;

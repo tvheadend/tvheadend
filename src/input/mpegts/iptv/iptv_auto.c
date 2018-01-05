@@ -198,7 +198,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       for (; ignore_path > 0; ignore_path--) {
         s = strrchr(u2.path, '/');
         if (s)
-          s = '\0';
+          *s = '\0';
       }
     }
     if (!urlrecompose(&u2))
