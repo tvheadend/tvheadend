@@ -35,11 +35,9 @@
 #define DVBCAM_SEL_FIRST    1
 #define DVBCAM_SEL_LAST     2
 
-#define CAIDS_PER_CA_SLOT   16
-
 typedef struct dvbcam_active_cam {
   TAILQ_ENTRY(dvbcam_active_cam) global_link;
-  uint16_t              caids[CAIDS_PER_CA_SLOT];
+  uint16_t              caids[32];
   int                   caids_count;
   linuxdvb_ca_t        *ca;
   uint8_t               slot;
@@ -72,10 +70,10 @@ typedef struct dvbcam {
   uint16_t caid_list[32];
 } dvbcam_t;
 
-TAILQ_HEAD(,dvbcam_active_service) dvbcam_active_services;
-TAILQ_HEAD(,dvbcam_active_cam) dvbcam_active_cams;
+static TAILQ_HEAD(,dvbcam_active_service) dvbcam_active_services;
+static TAILQ_HEAD(,dvbcam_active_cam) dvbcam_active_cams;
 
-pthread_mutex_t dvbcam_mutex;
+static pthread_mutex_t dvbcam_mutex;
 
 /*
  *
@@ -186,7 +184,7 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
     ac->ca = lca;
   }
 
-  caids_count = MIN(CAIDS_PER_CA_SLOT, caids_count);
+  caids_count = MIN(ARRAY_SIZE(ac->caids), caids_count);
 
   memcpy(ac->caids, caids, caids_count * sizeof(uint16_t));
   ac->caids_count = caids_count;

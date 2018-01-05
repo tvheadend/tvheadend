@@ -1217,6 +1217,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, esfilter_init);
   tvhftrace(LS_MAIN, bouquet_init);
   tvhftrace(LS_MAIN, service_init);
+  tvhftrace(LS_MAIN, descrambler_init);
   tvhftrace(LS_MAIN, dvb_init);
 #if ENABLE_MPEGTS
   tvhftrace(LS_MAIN, mpegts_init, adapter_mask, opt_nosatip, &opt_satip_xml,
@@ -1236,7 +1237,6 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, upnp_server_init, opt_bindaddr);
 #endif
   tvhftrace(LS_MAIN, service_mapper_init);
-  tvhftrace(LS_MAIN, descrambler_init);
   tvhftrace(LS_MAIN, epggrab_init);
   tvhftrace(LS_MAIN, epg_init);
   tvhftrace(LS_MAIN, dvr_init);
