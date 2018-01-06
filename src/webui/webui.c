@@ -1521,11 +1521,15 @@ http_serve_file(http_connection_t *hc, const char *fname,
   sprintf(range_buf, "bytes %jd-%jd/%jd",
           file_start, file_end, (intmax_t)st.st_size);
 
-  if(file_start > 0)
-    if (lseek(fd, file_start, SEEK_SET) != file_start) {
+  if(file_start > 0) {
+    off_t off;
+    if ((off = lseek(fd, file_start, SEEK_SET)) != file_start) {
+      tvherror(LS_HTTP, "unable to seek (offset %jd, returned %jd): %s",
+               file_start, (intmax_t)off, strerror(errno));
       close(fd);
       return HTTP_STATUS_INTERNAL;
     }
+  }
 
   if (preop) {
     ret = preop(hc, file_start, content_len, opaque);
