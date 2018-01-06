@@ -22,7 +22,6 @@
 
 #include "lang_codes.h"
 
-
 /* TVHCodec ================================================================= */
 
 static htsmsg_t *
@@ -107,7 +106,7 @@ tvh_codec_audio_get_list_channel_layouts(TVHAudioCodec *self)
                         list = NULL;
                         break;
                     }
-                    memset(l_buf, 0, sizeof(l_buf));
+                    l_buf[0] = '\0';
                     av_get_channel_layout_string(l_buf, sizeof(l_buf), 0, l);
                     ADD_ENTRY(list, map, s64, l, str, l_buf);
                 }

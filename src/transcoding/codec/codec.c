@@ -120,15 +120,20 @@ tvh_codec_video_init(TVHVideoCodec *self, AVCodec *codec)
     }
 }
 
-
 static void
 tvh_codec_audio_init(TVHAudioCodec *self, AVCodec *codec)
 {
+    static int default_sample_rates[] = {
+        44100, 48000, 96000, 192000, 0
+    };
+
     if (!self->sample_fmts) {
         self->sample_fmts = codec->sample_fmts;
     }
     if (!self->sample_rates) {
         self->sample_rates = codec->supported_samplerates;
+        if (!self->sample_rates)
+            self->sample_rates = default_sample_rates;
     }
     if (!self->channel_layouts) {
         self->channel_layouts = codec->channel_layouts;
