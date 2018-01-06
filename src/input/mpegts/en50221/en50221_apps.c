@@ -154,7 +154,8 @@ en50221_app_ca_handle
 
   if (atag == CICAM_AOT_CA_INFO) {
     count = 0;
-    for (; count < sizeof(app->cia_caids) - 1 && datalen > 1; count++, datalen -= 2)
+    for (; count < ARRAY_SIZE(app->cia_caids) - 1 && datalen > 1;
+         data += 2, datalen -= 2, count++)
       app->cia_caids[count] = (data[0] << 8) | data[1];
     if (datalen) {
       app->cia_caids[0] = 0;
