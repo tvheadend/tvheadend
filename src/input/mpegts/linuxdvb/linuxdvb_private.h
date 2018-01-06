@@ -433,7 +433,7 @@ int linuxdvb2tvh_delsys ( int delsys );
 #if ENABLE_LINUXDVB_CA
 
 linuxdvb_transport_t *
-linuxdvb_transport_create( linuxdvb_adapter_t *la, int number,
+linuxdvb_transport_create( linuxdvb_adapter_t *la, int number, int slots,
                            const char *ca_path, const char *ci_path );
 void linuxdvb_transport_destroy( linuxdvb_transport_t *lcat );
 void linuxdvb_transport_save( linuxdvb_transport_t *lcat, htsmsg_t *m );

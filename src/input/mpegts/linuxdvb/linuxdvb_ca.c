@@ -1009,7 +1009,7 @@ static en50221_ops_t linuxdvb_ca_ops = {
 };
 
 linuxdvb_transport_t *linuxdvb_transport_create
-  ( linuxdvb_adapter_t *la, int slots,
+  ( linuxdvb_adapter_t *la, int number, int slots,
     const char *ca_path, const char *ci_path )
 {
   linuxdvb_transport_t *lcat;
@@ -1019,6 +1019,7 @@ linuxdvb_transport_t *linuxdvb_transport_create
   lcat = calloc(1, sizeof(*lcat));
 
   lcat->lcat_adapter = la;
+  lcat->lcat_number = number;
   lcat->lcat_ca_path  = strdup(ca_path);
   lcat->lcat_ca_fd = -1;
 

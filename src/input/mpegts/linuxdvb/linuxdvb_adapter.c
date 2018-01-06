@@ -590,7 +590,7 @@ linuxdvb_adapter_add ( const char *path )
     if (conf)
       caconf = htsmsg_get_map(conf, "ca_devices");
 
-    lcat = linuxdvb_transport_create(la, cac.slot_num, ca_path, ci_found);
+    lcat = linuxdvb_transport_create(la, i, cac.slot_num, ca_path, ci_found);
     if (lcat) {
       for (j = 0; j < cac.slot_num; j++)
         linuxdvb_ca_create(caconf, lcat, j);
