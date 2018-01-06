@@ -217,18 +217,22 @@ void htsmsg_add_dbl(htsmsg_t *msg, const char *name, double dbl);
 void htsmsg_add_msg_extname(htsmsg_t *msg, const char *name, htsmsg_t *sub);
 
 /**
+ * Update an binary field
+ */
+int  htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len);
+int  htsmsg_field_set_bin_force(htsmsg_field_t *f, const void *bin, size_t len);
+
+/**
  * Add an binary field. The data is copied to a malloced storage
  */
-void htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin,
-		    size_t len);
+void htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len);
 
 /**
  * Add an binary field. The data is not copied, instead the caller
  * is responsible for keeping the data valid for as long as the message
  * is around.
  */
-void htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin,
-		       size_t len);
+void htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin, size_t len);
 
 /**
  * Get an integer as an unsigned 32 bit integer.
@@ -348,9 +352,13 @@ const char *htsmsg_field_get_string(htsmsg_field_t *f);
 #define htsmsg_field_get_str(f) htsmsg_field_get_string(f)
 
 /**
- * Get s64 from field
+ * Get a field of type 'bin'.
+ *
+ * @return HTSMSG_ERR_FIELD_NOT_FOUND - Field does not exist
+ *         HTSMSG_ERR_CONVERSION_IMPOSSIBLE - Field is not an integer or
+ *              out of range for the requested storage.
  */
-
+int htsmsg_field_get_bin(htsmsg_field_t *f, const void **binp, size_t *lenp);
 
 /**
  * Return the field \p name as an u32.

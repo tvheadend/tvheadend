@@ -156,8 +156,10 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
   if(esize) {
     if(type == HMF_STR)
       f->hmf_str = f->hmf_edata + nsize;
-    else if(type == HMF_BIN)
+    else if(type == HMF_BIN) {
       f->hmf_bin = f->hmf_edata + nsize;
+      f->hmf_binsize = esize;
+    }
   }
 
   f->hmf_type = type;
@@ -460,12 +462,61 @@ htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str)
 /*
  *
  */
+int
+htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len)
+{
+  if (f->hmf_type != HMF_BIN)
+    return 1;
+  if (f->hmf_flags & HMF_ALLOCED) {
+#if ENABLE_SLOW_MEMORYINFO
+    memoryinfo_remove(&htsmsg_field_memoryinfo, f->hmf_binsize);
+#endif
+    free((void *)f->hmf_bin);
+  }
+  else if (f->hmf_flags & HMF_INALLOCED) {
+    if (f->hmf_binsize >= len) {
+      memmove((char *)f->hmf_bin, bin, len);
+      f->hmf_binsize = len;
+      return 0;
+    }
+    f->hmf_flags &= ~HMF_INALLOCED;
+  }
+  f->hmf_flags |= HMF_ALLOCED;
+  f->hmf_bin = malloc(len);
+  f->hmf_binsize = len;
+  if (f->hmf_bin == NULL && len > 0) {
+    f->hmf_flags &= ~HMF_ALLOCED;
+    f->hmf_binsize = 0;
+    return 1;
+  }
+#if ENABLE_SLOW_MEMORYINFO
+  memoryinfo_alloc(&htsmsg_field_memoryinfo, len);
+#endif
+  return 0;
+}
+
+/*
+ *
+ */
+int
+htsmsg_field_set_bin_force(htsmsg_field_t *f, const void *bin, size_t len)
+{
+  if (f->hmf_type != HMF_BIN) {
+    htsmsg_field_data_destroy(f);
+    f->hmf_type = HMF_BIN;
+    f->hmf_bin = NULL;
+    f->hmf_binsize = 0;
+  }
+  return htsmsg_field_set_bin(f, bin, len);
+}
+
+/*
+ *
+ */
 void
 htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 {
   htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BIN, HMF_NAME_INALLOCED, len);
-  f->hmf_bin = f->hmf_str;
-  f->hmf_binsize = len;
   f->hmf_flags |= HMF_INALLOCED;
   memcpy((void *)f->hmf_bin, bin, len);
 }
@@ -773,26 +824,6 @@ htsmsg_field_get_dbl
   return 0;
 }
 
-/*
- *
- */
-int
-htsmsg_get_bin(htsmsg_t *msg, const char *name, const void **binp,
-	       size_t *lenp)
-{
-  htsmsg_field_t *f;
-  
-  if((f = htsmsg_field_find(msg, name)) == NULL)
-    return HTSMSG_ERR_FIELD_NOT_FOUND;
-  
-  if(f->hmf_type != HMF_BIN)
-    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
-
-  *binp = f->hmf_bin;
-  *lenp = f->hmf_binsize;
-  return 0;
-}
-
 /**
  *
  */
@@ -832,7 +863,57 @@ htsmsg_get_str(htsmsg_t *msg, const char *name)
   if((f = htsmsg_field_find(msg, name)) == NULL)
     return NULL;
   return htsmsg_field_get_string(f);
+}
 
+/**
+ *
+ */
+int
+htsmsg_field_get_bin(htsmsg_field_t *f, const void **binp, size_t *lenp)
+{
+  uint8_t *p;
+  size_t l;
+  int r;
+
+  switch(f->hmf_type) {
+  default:
+    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  case HMF_STR:
+    l = strlen(f->hmf_str);
+    if (l % 2)
+      return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+    l /= 2;
+    p = malloc(l);
+    if (hex2bin(p, l, f->hmf_str)) {
+      free(p);
+      return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+    }
+    r = htsmsg_field_set_bin_force(f, p, l);
+    free(p);
+    if (r)
+      return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+    break;
+  case HMF_BIN:
+    break;
+  }
+  *binp = f->hmf_bin;
+  *lenp = f->hmf_binsize;
+  return 0;
+}
+
+/*
+ *
+ */
+int
+htsmsg_get_bin
+  (htsmsg_t *msg, const char *name, const void **binp, size_t *lenp)
+{
+  htsmsg_field_t *f;
+
+  if((f = htsmsg_field_find(msg, name)) == NULL)
+    return HTSMSG_ERR_FIELD_NOT_FOUND;
+
+  return htsmsg_field_get_bin(f, binp, lenp);
 }
 
 /*
