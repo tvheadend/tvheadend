@@ -178,6 +178,8 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     self->oavctx->gop_size = ceil(av_q2d(av_inv_q(av_mul_q(
         self->oavctx->time_base, ticks_per_frame))));
     self->oavctx->gop_size *= 3;
+
+    self->oavctx->sample_aspect_ratio = self->iavctx->sample_aspect_ratio;
     return 0;
 }
 
