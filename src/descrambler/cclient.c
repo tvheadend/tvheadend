@@ -1190,6 +1190,7 @@ cc_conf_changed(caclient_t *cac)
   cclient_t *cc = (cclient_t *)cac;
   pthread_t tid;
   cc_message_t *cm;
+  char tname[32];
 
   if (cac->cac_enabled) {
     if (cc->cc_hostname == NULL || cc->cc_hostname[0] == '\0') {
@@ -1199,7 +1200,8 @@ cc_conf_changed(caclient_t *cac)
     if (!cc->cc_running) {
       cc->cc_running = 1;
       tvh_pipe(O_NONBLOCK, &cc->cc_pipe);
-      tvhthread_create(&cc->cc_tid, NULL, cc_thread, cc, "cc");
+      snprintf(tname, sizeof(tname), "cc-%s", cc->cc_id);
+      tvhthread_create(&cc->cc_tid, NULL, cc_thread, cc, tname);
       return;
     }
     pthread_mutex_lock(&cc->cc_mutex);
