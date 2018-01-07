@@ -1825,6 +1825,8 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   dvr_entry_assign_broadcast(de, NULL);
   free(de->de_channel_name);
   free(de->de_episode);
+  free(de->de_image);
+  free(de->de_uri);
 
   free(de);
 }
