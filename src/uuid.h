@@ -21,6 +21,7 @@
 #define __TVH_UUID_H__
 
 #include <stdint.h>
+#include <string.h>
 
 #define UUID_BIN_SIZE   (16)
 #define UUID_HEX_SIZE   (33) // inc NUL

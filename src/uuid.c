@@ -142,8 +142,7 @@ char *
 uuid_get_hex ( const tvh_uuid_t *u, char *dst )
 {
   assert(dst);
-  bin2hex(dst, UUID_HEX_SIZE, u->bin, sizeof(u->bin));
-  return dst;
+  return bin2hex(dst, UUID_HEX_SIZE, u->bin, sizeof(u->bin));
 }
 
 /* Validate the hexadecimal representation of uuid */

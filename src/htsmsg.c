@@ -133,6 +133,8 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
   if(esize) {
     if(type == HMF_STR)
       f->hmf_str = f->hmf_edata + nsize;
+    else if(type == HMF_UUID)
+      f->hmf_uuid = (uint8_t *)f->hmf_edata + nsize;
     else if(type == HMF_BIN) {
       f->hmf_bin = f->hmf_edata + nsize;
       f->hmf_binsize = esize;
@@ -530,6 +532,47 @@ htsmsg_add_bin_ptr(htsmsg_t *msg, const char *name, const void *bin, size_t len)
   f->hmf_binsize = len;
 }
 
+/*
+ *
+ */
+static int
+htsmsg_field_set_uuid(htsmsg_field_t *f, tvh_uuid_t *u)
+{
+  if (f->hmf_type != HMF_UUID) {
+    htsmsg_field_data_destroy(f);
+    f->hmf_type = HMF_UUID;
+    f->hmf_uuid = malloc(UUID_BIN_SIZE);
+    if (f->hmf_uuid == NULL)
+      return 1;
+  }
+  memcpy((char *)f->hmf_uuid, u->bin, UUID_BIN_SIZE);
+  return 0;
+}
+
+/*
+ *
+ */
+int
+htsmsg_set_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u)
+{
+  htsmsg_field_t *f = htsmsg_field_find(msg, name);
+  if (!f) {
+    htsmsg_add_uuid(msg, name, u);
+    return 0;
+  }
+  return htsmsg_field_set_uuid(f, u);
+}
+
+/*
+ *
+ */
+void
+htsmsg_add_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u)
+{
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_UUID, 0, UUID_BIN_SIZE);
+  f->hmf_flags |= HMF_INALLOCED;
+  memcpy((void *)f->hmf_uuid, u->bin, UUID_BIN_SIZE);
+}
 
 /*
  *
@@ -834,6 +877,10 @@ htsmsg_field_get_string(htsmsg_field_t *f)
     return NULL;
   case HMF_STR:
     break;
+  case HMF_UUID:
+    uuid_get_hex((tvh_uuid_t *)f->hmf_uuid, buf);
+    htsmsg_field_set_str_force(f, buf);
+    break;
   case HMF_BOOL:
     htsmsg_field_set_str_force(f, f->hmf_bool ? "true" : "false");
     break;
@@ -911,6 +958,34 @@ htsmsg_get_bin
     return HTSMSG_ERR_FIELD_NOT_FOUND;
 
   return htsmsg_field_get_bin(f, binp, lenp);
+}
+
+/*
+ *
+ */
+int
+htsmsg_get_uuid
+  (htsmsg_t *msg, const char *name, tvh_uuid_t *u)
+{
+  htsmsg_field_t *f;
+
+  if((f = htsmsg_field_find(msg, name)) == NULL)
+    return HTSMSG_ERR_FIELD_NOT_FOUND;
+
+  if(f->hmf_type == HMF_UUID) {
+    memcpy(u->bin, f->hmf_uuid, UUID_BIN_SIZE);
+    return 0;
+  } else {
+    const void *p;
+    size_t l;
+    int r = htsmsg_field_get_bin(f, &p, &l);
+    if (r == 0) {
+      if (l != UUID_BIN_SIZE)
+        return HTSMSG_ERR_FIELD_NOT_FOUND;
+      memcpy(u->bin, p, UUID_BIN_SIZE);
+    }
+    return r;
+  }
 }
 
 /*

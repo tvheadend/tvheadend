@@ -66,6 +66,11 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
       htsbuf_append_and_escape_jsonstr(hq, f->hmf_str);
       break;
 
+    case HMF_UUID:
+      uuid_get_hex((tvh_uuid_t *)f->hmf_uuid, buf);
+      htsbuf_append_and_escape_jsonstr(hq, buf);
+      break;
+
     case HMF_BIN:
       htsbuf_append_and_escape_jsonstr(hq, "binary");
       break;

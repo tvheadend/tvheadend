@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include "queue.h"
+#include "uuid.h"
 #include "build.h"
 
 #define HTSMSG_ERR_FIELD_NOT_FOUND       -1
@@ -53,6 +54,7 @@ typedef struct htsmsg {
 #define HMF_LIST 5
 #define HMF_DBL  6
 #define HMF_BOOL 7
+#define HMF_UUID 8
 
 typedef struct htsmsg_field {
   TAILQ_ENTRY(htsmsg_field) hmf_link;
@@ -66,6 +68,7 @@ typedef struct htsmsg_field {
   union {
     int64_t  s64;
     const char *str;
+    const uint8_t *uuid;
     struct {
       const char *data;
       size_t len;
@@ -84,6 +87,7 @@ typedef struct htsmsg_field {
 #define hmf_s64     u.s64
 #define hmf_msg     u.msg
 #define hmf_str     u.str
+#define hmf_uuid    u.uuid
 #define hmf_bin     u.bin.data
 #define hmf_binsize u.bin.len
 #define hmf_dbl     u.dbl
@@ -226,7 +230,7 @@ int  htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len);
 int  htsmsg_field_set_bin_force(htsmsg_field_t *f, const void *bin, size_t len);
 
 /**
- * Add an binary field. The data is copied to a malloced storage
+ * Add an binary field. The data is copied to a inallocated storage.
  */
 void htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len);
 
@@ -241,6 +245,16 @@ void htsmsg_add_bin_alloc(htsmsg_t *msg, const char *name, const void *bin, size
  * is around.
  */
 void htsmsg_add_bin_ptr(htsmsg_t *msg, const char *name, const void *bin, size_t len);
+
+/**
+ * Add/update a uuid field
+ */
+int htsmsg_set_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u);
+
+/**
+ * Add an uuid field.
+ */
+void htsmsg_add_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u);
 
 /**
  * Get an integer as an unsigned 32 bit integer.
@@ -300,6 +314,16 @@ int htsmsg_get_bool_or_default(htsmsg_t *msg, const char *name, int def);
  */
 int htsmsg_get_bin(htsmsg_t *msg, const char *name, const void **binp,
 		   size_t *lenp);
+
+/**
+ * Get uuid struct from a uuid field.
+ *
+ * @param u Pointer to the tvh_uuid_t structure.
+ *
+ * @return HTSMSG_ERR_FIELD_NOT_FOUND - Field does not exist
+ *         HTSMSG_ERR_CONVERSION_IMPOSSIBLE - Field is not a binary blob.
+ */
+int htsmsg_get_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u);
 
 /**
  * Get a field of type 'list'. No copying is done.

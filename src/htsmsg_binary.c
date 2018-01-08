@@ -55,8 +55,14 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
       return -1;
 
     nlen = namelen ? namelen + 1 : 0;
-    tlen = sizeof(htsmsg_field_t) + nlen +
-           (type == HMF_STR ? datalen + 1 : 0);
+    tlen = sizeof(htsmsg_field_t) + nlen;
+    if (type == HMF_STR) {
+      tlen += datalen + 1;
+    } else if (type == HMF_UUID) {
+      tlen = UUID_BIN_SIZE;
+      if (tlen != datalen)
+        return -1;
+    }
     f = malloc(tlen);
     if (f == NULL)
       return -1;
@@ -84,6 +90,11 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
       memcpy((char *)f->hmf_str, buf, datalen);
       ((char *)f->hmf_str)[datalen] = 0;
       f->hmf_flags |= HMF_INALLOCED;
+      break;
+
+    case HMF_UUID:
+      f->hmf_uuid = (uint8_t *)f->hmf_edata + nlen;
+      memcpy((char *)f->hmf_uuid, buf, UUID_BIN_SIZE);
       break;
 
     case HMF_BIN:
@@ -189,6 +200,10 @@ htsmsg_binary_count(htsmsg_t *msg)
 
     case HMF_STR:
       len += strlen(f->hmf_str);
+      break;
+
+    case HMF_UUID:
+      len += UUID_BIN_SIZE;
       break;
 
     case HMF_BIN:
