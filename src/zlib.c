@@ -154,9 +154,10 @@ int tvh_gzip_deflate_fd ( int fd, const uint8_t *data, size_t orig, size_t *size
 }
 
 int tvh_gzip_deflate_fd_header ( int fd, const uint8_t *data, size_t orig,
-                                 size_t *deflated_size, int speed )
+                                 size_t *deflated_size, int speed,
+                                 const char *signature )
 {
-  uint8_t data2[4];
+  uint8_t data2[6];
   size_t size = 0;
   int r;
 
@@ -169,13 +170,15 @@ int tvh_gzip_deflate_fd_header ( int fd, const uint8_t *data, size_t orig,
     if (r || size > UINT_MAX)
       return 1;
   }
-  r = lseek(fd, 8, SEEK_SET) != (off_t)8;
+  r = lseek(fd, 6, SEEK_SET) != (off_t)6;
   if (r)
     return 1;
   if (deflated_size) *deflated_size = size + 12;
-  data2[0] = (orig >> 24) & 0xff;
-  data2[1] = (orig >> 16) & 0xff;
-  data2[2] = (orig >> 8) & 0xff;
-  data2[3] = (orig & 0xff);
-  return tvh_write(fd, data2, 4);
+  data2[0] = signature ? signature[0] : '0';
+  data2[1] = signature ? signature[1] : '0';
+  data2[2] = (orig >> 24) & 0xff;
+  data2[3] = (orig >> 16) & 0xff;
+  data2[4] = (orig >> 8) & 0xff;
+  data2[5] = (orig & 0xff);
+  return tvh_write(fd, data2, 6);
 }

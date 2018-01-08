@@ -148,16 +148,17 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
   return len ? -1 : bin;
 }
 
-
-
 /*
  *
  */
 htsmsg_t *
-htsmsg_binary_deserialize(void *data, size_t len, const void *buf)
+htsmsg_binary_deserialize0(const void *data, size_t len, const void *buf)
 {
-  htsmsg_t *msg = htsmsg_create_map();
-  int r = htsmsg_binary_des0(msg, data, len);
+  htsmsg_t *msg;
+  int r;
+
+  msg = htsmsg_create_map();
+  r = htsmsg_binary_des0(msg, data, len);
   if (r < 0) {
     free((void *)buf);
     htsmsg_destroy(msg);
@@ -175,7 +176,36 @@ htsmsg_binary_deserialize(void *data, size_t len, const void *buf)
   return msg;
 }
 
+/*
+ *
+ */
+int
+htsmsg_binary_deserialize(htsmsg_t **msg, const void *data, size_t *len, const void *buf)
+{
+  htsmsg_t *m;
+  const uint8_t *p;
+  uint32_t l, len2;
 
+  len2 = *len;
+  *msg = NULL;
+  *len = 0;
+  if (len2 < 4) {
+    free((void *)buf);
+    return -1;
+  }
+  p = data;
+  l = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+  if (l + 4 > len2) {
+    free((void *)buf);
+    return -1;
+  }
+  m = htsmsg_binary_deserialize0(data + 4, l, buf);
+  if (m == NULL)
+    return -1;
+  *len = l + 4;
+  *msg = m;
+  return 0;
+}
 
 /*
  *
@@ -226,7 +256,6 @@ htsmsg_binary_count(htsmsg_t *msg)
   }
   return len;
 }
-
 
 /*
  *
@@ -316,6 +345,26 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
   }
 }
 
+/*
+ *
+ */
+int
+htsmsg_binary_serialize0(htsmsg_t *msg, void **datap, size_t *lenp, int maxlen)
+{
+  size_t len;
+  uint8_t *data;
+
+  len = htsmsg_binary_count(msg);
+  if(len > maxlen)
+    return -1;
+
+  data = malloc(len);
+
+  htsmsg_binary_write(msg, data);
+  *datap = data;
+  *lenp  = len;
+  return 0;
+}
 
 /*
  *

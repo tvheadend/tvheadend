@@ -3169,7 +3169,7 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
 
   /* buf will be tied to the message (on success) */
   /* bellow fcn calls free(buf) (on failure) */
-  *mp = htsmsg_binary_deserialize(buf, len, buf);
+  *mp = htsmsg_binary_deserialize0(buf, len, buf);
   if(*mp == NULL)
     return EBADMSG;
 

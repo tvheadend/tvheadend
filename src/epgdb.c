@@ -28,6 +28,7 @@
 #include "tvheadend.h"
 #include "sbuf.h"
 #include "htsmsg_binary.h"
+#include "htsmsg_binary2.h"
 #include "settings.h"
 #include "channels.h"
 #include "epg.h"
@@ -282,7 +283,7 @@ static void epg_mmap_sigbus (int sig, siginfo_t *siginfo, void *ptr)
  */
 void epg_init ( void )
 {
-  int fd = -1;
+  int fd = -1, binary2 = 0, r;
   struct stat st;
   size_t remain;
   uint8_t *mem, *rp, *zlib_mem = NULL;
@@ -343,8 +344,10 @@ void epg_init ( void )
   }
 
 #if ENABLE_ZLIB
-  if (remain > 12 && memcmp(rp, "\xff\xffGZIP00", 8) == 0) {
+  if (remain > 12 && memcmp(rp, "\xff\xffGZIP0", 7) == 0 &&
+      (rp[7] == '0' || rp[7] == '1')) {
     uint32_t orig = (rp[8] << 24) | (rp[9] << 16) | (rp[10] << 8) | rp[11];
+    binary2 = rp[7] == '1';
     tvhinfo(LS_EPGDB, "gzip format detected, inflating (ratio %.1f%% deflated size %zd)",
            (float)((remain * 100.0) / orig), remain);
     rp = zlib_mem = tvh_gzip_inflate(rp + 12, remain - 12, orig);
@@ -359,18 +362,19 @@ void epg_init ( void )
   while ( remain > 4 ) {
 
     /* Get message length */
-    uint32_t msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
-    remain    -= 4;
-    rp        += 4;
+    size_t msglen = remain;
+    htsmsg_t *m;
+    if (binary2) {
+      r = htsmsg_binary2_deserialize(&m, rp, &msglen, NULL);
+    } else {
+      r = htsmsg_binary_deserialize(&m, rp, &msglen, NULL);
+    }
 
     /* Safety check */
-    if ((int64_t)msglen > remain) {
+    if (r) {
       tvherror(LS_EPGDB, "corruption detected, some/all data lost");
       break;
     }
-    
-    /* Extract message */
-    htsmsg_t *m = htsmsg_binary_deserialize(rp, msglen, NULL);
 
     /* Next */
     rp     += msglen;
@@ -446,7 +450,13 @@ static int _epg_write ( sbuf_t *sb, htsmsg_t *m )
   size_t msglen;
   void *msgdata;
   if (m) {
-    int r = htsmsg_binary_serialize(m, &msgdata, &msglen, 0x10000);
+    int r;
+#if ENABLE_ZLIB
+    if (config.epg_compress)
+      r = htsmsg_binary2_serialize(m, &msgdata, &msglen, 0x10000);
+    else
+#endif
+      r = htsmsg_binary_serialize(m, &msgdata, &msglen, 0x10000);
     htsmsg_destroy(m);
     if (!r) {
       ret = 0;
@@ -487,7 +497,7 @@ static void epg_save_tsk_callback ( void *p, int dearmed )
   if (fd >= 0) {
 #if ENABLE_ZLIB
     if (config.epg_compress) {
-      r = tvh_gzip_deflate_fd_header(fd, sb->sb_data, size, &orig, 3) < 0;
+      r = tvh_gzip_deflate_fd_header(fd, sb->sb_data, size, &orig, 3, "01") < 0;
    } else
 #endif
       r = tvh_write(fd, sb->sb_data, orig = size);
