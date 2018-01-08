@@ -26,52 +26,68 @@
 #include "htsmsg_binary2.h"
 #include "memoryinfo.h"
 
+static uint32_t htsmsg_binary2_count(htsmsg_t *msg);
+
 /*
  *
  */
-static inline uint32_t htsmsg_binary2_get_length(uint8_t const **p, const uint8_t *end)
+static inline uint32_t htsmsg_binary2_get_length(uint8_t const **_p, const uint8_t *end)
 {
   uint32_t r = 0;
+  const uint8_t *p = *_p;
   uint8_t c;
-  while (*p != end) {
-    c = **p; (*p)++;
+  while (p != end) {
+    c = *p; p++;
     r |= c & 0x7f;
-    if (c & 0x80) r <<= 7;
+    if ((c & 0x80) == 0)
+      break;
+    r <<= 7;
   }
+  *_p = p;
   return r;
 }
 
-static inline void htsmsg_binary2_set_length(uint8_t **p, uint32_t len)
+static inline uint8_t *htsmsg_binary2_set_length(uint8_t *p, uint32_t len)
 {
   if (len == 0) {
-    **p = 0; (*p)++;
-    return;
+    *p = 0;
+    return p + 1;
   } else if (len < 0x80) {
-    /* nothing */
+    p[0] = len;
+    return p + 1;
   } else if (len < 0x4000) {
-    **p = 0x80 | (len >> 7); (*p)++;
+    p[0] = 0x80 | (len >> 7);
+    p[1] = len;
+    return p + 2;
   } else if (len < 0x200000) {
-    **p = 0x80 | (len >> 14); (*p)++;
-    **p = 0x80 | (len >> 7); (*p)++;
+    p[0] = 0x80 | (len >> 14);
+    p[1] = 0x80 | (len >> 7);
+    p[2] = len;
+    return p + 3;
+    p += 2;
   } else if (len < 0x10000000) {
-    **p = 0x80 | (len >> 21); (*p)++;
-    **p = 0x80 | (len >> 14); (*p)++;
-    **p = 0x80 | (len >> 7); (*p)++;
+    p[0] = 0x80 | (len >> 21);
+    p[1] = 0x80 | (len >> 14);
+    p[2] = 0x80 | (len >> 7);
+    p[3] = len;
+    return p + 4;
   } else {
-    **p = 0x80 | (len >> 28); (*p)++;
-    **p = 0x80 | (len >> 21); (*p)++;
-    **p = 0x80 | (len >> 14); (*p)++;
-    **p = 0x80 | (len >> 7); (*p)++;
+    p[0] = 0x80 | (len >> 28);
+    p[1] = 0x80 | (len >> 21);
+    p[2] = 0x80 | (len >> 14);
+    p[3] = 0x80 | (len >> 7);
+    p[4] = len;
+    return p + 5;
   }
-  **p = len; (*p)++;
 }
 
 static inline uint32_t htsmsg_binary2_length_count(uint32_t len)
 {
-  uint32_t r = 0;
-  while (len > 0) {
-    r++; len >>= 7;
-  }
+  uint32_t r;
+  if (len == 0)
+    return 1;
+  for (r = 0; len > 0; r++)
+    len >>= 7;
   return r;
 }
 
@@ -102,8 +118,14 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
       return -1;
 
     nlen = namelen ? namelen + 1 : 0;
-    tlen = sizeof(htsmsg_field_t) + nlen +
-           (type == HMF_STR ? datalen + 1 : 0);
+    tlen = sizeof(htsmsg_field_t) + nlen;
+    if (type == HMF_STR) {
+      tlen += datalen ? datalen + 1 : 0;
+    } else if (type == HMF_UUID) {
+      tlen += UUID_BIN_SIZE;
+      if (datalen != UUID_BIN_SIZE)
+        return -1;
+    }
     f = malloc(tlen);
     if (f == NULL)
       return -1;
@@ -131,6 +153,11 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
       memcpy((char *)f->hmf_str, buf, datalen);
       ((char *)f->hmf_str)[datalen] = 0;
       f->hmf_flags |= HMF_INALLOCED;
+      break;
+
+    case HMF_UUID:
+      f->hmf_uuid = (uint8_t *)f->hmf_edata + nlen;
+      memcpy((char *)f->hmf_uuid, buf, UUID_BIN_SIZE);
       break;
 
     case HMF_BIN:
@@ -218,6 +245,45 @@ htsmsg_binary2_deserialize(void *data, size_t len, const void *buf)
   return msg;
 }
 
+/*
+ *
+ */
+static uint32_t
+htsmsg_binary2_field_length(htsmsg_field_t *f)
+{
+  uint64_t u64;
+  uint32_t l;
+
+  switch(f->hmf_type) {
+  case HMF_MAP:
+  case HMF_LIST:
+    return htsmsg_binary2_count(&f->hmf_msg);
+
+  case HMF_STR:
+    return strlen(f->hmf_str);
+
+  case HMF_UUID:
+    return UUID_BIN_SIZE;
+
+  case HMF_BIN:
+    return f->hmf_binsize;
+
+  case HMF_S64:
+    u64 = f->hmf_s64;
+    l = 0;
+    while(u64 != 0) {
+      l++;
+      u64 >>= 8;
+    }
+    return l;
+
+  case HMF_BOOL:
+    return f->hmf_bool ? 1 : 0;
+
+  default:
+    abort();
+  }
+}
 
 
 /*
@@ -228,40 +294,12 @@ htsmsg_binary2_count(htsmsg_t *msg)
 {
   htsmsg_field_t *f;
   uint32_t len = 0, l;
-  uint64_t u64;
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-
-    l = 0;
-    switch(f->hmf_type) {
-    case HMF_MAP:
-    case HMF_LIST:
-      l = htsmsg_binary2_count(&f->hmf_msg);
-      break;
-
-    case HMF_STR:
-      l = strlen(f->hmf_str);
-      break;
-
-    case HMF_BIN:
-      l = f->hmf_binsize;
-      break;
-
-    case HMF_S64:
-      u64 = f->hmf_s64;
-      while(u64 != 0) {
-	l++;
-	u64 = u64 >> 8;
-      }
-      break;
-
-    case HMF_BOOL:
-      if (f->hmf_bool) l = 1;
-      break;
-    }
-
-    len += htsmsg_binary2_length_count(l) + 2 + l;
+    l = htsmsg_binary2_field_length(f);
+    len += 2 + htsmsg_binary2_length_count(l);
     len += f->hmf_name ? strlen(f->hmf_name) : 0;
+    len += l;
   }
   return len;
 }
@@ -279,41 +317,12 @@ htsmsg_binary2_write(htsmsg_t *msg, uint8_t *ptr)
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
     namelen = f->hmf_name ? strlen(f->hmf_name) : 0;
+    assert(namelen <= 0xff);
     *ptr++ = f->hmf_type;
     *ptr++ = namelen;
 
-    switch(f->hmf_type) {
-    case HMF_MAP:
-    case HMF_LIST:
-      l = htsmsg_binary2_count(&f->hmf_msg);
-      break;
-
-    case HMF_STR:
-      l = strlen(f->hmf_str);
-      break;
-
-    case HMF_BIN:
-      l = f->hmf_binsize;
-      break;
-
-    case HMF_S64:
-      u64 = f->hmf_s64;
-      l = 0;
-      while(u64 != 0) {
-	l++;
-	u64 = u64 >> 8;
-      }
-      break;
-
-    case HMF_BOOL:
-      l = f->hmf_bool ? 1 : 0;
-      break;
-
-    default:
-      abort();
-    }
-
-    htsmsg_binary2_set_length(&ptr, l);
+    l = htsmsg_binary2_field_length(f);
+    ptr = htsmsg_binary2_set_length(ptr, l);
 
     if(namelen > 0) {
       memcpy(ptr, f->hmf_name, namelen);
@@ -330,6 +339,10 @@ htsmsg_binary2_write(htsmsg_t *msg, uint8_t *ptr)
       memcpy(ptr, f->hmf_str, l);
       break;
 
+    case HMF_UUID:
+      memcpy(ptr, f->hmf_uuid, UUID_BIN_SIZE);
+      break;
+
     case HMF_BIN:
       memcpy(ptr, f->hmf_bin, l);
       break;
@@ -338,7 +351,7 @@ htsmsg_binary2_write(htsmsg_t *msg, uint8_t *ptr)
       u64 = f->hmf_s64;
       for(i = 0; i < l; i++) {
 	ptr[i] = u64;
-	u64 = u64 >> 8;
+	u64 >>= 8;
       }
       break;
 
@@ -366,15 +379,15 @@ htsmsg_binary2_serialize(htsmsg_t *msg, void **datap, size_t *lenp, size_t maxle
 
   len = htsmsg_binary2_count(msg);
   llen = htsmsg_binary2_length_count(len);
-  if(len + llen > maxlen)
+  if((size_t)len + (size_t)llen > maxlen)
     return -1;
 
-  p = data = malloc(len + llen);
- 
-  htsmsg_binary2_set_length(&p, len);
+  data = malloc(len + llen);
+
+  p = htsmsg_binary2_set_length(data, len);
   htsmsg_binary2_write(msg, p);
 
   *datap = data;
-  *lenp  = p - data;
+  *lenp  = len + llen;
   return 0;
 }
