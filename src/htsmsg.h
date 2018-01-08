@@ -176,6 +176,11 @@ void htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str);
 void htsmsg_add_str2(htsmsg_t *msg, const char *name, const char *str);
 
 /**
+ * Add a string field (allocated using malloc).
+ */
+void htsmsg_add_str_alloc(htsmsg_t *msg, const char *name, char *str);
+
+/**
  * Add a string field to a list only once.
  */
 void htsmsg_add_str_exclusive(htsmsg_t *msg, const char *str);
@@ -226,11 +231,16 @@ int  htsmsg_field_set_bin_force(htsmsg_field_t *f, const void *bin, size_t len);
 void htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len);
 
 /**
+ * Add an binary field. The passed data must be mallocated.
+ */
+void htsmsg_add_bin_alloc(htsmsg_t *msg, const char *name, const void *bin, size_t len);
+
+/**
  * Add an binary field. The data is not copied, instead the caller
  * is responsible for keeping the data valid for as long as the message
  * is around.
  */
-void htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin, size_t len);
+void htsmsg_add_bin_ptr(htsmsg_t *msg, const char *name, const void *bin, size_t len);
 
 /**
  * Get an integer as an unsigned 32 bit integer.

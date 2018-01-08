@@ -1769,14 +1769,15 @@ again:
   if (p == NULL)
     return -1;
   if (tcp_read(hc->hc_fd, bl, 4))
-    return -1;
+    goto err1;
   if (tcp_read(hc->hc_fd, p, plen))
-    return -1;
+    goto err1;
   /* apply mask descrambling */
   for (pi = 0; pi < plen; pi++)
     p[pi] ^= bl[pi & 3];
   if (op == HTTP_WSOP_PING) {
     http_websocket_send(hc, p, plen, HTTP_WSOP_PONG);
+    free(p);
     goto again;
   }
   msg = htsmsg_create_map();
@@ -1785,15 +1786,20 @@ again:
     p[plen] = '\0';
     msg1 = p[0] == '{' || p[0] == '[' ?
              htsmsg_json_deserialize((char *)p) : NULL;
-    if (msg1)
+    if (msg1) {
       htsmsg_add_msg(msg, "json", msg1);
-    else
-      htsmsg_add_str(msg, "text", (char *)p);
+      free(p);
+    } else {
+      htsmsg_add_str_alloc(msg, "text", (char *)p);
+    }
   } else {
-    htsmsg_add_bin(msg, "bin", p, plen);
+    htsmsg_add_bin_alloc(msg, "bin", p, plen);
   }
   *_res = msg;
   return 0;
+err1:
+  free(p);
+  return -1;
 }
 
 /**

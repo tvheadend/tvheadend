@@ -2868,8 +2868,7 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
   htsp_file_update_stats(hf, r);
 
   rep = htsmsg_create_map();
-  htsmsg_add_bin(rep, "data", m, r);
-  free(m);
+  htsmsg_add_bin_alloc(rep, "data", m, r);
 
 error:
   pthread_mutex_lock(&global_lock);
@@ -4002,7 +4001,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
    * object that just points to data, thus avoiding a copy.
    */
   payloadlen = pktbuf_len(pkt->pkt_payload);
-  htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload), payloadlen);
+  htsmsg_add_bin_ptr(m, "payload", pktbuf_ptr(pkt->pkt_payload), payloadlen);
   htsp_send_subscription(htsp, m, pkt->pkt_payload, hs, payloadlen);
   atomic_add(&hs->hs_s_bytes_out, payloadlen);
 
@@ -4138,8 +4137,8 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     }
 
     if (ssc->ssc_gh)
-      htsmsg_add_binptr(m, "meta", pktbuf_ptr(ssc->ssc_gh),
-		        pktbuf_len(ssc->ssc_gh));
+      htsmsg_add_bin_ptr(m, "meta", pktbuf_ptr(ssc->ssc_gh),
+		         pktbuf_len(ssc->ssc_gh));
 
     htsmsg_add_msg(streams, NULL, c);
   }

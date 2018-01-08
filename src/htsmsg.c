@@ -337,7 +337,6 @@ htsmsg_add_dbl(htsmsg_t *msg, const char *name, double dbl)
 }
 
 
-
 /*
  *
  */
@@ -347,6 +346,17 @@ htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str)
   htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_STR, 0, strlen(str) + 1);
   strcpy((char *)f->hmf_str, str);
   f->hmf_flags |= HMF_INALLOCED;
+}
+
+/*
+ *
+ */
+void
+htsmsg_add_str_alloc(htsmsg_t *msg, const char *name, char *str)
+{
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_STR, 0, 0);
+  f->hmf_str = str;
+  f->hmf_flags |= HMF_ALLOCED;
 }
 
 /*
@@ -501,7 +511,19 @@ htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len)
  *
  */
 void
-htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin, size_t len)
+htsmsg_add_bin_alloc(htsmsg_t *msg, const char *name, const void *bin, size_t len)
+{
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BIN, 0, 0);
+  f->hmf_flags |= HMF_ALLOCED;
+  f->hmf_bin = bin;
+  f->hmf_binsize = len;
+}
+
+/*
+ *
+ */
+void
+htsmsg_add_bin_ptr(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 {
   htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BIN, 0, 0);
   f->hmf_bin = bin;
