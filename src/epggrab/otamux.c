@@ -78,14 +78,14 @@ static void epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota 
 static int
 om_id_cmp   ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
 {
-  return strcmp(a->om_mux_uuid, b->om_mux_uuid);
+  return uuid_cmp(&a->om_mux_uuid, &b->om_mux_uuid);
 }
 
 static int
 om_mux_cmp  ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
 {
-  mpegts_mux_t *a1 = mpegts_mux_find(a->om_mux_uuid);
-  mpegts_mux_t *b1 = mpegts_mux_find(b->om_mux_uuid);
+  mpegts_mux_t *a1 = mpegts_mux_find0(&a->om_mux_uuid);
+  mpegts_mux_t *b1 = mpegts_mux_find0(&b->om_mux_uuid);
   if (a1 == NULL || b1 == NULL) {
     if (a1 == NULL && b1 == NULL)
       return 0;
@@ -97,7 +97,7 @@ om_mux_cmp  ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
 static int
 om_svcl_cmp ( epggrab_ota_svc_link_t *a, epggrab_ota_svc_link_t *b )
 {
-  return strcmp(a->uuid, b->uuid);
+  return uuid_cmp(&a->uuid, &b->uuid);
 }
 
 static int
@@ -128,22 +128,19 @@ epggrab_ota_queue_one( epggrab_ota_mux_t *om )
 void
 epggrab_ota_queue_mux( mpegts_mux_t *mm )
 {
-  const char *id;
   epggrab_ota_mux_t *om;
   int epg_flag;
-  char ubuf[UUID_HEX_SIZE];
 
   if (!mm)
     return;
 
   lock_assert(&global_lock);
 
-  id = idnode_uuid_as_str(&mm->mm_id, ubuf);
   epg_flag = mm->mm_is_epg(mm);
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE)
     return;
   RB_FOREACH(om, &epggrab_ota_all, om_global_link)
-    if (!strcmp(om->om_mux_uuid, id)) {
+    if (!uuid_cmp(&om->om_mux_uuid, &mm->mm_id.in_uuid)) {
       if (epggrab_ota_queue_one(om))
         epggrab_ota_kick(4);
       break;
@@ -193,7 +190,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   if (om->om_save)
     epggrab_ota_save(om);
 
-  mm = mpegts_mux_find(om->om_mux_uuid);
+  mm = mpegts_mux_find0(&om->om_mux_uuid);
   mpegts_mux_nice_name(mm, name, sizeof(name));
   tvhdebug(LS_EPGGRAB, "grab done for %s (%s)", name, reasons[reason]);
 
@@ -289,12 +286,10 @@ epggrab_mux_start ( mpegts_mux_t *mm, void *p )
 {
   epggrab_module_t  *m;
   epggrab_ota_mux_t *ota;
-  char ubuf[UUID_HEX_SIZE];
-  const char *uuid = idnode_uuid_as_str(&mm->mm_id, ubuf);
 
   /* Already started */
   TAILQ_FOREACH(ota, &epggrab_ota_active, om_q_link)
-    if (!strcmp(ota->om_mux_uuid, uuid))
+    if (!uuid_cmp(&ota->om_mux_uuid, &mm->mm_id.in_uuid))
       return;
 
   /* Register all modules */
@@ -312,8 +307,7 @@ static void
 epggrab_mux_stop ( mpegts_mux_t *mm, void *p, int reason )
 {
   epggrab_ota_mux_t *ota;
-  char ubuf[UUID_HEX_SIZE], name[256];
-  const char *uuid = idnode_uuid_as_str(&mm->mm_id, ubuf);
+  char name[256];
   int done = EPGGRAB_OTA_DONE_STOLEN;
 
   if (reason == SM_CODE_NO_INPUT)
@@ -324,7 +318,7 @@ epggrab_mux_stop ( mpegts_mux_t *mm, void *p, int reason )
     tvhtrace(LS_EPGGRAB, "mux %s (%p) stop", name, mm);
   }
   TAILQ_FOREACH(ota, &epggrab_ota_active, om_q_link)
-    if (!strcmp(ota->om_mux_uuid, uuid)) {
+    if (!uuid_cmp(&ota->om_mux_uuid, &mm->mm_id.in_uuid)) {
       epggrab_ota_done(ota, done);
       break;
     }
@@ -346,10 +340,8 @@ epggrab_ota_register
 
   if (ota == NULL) {
     /* Find mux entry */
-    char ubuf[UUID_HEX_SIZE];
-    const char *uuid = idnode_uuid_as_str(&mm->mm_id, ubuf);
     SKEL_ALLOC(epggrab_ota_mux_skel);
-    epggrab_ota_mux_skel->om_mux_uuid = (char*)uuid;
+    epggrab_ota_mux_skel->om_mux_uuid = mm->mm_id.in_uuid;
 
     ota = RB_INSERT_SORTED(&epggrab_ota_all, epggrab_ota_mux_skel, om_global_link, om_id_cmp);
     if (!ota) {
@@ -358,7 +350,6 @@ epggrab_ota_register
       tvhinfo(LS_EPGGRAB, "%s - registering mux for OTA EPG", buf);
       ota  = epggrab_ota_mux_skel;
       SKEL_USED(epggrab_ota_mux_skel);
-      ota->om_mux_uuid = strdup(uuid);
       TAILQ_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_mux_cmp);
       ota->om_q_type = EPGGRAB_OTA_MUX_PENDING;
       if (TAILQ_FIRST(&epggrab_ota_pending) == ota)
@@ -509,7 +500,7 @@ epggrab_ota_kick_cb ( void *p )
 
 next_one:
   /* Find the mux */
-  mm = mpegts_mux_find(om->om_mux_uuid);
+  mm = mpegts_mux_find0(&om->om_mux_uuid);
   if (!mm) {
     epggrab_ota_free(&epggrab_ota_pending, om);
     goto done;
@@ -697,8 +688,8 @@ epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
   if (!tvhtrace_enabled())
     return;
 
-  mm = mpegts_mux_find(ota->om_mux_uuid);
-  svc = mpegts_service_find_by_uuid(svcl->uuid);
+  mm = mpegts_mux_find0(&ota->om_mux_uuid);
+  svc = mpegts_service_find_by_uuid0(&svcl->uuid);
   if (mm && svc) {
     mpegts_mux_nice_name(mm, buf, sizeof(buf));
     tvhtrace(LS_EPGGRAB, "ota %s %s service %s", buf, op, svc->s_nicename);
@@ -708,19 +699,18 @@ epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
 
 void
 epggrab_ota_service_add ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
-                          const char *uuid, int save )
+                          tvh_uuid_t *uuid, int save )
 {
   epggrab_ota_svc_link_t *svcl;
 
   if (uuid == NULL || !atomic_get(&epggrab_ota_running))
     return;
   SKEL_ALLOC(epggrab_svc_link_skel);
-  epggrab_svc_link_skel->uuid = (char *)uuid;
+  epggrab_svc_link_skel->uuid = *uuid;
   svcl = RB_INSERT_SORTED(&map->om_svcs, epggrab_svc_link_skel, link, om_svcl_cmp);
   if (svcl == NULL) {
     svcl = epggrab_svc_link_skel;
     SKEL_USED(epggrab_svc_link_skel);
-    svcl->uuid = strdup(uuid);
     if (save)
       ota->om_save = 1;
     epggrab_ota_service_trace(ota, svcl, "add new");
@@ -736,7 +726,6 @@ epggrab_ota_service_del ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
     return;
   epggrab_ota_service_trace(ota, svcl, "delete");
   RB_REMOVE(&map->om_svcs, svcl, link);
-  free(svcl->uuid);
   free(svcl);
   if (save)
     ota->om_save = 1;
@@ -752,6 +741,7 @@ epggrab_ota_save ( epggrab_ota_mux_t *ota )
   epggrab_ota_map_t *map;
   epggrab_ota_svc_link_t *svcl;
   htsmsg_t *e, *l, *l2, *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
 
   ota->om_save = 0;
   htsmsg_add_u32(c, "complete", ota->om_complete);
@@ -762,14 +752,13 @@ epggrab_ota_save ( epggrab_ota_mux_t *ota )
     if (RB_FIRST(&map->om_svcs)) {
       l2 = htsmsg_create_list();
       RB_FOREACH(svcl, &map->om_svcs, link)
-        if (svcl->uuid)
-          htsmsg_add_str(l2, NULL, svcl->uuid);
+        htsmsg_add_uuid(l2, NULL, &svcl->uuid);
       htsmsg_add_msg(e, "services", l2);
     }
     htsmsg_add_msg(l, NULL, e);
   }
   htsmsg_add_msg(c, "modules", l);
-  hts_settings_save(c, "epggrab/otamux/%s", ota->om_mux_uuid);
+  hts_settings_save(c, "epggrab/otamux/%s", uuid_get_hex(&ota->om_mux_uuid, ubuf));
   htsmsg_destroy(c);
 }
 
@@ -797,9 +786,8 @@ epggrab_ota_load_one
   }
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
-  ota->om_mux_uuid = strdup(uuid);
+  ota->om_mux_uuid = mm->mm_id.in_uuid;
   if (RB_INSERT_SORTED(&epggrab_ota_all, ota, om_global_link, om_id_cmp)) {
-    free(ota->om_mux_uuid);
     free(ota);
     return;
   }
@@ -816,8 +804,11 @@ epggrab_ota_load_one
     RB_INIT(&map->om_svcs);
     map->om_module   = mod;
     if ((l2 = htsmsg_get_list(e, "services")) != NULL) {
-      HTSMSG_FOREACH(f2, l2)
-        epggrab_ota_service_add(map, ota, htsmsg_field_get_str(f2), 0);
+      HTSMSG_FOREACH(f2, l2) {
+        tvh_uuid_t u;
+        if (htsmsg_field_get_uuid(f2, &u))
+          epggrab_ota_service_add(map, ota, &u, 0);
+      }
     }
     LIST_INSERT_HEAD(&ota->om_modules, map, om_link);
   }
@@ -912,7 +903,6 @@ epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota  )
       epggrab_ota_service_del(map, ota, svcl, 0);
     free(map);
   }
-  free(ota->om_mux_uuid);
   free(ota->om_force_modname);
   free(ota);
 }

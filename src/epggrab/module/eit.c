@@ -920,7 +920,6 @@ _eit_callback
   eit_data_t           *data;
   const char           *cridauth, *charset;
   int                   cridauth_len, charset_len, data_len;
-  char ubuf[UUID_HEX_SIZE];
 
   if (!epggrab_ota_running)
     return -1;
@@ -1031,7 +1030,7 @@ svc_ok:
 
   /* Register this */
   if (ota)
-    epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id, ubuf), 1);
+    epggrab_ota_service_add(map, ota, &svc->s_id.in_uuid, 1);
 
   /* No point processing */
   if (!LIST_FIRST(&svc->s_channels))
@@ -1193,7 +1192,7 @@ static int _eit_tune
     nxt = RB_NEXT(osl, link);
     /* rule: if 5 mux scans fail for this service, remove it */
     if (osl->last_tune_count + 5 <= map->om_tune_count ||
-        !(s = mpegts_service_find_by_uuid(osl->uuid))) {
+        !(s = mpegts_service_find_by_uuid0(&osl->uuid))) {
       epggrab_ota_service_del(map, om, osl, 1);
     } else {
       if (LIST_FIRST(&s->s_channels))

@@ -384,6 +384,12 @@ const char *htsmsg_field_get_string(htsmsg_field_t *f);
 #define htsmsg_field_get_str(f) htsmsg_field_get_string(f)
 
 /**
+ * Given the field \p f, return a uuid if it is of type string, otherwise
+ * return NULL
+ */
+int htsmsg_field_get_uuid(htsmsg_field_t *f, tvh_uuid_t *u);
+
+/**
  * Get a field of type 'bin'.
  *
  * @return HTSMSG_ERR_FIELD_NOT_FOUND - Field does not exist

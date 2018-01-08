@@ -893,6 +893,9 @@ mpegts_mux_t *mpegts_mux_create0
   mpegts_mux_create0(calloc(1, sizeof(mpegts_mux_t)), &mpegts_mux_class, uuid,\
                      mn, onid, tsid, conf)
 
+static inline mpegts_mux_t *mpegts_mux_find0(tvh_uuid_t *uuid)
+  { return idnode_find0(uuid, &mpegts_mux_class, NULL); }
+
 static inline mpegts_mux_t *mpegts_mux_find(const char *uuid)
   { return idnode_find(uuid, &mpegts_mux_class, NULL); }
 
@@ -1134,6 +1137,9 @@ mpegts_service_t *
 mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid );
 
 void mpegts_service_update_slave_pids ( mpegts_service_t *t, int del );
+
+static inline mpegts_service_t *mpegts_service_find_by_uuid0(tvh_uuid_t *uuid)
+  { return idnode_find0(uuid, &mpegts_service_class, NULL); }
 
 static inline mpegts_service_t *mpegts_service_find_by_uuid(const char *uuid)
   { return idnode_find(uuid, &mpegts_service_class, NULL); }

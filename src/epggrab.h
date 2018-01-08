@@ -221,7 +221,7 @@ struct epggrab_module_ext
 
 struct epggrab_ota_svc_link
 {
-  char                          *uuid;
+  tvh_uuid_t                     uuid;
   uint64_t                       last_tune_count;
   RB_ENTRY(epggrab_ota_svc_link) link;
 };
@@ -232,7 +232,7 @@ struct epggrab_ota_svc_link
  */
 struct epggrab_ota_mux
 {
-  char                              *om_mux_uuid;     ///< Soft-link to mux
+  tvh_uuid_t                         om_mux_uuid;     ///< Soft-link to mux
   LIST_HEAD(,epggrab_ota_map)        om_modules;      ///< List of linked mods
   
   uint8_t                            om_done;         ///< The full completion mark for this round

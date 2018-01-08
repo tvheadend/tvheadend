@@ -458,7 +458,6 @@ _psip_eit_callback
   mpegts_psi_table_state_t *st;
   idnode_list_mapping_t *ilm;
   th_subscription_t    *ths;
-  char ubuf[UUID_HEX_SIZE];
 
   /* Validate */
   if (tableid != 0xcb) return -1;
@@ -507,8 +506,7 @@ _psip_eit_callback
 
   /* Register this */
   if (ps->ps_ota)
-    epggrab_ota_service_add(map, ps->ps_ota,
-                            idnode_uuid_as_str(&svc->s_id, ubuf), 1);
+    epggrab_ota_service_add(map, ps->ps_ota, &svc->s_id.in_uuid, 1);
 
   /* For each associated channels */
   LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
@@ -757,7 +755,7 @@ static int _psip_tune
     nxt = RB_NEXT(osl, link);
     /* rule: if 5 mux scans fail for this service, remove it */
     if (osl->last_tune_count + 5 <= map->om_tune_count ||
-        !(s = mpegts_service_find_by_uuid(osl->uuid))) {
+        !(s = mpegts_service_find_by_uuid0(&osl->uuid))) {
       epggrab_ota_service_del(map, om, osl, 1);
     } else {
       if (LIST_FIRST(&s->s_channels))

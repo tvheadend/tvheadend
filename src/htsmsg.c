@@ -960,6 +960,36 @@ htsmsg_get_bin
   return htsmsg_field_get_bin(f, binp, lenp);
 }
 
+/**
+ *
+ */
+int
+htsmsg_field_get_uuid(htsmsg_field_t *f, tvh_uuid_t *u)
+{
+  const void *p;
+  size_t l;
+  int r;
+
+  switch(f->hmf_type) {
+  case HMF_UUID:
+    memcpy(&u->bin, f->hmf_uuid, UUID_BIN_SIZE);
+    break;
+  case HMF_BIN:
+  case HMF_STR:
+    r = htsmsg_field_get_bin(f, &p, &l);
+    if (r == 0) {
+      if (l != UUID_BIN_SIZE)
+        return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+      memcpy(u->bin, p, UUID_BIN_SIZE);
+      return 0;
+    }
+    /* Fall through */
+  default:
+    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  }
+  return 0;
+}
+
 /*
  *
  */
@@ -972,20 +1002,7 @@ htsmsg_get_uuid
   if((f = htsmsg_field_find(msg, name)) == NULL)
     return HTSMSG_ERR_FIELD_NOT_FOUND;
 
-  if(f->hmf_type == HMF_UUID) {
-    memcpy(u->bin, f->hmf_uuid, UUID_BIN_SIZE);
-    return 0;
-  } else {
-    const void *p;
-    size_t l;
-    int r = htsmsg_field_get_bin(f, &p, &l);
-    if (r == 0) {
-      if (l != UUID_BIN_SIZE)
-        return HTSMSG_ERR_FIELD_NOT_FOUND;
-      memcpy(u->bin, p, UUID_BIN_SIZE);
-    }
-    return r;
-  }
+  return htsmsg_field_get_uuid(f, u);
 }
 
 /*

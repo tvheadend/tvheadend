@@ -167,7 +167,7 @@ void epggrab_ota_complete
 void
 epggrab_ota_service_add
   ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
-    const char *uuid, int save );
+    tvh_uuid_t *uuid, int save );
 void
 epggrab_ota_service_del
   ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
