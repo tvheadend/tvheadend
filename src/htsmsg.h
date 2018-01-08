@@ -62,8 +62,6 @@ typedef struct htsmsg_field {
 
 #define HMF_ALLOCED        0x1
 #define HMF_INALLOCED      0x2
-#define HMF_NAME_INALLOCED 0x4
-#define HMF_NAME_ALLOCED   0x8
 
   union {
     int64_t  s64;

@@ -78,23 +78,13 @@ htsmsg_field_data_destroy(htsmsg_field_t *f)
 void
 htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
 {
-#if ENABLE_SLOW_MEMORYINFO
-  size_t asize = 0;
-#endif
-
   TAILQ_REMOVE(&msg->hm_fields, f, hmf_link);
 
   htsmsg_field_data_destroy(f);
 
-  if (f->hmf_flags & HMF_NAME_ALLOCED) {
-#if ENABLE_SLOW_MEMORYINFO
-    asize += strlen(f->hmf_name);
-#endif
-    free((void *)f->hmf_name);
-  }
 #if ENABLE_SLOW_MEMORYINFO
   memoryinfo_free(&htsmsg_field_memoryinfo,
-                  sizeof(*f) + f->hmf_edata_size + asize);
+                  sizeof(*f) + f->hmf_edata_size);
 #endif
   free(f);
 }
@@ -118,14 +108,10 @@ htsmsg_clear(htsmsg_t *msg)
 htsmsg_field_t *
 htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t esize)
 {
-  size_t nsize = 0;
+  size_t nsize;
   htsmsg_field_t *f;
-#if ENABLE_SLOW_MEMORYINFO
-  size_t asize = 0;
-#endif
   
-  if((flags & HMF_NAME_INALLOCED) && name)
-    nsize = strlen(name) + 1;
+  nsize = name ? strlen(name) + 1 : 0;
   f = malloc(sizeof(htsmsg_field_t) + nsize + esize);
   if(f == NULL)
     return NULL;
@@ -137,20 +123,11 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
     assert(name != NULL);
   }
 
-  if(flags & HMF_NAME_INALLOCED) {
-    if (name) {
-      f->hmf_name = f->hmf_edata;
-      strcpy(f->hmf_edata, name);
-    } else {
-      f->hmf_name = NULL;
-    }
-  } else if(flags & HMF_NAME_ALLOCED) {
-    f->hmf_name = name ? strdup(name) : NULL;
-#if ENABLE_SLOW_MEMORYINFO
-    asize = name ? strlen(name) + 1 : 0;
-#endif
+  if (name) {
+    f->hmf_name = f->hmf_edata;
+    strcpy(f->hmf_edata, name);
   } else {
-    f->hmf_name = name;
+    f->hmf_name = NULL;
   }
 
   if(esize) {
@@ -167,7 +144,7 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
 #if ENABLE_SLOW_MEMORYINFO
   f->hmf_edata_size = nsize + esize;
   memoryinfo_alloc(&htsmsg_field_memoryinfo,
-                   sizeof(htsmsg_field_t) + f->hmf_edata_size + asize);
+                   sizeof(htsmsg_field_t) + f->hmf_edata_size);
 #endif
   return f;
 }
@@ -307,7 +284,7 @@ htsmsg_destroy(htsmsg_t *msg)
 void
 htsmsg_add_bool(htsmsg_t *msg, const char *name, int b)
 {
-  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BOOL, HMF_NAME_INALLOCED, 0);
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BOOL, 0, 0);
   f->hmf_bool = !!b;
 }
 
@@ -319,7 +296,7 @@ htsmsg_set_bool(htsmsg_t *msg, const char *name, int b)
 {
   htsmsg_field_t *f = htsmsg_field_find(msg, name);
   if (!f)
-    f = htsmsg_field_add(msg, name, HMF_BOOL, HMF_NAME_INALLOCED, 0);
+    f = htsmsg_field_add(msg, name, HMF_BOOL, 0, 0);
   f->hmf_bool = !!b;
 }
 
@@ -329,7 +306,7 @@ htsmsg_set_bool(htsmsg_t *msg, const char *name, int b)
 void
 htsmsg_add_s64(htsmsg_t *msg, const char *name, int64_t s64)
 {
-  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_S64, HMF_NAME_INALLOCED, 0);
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_S64, 0, 0);
   f->hmf_s64 = s64;
 }
 
@@ -341,7 +318,7 @@ htsmsg_set_s64(htsmsg_t *msg, const char *name, int64_t s64)
 {
   htsmsg_field_t *f = htsmsg_field_find(msg, name);
   if (!f)
-    f = htsmsg_field_add(msg, name, HMF_S64, HMF_NAME_INALLOCED, 0);
+    f = htsmsg_field_add(msg, name, HMF_S64, 0, 0);
   if (f->hmf_type != HMF_S64)
     return 1;
   f->hmf_s64 = s64;
@@ -355,7 +332,7 @@ htsmsg_set_s64(htsmsg_t *msg, const char *name, int64_t s64)
 void
 htsmsg_add_dbl(htsmsg_t *msg, const char *name, double dbl)
 {
-  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_DBL, HMF_NAME_INALLOCED, 0);
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_DBL, 0, 0);
   f->hmf_dbl = dbl;
 }
 
@@ -367,8 +344,7 @@ htsmsg_add_dbl(htsmsg_t *msg, const char *name, double dbl)
 void
 htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str)
 {
-  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_STR, HMF_NAME_INALLOCED,
-                                       strlen(str) + 1);
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_STR, 0, strlen(str) + 1);
   strcpy((char *)f->hmf_str, str);
   f->hmf_flags |= HMF_INALLOCED;
 }
@@ -475,7 +451,7 @@ htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len)
   }
   else if (f->hmf_flags & HMF_INALLOCED) {
     if (f->hmf_binsize >= len) {
-      memmove((char *)f->hmf_bin, bin, len);
+      memmove((void *)f->hmf_bin, bin, len);
       f->hmf_binsize = len;
       return 0;
     }
@@ -516,7 +492,7 @@ htsmsg_field_set_bin_force(htsmsg_field_t *f, const void *bin, size_t len)
 void
 htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 {
-  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BIN, HMF_NAME_INALLOCED, len);
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BIN, 0, len);
   f->hmf_flags |= HMF_INALLOCED;
   memcpy((void *)f->hmf_bin, bin, len);
 }
@@ -527,7 +503,7 @@ htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 void
 htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 {
-  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BIN, HMF_NAME_INALLOCED, 0);
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BIN, 0, 0);
   f->hmf_bin = bin;
   f->hmf_binsize = len;
 }
@@ -563,8 +539,7 @@ htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 {
   htsmsg_field_t *f;
 
-  f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP,
-		       HMF_NAME_INALLOCED, 0);
+  f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP, 0, 0);
   return htsmsg_field_set_msg(f, sub);
 }
 

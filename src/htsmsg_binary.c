@@ -33,7 +33,7 @@ static int
 htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
 {
   uint_fast32_t type, namelen, datalen;
-  size_t tlen;
+  size_t tlen, nlen;
   htsmsg_field_t *f;
   htsmsg_t *sub;
   uint64_t u64;
@@ -54,8 +54,8 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     if(len < namelen + datalen)
       return -1;
 
-    tlen = sizeof(htsmsg_field_t) +
-           (namelen ? namelen + 1 : 0) +
+    nlen = namelen ? namelen + 1 : 0;
+    tlen = sizeof(htsmsg_field_t) + nlen +
            (type == HMF_STR ? datalen + 1 : 0);
     f = malloc(tlen);
     if (f == NULL)
@@ -65,6 +65,7 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     memoryinfo_alloc(&htsmsg_field_memoryinfo, tlen);
 #endif
     f->hmf_type  = type;
+    f->hmf_flags = 0;
 
     if(namelen > 0) {
       f->hmf_name = f->hmf_edata;
@@ -73,18 +74,16 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
 
       buf += namelen;
       len -= namelen;
-      f->hmf_flags = HMF_NAME_INALLOCED;
-
     } else {
-      f->hmf_name  = NULL;
-      f->hmf_flags = 0;
+      f->hmf_name = NULL;
     }
 
     switch(type) {
     case HMF_STR:
-      f->hmf_str = f->hmf_edata + (namelen ? namelen + 1 : 0);
+      f->hmf_str = f->hmf_edata + nlen;
       memcpy((char *)f->hmf_str, buf, datalen);
       ((char *)f->hmf_str)[datalen] = 0;
+      f->hmf_flags |= HMF_INALLOCED;
       break;
 
     case HMF_BIN:
