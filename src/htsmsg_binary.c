@@ -85,6 +85,7 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
       f->hmf_str = f->hmf_edata + (namelen ? namelen + 1 : 0);
       memcpy((char *)f->hmf_str, buf, datalen);
       ((char *)f->hmf_str)[datalen] = 0;
+      f->hmf_flags |= HMF_INALLOCED;
       break;
 
     case HMF_BIN:
