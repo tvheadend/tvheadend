@@ -229,6 +229,7 @@ SRCS-1 = \
 	src/htsp_server.c \
 	src/htsmsg.c \
 	src/htsmsg_binary.c \
+	src/htsmsg_binary2.c \
 	src/htsmsg_json.c \
 	src/htsmsg_xml.c \
 	src/misc/dbl.c \
