@@ -979,7 +979,7 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
     htsmsg_add_u32(conf, "enabled", !!enabled);
   htsmsg_add_s64(conf, "start", start);
   htsmsg_add_s64(conf, "stop", stop);
-  htsmsg_add_str(conf, "channel", idnode_uuid_as_str(&ch->ch_id, ubuf));
+  htsmsg_add_uuid(conf, "channel", &ch->ch_id.in_uuid);
   htsmsg_add_u32(conf, "pri", pri);
   htsmsg_add_u32(conf, "retention", retention);
   htsmsg_add_u32(conf, "removal", removal);
@@ -1035,7 +1035,7 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
     htsmsg_add_u32(conf, "broadcast", e->id);
   if (dae)
   {
-    htsmsg_add_str(conf, "autorec", idnode_uuid_as_str(&dae->dae_id, ubuf));
+    htsmsg_add_uuid(conf, "autorec", &dae->dae_id.in_uuid);
     htsmsg_add_str(conf, "directory", dae->dae_directory ?: "");
     if (dae->dae_cat1 && *dae->dae_cat1)
       htsmsg_add_str(conf, "cat1", dae->dae_cat1);
@@ -1046,7 +1046,7 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
   }
   if (dte)
   {
-    htsmsg_add_str(conf, "timerec", idnode_uuid_as_str(&dte->dte_id, ubuf));
+    htsmsg_add_uuid(conf, "timerec", &dte->dte_id.in_uuid);
     htsmsg_add_str(conf, "directory", dte->dte_directory ?: "");
   }
 

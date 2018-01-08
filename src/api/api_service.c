@@ -42,7 +42,6 @@ static htsmsg_t *
 api_mapper_status_msg ( void )
 {
   htsmsg_t *m;
-  char ubuf[UUID_HEX_SIZE];
   service_mapper_status_t stat = service_mapper_status();
   m = htsmsg_create_map();
   htsmsg_add_u32(m, "total",  stat.total);
@@ -50,7 +49,7 @@ api_mapper_status_msg ( void )
   htsmsg_add_u32(m, "fail",   stat.fail);
   htsmsg_add_u32(m, "ignore", stat.ignore);
   if (stat.active)
-    htsmsg_add_str(m, "active", idnode_uuid_as_str(&stat.active->s_id, ubuf));
+    htsmsg_add_uuid(m, "active", &stat.active->s_id.in_uuid);
   return m;
 }
 

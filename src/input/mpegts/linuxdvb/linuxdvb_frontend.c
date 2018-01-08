@@ -2203,17 +2203,17 @@ linuxdvb_frontend_create
 void
 linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *fe )
 {
-  char id[16], ubuf[UUID_HEX_SIZE];
+  char id[16];
   htsmsg_t *m = htsmsg_create_map();
 
   /* Save frontend */
   mpegts_input_save((mpegts_input_t*)lfe, m);
   htsmsg_add_str(m, "type", dvb_type2str(lfe->lfe_type));
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lfe->ti_id, ubuf));
+  htsmsg_add_uuid(m, "uuid", &lfe->ti_id.in_uuid);
   if (lfe->lfe_satconf && !lfe->lfe_master) {
     htsmsg_t *s = htsmsg_create_map();
     linuxdvb_satconf_save(lfe->lfe_satconf, s);
-    htsmsg_add_str(s, "uuid", idnode_uuid_as_str(&lfe->lfe_satconf->ls_id, ubuf));
+    htsmsg_add_uuid(s, "uuid", &lfe->lfe_satconf->ls_id.in_uuid);
     htsmsg_add_msg(m, "satconf", s);
   }
   htsmsg_delete_field(m, "fe_master");

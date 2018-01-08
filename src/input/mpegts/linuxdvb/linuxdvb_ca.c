@@ -781,11 +781,11 @@ static void linuxdvb_ca_destroy( linuxdvb_ca_t *lca )
 
 static void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *msg )
 {
-  char id[8], ubuf[UUID_HEX_SIZE];
+  char id[32];
   htsmsg_t *m = htsmsg_create_map();
   linuxdvb_transport_t *lcat = lca->lca_transport;
 
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lca->lca_id, ubuf));
+  htsmsg_add_uuid(m, "uuid", &lca->lca_id.in_uuid);
   idnode_save(&lca->lca_id, m);
 
   /* Add to list */

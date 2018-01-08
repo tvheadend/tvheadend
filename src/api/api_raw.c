@@ -58,7 +58,6 @@ api_idnode_raw_export_by_class0
   idnode_set_t    *is;
   idnode_t        *in;
   htsmsg_t        *l, *e;
-  char ubuf[UUID_HEX_SIZE];
 
   /* Find class */
   idc = opaque;
@@ -75,7 +74,7 @@ api_idnode_raw_export_by_class0
       e = idnode_savefn(in, NULL, 0);
 
       if (e) {
-        htsmsg_set_str(e, "uuid", idnode_uuid_as_str(in, ubuf));
+        htsmsg_set_uuid(e, "uuid", &in->in_uuid);
         htsmsg_add_msg(l, NULL, e);
       }
 
@@ -99,7 +98,6 @@ api_idnode_raw_export
   htsmsg_t *uuids, *l = NULL, *m;
   htsmsg_field_t *f;
   const char *uuid = NULL, *class;
-  char ubuf[UUID_HEX_SIZE];
 
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {
@@ -137,7 +135,7 @@ api_idnode_raw_export
       }
       m = idnode_savefn(in, NULL, 0);
       if (m) {
-        htsmsg_set_str(m, "uuid", idnode_uuid_as_str(in, ubuf));
+        htsmsg_set_uuid(m, "uuid", &in->in_uuid);
         htsmsg_add_msg(l, NULL, m);
       }
       count++;
@@ -155,7 +153,7 @@ api_idnode_raw_export
       } else {
         m = idnode_savefn(in, NULL, 0);
         if (m) {
-          htsmsg_set_str(m, "uuid", idnode_uuid_as_str(in, ubuf));
+          htsmsg_set_uuid(m, "uuid", &in->in_uuid);
           htsmsg_add_msg(l, NULL, m);
         }
         idnode_perm_unset(in);

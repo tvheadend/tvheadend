@@ -1280,7 +1280,7 @@ mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c, int refs )
   idnode_save(&mm->mm_id, root);
   LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
     if (refs) {
-      htsmsg_add_str(services, NULL, idnode_uuid_as_str(&ms->s_id, ubuf));
+      htsmsg_add_uuid(services, NULL, &ms->s_id.in_uuid);
     } else {
       e = htsmsg_create_map();
       service_save((service_t *)ms, e);

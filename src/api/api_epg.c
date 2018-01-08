@@ -54,10 +54,10 @@ static void
 api_epg_add_channel ( htsmsg_t *m, channel_t *ch, const char *blank )
 {
   int64_t chnum;
-  char buf[32], ubuf[UUID_HEX_SIZE];
+  char buf[32];
   const char *s;
   htsmsg_add_str(m, "channelName", channel_get_name(ch, blank));
-  htsmsg_add_str(m, "channelUuid", channel_get_uuid(ch, ubuf));
+  htsmsg_add_uuid(m, "channelUuid", &ch->ch_id.in_uuid);
   if ((chnum = channel_get_number(ch)) >= 0) {
     uint32_t maj = chnum / CHANNEL_SPLIT;
     uint32_t min = chnum % CHANNEL_SPLIT;
@@ -210,7 +210,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
       if (access_verify_list(perm->aa_dvrcfgs,
                              idnode_uuid_as_str(&de->de_config->dvr_id, ubuf)))
         continue;
-      htsmsg_add_str(m, "dvrUuid", idnode_uuid_as_str(&de->de_id, ubuf));
+      htsmsg_add_uuid(m, "dvrUuid", &de->de_id.in_uuid);
       htsmsg_add_str(m, "dvrState", dvr_entry_schedstatus(de));
       break;
     }

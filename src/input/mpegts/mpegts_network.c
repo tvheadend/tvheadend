@@ -622,7 +622,7 @@ mpegts_network_wizard_get
     mpegts_network_t *mn, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_map(), *l, *e;
-  char ubuf[UUID_HEX_SIZE], buf[256];
+  char buf[256];
 
   if (mi && idc) {
     mi->mi_display_name(mi, buf, sizeof(buf));
@@ -632,7 +632,7 @@ mpegts_network_wizard_get
     htsmsg_add_msg(l, NULL, e);
     htsmsg_add_msg(m, "mpegts_network_types", l);
     if (mn)
-      htsmsg_add_str(m, "mpegts_network", idnode_uuid_as_str(&mn->mn_id, ubuf));
+      htsmsg_add_uuid(m, "mpegts_network", &mn->mn_id.in_uuid);
   }
   return m;
 }
@@ -641,7 +641,6 @@ void
 mpegts_network_wizard_create
   ( const char *clazz, htsmsg_t **nlist, const char *lang )
 {
-  char buf[256];
   mpegts_network_t *mn;
   mpegts_network_builder_t *mnb;
   htsmsg_t *conf;
@@ -669,7 +668,7 @@ mpegts_network_wizard_create
 found:
   if (mn && nlist) {
     *nlist = htsmsg_create_list();
-    htsmsg_add_str(*nlist, NULL, idnode_uuid_as_str(&mn->mn_id, buf));
+    htsmsg_add_uuid(*nlist, NULL, &mn->mn_id.in_uuid);
   }
 }
 

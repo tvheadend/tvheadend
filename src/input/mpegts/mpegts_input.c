@@ -80,10 +80,9 @@ mpegts_input_class_network_get ( void *obj )
   mpegts_network_link_t *mnl;  
   mpegts_input_t *mi = obj;
   htsmsg_t       *l  = htsmsg_create_list();
-  char ubuf[UUID_HEX_SIZE];
 
   LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(&mnl->mnl_network->mn_id, ubuf));
+    htsmsg_add_uuid(l, NULL, &mnl->mnl_network->mn_id.in_uuid);
 
   return l;
 }
@@ -98,13 +97,12 @@ htsmsg_t *
 mpegts_input_class_network_enum ( void *obj, const char *lang )
 {
   htsmsg_t *p, *m;
-  char ubuf[UUID_HEX_SIZE];
 
   if (!obj)
     return NULL;
 
   p = htsmsg_create_map();
-  htsmsg_add_str (p, "uuid",    idnode_uuid_as_str((idnode_t*)obj, ubuf));
+  htsmsg_add_uuid(p, "uuid",    &((idnode_t*)obj)->in_uuid);
   htsmsg_add_bool(p, "enum",    1);
 
   m = htsmsg_create_map();

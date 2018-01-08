@@ -235,8 +235,7 @@ idnode_get_short_uuid (const idnode_t *in)
 const char *
 idnode_uuid_as_str(const idnode_t *in, char *uuid)
 {
-  bin2hex(uuid, UUID_HEX_SIZE, in->in_uuid.bin, sizeof(in->in_uuid.bin));
-  return uuid;
+  return bin2hex(uuid, UUID_HEX_SIZE, in->in_uuid.bin, sizeof(in->in_uuid.bin));
 }
 
 /**
@@ -1107,10 +1106,9 @@ idnode_set_as_htsmsg
   ( idnode_set_t *is )
 {
   htsmsg_t *l = htsmsg_create_list();
-  char ubuf[UUID_HEX_SIZE];
   int i;
   for (i = 0; i < is->is_count; i++)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(is->is_array[i], ubuf));
+    htsmsg_add_uuid(l, NULL, &is->is_array[i]->in_uuid);
   return l;
 }
 
@@ -1532,14 +1530,13 @@ htsmsg_t *
 idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask, const char *lang)
 {
   const idclass_t *idc = self->in_class;
-  const char *uuid, *s;
-  char ubuf[UUID_HEX_SIZE], buf[384];
+  const char *s;
+  char buf[384];
 
   htsmsg_t *m = htsmsg_create_map();
   if (!idc->ic_snode) {
-    uuid = idnode_uuid_as_str(self, ubuf);
-    htsmsg_add_str(m, "uuid", uuid);
-    htsmsg_add_str(m, "id",   uuid);
+    htsmsg_add_uuid(m, "uuid", &self->in_uuid);
+    htsmsg_add_uuid(m, "id",   &self->in_uuid);
   }
   htsmsg_add_str(m, "text", idnode_get_title(self, lang, buf, sizeof(buf)) ?: "");
   if ((s = idclass_get_caption(idc, lang)))
@@ -1749,10 +1746,9 @@ idnode_list_get1
 {
   idnode_list_mapping_t *ilm;
   htsmsg_t *l = htsmsg_create_list();
-  char ubuf[UUID_HEX_SIZE];
 
   LIST_FOREACH(ilm, in1_list, ilm_in1_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(ilm->ilm_in2, ubuf));
+    htsmsg_add_uuid(l, NULL, &ilm->ilm_in2->in_uuid);
   return l;
 }
 
@@ -1762,10 +1758,9 @@ idnode_list_get2
 {
   idnode_list_mapping_t *ilm;
   htsmsg_t *l = htsmsg_create_list();
-  char ubuf[UUID_HEX_SIZE];
 
   LIST_FOREACH(ilm, in2_list, ilm_in2_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(ilm->ilm_in1, ubuf));
+    htsmsg_add_uuid(l, NULL, &ilm->ilm_in1->in_uuid);
   return l;
 }
 
@@ -1919,9 +1914,8 @@ idnode_notify_changed (void *in)
 void
 idnode_notify_title_changed (void *in)
 {
-  char ubuf[UUID_HEX_SIZE];
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(in, ubuf));
+  htsmsg_add_uuid(m, "uuid", &((idnode_t *)in)->in_uuid);
   notify_by_msg("title", m, NOTIFY_REWRITE_TITLE);
   idnode_notify_changed(in);
 }
