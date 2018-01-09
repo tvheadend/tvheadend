@@ -145,7 +145,7 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     buf += datalen;
     len -= datalen;
   }
-  return bin;
+  return len ? -1 : bin;
 }
 
 
