@@ -400,6 +400,7 @@ void epg_init ( void )
     htsmsg_add_u32(m, "last_id", 64 * 1024 * 1024);
     if (!epg_config_deserialize(m))
       assert(0);
+    htsmsg_destroy(m);
   }
 
   /* Stats */
