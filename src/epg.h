@@ -532,7 +532,7 @@ struct epg_broadcast
   LIST_ENTRY(epg_broadcast)  ep_link;          ///< Episode link
   epg_episode_t             *episode;          ///< Episode shown
   LIST_ENTRY(epg_broadcast)  sl_link;          ///< SeriesLink link
-  epg_serieslink_t          *serieslink;       ///< SeriesLink;
+  epg_serieslink_t          *serieslink;       ///< SeriesLink
   struct channel            *channel;          ///< Channel being broadcast on
 
   /* DVR */

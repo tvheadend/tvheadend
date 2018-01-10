@@ -286,10 +286,10 @@ epg_object_t *epg_object_find_by_id ( uint32_t id, epg_object_type_t type )
 
 static htsmsg_t * _epg_object_serialize ( void *o )
 {
+  htsmsg_t *m;
   epg_object_t *eo = o;
   tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] serialize",
            eo, eo->id, eo->type, eo->uri);
-  htsmsg_t *m;
   if (!eo->id || !eo->type) return NULL;
   m = htsmsg_create_map();
   htsmsg_add_u32(m, "id", eo->id);
@@ -367,40 +367,29 @@ static int FNNAME \
   return 0; \
 }
 
-
 EPG_OBJECT_SET_FN(_epg_object_set_lang_str,    lang_str_t,    lang_str_destroy,    lang_str_compare,    lang_str_copy)
 EPG_OBJECT_SET_FN(_epg_object_set_string_list, string_list_t, string_list_destroy, string_list_cmp,     string_list_copy)
 EPG_OBJECT_SET_FN(_epg_object_set_htsmsg,      htsmsg_t,      htsmsg_destroy,      htsmsg_cmp,          htsmsg_copy)
 #undef EPG_OBJECT_SET_FN
 
-static int _epg_object_set_u8
-  ( void *o, uint8_t *old, const uint8_t nval,
-    uint32_t *changed, uint32_t cflag )
-{
-  int save;
-  if (!o) return 0;
-  if (changed) *changed |= cflag;
-  if ((save = (*old != nval)) != 0) {
-    *old = nval;
-    _epg_object_set_updated(o);
-  }
-  return save;
+#define EPG_OBJECT_SET_FN(FNNAME,TYPE) \
+static int FNNAME \
+  ( void *o, TYPE *old, const TYPE nval, \
+    uint32_t *changed, uint32_t cflag ) \
+{ \
+  int save; \
+  if (!o) return 0; \
+  if (changed) *changed |= cflag; \
+  if ((save = (*old != nval)) != 0) { \
+    *old = nval; \
+    _epg_object_set_updated(o); \
+  } \
+  return save; \
 }
 
-static int _epg_object_set_u16
-  ( void *o, uint16_t *old, const uint16_t nval,
-    uint32_t *changed, uint32_t cflag )
-{
-  int save = 0;
-  if (!o) return 0;
-  if (changed) *changed |= cflag;
-  if ((save = (*old != nval)) != 0) {
-    *old = nval;
-    _epg_object_set_updated(o);
-    save = 1;
-  }
-  return save;
-}
+EPG_OBJECT_SET_FN(_epg_object_set_u8, uint8_t)
+EPG_OBJECT_SET_FN(_epg_object_set_u16, uint16_t)
+#undef EPG_OBJECT_SET_FN
 
 htsmsg_t *epg_object_serialize ( epg_object_t *eo )
 {
