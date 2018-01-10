@@ -22,6 +22,7 @@
 #include "tvhregex.h"
 #include "settings.h"
 #include "lang_str.h"
+#include "string_list.h"
 #include "access.h"
 
 /*
@@ -31,7 +32,6 @@ struct channel;
 struct channel_tag;
 struct dvr_entry;
 struct epggrab_module;
-struct string_list;
 
 /*
  * Map/List types
@@ -523,10 +523,10 @@ struct epg_broadcast
   lang_str_t                *description;      ///< Description
   htsmsg_t                  *credits;          ///< Cast/Credits map of name -> role type (actor, presenter, director, etc).
   lang_str_t                *credits_cached;   ///< Comma separated cast (for regex searching in GUI/autorec). Kept in sync with cast_map
-  struct string_list        *category;         ///< Extra categories (typically from xmltv) such as "Western" or "Sumo Wrestling".
+  string_list_t             *category;         ///< Extra categories (typically from xmltv) such as "Western" or "Sumo Wrestling".
                                                ///< These extra categories are often a superset of our EN 300 468 DVB genre.
                                                ///< Used with drop-down lists in the GUI.
-  struct string_list        *keyword;          ///< Extra keywords (typically from xmltv) such as "Wild West" or "Unicorn".
+  string_list_t             *keyword;          ///< Extra keywords (typically from xmltv) such as "Wild West" or "Unicorn".
   lang_str_t                *keyword_cached;   ///< Cached CSV version for regex searches.
   RB_ENTRY(epg_broadcast)    sched_link;       ///< Schedule link
   LIST_ENTRY(epg_broadcast)  ep_link;          ///< Episode link
@@ -598,13 +598,13 @@ int epg_broadcast_set_description
   ( epg_broadcast_t *b, const lang_str_t *str, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_credits
-( epg_broadcast_t *b, const htsmsg_t* msg, uint32_t *changed )
+( epg_broadcast_t *b, const htsmsg_t *msg, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_category
-( epg_broadcast_t *b, const struct string_list* msg, uint32_t *changed )
+( epg_broadcast_t *b, const string_list_t *msg, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_keyword
-( epg_broadcast_t *b, const struct string_list* msg, uint32_t *changed )
+( epg_broadcast_t *b, const string_list_t *msg, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_serieslink
   ( epg_broadcast_t *b, epg_serieslink_t *sl, uint32_t *changed )

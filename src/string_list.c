@@ -36,7 +36,6 @@ string_list_create(void)
   return ret;
 }
 
-
 void
 string_list_destroy(string_list_t *l)
 {
