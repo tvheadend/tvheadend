@@ -241,6 +241,7 @@ struct epggrab_ota_mux
   uint8_t                            om_save;         ///< something changed
   mtimer_t                           om_timer;        ///< Per mux active timer
   mtimer_t                           om_data_timer;   ///< Any EPG data seen?
+  int64_t                            om_retry_time;   ///< Next time to retry
 
   char                              *om_force_modname;///< Force this module
 
