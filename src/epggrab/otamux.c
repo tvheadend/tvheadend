@@ -474,7 +474,6 @@ epggrab_ota_kick_cb ( void *p )
   extern const idclass_t mpegts_mux_class;
   epggrab_ota_map_t *map;
   epggrab_ota_mux_t *om = TAILQ_FIRST(&epggrab_ota_pending);
-  epggrab_ota_mux_t *first = NULL;
   mpegts_mux_t *mm;
   char name[256];
   struct {
@@ -588,10 +587,9 @@ next_one:
       }
       TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
       om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+      om->om_retry_time = mclk() + mono2sec(60);
       if (r == SM_CODE_NO_FREE_ADAPTER)
         net->failed = 1;
-      if (first == NULL)
-        first = om;
     } else {
       if (tvhtrace_enabled()) {
         mpegts_mux_nice_name(mm, name, sizeof(name));
@@ -612,7 +610,7 @@ next_one:
 
 done:
   om = TAILQ_FIRST(&epggrab_ota_pending);
-  if (networks_count < ARRAY_SIZE(networks) && om && first != om)
+  if (networks_count < ARRAY_SIZE(networks) && om && om->om_retry_time < mclk())
     goto next_one;
   if (kick)
     epggrab_ota_kick(64); /* a random number? */
