@@ -179,10 +179,10 @@ static int tvhpoll_add0
     if (events & TVHPOLL_ERR) ev.events |= EPOLLERR;
     if (events & TVHPOLL_HUP) ev.events |= EPOLLHUP;
     if (oevents) {
-      if (epoll_ctl(tp->fd, EPOLL_CTL_MOD, evs[i].fd, &ev))
+      if (epoll_ctl(tp->fd, EPOLL_CTL_MOD, fd, &ev))
         break;
     } else {
-      if (epoll_ctl(tp->fd, EPOLL_CTL_ADD, evs[i].fd, &ev))
+      if (epoll_ctl(tp->fd, EPOLL_CTL_ADD, fd, &ev))
         break;
     }
     tvhpoll_set_events(tp, fd, events);
