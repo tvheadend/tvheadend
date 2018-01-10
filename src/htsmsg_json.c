@@ -55,11 +55,11 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 
     switch(f->hmf_type) {
     case HMF_MAP:
-      htsmsg_json_write(&f->hmf_msg, hq, 0, indent + 1, pretty);
+      htsmsg_json_write(f->hmf_msg, hq, 0, indent + 1, pretty);
       break;
 
     case HMF_LIST:
-      htsmsg_json_write(&f->hmf_msg, hq, 1, indent + 1, pretty);
+      htsmsg_json_write(f->hmf_msg, hq, 1, indent + 1, pretty);
       break;
 
     case HMF_STR:

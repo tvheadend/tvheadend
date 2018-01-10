@@ -46,7 +46,13 @@ htsmsg_field_data_destroy(htsmsg_field_t *f)
   switch(f->hmf_type) {
   case HMF_MAP:
   case HMF_LIST:
-    htsmsg_clear(&f->hmf_msg);
+    htsmsg_clear(f->hmf_msg);
+    if(f->hmf_flags & HMF_ALLOCED) {
+#if ENABLE_SLOW_MEMORYINFO
+      memoryinfo_remove(&htsmsg_field_memoryinfo, sizeof(htsmsg_t));
+#endif
+      free(f->hmf_msg);
+    }
     break;
 
   case HMF_STR:
@@ -111,32 +117,33 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
   size_t nsize;
   htsmsg_field_t *f;
   
-  nsize = name ? strlen(name) + 1 : 0;
+  nsize = name ? strlen(name) + 1 : 1;
   f = malloc(sizeof(htsmsg_field_t) + nsize + esize);
   if(f == NULL)
     return NULL;
   TAILQ_INSERT_TAIL(&msg->hm_fields, f, hmf_link);
 
   if(msg->hm_islist) {
-    assert(name == NULL);
+    assert(name == NULL || *name == '\0');
   } else {
-    assert(name != NULL);
+    assert(name != NULL && *name);
   }
 
   if (name) {
-    f->hmf_name = f->hmf_edata;
-    strcpy(f->hmf_edata, name);
+    strcpy((char *)f->hmf_name, name);
   } else {
-    f->hmf_name = NULL;
+    ((char *)f->hmf_name)[0] = '\0';
   }
 
   if(esize) {
-    if(type == HMF_STR)
-      f->hmf_str = f->hmf_edata + nsize;
-    else if(type == HMF_UUID)
-      f->hmf_uuid = (uint8_t *)f->hmf_edata + nsize;
-    else if(type == HMF_BIN) {
-      f->hmf_bin = f->hmf_edata + nsize;
+    if(type == HMF_STR) {
+      f->hmf_str = f->hmf_name + nsize;
+    } else if(type == HMF_UUID) {
+      f->hmf_uuid = (uint8_t *)f->hmf_name + nsize;
+    } else if(type == HMF_LIST || type == HMF_MAP) {
+      f->hmf_msg = (htsmsg_t *)(f->hmf_name + nsize);
+    } else if(type == HMF_BIN) {
+      f->hmf_bin = f->hmf_name + nsize;
       f->hmf_binsize = esize;
     }
   }
@@ -580,18 +587,20 @@ htsmsg_add_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u)
 static htsmsg_t *
 htsmsg_field_set_msg(htsmsg_field_t *f, htsmsg_t *sub)
 {
+  htsmsg_t *m = f->hmf_msg;
   assert(sub->hm_data == NULL);
-  f->hmf_msg.hm_data = NULL;
-  f->hmf_msg.hm_data_size = 0;
-  f->hmf_msg.hm_islist = sub->hm_islist;
-  TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
+  assert(f->hmf_type == HMF_LIST || f->hmf_type == HMF_MAP);
+  m->hm_data = NULL;
+  m->hm_data_size = 0;
+  m->hm_islist = sub->hm_islist;
+  TAILQ_MOVE(&m->hm_fields, &sub->hm_fields, hmf_link);
 #if ENABLE_SLOW_MEMORYINFO
   memoryinfo_free(&htsmsg_memoryinfo, sizeof(htsmsg_t));
 #endif
-  free(sub);
+  htsmsg_destroy(sub);
 
-  if (f->hmf_type == (f->hmf_msg.hm_islist ? HMF_LIST : HMF_MAP))
-    return &f->hmf_msg;
+  if (f->hmf_type == (m->hm_islist ? HMF_LIST : HMF_MAP))
+    return m;
 
   return NULL;
 }
@@ -604,7 +613,8 @@ htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 {
   htsmsg_field_t *f;
 
-  f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP, 0, 0);
+  f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP,
+                       0, sizeof(htsmsg_t));
   return htsmsg_field_set_msg(f, sub);
 }
 
@@ -621,30 +631,29 @@ htsmsg_set_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
   return htsmsg_field_set_msg(f, sub);
 }
 
-
-
 /*
  *
  */
 void
 htsmsg_add_msg_extname(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 {
+  htsmsg_t *m;
   htsmsg_field_t *f;
 
-  f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP, 0, 0);
+  f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP,
+                       0, sizeof(htsmsg_t));
+  m = f->hmf_msg;
 
   assert(sub->hm_data == NULL);
-  f->hmf_msg.hm_data = NULL;
-  f->hmf_msg.hm_data_size = 0;
-  TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
-  f->hmf_msg.hm_islist = sub->hm_islist;
+  m->hm_data = NULL;
+  m->hm_data_size = 0;
+  TAILQ_MOVE(&m->hm_fields, &sub->hm_fields, hmf_link);
+  m->hm_islist = sub->hm_islist;
 #if ENABLE_SLOW_MEMORYINFO
   memoryinfo_free(&htsmsg_memoryinfo, sizeof(htsmsg_t));
 #endif
-  free(sub);
+  htsmsg_destroy(sub);
 }
-
-
 
 /**
  *
@@ -683,11 +692,9 @@ htsmsg_field_get_s64
   return 0;
 }
 
-
 /**
  *
  */
-
 int
 bool_check(const char *str)
 {
@@ -739,7 +746,6 @@ htsmsg_get_bool_or_default(htsmsg_t *msg, const char *name, int def)
   return htsmsg_get_bool(msg, name, &ret) ? def : ret;
 }
 
-
 /**
  *
  */
@@ -749,7 +755,6 @@ htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def)
   int64_t s64;
   return htsmsg_get_s64(msg, name, &s64) ? def : s64;
 }
-
 
 /*
  *
@@ -1060,7 +1065,7 @@ htsmsg_get_str_multi(htsmsg_t *msg, ...)
       r = f->hmf_str;
       break;
     } else if(f->hmf_type == HMF_MAP)
-      msg = &f->hmf_msg;
+      msg = f->hmf_msg;
     else
       break;
   }
@@ -1094,7 +1099,7 @@ htsmsg_field_get_list ( htsmsg_field_t *f )
 static htsmsg_t *
 htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
 {
-  htsmsg_t *m;
+  htsmsg_t *m, *l;
 
   /* Deserialize JSON (will keep either list or map) */
   if (f->hmf_type == HMF_STR) {
@@ -1105,20 +1110,22 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
 #endif
         free((void*)f->hmf_str);
       }
-      f->hmf_type          = m->hm_islist ? HMF_LIST : HMF_MAP;
-      f->hmf_msg.hm_islist = m->hm_islist;
-      f->hmf_msg.hm_data   = NULL;
-      f->hmf_msg.hm_data_size = 0;
-      TAILQ_MOVE(&f->hmf_msg.hm_fields, &m->hm_fields, hmf_link);
+      l = f->hmf_msg  = malloc(sizeof(htsmsg_t));
+      f->hmf_type     = m->hm_islist ? HMF_LIST : HMF_MAP;
+      f->hmf_flags   |= HMF_ALLOCED;
+      l->hm_islist    = m->hm_islist;
+      l->hm_data      = NULL;
+      l->hm_data_size = 0;
+      TAILQ_MOVE(&l->hm_fields, &m->hm_fields, hmf_link);
 #if ENABLE_SLOW_MEMORYINFO
       memoryinfo_free(&htsmsg_memoryinfo, sizeof(htsmsg_t));
 #endif
-      free(m);
+      htsmsg_destroy(m);
     }
   }
 
   if (f->hmf_type == (islist ? HMF_LIST : HMF_MAP))
-    return &f->hmf_msg;
+    return f->hmf_msg;
 
   return NULL;
 }
@@ -1129,10 +1136,10 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
 htsmsg_t *
 htsmsg_detach_submsg(htsmsg_field_t *f)
 {
+  htsmsg_t *m = f->hmf_msg;
   htsmsg_t *r = htsmsg_create_map();
 
-  TAILQ_MOVE(&r->hm_fields, &f->hmf_msg.hm_fields, hmf_link);
-  TAILQ_INIT(&f->hmf_msg.hm_fields);
+  TAILQ_MOVE(&r->hm_fields, &m->hm_fields, hmf_link);
   r->hm_islist = f->hmf_type == HMF_LIST;
   return r;
 }
@@ -1157,14 +1164,14 @@ htsmsg_print0(htsmsg_t *msg, int indent)
 
     case HMF_MAP:
       printf("MAP) = {\n");
-      htsmsg_print0(&f->hmf_msg, indent + 1);
+      htsmsg_print0(f->hmf_msg, indent + 1);
       for(i = 0; i < indent; i++) printf("\t");
       printf("}\n");
       break;
 
     case HMF_LIST:
       printf("LIST) = {\n");
-      htsmsg_print0(&f->hmf_msg, indent + 1);
+      htsmsg_print0(f->hmf_msg, indent + 1);
       for(i = 0; i < indent; i++) printf("\t");
       printf("}\n");
       break;
@@ -1222,7 +1229,7 @@ htsmsg_copy_i(const htsmsg_t *src, htsmsg_t *dst)
     case HMF_LIST:
       sub = f->hmf_type == HMF_LIST ? 
 	htsmsg_create_list() : htsmsg_create_map();
-      htsmsg_copy_i(&f->hmf_msg, sub);
+      htsmsg_copy_i(f->hmf_msg, sub);
       htsmsg_add_msg(dst, f->hmf_name, sub);
       break;
       
@@ -1287,7 +1294,7 @@ htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2)
 
     case HMF_MAP:
     case HMF_LIST:
-      if (htsmsg_cmp(&f1->hmf_msg, &f2->hmf_msg))
+      if (htsmsg_cmp(f1->hmf_msg, f2->hmf_msg))
         return 1;
       break;
       
@@ -1353,7 +1360,7 @@ htsmsg_get_map_by_field_if_name(htsmsg_field_t *f, const char *name)
     return NULL;
   if(strcmp(f->hmf_name, name))
     return NULL;
-  return &f->hmf_msg;
+  return f->hmf_msg;
 }
 
 

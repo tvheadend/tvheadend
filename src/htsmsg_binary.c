@@ -54,10 +54,12 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     if(len < namelen + datalen)
       return -1;
 
-    nlen = namelen ? namelen + 1 : 0;
+    nlen = namelen ? namelen + 1 : 1;
     tlen = sizeof(htsmsg_field_t) + nlen;
     if (type == HMF_STR) {
       tlen += datalen + 1;
+    } else if (type == HMF_LIST || type == HMF_MAP) {
+      tlen += sizeof(htsmsg_t);
     } else if (type == HMF_UUID) {
       tlen = UUID_BIN_SIZE;
       if (tlen != datalen)
@@ -74,26 +76,25 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     f->hmf_flags = 0;
 
     if(namelen > 0) {
-      f->hmf_name = f->hmf_edata;
-      memcpy(f->hmf_edata, buf, namelen);
-      f->hmf_edata[namelen] = 0;
+      memcpy((char *)f->hmf_name, buf, namelen);
+      ((char *)f->hmf_name)[namelen] = 0;
 
       buf += namelen;
       len -= namelen;
     } else {
-      f->hmf_name = NULL;
+      ((char *)f->hmf_name)[0] = '\0';
     }
 
     switch(type) {
     case HMF_STR:
-      f->hmf_str = f->hmf_edata + nlen;
+      f->hmf_str = f->hmf_name + nlen;
       memcpy((char *)f->hmf_str, buf, datalen);
       ((char *)f->hmf_str)[datalen] = 0;
       f->hmf_flags |= HMF_INALLOCED;
       break;
 
     case HMF_UUID:
-      f->hmf_uuid = (uint8_t *)f->hmf_edata + nlen;
+      f->hmf_uuid = (uint8_t *)f->hmf_name + nlen;
       memcpy((char *)f->hmf_uuid, buf, UUID_BIN_SIZE);
       break;
 
@@ -112,7 +113,7 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
 
     case HMF_MAP:
     case HMF_LIST:
-      sub = &f->hmf_msg;
+      sub = f->hmf_msg = (htsmsg_t *)(f->hmf_name + nlen);
       TAILQ_INIT(&sub->hm_fields);
       sub->hm_data = NULL;
       sub->hm_data_size = 0;
@@ -225,7 +226,7 @@ htsmsg_binary_count(htsmsg_t *msg)
     switch(f->hmf_type) {
     case HMF_MAP:
     case HMF_LIST:
-      len += htsmsg_binary_count(&f->hmf_msg);
+      len += htsmsg_binary_count(f->hmf_msg);
       break;
 
     case HMF_STR:
@@ -275,7 +276,7 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
     switch(f->hmf_type) {
     case HMF_MAP:
     case HMF_LIST:
-      l = htsmsg_binary_count(&f->hmf_msg);
+      l = htsmsg_binary_count(f->hmf_msg);
       break;
 
     case HMF_STR:
@@ -317,7 +318,7 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
     switch(f->hmf_type) {
     case HMF_MAP:
     case HMF_LIST:
-      htsmsg_binary_write(&f->hmf_msg, ptr);
+      htsmsg_binary_write(f->hmf_msg, ptr);
       break;
 
     case HMF_STR:
