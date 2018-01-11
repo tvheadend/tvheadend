@@ -291,7 +291,7 @@ static void
 http_stream_status ( void *opaque, htsmsg_t *m )
 {
   http_connection_t *hc = opaque;
-  htsmsg_add_str(m, "type", "HTTP");
+  htsmsg_add_str(m, "type", (hc->hc_is_proxied)? "HTTP/proxy" : "HTTP");
   if (hc->hc_username)
     htsmsg_add_str(m, "user", hc->hc_username);
 }

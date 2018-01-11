@@ -176,6 +176,7 @@ typedef struct http_connection {
   uint8_t hc_no_output;
   uint8_t hc_shutdown;
   uint8_t hc_is_local_ip;   /*< a connection from the local network */
+  uint8_t hc_is_proxied;
 
   /* Support for HTTP POST */
   
