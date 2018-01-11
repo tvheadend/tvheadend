@@ -1112,7 +1112,7 @@ tcp_server_connections ( void )
   tcp_server_launch_t *tsl;
   lock_assert(&global_lock);
   htsmsg_t *l, *e, *m;
-  char buf[1024];
+  char buf[128];
   int c = 0;
   
   /* Build list */

@@ -1656,7 +1656,13 @@ static void
 rtsp_stream_status ( void *opaque, htsmsg_t *m )
 {
   http_connection_t *hc = opaque;
-  htsmsg_add_str(m, "type", (hc->hc_is_proxied)? "SAT>IP/proxy" : "SAT>IP");
+  char buf[128];
+
+  htsmsg_add_str(m, "type", "SAT>IP");
+  if (hc->hc_proxy_ip) {
+    tcp_get_str_from_ip(hc->hc_proxy_ip, buf, sizeof(buf));
+    htsmsg_add_str(m, "proxy", buf);
+  }
   if (hc->hc_username)
     htsmsg_add_str(m, "user", hc->hc_username);
 }

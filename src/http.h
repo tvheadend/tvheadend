@@ -137,6 +137,7 @@ typedef struct http_connection {
   char *hc_peer_ipstr;
   struct sockaddr_storage *hc_self;
   char *hc_representative;
+  struct sockaddr_storage *hc_proxy_ip;
   struct sockaddr_storage *hc_local_ip;
 
   pthread_mutex_t  *hc_paths_mutex;
@@ -176,7 +177,6 @@ typedef struct http_connection {
   uint8_t hc_no_output;
   uint8_t hc_shutdown;
   uint8_t hc_is_local_ip;   /*< a connection from the local network */
-  uint8_t hc_is_proxied;
 
   /* Support for HTTP POST */
   

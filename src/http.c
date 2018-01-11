@@ -1357,11 +1357,15 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   v = (config.proxy) ? http_arg_get(&hc->hc_args, "X-Forwarded-For") : NULL;
   if (v) {
+    if (hc->hc_proxy_ip == NULL)
+      hc->hc_proxy_ip = malloc(sizeof(*hc->hc_proxy_ip));
+    *hc->hc_proxy_ip = *hc->hc_peer;
     if (tcp_get_ip_from_str(v, hc->hc_peer) == NULL) {
       http_error(hc, HTTP_STATUS_BAD_REQUEST);
+      free(hc->hc_proxy_ip);
+      hc->hc_proxy_ip = NULL;
       return -1;
     }
-    hc->hc_is_proxied = 1;
   }
 
   tcp_get_str_from_ip(hc->hc_peer, authbuf, sizeof(authbuf));
@@ -1858,7 +1862,6 @@ http_serve_requests(http_connection_t *hc)
   atomic_set(&hc->hc_extra_insend, 0);
   atomic_set(&hc->hc_extra_chunks, 0);
 
-  hc->hc_is_proxied = 0;
   do {
     hc->hc_no_output  = 0;
 
@@ -1973,6 +1976,7 @@ error:
   free(hc->hc_nonce);
   hc->hc_nonce = NULL;
 
+  free(hc->hc_proxy_ip);
   free(hc->hc_local_ip);
 }
 

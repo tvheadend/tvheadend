@@ -607,6 +607,7 @@ tvheadend.status_conns = function(panel, index) {
                 { name: 'server_port' },
                 { name: 'peer', sortType: stype },
                 { name: 'peer_port' },
+                { name: 'proxy' },
                 { name: 'user', sortType: stype },
                 {
                     name: 'started',
@@ -671,6 +672,12 @@ tvheadend.status_conns = function(panel, index) {
                 id: 'server_port',
                 header: _("Server Port"),
                 dataIndex: 'server_port',
+                sortable: true
+            }, {
+                width: 50,
+                id: 'proxy',
+                header: _("Proxy Address"),
+                dataIndex: 'proxy',
                 sortable: true
             }]);
 
