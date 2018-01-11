@@ -643,8 +643,13 @@ cwc_send_emm(void *cc, cc_service_t *ct,
              cc_card_data_t *pcard, uint32_t provid,
              const uint8_t *data, int len)
 {
-  mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
-  uint16_t sid = t->s_dvb_service_id;
+  mpegts_service_t *t;
+  uint16_t sid = 0;
+
+  if (ct) {
+    t = (mpegts_service_t *)ct->td_service;
+    sid = t->s_dvb_service_id;
+  }
 
   cwc_send_msg(cc, data, len, sid, 1, pcard->cs_ra.caid, provid);
 }
