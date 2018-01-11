@@ -324,6 +324,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   dvr_entry_sched_state_t dvr_status;
   const char *lang = http_arg_get(&hc->hc_args, "Accept-Language");
   const char *s;
+  htsmsg_t *conf;
 
   pthread_mutex_lock(&global_lock);
 
@@ -335,10 +336,12 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   de = dvr_find_by_event(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
-    de = dvr_entry_create_by_event(1, NULL, e, 0, 0, hc->hc_username ?: NULL,
-                                   hc->hc_representative ?: NULL, NULL,
-                                   DVR_PRIO_NORMAL, DVR_RET_REM_DVRCONFIG,
-                                   DVR_RET_REM_DVRCONFIG, "simpleui");
+    conf = htsmsg_create_map();
+    htsmsg_add_str2(conf, "owner", hc->hc_username);
+    htsmsg_add_str2(conf, "creator", hc->hc_representative);
+    htsmsg_add_str(conf, "comment", "simpleui");
+    de = dvr_entry_create_from_htsmsg(conf, e);
+    htsmsg_destroy(conf);
   } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
     de = dvr_entry_cancel(de, 0);
   }

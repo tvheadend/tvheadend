@@ -1883,39 +1883,23 @@ htsp_method_getDvrConfigs(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t * 
 htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *out;
+  htsmsg_t *conf, *out;
+  dvr_config_t *dvr_conf;
   uint32_t eventid;
   epg_broadcast_t *e = NULL;
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
-  const char *dvr_config_name, *title, *desc, *subtitle, *lang, *comment;
-  int64_t start, stop, start_extra, stop_extra;
-  uint32_t u32, priority, retention, removal;
+  const char *s, *lang;
+  int64_t start, stop;
+  uint32_t u32;
   channel_t *ch = NULL;
-  int enabled;
 
-  /* Options */
-  enabled = htsmsg_get_u32_or_default(in, "enabled", 1);
-  dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
-  if(htsmsg_get_s64(in, "startExtra", &start_extra))
-    start_extra = 0;
-  if(htsmsg_get_s64(in, "stopExtra", &stop_extra))
-    stop_extra  = 0;
   if(!htsmsg_get_u32(in, "channelId", &u32))
     ch = channel_find_by_id(u32);
   if(!htsmsg_get_u32(in, "eventId", &eventid)) {
     e = epg_broadcast_find_by_id(eventid);
     ch = e ? e->channel : ch;
   }
-  if(htsmsg_get_u32(in, "priority", &priority))
-    priority = DVR_PRIO_DEFAULT;
-  if(htsmsg_get_u32(in, "retention", &retention))
-    retention = DVR_RET_REM_DVRCONFIG;
-  if(htsmsg_get_u32(in, "removal", &removal))
-    removal = DVR_RET_REM_DVRCONFIG;
-  comment = htsmsg_get_str(in, "comment");
-  if (!(lang  = htsmsg_get_str(in, "language")))
-    lang = htsp->htsp_language;
 
   /* Check access */
   if (!htsp_user_access_channel(htsp, ch))
@@ -1923,41 +1907,63 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (!ch)
     return htsp_error(htsp, N_("Channel does not exist"));
 
+  /* Options */
+  conf = htsmsg_create_map();
+  htsmsg_copy_field(conf, "enabled", in, NULL);
+  s = htsmsg_get_str(in, "configName");
+  if (s) {
+    dvr_conf = dvr_config_find_by_uuid(s);
+    if (dvr_conf == NULL)
+      dvr_conf = dvr_config_find_by_name(s);
+    if (dvr_conf)
+      htsmsg_add_uuid(conf, "config_name", &dvr_conf->dvr_id.in_uuid);
+  }
+  htsmsg_add_uuid(conf, "channel", &ch->ch_id.in_uuid);
+  htsmsg_copy_field(conf, "start_extra", in, "startExtra");
+  htsmsg_copy_field(conf, "stop_extra", in, "stopExtra");
+  htsmsg_copy_field(conf, "pri", in, "priority");
+  htsmsg_copy_field(conf, "retention", in, NULL);
+  htsmsg_copy_field(conf, "removal", in, NULL);
+  htsmsg_copy_field(conf, "comment", in, NULL);
+
+  if (!(lang  = htsmsg_get_str(in, "language")))
+    lang = htsp->htsp_language;
+
+  /* Auth */
+  s = htsp->htsp_granted_access->aa_username;
+  htsmsg_add_str2(conf, "owner", s);
+  s = htsp->htsp_granted_access->aa_representative;
+  htsmsg_add_str2(conf, "creator", s);
+
   /* Manual timer */
   if (!e) {
 
     /* Required attributes */
     if (htsmsg_get_s64(in, "start", &start) ||
         htsmsg_get_s64(in, "stop", &stop) ||
-        !(title = htsmsg_get_str(in, "title")))
+        !(s = htsmsg_get_str(in, "title")) ||
+        *s == '\0') {
+      htsmsg_destroy(conf);
       return htsp_error(htsp, N_("Invalid arguments"));
+    }
+
+    htsmsg_add_s64(conf, "start", start);
+    htsmsg_add_s64(conf, "stop", stop);
+    lang_str_serialize_one(conf, "title", s, lang);
 
     /* Optional attributes */
-    if (!(subtitle = htsmsg_get_str(in, "subtitle")))
-      subtitle = "";
-
-    /* Optional attributes */
-    if (!(desc = htsmsg_get_str(in, "description")))
-      desc = "";
-
-    /* Create the dvr entry */
-    de = dvr_entry_create_htsp(enabled, dvr_config_name, ch, start, stop,
-                               start_extra, stop_extra,
-                               title, subtitle, desc, lang, 0,
-                               htsp->htsp_granted_access->aa_username,
-                               htsp->htsp_granted_access->aa_representative,
-                               NULL, priority, retention, removal, comment);
-
-  /* Event timer */
-  } else {
-
-    de = dvr_entry_create_by_event(enabled, dvr_config_name, e,
-                                   start_extra, stop_extra,
-                                   htsp->htsp_granted_access->aa_username,
-                                   htsp->htsp_granted_access->aa_representative,
-                                   NULL, priority, retention, removal, comment);
-
+    s = htsmsg_get_str(in, "subtitle");
+    if (s)
+      lang_str_serialize_one(conf, "subtitle", s, lang);
+    s = htsmsg_get_str(in, "description");
+    if (s)
+      lang_str_serialize_one(conf, "description", s, lang);
   }
+
+  /* Create the dvr entry */
+  de = dvr_entry_create_from_htsmsg(conf, NULL);
+
+  htsmsg_destroy(conf);
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
   

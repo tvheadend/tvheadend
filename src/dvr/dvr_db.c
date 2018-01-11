@@ -955,42 +955,23 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
  * Create the event
  */
 dvr_entry_t *
-dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
-                  channel_t *ch, time_t start, time_t stop,
-                  time_t start_extra, time_t stop_extra,
-                  const char *title, const char *subtitle, const char *description,
-                  const char *lang, epg_genre_t *content_type,
-                  const char *owner,
-                  const char *creator, dvr_autorec_entry_t *dae,
-                  dvr_timerec_entry_t *dte,
-                  dvr_prio_t pri, int retention, int removal,
-                  const char *comment)
+dvr_entry_create_from_htsmsg(htsmsg_t *conf, epg_broadcast_t *e)
 {
   dvr_entry_t *de;
   char tbuf[64], *s;
   struct tm tm;
   time_t t;
-  lang_str_t *l;
-  htsmsg_t *conf;
   char ubuf[UUID_HEX_SIZE];
+  epg_genre_t *genre;
 
-  conf = htsmsg_create_map();
-  if (enabled >= 0)
-    htsmsg_add_u32(conf, "enabled", !!enabled);
-  htsmsg_add_s64(conf, "start", start);
-  htsmsg_add_s64(conf, "stop", stop);
-  htsmsg_add_uuid(conf, "channel", &ch->ch_id.in_uuid);
-  htsmsg_add_u32(conf, "pri", pri);
-  htsmsg_add_u32(conf, "retention", retention);
-  htsmsg_add_u32(conf, "removal", removal);
-  htsmsg_add_str(conf, "config_name", config_uuid ?: "");
-  htsmsg_add_s64(conf, "start_extra", start_extra);
-  htsmsg_add_s64(conf, "stop_extra", stop_extra);
-  htsmsg_add_str(conf, "owner", owner ?: "");
-  htsmsg_add_str(conf, "creator", creator ?: "");
-  htsmsg_add_str(conf, "comment", comment ?: "");
   if (e) {
+    htsmsg_add_u32(conf, "broadcast", e->id);
     htsmsg_add_u32(conf, "dvb_eid", e->dvb_eid);
+    htsmsg_set_uuid(conf, "channel", &e->channel->ch_id.in_uuid);
+    if (!htsmsg_field_find(conf, "start"))
+      htsmsg_add_s64(conf, "start", e->start);
+    if (!htsmsg_field_find(conf, "stop"))
+      htsmsg_add_s64(conf, "stop", e->stop);
     if (e->episode && e->episode->title)
       lang_str_serialize(e->episode->title, conf, "title");
     if (e->episode && e->episode->subtitle)
@@ -1011,48 +992,12 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
       htsmsg_add_str(conf, "uri", e->episode->uri);
     if (e->episode && e->episode->image)
       htsmsg_add_str(conf, "image", e->episode->image);
-  } else if (title) {
-    l = lang_str_create();
-    lang_str_add(l, title, lang, 0);
-    lang_str_serialize(l, conf, "title");
-    lang_str_destroy(l);
-    if (description) {
-      l = lang_str_create();
-      lang_str_add(l, description, lang, 0);
-      lang_str_serialize(l, conf, "description");
-      lang_str_destroy(l);
-    }
-    if (subtitle) {
-      l = lang_str_create();
-      lang_str_add(l, subtitle, lang, 0);
-      lang_str_serialize(l, conf, "subtitle");
-      lang_str_destroy(l);
-    }
-  }
-  if (content_type)
-    htsmsg_add_u32(conf, "content_type", content_type->code / 16);
-  if (e)
-    htsmsg_add_u32(conf, "broadcast", e->id);
-  if (dae)
-  {
-    htsmsg_add_uuid(conf, "autorec", &dae->dae_id.in_uuid);
-    htsmsg_add_str(conf, "directory", dae->dae_directory ?: "");
-    if (dae->dae_cat1 && *dae->dae_cat1)
-      htsmsg_add_str(conf, "cat1", dae->dae_cat1);
-    if (dae->dae_cat2 && *dae->dae_cat2)
-      htsmsg_add_str(conf, "cat2", dae->dae_cat2);
-    if (dae->dae_cat3 && *dae->dae_cat3)
-      htsmsg_add_str(conf, "cat3", dae->dae_cat3);
-  }
-  if (dte)
-  {
-    htsmsg_add_uuid(conf, "timerec", &dte->dte_id.in_uuid);
-    htsmsg_add_str(conf, "directory", dte->dte_directory ?: "");
+    genre = LIST_FIRST(&e->episode->genre);
+    if (genre)
+      htsmsg_add_u32(conf, "content_type", genre->code / 16);
   }
 
   de = dvr_entry_create(NULL, conf, 0);
-
-  htsmsg_destroy(conf);
 
   if (de == NULL)
     return NULL;
@@ -1068,38 +1013,10 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
          idnode_uuid_as_str(&de->de_id, ubuf),
          lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf,
          de->de_uri ? de->de_uri : "<noid>",
-         creator ?: "");
+         de->de_creator ?: "");
 
   idnode_changed(&de->de_id);
   return de;
-}
-
-/**
- *
- */
-dvr_entry_t *
-dvr_entry_create_htsp(int enabled, const char *config_uuid,
-                      channel_t *ch, time_t start, time_t stop,
-                      time_t start_extra, time_t stop_extra,
-                      const char *title, const char* subtitle,
-                      const char *description, const char *lang,
-                      epg_genre_t *content_type,
-                      const char *owner,
-                      const char *creator, dvr_autorec_entry_t *dae,
-                      dvr_prio_t pri, int retention, int removal,
-                      const char *comment)
-{
-  char ubuf[UUID_HEX_SIZE];
-  dvr_config_t *cfg = dvr_config_find_by_uuid(config_uuid);
-  if (!cfg)
-    cfg = dvr_config_find_by_name(config_uuid);
-  return dvr_entry_create_(enabled,
-                           cfg ? idnode_uuid_as_str(&cfg->dvr_id, ubuf) : NULL,
-                           NULL,
-                           ch, start, stop, start_extra, stop_extra,
-                           title, subtitle, description, lang, content_type,
-                           owner, creator, dae, NULL, pri, retention, removal,
-                           comment);
 }
 
 /**
@@ -1182,31 +1099,6 @@ static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
   return de->de_segment_stop_extra = segment_stop_extra;
 }
 
-
-/**
- *
- */
-dvr_entry_t *
-dvr_entry_create_by_event(int enabled, const char *config_uuid,
-                          epg_broadcast_t *e,
-                          time_t start_extra, time_t stop_extra,
-                          const char *owner,
-                          const char *creator, dvr_autorec_entry_t *dae,
-                          dvr_prio_t pri, int retention, int removal,
-                          const char *comment)
-{
-  if(!e->channel || !e->episode || !e->episode->title)
-    return NULL;
-
-  return dvr_entry_create_(enabled, config_uuid, e,
-                           e->channel, e->start, e->stop,
-                           start_extra, stop_extra,
-                           NULL, NULL, NULL, NULL,
-                           LIST_FIRST(&e->episode->genre),
-                           owner, creator, dae, NULL, pri,
-                           retention, removal, comment);
-}
-
 /**
  * Clone existing DVR entry and stop the previous
  */
@@ -1246,10 +1138,10 @@ dvr_entry_rerecord(dvr_entry_t *de)
   uint32_t rerecord;
   epg_broadcast_t *e, *ev;
   dvr_entry_t *de2;
-  char cfg_uuid[UUID_HEX_SIZE];
   char buf[512];
   int64_t fsize1, fsize2;
   time_t pre;
+  htsmsg_t *conf;
 
   if (dvr_in_init || de->de_dont_rerecord)
     return 0;
@@ -1320,15 +1212,21 @@ not_so_good:
                         epg_broadcast_get_title(e, NULL),
                         channel_get_name(e->channel, channel_blank_name));
 
-  idnode_uuid_as_str(&de->de_config->dvr_id, cfg_uuid);
   snprintf(buf, sizeof(buf), _("Re-record%s%s"),
            de->de_comment ? ": " : "", de->de_comment ?: "");
+  conf = htsmsg_create_map();
+  htsmsg_add_uuid(conf, "config_name", &de->de_config->dvr_id.in_uuid);
+  htsmsg_add_s64(conf, "start_extra", de->de_start_extra);
+  htsmsg_add_s64(conf, "stop_extra", de->de_stop_extra);
+  htsmsg_add_u32(conf, "pri", de->de_pri);
+  htsmsg_add_u32(conf, "retention", de->de_retention);
+  htsmsg_add_u32(conf, "removal", de->de_removal);
+  htsmsg_add_str2(conf, "owner", de->de_owner);
+  htsmsg_add_str2(conf, "creator", de->de_creator);
+  htsmsg_add_str(conf, "comment", buf);
+  de2 = dvr_entry_create_from_htsmsg(conf, e);
+  htsmsg_destroy(conf);
 
-  de2 = dvr_entry_create_by_event(1, cfg_uuid, e,
-                                  de->de_start_extra, de->de_stop_extra,
-                                  de->de_owner, de->de_creator, NULL,
-                                  de->de_pri, de->de_retention, de->de_removal,
-                                  buf);
   if (de2) {
     dvr_entry_change_parent_child(de, de2, NULL, 1);
   } else {
@@ -1749,10 +1647,10 @@ void
 dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t *dae)
 {
   char buf[512];
-  char ubuf[UUID_HEX_SIZE];
   const char *s;
   dvr_entry_t *de;
   uint32_t count = 0, max_count;
+  htsmsg_t *conf;
 
   /* Identical duplicate detection
      NOTE: Semantic duplicate detection is deferred to the start time of recording and then done using _dvr_duplicate_event by dvr_timer_start_recording. */
@@ -1780,10 +1678,23 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
   s = dae->dae_comment && *dae->dae_comment ? dae->dae_comment : dae->dae_name;
   snprintf(buf, sizeof(buf), _("Auto recording%s%s"), s ? ": " : "", s ?: "");
 
-  dvr_entry_create_by_event(enabled, idnode_uuid_as_str(&dae->dae_config->dvr_id, ubuf),
-                            e, dae->dae_start_extra, dae->dae_stop_extra,
-                            dae->dae_owner, dae->dae_creator, dae, dae->dae_pri,
-                            dae->dae_retention, dae->dae_removal, buf);
+  conf = htsmsg_create_map();
+  htsmsg_add_uuid(conf, "config_name", &dae->dae_config->dvr_id.in_uuid);
+  htsmsg_add_s64(conf, "start_extra", dae->dae_start_extra);
+  htsmsg_add_s64(conf, "stop_extra", dae->dae_stop_extra);
+  htsmsg_add_u32(conf, "pri", dae->dae_pri);
+  htsmsg_add_u32(conf, "retention", dae->dae_retention);
+  htsmsg_add_u32(conf, "removal", dae->dae_removal);
+  htsmsg_add_str2(conf, "owner", dae->dae_owner);
+  htsmsg_add_str2(conf, "creator", dae->dae_creator);
+  htsmsg_add_str(conf, "comment", buf);
+  htsmsg_add_uuid(conf, "autorec", &dae->dae_id.in_uuid);
+  htsmsg_add_str2(conf, "directory", dae->dae_directory);
+  htsmsg_add_str2(conf, "cat1", dae->dae_cat1);
+  htsmsg_add_str2(conf, "cat2", dae->dae_cat2);
+  htsmsg_add_str2(conf, "cat3", dae->dae_cat3);
+  dvr_entry_create_from_htsmsg(conf, e);
+  htsmsg_destroy(conf);
 }
 
 /**

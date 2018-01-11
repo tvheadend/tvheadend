@@ -453,11 +453,16 @@ htsmsg_field_t *htsmsg_field_find(const htsmsg_t *msg, const char *name);
  */
 htsmsg_field_t *htsmsg_field_last(htsmsg_t *msg);
 
-
 /**
  * Clone a message.
  */
 htsmsg_t *htsmsg_copy(const htsmsg_t *src);
+
+/**
+ * Copy only one field from one htsmsg to another (with renaming).
+ */
+void htsmsg_copy_field(htsmsg_t *dst, const char *dstname,
+                       const htsmsg_t *src, const char *srcname);
 
 /**
  * Compare a message.

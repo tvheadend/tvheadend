@@ -243,6 +243,16 @@ void lang_str_serialize ( lang_str_t *ls, htsmsg_t *m, const char *f )
   htsmsg_add_msg(m, f, lang_str_serialize_map(ls));
 }
 
+/* Serialize one string element directly */
+void lang_str_serialize_one
+  ( htsmsg_t *m, const char *f, const char *str, const char *lang )
+{
+  lang_str_t *l = lang_str_create();
+  lang_str_add(l, str, lang, 0);
+  lang_str_serialize(l, m, f);
+  lang_str_destroy(l);
+}
+
 /* De-serialize map */
 lang_str_t *lang_str_deserialize_map ( htsmsg_t *map )
 {

@@ -1211,49 +1211,59 @@ htsmsg_print(htsmsg_t *msg)
   htsmsg_print0(msg, 0);
 } 
 
-
 /**
  *
  */
+static void htsmsg_copy_i(htsmsg_t *dst, const htsmsg_t *src);
+
 static void
-htsmsg_copy_i(const htsmsg_t *src, htsmsg_t *dst)
+htsmsg_copy_f(htsmsg_t *dst, const htsmsg_field_t *f, const char *name)
 {
-  htsmsg_field_t *f;
   htsmsg_t *sub;
 
-  TAILQ_FOREACH(f, &src->hm_fields, hmf_link) {
+  switch(f->hmf_type) {
 
-    switch(f->hmf_type) {
+  case HMF_MAP:
+  case HMF_LIST:
+    sub = f->hmf_type == HMF_LIST ?
+      htsmsg_create_list() : htsmsg_create_map();
+    htsmsg_copy_i(f->hmf_msg, sub);
+    htsmsg_add_msg(dst, name, sub);
+    break;
 
-    case HMF_MAP:
-    case HMF_LIST:
-      sub = f->hmf_type == HMF_LIST ? 
-	htsmsg_create_list() : htsmsg_create_map();
-      htsmsg_copy_i(f->hmf_msg, sub);
-      htsmsg_add_msg(dst, f->hmf_name, sub);
-      break;
-      
-    case HMF_STR:
-      htsmsg_add_str(dst, f->hmf_name, f->hmf_str);
-      break;
+  case HMF_STR:
+    htsmsg_add_str(dst, name, f->hmf_str);
+    break;
 
-    case HMF_S64:
-      htsmsg_add_s64(dst, f->hmf_name, f->hmf_s64);
-      break;
+  case HMF_S64:
+    htsmsg_add_s64(dst, name, f->hmf_s64);
+    break;
 
-    case HMF_BOOL:
-      htsmsg_add_bool(dst, f->hmf_name, f->hmf_bool);
-      break;
+  case HMF_BOOL:
+    htsmsg_add_bool(dst, name, f->hmf_bool);
+    break;
 
-    case HMF_BIN:
-      htsmsg_add_bin(dst, f->hmf_name, f->hmf_bin, f->hmf_binsize);
-      break;
+  case HMF_UUID:
+    htsmsg_add_uuid(dst, name, (tvh_uuid_t *)f->hmf_uuid);
+    break;
 
-    case HMF_DBL:
-      htsmsg_add_dbl(dst, f->hmf_name, f->hmf_dbl);
-      break;
-    }
+  case HMF_BIN:
+    htsmsg_add_bin(dst, name, f->hmf_bin, f->hmf_binsize);
+    break;
+
+  case HMF_DBL:
+    htsmsg_add_dbl(dst, name, f->hmf_dbl);
+    break;
   }
+}
+
+static void
+htsmsg_copy_i(htsmsg_t *dst, const htsmsg_t *src)
+{
+  htsmsg_field_t *f;
+
+  TAILQ_FOREACH(f, &src->hm_fields, hmf_link)
+    htsmsg_copy_f(dst, f, f->hmf_name);
 }
 
 htsmsg_t *
@@ -1262,8 +1272,19 @@ htsmsg_copy(const htsmsg_t *src)
   htsmsg_t *dst;
   if (src == NULL) return NULL;
   dst = src->hm_islist ? htsmsg_create_list() : htsmsg_create_map();
-  htsmsg_copy_i(src, dst);
+  htsmsg_copy_i(dst, src);
   return dst;
+}
+
+void
+htsmsg_copy_field(htsmsg_t *dst, const char *dstname,
+                  const htsmsg_t *src, const char *srcname)
+{
+  htsmsg_field_t *f;
+  f = htsmsg_field_find(src, srcname ?: dstname);
+  if (f == NULL)
+    return;
+  htsmsg_copy_f(dst, f, dstname);
 }
 
 /**

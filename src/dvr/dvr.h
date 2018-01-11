@@ -548,28 +548,8 @@ dvr_entry_clone ( dvr_entry_t *de );
 dvr_entry_t *
 dvr_entry_create ( const char *uuid, htsmsg_t *conf, int clone );
 
-
 dvr_entry_t *
-dvr_entry_create_by_event( int enabled,
-                           const char *dvr_config_uuid,
-                           epg_broadcast_t *e,
-                           time_t start_extra, time_t stop_extra,
-                           const char *owner, const char *creator,
-                           dvr_autorec_entry_t *dae,
-                           dvr_prio_t pri, int retention, int removal,
-                           const char *comment );
-
-dvr_entry_t *
-dvr_entry_create_htsp( int enabled, const char *dvr_config_uuid,
-                       channel_t *ch, time_t start, time_t stop,
-                       time_t start_extra, time_t stop_extra,
-                       const char *title, const char *subtitle,
-                       const char *description,
-                       const char *lang, epg_genre_t *content_type,
-                       const char *owner, const char *creator,
-                       dvr_autorec_entry_t *dae,
-                       dvr_prio_t pri, int retention, int removal,
-                       const char *comment );
+dvr_entry_create_from_htsmsg( htsmsg_t *conf, epg_broadcast_t *e );
 
 dvr_entry_t *
 dvr_entry_update( dvr_entry_t *de, int enabled,
@@ -666,16 +646,6 @@ int dvr_get_disk_space(int64_t *bfree, int64_t *bused, int64_t *btotal);
 
 dvr_autorec_entry_t *
 dvr_autorec_create(const char *uuid, htsmsg_t *conf);
-
-dvr_entry_t *
-dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
-                  channel_t *ch, time_t start, time_t stop,
-                  time_t start_extra, time_t stop_extra,
-                  const char *title, const char* subtitle, const char *description,
-                  const char *lang, epg_genre_t *content_type,
-                  const char *owner, const char *creator,
-                  dvr_autorec_entry_t *dae, dvr_timerec_entry_t *tae,
-                  dvr_prio_t pri, int retention, int removal, const char *comment);
 
 dvr_autorec_entry_t *
 dvr_autorec_create_htsp(htsmsg_t *conf);

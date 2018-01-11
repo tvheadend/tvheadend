@@ -108,7 +108,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   struct tm tm_start, tm_stop;
   const char *title;
   char buf[200];
-  char ubuf[UUID_HEX_SIZE];
+  htsmsg_t *conf;
 
   if(dte->dte_enabled == 0 || dte->dte_weekdays == 0)
     goto fail;
@@ -152,13 +152,22 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   snprintf(buf, sizeof(buf), _("Time recording%s%s"),
            dte->dte_comment ? ": " : "",
            dte->dte_comment ?: "");
-  de = dvr_entry_create_(1, idnode_uuid_as_str(&dte->dte_config->dvr_id, ubuf),
-                         NULL, dte->dte_channel,
-                         start, stop, 0, 0, title, NULL,
-                         NULL, NULL, NULL, dte->dte_owner, dte->dte_creator,
-                         NULL, dte, dte->dte_pri, dte->dte_retention,
-                         dte->dte_removal, buf);
 
+  conf = htsmsg_create_map();
+  htsmsg_add_uuid(conf, "config_name", &dte->dte_config->dvr_id.in_uuid);
+  htsmsg_add_str2(conf, "title", title);
+  htsmsg_add_s64(conf, "start", start);
+  htsmsg_add_s64(conf, "stop", stop);
+  htsmsg_add_u32(conf, "pri", dte->dte_pri);
+  htsmsg_add_u32(conf, "retention", dte->dte_retention);
+  htsmsg_add_u32(conf, "removal", dte->dte_removal);
+  htsmsg_add_str2(conf, "owner", dte->dte_owner);
+  htsmsg_add_str2(conf, "creator", dte->dte_creator);
+  htsmsg_add_str(conf, "comment", buf);
+  htsmsg_add_uuid(conf, "timerec", &dte->dte_id.in_uuid);
+  htsmsg_add_str2(conf, "directory", dte->dte_directory);
+  dvr_entry_create_from_htsmsg(conf, NULL);
+  htsmsg_destroy(conf);
   return;
 
 fail:

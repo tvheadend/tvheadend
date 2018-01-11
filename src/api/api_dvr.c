@@ -206,13 +206,11 @@ api_dvr_entry_create_by_event
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   dvr_entry_t *de;
-  const char *config_uuid, *comment;
   epg_broadcast_t *e;
-  htsmsg_t *entries, *entries2 = NULL, *m, *l = NULL;
+  htsmsg_t *entries, *entries2 = NULL, *m, *l = NULL, *conf;
   htsmsg_field_t *f;
-  const char *s;
-  int count = 0, enabled;
-  char ubuf[UUID_HEX_SIZE];
+  const char *s, *config_uuid;
+  int count = 0;
 
   if (!(entries = htsmsg_get_list(args, "entries"))) {
     entries = entries2 = api_dvr_entry_create_from_single(args);
@@ -226,30 +224,35 @@ api_dvr_entry_create_by_event
     if (!(s = htsmsg_get_str(m, "event_id")))
       continue;
 
-    enabled = htsmsg_get_u32_or_default(m, "enabled", 1);
+    conf = htsmsg_create_map();
+    htsmsg_copy_field(conf, "enabled", m, NULL);
+    htsmsg_copy_field(conf, "comment", m, NULL);
+    htsmsg_add_str(conf, "owner", perm->aa_username);
+    htsmsg_add_str(conf, "creator", perm->aa_representative);
     config_uuid = htsmsg_get_str(m, "config_uuid");
-    comment = htsmsg_get_str(m, "comment");
+    de = NULL;
 
     pthread_mutex_lock(&global_lock);
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
       dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
       if (cfg) {
-        de = dvr_entry_create_by_event(enabled,
-                                       idnode_uuid_as_str(&cfg->dvr_id, ubuf),
-                                       e, 0, 0,
-                                       perm->aa_username,
-                                       perm->aa_representative,
-                                       NULL, DVR_PRIO_DEFAULT, DVR_RET_REM_DVRCONFIG,
-                                       DVR_RET_REM_DVRCONFIG, comment);
-        if (de) {
-          if (l == NULL)
-            l = htsmsg_create_list();
-          htsmsg_add_uuid(l, NULL, &de->de_id.in_uuid);
+        htsmsg_add_uuid(conf, "config_name", &cfg->dvr_id.in_uuid);
+        htsmsg_copy_field(conf, "config_name", m, "config_uuid");
+        de = dvr_entry_create_from_htsmsg(conf, e);
+        if (de)
           idnode_changed(&de->de_id);
-        }
       }
     }
     pthread_mutex_unlock(&global_lock);
+
+    htsmsg_destroy(conf);
+
+    if (de) {
+      if (l == NULL)
+        l = htsmsg_create_list();
+      htsmsg_add_uuid(l, NULL, &de->de_id.in_uuid);
+    }
+
     count++;
   }
 

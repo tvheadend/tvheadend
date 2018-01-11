@@ -56,8 +56,10 @@ int             lang_str_set2
 /* Serialize/Deserialize */
 htsmsg_t       *lang_str_serialize_map
   ( lang_str_t *ls );
-void            lang_str_serialize   
+void            lang_str_serialize
   ( lang_str_t *ls, htsmsg_t *msg, const char *f );
+void            lang_str_serialize_one
+  ( htsmsg_t *msg, const char *f, const char *str, const char *lang );
 lang_str_t     *lang_str_deserialize_map
   ( htsmsg_t *map );
 lang_str_t     *lang_str_deserialize
