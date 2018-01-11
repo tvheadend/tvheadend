@@ -635,6 +635,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE) \
 		--disable-all \
 		--enable-gpl \
+		--enable-nonfree \
 		--extra-cflags="$(ECFLAGS)" \
 		--extra-libs="$(ELIBS)" \
 		--pkg-config="$(ROOTDIR)/support/pkg-config.ffmpeg" \
