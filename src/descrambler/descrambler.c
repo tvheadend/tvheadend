@@ -317,10 +317,12 @@ descrambler_service_stop ( service_t *t )
 
   while ((td = LIST_FIRST(&t->s_descramblers)) != NULL)
     td->td_stop(td);
+  pthread_mutex_lock(&t->s_stream_mutex);
   t->s_descramble = NULL;
   t->s_descrambler = NULL;
   p = t->s_descramble_info;
   t->s_descramble_info = NULL;
+  pthread_mutex_unlock(&t->s_stream_mutex);
   free(p);
   if (dr) {
     tvhcsa_destroy(&dr->dr_csa);
