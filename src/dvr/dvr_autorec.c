@@ -449,6 +449,9 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
   free(dae->dae_owner);
   free(dae->dae_creator);
   free(dae->dae_comment);
+  free(dae->dae_cat1);
+  free(dae->dae_cat2);
+  free(dae->dae_cat3);
 
   autorec_regfree(dae);
 

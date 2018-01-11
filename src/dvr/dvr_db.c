@@ -958,7 +958,7 @@ dvr_entry_t *
 dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
                   channel_t *ch, time_t start, time_t stop,
                   time_t start_extra, time_t stop_extra,
-                  const char *title, const char* subtitle, const char *description,
+                  const char *title, const char *subtitle, const char *description,
                   const char *lang, epg_genre_t *content_type,
                   const char *owner,
                   const char *creator, dvr_autorec_entry_t *dae,
