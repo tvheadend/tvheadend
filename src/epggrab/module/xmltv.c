@@ -538,7 +538,7 @@ static string_list_t *
       const char *str = htsmsg_get_str(e, "cdata");
       if (str && *str) {
         if (!tag_list) tag_list = string_list_create();
-        string_list_insert(tag_list, str);
+        string_list_insert_lowercase(tag_list, str);
       }
     }
   }

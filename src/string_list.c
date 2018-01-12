@@ -18,6 +18,7 @@
 
 #include "string_list.h"
 
+#include <ctype.h>
 #include <string.h>
 #include "htsmsg.h"
 
@@ -68,6 +69,18 @@ string_list_insert(string_list_t *l, const char *id)
     free(item->id);
     free(item);
   }
+}
+
+void
+string_list_insert_lowercase(string_list_t *l, const char *id)
+{
+  char *s, *p;
+
+  if (!id) return;
+  s = alloca(strlen(id) + 1);
+  for (s = p = alloca(strlen(id) + 1); *id; id++, p++)
+    *p = tolower(*id);
+  string_list_insert(l, s);
 }
 
 htsmsg_t *

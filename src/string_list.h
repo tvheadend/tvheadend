@@ -57,6 +57,9 @@ void string_list_destroy(string_list_t *l);
 /// Insert a copy of id in to the sorted string list.
 void string_list_insert(string_list_t *l, const char *id);
 
+/// Insert a copy of lowercase id in to the sorted string list.
+void string_list_insert_lowercase(string_list_t *l, const char *id);
+
 /// Conversion function from sorted string list to an htsmsg.
 /// @return NULL if empty.
 struct htsmsg *string_list_to_htsmsg(const string_list_t *l)
