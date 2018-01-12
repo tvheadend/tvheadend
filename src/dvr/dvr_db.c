@@ -843,7 +843,7 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, uint16_t eid, int64_t
 {
   time_t t1, t2;
   const char *title1, *title2;
-  char buf[64];
+  epg_episode_num_t epnum;
 
   /* Wrong length (+/-20%) */
   t1 = de->de_stop - de->de_start;
@@ -870,10 +870,68 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, uint16_t eid, int64_t
     return 0;
 
   /* episode check */
-  if (dvr_entry_get_episode(e, buf, sizeof(buf)) && de->de_episode)
-    if (strcmp(buf, de->de_episode))
-      return 0;
+  epg_episode_get_epnum(e->episode, &epnum);
+  if (epg_episode_number_cmpfull(&epnum, &de->de_epnum))
+    return 0;
 
+  return 1;
+}
+
+/*
+ * Expect season and episode from an input string of
+ * "Season A/B.Episode Y/Z"
+ * or "Season A.Episode Y/Z"
+ * or "Season A.Episode Y"
+ * or some combination.
+ */
+static int extract_season_episode(epg_episode_num_t *epnum, const char *text)
+{
+  uint32_t s = 0, sc = 0, e = 0, ec = 0;
+  const char *ch = text;
+
+  memset(epnum, 0, sizeof(*epnum));
+
+  /* Extract season and season count */
+  if (strncasecmp(ch, "Season", 7))
+    goto _episode;
+
+  ch += 7;
+  for (; *ch == ' '; ch++);
+  for (; isdigit(*ch); ch++)
+    s = (s * 10) + (*ch - '0');
+  if (*ch == '/') {
+    for (ch++; isdigit(*ch); ch++)
+      sc = (sc * 10) + (*ch - '0');
+  }
+
+  /* Sanity check */
+  if (*ch != '.')
+    return 0;
+
+  /* Extract episode and episode count */
+_episode:
+  if (strncasecmp(ch, "Episode", 7))
+    return 0;
+  ch += 7;
+  for (; *ch == ' '; ch++);
+  for (; isdigit(*ch); ch++)
+    e = (e * 10) + (*ch - '0');
+  if (*ch == '/') {
+    for (ch++; isdigit(*ch); ch++)
+      ec = (ec * 10) + (*ch - '0');
+  }
+
+  /* end-of-string check */
+  if (*ch)
+    return 0;
+
+  if (e == 0)
+    return 0;
+
+  epnum->s_num = s;
+  epnum->s_cnt = sc;
+  epnum->e_num = e;
+  epnum->e_cnt = ec;
   return 1;
 }
 
@@ -887,6 +945,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   int64_t start, stop;
   htsmsg_t *m;
   char ubuf[UUID_HEX_SIZE];
+  const char *s;
 
   if (conf) {
     if (htsmsg_get_s64(conf, "start", &start))
@@ -914,6 +973,16 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   de->de_pri = DVR_PRIO_DEFAULT;
 
   idnode_load(&de->de_id, conf);
+
+  /* Extract episode info */
+  s = htsmsg_get_str(conf, "episode");
+  if (s) {
+    extract_season_episode(&de->de_epnum, s);
+  } else {
+    m = htsmsg_get_map(conf, "episode");
+    if (m)
+      epg_episode_epnum_deserialize(m, &de->de_epnum);
+  }
 
   /* filenames */
   m = htsmsg_get_list(conf, "files");
@@ -1251,7 +1320,11 @@ typedef int (*_dvr_duplicate_fcn_t)(dvr_entry_t *de, dvr_entry_t *de2, void **au
 
 static int _dvr_duplicate_epnum(dvr_entry_t *de, dvr_entry_t *de2, void **aux)
 {
-  return !strempty(de2->de_episode) && !strcmp(de->de_episode, de2->de_episode);
+  if (de->de_epnum.e_num && de2->de_epnum.e_num)
+    return de->de_epnum.e_num == de2->de_epnum.e_num;
+  if (de->de_epnum.text && de2->de_epnum.text)
+    return strcmp(de->de_epnum.text, de2->de_epnum.text) == 0;
+  return 0;
 }
 
 static int _dvr_duplicate_title(dvr_entry_t *de, dvr_entry_t *de2, void **aux)
@@ -1351,38 +1424,6 @@ static const char *_dvr_duplicate_get_dedup_program_id(const dvr_entry_t *de)
   return NULL;
 }
 
-/// Expect season and episode from an input string of
-/// "Season A/B.Episode Y/Z"
-/// or "Season A.Episode Y/Z"
-/// or "Season A.Episode Y"
-/// or some combination.
-static int64_t extract_season_episode(const char* ep)
-{
-  /* Go to first digit of season */
-  const char *ch = ep;
-  while (*ch && !isdigit(*ch))
-    ++ch;
-
-  /* atoi on the season */
-  int s=0;
-  while (isdigit(*ch))
-    s = (s  * 10) + (*ch++ - '0');
-
-  /* Now we're either on / or . */
-  while (*ch &&  *ch != '.')
-      ++ch;
-
-  /* Now we're on Episode */
-  while (*ch && !isdigit(*ch))
-    ++ch;
-  int e=0;
-  while (isdigit(*ch))
-    e = (e * 10) + (*ch++ - '0');
-
-  /* Now combine it together */
-  return ((int64_t)s) << 32 | e;
-}
-
 /// @return 1 if dup.
 static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void **aux)
 {
@@ -1402,41 +1443,18 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
   /* Titles not equal? Can't be a dup then */
   if (lang_str_compare(de1->de_title, de2->de_title)) return NOT_DUP;
 
-  /* Season and/or episode is stored in episode. But the numbers are
-   * not saved separately. We want to dup match only if both season
+  /* We want to dup match only if both season
    * AND episode are present since OTA often have just "Ep 1" without
    * giving the season.
    */
-  const char *s_ep1 = de1->de_episode;
-  const char *s_ep2 = de2->de_episode;
-
-  /* Are season AND episode both in the string? */
-  const int is_s_and_ep1 = s_ep1 && strstr(s_ep1, "Season") && strstr(s_ep1, "Episode");
-  const int is_s_and_ep2 = s_ep2 && strstr(s_ep2, "Season") && strstr(s_ep2, "Episode");
-
-  /* Season and episode are the same (for the same title) so must be a DUP.
-   * If they differ then must not be a DUP.
-   *
-   * We only compare up to the character before the slash since the
-   * default display is "Season X.Episode Y/Z" for xmltv, but OTA
-   * rarely has the Z component which means that we will frequently
-   * fail to match xmltv vs OTA unless we compare only the season and
-   * episode components and ignore the total number of episodes
-   * component.
-   *
-   * Newer tv_grab gives "Season X/X.Episode Y/Z" so we have to
-   * be careful with the compare.
-   */
-  if (is_s_and_ep1 && is_s_and_ep2) {
-    const int64_t sepnum1 = extract_season_episode(s_ep1);
-    const int64_t sepnum2 = extract_season_episode(s_ep2);
-    return sepnum1 == sepnum2 ? DUP : NOT_DUP;
-  }
+  if (de1->de_epnum.e_num && de2->de_epnum.e_num)
+    return de1->de_epnum.e_num == de2->de_epnum.e_num ? DUP : NOT_DUP;
 
   /* Only one has season and episode? Then can't be a dup with the
    * other one that doesn't have season+episode
    */
-  if ((is_s_and_ep1 && !is_s_and_ep2) || (!is_s_and_ep1 && is_s_and_ep2)) return NOT_DUP;
+  if (de1->de_epnum.e_num || de2->de_epnum.e_num)
+    return NOT_DUP;
 
   /* Now, near the end, we can check for unequal programme ids. We do
    * this check relatively late since we want dup checking above to
@@ -1483,7 +1501,8 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
    * for different region broadcasts so we want to match on episode details
    * first.
    */
-  if (do_progid_check && progid1 && progid2 && strcmp(progid1, progid2)) return NOT_DUP;
+  if (do_progid_check && progid1 && progid2 && strcmp(progid1, progid2))
+    return NOT_DUP;
 
   /* Only one side has an id? We do nothing for this case since programmes in old dvr/log
    * don't have a programid persisted.
@@ -1496,7 +1515,8 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
    * different crid so would be NOT_DUP at first check. But if everything is
    * identical then user should resort to using ONCE_PER_DAY rules, etc.
    */
-  if (!lang_str_compare(de1->de_subtitle, de2->de_subtitle) && !lang_str_compare(de1->de_desc, de2->de_desc))
+  if (!lang_str_compare(de1->de_subtitle, de2->de_subtitle) &&
+      !lang_str_compare(de1->de_desc, de2->de_desc))
     return DUP;
 
   /* If all tests have finished then we assume not a dup */
@@ -1545,7 +1565,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       break;
     case DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER:
     case DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER:
-      if (strempty(de->de_episode))
+      if (de->de_epnum.e_num == 0 && de->de_epnum.text == NULL)
         return NULL;
       break;
     case DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE:
@@ -1742,7 +1762,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   if (de->de_desc) lang_str_destroy(de->de_desc);
   dvr_entry_assign_broadcast(de, NULL);
   free(de->de_channel_name);
-  free(de->de_episode);
+  free(de->de_epnum.text);
   free(de->de_image);
   free(de->de_uri);
 
@@ -1923,6 +1943,7 @@ static dvr_entry_t *_dvr_entry_update
 {
   char buf[40];
   int save = 0, updated = 0;
+  epg_episode_num_t epnum;
 
   if (enabled >= 0) {
     enabled = !!enabled;
@@ -2091,11 +2112,15 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   /* Episode */
-  if (!dvr_entry_get_episode(de->de_bcast, buf, sizeof(buf)))
-    buf[0] = '\0';
-  if (strcmp(de->de_episode ?: "", buf)) {
-    free(de->de_episode);
-    de->de_episode = strdup(buf);
+  if (de->de_bcast->episode) {
+    epg_episode_get_epnum(de->de_bcast->episode, &epnum);
+  } else {
+    memset(&epnum, 0, sizeof(epnum));
+  }
+  if (epg_episode_number_cmpfull(&de->de_epnum, &epnum)) {
+    de->de_epnum = epnum;
+    if (epnum.text)
+      de->de_epnum.text = strdup(epnum.text);
     save |= DVR_UPDATED_EPISODE;
   }
 
@@ -2540,6 +2565,7 @@ dvr_entry_class_save(idnode_t *self, char *filename, size_t fsize)
   int64_t s64;
 
   idnode_save(&de->de_id, m);
+  htsmsg_add_msg(m, "episode", epg_episode_epnum_serialize(&de->de_epnum));
   if (de->de_files) {
     l = htsmsg_create_list();
     HTSMSG_FOREACH(f, de->de_files)
@@ -3183,6 +3209,44 @@ dvr_entry_class_disp_description_get(void *o)
     prop_ptr = NULL;
   if (prop_ptr == NULL)
     prop_ptr = "";
+  return &prop_ptr;
+}
+
+static int
+dvr_entry_class_disp_episode_set(void *o, const void *v)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  epg_episode_num_t epnum;
+  if (!extract_season_episode(&epnum, (const char *)v))
+    epnum.text = (char *)v;
+  if (epg_episode_number_cmpfull(&de->de_epnum, &epnum)) {
+    free(de->de_epnum.text);
+    de->de_epnum = epnum;
+    if (epnum.text)
+      de->de_epnum.text = strdup(epnum.text);
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+dvr_entry_class_disp_episode_get(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  const char *lang;
+  char buf1[32], buf2[32];
+  if (de->de_epnum.e_num) {
+    lang = idnode_lang(o);
+    snprintf(buf1, sizeof(buf1), "%s %%d", tvh_gettext_lang(lang, N_("Season")));
+    snprintf(buf1, sizeof(buf1), "%s %%d", tvh_gettext_lang(lang, N_("Episode")));
+    epg_episode_epnum_format(&de->de_epnum, prop_sbuf, PROP_SBUF_LEN, NULL,
+                             buf1, ".", buf2, "/%d");
+    return &prop_sbuf_ptr;
+  } else if (de->de_epnum.text) {
+    prop_ptr = de->de_epnum.text;
+  } else {
+    prop_ptr = "";
+  }
   return &prop_ptr;
 }
 
@@ -3872,11 +3936,12 @@ const idclass_t dvr_entry_class = {
     },
     {
       .type     = PT_STR,
-      .id       = "episode",
+      .id       = "episode_disp",
       .name     = N_("Episode"),
       .desc     = N_("Episode number/ID."),
-      .off      = offsetof(dvr_entry_t, de_episode),
-      .opts     = PO_RDONLY | PO_HIDDEN,
+      .set      = dvr_entry_class_disp_episode_set,
+      .get      = dvr_entry_class_disp_episode_get,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_NOSAVE,
     },
     {
       .type     = PT_STR,

@@ -420,7 +420,7 @@ int epg_episode_set_age_rating
 
 // Note: this does NOT strdup the text field
 void epg_episode_get_epnum
-  ( epg_episode_t *e, epg_episode_num_t *epnum );
+  ( const epg_episode_t *e, epg_episode_num_t *epnum );
 /* EpNum format helper */
 // output string will be:
 // if (episode_num) 
@@ -431,13 +431,23 @@ void epg_episode_get_epnum
 //   ret += sprintf(efmt, episode_num)
 //   if (episode_cnt) ret += sprintf(cfmt, episode_cnt)
 // and will return num chars written
+size_t epg_episode_epnum_format
+  ( epg_episode_num_t *epnum, char *buf, size_t len,
+    const char *pre,  const char *sfmt,
+    const char *sep,  const char *efmt,
+    const char *cfmt );
 size_t epg_episode_number_format 
   ( epg_episode_t *e, char *buf, size_t len,
     const char *pre,  const char *sfmt,
     const char *sep,  const char *efmt,
     const char *cfmt );
-int  epg_episode_number_cmp
-  ( epg_episode_num_t *a, epg_episode_num_t *b );
+int epg_episode_number_cmp
+  ( const epg_episode_num_t *a, const epg_episode_num_t *b );
+int epg_episode_number_cmpfull
+  ( const epg_episode_num_t *a, const epg_episode_num_t *b );
+
+htsmsg_t *epg_episode_epnum_serialize( epg_episode_num_t *num );
+void epg_episode_epnum_deserialize( htsmsg_t *m, epg_episode_num_t *num );
 
 /* Matching */
 int epg_episode_fuzzy_match

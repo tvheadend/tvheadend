@@ -687,6 +687,31 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
   return conf;
 }
 
+/*
+ *
+ */
+static void htsp_serialize_epnum
+  (htsmsg_t *out, epg_episode_num_t *epnum, const char *textname)
+{
+  if (epnum->s_num) {
+    htsmsg_add_u32(out, "seasonNumber", epnum->s_num);
+    if (epnum->s_cnt)
+      htsmsg_add_u32(out, "seasonCount", epnum->s_cnt);
+  }
+  if (epnum->e_num) {
+    htsmsg_add_u32(out, "episodeNumber", epnum->e_num);
+    if (epnum->e_cnt)
+      htsmsg_add_u32(out, "episodeCount", epnum->e_cnt);
+  }
+  if (epnum->p_num) {
+    htsmsg_add_u32(out, "partNumber", epnum->p_num);
+    if (epnum->p_cnt)
+      htsmsg_add_u32(out, "partCount", epnum->p_cnt);
+  }
+  if (epnum->text)
+    htsmsg_add_str(out, textname ?: "episodeOnscreen", epnum->text);
+}
+
 /* **************************************************************************
  * File helpers
  * *************************************************************************/
@@ -995,8 +1020,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
       htsmsg_add_str(out, "subtitle", s);
     if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
       htsmsg_add_str(out, "description", s);
-    if(de->de_episode)
-      htsmsg_add_str(out, "episode", de->de_episode);
+    htsp_serialize_epnum(out, &de->de_epnum, "episode");
     if(de->de_owner)
       htsmsg_add_str(out, "owner",   de->de_owner);
     if(de->de_creator)
@@ -1283,23 +1307,7 @@ htsp_build_event
     if (ee->first_aired)
       htsmsg_add_s64(out, "firstAired", ee->first_aired);
     epg_episode_get_epnum(ee, &epnum);
-    if (epnum.s_num) {
-      htsmsg_add_u32(out, "seasonNumber", epnum.s_num);
-      if (epnum.s_cnt)
-        htsmsg_add_u32(out, "seasonCount", epnum.s_cnt);
-    }
-    if (epnum.e_num) {
-      htsmsg_add_u32(out, "episodeNumber", epnum.e_num);
-      if (epnum.e_cnt)
-        htsmsg_add_u32(out, "episodeCount", epnum.e_cnt);
-    }
-    if (epnum.p_num) {
-      htsmsg_add_u32(out, "partNumber", epnum.p_num);
-      if (epnum.p_cnt)
-        htsmsg_add_u32(out, "partCount", epnum.p_cnt);
-    }
-    if (epnum.text)
-      htsmsg_add_str(out, "episodeOnscreen", epnum.text);
+    htsp_serialize_epnum(out, &epnum, NULL);
     if (ee->image)
       htsmsg_add_str(out, "image", ee->image);
   }

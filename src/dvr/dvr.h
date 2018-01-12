@@ -232,7 +232,7 @@ typedef struct dvr_entry {
    */
   LIST_ENTRY(dvr_entry) de_bcast_link;
   epg_broadcast_t *de_bcast;
-  char *de_episode;
+  epg_episode_num_t de_epnum;
 
   /**
    * Major State

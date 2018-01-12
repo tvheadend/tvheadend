@@ -855,7 +855,7 @@ const char *epg_season_get_summary
  * Episode
  * *************************************************************************/
 
-static htsmsg_t *epg_episode_num_serialize ( epg_episode_num_t *num )
+htsmsg_t *epg_episode_epnum_serialize ( epg_episode_num_t *num )
 {
   htsmsg_t *m;
   if (!num) return NULL;
@@ -877,7 +877,7 @@ static htsmsg_t *epg_episode_num_serialize ( epg_episode_num_t *num )
   return m;
 }
 
-static void epg_episode_num_deserialize 
+void epg_episode_epnum_deserialize
   ( htsmsg_t *m, epg_episode_num_t *num )
 {
   const char *str;
@@ -1256,38 +1256,52 @@ static void _epg_episode_rem_broadcast
   _epg_object_putref(episode);
 }
 
-size_t epg_episode_number_format 
-  ( epg_episode_t *episode, char *buf, size_t len,
+size_t epg_episode_epnum_format
+  ( epg_episode_num_t *epnum, char *buf, size_t len,
     const char *pre,  const char *sfmt,
     const char *sep,  const char *efmt,
     const char *cfmt )
 {
   size_t i = 0;
-  if (!episode || !buf || !len) return 0;
-  epg_episode_num_t num;
-  epg_episode_get_epnum(episode, &num);
+  if (!epnum || !buf || !len) return 0;
   buf[0] = '\0';
-  if (num.e_num) {
+  if (epnum->e_num) {
     if (pre) tvh_strlcatf(buf, len, i, "%s", pre);
-    if (sfmt && num.s_num) {
-      tvh_strlcatf(buf, len, i, sfmt, num.s_num);
-      if (cfmt && num.s_cnt)
-        tvh_strlcatf(buf, len, i, cfmt, num.s_cnt);
+    if (sfmt && epnum->s_num) {
+      tvh_strlcatf(buf, len, i, sfmt, epnum->s_num);
+      if (cfmt && epnum->s_cnt)
+        tvh_strlcatf(buf, len, i, cfmt, epnum->s_cnt);
       if (sep) tvh_strlcatf(buf, len, i, "%s", sep);
     }
-    tvh_strlcatf(buf, len, i, efmt, num.e_num);
-    if (cfmt && num.e_cnt)
-      tvh_strlcatf(buf, len, i, cfmt, num.e_cnt);
-  } else if (num.text) {
+    tvh_strlcatf(buf, len, i, efmt, epnum->e_num);
+    if (cfmt && epnum->e_cnt)
+      tvh_strlcatf(buf, len, i, cfmt, epnum->e_cnt);
+  } else if (epnum->text) {
     if (pre) tvh_strlcatf(buf, len, i, "%s", pre);
-    tvh_strlcatf(buf, len, i, "%s", num.text);
+    tvh_strlcatf(buf, len, i, "%s", epnum->text);
   }
   return i;
 }
 
-void epg_episode_get_epnum ( epg_episode_t *ee, epg_episode_num_t *num )
+size_t epg_episode_number_format
+  ( epg_episode_t *episode, char *buf, size_t len,
+    const char *pre,  const char *sfmt,
+    const char *sep,  const char *efmt,
+    const char *cfmt )
 {
-  if (!ee || !num) return;
+  if (!episode) return 0;
+  epg_episode_num_t num;
+  epg_episode_get_epnum(episode, &num);
+  return epg_episode_epnum_format(&num, buf, len, pre,
+                                  sfmt, sep, efmt, cfmt);
+}
+
+void epg_episode_get_epnum ( const epg_episode_t *ee, epg_episode_num_t *num )
+{
+  if (!ee || !num) {
+    memset(num, 0, sizeof(*num));
+    return;
+  }
   *num = ee->epnum;
   if (ee->season) {
     num->e_cnt = ee->season->episode_count;
@@ -1298,7 +1312,7 @@ void epg_episode_get_epnum ( epg_episode_t *ee, epg_episode_num_t *num )
   }
 }
 
-int epg_episode_number_cmp ( epg_episode_num_t *a, epg_episode_num_t *b )
+int epg_episode_number_cmp ( const epg_episode_num_t *a, const epg_episode_num_t *b )
 {
   if (a->e_num) {
     if (a->s_num != b->s_num) {
@@ -1312,6 +1326,23 @@ int epg_episode_number_cmp ( epg_episode_num_t *a, epg_episode_num_t *b )
     return strcmp(a->text, b->text);
   }
   return 0;
+}
+
+int epg_episode_number_cmpfull ( const epg_episode_num_t *a, const epg_episode_num_t *b )
+{
+  int i = a->s_cnt - b->s_cnt;
+  if (i) return i;
+  i = a->s_num - b->s_num;
+  if (i) return i;
+  i = a->e_cnt - b->e_cnt;
+  if (i) return i;
+  i = a->e_num - b->e_num;
+  if (i) return i;
+  i = a->p_cnt - b->p_cnt;
+  if (i) return i;
+  i = a->p_num - b->p_num;
+  if (i) return i;
+  return strcasecmp(a->text ?: "", b->text ?: "");
 }
 
 // WIBNI: this could do with soem proper matching, maybe some form of
@@ -1343,7 +1374,7 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     lang_str_serialize(episode->summary, m, "summary");
   if (episode->description)
     lang_str_serialize(episode->description, m, "description");
-  htsmsg_add_msg(m, "epnum", epg_episode_num_serialize(&episode->epnum));
+  htsmsg_add_msg(m, "epnum", epg_episode_epnum_serialize(&episode->epnum));
   LIST_FOREACH(eg, &episode->genre, link) {
     if (!a) a = htsmsg_create_list();
     htsmsg_add_u32(a, NULL, eg->code);
@@ -1405,7 +1436,7 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
     lang_str_destroy(ls);
   }
   if ((sub = htsmsg_get_map(m, "epnum"))) {
-    epg_episode_num_deserialize(sub, &num);
+    epg_episode_epnum_deserialize(sub, &num);
     *save |= epg_episode_set_epnum(ee, &num, &changes);
     if (num.text) free(num.text);
   }
