@@ -218,11 +218,14 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   }
 
   if (e->category) {
-    if (dae->dae_cat1 && *dae->dae_cat1 && !string_list_contains_string(e->category, dae->dae_cat1))
+    if (dae->dae_cat1 && *dae->dae_cat1 &&
+        !string_list_contains_string(e->category, dae->dae_cat1))
       return 0;
-    if (dae->dae_cat2 && *dae->dae_cat2 && !string_list_contains_string(e->category, dae->dae_cat2))
+    if (dae->dae_cat2 && *dae->dae_cat2 &&
+        !string_list_contains_string(e->category, dae->dae_cat2))
       return 0;
-    if (dae->dae_cat3 && *dae->dae_cat3 && !string_list_contains_string(e->category, dae->dae_cat3))
+    if (dae->dae_cat3 && *dae->dae_cat3 &&
+        !string_list_contains_string(e->category, dae->dae_cat3))
       return 0;
   } else if ((dae->dae_cat1 && *dae->dae_cat1) ||
              (dae->dae_cat2 && *dae->dae_cat2) ||

@@ -963,6 +963,7 @@ dvr_entry_create_from_htsmsg(htsmsg_t *conf, epg_broadcast_t *e)
   time_t t;
   char ubuf[UUID_HEX_SIZE];
   epg_genre_t *genre;
+  int summary_used = 0;
 
   if (e) {
     htsmsg_add_u32(conf, "broadcast", e->id);
@@ -980,10 +981,15 @@ dvr_entry_create_from_htsmsg(htsmsg_t *conf, epg_broadcast_t *e)
       lang_str_serialize(e->description, conf, "description");
     else if (e->episode && e->episode->description)
       lang_str_serialize(e->episode->description, conf, "description");
-    else if (e->summary)
+    else if (e->summary) {
       lang_str_serialize(e->summary, conf, "description");
-    else if (e->episode && e->episode->summary)
+      summary_used = 1;
+    } else if (e->episode && e->episode->summary)
       lang_str_serialize(e->episode->summary, conf, "description");
+    if (!summary_used && e->summary)
+      lang_str_serialize(e->summary, conf, "summary");
+    else if (e->episode && e->episode->summary)
+      lang_str_serialize(e->episode->summary, conf, "summary");
     if (e->episode && (s = dvr_entry_get_episode(e, tbuf, sizeof(tbuf))))
       htsmsg_add_str(conf, "episode", s);
     if (e->episode && e->episode->copyright_year)
@@ -1731,8 +1737,9 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   free(de->de_creator);
   free(de->de_comment);
   if (de->de_title) lang_str_destroy(de->de_title);
-  if (de->de_subtitle)  lang_str_destroy(de->de_subtitle);
-  if (de->de_desc)  lang_str_destroy(de->de_desc);
+  if (de->de_subtitle) lang_str_destroy(de->de_subtitle);
+  if (de->de_summary) lang_str_destroy(de->de_summary);
+  if (de->de_desc) lang_str_destroy(de->de_desc);
   dvr_entry_assign_broadcast(de, NULL);
   free(de->de_channel_name);
   free(de->de_episode);
@@ -1907,7 +1914,8 @@ static char *dvr_updated_str(char *buf, size_t buflen, int flags)
 static dvr_entry_t *_dvr_entry_update
   ( dvr_entry_t *de, int enabled, const char *dvr_config_uuid,
     epg_broadcast_t *e, channel_t *ch,
-    const char *title, const char *subtitle, const char *desc,
+    const char *title, const char *subtitle,
+    const char *summary, const char *desc,
     const char *lang, time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
     dvr_prio_t pri, int retention, int removal,
@@ -1969,6 +1977,9 @@ static dvr_entry_t *_dvr_entry_update
       }
       if (subtitle) {
         save |= lang_str_set(&de->de_subtitle, subtitle, lang) ? DVR_UPDATED_SUBTITLE : 0;
+      }
+      if (summary) {
+        save |= lang_str_set(&de->de_summary, summary, lang) ? DVR_UPDATED_SUMMARY : 0;
       }
     }
     goto dosave;
@@ -2036,6 +2047,13 @@ static dvr_entry_t *_dvr_entry_update
     save |= lang_str_set2(&de->de_subtitle, e->episode->subtitle) ? DVR_UPDATED_SUBTITLE : 0;
   } else if (subtitle) {
     save |= lang_str_set(&de->de_subtitle, subtitle, lang) ? DVR_UPDATED_SUBTITLE : 0;
+  }
+
+  /* Summary */
+  if (e && e->episode && e->episode->summary) {
+    save |= lang_str_set2(&de->de_summary, e->episode->summary) ? DVR_UPDATED_SUMMARY : 0;
+  } else if (summary) {
+    save |= lang_str_set(&de->de_summary, summary, lang) ? DVR_UPDATED_SUMMARY : 0;
   }
 
   /* EID */
@@ -2109,13 +2127,13 @@ dvr_entry_update
   ( dvr_entry_t *de, int enabled,
     const char *dvr_config_uuid, channel_t *ch,
     const char *title, const char *subtitle,
-    const char *desc, const char *lang,
+    const char *summary, const char *desc, const char *lang,
     time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
     dvr_prio_t pri, int retention, int removal, int playcount, int playposition )
 {
   return _dvr_entry_update(de, enabled, dvr_config_uuid,
-                           NULL, ch, title, subtitle, desc, lang,
+                           NULL, ch, title, subtitle, summary, desc, lang,
                            start, stop, start_extra, stop_extra,
                            pri, retention, removal, playcount, playposition);
 }
@@ -2171,7 +2189,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                           gmtime2local(e2->start, t1buf, sizeof(t1buf)),
                           gmtime2local(e2->stop, t2buf, sizeof(t2buf)));
           _dvr_entry_update(de, -1, NULL, e2, NULL, NULL, NULL, NULL, NULL,
-                            0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
+                            NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
           return;
         }
       }
@@ -2211,7 +2229,7 @@ void dvr_event_updated(epg_broadcast_t *e)
     return;
   LIST_FOREACH(de, &e->dvr_entries, de_bcast_link) {
     assert(de->de_bcast == e);
-    _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
+    _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
                       NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
     found++;
   }
@@ -2226,7 +2244,7 @@ void dvr_event_updated(epg_broadcast_t *e)
                             "link to event %s on %s",
                             epg_broadcast_get_title(e, NULL),
                             channel_get_name(e->channel, channel_blank_name));
-      _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
+      _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
                         NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
       break;
     }
@@ -3126,6 +3144,35 @@ dvr_entry_class_disp_subtitle_get(void *o)
   return &prop_ptr;
 }
 
+static int
+dvr_entry_class_disp_summary_set(void *o, const void *v)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  const char *lang = idnode_lang(o);
+  const char *s = "";
+  v = tvh_str_default(v, "UnknownSummary");
+  if (de->de_subtitle)
+    s = lang_str_get(de->de_summary, lang);
+  if (strcmp(s, v)) {
+    lang_str_set(&de->de_summary, v, lang);
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+dvr_entry_class_disp_summary_get(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  if (de->de_summary)
+    prop_ptr = lang_str_get(de->de_summary, idnode_lang(o));
+  else
+    prop_ptr = NULL;
+  if (prop_ptr == NULL)
+    prop_ptr = "";
+  return &prop_ptr;
+}
+
 static const void *
 dvr_entry_class_disp_description_get(void *o)
 {
@@ -3545,6 +3592,23 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Subtitle of the program (if any) (display only)."),
       .get      = dvr_entry_class_disp_subtitle_get,
       .set      = dvr_entry_class_disp_subtitle_set,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_LANGSTR,
+      .id       = "summary",
+      .name     = N_("Summary"),
+      .desc     = N_("Summary of the program (if any)."),
+      .off      = offsetof(dvr_entry_t, de_summary),
+      .opts     = PO_RDONLY,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "disp_summary",
+      .name     = N_("Summary"),
+      .desc     = N_("Summary of the program (if any) (display only)."),
+      .get      = dvr_entry_class_disp_summary_get,
+      .set      = dvr_entry_class_disp_summary_set,
       .opts     = PO_NOSAVE,
     },
     {

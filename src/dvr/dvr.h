@@ -212,6 +212,7 @@ typedef struct dvr_entry {
                          directory setting from the configuration */
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
   lang_str_t *de_subtitle;   /* Subtitle in UTF-8 (from EPG) */
+  lang_str_t *de_summary;    /* Summary in UTF-8 (from EPG) */
   lang_str_t *de_desc;       /* Description in UTF-8 (from EPG) */
   uint32_t de_content_type;  /* Content type (from EPG) (only code) */
   uint16_t de_copyright_year; /* Copyright year (from EPG) */
@@ -555,7 +556,7 @@ dvr_entry_t *
 dvr_entry_update( dvr_entry_t *de, int enabled,
                   const char *dvr_config_uuid, channel_t *ch,
                   const char *title, const char *subtitle,
-                  const char *desc, const char *lang,
+                  const char *summary, const char *desc, const char *lang,
                   time_t start, time_t stop,
                   time_t start_extra, time_t stop_extra,
                   dvr_prio_t pri, int retention, int removal,
