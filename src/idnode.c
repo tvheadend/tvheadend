@@ -2066,8 +2066,10 @@ idnode_done(void)
 {
   idclass_link_t *il;
 
+  pthread_mutex_lock(&global_lock);
   atomic_set(&save_running, 0);
   tvh_cond_signal(&save_cond, 0);
+  pthread_mutex_unlock(&global_lock);
   pthread_join(save_tid, NULL);
   mtimer_disarm(&save_timer);
 
