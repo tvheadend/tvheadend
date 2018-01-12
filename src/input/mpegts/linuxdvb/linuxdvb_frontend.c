@@ -657,15 +657,14 @@ static void
 linuxdvb_frontend_stop_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  char buf1[256], buf2[256];
+  char buf1[256];
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2;
 
   if (lfe->lfe_master)
     assert(lfe->lfe_type == DVB_TYPE_S);
 
   mi->mi_display_name(mi, buf1, sizeof(buf1));
-  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
-  tvhdebug(LS_LINUXDVB, "%s - stopping %s", buf1, buf2);
+  tvhdebug(LS_LINUXDVB, "%s - stopping %s", buf1, mmi->mmi_mux->mm_nicename);
 
   /* Stop thread */
   if (lfe->lfe_dvr_pipe.wr > 0) {
@@ -1957,11 +1956,10 @@ linuxdvb_frontend_tune1
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq )
 {
   int r = 0, i, rep;
-  char buf1[256], buf2[256];
+  char buf1[256];
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
-  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
-  tvhdebug(LS_LINUXDVB, "%s - starting %s", buf1, buf2);
+  tvhdebug(LS_LINUXDVB, "%s - starting %s", buf1, mmi->mmi_mux->mm_nicename);
 
   /* Tune */
   tvhtrace(LS_LINUXDVB, "%s - tuning", buf1);

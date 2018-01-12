@@ -729,11 +729,10 @@ satip_frontend_stop_mux
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_tune_req_t *tr;
-  char buf1[256], buf2[256];
+  char buf1[256];
 
   mi->mi_display_name(mi, buf1, sizeof(buf1));
-  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
-  tvhdebug(LS_SATIP, "%s - stopping %s", buf1, buf2);
+  tvhdebug(LS_SATIP, "%s - stopping %s", buf1, mmi->mmi_mux->mm_nicename);
 
   mtimer_disarm(&lfe->sf_monitor_timer);
 
@@ -787,11 +786,10 @@ satip_frontend_start_mux
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   dvb_mux_t *lm = (dvb_mux_t *)mmi->mmi_mux;
   satip_tune_req_t *tr;
-  char buf1[256], buf2[256];
+  char buf1[256];
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
-  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
-  tvhdebug(LS_SATIP, "%s - starting %s", buf1, buf2);
+  tvhdebug(LS_SATIP, "%s - starting %s", buf1, lm->mm_nicename);
 
   if (!lfe->sf_device->sd_no_univ_lnb &&
       (lm->lm_tuning.dmc_fe_delsys == DVB_SYS_DVBS ||

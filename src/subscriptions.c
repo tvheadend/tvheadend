@@ -188,7 +188,7 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 static void
 subscription_show_none(th_subscription_t *s)
 {
-  char buf[256], buf2[128];
+  char buf[256];
   size_t l = 0;
 
   tvh_strlcatf(buf, sizeof(buf), l,
@@ -201,8 +201,7 @@ subscription_show_none(th_subscription_t *s)
 #if ENABLE_MPEGTS
   else if (s->ths_raw_service) {
     mpegts_service_t *ms = (mpegts_service_t *)s->ths_raw_service;
-    mpegts_mux_nice_name(ms->s_dvb_mux, buf2, sizeof(buf2));
-    tvh_strlcatf(buf, sizeof(buf), l, " to mux \"%s\"", buf2);
+    tvh_strlcatf(buf, sizeof(buf), l, " to mux \"%s\"", ms->s_dvb_mux->mm_nicename);
   }
 #endif
   else {
@@ -211,8 +210,7 @@ subscription_show_none(th_subscription_t *s)
 #if ENABLE_MPEGTS
     if (idnode_is_instance(&s->ths_service->s_id, &mpegts_service_class)) {
       mpegts_service_t *ms = (mpegts_service_t *)s->ths_service;
-      mpegts_mux_nice_name(ms->s_dvb_mux, buf2, sizeof(buf2));
-      tvh_strlcatf(buf, sizeof(buf), l, " in mux \"%s\"", buf2);
+      tvh_strlcatf(buf, sizeof(buf), l, " in mux \"%s\"", ms->s_dvb_mux->mm_nicename);
     }
 #endif
   }

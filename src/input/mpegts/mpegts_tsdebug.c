@@ -28,7 +28,6 @@ tsdebug_started_mux
 {
   extern char *tvheadend_tsdebug;
   static const char *tmpdir = "/tmp/tvheadend.tsdebug/";
-  char buf[128];
   char path[PATH_MAX];
   struct stat st;
   if (!tvheadend_tsdebug && !stat(tmpdir, &st) && (st.st_mode & S_IFDIR) != 0)
@@ -36,14 +35,13 @@ tsdebug_started_mux
   if (tvheadend_tsdebug && !strcmp(tvheadend_tsdebug, tmpdir) && stat(tmpdir, &st))
     tvheadend_tsdebug = NULL;
   if (tvheadend_tsdebug) {
-    mpegts_mux_nice_name(mm, buf, sizeof(buf));
     snprintf(path, sizeof(path), "%s/%s-%li-%p-mux.ts", tvheadend_tsdebug,
-             buf, (long)mono2sec(mclk()), mi);
+             mm->mm_nicename, (long)mono2sec(mclk()), mi);
     mm->mm_tsdebug_fd = tvh_open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
     if (mm->mm_tsdebug_fd < 0)
       tvherror(LS_TSDEBUG, "unable to create file '%s' (%i)", path, errno);
     snprintf(path, sizeof(path), "%s/%s-%li-%p-input.ts", tvheadend_tsdebug,
-             buf, (long)mono2sec(mclk()), mi);
+             mm->mm_nicename, (long)mono2sec(mclk()), mi);
     mm->mm_tsdebug_fd2 = tvh_open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
     if (mm->mm_tsdebug_fd2 < 0)
       tvherror(LS_TSDEBUG, "unable to create file '%s' (%i)", path, errno);

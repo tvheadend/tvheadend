@@ -1114,6 +1114,7 @@ dvb_mux_create0
   htsmsg_t *c, *c2, *e;
   htsmsg_field_t *f;
   dvb_fe_delivery_system_t delsys;
+  char buf[512];
   char ubuf1[UUID_HEX_SIZE];
   char ubuf2[UUID_HEX_SIZE];
 
@@ -1177,6 +1178,10 @@ dvb_mux_create0
   lm->mm_display_name     = dvb_mux_display_name;
   lm->mm_config_save      = dvb_mux_config_save;
   lm->mm_create_instances = dvb_mux_create_instances;
+
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
+  free(mm->mm_nicename);
+  mm->mm_nicename = strdup(buf);
 
   /* No config */
   if (!conf) return lm;

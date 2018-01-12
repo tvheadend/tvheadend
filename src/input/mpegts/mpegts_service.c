@@ -797,7 +797,6 @@ mpegts_service_create0
     mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, htsmsg_t *conf )
 {
   int r;
-  char buf[256];
   mpegts_network_t *mn = mm->mm_network;
   time_t dispatch_clock = gclk();
 
@@ -847,8 +846,7 @@ mpegts_service_create0
   service_make_nicename((service_t*)s);
   pthread_mutex_unlock(&s->s_stream_mutex);
 
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhdebug(LS_MPEGTS, "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
+  tvhdebug(LS_MPEGTS, "%s - add service %04X %s", mm->mm_nicename, s->s_dvb_service_id, s->s_dvb_svcname);
 
   /* Bouquet */
   mpegts_network_bouquet_trigger(mn, 1);
@@ -1095,9 +1093,6 @@ mpegts_service_t *
 mpegts_service_create_raw ( mpegts_mux_t *mm )
 {
   mpegts_service_t *s = calloc(1, sizeof(*s));
-  char buf[256];
-
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
 
   if (service_create0((service_t*)s, STYPE_RAW,
                       &mpegts_service_raw_class, NULL,
@@ -1133,10 +1128,10 @@ mpegts_service_create_raw ( mpegts_mux_t *mm )
 
   pthread_mutex_lock(&s->s_stream_mutex);
   free(s->s_nicename);
-  s->s_nicename = strdup(buf);
+  s->s_nicename = strdup(mm->mm_nicename);
   pthread_mutex_unlock(&s->s_stream_mutex);
 
-  tvhdebug(LS_MPEGTS, "%s - add raw service", buf);
+  tvhdebug(LS_MPEGTS, "%s - add raw service", mm->mm_nicename);
 
   return s;
 }

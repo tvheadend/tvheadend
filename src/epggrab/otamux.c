@@ -191,8 +191,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
     epggrab_ota_save(om);
 
   mm = mpegts_mux_find0(&om->om_mux_uuid);
-  mpegts_mux_nice_name(mm, name, sizeof(name));
-  tvhdebug(LS_EPGGRAB, "grab done for %s (%s)", name, reasons[reason]);
+  tvhdebug(LS_EPGGRAB, "grab done for %s (%s)", mm->mm_nicename, reasons[reason]);
 
   mtimer_disarm(&om->om_timer);
   mtimer_disarm(&om->om_data_timer);
@@ -307,16 +306,12 @@ static void
 epggrab_mux_stop ( mpegts_mux_t *mm, void *p, int reason )
 {
   epggrab_ota_mux_t *ota;
-  char name[256];
   int done = EPGGRAB_OTA_DONE_STOLEN;
 
   if (reason == SM_CODE_NO_INPUT)
     done = EPGGRAB_OTA_DONE_NO_DATA;
 
-  if (tvhtrace_enabled()) {
-    mpegts_mux_nice_name(mm, name, sizeof(name));
-    tvhtrace(LS_EPGGRAB, "mux %s (%p) stop", name, mm);
-  }
+  tvhtrace(LS_EPGGRAB, "mux %s (%p) stop", mm->mm_nicename, mm);
   TAILQ_FOREACH(ota, &epggrab_ota_active, om_q_link)
     if (!uuid_cmp(&ota->om_mux_uuid, &mm->mm_id.in_uuid)) {
       epggrab_ota_done(ota, done);
@@ -345,9 +340,7 @@ epggrab_ota_register
 
     ota = RB_INSERT_SORTED(&epggrab_ota_all, epggrab_ota_mux_skel, om_global_link, om_id_cmp);
     if (!ota) {
-      char buf[256];
-      mpegts_mux_nice_name(mm, buf, sizeof(buf));
-      tvhinfo(LS_EPGGRAB, "%s - registering mux for OTA EPG", buf);
+      tvhinfo(LS_EPGGRAB, "%s - registering mux for OTA EPG", mm->mm_nicename);
       ota  = epggrab_ota_mux_skel;
       SKEL_USED(epggrab_ota_mux_skel);
       TAILQ_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_mux_cmp);
@@ -539,10 +532,7 @@ next_one:
   }
 
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE) {
-    if (tvhtrace_enabled()) {
-      mpegts_mux_nice_name(mm, name, sizeof(name));
-      tvhtrace(LS_EPGGRAB, "epg mux %s is disabled, skipping", name);
-    }
+    tvhtrace(LS_EPGGRAB, "epg mux %s is disabled, skipping", mm->mm_nicename);
     goto done;
   }
 
@@ -556,8 +546,7 @@ next_one:
     }
   }
   if ((i == 0 || (r == 0 && modname)) && epg_flag != MM_EPG_FORCE) {
-    mpegts_mux_nice_name(mm, name, sizeof(name));
-    tvhdebug(LS_EPGGRAB, "no OTA modules active for %s, check again next time", name);
+    tvhdebug(LS_EPGGRAB, "no OTA modules active for %s, check again next time", mm->mm_nicename);
     goto done;
   }
 
@@ -565,7 +554,6 @@ next_one:
   free(om->om_force_modname);
   om->om_force_modname = modname ? strdup(modname) : NULL;
 
-  /* Subscribe to the mux */
   om->om_requeue = 1;
   if ((r = mpegts_mux_subscribe(mm, NULL, "epggrab",
                                 SUBSCRIPTION_PRIO_EPG,
@@ -573,27 +561,18 @@ next_one:
                                 SUBSCRIPTION_ONESHOT |
                                 SUBSCRIPTION_TABLES))) {
     if (r != SM_CODE_NO_ADAPTERS) {
-      if (tvhtrace_enabled()) {
-        mpegts_mux_nice_name(mm, name, sizeof(name));
-        tvhtrace(LS_EPGGRAB, "subscription failed for %s (result %d)", name, r);
-      }
+      tvhtrace(LS_EPGGRAB, "subscription failed for %s (result %d)", mm->mm_nicename, r);
       TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
       om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
       om->om_retry_time = mclk() + mono2sec(60);
       if (r == SM_CODE_NO_FREE_ADAPTER)
         net->failed = 1;
     } else {
-      if (tvhtrace_enabled()) {
-        mpegts_mux_nice_name(mm, name, sizeof(name));
-        tvhtrace(LS_EPGGRAB, "no free adapter for %s (subscribe)", name);
-      }
+      tvhtrace(LS_EPGGRAB, "no free adapter for %s (subscribe)", mm->mm_nicename);
       net->fatal = 1;
     }
   } else {
-    if (tvhtrace_enabled()) {
-      mpegts_mux_nice_name(mm, name, sizeof(name));
-      tvhtrace(LS_EPGGRAB, "mux %s (%p), started", name, mm);
-    }
+    tvhtrace(LS_EPGGRAB, "mux %s (%p), started", name, mm->mm_nicename);
     kick = 0;
     /* note: it is possible that the mux_start listener is not called */
     /* for reshared mux subscriptions, so call it (maybe second time) here.. */
@@ -679,7 +658,6 @@ epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
                             epggrab_ota_svc_link_t *svcl,
                             const char *op )
 {
-  char buf[256];
   mpegts_mux_t *mm;
   mpegts_service_t *svc;
 
@@ -689,10 +667,9 @@ epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
   mm = mpegts_mux_find0(&ota->om_mux_uuid);
   svc = mpegts_service_find_by_uuid0(&svcl->uuid);
   if (mm && svc) {
-    mpegts_mux_nice_name(mm, buf, sizeof(buf));
-    tvhtrace(LS_EPGGRAB, "ota %s %s service %s", buf, op, svc->s_nicename);
+    tvhtrace(LS_EPGGRAB, "ota %s %s service %s", mm->mm_nicename, op, svc->s_nicename);
   } else if (tvheadend_is_running())
-    tvhtrace(LS_EPGGRAB, "ota %s, problem? (%p %p)", op, mm, svc);
+    tvhtrace(LS_EPGGRAB, "ota %s %s, problem? (%p %p)", mm->mm_nicename, op, mm, svc);
 }
 
 void
@@ -777,11 +754,7 @@ epggrab_ota_load_one
     hts_settings_remove("epggrab/otamux/%s", uuid);
     return;
   }
-  if (tvhtrace_enabled()) {
-    char name[256];
-    mpegts_mux_nice_name(mm, name, sizeof(name));
-    tvhtrace(LS_EPGGRAB, "loading config for %s", name);
-  }
+  tvhtrace(LS_EPGGRAB, "loading config for %s", mm->mm_nicename);
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
   ota->om_mux_uuid = mm->mm_id.in_uuid;

@@ -434,6 +434,7 @@ struct mpegts_mux
   
   LIST_ENTRY(mpegts_mux)  mm_network_link;
   mpegts_network_t       *mm_network;
+  char                   *mm_nicename;
   char                   *mm_provider_network_name;
   uint16_t                mm_onid;
   uint16_t                mm_tsid;

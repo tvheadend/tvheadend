@@ -151,12 +151,9 @@ mpegts_mux_alive(mpegts_mux_t *mm)
 static void
 dvb_bouquet_comment ( bouquet_t *bq, mpegts_mux_t *mm )
 {
-  char comment[128];
-
   if (bq->bq_comment && bq->bq_comment[0])
     return;
-  mpegts_mux_nice_name(mm, comment, sizeof(comment));
-  bouquet_change_comment(bq, comment, 0);
+  bouquet_change_comment(bq, mm->mm_nicename, 0);
 }
 
 static void
@@ -943,7 +940,6 @@ dvb_pat_callback
   mpegts_mux_t             *mm  = mt->mt_mux;
   mpegts_psi_table_state_t *st  = NULL;
   mpegts_service_t *s;
-  char buf[256];
 
   /* Begin */
   if (tableid != 0) return -1;
@@ -953,8 +949,7 @@ dvb_pat_callback
   if (r != 1) return r;
   if (tsid == 0 && !mm->mm_tsid_accept_zero_value) {
     if (tvhlog_limit(&mm->mm_tsid_loglimit, 2)) {
-      mpegts_mux_nice_name(mm, buf, sizeof(buf));
-      tvhwarn(mt->mt_subsys, "%s: %s: TSID zero value detected, ignoring", mt->mt_name, buf);
+      tvhwarn(mt->mt_subsys, "%s: %s: TSID zero value detected, ignoring", mt->mt_name, mm->mm_nicename);
     }
     goto end;
   }
@@ -964,14 +959,12 @@ dvb_pat_callback
   if (mm->mm_tsid != MPEGTS_TSID_NONE) {
     if (mm->mm_tsid && mm->mm_tsid != tsid) {
       if (++mm->mm_tsid_checks > 12) {
-        mpegts_mux_nice_name(mm, buf, sizeof(buf));
         tvhwarn(mt->mt_subsys, "%s: %s: TSID change detected - old %04x (%d), new %04x (%d)",
-                mt->mt_name, buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
+                mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
       } else {
         if (tvhtrace_enabled()) {
-          mpegts_mux_nice_name(mm, buf, sizeof(buf));
           tvhtrace(mt->mt_subsys, "%s: %s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
-                   mt->mt_name, buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
+                   mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
         }
         return 0; /* keep rolling */
       }
@@ -1272,7 +1265,7 @@ dvb_nit_mux
   const uint8_t *dlptr, *dptr, *lptr_orig = lptr;
   const char *charset;
   mpegts_network_t *mn;
-  char buf[128], dauth[256];
+  char dauth[256];
 
   if (mux && mux->mm_enabled != MM_ENABLE)
     bi = NULL;
@@ -1281,13 +1274,10 @@ dvb_nit_mux
   charset = discovery ? NULL : dvb_charset_find(mn, mux, NULL);
 
   if (!discovery || tvhtrace_enabled()) {
-    if (mux)
-      mpegts_mux_nice_name(mux, buf, sizeof(buf));
-    else
-      strcpy(buf, "<none>");
     tvhlog(discovery ? LOG_TRACE : LOG_DEBUG,
            mt->mt_subsys, "%s:  onid %04X (%d) tsid %04X (%d) mux %s%s",
-           mt->mt_name, onid, onid, tsid, tsid, buf,
+           mt->mt_name, onid, onid, tsid, tsid,
+           mm->mm_nicename ?: "<none>",
            discovery ? " (discovery)" : "");
   }
 
@@ -1641,11 +1631,8 @@ dvb_sdt_mux
   const uint8_t *lptr, *dptr;
   int llen, dlen;
   mpegts_network_t *mn = mm->mm_network;
-  char buf[128];
 
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-
-  tvhdebug(mt->mt_subsys, "%s: mux %s", mt->mt_name, buf);
+  tvhdebug(mt->mt_subsys, "%s: mux %s", mt->mt_name, mm->mm_nicename);
 
   /* Service loop */
   while(len >= 5) {
