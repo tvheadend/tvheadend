@@ -1227,7 +1227,7 @@ htsmsg_copy_f(htsmsg_t *dst, const htsmsg_field_t *f, const char *name)
   case HMF_LIST:
     sub = f->hmf_type == HMF_LIST ?
       htsmsg_create_list() : htsmsg_create_map();
-    htsmsg_copy_i(f->hmf_msg, sub);
+    htsmsg_copy_i(sub, f->hmf_msg);
     htsmsg_add_msg(dst, name, sub);
     break;
 
