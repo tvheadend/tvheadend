@@ -132,7 +132,9 @@ void notify_init( void )
 
 void notify_done( void )
 {
+  pthread_mutex_lock(&notify_mutex);
   tvh_cond_signal(&notify_cond, 0);
+  pthread_mutex_unlock(&notify_mutex);
   pthread_join(notify_tid, NULL);
   pthread_mutex_lock(&notify_mutex);
   htsmsg_destroy(notify_queue);
