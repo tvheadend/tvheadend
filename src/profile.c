@@ -955,19 +955,23 @@ profile_sharer_destroy(profile_chain_t *prch)
 
   if (prsh == NULL)
     return;
+  pthread_mutex_lock(&prsh->prsh_queue_mutex);
   LIST_REMOVE(prch, prch_sharer_link);
   if (LIST_EMPTY(&prsh->prsh_chains)) {
     if (prsh->prsh_queue_run) {
-      pthread_mutex_lock(&prsh->prsh_queue_mutex);
       prsh->prsh_queue_run = 0;
       tvh_cond_signal(&prsh->prsh_queue_cond, 0);
-      pthread_mutex_unlock(&prsh->prsh_queue_mutex);
-      pthread_join(prsh->prsh_queue_thread, NULL);
-      while ((psm = TAILQ_FIRST(&prsh->prsh_queue)) != NULL) {
-        streaming_msg_free(psm->psm_sm);
-        TAILQ_REMOVE(&prsh->prsh_queue, psm, psm_link);
-        free(psm);
-      }
+    }
+    prch->prch_sharer = NULL;
+    prch->prch_post_share = NULL;
+  }
+  pthread_mutex_unlock(&prsh->prsh_queue_mutex);
+  if (prch->prch_sharer == NULL) {
+    pthread_join(prsh->prsh_queue_thread, NULL);
+    while ((psm = TAILQ_FIRST(&prsh->prsh_queue)) != NULL) {
+      streaming_msg_free(psm->psm_sm);
+      TAILQ_REMOVE(&prsh->prsh_queue, psm, psm_link);
+      free(psm);
     }
     if (prsh->prsh_tsfix)
       tsfix_destroy(prsh->prsh_tsfix);
@@ -978,8 +982,6 @@ profile_sharer_destroy(profile_chain_t *prch)
     if (prsh->prsh_start_msg)
       streaming_start_unref(prsh->prsh_start_msg);
     free(prsh);
-    prch->prch_sharer = NULL;
-    prch->prch_post_share = NULL;
   } else {
     if (prsh->prsh_queue_run) {
       pthread_mutex_lock(&prsh->prsh_queue_mutex);
@@ -994,13 +996,19 @@ profile_sharer_destroy(profile_chain_t *prch)
         TAILQ_REMOVE(&prsh->prsh_queue, psm, psm_link);
         free(psm);
       }
-    }
-    prch->prch_sharer = NULL;
-    prch->prch_post_share = NULL;
-    if (prsh->prsh_master == prch)
-      prsh->prsh_master = NULL;
-    if (prsh->prsh_queue_run)
+      prch->prch_sharer = NULL;
+      prch->prch_post_share = NULL;
+      if (prsh->prsh_master == prch)
+        prsh->prsh_master = NULL;
       pthread_mutex_unlock(&prsh->prsh_queue_mutex);
+    } else {
+      pthread_mutex_lock(&prsh->prsh_queue_mutex);
+      prch->prch_sharer = NULL;
+      prch->prch_post_share = NULL;
+      if (prsh->prsh_master == prch)
+        prsh->prsh_master = NULL;
+      pthread_mutex_unlock(&prsh->prsh_queue_mutex);
+    }
   }
 }
 
