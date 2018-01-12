@@ -112,7 +112,7 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
     buf      = p;
 
     if(len < namelen + datalen)
-      abort(); // return -1;
+      return -1;
 
     nlen = namelen ? namelen + 1 : 1;
     tlen = sizeof(htsmsg_field_t) + nlen;
@@ -123,11 +123,11 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
     } else if (type == HMF_UUID) {
       tlen += UUID_BIN_SIZE;
       if (datalen != UUID_BIN_SIZE)
-        abort(); // return -1;
+        return -1;
     }
     f = malloc(tlen);
     if (f == NULL)
-      abort(); // return -1;
+      return -1;
 #if ENABLE_SLOW_MEMORYINFO
     f->hmf_edata_size = tlen - sizeof(htsmsg_field_t);
     memoryinfo_alloc(&htsmsg_field_memoryinfo, tlen);
@@ -184,7 +184,7 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
         memoryinfo_free(&htsmsg_field_memoryinfo, tlen);
 #endif
         free(f);
-        abort(); // return -1;
+        return -1;
       }
       if (i > 0)
         bin = 1;
@@ -199,7 +199,7 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
       memoryinfo_free(&htsmsg_field_memoryinfo, tlen);
 #endif
       free(f);
-      abort(); // return -1;
+      return -1;
     }
 
     TAILQ_INSERT_TAIL(&msg->hm_fields, f, hmf_link);
