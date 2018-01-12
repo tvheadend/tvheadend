@@ -418,8 +418,10 @@ htsmsg_field_set_str(htsmsg_field_t *f, const char *str)
     }
     f->hmf_flags &= ~HMF_INALLOCED;
   }
-  f->hmf_flags |= HMF_ALLOCED;
   f->hmf_str = strdup(str);
+  if (f->hmf_str == NULL)
+    return 1;
+  f->hmf_flags |= HMF_ALLOCED;
 #if ENABLE_SLOW_MEMORYINFO
   memoryinfo_alloc(&htsmsg_field_memoryinfo, strlen(str) + 1);
 #endif
@@ -476,14 +478,12 @@ htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len)
     }
     f->hmf_flags &= ~HMF_INALLOCED;
   }
-  f->hmf_flags |= HMF_ALLOCED;
   f->hmf_bin = malloc(len);
-  f->hmf_binsize = len;
-  if (f->hmf_bin == NULL && len > 0) {
-    f->hmf_flags &= ~HMF_ALLOCED;
-    f->hmf_binsize = 0;
+  if (f->hmf_bin == NULL && len > 0)
     return 1;
-  }
+  f->hmf_flags |= HMF_ALLOCED;
+  f->hmf_binsize = len;
+  memcpy((void *)f->hmf_bin, bin, len);
 #if ENABLE_SLOW_MEMORYINFO
   memoryinfo_alloc(&htsmsg_field_memoryinfo, len);
 #endif
@@ -551,6 +551,7 @@ htsmsg_field_set_uuid(htsmsg_field_t *f, tvh_uuid_t *u)
     f->hmf_uuid = malloc(UUID_BIN_SIZE);
     if (f->hmf_uuid == NULL)
       return 1;
+    f->hmf_flags |= HMF_ALLOCED;
   }
   memcpy((char *)f->hmf_uuid, u->bin, UUID_BIN_SIZE);
   return 0;
@@ -933,6 +934,8 @@ htsmsg_field_get_bin(htsmsg_field_t *f, const void **binp, size_t *lenp)
       return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
     l /= 2;
     p = malloc(l);
+    if (p == NULL)
+      return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
     if (hex2bin(p, l, f->hmf_str)) {
       free(p);
       return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
@@ -1111,6 +1114,8 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
         free((void*)f->hmf_str);
       }
       l = f->hmf_msg  = malloc(sizeof(htsmsg_t));
+      if (l == NULL)
+        return NULL;
       f->hmf_type     = m->hm_islist ? HMF_LIST : HMF_MAP;
       f->hmf_flags   |= HMF_ALLOCED;
       l->hm_islist    = m->hm_islist;
@@ -1416,6 +1421,8 @@ htsmsg_list_2_csv(htsmsg_t *m, char delim, int human)
   }\
 
   ret  = malloc(alloc = 512);
+  if (ret == NULL)
+    return NULL;
   *ret = 0;
   used = 0;
   if (human) {
