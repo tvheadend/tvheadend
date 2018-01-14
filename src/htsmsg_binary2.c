@@ -327,7 +327,7 @@ htsmsg_binary2_count(htsmsg_t *msg)
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
     l = htsmsg_binary2_field_length(f);
     len += 2 + htsmsg_binary2_length_count(l);
-    len += f->hmf_name ? strlen(f->hmf_name) : 0;
+    len += strlen(f->hmf_name);
     len += l;
   }
   return len;
@@ -344,7 +344,7 @@ htsmsg_binary2_write(htsmsg_t *msg, uint8_t *ptr)
   int l, i, namelen;
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-    namelen = f->hmf_name ? strlen(f->hmf_name) : 0;
+    namelen = strlen(f->hmf_name);
     assert(namelen <= 0xff);
     *ptr++ = f->hmf_type;
     *ptr++ = namelen;

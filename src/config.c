@@ -1334,7 +1334,7 @@ config_migrate_v21 ( void )
         s64 = 0;
         htsmsg_field_get_s64(f, &s64);
         if ((s64 || !strcmp(str ?: "", f->hmf_name)) &&
-            f->hmf_name && f->hmf_name[0]) {
+            f->hmf_name[0]) {
           a = htsmsg_create_map();
           htsmsg_add_bool(a, "enabled", 1);
           htsmsg_add_msg(e, f->hmf_name, a);

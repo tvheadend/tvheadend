@@ -220,8 +220,7 @@ htsmsg_binary_count(htsmsg_t *msg)
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
 
-    len += 6;
-    len += f->hmf_name ? strlen(f->hmf_name) : 0;
+    len += 6 + strlen(f->hmf_name);
 
     switch(f->hmf_type) {
     case HMF_MAP:
@@ -269,7 +268,7 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
   int l, i, namelen;
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-    namelen = f->hmf_name ? strlen(f->hmf_name) : 0;
+    namelen = strlen(f->hmf_name);
     *ptr++ = f->hmf_type;
     *ptr++ = namelen;
 

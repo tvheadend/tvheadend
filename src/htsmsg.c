@@ -170,7 +170,7 @@ htsmsg_field_find(const htsmsg_t *msg, const char *name)
   if (msg == NULL || name == NULL)
     return NULL;
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-    if(f->hmf_name != NULL && !strcmp(f->hmf_name, name))
+    if(!strcmp(f->hmf_name, name))
       return f;
   }
   return NULL;
@@ -1174,7 +1174,7 @@ htsmsg_print0(htsmsg_t *msg, int indent)
 
     for(i = 0; i < indent; i++) printf("\t");
 
-    printf("%s (", f->hmf_name ?: "");
+    printf("%s (", f->hmf_name);
 
     switch(f->hmf_type) {
 
@@ -1324,7 +1324,7 @@ htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2)
 
     if (f1->hmf_type != f2->hmf_type)
       return 1;
-    if (strcmp(f1->hmf_name ?: "", f2->hmf_name ?: ""))
+    if (strcmp(f1->hmf_name, f2->hmf_name))
       return 1;
 
     switch(f1->hmf_type) {
