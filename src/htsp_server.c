@@ -1918,7 +1918,6 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     if (dvr_conf)
       htsmsg_add_uuid(conf, "config_name", &dvr_conf->dvr_id.in_uuid);
   }
-  htsmsg_add_uuid(conf, "channel", &ch->ch_id.in_uuid);
   htsmsg_copy_field(conf, "start_extra", in, "startExtra");
   htsmsg_copy_field(conf, "stop_extra", in, "stopExtra");
   htsmsg_copy_field(conf, "pri", in, "priority");
@@ -1947,6 +1946,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
       return htsp_error(htsp, N_("Invalid arguments"));
     }
 
+    htsmsg_add_uuid(conf, "channel", &ch->ch_id.in_uuid);
     htsmsg_add_s64(conf, "start", start);
     htsmsg_add_s64(conf, "stop", stop);
     lang_str_serialize_one(conf, "title", s, lang);
@@ -1964,7 +1964,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   }
 
   /* Create the dvr entry */
-  de = dvr_entry_create_from_htsmsg(conf, NULL);
+  de = dvr_entry_create_from_htsmsg(conf, e);
 
   htsmsg_destroy(conf);
 
