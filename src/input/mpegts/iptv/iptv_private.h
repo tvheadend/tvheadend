@@ -29,13 +29,13 @@
 #define IPTV_PKTS        32
 #define IPTV_PKT_PAYLOAD 1472
 
-extern pthread_mutex_t iptv_lock;
-
 typedef struct iptv_input   iptv_input_t;
 typedef struct iptv_network iptv_network_t;
 typedef struct iptv_mux     iptv_mux_t;
 typedef struct iptv_service iptv_service_t;
 typedef struct iptv_handler iptv_handler_t;
+
+typedef struct tvhpoll tvhpoll_t;
 
 struct iptv_handler
 {
@@ -180,6 +180,8 @@ extern const idclass_t iptv_mux_class;
 extern iptv_input_t   *iptv_input;
 extern iptv_network_t *iptv_network;
 
+extern pthread_mutex_t iptv_lock;
+extern tvhpoll_t      *iptv_poll;
 
 int iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int allow_pipe );
 

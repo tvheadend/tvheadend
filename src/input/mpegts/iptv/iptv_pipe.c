@@ -20,6 +20,7 @@
 #include "tvheadend.h"
 #include "iptv_private.h"
 #include "spawn.h"
+#include "tvhpoll.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -82,8 +83,10 @@ iptv_pipe_stop
   int rd = im->mm_iptv_fd;
   pid_t pid = (intptr_t)im->im_data;
   spawn_kill(pid, tvh_kill_to_sig(im->mm_iptv_kill), im->mm_iptv_kill_timeout);
-  if (rd > 0)
+  if (rd > 0) {
+    tvhpoll_rem1(iptv_poll, rd);
     close(rd);
+  }
   im->mm_iptv_fd = -1;
 }
 
@@ -104,6 +107,7 @@ iptv_pipe_read ( iptv_mux_t *im )
         continue;
     }
     if (r <= 0) {
+      tvhpoll_rem1(iptv_poll, rd);
       close(rd);
       pid = (intptr_t)im->im_data;
       spawn_kill(pid, tvh_kill_to_sig(im->mm_iptv_kill), im->mm_iptv_kill_timeout);

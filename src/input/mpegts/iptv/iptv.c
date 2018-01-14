@@ -368,14 +368,16 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   /* Close file */
   if (im->mm_iptv_fd > 0) {
-    udp_close(im->mm_iptv_connection); // removes from poll
+    tvhpoll_rem1(iptv_poll, im->mm_iptv_fd);
+    udp_close(im->mm_iptv_connection);
     im->mm_iptv_connection = NULL;
     im->mm_iptv_fd = -1;
   }
 
   /* Close file2 */
   if (im->mm_iptv_fd2 > 0) {
-    udp_close(im->mm_iptv_connection2); // removes from poll
+    tvhpoll_rem1(iptv_poll, im->mm_iptv_fd2);
+    udp_close(im->mm_iptv_connection2);
     im->mm_iptv_connection2 = NULL;
     im->mm_iptv_fd2 = -1;
   }
