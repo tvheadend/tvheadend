@@ -661,8 +661,8 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
   if (add) {
     str = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
     htsmsg_add_str(conf, "config_name", str ?: "");
-    htsmsg_add_str(conf, "owner",   htsp->htsp_granted_access->aa_username ?: "");
-    htsmsg_add_str(conf, "creator", htsp->htsp_granted_access->aa_representative ?: "");
+    htsmsg_add_str2(conf, "owner",   htsp->htsp_granted_access->aa_username);
+    htsmsg_add_str2(conf, "creator", htsp->htsp_granted_access->aa_representative);
   } else {
     str = htsmsg_get_str(in, "configName");
     if (str) {
@@ -1021,12 +1021,9 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
       htsmsg_add_str(out, "description", s);
     htsp_serialize_epnum(out, &de->de_epnum, "episode");
-    if(de->de_owner)
-      htsmsg_add_str(out, "owner",   de->de_owner);
-    if(de->de_creator)
-      htsmsg_add_str(out, "creator", de->de_creator);
-    if(de->de_comment)
-      htsmsg_add_str(out, "comment", de->de_comment);
+    htsmsg_add_str2(out, "owner", de->de_owner);
+    htsmsg_add_str2(out, "creator", de->de_creator);
+    htsmsg_add_str2(out, "comment", de->de_comment);
     /* We use the accessor since it will also try to get
      * an image from current EPG if recording does not have
      * an associated image.
@@ -1157,14 +1154,11 @@ htsp_build_autorecentry(htsp_connection_t *htsp, dvr_autorec_entry_t *dae, const
     htsmsg_add_str(out, "title",     dae->dae_title);
     htsmsg_add_u32(out, "fulltext",  dae->dae_fulltext >= 1 ? 1 : 0);
   }
-  if(dae->dae_name)
-    htsmsg_add_str(out, "name",      dae->dae_name);
+  htsmsg_add_str2(out, "name",       dae->dae_name);
   if(dae->dae_directory)
     htsmsg_add_str(out, "directory", dae->dae_directory);
-  if(dae->dae_owner)
-    htsmsg_add_str(out, "owner",     dae->dae_owner);
-  if(dae->dae_creator)
-    htsmsg_add_str(out, "creator",   dae->dae_creator);
+  htsmsg_add_str2(out, "owner",      dae->dae_owner);
+  htsmsg_add_str2(out, "creator",    dae->dae_creator);
   if(dae->dae_channel)
     htsmsg_add_u32(out, "channel",   channel_get_id(dae->dae_channel));
 
@@ -1208,10 +1202,8 @@ htsp_build_timerecentry(htsp_connection_t *htsp, dvr_timerec_entry_t *dte, const
     htsmsg_add_str(out, "name",      dte->dte_name);
   if(dte->dte_directory)
     htsmsg_add_str(out, "directory", dte->dte_directory);
-  if(dte->dte_owner)
-    htsmsg_add_str(out, "owner",     dte->dte_owner);
-  if(dte->dte_creator)
-    htsmsg_add_str(out, "creator",   dte->dte_creator);
+  htsmsg_add_str2(out, "owner",      dte->dte_owner);
+  htsmsg_add_str2(out, "creator",    dte->dte_creator);
   if(dte->dte_channel)
     htsmsg_add_u32(out, "channel",   channel_get_id(dte->dte_channel));
 

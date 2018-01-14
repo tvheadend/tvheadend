@@ -460,6 +460,16 @@ htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str)
  *
  */
 int
+htsmsg_set_str2(htsmsg_t *msg, const char *name, const char *str)
+{
+  if (msg && name && str)
+    return htsmsg_set_str(msg, name, str);
+}
+
+/*
+ *
+ */
+int
 htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len)
 {
   if (f->hmf_type != HMF_BIN)

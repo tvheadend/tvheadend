@@ -192,6 +192,7 @@ void htsmsg_add_str_exclusive(htsmsg_t *msg, const char *str);
  * Add/update a string field
  */
 int  htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str);
+int  htsmsg_set_str2(htsmsg_t *msg, const char *name, const char *str);
 
 /**
  * Update a string field
