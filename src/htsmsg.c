@@ -90,7 +90,7 @@ htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
 
 #if ENABLE_SLOW_MEMORYINFO
   memoryinfo_free(&htsmsg_field_memoryinfo,
-                  sizeof(*f) + f->hmf_edata_size);
+                  sizeof(htsmsg_field_t) + f->hmf_edata_size);
 #endif
   free(f);
 }
@@ -267,10 +267,6 @@ htsmsg_create_list(void)
 void
 htsmsg_destroy(htsmsg_t *msg)
 {
-#if ENABLE_SLOW_MEMORYINFO
-  size_t size = 0;
-#endif
-
   if(msg == NULL)
     return;
 
@@ -278,11 +274,11 @@ htsmsg_destroy(htsmsg_t *msg)
   if (msg->hm_data) {
     free((void *)msg->hm_data);
 #if ENABLE_SLOW_MEMORYINFO
-    size += msg->hm_data_size;
+    memoryinfo_free(&htsmsg_memoryinfo, msg->hm_data_size);
 #endif
   }
 #if ENABLE_SLOW_MEMORYINFO
-  memoryinfo_free(&htsmsg_memoryinfo, sizeof(htsmsg_t) + size);
+  memoryinfo_free(&htsmsg_memoryinfo, sizeof(htsmsg_t));
 #endif
   free(msg);
 }
@@ -410,6 +406,7 @@ htsmsg_field_set_str(htsmsg_field_t *f, const char *str)
     memoryinfo_remove(&htsmsg_field_memoryinfo, strlen(f->hmf_str) + 1);
 #endif
     free((void *)f->hmf_str);
+    f->hmf_flags &= ~HMF_ALLOCED;
   }
   else if (f->hmf_flags & HMF_INALLOCED) {
     if (strlen(f->hmf_str) >= strlen(str)) {
@@ -480,6 +477,7 @@ htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len)
     memoryinfo_remove(&htsmsg_field_memoryinfo, f->hmf_binsize);
 #endif
     free((void *)f->hmf_bin);
+    f->hmf_flags &= ~HMF_ALLOCED;
   }
   else if (f->hmf_flags & HMF_INALLOCED) {
     if (f->hmf_binsize >= len) {
@@ -606,9 +604,6 @@ htsmsg_field_set_msg(htsmsg_field_t *f, htsmsg_t *sub)
   m->hm_data_size = 0;
   m->hm_islist = sub->hm_islist;
   TAILQ_MOVE(&m->hm_fields, &sub->hm_fields, hmf_link);
-#if ENABLE_SLOW_MEMORYINFO
-  memoryinfo_free(&htsmsg_memoryinfo, sizeof(htsmsg_t));
-#endif
   htsmsg_destroy(sub);
 
   if (f->hmf_type == (m->hm_islist ? HMF_LIST : HMF_MAP))
@@ -661,9 +656,6 @@ htsmsg_add_msg_extname(htsmsg_t *msg, const char *name, htsmsg_t *sub)
   m->hm_data_size = 0;
   TAILQ_MOVE(&m->hm_fields, &sub->hm_fields, hmf_link);
   m->hm_islist = sub->hm_islist;
-#if ENABLE_SLOW_MEMORYINFO
-  memoryinfo_free(&htsmsg_memoryinfo, sizeof(htsmsg_t));
-#endif
   htsmsg_destroy(sub);
 }
 
@@ -1133,9 +1125,6 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
       l->hm_data      = NULL;
       l->hm_data_size = 0;
       TAILQ_MOVE(&l->hm_fields, &m->hm_fields, hmf_link);
-#if ENABLE_SLOW_MEMORYINFO
-      memoryinfo_free(&htsmsg_memoryinfo, sizeof(htsmsg_t));
-#endif
       htsmsg_destroy(m);
     }
   }
