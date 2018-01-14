@@ -952,13 +952,14 @@ profile_sharer_destroy(profile_chain_t *prch)
 {
   profile_sharer_t *prsh = prch->prch_sharer;
   profile_sharer_message_t *psm, *psm2;
+  int run;
 
   if (prsh == NULL)
     return;
   pthread_mutex_lock(&prsh->prsh_queue_mutex);
   LIST_REMOVE(prch, prch_sharer_link);
   if (LIST_EMPTY(&prsh->prsh_chains)) {
-    if (prsh->prsh_queue_run) {
+    if ((run = prsh->prsh_queue_run) != 0) {
       prsh->prsh_queue_run = 0;
       tvh_cond_signal(&prsh->prsh_queue_cond, 0);
     }
@@ -966,7 +967,7 @@ profile_sharer_destroy(profile_chain_t *prch)
     prch->prch_post_share = NULL;
   }
   pthread_mutex_unlock(&prsh->prsh_queue_mutex);
-  if (prch->prch_sharer == NULL) {
+  if (run) {
     pthread_join(prsh->prsh_queue_thread, NULL);
     while ((psm = TAILQ_FIRST(&prsh->prsh_queue)) != NULL) {
       streaming_msg_free(psm->psm_sm);
