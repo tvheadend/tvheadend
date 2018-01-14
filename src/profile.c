@@ -952,7 +952,7 @@ profile_sharer_destroy(profile_chain_t *prch)
 {
   profile_sharer_t *prsh = prch->prch_sharer;
   profile_sharer_message_t *psm, *psm2;
-  int run;
+  int run = 0;
 
   if (prsh == NULL)
     return;
