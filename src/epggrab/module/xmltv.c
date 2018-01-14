@@ -74,7 +74,7 @@ static time_t _xmltv_str2time(const char *in)
   // TODO: handle string TZ?
   if (str[sp]) {
     sscanf(str+sp, "%d", &tz);
-    tz = (tz % 100) + (tz / 100) * 3600; // Convert from HHMM to seconds
+    tz = (tz % 100) * 60 + (tz / 100) * 3600; // Convert from HHMM to seconds
     str[sp] = 0;
   }
 
