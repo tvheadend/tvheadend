@@ -464,6 +464,7 @@ htsmsg_set_str2(htsmsg_t *msg, const char *name, const char *str)
 {
   if (msg && name && str)
     return htsmsg_set_str(msg, name, str);
+  return 1;
 }
 
 /*
