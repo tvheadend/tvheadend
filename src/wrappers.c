@@ -654,7 +654,7 @@ int regex_match_substring_length(tvh_regex_t *regex, unsigned number)
 /*
  * Sanitizer helpers to avoid false positives
  */
-#if __has_feature(thread_sanitizer)
+#if ENABLE_CCLANG_THREADSAN
 void *blacklisted_memcpy(void *dest, const void *src, size_t n)
   __attribute__((no_sanitize("thread")))
 {

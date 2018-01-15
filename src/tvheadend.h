@@ -832,7 +832,7 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 #define TVH_TITLE_LEN 256
 
 /* sanitizer helpers */
-#if __has_feature(thread_sanitizer)
+#if ENABLE_CCLANG_THREADSAN
 void *blacklisted_memcpy(void *dest, const void *src, size_t n);
 int blacklisted_close(int fildes);
 #else

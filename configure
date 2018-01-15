@@ -76,6 +76,7 @@ OPTIONS=(
   "libsystemd_daemon:no"
   "bintray_cache:yes"
   "ddci:no"
+  "cclang_threadsan:no"
 )
 
 #
@@ -297,6 +298,13 @@ int test(void)
   return 0;
 }
 '
+
+check_cc_snippet cclang_threadsan '
+int test(void){
+#if __has_feature(thread_sanitizer)
+  return 0;
+#endif
+}'
 
 #
 # Python
