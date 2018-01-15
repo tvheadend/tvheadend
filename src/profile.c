@@ -936,11 +936,13 @@ profile_sharer_create(profile_sharer_t *prsh,
                       streaming_target_t *dst)
 {
   prch->prch_post_share = dst;
+  pthread_mutex_lock(&prsh->prsh_queue_mutex);
   prch->prch_ts_delta = LIST_EMPTY(&prsh->prsh_chains) ? 0 : PTS_UNSET;
   LIST_INSERT_HEAD(&prsh->prsh_chains, prch, prch_sharer_link);
   prch->prch_sharer = prsh;
   if (!prsh->prsh_master)
     prsh->prsh_master = prch;
+  pthread_mutex_unlock(&prsh->prsh_queue_mutex);
   return 0;
 }
 

@@ -82,14 +82,14 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       switch (dtag) {
       case DVB_DESC_APP:
         l3 = *dptr++; dlen--;
-        if (l3 % 5) goto dvberr;
+        if (l3 > dlen || (l3 % 5)) goto dvberr;
         while (dlen >= 5 && l3 >= 5) {
           tvhtrace(mt->mt_subsys, "%s:     profile %04X %d.%d.%d", mt->mt_name, (dptr[0] << 8) | dptr[1], dptr[2], dptr[3], dptr[4]);
           dptr += 5;
           dlen -= 5;
           l3 -= 5;
         }
-        if (dlen < 3) goto dvberr;
+        if (dlen < 3 || l3 < 3) goto dvberr;
         flags = dptr[0];
         tvhtrace(mt->mt_subsys, "%s:     flags %02X prio %02X", mt->mt_name, dptr[0], dptr[1]);
         dptr += 2;
@@ -101,7 +101,7 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
         break;
       case DVB_DESC_APP_NAME:
         titles = htsmsg_create_list();
-        while (dlen > 4) {
+        while (dlen > 4 && l3 > 4) {
           r = dvb_get_string_with_len(title, sizeof(title), dptr + 3, dlen - 3, "UTF-8", NULL);
           if (r < 0) goto dvberr;
           tvhtrace(mt->mt_subsys, "%s:      lang '%c%c%c' name '%s'", mt->mt_name, dptr[0], dptr[1], dptr[2], title);

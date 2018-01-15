@@ -191,6 +191,11 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
     epggrab_ota_save(om);
 
   mm = mpegts_mux_find0(&om->om_mux_uuid);
+  if (mm == NULL) {
+    tvhdebug(LS_EPGGRAB, "unable to find mux %s (grab done: %s)",
+             uuid_get_hex(&om->om_mux_uuid, name), reasons[reason]);
+    return;
+  }
   tvhdebug(LS_EPGGRAB, "grab done for %s (%s)", mm->mm_nicename, reasons[reason]);
 
   mtimer_disarm(&om->om_timer);
@@ -660,16 +665,18 @@ epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
 {
   mpegts_mux_t *mm;
   mpegts_service_t *svc;
+  const char *nicename;
 
   if (!tvhtrace_enabled())
     return;
 
   mm = mpegts_mux_find0(&ota->om_mux_uuid);
+  nicename = mm ? mm->mm_nicename : "<unknown>";
   svc = mpegts_service_find_by_uuid0(&svcl->uuid);
   if (mm && svc) {
-    tvhtrace(LS_EPGGRAB, "ota %s %s service %s", mm->mm_nicename, op, svc->s_nicename);
+    tvhtrace(LS_EPGGRAB, "ota %s %s service %s", nicename, op, svc->s_nicename);
   } else if (tvheadend_is_running())
-    tvhtrace(LS_EPGGRAB, "ota %s %s, problem? (%p %p)", mm->mm_nicename, op, mm, svc);
+    tvhtrace(LS_EPGGRAB, "ota %s %s, problem? (%p %p)", nicename, op, mm, svc);
 }
 
 void

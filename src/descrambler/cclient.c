@@ -1197,14 +1197,15 @@ cc_conf_changed(caclient_t *cac)
       caclient_set_status(cac, CACLIENT_STATUS_NONE);
       return;
     }
+    pthread_mutex_lock(&cc->cc_mutex);
     if (!cc->cc_running) {
       cc->cc_running = 1;
       tvh_pipe(O_NONBLOCK, &cc->cc_pipe);
       snprintf(tname, sizeof(tname), "cc-%s", cc->cc_id);
       tvhthread_create(&cc->cc_tid, NULL, cc_thread, cc, tname);
+      pthread_mutex_unlock(&cc->cc_mutex);
       return;
     }
-    pthread_mutex_lock(&cc->cc_mutex);
     cc->cc_reconfigure = 1;
     if(cc->cc_fd >= 0)
       shutdown(cc->cc_fd, SHUT_RDWR);

@@ -639,6 +639,9 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
 
   if(pipe(fd) == -1) {
     pthread_mutex_unlock(&fork_lock);
+    // do not pass the local variable outside
+    if (argv[0] == bin)
+      argv[0] = NULL;
     return -1;
   }
 
@@ -648,6 +651,9 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
     pthread_mutex_unlock(&fork_lock);
     tvherror(LS_SPAWN, "Unable to fork() for \"%s\" -- %s",
              prog, strerror(errno));
+    // do not pass the local variable outside
+    if (argv[0] == bin)
+      argv[0] = NULL;
     return -1;
   }
 
@@ -737,6 +743,9 @@ spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_s
     pthread_mutex_unlock(&fork_lock);
     tvherror(LS_SPAWN, "Unable to fork() for \"%s\" -- %s",
 	     prog, strerror(errno));
+    // do not pass the local variable outside
+    if (argv[0] == bin)
+      argv[0] = NULL;
     return -1;
   }
 
