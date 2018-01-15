@@ -973,7 +973,7 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
     pthread_mutex_lock(&t->s_stream_mutex);
     x = t->s_pids;
     t->s_pids = p;
-    if (!pids->all && x && x->all) {
+    if (pids && !pids->all && x && x->all) {
       mpegts_input_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t);
       mpegts_input_close_pids(mi, mm, t, 1);
       for (i = 0; i < x->count; i++) {
@@ -981,7 +981,7 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
         mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t, 0);
       }
     } else {
-      if (pids->all) {
+      if (pids && pids->all) {
         mpegts_input_close_pids(mi, mm, t, 1);
         mpegts_input_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t, 0);
       } else {

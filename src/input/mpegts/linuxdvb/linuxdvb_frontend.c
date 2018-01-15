@@ -1222,6 +1222,7 @@ linuxdvb_frontend_monitor ( void *aux )
   sigstat.tc_bit       = mmi->tii_stats.tc_bit;
   sigstat.ec_block     = mmi->tii_stats.ec_block;
   sigstat.tc_block     = mmi->tii_stats.tc_block;
+  memset(&sm, 0, sizeof(sm));
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
 
@@ -2069,6 +2070,13 @@ linuxdvb_frontend_create
   htsmsg_t *scconf;
   ssize_t r;
 
+  /* Internal config ID */
+  snprintf(id, sizeof(id), "%s #%d", dvb_type2str(type), number);
+  if (conf)
+    conf = htsmsg_get_map(conf, id);
+  if (conf)
+    uuid = htsmsg_get_str(conf, "uuid");
+
   /* Tuner slave */
   snprintf(id, sizeof(id), "master for #%d", number);
   if (conf && type == DVB_TYPE_S) {
@@ -2076,13 +2084,6 @@ linuxdvb_frontend_create
     if (muuid && uuid && !strcmp(muuid, uuid))
       muuid = NULL;
   }
-
-  /* Internal config ID */
-  snprintf(id, sizeof(id), "%s #%d", dvb_type2str(type), number);
-  if (conf)
-    conf = htsmsg_get_map(conf, id);
-  if (conf)
-    uuid = htsmsg_get_str(conf, "uuid");
 
   /* Fudge configuration for old network entry */
   if (conf) {

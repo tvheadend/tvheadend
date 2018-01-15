@@ -68,8 +68,10 @@ emm_conax
   if (data[0] == 0x82) {
     if (len >= 10) {
       PROVIDERS_FOREACH(ra, i, ep)
-        if (memcmp(&data[3], &ep->sa[1], 7) == 0)
+        if (memcmp(&data[3], &ep->sa[1], 7) == 0) {
+          match = 1;
           break;
+        }
     }
   }
   if (match)

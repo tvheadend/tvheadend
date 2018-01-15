@@ -701,6 +701,9 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
     // might have been spawned
     setpgid(p, p);
   }
+  // do not pass the local variable outside
+  if (argv[0] == bin)
+    argv[0] = NULL;
   return 0;
 }
 
@@ -774,6 +777,9 @@ spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_s
   if (pid)
     *pid = p;
 
+  // do not pass the local variable outside
+  if (argv[0] == bin)
+    argv[0] = NULL;
   return 0;
 }
 

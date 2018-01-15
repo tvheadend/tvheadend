@@ -525,7 +525,7 @@ htsmsg_t *linuxdvb_en50607_id_list  ( void *o, const char *lang );
 htsmsg_t *linuxdvb_en50494_pin_list ( void *o, const char *lang );
 
 static inline int linuxdvb_unicable_is_en50607( const char *str )
-  { return strcmp(str, UNICABLE_II_NAME) == 0; }
+  { return str && strcmp(str, UNICABLE_II_NAME) == 0; }
 static inline int linuxdvb_unicable_is_en50494( const char *str )
   { return !linuxdvb_unicable_is_en50607(str); }
 

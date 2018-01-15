@@ -19,11 +19,12 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 
     class_name = ptr && *(void **)ptr ? av_default_item_name(ptr) : "";
 
+    if (fmt == NULL)
+      return;
+
     l1 = strlen(fmt);
     l2 = strlen(class_name);
     fmt1 = alloca(l1 + l2 + 3);
-    if (fmt == NULL)
-      return;
 
     strcpy(fmt1, class_name);
     if (class_name[0])

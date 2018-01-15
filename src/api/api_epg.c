@@ -161,7 +161,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
     }
     if (epnum.e_num) {
       htsmsg_add_u32(m, "episodeNumber", epnum.e_num);
-      if (epnum.s_cnt)
+      if (epnum.e_cnt)
         htsmsg_add_u32(m, "episodeCount", epnum.e_cnt);
     }
     if (epnum.p_num) {

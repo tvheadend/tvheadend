@@ -1724,7 +1724,7 @@ linuxdvb_diseqc_raw_send
   for (i = 0; i < len; i++) {
     message.msg[i] = (uint8_t)va_arg(ap, int);
     if (tvhtrace_enabled())
-      tvh_strlcatf(buf, sizeof(buf), c, "%02X ", message.msg[3 + i]);
+      tvh_strlcatf(buf, sizeof(buf), c, "%02X ", message.msg[i]);
   }
   va_end(ap);
 

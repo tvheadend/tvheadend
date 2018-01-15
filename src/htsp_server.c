@@ -1247,7 +1247,8 @@ htsp_build_event
     htsmsg_add_str(out, "method", method);
 
   htsmsg_add_u32(out, "eventId", e->id);
-  htsmsg_add_u32(out, "channelId", channel_get_id(e->channel));
+  if (e->channel)
+    htsmsg_add_u32(out, "channelId", channel_get_id(e->channel));
   htsmsg_add_s64(out, "start", e->start);
   htsmsg_add_s64(out, "stop", e->stop);
   if ((str = epg_broadcast_get_title(e, lang)))

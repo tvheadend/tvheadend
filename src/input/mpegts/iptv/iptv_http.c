@@ -305,8 +305,10 @@ iptv_http_data
     }
     memcpy(hp->hls_aes128.tmp + hp->hls_aes128.tmp_len, buf, len);
     hp->hls_aes128.tmp_len += len;
-    if (off == im->mm_iptv_buffer.sb_ptr)
+    if (off == im->mm_iptv_buffer.sb_ptr) {
+      pthread_mutex_unlock(&iptv_lock);
       return 0;
+    }
     buf = im->mm_iptv_buffer.sb_data + im->mm_iptv_buffer.sb_ptr;
     len = im->mm_iptv_buffer.sb_ptr - off;
     assert((len % 16) == 0);

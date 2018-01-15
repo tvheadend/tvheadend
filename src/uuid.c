@@ -190,9 +190,9 @@ uuid_set_free ( tvh_uuid_set_t *us )
 {
   if (us) {
     free(us->us_array);
+    us->us_size = 0;
+    us->us_count = 0;
   }
-  us->us_size = 0;
-  us->us_count = 0;
 }
 
 /* Destroy uuid set */

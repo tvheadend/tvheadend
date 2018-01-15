@@ -197,7 +197,7 @@ rtsp_new_session(const char *ipstr, int delsys, uint32_t nsession, int session)
     }
     if (strcmp(rs->peer_ipstr, ipstr) == 0 && --count_u == 0) {
       tvhnotice(LS_SATIPS, "Max number (%i) of active RTSP sessions per user (IP: %s).",
-                satip_server_conf.satip_max_user_connections, strdup(ipstr));
+                satip_server_conf.satip_max_user_connections, ipstr);
       return NULL;
     }
   }
@@ -361,7 +361,7 @@ rtsp_conn_ip(http_connection_t *hc, char *buf, size_t buflen, int *port)
       used_port = rtsp_nat_port;
   }
 
-  if (used_ip[0] == '*' || used_ip[0] == '\0' || used_ip == NULL) {
+  if (used_ip == NULL || used_ip[0] == '*' || used_ip[0] == '\0') {
     if (local) {
       tcp_get_str_from_ip(hc->hc_local_ip, buf, buflen);
       used_ip = buf;
@@ -514,8 +514,7 @@ static void
 rtsp_manage_descramble(session_t *rs)
 {
   idnode_set_t *found;
-  mpegts_service_t *s, *snext;
-  mpegts_service_t *master = (mpegts_service_t *)rs->subs->ths_raw_service;
+  mpegts_service_t *s, *snext, *master;
   slave_subscription_t *sub;
   mpegts_apids_t pmt_pids;
   size_t si;
@@ -528,6 +527,8 @@ rtsp_manage_descramble(session_t *rs)
 
   if (rs->mux == NULL || rs->subs == NULL)
     goto end;
+
+  master = (mpegts_service_t *)rs->subs->ths_raw_service;
 
   if (rs->pids.all) {
     LIST_FOREACH(s, &rs->mux->mm_services, s_dvb_mux_link)

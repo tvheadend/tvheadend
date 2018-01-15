@@ -149,6 +149,7 @@ satip_frontend_signal_cb( void *aux )
   sigstat.ec_block     = mmi->tii_stats.ec_block;
   sigstat.tc_block     = mmi->tii_stats.tc_block;
   pthread_mutex_unlock(&mmi->tii_stats_mutex);
+  memset(&sm, 0, sizeof(sm));
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(svc, &mmi->mmi_mux->mm_transports, s_active_link) {
@@ -2037,7 +2038,7 @@ new_tune:
   udp_multirecv_free(&um);
   lfe->sf_curmux = NULL;
 
-  memset(ev, 0, sizeof(&ev));
+  memset(ev, 0, sizeof(ev));
   nfds = 0;
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
     ev[nfds++].fd = rtp->fd;

@@ -2261,7 +2261,7 @@ psi_desc_ca(mpegts_table_t *mt, mpegts_service_t *t, const uint8_t *buffer, int 
     if (caid == 0x4ad2)//streamguard
        provid=0;
     if (caid != 0x4aee && caid != 0x4ad2) { // Bulcrypt
-       provid = size < 4 ? 0 : buffer[4];
+       provid = size < 5 ? 0 : buffer[4];
     }
     break;
   case 0x1800: // Nagra
@@ -2445,7 +2445,7 @@ psi_parse_pmt
     case 0x06:
       /* 0x06 is Chinese Cable TV AC-3 audio track */
       /* but mark it so only when no more descriptors exist */
-      if (dllen > 1 || !mux || mux->mm_pmt_ac3 != MM_AC3_PMT_06)
+      if (dllen > 1 || mux->mm_pmt_ac3 != MM_AC3_PMT_06)
         break;
       /* fall through to SCT_AC3 */
     case 0x81:

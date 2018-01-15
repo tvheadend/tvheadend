@@ -1484,9 +1484,13 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
      * So reverse slash would find the char at id+12 so +1 for len
      * to include the slash itself.
      */
-    const char *slash = strchr(progid1, '/');
-    const ssize_t num_char = slash ? slash + 1 - progid1 : 0;
-    is_same_authority = !strncmp(progid1, progid2, num_char);
+    if (progid1 && progid2) {
+      const char *slash = strchr(progid1, '/');
+      const ssize_t num_char = slash ? slash + 1 - progid1 : 0;
+      is_same_authority = !strncmp(progid1, progid2, num_char);
+    } else {
+      is_same_authority = 0;
+    }
   }
 
   const int do_progid_check =

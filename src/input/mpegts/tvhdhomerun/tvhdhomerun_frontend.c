@@ -155,6 +155,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
   if(r < 1) {
     tvherror(LS_TVHDHOMERUN, "failed to set target: %d", r);
+    close(sockfd);
     return NULL;
   }
 
@@ -293,6 +294,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   sigstat.signal_scale = mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
   sigstat.ber          = mmi->tii_stats.ber;
   sigstat.unc          = atomic_get(&mmi->tii_stats.unc);
+  memset(&sm, 0, sizeof(sm));
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
 

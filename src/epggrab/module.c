@@ -585,10 +585,10 @@ static void *_epggrab_socket_thread ( void *p )
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)p;
   tvhinfo(mod->subsys, "%s: external socket enabled", mod->id);
 
-  while ( mod->enabled && (s1 = atomic_get(&mod->sock)) ) {
+  while (mod->enabled && (s1 = atomic_get(&mod->sock)) >= 0) {
     tvhdebug(mod->subsys, "%s: waiting for connection", mod->id);
     s = accept(s1, NULL, NULL);
-    if (s <= 0) continue;
+    if (s < 0) continue;
     tvhdebug(mod->subsys, "%s: got connection %d", mod->id, s);
     _epggrab_socket_handler(mod, s);
     close(s);
@@ -608,7 +608,7 @@ epggrab_module_done_socket( void *m )
 
   assert(mod->type == EPGGRAB_EXT);
   mod->active = 0;
-  sock = atomic_exchange(&mod->sock, 0);
+  sock = atomic_exchange(&mod->sock, -1);
   shutdown(sock, SHUT_RDWR);
   close(sock);
   if (mod->tid) {
@@ -632,9 +632,10 @@ epggrab_module_activate_socket ( void *m, int a )
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)m;
   const char *path;
   assert(mod->type == EPGGRAB_EXT);
+  int sock;
 
   /* Ignore */
-  if ( mod->active == a ) return 0;
+  if (mod->active == a) return 0;
 
   /* Disable */
   if (!a) {
@@ -646,30 +647,29 @@ epggrab_module_activate_socket ( void *m, int a )
     unlink(mod->path); // just in case!
     hts_settings_makedirs(mod->path);
 
-    atomic_set(&mod->sock, socket(AF_UNIX, SOCK_STREAM, 0));
-    assert(atomic_get(&mod->sock));
+    sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    assert(sock >= 0);
 
     memset(&addr, 0, sizeof(struct sockaddr_un));
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, mod->path, 100);
-    if ( bind(mod->sock, (struct sockaddr*)&addr,
-             sizeof(struct sockaddr_un)) != 0 ) {
-      tvherror(mod->subsys, "%s: failed to bind socket", mod->id);
-      close(mod->sock);
-      mod->sock = 0;
+    if (bind(sock, (struct sockaddr*)&addr,
+             sizeof(struct sockaddr_un)) != 0) {
+      tvherror(mod->subsys, "%s: failed to bind socket: %s", mod->id, strerror(errno));
+      close(sock);
       return 0;
     }
 
-    if ( listen(mod->sock, 5) != 0 ) {
-      tvherror(mod->subsys, "%s: failed to listen on socket", mod->id);
-      close(mod->sock);
-      mod->sock = 0;
+    if (listen(mod->sock, 5) != 0) {
+      tvherror(mod->subsys, "%s: failed to listen on socket: %s", mod->id, strerror(errno));
+      close(sock);
       return 0;
     }
 
     tvhdebug(mod->subsys, "%s: starting socket thread", mod->id);
     pthread_attr_init(&tattr);
     mod->active = 1;
+    atomic_set(&mod->sock, sock);
     tvhthread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod, "epggrabso");
   }
   return 1;
@@ -689,6 +689,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
 
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ext_t));
+  atomic_set(&skel->sock, -1);
 
   /* Pass through */
   hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid);

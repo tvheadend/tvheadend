@@ -405,16 +405,18 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
     subtitle = NULL;
   }
 
-  char *title_buf = title ? alloca(strlen(title) + 1) : NULL;
-  char *subtitle_buf = subtitle ? alloca(strlen(subtitle) + 1) : NULL;
+  const size_t title_buf_size = title ? strlen(title) + 1 : 0;
+  char *title_buf = title ? alloca(title_buf_size) : NULL;
+  const size_t subtitle_buf_size = title ? strlen(title) + 1 : 0;
+  char *subtitle_buf = subtitle ? alloca(subtitle_buf_size) : NULL;
   /* Copy a cleaned version in to our buffers.
    * Since dvr_clean_directory_separator _can_ modify source if source!=dest
    * it means we have to remove our const when we call it.
    */
   if (title)
-    dvr_clean_directory_separator((char*)title,    title_buf,    sizeof(title_buf));
+    dvr_clean_directory_separator((char*)title,    title_buf,    title_buf_size);
   if (subtitle)
-    dvr_clean_directory_separator((char*)subtitle, subtitle_buf, sizeof(subtitle_buf));
+    dvr_clean_directory_separator((char*)subtitle, subtitle_buf, subtitle_buf_size);
 
   int is_movie = 0;
   /* Override options on the format tag. This is useful because my OTA

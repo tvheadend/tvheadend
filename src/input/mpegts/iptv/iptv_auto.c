@@ -343,12 +343,14 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
 
   m = parse_m3u(data, in->in_ctx_charset, host_url);
   items = htsmsg_get_list(m, "items");
-  HTSMSG_FOREACH(f, items) {
-    if ((item = htsmsg_field_get_map(f)) == NULL) continue;
-    iptv_auto_network_process_m3u_item(in, last_url,
-                                       remove_args, ignore_args, ignore_path,
-                                       chnum, item, &total, &count);
-    
+  if (items) {
+    HTSMSG_FOREACH(f, items) {
+      if ((item = htsmsg_field_get_map(f)) == NULL) continue;
+      iptv_auto_network_process_m3u_item(in, last_url,
+                                         remove_args, ignore_args, ignore_path,
+                                         chnum, item, &total, &count);
+      
+    }
   }
   htsmsg_destroy(m);
   if (total == 0)

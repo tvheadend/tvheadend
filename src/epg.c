@@ -1299,7 +1299,8 @@ size_t epg_episode_number_format
 void epg_episode_get_epnum ( const epg_episode_t *ee, epg_episode_num_t *num )
 {
   if (!ee || !num) {
-    memset(num, 0, sizeof(*num));
+    if (num)
+      memset(num, 0, sizeof(*num));
     return;
   }
   *num = ee->epnum;

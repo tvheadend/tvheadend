@@ -178,6 +178,7 @@ iptv_libav_start ( iptv_mux_t *im, const char *raw, const url_t *url )
 {
   iptv_libav_priv_t *la = calloc(1, sizeof(*la));
 
+  assert(raw);
   pthread_mutex_init(&la->lock, NULL);
   im->im_opaque = la;
   if (strncmp(raw, "libav:", 6) == 0)
@@ -191,7 +192,7 @@ iptv_libav_start ( iptv_mux_t *im, const char *raw, const url_t *url )
   atomic_set(&la->pause, 0);
   sbuf_init(&la->sbuf);
   tvhthread_create(&la->thread, NULL, iptv_libav_thread, la, "libavinput");
-  if (raw && raw[0])
+  if (raw[0])
     iptv_input_mux_started(im);
   return 0;
 }

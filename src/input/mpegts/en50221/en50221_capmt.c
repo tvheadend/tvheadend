@@ -206,7 +206,7 @@ int en50221_capmt_build
         tl -= 2 + dlen;
       }
       if (l)
-        return -EINVAL;
+        goto reterr;
       y[3] = 0xf0;
       put_len12(y + 3, x - y - 5);
     } else {
@@ -215,9 +215,11 @@ int en50221_capmt_build
     }
   }
 
-  *capmt = d;
-  *capmtlen = x - d;
-  return 0;
+  if (tl == 0) {
+    *capmt = d;
+    *capmtlen = x - d;
+    return 0;
+  }
 
 reterr:
   free(d);
@@ -258,7 +260,7 @@ int en50221_capmt_build_query
   while (tl >= 5) {
     l = extract_len12(n + 3);
     if (l + 5 > tl)
-      return -EINVAL;
+      goto reterr;
     if (l > 0) {
       if (l < 7)
         goto reterr;
@@ -268,11 +270,12 @@ int en50221_capmt_build_query
     n  += 5 + l;
     tl -= 5 + l;
   }
-  if (tl)
-    return -EINVAL;
-  *dst = d;
-  *dstlen = capmtlen;
-  return 0;
+
+  if (tl == 0) {
+    *dst = d;
+    *dstlen = capmtlen;
+    return 0;
+  }
 
 reterr:
   free(d);

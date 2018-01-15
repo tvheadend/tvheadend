@@ -1170,12 +1170,13 @@ capmt_send_key(capmt_t *capmt)
   const int index = capmt->capmt_last_key.index;
   const int parity = capmt->capmt_last_key.parity;
   const uint8_t *cw = capmt->capmt_last_key.cw;
-  ca_info_t *cai = &capmt->capmt_adapters[adapter].ca_info[index];
+  ca_info_t *cai;
   int type;
 
   capmt->capmt_last_key.adapter = -1;
   if (adapter < 0)
     return;
+  cai = &capmt->capmt_adapters[adapter].ca_info[index];
   switch (cai->algo) {
   case CA_ALGO_DVBCSA:
     type = DESCRAMBLER_CSA_CBC;
@@ -1879,7 +1880,7 @@ capmt_thread(void *aux)
             la = (linuxdvb_adapter_t*)is->is_array[i];
             if (!la || !la->la_is_enabled(la)) continue;
             n = la->la_dvb_number;
-            if (n < 0 || n > MAX_CA) {
+            if (n < 0 || n >= MAX_CA) {
               tvherror(LS_CAPMT, "%s: adapter number > MAX_CA", capmt_name(capmt));
               continue;
             }
@@ -1888,6 +1889,7 @@ capmt_thread(void *aux)
                                               &capmt->capmt_adapters[n].ca_sock,
                                               capmt->capmt_port + n);
           }
+          idnode_set_free(is);
           if (bind_ok)
             handle_ca0(capmt);
         }

@@ -438,6 +438,7 @@ ts_flush(mpegts_service_t *t, sbuf_t *sb)
   pb = pktbuf_alloc(sb->sb_data, sb->sb_ptr);
   pb->pb_err = sb->sb_err;
 
+  memset(&sm, 0, sizeof(sm));
   sm.sm_type = SMT_MPEGTS;
   sm.sm_data = pb;
   streaming_service_deliver((service_t *)t, streaming_msg_clone(&sm));

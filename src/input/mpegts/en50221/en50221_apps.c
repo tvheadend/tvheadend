@@ -209,6 +209,7 @@ en50221_app_ca_handle
             if (CICAM_CA_ENABLE(p[2]) != CICAM_CAEI_POSSIBLE)
               app->cia_ca_possible = 1;
             tvh_strlcatf(buf, sizeof(buf), c, " %d=%02X", u16, p[2]);
+            i -= 3;
           }
         }
       }

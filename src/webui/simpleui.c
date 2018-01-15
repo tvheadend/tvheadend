@@ -206,7 +206,7 @@ page_simple(http_connection_t *hc,
     memset(&eq, 0, sizeof(eq));
     eq.lang = strdup(lang);
     eq.fulltext = 1;
-    eq.stitle = s ? strdup(s) : NULL;
+    eq.stitle = strdup(s);
 
     //Note: force min/max durations for this interface to 0 and INT_MAX seconds respectively
     epg_query(&eq, hc->hc_access);

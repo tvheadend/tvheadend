@@ -83,7 +83,7 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       case DVB_DESC_APP:
         l3 = *dptr++; dlen--;
         if (l3 % 5) goto dvberr;
-        while (l3 >= 5) {
+        while (dlen >= 5 && l3 >= 5) {
           tvhtrace(mt->mt_subsys, "%s:     profile %04X %d.%d.%d", mt->mt_name, (dptr[0] << 8) | dptr[1], dptr[2], dptr[3], dptr[4]);
           dptr += 5;
           dlen -= 5;
@@ -153,6 +153,7 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       htsmsg_add_msg(apps, NULL, map);
     } else {
       htsmsg_destroy(titles);
+      titles = NULL;
     }
   }
   if (l2 != 0)

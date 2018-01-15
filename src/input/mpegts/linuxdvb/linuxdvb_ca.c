@@ -291,7 +291,7 @@ linuxdvb_ca_thread ( void *aux )
   
   tvhtrace(LS_EN50221, "ca thread start");
   ev = malloc(sizeof(*ev) * evsize);
-  poll = tvhpoll_create(ARRAY_SIZE(ev) + 1);
+  poll = tvhpoll_create(evsize + 1);
   tm = mclk();
   waitms = 250;
   while (tvheadend_running && !quit) {
@@ -1142,8 +1142,8 @@ linuxdvb_ca_enqueue_capmt
     if (!linuxdvb_ca_write_cmd(lca, CA_WRITE_CMD_CAPMT_QUERY, capmt2, capmtlen2)) {
       tvhtrace(LS_EN50221, "%s: CAPMT enqueued query (len %zd)", lca->lca_name, capmtlen2);
       en50221_capmt_dump(LS_EN50221, lca->lca_name, capmt2, capmtlen2);
-      free(capmt2);
     }
+    free(capmt2);
   }
 
   if (!linuxdvb_ca_write_cmd(lca, CA_WRITE_CMD_CAPMT, capmt, capmtlen)) {

@@ -61,7 +61,6 @@ static inline uint8_t *htsmsg_binary2_set_length(uint8_t *p, uint32_t len)
     p[1] = 0x80 | (len >> 7);
     p[2] = len & 0x7f;
     return p + 3;
-    p += 2;
   } else if (len < 0x10000000) {
     p[0] = 0x80 | (len >> 21);
     p[1] = 0x80 | (len >> 14);

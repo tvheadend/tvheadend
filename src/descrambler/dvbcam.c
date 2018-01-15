@@ -180,7 +180,7 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
   }
   if (ac == NULL) {
     if ((ac = calloc(1, sizeof(*ac))) == NULL)
-      return;
+      goto reterr;
     ac->ca = lca;
   }
 
@@ -196,6 +196,7 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
   if (ac_first == NULL)
     dvbcam_status_update();
 
+reterr:
   pthread_mutex_unlock(&dvbcam_mutex);
 }
 

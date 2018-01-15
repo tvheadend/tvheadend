@@ -614,8 +614,7 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
   htsbuf_queue_t *hq;
   char buf[255], ubuf[UUID_HEX_SIZE];
   char *profile, *hostpath;
-  const char *name, *blank, *sort;
-  const char *lang = hc->hc_access->aa_lang_ui;
+  const char *name, *blank, *sort, *lang;
   channel_t *ch;
   channel_t **chlist;
   int idx, count = 0;
@@ -624,6 +623,7 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
      access_verify2(hc->hc_access, ACCESS_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  lang = hc->hc_access->aa_lang_ui;
   hq = &hc->hc_reply;
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
   hostpath = http_get_hostpath(hc);
@@ -677,14 +677,14 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
   int idx, count = 0;
   int chidx, chcount = 0;
   char *profile, *hostpath;
-  const char *lang = hc->hc_access->aa_lang_ui;
-  const char *blank, *sort;
+  const char *blank, *sort, *lang;
   idnode_list_mapping_t *ilm;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  lang = hc->hc_access->aa_lang_ui;
   hq = &hc->hc_reply;
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
   hostpath = http_get_hostpath(hc);

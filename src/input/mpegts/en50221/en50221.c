@@ -727,7 +727,7 @@ static int en50221_create_app
   if (prop == NULL)
     tvherror(LS_EN50221, "%s: unknown resource id %08x",
                          cil->cil_name, resource_id);
-  app = calloc(1, prop->ciap_struct_size);
+  app = calloc(1, prop ? prop->ciap_struct_size : 0);
   if (app == NULL)
     return -ENOMEM;
   snprintf(buf, sizeof(buf), "%s-app%08x/%04X", cil->cil_name,
