@@ -1609,7 +1609,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
         continue;
 
       // only earlier recordings qualify as master
-      if (de2->de_start > de->de_start)
+      if (de2->de_start > de->de_start && de2->de_last_error != SM_CODE_PREVIOUSLY_RECORDED)
         continue;
 
       // only enabled upcoming recordings
@@ -1640,7 +1640,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
         continue;
 
       // only earlier recordings qualify as master
-      if (de2->de_start > de->de_start)
+      if (de2->de_start > de->de_start && de2->de_last_error != SM_CODE_PREVIOUSLY_RECORDED)
         continue;
 
       // only enabled upcoming recordings
