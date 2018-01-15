@@ -120,7 +120,7 @@ void
 fsmonitor_done ( void )
 {
   int fd = atomic_exchange(&fsmonitor_fd, -1);
-  if (fd >= 0) close(fd);
+  if (fd >= 0) blacklisted_close(fd);
   pthread_kill(fsmonitor_tid, SIGTERM);
   pthread_join(fsmonitor_tid, NULL);
 }

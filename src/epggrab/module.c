@@ -581,13 +581,13 @@ static void _epggrab_socket_handler ( epggrab_module_ext_t *mod, int s )
  */
 static void *_epggrab_socket_thread ( void *p )
 {
-  int s;
+  int s, s1;
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)p;
   tvhinfo(mod->subsys, "%s: external socket enabled", mod->id);
 
-  while ( mod->enabled && mod->sock ) {
+  while ( mod->enabled && (s1 = atomic_get(&mod->sock)) ) {
     tvhdebug(mod->subsys, "%s: waiting for connection", mod->id);
-    s = accept(mod->sock, NULL, NULL);
+    s = accept(s1, NULL, NULL);
     if (s <= 0) continue;
     tvhdebug(mod->subsys, "%s: got connection %d", mod->id, s);
     _epggrab_socket_handler(mod, s);
@@ -608,8 +608,7 @@ epggrab_module_done_socket( void *m )
 
   assert(mod->type == EPGGRAB_EXT);
   mod->active = 0;
-  sock = mod->sock;
-  mod->sock = 0;
+  sock = atomic_exchange(&mod->sock, 0);
   shutdown(sock, SHUT_RDWR);
   close(sock);
   if (mod->tid) {
@@ -647,8 +646,8 @@ epggrab_module_activate_socket ( void *m, int a )
     unlink(mod->path); // just in case!
     hts_settings_makedirs(mod->path);
 
-    mod->sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    assert(mod->sock);
+    atomic_set(&mod->sock, socket(AF_UNIX, SOCK_STREAM, 0));
+    assert(atomic_get(&mod->sock));
 
     memset(&addr, 0, sizeof(struct sockaddr_un));
     addr.sun_family = AF_UNIX;

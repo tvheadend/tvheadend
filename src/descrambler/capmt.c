@@ -190,6 +190,7 @@ typedef struct capmt_service {
 
   /* PIDs list */
   uint16_t ct_pids[MAX_PIDS];
+  uint8_t  ct_multipid;
 
   /* Elementary stream types */
   uint8_t ct_types[MAX_PIDS];
@@ -1117,7 +1118,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
   mpegts_service_t *t;
   capmt_service_t *ct;
   uint16_t *pids;
-  int i, j, pid, multipid;
+  int i, j, pid;
 
   pthread_mutex_lock(&capmt->capmt_mutex);
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
@@ -1136,8 +1137,6 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
     if (adapter != ct->ct_adapter)
       continue;
 
-    multipid = descrambler_multi_pid((th_descrambler_t *)ct);
-
     pids = cai->pids;
 
     for (i = 0; i < MAX_PIDS; i++) {
@@ -1146,7 +1145,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
         pid = ct->ct_pids[j];
         if (pid == 0) break;
         if (pid == pids[i]) {
-          if (multipid) {
+          if (ct->ct_multipid) {
             ct->ct_ok_flag = 1;
             descrambler_keys((th_descrambler_t *)ct, type, pid, even, odd);
             continue;
@@ -2456,6 +2455,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
   ct              = calloc(1, sizeof(capmt_service_t));
   ct->ct_capmt    = capmt;
   ct->ct_adapter  = tuner;
+  ct->ct_multipid = descrambler_multi_pid((th_descrambler_t *)ct);
 
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {

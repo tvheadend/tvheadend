@@ -831,4 +831,13 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 #define TVH_NAME_LEN 32
 #define TVH_TITLE_LEN 256
 
+/* sanitizer helpers */
+#if __has_feature(thread_sanitizer)
+void *blacklisted_memcpy(void *dest, const void *src, size_t n);
+int blacklisted_close(int fildes);
+#else
+#define blacklisted_memcpy memcpy
+#define blacklisted_close close
+#endif
+
 #endif /* TVHEADEND_H */

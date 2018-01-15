@@ -650,3 +650,25 @@ int regex_match_substring_length(tvh_regex_t *regex, unsigned number)
   }
 #endif
 }
+
+/*
+ * Sanitizer helpers to avoid false positives
+ */
+#if __has_feature(thread_sanitizer)
+void *blacklisted_memcpy(void *dest, const void *src, size_t n)
+  __attribute__((no_sanitize("thread")))
+{
+  uint8_t *d = dest, *s = src;
+  while (n-- > 0) *d++ = *s++;
+  return dest;
+}
+
+void *dlsym(void *handle, const char *symbol);
+
+int blacklisted_close(int fd)
+  __attribute__((no_sanitize("thread")))
+{
+  // close(fd); // sanitizer reports errors in close()
+  return 0;
+}
+#endif
