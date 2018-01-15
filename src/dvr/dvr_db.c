@@ -3238,7 +3238,7 @@ dvr_entry_class_disp_episode_get(void *o)
   if (de->de_epnum.e_num) {
     lang = idnode_lang(o);
     snprintf(buf1, sizeof(buf1), "%s %%d", tvh_gettext_lang(lang, N_("Season")));
-    snprintf(buf1, sizeof(buf1), "%s %%d", tvh_gettext_lang(lang, N_("Episode")));
+    snprintf(buf2, sizeof(buf2), "%s %%d", tvh_gettext_lang(lang, N_("Episode")));
     epg_episode_epnum_format(&de->de_epnum, prop_sbuf, PROP_SBUF_LEN, NULL,
                              buf1, ".", buf2, "/%d");
     return &prop_sbuf_ptr;
