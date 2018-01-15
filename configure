@@ -75,7 +75,7 @@ OPTIONS=(
   "slow_memoryinfo:no"
   "libsystemd_daemon:no"
   "bintray_cache:yes"
-  "ddci:no"
+  "ddci:yes"
   "cclang_threadsan:no"
 )
 
@@ -355,6 +355,14 @@ if enabled_or_auto linuxdvb; then
   elif enabled linuxdvb; then
     die "Linux DVB API not found (use --disable-linuxdvb)"
   fi
+fi
+
+if enabled linuxdvb; then
+  if enabled_or_auto ddci; then
+    enable ddci
+  fi
+else
+  disable ddci
 fi
 
 #
