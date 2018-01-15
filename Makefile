@@ -772,28 +772,25 @@ $(BUILDDIR)/build.o: $(BUILDDIR)/build.c
 
 # Documentation
 $(BUILDDIR)/docs-timestamp: $(I18N-DOCS) support/doc/md_to_c.py
-	@-rm -f src/docs_inc.c
-	@for i in $(MD-ROOT); do \
-	   echo "Markdown: docs/markdown/$${i}.md"; \
-	   $(MD-TO-C) --in="docs/markdown/$${i}.md" \
-	              --name="tvh_doc_root_$${i}" >> src/docs_inc.c || exit 1; \
-	 done
-	@for i in $(MD-CLASS); do \
-	   echo "Markdown: docs/class/$${i}.md"; \
-	   $(MD-TO-C) --in="docs/class/$${i}.md" \
-	              --name="tvh_doc_$${i}_class" >> src/docs_inc.c || exit 1; \
-	 done
-	@for i in $(MD-PROP); do \
-	   echo "Markdown: docs/property/$${i}.md"; \
-	   $(MD-TO-C) --in="docs/property/$${i}.md" \
-	              --name="tvh_doc_$${i}_property" >> src/docs_inc.c || exit 1; \
-	 done
-	@for i in $(MD-WIZARD); do \
-	   echo "Markdown: docs/wizard/$${i}.md"; \
-	   $(MD-TO-C) --in="docs/wizard/$${i}.md" \
-	              --name="tvh_doc_wizard_$${i}" >> src/docs_inc.c || exit 1; \
-	 done
-	@$(MD-TO-C) --pages="$(MD-ROOT)" >> src/docs_inc.c
+	@-rm -f src/docs_inc.c src/docs_inc.c.new
+	@$(MD-TO-C) --batch --list="$(MD-ROOT)" \
+	            --inpath="docs/markdown/%s.md" \
+	            --name="tvh_doc_root_%s" \
+	            --out="src/docs_inc.c.new"
+	@$(MD-TO-C) --batch --list="$(MD-CLASS)" \
+	            --inpath="docs/class/%s.md" \
+	            --name="tvh_doc_%s_class" \
+	            --out="src/docs_inc.c.new"
+	@$(MD-TO-C) --batch --list="$(MD-PROP)" \
+	            --inpath="docs/property/%s.md" \
+	            --name="tvh_doc_%s_property" \
+	            --out="src/docs_inc.c.new"
+	@$(MD-TO-C) --batch --list="$(MD-WIZARD)" \
+	            --inpath="docs/wizard/%s.md" \
+	            --name="tvh_doc_wizard_%s" \
+	            --out="src/docs_inc.c.new"
+	@$(MD-TO-C) --pages="$(MD-ROOT)" >> src/docs_inc.c.new
+	@mv src/docs_inc.c.new src/docs_inc.c
 	@touch $@
 
 src/docs_inc.c: $(BUILDDIR)/docs-timestamp
