@@ -183,7 +183,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
     [EPGGRAB_OTA_DONE_NO_DATA]     = "no data",
     [EPGGRAB_OTA_DONE_STOLEN]      = "stolen"
   };
-  char name[256];
+  char ubuf[UUID_HEX_SIZE];
   mpegts_mux_t *mm;
   epggrab_ota_map_t *map;
 
@@ -193,7 +193,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   mm = mpegts_mux_find0(&om->om_mux_uuid);
   if (mm == NULL) {
     tvhdebug(LS_EPGGRAB, "unable to find mux %s (grab done: %s)",
-             uuid_get_hex(&om->om_mux_uuid, name), reasons[reason]);
+             uuid_get_hex(&om->om_mux_uuid, ubuf), reasons[reason]);
     return;
   }
   tvhdebug(LS_EPGGRAB, "grab done for %s (%s)", mm->mm_nicename, reasons[reason]);
@@ -216,7 +216,8 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
     om->om_requeue = 0;
     LIST_FOREACH(map, &om->om_modules, om_link)
       if (!map->om_complete)
-        tvhwarn(LS_EPGGRAB, "%s - data completion timeout for %s", map->om_module->name, name);
+        tvhwarn(LS_EPGGRAB, "%s - data completion timeout for %s",
+                map->om_module->name, mm->mm_nicename);
   } else {
     om->om_requeue = 0;
   }
@@ -464,7 +465,6 @@ epggrab_ota_kick_cb ( void *p )
   epggrab_ota_map_t *map;
   epggrab_ota_mux_t *om = TAILQ_FIRST(&epggrab_ota_pending);
   mpegts_mux_t *mm;
-  char name[256];
   struct {
     mpegts_network_t *net;
     uint8_t failed;
@@ -577,7 +577,7 @@ next_one:
       net->fatal = 1;
     }
   } else {
-    tvhtrace(LS_EPGGRAB, "mux %s (%p), started", name, mm->mm_nicename);
+    tvhtrace(LS_EPGGRAB, "mux %s (%p), started", mm->mm_nicename, mm);
     kick = 0;
     /* note: it is possible that the mux_start listener is not called */
     /* for reshared mux subscriptions, so call it (maybe second time) here.. */
