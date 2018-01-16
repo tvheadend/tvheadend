@@ -28,27 +28,21 @@
 
 #define TVH_INPUT_BUFFER_MAX_SIZE (INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE)
 
-
-#define TVHPKT_INCREF pkt_ref_inc
-
-#define TVHPKT_DECREF pkt_ref_dec
-
 #define TVHPKT_CLEAR(ptr) \
     do { \
         th_pkt_t *_tmp = (ptr); \
         if (_tmp != NULL) { \
             (ptr) = NULL; \
-            TVHPKT_DECREF(_tmp); \
+            pkt_ref_dec(_tmp); \
         } \
     } while (0)
 
 #define TVHPKT_SET(ptr, pkt) \
     do { \
-        TVHPKT_INCREF((pkt)); \
+        pkt_ref_inc((pkt)); \
         TVHPKT_CLEAR((ptr)); \
         (ptr) = (pkt); \
     } while (0)
-
 
 #define str_clear(str) \
     do { \
