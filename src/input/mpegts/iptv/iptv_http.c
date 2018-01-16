@@ -271,7 +271,8 @@ iptv_http_data
   int pause = 0, off, rem;
   uint8_t tsbuf[188];
 
-  if (hp == NULL || hp->im == NULL || hc->hc_code != HTTP_STATUS_OK)
+  if (hp == NULL || hp->shutdown || hp->im == NULL ||
+      hc->hc_code != HTTP_STATUS_OK)
     return 0;
 
   im = hp->im;
@@ -385,7 +386,7 @@ iptv_http_complete
   htsmsg_t *m, *m2;
   int r;
 
-  if (hp == NULL || hp->im == NULL)
+  if (hp == NULL || hp->shutdown || hp->im == NULL)
     return 0;
 
   if (hp->m3u_header) {
@@ -473,7 +474,7 @@ iptv_http_complete_key
 {
   http_priv_t *hp = hc->hc_aux;
 
-  if (hp == NULL)
+  if (hp == NULL || hp->shutdown)
     return 0;
   tvhtrace(LS_IPTV, "received key len %d", hp->key_sbuf.sb_ptr);
   if (hp->key_sbuf.sb_ptr != AES_BLOCK_SIZE) {
@@ -499,7 +500,7 @@ iptv_http_create_header
 {
   http_priv_t *hp = hc->hc_aux;
 
-  if (hp == NULL || hp->im == NULL)
+  if (hp == NULL || hp->shutdown || hp->im == NULL)
     return;
   http_client_basic_args(hc, h, url, keepalive);
   http_client_add_args(hc, h, hp->im->mm_iptv_hdr);
@@ -555,7 +556,6 @@ iptv_http_stop
 {
   http_priv_t *hp = im->im_data;
 
-  hp->hc->hc_aux = NULL;
   hp->shutdown = 1;
   pthread_mutex_unlock(&iptv_lock);
   http_client_close(hp->hc);
