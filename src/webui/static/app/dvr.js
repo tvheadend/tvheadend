@@ -144,7 +144,7 @@ tvheadend.dvrDetails = function(uuid) {
         url: 'api/idnode/load',
         params: {
             uuid: uuid,
-            list: 'channel_icon,disp_title,disp_subtitle,disp_summary,episode,start_real,stop_real,' +
+            list: 'channel_icon,disp_title,disp_subtitle,disp_summary,episode_disp,start_real,stop_real,' +
                   'duration,disp_description,status,filesize,comment,duplicate,' +
                   'autorec_caption,timerec_caption,image,copyright_year,credits,keyword,category,' +
                   'first_aired,genre',
@@ -419,7 +419,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
             }
         },
         del: true,
-        list: 'category,enabled,duplicate,disp_title,disp_subtitle,disp_summary,episode,' +
+        list: 'category,enabled,duplicate,disp_title,disp_subtitle,disp_summary,episode_disp,' +
               'channel,image,copyright_year,start_real,stop_real,duration,pri,filesize,' +
               'sched_status,errors,data_errors,config_name,owner,creator,comment,genre',
         columns: {
@@ -597,7 +597,7 @@ tvheadend.dvr_finished = function(panel, index) {
             }
         },
         del: false,
-        list: 'disp_title,disp_subtitle,disp_summary,episode,channelname,' +
+        list: 'disp_title,disp_subtitle,disp_summary,episode_disp,channelname,' +
               'start_real,stop_real,duration,filesize,copyright_year,' +
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,',
         columns: {
@@ -621,8 +621,8 @@ tvheadend.dvr_finished = function(panel, index) {
                 tooltip: _("Play"),
                 renderer: function(v, o, r) {
                     var title = r.data['disp_title'];
-                    if (r.data['episode'])
-                        title += ' / ' + r.data['episode'];
+                    if (r.data['episode_disp'])
+                        title += ' / ' + r.data['episode_disp'];
                     return tvheadend.playLink('play/dvrfile/' + r.id, title);
                 }
             }],
@@ -713,7 +713,7 @@ tvheadend.dvr_failed = function(panel, index) {
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
-        list: 'disp_title,disp_subtitle,disp_summary,episode,channelname,' +
+        list: 'disp_title,disp_subtitle,disp_summary,episode_disp,channelname,' +
               'image,copyright_year,start_real,stop_real,duration,filesize,status,' +
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
         columns: {
@@ -737,8 +737,8 @@ tvheadend.dvr_failed = function(panel, index) {
                 tooltip: _("Play"),
                 renderer: function(v, o, r) {
                     var title = r.data['disp_title'];
-                    if (r.data['episode'])
-                        title += ' / ' + r.data['episode'];
+                    if (r.data['episode_disp'])
+                        title += ' / ' + r.data['episode_disp'];
                     return tvheadend.playLink('play/dvrfile/' + r.id, title);
                 }
             }],
@@ -788,7 +788,7 @@ tvheadend.dvr_removed = function(panel, index) {
         uilevel: 'expert',
         edit: { params: { list: tvheadend.admin ? "retention,owner,comment" : "retention,comment" } },
         del: true,
-        list: 'disp_title,disp_subtitle,disp_summary,episode,channelname,image,' +
+        list: 'disp_title,disp_subtitle,disp_summary,episode_disp,channelname,image,' +
               'copyright_year,start_real,stop_real,duration,status,' +
               'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
         columns: {

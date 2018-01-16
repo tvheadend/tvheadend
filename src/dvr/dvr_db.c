@@ -1613,7 +1613,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
         continue;
 
       // only earlier recordings qualify as master
-      if (de2->de_start > de->de_start)
+      if (de2->de_start > de->de_start && de2->de_last_error != SM_CODE_PREVIOUSLY_RECORDED)
         continue;
 
       // only enabled upcoming recordings
@@ -1644,7 +1644,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
         continue;
 
       // only earlier recordings qualify as master
-      if (de2->de_start > de->de_start)
+      if (de2->de_start > de->de_start && de2->de_last_error != SM_CODE_PREVIOUSLY_RECORDED)
         continue;
 
       // only enabled upcoming recordings
@@ -3242,7 +3242,7 @@ dvr_entry_class_disp_episode_get(void *o)
   if (de->de_epnum.e_num) {
     lang = idnode_lang(o);
     snprintf(buf1, sizeof(buf1), "%s %%d", tvh_gettext_lang(lang, N_("Season")));
-    snprintf(buf1, sizeof(buf1), "%s %%d", tvh_gettext_lang(lang, N_("Episode")));
+    snprintf(buf2, sizeof(buf2), "%s %%d", tvh_gettext_lang(lang, N_("Episode")));
     epg_episode_epnum_format(&de->de_epnum, prop_sbuf, PROP_SBUF_LEN, NULL,
                              buf1, ".", buf2, "/%d");
     return &prop_sbuf_ptr;
