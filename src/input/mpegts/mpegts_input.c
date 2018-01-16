@@ -957,11 +957,10 @@ mpegts_input_stopping_mux
 {
   assert(mmi->mmi_mux->mm_active);
 
+  pthread_mutex_lock(&mi->mi_output_lock);
   pthread_mutex_lock(&mi->mi_input_lock);
   mmi->mmi_mux->mm_active = NULL;
   pthread_mutex_unlock(&mi->mi_input_lock);
-  pthread_mutex_lock(&mi->mi_output_lock);
-  mmi->mmi_mux->mm_active = NULL;
   pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
