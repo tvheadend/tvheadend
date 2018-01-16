@@ -684,7 +684,7 @@ mpegts_input_cat_pass_callback
 
   /* Start */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
-                      tableid, 0, 5, &st, &sect, &last, &ver);
+                      tableid, 0, 5, &st, &sect, &last, &ver, 0);
   if (r != 1) return r;
   ptr += 5;
   len -= 5;

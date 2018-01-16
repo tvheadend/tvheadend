@@ -967,7 +967,7 @@ _eit_callback
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
-                      tableid, extraid, 11, &st, &sect, &last, &ver);
+                      tableid, extraid, 11, &st, &sect, &last, &ver, 0);
   if (r == 0) goto complete;
   if (r < 0) return r;
   if (tableid != 0x4e && r != 1) return r;

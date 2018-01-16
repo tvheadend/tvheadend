@@ -287,7 +287,8 @@ int
 dvb_table_begin
   (mpegts_psi_table_t *mt, const uint8_t *ptr, int len,
    int tableid, uint64_t extraid, int minlen,
-   mpegts_psi_table_state_t **ret, int *sect, int *last, int *ver)
+   mpegts_psi_table_state_t **ret, int *sect, int *last, int *ver,
+   time_t interval)
 {
   mpegts_psi_table_state_t *st;
   uint32_t sa, sb;
@@ -324,13 +325,21 @@ dvb_table_begin
       return -1;
 #endif
 
+    /* Inverval check */
+    if (interval && mt->mt_last_complete &&
+      mt->mt_last_complete + interval > gclk()) {
+      tvhtrace(mt->mt_subsys, "%s:  time interval exceeded, restart", mt->mt_name);
+      goto restart;
+    }
+
     /* New version */
     if (st->version != *ver) {
+      tvhtrace(mt->mt_subsys, "%s:  new version, restart", mt->mt_name);
+restart:
       if (st->complete == 2)
         mt->mt_complete--;
       if (st->complete)
         mt->mt_incomplete++;
-      tvhtrace(mt->mt_subsys, "%s:  new version, restart", mt->mt_name);
       mpegts_table_state_reset(mt, st, *last);
       st->version = *ver;
     }
@@ -357,6 +366,9 @@ dvb_table_begin
     }
   }
 
+  if (mt->mt_last_complete == 0)
+    mt->mt_last_complete = gclk();
+
   tvhlog_hexdump(mt->mt_subsys, ptr, len);
 
   return 1;
@@ -370,6 +382,7 @@ dvb_table_reset(mpegts_psi_table_t *mt)
   tvhtrace(mt->mt_subsys, "%s: pid %02X complete reset", mt->mt_name, mt->mt_pid);
   mt->mt_incomplete = 0;
   mt->mt_complete   = 0;
+  mt->mt_last_complete = 0;
   while ((st = RB_FIRST(&mt->mt_state)) != NULL) {
     RB_REMOVE(&mt->mt_state, st, link);
     free(st);

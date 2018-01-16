@@ -326,6 +326,7 @@ typedef struct mpegts_psi_table
 
   int     mt_pid;
 
+  time_t  mt_last_complete;
   int     mt_complete;
   int     mt_incomplete;
   uint8_t mt_finished;
@@ -350,7 +351,8 @@ int dvb_table_end
 int dvb_table_begin
   (mpegts_psi_table_t *mt, const uint8_t *ptr, int len,
    int tableid, uint64_t extraid, int minlen,
-   mpegts_psi_table_state_t **st, int *sect, int *last, int *ver);
+   mpegts_psi_table_state_t **st, int *sect, int *last, int *ver,
+   time_t interval);
 void dvb_table_reset (mpegts_psi_table_t *mt);
 void dvb_table_release (mpegts_psi_table_t *mt);
 

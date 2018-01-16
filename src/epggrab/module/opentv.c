@@ -594,7 +594,7 @@ opentv_table_callback
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, buf, len,
                       tableid, (uint64_t)(od.cid) << 32 | od.mjd, 7,
-                      &st, &sect, &last, &ver);
+                      &st, &sect, &last, &ver, 0);
   if (r != 1) goto done;
 
   /* Process */

@@ -55,7 +55,7 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     return;
 
   r = dvb_table_begin(mt, buf + 3, len - 3,
-                      tableid, app_type, 5, &tst, &sect, &last, &ver);
+                      tableid, app_type, 5, &tst, &sect, &last, &ver, 0);
   if (r != 1) return;
 
   p = buf;

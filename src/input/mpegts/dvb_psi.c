@@ -945,7 +945,8 @@ dvb_pat_callback
   if (tableid != 0) return -1;
   tsid = extract_tsid(ptr);
   r    = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
-                         tableid, tsid, 5, &st, &sect, &last, &ver);
+                         tableid, tsid, 5, &st, &sect, &last, &ver,
+                         3600);
   if (r != 1) return r;
   if (tsid == 0 && !mm->mm_tsid_accept_zero_value) {
     if (tvhlog_limit(&mm->mm_tsid_loglimit, 2)) {
@@ -1034,7 +1035,7 @@ dvb_cat_callback
 
   /* Start */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
-                      tableid, 0, 5, &st, &sect, &last, &ver);
+                      tableid, 0, 5, &st, &sect, &last, &ver, 0);
   if (r != 1) return r;
   ptr += 5;
   len -= 5;
@@ -1105,7 +1106,7 @@ dvb_pmt_callback
   if (len < 2) return -1;
   sid = extract_svcid(ptr);
   r   = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
-                        tableid, sid, 9, &st, &sect, &last, &ver);
+                        tableid, sid, 9, &st, &sect, &last, &ver, 0);
   if (r != 1) return r;
   if (mm->mm_sid_filter > 0 && sid != mm->mm_sid_filter)
     goto end;
@@ -1448,7 +1449,7 @@ dvb_nit_callback
   }
 
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
-                      tableid, nbid, 7, &st, &sect, &last, &ver);
+                      tableid, nbid, 7, &st, &sect, &last, &ver, 0);
   if (r == 0) {
     if (tableid == 0x4A || tableid == DVB_FASTSCAN_NIT_BASE) {
       if (tableid == DVB_FASTSCAN_NIT_BASE && bq) {
@@ -1773,7 +1774,7 @@ dvb_sdt_callback
   extraid = ((int)onid) << 16 | tsid;
   if (tableid != 0x42 && tableid != 0x46) return -1;
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
-                      tableid, extraid, 8, &st, &sect, &last, &ver);
+                      tableid, extraid, 8, &st, &sect, &last, &ver, 0);
   if (r != 1) return r;
 
   /* ID */
@@ -1835,7 +1836,7 @@ atsc_vct_callback
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
-                      tableid, extraid, 7, &st, &sect, &last, &ver);
+                      tableid, extraid, 7, &st, &sect, &last, &ver, 0);
   if (r != 1) return r;
   tvhdebug(mt->mt_subsys, "%s: tsid %04X (%d)", mt->mt_name, tsid, tsid);
 
@@ -1948,7 +1949,7 @@ atsc_stt_callback
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
-                      &st, &sect, &last, &ver);
+                      &st, &sect, &last, &ver, 0);
   if (r != 1) return r;
 
   /* Parse fields */
@@ -2138,7 +2139,7 @@ dvb_fs_sdt_callback
       return 0;
   }
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
-                      tableid, nbid, 7, &st, &sect, &last, &ver);
+                      tableid, nbid, 7, &st, &sect, &last, &ver, 0);
   if (r == 0) {
     mt->mt_working -= st->working;
     st->working = 0;

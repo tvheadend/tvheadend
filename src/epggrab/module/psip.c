@@ -489,7 +489,7 @@ _psip_eit_callback
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
-                      &st, &sect, &last, &ver);
+                      &st, &sect, &last, &ver, 0);
   if (r == 0) goto complete;
   if (r != 1) return r;
   tvhtrace(LS_PSIP, "0x%04x: EIT tsid %04X (%s), ver %d",
@@ -566,7 +566,7 @@ _psip_ett_callback
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
-                      &st, &sect, &last, &ver);
+                      &st, &sect, &last, &ver, 0);
   if (r == 0) goto complete;
   if (r != 1) return r;
 
@@ -658,7 +658,7 @@ _psip_mgt_callback
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
-                      &st, &sect, &last, &ver);
+                      &st, &sect, &last, &ver, 0);
   if (r != 1) return r;
 
   /* # tables */
