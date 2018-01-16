@@ -52,6 +52,7 @@ static int                  subscription_postpone;
 /**
  *
  */
+static void subscription_reschedule(void);
 static void subscription_unsubscribe_cb(void *aux);
 
 /**
@@ -312,6 +313,16 @@ subscription_ca_check_cb(void *aux)
 /**
  *
  */
+void
+subscription_delayed_reschedule(int64_t mono)
+{
+  mtimer_arm_rel(&subscription_reschedule_timer,
+	         subscription_reschedule_cb, NULL, mono);
+}
+
+/**
+ *
+ */
 static service_instance_t *
 subscription_start_instance
   (th_subscription_t *s, int *error)
@@ -338,7 +349,7 @@ subscription_start_instance
 /**
  *
  */
-void
+static void
 subscription_reschedule(void)
 {
   static int reenter = 0;
@@ -436,9 +447,7 @@ subscription_reschedule(void)
 
   if (postpone <= 0 || postpone == INT_MAX)
     postpone = 2;
-  mtimer_arm_rel(&subscription_reschedule_timer,
-	         subscription_reschedule_cb, NULL, sec2mono(postpone));
-
+  subscription_delayed_reschedule(sec2mono(postpone));
   reenter = 0;
 }
 
@@ -476,10 +485,9 @@ subscription_set_postpone(void *aux, const char *path, int64_t postpone)
       if (s->ths_postpone_end > now && s->ths_postpone_end - now > postpone2)
         s->ths_postpone_end = now + postpone2;
     }
-    mtimer_arm_rel(&subscription_reschedule_timer,
-  	           subscription_reschedule_cb, NULL, 0);
+    subscription_delayed_reschedule(0);
   }
- pthread_mutex_unlock(&global_lock);
+  pthread_mutex_unlock(&global_lock);
   return postpone;
 }
 
@@ -498,8 +506,7 @@ subscription_input_null(void *opaque, streaming_message_t *sm)
   th_subscription_t *s = opaque;
   if (sm->sm_type == SMT_STOP && subgetstate(s) != SUBSCRIPTION_ZOMBIE) {
     LIST_INSERT_HEAD(&subscriptions_remove, s, ths_remove_link);
-    mtimer_arm_rel(&subscription_reschedule_timer,
-  	           subscription_reschedule_cb, NULL, 0);
+    subscription_delayed_reschedule(0);
   }
 
   streaming_msg_free(sm);
@@ -735,8 +742,7 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
       (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
     subscription_destroy(s);
 
-  mtimer_arm_rel(&subscription_reschedule_timer,
-                 subscription_reschedule_cb, NULL, 0);
+  subscription_delayed_reschedule(0);
   notify_reload("subscriptions");
 }
 
@@ -818,8 +824,7 @@ subscription_create
 
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
 
-  mtimer_arm_rel(&subscription_reschedule_timer,
-	         subscription_reschedule_cb, NULL, 0);
+  subscription_delayed_reschedule(0);
   notify_reload("subscriptions");
 
   return s;
@@ -888,8 +893,7 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
     subscription_link_service(s, si->si_s);
     subscription_show_info(s);
   } else {
-    mtimer_arm_rel(&subscription_reschedule_timer,
-                   subscription_reschedule_cb, NULL, 0);
+    subscription_delayed_reschedule(0);
   }
   return s;
 }
@@ -1178,8 +1182,7 @@ subscription_change_weight(th_subscription_t *s, int weight)
 
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
 
-  mtimer_arm_rel(&subscription_reschedule_timer,
-	         subscription_reschedule_cb, NULL, 0);
+  subscription_delayed_reschedule(0);
 }
 
 /**

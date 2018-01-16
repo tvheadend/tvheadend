@@ -158,7 +158,7 @@ void subscription_unsubscribe(th_subscription_t *s, int flags);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
-void subscription_reschedule(void);
+void subscription_delayed_reschedule(int64_t mono);
 
 th_subscription_t *
 subscription_create_from_channel(struct profile_chain *prch,

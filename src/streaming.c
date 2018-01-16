@@ -490,6 +490,8 @@ streaming_code2txt(int code)
     return N_("No assigned adapters");
   case SM_CODE_INVALID_SERVICE:
     return N_("Invalid service");
+  case SM_CODE_CHN_NOT_ENABLED:
+    return N_("No channel enabled");
 
   case SM_CODE_ABORTED:
     return N_("Aborted by user");

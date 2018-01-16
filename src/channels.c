@@ -116,6 +116,14 @@ channel_class_delete ( idnode_t *self )
   channel_delete((channel_t*)self, 1);
 }
 
+static void
+channel_class_notify_enabled ( void *obj, const char *lang )
+{
+  channel_t *ch = (channel_t *)obj;
+  if (!ch->ch_enabled)
+    channel_remove_subscriber(ch, SM_CODE_CHN_NOT_ENABLED);
+}
+
 static int
 channel_class_autoname_set ( void *obj, const void *p )
 {
@@ -403,6 +411,7 @@ const idclass_t channel_class = {
       .desc     = N_("Enable/disable the channel."),
       .def.i    = 1,
       .off      = offsetof(channel_t, ch_enabled),
+      .notify   = channel_class_notify_enabled,
     },
     {
       .type     = PT_BOOL,
@@ -763,6 +772,28 @@ channel_epg_update_all ( channel_t *ch )
 
   RB_FOREACH(e, &ch->ch_epg_schedule, sched_link)
    channel_event_updated(e);
+}
+
+/**
+ * Remove all subscribers for given channel
+ */
+void channel_remove_subscriber
+  ( channel_t *ch, int reason )
+{
+  th_subscription_t *s, *s_next;
+  idnode_list_mapping_t *ilm;
+  service_t *t;
+
+  lock_assert(&global_lock);
+
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+    t = (service_t *)ilm->ilm_in1;
+    for (s = LIST_FIRST(&t->s_subscriptions); s; s = s_next) {
+      s_next = LIST_NEXT(s, ths_service_link);
+      if (s->ths_channel == ch)
+        service_remove_subscriber(t, s, reason);
+    }
+  }
 }
 
 /* **************************************************************************

@@ -131,6 +131,8 @@ channel_t *channel_create0
 
 void channel_delete(channel_t *ch, int delconf);
 
+void channel_remove_subscriber(channel_t *ch, int reason);
+
 channel_t *channel_find_by_name_and_bouquet(const char *name, const struct bouquet *bq);
 channel_t *channel_find_by_name(const char *name);
 /// Apply fuzzy matching when finding a channel such as ignoring

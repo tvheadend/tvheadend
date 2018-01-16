@@ -70,6 +70,8 @@ service_class_notify_enabled ( void *obj, const char *lang )
   if (t->s_enabled && t->s_auto != SERVICE_AUTO_OFF)
     t->s_auto = SERVICE_AUTO_NORMAL;
   bouquet_notify_service_enabled(t);
+  if (!t->s_enabled)
+    service_remove_subscriber(t, NULL, SM_CODE_SVC_NOT_ENABLED);
 }
 
 static const void *
