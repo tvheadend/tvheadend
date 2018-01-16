@@ -1552,7 +1552,7 @@ http_client_connect
 
   hc             = calloc(1, sizeof(http_client_t));
   pthread_mutex_init(&hc->hc_mutex, NULL);
-  hc->hc_id      = ++tally;
+  hc->hc_id      = atomic_add(&tally, 1);
   hc->hc_aux     = aux;
   hc->hc_io_size = 1024;
   hc->hc_rtsp_stream_id = -1;
