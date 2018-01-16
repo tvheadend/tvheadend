@@ -465,7 +465,7 @@ if BATCH:
   out = argv_get('out')
   name = argv_get('name')
   list = argv_get('list')
-  fp = open(out, "a+")
+  fp = utf8open(out, "a+")
   for l in list.split(' '):
     input = inpath % l
     print("Markdown: %s" % input)
