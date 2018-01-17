@@ -325,9 +325,9 @@ dvb_table_begin
       return -1;
 #endif
 
-    /* Inverval check */
+    /* Interval check */
     if (interval && mt->mt_last_complete &&
-      mt->mt_last_complete + interval > gclk()) {
+      mt->mt_last_complete + interval < gclk()) {
       tvhtrace(mt->mt_subsys, "%s:  time interval exceeded, restart", mt->mt_name);
       goto restart;
     }
