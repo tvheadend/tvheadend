@@ -200,7 +200,7 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
 reterr:
   pthread_mutex_unlock(&dvbcam_mutex);
 
-  if (call_update == NULL)
+  if (call_update)
     dvbcam_status_update();
 
 }
@@ -213,6 +213,7 @@ dvbcam_unregister_cam(linuxdvb_ca_t *lca)
 {
   dvbcam_active_cam_t *ac, *ac_next;
   dvbcam_active_service_t *as;
+  int call_update;
 
   tvhtrace(LS_DVBCAM, "unregister cam %s", lca->lca_name);
 
@@ -235,10 +236,12 @@ dvbcam_unregister_cam(linuxdvb_ca_t *lca)
     }
   }
 
-  if (TAILQ_EMPTY(&dvbcam_active_cams))
-    dvbcam_status_update();
+  call_update = TAILQ_EMPTY(&dvbcam_active_cams);
 
   pthread_mutex_unlock(&dvbcam_mutex);
+
+  if (call_update)
+    dvbcam_status_update();
 }
 
 /*
