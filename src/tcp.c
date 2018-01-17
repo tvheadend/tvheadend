@@ -695,7 +695,7 @@ tcp_server_loop(void *aux)
   while(atomic_get(&tcp_server_running)) {
     r = tvhpoll_wait(tcp_server_poll, &ev, 1, -1);
     if(r < 0) {
-      if (ERRNO_AGAIN(-r))
+      if (ERRNO_AGAIN(errno))
         continue;
       tvherror(LS_TCP, "tcp_server_loop: tvhpoll_wait: %s", strerror(errno));
       continue;
