@@ -312,8 +312,7 @@ static void capmt_send_client_info(capmt_t *capmt);
 static inline const char *
 capmt_name(capmt_t *capmt)
 {
-  return idnode_get_title(&capmt->cac_id, NULL,
-                          capmt->capmt_name, sizeof(capmt->capmt_name));
+  return capmt->capmt_name;
 }
 
 static inline int
@@ -2543,6 +2542,8 @@ capmt_conf_changed(caclient_t *cac)
   capmt_t *capmt = (capmt_t *)cac;
   pthread_t tid;
 
+  idnode_get_title(&capmt->cac_id, NULL,
+                   capmt->capmt_name, sizeof(capmt->capmt_name));
   if (capmt->cac_enabled) {
     if (capmt->capmt_sockfile == NULL || capmt->capmt_sockfile[0] == '\0') {
       caclient_set_status(cac, CACLIENT_STATUS_NONE);

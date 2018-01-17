@@ -382,7 +382,7 @@ caclient_set_status(caclient_t *cac, caclient_status_t status)
 {
   if (cac->cac_status != status) {
     cac->cac_status = status;
-    idnode_notify_changed(&cac->cac_id);
+    idnode_lnotify_changed(&cac->cac_id);
   }
 }
 

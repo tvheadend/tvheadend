@@ -388,8 +388,10 @@ subscription_reschedule(void)
       tvhwarn(LS_SUBSCRIPTION, "%04X: service instance is bad, reason: %s",
               shortid(s), streaming_code2txt(s->ths_testing_error));
 
+      pthread_mutex_lock(&t->s_stream_mutex);
       t->s_streaming_status = 0;
       t->s_status = SERVICE_IDLE;
+      pthread_mutex_unlock(&t->s_stream_mutex);
 
       si = s->ths_current_instance;
       assert(si != NULL);

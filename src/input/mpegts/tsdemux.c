@@ -300,11 +300,13 @@ ts_recv_packet1
          tsb[0], tsb[1], tsb[2], tsb[3], tsb[4], tsb[5]);
 #endif
 
-  /* Service inactive - ignore */
-  if(t->s_status != SERVICE_RUNNING)
-    return 0;
-
   pthread_mutex_lock(&t->s_stream_mutex);
+
+  /* Service inactive - ignore */
+  if(t->s_status != SERVICE_RUNNING) {
+    pthread_mutex_unlock(&t->s_stream_mutex);
+    return 0;
+  }
 
   service_set_streaming_status_flags((service_t*)t, TSS_INPUT_HARDWARE);
 

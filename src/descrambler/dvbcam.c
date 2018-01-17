@@ -83,9 +83,11 @@ dvbcam_status_update0(caclient_t *cac)
 {
   int status = CACLIENT_STATUS_NONE;
 
+  pthread_mutex_lock(&dvbcam_mutex);
   if (TAILQ_FIRST(&dvbcam_active_cams))
     status = CACLIENT_STATUS_CONNECTED;
   caclient_set_status(cac, status);
+  pthread_mutex_unlock(&dvbcam_mutex);
 }
 
 /*
@@ -166,7 +168,7 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
                     int caids_count)
 {
   dvbcam_active_cam_t *ac, *ac_first;
-  int registered = 0;
+  int registered = 0, call_update = 0;
 
   tvhtrace(LS_DVBCAM, "register cam %p caids_count %u", lca->lca_name, caids_count);
 
@@ -193,11 +195,14 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
   if (!registered)
     TAILQ_INSERT_TAIL(&dvbcam_active_cams, ac, global_link);
 
-  if (ac_first == NULL)
-    dvbcam_status_update();
+  call_update = ac_first == NULL;
 
 reterr:
   pthread_mutex_unlock(&dvbcam_mutex);
+
+  if (call_update == NULL)
+    dvbcam_status_update();
+
 }
 
 /*
