@@ -171,7 +171,7 @@ tvh_uuid_set_t *
 uuid_set_copy( tvh_uuid_set_t *dst, const tvh_uuid_set_t *src )
 {
   size_t size;
-  memset(&dst, 0, sizeof(*dst));
+  memset(dst, 0, sizeof(*dst));
   dst->us_alloc_chunk = src->us_alloc_chunk;
   size = sizeof(tvh_uuid_t) * src->us_size;
   dst->us_array = malloc(size);
