@@ -1940,6 +1940,7 @@ save_thread ( void *aux )
   tvh_uuid_t *uuid;
   char filename[PATH_MAX];
   tvh_uuid_set_t set, tset;
+  int lnotify;
 
   uuid_set_init(&set, 10);
   uuid_set_init(&tset, 10);
@@ -1949,10 +1950,14 @@ save_thread ( void *aux )
   pthread_mutex_lock(&global_lock);
 
   while (atomic_get(&save_running)) {
-    if (((ise = TAILQ_FIRST(&idnodes_save)) == NULL ||
-         (ise->ise_reqtime + IDNODE_SAVE_DELAY > mclk())) &&
-         uuid_set_empty(&idnode_lnotify_set) &&
-         uuid_set_empty(&idnode_lnotify_title_set)) {
+    if ((ise = TAILQ_FIRST(&idnodes_save)) == NULL ||
+        ise->ise_reqtime + IDNODE_SAVE_DELAY > mclk()) {
+      pthread_mutex_lock(&idnode_lnotify_mutex);
+      lnotify = !uuid_set_empty(&idnode_lnotify_set) ||
+                !uuid_set_empty(&idnode_lnotify_title_set);
+      pthread_mutex_unlock(&idnode_lnotify_mutex);
+      if (lnotify)
+        goto lnotifygo;
       if (ise)
         mtimer_arm_abs(&save_timer, idnode_save_trigger_thread_cb, NULL,
                        ise->ise_reqtime + IDNODE_SAVE_DELAY);
@@ -1971,6 +1976,7 @@ save_thread ( void *aux )
       }
       pthread_mutex_lock(&global_lock);
     }
+lnotifygo:
     pthread_mutex_lock(&idnode_lnotify_mutex);
     if (!uuid_set_empty(&idnode_lnotify_set)) {
       set = idnode_lnotify_set;

@@ -90,6 +90,11 @@ void uuid_set_init( tvh_uuid_set_t *us, uint32_t alloc_chunk );
 /**
  *
  */
+tvh_uuid_set_t *uuid_set_copy( tvh_uuid_set_t *dst, const tvh_uuid_set_t *src );
+
+/**
+ *
+ */
 tvh_uuid_t *uuid_set_add( tvh_uuid_set_t *us, const tvh_uuid_t *u );
 
 /**
