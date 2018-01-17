@@ -1153,9 +1153,9 @@ int epg_episode_set_season
     episode->season = season;
     if (season) {
       _epg_season_add_episode(season, episode);
-      save |= epg_episode_set_brand(episode, season->brand ?: NULL, changed);
+      epg_episode_set_brand(episode, season->brand ?: NULL, changed);
     } else {
-      save |= epg_episode_set_brand(episode, NULL, changed);
+      epg_episode_set_brand(episode, NULL, changed);
     }
     _epg_object_set_updated(episode);
     save = 1;

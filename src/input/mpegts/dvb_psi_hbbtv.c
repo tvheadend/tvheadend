@@ -101,7 +101,7 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
         break;
       case DVB_DESC_APP_NAME:
         titles = htsmsg_create_list();
-        while (dlen > 4 && l3 > 4) {
+        while (dlen > 4) {
           r = dvb_get_string_with_len(title, sizeof(title), dptr + 3, dlen - 3, "UTF-8", NULL);
           if (r < 0) goto dvberr;
           tvhtrace(mt->mt_subsys, "%s:      lang '%c%c%c' name '%s'", mt->mt_name, dptr[0], dptr[1], dptr[2], title);

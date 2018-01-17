@@ -64,6 +64,7 @@ str_vjoin(const char *separator, va_list ap)
                     strcpy(result + result_size - 1, str);
                     result_size += str_len;
                 } else {
+                    str_clear(str);
                     goto reterr;
                 }
             }

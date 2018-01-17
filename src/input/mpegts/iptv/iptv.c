@@ -338,7 +338,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   /* Start */
   pthread_mutex_lock(&iptv_lock);
   s = im->mm_iptv_url_raw;
-  im->mm_iptv_url_raw = strdup(raw);
+  im->mm_iptv_url_raw = raw ? strdup(raw) : NULL;
   if (im->mm_iptv_url_raw) {
     im->mm_active = mmi; // Note: must set here else mux_started call
                          // will not realise we're ready to accept pid open calls

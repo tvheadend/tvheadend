@@ -748,8 +748,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
   channel_t **chlist;
   int idx = 0, count = 0;
   char *profile, *hostpath;
-  const char *name, *blank, *sort;
-  const char *lang = hc->hc_access->aa_lang_ui;
+  const char *name, *blank, *sort, *lang;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
@@ -757,6 +756,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
 
   hq = &hc->hc_reply;
 
+  lang = hc->hc_access->aa_lang_ui;
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
   hostpath = http_get_hostpath(hc);
   sort = http_arg_get(&hc->hc_req_args, "sort");
