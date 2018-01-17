@@ -294,7 +294,7 @@ linuxdvb_ca_thread ( void *aux )
   poll = tvhpoll_create(evsize + 1);
   tm = mclk();
   waitms = 250;
-  while (tvheadend_running && !quit) {
+  while (tvheadend_is_running() && !quit) {
     evp = ev;
     evp->fd = linuxdvb_ca_pipe.rd;
     evp->events = TVHPOLL_IN;

@@ -140,7 +140,7 @@ static cmdline_opt_t* cmdline_opt_find
 /*
  * Globals
  */
-int              tvheadend_running;
+int              tvheadend_running; /* do not use directly: tvheadend_is_running() */
 int              tvheadend_webui_port;
 int              tvheadend_webui_debug;
 int              tvheadend_htsp_port;
