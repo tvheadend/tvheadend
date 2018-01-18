@@ -25,8 +25,8 @@
 typedef struct lang_str_ele
 {
   RB_ENTRY(lang_str_ele) link;
-  const char *lang;
-  char *str;
+  char lang[4];
+  char str[0];
 } lang_str_ele_t;
 
 typedef RB_HEAD(lang_str, lang_str_ele) lang_str_t;
@@ -76,8 +76,5 @@ int             lang_str_empty(lang_str_t* str)
 
 /* Size in bytes */
 size_t          lang_str_size ( const lang_str_t *ls );
-
-/* Init/Done */
-void            lang_str_done( void );
 
 #endif /* __TVH_LANG_STR_H__ */

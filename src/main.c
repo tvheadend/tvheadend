@@ -1342,7 +1342,6 @@ main(int argc, char **argv)
   tvhtrace(LS_MAIN, "mtimer tick thread join leave");
 
   tvhftrace(LS_MAIN, dvb_done);
-  tvhftrace(LS_MAIN, lang_str_done);
   tvhftrace(LS_MAIN, esfilter_done);
   tvhftrace(LS_MAIN, profile_done);
   tvhftrace(LS_MAIN, codec_done);
