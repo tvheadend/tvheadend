@@ -2252,18 +2252,15 @@ dvr_event_removed(epg_broadcast_t *e)
 void dvr_event_updated(epg_broadcast_t *e)
 {
   dvr_entry_t *de;
-  int found = 0;
 
   if (e->channel == NULL)
     return;
   LIST_FOREACH(de, &e->dvr_entries, de_bcast_link) {
     assert(de->de_bcast == e);
+    if (de->de_sched_state != DVR_SCHEDULED) continue;
     _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
                       NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
-    found++;
   }
-  if (found)
-    return;
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
     if (de->de_sched_state != DVR_SCHEDULED) continue;
     if (de->de_bcast) continue;
@@ -2275,7 +2272,6 @@ void dvr_event_updated(epg_broadcast_t *e)
                             channel_get_name(e->channel, channel_blank_name));
       _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
                         NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
-      break;
     }
   }
 }
