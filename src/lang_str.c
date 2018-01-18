@@ -114,7 +114,7 @@ const char *lang_str_get
   ( const lang_str_t *ls, const char *lang )
 {
   lang_str_ele_t *e = lang_str_get2(ls, lang);
-  return e->str;
+  return e ? e->str : NULL;
 }
 
 /* Internal insertion routine */
