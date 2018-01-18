@@ -45,7 +45,6 @@ string_list_destroy(string_list_t *l)
   string_list_item_t *item;
   while ((item = RB_FIRST(l))) {
     RB_REMOVE(l, item, h_link);
-    free(item->id);
     free(item);
   }
   free(l);
@@ -62,11 +61,10 @@ string_list_insert(string_list_t *l, const char *id)
 {
   if (!id) return;
 
-  string_list_item_t *item = calloc(1, sizeof(string_list_item_t));
-  item->id = strdup(id);
+  string_list_item_t *item = calloc(1, sizeof(string_list_item_t) + strlen(id) + 1);
+  strcpy(item->id, id);
   if (RB_INSERT_SORTED(l, item, h_link, string_list_item_cmp)) {
     /* Duplicate, so not inserted. */
-    free(item->id);
     free(item);
   }
 }
@@ -88,11 +86,10 @@ string_list_to_htsmsg(const string_list_t *l)
 {
   htsmsg_t *ret = NULL;
   string_list_item_t *item;
-  RB_FOREACH(item, l, h_link) {
-    if (!ret) ret = htsmsg_create_list();
-    const char *id = item->id;
-    htsmsg_add_str(ret, NULL, id);
-  }
+  if (RB_FIRST(l))
+    ret = htsmsg_create_list();
+  RB_FOREACH(item, l, h_link)
+    htsmsg_add_str(ret, NULL, item->id);
   return ret;
 }
 
@@ -106,7 +103,6 @@ htsmsg_to_string_list(const htsmsg_t *m)
       const char *str = f->hmf_str;
       if (str && *str) {
         if (!ret) ret = string_list_create();
-
         string_list_insert(ret, str);
       }
     }
@@ -117,11 +113,11 @@ htsmsg_to_string_list(const htsmsg_t *m)
 void
 string_list_serialize(const string_list_t *l, htsmsg_t *m, const char *f)
 {
-    if (!l) return;
+  if (!l) return;
 
-    htsmsg_t *msg = string_list_to_htsmsg(l);
-    if (msg)
-      htsmsg_add_msg(m, f, msg);
+  htsmsg_t *msg = string_list_to_htsmsg(l);
+  if (msg)
+    htsmsg_add_msg(m, f, msg);
 }
 
 string_list_t *
@@ -179,10 +175,8 @@ string_list_copy(const string_list_t *src)
   if (!src) return NULL;
   string_list_t *ret = string_list_create();
   string_list_item_t *item;
-  RB_FOREACH(item, src, h_link) {
-    const char *id = item->id;
-    string_list_insert(ret, id);
-  }
+  RB_FOREACH(item, src, h_link)
+    string_list_insert(ret, item->id);
 
   return ret;
 }
@@ -190,10 +184,13 @@ string_list_copy(const string_list_t *src)
 int
 string_list_contains_string(const string_list_t *src, const char *find)
 {
-  string_list_item_t skel;
-  skel.id = (char*)find;
+  if (find == NULL)
+    return 0;
 
-  string_list_item_t *item = RB_FIND(src, &skel, h_link, string_list_item_cmp);
+  string_list_item_t *skel = alloca(sizeof(*skel) + strlen(find) + 1);
+  strcpy(skel->id, find);
+
+  string_list_item_t *item = RB_FIND(src, skel, h_link, string_list_item_cmp);
   /* Can't just return item due to compiler settings preventing ptr to
    * int conversion
    */

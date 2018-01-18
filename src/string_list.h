@@ -39,8 +39,8 @@ struct htsmsg;
 /// string_list_destroy(l);
 
 struct string_list_item {
-  char *id;
   RB_ENTRY(string_list_item) h_link;
+  char id[0];
 };
 
 typedef struct string_list_item string_list_item_t;
