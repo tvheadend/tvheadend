@@ -1216,6 +1216,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
   char buf[512];
   int64_t fsize1, fsize2;
   time_t pre;
+  uint32_t warm;
   htsmsg_t *conf;
 
   if (dvr_in_init || de->de_dont_rerecord)
@@ -1269,11 +1270,11 @@ not_so_good:
     return 0;
 
   e = NULL;
-  pre = (60 * dvr_entry_get_extra_time_pre(de)) -
-        dvr_entry_warm_time(de);
+  pre = dvr_entry_get_extra_time_pre(de);
+  warm = dvr_entry_warm_time(de);
   RB_FOREACH(ev, &de->de_channel->ch_epg_schedule, sched_link) {
     if (de->de_bcast == ev) continue;
-    if (ev->start - pre < gclk()) continue;
+    if (ev->start - pre - warm < gclk()) continue;
     if (dvr_entry_fuzzy_match(de, ev, 0, INT64_MAX))
       if (!e || e->start > ev->start)
         e = ev;
