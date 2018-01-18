@@ -892,10 +892,10 @@ static int extract_season_episode(epg_episode_num_t *epnum, const char *text)
   memset(epnum, 0, sizeof(*epnum));
 
   /* Extract season and season count */
-  if (strncasecmp(ch, "Season", 7))
+  if (strncasecmp(ch, "Season", 6))
     goto _episode;
 
-  ch += 7;
+  ch += 6;
   for (; *ch == ' '; ch++);
   for (; isdigit(*ch); ch++)
     s = (s * 10) + (*ch - '0');
@@ -907,6 +907,7 @@ static int extract_season_episode(epg_episode_num_t *epnum, const char *text)
   /* Sanity check */
   if (*ch != '.')
     return 0;
+  ch++;
 
   /* Extract episode and episode count */
 _episode:
