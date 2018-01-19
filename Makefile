@@ -764,11 +764,11 @@ $(BUILDDIR)/timestamp.c: FORCE
 	@echo 'const char* build_timestamp = "'$(BUILD_DATE)'";' >> $@
 
 $(BUILDDIR)/timestamp.o: $(BUILDDIR)/timestamp.c
-	$(pCC) -c -o $@ $<
+	$(pCC) $(CFLAGS) -c -o $@ $<
 
 $(BUILDDIR)/build.o: $(BUILDDIR)/build.c
 	@mkdir -p $(dir $@)
-	$(pCC) -c -o $@ $<
+	$(pCC) $(CFLAGS) -c -o $@ $<
 
 # Documentation
 $(BUILDDIR)/docs-timestamp: $(I18N-DOCS) support/doc/md_to_c.py
@@ -825,7 +825,7 @@ src/tvh_locale_inc.c: $(PO-FILES)
 # Bundle files
 $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
-	$(pCC) -I${ROOTDIR}/src -c -o $@ $<
+	$(pCC) $(CFLAGS) -I${ROOTDIR}/src -c -o $@ $<
 
 $(BUILDDIR)/bundle.c: check_dvb_scan make_webui
 	@mkdir -p $(dir $@)
