@@ -1352,7 +1352,7 @@ mpegts_input_process
 
     pid &= 0x1FFF;
 
-    /* Ignore NUL packets */
+    /* Ignore NULL packets */
     if (pid == 0x1FFF) {
 #if ENABLE_TSDEBUG
       tsdebug_check_tspkt(mm, tsb, llen);
@@ -1500,6 +1500,82 @@ done:
   llen = tsb - mpkt->mp_data;
   atomic_add(&mmi->tii_stats.bps, llen);
   return llen;
+}
+
+/*
+ * Demux again data from one mpeg-ts stream.
+ * Might be used for hardware descramblers.
+ */
+void
+mpegts_input_postdemux
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, uint8_t *tsb, int len )
+{
+  uint16_t pid;
+  int llen, type = 0;
+  mpegts_pid_t *mp;
+  mpegts_pid_sub_t *mps;
+  service_t *s;
+  elementary_stream_t *st;
+  mpegts_mux_instance_t *mmi;
+
+  pthread_mutex_lock(&mi->mi_output_lock);
+  if (mm == NULL || (mmi = mm->mm_active) == NULL)
+    goto unlock;
+
+  assert(mm == mmi->mmi_mux);
+
+  /* Process */
+  assert((len % 188) == 0);
+  while (len > 0) {
+
+    /*
+     * mask
+     *  0 - 0xFF - sync word 0x47
+     *  1 - 0x80 - transport error
+     *  1 - 0x1F - pid high
+     *  2 - 0xFF - pid low
+     *  3 - 0xC0 - scrambled
+     *  3 - 0x10 - CC check
+     */
+    llen = mpegts_word_count(tsb, len, 0xFF9FFFD0);
+
+    pid = (tsb[1] << 8) | tsb[2];
+
+    pid &= 0x1FFF;
+
+    /* Ignore NULL packets */
+    if (pid == 0x1FFF)
+      goto done;
+
+    /* Find PID */
+    if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
+
+      type = mp->mp_type;
+      
+      /* Stream service data */
+      if (type & MPS_SERVICE) {
+        LIST_FOREACH(mps, &mp->mp_svc_subs, mps_svcraw_link) {
+          s = mps->mps_owner;
+          st = service_stream_find(s, pid);
+          ts_recv_packet0((mpegts_service_t*)s, st, tsb, llen);
+        }
+      } else
+      /* Stream table data */
+      if (type & MPS_STREAM) {
+        LIST_FOREACH(s, &mm->mm_transports, s_active_link) {
+          if (s->s_type != STYPE_STD) continue;
+          ts_recv_packet0((mpegts_service_t*)s, NULL, tsb, llen);
+        }
+      }
+
+    }
+
+done:
+    tsb += llen;
+    len -= llen;
+  }
+unlock:
+  pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
 static void *
