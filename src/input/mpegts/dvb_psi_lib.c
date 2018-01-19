@@ -328,6 +328,7 @@ dvb_table_begin
     /* Interval check */
     if (interval && mt->mt_last_complete &&
       mt->mt_last_complete + interval < gclk()) {
+      mt->mt_last_complete = 0;
       tvhtrace(mt->mt_subsys, "%s:  time interval exceeded, restart", mt->mt_name);
       goto restart;
     }
