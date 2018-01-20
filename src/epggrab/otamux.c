@@ -526,12 +526,17 @@ next_one:
       if (net->failed) {
         TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
         om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+        om->om_retry_time = mclk() + mono2sec(60);
         goto done;
       }
       break;
     }
   }
   if (i >= networks_count) {
+    if (i >= ARRAY_SIZE(networks)) {
+      tvherror(LS_EPGGRAB, "ota epg - too many networks");
+      goto done;
+    }
     net = &networks[networks_count++];
     net->net = mm->mm_network;
     net->failed = 0;
