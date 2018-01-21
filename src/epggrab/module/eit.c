@@ -63,7 +63,7 @@ typedef struct eit_data
 typedef struct eit_module_t
 {
   epggrab_module_ota_scraper_t  ;      ///< Base struct
-  int subtitle_summary;
+  int short_target;
   int running_immediate;               ///< Handle quickly the events from the current table
   eit_pattern_list_t p_snum;
   eit_pattern_list_t p_enum;
@@ -596,6 +596,7 @@ static int _eit_process_event_one
   lang_str_t *title_copy = NULL;
   uint32_t changes2 = 0, changes3 = 0, changes4 = 0;
   char tm1[32], tm2[32];
+  int short_target = ((eit_module_t *)mod)->short_target;
 
   /* Core fields */
   eid   = ptr[0] << 8 | ptr[1];
@@ -655,7 +656,9 @@ static int _eit_process_event_one
 
   /* Summary/Description */
   if (ev->summary)
-    *save |= epg_broadcast_set_summary(ebc, ev->summary, &changes2);
+    if (short_target != 0 ||
+        (ev->subtitle && lang_str_compare(ev->summary, ev->subtitle)))
+      *save |= epg_broadcast_set_summary(ebc, ev->summary, &changes2);
   if (ev->desc)
     *save |= epg_broadcast_set_description(ebc, ev->desc, &changes2);
 
@@ -702,7 +705,7 @@ static int _eit_process_event_one
       *save |= epg_episode_set_age_rating(ee, ev->parental, &changes4);
     if (ev->subtitle)
       *save |= epg_episode_set_subtitle(ee, ev->subtitle, &changes4);
-    else if (((eit_module_t *)mod)->subtitle_summary && ev->summary)
+    else if ((short_target == 0 || short_target == 2) && ev->summary)
       *save |= epg_episode_set_subtitle(ee, ev->summary, &changes4);
 #if TODO_ADD_EXTRA
     if (ev->extra)
@@ -1290,17 +1293,29 @@ static void _eit_module_load_config(eit_module_t *mod)
     free(generic_name);
 }
 
+static htsmsg_t *
+epggrab_mod_eit_class_short_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Subtitle"),  0 },
+    { N_("Summary"), 1 },
+    { N_("Subtitle and summary"), 2 }
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 static const idclass_t epggrab_mod_eit_class = {
   .ic_super      = &epggrab_mod_ota_scraper_class,
   .ic_class      = "epggrab_mod_eit",
   .ic_caption    = N_("Over-the-air EIT EPG grabber"),
   .ic_properties = (const property_t[]){
     {
-      .type   = PT_BOOL,
-      .id     = "subtitle_summary",
-      .name   = N_("Set subtitle to summary"),
-      .desc   = N_("If the subtitle is not scraped, set it to the summary text."),
-      .off    = offsetof(eit_module_t, subtitle_summary),
+      .type   = PT_INT,
+      .id     = "short_target",
+      .name   = N_("Short EIT description"),
+      .desc   = N_("Set the short EIT destription to given target (subtitle, summary or both)."),
+      .off    = offsetof(eit_module_t, short_target),
+      .list   = epggrab_mod_eit_class_short_list,
       .group  = 1,
       .opts   = PO_EXPERT,
     },
