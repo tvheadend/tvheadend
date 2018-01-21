@@ -45,6 +45,7 @@ static void
 cc_free_ecm_section(cc_ecm_section_t *es)
 {
   LIST_REMOVE(es, es_link);
+  free(es->es_data);
   free(es);
 }
 
@@ -280,8 +281,12 @@ cc_ecm_reset(th_descrambler_t *th)
   pthread_mutex_lock(&cc->cc_mutex);
   descrambler_change_keystate(th, DS_READY, 1);
   LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link)
-    LIST_FOREACH(es, &ep->ep_sections, es_link)
+    LIST_FOREACH(es, &ep->ep_sections, es_link) {
       es->es_keystate = ES_UNKNOWN;
+      free(es->es_data);
+      es->es_data = NULL;
+      es->es_data_len = 0;
+    }
   ct->ecm_state = ECM_RESET;
   pthread_mutex_unlock(&cc->cc_mutex);
   return 0;
@@ -300,8 +305,12 @@ cc_ecm_idle(th_descrambler_t *th)
 
   pthread_mutex_lock(&cc->cc_mutex);
   LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link)
-    LIST_FOREACH(es, &ep->ep_sections, es_link)
+    LIST_FOREACH(es, &ep->ep_sections, es_link) {
       es->es_keystate = ES_IDLE;
+      free(es->es_data);
+      es->es_data = NULL;
+      es->es_data_len = 0;
+    }
   ct->ecm_state = ECM_RESET;
   pthread_mutex_unlock(&cc->cc_mutex);
 }
@@ -927,6 +936,14 @@ found:
       es->es_section = section;
       LIST_INSERT_HEAD(&ep->ep_sections, es, es_link);
     }
+    if (es->es_data_len == len && memcmp(es->es_data, data, len) == 0)
+      goto end;
+    if (es->es_data_len < len) {
+      free(es->es_data);
+      es->es_data = malloc(len);
+    }
+    memcpy(es->es_data, data, len);
+    es->es_data_len = len;
 
     if(cc->cc_fd == -1) {
       // New key, but we are not connected (anymore), can not descramble

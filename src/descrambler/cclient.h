@@ -43,6 +43,8 @@ typedef struct cc_ecm_section {
   } es_keystate;
 
   int      es_section;
+  uint8_t *es_data;
+  uint32_t es_data_len;
 
   uint32_t es_card_id;
   uint16_t es_capid;
