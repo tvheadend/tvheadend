@@ -660,7 +660,7 @@ epggrab_module_activate_socket ( void *m, int a )
       return 0;
     }
 
-    if (listen(mod->sock, 5) != 0) {
+    if (listen(sock, 5) != 0) {
       tvherror(mod->subsys, "%s: failed to listen on socket: %s", mod->id, strerror(errno));
       close(sock);
       return 0;
