@@ -789,7 +789,7 @@ epggrab_ota_load_one
     if ((l2 = htsmsg_get_list(e, "services")) != NULL) {
       HTSMSG_FOREACH(f2, l2) {
         tvh_uuid_t u;
-        if (htsmsg_field_get_uuid(f2, &u))
+        if (!htsmsg_field_get_uuid(f2, &u))
           epggrab_ota_service_add(map, ota, &u, 0);
       }
     }
