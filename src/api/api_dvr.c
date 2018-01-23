@@ -237,7 +237,6 @@ api_dvr_entry_create_by_event
       dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
       if (cfg) {
         htsmsg_add_uuid(conf, "config_name", &cfg->dvr_id.in_uuid);
-        htsmsg_copy_field(conf, "config_name", m, "config_uuid");
         de = dvr_entry_create_from_htsmsg(conf, e);
         if (de)
           idnode_changed(&de->de_id);
