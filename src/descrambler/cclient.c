@@ -967,13 +967,15 @@ found:
       goto end;
     }
 
-    es->es_seq = cc->cc_send_ecm(cc, ct, es, pcard, data, len);
-
-    tvhdebug(cc->cc_subsys,
-             "%s: Sending ECM%s section=%d/%d for service \"%s\" (seqno: %d)",
-             cc->cc_name, chaninfo, section,
-             ep->ep_last_section, t->s_dvb_svcname, es->es_seq);
-    es->es_time = getfastmonoclock();
+    if (cc->cc_send_ecm(cc, ct, es, pcard, data, len) == 0) {
+      tvhdebug(cc->cc_subsys,
+               "%s: Sending ECM%s section=%d/%d for service \"%s\" (seqno: %d)",
+               cc->cc_name, chaninfo, section,
+               ep->ep_last_section, t->s_dvb_svcname, es->es_seq);
+      es->es_time = getfastmonoclock();
+    } else {
+      es->es_pending = 0;
+    }
   } else {
     if (cc->cc_forward_emm && data[0] >= 0x82 && data[0] <= 0x92) {
       tvhtrace(cc->cc_subsys, "%s: sending EMM for %04X:%06X service \"%s\"",

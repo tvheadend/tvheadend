@@ -523,9 +523,10 @@ cccam_read_message0(cccam_t *cccam, const char *state, sbuf_t *rbuf, int timeout
 /**
  *
  */
-static uint32_t
+static int
 cccam_send_msg(cccam_t *cccam, cccam_msg_type_t cmd,
-               uint8_t *buf, size_t len, int enq, int seq, uint32_t card_id)
+               uint8_t *buf, size_t len, int enq,
+               uint8_t seq, uint32_t card_id)
 {
   cc_message_t *cm;
   uint8_t *netbuf;
@@ -554,7 +555,7 @@ cccam_send_msg(cccam_t *cccam, cccam_msg_type_t cmd,
   cm->cm_len = len;
   cc_write_message((cclient_t *)cccam, cm, enq);
 
-  return seq;
+  return 0;
 }
 
 /**
@@ -747,7 +748,7 @@ cccam_init_session(void *cc)
 /**
  *
  */
-static uint32_t
+static int
 cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
                cc_card_data_t *pcard, const uint8_t *msg, int len)
 {
@@ -760,13 +761,13 @@ cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
 
   if (len > 255) {
     tvherror(cccam->cc_subsys, "%s: ECM too big (%d bytes)", cccam->cc_name, len);
-    return 0;
+    return -1;
   }
 
   if (cccam_set_busy(cccam)) {
     tvhinfo(cccam->cc_subsys, "%s: Ignore ECM request %02X (server is busy)",
             cccam->cc_name, msg[0]);
-    return 0;
+    return -1;
   }
 
   seq = atomic_add(&cccam->cc_seq, 1);
@@ -775,6 +776,7 @@ cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
   card_id = pcard->cs_id;
   es->es_card_id = card_id;
   sid = t->s_dvb_service_id;
+  es->es_seq = seq & 0xff;
 
   buf = alloca(len + 13);
   buf[ 0] = caid >> 8;

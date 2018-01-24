@@ -212,9 +212,10 @@ des_make_session_key(cwc_t *cwc)
  * Note, this function is called from multiple threads so beware of
  * the ID)
  */
-static uint32_t
+static int
 cwc_send_msg(void *cc, const uint8_t *msg, size_t len,
-             int sid, int enq, uint16_t st_caid, uint32_t st_provider)
+             int sid, int enq, uint16_t st_caid, uint32_t st_provider,
+             uint16_t *_seq)
 {
   cwc_t *cwc = cc;
   cc_message_t *cm;
@@ -261,7 +262,10 @@ cwc_send_msg(void *cc, const uint8_t *msg, size_t len,
   cm->cm_len = len;
   cc_write_message(cc, cm, enq);
 
-  return seq & 0xffff;
+  if (_seq)
+    *_seq = seq;
+
+  return 0;
 }
 
 /**
@@ -276,7 +280,7 @@ cwc_send_data_req(cwc_t *cwc)
   buf[1] = 0;
   buf[2] = 0;
 
-  cwc_send_msg(cwc, buf, 3, 0, 0, 0, 1);
+  cwc_send_msg(cwc, buf, 3, 0, 0, 0, 1, NULL);
 }
 
 
@@ -293,7 +297,7 @@ cwc_send_ka(void *cc)
   buf[1] = 0;
   buf[2] = 0;
 
-  cwc_send_msg(cwc, buf, 3, 0, 1, 0, 0);
+  cwc_send_msg(cwc, buf, 3, 0, 1, 0, 0, NULL);
 }
 
 /**
@@ -373,7 +377,7 @@ cwc_send_login(cwc_t *cwc)
   memcpy(buf + 3,      cwc->cc_username, ul);
   memcpy(buf + 3 + ul, cwc->cwc_password_salted, pl);
 
-  cwc_send_msg(cwc, buf, ul + pl + 3, TVHEADEND_PROTOCOL_ID, 0, 0, 0);
+  cwc_send_msg(cwc, buf, ul + pl + 3, TVHEADEND_PROTOCOL_ID, 0, 0, 0, NULL);
 
   return 0;
 }
@@ -625,14 +629,19 @@ cwc_read(void *cc, sbuf_t *rbuf)
 /**
  *
  */
-static uint32_t
+static int
 cwc_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
              cc_card_data_t *pcard, const uint8_t *data, int len)
 {
   mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
   uint16_t sid = t->s_dvb_service_id;
+  uint16_t seq;
+  int r;
 
-  return cwc_send_msg(cc, data, len, sid, 1, es->es_caid, es->es_provid);
+  r = cwc_send_msg(cc, data, len, sid, 1, es->es_caid, es->es_provid, &seq);
+  if (r == 0)
+    es->es_seq = seq;
+  return r;
 }
 
 /**
@@ -651,7 +660,7 @@ cwc_send_emm(void *cc, cc_service_t *ct,
     sid = t->s_dvb_service_id;
   }
 
-  cwc_send_msg(cc, data, len, sid, 1, pcard->cs_ra.caid, provid);
+  cwc_send_msg(cc, data, len, sid, 1, pcard->cs_ra.caid, provid, NULL);
 }
 
 /**
