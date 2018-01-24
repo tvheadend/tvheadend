@@ -1065,7 +1065,7 @@ parser_set_stream_vparam(elementary_stream_t *st, int width, int height,
     st->es_width = width;
     st->es_height = height;
     st->es_frame_duration = duration;
-    service_request_save(st->es_service, 0);
+    service_request_save(st->es_service);
     atomic_set(&st->es_service->s_pending_restart, 1);
   }
 }

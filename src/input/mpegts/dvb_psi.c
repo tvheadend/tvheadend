@@ -999,7 +999,7 @@ dvb_pat_callback
                          pid, MPS_WEIGHT_PMT_SCAN);
 
         if (save)
-          service_request_save((service_t*)s, 1);
+          service_request_save((service_t*)s);
       }
     }
 
@@ -2660,7 +2660,7 @@ psi_parse_pmt
      update&PMT_UPDATE_CAID_PID          ? ", CAID PID changed":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
     
-    service_request_save((service_t*)t, 0);
+    service_request_save((service_t*)t);
 
     // Only restart if something that our clients worry about did change
     if(update & ~(PMT_UPDATE_NEW_CA_STREAM |

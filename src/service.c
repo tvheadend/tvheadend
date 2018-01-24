@@ -1030,7 +1030,7 @@ service_set_enabled(service_t *t, int enabled, int _auto)
     t->s_enabled = !!enabled;
     t->s_auto = _auto;
     service_class_notify_enabled(t, NULL);
-    service_request_save(t, 0);
+    service_request_save(t);
     idnode_notify_changed(&t->s_id);
   }
 }
@@ -1617,20 +1617,18 @@ static struct service_queue pending_save_queue;
  *
  */
 void
-service_request_save(service_t *t, int restart)
+service_request_save(service_t *t)
 {
-  if (t->s_type != STYPE_STD && !restart)
+  if (t->s_type != STYPE_STD)
     return;
 
   pthread_mutex_lock(&pending_save_mutex);
 
   if(!t->s_ps_onqueue) {
-    t->s_ps_onqueue = 1 + !!restart;
+    t->s_ps_onqueue = 1;
     TAILQ_INSERT_TAIL(&pending_save_queue, t, s_ps_link);
     service_ref(t);
     tvh_cond_signal(&pending_save_cond, 0);
-  } else if (restart) {
-    t->s_ps_onqueue = 2; // upgrade to restart too
   }
 
   pthread_mutex_unlock(&pending_save_mutex);
@@ -1674,7 +1672,6 @@ static void *
 service_saver(void *aux)
 {
   service_t *t;
-  int restart;
 
   pthread_mutex_lock(&pending_save_mutex);
 
@@ -1685,7 +1682,6 @@ service_saver(void *aux)
       continue;
     }
     assert(t->s_ps_onqueue != 0);
-    restart = t->s_ps_onqueue == 2;
 
     TAILQ_REMOVE(&pending_save_queue, t, s_ps_link);
     t->s_ps_onqueue = 0;
@@ -1695,8 +1691,6 @@ service_saver(void *aux)
 
     if(t->s_status != SERVICE_ZOMBIE && t->s_config_save)
       idnode_changed(&t->s_id);
-    if(t->s_status == SERVICE_RUNNING && restart)
-      service_restart(t);
     service_unref(t);
 
     pthread_mutex_unlock(&global_lock);

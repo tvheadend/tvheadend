@@ -167,7 +167,7 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     snprintf(location, sizeof(location), "%d", sect);
     htsmsg_set_msg(t->s_hbbtv, location, apps);
     apps = NULL;
-    service_request_save(t, 0);
+    service_request_save(t);
   }
 
   if (streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET)) {

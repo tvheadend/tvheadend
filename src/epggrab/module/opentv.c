@@ -532,7 +532,7 @@ opentv_desc_channels
       svc->s_dvb_opentv_chnum = cnum;
       svc->s_dvb_opentv_id = unk;
       mpegts_network_bouquet_trigger(mm->mm_network, 0);
-      service_request_save((service_t *)svc, 0);
+      service_request_save((service_t *)svc);
     }
 skip_chnum:
     if (svc && LIST_FIRST(&svc->s_channels)) {

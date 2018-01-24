@@ -415,7 +415,7 @@ forbid:
       t->s_dvb_prefcapid = ct->cs_capid;
       tvhdebug(cc->cc_subsys, "%s: Saving prefered PID %d for %s",
                cc->cc_name, t->s_dvb_prefcapid, ct->td_nicename);
-      service_request_save((service_t*)t, 0);
+      service_request_save((service_t*)t);
     }
 
     tvhdebug(cc->cc_subsys,

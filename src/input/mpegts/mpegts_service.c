@@ -857,7 +857,7 @@ mpegts_service_create0
 
   /* Save the create time */
   if (s->s_dvb_created == dispatch_clock)
-    service_request_save((service_t *)s, 0);
+    service_request_save((service_t *)s);
 
   return s;
 }
