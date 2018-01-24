@@ -995,7 +995,7 @@ end:
  * cc_mutex is held
  */
 static void
-cc_service_destroy0(th_descrambler_t *td)
+cc_service_destroy0(cclient_t *cc, th_descrambler_t *td)
 {
   cc_service_t *ct = (cc_service_t *)td;
   int i;
@@ -1012,6 +1012,9 @@ cc_service_destroy0(th_descrambler_t *td)
 
   free(ct->td_nicename);
   free(ct);
+
+  if (LIST_EMPTY(&cc->cc_services) && cc->cc_no_services)
+    cc->cc_no_services(cc);
 }
 
 /**
@@ -1024,7 +1027,7 @@ cc_service_destroy(th_descrambler_t *td)
   cclient_t *cc = ct->cs_client;
 
   pthread_mutex_lock(&cc->cc_mutex);
-  cc_service_destroy0(td);
+  cc_service_destroy0(cc, td);
   pthread_mutex_unlock(&cc->cc_mutex);
 }
 
@@ -1075,7 +1078,7 @@ cc_service_start(caclient_t *cac, service_t *t)
     if (st) break;
   }
   if (!pcard) {
-    if (ct) cc_service_destroy0((th_descrambler_t*)ct);
+    if (ct) cc_service_destroy0(cc, (th_descrambler_t*)ct);
     goto end;
   }
   if (ct) {

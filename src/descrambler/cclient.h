@@ -146,6 +146,7 @@ typedef struct cclient {
                      cc_card_data_t *pcard, const uint8_t *data, int len);
   void (*cc_send_emm)(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
                       uint32_t provid, const uint8_t *data, int len);
+  void (*cc_no_services)(void *cc);
 
   /* Connection */
   int cc_fd;

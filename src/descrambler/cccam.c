@@ -876,6 +876,15 @@ cccam_read(void *cc, sbuf_t *rbuf)
  *
  */
 static void
+cccam_no_services(void *cc)
+{
+  cccam_unset_busy((cccam_t *)cc);
+}
+
+/**
+ *
+ */
+static void
 cccam_conf_changed(caclient_t *cac)
 {
   cccam_t *cccam = (cccam_t *)cac;
@@ -1051,5 +1060,6 @@ caclient_t *cccam_create(void)
   cccam->cc_send_ecm      = cccam_send_ecm;
   cccam->cc_send_emm      = cccam_send_emm;
   cccam->cc_keepalive     = cccam_send_ka;
+  cccam->cc_no_services   = cccam_no_services;
   return (caclient_t *)cccam;
 }
