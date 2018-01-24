@@ -1468,8 +1468,11 @@ dobackup(const char *oldver)
   char outfile[PATH_MAX], cwd[PATH_MAX];
   const char *argv[] = {
     "/usr/bin/tar", "cjf", outfile,
-    "--exclude", "backup", "--exclude", "epggrab/*.sock",
+    "--exclude", "backup",
+    "--exclude", "epggrab/*.sock",
     "--exclude", "timeshift/buffer",
+    "--exclude", "imagecache/meta",
+    "--exclude", "imagecache/data",
     ".", NULL
   };
   const char *root = hts_settings_get_root();
