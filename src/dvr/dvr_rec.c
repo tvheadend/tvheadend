@@ -71,6 +71,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   access_t *aa;
   uint32_t rec_count, net_count;
   int pri, c1, c2;
+  struct stat st;
 
   assert(de->de_s == NULL);
   assert(de->de_chain == NULL);
@@ -111,6 +112,11 @@ dvr_rec_subscribe(dvr_entry_t *de)
     }
   }
   access_destroy(aa);
+
+  if(stat(de->de_config->dvr_storage, &st) || !S_ISDIR(st.st_mode)) {
+    tvherror(LS_DVR, "the directory '%s' is not accessible", de->de_config->dvr_storage);
+    return -EIO;
+  }
 
   pro = de->de_config->dvr_profile;
   prch = malloc(sizeof(*prch));
@@ -1082,7 +1088,7 @@ cut1:
       }
     }
 
-    if(stat(path, &st) == -1) {
+    if (stat(path, &st) == -1) {
       tvhdebug(LS_DVR, "File \"%s\" -- %s -- Using for recording",
 	       path, strerror(errno));
       break;
@@ -1162,6 +1168,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   htsmsg_t *info, *e;
   htsmsg_field_t *f;
   muxer_t *muxer;
+  struct stat st;
   int i;
 
   if (!cfg) {
@@ -1171,6 +1178,11 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 
   if (!prch) {
     dvr_rec_fatal_error(de, "Unable to determine stream profile");
+    return -1;
+  }
+
+  if (stat(cfg->dvr_storage, &st) || !S_ISDIR(st.st_mode)) {
+    dvr_rec_fatal_error(de, "Unable to create file in directory '%s", cfg->dvr_storage);
     return -1;
   }
 
