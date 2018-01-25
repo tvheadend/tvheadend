@@ -24,6 +24,7 @@
 #include "htsbuf.h"
 #include "url.h"
 #include "udp.h"
+#include "tvhpoll.h"
 
 #define IPTV_BUF_SIZE    (300*188)
 #define IPTV_PKTS        32
@@ -34,8 +35,6 @@ typedef struct iptv_network iptv_network_t;
 typedef struct iptv_mux     iptv_mux_t;
 typedef struct iptv_service iptv_service_t;
 typedef struct iptv_handler iptv_handler_t;
-
-typedef struct tvhpoll tvhpoll_t;
 
 struct iptv_handler
 {
