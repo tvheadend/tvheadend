@@ -1323,9 +1323,10 @@ descrambler_table_callback
                          t->s_dvb_svcname);
             }
             if ((ptr[0] & 0xfe) == 0x80) { /* 0x80 = even, 0x81 = odd */
-              dr->dr_ecm_start[ptr[0] & 1] = mclk();
+              j = ptr[0] & 1;
+              dr->dr_ecm_start[j] = mclk();
               if (dr->dr_quick_ecm) {
-                ki = 1 << ((ptr[0] & 1) + 6); /* 0x40 = even, 0x80 = odd */
+                ki = 1 << (j + 6); /* 0x40 = even, 0x80 = odd */
                 for (i = 0; i < DESCRAMBLER_MAX_KEYS; i++) {
                   tk = &dr->dr_keys[i];
                   tk->key_valid &= ~ki;
@@ -1365,7 +1366,7 @@ descrambler_table_callback
           for (i = 0; i < DESCRAMBLER_MAX_KEYS; i++) {
             tk = &dr->dr_keys[i];
             for (j = 0; j < 2; j++) {
-              if (tk->key_timestamp[j] > dr->dr_ecm_start[j] &&
+              if (tk->key_timestamp[j] >= dr->dr_ecm_start[j] &&
                   tk->key_timestamp[j] + ms2mono(200) <= clk) {
                 tk->key_timestamp[j] = clk;
                 tvhtrace(LS_DESCRAMBLER, "ECM: %s key[%d] for service \"%s\" still valid",
