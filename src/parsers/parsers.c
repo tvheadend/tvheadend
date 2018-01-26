@@ -673,6 +673,8 @@ parse_mpa123(service_t *t, elementary_stream_t *st)
 
     if (fsize && st->es_audio_version < layer) {
       st->es_audio_version = layer;
+      tvhtrace(LS_PARSER, "audio version change %02d: val=%d (old=%d)",
+               st->es_index, layer, st->es_audio_version);
       atomic_set(&t->s_pending_restart, 1);
     }
 
@@ -1046,6 +1048,9 @@ parser_set_stream_vparam(elementary_stream_t *st, int width, int height,
 {
   int need_save = 0;
 
+  tvhtrace(LS_PARSER, "vparam %02d: w=%d h=%d d=%d (old w=%d h=%d d=%d meta=%d)",
+           st->es_index, width, height, duration, st->es_width, st->es_height,
+           st->es_frame_duration, st->es_meta_change);
   if(st->es_width == 0 && st->es_height == 0 && st->es_frame_duration < 2) {
     need_save = 1;
     st->es_meta_change = 0;
