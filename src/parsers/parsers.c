@@ -672,9 +672,9 @@ parse_mpa123(service_t *t, elementary_stream_t *st)
     }
 
     if (fsize && st->es_audio_version < layer) {
-      st->es_audio_version = layer;
       tvhtrace(LS_PARSER, "audio version change %02d: val=%d (old=%d)",
                st->es_index, layer, st->es_audio_version);
+      st->es_audio_version = layer;
       atomic_set(&t->s_pending_restart, 1);
     }
 
