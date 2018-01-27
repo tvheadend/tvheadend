@@ -737,19 +737,19 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
     mi = mux->mm_active ? mux->mm_active->mmi_input : NULL;
     if (mi) {
       pthread_mutex_lock(&mi->mi_output_lock);
-      pthread_mutex_lock(&sp->service->s_stream_mutex);
       for (i = 0; i < services_count; i++) {
         sp = &services[i];
+        pthread_mutex_lock(&sp->service->s_stream_mutex);
         for (i = 0; i < sp->to_open.count; i++)
           mpegts_input_open_pid(mi, mux, sp->to_open.pids[i].pid, MPS_SERVICE,
                                MPS_WEIGHT_CAT, sp->service, 0);
         for (i = 0; i < sp->to_close.count; i++)
           mpegts_input_close_pid(mi, mux, sp->to_close.pids[i].pid, MPS_SERVICE,
                                  MPS_WEIGHT_CAT, sp->service);
+        pthread_mutex_unlock(&sp->service->s_stream_mutex);
         mpegts_pid_done(&sp->to_open);
         mpegts_pid_done(&sp->to_close);
       }
-      pthread_mutex_unlock(&sp->service->s_stream_mutex);
       pthread_mutex_unlock(&mi->mi_output_lock);
       mpegts_mux_update_pids(mux);
     }
