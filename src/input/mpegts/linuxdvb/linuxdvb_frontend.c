@@ -1334,6 +1334,8 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
        linuxdvb_frontend_open_pid0(lfe, name, pids, pids_size, padd.pids[i].pid);
       mpegts_pid_done(&padd);
       mpegts_pid_done(&pdel);
+      mpegts_pid_done(tuned);
+      mpegts_pid_weighted(tuned, &lfe->lfe_pids, max);
     }
   }
 
@@ -1342,8 +1344,6 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
   else if (!all && linuxdvb_pid_exists(pids, pids_size, MPEGTS_FULLMUX_PID))
     linuxdvb_frontend_close_pid0(lfe, name, pids, pids_size, MPEGTS_FULLMUX_PID);
 
-  mpegts_pid_done(tuned);
-  mpegts_pid_weighted(tuned, &lfe->lfe_pids, max);
   tuned->all = lfe->lfe_pids.all;
 
   pthread_mutex_unlock(&lfe->lfe_dvr_lock);
