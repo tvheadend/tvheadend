@@ -245,6 +245,8 @@ api_epg_filter_add_str
     api_epg_filter_set_str(&eq->summary, v, comp);
   else if (!strcmp(k, "description"))
     api_epg_filter_set_str(&eq->description, v, comp);
+  else if (!strcmp(k, "extratext"))
+    api_epg_filter_set_str(&eq->extratext, v, comp);
 }
 
 static void
@@ -294,6 +296,7 @@ static struct strtab sortcmptab[] = {
   { "subtitle",      ESK_SUBTITLE },
   { "summary",       ESK_SUMMARY },
   { "description",   ESK_DESCRIPTION },
+  { "extratext",     ESK_EXTRATEXT },
   { "channelName",   ESK_CHANNEL },
   { "channelNumber", ESK_CHANNEL_NUM },
   { "starRating",    ESK_STARS },

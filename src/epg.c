@@ -3153,6 +3153,22 @@ static int _epg_sort_description_descending ( const void *a, const void *b, void
   return _epg_sort_description_ascending(a, b, eq) * -1;
 }
 
+static int _epg_sort_extratext_ascending ( const void *a, const void *b, void *eq )
+{
+  int r = _epg_sort_subtitle_ascending(a, b, eq);
+  if (r == 0) {
+    r = _epg_sort_summary_ascending(a, b, eq);
+    if (r == 0)
+      return _epg_sort_description_ascending(a, b, eq);
+  }
+  return r;
+}
+
+static int _epg_sort_extratext_descending ( const void *a, const void *b, void *eq )
+{
+  return _epg_sort_extratext_ascending(a, b, eq) * -1;
+}
+
 static int _epg_sort_channel_ascending ( const void *a, const void *b, void *eq )
 {
   char *s1 = strdup(channel_get_name((*(epg_broadcast_t**)a)->channel, ""));
@@ -3238,6 +3254,7 @@ epg_query ( epg_query_t *eq, access_t *perm )
   if (_eq_init_str(&eq->subtitle)) goto fin;
   if (_eq_init_str(&eq->summary)) goto fin;
   if (_eq_init_str(&eq->description)) goto fin;
+  if (_eq_init_str(&eq->extratext)) goto fin;
   if (_eq_init_str(&eq->channel_name)) goto fin;
 
   if (eq->stitle)
@@ -3283,6 +3300,7 @@ epg_query ( epg_query_t *eq, access_t *perm )
     case ESK_SUBTITLE:    fcn = _epg_sort_subtitle_ascending;     break;
     case ESK_SUMMARY:     fcn = _epg_sort_summary_ascending;      break;
     case ESK_DESCRIPTION: fcn = _epg_sort_description_ascending;  break;
+    case ESK_EXTRATEXT:   fcn = _epg_sort_extratext_ascending;    break;
     case ESK_CHANNEL:     fcn = _epg_sort_channel_ascending;      break;
     case ESK_CHANNEL_NUM: fcn = _epg_sort_channel_num_ascending;  break;
     case ESK_STARS:       fcn = _epg_sort_stars_ascending;        break;
@@ -3299,6 +3317,7 @@ epg_query ( epg_query_t *eq, access_t *perm )
     case ESK_SUBTITLE:    fcn = _epg_sort_subtitle_descending;    break;
     case ESK_SUMMARY:     fcn = _epg_sort_summary_descending;     break;
     case ESK_DESCRIPTION: fcn = _epg_sort_description_descending; break;
+    case ESK_EXTRATEXT:   fcn = _epg_sort_extratext_descending;   break;
     case ESK_CHANNEL:     fcn = _epg_sort_channel_descending;     break;
     case ESK_CHANNEL_NUM: fcn = _epg_sort_channel_num_descending; break;
     case ESK_STARS:       fcn = _epg_sort_stars_descending;       break;
@@ -3315,6 +3334,7 @@ fin:
   _eq_done_str(&eq->subtitle);
   _eq_done_str(&eq->summary);
   _eq_done_str(&eq->description);
+  _eq_done_str(&eq->extratext);
   _eq_done_str(&eq->channel_name);
 
   if (eq->stitle)

@@ -1,4 +1,4 @@
-insertContentGroupClearOption = function( scope, records, options ){
+insertContentGroupClearOption = function(scope, records, options) {
     var placeholder = Ext.data.Record.create(['val', 'key']);
     scope.insert(0,new placeholder({val: _('(Clear filter)'), key: '-1'}));
 };
@@ -10,7 +10,7 @@ tvheadend.ContentGroupStore = tvheadend.idnode_get_enum({
     }
 });
 
-insertCategoryClearOption = function( scope, records, options ){
+insertCategoryClearOption = function(scope, records, options) {
     var placeholder = Ext.data.Record.create(['key', 'val']);
     scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
 };
@@ -457,6 +457,7 @@ tvheadend.epg = function() {
             { name: 'subtitle' },
             { name: 'summary' },
             { name: 'description' },
+            { name: 'extratext' },
             { name: 'episodeOnscreen' },
             { name: 'image' },
             {
@@ -538,11 +539,15 @@ tvheadend.epg = function() {
         return value;
     }
 
-    function renderTextSubtitle(value, meta, record) {
+    function renderExtraText(value, meta, record) {
         setMetaAttr(meta, record);
 
-        if (!value)
+        value = record.data.subtitle;
+        if (!value) {
           value = record.data.summary;
+          if (!value)
+            value = record.data.description;
+        }
         return value;
     }
 
@@ -603,11 +608,11 @@ tvheadend.epg = function() {
             },
             {
                 width: 250,
-                id: 'subtitle',
-                header: _("Subtitle or summary"),
-                tooltip: _("Subtitle or summary"),
-                dataIndex: 'subtitle',
-                renderer: renderTextSubtitle
+                id: 'extratext',
+                header: _("Extra text"),
+                tooltip: _("Extra text: subtitle or summary or description"),
+                dataIndex: 'extratext',
+                renderer: renderExtraText
             },
             {
                 width: 100,
@@ -711,7 +716,7 @@ tvheadend.epg = function() {
         local: false,
         filters: [
             { type: 'string',   dataIndex: 'title' },
-            { type: 'string',   dataIndex: 'subtitle' },
+            { type: 'string',   dataIndex: 'extratext' },
             { type: 'string',   dataIndex: 'episodeOnscreen' },
             { type: 'intsplit', dataIndex: 'channelNumber', intsplit: 1000000 },
             { type: 'string',   dataIndex: 'channelName' },

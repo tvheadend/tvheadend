@@ -694,6 +694,7 @@ typedef struct epg_query {
   epg_filter_str_t  subtitle;
   epg_filter_str_t  summary;
   epg_filter_str_t  description;
+  epg_filter_str_t  extratext;
   epg_filter_num_t  episode;
   epg_filter_num_t  stars;
   epg_filter_num_t  age;
@@ -720,6 +721,7 @@ typedef struct epg_query {
     ESK_SUBTITLE,
     ESK_SUMMARY,
     ESK_DESCRIPTION,
+    ESK_EXTRATEXT,
     ESK_CHANNEL,
     ESK_CHANNEL_NUM,
     ESK_STARS,
