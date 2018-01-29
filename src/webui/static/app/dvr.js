@@ -239,7 +239,7 @@ tvheadend.displayDuplicate = function(value, meta, record) {
 tvheadend.displayWithDuplicateRenderer = function(value, meta, record) {
     return function() {
         return function(value, meta, record) {
-          return tvheadend.displayDuplicate(value, meta, record);
+            return tvheadend.displayDuplicate(value, meta, record);
         }
     }
 }
@@ -247,7 +247,7 @@ tvheadend.displayWithDuplicateRenderer = function(value, meta, record) {
 tvheadend.displayWithYearAndDuplicateRenderer = function(value, meta, record) {
     return function() {
         return function(value, meta, record) {
-            value = tvheadend.getDisplayTitle(value, record);
+            var value = tvheadend.getDisplayTitle(value, record);
             return tvheadend.displayDuplicate(value, meta, record);
         }
     }
@@ -256,8 +256,7 @@ tvheadend.displayWithYearAndDuplicateRenderer = function(value, meta, record) {
 tvheadend.displayWithYearRenderer = function(value, meta, record) {
     return function() {
         return function(value, meta, record) {
-            value = tvheadend.getDisplayTitle(value, record);
-            return value;
+            return tvheadend.getDisplayTitle(value, record);
         }
     }
 }
@@ -419,18 +418,15 @@ tvheadend.dvr_upcoming = function(panel, index) {
             }
         },
         del: true,
-        list: 'category,enabled,duplicate,disp_title,disp_subtitle,disp_summary,episode_disp,' +
+        list: 'category,enabled,duplicate,disp_title,disp_extratext,episode_disp,' +
               'channel,image,copyright_year,start_real,stop_real,duration,pri,filesize,' +
               'sched_status,errors,data_errors,config_name,owner,creator,comment,genre',
         columns: {
             disp_title: {
-              renderer: tvheadend.displayWithYearAndDuplicateRenderer()
+                renderer: tvheadend.displayWithYearAndDuplicateRenderer()
             },
-            disp_subtitle: {
-              renderer: tvheadend.displayWithDuplicateRenderer()
-            },
-            disp_summary: {
-              renderer: tvheadend.displayWithDuplicateRenderer()
+            disp_extratext: {
+                renderer: tvheadend.displayWithDuplicateRenderer()
             },
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -597,12 +593,12 @@ tvheadend.dvr_finished = function(panel, index) {
             }
         },
         del: false,
-        list: 'disp_title,disp_subtitle,disp_summary,episode_disp,channelname,' +
+        list: 'disp_title,disp_extratext,episode_disp,channelname,' +
               'start_real,stop_real,duration,filesize,copyright_year,' +
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,',
         columns: {
             disp_title: {
-              renderer: tvheadend.displayWithYearRenderer(),
+                renderer: tvheadend.displayWithYearRenderer(),
             },
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -713,7 +709,7 @@ tvheadend.dvr_failed = function(panel, index) {
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
-        list: 'disp_title,disp_subtitle,disp_summary,episode_disp,channelname,' +
+        list: 'disp_title,disp_extratext,episode_disp,channelname,' +
               'image,copyright_year,start_real,stop_real,duration,filesize,status,' +
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
         columns: {
@@ -788,12 +784,12 @@ tvheadend.dvr_removed = function(panel, index) {
         uilevel: 'expert',
         edit: { params: { list: tvheadend.admin ? "retention,owner,comment" : "retention,comment" } },
         del: true,
-        list: 'disp_title,disp_subtitle,disp_summary,episode_disp,channelname,image,' +
+        list: 'disp_title,disp_extratext,episode_disp,channelname,image,' +
               'copyright_year,start_real,stop_real,duration,status,' +
               'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
         columns: {
             disp_title: {
-              renderer: tvheadend.displayWithYearRenderer(),
+                renderer: tvheadend.displayWithYearRenderer(),
             },
         },
         sort: {
