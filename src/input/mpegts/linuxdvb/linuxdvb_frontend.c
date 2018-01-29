@@ -1281,14 +1281,21 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
 
   if (!lfe->lfe_pids.all) {
     mpegts_pid_weighted(&wpid, &lfe->lfe_pids, max);
-    mpegts_pid_compare(&wpid, tuned, &padd, &pdel);
-    mpegts_pid_done(&wpid);
-    for (i = 0; i < pdel.count; i++)
-      linuxdvb_frontend_close_pid0(lfe, name, pids, pids_size, pdel.pids[i].pid);
-    for (i = 0; i < padd.count; i++)
-      linuxdvb_frontend_open_pid0(lfe, name, pids, pids_size, padd.pids[i].pid);
-    mpegts_pid_done(&padd);
-    mpegts_pid_done(&pdel);
+    if (wpid.count > max && lfe->lfe_pids_use_all) {
+      all = 1;
+      mpegts_pid_done(&wpid);
+    } else {
+      mpegts_pid_compare(&wpid, tuned, &padd, &pdel);
+      mpegts_pid_done(&wpid);
+      for (i = 0; i < pdel.count; i++)
+        linuxdvb_frontend_close_pid0(lfe, name, pids, pids_size, pdel.pids[i].pid);
+      for (i = 0; i < padd.count; i++)
+       linuxdvb_frontend_open_pid0(lfe, name, pids, pids_size, padd.pids[i].pid);
+      mpegts_pid_done(&padd);
+      mpegts_pid_done(&pdel);
+      mpegts_pid_done(tuned);
+      mpegts_pid_weighted(tuned, &lfe->lfe_pids, max);
+    }
   }
 
   if (lfe->lfe_pids.all && !linuxdvb_pid_exists(pids, pids_size, MPEGTS_FULLMUX_PID))
@@ -1296,8 +1303,6 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
   else if (!lfe->lfe_pids.all && linuxdvb_pid_exists(pids, pids_size, MPEGTS_FULLMUX_PID))
     linuxdvb_frontend_close_pid0(lfe, name, pids, pids_size, MPEGTS_FULLMUX_PID);
 
-  mpegts_pid_done(tuned);
-  mpegts_pid_weighted(tuned, &lfe->lfe_pids, max);
   tuned->all = lfe->lfe_pids.all;
 
   pthread_mutex_unlock(&lfe->lfe_dvr_lock);
