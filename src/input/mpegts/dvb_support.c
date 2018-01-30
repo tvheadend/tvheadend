@@ -1186,9 +1186,6 @@ void dvb_init( void )
 
 void dvb_done( void )
 {
-  extern SKEL_DECLARE(mpegts_psi_table_state_skel, mpegts_psi_table_state_t);
-
-  SKEL_FREE(mpegts_psi_table_state_skel);
 #if ENABLE_MPEGTS_DVB
   htsmsg_destroy(satellites);
 #endif

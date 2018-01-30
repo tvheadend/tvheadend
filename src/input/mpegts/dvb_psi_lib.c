@@ -21,8 +21,6 @@
 #include "input.h"
 #include "dvb.h"
 
-SKEL_DECLARE(mpegts_psi_table_state_skel, struct mpegts_psi_table_state);
-
 /* **************************************************************************
  * Lookup tables
  * *************************************************************************/
@@ -214,19 +212,21 @@ static mpegts_psi_table_state_t *
 mpegts_table_state_find
   ( mpegts_psi_table_t *mt, int tableid, uint64_t extraid, int last )
 {
-  mpegts_psi_table_state_t *st;
+  mpegts_psi_table_state_t *st, *st2, st_cmp;
 
   /* Find state */
-  SKEL_ALLOC(mpegts_psi_table_state_skel);
-  mpegts_psi_table_state_skel->tableid = tableid;
-  mpegts_psi_table_state_skel->extraid = extraid;
-  st = RB_INSERT_SORTED(&mt->mt_state, mpegts_psi_table_state_skel, link, sect_cmp);
-  if (!st) {
-    st   = mpegts_psi_table_state_skel;
-    SKEL_USED(mpegts_psi_table_state_skel);
-    mt->mt_incomplete++;
-    mpegts_table_state_reset(mt, st, last);
-  }
+  st_cmp.tableid = tableid;
+  st_cmp.extraid = extraid;
+  st = RB_FIND(&mt->mt_state, &st_cmp, link, sect_cmp);
+  if (st)
+    return st;
+  st = calloc(1, sizeof(*st));
+  st->tableid = tableid;
+  st->extraid = extraid;
+  st2 = RB_INSERT_SORTED(&mt->mt_state, st, link, sect_cmp);
+  assert(st2 == NULL);
+  mt->mt_incomplete++;
+  mpegts_table_state_reset(mt, st, last);
   return st;
 }
 
