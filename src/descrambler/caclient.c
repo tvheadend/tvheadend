@@ -380,10 +380,8 @@ caclient_caid_update
 void
 caclient_set_status(caclient_t *cac, caclient_status_t status)
 {
-  if (cac->cac_status != status) {
-    cac->cac_status = status;
+  if (atomic_exchange(&cac->cac_status, status) != status)
     idnode_lnotify_changed(&cac->cac_id);
-  }
 }
 
 const char *

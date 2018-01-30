@@ -947,11 +947,10 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       filter_index >= MAX_FILTER ||
       pid > 8191)
     return;
+  pthread_mutex_lock(&capmt->capmt_mutex);
   cf = &capmt->capmt_demuxes.filters[demux_index];
   if (cf->max && cf->adapter != adapter)
-    return;
-
-  pthread_mutex_lock(&capmt->capmt_mutex);
+    goto end;
 
   /* ECM messages have the higher priority */
   t = NULL;
@@ -1010,6 +1009,7 @@ cont:
     capmt->capmt_demuxes.max = demux_index + 1;
   if (cf->max <= filter_index)
     cf->max = filter_index + 1;
+end:
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
 
@@ -1817,6 +1817,7 @@ capmt_thread(void *aux)
 
   while (atomic_get(&capmt->capmt_running)) {
     fatal = 0;
+    pthread_mutex_lock(&capmt->capmt_mutex);
     for (i = 0; i < MAX_CA; i++) {
       ca = &capmt->capmt_adapters[i];
       ca->ca_number = i;
@@ -1835,6 +1836,7 @@ capmt_thread(void *aux)
       capmt->capmt_sock_reconnect[i] = 0;
     }
     capmt_init_demuxes(capmt);
+    pthread_mutex_unlock(&capmt->capmt_mutex);
 
     /* Accessible */
     if (capmt->capmt_sockfile && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
