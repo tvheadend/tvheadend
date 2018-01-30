@@ -155,6 +155,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
 
   conf = htsmsg_create_map();
   htsmsg_add_uuid(conf, "config_name", &dte->dte_config->dvr_id.in_uuid);
+  htsmsg_set_uuid(conf, "channel", &dte->dte_channel->ch_id.in_uuid);
   htsmsg_add_str2(conf, "title", title);
   htsmsg_add_s64(conf, "start", start);
   htsmsg_add_s64(conf, "stop", stop);
