@@ -1948,7 +1948,7 @@ capmt_thread(void *aux)
       i = tvh_cond_timedwait(&capmt->capmt_cond, &capmt->capmt_mutex, mono);
       if (i == ETIMEDOUT)
         break;
-    } while (ERRNO_AGAIN(i));
+    } while (ERRNO_AGAIN(i) && atomic_get(&capmt->capmt_running));
 
     pthread_mutex_unlock(&capmt->capmt_mutex);
   }
