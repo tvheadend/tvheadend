@@ -1197,6 +1197,7 @@ main(int argc, char **argv)
   epg_in_load = 1;
 
   tvhthread_create(&mtimer_tick_tid, NULL, mtimer_tick_thread, NULL, "mtick");
+  tvhthread_create(&mtimer_tid, NULL, mtimer_thread, NULL, "mtimer");
   tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
 
 #if CONFIG_LINUXDVB_CA
@@ -1281,7 +1282,6 @@ main(int argc, char **argv)
   if(opt_abort)
     abort();
 
-  tvhthread_create(&mtimer_tid, NULL, mtimer_thread, NULL, "mtimer");
   mainloop();
   pthread_mutex_lock(&global_lock);
   tvh_cond_signal(&mtimer_cond, 0);
