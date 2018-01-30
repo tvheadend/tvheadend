@@ -162,7 +162,7 @@ static int _eit_get_string_with_len
   epggrab_module_ota_t *m = (epggrab_module_ota_t *)mod;
   dvb_string_conv_t *cptr = NULL;
 
-  if (((eit_private_t *)m->opaque)->conv == EIT_CONV_HUFFMAN)
+  if (atomic_get(&((eit_private_t *)m->opaque)->conv) == EIT_CONV_HUFFMAN)
     cptr = _eit_freesat_conv;
 
   /* Convert */
@@ -930,7 +930,7 @@ _eit_callback
   mm  = mt->mt_mux;
   map = mt->mt_opaque;
   mod = (epggrab_module_t *)map->om_module;
-  spec = ((eit_private_t *)((epggrab_module_ota_t *)mod)->opaque)->spec;
+  spec = atomic_get(&((eit_private_t *)((epggrab_module_ota_t *)mod)->opaque)->spec);
 
   /* Statistics */
   ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
@@ -1109,8 +1109,8 @@ static int _eit_start
   /* FIXME: It should be done only for selected muxes or networks */
   if (((eit_private_t *)m->opaque)->conv) {
     eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
-    ((eit_private_t *)eit->opaque)->spec = priv->spec;
-    ((eit_private_t *)eit->opaque)->conv = priv->conv;
+    atomic_set(&((eit_private_t *)eit->opaque)->spec, priv->spec);
+    atomic_set(&((eit_private_t *)eit->opaque)->conv, priv->conv);
   }
 
   if (spec == EIT_SPEC_NZ_FREEVIEW) {
