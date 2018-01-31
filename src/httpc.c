@@ -1473,6 +1473,8 @@ http_client_reconnect
 
   free(hc->hc_scheme);
   free(hc->hc_host);
+  hc->hc_scheme = NULL;
+  hc->hc_host = NULL;
 
   if (scheme == NULL || host == NULL)
     goto errnval;
