@@ -36,8 +36,8 @@
 typedef struct eit_private
 {
   uint16_t pid;
-  uint8_t  conv;
-  uint8_t  spec;
+  int  conv;
+  int  spec;
 } eit_private_t;
 
 #define EIT_CONV_HUFFMAN     1
