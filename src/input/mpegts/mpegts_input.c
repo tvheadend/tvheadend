@@ -1029,6 +1029,26 @@ mpegts_input_tuning_error ( mpegts_input_t *mi, mpegts_mux_t *mm )
  * Data processing
  * *************************************************************************/
 
+static void mpegts_input_analyze_table_queue ( mpegts_input_t *mi )
+{
+  mpegts_table_feed_t *mtf;
+  uint32_t sizes[8192];
+  uint16_t counters[8192];
+  uint16_t pid;
+
+  memset(&sizes, 0, sizeof(sizes));
+  memset(&counters, 0, sizeof(counters));
+  TAILQ_FOREACH(mtf, &mi->mi_table_queue, mtf_link) {
+    const uint8_t *tsb = mtf->mtf_tsb;
+    pid = (tsb[1] << 8) | tsb[2];
+    sizes[pid] += mtf->mtf_len;
+    counters[pid]++;
+  }
+  for (pid = 0; pid < 8192; pid++)
+    if (counters[pid])
+      tvhtrace(LS_MPEGTS, "table queue pid=%04X (%d) cnt %u len %u", pid, pid, counters[pid], sizes[pid]);
+}
+
 #if 0
 static int data_noise ( mpegts_packet_t *mp )
 {
@@ -1302,7 +1322,7 @@ static int
 mpegts_input_process
   ( mpegts_input_t *mi, mpegts_packet_t *mpkt )
 {
-  uint16_t pid;
+  uint16_t pid, pid2;
   uint8_t cc, cc2;
   uint8_t *tsb = mpkt->mp_data, *tsb2, *tsb2_end;
   int len = mpkt->mp_len, llen;
@@ -1416,16 +1436,36 @@ mpegts_input_process
             mpegts_input_table_dispatch(mm, mm->mm_nicename, tsb, llen);
           if (type & MPS_TABLE) {
             if (mi->mi_table_queue_size >= 2*1024*1024) {
-              if (tvhlog_limit(&mi->mi_input_queue_loglimit, 10))
+              if (tvhlog_limit(&mi->mi_input_queue_loglimit, 10)) {
                 tvhwarn(LS_MPEGTS, "too much queued table input data (over 2MB), discarding new");
+                if (tvhtrace_enabled())
+                  mpegts_input_analyze_table_queue(mi);
+              }
             } else {
-              mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t)+llen);
-              mtf->mtf_len = llen;
-              memcpy(mtf->mtf_tsb, tsb, llen);
-              mtf->mtf_mux = mm;
-              mi->mi_table_queue_size += llen;
-              memoryinfo_alloc(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + llen);
-              TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
+              mpegts_table_feed_t *mtf = TAILQ_LAST(&mi->mi_table_queue, mpegts_table_feed_queue);
+              if (mtf && mtf->mtf_mux == mm && mtf->mtf_len + llen <= MPEGTS_MTF_ALLOC_CHUNK) {
+                pid2 = (mtf->mtf_tsb[1] << 8) | mtf->mtf_tsb[2];
+                if (pid == pid2) {
+                  memcpy(mtf->mtf_tsb + mtf->mtf_len, tsb, llen);
+                  memoryinfo_free(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + mtf->mtf_len);
+                  mtf->mtf_len += llen;
+                  mi->mi_table_queue_size += llen;
+                  memoryinfo_alloc(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + mtf->mtf_len);
+                } else {
+                  mtf = NULL;
+                }
+              } else {
+                mtf = NULL;
+              }
+              if (mtf == NULL) {
+                mtf = malloc(sizeof(mpegts_table_feed_t) + MAX(llen, MPEGTS_MTF_ALLOC_CHUNK));
+                mtf->mtf_len = llen;
+                memcpy(mtf->mtf_tsb, tsb, llen);
+                mtf->mtf_mux = mm;
+                mi->mi_table_queue_size += llen;
+                memoryinfo_alloc(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + llen);
+                TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
+              }
               table_wakeup = 1;
             }
           }
@@ -1674,7 +1714,7 @@ mpegts_input_table_thread ( void *aux )
     memoryinfo_free(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + mtf->mtf_len);
     TAILQ_REMOVE(&mi->mi_table_queue, mtf, mtf_link);
     pthread_mutex_unlock(&mi->mi_output_lock);
-    
+
     /* Process */
     pthread_mutex_lock(&global_lock);
     if (atomic_get(&mi->mi_running)) {
