@@ -69,6 +69,10 @@ ifeq ($(CONFIG_ANDROID),no)
 LDFLAGS += -lrt
 endif
 endif
+ifeq ($(CONFIG_GPERFTOOLS),yes)
+CFLAGS += -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
+LDFLAGS += -lprofiler -ltcmalloc
+endif
 
 ifeq ($(COMPILER), clang)
 CFLAGS  += -Wno-microsoft -Qunused-arguments -Wno-unused-function
