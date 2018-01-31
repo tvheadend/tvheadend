@@ -1475,8 +1475,11 @@ http_serve_file(http_connection_t *hc, const char *fname,
       basename++; /* Skip '/' */
       str0 = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
                                   basename, strlen(basename) * 3);
-      if (str0 == NULL)
+      if (str0 == NULL) {
+        tvherror(LS_HTTP, "unable to convert filename '%s' to a safe form using charset '%s'",
+                 intlconv_charset_id("ASCII", 1, 1), basename);
         return HTTP_STATUS_INTERNAL;
+      }
       htsbuf_queue_init(&q, 0);
       htsbuf_append_and_escape_url(&q, basename);
       str = htsbuf_to_string(&q);
