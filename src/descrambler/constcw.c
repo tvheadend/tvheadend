@@ -316,6 +316,7 @@ const idclass_t caclient_ccw_csa_cbc_class =
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_ccw_csa_cbc",
   .ic_caption    = N_("CSA CBC Constant Code Word"),
+  .ic_groups     = caclient_ic_groups,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,
