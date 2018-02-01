@@ -741,7 +741,8 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   epg_episode_t *ee = NULL;
   channel_t *ch = NULL;
   lang_str_t *ls = NULL, *ls2 = NULL;
-  const char **langs, *lang;
+  const char *lang;
+  const lang_code_list_t *langs;
 
   if (ebc)                     ee = ebc->episode;
   else if (de && de->de_bcast) ee = de->de_bcast->episode;
@@ -828,9 +829,8 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
 
   if (comment) {
     lang = "eng";
-    if ((langs = lang_code_split(NULL)) && langs[0])
-      lang = tvh_strdupa(langs[0]);
-    free(langs);
+    if ((langs = lang_code_split(NULL)) != NULL)
+      lang = tvh_strdupa(langs->codes[0]->code2b);
 
     addtag(q, build_tag_string("COMMENT", comment, lang, 0, NULL));
   }

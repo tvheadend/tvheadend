@@ -85,21 +85,18 @@ lang_str_ele_t *lang_str_get2
   ( const lang_str_t *ls, const char *lang )
 {
   int i;
-  const char **langs;
+  const lang_code_list_t *langs;
   lang_str_ele_t skel, *e = NULL;
 
   if (!ls) return NULL;
   
   /* Check config/requested langs */
-  if ((langs = lang_code_split(lang))) {
-    i = 0;
-    while (langs[i]) {
-      strncpy(skel.lang, langs[i], sizeof(skel.lang));
+  if ((langs = lang_code_split(lang)) != NULL) {
+    for (i = 0; i < langs->codeslen; i++) {
+      strncpy(skel.lang, langs->codes[i]->code2b, sizeof(skel.lang));
       if ((e = RB_FIND(ls, &skel, link, _lang_cmp)))
         break;
-      i++;
     }
-    free(langs);
   }
 
   /* Use first available */
@@ -107,14 +104,6 @@ lang_str_ele_t *lang_str_get2
 
   /* Return */
   return e;
-}
-
-/* Get string */
-const char *lang_str_get
-  ( const lang_str_t *ls, const char *lang )
-{
-  lang_str_ele_t *e = lang_str_get2(ls, lang);
-  return e ? e->str : NULL;
 }
 
 /* Internal insertion routine */
