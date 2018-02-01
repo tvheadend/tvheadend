@@ -428,6 +428,7 @@ tvheadend.epg = function() {
                 type: 'date',
                 dateFormat: 'U' /* unix time */
             },
+            { name: 'duration' },
             { name: 'starRating' },
             { name: 'ageRating' },
             { name: 'genre' },
@@ -577,6 +578,7 @@ tvheadend.epg = function() {
                 id: 'duration',
                 header: _("Duration"),
                 tooltip: _("Duration"),
+                dataIndex: 'duration',
                 renderer: renderDuration
             },
             {
