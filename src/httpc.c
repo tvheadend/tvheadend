@@ -1480,17 +1480,17 @@ http_client_reconnect
     goto errnval;
 
   port           = http_port(hc, scheme, port);
-  hc->hc_pevents = 0;
-  hc->hc_version = ver;
-  hc->hc_redirv  = ver;
-  hc->hc_scheme  = strdup(scheme);
-  hc->hc_host    = strdup(host);
-  hc->hc_port    = port;
   hc->hc_fd      = tcp_connect(host, port, hc->hc_bindaddr, errbuf, sizeof(errbuf), -1);
   if (hc->hc_fd < 0) {
     tvherror(LS_HTTPC, "%04X: Unable to connect to %s:%i - %s", shortid(hc), host, port, errbuf);
     goto errnval;
   }
+  hc->hc_pevents = 0;
+  hc->hc_version = ver;
+  hc->hc_redirv  = ver;
+  hc->hc_port    = port;
+  hc->hc_scheme  = strdup(scheme);
+  hc->hc_host    = strdup(host);
   hc->hc_einprogress = 1;
   tvhtrace(LS_HTTPC, "%04X: Connected to %s:%i", shortid(hc), host, port);
   http_client_ssl_free(hc);
