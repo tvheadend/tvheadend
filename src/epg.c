@@ -1771,7 +1771,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   while ((ebc = RB_PREV(ret, sched_link)) != NULL) {
     if (ebc->stop <= ret->start) break;
     if (!_epg_object_can_remove(ebc, ret)) {
-      tvhtrace(LS_EPG, "grabber for event %u has lower priority than overlap (b), removing", ebc->id);
+      tvhtrace(LS_EPG, "grabber %s for event %u has higher priority than overlap (b), removing added",
+               ebc->grabber->id, ebc->id);
       _epg_channel_rem_broadcast(ch, ret, NULL);
       return NULL;
     }
@@ -1798,7 +1799,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   while ((ebc = RB_NEXT(ret, sched_link)) != NULL) {
     if (ebc->start >= ret->stop) break;
     if (!_epg_object_can_remove(ebc, ret)) {
-      tvhtrace(LS_EPG, "grabber for event %u has lower priority than overlap (a), removing", ebc->id);
+      tvhtrace(LS_EPG, "grabber %s for event %u has higher priority than overlap (a), removing added",
+               ebc->grabber->id, ebc->id);
       _epg_channel_rem_broadcast(ch, ret, NULL);
       return NULL;
     }
