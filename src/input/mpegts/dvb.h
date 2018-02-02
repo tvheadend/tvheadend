@@ -172,6 +172,7 @@ struct lang_str;
 
 #define DVB_DESC_BSKYB_NVOD           0xC0
 
+#define DVB_DESC_FREESAT_NIT          0xD2
 #define DVB_DESC_FREESAT_LCN          0xD3
 #define DVB_DESC_FREESAT_REGIONS      0xD4
 

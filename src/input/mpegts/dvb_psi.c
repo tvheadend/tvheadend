@@ -1531,14 +1531,14 @@ dvb_nit_callback
         // TODO: implement this?
         break;
       case DVB_DESC_PRIVATE_DATA:
-        if (tableid == 0x4A && dlen == 4) {
+        if (dlen == 4) {
           priv = extract_4byte(dptr);
           tvhtrace(mt->mt_subsys, "%s:    private %08X", mt->mt_name, priv);
         }
         break;
-      case DVB_DESC_FREESAT_REGIONS:
+    case DVB_DESC_FREESAT_REGIONS:
 #if ENABLE_MPEGTS_DVB
-        if (priv == PRIV_FSAT)
+        if (tableid == 0x4A && priv == PRIV_FSAT)
           dvb_freesat_regions(bi, mt, dptr, dlen);
 #endif
         break;
@@ -1612,6 +1612,10 @@ dvb_nit_callback
   /* End */
   if (retry)
     return 0;
+
+  if (tableid == 0x40)
+    eit_nit_callback(mt, nbid, name, priv);
+
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 
 dvberr:

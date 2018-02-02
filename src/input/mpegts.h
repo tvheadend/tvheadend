@@ -1192,6 +1192,11 @@ LIST_HEAD(,mpegts_listener) mpegts_listeners;
     if (ml->op) ml->op(t, ml->ml_opaque, arg1);\
 } (void)0
 
+/*
+ * misc
+ */
+void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint32_t priv);
+
 #endif /* __TVH_MPEGTS_H__ */
 
 /******************************************************************************

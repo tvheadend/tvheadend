@@ -35,12 +35,22 @@
 
 typedef struct eit_private
 {
+  int  id;
   uint16_t pid;
   int  conv;
   int  spec;
 } eit_private_t;
 
-#define EIT_CONV_HUFFMAN     1
+#define EIT_ID_STANDARD             0
+#define EIT_ID_UK_FREESAT           1
+#define EIT_ID_UK_FREEVIEW          2
+#define EIT_ID_NZ_FREEVIEW1         3
+#define EIT_ID_NZ_FREEVIEW2         4
+#define EIT_ID_BALTIC               5
+#define EIT_ID_BULSAT               6
+#define EIT_ID_UK_CABLE_VIRGIN      7
+
+#define EIT_CONV_HUFFMAN            1
 
 #define EIT_SPEC_UK_FREESAT         1
 #define EIT_SPEC_NZ_FREEVIEW        2
@@ -930,7 +940,7 @@ _eit_callback
   mm  = mt->mt_mux;
   map = mt->mt_opaque;
   mod = (epggrab_module_t *)map->om_module;
-  spec = atomic_get(&((eit_private_t *)((epggrab_module_ota_t *)mod)->opaque)->spec);
+  spec = ((eit_private_t *)((epggrab_module_ota_t *)mod)->opaque)->spec;
 
   /* Statistics */
   ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
@@ -956,12 +966,6 @@ _eit_callback
 
   tvhtrace(LS_TBL_EIT, "%s: sid %i tsid %04x onid %04x seg %02x",
            mt->mt_name, sid, tsid, onid, seg);
-
-  /* Local EIT contents - give them another priority to override main events */
-  if (spec == EIT_SPEC_NZ_FREEVIEW &&
-      ((tsid > 0x19 && tsid < 0x1d) ||
-       (tsid > 0x1e && tsid < 0x21)))
-    mod = epggrab_module_find_by_id("nz_freeview");
 
   /* Register interest */
   if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60) ||
@@ -1096,54 +1100,11 @@ complete:
 static int _eit_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
-  epggrab_module_ota_t *m = map->om_module, *eit = NULL;
-  eit_private_t *priv = (eit_private_t *)m->opaque;
-  int pid, opts = 0, spec;
+  epggrab_module_ota_t *m = map->om_module;
 
   /* Disabled */
   if (!m->enabled && !map->om_forced) return -1;
 
-  spec = priv->spec;
-
-  /* Do string conversions also for the EIT table */
-  /* FIXME: It should be done only for selected muxes or networks */
-  if (((eit_private_t *)m->opaque)->conv) {
-    eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
-    atomic_set(&((eit_private_t *)eit->opaque)->spec, priv->spec);
-    atomic_set(&((eit_private_t *)eit->opaque)->conv, priv->conv);
-  }
-
-  if (spec == EIT_SPEC_NZ_FREEVIEW) {
-    if (eit == NULL)
-      eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
-    if (eit->enabled)
-      map->om_complete = 1;
-  }
-
-  pid = priv->pid;
-
-  /* Freeview UK/NZ (switch to EIT, ignore if explicitly enabled) */
-  /* Note: do this as PID is the same */
-  if (pid == 0 && strcmp(m->id, "eit")) {
-    if (eit == NULL)
-      eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
-    if (eit->enabled) return -1;
-  }
-
-  /* Freesat (3002/3003) */
-  if (pid == 3003 && !strcmp("uk_freesat", m->id))
-    mpegts_table_add(dm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback, NULL,
-                     "bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
-
-  /* Standard (0x12) */
-  if (pid == 0) {
-    pid  = DVB_EIT_PID;
-    opts = MT_RECORD;
-  }
-
-  mpegts_table_add(dm, 0, 0, _eit_callback, map, m->id, LS_TBL_EIT, MT_CRC | opts, pid, MPS_WEIGHT_EIT);
-  // TODO: might want to limit recording to EITpf only
-  tvhdebug(m->subsys, "%s: installed table handlers", m->id);
   return 0;
 }
 
@@ -1204,6 +1165,88 @@ static int _eit_tune
   }
 
   return r;
+}
+
+#define PRIV_FSAT (('F' << 24) | ('S' << 16) | ('A' << 8) | 'T')
+
+static epggrab_ota_map_t *eit_find_epggrab_map(epggrab_ota_mux_t *om, int id)
+{
+  epggrab_ota_map_t *map;
+
+  LIST_FOREACH(map, &om->om_modules, om_link) {
+    if (((eit_private_t *)(map->om_module)->opaque)->id == id)
+      return map;
+  }
+  return NULL;
+}
+
+void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint32_t nitpriv)
+{
+  mpegts_mux_t *dm = mt->mt_mux;
+  epggrab_ota_mux_t *om = epggrab_ota_find_mux(dm);
+  epggrab_ota_map_t *map;
+  epggrab_module_ota_t *m = NULL;
+  eit_private_t *priv = NULL;
+  int id = EIT_ID_STANDARD, pid, opts = 0;
+
+  tvhtrace(LS_TBL_EIT, "NIT - tsid %04X (%d) onid %04X (%d) nbid %04X (%d) network name '%s' private %08X",
+           dm->mm_tsid, dm->mm_tsid, dm->mm_onid, dm->mm_onid, nbid, nbid, name, nitpriv);
+
+  if (nitpriv == PRIV_FSAT && strcmp(name, "Freesat") == 0)
+    id = EIT_ID_UK_FREESAT;
+  else if ((strcmp(name, "Sirius") == 0 && nbid == 0x55) ||
+           (strcmp(name, "Viasat") == 0 && nbid == 0x56))
+    id = EIT_ID_BALTIC;
+  else if (strcmp(name, "Freeview ") == 0 && dm->mm_onid == 0x222a &&
+           nbid >= 0x3401 && nbid < 0x3500) {
+    id = EIT_ID_NZ_FREEVIEW1;
+    if ((dm->mm_tsid > 0x19 && dm->mm_tsid < 0x1d) ||
+        (dm->mm_tsid > 0x1e && dm->mm_tsid < 0x21))
+      id = EIT_ID_NZ_FREEVIEW2;
+  }
+
+  while (1) {
+    map = eit_find_epggrab_map(om, id);
+    if (map == NULL)
+      return;
+
+    m = map->om_module;
+    if (!m->enabled && !map->om_forced) {
+      if (id != EIT_ID_STANDARD) {
+        if (id == EIT_ID_NZ_FREEVIEW2)
+          id = EIT_ID_NZ_FREEVIEW1;
+        else
+          id = EIT_ID_STANDARD;
+        continue;
+      }
+      return;
+    }
+  }
+
+  tvhtrace(m->subsys, "NIT - detected module '%s'", m->id);
+  priv = (eit_private_t *)m->opaque;
+  pid = priv->pid;
+
+  map->om_opaque = NULL;
+  switch (id) {
+  case EIT_ID_UK_FREESAT:
+    mpegts_table_add(dm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback, NULL,
+                     "fsat-bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
+    break;
+  default:
+    break;
+  }
+
+  /* Standard (0x12) */
+  if (pid == 0) {
+    pid  = DVB_EIT_PID;
+    opts = MT_RECORD;
+  }
+
+  mpegts_table_add(dm, 0, 0, _eit_callback, map, map->om_module->id, LS_TBL_EIT,
+                   MT_CRC | opts, pid, MPS_WEIGHT_EIT);
+  // TODO: might want to limit recording to EITpf only
+  tvhdebug(m->subsys, "%s: installed table handlers", m->id);
 }
 
 static void _eit_scrape_clear(eit_module_t *mod)
@@ -1346,8 +1389,9 @@ static eit_module_t *eit_module_ota_create
   return mod;
 }
 
-#define EIT_OPS(name, _pid, _conv, _spec) \
+#define EIT_OPS(name, _id, _pid, _conv, _spec) \
   static eit_private_t opaque_##name = { \
+    .id = (_id), \
     .pid = (_pid), \
     .conv = (_conv), \
     .spec = (_spec), \
@@ -1366,18 +1410,20 @@ static eit_module_t *eit_module_ota_create
 
 void eit_init ( void )
 {
-  EIT_OPS(ops, 0, 0, 0);
-  EIT_OPS(ops_uk_freesat, 3003, EIT_CONV_HUFFMAN, EIT_SPEC_UK_FREESAT);
-  EIT_OPS(ops_uk_freeview, 0, EIT_CONV_HUFFMAN, 0);
-  EIT_OPS(ops_nz_freeview, 0, EIT_CONV_HUFFMAN, EIT_SPEC_NZ_FREEVIEW);
-  EIT_OPS(ops_baltic, 0x39, 0, 0);
-  EIT_OPS(ops_bulsat, 0x12b, 0, 0);
-  EIT_OPS(ops_uk_cable_virgin, 0x2bc, 0, EIT_SPEC_UK_CABLE_VIRGIN);
+  EIT_OPS(ops, EIT_ID_STANDARD, 0, 0, 0);
+  EIT_OPS(ops_uk_freesat, EIT_ID_UK_FREESAT, 3003, EIT_CONV_HUFFMAN, EIT_SPEC_UK_FREESAT);
+  EIT_OPS(ops_uk_freeview, EIT_ID_UK_FREEVIEW, 0, EIT_CONV_HUFFMAN, 0);
+  EIT_OPS(ops_nz_freeview1, EIT_ID_NZ_FREEVIEW1, 0, EIT_CONV_HUFFMAN, EIT_SPEC_NZ_FREEVIEW);
+  EIT_OPS(ops_nz_freeview2, EIT_ID_NZ_FREEVIEW2, 0, EIT_CONV_HUFFMAN, EIT_SPEC_NZ_FREEVIEW);
+  EIT_OPS(ops_baltic, EIT_ID_BALTIC, 0x39, 0, 0);
+  EIT_OPS(ops_bulsat, EIT_ID_BULSAT, 0x12b, 0, 0);
+  EIT_OPS(ops_uk_cable_virgin, EIT_ID_UK_CABLE_VIRGIN, 0x2bc, 0, EIT_SPEC_UK_CABLE_VIRGIN);
 
   EIT_CREATE("eit", "EIT: DVB Grabber", 1, &ops);
   EIT_CREATE("uk_freesat", "UK: Freesat", 5, &ops_uk_freesat);
   EIT_CREATE("uk_freeview", "UK: Freeview", 5, &ops_uk_freeview);
-  EIT_CREATE("nz_freeview", "New Zealand: Freeview", 5, &ops_nz_freeview);
+  EIT_CREATE("nz_freeview1", "New Zealand: Freeview Base", 1, &ops_nz_freeview1);
+  EIT_CREATE("nz_freeview2", "New Zealand: Freeview Local", 5, &ops_nz_freeview2);
   EIT_CREATE("viasat_baltic", "VIASAT: Baltic", 5, &ops_baltic);
   EIT_CREATE("Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops_bulsat);
   EIT_CREATE("uk_cable_virgin", "UK: Cable Virgin", 5, &ops_uk_cable_virgin);

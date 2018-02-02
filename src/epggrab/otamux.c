@@ -125,6 +125,14 @@ epggrab_ota_queue_one( epggrab_ota_mux_t *om )
   return 1;
 }
 
+epggrab_ota_mux_t *epggrab_ota_find_mux ( mpegts_mux_t *mm )
+{
+  epggrab_ota_mux_t *om, tmp;
+  tmp.om_mux_uuid = mm->mm_id.in_uuid;
+  om = RB_FIND(&epggrab_ota_all, &tmp, om_global_link, om_id_cmp);
+  return om;
+}
+
 void
 epggrab_ota_queue_mux( mpegts_mux_t *mm )
 {
@@ -139,12 +147,9 @@ epggrab_ota_queue_mux( mpegts_mux_t *mm )
   epg_flag = mm->mm_is_epg(mm);
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE)
     return;
-  RB_FOREACH(om, &epggrab_ota_all, om_global_link)
-    if (!uuid_cmp(&om->om_mux_uuid, &mm->mm_id.in_uuid)) {
-      if (epggrab_ota_queue_one(om))
-        epggrab_ota_kick(4);
-      break;
-    }
+  om = epggrab_ota_find_mux(mm);
+  if (om && epggrab_ota_queue_one(om))
+    epggrab_ota_kick(4);
 }
 
 static void
