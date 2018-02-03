@@ -172,7 +172,7 @@ static int _eit_get_string_with_len
   epggrab_module_ota_t *m = (epggrab_module_ota_t *)mod;
   dvb_string_conv_t *cptr = NULL;
 
-  if (atomic_get(&((eit_private_t *)m->opaque)->conv) == EIT_CONV_HUFFMAN)
+  if (((eit_private_t *)m->opaque)->conv == EIT_CONV_HUFFMAN)
     cptr = _eit_freesat_conv;
 
   /* Convert */
@@ -1192,12 +1192,15 @@ void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint3
   tvhtrace(LS_TBL_EIT, "NIT - tsid %04X (%d) onid %04X (%d) nbid %04X (%d) network name '%s' private %08X",
            dm->mm_tsid, dm->mm_tsid, dm->mm_onid, dm->mm_onid, nbid, nbid, name, nitpriv);
 
-  if (nitpriv == PRIV_FSAT && strcmp(name, "Freesat") == 0)
+  if (nitpriv == PRIV_FSAT && strcmp(name, "Freesat") == 0) {
     id = EIT_ID_UK_FREESAT;
-  else if ((strcmp(name, "Sirius") == 0 && nbid == 0x55) ||
-           (strcmp(name, "Viasat") == 0 && nbid == 0x56))
+    /* always use BAT when UK Freesat detected */
+    mpegts_table_add(dm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback, NULL,
+                     "fsat-bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
+  } else if ((strcmp(name, "Sirius") == 0 && nbid == 0x55) ||
+             (strcmp(name, "Viasat") == 0 && nbid == 0x56)) {
     id = EIT_ID_BALTIC;
-  else if (strcmp(name, "Freeview ") == 0 && dm->mm_onid == 0x222a &&
+  } else if (strcmp(name, "Freeview ") == 0 && dm->mm_onid == 0x222a &&
            nbid >= 0x3401 && nbid < 0x3500) {
     id = EIT_ID_NZ_FREEVIEW1;
     if ((dm->mm_tsid > 0x19 && dm->mm_tsid < 0x1d) ||
@@ -1226,16 +1229,6 @@ void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint3
   tvhtrace(m->subsys, "NIT - detected module '%s'", m->id);
   priv = (eit_private_t *)m->opaque;
   pid = priv->pid;
-
-  map->om_opaque = NULL;
-  switch (id) {
-  case EIT_ID_UK_FREESAT:
-    mpegts_table_add(dm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback, NULL,
-                     "fsat-bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
-    break;
-  default:
-    break;
-  }
 
   /* Standard (0x12) */
   if (pid == 0) {
