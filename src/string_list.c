@@ -84,10 +84,11 @@ string_list_insert_lowercase(string_list_t *l, const char *id)
 htsmsg_t *
 string_list_to_htsmsg(const string_list_t *l)
 {
-  htsmsg_t *ret = NULL;
+  htsmsg_t *ret;
   string_list_item_t *item;
-  if (RB_FIRST(l))
-    ret = htsmsg_create_list();
+  if (!RB_FIRST(l))
+    return NULL;
+  ret = htsmsg_create_list();
   RB_FOREACH(item, l, h_link)
     htsmsg_add_str(ret, NULL, item->id);
   return ret;
