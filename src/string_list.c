@@ -76,8 +76,9 @@ string_list_insert_lowercase(string_list_t *l, const char *id)
 
   if (!id) return;
   s = alloca(strlen(id) + 1);
-  for (s = p = alloca(strlen(id) + 1); *id; id++, p++)
+  for (p = s; *id; id++, p++)
     *p = tolower(*id);
+  *p = '\0';
   string_list_insert(l, s);
 }
 
