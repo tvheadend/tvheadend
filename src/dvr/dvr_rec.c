@@ -413,7 +413,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
 
   const size_t title_buf_size = title ? strlen(title) + 1 : 0;
   char *title_buf = title ? alloca(title_buf_size) : NULL;
-  const size_t subtitle_buf_size = title ? strlen(title) + 1 : 0;
+  const size_t subtitle_buf_size = subtitle ? strlen(subtitle) + 1 : 0;
   char *subtitle_buf = subtitle ? alloca(subtitle_buf_size) : NULL;
   /* Copy a cleaned version in to our buffers.
    * Since dvr_clean_directory_separator _can_ modify source if source!=dest
