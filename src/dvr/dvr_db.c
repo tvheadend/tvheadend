@@ -3231,6 +3231,43 @@ dvr_entry_class_disp_extratext_get(void *o)
 }
 
 static int
+dvr_entry_class_disp_extratext_set(void *o, const void *v)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  const char *lang = idnode_lang(o);
+  const char *s = "";
+  int field = 0;
+  v = tvh_str_default(v, "UnknownExtraText");
+  if (de->de_subtitle){
+    s = lang_str_get(de->de_subtitle, lang);
+    field = 1;
+  }
+  if (s == NULL || s[0] == '\0'){
+    s = lang_str_get(de->de_summary, lang);
+    field = 2;
+  }
+  if (s == NULL || s[0] == '\0'){
+    s = lang_str_get(de->de_desc, lang);
+    field = 3;
+  }
+  if (strcmp(s, v)) {
+    switch(field){
+      case 1:
+        lang_str_set(&de->de_subtitle, v, lang);
+        break;
+      case 2:
+        lang_str_set(&de->de_summary, v, lang);
+        break;
+      case 3:
+        lang_str_set(&de->de_desc, v, lang);
+        break;
+    }
+    return 1;
+  }
+  return 0;
+}
+
+static int
 dvr_entry_class_disp_episode_set(void *o, const void *v)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
@@ -3715,7 +3752,8 @@ const idclass_t dvr_entry_class = {
       .name     = N_("Extra text"),
       .desc     = N_("Subtitle, summary or description of the program (if any) (display only)."),
       .get      = dvr_entry_class_disp_extratext_get,
-      .opts     = PO_RDONLY | PO_NOSAVE,
+      .set      = dvr_entry_class_disp_extratext_set,
+      .opts     = PO_NOSAVE | PO_ADVANCED,
     },
     {
       .type     = PT_INT,
@@ -3967,7 +4005,7 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Episode number/ID."),
       .set      = dvr_entry_class_disp_episode_set,
       .get      = dvr_entry_class_disp_episode_get,
-      .opts     = PO_RDONLY | PO_HIDDEN | PO_NOSAVE,
+      .opts     = PO_NOSAVE | PO_ADVANCED,
     },
     {
       .type     = PT_STR,

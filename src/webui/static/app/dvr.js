@@ -588,7 +588,7 @@ tvheadend.dvr_finished = function(panel, index) {
         tabIndex: index,
         edit: {
             params: {
-                list: tvheadend.admin ? "playcount,retention,removal,owner,comment" :
+                list: tvheadend.admin ? "episode_disp,disp_extratext,playcount,retention,removal,owner,comment" :
                                         "retention,removal,comment"
             }
         },
@@ -836,7 +836,7 @@ tvheadend.autorec_editor = function(panel, index) {
 
     var list = 'name,title,fulltext,channel,start,start_window,weekdays,' +
                'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,' +
-               'star_rating,dedup,directory,config_name,comment';
+               'star_rating,dedup,directory,config_name,comment,pri';
     var elist = 'enabled,start_extra,stop_extra,' +
                 (tvheadend.accessUpdate.admin ?
                 list + ',owner,creator' : list) + ',pri,retention,removal,maxcount,maxsched';
