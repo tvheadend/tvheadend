@@ -1172,9 +1172,11 @@ static int _eit_tune
 static epggrab_ota_map_t *eit_find_epggrab_map(epggrab_ota_mux_t *om, int id)
 {
   epggrab_ota_map_t *map;
+  epggrab_module_ota_t *m;
 
   LIST_FOREACH(map, &om->om_modules, om_link) {
-    if (((eit_private_t *)(map->om_module)->opaque)->id == id)
+    m = map->om_module;
+    if (m->opaque && ((eit_private_t *)m->opaque)->id == id)
       return map;
   }
   return NULL;
@@ -1224,6 +1226,8 @@ void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint3
       }
       return;
     }
+
+    break;
   }
 
   tvhtrace(m->subsys, "NIT - detected module '%s'", m->id);
