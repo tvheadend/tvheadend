@@ -970,7 +970,6 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   int64_t fsize = -1, start, stop;
   uint32_t u32;
   char ubuf[UUID_HEX_SIZE];
-  int subtitle_is_summary = 0;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
 
@@ -1017,18 +1016,28 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
 
     if(de->de_title && (s = lang_str_get(de->de_title, lang)))
       htsmsg_add_str(out, "title", s);
-    if(de->de_subtitle && (s = lang_str_get(de->de_subtitle, lang)))
-      htsmsg_add_str(out, "subtitle", s);
-    else if (htsp->htsp_version < 32 &&
-             de->de_summary && (s = lang_str_get(de->de_summary, lang))) {
-      htsmsg_add_str(out, "subtitle", s);
-      subtitle_is_summary = 1;
+    if (htsp->htsp_version < 32) {
+      if ((s = lang_str_get(de->de_desc, lang))) {
+        htsmsg_add_str(out, "description", s);
+        if ((s = lang_str_get(de->de_summary, lang)))
+          htsmsg_add_str(out, "summary", s);
+        if ((s = lang_str_get(de->de_subtitle, lang)))
+          htsmsg_add_str(out, "subtitle", s);
+      } else if ((s = lang_str_get(de->de_summary, lang))) {
+        htsmsg_add_str(out, "description", s);
+        if ((s = lang_str_get(de->de_subtitle, lang)))
+          htsmsg_add_str(out, "subtitle", s);
+      } else if ((s = lang_str_get(de->de_subtitle, lang))) {
+        htsmsg_add_str(out, "description", s);
+      }
+    } else {
+      if (de->de_subtitle && (s = lang_str_get(de->de_subtitle, lang)))
+        htsmsg_add_str(out, "subtitle", s);
+      if (de->de_summary && (s = lang_str_get(de->de_summary, lang)))
+        htsmsg_add_str(out, "summary", s);
+      if (de->de_desc && (s = lang_str_get(de->de_desc, lang)))
+        htsmsg_add_str(out, "description", s);
     }
-    if (!subtitle_is_summary &&
-        de->de_summary && (s = lang_str_get(de->de_summary, lang)))
-      htsmsg_add_str(out, "summary", s);
-    if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
-      htsmsg_add_str(out, "description", s);
     htsp_serialize_epnum(out, &de->de_epnum, "episode");
     htsmsg_add_str2(out, "owner", de->de_owner);
     htsmsg_add_str2(out, "creator", de->de_creator);
@@ -1262,18 +1271,23 @@ htsp_build_event
   htsmsg_add_s64(out, "stop", e->stop);
   if ((str = epg_broadcast_get_title(e, lang)))
     htsmsg_add_str(out, "title", str);
-  if ((str = epg_broadcast_get_subtitle(e, lang)))
-    htsmsg_add_str(out, "subtitle", str);
-  else if (htsp->htsp_version < 32 && (str = epg_broadcast_get_summary(e, lang)))
-    htsmsg_add_str(out, "subtitle", str);
   if (htsp->htsp_version < 32) {
     if ((str = epg_broadcast_get_description(e, lang))) {
       htsmsg_add_str(out, "description", str);
       if ((str = epg_broadcast_get_summary(e, lang)))
         htsmsg_add_str(out, "summary", str);
-    } else if((str = epg_broadcast_get_summary(e, lang)))
+      if ((str = epg_broadcast_get_subtitle(e, lang)))
+        htsmsg_add_str(out, "subtitle", str);
+    } else if ((str = epg_broadcast_get_summary(e, lang))) {
       htsmsg_add_str(out, "description", str);
+      if ((str = epg_broadcast_get_subtitle(e, lang)))
+        htsmsg_add_str(out, "subtitle", str);
+    } else if ((str = epg_broadcast_get_subtitle(e, lang))) {
+      htsmsg_add_str(out, "description", str);
+    }
   } else {
+    if ((str = epg_broadcast_get_subtitle(e, lang)))
+      htsmsg_add_str(out, "subtitle", str);
     if ((str = epg_broadcast_get_summary(e, lang)))
       htsmsg_add_str(out, "summary", str);
     if ((str = epg_broadcast_get_description(e, lang)))
