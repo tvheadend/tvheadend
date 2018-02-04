@@ -164,6 +164,8 @@ api_dvr_entry_create
     }
 
     s1 = htsmsg_get_str(conf, "disp_subtitle");
+    if (s1 == NULL || s1[0] == '\0')
+      s1 = htsmsg_get_str(conf, "disp_extratext");
     if (s1 && !htsmsg_get_map(conf, "subtitle")) {
       m = htsmsg_create_map();
       htsmsg_add_str(m, lang, s1);
