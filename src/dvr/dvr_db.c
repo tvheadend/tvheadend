@@ -4005,7 +4005,7 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Episode number/ID."),
       .set      = dvr_entry_class_disp_episode_set,
       .get      = dvr_entry_class_disp_episode_get,
-      .opts     = PO_NOSAVE | PO_ADVANCED,
+      .opts     = PO_HIDDEN | PO_NOSAVE | PO_ADVANCED,
     },
     {
       .type     = PT_STR,
