@@ -276,6 +276,8 @@ int htsmsg_field_get_u32(htsmsg_field_t *f, uint32_t *u32p);
  */
 int htsmsg_get_s32(htsmsg_t *msg, const char *name,  int32_t *s32p);
 
+int htsmsg_field_get_s32(htsmsg_field_t *f, int32_t *s32p);
+
 /**
  * Get an integer as an signed 64 bit integer.
  *

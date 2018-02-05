@@ -805,7 +805,6 @@ htsmsg_get_u32_or_default(htsmsg_t *msg, const char *name, uint32_t def)
   return htsmsg_get_u32(msg, name, &u32) ? def : u32;
 }
 
-
 /**
  *
  */
@@ -815,8 +814,6 @@ htsmsg_get_s32_or_default(htsmsg_t *msg, const char *name, int32_t def)
   int32_t s32;
   return htsmsg_get_s32(msg, name, &s32) ? def : s32;
 }
-
-
 
 /*
  *
@@ -832,11 +829,29 @@ htsmsg_get_s32(htsmsg_t *msg, const char *name, int32_t *s32p)
 
   if(s64 < -0x80000000LL || s64 > 0x7fffffffLL)
     return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
-  
+
   *s32p = s64;
   return 0;
 }
 
+/*
+ *
+ */
+int
+htsmsg_field_get_s32(htsmsg_field_t *f, int32_t *s32p)
+{
+  int r;
+  int64_t s64;
+
+  if((r = htsmsg_field_get_s64(f, &s64)) != 0)
+    return r;
+
+  if(s64 < -0x80000000LL || s64 > 0x7fffffffLL)
+    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+
+  *s32p = s64;
+  return 0;
+}
 
 /*
  *
