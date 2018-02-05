@@ -141,6 +141,7 @@ static cmdline_opt_t* cmdline_opt_find
  * Globals
  */
 int              tvheadend_running; /* do not use directly: tvheadend_is_running() */
+int              tvheadend_mainloop;
 int              tvheadend_webui_port;
 int              tvheadend_webui_debug;
 int              tvheadend_htsp_port;
@@ -610,6 +611,11 @@ mtimer_thread(void *aux)
   const char *id;
   const char *fcn;
 #endif
+
+  pthread_mutex_lock(&global_lock);
+  while (tvheadend_is_running() && atomic_get(&tvheadend_mainloop) == 0)
+    tvh_cond_wait(&mtimer_cond, &global_lock);
+  pthread_mutex_unlock(&global_lock);
 
   while (tvheadend_is_running()) {
     now = mdispatch_clock_update();
@@ -1143,6 +1149,7 @@ main(int argc, char **argv)
   }
 
   atomic_set(&tvheadend_running, 1);
+  atomic_set(&tvheadend_mainloop, 0);
 
   /* Start log thread (must be done post fork) */
   tvhlog_start();
@@ -1282,6 +1289,10 @@ main(int argc, char **argv)
   if(opt_abort)
     abort();
 
+  pthread_mutex_lock(&global_lock);
+  tvheadend_mainloop = 1;
+  tvh_cond_signal(&mtimer_cond, 0);
+  pthread_mutex_unlock(&global_lock);
   mainloop();
   pthread_mutex_lock(&global_lock);
   tvh_cond_signal(&mtimer_cond, 0);
