@@ -148,6 +148,27 @@ mpegts_mux_alive(mpegts_mux_t *mm)
   return !LIST_EMPTY(&mm->mm_services) && mm->mm_scan_result != MM_SCAN_FAIL;
 }
 
+static uint32_t
+dvb_priv_lookup(mpegts_table_t *mt, const uint8_t *lptr, int llen)
+{
+  uint32_t priv = 0;
+  uint8_t dtag;
+  int dllen, dlen;
+  const uint8_t *dlptr, *dptr;
+
+  DVB_DESC_FOREACH(mt, lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
+    if (dtag == DVB_DESC_PRIVATE_DATA) {
+      if (dlen == 4) {
+        priv = extract_4byte(dptr);
+        if (priv)
+          break;
+      }
+    }
+  }}
+dvberr:
+  return priv;
+}
+
 static void
 dvb_bouquet_comment ( bouquet_t *bq, mpegts_mux_t *mm )
 {
@@ -1423,7 +1444,7 @@ dvb_nit_callback
 {
   int save = 0, retry = 0;
   int r, sect, last, ver;
-  uint32_t priv = 0;
+  uint32_t priv = 0, priv2 = 0;
   uint8_t  dtag;
   int llen, dlen;
   const uint8_t *lptr, *dptr;
@@ -1600,9 +1621,19 @@ dvb_nit_callback
         r = dvb_nit_mux(mt, mux, mm, onid, tsid, lptr, llen, tableid, bi, 0);
         if (r < 0)
           return r;
+        if (priv == 0 && priv2)
+          priv = priv2;
       }
       if (mm == mux && mux->mm_onid == 0xffff && mux->mm_tsid == tsid)
         retry = 1; /* keep rolling - perhaps SDT was not parsed yet */
+    }
+
+    if (priv == 0) {
+      priv2 = dvb_priv_lookup(mt, lptr, llen);
+      if (priv2) {
+        tvhtrace(mt->mt_subsys, "%s: using private2 data 0x%08x", mt->mt_name, priv2);
+        priv = priv2;
+      }
     }
       
     lptr += r;

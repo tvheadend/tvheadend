@@ -126,7 +126,7 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
   if(msg->hm_islist) {
     assert(name == NULL || *name == '\0');
   } else {
-    assert(name != NULL && *name);
+    assert(name != NULL);
   }
 
   if (name) {

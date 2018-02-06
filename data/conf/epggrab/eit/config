@@ -22,8 +22,9 @@
       "eng": "UK: Freeview"
     },
     "nit": {
-      "FIXMEFIXME": 1
+      "": { "onid": 9018 }
     },
+    "priv": 9018,
     "prio": 5,
     "conv": "huffman"
   },

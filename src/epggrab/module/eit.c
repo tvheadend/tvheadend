@@ -46,7 +46,8 @@ typedef struct eit_nit {
 
 typedef struct eit_private
 {
-  LIST_ENTRY(eit_private) link;
+  TAILQ_ENTRY(eit_private) link;
+  epggrab_module_ota_t *module;
   uint16_t pid;
   uint16_t bat_pid;
   int conv;
@@ -89,6 +90,8 @@ typedef struct eit_module_t
   eit_pattern_list_t p_scrape_summary; ///< Scrape summary from summary data
   eit_pattern_list_t p_is_new;         ///< Is programme new to air
 } eit_module_t;
+
+static TAILQ_HEAD(, eit_private) eit_private_list;
 
 /* ************************************************************************
  * Status handling
@@ -1187,7 +1190,7 @@ static int eit_nit_array_check(uint16_t val, uint16_t *array, int array_count)
 void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint32_t nitpriv)
 {
   mpegts_mux_t *dm = mt->mt_mux;
-  epggrab_ota_mux_t *om = epggrab_ota_find_mux(dm);
+  epggrab_ota_mux_t *om;
   epggrab_ota_map_t *map;
   epggrab_module_ota_t *m = NULL;
   eit_nit_t *nit;
@@ -1197,11 +1200,8 @@ void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint3
   tvhtrace(LS_TBL_EIT, "NIT - tsid %04X (%d) onid %04X (%d) nbid %04X (%d) network name '%s' private %08X",
            dm->mm_tsid, dm->mm_tsid, dm->mm_onid, dm->mm_onid, nbid, nbid, name, nitpriv);
 
-  LIST_FOREACH(map, &om->om_modules, om_link) {
-    m = map->om_module;
-    priv = m->opaque;
-    if (priv == NULL)
-      continue;
+  TAILQ_FOREACH(priv, &eit_private_list, link) {
+    m = priv->module;
     if (priv->nitpriv && priv->nitpriv != nitpriv)
       continue;
     if (LIST_FIRST(&priv->nit)) {
@@ -1223,17 +1223,25 @@ void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint3
     }
   }
 
-  if (map && priv->bat_pid) {
+  if (!priv)
+    return;
+
+  if (priv->bat_pid) {
     mpegts_table_add(dm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback, NULL,
                      "ebat", LS_TBL_BASE, MT_CRC, priv->bat_pid, MPS_WEIGHT_EIT);
   }
 
-  if (!map)
+  om = epggrab_ota_find_mux(dm);
+  if (!om)
     return;
-
-  m = map->om_module;
-  if (!m->enabled && !map->om_forced)
+  LIST_FOREACH(map, &om->om_modules, om_link) {
+    if (map->om_module == m)
+      break;
+  }
+  if (!map || (!m->enabled && !map->om_forced)) {
+    tvhtrace(m->subsys, "NIT - module '%s' not enabled", m->id);
     return;
+  }
 
   tvhtrace(m->subsys, "NIT - detected module '%s'", m->id);
   priv = (eit_private_t *)m->opaque;
@@ -1338,13 +1346,9 @@ static void _eit_module_load_config(eit_module_t *mod)
     free(generic_name);
 }
 
-void _eit_done ( void *m )
+static void _eit_done0( eit_private_t *priv )
 {
-  eit_module_t *mod = m;
   eit_nit_t *nit;
-  eit_private_t *priv = mod->opaque;
-  _eit_scrape_clear(mod);
-  mod->opaque = NULL;
   while ((nit = LIST_FIRST(&priv->nit)) != NULL) {
     LIST_REMOVE(nit, link);
     free(nit->name);
@@ -1352,6 +1356,16 @@ void _eit_done ( void *m )
   }
   free(priv->ops);
   free(priv);
+}
+
+void _eit_done ( void *m )
+{
+  eit_module_t *mod = m;
+  eit_private_t *priv = mod->opaque;
+  _eit_scrape_clear(mod);
+  mod->opaque = NULL;
+  TAILQ_REMOVE(&eit_private_list, priv, link);
+  _eit_done0(priv);
 }
 
 static htsmsg_t *
@@ -1462,7 +1476,7 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
   if (map) {
     HTSMSG_FOREACH(f, map) {
       nit = calloc(1, sizeof(*nit));
-      nit->name = strdup(f->hmf_name);
+      nit->name = f->hmf_name[0] ? strdup(f->hmf_name) : NULL;
       if ((e = htsmsg_field_get_map(f)) != NULL) {
         eit_parse_list(e, "onid", nit->onid, ARRAY_SIZE(nit->onid), &nit->onid_count);
         eit_parse_list(e, "tsid", nit->tsid, ARRAY_SIZE(nit->tsid), &nit->tsid_count);
@@ -1487,11 +1501,14 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
     }
   }
   if (name_str) {
-    eit_module_ota_create(id, LS_TBL_EIT, NULL,
-                          lang_str_get(name_str, NULL),
-                          prio, ops);
+    priv->module = (epggrab_module_ota_t *)
+      eit_module_ota_create(id, LS_TBL_EIT, NULL,
+                            lang_str_get(name_str, NULL),
+                            prio, ops);
+    TAILQ_INSERT_TAIL(&eit_private_list, priv, link);
   } else {
     tvherror(LS_TBL_EIT, "missing name for '%s' in config", id);
+    _eit_done0(priv);
   }
   lang_str_destroy(name_str);
 }
@@ -1500,6 +1517,8 @@ void eit_init ( void )
 {
   htsmsg_field_t *f;
   htsmsg_t *c, *e;
+
+  TAILQ_INIT(&eit_private_list);
 
   c = hts_settings_load("epggrab/eit/config");
   if (!c) {
