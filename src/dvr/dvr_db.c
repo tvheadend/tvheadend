@@ -347,7 +347,7 @@ static inline int extra_valid(time_t extra)
 static uint32_t
 dvr_entry_warm_time( dvr_entry_t *de )
 {
-  return MIN(de->de_config->dvr_warm_time, 240);
+  return MIN(de->de_config->dvr_warm_time, 600);
 }
 
 time_t
