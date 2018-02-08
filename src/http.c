@@ -561,31 +561,33 @@ http_header_match(http_connection_t *hc, const char *name, const char *value)
 static char *
 http_get_header_value(const char *hdr, const char *name)
 {
-  char *tokbuf, *tok, *saveptr = NULL, *q, *s;
-
-  tokbuf = tvh_strdupa(hdr);
-  tok = strtok_r(tokbuf, ",", &saveptr);
-  while (tok) {
-    while (*tok == ' ')
-      tok++;
-    if ((q = strchr(tok, '=')) == NULL)
-      goto next;
-    *q = '\0';
-    if (strcasecmp(tok, name))
-      goto next;
-    s = q + 1;
-    if (*s == '"') {
-      q = strchr(++s, '"');
-      if (q)
-        *q = '\0';
-    } else {
-      q = strchr(s, ' ');
-      if (q)
-        *q = '\0';
+  char *s, *start, *val;
+  s = tvh_strdupa(hdr);
+  while (*s) {
+    while (*s && *s <= ' ') s++;
+    start = s;
+    while (*s && *s != '=') s++;
+    if (*s == '=') {
+      *s = '\0';
+      s++;
     }
-    return strdup(s);
-next:
-    tok = strtok_r(NULL, ",", &saveptr);
+    while (*s && *s <= ' ') s++;
+    if (*s == '"') {
+      val = ++s;
+      while (*s && *s != '"') s++;
+      if (*s == '"') {
+        *s = '\0';
+        s++;
+      }
+      while (*s && (*s <= ' ' || *s == ',')) s++;
+    } else {
+      val = s;
+      while (*s && *s != ',') s++;
+      *s = '\0';
+      s++;
+    }
+    if (*start && strcmp(name, start) == 0)
+      return strdup(val);
   }
   return NULL;
 }
