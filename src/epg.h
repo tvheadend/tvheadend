@@ -531,6 +531,7 @@ struct epg_broadcast
   /* Broadcast level text */
   lang_str_t                *summary;          ///< Summary
   lang_str_t                *description;      ///< Description
+  lang_str_t                *extratext;        ///< Extra text
   htsmsg_t                  *credits;          ///< Cast/Credits map of name -> role type (actor, presenter, director, etc).
   lang_str_t                *credits_cached;   ///< Comma separated cast (for regex searching in GUI/autorec). Kept in sync with cast_map
   string_list_t             *category;         ///< Extra categories (typically from xmltv) such as "Western" or "Sumo Wrestling".
