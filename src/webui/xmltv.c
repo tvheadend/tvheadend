@@ -114,6 +114,12 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</desc>\n");
     }
+  else if (ebc->summary)
+    RB_FOREACH(lse, ebc->summary, link) {
+      htsbuf_qprintf(hq, "  <desc lang=\"%s\">", lse->lang);
+      htsbuf_append_and_escape_xml(hq, lse->str);
+      htsbuf_append_str(hq, "</desc>\n");
+    }
   htsbuf_append_str(hq, "</programme>\n");
 }
 
