@@ -627,7 +627,7 @@ mpa_valid_frame(uint32_t h)
   if ((h & 0xffe00000) != 0xffe00000) return 0; /* start bits */
   if ((h & (3<<17)) == 0) return 0;             /* unknown MPEG audio layer */
   if ((h & (15<<12)) == (15<<12)) return 0;     /* invalid bitrate */
-  if ((h & (3<<10)) == (3<<10)) return 0;             /* invalid frequency */
+  if ((h & (3<<10)) == (3<<10)) return 0;       /* invalid frequency */
   return 1;
 }
 
@@ -637,16 +637,16 @@ mpa_valid_frame(uint32_t h)
 static int
 parse_mpa123(service_t *t, elementary_stream_t *st)
 {
-  int i, len, layer, lsf, mpeg25, br, sr, pad, fsize, channels, duration;
+  int i, len, layer, lsf, mpeg25, br, sr, pad;
+  int fsize, fsize2, channels, duration;
   int64_t dts;
   uint32_t h;
   const uint8_t *buf;
 
- again:
   buf = st->es_buf_a.sb_data;
   len = st->es_buf_a.sb_ptr;
 
-  for (i = 0; i < len - 4; i++) {
+  for (i = fsize2 = 0; i < len - 4; i++) {
     if (!mpa_valid_frame(h = RB32(buf + i))) continue;
 
     layer = 4 - ((h >> 17) & 3);
@@ -671,13 +671,6 @@ parse_mpa123(service_t *t, elementary_stream_t *st)
     default: fsize = 0;
     }
 
-    if (fsize && st->es_audio_version < layer) {
-      tvhtrace(LS_PARSER, "audio version change %02d: val=%d (old=%d)",
-               st->es_index, layer, st->es_audio_version);
-      st->es_audio_version = layer;
-      atomic_set(&t->s_pending_restart, 1);
-    }
-
     duration = 90000 * 1152 / sr;
     channels = ((h >> 6) & 3) == 3 ? 1 : 2;
     dts = st->es_curdts;
@@ -686,16 +679,28 @@ parse_mpa123(service_t *t, elementary_stream_t *st)
       if(dts == PTS_UNSET) continue;
     }
 
-    if(len < i + fsize + 4) continue;
+    if(len < i + fsize + 4) {
+      if (fsize == fsize2)
+        goto ok;
+      break;
+    }
 
-    h = RB32(buf + i + fsize);
-    if(mpa_valid_frame(h)) {
+    if(mpa_valid_frame(RB32(buf + i + fsize))) {
+ok:
+      if (st->es_audio_version < layer) {
+        tvhtrace(LS_PARSER, "mpeg audio version change %02d: val=%d (old=%d)",
+                 st->es_index, layer, st->es_audio_version);
+        st->es_audio_version = layer;
+        atomic_set(&t->s_pending_restart, 1);
+      }
       makeapkt(t, st, buf + i, fsize, dts, duration,
                channels, mpa_sri[(buf[i+2] >> 2) & 3]);
-      sbuf_cut(&st->es_buf_a, i + fsize);
-      goto again;
+      i += fsize - 1;
+      fsize2 = fsize;
     }
   }
+  assert(i <= st->es_buf_a.sb_ptr);
+  sbuf_cut(&st->es_buf_a, i);
 
   return PARSER_RESET;
 }
