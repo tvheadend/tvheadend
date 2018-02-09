@@ -921,7 +921,7 @@ parse_pids(char *p, mpegts_apids_t *pids)
   while (1) {
     if (x == NULL)
       break;
-    if (strcmp(x, "all") == 0) {
+    if (strcmp(x, "all") == 0 || strcmp(x, "8192") == 0) {
       if (satip_server_conf.satip_restrict_pids_all) {
         pids->all = 0;
         for (pid = 1; pid <= 2; pid++) /* CAT, TSDT */
