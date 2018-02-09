@@ -1540,6 +1540,8 @@ service_restart_streams(service_t *t)
 void
 service_restart(service_t *t)
 {
+  tvhtrace(LS_SERVICE, "restarting service '%s'", t->s_nicename);
+
   if (t->s_type == STYPE_STD) {
     pthread_mutex_lock(&t->s_stream_mutex);
     service_restart_streams(t);
