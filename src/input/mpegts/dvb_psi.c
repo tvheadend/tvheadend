@@ -169,6 +169,35 @@ dvberr:
   return priv;
 }
 
+static int
+mpegts_mux_tsid_check(mpegts_mux_t *mm, mpegts_table_t *mt, uint16_t tsid)
+{
+  if (tsid == 0 && !mm->mm_tsid_accept_zero_value) {
+    if (tvhlog_limit(&mm->mm_tsid_loglimit, 2)) {
+      tvhwarn(mt->mt_subsys, "%s: %s: TSID zero value detected, ignoring", mt->mt_name, mm->mm_nicename);
+    }
+    return 1;
+  }
+  tvhdebug(mt->mt_subsys, "%s: %p: tsid %04X (%d)", mt->mt_name, mm, tsid, tsid);
+  if (mm->mm_tsid != MPEGTS_TSID_NONE) {
+    if (mm->mm_tsid && mm->mm_tsid != tsid) {
+      if (++mm->mm_tsid_checks > 12) {
+        tvhwarn(mt->mt_subsys, "%s: %s: TSID change detected - old %04x (%d), new %04x (%d)",
+                mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
+      } else {
+        if (tvhtrace_enabled()) {
+          tvhtrace(mt->mt_subsys, "%s: %s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
+                   mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
+        }
+        return 0; /* keep rolling */
+      }
+    }
+    mm->mm_tsid_checks = -100;
+  }
+  mpegts_mux_set_tsid(mm, tsid, 1);
+  return 0;
+}
+
 static void
 dvb_bouquet_comment ( bouquet_t *bq, mpegts_mux_t *mm )
 {
@@ -969,31 +998,9 @@ dvb_pat_callback
                          tableid, tsid, 5, &st, &sect, &last, &ver,
                          3600);
   if (r != 1) return r;
-  if (tsid == 0 && !mm->mm_tsid_accept_zero_value) {
-    if (tvhlog_limit(&mm->mm_tsid_loglimit, 2)) {
-      tvhwarn(mt->mt_subsys, "%s: %s: TSID zero value detected, ignoring", mt->mt_name, mm->mm_nicename);
-    }
-    goto end;
-  }
 
   /* Multiplex */
-  tvhdebug(mt->mt_subsys, "%s: %p: tsid %04X (%d)", mt->mt_name, mm, tsid, tsid);
-  if (mm->mm_tsid != MPEGTS_TSID_NONE) {
-    if (mm->mm_tsid && mm->mm_tsid != tsid) {
-      if (++mm->mm_tsid_checks > 12) {
-        tvhwarn(mt->mt_subsys, "%s: %s: TSID change detected - old %04x (%d), new %04x (%d)",
-                mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
-      } else {
-        if (tvhtrace_enabled()) {
-          tvhtrace(mt->mt_subsys, "%s: %s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
-                   mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
-        }
-        return 0; /* keep rolling */
-      }
-    }
-    mm->mm_tsid_checks = -100;
-  }
-  mpegts_mux_set_tsid(mm, tsid, 1);
+  if (mpegts_mux_tsid_check(mm, mt, tsid)) goto end;
   
   /* Process each programme */
   ptr += 5;
@@ -1873,7 +1880,19 @@ atsc_vct_callback
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, extraid, 7, &st, &sect, &last, &ver, 0);
   if (r != 1) return r;
-  tvhdebug(mt->mt_subsys, "%s: tsid %04X (%d)", mt->mt_name, tsid, tsid);
+
+  if (mm->mm_tsid == 0 && tsid) {
+    if (!LIST_EMPTY(&mm->mm_services)) {
+      mm->mm_tsid = tsid;
+    } else {
+      mpegts_table_t *mt2 = mpegts_table_find(mm, "pat", NULL);
+      if (mt2) mpegts_table_reset(mt2);
+      return -1;
+    }
+  }
+
+  mm->mm_tsid_accept_zero_value = 1; /* ohh, we saw that */
+  if (mpegts_mux_tsid_check(mm, mt, tsid)) goto end;
 
   /* # channels */
   count = ptr[6];
@@ -1960,6 +1979,7 @@ next:
     len -= dlen + 32;
   }
 
+end:
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 

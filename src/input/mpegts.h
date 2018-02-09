@@ -1055,18 +1055,14 @@ static inline ssize_t sbuf_tsdebug_read(mpegts_mux_t *mm, sbuf_t *sb, int fd) { 
 
 #endif
 
-void mpegts_table_dispatch
-  (const uint8_t *sec, size_t r, void *mt);
-static inline void mpegts_table_grab
-  (mpegts_table_t *mt)
+void mpegts_table_dispatch(const uint8_t *sec, size_t r, void *mt);
+static inline void mpegts_table_grab(mpegts_table_t *mt)
 {
   int v = atomic_add(&mt->mt_arefcount, 1);
   assert(v > 0);
 }
-void mpegts_table_release_
-  (mpegts_table_t *mt);
-static inline int mpegts_table_release
-  (mpegts_table_t *mt)
+void mpegts_table_release_(mpegts_table_t *mt);
+static inline int mpegts_table_release(mpegts_table_t *mt)
 {
   int v = atomic_dec(&mt->mt_arefcount, 1);
   assert(v > 0);
@@ -1077,20 +1073,20 @@ static inline int mpegts_table_release
   }
   return 0;
 }
-int mpegts_table_type
-  ( mpegts_table_t *mt );
+int mpegts_table_type(mpegts_table_t *mt);
 mpegts_table_t *mpegts_table_add
   (mpegts_mux_t *mm, int tableid, int mask,
    mpegts_table_callback_t callback, void *opaque,
    const char *name, int subsys, int flags, int pid, int weight);
-void mpegts_table_flush_all
-  (mpegts_mux_t *mm);
-void mpegts_table_destroy ( mpegts_table_t *mt );
+mpegts_table_t *mpegts_table_find
+  (mpegts_mux_t *mm, const char *name, void *opaque);
+void mpegts_table_flush_all(mpegts_mux_t *mm);
+void mpegts_table_destroy(mpegts_table_t *mt);
+static inline void mpegts_table_reset(mpegts_table_t *mt)
+  { dvb_table_reset((mpegts_psi_table_t *)mt); }
+void mpegts_table_consistency_check(mpegts_mux_t *mm);
 
-void mpegts_table_consistency_check( mpegts_mux_t *mm );
-
-void dvb_bat_destroy
-  (struct mpegts_table *mt);
+void dvb_bat_destroy(struct mpegts_table *mt);
 
 int dvb_pat_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);

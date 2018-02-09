@@ -174,6 +174,29 @@ mpegts_table_type ( mpegts_table_t *mt )
 }
 
 /**
+ * Find a table
+ */
+mpegts_table_t *mpegts_table_find
+  ( mpegts_mux_t *mm, const char *name, void *opaque )
+{
+  mpegts_table_t *mt;
+
+  pthread_mutex_lock(&mm->mm_tables_lock);
+  mpegts_table_consistency_check(mm);
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    if (mt->mt_opaque != opaque)
+      continue;
+    if (strcmp(mt->mt_name, name))
+      continue;
+    mpegts_table_consistency_check(mm);
+    break;
+  }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
+  return mt;
+}
+
+
+/**
  * Add a new DVB table
  */
 mpegts_table_t *
