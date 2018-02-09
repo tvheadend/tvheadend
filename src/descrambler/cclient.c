@@ -917,9 +917,12 @@ found:
   if (pcard->cs_ra.caid == 0x4a30) ecm |= data[0] == 0x50; /* DVN */
 
   if (ecm) {
-    if((pcard->cs_ra.caid >> 8) == 6) {
+    if ((pcard->cs_ra.caid >> 8) == 6) {
       ep->ep_last_section = data[5];
       section = data[4];
+    } else if (pcard->cs_ra.caid == 0xe00) {
+      ep->ep_last_section = 0;
+      section = data[0] & 1;
     } else {
       ep->ep_last_section = 0;
       section = 0;
