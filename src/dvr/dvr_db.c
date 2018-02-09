@@ -3235,36 +3235,20 @@ dvr_entry_class_disp_extratext_set(void *o, const void *v)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   const char *lang = idnode_lang(o);
-  const char *s = "";
-  int field = 0;
-  v = tvh_str_default(v, "UnknownExtraText");
-  if (de->de_subtitle){
-    s = lang_str_get(de->de_subtitle, lang);
-    field = 1;
+  v = tvh_str_default(v, "?????");
+
+  if (de->de_subtitle && lang_str_get(de->de_subtitle, lang)[0] != '\0'){
+    return lang_str_set(&de->de_subtitle, v, lang);
   }
-  if (s == NULL || s[0] == '\0'){
-    s = lang_str_get(de->de_summary, lang);
-    field = 2;
+  if (de->de_summary && lang_str_get(de->de_summary, lang)[0] != '\0'){
+    return lang_str_set(&de->de_summary, v, lang);
   }
-  if (s == NULL || s[0] == '\0'){
-    s = lang_str_get(de->de_desc, lang);
-    field = 3;
+  if (de->de_desc && lang_str_get(de->de_desc, lang)[0] != '\0'){
+    return lang_str_set(&de->de_desc, v, lang);
   }
-  if (strcmp(s, v)) {
-    switch(field){
-      case 1:
-        lang_str_set(&de->de_subtitle, v, lang);
-        break;
-      case 2:
-        lang_str_set(&de->de_summary, v, lang);
-        break;
-      case 3:
-        lang_str_set(&de->de_desc, v, lang);
-        break;
-    }
-    return 1;
-  }
-  return 0;
+  // If subtitle, summary or descripcion is not set, the extratext
+  // field is stored in subtitle by default
+  return lang_str_set(&de->de_subtitle, v, lang);
 }
 
 static int
@@ -3750,10 +3734,10 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "disp_extratext",
       .name     = N_("Extra text"),
-      .desc     = N_("Subtitle, summary or description of the program (if any) (display only)."),
+      .desc     = N_("Subtitle, summary or description of the program (if any)."),
       .get      = dvr_entry_class_disp_extratext_get,
       .set      = dvr_entry_class_disp_extratext_set,
-      .opts     = PO_NOSAVE | PO_ADVANCED,
+      .opts     = PO_NOSAVE,
     },
     {
       .type     = PT_INT,
@@ -4005,7 +3989,7 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Episode number/ID."),
       .set      = dvr_entry_class_disp_episode_set,
       .get      = dvr_entry_class_disp_episode_get,
-      .opts     = PO_HIDDEN | PO_NOSAVE | PO_ADVANCED,
+      .opts     = PO_HIDDEN | PO_NOSAVE,
     },
     {
       .type     = PT_STR,
