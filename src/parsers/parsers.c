@@ -680,7 +680,7 @@ parse_mpa123(service_t *t, elementary_stream_t *st)
     }
 
     if(len < i + fsize + 4) {
-      if (fsize == fsize2)
+      if (len - i == fsize && fsize == fsize2)
         goto ok;
       break;
     }
