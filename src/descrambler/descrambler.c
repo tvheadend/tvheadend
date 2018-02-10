@@ -638,10 +638,12 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
     for (j = 0; j < DESCRAMBLER_MAX_KEYS; j++) {
       tk = &dr->dr_keys[j];
       pid2 = tk->key_pid;
-      if (pid2)
+      if (pid2) {
+        pthread_mutex_unlock(&t->s_stream_mutex);
         descrambler_keys(td, type, pid2, even, odd);
+        pthread_mutex_lock(&t->s_stream_mutex);
+      }
     }
-    pthread_mutex_lock(&t->s_stream_mutex);
     goto end;
   }
 
