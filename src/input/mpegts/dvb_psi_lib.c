@@ -201,11 +201,24 @@ mpegts_table_state_reset
   int i;
   mt->mt_finished = 0;
   st->complete = 0;
-  st->version = 0xff;  /* invalid */
+  st->version = MPEGTS_PSI_VERSION_NONE;
+  st->last = last;
   memset(st->sections, 0, sizeof(st->sections));
   for (i = 0; i < last / 32; i++)
     st->sections[i] = 0xFFFFFFFF;
   st->sections[last / 32] = 0xFFFFFFFF << (31 - (last % 32));
+}
+
+static void
+mpegts_table_state_restart
+  ( mpegts_psi_table_t *mt, mpegts_psi_table_state_t *st, int last, int ver )
+{
+  if (st->complete == 2)
+    mt->mt_complete--;
+  if (st->complete)
+    mt->mt_incomplete++;
+  mpegts_table_state_reset(mt, st, last);
+  st->version = ver;
 }
 
 static mpegts_psi_table_state_t *
@@ -290,7 +303,7 @@ dvb_table_begin
    mpegts_psi_table_state_t **ret, int *sect, int *last, int *ver,
    time_t interval)
 {
-  mpegts_psi_table_state_t *st;
+  mpegts_psi_table_state_t *st, *st2;
   uint32_t sa, sb;
 
   /* Not long enough */
@@ -329,20 +342,17 @@ dvb_table_begin
     if (interval && mt->mt_last_complete &&
       mt->mt_last_complete + interval < gclk()) {
       mt->mt_last_complete = 0;
-      tvhtrace(mt->mt_subsys, "%s:  time interval exceeded, restart", mt->mt_name);
-      goto restart;
+      tvhtrace(mt->mt_subsys, "%s:  time interval exceeded, complete restart", mt->mt_name);
+      RB_FOREACH(st2, &mt->mt_state, link)
+        if (st != st2)
+          mpegts_table_state_restart(mt, st2, st2->last, MPEGTS_PSI_VERSION_NONE);
+      mpegts_table_state_restart(mt, st, *last, *ver);
     }
 
     /* New version */
-    if (st->version != *ver) {
+    if (st->version != MPEGTS_PSI_VERSION_NONE && st->version != *ver) {
       tvhtrace(mt->mt_subsys, "%s:  new version, restart", mt->mt_name);
-restart:
-      if (st->complete == 2)
-        mt->mt_complete--;
-      if (st->complete)
-        mt->mt_incomplete++;
-      mpegts_table_state_reset(mt, st, *last);
-      st->version = *ver;
+      mpegts_table_state_restart(mt, st, *last, *ver);
     }
 
     /* Complete? */
