@@ -341,13 +341,8 @@ dvb_table_begin
     if (st->version == MPEGTS_PSI_VERSION_NONE)
       st->version = *ver;
     if (st->version != *ver) {
-      if (st->complete == 2)
-        mt->mt_complete--;
-      if (st->complete)
-        mt->mt_incomplete++;
       tvhtrace(mt->mt_subsys, "%s:  new version, restart", mt->mt_name);
-      mpegts_table_state_reset(mt, st, *last);
-      st->version = *ver;
+      mpegts_table_state_restart(mt, st, *last, *ver);
     }
 
     /* Complete? */
