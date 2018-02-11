@@ -169,6 +169,13 @@ api_dvr_entry_create
       htsmsg_add_str(m, lang, s1);
       htsmsg_add_msg(conf, "subtitle", m);
     }
+
+    s1 = htsmsg_get_str(conf, "disp_extratext");
+    if (s1 && !htsmsg_get_map(conf, "subtitle")) {
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, lang, s1);
+      htsmsg_add_msg(conf, "subtitle", m);
+    }
     if ((de = dvr_entry_create(NULL, conf, 0)))
       api_idnode_create(resp, &de->de_id);
 
