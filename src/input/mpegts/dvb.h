@@ -274,6 +274,7 @@ do {\
  */
 
 #define MPEGTS_PSI_SECTION_SIZE 5000
+#define MPEGTS_PSI_VERSION_NONE 255
 
 typedef struct mpegts_psi_section
 {
@@ -294,6 +295,7 @@ typedef struct mpegts_psi_table_state
   int      tableid;
   uint64_t extraid;
   int      version;
+  int      last;
   int      complete;
   int      working;
   uint32_t sections[8];

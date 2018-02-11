@@ -201,11 +201,24 @@ mpegts_table_state_reset
   int i;
   mt->mt_finished = 0;
   st->complete = 0;
-  st->version = 0xff;  /* invalid */
+  st->version = MPEGTS_PSI_VERSION_NONE;
+  st->last = last;
   memset(st->sections, 0, sizeof(st->sections));
   for (i = 0; i < last / 32; i++)
     st->sections[i] = 0xFFFFFFFF;
   st->sections[last / 32] = 0xFFFFFFFF << (31 - (last % 32));
+}
+
+static void
+mpegts_table_state_restart
+  ( mpegts_psi_table_t *mt, mpegts_psi_table_state_t *st, int last, int ver )
+{
+  if (st->complete == 2)
+    mt->mt_complete--;
+  if (st->complete)
+    mt->mt_incomplete++;
+  mpegts_table_state_reset(mt, st, last);
+  st->version = ver;
 }
 
 static mpegts_psi_table_state_t *
@@ -325,6 +338,8 @@ dvb_table_begin
 #endif
 
     /* New version */
+    if (st->version == MPEGTS_PSI_VERSION_NONE)
+      st->version = *ver;
     if (st->version != *ver) {
       if (st->complete == 2)
         mt->mt_complete--;
