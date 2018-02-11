@@ -350,7 +350,9 @@ dvb_table_begin
     }
 
     /* New version */
-    if (st->version != MPEGTS_PSI_VERSION_NONE && st->version != *ver) {
+    if (st->version == MPEGTS_PSI_VERSION_NONE)
+      st->version = *ver;
+    if (st->version != *ver) {
       tvhtrace(mt->mt_subsys, "%s:  new version, restart", mt->mt_name);
       mpegts_table_state_restart(mt, st, *last, *ver);
     }
