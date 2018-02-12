@@ -1635,7 +1635,7 @@ dvb_nit_callback
         retry = 1; /* keep rolling - perhaps SDT was not parsed yet */
     }
 
-    if (priv == 0) {
+    if (tableid == 0x40 && priv == 0) {
       priv2 = dvb_priv_lookup(mt, lptr, llen);
       if (priv2) {
         tvhtrace(mt->mt_subsys, "%s: using private2 data 0x%08x", mt->mt_name, priv2);
