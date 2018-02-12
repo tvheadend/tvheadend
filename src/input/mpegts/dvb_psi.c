@@ -1635,7 +1635,7 @@ dvb_nit_callback
         retry = 1; /* keep rolling - perhaps SDT was not parsed yet */
     }
 
-    if (tableid == 0x40 && priv == 0) {
+    if ((tableid == 0x40 || (mn->mn_nid && mn->mn_nid == nbid)) && priv == 0) {
       priv2 = dvb_priv_lookup(mt, lptr, llen);
       if (priv2) {
         tvhtrace(mt->mt_subsys, "%s: using private2 data 0x%08x", mt->mt_name, priv2);
@@ -1651,7 +1651,7 @@ dvb_nit_callback
   if (retry)
     return 0;
 
-  if (tableid == 0x40)
+  if (tableid == 0x40 || (mn->mn_nid && mn->mn_nid == nbid))
     eit_nit_callback(mt, nbid, name, priv);
 
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
