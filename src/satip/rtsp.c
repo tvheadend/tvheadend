@@ -1659,7 +1659,7 @@ rtsp_stream_status ( void *opaque, htsmsg_t *m )
   http_connection_t *hc = opaque;
   char buf[128];
   struct session *rs = NULL;
-  htsmsg_t *c, *l;
+  htsmsg_t *c, *tcp = NULL, *udp = NULL;
   int udpport, s32;
 
   htsmsg_add_str(m, "type", "SAT>IP");
@@ -1677,22 +1677,22 @@ rtsp_stream_status ( void *opaque, htsmsg_t *m )
         (udpport = rs->rtp_peer_port) > 0) {
       if (udpport == RTSP_TCP_DATA) {
         if (rs->tcp_data == hc) {
-          c = htsmsg_create_map();
-          l = htsmsg_create_list();
           s32 = htsmsg_get_s32_or_default(m, "peer_port", -1);
-          htsmsg_add_s32(l, NULL, s32);
-          htsmsg_add_msg(c, "tcp", l);
-          htsmsg_add_msg(m, "peer_extra_ports", c);
+          if (!tcp) tcp = htsmsg_create_list();
+          htsmsg_add_s32(tcp, NULL, s32);
         }
       } else {
-        c = htsmsg_create_map();
-        l = htsmsg_create_list();
-        htsmsg_add_s32(l, NULL, udpport);
-        htsmsg_add_s32(l, NULL, udpport+1);
-        htsmsg_add_msg(c, "udp", l);
-        htsmsg_add_msg(m, "peer_extra_ports", c);
+        if (!udp) udp = htsmsg_create_list();
+        htsmsg_add_s32(udp, NULL, udpport);
+        htsmsg_add_s32(udp, NULL, udpport+1);
       }
     }
+  }
+  if (tcp || udp) {
+    c = htsmsg_create_map();
+    if (tcp) htsmsg_add_msg(c, "tcp", tcp);
+    if (udp) htsmsg_add_msg(c, "udp", udp);
+    htsmsg_add_msg(m, "peer_extra_ports", c);
   }
 }
 

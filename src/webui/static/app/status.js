@@ -659,10 +659,10 @@ tvheadend.status_conns = function(panel, index) {
                     if (!v) return '';
                     var o = '';
                     if ('tcp' in v)
-                        o += _("TCP") + v.tcp.join(',');
+                        o += _("TCP") + ':' + v.tcp.join(',');
                     if ('udp' in v) {
                         if (o) o += ';';
-                        o += _("UDP") + v.udp.join(',');
+                        o += _("UDP") + ':' + v.udp.join(',');
                     }
                     return o;
                 }
