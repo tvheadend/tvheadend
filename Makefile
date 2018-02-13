@@ -631,13 +631,16 @@ SRCS-${CONFIG_DBUS_1}  += src/dbus.c
 # Watchdog
 SRCS-${CONFIG_LIBSYSTEMD_DAEMON} += src/watchdog.c
 
+# DVB scan
+DVBSCAN-$(CONFIG_DVBSCAN) += check_dvb_scan
+ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
+
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
 BUNDLES-yes               += src/webui/static
 BUNDLES-yes               += data/conf
 BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
 BUNDLES                    = $(BUNDLES-yes)
-ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 
 #
 # Documentation
@@ -831,7 +834,7 @@ $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
 	$(pCC) $(CFLAGS) -I${ROOTDIR}/src -c -o $@ $<
 
-$(BUILDDIR)/bundle.c: check_dvb_scan make_webui
+$(BUILDDIR)/bundle.c: $(DVBSCAN-yes) make_webui
 	@mkdir -p $(dir $@)
 	$(pMKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
 
