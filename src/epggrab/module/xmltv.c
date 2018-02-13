@@ -610,7 +610,6 @@ static int _xmltv_parse_programme_tags
   const int use_category_not_genre = ((epggrab_module_int_t *)mod)->xmltv_use_category_not_genre;
   int save = 0, save2 = 0, save3 = 0;
   epg_episode_t *ee = NULL;
-  epg_serieslink_t *es = NULL;
   epg_broadcast_t *ebc;
   epg_genre_list_t *egl;
   epg_episode_num_t epnum;
@@ -721,12 +720,9 @@ static int _xmltv_parse_programme_tags
    * Series Link
    */
   if (suri) {
-    if ((es = epg_serieslink_find_by_uri(suri, mod, 1, &save2, &changes2))) {
-      save |= epg_broadcast_set_serieslink(ebc, es, &changes);
-      save |= epg_serieslink_change_finish(es, changes2, 0);
-    }
+    save |= epg_broadcast_set_serieslink_uri(ebc, suri, &changes);
     free(suri);
-    if (es) stats->seasons.total++;
+    stats->seasons.total++;
     if (save2 && (changes2 & EPG_CHANGED_CREATE)) stats->seasons.created++;
   }
 

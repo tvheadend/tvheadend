@@ -41,7 +41,6 @@
 
 extern epg_object_tree_t epg_seasons;
 extern epg_object_tree_t epg_episodes;
-extern epg_object_tree_t epg_serieslinks;
 
 /* **************************************************************************
  * Load
@@ -131,7 +130,7 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
   
   /* Series link */
   } else if ( !strcmp(*sect, "serieslinks") ) {
-    if (epg_serieslink_deserialize(m, 1, &save)) stats->seasons.total++;
+    /* skip */
   
   /* Broadcasts */
   } else if ( !strcmp(*sect, "broadcasts") ) {
@@ -200,26 +199,6 @@ static memoryinfo_t epg_memoryinfo_episodes = {
   .my_update = epg_memoryinfo_episodes_update
 };
 
-static void epg_memoryinfo_serieslinks_update(memoryinfo_t *my)
-{
-  epg_object_t *eo;
-  epg_serieslink_t *es;
-  int64_t size = 0, count = 0;
-
-  RB_FOREACH(eo, &epg_serieslinks, uri_link) {
-    es = (epg_serieslink_t *)eo;
-    size += sizeof(*es);
-    size += tvh_strlen(es->uri);
-    count++;
-  }
-  memoryinfo_update(my, size, count);
-}
-
-static memoryinfo_t epg_memoryinfo_serieslinks = {
-  .my_name = "EPG Series Links",
-  .my_update = epg_memoryinfo_serieslinks_update
-};
-
 static void epg_memoryinfo_broadcasts_update(memoryinfo_t *my)
 {
   channel_t *ch;
@@ -270,7 +249,6 @@ void epg_init ( void )
 
   memoryinfo_register(&epg_memoryinfo_seasons);
   memoryinfo_register(&epg_memoryinfo_episodes);
-  memoryinfo_register(&epg_memoryinfo_serieslinks);
   memoryinfo_register(&epg_memoryinfo_broadcasts);
 
   /* Find the right file (and version) */
@@ -407,7 +385,6 @@ void epg_done ( void )
   epg_skel_done();
   memoryinfo_unregister(&epg_memoryinfo_seasons);
   memoryinfo_unregister(&epg_memoryinfo_episodes);
-  memoryinfo_unregister(&epg_memoryinfo_serieslinks);
   memoryinfo_unregister(&epg_memoryinfo_broadcasts);
   pthread_mutex_unlock(&global_lock);
 }
@@ -526,11 +503,6 @@ void epg_save ( void )
   RB_FOREACH(eo,  &epg_episodes, uri_link) {
     if (_epg_write(sb, epg_episode_serialize((epg_episode_t*)eo))) goto error;
     stats.episodes.total++;
-  }
-  if ( _epg_write_sect(sb, "serieslinks") ) goto error;
-  RB_FOREACH(eo, &epg_serieslinks, uri_link) {
-    if (_epg_write(sb, epg_serieslink_serialize((epg_serieslink_t*)eo))) goto error;
-    stats.seasons.total++;
   }
   if ( _epg_write_sect(sb, "broadcasts") ) goto error;
   CHANNEL_FOREACH(ch) {

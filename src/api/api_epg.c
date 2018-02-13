@@ -98,11 +98,8 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
     if (ee->uri && strncasecmp(ee->uri, "tvh://", 6))
       htsmsg_add_str(m, "episodeUri", ee->uri);
   }
-  if (eb->serieslink) {
-    htsmsg_add_u32(m, "serieslinkId", eb->serieslink->id);
-    if (eb->serieslink->uri)
-      htsmsg_add_str(m, "serieslinkUri", eb->serieslink->uri);
-  }
+  if (eb->serieslink_uri)
+    htsmsg_add_str(m, "serieslinkUri", eb->serieslink_uri);
   
   /* Channel Info */
   api_epg_add_channel(m, ch, *blank);

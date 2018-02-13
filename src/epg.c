@@ -47,7 +47,6 @@ epg_object_tree_t epg_objects[EPG_HASH_WIDTH];
 /* URI lists */
 epg_object_tree_t epg_seasons;
 epg_object_tree_t epg_episodes;
-epg_object_tree_t epg_serieslinks;
 
 /* Other special case lists */
 epg_object_list_t epg_object_unref;
@@ -391,8 +390,6 @@ htsmsg_t *epg_object_serialize ( epg_object_t *eo )
       return epg_episode_serialize((epg_episode_t*)eo);
     case EPG_BROADCAST:
       return epg_broadcast_serialize((epg_broadcast_t*)eo);
-    case EPG_SERIESLINK:
-      return epg_serieslink_serialize((epg_serieslink_t*)eo);
     default:
       return NULL;
   }
@@ -410,8 +407,6 @@ epg_object_t *epg_object_deserialize ( htsmsg_t *msg, int create, int *save )
       return (epg_object_t*)epg_episode_deserialize(msg, create, save);
     case EPG_BROADCAST:
       return (epg_object_t*)epg_broadcast_deserialize(msg, create, save);
-    case EPG_SERIESLINK:
-      return (epg_object_t*)epg_serieslink_deserialize(msg, create, save);
   }
   return NULL;
 }
@@ -1223,106 +1218,6 @@ const char *epg_episode_get_description
 }
 
 /* **************************************************************************
- * Series link
- * *************************************************************************/
-
-static void _epg_serieslink_destroy ( void *eo )
-{
-  epg_serieslink_t *es = (epg_serieslink_t*)eo;
-  if (LIST_FIRST(&es->broadcasts)) {
-    tvhlog(LOG_CRIT, LS_EPG, "attempt to destory series link with broadcasts");
-    assert(0);
-  }
-  _epg_object_destroy(eo, &epg_serieslinks);
-  free(es);
-}
-
-static void _epg_serieslink_updated ( void *eo )
-{
-  dvr_autorec_check_serieslink((epg_serieslink_t*)eo);
-}
-
-static epg_object_ops_t _epg_serieslink_ops = {
-  .getref  = _epg_object_getref,
-  .putref  = _epg_object_putref,
-  .destroy = _epg_serieslink_destroy,
-  .update  = _epg_serieslink_updated,
-};
-
-static epg_object_t **_epg_serieslink_skel ( void )
-{
-  static epg_object_t *skel = NULL;
-  if (!skel) {
-    skel = calloc(1, sizeof(epg_serieslink_t));
-    skel->type = EPG_SERIESLINK;
-    skel->ops  = &_epg_serieslink_ops;
-  }
-  return &skel;
-}
-
-epg_serieslink_t* epg_serieslink_find_by_uri
-  ( const char *uri, epggrab_module_t *src, int create,
-    int *save, uint32_t *changed )
-{
-  return (epg_serieslink_t*)
-    _epg_object_find_by_uri(uri, src, create, save, changed,
-                            &epg_serieslinks,
-                            _epg_serieslink_skel());
-}
-
-epg_serieslink_t *epg_serieslink_find_by_id ( uint32_t id )
-{
-  return (epg_serieslink_t*)epg_object_find_by_id(id, EPG_SERIESLINK);
-}
-
-int epg_serieslink_change_finish
-  ( epg_serieslink_t *esl, uint32_t changes, int merge )
-{
-  return 0;
-}
-
-static void _epg_serieslink_add_broadcast
-  ( epg_serieslink_t *esl, epg_broadcast_t *ebc )
-{
-  _epg_object_getref(esl);
-  _epg_object_set_updated(esl);
-  LIST_INSERT_HEAD(&esl->broadcasts, ebc, sl_link);
-}
-
-static void _epg_serieslink_rem_broadcast
-  ( epg_serieslink_t *esl, epg_broadcast_t *ebc )
-{
-  LIST_REMOVE(ebc, sl_link);
-  _epg_object_set_updated(esl);
-  _epg_object_putref(esl);
-}
-
-htsmsg_t *epg_serieslink_serialize ( epg_serieslink_t *esl )
-{
-  htsmsg_t *m;
-  if (!esl || !esl->uri) return NULL;
-  if (!(m = _epg_object_serialize((epg_object_t*)esl))) return NULL;
-  return m;
-}
-
-epg_serieslink_t *epg_serieslink_deserialize 
-  ( htsmsg_t *m, int create, int *save )
-{
-  epg_object_t **skel = _epg_serieslink_skel();
-  epg_serieslink_t *esl;
-  uint32_t changes = 0;
-
-  if (!_epg_object_deserialize(m, *skel)) return NULL;
-  if (!(esl = epg_serieslink_find_by_uri((*skel)->uri, (*skel)->grabber,
-                                         create, save, &changes)))
-    return NULL;
-
-  *save |= epg_serieslink_change_finish(esl, changes, 0);
-  
-  return esl;
-}
-
-/* **************************************************************************
  * Channel
  * *************************************************************************/
 
@@ -1636,7 +1531,6 @@ static void _epg_broadcast_destroy ( void *eo )
     notify_delayed(id, "epg", "delete");
   }
   if (ebc->episode)     _epg_episode_rem_broadcast(ebc->episode, ebc);
-  if (ebc->serieslink)  _epg_serieslink_rem_broadcast(ebc->serieslink, ebc);
   if (ebc->summary)     lang_str_destroy(ebc->summary);
   if (ebc->description) lang_str_destroy(ebc->description);
   if (ebc->credits)     htsmsg_destroy(ebc->credits);
@@ -1644,6 +1538,7 @@ static void _epg_broadcast_destroy ( void *eo )
   if (ebc->category)    string_list_destroy(ebc->category);
   if (ebc->keyword)     string_list_destroy(ebc->keyword);
   if (ebc->keyword_cached) lang_str_destroy(ebc->keyword_cached);
+  free(ebc->serieslink_uri);
   _epg_object_destroy(eo, NULL);
   assert(LIST_EMPTY(&ebc->dvr_entries));
   free(ebc);
@@ -1740,7 +1635,7 @@ int epg_broadcast_change_finish
   if (!(changes & EPG_CHANGED_EPISODE))
     save |= epg_broadcast_set_episode(broadcast, NULL, NULL);
   if (!(changes & EPG_CHANGED_SERIESLINK))
-    save |= epg_broadcast_set_serieslink(broadcast, NULL, NULL);
+    save |= epg_broadcast_set_serieslink_uri(broadcast, NULL, NULL);
   if (!(changes & EPG_CHANGED_DVB_EID))
     save |= epg_broadcast_set_dvb_eid(broadcast, 0, NULL);
   if (!(changes & EPG_CHANGED_IS_WIDESCREEN))
@@ -1800,7 +1695,7 @@ epg_broadcast_t *epg_broadcast_clone
     *save |= epg_broadcast_set_category(ebc, src->category, &changes);
     *save |= epg_broadcast_set_keyword(ebc, src->keyword, &changes);
     *save |= epg_broadcast_set_description(ebc, src->description, &changes);
-    *save |= epg_broadcast_set_serieslink(ebc, src->serieslink, &changes);
+    *save |= epg_broadcast_set_serieslink_uri(ebc, src->serieslink_uri, &changes);
     *save |= epg_broadcast_set_episode(ebc, src->episode, &changes);
     _epg_object_set_grabber(ebc, src->grabber);
     *save |= epg_broadcast_change_finish(ebc, changes, 0);
@@ -1851,16 +1746,15 @@ int epg_broadcast_set_episode
   return save;
 }
 
-int epg_broadcast_set_serieslink
-  ( epg_broadcast_t *ebc, epg_serieslink_t *esl, uint32_t *changed )
+int epg_broadcast_set_serieslink_uri
+  ( epg_broadcast_t *ebc, const char *uri, uint32_t *changed )
 {
   int save = 0;
   if (!ebc) return 0;
   if (changed) *changed |= EPG_CHANGED_SERIESLINK;
-  if (ebc->serieslink != esl) {
-    if (ebc->serieslink) _epg_serieslink_rem_broadcast(ebc->serieslink, ebc);
-    ebc->serieslink = esl;
-    if (esl) _epg_serieslink_add_broadcast(esl, ebc);
+  if (strcmp(ebc->serieslink_uri ?: "", uri ?: "")) {
+    free(ebc->serieslink_uri);
+    ebc->serieslink_uri = strdup(uri);
     save = 1;
   }
   return save;
@@ -2114,9 +2008,8 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
   if (broadcast->keyword)
     string_list_serialize(broadcast->keyword, m, "keyword");
   /* No need to serialize keyword_cached since it is rebuilt from keyword */
-
-  if (broadcast->serieslink)
-    htsmsg_add_str(m, "serieslink", broadcast->serieslink->uri);
+  if (broadcast->serieslink_uri)
+    htsmsg_add_str(m, "serieslink", broadcast->serieslink_uri);
   
   return m;
 }
@@ -2127,12 +2020,11 @@ epg_broadcast_t *epg_broadcast_deserialize
   channel_t *ch = NULL;
   epg_broadcast_t *ebc, **skel = _epg_broadcast_skel();
   epg_episode_t *ee;
-  epg_serieslink_t *esl;
   lang_str_t *ls;
   htsmsg_t *hm;
   string_list_t *sl;
   const char *str;
-  uint32_t eid, u32, changes = 0, changes2 = 0;
+  uint32_t eid, u32, changes = 0;
   int64_t start, stop;
 
   if (htsmsg_get_s64(m, "start", &start)) return NULL;
@@ -2208,10 +2100,7 @@ epg_broadcast_t *epg_broadcast_deserialize
 
   /* Series link */
   if ((str = htsmsg_get_str(m, "serieslink")))
-    if ((esl = epg_serieslink_find_by_uri(str, ebc->grabber, 1, save, &changes2))) {
-      *save |= epg_broadcast_set_serieslink(ebc, esl, &changes);
-      *save |= epg_serieslink_change_finish(esl, changes2, 0);
-    }
+    *save |= epg_broadcast_set_serieslink_uri(ebc, str, &changes);
 
   /* Set the episode */
   *save |= epg_broadcast_set_episode(ebc, ee, &changes);
@@ -3101,8 +2990,6 @@ void epg_skel_done(void)
   skel = _epg_season_skel();
   free(*skel); *skel = NULL;
   skel = _epg_episode_skel();
-  free(*skel); *skel = NULL;
-  skel = _epg_serieslink_skel();
   free(*skel); *skel = NULL;
   broad = _epg_broadcast_skel();
   free(*broad); *broad = NULL;

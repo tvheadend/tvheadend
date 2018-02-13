@@ -166,13 +166,14 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_season == NULL &&
      dae->dae_minduration <= 0 &&
      (dae->dae_maxduration <= 0 || dae->dae_maxduration > 24 * 3600) &&
-     dae->dae_serieslink == NULL)
+     dae->dae_serieslink_uri == NULL)
     return 0; // Avoid super wildcard match
 
   // Note: we always test season first, though it will only be set
   //       if configured
-  if(dae->dae_serieslink) {
-    if (!e->serieslink || dae->dae_serieslink != e->serieslink) return 0;
+  if(dae->dae_serieslink_uri) {
+    if (!e->serieslink_uri ||
+        strcmp(dae->dae_serieslink_uri ?: "", e->serieslink_uri)) return 0;
   } else {
     if(dae->dae_season)
       if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
@@ -284,7 +285,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
 
   /* Do not check title if the event is from the serieslink group */
-  if(dae->dae_serieslink == NULL &&
+  if((dae->dae_serieslink_uri == NULL || dae->dae_serieslink_uri[0] == '\0') &&
      dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     lang_str_ele_t *ls;
     if (!dae->dae_fulltext) {
@@ -407,8 +408,8 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
   free(title);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
   htsmsg_add_str(conf, "channel", chname);
-  if (event->serieslink)
-    htsmsg_add_str(conf, "serieslink", event->serieslink->uri);
+  if (event->serieslink_uri)
+    htsmsg_add_str(conf, "serieslink", event->serieslink_uri);
   htsmsg_add_str(conf, "owner", owner ?: "");
   htsmsg_add_str(conf, "creator", creator ?: "");
   htsmsg_add_str(conf, "comment", comment ?: "");
@@ -463,8 +464,6 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
 
   if(dae->dae_season)
     dae->dae_season->ops->putref(dae->dae_season);
-  if(dae->dae_serieslink)
-    dae->dae_serieslink->ops->putref(dae->dae_serieslink);
 
   free(dae);
 }
@@ -936,40 +935,6 @@ dvr_autorec_entry_class_star_rating_list ( void *o, const char *lang )
   return m;
 }
 
-
-static int
-dvr_autorec_entry_class_series_link_set(void *o, const void *v)
-{
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  int save;
-  epg_serieslink_t *sl;
-
-  v = tvh_str_default(v, NULL);
-  sl = v ? epg_serieslink_find_by_uri(v, NULL, 1, &save, NULL) : NULL;
-  if (sl && dae->dae_serieslink != sl) {
-    if (dae->dae_serieslink)
-      dae->dae_serieslink->ops->putref((epg_object_t*)dae->dae_season);
-    sl->ops->getref((epg_object_t*)sl);
-    dae->dae_serieslink = sl;
-    return 1;
-  } else if (sl == NULL && dae->dae_serieslink) {
-    dae->dae_season->ops->putref((epg_object_t*)dae->dae_season);
-    dae->dae_season = NULL;
-    return 1;
-  }
-  return 0;
-}
-
-static const void *
-dvr_autorec_entry_class_series_link_get(void *o)
-{
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  prop_ptr = dae->dae_serieslink ? dae->dae_serieslink->uri : NULL;
-  if (prop_ptr == NULL)
-    prop_ptr = "";
-  return &prop_ptr;
-}
-
 static htsmsg_t *
 dvr_autorec_entry_class_content_type_list(void *o, const char *lang)
 {
@@ -1373,8 +1338,7 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "serieslink",
       .name     = N_("Series link"),
       .desc     = N_("Series link ID."),
-      .set      = dvr_autorec_entry_class_series_link_set,
-      .get      = dvr_autorec_entry_class_series_link_get,
+      .off      = offsetof(dvr_autorec_entry_t, dae_serieslink_uri),
       .opts     = PO_RDONLY | PO_ADVANCED,
     },
     {
@@ -1469,11 +1433,6 @@ void dvr_autorec_check_season(epg_season_t *s)
 {
 // Note: I guess new episodes might have been added, but again its likely
 //       this will already have been picked up by the check_event call
-}
-
-void dvr_autorec_check_serieslink(epg_serieslink_t *s)
-{
-// TODO: need to implement this
 }
 
 /**

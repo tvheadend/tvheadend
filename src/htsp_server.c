@@ -601,10 +601,8 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
       htsmsg_add_s64(conf, "start_extra", !retval ? (s64 < 0 ? 0 : s64)  : 0); // 0 = dvr config
     if (!(retval = htsmsg_get_s64(in, "stopExtra", &s64)) || add)
       htsmsg_add_s64(conf, "stop_extra", !retval ? (s64 < 0 ? 0 : s64) : 0);   // 0 = dvr config
-    if (!(retval = htsmsg_get_u32(in, "serieslinkId", &u32)) || add)
-      htsmsg_add_u32(conf, "serieslinkId", !retval ? u32 : 0);
-    if((str = htsmsg_get_str(in, "serieslinkUri")) || add)
-      htsmsg_add_str(conf, "serieslink", str ?: ""); // for compat reasons, htsp name is not same as internal name
+    if ((str = htsmsg_get_str(in, "serieslinkUri")) || add)
+      htsmsg_add_str(conf, "serieslink", str ?: "");
 
     if (add) { // for add, stay compatible with older "approxTime
       if(htsmsg_get_s32(in, "approxTime", &approx_time))
@@ -1179,12 +1177,8 @@ htsp_build_autorecentry(htsp_connection_t *htsp, dvr_autorec_entry_t *dae, const
   htsmsg_add_str2(out, "creator",    dae->dae_creator);
   if(dae->dae_channel)
     htsmsg_add_u32(out, "channel",   channel_get_id(dae->dae_channel));
-
-  if (dae->dae_serieslink) {
-    htsmsg_add_u32(out, "serieslinkId", dae->dae_serieslink->id);
-    if (dae->dae_serieslink->uri)
-      htsmsg_add_str(out, "serieslinkUri", dae->dae_serieslink->uri);
-  }
+  if (dae->dae_serieslink_uri)
+    htsmsg_add_str(out, "serieslinkUri", dae->dae_serieslink_uri);
   htsmsg_add_str(out, "method", method);
 
   return out;
@@ -1250,7 +1244,6 @@ htsp_build_event
   if (update) {
     int ignore = 1;
     if      (e->updated > update) ignore = 0;
-    else if (e->serieslink && e->serieslink->updated > update) ignore = 0;
     else if (ee) {
            if (ee->updated > update) ignore = 0;
       else if (ee->season && ee->season->updated > update) ignore = 0;
@@ -1303,11 +1296,8 @@ htsp_build_event
     htsmsg_add_msg(out, "keyword", string_list_to_htsmsg(e->keyword));
   }
 
-  if (e->serieslink) {
-    htsmsg_add_u32(out, "serieslinkId", e->serieslink->id);
-    if (e->serieslink->uri)
-      htsmsg_add_str(out, "serieslinkUri", e->serieslink->uri);
-  }
+  if (e->serieslink_uri)
+    htsmsg_add_str(out, "serieslinkUri", e->serieslink_uri);
 
   if (ee) {
     htsmsg_add_u32(out, "episodeId", ee->id);

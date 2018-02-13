@@ -52,7 +52,6 @@ typedef struct epg_object          epg_object_t;
 typedef struct epg_season          epg_season_t;
 typedef struct epg_episode         epg_episode_t;
 typedef struct epg_broadcast       epg_broadcast_t;
-typedef struct epg_serieslink      epg_serieslink_t;
 
 extern int epg_in_load;
 
@@ -387,33 +386,6 @@ htsmsg_t      *epg_episode_serialize   ( epg_episode_t *b );
 epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save );
 
 /* ************************************************************************
- * Series Link - broadcast level linkage
- * ***********************************************************************/
-
-/* Object */
-struct epg_serieslink
-{
-  epg_object_t;
-
-  epg_broadcast_list_t         broadcasts;      ///< Episode list
-};
-
-/* Lookup */
-epg_serieslink_t *epg_serieslink_find_by_uri
-  ( const char *uri, struct epggrab_module *src, int create, int *save, uint32_t *changes );
-epg_serieslink_t *epg_serieslink_find_by_id
-  ( uint32_t id );
-
-/* Post-modify */
-int epg_serieslink_change_finish( epg_serieslink_t *s, uint32_t changed, int merge )
-  __attribute__((warn_unused_result));
-
-/* Serialization */
-htsmsg_t         *epg_serieslink_serialize   ( epg_serieslink_t *s );
-epg_serieslink_t *epg_serieslink_deserialize 
-  ( htsmsg_t *m, int create, int *save );
-
-/* ************************************************************************
  * Broadcast - specific airing (channel & time) of an episode
  * ***********************************************************************/
 
@@ -470,7 +442,7 @@ struct epg_broadcast
   LIST_ENTRY(epg_broadcast)  ep_link;          ///< Episode link
   epg_episode_t             *episode;          ///< Episode shown
   LIST_ENTRY(epg_broadcast)  sl_link;          ///< SeriesLink link
-  epg_serieslink_t          *serieslink;       ///< SeriesLink
+  char                      *serieslink_uri;   ///< SeriesLink URI
   struct channel            *channel;          ///< Channel being broadcast on
 
   /* DVR */
@@ -544,8 +516,8 @@ int epg_broadcast_set_category
 int epg_broadcast_set_keyword
 ( epg_broadcast_t *b, const string_list_t *msg, uint32_t *changed )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_serieslink
-  ( epg_broadcast_t *b, epg_serieslink_t *sl, uint32_t *changed )
+int epg_broadcast_set_serieslink_uri
+  ( epg_broadcast_t *b, const char *uri, uint32_t *changed )
   __attribute__((warn_unused_result));
 
 /* Accessors */

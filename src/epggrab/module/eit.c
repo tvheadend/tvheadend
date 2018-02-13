@@ -610,10 +610,9 @@ static int _eit_process_event_one
   uint8_t running;
   epg_broadcast_t *ebc, _ebc;
   epg_episode_t *ee = NULL, _ee;
-  epg_serieslink_t *es;
   epg_running_t run;
   lang_str_t *title_copy = NULL;
-  uint32_t changes2 = 0, changes3 = 0, changes4 = 0;
+  uint32_t changes2 = 0, changes3 = 0;
   char tm1[32], tm2[32];
   int short_target = ((eit_module_t *)mod)->short_target;
 
@@ -645,10 +644,6 @@ static int _eit_process_event_one
     if (!ev->title)
       goto running;
     memset(&_ebc, 0, sizeof(_ebc));
-    if (*ev->suri)
-      if ((es = epg_serieslink_find_by_uri(ev->suri, mod, 0, 0, NULL)))
-        _ebc.serieslink = es;
-    
     if (*ev->uri && (ee = epg_episode_find_by_uri(ev->uri, mod, 0, 0, NULL))) {
       _ee = *ee;
     } else {
@@ -658,6 +653,7 @@ static int _eit_process_event_one
     _ebc.dvb_eid = eid;
     _ebc.start = start;
     _ebc.stop = stop;
+    _ebc.serieslink_uri = ev->suri;
     _ee.title = title_copy = lang_str_copy(ev->title);
 
     ebc = epg_match_now_next(ch, &_ebc);
@@ -692,12 +688,8 @@ static int _eit_process_event_one
    * Series link
    */
 
-  if (*ev->suri) {
-    if ((es = epg_serieslink_find_by_uri(ev->suri, mod, 1, save, &changes3))) {
-      *save |= epg_broadcast_set_serieslink(ebc, es, &changes2);
-      *save |= epg_serieslink_change_finish(es, changes3, 0);
-    }
-  }
+  if (*ev->suri)
+    *save |= epg_broadcast_set_serieslink_uri(ebc, ev->suri, &changes2);
 
   /*
    * Episode
@@ -705,9 +697,9 @@ static int _eit_process_event_one
 
   /* Find episode */
   if (*ev->uri) {
-    ee = epg_episode_find_by_uri(ev->uri, mod, 1, save, &changes4);
+    ee = epg_episode_find_by_uri(ev->uri, mod, 1, save, &changes3);
   } else {
-    ee = epg_episode_find_by_broadcast(ebc, mod, 1, save, &changes4);
+    ee = epg_episode_find_by_broadcast(ebc, mod, 1, save, &changes3);
   }
 
   /* Update Episode */
@@ -715,29 +707,29 @@ static int _eit_process_event_one
     *save |= epg_broadcast_set_episode(ebc, ee, &changes2);
     if (ev->is_new > 0)
       *save |= epg_broadcast_set_is_new(ebc, ev->is_new - 1, &changes2);
-    *save |= epg_episode_set_is_bw(ee, ev->bw, &changes4);
+    *save |= epg_episode_set_is_bw(ee, ev->bw, &changes3);
     if (ev->title)
-      *save |= epg_episode_set_title(ee, ev->title, &changes4);
+      *save |= epg_episode_set_title(ee, ev->title, &changes3);
     if (ev->genre)
-      *save |= epg_episode_set_genre(ee, ev->genre, &changes4);
+      *save |= epg_episode_set_genre(ee, ev->genre, &changes3);
     if (ev->parental)
-      *save |= epg_episode_set_age_rating(ee, ev->parental, &changes4);
+      *save |= epg_episode_set_age_rating(ee, ev->parental, &changes3);
     if (ev->subtitle)
-      *save |= epg_episode_set_subtitle(ee, ev->subtitle, &changes4);
+      *save |= epg_episode_set_subtitle(ee, ev->subtitle, &changes3);
     else if ((short_target == 0 || short_target == 2) && ev->summary)
-      *save |= epg_episode_set_subtitle(ee, ev->summary, &changes4);
+      *save |= epg_episode_set_subtitle(ee, ev->summary, &changes3);
 #if TODO_ADD_EXTRA
     if (ev->extra)
-      *save |= epg_episode_set_extra(ee, extra, &changes4);
+      *save |= epg_episode_set_extra(ee, extra, &changes3);
 #endif
     /* save any found episode number */
     if (ev->en.s_num || ev->en.e_num || ev->en.p_num)
-      *save |= epg_episode_set_epnum(ee, &ev->en, &changes4);
+      *save |= epg_episode_set_epnum(ee, &ev->en, &changes3);
     if (ev->first_aired > 0)
-      *save |= epg_episode_set_first_aired(ee, ev->first_aired, &changes4);
+      *save |= epg_episode_set_first_aired(ee, ev->first_aired, &changes3);
     if (ev->copyright_year > 0)
-      *save |= epg_episode_set_copyright_year(ee, ev->copyright_year, &changes4);
-    *save |= epg_episode_change_finish(ee, changes4, 0);
+      *save |= epg_episode_set_copyright_year(ee, ev->copyright_year, &changes3);
+    *save |= epg_episode_change_finish(ee, changes3, 0);
   }
 
   *save |= epg_broadcast_change_finish(ebc, changes2, 0);

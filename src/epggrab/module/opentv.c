@@ -294,7 +294,6 @@ opentv_parse_event_section_one
   epggrab_module_t *src = (epggrab_module_t*)mod;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
-  epg_serieslink_t *es;
   opentv_event_t ev;
   char buffer[2048], *s;
   lang_str_t *ls;
@@ -354,10 +353,7 @@ opentv_parse_event_section_one
       char suri[257], ubuf[UUID_HEX_SIZE];
       snprintf(suri, 256, "opentv://channel-%s/series-%d",
                channel_get_uuid(ch, ubuf), ev.serieslink);
-      if ((es = epg_serieslink_find_by_uri(suri, src, 1, &save, &changes2))) {
-        save |= epg_broadcast_set_serieslink(ebc, es, &changes);
-        save |= epg_serieslink_change_finish(es, changes2, merge);
-      }
+      save |= epg_broadcast_set_serieslink_uri(ebc, suri, &changes);
     }
 
     /*
