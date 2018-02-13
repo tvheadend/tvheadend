@@ -1243,11 +1243,8 @@ htsp_build_event
   /* Ignore? */
   if (update) {
     int ignore = 1;
-    if      (e->updated > update) ignore = 0;
-    else if (ee) {
-           if (ee->updated > update) ignore = 0;
-      else if (ee->season && ee->season->updated > update) ignore = 0;
-    }
+    if (e->updated > update) ignore = 0;
+    else if (ee && ee->updated > update) ignore = 0;
     if (ignore) return NULL;
   }
 
@@ -1303,8 +1300,6 @@ htsp_build_event
     htsmsg_add_u32(out, "episodeId", ee->id);
     if (ee->uri && strncasecmp(ee->uri,"tvh://",6))  /* tvh:// uris are internal */
       htsmsg_add_str(out, "episodeUri", ee->uri);
-    if (ee->season)
-      htsmsg_add_u32(out, "seasonId", ee->season->id);
     if((g = LIST_FIRST(&ee->genre))) {
       uint32_t code = g->code;
       if (htsp->htsp_version < 6) code = (code >> 4) & 0xF;

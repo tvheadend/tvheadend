@@ -163,20 +163,14 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      (dae->dae_cat1 == NULL || *dae->dae_cat1 == 0) &&
      (dae->dae_cat2 == NULL || *dae->dae_cat2 == 0) &&
      (dae->dae_cat3 == NULL || *dae->dae_cat3 == 0) &&
-     dae->dae_season == NULL &&
      dae->dae_minduration <= 0 &&
      (dae->dae_maxduration <= 0 || dae->dae_maxduration > 24 * 3600) &&
      dae->dae_serieslink_uri == NULL)
     return 0; // Avoid super wildcard match
 
-  // Note: we always test season first, though it will only be set
-  //       if configured
   if(dae->dae_serieslink_uri) {
     if (!e->serieslink_uri ||
         strcmp(dae->dae_serieslink_uri ?: "", e->serieslink_uri)) return 0;
-  } else {
-    if(dae->dae_season)
-      if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
   }
 
   if(dae->dae_btype != DVR_AUTOREC_BTYPE_ALL) {
@@ -461,9 +455,6 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
 
   if(dae->dae_channel_tag != NULL)
     LIST_REMOVE(dae, dae_channel_tag_link);
-
-  if(dae->dae_season)
-    dae->dae_season->ops->putref(dae->dae_season);
 
   free(dae);
 }
@@ -860,39 +851,6 @@ dvr_autorec_entry_class_weekdays_rend_(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   return dvr_autorec_entry_class_weekdays_rend(dae->dae_weekdays, lang);
-}
-
-static int
-dvr_autorec_entry_class_season_set(void *o, const void *v)
-{
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  int save;
-  epg_season_t *season;
-
-  v = tvh_str_default(v, NULL);
-  season = v ? epg_season_find_by_uri(v, NULL, 1, &save, NULL) : NULL;
-  if (season && dae->dae_season != season) {
-    if (dae->dae_season)
-      dae->dae_season->ops->putref((epg_object_t*)dae->dae_season);
-    season->ops->getref((epg_object_t*)season);
-    dae->dae_season = season;
-    return 1;
-  } else if (season == NULL && dae->dae_season) {
-    dae->dae_season->ops->putref((epg_object_t*)dae->dae_season);
-    dae->dae_season = NULL;
-    return 1;
-  }
-  return 0;
-}
-
-static const void *
-dvr_autorec_entry_class_season_get(void *o)
-{
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  prop_ptr = dae->dae_season ? dae->dae_season->uri : NULL;
-  if (prop_ptr == NULL)
-    prop_ptr = "";
-  return &prop_ptr;
 }
 
 /** Validate star rating is in range */
@@ -1326,15 +1284,6 @@ const idclass_t dvr_autorec_entry_class = {
     },
     {
       .type     = PT_STR,
-      .id       = "season",
-      .name     = N_("Season"),
-      .desc     = N_("Season information (if available)."),
-      .set      = dvr_autorec_entry_class_season_set,
-      .get      = dvr_autorec_entry_class_season_get,
-      .opts     = PO_RDONLY | PO_ADVANCED,
-    },
-    {
-      .type     = PT_STR,
       .id       = "serieslink",
       .name     = N_("Series link"),
       .desc     = N_("Series link ID."),
@@ -1427,12 +1376,6 @@ dvr_autorec_check_event(epg_broadcast_t *e)
       dvr_entry_create_by_autorec(1, e, dae);
   // Note: no longer updating event here as it will be done from EPG
   //       anyway
-}
-
-void dvr_autorec_check_season(epg_season_t *s)
-{
-// Note: I guess new episodes might have been added, but again its likely
-//       this will already have been picked up by the check_event call
 }
 
 /**

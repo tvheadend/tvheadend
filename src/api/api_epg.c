@@ -565,10 +565,10 @@ api_epg_related
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   uint32_t id, entries = 0;
-  htsmsg_t *l = htsmsg_create_list();
-  epg_broadcast_t *e;
-  epg_episode_t *ep, *ep2;
-  char *lang;
+  htsmsg_t *l = htsmsg_create_list(), *m;
+  epg_broadcast_t *e, *ebc;
+  channel_t *ch;
+  char *lang, *uri;
   
   if (htsmsg_get_u32(args, "eventId", &id))
     return -EINVAL;
@@ -577,13 +577,17 @@ api_epg_related
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   pthread_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
-  ep = e ? e->episode : NULL;
-  if (ep && ep->season) {
-    LIST_FOREACH(ep2, &ep->season->episodes, slink) {
-      if (ep2 == ep) continue;
-      if (!ep2->title) continue;
-      api_epg_episode_broadcasts(perm, l, lang, ep2, &entries, e);
-    }
+  uri = e->serieslink_uri;
+  if (uri && uri[0]) {
+    CHANNEL_FOREACH(ch)
+      if (channel_access(ch, perm, 0))
+        RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link)
+          if (ebc != e && ebc->serieslink_uri &&
+              strcmp(ebc->serieslink_uri, uri) == 0) {
+            m = api_epg_entry(ebc, lang, perm, NULL);
+            htsmsg_add_msg(l, NULL, m);
+            entries++;
+          }
   }
   pthread_mutex_unlock(&global_lock);
   free(lang);

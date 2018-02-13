@@ -39,7 +39,6 @@
 #define EPG_DB_VERSION 2
 #define EPG_DB_ALLOC_STEP (1024*1024)
 
-extern epg_object_tree_t epg_seasons;
 extern epg_object_tree_t epg_episodes;
 
 /* **************************************************************************
@@ -122,7 +121,7 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
       
   /* Season */
   } else if ( !strcmp(*sect, "seasons") ) {
-    if (epg_season_deserialize(m, 1, &save)) stats->seasons.total++;
+    /* skip */
 
   /* Episode */
   } else if ( !strcmp(*sect, "episodes") ) {
@@ -150,28 +149,6 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
 /*
  * Memoryinfo
  */
-
-static void epg_memoryinfo_seasons_update(memoryinfo_t *my)
-{
-  epg_object_t *eo;
-  epg_season_t *es;
-  int64_t size = 0, count = 0;
-
-  RB_FOREACH(eo, &epg_seasons, uri_link) {
-    es = (epg_season_t *)eo;
-    size += sizeof(*es);
-    size += tvh_strlen(es->uri);
-    size += lang_str_size(es->summary);
-    size += tvh_strlen(es->image);
-    count++;
-  }
-  memoryinfo_update(my, size, count);
-}
-
-static memoryinfo_t epg_memoryinfo_seasons = {
-  .my_name = "EPG Seasons",
-  .my_update = epg_memoryinfo_seasons_update
-};
 
 static void epg_memoryinfo_episodes_update(memoryinfo_t *my)
 {
@@ -247,7 +224,6 @@ void epg_init ( void )
   struct sigaction act, oldact;
   char *sect = NULL;
 
-  memoryinfo_register(&epg_memoryinfo_seasons);
   memoryinfo_register(&epg_memoryinfo_episodes);
   memoryinfo_register(&epg_memoryinfo_broadcasts);
 
@@ -363,7 +339,6 @@ void epg_init ( void )
   /* Stats */
   tvhinfo(LS_EPGDB, "loaded v%d", ver);
   tvhinfo(LS_EPGDB, "  config     %d", stats.config.total);
-  tvhinfo(LS_EPGDB, "  seasons    %d", stats.seasons.total);
   tvhinfo(LS_EPGDB, "  episodes   %d", stats.episodes.total);
   tvhinfo(LS_EPGDB, "  broadcasts %d", stats.broadcasts.total);
 
@@ -383,7 +358,6 @@ void epg_done ( void )
   CHANNEL_FOREACH(ch)
     epg_channel_unlink(ch);
   epg_skel_done();
-  memoryinfo_unregister(&epg_memoryinfo_seasons);
   memoryinfo_unregister(&epg_memoryinfo_episodes);
   memoryinfo_unregister(&epg_memoryinfo_broadcasts);
   pthread_mutex_unlock(&global_lock);
@@ -494,11 +468,6 @@ void epg_save ( void )
   memset(&stats, 0, sizeof(stats));
   if ( _epg_write_sect(sb, "config") ) goto error;
   if (_epg_write(sb, epg_config_serialize())) goto error;
-  if ( _epg_write_sect(sb, "seasons") ) goto error;
-  RB_FOREACH(eo,  &epg_seasons, uri_link) {
-    if (_epg_write(sb, epg_season_serialize((epg_season_t*)eo))) goto error;
-    stats.seasons.total++;
-  }
   if ( _epg_write_sect(sb, "episodes") ) goto error;
   RB_FOREACH(eo,  &epg_episodes, uri_link) {
     if (_epg_write(sb, epg_episode_serialize((epg_episode_t*)eo))) goto error;
@@ -517,7 +486,6 @@ void epg_save ( void )
 
   /* Stats */
   tvhinfo(LS_EPGDB, "queued to save (size %d)", sb->sb_ptr);
-  tvhinfo(LS_EPGDB, "  seasons    %d", stats.seasons.total);
   tvhinfo(LS_EPGDB, "  episodes   %d", stats.episodes.total);
   tvhinfo(LS_EPGDB, "  broadcasts %d", stats.broadcasts.total);
 

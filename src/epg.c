@@ -45,7 +45,6 @@
 epg_object_tree_t epg_objects[EPG_HASH_WIDTH];
 
 /* URI lists */
-epg_object_tree_t epg_seasons;
 epg_object_tree_t epg_episodes;
 
 /* Other special case lists */
@@ -84,25 +83,6 @@ static int _ebc_start_cmp ( const void *a, const void *b )
   return ((epg_broadcast_t*)a)->start - ((epg_broadcast_t*)b)->start;
 }
 
-// Note: this will do nothing with text episode numbering
-static int _episode_order ( const void *_a, const void *_b )
-{
-  int r, as, bs;
-  const epg_episode_t *a = (const epg_episode_t*)_a;
-  const epg_episode_t *b = (const epg_episode_t*)_b;
-  if (!a) return -1;
-  if (!b) return 1;
-  if (a->season) as = a->season->number;
-  else           as = a->epnum.s_num;
-  if (b->season) bs = b->season->number;
-  else           bs = b->epnum.s_num;
-  r = as - bs;
-  if (r) return r;
-  r = a->epnum.e_num - b->epnum.e_num;
-  if (r) return r;
-  return a->epnum.p_num - b->epnum.p_num;
-}
-
 void epg_updated ( void )
 {
   epg_object_t *eo;
@@ -117,7 +97,7 @@ void epg_updated ( void )
     eo->ops->destroy(eo);
   }
   // Note: we do things this way around since unref'd objects are not likely
-  //       to be useful to DVR since they will relate to episode/seasons
+  //       to be useful to DVR since they will relate to episodes
   //       with no valid broadcasts etc..
 
   /* Update updated */
@@ -384,8 +364,6 @@ htsmsg_t *epg_object_serialize ( epg_object_t *eo )
 {
   if (!eo) return NULL;
   switch (eo->type) {
-    case EPG_SEASON:
-      return epg_season_serialize((epg_season_t*)eo);
     case EPG_EPISODE:
       return epg_episode_serialize((epg_episode_t*)eo);
     case EPG_BROADCAST:
@@ -401,192 +379,12 @@ epg_object_t *epg_object_deserialize ( htsmsg_t *msg, int create, int *save )
   if (!msg) return NULL;
   type = htsmsg_get_u32_or_default(msg, "type", 0);
   switch (type) {
-    case EPG_SEASON:
-      return (epg_object_t*)epg_season_deserialize(msg, create, save);
     case EPG_EPISODE:
       return (epg_object_t*)epg_episode_deserialize(msg, create, save);
     case EPG_BROADCAST:
       return (epg_object_t*)epg_broadcast_deserialize(msg, create, save);
   }
   return NULL;
-}
-
-/* **************************************************************************
- * Season
- * *************************************************************************/
-
-static void _epg_season_destroy ( void *eo )
-{
-  epg_season_t *es = (epg_season_t*)eo;
-  if (LIST_FIRST(&es->episodes)) {
-    tvhlog(LOG_CRIT, LS_EPG, "attempt to destory season with episodes");
-    assert(0);
-  }
-  if (es->summary) lang_str_destroy(es->summary);
-  if (es->image)   free(es->image);
-  _epg_object_destroy(eo, &epg_seasons);
-  free(es);
-}
-
-static void _epg_season_updated ( void *eo )
-{
-  dvr_autorec_check_season((epg_season_t*)eo);
-}
-
-static epg_object_ops_t _epg_season_ops = {
-  .getref  = _epg_object_getref,
-  .putref  = _epg_object_putref,
-  .destroy = _epg_season_destroy,
-  .update  = _epg_season_updated,
-};
-
-static epg_object_t **_epg_season_skel ( void )
-{
-  static epg_object_t *skel = NULL;
-  if (!skel) {
-    skel = calloc(1, sizeof(epg_season_t));
-    skel->type = EPG_SEASON;
-    skel->ops  = &_epg_season_ops;
-  }
-  return &skel;
-}
-
-epg_season_t* epg_season_find_by_uri 
-  ( const char *uri, epggrab_module_t *src,
-    int create, int *save, uint32_t *changed )
-{
-  return (epg_season_t*)
-    _epg_object_find_by_uri(uri, src, create, save, changed,
-                            &epg_seasons,
-                            _epg_season_skel());
-}
-
-epg_season_t *epg_season_find_by_id ( uint32_t id )
-{
-  return (epg_season_t*)epg_object_find_by_id(id, EPG_SEASON);
-}
-
-int epg_season_change_finish
-  ( epg_season_t *season, uint32_t changes, int merge )
-{
-  int save = 0;
-  if (merge) return 0;
-  if (changes & EPG_CHANGED_CREATE) return 0;
-  if (!(changes & EPG_CHANGED_SUMMARY))
-    save |= epg_season_set_summary(season, NULL, NULL);
-  if (!(changes & EPG_CHANGED_IMAGE))
-    save |= epg_season_set_image(season, NULL, NULL);
-  if (!(changes & EPG_CHANGED_EPISODE_COUNT))
-    save |= epg_season_set_episode_count(season, 0, NULL);
-  if (!(changes & EPG_CHANGED_SEASON_NUMBER))
-    save |= epg_season_set_number(season, 0, NULL);
-  return save;
-}
-
-int epg_season_set_summary
-  ( epg_season_t *season, const lang_str_t *summary, uint32_t *changed )
-{
-  if (!season) return 0;
-  return _epg_object_set_lang_str(season, &season->summary, summary,
-                                  changed, EPG_CHANGED_SUMMARY);
-}
-
-int epg_season_set_image
-  ( epg_season_t *season, const char *image, uint32_t *changed )
-{
-  int save;
-  if (!season) return 0;
-  save = _epg_object_set_str(season, &season->image, image,
-                             changed, EPG_CHANGED_IMAGE);
-  if (save)
-    imagecache_get_id(image);
-  return save;
-}
-
-int epg_season_set_episode_count
-  ( epg_season_t *season, uint16_t count, uint32_t *changed )
-{
-  if (!season) return 0;
-  return _epg_object_set_u16(season, &season->episode_count, count,
-                             changed, EPG_CHANGED_EPISODE_COUNT);
-}
-
-int epg_season_set_number
-  ( epg_season_t *season, uint16_t number, uint32_t *changed )
-{
-  if (!season) return 0;
-  return _epg_object_set_u16(season, &season->number, number,
-                             changed, EPG_CHANGED_SEASON_NUMBER);
-}
-
-static void _epg_season_add_episode
-  ( epg_season_t *season, epg_episode_t *episode )
-{
-  _epg_object_getref(season);
-  _epg_object_set_updated(season);
-  LIST_INSERT_SORTED(&season->episodes, episode, slink, _episode_order);
-}
-
-static void _epg_season_rem_episode
-  ( epg_season_t *season, epg_episode_t *episode )
-{
-  LIST_REMOVE(episode, slink);
-  _epg_object_set_updated(season);
-  _epg_object_putref(season);
-}
-
-htsmsg_t *epg_season_serialize ( epg_season_t *season )
-{
-  htsmsg_t *m;
-  if (!season || !season->uri) return NULL;
-  if (!(m = _epg_object_serialize((epg_object_t*)season))) return NULL;
-  if (season->summary)
-    lang_str_serialize(season->summary, m, "summary");
-  if (season->number)
-    htsmsg_add_u32(m, "number", season->number);
-  if (season->episode_count)
-    htsmsg_add_u32(m, "episode-count", season->episode_count);
-  if (season->image)
-    htsmsg_add_str(m, "image", season->image);
-  return m;
-}
-
-epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
-{
-  epg_object_t **skel = _epg_season_skel();
-  epg_season_t *es;
-  uint32_t u32, changes = 0;
-  const char *str;
-  lang_str_t *ls;
-
-  if (!_epg_object_deserialize(m, *skel)) return NULL;
-  if (!(es = epg_season_find_by_uri((*skel)->uri, (*skel)->grabber,
-                                    create, save, &changes)))
-    return NULL;
-  
-  if ((ls = lang_str_deserialize(m, "summary"))) {
-    *save |= epg_season_set_summary(es, ls, &changes);
-    lang_str_destroy(ls);
-  }
-
-  if (!htsmsg_get_u32(m, "number", &u32))
-    *save |= epg_season_set_number(es, u32, &changes);
-  if (!htsmsg_get_u32(m, "episode-count", &u32))
-    *save |= epg_season_set_episode_count(es, u32, &changes);
-  
-  if ((str = htsmsg_get_str(m, "image")))
-    *save |= epg_season_set_image(es, str, &changes);
-
-  *save |= epg_season_change_finish(es, changes, 0);
-
-  return es;
-}
-
-const char *epg_season_get_summary
-  ( const epg_season_t *s, const char *lang )
-{
-  if (!s || !s->summary) return NULL;
-  return lang_str_get(s->summary, lang);
 }
 
 /* **************************************************************************
@@ -648,7 +446,6 @@ static void _epg_episode_destroy ( void *eo )
     tvhlog(LOG_CRIT, LS_EPG, "attempt to destroy episode with broadcasts");
     assert(0);
   }
-  if (ee->season)      _epg_season_rem_episode(ee->season, ee);
   if (ee->title)       lang_str_destroy(ee->title);
   if (ee->subtitle)    lang_str_destroy(ee->subtitle);
   if (ee->summary)     lang_str_destroy(ee->summary);
@@ -746,8 +543,6 @@ int epg_episode_change_finish
     save |= _epg_object_set_u16(episode, &episode->epnum.p_cnt, 0, NULL, 0);
   if (!(changes & EPG_CHANGED_EPTEXT))
     save |= _epg_object_set_str(episode, &episode->epnum.text, NULL, NULL, 0);
-  if (!(changes & EPG_CHANGED_SEASON))
-    save |= epg_episode_set_season(episode, NULL, NULL);
   if (!(changes & EPG_CHANGED_GENRE))
     save |= epg_episode_set_genre(episode, NULL, NULL);
   if (!(changes & EPG_CHANGED_IS_BW))
@@ -858,24 +653,6 @@ int epg_episode_set_epnum
   if (num->text)
     save |= _epg_object_set_str(episode, &episode->epnum.text,
                                 num->text, changed, EPG_CHANGED_EPTEXT);
-  return save;
-}
-
-int epg_episode_set_season 
-  ( epg_episode_t *episode, epg_season_t *season, uint32_t *changed )
-{
-  int save = 0;
-  if (!episode) return 0;
-  if (changed) *changed |= EPG_CHANGED_SEASON;
-  if (episode->season != season) {
-    if (episode->season) _epg_season_rem_episode(episode->season, episode);
-    episode->season = season;
-    if (season) {
-      _epg_season_add_episode(season, episode);
-    }
-    _epg_object_set_updated(episode);
-    save |= 1;
-  }
   return save;
 }
 
@@ -1020,10 +797,6 @@ void epg_episode_get_epnum ( const epg_episode_t *ee, epg_episode_num_t *num )
     return;
   }
   *num = ee->epnum;
-  if (ee->season) {
-    num->e_cnt = ee->season->episode_count;
-    num->s_num = ee->season->number;
-  }
 }
 
 int epg_episode_number_cmp ( const epg_episode_num_t *a, const epg_episode_num_t *b )
@@ -1094,8 +867,6 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_u32(a, NULL, eg->code);
   }
   if (a) htsmsg_add_msg(m, "genre", a);
-  if (episode->season)
-    htsmsg_add_str(m, "season", episode->season->uri);
   if (episode->is_bw)
     htsmsg_add_u32(m, "is_bw", 1);
   if (episode->star_rating)
@@ -1116,7 +887,6 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
 {
   epg_object_t **skel = _epg_episode_skel();
   epg_episode_t *ee;
-  epg_season_t *es;
   const char *str;
   epg_episode_num_t num;
   htsmsg_t *sub;
@@ -1161,10 +931,6 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
     *save |= epg_episode_set_genre(ee, egl, &changes);
     epg_genre_list_destroy(egl);
   }
-  
-  if ((str = htsmsg_get_str(m, "season")))
-    if ((es = epg_season_find_by_uri(str, ee->grabber, 0, NULL, &changes)))
-      *save |= epg_episode_set_season(ee, es, NULL);
   
   if (!htsmsg_get_u32(m, "is_bw", &u32))
     *save |= epg_episode_set_is_bw(ee, u32, &changes);
@@ -2987,8 +2753,6 @@ void epg_skel_done(void)
   epg_object_t **skel;
   epg_broadcast_t **broad;
 
-  skel = _epg_season_skel();
-  free(*skel); *skel = NULL;
   skel = _epg_episode_skel();
   free(*skel); *skel = NULL;
   broad = _epg_broadcast_skel();
