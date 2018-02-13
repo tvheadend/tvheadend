@@ -324,7 +324,6 @@ SRCS-2 += \
 SRCS-2 += \
 	src/epggrab/module.c \
 	src/epggrab/channel.c \
-	src/epggrab/module/pyepg.c \
 	src/epggrab/module/xmltv.c
 
 SRCS-2 += \

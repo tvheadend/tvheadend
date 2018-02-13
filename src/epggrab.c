@@ -269,7 +269,6 @@ static void _epggrab_load ( void )
   /* Load module config (channels) */
   eit_load();
   opentv_load();
-  pyepg_load();
   xmltv_load();
 }
 
@@ -498,10 +497,8 @@ void epggrab_init ( void )
   idclass_register(&epggrab_class);
   idclass_register(&epggrab_mod_class);
   idclass_register(&epggrab_mod_int_class);
-  idclass_register(&epggrab_mod_int_pyepg_class);
   idclass_register(&epggrab_mod_int_xmltv_class);
   idclass_register(&epggrab_mod_ext_class);
-  idclass_register(&epggrab_mod_ext_pyepg_class);
   idclass_register(&epggrab_mod_ext_xmltv_class);
   idclass_register(&epggrab_mod_ota_class);
 
@@ -513,7 +510,6 @@ void epggrab_init ( void )
   psip_init();
   opentv_init();
 #endif
-  pyepg_init();
   xmltv_init();
 
   /* Initialise the OTA subsystem */
@@ -562,7 +558,6 @@ void epggrab_done ( void )
   epggrab_ota_shutdown();
   eit_done();
   opentv_done();
-  pyepg_done();
   xmltv_done();
   free(epggrab_conf.cron);
   epggrab_conf.cron = NULL;
