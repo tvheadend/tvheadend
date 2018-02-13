@@ -163,7 +163,6 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      (dae->dae_cat1 == NULL || *dae->dae_cat1 == 0) &&
      (dae->dae_cat2 == NULL || *dae->dae_cat2 == 0) &&
      (dae->dae_cat3 == NULL || *dae->dae_cat3 == 0) &&
-     dae->dae_brand == NULL &&
      dae->dae_season == NULL &&
      dae->dae_minduration <= 0 &&
      (dae->dae_maxduration <= 0 || dae->dae_maxduration > 24 * 3600) &&
@@ -177,8 +176,6 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   } else {
     if(dae->dae_season)
       if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
-    if(dae->dae_brand)
-      if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
   }
 
   if(dae->dae_btype != DVR_AUTOREC_BTYPE_ALL) {
@@ -464,8 +461,6 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
   if(dae->dae_channel_tag != NULL)
     LIST_REMOVE(dae, dae_channel_tag_link);
 
-  if(dae->dae_brand)
-    dae->dae_brand->ops->putref(dae->dae_brand);
   if(dae->dae_season)
     dae->dae_season->ops->putref(dae->dae_season);
   if(dae->dae_serieslink)
@@ -866,39 +861,6 @@ dvr_autorec_entry_class_weekdays_rend_(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   return dvr_autorec_entry_class_weekdays_rend(dae->dae_weekdays, lang);
-}
-
-static int
-dvr_autorec_entry_class_brand_set(void *o, const void *v)
-{
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  int save;
-  epg_brand_t *brand;
-
-  v = tvh_str_default(v, NULL);
-  brand = v ? epg_brand_find_by_uri(v, NULL, 1, &save, NULL) : NULL;
-  if (brand && dae->dae_brand != brand) {
-    if (dae->dae_brand)
-      dae->dae_brand->ops->putref((epg_object_t*)dae->dae_brand);
-    brand->ops->getref((epg_object_t*)brand);
-    dae->dae_brand = brand;
-    return 1;
-  } else if (brand == NULL && dae->dae_brand) {
-    dae->dae_brand->ops->putref((epg_object_t*)dae->dae_brand);
-    dae->dae_brand = NULL;
-    return 1;
-  }
-  return 0;
-}
-
-static const void *
-dvr_autorec_entry_class_brand_get(void *o)
-{
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  prop_ptr = dae->dae_brand ? dae->dae_brand->uri : NULL;
-  if (prop_ptr == NULL)
-    prop_ptr = "";
-  return &prop_ptr;
 }
 
 static int
@@ -1399,15 +1361,6 @@ const idclass_t dvr_autorec_entry_class = {
     },
     {
       .type     = PT_STR,
-      .id       = "brand",
-      .name     = N_("Brand"),
-      .desc     = N_("Branding information (if available)."),
-      .set      = dvr_autorec_entry_class_brand_set,
-      .get      = dvr_autorec_entry_class_brand_get,
-      .opts     = PO_RDONLY | PO_ADVANCED,
-    },
-    {
-      .type     = PT_STR,
       .id       = "season",
       .name     = N_("Season"),
       .desc     = N_("Season information (if available)."),
@@ -1510,13 +1463,6 @@ dvr_autorec_check_event(epg_broadcast_t *e)
       dvr_entry_create_by_autorec(1, e, dae);
   // Note: no longer updating event here as it will be done from EPG
   //       anyway
-}
-
-void dvr_autorec_check_brand(epg_brand_t *b)
-{
-// Note: for the most part this will only be relevant should an episode
-//       to which a broadcast is linked suddenly get added to a new brand
-//       this is pretty damn unlikely!
 }
 
 void dvr_autorec_check_season(epg_season_t *s)

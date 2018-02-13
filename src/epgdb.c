@@ -39,7 +39,6 @@
 #define EPG_DB_VERSION 2
 #define EPG_DB_ALLOC_STEP (1024*1024)
 
-extern epg_object_tree_t epg_brands;
 extern epg_object_tree_t epg_seasons;
 extern epg_object_tree_t epg_episodes;
 extern epg_object_tree_t epg_serieslinks;
@@ -120,7 +119,7 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
   
   /* Brand */
   } else if ( !strcmp(*sect, "brands") ) {
-    if (epg_brand_deserialize(m, 1, &save)) stats->brands.total++;
+    /* skip */
       
   /* Season */
   } else if ( !strcmp(*sect, "seasons") ) {
@@ -152,29 +151,6 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
 /*
  * Memoryinfo
  */
-
-static void epg_memoryinfo_brands_update(memoryinfo_t *my)
-{
-  epg_object_t *eo;
-  epg_brand_t *eb;
-  int64_t size = 0, count = 0;
-
-  RB_FOREACH(eo, &epg_brands, uri_link) {
-    eb = (epg_brand_t *)eo;
-    size += sizeof(*eb);
-    size += tvh_strlen(eb->uri);
-    size += lang_str_size(eb->title);
-    size += lang_str_size(eb->summary);
-    size += tvh_strlen(eb->image);
-    count++;
-  }
-  memoryinfo_update(my, size, count);
-}
-
-static memoryinfo_t epg_memoryinfo_brands = {
-  .my_name = "EPG Brands",
-  .my_update = epg_memoryinfo_brands_update
-};
 
 static void epg_memoryinfo_seasons_update(memoryinfo_t *my)
 {
@@ -292,7 +268,6 @@ void epg_init ( void )
   struct sigaction act, oldact;
   char *sect = NULL;
 
-  memoryinfo_register(&epg_memoryinfo_brands);
   memoryinfo_register(&epg_memoryinfo_seasons);
   memoryinfo_register(&epg_memoryinfo_episodes);
   memoryinfo_register(&epg_memoryinfo_serieslinks);
@@ -410,8 +385,6 @@ void epg_init ( void )
   /* Stats */
   tvhinfo(LS_EPGDB, "loaded v%d", ver);
   tvhinfo(LS_EPGDB, "  config     %d", stats.config.total);
-  //tvhinfo(LS_EPGDB, "  channels   %d", stats.channels.total);
-  tvhinfo(LS_EPGDB, "  brands     %d", stats.brands.total);
   tvhinfo(LS_EPGDB, "  seasons    %d", stats.seasons.total);
   tvhinfo(LS_EPGDB, "  episodes   %d", stats.episodes.total);
   tvhinfo(LS_EPGDB, "  broadcasts %d", stats.broadcasts.total);
@@ -432,7 +405,6 @@ void epg_done ( void )
   CHANNEL_FOREACH(ch)
     epg_channel_unlink(ch);
   epg_skel_done();
-  memoryinfo_unregister(&epg_memoryinfo_brands);
   memoryinfo_unregister(&epg_memoryinfo_seasons);
   memoryinfo_unregister(&epg_memoryinfo_episodes);
   memoryinfo_unregister(&epg_memoryinfo_serieslinks);
@@ -545,11 +517,6 @@ void epg_save ( void )
   memset(&stats, 0, sizeof(stats));
   if ( _epg_write_sect(sb, "config") ) goto error;
   if (_epg_write(sb, epg_config_serialize())) goto error;
-  if ( _epg_write_sect(sb, "brands") ) goto error;
-  RB_FOREACH(eo,  &epg_brands, uri_link) {
-    if (_epg_write(sb, epg_brand_serialize((epg_brand_t*)eo))) goto error;
-    stats.brands.total++;
-  }
   if ( _epg_write_sect(sb, "seasons") ) goto error;
   RB_FOREACH(eo,  &epg_seasons, uri_link) {
     if (_epg_write(sb, epg_season_serialize((epg_season_t*)eo))) goto error;
@@ -578,7 +545,6 @@ void epg_save ( void )
 
   /* Stats */
   tvhinfo(LS_EPGDB, "queued to save (size %d)", sb->sb_ptr);
-  tvhinfo(LS_EPGDB, "  brands     %d", stats.brands.total);
   tvhinfo(LS_EPGDB, "  seasons    %d", stats.seasons.total);
   tvhinfo(LS_EPGDB, "  episodes   %d", stats.episodes.total);
   tvhinfo(LS_EPGDB, "  broadcasts %d", stats.broadcasts.total);

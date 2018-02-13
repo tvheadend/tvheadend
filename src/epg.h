@@ -38,7 +38,6 @@ struct epggrab_module;
  */
 typedef LIST_HEAD(,epg_object)     epg_object_list_t;
 typedef RB_HEAD  (,epg_object)     epg_object_tree_t;
-typedef LIST_HEAD(,epg_brand)      epg_brand_list_t;
 typedef LIST_HEAD(,epg_season)     epg_season_list_t;
 typedef LIST_HEAD(,epg_episode)    epg_episode_list_t;
 typedef LIST_HEAD(,epg_broadcast)  epg_broadcast_list_t;
@@ -50,7 +49,6 @@ typedef LIST_HEAD(,epg_genre)      epg_genre_list_t;
  */
 typedef struct epg_genre           epg_genre_t;
 typedef struct epg_object          epg_object_t;
-typedef struct epg_brand           epg_brand_t;
 typedef struct epg_season          epg_season_t;
 typedef struct epg_episode         epg_episode_t;
 typedef struct epg_broadcast       epg_broadcast_t;
@@ -109,7 +107,6 @@ htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix, const char *la
 typedef enum epg_object_type
 {
   EPG_UNDEF,
-  EPG_BRAND,
   EPG_SEASON,
   EPG_EPISODE,
   EPG_BROADCAST,
@@ -165,66 +162,6 @@ htsmsg_t     *epg_object_serialize   ( epg_object_t *eo );
 epg_object_t *epg_object_deserialize ( htsmsg_t *msg, int create, int *save );
 
 /* ************************************************************************
- * Brand - Represents a specific show
- * e.g. The Simpsons, 24, Eastenders, etc...
- * ***********************************************************************/
-
-/* Change flags */
-#define EPG_CHANGED_SEASON_COUNT (1<<(EPG_CHANGED_SLAST+1))
-#define EPG_CHANGED_SEASONS      (1<<(EPG_CHANGED_SLAST+2))
-#define EPG_CHANGED_EPISODES     (1<<(EPG_CHANGED_SLAST+3))
-
-/* Object */
-struct epg_brand
-{
-  epg_object_t;                            ///< Base object
-
-  lang_str_t                *title;        ///< Brand name
-  lang_str_t                *summary;      ///< Brand summary
-  uint16_t                   season_count; ///< Total number of seasons
-  char                      *image;        ///< Brand image
-
-  epg_season_list_t          seasons;      ///< Season list
-  epg_episode_list_t         episodes;     ///< Episode list
-};
-
-/* Lookup */
-epg_brand_t *epg_brand_find_by_uri
-  ( const char *uri, struct epggrab_module *src, int create, int *save, uint32_t *changes );
-epg_brand_t *epg_brand_find_by_id ( uint32_t id );
-
-/* Post-modify */
-int epg_brand_change_finish( epg_brand_t *b, uint32_t changed, int merge )
-  __attribute__((warn_unused_result));
-
-/* Accessors */
-const char *epg_brand_get_title
-  ( const epg_brand_t *b, const char *lang );
-const char *epg_brand_get_summary
-  ( const epg_brand_t *b, const char *lang );
-
-/* Mutators */
-int epg_brand_set_title        
-  ( epg_brand_t *b, const lang_str_t *title, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_brand_set_summary
-  ( epg_brand_t *b, const lang_str_t *summary, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_brand_set_season_count
-  ( epg_brand_t *b, uint16_t season_count, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_brand_set_image
-  ( epg_brand_t *b, const char *i, uint32_t *changed )
-  __attribute__((warn_unused_result));
-
-/* Serialization */
-htsmsg_t    *epg_brand_serialize   ( epg_brand_t *b );
-epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save );
-
-/* List all brands (serialized) */
-htsmsg_t    *epg_brand_list ( void );
-
-/* ************************************************************************
  * Season
  * ***********************************************************************/
 
@@ -243,7 +180,6 @@ struct epg_season
   char                      *image;         ///< Season image
 
   LIST_ENTRY(epg_season)     blink;         ///< Brand list link
-  epg_brand_t               *brand;         ///< Parent brand
   epg_episode_list_t         episodes;      ///< Episode list
 
 };
@@ -271,9 +207,6 @@ int epg_season_set_number
 int epg_season_set_episode_count
   ( epg_season_t *s, uint16_t episode_count, uint32_t *changed )
   __attribute__((warn_unused_result));
-int epg_season_set_brand
-  ( epg_season_t *s, epg_brand_t *b, uint32_t *changed )
-  __attribute__((warn_unused_result));
 int epg_season_set_image
   ( epg_season_t *s, const char *image, uint32_t *changed )
   __attribute__((warn_unused_result));
@@ -299,9 +232,8 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
 #define EPG_CHANGED_STAR_RATING  (1<<(EPG_CHANGED_SLAST+10))
 #define EPG_CHANGED_AGE_RATING   (1<<(EPG_CHANGED_SLAST+11))
 #define EPG_CHANGED_FIRST_AIRED  (1<<(EPG_CHANGED_SLAST+12))
-#define EPG_CHANGED_BRAND        (1<<(EPG_CHANGED_SLAST+13))
-#define EPG_CHANGED_SEASON       (1<<(EPG_CHANGED_SLAST+14))
-#define EPG_CHANGED_COPYRIGHT_YEAR (1<<(EPG_CHANGED_SLAST+15))
+#define EPG_CHANGED_SEASON       (1<<(EPG_CHANGED_SLAST+13))
+#define EPG_CHANGED_COPYRIGHT_YEAR (1<<(EPG_CHANGED_SLAST+14))
 
 /* Episode numbering object - this is for some back-compat and also
  * to allow episode information to be "collated" into easy to use object
@@ -342,7 +274,6 @@ struct epg_episode
                                              ///< year since we only get year not month and day.
   LIST_ENTRY(epg_episode)    blink;         ///< Brand link
   LIST_ENTRY(epg_episode)    slink;         ///< Season link
-  epg_brand_t               *brand;         ///< (Grand-)Parent brand
   epg_season_t              *season;        ///< Parent season
   epg_broadcast_list_t       broadcasts;    ///< Broadcast list
 };
@@ -389,9 +320,6 @@ int epg_episode_set_part
   __attribute__((warn_unused_result));
 int epg_episode_set_epnum
   ( epg_episode_t *e, epg_episode_num_t *num, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_brand
-  ( epg_episode_t *e, epg_brand_t *b, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_season
   ( epg_episode_t *e, epg_season_t *s, uint32_t *changed )

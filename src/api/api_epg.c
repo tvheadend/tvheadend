@@ -581,14 +581,7 @@ api_epg_related
   pthread_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
   ep = e ? e->episode : NULL;
-  if (ep && ep->brand) {
-    LIST_FOREACH(ep2, &ep->brand->episodes, blink) {
-      if (ep2 == ep) continue;
-      if (!ep2->title) continue;
-      api_epg_episode_broadcasts(perm, l, lang, ep2, &entries, e);
-      entries++;
-    }
-  } else if (ep && ep->season) {
+  if (ep && ep->season) {
     LIST_FOREACH(ep2, &ep->season->episodes, slink) {
       if (ep2 == ep) continue;
       if (!ep2->title) continue;
@@ -654,20 +647,6 @@ api_epg_load
 }
 
 static int
-api_epg_brand_list(access_t *perm, void *opaque, const char *op,
-                   htsmsg_t *args, htsmsg_t **resp)
-{
-  htsmsg_t *array;
-
-  *resp = htsmsg_create_map();
-  pthread_mutex_lock(&global_lock);
-  array = epg_brand_list();
-  pthread_mutex_unlock(&global_lock);
-  htsmsg_add_msg(*resp, "entries", array);
-  return 0;
-}
-
-static int
 api_epg_content_type_list(access_t *perm, void *opaque, const char *op,
                           htsmsg_t *args, htsmsg_t **resp)
 {
@@ -689,7 +668,6 @@ void api_epg_init ( void )
     { "epg/events/alternative", ACCESS_ANONYMOUS, api_epg_alternative, NULL },
     { "epg/events/related",     ACCESS_ANONYMOUS, api_epg_related, NULL },
     { "epg/events/load",        ACCESS_ANONYMOUS, api_epg_load, NULL },
-    { "epg/brand/list",         ACCESS_ANONYMOUS, api_epg_brand_list, NULL },
     { "epg/content_type/list",  ACCESS_ANONYMOUS, api_epg_content_type_list, NULL },
 
     { NULL },
