@@ -1477,7 +1477,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
                                   basename, strlen(basename) * 3);
       if (str0 == NULL) {
         tvherror(LS_HTTP, "unable to convert filename '%s' to a safe form using charset '%s'",
-                 intlconv_charset_id("ASCII", 1, 1), basename);
+                 basename, intlconv_charset_id("ASCII", 1, 1));
         return HTTP_STATUS_INTERNAL;
       }
       htsbuf_queue_init(&q, 0);
