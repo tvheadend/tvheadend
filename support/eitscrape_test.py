@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2017 Tvheadend Foundation CIC
+# Copyright (C) 2017, 2018 Tvheadend Foundation CIC
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -170,7 +170,7 @@ class EITScrapeTest(object):
       canonical, _, _ = key.partition(':')
       text = test['summary']
       if canonical == 'new_title':
-        text = test['title'] + ' ' + text
+        text = test['title'] + ' % ' + text
       if 'language' in test:
         lang = test['language']
       else:
