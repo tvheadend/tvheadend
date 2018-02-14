@@ -357,7 +357,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 	      days[a.tm_wday], a.tm_mday, a.tm_mon + 1,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
-  s = epg_episode_get_title(e->episode, lang);
+  s = epg_broadcast_get_title(e, lang);
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
 	      channel_get_name(e->channel, lang), s ?: "");
   

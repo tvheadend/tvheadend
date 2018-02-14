@@ -36,7 +36,7 @@
 #include "config.h"
 #include "memoryinfo.h"
 
-#define EPG_DB_VERSION 2
+#define EPG_DB_VERSION 3
 #define EPG_DB_ALLOC_STEP (1024*1024)
 
 extern epg_object_tree_t epg_episodes;
@@ -46,66 +46,10 @@ extern epg_object_tree_t epg_episodes;
  * *************************************************************************/
 
 /*
- * Use for v1 databases
- */
-#if DEPRECATED
-static void _epgdb_v1_process ( htsmsg_t *c, epggrab_stats_t *stats )
-{
-  channel_t *ch;
-  epg_episode_t *ee;
-  epg_broadcast_t *ebc;
-  uint32_t ch_id = 0;
-  uint32_t e_start = 0;
-  uint32_t e_stop = 0;
-  uint32_t u32;
-  const char *title, *desc, *str;
-  char *uri;
-  int save = 0;
-
-  /* Check key info */
-  if(htsmsg_get_u32(c, "ch_id", &ch_id)) return;
-  if((ch = channel_find_by_id(ch_id)) == NULL) return;
-  if(htsmsg_get_u32(c, "start", &e_start)) return;
-  if(htsmsg_get_u32(c, "stop", &e_stop)) return;
-  if(!(title = htsmsg_get_str(c, "title"))) return;
-  
-  /* Create broadcast */
-  save = 0;
-  ebc  = epg_broadcast_find_by_time(ch, e_start, e_stop, 0, 1, &save);
-  if (!ebc) return;
-  if (save) stats->broadcasts.total++;
-
-  /* Create episode */
-  save = 0;
-  desc = htsmsg_get_str(c, "desc");
-  uri  = md5sum(desc ?: title);
-  ee   = epg_episode_find_by_uri(uri, 1, &save);
-  free(uri);
-  if (!ee) return;
-  if (save) stats->episodes.total++;
-  if (title)
-    save |= epg_episode_set_title(ee, title, NULL, NULL);
-  if (desc)
-    save |= epg_episode_set_summary(ee, desc, NULL, NULL);
-  if (!htsmsg_get_u32(c, "episode", &u32))
-    save |= epg_episode_set_number(ee, u32, NULL);
-  if (!htsmsg_get_u32(c, "part", &u32))
-    save |= epg_episode_set_part(ee, u32, 0, NULL);
-  if (!htsmsg_get_u32(c, "season", &u32))
-    ee->epnum.s_num = u32;
-  if ((str = htsmsg_get_str(c, "epname")))
-    ee->epnum.text  = strdup(str);
-
-  /* Set episode */
-  save |= epg_broadcast_set_episode(ebc, ee, NULL);
-}
-#endif
-
-/*
- * Process v2 data
+ * Process v3 data
  */
 static void
-_epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
+_epgdb_v3_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
 {
   int save = 0;
   const char *s;
@@ -114,22 +58,6 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
   if ( (s = htsmsg_get_str(m, "__section__")) ) {
     if (*sect) free(*sect);
     *sect = strdup(s);
-  
-  /* Brand */
-  } else if ( !strcmp(*sect, "brands") ) {
-    /* skip */
-      
-  /* Season */
-  } else if ( !strcmp(*sect, "seasons") ) {
-    /* skip */
-
-  /* Episode */
-  } else if ( !strcmp(*sect, "episodes") ) {
-    if (epg_episode_deserialize(m, 1, &save)) stats->episodes.total++;
-  
-  /* Series link */
-  } else if ( !strcmp(*sect, "serieslinks") ) {
-    /* skip */
   
   /* Broadcasts */
   } else if ( !strcmp(*sect, "broadcasts") ) {
@@ -150,32 +78,6 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
  * Memoryinfo
  */
 
-static void epg_memoryinfo_episodes_update(memoryinfo_t *my)
-{
-  epg_object_t *eo;
-  epg_episode_t *ee;
-  int64_t size = 0, count = 0;
-
-  RB_FOREACH(eo, &epg_episodes, uri_link) {
-    ee = (epg_episode_t *)eo;
-    size += sizeof(*ee);
-    size += tvh_strlen(ee->uri);
-    size += lang_str_size(ee->title);
-    size += lang_str_size(ee->subtitle);
-    size += lang_str_size(ee->summary);
-    size += lang_str_size(ee->description);
-    size += tvh_strlen(ee->image);
-    size += tvh_strlen(ee->epnum.text);
-    count++;
-  }
-  memoryinfo_update(my, size, count);
-}
-
-static memoryinfo_t epg_memoryinfo_episodes = {
-  .my_name = "EPG Episodes",
-  .my_update = epg_memoryinfo_episodes_update
-};
-
 static void epg_memoryinfo_broadcasts_update(memoryinfo_t *my)
 {
   channel_t *ch;
@@ -186,7 +88,12 @@ static void epg_memoryinfo_broadcasts_update(memoryinfo_t *my)
     if (ch->ch_epg_parent) continue;
     RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
       size += sizeof(*ebc);
-      size += tvh_strlen(ebc->uri);
+      size += tvh_strlen(ebc->image);
+      size += tvh_strlen(ebc->epnum.text);
+      size += tvh_strlen(ebc->episode_uri);
+      size += tvh_strlen(ebc->serieslink_uri);
+      size += lang_str_size(ebc->title);
+      size += lang_str_size(ebc->subtitle);
       size += lang_str_size(ebc->summary);
       size += lang_str_size(ebc->description);
       count++;
@@ -215,7 +122,7 @@ static void epg_mmap_sigbus (int sig, siginfo_t *siginfo, void *ptr)
  */
 void epg_init ( void )
 {
-  int fd = -1, binary2 = 0, r;
+  int fd = -1, r;
   struct stat st;
   size_t remain;
   uint8_t *mem, *rp, *zlib_mem = NULL;
@@ -224,7 +131,6 @@ void epg_init ( void )
   struct sigaction act, oldact;
   char *sect = NULL;
 
-  memoryinfo_register(&epg_memoryinfo_episodes);
   memoryinfo_register(&epg_memoryinfo_broadcasts);
 
   /* Find the right file (and version) */
@@ -273,10 +179,9 @@ void epg_init ( void )
   }
 
 #if ENABLE_ZLIB
-  if (remain > 12 && memcmp(rp, "\xff\xffGZIP0", 7) == 0 &&
+  if (remain > 12 && memcmp(rp, "\xff\xffGZIP01", 8) == 0 &&
       (rp[7] == '0' || rp[7] == '1')) {
     uint32_t orig = (rp[8] << 24) | (rp[9] << 16) | (rp[10] << 8) | rp[11];
-    binary2 = rp[7] == '1';
     tvhinfo(LS_EPGDB, "gzip format detected, inflating (ratio %.1f%% deflated size %zd)",
            (float)((remain * 100.0) / orig), remain);
     rp = zlib_mem = tvh_gzip_inflate(rp + 12, remain - 12, orig);
@@ -293,11 +198,7 @@ void epg_init ( void )
     /* Get message length */
     size_t msglen = remain;
     htsmsg_t *m;
-    if (binary2) {
-      r = htsmsg_binary2_deserialize(&m, rp, &msglen, NULL);
-    } else {
-      r = htsmsg_binary_deserialize(&m, rp, &msglen, NULL);
-    }
+    r = htsmsg_binary2_deserialize(&m, rp, &msglen, NULL);
 
     /* Safety check */
     if (r) {
@@ -314,8 +215,8 @@ void epg_init ( void )
 
     /* Process */
     switch (ver) {
-      case 2:
-        _epgdb_v2_process(&sect, m, &stats);
+      case 3:
+        _epgdb_v3_process(&sect, m, &stats);
         break;
       default:
         break;
@@ -339,7 +240,6 @@ void epg_init ( void )
   /* Stats */
   tvhinfo(LS_EPGDB, "loaded v%d", ver);
   tvhinfo(LS_EPGDB, "  config     %d", stats.config.total);
-  tvhinfo(LS_EPGDB, "  episodes   %d", stats.episodes.total);
   tvhinfo(LS_EPGDB, "  broadcasts %d", stats.broadcasts.total);
 
   /* Close file */
@@ -358,7 +258,6 @@ void epg_done ( void )
   CHANNEL_FOREACH(ch)
     epg_channel_unlink(ch);
   epg_skel_done();
-  memoryinfo_unregister(&epg_memoryinfo_episodes);
   memoryinfo_unregister(&epg_memoryinfo_broadcasts);
   pthread_mutex_unlock(&global_lock);
 }
@@ -374,12 +273,7 @@ static int _epg_write ( sbuf_t *sb, htsmsg_t *m )
   void *msgdata;
   if (m) {
     int r;
-#if ENABLE_ZLIB
-    if (config.epg_compress)
-      r = htsmsg_binary2_serialize(m, &msgdata, &msglen, 0x10000);
-    else
-#endif
-      r = htsmsg_binary_serialize(m, &msgdata, &msglen, 0x10000);
+    r = htsmsg_binary2_serialize(m, &msgdata, &msglen, 0x10000);
     htsmsg_destroy(m);
     if (!r) {
       ret = 0;
@@ -448,7 +342,6 @@ void epg_save_callback ( void *p )
 void epg_save ( void )
 {
   sbuf_t *sb = malloc(sizeof(*sb));
-  epg_object_t *eo;
   epg_broadcast_t *ebc;
   channel_t *ch;
   epggrab_stats_t stats;
@@ -468,11 +361,6 @@ void epg_save ( void )
   memset(&stats, 0, sizeof(stats));
   if ( _epg_write_sect(sb, "config") ) goto error;
   if (_epg_write(sb, epg_config_serialize())) goto error;
-  if ( _epg_write_sect(sb, "episodes") ) goto error;
-  RB_FOREACH(eo,  &epg_episodes, uri_link) {
-    if (_epg_write(sb, epg_episode_serialize((epg_episode_t*)eo))) goto error;
-    stats.episodes.total++;
-  }
   if ( _epg_write_sect(sb, "broadcasts") ) goto error;
   CHANNEL_FOREACH(ch) {
     if (ch->ch_epg_parent) continue;
@@ -486,7 +374,6 @@ void epg_save ( void )
 
   /* Stats */
   tvhinfo(LS_EPGDB, "queued to save (size %d)", sb->sb_ptr);
-  tvhinfo(LS_EPGDB, "  episodes   %d", stats.episodes.total);
   tvhinfo(LS_EPGDB, "  broadcasts %d", stats.broadcasts.total);
 
   return;

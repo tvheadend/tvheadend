@@ -1238,15 +1238,9 @@ htsp_build_event
   epg_genre_t *g;
   epg_episode_num_t epnum;
   const char *str;
-  epg_episode_t *ee = e->episode;
 
   /* Ignore? */
-  if (update) {
-    int ignore = 1;
-    if (e->updated > update) ignore = 0;
-    else if (ee && ee->updated > update) ignore = 0;
-    if (ignore) return NULL;
-  }
+  if (update && e->updated <= update) return NULL;
 
   out = htsmsg_create_map();
 
@@ -1296,28 +1290,27 @@ htsp_build_event
   if (e->serieslink_uri)
     htsmsg_add_str(out, "serieslinkUri", e->serieslink_uri);
 
-  if (ee) {
-    htsmsg_add_u32(out, "episodeId", ee->id);
-    if (ee->uri && strncasecmp(ee->uri,"tvh://",6))  /* tvh:// uris are internal */
-      htsmsg_add_str(out, "episodeUri", ee->uri);
-    if((g = LIST_FIRST(&ee->genre))) {
-      uint32_t code = g->code;
-      if (htsp->htsp_version < 6) code = (code >> 4) & 0xF;
-      htsmsg_add_u32(out, "contentType", code);
-    }
-    if (ee->age_rating)
-      htsmsg_add_u32(out, "ageRating", ee->age_rating);
-    if (ee->star_rating)
-      htsmsg_add_u32(out, "starRating", ee->star_rating);
-    if (ee->copyright_year)
-      htsmsg_add_u32(out, "copyrightYear", ee->copyright_year);
-    if (ee->first_aired)
-      htsmsg_add_s64(out, "firstAired", ee->first_aired);
-    epg_episode_get_epnum(ee, &epnum);
-    htsp_serialize_epnum(out, &epnum, NULL);
-    if (ee->image)
-      htsmsg_add_str(out, "image", ee->image);
+  /* tvh:// uris are internal */
+  if (e->episode_uri && strncasecmp(e->episode_uri, "tvh://", 6))
+    htsmsg_add_str(out, "episodeUri", e->episode_uri);
+
+  if((g = LIST_FIRST(&e->genre))) {
+    uint32_t code = g->code;
+    if (htsp->htsp_version < 6) code = (code >> 4) & 0xF;
+    htsmsg_add_u32(out, "contentType", code);
   }
+  if (e->age_rating)
+    htsmsg_add_u32(out, "ageRating", e->age_rating);
+  if (e->star_rating)
+    htsmsg_add_u32(out, "starRating", e->star_rating);
+  if (e->copyright_year)
+    htsmsg_add_u32(out, "copyrightYear", e->copyright_year);
+  if (e->first_aired)
+    htsmsg_add_s64(out, "firstAired", e->first_aired);
+  epg_broadcast_get_epnum(e, &epnum);
+  htsp_serialize_epnum(out, &epnum, NULL);
+  if (e->image)
+    htsmsg_add_str(out, "image", e->image);
 
   if (e->channel) {
     LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {

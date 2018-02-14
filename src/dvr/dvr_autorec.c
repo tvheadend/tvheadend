@@ -151,7 +151,6 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   double duration;
 
   if (!e->channel) return 0;
-  if (!e->episode) return 0;
   if(dae->dae_enabled == 0 || dae->dae_weekdays == 0)
     return 0;
 
@@ -205,7 +204,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     epg_genre_t ct;
     memset(&ct, 0, sizeof(ct));
     ct.code = dae->dae_content_type;
-    if (!epg_genre_list_contains(&e->episode->genre, &ct, 1))
+    if (!epg_genre_list_contains(&e->genre, &ct, 1))
       return 0;
   }
 
@@ -274,8 +273,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
    * dae_star_rating is zero then that means "do not check
    * star rating of episode".
    */
-  if (e->episode && dae->dae_star_rating)
-    if (e->episode->star_rating < dae->dae_star_rating)
+  if (dae->dae_star_rating)
+    if (e->star_rating < dae->dae_star_rating)
       return 0;
 
   /* Do not check title if the event is from the serieslink group */
@@ -283,16 +282,16 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     lang_str_ele_t *ls;
     if (!dae->dae_fulltext) {
-      if(!e->episode->title) return 0;
-      RB_FOREACH(ls, e->episode->title, link)
+      if(!e->title) return 0;
+      RB_FOREACH(ls, e->title, link)
         if (!regex_match(&dae->dae_title_regex, ls->str)) break;
     } else {
       ls = NULL;
-      if (e->episode->title)
-        RB_FOREACH(ls, e->episode->title, link)
+      if (e->title)
+        RB_FOREACH(ls, e->title, link)
           if (!regex_match(&dae->dae_title_regex, ls->str)) break;
-      if (!ls && e->episode->subtitle)
-        RB_FOREACH(ls, e->episode->subtitle, link)
+      if (!ls && e->subtitle)
+        RB_FOREACH(ls, e->subtitle, link)
           if (!regex_match(&dae->dae_title_regex, ls->str)) break;
       if (!ls && e->summary)
         RB_FOREACH(ls, e->summary, link)
@@ -388,7 +387,7 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
   const char *chname;
   char *title;
   const char *name;
-  if (!event || !event->episode)
+  if (!event)
     return NULL;
   chname = channel_get_name(event->channel, NULL);
   if (!chname)

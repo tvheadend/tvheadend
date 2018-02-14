@@ -369,11 +369,11 @@ dvr_sub_episode(const char *id, const char *fmt, const void *aux, char *tmp, siz
   const dvr_entry_t *de = aux;
   char buf[64];
 
-  if (de->de_bcast == NULL || de->de_bcast->episode == NULL)
+  if (de->de_bcast == NULL)
     return "";
-  epg_episode_number_format(de->de_bcast->episode,
-                            buf, sizeof(buf),
-                            NULL, "S%02d", NULL, "E%02d", NULL);
+  epg_broadcast_epnumber_format(de->de_bcast,
+                                buf, sizeof(buf),
+                                NULL, "S%02d", NULL, "E%02d", NULL);
   return dvr_do_prefix(id, fmt, buf, tmp, tmplen);
 }
 
@@ -383,8 +383,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
   char date_buf[512] = { 0 };
   char episode_buf[512] = { 0 };
   const dvr_entry_t *de = aux;
-  /* Can't be const due to call to epg_episode_number_format */
-  /*const*/ epg_episode_t *episode = de->de_bcast ? de->de_bcast->episode : 0;
+  epg_broadcast_t *ebc = de->de_bcast;
 
   *tmp = 0;
   const char *title    = lang_str_get(de->de_title, NULL);
@@ -433,11 +432,11 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
   else if (fmt && *fmt == '2')       /* Force to be a series (not a movie) */
     is_movie = 0;
   else {
-    if (de->de_bcast && de->de_bcast->category) {
+    if (ebc && ebc->category) {
       /* We've parsed categories from xmltv. So check if it has the movie category. */
       is_movie =
-        string_list_contains_string(de->de_bcast->category, "movie") ||
-        string_list_contains_string(de->de_bcast->category, "film");
+        string_list_contains_string(ebc->category, "movie") ||
+        string_list_contains_string(ebc->category, "film");
     } else {
       /* No xmltv categories parsed. So have to use less-accurate genre instead. */
 
@@ -449,7 +448,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
          * series/episode number then assume must be an episode,
          * otherwise we default to movie.
          */
-        if (episode && (episode->epnum.s_num || episode->epnum.e_num))
+        if (ebc && (ebc->epnum.s_num || ebc->epnum.e_num))
             is_movie = 0;
       }
     }
@@ -461,12 +460,12 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
     /* Include the year if available. This helps scraper differentiate
      * between numerous remakes of the same film.
      */
-    if (episode) {
-      if (episode->copyright_year) {
-        sprintf(date_buf, "%04d", episode->copyright_year);
+    if (ebc) {
+      if (ebc->copyright_year) {
+        sprintf(date_buf, "%04d", ebc->copyright_year);
       } else {
         /* Some providers use first_aired as really the copyright date. */
-        const time_t first_aired = episode->first_aired;
+        const time_t first_aired = ebc->first_aired;
         if (first_aired) {
           /* Get just the year part */
           struct tm tm;
@@ -478,13 +477,13 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
     }
   } else {
     /* Not a movie */
-    if (episode) {
+    if (ebc) {
       /* Get episode information */
-      epg_episode_number_format(episode,
-                                episode_buf, sizeof(episode_buf),
-                                NULL, "S%02d", NULL, "E%02d", NULL);
+      epg_broadcast_epnumber_format(ebc,
+                                    episode_buf, sizeof(episode_buf),
+                                    NULL, "S%02d", NULL, "E%02d", NULL);
 
-      const time_t first_aired = episode->first_aired;
+      const time_t first_aired = ebc->first_aired;
       if (first_aired) {
         /* Get as yyyy-mm-dd since programme could be one episode a day/week,
          * unlike films which only needs the year.
@@ -584,9 +583,9 @@ dvr_sub_genre(const char *id, const char *fmt, const void *aux, char *tmp, size_
   epg_genre_t *genre;
   char buf[64];
 
-  if (de->de_bcast == NULL || de->de_bcast->episode == NULL)
+  if (de->de_bcast == NULL)
     return "";
-  genre = LIST_FIRST(&de->de_bcast->episode->genre);
+  genre = LIST_FIRST(&de->de_bcast->genre);
   if (!genre || !genre->code)
     return "";
   epg_genre_get_str(genre, 0, 1, buf, sizeof(buf), "en");

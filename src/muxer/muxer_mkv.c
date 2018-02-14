@@ -738,17 +738,11 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   epg_genre_t eg0;
   struct tm tm;
   time_t t;
-  epg_episode_t *ee = NULL;
-  channel_t *ch = NULL;
+  channel_t *ch = ebc ? ebc->channel : NULL;
   lang_str_t *ls = NULL, *ls2 = NULL;
   const char *lang;
   const lang_code_list_t *langs;
-
-  if (ebc)                     ee = ebc->episode;
-  else if (de && de->de_bcast) ee = de->de_bcast->episode;
-
-  if (de)       ch = de->de_channel;
-  else if (ebc) ch = ebc->channel;
+  epg_episode_num_t num;
 
   if (de || ebc) {
     localtime_r(de ? &de->de_start : &ebc->start, &tm);
@@ -773,8 +767,8 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
     memset(&eg0, 0, sizeof(eg0));
     eg0.code = de->de_content_type;
     eg = &eg0;
-  } else if (ee) {
-    eg = LIST_FIRST(&ee->genre);
+  } else if (ebc) {
+    eg = LIST_FIRST(&ebc->genre);
   }
   if(eg && epg_genre_get_str(eg, 1, 0, ctype, 100, NULL))
     addtag(q, build_tag_string("CONTENT_TYPE", ctype, NULL, 0, NULL));
@@ -783,15 +777,10 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
     addtag(q, build_tag_string("TVCHANNEL",
                                channel_get_name(ch, channel_blank_name), NULL, 0, NULL));
 
-  if (ee && ee->summary)
-    ls = ee->summary;
-  else if (ebc && ebc->summary)
+  if (ebc && ebc->summary)
     ls = ebc->summary;
-
   if(de && de->de_desc)
     ls2 = de->de_desc;
-  else if (ee && ee->description)
-    ls2 = ee->description;
   else if (ebc && ebc->description)
     ls2 = ebc->description;
 
@@ -810,22 +799,19 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
       addtag(q, build_tag_string("DESCRIPTION", e->str, e->lang, 0, NULL));
   }
 
-  if (ee) {
-    epg_episode_num_t num;
-    epg_episode_get_epnum(ee, &num);
-    if(num.e_num)
-      addtag(q, build_tag_int("PART_NUMBER", num.e_num,
-			       0, NULL));
-    if(num.s_num)
-      addtag(q, build_tag_int("PART_NUMBER", num.s_num,
-			       60, "SEASON"));
-    if(num.p_num)
-      addtag(q, build_tag_int("PART_NUMBER", num.p_num,
-			       40, "PART"));
-    if (num.text)
-      addtag(q, build_tag_string("SYNOPSIS",
-			       num.text, NULL, 0, NULL));
-  }
+  epg_broadcast_get_epnum(ebc, &num);
+  if(num.e_num)
+    addtag(q, build_tag_int("PART_NUMBER", num.e_num,
+                              0, NULL));
+  if(num.s_num)
+    addtag(q, build_tag_int("PART_NUMBER", num.s_num,
+                              60, "SEASON"));
+  if(num.p_num)
+    addtag(q, build_tag_int("PART_NUMBER", num.p_num,
+                              40, "PART"));
+  if (num.text)
+    addtag(q, build_tag_string("SYNOPSIS",
+                               num.text, NULL, 0, NULL));
 
   if (comment) {
     lang = "eng";

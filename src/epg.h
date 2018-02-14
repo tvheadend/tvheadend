@@ -38,7 +38,6 @@ struct epggrab_module;
  */
 typedef LIST_HEAD(,epg_object)     epg_object_list_t;
 typedef RB_HEAD  (,epg_object)     epg_object_tree_t;
-typedef LIST_HEAD(,epg_episode)    epg_episode_list_t;
 typedef LIST_HEAD(,epg_broadcast)  epg_broadcast_list_t;
 typedef RB_HEAD  (,epg_broadcast)  epg_broadcast_tree_t;
 typedef LIST_HEAD(,epg_genre)      epg_genre_list_t;
@@ -48,7 +47,6 @@ typedef LIST_HEAD(,epg_genre)      epg_genre_list_t;
  */
 typedef struct epg_genre           epg_genre_t;
 typedef struct epg_object          epg_object_t;
-typedef struct epg_episode         epg_episode_t;
 typedef struct epg_broadcast       epg_broadcast_t;
 
 extern int epg_in_load;
@@ -104,22 +102,48 @@ htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix, const char *la
 typedef enum epg_object_type
 {
   EPG_UNDEF,
-  EPG_EPISODE,
   EPG_BROADCAST,
 } epg_object_type_t;
 #define EPG_TYPEMAX EPG_BROADCAST
 
-/* Change flags - shared */
-#define EPG_CHANGED_CREATE        (1<<0)
-#define EPG_CHANGED_TITLE         (1<<1)
-#define EPG_CHANGED_SUBTITLE      (1<<2)
-#define EPG_CHANGED_SUMMARY       (1<<3)
-#define EPG_CHANGED_DESCRIPTION   (1<<4)
-#define EPG_CHANGED_IMAGE         (1<<5)
-#define EPG_CHANGED_CREDITS       (1<<6)
-#define EPG_CHANGED_CATEGORY      (1<<7)
-#define EPG_CHANGED_KEYWORD       (1<<8)
-#define EPG_CHANGED_SLAST         2
+/* Change type */
+typedef uint64_t epg_changes_t;
+
+/* Change flags */
+#define EPG_CHANGED_CREATE         (1ULL<<0)
+#define EPG_CHANGED_TITLE          (1ULL<<1)
+#define EPG_CHANGED_SUBTITLE       (1ULL<<2)
+#define EPG_CHANGED_SUMMARY        (1ULL<<3)
+#define EPG_CHANGED_DESCRIPTION    (1ULL<<4)
+#define EPG_CHANGED_IMAGE          (1ULL<<5)
+#define EPG_CHANGED_CREDITS        (1ULL<<6)
+#define EPG_CHANGED_CATEGORY       (1ULL<<7)
+#define EPG_CHANGED_KEYWORD        (1ULL<<8)
+#define EPG_CHANGED_DVB_EID        (1ULL<<9)
+#define EPG_CHANGED_IS_WIDESCREEN  (1ULL<<10)
+#define EPG_CHANGED_IS_HD          (1ULL<<11)
+#define EPG_CHANGED_LINES          (1ULL<<12)
+#define EPG_CHANGED_ASPECT         (1ULL<<13)
+#define EPG_CHANGED_DEAFSIGNED     (1ULL<<14)
+#define EPG_CHANGED_SUBTITLED      (1ULL<<15)
+#define EPG_CHANGED_AUDIO_DESC     (1ULL<<16)
+#define EPG_CHANGED_IS_NEW         (1ULL<<17)
+#define EPG_CHANGED_IS_REPEAT      (1ULL<<18)
+#define EPG_CHANGED_SERIESLINK     (1ULL<<19)
+#define EPG_CHANGED_EPISODE        (1ULL<<20)
+#define EPG_CHANGED_GENRE          (1ULL<<21)
+#define EPG_CHANGED_EPNUM_NUM      (1ULL<<22)
+#define EPG_CHANGED_EPNUM_CNT      (1ULL<<23)
+#define EPG_CHANGED_EPPAR_NUM      (1ULL<<24)
+#define EPG_CHANGED_EPPAR_CNT      (1ULL<<25)
+#define EPG_CHANGED_EPSER_NUM      (1ULL<<26)
+#define EPG_CHANGED_EPSER_CNT      (1ULL<<27)
+#define EPG_CHANGED_EPTEXT         (1ULL<<28)
+#define EPG_CHANGED_IS_BW          (1ULL<<29)
+#define EPG_CHANGED_STAR_RATING    (1ULL<<30)
+#define EPG_CHANGED_AGE_RATING     (1ULL<<31)
+#define EPG_CHANGED_FIRST_AIRED    (1ULL<<32)
+#define EPG_CHANGED_COPYRIGHT_YEAR (1ULL<<33)
 
 typedef struct epg_object_ops {
   void (*getref)  ( void *o );        ///< Get a reference
@@ -138,7 +162,6 @@ struct epg_object
  
   epg_object_type_t       type;       ///< Specific object type
   uint32_t                id;         ///< Internal ID
-  char                   *uri;        ///< Unique ID (from grabber)
   time_t                  updated;    ///< Last time object was changed
 
   uint8_t                 _updated;   ///< Flag to indicate updated
@@ -157,27 +180,9 @@ htsmsg_t     *epg_object_serialize   ( epg_object_t *eo );
 epg_object_t *epg_object_deserialize ( htsmsg_t *msg, int create, int *save );
 
 /* ************************************************************************
- * Episode
+ * Episode numbering
  * ***********************************************************************/
 
-/* Change flags */
-#define EPG_CHANGED_GENRE        (1<<(EPG_CHANGED_SLAST+1))
-#define EPG_CHANGED_EPNUM_NUM    (1<<(EPG_CHANGED_SLAST+2))
-#define EPG_CHANGED_EPNUM_CNT    (1<<(EPG_CHANGED_SLAST+3))
-#define EPG_CHANGED_EPPAR_NUM    (1<<(EPG_CHANGED_SLAST+4))
-#define EPG_CHANGED_EPPAR_CNT    (1<<(EPG_CHANGED_SLAST+5))
-#define EPG_CHANGED_EPSER_NUM    (1<<(EPG_CHANGED_SLAST+6))
-#define EPG_CHANGED_EPSER_CNT    (1<<(EPG_CHANGED_SLAST+7))
-#define EPG_CHANGED_EPTEXT       (1<<(EPG_CHANGED_SLAST+8))
-#define EPG_CHANGED_IS_BW        (1<<(EPG_CHANGED_SLAST+9))
-#define EPG_CHANGED_STAR_RATING  (1<<(EPG_CHANGED_SLAST+10))
-#define EPG_CHANGED_AGE_RATING   (1<<(EPG_CHANGED_SLAST+11))
-#define EPG_CHANGED_FIRST_AIRED  (1<<(EPG_CHANGED_SLAST+12))
-#define EPG_CHANGED_COPYRIGHT_YEAR (1<<(EPG_CHANGED_SLAST+13))
-
-/* Episode numbering object - this is for some back-compat and also
- * to allow episode information to be "collated" into easy to use object
- */
 typedef struct epg_episode_num
 {
   uint16_t s_num; ///< Series number
@@ -189,102 +194,9 @@ typedef struct epg_episode_num
   char     *text; ///< Arbitary text description of episode num
 } epg_episode_num_t;
 
-/* Object */
-struct epg_episode
-{
-  epg_object_t;                             ///< Parent object
+htsmsg_t *epg_episode_epnum_serialize( epg_episode_num_t *num );
+void epg_episode_epnum_deserialize( htsmsg_t *m, epg_episode_num_t *num );
 
-  lang_str_t                *title;         ///< Title
-  lang_str_t                *subtitle;      ///< Sub-title
-  lang_str_t                *summary;       ///< Summary
-  lang_str_t                *description;   ///< An extended description
-  char                      *image;         ///< Episode image
-  epg_genre_list_t           genre;         ///< Episode genre(s)
-  epg_episode_num_t          epnum;         ///< Episode numbering
-  // Note: do not use epnum directly! use the accessor routine
-
-  uint8_t                    is_bw;          ///< Is black and white
-  uint8_t                    star_rating;    ///< Star rating
-  uint8_t                    age_rating;     ///< Age certificate
-  time_t                     first_aired;    ///< Original airdate
-  uint16_t                   copyright_year; ///< xmltv DTD gives a tag "date" (separate to previously-shown/first aired).
-                                             ///< This is the date programme was "finished...probably the copyright date."
-                                             ///< We'll call it copyright_year since words like "complete" and "finished"
-                                             ///< sound too similar to dvr recorded functionality. We'll only store the
-                                             ///< year since we only get year not month and day.
-  LIST_ENTRY(epg_episode)    blink;         ///< Brand link
-  LIST_ENTRY(epg_episode)    slink;         ///< Season link
-  epg_broadcast_list_t       broadcasts;    ///< Broadcast list
-};
-
-/* Lookup */
-epg_episode_t *epg_episode_find_by_uri
-  ( const char *uri, struct epggrab_module *src, int create, int *save, uint32_t *changes );
-epg_episode_t *epg_episode_find_by_id ( uint32_t id );
-epg_episode_t *epg_episode_find_by_broadcast
-  ( epg_broadcast_t *b, struct epggrab_module *src, int create, int *save, uint32_t *changes );
-
-/* Post-modify */
-int epg_episode_change_finish( epg_episode_t *s, uint32_t changed, int merge )
-  __attribute__((warn_unused_result));
-
-/* Accessors */
-const char *epg_episode_get_title
-  ( const epg_episode_t *e, const char *lang );
-const char *epg_episode_get_subtitle
-  ( const epg_episode_t *e, const char *lang );
-const char *epg_episode_get_summary
-  ( const epg_episode_t *e, const char *lang );
-const char *epg_episode_get_description
-  ( const epg_episode_t *e, const char *lang );
-
-/* Mutators */
-int epg_episode_set_title
-  ( epg_episode_t *e, const lang_str_t *title, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_subtitle
-  ( epg_episode_t *e, const lang_str_t *subtitle, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_summary
-  ( epg_episode_t *e, const lang_str_t *summary, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_description
-  ( epg_episode_t *e, const lang_str_t *description, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_number
-  ( epg_episode_t *e, uint16_t number, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_part
-  ( epg_episode_t *e, uint16_t number, uint16_t count, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_epnum
-  ( epg_episode_t *e, epg_episode_num_t *num, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_genre
-  ( epg_episode_t *e, epg_genre_list_t *g, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_image
-  ( epg_episode_t *e, const char *i, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_is_bw
-  ( epg_episode_t *e, uint8_t bw, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_first_aired
-  ( epg_episode_t *e, time_t aired, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_star_rating
-  ( epg_episode_t *e, uint8_t stars, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_copyright_year
-  ( epg_episode_t *e, uint16_t stars, uint32_t *changed )
-  __attribute__((warn_unused_result));
-int epg_episode_set_age_rating
-  ( epg_episode_t *e, uint8_t age, uint32_t *changed )
-  __attribute__((warn_unused_result));
-
-// Note: this does NOT strdup the text field
-void epg_episode_get_epnum
-  ( const epg_episode_t *e, epg_episode_num_t *epnum );
 /* EpNum format helper */
 // output string will be:
 // if (episode_num) 
@@ -295,13 +207,8 @@ void epg_episode_get_epnum
 //   ret += sprintf(efmt, episode_num)
 //   if (episode_cnt) ret += sprintf(cfmt, episode_cnt)
 // and will return num chars written
-size_t epg_episode_epnum_format
+size_t epg_episode_num_format
   ( epg_episode_num_t *epnum, char *buf, size_t len,
-    const char *pre,  const char *sfmt,
-    const char *sep,  const char *efmt,
-    const char *cfmt );
-size_t epg_episode_number_format 
-  ( epg_episode_t *e, char *buf, size_t len,
     const char *pre,  const char *sfmt,
     const char *sep,  const char *efmt,
     const char *cfmt );
@@ -310,49 +217,30 @@ int epg_episode_number_cmp
 int epg_episode_number_cmpfull
   ( const epg_episode_num_t *a, const epg_episode_num_t *b );
 
-htsmsg_t *epg_episode_epnum_serialize( epg_episode_num_t *num );
-void epg_episode_epnum_deserialize( htsmsg_t *m, epg_episode_num_t *num );
-
-/* Matching */
-int epg_episode_fuzzy_match
-  ( epg_episode_t *ee, const char *uri, const char *title,
-    const char *summary, const char *description );
-
-/* Serialization */
-htsmsg_t      *epg_episode_serialize   ( epg_episode_t *b );
-epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save );
-
 /* ************************************************************************
  * Broadcast - specific airing (channel & time) of an episode
  * ***********************************************************************/
-
-#define EPG_CHANGED_DVB_EID      (1<<(EPG_CHANGED_SLAST+1))
-#define EPG_CHANGED_IS_WIDESCREEN (1<<(EPG_CHANGED_SLAST+2))
-#define EPG_CHANGED_IS_HD        (1<<(EPG_CHANGED_SLAST+3))
-#define EPG_CHANGED_LINES        (1<<(EPG_CHANGED_SLAST+4))
-#define EPG_CHANGED_ASPECT       (1<<(EPG_CHANGED_SLAST+5))
-#define EPG_CHANGED_DEAFSIGNED   (1<<(EPG_CHANGED_SLAST+6))
-#define EPG_CHANGED_SUBTITLED    (1<<(EPG_CHANGED_SLAST+7))
-#define EPG_CHANGED_AUDIO_DESC   (1<<(EPG_CHANGED_SLAST+8))
-#define EPG_CHANGED_IS_NEW       (1<<(EPG_CHANGED_SLAST+9))
-#define EPG_CHANGED_IS_REPEAT    (1<<(EPG_CHANGED_SLAST+10))
-#define EPG_CHANGED_EPISODE      (1<<(EPG_CHANGED_SLAST+11))
-#define EPG_CHANGED_SERIESLINK   (1<<(EPG_CHANGED_SLAST+12))
 
 /* Object */
 struct epg_broadcast
 {
   epg_object_t;                                ///< Parent object
+
+  struct channel            *channel;          ///< Channel being broadcast on
+  RB_ENTRY(epg_broadcast)    sched_link;       ///< Schedule link
+  LIST_HEAD(, dvr_entry)     dvr_entries;      ///< Associated DVR entries
   
+  /* */
   uint16_t                   dvb_eid;          ///< DVB Event ID
   time_t                     start;            ///< Start time
   time_t                     stop;             ///< End time
 
   /* Some quality info */
-  uint8_t                    is_widescreen;    ///< Is widescreen
-  uint8_t                    is_hd;            ///< Is HD
   uint16_t                   lines;            ///< Lines in image (quality)
   uint16_t                   aspect;           ///< Aspect ratio (*100)
+  uint8_t                    is_widescreen;    ///< Is widescreen
+  uint8_t                    is_hd;            ///< Is HD
+  uint8_t                    is_bw;            ///< Is black and white
 
   /* Some accessibility support */
   uint8_t                    is_deafsigned;    ///< In screen signing
@@ -360,14 +248,23 @@ struct epg_broadcast
   uint8_t                    is_audio_desc;    ///< Audio description
 
   /* Misc flags */
+  uint8_t                    star_rating;      ///< Star rating
+  uint8_t                    age_rating;       ///< Age certificate
   uint8_t                    is_new;           ///< New series / file premiere
   uint8_t                    is_repeat;        ///< Repeat screening
   uint8_t                    running;          ///< EPG running flag
   uint8_t                    update_running;   ///< new EPG running flag
 
   /* Broadcast level text */
+  lang_str_t                *title;            ///< Title
+  lang_str_t                *subtitle;         ///< Sub-title
   lang_str_t                *summary;          ///< Summary
   lang_str_t                *description;      ///< Description
+
+  char                      *image;            ///< Episode image
+  epg_genre_list_t           genre;            ///< Episode genre(s)
+  epg_episode_num_t          epnum;            ///< Episode numbering
+
   htsmsg_t                  *credits;          ///< Cast/Credits map of name -> role type (actor, presenter, director, etc).
   lang_str_t                *credits_cached;   ///< Comma separated cast (for regex searching in GUI/autorec). Kept in sync with cast_map
   string_list_t             *category;         ///< Extra categories (typically from xmltv) such as "Western" or "Sumo Wrestling".
@@ -375,26 +272,28 @@ struct epg_broadcast
                                                ///< Used with drop-down lists in the GUI.
   string_list_t             *keyword;          ///< Extra keywords (typically from xmltv) such as "Wild West" or "Unicorn".
   lang_str_t                *keyword_cached;   ///< Cached CSV version for regex searches.
-  RB_ENTRY(epg_broadcast)    sched_link;       ///< Schedule link
-  LIST_ENTRY(epg_broadcast)  ep_link;          ///< Episode link
-  epg_episode_t             *episode;          ///< Episode shown
-  LIST_ENTRY(epg_broadcast)  sl_link;          ///< SeriesLink link
   char                      *serieslink_uri;   ///< SeriesLink URI
-  struct channel            *channel;          ///< Channel being broadcast on
+  char                      *episode_uri;      ///< Episode URI
 
-  /* DVR */
-  LIST_HEAD(, dvr_entry)     dvr_entries;      ///< Associated DVR entries
+  // Note: do not use epnum directly! use the accessor routine
+
+  time_t                     first_aired;     ///< Original airdate
+  uint16_t                   copyright_year;  ///< xmltv DTD gives a tag "date" (separate to previously-shown/first aired).
+                                              ///< This is the date programme was "finished...probably the copyright date."
+                                              ///< We'll call it copyright_year since words like "complete" and "finished"
+                                              ///< sound too similar to dvr recorded functionality. We'll only store the
+                                              ///< year since we only get year not month and day.
 };
 
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time 
   ( struct channel *ch, struct epggrab_module *src,
-    time_t start, time_t stop, int create, int *save, uint32_t *changes );
+    time_t start, time_t stop, int create, int *save, epg_changes_t *changes );
 epg_broadcast_t *epg_broadcast_find_by_eid ( struct channel *ch, uint16_t eid );
 epg_broadcast_t *epg_broadcast_find_by_id  ( uint32_t id );
 
 /* Post-modify */
-int epg_broadcast_change_finish( epg_broadcast_t *b, uint32_t changed, int merge )
+int epg_broadcast_change_finish( epg_broadcast_t *b, epg_changes_t changed, int merge )
   __attribute__((warn_unused_result));
 
 /* Special */
@@ -403,58 +302,94 @@ epg_broadcast_t *epg_broadcast_clone
 
 /* Mutators */
 int epg_broadcast_set_dvb_eid
-  ( epg_broadcast_t *b, uint16_t dvb_eid, uint32_t *changed )
+  ( epg_broadcast_t *b, uint16_t dvb_eid, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_running
   ( epg_broadcast_t *b, epg_running_t running )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_episode
-  ( epg_broadcast_t *b, epg_episode_t *e, uint32_t *changed )
-  __attribute__((warn_unused_result));
 int epg_broadcast_set_is_widescreen
-  ( epg_broadcast_t *b, uint8_t ws, uint32_t *changed )
+  ( epg_broadcast_t *b, uint8_t ws, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_hd
-  ( epg_broadcast_t *b, uint8_t hd, uint32_t *changed )
+  ( epg_broadcast_t *b, uint8_t hd, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_lines 
-  ( epg_broadcast_t *b, uint16_t lines, uint32_t *changed )
+  ( epg_broadcast_t *b, uint16_t lines, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_aspect
-  ( epg_broadcast_t *b, uint16_t aspect, uint32_t *changed )
+  ( epg_broadcast_t *b, uint16_t aspect, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_deafsigned
-  ( epg_broadcast_t *b, uint8_t ds, uint32_t *changed )
+  ( epg_broadcast_t *b, uint8_t ds, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_subtitled
-  ( epg_broadcast_t *b, uint8_t st, uint32_t *changed )
+  ( epg_broadcast_t *b, uint8_t st, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_audio_desc
-  ( epg_broadcast_t *b, uint8_t ad, uint32_t *changed )
+  ( epg_broadcast_t *b, uint8_t ad, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_new
-  ( epg_broadcast_t *b, uint8_t n, uint32_t *changed )
+  ( epg_broadcast_t *b, uint8_t n, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_repeat
-  ( epg_broadcast_t *b, uint8_t r, uint32_t *changed )
+  ( epg_broadcast_t *b, uint8_t r, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_title
+  ( epg_broadcast_t *b, const lang_str_t *str, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_subtitle
+  ( epg_broadcast_t *b, const lang_str_t *str, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_summary
-  ( epg_broadcast_t *b, const lang_str_t *str, uint32_t *changed )
+  ( epg_broadcast_t *b, const lang_str_t *str, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_description
-  ( epg_broadcast_t *b, const lang_str_t *str, uint32_t *changed )
+  ( epg_broadcast_t *b, const lang_str_t *str, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_credits
-( epg_broadcast_t *b, const htsmsg_t *msg, uint32_t *changed )
+( epg_broadcast_t *b, const htsmsg_t *msg, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_category
-( epg_broadcast_t *b, const string_list_t *msg, uint32_t *changed )
+( epg_broadcast_t *b, const string_list_t *msg, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_keyword
-( epg_broadcast_t *b, const string_list_t *msg, uint32_t *changed )
+( epg_broadcast_t *b, const string_list_t *msg, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_serieslink_uri
-  ( epg_broadcast_t *b, const char *uri, uint32_t *changed )
+  ( epg_broadcast_t *b, const char *uri, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_episode_uri
+  ( epg_broadcast_t *b, const char *uri, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_epnumber
+  ( epg_broadcast_t *b, uint16_t number, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_eppart
+  ( epg_broadcast_t *b, uint16_t number, uint16_t count, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_epnum
+  ( epg_broadcast_t *b, epg_episode_num_t *num, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_genre
+  ( epg_broadcast_t *b, epg_genre_list_t *g, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_image
+  ( epg_broadcast_t *b, const char *i, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_bw
+  ( epg_broadcast_t *b, uint8_t bw, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_first_aired
+  ( epg_broadcast_t *b, time_t aired, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_star_rating
+  ( epg_broadcast_t *b, uint8_t stars, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_copyright_year
+  ( epg_broadcast_t *b, uint16_t stars, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_age_rating
+  ( epg_broadcast_t *b, uint8_t age, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 
 /* Accessors */
@@ -472,6 +407,22 @@ const char *epg_broadcast_get_credits_cached
   ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_keyword_cached
   ( epg_broadcast_t *b, const char *lang );
+
+/* Episode number heplers */
+// Note: this does NOT strdup the text field
+void epg_broadcast_get_epnum
+  ( const epg_broadcast_t *b, epg_episode_num_t *epnum );
+size_t epg_broadcast_epnumber_format 
+  ( epg_broadcast_t *b, char *buf, size_t len,
+    const char *pre,  const char *sfmt,
+    const char *sep,  const char *efmt,
+    const char *cfmt );
+
+static inline int epg_episode_match(epg_broadcast_t *a, epg_broadcast_t *b)
+{
+  if (a == NULL || b == NULL) return 0;
+  return strcmp(a->episode_uri ?: "", b->episode_uri ?: "") == 0;
+}
 
 /* Serialization */
 htsmsg_t        *epg_broadcast_serialize   ( epg_broadcast_t *b );

@@ -178,7 +178,7 @@ epggrab_ota_service_del
  * *************************************************************************/
 
 int  xmltv_parse_accessibility
-  ( epg_broadcast_t *ebc, htsmsg_t *m, uint32_t *changes );
+  ( epg_broadcast_t *ebc, htsmsg_t *m, epg_changes_t *changes );
 
 /* Freesat huffman decoder */
 size_t freesat_huffman_decode

@@ -293,11 +293,10 @@ opentv_parse_event_section_one
   int i, r, save = 0, merge;
   epggrab_module_t *src = (epggrab_module_t*)mod;
   epg_broadcast_t *ebc;
-  epg_episode_t *ee;
   opentv_event_t ev;
   char buffer[2048], *s;
   lang_str_t *ls;
-  uint32_t changes, changes2, changes3;
+  epg_changes_t changes;
 
   /* Loop around event entries */
   i = 7;
@@ -311,7 +310,7 @@ opentv_parse_event_section_one
      * Broadcast
      */
 
-    merge = changes = changes2 = changes3 = 0;
+    merge = changes = 0;
 
     /* Find broadcast */
     if (ev.start && ev.stop) {
@@ -360,64 +359,59 @@ opentv_parse_event_section_one
      * Episode
      */
 
-    if ((ee = epg_episode_find_by_broadcast(ebc, src, 1, &save, &changes3))) {
-      save |= epg_broadcast_set_episode(ebc, ee, &changes);
-      tvhdebug(LS_OPENTV, "  find episode %p", ee);
-      if (ev.title) {
-        tvhdebug(LS_OPENTV, "    title '%s'", ev.title);
+    if (ev.title) {
+      tvhdebug(LS_OPENTV, "    title '%s'", ev.title);
 
-        /* try to cleanup the title */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.title, lang, &mod->p_cleanup_title)) {
-          tvhtrace(LS_OPENTV, "  clean title '%s'", buffer);
-          s = buffer;
-        } else {
-          s = ev.title;
-        }
-        ls = lang_str_create2(s, lang);
-        save |= epg_episode_set_title(ee, ls, &changes3);
+      /* try to cleanup the title */
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.title, lang, &mod->p_cleanup_title)) {
+        tvhtrace(LS_OPENTV, "  clean title '%s'", buffer);
+        s = buffer;
+      } else {
+        s = ev.title;
+      }
+      ls = lang_str_create2(s, lang);
+      save |= epg_broadcast_set_title(ebc, ls, &changes);
+      lang_str_destroy(ls);
+    }
+    if (ev.cat) {
+      epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
+      epg_genre_list_add_by_eit(egl, ev.cat);
+      save |= epg_broadcast_set_genre(ebc, egl, &changes);
+      epg_genre_list_destroy(egl);
+    }
+    if (ev.summary) {
+      epg_episode_num_t en;
+
+      memset(&en, 0, sizeof(en));
+      /* search for season number */
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_snum))
+        if ((en.s_num = atoi(buffer)))
+          tvhtrace(LS_OPENTV,"  extract season number %d", en.s_num);
+      /* ...for episode number */
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_enum))
+        if ((en.e_num = atoi(buffer)))
+          tvhtrace(LS_OPENTV,"  extract episode number %d", en.e_num);
+      /* ...for part number */
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_pnum)) {
+        if (buffer[0] >= 'a' && buffer[0] <= 'z')
+          en.p_num = buffer[0] - 'a' + 1;
+        else
+          if (buffer[0] >= 'A' && buffer[0] <= 'Z')
+            en.p_num = buffer[0] - 'A' + 1;
+        if (en.p_num)
+          tvhtrace(LS_OPENTV,"  extract part number %d", en.p_num);
+      }
+      /* save any found number */
+      if (en.s_num || en.e_num || en.p_num)
+        save |= epg_broadcast_set_epnum(ebc, &en, &changes);
+
+      /* ...for subtitle */
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_subt)) {
+        tvhtrace(LS_OPENTV, "  extract subtitle '%s'", buffer);
+        ls = lang_str_create2(buffer, lang);
+        save |= epg_broadcast_set_subtitle(ebc, ls, &changes);
         lang_str_destroy(ls);
       }
-      if (ev.cat) {
-        epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
-        epg_genre_list_add_by_eit(egl, ev.cat);
-        save |= epg_episode_set_genre(ee, egl, &changes3);
-        epg_genre_list_destroy(egl);
-      }
-      if (ev.summary) {
-        epg_episode_num_t en;
-
-        memset(&en, 0, sizeof(en));
-        /* search for season number */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_snum))
-          if ((en.s_num = atoi(buffer)))
-            tvhtrace(LS_OPENTV,"  extract season number %d", en.s_num);
-        /* ...for episode number */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_enum))
-          if ((en.e_num = atoi(buffer)))
-            tvhtrace(LS_OPENTV,"  extract episode number %d", en.e_num);
-        /* ...for part number */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_pnum)) {
-          if (buffer[0] >= 'a' && buffer[0] <= 'z')
-            en.p_num = buffer[0] - 'a' + 1;
-          else
-            if (buffer[0] >= 'A' && buffer[0] <= 'Z')
-              en.p_num = buffer[0] - 'A' + 1;
-          if (en.p_num)
-            tvhtrace(LS_OPENTV,"  extract part number %d", en.p_num);
-        }
-        /* save any found number */
-        if (en.s_num || en.e_num || en.p_num)
-          save |= epg_episode_set_epnum(ee, &en, &changes3);
-
-        /* ...for subtitle */
-        if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_subt)) {
-          tvhtrace(LS_OPENTV, "  extract subtitle '%s'", buffer);
-          ls = lang_str_create2(buffer, lang);
-          save |= epg_episode_set_subtitle(ee, ls, &changes3);
-          lang_str_destroy(ls);
-        }
-      }
-      save |= epg_episode_change_finish(ee, changes3, merge);
     }
 
     save |= epg_broadcast_change_finish(ebc, changes, merge);

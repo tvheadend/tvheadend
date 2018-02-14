@@ -340,14 +340,13 @@ _psip_eit_callback_channel
   uint16_t eventid;
   uint32_t starttime, length;
   time_t start, stop;
-  int save = 0, save2, save3, i, size;
+  int save = 0, save2, i, size;
   uint8_t titlelen;
   unsigned int dlen;
   epg_broadcast_t *ebc;
-  epg_episode_t *ee;
   lang_str_t *title, *description;
   psip_desc_t *pd;
-  uint32_t changes2, changes3;
+  epg_changes_t changes2;
   epggrab_module_t *mod = (epggrab_module_t *)ps->ps_mod;
 
   for (i = 0; len >= 12 && i < count; len -= size, ptr += size, i++) {
@@ -385,7 +384,7 @@ _psip_eit_callback_channel
              eventid, start, length,
              lang_str_get(title, NULL), titlelen);
 
-    save2 = save3 = changes2 = changes3 = 0;
+    save2 = changes2 = 0;
 
     ebc = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes2);
     tvhtrace(LS_PSIP, "  eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
@@ -403,16 +402,11 @@ _psip_eit_callback_channel
       }
     }
 
-    ee = epg_episode_find_by_broadcast(ebc, mod, 1, &save3, &changes3);
-    if (ee) {
-      save2 |= epg_broadcast_set_episode(ebc, ee, &changes2);
-      save3 |= epg_episode_set_title(ee, title, &changes3);
-      save3 |= epg_episode_change_finish(ee, changes3, 0);
-    }
+    save |= epg_broadcast_set_title(ebc, title, &changes2);
 
     save |= epg_broadcast_change_finish(ebc, changes2, 0);
 
-    save |= save2 | save3;
+    save |= save2;
 
 next:
     lang_str_destroy(title);
@@ -548,7 +542,7 @@ _psip_ett_callback
   lang_str_t *description;
   idnode_list_mapping_t *ilm;
   channel_t            *ch;
-  uint32_t              changes;
+  epg_changes_t         changes;
 
   /* Validate */
   if (tableid != 0xcc) return -1;
@@ -603,7 +597,7 @@ _psip_ett_callback
         save |= epg_broadcast_change_finish(ebc, changes, 1);
         tvhtrace(LS_PSIP, "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d) ['%s'], ver %d",
                  mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid,
-                 lang_str_get(ebc->episode->title, "eng"), ver);
+                 lang_str_get(ebc->title, "eng"), ver);
       } else {
         found = 0;
       }

@@ -106,21 +106,20 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
                          channel_t *ch, epg_broadcast_t *ebc)
 {
   char start[32], stop[32], ubuf[UUID_HEX_SIZE];
-  epg_episode_t *e = ebc->episode;
   lang_str_ele_t *lse;
 
-  if (e == NULL || e->title == NULL) return;
+  if (ebc->title == NULL) return;
   http_xmltv_time(start, ebc->start);
   http_xmltv_time(stop, ebc->stop);
   htsbuf_qprintf(hq, "<programme start=\"%s\" stop=\"%s\" channel=\"%s\">\n",
                  start, stop, idnode_uuid_as_str(&ch->ch_id, ubuf));
-  RB_FOREACH(lse, e->title, link) {
+  RB_FOREACH(lse, ebc->title, link) {
     htsbuf_qprintf(hq, "  <title lang=\"%s\">", lse->lang);
     htsbuf_append_and_escape_xml(hq, lse->str);
     htsbuf_append_str(hq, "</title>\n");
   }
-  if (e->subtitle)
-    RB_FOREACH(lse, e->subtitle, link) {
+  if (ebc->subtitle)
+    RB_FOREACH(lse, ebc->subtitle, link) {
       htsbuf_qprintf(hq, "  <sub-title lang=\"%s\">", lse->lang);
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</sub-title>\n");
