@@ -557,7 +557,7 @@ _eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
     char title_summary[2048];
     lang_str_t *ls = lang_str_create();
     RB_FOREACH(se, ev->title, link) {
-      snprintf(title_summary, sizeof(title_summary), "%s %s",
+      snprintf(title_summary, sizeof(title_summary), "%s %% %s",
                se->str, lang_str_get(ev->summary, se->lang));
       if (eit_pattern_apply_list(buffer, sizeof(buffer), title_summary, se->lang, &eit_mod->p_scrape_title)) {
         tvhtrace(LS_TBL_EIT, "  scrape title '%s' from '%s' using %s",
