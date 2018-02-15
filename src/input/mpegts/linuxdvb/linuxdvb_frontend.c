@@ -2078,9 +2078,9 @@ linuxdvb_frontend_create
     uuid = htsmsg_get_str(conf, "uuid");
 
   /* Tuner slave */
-  snprintf(id, sizeof(id), "master for #%d", number);
+  snprintf(buf, sizeof(buf), "master for #%d", number);
   if (conf && type == DVB_TYPE_S) {
-    muuid = htsmsg_get_str(conf, id);
+    muuid = htsmsg_get_str(conf, buf);
     if (muuid && uuid && !strcmp(muuid, uuid))
       muuid = NULL;
   }
