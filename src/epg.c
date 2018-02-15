@@ -347,6 +347,10 @@ htsmsg_t *epg_episode_epnum_serialize ( epg_episode_num_t *num )
 {
   htsmsg_t *m;
   if (!num) return NULL;
+  if (!num->e_num && !num->e_cnt &&
+      !num->s_num && !num->s_cnt &&
+      !num->p_num && !num->p_cnt &&
+      !num->text) return NULL;
   m = htsmsg_create_map();
   if (num->e_num)
     htsmsg_add_u32(m, "enum", num->e_num);
@@ -1546,7 +1550,8 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
     lang_str_serialize(broadcast->summary, m, "sum");
   if (broadcast->description)
     lang_str_serialize(broadcast->description, m, "des");
-  htsmsg_add_msg(m, "epn", epg_episode_epnum_serialize(&broadcast->epnum));
+  if ((a = epg_episode_epnum_serialize(&broadcast->epnum)) != NULL)
+    htsmsg_add_msg(m, "epn", a);
   a = NULL;
   LIST_FOREACH(eg, &broadcast->genre, link) {
     if (!a) a = htsmsg_create_list();

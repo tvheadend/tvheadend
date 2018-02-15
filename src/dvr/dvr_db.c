@@ -2565,7 +2565,8 @@ dvr_entry_class_save(idnode_t *self, char *filename, size_t fsize)
   int64_t s64;
 
   idnode_save(&de->de_id, m);
-  htsmsg_add_msg(m, "episode", epg_episode_epnum_serialize(&de->de_epnum));
+  if ((e = epg_episode_epnum_serialize(&de->de_epnum)) != NULL)
+    htsmsg_add_msg(m, "episode", e);
   if (de->de_files) {
     l = htsmsg_create_list();
     HTSMSG_FOREACH(f, de->de_files)
