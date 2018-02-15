@@ -463,11 +463,15 @@ dvr_entry_get_rerecord_errors( dvr_entry_t *de )
 int
 dvr_entry_get_epg_running( dvr_entry_t *de )
 {
+  channel_t *ch;
+
   if (de->de_dvb_eid == 0)
     return 0;
-  if (de->de_channel->ch_epg_running < 0)
+  if ((ch = de->de_channel) == NULL)
+    return 0;
+  if (ch->ch_epg_running < 0)
     return de->de_config->dvr_running;
-  return de->de_channel->ch_epg_running > 0;
+  return ch->ch_epg_running > 0;
 }
 
 /*
