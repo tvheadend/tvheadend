@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -111,7 +112,7 @@ static int _lang_str_add
   ( lang_str_t *ls, const char *str, const char *lang, int cmd )
 {
   int save = 0;
-  lang_str_ele_t *ae, *e;
+  lang_str_ele_t *e, *ae;
 
   if (!str) return 0;
 
@@ -119,14 +120,16 @@ static int _lang_str_add
   if (!lang) lang = lang_code_preferred();
   if (!(lang = lang_code_get(lang))) return 0;
 
-  /* Create skel */
-  ae = malloc(sizeof(*e) + strlen(str) + 1);
-  strncpy(ae->lang, lang, sizeof(ae->lang));
+  /* Use 'dummy' ele pointer for _lang_cmp */
+  ae = (lang_str_ele_t *)(lang - offsetof(lang_str_ele_t, lang));
+  e = RB_FIND(ls, ae, link, _lang_cmp);
 
   /* Create */
-  e = RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
   if (!e) {
-    strcpy(ae->str, str);
+    e = malloc(sizeof(*e) + strlen(str) + 1);
+    strncpy(e->lang, lang, sizeof(e->lang));
+    strcpy(e->str, str);
+    RB_INSERT_SORTED(ls, e, link, _lang_cmp);
     save = 1;
 
   /* Append */
@@ -139,8 +142,7 @@ static int _lang_str_add
     } else {
       ae = e;
     }
-    e = RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
-    assert(!e);
+    RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
 
   /* Update */
   } else if (cmd == LANG_STR_UPDATE && strcmp(str, e->str)) {
@@ -156,8 +158,7 @@ static int _lang_str_add
       } else {
         ae = e;
       }
-      e = RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
-      assert(!e);
+      RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
     }
   }
   
