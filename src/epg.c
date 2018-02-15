@@ -1539,9 +1539,9 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
   if (broadcast->image)
     htsmsg_add_str(m, "img", broadcast->image);
   if (broadcast->title)
-    lang_str_serialize(broadcast->summary, m, "tit");
+    lang_str_serialize(broadcast->title, m, "tit");
   if (broadcast->subtitle)
-    lang_str_serialize(broadcast->summary, m, "sti");
+    lang_str_serialize(broadcast->subtitle, m, "sti");
   if (broadcast->summary)
     lang_str_serialize(broadcast->summary, m, "sum");
   if (broadcast->description)
