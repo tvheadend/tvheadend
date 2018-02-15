@@ -378,17 +378,23 @@ void epg_episode_epnum_deserialize
 
   memset(num, 0, sizeof(epg_episode_num_t));
 
-  if (!htsmsg_get_u32(m, "enum", &u32))
+  if (!htsmsg_get_u32(m, "enum", &u32) ||
+      !htsmsg_get_u32(m, "e_num", &u32))
     num->e_num = u32;
-  if (!htsmsg_get_u32(m, "ecnt", &u32))
+  if (!htsmsg_get_u32(m, "ecnt", &u32) ||
+      !htsmsg_get_u32(m, "e_cnt", &u32))
     num->e_cnt = u32;
-  if (!htsmsg_get_u32(m, "snum", &u32))
+  if (!htsmsg_get_u32(m, "snum", &u32) ||
+      !htsmsg_get_u32(m, "s_num", &u32))
     num->s_num = u32;
-  if (!htsmsg_get_u32(m, "scnt", &u32))
+  if (!htsmsg_get_u32(m, "scnt", &u32) ||
+      !htsmsg_get_u32(m, "s_cnt", &u32))
     num->s_cnt = u32;
-  if (!htsmsg_get_u32(m, "pnum", &u32))
+  if (!htsmsg_get_u32(m, "pnum", &u32) ||
+      !htsmsg_get_u32(m, "p_num", &u32))
     num->p_num = u32;
-  if (!htsmsg_get_u32(m, "pcnt", &u32))
+  if (!htsmsg_get_u32(m, "pcnt", &u32) ||
+      !htsmsg_get_u32(m, "p_cnt", &u32))
     num->p_cnt = u32;
   if ((str = htsmsg_get_str(m, "text")))
     num->text = strdup(str);
