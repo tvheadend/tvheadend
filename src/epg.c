@@ -353,17 +353,17 @@ htsmsg_t *epg_episode_epnum_serialize ( epg_episode_num_t *num )
       !num->text) return NULL;
   m = htsmsg_create_map();
   if (num->e_num)
-    htsmsg_add_u32(m, "enum", num->e_num);
+    htsmsg_add_u32(m, "e_num", num->e_num);
   if (num->e_cnt)
-    htsmsg_add_u32(m, "ecnt", num->e_cnt);
+    htsmsg_add_u32(m, "e_cnt", num->e_cnt);
   if (num->s_num)
-    htsmsg_add_u32(m, "snum", num->s_num);
+    htsmsg_add_u32(m, "s_num", num->s_num);
   if (num->s_cnt)
-    htsmsg_add_u32(m, "scnt", num->s_cnt);
+    htsmsg_add_u32(m, "s_cnt", num->s_cnt);
   if (num->p_num)
-    htsmsg_add_u32(m, "pnum", num->p_num);
+    htsmsg_add_u32(m, "p_num", num->p_num);
   if (num->p_cnt)
-    htsmsg_add_u32(m, "pcnt", num->p_cnt);
+    htsmsg_add_u32(m, "p_cnt", num->p_cnt);
   if (num->text)
     htsmsg_add_str(m, "text", num->text);
   return m;
@@ -378,17 +378,17 @@ void epg_episode_epnum_deserialize
 
   memset(num, 0, sizeof(epg_episode_num_t));
 
-  if (!htsmsg_get_u32(m, "enum", &u32))
+  if (!htsmsg_get_u32(m, "e_num", &u32))
     num->e_num = u32;
-  if (!htsmsg_get_u32(m, "ecnt", &u32))
+  if (!htsmsg_get_u32(m, "e_cnt", &u32))
     num->e_cnt = u32;
-  if (!htsmsg_get_u32(m, "snum", &u32))
+  if (!htsmsg_get_u32(m, "s_num", &u32))
     num->s_num = u32;
-  if (!htsmsg_get_u32(m, "scnt", &u32))
+  if (!htsmsg_get_u32(m, "s_cnt", &u32))
     num->s_cnt = u32;
-  if (!htsmsg_get_u32(m, "pnum", &u32))
+  if (!htsmsg_get_u32(m, "p_num", &u32))
     num->p_num = u32;
-  if (!htsmsg_get_u32(m, "pcnt", &u32))
+  if (!htsmsg_get_u32(m, "p_cnt", &u32))
     num->p_cnt = u32;
   if ((str = htsmsg_get_str(m, "text")))
     num->text = strdup(str);
