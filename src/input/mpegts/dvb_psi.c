@@ -299,6 +299,8 @@ dvb_desc_sat_del
   /* Not enough data */
   if(len < 11) return NULL;
 
+  if(!idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) return NULL;
+
   /* Extract data */
   frequency = bcdtoint4(ptr);
   symrate   = bcdtoint41(ptr + 7);
@@ -383,6 +385,8 @@ dvb_desc_cable_del
   /* Not enough data */
   if(len < 11) return NULL;
 
+  if(!idnode_is_instance(&mm->mm_id, &dvb_mux_dvbc_class)) return NULL;
+
   /* Extract data */
   frequency  = bcdtoint4(ptr);
   symrate    = bcdtoint41(ptr + 7);
@@ -450,6 +454,8 @@ dvb_desc_terr_del
 
   /* Not enough data */
   if (len < 11) return NULL;
+
+  if(!idnode_is_instance(&mm->mm_id, &dvb_mux_dvbt_class)) return NULL;
 
   /* Extract data */
   frequency     = extract_4byte(ptr);
