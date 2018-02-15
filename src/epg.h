@@ -40,6 +40,7 @@ typedef LIST_HEAD(,epg_object)     epg_object_list_t;
 typedef RB_HEAD  (,epg_object)     epg_object_tree_t;
 typedef LIST_HEAD(,epg_broadcast)  epg_broadcast_list_t;
 typedef RB_HEAD  (,epg_broadcast)  epg_broadcast_tree_t;
+typedef RB_HEAD  (,epg_set)        epg_set_tree_t;
 typedef LIST_HEAD(,epg_genre)      epg_genre_list_t;
 
 /*
@@ -48,8 +49,12 @@ typedef LIST_HEAD(,epg_genre)      epg_genre_list_t;
 typedef struct epg_genre           epg_genre_t;
 typedef struct epg_object          epg_object_t;
 typedef struct epg_broadcast       epg_broadcast_t;
+typedef struct epg_set_item        epg_set_item_t;
+typedef struct epg_set             epg_set_t;
 
 extern int epg_in_load;
+extern epg_set_tree_t epg_episodelinks;
+extern epg_set_tree_t epg_serieslinks;
 
 /*
  *
@@ -155,7 +160,6 @@ typedef struct epg_object_ops {
 /* Object */
 struct epg_object
 {
-  RB_ENTRY(epg_object)    uri_link;   ///< Global URI link
   RB_ENTRY(epg_object)    id_link;    ///< Global (ID) link
   LIST_ENTRY(epg_object)  un_link;    ///< Global unref'd link
   LIST_ENTRY(epg_object)  up_link;    ///< Global updated link
@@ -218,6 +222,28 @@ int epg_episode_number_cmpfull
   ( const epg_episode_num_t *a, const epg_episode_num_t *b );
 
 /* ************************************************************************
+ * Broadcast set
+ * ***********************************************************************/
+
+struct epg_set_item {
+  LIST_ENTRY(epg_set_item) item_link;
+  epg_broadcast_t *broadcast;
+};
+
+struct epg_set {
+  RB_ENTRY(epg_set) set_link;
+  LIST_HEAD(, epg_set_item) broadcasts;
+  char uri[0];
+};
+
+epg_set_t *epg_set_broadcast_insert
+  (epg_set_tree_t *tree, epg_broadcast_t *b, const char *uri);
+void epg_set_broadcast_remove
+  (epg_set_tree_t *tree, epg_set_t *set, epg_broadcast_t *b);
+epg_set_t *epg_set_broadcast_find_by_uri
+  (epg_set_tree_t *tree, const char *uri);
+
+/* ************************************************************************
  * Broadcast - specific airing (channel & time) of an episode
  * ***********************************************************************/
 
@@ -263,7 +289,7 @@ struct epg_broadcast
 
   char                      *image;            ///< Episode image
   epg_genre_list_t           genre;            ///< Episode genre(s)
-  epg_episode_num_t          epnum;            ///< Episode numbering
+  epg_episode_num_t          epnum;            ///< Episode numbering; NOTE: use the accessor routine!
 
   htsmsg_t                  *credits;          ///< Cast/Credits map of name -> role type (actor, presenter, director, etc).
   lang_str_t                *credits_cached;   ///< Comma separated cast (for regex searching in GUI/autorec). Kept in sync with cast_map
@@ -272,17 +298,15 @@ struct epg_broadcast
                                                ///< Used with drop-down lists in the GUI.
   string_list_t             *keyword;          ///< Extra keywords (typically from xmltv) such as "Wild West" or "Unicorn".
   lang_str_t                *keyword_cached;   ///< Cached CSV version for regex searches.
-  char                      *serieslink_uri;   ///< SeriesLink URI
-  char                      *episode_uri;      ///< Episode URI
+  epg_set_t                 *serieslink;       ///< Series Link
+  epg_set_t                 *episodelink;      ///< Episode Link
 
-  // Note: do not use epnum directly! use the accessor routine
-
-  time_t                     first_aired;     ///< Original airdate
-  uint16_t                   copyright_year;  ///< xmltv DTD gives a tag "date" (separate to previously-shown/first aired).
-                                              ///< This is the date programme was "finished...probably the copyright date."
-                                              ///< We'll call it copyright_year since words like "complete" and "finished"
-                                              ///< sound too similar to dvr recorded functionality. We'll only store the
-                                              ///< year since we only get year not month and day.
+  time_t                     first_aired;      ///< Original airdate
+  uint16_t                   copyright_year;   ///< xmltv DTD gives a tag "date" (separate to previously-shown/first aired).
+                                               ///< This is the date programme was "finished...probably the copyright date."
+                                               ///< We'll call it copyright_year since words like "complete" and "finished"
+                                               ///< sound too similar to dvr recorded functionality. We'll only store the
+                                               ///< year since we only get year not month and day.
 };
 
 /* Lookup */
@@ -358,7 +382,7 @@ int epg_broadcast_set_keyword
 int epg_broadcast_set_serieslink_uri
   ( epg_broadcast_t *b, const char *uri, epg_changes_t *changed )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_episode_uri
+int epg_broadcast_set_episodelink_uri
   ( epg_broadcast_t *b, const char *uri, epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_epnumber
@@ -421,7 +445,7 @@ size_t epg_broadcast_epnumber_format
 static inline int epg_episode_match(epg_broadcast_t *a, epg_broadcast_t *b)
 {
   if (a == NULL || b == NULL) return 0;
-  return strcmp(a->episode_uri ?: "", b->episode_uri ?: "") == 0;
+  return a->episodelink == b->episodelink;
 }
 
 /* Serialization */

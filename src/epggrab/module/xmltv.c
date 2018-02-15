@@ -613,15 +613,16 @@ static int _xmltv_parse_programme_tags
   epg_broadcast_t *ebc;
   epg_genre_list_t *egl;
   epg_episode_num_t epnum;
-  memset(&epnum, 0, sizeof(epnum));
+  epg_set_t *set;
   char *suri = NULL, *uri = NULL;
-  const char *s;
   lang_str_t *title = NULL;
   lang_str_t *desc = NULL;
   lang_str_t *summary = NULL;
   lang_str_t *subtitle = NULL;
   time_t first_aired = 0;
   int8_t bw = -1;
+
+  memset(&epnum, 0, sizeof(epnum));
 
   /*
    * Broadcast
@@ -716,12 +717,12 @@ static int _xmltv_parse_programme_tags
    * Series Link
    */
   if (suri) {
-    s = ebc->serieslink_uri;
+    set = ebc->serieslink;
     save |= epg_broadcast_set_serieslink_uri(ebc, suri, &changes);
     free(suri);
     stats->seasons.total++;
     if (changes & EPG_CHANGED_SERIESLINK) {
-      if (s == NULL)
+      if (set == NULL)
         stats->seasons.created++;
       else
         stats->seasons.modified++;
@@ -732,11 +733,11 @@ static int _xmltv_parse_programme_tags
    * Episode
    */
   if (uri) {
-    s = ebc->episode_uri;
-    save |= epg_broadcast_set_episode_uri(ebc, uri, &changes);
+    set = ebc->episodelink;
+    save |= epg_broadcast_set_episodelink_uri(ebc, uri, &changes);
     stats->episodes.total++;
     if (changes & EPG_CHANGED_EPISODE) {
-      if (s == NULL)
+      if (set == NULL)
         stats->episodes.created++;
       else
         stats->episodes.modified++;

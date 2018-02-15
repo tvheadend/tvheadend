@@ -1287,12 +1287,12 @@ htsp_build_event
     htsmsg_add_msg(out, "keyword", string_list_to_htsmsg(e->keyword));
   }
 
-  if (e->serieslink_uri)
-    htsmsg_add_str(out, "serieslinkUri", e->serieslink_uri);
+  if (e->serieslink)
+    htsmsg_add_str(out, "serieslinkUri", e->serieslink->uri);
 
   /* tvh:// uris are internal */
-  if (e->episode_uri && strncasecmp(e->episode_uri, "tvh://", 6))
-    htsmsg_add_str(out, "episodeUri", e->episode_uri);
+  if (e->episodelink && strncasecmp(e->episodelink->uri, "tvh://", 6))
+    htsmsg_add_str(out, "episodeUri", e->episodelink->uri);
 
   if((g = LIST_FIRST(&e->genre))) {
     uint32_t code = g->code;

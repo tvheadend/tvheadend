@@ -168,8 +168,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     return 0; // Avoid super wildcard match
 
   if(dae->dae_serieslink_uri) {
-    if (!e->serieslink_uri ||
-        strcmp(dae->dae_serieslink_uri ?: "", e->serieslink_uri)) return 0;
+    if (!e->serieslink ||
+        strcmp(dae->dae_serieslink_uri ?: "", e->serieslink->uri)) return 0;
   }
 
   if(dae->dae_btype != DVR_AUTOREC_BTYPE_ALL) {
@@ -401,8 +401,8 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
   free(title);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
   htsmsg_add_str(conf, "channel", chname);
-  if (event->serieslink_uri)
-    htsmsg_add_str(conf, "serieslink", event->serieslink_uri);
+  if (event->serieslink)
+    htsmsg_add_str(conf, "serieslink", event->serieslink->uri);
   htsmsg_add_str(conf, "owner", owner ?: "");
   htsmsg_add_str(conf, "creator", creator ?: "");
   htsmsg_add_str(conf, "comment", comment ?: "");

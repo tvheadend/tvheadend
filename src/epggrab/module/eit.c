@@ -610,7 +610,6 @@ static int _eit_process_event_one
   uint8_t running;
   epg_broadcast_t *ebc, _ebc;
   epg_running_t run;
-  lang_str_t *title_copy = NULL;
   epg_changes_t changes = 0;
   char tm1[32], tm2[32];
   int short_target = ((eit_module_t *)mod)->short_target;
@@ -646,12 +645,12 @@ static int _eit_process_event_one
     _ebc.dvb_eid = eid;
     _ebc.start = start;
     _ebc.stop = stop;
-    _ebc.episode_uri = ev->uri;
-    _ebc.serieslink_uri = ev->suri;
-    _ebc.title = title_copy = lang_str_copy(ev->title);
-
+    _ebc.episodelink = epg_set_broadcast_find_by_uri(&epg_episodelinks, ev->uri);
+    _ebc.serieslink = epg_set_broadcast_find_by_uri(&epg_serieslinks, ev->suri);
+    _ebc.title = lang_str_copy(ev->title);
     ebc = epg_match_now_next(ch, &_ebc);
     tvhtrace(mod->subsys, "%s:  running state only ebc=%p", svc->s_dvb_svcname ?: "(null)", ebc);
+    lang_str_destroy(_ebc.title);
     goto running;
   } else {
     *save = save2;
@@ -691,7 +690,7 @@ static int _eit_process_event_one
 
   /* Find episode */
   if (*ev->uri)
-    *save |= epg_broadcast_set_episode_uri(ebc, ev->suri, &changes);
+    *save |= epg_broadcast_set_episodelink_uri(ebc, ev->suri, &changes);
 
   /* Update Episode */
   if (ev->is_new > 0)
@@ -737,7 +736,6 @@ running:
     }
   }
 
-  if (title_copy) lang_str_destroy(title_copy);
   return 0;
 }
 

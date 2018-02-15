@@ -90,8 +90,6 @@ static void epg_memoryinfo_broadcasts_update(memoryinfo_t *my)
       size += sizeof(*ebc);
       size += tvh_strlen(ebc->image);
       size += tvh_strlen(ebc->epnum.text);
-      size += tvh_strlen(ebc->episode_uri);
-      size += tvh_strlen(ebc->serieslink_uri);
       size += lang_str_size(ebc->title);
       size += lang_str_size(ebc->subtitle);
       size += lang_str_size(ebc->summary);

@@ -45,7 +45,8 @@
 epg_object_tree_t epg_objects[EPG_HASH_WIDTH];
 
 /* URI lists */
-epg_object_tree_t epg_episodes;
+epg_set_tree_t epg_serieslinks;
+epg_set_tree_t epg_episodelinks;
 
 /* Other special case lists */
 epg_object_list_t epg_object_unref;
@@ -114,7 +115,6 @@ static void _epg_object_destroy
   assert(eo->refcount == 0);
   tvhtrace(LS_EPG, "eo [%p, %u, %d] destroy",
            eo, eo->id, eo->type);
-  if (tree) RB_REMOVE(tree, eo, uri_link);
   if (eo->_updated) LIST_REMOVE(eo, up_link);
   RB_REMOVE(epg_id_tree(eo), eo, id_link);
 }
@@ -221,10 +221,10 @@ static htsmsg_t * _epg_object_serialize ( void *o )
   if (!eo->id || !eo->type) return NULL;
   m = htsmsg_create_map();
   htsmsg_add_u32(m, "id", eo->id);
-  htsmsg_add_u32(m, "type", eo->type);
+  htsmsg_add_u32(m, "tp", eo->type);
   if (eo->grabber)
-    htsmsg_add_str(m, "grabber", eo->grabber->id);
-  htsmsg_add_s64(m, "updated", eo->updated);
+    htsmsg_add_str(m, "gr", eo->grabber->id);
+  htsmsg_add_s64(m, "up", eo->updated);
   return m;
 }
 
@@ -233,12 +233,12 @@ static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
   int64_t s64;
   uint32_t u32;
   const char *s;
-  if (htsmsg_get_u32(m, "id",   &eo->id)) return NULL;
-  if (htsmsg_get_u32(m, "type", &u32))    return NULL;
+  if (htsmsg_get_u32(m, "id", &eo->id)) return NULL;
+  if (htsmsg_get_u32(m, "tp", &u32))    return NULL;
   if (u32 != eo->type)                    return NULL;
-  if ((s = htsmsg_get_str(m, "grabber")))
+  if ((s = htsmsg_get_str(m, "gr")))
     eo->grabber = epggrab_module_find_by_id(s);
-  if (!htsmsg_get_s64(m, "updated", &s64)) {
+  if (!htsmsg_get_s64(m, "up", &s64)) {
     _epg_object_set_updated(eo);
     eo->updated = s64;
   }
@@ -349,17 +349,17 @@ htsmsg_t *epg_episode_epnum_serialize ( epg_episode_num_t *num )
   if (!num) return NULL;
   m = htsmsg_create_map();
   if (num->e_num)
-    htsmsg_add_u32(m, "e_num", num->e_num);
+    htsmsg_add_u32(m, "enum", num->e_num);
   if (num->e_cnt)
-    htsmsg_add_u32(m, "e_cnt", num->e_cnt);
+    htsmsg_add_u32(m, "ecnt", num->e_cnt);
   if (num->s_num)
-    htsmsg_add_u32(m, "s_num", num->s_num);
+    htsmsg_add_u32(m, "snum", num->s_num);
   if (num->s_cnt)
-    htsmsg_add_u32(m, "s_cnt", num->s_cnt);
+    htsmsg_add_u32(m, "scnt", num->s_cnt);
   if (num->p_num)
-    htsmsg_add_u32(m, "p_num", num->p_num);
+    htsmsg_add_u32(m, "pnum", num->p_num);
   if (num->p_cnt)
-    htsmsg_add_u32(m, "p_cnt", num->p_cnt);
+    htsmsg_add_u32(m, "pcnt", num->p_cnt);
   if (num->text)
     htsmsg_add_str(m, "text", num->text);
   return m;
@@ -374,17 +374,17 @@ void epg_episode_epnum_deserialize
 
   memset(num, 0, sizeof(epg_episode_num_t));
 
-  if (!htsmsg_get_u32(m, "e_num", &u32))
+  if (!htsmsg_get_u32(m, "enum", &u32))
     num->e_num = u32;
-  if (!htsmsg_get_u32(m, "e_cnt", &u32))
+  if (!htsmsg_get_u32(m, "ecnt", &u32))
     num->e_cnt = u32;
-  if (!htsmsg_get_u32(m, "s_num", &u32))
+  if (!htsmsg_get_u32(m, "snum", &u32))
     num->s_num = u32;
-  if (!htsmsg_get_u32(m, "s_cnt", &u32))
+  if (!htsmsg_get_u32(m, "scnt", &u32))
     num->s_cnt = u32;
-  if (!htsmsg_get_u32(m, "p_num", &u32))
+  if (!htsmsg_get_u32(m, "pnum", &u32))
     num->p_num = u32;
-  if (!htsmsg_get_u32(m, "p_cnt", &u32))
+  if (!htsmsg_get_u32(m, "pcnt", &u32))
     num->p_cnt = u32;
   if ((str = htsmsg_get_str(m, "text")))
     num->text = strdup(str);
@@ -748,6 +748,71 @@ epg_broadcast_t *epg_match_now_next ( channel_t *ch, epg_broadcast_t *ebc )
 }
 
 /* **************************************************************************
+ * Broadcast set
+ * *************************************************************************/
+
+static int _set_uri_cmp(const void *_a, const void *_b)
+{
+  const epg_set_t *a = _a, *b = _b;
+  return strcmp(a->uri, b->uri);
+}
+
+epg_set_t *epg_set_broadcast_find_by_uri
+  (epg_set_tree_t *tree, const char *uri)
+{
+  epg_set_t *dummy;
+
+  if (tree == NULL || uri == NULL || uri[0] == '\0')
+    return NULL;
+  dummy = (epg_set_t *)(uri - offsetof(epg_set_t, uri));
+  return RB_FIND(tree, dummy, set_link, _set_uri_cmp);
+}
+
+
+epg_set_t *epg_set_broadcast_insert
+  (epg_set_tree_t *tree, epg_broadcast_t *b, const char *uri)
+{
+  epg_set_t *es;
+  epg_set_item_t *item;
+
+  if (tree == NULL || b == NULL)
+    return NULL;
+  if (uri == NULL || uri[0] == '\0')
+    return NULL;
+  es = epg_set_broadcast_find_by_uri(tree, uri);
+  if (!es) {
+    es = malloc(sizeof(*es) + strlen(uri) + 1);
+    LIST_INIT(&es->broadcasts);
+    strcpy(es->uri, uri);
+    RB_INSERT_SORTED(tree, es, set_link, _set_uri_cmp);
+  }
+  item = malloc(sizeof(*item));
+  item->broadcast = b;
+  LIST_INSERT_HEAD(&es->broadcasts, item, item_link);
+  return es;
+}
+
+void epg_set_broadcast_remove
+  (epg_set_tree_t *tree, epg_set_t *set, epg_broadcast_t *b)
+{
+  epg_set_item_t *item;
+
+  if (tree == NULL || set == NULL)
+    return;
+  LIST_FOREACH(item, &set->broadcasts, item_link)
+    if (item->broadcast == b) {
+      LIST_REMOVE(item, item_link);
+      free(item);
+      if (LIST_EMPTY(&set->broadcasts)) {
+        RB_REMOVE(tree, set, set_link);
+        free(set);
+      }
+      return;
+    }
+  assert(0);
+}
+
+/* **************************************************************************
  * Broadcast
  * *************************************************************************/
 
@@ -777,8 +842,8 @@ static void _epg_broadcast_destroy ( void *eo )
   if (ebc->category)    string_list_destroy(ebc->category);
   if (ebc->keyword)     string_list_destroy(ebc->keyword);
   if (ebc->keyword_cached) lang_str_destroy(ebc->keyword_cached);
-  free(ebc->serieslink_uri);
-  free(ebc->episode_uri);
+  epg_set_broadcast_remove(&epg_serieslinks, ebc->serieslink, ebc);
+  epg_set_broadcast_remove(&epg_episodelinks, ebc->episodelink, ebc);
   _epg_object_destroy(eo, NULL);
   assert(LIST_EMPTY(&ebc->dvr_entries));
   free(ebc);
@@ -875,7 +940,7 @@ int epg_broadcast_change_finish
   if (!(changes & EPG_CHANGED_SERIESLINK))
     save |= epg_broadcast_set_serieslink_uri(broadcast, NULL, NULL);
   if (!(changes & EPG_CHANGED_EPISODE))
-    save |= epg_broadcast_set_episode_uri(broadcast, NULL, NULL);
+    save |= epg_broadcast_set_episodelink_uri(broadcast, NULL, NULL);
   if (!(changes & EPG_CHANGED_DVB_EID))
     save |= epg_broadcast_set_dvb_eid(broadcast, 0, NULL);
   if (!(changes & EPG_CHANGED_IS_WIDESCREEN))
@@ -976,8 +1041,10 @@ epg_broadcast_t *epg_broadcast_clone
     *save |= epg_broadcast_set_category(ebc, src->category, &changes);
     *save |= epg_broadcast_set_keyword(ebc, src->keyword, &changes);
     *save |= epg_broadcast_set_description(ebc, src->description, &changes);
-    *save |= epg_broadcast_set_serieslink_uri(ebc, src->serieslink_uri, &changes);
-    *save |= epg_broadcast_set_episode_uri(ebc, src->episode_uri, &changes);
+    *save |= epg_broadcast_set_serieslink_uri
+               (ebc, src->serieslink ? src->serieslink->uri : NULL, &changes);
+    *save |= epg_broadcast_set_episodelink_uri
+               (ebc, src->episodelink ? src->episodelink->uri : NULL, &changes);
     *save |= epg_broadcast_set_first_aired(ebc, src->first_aired, &changes);
     *save |= epg_broadcast_set_copyright_year(ebc, src->copyright_year, &changes);
     _epg_object_set_grabber(ebc, src->grabber);
@@ -1012,32 +1079,38 @@ int epg_broadcast_set_running
   return save;
 }
 
+static int _epg_broadcast_set_set
+  ( epg_broadcast_t *ebc, const char *uri,
+    epg_set_tree_t *tree, epg_set_t **set )
+{
+  if (*set == NULL) {
+    if (uri == NULL || uri[0] == '\0')
+      return 0;
+  } else if (strcmp((*set)->uri ?: "", uri ?: "")) {
+    if (*set)
+      epg_set_broadcast_remove(tree, *set, ebc);
+  } else {
+    return 0;
+  }
+  *set = epg_set_broadcast_insert(tree, ebc, uri);
+  return 1;
+}
+
+
 int epg_broadcast_set_serieslink_uri
   ( epg_broadcast_t *ebc, const char *uri, epg_changes_t *changed )
 {
-  int save = 0;
   if (!ebc) return 0;
   if (changed) *changed |= EPG_CHANGED_SERIESLINK;
-  if (strcmp(ebc->serieslink_uri ?: "", uri ?: "")) {
-    free(ebc->serieslink_uri);
-    ebc->serieslink_uri = strdup(uri);
-    save = 1;
-  }
-  return save;
+  return _epg_broadcast_set_set(ebc, uri, &epg_serieslinks, &ebc->serieslink);
 }
 
-int epg_broadcast_set_episode_uri
+int epg_broadcast_set_episodelink_uri
   ( epg_broadcast_t *ebc, const char *uri, epg_changes_t *changed )
 {
-  int save = 0;
   if (!ebc) return 0;
-  if (changed) *changed |= EPG_CHANGED_SERIESLINK;
-  if (strcmp(ebc->episode_uri ?: "", uri ?: "")) {
-    free(ebc->episode_uri);
-    ebc->episode_uri = strdup(uri);
-    save = 1;
-  }
-  return save;
+  if (changed) *changed |= EPG_CHANGED_EPISODE;
+  return _epg_broadcast_set_set(ebc, uri, &epg_episodelinks, &ebc->episodelink);
 }
 
 int epg_broadcast_set_dvb_eid
@@ -1436,11 +1509,11 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
   htsmsg_add_s64(m, "start", broadcast->start);
   htsmsg_add_s64(m, "stop", broadcast->stop);
   if (broadcast->channel)
-    htsmsg_add_str(m, "channel", channel_get_uuid(broadcast->channel, ubuf));
+    htsmsg_add_str(m, "ch", channel_get_uuid(broadcast->channel, ubuf));
   if (broadcast->dvb_eid)
-    htsmsg_add_u32(m, "dvb_eid", broadcast->dvb_eid);
+    htsmsg_add_u32(m, "eid", broadcast->dvb_eid);
   if (broadcast->is_widescreen)
-    htsmsg_add_u32(m, "is_widescreen", 1);
+    htsmsg_add_u32(m, "is_wd", 1);
   if (broadcast->is_hd)
     htsmsg_add_u32(m, "is_hd", 1);
   if (broadcast->is_bw)
@@ -1450,49 +1523,52 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
   if (broadcast->aspect)
     htsmsg_add_u32(m, "aspect", broadcast->aspect);
   if (broadcast->is_deafsigned)
-    htsmsg_add_u32(m, "is_deafsigned", 1);
+    htsmsg_add_u32(m, "is_de", 1);
   if (broadcast->is_subtitled)
-    htsmsg_add_u32(m, "is_subtitled", 1);
+    htsmsg_add_u32(m, "is_st", 1);
   if (broadcast->is_audio_desc)
-    htsmsg_add_u32(m, "is_audio_desc", 1);
+    htsmsg_add_u32(m, "is_ad", 1);
   if (broadcast->is_new)
-    htsmsg_add_u32(m, "is_new", 1);
+    htsmsg_add_u32(m, "is_n", 1);
   if (broadcast->is_repeat)
-    htsmsg_add_u32(m, "is_repeat", 1);
+    htsmsg_add_u32(m, "is_r", 1);
   if (broadcast->star_rating)
-    htsmsg_add_u32(m, "star_rating", broadcast->star_rating);
+    htsmsg_add_u32(m, "star", broadcast->star_rating);
   if (broadcast->age_rating)
-    htsmsg_add_u32(m, "age_rating", broadcast->age_rating);
+    htsmsg_add_u32(m, "age", broadcast->age_rating);
   if (broadcast->image)
-    htsmsg_add_str(m, "image", broadcast->image);
+    htsmsg_add_str(m, "img", broadcast->image);
   if (broadcast->title)
-    lang_str_serialize(broadcast->summary, m, "title");
+    lang_str_serialize(broadcast->summary, m, "tit");
   if (broadcast->subtitle)
-    lang_str_serialize(broadcast->summary, m, "subtitle");
+    lang_str_serialize(broadcast->summary, m, "sti");
   if (broadcast->summary)
-    lang_str_serialize(broadcast->summary, m, "summary");
+    lang_str_serialize(broadcast->summary, m, "sum");
   if (broadcast->description)
-    lang_str_serialize(broadcast->description, m, "description");
-  htsmsg_add_msg(m, "epnum", epg_episode_epnum_serialize(&broadcast->epnum));
+    lang_str_serialize(broadcast->description, m, "des");
+  htsmsg_add_msg(m, "epn", epg_episode_epnum_serialize(&broadcast->epnum));
+  a = NULL;
   LIST_FOREACH(eg, &broadcast->genre, link) {
     if (!a) a = htsmsg_create_list();
     htsmsg_add_u32(a, NULL, eg->code);
   }
   if (a) htsmsg_add_msg(m, "genre", a);
   if (broadcast->copyright_year)
-    htsmsg_add_u32(m, "copyright_year", broadcast->copyright_year);
+    htsmsg_add_u32(m, "cyear", broadcast->copyright_year);
   if (broadcast->first_aired)
-    htsmsg_add_s64(m, "first_aired", broadcast->first_aired);
+    htsmsg_add_s64(m, "fair", broadcast->first_aired);
   if (broadcast->credits)
-    htsmsg_add_msg(m, "credits", htsmsg_copy(broadcast->credits));
+    htsmsg_add_msg(m, "cred", htsmsg_copy(broadcast->credits));
   /* No need to serialize credits_cached since it is rebuilt from credits. */
   if (broadcast->category)
-    string_list_serialize(broadcast->category, m, "category");
+    string_list_serialize(broadcast->category, m, "cat");
   if (broadcast->keyword)
-    string_list_serialize(broadcast->keyword, m, "keyword");
+    string_list_serialize(broadcast->keyword, m, "key");
   /* No need to serialize keyword_cached since it is rebuilt from keyword */
-  if (broadcast->serieslink_uri)
-    htsmsg_add_str(m, "serieslink", broadcast->serieslink_uri);
+  if (broadcast->serieslink)
+    htsmsg_add_str(m, "slink", broadcast->serieslink->uri);
+  if (broadcast->episodelink)
+    htsmsg_add_str(m, "elink", broadcast->episodelink->uri);
   return m;
 }
 
@@ -1516,7 +1592,6 @@ epg_broadcast_t *epg_broadcast_deserialize
   if (!start || !stop) return NULL;
   if (stop <= start) return NULL;
   if (stop <= gclk()) return NULL;
-  if (!(str = htsmsg_get_str(m, "episode"))) return NULL;
 
   _epg_object_deserialize(m, (epg_object_t*)*skel);
 
@@ -1525,7 +1600,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   (*skel)->stop    = stop;
 
   /* Get channel */
-  if ((str = htsmsg_get_str(m, "channel")))
+  if ((str = htsmsg_get_str(m, "ch")))
     ch = channel_find(str);
   if (!ch) return NULL;
 
@@ -1534,9 +1609,9 @@ epg_broadcast_t *epg_broadcast_deserialize
   if (!ebc) return NULL;
 
   /* Get metadata */
-  if (!htsmsg_get_u32(m, "dvb_eid", &eid))
+  if (!htsmsg_get_u32(m, "eid", &eid))
     *save |= epg_broadcast_set_dvb_eid(ebc, eid, &changes);
-  if (!htsmsg_get_u32(m, "is_widescreen", &u32))
+  if (!htsmsg_get_u32(m, "is_wd", &u32))
     *save |= epg_broadcast_set_is_widescreen(ebc, u32, &changes);
   if (!htsmsg_get_u32(m, "is_hd", &u32))
     *save |= epg_broadcast_set_is_hd(ebc, u32, &changes);
@@ -1546,22 +1621,22 @@ epg_broadcast_t *epg_broadcast_deserialize
     *save |= epg_broadcast_set_lines(ebc, u32, &changes);
   if (!htsmsg_get_u32(m, "aspect", &u32))
     *save |= epg_broadcast_set_aspect(ebc, u32, &changes);
-  if (!htsmsg_get_u32(m, "is_deafsigned", &u32))
+  if (!htsmsg_get_u32(m, "is_de", &u32))
     *save |= epg_broadcast_set_is_deafsigned(ebc, u32, &changes);
-  if (!htsmsg_get_u32(m, "is_subtitled", &u32))
+  if (!htsmsg_get_u32(m, "is_st", &u32))
     *save |= epg_broadcast_set_is_subtitled(ebc, u32, &changes);
-  if (!htsmsg_get_u32(m, "is_audio_desc", &u32))
+  if (!htsmsg_get_u32(m, "is_ad", &u32))
     *save |= epg_broadcast_set_is_audio_desc(ebc, u32, &changes);
-  if (!htsmsg_get_u32(m, "is_new", &u32))
+  if (!htsmsg_get_u32(m, "is_n", &u32))
     *save |= epg_broadcast_set_is_new(ebc, u32, &changes);
-  if (!htsmsg_get_u32(m, "is_repeat", &u32))
+  if (!htsmsg_get_u32(m, "is_r", &u32))
     *save |= epg_broadcast_set_is_repeat(ebc, u32, &changes);
-  if (!htsmsg_get_u32(m, "star_rating", &u32))
+  if (!htsmsg_get_u32(m, "star", &u32))
     *save |= epg_broadcast_set_star_rating(ebc, u32, &changes);
-  if (!htsmsg_get_u32(m, "age_rating", &u32))
+  if (!htsmsg_get_u32(m, "age", &u32))
     *save |= epg_broadcast_set_age_rating(ebc, u32, &changes);
 
-  if ((str = htsmsg_get_str(m, "image")))
+  if ((str = htsmsg_get_str(m, "img")))
     *save |= epg_broadcast_set_image(ebc, str, &changes);
 
   if ((hm = htsmsg_get_list(m, "genre"))) {
@@ -1575,49 +1650,51 @@ epg_broadcast_t *epg_broadcast_deserialize
     epg_genre_list_destroy(egl);
   }
 
-  if ((ls = lang_str_deserialize(m, "title"))) {
+  if ((ls = lang_str_deserialize(m, "tit"))) {
     *save |= epg_broadcast_set_title(ebc, ls, &changes);
     lang_str_destroy(ls);
   }
-  if ((ls = lang_str_deserialize(m, "subtitle"))) {
+  if ((ls = lang_str_deserialize(m, "sti"))) {
     *save |= epg_broadcast_set_subtitle(ebc, ls, &changes);
     lang_str_destroy(ls);
   }
-  if ((ls = lang_str_deserialize(m, "summary"))) {
+  if ((ls = lang_str_deserialize(m, "sum"))) {
     *save |= epg_broadcast_set_summary(ebc, ls, &changes);
     lang_str_destroy(ls);
   }
-  if ((ls = lang_str_deserialize(m, "description"))) {
+  if ((ls = lang_str_deserialize(m, "des"))) {
     *save |= epg_broadcast_set_description(ebc, ls, &changes);
     lang_str_destroy(ls);
   }
 
-  if ((hm = htsmsg_get_map(m, "epnum"))) {
+  if ((hm = htsmsg_get_map(m, "epn"))) {
     epg_episode_epnum_deserialize(hm, &num);
     *save |= epg_broadcast_set_epnum(ebc, &num, &changes);
     if (num.text) free(num.text);
   }
 
-  if (!htsmsg_get_u32(m, "copyright_year", &u32))
+  if (!htsmsg_get_u32(m, "cyear", &u32))
     *save |= epg_broadcast_set_copyright_year(ebc, u32, &changes);
-  if (!htsmsg_get_s64(m, "first_aired", &s64))
+  if (!htsmsg_get_s64(m, "fair", &s64))
     *save |= epg_broadcast_set_first_aired(ebc, (time_t)s64, &changes);
 
-  if ((hm = htsmsg_get_map(m, "credits")))
+  if ((hm = htsmsg_get_map(m, "cred")))
     *save |= epg_broadcast_set_credits(ebc, hm, &changes);
 
-  if ((sl = string_list_deserialize(m, "keyword"))) {
+  if ((sl = string_list_deserialize(m, "key"))) {
     *save |= epg_broadcast_set_keyword(ebc, sl, &changes);
     string_list_destroy(sl);
   }
-  if ((sl = string_list_deserialize(m, "category"))) {
+  if ((sl = string_list_deserialize(m, "cat"))) {
     *save |= epg_broadcast_set_category(ebc, sl, &changes);
     string_list_destroy(sl);
   }
 
   /* Series link */
-  if ((str = htsmsg_get_str(m, "serieslink")))
+  if ((str = htsmsg_get_str(m, "slink")))
     *save |= epg_broadcast_set_serieslink_uri(ebc, str, &changes);
+  if ((str = htsmsg_get_str(m, "elink")))
+    *save |= epg_broadcast_set_episodelink_uri(ebc, str, &changes);
 
   *save |= epg_broadcast_change_finish(ebc, changes, 0);
 
@@ -2498,4 +2575,6 @@ void epg_skel_done(void)
 
   broad = _epg_broadcast_skel();
   free(*broad); *broad = NULL;
+  assert(RB_FIRST(&epg_serieslinks) == NULL);
+  assert(RB_FIRST(&epg_episodelinks) == NULL);
 }

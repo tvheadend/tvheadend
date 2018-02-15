@@ -92,10 +92,10 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
 
   /* EPG IDs */
   htsmsg_add_u32(m, "eventId", eb->id);
-  if (eb->episode_uri && strncasecmp(eb->episode_uri, "tvh://", 6))
-    htsmsg_add_str(m, "episodeUri", eb->episode_uri);
-  if (eb->serieslink_uri)
-    htsmsg_add_str(m, "serieslinkUri", eb->serieslink_uri);
+  if (eb->episodelink && strncasecmp(eb->episodelink->uri, "tvh://", 6))
+    htsmsg_add_str(m, "episodeUri", eb->episodelink->uri);
+  if (eb->serieslink)
+    htsmsg_add_str(m, "serieslinkUri", eb->serieslink->uri);
   
   /* Channel Info */
   api_epg_add_channel(m, ch, *blank);
@@ -512,22 +512,21 @@ api_epg_episode_broadcasts
     uint32_t *entries, epg_broadcast_t *ebc_skip )
 {
   epg_broadcast_t *ebc;
-  channel_t *ch;
   htsmsg_t *m;
-  const char *uri = ep->episode_uri;
+  epg_set_t *episodelink = ep->episodelink;
+  epg_set_item_t *item;
 
-  if (uri == NULL || uri[0] == '\0')
+  if (episodelink == NULL)
     return;
 
-  CHANNEL_FOREACH(ch)
-    if (channel_access(ch, perm, 0))
-      RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link)
-        if (ebc && ebc->episode_uri && ebc != ebc_skip &&
-            strcmp(uri, ebc->episode_uri) == 0) {
-          m = api_epg_entry(ebc, lang, perm, NULL);
-          htsmsg_add_msg(l, NULL, m);
-          (*entries)++;
-        }
+  LIST_FOREACH(item, &episodelink->broadcasts, item_link) {
+    ebc = item->broadcast;
+    if (ebc != ebc_skip) {
+      m = api_epg_entry(ebc, lang, perm, NULL);
+      htsmsg_add_msg(l, NULL, m);
+      (*entries)++;
+    }
+  }
 }
 
 static int
@@ -566,8 +565,9 @@ api_epg_related
   uint32_t id, entries = 0;
   htsmsg_t *l = htsmsg_create_list(), *m;
   epg_broadcast_t *e, *ebc;
-  channel_t *ch;
-  char *lang, *uri;
+  char *lang;
+  epg_set_t *serieslink;
+  epg_set_item_t *item;
   
   if (htsmsg_get_u32(args, "eventId", &id))
     return -EINVAL;
@@ -576,17 +576,16 @@ api_epg_related
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   pthread_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
-  uri = e->serieslink_uri;
-  if (uri && uri[0]) {
-    CHANNEL_FOREACH(ch)
-      if (channel_access(ch, perm, 0))
-        RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link)
-          if (ebc != e && ebc->serieslink_uri &&
-              strcmp(ebc->serieslink_uri, uri) == 0) {
-            m = api_epg_entry(ebc, lang, perm, NULL);
-            htsmsg_add_msg(l, NULL, m);
-            entries++;
-          }
+  serieslink = e->serieslink;
+  if (serieslink) {
+    LIST_FOREACH(item, &serieslink->broadcasts, item_link) {
+      ebc = item->broadcast;
+      if (ebc != e) {
+        m = api_epg_entry(ebc, lang, perm, NULL);
+        htsmsg_add_msg(l, NULL, m);
+        entries++;
+      }
+    }
   }
   pthread_mutex_unlock(&global_lock);
   free(lang);

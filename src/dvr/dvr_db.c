@@ -1059,8 +1059,8 @@ dvr_entry_create_from_htsmsg(htsmsg_t *conf, epg_broadcast_t *e)
       htsmsg_add_str(conf, "episode", s);
     if (e->copyright_year)
       htsmsg_add_u32(conf, "copyright_year", e->copyright_year);
-    if (e->episode_uri)
-      htsmsg_add_str(conf, "uri", e->episode_uri);
+    if (e->episodelink)
+      htsmsg_add_str(conf, "uri", e->episodelink->uri);
     if (e->image)
       htsmsg_add_str(conf, "image", e->image);
     genre = LIST_FIRST(&e->genre);
@@ -1099,7 +1099,7 @@ static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
   time_t segment_stop_extra, start, stop, maximum_stop_time;
   int max_progs_to_check;
   epg_broadcast_t *e, *next;
-  const char *ep_uri, *next_uri;
+  epg_set_t *eplink1, *eplink2;
 
   if (!de)
     return 0;
@@ -1119,10 +1119,12 @@ static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
     return 0;
   }
 
-  ep_uri = e->episode_uri;
+  eplink1 = e->episodelink;
 
   /* If not a segmented programme then no segment extra time */
-  if (!ep_uri || strncmp(ep_uri, "crid://", 7) || !strstr(ep_uri, "#"))
+  if (eplink1 == NULL ||
+      strncmp(eplink1->uri, "crid://", 7) ||
+      !strstr(eplink1->uri, "#"))
     return 0;
 
   /* This URI is a CRID (from EIT) which contains an IMI so the
@@ -1157,15 +1159,17 @@ static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
        --max_progs_to_check && stop < maximum_stop_time &&
          next && next->start < stop + THREE_HOURS;
        next = epg_broadcast_get_next(next)) {
-    next_uri = next->episode_uri;
-    if (next_uri && strcmp(ep_uri, next_uri) == 0) {
+    eplink2 = next->episodelink;
+    if (eplink2 && eplink1 == eplink2) {
       /* Identical CRID+IMI. So that means that programme is a
        * segment part of this programme. So extend our stop time
        * to include this programme.
        */
       segment_stop_extra = next->stop - stop;
-      tvhinfo(LS_DVR, "Increasing stop for \"%s\" on \"%s\" \"%s\" by %"PRId64" seconds at start %"PRId64" and original stop %"PRId64,
-              lang_str_get(e->title, NULL), DVR_CH_NAME(de), ep_uri, (int64_t)segment_stop_extra, (int64_t)start, (int64_t)stop);
+      tvhinfo(LS_DVR, "Increasing stop for \"%s\" on \"%s\" \"%s\" by %"PRId64
+                      " seconds at start %"PRId64" and original stop %"PRId64,
+                      lang_str_get(e->title, NULL), DVR_CH_NAME(de), eplink1->uri,
+                      (int64_t)segment_stop_extra, (int64_t)start, (int64_t)stop);
     }
   }
 
