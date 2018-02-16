@@ -1049,7 +1049,6 @@ dvb_pat_callback
                      MPS_WEIGHT_NIT);
 
   /* End */
-end:
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
