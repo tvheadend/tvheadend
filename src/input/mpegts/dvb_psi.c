@@ -1006,7 +1006,7 @@ dvb_pat_callback
   if (r != 1) return r;
 
   /* Multiplex */
-  if (mpegts_mux_tsid_check(mm, mt, tsid)) goto end;
+  if (mpegts_mux_tsid_check(mm, mt, tsid)) return -1;
   
   /* Process each programme */
   ptr += 5;
