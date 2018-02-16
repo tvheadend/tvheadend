@@ -518,7 +518,7 @@ _xmltv_parse_lang_str ( lang_str_t **ls, htsmsg_t *tags, const char *tname )
       lang = NULL;
       if ((attrib = htsmsg_get_map(e, "attrib")))
         lang = htsmsg_get_str(attrib, "lang");
-      lang_str_add(*ls, htsmsg_get_str(e, "cdata"), lang, 0);
+      lang_str_add(*ls, htsmsg_get_str(e, "cdata"), lang);
     }
   }
 }

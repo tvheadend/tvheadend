@@ -212,7 +212,7 @@ static int _eit_desc_short_event
     return -1;
   } else if ( r > 1 ) {
     if (!ev->title) ev->title = lang_str_create();
-    lang_str_add(ev->title, buf, lang, 0);
+    lang_str_add(ev->title, buf, lang);
   }
 
   len -= r;
@@ -225,7 +225,7 @@ static int _eit_desc_short_event
     return -1;
   } else if ( r > 1 ) {
     if (!ev->summary) ev->summary = lang_str_create();
-    lang_str_add(ev->summary, buf, lang, 0);
+    lang_str_add(ev->summary, buf, lang);
   }
 
   return 0;

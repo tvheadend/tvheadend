@@ -48,7 +48,7 @@ static inline const char *lang_str_get(const lang_str_t *ls, const char *lang)
 
 /* Add/Update elements */
 int             lang_str_add      
-  ( lang_str_t *ls, const char *str, const char *lang, int update );
+  ( lang_str_t *ls, const char *str, const char *lang );
 int             lang_str_append  
   ( lang_str_t *ls, const char *str, const char *lang );
 int             lang_str_set
