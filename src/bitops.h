@@ -29,7 +29,7 @@ typedef uint32_t bitops_ulong_t;
 #endif
 
 #define BIT_WORD(bit) ((bit) / BITS_PER_LONG)
-#define BIT_MASK(bit) (1UL << ((bit) % BITS_PER_LONG))
+#define BIT_MASK(bit) (1ULL << ((bit) % BITS_PER_LONG))
 
 static inline void set_bit(int bit, void *addr)
 {
