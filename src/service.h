@@ -484,6 +484,10 @@ typedef struct service {
   void *s_descrambler; /* last active descrambler */
   descramble_info_t *s_descramble_info;
 
+#if ENABLE_DDCI_MCD
+  TAILQ_ENTRY(service) s_ddci_attached;
+#endif
+
   /**
    * List of all and filtered components.
    */
