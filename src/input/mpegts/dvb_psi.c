@@ -189,7 +189,7 @@ mpegts_mux_tsid_check(mpegts_mux_t *mm, mpegts_table_t *mt, uint16_t tsid)
           tvhtrace(mt->mt_subsys, "%s: %s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
                    mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
         }
-        return 0; /* keep rolling */
+        return -1; /* keep rolling */
       }
     }
     mm->mm_tsid_checks = -100;
@@ -1006,7 +1006,9 @@ dvb_pat_callback
   if (r != 1) return r;
 
   /* Multiplex */
-  if (mpegts_mux_tsid_check(mm, mt, tsid)) return -1;
+  r = mpegts_mux_tsid_check(mm, mt, tsid);
+  if (r < 0) return -1;
+  if (r > 0) goto end;
   
   /* Process each programme */
   ptr += 5;
@@ -1049,6 +1051,7 @@ dvb_pat_callback
                      MPS_WEIGHT_NIT);
 
   /* End */
+end:
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
@@ -1897,7 +1900,9 @@ atsc_vct_callback
   }
 
   mm->mm_tsid_accept_zero_value = 1; /* ohh, we saw that */
-  if (mpegts_mux_tsid_check(mm, mt, tsid)) goto end;
+  r = mpegts_mux_tsid_check(mm, mt, tsid);
+  if (r < 0) return -1;
+  if (r > 0) goto end;
 
   /* # channels */
   count = ptr[6];
