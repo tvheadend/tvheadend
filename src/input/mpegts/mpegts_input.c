@@ -1597,15 +1597,19 @@ mpegts_input_postdemux
       if (type & MPS_SERVICE) {
         LIST_FOREACH(mps, &mp->mp_svc_subs, mps_svcraw_link) {
           s = mps->mps_owner;
+          pthread_mutex_lock(&s->s_stream_mutex);
           st = service_stream_find(s, pid);
           ts_recv_packet0((mpegts_service_t*)s, st, tsb, llen);
+          pthread_mutex_unlock(&s->s_stream_mutex);
         }
       } else
       /* Stream table data */
       if (type & MPS_STREAM) {
         LIST_FOREACH(s, &mm->mm_transports, s_active_link) {
           if (s->s_type != STYPE_STD) continue;
+          pthread_mutex_lock(&s->s_stream_mutex);
           ts_recv_packet0((mpegts_service_t*)s, NULL, tsb, llen);
+          pthread_mutex_unlock(&s->s_stream_mutex);
         }
       }
 
