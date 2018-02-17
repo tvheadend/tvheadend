@@ -66,6 +66,7 @@ typedef struct dvbcam {
   caclient_t;
   LIST_HEAD(,dvbcam_active_service) services;
   int limit;
+  int multi;
   int caid_select;
   uint16_t caid_list[32];
 } dvbcam_t;
@@ -865,7 +866,7 @@ const idclass_t caclient_dvbcam_class =
       .type     = PT_INT,
       .id       = "caid_select",
       .name     = N_("CAID selection"),
-      .desc     = N_("Selection method for CAID"),
+      .desc     = N_("Selection method for CAID."),
       .list     = caclient_dvbcam_class_caid_selection_list,
       .off      = offsetof(dvbcam_t, caid_select),
       .opts     = PO_DOC_NLIST,
@@ -879,6 +880,14 @@ const idclass_t caclient_dvbcam_class =
                      "E.g. '0D00,0F00,0100'."),
       .set      = caclient_dvbcam_class_caid_list_set,
       .get      = caclient_dvbcam_class_caid_list_get,
+      .group    = 2,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "multi",
+      .name     = N_("CAM can decode multiple channels"),
+      .desc     = N_("To enable MCD and MTD for this CAM."),
+      .off      = offsetof(dvbcam_t, multi),
       .group    = 2,
     },
     {}
