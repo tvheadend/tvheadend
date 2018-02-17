@@ -66,6 +66,7 @@ typedef struct dvbcam {
   caclient_t;
   LIST_HEAD(,dvbcam_active_service) services;
   int limit;
+  int multi;
   int caid_select;
   uint16_t caid_list[32];
 } dvbcam_t;
@@ -137,7 +138,7 @@ dvbcam_unregister_ddci(dvbcam_active_cam_t *ac, dvbcam_active_service_t *as)
 
     /* unassign the service from the DD CI CAM */
     as->lddci = NULL;
-    linuxdvb_ddci_assign(lddci, NULL);
+    linuxdvb_ddci_unassign(lddci, t);
     if (dr) {
       dr->dr_descrambler = NULL;
       dr->dr_descramble = NULL;
@@ -408,7 +409,7 @@ dvbcam_descramble_ddci(service_t *t, elementary_stream_t *st, const uint8_t *tsb
   dvbcam_active_service_t   *as = (dvbcam_active_service_t *)dr->dr_descrambler;
 
   if (as->ac != NULL)
-    linuxdvb_ddci_put(as->ac->ca->lca_transport->lddci, tsb, len);
+    linuxdvb_ddci_put(as->ac->ca->lca_transport->lddci, t, st, tsb, len);
 
   return 1;
 }
@@ -484,6 +485,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
       if (i > 0)
         break;
     }
+
     TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
       if (st->es_type != SCT_CA) continue;
       LIST_FOREACH(c, &st->es_caids, link) {
@@ -497,12 +499,12 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
             /* limit the concurrent service decoders per CAM */
             if (dc->limit > 0 && ac->allocated_programs >= dc->limit)
               continue;
-  #if ENABLE_DDCI
-            /* currently we allow only one service per DD CI */
+#if ENABLE_DDCI
             lcat = ac->ca->lca_transport;
-            if (lcat->lddci && linuxdvb_ddci_is_assigned(lcat->lddci))
+            if (lcat->lddci && linuxdvb_ddci_do_not_assign(lcat->lddci, t,
+                                                           dc->multi))
               continue;
-  #endif
+#endif
             tvhtrace(LS_DVBCAM, "%s/%p: match CAID %04X PID %d (%04X)",
                                 ac->ca->lca_name, t, c->caid, c->pid, c->pid);
             goto end_of_search_for_cam;
@@ -865,7 +867,7 @@ const idclass_t caclient_dvbcam_class =
       .type     = PT_INT,
       .id       = "caid_select",
       .name     = N_("CAID selection"),
-      .desc     = N_("Selection method for CAID"),
+      .desc     = N_("Selection method for CAID."),
       .list     = caclient_dvbcam_class_caid_selection_list,
       .off      = offsetof(dvbcam_t, caid_select),
       .opts     = PO_DOC_NLIST,
@@ -879,6 +881,14 @@ const idclass_t caclient_dvbcam_class =
                      "E.g. '0D00,0F00,0100'."),
       .set      = caclient_dvbcam_class_caid_list_set,
       .get      = caclient_dvbcam_class_caid_list_get,
+      .group    = 2,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "multi",
+      .name     = N_("CAM can decode multiple channels"),
+      .desc     = N_("To enable MCD and MTD for this CAM."),
+      .off      = offsetof(dvbcam_t, multi),
       .group    = 2,
     },
     {}
