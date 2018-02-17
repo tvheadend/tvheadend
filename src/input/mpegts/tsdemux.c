@@ -333,7 +333,7 @@ ts_recv_packet1
   if(!t->s_scrambled_pass && ((tsb[3] & 0xc0) || scrambled)) {
 
     /**
-     * Lock for descrambling, but only if packet was not in error
+     * Look for descrambling, but only if packet was not in error
      */
     if(!scrambled && !error)
       t->s_scrambled_seen |= service_is_encrypted((service_t*)t);
