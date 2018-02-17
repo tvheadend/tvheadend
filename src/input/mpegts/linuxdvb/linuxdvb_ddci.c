@@ -153,6 +153,18 @@ linuxdvb_ddci_mtimer_arm_rel
     pthread_mutex_unlock(&global_lock);
 }
 
+/* returns 1, if the given PID shall be sent to the CAM AND to the service */
+static inline int
+linuxdvb_ddci_cam_pid_required ( int_fast16_t pid )
+{
+  /* special PIDs required by a CAM */
+  if ((pid == DVB_PAT_PID) || (pid == DVB_EIT_PID) || (pid == DVB_TDT_PID))
+      return 1;
+
+  /* all other PIDs */
+  return 0;
+}
+
 
 /*****************************************************************************
  *
@@ -479,7 +491,7 @@ linuxdvb_ddci_wr_thread_buffer_put
   /* We need to lock this function against linuxdvb_ddci_wr_thread_stop, because
    * linuxdvb_ddci_wr_thread_buffer_put may be executed by another thread
    * simultaneously, although the stop function is already running. Due to the
-   * race condition with the tread_running flag, it may happen, that the buffer
+   * race condition with the thread_running flag, it may happen, that the buffer
    * is not empty after the stop function is finished. The next execution of
    * linuxdvb_ddci_wr_thread_start will then re-init the queue and the wrongly
    * stored data is lost -> memory leak.
@@ -628,8 +640,11 @@ linuxdvb_ddci_read_thread ( void *arg )
   tvhtrace(LS_DDCI, "CAM %s read thread started", ci_id);
   linuxdvb_ddci_thread_signal(ddci_thread);
   while (tvheadend_is_running() && !ddci_thread->lddci_thread_stop) {
+#if ! ENABLE_DDCI_MCD
     service_t *t;
-    int nfds, num_pkg, clr_stat = 0, pkg_chk = 0, scrambled = 0;
+    int clr_stat = 0;
+#endif
+    int nfds, num_pkg, pkg_chk = 0, scrambled = 0;
     ssize_t n;
 
     nfds = tvhpoll_wait(efd, ev, 1, 150);
@@ -650,6 +665,9 @@ linuxdvb_ddci_read_thread ( void *arg )
     if (sb.sb_ptr > 0) {
       int len, skip;
       uint8_t *tsb;
+#if ENABLE_DDCI_MCD
+      int len2;
+#endif
 
       len = sb.sb_ptr;
       if (len < LDDCI_MIN_TS_PKT)
@@ -684,10 +702,43 @@ linuxdvb_ddci_read_thread ( void *arg )
       }
       ddci_rd_thread->lddci_recv_pkgCntS += scrambled;
 
-      /* FIXME: split the received packets according to the PID in different
-       *        buffers and deliver them
-       * FIXME: How to determine the right service pointer?
-       */
+#if ENABLE_DDCI_MCD
+      len2 = len;
+      while (len2 > 0) {
+        uint16_t pid;
+        int llen;
+
+        /* Filter out PIDs which are already sent to the service, but also sent
+         * to the CAM (PAT, EIT,..), because we don't want to send them twice.
+         * To do that, we need first split the stream in junks with the same
+         * PID */
+
+        /*
+         * mask
+         *  0 - 0xFF - sync word 0x47
+         *  1 - 0x80 - transport error
+         *  1 - 0x1F - pid high
+         *  2 - 0xFF - pid low
+         *  3 - 0x00 - ignore scrambled flags
+         */
+        llen = mpegts_word_count(tsb, len2, 0xFF9FFF00);
+
+        pid = (tsb[1] << 8) | tsb[2];
+        pid &= 0x1FFF;
+
+        if (!linuxdvb_ddci_cam_pid_required(pid))
+          mpegts_input_postdemux(ddci_thread->lddci->lddci_mi,
+                                 ddci_thread->lddci->lddci_mm, tsb, llen);
+
+        tsb += llen;
+        len2 -= llen;
+      }
+
+      ddci_rd_thread->lddci_recv_pkgCntW += num_pkg;
+
+      /* FIXME: Statistic clearing */
+
+#else
       /* as a first step we send the data to the associated service */
       t = ddci_thread->lddci->t;
       if (t) {
@@ -705,6 +756,7 @@ linuxdvb_ddci_read_thread ( void *arg )
         linuxdvb_ddci_rd_thread_statistic(ddci_rd_thread);
         linuxdvb_ddci_rd_thread_statistic_clr(ddci_rd_thread);
       }
+#endif
 
       /* handled */
       sbuf_cut(&sb, len);
@@ -744,6 +796,42 @@ static inline void
 linuxdvb_ddci_rd_thread_stop ( linuxdvb_ddci_rd_thread_t *ddci_rd_thread )
 {
   linuxdvb_ddci_thread_stop(LDDCI_TO_THREAD(ddci_rd_thread));
+}
+
+
+/*****************************************************************************
+ *
+ * DD CI API helpers
+ *
+ *****************************************************************************/
+
+#if ENABLE_DDCI_MCD
+static inline int
+linuxdvb_ddci_is_srv_assigned ( linuxdvb_ddci_t *lddci, service_t *t )
+{
+  service_t *s;
+
+  TAILQ_FOREACH(s, &lddci->lddci_services, s_ddci_attached)
+    if (s == t) return 1;
+
+  return 0;
+}
+#endif
+
+/* returns 1, if the given PID shall be not sent to the CAM */
+static inline int
+linuxdvb_ddci_cam_pid_filter ( int_fast16_t pid )
+{
+  if (pid == -1) return 1;
+
+  if (linuxdvb_ddci_cam_pid_required(pid))
+      return 0;
+
+  /* all other special PIDs are not required */
+  if (pid < 20) return 1;
+
+  /* stream PIDs */
+  return 0;
 }
 
 
@@ -847,9 +935,23 @@ linuxdvb_ddci_open ( linuxdvb_ddci_t *lddci )
 }
 
 void
-linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, const uint8_t *tsb, int len )
+linuxdvb_ddci_put
+  ( linuxdvb_ddci_t *lddci, service_t *t, elementary_stream_t *st,
+    const uint8_t *tsb, int len )
 {
-  linuxdvb_ddci_wr_thread_buffer_put(&lddci->lddci_wr_thread, tsb, len );
+  int_fast16_t pid = st ? st->es_pid : -1;
+
+  if (linuxdvb_ddci_cam_pid_filter(pid))
+    ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
+  else {
+    /* special PIDs will be filtered when reading from the CAM, so send them
+     * now to the service, also. */
+    if (linuxdvb_ddci_cam_pid_required(pid))
+      ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
+
+    /* some special PIDs and all TS PIDs to be decoded */
+    linuxdvb_ddci_wr_thread_buffer_put(&lddci->lddci_wr_thread, tsb, len );
+  }
 }
 
 #if ENABLE_DDCI_MCD

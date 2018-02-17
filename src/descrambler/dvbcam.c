@@ -409,7 +409,7 @@ dvbcam_descramble_ddci(service_t *t, elementary_stream_t *st, const uint8_t *tsb
   dvbcam_active_service_t   *as = (dvbcam_active_service_t *)dr->dr_descrambler;
 
   if (as->ac != NULL)
-    linuxdvb_ddci_put(as->ac->ca->lca_transport->lddci, tsb, len);
+    linuxdvb_ddci_put(as->ac->ca->lca_transport->lddci, t, st, tsb, len);
 
   return 1;
 }
@@ -485,6 +485,7 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
       if (i > 0)
         break;
     }
+
     TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
       if (st->es_type != SCT_CA) continue;
       LIST_FOREACH(c, &st->es_caids, link) {
