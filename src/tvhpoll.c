@@ -190,14 +190,14 @@ static int tvhpoll_add0
   return i >= num ? 0 : -1;
 #elif ENABLE_KQUEUE
   int i, j, r = 0;
-  struct kevent ev = alloca(EV_SIZE * num * 2);
+  struct kevent *ev = alloca(EV_SIZE * num * 2);
   for (i = j = 0; i < num; i++) {
     const int fd = evs[i].fd;
     const void *ptr = evs[i].ptr;
     const uint32_t events = evs[i].events;
     const uint32_t oevents = tvhpoll_get_events(tp, fd);
     if (events == ovents) continue;
-    tvhpoll_set_evbits(tp, fd, events);
+    tvhpoll_set_events(tp, fd, events);
     if (events & (TVHPOLL_OUT|TVHPOLL_IN)) == (TVHPOLL_OUT|TVHPOLL_IN)) {
       EV_SET(ev+j, fd, EVFILT_READ|EVFILT_WRITE, EV_ADD, 0, 0, ptr);
       j++;
