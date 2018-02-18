@@ -138,7 +138,7 @@ dvbcam_unregister_ddci(dvbcam_active_cam_t *ac, dvbcam_active_service_t *as)
 
     /* unassign the service from the DD CI CAM */
     as->lddci = NULL;
-    linuxdvb_ddci_assign(lddci, NULL);
+    linuxdvb_ddci_unassign(lddci, t);
     if (dr) {
       dr->dr_descrambler = NULL;
       dr->dr_descramble = NULL;
@@ -498,12 +498,12 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
             /* limit the concurrent service decoders per CAM */
             if (dc->limit > 0 && ac->allocated_programs >= dc->limit)
               continue;
-  #if ENABLE_DDCI
-            /* currently we allow only one service per DD CI */
+#if ENABLE_DDCI
             lcat = ac->ca->lca_transport;
-            if (lcat->lddci && linuxdvb_ddci_is_assigned(lcat->lddci))
+            if (lcat->lddci && linuxdvb_ddci_do_not_assign(lcat->lddci, t,
+                                                           dc->multi))
               continue;
-  #endif
+#endif
             tvhtrace(LS_DVBCAM, "%s/%p: match CAID %04X PID %d (%04X)",
                                 ac->ca->lca_name, t, c->caid, c->pid, c->pid);
             goto end_of_search_for_cam;
