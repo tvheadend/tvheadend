@@ -104,8 +104,12 @@ struct linuxdvb_ddci
   linuxdvb_ddci_wr_thread_t  lddci_wr_thread;
   linuxdvb_ddci_rd_thread_t  lddci_rd_thread;
 
-  /* currently we use a fix assignment to one single service */
-  service_t                 *t;   /* associated service */
+  /* list of services assigned to this DD CI instance */
+  idnode_set_t               *lddci_services;
+  /* the same mux used for all services */
+  mpegts_mux_t               *lddci_mm;
+  /* the same input used for all services */
+  mpegts_input_t             *lddci_mi;
 };
 
 
@@ -758,6 +762,7 @@ linuxdvb_ddci_create ( linuxdvb_transport_t *lcat, const char *ci_path)
   lddci->lddci_fdR = -1;
   linuxdvb_ddci_wr_thread_init(lddci);
   linuxdvb_ddci_rd_thread_init(lddci);
+  lddci->lddci_services = idnode_set_create(0);
 
   tvhtrace(LS_DDCI, "created %s %s", lddci->lddci_id, lddci->lddci_path);
 
@@ -771,6 +776,7 @@ linuxdvb_ddci_destroy ( linuxdvb_ddci_t *lddci )
     return;
   tvhtrace(LS_DDCI, "destroy %s %s", lddci->lddci_id, lddci->lddci_path);
   linuxdvb_ddci_close(lddci);
+  idnode_set_free(lddci->lddci_services);
   free(lddci->lddci_path);
   free(lddci);
 }
@@ -840,51 +846,56 @@ linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, const uint8_t *tsb, int len )
   linuxdvb_ddci_wr_thread_buffer_put(&lddci->lddci_wr_thread, tsb, len );
 }
 
-int
+void
 linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t )
 {
-  int ret = 0;
+  if (!idnode_set_exists(lddci->lddci_services, &t->s_id)) {
+    mpegts_service_t *s = (mpegts_service_t *)t;
+    const char *txt = "";
 
-  if (lddci->t && t != NULL) {
-    tvhwarn(LS_DDCI, "active assignment at %s changed to %p",
-            lddci->lddci_id, t );
-    ret = 1;
+    /* first service? -> store common data (for MCD all services have to
+     * have the same MUX/Input */
+    if (lddci->lddci_services->is_count == 0) {
+      lddci->lddci_mm = s->s_dvb_mux;
+      lddci->lddci_mi = s->s_dvb_active_input;
+    } else {
+      txt = "(MCD) ";
+      assert( lddci->lddci_mm == s->s_dvb_mux);
+      assert( lddci->lddci_mi == s->s_dvb_active_input);
+    }
+
+    tvhnotice(LS_DDCI, "CAM %s %sassigned to %p", lddci->lddci_id, txt, t );
+
+    idnode_set_add(lddci->lddci_services, &t->s_id, NULL, NULL);
   }
-  else if (t)
-    tvhnotice(LS_DDCI, "CAM %s assigned to %p", lddci->lddci_id, t );
-  else if (lddci->t) {
-    tvhnotice(LS_DDCI, "CAM %s unassigned from %p", lddci->lddci_id, lddci->t );
+}
 
-    /* in case of MCD/MTD this needs to be re-thinked */
+void
+linuxdvb_ddci_unassign ( linuxdvb_ddci_t *lddci, service_t *t )
+{
+  if (idnode_set_exists(lddci->lddci_services, &t->s_id)) {
+    tvhnotice(LS_DDCI, "CAM %s unassigned from %p", lddci->lddci_id, t );
+
+    idnode_set_remove(lddci->lddci_services, &t->s_id);
+  }
+
+  if (lddci->lddci_services->is_count == 0) {
+    lddci->lddci_mm = NULL;
+    lddci->lddci_mi = NULL;
     linuxdvb_ddci_wr_thread_statistic_clr(&lddci->lddci_wr_thread);
   }
-
-  lddci->t = t;
-  return ret;
 }
 
 int
-linuxdvb_ddci_is_assigned ( linuxdvb_ddci_t *lddci )
+linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, service_t *t, int multi )
 {
-  return !!lddci->t;
-}
+  mpegts_service_t *s = (mpegts_service_t *)t;
 
-int
-linuxdvb_ddci_require_descramble
-  ( service_t *t, int_fast16_t pid, elementary_stream_t *st )
-{
-  int ret = 0;
+  /* nothing assigned? */
+  if (!lddci->lddci_mm) return 0;
 
-  switch (pid) {
-    case DVB_CAT_PID:
-    case DVB_EIT_PID:
-      ++ret;
-      break;
-  }
+  /* CAM can do multi channel decoding and new service uses the same mux? */
+  if (multi && (lddci->lddci_mm == s->s_dvb_mux)) return 0;
 
-  /* DD CI requires all CA descriptor PIDs */
-  if (st && st->es_type == SCT_CA)
-    ++ret;
-
-  return ret;
+  return 1;
 }
