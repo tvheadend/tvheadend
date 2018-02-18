@@ -445,6 +445,7 @@ size_t epg_broadcast_epnumber_format
 static inline int epg_episode_match(epg_broadcast_t *a, epg_broadcast_t *b)
 {
   if (a == NULL || b == NULL) return 0;
+  if (a->episodelink == NULL || b->episodelink == NULL) return 0;
   return a->episodelink == b->episodelink;
 }
 
