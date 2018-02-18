@@ -196,9 +196,9 @@ static int tvhpoll_add0
     const void *ptr = evs[i].ptr;
     const uint32_t events = evs[i].events;
     const uint32_t oevents = tvhpoll_get_events(tp, fd);
-    if (events == ovents) continue;
+    if (events == oevents) continue;
     tvhpoll_set_events(tp, fd, events);
-    if (events & (TVHPOLL_OUT|TVHPOLL_IN)) == (TVHPOLL_OUT|TVHPOLL_IN)) {
+    if ((events & (TVHPOLL_OUT|TVHPOLL_IN)) == (TVHPOLL_OUT|TVHPOLL_IN)) {
       EV_SET(ev+j, fd, EVFILT_READ|EVFILT_WRITE, EV_ADD, 0, 0, ptr);
       j++;
       continue;
