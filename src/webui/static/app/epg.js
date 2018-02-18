@@ -292,7 +292,7 @@ tvheadend.epgDetails = function(event) {
             handler: recordSeries,
             iconCls: 'autoRec',
             tooltip: _('Create an automatic recording rule to record all future programs that match the current query.'),
-            text: event.serieslinkId ? _("Record series") : _("Autorec")
+            text: event.serieslinkUri ? _("Record series") : _("Autorec")
         }));
 
     } else {
@@ -486,7 +486,7 @@ tvheadend.epg = function() {
             { name: 'genre' },
             { name: 'dvrUuid' },
             { name: 'dvrState' },
-            { name: 'serieslinkId' }
+            { name: 'serieslinkUri' }
         ])
     });
 
