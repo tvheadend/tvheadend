@@ -837,7 +837,7 @@ static void _epg_broadcast_destroy ( void *eo )
     snprintf(id, sizeof(id), "%u", ebc->id);
     notify_delayed(id, "epg", "delete");
   }
-  if (ebc->title)       lang_str_destroy(ebc->summary);
+  if (ebc->title)       lang_str_destroy(ebc->title);
   if (ebc->subtitle)    lang_str_destroy(ebc->subtitle);
   if (ebc->summary)     lang_str_destroy(ebc->summary);
   if (ebc->description) lang_str_destroy(ebc->description);
