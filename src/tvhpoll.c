@@ -189,7 +189,7 @@ static int tvhpoll_add0
   }
   return i >= num ? 0 : -1;
 #elif ENABLE_KQUEUE
-  int i, j, r = 0;
+  int i, j;
   struct kevent *ev = alloca(EV_SIZE * num * 2);
   for (i = j = 0; i < num; i++) {
     const int fd = evs[i].fd;
