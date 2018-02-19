@@ -292,9 +292,12 @@ static int FNNAME \
   return 0; \
 }
 
-EPG_OBJECT_SET_FN(_epg_object_set_lang_str,    lang_str_t,    lang_str_destroy,    lang_str_compare,    lang_str_copy)
-EPG_OBJECT_SET_FN(_epg_object_set_string_list, string_list_t, string_list_destroy, string_list_cmp,     string_list_copy)
-EPG_OBJECT_SET_FN(_epg_object_set_htsmsg,      htsmsg_t,      htsmsg_destroy,      htsmsg_cmp,          htsmsg_copy)
+EPG_OBJECT_SET_FN(_epg_object_set_lang_str, lang_str_t,
+                  lang_str_destroy, lang_str_compare, lang_str_copy)
+EPG_OBJECT_SET_FN(_epg_object_set_string_list, string_list_t,
+                  string_list_destroy, string_list_cmp, string_list_copy)
+EPG_OBJECT_SET_FN(_epg_object_set_htsmsg, htsmsg_t,
+                  htsmsg_destroy, htsmsg_cmp, htsmsg_copy)
 #undef EPG_OBJECT_SET_FN
 
 #define EPG_OBJECT_SET_FN(FNNAME,TYPE) \
