@@ -204,6 +204,20 @@ mpegts_network_scan_mux_active ( mpegts_mux_t *mm )
   TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
 }
 
+/* Mux has been reactivated */
+void
+mpegts_network_scan_mux_reactivate ( mpegts_mux_t *mm )
+{
+  mpegts_network_t *mn = mm->mm_network;
+  if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE)
+    return;
+  if (mm->mm_scan_state == MM_SCAN_STATE_PEND)
+    TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
+  mm->mm_scan_init  = 0;
+  mm->mm_scan_state = MM_SCAN_STATE_ACTIVE;
+  TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
+}
+
 /******************************************************************************
  * Mux queue handling
  *****************************************************************************/
