@@ -378,7 +378,7 @@ static int _xmltv_parse_date_finished
           char year_buf[32];
           strncpy(year_buf, str, 4);
           year_buf[5] = 0;
-          const uint16_t year = atoi(year_buf);
+          const int64_t year = atoll(year_buf);
           /* Sanity check the year before copying it over. */
           if (year > 1800 && year < 2500) {
               return epg_broadcast_set_copyright_year(ebc, year, changes);
