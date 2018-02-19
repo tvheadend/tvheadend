@@ -830,7 +830,7 @@ static int _eit_process_event
   if (lock)
     pthread_mutex_lock(&global_lock);
   svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
-  if (svc) {
+  if (svc && eit_mod->opaque) {
     LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
       ch = (channel_t *)ilm->ilm_in2;
       if (!ch->ch_enabled || ch->ch_epg_parent) continue;
@@ -919,6 +919,7 @@ _eit_callback
   eit_data_t           *data;
   const char           *cridauth, *charset;
   int                   cridauth_len, charset_len, data_len;
+  eit_private_t        *priv;
 
   if (!epggrab_ota_running)
     return -1;
@@ -926,7 +927,10 @@ _eit_callback
   mm  = mt->mt_mux;
   map = mt->mt_opaque;
   mod = (epggrab_module_t *)map->om_module;
-  hacks = ((eit_private_t *)((epggrab_module_ota_t *)mod)->opaque)->hacks;
+  priv = (eit_private_t *)((epggrab_module_ota_t *)mod)->opaque;
+  if (priv == NULL)
+    return -1;
+  hacks = priv->hacks;
 
   /* Statistics */
   ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
