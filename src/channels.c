@@ -479,6 +479,17 @@ const idclass_t channel_class = {
       .opts     = PO_ADVANCED,
     },
     {
+      .type     = PT_U32,
+      .id       = "epglimit",
+      .name     = N_("Limit EPG (days)"),
+      .desc     = N_("Limit EPG data to specified days to reduce "
+                     "the memory consumption. The zero value means "
+                     "unlimited EPG."),
+      .def.i    = 1,
+      .off      = offsetof(channel_t, ch_epg_limit),
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "epggrab",

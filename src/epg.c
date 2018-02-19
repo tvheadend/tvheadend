@@ -563,6 +563,9 @@ static epg_broadcast_t *_epg_channel_add_broadcast
     return NULL;
   }
 
+  if (ch->ch_epg_limit && (*bcast)->start < gclk() + ch->ch_epg_limit * 3600 * 24)
+    return NULL;
+
   /* Set channel */
   (*bcast)->channel = ch;
 
