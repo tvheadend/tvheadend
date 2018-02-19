@@ -1319,6 +1319,7 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
     return 0;
   if (!force && mm->mm_tsid != MPEGTS_TSID_NONE)
     return 0;
+  mm->mm_scan_state = MM_SCAN_STATE_ACTIVE;
   mm->mm_tsid = tsid;
   tvhtrace(LS_MPEGTS, "%s - set tsid %04X (%d)", mm->mm_nicename, tsid, tsid);
   idnode_changed(&mm->mm_id);
