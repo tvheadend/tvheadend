@@ -149,7 +149,7 @@ static int _lang_str_add
 
   /* Update */
   } else if (cmd == LANG_STR_UPDATE && strcmp(str, e->str)) {
-    if (strlen(e->str) <= strlen(str)) {
+    if (strlen(e->str) >= strlen(str)) {
       strcpy(e->str, str);
       save = 1;
     } else {
