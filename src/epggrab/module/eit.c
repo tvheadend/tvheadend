@@ -690,7 +690,7 @@ static int _eit_process_event_one
 
   /* Find episode */
   if (*ev->uri)
-    *save |= epg_broadcast_set_episodelink_uri(ebc, ev->suri, &changes);
+    *save |= epg_broadcast_set_episodelink_uri(ebc, ev->uri, &changes);
 
   /* Update Episode */
   if (ev->is_new > 0)
