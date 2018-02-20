@@ -1137,7 +1137,8 @@ mpegts_service_find_e2
 mpegts_service_t *
 mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid );
 
-void mpegts_service_update_slave_pids ( mpegts_service_t *t, int del );
+void mpegts_service_update_slave_pids
+  ( mpegts_service_t *t, mpegts_service_t *master_filter, int del );
 
 static inline mpegts_service_t *mpegts_service_find_by_uuid0(tvh_uuid_t *uuid)
   { return idnode_find0(uuid, &mpegts_service_class, NULL); }

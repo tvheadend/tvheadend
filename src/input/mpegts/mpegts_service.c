@@ -1014,7 +1014,8 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
 }
 
 void
-mpegts_service_update_slave_pids ( mpegts_service_t *s, int del )
+mpegts_service_update_slave_pids
+  ( mpegts_service_t *s, mpegts_service_t *master, int del )
 {
   mpegts_service_t *s2;
   mpegts_apids_t *pids;
@@ -1040,6 +1041,7 @@ mpegts_service_update_slave_pids ( mpegts_service_t *s, int del )
 
   for (i = 0; i < s->s_masters.is_count; i++) {
     s2 = (mpegts_service_t *)s->s_masters.is_array[i];
+    if (master && master != s2) continue;
     pthread_mutex_lock(&s2->s_stream_mutex);
     if (!del)
       mpegts_pid_add_group(s2->s_slaves_pids, pids);
@@ -1062,7 +1064,7 @@ mpegts_service_link ( mpegts_service_t *master, mpegts_service_t *slave )
   idnode_set_alloc(&master->s_slaves, 16);
   idnode_set_add(&master->s_slaves, &slave->s_id, NULL, NULL);
   pthread_mutex_unlock(&master->s_stream_mutex);
-  mpegts_service_update_slave_pids(slave, 0);
+  mpegts_service_update_slave_pids(slave, master, 0);
   pthread_mutex_unlock(&slave->s_stream_mutex);
   return 0;
 }
@@ -1071,7 +1073,7 @@ static int
 mpegts_service_unlink ( mpegts_service_t *master, mpegts_service_t *slave )
 {
   pthread_mutex_lock(&slave->s_stream_mutex);
-  mpegts_service_update_slave_pids(slave, 1);
+  mpegts_service_update_slave_pids(slave, master, 1);
   pthread_mutex_lock(&master->s_stream_mutex);
   idnode_set_remove(&slave->s_masters, &master->s_id);
   if (idnode_set_empty(&slave->s_masters))

@@ -820,7 +820,7 @@ mpegts_input_open_service
         mpegts_input_open_pid(mi, mm, st->es_pid, MPS_SERVICE, mpegts_mps_weight(st), s, reopen);
       }
 
-    mpegts_service_update_slave_pids(s, 0);
+    mpegts_service_update_slave_pids(s, NULL, 0);
 
   } else {
     if ((pids = s->s_pids) != NULL) {
@@ -899,7 +899,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
       }
     }
 
-    mpegts_service_update_slave_pids(s, 1);
+    mpegts_service_update_slave_pids(s, NULL, 1);
 
   } else {
     mpegts_input_close_pids(mi, mm, s, 1);
