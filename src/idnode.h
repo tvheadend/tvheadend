@@ -318,6 +318,8 @@ int idnode_set_remove ( idnode_set_t *is, idnode_t *in );
 ssize_t idnode_set_find_index( idnode_set_t *is, idnode_t *in );
 static inline int idnode_set_exists ( idnode_set_t *is, idnode_t *in )
   { return idnode_set_find_index(is, in) >= 0; }
+static inline int idnode_set_empty ( idnode_set_t *is )
+  { return is->is_count == 0; }
 void idnode_set_sort ( idnode_set_t *is, idnode_sort_t *s );
 void idnode_set_sort_by_title ( idnode_set_t *is, const char *lang );
 htsmsg_t *idnode_set_as_htsmsg ( idnode_set_t *is );

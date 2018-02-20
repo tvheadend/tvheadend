@@ -405,7 +405,7 @@ ts_recv_raw(mpegts_service_t *t, const uint8_t *tsb, int len)
 
   pthread_mutex_lock(&t->s_stream_mutex);
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
-  if (!LIST_EMPTY(&t->s_slaves)) {
+  if (!idnode_set_empty(&t->s_slaves)) {
     /* If PID is owned by a slave service, let parent service to
      * deliver this PID (decrambling)
      */

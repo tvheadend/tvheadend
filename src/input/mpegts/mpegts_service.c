@@ -744,6 +744,7 @@ mpegts_service_delete ( service_t *t, int delconf )
     mms->s_unlink(mms, ms);
   }
   idnode_set_clear(&ms->s_masters);
+  idnode_set_clear(&ms->s_slaves);
 
   /* Remove PID lists */
   mpegts_pid_destroy(&ms->s_pids);
@@ -1056,10 +1057,10 @@ mpegts_service_link ( mpegts_service_t *master, mpegts_service_t *slave )
   pthread_mutex_lock(&slave->s_stream_mutex);
   pthread_mutex_lock(&master->s_stream_mutex);
   assert(!idnode_set_exists(&slave->s_masters, &master->s_id));
-  assert(LIST_SAFE_ENTRY(slave, s_slaves_link));
   idnode_set_alloc(&slave->s_masters, 16);
   idnode_set_add(&slave->s_masters, &master->s_id, NULL, NULL);
-  LIST_INSERT_HEAD(&master->s_slaves, slave, s_slaves_link);
+  idnode_set_alloc(&master->s_slaves, 16);
+  idnode_set_add(&master->s_slaves, &slave->s_id, NULL, NULL);
   pthread_mutex_unlock(&master->s_stream_mutex);
   mpegts_service_update_slave_pids(slave, 0);
   pthread_mutex_unlock(&slave->s_stream_mutex);
@@ -1073,9 +1074,11 @@ mpegts_service_unlink ( mpegts_service_t *master, mpegts_service_t *slave )
   mpegts_service_update_slave_pids(slave, 1);
   pthread_mutex_lock(&master->s_stream_mutex);
   idnode_set_remove(&slave->s_masters, &master->s_id);
-  if (slave->s_masters.is_count == 0)
+  if (idnode_set_empty(&slave->s_masters))
     idnode_set_clear(&slave->s_masters);
-  LIST_SAFE_REMOVE(slave, s_slaves_link);
+  idnode_set_remove(&master->s_slaves, &slave->s_id);
+  if (idnode_set_empty(&master->s_slaves))
+    idnode_set_clear(&master->s_slaves);
   pthread_mutex_unlock(&master->s_stream_mutex);
   pthread_mutex_unlock(&slave->s_stream_mutex);
   return 0;

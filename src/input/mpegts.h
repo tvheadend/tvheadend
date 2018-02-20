@@ -567,8 +567,7 @@ struct mpegts_service
 
   mpegts_apids_t             *s_pids;
   idnode_set_t                s_masters;
-  LIST_HEAD(, mpegts_service) s_slaves;
-  LIST_ENTRY(mpegts_service)  s_slaves_link;
+  idnode_set_t                s_slaves;
   mpegts_apids_t             *s_slaves_pids;
 
   /*

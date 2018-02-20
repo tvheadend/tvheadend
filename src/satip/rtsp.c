@@ -514,7 +514,7 @@ static void
 rtsp_manage_descramble(session_t *rs)
 {
   idnode_set_t *found;
-  mpegts_service_t *s, *snext, *master;
+  mpegts_service_t *s, *master;
   slave_subscription_t *sub;
   mpegts_apids_t pmt_pids;
   size_t si;
@@ -544,12 +544,14 @@ rtsp_manage_descramble(session_t *rs)
   }
 
   /* Remove already used or no-longer required services */
-  for (s = LIST_FIRST(&master->s_slaves); s; s = snext) {
-    snext = LIST_NEXT(s, s_slaves_link);
-    if (idnode_set_remove(found, &s->s_id))
+  for (si = 0; si < master->s_slaves.is_count; si++) {
+    s = (mpegts_service_t *)master->s_slaves.is_array[si];
+    if (idnode_set_remove(found, &s->s_id)) {
       used++;
-    else if (!idnode_set_exists(found, &s->s_id))
+    } else if (!idnode_set_exists(found, &s->s_id)) {
       rtsp_slave_remove(rs, master, s);
+      si--;
+    }
   }
 
   /* Add new ones */
