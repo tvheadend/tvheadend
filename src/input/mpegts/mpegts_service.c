@@ -26,9 +26,7 @@
 #include "dvb_charset.h"
 #include "config.h"
 #include "epggrab.h"
-#if ENABLE_DDCI
 #include "descrambler/dvbcam.h"
-#endif
 
 /* **************************************************************************
  * Class definition
@@ -1021,13 +1019,7 @@ mpegts_service_update_slave_pids ( mpegts_service_t *s, int del )
   mpegts_apids_t *pids;
   elementary_stream_t *st;
   int i;
-#if ENABLE_DDCI
-  int is_ddci = dvbcam_is_ddci((service_t*)s);
-#define IS_DDCI  is_ddci
-#else
-#define IS_DDCI  0
-#endif
-
+  const int is_ddci = dvbcam_is_ddci((service_t*)s);
 
   lock_assert(&s->s_stream_mutex);
 
@@ -1041,7 +1033,7 @@ mpegts_service_update_slave_pids ( mpegts_service_t *s, int del )
 
   /* Ensure that filtered PIDs are not send in ts_recv_raw */
   TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
-    if ((IS_DDCI || s->s_scrambled_pass || st->es_type != SCT_CA) &&
+    if ((is_ddci || s->s_scrambled_pass || st->es_type != SCT_CA) &&
         st->es_pid >= 0 && st->es_pid < 8192)
       mpegts_pid_add(pids, st->es_pid, mpegts_mps_weight(st));
 

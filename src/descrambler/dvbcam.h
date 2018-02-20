@@ -19,6 +19,7 @@
 #ifndef __DVBCAM_H__
 #define __DVBCAM_H__
 
+struct service;
 struct mpegts_service;
 struct elementary_stream;
 
@@ -31,11 +32,12 @@ void dvbcam_register_cam(struct linuxdvb_ca *lca, uint16_t * caids, int num_caid
 void dvbcam_unregister_cam(struct linuxdvb_ca *lca);
 void dvbcam_pmt_data(struct mpegts_service *s, const uint8_t *ptr, int len);
 
-#if ENABLE_DDCI
-struct service;
-int dvbcam_is_ddci(struct service *t);
 #endif
 
+#if defined(ENABLE_LINUXDVB_CA) && defined(ENABLE_DDCI)
+int dvbcam_is_ddci(struct service *t);
+#else
+static inline int dvbcam_is_ddci(struct service_t *t) { return 0; }
 #endif
 
 #endif /* __DVBCAM_H__ */
