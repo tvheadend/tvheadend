@@ -921,7 +921,7 @@ main(int argc, char **argv)
   tvheadend_cwd = dirname(tvh_strdupa(tvheadend_cwd0));
 
   /* Set locale */
-  setlocale(LC_ALL, "C.utf8");
+  setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
   tvh_gettext_init();
 

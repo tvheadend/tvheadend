@@ -29,8 +29,11 @@ intlconv_test( void )
   /* The string is "Yellow Horse" in Czech for the curiosity */
   const char *charset = intlconv_charset_id("ASCII", 1, 1);
   char *s = intlconv_utf8safestr(charset, "ŽluťoučkýKůň", 128);
-  if (strcmp(s, "ZlutouckyKun")) {
-    tvherror(LS_MAIN, "iconv() routine is not working properly, aborting!");
+  if (s == NULL ||
+      (strcmp(s, "ZlutouckyKun") &&
+       strcmp(s, "Zlutouck'yKun") &&
+       strcmp(s, "?lu?ou?k?K??"))) {
+    tvherror(LS_MAIN, "iconv() routine is not working properly (%s), aborting!", s);
     tvh_safe_usleep(2000000);
     abort();
   }
