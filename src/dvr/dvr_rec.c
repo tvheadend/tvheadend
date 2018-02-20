@@ -1712,6 +1712,8 @@ dvr_thread(void *aux)
     case SMT_STOP:
        if (sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
 	 // Subscription is restarting, wait for SMT_START
+	 if (muxing)
+           tvhtrace(LS_DVR, "%s - source reconfigured", idnode_uuid_as_str(&de->de_id, ubuf));
 	 muxing = 0; // reconfigure muxer
 
        } else if(sm->sm_code == 0) {
