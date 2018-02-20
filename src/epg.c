@@ -1103,8 +1103,7 @@ static int _epg_broadcast_set_set
     if (uri == NULL || uri[0] == '\0')
       return 0;
   } else if (strcmp((*set)->uri ?: "", uri ?: "")) {
-    if (*set)
-      epg_set_broadcast_remove(tree, *set, ebc);
+    epg_set_broadcast_remove(tree, *set, ebc);
   } else {
     return 0;
   }
