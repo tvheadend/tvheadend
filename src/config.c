@@ -1701,6 +1701,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config_scanfile_ok = 0;
   config.theme_ui = strdup("blue");
   config.chname_num = 1;
+  config.iptv_tpool_count = 2;
 
   idclass_register(&config_class);
 
@@ -2416,6 +2417,15 @@ const idclass_t config_class = {
       .off    = offsetof(config_t, tvhtime_tolerance),
       .opts   = PO_EXPERT,
       .group  = 6,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "iptv_tpool",
+      .name   = N_("IPTV threads"),
+      .desc   = N_("Set the number of threads for IPTV to split load "
+                   "across more CPUs."),
+      .off    = offsetof(config_t, iptv_tpool_count),
+      .group  = 7
     },
     {
       .type   = PT_INT,

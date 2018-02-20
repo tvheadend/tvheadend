@@ -32,7 +32,8 @@
  * Spawn task and create pipes
  */
 static int
-iptv_pipe_start ( iptv_mux_t *im, const char *raw, const url_t *url )
+iptv_pipe_start
+  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
 {
   char **argv = NULL, **envp = NULL;
   const char *replace[] = { "${service_name}", im->mm_iptv_svcname ?: "", NULL };
@@ -65,7 +66,7 @@ iptv_pipe_start ( iptv_mux_t *im, const char *raw, const url_t *url )
   im->mm_iptv_respawn_last = mclk();
 
   if (url)
-    iptv_input_mux_started(im);
+    iptv_input_mux_started(mi, im);
   return 0;
 
 err:
@@ -78,20 +79,15 @@ err:
 
 static void
 iptv_pipe_stop
-  ( iptv_mux_t *im )
+  ( iptv_input_t *mi, iptv_mux_t *im )
 {
-  int rd = im->mm_iptv_fd;
   pid_t pid = (intptr_t)im->im_data;
   spawn_kill(pid, tvh_kill_to_sig(im->mm_iptv_kill), im->mm_iptv_kill_timeout);
-  if (rd > 0) {
-    tvhpoll_rem1(iptv_poll, rd);
-    close(rd);
-  }
-  im->mm_iptv_fd = -1;
+  iptv_input_close_fds(mi, im);
 }
 
 static ssize_t
-iptv_pipe_read ( iptv_mux_t *im )
+iptv_pipe_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
   int r, rd = im->mm_iptv_fd;
   ssize_t res = 0;
@@ -107,12 +103,10 @@ iptv_pipe_read ( iptv_mux_t *im )
         continue;
     }
     if (r <= 0) {
-      tvhpoll_rem1(iptv_poll, rd);
-      close(rd);
+      iptv_input_close_fds(mi, im);
       pid = (intptr_t)im->im_data;
-      spawn_kill(pid, tvh_kill_to_sig(im->mm_iptv_kill), im->mm_iptv_kill_timeout);
-      im->mm_iptv_fd = -1;
       im->im_data = NULL;
+      spawn_kill(pid, tvh_kill_to_sig(im->mm_iptv_kill), im->mm_iptv_kill_timeout);
       if (mclk() < im->mm_iptv_respawn_last + sec2mono(2)) {
         tvherror(LS_IPTV, "stdin pipe unexpectedly closed: %s",
                  r < 0 ? strerror(errno) : "No data");
@@ -122,10 +116,10 @@ iptv_pipe_read ( iptv_mux_t *im )
         pthread_mutex_lock(&global_lock);
         pthread_mutex_lock(&iptv_lock);
         if (im->mm_active) {
-          if (iptv_pipe_start(im, im->mm_iptv_url_raw, NULL)) {
+          if (iptv_pipe_start(mi, im, im->mm_iptv_url_raw, NULL)) {
             tvherror(LS_IPTV, "unable to respawn %s", im->mm_iptv_url_raw);
           } else {
-            iptv_input_fd_started(im);
+            iptv_input_fd_started(mi, im);
             im->mm_iptv_respawn_last = mclk();
           }
         }

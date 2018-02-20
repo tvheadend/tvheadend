@@ -32,7 +32,8 @@
  * Connect UDP/RTP
  */
 static int
-iptv_udp_start ( iptv_mux_t *im, const char *raw, const url_t *url )
+iptv_udp_start
+  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
 {
   udp_connection_t *conn;
   udp_multirecv_t *um;
@@ -54,13 +55,13 @@ iptv_udp_start ( iptv_mux_t *im, const char *raw, const url_t *url )
   udp_multirecv_init(um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
   im->im_data = um;
 
-  iptv_input_mux_started(im);
+  iptv_input_mux_started(mi, im);
   return 0;
 }
 
 static void
 iptv_udp_stop
-  ( iptv_mux_t *im )
+  ( iptv_input_t *mi, iptv_mux_t *im )
 {
   udp_multirecv_t *um = im->im_data;
 
@@ -72,7 +73,7 @@ iptv_udp_stop
 }
 
 static ssize_t
-iptv_udp_read ( iptv_mux_t *im )
+iptv_udp_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
   int i, n;
   struct iovec *iovec;
@@ -178,7 +179,7 @@ iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
 }
 
 static ssize_t
-iptv_udp_rtp_read ( iptv_mux_t *im )
+iptv_udp_rtp_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
   udp_multirecv_t *um = im->im_data;
 

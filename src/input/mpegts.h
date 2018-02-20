@@ -992,7 +992,7 @@ void mpegts_mux_update_pids ( mpegts_mux_t *mm );
 int mpegts_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b );
 
 void mpegts_input_recv_packets
-  (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
+  (mpegts_mux_instance_t *mmi, sbuf_t *sb,
    int flags, mpegts_pcr_t *pcr);
 
 void mpegts_input_postdemux

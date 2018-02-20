@@ -1072,17 +1072,6 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 }
 
 static void
-dvb_mux_create_instances ( mpegts_mux_t *mm )
-{
-  mpegts_network_link_t *mnl;
-  LIST_FOREACH(mnl, &mm->mm_network->mn_inputs, mnl_mn_link) {
-    mpegts_input_t *mi = mnl->mnl_input;
-    if (mi->mi_is_enabled(mi, mm, 0, -1) != MI_IS_ENABLED_NEVER)
-      mi->mi_create_mux_instance(mi, mm);
-  }
-}
-
-static void
 dvb_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
   char ubuf1[UUID_HEX_SIZE];
@@ -1177,7 +1166,6 @@ dvb_mux_create0
   lm->mm_delete           = dvb_mux_delete;
   lm->mm_display_name     = dvb_mux_display_name;
   lm->mm_config_save      = dvb_mux_config_save;
-  lm->mm_create_instances = dvb_mux_create_instances;
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   free(mm->mm_nicename);

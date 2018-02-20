@@ -65,6 +65,7 @@ typedef struct config {
   int epg_compress;
   uint32_t epg_cut_window;
   uint32_t epg_update_window;
+  int iptv_tpool_count;
 } config_t;
 
 extern const idclass_t config_class;

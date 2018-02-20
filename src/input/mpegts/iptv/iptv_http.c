@@ -29,6 +29,7 @@
 #endif
 
 typedef struct http_priv {
+  iptv_input_t  *mi;
   iptv_mux_t    *im;
   http_client_t *hc;
   uint8_t        shutdown;
@@ -249,7 +250,7 @@ iptv_http_header ( http_client_t *hc )
   hp->off = 0;
   if (iptv_http_safe_global_lock(hp)) {
     if (!hp->started) {
-      iptv_input_mux_started(hp->im);
+      iptv_input_mux_started(hp->mi, hp->im);
     } else {
       iptv_input_recv_flush(hp->im);
     }
@@ -511,13 +512,14 @@ iptv_http_create_header
  */
 static int
 iptv_http_start
-  ( iptv_mux_t *im, const char *raw, const url_t *u )
+  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *u )
 {
   http_priv_t *hp;
   http_client_t *hc;
   int r;
 
   hp = calloc(1, sizeof(*hp));
+  hp->mi = mi;
   hp->im = im;
   if (!(hc = http_client_connect(hp, HTTP_VERSION_1_1, u->scheme,
                                  u->host, u->port, NULL))) {
@@ -552,7 +554,7 @@ iptv_http_start
  */
 static void
 iptv_http_stop
-  ( iptv_mux_t *im )
+  ( iptv_input_t *mi, iptv_mux_t *im )
 {
   http_priv_t *hp = im->im_data;
 
@@ -579,7 +581,7 @@ iptv_http_stop
  */
 static void
 iptv_http_pause
-  ( iptv_mux_t *im, int pause )
+  ( iptv_input_t *mi, iptv_mux_t *im, int pause )
 {
   http_priv_t *hp = im->im_data;
 

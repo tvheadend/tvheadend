@@ -1126,9 +1126,10 @@ ts_sync_count ( const uint8_t *tsb, int len )
 
 void
 mpegts_input_recv_packets
-  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
+  ( mpegts_mux_instance_t *mmi, sbuf_t *sb,
     int flags, mpegts_pcr_t *pcr )
 {
+  mpegts_input_t *mi = mmi->mmi_input;
   int len, len2, off;
   mpegts_packet_t *mp;
   uint8_t *tsb;

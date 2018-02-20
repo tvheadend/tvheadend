@@ -1491,8 +1491,7 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
       if (lfe->sf_req == lfe->sf_req_thread) {
         mmi = lfe->sf_req->sf_mmi;
         atomic_add(&mmi->tii_stats.unc, unc);
-        mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
-                                  &lfe->sf_sbuf, 0, NULL);
+        mpegts_input_recv_packets(mmi, &lfe->sf_sbuf, 0, NULL);
       }
       pthread_mutex_unlock(&lfe->sf_dvr_lock);
       lfe->sf_last_data_tstamp = mclk();
@@ -2027,7 +2026,7 @@ new_tune:
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     if (lfe->sf_req == lfe->sf_req_thread) {
       atomic_add(&mmi->tii_stats.unc, unc);
-      mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, sb, 0, NULL);
+      mpegts_input_recv_packets(mmi, sb, 0, NULL);
     } else
       fatal = 1;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);

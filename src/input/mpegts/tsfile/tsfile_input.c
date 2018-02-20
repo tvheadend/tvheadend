@@ -131,7 +131,7 @@ tsfile_input_thread ( void *aux )
       pcr.pcr_first = PTS_UNSET;
       pcr.pcr_last  = PTS_UNSET;
       pcr.pcr_pid   = tmi->mmi_tsfile_pcr_pid;
-      mpegts_input_recv_packets((mpegts_input_t*)mi, mmi, &buf, 0, &pcr);
+      mpegts_input_recv_packets(mmi, &buf, 0, &pcr);
       if (pcr.pcr_pid)
         tmi->mmi_tsfile_pcr_pid = pcr.pcr_pid;
 

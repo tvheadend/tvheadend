@@ -42,10 +42,10 @@ struct iptv_handler
 
   uint32_t buffer_limit;
 
-  int     (*start) ( iptv_mux_t *im, const char *raw, const url_t *url );
-  void    (*stop)  ( iptv_mux_t *im );
-  ssize_t (*read)  ( iptv_mux_t *im );
-  void    (*pause) ( iptv_mux_t *im, int pause );
+  int     (*start) ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url );
+  void    (*stop)  ( iptv_input_t *mi, iptv_mux_t *im );
+  ssize_t (*read)  ( iptv_input_t *mi, iptv_mux_t *im );
+  void    (*pause) ( iptv_input_t *mi, iptv_mux_t *im, int pause );
   
   RB_ENTRY(iptv_handler) link;
 };
@@ -55,13 +55,16 @@ void iptv_handler_register ( iptv_handler_t *ih, int num );
 struct iptv_input
 {
   mpegts_input_t;
+
+  void *mi_tpool;
 };
 
-int  iptv_input_fd_started ( iptv_mux_t *im );
-void iptv_input_mux_started ( iptv_mux_t *im );
+int  iptv_input_fd_started ( iptv_input_t *mi, iptv_mux_t *im );
+void iptv_input_close_fds ( iptv_input_t *mi, iptv_mux_t *im );
+void iptv_input_mux_started ( iptv_input_t *mi, iptv_mux_t *im );
 int  iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len );
 void iptv_input_recv_flush ( iptv_mux_t *im );
-void iptv_input_pause_handler ( iptv_mux_t *im, int pause );
+void iptv_input_pause_handler ( iptv_input_t *mi, iptv_mux_t *im, int pause );
 
 struct iptv_network
 {
@@ -176,11 +179,9 @@ extern const idclass_t iptv_network_class;
 extern const idclass_t iptv_auto_network_class;
 extern const idclass_t iptv_mux_class;
 
-extern iptv_input_t   *iptv_input;
 extern iptv_network_t *iptv_network;
 
 extern pthread_mutex_t iptv_lock;
-extern tvhpoll_t      *iptv_poll;
 
 int iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int allow_pipe );
 

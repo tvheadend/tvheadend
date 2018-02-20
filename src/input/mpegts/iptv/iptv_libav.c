@@ -174,7 +174,8 @@ fail:
  * Start new thread
  */
 static int
-iptv_libav_start ( iptv_mux_t *im, const char *raw, const url_t *url )
+iptv_libav_start
+  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
 {
   iptv_libav_priv_t *la = calloc(1, sizeof(*la));
 
@@ -187,19 +188,19 @@ iptv_libav_start ( iptv_mux_t *im, const char *raw, const url_t *url )
   la->mux = im;
   tvh_pipe(O_NONBLOCK, &la->pipe);
   im->mm_iptv_fd = la->pipe.rd;
-  iptv_input_fd_started(im);
+  iptv_input_fd_started(mi, im);
   atomic_set(&la->running, 1);
   atomic_set(&la->pause, 0);
   sbuf_init(&la->sbuf);
   tvhthread_create(&la->thread, NULL, iptv_libav_thread, la, "libavinput");
   if (raw[0])
-    iptv_input_mux_started(im);
+    iptv_input_mux_started(mi, im);
   return 0;
 }
 
 static void
 iptv_libav_stop
-  ( iptv_mux_t *im )
+  ( iptv_input_t *mi, iptv_mux_t *im )
 {
   iptv_libav_priv_t *la = im->im_opaque;
 
@@ -215,7 +216,7 @@ iptv_libav_stop
 }
 
 static ssize_t
-iptv_libav_read ( iptv_mux_t *im )
+iptv_libav_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
   iptv_libav_priv_t *la = im->im_opaque;
   char buf[8192];
@@ -233,7 +234,7 @@ iptv_libav_read ( iptv_mux_t *im )
 }
 
 static void
-iptv_libav_pause ( iptv_mux_t *im, int pause )
+iptv_libav_pause ( iptv_input_t *mi, iptv_mux_t *im, int pause )
 {
   iptv_libav_priv_t *la = im->im_opaque;
 

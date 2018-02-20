@@ -25,7 +25,6 @@
  * Class
  */
 extern const idclass_t mpegts_mux_class;
-extern const idclass_t mpegts_mux_instance_class;
 
 static inline void
 iptv_url_set0 ( char **url, char **sane_url,
@@ -372,11 +371,6 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
     im->mm_iptv_kill_timeout = 5;
 
   sbuf_init(&im->mm_iptv_buffer);
-
-  /* Create Instance */
-  (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL,
-                                   (mpegts_input_t*)iptv_input,
-                                   (mpegts_mux_t*)im);
 
   /* Services */
   c2 = NULL;
