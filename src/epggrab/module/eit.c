@@ -622,6 +622,9 @@ static int _eit_process_event_one
                   bcdtoint(ptr[9] & 0xff);
   running = (ptr[10] >> 5) & 0x07;
 
+  if (epg_channel_ignore_broadcast(ch, start))
+    return 0;
+
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes);
   tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, tbl=%02x, running=%d, start=%s,"

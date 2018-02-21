@@ -467,6 +467,13 @@ int epg_episode_number_cmpfull ( const epg_episode_num_t *a, const epg_episode_n
  * Channel
  * *************************************************************************/
 
+int epg_channel_ignore_broadcast(channel_t *ch, time_t start)
+{
+  if (ch->ch_epg_limit && start < gclk() + ch->ch_epg_limit * 3600 * 24)
+    return 1;
+  return 0;
+}
+
 static void _epg_channel_rem_broadcast 
   ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *ebc_new )
 {
@@ -565,9 +572,6 @@ static epg_broadcast_t *_epg_channel_add_broadcast
              gmtime2local((*bcast)->stop, tm2, sizeof(tm2)));
     return NULL;
   }
-
-  if (ch->ch_epg_limit && (*bcast)->start < gclk() + ch->ch_epg_limit * 3600 * 24)
-    return NULL;
 
   /* Set channel */
   (*bcast)->channel = ch;

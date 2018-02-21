@@ -458,6 +458,7 @@ epg_broadcast_t *epg_broadcast_deserialize
  * Channel - provides mapping from EPG channels to real channels
  * ***********************************************************************/
 
+int epg_channel_ignore_broadcast( struct channel *ch, time_t start );
 /* Unlink */
 void epg_channel_unlink ( struct channel *ch );
 /* Match now / next events */

@@ -622,6 +622,9 @@ static int _xmltv_parse_programme_tags
   time_t first_aired = 0;
   int8_t bw = -1;
 
+  if (epg_channel_ignore_broadcast(ch, start))
+    return 0;
+
   memset(&epnum, 0, sizeof(epnum));
 
   /*

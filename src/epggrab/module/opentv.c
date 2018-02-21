@@ -310,6 +310,9 @@ opentv_parse_event_section_one
      * Broadcast
      */
 
+    if (epg_channel_ignore_broadcast(ch, ev.start))
+      goto done;
+
     merge = changes = 0;
 
     /* Find broadcast */
