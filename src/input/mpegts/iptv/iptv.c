@@ -56,7 +56,7 @@ int iptv_tpool_count = 0;
 iptv_thread_pool_t *iptv_tpool_last = NULL;
 gtimer_t iptv_tpool_manage_timer;
 
-static void iptv_input_thread_manage(int count);
+static void iptv_input_thread_manage(int count, int force);
 
 static inline int iptv_tpool_safe_count(void)
 {
@@ -445,7 +445,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   pthread_mutex_unlock(&iptv_lock);
 
   if (u32 == 0)
-    iptv_input_thread_manage(iptv_tpool_safe_count());
+    iptv_input_thread_manage(iptv_tpool_safe_count(), 0);
 }
 
 static void
@@ -1184,7 +1184,7 @@ iptv_create_input ( void *tpool )
 }
 
 static void
-iptv_input_thread_manage(int count)
+iptv_input_thread_manage(int count, int force)
 {
   iptv_thread_pool_t *pool;
 
@@ -1198,7 +1198,7 @@ iptv_input_thread_manage(int count)
   }
   while (iptv_tpool_count > count) {
     TAILQ_FOREACH(pool, &iptv_tpool, link)
-      if (pool->streams == 0) {
+      if (pool->streams == 0 || force) {
         pthread_kill(pool->thread, SIGTERM);
         pthread_join(pool->thread, NULL);
         TAILQ_REMOVE(&iptv_tpool, pool, link);
@@ -1233,14 +1233,14 @@ void iptv_init ( void )
   iptv_network_init();
 
   /* Threads init */
-  iptv_input_thread_manage(iptv_tpool_safe_count());
+  iptv_input_thread_manage(iptv_tpool_safe_count(), 0);
   tvhinfo(LS_IPTV, "Using %d input thread(s)", iptv_tpool_count);
 }
 
 void iptv_done ( void )
 {
   pthread_mutex_lock(&global_lock);
-  iptv_input_thread_manage(0);
+  iptv_input_thread_manage(0, 1);
   assert(TAILQ_EMPTY(&iptv_tpool));
   mpegts_network_unregister_builder(&iptv_auto_network_class);
   mpegts_network_unregister_builder(&iptv_network_class);
