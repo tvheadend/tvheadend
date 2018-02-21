@@ -59,11 +59,12 @@ urlrecompose( url_t *url )
 {
   size_t len;
   char *raw, port[16];
-  const int auth = url->user && url->user[0] &&
-                   url->pass && url->pass[0];
+  const int user = url->user && url->user[0];
+  const int pass = url->pass && url->pass[0];
 
   len = (url->scheme ? strlen(url->scheme) : 0) + 4 +
-        (auth ? (strlen(url->user) + strlen(url->pass) + 2) : 0) +
+        (user ? strlen(url->user) + 1 : 0) +
+        (pass ? strlen(url->pass) + 1 : 0) +
         (url->host ? strlen(url->host) : 0) +
         (url->port > 0 ? 6 : 0) +
         (url->path ? strlen(url->path) : 0) +
@@ -77,10 +78,10 @@ urlrecompose( url_t *url )
     port[0] = '\0';
   snprintf(raw, len, "%s%s%s%s%s%s%s%s%s%s%s",
            url->scheme ?: "", url->scheme ? "://" : "",
-           auth ? url->user : "",
-           auth ? ":" : "",
-           auth ? url->pass : "",
-           auth ? "@" : "",
+           user ? url->user : "",
+           (user && pass) ? ":" : "",
+           (user && pass) ? url->pass : "",
+           user ? "@" : "",
            url->host ?: "", port,
            url->path ?: "",
            (url->query && url->query[0]) ? "?" : "",
