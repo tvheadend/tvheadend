@@ -376,8 +376,7 @@ _psip_eit_callback_channel
 
     if (size > len) break;
 
-    if (epg_channel_ignore_broadcast(ch, start))
-       goto next;
+    if (epg_channel_ignore_broadcast(ch, start)) continue;
 
     title = atsc_get_string(ptr+10, titlelen);
     if (title == NULL) continue;
