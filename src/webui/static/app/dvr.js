@@ -291,10 +291,10 @@ tvheadend.dvrButtonFcn = function(store, select, _url, q) {
 tvheadend.dvr_upcoming = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
-    var list = 'disp_title,channel,start,start_extra,stop,stop_extra,pri,config_name,comment';
+    var list = 'disp_title,disp_extratext,channel,start,start_extra,stop,stop_extra,pri,config_name,comment';
     var elist = 'enabled,' +
                 (tvheadend.accessUpdate.admin ?
-                list + ',owner,creator' : list) + ',retention,removal';
+                list + ',episode_disp,owner,creator' : list) + ',retention,removal';
     var duplicates = 0;
     var buttonFcn = tvheadend.dvrButtonFcn;
     var columnId = null;
@@ -588,7 +588,7 @@ tvheadend.dvr_finished = function(panel, index) {
         tabIndex: index,
         edit: {
             params: {
-                list: tvheadend.admin ? "playcount,retention,removal,owner,comment" :
+                list: tvheadend.admin ? "disp_title,disp_extratext,episode_disp,playcount,retention,removal,owner,comment" :
                                         "retention,removal,comment"
             }
         },
@@ -782,7 +782,7 @@ tvheadend.dvr_removed = function(panel, index) {
         iconCls: 'remove',
         tabIndex: index,
         uilevel: 'expert',
-        edit: { params: { list: tvheadend.admin ? "retention,owner,comment" : "retention,comment" } },
+        edit: { params: { list: tvheadend.admin ? "retention,owner,disp_title,disp_extratext,episode_disp,comment" : "retention,comment" } },
         del: true,
         list: 'disp_title,disp_extratext,episode_disp,channelname,image,' +
               'copyright_year,start_real,stop_real,duration,status,' +
@@ -836,7 +836,7 @@ tvheadend.autorec_editor = function(panel, index) {
 
     var list = 'name,title,fulltext,channel,start,start_window,weekdays,' +
                'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,' +
-               'star_rating,dedup,directory,config_name,comment';
+               'star_rating,dedup,directory,config_name,comment,pri';
     var elist = 'enabled,start_extra,stop_extra,' +
                 (tvheadend.accessUpdate.admin ?
                 list + ',owner,creator' : list) + ',pri,retention,removal,maxcount,maxsched';
