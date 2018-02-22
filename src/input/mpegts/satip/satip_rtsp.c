@@ -313,6 +313,7 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
     htsbuf_queue_init(&q, 0);
     htsbuf_qprintf(&q, "addpids=%s", addpids);
     query = htsbuf_to_string(&q);
+    tvhtrace(LS_SATIP, "%04X: PLAY params (split) - %s", hc->hc_id, query);
     r = rtsp_play(hc, stream, query);
     free(query);
   }
