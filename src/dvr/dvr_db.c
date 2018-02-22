@@ -3224,9 +3224,9 @@ dvr_entry_class_disp_extratext_get(void *o)
   prop_ptr = NULL;
   if (de->de_subtitle)
     prop_ptr = lang_str_get(de->de_subtitle, idnode_lang(o));
-  if (prop_ptr == NULL || prop_ptr[0] == '\0')
+  if (prop_ptr == NULL)
     prop_ptr = lang_str_get(de->de_summary, idnode_lang(o));
-  if (prop_ptr == NULL || prop_ptr[0] == '\0')
+  if (prop_ptr == NULL)
     prop_ptr = lang_str_get(de->de_desc, idnode_lang(o));
   if (prop_ptr == NULL)
     prop_ptr = "";
@@ -3240,15 +3240,12 @@ dvr_entry_class_disp_extratext_set(void *o, const void *v)
   const char *lang = idnode_lang(o);
   v = tvh_str_default(v, "?????");
 
-  if (de->de_subtitle && lang_str_get(de->de_subtitle, lang)[0] != '\0'){
+  if (lang_str_get(de->de_subtitle, lang))
     return lang_str_set(&de->de_subtitle, v, lang);
-  }
-  if (de->de_summary && lang_str_get(de->de_summary, lang)[0] != '\0'){
+  if (lang_str_get(de->de_summary, lang))
     return lang_str_set(&de->de_summary, v, lang);
-  }
-  if (de->de_desc && lang_str_get(de->de_desc, lang)[0] != '\0'){
+  if (lang_str_get(de->de_desc, lang))
     return lang_str_set(&de->de_desc, v, lang);
-  }
   // If subtitle, summary or descripcion is not set, the extratext
   // field is stored in subtitle by default
   return lang_str_set(&de->de_subtitle, v, lang);
