@@ -294,19 +294,18 @@ int
 mpegts_pid_weighted(mpegts_apids_t *dst, mpegts_apids_t *pids, int limit)
 {
   int i, j;
+  mpegts_apids_t sorted;
+
+  mpegts_pid_init(&sorted);
+  mpegts_pid_copy(&sorted, pids);
+  qsort(sorted.pids, sorted.count, sizeof(mpegts_apid_t), pid_wcmp);
+
   mpegts_pid_init(dst);
-  mpegts_pid_copy(dst, pids);
-  qsort(dst->pids, dst->count, sizeof(mpegts_apid_t), pid_wcmp);
-  for (i = j = 0; i < dst->count; i++)
-    if (j == 0 || (dst->pids[j-1].pid != dst->pids[i].pid)) {
-      if (j < limit || dst->pids[i].weight > MPS_WEIGHT_PMT_SCAN) {
-        dst->pids[j].weight = 0;
-        dst->pids[j++].pid = dst->pids[i].pid;
-      }
-    }
-  dst->count = j;
-  dst->sorted = 0;
+  for (i = j = 0; i < sorted.count && dst->count < limit; i++)
+    mpegts_pid_add(dst, sorted.pids[i].pid, 0);
   dst->all = pids->all;
+
+  mpegts_pid_done(&sorted);
   return 0;
 }
 
