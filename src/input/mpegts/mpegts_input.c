@@ -936,7 +936,7 @@ mpegts_input_started_mux
   tsdebug_started_mux(mi, mm);
 
   /* Deliver first TS packets as fast as possible */
-  mi->mi_last_dispatch = 0;
+  atomic_set_s64(&mi->mi_last_dispatch, 0);
 
   /* Arm timer */
   if (LIST_FIRST(&mi->mi_mux_active) == NULL)
@@ -1145,10 +1145,10 @@ retry:
   len  = sb->sb_ptr;
   if (len < (MIN_TS_PKT * 188) && (flags & MPEGTS_DATA_CC_RESTART) == 0) {
     /* For slow streams, check also against the clock */
-    if (monocmpfastsec(mclk(), mi->mi_last_dispatch))
+    if (monocmpfastsec(mclk(), atomic_add_s64(&mi->mi_last_dispatch, 0)))
       return;
   }
-  mi->mi_last_dispatch = mclk();
+  atomic_set_s64(&mi->mi_last_dispatch, mclk());
 
   /* Check for sync */
   while ( (len >= MIN_TS_SYN) &&
