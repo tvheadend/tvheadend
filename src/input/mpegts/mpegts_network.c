@@ -442,6 +442,14 @@ mpegts_network_mux_create2
   return NULL;
 }
 
+void
+mpegts_network_scan ( mpegts_network_t *mn )
+{
+  mpegts_mux_t *mm;
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+    mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+}
+
 static void
 mpegts_network_link_delete ( mpegts_network_link_t *mnl )
 {
@@ -518,6 +526,7 @@ mpegts_network_create0
   mn->mn_create_service = mpegts_network_create_service;
   mn->mn_mux_class      = mpegts_network_mux_class;
   mn->mn_mux_create2    = mpegts_network_mux_create2;
+  mn->mn_scan           = mpegts_network_scan;
   mn->mn_delete         = mpegts_network_delete;
 
   /* Add to global list */
@@ -589,14 +598,6 @@ mpegts_network_set_network_name
     save = 1;
   }
   return save;
-}
-
-void
-mpegts_network_scan ( mpegts_network_t *mn )
-{
-  mpegts_mux_t *mm;
-  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
-    mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
 }
 
 void

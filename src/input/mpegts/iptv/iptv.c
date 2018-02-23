@@ -1016,6 +1016,13 @@ iptv_network_create_mux2
   return (mpegts_mux_t*)iptv_mux_create0((iptv_network_t*)mn, NULL, conf);
 }
 
+static void
+iptv_network_auto_scan ( mpegts_network_t *mn )
+{
+  iptv_auto_network_trigger((iptv_network_t *)mn);
+  mpegts_network_scan(mn);
+}
+
 static mpegts_service_t *
 iptv_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
@@ -1069,6 +1076,8 @@ iptv_network_create0
   in->mn_mux_class      = iptv_network_mux_class;
   in->mn_mux_create2    = iptv_network_create_mux2;
   in->mn_config_save    = iptv_network_config_save;
+  if (idc == &iptv_auto_network_class)
+    in->mn_scan         = iptv_network_auto_scan;
  
   /* Defaults */
   in->mn_autodiscovery  = 0;

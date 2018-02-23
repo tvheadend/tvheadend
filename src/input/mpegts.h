@@ -350,6 +350,7 @@ struct mpegts_network
     (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
   const idclass_t*  (*mn_mux_class)   (mpegts_network_t*);
   mpegts_mux_t *    (*mn_mux_create2) (mpegts_network_t *mn, htsmsg_t *conf);
+ void              (*mn_scan)        (mpegts_network_t*);
 
   /*
    * Configuration

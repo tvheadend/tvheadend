@@ -147,15 +147,15 @@ api_mpegts_network_scan
       if (!(uuid = htsmsg_field_get_str(f))) continue;
       pthread_mutex_lock(&global_lock);
       mn = mpegts_network_find(uuid);
-      if (mn)
-        mpegts_network_scan(mn);
+      if (mn && mn->mn_scan)
+        mn->mn_scan(mn);
       pthread_mutex_unlock(&global_lock);
     }
   } else if ((uuid = htsmsg_field_get_str(f))) {
     pthread_mutex_lock(&global_lock);
     mn = mpegts_network_find(uuid);
-    if (mn)
-      mpegts_network_scan(mn);
+    if (mn && mn->mn_scan)
+      mn->mn_scan(mn);
     pthread_mutex_unlock(&global_lock);
     if (!mn)
       return -ENOENT;
