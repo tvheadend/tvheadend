@@ -106,7 +106,6 @@ mpegts_psi_section_reassemble0
     return len; // Not there yet
 
   if(p[0] == 0x72) { /* stuffing section */
-    dvb_table_reset(mt);
     cb = NULL;
     crc = 0;
   }
