@@ -102,11 +102,26 @@ iptv_handler_find ( const char *scheme )
  * IPTV input
  * *************************************************************************/
 
+static int
+iptv_input_thread_number ( iptv_input_t *mi )
+{
+  iptv_thread_pool_t *pool;
+  int num = 1;
+
+  TAILQ_FOREACH(pool, &iptv_tpool, link) {
+    if (pool->input == mi)
+      break;
+    num++;
+  }
+  return num;
+}
+
 static void
 iptv_input_class_get_title
   ( idnode_t *self, const char *lang, char *dst, size_t dstsize )
 {
-  snprintf(dst, dstsize, "%s", tvh_gettext_lang(lang, N_("IPTV")));
+  int num = iptv_input_thread_number((iptv_input_t *)self);
+  snprintf(dst, dstsize, "%s%d", tvh_gettext_lang(lang, N_("IPTV thread #")), num);
 }
 
 extern const idclass_t mpegts_input_class;
@@ -451,7 +466,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 static void
 iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 {
-  snprintf(buf, len, "IPTV");
+  snprintf(buf, len, "IPTV #%d", iptv_input_thread_number(mi));
 }
 
 static inline int
