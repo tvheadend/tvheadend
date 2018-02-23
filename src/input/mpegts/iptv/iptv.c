@@ -466,7 +466,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 static void
 iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 {
-  snprintf(buf, len, "IPTV #%d", iptv_input_thread_number(mi));
+  snprintf(buf, len, "IPTV #%d", iptv_input_thread_number((iptv_input_t *)mi));
 }
 
 static inline int
