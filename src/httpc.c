@@ -1154,6 +1154,7 @@ rtsp_data:
     }
     r += hc->hc_csize;
     hc->hc_code = 0;
+    res = 0;
     if (hc->hc_rtp_data_complete) {
       http_client_get(hc);
       pthread_mutex_unlock(&hc->hc_mutex);
