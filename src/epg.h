@@ -583,7 +583,8 @@ int epg_broadcast_set_serieslink
   __attribute__((warn_unused_result));
 
 /* Accessors */
-epg_broadcast_t *epg_broadcast_get_next    ( epg_broadcast_t *b );
+epg_broadcast_t *epg_broadcast_get_prev( epg_broadcast_t *b );
+epg_broadcast_t *epg_broadcast_get_next( epg_broadcast_t *b );
 const char *epg_broadcast_get_title 
   ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_subtitle
