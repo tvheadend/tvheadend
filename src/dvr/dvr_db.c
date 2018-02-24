@@ -982,7 +982,8 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   /* Extract episode info */
   s = htsmsg_get_str(conf, "episode");
   if (s) {
-    extract_season_episode(&de->de_epnum, s);
+    if (!extract_season_episode(&de->de_epnum, s))
+      de->de_epnum.text = strdup(s);
   } else {
     m = htsmsg_get_map(conf, "episode");
     if (m)
