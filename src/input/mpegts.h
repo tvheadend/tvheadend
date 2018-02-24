@@ -539,6 +539,13 @@ struct mpegts_mux
   uint16_t mm_sid_filter;
 
   /*
+   * SAT>IP Remap
+   */
+  uint32_t        mm_remap_satip_dvbt_freq;
+  uint32_t        mm_remap_satip_dvbc_freq;
+  uint32_t        mm_remap_satip_dvbs_freq;
+
+  /*
    * TSDEBUG
    */
 #if ENABLE_TSDEBUG
