@@ -2270,8 +2270,8 @@ dvr_entry_start_recording(dvr_entry_t *de, int clone)
    */
   if (de->de_bcast && de->de_running_start == 0 && de->de_running_stop == 0) {
     epg_broadcast_t *ebc = epg_broadcast_get_prev(de->de_bcast);
-    if (de->de_bcast->running != EPG_RUNNING_NOTSET ||
-        (ebc && ebc->running != EPG_RUNNING_NOTSET))
+    if (de->de_bcast->running != EPG_RUNNING_STOP ||
+        (ebc && ebc->running != EPG_RUNNING_STOP))
       de->de_running_stop = gclk();
   }
 
