@@ -2464,6 +2464,17 @@ dvr_entry_start_recording(dvr_entry_t *de, int clone)
   tvhinfo(LS_DVR, "\"%s\" on \"%s\" recorder starting",
 	  lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
 
+  /*
+   * The running flag is updated only on the event change. When the DVR
+   * entry is added too late, the running timers might not be updated.
+   */
+  if (de->de_bcast && de->de_running_start == 0 && de->de_running_stop == 0) {
+    epg_broadcast_t *ebc = epg_broadcast_get_prev(de->de_bcast);
+    if (de->de_bcast->running != EPG_RUNNING_NOTSET ||
+        (ebc && ebc->running != EPG_RUNNING_NOTSET))
+      de->de_running_stop = gclk();
+  }
+
   if (!clone && (r = dvr_rec_subscribe(de)) < 0) {
     dvr_entry_completed(de, r == -EPERM ? SM_CODE_USER_ACCESS :
                            (r == -EOVERFLOW ? SM_CODE_USER_LIMIT :

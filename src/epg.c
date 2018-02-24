@@ -1453,10 +1453,16 @@ int epg_broadcast_set_first_aired
   return 0;
 }
 
-epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
+epg_broadcast_t *epg_broadcast_get_prev ( epg_broadcast_t *b )
 {
-  if ( !broadcast ) return NULL;
-  return RB_NEXT(broadcast, sched_link);
+  if (!b) return NULL;
+  return RB_PREV(b, sched_link);
+}
+
+epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b )
+{
+  if (!b) return NULL;
+  return RB_NEXT(b, sched_link);
 }
 
 const char *epg_broadcast_get_title ( epg_broadcast_t *b, const char *lang )
