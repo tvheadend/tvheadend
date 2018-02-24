@@ -1081,6 +1081,8 @@ rtsp_parse_cmd
     rs->rtp_peer_port = r;
     rs->frontend = fe > 0 ? fe : 1;
   } else {
+    if (!rs && !stream && cmd == RTSP_CMD_DESCRIBE)
+      rs = rtsp_new_session(hc->hc_peer_ipstr, msys, 0, -1);
     if (!rs || stream != rs->stream) {
       if (rs)
         errcode = HTTP_STATUS_NOT_FOUND;
@@ -1358,7 +1360,8 @@ rtsp_describe_session(session_t *rs, htsbuf_queue_t *q)
 {
   char buf[4096];
 
-  htsbuf_qprintf(q, "a=control:stream=%d\r\n", rs->stream);
+  if (rs->stream > 0)
+    htsbuf_qprintf(q, "a=control:stream=%d\r\n", rs->stream);
   htsbuf_qprintf(q, "a=tool:%s\r\n", config_get_http_server_name());
   htsbuf_append_str(q, "m=video 0 RTP/AVP 33\r\n");
   if (strchr(rtsp_ip, ':'))
