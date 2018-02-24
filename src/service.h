@@ -19,12 +19,11 @@
 #ifndef SERVICE_H__
 #define SERVICE_H__
 
+#include "esstream.h"
 #include "sbuf.h"
 #include "htsmsg.h"
 #include "idnode.h"
 #include "profile.h"
-#include "descrambler.h"
-#include "input/mpegts/dvb.h"
 
 extern const idclass_t service_class;
 extern const idclass_t service_raw_class;
@@ -53,64 +52,6 @@ typedef struct source_info {
   char *si_service;
   int   si_type;
 } source_info_t;
-
-/**
- * Stream, one media component for a service.
- */
-typedef struct elementary_stream {
-
-  TAILQ_ENTRY(elementary_stream) es_link;
-  TAILQ_ENTRY(elementary_stream) es_filt_link;
-
-  uint32_t es_position;
-  struct service *es_service;
-
-  streaming_component_type_t es_type;
-  int es_index;
-
-  char *es_nicename;
-
-  /* PID related */
-  int16_t es_pid;
-  uint16_t es_parent_pid;    /* For subtitle streams originating from 
-				a teletext stream. this is the pid
-				of the teletext stream */
-  int8_t es_pid_opened;      /* PID is opened */
-  int8_t es_cc;              /* Last CC */
-
-  /* CA ID's on this stream */
-  struct caid_list es_caids;
-
-  /* */
-  int es_delete_me;      /* Temporary flag for deleting streams */
-
-  /* Stream info */
-  int es_frame_duration;
-
-  int es_width;
-  int es_height;
-
-  uint16_t es_aspect_num;
-  uint16_t es_aspect_den;
-
-  char es_lang[4];           /* ISO 639 2B 3-letter language code */
-  uint8_t es_audio_type;     /* Audio type */
-  uint8_t es_audio_version;  /* Audio version/layer */
-
-  uint16_t es_composition_id;
-  uint16_t es_ancillary_id;
-
-  /* Error log limiters */
-  tvhlog_limit_t es_cc_log;
-  
-  /* Filter temporary variable */
-  uint32_t es_filter;
-
-  /* HBBTV PSI table (AIT) */
-  mpegts_psi_table_t es_psi;
-
-} elementary_stream_t;
-
 
 typedef TAILQ_HEAD(service_instance_list, service_instance) service_instance_list_t;
 
@@ -444,12 +385,9 @@ typedef struct service {
   descramble_info_t *s_descramble_info;
 
   /**
-   * List of all and filtered components.
+   * Set of all and filtered components.
    */
-  struct elementary_stream_queue s_components;
-  struct elementary_stream_queue s_filt_components;
-  short s_last_pid;
-  elementary_stream_t *s_last_es;
+  elementary_set_t s_components;
 
   /**
    * Delivery pad, this is were we finally deliver all streaming output
@@ -481,8 +419,6 @@ int service_start(service_t *t, int instance, int weight, int flags,
                   int timeout, int postpone);
 void service_stop(service_t *t);
 
-void service_build_filter(service_t *t);
-
 service_t *service_create0(service_t *t, int service_type, const idclass_t *idc,
                            const char *uuid, int source_type, htsmsg_t *conf);
 
@@ -507,33 +443,10 @@ service_instance_t *service_find_instance(struct service *s,
                                           int flags, int timeout,
                                           int postpone);
 
-elementary_stream_t *service_stream_find_(service_t *t, int pid);
-
-static inline elementary_stream_t *
-service_stream_find(service_t *t, int pid)
-{
-  if (t->s_last_pid != (pid))
-    return service_stream_find_(t, pid);
-  else
-    return t->s_last_es;
-}
-
-elementary_stream_t *
-service_stream_type_find(service_t *t, streaming_component_type_t type);
-
-elementary_stream_t *service_stream_create(service_t *t, int pid,
-				     streaming_component_type_t type);
-
-elementary_stream_t *
-service_stream_type_modify(service_t *t, int pid,
-                           streaming_component_type_t type);
-
 void service_settings_write(service_t *t);
 
 const char *service_servicetype_txt(service_t *t);
 
-int service_has_audio_or_video(service_t *t);
-int service_has_no_audio(service_t *t, int filtered);
 int service_is_sdtv(service_t *t);
 int service_is_uhdtv(service_t *t);
 int service_is_hdtv(service_t *t);
@@ -573,7 +486,6 @@ service_reset_streaming_status_flags(service_t *t, int flag)
     service_set_streaming_status_flags_(t, n & ~flag);
 }
 
-
 struct streaming_start;
 struct streaming_start *service_build_stream_start(service_t *t);
 
@@ -581,21 +493,15 @@ void service_restart(service_t *t);
 
 void service_restart_streams(service_t *t);
 
-void service_stream_destroy(service_t *t, elementary_stream_t *st);
-
-void service_stream_type_destroy(service_t *t, streaming_component_type_t type);
-
 void service_request_save(service_t *t);
 
 void service_source_info_free(source_info_t *si);
 
 void service_source_info_copy(source_info_t *dst, const source_info_t *src);
 
-void service_make_nicename(service_t *t);
+const char *service_make_nicename(service_t *t);
 
 const char *service_nicename(service_t *t);
-
-const char *service_component_nicename(elementary_stream_t *st);
 
 const char *service_adapter_nicename(service_t *t, char *buf, size_t len);
 

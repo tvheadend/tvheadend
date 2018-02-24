@@ -19,6 +19,7 @@
 
 #include <assert.h>
 
+#include "tvheadend.h"
 #include "service.h"
 #include "channels.h"
 #include "input.h"
@@ -919,7 +920,7 @@ mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid )
     pthread_mutex_lock(&s->s_stream_mutex);
     if (pid == s->s_pmt_pid || pid == s->s_pcr_pid)
       goto ok;
-    if (service_stream_find((service_t *)s, pid))
+    if (elementary_stream_find(&s->s_components, pid))
       goto ok;
     pthread_mutex_unlock(&s->s_stream_mutex);
   }
@@ -1040,7 +1041,7 @@ mpegts_service_update_slave_pids
   mpegts_pid_add(pids, s->s_pcr_pid, MPS_WEIGHT_PCR);
 
   /* Ensure that filtered PIDs are not send in ts_recv_raw */
-  TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
+  TAILQ_FOREACH(st, &s->s_components.set_filter, es_filter_link)
     if ((is_ddci || s->s_scrambled_pass || st->es_type != SCT_CA) &&
         st->es_pid >= 0 && st->es_pid < 8192)
       mpegts_pid_add(pids, st->es_pid, mpegts_mps_weight(st));

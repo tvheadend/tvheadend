@@ -331,7 +331,7 @@ static void parser_input_start(parser_t *prs, streaming_message_t *sm)
   prs->prs_candidate_pcr = PTS_UNSET;
   prs->prs_current_pcr_guess = 0;
   prs->prs_pcr_boundary = 90000;
-  if (service_has_no_audio(prs->prs_service, 1))
+  if (elementary_stream_has_no_audio(&prs->prs_service->s_components, 1))
     prs->prs_pcr_boundary = 6*90000;
 
   streaming_target_deliver2(prs->prs_output, sm);

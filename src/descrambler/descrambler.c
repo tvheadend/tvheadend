@@ -323,7 +323,7 @@ descrambler_quick_ecm ( mpegts_service_t *t, int pid )
 
   if (!ca_hints_quickecm)
     return 0;
-  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+  TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
     if (st->es_pid != pid) continue;
     TAILQ_FOREACH(hint, &ca_hints, dh_link) {
       if (!hint->dh_quickecm) continue;
@@ -359,7 +359,7 @@ descrambler_service_start ( service_t *t )
   if (!t->s_dvb_forcecaid) {
 
     count = 0;
-    TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
+    TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link)
       LIST_FOREACH(ca, &st->es_caids, link) {
         if (ca->use == 0) continue;
         TAILQ_FOREACH(hint, &ca_hints, dh_link) {

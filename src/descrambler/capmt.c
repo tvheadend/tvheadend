@@ -2137,7 +2137,7 @@ capmt_caid_change(th_descrambler_t *td)
 
   /* add missing A/V PIDs and ECM PIDs */
   i = 0;
-  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+  TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
     if (i < MAX_PIDS && capmt_include_elementary_stream(st->es_type)) {
       if (capmt_update_elementary_stream(ct, &i, st))
         change = 1;
@@ -2172,7 +2172,7 @@ capmt_caid_change(th_descrambler_t *td)
         cce->cce_ecmpid != t->s_dvb_prefcapid) {
       st = NULL;
     } else {
-      TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+      TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
         LIST_FOREACH(c, &st->es_caids, link)
           if (c->use && cce->cce_caid == c->caid &&
               cce->cce_providerid == c->providerid &&
@@ -2513,7 +2513,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
   ct->ct_multipid = descrambler_multi_pid((th_descrambler_t *)ct);
 
   i = 0;
-  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+  TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
     if (i < MAX_PIDS && capmt_include_elementary_stream(st->es_type))
       capmt_update_elementary_stream(ct, &i, st);
     if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&

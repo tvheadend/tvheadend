@@ -254,8 +254,6 @@ TAILQ_HEAD(ref_update_queue, ref_update);
 LIST_HEAD(service_list, service);
 RB_HEAD(service_tree, service);
 TAILQ_HEAD(service_queue, service);
-LIST_HEAD(elementary_stream_list, elementary_stream);
-TAILQ_HEAD(elementary_stream_queue, elementary_stream);
 LIST_HEAD(th_muxer_list, th_muxer);
 LIST_HEAD(th_muxstream_list, th_muxstream);
 LIST_HEAD(th_descrambler_list, th_descrambler);

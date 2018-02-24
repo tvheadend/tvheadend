@@ -668,10 +668,11 @@ mpegts_input_open_service_pid
   lock_assert(&s->s_stream_mutex);
 
   es = NULL;
-  if (service_stream_find((service_t *)s, pid) == NULL) {
+  if (elementary_stream_find(&s->s_components, pid) == NULL) {
     if (!create)
       return NULL;
-    es = service_stream_create(s, pid, stype);
+    es = elementary_stream_create(&s->s_components, pid, stype,
+                                  s->s_status == SERVICE_RUNNING);
     es->es_pid_opened = 1;
   }
   if (es && mm->mm_active) {
@@ -731,7 +732,7 @@ mpegts_input_cat_pass_callback
   pthread_mutex_lock(&mi->mi_output_lock);
   pthread_mutex_lock(&s->s_stream_mutex);
 
-  TAILQ_FOREACH(es, &s->s_components, es_link) {
+  TAILQ_FOREACH(es, &s->s_components.set_all, es_link) {
     if (es->es_type != SCT_CAT) continue;
     es->es_delete_me = 1;
     LIST_FOREACH(c, &es->es_caids, link)
@@ -783,7 +784,7 @@ mpegts_input_cat_pass_callback
     len -= dlen;
   }
 
-  for (es = TAILQ_FIRST(&s->s_components); es != NULL; es = next) {
+  for (es = TAILQ_FIRST(&s->s_components.set_all); es != NULL; es = next) {
     next = TAILQ_NEXT(es, es_link);
     if (es->es_type != SCT_CAT) continue;
     for (c = LIST_FIRST(&es->es_caids); c != NULL; c = cn) {
@@ -794,7 +795,7 @@ mpegts_input_cat_pass_callback
       }
     }
     if (es->es_delete_me)
-      service_stream_destroy(s, es);
+      elementary_set_stream_destroy(&s->s_components, es);
   }
 
   pthread_mutex_unlock(&s->s_stream_mutex);
@@ -846,7 +847,7 @@ mpegts_input_open_service
       s->s_cat_opened = 1;
     }
     /* Open only filtered components here */
-    TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
+    TAILQ_FOREACH(st, &s->s_components.set_filter, es_filter_link)
       if ((s->s_scrambled_pass || st->es_type != SCT_CA) &&
           st->es_pid != s->s_pmt_pid && st->es_pid != s->s_pcr_pid) {
         st->es_pid_opened = 1;
@@ -925,7 +926,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
       s->s_cat_opened = 0;
     }
     /* Close all opened PIDs (the component filter may be changed at runtime) */
-    TAILQ_FOREACH(st, &s->s_components, es_link) {
+    TAILQ_FOREACH(st, &s->s_components.set_all, es_link) {
       if (st->es_pid_opened) {
         st->es_pid_opened = 0;
         mpegts_input_close_pid(mi, mm, st->es_pid, MPS_SERVICE, s);
@@ -1562,7 +1563,7 @@ done:
 
   if (mpkt->mp_cc_restart) {
     LIST_FOREACH(s, &mm->mm_transports, s_active_link)
-      TAILQ_FOREACH(st, &s->s_components, es_link)
+      TAILQ_FOREACH(st, &s->s_components.set_all, es_link)
         st->es_cc = -1;
   }
 
@@ -1634,7 +1635,7 @@ mpegts_input_postdemux
         LIST_FOREACH(mps, &mp->mp_svc_subs, mps_svcraw_link) {
           s = mps->mps_owner;
           pthread_mutex_lock(&s->s_stream_mutex);
-          st = service_stream_find(s, pid);
+          st = elementary_stream_find(&s->s_components, pid);
           ts_recv_packet0((mpegts_service_t*)s, st, tsb, llen);
           pthread_mutex_unlock(&s->s_stream_mutex);
         }

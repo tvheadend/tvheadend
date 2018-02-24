@@ -16,7 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "tvheadend.h"
 #include "en50221_capmt.h"
+#include "esstream.h"
 #include "input.h"
 
 #define EN50221_CAPMT_CMD_OK       1
@@ -77,7 +79,7 @@ static int en50221_capmt_check_pid
 {
   elementary_stream_t *st;
 
-  TAILQ_FOREACH(st, &s->s_filt_components, es_link)
+  TAILQ_FOREACH(st, &s->s_components.set_filter, es_filter_link)
     if (st->es_pid == pid) return 1;
   return 0;
 }
@@ -96,7 +98,7 @@ static int en50221_capmt_check_caid
   if (caids_count == 0)
     return 0;
 
-  TAILQ_FOREACH(st, &s->s_filt_components, es_link) {
+  TAILQ_FOREACH(st, &s->s_components.set_filter, es_filter_link) {
     if (st->es_type != SCT_CA) continue;
     LIST_FOREACH(c, &st->es_caids, link) {
       if (!c->use) continue;

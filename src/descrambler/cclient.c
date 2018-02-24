@@ -869,7 +869,7 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
       tvhdebug(cc->cc_subsys, "%s: ECM state INIT", cc->cc_name);
 
       if(t->s_dvb_prefcapid_lock != PREFCAPID_OFF) {
-        st = service_stream_find((service_t*)t, t->s_dvb_prefcapid);
+        st = elementary_stream_find(&t->s_components, t->s_dvb_prefcapid);
         if (st && st->es_type == SCT_CA)
           LIST_FOREACH(c, &st->es_caids, link)
             LIST_FOREACH(pcard, &cc->cc_cards, cs_card)
@@ -896,7 +896,7 @@ prefcapid_ok:
       goto end;
   }
 
-  st = service_stream_find((service_t *)t, pid);
+  st = elementary_stream_find(&t->s_components, pid);
   if (st) {
     LIST_FOREACH(c, &st->es_caids, link)
       LIST_FOREACH(pcard, &cc->cc_cards, cs_card)
@@ -1067,7 +1067,7 @@ cc_service_start(caclient_t *cac, service_t *t)
   LIST_FOREACH(pcard, &cc->cc_cards, cs_card) {
     if (!pcard->cs_running) continue;
     if (pcard->cs_ra.caid == 0) continue;
-    TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+    TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
       if (prefpid_lock == PREFCAPID_FORCE && prefpid != st->es_pid)
         continue;
       LIST_FOREACH(c, &st->es_caids, link) {
@@ -1086,7 +1086,7 @@ cc_service_start(caclient_t *cac, service_t *t)
   if (ct) {
     reuse = 1;
     for (i = 0; i < ct->cs_epids.count; i++) {
-      TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+      TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
         if (st->es_pid != ct->cs_epids.pids[i].pid) continue;
         LIST_FOREACH(c, &st->es_caids, link)
           if (c->use && c->caid == pcard->cs_ra.caid)
@@ -1128,7 +1128,7 @@ cc_service_start(caclient_t *cac, service_t *t)
 add:
   i = 0;
   mpegts_pid_init(&epids);
-  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+  TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
     LIST_FOREACH(c, &st->es_caids, link)
       if (c->use && c->caid == pcard->cs_ra.caid)
         mpegts_pid_add(&epids, st->es_pid, 0);

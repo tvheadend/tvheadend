@@ -98,8 +98,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  if(TAILQ_FIRST(&t->s_filt_components) != NULL ||
-     t->s_type != STYPE_STD) {
+  if(elementary_set_has_streams(&t->s_components, 1) || t->s_type != STYPE_STD) {
 
     streaming_msg_free(s->ths_start_message);
 

@@ -493,7 +493,7 @@ rtsp_validate_service(mpegts_service_t *s, mpegts_apids_t *pids)
     pthread_mutex_unlock(&s->s_stream_mutex);
     return 0;
   }
-  TAILQ_FOREACH(st, &s->s_components, es_link) {
+  TAILQ_FOREACH(st, &s->s_components.set_all, es_link) {
     if (st->es_type == SCT_CA)
       enc = 1;
     if (st->es_pid > 0)

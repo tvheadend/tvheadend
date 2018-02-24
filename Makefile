@@ -226,6 +226,7 @@ SRCS-1 = \
 	src/epggrab.c\
 	src/spawn.c \
 	src/packet.c \
+	src/esstream.c \
 	src/streaming.c \
 	src/channels.c \
 	src/subscriptions.c \

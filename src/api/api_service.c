@@ -143,14 +143,13 @@ api_service_streams
     htsmsg_add_str(e, "type", "PMT");
     htsmsg_add_msg(st, NULL, e);
   }
-  TAILQ_FOREACH(es, &s->s_components, es_link) {
+  TAILQ_FOREACH(es, &s->s_components.set_all, es_link) {
     if (es->es_type == SCT_PCR) continue;
     htsmsg_add_msg(st, NULL, api_service_streams_get_one(es, 0));
   }
-  if (TAILQ_FIRST(&s->s_filt_components) == NULL ||
-      s->s_status == SERVICE_IDLE)
-    service_build_filter(s);
-  TAILQ_FOREACH(es, &s->s_filt_components, es_filt_link) {
+  if (elementary_set_has_streams(&s->s_components, 1) || s->s_status == SERVICE_IDLE)
+    elementary_set_filter_build(&s->s_components);
+  TAILQ_FOREACH(es, &s->s_components.set_filter, es_filter_link) {
     if (es->es_type == SCT_PCR) continue;
     htsmsg_add_msg(stf, NULL, api_service_streams_get_one(es, 1));
   }

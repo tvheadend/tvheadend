@@ -147,7 +147,7 @@ constcw_service_start(caclient_t *cac, service_t *t)
 
   if (!mt->s_dvb_forcecaid) {
     pthread_mutex_lock(&t->s_stream_mutex);
-    TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+    TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
       LIST_FOREACH(c, &st->es_caids, link) {
         if (c->use && c->caid == ccw->ccw_caid &&
             c->providerid == ccw->ccw_providerid)

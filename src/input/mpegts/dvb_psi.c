@@ -2241,9 +2241,10 @@ psi_desc_add_ca
   tvhdebug(mt->mt_subsys, "%s:  caid %04X (%s) provider %08X pid %04X",
            mt->mt_name, caid, caid2name(caid), provid, pid);
 
-  st = service_stream_find((service_t*)t, pid);
+  st = elementary_stream_find(&t->s_components, pid);
   if (st == NULL || st->es_type != SCT_CA) {
-    st = service_stream_create((service_t*)t, pid, SCT_CA);
+    st = elementary_stream_create(&t->s_components, pid, SCT_CA,
+                                  t->s_status == SERVICE_RUNNING);
     r |= PMT_UPDATE_NEW_CA_STREAM;
   }
 
@@ -2368,10 +2369,11 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
       // higher than normal MPEG TS (0x2000 ++)
       int pid = DVB_TELETEXT_BASE + page;
     
-      st = service_stream_find((service_t*)t, pid);
+      st = elementary_stream_find(&t->s_components, pid);
       if (st == NULL || st->es_type != SCT_TEXTSUB) {
         r |= PMT_UPDATE_NEW_STREAM;
-        st = service_stream_create((service_t*)t, pid, SCT_TEXTSUB);
+        st = elementary_stream_create(&t->s_components, pid, SCT_TEXTSUB,
+                                      t->s_status == SERVICE_RUNNING);
       }
 
       lang = lang_code_get2((const char*)ptr, 3);
@@ -2442,7 +2444,7 @@ psi_parse_pmt
   len -= 9;
 
   /* Mark all streams for deletion */
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
+  TAILQ_FOREACH(st, &t->s_components.set_all, es_link) {
     st->es_delete_me = 1;
 
     LIST_FOREACH(c, &st->es_caids, link)
@@ -2611,10 +2613,11 @@ psi_parse_pmt
     
     if (hts_stream_type != SCT_UNKNOWN) {
 
-      st = service_stream_find((service_t*)t, pid);
+      st = elementary_stream_find(&t->s_components, pid);
       if (st == NULL || st->es_type != hts_stream_type) {
         update |= PMT_UPDATE_NEW_STREAM;
-        st = service_stream_create((service_t*)t, pid, hts_stream_type);
+        st = elementary_stream_create(&t->s_components, pid, hts_stream_type,
+                                      t->s_status == SERVICE_RUNNING);
       }
 
       if (st->es_type != hts_stream_type) {
@@ -2676,12 +2679,13 @@ psi_parse_pmt
 
   /* Handle PCR 'elementary stream' */
   if (!pcr_shared) {
-    st = service_stream_type_modify((service_t *)t, t->s_pcr_pid, SCT_PCR);
+    st = elementary_stream_type_modify(&t->s_components, t->s_pcr_pid, SCT_PCR,
+                                       t->s_status == SERVICE_RUNNING);
     st->es_delete_me = 0;
   }
 
   /* Scan again to see if any streams should be deleted */
-  for(st = TAILQ_FIRST(&t->s_components); st != NULL; st = next) {
+  for(st = TAILQ_FIRST(&t->s_components.set_all); st != NULL; st = next) {
     next = TAILQ_NEXT(st, es_link);
 
     for(c = LIST_FIRST(&st->es_caids); c != NULL; c = cn) {
@@ -2694,13 +2698,13 @@ psi_parse_pmt
     }
 
     if(st->es_delete_me) {
-      service_stream_destroy((service_t*)t, st);
+      elementary_set_stream_destroy(&t->s_components, st);
       update |= PMT_UPDATE_STREAM_DELETED;
     }
   }
 
   if(update & PMT_REORDERED)
-    sort_elementary_streams((service_t*)t);
+    elementary_set_sort_streams(&t->s_components);
 
   if(update) {
     tvhdebug(mt->mt_subsys, "%s: Service \"%s\" PMT (version %d) updated"
@@ -2738,7 +2742,7 @@ psi_parse_pmt
     }
   }
 
-  if (service_has_audio_or_video((service_t *)t)) {
+  if (elementary_stream_has_audio_or_video(&t->s_components)) {
     dvb_service_autoenable(t, "PAT and PMT");
     t->s_verified = 1;
   }

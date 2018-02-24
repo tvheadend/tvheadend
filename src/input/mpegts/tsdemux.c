@@ -59,7 +59,7 @@ ts_recv_packet0
         if (t->s_start_time + sec2mono(1) < mclk() &&
             tvhlog_limit(&st->es_cc_log, 10))
           tvhwarn(LS_TS, "%s Continuity counter error (total %zi)",
-                        service_component_nicename(st), st->es_cc_log.count);
+                         st->es_nicename, st->es_cc_log.count);
         if (!error)
           errors++;
         error |= 2;
@@ -123,7 +123,7 @@ ts_recv_skipped0
         if (t->s_start_time + sec2mono(1) < mclk() &&
             tvhlog_limit(&st->es_cc_log, 10))
           tvhwarn(LS_TS, "%s Continuity counter error (total %zi)",
-                        service_component_nicename(st), st->es_cc_log.count);
+                         st->es_nicename, st->es_cc_log.count);
       }
       st->es_cc = (cc + 1) & 0xf;
     }
@@ -186,7 +186,7 @@ ts_recv_packet1
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
-  st = service_stream_find((service_t*)t, pid);
+  st = elementary_stream_find(&t->s_components, pid);
 
   if((st == NULL) && (pid != t->s_pcr_pid) && !table) {
     pthread_mutex_unlock(&t->s_stream_mutex);
@@ -240,7 +240,7 @@ ts_recv_packet2(mpegts_service_t *t, const uint8_t *tsb, int len)
   for ( ; len > 0; tsb += len2, len -= len2 ) {
     len2 = mpegts_word_count(tsb, len, 0xFF9FFFD0);
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-    st = service_stream_find((service_t*)t, pid);
+    st = elementary_stream_find(&t->s_components, pid);
     ts_recv_packet0(t, st, tsb, len2);
   }
 }
@@ -257,7 +257,7 @@ ts_skip_packet2(mpegts_service_t *t, const uint8_t *tsb, int len)
   for ( ; len > 0; tsb += len2, len -= len2 ) {
     len2 = mpegts_word_count(tsb, len, 0xFF9FFFD0);
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-    if((st = service_stream_find((service_t*)t, pid)) != NULL)
+    if((st = elementary_stream_find(&t->s_components, pid)) != NULL)
       ts_recv_skipped0(t, st, tsb, len2);
   }
 }

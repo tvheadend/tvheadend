@@ -445,7 +445,7 @@ esfilter_build_ca_enum(int provider)
   lock_assert(&global_lock);
   TAILQ_FOREACH(s, &service_all, s_all_link) {
     pthread_mutex_lock(&s->s_stream_mutex);
-    TAILQ_FOREACH(es, &s->s_components, es_link) {
+    TAILQ_FOREACH(es, &s->s_components.set_all, es_link) {
       LIST_FOREACH(ca, &es->es_caids, link) {
         v = provider ? ca->providerid : ca->caid;
         for (i = 0; i < count; i++)
