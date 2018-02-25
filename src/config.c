@@ -2419,7 +2419,7 @@ const idclass_t config_class = {
       .group  = 6,
     },
     {
-      .type   = PT_BOOL,
+      .type   = PT_INT,
       .id     = "iptv_tpool",
       .name   = N_("IPTV threads"),
       .desc   = N_("Set the number of threads for IPTV to split load "
