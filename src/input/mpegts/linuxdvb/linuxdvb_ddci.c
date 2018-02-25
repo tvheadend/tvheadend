@@ -110,6 +110,7 @@ struct linuxdvb_ddci
   mpegts_mux_t               *lddci_mm;
   /* the same input used for all services */
   mpegts_input_t             *lddci_mi;
+  const uint8_t              *lddci_prev_tsb;
 };
 
 
@@ -474,7 +475,7 @@ linuxdvb_ddci_wr_thread_buffer_put
   /* We need to lock this function against linuxdvb_ddci_wr_thread_stop, because
    * linuxdvb_ddci_wr_thread_buffer_put may be executed by another thread
    * simultaneously, although the stop function is already running. Due to the
-   * race condition with the tread_running flag, it may happen, that the buffer
+   * race condition with the thread_running flag, it may happen, that the buffer
    * is not empty after the stop function is finished. The next execution of
    * linuxdvb_ddci_wr_thread_start will then re-init the queue and the wrongly
    * stored data is lost -> memory leak.
@@ -828,8 +829,26 @@ linuxdvb_ddci_open ( linuxdvb_ddci_t *lddci )
 }
 
 void
-linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, const uint8_t *tsb, int len )
+linuxdvb_ddci_put
+  ( linuxdvb_ddci_t *lddci, service_t *t, const uint8_t *tsb, int len )
 {
+  /* ignore duplicates
+   * Note: Checking only the pointer is possible, because the calling
+   *       functions will execute the descrambler for the special PIDs in a
+   *       loop for each service.
+   *       If this ever changes, this code needs to be adapted!
+   */
+  /* FIXME: In case of MTD we will send all PIDs to the PID translator.
+   * This allows to know which packed is for which service, even if the PAT,
+   * CAT or EIT is the same, when they originally came from the same
+   * transponder. */
+  if (lddci->lddci_prev_tsb == tsb) return;
+  lddci->lddci_prev_tsb = tsb;
+
+  /* FIXME: For MTD add here the PID translator
+   * And also remove the CAT from the stream and generate a faked one.
+   */
+
   linuxdvb_ddci_wr_thread_buffer_put(&lddci->lddci_wr_thread, tsb, len );
 }
 

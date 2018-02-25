@@ -409,7 +409,7 @@ dvbcam_descramble_ddci(service_t *t, elementary_stream_t *st, const uint8_t *tsb
   dvbcam_active_service_t   *as = (dvbcam_active_service_t *)dr->dr_descrambler;
 
   if (as->ac != NULL)
-    linuxdvb_ddci_put(as->ac->ca->lca_transport->lddci, tsb, len);
+    linuxdvb_ddci_put(as->ac->ca->lca_transport->lddci, t, tsb, len);
 
   return 1;
 }
