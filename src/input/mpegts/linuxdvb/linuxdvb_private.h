@@ -460,28 +460,15 @@ linuxdvb_ddci_open ( linuxdvb_ddci_t *lddci );
 void
 linuxdvb_ddci_close ( linuxdvb_ddci_t *lddci );
 void
-linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, const uint8_t *tsb, int len );
-/* Un/Assign the service to DD CI CAM.
- * If t is NULL, the service is unassigned.
- *
- *  ret: 0 .. un/assigned
- *       1 .. assigned, but it was already assigned to another service
- */
-int
+linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, service_t *t,
+                    const uint8_t *tsb, int len );
+void
 linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t );
+void
+linuxdvb_ddci_unassign ( linuxdvb_ddci_t *lddci, service_t *t );
+/* return 0, if ddci can be assigned to the given service */
 int
-linuxdvb_ddci_is_assigned ( linuxdvb_ddci_t *lddci );
-/* Checks if the given PID needs to be sent to the CAM (descrambler).
- * This will check for special PIDs only. Scrambled packets (scrambled bits set)
- * data needs to be forwarded in any case to the CAM.
- *
- *  ret:  0 .. not required
- *       >0 .. PID is required by the CAM
- */
-int
-linuxdvb_ddci_require_descramble
-  ( service_t *t, int_fast16_t pid, elementary_stream_t *st );
-
+linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, service_t *t, int multi );
 #endif
 
 /*
