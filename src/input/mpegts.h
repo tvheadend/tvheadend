@@ -153,14 +153,15 @@ typedef struct mpegts_pid_sub
   RB_ENTRY(mpegts_pid_sub) mps_link;
   LIST_ENTRY(mpegts_pid_sub) mps_raw_link;
   LIST_ENTRY(mpegts_pid_sub) mps_svcraw_link;
-#define MPS_NONE    0x00
-#define MPS_ALL     0x01
-#define MPS_RAW     0x02
-#define MPS_STREAM  0x04
-#define MPS_SERVICE 0x08
-#define MPS_TABLE   0x10
-#define MPS_FTABLE  0x20
-#define MPS_TABLES  0x40
+#define MPS_NONE         0x00
+#define MPS_ALL          0x01
+#define MPS_RAW          0x02
+#define MPS_STREAM       0x04
+#define MPS_SERVICE      0x08
+#define MPS_TABLE        0x10
+#define MPS_FTABLE       0x20
+#define MPS_TABLES       0x40
+#define MPS_NOPOSTDEMUX  0x80
   int   mps_type;
 #define MPS_WEIGHT_PAT     1000
 #define MPS_WEIGHT_CAT      999

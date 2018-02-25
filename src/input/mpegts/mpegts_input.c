@@ -1592,7 +1592,10 @@ mpegts_input_postdemux
     if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
 
       type = mp->mp_type;
-      
+
+      if (type & MPS_NOPOSTDEMUX)
+        goto done;
+
       /* Stream service data */
       if (type & MPS_SERVICE) {
         LIST_FOREACH(mps, &mp->mp_svc_subs, mps_svcraw_link) {
