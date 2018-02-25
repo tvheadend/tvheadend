@@ -412,15 +412,16 @@ size_t epg_episode_num_format
   size_t i = 0;
   if (!epnum || !buf || !len) return 0;
   buf[0] = '\0';
-  if (epnum->e_num) {
+  if (epnum->e_num || epnum->s_num) {
     if (pre) tvh_strlcatf(buf, len, i, "%s", pre);
     if (sfmt && epnum->s_num) {
       tvh_strlcatf(buf, len, i, sfmt, epnum->s_num);
       if (cfmt && epnum->s_cnt)
         tvh_strlcatf(buf, len, i, cfmt, epnum->s_cnt);
-      if (sep) tvh_strlcatf(buf, len, i, "%s", sep);
+      if (sep && efmt && epnum->e_num) tvh_strlcatf(buf, len, i, "%s", sep);
     }
-    tvh_strlcatf(buf, len, i, efmt, epnum->e_num);
+    if (efmt && epnum->e_num)
+      tvh_strlcatf(buf, len, i, efmt, epnum->e_num);
     if (cfmt && epnum->e_cnt)
       tvh_strlcatf(buf, len, i, cfmt, epnum->e_cnt);
   } else if (epnum->text) {
