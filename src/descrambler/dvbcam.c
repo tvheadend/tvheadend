@@ -625,7 +625,8 @@ update_pid:
     if (mi) {
       pthread_mutex_lock(&mi->mi_output_lock);
       pthread_mutex_lock(&t->s_stream_mutex);
-      mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, t, 0);
+      mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE | MPS_NOPOSTDEMUX,
+                            MPS_WEIGHT_CAT, t, 0);
       ((mpegts_service_t *)t)->s_cat_opened = 1;
       for (i = 0; i < ecm_to_open.count; i++)
         mpegts_input_open_pid(mi, mm, ecm_to_open.pids[i].pid, MPS_SERVICE,
