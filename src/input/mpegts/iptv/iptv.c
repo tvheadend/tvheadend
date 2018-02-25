@@ -147,19 +147,24 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
 {
   int h = 0, l = 0, w, rw = INT_MAX;
   mpegts_mux_instance_t *mmi, *rmmi = NULL;
+  iptv_input_t *mi2;
   iptv_network_t *in = (iptv_network_t *)mm->mm_network;
+  iptv_thread_pool_t *pool;
   
-  pthread_mutex_lock(&mi->mi_output_lock);
-  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-    if (mmi->mmi_mux->mm_network == (mpegts_network_t *)in) {
-      w = mpegts_mux_instance_weight(mmi);
-      if (w < rw && (!conf->active || mmi->mmi_mux != mm)) {
-        rmmi = mmi;
-        rw = w;
+  TAILQ_FOREACH(pool, &iptv_tpool, link) {
+    mi2 = pool->input;
+    pthread_mutex_lock(&mi2->mi_output_lock);
+    LIST_FOREACH(mmi, &mi2->mi_mux_active, mmi_active_link)
+      if (mmi->mmi_mux->mm_network == (mpegts_network_t *)in) {
+        w = mpegts_mux_instance_weight(mmi);
+        if (w < rw && (!conf->active || mmi->mmi_mux != mm)) {
+          rmmi = mmi;
+          rw = w;
+        }
+        if (w >= weight) h++; else l++;
       }
-      if (w >= weight) h++; else l++;
-    }
-  pthread_mutex_unlock(&mi->mi_output_lock);
+    pthread_mutex_unlock(&mi2->mi_output_lock);
+  }
 
   tvhtrace(LS_IPTV_SUB, "is free[%p]: h = %d, l = %d, rw = %d", mm, h, l, rw);
 
