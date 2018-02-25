@@ -460,7 +460,8 @@ linuxdvb_ddci_open ( linuxdvb_ddci_t *lddci );
 void
 linuxdvb_ddci_close ( linuxdvb_ddci_t *lddci );
 void
-linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, const uint8_t *tsb, int len );
+linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, service_t *t,
+                    const uint8_t *tsb, int len );
 void
 linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t );
 void
