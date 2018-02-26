@@ -679,13 +679,13 @@ parse_mpa123(service_t *t, elementary_stream_t *st)
       if(dts == PTS_UNSET) continue;
     }
 
-    if(len < i + fsize + 4) {
+    if (len < i + fsize + 4) {
       if (len - i == fsize && fsize == fsize2)
         goto ok;
       break;
     }
 
-    if(mpa_valid_frame(RB32(buf + i + fsize))) {
+    if (mpa_valid_frame(RB32(buf + i + fsize))) {
 ok:
       if (st->es_audio_version < layer) {
         tvhtrace(LS_PARSER, "mpeg audio version change %02d: val=%d (old=%d)",
@@ -772,76 +772,82 @@ const static uint16_t ac3_frame_size_tab[38][3] = {
 static int
 ac3_valid_frame(const uint8_t *buf)
 {
-  if(buf[0] != 0x0b || buf[1] != 0x77 || buf[5] >> 3 > 10)
+  if (buf[0] != 0x0b || buf[1] != 0x77 || (buf[5] >> 3) > 10)
     return 0;
   return (buf[4] & 0xc0) != 0xc0 && (buf[4] & 0x3f) < 0x26;
 }
 
 static const char acmodtab[8] = {2,1,2,3,3,4,4,5};
 
-
 static int 
 parse_ac3(service_t *t, elementary_stream_t *st, size_t ilen,
           uint32_t next_startcode, int sc_offset)
 {
-  int i, len;
-  const uint8_t *buf;
+  int i, len, bsid, fscod, frmsizcod, fsize, fsize2, sr, duration, sri;
+  int64_t dts;
+  const uint8_t *buf, *p;
+  bitstream_t bs;
 
-  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != PARSER_APPEND)
+  if ((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != PARSER_APPEND)
     return i;
 
- again:
   buf = st->es_buf_a.sb_data;
   len = st->es_buf_a.sb_ptr;
 
-  for(i = 0; i < len - 6; i++) {
-    const uint8_t *p = buf + i;
-    if(ac3_valid_frame(p)) {
-      int bsid      = p[5] >> 3;
-      int fscod     = p[4] >> 6;
-      int frmsizcod = p[4] & 0x3f;
-      int fsize     = ac3_frame_size_tab[frmsizcod][fscod] * 2;
-      
-      bsid -= 8;
-      if(bsid < 0)
-        bsid = 0;
-      int sr = ac3_freq_tab[fscod] >> bsid;
-      
-      if(sr) {
-        int duration = 90000 * 1536 / sr;
-        int64_t dts = st->es_curdts;
-        int sri = rate_to_sri(sr);
+  for (i = fsize2 = 0; i < len - 6; i++) {
+    if (!ac3_valid_frame(p = buf + i)) continue;
 
-        if(dts == PTS_UNSET)
-          dts = st->es_nextdts;
+    bsid      = p[5] >> 3;
+    fscod     = p[4] >> 6;
+    frmsizcod = p[4] & 0x3f;
+    fsize     = ac3_frame_size_tab[frmsizcod][fscod] * 2;
 
-        if(dts != PTS_UNSET && len >= i + fsize + 6 &&
-           ac3_valid_frame(p + fsize)) {
+    bsid -= 8;
+    if (bsid < 0) bsid = 0;
+    sr = ac3_freq_tab[fscod] >> bsid;
 
-          bitstream_t bs;
-          init_rbits(&bs, p + 5, (fsize - 5) * 8);
+    if (sr == 0) continue;
 
-          read_bits(&bs, 5); // bsid
-          read_bits(&bs, 3); // bsmod
-          int acmod = read_bits(&bs, 3);
+    duration = 90000 * 1536 / sr;
+    sri = rate_to_sri(sr);
 
-          if((acmod & 0x1) && (acmod != 0x1))
-            read_bits(&bs, 2); // cmixlen
-          if(acmod & 0x4)
-            read_bits(&bs, 2); // surmixlev
-          if(acmod == 0x2)
-            read_bits(&bs, 2); // dsurmod
+    dts = st->es_curdts;
+    if (dts == PTS_UNSET) {
+      dts = st->es_nextdts;
+      if(dts == PTS_UNSET) continue;
+    }
 
-          int lfeon = read_bits(&bs, 1);
-          int channels = acmodtab[acmod] + lfeon;
+    if (len < i + fsize + 6) {
+      if (len - i == fsize && fsize == fsize2)
+        goto ok;
+      break;
+    }
 
-          makeapkt(t, st, p, fsize, dts, duration, channels, sri);
-          sbuf_cut(&st->es_buf_a, i + fsize);
-          goto again;
-        }
-      }
+    if (ac3_valid_frame(p + fsize)) {
+ok:
+      init_rbits(&bs, p + 5, (fsize - 5) * 8);
+
+      read_bits(&bs, 5); // bsid
+      read_bits(&bs, 3); // bsmod
+      int acmod = read_bits(&bs, 3);
+
+      if((acmod & 0x1) && (acmod != 0x1))
+        read_bits(&bs, 2); // cmixlen
+      if(acmod & 0x4)
+        read_bits(&bs, 2); // surmixlev
+      if(acmod == 0x2)
+        read_bits(&bs, 2); // dsurmod
+
+      int lfeon = read_bits(&bs, 1);
+      int channels = acmodtab[acmod] + lfeon;
+      makeapkt(t, st, p, fsize, dts, duration, channels, sri);
+      i += fsize - 1;
+      fsize2 = fsize;
     }
   }
+  assert(i <= st->es_buf_a.sb_ptr);
+  sbuf_cut(&st->es_buf_a, i);
+
   return PARSER_RESET;
 }
 
@@ -849,67 +855,77 @@ parse_ac3(service_t *t, elementary_stream_t *st, size_t ilen,
 /**
  * EAC3 audio parser
  */
-
-
 static int
 eac3_valid_frame(const uint8_t *buf)
 {
-  if(buf[0] != 0x0b || buf[1] != 0x77 || buf[5] >> 3 <= 10)
+  uint8_t bs;
+
+  if (buf[0] != 0x0b || buf[1] != 0x77)
+    return 0;
+  bs = buf[5] >> 3;
+  if (bs <= 10 || bs > 16)
     return 0;
   return (buf[4] & 0xc0) != 0xc0;
 }
 
-static int 
+static int
 parse_eac3(service_t *t, elementary_stream_t *st, size_t ilen,
            uint32_t next_startcode, int sc_offset)
 {
-  int i, len;
-  const uint8_t *buf;
+  int i, len, fsize, fsize2, sr, sr2, rate, sri, acmod, lfeon, channels, duration;
+  int64_t dts;
+  const uint8_t *buf, *p;
 
   if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != PARSER_APPEND)
     return i;
 
- again:
   buf = st->es_buf_a.sb_data;
   len = st->es_buf_a.sb_ptr;
 
-  for(i = 0; i < len - 6; i++) {
-    const uint8_t *p = buf + i;
-    if(eac3_valid_frame(p)) {
+  for (i = fsize2 = 0; i < len - 6; i++) {
+    if (!eac3_valid_frame(p = buf + i)) continue;
 
-      int fsize = ((((p[2] & 0x7) << 8) + p[3]) + 1) * 2;
+    fsize = ((((p[2] & 0x7) << 8) + p[3]) + 1) * 2;
 
-      int sr = p[4] >> 6;
-      int rate;
-      if(sr == 3) {
-        int sr2 = (p[4] >> 4) & 0x3;
-        if(sr2 == 3)
-          continue;
-        rate = ac3_freq_tab[sr2] / 2;
-      } else {
-        rate = ac3_freq_tab[sr];
-      }
+    sr = p[4] >> 6;
+    if (sr == 3) {
+      sr2 = (p[4] >> 4) & 0x3;
+      if (sr2 == 3) continue;
+      rate = ac3_freq_tab[sr2] / 2;
+    } else {
+      rate = ac3_freq_tab[sr];
+    }
 
-      int64_t dts = st->es_curdts;
-      int sri = rate_to_sri(rate);
+    sri = rate_to_sri(rate);
 
-      int acmod = (p[4] >> 1) & 0x7;
-      int lfeon = p[4] & 1;
+    acmod = (p[4] >> 1) & 0x7;
+    lfeon = p[4] & 1;
 
-      int channels = acmodtab[acmod] + lfeon;
-      int duration = 90000 * 1536 / rate;
+    channels = acmodtab[acmod] + lfeon;
+    duration = 90000 * 1536 / rate;
 
-      if(dts == PTS_UNSET)
-        dts = st->es_nextdts;
+    dts = st->es_curdts;
+    if (dts == PTS_UNSET) {
+      dts = st->es_nextdts;
+      if (dts == PTS_UNSET) continue;
+    }
 
-      if(dts != PTS_UNSET && len >= i + fsize + 6 &&
-         eac3_valid_frame(p + fsize)) {
-        makeapkt(t, st, p, fsize, dts, duration, channels, sri);
-        sbuf_cut(&st->es_buf_a, i + fsize);
-        goto again;
-      }
+    if (len < i + fsize + 6) {
+      if (len - i == fsize && fsize == fsize2)
+        goto ok;
+      break;
+    }
+
+    if (eac3_valid_frame(p + fsize)) {
+ok:
+      makeapkt(t, st, p, fsize, dts, duration, channels, sri);
+      i += fsize - 1;
+      fsize2 = fsize;
     }
   }
+  assert(i <= st->es_buf_a.sb_ptr);
+  sbuf_cut(&st->es_buf_a, i);
+
   return PARSER_RESET;
 }
 
