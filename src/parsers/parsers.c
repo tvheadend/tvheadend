@@ -879,7 +879,6 @@ ok:
   }
   assert(i <= st->es_buf_a.sb_ptr);
   ver = versions[0] + versions[1];
-  printf("[0] = %d, [1] = %d, count = %d\n", versions[0], versions[1], count);
   if (ver > 4 && ver - count > 2) {
     if (versions[0] - 2 > versions[1]) {
       tvhtrace(LS_PARSER, "%d: stream changed to AC3 type", st->es_index);
