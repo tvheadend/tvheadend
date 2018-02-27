@@ -1595,7 +1595,7 @@ idnode_slist_set ( idnode_t *in, idnode_slist_t *options, const htsmsg_t *vals )
       HTSMSG_FOREACH(f, vals) {
         if ((s = htsmsg_field_get_str(f)) == NULL)
           continue;
-        if (strcmp(s, o->id))
+        if (s != NULL && strcmp(s, o->id))
           continue;
         if (*ip == 0) changed = 1;
         break;
