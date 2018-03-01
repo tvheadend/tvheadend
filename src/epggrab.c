@@ -338,15 +338,15 @@ const idclass_t epggrab_class = {
   .ic_save       = epggrab_class_save,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("General configuration"),
+         .name   = N_("General Settings"),
          .number = 1,
       },
       {
-         .name   = N_("Internal grabber"),
+         .name   = N_("Internal Grabber Settings"),
          .number = 2,
       },
       {
-         .name   = N_("Over-the-air grabbers"),
+         .name   = N_("OTA (Over-the-air) Grabber Settings"),
          .number = 3,
       },
       {}

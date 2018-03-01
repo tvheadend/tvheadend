@@ -1268,19 +1268,19 @@ const idclass_t caclient_cc_class =
   .ic_caption    = N_("Card client"),
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Client"),
+      .name   = N_("General Settings"),
       .number = 1,
     },
     {
-      .name   = N_("Login information"),
+      .name   = N_("Login Settings"),
       .number = 2,
     },
     {
-      .name   = N_("EMM"),
+      .name   = N_("EMM Settings"),
       .number = 3,
     },
     {
-      .name   = N_("Connection"),
+      .name   = N_("Connection Settings"),
       .number = 4,
     },
     {}

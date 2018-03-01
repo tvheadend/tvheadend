@@ -643,23 +643,23 @@ const idclass_t satip_server_class = {
   .ic_changed    = satip_server_class_changed,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("General"),
+         .name   = N_("General Settings"),
          .number = 1,
       },
       {
-         .name   = N_("NAT"),
+         .name   = N_("NAT Settings"),
          .number = 2,
       },
       {
-         .name   = N_("Signal"),
+         .name   = N_("Signal Settings"),
          .number = 3,
       },
       {
-         .name   = N_("Exported tuners"),
+         .name   = N_("Exported Tuner(s) Settings"),
          .number = 4,
       },
       {
-         .name   = N_("Other"),
+         .name   = N_("Miscellaneous Settings"),
          .number = 5,
       },
       {}

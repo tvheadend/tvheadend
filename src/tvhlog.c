@@ -719,8 +719,16 @@ const idclass_t tvhlog_conf_class = {
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Settings"),
+      .name   = N_("General Settings"),
       .number = 1,
+    },
+    {
+      .name   = N_("Subsystem Output Settings"),
+      .number = 2,
+    },
+    {
+      .name   = N_("Miscellaneous Settings"),
+      .number = 3,
     },
     {}
   },
@@ -754,18 +762,6 @@ const idclass_t tvhlog_conf_class = {
       .group  = 1,
     },
     {
-      .type   = PT_STR,
-      .id     = "debugsubs",
-      .name   = N_("Debug subsystems"),
-      .desc   = N_("Enter comma-separated list of subsystems you want "
-                   "debugging output for (e.g "
-                   "+linuxdvb,+subscriptions,+mpegts)."),
-      .get    = tvhlog_class_debugsubs_get,
-      .set    = tvhlog_class_debugsubs_set,
-      .opts   = PO_MULTILINE,
-      .group  = 1,
-    },
-    {
       .type   = PT_BOOL,
       .id     = "trace",
       .name   = N_("Debug trace (low-level)"),
@@ -779,10 +775,22 @@ const idclass_t tvhlog_conf_class = {
     },
     {
       .type   = PT_STR,
+      .id     = "debugsubs",
+      .name   = N_("Debug subsystems"),
+      .desc   = N_("Enter comma-separated list of subsystems you want "
+                   "debugging output for (e.g. "
+                   "linuxdvb,subscriptions,mpegts)."),
+      .get    = tvhlog_class_debugsubs_get,
+      .set    = tvhlog_class_debugsubs_set,
+      .opts   = PO_MULTILINE,
+      .group  = 2,
+    },
+    {
+      .type   = PT_STR,
       .id     = "tracesubs",
       .name   = N_("Trace subsystems"),
       .desc   = N_("Enter comma-separated list of subsystems you want "
-                   "to get traces for (e.g +linuxdvb,+subscriptions,+mpegts)."),
+                   "to get traces for (e.g linuxdvb,subscriptions,mpegts)."),
       .get    = tvhlog_class_tracesubs_get,
       .set    = tvhlog_class_tracesubs_set,
 #if !ENABLE_TRACE
@@ -790,7 +798,7 @@ const idclass_t tvhlog_conf_class = {
 #else
       .opts   = PO_MULTILINE,
 #endif
-      .group  = 1,
+      .group  = 2,
     },
     {
       .type   = PT_BOOL,
@@ -799,7 +807,7 @@ const idclass_t tvhlog_conf_class = {
       .desc   = N_("Enable/disable libav log output."),
       .get    = tvhlog_class_libav_get,
       .set    = tvhlog_class_libav_set,
-      .group  = 1,
+      .group  = 3,
     },
     {}
   }
