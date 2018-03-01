@@ -196,7 +196,7 @@ const codec_profile_class_t codec_profile_class = {
         .ic_delete   = codec_profile_class_delete,
         .ic_groups   = (const property_group_t[]) {
             {
-                .name   = N_("Identification"),
+                .name   = N_("General Settings"),
                 .number = 1,
             },
             {

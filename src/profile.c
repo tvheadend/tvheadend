@@ -291,7 +291,7 @@ const idclass_t profile_class =
   .ic_delete     = profile_class_delete,
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Configuration"),
+      .name   = N_("General Settings"),
       .number = 1,
     },
     {}
@@ -304,6 +304,16 @@ const idclass_t profile_class =
       .opts     = PO_RDONLY | PO_HIDDEN,
       .get      = profile_class_class_get,
       .set      = profile_class_class_set,
+      .group    = 1
+    },
+    {
+      .type     = PT_STR,
+      .id       = "name",
+      .name     = N_("Profile name"),
+      .desc     = N_("The name of the profile."),
+      .off      = offsetof(profile_t, pro_name),
+      .get_opts = profile_class_name_opts,
+      .notify   = idnode_notify_title_changed_lang,
       .group    = 1
     },
     {
@@ -328,21 +338,21 @@ const idclass_t profile_class =
     },
     {
       .type     = PT_STR,
-      .id       = "name",
-      .name     = N_("Profile name"),
-      .desc     = N_("The name of the profile."),
-      .off      = offsetof(profile_t, pro_name),
-      .get_opts = profile_class_name_opts,
-      .notify   = idnode_notify_title_changed_lang,
-      .group    = 1
-    },
-    {
-      .type     = PT_STR,
       .id       = "comment",
       .name     = N_("Comment"),
       .desc     = N_("Free-form text field. You can enter whatever you "
                      "like here."),
       .off      = offsetof(profile_t, pro_comment),
+      .group    = 1
+    },
+    {
+      .type     = PT_INT,
+      .id       = "timeout",
+      .name     = N_("Timeout (sec) (0=infinite)"),
+      .desc     = N_("The number of seconds to wait for a stream to "
+                     "start."),
+      .off      = offsetof(profile_t, pro_timeout),
+      .def.i    = 5,
       .group    = 1
     },
     {
@@ -369,16 +379,6 @@ const idclass_t profile_class =
       .group    = 1
     },
     {
-      .type     = PT_INT,
-      .id       = "timeout",
-      .name     = N_("Timeout (sec) (0=infinite)"),
-      .desc     = N_("The number of seconds to wait for a stream to "
-                     "start."),
-      .off      = offsetof(profile_t, pro_timeout),
-      .def.i    = 5,
-      .group    = 1
-    },
-    {
       .type     = PT_BOOL,
       .id       = "restart",
       .name     = N_("Restart on error"),
@@ -387,7 +387,7 @@ const idclass_t profile_class =
       .off      = offsetof(profile_t, pro_restart),
       .opts     = PO_EXPERT,
       .def.i    = 0,
-      .group    = 1
+      .group    = 1,
     },
     {
       .type     = PT_BOOL,
@@ -399,7 +399,7 @@ const idclass_t profile_class =
       .off      = offsetof(profile_t, pro_contaccess),
       .opts     = PO_EXPERT,
       .def.i    = 1,
-      .group    = 1
+      .group    = 1,
     },
     {
       .type     = PT_INT,
@@ -409,7 +409,7 @@ const idclass_t profile_class =
       .off      = offsetof(profile_t, pro_ca_timeout),
       .opts     = PO_EXPERT,
       .def.i    = 2000,
-      .group    = 1
+      .group    = 1,
     },
     {
       .type     = PT_BOOL,
@@ -1319,11 +1319,11 @@ const idclass_t profile_mpegts_pass_class =
   .ic_caption    = N_("MPEG-TS Pass-thru/built-in"),
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Configuration"),
+      .name   = N_("General Settings"),
       .number = 1,
     },
     {
-      .name   = N_("Rewrite MPEG-TS SI tables"),
+      .name   = N_("Rewrite MPEG-TS SI Table(s) Settings"),
       .number = 2,
     },
     {}
@@ -1471,11 +1471,11 @@ const idclass_t profile_mpegts_spawn_class =
   .ic_caption    = N_("MPEG-TS Spawn/built-in"),
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Configuration"),
+      .name   = N_("General Settings"),
       .number = 1,
     },
     {
-      .name   = N_("Spawn configuration"),
+      .name   = N_("Spawn Settings"),
       .number = 2,
     },
     {}
@@ -1608,11 +1608,11 @@ const idclass_t profile_matroska_class =
   .ic_caption    = N_("Matroska (mkv)/built-in"),
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Configuration"),
+      .name   = N_("General Settings"),
       .number = 1,
     },
     {
-      .name   = N_("Matroska specific"),
+      .name   = N_("Matroska Specific Settings"),
       .number = 2,
     },
     {}
@@ -2236,11 +2236,11 @@ const idclass_t profile_transcode_class =
   .ic_caption    = N_("Transcode/av-lib"),
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Configuration"),
+      .name   = N_("General Settings"),
       .number = 1,
     },
     {
-      .name   = N_("Transcoding"),
+      .name   = N_("Transcoding Settings"),
       .number = 2,
     },
     {}

@@ -844,11 +844,11 @@ const idclass_t caclient_dvbcam_class =
   .ic_caption    = N_("Linux DVB CAM Client"),
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Client"),
+      .name   = N_("General Settings"),
       .number = 1,
     },
     {
-      .name   = N_("Common Interface"),
+      .name   = N_("Common Interface Settings"),
       .number = 2,
     },
     {}

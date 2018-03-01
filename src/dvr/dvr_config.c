@@ -822,19 +822,19 @@ const idclass_t dvr_config_class = {
   .ic_perm       = dvr_config_class_perm,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("General settings"),
+         .name   = N_("General Settings"),
          .number = 1,
       },
       {
-         .name   = N_("Filesystem settings"),
+         .name   = N_("Filesystem Settings"),
          .number = 2,
       },
       {
-         .name   = N_("Subdirectory options"),
+         .name   = N_("Subdirectory Settings"),
          .number = 3,
       },
       {
-         .name   = N_("Filename and tagging options"),
+         .name   = N_("Filename/Tagging Settings"),
          .number = 4,
          .column = 1,
       },
@@ -845,11 +845,11 @@ const idclass_t dvr_config_class = {
          .column = 2,
       },
       {
-         .name   = N_("EPG/Autorec settings"),
+         .name   = N_("EPG/Autorec Settings"),
          .number = 6,
       },
       {
-         .name   = N_("Misc settings"),
+         .name   = N_("Miscellaneous Settings"),
          .number = 7,
       },
       {}

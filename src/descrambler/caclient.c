@@ -272,7 +272,7 @@ const idclass_t caclient_class =
   .ic_movedown   = caclient_class_movedown,
   .ic_groups     = (const property_group_t[]) {
     {
-      .name   = N_("Client"),
+      .name   = N_("General Settings"),
       .number = 1,
     },
     {}

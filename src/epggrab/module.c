@@ -143,7 +143,7 @@ const idclass_t epggrab_mod_class = {
   .ic_changed    = epggrab_mod_class_changed,
   .ic_groups     = (const property_group_t[]) {
      {
-        .name   = N_("Settings"),
+        .name   = N_("Grabber Settings"),
         .number = 1,
      },
      {}
