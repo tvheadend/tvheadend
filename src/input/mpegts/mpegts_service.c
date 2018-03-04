@@ -993,6 +993,12 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
           pi = &add.pids[i];
           mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t, 0);
         }
+        if (p) {
+          for (i = 0; i < p->count; i++) {
+            pi = &p->pids[i];
+            mpegts_input_update_pid_weight(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
+          }
+        }
         mpegts_pid_done(&add);
         mpegts_pid_done(&del);
       }

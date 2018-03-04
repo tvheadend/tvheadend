@@ -624,6 +624,39 @@ mpegts_input_close_pid
   return 0;
 }
 
+mpegts_pid_t *
+mpegts_input_update_pid_weight
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight,
+    void *owner )
+{
+  mpegts_pid_sub_t *mps, skel;
+  mpegts_pid_t *mp;
+  assert(owner != NULL);
+  lock_assert(&mi->mi_output_lock);
+  if (!(mp = mpegts_mux_find_pid(mm, pid, 0)))
+    return NULL;
+  if (pid == MPEGTS_FULLMUX_PID || pid == MPEGTS_TABLES_PID) {
+    LIST_FOREACH(mps, &mm->mm_all_subs, mps_svcraw_link)
+      if (mps->mps_owner == owner) break;
+    if (mps == NULL) return NULL;
+    tvhdebug(LS_MPEGTS, "%s - update PID %s weight %d subscription [%04x/%p]",
+             mm->mm_nicename, pid == MPEGTS_TABLES_PID ? "tables" : "fullmux",
+             weight, type, owner);
+    mps->mps_weight = weight;
+  } else {
+    skel.mps_type   = type;
+    skel.mps_weight = -1;
+    skel.mps_owner  = owner;
+    mps = RB_FIND(&mp->mp_subs, &skel, mps_link, mpegts_mps_cmp);
+    if (mps == NULL) return NULL;
+    tvhdebug(LS_MPEGTS, "%s - update PID %04X (%d) weight %d [%d/%p]",
+             mm->mm_nicename, mp->mp_pid, mp->mp_pid, weight, type, owner);
+    mps->mps_weight = weight;
+    mm->mm_update_pids_flag = 1;
+  }
+  return mp;
+}
+
 elementary_stream_t *
 mpegts_input_open_service_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm,
