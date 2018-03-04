@@ -1015,8 +1015,7 @@ mpegts_pid_t * mpegts_input_open_pid
     void *owner, int reopen );
 
 int mpegts_input_close_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight,
-    void *owner );
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
 
 void mpegts_input_close_pids
   ( mpegts_input_t *mi, mpegts_mux_t *mm, void *owner, int all );
