@@ -279,6 +279,35 @@ mpegts_pid_compare(mpegts_apids_t *dst, mpegts_apids_t *src,
   }
   for (i = 0; i < src->count; i++) {
     p = &src->pids[i];
+    if (mpegts_pid_find_rindex(dst, p->pid) < 0)
+      mpegts_pid_add(del, p->pid, p->weight);
+  }
+  for (i = 0; i < dst->count; i++) {
+    p = &dst->pids[i];
+    if (mpegts_pid_find_rindex(src, p->pid) < 0)
+      mpegts_pid_add(add, p->pid, p->weight);
+  }
+  return add->count || del->count;
+}
+
+int
+mpegts_pid_compare_weight(mpegts_apids_t *dst, mpegts_apids_t *src,
+                          mpegts_apids_t *add, mpegts_apids_t *del)
+{
+  mpegts_apid_t *p;
+  int i;
+
+  assert(dst);
+  assert(add);
+  assert(del);
+  if (mpegts_pid_init(add) || mpegts_pid_init(del))
+    return -1;
+  if (src == NULL) {
+    mpegts_pid_copy(add, dst);
+    return add->count > 0;
+  }
+  for (i = 0; i < src->count; i++) {
+    p = &src->pids[i];
     if (mpegts_pid_find_windex(dst, p->pid, p->weight) < 0)
       mpegts_pid_add(del, p->pid, p->weight);
   }
@@ -295,14 +324,18 @@ mpegts_pid_weighted(mpegts_apids_t *dst, mpegts_apids_t *pids, int limit)
 {
   int i, j;
   mpegts_apids_t sorted;
+  uint16_t pid;
 
   mpegts_pid_init(&sorted);
   mpegts_pid_copy(&sorted, pids);
   qsort(sorted.pids, sorted.count, sizeof(mpegts_apid_t), pid_wcmp);
 
   mpegts_pid_init(dst);
-  for (i = j = 0; i < sorted.count && dst->count < limit; i++)
-    mpegts_pid_add(dst, sorted.pids[i].pid, 0);
+  for (i = j = 0; i < sorted.count && dst->count < limit; i++) {
+    pid = sorted.pids[i].pid;
+    if (mpegts_pid_find_rindex(dst, pid) < 0)
+      mpegts_pid_add(dst, pid, sorted.pids[i].weight);
+  }
   dst->all = pids->all;
 
   mpegts_pid_done(&sorted);
