@@ -383,6 +383,7 @@ SRCS-MPEGTS = \
 	src/input/mpegts/mpegts_table.c \
 	src/input/mpegts/dvb_support.c \
 	src/input/mpegts/dvb_charset.c \
+	src/input/mpegts/dvb_psi_pmt.c \
 	src/input/mpegts/dvb_psi.c \
 	src/input/mpegts/fastscan.c \
 	src/input/mpegts/mpegts_mux_sched.c \

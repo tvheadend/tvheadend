@@ -1146,6 +1146,8 @@ mpegts_service_find_e2
 mpegts_service_t *
 mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid );
 
+void mpegts_service_autoenable( mpegts_service_t *s, const char *where );
+
 void mpegts_service_update_slave_pids
   ( mpegts_service_t *t, mpegts_service_t *master_filter, int del );
 

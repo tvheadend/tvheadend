@@ -931,6 +931,20 @@ ok:
 }
 
 /*
+ * Auto-enable service
+ */
+void
+mpegts_service_autoenable( mpegts_service_t *s, const char *where )
+{
+  if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
+    tvhinfo(LS_MPEGTS, "enabling service %s [sid %04X/%d] (found in %s)",
+            s->s_nicename, s->s_dvb_service_id, s->s_dvb_service_id, where);
+    service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
+  }
+  s->s_dvb_check_seen = gclk();
+}
+
+/*
  * Raw MPEGTS Service
  */
 
