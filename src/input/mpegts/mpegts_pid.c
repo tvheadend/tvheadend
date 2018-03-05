@@ -371,22 +371,21 @@ mpegts_pid_dump(mpegts_apids_t *pids, char *buf, int len, int wflag, int raw)
     return len;
   if (pids->all)
     return snprintf(buf, len, "all");
-  if (!raw)
+  if (!raw) {
     mpegts_pid_weighted(&spids, pids, len / 2);
-  else {
-    mpegts_pid_init(&spids);
-    mpegts_pid_copy(&spids, pids);
+    pids = &spids;
   }
   *buf = '\0';
   if (wflag) {
-    for (i = 0; i < spids.count && l + 1 < len; i++) {
-      p = &spids.pids[i];
+    for (i = 0; i < pids->count && l + 1 < len; i++) {
+      p = &pids->pids[i];
       tvh_strlcatf(buf, len, l, "%s%i(%i)", i > 0 ? "," : "", p->pid, p->weight);
     }
   } else {
-    for (i = 0; i < spids.count && l + 1 < len; i++)
-     tvh_strlcatf(buf, len, l, "%s%i", i > 0 ? "," : "", spids.pids[i].pid);
+    for (i = 0; i < pids->count && l + 1 < len; i++)
+     tvh_strlcatf(buf, len, l, "%s%i", i > 0 ? "," : "", pids->pids[i].pid);
   }
-  mpegts_pid_done(&spids);
+  if (pids == &spids)
+    mpegts_pid_done(&spids);
   return l;
 }
