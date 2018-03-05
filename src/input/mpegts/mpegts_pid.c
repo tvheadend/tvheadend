@@ -261,12 +261,20 @@ mpegts_pid_cmp(mpegts_apids_t *a, mpegts_apids_t *b)
   return 0;
 }
 
+static void
+mpegts_pid_update_max_weight_by_index(mpegts_apids_t *a, int i, uint16_t weight)
+{
+  uint16_t *w = &a->pids[i].weight;
+  if (*w < weight)
+    *w = weight;
+}
+
 int
 mpegts_pid_compare(mpegts_apids_t *dst, mpegts_apids_t *src,
                    mpegts_apids_t *add, mpegts_apids_t *del)
 {
   mpegts_apid_t *p;
-  int i;
+  int i, j;
 
   assert(dst);
   assert(add);
@@ -279,13 +287,23 @@ mpegts_pid_compare(mpegts_apids_t *dst, mpegts_apids_t *src,
   }
   for (i = 0; i < src->count; i++) {
     p = &src->pids[i];
-    if (mpegts_pid_find_rindex(dst, p->pid) < 0)
-      mpegts_pid_add(del, p->pid, p->weight);
+    if (mpegts_pid_find_rindex(dst, p->pid) < 0) {
+      j = mpegts_pid_find_rindex(del, p->pid);
+      if (j < 0)
+        mpegts_pid_add(del, p->pid, p->weight);
+      else
+        mpegts_pid_update_max_weight_by_index(del, j, p->weight);
+    }
   }
   for (i = 0; i < dst->count; i++) {
     p = &dst->pids[i];
-    if (mpegts_pid_find_rindex(src, p->pid) < 0)
-      mpegts_pid_add(add, p->pid, p->weight);
+    if (mpegts_pid_find_rindex(src, p->pid) < 0) {
+      j = mpegts_pid_find_rindex(add, p->pid);
+      if (j < 0)
+        mpegts_pid_add(add, p->pid, p->weight);
+      else
+        mpegts_pid_update_max_weight_by_index(add, j, p->weight);
+    }
   }
   return add->count || del->count;
 }
