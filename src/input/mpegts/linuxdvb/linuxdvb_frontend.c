@@ -1317,11 +1317,16 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
   mpegts_apids_t wpid, padd, pdel;
   int i, max = MAX(14, lfe->lfe_pids_max);
   int all = lfe->lfe_pids.all;
+  char buf[512];
 
   pthread_mutex_lock(&lfe->lfe_dvr_lock);
 
   if (!all) {
     mpegts_pid_weighted(&wpid, &lfe->lfe_pids, max);
+    if (tvhtrace_enabled()) {
+      mpegts_pid_dump(&wpid, buf, sizeof(buf), 1, 1);
+      tvhtrace(LS_LINUXDVB, "%s - weighted PIDs %s", name, buf);
+    }
     if (wpid.count > max && lfe->lfe_pids_use_all) {
       all = 1;
       mpegts_pid_done(&wpid);
