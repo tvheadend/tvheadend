@@ -1109,7 +1109,7 @@ static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
   if (!de)
     return 0;
 
-  if (dvr_entry_get_epg_running(de) <= 0)
+  if (dvr_entry_get_epg_running(de))
     return 0;
 
   /* Return any cached value we have previous calculated. */
