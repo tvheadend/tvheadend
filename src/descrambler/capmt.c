@@ -122,15 +122,15 @@ typedef struct dmx_filter {
 #define MAX_PIDS     64   // max opened pids
 #define MAX_INFO_LEN 255
 
-typedef enum {
-    CAPMT_OSCAM_SO_WRAPPER,
-    CAPMT_OSCAM_OLD,
-    CAPMT_OSCAM_MULTILIST,
-    CAPMT_OSCAM_TCP,
-    CAPMT_OSCAM_UNIX_SOCKET,
-    CAPMT_OSCAM_NET_PROTO,
-    CAPMT_OSCAM_UNIX_SOCKET_NP /* NET_PROTO through socket */
-} capmt_oscam_mode_t;
+#if 0 // really old implementations
+#define CAPMT_OSCAM_SO_WRAPPER     0
+#define CAPMT_OSCAM_OLD            1
+#define CAPMT_OSCAM_MULTILIST      2
+#define CAPMT_OSCAM_TCP            3
+#define CAPMT_OSCAM_UNIX_SOCKET    4
+#endif
+#define CAPMT_OSCAM_NET_PROTO      5
+#define CAPMT_OSCAM_UNIX_SOCKET_NP 6 /* NET_PROTO through socket */
 
 /**
  *
@@ -316,11 +316,53 @@ capmt_name(capmt_t *capmt)
 }
 
 static inline int
+capmt_oscam_so_wrapper(capmt_t *capmt)
+{
+#ifdef CAPMT_OSCAM_SO_WRAPPER
+  if (capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER)
+    return 1;
+#endif
+  return 0;
+}
+
+static inline int
 capmt_oscam_new(capmt_t *capmt)
 {
-  int oscam = capmt->capmt_oscam;
-  return oscam != CAPMT_OSCAM_SO_WRAPPER &&
-         oscam != CAPMT_OSCAM_OLD;
+  if (capmt_oscam_so_wrapper(capmt))
+    return 0;
+#ifdef CAPMT_OSCAM_OLD
+  if (capmt->capmt_oscam = CAPMT_OSCAM_OLD)
+    return 0;
+#endif
+  return 1;
+}
+
+static inline int
+capmt_oscam_network(capmt_t *capmt)
+{
+#ifdef CAPMT_OSCAM_TCP
+  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP)
+    return 1;
+#endif
+#ifdef CAPMT_OSCAM_NET_PROTO
+  if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO)
+    return 1;
+#endif
+  return 0;
+}
+
+static inline int
+capmt_oscam_socket(capmt_t *capmt)
+{
+#ifdef CAPMT_OSCAM_UNIX_SOCKET
+  if (capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET)
+    return 1;
+#endif
+#ifdef CAPMT_OSCAM_UNIX_SOCKET_NP
+  if (capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET_NP)
+    return 1;
+#endif
+  return 0;
 }
 
 static inline int
@@ -492,8 +534,8 @@ capmt_connect(capmt_t *capmt, int i)
   if (!atomic_get(&capmt->capmt_running))
     return -1;
 
-  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP ||
-      capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+#if defined(CAPMT_OSCAM_TCP) || defined(CAPMT_OSCAM_NET_PROTO)
+  if (capmt_oscam_network(capmt)) {
 
     char errbuf[256];
 
@@ -506,7 +548,9 @@ capmt_connect(capmt_t *capmt, int i)
       fd = -1;
     }
 
-  } else {
+  } else
+#endif
+  {
 
     struct sockaddr_un serv_addr_un;
 
@@ -560,8 +604,10 @@ capmt_socket_close(capmt_t *capmt, int sock_idx)
   capmt->capmt_sock[sock_idx] = -1;
   if (capmt_oscam_new(capmt))
     capmt_pid_flush(capmt);
+#ifdef CAPMT_OSCAM_OLD
   else if (capmt->capmt_oscam == CAPMT_OSCAM_OLD)
     capmt->sids[sock_idx] = capmt->adps[sock_idx] = -1;
+#endif
 }
 
 static void
@@ -581,7 +627,8 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
   int i = 0, found = 0, fd;
   ssize_t res;
 
-  if (capmt->capmt_oscam != CAPMT_OSCAM_SO_WRAPPER) {
+  if (!capmt_oscam_so_wrapper(capmt)) {
+#ifdef CAPMT_OSCAM_OLD
     if (capmt->capmt_oscam == CAPMT_OSCAM_OLD) {
       // dumping current SID table
       for (i = 0; i < MAX_SOCKETS; i++)
@@ -618,13 +665,13 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
         tvhdebug(LS_CAPMT, "%s: %s: added: i=%d", capmt_name(capmt), __FUNCTION__, i);
       }
     }
+#endif
 
     // check if the socket is still alive by writing 0 bytes
     if (capmt->capmt_sock[i] >= 0) {
       if (send(capmt->capmt_sock[i], NULL, 0, MSG_DONTWAIT) < 0)
         capmt->capmt_sock[i] = -1;
-      else if ((capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER ||
-                capmt->capmt_oscam == CAPMT_OSCAM_OLD) && found)
+      else if (!capmt_oscam_new(capmt) && found)
         return 0;
     }
 
@@ -658,7 +705,7 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
 #else
     tvhdebug(LS_CAPMT, "%s: Message send failed to socket %i (%zi)", capmt_name(capmt), fd, res);
 #endif
-    if (capmt->capmt_oscam != CAPMT_OSCAM_SO_WRAPPER) {
+    if (!capmt_oscam_so_wrapper(capmt)) {
       capmt_socket_close_lock(capmt, i);
       return -1;
     }
@@ -743,13 +790,13 @@ capmt_flush_queue(capmt_t *capmt, int del_only)
 static void 
 capmt_send_stop(capmt_service_t *t)
 {
-  mpegts_service_t *s = (mpegts_service_t *)t->td_service;
   capmt_t *capmt = t->ct_capmt;
-  int oscam = capmt->capmt_oscam;
 
   lock_assert(&capmt->capmt_mutex);
 
-  if (oscam == CAPMT_OSCAM_OLD) {
+#ifdef CAPMT_OSCAM_OLD
+  if (capmt->capmt_oscam == CAPMT_OSCAM_OLD) {
+    mpegts_service_t *s = (mpegts_service_t *)t->td_service;
     int i;
     // searching for socket to close
     for (i = 0; i < MAX_SOCKETS; i++)
@@ -766,8 +813,12 @@ capmt_send_stop(capmt_service_t *t)
     capmt->sids[i] = 0;
     capmt->adps[i] = 0;
     capmt_socket_close(capmt, i);
-  } else if (oscam == CAPMT_OSCAM_SO_WRAPPER) {  // standard old capmt mode
-    /* buffer for capmt */
+  }
+#endif
+#ifdef CAPMT_OSCAM_SO_WRAPPER
+  if (capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER) {  // standard old capmt mode
+     mpegts_service_t *s = (mpegts_service_t *)t->td_service;
+   /* buffer for capmt */
     int pos = 0;
     uint8_t buf[4094];
 
@@ -804,6 +855,7 @@ capmt_send_stop(capmt_service_t *t)
     capmt_queue_msg(capmt, t->ct_adapter, s->s_dvb_service_id,
                     buf, pos, CAPMT_MSG_CLEAR);
   }
+#endif
 }
 
 /**
@@ -1078,6 +1130,7 @@ capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force)
 }
 
 #if CONFIG_LINUXDVB
+#ifdef CAPMT_OSCAM_SO_WRAPPER
 static void
 capmt_abort(capmt_t *capmt, int keystate)
 {
@@ -1100,6 +1153,7 @@ capmt_abort(capmt_t *capmt, int keystate)
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
+#endif
 #endif
 
 static int
@@ -1476,15 +1530,14 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
 static void
 show_connection(capmt_t *capmt, const char *what)
 {
-  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP || capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+  if (capmt_oscam_network(capmt)) {
     tvhinfo(LS_CAPMT,
             "%s: mode %i connected to %s:%i (%s)",
             capmt_name(capmt),
             capmt->capmt_oscam,
             capmt->capmt_sockfile, capmt->capmt_port,
             what);
-  } else if (capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET ||
-             capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET_NP) {
+  } else if (capmt_oscam_socket(capmt)) {
     tvhinfo(LS_CAPMT,
             "%s: mode %i sockfile %s got connection from client (%s)",
             capmt_name(capmt),
@@ -1727,6 +1780,7 @@ handle_single(capmt_t *capmt)
 }
 
 #if CONFIG_LINUXDVB
+#ifdef CAPMT_OSCAM_SO_WRAPPER
 static void 
 handle_ca0_wrapper(capmt_t *capmt)
 {
@@ -1774,6 +1828,7 @@ handle_ca0_wrapper(capmt_t *capmt)
   capmt_abort(capmt, DS_READY);
   tvhinfo(LS_CAPMT, "%s: connection from client closed ...", capmt_name(capmt));
 }
+#endif
 #endif
 
 #if ENABLE_LINUXDVB
@@ -1839,8 +1894,7 @@ capmt_thread(void *aux)
     pthread_mutex_unlock(&capmt->capmt_mutex);
 
     /* Accessible */
-    if (capmt->capmt_sockfile && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
-        capmt->capmt_oscam != CAPMT_OSCAM_NET_PROTO &&
+    if (capmt->capmt_sockfile && !capmt_oscam_network(capmt) &&
         !access(capmt->capmt_sockfile, R_OK | W_OK))
       caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_NONE);
     else
@@ -1865,6 +1919,7 @@ capmt_thread(void *aux)
         handle_single(capmt);
       } else {
         int bind_ok = 0;
+#ifdef CAPMT_OSCAM_SO_WRAPPER
         /* open connection to emulated ca0 device */
         if (capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER) {
           bind_ok = capmt_create_udp_socket(capmt,
@@ -1872,7 +1927,9 @@ capmt_thread(void *aux)
                                             capmt->capmt_port);
           if (bind_ok)
             handle_ca0_wrapper(capmt);
-        } else {
+        } else
+#endif
+        {
           int i, n;
           extern const idclass_t linuxdvb_adapter_class;
           linuxdvb_adapter_t *la;
@@ -1898,13 +1955,11 @@ capmt_thread(void *aux)
           fatal = 1;
       }
 #else
-     if (capmt->capmt_oscam == CAPMT_OSCAM_TCP ||
-         capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO ||
-         capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET ||
-         capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET_NP) {
+     if (capmt_oscam_network(capmt) ||
+         capmt_oscam_socket(capmt)) {
        handle_single(capmt);
      } else {
-       tvherror(LS_CAPMT, "%s: Only modes 3 and 4 are supported for non-linuxdvb devices", capmt_name(capmt));
+       tvherror(LS_CAPMT, "%s: Only modes 3,4,5,6 are supported for non-linuxdvb devices", capmt_name(capmt));
        fatal = 1;
      }
 #endif
@@ -2178,7 +2233,7 @@ capmt_send_request(capmt_service_t *ct, int lm)
   uint16_t transponder = t->s_dvb_mux->mm_tsid;
   uint16_t onid = t->s_dvb_mux->mm_onid;
   const int adapter_num = ct->ct_adapter;
-  const int wrapper = capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER;
+  const int wrapper = capmt_oscam_so_wrapper(capmt);
   const int pc_desc = !wrapper && adapter_num >= 8;
   int i;
 
@@ -2420,10 +2475,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
     if (ct->td_service == (service_t *)t)
       goto fin;
 
-  if (tuner < 0 && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
-                   capmt->capmt_oscam != CAPMT_OSCAM_NET_PROTO &&
-                   capmt->capmt_oscam != CAPMT_OSCAM_UNIX_SOCKET &&
-                   capmt->capmt_oscam != CAPMT_OSCAM_UNIX_SOCKET_NP) {
+  if (tuner < 0 && !capmt_oscam_network(capmt) && !capmt_oscam_socket(capmt)) {
     tvhwarn(LS_CAPMT,
             "%s: Virtual adapters are supported only in modes 3, 4, 5 and 6 (service \"%s\")",
             capmt_name(capmt), t->s_dvb_svcname);
@@ -2485,8 +2537,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
   }
 
   td = (th_descrambler_t *)ct;
-  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP ||
-      capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+  if (capmt_oscam_network(capmt)) {
     snprintf(buf, sizeof(buf), "capmt-%s-%i",
                                capmt->capmt_sockfile,
                                capmt->capmt_port);
@@ -2528,8 +2579,7 @@ capmt_free(caclient_t *cac)
   tvhinfo(LS_CAPMT, "%s: mode %i %s %s port %i destroyed",
           capmt_name(capmt),
           capmt->capmt_oscam,
-          capmt->capmt_oscam == CAPMT_OSCAM_TCP ||
-            capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO ? "IP address" : "sockfile",
+          capmt_oscam_network(capmt) ? "IP address" : "sockfile",
           capmt->capmt_sockfile, capmt->capmt_port);
   capmt_flush_queue(capmt, 1);
   free(capmt->capmt_sockfile);
@@ -2538,6 +2588,30 @@ capmt_free(caclient_t *cac)
 /**
  *
  */
+static const struct strtab caclient_capmt_oscam_mode_tab[] = {
+#ifdef CAPMT_OSCAM_NET_PROTO
+  { N_("OSCam net protocol (rev >= 10389)"), CAPMT_OSCAM_NET_PROTO },
+#endif
+#ifdef CAPMT_OSCAM_UNIX_SOCKET_NP
+  { N_("OSCam new pc-nodmx (rev >= 10389)"), CAPMT_OSCAM_UNIX_SOCKET_NP },
+#endif
+#ifdef CAPMT_OSCAM_TCP
+  { N_("OSCam TCP (rev >= 9574)"),           CAPMT_OSCAM_TCP },
+#endif
+#ifdef CAPMT_OSCAM_UNIX_SOCKET
+  { N_("OSCam pc-nodmx (rev >= 9756)"),      CAPMT_OSCAM_UNIX_SOCKET },
+#endif
+#ifdef CAPMT_OSCAM_MULTILIST
+  { N_("OSCam (rev >= 9095)"),               CAPMT_OSCAM_MULTILIST },
+#endif
+#ifdef CAPMT_OSCAM_OLD
+  { N_("Older OSCam"),                       CAPMT_OSCAM_OLD },
+#endif
+#ifdef CAPMT_OSCAM_SO_WRAPPER
+  { N_("Wrapper (capmt_ca.so)"),             CAPMT_OSCAM_SO_WRAPPER },
+#endif
+};
+
 static void
 capmt_conf_changed(caclient_t *cac)
 {
@@ -2546,6 +2620,13 @@ capmt_conf_changed(caclient_t *cac)
 
   idnode_get_title(&capmt->cac_id, NULL,
                    capmt->capmt_name, sizeof(capmt->capmt_name));
+
+  if (val2str(capmt->capmt_oscam, caclient_capmt_oscam_mode_tab) == NULL) {
+    tvherror(LS_CAPMT, "Unknown mode %d, disabling capmt client %s",
+             capmt->capmt_oscam, capmt->capmt_name);
+    capmt->cac_enabled = 0;
+  }
+
   if (capmt->cac_enabled) {
     if (capmt->capmt_sockfile == NULL || capmt->capmt_sockfile[0] == '\0') {
       caclient_set_status(cac, CACLIENT_STATUS_NONE);
@@ -2581,16 +2662,7 @@ capmt_conf_changed(caclient_t *cac)
 static htsmsg_t *
 caclient_capmt_class_oscam_mode_list ( void *o, const char *lang )
 {
-  static const struct strtab tab[] = {
-    { N_("OSCam net protocol (rev >= 10389)"), CAPMT_OSCAM_NET_PROTO },
-    { N_("OSCam new pc-nodmx (rev >= 10389)"), CAPMT_OSCAM_UNIX_SOCKET_NP },
-    { N_("OSCam TCP (rev >= 9574)"),           CAPMT_OSCAM_TCP },
-    { N_("OSCam pc-nodmx (rev >= 9756)"),      CAPMT_OSCAM_UNIX_SOCKET },
-    { N_("OSCam (rev >= 9095)"),               CAPMT_OSCAM_MULTILIST },
-    { N_("Older OSCam"),                       CAPMT_OSCAM_OLD },
-    { N_("Wrapper (capmt_ca.so)"),             CAPMT_OSCAM_SO_WRAPPER },
-  };
-  return strtab2htsmsg(tab, 1, lang);
+  return strtab2htsmsg(caclient_capmt_oscam_mode_tab, 1, lang);
 }
 
 static htsmsg_t *
