@@ -26,12 +26,60 @@
 /**
  *
  */
-
 typedef struct service service_t;
 typedef struct streaming_start streaming_start_t;
 
+typedef enum streaming_component_type streaming_component_type_t;
 typedef struct elementary_stream elementary_stream_t;
 typedef struct elementary_set elementary_set_t;
+
+/**
+ * Stream component types
+ */
+enum streaming_component_type {
+  SCT_NONE = -1,
+  SCT_UNKNOWN = 0,
+  SCT_RAW = 1,
+  SCT_PCR,     /* MPEG-TS PCR data */
+  SCT_CAT,     /* MPEG-TS CAT (EMM) data */
+  SCT_CA,      /* MPEG-TS ECM data */
+  SCT_HBBTV,   /* HBBTV info */
+  /* standard codecs */
+  SCT_MPEG2VIDEO,
+  SCT_MPEG2AUDIO,
+  SCT_H264,
+  SCT_AC3,
+  SCT_TELETEXT,
+  SCT_DVBSUB,
+  SCT_AAC,     /* AAC-LATM in MPEG-TS, ADTS + AAC in packet form */
+  SCT_MPEGTS,
+  SCT_TEXTSUB,
+  SCT_EAC3,
+  SCT_MP4A,    /* ADTS + AAC in MPEG-TS and packet form */
+  SCT_VP8,
+  SCT_VORBIS,
+  SCT_HEVC,
+  SCT_VP9,
+  SCT_THEORA,
+  SCT_OPUS,
+  SCT_FLAC,
+  SCT_LAST = SCT_FLAC
+};
+
+#define SCT_MASK(t) (1 << (t))
+
+#define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264 || \
+			(t) == SCT_VP8 || (t) == SCT_HEVC || \
+			(t) == SCT_VP9 || (t) == SCT_THEORA)
+
+#define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
+			(t) == SCT_AAC  || (t) == SCT_MP4A || \
+			(t) == SCT_EAC3 || (t) == SCT_VORBIS || \
+			(t) == SCT_OPUS || (t) == SCT_FLAC)
+
+#define SCT_ISAV(t) (SCT_ISVIDEO(t) || SCT_ISAUDIO(t))
+
+#define SCT_ISSUBTITLE(t) ((t) == SCT_TEXTSUB || (t) == SCT_DVBSUB)
 
 /**
  * Stream, one media component for a service.

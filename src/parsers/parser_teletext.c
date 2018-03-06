@@ -1036,7 +1036,7 @@ teletext_rundown_scan(parser_t *prs, tt_private_t *ttp)
   uint8_t *l;
   mpegts_service_t *t;
   time_t now = prs->prs_tt_clock, start, stop;
-  th_commercial_advice_t ca;
+  commercial_advice_t ca;
 
   if(ttp->ttp_rundown_valid == 0)
     return;

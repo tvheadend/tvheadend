@@ -19,6 +19,7 @@
 #ifndef MUXER_H_
 #define MUXER_H_
 
+#include "streaming.h"
 #include "htsmsg.h"
 
 #define MC_IS_EOS_ERROR(e) ((e) == EPIPE || (e) == ECONNRESET)

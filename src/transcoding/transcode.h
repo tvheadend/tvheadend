@@ -23,6 +23,7 @@
 
 
 #include "tvheadend.h"
+#include "streaming.h"
 
 
 /* TVHTranscoder ============================================================ */

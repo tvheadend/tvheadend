@@ -20,6 +20,7 @@
 
 #include "internals.h"
 #include "../codec/internals.h"
+#include "service.h"
 
 
 static TVHCodecProfile _codec_profile_copy = { .name = (char *)"copy" };

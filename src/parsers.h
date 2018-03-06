@@ -20,6 +20,7 @@
 #define PARSERS_H
 
 #include "tvheadend.h"
+#include "sbuf.h"
 #include "streaming.h"
 #include "subscriptions.h"
 #include "packet.h"
@@ -91,7 +92,7 @@ struct parser {
   uint8_t  prs_current_pcr_guess;
 
   /* Teletext */
-  th_commercial_advice_t prs_tt_commercial_advice;
+  commercial_advice_t prs_tt_commercial_advice;
   time_t prs_tt_clock;   /* Network clock as determined by teletext decoder */
 
 };

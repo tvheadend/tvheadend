@@ -20,11 +20,13 @@
 #define SERVICE_H__
 
 #include "esstream.h"
-#include "sbuf.h"
+#include "streaming.h"
 #include "htsmsg.h"
 #include "idnode.h"
-#include "profile.h"
 
+/**
+ *
+ */
 extern const idclass_t service_class;
 extern const idclass_t service_raw_class;
 
@@ -32,27 +34,19 @@ extern struct service_queue service_all;
 extern struct service_queue service_raw_all;
 extern struct service_queue service_raw_remove;
 
+/**
+ *
+ */
 struct channel;
 struct tvh_input;
 struct mpegts_apids;
+struct profile_chain;
+struct source_info;
+struct descramble_info;
 
 /**
- * Source information
+ *
  */
-typedef struct source_info {
-  tvh_uuid_t si_adapter_uuid;
-  tvh_uuid_t si_network_uuid;
-  tvh_uuid_t si_mux_uuid;
-  char *si_adapter;
-  char *si_network;
-  char *si_network_type;
-  char *si_satpos;
-  char *si_mux;
-  char *si_provider;
-  char *si_service;
-  int   si_type;
-} source_info_t;
-
 typedef TAILQ_HEAD(service_instance_list, service_instance) service_instance_list_t;
 
 /**
@@ -61,25 +55,19 @@ typedef TAILQ_HEAD(service_instance_list, service_instance) service_instance_lis
 typedef struct service_instance {
 
   TAILQ_ENTRY(service_instance) si_link;
+  struct service *si_s; /* A reference is held */
 
-  int si_prio;
-
-  struct service *si_s; // A reference is held
-  int si_instance;       // Discriminator when having multiple adapters, etc
-
-  int si_error;        /* Set if subscription layer deem this cand
-                          to be broken. We typically set this if we
-                          have not seen any demuxed packets after
-                          the grace period has expired.
-                          The actual value is current time
-                       */
-
+  int si_prio;          /* Priority (higher value has more weight) */
+  int si_instance;      /* Discriminator when having multiple adapters, etc */
+  int si_error;         /* Set if subscription layer deem this cand
+                         * to be broken. We typically set this if we
+                         * have not seen any demuxed packets after
+                         * the grace period has expired.
+                         * The actual value is current time
+                         */
   time_t si_error_time;
-
-
-  int si_weight;         // Highest weight that holds this cand
-
-  int si_mark;           // For mark & sweep
+  int si_weight;        /* Highest weight that holds this cand */
+  int si_mark;          /* For mark & sweep */
 
   char si_source[128];
 
@@ -272,7 +260,7 @@ typedef struct service {
   /**
    * Teletext...
    */
-  th_commercial_advice_t s_tt_commercial_advice;
+  commercial_advice_t s_tt_commercial_advice;
   time_t s_tt_clock;   /* Network clock as determined by teletext decoder */
  
   /**
@@ -382,7 +370,7 @@ typedef struct service {
   uint8_t s_scrambled_pass;
   th_descrambler_runtime_t *s_descramble;
   void *s_descrambler; /* last active descrambler */
-  descramble_info_t *s_descramble_info;
+  struct descramble_info *s_descramble_info;
 
   /**
    * Set of all and filtered components.
@@ -437,7 +425,7 @@ static inline service_t *service_find_by_uuid0(tvh_uuid_t *uuid)
 service_instance_t *service_find_instance(struct service *s,
                                           struct channel *ch,
                                           struct tvh_input *source,
-                                          profile_chain_t *prch,
+                                          struct profile_chain *prch,
                                           service_instance_list_t *sil,
                                           int *error, int weight,
                                           int flags, int timeout,

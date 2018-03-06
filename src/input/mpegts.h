@@ -25,6 +25,7 @@
 #endif
 
 #include "atomic.h"
+#include "sbuf.h"
 #include "input.h"
 #include "service.h"
 #include "mpegts/dvb.h"
