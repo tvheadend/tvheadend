@@ -81,16 +81,25 @@ mpegts_psi_section_reassemble0
     return -1;
 
   if(start) {
-    // Payload unit start indicator
+    /* Payload unit start indicator */
     mt->mt_sect.ps_offset = 0;
-    if((data[0] & mt->mt_sect.ps_mask) != mt->mt_sect.ps_table)
-      mt->mt_sect.ps_lock = 0;
-    else
-      mt->mt_sect.ps_lock = 1;
+    mt->mt_sect.ps_lock = 1;
+    if((data[0] & mt->mt_sect.ps_mask) != mt->mt_sect.ps_table) {
+      if(len >= 3) {
+        tsize = 3 + (((data[1] & 0xf) << 8) | data[2]);
+        if(len >= tsize)
+          return tsize;
+      }
+    }
   }
 
   if(!mt->mt_sect.ps_lock)
     return -1;
+
+  if(mt->mt_sect.ps_offset + len > MPEGTS_PSI_SECTION_SIZE) {
+    tvherror(mt->mt_subsys, "PSI section overflow");
+    return -1;
+  }
 
   memcpy(p + mt->mt_sect.ps_offset, data, len);
   mt->mt_sect.ps_offset += len;
@@ -108,10 +117,12 @@ mpegts_psi_section_reassemble0
   if(p[0] == 0x72) { /* stuffing section */
     cb = NULL;
     crc = 0;
+  } else if((p[0] & mt->mt_sect.ps_mask) != mt->mt_sect.ps_table) {
+    cb = NULL;
   }
 
   if(crc && tvh_crc32(p, tsize, 0xffffffff)) {
-    if (tvhlog_limit(&mt->mt_err_log, 10)) {
+    if (cb && tvhlog_limit(&mt->mt_err_log, 10)) {
       tvhwarn(mt->mt_subsys, "%s: %s: invalid checksum (len %i, errors %zi)",
               mt->mt_name, logpref, tsize, mt->mt_err_log.count);
     }
@@ -119,7 +130,6 @@ mpegts_psi_section_reassemble0
   }
 
   excess = mt->mt_sect.ps_offset - tsize;
-  mt->mt_sect.ps_lock = 0;
 
   if (cb)
     cb(p, tsize - (crc ? 4 : 0), opaque);
@@ -162,8 +172,15 @@ mpegts_psi_section_reassemble
       mt->mt_sect.ps_lock = 0;
       return;
     }
-    mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, len, 0, crc, cb, opaque);
-    off += len;
+    while (off < len) {
+      r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, len, 0, crc, cb, opaque);
+      if (r < 0) {
+        mt->mt_sect.ps_lock = 0;
+        off = 188;
+        break;
+      }
+      off += r;
+    }
   }
 
   while(off < 188) {
