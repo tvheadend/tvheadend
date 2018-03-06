@@ -37,6 +37,8 @@ typedef struct memoryinfo {
   int64_t                my_peak_count;
 } memoryinfo_t;
 
+LIST_HEAD(memoryinfo_list, memoryinfo);
+
 extern struct memoryinfo_list memoryinfo_entries;
 extern const idclass_t memoryinfo_class;
 

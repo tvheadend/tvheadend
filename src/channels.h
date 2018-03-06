@@ -43,7 +43,7 @@ typedef struct channel
 {
   idnode_t ch_id;
 
-  RB_ENTRY(channel)   ch_link;
+  RB_ENTRY(channel) ch_link;
 
   int ch_refcount;
   int ch_load;
@@ -82,9 +82,9 @@ typedef struct channel
   int                   ch_dvr_extra_time_pre;
   int                   ch_dvr_extra_time_post;
   int                   ch_epg_running;
-  struct dvr_entry_list ch_dvrs;
-  struct dvr_autorec_entry_list ch_autorecs;
-  struct dvr_timerec_entry_list ch_timerecs;
+  LIST_HEAD(, dvr_entry)         ch_dvrs;
+  LIST_HEAD(, dvr_autorec_entry) ch_autorecs;
+  LIST_HEAD(, dvr_timerec_entry) ch_timerecs;
 
 } channel_t;
 
@@ -109,7 +109,7 @@ typedef struct channel_tag {
 
   idnode_list_head_t ct_ctms;
 
-  struct dvr_autorec_entry_list ct_autorecs;
+  LIST_HEAD(, dvr_autorec_entry) ct_autorecs;
 
   idnode_list_head_t ct_accesses;
 

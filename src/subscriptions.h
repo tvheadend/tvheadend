@@ -147,6 +147,7 @@ typedef struct th_subscription {
 
 } th_subscription_t;
 
+LIST_HEAD(th_subscription_list, th_subscription);
 
 /**
  * Prototypes

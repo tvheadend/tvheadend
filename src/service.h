@@ -47,7 +47,11 @@ struct descramble_info;
 /**
  *
  */
+LIST_HEAD(th_descrambler_list, th_descrambler);
 typedef TAILQ_HEAD(service_instance_list, service_instance) service_instance_list_t;
+LIST_HEAD(service_list, service);
+RB_HEAD(service_tree, service);
+TAILQ_HEAD(service_queue, service);
 
 /**
  *

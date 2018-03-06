@@ -230,29 +230,6 @@ tasklet_t *tasklet_arm_alloc(tsk_callback_t *callback, void *opaque);
 void tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque);
 void tasklet_disarm(tasklet_t *gti);
 
-
-/*
- * List / Queue header declarations
- */
-LIST_HEAD(memoryinfo_list, memoryinfo);
-LIST_HEAD(access_entry_list, access_entry);
-LIST_HEAD(th_subscription_list, th_subscription);
-LIST_HEAD(dvr_vfs_list, dvr_vfs);
-LIST_HEAD(dvr_config_list, dvr_config);
-LIST_HEAD(dvr_entry_list, dvr_entry);
-TAILQ_HEAD(ref_update_queue, ref_update);
-LIST_HEAD(service_list, service);
-RB_HEAD(service_tree, service);
-TAILQ_HEAD(service_queue, service);
-LIST_HEAD(th_muxer_list, th_muxer);
-LIST_HEAD(th_muxstream_list, th_muxstream);
-LIST_HEAD(th_descrambler_list, th_descrambler);
-TAILQ_HEAD(th_refpkt_queue, th_refpkt);
-TAILQ_HEAD(th_muxpkt_queue, th_muxpkt);
-LIST_HEAD(dvr_autorec_entry_list, dvr_autorec_entry);
-LIST_HEAD(dvr_timerec_entry_list, dvr_timerec_entry);
-TAILQ_HEAD(th_pktref_queue, th_pktref);
-
 /**
  *
  */

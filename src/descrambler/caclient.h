@@ -22,6 +22,7 @@
 #include "tvheadend.h"
 #include "idnode.h"
 
+struct service;
 struct mpegts_mux;
 
 extern const idclass_t caclient_class;

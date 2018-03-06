@@ -26,7 +26,6 @@ struct memoryinfo;
 /**
  * Packet buffer
  */
-
 typedef struct pktbuf {
   int pb_refcount;
   int pb_err;
@@ -82,7 +81,6 @@ typedef struct th_pkt {
 
 } th_pkt_t;
 
-
 /**
  * A packet reference
  */
@@ -91,6 +89,7 @@ typedef struct th_pktref {
   th_pkt_t *pr_pkt;
 } th_pktref_t;
 
+TAILQ_HEAD(th_pktref_queue, th_pktref);
 
 /**
  *

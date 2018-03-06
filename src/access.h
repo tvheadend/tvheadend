@@ -150,6 +150,8 @@ typedef struct access_entry {
   struct access_ipmask_queue ae_ipmasks;
 } access_entry_t;
 
+LIST_HEAD(access_entry_list, access_entry);
+
 extern const idclass_t access_entry_class;
 
 typedef struct access {

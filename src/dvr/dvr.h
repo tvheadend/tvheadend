@@ -28,6 +28,23 @@
 #include "lang_str.h"
 #include "tvhvfs.h"
 
+/**
+ *
+ */
+LIST_HEAD(dvr_config_list, dvr_config);
+LIST_HEAD(dvr_entry_list, dvr_entry);
+
+LIST_HEAD(dvr_autorec_entry_list, dvr_autorec_entry);
+LIST_HEAD(dvr_timerec_entry_list, dvr_timerec_entry);
+
+TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
+TAILQ_HEAD(dvr_timerec_entry_queue, dvr_timerec_entry);
+
+LIST_HEAD(dvr_vfs_list, dvr_vfs);
+
+/**
+ *
+ */
 #define DVR_MAX_DATA_ERRORS     (10000)
 
 #define DVR_FILESIZE_UPDATE     (1<<0)
@@ -397,8 +414,6 @@ typedef struct dvr_autorec_entry {
   
 } dvr_autorec_entry_t;
 
-TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
-
 extern struct dvr_autorec_entry_queue autorec_entries;
 
 /**
@@ -436,8 +451,6 @@ typedef struct dvr_timerec_entry {
   uint32_t dte_retention;
   uint32_t dte_removal;
 } dvr_timerec_entry_t;
-
-TAILQ_HEAD(dvr_timerec_entry_queue, dvr_timerec_entry);
 
 extern struct dvr_timerec_entry_queue timerec_entries;
 
@@ -827,6 +840,5 @@ void dvr_init(void);
 void dvr_config_init(void);
 
 void dvr_done(void);
-
 
 #endif /* DVR_H  */
