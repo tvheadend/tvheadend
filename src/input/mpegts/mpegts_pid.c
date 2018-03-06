@@ -340,7 +340,7 @@ mpegts_pid_compare_weight(mpegts_apids_t *dst, mpegts_apids_t *src,
 int
 mpegts_pid_weighted(mpegts_apids_t *dst, mpegts_apids_t *pids, int limit)
 {
-  int i, j;
+  int i, j, overlimit = 0;
   mpegts_apids_t sorted;
   mpegts_apid_t *p;
 
@@ -357,10 +357,15 @@ mpegts_pid_weighted(mpegts_apids_t *dst, mpegts_apids_t *pids, int limit)
     else
       mpegts_pid_update_max_weight_by_index(dst, j, p->weight);
   }
+  for ( ; i < sorted.count; i++) {
+    p = &sorted.pids[i];
+    if (mpegts_pid_find_rindex(dst, sorted.pids[i].pid) < 0)
+      overlimit++;
+  }
   dst->all = pids->all;
 
   mpegts_pid_done(&sorted);
-  return 0;
+  return overlimit;
 }
 
 int
