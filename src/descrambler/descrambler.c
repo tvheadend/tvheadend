@@ -1277,12 +1277,13 @@ descrambler_table_callback
   LIST_HEAD(,descrambler_ecmsec) sections;
   int emm = (mt->mt_flags & MT_FAST) == 0;
   mpegts_service_t *t;
-  int64_t clk;
+  int64_t clk, clk2;
   uint8_t ki;
   int i, j;
 
   if (len < 6)
     return 0;
+  clk = mclk();
   LIST_INIT(&sections);
   pthread_mutex_lock(&mt->mt_mux->mm_descrambler_lock);
   TAILQ_FOREACH(ds, &dt->sections, link) {
@@ -1337,7 +1338,7 @@ descrambler_table_callback
             }
             if ((ptr[0] & 0xfe) == 0x80) { /* 0x80 = even, 0x81 = odd */
               j = ptr[0] & 1;
-              dr->dr_ecm_start[j] = mclk();
+              dr->dr_ecm_start[j] = clk;
               if (dr->dr_quick_ecm) {
                 ki = 1 << (j + 6); /* 0x40 = even, 0x80 = odd */
                 for (i = 0; i < DESCRAMBLER_MAX_KEYS; i++) {
@@ -1375,11 +1376,11 @@ descrambler_table_callback
       if ((t = mt->mt_service) != NULL) {
         pthread_mutex_lock(&t->s_stream_mutex);
         if ((dr = t->s_descramble) != NULL) {
-          clk = mclk();
           for (i = 0; i < DESCRAMBLER_MAX_KEYS; i++) {
             tk = &dr->dr_keys[i];
             for (j = 0; j < 2; j++) {
-              if (tk->key_timestamp[j] >= dr->dr_ecm_start[j] &&
+              clk2 = dr->dr_ecm_start[j];
+              if (clk2 > 0 && tk->key_timestamp[j] >= clk2 &&
                   tk->key_timestamp[j] + ms2mono(200) <= clk) {
                 tk->key_timestamp[j] = clk;
                 tvhtrace(LS_DESCRAMBLER, "ECM: %s key[%d] for service \"%s\" still valid",
