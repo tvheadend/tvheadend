@@ -582,6 +582,8 @@ next_one:
       om->om_retry_time = mclk() + mono2sec(60);
       if (r == SM_CODE_NO_FREE_ADAPTER)
         net->failed = 1;
+      if (r == SM_CODE_TUNING_FAILED)
+        net->failed = 1;
     } else {
       tvhtrace(LS_EPGGRAB, "no free adapter for %s (subscribe)", mm->mm_nicename);
       net->fatal = 1;
