@@ -595,6 +595,8 @@ next_one:
       om->om_retry_time = mclk() + mono2sec(60);
       if (r == SM_CODE_NO_FREE_ADAPTER)
         net->failed = 1;
+      if (r == SM_CODE_TUNING_FAILED)
+        net->failed = 1;
     } else {
       if (tvhtrace_enabled()) {
         mpegts_mux_nice_name(mm, name, sizeof(name));
