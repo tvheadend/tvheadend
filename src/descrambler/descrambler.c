@@ -1277,7 +1277,7 @@ descrambler_table_callback
   LIST_HEAD(,descrambler_ecmsec) sections;
   int emm = (mt->mt_flags & MT_FAST) == 0;
   mpegts_service_t *t;
-  int64_t clk, clk2;
+  int64_t clk, clk2, clk3;
   uint8_t ki;
   int i, j;
 
@@ -1380,8 +1380,8 @@ descrambler_table_callback
             tk = &dr->dr_keys[i];
             for (j = 0; j < 2; j++) {
               clk2 = dr->dr_ecm_start[j];
-              if (clk2 > 0 && tk->key_timestamp[j] >= clk2 &&
-                  tk->key_timestamp[j] + ms2mono(200) <= clk) {
+              clk3 = tk->key_timestamp[j];
+              if (clk3 > 0 && clk3 >= clk2 && clk3 + ms2mono(200) <= clk) {
                 tk->key_timestamp[j] = clk;
                 tvhtrace(LS_DESCRAMBLER, "ECM: %s key[%d] for service \"%s\" still valid",
                                          j == 0 ? "Even" : "Odd",
