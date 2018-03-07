@@ -1073,6 +1073,26 @@ dvr_entry_create_htsp(int enabled, const char *config_uuid,
                            comment);
 }
 
+dvr_entry_t *
+dvr_entry_create_by_event(int enabled, const char *config_uuid,
+                          epg_broadcast_t *e,
+                          time_t start_extra, time_t stop_extra,
+                          const char *owner,
+                          const char *creator, dvr_autorec_entry_t *dae,
+                          dvr_prio_t pri, int retention, int removal,
+                          const char *comment)
+{
+  if(!e->channel || !e->episode || !e->episode->title)
+    return NULL;
+  return dvr_entry_create_(enabled, config_uuid, e,
+                           e->channel, e->start, e->stop,
+                           start_extra, stop_extra,
+                           NULL, NULL, NULL, NULL,
+                           LIST_FIRST(&e->episode->genre),
+                           owner, creator, dae, NULL, pri,
+                           retention, removal, comment);
+}
+
 /**
  * Return the event for the last segment.
  */
