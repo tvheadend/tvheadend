@@ -1074,28 +1074,21 @@ dvr_entry_create_htsp(int enabled, const char *config_uuid,
 }
 
 /**
- * Determine stop time for the broadcast taking in
- * to account segmented programmes via EIT.
+ * Return the event for the last segment.
  */
-static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
+static epg_broadcast_t *dvr_entry_get_segment_last( dvr_entry_t *de )
 {
+  time_t start, stop, maximum_stop_time;
+  int max_progs_to_check;
+  epg_broadcast_t *e, *next, *ret;
+
   if (!de)
-    return 0;
-
-  if (dvr_entry_get_epg_running(de))
-    return 0;
-
-  /* Return any cached value we have previous calculated. */
-  time_t segment_stop_extra = de->de_segment_stop_extra;
-  if (segment_stop_extra) {
-    return segment_stop_extra;
-  }
+    return NULL;
 
   /* If we have no broadcast data then can not search for matches */
-  epg_broadcast_t *e = de->de_bcast;
-  if (!e) {
-    return 0;
-  }
+  e = de->de_bcast;
+  if (!e)
+    return NULL;
 
   const char *ep_uri = e->episode->uri;
 
@@ -1127,11 +1120,11 @@ static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
     MAX_STOP_TIME = 9 * 60 * 60
   };
 
-  const time_t start = e->start;
-  const time_t stop  = e->stop;
-  const time_t maximum_stop_time = start + MAX_STOP_TIME;
-  int max_progs_to_check = 10;
-  epg_broadcast_t *next;
+  ret = NULL;
+  start = e->start;
+  stop  = e->stop;
+  maximum_stop_time = start + MAX_STOP_TIME;
+  max_progs_to_check = 10;
   for (next = epg_broadcast_get_next(e);
        --max_progs_to_check && stop < maximum_stop_time &&
          next && next->episode && next->start < stop + THREE_HOURS;
@@ -1142,40 +1135,45 @@ static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
        * segment part of this programme. So extend our stop time
        * to include this programme.
        */
-      segment_stop_extra = next->stop - stop;
-      tvhinfo(LS_DVR, "Increasing stop for \"%s\" on \"%s\" \"%s\" by %"PRId64" seconds at start %"PRId64" and original stop %"PRId64,
-              lang_str_get(e->episode->title, NULL), DVR_CH_NAME(de), ep_uri, (int64_t)segment_stop_extra, (int64_t)start, (int64_t)stop);
+      ret = next;
     }
   }
 
-  /* Cache the value */
-  de->de_segment_stop_extra = segment_stop_extra;
-  return segment_stop_extra;
+  return ret;
 }
 
-
 /**
- *
+ * Determine stop time for the broadcast taking in
+ * to account segmented programmes via EIT.
  */
-dvr_entry_t *
-dvr_entry_create_by_event(int enabled, const char *config_uuid,
-                          epg_broadcast_t *e,
-                          time_t start_extra, time_t stop_extra,
-                          const char *owner,
-                          const char *creator, dvr_autorec_entry_t *dae,
-                          dvr_prio_t pri, int retention, int removal,
-                          const char *comment)
+static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
 {
-  if(!e->channel || !e->episode || !e->episode->title)
-    return NULL;
+  time_t segment_stop_extra;
+  epg_broadcast_t *e;
 
-  return dvr_entry_create_(enabled, config_uuid, e,
-                           e->channel, e->start, e->stop,
-                           start_extra, stop_extra,
-                           NULL, NULL, NULL, NULL,
-                           LIST_FIRST(&e->episode->genre),
-                           owner, creator, dae, NULL, pri,
-                           retention, removal, comment);
+  if (!de)
+    return 0;
+
+  /* Return any cached value we have previous calculated. */
+  if (de->de_segment_stop_extra)
+    return de->de_segment_stop_extra;
+
+  /* Do not update stop extra without the last segment */
+  e = dvr_entry_get_segment_last(de);
+  if (!e)
+    return 0;
+
+  segment_stop_extra = e->stop - de->de_bcast->stop;
+  if (segment_stop_extra != de->de_segment_stop_extra) {
+    tvhinfo(LS_DVR, "Increasing stop for \"%s\" on \"%s\" \"%s\" by %"PRId64
+                    " seconds at start %"PRId64" and original stop %"PRId64,
+                    lang_str_get(e->episode->title, NULL), DVR_CH_NAME(de), e->episode->uri,
+                    (int64_t)segment_stop_extra, (int64_t)de->de_bcast->start,
+                    (int64_t)de->de_bcast->stop);
+    de->de_segment_stop_extra = segment_stop_extra;
+  }
+
+  return segment_stop_extra;
 }
 
 /**
@@ -2086,6 +2084,7 @@ void dvr_event_updated(epg_broadcast_t *e)
 void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t running)
 {
   dvr_entry_t *de;
+  epg_broadcast_t *e2;
   const char *srcname;
   char ubuf[UUID_HEX_SIZE];
 
@@ -2128,10 +2127,16 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
        * (by definition) the first segment will be marked as stop long
        * before the second segment is marked as started. Otherwise if we
        * processed the stop then we will stop the dvr_thread from
-       * recording tv packets.
+       * recording tv packets. But if the event is behind the last segment,
+       * stop it.
        */
       if (de->de_segment_stop_extra) {
-        continue;
+        e2 = dvr_entry_get_segment_last(de);
+        for ( ; e2; e2 = epg_broadcast_get_prev(e2))
+          if (e == e2)
+            break;
+        if (e2)
+          continue;
       }
       /*
        * make checking more robust
