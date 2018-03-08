@@ -187,7 +187,7 @@ ts_recv_packet1
 
   st = elementary_stream_find(&t->s_components, pid);
 
-  if((st == NULL) && (pid != t->s_pcr_pid) && !table) {
+  if((st == NULL) && (pid != t->s_components.set_pcr_pid) && !table) {
     pthread_mutex_unlock(&t->s_stream_mutex);
     return 0;
   }

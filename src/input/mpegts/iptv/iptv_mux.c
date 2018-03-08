@@ -391,7 +391,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
     ms = iptv_service_create0(im, 0, 0, NULL, conf);
     htsmsg_destroy(conf);
     if (ms) {
-      ms->s_pmt_pid = SERVICE_PMT_AUTO;
+      ms->s_components.set_pmt_pid = SERVICE_PMT_AUTO;
       mpegts_network_bouquet_trigger((mpegts_network_t *)in, 0);
     }
   }

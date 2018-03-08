@@ -634,7 +634,7 @@ cwc_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
              cc_card_data_t *pcard, const uint8_t *data, int len)
 {
   mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
-  uint16_t sid = t->s_dvb_service_id;
+  uint16_t sid = t->s_components.set_service_id;
   uint16_t seq;
   int r;
 
@@ -657,7 +657,7 @@ cwc_send_emm(void *cc, cc_service_t *ct,
 
   if (ct) {
     t = (mpegts_service_t *)ct->td_service;
-    sid = t->s_dvb_service_id;
+    sid = t->s_components.set_service_id;
   }
 
   cwc_send_msg(cc, data, len, sid, 1, pcard->cs_ra.caid, provid, NULL);

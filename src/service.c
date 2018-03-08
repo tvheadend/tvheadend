@@ -746,7 +746,7 @@ service_make_nicename0(service_t *t, char *buf, size_t len, int adapter)
 
   service_name = si.si_service;
   if (service_name == NULL || si.si_service[0] == '0') {
-    snprintf(buf2, sizeof(buf2), "{PMT:%d}", t->s_pmt_pid);
+    snprintf(buf2, sizeof(buf2), "{PMT:%d}", t->s_components.set_pmt_pid);
     service_name = buf2;
   }
 
@@ -983,6 +983,7 @@ void
 service_restart_streams(service_t *t)
 {
   streaming_message_t *sm;
+  streaming_start_t *ss;
   const int had_streams = elementary_set_has_streams(&t->s_components, 1);
   const int had_components = had_streams && t->s_running;
 
@@ -993,7 +994,8 @@ service_restart_streams(service_t *t)
       sm = streaming_msg_create_code(SMT_STOP, SM_CODE_SOURCE_RECONFIGURED);
       streaming_service_deliver(t, sm);
     }
-    sm = streaming_msg_create_data(SMT_START, service_build_stream_start(t));
+    ss = elementary_stream_build_start(&t->s_components);
+    sm = streaming_msg_create_data(SMT_START, ss);
     streaming_pad_deliver(&t->s_streaming_pad, sm);
     t->s_running = 1;
   } else {
@@ -1025,25 +1027,6 @@ service_restart(service_t *t)
     t->s_refresh_feed(t);
 
   descrambler_service_start(t);
-}
-
-/**
- * Generate a message containing info about all components
- */
-streaming_start_t *
-service_build_stream_start(service_t *t)
-{
-  extern const idclass_t mpegts_service_class;
-  streaming_start_t *ss;
-
-  ss = elementary_stream_build_start(&t->s_components);
-  ss->ss_pcr_pid = t->s_pcr_pid;
-  ss->ss_pmt_pid = t->s_pmt_pid;
-  if (idnode_is_instance(&t->s_id, &mpegts_service_class)) {
-    mpegts_service_t *ts = (mpegts_service_t*)t;
-    ss->ss_service_id = ts->s_dvb_service_id;
-  }
-  return ss;
 }
 
 /**
@@ -1516,8 +1499,8 @@ void service_save ( service_t *t, htsmsg_t *m )
   idnode_save(&t->s_id, m);
 
   htsmsg_add_s32(m, "verified", t->s_verified);
-  htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
-  htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
+  htsmsg_add_u32(m, "pcr", t->s_components.set_pcr_pid);
+  htsmsg_add_u32(m, "pmt", t->s_components.set_pmt_pid);
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
@@ -1674,7 +1657,7 @@ void service_load ( service_t *t, htsmsg_t *c )
   htsmsg_t *m, *hbbtv;
   htsmsg_field_t *f;
   int32_t s32;
-  uint32_t u32, pid;
+  uint32_t u32, pid, pid2;
   elementary_stream_t *st;
   streaming_component_type_t type;
   const char *v;
@@ -1688,9 +1671,9 @@ void service_load ( service_t *t, htsmsg_t *c )
   else
     t->s_verified = 1;
   if(!htsmsg_get_u32(c, "pcr", &u32))
-    t->s_pcr_pid = u32;
+    t->s_components.set_pcr_pid = u32;
   if(!htsmsg_get_u32(c, "pmt", &u32))
-    t->s_pmt_pid = u32;
+    t->s_components.set_pmt_pid = u32;
 
   if (config.hbbtv) {
     hbbtv = htsmsg_get_map(c, "hbbtv");
@@ -1718,7 +1701,8 @@ void service_load ( service_t *t, htsmsg_t *c )
       if(htsmsg_get_u32(c, "pid", &pid))
         continue;
 
-      if(pid > 0 && t->s_pcr_pid > 0 && pid == t->s_pcr_pid)
+      pid2 = t->s_components.set_pcr_pid;
+      if(pid > 0 && pid2 > 0 && pid == pid2)
         shared_pcr = 1;
 
       st = elementary_stream_create(&t->s_components, pid, type, 0);
@@ -1765,7 +1749,8 @@ void service_load ( service_t *t, htsmsg_t *c )
     }
   }
   if (!shared_pcr)
-    elementary_stream_type_modify(&t->s_components, t->s_pcr_pid, SCT_PCR, 0);
+    elementary_stream_type_modify(&t->s_components,
+                                   t->s_components.set_pcr_pid, SCT_PCR, 0);
   else
     elementary_stream_type_destroy(&t->s_components, SCT_PCR);
   elementary_set_sort_streams(&t->s_components);

@@ -44,6 +44,6 @@
 
 uint32_t dvb_psi_parse_pmt
   (mpegts_table_t *mt, const char *nicename, elementary_set_t *set,
-   const uint8_t *ptr, int len, uint16_t *pcr, int running);
+   const uint8_t *ptr, int len, int running);
 
 #endif

@@ -1271,7 +1271,7 @@ capmt_process_notify(capmt_t *capmt, uint8_t adapter,
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
     t = (mpegts_service_t *)ct->td_service;
 
-    if (sid != t->s_dvb_service_id)
+    if (sid != t->s_components.set_service_id)
       continue;
     if (adapter != ct->ct_adapter)
       continue;
@@ -2228,8 +2228,8 @@ capmt_send_request(capmt_service_t *ct, int lm)
 {
   capmt_t *capmt = ct->ct_capmt;
   mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
-  uint16_t sid = t->s_dvb_service_id;
-  uint16_t pmtpid = t->s_pmt_pid;
+  uint16_t sid = t->s_components.set_service_id;
+  uint16_t pmtpid = t->s_components.set_pmt_pid;
   uint16_t transponder = t->s_dvb_mux->mm_tsid;
   uint16_t onid = t->s_dvb_mux->mm_onid;
   const int adapter_num = ct->ct_adapter;

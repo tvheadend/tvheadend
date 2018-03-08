@@ -498,7 +498,7 @@ descrambler_notify_nokey( th_descrambler_runtime_t *dr )
   tvhdebug(LS_DESCRAMBLER, "no key for service='%s'", t->s_dvb_svcname);
 
   di = calloc(1, sizeof(*di));
-  di->pid = t->s_pmt_pid;
+  di->pid = t->s_components.set_pmt_pid;
 
   descrambler_notify_deliver(t, di);
 }

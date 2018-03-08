@@ -133,7 +133,7 @@ constcw_service_start(caclient_t *cac, service_t *t)
   if (mt->s_dvb_forcecaid && mt->s_dvb_forcecaid != ccw->ccw_caid)
     return;
 
-  if (mt->s_dvb_service_id != ccw->ccw_sid)
+  if (mt->s_components.set_service_id != ccw->ccw_sid)
     return;
 
   if (mt->s_dvb_mux->mm_tsid != ccw->ccw_tsid)

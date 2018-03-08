@@ -837,11 +837,13 @@ mpegts_input_open_service
   pthread_mutex_lock(&s->s_stream_mutex);
   if (s->s_type == STYPE_STD) {
 
-    if (s->s_pmt_pid == SERVICE_PMT_AUTO)
+    if (s->s_components.set_pmt_pid == SERVICE_PMT_AUTO)
       goto no_pids;
 
-    mpegts_input_open_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s, reopen);
-    mpegts_input_open_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s, reopen);
+    mpegts_input_open_pid(mi, mm, s->s_components.set_pmt_pid,
+                          MPS_SERVICE, MPS_WEIGHT_PMT, s, reopen);
+    mpegts_input_open_pid(mi, mm, s->s_components.set_pcr_pid,
+                          MPS_SERVICE, MPS_WEIGHT_PCR, s, reopen);
     if (s->s_scrambled_pass) {
       mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, s, reopen);
       s->s_cat_opened = 1;
@@ -849,7 +851,8 @@ mpegts_input_open_service
     /* Open only filtered components here */
     TAILQ_FOREACH(st, &s->s_components.set_filter, es_filter_link)
       if ((s->s_scrambled_pass || st->es_type != SCT_CA) &&
-          st->es_pid != s->s_pmt_pid && st->es_pid != s->s_pcr_pid) {
+          st->es_pid != s->s_components.set_pmt_pid &&
+          st->es_pid != s->s_components.set_pcr_pid) {
         st->es_pid_opened = 1;
         mpegts_input_open_pid(mi, mm, st->es_pid, MPS_SERVICE, mpegts_mps_weight(st), s, reopen);
       }
@@ -882,7 +885,7 @@ no_pids:
     s->s_pmt_mon =
       mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK,
                        dvb_pmt_callback, s, "pmt", LS_TBL_BASE,
-                       MT_CRC, s->s_pmt_pid, MPS_WEIGHT_PMT);
+                       MT_CRC, s->s_components.set_pmt_pid, MPS_WEIGHT_PMT);
     if (s->s_scrambled_pass && (flags & SUBSCRIPTION_EMM) != 0)
       mpegts_input_open_cat_monitor(mm, s);
   }
@@ -916,11 +919,11 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   pthread_mutex_lock(&s->s_stream_mutex);
   if (s->s_type == STYPE_STD) {
 
-    if (s->s_pmt_pid == SERVICE_PMT_AUTO)
+    if (s->s_components.set_pmt_pid == SERVICE_PMT_AUTO)
       goto no_pids;
 
-    mpegts_input_close_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, s);
-    mpegts_input_close_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, s);
+    mpegts_input_close_pid(mi, mm, s->s_components.set_pmt_pid, MPS_SERVICE, s);
+    mpegts_input_close_pid(mi, mm, s->s_components.set_pcr_pid, MPS_SERVICE, s);
     if (s->s_cat_opened) {
       mpegts_input_close_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, s);
       s->s_cat_opened = 0;
@@ -1450,7 +1453,8 @@ mpegts_input_process
         LIST_FOREACH(mps, &mp->mp_svc_subs, mps_svcraw_link) {
           s = mps->mps_owner;
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
-              (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
+              (pid == s->s_components.set_pmt_pid) ||
+              (pid == s->s_components.set_pcr_pid);
           ts_recv_packet1((mpegts_service_t*)s, tsb, llen, f);
         }
       } else
@@ -1459,7 +1463,8 @@ mpegts_input_process
         LIST_FOREACH(s, &mm->mm_transports, s_active_link) {
           if (s->s_type != STYPE_STD) continue;
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
-              (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
+              (pid == s->s_components.set_pmt_pid) ||
+              (pid == s->s_components.set_pcr_pid);
           ts_recv_packet1((mpegts_service_t*)s, tsb, llen, f);
         }
       }

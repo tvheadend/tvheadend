@@ -642,6 +642,10 @@ elementary_stream_build_start(elementary_set_t *set)
     *(elementary_info_t *)ssc = *(elementary_info_t *)st;
   }
 
+  ss->ss_pcr_pid = set->set_pcr_pid;
+  ss->ss_pmt_pid = set->set_pmt_pid;
+  ss->ss_service_id = set->set_service_id;
+
   ss->ss_refcount = 1;
   return ss;
 }

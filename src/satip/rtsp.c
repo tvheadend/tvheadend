@@ -489,7 +489,7 @@ rtsp_validate_service(mpegts_service_t *s, mpegts_apids_t *pids)
   elementary_stream_t *st;
 
   pthread_mutex_lock(&s->s_stream_mutex);
-  if (s->s_pmt_pid <= 0 || s->s_pcr_pid <= 0) {
+  if (s->s_components.set_pmt_pid <= 0 || s->s_components.set_pcr_pid <= 0) {
     pthread_mutex_unlock(&s->s_stream_mutex);
     return 0;
   }
@@ -504,7 +504,8 @@ rtsp_validate_service(mpegts_service_t *s, mpegts_apids_t *pids)
   pthread_mutex_unlock(&s->s_stream_mutex);
   if (enc == 0 || av == 0)
     return 0;
-  return pids == NULL || mpegts_pid_wexists(pids, s->s_pmt_pid, MPS_WEIGHT_RAW);
+  return pids == NULL ||
+         mpegts_pid_wexists(pids, s->s_components.set_pmt_pid, MPS_WEIGHT_RAW);
 }
 
 /*
@@ -573,8 +574,9 @@ end:
     mpegts_pid_init(&pmt_pids);
     LIST_FOREACH(sub, &rs->slaves, link) {
       if ((s = sub->service) == NULL) continue;
-      if (s->s_pmt_pid <= 0 || s->s_pmt_pid >= 8191) continue;
-      mpegts_pid_add(&pmt_pids, s->s_pmt_pid, MPS_WEIGHT_PMT);
+      if (s->s_components.set_pmt_pid <= 0 ||
+          s->s_components.set_pmt_pid >= 8191) continue;
+      mpegts_pid_add(&pmt_pids, s->s_components.set_pmt_pid, MPS_WEIGHT_PMT);
     }
     satip_rtp_update_pmt_pids(rs->rtp_handle, &pmt_pids);
     mpegts_pid_done(&pmt_pids);

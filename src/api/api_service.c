@@ -131,15 +131,15 @@ api_service_streams
   pthread_mutex_lock(&s->s_stream_mutex);
   st = htsmsg_create_list();
   stf = htsmsg_create_list();
-  if (s->s_pcr_pid) {
+  if (s->s_components.set_pcr_pid) {
     e = htsmsg_create_map();
-    htsmsg_add_u32(e, "pid", s->s_pcr_pid);
+    htsmsg_add_u32(e, "pid", s->s_components.set_pcr_pid);
     htsmsg_add_str(e, "type", "PCR");
     htsmsg_add_msg(st, NULL, e);
   }
-  if (s->s_pmt_pid) {
+  if (s->s_components.set_pmt_pid) {
     e = htsmsg_create_map();
-    htsmsg_add_u32(e, "pid", s->s_pmt_pid);
+    htsmsg_add_u32(e, "pid", s->s_components.set_pmt_pid);
     htsmsg_add_str(e, "type", "PMT");
     htsmsg_add_msg(st, NULL, e);
   }

@@ -144,11 +144,18 @@ struct elementary_stream {
 struct elementary_set {
   TAILQ_HEAD(, elementary_stream) set_all;
   TAILQ_HEAD(, elementary_stream) set_filter;
+
+  uint16_t set_pmt_pid;      /* PMT PID number */
+  uint16_t set_pcr_pid;      /* PCR PID number */
+  uint16_t set_service_id;   /* MPEG-TS DVB service ID number */
+
   int set_subsys;
   char *set_nicename;
+  service_t *set_service;
+
+  /* Cache lookups */
   uint16_t set_last_pid;
   elementary_stream_t *set_last_es;
-  service_t *set_service;
 };
 
 /*

@@ -332,7 +332,7 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
   }
 
   r = en50221_capmt_build(s, bcmd,
-                          s->s_dvb_service_id,
+                          s->s_components.set_service_id,
                           ac->caids, ac->caids_count,
                           as->last_pmt, as->last_pmt_len,
                           &capmt, &capmt_len);
@@ -363,7 +363,7 @@ dvbcam_service_destroy(th_descrambler_t *td)
     if (ac) {
       s = (mpegts_service_t *)td->td_service;
       r = en50221_capmt_build(s, EN50221_CAPMT_BUILD_DELETE,
-                              s->s_dvb_service_id,
+                              s->s_components.set_service_id,
                               ac->caids, ac->caids_count,
                               as->last_pmt, as->last_pmt_len,
                               &capmt, &capmt_len);

@@ -858,8 +858,8 @@ satip_frontend_update_pids
           RB_FOREACH(mps, &mp->mp_subs, mps_link)
             w = MAX(w, mps->mps_weight);
           LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
-            mpegts_pid_add(&tr->sf_pids, s->s_pmt_pid, w);
-            mpegts_pid_add(&tr->sf_pids, s->s_pcr_pid, w);
+            mpegts_pid_add(&tr->sf_pids, s->s_components.set_pmt_pid, w);
+            mpegts_pid_add(&tr->sf_pids, s->s_components.set_pcr_pid, w);
             TAILQ_FOREACH(st, &s->s_components.set_all, es_link)
               mpegts_pid_add(&tr->sf_pids, st->es_pid, w);
           }

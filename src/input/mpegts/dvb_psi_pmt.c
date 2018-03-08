@@ -227,7 +227,7 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
 uint32_t
 dvb_psi_parse_pmt
   (mpegts_table_t *mt, const char *nicename, elementary_set_t *set,
-   const uint8_t *ptr, int len, uint16_t *pcr, int running)
+   const uint8_t *ptr, int len, int running)
 {
   uint16_t pcr_pid, pid;
   uint8_t estype;
@@ -252,8 +252,8 @@ dvb_psi_parse_pmt
   pcr_pid = extract_pid(ptr + 5);
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];
   
-  if(*pcr != pcr_pid) {
-    *pcr = pcr_pid;
+  if(set->set_pcr_pid != pcr_pid) {
+    set->set_pcr_pid = pcr_pid;
     update |= PMT_UPDATE_PCR;
   }
   tvhdebug(mt->mt_subsys, "%s:  pcr_pid %04X", mt->mt_name, pcr_pid);
@@ -488,7 +488,7 @@ dvb_psi_parse_pmt
         update |= PMT_UPDATE_ANCILLARY_ID;
       }
 
-      if (st->es_pid == *pcr)
+      if (st->es_pid == set->set_pcr_pid)
         pcr_shared = 1;
     }
     position++;
@@ -496,7 +496,7 @@ dvb_psi_parse_pmt
 
   /* Handle PCR 'elementary stream' */
   if (!pcr_shared) {
-    st = elementary_stream_type_modify(set, *pcr, SCT_PCR, running);
+    st = elementary_stream_type_modify(set, set->set_pcr_pid, SCT_PCR, running);
     st->es_delete_me = 0;
   }
 
@@ -571,7 +571,7 @@ dvb_pmt_callback
 
   /* Find service */
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-    if (s->s_dvb_service_id == sid) break;
+    if (s->s_components.set_service_id == sid) break;
   if (!s) return -1;
 
   /* Process */
@@ -579,7 +579,7 @@ dvb_pmt_callback
   update = 0;
   pthread_mutex_lock(&s->s_stream_mutex);
   update = dvb_psi_parse_pmt(mt, service_nicename((service_t *)s),
-                             &s->s_components, ptr, len, &s->s_pcr_pid,
+                             &s->s_components, ptr, len,
                              s->s_status == SERVICE_RUNNING);
   if (update)
     service_request_save((service_t*)s);

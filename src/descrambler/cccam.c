@@ -775,7 +775,7 @@ cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
   provid = es->es_provid;
   card_id = pcard->cs_id;
   es->es_card_id = card_id;
-  sid = t->s_dvb_service_id;
+  sid = t->s_components.set_service_id;
   es->es_seq = seq & 0xff;
 
   buf = alloca(len + 13);

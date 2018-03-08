@@ -189,18 +189,6 @@ typedef struct service {
 // TODO: should this really be here?
 
   /**
-   * PID carrying the programs PCR.
-   * XXX: We don't support transports that does not carry
-   * the PCR in one of the content streams.
-   */
-  uint16_t s_pcr_pid;
-
-  /**
-   * PID for the PMT of this MPEG-TS stream.
-   */
-  uint16_t s_pmt_pid;
-
-  /**
    * Set if transport is enabled (the default).  If disabled it should
    * not be considered when chasing for available transports during
    * subscription scheduling.
@@ -477,9 +465,6 @@ service_reset_streaming_status_flags(service_t *t, int flag)
   if ((n & flag) != 0)
     service_set_streaming_status_flags_(t, n & ~flag);
 }
-
-struct streaming_start;
-struct streaming_start *service_build_stream_start(service_t *t);
 
 void service_restart(service_t *t);
 

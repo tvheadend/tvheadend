@@ -96,8 +96,8 @@ tsfile_input_thread ( void *aux )
       mpegts_service_t *s;
       pthread_mutex_lock(&tsfile_lock);
       LIST_FOREACH(s, &tmi->mmi_mux->mm_services, s_dvb_mux_link) {
-        if (s->s_pcr_pid)
-          tmi->mmi_tsfile_pcr_pid = s->s_pcr_pid;
+        if (s->s_components.set_pcr_pid)
+          tmi->mmi_tsfile_pcr_pid = s->s_components.set_pcr_pid;
       }
       pthread_mutex_unlock(&tsfile_lock);
     }

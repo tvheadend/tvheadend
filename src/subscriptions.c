@@ -88,6 +88,8 @@ static void
 subscription_link_service(th_subscription_t *s, service_t *t)
 {
   streaming_message_t *sm;
+  streaming_start_t *ss;
+
   subsetstate(s, SUBSCRIPTION_TESTING_SERVICE);
  
   s->ths_service = t;
@@ -99,11 +101,9 @@ subscription_link_service(th_subscription_t *s, service_t *t)
   pthread_mutex_lock(&t->s_stream_mutex);
 
   if(elementary_set_has_streams(&t->s_components, 1) || t->s_type != STYPE_STD) {
-
     streaming_msg_free(s->ths_start_message);
-
-    s->ths_start_message =
-      streaming_msg_create_data(SMT_START, service_build_stream_start(t));
+    ss = elementary_stream_build_start(&t->s_components);
+    s->ths_start_message = streaming_msg_create_data(SMT_START, ss);
   }
 
   // Link to service output

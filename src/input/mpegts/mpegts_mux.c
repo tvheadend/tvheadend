@@ -1078,7 +1078,9 @@ mpegts_mux_scan_service_check ( mpegts_mux_t *mm )
     if (s->s_enabled && s->s_auto != SERVICE_AUTO_OFF &&
         s->s_dvb_check_seen + 24 * 3600 < last_seen) {
       tvhinfo(LS_MPEGTS, "disabling service %s [sid %04X/%d] (missing in PAT/SDT)",
-              s->s_nicename ?: "<unknown>", s->s_dvb_service_id, s->s_dvb_service_id);
+              s->s_nicename ?: "<unknown>",
+              s->s_components.set_service_id,
+              s->s_components.set_service_id);
       service_set_enabled((service_t *)s, 0, SERVICE_AUTO_PAT_MISSING);
     }
   }
@@ -1456,7 +1458,7 @@ mpegts_mux_find_service ( mpegts_mux_t *mm, uint16_t sid )
 {
   mpegts_service_t *ms;
   LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link)
-    if (ms->s_dvb_service_id == sid && ms->s_enabled)
+    if (ms->s_components.set_service_id == sid && ms->s_enabled)
       break;
   return ms;
 }
