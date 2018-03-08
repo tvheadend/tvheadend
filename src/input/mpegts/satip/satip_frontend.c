@@ -2254,9 +2254,25 @@ satip_frontend_create
       (strncmp(lfe->mi_name, "SAT>IP ", 7) == 0 &&
        strstr(lfe->mi_name, " Tuner ") &&
        strstr(lfe->mi_name, " #"))) {
-    snprintf(lname, sizeof(lname), "SAT>IP %s Tuner #%i (%s)",
+    char transport[4];
+    switch (lfe->sf_transport_mode) {
+      case RTP_SERVER_DEFAULT:
+        strcpy(transport, lfe->sf_device->sd_tcp_mode ? "AVP" : "RTP");
+        break;
+      case RTP_UDP:
+        strcpy(transport,"RTP");
+        break;
+      case RTP_INTERLEAVED:
+        strcpy(transport,"AVP");
+        break;
+      default:
+        strcpy(transport,"\0");
+        break;
+    }
+    snprintf(lname, sizeof(lname), "SAT>IP %s Tuner #%i (%s/%s)",
              dvb_type2str(type), num,
-             satip_device_nicename(sd, nname, sizeof(nname)));
+             satip_device_nicename(sd, nname, sizeof(nname)),
+             transport);
     free(lfe->mi_name);
     lfe->mi_name = strdup(lname);
   }
