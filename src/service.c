@@ -42,7 +42,7 @@
 #include "atomic.h"
 #include "htsp_server.h"
 #include "lang_codes.h"
-#include "descrambler.h"
+#include "descrambler/descrambler.h"
 #include "descrambler/caid.h"
 #include "input.h"
 #include "access.h"

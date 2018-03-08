@@ -20,7 +20,7 @@
 #ifndef ESSTREAM_H__
 #define ESSTREAM_H__
 
-#include "descrambler.h"
+#include "descrambler/descrambler.h"
 #include "input/mpegts/dvb.h"
 
 /**

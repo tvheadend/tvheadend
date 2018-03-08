@@ -47,7 +47,7 @@
 #include "spawn.h"
 #include "subscriptions.h"
 #include "service_mapper.h"
-#include "descrambler.h"
+#include "descrambler/descrambler.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
 #include "satip/server.h"
