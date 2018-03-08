@@ -28,7 +28,7 @@
 #include "channels.h"
 #include "libav.h"
 #include "muxer_libav.h"
-#include "parsers.h"
+#include "parsers/parsers.h"
 #include "parsers/parser_avc.h"
 #include "parsers/parser_hevc.h"
 

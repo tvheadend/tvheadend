@@ -34,7 +34,7 @@
 #include "tvheadend.h"
 #include "subscriptions.h"
 #include "streaming.h"
-#include "parsers.h"
+#include "parsers/parsers.h"
 #include "channels.h"
 #include "service.h"
 #include "profile.h"

@@ -17,8 +17,7 @@
  */
 
 #include "tvheadend.h"
-#include "streaming.h"
-#include "parsers.h"
+#include "service.h"
 #include "tsdemux.h"
 #include "htsmsg.h"
 #include "htsmsg_binary.h"

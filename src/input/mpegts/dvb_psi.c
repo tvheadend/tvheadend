@@ -21,7 +21,6 @@
 #include "dvb.h"
 #include "dvb_psi_pmt.h"
 #include "tsdemux.h"
-#include "parsers.h"
 #include "lang_codes.h"
 #include "service.h"
 #include "dvb_charset.h"
