@@ -191,5 +191,8 @@ int elementary_stream_has_no_audio(elementary_set_t *set, int filtered);
 int elementary_set_has_streams(elementary_set_t *set, int filtered);
 void elementary_set_sort_streams(elementary_set_t *set);
 streaming_start_t *elementary_stream_build_start(elementary_set_t *set);
+elementary_set_t *elementary_stream_create_from_start
+  (elementary_set_t *set, streaming_start_t *ss);
+
 
 #endif // ESSTREAM_H__

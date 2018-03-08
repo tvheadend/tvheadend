@@ -625,8 +625,8 @@ streaming_start_t *
 elementary_stream_build_start(elementary_set_t *set)
 {
   elementary_stream_t *st;
-  int n = 0;
   streaming_start_t *ss;
+  int n = 0;
 
   TAILQ_FOREACH(st, &set->set_filter, es_filter_link)
     n++;
@@ -648,4 +648,34 @@ elementary_stream_build_start(elementary_set_t *set)
 
   ss->ss_refcount = 1;
   return ss;
+}
+
+/**
+ * Create back elementary streams from the start message.
+ */
+elementary_set_t *
+elementary_stream_create_from_start
+  (elementary_set_t *set, streaming_start_t *ss)
+{
+  elementary_stream_t *st;
+  int n;
+
+  /* we expect the empty set */
+  assert(TAILQ_FIRST(&set->set_all) == NULL);
+  assert(TAILQ_FIRST(&set->set_filter) == NULL);
+
+  for (n = 0; n < ss->ss_num_components; n++) {
+    streaming_start_component_t *ssc = &ss->ss_components[n];
+    st = calloc(1, sizeof(*st));
+    *(elementary_info_t *)st = *(elementary_info_t *)ssc;
+    st->es_service = set->set_service;
+    elementary_stream_make_nicename(st, set->set_nicename);
+    TAILQ_INSERT_TAIL(&set->set_all, st, es_link);
+  }
+
+  set->set_pcr_pid = ss->ss_pcr_pid;
+  set->set_pmt_pid = ss->ss_pmt_pid;
+  set->set_service_id = ss->ss_service_id;
+
+  return set;
 }
