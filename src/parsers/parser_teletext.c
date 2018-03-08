@@ -1044,7 +1044,7 @@ teletext_rundown_scan(parser_t *prs, tt_private_t *ttp)
   if(prs->prs_es_count <= 0)
     return;
 
-  t = (mpegts_service_t *)prs->prs_es[0].es_service;
+  t = (mpegts_service_t *)prs->prs_service;
   if(t == NULL)
     return;
 
