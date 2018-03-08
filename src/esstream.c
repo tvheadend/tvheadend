@@ -639,18 +639,7 @@ elementary_stream_build_start(elementary_set_t *set)
   n = 0;
   TAILQ_FOREACH(st, &set->set_filter, es_filter_link) {
     streaming_start_component_t *ssc = &ss->ss_components[n++];
-    ssc->ssc_index = st->es_index;
-    ssc->ssc_type  = st->es_type;
-
-    memcpy(ssc->ssc_lang, st->es_lang, 4);
-    ssc->ssc_audio_type = st->es_audio_type;
-    ssc->ssc_audio_version = st->es_audio_version;
-    ssc->ssc_composition_id = st->es_composition_id;
-    ssc->ssc_ancillary_id = st->es_ancillary_id;
-    ssc->ssc_pid = st->es_pid;
-    ssc->ssc_width = st->es_width;
-    ssc->ssc_height = st->es_height;
-    ssc->ssc_frameduration = st->es_frame_duration;
+    *(elementary_info_t *)ssc = *(elementary_info_t *)st;
   }
 
   ss->ss_refcount = 1;

@@ -30,6 +30,7 @@ typedef struct service service_t;
 typedef struct streaming_start streaming_start_t;
 
 typedef enum streaming_component_type streaming_component_type_t;
+typedef struct elementary_info elementary_info_t;
 typedef struct elementary_stream elementary_stream_t;
 typedef struct elementary_set elementary_set_t;
 
@@ -82,35 +83,13 @@ enum streaming_component_type {
 #define SCT_ISSUBTITLE(t) ((t) == SCT_TEXTSUB || (t) == SCT_DVBSUB)
 
 /**
- * Stream, one media component for a service.
+ * Stream info, one media component for a service.
  */
-struct elementary_stream {
-  TAILQ_ENTRY(elementary_stream) es_link;
-  TAILQ_ENTRY(elementary_stream) es_filter_link;
-
-  uint32_t es_position;
-  struct service *es_service;
-
-  streaming_component_type_t es_type;
+struct elementary_info {
   int es_index;
-
-  char *es_nicename;
-
-  /* PID related */
   int16_t es_pid;
-  uint16_t es_parent_pid;    /* For subtitle streams originating from
-				a teletext stream. this is the pid
-				of the teletext stream */
-  int8_t es_pid_opened;      /* PID is opened */
-  int8_t es_cc;              /* Last CC */
+  int es_type;
 
-  /* CA ID's on this stream */
-  struct caid_list es_caids;
-
-  /* */
-  int es_delete_me;      /* Temporary flag for deleting streams */
-
-  /* Stream info */
   int es_frame_duration;
 
   int es_width;
@@ -122,17 +101,41 @@ struct elementary_stream {
   char es_lang[4];           /* ISO 639 2B 3-letter language code */
   uint8_t es_audio_type;     /* Audio type */
   uint8_t es_audio_version;  /* Audio version/layer */
+  uint8_t es_sri;
+  uint8_t es_ext_sri;
+  uint16_t es_channels;
 
   uint16_t es_composition_id;
   uint16_t es_ancillary_id;
+};
 
-  /* Error log limiters */
-  tvhlog_limit_t es_cc_log;
-  /* Filter temporary variable */
-  uint32_t es_filter;
+/**
+ * Stream, one media component for a service.
+ */
+struct elementary_stream {
+  elementary_info_t;
 
-  /* HBBTV PSI table (AIT) */
-  mpegts_psi_table_t es_psi;
+  TAILQ_ENTRY(elementary_stream) es_link;
+  TAILQ_ENTRY(elementary_stream) es_filter_link;
+
+  uint32_t es_position;
+  struct service *es_service;
+  char *es_nicename;
+
+  /* PID related */
+  uint16_t es_parent_pid;    /* For subtitle streams originating from
+				a teletext stream. this is the pid
+				of the teletext stream */
+  int8_t es_pid_opened;      /* PID is opened */
+  int8_t es_cc;              /* Last CC */
+  int8_t es_delete_me;       /* Temporary flag for deleting streams */
+
+  struct caid_list es_caids; /* CA ID's on this stream */
+
+  tvhlog_limit_t es_cc_log;  /* CC error log limiter */
+  uint32_t es_filter;        /* Filter temporary variable */
+
+  mpegts_psi_table_t es_psi; /* HBBTV PSI table (AIT) */
 };
 
 /*

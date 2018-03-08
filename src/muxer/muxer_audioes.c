@@ -79,9 +79,9 @@ audioes_get_component(muxer_t *m, const struct streaming_start *ss)
 
   for (i = count = 0; i < ss->ss_num_components;i++) {
     ssc = &ss->ss_components[i];
-    if ((!ssc->ssc_disabled) && (SCT_ISAUDIO(ssc->ssc_type))) {
+    if ((!ssc->ssc_disabled) && (SCT_ISAUDIO(ssc->es_type))) {
       if (m->m_config.u.audioes.m_force_type != MC_UNKNOWN) {
-        mc = audioes_muxer_type(ssc->ssc_type);
+        mc = audioes_muxer_type(ssc->es_type);
         if (m->m_config.u.audioes.m_force_type != mc)
           continue;
       }
@@ -108,7 +108,7 @@ audioes_muxer_mime(muxer_t *m, const struct streaming_start *ss)
 
   ssc = audioes_get_component(m, ss);
   if (ssc)
-    mc = audioes_muxer_type(ssc->ssc_type);
+    mc = audioes_muxer_type(ssc->es_type);
 
   return muxer_container_type2mime(mc, 0);
 }
@@ -127,7 +127,7 @@ audioes_muxer_reconfigure(muxer_t *m, const struct streaming_start *ss)
 
   ssc = audioes_get_component(m, ss);
   if (ssc)
-    am->am_index = ssc->ssc_index;
+    am->am_index = ssc->es_index;
 
   return 0;
 }

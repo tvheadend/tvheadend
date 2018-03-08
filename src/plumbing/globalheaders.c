@@ -82,19 +82,19 @@ gh_flush(globalheaders_t *gh)
 static void
 apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 {
-  if(ssc->ssc_frameduration == 0 && pkt->pkt_duration != 0)
-    ssc->ssc_frameduration = pkt->pkt_duration;
+  if(ssc->es_frame_duration == 0 && pkt->pkt_duration != 0)
+    ssc->es_frame_duration = pkt->pkt_duration;
 
-  if(SCT_ISAUDIO(ssc->ssc_type) && !ssc->ssc_channels) {
-    ssc->ssc_channels = pkt->a.pkt_channels;
-    ssc->ssc_sri      = pkt->a.pkt_sri;
-    ssc->ssc_ext_sri  = pkt->a.pkt_ext_sri;
+  if(SCT_ISAUDIO(ssc->es_type) && !ssc->es_channels) {
+    ssc->es_channels = pkt->a.pkt_channels;
+    ssc->es_sri      = pkt->a.pkt_sri;
+    ssc->es_ext_sri  = pkt->a.pkt_ext_sri;
   }
 
-  if(SCT_ISVIDEO(ssc->ssc_type)) {
+  if(SCT_ISVIDEO(ssc->es_type)) {
     if(pkt->v.pkt_aspect_num && pkt->v.pkt_aspect_den) {
-      ssc->ssc_aspect_num = pkt->v.pkt_aspect_num;
-      ssc->ssc_aspect_den = pkt->v.pkt_aspect_den;
+      ssc->es_aspect_num = pkt->v.pkt_aspect_num;
+      ssc->es_aspect_den = pkt->v.pkt_aspect_den;
     }
   }
 
@@ -107,7 +107,7 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
     return;
   }
 
-  if (ssc->ssc_type == SCT_MP4A || ssc->ssc_type == SCT_AAC) {
+  if (ssc->es_type == SCT_MP4A || ssc->es_type == SCT_AAC) {
     ssc->ssc_gh = pktbuf_alloc(NULL, pkt->a.pkt_ext_sri ? 5 : 2);
     uint8_t *d = pktbuf_ptr(ssc->ssc_gh);
 
@@ -129,22 +129,22 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 static int
 header_complete(streaming_start_component_t *ssc, int not_so_picky)
 {
-  int is_video = SCT_ISVIDEO(ssc->ssc_type);
-  int is_audio = !is_video && SCT_ISAUDIO(ssc->ssc_type);
+  int is_video = SCT_ISVIDEO(ssc->es_type);
+  int is_audio = !is_video && SCT_ISAUDIO(ssc->es_type);
 
-  if((is_audio || is_video) && ssc->ssc_frameduration == 0)
+  if((is_audio || is_video) && ssc->es_frame_duration == 0)
     return 0;
 
   if(is_video) {
-    if(!not_so_picky && (ssc->ssc_aspect_num == 0 || ssc->ssc_aspect_den == 0 ||
-                         ssc->ssc_width == 0 || ssc->ssc_height == 0))
+    if(!not_so_picky && (ssc->es_aspect_num == 0 || ssc->es_aspect_den == 0 ||
+                         ssc->es_width == 0 || ssc->es_height == 0))
       return 0;
   }
 
-  if(is_audio && !ssc->ssc_channels)
+  if(is_audio && !ssc->es_channels)
     return 0;
 
-  if(ssc->ssc_gh == NULL && gh_require_meta(ssc->ssc_type))
+  if(ssc->ssc_gh == NULL && gh_require_meta(ssc->es_type))
     return 0;
 
   return 1;
@@ -169,7 +169,7 @@ gh_queue_delay(globalheaders_t *gh, int index)
     if (f->pr_pkt->pkt_dts != PTS_UNSET) {
       ssc = streaming_start_component_find_by_index
               (gh->gh_ss, f->pr_pkt->pkt_componentindex);
-      if (ssc && ssc->ssc_index == index)
+      if (ssc && ssc->es_index == index)
         break;
     }
     f = TAILQ_NEXT(f, pr_link);
@@ -178,7 +178,7 @@ gh_queue_delay(globalheaders_t *gh, int index)
     if (l->pr_pkt->pkt_dts != PTS_UNSET) {
       ssc = streaming_start_component_find_by_index
               (gh->gh_ss, l->pr_pkt->pkt_componentindex);
-      if (ssc && ssc->ssc_index == index)
+      if (ssc && ssc->es_index == index)
         break;
     }
     l = TAILQ_PREV(l, th_pktref_queue, pr_link);
@@ -216,8 +216,8 @@ headers_complete(globalheaders_t *gh)
 
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
-    qd[i] = gh_is_audiovideo(ssc->ssc_type) ?
-              gh_queue_delay(gh, ssc->ssc_index) : 0;
+    qd[i] = gh_is_audiovideo(ssc->es_type) ?
+              gh_queue_delay(gh, ssc->es_index) : 0;
     if (qd[i] > qd_max)
       qd_max = qd[i];
   }
@@ -239,8 +239,8 @@ headers_complete(globalheaders_t *gh)
       if(threshold || (qd[i] <= 0 && qd_max > (MAX_SCAN_TIME * 90) / 2)) {
 	ssc->ssc_disabled = 1;
         tvhdebug(LS_GLOBALHEADERS, "gh disable stream %d %s%s%s (PID %i) threshold %d qd %"PRId64" qd_max %"PRId64,
-             ssc->ssc_index, streaming_component_type2txt(ssc->ssc_type),
-             ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang, ssc->ssc_pid,
+             ssc->es_index, streaming_component_type2txt(ssc->es_type),
+             ssc->es_lang[0] ? " " : "", ssc->es_lang, ssc->es_pid,
              threshold, qd[i], qd_max);
       } else {
 	return 0;
@@ -254,9 +254,9 @@ headers_complete(globalheaders_t *gh)
     for(i = 0; i < ss->ss_num_components; i++) {
       ssc = &ss->ss_components[i];
       tvhtrace(LS_GLOBALHEADERS, "stream %d %s%s%s (PID %i) complete time %"PRId64"%s",
-               ssc->ssc_index, streaming_component_type2txt(ssc->ssc_type),
-               ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang, ssc->ssc_pid,
-               gh_queue_delay(gh, ssc->ssc_index),
+               ssc->es_index, streaming_component_type2txt(ssc->es_type),
+               ssc->es_lang[0] ? " " : "", ssc->es_lang, ssc->es_pid,
+               gh_queue_delay(gh, ssc->es_index),
                ssc->ssc_disabled ? " disabled" : "");
     }
   }
@@ -307,7 +307,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 
     streaming_msg_free(sm);
 
-    if(!gh_is_audiovideo(ssc->ssc_type))
+    if(!gh_is_audiovideo(ssc->es_type))
       break;
 
     if(!headers_complete(gh))

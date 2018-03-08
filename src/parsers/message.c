@@ -310,10 +310,10 @@ static void parser_input_start(parser_t *prs, streaming_message_t *sm)
   for (i = 0; i < ss->ss_num_components; i++) {
     pes = &prs->prs_es[i];
     ssc = &ss->ss_components[i];
-    parser_init_es(&prs->prs_es[i], prs, ssc->ssc_type);
+    parser_init_es(&prs->prs_es[i], prs, ssc->es_type);
     pes->es_service = prs->prs_service;
-    pes->es_index = ssc->ssc_index;
-    pes->es_pid = ssc->ssc_pid;
+    pes->es_index = ssc->es_index;
+    pes->es_pid = ssc->es_pid;
     if (pes->es_pid != -1) {
       snprintf(buf, sizeof(buf), "%s: %s @ #%d",
                service_nicename(prs->prs_service),

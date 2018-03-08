@@ -4097,8 +4097,8 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
     if (ssc->ssc_disabled) continue;
-    if (SCT_ISVIDEO(ssc->ssc_type)) {
-      if (ssc->ssc_width == 0 || ssc->ssc_height == 0) {
+    if (SCT_ISVIDEO(ssc->es_type)) {
+      if (ssc->es_width == 0 || ssc->es_height == 0) {
         hs->hs_wait_for_video = 1;
         return;
       }
@@ -4115,43 +4115,43 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     if(ssc->ssc_disabled) continue;
 
     c = htsmsg_create_map();
-    htsmsg_add_u32(c, "index", ssc->ssc_index);
-    if (ssc->ssc_type == SCT_MP4A)
+    htsmsg_add_u32(c, "index", ssc->es_index);
+    if (ssc->es_type == SCT_MP4A)
       type = "AAC"; /* override */
     else
-      type = streaming_component_type2txt(ssc->ssc_type);
+      type = streaming_component_type2txt(ssc->es_type);
     htsmsg_add_str(c, "type", type);
-    if(ssc->ssc_lang[0])
-      htsmsg_add_str(c, "language", ssc->ssc_lang);
+    if(ssc->es_lang[0])
+      htsmsg_add_str(c, "language", ssc->es_lang);
     
-    if(ssc->ssc_type == SCT_DVBSUB) {
-      htsmsg_add_u32(c, "composition_id", ssc->ssc_composition_id);
-      htsmsg_add_u32(c, "ancillary_id", ssc->ssc_ancillary_id);
+    if(ssc->es_type == SCT_DVBSUB) {
+      htsmsg_add_u32(c, "composition_id", ssc->es_composition_id);
+      htsmsg_add_u32(c, "ancillary_id", ssc->es_ancillary_id);
     }
 
-    if(SCT_ISVIDEO(ssc->ssc_type)) {
-      if(ssc->ssc_width)
-        htsmsg_add_u32(c, "width", ssc->ssc_width);
-      if(ssc->ssc_height)
-        htsmsg_add_u32(c, "height", ssc->ssc_height);
-      if(ssc->ssc_frameduration)
-        htsmsg_add_u32(c, "duration", hs->hs_90khz ? ssc->ssc_frameduration :
-                       ts_rescale(ssc->ssc_frameduration, 1000000));
-      if (ssc->ssc_aspect_num)
-        htsmsg_add_u32(c, "aspect_num", ssc->ssc_aspect_num);
-      if (ssc->ssc_aspect_den)
-        htsmsg_add_u32(c, "aspect_den", ssc->ssc_aspect_den);
+    if(SCT_ISVIDEO(ssc->es_type)) {
+      if(ssc->es_width)
+        htsmsg_add_u32(c, "width", ssc->es_width);
+      if(ssc->es_height)
+        htsmsg_add_u32(c, "height", ssc->es_height);
+      if(ssc->es_frame_duration)
+        htsmsg_add_u32(c, "duration", hs->hs_90khz ? ssc->es_frame_duration :
+                       ts_rescale(ssc->es_frame_duration, 1000000));
+      if (ssc->es_aspect_num)
+        htsmsg_add_u32(c, "aspect_num", ssc->es_aspect_num);
+      if (ssc->es_aspect_den)
+        htsmsg_add_u32(c, "aspect_den", ssc->es_aspect_den);
     }
 
-    if (SCT_ISAUDIO(ssc->ssc_type))
+    if (SCT_ISAUDIO(ssc->es_type))
     {
-      htsmsg_add_u32(c, "audio_type", ssc->ssc_audio_type);
-      if (ssc->ssc_audio_version)
-        htsmsg_add_u32(c, "audio_version", ssc->ssc_audio_version);
-      if (ssc->ssc_channels)
-        htsmsg_add_u32(c, "channels", ssc->ssc_channels);
-      if (ssc->ssc_sri)
-        htsmsg_add_u32(c, "rate", ssc->ssc_sri);
+      htsmsg_add_u32(c, "audio_type", ssc->es_audio_type);
+      if (ssc->es_audio_version)
+        htsmsg_add_u32(c, "audio_version", ssc->es_audio_version);
+      if (ssc->es_channels)
+        htsmsg_add_u32(c, "channels", ssc->es_channels);
+      if (ssc->es_sri)
+        htsmsg_add_u32(c, "rate", ssc->es_sri);
     }
 
     if (ssc->ssc_gh)

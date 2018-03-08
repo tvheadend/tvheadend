@@ -161,9 +161,9 @@ tsfix_start(tsfix_t *tf, streaming_start_t *ss)
 
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
-    tfs = tsfix_add_stream(tf, ssc->ssc_index, ssc->ssc_type);
+    tfs = tsfix_add_stream(tf, ssc->es_index, ssc->es_type);
     if (tfs->tfs_video) {
-      if (ssc->ssc_width == 0 || ssc->ssc_height == 0)
+      if (ssc->es_width == 0 || ssc->es_height == 0)
         /* only first video stream may be valid */
         vwait = !hasvideo ? 1 : 0;
       hasvideo = 1;

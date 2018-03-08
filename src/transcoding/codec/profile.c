@@ -226,7 +226,7 @@ tvh_codec_profile_is_copy(TVHCodecProfile *self, tvh_ssc_t *ssc)
         tvherror(LS_CODEC, "unknown type for profile '%s'", self->name);
         return -1;
     }
-    if (out_type == ssc->ssc_type) {
+    if (out_type == ssc->es_type) {
         idclass = (&self->idnode)->in_class;
         while (idclass) {
             codec_profile_class = (codec_profile_class_t *)idclass;

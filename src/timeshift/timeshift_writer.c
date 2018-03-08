@@ -245,8 +245,8 @@ static void _update_smt_start ( timeshift_t *ts, streaming_start_t *ss )
 
   /* Update video index */
   for (i = 0; i < ss->ss_num_components; i++)
-    if (SCT_ISVIDEO(ss->ss_components[i].ssc_type)) {
-      ts->vididx = ss->ss_components[i].ssc_index;
+    if (SCT_ISVIDEO(ss->ss_components[i].es_type)) {
+      ts->vididx = ss->ss_components[i].es_index;
       break;
     }
 }

@@ -388,28 +388,12 @@ struct source_info {
  *
  */
 struct streaming_start_component {
-  int ssc_index;
-  int ssc_type;
-  char ssc_lang[4];
-  uint8_t ssc_audio_type;
-  uint8_t ssc_audio_version;
-  uint16_t ssc_composition_id;
-  uint16_t ssc_ancillary_id;
-  uint16_t ssc_pid;
-  int16_t ssc_width;
-  int16_t ssc_height;
-  int16_t ssc_aspect_num;
-  int16_t ssc_aspect_den;
-  uint8_t ssc_sri;
-  uint8_t ssc_ext_sri;
-  uint8_t ssc_channels;
+  elementary_info_t;
+
   uint8_t ssc_disabled;
   uint8_t ssc_muxer_disabled;
   
   pktbuf_t *ssc_gh;
-
-  int ssc_frameduration;
-
 };
 
 

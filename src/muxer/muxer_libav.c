@@ -85,9 +85,9 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   if (!st)
     return -1;
 
-  st->id = ssc->ssc_index;
+  st->id = ssc->es_index;
   c = st->codec;
-  c->codec_id = streaming_component_type2codec_id(ssc->ssc_type);
+  c->codec_id = streaming_component_type2codec_id(ssc->es_type);
 
   switch(lm->m_config.m_type) {
   case MC_MATROSKA:
@@ -111,10 +111,10 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   }
 
   if(ssc->ssc_gh) {
-    if (ssc->ssc_type == SCT_H264 || ssc->ssc_type == SCT_HEVC) {
+    if (ssc->es_type == SCT_H264 || ssc->es_type == SCT_HEVC) {
       sbuf_t hdr;
       sbuf_init(&hdr);
-      if (ssc->ssc_type == SCT_H264) {
+      if (ssc->es_type == SCT_H264) {
           isom_write_avcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
                           pktbuf_len(ssc->ssc_gh));
       } else {
@@ -133,12 +133,12 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     }
   }
 
-  if(SCT_ISAUDIO(ssc->ssc_type)) {
+  if(SCT_ISAUDIO(ssc->es_type)) {
     c->codec_type    = AVMEDIA_TYPE_AUDIO;
     c->sample_fmt    = AV_SAMPLE_FMT_S16;
 
-    c->sample_rate   = sri_to_rate(ssc->ssc_sri);
-    c->channels      = ssc->ssc_channels;
+    c->sample_rate   = sri_to_rate(ssc->es_sri);
+    c->channels      = ssc->es_channels;
 
 #if 0
     c->time_base.num = 1;
@@ -147,18 +147,18 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->time_base     = st->time_base;
 #endif
 
-    av_dict_set(&st->metadata, "language", ssc->ssc_lang, 0);
+    av_dict_set(&st->metadata, "language", ssc->es_lang, 0);
 
-  } else if(SCT_ISVIDEO(ssc->ssc_type)) {
+  } else if(SCT_ISVIDEO(ssc->es_type)) {
     c->codec_type = AVMEDIA_TYPE_VIDEO;
-    c->width      = ssc->ssc_width;
-    c->height     = ssc->ssc_height;
+    c->width      = ssc->es_width;
+    c->height     = ssc->es_height;
 
     c->time_base.num = 1;
     c->time_base.den = 25;
 
-    c->sample_aspect_ratio.num = ssc->ssc_aspect_num;
-    c->sample_aspect_ratio.den = ssc->ssc_aspect_den;
+    c->sample_aspect_ratio.num = ssc->es_aspect_num;
+    c->sample_aspect_ratio.den = ssc->es_aspect_den;
 
     if (lm->m_config.m_type == MC_AVMP4) {
       /* this is a whole hell */
@@ -169,9 +169,9 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     st->sample_aspect_ratio.num = c->sample_aspect_ratio.num;
     st->sample_aspect_ratio.den = c->sample_aspect_ratio.den;
 
-  } else if(SCT_ISSUBTITLE(ssc->ssc_type)) {
+  } else if(SCT_ISSUBTITLE(ssc->es_type)) {
     c->codec_type = AVMEDIA_TYPE_SUBTITLE;
-    av_dict_set(&st->metadata, "language", ssc->ssc_lang, 0);
+    av_dict_set(&st->metadata, "language", ssc->es_lang, 0);
   }
 
   if(lm->lm_oc->oformat->flags & AVFMT_GLOBALHEADER)
@@ -268,11 +268,11 @@ lav_muxer_mime(muxer_t* m, const struct streaming_start *ss)
     if(ssc->ssc_disabled)
       continue;
 
-    if(!lav_muxer_support_stream(m->m_config.m_type, ssc->ssc_type))
+    if(!lav_muxer_support_stream(m->m_config.m_type, ssc->es_type))
       continue;
 
-    has_video |= SCT_ISVIDEO(ssc->ssc_type);
-    has_audio |= SCT_ISAUDIO(ssc->ssc_type);
+    has_video |= SCT_ISVIDEO(ssc->es_type);
+    has_audio |= SCT_ISAUDIO(ssc->es_type);
   }
 
   if(has_video)
@@ -318,9 +318,9 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
     if(ssc->ssc_disabled)
       continue;
 
-    if(!lav_muxer_support_stream(lm->m_config.m_type, ssc->ssc_type)) {
+    if(!lav_muxer_support_stream(lm->m_config.m_type, ssc->es_type)) {
       tvhwarn(LS_LIBAV,  "%s is not supported in %s", 
-	      streaming_component_type2txt(ssc->ssc_type), 
+	      streaming_component_type2txt(ssc->es_type), 
 	      muxer_container_type2txt(lm->m_config.m_type));
       ssc->ssc_muxer_disabled = 1;
       continue;
@@ -328,7 +328,7 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
 
     if(lav_muxer_add_stream(lm, ssc)) {
       tvherror(LS_LIBAV,  "Failed to add %s stream", 
-	       streaming_component_type2txt(ssc->ssc_type));
+	       streaming_component_type2txt(ssc->es_type));
       ssc->ssc_muxer_disabled = 1;
       continue;
     }

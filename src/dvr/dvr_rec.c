@@ -1259,61 +1259,61 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
       continue;
 
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "type", streaming_component_type2txt(ssc->ssc_type));
-    if (ssc->ssc_lang[0])
-       htsmsg_add_str(e, "language", ssc->ssc_lang);
+    htsmsg_add_str(e, "type", streaming_component_type2txt(ssc->es_type));
+    if (ssc->es_lang[0])
+       htsmsg_add_str(e, "language", ssc->es_lang);
 
-    if(SCT_ISAUDIO(ssc->ssc_type)) {
-      htsmsg_add_u32(e, "audio_type", ssc->ssc_audio_type);
-      if(ssc->ssc_audio_version)
-        htsmsg_add_u32(e, "audio_version", ssc->ssc_audio_version);
-      if(ssc->ssc_sri < 16)
-	snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->ssc_sri));
+    if(SCT_ISAUDIO(ssc->es_type)) {
+      htsmsg_add_u32(e, "audio_type", ssc->es_audio_type);
+      if(ssc->es_audio_version)
+        htsmsg_add_u32(e, "audio_version", ssc->es_audio_version);
+      if(ssc->es_sri < 16)
+	snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->es_sri));
       else
 	strcpy(sr, "?");
 
-      if(ssc->ssc_channels == 6)
+      if(ssc->es_channels == 6)
 	snprintf(ch, sizeof(ch), "5.1");
-      else if(ssc->ssc_channels == 0)
+      else if(ssc->es_channels == 0)
 	strcpy(ch, "?");
       else
-	snprintf(ch, sizeof(ch), "%d", ssc->ssc_channels);
+	snprintf(ch, sizeof(ch), "%d", ssc->es_channels);
     } else {
       sr[0] = ch[0] = 0;
     }
 
-    if(SCT_ISVIDEO(ssc->ssc_type)) {
-      if(ssc->ssc_width && ssc->ssc_height)
+    if(SCT_ISVIDEO(ssc->es_type)) {
+      if(ssc->es_width && ssc->es_height)
 	snprintf(res, sizeof(res), "%dx%d",
-		 ssc->ssc_width, ssc->ssc_height);
+		 ssc->es_width, ssc->es_height);
       else
 	strcpy(res, "?");
 
-      if(ssc->ssc_aspect_num &&  ssc->ssc_aspect_den)
+      if(ssc->es_aspect_num &&  ssc->es_aspect_den)
 	snprintf(asp, sizeof(asp), "%d:%d",
-		 ssc->ssc_aspect_num, ssc->ssc_aspect_den);
+		 ssc->es_aspect_num, ssc->es_aspect_den);
       else
 	strcpy(asp, "?");
 
-      htsmsg_add_u32(e, "width",      ssc->ssc_width);
-      htsmsg_add_u32(e, "height",     ssc->ssc_height);
-      htsmsg_add_u32(e, "duration",   ssc->ssc_frameduration);
-      htsmsg_add_u32(e, "aspect_num", ssc->ssc_aspect_num);
-      htsmsg_add_u32(e, "aspect_den", ssc->ssc_aspect_den);
+      htsmsg_add_u32(e, "width",      ssc->es_width);
+      htsmsg_add_u32(e, "height",     ssc->es_height);
+      htsmsg_add_u32(e, "duration",   ssc->es_frame_duration);
+      htsmsg_add_u32(e, "aspect_num", ssc->es_aspect_num);
+      htsmsg_add_u32(e, "aspect_den", ssc->es_aspect_den);
     } else {
       res[0] = asp[0] = 0;
     }
 
-    if (SCT_ISSUBTITLE(ssc->ssc_type)) {
-      htsmsg_add_u32(e, "composition_id", ssc->ssc_composition_id);
-      htsmsg_add_u32(e, "ancillary_id",   ssc->ssc_ancillary_id);
+    if (SCT_ISSUBTITLE(ssc->es_type)) {
+      htsmsg_add_u32(e, "composition_id", ssc->es_composition_id);
+      htsmsg_add_u32(e, "ancillary_id",   ssc->es_ancillary_id);
     }
 
     tvhinfo(LS_DVR,
 	   "%2d  %-16s  %-4s  %-10s  %-12s  %-11s  %-8s  %s",
-	   ssc->ssc_index,
-	   streaming_component_type2txt(ssc->ssc_type),
-	   ssc->ssc_lang,
+	   ssc->es_index,
+	   streaming_component_type2txt(ssc->es_type),
+	   ssc->es_lang,
 	   res,
 	   asp,
 	   sr,
@@ -1495,10 +1495,10 @@ get_dts_ref(th_pkt_t *pkt, streaming_start_t *ss)
     return PTS_UNSET;
   for (i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
-    if (ssc->ssc_index == pkt->pkt_componentindex) {
-      if (SCT_ISVIDEO(ssc->ssc_type))
+    if (ssc->es_index == pkt->pkt_componentindex) {
+      if (SCT_ISVIDEO(ssc->es_type))
         return pkt->pkt_dts;
-      if (audio == PTS_UNSET && SCT_ISAUDIO(ssc->ssc_type))
+      if (audio == PTS_UNSET && SCT_ISAUDIO(ssc->es_type))
         audio = pkt->pkt_dts;
     }
   }

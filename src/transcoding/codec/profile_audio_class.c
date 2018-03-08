@@ -125,8 +125,8 @@ tvh_codec_profile_audio_is_copy(TVHAudioCodecProfile *self, tvh_ssc_t *ssc)
     // TODO: fix me
     // assuming default channel_layout (AV_CH_LAYOUT_STEREO)
     // and sample_rate (48kHz) for input
-    int ssc_channels = ssc->ssc_channels ? ssc->ssc_channels : 2;
-    int ssc_sr = ssc->ssc_sri ? sri_to_rate(ssc->ssc_sri) : 48000;
+    int ssc_channels = ssc->es_channels ? ssc->es_channels : 2;
+    int ssc_sr = ssc->es_sri ? sri_to_rate(ssc->es_sri) : 48000;
     if ((self->channel_layout &&
          ssc_channels != av_get_channel_layout_nb_channels(self->channel_layout)) ||
         (self->sample_rate && ssc_sr != self->sample_rate)) {

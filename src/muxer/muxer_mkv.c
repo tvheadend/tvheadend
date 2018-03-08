@@ -269,24 +269,24 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
     tr = &mk->tracks[i];
 
     tr->disabled = ssc->ssc_disabled;
-    tr->index = ssc->ssc_index;
+    tr->index = ssc->es_index;
 
     if(tr->disabled)
       continue;
 
-    tr->type = ssc->ssc_type;
-    tr->channels = ssc->ssc_channels;
-    tr->aspect_num = ssc->ssc_aspect_num;
-    tr->aspect_den = ssc->ssc_aspect_den;
+    tr->type = ssc->es_type;
+    tr->channels = ssc->es_channels;
+    tr->aspect_num = ssc->es_aspect_num;
+    tr->aspect_den = ssc->es_aspect_den;
     tr->commercial = COMMERCIAL_UNKNOWN;
-    tr->sri = ssc->ssc_sri;
+    tr->sri = ssc->es_sri;
     tr->nextpts = PTS_UNSET;
 
-    if (mk->webm && ssc->ssc_type != SCT_VP8 && ssc->ssc_type != SCT_VORBIS)
+    if (mk->webm && ssc->es_type != SCT_VP8 && ssc->es_type != SCT_VORBIS)
       tvhwarn(LS_MKV, "WEBM format supports only VP8+VORBIS streams (detected %s)",
-              streaming_component_type2txt(ssc->ssc_type));
+              streaming_component_type2txt(ssc->es_type));
 
-    switch(ssc->ssc_type) {
+    switch(ssc->es_type) {
     case SCT_MPEG2VIDEO:
       tracktype = 1;
       codec_id = "V_MPEG2";
@@ -327,9 +327,9 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
     case SCT_MPEG2AUDIO:
       tracktype = 2;
       codec_id  = "A_MPEG/L2";
-      if (ssc->ssc_audio_version == 3)
+      if (ssc->es_audio_version == 3)
         codec_id = "A_MPEG/L3";
-      else if (ssc->ssc_audio_version == 1)
+      else if (ssc->es_audio_version == 1)
         codec_id = "A_MPEG/L1";
       break;
 
@@ -396,10 +396,10 @@ disable:
     ebml_append_uint(t, 0x9c, 0); // Lacing
     ebml_append_string(t, 0x86, codec_id);
 
-    if(ssc->ssc_lang[0])
-      ebml_append_string(t, 0x22b59c, ssc->ssc_lang);
+    if(ssc->es_lang[0])
+      ebml_append_string(t, 0x22b59c, ssc->es_lang);
 
-    switch(ssc->ssc_type) {
+    switch(ssc->es_type) {
     case SCT_HEVC:
     case SCT_H264:
     case SCT_MPEG2VIDEO:
@@ -431,7 +431,7 @@ disable:
         uint8_t *header_start[3];
         int header_len[3];
         int j;
-        int first_header_size = ssc->ssc_type == SCT_VORBIS ? 30 : 42;
+        int first_header_size = ssc->es_type == SCT_VORBIS ? 30 : 42;
 
         if(mk_split_xiph_headers(pktbuf_ptr(ssc->ssc_gh), pktbuf_len(ssc->ssc_gh),
                                  first_header_size, header_start, header_len)) {
@@ -449,32 +449,32 @@ disable:
       break;
 
     case SCT_DVBSUB:
-      buf4[0] = ssc->ssc_composition_id >> 8;
-      buf4[1] = ssc->ssc_composition_id;
-      buf4[2] = ssc->ssc_ancillary_id >> 8;
-      buf4[3] = ssc->ssc_ancillary_id;
+      buf4[0] = ssc->es_composition_id >> 8;
+      buf4[1] = ssc->es_composition_id;
+      buf4[2] = ssc->es_ancillary_id >> 8;
+      buf4[3] = ssc->es_ancillary_id;
       ebml_append_bin(t, 0x63a2, buf4, 4);
       break;
     }
 
-    if(SCT_ISVIDEO(ssc->ssc_type)) {
+    if(SCT_ISVIDEO(ssc->es_type)) {
       htsbuf_queue_t *vi = htsbuf_queue_alloc(0);
 
-      if(ssc->ssc_frameduration) {
-        int d = ts_rescale(ssc->ssc_frameduration, 1000000000);
+      if(ssc->es_frame_duration) {
+        int d = ts_rescale(ssc->es_frame_duration, 1000000000);
         ebml_append_uint(t, 0x23e383, d);
       }
-      ebml_append_uint(vi, 0xb0, ssc->ssc_width);
-      ebml_append_uint(vi, 0xba, ssc->ssc_height);
+      ebml_append_uint(vi, 0xb0, ssc->es_width);
+      ebml_append_uint(vi, 0xba, ssc->es_height);
 
-      if (ssc->ssc_aspect_num && ssc->ssc_aspect_den) {
+      if (ssc->es_aspect_num && ssc->es_aspect_den) {
         if (mk->webm) {
-          ebml_append_uint(vi, 0x54b0, (ssc->ssc_height * ssc->ssc_aspect_num) / ssc->ssc_aspect_den);
-          ebml_append_uint(vi, 0x54ba, ssc->ssc_height);
+          ebml_append_uint(vi, 0x54b0, (ssc->es_height * ssc->es_aspect_num) / ssc->es_aspect_den);
+          ebml_append_uint(vi, 0x54ba, ssc->es_height);
           ebml_append_uint(vi, 0x54b2, 0); // DisplayUnit: pixels because DAR is not supported by webm
         } else {
-          ebml_append_uint(vi, 0x54b0, ssc->ssc_aspect_num);
-          ebml_append_uint(vi, 0x54ba, ssc->ssc_aspect_den);
+          ebml_append_uint(vi, 0x54b0, ssc->es_aspect_num);
+          ebml_append_uint(vi, 0x54ba, ssc->es_aspect_den);
           ebml_append_uint(vi, 0x54b2, 3); // DisplayUnit: DAR
         }
       }
@@ -482,13 +482,13 @@ disable:
       ebml_append_master(t, 0xe0, vi);
     }
 
-    if(SCT_ISAUDIO(ssc->ssc_type)) {
+    if(SCT_ISAUDIO(ssc->es_type)) {
       htsbuf_queue_t *au = htsbuf_queue_alloc(0);
 
-      ebml_append_float(au, 0xb5, sri_to_rate(ssc->ssc_sri));
-      if (ssc->ssc_ext_sri)
-        ebml_append_float(au, 0x78b5, sri_to_rate(ssc->ssc_ext_sri - 1));
-      ebml_append_uint(au, 0x9f, ssc->ssc_channels);
+      ebml_append_float(au, 0xb5, sri_to_rate(ssc->es_sri));
+      if (ssc->es_ext_sri)
+        ebml_append_float(au, 0x78b5, sri_to_rate(ssc->es_ext_sri - 1));
+      ebml_append_uint(au, 0x9f, ssc->es_channels);
       if (bit_depth)
         ebml_append_uint(au, 0x6264, bit_depth);
 
@@ -1299,8 +1299,8 @@ mkv_muxer_mime(muxer_t* m, const struct streaming_start *ss)
     if(ssc->ssc_disabled)
       continue;
 
-    has_video |= SCT_ISVIDEO(ssc->ssc_type);
-    has_audio |= SCT_ISAUDIO(ssc->ssc_type);
+    has_video |= SCT_ISVIDEO(ssc->es_type);
+    has_audio |= SCT_ISAUDIO(ssc->es_type);
   }
 
   if(has_video)

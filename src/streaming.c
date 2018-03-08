@@ -547,7 +547,7 @@ streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
   streaming_start_component_t *ssc;
   int i;
   for(i = 0, ssc = ss->ss_components; i < ss->ss_num_components; i++, ssc++)
-    if(ssc->ssc_index == idx)
+    if(ssc->es_index == idx)
       return ssc;
   return NULL;
 }
