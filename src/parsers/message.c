@@ -26,7 +26,7 @@
 #include <assert.h>
 
 #include "parsers.h"
-#include "../input/mpegts/tsdemux.h"
+#include "../input/mpegts/dvb_psi_hbbtv.h"
 #include "packet.h"
 #include "streaming.h"
 #include "config.h"

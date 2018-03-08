@@ -20,6 +20,7 @@
 #include "subscriptions.h"
 #include "streaming.h"
 #include "input.h"
+#include "dvb_psi_hbbtv.h"
 #include "tsdemux.h"
 
 #define TS_REMUX_BUFSIZE (188 * 100)

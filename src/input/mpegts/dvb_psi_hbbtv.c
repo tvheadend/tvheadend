@@ -18,9 +18,7 @@
 
 #include "tvheadend.h"
 #include "service.h"
-#include "tsdemux.h"
-#include "htsmsg.h"
-#include "htsmsg_binary.h"
+#include "dvb_psi_hbbtv.h"
 
 /**
  * Extract Hbbtv
