@@ -544,12 +544,11 @@ streaming_start_copy(const streaming_start_t *src)
 streaming_start_component_t *
 streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
 {
+  streaming_start_component_t *ssc;
   int i;
-  for(i = 0; i < ss->ss_num_components; i++) {
-    streaming_start_component_t *ssc = &ss->ss_components[i];
+  for(i = 0, ssc = ss->ss_components; i < ss->ss_num_components; i++, ssc++)
     if(ssc->ssc_index == idx)
       return ssc;
-  }
   return NULL;
 }
 
