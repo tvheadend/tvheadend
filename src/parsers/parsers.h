@@ -78,9 +78,7 @@ struct parser {
   service_t *prs_service;
 
   /* Elementary streams */
-  int prs_es_size;
-  int prs_es_count;
-  parser_es_t *prs_es;
+  elementary_set_t prs_components;
 
   /* Globals */
   uint16_t prs_pcr_pid;

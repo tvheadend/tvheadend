@@ -35,15 +35,14 @@
 /**
  *
  */
-static parser_es_t *
+static inline parser_es_t *
 parser_find_es(parser_t *prs, int pid)
 {
-  parser_es_t *pes;
-  int i;
+  elementary_stream_t *es;
 
-  for (i = 0, pes = prs->prs_es; i < prs->prs_es_count; i++, pes++)
-    if (pes->es_pid == pid)
-      return pes;
+  TAILQ_FOREACH(es, &prs->prs_components.set_all, es_link)
+    if (es->es_pid == pid)
+      return (parser_es_t *)es;
   return NULL;
 }
 
@@ -231,11 +230,9 @@ static void parser_input_mpegts(parser_t *prs, pktbuf_t *pb)
 /**
  *
  */
-static void parser_init_es(parser_es_t *pes, parser_t *prs,
-                           streaming_component_type_t type)
+static void parser_init_es(parser_es_t *pes, parser_t *prs)
 {
   pes->es_parser = prs;
-  pes->es_type = type;
   pes->es_incomplete = 0;
   pes->es_header_mode = 0;
   pes->es_parser_state = 0;
@@ -292,39 +289,16 @@ static void parser_clean_es(parser_es_t *pes)
 static void parser_input_start(parser_t *prs, streaming_message_t *sm)
 {
   streaming_start_t *ss = sm->sm_data;
-  const streaming_start_component_t *ssc;
-  parser_es_t *pes;
-  char buf[256];
-  int i;
+  elementary_stream_t *es;
 
-  for (i = 0; i < prs->prs_es_count; i++)
-    parser_clean_es(&prs->prs_es[i]);
+  TAILQ_FOREACH(es, &prs->prs_components.set_all, es_link)
+    parser_clean_es((parser_es_t *)es);
+  elementary_set_clean(&prs->prs_components);
 
-  if (prs->prs_es_size < ss->ss_num_components) {
-    prs->prs_es = realloc(prs->prs_es, ss->ss_num_components * sizeof(parser_es_t));
-    if (prs->prs_es == NULL)
-      abort();
-  }
-
-  prs->prs_es_count = ss->ss_num_components;
-  for (i = 0; i < ss->ss_num_components; i++) {
-    pes = &prs->prs_es[i];
-    ssc = &ss->ss_components[i];
-    parser_init_es(&prs->prs_es[i], prs, ssc->es_type);
-    pes->es_service = prs->prs_service;
-    pes->es_index = ssc->es_index;
-    pes->es_pid = ssc->es_pid;
-    if (pes->es_pid != -1) {
-      snprintf(buf, sizeof(buf), "%s: %s @ #%d",
-               service_nicename(prs->prs_service),
-               streaming_component_type2txt(pes->es_type),
-               pes->es_pid);
-    } else {
-      snprintf(buf, sizeof(buf), "%s: %s",
-               service_nicename(prs->prs_service),
-               streaming_component_type2txt(pes->es_type));
-    }
-    pes->es_nicename = strdup(buf);
+  elementary_stream_create_from_start(&prs->prs_components, ss, sizeof(parser_es_t));
+  TAILQ_FOREACH(es, &prs->prs_components.set_all, es_link) {
+    parser_init_es((parser_es_t *)es, prs);
+    TAILQ_INSERT_TAIL(&prs->prs_components.set_filter, es, es_filter_link);
   }
 
   prs->prs_current_pcr = PTS_UNSET;
@@ -380,10 +354,12 @@ streaming_target_t *
 parser_create(streaming_target_t *output, th_subscription_t *ts)
 {
   parser_t *prs = calloc(1, sizeof(parser_t));
+  service_t *t = ts->ths_service;
 
   prs->prs_output = output;
   prs->prs_subscription = ts;
-  prs->prs_service = ts->ths_service;
+  prs->prs_service = t;
+  elementary_set_init(&prs->prs_components, LS_PARSER, service_nicename(t), t);
   streaming_target_init(&prs->prs_input, &parser_input_ops, prs, 0);
   return &prs->prs_input;
 
@@ -396,9 +372,10 @@ void
 parser_destroy(streaming_target_t *pad)
 {
   parser_t *prs = (parser_t *)pad;
-  int i;
+  elementary_stream_t *es;
 
-  for (i = 0; i < prs->prs_es_count; i++)
-    parser_clean_es(&prs->prs_es[i]);
+  TAILQ_FOREACH(es, &prs->prs_components.set_all, es_link)
+    parser_clean_es((parser_es_t *)es);
+  elementary_set_clean(&prs->prs_components);
   free(prs);
 }

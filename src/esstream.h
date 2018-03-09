@@ -192,7 +192,7 @@ int elementary_set_has_streams(elementary_set_t *set, int filtered);
 void elementary_set_sort_streams(elementary_set_t *set);
 streaming_start_t *elementary_stream_build_start(elementary_set_t *set);
 elementary_set_t *elementary_stream_create_from_start
-  (elementary_set_t *set, streaming_start_t *ss);
+  (elementary_set_t *set, streaming_start_t *ss, size_t es_size);
 
 
 #endif // ESSTREAM_H__

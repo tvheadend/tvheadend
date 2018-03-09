@@ -655,7 +655,7 @@ elementary_stream_build_start(elementary_set_t *set)
  */
 elementary_set_t *
 elementary_stream_create_from_start
-  (elementary_set_t *set, streaming_start_t *ss)
+  (elementary_set_t *set, streaming_start_t *ss, size_t es_size)
 {
   elementary_stream_t *st;
   int n;
@@ -666,7 +666,7 @@ elementary_stream_create_from_start
 
   for (n = 0; n < ss->ss_num_components; n++) {
     streaming_start_component_t *ssc = &ss->ss_components[n];
-    st = calloc(1, sizeof(*st));
+    st = calloc(1, es_size ?: sizeof(*st));
     *(elementary_info_t *)st = *(elementary_info_t *)ssc;
     st->es_service = set->set_service;
     elementary_stream_make_nicename(st, set->set_nicename);

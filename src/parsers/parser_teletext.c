@@ -838,14 +838,14 @@ dump_page(tt_mag_t *ttm)
 static void
 tt_subtitle_deliver(parser_t *t, parser_es_t *parent, tt_mag_t *ttm)
 {
-  int i;
+  elementary_stream_t *es;
   parser_es_t *st;
 
   if(ttm->ttm_current_pts == PTS_UNSET)
     return;
 
-  for (i = 0; i < t->prs_es_count; i++) {
-    st = &t->prs_es[i];
+  TAILQ_FOREACH(es, &t->prs_components.set_filter, es_filter_link) {
+    st = (parser_es_t *)es;
     if (parent->es_pid == st->es_parent_pid &&
       ttm->ttm_curpage == st->es_pid -  PID_TELETEXT_BASE) {
       if (extract_subtitle(t, st, ttm, ttm->ttm_current_pts))
@@ -1041,7 +1041,7 @@ teletext_rundown_scan(parser_t *prs, tt_private_t *ttp)
   if(ttp->ttp_rundown_valid == 0)
     return;
 
-  if(prs->prs_es_count <= 0)
+  if(TAILQ_EMPTY(&prs->prs_components.set_filter))
     return;
 
   t = (mpegts_service_t *)prs->prs_service;
