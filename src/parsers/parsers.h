@@ -30,12 +30,16 @@ typedef struct parser parser_t;
 
 struct th_subscription;
 
+typedef void (parse_callback_t)
+  (parser_t *t, parser_es_t *st, const uint8_t *data, int len, int start);
+
 /* parser elementary stream */
 struct parser_es {
   elementary_stream_t;
   /* Parent */
   parser_t *es_parser;
   /* State */
+  parse_callback_t *es_parse_callback;
   sbuf_t    es_buf;
   uint8_t   es_incomplete;
   uint8_t   es_header_mode;

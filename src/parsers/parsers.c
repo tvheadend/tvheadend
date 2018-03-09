@@ -65,252 +65,282 @@ pts_no_backlog(int64_t pts)
   return pts_is_backlog(pts) ? (pts & ~PTS_BACKLOG) : pts;
 }
 
-static int parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
-                            uint32_t next_startcode, int sc_offset);
-
-static int parse_h264(parser_t *t, parser_es_t *st, size_t len,
-                      uint32_t next_startcode, int sc_offset);
-
-static int parse_hevc(parser_t *t, parser_es_t *st, size_t len,
-                      uint32_t next_startcode, int sc_offset);
-
 typedef int (packet_parser_t)(parser_t *t, parser_es_t *st, size_t len,
                               uint32_t next_startcode, int sc_offset);
 
 typedef void (aparser_t)(parser_t *t, parser_es_t *st, th_pkt_t *pkt);
 
-static void parse_pes(parser_t *t, parser_es_t *st, const uint8_t *data,
-                      int len, int start, packet_parser_t *vp);
-
-static void parse_mp4a_data(parser_t *t, parser_es_t *st, int skip_next_check);
-
-static void parse_aac(parser_t *t, parser_es_t *st, const uint8_t *data,
-                      int len, int start);
-
-static void parse_subtitles(parser_t *t, parser_es_t *st,
-                            const uint8_t *data, int len, int start);
-
-static void parse_teletext(parser_t *t, parser_es_t *st,
-                           const uint8_t *data, int len, int start);
-
-static void parse_hbbtv(parser_t *t, parser_es_t *st,
-                        const uint8_t *data, int len, int start);
-
-static int parse_mpa(parser_t *t, parser_es_t *st, size_t len,
-                     uint32_t next_startcode, int sc_offset);
-
-static int parse_mpa123(parser_t *t, parser_es_t *st);
-
-static int parse_ac3(parser_t *t, parser_es_t *st, size_t len,
-                     uint32_t next_startcode, int sc_offset);
-
 static void parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt);
 
-static void parser_deliver_error(parser_t *t, parser_es_t *st);
-
-static int parse_pes_header(parser_t *t, parser_es_t *st,
-                            const uint8_t *buf, size_t len);
-
-static void parser_backlog(parser_t *t, parser_es_t *st, th_pkt_t *pkt);
-
-static void parser_do_backlog(parser_t *t, parser_es_t *st,
-                  void (*pkt_cb)(parser_t *t, parser_es_t *st, th_pkt_t *pkt),
-                  pktbuf_t *meta);
-
 /**
- * for debugging
+ *
  */
-#if 0
-static int data_noise(const uint8_t *data, int len)
+static th_pkt_t *
+parser_error_packet(parser_t *t, parser_es_t *st, int error)
 {
-  static uint64_t off = 0, win = 4096, limit = 1024*1024;
-  uint32_t i;
-  off += len;
-  if (off >= limit && off < limit + win) {
-    if ((off & 3) == 1)
-      return 1;
-    for (i = 0; i < len; i += 3)
-      ((char *)data)[i] ^= 0xa5;
-  } else if (off >= limit + win) {
-    off = 0;
-    limit = (uint64_t)data[15] * 4 * 1024;
-    win   = (uint64_t)data[16] * 4;
-  }
-  return 0;
-}
-#else
-static inline int data_noise(const uint8_t *data, int len) { return 0; }
-#endif
-
-/**
- * Parse raw mpeg data - single TS packet
- */
-void
-parse_mpeg_ts(parser_t *t, parser_es_t *st, const uint8_t *data,
-              int len, int start, int err)
-{
-  if(err) {
-    if (start)
-      parser_deliver_error(t, st);
-    sbuf_err(&st->es_buf, 1);
-  }
-
-  if (data_noise(data, len))
-    return;
-
-  switch(st->es_type) {
-  case SCT_MPEG2VIDEO:
-    parse_pes(t, st, data, len, start, parse_mpeg2video);
-    break;
-
-  case SCT_H264:
-    parse_pes(t, st, data, len, start, parse_h264);
-    break;
-
-  case SCT_HEVC:
-    parse_pes(t, st, data, len, start, parse_hevc);
-    break;
-
-  case SCT_MPEG2AUDIO:
-    parse_pes(t, st, data, len, start, parse_mpa);
-    break;
-
-  case SCT_AC3:
-  case SCT_EAC3:
-    parse_pes(t, st, data, len, start, parse_ac3);
-    break;
-
-  case SCT_DVBSUB:
-    parse_subtitles(t, st, data, len, start);
-    break;
-    
-  case SCT_AAC:
-  case SCT_MP4A:
-    parse_aac(t, st, data, len, start);
-    break;
-
-  case SCT_TELETEXT:
-    parse_teletext(t, st, data, len, start);
-    break;
-
-  case SCT_HBBTV:
-    parse_hbbtv(t, st, data, len, start);
-    break;
-
-  default:
-    break;
-  }
-}
-
-/**
- * Parse AAC LATM and ADTS
- */
-static void 
-parse_aac(parser_t *t, parser_es_t *st, const uint8_t *data,
-          int len, int start)
-{
-  int l, muxlen, p, latm;
   th_pkt_t *pkt;
-  int64_t olddts = PTS_UNSET, oldpts = PTS_UNSET;
 
-  if(st->es_parser_state == 0) {
-    if (start) {
-      /* Payload unit start */
-      st->es_parser_state = 1;
-      st->es_parser_ptr = 0;
-      sbuf_reset(&st->es_buf, 4000);
-    } else {
-      return;
-    }
-  }
-
-  if(start) {
-    int hlen;
-
-    if(len < 9)
-      return;
-
-    if((data[0] != 0 && data[1] != 0 && data[2] != 1) ||
-       (data[3] != 0xbd && (data[3] & ~0x1f) != 0xc0)) { /* startcode */
-      sbuf_reset(&st->es_buf, 4000);
-      return;
-    }
-
-    olddts = st->es_curdts;
-    oldpts = st->es_curpts;
-    hlen = parse_pes_header(t, st, data + 6, len - 6);
-    if (hlen >= 0 && st->es_buf.sb_ptr) {
-      st->es_curdts = olddts;
-      st->es_curpts = oldpts;
-    }
-
-    if(hlen < 0)
-      return;
-
-    data += 6 + hlen;
-    len  -= 6 + hlen;
-  }
-
-  sbuf_append(&st->es_buf, data, len);
-
-  p = 0;
-  latm = -1;
-
-  while((l = st->es_buf.sb_ptr - p) > 3) {
-    const uint8_t *d = st->es_buf.sb_data + p;
-    /* Startcode check */
-    if(d[0] == 0 && d[1] == 0 && d[2] == 1) {
-      p += 4;
-    /* LATM */
-    } else if(latm != 0 && d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
-      muxlen = (d[1] & 0x1f) << 8 | d[2];
-
-      if(l < muxlen + 3)
-        break;
-
-      latm = 1;
-      pkt = parse_latm_audio_mux_element(t, st, d + 3, muxlen);
-
-      if(pkt != NULL) {
-        pkt->pkt_err = st->es_buf.sb_err;
-        parser_deliver(t, st, pkt);
-        st->es_buf.sb_err = 0;
-      }
-
-      p += muxlen + 3;
-    /* ADTS */
-    } else if(latm <= 0 && d[0] == 0xff && (d[1] & 0xf0) == 0xf0) {
-
-      if (l < 7)
-        break;
-
-      muxlen = ((uint16_t)(d[3] & 0x03) << 11) | ((uint16_t)d[4] << 3) | (d[5] >> 5);
-      if (l < muxlen)
-        break;
-
-      if (muxlen < 7) {
-        p++;
-        continue;
-      }
-
-      latm = 0;
-      sbuf_reset(&st->es_buf_a, 4000);
-      sbuf_append(&st->es_buf_a, d, muxlen);
-      parse_mp4a_data(t, st, 1);
-
-      p += muxlen;
-
-    /* Wrong bytestream */
-    } else {
-      tvhtrace(LS_PARSER, "AAC skip byte %02x", d[0]);
-      p++;
-    }
-  }
-
-  if (p > 0)
-    sbuf_cut(&st->es_buf, p);
+  pkt = pkt_alloc(st->es_type, NULL, 0,
+                  PTS_UNSET, PTS_UNSET, t->prs_current_pcr);
+  pkt->pkt_err = error;
+  return pkt;
 }
 
+/**
+ * Deliver errors
+ */
+static void
+parser_deliver_error(parser_t *t, parser_es_t *st)
+{
+  th_pkt_t *pkt;
+
+  if (!st->es_buf.sb_err)
+    return;
+  pkt = parser_error_packet(t, st, st->es_buf.sb_err);
+  parser_deliver(t, st, pkt);
+  st->es_buf.sb_err = 0;
+}
+
+/**
+ *
+ */
+static void
+parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
+{
+  int64_t d, diff;
+
+  assert(pkt->pkt_type == st->es_type);
+
+  if (pkt->pkt_dts == PTS_UNSET) {
+    if (pkt->pkt_pts == PTS_UNSET && !pkt->pkt_payload) /* error notification */
+      goto deliver;
+    pkt_trace(LS_PARSER, pkt, "dts drop");
+    pkt_ref_dec(pkt);
+    pkt = parser_error_packet(t, st, 1);
+    goto deliver;
+  }
+
+  diff = st->es_type == SCT_DVBSUB ? 8*90000 : 6*90000;
+  d = pts_diff(pkt->pkt_pcr, (pkt->pkt_dts + 30000) & PTS_MASK);
+
+  if (d > diff || d == PTS_UNSET) {
+    if (d != PTS_UNSET && tvhlog_limit(&st->es_pcr_log, 2))
+      tvhwarn(LS_PARSER, "%s: DTS and PCR diff is very big (%"PRId64")",
+              st->es_nicename, pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
+    pkt_trace(LS_PARSER, pkt, "pcr drop");
+    pkt_ref_dec(pkt);
+    pkt = parser_error_packet(t, st, 1);
+    goto deliver;
+  }
+
+deliver:
+  pkt->pkt_componentindex = st->es_index;
+
+  pkt_trace(LS_PARSER, pkt, "deliver");
+
+  if (SCT_ISVIDEO(pkt->pkt_type)) {
+    pkt->v.pkt_aspect_num = st->es_aspect_num;
+    pkt->v.pkt_aspect_den = st->es_aspect_den;
+  }
+
+  /* Forward packet */
+  streaming_target_deliver2(t->prs_output, streaming_msg_create_pkt(pkt));
+
+  /* Decrease our own reference to the packet */
+  pkt_ref_dec(pkt);
+
+}
+
+/**
+ * Do backlog (fix DTS & PTS and reparse slices - frame type, field etc.)
+ */
+static void
+parser_backlog(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
+{
+  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
+  TAILQ_INSERT_TAIL(&st->es_backlog, sm, sm_link);
+  pkt_ref_dec(pkt); /* streaming_msg_create_pkt increses ref counter */
+
+#if ENABLE_TRACE
+  if (tvhtrace_enabled()) {
+    int64_t dts = pkt->pkt_dts;
+    int64_t pts = pkt->pkt_pts;
+    pkt->pkt_dts = pts_no_backlog(dts);
+    pkt->pkt_pts = pts_no_backlog(pts);
+    pkt_trace(LS_PARSER, pkt, "backlog");
+    pkt->pkt_dts = dts;
+    pkt->pkt_pts = pts;
+  }
+#endif
+}
+
+static void
+parser_do_backlog(parser_t *t, parser_es_t *st,
+                  void (*pkt_cb)(parser_t *t, parser_es_t *st, th_pkt_t *pkt),
+                  pktbuf_t *meta)
+{
+  streaming_message_t *sm;
+  int64_t prevdts = PTS_UNSET, absdts = PTS_UNSET;
+  int64_t prevpts = PTS_UNSET, abspts = PTS_UNSET;
+  th_pkt_t *pkt, *npkt;
+  size_t metalen;
+
+  tvhtrace(LS_PARSER,
+           "pkt bcklog %2d %-12s - backlog flush start - (meta %ld)",
+           st->es_index,
+           streaming_component_type2txt(st->es_type),
+           meta ? (long)pktbuf_len(meta) : -1);
+  TAILQ_FOREACH(sm, &st->es_backlog, sm_link) {
+    pkt = sm->sm_data;
+    if (pkt->pkt_meta) {
+      meta = pkt->pkt_meta;
+      break;
+    }
+  }
+  while ((sm = TAILQ_FIRST(&st->es_backlog)) != NULL) {
+    pkt = sm->sm_data;
+    TAILQ_REMOVE(&st->es_backlog, sm, sm_link);
+
+    if (pkt->pkt_dts != PTS_UNSET)
+      pkt->pkt_dts &= ~PTS_BACKLOG;
+    if (pkt->pkt_pts != PTS_UNSET)
+      pkt->pkt_pts &= ~PTS_BACKLOG;
+
+    if (prevdts != PTS_UNSET && pkt->pkt_dts != PTS_UNSET &&
+        pkt->pkt_dts == ((prevdts + 1) & PTS_MASK))
+      pkt->pkt_dts = absdts;
+    if (prevpts != PTS_UNSET && pkt->pkt_pts != PTS_UNSET &&
+        pkt->pkt_pts == ((prevpts + 1) & PTS_MASK))
+      pkt->pkt_pts = abspts;
+
+    if (meta) {
+      if (pkt->pkt_meta == NULL) {
+        pktbuf_ref_inc(meta);
+        pkt->pkt_meta = meta;
+        /* insert the metadata into payload of the first packet, too */
+        npkt = pkt_copy_shallow(pkt);
+        pktbuf_ref_dec(npkt->pkt_payload);
+        metalen = pktbuf_len(meta);
+        npkt->pkt_payload = pktbuf_alloc(NULL, metalen + pktbuf_len(pkt->pkt_payload));
+        memcpy(pktbuf_ptr(npkt->pkt_payload), pktbuf_ptr(meta), metalen);
+        memcpy(pktbuf_ptr(npkt->pkt_payload) + metalen,
+               pktbuf_ptr(pkt->pkt_payload), pktbuf_len(pkt->pkt_payload));
+        npkt->pkt_payload->pb_err = pkt->pkt_payload->pb_err + meta->pb_err;
+        pkt_ref_dec(pkt);
+        pkt = npkt;
+      }
+      meta = NULL;
+    }
+
+    if (pkt_cb)
+      pkt_cb(t, st, pkt);
+
+    if (absdts == PTS_UNSET) {
+      absdts = pkt->pkt_dts;
+    } else {
+      absdts += st->es_frame_duration;
+      absdts &= PTS_MASK;
+    }
+
+    if (abspts == PTS_UNSET) {
+      abspts = pkt->pkt_pts;
+    } else {
+      abspts += st->es_frame_duration;
+      abspts &= PTS_MASK;
+    }
+
+    prevdts = pkt->pkt_dts;
+    prevpts = pkt->pkt_pts;
+
+    parser_deliver(t, st, pkt);
+    sm->sm_data = NULL;
+    streaming_msg_free(sm);
+  }
+  tvhtrace(LS_PARSER,
+           "pkt bcklog %2d %-12s - backlog flush end -",
+           st->es_index,
+           streaming_component_type2txt(st->es_type));
+}
+
+
+/**
+ * PES header parser
+ *
+ * Extract DTS and PTS and update current values in stream
+ */
+static int
+parse_pes_header(parser_t *t, parser_es_t *st,
+                 const uint8_t *buf, size_t len)
+{
+  int64_t dts, pts, d, d2;
+  int hdr, flags, hlen;
+
+  if (len < 3)
+    return -1;
+
+  hdr   = buf[0];
+  flags = buf[1];
+  hlen  = buf[2];
+  buf  += 3;
+  len  -= 3;
+
+  if(len < hlen || (hdr & 0xc0) != 0x80)
+    goto err;
+
+  if((flags & 0xc0) == 0xc0) {
+    if(hlen < 10)
+      goto err;
+
+    pts = getpts(buf);
+    dts = getpts(buf + 5);
+
+    d = (pts - dts) & PTS_MASK;
+    if(d > 180000) {
+      /* More than two seconds of PTS/DTS delta, probably corrupt */
+      if (st->es_curpts != PTS_UNSET && st->es_frame_duration > 10) {
+        /* try to do a recovery for this:
+         * dts 2954743318 pts 2954746828
+         * dts 2954746918 pts 2419836508 ERROR
+         * dts 2954750518 pts 2419843708 ERROR
+         * dts 2954754118 pts 2954757628
+         * dts 2954757718 pts 2954761228
+         */
+        d2 = pts_diff(st->es_curdts, dts);
+        if (d2 != PTS_UNSET && d2 < 10000)
+          pts = st->es_curpts + st->es_frame_duration;
+        d = (pts - dts) & PTS_MASK;
+        if (d <= 180000)
+          goto cont;
+      }
+      pts = dts = PTS_UNSET;
+    }
+
+  } else if((flags & 0xc0) == 0x80) {
+    if(hlen < 5)
+      goto err;
+
+    dts = pts = getpts(buf);
+  } else
+    return hlen + 3;
+
+ cont:
+  if(st->es_buf.sb_err) {
+    st->es_curdts = PTS_UNSET;
+    st->es_curpts = PTS_UNSET;
+  } else {
+    st->es_curdts = dts;
+    st->es_curpts = pts;
+  }
+  return hlen + 3;
+
+ err:
+  st->es_curdts = PTS_UNSET;
+  st->es_curpts = PTS_UNSET;
+  if (tvhlog_limit(&st->es_pes_log, 10))
+    tvhwarn(LS_TS, "%s Corrupted PES header (errors %zi)",
+            st->es_nicename, st->es_pes_log.count);
+  return -1;
+}
 
 /**
  * Generic PES parser
@@ -486,7 +516,6 @@ depacketize(parser_t *t, parser_es_t *st, size_t len,
   return PARSER_APPEND;
 }
 
-
 /**
  *
  */
@@ -508,6 +537,7 @@ makeapkt(parser_t *t, parser_es_t *st, const void *buf,
   st->es_curdts = PTS_UNSET;
   st->es_nextdts = dts + duration;
 }
+
 
 /**
  * Parse AAC MP4A
@@ -583,6 +613,119 @@ static void parse_mp4a_data(parser_t *t, parser_es_t *st,
   }
 }
 
+/**
+ * Parse AAC LATM and ADTS
+ */
+static void
+parse_aac(parser_t *t, parser_es_t *st, const uint8_t *data,
+          int len, int start)
+{
+  int l, muxlen, p, latm;
+  th_pkt_t *pkt;
+  int64_t olddts = PTS_UNSET, oldpts = PTS_UNSET;
+
+  if(st->es_parser_state == 0) {
+    if (start) {
+      /* Payload unit start */
+      st->es_parser_state = 1;
+      st->es_parser_ptr = 0;
+      sbuf_reset(&st->es_buf, 4000);
+    } else {
+      return;
+    }
+  }
+
+  if(start) {
+    int hlen;
+
+    if(len < 9)
+      return;
+
+    if((data[0] != 0 && data[1] != 0 && data[2] != 1) ||
+       (data[3] != 0xbd && (data[3] & ~0x1f) != 0xc0)) { /* startcode */
+      sbuf_reset(&st->es_buf, 4000);
+      return;
+    }
+
+    olddts = st->es_curdts;
+    oldpts = st->es_curpts;
+    hlen = parse_pes_header(t, st, data + 6, len - 6);
+    if (hlen >= 0 && st->es_buf.sb_ptr) {
+      st->es_curdts = olddts;
+      st->es_curpts = oldpts;
+    }
+
+    if(hlen < 0)
+      return;
+
+    data += 6 + hlen;
+    len  -= 6 + hlen;
+  }
+
+  sbuf_append(&st->es_buf, data, len);
+
+  p = 0;
+  latm = -1;
+
+  while((l = st->es_buf.sb_ptr - p) > 3) {
+    const uint8_t *d = st->es_buf.sb_data + p;
+    /* Startcode check */
+    if(d[0] == 0 && d[1] == 0 && d[2] == 1) {
+      p += 4;
+    /* LATM */
+    } else if(latm != 0 && d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
+      muxlen = (d[1] & 0x1f) << 8 | d[2];
+
+      if(l < muxlen + 3)
+        break;
+
+      latm = 1;
+      pkt = parse_latm_audio_mux_element(t, st, d + 3, muxlen);
+
+      if(pkt != NULL) {
+        pkt->pkt_err = st->es_buf.sb_err;
+        parser_deliver(t, st, pkt);
+        st->es_buf.sb_err = 0;
+      }
+
+      p += muxlen + 3;
+    /* ADTS */
+    } else if(latm <= 0 && d[0] == 0xff && (d[1] & 0xf0) == 0xf0) {
+
+      if (l < 7)
+        break;
+
+      muxlen = ((uint16_t)(d[3] & 0x03) << 11) | ((uint16_t)d[4] << 3) | (d[5] >> 5);
+      if (l < muxlen)
+        break;
+
+      if (muxlen < 7) {
+        p++;
+        continue;
+      }
+
+      latm = 0;
+      sbuf_reset(&st->es_buf_a, 4000);
+      sbuf_append(&st->es_buf_a, d, muxlen);
+      parse_mp4a_data(t, st, 1);
+
+      p += muxlen;
+
+    /* Wrong bytestream */
+    } else {
+      tvhtrace(LS_PARSER, "AAC skip byte %02x", d[0]);
+      p++;
+    }
+  }
+
+  if (p > 0)
+    sbuf_cut(&st->es_buf, p);
+}
+
+
+/**
+ * MPEG layer 1/2/3 parser
+ */
 const static int mpa_br[2][3][16] = {
 {
   {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0},
@@ -695,6 +838,12 @@ parse_mpa(parser_t *t, parser_es_t *st, size_t ilen,
   if((r = depacketize(t, st, ilen, next_startcode, sc_offset)) != PARSER_APPEND)
     return r;
   return parse_mpa123(t, st);
+}
+
+static void parse_pes_mpa(parser_t *t, parser_es_t *st,
+                          const uint8_t *data, int len, int start)
+{
+  return parse_pes(t, st, data, len, start, parse_mpa);
 }
 
 
@@ -879,84 +1028,12 @@ ok:
   return PARSER_RESET;
 }
 
-/**
- * PES header parser
- *
- * Extract DTS and PTS and update current values in stream
- */
-static int
-parse_pes_header(parser_t *t, parser_es_t *st,
-                 const uint8_t *buf, size_t len)
+static void parse_pes_ac3(parser_t *t, parser_es_t *st,
+                          const uint8_t *data, int len, int start)
 {
-  int64_t dts, pts, d, d2;
-  int hdr, flags, hlen;
+  return parse_pes(t, st, data, len, start, parse_ac3);
+}
 
-  if (len < 3)
-    return -1;
-
-  hdr   = buf[0];
-  flags = buf[1];
-  hlen  = buf[2];
-  buf  += 3;
-  len  -= 3;
-
-  if(len < hlen || (hdr & 0xc0) != 0x80)
-    goto err;
-
-  if((flags & 0xc0) == 0xc0) {
-    if(hlen < 10) 
-      goto err;
-
-    pts = getpts(buf);
-    dts = getpts(buf + 5);
-
-    d = (pts - dts) & PTS_MASK;
-    if(d > 180000) {
-      /* More than two seconds of PTS/DTS delta, probably corrupt */
-      if (st->es_curpts != PTS_UNSET && st->es_frame_duration > 10) {
-        /* try to do a recovery for this:
-         * dts 2954743318 pts 2954746828
-         * dts 2954746918 pts 2419836508 ERROR
-         * dts 2954750518 pts 2419843708 ERROR
-         * dts 2954754118 pts 2954757628
-         * dts 2954757718 pts 2954761228
-         */
-        d2 = pts_diff(st->es_curdts, dts);
-        if (d2 != PTS_UNSET && d2 < 10000)
-          pts = st->es_curpts + st->es_frame_duration;
-        d = (pts - dts) & PTS_MASK;
-        if (d <= 180000)
-          goto cont;
-      }
-      pts = dts = PTS_UNSET;
-    }
-
-  } else if((flags & 0xc0) == 0x80) {
-    if(hlen < 5)
-      goto err;
-
-    dts = pts = getpts(buf);
-  } else
-    return hlen + 3;
-
- cont:
-  if(st->es_buf.sb_err) {
-    st->es_curdts = PTS_UNSET;
-    st->es_curpts = PTS_UNSET;
-  } else {
-    st->es_curdts = dts;
-    st->es_curpts = pts;
-  }
-  return hlen + 3;
-
- err:
-  st->es_curdts = PTS_UNSET;
-  st->es_curpts = PTS_UNSET;
-  if (tvhlog_limit(&st->es_pes_log, 10))
-    tvhwarn(LS_TS, "%s Corrupted PES header (errors %zi)",
-            st->es_nicename, st->es_pes_log.count);
-  return -1;
-} 
 
 /**
  *
@@ -1282,6 +1359,11 @@ parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
   return PARSER_APPEND;
 }
 
+static void parse_pes_mpeg2video(parser_t *t, parser_es_t *st,
+                                 const uint8_t *data, int len, int start)
+{
+  return parse_pes(t, st, data, len, start, parse_mpeg2video);
+}
 
 /**
  *
@@ -1511,6 +1593,13 @@ parse_h264(parser_t *t, parser_es_t *st, size_t len,
   return ret;
 }
 
+static void parse_pes_h264(parser_t *t, parser_es_t *st,
+                           const uint8_t *data, int len, int start)
+{
+  return parse_pes(t, st, data, len, start, parse_h264);
+}
+
+
 /**
  *
  * H.265 (HEVC) parser
@@ -1676,6 +1765,13 @@ parse_hevc(parser_t *t, parser_es_t *st, size_t len,
   return ret;
 }
 
+static void parse_pes_hevc(parser_t *t, parser_es_t *st,
+                           const uint8_t *data, int len, int start)
+{
+  return parse_pes(t, st, data, len, start, parse_hevc);
+}
+
+
 /**
  * http://broadcasting.ru/pdf-standard-specifications/subtitling/dvb-sub/en300743.v1.2.1.pdf
  */
@@ -1808,191 +1904,100 @@ parse_hbbtv(parser_t *t, parser_es_t *st, const uint8_t *data,
 }
 
 /**
- *
+ * for debugging
  */
-static th_pkt_t *
-parser_error_packet(parser_t *t, parser_es_t *st, int error)
+#if 0
+static int data_noise(const uint8_t *data, int len)
 {
-  th_pkt_t *pkt;
-
-  pkt = pkt_alloc(st->es_type, NULL, 0,
-                  PTS_UNSET, PTS_UNSET, t->prs_current_pcr);
-  pkt->pkt_err = error;
-  return pkt;
+  static uint64_t off = 0, win = 4096, limit = 1024*1024;
+  uint32_t i;
+  off += len;
+  if (off >= limit && off < limit + win) {
+    if ((off & 3) == 1)
+      return 1;
+    for (i = 0; i < len; i += 3)
+      ((char *)data)[i] ^= 0xa5;
+  } else if (off >= limit + win) {
+    off = 0;
+    limit = (uint64_t)data[15] * 4 * 1024;
+    win   = (uint64_t)data[16] * 4;
+  }
+  return 0;
 }
-
-/**
- *
- */
-static void
-parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
-{
-  int64_t d, diff;
-
-  assert(pkt->pkt_type == st->es_type);
-
-  if (pkt->pkt_dts == PTS_UNSET) {
-    if (pkt->pkt_pts == PTS_UNSET && !pkt->pkt_payload) /* error notification */
-      goto deliver;
-    pkt_trace(LS_PARSER, pkt, "dts drop");
-    pkt_ref_dec(pkt);
-    pkt = parser_error_packet(t, st, 1);
-    goto deliver;
-  }
-
-  diff = st->es_type == SCT_DVBSUB ? 8*90000 : 6*90000;
-  d = pts_diff(pkt->pkt_pcr, (pkt->pkt_dts + 30000) & PTS_MASK);
-
-  if (d > diff || d == PTS_UNSET) {
-    if (d != PTS_UNSET && tvhlog_limit(&st->es_pcr_log, 2))
-      tvhwarn(LS_PARSER, "%s: DTS and PCR diff is very big (%"PRId64")",
-              st->es_nicename, pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
-    pkt_trace(LS_PARSER, pkt, "pcr drop");
-    pkt_ref_dec(pkt);
-    pkt = parser_error_packet(t, st, 1);
-    goto deliver;
-  }
-
-deliver:
-  pkt->pkt_componentindex = st->es_index;
-
-  pkt_trace(LS_PARSER, pkt, "deliver");
-
-  if (SCT_ISVIDEO(pkt->pkt_type)) {
-    pkt->v.pkt_aspect_num = st->es_aspect_num;
-    pkt->v.pkt_aspect_den = st->es_aspect_den;
-  }
-
-  /* Forward packet */
-  streaming_target_deliver2(t->prs_output, streaming_msg_create_pkt(pkt));
-
-  /* Decrease our own reference to the packet */
-  pkt_ref_dec(pkt);
-
-}
-
-/**
- * Deliver errors
- */
-static void
-parser_deliver_error(parser_t *t, parser_es_t *st)
-{
-  th_pkt_t *pkt;
-
-  if (!st->es_buf.sb_err)
-    return;
-  pkt = parser_error_packet(t, st, st->es_buf.sb_err);
-  parser_deliver(t, st, pkt);
-  st->es_buf.sb_err = 0;
-}
-
-/**
- * Do backlog (fix DTS & PTS and reparse slices - frame type, field etc.)
- */
-static void
-parser_backlog(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
-{
-  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
-  TAILQ_INSERT_TAIL(&st->es_backlog, sm, sm_link);
-  pkt_ref_dec(pkt); /* streaming_msg_create_pkt increses ref counter */
-
-#if ENABLE_TRACE
-  if (tvhtrace_enabled()) {
-    int64_t dts = pkt->pkt_dts;
-    int64_t pts = pkt->pkt_pts;
-    pkt->pkt_dts = pts_no_backlog(dts);
-    pkt->pkt_pts = pts_no_backlog(pts);
-    pkt_trace(LS_PARSER, pkt, "backlog");
-    pkt->pkt_dts = dts;
-    pkt->pkt_pts = pts;
-  }
+#else
+static inline int data_noise(const uint8_t *data, int len) { return 0; }
 #endif
-}
 
 static void
-parser_do_backlog(parser_t *t, parser_es_t *st,
-                  void (*pkt_cb)(parser_t *t, parser_es_t *st, th_pkt_t *pkt),
-                  pktbuf_t *meta)
+parse_none(parser_t *t, parser_es_t *st, const uint8_t *data,
+           int len, int start)
 {
-  streaming_message_t *sm;
-  int64_t prevdts = PTS_UNSET, absdts = PTS_UNSET;
-  int64_t prevpts = PTS_UNSET, abspts = PTS_UNSET;
-  th_pkt_t *pkt, *npkt;
-  size_t metalen;
+}
 
-  tvhtrace(LS_PARSER,
-           "pkt bcklog %2d %-12s - backlog flush start - (meta %ld)",
-           st->es_index,
-           streaming_component_type2txt(st->es_type),
-           meta ? (long)pktbuf_len(meta) : -1);
-  TAILQ_FOREACH(sm, &st->es_backlog, sm_link) {
-    pkt = sm->sm_data;
-    if (pkt->pkt_meta) {
-      meta = pkt->pkt_meta;
-      break;
-    }
+/**
+ * Parse raw mpeg data - single TS packet
+ */
+void
+parse_mpeg_ts(parser_t *t, parser_es_t *st, const uint8_t *data,
+              int len, int start, int err)
+{
+  if (err) {
+    if (start)
+      parser_deliver_error(t, st);
+    sbuf_err(&st->es_buf, 1);
   }
-  while ((sm = TAILQ_FIRST(&st->es_backlog)) != NULL) {
-    pkt = sm->sm_data;
-    TAILQ_REMOVE(&st->es_backlog, sm, sm_link);
 
-    if (pkt->pkt_dts != PTS_UNSET)
-      pkt->pkt_dts &= ~PTS_BACKLOG;
-    if (pkt->pkt_pts != PTS_UNSET)
-      pkt->pkt_pts &= ~PTS_BACKLOG;
+  if (data_noise(data, len))
+    return;
 
-    if (prevdts != PTS_UNSET && pkt->pkt_dts != PTS_UNSET &&
-        pkt->pkt_dts == ((prevdts + 1) & PTS_MASK))
-      pkt->pkt_dts = absdts;
-    if (prevpts != PTS_UNSET && pkt->pkt_pts != PTS_UNSET &&
-        pkt->pkt_pts == ((prevpts + 1) & PTS_MASK))
-      pkt->pkt_pts = abspts;
-
-    if (meta) {
-      if (pkt->pkt_meta == NULL) {
-        pktbuf_ref_inc(meta);
-        pkt->pkt_meta = meta;
-        /* insert the metadata into payload of the first packet, too */
-        npkt = pkt_copy_shallow(pkt);
-        pktbuf_ref_dec(npkt->pkt_payload);
-        metalen = pktbuf_len(meta);
-        npkt->pkt_payload = pktbuf_alloc(NULL, metalen + pktbuf_len(pkt->pkt_payload));
-        memcpy(pktbuf_ptr(npkt->pkt_payload), pktbuf_ptr(meta), metalen);
-        memcpy(pktbuf_ptr(npkt->pkt_payload) + metalen,
-               pktbuf_ptr(pkt->pkt_payload), pktbuf_len(pkt->pkt_payload));
-        npkt->pkt_payload->pb_err = pkt->pkt_payload->pb_err + meta->pb_err;
-        pkt_ref_dec(pkt);
-        pkt = npkt;
-      }
-      meta = NULL;
-    }
-
-    if (pkt_cb)
-      pkt_cb(t, st, pkt);
-
-    if (absdts == PTS_UNSET) {
-      absdts = pkt->pkt_dts;
-    } else {
-      absdts += st->es_frame_duration;
-      absdts &= PTS_MASK;
-    }
-
-    if (abspts == PTS_UNSET) {
-      abspts = pkt->pkt_pts;
-    } else {
-      abspts += st->es_frame_duration;
-      abspts &= PTS_MASK;
-    }
-
-    prevdts = pkt->pkt_dts;
-    prevpts = pkt->pkt_pts;
-
-    parser_deliver(t, st, pkt);
-    sm->sm_data = NULL;
-    streaming_msg_free(sm);
+  if (st->es_parse_callback) {
+    st->es_parse_callback(t, st, data, len, start);
+    return;
   }
-  tvhtrace(LS_PARSER,
-           "pkt bcklog %2d %-12s - backlog flush end -",
-           st->es_index,
-           streaming_component_type2txt(st->es_type));
+
+  switch(st->es_type) {
+  case SCT_MPEG2VIDEO:
+    st->es_parse_callback = parse_pes_mpeg2video;
+    break;
+
+  case SCT_H264:
+    st->es_parse_callback = parse_pes_h264;
+    break;
+
+  case SCT_HEVC:
+    st->es_parse_callback = parse_pes_hevc;
+    break;
+
+  case SCT_MPEG2AUDIO:
+    st->es_parse_callback = parse_pes_mpa;
+    break;
+
+  case SCT_AC3:
+  case SCT_EAC3:
+    st->es_parse_callback = parse_pes_ac3;
+    break;
+
+  case SCT_DVBSUB:
+    st->es_parse_callback = parse_subtitles;
+    break;
+
+  case SCT_AAC:
+  case SCT_MP4A:
+    st->es_parse_callback = parse_aac;
+    break;
+
+  case SCT_TELETEXT:
+    st->es_parse_callback = parse_teletext;
+    break;
+
+  case SCT_HBBTV:
+    st->es_parse_callback = parse_hbbtv;
+    break;
+
+  default:
+    st->es_parse_callback = parse_none;
+    break;
+  }
+
+  st->es_parse_callback(t, st, data, len, start);
 }

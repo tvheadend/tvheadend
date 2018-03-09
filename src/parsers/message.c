@@ -233,6 +233,7 @@ static void parser_input_mpegts(parser_t *prs, pktbuf_t *pb)
 static void parser_init_es(parser_es_t *pes, parser_t *prs)
 {
   pes->es_parser = prs;
+  pes->es_parse_callback = NULL;
   pes->es_incomplete = 0;
   pes->es_header_mode = 0;
   pes->es_parser_state = 0;
