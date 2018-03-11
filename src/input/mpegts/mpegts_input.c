@@ -1255,7 +1255,7 @@ retry:
         tvh_cond_signal(&mi->mi_input_cond, 0);
       } else {
         if (tvhlog_limit(&mi->mi_input_queue_loglimit, 10))
-          tvhwarn(LS_MPEGTS, "too much queued input data (over 50MB), discarding new");
+          tvhwarn(LS_MPEGTS, "too much queued input data (over 50MB) for %s, discarding new", mi->mi_name);
         free(mp);
       }
     } else {
@@ -1471,7 +1471,7 @@ mpegts_input_process
           if (type & MPS_TABLE) {
             if (mi->mi_table_queue_size >= 2*1024*1024) {
               if (tvhlog_limit(&mi->mi_input_queue_loglimit, 10)) {
-                tvhwarn(LS_MPEGTS, "too much queued table input data (over 2MB), discarding new");
+                tvhwarn(LS_MPEGTS, "too much queued table input data (over 2MB) for %s, discarding new", mi->mi_name);
                 if (tvhtrace_enabled())
                   mpegts_input_analyze_table_queue(mi);
               }
