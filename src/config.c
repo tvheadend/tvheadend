@@ -1688,7 +1688,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   memset(&config, 0, sizeof(config));
   config.idnode.in_class = &config_class;
   config.ui_quicktips = 1;
-  config.digest = 1;
+  config.http_auth = HTTP_AUTH_DIGEST;
   config.proxy = 0;
   config.realm = strdup("tvheadend");
   config.info_area = strdup("login,storage,time");
@@ -2013,6 +2013,17 @@ config_class_piconscheme_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+config_class_http_auth_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Plain (insecure)"),      HTTP_AUTH_PLAIN },
+    { N_("Digest"),                HTTP_AUTH_DIGEST },
+    { N_("Both plain and digest"), HTTP_AUTH_PLAIN_DIGEST },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 #if ENABLE_MPEGTS_DVB
 static void
 config_muxconfpath_notify_cb(void *opaque, int disarmed)
@@ -2331,13 +2342,14 @@ const idclass_t config_class = {
       .group  = 5
     },
     {
-      .type   = PT_BOOL,
+      .type   = PT_INT,
       .id     = "digest",
-      .name   = N_("Digest authentication"),
+      .name   = N_("Authentication type"),
       .desc   = N_("Digest access authentication is intended as a security trade-off. "
                    "It is intended to replace unencrypted HTTP basic access authentication. "
                    "This option should be enabled for standard usage."),
-      .off    = offsetof(config_t, digest),
+      .list   = config_class_http_auth_list,
+      .off    = offsetof(config_t, http_auth),
       .opts   = PO_EXPERT,
       .group  = 5
     },

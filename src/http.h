@@ -88,6 +88,10 @@ typedef struct http_arg {
 #define HTTP_STATUS_HTTP_VERSION    505
 #define HTTP_STATUS_OP_NOT_SUPPRT   551
 
+#define HTTP_AUTH_PLAIN             0
+#define HTTP_AUTH_DIGEST            1
+#define HTTP_AUTH_PLAIN_DIGEST      2
+
 typedef enum http_state {
   HTTP_CON_WAIT_REQUEST,
   HTTP_CON_READ_HEADER,
