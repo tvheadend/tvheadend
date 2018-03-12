@@ -1094,7 +1094,7 @@ main(int argc, char **argv)
 
   uuid_init();
   idnode_boot();
-  config_boot(opt_config, gid, uid);
+  config_boot(opt_config, gid, uid, opt_user_agent);
   tcp_server_preinit(opt_ipv6);
   http_server_init(opt_bindaddr);    // bind to ports only
   htsp_init(opt_bindaddr);	     // bind to ports only
@@ -1222,7 +1222,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, codec_init);
   tvhftrace(LS_MAIN, profile_init);
   tvhftrace(LS_MAIN, imagecache_init);
-  tvhftrace(LS_MAIN, http_client_init, opt_user_agent);
+  tvhftrace(LS_MAIN, http_client_init);
   tvhftrace(LS_MAIN, esfilter_init);
   tvhftrace(LS_MAIN, bouquet_init);
   tvhftrace(LS_MAIN, service_init);

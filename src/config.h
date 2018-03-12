@@ -41,6 +41,7 @@ typedef struct config {
   char *full_version;
   char *server_name;
   char *http_server_name;
+  char *http_user_agent;
   char *language;
   char *info_area;
   int chname_num;
@@ -71,9 +72,10 @@ typedef struct config {
 extern const idclass_t config_class;
 extern config_t config;
 
-void        config_boot    ( const char *path, gid_t gid, uid_t uid );
-void        config_init    ( int backup );
-void        config_done    ( void );
+void config_boot
+  ( const char *path, gid_t gid, uid_t uid, const char *http_user_agent );
+void config_init( int backup );
+void config_done( void );
 
 const char *config_get_server_name ( void );
 const char *config_get_http_server_name ( void );

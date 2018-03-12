@@ -20,6 +20,7 @@
 #include "tvheadend.h"
 #include "http.h"
 #include "tcp.h"
+#include "config.h"
 
 #include <pthread.h>
 #include <unistd.h>
@@ -43,6 +44,8 @@
 #if ENABLE_ANDROID
 #include <sys/socket.h>
 #endif
+
+#define HTTPCLIENT_TESTSUITE 1
 
 struct http_client_ssl {
   int      connected;
@@ -85,7 +88,6 @@ static TAILQ_HEAD(,http_client) http_clients;
 static pthread_mutex_t          http_lock;
 static tvh_cond_t               http_cond;
 static th_pipe_t                http_pipe;
-static char                    *http_user_agent;
 
 /*
  *
@@ -1216,12 +1218,8 @@ http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url
                                         http_port(hc, url->scheme, url->port));
     http_arg_set(h, "Host", buf);
   }
-  if (http_user_agent) {
-    http_arg_set(h, "User-Agent", http_user_agent);
-  } else {
-    snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
-    http_arg_set(h, "User-Agent", buf);
-  }
+  assert(config.http_user_agent);
+  http_arg_set(h, "User-Agent", config.http_user_agent);
   if (!keepalive)
     http_arg_set(h, "Connection", "close");
   http_client_basic_auth(hc, h, url->user, url->pass);
@@ -1659,10 +1657,8 @@ http_client_close ( http_client_t *hc )
 pthread_t http_client_tid;
 
 void
-http_client_init ( const char *user_agent )
+http_client_init ( void )
 {
-  http_user_agent = user_agent ? strdup(user_agent) : NULL;
-
   /* Setup list */
   pthread_mutex_init(&http_lock, NULL);
   tvh_cond_init(&http_cond);
@@ -1699,7 +1695,6 @@ http_client_done ( void )
   tvhpoll_destroy(http_poll);
   http_poll = NULL;
   pthread_mutex_unlock(&http_lock);
-  free(http_user_agent);
 }
 
 /*

@@ -1677,7 +1677,8 @@ config_check ( void )
 static int config_newcfg = 0;
 
 void
-config_boot ( const char *path, gid_t gid, uid_t uid )
+config_boot
+  ( const char *path, gid_t gid, uid_t uid, const char *http_user_agent )
 {
   struct stat st;
   char buf[1024];
@@ -1780,6 +1781,12 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
     config.realm = strdup("tvheadend");
   if (tvh_str_default(config.http_server_name, NULL) == NULL)
     config.http_server_name = strdup("HTS/tvheadend");
+  if ((config.http_user_agent &&
+       strncmp(config.http_user_agent, "TVHeadend/", 10) == 0) ||
+      tvh_str_default(config.http_user_agent, NULL) == NULL) {
+    snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
+    tvh_str_set(&config.http_user_agent, buf);
+  }
   if (!config_scanfile_ok)
     config_muxconfpath_notify(&config.idnode, NULL);
 }
@@ -1820,6 +1827,7 @@ void config_done ( void )
   free(config.wizard);
   free(config.full_version);
   free(config.http_server_name);
+  free(config.http_user_agent);
   free(config.server_name);
   free(config.language);
   free(config.language_ui);
@@ -2390,6 +2398,15 @@ const idclass_t config_class = {
       .off    = offsetof(config_t, cors_origin),
       .opts   = PO_EXPERT,
       .group  = 5
+    },
+    {
+      .type   = PT_STR,
+      .id     = "http_user_agent",
+      .name   = N_("HTTP User Agent"),
+      .desc   = N_("The user agent string for the build-in HTTP client."),
+      .off    = offsetof(config_t, http_user_agent),
+      .opts   = PO_HIDDEN | PO_EXPERT,
+      .group  = 6,
     },
     {
       .type   = PT_INT,
