@@ -1705,7 +1705,7 @@ void service_load ( service_t *t, htsmsg_t *c )
       if(pid > 0 && pid2 > 0 && pid == pid2)
         shared_pcr = 1;
 
-      st = elementary_stream_create(&t->s_components, pid, type, 0);
+      st = elementary_stream_create(&t->s_components, pid, type);
 
       if((v = htsmsg_get_str(c, "language")) != NULL)
         strncpy(st->es_lang, lang_code_get(v), 3);
@@ -1750,7 +1750,7 @@ void service_load ( service_t *t, htsmsg_t *c )
   }
   if (!shared_pcr)
     elementary_stream_type_modify(&t->s_components,
-                                   t->s_components.set_pcr_pid, SCT_PCR, 0);
+                                   t->s_components.set_pcr_pid, SCT_PCR);
   else
     elementary_stream_type_destroy(&t->s_components, SCT_PCR);
   elementary_set_sort_streams(&t->s_components);

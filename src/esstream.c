@@ -456,9 +456,9 @@ ignore:
  */
 elementary_stream_t *
 elementary_stream_create
-  (elementary_set_t *set, int pid, streaming_component_type_t type, int running)
+  (elementary_set_t *set, int pid, streaming_component_type_t type)
 {
-  elementary_stream_t *st, *st2;
+  elementary_stream_t *st;
   int i = 0;
   int idx = 0;
 
@@ -474,6 +474,7 @@ elementary_stream_create
   st->es_index = idx + 1;
 
   st->es_type = type;
+  st->es_cc = -1;
 
   TAILQ_INSERT_TAIL(&set->set_all, st, es_link);
   st->es_service = set->set_service;
@@ -481,15 +482,6 @@ elementary_stream_create
   st->es_pid = pid;
 
   elementary_stream_make_nicename(st, set->set_nicename);
-
-  if (running) {
-    elementary_set_filter_build(set);
-    TAILQ_FOREACH(st2, &set->set_filter, es_filter_link)
-      if (st2 == st) {
-        elementary_stream_init(st);
-        break;
-      }
-  }
 
   return st;
 }
@@ -532,12 +524,11 @@ elementary_stream_type_find
  */
 elementary_stream_t *
 elementary_stream_type_modify(elementary_set_t *set, int pid,
-                              streaming_component_type_t type,
-                              int running)
+                              streaming_component_type_t type)
 {
   elementary_stream_t *es = elementary_stream_type_find(set, type);
   if (!es)
-    return elementary_stream_create(set, pid, type, running);
+    return elementary_stream_create(set, pid, type);
   if (es->es_pid != pid)
     es->es_pid = pid;
   return es;

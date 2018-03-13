@@ -52,7 +52,7 @@ extract_svcid(const uint8_t *ptr)
 static int
 psi_desc_add_ca
   (mpegts_table_t *mt, elementary_set_t *set,
-   uint16_t caid, uint32_t provid, uint16_t pid, int running)
+   uint16_t caid, uint32_t provid, uint16_t pid)
 {
   elementary_stream_t *st;
   caid_t *c;
@@ -63,7 +63,7 @@ psi_desc_add_ca
 
   st = elementary_stream_find(set, pid);
   if (st == NULL || st->es_type != SCT_CA) {
-    st = elementary_stream_create(set, pid, SCT_CA, running);
+    st = elementary_stream_create(set, pid, SCT_CA);
     r |= PMT_UPDATE_NEW_CA_STREAM;
   }
 
@@ -104,8 +104,7 @@ psi_desc_add_ca
  */
 static int 
 psi_desc_ca
-  (mpegts_table_t *mt, elementary_set_t *set, const uint8_t *buffer,
-   int size, int running)
+  (mpegts_table_t *mt, elementary_set_t *set, const uint8_t *buffer, int size)
 {
   int r = 0;
   int i;
@@ -129,7 +128,7 @@ psi_desc_ca
       uint16_t xpid = extract_pid(buffer + i);
       uint16_t xprovid = extract_2byte(buffer + i + 2);
 
-      r |= psi_desc_add_ca(mt, set, caid, xprovid, xpid, running);
+      r |= psi_desc_add_ca(mt, set, caid, xprovid, xpid);
     }
     break;
   case 0x0500:// Viaccess
@@ -163,7 +162,7 @@ psi_desc_ca
     break;
   }
 
-  r |= psi_desc_add_ca(mt, set, caid, provid, pid, running);
+  r |= psi_desc_add_ca(mt, set, caid, provid, pid);
 
   return r;
 }
@@ -173,7 +172,7 @@ psi_desc_ca
  */
 static int
 psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
-                  int parent_pid, int *position, int running)
+                  int parent_pid, int *position)
 {
   int r = 0;
   const char *lang;
@@ -193,7 +192,7 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
       st = elementary_stream_find(set, pid);
       if (st == NULL || st->es_type != SCT_TEXTSUB) {
         r |= PMT_UPDATE_NEW_STREAM;
-        st = elementary_stream_create(set, pid, SCT_TEXTSUB, running);
+        st = elementary_stream_create(set, pid, SCT_TEXTSUB);
       }
 
       lang = lang_code_get2((const char*)ptr, 3);
@@ -227,7 +226,7 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
 uint32_t
 dvb_psi_parse_pmt
   (mpegts_table_t *mt, const char *nicename, elementary_set_t *set,
-   const uint8_t *ptr, int len, int running)
+   const uint8_t *ptr, int len)
 {
   uint16_t pcr_pid, pid;
   uint8_t estype;
@@ -281,7 +280,7 @@ dvb_psi_parse_pmt
 
     switch(dtag) {
     case DVB_DESC_CA:
-      update |= psi_desc_ca(mt, set, ptr, dlen, running);
+      update |= psi_desc_ca(mt, set, ptr, dlen);
       break;
 
     default:
@@ -369,7 +368,7 @@ dvb_psi_parse_pmt
 
       switch(dtag) {
       case DVB_DESC_CA:
-        update |= psi_desc_ca(mt, set, ptr, dlen, running);
+        update |= psi_desc_ca(mt, set, ptr, dlen);
         break;
 
       case DVB_DESC_VIDEO_STREAM:
@@ -393,7 +392,7 @@ dvb_psi_parse_pmt
         if(estype == 0x06)
           hts_stream_type = SCT_TELETEXT;
   
-        update |= psi_desc_teletext(set, ptr, dlen, pid, &tt_position, running);
+        update |= psi_desc_teletext(set, ptr, dlen, pid, &tt_position);
         break;
 
       case DVB_DESC_AC3:
@@ -434,7 +433,7 @@ dvb_psi_parse_pmt
       st = elementary_stream_find(set, pid);
       if (st == NULL || st->es_type != hts_stream_type) {
         update |= PMT_UPDATE_NEW_STREAM;
-        st = elementary_stream_create(set, pid, hts_stream_type, running);
+        st = elementary_stream_create(set, pid, hts_stream_type);
       }
 
       if (st->es_type != hts_stream_type) {
@@ -496,7 +495,7 @@ dvb_psi_parse_pmt
 
   /* Handle PCR 'elementary stream' */
   if (!pcr_shared) {
-    st = elementary_stream_type_modify(set, set->set_pcr_pid, SCT_PCR, running);
+    st = elementary_stream_type_modify(set, set->set_pcr_pid, SCT_PCR);
     st->es_delete_me = 0;
   }
 
@@ -579,10 +578,12 @@ dvb_pmt_callback
   update = 0;
   pthread_mutex_lock(&s->s_stream_mutex);
   update = dvb_psi_parse_pmt(mt, service_nicename((service_t *)s),
-                             &s->s_components, ptr, len,
-                             s->s_status == SERVICE_RUNNING);
-  if (update)
+                             &s->s_components, ptr, len);
+  if (update) {
+    if (s->s_status == SERVICE_RUNNING)
+      elementary_set_filter_build(&s->s_components);
     service_request_save((service_t*)s);
+  }
   /* Only restart if something that our clients worry about did change */
   restart = 0;
   if (update) {

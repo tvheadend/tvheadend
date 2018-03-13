@@ -170,7 +170,7 @@ void elementary_set_stream_destroy(elementary_set_t *set, elementary_stream_t *e
 void elementary_set_init_filter_streams(elementary_set_t *set);
 void elementary_set_filter_build(elementary_set_t *set);
 elementary_stream_t *elementary_stream_create
-  (elementary_set_t *set, int pid, streaming_component_type_t type, int running);
+  (elementary_set_t *set, int pid, streaming_component_type_t type);
 elementary_stream_t *elementary_stream_find_(elementary_set_t *set, int pid);
 elementary_stream_t *elementary_stream_type_find
   (elementary_set_t *set, streaming_component_type_t type);
@@ -183,7 +183,7 @@ static inline elementary_stream_t *elementary_stream_find
       return set->set_last_es;
   }
 elementary_stream_t *elementary_stream_type_modify
-  (elementary_set_t *set, int pid, streaming_component_type_t type, int running);
+  (elementary_set_t *set, int pid, streaming_component_type_t type);
 void elementary_stream_type_destroy
   (elementary_set_t *set, streaming_component_type_t type);
 int elementary_stream_has_audio_or_video(elementary_set_t *set);

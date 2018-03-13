@@ -671,8 +671,7 @@ mpegts_input_open_service_pid
   if (elementary_stream_find(&s->s_components, pid) == NULL) {
     if (!create)
       return NULL;
-    es = elementary_stream_create(&s->s_components, pid, stype,
-                                  s->s_status == SERVICE_RUNNING);
+    es = elementary_stream_create(&s->s_components, pid, stype);
     es->es_pid_opened = 1;
   }
   if (es && mm->mm_active) {
