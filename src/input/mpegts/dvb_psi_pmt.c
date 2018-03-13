@@ -23,6 +23,7 @@
 #include "descrambler/caid.h"
 #include "descrambler/dvbcam.h"
 #include "dvb_psi_pmt.h"
+#include "dvb_psi_hbbtv.h"
 
 /*
  * PMT processing
@@ -552,12 +553,14 @@ int
 dvb_pmt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r, sect, last, ver, restart;
+  int r, sect, last, ver, restart, hbbtv = 0;
   uint32_t update;
   uint16_t sid;
   mpegts_mux_t *mm = mt->mt_mux;
   mpegts_service_t *s;
+  elementary_stream_t *es;
   mpegts_psi_table_state_t *st  = NULL;
+  uint16_t hbbtv_pids[16];
 
   /* Start */
   if (len < 2) return -1;
@@ -582,6 +585,10 @@ dvb_pmt_callback
   if (update) {
     if (s->s_status == SERVICE_RUNNING)
       elementary_set_filter_build(&s->s_components);
+    TAILQ_FOREACH(es, &s->s_components.set_filter, es_filter_link) {
+      if (hbbtv >= ARRAY_SIZE(hbbtv_pids)) break;
+      hbbtv_pids[hbbtv++] = es->es_pid;
+    }
     service_request_save((service_t*)s);
   }
   /* Only restart if something that our clients worry about did change */
@@ -606,6 +613,11 @@ dvb_pmt_callback
   if (update & (PMT_UPDATE_NEW_CA_STREAM|PMT_UPDATE_NEW_CAID|
                 PMT_UPDATE_CAID_DELETED|PMT_UPDATE_CAID_PID))
     descrambler_caid_changed((service_t *)s);
+  for (r = 0; r < hbbtv; r++)
+    mpegts_table_add(mm, DVB_HBBTV_BASE, DVB_HBBTV_MASK,
+                     dvb_hbbtv_callback, NULL, "hbbtv", LS_TBL_BASE,
+                     MT_CRC | MT_FULL | MT_QUICKREQ | MT_ONESHOT | MT_SCANSUBS,
+                     hbbtv_pids[r], MPS_WEIGHT_HBBTV_SCAN);
 
 #if ENABLE_LINUXDVB_CA
   dvbcam_pmt_data(s, ptr, len);

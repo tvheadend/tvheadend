@@ -161,7 +161,7 @@ ts_recv_hbbtv1_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 {
   parser_es_t *pes = (parser_es_t *)mt->mt_opaque;
   parser_t *prs = pes->es_parser;
-  htsmsg_t *apps = ts_recv_hbbtv(mt, (elementary_stream_t *)pes, buf, len, NULL);
+  htsmsg_t *apps = dvb_psi_parse_hbbtv(mt, buf, len, NULL);
 
   if (apps) {
     void *bin;
@@ -374,9 +374,14 @@ parser_destroy(streaming_target_t *pad)
 {
   parser_t *prs = (parser_t *)pad;
   elementary_stream_t *es;
+  parser_es_t *pes;
 
-  TAILQ_FOREACH(es, &prs->prs_components.set_all, es_link)
-    parser_clean_es((parser_es_t *)es);
+  TAILQ_FOREACH(es, &prs->prs_components.set_all, es_link) {
+    pes = (parser_es_t *)es;
+    parser_clean_es(pes);
+    if (pes->es_psi.mt_name)
+      dvb_table_parse_done(&pes->es_psi);
+  }
   elementary_set_clean(&prs->prs_components);
   free(prs);
 }

@@ -166,30 +166,31 @@ typedef struct mpegts_pid_sub
 #define MPS_TABLES       0x40
 #define MPS_NOPOSTDEMUX  0x80
   int   mps_type;
-#define MPS_WEIGHT_PAT     1000
-#define MPS_WEIGHT_CAT      999
-#define MPS_WEIGHT_SDT      999
-#define MPS_WEIGHT_NIT      999
-#define MPS_WEIGHT_BAT      999
-#define MPS_WEIGHT_VCT      999
-#define MPS_WEIGHT_EIT      999
-#define MPS_WEIGHT_ETT      999
-#define MPS_WEIGHT_MGT      999
-#define MPS_WEIGHT_PMT      998
-#define MPS_WEIGHT_PCR      997
-#define MPS_WEIGHT_CA       996
-#define MPS_WEIGHT_VIDEO    900
-#define MPS_WEIGHT_AUDIO    800
-#define MPS_WEIGHT_SUBTITLE 700
-#define MPS_WEIGHT_ESOTHER  500
-#define MPS_WEIGHT_RAW      400
-#define MPS_WEIGHT_NIT2     300
-#define MPS_WEIGHT_SDT2     300
-#define MPS_WEIGHT_ALLLIMIT 200 /* values under this limit does not switch */
-                                /* input to the unfiltered PIDs (all) mode */
-#define MPS_WEIGHT_TDT      101
-#define MPS_WEIGHT_STT      101
-#define MPS_WEIGHT_PMT_SCAN 100
+#define MPS_WEIGHT_PAT       1000
+#define MPS_WEIGHT_CAT        999
+#define MPS_WEIGHT_SDT        999
+#define MPS_WEIGHT_NIT        999
+#define MPS_WEIGHT_BAT        999
+#define MPS_WEIGHT_VCT        999
+#define MPS_WEIGHT_EIT        999
+#define MPS_WEIGHT_ETT        999
+#define MPS_WEIGHT_MGT        999
+#define MPS_WEIGHT_PMT        998
+#define MPS_WEIGHT_PCR        997
+#define MPS_WEIGHT_CA         996
+#define MPS_WEIGHT_VIDEO      900
+#define MPS_WEIGHT_AUDIO      800
+#define MPS_WEIGHT_SUBTITLE   700
+#define MPS_WEIGHT_ESOTHER    500
+#define MPS_WEIGHT_RAW        400
+#define MPS_WEIGHT_NIT2       300
+#define MPS_WEIGHT_SDT2       300
+#define MPS_WEIGHT_ALLLIMIT   200 /* values under this limit does not switch */
+                                  /* input to the unfiltered PIDs (all) mode */
+#define MPS_WEIGHT_TDT        102
+#define MPS_WEIGHT_STT        102
+#define MPS_WEIGHT_PMT_SCAN   101
+#define MPS_WEIGHT_HBBTV_SCAN 100
   int   mps_weight;
   void *mps_owner;
 } mpegts_pid_sub_t;

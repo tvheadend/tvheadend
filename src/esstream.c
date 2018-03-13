@@ -94,10 +94,6 @@ static void
 elementary_stream_init(elementary_stream_t *es)
 {
   es->es_cc = -1;
-
-  if (es->es_type == SCT_HBBTV && es->es_psi.mt_name == NULL)
-    dvb_table_parse_init(&es->es_psi, "hbbtv", LS_TS, es->es_pid,
-                         DVB_HBBTV_BASE, DVB_HBBTV_MASK, es);
 }
 
 /**
@@ -107,9 +103,6 @@ static void
 elementary_stream_clean(elementary_stream_t *es)
 {
   tvhlog_limit_reset(&es->es_cc_log);
-
-  if (es->es_psi.mt_name)
-    dvb_table_reset(&es->es_psi);
 }
 
 /**
@@ -154,9 +147,6 @@ elementary_set_stream_destroy(elementary_set_t *set, elementary_stream_t *es)
 {
   elementary_stream_t *es1;
   caid_t *c;
-
-  if (es->es_psi.mt_name)
-    dvb_table_parse_done(&es->es_psi);
 
   if (set->set_last_es == es) {
     set->set_last_pid = -1;

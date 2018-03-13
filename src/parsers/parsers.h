@@ -57,6 +57,7 @@ struct parser_es {
   struct th_pkt *es_curpkt;
   struct streaming_message_queue es_backlog;
   tvhlog_limit_t es_pes_log;
+  mpegts_psi_table_t es_psi;
   /* Clocks */
   int64_t   es_curpts;
   int64_t   es_curdts;

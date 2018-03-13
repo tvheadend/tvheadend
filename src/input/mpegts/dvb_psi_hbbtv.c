@@ -18,14 +18,15 @@
 
 #include "tvheadend.h"
 #include "service.h"
+#include "input.h"
 #include "dvb_psi_hbbtv.h"
 
 /**
  * Extract Hbbtv
  */
 htsmsg_t *
-ts_recv_hbbtv(mpegts_psi_table_t *mt, elementary_stream_t *st,
-              const uint8_t *buf, int len, int *_sect)
+dvb_psi_parse_hbbtv
+  (mpegts_psi_table_t *mt, const uint8_t *buf, int len, int *_sect)
 {
   static const char *visibility_table[4] = {
     "none",
@@ -165,12 +166,12 @@ dvberr:
 }
 
 void
-ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
+dvb_psi_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 {
   elementary_stream_t *st = (elementary_stream_t *)mt->mt_opaque;
   service_t *t = st->es_service;
   int sect;
-  htsmsg_t *apps = ts_recv_hbbtv(mt, st, buf, len, &sect);
+  htsmsg_t *apps = dvb_psi_parse_hbbtv(mt, buf, len, &sect);
   if (apps == NULL)
     return;
   if (t->s_hbbtv == NULL)
@@ -181,4 +182,11 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     htsmsg_set_msg(t->s_hbbtv, buf, apps);
     service_request_save(t);
   }
+}
+
+int
+dvb_hbbtv_callback(mpegts_table_t *mt, const uint8_t *buf, int len, int tableid)
+{
+  dvb_psi_hbbtv_cb((mpegts_psi_table_t *)mt, buf, len);
+  return 0;
 }

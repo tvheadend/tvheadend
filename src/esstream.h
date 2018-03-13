@@ -134,8 +134,6 @@ struct elementary_stream {
 
   tvhlog_limit_t es_cc_log;  /* CC error log limiter */
   uint32_t es_filter;        /* Filter temporary variable */
-
-  mpegts_psi_table_t es_psi; /* HBBTV PSI table (AIT) */
 };
 
 /*

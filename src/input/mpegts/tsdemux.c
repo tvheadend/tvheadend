@@ -68,11 +68,6 @@ ts_recv_packet0
 
     if (tsb2[3] & 0xc0) /* scrambled */
       continue;
-
-    if (st->es_type == SCT_HBBTV) {
-      dvb_table_parse(&st->es_psi, "ts", tsb2, 188, 1, 0, ts_recv_hbbtv_cb);
-      continue;
-    }
   }
 
   if (!t->s_scrambled_pass && (st->es_type == SCT_CA || st->es_type == SCT_CAT))
