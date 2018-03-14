@@ -2096,7 +2096,7 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   /* Subtitle */
-  if (e &&& e->subtitle) {
+  if (e && e->subtitle) {
     save |= lang_str_set2(&de->de_subtitle, e->subtitle) ? DVR_UPDATED_SUBTITLE : 0;
   } else if (subtitle) {
     save |= lang_str_set(&de->de_subtitle, subtitle, lang) ? DVR_UPDATED_SUBTITLE : 0;
