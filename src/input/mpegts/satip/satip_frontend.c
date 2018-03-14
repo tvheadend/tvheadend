@@ -1065,7 +1065,7 @@ satip_frontend_pid_changed( http_client_t *rtsp,
   satip_tune_req_t *tr;
   satip_device_t *sd = lfe->sf_device;
   char *setup = NULL, *add = NULL, *del = NULL;
-  int i, j, r, pid;
+  int i, j, r, pid, overlimit;
   int max_pids_len = sd->sd_pids_len;
   int max_pids_count = sd->sd_pids_max;
   mpegts_apids_t wpid, padd, pdel;
@@ -1094,9 +1094,9 @@ all:
              tr->sf_pids_tuned.all ||
              tr->sf_pids.count == 0) {
 
-    mpegts_pid_weighted(&wpid, &tr->sf_pids, max_pids_count);
+    overlimit = mpegts_pid_weighted(&wpid, &tr->sf_pids, max_pids_count);
 
-    if (wpid.count > max_pids_count && sd->sd_fullmux_ok) {
+    if (overlimit > 0 && sd->sd_fullmux_ok) {
       mpegts_pid_done(&wpid);
       goto all;
     }
