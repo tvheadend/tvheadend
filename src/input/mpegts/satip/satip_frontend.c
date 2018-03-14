@@ -1094,7 +1094,8 @@ all:
              tr->sf_pids_tuned.all ||
              tr->sf_pids.count == 0) {
 
-    overlimit = mpegts_pid_weighted(&wpid, &tr->sf_pids, max_pids_count);
+    overlimit = mpegts_pid_weighted(&wpid, &tr->sf_pids,
+                                    max_pids_count, MPS_WEIGHT_ALLLIMIT);
 
     if (overlimit > 0 && sd->sd_fullmux_ok) {
       mpegts_pid_done(&wpid);
@@ -1116,7 +1117,8 @@ all:
 
   } else {
 
-    overlimit = mpegts_pid_weighted(&wpid, &tr->sf_pids, max_pids_count);
+    overlimit = mpegts_pid_weighted(&wpid, &tr->sf_pids,
+                                    max_pids_count, MPS_WEIGHT_ALLLIMIT);
 
     if (overlimit > 0 && sd->sd_fullmux_ok) {
       mpegts_pid_done(&wpid);

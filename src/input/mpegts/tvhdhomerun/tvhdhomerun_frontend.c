@@ -521,7 +521,7 @@ static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *
     }
   }
 
-  mpegts_pid_weighted(&wpids, &pids, 128 /* max? */);
+  mpegts_pid_weighted(&wpids, &pids, 128 /* max? */, MPS_WEIGHT_ALLLIMIT);
   for (i = 0; i < wpids.count; i++)
     tvhdhomerun_device_open_pid(hfe, wpids.pids[i].pid);
   if (wpids.all)

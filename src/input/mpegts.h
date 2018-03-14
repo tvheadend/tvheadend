@@ -115,7 +115,7 @@ int mpegts_pid_compare ( mpegts_apids_t *dst, mpegts_apids_t *src,
                          mpegts_apids_t *add, mpegts_apids_t *del );
 int mpegts_pid_compare_weight ( mpegts_apids_t *dst, mpegts_apids_t *src,
                                 mpegts_apids_t *add, mpegts_apids_t *del );
-int mpegts_pid_weighted ( mpegts_apids_t *dst, mpegts_apids_t *src, int limit );
+int mpegts_pid_weighted ( mpegts_apids_t *dst, mpegts_apids_t *src, int limit, int mweight );
 int mpegts_pid_dump ( mpegts_apids_t *pids, char *buf, int len, int wflag, int raw );
 
 /* **************************************************************************
@@ -184,6 +184,8 @@ typedef struct mpegts_pid_sub
 #define MPS_WEIGHT_RAW      400
 #define MPS_WEIGHT_NIT2     300
 #define MPS_WEIGHT_SDT2     300
+#define MPS_WEIGHT_ALLLIMIT 200 /* values under this limit does not switch */
+                                /* input to the unfiltered PIDs (all) mode */
 #define MPS_WEIGHT_TDT      101
 #define MPS_WEIGHT_STT      101
 #define MPS_WEIGHT_PMT_SCAN 100

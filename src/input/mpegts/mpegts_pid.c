@@ -338,7 +338,8 @@ mpegts_pid_compare_weight(mpegts_apids_t *dst, mpegts_apids_t *src,
 }
 
 int
-mpegts_pid_weighted(mpegts_apids_t *dst, mpegts_apids_t *pids, int limit)
+mpegts_pid_weighted
+  (mpegts_apids_t *dst, mpegts_apids_t *pids, int limit, int mweight)
 {
   int i, j, overlimit = 0;
   mpegts_apids_t sorted;
@@ -359,7 +360,9 @@ mpegts_pid_weighted(mpegts_apids_t *dst, mpegts_apids_t *pids, int limit)
   }
   for ( ; i < sorted.count; i++) {
     p = &sorted.pids[i];
-    if (mpegts_pid_find_rindex(dst, sorted.pids[i].pid) < 0)
+    if (p->weight < mweight)
+      continue;
+    if (mpegts_pid_find_rindex(dst, p->pid) < 0)
       overlimit++;
   }
   dst->all = pids->all;
@@ -380,7 +383,7 @@ mpegts_pid_dump(mpegts_apids_t *pids, char *buf, int len, int wflag, int raw)
   if (pids->all)
     return snprintf(buf, len, "all");
   if (!raw) {
-    mpegts_pid_weighted(&spids, pids, len / 2);
+    mpegts_pid_weighted(&spids, pids, len / 2, 0);
     pids = &spids;
   }
   *buf = '\0';
