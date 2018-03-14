@@ -31,6 +31,7 @@
 #include "profile.h"
 #include "avahi.h"
 #include "url.h"
+#include "http.h"
 #include "satip/server.h"
 #include "channels.h"
 #include "input/mpegts/scanfile.h"
