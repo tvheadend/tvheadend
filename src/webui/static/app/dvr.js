@@ -593,7 +593,7 @@ tvheadend.dvr_finished = function(panel, index) {
             }
         },
         del: false,
-        list: 'disp_title,disp_extratext,episode_disp,channelname,' +
+        list: 'disp_title,disp_extratext,episode_disp,channel,' +
               'start_real,stop_real,duration,filesize,copyright_year,' +
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,',
         columns: {
@@ -709,7 +709,7 @@ tvheadend.dvr_failed = function(panel, index) {
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
-        list: 'disp_title,disp_extratext,episode_disp,channelname,' +
+        list: 'disp_title,disp_extratext,episode_disp,channel,' +
               'image,copyright_year,start_real,stop_real,duration,filesize,status,' +
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
         columns: {
@@ -784,7 +784,7 @@ tvheadend.dvr_removed = function(panel, index) {
         uilevel: 'expert',
         edit: { params: { list: tvheadend.admin ? "retention,owner,disp_title,disp_extratext,episode_disp,comment" : "retention,comment" } },
         del: true,
-        list: 'disp_title,disp_extratext,episode_disp,channelname,image,' +
+        list: 'disp_title,disp_extratext,episode_disp,channel,image,' +
               'copyright_year,start_real,stop_real,duration,status,' +
               'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
         columns: {
