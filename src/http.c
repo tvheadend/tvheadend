@@ -1414,39 +1414,47 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   /* Extract authorization */
   if((v = http_arg_get(&hc->hc_args, "Authorization")) != NULL) {
     if((n = http_tokenize(v, argv, 2, -1)) == 2) {
-      if ((config.http_auth == HTTP_AUTH_PLAIN ||
-           config.http_auth == HTTP_AUTH_PLAIN_DIGEST) &&
-          strcasecmp(argv[0], "basic") == 0) {
-        n = base64_decode((uint8_t *)authbuf, argv[1], sizeof(authbuf) - 1);
-        if (n < 0)
-          n = 0;
-        authbuf[n] = 0;
-        if((n = http_tokenize(authbuf, argv, 2, ':')) == 2) {
-          hc->hc_username = tvh_strdupa(argv[0]);
-          hc->hc_password = tvh_strdupa(argv[1]);
-          http_deescape(hc->hc_username);
-          http_deescape(hc->hc_password);
-          // No way to actually track this
+      if (strcasecmp(argv[0], "basic") == 0) {
+        if (config.http_auth == HTTP_AUTH_PLAIN ||
+            config.http_auth == HTTP_AUTH_PLAIN_DIGEST) {
+          n = base64_decode((uint8_t *)authbuf, argv[1], sizeof(authbuf) - 1);
+          if (n < 0)
+            n = 0;
+          authbuf[n] = 0;
+          if((n = http_tokenize(authbuf, argv, 2, ':')) == 2) {
+            hc->hc_username = tvh_strdupa(argv[0]);
+            hc->hc_password = tvh_strdupa(argv[1]);
+            http_deescape(hc->hc_username);
+            http_deescape(hc->hc_password);
+            // No way to actually track this
+          } else {
+            http_error(hc, HTTP_STATUS_UNAUTHORIZED);
+            return -1;
+          }
         } else {
           http_error(hc, HTTP_STATUS_UNAUTHORIZED);
           return -1;
         }
-      } else if ((config.http_auth == HTTP_AUTH_DIGEST ||
-                  config.http_auth == HTTP_AUTH_PLAIN_DIGEST) &&
-                 strcasecmp(argv[0], "digest") == 0) {
-        v = http_get_header_value(argv[1], "nonce");
-        if (v == NULL || !http_nonce_exists(v)) {
+      } else if (strcasecmp(argv[0], "digest") == 0) {
+        if (config.http_auth == HTTP_AUTH_DIGEST ||
+            config.http_auth == HTTP_AUTH_PLAIN_DIGEST) {
+          v = http_get_header_value(argv[1], "nonce");
+          if (v == NULL || !http_nonce_exists(v)) {
+            free(v);
+            http_error(hc, HTTP_STATUS_UNAUTHORIZED);
+            return -1;
+          }
+          free(hc->hc_nonce);
+          hc->hc_nonce = v;
+          v = http_get_header_value(argv[1], "username");
+          hc->hc_authhdr  = tvh_strdupa(argv[1]);
+          hc->hc_username = tvh_strdupa(v);
+          http_deescape(hc->hc_username);
           free(v);
+        } else {
           http_error(hc, HTTP_STATUS_UNAUTHORIZED);
           return -1;
         }
-        free(hc->hc_nonce);
-        hc->hc_nonce = v;
-        v = http_get_header_value(argv[1], "username");
-        hc->hc_authhdr  = tvh_strdupa(argv[1]);
-        hc->hc_username = tvh_strdupa(v);
-        http_deescape(hc->hc_username);
-        free(v);
       } else {
         http_error(hc, HTTP_STATUS_BAD_REQUEST);
         return -1;
