@@ -3540,10 +3540,12 @@ htsp_register(void)
 void
 htsp_done(void)
 {
+  pthread_mutex_lock(&global_lock);
   if (htsp_server_2)
     tcp_server_delete(htsp_server_2);
   if (htsp_server)
     tcp_server_delete(htsp_server);
+  pthread_mutex_unlock(&global_lock);
 }
 
 /* **************************************************************************
