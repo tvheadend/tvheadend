@@ -2876,6 +2876,10 @@ dvr_entry_class_channel_get(void *o)
     idnode_uuid_as_str(&de->de_channel->ch_id, prop_sbuf);
   else
     prop_sbuf[0] = '\0';
+  if (!de->de_channel && de->de_channel_name){
+    strncpy(prop_sbuf, de->de_channel_name, PROP_SBUF_LEN);
+    prop_sbuf[PROP_SBUF_LEN-1] = '\0';
+  }
   return &prop_sbuf_ptr;
 }
 
