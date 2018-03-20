@@ -243,7 +243,6 @@ cc_remove_card(cclient_t *cc, cc_card_data_t *pcard)
             }
           }
         }
-        es = esn;
       }
       if (LIST_EMPTY(&ep->ep_sections))
         cc_free_ecm_pid(ep);
