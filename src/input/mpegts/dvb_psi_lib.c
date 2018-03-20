@@ -167,31 +167,31 @@ mpegts_psi_section_reassemble
   }
 
   if(pusi) {
-    uint8_t len = tsb[off++];
-    if (len > 188 - off) {
-      mt->mt_sect.ps_lock = 0;
-      return;
-    }
-    while (off < len) {
-      r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, len, 0, crc, cb, opaque);
-      if (r < 0) {
-        mt->mt_sect.ps_lock = 0;
-        off = 188;
-        break;
-      }
-      off += r;
+    uint8_t len2 = tsb[off++];
+    uint8_t off2 = off;
+    off += len2;
+    if (off > 188)
+      goto wrong_state;
+    while (off2 < len2) {
+      r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off2, len2, 0, crc, cb, opaque);
+      if (r < 0)
+        goto wrong_state;
+      off2 += r;
+      len2 -= r;
     }
   }
 
   while(off < 188) {
     r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, 188 - off, pusi, crc,
         cb, opaque);
-    if(r < 0) {
-      mt->mt_sect.ps_lock = 0;
-      break;
-    }
+    if (r < 0)
+      goto wrong_state;
     off += r;
   }
+  return;
+
+wrong_state:
+  mt->mt_sect.ps_lock = 0;
 }
 
 /*
