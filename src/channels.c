@@ -936,6 +936,27 @@ channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor )
 }
 
 char *
+channel_get_number_as_str ( channel_t *ch, char *dst, size_t dstlen )
+{
+  int64_t num = channel_get_number(ch);
+  uint32_t major, minor;
+  if (num == 0) return NULL;
+  major = channel_get_major(num);
+  minor = channel_get_minor(num);
+  if (minor)
+    snprintf(dst, dstlen, "%u.%u", major, minor);
+  else
+    snprintf(dst, dstlen, "%u", major);
+  return dst;
+}
+
+int64_t
+channel_get_number_from_str ( const char *str )
+{
+  return prop_intsplit_from_str(str, CHANNEL_SPLIT);
+}
+
+char *
 channel_get_source ( channel_t *ch, char *dst, size_t dstlen )
 {
   const char *s;

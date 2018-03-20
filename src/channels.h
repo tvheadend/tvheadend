@@ -200,6 +200,9 @@ static inline uint32_t channel_get_minor ( int64_t chnum ) { return chnum % CHAN
 int64_t channel_get_number ( channel_t *ch );
 int channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor );
 
+char *channel_get_number_as_str ( channel_t *ch, char *dst, size_t dstlen );
+int64_t channel_get_number_from_str ( const char *str );
+
 char *channel_get_source ( channel_t *ch, char *dst, size_t dstlen );
 
 const char *channel_get_icon ( channel_t *ch );

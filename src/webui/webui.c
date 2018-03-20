@@ -487,8 +487,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
 static void
 http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
                       const char *url_remain, const char *profile,
-                      const char *svcname, const char *logo,
-                      const char *epgid, access_t *access)
+                      const char *svcname, const char *chnum,
+                      const char *logo, const char *epgid, access_t *access)
 {
   htsbuf_append_str(hq, "#EXTINF:-1");
   if (logo) {
@@ -499,6 +499,8 @@ http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
   }
   if (epgid)
     htsbuf_qprintf(hq, " tvg-id=\"%s\"", epgid);
+  if (chnum)
+    htsbuf_qprintf(hq, " tvg-chno=\"%s\"", chnum);
   htsbuf_qprintf(hq, ",%s\n%s%s?ticket=%s", svcname, hostpath, url_remain,
                      access_ticket_create(url_remain, access));
   htsbuf_qprintf(hq, "&profile=%s\n", profile);
@@ -561,7 +563,7 @@ static int
 http_channel_playlist(http_connection_t *hc, int pltype, channel_t *channel)
 {
   htsbuf_queue_t *hq;
-  char buf[255];
+  char buf[255], chnum[32];
   char *profile, *hostpath;
   const char *name, *blank;
   const char *lang = hc->hc_access->aa_lang_ui;
@@ -584,6 +586,7 @@ http_channel_playlist(http_connection_t *hc, int pltype, channel_t *channel)
 
     htsbuf_append_str(hq, "#EXTM3U\n");
     http_m3u_playlist_add(hq, hostpath, buf, profile, name,
+                          channel_get_number_as_str(channel, chnum, sizeof(chnum)),
                           channel_get_icon(channel),
                           channel_get_uuid(channel, ubuf),
                           hc->hc_access);
@@ -612,7 +615,7 @@ static int
 http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
 {
   htsbuf_queue_t *hq;
-  char buf[255], ubuf[UUID_HEX_SIZE];
+  char buf[255], chnum[32], ubuf[UUID_HEX_SIZE];
   char *profile, *hostpath;
   const char *name, *blank, *sort, *lang;
   channel_t *ch;
@@ -643,6 +646,7 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
     name = channel_get_name(ch, blank);
     if (pltype == PLAYLIST_M3U) {
       http_m3u_playlist_add(hq, hostpath, buf, profile, name,
+                            channel_get_number_as_str(ch, chnum, sizeof(chnum)),
                             channel_get_icon(ch),
                             channel_get_uuid(ch, ubuf),
                             hc->hc_access);
@@ -703,7 +707,7 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
     ct = ctlist[idx];
     if (pltype == PLAYLIST_M3U) {
       snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
-      http_m3u_playlist_add(hq, hostpath, buf, profile, ct->ct_name,
+      http_m3u_playlist_add(hq, hostpath, buf, profile, ct->ct_name, NULL,
                             channel_tag_get_icon(ct), NULL, hc->hc_access);
     } else if (pltype == PLAYLIST_E2) {
       htsbuf_qprintf(hq, "#SERVICE 1:64:%d:0:0:0:0:0:0:0::%s\n", labelidx++, ct->ct_name);
@@ -743,7 +747,7 @@ static int
 http_channel_list_playlist(http_connection_t *hc, int pltype)
 {
   htsbuf_queue_t *hq;
-  char buf[255], ubuf[UUID_HEX_SIZE];
+  char buf[255], chnum[32], ubuf[UUID_HEX_SIZE];
   channel_t *ch;
   channel_t **chlist;
   int idx = 0, count = 0;
@@ -775,6 +779,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
 
     if (pltype == PLAYLIST_M3U) {
       http_m3u_playlist_add(hq, hostpath, buf, profile, name,
+                            channel_get_number_as_str(ch, chnum, sizeof(chnum)),
                             channel_get_icon(ch),
                             channel_get_uuid(ch, ubuf),
                             hc->hc_access);
