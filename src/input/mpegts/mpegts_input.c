@@ -1668,7 +1668,9 @@ mpegts_input_thread ( void * p )
   int update_pids;
   char buf[256];
 
+  pthread_mutex_lock(&global_lock);
   mi->mi_display_name(mi, buf, sizeof(buf));
+  pthread_mutex_unlock(&global_lock);
   pthread_mutex_lock(&mi->mi_input_lock);
   while (atomic_get(&mi->mi_running)) {
 

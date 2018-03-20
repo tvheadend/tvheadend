@@ -229,14 +229,14 @@ cc_remove_card(cclient_t *cc, cc_card_data_t *pcard)
           cc_get_card_name(pcard, buf, sizeof(buf)));
 
   /* invalidate all requests */
-  LIST_FOREACH(ct, &cc->cc_services, cs_link) {
+  LIST_FOREACH(ct, &cc->cc_services, cs_link)
     for (ep = LIST_FIRST(&ct->cs_ecm_pids); ep; ep = epn) {
       epn = LIST_NEXT(ep, ep_link);
       for (es = LIST_FIRST(&ep->ep_sections); es; es = esn) {
         esn = LIST_NEXT(es, es_link);
         if (es->es_caid == pcard->cs_ra.caid) {
           emmp = pcard->cs_ra.providers;
-          for (i = 0; i < pcard->cs_ra.providers_count; i++, emmp++)
+          for (i = 0; i < pcard->cs_ra.providers_count; i++, emmp++) {
             if (emmp->id == es->es_provid) {
               cc_free_ecm_section(es);
               break;
