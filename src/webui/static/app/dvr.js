@@ -225,38 +225,38 @@ tvheadend.filesizeRenderer = function(st) {
 }
 
 
-tvheadend.displayDuplicate = function(value, meta, record) {
-    if (value == null)
+tvheadend.displayDuplicate = function(v, meta, rec) {
+    if (v == null)
         return '';
     var is_dup = record.data['duplicate'];
     if (is_dup)
-        return "<span class='x-epg-duplicate'>" + value + "</span>";
+        return "<span class='x-epg-duplicate'>" + v + "</span>";
     else
-        return value;
+        return v;
 }
 
 /** Render an entry differently if it is a duplicate */
-tvheadend.displayWithDuplicateRenderer = function(value, meta, record) {
+tvheadend.displayWithDuplicateRenderer = function(v, meta, rec) {
     return function() {
-        return function(value, meta, record) {
-            return tvheadend.displayDuplicate(value, meta, record);
+        return function(v, meta, rec) {
+            return tvheadend.displayDuplicate(v, meta, rec);
         }
     }
 }
 
-tvheadend.displayWithYearAndDuplicateRenderer = function(value, meta, record) {
+tvheadend.displayWithYearAndDuplicateRenderer = function(v, meta, rec) {
     return function() {
-        return function(value, meta, record) {
-            var value = tvheadend.getDisplayTitle(value, record);
-            return tvheadend.displayDuplicate(value, meta, record);
+        return function(v, meta, rec) {
+            var v = tvheadend.getDisplayTitle(v, rec);
+            return tvheadend.displayDuplicate(v, meta, rec);
         }
     }
 }
 
-tvheadend.displayWithYearRenderer = function(value, meta, record) {
+tvheadend.displayWithYearRenderer = function(v, meta, rec) {
     return function() {
-        return function(value, meta, record) {
-            return tvheadend.getDisplayTitle(value, record);
+        return function(v, meta, rec) {
+            return tvheadend.getDisplayTitle(v, rec);
         }
     }
 }
@@ -714,7 +714,7 @@ tvheadend.dvr_failed = function(panel, index) {
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
         columns: {
             disp_title: {
-              renderer: tvheadend.displayWithYearRenderer(),
+                renderer: tvheadend.displayWithYearRenderer(),
             },
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -790,7 +790,7 @@ tvheadend.dvr_removed = function(panel, index) {
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
-            },
+            }
         },
         sort: {
           field: 'start_real',
