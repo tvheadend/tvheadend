@@ -183,6 +183,20 @@ tvheadend.dvrRowActions = function() {
     });
 }
 
+tvheadend.dvrChannelRenderer = function(st) {
+    return function(st) {
+        return function(v, meta, rec) {
+            if (v) {
+                var r = st.getById(v);
+                if (r) v = r.data.val;
+            }
+            if (!v)
+                v = rec.data['channelname'];
+            return v;
+        }
+    }
+}
+
 tvheadend.weekdaysRenderer = function(st) {
     return function(v) {
         var t = [];
@@ -224,11 +238,10 @@ tvheadend.filesizeRenderer = function(st) {
     }
 }
 
-
 tvheadend.displayDuplicate = function(v, meta, rec) {
     if (v == null)
         return '';
-    var is_dup = record.data['duplicate'];
+    var is_dup = rec.data['duplicate'];
     if (is_dup)
         return "<span class='x-epg-duplicate'>" + v + "</span>";
     else
@@ -593,12 +606,15 @@ tvheadend.dvr_finished = function(panel, index) {
             }
         },
         del: false,
-        list: 'disp_title,disp_extratext,episode_disp,channel,' +
+        list: 'disp_title,disp_extratext,episode_disp,channel,channelname,' +
               'start_real,stop_real,duration,filesize,copyright_year,' +
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
+            },
+            channel: {
+                renderer: tvheadend.dvrChannelRenderer(),
             },
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -709,12 +725,15 @@ tvheadend.dvr_failed = function(panel, index) {
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
-        list: 'disp_title,disp_extratext,episode_disp,channel,' +
+        list: 'disp_title,disp_extratext,episode_disp,channel,channelname,' +
               'image,copyright_year,start_real,stop_real,duration,filesize,status,' +
               'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
+            },
+            channel: {
+                renderer: tvheadend.dvrChannelRenderer(),
             },
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -784,12 +803,15 @@ tvheadend.dvr_removed = function(panel, index) {
         uilevel: 'expert',
         edit: { params: { list: tvheadend.admin ? "retention,owner,disp_title,disp_extratext,episode_disp,comment" : "retention,comment" } },
         del: true,
-        list: 'disp_title,disp_extratext,episode_disp,channel,image,' +
+        list: 'disp_title,disp_extratext,episode_disp,channel,channelname,image,' +
               'copyright_year,start_real,stop_real,duration,status,' +
               'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
+            },
+            channel: {
+                renderer: tvheadend.dvrChannelRenderer(),
             }
         },
         sort: {
