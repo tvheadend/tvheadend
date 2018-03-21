@@ -39,6 +39,10 @@
 #endif
 
 
+#define ECM_PARITY_DEFAULT              0
+#define ECM_PARITY_80EVEN_81ODD		1
+#define ECM_PARITY_81EVEN_80ODD         2
+
 typedef struct th_descrambler_data {
   TAILQ_ENTRY(th_descrambler_data) dd_link;
   int64_t dd_timestamp;
@@ -53,6 +57,7 @@ typedef struct th_descrambler_hint {
   uint16_t dh_mask;
   uint32_t dh_interval;
   uint32_t dh_paritycheck;
+  uint32_t dh_ecmparity;
   uint32_t dh_constcw: 1;
   uint32_t dh_quickecm: 1;
   uint32_t dh_multipid: 1;
@@ -224,6 +229,15 @@ descrambler_data_analyze(th_descrambler_runtime_t *dr,
 /*
  *
  */
+static struct strtab ecmparitytab[] = {
+  { "default",  ECM_PARITY_DEFAULT },
+  { "standard", ECM_PARITY_80EVEN_81ODD },
+  { "inverted", ECM_PARITY_81EVEN_80ODD },
+};
+
+/*
+ *
+ */
 static void
 descrambler_load_hints(htsmsg_t *m)
 {
@@ -245,13 +259,15 @@ descrambler_load_hints(htsmsg_t *m)
     hint.dh_multipid = htsmsg_get_bool_or_default(e, "multipid", 0);
     hint.dh_interval = htsmsg_get_s32_or_default(e, "interval", 10000);
     hint.dh_paritycheck = htsmsg_get_s32_or_default(e, "paritycheck", 20);
-    tvhinfo(LS_DESCRAMBLER, "adding CAID %04X/%04X as%s%s%s interval %ums pc %d (%s)",
+    hint.dh_ecmparity = str2val_def(htsmsg_get_str(e, "ecmparity"), ecmparitytab, ECM_PARITY_DEFAULT);
+    tvhinfo(LS_DESCRAMBLER, "adding CAID %04X/%04X as%s%s%s interval %ums pc %d ep %s (%s)",
                             hint.dh_caid, hint.dh_mask,
                             hint.dh_constcw ? " ConstCW" : "",
                             hint.dh_quickecm ? " QuickECM" : "",
                             hint.dh_multipid ? " MultiPID" : "",
                             hint.dh_interval,
                             hint.dh_paritycheck,
+                            val2str(hint.dh_ecmparity, ecmparitytab),
                             htsmsg_get_str(e, "name") ?: "unknown");
     dhint = malloc(sizeof(*dhint));
     *dhint = hint;
@@ -336,6 +352,7 @@ descrambler_service_start ( service_t *t )
   elementary_stream_t *st;
   caid_t *ca;
   int i, count, constcw = 0, multipid = 0, interval = 10000, paritycheck = 20;
+  int ecmparity = ECM_PARITY_DEFAULT;
 
   if (t->s_scrambled_pass)
     return;
@@ -352,6 +369,8 @@ descrambler_service_start ( service_t *t )
             if (hint->dh_multipid) multipid = 1;
             if (hint->dh_interval) interval = hint->dh_interval;
             if (hint->dh_paritycheck) paritycheck = hint->dh_paritycheck;
+            if (hint->dh_ecmparity != ECM_PARITY_DEFAULT)
+              ecmparity = hint->dh_ecmparity;
           }
         }
         count++;
@@ -391,6 +410,7 @@ descrambler_service_start ( service_t *t )
     dr->dr_ecm_key_margin = ms2mono(interval) / 5;
     dr->dr_key_const = constcw;
     dr->dr_key_multipid = multipid;
+    dr->dr_ecm_parity = ecmparity ?: ECM_PARITY_80EVEN_81ODD;
     if (constcw)
       tvhtrace(LS_DESCRAMBLER, "using constcw for \"%s\"", t->s_nicename);
     if (multipid)
@@ -1338,6 +1358,8 @@ descrambler_table_callback
             }
             if ((ptr[0] & 0xfe) == 0x80) { /* 0x80 = even, 0x81 = odd */
               j = ptr[0] & 1;
+              if (dr->dr_ecm_parity == ECM_PARITY_81EVEN_80ODD)
+                j ^= 1;
               dr->dr_ecm_start[j] = clk;
               if (dr->dr_quick_ecm) {
                 ki = 1 << (j + 6); /* 0x40 = even, 0x80 = odd */

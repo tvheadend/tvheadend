@@ -94,6 +94,7 @@ typedef struct th_descrambler_runtime {
   int      dr_ca_resolved;
   int      dr_ca_failed;
   int      dr_ca_fatal;
+  int      dr_ecm_parity;
   uint32_t dr_external:1;
   uint32_t dr_skip:1;
   uint32_t dr_quick_ecm:1;
