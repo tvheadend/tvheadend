@@ -767,9 +767,19 @@ service_find_instance
   lock_assert(&global_lock);
 
   /* Build list */
+  r = 0;
+  if (flags & SUBSCRIPTION_SWSERVICE) {
+    TAILQ_FOREACH(si, sil, si_link) {
+      next = TAILQ_NEXT(si, si_link);
+      if (next && next->si_s != si->si_s) {
+        r++;
+        break;
+      }
+    }
+  }
   TAILQ_FOREACH(si, sil, si_link) {
     si->si_mark = 1;
-    if (flags & SUBSCRIPTION_SWSERVICE) {
+    if (r && (flags & SUBSCRIPTION_SWSERVICE) != 0) {
       TAILQ_FOREACH(next, sil, si_link)
         if (next != si && si->si_s == next->si_s && si->si_error)
           next->si_error = MAX(next->si_error, si->si_error);
