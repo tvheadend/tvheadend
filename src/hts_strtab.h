@@ -42,7 +42,7 @@ struct strtab_str {
 static int str2val0(const char *str, const struct strtab tab[], int l)
      __attribute((unused));
 
-static int
+static inline int
 str2val0(const char *str, const struct strtab tab[], int l)
 {
   int i;
@@ -60,7 +60,7 @@ str2val0(const char *str, const struct strtab tab[], int l)
 static int str2val0_def(const char *str, struct strtab tab[], int l, int def)
      __attribute((unused));
 
-static int
+static inline int
 str2val0_def(const char *str, struct strtab tab[], int l, int def)
 {
   int i;
@@ -78,7 +78,7 @@ str2val0_def(const char *str, struct strtab tab[], int l, int def)
 static const char * val2str0(int val, const struct strtab tab[], int l)
      __attribute__((unused));
 
-static const char *
+static inline const char *
 val2str0(int val, const struct strtab tab[], int l)
 {
   int i;
