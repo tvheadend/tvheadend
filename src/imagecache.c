@@ -402,7 +402,7 @@ imagecache_init ( void )
   htsmsg_field_t *f;
   imagecache_image_t *img, *i;
   const char *url, *sha1;
-  uint32_t id;
+  int id;
 
   /* Init vars */
   imagecache_id             = 0;
@@ -450,8 +450,6 @@ imagecache_init ( void )
       }
       i = RB_INSERT_SORTED(&imagecache_by_id, img, id_link, id_cmp);
       assert(!i);
-      if (id > imagecache_id)
-        imagecache_id = id;
 #if ENABLE_IMAGECACHE
       if (!img->updated)
         imagecache_image_add(img);
@@ -594,10 +592,10 @@ imagecache_trigger( void )
 /*
  * Fetch a URLs ID
  */
-uint32_t
+int
 imagecache_get_id ( const char *url )
 {
-  uint32_t id = 0;
+  int id = 0;
   imagecache_image_t *i;
 
   lock_assert(&global_lock);
@@ -643,7 +641,7 @@ imagecache_get_id ( const char *url )
  * Get data
  */
 int
-imagecache_filename ( uint32_t id, char *name, size_t len )
+imagecache_filename ( int id, char *name, size_t len )
 {
   imagecache_image_t skel, *i;
   char *fn;

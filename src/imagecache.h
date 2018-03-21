@@ -42,8 +42,8 @@ void     imagecache_clean    ( void );
 void     imagecache_trigger  ( void );
 
 // Note: will return 0 if invalid (must serve original URL)
-uint32_t imagecache_get_id  ( const char *url );
+int      imagecache_get_id  ( const char *url );
 
-int      imagecache_filename ( uint32_t id, char *name, size_t len );
+int      imagecache_filename ( int id, char *name, size_t len );
 
 #endif /* __IMAGE_CACHE_H__ */

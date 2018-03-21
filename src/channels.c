@@ -1024,7 +1024,7 @@ channel_get_icon ( channel_t *ch )
              *picon  = config.picon_path,
              *icon   = ch->ch_icon,
              *chname, *icn;
-  uint32_t id, i, pick, prefer = config.prefer_picon ? 1 : 0;
+  int id, i, pick, prefer = config.prefer_picon ? 1 : 0;
   char c;
 
   if (tvh_str_default(icon, NULL) == NULL)
@@ -1629,7 +1629,7 @@ channel_tag_get_icon(channel_tag_t *ct)
 {
   static char buf[64];
   const char *icon  = ct->ct_icon;
-  uint32_t id;
+  int id;
 
   /* Lookup imagecache ID */
   if ((id = imagecache_get_id(icon))) {
