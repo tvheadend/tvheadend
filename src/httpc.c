@@ -45,7 +45,9 @@
 #include <sys/socket.h>
 #endif
 
+#if 0
 #define HTTPCLIENT_TESTSUITE 1
+#endif
 
 struct http_client_ssl {
   int      connected;
