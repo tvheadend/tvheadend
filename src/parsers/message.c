@@ -303,6 +303,7 @@ static void parser_input_start(parser_t *prs, streaming_message_t *sm)
     TAILQ_INSERT_TAIL(&set->set_filter, es, es_filter_link);
   }
 
+  prs->prs_pcr_pid = ss->ss_pcr_pid;
   prs->prs_current_pcr = PTS_UNSET;
   prs->prs_candidate_pcr = PTS_UNSET;
   prs->prs_current_pcr_guess = 0;
