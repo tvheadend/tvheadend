@@ -919,7 +919,7 @@ tvheadend.autorec_editor = function(panel, index) {
         },
         del: true,
         list: 'enabled,name,title,fulltext,channel,tag,start,start_window,' +
-              'weekdays,minduration,maxduration,btype,content_type,cat1,cat2,cat3' +
+              'weekdays,minduration,maxduration,record,btype,content_type,cat1,cat2,cat3' +
               'star_rating,pri,dedup,directory,config_name,owner,creator,comment',
         sort: {
           field: 'name',
