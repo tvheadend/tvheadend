@@ -608,7 +608,7 @@ service_destroy(service_t *t, int delconf)
 
   t->s_status = SERVICE_ZOMBIE;
 
-  elementary_set_clean(&t->s_components);
+  elementary_set_clean(&t->s_components, NULL);
 
   if (t->s_hbbtv) {
     htsmsg_destroy(t->s_hbbtv);

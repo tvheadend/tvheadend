@@ -62,7 +62,7 @@ void elementary_set_init
 /**
  *
  */
-void elementary_set_clean(elementary_set_t *set)
+void elementary_set_clean(elementary_set_t *set, service_t *t)
 {
   elementary_stream_t *st;
 
@@ -71,7 +71,7 @@ void elementary_set_clean(elementary_set_t *set)
     elementary_set_stream_destroy(set, st);
   free(set->set_nicename);
   set->set_nicename = NULL;
-  set->set_service = 0;
+  set->set_service = t;
 }
 
 /**

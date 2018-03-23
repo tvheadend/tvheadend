@@ -290,23 +290,24 @@ static void parser_clean_es(parser_es_t *pes)
 static void parser_input_start(parser_t *prs, streaming_message_t *sm)
 {
   streaming_start_t *ss = sm->sm_data;
+  elementary_set_t *set = &prs->prs_components;
   elementary_stream_t *es;
 
-  TAILQ_FOREACH(es, &prs->prs_components.set_all, es_link)
+  TAILQ_FOREACH(es, &set->set_all, es_link)
     parser_clean_es((parser_es_t *)es);
-  elementary_set_clean(&prs->prs_components);
+  elementary_set_clean(set, prs->prs_service);
 
-  elementary_stream_create_from_start(&prs->prs_components, ss, sizeof(parser_es_t));
-  TAILQ_FOREACH(es, &prs->prs_components.set_all, es_link) {
+  elementary_stream_create_from_start(set, ss, sizeof(parser_es_t));
+  TAILQ_FOREACH(es, &set->set_all, es_link) {
     parser_init_es((parser_es_t *)es, prs);
-    TAILQ_INSERT_TAIL(&prs->prs_components.set_filter, es, es_filter_link);
+    TAILQ_INSERT_TAIL(&set->set_filter, es, es_filter_link);
   }
 
   prs->prs_current_pcr = PTS_UNSET;
   prs->prs_candidate_pcr = PTS_UNSET;
   prs->prs_current_pcr_guess = 0;
   prs->prs_pcr_boundary = 90000;
-  if (elementary_stream_has_no_audio(&prs->prs_service->s_components, 1))
+  if (elementary_stream_has_no_audio(set, 1))
     prs->prs_pcr_boundary = 6*90000;
 
   streaming_target_deliver2(prs->prs_output, sm);
@@ -391,6 +392,6 @@ parser_destroy(streaming_target_t *pad)
     if (pes->es_psi.mt_name)
       dvb_table_parse_done(&pes->es_psi);
   }
-  elementary_set_clean(&prs->prs_components);
+  elementary_set_clean(&prs->prs_components, NULL);
   free(prs);
 }
