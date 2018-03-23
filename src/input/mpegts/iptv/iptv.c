@@ -1070,6 +1070,7 @@ iptv_network_create0
     in->in_remove_args = strdup("ticket");
   if (!mpegts_network_create0((mpegts_network_t *)in, idc,
                               uuid, NULL, conf)) {
+    free(in->in_remove_args);
     free(in);
     return NULL;
   }
