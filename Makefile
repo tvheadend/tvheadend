@@ -2,7 +2,7 @@
 #  Tvheadend streaming server.
 #  Copyright (C) 2007-2009 Andreas Öman
 #  Copyright (C) 2012-2015 Adam Sutton
-#  Copyright (C) 2012-2017 Jaroslav Kysela
+#  Copyright (C) 2012-2018 Jaroslav Kysela
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -602,22 +602,6 @@ SRCS-TSDEBUG = \
 	src/descrambler/tsdebugcw.c
 SRCS-${CONFIG_TSDEBUG} += $(SRCS-TSDEBUG)
 I18N-C += $(SRCS-TSDEBUG)
-
-# FFdecsa
-ifneq ($(CONFIG_DVBCSA),yes)
-FFDECSA-$(CONFIG_CAPMT)   = yes
-FFDECSA-$(CONFIG_CWC)     = yes
-FFDECSA-$(CONFIG_CONSTCW) = yes
-endif
-
-ifeq ($(FFDECSA-yes),yes)
-SRCS-yes += src/descrambler/ffdecsa/ffdecsa_interface.c \
-	src/descrambler/ffdecsa/ffdecsa_int.c
-SRCS-${CONFIG_MMX}  += src/descrambler/ffdecsa/ffdecsa_mmx.c
-SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
-${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
-${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
-endif
 
 # crypto algorithms
 SRCS-${CONFIG_SSL} += src/descrambler/algo/libaesdec.c

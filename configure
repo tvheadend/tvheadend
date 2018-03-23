@@ -66,7 +66,6 @@ OPTIONS=(
   "tvhcsa:auto"
   "bundle:no"
   "pngquant:no"
-  "dvbcsa:no"
   "kqueue:no"
   "dbus_1:auto"
   "android:no"
@@ -648,10 +647,11 @@ fi
 #
 if enabled cwc || enabled cccam || enabled capmt || enabled constcw; then
   enable tvhcsa
+  enable dvbcsa
   if enabled dvbcsa; then
     (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\
      check_cc_lib    dvbcsa dvbcsa_l) ||\
-    die "Failed to find dvbcsa support (use --disable-dvbcsa)"
+    die "Failed to find dvbcsa library"
     LDFLAGS="$LDFLAGS -ldvbcsa"
   fi
 fi
