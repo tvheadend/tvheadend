@@ -621,27 +621,43 @@ rtsp_start
           }
         }
       }
-#if ENABLE_IPTV
-      if (idnode_is_instance(&mn->mn_id, &iptv_network_class)) {
-        LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link) {
-          if (rs->dmc.dmc_fe_type == DVB_TYPE_T &&
-              deltaU32(rs->dmc.dmc_fe_freq, ((iptv_mux_t *)mux)->mm_iptv_satip_dvbt_freq) < 2000)
-            break;
-          if (rs->dmc.dmc_fe_type == DVB_TYPE_C &&
-              deltaU32(rs->dmc.dmc_fe_freq, ((iptv_mux_t *)mux)->mm_iptv_satip_dvbc_freq) < 2000)
-            break;
-          if (rs->dmc.dmc_fe_type == DVB_TYPE_S &&
-              deltaU32(rs->dmc.dmc_fe_freq, ((iptv_mux_t *)mux)->mm_iptv_satip_dvbs_freq) < 2000)
-            break;
-          }
-        if (mux) {
+    }
+    // MUX not found, search for a SAT>IP frequency remap
+    LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+      LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link) {
+        if (rs->dmc.dmc_fe_type == DVB_TYPE_T &&
+            deltaU32(rs->dmc.dmc_fe_freq, mux->mm_remap_satip_dvbt_freq) < 2000)
+          break;
+        if (rs->dmc.dmc_fe_type == DVB_TYPE_C &&
+            deltaU32(rs->dmc.dmc_fe_freq, mux->mm_remap_satip_dvbc_freq) < 2000)
+          break;
+        if (rs->dmc.dmc_fe_type == DVB_TYPE_S &&
+            deltaU32(rs->dmc.dmc_fe_freq, mux->mm_remap_satip_dvbs_freq) < 2000)
+          break;
+      }
+      if (mux) {
+        if (idnode_is_instance(&mn->mn_id, &dvb_network_class)) {
+          dmc = ((dvb_mux_t *)mux)->lm_tuning;
+          rs->perm_lock = 0;
+        } else if (idnode_is_instance(&mn->mn_id, &iptv_network_class)) {
           dmc = rs->dmc;
           rs->perm_lock = 1;
-          break;
+        } else if (idnode_is_instance(&mn->mn_id, &mpegts_network_class)) {
+          dmc = rs->dmc;
+          rs->perm_lock = 1;
+        } else {
+          // TODO: Unkown Network Type to Remap
+          tvhwarn(LS_SATIPS, "Error! Found a REMAP for a MUX type (%s) not implemented.", mn->mn_id.in_class->ic_class);
+          mux = NULL;
+          buf[0]='\0';
         }
+        //  dvb_mux_conf_str(&dmc, buf, sizeof(buf));
+        mpegts_mux_nice_name(mux, buf, sizeof(buf));
+        tvhdebug(LS_SATIPS, "MUX remapping -> FREQ: %i to MUX: %s", rs->dmc.dmc_fe_freq, buf);
+        break;
       }
-#endif
     }
+
     if (mux == NULL && mn2 &&
         (rtsp_muxcnf == MUXCNF_AUTO || rtsp_muxcnf == MUXCNF_KEEP)) {
       dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));

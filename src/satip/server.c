@@ -150,22 +150,20 @@ satip_server_http_xml(http_connection_t *hc)
       dvbc++;
     else if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_t_class))
       atsc++;
-#if ENABLE_IPTV
-    else if (idnode_is_instance(&mn->mn_id, &iptv_network_class)) {
-      mpegts_mux_t *mm;
-      LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
-        if (((iptv_mux_t *)mm)->mm_iptv_satip_dvbt_freq) {
-          dvbt++;
-        }
-        if (((iptv_mux_t *)mm)->mm_iptv_satip_dvbc_freq) {
-          dvbc++;
-        }
-        if (((iptv_mux_t *)mm)->mm_iptv_satip_dvbs_freq) {
-          dvbs++;
-        }
+  }
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    mpegts_mux_t *mux;
+    LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link) {
+      if (mux->mm_remap_satip_dvbt_freq) {
+        dvbt++;
+      }
+      if (mux->mm_remap_satip_dvbc_freq) {
+        dvbc++;
+      }
+      if (mux->mm_remap_satip_dvbs_freq) {
+        dvbs++;
       }
     }
-#endif
   }
   // The SAT>IP specification only supports 1-9 tuners (1 digit)!
   if (dvbt > 9) dvbt = 9;
