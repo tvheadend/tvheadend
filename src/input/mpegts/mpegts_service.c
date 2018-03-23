@@ -535,7 +535,7 @@ mpegts_service_channel_number ( service_t *s )
       r = ms->s_dvb_opentv_chnum * CHANNEL_SPLIT;
   }
   if (r <= 0 && ms->s_dvb_mux->mm_network->mn_sid_chnum)
-    r = ms->s_components.set_service_id * CHANNEL_SPLIT;
+    r = service_id16(ms) * CHANNEL_SPLIT;
   return r;
 }
 
@@ -630,7 +630,7 @@ mpegts_service_channel_icon ( service_t *s )
     snprintf(prop_sbuf, PROP_SBUF_LEN,
              "picon://1_0_%X_%X_%X_%X_%X_0_0_0.png",
              config.picon_scheme == PICON_ISVCTYPE ? 1 : ms->s_dvb_servicetype,
-             ms->s_components.set_service_id,
+             service_id16(ms),
              ms->s_dvb_mux->mm_tsid,
              ms->s_dvb_mux->mm_onid,
              hash);
@@ -701,7 +701,7 @@ mpegts_service_find_e2(uint32_t stype, uint32_t sid, uint32_t tsid,
       if (mm->mm_tsid != tsid || mm->mm_onid != onid) continue;
       if (!mpegts_service_match_mux((dvb_mux_t *)mm, hash, idc)) continue;
       LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-        if (s->s_components.set_service_id == sid)
+        if (service_id16(s) == sid)
           return (service_t *)s;
     }
   }
@@ -848,9 +848,7 @@ mpegts_service_create0
   pthread_mutex_unlock(&s->s_stream_mutex);
 
   tvhdebug(LS_MPEGTS, "%s - add service %04X %s",
-           mm->mm_nicename,
-           s->s_components.set_service_id,
-           s->s_dvb_svcname);
+           mm->mm_nicename, service_id16(s), s->s_dvb_svcname);
 
   /* Bouquet */
   mpegts_network_bouquet_trigger(mn, 1);
@@ -884,7 +882,7 @@ mpegts_service_find
 
   /* Find existing service */
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
-    if (s->s_components.set_service_id == sid) {
+    if (service_id16(s) == sid) {
       if (pmt_pid && pmt_pid != s->s_components.set_pmt_pid) {
         s->s_components.set_pmt_pid = pmt_pid;
         if (save) *save = 1;
@@ -944,8 +942,8 @@ mpegts_service_autoenable( mpegts_service_t *s, const char *where )
   if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
     tvhinfo(LS_MPEGTS, "enabling service %s [sid %04X/%d] (found in %s)",
             s->s_nicename,
-            s->s_components.set_service_id,
-            s->s_components.set_service_id,
+            service_id16(s),
+            service_id16(s),
             where);
     service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
   }

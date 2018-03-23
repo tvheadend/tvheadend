@@ -73,7 +73,7 @@ tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
     if (crc != tvh_crc32(pkt, pos, 0x859aa5ba))
       return;
     LIST_FOREACH(t, &mm->mm_services, s_dvb_mux_link)
-      if (t->s_components.set_service_id == sid) break;
+      if (service_id16(t) == sid) break;
     if (!t)
       return;
     pos = 4 + 24 + 4;

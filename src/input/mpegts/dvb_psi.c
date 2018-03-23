@@ -749,7 +749,7 @@ dvb_freesat_completed
   /* Find all "fallback" services and region specific */
   TAILQ_FOREACH(bs, &bi->services, link) {
     total++;
-    sid = bs->svc->s_components.set_service_id;
+    sid = service_id16(bs->svc);
     TAILQ_FOREACH(fs, &bi->fservices, link)
       if (fs->sid == sid) {
         fs->svc = bs->svc;
@@ -933,7 +933,7 @@ dvb_bskyb_local_channels
     }
 
     TAILQ_FOREACH(bs, &bi->services, link)
-      if (bs->svc->s_components.set_service_id == sid)
+      if (service_id16(bs->svc) == sid)
         break;
     if (mm && !bs) {
       s = mpegts_service_find(mm, sid, 0, 0, NULL);

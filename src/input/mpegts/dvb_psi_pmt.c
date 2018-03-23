@@ -573,7 +573,7 @@ dvb_pmt_callback
 
   /* Find service */
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-    if (s->s_components.set_service_id == sid) break;
+    if (service_id16(s) == sid) break;
   if (!s) return -1;
 
   /* Process */

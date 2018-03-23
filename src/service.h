@@ -389,11 +389,9 @@ typedef struct service {
 } service_t;
 
 
-
-
-
 void service_init(void);
 void service_done(void);
+
 
 int service_start(service_t *t, int instance, int weight, int flags,
                   int timeout, int postpone);
@@ -427,12 +425,17 @@ void service_settings_write(service_t *t);
 
 const char *service_servicetype_txt(service_t *t);
 
+static inline uint16_t service_id16(void *t)
+  { return ((service_t *)t)->s_components.set_service_id; }
+
 int service_is_sdtv(service_t *t);
 int service_is_uhdtv(service_t *t);
 int service_is_hdtv(service_t *t);
 int service_is_radio(service_t *t);
 int service_is_other(service_t *t);
-#define service_is_tv(s) (service_is_hdtv(s) || service_is_sdtv(s) || service_is_uhdtv(s))
+
+static inline int service_is_tv( service_t *s)
+  { return service_is_hdtv(s) || service_is_sdtv(s) || service_is_uhdtv(s); }
 
 int service_is_encrypted ( service_t *t );
 
