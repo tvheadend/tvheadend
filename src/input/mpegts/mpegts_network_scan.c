@@ -423,6 +423,7 @@ tsid_lookup:
                                             mux, NULL, NULL);
         if (mm) {
           char buf[256];
+          mpegts_mux_post_create(mm);
           idnode_changed(&mm->mm_id);
           mn->mn_display_name(mn, buf, sizeof(buf));
           tvhinfo(LS_MPEGTS, "fastscan mux add to network '%s'", buf);

@@ -311,6 +311,7 @@ skip_url:
     htsmsg_add_s32(conf, "spriority", smuxprio);
 
   im = iptv_mux_create0(in, NULL, conf);
+  mpegts_mux_post_create((mpegts_mux_t *)im);
   htsmsg_destroy(conf);
 
   if (im) {

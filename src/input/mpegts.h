@@ -357,7 +357,7 @@ struct mpegts_network
     (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
   const idclass_t*  (*mn_mux_class)   (mpegts_network_t*);
   mpegts_mux_t *    (*mn_mux_create2) (mpegts_network_t *mn, htsmsg_t *conf);
- void              (*mn_scan)        (mpegts_network_t*);
+  void              (*mn_scan)        (mpegts_network_t*);
 
   /*
    * Configuration
@@ -884,6 +884,8 @@ mpegts_mux_t *mpegts_mux_create0
 #define mpegts_mux_create1(uuid, mn, onid, tsid, conf)\
   mpegts_mux_create0(calloc(1, sizeof(mpegts_mux_t)), &mpegts_mux_class, uuid,\
                      mn, onid, tsid, conf)
+
+mpegts_mux_t *mpegts_mux_post_create(mpegts_mux_t *mm);
 
 static inline mpegts_mux_t *mpegts_mux_find0(tvh_uuid_t *uuid)
   { return idnode_find0(uuid, &mpegts_mux_class, NULL); }

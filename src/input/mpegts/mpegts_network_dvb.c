@@ -83,8 +83,10 @@ dvb_network_scanfile_set ( dvb_network_t *ln, const char *id )
     if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, 0, 0))) {
       mm = dvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
                            dmc, NULL, NULL);
-      if (mm)
+      if (mm) {
+        mpegts_mux_post_create((mpegts_mux_t *)mm);
         idnode_changed(&mm->mm_id);
+      }
       if (tvhtrace_enabled()) {
         char buf[128];
         dvb_mux_conf_str(dmc, buf, sizeof(buf));
@@ -706,6 +708,7 @@ dvb_network_create_mux
     }
     if (save) {
       mm = dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
+      mpegts_mux_post_create((mpegts_mux_t *)mm);
       if (tvhtrace_enabled()) {
         char buf[128];
         dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
@@ -835,9 +838,10 @@ dvb_network_mux_create2
   ( mpegts_network_t *mn, htsmsg_t *conf )
 {
   dvb_network_t *ln = (dvb_network_t*)mn;
-  return (mpegts_mux_t*)
-    dvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
-                    NULL, NULL, conf);
+  dvb_mux_t *mm;
+  mm = dvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
+                       NULL, NULL, conf);
+  return mpegts_mux_post_create((mpegts_mux_t *)mm);
 }
 
 /* ****************************************************************************
@@ -849,6 +853,7 @@ dvb_network_create0
   ( const char *uuid, const idclass_t *idc, htsmsg_t *conf )
 {
   dvb_network_t *ln;
+  dvb_mux_t *lm;
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
   const char *s;
@@ -883,7 +888,8 @@ dvb_network_create0
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
-      (void)dvb_mux_create1(ln, f->hmf_name, e);
+      lm = dvb_mux_create1(ln, f->hmf_name, e);
+      mpegts_mux_post_create((mpegts_mux_t *)lm);
     }
     htsmsg_destroy(c);
   }

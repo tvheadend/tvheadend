@@ -150,7 +150,7 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
   iptv_input_t *mi2;
   iptv_network_t *in = (iptv_network_t *)mm->mm_network;
   iptv_thread_pool_t *pool;
-  
+
   TAILQ_FOREACH(pool, &iptv_tpool, link) {
     mi2 = pool->input;
     pthread_mutex_lock(&mi2->mi_output_lock);
@@ -1017,7 +1017,8 @@ static mpegts_mux_t *
 iptv_network_create_mux2
   ( mpegts_network_t *mn, htsmsg_t *conf )
 {
-  return (mpegts_mux_t*)iptv_mux_create0((iptv_network_t*)mn, NULL, conf);
+  iptv_mux_t *im = iptv_mux_create0((iptv_network_t*)mn, NULL, conf);
+  return mpegts_mux_post_create((mpegts_mux_t *)im);
 }
 
 static void
@@ -1059,6 +1060,7 @@ iptv_network_create0
   ( const char *uuid, htsmsg_t *conf, const idclass_t *idc )
 {
   iptv_network_t *in = calloc(1, sizeof(*in));
+  iptv_mux_t *im;
   htsmsg_t *c;
   char ubuf[UUID_HEX_SIZE];
 
@@ -1098,7 +1100,8 @@ iptv_network_create0
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
-      iptv_mux_create0(in, f->hmf_name, e);
+      im = iptv_mux_create0(in, f->hmf_name, e);
+      mpegts_mux_post_create((mpegts_mux_t *)im);
     }
     htsmsg_destroy(c);
   }
@@ -1113,7 +1116,13 @@ static mpegts_network_t *
 iptv_network_builder
   ( const idclass_t *idc, htsmsg_t *conf )
 {
-  return (mpegts_network_t*)iptv_network_create0(NULL, conf, idc);
+  mpegts_network_t *mn;
+  iptv_thread_pool_t *pool;
+
+  mn = (mpegts_network_t *)iptv_network_create0(NULL, conf, idc);
+  TAILQ_FOREACH(pool, &iptv_tpool, link)
+    mpegts_input_add_network((mpegts_input_t *)pool->input, mn);
+  return mn;
 }
 
 /* **************************************************************************

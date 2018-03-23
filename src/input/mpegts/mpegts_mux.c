@@ -1197,8 +1197,6 @@ mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,
     mpegts_network_t *mn, uint16_t onid, uint16_t tsid, htsmsg_t *conf )
 {
-  char buf[256];
-
   if (idnode_insert(&mm->mm_id, uuid, class, 0)) {
     if (uuid)
       tvherror(LS_MPEGTS, "invalid mux uuid '%s'", uuid);
@@ -1251,8 +1249,25 @@ mpegts_mux_create0
   if (conf)
     idnode_load(&mm->mm_id, conf);
 
+  return mm;
+}
+
+mpegts_mux_t *
+mpegts_mux_post_create ( mpegts_mux_t *mm )
+{
+  mpegts_network_t *mn;
+  char buf[256];
+
+  if (mm == NULL)
+    return NULL;
+
+  mn = mm->mm_network;
   if (mm->mm_enabled == MM_IGNORE)
     mm->mm_scan_result = MM_SCAN_IGNORE;
+
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
+  tvhtrace(LS_MPEGTS, "%s - created", buf);
+  mm->mm_nicename = strdup(buf);
 
   /* Initial scan */
   if (mm->mm_scan_result == MM_SCAN_NONE || !mn->mn_skipinitscan)
@@ -1261,10 +1276,6 @@ mpegts_mux_create0
   else if (mm->mm_network->mn_idlescan)
     mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE,
                                   SUBSCRIPTION_IDLESCAN, 10);
-
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace(LS_MPEGTS, "%s - created", buf);
-  mm->mm_nicename = strdup(buf);
 
   return mm;
 }
