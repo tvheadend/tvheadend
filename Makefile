@@ -901,3 +901,24 @@ $(ROOTDIR)/data/dvb-scan/dvb-s/.stamp: $(ROOTDIR)/data/satellites.xml \
 
 .PHONY: satellites_xml
 satellites_xml: $(ROOTDIR)/data/dvb-scan/dvb-s/.stamp
+
+#
+# perf
+#
+
+PERF_DATA = /tmp/tvheadend.perf.data
+PERF_SLEEP ?= 30
+
+$(PERF_DATA): FORCE
+	perf record -F 16000 -g -p $$(pidof tvheadend) -o $(PERF_DATA) sleep $(PERF_SLEEP)
+
+.PHONY: perf-record
+perf-record: $(PERF_DATA)
+
+.PHONY: perf-graph
+perf-graph:
+	perf report --stdio -g graph -i $(PERF_DATA)
+
+.PHONY: perf-report
+perf-report:
+	perf report --stdio -g none -i $(PERF_DATA)
