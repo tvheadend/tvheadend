@@ -969,8 +969,6 @@ mpegts_input_started_mux
 {
   mpegts_mux_t *mm = mmi->mmi_mux;
 
-  tsdebug_started_mux(mi, mm);
-
   /* Deliver first TS packets as fast as possible */
   atomic_set_s64(&mi->mi_last_dispatch, 0);
 
@@ -1023,8 +1021,6 @@ mpegts_input_stopped_mux
   }
   notify_reload("input_status");
   mpegts_input_dbus_notify(mi, 0);
-
-  tsdebug_stopped_mux(mi, mm);
 }
 
 static int
@@ -1371,18 +1367,11 @@ mpegts_input_process
   int table_wakeup = 0;
   mpegts_mux_t *mm = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi;
-#if ENABLE_TSDEBUG
-  off_t tsdebug_pos;
-#endif
 
   if (mm == NULL || (mmi = mm->mm_active) == NULL)
     return 0;
 
   assert(mm == mmi->mmi_mux);
-
-#if ENABLE_TSDEBUG
-  tsdebug_pos = mm->mm_tsdebug_pos;
-#endif
 
   /* Process */
   assert((len % 188) == 0);
@@ -1411,9 +1400,8 @@ mpegts_input_process
 
     /* Ignore NULL packets */
     if (pid == 0x1FFF) {
-#if ENABLE_TSDEBUG
-      tsdebug_check_tspkt(mm, tsb, llen);
-#endif
+      if (tsb[4] == 'T' && tsb[5] == 'V')
+        tsdebug_check_tspkt(mm, tsb, llen);
       goto done;
     }
 
@@ -1524,9 +1512,6 @@ mpegts_input_process
 done:
     tsb += llen;
     len -= llen;
-#if ENABLE_TSDEBUG
-    mm->mm_tsdebug_pos += llen;
-#endif
   }
 
   /* Raw stream */
@@ -1541,29 +1526,6 @@ done:
     streaming_pad_deliver(&mmi->mmi_streaming_pad, streaming_msg_clone(&sm));
     pktbuf_ref_dec(pb);
   }
-#if ENABLE_TSDEBUG
-  if (mm->mm_tsdebug_fd >= 0 || mm->mm_tsdebug_fd2 >= 0) {
-    tsdebug_packet_t *tp, *tp_next;
-    off_t pos = 0;
-    size_t used = tsb - mpkt->mp_data;
-    pthread_mutex_lock(&mm->mm_tsdebug_lock);
-    for (tp = TAILQ_FIRST(&mm->mm_tsdebug_packets); tp; tp = tp_next) {
-      tp_next = TAILQ_NEXT(tp, link);
-      assert((tp->pos % 188) == 0);
-      assert(tp->pos >= tsdebug_pos && tp->pos < tsdebug_pos + used);
-      if (mm->mm_tsdebug_fd >= 0) {
-        tvh_write(mm->mm_tsdebug_fd, mpkt->mp_data + pos, tp->pos - tsdebug_pos - pos);
-        tvh_write(mm->mm_tsdebug_fd, tp->pkt, 188);
-      }
-      pos = tp->pos - tsdebug_pos;
-      TAILQ_REMOVE(&mm->mm_tsdebug_packets, tp, link);
-      free(tp);
-    }
-    if (pos < used && mm->mm_tsdebug_fd >= 0)
-      tvh_write(mm->mm_tsdebug_fd, mpkt->mp_data + pos, used - pos);
-    pthread_mutex_unlock(&mm->mm_tsdebug_lock);
-  }
-#endif
 
   if (mpkt->mp_cc_restart) {
     LIST_FOREACH(s, &mm->mm_transports, s_active_link)

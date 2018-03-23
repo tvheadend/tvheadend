@@ -1456,7 +1456,6 @@ satip_frontend_rtp_decode
     }
   } else {
 wrdata:
-    tsdebug_write((mpegts_mux_t *)lfe->sf_curmux, p + pos, len);
     sbuf_append(&lfe->sf_sbuf, p + pos, len);
   }
 next:

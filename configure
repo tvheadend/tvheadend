@@ -69,7 +69,6 @@ OPTIONS=(
   "kqueue:no"
   "dbus_1:auto"
   "android:no"
-  "tsdebug:no"
   "gtimer_check:no"
   "slow_memoryinfo:no"
   "libsystemd_daemon:no"
@@ -722,13 +721,6 @@ if enabled_or_auto dbus_1; then
   elif enabled dbus-1; then
     die "DBus-1 development support not found (use --disable-dbus-1)"
   fi
-fi
-
-#
-# TSDebug
-#
-if enabled_or_auto tsdebug; then
-  enable mpegts_dvb
 fi
 
 #

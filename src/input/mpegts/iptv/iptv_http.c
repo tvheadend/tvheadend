@@ -318,7 +318,6 @@ iptv_http_data
   } else {
     sbuf_append(&im->mm_iptv_buffer, buf, len);
   }
-  tsdebug_write((mpegts_mux_t *)im, buf, len);
   hp->off += len;
 
   if (hp->hls_url && hp->off == 0 && len >= 2*188) {

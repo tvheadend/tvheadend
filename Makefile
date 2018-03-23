@@ -387,7 +387,9 @@ SRCS-MPEGTS = \
 	src/input/mpegts/dvb_psi.c \
 	src/input/mpegts/fastscan.c \
 	src/input/mpegts/mpegts_mux_sched.c \
-        src/input/mpegts/mpegts_network_scan.c
+        src/input/mpegts/mpegts_network_scan.c \
+        src/input/mpegts/mpegts_tsdebug.c \
+        src/descrambler/tsdebugcw.c
 SRCS-$(CONFIG_MPEGTS) += $(SRCS-MPEGTS)
 I18N-C += $(SRCS-MPEGTS)
 
@@ -598,13 +600,6 @@ SRCS-DDCI = \
 	src/input/mpegts/linuxdvb/linuxdvb_ddci.c
 SRCS-${CONFIG_DDCI} += $(SRCS-DDCI)
 I18N-C += $(SRCS-DDCI)
-
-# TSDEBUGCW
-SRCS-TSDEBUG = \
-	src/input/mpegts/mpegts_tsdebug.c \
-	src/descrambler/tsdebugcw.c
-SRCS-${CONFIG_TSDEBUG} += $(SRCS-TSDEBUG)
-I18N-C += $(SRCS-TSDEBUG)
 
 # crypto algorithms
 SRCS-${CONFIG_SSL} += src/descrambler/algo/libaesdec.c

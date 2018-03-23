@@ -1,6 +1,6 @@
 /*
  *  Tvheadend - MPEGTS debug output
- *  Copyright (C) 2015,2016,2017 Jaroslav Kysela
+ *  Copyright (C) 2015,2016,2017,2018 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,54 +19,34 @@
 
 #include "input.h"
 
-#include <fcntl.h>
-#include <sys/stat.h>
-
 void
-tsdebug_started_mux
-  ( mpegts_input_t *mi, mpegts_mux_t *mm )
+tsdebug_encode_keys
+  ( uint8_t *dst, uint16_t sid, uint16_t pid,
+    uint8_t keytype, uint8_t keylen, uint8_t *even, uint8_t *odd )
 {
-  extern char *tvheadend_tsdebug;
-  static const char *tmpdir = "/tmp/tvheadend.tsdebug/";
-  char path[PATH_MAX];
-  struct stat st;
-  if (!tvheadend_tsdebug && !stat(tmpdir, &st) && (st.st_mode & S_IFDIR) != 0)
-    tvheadend_tsdebug = (char *)tmpdir;
-  if (tvheadend_tsdebug && !strcmp(tvheadend_tsdebug, tmpdir) && stat(tmpdir, &st))
-    tvheadend_tsdebug = NULL;
-  if (tvheadend_tsdebug) {
-    snprintf(path, sizeof(path), "%s/%s-%li-%p-mux.ts", tvheadend_tsdebug,
-             mm->mm_nicename, (long)mono2sec(mclk()), mi);
-    mm->mm_tsdebug_fd = tvh_open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-    if (mm->mm_tsdebug_fd < 0)
-      tvherror(LS_TSDEBUG, "unable to create file '%s' (%i)", path, errno);
-    snprintf(path, sizeof(path), "%s/%s-%li-%p-input.ts", tvheadend_tsdebug,
-             mm->mm_nicename, (long)mono2sec(mclk()), mi);
-    mm->mm_tsdebug_fd2 = tvh_open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-    if (mm->mm_tsdebug_fd2 < 0)
-      tvherror(LS_TSDEBUG, "unable to create file '%s' (%i)", path, errno);
-  } else {
-    mm->mm_tsdebug_fd = -1;
-    mm->mm_tsdebug_fd2 = -1;
-  }
-}
+  uint32_t pos = 0, crc;
 
-void
-tsdebug_stopped_mux
-  ( mpegts_input_t *mi, mpegts_mux_t *mm )
-{
-  tsdebug_packet_t *tp;
-  if (mm->mm_tsdebug_fd >= 0)
-    close(mm->mm_tsdebug_fd);
-  if (mm->mm_tsdebug_fd2 >= 0)
-    close(mm->mm_tsdebug_fd2);
-  mm->mm_tsdebug_fd = -1;
-  mm->mm_tsdebug_fd2 = -1;
-  mm->mm_tsdebug_pos = 0;
-  while ((tp = TAILQ_FIRST(&mm->mm_tsdebug_packets)) != NULL) {
-    TAILQ_REMOVE(&mm->mm_tsdebug_packets, tp, link);
-    free(tp);
-  }
+  memset(dst, 0xff, 188);
+  dst[pos++] = 0x47; /* sync byte */
+  dst[pos++] = 0x1f; /* PID MSB */
+  dst[pos++] = 0xff; /* PID LSB */
+  dst[pos++] = 0x00; /* CC */
+  memcpy(dst + pos, "TVHeadendDescramblerKeys", 24);
+  dst += 24;
+  dst[pos++] = keytype;
+  dst[pos++] = keylen;
+  dst[pos++] = (sid >> 8) & 0xff;
+  dst[pos++] = sid & 0xff;
+  dst[pos++] = (pid >> 8) & 0xff;
+  dst[pos++] = pid & 0xff;
+  memcpy(dst + pos, even, keylen);
+  memcpy(dst + pos + keylen, odd, keylen);
+  pos += 2 * keylen;
+  crc = tvh_crc32(dst, pos, 0x859aa5ba);
+  dst[pos++] = (crc >> 24) & 0xff;
+  dst[pos++] = (crc >> 16) & 0xff;
+  dst[pos++] = (crc >> 8) & 0xff;
+  dst[pos++] = crc & 0xff;
 }
 
 void
@@ -93,7 +73,7 @@ tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
     if (crc != tvh_crc32(pkt, pos, 0x859aa5ba))
       return;
     LIST_FOREACH(t, &mm->mm_services, s_dvb_mux_link)
-      if (t->s_dvb_service_id == sid) break;
+      if (t->s_components.set_service_id == sid) break;
     if (!t)
       return;
     pos = 4 + 24 + 4;

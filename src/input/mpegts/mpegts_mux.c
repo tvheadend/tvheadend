@@ -1248,11 +1248,6 @@ mpegts_mux_create0
   mm->mm_last_pid            = -1;
   mm->mm_created             = gclk();
 
-#if ENABLE_TSDEBUG
-  pthread_mutex_init(&mm->mm_tsdebug_lock, NULL);
-  mm->mm_tsdebug_fd = mm->mm_tsdebug_fd2 = -1;
-#endif
-
   /* Configuration */
   if (conf)
     idnode_load(&mm->mm_id, conf);

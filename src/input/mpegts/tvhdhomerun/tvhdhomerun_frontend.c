@@ -183,7 +183,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
     if (nfds < 1) continue;
     if (ev[0].ptr != hfe) break;
 
-    if((r = sbuf_tsdebug_read(mmi->mmi_mux, &sb, sockfd)) < 0) {
+    if((r = sbuf_read(&sb, sockfd)) < 0) {
       /* whoopsy */
       if(ERRNO_AGAIN(errno))
         continue;

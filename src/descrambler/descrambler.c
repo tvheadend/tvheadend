@@ -677,7 +677,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
 
   if (j >= DESCRAMBLER_MAX_KEYS) {
     tvherror(LS_DESCRAMBLER, "too many keys");
-    goto fin;
+    goto end;
   }
 
   if (pid == 0)
@@ -688,7 +688,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
 
   if (tvhcsa_set_type(&tk->key_csa, type) < 0) {
     if (tk->key_type_overwritten)
-      goto fin;
+      goto end;
     if (type == DESCRAMBLER_CSA_CBC && tk->key_csa.csa_type == DESCRAMBLER_DES_NCB) {
       tvhwarn(LS_DESCRAMBLER,
               "Keep key%s type %s (requested %s) for service \"%s\", check your caclient",
@@ -704,7 +704,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
     tvhcsa_destroy(&tk->key_csa);
     tvhcsa_init(&tk->key_csa);
     if (tvhcsa_set_type(&tk->key_csa, type) < 0)
-      goto fin;
+      goto end;
     tk->key_valid = 0;
   }
 
@@ -724,7 +724,7 @@ cont:
         td->td_ecm_idle(td);
         pthread_mutex_lock(&t->s_stream_mutex);
       }
-      goto fin;
+      goto end;
     }
 
   if (even && memcmp(empty, even, tk->key_csa.csa_keylen)) {
@@ -803,50 +803,6 @@ cont:
              dr->dr_key_const ? " (const)" : "");
   }
 
-fin:
-#if ENABLE_TSDEBUG
-  if (j) {
-    tsdebug_packet_t *tp = malloc(sizeof(*tp));
-    uint16_t keylen = tk->key_csa.csa_keylen;
-    mpegts_service_t *ms = (mpegts_service_t *)t;
-    uint16_t sid = ms->s_dvb_service_id;
-    uint32_t pos = 0, crc;
-    mpegts_mux_t *mm = ms->s_dvb_mux;
-    mpegts_mux_instance_t *mmi = mm ? mm->mm_active : NULL;
-    mpegts_input_t *mi = mmi ? mmi->mmi_input : NULL;
-    if (mi == NULL || (mm->mm_tsdebug_fd < 0 && mm->mm_tsdebug_fd2 < 0)) {
-      free(tp);
-      goto end;
-    }
-    pthread_mutex_unlock(&t->s_stream_mutex);
-    memset(tp->pkt, 0xff, sizeof(tp->pkt));
-    tp->pkt[pos++] = 0x47; /* sync byte */
-    tp->pkt[pos++] = 0x1f; /* PID MSB */
-    tp->pkt[pos++] = 0xff; /* PID LSB */
-    tp->pkt[pos++] = 0x00; /* CC */
-    memcpy(tp->pkt + pos, "TVHeadendDescramblerKeys", 24);
-    pos += 24;
-    tp->pkt[pos++] = type & 0xff;
-    tp->pkt[pos++] = keylen & 0xff;
-    tp->pkt[pos++] = (sid >> 8) & 0xff;
-    tp->pkt[pos++] = sid & 0xff;
-    tp->pkt[pos++] = (pid >> 8) & 0xff;
-    tp->pkt[pos++] = pid & 0xff;
-    memcpy(tp->pkt + pos, even ?: empty, keylen);
-    memcpy(tp->pkt + pos + keylen, odd ?: empty, keylen);
-    pos += 2 * keylen;
-    crc = tvh_crc32(tp->pkt, pos, 0x859aa5ba);
-    tp->pkt[pos++] = (crc >> 24) & 0xff;
-    tp->pkt[pos++] = (crc >> 16) & 0xff;
-    tp->pkt[pos++] = (crc >> 8) & 0xff;
-    tp->pkt[pos++] = crc & 0xff;
-    pthread_mutex_lock(&mm->mm_tsdebug_lock);
-    tp->pos = mm->mm_tsdebug_pos;
-    TAILQ_INSERT_HEAD(&mm->mm_tsdebug_packets, tp, link);
-    pthread_mutex_unlock(&mm->mm_tsdebug_lock);
-    return;
-  }
-#endif
 end:
   pthread_mutex_unlock(&t->s_stream_mutex);
 }

@@ -426,12 +426,6 @@ enum mpegts_mux_ac3_flag
   MM_AC3_PMT_N05,
 };
 
-typedef struct tsdebug_packet {
-  TAILQ_ENTRY(tsdebug_packet) link;
-  uint8_t pkt[188];
-  off_t pos;
-} tsdebug_packet_t;
-
 /* Multiplex */
 struct mpegts_mux
 {
@@ -544,17 +538,6 @@ struct mpegts_mux
   int      mm_pmt_ac3;
   int      mm_eit_tsid_nocheck;
   uint16_t mm_sid_filter;
-
-  /*
-   * TSDEBUG
-   */
-#if ENABLE_TSDEBUG
-  pthread_mutex_t mm_tsdebug_lock;
-  int             mm_tsdebug_fd;
-  int             mm_tsdebug_fd2;
-  off_t           mm_tsdebug_pos;
-  TAILQ_HEAD(, tsdebug_packet) mm_tsdebug_packets;
-#endif
 };
 
 #define PREFCAPID_OFF      0
@@ -1033,36 +1016,11 @@ elementary_stream_t *mpegts_input_open_service_pid
 
 void mpegts_input_open_cat_monitor ( mpegts_mux_t *mm, mpegts_service_t *s );
 
-#if ENABLE_TSDEBUG
+void tsdebug_encode_keys
+  ( uint8_t *dst, uint16_t sid, uint16_t pid,
+    uint8_t keytype, uint8_t keylen, uint8_t *even, uint8_t *odd );
 
-void tsdebug_started_mux(mpegts_input_t *mi, mpegts_mux_t *mm);
-void tsdebug_stopped_mux(mpegts_input_t *mi, mpegts_mux_t *mm);
-void tsdebug_check_tspkt(mpegts_mux_t *mm, uint8_t *pkt, int len);
-
-static inline void
-tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
-{
-  if (mm && mm->mm_tsdebug_fd2 >= 0)
-    if (write(mm->mm_tsdebug_fd2, buf, len) != len)
-      tvherror(LS_TSDEBUG, "unable to write input data (%i)", errno);
-}
-
-static inline ssize_t
-sbuf_tsdebug_read(mpegts_mux_t *mm, sbuf_t *sb, int fd)
-{
-  ssize_t r = sbuf_read(sb, fd);
-  tsdebug_write(mm, sb->sb_data + sb->sb_ptr - r, r);
-  return r;
-}
-
-#else
-
-static inline void tsdebug_started_mux(mpegts_input_t *mi, mpegts_mux_t *mm) { return; }
-static inline void tsdebug_stopped_mux(mpegts_input_t *mi, mpegts_mux_t *mm) { return; }
-static inline void tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len) { return; }
-static inline ssize_t sbuf_tsdebug_read(mpegts_mux_t *mm, sbuf_t *sb, int fd) { return sbuf_read(sb, fd); }
-
-#endif
+void tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len );
 
 void mpegts_table_dispatch(const uint8_t *sec, size_t r, void *mt);
 static inline void mpegts_table_grab(mpegts_table_t *mt)
@@ -1212,4 +1170,3 @@ void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint3
  *
  * vim:sts=2:ts=2:sw=2:et
  *****************************************************************************/
-
