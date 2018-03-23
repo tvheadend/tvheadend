@@ -24,7 +24,6 @@
 #include "descrambler.h"
 #include "caid.h"
 #include "caclient.h"
-#include "ffdecsa/FFdecsa.h"
 #include "input.h"
 #include "input/mpegts/tsdemux.h"
 #include "dvbcam.h"
