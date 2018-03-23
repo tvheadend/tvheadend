@@ -795,7 +795,6 @@ const idclass_t iptv_network_class = {
                      " or ffmpeg) to the MPEG-TS format which is accepted by"
                      " tvheadend."),
       .off      = offsetof(iptv_network_t, in_libav),
-      .def.i    = 1,
       .opts     = PO_ADVANCED
     },
 #endif
