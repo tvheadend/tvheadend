@@ -125,6 +125,8 @@ streaming_target_t * parser_create(streaming_target_t *output, struct th_subscri
 
 void parser_destroy(streaming_target_t *pad);
 
+streaming_target_t * parser_output(streaming_target_t *pad);
+
 void parse_mpeg_ts(parser_t *t, parser_es_t *st, const uint8_t *data,
                    int len, int start, int err);
 

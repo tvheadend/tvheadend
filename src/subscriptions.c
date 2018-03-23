@@ -91,8 +91,13 @@ subscription_link_service(th_subscription_t *s, service_t *t)
   streaming_start_t *ss;
 
   subsetstate(s, SUBSCRIPTION_TESTING_SERVICE);
- 
   s->ths_service = t;
+
+  if ((s->ths_flags & SUBSCRIPTION_TYPE_MASK) == SUBSCRIPTION_PACKET) {
+    assert(s->ths_parser == NULL);
+    s->ths_output = s->ths_parser = parser_create(s->ths_output, s);
+  }
+
   LIST_INSERT_HEAD(&t->s_subscriptions, s, ths_service_link);
 
   tvhtrace(LS_SUBSCRIPTION, "%04X: linking sub %p to svc %p type %i",
@@ -154,9 +159,17 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int resched)
     t->s_running = 0;
   }
 
+  if (s->ths_parser)
+    s->ths_output = parser_output(s->ths_parser);
+
   pthread_mutex_unlock(&t->s_stream_mutex);
 
   LIST_REMOVE(s, ths_service_link);
+
+  if (s->ths_parser) {
+    parser_destroy(s->ths_parser);
+    s->ths_parser = NULL;
+  }
 
   if (!resched && (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
     mtimer_arm_rel(&s->ths_remove_timer, subscription_unsubscribe_cb, s, 0);
@@ -777,8 +790,6 @@ subscription_create
   if (!st) {
     st = calloc(1, sizeof(streaming_target_t));
     streaming_target_init(st, &subscription_input_null_ops, s, 0);
-  } else if ((flags & SUBSCRIPTION_TYPE_MASK) == SUBSCRIPTION_PACKET) {
-    st = s->ths_parser = parser_create(st, s);
   }
 
   streaming_target_init(&s->ths_input, ops, s, 0);

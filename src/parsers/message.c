@@ -349,6 +349,15 @@ static streaming_ops_t parser_input_ops = {
 };
 
 /**
+ * Parser get output target
+ */
+streaming_target_t *
+parser_output(streaming_target_t *pad)
+{
+  return ((parser_t *)pad)->prs_output;
+}
+
+/**
  * Parser create
  */
 streaming_target_t *
