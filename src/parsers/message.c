@@ -279,9 +279,6 @@ static void parser_clean_es(parser_es_t *pes)
 
   tvhlog_limit_reset(&pes->es_pes_log);
   tvhlog_limit_reset(&pes->es_pcr_log);
-
-  free(pes->es_nicename);
-  pes->es_nicename = NULL;
 }
 
 /**
