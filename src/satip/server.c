@@ -133,6 +133,8 @@ satip_server_http_xml(http_connection_t *hc)
     {}
   };
 
+  if (http_server_ip == NULL)
+    return HTTP_STATUS_NOT_FOUND;
 
   htsbuf_queue_init(&q, 0);
 
