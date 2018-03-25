@@ -74,10 +74,10 @@ lang_str_t     *lang_str_deserialize
 int             lang_str_compare ( const lang_str_t *ls1, const lang_str_t *ls2 );
 
 /* Is string empty? */
-int             strempty(const char* c)
-    __attribute__((warn_unused_result));
-int             lang_str_empty(lang_str_t* str)
-    __attribute__((warn_unused_result));
+static inline int strempty(const char *c)
+  { return c == NULL || *c == '\0'; }
+static inline int lang_str_empty(lang_str_t* str)
+  { return strempty(lang_str_get(str, NULL)); }
 
 /* Size in bytes */
 size_t          lang_str_size ( const lang_str_t *ls );

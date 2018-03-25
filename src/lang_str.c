@@ -342,14 +342,6 @@ int lang_str_compare( const lang_str_t *ls1, const lang_str_t *ls2 )
   return 0;
 }
 
-int strempty(const char* c) {
-  return !c || c[0] == 0;
-}
-
-int lang_str_empty(lang_str_t* str) {
-  return strempty(lang_str_get(str, NULL));
-}
-
 size_t lang_str_size(const lang_str_t *ls)
 {
   lang_str_ele_t *e;

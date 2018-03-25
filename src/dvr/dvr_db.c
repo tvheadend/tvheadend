@@ -3030,11 +3030,12 @@ dvr_entry_class_autorec_caption_get(void *o)
   dvr_entry_t *de = (dvr_entry_t *)o;
   dvr_autorec_entry_t *dae = de->de_autorec;
   if (dae) {
+    const int comment = !strempty(dae->dae_comment);
     snprintf(prop_sbuf, PROP_SBUF_LEN, "%s%s%s%s",
              dae->dae_name ?: "",
-             (dae->dae_comment != '\0' && strcmp(dae->dae_comment,"") != 0) ? " (" : "",
-             (dae->dae_comment != '\0' && strcmp(dae->dae_comment,"") != 0) ? dae->dae_comment : "",
-             (dae->dae_comment != '\0' && strcmp(dae->dae_comment,"") != 0) ? ")" : "");
+             comment ? " (" : "",
+             comment ? dae->dae_comment : "",
+             comment ? ")" : "");
   } else
     prop_sbuf[0] = '\0';
   return &prop_sbuf_ptr;
