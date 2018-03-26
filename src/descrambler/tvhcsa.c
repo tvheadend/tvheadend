@@ -90,28 +90,7 @@ tvhcsa_csa_cbc_flush
   csa->csa_fill = 0;
 
 #else
-
-  int r, l;
-  unsigned char *vec[3];
-
-  vec[0] = csa->csa_tsbcluster;
-  vec[1] = csa->csa_tsbcluster + csa->csa_fill * 188;
-  vec[2] = NULL;
-
-  r = decrypt_packets(csa->csa_keys, vec);
-  if(r > 0) {
-    ts_recv_packet2(s, csa->csa_tsbcluster, r * 188);
-
-    l = csa->csa_fill - r;
-    assert(l >= 0);
-
-    if(l > 0)
-      memmove(csa->csa_tsbcluster, csa->csa_tsbcluster + r * 188, l * 188);
-    csa->csa_fill = l;
-  } else {
-    csa->csa_fill = 0;
-  }
-
+#error "Unknown CSA descrambler"
 #endif
 }
 
@@ -172,17 +151,7 @@ tvhcsa_csa_cbc_descramble
   }
 
 #else
-
-  for ( ; tsb < tsb_end; tsb += 188 ) {
-
-    memcpy(csa->csa_tsbcluster + csa->csa_fill * 188, tsb, 188);
-    csa->csa_fill++;
-
-    if(csa->csa_fill == csa->csa_cluster_size)
-      tvhcsa_csa_cbc_flush(csa, s);
-
-  }
-
+#error "Unknown CSA descrambler"
 #endif
 }
 
@@ -201,7 +170,7 @@ tvhcsa_set_type( tvhcsa_t *csa, int type )
 #if ENABLE_DVBCSA
     csa->csa_cluster_size  = dvbcsa_bs_batch_size();
 #else
-    csa->csa_cluster_size  = get_suggested_cluster_size();
+    csa->csa_cluster_size  = 0;
 #endif
     /* Note: the optimized routines might read memory after last TS packet */
     /*       allocate safe memory and fill it with zeros */
@@ -214,8 +183,6 @@ tvhcsa_set_type( tvhcsa_t *csa, int type )
                                     sizeof(struct dvbcsa_bs_batch_s));
     csa->csa_key_even      = dvbcsa_bs_key_alloc();
     csa->csa_key_odd       = dvbcsa_bs_key_alloc();
-#else
-    csa->csa_keys          = get_key_struct();
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
@@ -250,8 +217,6 @@ void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
   case DESCRAMBLER_CSA_CBC:
 #if ENABLE_DVBCSA
     dvbcsa_bs_key_set(even, csa->csa_key_even);
-#else
-    set_even_control_word((csa)->csa_keys, even);
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
@@ -263,7 +228,6 @@ void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
   case DESCRAMBLER_AES128_ECB:
     aes128_set_even_control_word(csa->csa_priv, even);
     break;
-  default:
     assert(0);
   }
 }
@@ -275,8 +239,6 @@ void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
   case DESCRAMBLER_CSA_CBC:
 #if ENABLE_DVBCSA
     dvbcsa_bs_key_set(odd, csa->csa_key_odd);
-#else
-    set_odd_control_word((csa)->csa_keys, odd);
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
@@ -312,9 +274,6 @@ tvhcsa_destroy ( tvhcsa_t *csa )
     free(csa->csa_tsbbatch_odd);
   if (csa->csa_tsbbatch_even)
     free(csa->csa_tsbbatch_even);
-#else
-  if (csa->csa_keys)
-    free_key_struct(csa->csa_keys);
 #endif
   if (csa->csa_tsbcluster)
     free(csa->csa_tsbcluster);
