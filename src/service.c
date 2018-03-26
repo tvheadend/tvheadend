@@ -995,6 +995,7 @@ service_restart_streams(service_t *t)
       streaming_service_deliver(t, sm);
     }
     ss = elementary_stream_build_start(&t->s_components);
+    t->s_setsourceinfo(t, &ss->ss_si);
     sm = streaming_msg_create_data(SMT_START, ss);
     streaming_pad_deliver(&t->s_streaming_pad, sm);
     t->s_running = 1;
