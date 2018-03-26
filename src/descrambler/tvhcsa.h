@@ -26,8 +26,6 @@ struct elementary_stream;
 #include "build.h"
 #if ENABLE_DVBCSA
 #include <dvbcsa/dvbcsa.h>
-#else
-#include "ffdecsa/FFdecsa.h"
 #endif
 
 typedef struct tvhcsa
