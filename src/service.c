@@ -1031,6 +1031,44 @@ service_restart(service_t *t)
 }
 
 /**
+ * Update one elementary stream from the parser.
+ * The update should be handled only for the live streaming.
+ */
+void
+service_update_elementary_stream(service_t *t, elementary_stream_t *src)
+{
+  elementary_stream_t *es;
+  int change = 0, restart = 0;
+
+  es = elementary_stream_find(&t->s_components, src->es_pid);
+  if (es == NULL)
+    return;
+
+  # define _CHANGE(field) \
+    if (es->field != src->field) { es->field = src->field; change++; }
+  # define _RESTART(field) \
+    if (es->field != src->field) { es->field = src->field; restart++; }
+
+  _CHANGE(es_frame_duration);
+  _RESTART(es_width);
+  _RESTART(es_height);
+  _CHANGE(es_aspect_num);
+  _CHANGE(es_aspect_den);
+  _RESTART(es_audio_version);
+  _RESTART(es_sri);
+  _RESTART(es_ext_sri);
+  _CHANGE(es_channels);
+
+  # undef _CHANGE
+  # undef _RESTART
+
+  if (change || restart)
+    service_request_save(t);
+  if (restart)
+    atomic_set(&t->s_pending_restart, 1);
+}
+
+/**
  *
  */
 

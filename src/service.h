@@ -475,6 +475,8 @@ void service_restart_streams(service_t *t);
 
 void service_request_save(service_t *t);
 
+void service_update_elementary_stream(service_t *t, elementary_stream_t *src);
+
 void service_source_info_free(source_info_t *si);
 
 void service_source_info_copy(source_info_t *dst, const source_info_t *src);

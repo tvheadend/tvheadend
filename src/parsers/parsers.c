@@ -812,7 +812,7 @@ ok:
         tvhtrace(LS_PARSER, "mpeg audio version change %02d: val=%d (old=%d)",
                  st->es_index, layer, st->es_audio_version);
         st->es_audio_version = layer;
-        atomic_set(&st->es_service->s_pending_restart, 1);
+        service_update_elementary_stream(st->es_service, (elementary_stream_t *)st);
       }
       makeapkt(t, st, buf + i, fsize, dts, duration,
                channels, mpa_sri[(buf[i+2] >> 2) & 3]);
@@ -1117,8 +1117,7 @@ parser_set_stream_vparam(parser_es_t *st, int width, int height,
     st->es_width = width;
     st->es_height = height;
     st->es_frame_duration = duration;
-    service_request_save(st->es_service);
-    atomic_set(&st->es_service->s_pending_restart, 1);
+    service_update_elementary_stream(st->es_service, (elementary_stream_t *)st);
   }
 }
 
