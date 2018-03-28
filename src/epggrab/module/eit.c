@@ -495,6 +495,9 @@ static int _eit_process_event_one
       case DVB_DESC_CRID:
         r = _eit_desc_crid(mod, ptr, dlen, &ev, svc);
         break;
+      //case DVB_DESC_DISHNET_PROGID:
+      //  r = _eit_desc_crid(mod, ptr, dlen, &ev, svc);
+      //  break;
       default:
         r = 0;
         _eit_dtag_dump(mod, dtag, dlen, ptr);
@@ -649,7 +652,7 @@ _eit_callback
   }
 
   /* Validate */
-  if(tableid < 0x4e || tableid > 0x6f || len < 11) {
+  if((tableid < 0x4e || tableid > 0x6f || len < 11) && (tableid < 0x81 || tableid > 0xa4 || len < 11)) {
     if (ths)
       atomic_add(&ths->ths_total_err, 1);
     return -1;
@@ -887,6 +890,8 @@ void eit_init ( void )
   EIT_OPS(ops_nz_freeview, 0, EIT_CONV_HUFFMAN, EIT_SPEC_NZ_FREEVIEW);
   EIT_OPS(ops_baltic, 0x39, 0, 0);
   EIT_OPS(ops_bulsat, 0x12b, 0, 0);
+  EIT_OPS(ops_na_dish, 0x300, EIT_CONV_HUFFMAN, 0);
+  EIT_OPS(ops_na_bell, 0x441, EIT_CONV_HUFFMAN, 0);
 
   EIT_CREATE("eit", "EIT: DVB Grabber", 1, &ops);
   EIT_CREATE("uk_freesat", "UK: Freesat", 5, &ops_uk_freesat);
@@ -894,6 +899,8 @@ void eit_init ( void )
   EIT_CREATE("nz_freeview", "New Zealand: Freeview", 5, &ops_nz_freeview);
   EIT_CREATE("viasat_baltic", "VIASAT: Baltic", 5, &ops_baltic);
   EIT_CREATE("Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops_bulsat);
+  EIT_CREATE("na_dish", "NA Dish", 5, &ops_na_dish);
+  EIT_CREATE("na_bell", "NA Bell", 5, &ops_na_bell);
 }
 
 void eit_done ( void )

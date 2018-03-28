@@ -179,9 +179,6 @@ linuxdvb_switch_tune
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
 
   if (!strcmp(ld->ld_type ?: "", "Legacy SW21")) {
-      if (lsp->ls_last_switch == sc )
-          return 0;
-      
       if ( ls->ls_uncommitted % 2 == 0 )
           cmd = 0x34;
       else

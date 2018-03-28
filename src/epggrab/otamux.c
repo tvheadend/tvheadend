@@ -496,6 +496,8 @@ epggrab_ota_kick_cb ( void *p )
     [MM_EPG_ONLY_OPENTV_SKY_UK]      = "opentv-skyuk",
     [MM_EPG_ONLY_OPENTV_SKY_ITALIA]  = "opentv-skyit",
     [MM_EPG_ONLY_OPENTV_SKY_AUSAT]   = "opentv-ausat",
+    [MM_EPG_ONLY_DISHNET_DISH]       = "na_dish",
+    [MM_EPG_ONLY_DISHNET_BELL]       = "na_bell",
   };
 
   lock_assert(&global_lock);

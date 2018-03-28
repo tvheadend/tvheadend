@@ -490,6 +490,8 @@ mpegts_mux_epg_list ( void *o, const char *lang )
     { N_("Only OpenTV Sky UK"),       MM_EPG_ONLY_OPENTV_SKY_UK },
     { N_("Only OpenTV Sky Italia"),   MM_EPG_ONLY_OPENTV_SKY_ITALIA },
     { N_("Only OpenTV Sky Ausat"),    MM_EPG_ONLY_OPENTV_SKY_AUSAT },
+    { N_("Only Dish Network"),        MM_EPG_ONLY_DISHNET_DISH },
+    { N_("Only Bell Expressvu"),      MM_EPG_ONLY_DISHNET_BELL },
   };
   return strtab2htsmsg(tab, 1, lang);
 }

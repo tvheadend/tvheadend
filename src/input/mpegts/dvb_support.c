@@ -266,7 +266,7 @@ dvb_get_string
 
   /* Check custom conversion */
   while (conv && conv->func) {
-    if (conv->type == src[0])
+    if ((conv->type == src[0]) || (conv->type == 0xff ))
       return conv->func(dst, &dstlen, src, srclen);
     conv++;
   }
@@ -382,7 +382,7 @@ dvb_get_string_with_len(char *dst, size_t dstlen,
 {
   int l = buf[0];
 
-  if(l + 1 > buflen)
+  if(l + 1 > buflen && conv->type != 0xff)
     return -1;
 
   if(dvb_get_string(dst, dstlen, buf + 1, l, dvb_charset, conv))

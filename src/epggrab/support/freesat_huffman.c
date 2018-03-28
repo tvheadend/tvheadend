@@ -5777,7 +5777,7 @@ size_t freesat_huffman_decode
 	unsigned short kk;
 	unsigned int b;
 
-  if (src[0] != 0x1f) return -1;
+  if (src[0] != 0x1f && src[0] != 0xff) return -1;
 
 	p = 0;
 	if (src[1] == 1 || src[1] == 2) {

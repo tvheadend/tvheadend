@@ -188,6 +188,13 @@ struct lang_str;
 #define ATSC_DESC_GENRE               0xAB
 #define ATSC_DESC_PRIVATE_INFO        0xAD
 
+#define DVB_DESC_DISHNET_MPAA         0x81      // Stars and MPAA ratings
+#define DVB_DESC_DISHNET_NAME         0x91      // Huffman encoded
+#define DVB_DESC_DISHNET_DESCRIPT     0x92      // Huffman encoded
+#define DVB_DESC_DISHNET_VCHIP        0x95      // VChip ratings
+#define DVB_DESC_DISHNET_PROGID       0x96      // Series ID, Program ID, and Original air date
+#define DVB_DESC_DISHNET_CODED        0x8b      // unknown
+
 /* Service type lookup */
 
 int dvb_servicetype_lookup ( int t );

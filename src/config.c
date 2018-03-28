@@ -611,6 +611,8 @@ config_migrate_v6 ( void )
       htsmsg_add_u32(m, "opentv-skyuk", 1);
       htsmsg_add_u32(m, "opentv-skyit", 1);
       htsmsg_add_u32(m, "opentv-ausat", 1);
+      htsmsg_add_u32(m, "na_dish", 1);
+      htsmsg_add_u32(m, "na_bell", 1);
     }
 
     hts_settings_save(c, "epggrab/config");
