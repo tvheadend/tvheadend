@@ -1442,7 +1442,7 @@ mpegts_input_process
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
               (pid == s->s_components.set_pmt_pid) ||
               (pid == s->s_components.set_pcr_pid);
-          ts_recv_packet1((mpegts_service_t*)s, tsb, llen, f);
+          ts_recv_packet1((mpegts_service_t*)s, pid, tsb, llen, f);
         }
       } else
       /* Stream table data */
@@ -1452,7 +1452,7 @@ mpegts_input_process
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
               (pid == s->s_components.set_pmt_pid) ||
               (pid == s->s_components.set_pcr_pid);
-          ts_recv_packet1((mpegts_service_t*)s, tsb, llen, f);
+          ts_recv_packet1((mpegts_service_t*)s, pid, tsb, llen, f);
         }
       }
 

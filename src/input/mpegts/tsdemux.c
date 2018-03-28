@@ -141,14 +141,13 @@ skip_cc:
 }
 
 /**
- * Process service stream packets, extract PCR and optionally descramble
+ * Process service stream packets, optionally descramble
  */
 int
 ts_recv_packet1
-  (mpegts_service_t *t, const uint8_t *tsb, int len, int table)
+  (mpegts_service_t *t, uint16_t pid, const uint8_t *tsb, int len, int table)
 {
   elementary_stream_t *st;
-  int_fast16_t pid;
   uint_fast8_t scrambled, error = 0;
   int r;
   
@@ -177,8 +176,6 @@ ts_recv_packet1
       tvhwarn(LS_TS, "%s Transport error indicator (total %zi)",
               service_nicename((service_t*)t), t->s_tei_log.count);
   }
-
-  pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
   st = elementary_stream_find(&t->s_components, pid);
 
