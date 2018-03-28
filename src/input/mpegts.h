@@ -495,6 +495,7 @@ struct mpegts_mux
    * Data processing
    */
 
+  uint64_t                    mm_input_pos;
   RB_HEAD(, mpegts_pid)       mm_pids;
   LIST_HEAD(, mpegts_pid_sub) mm_all_subs;
   int                         mm_last_pid;

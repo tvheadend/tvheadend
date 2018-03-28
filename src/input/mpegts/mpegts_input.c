@@ -1367,6 +1367,7 @@ mpegts_input_process
   int table_wakeup = 0;
   mpegts_mux_t *mm = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi;
+  uint64_t tspos;
 
   if (mm == NULL || (mmi = mm->mm_active) == NULL)
     return 0;
@@ -1374,6 +1375,7 @@ mpegts_input_process
   assert(mm == mmi->mmi_mux);
 
   /* Process */
+  tspos = mm->mm_input_pos;
   assert((len % 188) == 0);
   while (len > 0) {
 
@@ -1427,12 +1429,12 @@ mpegts_input_process
       /* Stream all PIDs */
       LIST_FOREACH(mps, &mm->mm_all_subs, mps_svcraw_link)
         if ((mps->mps_type & MPS_ALL) || (type & (MPS_TABLE|MPS_FTABLE)))
-          ts_recv_raw((mpegts_service_t *)mps->mps_owner, tsb, llen);
+          ts_recv_raw((mpegts_service_t *)mps->mps_owner, tspos, tsb, llen);
 
       /* Stream raw PIDs */
       if (type & MPS_RAW) {
         LIST_FOREACH(mps, &mp->mp_raw_subs, mps_raw_link)
-          ts_recv_raw((mpegts_service_t *)mps->mps_owner, tsb, llen);
+          ts_recv_raw((mpegts_service_t *)mps->mps_owner, tspos, tsb, llen);
       }
 
       /* Stream service data */
@@ -1442,7 +1444,7 @@ mpegts_input_process
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
               (pid == s->s_components.set_pmt_pid) ||
               (pid == s->s_components.set_pcr_pid);
-          ts_recv_packet1((mpegts_service_t*)s, pid, tsb, llen, f);
+          ts_recv_packet1((mpegts_service_t*)s, tspos, pid, tsb, llen, f);
         }
       } else
       /* Stream table data */
@@ -1452,7 +1454,7 @@ mpegts_input_process
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
               (pid == s->s_components.set_pmt_pid) ||
               (pid == s->s_components.set_pcr_pid);
-          ts_recv_packet1((mpegts_service_t*)s, pid, tsb, llen, f);
+          ts_recv_packet1((mpegts_service_t*)s, tspos, pid, tsb, llen, f);
         }
       }
 
@@ -1505,13 +1507,14 @@ mpegts_input_process
 
       /* Stream to all fullmux subscribers */
       LIST_FOREACH(mps, &mm->mm_all_subs, mps_svcraw_link)
-        ts_recv_raw((mpegts_service_t *)mps->mps_owner, tsb, llen);
+        ts_recv_raw((mpegts_service_t *)mps->mps_owner, tspos, tsb, llen);
 
     }
 
 done:
     tsb += llen;
     len -= llen;
+    tspos += llen;
   }
 
   /* Raw stream */
@@ -1540,6 +1543,7 @@ done:
   /* Bandwidth monitoring */
   llen = tsb - mpkt->mp_data;
   atomic_add(&mmi->tii_stats.bps, llen);
+  mm->mm_input_pos += llen;
   return llen;
 }
 

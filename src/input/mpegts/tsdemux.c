@@ -145,7 +145,8 @@ skip_cc:
  */
 int
 ts_recv_packet1
-  (mpegts_service_t *t, uint16_t pid, const uint8_t *tsb, int len, int table)
+  (mpegts_service_t *t, uint64_t tspos, uint16_t pid,
+   const uint8_t *tsb, int len, int table)
 {
   elementary_stream_t *st;
   uint_fast8_t scrambled, error = 0;
@@ -257,7 +258,7 @@ ts_skip_packet2(mpegts_service_t *t, const uint8_t *tsb, int len)
  *
  */
 void
-ts_recv_raw(mpegts_service_t *t, const uint8_t *tsb, int len)
+ts_recv_raw(mpegts_service_t *t, uint64_t tspos, const uint8_t *tsb, int len)
 {
   int pid, parent = 0;
 

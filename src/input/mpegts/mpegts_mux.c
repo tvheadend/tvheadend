@@ -260,6 +260,7 @@ mpegts_mux_instance_start
 
   r = mi->mi_warm_mux(mi, mmi);
   if (r) return r;
+  mm->mm_input_pos = 0;
   r = mi->mi_start_mux(mi, mmi, weight);
   if (r) return r;
 
