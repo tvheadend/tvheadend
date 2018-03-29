@@ -131,7 +131,7 @@ cc_new_card(cclient_t *cc, uint16_t caid, uint32_t cardid, uint8_t *ua,
 
   if (pcard == NULL) {
     pcard = calloc(1, sizeof(cc_card_data_t));
-    emm_reass_init(&pcard->cs_ra, caid);
+    emm_reass_init(&pcard->cs_ra, cc->cc_subsys, caid);
     pcard->cs_id = cardid;
     allocated = 1;
   }

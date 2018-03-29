@@ -335,7 +335,7 @@ emm_viaccess
 
       crc = tvh_crc32(ass2, len, 0xffffffff);
       if (!emm_cache_lookup(ra, crc)) {
-        tvhdebug(LS_CWC,
+        tvhdebug(ra->subsys,
                 "Send EMM "
                 "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
                 "...%02x.%02x.%02x.%02x",
@@ -452,7 +452,7 @@ emm_streamguard
   if (len < 1)
     return;
 
-  tvhinfo(LS_CWC, "emm_streamguard streamguard card data emm get,here lots of works todo...");
+  tvhinfo(ra->subsys, "emm_streamguard streamguard card data emm get,here lots of works todo...");
 
   if (data[0] == 0x87) {
     match = len >= 7 && memcmp(&data[3], &ra->ua[4], 4) == 0;
@@ -592,16 +592,17 @@ void
 emm_filter(emm_reass_t *ra, const uint8_t *data, int len, void *mux,
            emm_send_t send, void *aux)
 {
-  tvhtrace(LS_CWC, "emm filter : %s - len %d mux %p", caid2name(ra->caid), len, mux);
-  tvhlog_hexdump(LS_CWC, data, len);
+  tvhtrace(ra->subsys, "emm filter : %s - len %d mux %p", caid2name(ra->caid), len, mux);
+  tvhlog_hexdump(ra->subsys, data, len);
   if (ra->do_emm)
     ra->do_emm(ra, data, len, mux, send, aux);
 }
 
 void
-emm_reass_init(emm_reass_t *ra, uint16_t caid)
+emm_reass_init(emm_reass_t *ra, int subsys, uint16_t caid)
 {
   memset(ra, 0, sizeof(*ra));
+  ra->subsys = subsys;
   ra->caid = caid;
   ra->type = detect_card_type(caid);
   switch (ra->type) {

@@ -44,6 +44,8 @@ typedef void (*emm_send_t)
   (void *aux, const uint8_t *radata, int ralen, void *mux);
 
 struct emm_reass {
+  int subsys;
+
   uint16_t caid;
   card_type_t type;
 
@@ -70,7 +72,7 @@ struct emm_reass {
 void emm_filter(emm_reass_t *ra, const uint8_t *data, int len,
                 void *mux, emm_send_t send, void *aux);
 emm_provider_t *emm_find_provider(emm_reass_t *ra, uint32_t provid);
-void emm_reass_init(emm_reass_t *ra, uint16_t caid);
+void emm_reass_init(emm_reass_t *ra, int subsys, uint16_t caid);
 void emm_reass_done(emm_reass_t *ra);
 
 #endif /* __TVH_EMM_REASS_H__ */
