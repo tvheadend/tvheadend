@@ -292,7 +292,7 @@ static void parser_input_start(parser_t *prs, streaming_message_t *sm)
 
   TAILQ_FOREACH(es, &set->set_all, es_link)
     parser_clean_es((parser_es_t *)es);
-  elementary_set_clean(set, prs->prs_service);
+  elementary_set_clean(set, prs->prs_service, 1);
 
   elementary_stream_create_from_start(set, ss, sizeof(parser_es_t));
   TAILQ_FOREACH(es, &set->set_all, es_link) {
@@ -390,6 +390,6 @@ parser_destroy(streaming_target_t *pad)
     if (pes->es_psi.mt_name)
       dvb_table_parse_done(&pes->es_psi);
   }
-  elementary_set_clean(&prs->prs_components, NULL);
+  elementary_set_clean(&prs->prs_components, NULL, 0);
   free(prs);
 }

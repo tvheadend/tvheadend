@@ -161,7 +161,7 @@ struct elementary_set {
  */
 void elementary_set_init
   (elementary_set_t *set, int subsys, const char *nicename, service_t *t);
-void elementary_set_clean(elementary_set_t *set, service_t *t);
+void elementary_set_clean(elementary_set_t *set, service_t *t, int keep_nicename);
 void elementary_set_update_nicename(elementary_set_t *set, const char *nicename);
 void elementary_set_clean_streams(elementary_set_t *set);
 void elementary_set_stream_destroy(elementary_set_t *set, elementary_stream_t *es);

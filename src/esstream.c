@@ -62,15 +62,17 @@ void elementary_set_init
 /**
  *
  */
-void elementary_set_clean(elementary_set_t *set, service_t *t)
+void elementary_set_clean(elementary_set_t *set, service_t *t, int keep_nicename)
 {
   elementary_stream_t *st;
 
   TAILQ_INIT(&set->set_filter);
   while ((st = TAILQ_FIRST(&set->set_all)) != NULL)
     elementary_set_stream_destroy(set, st);
-  free(set->set_nicename);
-  set->set_nicename = NULL;
+  if (!keep_nicename) {
+    free(set->set_nicename);
+    set->set_nicename = NULL;
+  }
   set->set_service = t;
 }
 
