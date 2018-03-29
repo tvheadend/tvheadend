@@ -1156,6 +1156,32 @@ ts_sync_count ( const uint8_t *tsb, int len )
   return tsb - start;
 }
 
+static void
+mpegts_input_queue_packets
+  ( mpegts_mux_instance_t *mmi, mpegts_packet_t *mp )
+{
+  mpegts_input_t *mi = mmi->mmi_input;
+  int len = mp->mp_len;
+
+  pthread_mutex_lock(&mi->mi_input_lock);
+  if (mmi->mmi_mux->mm_active == mmi) {
+    if (mi->mi_input_queue_size < 50*1024*1024) {
+      mi->mi_input_queue_size += len;
+      memoryinfo_alloc(&mpegts_input_queue_memoryinfo, sizeof(mpegts_packet_t) + len);
+      mpegts_mux_grab(mp->mp_mux);
+      TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
+      tvh_cond_signal(&mi->mi_input_cond, 0);
+    } else {
+      if (tvhlog_limit(&mi->mi_input_queue_loglimit, 10))
+        tvhwarn(LS_MPEGTS, "too much queued input data (over 50MB) for %s, discarding new", mi->mi_name);
+      free(mp);
+    }
+  } else {
+    free(mp);
+  }
+  pthread_mutex_unlock(&mi->mi_input_lock);
+}
+
 void
 mpegts_input_recv_packets
   ( mpegts_mux_instance_t *mmi, sbuf_t *sb,
@@ -1244,23 +1270,7 @@ retry:
       goto end;
     }
 
-    pthread_mutex_lock(&mi->mi_input_lock);
-    if (mmi->mmi_mux->mm_active == mmi) {
-      if (mi->mi_input_queue_size < 50*1024*1024) {
-        mi->mi_input_queue_size += len2;
-        memoryinfo_alloc(&mpegts_input_queue_memoryinfo, sizeof(mpegts_packet_t) + len2);
-        mpegts_mux_grab(mp->mp_mux);
-        TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
-        tvh_cond_signal(&mi->mi_input_cond, 0);
-      } else {
-        if (tvhlog_limit(&mi->mi_input_queue_loglimit, 10))
-          tvhwarn(LS_MPEGTS, "too much queued input data (over 50MB) for %s, discarding new", mi->mi_name);
-        free(mp);
-      }
-    } else {
-      free(mp);
-    }
-    pthread_mutex_unlock(&mi->mi_input_lock);
+    mpegts_input_queue_packets(mmi, mp);
   }
 
   /* Adjust buffer */
