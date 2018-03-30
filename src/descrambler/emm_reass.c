@@ -89,6 +89,7 @@ emm_irdeto
 {
   int i, emm_mode, emm_len, match = 0;
   emm_provider_t *ep;
+  char prov[4];
 
   if (len < 4)
     return;
@@ -96,22 +97,30 @@ emm_irdeto
   emm_mode = data[3] >> 3;
   emm_len = data[3] & 0x07;
 
-  if (4 + emm_len > len)
+  if (4 + emm_len > len || emm_len > 3)
     return;
 
-  if (emm_mode & 0x10){
+  if (emm_mode & 0x10) {
     // try to match card
-    match = (emm_mode == ra->ua[4] &&
-             (!emm_len || // zero length
-              !memcmp(&data[4], &ra->ua[5], emm_len))); // exact match
+    match = emm_mode == ra->ua[4] &&
+            (!emm_len || // zero length
+             !memcmp(&data[4], &ra->ua[5], emm_len)); // exact match
   } else {
-    // try to match provider
-    PROVIDERS_FOREACH(ra, i, ep) {
-      match = (emm_mode == ep->sa[4] &&
-               (!emm_len || // zero length
-                !memcmp(&data[4], &ep->sa[5], emm_len)));
-      // exact match
-      if (match) break;
+    if (emm_len && !memcmp(&data[4], &ra->ua[5], emm_len)) {
+      match = 1;
+    } else {
+      // try to match provider
+      PROVIDERS_FOREACH(ra, i, ep) {
+        prov[0] = ep->id >> 24;
+        prov[1] = ep->id >> 16;
+        prov[2] = ep->id >> 8;
+        prov[3] = ep->id;
+        match = emm_mode == prov[0] &&
+                (!emm_len || // zero length
+                 !memcmp(&data[4], prov + 1, emm_len));
+        // exact match
+        if (match) break;
+      }
     }
   }
 
