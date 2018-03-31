@@ -264,11 +264,11 @@ int
 satip_server_http_page(http_connection_t *hc,
                        const char *remain, void *opaque)
 {
-  if (strcmp(remain, "desc.xml") == 0)
+  if (remain && strcmp(remain, "desc.xml") == 0)
     return satip_server_http_xml(hc);
-  if (strcmp(remain, "satip.m3u") == 0)
+  if (remain && strcmp(remain, "satip.m3u") == 0)
     return satip_server_satip_m3u(hc);
-  return 0;
+  return HTTP_STATUS_BAD_REQUEST;
 }
 
 /*
