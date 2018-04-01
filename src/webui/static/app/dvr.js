@@ -484,6 +484,8 @@ tvheadend.dvr_finished = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
     var buttonFcn = tvheadend.dvrButtonFcn;
+    var pageSize = 50;
+    var activePage = 0;
 
     var downloadButton = {
         name: 'download',
@@ -567,10 +569,18 @@ tvheadend.dvr_finished = function(panel, index) {
             this.setText(groupingText(store.groupField));
             if (!store.groupField){
                 select.grid.view.enableGrouping = true;
+                pageSize = select.grid.bottomToolbar.pageSize; // Store page size
+                activePage = select.grid.bottomToolbar.getPageData().activePage; // Store active page
+                select.grid.bottomToolbar.pageSize = 999999999 // Select all rows
+                select.grid.bottomToolbar.changePage(0);
+                store.reload();
                 select.grid.store.groupBy(store.sortInfo.field);
                 select.grid.fireEvent('groupchange', select.grid, store.getGroupState());
                 select.grid.view.refresh();
             }else{
+                select.grid.bottomToolbar.pageSize = pageSize // Restore page size
+                select.grid.bottomToolbar.changePage(activePage); // Restore previous active page
+                store.reload();
                 store.clearGrouping();
                 select.grid.view.enableGrouping = false;
                 select.grid.fireEvent('groupchange', select.grid, null);
