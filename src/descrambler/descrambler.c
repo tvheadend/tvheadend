@@ -286,9 +286,6 @@ descrambler_init ( void )
   TAILQ_INIT(&ca_hints);
   ca_hints_quickecm = 0;
 
-#if (ENABLE_CWC || ENABLE_CAPMT || ENABLE_CCCAM) && !ENABLE_DVBCSA
-  ffdecsa_init();
-#endif
   caclient_init();
 
   if ((c = hts_settings_load("descrambler")) != NULL) {
