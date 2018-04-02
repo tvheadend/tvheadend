@@ -344,7 +344,7 @@ tsfix_update_ref(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
   if (tfs->tfs_audio) {
     diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
-    if (diff > 2 * 90000) {
+    if (diff > 3 * 90000) {
       tvhwarn(LS_TSFIX, "The timediff for %s is big (%"PRId64"), using current dts",
               streaming_component_type2txt(tfs->tfs_type), diff);
       tfs->tfs_local_ref = pkt->pkt_dts;
