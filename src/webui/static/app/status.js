@@ -42,7 +42,7 @@ tvheadend.status_subs = function(panel, index)
             totalProperty: 'totalCount',
             fields: [
                 { name: 'id', sortType: stype },
-                { name: 'hostname', sortType: stype },
+                { name: 'hostname', sortType: stypei },
                 { name: 'username', sortType: stype },
                 { name: 'title', sortType: stype },
                 { name: 'channel', sortType: stype },
@@ -50,8 +50,8 @@ tvheadend.status_subs = function(panel, index)
                 { name: 'profile', sortType: stype },
                 { name: 'state', sortType: stype },
                 { name: 'descramble', sortType: stype },
-                { name: 'errors', sortType: stype },
-                { name: 'in', sortType: stype },
+                { name: 'errors', sortType: stypei },
+                { name: 'in', sortType: stypei },
                 { name: 'out', sortType: stypei },
                 {
                     name: 'start',
