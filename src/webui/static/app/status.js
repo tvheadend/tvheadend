@@ -52,7 +52,7 @@ tvheadend.status_subs = function(panel, index)
                 { name: 'descramble', sortType: stype },
                 { name: 'errors', sortType: stype },
                 { name: 'in', sortType: stype },
-                { name: 'out', sortType: stypei },
+                { name: 'out', sortType: stype },
                 {
                     name: 'start',
                     type: 'date',
