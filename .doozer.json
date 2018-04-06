@@ -331,7 +331,6 @@
         "avahi-devel",
         "openssl-devel",
         "zlib-devel",
-        "libdvbcsa-devel",
         "wget",
         "bzip2",
         "uriparser-devel",
@@ -340,7 +339,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "./configure --disable-tvhcsa --disable-dvbscan && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -368,7 +367,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "./configure --disable-tvhcsa --disable-dvbscan && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
     },
