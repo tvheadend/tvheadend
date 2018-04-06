@@ -317,35 +317,9 @@
       ]
     },
     "fedora24-x86_64": {
-      "buildenv": "fedora24-x86_64",
+      "buildenv": "docker:fedora:24",
       "builddeps": [
-        "gcc-c++",
-        "which",
-        "rpm-build",
-        "rpmdevtools",
-        "git",
-        "make",
-        "cmake",
-        "gettext-devel",
-        "dbus-devel",
-        "avahi-devel",
-        "openssl-devel",
-        "zlib-devel",
-        "wget",
-        "bzip2",
-        "uriparser-devel",
-        "pcre2-devel",
-        "python",
-        "ccache"
-      ],
-      "buildcmd": [
-        "./configure --disable-tvhcsa --disable-dvbscan && make -C rpm build-doozer",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "centos7-x86_64": {
-      "buildenv": "centos7-x86_64",
-      "builddeps": [
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-24.noarch.rpm"],
         "gcc-c++",
         "which",
         "rpm-build",
@@ -367,7 +341,36 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-tvhcsa --disable-dvbscan && make -C rpm build-doozer",
+        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "centos7-x86_64": {
+      "buildenv": "docker:centos:7",
+      "builddeps": [
+        ["https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm"],
+        "gcc-c++",
+        "which",
+        "rpm-build",
+        "rpmdevtools",
+        "git",
+        "make",
+        "cmake",
+        "gettext-devel",
+        "dbus-devel",
+        "avahi-devel",
+        "openssl-devel",
+        "zlib-devel",
+        "libdvbcsa-devel",
+        "wget",
+        "bzip2",
+        "uriparser-devel",
+        "pcre2-devel",
+        "python",
+        "ccache"
+      ],
+      "buildcmd": [
+        "./configure --disable-dvbscan && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
     },
