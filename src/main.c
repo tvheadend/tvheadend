@@ -146,7 +146,6 @@ int              tvheadend_webui_port;
 int              tvheadend_webui_debug;
 int              tvheadend_htsp_port;
 int              tvheadend_htsp_port_extra;
-const char      *tvheadend_tsdebug;
 const char      *tvheadend_cwd0;
 const char      *tvheadend_cwd;
 const char      *tvheadend_webroot;
@@ -909,9 +908,6 @@ main(int argc, char **argv)
     { 0, NULL, N_("Testing options"), OPT_BOOL, NULL },
     { 0, "tsfile_tuners", N_("Number of tsfile tuners"), OPT_INT, &opt_tsfile_tuner },
     { 0, "tsfile", N_("tsfile input (mux file)"), OPT_STR_LIST, &opt_tsfile },
-#endif
-#if ENABLE_TSDEBUG
-    { 0, "tsdebug", N_("Output directory for tsdebug"), OPT_STR, &tvheadend_tsdebug },
 #endif
 
   };
