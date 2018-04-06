@@ -1,5 +1,4 @@
 {
-  "concurrent": false,
   "targets": {
     "trusty-amd64": {
       "buildenv": "trusty-amd64",
