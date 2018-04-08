@@ -38,15 +38,12 @@
 #include "queue.h"
 #include "hts_strtab.h"
 #include "htsmsg.h"
+#include "tprofile.h"
 #include "tvhlog.h"
 
 #include "redblack.h"
 
 #include "tvh_locale.h"
-
-#define STRINGIFY(s) # s
-#define SRCLINEID() SRCLINEID2(__FILE__, __LINE__)
-#define SRCLINEID2(f,l) f ":" STRINGIFY(l)
 
 #define ERRNO_AGAIN(e) ((e) == EAGAIN || (e) == EINTR || (e) == EWOULDBLOCK)
 
@@ -145,7 +142,7 @@ typedef struct {
  */
 
 #if ENABLE_GTIMER_CHECK
-#define GTIMER_TRACEID_ const char *id, const char *fcn,
+#define GTIMER_TRACEID_ const char *id,
 #define GTIMER_FCN(n) check_##n
 #else
 #define GTIMER_TRACEID_
@@ -165,7 +162,6 @@ typedef struct mtimer {
   int64_t mti_expire;
 #if ENABLE_GTIMER_CHECK
   const char *mti_id;
-  const char *mti_fcn;
 #endif
 } mtimer_t;
 
@@ -175,8 +171,8 @@ void GTIMER_FCN(mtimer_arm_abs)
   (GTIMER_TRACEID_ mtimer_t *mti, mti_callback_t *callback, void *opaque, int64_t when);
 
 #if ENABLE_GTIMER_CHECK
-#define mtimer_arm_rel(a, b, c, d) GTIMER_FCN(mtimer_arm_rel)(SRCLINEID(), __func__, a, b, c, d)
-#define mtimer_arm_abs(a, b, c, d) GTIMER_FCN(mtimer_arm_abs)(SRCLINEID(), __func__, a, b, c, d)
+#define mtimer_arm_rel(a, b, c, d) GTIMER_FCN(mtimer_arm_rel)(SRCLINEID(), a, b, c, d)
+#define mtimer_arm_abs(a, b, c, d) GTIMER_FCN(mtimer_arm_abs)(SRCLINEID(), a, b, c, d)
 #endif
 
 void mtimer_disarm(mtimer_t *mti);
@@ -196,7 +192,6 @@ typedef struct gtimer {
   time_t gti_expire;
 #if ENABLE_GTIMER_CHECK
   const char *gti_id;
-  const char *gti_fcn;
 #endif
 } gtimer_t;
 
@@ -206,8 +201,8 @@ void GTIMER_FCN(gtimer_arm_absn)
   (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t when);
 
 #if ENABLE_GTIMER_CHECK
-#define gtimer_arm_rel(a, b, c, d) GTIMER_FCN(gtimer_arm_rel)(SRCLINEID(), __func__, a, b, c, d)
-#define gtimer_arm_absn(a, b, c, d) GTIMER_FCN(gtimer_arm_absn)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_rel(a, b, c, d) GTIMER_FCN(gtimer_arm_rel)(SRCLINEID(), a, b, c, d)
+#define gtimer_arm_absn(a, b, c, d) GTIMER_FCN(gtimer_arm_absn)(SRCLINEID(), a, b, c, d)
 #endif
 
 void gtimer_disarm(gtimer_t *gti);

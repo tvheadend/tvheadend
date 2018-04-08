@@ -76,6 +76,7 @@
 #include "streaming.h"
 #include "memoryinfo.h"
 #include "watchdog.h"
+#include "tprofile.h"
 #if CONFIG_LINUXDVB_CA
 #include "input/mpegts/en50221/en50221.h"
 #endif
@@ -190,8 +191,10 @@ static tvh_cond_t mtimer_cond;
 static int64_t mtimer_periodic;
 static pthread_t mtimer_tid;
 static pthread_t mtimer_tick_tid;
+static tprofile_t mtimer_profile;
 static LIST_HEAD(, gtimer) gtimers;
 static pthread_cond_t gtimer_cond;
+static tprofile_t gtimer_profile;
 static TAILQ_HEAD(, tasklet) tasklets;
 static tvh_cond_t tasklet_cond;
 static pthread_t tasklet_tid;
@@ -271,7 +274,6 @@ GTIMER_FCN(mtimer_arm_abs)
   mti->mti_expire   = when;
 #if ENABLE_GTIMER_CHECK
   mti->mti_id       = id;
-  mti->mti_fcn      = fcn;
 #endif
 
   LIST_INSERT_SORTED(&mtimers, mti, mti_link, mtimercmp);
@@ -288,7 +290,7 @@ GTIMER_FCN(mtimer_arm_rel)
   (GTIMER_TRACEID_ mtimer_t *gti, mti_callback_t *callback, void *opaque, int64_t delta)
 {
 #if ENABLE_GTIMER_CHECK
-  GTIMER_FCN(mtimer_arm_abs)(id, fcn, gti, callback, opaque, mclk() + delta);
+  GTIMER_FCN(mtimer_arm_abs)(id, gti, callback, opaque, mclk() + delta);
 #else
   mtimer_arm_abs(gti, callback, opaque, mclk() + delta);
 #endif
@@ -332,7 +334,6 @@ GTIMER_FCN(gtimer_arm_absn)
   gti->gti_expire   = when;
 #if ENABLE_GTIMER_CHECK
   gti->gti_id       = id;
-  gti->gti_fcn      = fcn;
 #endif
 
   LIST_INSERT_SORTED(&gtimers, gti, gti_link, gtimercmp);
@@ -349,7 +350,7 @@ GTIMER_FCN(gtimer_arm_rel)
   (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t delta)
 {
 #if ENABLE_GTIMER_CHECK
-  GTIMER_FCN(gtimer_arm_absn)(id, fcn, gti, callback, opaque, gclk() + delta);
+  GTIMER_FCN(gtimer_arm_absn)(id, gti, callback, opaque, gclk() + delta);
 #else
   gtimer_arm_absn(gti, callback, opaque, gclk() + delta);
 #endif
@@ -575,6 +576,7 @@ mdispatch_clock_update(void)
   if (mono > atomic_get_s64(&mtimer_periodic)) {
     atomic_set_s64(&mtimer_periodic, mono + MONOCLOCK_RESOLUTION);
     gdispatch_clock_update(); /* gclk() update */
+    tprofile_log_stats(); /* Log timings */
     comet_flush(); /* Flush idle comet mailboxes */
   }
 
@@ -605,11 +607,7 @@ mtimer_thread(void *aux)
   mtimer_t *mti;
   mti_callback_t *cb;
   int64_t now, next;
-#if ENABLE_GTIMER_CHECK
-  int64_t mtm;
   const char *id;
-  const char *fcn;
-#endif
 
   pthread_mutex_lock(&global_lock);
   while (tvheadend_is_running() && atomic_get(&tvheadend_mainloop) == 0)
@@ -632,10 +630,12 @@ mtimer_thread(void *aux)
       }
 
 #if ENABLE_GTIMER_CHECK
-      mtm = getmonoclock();
       id = mti->mti_id;
-      fcn = mti->mti_fcn;
+#else
+      id = NULL;
 #endif
+      tprofile_start(&mtimer_profile, id);
+
       cb = mti->mti_callback;
 
       LIST_REMOVE(mti, mti_link);
@@ -643,11 +643,7 @@ mtimer_thread(void *aux)
 
       cb(mti->mti_opaque);
 
-#if ENABLE_GTIMER_CHECK
-      mtm = getmonoclock() - mtm;
-      if (mtm > 10000)
-        tvhtrace(LS_MTIMER, "%s:%s duration %"PRId64"us", id, fcn, mtm);
-#endif
+      tprofile_finish(&mtimer_profile);
     }
 
     /* Periodic updates */
@@ -672,11 +668,7 @@ mainloop(void)
   gti_callback_t *cb;
   time_t now;
   struct timespec ts;
-#if ENABLE_GTIMER_CHECK
-  int64_t mtm;
   const char *id;
-  const char *fcn;
-#endif
 
   while (tvheadend_is_running()) {
     now = gdispatch_clock_update();
@@ -703,10 +695,12 @@ mainloop(void)
       }
 
 #if ENABLE_GTIMER_CHECK
-      mtm = getmonoclock();
       id = gti->gti_id;
-      fcn = gti->gti_fcn;
+#else
+      id = NULL;
 #endif
+      tprofile_start(&gtimer_profile, id);
+
       cb = gti->gti_callback;
 
       LIST_REMOVE(gti, gti_link);
@@ -714,11 +708,7 @@ mainloop(void)
 
       cb(gti->gti_opaque);
 
-#if ENABLE_GTIMER_CHECK
-      mtm = getmonoclock() - mtm;
-      if (mtm > 10000)
-        tvhtrace(LS_GTIMER, "%s:%s duration %"PRId64"us", id, fcn, mtm);
-#endif
+      tprofile_finish(&gtimer_profile);
     }
 
     /* Wait */
@@ -801,7 +791,8 @@ main(int argc, char **argv)
               opt_dbus_session = 0,
               opt_nobackup     = 0,
               opt_nobat        = 0,
-              opt_subsystems   = 0;
+              opt_subsystems   = 0,
+              opt_tprofile     = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -909,6 +900,8 @@ main(int argc, char **argv)
     { 0, "tsfile_tuners", N_("Number of tsfile tuners"), OPT_INT, &opt_tsfile_tuner },
     { 0, "tsfile", N_("tsfile input (mux file)"), OPT_STR_LIST, &opt_tsfile },
 #endif
+
+    { 0, "tprofile", N_("Gather timing statistics for the code"), OPT_BOOL, &opt_tprofile },
 
   };
 
@@ -1088,6 +1081,9 @@ main(int argc, char **argv)
     }
   }
 
+  tprofile_module_init(opt_tprofile);
+  tprofile_init(&gtimer_profile, "gtimer");
+  tprofile_init(&mtimer_profile, "mtimer");
   uuid_init();
   idnode_boot();
   config_boot(opt_config, gid, uid, opt_user_agent);
@@ -1360,6 +1356,9 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, notify_done);
   tvhftrace(LS_MAIN, spawn_done);
 
+  tprofile_done(&gtimer_profile);
+  tprofile_done(&mtimer_profile);
+  tprofile_module_done();
   tvhlog(LOG_NOTICE, LS_STOP, "Exiting HTS Tvheadend");
   tvhlog_end();
 

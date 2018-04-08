@@ -208,6 +208,7 @@ SRCS-1 = \
 	src/uuid.c \
 	src/main.c \
 	src/tvhlog.c \
+	src/tprofile.c \
 	src/idnode.c \
 	src/prop.c \
 	src/proplib.c \

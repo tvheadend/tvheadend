@@ -124,6 +124,7 @@ mpegts_table_release_ ( mpegts_table_t *mt )
   if (mt->mt_destroy)
     mt->mt_destroy(mt);
   free(mt->mt_name);
+  tprofile_done(&mt->mt_profile);
   if (tvhtrace_enabled()) {
     /* poison */
     memset(mt, 0xa5, sizeof(*mt));
@@ -207,6 +208,7 @@ mpegts_table_add
 {
   mpegts_table_t *mt;
   int subscribe = 1;
+  char buf[64];
 
   /* Check for existing */
   pthread_mutex_lock(&mm->mm_tables_lock);
@@ -258,6 +260,8 @@ mpegts_table_add
   mt->mt_sect.ps_cc = -1;
   mt->mt_sect.ps_table = tableid;
   mt->mt_sect.ps_mask = mask;
+  snprintf(buf, sizeof(buf), "%s %p", mt->mt_name, mt);
+  tprofile_init(&mt->mt_profile, buf);
 
   /* Open table */
   if (pid < 0) {

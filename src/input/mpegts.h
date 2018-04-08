@@ -25,6 +25,7 @@
 #endif
 
 #include "atomic.h"
+#include "tprofile.h"
 #include "sbuf.h"
 #include "input.h"
 #include "service.h"
@@ -269,6 +270,8 @@ struct mpegts_table
   struct mpegts_table_mux_cb *mt_mux_cb;
 
   mpegts_service_t *mt_service;
+
+  tprofile_t mt_profile;
   
   void (*mt_destroy) (mpegts_table_t *mt); // Allow customisable destroy hook
                                            // useful for dynamic allocation of
@@ -710,6 +713,7 @@ struct mpegts_input
   TAILQ_HEAD(,mpegts_packet)      mi_input_queue;
   uint64_t                        mi_input_queue_size;
   tvhlog_limit_t                  mi_input_queue_loglimit;
+  qprofile_t                      mi_qprofile;
   int                             mi_remove_scrambled_bits;
 
   /* Data processing/output */

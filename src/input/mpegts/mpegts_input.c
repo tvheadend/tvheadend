@@ -1,4 +1,4 @@
-/*
+  /*
  *  Tvheadend - MPEGTS input source
  *  Copyright (C) 2013 Adam Sutton
  *
@@ -1161,6 +1161,7 @@ mpegts_input_queue_packets
   ( mpegts_mux_instance_t *mmi, mpegts_packet_t *mp )
 {
   mpegts_input_t *mi = mmi->mmi_input;
+  const char *id = SRCLINEID();
   int len = mp->mp_len;
 
   pthread_mutex_lock(&mi->mi_input_lock);
@@ -1170,10 +1171,13 @@ mpegts_input_queue_packets
       memoryinfo_alloc(&mpegts_input_queue_memoryinfo, sizeof(mpegts_packet_t) + len);
       mpegts_mux_grab(mp->mp_mux);
       TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
+      tprofile_queue_add(&mi->mi_qprofile, id, len);
+      tprofile_queue_set(&mi->mi_qprofile, id, mi->mi_input_queue_size);
       tvh_cond_signal(&mi->mi_input_cond, 0);
     } else {
       if (tvhlog_limit(&mi->mi_input_queue_loglimit, 10))
         tvhwarn(LS_MPEGTS, "too much queued input data (over 50MB) for %s, discarding new", mi->mi_name);
+      tprofile_queue_drop(&mi->mi_qprofile, id, len);
       free(mp);
     }
   } else {
@@ -1301,6 +1305,7 @@ mpegts_input_table_dispatch
     if (mt->mt_destroyed || !mt->mt_subscribed || mt->mt_pid != pid)
       continue;
     mpegts_table_grab(mt);
+    tprofile_start(&mt->mt_profile, "dispatch");
     if (len < i)
       vec[len++] = mt;
   }
@@ -1318,6 +1323,7 @@ mpegts_input_table_dispatch
         mpegts_psi_section_reassemble((mpegts_psi_table_t *)mt, logprefix,
                                       tsb2, mt->mt_flags & MT_CRC,
                                       mpegts_table_dispatch, mt);
+    tprofile_finish(&mt->mt_profile);
     mpegts_table_release(mt);
   }
 }
@@ -1644,14 +1650,18 @@ static void *
 mpegts_input_thread ( void * p )
 {
   mpegts_packet_t *mp;
-  mpegts_input_t  *mi = p;
+  mpegts_input_t *mi = p;
   size_t bytes = 0;
   int update_pids;
+  tprofile_t tprofile;
   char buf[256];
 
   pthread_mutex_lock(&global_lock);
   mi->mi_display_name(mi, buf, sizeof(buf));
   pthread_mutex_unlock(&global_lock);
+
+  tprofile_init(&tprofile, buf);
+
   pthread_mutex_lock(&mi->mi_input_lock);
   while (atomic_get(&mi->mi_running)) {
 
@@ -1679,7 +1689,9 @@ mpegts_input_thread ( void * p )
       pthread_mutex_unlock(&global_lock);
       pthread_mutex_lock(&mi->mi_output_lock);
     }
+    tprofile_start(&tprofile, "input");
     bytes += mpegts_input_process(mi, mp);
+    tprofile_finish(&tprofile);
     update_pids = mp->mp_mux && mp->mp_mux->mm_update_pids_flag;
     pthread_mutex_unlock(&mi->mi_output_lock);
     if (update_pids) {
@@ -1716,15 +1728,17 @@ mpegts_input_thread ( void * p )
   mi->mi_input_queue_size = 0;
   pthread_mutex_unlock(&mi->mi_input_lock);
 
+  tprofile_done(&tprofile);
+
   return NULL;
 }
 
 static void *
 mpegts_input_table_thread ( void *aux )
 {
-  mpegts_table_feed_t   *mtf;
-  mpegts_input_t        *mi = aux;
-  mpegts_mux_t          *mm = NULL;
+  mpegts_table_feed_t *mtf;
+  mpegts_input_t *mi = aux;
+  mpegts_mux_t *mm = NULL;
 
   pthread_mutex_lock(&mi->mi_output_lock);
   while (atomic_get(&mi->mi_running)) {
@@ -1984,12 +1998,16 @@ mpegts_input_create0
   ( mpegts_input_t *mi, const idclass_t *class, const char *uuid,
     htsmsg_t *c )
 {
+  char buf[32];
+
   if (idnode_insert(&mi->ti_id, uuid, class, 0)) {
     if (uuid)
       tvherror(LS_MPEGTS, "invalid input uuid '%s'", uuid);
     free(mi);
     return NULL;
   }
+  snprintf(buf, sizeof(buf), "input %p", mi);
+  tprofile_queue_init(&mi->mi_qprofile, buf);
   LIST_INSERT_HEAD(&tvh_inputs, (tvh_input_t*)mi, ti_link);
   
   /* Defaults */
@@ -2082,6 +2100,7 @@ mpegts_input_delete ( mpegts_input_t *mi, int delconf )
   /* Stop threads (will unlock global_lock to join) */
   mpegts_input_thread_stop(mi);
 
+  tprofile_queue_done(&mi->mi_qprofile);
   pthread_mutex_destroy(&mi->mi_output_lock);
   tvh_cond_destroy(&mi->mi_table_cond);
   free(mi->mi_name);
