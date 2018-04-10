@@ -145,10 +145,12 @@ dvbcam_unregister_ddci(dvbcam_active_cam_t *ac, dvbcam_active_service_t *as)
     }
   }
 }
+#endif
 
 int
 dvbcam_is_ddci(struct service *t)
 {
+#if ENABLE_DDCI
   th_descrambler_runtime_t *dr = t->s_descramble;
   int ret = 0;
 
@@ -158,8 +160,10 @@ dvbcam_is_ddci(struct service *t)
       ret = as->lddci != NULL;
   }
   return ret;
-}
+#else
+  return 0;
 #endif
+}
 
 /*
  *
