@@ -2,12 +2,12 @@ Source: tvheadend
 Section: video
 Priority: extra
 Maintainer: Adam Sutton <aps@tvheadend.org>
-Build-Depends: debhelper (>= 7.0.50), pkg-config, gettext, libavahi-client-dev, libssl-dev, zlib1g-dev, wget, bzip2, git-core, liburiparser-dev, python, ca-certificates, cmake, dvb-apps, libpcre2-dev | libpcre3-dev
+Build-Depends: debhelper (>= 7.0.50), pkg-config, gettext, libavahi-client-dev, libssl-dev, zlib1g-dev, wget, bzip2, git-core, liburiparser-dev, python, ca-certificates, cmake, libpcre2-dev | libpcre3-dev, libdvbcsa-dev
 Standards-Version: 3.7.3
 
 Package: tvheadend
 Architecture: any
-Depends: ${shlibs:Depends}, libavahi-client3, zlib1g, liburiparser1, dvb-apps, bzip2
+Depends: ${shlibs:Depends}, libavahi-client3, zlib1g, liburiparser1, bzip2
 Recommends: xmltv-util
 Enhances: showtime
 Replaces: hts-tvheadend
@@ -15,7 +15,7 @@ Homepage: https://tvheadend.org
 Description: Tvheadend
  Tvheadend is a TV streaming server and digital video recorder.
    - supports a variety of inputs (DVB-S(2)/T(2)/C, ISDB-S/T/C, ATSC-T/C, IPTV, SAT>IP, HDHR)
-   - supports a variety of clients (Showtime, Smart TV, Kodi, VLC)
+   - supports a variety of clients (Movian, Smart TV, Kodi, VLC)
 
 Package: tvheadend-dbg
 Architecture: any

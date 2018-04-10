@@ -120,12 +120,12 @@ spawn_pipe_thread(void *aux)
   int nfds;
 
   memset(ev, 0, sizeof(ev));
-  ev[0].events   = TVHPOLL_IN;
-  ev[0].fd       = spawn_pipe_info.rd;
-  ev[0].data.ptr = &spawn_pipe_info;
-  ev[1].events   = TVHPOLL_IN;
-  ev[1].fd       = spawn_pipe_error.rd;
-  ev[1].data.ptr = &spawn_pipe_error;
+  ev[0].events = TVHPOLL_IN;
+  ev[0].fd     = spawn_pipe_info.rd;
+  ev[0].ptr    = &spawn_pipe_info;
+  ev[1].events = TVHPOLL_IN;
+  ev[1].fd     = spawn_pipe_error.rd;
+  ev[1].ptr    = &spawn_pipe_error;
   tvhpoll_add(efd, ev, 2);
 
   while (atomic_get(&spawn_pipe_running)) {
@@ -362,7 +362,7 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
 {
   char *s, *f, *p, *a;
   const char **r;
-  int i = 0, l, eow = 0;
+  int i = 0, l, eow;
 
   if (!argv || !cmd)
     return -1;
@@ -374,8 +374,8 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
     while (*s == ' ')
       s++;
     f = s;
-    eow = *s == '\'' || *s == '"' ? *s++ : ' ';
-    while (*s && *s != eow) {
+    eow = 0;
+    while (*s) {
       if (*s == '\\') {
         l = *(s + 1);
         if (l == 'b')
@@ -398,6 +398,18 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
           if (*s)
             s++;
         }
+      } else if (eow) {
+        if (*s == eow) {
+          memmove(s, s + 1, strlen(s));
+          eow = 0;
+        } else {
+          s++;
+        }
+      } else if (*s == '\'' || *s == '"') {
+        eow = *s;
+        memmove(s, s + 1, strlen(s));
+      } else if (*s == ' ') {
+        break;
       } else {
         s++;
       }
@@ -627,6 +639,9 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
 
   if(pipe(fd) == -1) {
     pthread_mutex_unlock(&fork_lock);
+    // do not pass the local variable outside
+    if (argv[0] == bin)
+      argv[0] = NULL;
     return -1;
   }
 
@@ -636,6 +651,9 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
     pthread_mutex_unlock(&fork_lock);
     tvherror(LS_SPAWN, "Unable to fork() for \"%s\" -- %s",
              prog, strerror(errno));
+    // do not pass the local variable outside
+    if (argv[0] == bin)
+      argv[0] = NULL;
     return -1;
   }
 
@@ -689,6 +707,9 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
     // might have been spawned
     setpgid(p, p);
   }
+  // do not pass the local variable outside
+  if (argv[0] == bin)
+    argv[0] = NULL;
   return 0;
 }
 
@@ -722,6 +743,9 @@ spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_s
     pthread_mutex_unlock(&fork_lock);
     tvherror(LS_SPAWN, "Unable to fork() for \"%s\" -- %s",
 	     prog, strerror(errno));
+    // do not pass the local variable outside
+    if (argv[0] == bin)
+      argv[0] = NULL;
     return -1;
   }
 
@@ -762,6 +786,9 @@ spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_s
   if (pid)
     *pid = p;
 
+  // do not pass the local variable outside
+  if (argv[0] == bin)
+    argv[0] = NULL;
   return 0;
 }
 

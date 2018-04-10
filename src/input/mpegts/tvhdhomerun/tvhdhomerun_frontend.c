@@ -155,16 +155,19 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
   if(r < 1) {
     tvherror(LS_TVHDHOMERUN, "failed to set target: %d", r);
+    close(sockfd);
     return NULL;
   }
 
   /* the poll set includes the sockfd and the pipe for IPC */
   efd = tvhpoll_create(2);
   memset(ev, 0, sizeof(ev));
-  ev[0].events             = TVHPOLL_IN;
-  ev[0].fd = ev[0].data.fd = sockfd;
-  ev[1].events             = TVHPOLL_IN;
-  ev[1].fd = ev[1].data.fd = hfe->hf_input_thread_pipe.rd;
+  ev[0].events = TVHPOLL_IN;
+  ev[0].fd     = sockfd;
+  ev[0].ptr    = hfe;
+  ev[1].events = TVHPOLL_IN;
+  ev[1].fd     = hfe->hf_input_thread_pipe.rd;
+  ev[1].ptr    = &hfe->hf_input_thread_pipe;
 
   r = tvhpoll_add(efd, ev, 2);
   if(r < 0)
@@ -178,9 +181,9 @@ tvhdhomerun_frontend_input_thread ( void *aux )
     nfds = tvhpoll_wait(efd, ev, 1, -1);
 
     if (nfds < 1) continue;
-    if (ev[0].data.fd != sockfd) break;
+    if (ev[0].ptr != hfe) break;
 
-    if((r = sbuf_tsdebug_read(mmi->mmi_mux, &sb, sockfd)) < 0) {
+    if((r = sbuf_read(&sb, sockfd)) < 0) {
       /* whoopsy */
       if(ERRNO_AGAIN(errno))
         continue;
@@ -198,7 +201,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
     //tvhdebug(LS_TVHDHOMERUN, "got r=%d (thats %d)", r, (r == 7*188));
 
-    mpegts_input_recv_packets((mpegts_input_t*) hfe, mmi, &sb, 0, NULL);
+    mpegts_input_recv_packets(mmi, &sb, 0, NULL);
   }
 
   tvhdebug(LS_TVHDHOMERUN, "setting target to none");
@@ -291,6 +294,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   sigstat.signal_scale = mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
   sigstat.ber          = mmi->tii_stats.ber;
   sigstat.unc          = atomic_get(&mmi->tii_stats.unc);
+  memset(&sm, 0, sizeof(sm));
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
 
@@ -298,7 +302,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
 
   LIST_FOREACH(svc, &mmi->mmi_mux->mm_transports, s_active_link) {
     pthread_mutex_lock(&svc->s_stream_mutex);
-    streaming_pad_deliver(&svc->s_streaming_pad, streaming_msg_clone(&sm));
+    streaming_service_deliver(svc, streaming_msg_clone(&sm));
     pthread_mutex_unlock(&svc->s_stream_mutex);
   }
 }
@@ -517,7 +521,7 @@ static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *
     }
   }
 
-  mpegts_pid_weighted(&wpids, &pids, 128 /* max? */);
+  mpegts_pid_weighted(&wpids, &pids, 128 /* max? */, MPS_WEIGHT_ALLLIMIT);
   for (i = 0; i < wpids.count; i++)
     tvhdhomerun_device_open_pid(hfe, wpids.pids[i].pid);
   if (wpids.all)

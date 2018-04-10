@@ -32,17 +32,15 @@
  * Connect UDP/RTP
  */
 static int
-iptv_udp_start ( iptv_mux_t *im, const char *raw, const url_t *url )
+iptv_udp_start
+  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
 {
-  char name[256];
   udp_connection_t *conn;
   udp_multirecv_t *um;
 
-  mpegts_mux_nice_name((mpegts_mux_t*)im, name, sizeof(name));
-
   /* Note: url->user is used for specifying multicast source address (SSM)
      here. The URL format is rtp://<srcaddr>@<grpaddr>:<port> */
-  conn = udp_bind(LS_IPTV, name, url->host, url->port, url->user,
+  conn = udp_bind(LS_IPTV, im->mm_nicename, url->host, url->port, url->user,
                   im->mm_iptv_interface, IPTV_BUF_SIZE, 4*1024);
   if (conn == UDP_FATAL_ERROR)
     return SM_CODE_TUNING_FAILED;
@@ -57,13 +55,13 @@ iptv_udp_start ( iptv_mux_t *im, const char *raw, const url_t *url )
   udp_multirecv_init(um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
   im->im_data = um;
 
-  iptv_input_mux_started(im);
+  iptv_input_mux_started(mi, im);
   return 0;
 }
 
 static void
 iptv_udp_stop
-  ( iptv_mux_t *im )
+  ( iptv_input_t *mi, iptv_mux_t *im )
 {
   udp_multirecv_t *um = im->im_data;
 
@@ -75,13 +73,12 @@ iptv_udp_stop
 }
 
 static ssize_t
-iptv_udp_read ( iptv_mux_t *im )
+iptv_udp_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
   int i, n;
   struct iovec *iovec;
   udp_multirecv_t *um = im->im_data;
   ssize_t res = 0;
-  char name[256];
 
   n = udp_multirecv_read(um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
   if (n < 0)
@@ -100,8 +97,7 @@ iptv_udp_read ( iptv_mux_t *im )
   }
 
   if (im->mm_iptv_rtp_seq < 0xffff && im->mm_iptv_rtp_seq > 0x3ff) {
-    mpegts_mux_nice_name((mpegts_mux_t*)im, name, sizeof(name));
-    tvherror(LS_IPTV, "receving non-raw UDP data for %s!", name);
+    tvherror(LS_IPTV, "receving non-raw UDP data for %s!", im->mm_nicename);
     im->mm_iptv_rtp_seq = 0x10000; /* no further logs! */
   }
 
@@ -170,7 +166,6 @@ iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
     seq = nseq;
 
     /* Move data */
-    tsdebug_write((mpegts_mux_t *)im, rtp + hlen, len);
     sbuf_append(&im->mm_iptv_buffer, rtp + hlen, len);
     res += len;
   }
@@ -183,7 +178,7 @@ iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
 }
 
 static ssize_t
-iptv_udp_rtp_read ( iptv_mux_t *im )
+iptv_udp_rtp_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
   udp_multirecv_t *um = im->im_data;
 

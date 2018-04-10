@@ -29,6 +29,7 @@
 
 #include "htsmsg.h"
 #include "htsmsg_binary.h"
+#include "htsmsg_binary2.h"
 #include "htsmsg_json.h"
 #include "settings.h"
 #include "tvheadend.h"
@@ -182,9 +183,9 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 #if ENABLE_ZLIB
     void *msgdata = NULL;
     size_t msglen;
-    r = htsmsg_binary_serialize(record, &msgdata, &msglen, 2*1024*1024);
+    r = htsmsg_binary2_serialize0(record, &msgdata, &msglen, 2*1024*1024);
     if (!r && msglen >= 4) {
-      r = tvh_gzip_deflate_fd_header(fd, msgdata + 4, msglen - 4, NULL, 3);
+      r = tvh_gzip_deflate_fd_header(fd, msgdata, msglen, NULL, 3, "01");
       if (r)
         ok = 0;
     } else {
@@ -233,7 +234,8 @@ hts_settings_load_one(const char *filename)
 
   /* Decode */
   if(n == size) {
-    if (size > 12 && memcmp(mem, "\xff\xffGZIP00", 8) == 0) {
+    if (size > 12 && memcmp(mem, "\xff\xffGZIP0", 7) == 0 &&
+        (mem[7] == '0' || mem[7] == '1')) {
 #if ENABLE_ZLIB
       uint32_t orig = (mem[8] << 24) | (mem[9] << 16) | (mem[10] << 8) | mem[11];
       if (orig > 10*1024*1024U) {
@@ -242,7 +244,11 @@ hts_settings_load_one(const char *filename)
       } else if (orig > 0) {
         uint8_t *unpacked = tvh_gzip_inflate((uint8_t *)mem + 12, size - 12, orig);
         if (unpacked) {
-          r = htsmsg_binary_deserialize(unpacked, orig, NULL);
+          if (mem[7] == '1') {
+            r = htsmsg_binary2_deserialize0(unpacked, orig, NULL);
+          } else {
+            r = htsmsg_binary_deserialize0(unpacked, orig, NULL);
+          }
           free(unpacked);
         }
       }

@@ -19,6 +19,7 @@
 #include "tvheadend.h"
 #include "settings.h"
 #include "caclient.h"
+#include "dvbcam.h"
 
 const idclass_t *caclient_classes[] = {
 #if ENABLE_LINUXDVB_CA
@@ -187,15 +188,17 @@ caclient_class_save ( idnode_t *in, char *filename, size_t fsize )
   return c;
 }
 
-static const char *
-caclient_class_get_title ( idnode_t *in, const char *lang )
+static void
+caclient_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
   caclient_t *cac = (caclient_t *)in;
-  if (cac->cac_name && cac->cac_name[0])
-    return cac->cac_name;
-  snprintf(prop_sbuf, PROP_SBUF_LEN,
-           tvh_gettext_lang(lang, N_("CA client %i")), cac->cac_index);
-  return prop_sbuf;
+  if (cac->cac_name && cac->cac_name[0]) {
+    snprintf(dst, dstsize, "%s", cac->cac_name);
+  } else {
+    snprintf(dst, dstsize,
+             tvh_gettext_lang(lang, N_("CA client %i")), cac->cac_index);
+  }
 }
 
 static void
@@ -267,6 +270,13 @@ const idclass_t caclient_class =
   .ic_delete     = caclient_class_delete,
   .ic_moveup     = caclient_class_moveup,
   .ic_movedown   = caclient_class_movedown,
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("General Settings"),
+      .number = 1,
+    },
+    {}
+  },
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -275,6 +285,7 @@ const idclass_t caclient_class =
       .opts     = PO_RDONLY | PO_HIDDEN | PO_NOUI,
       .get      = caclient_class_class_get,
       .set      = caclient_class_class_set,
+      .group    = 1,
     },
     {
       .type     = PT_INT,
@@ -282,6 +293,7 @@ const idclass_t caclient_class =
       .name     = N_("Index"),
       .opts     = PO_RDONLY | PO_HIDDEN | PO_NOUI,
       .off      = offsetof(caclient_t, cac_index),
+      .group    = 1,
     },
     {
       .type     = PT_BOOL,
@@ -289,6 +301,7 @@ const idclass_t caclient_class =
       .name     = N_("Enabled"),
       .desc     = N_("Enable/Disable CA client."),
       .off      = offsetof(caclient_t, cac_enabled),
+      .group    = 1,
     },
     {
       .type     = PT_STR,
@@ -296,7 +309,8 @@ const idclass_t caclient_class =
       .name     = N_("Client name"),
       .desc     = N_("Name of the client."),
       .off      = offsetof(caclient_t, cac_name),
-      .notify   = idnode_notify_title_changed,
+      .notify   = idnode_notify_title_changed_lang,
+      .group    = 1,
     },
     {
       .type     = PT_STR,
@@ -304,6 +318,7 @@ const idclass_t caclient_class =
       .name     = N_("Comment"),
       .desc     = N_("Free-form text field, enter whatever you like."),
       .off      = offsetof(caclient_t, cac_comment),
+      .group    = 1,
     },
     {
       .type     = PT_STR,
@@ -311,6 +326,7 @@ const idclass_t caclient_class =
       .name     = N_("Status"),
       .get      = caclient_class_status_get,
       .opts     = PO_RDONLY | PO_HIDDEN | PO_NOSAVE | PO_NOUI,
+      .group    = 1,
     },
     { }
   }
@@ -332,7 +348,23 @@ caclient_start ( struct service *t )
 }
 
 void
-caclient_caid_update(struct mpegts_mux *mux, uint16_t caid, uint16_t pid, int valid)
+caclient_cat_update
+  ( struct mpegts_mux *mux, const uint8_t *data, int len )
+{
+  caclient_t *cac;
+
+  lock_assert(&global_lock);
+
+  pthread_mutex_lock(&caclients_mutex);
+  TAILQ_FOREACH(cac, &caclients, cac_link)
+    if (cac->cac_cat_update && cac->cac_enabled)
+      cac->cac_cat_update(cac, mux, data, len);
+  pthread_mutex_unlock(&caclients_mutex);
+}
+
+void
+caclient_caid_update
+  ( struct mpegts_mux *mux, uint16_t caid, uint16_t pid, int valid )
 {
   caclient_t *cac;
 
@@ -348,10 +380,8 @@ caclient_caid_update(struct mpegts_mux *mux, uint16_t caid, uint16_t pid, int va
 void
 caclient_set_status(caclient_t *cac, caclient_status_t status)
 {
-  if (cac->cac_status != status) {
-    cac->cac_status = status;
-    idnode_notify_changed(&cac->cac_id);
-  }
+  if (atomic_exchange(&cac->cac_status, status) != status)
+    idnode_lnotify_changed(&cac->cac_id);
 }
 
 const char *
@@ -397,18 +427,20 @@ caclient_init(void)
   for (r = caclient_classes; *r; r++)
     idclass_register(*r);
 
-  if (!(c = hts_settings_load("caclient")))
-    return;
-  HTSMSG_FOREACH(f, c) {
-    if (!(e = htsmsg_field_get_map(f)))
-      continue;
-    caclient_create(f->hmf_name, e, 0);
+  if ((c = hts_settings_load("caclient"))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
+      caclient_create(f->hmf_name, e, 0);
+    }
+    htsmsg_destroy(c);
   }
-  htsmsg_destroy(c);
 
 #if ENABLE_LINUXDVB_CA
   {
     caclient_t *cac;
+
+    dvbcam_init();
     pthread_mutex_lock(&caclients_mutex);
     TAILQ_FOREACH(cac, &caclients, cac_link)
       if (idnode_is_instance(&cac->cac_id, &caclient_dvbcam_class))

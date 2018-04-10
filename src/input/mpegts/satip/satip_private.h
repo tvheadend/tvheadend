@@ -87,7 +87,6 @@ struct satip_device
   int                        sd_pids_len;
   int                        sd_pids_deladd;
   int                        sd_sig_scale;
-  int                        sd_pids0;
   char                      *sd_tunercfg;
   int                        sd_pids21;
   int                        sd_pilot_on;
@@ -282,9 +281,8 @@ satip_satconf_t *satip_satconf_get_position
 
 #define SATIP_SETUP_TCP      (1<<0)
 #define SATIP_SETUP_PLAY     (1<<1)
-#define SATIP_SETUP_PIDS0    (1<<2)
-#define SATIP_SETUP_PILOT_ON (1<<3)
-#define SATIP_SETUP_PIDS21   (1<<4)
+#define SATIP_SETUP_PILOT_ON (1<<2)
+#define SATIP_SETUP_PIDS21   (1<<3)
 
 int
 satip_rtsp_setup( http_client_t *hc,

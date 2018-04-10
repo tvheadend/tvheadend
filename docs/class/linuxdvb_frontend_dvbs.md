@@ -1,17 +1,24 @@
-This panel lists all the available satellite (DVB-S/ISDB-S) frontend 
-parameters.
-
-!['DVB-S frontend parameters'](static/img/doc/linuxdvb_frontend_dvbs/tab.png)
+<tvh_include>inc/linuxdvb_contents</tvh_include>
 
 ---
 
-### Buttons
+## Overview
 
-The following buttons are available:
+This panel lists all the available satellite (DVB-S/ISDB-S) frontend 
+parameters.
 
-Button         | Function
----------------|---------
-**Save**       | Save the current configuration.
-<tvh_include>inc/common_button_table_end</tvh_include>
+<tvh_include>inc/dvbinputs_table</tvh_include>
+
+---
+
+## Buttons
+
+<tvh_include>inc/buttons</tvh_include>
+
+---
+
+## Device Types and Configuration
+
+<tvh_include>inc/dvbinputs_type_table</tvh_include>
 
 ---

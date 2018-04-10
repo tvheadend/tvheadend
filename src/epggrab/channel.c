@@ -330,9 +330,6 @@ epggrab_channel_t *epggrab_channel_create
 {
   epggrab_channel_t *ec;
 
-  if (htsmsg_get_str(conf, "id") == NULL)
-    return NULL;
-
   ec = calloc(1, sizeof(*ec));
   if (idnode_insert(&ec->idnode, uuid, &epggrab_channel_class, 0)) {
     if (uuid)
@@ -350,6 +347,9 @@ epggrab_channel_t *epggrab_channel_create
   if (conf)
     idnode_load(&ec->idnode, conf);
 
+  if (ec->id == NULL)
+    ec->id = strdup("");
+
   TAILQ_INSERT_TAIL(&epggrab_channel_entries, ec, all_link);
   if (RB_INSERT_SORTED(&owner->channels, ec, link, _ch_id_cmp)) {
     tvherror(LS_EPGGRAB, "removing duplicate channel id '%s' (uuid '%s')", ec->id, uuid);
@@ -366,6 +366,11 @@ epggrab_channel_t *epggrab_channel_find
 {
   char *s;
   epggrab_channel_t *ec;
+
+  if (id == NULL || id[0] == '\0') {
+    tvhwarn(LS_EPGGRAB, "%s: ignoring empty EPG id source", mod->id);
+    return NULL;
+  }
 
   SKEL_ALLOC(epggrab_channel_skel);
   s = epggrab_channel_skel->id = tvh_strdupa(id);
@@ -534,14 +539,14 @@ epggrab_channel_is_ota ( epggrab_channel_t *ec )
  * Class
  */
 
-static const char *
-epggrab_channel_class_get_title(idnode_t *self, const char *lang)
+static void
+epggrab_channel_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   epggrab_channel_t *ec = (epggrab_channel_t*)self;
 
-  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s: %s (%s)",
+  snprintf(dst, dstsize, "%s: %s (%s)",
            ec->name ?: ec->id, ec->id, ec->mod->name);
-  return prop_sbuf;
 }
 
 static htsmsg_t *
@@ -736,7 +741,7 @@ CLASS_DOC(epggrabber_channel)
 
 const idclass_t epggrab_channel_class = {
   .ic_class      = "epggrab_channel",
-  .ic_caption    = N_("EPG Grabber Channel"),
+  .ic_caption    = N_("Channels / EPG - EPG Grabber Channels"),
   .ic_doc        = tvh_doc_epggrabber_channel_class,
   .ic_event      = "epggrab_channel",
   .ic_perm_def   = ACCESS_ADMIN,

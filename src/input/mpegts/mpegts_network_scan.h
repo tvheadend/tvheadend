@@ -45,6 +45,7 @@ void mpegts_network_scan_mux_done    ( mpegts_mux_t *mm );
 void mpegts_network_scan_mux_partial ( mpegts_mux_t *mm );
 void mpegts_network_scan_mux_cancel  ( mpegts_mux_t *mm, int reinsert );
 void mpegts_network_scan_mux_active  ( mpegts_mux_t *mm );
+void mpegts_network_scan_mux_reactivate ( mpegts_mux_t *mm );
 
 /*
  * Init / Teardown

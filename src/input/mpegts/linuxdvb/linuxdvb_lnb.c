@@ -43,13 +43,12 @@ typedef struct linuxdvb_lnb_conf
   int lnb_switch;
 } linuxdvb_lnb_conf_t;
 
-static const char *
-linuxdvb_lnb_class_get_title ( idnode_t *o, const char *lang )
+static void
+linuxdvb_lnb_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
 {
-  static char buf[256];
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
-  snprintf(buf, sizeof(buf), "LNB: %s", ld->ld_type);
-  return buf;
+  snprintf(dst, dstsize, tvh_gettext_lang(lang, N_("LNB: %s")), ld->ld_type);
 }
 
 extern const idclass_t linuxdvb_diseqc_class;

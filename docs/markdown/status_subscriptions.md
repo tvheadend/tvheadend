@@ -1,26 +1,26 @@
-## Status - Subscriptions
+# Status - Subscriptions
+
+<tvh_include>inc/status_contents</tvh_include>
+
+---
+
+## Overview
 
 This tab shows information about all active subscriptions to Tvheadend.
 
 This is a read-only tab; nothing is configurable.
 
-!['Status - Subscriptions' Tab](static/img/doc/status_subscriptions/tab.png)
+!['Status - Subscriptions' Tab](static/img/doc/status/subscriptions.png)
 
 ---
 
-### Menu Bar/Buttons
+## Buttons
 
-The following functions are available:
-
-Button     | Function
------------|---------
-**Help**   | Display this help page.
+<tvh_include>inc/buttons</tvh_include>
 
 ---
 
-#### Items
-
-The main grid items have the following functions:
+## Items
 
 **ID**
 : Subscription ID.

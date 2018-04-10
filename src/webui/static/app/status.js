@@ -607,6 +607,8 @@ tvheadend.status_conns = function(panel, index) {
                 { name: 'server_port' },
                 { name: 'peer', sortType: stype },
                 { name: 'peer_port' },
+                { name: 'peer_extra_ports' },
+                { name: 'proxy' },
                 { name: 'user', sortType: stype },
                 {
                     name: 'started',
@@ -649,6 +651,23 @@ tvheadend.status_conns = function(panel, index) {
                 sortable: true
             }, {
                 width: 50,
+                id: 'peer_extra_ports',
+                header: _("Client Data Ports"),
+                dataIndex: 'peer_extra_ports',
+                sortable: false,
+                renderer: function(v) {
+                    if (!v) return '';
+                    var o = '';
+                    if ('tcp' in v)
+                        o += _("TCP") + ':' + v.tcp.join(',');
+                    if ('udp' in v) {
+                        if (o) o += ';';
+                        o += _("UDP") + ':' + v.udp.join(',');
+                    }
+                    return o;
+                }
+            }, {
+                width: 50,
                 id: 'user',
                 header: _("Username"),
                 dataIndex: 'user',
@@ -671,6 +690,12 @@ tvheadend.status_conns = function(panel, index) {
                 id: 'server_port',
                 header: _("Server Port"),
                 dataIndex: 'server_port',
+                sortable: true
+            }, {
+                width: 50,
+                id: 'proxy',
+                header: _("Proxy Address"),
+                dataIndex: 'proxy',
                 sortable: true
             }]);
 

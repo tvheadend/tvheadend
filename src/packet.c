@@ -18,6 +18,7 @@
 
 
 #include "tvheadend.h"
+#include "streaming.h"
 #include "packet.h"
 #include "string.h"
 #include "atomic.h"
@@ -92,7 +93,7 @@ pkt_copy_shallow(th_pkt_t *pkt)
   th_pkt_t *n = malloc(sizeof(th_pkt_t));
 
   if (n) {
-    *n = *pkt;
+    blacklisted_memcpy(n, pkt, sizeof(*pkt));
 
     n->pkt_refcount = 1;
 
@@ -115,7 +116,7 @@ pkt_copy_nodata(th_pkt_t *pkt)
   th_pkt_t *n = malloc(sizeof(th_pkt_t));
 
   if (n) {
-    *n = *pkt;
+    blacklisted_memcpy(n, pkt, sizeof(*pkt));
 
     n->pkt_refcount = 1;
 

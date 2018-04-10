@@ -1,4 +1,26 @@
 {
+  "caid_comment": [
+    "",
+    "The CAID list contains configuration for separate CA systems.",
+    "",
+    "TVHeadend uses some techniques to decode the previous queued data to offer",
+    "faster client input and data queing when the keys are late.",
+    "Here is the descrambling layer configuration to do this properly.",
+    "",
+    "name - CA nice name",
+    "caid - CAID (hexadecimal)",
+    "mask - CAID mask (hexadecimal - use FFFF for single CAID)",
+    "interval - expected ECM interval (in milliseconds)",
+    "multipid - multiple keys for different PIDs",
+    "quickecm - key is changed quickly upon the ECM change",
+    "constcw - the key won't change (it may be used also to turn off",
+    "          the extra logic in TVH's code - may help for other CAs)",
+    "paritycheck - number of TS packets to decide when the key parity was changed",
+    "              in the input TS stream",
+    "ecmparity - can be a string from this list:",
+    "             'standard' - ECM 0x80 means even, ECM 0x81 means odd",
+    "             'inverted' - ECM 0x81 means even, ECM 0x80 means odd"
+  ],
   "caid": [
     {
       "name": "BISS",

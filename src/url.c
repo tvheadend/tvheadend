@@ -43,15 +43,52 @@ urlreset ( url_t *url )
 void
 urlcopy ( url_t *dst, const url_t *src )
 {
-  dst->scheme = strdup(src->scheme);
-  dst->user   = strdup(src->user);
-  dst->pass   = strdup(src->pass);
-  dst->host   = strdup(src->host);
+  dst->scheme = src->scheme ? strdup(src->scheme) : NULL;
+  dst->user   = src->user ? strdup(src->user) : NULL;
+  dst->pass   = src->pass ? strdup(src->pass) : NULL;
+  dst->host   = src->host ? strdup(src->host) : NULL;
   dst->port   = src->port;
-  dst->path   = strdup(src->path);
-  dst->query  = strdup(src->query);
-  dst->frag   = strdup(src->frag);
-  dst->raw    = strdup(src->raw);
+  dst->path   = src->path ? strdup(src->path) : NULL;
+  dst->query  = src->query ? strdup(src->query) : NULL;
+  dst->frag   = src->frag ? strdup(src->frag) : NULL;
+  dst->raw    = src->raw ? strdup(src->raw) : NULL;
+}
+
+int
+urlrecompose( url_t *url )
+{
+  size_t len;
+  char *raw, port[16];
+  const int user = url->user && url->user[0];
+  const int pass = url->pass && url->pass[0];
+
+  len = (url->scheme ? strlen(url->scheme) : 0) + 4 +
+        (user ? strlen(url->user) + 1 : 0) +
+        (pass ? strlen(url->pass) + 1 : 0) +
+        (url->host ? strlen(url->host) : 0) +
+        (url->port > 0 ? 6 : 0) +
+        (url->path ? strlen(url->path) : 0) +
+        (url->query ? strlen(url->query) + 1 : 0);
+  raw = malloc(len);
+  if (raw == NULL)
+    return -ENOMEM;
+  if (url->port > 0 && url->port <= 65535)
+    snprintf(port, sizeof(port), ":%d", url->port);
+  else
+    port[0] = '\0';
+  snprintf(raw, len, "%s%s%s%s%s%s%s%s%s%s%s",
+           url->scheme ?: "", url->scheme ? "://" : "",
+           user ? url->user : "",
+           (user && pass) ? ":" : "",
+           (user && pass) ? url->pass : "",
+           user ? "@" : "",
+           url->host ?: "", port,
+           url->path ?: "",
+           (url->query && url->query[0]) ? "?" : "",
+           url->query ?: "");
+  free(url->raw);
+  url->raw = raw;
+  return 0;
 }
 
 /* Use liburiparser if available */

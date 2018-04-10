@@ -93,7 +93,8 @@ iptv_file_thread ( void *aux )
  * Open file
  */
 static int
-iptv_file_start ( iptv_mux_t *im, const char *raw, const url_t *url )
+iptv_file_start
+  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
 {
   file_priv_t *fp;
   int fd = tvh_open(raw + 7, O_RDONLY | O_NONBLOCK, 0);
@@ -107,14 +108,14 @@ iptv_file_start ( iptv_mux_t *im, const char *raw, const url_t *url )
   fp->fd = fd;
   tvh_cond_init(&fp->cond);
   im->im_data = fp;
-  iptv_input_mux_started(im);
+  iptv_input_mux_started(mi, im);
   tvhthread_create(&fp->tid, NULL, iptv_file_thread, im, "iptvfile");
   return 0;
 }
 
 static void
 iptv_file_stop
-  ( iptv_mux_t *im )
+  ( iptv_input_t *mi, iptv_mux_t *im )
 {
   file_priv_t *fp = im->im_data;
   int rd = fp->fd;

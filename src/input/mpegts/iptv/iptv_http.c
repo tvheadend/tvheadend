@@ -29,6 +29,7 @@
 #endif
 
 typedef struct http_priv {
+  iptv_input_t  *mi;
   iptv_mux_t    *im;
   http_client_t *hc;
   uint8_t        shutdown;
@@ -249,7 +250,7 @@ iptv_http_header ( http_client_t *hc )
   hp->off = 0;
   if (iptv_http_safe_global_lock(hp)) {
     if (!hp->started) {
-      iptv_input_mux_started(hp->im);
+      iptv_input_mux_started(hp->mi, hp->im);
     } else {
       iptv_input_recv_flush(hp->im);
     }
@@ -271,7 +272,8 @@ iptv_http_data
   int pause = 0, off, rem;
   uint8_t tsbuf[188];
 
-  if (hp == NULL || hp->im == NULL || hc->hc_code != HTTP_STATUS_OK)
+  if (hp == NULL || hp->shutdown || hp->im == NULL ||
+      hc->hc_code != HTTP_STATUS_OK)
     return 0;
 
   im = hp->im;
@@ -305,8 +307,10 @@ iptv_http_data
     }
     memcpy(hp->hls_aes128.tmp + hp->hls_aes128.tmp_len, buf, len);
     hp->hls_aes128.tmp_len += len;
-    if (off == im->mm_iptv_buffer.sb_ptr)
+    if (off == im->mm_iptv_buffer.sb_ptr) {
+      pthread_mutex_unlock(&iptv_lock);
       return 0;
+    }
     buf = im->mm_iptv_buffer.sb_data + im->mm_iptv_buffer.sb_ptr;
     len = im->mm_iptv_buffer.sb_ptr - off;
     assert((len % 16) == 0);
@@ -314,7 +318,6 @@ iptv_http_data
   } else {
     sbuf_append(&im->mm_iptv_buffer, buf, len);
   }
-  tsdebug_write((mpegts_mux_t *)im, buf, len);
   hp->off += len;
 
   if (hp->hls_url && hp->off == 0 && len >= 2*188) {
@@ -383,7 +386,7 @@ iptv_http_complete
   htsmsg_t *m, *m2;
   int r;
 
-  if (hp == NULL || hp->im == NULL)
+  if (hp == NULL || hp->shutdown || hp->im == NULL)
     return 0;
 
   if (hp->m3u_header) {
@@ -471,7 +474,7 @@ iptv_http_complete_key
 {
   http_priv_t *hp = hc->hc_aux;
 
-  if (hp == NULL)
+  if (hp == NULL || hp->shutdown)
     return 0;
   tvhtrace(LS_IPTV, "received key len %d", hp->key_sbuf.sb_ptr);
   if (hp->key_sbuf.sb_ptr != AES_BLOCK_SIZE) {
@@ -497,7 +500,7 @@ iptv_http_create_header
 {
   http_priv_t *hp = hc->hc_aux;
 
-  if (hp == NULL || hp->im == NULL)
+  if (hp == NULL || hp->shutdown || hp->im == NULL)
     return;
   http_client_basic_args(hc, h, url, keepalive);
   http_client_add_args(hc, h, hp->im->mm_iptv_hdr);
@@ -508,13 +511,14 @@ iptv_http_create_header
  */
 static int
 iptv_http_start
-  ( iptv_mux_t *im, const char *raw, const url_t *u )
+  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *u )
 {
   http_priv_t *hp;
   http_client_t *hc;
   int r;
 
   hp = calloc(1, sizeof(*hp));
+  hp->mi = mi;
   hp->im = im;
   if (!(hc = http_client_connect(hp, HTTP_VERSION_1_1, u->scheme,
                                  u->host, u->port, NULL))) {
@@ -549,11 +553,10 @@ iptv_http_start
  */
 static void
 iptv_http_stop
-  ( iptv_mux_t *im )
+  ( iptv_input_t *mi, iptv_mux_t *im )
 {
   http_priv_t *hp = im->im_data;
 
-  hp->hc->hc_aux = NULL;
   hp->shutdown = 1;
   pthread_mutex_unlock(&iptv_lock);
   http_client_close(hp->hc);
@@ -577,7 +580,7 @@ iptv_http_stop
  */
 static void
 iptv_http_pause
-  ( iptv_mux_t *im, int pause )
+  ( iptv_input_t *mi, iptv_mux_t *im, int pause )
 {
   http_priv_t *hp = im->im_data;
 

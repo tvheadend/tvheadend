@@ -106,27 +106,32 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
                          channel_t *ch, epg_broadcast_t *ebc)
 {
   char start[32], stop[32], ubuf[UUID_HEX_SIZE];
-  epg_episode_t *e = ebc->episode;
   lang_str_ele_t *lse;
 
-  if (e == NULL || e->title == NULL) return;
+  if (ebc->title == NULL) return;
   http_xmltv_time(start, ebc->start);
   http_xmltv_time(stop, ebc->stop);
   htsbuf_qprintf(hq, "<programme start=\"%s\" stop=\"%s\" channel=\"%s\">\n",
                  start, stop, idnode_uuid_as_str(&ch->ch_id, ubuf));
-  RB_FOREACH(lse, e->title, link) {
+  RB_FOREACH(lse, ebc->title, link) {
     htsbuf_qprintf(hq, "  <title lang=\"%s\">", lse->lang);
     htsbuf_append_and_escape_xml(hq, lse->str);
     htsbuf_append_str(hq, "</title>\n");
   }
-  if (e->subtitle)
-    RB_FOREACH(lse, e->subtitle, link) {
+  if (ebc->subtitle)
+    RB_FOREACH(lse, ebc->subtitle, link) {
       htsbuf_qprintf(hq, "  <sub-title lang=\"%s\">", lse->lang);
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</sub-title>\n");
     }
   if (ebc->description)
     RB_FOREACH(lse, ebc->description, link) {
+      htsbuf_qprintf(hq, "  <desc lang=\"%s\">", lse->lang);
+      htsbuf_append_and_escape_xml(hq, lse->str);
+      htsbuf_append_str(hq, "</desc>\n");
+    }
+  else if (ebc->summary)
+    RB_FOREACH(lse, ebc->summary, link) {
       htsbuf_qprintf(hq, "  <desc lang=\"%s\">", lse->lang);
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</desc>\n");
@@ -282,7 +287,7 @@ page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
   else if (nc == 2 && !strcmp(components[0], "channel"))
     ch = channel_find(components[1]);
   else if (nc == 2 && !strcmp(components[0], "tagid"))
-    tag = channel_tag_find_by_identifier(atoi(components[1]));
+    tag = channel_tag_find_by_id(atoi(components[1]));
   else if (nc == 2 && !strcmp(components[0], "tagname"))
     tag = channel_tag_find_by_name(components[1], 0);
   else if (nc == 2 && !strcmp(components[0], "tag"))

@@ -29,21 +29,17 @@ tvh_stream_is_copy(TVHCodecProfile *profile, tvh_ssc_t *ssc,
                    const char *src_codecs)
 {
     const char *txtname;
-    char *codecs, *str, *token, *saveptr;
+    htsmsg_t *list;
+    int r;
 
     /* if the source codec is in the list, do the stream copy only */
     if (src_codecs && *src_codecs != '\0' && *src_codecs != '-') {
-        txtname = streaming_component_type2txt(ssc->ssc_type);
-        if (txtname == NULL)
-            goto cont;
-        codecs = tvh_strdupa(src_codecs);
-        if (codecs == NULL)
-            goto cont;
-        for (str = codecs; ; str = NULL) {
-            token = strtok_r(str, " ,|;" , &saveptr);
-            if (token == NULL)
-                break;
-            if (!strcasecmp(token, txtname))
+        list = htsmsg_csv_2_list(src_codecs, ',');
+        if (list) {
+            txtname = streaming_component_type2txt(ssc->es_type);
+            r = htsmsg_is_string_in_list(list, txtname);
+            htsmsg_destroy(list);
+            if (r)
                 goto cont;
         }
         return 1;
@@ -59,12 +55,12 @@ cont:
 static int
 tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
 {
-    enum AVCodecID icodec_id = streaming_component_type2codec_id(ssc->ssc_type);
+    enum AVCodecID icodec_id = streaming_component_type2codec_id(ssc->es_type);
     AVCodec *icodec = NULL, *ocodec = NULL;
 
     if (icodec_id == AV_CODEC_ID_NONE) {
         tvh_stream_log(self, LOG_ERR, "unknown decoder id for '%s'",
-                       streaming_component_type2txt(ssc->ssc_type));
+                       streaming_component_type2txt(ssc->es_type));
         return -1;
     }
 #if ENABLE_MMAL
@@ -81,7 +77,7 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
 #endif
     if (!icodec && !(icodec = avcodec_find_decoder(icodec_id))) {
         tvh_stream_log(self, LOG_ERR, "failed to find decoder for '%s'",
-                       streaming_component_type2txt(ssc->ssc_type));
+                       streaming_component_type2txt(ssc->es_type));
         return -1;
     }
     if (!(ocodec = tvh_codec_profile_get_avcodec(profile))) {
@@ -99,8 +95,8 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
                                              icodec, ocodec, ssc->ssc_gh))) {
         return -1;
     }
-    self->type = ssc->ssc_type = codec_id2streaming_component_type(ocodec->id);
-    if (ssc->ssc_type == SCT_UNKNOWN) {
+    self->type = ssc->es_type = codec_id2streaming_component_type(ocodec->id);
+    if (ssc->es_type == SCT_UNKNOWN) {
         tvh_stream_log(self, LOG_ERR, "unable to translate AV type %s [%d] to SCT!", ocodec->name, ocodec->id);
     }
     ssc->ssc_gh = NULL;
@@ -128,7 +124,7 @@ tvh_stream_handle(TVHStream *self, th_pkt_t *pkt)
     if (pkt->pkt_payload && self->context) {
         return (tvh_context_handle(self->context, pkt) < 0) ? -1 : 0;
     }
-    TVHPKT_INCREF(pkt);
+    pkt_ref_inc(pkt);
     return tvh_transcoder_deliver(self->transcoder, pkt);
 }
 
@@ -153,8 +149,8 @@ tvh_stream_create(TVHTranscoder *transcoder, TVHCodecProfile *profile,
         return NULL;
     }
     self->transcoder = transcoder;
-    self->id = self->index = ssc->ssc_index;
-    self->type = ssc->ssc_type;
+    self->id = self->index = ssc->es_index;
+    self->type = ssc->es_type;
     if ((is_copy = tvh_stream_is_copy(profile, ssc, src_codecs)) > 0) {
         self->is_copy = 1;
         if (ssc->ssc_gh) {

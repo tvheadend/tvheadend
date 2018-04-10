@@ -42,5 +42,6 @@ void urlreset ( url_t *url );
 int urlparse ( const char *str, url_t *url );
 void urlparse_done ( void );
 void urlcopy ( url_t *dst, const url_t *src );
+int urlrecompose ( url_t *url );
 
 #endif

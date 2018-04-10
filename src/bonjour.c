@@ -26,8 +26,8 @@
 #include <CoreServices/CoreServices.h>
 
 typedef struct {
-  char *key;
-  char *value;
+  const char *key;
+  const char *value;
 } txt_rec_t;
 
 pthread_t bonjour_tid;
@@ -43,7 +43,7 @@ bonjour_callback(CFNetServiceRef theService, CFStreamError* error, void* info)
 }
 
 static void
-bonjour_start_service(CFNetServiceRef *svc, char *service_type,
+bonjour_start_service(CFNetServiceRef *svc, const char *service_type,
                       uint32_t port, txt_rec_t *txt)
 {
   CFStringRef str;
@@ -107,16 +107,20 @@ bonjour_init(void)
     { "path", tvheadend_webroot ? tvheadend_webroot : "/" },
     { .key = NULL }
   };
-  
-  bonjour_start_service(&svc_http, "_http._tcp", tvheadend_webui_port, 
-                        txt_rec_http);
 
-  bonjour_start_service(&svc_htsp, "_htsp._tcp", tvheadend_htsp_port, NULL);
+  if (tvheadend_webui_port > 0)
+    bonjour_start_service(&svc_http, "_http._tcp", tvheadend_webui_port,
+                          txt_rec_http);
+
+  if (tvheadend_htsp_port > 0)
+    bonjour_start_service(&svc_htsp, "_htsp._tcp", tvheadend_htsp_port, NULL);
 }
 
 void
 bonjour_done(void)
 {
-  bonjour_stop_service(&svc_http);
-  bonjour_stop_service(&svc_htsp);
+  if (tvheadend_webui_port > 0)
+    bonjour_stop_service(&svc_http);
+  if (tvheadend_htsp_port > 0)
+    bonjour_stop_service(&svc_htsp);
 }

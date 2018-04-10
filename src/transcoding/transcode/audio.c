@@ -28,6 +28,7 @@ _audio_context_sample_fmt(TVHContext *self, AVDictionary **opts)
         tvh_codec_profile_audio_get_sample_fmts(self->profile);
     enum AVSampleFormat ifmt = self->iavctx->sample_fmt;
     enum AVSampleFormat ofmt = AV_SAMPLE_FMT_NONE;
+    enum AVSampleFormat altfmt = AV_SAMPLE_FMT_NONE;
     int i;
 
     if (!tvh_context_get_int_opt(opts, "sample_fmt", &ofmt) &&
@@ -38,13 +39,18 @@ _audio_context_sample_fmt(TVHContext *self, AVDictionary **opts)
                     break;
                 }
             }
-            ofmt = (ofmt != AV_SAMPLE_FMT_NONE) ? ofmt : sample_fmts[0];
+            altfmt = (ofmt != AV_SAMPLE_FMT_NONE) ? ofmt : sample_fmts[0];
         }
         else {
-            ofmt = ifmt;
+            altfmt = ifmt;
         }
     }
-    return ofmt;
+    if (tvhtrace_enabled())
+      tvh_context_log(self, LOG_TRACE, "audio format selection: old %s, alt %s, in %s",
+                      av_get_sample_fmt_name(ofmt),
+                      av_get_sample_fmt_name(altfmt),
+                      av_get_sample_fmt_name(ifmt));
+    return ofmt == AV_SAMPLE_FMT_NONE ? altfmt : ofmt;
 }
 
 
@@ -66,6 +72,9 @@ _audio_context_sample_rate(TVHContext *self, AVDictionary **opts)
             }
         }
     }
+    if (tvhtrace_enabled())
+      tvh_context_log(self, LOG_TRACE, "audio rate selection: old %i, alt %i, in %i",
+                      orate, altrate, irate);
     return orate ? orate : (altrate ? altrate : 48000);
 }
 
@@ -78,7 +87,7 @@ _audio_context_channel_layout(TVHContext *self, AVDictionary **opts)
     uint64_t ilayout = self->iavctx->channel_layout;
     uint64_t altlayout = 0, olayout = 0;
     int tmp = 0, ichannels = 0, i;
-
+    char obuf[64], abuf[64], ibuf[64];
 
     if (!tvh_context_get_int_opt(opts, "channel_layout", &tmp) &&
         !(olayout = tmp) && channel_layouts) {
@@ -91,6 +100,16 @@ _audio_context_channel_layout(TVHContext *self, AVDictionary **opts)
                 altlayout = olayout;
             }
         }
+    }
+    if (tvhtrace_enabled()) {
+        strcpy(obuf, "none");
+        av_get_channel_layout_string(obuf, sizeof(obuf), 0, olayout);
+        strcpy(abuf, "none");
+        av_get_channel_layout_string(abuf, sizeof(abuf), 0, altlayout);
+        strcpy(ibuf, "none");
+        av_get_channel_layout_string(ibuf, sizeof(ibuf), 0, ilayout);
+        tvh_context_log(self, LOG_TRACE, "audio layout selection: old %s, alt %s, in %s",
+                        obuf, abuf, ibuf);
     }
     return olayout ? olayout : (altlayout ? altlayout : AV_CH_LAYOUT_STEREO);
 }

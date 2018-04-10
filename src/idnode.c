@@ -41,15 +41,20 @@ typedef struct idclass_link
   RB_ENTRY(idclass_link) link;
 } idclass_link_t;
 
+pthread_mutex_t                 idnode_mutex = PTHREAD_MUTEX_INITIALIZER;
 static idnodes_rb_t             idnodes;
 static RB_HEAD(,idclass_link)   idclasses;
 static RB_HEAD(,idclass_link)   idrootclasses;
 static TAILQ_HEAD(,idnode_save) idnodes_save;
 
-tvh_cond_t save_cond;
-pthread_t save_tid;
-static int save_running;
-static mtimer_t save_timer;
+static tvh_cond_t save_cond;
+static pthread_t  save_tid;
+static int        save_running;
+static mtimer_t   save_timer;
+
+static pthread_mutex_t idnode_lnotify_mutex = PTHREAD_MUTEX_INITIALIZER;
+static tvh_uuid_set_t  idnode_lnotify_set;
+static tvh_uuid_set_t  idnode_lnotify_title_set;
 
 SKEL_DECLARE(idclasses_skel, idclass_link_t);
 
@@ -101,10 +106,12 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
 
   lock_assert(&global_lock);
 
+  idnode_lock();
+
   in->in_class = class;
   do {
 
-    if (uuid_init_bin(&u, uuid)) {
+    if (uuid_set(&u, uuid)) {
       in->in_class = NULL;
       return -1;
     }
@@ -145,6 +152,8 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   c = RB_INSERT_SORTED(in->in_domain, in, in_domain_link, in_cmp);
   assert(c == NULL);
 
+  idnode_unlock();
+
   /* Fire event */
   idnode_notify(in, "create");
 
@@ -160,8 +169,10 @@ idnode_unlink(idnode_t *in)
   char ubuf[UUID_HEX_SIZE];
 
   lock_assert(&global_lock);
+  idnode_lock();
   RB_REMOVE(&idnodes, in, in_link);
   RB_REMOVE(in->in_domain, in, in_domain_link);
+  idnode_unlock();
   tvhtrace(LS_IDNODE, "unlink node %s", idnode_uuid_as_str(in, ubuf));
   idnode_notify(in, "delete");
   assert(in->in_save == NULL || in->in_save == SAVEPTR_OUTOFSERVICE);
@@ -224,23 +235,26 @@ idnode_get_short_uuid (const idnode_t *in)
 const char *
 idnode_uuid_as_str(const idnode_t *in, char *uuid)
 {
-  bin2hex(uuid, UUID_HEX_SIZE, in->in_uuid.bin, sizeof(in->in_uuid.bin));
-  return uuid;
+  return bin2hex(uuid, UUID_HEX_SIZE, in->in_uuid.bin, sizeof(in->in_uuid.bin));
 }
 
 /**
  *
  */
 const char *
-idnode_get_title(idnode_t *in, const char *lang)
+idnode_get_title(idnode_t *in, const char *lang, char *dst, size_t dstsize)
 {
   static char ubuf[UUID_HEX_SIZE];
   const idclass_t *ic = in->in_class;
   for(; ic != NULL; ic = ic->ic_super) {
-    if(ic->ic_get_title != NULL)
-      return ic->ic_get_title(in, lang);
+    if(ic->ic_get_title != NULL) {
+      ic->ic_get_title(in, lang, dst, dstsize);
+      return dst;
+    }
   }
-  return idnode_uuid_as_str(in, ubuf);
+  strncpy(dst, idnode_uuid_as_str(in, ubuf), dstsize);
+  dst[dstsize-1] = 0;
+  return dst;
 }
 
 
@@ -608,22 +622,17 @@ idnode_domain(const idclass_t *idc)
   }
 }
 
-void *
-idnode_find ( const char *uuid, const idclass_t *idc, const idnodes_rb_t *domain )
+static idnode_t *
+idnode_find_ ( idnode_t *skel, const idclass_t *idc, const idnodes_rb_t *domain )
 {
-  idnode_t skel, *r;
+  idnode_t *r;
 
-  tvhtrace(LS_IDNODE, "find node %s class %s", uuid, idc ? idc->ic_class : NULL);
-  if(uuid == NULL || strlen(uuid) != UUID_HEX_SIZE - 1)
-    return NULL;
-  if(hex2bin(skel.in_uuid.bin, sizeof(skel.in_uuid.bin), uuid))
-    return NULL;
   if (domain == NULL)
     domain = idnode_domain(idc);
   if (domain == NULL)
-    r = RB_FIND(&idnodes, &skel, in_link, in_cmp);
+    r = RB_FIND(&idnodes, skel, in_link, in_cmp);
   else
-    r = RB_FIND(domain, &skel, in_domain_link, in_cmp);
+    r = RB_FIND(domain, skel, in_domain_link, in_cmp);
   if(r != NULL && idc != NULL) {
     const idclass_t *c = r->in_class;
     for(;c != NULL; c = c->ic_super) {
@@ -633,6 +642,29 @@ idnode_find ( const char *uuid, const idclass_t *idc, const idnodes_rb_t *domain
     return NULL;
   }
   return r;
+}
+
+void *
+idnode_find0 ( tvh_uuid_t *uuid, const idclass_t *idc, const idnodes_rb_t *domain )
+{
+  char buf[UUID_HEX_SIZE];
+  idnode_t skel;
+  skel.in_uuid = *uuid;
+  tvhtrace(LS_IDNODE, "find node %s class %s",
+           uuid_get_hex(uuid, buf), idc ? idc->ic_class : NULL);
+  return idnode_find_(&skel, idc, domain);
+}
+
+void *
+idnode_find ( const char *uuid, const idclass_t *idc, const idnodes_rb_t *domain )
+{
+  idnode_t skel;
+  tvhtrace(LS_IDNODE, "find node %s class %s", uuid, idc ? idc->ic_class : NULL);
+  if(uuid == NULL || strlen(uuid) != UUID_HEX_SIZE - 1)
+    return NULL;
+  if(hex2bin(skel.in_uuid.bin, sizeof(skel.in_uuid.bin), uuid))
+    return NULL;
+  return idnode_find_(&skel, idc, domain);
 }
 
 idnode_set_t *
@@ -683,9 +715,11 @@ idnode_cmp_title
 {
   idnode_t      *ina  = *(idnode_t**)a;
   idnode_t      *inb  = *(idnode_t**)b;
-  const char *sa = idnode_get_title(ina, (const char *)lang);
-  const char *sb = idnode_get_title(inb, (const char *)lang);
-  return strcmp(sa ?: "", sb ?: "");
+  char bufa[384];
+  char bufb[384];
+  idnode_get_title(ina, (const char *)lang, bufa, sizeof(bufa));
+  idnode_get_title(inb, (const char *)lang, bufb, sizeof(bufb));
+  return strcmp(bufa, bufb);
 }
 
 #define safecmp(a, b) ((a) > (b) ? 1 : ((a) < (b) ? -1 : 0))
@@ -1072,10 +1106,9 @@ idnode_set_as_htsmsg
   ( idnode_set_t *is )
 {
   htsmsg_t *l = htsmsg_create_list();
-  char ubuf[UUID_HEX_SIZE];
   int i;
   for (i = 0; i < is->is_count; i++)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(is->is_array[i], ubuf));
+    htsmsg_add_uuid(l, NULL, &is->is_array[i]->in_uuid);
   return l;
 }
 
@@ -1497,16 +1530,15 @@ htsmsg_t *
 idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask, const char *lang)
 {
   const idclass_t *idc = self->in_class;
-  const char *uuid, *s;
-  char ubuf[UUID_HEX_SIZE];
+  const char *s;
+  char buf[384];
 
   htsmsg_t *m = htsmsg_create_map();
   if (!idc->ic_snode) {
-    uuid = idnode_uuid_as_str(self, ubuf);
-    htsmsg_add_str(m, "uuid", uuid);
-    htsmsg_add_str(m, "id",   uuid);
+    htsmsg_add_uuid(m, "uuid", &self->in_uuid);
+    htsmsg_add_uuid(m, "id",   &self->in_uuid);
   }
-  htsmsg_add_str(m, "text", idnode_get_title(self, lang) ?: "");
+  htsmsg_add_str(m, "text", idnode_get_title(self, lang, buf, sizeof(buf)) ?: "");
   if ((s = idclass_get_caption(idc, lang)))
     htsmsg_add_str(m, "caption", s);
   if ((s = idclass_get_class(idc)))
@@ -1714,10 +1746,9 @@ idnode_list_get1
 {
   idnode_list_mapping_t *ilm;
   htsmsg_t *l = htsmsg_create_list();
-  char ubuf[UUID_HEX_SIZE];
 
   LIST_FOREACH(ilm, in1_list, ilm_in1_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(ilm->ilm_in2, ubuf));
+    htsmsg_add_uuid(l, NULL, &ilm->ilm_in2->in_uuid);
   return l;
 }
 
@@ -1727,10 +1758,9 @@ idnode_list_get2
 {
   idnode_list_mapping_t *ilm;
   htsmsg_t *l = htsmsg_create_list();
-  char ubuf[UUID_HEX_SIZE];
 
   LIST_FOREACH(ilm, in2_list, ilm_in2_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(ilm->ilm_in1, ubuf));
+    htsmsg_add_uuid(l, NULL, &ilm->ilm_in1->in_uuid);
   return l;
 }
 
@@ -1741,9 +1771,10 @@ idnode_list_get_csv1
   char *str;
   idnode_list_mapping_t *ilm;
   htsmsg_t *l = htsmsg_create_list();
+  char buf[384];
 
   LIST_FOREACH(ilm, in1_list, ilm_in1_link)
-    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in2, lang));
+    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in2, lang, buf, sizeof(buf)));
 
   str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
@@ -1757,9 +1788,10 @@ idnode_list_get_csv2
   char *str;
   idnode_list_mapping_t *ilm;
   htsmsg_t *l = htsmsg_create_list();
+  char buf[384];
 
   LIST_FOREACH(ilm, in2_list, ilm_in2_link)
-    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in1, lang));
+    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in1, lang, buf, sizeof(buf)));
 
   str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
@@ -1880,14 +1912,18 @@ idnode_notify_changed (void *in)
 }
 
 void
-idnode_notify_title_changed (void *in, const char *lang)
+idnode_notify_title_changed (void *in)
 {
-  char ubuf[UUID_HEX_SIZE];
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(in, ubuf));
-  htsmsg_add_str(m, "text", idnode_get_title(in, lang));
-  notify_by_msg("title", m, 0);
+  htsmsg_add_uuid(m, "uuid", &((idnode_t *)in)->in_uuid);
+  notify_by_msg("title", m, NOTIFY_REWRITE_TITLE);
   idnode_notify_changed(in);
+}
+
+void
+idnode_notify_title_changed_lang (void *in, const char *lang)
+{
+  return idnode_notify_title_changed(in);
 }
 
 /* **************************************************************************
@@ -1898,8 +1934,16 @@ static void *
 save_thread ( void *aux )
 {
   idnode_save_t *ise;
+  idnode_t *in;
   htsmsg_t *m;
+  uint32_t u32;
+  tvh_uuid_t *uuid;
   char filename[PATH_MAX];
+  tvh_uuid_set_t set, tset;
+  int lnotify;
+
+  uuid_set_init(&set, 10);
+  uuid_set_init(&tset, 10);
 
   tvhthread_renice(15);
 
@@ -1907,23 +1951,58 @@ save_thread ( void *aux )
 
   while (atomic_get(&save_running)) {
     if ((ise = TAILQ_FIRST(&idnodes_save)) == NULL ||
-        (ise->ise_reqtime + IDNODE_SAVE_DELAY > mclk())) {
+        ise->ise_reqtime + IDNODE_SAVE_DELAY > mclk()) {
+      pthread_mutex_lock(&idnode_lnotify_mutex);
+      lnotify = !uuid_set_empty(&idnode_lnotify_set) ||
+                !uuid_set_empty(&idnode_lnotify_title_set);
+      pthread_mutex_unlock(&idnode_lnotify_mutex);
+      if (lnotify)
+        goto lnotifygo;
       if (ise)
         mtimer_arm_abs(&save_timer, idnode_save_trigger_thread_cb, NULL,
                        ise->ise_reqtime + IDNODE_SAVE_DELAY);
       tvh_cond_wait(&save_cond, &global_lock);
       continue;
     }
-    m = idnode_savefn(ise->ise_node, filename, sizeof(filename));
-    ise->ise_node->in_save = NULL;
-    TAILQ_REMOVE(&idnodes_save, ise, ise_link);
-    pthread_mutex_unlock(&global_lock);
-    free(ise);
-    if (m) {
-      hts_settings_save(m, "%s", filename);
-      htsmsg_destroy(m);
+    if (ise) {
+      m = idnode_savefn(ise->ise_node, filename, sizeof(filename));
+      ise->ise_node->in_save = NULL;
+      TAILQ_REMOVE(&idnodes_save, ise, ise_link);
+      pthread_mutex_unlock(&global_lock);
+      free(ise);
+      if (m) {
+        hts_settings_save(m, "%s", filename);
+        htsmsg_destroy(m);
+      }
+      pthread_mutex_lock(&global_lock);
     }
-    pthread_mutex_lock(&global_lock);
+lnotifygo:
+    pthread_mutex_lock(&idnode_lnotify_mutex);
+    if (!uuid_set_empty(&idnode_lnotify_set)) {
+      set = idnode_lnotify_set;
+      uuid_set_init(&idnode_lnotify_set, 10);
+    }
+    if (!uuid_set_empty(&idnode_lnotify_title_set)) {
+      tset = idnode_lnotify_title_set;
+      uuid_set_init(&idnode_lnotify_title_set, 10);
+    }
+    pthread_mutex_unlock(&idnode_lnotify_mutex);
+    if (!uuid_set_empty(&set)) {
+      UUID_SET_FOREACH(uuid, &set, u32) {
+        in = idnode_find0(uuid, NULL, NULL);
+        if (in)
+         idnode_notify_changed(in);
+      }
+      uuid_set_free(&set);
+    }
+    if (!uuid_set_empty(&tset)) {
+      UUID_SET_FOREACH(uuid, &tset, u32) {
+        in = idnode_find0(uuid, NULL, NULL);
+        if (in)
+          idnode_notify_title_changed(in);
+      }
+      uuid_set_free(&tset);
+    }
   }
 
   mtimer_disarm(&save_timer);
@@ -1946,6 +2025,26 @@ save_thread ( void *aux )
 }
 
 /* **************************************************************************
+ * Light update - outside global lock
+ * *************************************************************************/
+
+void idnode_lnotify_changed( void *in )
+{
+  pthread_mutex_lock(&idnode_lnotify_mutex);
+  uuid_set_add(&idnode_lnotify_set, &((idnode_t *)in)->in_uuid);
+  pthread_mutex_unlock(&idnode_lnotify_mutex);
+  tvh_cond_signal(&save_cond, 0);
+}
+
+void idnode_lnotify_title_changed( void *in )
+{
+  pthread_mutex_lock(&idnode_lnotify_mutex);
+  uuid_set_add(&idnode_lnotify_title_set, &((idnode_t *)in)->in_uuid);
+  pthread_mutex_unlock(&idnode_lnotify_mutex);
+  tvh_cond_signal(&save_cond, 0);
+}
+
+/* **************************************************************************
  * Initialization
  * *************************************************************************/
 
@@ -1957,6 +2056,8 @@ idnode_boot(void)
   RB_INIT(&idrootclasses);
   TAILQ_INIT(&idnodes_save);
   tvh_cond_init(&save_cond);
+  uuid_set_init(&idnode_lnotify_set, 10);
+  uuid_set_init(&idnode_lnotify_title_set, 10);
 }
 
 void
@@ -1971,8 +2072,10 @@ idnode_done(void)
 {
   idclass_link_t *il;
 
+  pthread_mutex_lock(&global_lock);
   atomic_set(&save_running, 0);
   tvh_cond_signal(&save_cond, 0);
+  pthread_mutex_unlock(&global_lock);
   pthread_join(save_tid, NULL);
   mtimer_disarm(&save_timer);
 
@@ -1985,6 +2088,9 @@ idnode_done(void)
     free(il);
   }
   SKEL_FREE(idclasses_skel);
+
+  uuid_set_free(&idnode_lnotify_set);
+  uuid_set_free(&idnode_lnotify_title_set);
 }
 
 /******************************************************************************

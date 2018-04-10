@@ -1,24 +1,31 @@
-This tab is the second part of Tvheadend's access control mechanism. It is
-where you set and maintain all user passwords (e.g. for streaming or DVR access).
-
-!['Configuration - Passwords tab'](static/img/doc/passwd/tab.png)
+<tvh_include>inc/users_contents</tvh_include>
 
 ---
 
-<tvh_include>inc/common_button_table_start</tvh_include>
+<tvh_include>inc/users_overview</tvh_include>
 
-<tvh_include>inc/common_button_table_end</tvh_include>
+!['Passwords' Tab](static/img/doc/users/passwords_tab.png)
+
+### Notes on Passwords
+
+* For a password to apply to an account, the username entered must match 
+a username in the *Access Entries* tab and only password entries that are 
+enabled will apply.
+
+* You can have multiple passwords matching a single *Access Entry* if you 
+wish.
+
+* You can enter whatever you like in the comment field.
+
+* Wildcard (anonymous) accounts don't actually need a password, but it's 
+recommended you add one anyway (enter an asterisk `*`).
 
 ---
 
-### Example
+## Buttons
 
-This is an example of a password entry.
+<tvh_include>inc/buttons</tvh_include>
 
-!['Add Password dialog'](static/img/doc/passwd/add.png)
-
-Be aware that the username you enter here must match a username/entry in 
-the Access Entries tab for it to apply. You may 
-have multiple password entries for the same username if you wish. 
 
 ---
+

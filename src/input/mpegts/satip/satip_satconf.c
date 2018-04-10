@@ -250,7 +250,6 @@ satip_satconf_class_network_set( void *o, const void *p )
   htsmsg_field_t *f;
   const char *str;
   int i, save;
-  char ubuf[UUID_HEX_SIZE];
 
   HTSMSG_FOREACH(f, msg) {
     if (!(str = htsmsg_field_get_str(f))) continue;
@@ -276,8 +275,7 @@ satip_satconf_class_network_set( void *o, const void *p )
     satip_satconf_t *sfc2;
     TAILQ_FOREACH(sfc2, &lfe->sf_satconf, sfc_link) {
       for (i = 0; i < sfc2->sfc_networks->is_count; i++)
-        htsmsg_add_str(l, NULL,
-                       idnode_uuid_as_str(sfc2->sfc_networks->is_array[i], ubuf));
+        htsmsg_add_uuid(l, NULL, &sfc2->sfc_networks->is_array[i]->in_uuid);
     }
     mpegts_input_class_network_set(lfe, l);
     /* update the slave tuners, too */
@@ -317,10 +315,11 @@ satip_satconf_class_network_rend( void *o, const char *lang )
   return str;
 }
 
-static const char *
-satip_satconf_class_get_title ( idnode_t *o, const char *lang )
+static void
+satip_satconf_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t size )
 {
-  return ((satip_satconf_t *)o)->sfc_name;
+  snprintf(dst, size, "%s", ((satip_satconf_t *)o)->sfc_name);
 }
 
 static void
@@ -362,7 +361,7 @@ const idclass_t satip_satconf_class =
       .name     = N_("Name"),
       .desc     = N_("Set the display name."),
       .off      = offsetof(satip_satconf_t, sfc_name),
-      .notify   = idnode_notify_title_changed,
+      .notify   = idnode_notify_title_changed_lang,
     },
     {
       .type     = PT_INT,

@@ -161,9 +161,9 @@ tsfix_start(tsfix_t *tf, streaming_start_t *ss)
 
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
-    tfs = tsfix_add_stream(tf, ssc->ssc_index, ssc->ssc_type);
+    tfs = tsfix_add_stream(tf, ssc->es_index, ssc->es_type);
     if (tfs->tfs_video) {
-      if (ssc->ssc_width == 0 || ssc->ssc_height == 0)
+      if (ssc->es_width == 0 || ssc->es_height == 0)
         /* only first video stream may be valid */
         vwait = !hasvideo ? 1 : 0;
       hasvideo = 1;
@@ -195,7 +195,11 @@ tsfix_stop(tsfix_t *tf)
 static void
 tsfix_packet_drop(tfstream_t *tfs, th_pkt_t *pkt, const char *reason)
 {
-  pkt_trace(LS_TSFIX, pkt, "drop");
+  if (tvhtrace_enabled()) {
+    char buf[64];
+    snprintf(buf, sizeof(buf), "drop %s", reason);
+    pkt_trace(LS_TSFIX, pkt, buf);
+  }
   pkt_ref_dec(pkt);
 }
 
@@ -340,7 +344,7 @@ tsfix_update_ref(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
   if (tfs->tfs_audio) {
     diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
-    if (diff > 2 * 90000) {
+    if (diff > 3 * 90000) {
       tvhwarn(LS_TSFIX, "The timediff for %s is big (%"PRId64"), using current dts",
               streaming_component_type2txt(tfs->tfs_type), diff);
       tfs->tfs_local_ref = pkt->pkt_dts;
@@ -539,14 +543,17 @@ compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 static void
 tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 {
-  th_pkt_t *pkt = pkt_copy_shallow(sm->sm_data);
-  tfstream_t *tfs = tfs_find(tf, pkt), *tfs2;
-  streaming_msg_free(sm);
+  th_pkt_t *pkt;
+  tfstream_t *tfs, *tfs2;
   int64_t diff, diff2, threshold;
   int r;
 
+  pkt = pkt_copy_shallow(sm->sm_data);
+  tfs = tfs_find(tf, pkt);
+  streaming_msg_free(sm);
+
   if (tfs == NULL || mclk() < tf->tf_start_time) {
-    pkt_ref_dec(pkt);
+    tsfix_packet_drop(tfs, pkt, "start time");
     return;
   }
 
@@ -564,13 +571,17 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
         break;
       }
     tf->tf_tsref = pkt->pkt_dts & PTS_MASK;
+    if (pts_is_greater_or_equal(pkt->pkt_pcr, pkt->pkt_dts) > 0)
+      tf->tf_tsref = pkt->pkt_pcr & PTS_MASK;
     diff = diff2 = tsfix_backlog_diff(tf);
     if (diff > threshold) {
       if (diff > 160000)
         diff = 160000;
       tf->tf_tsref = (tf->tf_tsref - diff) % PTS_MASK;
-      tvhtrace(LS_TSFIX, "reference clock set to %"PRId64" (backlog %"PRId64")", tf->tf_tsref, diff2);
+      tvhtrace(LS_TSFIX, "reference clock set to %"PRId64" (dts %"PRId64" pcr %"PRId64" backlog %"PRId64")", tf->tf_tsref, pkt->pkt_dts, pkt->pkt_pcr, diff2);
       tsfix_backlog(tf);
+    } else {
+      tvhtrace(LS_TSFIX, "reference clock set to %"PRId64" (dts %"PRId64" pcr %"PRId64" backlog %"PRId64")", tf->tf_tsref, pkt->pkt_dts, pkt->pkt_pcr, diff2);
     }
   } else if (txfix_need_to_update_ref(tf, tfs, pkt)) {
     r = tsfix_update_ref(tf, tfs, pkt);

@@ -61,12 +61,12 @@ tvh_codec_video_get_list_pix_fmts(TVHVideoCodec *self)
 static int
 tvh_codec_profile_video_setup(TVHVideoCodecProfile *self, tvh_ssc_t *ssc)
 {
-    self->size.den = ssc->ssc_height;
-    self->size.num = ssc->ssc_width;
+    self->size.den = ssc->es_height;
+    self->size.num = ssc->es_width;
     if (self->height) {
         self->size.den = self->height;
         self->size.den += self->size.den & 1;
-        self->size.num = self->size.den * ((double)ssc->ssc_width / ssc->ssc_height);
+        self->size.num = self->size.den * ((double)ssc->es_width / ssc->es_height);
         self->size.num += self->size.num & 1;
     }
     return 0;
@@ -76,7 +76,7 @@ tvh_codec_profile_video_setup(TVHVideoCodecProfile *self, tvh_ssc_t *ssc)
 static int
 tvh_codec_profile_video_is_copy(TVHVideoCodecProfile *self, tvh_ssc_t *ssc)
 {
-    return (!self->deinterlace && (self->size.den == ssc->ssc_height));
+    return (!self->deinterlace && (self->size.den == ssc->es_height));
 }
 
 

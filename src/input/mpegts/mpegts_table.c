@@ -47,7 +47,6 @@ mpegts_table_consistency_check ( mpegts_mux_t *mm )
 static void
 mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
 {
-  char buf[256];
   mpegts_table_t   *mt;
 
   assert(mm == mtm->mt_mux);
@@ -76,8 +75,7 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
 
   pthread_mutex_unlock(&mm->mm_tables_lock);
 
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  mpegts_mux_scan_done(mm, buf, 1);
+  mpegts_mux_scan_done(mm, mm->mm_nicename, 1);
 }
 
 void
@@ -126,6 +124,7 @@ mpegts_table_release_ ( mpegts_table_t *mt )
   if (mt->mt_destroy)
     mt->mt_destroy(mt);
   free(mt->mt_name);
+  tprofile_done(&mt->mt_profile);
   if (tvhtrace_enabled()) {
     /* poison */
     memset(mt, 0xa5, sizeof(*mt));
@@ -176,6 +175,29 @@ mpegts_table_type ( mpegts_table_t *mt )
 }
 
 /**
+ * Find a table
+ */
+mpegts_table_t *mpegts_table_find
+  ( mpegts_mux_t *mm, const char *name, void *opaque )
+{
+  mpegts_table_t *mt;
+
+  pthread_mutex_lock(&mm->mm_tables_lock);
+  mpegts_table_consistency_check(mm);
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    if (mt->mt_opaque != opaque)
+      continue;
+    if (strcmp(mt->mt_name, name))
+      continue;
+    mpegts_table_consistency_check(mm);
+    break;
+  }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
+  return mt;
+}
+
+
+/**
  * Add a new DVB table
  */
 mpegts_table_t *
@@ -186,6 +208,7 @@ mpegts_table_add
 {
   mpegts_table_t *mt;
   int subscribe = 1;
+  char buf[64];
 
   /* Check for existing */
   pthread_mutex_lock(&mm->mm_tables_lock);
@@ -237,6 +260,8 @@ mpegts_table_add
   mt->mt_sect.ps_cc = -1;
   mt->mt_sect.ps_table = tableid;
   mt->mt_sect.ps_mask = mask;
+  snprintf(buf, sizeof(buf), "%s %p", mt->mt_name, mt);
+  tprofile_init(&mt->mt_profile, buf);
 
   /* Open table */
   if (pid < 0) {

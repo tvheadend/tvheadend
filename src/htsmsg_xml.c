@@ -204,8 +204,9 @@ xmlns_destroy(xmlns_t *ns)
  *
  */
 static char *
-htsmsg_xml_parse_attrib(xmlparser_t *xp, htsmsg_t *msg, char *src,
-			struct xmlns_list *xmlns_scope_list)
+htsmsg_xml_parse_attrib
+  (xmlparser_t *xp, htsmsg_t *msg, char *src,
+   struct xmlns_list *xmlns_scope_list)
 {
   char *attribname, *payload;
   int attriblen, payloadlen;
@@ -409,10 +410,6 @@ htsmsg_xml_parse_tag(xmlparser_t *xp, htsmsg_t *parent, char *src)
   return src;
 }
 
-
-
-
-
 /**
  *
  */
@@ -479,7 +476,6 @@ htsmsg_xml_parse_pi(xmlparser_t *xp, htsmsg_t *parent, char *src)
   return src;
 }
 
-
 /**
  *
  */
@@ -503,8 +499,8 @@ xml_parse_comment(xmlparser_t *xp, char *src)
  *
  */
 static char *
-decode_label_reference(xmlparser_t *xp, 
-		       struct cdata_content_queue *ccq, char *src)
+decode_label_reference
+  (xmlparser_t *xp, struct cdata_content_queue *ccq, char *src)
 {
   char *s = src;
   int l;
@@ -547,9 +543,9 @@ decode_label_reference(xmlparser_t *xp,
  *
  */
 static char *
-htsmsg_xml_parse_cd0(xmlparser_t *xp, 
-		     struct cdata_content_queue *ccq, htsmsg_t *tags,
-		     htsmsg_t *pis, char *src, int raw)
+htsmsg_xml_parse_cd0
+  (xmlparser_t *xp,struct cdata_content_queue *ccq, htsmsg_t *tags,
+   htsmsg_t *pis, char *src, int raw)
 {
   cdata_content_t *cc = NULL;
   int c;
@@ -757,7 +753,6 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
   return src;
 }
 
-
 /**
  *
  */
@@ -816,8 +811,6 @@ htsmsg_parse_prolog(xmlparser_t *xp, char *src)
   return src;
 }
 
-
-
 /**
  *
  */
@@ -827,7 +820,6 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
   htsmsg_t *m;
   xmlparser_t xp;
   char *src0 = src;
-  int i;
 
   memset(&xp, 0, sizeof(xp));
   xp.xp_encoding = XML_ENCODING_UTF8;
@@ -861,12 +853,9 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
   snprintf(errbuf, errbufsize, "%s", xp.xp_errmsg);
   
   /* Remove any odd chars inside of errmsg */
-  for(i = 0; i < errbufsize; i++) {
-    if(errbuf[i] < 32) {
-      errbuf[i] = 0;
-      break;
-    }
-  }
+  for ( ; *errbuf; errbuf++)
+    if (*errbuf < ' ')
+      *errbuf = ' ';
 
   return NULL;
 }
@@ -899,7 +888,7 @@ htsmsg_xml_get_cdata_u32(htsmsg_t *tags, const char *name, uint32_t *u32)
  * Get tag attribute
  */
 const char *
-htsmsg_xml_get_attr_str ( htsmsg_t *tag, const char *name )
+htsmsg_xml_get_attr_str(htsmsg_t *tag, const char *name)
 {
   htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
   if (attr) return htsmsg_get_str(attr, name);
@@ -907,7 +896,7 @@ htsmsg_xml_get_attr_str ( htsmsg_t *tag, const char *name )
 }
 
 int
-htsmsg_xml_get_attr_u32 ( htsmsg_t *tag, const char *name, uint32_t *ret )
+htsmsg_xml_get_attr_u32(htsmsg_t *tag, const char *name, uint32_t *ret)
 {
   htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
   if (attr) return htsmsg_get_u32(attr, name, ret);

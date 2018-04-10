@@ -26,6 +26,8 @@ typedef struct service_mapper_conf
   int check_availability; ///< Check service is receivable
   int encrypted;          ///< Include encrypted services
   int merge_same_name;    ///< Merge entries with the same name
+  int merge_same_name_fuzzy;    ///< Merge entries with the same name with fuzzy matching (ignore case, etc)
+  int tidy_channel_name;  ///< Tidy channel name by removing trailing HD/UHD.
   int type_tags;          ///< Create tags based on the service type (SDTV/HDTV/Radio)
   int provider_tags;      ///< Create tags based on provider name
   int network_tags;       ///< Create tags based on network name (useful for multi adapter equipments)

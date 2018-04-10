@@ -47,7 +47,7 @@
 #include "spawn.h"
 #include "subscriptions.h"
 #include "service_mapper.h"
-#include "descrambler.h"
+#include "descrambler/descrambler.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
 #include "satip/server.h"
@@ -75,6 +75,11 @@
 #include "packet.h"
 #include "streaming.h"
 #include "memoryinfo.h"
+#include "watchdog.h"
+#include "tprofile.h"
+#if CONFIG_LINUXDVB_CA
+#include "input/mpegts/en50221/en50221.h"
+#endif
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
@@ -136,12 +141,12 @@ static cmdline_opt_t* cmdline_opt_find
 /*
  * Globals
  */
-int              tvheadend_running;
+int              tvheadend_running; /* do not use directly: tvheadend_is_running() */
+int              tvheadend_mainloop;
 int              tvheadend_webui_port;
 int              tvheadend_webui_debug;
 int              tvheadend_htsp_port;
 int              tvheadend_htsp_port_extra;
-const char      *tvheadend_tsdebug;
 const char      *tvheadend_cwd0;
 const char      *tvheadend_cwd;
 const char      *tvheadend_webroot;
@@ -186,8 +191,10 @@ static tvh_cond_t mtimer_cond;
 static int64_t mtimer_periodic;
 static pthread_t mtimer_tid;
 static pthread_t mtimer_tick_tid;
+static tprofile_t mtimer_profile;
 static LIST_HEAD(, gtimer) gtimers;
 static pthread_cond_t gtimer_cond;
+static tprofile_t gtimer_profile;
 static TAILQ_HEAD(, tasklet) tasklets;
 static tvh_cond_t tasklet_cond;
 static pthread_t tasklet_tid;
@@ -267,7 +274,6 @@ GTIMER_FCN(mtimer_arm_abs)
   mti->mti_expire   = when;
 #if ENABLE_GTIMER_CHECK
   mti->mti_id       = id;
-  mti->mti_fcn      = fcn;
 #endif
 
   LIST_INSERT_SORTED(&mtimers, mti, mti_link, mtimercmp);
@@ -284,7 +290,7 @@ GTIMER_FCN(mtimer_arm_rel)
   (GTIMER_TRACEID_ mtimer_t *gti, mti_callback_t *callback, void *opaque, int64_t delta)
 {
 #if ENABLE_GTIMER_CHECK
-  GTIMER_FCN(mtimer_arm_abs)(id, fcn, gti, callback, opaque, mclk() + delta);
+  GTIMER_FCN(mtimer_arm_abs)(id, gti, callback, opaque, mclk() + delta);
 #else
   mtimer_arm_abs(gti, callback, opaque, mclk() + delta);
 #endif
@@ -328,7 +334,6 @@ GTIMER_FCN(gtimer_arm_absn)
   gti->gti_expire   = when;
 #if ENABLE_GTIMER_CHECK
   gti->gti_id       = id;
-  gti->gti_fcn      = fcn;
 #endif
 
   LIST_INSERT_SORTED(&gtimers, gti, gti_link, gtimercmp);
@@ -345,7 +350,7 @@ GTIMER_FCN(gtimer_arm_rel)
   (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t delta)
 {
 #if ENABLE_GTIMER_CHECK
-  GTIMER_FCN(gtimer_arm_absn)(id, fcn, gti, callback, opaque, gclk() + delta);
+  GTIMER_FCN(gtimer_arm_absn)(id, gti, callback, opaque, gclk() + delta);
 #else
   gtimer_arm_absn(gti, callback, opaque, gclk() + delta);
 #endif
@@ -571,6 +576,7 @@ mdispatch_clock_update(void)
   if (mono > atomic_get_s64(&mtimer_periodic)) {
     atomic_set_s64(&mtimer_periodic, mono + MONOCLOCK_RESOLUTION);
     gdispatch_clock_update(); /* gclk() update */
+    tprofile_log_stats(); /* Log timings */
     comet_flush(); /* Flush idle comet mailboxes */
   }
 
@@ -601,11 +607,12 @@ mtimer_thread(void *aux)
   mtimer_t *mti;
   mti_callback_t *cb;
   int64_t now, next;
-#if ENABLE_GTIMER_CHECK
-  int64_t mtm;
   const char *id;
-  const char *fcn;
-#endif
+
+  pthread_mutex_lock(&global_lock);
+  while (tvheadend_is_running() && atomic_get(&tvheadend_mainloop) == 0)
+    tvh_cond_wait(&mtimer_cond, &global_lock);
+  pthread_mutex_unlock(&global_lock);
 
   while (tvheadend_is_running()) {
     now = mdispatch_clock_update();
@@ -623,10 +630,12 @@ mtimer_thread(void *aux)
       }
 
 #if ENABLE_GTIMER_CHECK
-      mtm = getmonoclock();
       id = mti->mti_id;
-      fcn = mti->mti_fcn;
+#else
+      id = NULL;
 #endif
+      tprofile_start(&mtimer_profile, id);
+
       cb = mti->mti_callback;
 
       LIST_REMOVE(mti, mti_link);
@@ -634,11 +643,7 @@ mtimer_thread(void *aux)
 
       cb(mti->mti_opaque);
 
-#if ENABLE_GTIMER_CHECK
-      mtm = getmonoclock() - mtm;
-      if (mtm > 10000)
-        tvhtrace(LS_MTIMER, "%s:%s duration %"PRId64"us", id, fcn, mtm);
-#endif
+      tprofile_finish(&mtimer_profile);
     }
 
     /* Periodic updates */
@@ -663,11 +668,7 @@ mainloop(void)
   gti_callback_t *cb;
   time_t now;
   struct timespec ts;
-#if ENABLE_GTIMER_CHECK
-  int64_t mtm;
   const char *id;
-  const char *fcn;
-#endif
 
   while (tvheadend_is_running()) {
     now = gdispatch_clock_update();
@@ -694,10 +695,12 @@ mainloop(void)
       }
 
 #if ENABLE_GTIMER_CHECK
-      mtm = getmonoclock();
       id = gti->gti_id;
-      fcn = gti->gti_fcn;
+#else
+      id = NULL;
 #endif
+      tprofile_start(&gtimer_profile, id);
+
       cb = gti->gti_callback;
 
       LIST_REMOVE(gti, gti_link);
@@ -705,11 +708,7 @@ mainloop(void)
 
       cb(gti->gti_opaque);
 
-#if ENABLE_GTIMER_CHECK
-      mtm = getmonoclock() - mtm;
-      if (mtm > 10000)
-        tvhtrace(LS_GTIMER, "%s:%s duration %"PRId64"us", id, fcn, mtm);
-#endif
+      tprofile_finish(&gtimer_profile);
     }
 
     /* Wait */
@@ -792,7 +791,8 @@ main(int argc, char **argv)
               opt_dbus_session = 0,
               opt_nobackup     = 0,
               opt_nobat        = 0,
-              opt_subsystems   = 0;
+              opt_subsystems   = 0,
+              opt_tprofile     = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -900,9 +900,8 @@ main(int argc, char **argv)
     { 0, "tsfile_tuners", N_("Number of tsfile tuners"), OPT_INT, &opt_tsfile_tuner },
     { 0, "tsfile", N_("tsfile input (mux file)"), OPT_STR_LIST, &opt_tsfile },
 #endif
-#if ENABLE_TSDEBUG
-    { 0, "tsdebug", N_("Output directory for tsdebug"), OPT_STR, &tvheadend_tsdebug },
-#endif
+
+    { 0, "tprofile", N_("Gather timing statistics for the code"), OPT_BOOL, &opt_tprofile },
 
   };
 
@@ -1082,9 +1081,12 @@ main(int argc, char **argv)
     }
   }
 
+  tprofile_module_init(opt_tprofile);
+  tprofile_init(&gtimer_profile, "gtimer");
+  tprofile_init(&mtimer_profile, "mtimer");
   uuid_init();
   idnode_boot();
-  config_boot(opt_config, gid, uid);
+  config_boot(opt_config, gid, uid, opt_user_agent);
   tcp_server_preinit(opt_ipv6);
   http_server_init(opt_bindaddr);    // bind to ports only
   htsp_init(opt_bindaddr);	     // bind to ports only
@@ -1139,6 +1141,7 @@ main(int argc, char **argv)
   }
 
   atomic_set(&tvheadend_running, 1);
+  atomic_set(&tvheadend_mainloop, 0);
 
   /* Start log thread (must be done post fork) */
   tvhlog_start();
@@ -1193,7 +1196,12 @@ main(int argc, char **argv)
   epg_in_load = 1;
 
   tvhthread_create(&mtimer_tick_tid, NULL, mtimer_tick_thread, NULL, "mtick");
+  tvhthread_create(&mtimer_tid, NULL, mtimer_thread, NULL, "mtimer");
   tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
+
+#if CONFIG_LINUXDVB_CA
+  en50221_register_apps();
+#endif
 
   tvhftrace(LS_MAIN, streaming_init);
   tvhftrace(LS_MAIN, tvh_hardware_init);
@@ -1206,10 +1214,11 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, codec_init);
   tvhftrace(LS_MAIN, profile_init);
   tvhftrace(LS_MAIN, imagecache_init);
-  tvhftrace(LS_MAIN, http_client_init, opt_user_agent);
+  tvhftrace(LS_MAIN, http_client_init);
   tvhftrace(LS_MAIN, esfilter_init);
   tvhftrace(LS_MAIN, bouquet_init);
   tvhftrace(LS_MAIN, service_init);
+  tvhftrace(LS_MAIN, descrambler_init);
   tvhftrace(LS_MAIN, dvb_init);
 #if ENABLE_MPEGTS
   tvhftrace(LS_MAIN, mpegts_init, adapter_mask, opt_nosatip, &opt_satip_xml,
@@ -1229,7 +1238,6 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, upnp_server_init, opt_bindaddr);
 #endif
   tvhftrace(LS_MAIN, service_mapper_init);
-  tvhftrace(LS_MAIN, descrambler_init);
   tvhftrace(LS_MAIN, epggrab_init);
   tvhftrace(LS_MAIN, epg_init);
   tvhftrace(LS_MAIN, dvr_init);
@@ -1248,6 +1256,8 @@ main(int argc, char **argv)
   epg_in_load = 0;
 
   pthread_mutex_unlock(&global_lock);
+
+  tvhftrace(LS_MAIN, watchdog_init);
 
   /**
    * Wait for SIGTERM / SIGINT, but only in this thread
@@ -1271,7 +1281,10 @@ main(int argc, char **argv)
   if(opt_abort)
     abort();
 
-  tvhthread_create(&mtimer_tid, NULL, mtimer_thread, NULL, "mtimer");
+  pthread_mutex_lock(&global_lock);
+  tvheadend_mainloop = 1;
+  tvh_cond_signal(&mtimer_cond, 0);
+  pthread_mutex_unlock(&global_lock);
   mainloop();
   pthread_mutex_lock(&global_lock);
   tvh_cond_signal(&mtimer_cond, 0);
@@ -1332,7 +1345,6 @@ main(int argc, char **argv)
   tvhtrace(LS_MAIN, "mtimer tick thread join leave");
 
   tvhftrace(LS_MAIN, dvb_done);
-  tvhftrace(LS_MAIN, lang_str_done);
   tvhftrace(LS_MAIN, esfilter_done);
   tvhftrace(LS_MAIN, profile_done);
   tvhftrace(LS_MAIN, codec_done);
@@ -1344,6 +1356,9 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, notify_done);
   tvhftrace(LS_MAIN, spawn_done);
 
+  tprofile_done(&gtimer_profile);
+  tprofile_done(&mtimer_profile);
+  tprofile_module_done();
   tvhlog(LOG_NOTICE, LS_STOP, "Exiting HTS Tvheadend");
   tvhlog_end();
 
@@ -1375,6 +1390,8 @@ main(int argc, char **argv)
 #endif
   tvh_gettext_done();
   free((char *)tvheadend_webroot);
+
+  tvhftrace(LS_MAIN, watchdog_done);
   return 0;
 }
 

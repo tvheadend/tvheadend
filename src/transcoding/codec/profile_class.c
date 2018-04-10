@@ -184,18 +184,19 @@ codec_profile_class_profile_list(void *obj, const char *lang)
 
 
 /* codec_profile_class */
-
+CLASS_DOC(codec_profile)
 const codec_profile_class_t codec_profile_class = {
     {
         .ic_class    = "codec_profile",
-        .ic_caption  = N_("Codec Profile"),
+        .ic_caption  = N_("Stream - Codec Profiles"),
         .ic_event    = "codec_profile",
         .ic_perm_def = ACCESS_ADMIN,
+        .ic_doc        = tvh_doc_codec_profile_class,
         .ic_save     = codec_profile_class_save,
         .ic_delete   = codec_profile_class_delete,
         .ic_groups   = (const property_group_t[]) {
             {
-                .name   = N_("Identification"),
+                .name   = N_("General Settings"),
                 .number = 1,
             },
             {

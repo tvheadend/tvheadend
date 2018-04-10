@@ -291,6 +291,8 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
     .check_availability = 0,
     .encrypted          = 1,
     .merge_same_name    = 0,
+    .merge_same_name_fuzzy = 0,
+    .tidy_channel_name  = 0,
     .type_tags          = 0,
     .provider_tags      = 0,
     .network_tags       = 0
@@ -313,6 +315,8 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
   if (!ilm) {
     sm_conf.encrypted = bq->bq_mapencrypted;
     sm_conf.merge_same_name = bq->bq_mapmergename;
+    sm_conf.merge_same_name_fuzzy = bq->bq_mapmergefuzzy;
+    sm_conf.tidy_channel_name = bq->bq_tidychannelname;
     sm_conf.type_tags = bq->bq_chtag_type_tags;
     sm_conf.provider_tags = bq->bq_chtag_provider_tags;
     sm_conf.network_tags = bq->bq_chtag_network_tags;
@@ -677,14 +681,16 @@ bouquet_class_delete(idnode_t *self)
   bouquet_delete((bouquet_t *)self);
 }
 
-static const char *
-bouquet_class_get_title (idnode_t *self, const char *lang)
+static void
+bouquet_class_get_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
   bouquet_t *bq = (bouquet_t *)self;
 
   if (bq->bq_comment && bq->bq_comment[0] != '\0')
-    return bq->bq_comment;
-  return bq->bq_name ?: "";
+    snprintf(dst, dstsize, "%s", bq->bq_comment);
+  else
+    snprintf(dst, dstsize, "%s", bq->bq_name ?: "");
 }
 
 /* exported for others */
@@ -747,6 +753,16 @@ static idnode_slist_t bouquest_class_mapopt_slist[] = {
     .id   = "merge_name",
     .name = N_("Merge same name"),
     .off  = offsetof(bouquet_t, bq_mapmergename),
+  },
+  {
+    .id   = "merge_same_name_fuzzy",
+    .name = N_("Use fuzzy mapping if merging same name"),
+    .off  = offsetof(bouquet_t, bq_mapmergefuzzy),
+  },
+  {
+    .id   = "tidy_channel_name",
+    .name = N_("Tidy channel name (e.g., stripping HD/UHD suffix)"),
+    .off  = offsetof(bouquet_t, bq_tidychannelname),
   },
   {}
 };
@@ -979,7 +995,7 @@ PROP_DOC(bouquet_tagging)
 
 const idclass_t bouquet_class = {
   .ic_class      = "bouquet",
-  .ic_caption    = N_("Bouquets"),
+  .ic_caption    = N_("Channels / EPG - Bouquets"),
   .ic_doc        = tvh_doc_bouquet_class,
   .ic_event      = "bouquet",
   .ic_perm_def   = ACCESS_ADMIN,
@@ -1280,7 +1296,7 @@ bouquet_service_resolve(void)
         if ((e = htsmsg_field_get_map(f)) == NULL) continue;
         lcn = htsmsg_get_s64_or_default(e, "lcn", 0);
         tag = htsmsg_get_str(e, "tag");
-        s = service_find_by_identifier(f->hmf_name);
+        s = service_find_by_uuid(f->hmf_name);
         if (s)
           bouquet_add_service(bq, s, lcn, tag);
       }

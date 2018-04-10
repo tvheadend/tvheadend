@@ -240,7 +240,7 @@ wizard_page_t *wizard_hello(const char *lang)
   };
   wizard_page_t *page =
     page_init("hello", "wizard_hello",
-    N_("Welcome - Tvheadend - your TV streaming server and video recorder"));
+    N_("Wizard - Welcome/Language"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_hello_t *w;
   htsmsg_t *m;
@@ -464,7 +464,7 @@ wizard_page_t *wizard_login(const char *lang)
   };
   wizard_page_t *page =
     page_init("login", "wizard_login",
-    N_("Welcome - Tvheadend - your TV streaming server and video recorder"));
+    N_("Wizard - Access Control"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_login_t *w;
   access_entry_t *ae;
@@ -667,7 +667,7 @@ wizard_page_t *wizard_network(const char *lang)
     PREV_BUTTON(login),
     NEXT_BUTTON(muxes),
   };
-  wizard_page_t *page = page_init("network", "wizard_network", N_("Network settings"));
+  wizard_page_t *page = page_init("network", "wizard_network", N_("Wizard - Network Settings"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_network_t *w;
   mpegts_network_t *mn;
@@ -773,7 +773,7 @@ static const void *muxes_progress_get(void *o)
 {
   wizard_page_t *p = o;
   wizard_muxes_t *w = p->aux;
-  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", tvh_gettext_lang(w->lang, N_("Scan progress")));
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", tvh_gettext_lang(w->lang, N_("Progress")));
   return &prop_sbuf_ptr;
 }
 
@@ -959,7 +959,7 @@ wizard_page_t *wizard_muxes(const char *lang)
     PREV_BUTTON(network),
     NEXT_BUTTON(status),
   };
-  wizard_page_t *page = page_init("muxes", "wizard_muxes", N_("Assign predefined muxes to networks"));
+  wizard_page_t *page = page_init("muxes", "wizard_muxes", N_("Wizard - Assign Predefined Muxes to Networks"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_muxes_t *w;
   mpegts_network_t *mn;
@@ -1044,7 +1044,7 @@ wizard_page_t *wizard_status(const char *lang)
     NEXT_BUTTON(mapping),
     {}
   };
-  wizard_page_t *page = page_init("status", "wizard_status", N_("Scan status"));
+  wizard_page_t *page = page_init("status", "wizard_status", N_("Wizard - Scanning for Services"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   ic->ic_properties = props;
   ic->ic_groups = groups;
@@ -1136,7 +1136,7 @@ wizard_page_t *wizard_mapping(const char *lang)
     NEXT_BUTTON(channels),
     {}
   };
-  wizard_page_t *page = page_init("mapping", "wizard_mapping", N_("Service mapping"));
+  wizard_page_t *page = page_init("mapping", "wizard_mapping", N_("Wizard - Service Mapping"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_mapping_t *w;
   ic->ic_properties = props;
@@ -1189,7 +1189,7 @@ wizard_page_t *wizard_channels(const char *lang)
     LAST_BUTTON(),
     {}
   };
-  wizard_page_t *page = page_init("channels", "wizard_channels", N_("Finished"));
+  wizard_page_t *page = page_init("channels", "wizard_channels", N_("Wizard - Finished"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   access_entry_t *ae;
 

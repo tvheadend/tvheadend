@@ -20,6 +20,7 @@
 
 #include "internals.h"
 
+#include "parsers/parsers.h"
 #include "parsers/bitstream.h"
 #include "parsers/parser_avc.h"
 #include "parsers/parser_h264.h"

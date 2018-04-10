@@ -41,15 +41,14 @@ mpegts_network_class_save
   return NULL;
 }
 
-static const char *
-mpegts_network_class_get_title ( idnode_t *in, const char *lang )
+static void
+mpegts_network_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
-  static char buf[256];
   mpegts_network_t *mn = (mpegts_network_t*)in;
-  *buf = 0;
+  *dst = 0;
   if (mn->mn_display_name)
-    mn->mn_display_name(mn, buf, sizeof(buf));
-  return buf;
+    mn->mn_display_name(mn, dst, dstsize);
 }
 
 static const void *
@@ -176,7 +175,7 @@ const idclass_t mpegts_network_class =
       .name     = N_("Network name"),
       .desc     = N_("Name of the network."),
       .off      = offsetof(mpegts_network_t, mn_network_name),
-      .notify   = idnode_notify_title_changed,
+      .notify   = idnode_notify_title_changed_lang,
     },
     {
       .type     = PT_STR,
@@ -443,6 +442,14 @@ mpegts_network_mux_create2
   return NULL;
 }
 
+void
+mpegts_network_scan ( mpegts_network_t *mn )
+{
+  mpegts_mux_t *mm;
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+    mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+}
+
 static void
 mpegts_network_link_delete ( mpegts_network_link_t *mnl )
 {
@@ -519,6 +526,7 @@ mpegts_network_create0
   mn->mn_create_service = mpegts_network_create_service;
   mn->mn_mux_class      = mpegts_network_mux_class;
   mn->mn_mux_create2    = mpegts_network_mux_create2;
+  mn->mn_scan           = mpegts_network_scan;
   mn->mn_delete         = mpegts_network_delete;
 
   /* Add to global list */
@@ -593,14 +601,6 @@ mpegts_network_set_network_name
 }
 
 void
-mpegts_network_scan ( mpegts_network_t *mn )
-{
-  mpegts_mux_t *mm;
-  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
-    mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
-}
-
-void
 mpegts_network_get_type_str( mpegts_network_t *mn, char *buf, size_t buflen )
 {
   const char *s = "IPTV";
@@ -623,7 +623,7 @@ mpegts_network_wizard_get
     mpegts_network_t *mn, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_map(), *l, *e;
-  char ubuf[UUID_HEX_SIZE], buf[256];
+  char buf[256];
 
   if (mi && idc) {
     mi->mi_display_name(mi, buf, sizeof(buf));
@@ -633,7 +633,7 @@ mpegts_network_wizard_get
     htsmsg_add_msg(l, NULL, e);
     htsmsg_add_msg(m, "mpegts_network_types", l);
     if (mn)
-      htsmsg_add_str(m, "mpegts_network", idnode_uuid_as_str(&mn->mn_id, ubuf));
+      htsmsg_add_uuid(m, "mpegts_network", &mn->mn_id.in_uuid);
   }
   return m;
 }
@@ -642,7 +642,6 @@ void
 mpegts_network_wizard_create
   ( const char *clazz, htsmsg_t **nlist, const char *lang )
 {
-  char buf[256];
   mpegts_network_t *mn;
   mpegts_network_builder_t *mnb;
   htsmsg_t *conf;
@@ -670,7 +669,7 @@ mpegts_network_wizard_create
 found:
   if (mn && nlist) {
     *nlist = htsmsg_create_list();
-    htsmsg_add_str(*nlist, NULL, idnode_uuid_as_str(&mn->mn_id, buf));
+    htsmsg_add_uuid(*nlist, NULL, &mn->mn_id.in_uuid);
   }
 }
 

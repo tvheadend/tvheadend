@@ -26,21 +26,32 @@
 #  define PCRE_STUDY_JIT_COMPILE 0
 #  endif
 
+#define TVHREGEX_TYPE           "pcre1"
+
 #elif ENABLE_PCRE2
 
 #  define PCRE2_CODE_UNIT_WIDTH 8
 #  include <pcre2.h>
 
-#else
+#define TVHREGEX_TYPE           "pcre2"
+
+#endif
 
 #  include <regex.h>
 
-#endif
+#define TVHREGEX_MAX_MATCHES    10
+
+/* Compile flags */
+#define TVHREGEX_POSIX          1       /* Use POSIX regex engine */
+#define TVHREGEX_CASELESS       2       /* Use case-insensitive matching */
 
 typedef struct {
 #if ENABLE_PCRE
   pcre *re_code;
   pcre_extra *re_extra;
+  int re_match[TVHREGEX_MAX_MATCHES * 3];
+  const char *re_text;
+  int re_matches;
 #if PCRE_STUDY_JIT_COMPILE
   pcre_jit_stack *re_jit_stack;
 #endif
@@ -49,26 +60,19 @@ typedef struct {
   pcre2_match_data *re_match;
   pcre2_match_context *re_mcontext;
   pcre2_jit_stack *re_jit_stack;
-#else
-  regex_t re_code;
+#endif
+  regex_t re_posix_code;
+  regmatch_t re_posix_match[TVHREGEX_MAX_MATCHES];
+  const char *re_posix_text;
+#if ENABLE_PCRE || ENABLE_PCRE2
+  int is_posix;
 #endif
 } tvh_regex_t;
 
-static inline int regex_match(tvh_regex_t *regex, const char *str)
-{
-#if ENABLE_PCRE
-  int vec[30];
-  return pcre_exec(regex->re_code, regex->re_extra,
-                   str, strlen(str), 0, 0, vec, ARRAY_SIZE(vec)) < 0;
-#elif ENABLE_PCRE2
-  return pcre2_match(regex->re_code, (PCRE2_SPTR8)str, -1, 0, 0,
-                     regex->re_match, regex->re_mcontext) <= 0;
-#else
-  return regexec(&regex->re_code, str, 0, NULL, 0);
-#endif
-}
-
 void regex_free(tvh_regex_t *regex);
-int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys);
+int regex_compile(tvh_regex_t *regex, const char *re_str, int flags, int subsys);
+int regex_match(tvh_regex_t *regex, const char *str);
+int regex_match_substring(tvh_regex_t *regex, unsigned number, char *buf, size_t size_buf);
+int regex_match_substring_length(tvh_regex_t *regex, unsigned number);
 
 #endif /* __TVHREGEX_H__ */

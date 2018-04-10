@@ -77,8 +77,8 @@ typedef enum {
 #define INTEXTRA_IS_RANGE(e) (((e) & (1<<31)) != 0)
 #define INTEXTRA_IS_SPLIT(e) !INTEXTRA_IS_RANGE(e)
 #define INTEXTRA_GET_STEP(e) (((e)>>24)&0x7f)
-#define INTEXTRA_GET_MAX(e)  ((e)&(1<<23)?-(((e)>>12)&0x7ff):(((e)>>12)&0x7ff))
-#define INTEXTRA_GET_MIN(e)  ((e)&(1<<11)?-((e)&0x7ff):((e)&0x7ff))
+#define INTEXTRA_GET_MAX(e)  ((e)&(1<<23)?-(0x800-(((e)>>12)&0x7ff)):(((e)>>12)&0x7ff))
+#define INTEXTRA_GET_MIN(e)  ((e)&(1<<11)?-(0x800-((e)&0x7ff)):((e)&0x7ff))
 
 /*
  * Property definition

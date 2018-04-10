@@ -500,6 +500,9 @@ lang_code_lookup_t* lang_codes_code2b = NULL;
 lang_code_lookup_t* lang_codes_code1 = NULL;
 lang_code_lookup_t* lang_codes_code2t = NULL;
 
+pthread_mutex_t lang_code_split_mutex = PTHREAD_MUTEX_INITIALIZER;
+RB_HEAD(,lang_code_list) lang_code_split_tree = { NULL, NULL, NULL, 0 };
+
 /* **************************************************************************
  * Functions
  * *************************************************************************/
@@ -508,22 +511,25 @@ lang_code_lookup_t* lang_codes_code2t = NULL;
 static int _lang_code2b_cmp ( void *a, void *b )
 {
   return strcmp(((lang_code_lookup_element_t*)a)->lang_code->code2b,
-      ((lang_code_lookup_element_t*)b)->lang_code->code2b);
+                ((lang_code_lookup_element_t*)b)->lang_code->code2b);
 }
 
 static int _lang_code1_cmp ( void *a, void *b )
 {
   return strcmp(((lang_code_lookup_element_t*)a)->lang_code->code1,
-      ((lang_code_lookup_element_t*)b)->lang_code->code1);
+                ((lang_code_lookup_element_t*)b)->lang_code->code1);
 }
 
 static int _lang_code2t_cmp ( void *a, void *b )
 {
   return strcmp(((lang_code_lookup_element_t*)a)->lang_code->code2t,
-      ((lang_code_lookup_element_t*)b)->lang_code->code2t);
+                ((lang_code_lookup_element_t*)b)->lang_code->code2t);
 }
 
-static int _lang_code_lookup_add( lang_code_lookup_t* lookup_table, const lang_code_t *code, int (*func)(void*, void*) ) {
+static int _lang_code_lookup_add
+  ( lang_code_lookup_t* lookup_table, const lang_code_t *code,
+    int (*func)(void*, void*) )
+{
   lang_code_lookup_element_t *element;
   element = (lang_code_lookup_element_t *)calloc(1, sizeof(lang_code_lookup_element_t));
   element->lang_code = code;
@@ -606,35 +612,18 @@ const lang_code_t *lang_code_get3 ( const char *code )
   return _lang_code_get(code, strlen(code ?: ""));
 }
 
-const char **lang_code_split ( const char *codes )
+static int _split_cmp(const void *_a, const void *_b)
 {
-  int i = 0;
-  const lang_code_t **lcs = lang_code_split2(codes);
-  const char **ret;
-
-  if(!lcs) return NULL;
-
-  while(lcs[i])
-    i++;
-
-  ret = calloc(1+i, sizeof(char*));
-
-  i = 0;
-  while(lcs[i]) {
-      ret[i] = lcs[i]->code2b;
-      i++;
-  }
-  ret[i] = NULL;
-  free(lcs);
-
-  return ret;
+  const lang_code_list_t *a = _a;
+  const lang_code_list_t *b = _b;
+  return strcmp(a->langs, b->langs);
 }
 
-const lang_code_t **lang_code_split2 ( const char *codes )
+const lang_code_list_t *lang_code_split ( const char *codes )
 {
   int n;
   const char *c, *p;
-  const lang_code_t **ret;
+  lang_code_list_t *ret, skel;
   const lang_code_t *co;
 
   /* Defaults */
@@ -643,30 +632,38 @@ const lang_code_t **lang_code_split2 ( const char *codes )
   /* No config */
   if (!codes) return NULL;
 
-  /* Count entries */
-  n = 0;
-  c = codes;
-  while (*c) {
-    if (*c == ',') n++;
-    c++;
-  }
-  ret = calloc(2+n, sizeof(lang_code_t*));
+  pthread_mutex_lock(&lang_code_split_mutex);
 
-  /* Create list */
-  n = 0;
-  p = c = codes;
-  while (*c) {
-    if (*c == ',') {
+  skel.langs = (char *)codes;
+  ret = RB_FIND(&lang_code_split_tree, &skel, link, _split_cmp);
+  if (ret)
+    goto unlock;
+
+  for (n = 1, p = codes; *p; p++)
+    if (*p == ',') n++;
+
+  ret = calloc(1, sizeof(lang_code_list_t) + n * sizeof(lang_code_t *));
+  if (ret) {
+    /* Create list */
+    for (n = 0, p = c = codes; *c; c++)
+      if (*c == ',') {
+        co = lang_code_get3(p);
+        if(co)
+          ret->codes[n++] = co;
+        p = c + 1;
+      }
+    if (*p) {
       co = lang_code_get3(p);
-      if(co)
-        ret[n++] = co;
-      p = c + 1;
+      if (co)
+        ret->codes[n++] = co;
     }
-    c++;
+    ret->codeslen = n;
+    ret->langs = strdup(codes);
+    RB_INSERT_SORTED(&lang_code_split_tree, ret, link, _split_cmp);
   }
-  if (*p) ret[n++] = lang_code_get3(p);
-  ret[n] = NULL;
 
+unlock:
+  pthread_mutex_unlock(&lang_code_split_mutex);
   return ret;
 }
 
@@ -724,6 +721,14 @@ char *lang_code_user( const char *ucode )
 
 void lang_code_done( void )
 {
+  lang_code_list_t *lcs;
+  pthread_mutex_lock(&lang_code_split_mutex);
+  while ((lcs = RB_FIRST(&lang_code_split_tree)) != NULL) {
+    RB_REMOVE(&lang_code_split_tree, lcs, link);
+    free((char *)lcs->langs);
+    free(lcs);
+  }
+  pthread_mutex_unlock(&lang_code_split_mutex);
   lang_code_free(lang_codes_code2b);
   lang_code_free(lang_codes_code1);
   lang_code_free(lang_codes_code2t);

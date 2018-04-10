@@ -41,8 +41,8 @@
     do { \
         _stream_log((level), fmt, \
             (transcoder), \
-            (ssc)->ssc_index, \
-            (ssc)->ssc_type, \
+            (ssc)->es_index, \
+            (ssc)->es_type, \
             ##__VA_ARGS__); \
     } while (0)
 

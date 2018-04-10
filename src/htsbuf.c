@@ -406,13 +406,24 @@ htsbuf_append_and_escape_url(htsbuf_queue_t *hq, const char *s)
     char buf[4];
     C = *c++;
     
+    /* RFC 3986, section 3.4 */
     if((C >= '0' && C <= '9') ||
        (C >= 'a' && C <= 'z') ||
        (C >= 'A' && C <= 'Z') ||
-       C == '_' ||
-       C == '~' ||
-       C == '.' ||
-       C == '-') {
+       C == '/'  ||
+       C == ':'  ||
+       C == '@'  ||
+       C == '-'  ||
+       C == '.'  ||
+       C == '~'  ||
+       C == '!'  ||
+       C == '$'  ||
+       C == '\'' ||
+       C == '('  ||
+       C == ')'  ||
+       C == '*'  ||
+       C == ','  ||
+       C == ';') {
       esc = NULL;
     } else {
       static const char hexchars[16] = "0123456789ABCDEF";

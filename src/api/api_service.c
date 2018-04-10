@@ -42,7 +42,6 @@ static htsmsg_t *
 api_mapper_status_msg ( void )
 {
   htsmsg_t *m;
-  char ubuf[UUID_HEX_SIZE];
   service_mapper_status_t stat = service_mapper_status();
   m = htsmsg_create_map();
   htsmsg_add_u32(m, "total",  stat.total);
@@ -50,7 +49,7 @@ api_mapper_status_msg ( void )
   htsmsg_add_u32(m, "fail",   stat.fail);
   htsmsg_add_u32(m, "ignore", stat.ignore);
   if (stat.active)
-    htsmsg_add_str(m, "active", idnode_uuid_as_str(&stat.active->s_id, ubuf));
+    htsmsg_add_uuid(m, "active", &stat.active->s_id.in_uuid);
   return m;
 }
 
@@ -123,7 +122,7 @@ api_service_streams
   pthread_mutex_lock(&global_lock);
 
   /* Couldn't find */
-  if (!(s = service_find(uuid))) {
+  if (!(s = service_find_by_uuid(uuid))) {
     pthread_mutex_unlock(&global_lock);
     return EINVAL;
   }
@@ -132,25 +131,28 @@ api_service_streams
   pthread_mutex_lock(&s->s_stream_mutex);
   st = htsmsg_create_list();
   stf = htsmsg_create_list();
-  if (s->s_pcr_pid) {
+  if (s->s_components.set_pcr_pid) {
     e = htsmsg_create_map();
-    htsmsg_add_u32(e, "pid", s->s_pcr_pid);
+    htsmsg_add_u32(e, "pid", s->s_components.set_pcr_pid);
     htsmsg_add_str(e, "type", "PCR");
     htsmsg_add_msg(st, NULL, e);
   }
-  if (s->s_pmt_pid) {
+  if (s->s_components.set_pmt_pid) {
     e = htsmsg_create_map();
-    htsmsg_add_u32(e, "pid", s->s_pmt_pid);
+    htsmsg_add_u32(e, "pid", s->s_components.set_pmt_pid);
     htsmsg_add_str(e, "type", "PMT");
     htsmsg_add_msg(st, NULL, e);
   }
-  TAILQ_FOREACH(es, &s->s_components, es_link)
+  TAILQ_FOREACH(es, &s->s_components.set_all, es_link) {
+    if (es->es_type == SCT_PCR) continue;
     htsmsg_add_msg(st, NULL, api_service_streams_get_one(es, 0));
-  if (TAILQ_FIRST(&s->s_filt_components) == NULL ||
-      s->s_status == SERVICE_IDLE)
-    service_build_filter(s);
-  TAILQ_FOREACH(es, &s->s_filt_components, es_filt_link)
+  }
+  if (elementary_set_has_streams(&s->s_components, 1) || s->s_status == SERVICE_IDLE)
+    elementary_set_filter_build(&s->s_components);
+  TAILQ_FOREACH(es, &s->s_components.set_filter, es_filter_link) {
+    if (es->es_type == SCT_PCR) continue;
     htsmsg_add_msg(stf, NULL, api_service_streams_get_one(es, 1));
+  }
   *resp = htsmsg_create_map();
   htsmsg_add_str(*resp, "name", s->s_nicename);
   if (s->s_hbbtv)

@@ -33,7 +33,7 @@ static int
 htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
 {
   uint_fast32_t type, namelen, datalen;
-  size_t tlen;
+  size_t tlen, nlen;
   htsmsg_field_t *f;
   htsmsg_t *sub;
   uint64_t u64;
@@ -54,9 +54,17 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     if(len < namelen + datalen)
       return -1;
 
-    tlen = sizeof(htsmsg_field_t) +
-           (namelen ? namelen + 1 : 0) +
-           (type == HMF_STR ? datalen + 1 : 0);
+    nlen = namelen ? namelen + 1 : 1;
+    tlen = sizeof(htsmsg_field_t) + nlen;
+    if (type == HMF_STR) {
+      tlen += datalen + 1;
+    } else if (type == HMF_LIST || type == HMF_MAP) {
+      tlen += sizeof(htsmsg_t);
+    } else if (type == HMF_UUID) {
+      tlen = UUID_BIN_SIZE;
+      if (tlen != datalen)
+        return -1;
+    }
     f = malloc(tlen);
     if (f == NULL)
       return -1;
@@ -65,26 +73,29 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     memoryinfo_alloc(&htsmsg_field_memoryinfo, tlen);
 #endif
     f->hmf_type  = type;
+    f->hmf_flags = 0;
 
     if(namelen > 0) {
-      f->hmf_name = f->hmf_edata;
-      memcpy(f->hmf_edata, buf, namelen);
-      f->hmf_edata[namelen] = 0;
+      memcpy((char *)f->hmf_name, buf, namelen);
+      ((char *)f->hmf_name)[namelen] = 0;
 
       buf += namelen;
       len -= namelen;
-      f->hmf_flags = HMF_NAME_INALLOCED;
-
     } else {
-      f->hmf_name  = NULL;
-      f->hmf_flags = 0;
+      ((char *)f->hmf_name)[0] = '\0';
     }
 
     switch(type) {
     case HMF_STR:
-      f->hmf_str = f->hmf_edata + (namelen ? namelen + 1 : 0);
+      f->hmf_str = f->hmf_name + nlen;
       memcpy((char *)f->hmf_str, buf, datalen);
       ((char *)f->hmf_str)[datalen] = 0;
+      f->hmf_flags |= HMF_INALLOCED;
+      break;
+
+    case HMF_UUID:
+      f->hmf_uuid = (uint8_t *)f->hmf_name + nlen;
+      memcpy((char *)f->hmf_uuid, buf, UUID_BIN_SIZE);
       break;
 
     case HMF_BIN:
@@ -102,7 +113,7 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
 
     case HMF_MAP:
     case HMF_LIST:
-      sub = &f->hmf_msg;
+      sub = f->hmf_msg = (htsmsg_t *)(f->hmf_name + nlen);
       TAILQ_INIT(&sub->hm_fields);
       sub->hm_data = NULL;
       sub->hm_data_size = 0;
@@ -135,19 +146,20 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     buf += datalen;
     len -= datalen;
   }
-  return bin;
+  return len ? -1 : bin;
 }
-
-
 
 /*
  *
  */
 htsmsg_t *
-htsmsg_binary_deserialize(void *data, size_t len, const void *buf)
+htsmsg_binary_deserialize0(const void *data, size_t len, const void *buf)
 {
-  htsmsg_t *msg = htsmsg_create_map();
-  int r = htsmsg_binary_des0(msg, data, len);
+  htsmsg_t *msg;
+  int r;
+
+  msg = htsmsg_create_map();
+  r = htsmsg_binary_des0(msg, data, len);
   if (r < 0) {
     free((void *)buf);
     htsmsg_destroy(msg);
@@ -165,7 +177,36 @@ htsmsg_binary_deserialize(void *data, size_t len, const void *buf)
   return msg;
 }
 
+/*
+ *
+ */
+int
+htsmsg_binary_deserialize(htsmsg_t **msg, const void *data, size_t *len, const void *buf)
+{
+  htsmsg_t *m;
+  const uint8_t *p;
+  uint32_t l, len2;
 
+  len2 = *len;
+  *msg = NULL;
+  *len = 0;
+  if (len2 < 4) {
+    free((void *)buf);
+    return -1;
+  }
+  p = data;
+  l = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+  if (l + 4 > len2) {
+    free((void *)buf);
+    return -1;
+  }
+  m = htsmsg_binary_deserialize0(data + 4, l, buf);
+  if (m == NULL)
+    return -1;
+  *len = l + 4;
+  *msg = m;
+  return 0;
+}
 
 /*
  *
@@ -179,17 +220,20 @@ htsmsg_binary_count(htsmsg_t *msg)
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
 
-    len += 6;
-    len += f->hmf_name ? strlen(f->hmf_name) : 0;
+    len += 6 + strlen(f->hmf_name);
 
     switch(f->hmf_type) {
     case HMF_MAP:
     case HMF_LIST:
-      len += htsmsg_binary_count(&f->hmf_msg);
+      len += htsmsg_binary_count(f->hmf_msg);
       break;
 
     case HMF_STR:
       len += strlen(f->hmf_str);
+      break;
+
+    case HMF_UUID:
+      len += UUID_BIN_SIZE;
       break;
 
     case HMF_BIN:
@@ -213,7 +257,6 @@ htsmsg_binary_count(htsmsg_t *msg)
   return len;
 }
 
-
 /*
  *
  */
@@ -225,14 +268,14 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
   int l, i, namelen;
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-    namelen = f->hmf_name ? strlen(f->hmf_name) : 0;
+    namelen = strlen(f->hmf_name);
     *ptr++ = f->hmf_type;
     *ptr++ = namelen;
 
     switch(f->hmf_type) {
     case HMF_MAP:
     case HMF_LIST:
-      l = htsmsg_binary_count(&f->hmf_msg);
+      l = htsmsg_binary_count(f->hmf_msg);
       break;
 
     case HMF_STR:
@@ -274,7 +317,7 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
     switch(f->hmf_type) {
     case HMF_MAP:
     case HMF_LIST:
-      htsmsg_binary_write(&f->hmf_msg, ptr);
+      htsmsg_binary_write(f->hmf_msg, ptr);
       break;
 
     case HMF_STR:
@@ -302,6 +345,26 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
   }
 }
 
+/*
+ *
+ */
+int
+htsmsg_binary_serialize0(htsmsg_t *msg, void **datap, size_t *lenp, int maxlen)
+{
+  size_t len;
+  uint8_t *data;
+
+  len = htsmsg_binary_count(msg);
+  if(len > maxlen)
+    return -1;
+
+  data = malloc(len);
+
+  htsmsg_binary_write(msg, data);
+  *datap = data;
+  *lenp  = len;
+  return 0;
+}
 
 /*
  *

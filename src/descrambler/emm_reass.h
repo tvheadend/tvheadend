@@ -22,7 +22,10 @@
 #include "tvheadend.h"
 #include "descrambler/caid.h"
 
-typedef struct emm_provider {
+typedef struct emm_provider emm_provider_t;
+typedef struct emm_reass emm_reass_t;
+
+struct emm_provider {
   uint32_t id;
   uint8_t sa[8];
   union {
@@ -32,7 +35,7 @@ typedef struct emm_provider {
       int         shared_len;
     } viacess[2];
   } u;
-} emm_provider_t;
+};
 
 #define EMM_CACHE_SIZE (1<<5)
 #define EMM_CACHE_MASK (EMM_CACHE_SIZE-1)
@@ -40,7 +43,9 @@ typedef struct emm_provider {
 typedef void (*emm_send_t)
   (void *aux, const uint8_t *radata, int ralen, void *mux);
 
-typedef struct emm_reass {
+struct emm_reass {
+  int subsys;
+
   uint16_t caid;
   card_type_t type;
 
@@ -60,14 +65,14 @@ typedef struct emm_reass {
     } cryptoworks;
   } u;
 
-  void (*do_emm)(struct emm_reass *ra, const uint8_t *data, int len,
+  void (*do_emm)(emm_reass_t *ra, const uint8_t *data, int len,
                  void *mux, emm_send_t send, void *aux);
-} emm_reass_t;
+};
 
-
-void emm_filter(struct emm_reass *ra, const uint8_t *data, int len,
+void emm_filter(emm_reass_t *ra, const uint8_t *data, int len,
                 void *mux, emm_send_t send, void *aux);
-void emm_reass_init(emm_reass_t *ra, uint16_t caid);
+emm_provider_t *emm_find_provider(emm_reass_t *ra, uint32_t provid);
+void emm_reass_init(emm_reass_t *ra, int subsys, uint16_t caid);
 void emm_reass_done(emm_reass_t *ra);
 
 #endif /* __TVH_EMM_REASS_H__ */

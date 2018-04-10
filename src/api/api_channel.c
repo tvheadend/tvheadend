@@ -33,31 +33,41 @@ api_channel_is_all(access_t *perm, htsmsg_t *args)
          !access_verify2(perm, ACCESS_ADMIN);
 }
 
-// TODO: this will need converting to an idnode system
 static int
 api_channel_list
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  channel_t *ch;
+  channel_t *ch, **chlist;
   htsmsg_t *l;
-  int cfg = api_channel_is_all(perm, args);
-  char buf[128], ubuf[UUID_HEX_SIZE];
-  const char *name, *blank;
+  const int cfg = api_channel_is_all(perm, args);
+  const int numbers = htsmsg_get_s32_or_default(args, "numbers", 0);
+  const int sources = htsmsg_get_s32_or_default(args, "sources", 0);
+  const int flags = (numbers ? CHANNEL_ENAME_NUMBERS : 0) |
+                    (sources ? CHANNEL_ENAME_SOURCES : 0);
+  char buf[128], buf1[128], ubuf[UUID_HEX_SIZE];
+  const char *name, *blank, *sort = htsmsg_get_str(args, "sort");
+  int i, count;
 
+  sort = htsmsg_get_str(args, "sort");
+  if (numbers && !sort) sort = "numname";
   blank = tvh_gettext_lang(perm->aa_lang_ui, channel_blank_name);
   l = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
-  CHANNEL_FOREACH(ch) {
+  chlist = channel_get_sorted_list(sort, cfg, &count);
+  for (i = 0; i < count; i++) {
+    ch = chlist[i];
     if (!cfg && !channel_access(ch, perm, 0)) continue;
     if (!ch->ch_enabled) {
-      snprintf(buf, sizeof(buf), "{%s}", channel_get_name(ch, blank));
+      snprintf(buf, sizeof(buf), "{%s}",
+               channel_get_ename(ch, buf1, sizeof(buf1), blank, flags));
       name = buf;
     } else {
-      name = channel_get_name(ch, blank);
+      name = channel_get_ename(ch, buf1, sizeof(buf1), blank, flags);
     }
     htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&ch->ch_id, ubuf), name));
   }
   pthread_mutex_unlock(&global_lock);
+  free(chlist);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
   
@@ -93,6 +103,23 @@ api_channel_create
   pthread_mutex_unlock(&global_lock);
 
   return 0;
+}
+
+static int
+api_channel_rename
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  const char *from, *to;
+  if (!(from = htsmsg_get_str(args, "from")))
+    return -EINVAL;
+  if (!(to = htsmsg_get_str(args, "to")))
+    return -EINVAL;
+  /* We need the lock since we are altering details */
+  pthread_mutex_lock(&global_lock);
+  const int num_match = channel_rename_and_save(from, to);
+  pthread_mutex_unlock(&global_lock);
+
+  return num_match > 0 ? 0 : -ENOENT;
 }
 
 static int
@@ -205,6 +232,7 @@ void api_channel_init ( void )
     { "channel/grid",    ACCESS_ANONYMOUS, api_idnode_grid,  api_channel_grid },
     { "channel/list",    ACCESS_ANONYMOUS, api_channel_list, NULL },
     { "channel/create",  ACCESS_ADMIN,     api_channel_create, NULL },
+    { "channel/rename",  ACCESS_ADMIN,     api_channel_rename, NULL }, /* User convenience function */
 
     { "channeltag/class",ACCESS_ANONYMOUS, api_idnode_class, (void*)&channel_tag_class },
     { "channeltag/grid", ACCESS_ANONYMOUS, api_idnode_grid,  api_channel_tag_grid },

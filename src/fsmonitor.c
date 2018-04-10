@@ -53,7 +53,7 @@ fsmonitor_thread ( void* p )
   fsmonitor_link_t *fml;
   fsmonitor_t *fsm;
 
-  while (atomic_get(&tvheadend_running)) {
+  while (tvheadend_is_running()) {
 
     fd = atomic_get(&fsmonitor_fd);
     if (fd < 0)
@@ -120,7 +120,7 @@ void
 fsmonitor_done ( void )
 {
   int fd = atomic_exchange(&fsmonitor_fd, -1);
-  if (fd >= 0) close(fd);
+  if (fd >= 0) blacklisted_close(fd);
   pthread_kill(fsmonitor_tid, SIGTERM);
   pthread_join(fsmonitor_tid, NULL);
 }

@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -24,7 +25,10 @@
 #include "lang_str.h"
 #include "tvheadend.h"
 
-SKEL_DECLARE(lang_str_ele_skel, lang_str_ele_t);
+#define LANG_STR_ADD    0
+#define LANG_STR_UPDATE 1
+#define LANG_STR_APPEND 2
+
 
 /* ************************************************************************
  * Support
@@ -50,7 +54,7 @@ lang_str_t *lang_str_create2 ( const char *s, const char *lang )
 {
   lang_str_t *ls = lang_str_create();
   if (ls)
-    lang_str_add(ls, s, lang, 0);
+    lang_str_add(ls, s, lang);
   return ls;
 }
 
@@ -61,7 +65,6 @@ void lang_str_destroy ( lang_str_t *ls )
   if (ls == NULL)
     return;
   while ((e = RB_FIRST(ls))) {
-    if (e->str)  free(e->str);
     RB_REMOVE(ls, e, link);
     free(e);
   }
@@ -71,10 +74,13 @@ void lang_str_destroy ( lang_str_t *ls )
 /* Copy the lang_str instance */
 lang_str_t *lang_str_copy ( const lang_str_t *ls )
 {
-  lang_str_t *ret = lang_str_create();
+  lang_str_t *ret;
   lang_str_ele_t *e;
+  if (ls == NULL)
+    return NULL;
+  ret = lang_str_create();
   RB_FOREACH(e, ls, link)
-    lang_str_add(ret, e->str, e->lang, 0);
+    lang_str_add(ret, e->str, e->lang);
   return ret;
 }
 
@@ -83,21 +89,18 @@ lang_str_ele_t *lang_str_get2
   ( const lang_str_t *ls, const char *lang )
 {
   int i;
-  const char **langs;
+  const lang_code_list_t *langs;
   lang_str_ele_t skel, *e = NULL;
 
   if (!ls) return NULL;
   
   /* Check config/requested langs */
-  if ((langs = lang_code_split(lang))) {
-    i = 0;
-    while (langs[i]) {
-      skel.lang = langs[i];
+  if ((langs = lang_code_split(lang)) != NULL) {
+    for (i = 0; i < langs->codeslen; i++) {
+      strncpy(skel.lang, langs->codes[i]->code2b, sizeof(skel.lang));
       if ((e = RB_FIND(ls, &skel, link, _lang_cmp)))
         break;
-      i++;
     }
-    free(langs);
   }
 
   /* Use first available */
@@ -107,49 +110,59 @@ lang_str_ele_t *lang_str_get2
   return e;
 }
 
-/* Get string */
-const char *lang_str_get
-  ( const lang_str_t *ls, const char *lang )
-{
-  lang_str_ele_t *e = lang_str_get2(ls, lang);
-  return e ? e->str : NULL;
-}
-
 /* Internal insertion routine */
 static int _lang_str_add
-  ( lang_str_t *ls, const char *str, const char *lang, int update, int append )
+  ( lang_str_t *ls, const char *str, const char *lang, int cmd )
 {
   int save = 0;
-  lang_str_ele_t *e;
+  lang_str_ele_t *e, *ae;
 
-  if (!str) return 0;
+  if (!ls || !str) return 0;
 
   /* Get proper code */
   if (!lang) lang = lang_code_preferred();
   if (!(lang = lang_code_get(lang))) return 0;
 
-  /* Create skel */
-  SKEL_ALLOC(lang_str_ele_skel);
-  lang_str_ele_skel->lang = lang;
+  /* Use 'dummy' ele pointer for _lang_cmp */
+  ae = (lang_str_ele_t *)(lang - offsetof(lang_str_ele_t, lang));
+  e = RB_FIND(ls, ae, link, _lang_cmp);
 
   /* Create */
-  e = RB_INSERT_SORTED(ls, lang_str_ele_skel, link, _lang_cmp);
   if (!e) {
-    lang_str_ele_skel->str = strdup(str);
-    SKEL_USED(lang_str_ele_skel);
+    e = malloc(sizeof(*e) + strlen(str) + 1);
+    strncpy(e->lang, lang, sizeof(e->lang));
+    strcpy(e->str, str);
+    RB_INSERT_SORTED(ls, e, link, _lang_cmp);
     save = 1;
 
   /* Append */
-  } else if (append) {
-    e->str = realloc(e->str, strlen(e->str) + strlen(str) + 1);
-    strcat(e->str, str);
-    save = 1;
+  } else if (cmd == LANG_STR_APPEND) {
+    RB_REMOVE(ls, e, link);
+    ae = realloc(e, sizeof(*e) + strlen(e->str) + strlen(str) + 1);
+    if (ae) {
+      strcat(ae->str, str);
+      save = 1;
+    } else {
+      ae = e;
+    }
+    RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
 
   /* Update */
-  } else if (update && strcmp(str, e->str)) {
-    free(e->str);
-    e->str = strdup(str);
-    save = 1;
+  } else if (cmd == LANG_STR_UPDATE && strcmp(str, e->str)) {
+    if (strlen(e->str) >= strlen(str)) {
+      strcpy(e->str, str);
+      save = 1;
+    } else {
+      RB_REMOVE(ls, e, link);
+      ae = realloc(e, sizeof(*e) + strlen(str) + 1);
+      if (ae) {
+        strcpy(ae->str, str);
+        save = 1;
+      } else {
+        ae = e;
+      }
+      RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
+    }
   }
   
   return save;
@@ -157,16 +170,16 @@ static int _lang_str_add
 
 /* Add new string (or replace existing one) */
 int lang_str_add 
-  ( lang_str_t *ls, const char *str, const char *lang, int update )
+  ( lang_str_t *ls, const char *str, const char *lang )
 { 
-  return _lang_str_add(ls, str, lang, update, 0);
+  return _lang_str_add(ls, str, lang, LANG_STR_UPDATE);
 }
 
 /* Append to existing string (or add new one) */
 int lang_str_append
   ( lang_str_t *ls, const char *str, const char *lang )
 {
-  return _lang_str_add(ls, str, lang, 0, 1);
+  return _lang_str_add(ls, str, lang, LANG_STR_APPEND);
 }
 
 /* Set new string with update check */
@@ -195,13 +208,25 @@ change:
   lang_str_destroy(*dst);
 change1:
   *dst = lang_str_create();
-  lang_str_add(*dst, str, lang, 1);
+  lang_str_add(*dst, str, lang);
   return 1;
+}
+
+/* Set new string with update check */
+int lang_str_set_multi
+  ( lang_str_t **dst, const lang_str_t *src )
+{
+  int changed = 0;
+  lang_str_ele_t *e;
+  RB_FOREACH(e, src, link) {
+    changed |= lang_str_set(dst, e->str, e->lang);
+  }
+  return changed;
 }
 
 /* Set new strings with update check */
 int lang_str_set2
-  ( lang_str_t **dst, lang_str_t *src )
+  ( lang_str_t **dst, const lang_str_t *src )
 {
   if (*dst) {
     if (!lang_str_compare(*dst, src))
@@ -231,6 +256,18 @@ void lang_str_serialize ( lang_str_t *ls, htsmsg_t *m, const char *f )
   htsmsg_add_msg(m, f, lang_str_serialize_map(ls));
 }
 
+/* Serialize one string element directly */
+void lang_str_serialize_one
+  ( htsmsg_t *m, const char *f, const char *str, const char *lang )
+{
+  lang_str_t *l = lang_str_create();
+  if (l) {
+    lang_str_add(l, str, lang);
+    lang_str_serialize(l, m, f);
+    lang_str_destroy(l);
+  }
+}
+
 /* De-serialize map */
 lang_str_t *lang_str_deserialize_map ( htsmsg_t *map )
 {
@@ -238,9 +275,11 @@ lang_str_t *lang_str_deserialize_map ( htsmsg_t *map )
   htsmsg_field_t *f;
   const char *str;
 
-  HTSMSG_FOREACH(f, map) {
-    if ((str = htsmsg_field_get_string(f))) {
-      lang_str_add(ret, str, f->hmf_name, 0);
+  if (ret) {
+    HTSMSG_FOREACH(f, map) {
+      if ((str = htsmsg_field_get_string(f))) {
+        lang_str_add(ret, str, f->hmf_name);
+      }
     }
   }
   return ret;
@@ -256,7 +295,7 @@ lang_str_t *lang_str_deserialize ( htsmsg_t *m, const char *n )
     return lang_str_deserialize_map(a);
   } else if ((str = htsmsg_get_str(m, n))) {
     lang_str_t *ret = lang_str_create();
-    lang_str_add(ret, str, NULL, 0);
+    lang_str_add(ret, str, NULL);
     return ret;
   }
   return NULL;
@@ -303,14 +342,6 @@ int lang_str_compare( const lang_str_t *ls1, const lang_str_t *ls2 )
   return 0;
 }
 
-int strempty(const char* c) {
-  return !c || c[0] == 0;
-}
-
-int lang_str_empty(lang_str_t* str) {
-  return strempty(lang_str_get(str, NULL));
-}
-
 size_t lang_str_size(const lang_str_t *ls)
 {
   lang_str_ele_t *e;
@@ -320,12 +351,6 @@ size_t lang_str_size(const lang_str_t *ls)
   RB_FOREACH(e, ls, link) {
     size += sizeof(*e);
     size += tvh_strlen(e->str);
-    size += tvh_strlen(e->lang);
   }
   return size;
-}
-
-void lang_str_done( void )
-{
-  SKEL_FREE(lang_str_ele_skel);
 }

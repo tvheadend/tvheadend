@@ -220,7 +220,7 @@ decode_scaling_list(bitstream_t *bs, int size)
 
 
 int
-h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
+h264_decode_seq_parameter_set(parser_es_t *st, bitstream_t *bs)
 {
   uint32_t profile_idc, level_idc, poc_type;
   uint32_t sps_id, tmp, i, width, height;
@@ -341,7 +341,7 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 
 
 int
-h264_decode_pic_parameter_set(elementary_stream_t *st, bitstream_t *bs)
+h264_decode_pic_parameter_set(parser_es_t *st, bitstream_t *bs)
 {
   h264_private_t *p;
   uint32_t pps_id, sps_id;
@@ -368,7 +368,7 @@ h264_decode_pic_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 
 
 int
-h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
+h264_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype,
 			 int *isfield)
 {
   h264_private_t *p;

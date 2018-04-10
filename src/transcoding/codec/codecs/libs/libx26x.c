@@ -98,6 +98,17 @@ static const codec_profile_class_t codec_profile_libx26x_class = {
 };
 
 
+static void
+tvh_codec_profile_libx265_destroy(TVHCodecProfile *_self)
+{
+    tvh_codec_profile_libx26x_t *self = (tvh_codec_profile_libx26x_t *)_self;
+    tvh_codec_profile_video_destroy(_self);
+    free(self->preset);
+    free(self->tune);
+    free(self->params);
+}
+
+
 /* libx264 ================================================================== */
 
 #if ENABLE_LIBX264
@@ -201,6 +212,7 @@ TVHVideoCodec tvh_codec_libx264 = {
     .size     = sizeof(tvh_codec_profile_libx26x_t),
     .idclass  = &codec_profile_libx264_class,
     .profiles = libx264_profiles,
+    .profile_destroy = tvh_codec_profile_libx265_destroy,
 };
 
 #endif
@@ -292,17 +304,6 @@ static const codec_profile_class_t codec_profile_libx265_class = {
     },
     .open = (codec_profile_open_meth)tvh_codec_profile_libx265_open,
 };
-
-
-static void
-tvh_codec_profile_libx265_destroy(TVHCodecProfile *_self)
-{
-    tvh_codec_profile_libx26x_t *self = (tvh_codec_profile_libx26x_t *)_self;
-    tvh_codec_profile_video_destroy(_self);
-    free(self->preset);
-    free(self->tune);
-    free(self->params);
-}
 
 
 TVHVideoCodec tvh_codec_libx265 = {

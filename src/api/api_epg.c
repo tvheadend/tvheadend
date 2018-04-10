@@ -54,10 +54,10 @@ static void
 api_epg_add_channel ( htsmsg_t *m, channel_t *ch, const char *blank )
 {
   int64_t chnum;
-  char buf[32], ubuf[UUID_HEX_SIZE];
+  char buf[32];
   const char *s;
   htsmsg_add_str(m, "channelName", channel_get_name(ch, blank));
-  htsmsg_add_str(m, "channelUuid", channel_get_uuid(ch, ubuf));
+  htsmsg_add_uuid(m, "channelUuid", &ch->ch_id.in_uuid);
   if ((chnum = channel_get_number(ch)) >= 0) {
     uint32_t maj = chnum / CHANNEL_SPLIT;
     uint32_t min = chnum % CHANNEL_SPLIT;
@@ -76,7 +76,6 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
 {
   const char *s;
   char buf[64];
-  epg_episode_t *ee = eb->episode;
   channel_t     *ch = eb->channel;
   htsmsg_t *m, *m2;
   epg_episode_num_t epnum;
@@ -84,7 +83,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
   dvr_entry_t *de;
   char ubuf[UUID_HEX_SIZE];
 
-  if (!ee || !ch) return NULL;
+  if (!ch) return NULL;
 
   if (*blank == NULL)
     *blank = tvh_gettext_lang(lang, channel_blank_name);
@@ -93,16 +92,10 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
 
   /* EPG IDs */
   htsmsg_add_u32(m, "eventId", eb->id);
-  if (ee) {
-    htsmsg_add_u32(m, "episodeId", ee->id);
-    if (ee->uri && strncasecmp(ee->uri, "tvh://", 6))
-      htsmsg_add_str(m, "episodeUri", ee->uri);
-  }
-  if (eb->serieslink) {
-    htsmsg_add_u32(m, "serieslinkId", eb->serieslink->id);
-    if (eb->serieslink->uri)
-      htsmsg_add_str(m, "serieslinkUri", eb->serieslink->uri);
-  }
+  if (eb->episodelink && strncasecmp(eb->episodelink->uri, "tvh://", 6))
+    htsmsg_add_str(m, "episodeUri", eb->episodelink->uri);
+  if (eb->serieslink)
+    htsmsg_add_str(m, "serieslinkUri", eb->serieslink->uri);
   
   /* Channel Info */
   api_epg_add_channel(m, ch, *blank);
@@ -144,60 +137,60 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
     htsmsg_add_u32(m, "audiodesc", eb->is_audio_desc);
   if (eb->is_hd)
     htsmsg_add_u32(m, "hd", eb->is_hd);
+  if (eb->is_bw)
+    htsmsg_add_u32(m, "bw", eb->is_bw);
   if (eb->lines)
     htsmsg_add_u32(m, "lines", eb->lines);
   if (eb->aspect)
     htsmsg_add_u32(m, "aspect", eb->aspect);
 
   /* Episode info */
-  if (ee) {
-    
-    /* Number */
-    epg_episode_get_epnum(ee, &epnum);
-    if (epnum.s_num) {
-      htsmsg_add_u32(m, "seasonNumber", epnum.s_num);
-      if (epnum.s_cnt)
-        htsmsg_add_u32(m, "seasonCount", epnum.s_cnt);
-    }
-    if (epnum.e_num) {
-      htsmsg_add_u32(m, "episodeNumber", epnum.e_num);
-      if (epnum.s_cnt)
-        htsmsg_add_u32(m, "episodeCount", epnum.e_cnt);
-    }
-    if (epnum.p_num) {
-      htsmsg_add_u32(m, "partNumber", epnum.p_num);
-      if (epnum.p_cnt)
-        htsmsg_add_u32(m, "partCount", epnum.p_cnt);
-    }
-    if (epnum.text)
-      htsmsg_add_str(m, "episodeOnscreen", epnum.text);
-    else if (epg_episode_number_format(ee, buf, sizeof(buf), NULL,
-                                       "s%02d", ".", "e%02d", ""))
-      htsmsg_add_str(m, "episodeOnscreen", buf);
-
-    /* Image */
-    if (ee->image)
-      htsmsg_add_str(m, "image", ee->image);
-
-    /* Rating */
-    if (ee->star_rating)
-      htsmsg_add_u32(m, "starRating", ee->star_rating);
-    if (ee->age_rating)
-      htsmsg_add_u32(m, "ageRating", ee->age_rating);
-
-    if (ee->copyright_year)
-      htsmsg_add_u32(m, "copyrightYear", ee->copyright_year);
-
-    /* Content Type */
-    m2 = NULL;
-    LIST_FOREACH(eg, &ee->genre, link) {
-      if (m2 == NULL)
-        m2 = htsmsg_create_list();
-      htsmsg_add_u32(m2, NULL, eg->code);
-    }
-    if (m2)
-      htsmsg_add_msg(m, "genre", m2);
+  epg_broadcast_get_epnum(eb, &epnum);
+  if (epnum.s_num) {
+    htsmsg_add_u32(m, "seasonNumber", epnum.s_num);
+    if (epnum.s_cnt)
+      htsmsg_add_u32(m, "seasonCount", epnum.s_cnt);
   }
+  if (epnum.e_num) {
+    htsmsg_add_u32(m, "episodeNumber", epnum.e_num);
+    if (epnum.e_cnt)
+      htsmsg_add_u32(m, "episodeCount", epnum.e_cnt);
+  }
+  if (epnum.p_num) {
+    htsmsg_add_u32(m, "partNumber", epnum.p_num);
+    if (epnum.p_cnt)
+      htsmsg_add_u32(m, "partCount", epnum.p_cnt);
+  }
+  if (epnum.text)
+    htsmsg_add_str(m, "episodeOnscreen", epnum.text);
+  else if (epg_broadcast_epnumber_format(eb, buf, sizeof(buf), NULL,
+                                         "s%02d", ".", "e%02d", ""))
+    htsmsg_add_str(m, "episodeOnscreen", buf);
+
+  /* Image */
+  if (eb->image)
+    htsmsg_add_str(m, "image", eb->image);
+
+  /* Rating */
+  if (eb->star_rating)
+    htsmsg_add_u32(m, "starRating", eb->star_rating);
+  if (eb->age_rating)
+    htsmsg_add_u32(m, "ageRating", eb->age_rating);
+
+  if (eb->first_aired)
+    htsmsg_add_s64(m, "first_aired", eb->first_aired);
+  if (eb->copyright_year)
+    htsmsg_add_u32(m, "copyright_year", eb->copyright_year);
+
+  /* Content Type */
+  m2 = NULL;
+  LIST_FOREACH(eg, &eb->genre, link) {
+    if (m2 == NULL)
+      m2 = htsmsg_create_list();
+    htsmsg_add_u32(m2, NULL, eg->code);
+  }
+  if (m2)
+    htsmsg_add_msg(m, "genre", m2);
 
   /* Recording */
   if (eb->channel && !access_verify2(perm, ACCESS_RECORDER)) {
@@ -208,7 +201,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
       if (access_verify_list(perm->aa_dvrcfgs,
                              idnode_uuid_as_str(&de->de_config->dvr_id, ubuf)))
         continue;
-      htsmsg_add_str(m, "dvrUuid", idnode_uuid_as_str(&de->de_id, ubuf));
+      htsmsg_add_uuid(m, "dvrUuid", &de->de_id.in_uuid);
       htsmsg_add_str(m, "dvrState", dvr_entry_schedstatus(de));
       break;
     }
@@ -243,6 +236,8 @@ api_epg_filter_add_str
     api_epg_filter_set_str(&eq->summary, v, comp);
   else if (!strcmp(k, "description"))
     api_epg_filter_set_str(&eq->description, v, comp);
+  else if (!strcmp(k, "extratext"))
+    api_epg_filter_set_str(&eq->extratext, v, comp);
 }
 
 static void
@@ -292,6 +287,7 @@ static struct strtab sortcmptab[] = {
   { "subtitle",      ESK_SUBTITLE },
   { "summary",       ESK_SUMMARY },
   { "description",   ESK_DESCRIPTION },
+  { "extratext",     ESK_EXTRATEXT },
   { "channelName",   ESK_CHANNEL },
   { "channelNumber", ESK_CHANNEL_NUM },
   { "starRating",    ESK_STARS },
@@ -341,12 +337,22 @@ api_epg_grid
   if (str)
     eq.stitle = strdup(str);
   eq.fulltext = htsmsg_get_bool_or_default(args, "fulltext", 0);
+  eq.new_only = htsmsg_get_bool_or_default(args, "new", 0);
   str = htsmsg_get_str(args, "channel");
   if (str)
     eq.channel = strdup(str);
   str = htsmsg_get_str(args, "channelTag");
   if (str)
     eq.channel_tag = strdup(str);
+  str = htsmsg_get_str(args, "cat1");
+  if (str)
+    eq.cat1 = strdup(str);
+  str = htsmsg_get_str(args, "cat2");
+  if (str)
+    eq.cat2 = strdup(str);
+  str = htsmsg_get_str(args, "cat3");
+  if (str)
+    eq.cat3 = strdup(str);
 
   if (mode != NULL) {
       if (!strcmp(mode, "now")) {
@@ -502,20 +508,24 @@ api_epg_grid
 
 static void
 api_epg_episode_broadcasts
-  ( access_t *perm, htsmsg_t *l, const char *lang, epg_episode_t *ep,
+  ( access_t *perm, htsmsg_t *l, const char *lang, epg_broadcast_t *ep,
     uint32_t *entries, epg_broadcast_t *ebc_skip )
 {
   epg_broadcast_t *ebc;
-  channel_t *ch;
   htsmsg_t *m;
+  epg_set_t *episodelink = ep->episodelink;
+  epg_set_item_t *item;
 
-  LIST_FOREACH(ebc, &ep->broadcasts, ep_link) {
-    ch = ebc->channel;
-    if (ch == NULL) continue;
-    if (ebc == ebc_skip) continue;
-    m = api_epg_entry(ebc, lang, perm, NULL);
-    htsmsg_add_msg(l, NULL, m);
-    (*entries)++;
+  if (episodelink == NULL)
+    return;
+
+  LIST_FOREACH(item, &episodelink->broadcasts, item_link) {
+    ebc = item->broadcast;
+    if (ebc != ebc_skip) {
+      m = api_epg_entry(ebc, lang, perm, NULL);
+      htsmsg_add_msg(l, NULL, m);
+      (*entries)++;
+    }
   }
 }
 
@@ -528,15 +538,15 @@ api_epg_alternative
   epg_broadcast_t *e;
   char *lang;
 
-  if (!htsmsg_get_u32(args, "eventId", &id))
+  if (htsmsg_get_u32(args, "eventId", &id))
     return -EINVAL;
 
   /* Main Job */
-  pthread_mutex_lock(&global_lock);
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
+  pthread_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
-  if (e && e->episode)
-    api_epg_episode_broadcasts(perm, l, lang, e->episode, &entries, e);
+  if (e)
+    api_epg_episode_broadcasts(perm, l, lang, e, &entries, e);
   pthread_mutex_unlock(&global_lock);
   free(lang);
 
@@ -553,31 +563,28 @@ api_epg_related
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   uint32_t id, entries = 0;
-  htsmsg_t *l = htsmsg_create_list();
-  epg_broadcast_t *e;
-  epg_episode_t *ep, *ep2;
+  htsmsg_t *l = htsmsg_create_list(), *m;
+  epg_broadcast_t *e, *ebc;
   char *lang;
+  epg_set_t *serieslink;
+  epg_set_item_t *item;
   
-  if (!htsmsg_get_u32(args, "eventId", &id))
+  if (htsmsg_get_u32(args, "eventId", &id))
     return -EINVAL;
 
   /* Main Job */
-  pthread_mutex_lock(&global_lock);
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
+  pthread_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
-  ep = e ? e->episode : NULL;
-  if (ep && ep->brand) {
-    LIST_FOREACH(ep2, &ep->brand->episodes, blink) {
-      if (ep2 == ep) continue;
-      if (!ep2->title) continue;
-      api_epg_episode_broadcasts(perm, l, lang, ep2, &entries, e);
-      entries++;
-    }
-  } else if (ep && ep->season) {
-    LIST_FOREACH(ep2, &ep->season->episodes, slink) {
-      if (ep2 == ep) continue;
-      if (!ep2->title) continue;
-      api_epg_episode_broadcasts(perm, l, lang, ep2, &entries, e);
+  serieslink = e->serieslink;
+  if (serieslink) {
+    LIST_FOREACH(item, &serieslink->broadcasts, item_link) {
+      ebc = item->broadcast;
+      if (ebc != e) {
+        m = api_epg_entry(ebc, lang, perm, NULL);
+        htsmsg_add_msg(l, NULL, m);
+        entries++;
+      }
     }
   }
   pthread_mutex_unlock(&global_lock);
@@ -639,20 +646,6 @@ api_epg_load
 }
 
 static int
-api_epg_brand_list(access_t *perm, void *opaque, const char *op,
-                   htsmsg_t *args, htsmsg_t **resp)
-{
-  htsmsg_t *array;
-
-  *resp = htsmsg_create_map();
-  pthread_mutex_lock(&global_lock);
-  array = epg_brand_list();
-  pthread_mutex_unlock(&global_lock);
-  htsmsg_add_msg(*resp, "entries", array);
-  return 0;
-}
-
-static int
 api_epg_content_type_list(access_t *perm, void *opaque, const char *op,
                           htsmsg_t *args, htsmsg_t **resp)
 {
@@ -674,7 +667,6 @@ void api_epg_init ( void )
     { "epg/events/alternative", ACCESS_ANONYMOUS, api_epg_alternative, NULL },
     { "epg/events/related",     ACCESS_ANONYMOUS, api_epg_related, NULL },
     { "epg/events/load",        ACCESS_ANONYMOUS, api_epg_load, NULL },
-    { "epg/brand/list",         ACCESS_ANONYMOUS, api_epg_brand_list, NULL },
     { "epg/content_type/list",  ACCESS_ANONYMOUS, api_epg_content_type_list, NULL },
 
     { NULL },

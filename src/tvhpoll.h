@@ -27,14 +27,9 @@
 typedef struct tvhpoll tvhpoll_t;
 typedef struct tvhpoll_event
 {
-  int  fd; // input
-  int  events;
-  union {
-    void     *ptr;
-    uint64_t u64;
-    uint32_t u32;
-    int      fd;
-  }    data;
+  int         fd; // input
+  uint32_t    events;
+  void       *ptr;
 } tvhpoll_event_t;
 
 #define TVHPOLL_IN  0x01
@@ -43,13 +38,13 @@ typedef struct tvhpoll_event
 #define TVHPOLL_ERR 0x08
 #define TVHPOLL_HUP 0x10
 
-tvhpoll_t *tvhpoll_create  ( size_t num );
-void       tvhpoll_destroy ( tvhpoll_t *tp );
-int        tvhpoll_add
-  ( tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num );
-int        tvhpoll_rem
-  ( tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num );
-int        tvhpoll_wait
-  ( tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num, int ms );
+tvhpoll_t *tvhpoll_create(size_t num);
+void tvhpoll_destroy(tvhpoll_t *tp);
+int tvhpoll_set(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
+int tvhpoll_add(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
+int tvhpoll_add1(tvhpoll_t *tp, int fd, uint32_t events, void *ptr);
+int tvhpoll_rem(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
+int tvhpoll_rem1(tvhpoll_t *tp, int fd);
+int tvhpoll_wait(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num, int ms);
 
 #endif /* __TVHPOLL_H__ */

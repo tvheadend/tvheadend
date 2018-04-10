@@ -19,6 +19,7 @@ test -z "$PKG_CONFIG" && PKG_CONFIG=pkg-config
 OPTIONS=(
   "pie:yes"
   "ccdebug:no"
+  "cardclient:auto"
   "cwc:yes"
   "cccam:yes"
   "capmt:yes"
@@ -65,16 +66,16 @@ OPTIONS=(
   "tvhcsa:auto"
   "bundle:no"
   "pngquant:no"
-  "dvbcsa:no"
-  "dvben50221:auto"
   "kqueue:no"
   "dbus_1:auto"
   "android:no"
-  "tsdebug:no"
   "gtimer_check:no"
   "slow_memoryinfo:no"
   "libsystemd_daemon:no"
   "bintray_cache:yes"
+  "ddci:yes"
+  "cclang_threadsan:no"
+  "gperftools:no"
 )
 
 #
@@ -177,6 +178,12 @@ uint64_t test(time_t *ptr){
 return __sync_fetch_and_add(ptr, 1);
 }'
 
+check_cc_snippet atomic_ptr '#include <stdint.h>
+#include <time.h>
+void *test(void * volatile *ptr){
+return __sync_fetch_and_add(ptr, (void *)1);
+}'
+
 check_cc_snippet bitops64 '#include <stdint.h>
 int test(void){
   int l = sizeof(long);
@@ -275,21 +282,10 @@ int test(void)
 }
 ' -liconv
 
-if enabled_or_auto dvben50221; then
-  check_cc_snippet libdvben50221 '
-  #include <libdvben50221/en50221_session.h>
-  #define TEST test
-  int test(void)
-  {
-    struct en50221_transport_layer *tl = en50221_tl_create(5, 32);
-    return 0;
-  }
-  ' '-ldvben50221 -ldvbapi -lucsi'
-  if enabled libdvben50221; then
-    enable dvben50221
-  else
-    disable dvben50221
-  fi
+if enabled libiconv; then
+  printf "    ^ using external iconv library\n"
+else
+  printf "    ^ using build-in glibc iconv routines\n"
 fi
 
 check_cc_snippet ifnames '
@@ -301,6 +297,13 @@ int test(void)
   return 0;
 }
 '
+
+check_cc_snippet cclang_threadsan '
+int test(void){
+#if __has_feature(thread_sanitizer)
+  return 0;
+#endif
+}'
 
 #
 # Python
@@ -347,9 +350,18 @@ check_cc_header 'linux/dvb/version' linuxdvbapi
 if enabled_or_auto linuxdvb; then
   if enabled linuxdvbapi; then
     enable linuxdvb
+    enable linuxdvb_ca
   elif enabled linuxdvb; then
     die "Linux DVB API not found (use --disable-linuxdvb)"
   fi
+fi
+
+if enabled linuxdvb; then
+  if enabled_or_auto ddci; then
+    enable ddci
+  fi
+else
+  disable ddci
 fi
 
 #
@@ -623,25 +635,27 @@ if enabled_or_auto inotify; then
 fi
 
 #
-# libdvbcsa, tvhcsa
+# common card client
 #
-if enabled cwc || enabled cccam || enabled capmt || enabled constcw; then
-  enable tvhcsa
-  if enabled dvbcsa; then
-    (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\
-     check_cc_lib    dvbcsa dvbcsa_l) ||\
-    die "Failed to find dvbcsa support (use --disable-dvbcsa)"
-    LDFLAGS="$LDFLAGS -ldvbcsa"
-  fi
+if enabled cwc || enabled cccam; then
+  enable cardclient
 fi
 
 #
-# libdvben50221
+# libdvbcsa, tvhcsa
 #
-if enabled linuxdvb; then
-  if enabled libdvben50221; then
-    LDFLAGS="$LDFLAGS -ldvben50221 -ldvbapi -lucsi"
-    enable linuxdvb_ca
+if enabled_or_auto tvhcsa; then
+  if enabled cwc || enabled cccam || enabled capmt || enabled constcw; then
+    enable tvhcsa
+    enable dvbcsa
+    if enabled dvbcsa; then
+      (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\
+       check_cc_lib    dvbcsa dvbcsa_l) ||\
+      die "Failed to find dvbcsa library"
+      LDFLAGS="$LDFLAGS -ldvbcsa"
+    fi
+  else
+    disable tvhcsa
   fi
 fi
 
@@ -714,17 +728,10 @@ if enabled_or_auto dbus_1; then
 fi
 
 #
-# TSDebug
-#
-if enabled_or_auto tsdebug; then
-  enable mpegts_dvb
-fi
-
-#
 # systemd
 #
 if enabled_or_auto libsystemd_daemon; then
-  if check_pkg libsystemd-daemon; then
+  if check_pkg libsystemd-daemon || check_pkg libsystemd; then
     enable libsystemd_daemon
   elif enabled libsystemd_daemon; then
     die "libsystemd-daemon development support not found (use --disable-systemd_daemon)"

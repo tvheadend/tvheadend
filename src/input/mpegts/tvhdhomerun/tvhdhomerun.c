@@ -83,15 +83,15 @@ static pthread_t tvhdhomerun_discovery_tid;
 static pthread_mutex_t tvhdhomerun_discovery_lock;
 static tvh_cond_t tvhdhomerun_discovery_cond;
 
-static const char *
-tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
+static void
+tvhdhomerun_device_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
   tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)in;
   char ip[64];
   tcp_get_str_from_ip(&hd->hd_info.ip_address, ip, sizeof(ip));
-  snprintf(prop_sbuf, PROP_SBUF_LEN,
+  snprintf(dst, dstsize,
            "%s - %s", hd->hd_info.friendlyname, ip);
-  return prop_sbuf;
 }
 
 static const void *
@@ -263,12 +263,12 @@ tvhdhomerun_device_calc_bin_uuid( uint8_t *uuid, const uint32_t device_id )
 }
 
 static void
-tvhdhomerun_device_calc_uuid( tvh_uuid_t *uuid, const uint32_t device_id )
+tvhdhomerun_device_calc_uuid( char *uhex, const uint32_t device_id )
 {
   uint8_t uuidbin[20];
 
   tvhdhomerun_device_calc_bin_uuid(uuidbin, device_id);
-  bin2hex(uuid->hex, sizeof(uuid->hex), uuidbin, sizeof(uuidbin));
+  bin2hex(uhex, UUID_HEX_SIZE, uuidbin, sizeof(uuidbin));
 }
 
 static tvhdhomerun_device_t *
@@ -293,12 +293,12 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
 
   tvhdhomerun_device_t *hd = calloc(1, sizeof(tvhdhomerun_device_t));
   htsmsg_t *conf = NULL, *feconf = NULL;
-  tvh_uuid_t uuid;
+  char uhex[UUID_HEX_SIZE];
   int j, save = 0;
   struct hdhomerun_device_t *hdhomerun_tuner;
   dvb_fe_type_t type = DVB_TYPE_C;
 
-  tvhdhomerun_device_calc_uuid(&uuid, dInfo->device_id);
+  tvhdhomerun_device_calc_uuid(uhex, dInfo->device_id);
 
   hdhomerun_tuner = hdhomerun_device_create(dInfo->device_id, dInfo->ip_addr, 0, NULL);
   {
@@ -309,7 +309,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
     hdhomerun_device_destroy(hdhomerun_tuner);
   }
 
-  conf = hts_settings_load("input/tvhdhomerun/adapters/%s", uuid.hex);
+  conf = hts_settings_load("input/tvhdhomerun/adapters/%s", uhex);
 
   if ( conf != NULL ) {
     const char *override_type = htsmsg_get_str(conf, "fe_override");
@@ -337,7 +337,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   hd->hd_pids_deladd = 1;
 
   if (!tvh_hardware_create0((tvh_hardware_t*)hd, &tvhdhomerun_device_class,
-                            uuid.hex, conf))
+                            uhex, conf))
     return;
 
   TAILQ_INIT(&hd->hd_frontends);
@@ -352,7 +352,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   memset(&hd->hd_info.ip_address, 0, sizeof(hd->hd_info.ip_address));
   hd->hd_info.ip_address.ss_family = AF_INET;
   ((struct sockaddr_in *)&hd->hd_info.ip_address)->sin_addr.s_addr = htonl(dInfo->ip_addr);
-  hd->hd_info.uuid = strdup(uuid.hex);
+  hd->hd_info.uuid = strdup(uhex);
   hd->hd_info.friendlyname = strdup(fName);
 
   if (conf)

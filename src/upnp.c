@@ -148,12 +148,12 @@ upnp_thread( void *aux )
     goto error;
 
   memset(&ev, 0, sizeof(ev));
-  ev[0].fd       = multicast->fd;
-  ev[0].events   = TVHPOLL_IN;
-  ev[0].data.ptr = multicast;
-  ev[1].fd       = unicast->fd;
-  ev[1].events   = TVHPOLL_IN;
-  ev[1].data.ptr = unicast;
+  ev[0].fd     = multicast->fd;
+  ev[0].events = TVHPOLL_IN;
+  ev[0].ptr    = multicast;
+  ev[1].fd     = unicast->fd;
+  ev[1].events = TVHPOLL_IN;
+  ev[1].ptr    = unicast;
   tvhpoll_add(poll, ev, 2);
 
   delay_ms = 0;
@@ -165,7 +165,7 @@ upnp_thread( void *aux )
 
     while (r-- > 0) {
       if ((ev[r].events & TVHPOLL_IN) != 0) {
-        conn = ev[r].data.ptr;
+        conn = ev[r].ptr;
         iplen = sizeof(ip);
         size = recvfrom(conn->fd, buf, sizeof(buf), 0,
                                            (struct sockaddr *)&ip, &iplen);

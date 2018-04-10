@@ -16,57 +16,146 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <ctype.h>
 #include "tvheadend.h"
 #include "eitpatternlist.h"
 #include "htsmsg.h"
 
-void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l )
+#define MAX_TEXT_LEN    2048
+
+static char *get_languages_string(htsmsg_field_t *field)
+{
+  const char *s;
+  htsmsg_t *langlist;
+
+  if (field == NULL)
+    return NULL;
+
+  s = htsmsg_field_get_str(field);
+  if (s) {
+    return strdup(s);
+  } else {
+    langlist = htsmsg_field_get_list(field);
+    if (langlist) {
+      htsmsg_field_t *item;
+      char langbuf[MAX_TEXT_LEN];
+      langbuf[0] = '\0';
+      HTSMSG_FOREACH(item, langlist) {
+        s = htsmsg_field_get_str(item);
+        if (s) {
+          strncat(langbuf, s, sizeof(langbuf) - strlen(langbuf) - 1);
+          strncat(langbuf, "|", sizeof(langbuf) - strlen(langbuf) - 1);
+        }
+      }
+      if (strlen(langbuf) > 0)
+        return strdup(langbuf);
+    }
+  }
+  return NULL;
+}
+
+void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l, int flags )
 {
   eit_pattern_t *pattern;
   htsmsg_field_t *f;
-  const char *s;
+  const char *text;
+  int filter;
+  char *langs;
 
   TAILQ_INIT(list);
   if (!l) return;
   HTSMSG_FOREACH(f, l) {
-    s = htsmsg_field_get_str(f);
-    if (s == NULL) continue;
+    text = htsmsg_field_get_str(f);
+    filter = 0;
+    langs = NULL;
+    if (text == NULL) {
+      htsmsg_t *m = htsmsg_field_get_map(f);
+      if (m == NULL) continue;
+      text = htsmsg_get_str(m, "pattern");
+      if (text == NULL) continue;
+      filter = htsmsg_get_bool_or_default(m, "filter", 0);
+      langs = get_languages_string(htsmsg_field_find(m, "lang"));
+    }
     pattern = calloc(1, sizeof(eit_pattern_t));
-    pattern->text = strdup(s);
-    if (regcomp(&pattern->compiled, pattern->text, REG_EXTENDED)) {
+    pattern->text = strdup(text);
+    pattern->filter = filter;
+    pattern->langs = langs;
+    if (regex_compile(&pattern->compiled, pattern->text, flags, LS_EPGGRAB)) {
       tvhwarn(LS_EPGGRAB, "error compiling pattern \"%s\"", pattern->text);
+      free(pattern->langs);
       free(pattern->text);
       free(pattern);
     } else {
-      tvhtrace(LS_EPGGRAB, "compiled pattern \"%s\"", pattern->text);
+      tvhtrace(LS_EPGGRAB, "compiled pattern \"%s\", filter %d", pattern->text, pattern->filter);
       TAILQ_INSERT_TAIL(list, pattern, p_links);
     }
   }
 }
 
-void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, eit_pattern_list_t *l)
+void eit_pattern_compile_named_list ( eit_pattern_list_t *list, htsmsg_t *m, const char *key)
 {
-  regmatch_t match[2];
+#if defined(TVHREGEX_TYPE)
+  htsmsg_t *m_alt = htsmsg_get_map(m, TVHREGEX_TYPE);
+  if (!m_alt)
+    m_alt = htsmsg_get_map(m, "pcre");
+  if (m_alt) {
+    htsmsg_t *res = htsmsg_get_list(m_alt, key);
+    if (res) {
+      eit_pattern_compile_list(list, res, 0);
+      return;
+    }
+  }
+#endif
+  eit_pattern_compile_list(list, htsmsg_get_list(m, key), TVHREGEX_POSIX);
+}
+
+static void rtrim(char *buf)
+{
+  size_t len = strlen(buf);
+  while (len > 0 && isspace(buf[len - 1]))
+    --len;
+  buf[len] = '\0';
+}
+
+void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, const char *lang, eit_pattern_list_t *l)
+{
   eit_pattern_t *p;
-  ssize_t size;
+  char textbuf[MAX_TEXT_LEN];
+  char matchbuf[MAX_TEXT_LEN];
+  int matchno;
+
+  assert(buf);
+  assert(text);
 
   if (!l) return NULL;
-  /* search and report the first match */
-  TAILQ_FOREACH(p, l, p_links)
-    if (!regexec(&p->compiled, text, 2, match, 0) && match[1].rm_so != -1) {
-      size = MIN(match[1].rm_eo - match[1].rm_so, size_buf - 1);
-      if (size <= 0)
+
+  /* search and concatenate all subgroup matches - there must be at least one */
+  TAILQ_FOREACH(p, l, p_links) {
+    if (p->langs && lang) {
+      if (strstr(p->langs, lang) == NULL) {
         continue;
-      while (isspace(text[match[1].rm_so + size - 1]))
-        size--;
-      memcpy(buf, text + match[1].rm_so, size);
-      buf[size] = '\0';
-      if (size) {
-         tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches with '%s'", p->text, buf);
-         return buf;
       }
     }
+    if (!regex_match(&p->compiled, text) &&
+        !regex_match_substring(&p->compiled, 1, buf, size_buf)) {
+      for (matchno = 2; ; ++matchno) {
+        if (regex_match_substring(&p->compiled, matchno, matchbuf, sizeof(matchbuf)))
+          break;
+        size_t len = strlen(buf);
+        strncat(buf, matchbuf, size_buf - len - 1);
+      }
+      rtrim(buf);
+      tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches '%s' from '%s'", p->text, buf, text);
+      if (p->filter) {
+        strncpy(textbuf, buf, MAX_TEXT_LEN - 1);
+        textbuf[MAX_TEXT_LEN - 1] = '\0';
+        text = textbuf;
+        continue;
+      }
+      return buf;
+    }
+  }
   return NULL;
 }
 
@@ -77,8 +166,9 @@ void eit_pattern_free_list ( eit_pattern_list_t *l )
   if (!l) return;
   while ((p = TAILQ_FIRST(l)) != NULL) {
     TAILQ_REMOVE(l, p, p_links);
+    free(p->langs);
     free(p->text);
-    regfree(&p->compiled);
+    regex_free(&p->compiled);
     free(p);
   }
 }

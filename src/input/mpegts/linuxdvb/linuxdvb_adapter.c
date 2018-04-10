@@ -40,6 +40,10 @@
 #define CA_PATH  "%s/ca%d"
 #define DVR_PATH "%s/dvr%d"
 #define DMX_PATH "%s/demux%d"
+#define CI_PATH  "%s/ci%d"
+#define SEC_PATH "%s/sec%d"
+
+#define MAX_DEV_OPEN_ATTEMPTS 20
 
 /* ***************************************************************************
  * DVB Adapter
@@ -52,7 +56,7 @@ linuxdvb_adapter_class_save ( idnode_t *in, char *filename, size_t fsize )
   htsmsg_t *m, *l;
   linuxdvb_frontend_t *lfe;
 #if ENABLE_LINUXDVB_CA
-  linuxdvb_ca_t *lca;
+  linuxdvb_transport_t *lcat;
 #endif
   char ubuf[UUID_HEX_SIZE];
 
@@ -69,8 +73,8 @@ linuxdvb_adapter_class_save ( idnode_t *in, char *filename, size_t fsize )
     /* CAs */
   #if ENABLE_LINUXDVB_CA
     l = htsmsg_create_map();
-    LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
-      linuxdvb_ca_save(lca, l);
+    LIST_FOREACH(lcat, &la->la_ca_transports, lcat_link)
+      linuxdvb_transport_save(lcat, l);
     htsmsg_add_msg(m, "ca_devices", l);
   #endif
 
@@ -86,6 +90,7 @@ linuxdvb_adapter_class_get_childs ( idnode_t *in )
 {
   linuxdvb_frontend_t *lfe;
 #if ENABLE_LINUXDVB_CA
+  linuxdvb_transport_t *lcat;
   linuxdvb_ca_t *lca;
 #endif
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
@@ -93,17 +98,19 @@ linuxdvb_adapter_class_get_childs ( idnode_t *in )
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
     idnode_set_add(is, &lfe->ti_id, NULL, NULL);
 #if ENABLE_LINUXDVB_CA
-  LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
-    idnode_set_add(is, &lca->lca_id, NULL, NULL);
+  LIST_FOREACH(lcat, &la->la_ca_transports, lcat_link)
+    LIST_FOREACH(lca, &lcat->lcat_slots, lca_link)
+      idnode_set_add(is, &lca->lca_id, NULL, NULL);
 #endif
   return is;
 }
 
-static const char *
-linuxdvb_adapter_class_get_title ( idnode_t *in, const char *lang )
+static void
+linuxdvb_adapter_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
-  return la->la_name ?: la->la_rootpath;
+  snprintf(dst, dstsize, "%s", la->la_name ?: la->la_rootpath);
 }
 
 static const void *
@@ -111,18 +118,21 @@ linuxdvb_adapter_class_active_get ( void *obj )
 {
   static int active;
 #if ENABLE_LINUXDVB_CA
+  linuxdvb_transport_t *lcat;
   linuxdvb_ca_t *lca;
 #endif
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)obj;
   active = la->la_is_enabled(la);
 #if ENABLE_LINUXDVB_CA
   if (!active) {
-    LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
-      if (lca->lca_enabled) {
-        active = 1;
-        break;
-      }
+    LIST_FOREACH(lcat, &la->la_ca_transports, lcat_link)
+      LIST_FOREACH(lca, &lcat->lcat_slots, lca_link)
+        if (lca->lca_enabled) {
+          active = 1;
+          goto caok;
+        }
   }
+caok:
 #endif
   return &active;
 }
@@ -194,7 +204,6 @@ linuxdvb_adapter_create
   la->la_rootpath   = strdup(path);
   la->la_name       = strdup(buf);
   la->la_dvb_number = number;
-
   /* Callbacks */
   la->la_is_enabled = linuxdvb_adapter_is_enabled;
 
@@ -211,22 +220,23 @@ linuxdvb_adapter_new(const char *path, int a, const char *name,
   linuxdvb_adapter_t *la;
   SHA_CTX sha1;
   uint8_t uuidbin[20];
-  tvh_uuid_t uuid;
+  char uhex[UUID_HEX_SIZE];
 
   /* Create hash for adapter */
   SHA1_Init(&sha1);
   SHA1_Update(&sha1, (void*)path,     strlen(path));
   SHA1_Update(&sha1, (void*)name,     strlen(name));
   SHA1_Final(uuidbin, &sha1);
-  bin2hex(uuid.hex, sizeof(uuid.hex), uuidbin, sizeof(uuidbin));
+
+  bin2hex(uhex, sizeof(uhex), uuidbin, sizeof(uuidbin));
 
   /* Load config */
-  *conf = hts_settings_load("input/linuxdvb/adapters/%s", uuid.hex);
+  *conf = hts_settings_load("input/linuxdvb/adapters/%s", uhex);
   if (*conf == NULL)
     *save = 1;
 
   /* Create */
-  if (!(la = linuxdvb_adapter_create(uuid.hex, *conf, path, a, display_name))) {
+  if (!(la = linuxdvb_adapter_create(uhex, *conf, path, a, display_name))) {
     htsmsg_destroy(*conf);
     *conf = NULL;
     return NULL;
@@ -299,22 +309,60 @@ linuxdvb_get_systems(int fd, struct dtv_property *_cmd)
 }
 #endif
 
+#if ENABLE_DDCI
+/* ret:  0 .. DDCI found and usable
+ *      -1 .. DDCI found but not usable
+ *      -2 .. DDCI not found
+ */
+static int
+linuxdvb_check_ddci ( const char *ci_path )
+{
+  int j, fd, ret = -2;
+
+  tvhtrace(LS_DDCI, "checking for DDCI %s", ci_path);
+
+  /* check existence */
+  if (!access(ci_path, R_OK | W_OK)) {
+    for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
+      if ((fd = tvh_open(ci_path, O_WRONLY, 0)) >= 0) break;
+      tvh_safe_usleep(100000);
+    }
+    if (fd >= 0) {
+      close(fd);
+      tvhinfo(LS_DDCI, "DDCI found %s", ci_path);
+      ret = 0;
+    }
+    else {
+      ret = -1;
+      tvherror(LS_DDCI, "unable to open %s", ci_path);
+    }
+  }
+  return ret;
+}
+#endif /* ENABLE_DDCI */
+
 /*
  * Add adapter by path
  */
 static void
 linuxdvb_adapter_add ( const char *path )
 {
-#define MAX_DEV_OPEN_ATTEMPTS 20
   extern int linuxdvb_adapter_mask;
   int a, i, j, r, fd;
   char fe_path[512], dmx_path[512], dvr_path[512], name[132];
 #if ENABLE_LINUXDVB_CA
+  linuxdvb_transport_t *lcat;
   char ca_path[512];
   htsmsg_t *caconf = NULL;
+  const char *ci_found = NULL;
+#if ENABLE_DDCI
+  linuxdvb_adapter_t *la_fe = NULL;
+  char ci_path[512];
+#endif
 #endif
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
+  ca_caps_t cac;
   htsmsg_t *conf = NULL, *feconf = NULL;
   int save = 0;
   dvb_fe_type_t type;
@@ -324,6 +372,8 @@ linuxdvb_adapter_add ( const char *path )
   struct dtv_property cmd;
   linuxdvb_frontend_t *lfe;
 #endif
+
+  tvhtrace(LS_LINUXDVB, "scanning adapter %s", path);
 
   /* Validate the path */
   if (sscanf(path, "/dev/dvb/adapter%d", &a) != 1)
@@ -437,6 +487,36 @@ linuxdvb_adapter_add ( const char *path )
 
   /* Process each CA device */
 #if ENABLE_LINUXDVB_CA
+  /* A normal DVB card with hard wired CI interface creates the caX device in
+   * the same adapter directory than the frontendX device.
+   * The Digital Device CI interfaces do the same, when the driver is started
+   * with adapter_alloc=3. This parameter is used together with the redirect
+   * feature of the DD CI to inform user mode applications, that the caX device
+   * is hard wired to the DVB tuner. This means the special DDCI feature must
+   * not be activated, when the caX and the frontedX device are present in the
+   * same adapter directory.
+   *
+   * The normal use case for the DD CI is a stand alone CI interface, which can
+   * be used by any tuner in the system, which is not limited to Digital Devices
+   * hardware.
+   * This is the default mode of the driver or started with adapter_alloc=0
+   * parameter. In this mode the caX device is created in a dedicated adapter
+   * directory.
+   *
+   * In both modes also a secX or ciX device is create additionally. In the
+   * first mode (adapter_alloc=3 and redirect) this shall be ignored. In the
+   * second mode it needs to be associated with the caX device and later on
+   * used to send/receive the crypted/decrypted TS stream to/from the CAM.
+   *
+   */
+
+#if ENABLE_DDCI
+  /* remember, if la exists already, which means DD CI is hard wired to the
+   * tuner
+   */
+  la_fe = la;
+#endif
+
   for (i = 0; i < 32; i++) {
     snprintf(ca_path, sizeof(ca_path), CA_PATH, path, i);
     if (access(ca_path, R_OK | W_OK)) continue;
@@ -450,12 +530,51 @@ linuxdvb_adapter_add ( const char *path )
       tvherror(LS_LINUXDVB, "unable to open %s", ca_path);
       continue;
     }
+    memset(&cac, 0, sizeof(cac));
     r = ioctl(fd, CA_RESET, NULL);
+    if (r == 0)
+      r = ioctl(fd, CA_GET_CAP, &cac);
     close(fd);
     if(r) {
       tvherror(LS_LINUXDVB, "unable to query %s", ca_path);
       continue;
     }
+    if(cac.slot_num == 0) {
+      tvherror(LS_LINUXDVB, "CAM %s has no slots", ca_path);
+      continue;
+    }
+    if((cac.slot_type & (CA_CI_LINK|CA_CI)) == 0) {
+      tvherror(LS_LINUXDVB, "unsupported CAM type %08x", cac.slot_type);
+      continue;
+    }
+
+#if ENABLE_DDCI
+    /* check for DD CI only, if no frontend was found (stand alone mode) */
+    if (!la_fe) {
+      int ddci_ret;
+
+      /* DD driver uses ciX */
+      snprintf(ci_path, sizeof(ci_path), CI_PATH, path, i);
+      ddci_ret = linuxdvb_check_ddci ( ci_path );
+      if (ddci_ret == -2 ) {
+        /* Mainline driver uses secX */
+        snprintf(ci_path, sizeof(ci_path), SEC_PATH, path, i);
+        ddci_ret = linuxdvb_check_ddci ( ci_path );
+      }
+
+      /* The DD CI device have not been found, or was not usable, so we
+       * ignore the whole caX device also, because we are in DD CI stand alone
+       * mode and this requires a working ciX/secX device.
+       * It would be possible to check for -1 so that it get ignored only in
+       * case of an open error.
+       */
+      if (ddci_ret) {
+        tvherror(LS_LINUXDVB, "ignoring DDCI %s", ca_path);
+        continue;
+      }
+      ci_found = ci_path;
+    }
+#endif /* ENABLE_DDCI */
 
     pthread_mutex_lock(&global_lock);
 
@@ -464,17 +583,21 @@ linuxdvb_adapter_add ( const char *path )
       la = linuxdvb_adapter_new(path, a, ca_path, name, &conf, &save);
       if (la == NULL) {
         tvherror(LS_LINUXDVB, "failed to create %s", path);
-        return; // Note: save to return here as global_lock is held
+        continue;
       }
     }
 
     if (conf)
       caconf = htsmsg_get_map(conf, "ca_devices");
 
-    linuxdvb_ca_create(caconf, la, i, ca_path);
+    lcat = linuxdvb_transport_create(la, i, cac.slot_num, ca_path, ci_found);
+    if (lcat) {
+      for (j = 0; j < cac.slot_num; j++)
+        linuxdvb_ca_create(caconf, lcat, j);
+    }
     pthread_mutex_unlock(&global_lock);
   }
-#endif
+#endif /* ENABLE_LINUXDVB_CA */
 
   /* Cleanup */
   if (conf)
@@ -519,7 +642,10 @@ static void
 linuxdvb_adapter_del ( const char *path )
 {
   int a;
-  linuxdvb_frontend_t *lfe, *next;
+  linuxdvb_frontend_t *lfe, *lfe_next;
+#if ENABLE_LINUXDVB_CA
+  linuxdvb_transport_t *lcat, *lcat_next;
+#endif
   linuxdvb_adapter_t *la = NULL;
   tvh_hardware_t *th;
 
@@ -535,10 +661,18 @@ linuxdvb_adapter_del ( const char *path )
     idnode_save_check(&la->th_id, 0);
   
     /* Delete the frontends */
-    for (lfe = LIST_FIRST(&la->la_frontends); lfe != NULL; lfe = next) {
-      next = LIST_NEXT(lfe, lfe_link);
-      linuxdvb_frontend_delete(lfe);
+    for (lfe = LIST_FIRST(&la->la_frontends); lfe != NULL; lfe = lfe_next) {
+      lfe_next = LIST_NEXT(lfe, lfe_link);
+      linuxdvb_frontend_destroy(lfe);
     }
+    
+#if ENABLE_LINUXDVB_CA
+    /* Delete the CA devices */
+    for (lcat = LIST_FIRST(&la->la_ca_transports); lcat != NULL; lcat = lcat_next) {
+      lcat_next = LIST_NEXT(lcat, lcat_link);
+      linuxdvb_transport_destroy(lcat);
+    }
+#endif
 
     /* Free memory */
     free(la->la_rootpath);
@@ -661,6 +795,7 @@ linuxdvb_adapter_init ( void )
 
 #if ENABLE_LINUXDVB_CA
   idclass_register(&linuxdvb_ca_class);
+  linuxdvb_ca_init();
 #endif
 
   /* Install monitor on /dev */
@@ -691,5 +826,8 @@ linuxdvb_adapter_done ( void )
       linuxdvb_adapter_del(la->la_rootpath);
     }
   }
+#if ENABLE_LINUXDVB_CA
+  linuxdvb_ca_done();
+#endif
   pthread_mutex_unlock(&global_lock);
 }

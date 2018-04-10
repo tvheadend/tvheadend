@@ -20,6 +20,7 @@
 
 #include "internals.h"
 #include "../codec/internals.h"
+#include "service.h"
 
 
 static TVHCodecProfile _codec_profile_copy = { .name = (char *)"copy" };
@@ -34,13 +35,13 @@ ssc_get_media_type(tvh_ssc_t *ssc)
     if (ssc->ssc_disabled) {
         return AVMEDIA_TYPE_UNKNOWN;
     }
-    if (SCT_ISVIDEO(ssc->ssc_type)) {
+    if (SCT_ISVIDEO(ssc->es_type)) {
         return AVMEDIA_TYPE_VIDEO;
     }
-    if (SCT_ISAUDIO(ssc->ssc_type)) {
+    if (SCT_ISAUDIO(ssc->es_type)) {
         return AVMEDIA_TYPE_AUDIO;
     }
-    if (SCT_ISSUBTITLE(ssc->ssc_type)) {
+    if (SCT_ISSUBTITLE(ssc->es_type)) {
         return AVMEDIA_TYPE_SUBTITLE;
     }
     return AVMEDIA_TYPE_UNKNOWN;
@@ -73,7 +74,7 @@ lang_match(const char *lang, tvh_ssc_t *ssc, int *index, int value)
 {
     if (*index >= 0)
         return 0;
-    if (lang && strcmp(lang, ssc->ssc_lang) == 0) {
+    if (lang && strcmp(lang, ssc->es_lang) == 0) {
         *index = value;
         return 1;
     }
@@ -231,7 +232,7 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
             if (j < count)
                 continue;
             ssc_src = &ss_src->ss_components[i];
-            switch (ssc_src->ssc_type) {
+            switch (ssc_src->es_type) {
             case SCT_CA:
             case SCT_HBBTV:
             case SCT_TELETEXT:

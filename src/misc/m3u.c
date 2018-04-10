@@ -240,6 +240,8 @@ multi:
       data = until_eol(data + 14);
       continue;
     } else if (strncmp(data, "#EXTVLCOPT:program=", 19) == 0) {
+      if (item == NULL)
+        item = htsmsg_create_map();
       htsmsg_add_s64(item, "vlc-program", strtoll(data + 19, NULL, 10));
       data = until_eol(data + 19);
     } else if (strncmp(data, "#EXT", 4) == 0) {

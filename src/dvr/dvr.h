@@ -28,6 +28,23 @@
 #include "lang_str.h"
 #include "tvhvfs.h"
 
+/**
+ *
+ */
+LIST_HEAD(dvr_config_list, dvr_config);
+LIST_HEAD(dvr_entry_list, dvr_entry);
+
+LIST_HEAD(dvr_autorec_entry_list, dvr_autorec_entry);
+LIST_HEAD(dvr_timerec_entry_list, dvr_timerec_entry);
+
+TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
+TAILQ_HEAD(dvr_timerec_entry_queue, dvr_timerec_entry);
+
+LIST_HEAD(dvr_vfs_list, dvr_vfs);
+
+/**
+ *
+ */
 #define DVR_MAX_DATA_ERRORS     (10000)
 
 #define DVR_FILESIZE_UPDATE     (1<<0)
@@ -206,11 +223,13 @@ typedef struct dvr_entry {
   char *de_creator;
   char *de_comment;
   char *de_uri;                 /* Programme unique ID */
+  char *de_image;               /* Programme Image */
   htsmsg_t *de_files; /* List of all used files */
   char *de_directory; /* Can be set for autorec entries, will override any 
                          directory setting from the configuration */
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
   lang_str_t *de_subtitle;   /* Subtitle in UTF-8 (from EPG) */
+  lang_str_t *de_summary;    /* Summary in UTF-8 (from EPG) */
   lang_str_t *de_desc;       /* Description in UTF-8 (from EPG) */
   uint32_t de_content_type;  /* Content type (from EPG) (only code) */
   uint16_t de_copyright_year; /* Copyright year (from EPG) */
@@ -228,8 +247,9 @@ typedef struct dvr_entry {
   /**
    * EPG information / links
    */
+  LIST_ENTRY(dvr_entry) de_bcast_link;
   epg_broadcast_t *de_bcast;
-  char *de_episode;
+  epg_episode_num_t de_epnum;
 
   /**
    * Major State
@@ -323,8 +343,9 @@ typedef enum {
 
 typedef enum {
   DVR_AUTOREC_BTYPE_ALL = 0,
-  DVR_AUTOREC_BTYPE_NEW = 1,
-  DVR_AUTOREC_BTYPE_REPEAT = 2
+  DVR_AUTOREC_BTYPE_NEW_OR_UNKNOWN = 1,
+  DVR_AUTOREC_BTYPE_REPEAT = 2,
+  DVR_AUTOREC_BTYPE_NEW = 3,
 } dvr_autorec_btype_t;
 
 /**
@@ -375,9 +396,7 @@ typedef struct dvr_autorec_entry {
 
   struct dvr_entry_list dae_spawns;
 
-  epg_brand_t *dae_brand;
-  epg_season_t *dae_season;
-  epg_serieslink_t *dae_serieslink;
+  const char *dae_serieslink_uri;
   epg_episode_num_t dae_epnum;
 
   int dae_minduration;
@@ -394,8 +413,6 @@ typedef struct dvr_autorec_entry {
   int dae_record;
   
 } dvr_autorec_entry_t;
-
-TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
 
 extern struct dvr_autorec_entry_queue autorec_entries;
 
@@ -434,8 +451,6 @@ typedef struct dvr_timerec_entry {
   uint32_t dte_retention;
   uint32_t dte_removal;
 } dvr_timerec_entry_t;
-
-TAILQ_HEAD(dvr_timerec_entry_queue, dvr_timerec_entry);
 
 extern struct dvr_timerec_entry_queue timerec_entries;
 
@@ -496,6 +511,12 @@ static inline int dvr_entry_is_editable(dvr_entry_t *de)
 static inline int dvr_entry_is_valid(dvr_entry_t *de)
   { return de->de_refcnt > 0; }
 
+static inline int dvr_entry_is_completed_ok(dvr_entry_t *de)
+  { assert(de->de_sched_state == DVR_COMPLETED);
+    return de->de_last_error == SM_CODE_OK ||
+           de->de_last_error == SM_CODE_FORCE_OK ||
+           de->de_last_error == SM_CODE_PREVIOUSLY_RECORDED; }
+
 char *dvr_entry_get_retention_string ( dvr_entry_t *de );
 
 char *dvr_entry_get_removal_string ( dvr_entry_t *de );
@@ -539,34 +560,14 @@ dvr_entry_clone ( dvr_entry_t *de );
 dvr_entry_t *
 dvr_entry_create ( const char *uuid, htsmsg_t *conf, int clone );
 
-
 dvr_entry_t *
-dvr_entry_create_by_event( int enabled,
-                           const char *dvr_config_uuid,
-                           epg_broadcast_t *e,
-                           time_t start_extra, time_t stop_extra,
-                           const char *owner, const char *creator,
-                           dvr_autorec_entry_t *dae,
-                           dvr_prio_t pri, int retention, int removal,
-                           const char *comment );
-
-dvr_entry_t *
-dvr_entry_create_htsp( int enabled, const char *dvr_config_uuid,
-                       channel_t *ch, time_t start, time_t stop,
-                       time_t start_extra, time_t stop_extra,
-                       const char *title, const char *subtitle,
-                       const char *description,
-                       const char *lang, epg_genre_t *content_type,
-                       const char *owner, const char *creator,
-                       dvr_autorec_entry_t *dae,
-                       dvr_prio_t pri, int retention, int removal,
-                       const char *comment );
+dvr_entry_create_from_htsmsg( htsmsg_t *conf, epg_broadcast_t *e );
 
 dvr_entry_t *
 dvr_entry_update( dvr_entry_t *de, int enabled,
                   const char *dvr_config_uuid, channel_t *ch,
                   const char *title, const char *subtitle,
-                  const char *desc, const char *lang,
+                  const char *summary, const char *desc, const char *lang,
                   time_t start, time_t stop,
                   time_t start_extra, time_t stop_extra,
                   dvr_prio_t pri, int retention, int removal,
@@ -588,7 +589,7 @@ void dvr_event_removed(epg_broadcast_t *e);
 
 void dvr_event_updated(epg_broadcast_t *e);
 
-void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t running);
+void dvr_event_running(epg_broadcast_t *e, epg_running_t running);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
@@ -619,6 +620,8 @@ void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord);
 
 void dvr_entry_cancel_remove(dvr_entry_t *de, int rerecord);
 
+void dvr_entry_set_prevrec(dvr_entry_t *de, int cmd);
+
 int dvr_entry_file_moved(const char *src, const char *dst);
 
 void dvr_entry_destroy(dvr_entry_t *de, int delconf);
@@ -631,10 +634,11 @@ htsmsg_t *dvr_entry_class_retention_list ( void *o, const char *lang );
 htsmsg_t *dvr_entry_class_removal_list ( void *o, const char *lang );
 
 int dvr_entry_is_upcoming(dvr_entry_t *entry);
+int dvr_entry_is_upcoming_nodup(dvr_entry_t *entry);
 int dvr_entry_is_finished(dvr_entry_t *entry, int flags);
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
-void dvr_entry_changed_notify(dvr_entry_t *de);
+void dvr_entry_changed(dvr_entry_t *de);
 
 void dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre);
 
@@ -654,16 +658,6 @@ int dvr_get_disk_space(int64_t *bfree, int64_t *bused, int64_t *btotal);
 
 dvr_autorec_entry_t *
 dvr_autorec_create(const char *uuid, htsmsg_t *conf);
-
-dvr_entry_t *
-dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
-                  channel_t *ch, time_t start, time_t stop,
-                  time_t start_extra, time_t stop_extra,
-                  const char *title, const char* subtitle, const char *description,
-                  const char *lang, epg_genre_t *content_type,
-                  const char *owner, const char *creator,
-                  dvr_autorec_entry_t *dae, dvr_timerec_entry_t *tae,
-                  dvr_prio_t pri, int retention, int removal, const char *comment);
 
 dvr_autorec_entry_t *
 dvr_autorec_create_htsp(htsmsg_t *conf);
@@ -687,11 +681,9 @@ htsmsg_t * dvr_autorec_entry_class_time_list(void *o, const char *null);
 htsmsg_t * dvr_autorec_entry_class_weekdays_get(uint32_t weekdays);
 htsmsg_t * dvr_autorec_entry_class_weekdays_list (void *o, const char *list);
 char * dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays, const char *lang);
+const char *dvr_entry_class_image_url_get(const dvr_entry_t *o);
 
 void dvr_autorec_check_event(epg_broadcast_t *e);
-void dvr_autorec_check_brand(epg_brand_t *b);
-void dvr_autorec_check_season(epg_season_t *s);
-void dvr_autorec_check_serieslink(epg_serieslink_t *s);
 
 void autorec_destroy_by_config(dvr_config_t *cfg, int delconf);
 
@@ -848,6 +840,5 @@ void dvr_init(void);
 void dvr_config_init(void);
 
 void dvr_done(void);
-
 
 #endif /* DVR_H  */

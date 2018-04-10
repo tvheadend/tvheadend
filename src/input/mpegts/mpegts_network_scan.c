@@ -204,6 +204,20 @@ mpegts_network_scan_mux_active ( mpegts_mux_t *mm )
   TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
 }
 
+/* Mux has been reactivated */
+void
+mpegts_network_scan_mux_reactivate ( mpegts_mux_t *mm )
+{
+  mpegts_network_t *mn = mm->mm_network;
+  if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE)
+    return;
+  if (mm->mm_scan_state == MM_SCAN_STATE_PEND)
+    TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
+  mm->mm_scan_init  = 0;
+  mm->mm_scan_state = MM_SCAN_STATE_ACTIVE;
+  TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
+}
+
 /******************************************************************************
  * Mux queue handling
  *****************************************************************************/
@@ -212,14 +226,12 @@ void
 mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
 {
   mpegts_network_t *mn = mm->mm_network;
-  char buf[384];
   if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE) {
     TAILQ_REMOVE(&mn->mn_scan_active, mm, mm_scan_link);
   } else if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
     TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
   }
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhdebug(LS_MPEGTS, "removing mux %s from scan queue", buf);
+  tvhdebug(LS_MPEGTS, "removing mux %s from scan queue", mm->mm_nicename);
   mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
   mm->mm_scan_weight = 0;
   mtimer_disarm(&mm->mm_scan_timeout);
@@ -232,7 +244,6 @@ mpegts_network_scan_queue_add
   ( mpegts_mux_t *mm, int weight, int flags, int delay )
 {
   int reload = 0;
-  char buf[384];
   mpegts_network_t *mn = mm->mm_network;
 
   if (!mm->mm_is_enabled(mm)) return;
@@ -255,9 +266,8 @@ mpegts_network_scan_queue_add
     TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
   }
 
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhdebug(LS_MPEGTS, "adding mux %s to scan queue weight %d flags %04X",
-                      buf, weight, flags);
+                      mm->mm_nicename, weight, flags);
 
   /* Add new entry */
   mm->mm_scan_state  = MM_SCAN_STATE_PEND;
@@ -383,9 +393,7 @@ tsid_lookup:
             ((dvb_mux_t *)mm)->lm_tuning.u.dmc_fe_qpsk.polarisation == dvb_str2pol(pol) &&
             ((dvb_mux_t *)mm)->lm_tuning.u.dmc_fe_qpsk.orbital_pos == satpos)
         {
-          char buf[256];
-          mpegts_mux_nice_name(mm, buf, sizeof(buf));
-          tvhinfo(LS_MPEGTS, "fastscan mux found '%s', set scan state 'PENDING'", buf);
+          tvhinfo(LS_MPEGTS, "fastscan mux found '%s', set scan state 'PENDING'", mm->mm_nicename);
           mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
           return;
         }
@@ -415,6 +423,7 @@ tsid_lookup:
                                             mux, NULL, NULL);
         if (mm) {
           char buf[256];
+          mpegts_mux_post_create(mm);
           idnode_changed(&mm->mm_id);
           mn->mn_display_name(mn, buf, sizeof(buf));
           tvhinfo(LS_MPEGTS, "fastscan mux add to network '%s'", buf);

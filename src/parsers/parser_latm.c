@@ -93,8 +93,7 @@ static inline int read_sr(bitstream_t *bs, int *sri)
 }
 
 static int
-read_audio_specific_config(elementary_stream_t *st, latm_private_t *latm,
-			   bitstream_t *bs)
+read_audio_specific_config(parser_es_t *st, latm_private_t *latm, bitstream_t *bs)
 {
   int aot, sr, sri;
 
@@ -144,7 +143,7 @@ read_audio_specific_config(elementary_stream_t *st, latm_private_t *latm,
 
 
 static int
-read_stream_mux_config(elementary_stream_t *st, latm_private_t *latm, bitstream_t *bs)
+read_stream_mux_config(parser_es_t *st, latm_private_t *latm, bitstream_t *bs)
 {
   int audio_mux_version = read_bits1(bs);
   latm->audio_mux_version_A = 0;
@@ -225,7 +224,7 @@ read_stream_mux_config(elementary_stream_t *st, latm_private_t *latm, bitstream_
  * Parse AAC LATM
  */
 th_pkt_t *
-parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st, 
+parse_latm_audio_mux_element(parser_t *t, parser_es_t *st,
 			     const uint8_t *data, int len)
 {
   latm_private_t *latm;
@@ -260,9 +259,10 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
   if(st->es_curdts == PTS_UNSET)
     return NULL;
 
-  th_pkt_t *pkt = pkt_alloc(st->es_type, NULL, slot_len + 7, st->es_curdts, st->es_curdts, t->s_current_pcr);
+  th_pkt_t *pkt = pkt_alloc(st->es_type, NULL, slot_len + 7,
+                            st->es_curdts, st->es_curdts, t->prs_current_pcr);
 
-  pkt->pkt_commercial = t->s_tt_commercial_advice;
+  pkt->pkt_commercial = t->prs_tt_commercial_advice;
   pkt->pkt_duration   = st->es_frame_duration;
   pkt->a.pkt_sri      = latm->sri;
   pkt->a.pkt_ext_sri  = latm->ext_sri;

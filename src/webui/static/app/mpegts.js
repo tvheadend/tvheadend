@@ -188,7 +188,7 @@ tvheadend.show_service_streams = function(data) {
         html += '<td>' + p + '</td>';
         html += '<td>' + s.type + '</td>';
         html += '<td>' + (s.language || '&nbsp;') + '</td>';
-        if (s.type === 'CA') {
+        if (s.type === 'CA' || s.type === 'CAT') {
             d = _('CAIDS: ');
             for (j = 0; j < s.caids.length; j++) {
                 if (j > 0)

@@ -115,7 +115,7 @@ const char *dvb_charset_find
   if (mm) {
     LIST_FOREACH(enc, &dvb_charset_list, link) {
       if (mm->mm_onid == enc->onid && mm->mm_tsid == enc->tsid) {
-        if (s && (s->s_dvb_service_id == enc->sid)) {
+        if (s && service_id16(s) == enc->sid) {
           ret = enc;
           break;
         } else if (!enc->sid) {

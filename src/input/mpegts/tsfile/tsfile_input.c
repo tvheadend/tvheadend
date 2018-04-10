@@ -67,11 +67,8 @@ tsfile_input_thread ( void *aux )
   if (fd == -1) return NULL;
   
   /* Polling */
-  memset(&ev, 0, sizeof(ev));
   efd = tvhpoll_create(2);
-  ev.events          = TVHPOLL_IN;
-  ev.fd = ev.data.fd = mi->ti_thread_pipe.rd;
-  tvhpoll_add(efd, &ev, 1);
+  tvhpoll_add1(efd, mi->ti_thread_pipe.rd, TVHPOLL_IN, NULL);
 
   /* Alloc memory */
   sbuf_init_fixed(&buf, 18800);
@@ -99,8 +96,8 @@ tsfile_input_thread ( void *aux )
       mpegts_service_t *s;
       pthread_mutex_lock(&tsfile_lock);
       LIST_FOREACH(s, &tmi->mmi_mux->mm_services, s_dvb_mux_link) {
-        if (s->s_pcr_pid)
-          tmi->mmi_tsfile_pcr_pid = s->s_pcr_pid;
+        if (s->s_components.set_pcr_pid)
+          tmi->mmi_tsfile_pcr_pid = s->s_components.set_pcr_pid;
       }
       pthread_mutex_unlock(&tsfile_lock);
     }
@@ -134,7 +131,7 @@ tsfile_input_thread ( void *aux )
       pcr.pcr_first = PTS_UNSET;
       pcr.pcr_last  = PTS_UNSET;
       pcr.pcr_pid   = tmi->mmi_tsfile_pcr_pid;
-      mpegts_input_recv_packets((mpegts_input_t*)mi, mmi, &buf, 0, &pcr);
+      mpegts_input_recv_packets(mmi, &buf, 0, &pcr);
       if (pcr.pcr_pid)
         tmi->mmi_tsfile_pcr_pid = pcr.pcr_pid;
 

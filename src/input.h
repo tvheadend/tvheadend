@@ -21,6 +21,7 @@
 
 #include "idnode.h"
 #include "queue.h"
+#include "streaming.h"
 
 struct htsmsg;
 

@@ -171,14 +171,12 @@ satip_device_class_get_childs ( idnode_t *in )
   return is;
 }
 
-static const char *
-satip_device_class_get_title( idnode_t *in, const char *lang )
+static void
+satip_device_class_get_title
+  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
 {
-  static char buf[256];
   satip_device_t *sd = (satip_device_t *)in;
-  snprintf(buf, sizeof(buf),
-           "%s - %s", sd->sd_info.friendlyname, sd->sd_info.addr);
-  return buf;
+  snprintf(dst, dstsize, "%s - %s", sd->sd_info.friendlyname, sd->sd_info.addr);
 }
 
 static const char *satip_tunercfg_tab[] = {
@@ -320,15 +318,6 @@ const idclass_t satip_device_class =
                      "addpids/delpids commands."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_pids_deladd),
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "pids0",
-      .name     = N_("PIDs in setup"),
-      .desc     = N_("Enable if the SAT>IP box requires pids=0 parameter "
-                     "in the SETUP RTSP command."),
-      .opts     = PO_ADVANCED,
-      .off      = offsetof(satip_device_t, sd_pids0),
     },
     {
       .type     = PT_BOOL,
@@ -537,12 +526,12 @@ satip_device_calc_bin_uuid( uint8_t *uuid, const char *satip_uuid )
 }
 
 static void
-satip_device_calc_uuid( tvh_uuid_t *uuid, const char *satip_uuid )
+satip_device_calc_uuid( char *uuid, const char *satip_uuid )
 {
   uint8_t uuidbin[20];
 
   sha1_calc(uuidbin, (const uint8_t *)satip_uuid, strlen(satip_uuid), NULL, 0);
-  bin2hex(uuid->hex, sizeof(uuid->hex), uuidbin, sizeof(uuidbin));
+  bin2hex(uuid, UUID_HEX_SIZE, uuidbin, sizeof(uuidbin));
 }
 
 static void
@@ -567,7 +556,6 @@ satip_device_hack( satip_device_t *sd )
 #endif
   if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
     /* OctopusNet requires pids in the SETUP RTSP command */
-    sd->sd_pids0       = 1;
   } else if (strstr(sd->sd_info.manufacturer, "Triax") &&
              strstr(sd->sd_info.modelname, "TSS400")) {
     sd->sd_pilot_on    = 1;
@@ -581,8 +569,7 @@ satip_device_hack( satip_device_t *sd )
              strstr(sd->sd_info.modelname, "FRITZ!")) {
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_deladd = 0;
-    sd->sd_pids0       = 1;
-    sd->sd_pids21       = 1;
+    sd->sd_pids21      = 1;
   }
 }
 
@@ -590,7 +577,7 @@ static satip_device_t *
 satip_device_create( satip_device_info_t *info )
 {
   satip_device_t *sd = calloc(1, sizeof(satip_device_t));
-  tvh_uuid_t uuid;
+  char uhex[UUID_HEX_SIZE];
   htsmsg_t *conf = NULL, *feconf = NULL;
   char *argv[10], *tunercfg;
   int i, j, n, m, fenum, v2, save = 0;
@@ -599,9 +586,9 @@ satip_device_create( satip_device_info_t *info )
 
   sd->sd_inload = 1;
 
-  satip_device_calc_uuid(&uuid, info->uuid);
+  satip_device_calc_uuid(uhex, info->uuid);
 
-  conf = hts_settings_load("input/satip/adapters/%s", uuid.hex);
+  conf = hts_settings_load("input/satip/adapters/%s", uhex);
 
   /* some sane defaults */
   sd->sd_fast_switch = 1;
@@ -613,7 +600,7 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_dbus_allow  = 1;
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
-                            uuid.hex, conf)) {
+                            uhex, conf)) {
     /* Note: sd is freed in above fcn */
     return NULL;
   }

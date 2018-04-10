@@ -42,9 +42,14 @@ emm_cache_insert(emm_reass_t *ra, uint32_t crc)
 static int
 emm_cache_lookup(emm_reass_t *ra, uint32_t crc)
 {
-  int i;
+  int i, off;
+
+  off = ra->emm_cache_write - ra->emm_cache_count;
+  if (off < 0)
+    off += EMM_CACHE_SIZE;
+  assert(off >= 0);
   for (i = 0; i < ra->emm_cache_count; i++)
-    if (ra->emm_cache[i] == crc)
+    if (ra->emm_cache[(off + i) & EMM_CACHE_MASK] == crc)
       return 1;
   return 0;
 }
@@ -58,17 +63,19 @@ emm_conax
    emm_send_t send, void *aux)
 {
   emm_provider_t *ep;
-  int i;
+  int i, match = 0;
 
-  if (len < 10)
-    return;
   if (data[0] == 0x82) {
-    PROVIDERS_FOREACH(ra, i, ep)
-      if (memcmp(&data[3], &ep->sa[1], 7) == 0) {
-        send(aux, data, len, mux);
-        break;
-      }
+    if (len >= 10) {
+      PROVIDERS_FOREACH(ra, i, ep)
+        if (memcmp(&data[3], &ep->sa[1], 7) == 0) {
+          match = 1;
+          break;
+        }
+    }
   }
+  if (match)
+    send(aux, data, len, mux);
 }
 
 /**
@@ -82,6 +89,7 @@ emm_irdeto
 {
   int i, emm_mode, emm_len, match = 0;
   emm_provider_t *ep;
+  char prov[4];
 
   if (len < 4)
     return;
@@ -89,22 +97,30 @@ emm_irdeto
   emm_mode = data[3] >> 3;
   emm_len = data[3] & 0x07;
 
-  if (4 + emm_len > len)
+  if (4 + emm_len > len || emm_len > 3)
     return;
 
-  if (emm_mode & 0x10){
+  if (emm_mode & 0x10) {
     // try to match card
-    match = (emm_mode == ra->ua[4] &&
-             (!emm_len || // zero length
-              !memcmp(&data[4], &ra->ua[5], emm_len))); // exact match
+    match = emm_mode == ra->ua[4] &&
+            (!emm_len || // zero length
+             !memcmp(&data[4], &ra->ua[5], emm_len)); // exact match
   } else {
-    // try to match provider
-    PROVIDERS_FOREACH(ra, i, ep) {
-      match = (emm_mode == ep->sa[4] &&
-               (!emm_len || // zero length
-                !memcmp(&data[4], &ep->sa[5], emm_len)));
-      // exact match
-      if (match) break;
+    if (emm_len && !memcmp(&data[4], &ra->ua[5], emm_len)) {
+      match = 1;
+    } else {
+      // try to match provider
+      PROVIDERS_FOREACH(ra, i, ep) {
+        prov[0] = ep->id >> 24;
+        prov[1] = ep->id >> 16;
+        prov[2] = ep->id >> 8;
+        prov[3] = ep->id;
+        match = emm_mode == prov[0] &&
+                (!emm_len || // zero length
+                 !memcmp(&data[4], prov + 1, emm_len));
+        // exact match
+        if (match) break;
+      }
     }
   }
 
@@ -129,18 +145,17 @@ emm_seca
     return;
 
   if (data[0] == 0x82) {         // unique emm
-    if (len < 9)
-      return;
-    match = memcmp(&data[3], &ra->ua[2], 6) == 0;
+    if (len >= 9)
+      match = memcmp(&data[3], &ra->ua[2], 6) == 0;
   } else if (data[0] == 0x84) {  // shared emm
-    if (len < 8)
-      return;
-    /* XXX this part is untested but should do no harm */
-    PROVIDERS_FOREACH(ra, i, ep)
-      if (memcmp(&data[5], &ep->sa[5], 3) == 0) {
-        match = 1;
-        break;
-      }
+    if (len >= 8) {
+      /* XXX this part is untested but should do no harm */
+      PROVIDERS_FOREACH(ra, i, ep)
+        if (memcmp(&data[5], &ep->sa[5], 3) == 0) {
+          match = 1;
+          break;
+        }
+    }
   } else if (data[0] == 0x83) {  // global emm -> seca3
     match = 1;
   }
@@ -329,7 +344,7 @@ emm_viaccess
 
       crc = tvh_crc32(ass2, len, 0xffffffff);
       if (!emm_cache_lookup(ra, crc)) {
-        tvhdebug(LS_CWC,
+        tvhdebug(ra->subsys,
                 "Send EMM "
                 "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
                 "...%02x.%02x.%02x.%02x",
@@ -358,16 +373,17 @@ emm_dre
     return;
 
   if (data[0] == 0x87) {
-    if (len < 7)
-      return;
-    match = memcmp(&data[3], &ra->ua[4], 4) == 0;
+    if (len >= 7)
+      match = memcmp(&data[3], &ra->ua[4], 4) == 0;
   } else if (data[0] == 0x86) {
-    PROVIDERS_FOREACH(ra, i, ep)
-      if (memcmp(&data[40], &ep->sa[4], 4) == 0) {
-   /* if (memcmp(&data[3], &ep->sa[4], 1) == 0) { */
-        match = 1;
-        break;
-      }
+    if (len >= 44) {
+      PROVIDERS_FOREACH(ra, i, ep)
+        if (memcmp(&data[40], &ep->sa[4], 4) == 0) {
+     /* if (memcmp(&data[3], &ep->sa[4], 1) == 0) { */
+          match = 1;
+          break;
+        }
+    }
   }
 
   if (match)
@@ -383,12 +399,14 @@ emm_nagra
   uint8_t hexserial[4];
 
   if (data[0] == 0x83) {        // unique|shared
-    hexserial[0] = data[5];
-    hexserial[1] = data[4];
-    hexserial[2] = data[3];
-    hexserial[3] = data[6];
-    if (memcmp(hexserial, &ra->ua[4], (data[7] == 0x10) ? 3 : 4) == 0)
-      match = 1;
+    if (len >= 8) {
+      hexserial[0] = data[5];
+      hexserial[1] = data[4];
+      hexserial[2] = data[3];
+      hexserial[3] = data[6];
+      if (memcmp(hexserial, &ra->ua[4], (data[7] == 0x10) ? 3 : 4) == 0)
+        match = 1;
+    }
   } else if (data[0] == 0x82) { // global
     match = 1;
   }
@@ -412,10 +430,12 @@ emm_nds
   emmtype      = (data[3] & 0xC0) >> 6;
 
   if (emmtype == 1 || emmtype == 2) { // unique|shared
-    for (i = 0; i < serial_count; i++) {
-      if (memcmp(&data[i * 4 + 4], &ra->ua[4], 5 - emmtype) == 0) {
-        match = 1;
-        break;
+    if (len >= serial_count * 4 + 4) {
+      for (i = 0; i < serial_count; i++) {
+        if (memcmp(&data[i * 4 + 4], &ra->ua[4], 5 - emmtype) == 0) {
+          match = 1;
+          break;
+        }
       }
     }
   } else if (emmtype == 0) {          // global
@@ -441,17 +461,19 @@ emm_streamguard
   if (len < 1)
     return;
 
-  tvhinfo(LS_CWC, "emm_streamguard streamguard card data emm get,here lots of works todo...");
+  tvhinfo(ra->subsys, "emm_streamguard streamguard card data emm get,here lots of works todo...");
 
   if (data[0] == 0x87) {
-    match = memcmp(&data[3], &ra->ua[4], 4) == 0;
+    match = len >= 7 && memcmp(&data[3], &ra->ua[4], 4) == 0;
   } else if (data[0] == 0x86) {
-    PROVIDERS_FOREACH(ra, i, ep)
-      if (memcmp(&data[40], &ep->sa[4], 4) == 0) {
-   /* if (memcmp(&data[3], &cwc->cwc_providers[i].sa[4], 1) == 0) { */
-        match = 1;
-        break;
-      }
+    if (len >= 44) {
+      PROVIDERS_FOREACH(ra, i, ep)
+        if (memcmp(&data[40], &ep->sa[4], 4) == 0) {
+     /* if (memcmp(&data[3], &cwc->cwc_providers[i].sa[4], 1) == 0) { */
+          match = 1;
+          break;
+        }
+    }
   }
 
   if (match)
@@ -579,20 +601,22 @@ void
 emm_filter(emm_reass_t *ra, const uint8_t *data, int len, void *mux,
            emm_send_t send, void *aux)
 {
-  tvhtrace(LS_CWC, "emm filter : %s - len %d mux %p", caid2name(ra->caid), len, mux);
-  tvhlog_hexdump(LS_CWC, data, len);
+  tvhtrace(ra->subsys, "emm filter : %s - len %d mux %p", caid2name(ra->caid), len, mux);
+  tvhlog_hexdump(ra->subsys, data, len);
   if (ra->do_emm)
     ra->do_emm(ra, data, len, mux, send, aux);
 }
 
 void
-emm_reass_init(emm_reass_t *ra, uint16_t caid)
+emm_reass_init(emm_reass_t *ra, int subsys, uint16_t caid)
 {
   memset(ra, 0, sizeof(*ra));
+  ra->subsys = subsys;
   ra->caid = caid;
   ra->type = detect_card_type(caid);
   switch (ra->type) {
   case CARD_CONAX:       ra->do_emm = emm_conax;        break;
+  case CARD_BETACRYPT:   /* really? */
   case CARD_IRDETO:      ra->do_emm = emm_irdeto;       break;
   case CARD_SECA:        ra->do_emm = emm_seca;         break;
   case CARD_VIACCESS:    ra->do_emm = emm_viaccess;     break;
@@ -616,7 +640,7 @@ emm_reass_done(emm_reass_t *ra)
   PROVIDERS_FOREACH(ra, i, ep) {
     if (ra->type == CARD_VIACCESS) {
       free(EP_VIACCESS(ep, 0).shared_emm);
-      free(EP_VIACCESS(ep, 0).shared_emm);
+      free(EP_VIACCESS(ep, 1).shared_emm);
     }
   }
   free(ra->providers);

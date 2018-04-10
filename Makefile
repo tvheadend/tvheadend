@@ -2,7 +2,7 @@
 #  Tvheadend streaming server.
 #  Copyright (C) 2007-2009 Andreas Öman
 #  Copyright (C) 2012-2015 Adam Sutton
-#  Copyright (C) 2012-2017 Jaroslav Kysela
+#  Copyright (C) 2012-2018 Jaroslav Kysela
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -68,6 +68,10 @@ else
 ifeq ($(CONFIG_ANDROID),no)
 LDFLAGS += -lrt
 endif
+endif
+ifeq ($(CONFIG_GPERFTOOLS),yes)
+CFLAGS += -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
+LDFLAGS += -lprofiler -ltcmalloc
 endif
 
 ifeq ($(COMPILER), clang)
@@ -204,11 +208,13 @@ SRCS-1 = \
 	src/uuid.c \
 	src/main.c \
 	src/tvhlog.c \
+	src/tprofile.c \
 	src/idnode.c \
 	src/prop.c \
 	src/proplib.c \
 	src/utils.c \
 	src/wrappers.c \
+	src/tvhvfs.c \
 	src/access.c \
 	src/tcp.c \
 	src/udp.c \
@@ -221,6 +227,7 @@ SRCS-1 = \
 	src/epggrab.c\
 	src/spawn.c \
 	src/packet.c \
+	src/esstream.c \
 	src/streaming.c \
 	src/channels.c \
 	src/subscriptions.c \
@@ -228,6 +235,7 @@ SRCS-1 = \
 	src/htsp_server.c \
 	src/htsmsg.c \
 	src/htsmsg_binary.c \
+	src/htsmsg_binary2.c \
 	src/htsmsg_json.c \
 	src/htsmsg_xml.c \
 	src/misc/dbl.c \
@@ -260,6 +268,7 @@ SRCS-1 = \
 	src/string_list.c \
 	src/wizard.c \
 	src/memoryinfo.c
+
 SRCS = $(SRCS-1)
 I18N-C = $(SRCS-1)
 
@@ -306,6 +315,7 @@ SRCS-2 = \
 	src/api/api_wizard.c
 
 SRCS-2 += \
+        src/parsers/message.c \
 	src/parsers/parsers.c \
 	src/parsers/bitstream.c \
 	src/parsers/parser_h264.c \
@@ -317,7 +327,6 @@ SRCS-2 += \
 SRCS-2 += \
 	src/epggrab/module.c \
 	src/epggrab/channel.c \
-	src/epggrab/module/pyepg.c \
 	src/epggrab/module/xmltv.c
 
 SRCS-2 += \
@@ -375,10 +384,13 @@ SRCS-MPEGTS = \
 	src/input/mpegts/mpegts_table.c \
 	src/input/mpegts/dvb_support.c \
 	src/input/mpegts/dvb_charset.c \
+	src/input/mpegts/dvb_psi_pmt.c \
 	src/input/mpegts/dvb_psi.c \
 	src/input/mpegts/fastscan.c \
 	src/input/mpegts/mpegts_mux_sched.c \
-        src/input/mpegts/mpegts_network_scan.c
+        src/input/mpegts/mpegts_network_scan.c \
+        src/input/mpegts/mpegts_tsdebug.c \
+        src/descrambler/tsdebugcw.c
 SRCS-$(CONFIG_MPEGTS) += $(SRCS-MPEGTS)
 I18N-C += $(SRCS-MPEGTS)
 
@@ -477,7 +489,7 @@ I18N-C += $(SRCS-AVAHI)
 # Bonjour
 SRCS-BONJOUR = \
 	src/bonjour.c
-SRCS-$(CONFIG_BONJOUR) = $(SRCS-BONJOUR)
+SRCS-$(CONFIG_BONJOUR) += $(SRCS-BONJOUR)
 I18N-C += $(SRCS-BONJOUR)
 
 # codecs
@@ -544,10 +556,16 @@ SRCS-TVHCSA = \
 SRCS-${CONFIG_TVHCSA} += $(SRCS-TVHCSA)
 I18N-C += $(SRCS-TVHCSA)
 
+# Cardclient
+SRCS-CARDCLIENT = \
+        src/descrambler/cclient.c \
+	src/descrambler/emm_reass.c
+SRCS-${CONFIG_CARDCLIENT} += $(SRCS-CARDCLIENT)
+I18N-C += $(SRCS-CARDCLIENT)
+
 # CWC
 SRCS-CWC = \
-	src/descrambler/cwc.c \
-	src/descrambler/emm_reass.c
+	src/descrambler/cwc.c
 SRCS-${CONFIG_CWC} += $(SRCS-CWC)
 I18N-C += $(SRCS-CWC)
 
@@ -571,33 +589,18 @@ I18N-C += $(SRCS-CONSTCW)
 
 # DVB CAM
 SRCS-DVBCAM = \
+        src/input/mpegts/en50221/en50221.c \
+        src/input/mpegts/en50221/en50221_apps.c \
+        src/input/mpegts/en50221/en50221_capmt.c \
 	src/input/mpegts/linuxdvb/linuxdvb_ca.c \
 	src/descrambler/dvbcam.c
 SRCS-${CONFIG_LINUXDVB_CA} += $(SRCS-DVBCAM)
 I18N-C += $(SRCS-DVBCAM)
 
-# TSDEBUGCW
-SRCS-TSDEBUG = \
-	src/input/mpegts/mpegts_tsdebug.c \
-	src/descrambler/tsdebugcw.c
-SRCS-${CONFIG_TSDEBUG} += $(SRCS-TSDEBUG)
-I18N-C += $(SRCS-TSDEBUG)
-
-# FFdecsa
-ifneq ($(CONFIG_DVBCSA),yes)
-FFDECSA-$(CONFIG_CAPMT)   = yes
-FFDECSA-$(CONFIG_CWC)     = yes
-FFDECSA-$(CONFIG_CONSTCW) = yes
-endif
-
-ifeq ($(FFDECSA-yes),yes)
-SRCS-yes += src/descrambler/ffdecsa/ffdecsa_interface.c \
-	src/descrambler/ffdecsa/ffdecsa_int.c
-SRCS-${CONFIG_MMX}  += src/descrambler/ffdecsa/ffdecsa_mmx.c
-SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
-${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
-${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
-endif
+SRCS-DDCI = \
+	src/input/mpegts/linuxdvb/linuxdvb_ddci.c
+SRCS-${CONFIG_DDCI} += $(SRCS-DDCI)
+I18N-C += $(SRCS-DDCI)
 
 # crypto algorithms
 SRCS-${CONFIG_SSL} += src/descrambler/algo/libaesdec.c
@@ -607,13 +610,19 @@ SRCS-${CONFIG_SSL} += src/descrambler/algo/libdesdec.c
 # DBUS
 SRCS-${CONFIG_DBUS_1}  += src/dbus.c
 
+# Watchdog
+SRCS-${CONFIG_LIBSYSTEMD_DAEMON} += src/watchdog.c
+
+# DVB scan
+DVBSCAN-$(CONFIG_DVBSCAN) += check_dvb_scan
+ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
+
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
 BUNDLES-yes               += src/webui/static
 BUNDLES-yes               += data/conf
 BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
 BUNDLES                    = $(BUNDLES-yes)
-ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 
 #
 # Documentation
@@ -744,36 +753,33 @@ $(BUILDDIR)/timestamp.c: FORCE
 	@echo 'const char* build_timestamp = "'$(BUILD_DATE)'";' >> $@
 
 $(BUILDDIR)/timestamp.o: $(BUILDDIR)/timestamp.c
-	$(pCC) -c -o $@ $<
+	$(pCC) $(CFLAGS) -c -o $@ $<
 
 $(BUILDDIR)/build.o: $(BUILDDIR)/build.c
 	@mkdir -p $(dir $@)
-	$(pCC) -c -o $@ $<
+	$(pCC) $(CFLAGS) -c -o $@ $<
 
 # Documentation
 $(BUILDDIR)/docs-timestamp: $(I18N-DOCS) support/doc/md_to_c.py
-	@-rm -f src/docs_inc.c
-	@for i in $(MD-ROOT); do \
-	   echo "Markdown: docs/markdown/$${i}.md"; \
-	   $(MD-TO-C) --in="docs/markdown/$${i}.md" \
-	              --name="tvh_doc_root_$${i}" >> src/docs_inc.c || exit 1; \
-	 done
-	@for i in $(MD-CLASS); do \
-	   echo "Markdown: docs/class/$${i}.md"; \
-	   $(MD-TO-C) --in="docs/class/$${i}.md" \
-	              --name="tvh_doc_$${i}_class" >> src/docs_inc.c || exit 1; \
-	 done
-	@for i in $(MD-PROP); do \
-	   echo "Markdown: docs/property/$${i}.md"; \
-	   $(MD-TO-C) --in="docs/property/$${i}.md" \
-	              --name="tvh_doc_$${i}_property" >> src/docs_inc.c || exit 1; \
-	 done
-	@for i in $(MD-WIZARD); do \
-	   echo "Markdown: docs/wizard/$${i}.md"; \
-	   $(MD-TO-C) --in="docs/wizard/$${i}.md" \
-	              --name="tvh_doc_wizard_$${i}" >> src/docs_inc.c || exit 1; \
-	 done
-	@$(MD-TO-C) --pages="$(MD-ROOT)" >> src/docs_inc.c
+	@-rm -f src/docs_inc.c src/docs_inc.c.new
+	@$(MD-TO-C) --batch --list="$(MD-ROOT)" \
+	            --inpath="docs/markdown/%s.md" \
+	            --name="tvh_doc_root_%s" \
+	            --out="src/docs_inc.c.new"
+	@$(MD-TO-C) --batch --list="$(MD-CLASS)" \
+	            --inpath="docs/class/%s.md" \
+	            --name="tvh_doc_%s_class" \
+	            --out="src/docs_inc.c.new"
+	@$(MD-TO-C) --batch --list="$(MD-PROP)" \
+	            --inpath="docs/property/%s.md" \
+	            --name="tvh_doc_%s_property" \
+	            --out="src/docs_inc.c.new"
+	@$(MD-TO-C) --batch --list="$(MD-WIZARD)" \
+	            --inpath="docs/wizard/%s.md" \
+	            --name="tvh_doc_wizard_%s" \
+	            --out="src/docs_inc.c.new"
+	@$(MD-TO-C) --pages="$(MD-ROOT)" >> src/docs_inc.c.new
+	@mv src/docs_inc.c.new src/docs_inc.c
 	@touch $@
 
 src/docs_inc.c: $(BUILDDIR)/docs-timestamp
@@ -808,9 +814,9 @@ src/tvh_locale_inc.c: $(PO-FILES)
 # Bundle files
 $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
-	$(pCC) -I${ROOTDIR}/src -c -o $@ $<
+	$(pCC) $(CFLAGS) -I${ROOTDIR}/src -c -o $@ $<
 
-$(BUILDDIR)/bundle.c: check_dvb_scan make_webui
+$(BUILDDIR)/bundle.c: $(DVBSCAN-yes) make_webui
 	@mkdir -p $(dir $@)
 	$(pMKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
 
@@ -878,3 +884,24 @@ $(ROOTDIR)/data/dvb-scan/dvb-s/.stamp: $(ROOTDIR)/data/satellites.xml \
 
 .PHONY: satellites_xml
 satellites_xml: $(ROOTDIR)/data/dvb-scan/dvb-s/.stamp
+
+#
+# perf
+#
+
+PERF_DATA = /tmp/tvheadend.perf.data
+PERF_SLEEP ?= 30
+
+$(PERF_DATA): FORCE
+	perf record -F 16000 -g -p $$(pidof tvheadend) -o $(PERF_DATA) sleep $(PERF_SLEEP)
+
+.PHONY: perf-record
+perf-record: $(PERF_DATA)
+
+.PHONY: perf-graph
+perf-graph:
+	perf report --stdio -g graph -i $(PERF_DATA)
+
+.PHONY: perf-report
+perf-report:
+	perf report --stdio -g none -i $(PERF_DATA)

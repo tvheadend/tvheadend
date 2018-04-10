@@ -26,6 +26,9 @@
 #ifndef __TVH_DVB_SUPPORT_H__
 #define __TVH_DVB_SUPPORT_H__
 
+#include "queue.h"
+#include "redblack.h"
+
 struct mpegts_table;
 struct mpegts_table_state;
 struct mpegts_network;
@@ -169,6 +172,7 @@ struct lang_str;
 
 #define DVB_DESC_BSKYB_NVOD           0xC0
 
+#define DVB_DESC_FREESAT_NIT          0xD2
 #define DVB_DESC_FREESAT_LCN          0xD3
 #define DVB_DESC_FREESAT_REGIONS      0xD4
 
@@ -283,6 +287,7 @@ do {\
  */
 
 #define MPEGTS_PSI_SECTION_SIZE 5000
+#define MPEGTS_PSI_VERSION_NONE 255
 
 typedef struct mpegts_psi_section
 {
@@ -303,6 +308,7 @@ typedef struct mpegts_psi_table_state
   int      tableid;
   uint64_t extraid;
   int      version;
+  int      last;
   int      complete;
   int      working;
   uint32_t sections[8];
@@ -323,6 +329,7 @@ typedef struct mpegts_psi_table
 
   int     mt_pid;
 
+  time_t  mt_last_complete;
   int     mt_complete;
   int     mt_incomplete;
   uint8_t mt_finished;
@@ -347,7 +354,8 @@ int dvb_table_end
 int dvb_table_begin
   (mpegts_psi_table_t *mt, const uint8_t *ptr, int len,
    int tableid, uint64_t extraid, int minlen,
-   mpegts_psi_table_state_t **st, int *sect, int *last, int *ver);
+   mpegts_psi_table_state_t **st, int *sect, int *last, int *ver,
+   time_t interval);
 void dvb_table_reset (mpegts_psi_table_t *mt);
 void dvb_table_release (mpegts_psi_table_t *mt);
 
@@ -416,6 +424,7 @@ typedef enum dvb_fe_type {
   DVB_TYPE_ISDB_T,              /* terrestrial - japan, brazil */
   DVB_TYPE_ISDB_C,              /* cable - japan, brazil */
   DVB_TYPE_ISDB_S,              /* satellite - japan, brazil */
+  DVB_TYPE_DTMB,                /* DTMB - china, cuba, hong kong, macau */
   DVB_TYPE_DAB,                 /* digital radio (europe) */
   DVB_TYPE_LAST = DVB_TYPE_DAB
 } dvb_fe_type_t;

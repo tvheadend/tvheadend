@@ -17,17 +17,16 @@
  */
 
 #include "tvheadend.h"
-#include "streaming.h"
-#include "parsers.h"
-#include "tsdemux.h"
-#include "htsmsg.h"
-#include "htsmsg_binary.h"
+#include "service.h"
+#include "input.h"
+#include "dvb_psi_hbbtv.h"
 
 /**
  * Extract Hbbtv
  */
-void
-ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
+htsmsg_t *
+dvb_psi_parse_hbbtv
+  (mpegts_psi_table_t *mt, const uint8_t *buf, int len, int *_sect)
 {
   static const char *visibility_table[4] = {
     "none",
@@ -35,8 +34,6 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     "reserved",
     "all",
   };
-  elementary_stream_t *st = (elementary_stream_t *)mt->mt_opaque;
-  service_t *t = st->es_service;
   mpegts_psi_table_state_t *tst = NULL;
   int r, sect, last, ver, l, l2, l3, dllen, dlen, flags;
   uint8_t tableid = buf[0], dtag;
@@ -45,18 +42,16 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   uint32_t org_id;
   char title[256], name[256], location[256], *str;
   htsmsg_t *map, *apps = NULL, *titles = NULL;
-  void *bin;
-  size_t binlen;
 
   if (tableid != 0x74 || len < 16)
-    return;
+    return NULL;
   app_type = (buf[3] << 8) | buf[4];
   if (app_type & 1) /* testing */
-    return;
+    return NULL;
 
   r = dvb_table_begin(mt, buf + 3, len - 3,
-                      tableid, app_type, 5, &tst, &sect, &last, &ver);
-  if (r != 1) return;
+                      tableid, app_type, 5, &tst, &sect, &last, &ver, 0);
+  if (r != 1) return NULL;
 
   p = buf;
   l = len;
@@ -82,14 +77,14 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       switch (dtag) {
       case DVB_DESC_APP:
         l3 = *dptr++; dlen--;
-        if (l3 % 5) goto dvberr;
-        while (l3 >= 5) {
+        if (l3 > dlen || (l3 % 5)) goto dvberr;
+        while (dlen >= 5 && l3 >= 5) {
           tvhtrace(mt->mt_subsys, "%s:     profile %04X %d.%d.%d", mt->mt_name, (dptr[0] << 8) | dptr[1], dptr[2], dptr[3], dptr[4]);
           dptr += 5;
           dlen -= 5;
           l3 -= 5;
         }
-        if (dlen < 3) goto dvberr;
+        if (dlen < 3 || l3 < 3) goto dvberr;
         flags = dptr[0];
         tvhtrace(mt->mt_subsys, "%s:     flags %02X prio %02X", mt->mt_name, dptr[0], dptr[1]);
         dptr += 2;
@@ -153,34 +148,45 @@ ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       htsmsg_add_msg(apps, NULL, map);
     } else {
       htsmsg_destroy(titles);
+      titles = NULL;
     }
   }
   if (l2 != 0)
     goto dvberr;
 
   dvb_table_end(mt, tst, sect);
-
-  if (t->s_hbbtv == NULL)
-    t->s_hbbtv = htsmsg_create_map();
-  if (apps) {
-    snprintf(location, sizeof(location), "%d", sect);
-    htsmsg_set_msg(t->s_hbbtv, location, apps);
-    apps = NULL;
-    service_request_save(t, 0);
-  }
-
-  if (streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET)) {
-    parse_mpeg_ts(t, st, buf, len, 1, 0);
-    if (t->s_hbbtv) {
-      if (!htsmsg_binary_serialize(t->s_hbbtv, &bin, &binlen, 128*1024)) {
-        parse_mpeg_ts(t, st, bin, binlen, 1, 0);
-        free(bin);
-      }
-    }
-  }
+  if (_sect)
+    *_sect = sect;
+  return apps;
 
 dvberr:
   htsmsg_destroy(apps);
   htsmsg_destroy(titles);
-  return;
+  return NULL;
+}
+
+void
+dvb_psi_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
+{
+  elementary_stream_t *st = (elementary_stream_t *)mt->mt_opaque;
+  service_t *t = st->es_service;
+  int sect;
+  htsmsg_t *apps = dvb_psi_parse_hbbtv(mt, buf, len, &sect);
+  if (apps == NULL)
+    return;
+  if (t->s_hbbtv == NULL)
+    t->s_hbbtv = htsmsg_create_map();
+  if (apps) {
+    char buf[20];
+    snprintf(buf, sizeof(buf), "%d", sect);
+    htsmsg_set_msg(t->s_hbbtv, buf, apps);
+    service_request_save(t);
+  }
+}
+
+int
+dvb_hbbtv_callback(mpegts_table_t *mt, const uint8_t *buf, int len, int tableid)
+{
+  dvb_psi_hbbtv_cb((mpegts_psi_table_t *)mt, buf, len);
+  return 0;
 }

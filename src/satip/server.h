@@ -63,8 +63,12 @@ struct satip_server_conf {
   int satip_dvbc2;
   int satip_atsc_t;
   int satip_atsc_c;
+  int satip_max_sessions;
+  int satip_max_user_connections;
   char *satip_nat_ip;
   int satip_nat_rtsp;
+  int satip_nat_name_force;
+  char *satip_rtp_src_ip;
 };
 
 extern struct satip_server_conf satip_server_conf;
@@ -95,6 +99,7 @@ int satip_rtsp_delsys(int fe, int *findex, const char **ftype);
 
 void satip_server_rtsp_init(const char *bindaddr, int port,
                             int descramble, int rewrite_pmt, int muxcnf,
+                            const char *rtp_src,
                             const char *nat_ip, int nat_port);
 void satip_server_rtsp_register(void);
 void satip_server_rtsp_done(void);

@@ -27,12 +27,14 @@ static char *
 str_add(const char *sep, const char *str)
 {
     size_t sep_len = strlen(sep), str_len = strlen(str);
-    char *result = NULL;
+    char *result = malloc(sep_len + str_len + 1);
 
-    if ((result = calloc(1, sep_len + str_len + 1))) {
+    if (result) {
         if (str_len > 0) {
-            strncpy(result, sep, sep_len);
-            strncat(result, str, str_len);
+            strcpy(result, sep);
+            strcat(result, str);
+        } else {
+            result[0] = '\0';
         }
     }
     return result;
@@ -46,32 +48,36 @@ str_vjoin(const char *separator, va_list ap)
     char *str = NULL, *tmp_result = NULL, *result = NULL;
     size_t str_len = 0, result_size = 1;
 
-    if ((result = calloc(1, result_size))) {
-        while ((va_str = va_arg(ap, const char *))) {
-            if (strlen(va_str)) {
-                if ((str = str_add(strlen(result) ? sep : "", va_str))) {
-                    if ((str_len = strlen(str))) {
-                        result_size += str_len;
-                        if ((tmp_result = realloc(result, result_size))) {
-                            result = tmp_result;
-                            strncat(result, str, str_len);
-                        }
-                        else {
-                            str_clear(result);
-                        }
-                    }
+    result = calloc(1, result_size);
+    if (result == NULL)
+        return NULL;
+    while ((va_str = va_arg(ap, const char *))) {
+        str_len = strlen(va_str);
+        if (str_len == 0)
+            continue;
+        str = str_add(result[0] ? sep : "", va_str);
+        if (str) {
+            str_len = strlen(str);
+            if (str_len) {
+                if ((tmp_result = realloc(result, result_size + str_len))) {
+                    result = tmp_result;
+                    strcpy(result + result_size - 1, str);
+                    result_size += str_len;
+                } else {
                     str_clear(str);
-                }
-                else {
-                    str_clear(result);
-                }
-                if (!result) {
-                    break;
+                    goto reterr;
                 }
             }
+            str_clear(str);
+        } else {
+            goto reterr;
         }
     }
     return result;
+
+reterr:
+    free(result);
+    return NULL;
 }
 
 
@@ -101,9 +107,8 @@ str_snprintf(char *str, size_t size, const char *format, ...)
 uint8_t *
 pktbuf_copy_data(pktbuf_t *pb)
 {
-    uint8_t *data = av_mallocz(pb->pb_size);
-    if (data) {
+    uint8_t *data = av_malloc(pb->pb_size);
+    if (data)
         memcpy(data, pb->pb_data, pb->pb_size);
-    }
     return data;
 }

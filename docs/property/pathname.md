@@ -6,8 +6,10 @@
 Format    | Description                                      | Example
 :--------:|--------------------------------------------------|--------
 `$t$n.$x` | Default format (title, unique number, extension) | Tennis - Wimbledon-1.mkv
-`$s`      | Event subtitle name                              | Sport
 `$t`      | Event title name                                 | Tennis - Wimbledon
+`$s`      | Event subtitle name or summary text              | Live Tennis Broadcast from Wimbledon
+`$u`      | Event subtitle name                              | Tennis
+`$m`      | Event summary text                               | Live Tennis Broadcast from Wimbledon
 `$e`      | Event episode name                               | S02-E06
 `$c`      | Channel name                                     | SkySport
 `$g`      | Content type                                     | Movie : Science fiction

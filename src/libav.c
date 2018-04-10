@@ -17,13 +17,14 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
   if (level != AV_LOG_QUIET &&
       ((level <= AV_LOG_INFO) || (tvhlog_options & TVHLOG_OPT_LIBAV))) {
 
-    class_name = ptr ? av_default_item_name(ptr) : "";
+    class_name = ptr && *(void **)ptr ? av_default_item_name(ptr) : "";
+
+    if (fmt == NULL)
+      return;
 
     l1 = strlen(fmt);
     l2 = strlen(class_name);
     fmt1 = alloca(l1 + l2 + 3);
-    if (fmt == NULL)
-      return;
 
     strcpy(fmt1, class_name);
     if (class_name[0])
@@ -199,6 +200,9 @@ codec_id2streaming_component_type(enum AVCodecID id)
   case AV_CODEC_ID_DVB_TELETEXT:
     type = SCT_TELETEXT;
     break;
+  case AV_CODEC_ID_FLAC:
+    type = SCT_FLAC;
+    break;
   case AV_CODEC_ID_NONE:
     type = SCT_NONE;
     break;
@@ -242,12 +246,20 @@ static void libav_va_log(int severity, const char *msg)
   tvhlog(severity, LS_VAAPI, "%s", s);
 }
 
+#if VA_CHECK_VERSION(1, 0, 0)
+static void libav_va_error_callback(void *context, const char *msg)
+#else
 static void libav_va_error_callback(const char *msg)
+#endif
 {
   libav_va_log(LOG_ERR, msg);
 }
 
+#if VA_CHECK_VERSION(1, 0, 0)
+static void libav_va_info_callback(void *context, const char *msg)
+#else
 static void libav_va_info_callback(const char *msg)
+#endif
 {
   libav_va_log(LOG_INFO, msg);
 }
@@ -262,8 +274,26 @@ libav_vaapi_init(void)
 {
 #if ENABLE_VAAPI
 #ifdef VA_FOURCC_I010
+#if !VA_CHECK_VERSION(1, 0, 0)
   vaSetErrorCallback(libav_va_error_callback);
   vaSetInfoCallback(libav_va_info_callback);
+#endif
+#endif
+#endif
+}
+
+/**
+ *
+ */
+void
+libav_vaapi_init_context(void *context)
+{
+#if ENABLE_VAAPI
+#ifdef VA_FOURCC_I010
+#if VA_CHECK_VERSION(1, 0, 0)
+  vaSetErrorCallback(context, libav_va_error_callback, NULL);
+  vaSetInfoCallback(context, libav_va_info_callback, NULL);
+#endif
 #endif
 #endif
 }

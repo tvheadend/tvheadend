@@ -112,7 +112,8 @@ iptv_rtsp_header ( http_client_t *hc )
     }
     hc->hc_cmd = HTTP_CMD_NONE;
     pthread_mutex_lock(&global_lock);
-    iptv_input_mux_started(hc->hc_aux);
+    if (im->mm_active)
+      iptv_input_mux_started((iptv_input_t *)im->mm_active->mmi_input, im);
     mtimer_arm_rel(&rp->alive_timer, iptv_rtsp_alive_cb, im,
                    sec2mono(MAX(1, (hc->hc_rtp_timeout / 2) - 1)));
     pthread_mutex_unlock(&global_lock);
@@ -147,7 +148,7 @@ iptv_rtsp_data
  */
 static int
 iptv_rtsp_start
-  ( iptv_mux_t *im, const char *raw, const url_t *u )
+  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *u )
 {
   rtsp_priv_t *rp;
   http_client_t *hc;
@@ -209,7 +210,7 @@ iptv_rtsp_start
  */
 static void
 iptv_rtsp_stop
-  ( iptv_mux_t *im )
+  ( iptv_input_t *mi, iptv_mux_t *im )
 {
   rtsp_priv_t *rp = im->im_data;
   int play;
@@ -267,7 +268,7 @@ iptv_rtp_header_callback ( iptv_mux_t *im, uint8_t *rtp, int len )
  * Read data
  */
 static ssize_t
-iptv_rtsp_read ( iptv_mux_t *im )
+iptv_rtsp_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
   rtsp_priv_t *rp = im->im_data;
   udp_multirecv_t *um = &rp->um;

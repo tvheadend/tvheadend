@@ -75,13 +75,12 @@ typedef struct linuxdvb_rotor
 
 #ifndef ROTOR_TEST
 
-static const char *
-linuxdvb_rotor_class_get_title ( idnode_t *o, const char *lang )
+static void
+linuxdvb_rotor_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
 {
-  static char buf[256];
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
-  snprintf(buf, sizeof(buf), "Rotor: %s", ld->ld_type);
-  return buf;
+  snprintf(dst, dstsize, tvh_gettext_lang(lang, N_("Rotor: %s")), ld->ld_type);
 }
 
 extern const idclass_t linuxdvb_diseqc_class;

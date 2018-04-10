@@ -26,8 +26,6 @@ struct elementary_stream;
 #include "build.h"
 #if ENABLE_DVBCSA
 #include <dvbcsa/dvbcsa.h>
-#else
-#include "ffdecsa/FFdecsa.h"
 #endif
 
 typedef struct tvhcsa
@@ -56,8 +54,6 @@ typedef struct tvhcsa
 
   struct dvbcsa_bs_key_s *csa_key_even;
   struct dvbcsa_bs_key_s *csa_key_odd;
-#else
-  void *csa_keys;
 #endif
   void *csa_priv;
 

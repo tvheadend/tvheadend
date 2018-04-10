@@ -80,6 +80,7 @@ static uint32_t session_number;
 static uint16_t stream_id;
 static char *rtsp_ip = NULL;
 static char *rtsp_nat_ip = NULL;
+static char *rtp_src_ip = NULL;
 static int rtsp_port = -1;
 static int rtsp_nat_port = -1;
 static int rtsp_descramble = 1;
@@ -92,6 +93,13 @@ static pthread_mutex_t rtsp_lock;
 static void rtsp_close_session(session_t *rs);
 static void rtsp_free_session(session_t *rs);
 
+/*
+ *
+ */
+static inline int rtsp_is_nat_active(void)
+{
+  return rtsp_nat_ip[0] != '\0';
+}
 
 /*
  *
@@ -176,8 +184,25 @@ result:
 static struct session *
 rtsp_new_session(const char *ipstr, int delsys, uint32_t nsession, int session)
 {
-  struct session *rs = calloc(1, sizeof(*rs));
+  struct session *rs = NULL;
+  int count_s = satip_server_conf.satip_max_sessions;
+  int count_u = satip_server_conf.satip_max_user_connections;
 
+  if (count_s > 0 || count_u > 0)
+  TAILQ_FOREACH(rs, &rtsp_sessions, link) {
+    if (--count_s == 0) {
+      tvhnotice(LS_SATIPS, "Max number (%i) of active RTSP sessions reached.",
+                satip_server_conf.satip_max_sessions);
+      return NULL;
+    }
+    if (strcmp(rs->peer_ipstr, ipstr) == 0 && --count_u == 0) {
+      tvhnotice(LS_SATIPS, "Max number (%i) of active RTSP sessions per user (IP: %s).",
+                satip_server_conf.satip_max_user_connections, ipstr);
+      return NULL;
+    }
+  }
+
+  rs = calloc(1, sizeof(*rs));
   if (rs == NULL)
     return NULL;
 
@@ -280,9 +305,10 @@ rtsp_check_urlbase(char *u)
   if (strcmp(u, rtsp_ip)) {
     if (rtsp_nat_ip == NULL)
       return NULL;
-    if (rtsp_nat_ip[0] != '*')
-      if (rtsp_nat_ip[0] == '\0' || strcmp(u, rtsp_nat_ip))
+    if (rtsp_is_nat_active()) {
+      if (rtsp_nat_ip[0] != '*' && strcmp(u, rtsp_nat_ip))
         return NULL;
+    }
   }
   return p ? p + 1 : u + strlen(u);
 }
@@ -314,6 +340,39 @@ rtsp_parse_args(http_connection_t *hc, char *u)
   }
   http_parse_args(&hc->hc_req_args, u);
   return stream;
+}
+
+/*
+ *
+ */
+static inline const char *
+rtsp_conn_ip(http_connection_t *hc, char *buf, size_t buflen, int *port)
+{
+  const char *used_ip = rtsp_ip;
+  int used_port = rtsp_port, local;
+
+  if (!rtsp_is_nat_active())
+    goto end;
+  /* note: it initializes hc->hc_local_ip, too */
+  local = http_check_local_ip(hc) > 0;
+  if (local || satip_server_conf.satip_nat_name_force) {
+    used_ip = rtsp_nat_ip;
+    if (rtsp_nat_port > 0)
+      used_port = rtsp_nat_port;
+  }
+
+  if (used_ip == NULL || used_ip[0] == '*' || used_ip[0] == '\0') {
+    if (local) {
+      tcp_get_str_from_ip(hc->hc_local_ip, buf, buflen);
+      used_ip = buf;
+    } else {
+      used_ip = "127.0.0.1";
+    }
+  }
+
+end:
+  *port = used_port > 0 ? used_port : 554;
+  return used_ip;
 }
 
 /*
@@ -430,11 +489,11 @@ rtsp_validate_service(mpegts_service_t *s, mpegts_apids_t *pids)
   elementary_stream_t *st;
 
   pthread_mutex_lock(&s->s_stream_mutex);
-  if (s->s_pmt_pid <= 0 || s->s_pcr_pid <= 0) {
+  if (s->s_components.set_pmt_pid <= 0 || s->s_components.set_pcr_pid <= 0) {
     pthread_mutex_unlock(&s->s_stream_mutex);
     return 0;
   }
-  TAILQ_FOREACH(st, &s->s_components, es_link) {
+  TAILQ_FOREACH(st, &s->s_components.set_all, es_link) {
     if (st->es_type == SCT_CA)
       enc = 1;
     if (st->es_pid > 0)
@@ -445,7 +504,8 @@ rtsp_validate_service(mpegts_service_t *s, mpegts_apids_t *pids)
   pthread_mutex_unlock(&s->s_stream_mutex);
   if (enc == 0 || av == 0)
     return 0;
-  return pids == NULL || mpegts_pid_wexists(pids, s->s_pmt_pid, MPS_WEIGHT_RAW);
+  return pids == NULL ||
+         mpegts_pid_wexists(pids, s->s_components.set_pmt_pid, MPS_WEIGHT_RAW);
 }
 
 /*
@@ -455,8 +515,7 @@ static void
 rtsp_manage_descramble(session_t *rs)
 {
   idnode_set_t *found;
-  mpegts_service_t *s, *snext;
-  mpegts_service_t *master = (mpegts_service_t *)rs->subs->ths_raw_service;
+  mpegts_service_t *s, *master;
   slave_subscription_t *sub;
   mpegts_apids_t pmt_pids;
   size_t si;
@@ -469,6 +528,8 @@ rtsp_manage_descramble(session_t *rs)
 
   if (rs->mux == NULL || rs->subs == NULL)
     goto end;
+
+  master = (mpegts_service_t *)rs->subs->ths_raw_service;
 
   if (rs->pids.all) {
     LIST_FOREACH(s, &rs->mux->mm_services, s_dvb_mux_link)
@@ -484,12 +545,14 @@ rtsp_manage_descramble(session_t *rs)
   }
 
   /* Remove already used or no-longer required services */
-  for (s = LIST_FIRST(&master->s_slaves); s; s = snext) {
-    snext = LIST_NEXT(s, s_slaves_link);
-    if (idnode_set_remove(found, &s->s_id))
+  for (si = 0; si < master->s_slaves.is_count; si++) {
+    s = (mpegts_service_t *)master->s_slaves.is_array[si];
+    if (idnode_set_remove(found, &s->s_id)) {
       used++;
-    else if (!idnode_set_exists(found, &s->s_id))
+    } else if (!idnode_set_exists(found, &s->s_id)) {
       rtsp_slave_remove(rs, master, s);
+      si--;
+    }
   }
 
   /* Add new ones */
@@ -511,8 +574,9 @@ end:
     mpegts_pid_init(&pmt_pids);
     LIST_FOREACH(sub, &rs->slaves, link) {
       if ((s = sub->service) == NULL) continue;
-      if (s->s_pmt_pid <= 0 || s->s_pmt_pid >= 8191) continue;
-      mpegts_pid_add(&pmt_pids, s->s_pmt_pid, MPS_WEIGHT_PMT);
+      if (s->s_components.set_pmt_pid <= 0 ||
+          s->s_components.set_pmt_pid >= 8191) continue;
+      mpegts_pid_add(&pmt_pids, s->s_components.set_pmt_pid, MPS_WEIGHT_PMT);
     }
     satip_rtp_update_pmt_pids(rs->rtp_handle, &pmt_pids);
     mpegts_pid_done(&pmt_pids);
@@ -861,7 +925,7 @@ parse_pids(char *p, mpegts_apids_t *pids)
   while (1) {
     if (x == NULL)
       break;
-    if (strcmp(x, "all") == 0) {
+    if (strcmp(x, "all") == 0 || strcmp(x, "8192") == 0) {
       if (satip_server_conf.satip_restrict_pids_all) {
         pids->all = 0;
         for (pid = 1; pid <= 2; pid++) /* CAT, TSDT */
@@ -983,12 +1047,14 @@ rtsp_parse_cmd
   if (cmd == RTSP_CMD_SETUP) {
     if (!rs) {
       rs = rtsp_new_session(hc->hc_peer_ipstr, msys, 0, -1);
+      if (rs == NULL) goto end;
       if (delsys == DVB_SYS_NONE) goto end;
       if (msys == DVB_SYS_NONE) goto end;
       if (!(*valid)) goto end;
       alloc_stream_id = 1;
     } else if (stream != rs->stream) {
       rs = rtsp_new_session(hc->hc_peer_ipstr, msys, rs->nsession, stream);
+      if (rs == NULL) goto end;
       if (delsys == DVB_SYS_NONE) goto end;
       if (msys == DVB_SYS_NONE) goto end;
       if (!(*valid)) goto end;
@@ -1017,6 +1083,8 @@ rtsp_parse_cmd
     rs->rtp_peer_port = r;
     rs->frontend = fe > 0 ? fe : 1;
   } else {
+    if (!rs && !stream && cmd == RTSP_CMD_DESCRIBE)
+      rs = rtsp_new_session(hc->hc_peer_ipstr, msys, 0, -1);
     if (!rs || stream != rs->stream) {
       if (rs)
         errcode = HTTP_STATUS_NOT_FOUND;
@@ -1294,7 +1362,8 @@ rtsp_describe_session(session_t *rs, htsbuf_queue_t *q)
 {
   char buf[4096];
 
-  htsbuf_qprintf(q, "a=control:stream=%d\r\n", rs->stream);
+  if (rs->stream > 0)
+    htsbuf_qprintf(q, "a=control:stream=%d\r\n", rs->stream);
   htsbuf_qprintf(q, "a=tool:%s\r\n", config_get_http_server_name());
   htsbuf_append_str(q, "m=video 0 RTP/AVP 33\r\n");
   if (strchr(rtsp_ip, ':'))
@@ -1322,9 +1391,10 @@ rtsp_process_describe(http_connection_t *hc)
   char *u = tvh_strdupa(hc->hc_url);
   session_t *rs;
   htsbuf_queue_t q;
-  char buf[96];
+  char buf[96], buf1[46];
+  const char *used_ip = NULL;
   int r = HTTP_STATUS_BAD_REQUEST;
-  int stream, first = 1, valid;
+  int stream, first = 1, valid, used_port;
 
   htsbuf_queue_init(&q, 0);
 
@@ -1381,10 +1451,15 @@ rtsp_process_describe(http_connection_t *hc)
   http_arg_init(&args);
   if (hc->hc_session)
     http_arg_set(&args, "Session", hc->hc_session);
-  if (stream > 0)
-    snprintf(buf, sizeof(buf), "rtsp://%s/stream=%i", rtsp_ip, stream);
+  used_ip = rtsp_conn_ip(hc, buf1, sizeof(buf1), &used_port);
+  if ((stream > 0) && (used_port != 554))
+    snprintf(buf, sizeof(buf), "rtsp://%s:%d/stream=%i", used_ip, used_port, stream);
+  else if ((stream > 0) && (used_port == 554))
+    snprintf(buf, sizeof(buf), "rtsp://%s/stream=%i", used_ip, stream);
+  else if (used_port != 554)
+    snprintf(buf, sizeof(buf), "rtsp://%s:%d", used_ip, used_port);
   else
-    snprintf(buf, sizeof(buf), "rtsp://%s", rtsp_ip);
+    snprintf(buf, sizeof(buf), "rtsp://%s", used_ip);
   http_arg_set(&args, "Content-Base", buf);
   http_send_begin(hc);
   http_send_header(hc, HTTP_STATUS_OK, "application/sdp", q.hq_size,
@@ -1408,8 +1483,9 @@ static int
 rtsp_process_play(http_connection_t *hc, int cmd)
 {
   session_t *rs;
-  int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, i, stream;
-  char buf[256], *u = tvh_strdupa(hc->hc_url);
+  int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, i, stream, used_port;
+  char buf[256], buf1[46], *u = tvh_strdupa(hc->hc_url);
+  const char *used_ip = NULL;
   http_arg_list_t args;
 
   http_arg_init(&args);
@@ -1430,7 +1506,7 @@ rtsp_process_play(http_connection_t *hc, int cmd)
       !rs->rtp_udp_bound) {
     if (udp_bind_double(&rs->udp_rtp, &rs->udp_rtcp,
                         LS_SATIPS, "rtsp", "rtcp",
-                        rtsp_ip, 0, NULL,
+                        (rtp_src_ip != NULL && rtp_src_ip[0] != '\0') ? rtp_src_ip : rtsp_ip, 0, NULL,
                         4*1024, 4*1024,
                         RTP_BUFSIZE, RTCP_BUFSIZE)) {
       errcode = HTTP_STATUS_INTERNAL;
@@ -1467,10 +1543,11 @@ rtsp_process_play(http_connection_t *hc, int cmd)
     snprintf(buf, sizeof(buf), "%d", rs->stream);
     http_arg_set(&args, "com.ses.streamID", buf);
   } else {
-    if (rtsp_port != 554)
-      snprintf(buf, sizeof(buf), "url=rtsp://%s:%d/stream=%d", rtsp_ip, rtsp_port, rs->stream);
+    used_ip = rtsp_conn_ip(hc, buf1, sizeof(buf1), &used_port);
+    if (used_port != 554)
+      snprintf(buf, sizeof(buf), "url=rtsp://%s:%d/stream=%d", used_ip, used_port, rs->stream);
     else
-      snprintf(buf, sizeof(buf), "url=rtsp://%s/stream=%d", rtsp_ip, rs->stream);
+      snprintf(buf, sizeof(buf), "url=rtsp://%s/stream=%d", used_ip, rs->stream);
     http_arg_set(&args, "RTP-Info", buf);
   }
 
@@ -1587,9 +1664,43 @@ static void
 rtsp_stream_status ( void *opaque, htsmsg_t *m )
 {
   http_connection_t *hc = opaque;
+  char buf[128];
+  struct session *rs = NULL;
+  htsmsg_t *c, *tcp = NULL, *udp = NULL;
+  int udpport, s32;
+
   htsmsg_add_str(m, "type", "SAT>IP");
+  if (hc->hc_proxy_ip) {
+    tcp_get_str_from_ip(hc->hc_proxy_ip, buf, sizeof(buf));
+    htsmsg_add_str(m, "proxy", buf);
+  }
   if (hc->hc_username)
     htsmsg_add_str(m, "user", hc->hc_username);
+
+  TAILQ_FOREACH(rs, &rtsp_sessions, link) {
+    if (hc->hc_session &&
+        strcmp(rs->session, hc->hc_session) == 0 &&
+        strcmp(rs->peer_ipstr, hc->hc_peer_ipstr) == 0 &&
+        (udpport = rs->rtp_peer_port) > 0) {
+      if (udpport == RTSP_TCP_DATA) {
+        if (rs->tcp_data == hc) {
+          s32 = htsmsg_get_s32_or_default(m, "peer_port", -1);
+          if (!tcp) tcp = htsmsg_create_list();
+          htsmsg_add_s32(tcp, NULL, s32);
+        }
+      } else {
+        if (!udp) udp = htsmsg_create_list();
+        htsmsg_add_s32(udp, NULL, udpport);
+        htsmsg_add_s32(udp, NULL, udpport+1);
+      }
+    }
+  }
+  if (tcp || udp) {
+    c = htsmsg_create_map();
+    if (tcp) htsmsg_add_msg(c, "tcp", tcp);
+    if (udp) htsmsg_add_msg(c, "udp", udp);
+    htsmsg_add_msg(m, "peer_extra_ports", c);
+  }
 }
 
 /*
@@ -1617,6 +1728,7 @@ rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   /* Note: global_lock held on entry */
   pthread_mutex_unlock(&global_lock);
 
+  hc.hc_subsys  = LS_SATIPS;
   hc.hc_fd      = fd;
   hc.hc_peer    = peer;
   hc.hc_self    = self;
@@ -1698,7 +1810,7 @@ rtsp_close_sessions(void)
  */
 void satip_server_rtsp_init
   (const char *bindaddr, int port, int descramble, int rewrite_pmt, int muxcnf,
-   const char *nat_ip, int nat_port)
+   const char *rtp_src, const char *nat_ip, int nat_port)
 {
   static tcp_server_ops_t ops = {
     .start  = rtsp_serve,
@@ -1728,6 +1840,9 @@ void satip_server_rtsp_init
   rtsp_descramble = descramble;
   rtsp_rewrite_pmt = rewrite_pmt;
   rtsp_muxcnf = muxcnf;
+  s = rtp_src_ip;
+  rtp_src_ip = rtp_src ? strdup(rtp_src) : NULL;
+  free(s);
   s = rtsp_nat_ip;
   rtsp_nat_ip = nat_ip ? strdup(nat_ip) : NULL;
   free(s);
@@ -1756,8 +1871,9 @@ void satip_server_rtsp_done(void)
   rtsp_port = -1;
   rtsp_nat_port = -1;
   free(rtsp_ip);
+  free(rtp_src_ip);
   free(rtsp_nat_ip);
-  rtsp_ip = rtsp_nat_ip = NULL;
+  rtsp_ip = rtp_src_ip = rtsp_nat_ip = NULL;
   satip_rtp_done();
   pthread_mutex_unlock(&global_lock);
 }

@@ -272,20 +272,18 @@ tvh_context_pack(TVHContext *self, AVPacket *avpkt)
 
     if (self->helper && self->helper->pack) {
         pkt = self->helper->pack(self, avpkt);
-    }
-    else {
+    } else {
         pkt = pkt_alloc(self->stream->type, avpkt->data, avpkt->size, avpkt->pts, avpkt->dts, 0);
     }
     if (!pkt) {
         tvh_context_log(self, LOG_ERR, "failed to create packet");
+    } else {
+        // FIXME: ugly hack
+        if (pkt->pkt_pcr == 0)
+            pkt->pkt_pcr = pkt->pkt_dts;
+        if (_context_meta(self, avpkt, pkt) || _context_wrap(self, avpkt, pkt))
+            TVHPKT_CLEAR(pkt);
     }
-    else if (_context_meta(self, avpkt, pkt) ||
-             _context_wrap(self, avpkt, pkt)) {
-        TVHPKT_CLEAR(pkt);
-    }
-    // FIXME: ugly hack
-    if (pkt->pkt_pcr == 0)
-        pkt->pkt_pcr = pkt->pkt_dts;
     return pkt;
 }
 
@@ -603,7 +601,7 @@ tvh_context_open_filters(TVHContext *self,
     }
 
     avfilter_graph_set_auto_convert(self->avfltgraph,
-                                    AVFILTER_AUTO_CONVERT_NONE);
+                                    AVFILTER_AUTO_CONVERT_ALL);
 
     if ((ret = avfilter_graph_config(self->avfltgraph, &logctx)) < 0) {
         tvh_context_log(self, LOG_ERR, "filters: failed to config filter graph");

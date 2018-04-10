@@ -24,8 +24,14 @@
 /**
  * htsmsg_binary_deserialize
  */
-htsmsg_t *htsmsg_binary_deserialize(void *data, size_t len,
-				    const void *buf);
+htsmsg_t *htsmsg_binary_deserialize0(const void *data, size_t len,
+                                     const void *buf);
+
+int htsmsg_binary_deserialize(htsmsg_t **msg, const void *data, size_t *len,
+                              const void *buf);
+
+int htsmsg_binary_serialize0(htsmsg_t *msg, void **datap, size_t *lenp,
+			     int maxlen);
 
 int htsmsg_binary_serialize(htsmsg_t *msg, void **datap, size_t *lenp,
 			    int maxlen);

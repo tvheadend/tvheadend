@@ -38,11 +38,12 @@ struct htsmsg;
 /// string_list_insert(l, "str2");
 /// string_list_destroy(l);
 
-typedef struct string_list_item
-{
-  char* id;
+struct string_list_item {
   RB_ENTRY(string_list_item) h_link;
-} string_list_item_t;
+  char id[0];
+};
+
+typedef struct string_list_item string_list_item_t;
 typedef RB_HEAD(string_list, string_list_item) string_list_t;
 
 /// Initialize the memory used by the list.
@@ -56,11 +57,14 @@ void string_list_destroy(string_list_t *l);
 /// Insert a copy of id in to the sorted string list.
 void string_list_insert(string_list_t *l, const char *id);
 
+/// Insert a copy of lowercase id in to the sorted string list.
+void string_list_insert_lowercase(string_list_t *l, const char *id);
+
 /// Conversion function from sorted string list to an htsmsg.
 /// @return NULL if empty.
 struct htsmsg *string_list_to_htsmsg(const string_list_t *l)
     __attribute__((warn_unused_result));
-string_list_t * htsmsg_to_string_list(const struct htsmsg *m)
+string_list_t *htsmsg_to_string_list(const struct htsmsg *m)
     __attribute__((warn_unused_result));
 void string_list_serialize(const string_list_t *l, struct htsmsg *m, const char *f);
 string_list_t *string_list_deserialize(const struct htsmsg *m, const char *f)

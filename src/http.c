@@ -40,6 +40,7 @@
 #include "channels.h"
 #include "config.h"
 #include "htsmsg_json.h"
+#include "compat.h"
 
 #if ENABLE_ANDROID
 #include <sys/socket.h>
@@ -380,7 +381,8 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
   if(rc == HTTP_STATUS_UNAUTHORIZED) {
     const char *realm = tvh_str_default(config.realm, "tvheadend");
-    if (config.digest) {
+    if (config.http_auth == HTTP_AUTH_DIGEST ||
+        config.http_auth == HTTP_AUTH_PLAIN_DIGEST) {
       if (hc->hc_nonce == NULL)
         hc->hc_nonce = http_get_nonce();
       char *opaque = http_get_opaque(realm, hc->hc_nonce);
@@ -560,33 +562,49 @@ http_header_match(http_connection_t *hc, const char *name, const char *value)
 static char *
 http_get_header_value(const char *hdr, const char *name)
 {
-  char *tokbuf, *tok, *saveptr = NULL, *q, *s;
-
-  tokbuf = tvh_strdupa(hdr);
-  tok = strtok_r(tokbuf, ",", &saveptr);
-  while (tok) {
-    while (*tok == ' ')
-      tok++;
-    if ((q = strchr(tok, '=')) == NULL)
-      goto next;
-    *q = '\0';
-    if (strcasecmp(tok, name))
-      goto next;
-    s = q + 1;
-    if (*s == '"') {
-      q = strchr(++s, '"');
-      if (q)
-        *q = '\0';
-    } else {
-      q = strchr(s, ' ');
-      if (q)
-        *q = '\0';
+  char *s, *start, *val;
+  s = tvh_strdupa(hdr);
+  while (*s) {
+    while (*s && *s <= ' ') s++;
+    start = s;
+    while (*s && *s != '=') s++;
+    if (*s == '=') {
+      *s = '\0';
+      s++;
     }
-    return strdup(s);
-next:
-    tok = strtok_r(NULL, ",", &saveptr);
+    while (*s && *s <= ' ') s++;
+    if (*s == '"') {
+      val = ++s;
+      while (*s && *s != '"') s++;
+      if (*s == '"') {
+        *s = '\0';
+        s++;
+      }
+      while (*s && (*s <= ' ' || *s == ',')) s++;
+    } else {
+      val = s;
+      while (*s && *s != ',') s++;
+      *s = '\0';
+      s++;
+    }
+    if (*start && strcmp(name, start) == 0)
+      return strdup(val);
   }
   return NULL;
+}
+
+/**
+ *
+ */
+int
+http_check_local_ip( http_connection_t *hc )
+{
+  if (hc->hc_local_ip == NULL) {
+    hc->hc_local_ip = malloc(sizeof(*hc->hc_local_ip));
+    *hc->hc_local_ip = *hc->hc_self;
+    hc->hc_is_local_ip = ip_check_is_local_address(hc->hc_peer, hc->hc_self, hc->hc_local_ip) > 0;
+  }
+  return hc->hc_is_local_ip;
 }
 
 /**
@@ -642,9 +660,10 @@ http_error(http_connection_t *hc, int error)
       level = LOG_DEBUG;
     else if (error == HTTP_STATUS_BAD_REQUEST || error > HTTP_STATUS_UNAUTHORIZED)
       level = LOG_ERR;
-    tvhlog(level, LS_HTTP, "%s: %s %s %s -- %d",
+    if (hc->hc_cmd == 6 && strstr(hc->hc_url, "&pids")) abort();
+    tvhlog(level, hc->hc_subsys, "%s: %s %s (%d) %s -- %d",
 	   hc->hc_peer_ipstr, http_ver2str(hc->hc_version),
-           http_cmd2str(hc->hc_cmd), hc->hc_url, error);
+           http_cmd2str(hc->hc_cmd), hc->hc_cmd, hc->hc_url, error);
   }
 
   if (hc->hc_version != RTSP_VERSION_1_0) {
@@ -937,7 +956,7 @@ http_access_verify_ticket(http_connection_t *hc)
   hc->hc_access = access_ticket_verify2(ticket_id, hc->hc_url);
   if (hc->hc_access == NULL)
     return;
-  tvhinfo(LS_HTTP, "%s: using ticket %s for %s",
+  tvhinfo(hc->hc_subsys, "%s: using ticket %s for %s",
 	  hc->hc_peer_ipstr, ticket_id, hc->hc_url);
 }
 
@@ -1201,7 +1220,7 @@ dump_request(http_connection_t *hc)
   if (!first)
     tvh_strlcatf(buf, sizeof(buf), ptr, "}}");
 
-  tvhtrace(LS_HTTP, "%s %s %s%s", http_ver2str(hc->hc_version),
+  tvhtrace(hc->hc_subsys, "%s %s %s%s", http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, buf);
 }
 
@@ -1342,8 +1361,13 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   v = (config.proxy) ? http_arg_get(&hc->hc_args, "X-Forwarded-For") : NULL;
   if (v) {
+    if (hc->hc_proxy_ip == NULL)
+      hc->hc_proxy_ip = malloc(sizeof(*hc->hc_proxy_ip));
+    *hc->hc_proxy_ip = *hc->hc_peer;
     if (tcp_get_ip_from_str(v, hc->hc_peer) == NULL) {
       http_error(hc, HTTP_STATUS_BAD_REQUEST);
+      free(hc->hc_proxy_ip);
+      hc->hc_proxy_ip = NULL;
       return -1;
     }
   }
@@ -1364,19 +1388,16 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   case RTSP_VERSION_1_0:
     hc->hc_keep_alive = 1;
     /* Extract CSeq */
-    if((v = http_arg_get(&hc->hc_args, "CSeq")) != NULL)
+    if((v = http_arg_get(&hc->hc_args, "CSeq")) != NULL) {
       hc->hc_cseq = strtoll(v, NULL, 10);
-    else
+    } else {
       hc->hc_cseq = 0;
+    }
     free(hc->hc_session);
     if ((v = http_arg_get(&hc->hc_args, "Session")) != NULL)
       hc->hc_session = tvh_strdupa(v);
     else
       hc->hc_session = NULL;
-    if(hc->hc_cseq == 0) {
-      http_error(hc, HTTP_STATUS_BAD_REQUEST);
-      return -1;
-    }
     break;
 
   case HTTP_VERSION_1_0:
@@ -1394,34 +1415,46 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   if((v = http_arg_get(&hc->hc_args, "Authorization")) != NULL) {
     if((n = http_tokenize(v, argv, 2, -1)) == 2) {
       if (strcasecmp(argv[0], "basic") == 0) {
-        n = base64_decode((uint8_t *)authbuf, argv[1], sizeof(authbuf) - 1);
-        if (n < 0)
-          n = 0;
-        authbuf[n] = 0;
-        if((n = http_tokenize(authbuf, argv, 2, ':')) == 2) {
-          hc->hc_username = tvh_strdupa(argv[0]);
-          hc->hc_password = tvh_strdupa(argv[1]);
-          http_deescape(hc->hc_username);
-          http_deescape(hc->hc_password);
-          // No way to actually track this
+        if (config.http_auth == HTTP_AUTH_PLAIN ||
+            config.http_auth == HTTP_AUTH_PLAIN_DIGEST) {
+          n = base64_decode((uint8_t *)authbuf, argv[1], sizeof(authbuf) - 1);
+          if (n < 0)
+            n = 0;
+          authbuf[n] = 0;
+          if((n = http_tokenize(authbuf, argv, 2, ':')) == 2) {
+            hc->hc_username = tvh_strdupa(argv[0]);
+            hc->hc_password = tvh_strdupa(argv[1]);
+            http_deescape(hc->hc_username);
+            http_deescape(hc->hc_password);
+            // No way to actually track this
+          } else {
+            http_error(hc, HTTP_STATUS_UNAUTHORIZED);
+            return -1;
+          }
         } else {
           http_error(hc, HTTP_STATUS_UNAUTHORIZED);
           return -1;
         }
       } else if (strcasecmp(argv[0], "digest") == 0) {
-        v = http_get_header_value(argv[1], "nonce");
-        if (v == NULL || !http_nonce_exists(v)) {
+        if (config.http_auth == HTTP_AUTH_DIGEST ||
+            config.http_auth == HTTP_AUTH_PLAIN_DIGEST) {
+          v = http_get_header_value(argv[1], "nonce");
+          if (v == NULL || !http_nonce_exists(v)) {
+            free(v);
+            http_error(hc, HTTP_STATUS_UNAUTHORIZED);
+            return -1;
+          }
+          free(hc->hc_nonce);
+          hc->hc_nonce = v;
+          v = http_get_header_value(argv[1], "username");
+          hc->hc_authhdr  = tvh_strdupa(argv[1]);
+          hc->hc_username = tvh_strdupa(v);
+          http_deescape(hc->hc_username);
           free(v);
+        } else {
           http_error(hc, HTTP_STATUS_UNAUTHORIZED);
           return -1;
         }
-        free(hc->hc_nonce);
-        hc->hc_nonce = v;
-        v = http_get_header_value(argv[1], "username");
-        hc->hc_authhdr  = tvh_strdupa(argv[1]);
-        hc->hc_username = tvh_strdupa(v);
-        http_deescape(hc->hc_username);
-        free(v);
       } else {
         http_error(hc, HTTP_STATUS_BAD_REQUEST);
         return -1;
@@ -1436,10 +1469,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   case RTSP_VERSION_1_0:
     if (tvhtrace_enabled())
       dump_request(hc);
-    if (hc->hc_cseq)
-      rval = hc->hc_process(hc, spill);
-    else
-      http_error(hc, HTTP_STATUS_HTTP_VERSION);
+    rval = hc->hc_process(hc, spill);
     break;
 
   case HTTP_VERSION_1_0:
@@ -1472,7 +1502,7 @@ http_arg_remove(struct http_arg_list *list, struct http_arg *arg)
  * Delete all arguments associated with a connection
  */
 void
-http_arg_flush(struct http_arg_list *list)
+http_arg_flush(http_arg_list_t *list)
 {
   http_arg_t *ra;
   while((ra = TAILQ_FIRST(list)) != NULL)
@@ -1484,7 +1514,7 @@ http_arg_flush(struct http_arg_list *list)
  * Find an argument associated with a connection
  */
 char *
-http_arg_get(struct http_arg_list *list, const char *name)
+http_arg_get(http_arg_list_t *list, const char *name)
 {
   http_arg_t *ra;
   TAILQ_FOREACH(ra, list, link)
@@ -1532,6 +1562,34 @@ http_arg_set(struct http_arg_list *list, const char *key, const char *val)
   TAILQ_INSERT_TAIL(list, ra, link);
   ra->key = strdup(key);
   ra->val = val ? strdup(val) : NULL;
+}
+
+/*
+ *
+ */
+char *
+http_arg_get_query(http_arg_list_t *args)
+{
+  htsbuf_queue_t q;
+  http_arg_t *ra;
+  char *r;
+
+  if (http_args_empty(args))
+    return NULL;
+  htsbuf_queue_init(&q, 0);
+  htsbuf_queue_init(&q, 0);
+  TAILQ_FOREACH(ra, args, link) {
+    if (!htsbuf_empty(&q))
+      htsbuf_append(&q, "&", 1);
+    htsbuf_append_and_escape_url(&q, ra->key);
+    if (ra->val) {
+      htsbuf_append(&q, "=", 1);
+      htsbuf_append_and_escape_url(&q, ra->val);
+    }
+  }
+  r = htsbuf_to_string(&q);
+  htsbuf_queue_flush(&q);
+  return r;
 }
 
 /*
@@ -1726,14 +1784,15 @@ again:
   if (p == NULL)
     return -1;
   if (tcp_read(hc->hc_fd, bl, 4))
-    return -1;
+    goto err1;
   if (tcp_read(hc->hc_fd, p, plen))
-    return -1;
+    goto err1;
   /* apply mask descrambling */
   for (pi = 0; pi < plen; pi++)
     p[pi] ^= bl[pi & 3];
   if (op == HTTP_WSOP_PING) {
     http_websocket_send(hc, p, plen, HTTP_WSOP_PONG);
+    free(p);
     goto again;
   }
   msg = htsmsg_create_map();
@@ -1742,15 +1801,20 @@ again:
     p[plen] = '\0';
     msg1 = p[0] == '{' || p[0] == '[' ?
              htsmsg_json_deserialize((char *)p) : NULL;
-    if (msg1)
+    if (msg1) {
       htsmsg_add_msg(msg, "json", msg1);
-    else
-      htsmsg_add_str(msg, "text", (char *)p);
+      free(p);
+    } else {
+      htsmsg_add_str_alloc(msg, "text", (char *)p);
+    }
   } else {
-    htsmsg_add_bin(msg, "bin", p, plen);
+    htsmsg_add_bin_alloc(msg, "bin", p, plen);
   }
   *_res = msg;
   return 0;
+err1:
+  free(p);
+  return -1;
 }
 
 /**
@@ -1820,7 +1884,7 @@ http_serve_requests(http_connection_t *hc)
      * Format: 'PROXY TCP4 192.168.0.1 192.168.0.11 56324 9981\r\n'
      *                     SRC-ADDRESS DST-ADDRESS  SPORT DPORT */
     if (config.proxy && strncmp(cmdline, "PROXY ", 6) == 0) {
-      tvhtrace(LS_HTTP, "[PROXY] PROXY protocol detected! cmdline='%s'", cmdline);
+      tvhtrace(hc->hc_subsys, "[PROXY] PROXY protocol detected! cmdline='%s'", cmdline);
 
       argv[0] = cmdline;
       s = cmdline + 6;
@@ -1858,7 +1922,7 @@ http_serve_requests(http_connection_t *hc)
 
       /* Don't care about DST-ADDRESS, SRC-PORT & DST-PORT
          All it's OK, push the original client IP */
-      tvhtrace(LS_HTTP, "[PROXY] Original source='%s'", s);
+      tvhtrace(hc->hc_subsys, "[PROXY] Original source='%s'", s);
       http_arg_set(&hc->hc_args, "X-Forwarded-For", s);
       free(argv[0]);
     }
@@ -1922,6 +1986,8 @@ error:
   free(hc->hc_nonce);
   hc->hc_nonce = NULL;
 
+  free(hc->hc_proxy_ip);
+  free(hc->hc_local_ip);
 }
 
 
@@ -1939,6 +2005,7 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   memset(&hc, 0, sizeof(http_connection_t));
   *opaque = &hc;
 
+  hc.hc_subsys  = LS_HTTP;
   hc.hc_fd      = fd;
   hc.hc_peer    = peer;
   hc.hc_self    = self;
@@ -1978,8 +2045,10 @@ http_server_init(const char *bindaddr)
     .cancel = http_cancel
   };
   RB_INIT(&http_nonces);
-  http_server = tcp_server_create(LS_HTTP, "HTTP", bindaddr, tvheadend_webui_port, &ops, NULL);
-  atomic_set(&http_server_running, 1);
+  if (tvheadend_webui_port > 0) {
+    http_server = tcp_server_create(LS_HTTP, "HTTP", bindaddr, tvheadend_webui_port, &ops, NULL);
+    atomic_set(&http_server_running, 1);
+  }
 }
 
 void

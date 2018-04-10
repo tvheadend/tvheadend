@@ -430,7 +430,7 @@ def argv_get(what):
   for a in sys.argv:
     if a.startswith(what):
       a = a[len(what):]
-      if a[0] == '=':
+      if a and a[0] == '=':
         return a[1:]
       else:
         return True
@@ -440,30 +440,46 @@ def argv_get(what):
 #
 #
 
+def run(input, name, human):
+  fp = utf8open(input, 'r')
+  text = fp.read(1024*1024*2)
+  fp.close()
+
+  renderer = TVH_C_Renderer(parse_html=1)
+  md = Markdown(renderer)
+  text = md(text)
+  text = optimize(text)
+  if human:
+    return text
+  return 'const char *' + name + '[] = {\n' + text + '\nNULL\n};\n'
+
 HUMAN=argv_get('human')
 DEBUG=argv_get('debug')
 pages = argv_get('pages')
 if pages:
   dopages(pages)
   sys.exit(0)
-input = argv_get('in')
-if not input:
-  fatal('Specify input file.')
-name = argv_get('name')
-if not name:
-  fatal('Specify class name.')
-name = name.replace('/', '_')
-
-fp = utf8open(input, 'r')
-text = fp.read(1024*1024*2)
-fp.close()
-
-renderer = TVH_C_Renderer(parse_html=1)
-md = Markdown(renderer)
-text = md(text)
-text = optimize(text)
-
-if not HUMAN:
-  print('const char *' + name + '[] = {\n' + text + '\nNULL\n};\n');
+BATCH=argv_get('batch')
+if BATCH:
+  inpath = argv_get('inpath')
+  out = argv_get('out')
+  name = argv_get('name')
+  list = argv_get('list')
+  fp = utf8open(out, "a+")
+  for l in list.split(' '):
+    input = inpath % l
+    print("Markdown: %s" % input)
+    n = (name % l).replace('/', '_')
+    text = run(input, n, HUMAN)
+    fp.write(text)
+  fp.close()
 else:
+  input = argv_get('in')
+  if not input:
+    fatal('Specify input file.')
+  name = argv_get('name')
+  if not name:
+    fatal('Specify class name.')
+  name = name.replace('/', '_')
+  text = run(input, name, HUMAN)
   print(text)

@@ -366,22 +366,15 @@ dbus_server_thread(void *aux)
   }
 
   poll = tvhpoll_create(2);
-  memset(&ev, 0, sizeof(ev));
-  ev.fd       = dbus_pipe.rd;
-  ev.events   = TVHPOLL_IN;
-  ev.data.ptr = &dbus_pipe;
-  tvhpoll_add(poll, &ev, 1);
-  memset(&ev, 0, sizeof(ev));
-  if (!dbus_connection_get_unix_fd(conn, &ev.fd)) {
+  tvhpoll_add1(poll, dbus_pipe.rd, TVHPOLL_IN, &dbus_pipe);
+  if (!dbus_connection_get_unix_fd(conn, &n)) {
     atomic_set(&dbus_running, 0);
     tvhpoll_destroy(poll);
     dbus_connection_safe_close(notify);
     dbus_connection_safe_close(conn);
     return NULL;
   }
-  ev.events   = TVHPOLL_IN;
-  ev.data.ptr = conn;
-  tvhpoll_add(poll, &ev, 1);
+  tvhpoll_add1(poll, n, TVHPOLL_IN, conn);
 
   while (atomic_get(&dbus_running)) {
 
@@ -393,7 +386,7 @@ dbus_server_thread(void *aux)
       continue;
     }
 
-    if (ev.data.ptr == &dbus_pipe) {
+    if (ev.ptr == &dbus_pipe) {
       if (read(dbus_pipe.rd, &c, 1) == 1) {
         if (c == 's')
           dbus_flush_queue(notify);

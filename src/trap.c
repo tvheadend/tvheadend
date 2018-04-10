@@ -204,14 +204,13 @@ traphandler(int sig, siginfo_t *si, void *UC)
       }
 
       if(dli.dli_fname != NULL && dli.dli_fbase != NULL) {
-        tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p",
-                     dli.dli_fname,
-                     frames[i]);
+        tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p %p",
+                     dli.dli_fname, frames[i], dli.dli_fbase);
         continue;
       }
 
 
-      tvhlog_spawn(LOG_ALERT, LS_CRASH, "%p", frames[i]);
+      tvhlog_spawn(LOG_ALERT, LS_CRASH, "%p %p", frames[i], dli.dli_fbase);
     }
   }
 #endif

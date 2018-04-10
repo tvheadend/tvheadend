@@ -20,6 +20,7 @@
 #define __TVH_TIMESHIFT_H__
 
 #include "idnode.h"
+#include "streaming.h"
 #include "memoryinfo.h"
 
 typedef struct timeshift_conf {

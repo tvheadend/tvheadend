@@ -10,5 +10,12 @@ Type=forking
 Restart=on-failure
 RestartSec=54s
 
+# To enable watchdog functionality, uncomment these, remove Type=forking
+# and compile with --enable-libsystemd_daemon
+#Type=notify
+#WatchdogSec=1m
+#TimeoutStartSec=5m
+#TimeoutStopSec=20
+
 [Install]
 WantedBy=multi-user.target

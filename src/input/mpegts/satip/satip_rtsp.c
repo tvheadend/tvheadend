@@ -227,13 +227,10 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
   }
   if (weight > 0)
     satip_rtsp_add_val("tvhweight", buf, (uint32_t)weight * 1000);
-  if (flags & SATIP_SETUP_PIDS0) {
-    strcat(buf, "&pids=0");
-    if (flags & SATIP_SETUP_PIDS21)
-      strcat(buf, ",21");
-  } else if (flags & SATIP_SETUP_PIDS21)
-    strcat(buf, "&pids=21");
-  tvhtrace(LS_SATIP, "setup params - %s", buf);
+  strcat(buf, "&pids=0");
+  if (flags & SATIP_SETUP_PIDS21)
+    strcat(buf, ",21");
+  tvhtrace(LS_SATIP, "%04X: SETUP params - %s", hc->hc_id, buf);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);
@@ -309,12 +306,14 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);
   query = htsbuf_to_string(&q);
+  tvhtrace(LS_SATIP, "%04X: PLAY params - %s", hc->hc_id, query);
   r = rtsp_play(hc, stream, query);
   free(query);
   if (r >= 0 && split) {
     htsbuf_queue_init(&q, 0);
     htsbuf_qprintf(&q, "addpids=%s", addpids);
     query = htsbuf_to_string(&q);
+    tvhtrace(LS_SATIP, "%04X: PLAY params (split) - %s", hc->hc_id, query);
     r = rtsp_play(hc, stream, query);
     free(query);
   }

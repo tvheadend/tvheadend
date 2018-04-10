@@ -224,6 +224,18 @@
     background-image: url(../icons/delete.png) !important;
 }
 
+.prevrec {
+    background-image: url(../icons/accept.png) !important;
+}
+
+.duprec {
+    background-image: url(../icons/control_repeat_blue.png) !important;
+}
+
+.grouping {
+    background-image: url(../icons/control_repeat_blue.png) !important;
+}
+
 .cancel {
     background-image: url(../icons/cancel.png) !important;
 }
@@ -665,6 +677,53 @@
 
 .x-epg-hr {
     margin: 0;
+}
+
+/* Although our other icons are 16x16, our fonts are 12px and these
+   icons are displayed next to text instead of in a toolbar. So if we
+   set our size to 16x16 then they are too big for the grid, so we
+   make the icons slightly smaller to compensate.  We don't make them
+   exactly 12px since 13px seems to fit without extending the lines
+   visibly whereas 14px makes it quite a bit bigger.
+*/
+.x-grid-category-icon {
+}
+
+.x-grid-category-icon img {
+    width: 13px;
+    height: 13px;
+    margin-right: 0.1em;
+}
+
+.x-grid-category-icon img:hover{
+    transform: scale(4,4);
+    /* Our parent is overflow: hidden so we need position to break out and
+     * be visible.
+     */
+    position: absolute;
+    /* Need a higher z-index otherwise we are hidden by progress bar */
+    z-index: 10;
+}
+
+/* Larger icons used in dialog boxes */
+.x-dialog-category-large-icon {
+}
+
+.x-dialog-category-large-icon img {
+    width: 32px;
+    height: 32px;
+    margin-right: 0.1em;
+}
+
+.x-dialog-category-large-icon img:hover{
+    transform: scale(2, 2);
+    /* We need a transform-origin to avoid being clipped in a dialog box */
+    transform-origin: top left;
+}
+
+.x-epg-icons {
+    float: left;
+    margin-left: 0.5em;
 }
 
 .x-epg-title {

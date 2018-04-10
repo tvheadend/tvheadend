@@ -88,6 +88,10 @@ typedef struct http_arg {
 #define HTTP_STATUS_HTTP_VERSION    505
 #define HTTP_STATUS_OP_NOT_SUPPRT   551
 
+#define HTTP_AUTH_PLAIN             0
+#define HTTP_AUTH_DIGEST            1
+#define HTTP_AUTH_PLAIN_DIGEST      2
+
 typedef enum http_state {
   HTTP_CON_WAIT_REQUEST,
   HTTP_CON_READ_HEADER,
@@ -131,11 +135,14 @@ typedef enum http_wsop {
 } http_wsop_t;
 
 typedef struct http_connection {
+  int hc_subsys;
   int hc_fd;
   struct sockaddr_storage *hc_peer;
   char *hc_peer_ipstr;
   struct sockaddr_storage *hc_self;
   char *hc_representative;
+  struct sockaddr_storage *hc_proxy_ip;
+  struct sockaddr_storage *hc_local_ip;
 
   pthread_mutex_t  *hc_paths_mutex;
   http_path_list_t *hc_paths;
@@ -143,7 +150,6 @@ typedef struct http_connection {
 
   char *hc_url;
   char *hc_url_orig;
-  int hc_keep_alive;
 
   htsbuf_queue_t  hc_reply;
 
@@ -166,12 +172,15 @@ typedef struct http_connection {
   char *hc_nonce;
   access_t *hc_access;
 
-  struct config_head *hc_user_config;
-
-  int hc_no_output;
-  int hc_shutdown;
+  /* RTSP */
   uint64_t hc_cseq;
   char *hc_session;
+
+  /* Flags */
+  uint8_t hc_keep_alive;
+  uint8_t hc_no_output;
+  uint8_t hc_shutdown;
+  uint8_t hc_is_local_ip;   /*< a connection from the local network */
 
   /* Support for HTTP POST */
   
@@ -187,20 +196,22 @@ int http_str2cmd(const char *str);
 const char *http_ver2str(int val);
 int http_str2ver(const char *str);
 
-static inline void http_arg_init(struct http_arg_list *list)
+static inline void http_arg_init(http_arg_list_t *list)
 {
   TAILQ_INIT(list);
 }
 
-void http_arg_remove(struct http_arg_list *list, struct http_arg *arg);
-void http_arg_flush(struct http_arg_list *list);
+void http_arg_remove(http_arg_list_t *list, struct http_arg *arg);
+void http_arg_flush(http_arg_list_t *list);
 
-char *http_arg_get(struct http_arg_list *list, const char *name);
-char *http_arg_get_remove(struct http_arg_list *list, const char *name);
+char *http_arg_get(http_arg_list_t *list, const char *name);
+char *http_arg_get_remove(http_arg_list_t *list, const char *name);
 
-void http_arg_set(struct http_arg_list *list, const char *key, const char *val);
+void http_arg_set(http_arg_list_t *list, const char *key, const char *val);
 
-static inline int http_args_empty(const struct http_arg_list *list) { return TAILQ_EMPTY(list); }
+char *http_arg_get_query(http_arg_list_t *list);
+
+static inline int http_args_empty(const http_arg_list_t *list) { return TAILQ_EMPTY(list); }
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
@@ -263,6 +274,8 @@ int http_websocket_read(http_connection_t *hc, htsmsg_t **_res, int timeout);
 void http_serve_requests(http_connection_t *hc);
 
 void http_cancel(void *opaque);
+
+int http_check_local_ip(http_connection_t *hc);
 
 typedef int (http_callback_t)(http_connection_t *hc, 
 			      const char *remain, void *opaque);
@@ -418,7 +431,7 @@ struct http_client {
   void    (*hc_conn_closed)  (http_client_t *hc, int err);
 };
 
-void http_client_init ( const char *user_agent );
+void http_client_init ( void );
 void http_client_done ( void );
 
 http_client_t*

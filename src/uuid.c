@@ -76,17 +76,20 @@ hex2bin(uint8_t *buf, size_t buflen, const char *str)
 /**
  *
  */
-void
+char *
 bin2hex(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
 {
+  static const char table[] = "0123456789abcdef";
+  char *ret = dst;
   while(dstlen > 2 && srclen > 0) {
-    *dst++ = "0123456789abcdef"[*src >> 4];
-    *dst++ = "0123456789abcdef"[*src & 0xf];
+    *dst++ = table[*src >> 4];
+    *dst++ = table[*src & 0xf];
     src++;
     srclen--;
     dstlen -= 2;
   }
   *dst = 0;
+  return ret;
 }
 
 /* **************************************************************************
@@ -114,15 +117,19 @@ uuid_random ( uint8_t *buf, size_t bufsize )
 
 /* Initialise binary */
 int
-uuid_init_bin ( tvh_uuid_t *u, const char *str )
+uuid_set ( tvh_uuid_t *u, const char *str )
 {
-  memset(u, 0, sizeof(tvh_uuid_t));
   if (str) {
     if (strlen(str) != UUID_HEX_SIZE - 1) {
-      tvherror(LS_UUID, "wrong uuid size");
+      memset(u, 0, sizeof(*u));
+      tvherror(LS_UUID, "wrong uuid string size (%zd)", strlen(str));
       return -EINVAL;
     }
-    return hex2bin(u->bin, sizeof(u->bin), str);
+    if (hex2bin(u->bin, sizeof(u->bin), str)) {
+      memset(u, 0, sizeof(*u));
+      tvherror(LS_UUID, "wrong uuid string '%s'", str);
+      return -EINVAL;
+    }
   } else if (read(fd, u->bin, sizeof(u->bin)) != sizeof(u->bin)) {
     tvherror(LS_UUID, "failed to read from %s", RANDOM_PATH);
     return -EINVAL;
@@ -131,39 +138,14 @@ uuid_init_bin ( tvh_uuid_t *u, const char *str )
 }
 
 /* Initialise hex string */
-int
-uuid_init_hex ( tvh_uuid_t *u, const char *str )
+char *
+uuid_get_hex ( const tvh_uuid_t *u, char *dst )
 {
-  tvh_uuid_t tmp;
-  if (uuid_init_bin(&tmp, str))
-    return 1;
-  return uuid_bin2hex(&tmp, u);
+  assert(dst);
+  return bin2hex(dst, UUID_HEX_SIZE, u->bin, sizeof(u->bin));
 }
 
-/* Convert bin to hex string */
-int
-uuid_bin2hex ( const tvh_uuid_t *a, tvh_uuid_t *b )
-{
-  tvh_uuid_t tmp;
-  memset(&tmp, 0, sizeof(tmp));
-  bin2hex(tmp.hex, sizeof(tmp.hex), a->bin, sizeof(a->bin));
-  memcpy(b, &tmp, sizeof(tmp));
-  return 0;
-}
-
-/* Convert hex string to bin (in place) */
-int
-uuid_hex2bin ( const tvh_uuid_t *a, tvh_uuid_t *b )
-{ 
-  tvh_uuid_t tmp;
-  memset(&tmp, 0, sizeof(tmp));
-  if (hex2bin(tmp.bin, sizeof(tmp.bin), a->hex))
-    return 1;
-  memcpy(b, &tmp, sizeof(tmp));
-  return 0;
-}
-
-/* Validate hex string */
+/* Validate the hexadecimal representation of uuid */
 int
 uuid_hexvalid ( const char *uuid )
 {
@@ -174,4 +156,68 @@ uuid_hexvalid ( const char *uuid )
     if (hexnibble(uuid[i]) < 0)
       return 0;
   return 1;
+}
+
+/* Init uuid set */
+void
+uuid_set_init( tvh_uuid_set_t *us, uint32_t alloc_chunk )
+{
+  memset(us, 0, sizeof(*us));
+  us->us_alloc_chunk = alloc_chunk ?: 10;
+}
+
+/* Copy uuid set */
+tvh_uuid_set_t *
+uuid_set_copy( tvh_uuid_set_t *dst, const tvh_uuid_set_t *src )
+{
+  size_t size;
+  memset(dst, 0, sizeof(*dst));
+  dst->us_alloc_chunk = src->us_alloc_chunk;
+  size = sizeof(tvh_uuid_t) * src->us_size;
+  dst->us_array = malloc(size);
+  if (dst->us_array == NULL)
+    return NULL;
+  memcpy(dst->us_array, src->us_array, size);
+  dst->us_size = src->us_size;
+  dst->us_count = src->us_count;
+  return dst;
+}
+
+/* Add an uuid to set */
+tvh_uuid_t *
+uuid_set_add ( tvh_uuid_set_t *us, const tvh_uuid_t *u ) 
+{
+  tvh_uuid_t *nu;
+
+  if (us->us_count >= us->us_size) {
+    nu = realloc(us->us_array, sizeof(*u) * (us->us_size + us->us_alloc_chunk));
+    if (nu == NULL)
+      return NULL;
+    us->us_array = nu;
+    us->us_size += us->us_alloc_chunk;
+  }
+  nu = &us->us_array[us->us_count++];
+  *nu = *u;
+  return nu;
+}
+
+/* Free uuid set */
+void
+uuid_set_free ( tvh_uuid_set_t *us )
+{
+  if (us) {
+    free(us->us_array);
+    us->us_size = 0;
+    us->us_count = 0;
+  }
+}
+
+/* Destroy uuid set */
+void
+uuid_set_destroy ( tvh_uuid_set_t *us )
+{
+  if (us) {
+    uuid_set_free(us);
+    free(us);
+  }
 }

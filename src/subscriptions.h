@@ -109,6 +109,7 @@ typedef struct th_subscription {
   streaming_target_t ths_input;
 
   streaming_target_t *ths_output;
+  streaming_target_t *ths_parser;
 
   int ths_flags;
   int ths_timeout;
@@ -146,6 +147,7 @@ typedef struct th_subscription {
 
 } th_subscription_t;
 
+LIST_HEAD(th_subscription_list, th_subscription);
 
 /**
  * Prototypes
@@ -158,7 +160,7 @@ void subscription_unsubscribe(th_subscription_t *s, int flags);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
-void subscription_reschedule(void);
+void subscription_delayed_reschedule(int64_t mono);
 
 th_subscription_t *
 subscription_create_from_channel(struct profile_chain *prch,

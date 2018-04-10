@@ -22,10 +22,12 @@
 #include "tvheadend.h"
 #include "idnode.h"
 
+struct service;
 struct mpegts_mux;
 
 extern const idclass_t caclient_class;
 extern const idclass_t caclient_dvbcam_class;
+extern const idclass_t caclient_cc_class;
 extern const idclass_t caclient_cwc_class;
 extern const idclass_t caclient_cccam_class;
 extern const idclass_t caclient_capmt_class;
@@ -61,6 +63,9 @@ typedef struct caclient {
   void (*cac_free)(struct caclient *cac);
   void (*cac_start)(struct caclient *cac, struct service *t);
   void (*cac_conf_changed)(struct caclient *cac);
+  void (*cac_cat_update)(struct caclient *cac,
+                         struct mpegts_mux *mux,
+                         const uint8_t *data, int len);
   void (*cac_caid_update)(struct caclient *cac,
                           struct mpegts_mux *mux,
                           uint16_t caid, uint16_t pid, int valid);
@@ -72,6 +77,8 @@ caclient_t *caclient_create
 void caclient_start( struct service *t );
 void caclient_caid_update(struct mpegts_mux *mux,
                           uint16_t caid, uint16_t pid, int valid);
+void caclient_cat_update(struct mpegts_mux *mux,
+                         const uint8_t *data, int len);
 
 void caclient_set_status(caclient_t *cac, caclient_status_t status);
 const char *caclient_get_status(caclient_t *cac);

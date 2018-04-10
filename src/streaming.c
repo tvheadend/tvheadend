@@ -95,8 +95,12 @@ static htsmsg_t *
 streaming_queue_info(void *opaque, htsmsg_t *list)
 {
   streaming_queue_t *sq = opaque;
+  size_t size;
   char buf[256];
-  snprintf(buf, sizeof(buf), "streaming queue %p size %zd", sq, sq->sq_size);
+  pthread_mutex_lock(&sq->sq_mutex);
+  size = sq->sq_size;
+  pthread_mutex_unlock(&sq->sq_mutex);
+  snprintf(buf, sizeof(buf), "streaming queue %p size %zd", sq, size);
   htsmsg_add_str(list, NULL, buf);
   return list;
 }
@@ -423,6 +427,17 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
 /**
  *
  */
+void
+streaming_service_deliver(service_t *t, streaming_message_t *sm)
+{
+  if (atomic_set(&t->s_pending_restart, 0))
+    service_restart_streams(t);
+  streaming_pad_deliver(&t->s_streaming_pad, sm);
+}
+
+/**
+ *
+ */
 const char *
 streaming_code2txt(int code)
 {
@@ -452,6 +467,8 @@ streaming_code2txt(int code)
     return N_("Weak stream");
   case SM_CODE_USER_REQUEST:
     return N_("User request");
+  case SM_CODE_PREVIOUSLY_RECORDED:
+    return N_("Previously recorded");
 
   case SM_CODE_NO_FREE_ADAPTER:
     return N_("No free adapter");
@@ -473,6 +490,8 @@ streaming_code2txt(int code)
     return N_("No assigned adapters");
   case SM_CODE_INVALID_SERVICE:
     return N_("Invalid service");
+  case SM_CODE_CHN_NOT_ENABLED:
+    return N_("No channel enabled");
 
   case SM_CODE_ABORTED:
     return N_("Aborted by user");
@@ -525,12 +544,11 @@ streaming_start_copy(const streaming_start_t *src)
 streaming_start_component_t *
 streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
 {
+  streaming_start_component_t *ssc;
   int i;
-  for(i = 0; i < ss->ss_num_components; i++) {
-    streaming_start_component_t *ssc = &ss->ss_components[i];
-    if(ssc->ssc_index == idx)
+  for(i = 0, ssc = ss->ss_components; i < ss->ss_num_components; i++, ssc++)
+    if(ssc->es_index == idx)
       return ssc;
-  }
   return NULL;
 }
 
@@ -542,13 +560,15 @@ static struct strtab streamtypetab[] = {
   { "UNKNOWN",    SCT_UNKNOWN },
   { "RAW",        SCT_RAW },
   { "PCR",        SCT_PCR },
+  { "CAT",        SCT_CAT },
+  { "CA",         SCT_CA },
+  { "HBBTV",      SCT_HBBTV },
   { "MPEG2VIDEO", SCT_MPEG2VIDEO },
   { "MPEG2AUDIO", SCT_MPEG2AUDIO },
   { "H264",       SCT_H264 },
   { "AC3",        SCT_AC3 },
   { "TELETEXT",   SCT_TELETEXT },
   { "DVBSUB",     SCT_DVBSUB },
-  { "CA",         SCT_CA },
   { "AAC",        SCT_AAC },
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
@@ -558,9 +578,9 @@ static struct strtab streamtypetab[] = {
   { "VORBIS",     SCT_VORBIS },
   { "HEVC",       SCT_HEVC },
   { "VP9",        SCT_VP9 },
-  { "HBBTV",      SCT_HBBTV },
   { "THEORA",     SCT_THEORA },
   { "OPUS",       SCT_OPUS },
+  { "FLAC",       SCT_FLAC },
 };
 
 /**
@@ -590,6 +610,20 @@ streaming_component_audio_type2desc(int audio_type)
   }
 
   return N_("Reserved");
+}
+
+static struct strtab signal_statetab[] = {
+  { "GOOD",       SIGNAL_GOOD    },
+  { "BAD",        SIGNAL_BAD     },
+  { "FAINT",      SIGNAL_FAINT   },
+  { "NONE",       SIGNAL_NONE    },
+};
+
+const char *signal2str(signal_state_t st)
+{
+  const char *r = val2str(st, signal_statetab);
+  if (!r) r = "UNKNOWN";
+  return r;
 }
 
 /*

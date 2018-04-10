@@ -36,8 +36,8 @@ EXTLIBS        =
 COMPONENTS     = avutil avcodec avformat swscale avresample swresample avfilter
 PROTOCOLS      = file http https hls mmsh mmst rtmp rtmpe rtmps rtmpt rtmpte rtmpts \
                  ffrtmpcrypt ffrtmphttp rtp srtp tcp udp udplite unix
-DECODERS       = mpeg2video mp2 aac vorbis ac3 eac3 aac_latm opus h264 hevc theora
-ENCODERS       = mpeg2video mp2 aac vorbis
+DECODERS       = mpeg2video mp2 aac vorbis ac3 eac3 aac_latm opus h264 hevc theora flac
+ENCODERS       = mpeg2video mp2 aac vorbis flac
 MUXERS         = mpegts matroska mp4
 DEMUXERS       = mpegts matroska hls flv live_flv
 BSFS           = h264_mp4toannexb hevc_mp4toannexb
@@ -94,10 +94,10 @@ LIBOPUS_TB     = $(LIBOPUS).tar.gz
 LIBOPUS_URL    = https://archive.mozilla.org/pub/opus/$(LIBOPUS_TB)
 LIBOPUS_SHA1   = 35d108ca9d6a8d05e52d06c5421a5f95b39fdac9
 
-FFMPEG         = ffmpeg-3.4
+FFMPEG         = ffmpeg-3.4.1
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = 6cfb7f4549a5b2dce6a8442ce16c76739c09dd6d
+FFMPEG_SHA1    = 4347db0b5a5cfc3847395b29aefb51d09cfdd697
 
 # ##############################################################################
 # Library Config
@@ -635,9 +635,11 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE) \
 		--disable-all \
 		--enable-gpl \
+		--enable-nonfree \
 		--extra-cflags="$(ECFLAGS)" \
 		--extra-libs="$(ELIBS)" \
 		--pkg-config="$(ROOTDIR)/support/pkg-config.ffmpeg" \
+		--enable-openssl --enable-protocol=tls_openssl \
 		$(foreach component,$(COMPONENTS),--enable-$(component)) \
 		$(foreach extlib,$(EXTLIBS),--enable-$(extlib)) \
 		$(foreach protocol,$(PROTOCOLS),--enable-protocol=$(protocol)) \
