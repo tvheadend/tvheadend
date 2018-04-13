@@ -2225,8 +2225,8 @@ static void
 psi_tables_dvb ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
-                   NULL, "nit", LS_TBL_BASE, MT_QUICKREQ | MT_CRC, DVB_NIT_PID,
-                   MPS_WEIGHT_NIT);
+                   NULL, "nit", LS_TBL_BASE, MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_NIT_PID, MPS_WEIGHT_NIT);
   mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
                    NULL, "sdt", LS_TBL_BASE, MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_SDT_PID, MPS_WEIGHT_SDT);
