@@ -498,7 +498,7 @@ static void _epg_channel_timer_callback ( void *p )
 
   /* Clear now/next */
   if ((cur = ch->ch_epg_now)) {
-    if (cur->running != EPG_RUNNING_STOP) {
+    if (cur->running != EPG_RUNNING_STOP && cur->running != EPG_RUNNING_NOTSET) {
       /* running? don't do anything */
       gtimer_arm_rel(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, 2);
       return;
