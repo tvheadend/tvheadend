@@ -1072,7 +1072,7 @@ static void mpegts_input_analyze_table_queue ( mpegts_input_t *mi )
   memset(&counters, 0, sizeof(counters));
   TAILQ_FOREACH(mtf, &mi->mi_table_queue, mtf_link) {
     const uint8_t *tsb = mtf->mtf_tsb;
-    pid = ((tsb[1] << 8) & 0x0f) | tsb[2];
+    pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
     sizes[pid] += mtf->mtf_len;
     counters[pid]++;
   }
