@@ -60,8 +60,8 @@ echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
 %install
 %make_install
 
-install -Dpm 0644 rpm/tvheadend.sysconfig %{buildroot}%{_sysconfdir}/sysconfig/tvheadend
-install -Dpm 0644 rpm/tvheadend.service %{buildroot}%{_unitdir}
+install -Dpm 0644 rpm/tvheadend.sysconfig %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+install -Dpm 0644 rpm/tvheadend.service %{buildroot}%{_unitdir}/%{name}.service
 
 install -dm 0755 %{buildroot}%{_sharedstatedir}/%{name}/
 
