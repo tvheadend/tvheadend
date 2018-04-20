@@ -316,10 +316,10 @@
         "support/bintray.py publish filelist.txt"
       ]
     },
-    "fedora24-x86_64": {
-      "buildenv": "docker:fedora:24",
+    "fedora28-x86_64": {
+      "buildenv": "docker:fedora:28",
       "builddeps": [
-        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-24.noarch.rpm"],
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-28.noarch.rpm"],
         "gcc-c++",
         "which",
         "rpm-build",
