@@ -316,6 +316,35 @@
         "support/bintray.py publish filelist.txt"
       ]
     },
+    "fedora27-x86_64": {
+      "buildenv": "docker:fedora:27",
+      "builddeps": [
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-27.noarch.rpm"],
+        "gcc-c++",
+        "which",
+        "rpm-build",
+        "rpmdevtools",
+        "git",
+        "make",
+        "cmake",
+        "gettext-devel",
+        "dbus-devel",
+        "avahi-devel",
+        "openssl-devel",
+        "zlib-devel",
+        "libdvbcsa-devel",
+        "wget",
+        "bzip2",
+        "uriparser-devel",
+        "pcre2-devel",
+        "python",
+        "ccache"
+      ],
+      "buildcmd": [
+        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
     "fedora28-x86_64": {
       "buildenv": "docker:fedora:28",
       "builddeps": [
