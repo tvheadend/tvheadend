@@ -37,6 +37,7 @@ BuildRequires:  python2
 Requires:       bzip2
 Requires:       tar
 
+
 %description
 Tvheadend is a TV streaming server with Digital Video Recorder functionality
 for Linux supporting DVB, ATSC, IPTV, SAT>IP, HDHomeRun as input sources.
@@ -44,18 +45,21 @@ for Linux supporting DVB, ATSC, IPTV, SAT>IP, HDHomeRun as input sources.
 It can be used as a back-end to HTTP (VLC, MPlayer), HTSP (Movian, Kodi),
 SAT>IP and various other clients using these protocols.
 
+
 %prep
 %setup -q -n tvheadend-%{commit}
 #%patch999 -p1 -b .test
 
+
 %build
 echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
 %ifarch %arm
-      %configure --disable-lockowner --enable-bundle --disable-ffmpeg_static
+      %configure --disable-lockowner --disable-ffmpeg_static
 %else
-      %configure --disable-lockowner --enable-bundle --enable-ffmpeg_static --enable-libx265
+      %configure --disable-lockowner --enable-ffmpeg_static --enable-libx265
 %endif
-%make_build V=1 PYTHON=python2
+%make_build PYTHON=python2
+
 
 %install
 %make_install
@@ -66,6 +70,7 @@ install -Dpm 0644 rpm/tvheadend.service %{buildroot}%{_unitdir}/%{name}.service
 install -dm 0755 %{buildroot}%{_sharedstatedir}/%{name}/
 
 chmod 0644 %{buildroot}%{_mandir}/man1/%{name}.1
+
 
 %pre
 getent group tvheadend >/dev/null || groupadd -f -g %{tvheadend_group_number} -r tvheadend
@@ -81,11 +86,14 @@ if ! getent passwd tvheadend > /dev/null ; then
 fi
 exit 0
 
+
 %post
 %systemd_post %{name}.service
 
+
 %preun
 %systemd_preun %{name}.service
+
 
 %postun
 %systemd_postun_with_restart %{name}.service
@@ -95,10 +103,12 @@ exit 0
 %doc CONTRIBUTING.md README.md
 %license LICENSE.md licenses/gpl-3.0.txt
 %{_bindir}/*
-%config(noreplace) %{_sysconfdir}/sysconfig/%{name}
+%{_datadir}/%{name}/
 %{_unitdir}/*
+%config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %{_mandir}/man1/*.1.*
 %attr(-,%{tvheadend_user},%{tvheadend_group}) %dir %{_sharedstatedir}/%{tvheadend_user}/
+
 
 %changelog
 * Fri Apr 20 2018 Jaroslav Kysela <perex@perex.cz> 4.2.6-1
@@ -128,5 +138,3 @@ exit 0
 
 * Mon Oct 13 2014 Jaroslav Kysela <perex@perex.cz> 3.9-1803-g392dec0
 - Add basic RPM build support
-
-~
