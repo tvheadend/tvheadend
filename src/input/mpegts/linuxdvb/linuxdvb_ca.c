@@ -714,7 +714,7 @@ linuxdvb_ca_create
   ( htsmsg_t *conf, linuxdvb_transport_t *lcat, int slotnum )
 {
   linuxdvb_ca_t *lca;
-  char id[6], buf[32];
+  char id[32], buf[32];
   const char *uuid = NULL;
 
   lca = calloc(1, sizeof(linuxdvb_ca_t));
