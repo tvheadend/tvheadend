@@ -1,4 +1,4 @@
 # Configuration file for the tvheadend service.
 
 MALLOC_ARENA_MAX=4
-OPTIONS="-c /home/tvheadend/config -u tvheadend -g tvheadend -6 --http_port 9981 --htsp_port 9982"
+OPTIONS="-c /var/lib/tvheadend/config -u tvheadend -g tvheadend -6 --http_port 9981 --htsp_port 9982"
