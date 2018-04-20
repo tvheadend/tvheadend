@@ -855,7 +855,7 @@ dvb_str2val(qam);
 
 const char *dvb_bw2str(int p)
 {
-  static char __thread buf[16];
+  static char __thread buf[17];
   const char *res = dvb_common2str(p);
   if (res)
     return res;

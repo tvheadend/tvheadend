@@ -130,7 +130,7 @@ void
 hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 {
   char path[PATH_MAX];
-  char tmppath[PATH_MAX];
+  char tmppath[PATH_MAX + 4];
   int fd;
   va_list ap;
   htsbuf_queue_t hq;

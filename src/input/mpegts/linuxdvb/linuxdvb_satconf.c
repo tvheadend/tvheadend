@@ -186,7 +186,7 @@ linuxdvb_satconf_class_orbitalpos_set
   linuxdvb_satconf_t *ls = p;
   int c = *(int*)linuxdvb_satconf_class_orbitalpos_get(p);
   int n = *(int*)v;
-  char buf[20];
+  char buf[22];
 
   if (n == c)
     return 0;

@@ -252,7 +252,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
 {
   int res = 1, r;
   url_t url;
-  char tpath[PATH_MAX] = "", path[PATH_MAX];
+  char tpath[PATH_MAX + 4] = "", path[PATH_MAX];
   tvhpoll_event_t ev;
   tvhpoll_t *efd = NULL;
   http_client_t *hc = NULL;

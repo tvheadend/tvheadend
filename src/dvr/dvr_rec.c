@@ -908,7 +908,7 @@ static int
 pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 {
   char filename[PATH_MAX];
-  char path[PATH_MAX];
+  char path[PATH_MAX + 1];
   char ptmp[PATH_MAX];
   char number[16];
   char tmp[MAX(PATH_MAX, 512)];

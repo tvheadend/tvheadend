@@ -718,7 +718,7 @@ static int
 dvb_freesat_add_service
   ( dvb_bat_id_t *bi, dvb_freesat_region_t *fr, mpegts_service_t *s, uint32_t lcn )
 {
-  char name[96], src[64];
+  char name[96], src[126];
   if (!fr->bouquet) {
     strcpy(name, "???");
     if (idnode_is_instance(&bi->mm->mm_id, &dvb_mux_dvbs_class))
