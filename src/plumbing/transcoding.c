@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include <libavfilter/avfiltergraph.h>
+#include <libavfilter/avfilter.h>
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
 #include <libavutil/opt.h>
@@ -574,7 +574,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     octx->channels        = as->aud_channels ? as->aud_channels : ictx->channels;
     octx->channel_layout  = transcode_get_channel_layout(&octx->channels, ocodec);
     octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : 0;
-    octx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
+    octx->flags          |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     if (!octx->sample_rate) {
       tvherror(LS_TRANSCODE, "%04X: audio encoder has no suitable sample rate!", shortid(t));
@@ -619,7 +619,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
 
     case SCT_AAC:
-      octx->flags |= CODEC_FLAG_BITEXACT;
+      octx->flags |= AV_CODEC_FLAG_BITEXACT;
       // use 64 kbit per channel as default
       if (octx->bit_rate == 0) {
         octx->bit_rate = octx->channels * 64000;
@@ -630,10 +630,10 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       // use vbr with quality setting as default
       // and also use a user specified bitrate < 16 kbit as quality setting
       if (octx->bit_rate == 0) {
-        octx->flags |= CODEC_FLAG_QSCALE;
+        octx->flags |= AV_CODEC_FLAG_QSCALE;
         octx->global_quality = 4 * FF_QP2LAMBDA;
       } else if (t->t_props.tp_abitrate < 16) {
-        octx->flags |= CODEC_FLAG_QSCALE;
+        octx->flags |= AV_CODEC_FLAG_QSCALE;
         octx->global_quality = t->t_props.tp_abitrate * FF_QP2LAMBDA;
         octx->bit_rate = 0;
       }
@@ -1048,7 +1048,7 @@ create_video_filter(video_stream_t *vs, transcoder_t *t,
                     AVCodecContext *ictx, AVCodecContext *octx)
 {
   AVFilterInOut *flt_inputs, *flt_outputs;
-  AVFilter *flt_bufsrc, *flt_bufsink;
+  const AVFilter *flt_bufsrc, *flt_bufsink;
   enum AVPixelFormat pix_fmts[] = { 0, AV_PIX_FMT_NONE };
   char opt[128];
   int err;
@@ -1289,12 +1289,12 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       else
           octx->pix_fmt    = AV_PIX_FMT_YUV420P;
 
-      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+      octx->flags         |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
       if (t->t_props.tp_vbitrate < 64) {
         // encode with specified quality and optimize for low latency
         // valid values for quality are 2-31, smaller means better quality, use 5 as default
-        octx->flags          |= CODEC_FLAG_QSCALE;
+        octx->flags          |= AV_CODEC_FLAG_QSCALE;
         octx->global_quality  = FF_QP2LAMBDA *
             (t->t_props.tp_vbitrate == 0 ? 5 : MINMAX(t->t_props.tp_vbitrate, 2, 31));
       } else {
@@ -1340,7 +1340,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       else
           octx->pix_fmt    = AV_PIX_FMT_YUV420P;
 
-      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+      octx->flags         |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
       // Default = "medium". We gain more encoding speed compared to the loss of quality when lowering it _slightly_.
       // select preset according to system performance and codec type
@@ -1371,7 +1371,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
     case SCT_HEVC:
       octx->pix_fmt        = AV_PIX_FMT_YUV420P;
-      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+      octx->flags         |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
       // on all hardware ultrafast (or maybe superfast) should be safe
       // select preset according to system performance
@@ -2177,7 +2177,7 @@ transcoder_get_capabilities(int experimental)
     if (!WORKING_ENCODER(p->id))
       continue;
 
-    if (((p->capabilities & CODEC_CAP_EXPERIMENTAL) && !experimental) ||
+    if (((p->capabilities & AV_CODEC_CAP_EXPERIMENTAL) && !experimental) ||
         (p->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE)) {
       continue;
     }
@@ -2192,7 +2192,7 @@ transcoder_get_capabilities(int experimental)
     htsmsg_add_str(m, "name", p->name);
     snprintf(buf, sizeof(buf), "%s%s",
              p->long_name ?: "",
-             (p->capabilities & CODEC_CAP_EXPERIMENTAL) ?
+             (p->capabilities & AV_CODEC_CAP_EXPERIMENTAL) ?
                " (Experimental)" : "");
     if (buf[0] != '\0')
       htsmsg_add_str(m, "long_name", buf);

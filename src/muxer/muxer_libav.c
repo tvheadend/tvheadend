@@ -174,7 +174,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   }
 
   if(lm->lm_oc->oformat->flags & AVFMT_GLOBALHEADER)
-    c->flags |= CODEC_FLAG_GLOBAL_HEADER;
+    c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
   return 0;
 }
