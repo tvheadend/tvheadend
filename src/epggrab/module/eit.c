@@ -50,8 +50,8 @@ typedef struct eit_private
 
 typedef struct eit_event
 {
-  char              uri[257];
-  char              suri[257];
+  char              uri[529];
+  char              suri[529];
   
   lang_str_t       *title;
   lang_str_t       *summary;
