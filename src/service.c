@@ -975,6 +975,18 @@ service_set_streaming_status_flags_(service_t *t, int set)
 }
 
 /**
+ *
+ */
+streaming_start_t *
+service_build_streaming_start(service_t *t)
+{
+  streaming_start_t *ss;
+  ss = elementary_stream_build_start(&t->s_components);
+  t->s_setsourceinfo(t, &ss->ss_si);
+  return ss;
+}
+
+/**
  * Restart output on a service (streams only).
  * Happens if the stream composition changes.
  * (i.e. an AC3 stream disappears, etc)
@@ -994,8 +1006,7 @@ service_restart_streams(service_t *t)
       sm = streaming_msg_create_code(SMT_STOP, SM_CODE_SOURCE_RECONFIGURED);
       streaming_service_deliver(t, sm);
     }
-    ss = elementary_stream_build_start(&t->s_components);
-    t->s_setsourceinfo(t, &ss->ss_si);
+    ss = service_build_streaming_start(t);
     sm = streaming_msg_create_data(SMT_START, ss);
     streaming_pad_deliver(&t->s_streaming_pad, sm);
     t->s_running = 1;

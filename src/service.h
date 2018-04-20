@@ -469,6 +469,8 @@ service_reset_streaming_status_flags(service_t *t, int flag)
     service_set_streaming_status_flags_(t, n & ~flag);
 }
 
+streaming_start_t *service_build_streaming_start(service_t *t);
+
 void service_restart(service_t *t);
 
 void service_restart_streams(service_t *t);

@@ -382,6 +382,8 @@ struct source_info {
   char *si_provider;
   char *si_service;
   int   si_type;
+  uint16_t si_tsid;
+  uint16_t si_onid;
 };
 
 /**

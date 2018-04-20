@@ -500,6 +500,9 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
     si->si_satpos = strdup(buf);
   }
 #endif
+
+  si->si_tsid = m->mm_tsid;
+  si->si_onid = m->mm_onid;
 }
 
 /*

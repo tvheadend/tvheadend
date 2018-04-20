@@ -107,6 +107,10 @@ struct elementary_info {
 
   uint16_t es_composition_id;
   uint16_t es_ancillary_id;
+
+  uint16_t es_parent_pid;    /* For subtitle streams originating from
+				a teletext stream. this is the pid
+				of the teletext stream */
 };
 
 /**
@@ -123,9 +127,6 @@ struct elementary_stream {
   char *es_nicename;
 
   /* PID related */
-  uint16_t es_parent_pid;    /* For subtitle streams originating from
-				a teletext stream. this is the pid
-				of the teletext stream */
   int8_t es_pid_opened;      /* PID is opened */
   int8_t es_cc;              /* Last CC */
   int8_t es_delete_me;       /* Temporary flag for deleting streams */

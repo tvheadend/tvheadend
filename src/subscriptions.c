@@ -107,8 +107,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   if(elementary_set_has_streams(&t->s_components, 1) || t->s_type != STYPE_STD) {
     streaming_msg_free(s->ths_start_message);
-    ss = elementary_stream_build_start(&t->s_components);
-    t->s_setsourceinfo(t, &ss->ss_si);
+    ss = service_build_streaming_start(t);
     s->ths_start_message = streaming_msg_create_data(SMT_START, ss);
   }
 
