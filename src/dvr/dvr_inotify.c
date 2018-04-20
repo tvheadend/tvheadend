@@ -245,7 +245,7 @@ _dvr_inotify_moved
   htsmsg_t *m = NULL;
   htsmsg_field_t *f = NULL;
   char realdir[PATH_MAX];
-  char new_path[PATH_MAX];
+  char new_path[PATH_MAX+PATH_MAX+1];
   char ubuf[UUID_HEX_SIZE];
   char *file, *dir = NULL;
 
