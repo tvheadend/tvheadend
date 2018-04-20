@@ -296,7 +296,7 @@ static int _epg_write_sect ( sbuf_t *sb, const char *sect )
 
 static void epg_save_tsk_callback ( void *p, int dearmed )
 {
-  char tmppath[PATH_MAX];
+  char tmppath[PATH_MAX+4];
   char path[PATH_MAX];
   sbuf_t *sb = p;
   size_t size = sb->sb_ptr, orig;
