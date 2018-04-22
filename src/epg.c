@@ -470,7 +470,7 @@ int epg_episode_number_cmpfull ( const epg_episode_num_t *a, const epg_episode_n
 
 int epg_channel_ignore_broadcast(channel_t *ch, time_t start)
 {
-  if (ch->ch_epg_limit && start < gclk() + ch->ch_epg_limit * 3600 * 24)
+  if (ch->ch_epg_limit && start >= gclk() + ch->ch_epg_limit * 3600 * 24)
     return 1;
   return 0;
 }
