@@ -1376,13 +1376,13 @@ tvheadend.toCustomDate = function(date, format) //author: meizz, improvements by
 
     if(/(\%[yY]+)/.test(format)) format=format.replace(RegExp.$1, (date.getFullYear()+"").substr(5 - RegExp.$1.length));
 
-    if(/(\%MMMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString('es', {month: 'long'})));
+    if(/(\%MMMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {month: 'long'})));
 
-    if(/(\%MMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString('es', {month: 'short'})));
+    if(/(\%MMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {month: 'short'})));
 
-    if(/(\%dddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString('es', {weekday: 'long'})));
+    if(/(\%dddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {weekday: 'long'})));
 
-    if(/(\%ddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString('es', {weekday: 'short'})));
+    if(/(\%ddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {weekday: 'short'})));
 
     for(var k in o) if(new RegExp("("+ k +")").test(format))
         format = format.replace(RegExp.$1, RegExp.$1.length==2 ? o[k] : ("00"+ o[k]).substr((""+ o[k]).length));
