@@ -12,6 +12,7 @@ tvheadend.wizard = null;
 tvheadend.docs_toc = null;
 tvheadend.doc_history = [];
 tvheadend.doc_win = null;
+tvheadend.date_mask = '';
 tvheadend.language = window.navigator.userLanguage || window.navigator.language;
 
 // Use en-US if browser language detection fails.
@@ -744,8 +745,8 @@ Ext.Ajax.request({
  */
 tvheadend.niceDate = function(dt) {
     var d = new Date(dt);
-    return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.language, {weekday: 'long'}) + '</div>' +
-           '<div class="x-nice-date">' + d.toLocaleDateString() + '</div>' +
+    return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.toLocaleFormat(), {weekday: 'long'}) + '</div>' +
+           '<div class="x-nice-date">' + d.toLocaleDateString(tvheadend.toLocaleFormat()) + '</div>' +
            '<div class="x-nice-time">' + d.toLocaleTimeString() + '</div>';
 }
 
@@ -787,8 +788,8 @@ tvheadend.niceDateYearMonth = function(dt, refdate) {
         }
       }
     }
-    return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.language, {weekday: 'long'}) + '</div>' +
-           '<div class="x-nice-date">' + d.toLocaleDateString() + '</div>';
+    return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.toLocaleFormat(), {weekday: 'long'}) + '</div>' +
+           '<div class="x-nice-date">' + d.toLocaleDateString(tvheadend.toLocaleFormat()) + '</div>';
 }
 
 /*
@@ -998,6 +999,7 @@ function accessUpdate(o) {
     tvheadend.quicktips = o.quicktips ? true : false;
     tvheadend.chname_num = o.chname_num ? 1 : 0;
     tvheadend.chname_src = o.chname_src ? 1 : 0;
+    tvheadend.date_mask = o.date_mask;
 
     if (o.uilevel_nochange)
         tvheadend.uilevel_nochange = true;
@@ -1336,7 +1338,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         var d = stime ? new Date(stime) : new Date();
         var el = Ext.get(panel.extra.time.tabEl).child('span.x-tab-strip-extra-comp', true);
         el.innerHTML = '<b>' + d.toLocaleTimeString() + '</b>';
-        el.qtip = d.toLocaleString();
+        el.qtip = d.toLocaleString(tvheadend.toLocaleFormat());
     },
 
     onLoginCmdClicked: function(e) {
@@ -1351,6 +1353,42 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
     }
 
 });
+
+/*
+ * Return tvh_locale_lang in date().toLocaleDateString() compatible format
+ */
+tvheadend.toLocaleFormat = function()
+{
+	return tvh_locale_lang.replace('_','-');
+};
+
+tvheadend.toCustomDate = function(date, format) //author: meizz, improvements by pablozg
+{
+    var o = {
+        "\%M+" : date.getMonth()+1, //month
+        "\%d+" : date.getDate(),    //day
+        "\%h+" : date.getHours(),   //hour
+        "\%m+" : date.getMinutes(), //minute
+        "\%s+" : date.getSeconds(), //second
+        "\%q+" : Math.floor((date.getMonth()+3)/3),  //quarter
+        "\%S" : date.getMilliseconds() //millisecond
+    }
+
+    if(/(\%[yY]+)/.test(format)) format=format.replace(RegExp.$1, (date.getFullYear()+"").substr(5 - RegExp.$1.length));
+
+    if(/(\%MMMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString('es', {month: 'long'})));
+
+    if(/(\%MMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString('es', {month: 'short'})));
+
+    if(/(\%dddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString('es', {weekday: 'long'})));
+
+    if(/(\%ddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString('es', {weekday: 'short'})));
+
+    for(var k in o) if(new RegExp("("+ k +")").test(format))
+        format = format.replace(RegExp.$1, RegExp.$1.length==2 ? o[k] : ("00"+ o[k]).substr((""+ o[k]).length));
+
+    return format;
+}
 
 /**
  *

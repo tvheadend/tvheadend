@@ -370,7 +370,7 @@ tvheadend.IdNodeField = function(conf)
                 return function(v) {
                     if (v > 0) {
                         var dt = new Date(v * 1000);
-                        return dt.toLocaleDateString();
+                        return dt.toLocaleDateString(tvheadend.toLocaleFormat());
                     }
                     return '';
                 }
@@ -378,8 +378,11 @@ tvheadend.IdNodeField = function(conf)
             return function(v) {
                 if (v > 0) {
                     var dt = new Date(v * 1000);
-                    var wd = dt.toLocaleString(tvheadend.language, {weekday: 'short'});
-                    return wd + ' ' + dt.toLocaleString();
+                    if (tvheadend.date_mask.length > 1){
+                        return tvheadend.toCustomDate(dt,tvheadend.date_mask);
+                    }else{
+                        return tvheadend.toCustomDate(dt,'%ddd %dd/%MM/%YYYY, %hh:%mm:%ss');
+                    }
                 }
                 return '';
             }
@@ -754,8 +757,8 @@ tvheadend.idnode_editor_field = function(f, conf)
             if (!f.duration) {
                 if (d) {
                     var dt = new Date(value * 1000);
-                    value = f.date ? dt.toLocaleDateString() :
-                                     dt.toLocaleString();
+                    value = f.date ? dt.toLocaleDateString(tvheadend.toLocaleFormat()) :
+                                     dt.toLocaleString(tvheadend.toLocaleFormat());
                     r = new Ext.form.TextField({
                         fieldLabel: f.caption,
                         name: f.id,
