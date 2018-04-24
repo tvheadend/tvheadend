@@ -506,7 +506,11 @@ tvheadend.epg = function() {
 
         if (value) {
           var dt = new Date(value);
-          return dt.format('D, M d, H:i');
+          if (tvheadend.date_mask.length > 1){
+            return tvheadend.toCustomDate(dt,tvheadend.date_mask);
+          }else{
+            return tvheadend.toCustomDate(dt,'%ddd, %MMMM %dd, %hh:%mm');
+          }
         }
         return "";
     }
