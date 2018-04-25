@@ -1364,31 +1364,35 @@ tvheadend.toLocaleFormat = function()
 
 tvheadend.toCustomDate = function(date, format) //author: meizz, improvements by pablozg
 {
-    var o = {
-        "\%M+" : date.getMonth()+1, //month
-        "\%d+" : date.getDate(),    //day
-        "\%h+" : date.getHours(),   //hour
-        "\%m+" : date.getMinutes(), //minute
-        "\%s+" : date.getSeconds(), //second
-        "\%q+" : Math.floor((date.getMonth()+3)/3),  //quarter
-        "\%S" : date.getMilliseconds() //millisecond
+    if(/([%][MmsSyYdhq]+)/.test(format)){
+        var o = {
+            "\%M+" : date.getMonth()+1, //month
+            "\%d+" : date.getDate(),    //day
+            "\%h+" : date.getHours(),   //hour
+            "\%m+" : date.getMinutes(), //minute
+            "\%s+" : date.getSeconds(), //second
+            "\%q+" : Math.floor((date.getMonth()+3)/3),  //quarter
+            "\%S" : date.getMilliseconds() //millisecond
+        }
+
+        if(/(\%[yY]+)/.test(format)) format=format.replace(RegExp.$1, (date.getFullYear()+"").substr(5 - RegExp.$1.length));
+
+        if(/(\%MMMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {month: 'long'})));
+
+        if(/(\%MMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {month: 'short'})));
+
+        if(/(\%dddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {weekday: 'long'})));
+
+        if(/(\%ddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {weekday: 'short'})));
+
+        for(var k in o)
+            if(new RegExp("("+ k +")").test(format))
+                    format = format.replace(RegExp.$1, RegExp.$1.length==2 ? o[k] : ("00"+ o[k]).substr((""+ o[k]).length));
+        return format;
+    }else{
+        var options = {weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false};
+        return date.toLocaleString(tvheadend.toLocaleFormat(), options);
     }
-
-    if(/(\%[yY]+)/.test(format)) format=format.replace(RegExp.$1, (date.getFullYear()+"").substr(5 - RegExp.$1.length));
-
-    if(/(\%MMMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {month: 'long'})));
-
-    if(/(\%MMM)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {month: 'short'})));
-
-    if(/(\%dddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {weekday: 'long'})));
-
-    if(/(\%ddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {weekday: 'short'})));
-
-    for(var k in o)
-        if(new RegExp("("+ k +")").test(format))
-            format = format.replace(RegExp.$1, RegExp.$1.length==2 ? o[k] : ("00"+ o[k]).substr((""+ o[k]).length));
-
-    return format;
 }
 
 /**
