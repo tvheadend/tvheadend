@@ -378,10 +378,11 @@ tvheadend.IdNodeField = function(conf)
             return function(v) {
                 if (v > 0) {
                     var dt = new Date(v * 1000);
-                    if (tvheadend.date_mask.length > 1){
+                    if(/([%][MmsSyYdhq]+)/.test(tvheadend.date_mask)){
                         return tvheadend.toCustomDate(dt,tvheadend.date_mask);
                     }else{
-                        return tvheadend.toCustomDate(dt,'%ddd %dd/%MM/%YYYY, %hh:%mm:%ss');
+                        var options = {weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false};
+                        return dt.toLocaleString(tvheadend.toLocaleFormat(), options);
                     }
                 }
                 return '';

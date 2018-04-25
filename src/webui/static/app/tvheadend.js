@@ -1384,8 +1384,9 @@ tvheadend.toCustomDate = function(date, format) //author: meizz, improvements by
 
     if(/(\%ddd)/.test(format)) format=format.replace(RegExp.$1, (date.toLocaleDateString(tvheadend.toLocaleFormat(), {weekday: 'short'})));
 
-    for(var k in o) if(new RegExp("("+ k +")").test(format))
-        format = format.replace(RegExp.$1, RegExp.$1.length==2 ? o[k] : ("00"+ o[k]).substr((""+ o[k]).length));
+    for(var k in o)
+        if(new RegExp("("+ k +")").test(format))
+            format = format.replace(RegExp.$1, RegExp.$1.length==2 ? o[k] : ("00"+ o[k]).substr((""+ o[k]).length));
 
     return format;
 }
