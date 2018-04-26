@@ -1154,7 +1154,7 @@ tvheadend.epg = function() {
           items: [
               epgFilterCat1, '-',
               epgFilterCat2, '-',
-              epgFilterCat3, '-',
+              epgFilterCat3, '-'
           ]
         });
         panel.add(tbar2);
