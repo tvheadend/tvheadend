@@ -599,6 +599,11 @@ tvheadend.dvr_finished = function(panel, index) {
 
     function viewready(grid) {
         grid.abuttons['grouping'].setText(groupingText(!grid.store.groupField));
+        if (grid.store.groupField){
+          grid.bottomToolbar.pageSize = 999999999 // Select all rows
+          grid.bottomToolbar.changePage(0);
+          grid.store.reload();
+        }
     }
 
     tvheadend.idnode_grid(panel, {
