@@ -316,11 +316,6 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
 }
 
 static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, int pid) {
-  /* PID filtering unneeded with virtual channels */
-  dvb_mux_t *lm = (dvb_mux_t *)hfe->hf_mmi->mmi_mux;
-  if (lm->lm_tuning.dmc_fe_vchan.num)
-    return;
-
   char *pfilter;
   char buf[1024];
   int res;
@@ -475,7 +470,8 @@ tvhdhomerun_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
-  int res, r;
+  dvb_mux_t *lm = (dvb_mux_t *)mmi->mmi_mux;
+  int res;
   char buf1[256], buf2[256];
 
   mi->mi_display_name(mi, buf1, sizeof(buf1));
@@ -486,11 +482,14 @@ tvhdhomerun_frontend_start_mux
   res = tvhdhomerun_frontend_tune(hfe, mmi);
 
   /* reset the pfilters */
-  pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
-  r = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, "0x0000");
-  pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
-  if(r < 1)
-    tvherror(LS_TVHDHOMERUN, "failed to reset pfilter: %d", r);
+  if (!lm->lm_tuning.dmc_fe_vchan.num) {
+    int r;
+    pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
+    r = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, "0x0000");
+    pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
+    if(r < 1)
+      tvherror(LS_TVHDHOMERUN, "failed to reset pfilter: %d", r);
+  }
 
   return res;
 }
