@@ -1124,7 +1124,7 @@ dvb_mux_conf_str_vchan(dvb_mux_conf_t *dmc, char *buf, size_t bufsize)
 int
 dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
-	if (dmc->dmv_fe_vchan.num)
+	if (dmc->dmc_fe_vchan.num)
 		return dvb_mux_conf_str_vchan(dmc, buf, bufsize);
   switch (dmc->dmc_fe_type) {
   case DVB_TYPE_NONE:

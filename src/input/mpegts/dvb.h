@@ -611,7 +611,7 @@ typedef struct dvb_mux_conf
   dvb_fe_delivery_system_t    dmc_fe_delsys;
   dvb_fe_modulation_t         dmc_fe_modulation;
   uint32_t                    dmc_fe_freq;
-  dvb_fe_vchant_t	          dmc_fe_vchan;
+  dvb_fe_vchan_t	          dmc_fe_vchan;
   dvb_fe_spectral_inversion_t dmc_fe_inversion;
   dvb_fe_rolloff_t            dmc_fe_rolloff;
   dvb_fe_pilot_t              dmc_fe_pilot;

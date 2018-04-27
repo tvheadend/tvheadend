@@ -795,7 +795,7 @@ static mpegts_service_t *
 dvb_network_create_service(mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid)
 {
 	dvb_mux_t	        *lm = (dvb_mux_t *)mm;
-	mpegts_network_t	*ln = mm->mn_network;
+	mpegts_network_t	*ln = mm->mm_network;
 	mpegts_service_t	*s;
 
 	s = mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
@@ -809,6 +809,7 @@ dvb_network_create_service(mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid)
 		if (!s->s_dvb_svcname && lm->lm_tuning.dmc_fe_vchan.name)
 			s->s_dvb_svcname = lm->lm_tuning.dmc_fe_vchan.name;
 	}
+	return s;
 }
 
 static mpegts_mux_t *
