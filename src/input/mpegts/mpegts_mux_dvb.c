@@ -532,6 +532,32 @@ dvb_mux_atsc_t_class_delsys_enum (void *o, const char *lang)
   return list;
 }
 
+static const void *
+dvb_mux_class_vchan_get(void *o)
+{
+	dvb_mux_t *lm = (dvb_mux_t *)o;
+	if (!lm->lm_tuning.dmc_fe_vchan.minor)
+		snprintf(prop_sbuf, PROP_SBUF_LEN, "%u",
+		  lm->lm_tuning.dmc_fe_vchan.num);
+	else
+		snprintf(prop_sbuf, PROP_SBUF_LEN, "%u.%u",
+		  lm->lm_tuning.dmc_fe_vchan.num,
+		  lm->lm_tuning.dmc_fe_vchan.minor);
+	return &prop_sbuf_ptr;
+}
+
+static int
+dvb_mux_class_vchan_set(void *o, const void *v)
+{
+	dvb_mux_t *lm = (dvb_mux_t *)o;
+
+	lm->lm_tuning.dmc_fe_vchan.minor = 0;
+	sscanf(v, "%u%*[.-]%hu",
+	  &lm->lm_tuning.dmc_fe_vchan.num,
+	  &lm->lm_tuning.dmc_fe_vchan.minor);
+	return 0;
+}
+
 dvb_mux_class_R(atsc_t, modulation, qam, qam,
                      DVB_MOD_QAM_AUTO, DVB_MOD_QAM_256, DVB_MOD_VSB_8);
 
@@ -557,6 +583,35 @@ const idclass_t dvb_mux_atsc_t_class =
       MUX_PROP_STR("modulation", N_("Modulation"), atsc_t, qam, N_("AUTO")),
       .desc     = N_("The modulation used on the mux."),
     },
+    {
+		.type	= PT_STR,
+		.id	    = "vch",
+		.name	= N_("Virtual channel"),
+		.get	= dvb_mux_class_vchan_get,
+		.set	= dvb_mux_class_vchan_set,
+		.opts	= PO_ADVANCED,
+	},
+	{
+		.type	= PT_U32,
+		.id	    = "vch_num",
+		.name	= N_("Virtual channel number"),
+		.off	= offsetof(dvb_mux_t, lm_tuning.dmc_fe_vchan.num),
+		.opts	= PO_RDONLY | PO_NOSAVE,
+	},
+	{
+		.type	= PT_U16,
+		.id	    = "vch_minor",
+		.name	= N_("Virtual channel (minor)"),
+		.off	= offsetof(dvb_mux_t, lm_tuning.dmc_fe_vchan.minor),
+		.opts	= PO_RDONLY | PO_NOSAVE,
+	},
+	{
+		.type	= PT_STR,
+		.id	    = "vch_name",
+		.name	= N_("Virtual channel name"),
+		.off	= offsetof(dvb_mux_t, lm_tuning.dmc_fe_vchan.name),
+		.opts	= PO_RDONLY | PO_NOSAVE,
+	},
     {}
   }
 };
@@ -610,6 +665,35 @@ const idclass_t dvb_mux_atsc_c_class =
       MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO")),
       .desc     = N_("The forward error correction used on the mux."),
     },
+    {
+		.type	= PT_STR,
+		.id	    = "vch",
+		.name	= N_("Virtual channel"),
+		.get	= dvb_mux_class_vchan_get,
+		.set	= dvb_mux_class_vchan_set,
+		.opts	= PO_ADVANCED,
+	},
+	{
+		.type	= PT_U32,
+		.id	    = "vch_num",
+		.name	= N_("Virtual channel number"),
+		.off	= offsetof(dvb_mux_t, lm_tuning.dmc_fe_vchan.num),
+		.opts	= PO_RDONLY | PO_NOSAVE,
+	},
+	{
+		.type	= PT_U16,
+		.id	    = "vch_minor",
+		.name	= N_("Virtual channel (minor)"),
+		.off	= offsetof(dvb_mux_t, lm_tuning.dmc_fe_vchan.minor),
+		.opts	= PO_RDONLY | PO_NOSAVE,
+	},
+	{
+		.type	= PT_STR,
+		.id	    = "vch_name",
+		.name	= N_("Virtual channel name"),
+		.off	= offsetof(dvb_mux_t, lm_tuning.dmc_fe_vchan.name),
+		.opts	= PO_RDONLY | PO_NOSAVE,
+	},
     {}
   }
 };
@@ -910,29 +994,40 @@ static void
 dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   dvb_mux_t *lm = (dvb_mux_t*)mm;
-  dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
-  uint32_t freq = lm->lm_tuning.dmc_fe_freq, freq2;
-  char extra[8], buf2[5], *p;
-  if (ln->ln_type == DVB_TYPE_S) {
-    const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
-    if (s) extra[0] = *s;
-    extra[1] = '\0';
+
+  if (lm->lm_tuning.dmc_fe_vchan.num) {
+	if (!lm->lm_tuning.dmc_fe_vchan.minor)
+		snprintf(buf, len, "%u",
+		  lm->lm_tuning.dmc_fe_vchan.num);
+	else
+		snprintf(buf, len, "%u.%u",
+		  lm->lm_tuning.dmc_fe_vchan.num,
+		  lm->lm_tuning.dmc_fe_vchan.minor);
   } else {
+    dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
+    uint32_t freq = lm->lm_tuning.dmc_fe_freq, freq2;
+    char extra[8], buf2[5], *p;
+    if (ln->ln_type == DVB_TYPE_S) {
+      const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
+      if (s) extra[0] = *s;
+      extra[1] = '\0';
+    } else {
+      freq /= 1000;
+      strcpy(extra, "MHz");
+    }
+    freq2 = freq % 1000;
     freq /= 1000;
-    strcpy(extra, "MHz");
+    snprintf(buf2, sizeof(buf2), "%03d", freq2);
+    p = buf2 + 2;
+    while (freq2 && (freq2 % 10) == 0) {
+      freq2 /= 10;
+      *(p--) = '\0';
+    }
+    if (freq2)
+      snprintf(buf, len, "%d.%s%s", freq, buf2, extra);
+    else
+      snprintf(buf, len, "%d%s", freq, extra);
   }
-  freq2 = freq % 1000;
-  freq /= 1000;
-  snprintf(buf2, sizeof(buf2), "%03d", freq2);
-  p = buf2 + 2;
-  while (freq2 && (freq2 % 10) == 0) {
-    freq2 /= 10;
-    *(p--) = '\0';
-  }
-  if (freq2)
-    snprintf(buf, len, "%d.%s%s", freq, buf2, extra);
-  else
-    snprintf(buf, len, "%d%s", freq, extra);
 }
 
 static void

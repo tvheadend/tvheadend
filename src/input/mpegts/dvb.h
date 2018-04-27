@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* 
+/*
  * Based on:
  *
  * ITU-T Recommendation H.222.0 / ISO standard 13818-1
@@ -599,12 +599,19 @@ typedef struct dvb_isdbt_config {
   } layers[3];
 } dvb_isdbt_config_t;
 
+typedef struct dvb_fe_vchan {
+	uint32_t	num;
+	uint16_t	minor;
+	char	   *name;
+} dvb_fe_vchan_t;
+
 typedef struct dvb_mux_conf
 {
   dvb_fe_type_t               dmc_fe_type;
   dvb_fe_delivery_system_t    dmc_fe_delsys;
   dvb_fe_modulation_t         dmc_fe_modulation;
   uint32_t                    dmc_fe_freq;
+  dvb_fe_vchant_t	          dmc_fe_vchan;
   dvb_fe_spectral_inversion_t dmc_fe_inversion;
   dvb_fe_rolloff_t            dmc_fe_rolloff;
   dvb_fe_pilot_t              dmc_fe_pilot;
@@ -620,7 +627,7 @@ typedef struct dvb_mux_conf
 
   // For scan file configurations
   LIST_ENTRY(dvb_mux_conf)    dmc_link;
-  
+
 } dvb_mux_conf_t;
 
 /* conversion routines */

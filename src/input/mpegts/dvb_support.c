@@ -252,7 +252,7 @@ static inline size_t dvb_convert(int conv,
 
 int
 dvb_get_string
-  (char *dst, size_t dstlen, const uint8_t *src, size_t srclen, 
+  (char *dst, size_t dstlen, const uint8_t *src, size_t srclen,
    const char *dvb_charset, dvb_string_conv_t *conv)
 {
   int ic = -1;
@@ -302,7 +302,7 @@ dvb_get_string
     ic = convert_iso_8859[src[2]];
     src+=3; srclen-=3;
     break;
-    
+
   case 0x11:
     ic = convert_ucs2;
     src++; srclen--;
@@ -376,7 +376,7 @@ dvb_get_string
 
 
 int
-dvb_get_string_with_len(char *dst, size_t dstlen, 
+dvb_get_string_with_len(char *dst, size_t dstlen,
 			const uint8_t *buf, size_t buflen, const char *dvb_charset,
       dvb_string_conv_t *conv)
 {
@@ -1105,9 +1105,27 @@ dvb_mux_conf_str_isdb_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
            dmc->u.dmc_fe_isdbt.layers[2].time_interleaving);
 }
 
+static int
+dvb_mux_conf_str_vchan(dvb_mux_conf_t *dmc, char *buf, size_t bufsize)
+{
+	if (!dmc->dmc_fe_vchan.minor)
+		return snprintf(buf, bufsize,
+		  "%s channel %u",
+		  dvb_type2str(dmc->dmc_fe_type),
+		  dmc->dmc_fe_vchan.num);
+	else
+		return snprintf(buf, bufsize,
+		  "%s channel %u.%u",
+		  dvb_type2str(dmc->dmc_fe_type),
+		  dmc->dmc_fe_vchan.num,
+		  dmc->dmc_fe_vchan.minor);
+}
+
 int
 dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
+	if (dmc->dmv_fe_vchan.num)
+		return dvb_mux_conf_str_vchan(dmc, buf, bufsize);
   switch (dmc->dmc_fe_type) {
   case DVB_TYPE_NONE:
     return
