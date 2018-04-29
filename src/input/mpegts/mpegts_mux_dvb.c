@@ -550,11 +550,17 @@ static int
 dvb_mux_class_vchan_set(void *o, const void *v)
 {
 	dvb_mux_t *lm = (dvb_mux_t *)o;
+	int r;
 
-	lm->lm_tuning.dmc_fe_vchan.minor = 0;
-	sscanf(v, "%u%*[.-]%hu",
+	r = sscanf(v, "%u%*[.-]%hu",
 	  &lm->lm_tuning.dmc_fe_vchan.num,
 	  &lm->lm_tuning.dmc_fe_vchan.minor);
+	switch r {
+	case 0:
+		return 1;
+	case 1:
+		lm->tm_tuning.dmc_fe_vchan.minor = 0;
+	}
 	return 0;
 }
 
