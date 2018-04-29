@@ -254,6 +254,18 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
       tvhdebug(LS_TVHDHOMERUN, "locked");
       hfe->hf_locked = 1;
 
+      /* Set vchan.name from status */
+      dvb_mux_t *lm = (dvb_mux_t *)mm;
+      struct hdhomerun_tuner_vstatus_t tuner_vstatus;
+      char *tuner_vstatus_str;
+      pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
+      res = hdhomerun_device_get_tuner_vstatus(hfe->hf_hdhomerun_tuner,
+        &tuner_vstatus_str, &tuner_vstatus);
+      pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
+      if (res < 1)
+        tvhwarn(LS_TVHDHOMERUN, "tuner_vstatus (%d)", res);
+      lm->lm_tuning.dmc_fe_vchan.name = strdup(tuner_vstatus.name);
+
       /* start input thread */
       tvh_pipe(O_NONBLOCK, &hfe->hf_input_thread_pipe);
       pthread_mutex_lock(&hfe->hf_input_thread_mutex);
@@ -366,56 +378,63 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
   int res;
   char *perror;
 
-  /* resolve the modulation type */
-  switch (dmc->dmc_fe_type) {
-    case DVB_TYPE_C:
-      /* the symbol rate */
-      symbol_rate = dmc->u.dmc_fe_qam.symbol_rate / 1000;
-      switch(dmc->dmc_fe_modulation) {
-        case DVB_MOD_QAM_64:
-          snprintf(channel_buf, sizeof(channel_buf), "a8qam64-%d:%u", symbol_rate, dmc->dmc_fe_freq);
-          break;
-        case DVB_MOD_QAM_256:
-          snprintf(channel_buf, sizeof(channel_buf), "a8qam256-%d:%u", symbol_rate, dmc->dmc_fe_freq);
-          break;
-        default:
-          snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
-          break;
-      }
-      break;
-    case DVB_TYPE_T:
-      bandwidth = dmc->u.dmc_fe_ofdm.bandwidth / 1000UL;
-      switch (dmc->dmc_fe_modulation) {
-        case DVB_MOD_AUTO:
-            if (dmc->u.dmc_fe_ofdm.bandwidth == DVB_BANDWIDTH_AUTO) {
-                snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
-            } else {
-                snprintf(channel_buf, sizeof(channel_buf), "auto%dt:%u", bandwidth, dmc->dmc_fe_freq);
-            }
+  if (dmc->dmc_fe_vchan.num) {
+    if (!dmc->dmc_fe_vchan.minor)
+      snprintf(channel_buf, sizeof(channel_buf), "%u", dmc->dmc_fe_vchan.num);
+    else
+      snprintf(channel_buf, sizeof(channel_buf), "%u.%u", dmc->dmc_fe_vchan.num, dmc->dmc_fe_vchan.minor);
+  } else {
+    /* resolve the modulation type */
+    switch (dmc->dmc_fe_type) {
+      case DVB_TYPE_C:
+        /* the symbol rate */
+        symbol_rate = dmc->u.dmc_fe_qam.symbol_rate / 1000;
+        switch(dmc->dmc_fe_modulation) {
+          case DVB_MOD_QAM_64:
+            snprintf(channel_buf, sizeof(channel_buf), "a8qam64-%d:%u", symbol_rate, dmc->dmc_fe_freq);
             break;
-        case DVB_MOD_QAM_256:
-            if (dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {
-                snprintf(channel_buf, sizeof(channel_buf), "tt%dqam256:%u", bandwidth, dmc->dmc_fe_freq);
-            } else {
-                snprintf(channel_buf, sizeof(channel_buf), "t%dqam256:%u", bandwidth, dmc->dmc_fe_freq);
-            }
+          case DVB_MOD_QAM_256:
+            snprintf(channel_buf, sizeof(channel_buf), "a8qam256-%d:%u", symbol_rate, dmc->dmc_fe_freq);
             break;
-        case DVB_MOD_QAM_64:
-            if (dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {
-                snprintf(channel_buf, sizeof(channel_buf), "tt%dqam64:%u", bandwidth, dmc->dmc_fe_freq);
-            } else {
-                snprintf(channel_buf, sizeof(channel_buf), "t%dqam64:%u", bandwidth, dmc->dmc_fe_freq);
-            }
-            break;
-        default:
-            /* probably won't work but never mind */
+          default:
             snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
             break;
-      }
-      break;
-    default:
-      snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
-      break;
+        }
+        break;
+      case DVB_TYPE_T:
+        bandwidth = dmc->u.dmc_fe_ofdm.bandwidth / 1000UL;
+        switch (dmc->dmc_fe_modulation) {
+          case DVB_MOD_AUTO:
+              if (dmc->u.dmc_fe_ofdm.bandwidth == DVB_BANDWIDTH_AUTO) {
+                  snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
+              } else {
+                  snprintf(channel_buf, sizeof(channel_buf), "auto%dt:%u", bandwidth, dmc->dmc_fe_freq);
+              }
+              break;
+          case DVB_MOD_QAM_256:
+              if (dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {
+                  snprintf(channel_buf, sizeof(channel_buf), "tt%dqam256:%u", bandwidth, dmc->dmc_fe_freq);
+              } else {
+                  snprintf(channel_buf, sizeof(channel_buf), "t%dqam256:%u", bandwidth, dmc->dmc_fe_freq);
+              }
+              break;
+          case DVB_MOD_QAM_64:
+              if (dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {
+                  snprintf(channel_buf, sizeof(channel_buf), "tt%dqam64:%u", bandwidth, dmc->dmc_fe_freq);
+              } else {
+                  snprintf(channel_buf, sizeof(channel_buf), "t%dqam64:%u", bandwidth, dmc->dmc_fe_freq);
+              }
+              break;
+          default:
+              /* probably won't work but never mind */
+              snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
+              break;
+        }
+        break;
+      default:
+        snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
+        break;
+    }
   }
 
   tvhinfo(LS_TVHDHOMERUN, "tuning to %s", channel_buf);
@@ -427,7 +446,10 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
     tvherror(LS_TVHDHOMERUN, "failed to acquire lockkey: %s", perror);
     return SM_CODE_TUNING_FAILED;
   }
-  res = hdhomerun_device_set_tuner_channel(hfe->hf_hdhomerun_tuner, channel_buf);
+  if (dmc->dmc_fe_vchan.num)
+    res = hdhomerun_device_set_tuner_vchannel(hfe->hf_hdhomerun_tuner, channel_buf);
+  else
+    res = hdhomerun_device_set_tuner_channel(hfe->hf_hdhomerun_tuner, channel_buf);
   pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
   if(res < 1) {
     tvherror(LS_TVHDHOMERUN, "failed to tune to %s", channel_buf);
@@ -448,7 +470,8 @@ tvhdhomerun_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
-  int res, r;
+  dvb_mux_t *lm = (dvb_mux_t *)mmi->mmi_mux;
+  int res;
   char buf1[256], buf2[256];
 
   mi->mi_display_name(mi, buf1, sizeof(buf1));
@@ -459,11 +482,14 @@ tvhdhomerun_frontend_start_mux
   res = tvhdhomerun_frontend_tune(hfe, mmi);
 
   /* reset the pfilters */
-  pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
-  r = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, "0x0000");
-  pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
-  if(r < 1)
-    tvherror(LS_TVHDHOMERUN, "failed to reset pfilter: %d", r);
+  if (!lm->lm_tuning.dmc_fe_vchan.num) {
+    int r;
+    pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
+    r = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, "0x0000");
+    pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
+    if(r < 1)
+      tvherror(LS_TVHDHOMERUN, "failed to reset pfilter: %d", r);
+  }
 
   return res;
 }
