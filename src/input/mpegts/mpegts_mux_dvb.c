@@ -559,7 +559,7 @@ dvb_mux_class_vchan_set(void *o, const void *v)
 	case 0:
 		return 1;
 	case 1:
-		lm->tm_tuning.dmc_fe_vchan.minor = 0;
+		lm->lm_tuning.dmc_fe_vchan.minor = 0;
 	}
 	return 0;
 }
