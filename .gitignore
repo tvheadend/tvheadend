@@ -1,6 +1,9 @@
 build.*
 .config.mk
 
+debian/debhelper-build-stamp
+filelist.txt
+
 src/version.c
 src/tvh_locale_inc.c
 src/docs_inc.[ch]
