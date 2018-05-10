@@ -683,6 +683,7 @@ const static struct strtab delsystab[] = {
   { "DVBC/ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
   { "DVBC_ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
   { "ATSC-C",       DVB_SYS_DVBC_ANNEX_B },
+  { "CableCARD",    DVB_SYS_DVBC_ANNEX_B },
   { "DVBC/ANNEX_B", DVB_SYS_DVBC_ANNEX_B },
   { "DVBC_ANNEX_B", DVB_SYS_DVBC_ANNEX_B },
   { "DVB-C/ANNEX-C",DVB_SYS_DVBC_ANNEX_C },
@@ -738,6 +739,8 @@ dvb_delsys2type ( mpegts_network_t *ln, dvb_fe_delivery_system_t delsys )
     case DVB_SYS_DVBC_ANNEX_B:
       if (ln && idnode_is_instance(&ln->mn_id, &dvb_network_dvbc_class))
         return DVB_TYPE_C;
+      if (ln && idnode_is_instance(&ln->mn_id, &dvb_network_cablecard_class))
+        return DVB_TYPE_CABLECARD;
       else
         return DVB_TYPE_ATSC_C;
     case DVB_SYS_ISDBT:
@@ -946,24 +949,25 @@ const static struct strtab poltab[] = {
 dvb_str2val(pol);
 
 const static struct strtab typetab[] = {
-  {"DVB-T",  DVB_TYPE_T},
-  {"DVB-C",  DVB_TYPE_C},
-  {"DVB-S",  DVB_TYPE_S},
-  {"ATSC-T", DVB_TYPE_ATSC_T},
-  {"ATSC-C", DVB_TYPE_ATSC_C},
-  {"ISDB-T", DVB_TYPE_ISDB_T},
-  {"ISDB-C", DVB_TYPE_ISDB_C},
-  {"ISDB-S", DVB_TYPE_ISDB_S},
-  {"DAB",    DVB_TYPE_DAB},
-  {"DVBT",   DVB_TYPE_T},
-  {"DVBC",   DVB_TYPE_C},
-  {"DVBS",   DVB_TYPE_S},
-  {"ATSC",   DVB_TYPE_ATSC_T},
-  {"ATSCT",  DVB_TYPE_ATSC_T},
-  {"ATSCC",  DVB_TYPE_ATSC_C},
-  {"ISDBT",  DVB_TYPE_ISDB_T},
-  {"ISDBC",  DVB_TYPE_ISDB_C},
-  {"ISDBS",  DVB_TYPE_ISDB_S}
+  {"DVB-T",     DVB_TYPE_T},
+  {"DVB-C",     DVB_TYPE_C},
+  {"DVB-S",     DVB_TYPE_S},
+  {"ATSC-T",    DVB_TYPE_ATSC_T},
+  {"ATSC-C",    DVB_TYPE_ATSC_C},
+  {"CableCARD", DVB_TYPE_CABLECARD},
+  {"ISDB-T",    DVB_TYPE_ISDB_T},
+  {"ISDB-C",    DVB_TYPE_ISDB_C},
+  {"ISDB-S",    DVB_TYPE_ISDB_S},
+  {"DAB",       DVB_TYPE_DAB},
+  {"DVBT",      DVB_TYPE_T},
+  {"DVBC",      DVB_TYPE_C},
+  {"DVBS",      DVB_TYPE_S},
+  {"ATSC",      DVB_TYPE_ATSC_T},
+  {"ATSCT",     DVB_TYPE_ATSC_T},
+  {"ATSCC",     DVB_TYPE_ATSC_C},
+  {"ISDBT",     DVB_TYPE_ISDB_T},
+  {"ISDBC",     DVB_TYPE_ISDB_C},
+  {"ISDBS",     DVB_TYPE_ISDB_S}
 };
 dvb_str2val(type);
 
@@ -1082,6 +1086,20 @@ dvb_mux_conf_str_atsc_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 }
 
 static int
+dvb_mux_conf_str_cablecard(dvb_mux_conf_t *dmc, char *buf, size_t bufsize)
+{
+  if (!dmc->dmc_fe_vchan.minor)
+    return snprintf(buf, bufsize, "%s channel %u",
+      dvb_type2str(dmc->dmc_fe_type),
+      dmc->dmc_fe_vchan.num);
+  else
+    return snprintf(buf, bufsize, "%s channel %u.%u",
+      dvb_type2str(dmc->dmc_fe_type),
+      dmc->dmc_fe_vchan.num,
+      dmc->dmc_fe_vchan.minor);
+}
+
+static int
 dvb_mux_conf_str_isdb_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
   char hp[16];
@@ -1124,6 +1142,8 @@ dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
     return dvb_mux_conf_str_dvbs(dmc, buf, bufsize);
   case DVB_TYPE_ATSC_T:
     return dvb_mux_conf_str_atsc_t(dmc, buf, bufsize);
+  case DVB_TYPE_CABLECARD:
+    return dvb_mux_conf_str_cablecard(dmc, buf, bufsize);
   case DVB_TYPE_ISDB_T:
     return dvb_mux_conf_str_isdb_t(dmc, buf, bufsize);
   default:

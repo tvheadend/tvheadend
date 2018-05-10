@@ -129,6 +129,39 @@ dvb_mux_class_delsys_set (void *o, const void *v)
   return 0;
 }
 
+static const void *
+dvb_mux_class_vchan_get(void *o)
+{
+  dvb_mux_t *lm = (dvb_mux_t *)o;
+
+  if (!lm->lm_tuning.dmc_fe_vchan.minor)
+    snprintf(prop_sbuf, PROP_SBUF_LEN, "%u",
+      lm->lm_tuning.dmc_fe_vchan.num);
+  else
+    snprintf(prop_sbuf, PROP_SBUF_LEN, "%u.%u",
+      lm->lm_tuning.dmc_fe_vchan.num,
+      lm->lm_tuning.dmc_fe_vchan.minor);
+	return &prop_sbuf_ptr;
+}
+
+static int
+dvb_mux_class_vchan_set(void *o, const void *v)
+{
+  dvb_mux_t *lm = (dvb_mux_t *)o;
+  int r;
+
+  r = sscanf(v, "%u%*[.-]%hu",
+    &lm->lm_tuning.dmc_fe_vchan.num,
+    &lm->lm_tuning.dmc_fe_vchan.minor);
+  switch (r) {
+  case 0:
+    return 1;
+  case 1:
+    lm->lm_tuning.dmc_fe_vchan.minor = 0;
+  }
+  return 0;
+}
+
 const idclass_t dvb_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
@@ -615,6 +648,43 @@ const idclass_t dvb_mux_atsc_c_class =
 };
 
 /*
+ * CableCARD
+ */
+const idclass_t dvb_mux_cablecard_class =
+{
+  .ic_super      = &dvb_mux_class,
+  .ic_class      = "dvb_mux_cablecard",
+  .ic_caption    = N_("CableCARD multiplex"),
+  .ic_properties = (const property_t[]){
+    {
+      .type = PT_STR,
+      .id   = "vchan",
+      .name = N_("Channel"),
+      .desc = N_("The channel on the cable provider's network."),
+      .get  = dvb_mux_class_vchan_get,
+      .set  = dvb_mux_class_vchan_set,
+    },
+    {
+      .type = PT_U32,
+      .id   = "frequency",
+      .name = N_("Frequency (Hz)"),
+      .desc = N_("The frequency of the mux (in Hertz)."),
+      .off  = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
+      .opts = PO_RDONLY | PO_NOSAVE,
+    },
+    {
+      .type = PT_STR,
+      .id   = "vchan_name",
+      .name = N_("Callsign"),
+      .desc = N_("The channel's name or callsign as set by the cable provider."),
+      .off  = offsetof(dvb_mux_t, lm_tuning.dmc_fe_vchan.name),
+      .opts = PO_RDONLY | PO_NOSAVE,
+    },
+    {}
+  }
+};
+
+/*
  * ISDB-T
  */
 
@@ -1049,26 +1119,36 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
   uint32_t freq = lm->lm_tuning.dmc_fe_freq, freq2;
   char extra[8], buf2[5], *p;
-  if (ln->ln_type == DVB_TYPE_S) {
-    const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
-    if (s) extra[0] = *s;
-    extra[1] = '\0';
+
+  if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_CABLECARD) {
+    if (!lm->lm_tuning.dmc_fe_vchan.minor)
+      snprintf(buf, len, "%u", lm->lm_tuning.dmc_fe_vchan.num);
+    else
+      snprintf(buf, len, "%u.%u",
+        lm->lm_tuning.dmc_fe_vchan.num,
+        lm->lm_tuning.dmc_fe_vchan.minor);
   } else {
+    if (ln->ln_type == DVB_TYPE_S) {
+      const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
+      if (s) extra[0] = *s;
+      extra[1] = '\0';
+    } else {
+      freq /= 1000;
+      strcpy(extra, "MHz");
+    }
+    freq2 = freq % 1000;
     freq /= 1000;
-    strcpy(extra, "MHz");
+    snprintf(buf2, sizeof(buf2), "%03d", freq2);
+    p = buf2 + 2;
+    while (freq2 && (freq2 % 10) == 0) {
+      freq2 /= 10;
+      *(p--) = '\0';
+    }
+    if (freq2)
+      snprintf(buf, len, "%d.%s%s", freq, buf2, extra);
+    else
+      snprintf(buf, len, "%d%s", freq, extra);
   }
-  freq2 = freq % 1000;
-  freq /= 1000;
-  snprintf(buf2, sizeof(buf2), "%03d", freq2);
-  p = buf2 + 2;
-  while (freq2 && (freq2 % 10) == 0) {
-    freq2 /= 10;
-    *(p--) = '\0';
-  }
-  if (freq2)
-    snprintf(buf, len, "%d.%s%s", freq, buf2, extra);
-  else
-    snprintf(buf, len, "%d%s", freq, extra);
 }
 
 static void
@@ -1121,6 +1201,9 @@ dvb_mux_create0
     delsys = DVB_SYS_ATSC;
   } else if (ln->ln_type == DVB_TYPE_ATSC_C) {
     idc = &dvb_mux_atsc_c_class;
+    delsys = DVB_SYS_DVBC_ANNEX_B;
+  } else if (ln->ln_type == DVB_TYPE_CABLECARD) {
+    idc = &dvb_mux_cablecard_class;
     delsys = DVB_SYS_DVBC_ANNEX_B;
   } else if (ln->ln_type == DVB_TYPE_ISDB_T) {
     idc = &dvb_mux_isdb_t_class;
