@@ -850,6 +850,8 @@ dvb_network_create_service
   /* Set service values from mux if CableCARD */
   if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_CABLECARD) {
     mpegts_network_t *ln = mm->mm_network;
+    if (!s->s_dvb_provider && lm->mm_provider_network_name)
+      s->s_dvb_provider = strdup(lm->mm_provider_network_name);
     if (!s->s_dvb_provider && ln->mn_provider_network_name)
       s->s_dvb_provider = strdup(ln->mn_provider_network_name);
     if (!s->s_dvb_channel_num)
