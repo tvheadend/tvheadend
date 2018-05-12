@@ -117,6 +117,7 @@ tvhdhomerun_device_class_override_enum( void * p, const char *lang )
   htsmsg_add_str(m, NULL, "DVB-C");
   htsmsg_add_str(m, NULL, "ATSC-T");
   htsmsg_add_str(m, NULL, "ATSC-C");
+  htsmsg_add_str(m, NULL, "CableCARD");
   return m;
 }
 
@@ -318,13 +319,16 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
         override_type = "ATSC-T";
       type = dvb_str2type(override_type);
       if ( ! ( type == DVB_TYPE_C || type == DVB_TYPE_T ||
-               type == DVB_TYPE_ATSC_T || type == DVB_TYPE_ATSC_C ) ) {
+               type == DVB_TYPE_ATSC_T || type == DVB_TYPE_ATSC_C ||
+               type == DVB_TYPE_CABLECARD ) ) {
         type = DVB_TYPE_C;
       }
     }
   } else {
     if (strstr(hd->hd_info.deviceModel, "_atsc"))
       type = DVB_TYPE_ATSC_T;
+    if (strstr(hd->hd_info.deviceModel, "_cablecard"))
+      type = DVB_TYPE_CABLECARD;
   }
 
   hd->hd_override_type = strdup(dvb_type2str(type));
@@ -455,6 +459,7 @@ void tvhdhomerun_init ( void )
   idclass_register(&tvhdhomerun_frontend_dvbc_class);
   idclass_register(&tvhdhomerun_frontend_atsc_t_class);
   idclass_register(&tvhdhomerun_frontend_atsc_c_class);
+  idclass_register(&tvhdhomerun_frontend_cablecard_class);
   TAILQ_INIT(&tvhdhomerun_discoveries);
   pthread_mutex_init(&tvhdhomerun_discovery_lock, NULL);
   tvh_cond_init(&tvhdhomerun_discovery_cond);

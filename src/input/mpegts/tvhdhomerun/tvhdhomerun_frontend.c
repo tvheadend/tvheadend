@@ -257,6 +257,19 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
       tvhdebug(LS_TVHDHOMERUN, "locked");
       hfe->hf_locked = 1;
 
+      /* Get CableCARD variables */
+      dvb_mux_t *lm = (dvb_mux_t *)mm;
+      struct hdhomerun_tuner_vstatus_t tuner_vstatus;
+      char *tuner_vstatus_str;
+      pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
+      res = hdhomerun_device_get_tuner_vstatus(hfe->hf_hdhomerun_tuner,
+        &tuner_vstatus_str, &tuner_vstatus);
+      pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
+      if (res < 1)
+        tvhwarn(LS_TVHDHOMERUN, "tuner_vstatus (%d)", res);
+      lm->lm_tuning.dmc_fe_vchan.name = strdup(tuner_vstatus.name);
+      sscanf(strstr(tuner_status.channel, ":"), ":%u", &lm->lm_tuning.dmc_fe_freq);
+
       /* start input thread */
       tvh_pipe(O_NONBLOCK, &hfe->hf_input_thread_pipe);
       pthread_mutex_lock(&hfe->hf_input_thread_mutex);
@@ -311,6 +324,9 @@ static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, int pid) {
   char *pfilter;
   char buf[1024];
   int res;
+
+  if (hfe->hf_type == DVB_TYPE_CABLECARD)
+    return;
 
   /* a full mux subscription should specificly set the filter */
   if (pid == MPEGTS_FULLMUX_PID) {
@@ -417,6 +433,14 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
             break;
       }
       break;
+    case DVB_TYPE_CABLECARD:
+      if (!dmc->dmc_fe_vchan.minor)
+        snprintf(channel_buf, sizeof(channel_buf), "%u", dmc->dmc_fe_vchan.num);
+      else
+        snprintf(channel_buf, sizeof(channel_buf), "%u.%u",
+          dmc->dmc_fe_vchan.num,
+          dmc->dmc_fe_vchan.minor);
+      break;
     default:
       snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
       break;
@@ -431,7 +455,10 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
     tvherror(LS_TVHDHOMERUN, "failed to acquire lockkey: %s", perror);
     return SM_CODE_TUNING_FAILED;
   }
-  res = hdhomerun_device_set_tuner_channel(hfe->hf_hdhomerun_tuner, channel_buf);
+  if (hfe->hf_type == DVB_TYPE_CABLECARD)
+    res = hdhomerun_device_set_tuner_vchannel(hfe->hf_hdhomerun_tuner, channel_buf);
+  else
+    res = hdhomerun_device_set_tuner_channel(hfe->hf_hdhomerun_tuner, channel_buf);
   pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
   if(res < 1) {
     tvherror(LS_TVHDHOMERUN, "failed to tune to %s", channel_buf);
@@ -463,11 +490,13 @@ tvhdhomerun_frontend_start_mux
   res = tvhdhomerun_frontend_tune(hfe, mmi);
 
   /* reset the pfilters */
-  pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
-  r = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, "0x0000");
-  pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
-  if(r < 1)
-    tvherror(LS_TVHDHOMERUN, "failed to reset pfilter: %d", r);
+  if (hfe->hf_type != DVB_TYPE_CABLECARD) {
+    pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
+    r = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, "0x0000");
+    pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
+    if(r < 1)
+      tvherror(LS_TVHDHOMERUN, "failed to reset pfilter: %d", r);
+  }
 
   return res;
 }
@@ -620,6 +649,16 @@ const idclass_t tvhdhomerun_frontend_atsc_c_class =
   }
 };
 
+const idclass_t tvhdhomerun_frontend_cablecard_class =
+{
+  .ic_super = &tvhdhomerun_frontend_class,
+  .ic_class = "tvhdhomerun_frontend_cablecard",
+  .ic_caption = N_("HDHomeRun CableCARD frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
 static mpegts_network_t *
 tvhdhomerun_frontend_wizard_network ( tvhdhomerun_frontend_t *hfe )
 {
@@ -708,6 +747,8 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
     idc = &tvhdhomerun_frontend_atsc_t_class;
   else if (type == DVB_TYPE_ATSC_C)
     idc = &tvhdhomerun_frontend_atsc_c_class;
+  else if (type == DVB_TYPE_CABLECARD)
+    idc = &tvhdhomerun_frontend_cablecard_class;
   else {
     tvherror(LS_TVHDHOMERUN, "unknown FE type %d", type);
     return NULL;
