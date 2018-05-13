@@ -670,7 +670,7 @@ const idclass_t dvb_mux_cablecard_class =
       .name = N_("Frequency (Hz)"),
       .desc = N_("The frequency of the mux (in Hertz)."),
       .off  = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
-      .opts = PO_RDONLY | PO_NOSAVE,
+      .opts = PO_RDONLY,
     },
     {
       .type = PT_STR,
@@ -678,7 +678,7 @@ const idclass_t dvb_mux_cablecard_class =
       .name = N_("Callsign"),
       .desc = N_("The channel's name or callsign as set by the cable provider."),
       .off  = offsetof(dvb_mux_t, lm_tuning.dmc_fe_vchan.name),
-      .opts = PO_RDONLY | PO_NOSAVE,
+      .opts = PO_RDONLY,
     },
     {}
   }
