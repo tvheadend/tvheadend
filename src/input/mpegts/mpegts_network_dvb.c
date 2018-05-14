@@ -855,11 +855,11 @@ dvb_network_create_service
     if (!s->s_dvb_provider && ln->mn_provider_network_name)
       s->s_dvb_provider = strdup(ln->mn_provider_network_name);
     if (!s->s_dvb_channel_num)
-      s->s_dvb_channel_num = lm->lm_tuning.dmc_fe_vchan.num;
-    if (!s->s_dvb_channel_minor && lm->lm_tuning.dmc_fe_vchan.minor)
-      s->s_dvb_channel_minor = lm->lm_tuning.dmc_fe_vchan.minor;
-    if (!s->s_dvb_svcname && lm->lm_tuning.dmc_fe_vchan.name)
-      s->s_dvb_svcname = strdup(lm->lm_tuning.dmc_fe_vchan.name);
+      s->s_dvb_channel_num = lm->lm_tuning.u.dmc_fe_cablecard.num;
+    if (!s->s_dvb_channel_minor && lm->lm_tuning.u.dmc_fe_cablecard.minor)
+      s->s_dvb_channel_minor = lm->lm_tuning.u.dmc_fe_cablecard.minor;
+    if (!s->s_dvb_svcname && lm->lm_tuning.u.dmc_fe_cablecard.name)
+      s->s_dvb_svcname = strdup(lm->lm_tuning.u.dmc_fe_cablecard.name);
   }
 
   return s;

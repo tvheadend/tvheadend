@@ -134,13 +134,13 @@ dvb_mux_class_vchan_get(void *o)
 {
   dvb_mux_t *lm = (dvb_mux_t *)o;
 
-  if (!lm->lm_tuning.dmc_fe_vchan.minor)
+  if (!lm->lm_tuning.u.dmc_fe_cablecard.minor)
     snprintf(prop_sbuf, PROP_SBUF_LEN, "%u",
-      lm->lm_tuning.dmc_fe_vchan.num);
+      lm->lm_tuning.u.dmc_fe_cablecard.num);
   else
     snprintf(prop_sbuf, PROP_SBUF_LEN, "%u.%u",
-      lm->lm_tuning.dmc_fe_vchan.num,
-      lm->lm_tuning.dmc_fe_vchan.minor);
+      lm->lm_tuning.u.dmc_fe_cablecard.num,
+      lm->lm_tuning.u.dmc_fe_cablecard.minor);
 	return &prop_sbuf_ptr;
 }
 
@@ -151,13 +151,13 @@ dvb_mux_class_vchan_set(void *o, const void *v)
   int r;
 
   r = sscanf(v, "%u%*[.-]%hu",
-    &lm->lm_tuning.dmc_fe_vchan.num,
-    &lm->lm_tuning.dmc_fe_vchan.minor);
+    &lm->lm_tuning.u.dmc_fe_cablecard.num,
+    &lm->lm_tuning.u.dmc_fe_cablecard.minor);
   switch (r) {
   case 0:
     return 1;
   case 1:
-    lm->lm_tuning.dmc_fe_vchan.minor = 0;
+    lm->lm_tuning.u.dmc_fe_cablecard.minor = 0;
   }
   return 0;
 }
@@ -677,7 +677,7 @@ const idclass_t dvb_mux_cablecard_class =
       .id   = "vchan_name",
       .name = N_("Callsign"),
       .desc = N_("The channel's name or callsign as set by the cable provider."),
-      .off  = offsetof(dvb_mux_t, lm_tuning.dmc_fe_vchan.name),
+      .off  = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_cablecard.name),
       .opts = PO_RDONLY,
     },
     {}
@@ -1121,12 +1121,12 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   char extra[8], buf2[5], *p;
 
   if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_CABLECARD) {
-    if (!lm->lm_tuning.dmc_fe_vchan.minor)
-      snprintf(buf, len, "%u", lm->lm_tuning.dmc_fe_vchan.num);
+    if (!lm->lm_tuning.u.dmc_fe_cablecard.minor)
+      snprintf(buf, len, "%u", lm->lm_tuning.u.dmc_fe_cablecard.num);
     else
       snprintf(buf, len, "%u.%u",
-        lm->lm_tuning.dmc_fe_vchan.num,
-        lm->lm_tuning.dmc_fe_vchan.minor);
+        lm->lm_tuning.u.dmc_fe_cablecard.num,
+        lm->lm_tuning.u.dmc_fe_cablecard.minor);
   } else {
     if (ln->ln_type == DVB_TYPE_S) {
       const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
