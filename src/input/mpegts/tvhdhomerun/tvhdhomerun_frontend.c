@@ -267,7 +267,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
       pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
       if (res < 1)
         tvhwarn(LS_TVHDHOMERUN, "tuner_vstatus (%d)", res);
-      lm->lm_tuning.dmc_fe_vchan.name = strdup(tuner_vstatus.name);
+      lm->lm_tuning.u.dmc_fe_cablecard.name = strdup(tuner_vstatus.name);
       sscanf(strstr(tuner_status.channel, ":"), ":%u", &lm->lm_tuning.dmc_fe_freq);
 
       /* start input thread */
@@ -434,12 +434,12 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
       }
       break;
     case DVB_TYPE_CABLECARD:
-      if (!dmc->dmc_fe_vchan.minor)
-        snprintf(channel_buf, sizeof(channel_buf), "%u", dmc->dmc_fe_vchan.num);
+      if (!dmc->u.dmc_fe_cablecard.minor)
+        snprintf(channel_buf, sizeof(channel_buf), "%u", dmc->u.dmc_fe_cablecard.num);
       else
         snprintf(channel_buf, sizeof(channel_buf), "%u.%u",
-          dmc->dmc_fe_vchan.num,
-          dmc->dmc_fe_vchan.minor);
+          dmc->u.dmc_fe_cablecard.num,
+          dmc->u.dmc_fe_cablecard.minor);
       break;
     default:
       snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);

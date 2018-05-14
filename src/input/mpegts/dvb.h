@@ -616,11 +616,11 @@ typedef struct dvb_isdbt_config {
   } layers[3];
 } dvb_isdbt_config_t;
 
-typedef struct dvb_fe_vchan {
+typedef struct dvb_cablecard_config {
   uint32_t  num;
   uint16_t  minor;
   char     *name;
-} dvb_fe_vchan_t;
+} dvb_cablecard_config_t;
 
 typedef struct dvb_mux_conf
 {
@@ -639,8 +639,8 @@ typedef struct dvb_mux_conf
     dvb_qam_config_t          dmc_fe_qam;
     dvb_ofdm_config_t         dmc_fe_ofdm;
     dvb_isdbt_config_t        dmc_fe_isdbt;
+    dvb_cablecard_config_t    dmc_fe_cablecard;
   } u;
-  dvb_fe_vchan_t              dmc_fe_vchan;
 
   // For scan file configurations
   LIST_ENTRY(dvb_mux_conf)    dmc_link;
