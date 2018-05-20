@@ -129,39 +129,6 @@ dvb_mux_class_delsys_set (void *o, const void *v)
   return 0;
 }
 
-static const void *
-dvb_mux_class_vchan_get(void *o)
-{
-  dvb_mux_t *lm = (dvb_mux_t *)o;
-
-  if (!lm->lm_tuning.u.dmc_fe_cablecard.minor)
-    snprintf(prop_sbuf, PROP_SBUF_LEN, "%u",
-      lm->lm_tuning.u.dmc_fe_cablecard.num);
-  else
-    snprintf(prop_sbuf, PROP_SBUF_LEN, "%u.%u",
-      lm->lm_tuning.u.dmc_fe_cablecard.num,
-      lm->lm_tuning.u.dmc_fe_cablecard.minor);
-	return &prop_sbuf_ptr;
-}
-
-static int
-dvb_mux_class_vchan_set(void *o, const void *v)
-{
-  dvb_mux_t *lm = (dvb_mux_t *)o;
-  int r;
-
-  r = sscanf(v, "%u%*[.-]%hu",
-    &lm->lm_tuning.u.dmc_fe_cablecard.num,
-    &lm->lm_tuning.u.dmc_fe_cablecard.minor);
-  switch (r) {
-  case 0:
-    return 1;
-  case 1:
-    lm->lm_tuning.u.dmc_fe_cablecard.minor = 0;
-  }
-  return 0;
-}
-
 const idclass_t dvb_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
@@ -657,12 +624,11 @@ const idclass_t dvb_mux_cablecard_class =
   .ic_caption    = N_("CableCARD multiplex"),
   .ic_properties = (const property_t[]){
     {
-      .type = PT_STR,
+      .type = PT_U32,
       .id   = "vchan",
       .name = N_("Channel"),
       .desc = N_("The channel on the cable provider's network."),
-      .get  = dvb_mux_class_vchan_get,
-      .set  = dvb_mux_class_vchan_set,
+      .off  = offsetof(dvb_mux_t, lm_tuning.dmc_fe_cablecard.vchannel),
     },
     {
       .type = PT_U32,
@@ -1120,14 +1086,9 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   uint32_t freq = lm->lm_tuning.dmc_fe_freq, freq2;
   char extra[8], buf2[5], *p;
 
-  if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_CABLECARD) {
-    if (!lm->lm_tuning.u.dmc_fe_cablecard.minor)
-      snprintf(buf, len, "%u", lm->lm_tuning.u.dmc_fe_cablecard.num);
-    else
-      snprintf(buf, len, "%u.%u",
-        lm->lm_tuning.u.dmc_fe_cablecard.num,
-        lm->lm_tuning.u.dmc_fe_cablecard.minor);
-  } else {
+  if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_CABLECARD)
+    snprintf(buf, len, "%u", lm->lm_tuning.u.dmc_fe_cablecard.vchannel);
+  else {
     if (ln->ln_type == DVB_TYPE_S) {
       const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
       if (s) extra[0] = *s;

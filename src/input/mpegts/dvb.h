@@ -617,8 +617,7 @@ typedef struct dvb_isdbt_config {
 } dvb_isdbt_config_t;
 
 typedef struct dvb_cablecard_config {
-  uint32_t  num;
-  uint16_t  minor;
+  uint32_t  vchannel;
   char     *name;
 } dvb_cablecard_config_t;
 
