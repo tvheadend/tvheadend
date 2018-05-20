@@ -1088,15 +1088,9 @@ dvb_mux_conf_str_atsc_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 static int
 dvb_mux_conf_str_cablecard(dvb_mux_conf_t *dmc, char *buf, size_t bufsize)
 {
-  if (!dmc->u.dmc_fe_cablecard.minor)
-    return snprintf(buf, bufsize, "%s channel %u",
+  return snprintf(buf, bufsize, "%s channel %u",
       dvb_type2str(dmc->dmc_fe_type),
-      dmc->u.dmc_fe_cablecard.num);
-  else
-    return snprintf(buf, bufsize, "%s channel %u.%u",
-      dvb_type2str(dmc->dmc_fe_type),
-      dmc->u.dmc_fe_cablecard.num,
-      dmc->u.dmc_fe_cablecard.minor);
+      dmc->u.dmc_fe_cablecard.vchannel);
 }
 
 static int

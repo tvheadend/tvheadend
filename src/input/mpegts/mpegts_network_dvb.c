@@ -47,7 +47,7 @@ dvb_network_class_delete ( idnode_t *in )
   char ubuf[UUID_HEX_SIZE];
 
   /* remove config */
-  hts_settings_remove("input/dvb/networks/%s", 
+  hts_settings_remove("input/dvb/networks/%s",
                       idnode_uuid_as_str(in, ubuf));
 
   /* Parent delete */
@@ -855,9 +855,7 @@ dvb_network_create_service
     if (!s->s_dvb_provider && ln->mn_provider_network_name)
       s->s_dvb_provider = strdup(ln->mn_provider_network_name);
     if (!s->s_dvb_channel_num)
-      s->s_dvb_channel_num = lm->lm_tuning.u.dmc_fe_cablecard.num;
-    if (!s->s_dvb_channel_minor && lm->lm_tuning.u.dmc_fe_cablecard.minor)
-      s->s_dvb_channel_minor = lm->lm_tuning.u.dmc_fe_cablecard.minor;
+      s->s_dvb_channel_num = lm->lm_tuning.u.dmc_fe_cablecard.vchannel;
     if (!s->s_dvb_svcname && lm->lm_tuning.u.dmc_fe_cablecard.name)
       s->s_dvb_svcname = strdup(lm->lm_tuning.u.dmc_fe_cablecard.name);
   }
@@ -898,7 +896,7 @@ dvb_network_create0
   if (!(ln = (dvb_network_t*)mpegts_network_create0((void*)ln,
                                      idc, uuid, NULL, conf)))
     return NULL;
-  
+
   /* Callbacks */
   ln->mn_create_mux     = dvb_network_create_mux;
   ln->mn_create_service = dvb_network_create_service;
@@ -984,7 +982,7 @@ void dvb_network_init ( void )
   for (i = 0; i < ARRAY_SIZE(dvb_network_classes); i++)
     mpegts_network_register_builder(dvb_network_classes[i],
                                     dvb_network_builder);
-  
+
   /* Load settings */
   if (!(c = hts_settings_load_r(1, "input/dvb/networks")))
     return;

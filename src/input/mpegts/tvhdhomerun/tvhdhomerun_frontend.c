@@ -434,12 +434,7 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
       }
       break;
     case DVB_TYPE_CABLECARD:
-      if (!dmc->u.dmc_fe_cablecard.minor)
-        snprintf(channel_buf, sizeof(channel_buf), "%u", dmc->u.dmc_fe_cablecard.num);
-      else
-        snprintf(channel_buf, sizeof(channel_buf), "%u.%u",
-          dmc->u.dmc_fe_cablecard.num,
-          dmc->u.dmc_fe_cablecard.minor);
+      snprintf(channel_buf, sizeof(channel_buf), "%u", dmc->u.dmc_fe_cablecard.vchannel);
       break;
     default:
       snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
