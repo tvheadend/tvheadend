@@ -628,7 +628,7 @@ const idclass_t dvb_mux_cablecard_class =
       .id   = "vchan",
       .name = N_("Channel"),
       .desc = N_("The channel on the cable provider's network."),
-      .off  = offsetof(dvb_mux_t, lm_tuning.dmc_fe_cablecard.vchannel),
+      .off  = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_cablecard.vchannel),
     },
     {
       .type = PT_U32,
