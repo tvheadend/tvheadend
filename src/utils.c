@@ -841,8 +841,10 @@ deferred_unlink(const char *filename, const char *rootdir)
     free(s);
     return r;
   }
-  if (rootdir == NULL)
+  if (rootdir == NULL){
+    dvr_cutpoint_delete_files (filename);
     tasklet_arm_alloc(deferred_unlink_cb, s);
+  }
   else {
     du = calloc(1, sizeof(*du));
     if (du == NULL) {
@@ -851,6 +853,7 @@ deferred_unlink(const char *filename, const char *rootdir)
     }
     du->filename = s;
     du->rootdir = strdup(rootdir);
+    dvr_cutpoint_delete_files (filename);
     tasklet_arm_alloc(deferred_unlink_dir_cb, du);
   }
   return 0;
