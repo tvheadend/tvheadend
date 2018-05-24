@@ -378,6 +378,7 @@ void http_deescape(char *str);
 int mpegts_word_count(const uint8_t *tsb, int len, uint32_t mask);
 
 int deferred_unlink(const char *filename, const char *rootdir);
+void dvr_cutpoint_delete_files (const char *s);
 
 void sha1_calc(uint8_t *dst, const uint8_t *d1, size_t d1_len, const uint8_t *d2, size_t d2_len);
 
