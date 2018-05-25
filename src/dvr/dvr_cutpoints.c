@@ -300,8 +300,8 @@ dvr_cutpoint_delete_files (const char *s)
       continue;
 
     /* Delete File */
-    tvhinfo(LS_MAIN, "Erasing cutpoint file '%s'", (const char *)path);
+    tvhinfo(LS_DVR, "Erasing cutpoint file '%s'", (const char *)path);
     if (unlink(path))
-      tvherror(LS_MAIN, "unable to remove cutpoint file '%s'", (const char *)path);
+      tvherror(LS_DVR, "unable to remove cutpoint file '%s'", (const char *)path);
   }
 }
