@@ -1471,7 +1471,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
 #if defined(PLATFORM_LINUX)
   ssize_t r;
 #elif defined(PLATFORM_FREEBSD) || defined(PLATFORM_DARWIN)
-  off_t r;
+  off_t o, r;
 #endif
   
   if (fconv) {
@@ -1535,6 +1535,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
   sprintf(range_buf, "bytes %jd-%jd/%jd",
           file_start, file_end, (intmax_t)st.st_size);
 
+#if defined(PLATFORM_LINUX)
   if(file_start > 0) {
     off_t off;
     if ((off = lseek(fd, file_start, SEEK_SET)) != file_start) {
@@ -1544,6 +1545,9 @@ http_serve_file(http_connection_t *hc, const char *fname,
       return HTTP_STATUS_INTERNAL;
     }
   }
+#elif defined(PLATFORM_FREEBSD) || defined(PLATFORM_DARWIN)
+  o = file_start;
+#endif
 
   if (preop) {
     ret = preop(hc, file_start, content_len, opaque);
@@ -1564,16 +1568,22 @@ http_serve_file(http_connection_t *hc, const char *fname,
       chunk = MIN(1024 * ((stats ? 128 : 1024) * 1024), content_len);
 #if defined(PLATFORM_LINUX)
       r = sendfile(hc->hc_fd, fd, NULL, chunk);
-#elif defined(PLATFORM_FREEBSD)
-      sendfile(fd, hc->hc_fd, 0, chunk, NULL, &r, 0);
-#elif defined(PLATFORM_DARWIN)
-      r = chunk;
-      sendfile(fd, hc->hc_fd, 0, &r, NULL, 0);
-#endif
-      if(r < 0) {
+      if (r < 0) {
         ret = -1;
         break;
       }
+#elif defined(PLATFORM_FREEBSD)
+      ret = sendfile(fd, hc->hc_fd, o, chunk, NULL, &r, 0);
+      if (ret < 0)
+        break;
+      o += r;
+#elif defined(PLATFORM_DARWIN)
+      r = chunk;
+      ret = sendfile(fd, hc->hc_fd, o, &r, NULL, 0);
+      if (ret < 0)
+        break;
+      o += r;
+#endif
       content_len -= r;
       if (stats)
         stats(hc, r, opaque);
