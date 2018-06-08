@@ -304,12 +304,14 @@ tvheadend.epgDetails = function(event) {
 
     }
 
+    var windowHeight = Ext.getBody().getViewSize().height - 150;
+
     var win = new Ext.Window({
         title: _('Broadcast Details'),
         iconCls: 'broadcast_details',
         layout: 'fit',
         width: 675,
-        height: 450,
+        height: windowHeight,
         constrainHeader: true,
         buttons: buttons,
         buttonAlign: 'center',

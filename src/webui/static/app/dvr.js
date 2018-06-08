@@ -140,12 +140,14 @@ tvheadend.dvrDetails = function(uuid) {
                         encodeURIComponent(title)+'&searchseriesid=&tab=listseries&function=Search','_blank');
         }
 
+        var windowHeight = Ext.getBody().getViewSize().height - 150;
+
         var win = new Ext.Window({
             title: title,
             iconCls: 'info',
             layout: 'fit',
             width: 650,
-            height: 450,
+            height: windowHeight,
             constrainHeader: true,
             buttonAlign: 'center',
             buttons: buttons,
