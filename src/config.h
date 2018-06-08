@@ -68,6 +68,7 @@ typedef struct config {
   uint32_t epg_update_window;
   int iptv_tpool_count;
   char *date_mask;
+  int label_formatting;
 } config_t;
 
 extern const idclass_t config_class;

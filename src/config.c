@@ -1705,6 +1705,7 @@ config_boot
   config.chname_num = 1;
   config.iptv_tpool_count = 2;
   config.date_mask = strdup("");
+  config.label_formatting = 0;
 
   idclass_register(&config_class);
 
@@ -2236,6 +2237,14 @@ const idclass_t config_class = {
       .opts   = PO_ADVANCED,
       .off    = offsetof(config_t, date_mask),
       .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "label_formatting",
+      .name   = N_("Kodi label formatting support"),
+      .desc   = N_("Enable parser for kodi label formatting"),
+      .off    = offsetof(config_t, label_formatting),
+      .group  = 2
     },
     {
       .type   = PT_STR,
