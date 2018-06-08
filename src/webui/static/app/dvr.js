@@ -17,7 +17,7 @@ tvheadend.labelFormattingParser = function(description) {
 	                   .replace(/\[\/I\]/g, '<\/i>')
 	                   .replace(/\[UPPERCASE\](.*)\[\/UPPERCASE\]/g, function(match, group) {return group.toUpperCase();})
 	                   .replace(/\[LOWERCASE\](.*)\[\/LOWERCASE\]/g, function(match, group) {return group.toLowerCase();})
-	                   .replace(/\[CAPITALIZE\](.*)\[\/CAPITALIZE\]/g, function(match, group) {return group.split(/\s/).map(w => w[0].toUpperCase()  w.slice(1)).join(' ');});
+	                   .replace(/\[CAPITALIZE\](.*)\[\/CAPITALIZE\]/g, function(match, group) {return group.split(/\s+/).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');});
     }else return description;
 };
 
