@@ -152,7 +152,7 @@ tvheadend.epgDetails = function(event) {
     if (event.summary)
       content += '<div class="x-epg-summary">' + event.summary + '</div>';
     if (event.description)
-      content += '<div class="x-epg-desc">' + tvheadend.labelFormatting(event.description) + '</div>';
+      content += '<div class="x-epg-desc">' + tvheadend.labelFormattingParser(event.description) + '</div>';
     if (event.summary || event.description)
       content += '<hr class="x-epg-hr"/>';
     content += tvheadend.getDisplayCredits(event.credits);

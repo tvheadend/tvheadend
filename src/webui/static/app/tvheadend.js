@@ -12,6 +12,7 @@ tvheadend.wizard = null;
 tvheadend.docs_toc = null;
 tvheadend.doc_history = [];
 tvheadend.doc_win = null;
+tvheadend.label_formatting = false;
 tvheadend.language = window.navigator.userLanguage || window.navigator.language;
 
 // Use en-US if browser language detection fails.
@@ -998,6 +999,7 @@ function accessUpdate(o) {
     tvheadend.quicktips = o.quicktips ? true : false;
     tvheadend.chname_num = o.chname_num ? 1 : 0;
     tvheadend.chname_src = o.chname_src ? 1 : 0;
+    tvheadend.label_formatting = o.label_formatting ? true : false;
 
     if (o.uilevel_nochange)
         tvheadend.uilevel_nochange = true;
