@@ -150,6 +150,7 @@ tvheadend.dvrDetails = function(uuid) {
             height: windowHeight,
             constrainHeader: true,
             buttonAlign: 'center',
+            autoScroll: true,
             buttons: buttons,
             html: content
         });
