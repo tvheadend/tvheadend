@@ -1373,12 +1373,15 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
                 var r = store.getAt(s.selectedIndex);
                 if (r) {
                     var d = r.json.props;
+
                     if (d) {
                         d = tvheadend.idnode_filter_fields(d, conf.select.list || null);
                         pclass = r.get(conf.select.valueField);
                         win.setTitle(String.format(_('Add {0}'), s.lastSelectionText));
                         panel.remove(s);
                         tvheadend.idnode_editor_form(uilevel, d, r.json, panel, { create: true, showpwd: true, forms: conf.forms });
+                        if (cloneValues)
+                            panel.getForm().setValues(cloneValues);
                         abuttons.save.setVisible(true);
                         abuttons.apply.setVisible(true);
                         win.setOriginSize(true);
