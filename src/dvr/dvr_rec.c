@@ -523,7 +523,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
       tvh_strlcatf(tmp, tmplen, offset, "%s/", subdir);
     }
 
-    if (*title_buf)          tvh_strlcatf(tmp, tmplen, offset, "%s", title_buf);
+    if (title_buf)          tvh_strlcatf(tmp, tmplen, offset, "%s", title_buf);
     /* Movies don't have anything relevant in sub-titles field so
      * anything there should be ignored. I think some channels store a
      * translated movie name there (title=original movie name,
@@ -531,7 +531,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
      * since scrapers only handle one title.
      */
     // if (*subtitle_buf) tvh_strlcatf(tmp, tmplen, offset, " - %s", subtitle_buf);
-    if (*date_buf)  tvh_strlcatf(tmp, tmplen, offset, " (%s)", date_buf);
+    if (date_buf)  tvh_strlcatf(tmp, tmplen, offset, " (%s)", date_buf);
   } else {
     /* TV shows have to go in separate directories based on their title in
      * order to be scraped properly.
@@ -549,11 +549,11 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
                 config->dvr_format_tvshows_subdir : "tvshows";
       tvh_strlcatf(tmp, tmplen, offset, "%s/", subdir);
     }
-    if (*title_buf)        tvh_strlcatf(tmp, tmplen, offset, "%s/%s", title_buf, title_buf);
-    if (*episode_buf)      tvh_strlcatf(tmp, tmplen, offset, " - %s", episode_buf);
-    if (*subtitle_buf)     tvh_strlcatf(tmp, tmplen, offset, " - %s", subtitle_buf);
+    if (title_buf)        tvh_strlcatf(tmp, tmplen, offset, "%s/%s", title_buf, title_buf);
+    if (episode_buf)      tvh_strlcatf(tmp, tmplen, offset, " - %s", episode_buf);
+    if (subtitle_buf)     tvh_strlcatf(tmp, tmplen, offset, " - %s", subtitle_buf);
     /* Only include date if we don't have an explicit episode number. */
-    if (!*episode_buf && *date_buf) tvh_strlcatf(tmp, tmplen, offset, "_%s", date_buf);
+    if (!episode_buf && date_buf) tvh_strlcatf(tmp, tmplen, offset, "_%s", date_buf);
   }
   return tmp;
 }
