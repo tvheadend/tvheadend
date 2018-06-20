@@ -400,7 +400,7 @@
       ],
       "buildcmd": [
         "./configure --disable-dvbscan && make -C rpm build-doozer",
-        "support/bintray.py publish filelist.txt",
+        "BINTRAY_REPO=centos support/bintray.py publish filelist.txt",
       ]
     },
     "bionic-amd64": {
