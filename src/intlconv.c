@@ -107,10 +107,8 @@ intlconv_charset_id( const char *charset,
     snprintf(buf, sizeof(buf), "%s%sTRANSLIT", charset, delim);
   else if (ignore_bad_chars)
     snprintf(buf, sizeof(buf), "%s%sIGNORE", charset, delim);
-  else {
-    strncpy(buf, charset, sizeof(buf));
-    buf[sizeof(buf)-1] = '\0';
-  }
+  else
+    strlcpy(buf, charset, sizeof(buf));
   return buf;
 }
 
@@ -125,8 +123,7 @@ intlconv_utf8( char *dst, size_t dst_size,
   ssize_t res;
 
   if (dst_charset_id == NULL) {
-    strncpy(dst, src_utf8, dst_size);
-    dst[dst_size - 1] = '\0';
+    strlcpy(dst, src_utf8, dst_size);
     return strlen(dst);
   }
   templ.ic_charset_id = (char *)dst_charset_id;
@@ -214,8 +211,7 @@ intlconv_to_utf8( char *dst, size_t dst_size,
   ssize_t res;
 
   if (src_charset_id == NULL) {
-    strncpy(dst, src, dst_size);
-    dst[dst_size - 1] = '\0';
+    strlcpy(dst, src, dst_size);
     return strlen(dst);
   }
   templ.ic_charset_id = (char *)src_charset_id;

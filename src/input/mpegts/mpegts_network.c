@@ -342,7 +342,7 @@ static void
 mpegts_network_display_name
   ( mpegts_network_t *mn, char *buf, size_t len )
 {
-  strncpy(buf, tvh_str_default(mn->mn_network_name, "unknown"), len);
+  strlcpy(buf, tvh_str_default(mn->mn_network_name, "unknown"), len);
 }
 
 static bouquet_t *

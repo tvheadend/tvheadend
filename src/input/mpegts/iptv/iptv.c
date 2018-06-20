@@ -292,8 +292,7 @@ iptv_sub_url_encode(iptv_mux_t *im, const char *s, char *tmp, size_t tmplen)
        !strncmp(im->mm_iptv_url, "file://", 7)))
     return s;
   p = url_encode(s);
-  strncpy(tmp, p, tmplen-1);
-  tmp[tmplen-1] = '\0';
+  strlcpy(tmp, p, tmplen);
   free(p);
   return tmp;
 }

@@ -527,10 +527,10 @@ descrambler_notify( th_descrambler_t *td,
   di->provid  = provid;
   di->ecmtime = ecmtime;
   di->hops    = hops;
-  strncpy(di->cardsystem, cardsystem, sizeof(di->cardsystem)-1);
-  strncpy(di->reader, reader, sizeof(di->reader)-1);
-  strncpy(di->from, from, sizeof(di->protocol)-1);
-  strncpy(di->protocol, protocol, sizeof(di->protocol)-1);
+  strlcpy(di->cardsystem, cardsystem, sizeof(di->cardsystem));
+  strlcpy(di->reader, reader, sizeof(di->reader));
+  strlcpy(di->from, from, sizeof(di->protocol));
+  strlcpy(di->protocol, protocol, sizeof(di->protocol));
 
   pthread_mutex_lock(&t->s_stream_mutex);
   descrambler_notify_deliver(t, di);

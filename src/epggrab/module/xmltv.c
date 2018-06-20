@@ -61,8 +61,7 @@ static time_t _xmltv_str2time(const char *in)
 
   memset(&tm, 0, sizeof(tm));
   tm.tm_mday = 1;               /* Day is one-based not zero-based */
-  strncpy(str, in, sizeof(str));
-  str[sizeof(str)-1] = '\0';
+  strlcpy(str, in, sizeof(str));
 
   /* split tz */
   while (str[sp] && str[sp] != ' ' && str[sp] != '+' && str[sp] != '-')
@@ -376,8 +375,7 @@ static int _xmltv_parse_date_finished
       const size_t len = strlen(str);
       if (len >= 4) {
           char year_buf[32];
-          strncpy(year_buf, str, 4);
-          year_buf[5] = 0;
+          strlcpy(year_buf, str, 5);
           const int64_t year = atoll(year_buf);
           /* Sanity check the year before copying it over. */
           if (year > 1800 && year < 2500) {

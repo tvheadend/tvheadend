@@ -78,8 +78,7 @@ dvr_vfs_find1(dvr_vfs_t *old, htsmsg_t *m)
     return dvr_vfs_find(old, &fsid);
   } else if ((s = htsmsg_get_str(m, "fsid0")) != NULL) {
     fsid.fsid = 0;
-    strncpy(fsid.id, s, sizeof(fsid.id)-1);
-    fsid.id[sizeof(fsid.id)-1] = '\0';
+    strlcpy(fsid.id, s, sizeof(fsid.id));
     return dvr_vfs_find(old, &fsid);
   }
   return NULL;

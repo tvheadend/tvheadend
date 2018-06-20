@@ -665,7 +665,7 @@ dvr_autorec_entry_class_time_get(void *o, int tm)
   if (tm >= 0)
     snprintf(prop_sbuf, PROP_SBUF_LEN, "%02d:%02d", tm / 60, tm % 60);
   else
-    strncpy(prop_sbuf, N_("Any"), 16);
+    strlcpy(prop_sbuf, N_("Any"), PROP_SBUF_LEN);
   return &prop_sbuf_ptr;
 }
 

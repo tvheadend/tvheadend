@@ -21,6 +21,7 @@
 #include <string.h>
 #include <time.h>
 #include "tvhlog.h"
+#include "tvh_string.h"
 #include "en50221.h"
 #include "input/mpegts/dvb.h"
 #include "descrambler/caid.h"

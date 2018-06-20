@@ -452,8 +452,7 @@ static int _eit_desc_crid
     
       if (crid) {
         if (strstr(buf, "crid://") == buf) {
-          strncpy(crid, buf, clen);
-          crid[clen-1] = '\0';
+          strlcpy(crid, buf, clen);
         } else if (*buf != '/') {
           snprintf(crid, clen, "crid://%s", buf);
         } else {

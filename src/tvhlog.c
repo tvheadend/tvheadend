@@ -355,8 +355,7 @@ tvhlog_thread ( void *p )
     /* Copy options and path */
     if (!fp) {
       if (tvhlog_path) {
-        strncpy(buf, tvhlog_path, sizeof(buf)-1);
-        buf[sizeof(buf)-1] = '\0';
+        strlcpy(buf, tvhlog_path, sizeof(buf));
         path = buf;
       } else {
         path = NULL;

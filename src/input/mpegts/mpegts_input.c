@@ -395,10 +395,10 @@ static void
 mpegts_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 {
   if (mi->mi_name) {
-    strncpy(buf, mi->mi_name, len - 1);
-    buf[len - 1] = '\0';
-  } else
+    strlcpy(buf, mi->mi_name, len);
+  } else {
     *buf = 0;
+  }
 }
 
 int

@@ -657,8 +657,7 @@ imagecache_filename ( int id, char *name, size_t len )
   if (!strncasecmp(i->url, "file://", 7)) {
     fn = tvh_strdupa(i->url + 7);
     http_deescape(fn);
-    strncpy(name, fn, len);
-    name[len-1] = '\0';
+    strlcpy(name, fn, len);
   }
 
   /* Remote file */

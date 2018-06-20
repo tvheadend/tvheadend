@@ -101,7 +101,7 @@ _hts_settings_buildpath
   if (*tmp != '/' && prefix)
     snprintf(dst, dstsize, "%s/%s", prefix, tmp);
   else
-    strncpy(dst, tmp, dstsize);
+    strlcpy(dst, tmp, dstsize);
 
   while(*n) {
     if(*n == ':' || *n == '?' || *n == '*' || *n > 127 || *n < 32)

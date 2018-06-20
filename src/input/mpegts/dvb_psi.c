@@ -703,8 +703,7 @@ dvb_freesat_regions
     if (!fr) {
       fr = calloc(1, sizeof(*fr));
       fr->regionid = id;
-      strncpy(fr->name, name, sizeof(fr->name)-1);
-      fr->name[sizeof(fr->name)-1] = '\0';
+      strlcpy(fr->name, name, sizeof(fr->name));
       TAILQ_INIT(&fr->services);
       LIST_INSERT_HEAD(&bi->fregions, fr, link);
     }
@@ -958,8 +957,7 @@ dvb_bskyb_local_channels
           snprintf(buf, sizeof(buf), "Region %d", regionid);
           str = buf;
         }
-        strncpy(fr->name, str, sizeof(fr->name)-1);
-        fr->name[sizeof(fr->name)-1] = '\0';
+        strlcpy(fr->name, str, sizeof(fr->name));
         TAILQ_INIT(&fr->services);
         LIST_INSERT_HEAD(&bi->fregions, fr, link);
       }
@@ -1510,10 +1508,8 @@ dvb_nit_callback
   /* BAT */
   } else if (tableid == 0x4A) {
     tvhdebug(mt->mt_subsys, "%s: bouquet %04X (%d) [%s]", mt->mt_name, nbid, nbid, name);
-    if (bi && *name) {
-      strncpy(bi->name, name, sizeof(bi->name)-1);
-      bi->name[sizeof(bi->name)-1] = '\0';
-    }
+    if (bi && *name)
+      strlcpy(bi->name, name, sizeof(bi->name));
 
   /* NIT */
   } else {

@@ -652,7 +652,7 @@ epggrab_module_activate_socket ( void *m, int a )
 
     memset(&addr, 0, sizeof(struct sockaddr_un));
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, mod->path, 100);
+    strlcpy(addr.sun_path, mod->path, sizeof(addr.sun_path));
     if (bind(sock, (struct sockaddr*)&addr,
              sizeof(struct sockaddr_un)) != 0) {
       tvherror(mod->subsys, "%s: failed to bind socket: %s", mod->id, strerror(errno));

@@ -1166,8 +1166,7 @@ found:
   if ((id = imagecache_get_id(icon))) {
     snprintf(buf, sizeof(buf), "imagecache/%d", id);
   } else {
-    strncpy(buf, icon, sizeof(buf));
-    buf[sizeof(buf)-1] = '\0';
+    strlcpy(buf, icon, sizeof(buf));
   }
 
   return buf;

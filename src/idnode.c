@@ -252,8 +252,7 @@ idnode_get_title(idnode_t *in, const char *lang, char *dst, size_t dstsize)
       return dst;
     }
   }
-  strncpy(dst, idnode_uuid_as_str(in, ubuf), dstsize);
-  dst[dstsize-1] = 0;
+  strlcpy(dst, idnode_uuid_as_str(in, ubuf), dstsize);
   return dst;
 }
 

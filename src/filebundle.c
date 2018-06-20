@@ -192,8 +192,7 @@ fb_dirent *fb_readdir ( fb_dir *dir )
   fb_dirent *ret = NULL;
   if (dir->type == FB_BUNDLE) {
     if (dir->b.cur) {
-      strncpy(dir->dirent.name, dir->b.cur->name, sizeof(dir->dirent.name)-1);
-      dir->dirent.name[sizeof(dir->dirent.name)-1] = '\0';
+      strlcpy(dir->dirent.name, dir->b.cur->name, sizeof(dir->dirent.name));
       dir->dirent.type = dir->b.cur->type;
       dir->b.cur       = dir->b.cur->next;
       ret              = &dir->dirent;
@@ -261,8 +260,7 @@ int fb_scandir ( const char *path, fb_dirent ***list )
     i = 0;
     while (fb) {
       (*list)[i] = calloc(1, sizeof(fb_dirent));
-      strncpy((*list)[i]->name, fb->name, sizeof((*list)[i]->name));
-      (*list)[i]->name[sizeof((*list)[i]->name)-1] = '\0';
+      strlcpy((*list)[i]->name, fb->name, sizeof((*list)[i]->name));
       fb = fb->next;
       i++;
     }

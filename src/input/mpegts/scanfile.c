@@ -335,8 +335,7 @@ scanfile_create_network
   int opos;
 
   /* Region */
-  strncpy(buf, name, sizeof(buf));
-  buf[sizeof(buf)-1] = '\0';
+  strlcpy(buf, name, sizeof(buf));
   if (!strcmp(type, "dvb-s")) {
     reg = scanfile_region_create(type, "geo", "Geo-synchronous Orbit");
   } else {

@@ -243,12 +243,6 @@ static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
   abort(); \
 } while (0)
 
-#define tvh_strlen(s) ((s) ? strlen(s) : 0)
-
-#define tvh_strlcatf(buf, size, ptr, fmt...) \
-  do { int __r = snprintf((buf) + ptr, (size) - ptr, fmt); \
-       ptr = __r >= (size) - ptr ? (size) - 1 : ptr + __r; } while (0)
-
 void tvhlog_backtrace_printf(const char *fmt, ...);
 
 #endif /* __TVH_LOGGING_H__ */

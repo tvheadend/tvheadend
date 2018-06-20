@@ -40,15 +40,14 @@ static char *get_languages_string(htsmsg_field_t *field)
     if (langlist) {
       htsmsg_field_t *item;
       char langbuf[MAX_TEXT_LEN];
+      size_t l = 0;
       langbuf[0] = '\0';
       HTSMSG_FOREACH(item, langlist) {
         s = htsmsg_field_get_str(item);
-        if (s) {
-          strncat(langbuf, s, sizeof(langbuf) - strlen(langbuf) - 1);
-          strncat(langbuf, "|", sizeof(langbuf) - strlen(langbuf) - 1);
-        }
+        if (s)
+          tvh_strlcatf(langbuf, MAX_TEXT_LEN, l, "%s|", s);
       }
-      if (strlen(langbuf) > 0)
+      if (l > 0)
         return strdup(langbuf);
     }
   }
@@ -143,13 +142,12 @@ void *eit_pattern_apply_list(char *buf, size_t size_buf, const char *text, const
         if (regex_match_substring(&p->compiled, matchno, matchbuf, sizeof(matchbuf)))
           break;
         size_t len = strlen(buf);
-        strncat(buf, matchbuf, size_buf - len - 1);
+        strlcat(buf, matchbuf, size_buf - len);
       }
       rtrim(buf);
       tvhtrace(LS_EPGGRAB,"  pattern \"%s\" matches '%s' from '%s'", p->text, buf, text);
       if (p->filter) {
-        strncpy(textbuf, buf, MAX_TEXT_LEN - 1);
-        textbuf[MAX_TEXT_LEN - 1] = '\0';
+        strlcpy(textbuf, buf, MAX_TEXT_LEN);
         text = textbuf;
         continue;
       }

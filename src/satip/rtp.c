@@ -670,8 +670,7 @@ satip_rtcp_fec(int fec)
   s = dvb_fec2str(fec);
   if (s == NULL)
     return "";
-  strncpy(buf, s, sizeof(buf));
-  buf[sizeof(buf)-1] = '\0';
+  strlcpy(buf, s, sizeof(buf));
   p = strchr(buf, '/');
   while (p && *p) {
     *p = *(p+1);
