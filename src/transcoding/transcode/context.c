@@ -498,7 +498,7 @@ tvh_context_open_filters(TVHContext *self,
     struct {
         const AVClass *class;
     } logctx = { &logclass };
-    AVFilter *iavflt = NULL, *oavflt = NULL;
+    const AVFilter *iavflt = NULL, *oavflt = NULL;
     AVFilterInOut *iavfltio = NULL, *oavfltio = NULL;
     AVBufferSrcParameters *par = NULL;
     int i, ret = -1;

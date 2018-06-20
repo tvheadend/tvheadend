@@ -102,7 +102,7 @@ codec_get_title(AVCodec *self)
         str_snprintf(codec_title, sizeof(codec_title),
             self->long_name ? "%s: %s%s" : "%s%s%s",
             self->name, self->long_name ? self->long_name : "",
-            (self->capabilities & CODEC_CAP_EXPERIMENTAL) ? " (Experimental)" : "")
+            (self->capabilities & AV_CODEC_CAP_EXPERIMENTAL) ? " (Experimental)" : "")
        ) {
         return NULL;
     }
