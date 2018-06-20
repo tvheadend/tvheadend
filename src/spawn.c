@@ -201,8 +201,7 @@ find_exec ( const char *name, char *out, size_t len )
   if (name[0] == '/') {
     if (lstat(name, &st)) return 0;
     if (!S_ISREG(st.st_mode) || !(st.st_mode & S_IEXEC)) return 0;
-    strncpy(out, name, len);
-    out[len-1] = '\0';
+    strlcpy(out, name, len);
     return 1;
   }
   if (!(path = getenv("PATH"))) return 0;
@@ -215,8 +214,7 @@ find_exec ( const char *name, char *out, size_t len )
         snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
         if (lstat(bin, &st)) continue;
         if (!S_ISREG(st.st_mode) || !(st.st_mode & S_IEXEC)) continue;
-        strncpy(out, bin, len);
-        out[len-1] = '\0';
+        strlcpy(out, bin, len);
         ret = 1;
         break;
       }

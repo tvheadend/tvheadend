@@ -328,13 +328,12 @@ iptv_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   iptv_mux_t *im = (iptv_mux_t*)mm;
   if(im->mm_iptv_muxname) {
-    strncpy(buf, im->mm_iptv_muxname, len);
-    buf[len-1] = '\0';
+    strlcpy(buf, im->mm_iptv_muxname, len);
   } else if(im->mm_iptv_url_sane) {
-    strncpy(buf, im->mm_iptv_url_sane, len);
-    buf[len-1] = '\0';
-  } else
+    strlcpy(buf, im->mm_iptv_url_sane, len);
+  } else {
     *buf = 0;
+  }
 }
 
 /*

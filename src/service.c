@@ -1847,8 +1847,7 @@ service_instance_add(service_instance_list_t *sil,
   }
   si->si_weight = weight;
   si->si_prio   = prio;
-  strncpy(si->si_source, source ?: "<unknown>", sizeof(si->si_source));
-  si->si_source[sizeof(si->si_source)-1] = '\0';
+  strlcpy(si->si_source, source ?: "<unknown>", sizeof(si->si_source));
   TAILQ_INSERT_SORTED(sil, si, si_link, si_cmp);
   return si;
 }
@@ -2197,7 +2196,7 @@ void service_load ( service_t *t, htsmsg_t *c )
       st = service_stream_create(t, pid, type);
 
       if((v = htsmsg_get_str(c, "language")) != NULL)
-        strncpy(st->es_lang, lang_code_get(v), 3);
+        strlcpy(st->es_lang, lang_code_get(v), 4);
 
       if (SCT_ISAUDIO(type)) {
         if(!htsmsg_get_u32(c, "audio_type", &u32))

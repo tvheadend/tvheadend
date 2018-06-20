@@ -892,8 +892,7 @@ access_set_prefix(struct access_ipmask_queue *ais, const char *prefix, int dflt)
     free(ai);
   }
 
-  strncpy(tokbuf, prefix, sizeof(tokbuf)-1);
-  tokbuf[sizeof(tokbuf) - 1] = 0;
+  strlcpy(tokbuf, prefix, sizeof(tokbuf));
   tok = strtok_r(tokbuf, delim, &saveptr);
 
   while (tok != NULL) {

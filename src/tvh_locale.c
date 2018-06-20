@@ -22,6 +22,7 @@
 #include <pthread.h>
 #include "pthread.h"
 #include "tvh_locale.h"
+#include "tvh_string.h"
 #include "redblack.h"
 
 struct tvh_locale {
@@ -198,8 +199,7 @@ static void tvh_gettext_default_init(void)
   if (p == NULL)
     p = (char *)"en_US";
 
-  strncpy(dflt, p, sizeof(dflt)-1);
-  dflt[sizeof(dflt)-1] = '\0';
+  strlcpy(dflt, p, sizeof(dflt));
   for (p = dflt; *p && *p != '.'; p++);
   if (*p == '.') *p = '\0';
 

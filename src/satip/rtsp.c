@@ -1519,8 +1519,7 @@ rtsp_process_teardown(http_connection_t *hc)
     pthread_mutex_unlock(&rtsp_lock);
     http_error(hc, !rs ? HTTP_STATUS_BAD_SESSION : HTTP_STATUS_NOT_FOUND);
   } else {
-    strncpy(session, rs->session, sizeof(session));
-    session[sizeof(session)-1] = '\0';
+    strlcpy(session, rs->session, sizeof(session));
     rtsp_close_session(rs);
     rtsp_free_session(rs);
     pthread_mutex_unlock(&rtsp_lock);

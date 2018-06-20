@@ -175,9 +175,8 @@ tvhthread_create
     pthread_attr_setstacksize(&_attr, 2*1024*1024);
     attr = &_attr;
   }
-  strncpy(ts->name, "tvh:", 4);
-  strncpy(ts->name+4, name, sizeof(ts->name)-4);
-  ts->name[sizeof(ts->name)-1] = '\0';
+  strlcpy(ts->name, "tvh:", 5);
+  strlcpy(ts->name+4, name, sizeof(ts->name)-4);
   ts->run  = start_routine;
   ts->arg  = arg;
   r = pthread_create(thread, attr, thread_wrapper, ts);

@@ -36,6 +36,7 @@
 #include <sys/syscall.h>
 #endif
 #include "queue.h"
+#include "tvh_string.h"
 #include "hts_strtab.h"
 #include "htsmsg.h"
 #include "tvhlog.h"
@@ -635,25 +636,10 @@ const char *streaming_component_type2txt(streaming_component_type_t s);
 streaming_component_type_t streaming_component_txt2type(const char *s);
 const char *streaming_component_audio_type2desc(int audio_type);
 
-static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
-{
-  unsigned int v = 5381;
-  while(*s)
-    v += (v << 5) + v + *s++;
-  return v % mod;
-}
-
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MINMAX(a,mi,ma) MAX(mi, MIN(ma, a))
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
-static inline const char *tvh_str_default(const char *s, const char *dflt)
-{
-  return s && s[0] ? s : dflt;
-}
-void tvh_str_set(char **strp, const char *src);
-int tvh_str_update(char **strp, const char *src);
 
 int sri_to_rate(int sri);
 int rate_to_sri(int rate);
@@ -669,36 +655,11 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
 
 #define scopedgloballock() scopedlock(&global_lock)
 
-#define tvh_strdupa(n) \
-  ({ int tvh_l = strlen(n); \
-     char *tvh_b = alloca(tvh_l + 1); \
-     memcpy(tvh_b, n, tvh_l + 1); })
-
-#define tvh_strlen(s) ((s) ? strlen(s) : 0)
-
-#define tvh_strlcatf(buf, size, ptr, fmt...) \
-  do { int __r = snprintf((buf) + ptr, (size) - ptr, fmt); \
-       ptr = __r >= (size) - ptr ? (size) - 1 : ptr + __r; } while (0)
-
-static inline const char *tvh_strbegins(const char *s1, const char *s2)
-{
-  while(*s2)
-    if(*s1++ != *s2++)
-      return NULL;
-  return s1;
-}
-
 typedef struct th_pipe
 {
   int rd;
   int wr;
 } th_pipe_t;
-
-static inline void mystrset(char **p, const char *s)
-{
-  free(*p);
-  *p = s ? strdup(s) : NULL;
-}
 
 void doexit(int x);
 
@@ -743,10 +704,6 @@ char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size);
 
 /* Calculate the output size needed to base64-encode x bytes. */
 #define BASE64_SIZE(x) (((x)+2) / 3 * 4 + 1)
-
-int put_utf8(char *out, int c);
-
-char *utf8_lowercase_inplace(char *s);
 
 static inline int64_t ts_rescale(int64_t ts, int tb)
 {

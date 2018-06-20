@@ -3083,8 +3083,7 @@ static const void *
 dvr_entry_class_status_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  strncpy(prop_sbuf, dvr_entry_status(de), PROP_SBUF_LEN);
-  prop_sbuf[PROP_SBUF_LEN-1] = '\0';
+  strlcpy(prop_sbuf, dvr_entry_status(de), PROP_SBUF_LEN);
   return &prop_sbuf_ptr;
 }
 
@@ -3092,8 +3091,7 @@ static const void *
 dvr_entry_class_sched_status_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  strncpy(prop_sbuf, dvr_entry_schedstatus(de), PROP_SBUF_LEN);
-  prop_sbuf[PROP_SBUF_LEN-1] = '\0';
+  strlcpy(prop_sbuf, dvr_entry_schedstatus(de), PROP_SBUF_LEN);
   return &prop_sbuf_ptr;
 }
 

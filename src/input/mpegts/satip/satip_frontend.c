@@ -1762,8 +1762,7 @@ new_tune:
             fatal = 1;
             continue;
           } else {
-            strncpy((char *)session, rtsp->hc_rtsp_session ?: "", sizeof(session));
-            session[sizeof(session)-1] = '\0';
+            strlcpy((char *)session, rtsp->hc_rtsp_session ?: "", sizeof(session));
             stream_id = rtsp->hc_rtsp_stream_id;
             tvhdebug(LS_SATIP, "%s #%i - new session %s stream id %li",
                         rtsp->hc_host, lfe->sf_number,

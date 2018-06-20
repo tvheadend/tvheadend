@@ -59,8 +59,8 @@ static time_t _xmltv_str2time(const char *in)
   char str[32];
 
   memset(&tm, 0, sizeof(tm));
-  strncpy(str, in, sizeof(str));
-  str[sizeof(str)-1] = '\0';
+  tm.tm_mday = 1;               /* Day is one-based not zero-based */
+  strlcpy(str, in, sizeof(str));
 
   /* split tz */
   while (str[sp] && str[sp] != ' ' && str[sp] != '+' && str[sp] != '-')

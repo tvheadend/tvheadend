@@ -441,7 +441,7 @@ tcp_get_str_from_ip(const struct sockaddr_storage *sa, char *dst, size_t maxlen)
       inet_ntop(AF_INET6, &(((struct sockaddr_in6*)sa)->sin6_addr), dst, maxlen);
       break;
     default:
-      strncpy(dst, "Unknown AF", maxlen);
+      strlcpy(dst, "Unknown AF", maxlen);
       return NULL;
   }
 

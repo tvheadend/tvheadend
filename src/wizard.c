@@ -254,7 +254,7 @@ wizard_page_t *wizard_hello(const char *lang)
   page->aux = w = calloc(1, sizeof(wizard_hello_t));
 
   if (config.language_ui)
-    strncpy(w->ui_lang, config.language_ui, sizeof(w->ui_lang)-1);
+    strlcpy(w->ui_lang, config.language_ui, sizeof(w->ui_lang));
 
   m = htsmsg_csv_2_list(config.language, ',');
   f = m ? HTSMSG_FIRST(m) : NULL;
@@ -262,9 +262,9 @@ wizard_page_t *wizard_hello(const char *lang)
     s = htsmsg_field_get_string(f);
     if (s == NULL) break;
     switch (idx) {
-    case 0: strncpy(w->epg_lang1, s, sizeof(w->epg_lang1) - 1); break;
-    case 1: strncpy(w->epg_lang2, s, sizeof(w->epg_lang2) - 1); break;
-    case 2: strncpy(w->epg_lang3, s, sizeof(w->epg_lang3) - 1); break;
+    case 0: strlcpy(w->epg_lang1, s, sizeof(w->epg_lang1)); break;
+    case 1: strlcpy(w->epg_lang2, s, sizeof(w->epg_lang2)); break;
+    case 2: strlcpy(w->epg_lang3, s, sizeof(w->epg_lang3)); break;
     }
     f = HTSMSG_NEXT(f);
   }

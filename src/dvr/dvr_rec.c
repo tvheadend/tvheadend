@@ -320,8 +320,7 @@ dvr_do_prefix(const char *id, const char *fmt, const char *s, char *tmp, size_t 
   } else if (s[0] && !isalpha(id[0])) {
     snprintf(tmp, tmplen, "%c%s", id[0], s);
   } else {
-    strncpy(tmp, s, tmplen-1);
-    tmp[tmplen-1] = '\0';
+    strlcpy(tmp, s, tmplen);
   }
   return dvr_clean_directory_separator(tmp, tmp, tmplen);
 }
@@ -562,8 +561,7 @@ dvr_sub_str(const char *id, const char *fmt, const void *aux, char *tmp, size_t 
 static const char *
 dvr_sub_str_separator(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
-  strncpy(tmp, (const char *)aux, tmplen-1);
-  tmp[tmplen-1] = '\0';
+  strlcpy(tmp, (const char *)aux, tmplen);
   return dvr_clean_directory_separator(tmp, tmp, tmplen);
 }
 
@@ -598,8 +596,7 @@ static htsstr_substitute_t dvr_subs_postproc_entry[] = {
 static const char *
 dvr_sub_basename(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
-  strncpy(tmp, (const char *)aux, tmplen);
-  tmp[tmplen-1] = '\0';
+  strlcpy(tmp, (const char *)aux, tmplen);
   return basename(tmp);
 }
 
@@ -703,8 +700,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
   localtime_r(&de->de_start, &tm);
 
-  strncpy(path, cfg->dvr_storage, sizeof(path));
-  path[sizeof(path)-1] = '\0';
+  strlcpy(path, cfg->dvr_storage, sizeof(path));
   l = strlen(path);
   if (l + 1 >= sizeof(path)) {
     tvherror(LS_DVR, "wrong storage path");
@@ -736,8 +732,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     if (dir_dosubs) {
       htsstr_substitute(de->de_directory+2, ptmp, sizeof(ptmp), '$', dvr_subs_entry, de, tmp, sizeof(tmp));
     } else {
-      strncpy(ptmp, de->de_directory, sizeof(ptmp)-1);
-      ptmp[sizeof(ptmp)-1] = '\0';
+      strlcpy(ptmp, de->de_directory, sizeof(ptmp));
     }
     s = ptmp;
     while (*s == '/')

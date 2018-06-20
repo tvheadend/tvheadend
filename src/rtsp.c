@@ -54,8 +54,8 @@ rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
       hdr = &h;
       http_arg_init(&h);
     }
-    strncpy(buf_body, body, sizeof(buf_body));
-    strncat(buf_body, "\r\n", 2);
+    strlcpy(buf_body, body, sizeof(buf_body));
+    strlcat(buf_body, "\r\n", 2);
     snprintf(buf2, sizeof(buf2), "%"PRIu64, (uint64_t)(size + 2));
     http_arg_set(hdr, "Content-Length", buf2);
   }

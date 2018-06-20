@@ -356,8 +356,7 @@ esfilter_class_language_set(void *o, const void *v)
   const char *s = v;
   char n[4];
   int save;
-  strncpy(n, s && s[0] ? lang_code_get(s) : "", 4);
-  n[3] = 0;
+  strlcpy(n, s && s[0] ? lang_code_get(s) : "", 4);
   save = strcmp(esf->esf_language, n);
   strcpy(esf->esf_language, n);
   return save;
@@ -402,8 +401,7 @@ esfilter_class_service_set(void *o, const void *v)
   const char *s = v;
   int save = 0;
   if (strncmp(esf->esf_service, s, UUID_HEX_SIZE)) {
-    strncpy(esf->esf_service, s, UUID_HEX_SIZE);
-    esf->esf_service[UUID_HEX_SIZE-1] = '\0';
+    strlcpy(esf->esf_service, s, UUID_HEX_SIZE);
     save = 1;
   }
   return save;
