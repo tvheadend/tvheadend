@@ -97,7 +97,7 @@ lang_str_ele_t *lang_str_get2
   /* Check config/requested langs */
   if ((langs = lang_code_split(lang)) != NULL) {
     for (i = 0; i < langs->codeslen; i++) {
-      strncpy(skel.lang, langs->codes[i]->code2b, sizeof(skel.lang));
+      memcpy(skel.lang, langs->codes[i]->code2b, sizeof(skel.lang));
       if ((e = RB_FIND(ls, &skel, link, _lang_cmp)))
         break;
     }
@@ -130,7 +130,7 @@ static int _lang_str_add
   /* Create */
   if (!e) {
     e = malloc(sizeof(*e) + strlen(str) + 1);
-    strncpy(e->lang, lang, sizeof(e->lang));
+    memcpy(e->lang, lang, sizeof(e->lang));
     strcpy(e->str, str);
     RB_INSERT_SORTED(ls, e, link, _lang_cmp);
     save = 1;

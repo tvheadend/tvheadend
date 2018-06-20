@@ -261,7 +261,7 @@ int fb_scandir ( const char *path, fb_dirent ***list )
     i = 0;
     while (fb) {
       (*list)[i] = calloc(1, sizeof(fb_dirent));
-      strncpy((*list)[i]->name, fb->name, sizeof((*list)[i]->name));
+      memcpy((*list)[i]->name, fb->name, sizeof((*list)[i]->name));
       (*list)[i]->name[sizeof((*list)[i]->name)-1] = '\0';
       fb = fb->next;
       i++;
