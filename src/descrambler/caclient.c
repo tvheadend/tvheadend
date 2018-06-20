@@ -120,7 +120,8 @@ caclient_create
 #if ENABLE_CONSTCW
   if (c == &caclient_ccw_csa_cbc_class ||
       c == &caclient_ccw_des_ncb_class ||
-      c == &caclient_ccw_aes_ecb_class)
+      c == &caclient_ccw_aes_ecb_class ||
+      c == &caclient_ccw_aes128_ecb_class)
     cac = constcw_create();
 #endif
   if (cac == NULL) {
