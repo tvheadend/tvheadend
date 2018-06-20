@@ -471,7 +471,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
      */
     if (ebc) {
       if (ebc->copyright_year) {
-        date_buf = alloca(10);
+        date_buf = alloca(12);
         sprintf(date_buf, "%04d", ebc->copyright_year);
       } else {
         /* Some providers use first_aired as really the copyright date. */
@@ -480,7 +480,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
           /* Get just the year part */
           struct tm tm;
           if (localtime_r(&first_aired, &tm)) {
-            date_buf = alloca(10);
+            date_buf = alloca(12);
             sprintf(date_buf, "%04d", tm.tm_year + 1900);
           }
         }
