@@ -114,13 +114,13 @@ static time_t _xmltv_str2time(const char *in)
  * made, or episode X out of Y episodes in this series, or part X of a
  * Y-part episode.  If any of these aren't known they can be omitted.
  * You can put spaces whereever you like to make things easier to read.
- * 
+ *
  * (NB 'part number' is not used when a whole programme is split in two
  * for purely scheduling reasons; it's intended for cases where there
  * really is a 'Part One' and 'Part Two'.  The format doesn't currently
  * have a way to represent a whole programme that happens to be split
  * across two or more timeslots.)
- * 
+ *
  * Some examples will make things clearer.  The first episode of the
  * second series is '1.0.0/1' .  If it were a two-part episode, then the
  * first half would be '1.0.0/2' and the second half '1.0.1/2'.  If you
@@ -200,7 +200,7 @@ static void parse_xmltv_dd_progid
 {
   char buf[128];
   if (strlen(s) < 2) return;
-  
+
   /* Raw URI */
   snprintf(buf, sizeof(buf)-1, "ddprogid://%s/%s", mod->id, s);
 
@@ -241,7 +241,7 @@ static void get_episode_info
        (cdata = htsmsg_get_str(c, "cdata")) == NULL ||
        (sys = htsmsg_get_str(a, "system")) == NULL)
       continue;
-    
+
     if(!strcmp(sys, "onscreen"))
       epnum->text = (char*)cdata;
     else if(!strcmp(sys, "xmltv_ns"))
@@ -310,7 +310,7 @@ xmltv_parse_vid_quality
   }
   if (lines)
     save |= epg_broadcast_set_lines(ebc, lines, changes);
-  
+
   return save;
 }
 
@@ -318,7 +318,7 @@ xmltv_parse_vid_quality
  * Parse accessibility data
  */
 int
-xmltv_parse_accessibility 
+xmltv_parse_accessibility
   ( epg_broadcast_t *ebc, htsmsg_t *m, epg_changes_t *changes )
 {
   int save = 0;
@@ -599,7 +599,7 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
  * Parse tags inside of a programme
  */
 static int _xmltv_parse_programme_tags
-  (epggrab_module_t *mod, channel_t *ch, htsmsg_t *tags, 
+  (epggrab_module_t *mod, channel_t *ch, htsmsg_t *tags,
    time_t start, time_t stop, const char *icon,
    epggrab_stats_t *stats)
 {
@@ -661,9 +661,14 @@ static int _xmltv_parse_programme_tags
     if (VAR) { \
       char *str = string_list_2_csv(VAR, ',', 1); \
       if (str) {                                  \
-        lang_str_append(desc, "\n\n", NULL);      \
-        lang_str_append(desc, NAME, NULL);        \
-        lang_str_append(desc, str, NULL);         \
+        lang_str_ele_t *e;                        \
+                                                  \
+        RB_FOREACH(e, desc, link)                 \
+        {                                         \
+          lang_str_append(desc, "\n\n", e->lang); \
+          lang_str_append(desc, NAME, e->lang);   \
+          lang_str_append(desc, str, e->lang);    \
+        }                                         \
         free(str);                                \
       }                                           \
     }
@@ -863,7 +868,6 @@ static int _xmltv_parse_channel
   ch->laststamp = gclk();
   stats->channels.total++;
   if (save) stats->channels.created++;
-  
   dnames = htsmsg_create_list();
 
   HTSMSG_FOREACH(f, tags) {
