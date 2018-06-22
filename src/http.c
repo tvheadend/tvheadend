@@ -658,7 +658,6 @@ http_error(http_connection_t *hc, int error)
       level = LOG_DEBUG;
     else if (error == HTTP_STATUS_BAD_REQUEST || error > HTTP_STATUS_UNAUTHORIZED)
       level = LOG_ERR;
-    if (hc->hc_cmd == 6 && strstr(hc->hc_url, "&pids")) abort();
     tvhlog(level, hc->hc_subsys, "%s: %s %s (%d) %s -- %d",
 	   hc->hc_peer_ipstr, http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_cmd, hc->hc_url, error);
