@@ -659,18 +659,16 @@ static int _xmltv_parse_programme_tags
      */
 #define APPENDIT(VAR,NAME) \
     if (VAR) { \
-      char *str = string_list_2_csv(VAR, ',', 1); \
-      if (str) {                                  \
-        lang_str_ele_t *e;                        \
-                                                  \
-        RB_FOREACH(e, desc, link)                 \
-        {                                         \
-          lang_str_append(desc, "\n\n", e->lang); \
-          lang_str_append(desc, NAME, e->lang);   \
-          lang_str_append(desc, str, e->lang);    \
-        }                                         \
-        free(str);                                \
-      }                                           \
+      char *str = string_list_2_csv((VAR), ',', 1);				\
+      if (str) {								\
+        lang_str_ele_t *e;							\
+        RB_FOREACH(e, desc, link) {						\
+          lang_str_append(desc, "\n\n", e->lang);				\
+          lang_str_append(desc, tvh_gettext_lang((NAME), e->lang), e->lang);	\
+          lang_str_append(desc, str, e->lang);					\
+        }									\
+        free(str);								\
+      }										\
     }
 
     /* Append the details on to the description, mainly for legacy
