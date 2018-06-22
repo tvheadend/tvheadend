@@ -1544,8 +1544,8 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
     HTSMSG_FOREACH(f, map) {
       sdt = calloc(1, sizeof(*sdt));
       if ((e = htsmsg_field_get_map(f)) != NULL) {
-        eit_parse_list(e, "onid", nit->onid, ARRAY_SIZE(sdt->onid), &sdt->onid_count);
-        eit_parse_list(e, "tsid", nit->tsid, ARRAY_SIZE(sdt->tsid), &sdt->tsid_count);
+        eit_parse_list(e, "onid", sdt->onid, ARRAY_SIZE(sdt->onid), &sdt->onid_count);
+        eit_parse_list(e, "tsid", sdt->tsid, ARRAY_SIZE(sdt->tsid), &sdt->tsid_count);
       }
       LIST_INSERT_HEAD(&priv->sdt, sdt, link);
     }
