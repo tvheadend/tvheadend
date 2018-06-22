@@ -69,6 +69,7 @@
       "Sirius": { "nbid": 85 },
       "Viasat": { "nbid": 86 }
     },
+    "pid": 37,
     "prio": 5
   },
 
@@ -101,7 +102,8 @@
     "name": {
       "eng": "EIT: EPG Grabber"
     },
-    "prio": 1
+    "prio": 1,
+    "sdt_enable": 1
   }
 
 }

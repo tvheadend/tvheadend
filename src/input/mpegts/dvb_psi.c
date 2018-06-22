@@ -1639,6 +1639,7 @@ dvb_sdt_mux
         case DVB_DESC_PRIVATE_DATA:
           if (dlen == 4) {
             priv = extract_4byte(dptr);
+            if (priv && mt->mt_priv == 0) mt->mt_priv = priv;
             tvhtrace(mt->mt_subsys, "%s:  private %08X", mt->mt_name, priv);
           }
           break;
@@ -1739,7 +1740,14 @@ dvb_sdt_callback
   if (tableid != 0x42 && tableid != 0x46) return -1;
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, extraid, 8, &st, &sect, &last, &ver, 0);
-  if (r != 1) return r;
+  if (r != 1) {
+    if (r == 0) {
+      /* install EIT handlers, but later than from optional NIT */
+      if (mm->mm_start_monoclock + sec2mono(10) < mclk())
+        eit_sdt_callback(mt, mt->mt_priv);
+    }
+    return r;
+  }
 
   /* ID */
   tvhdebug(mt->mt_subsys, "%s: onid %04X (%d) tsid %04X (%d)",
@@ -1756,6 +1764,9 @@ dvb_sdt_callback
     r = dvb_sdt_mux(mt, mm, mm, ptr, len, tableid);
     if (r)
       return r;
+    /* install EIT handlers, but later than from optional NIT */
+    if (mm->mm_start_monoclock + sec2mono(10) < mclk())
+      eit_sdt_callback(mt, mt->mt_priv);
   } else {
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
       if (mm->mm_onid == onid && mm->mm_tsid == tsid &&

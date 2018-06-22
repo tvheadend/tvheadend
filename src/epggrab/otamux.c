@@ -280,6 +280,7 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
     if (modname && !strcmp(modname, map->om_module->id))
       map->om_forced = 1;
     map->om_complete = 0;
+    map->om_eit_state = EPGGRAB_OTA_MUX_EIT_IDLE;
     if (map->om_module->start(map, mm) < 0) {
       map->om_complete = 1;
     } else

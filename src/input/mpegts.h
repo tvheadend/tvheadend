@@ -266,6 +266,7 @@ struct mpegts_table
  
   int mt_destroyed; // Refcounting
   int mt_arefcount;
+  uint32_t mt_priv;
 
   struct mpegts_table_mux_cb *mt_mux_cb;
 
@@ -1169,6 +1170,7 @@ LIST_HEAD(,mpegts_listener) mpegts_listeners;
  * misc
  */
 void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint32_t priv);
+void eit_sdt_callback(mpegts_table_t *mt, uint32_t priv);
 
 #endif /* __TVH_MPEGTS_H__ */
 

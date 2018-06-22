@@ -266,6 +266,11 @@ struct epggrab_ota_map
   uint8_t                             om_first;
   uint8_t                             om_forced;
   uint64_t                            om_tune_count;
+  enum {
+    EPGGRAB_OTA_MUX_EIT_IDLE,
+    EPGGRAB_OTA_MUX_EIT_NIT,
+    EPGGRAB_OTA_MUX_EIT_SDT
+  }                                   om_eit_state;
   RB_HEAD(,epggrab_ota_svc_link)      om_svcs;         ///< Muxes we carry data for
   void                               *om_opaque;
 };
