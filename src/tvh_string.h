@@ -47,6 +47,7 @@ static inline const char *tvh_strbegins(const char *s1, const char *s2)
   return s1;
 }
 
+#ifndef ENABLE_STRLCPY
 static inline size_t strlcpy(char *dst, const char *src, size_t size)
 {
   size_t ret = strlen(src);
@@ -57,7 +58,9 @@ static inline size_t strlcpy(char *dst, const char *src, size_t size)
   }
   return ret;
 }
+#endif
 
+#ifndef ENABLE_STRLCAT
 static inline size_t strlcat(char *dst, const char *src, size_t count)
 {
   size_t dlen = strlen(dst);
@@ -72,6 +75,7 @@ static inline size_t strlcat(char *dst, const char *src, size_t count)
   dst[len] = '\0';
   return res;
 }
+#endif
 
 #define tvh_strlcatf(buf, size, ptr, fmt...) \
   do { int __r = snprintf((buf) + ptr, (size) - ptr, fmt); \

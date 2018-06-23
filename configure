@@ -152,6 +152,20 @@ else
   COMPILER=gcc
 fi
 
+check_cc_snippet strlcat '#include <string.h>
+int test(int argc, char **argv) {
+  char dst[10];
+  strlcat("test", dst, sizeof(dst));
+  return 0;
+}'
+
+check_cc_snippet strlcpy '#include <string.h>
+int test(int argc, char **argv) {
+  char dst[10];
+  strlcpy("test", dst, sizeof(dst));
+  return 0;
+}'
+
 check_cc_snippet getloadavg '#include <stdlib.h>
 void test() { getloadavg(NULL,0); }'
 
