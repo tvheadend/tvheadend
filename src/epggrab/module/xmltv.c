@@ -664,7 +664,7 @@ static int _xmltv_parse_programme_tags
         lang_str_ele_t *e;							\
         RB_FOREACH(e, desc, link) {						\
           lang_str_append(desc, "\n\n", e->lang);				\
-          lang_str_append(desc, tvh_gettext_lang((NAME), e->lang), e->lang);	\
+          lang_str_append(desc, tvh_gettext_lang(e->lang, (NAME)), e->lang);	\
           lang_str_append(desc, str, e->lang);					\
         }									\
         free(str);								\
