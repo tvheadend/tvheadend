@@ -654,7 +654,6 @@ fi
 if enabled_or_auto vaapi; then
   if enabled libav; then
     if check_pkg libva ">=0.38.0"; then
-      check_pkg libva-x11 ">=0.38.0" || die "libva-x11 not found"
       check_pkg libva-drm ">=0.38.0" || die "libva-drm not found"
       enable vaapi
       enable hwaccels
