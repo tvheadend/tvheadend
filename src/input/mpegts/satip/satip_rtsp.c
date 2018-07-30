@@ -157,7 +157,10 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     sprintf(buf, "src=%i&", src);
   else
     buf[0] = '\0';
-  sprintf(buf + strlen(buf), "fe=%i", fe);
+
+  if (flags & SATIP_SETUP_FE)
+	  sprintf(buf + strlen(buf), "fe=%i", fe);
+
   if (dmc->dmc_fe_delsys == DVB_SYS_DVBS ||
       dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {
     satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq);
@@ -196,6 +199,11 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
         dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_AUTO)
       /* note: OctopusNet device does not handle 'fec=auto' */
       ADD(u.dmc_fe_qam.fec_inner,   fec,   "auto");
+
+    // for sat>ip compliance
+	if (flags & SATIP_SETUP_SPECINV)
+	    strcat(buf, "&specinv=0");
+
   } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBT ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {
     satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
