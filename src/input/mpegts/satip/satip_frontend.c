@@ -217,6 +217,14 @@ const idclass_t satip_frontend_class =
       .off      = offsetof(satip_frontend_t, sf_pass_weight),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "specinv",
+      .name     = N_("Pass SPECINV"),
+      .desc     = N_("Pass Spectrum inversion."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_frontend_t, sf_specinv),
+    },
+    {
       .type     = PT_STR,
       .id       = "tunerbindaddr",
       .name     = N_("Tuner bind IP address"),
@@ -1646,6 +1654,11 @@ new_tune:
     rtsp_flags |= SATIP_SETUP_PILOT_ON;
   if (lfe->sf_device->sd_pids21)
     rtsp_flags |= SATIP_SETUP_PIDS21;
+  if (lfe->sf_specinv)
+      rtsp_flags |= SATIP_SETUP_SPECINV;
+  if (lfe->sf_device->sd_fe)
+        rtsp_flags |= SATIP_SETUP_FE;
+
   r = -12345678;
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_req == lfe->sf_req_thread) {
@@ -2050,6 +2063,9 @@ satip_frontend_hacks( satip_frontend_t *lfe )
   } else if (strstr(sd->sd_info.manufacturer, "AVM Berlin") &&
               strstr(sd->sd_info.modelname, "FRITZ!")) {
     lfe->sf_play2 = 1;
+  } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
+    lfe->sf_specinv = 1;
+    lfe->sf_pass_weight = 0;
   }
 }
 
@@ -2129,6 +2145,7 @@ satip_frontend_create
   lfe->sf_position     = -1;
   lfe->sf_netlimit     = 1;
   lfe->sf_netgroup     = 0;
+
 
   /* Callbacks */
   lfe->mi_get_weight   = satip_frontend_get_weight;

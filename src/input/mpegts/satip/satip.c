@@ -315,6 +315,15 @@ const idclass_t satip_device_class =
     },
     {
       .type     = PT_BOOL,
+      .id       = "fe",
+      .name     = N_("FE supported"),
+      .desc     = N_("Enable if the SAT>IP box supports the frontend "
+    		         "identifier."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_fe),
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "piloton",
       .name     = N_("Force pilot for DVB-S2"),
       .desc     = N_("Enable if the SAT>IP box requests plts=on "
@@ -564,6 +573,8 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_deladd = 0;
     sd->sd_pids21      = 1;
+  } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
+    sd->sd_fe  = 0;
   }
 }
 
@@ -590,6 +601,7 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_pids_len    = 127;
   sd->sd_pids_max    = 32;
   sd->sd_pids_deladd = 1;
+  sd->sd_fe          = 1;
   sd->sd_sig_scale   = 240;
   sd->sd_dbus_allow  = 1;
 
