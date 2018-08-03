@@ -86,6 +86,7 @@ struct satip_device
   int                        sd_pids_max;
   int                        sd_pids_len;
   int                        sd_pids_deladd;
+  int                        sd_fe;
   int                        sd_sig_scale;
   char                      *sd_tunercfg;
   int                        sd_pids21;
@@ -146,6 +147,7 @@ struct satip_frontend
   int                        sf_grace_period;
   int                        sf_teardown_delay;
   int                        sf_pass_weight;
+  int                        sf_specinv;
   int                        sf_delsys;
   char                      *sf_tuner_bindaddr;
 
@@ -283,6 +285,8 @@ satip_satconf_t *satip_satconf_get_position
 #define SATIP_SETUP_PLAY     (1<<1)
 #define SATIP_SETUP_PILOT_ON (1<<2)
 #define SATIP_SETUP_PIDS21   (1<<3)
+#define SATIP_SETUP_FE       (1<<4)
+#define SATIP_SETUP_SPECINV  (1<<5)
 
 int
 satip_rtsp_setup( http_client_t *hc,
