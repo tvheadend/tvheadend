@@ -2065,6 +2065,7 @@ satip_frontend_hacks( satip_frontend_t *lfe )
     lfe->sf_play2 = 1;
   } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
     lfe->sf_specinv = 1;
+    lfe->sf_pass_weight = 0;
   }
 }
 
