@@ -454,8 +454,11 @@ tcp_socket_dead(int fd)
   if (err)
     return -err;
 #ifdef PLATFORM_FREEBSD
-  if (recv(fd, NULL, 0, MSG_PEEK | MSG_DONTWAIT) < 0)
+  err = recv(fd, NULL, 0, MSG_PEEK | MSG_DONTWAIT);
+  if (err < 0)
     return -errno;
+  else if (err == 0)
+      return -EIO;
 #else
   if (recv(fd, NULL, 0, MSG_PEEK | MSG_DONTWAIT) == 0)
     return -EIO;
