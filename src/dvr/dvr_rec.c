@@ -380,6 +380,15 @@ static const char *
 _dvr_get_tvmovies_subdir(const dvr_entry_t *de)
 {
   dvr_config_t *config = de->de_config;
+  if (config && !strempty(config->dvr_format_tvmovies_subdir))
+    return config->dvr_format_tvmovies_subdir;
+  return "tvmovies";
+}
+
+static const char *
+_dvr_get_tvshows_subdir(const dvr_entry_t *de)
+{
+  dvr_config_t *config = de->de_config;
   if (config && !strempty(config->dvr_format_tvshows_subdir))
     return config->dvr_format_tvshows_subdir;
   return "tvshows";
@@ -555,7 +564,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
      *   "title - subtitle"                        (without genre_subdir, no epg info on show)
      */
     if (with_genre_subdir)
-      tvh_strlcatf(tmp, tmplen, offset, "%s/", _dvr_get_tvmovies_subdir(de));
+      tvh_strlcatf(tmp, tmplen, offset, "%s/", _dvr_get_tvshows_subdir(de));
     if (!strempty(title_buf))
       tvh_strlcatf(tmp, tmplen, offset, "%s/%s", title_buf, title_buf);
     if (!strempty(episode_buf))
