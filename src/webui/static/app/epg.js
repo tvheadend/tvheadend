@@ -69,7 +69,7 @@ tvheadend.channelLookupName = function(key) {
 tvheadend.channelTagLookupName = function(key) {
     var s = "";
     var tags = tvheadend.getChannelTags();
-    var index = tvheadend.tags.find('key', key);
+    var index = tags.find('key', key);
     if (index !== -1)
         s = tags.getAt(index).get('val');
     return s;
