@@ -141,6 +141,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_CCCAM]         = { "cccam",         N_("CWC CCCam Client") },
   [LS_DVBCAM]        = { "dvbcam",        N_("DVB CAM Client") },
   [LS_DVR]           = { "dvr",           N_("Digital Video Recorder") },
+  [LS_DVR_INOTIFY]   = { "dvr-inotify",   N_("DVR Inotify") },
   [LS_EPG]           = { "epg",           N_("Electronic Program Guide") },
   [LS_EPGDB]         = { "epgdb",         N_("EPG Database") },
   [LS_EPGGRAB]       = { "epggrab",       N_("EPG Grabber") },
