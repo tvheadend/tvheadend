@@ -318,7 +318,9 @@ const idclass_t satip_device_class =
       .id       = "fe",
       .name     = N_("FE supported"),
       .desc     = N_("Enable if the SAT>IP box supports the frontend "
-    		         "identifier."),
+                     "identifier. This allows the auto-tuner allocation, "
+                     "but it might cause trouble for boxes with different "
+                     "tuner reception connections like satellite inputs."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_fe),
     },
