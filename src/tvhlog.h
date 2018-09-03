@@ -163,6 +163,7 @@ enum {
   LS_CWC,
   LS_DVBCAM,
   LS_DVR,
+  LS_DVR_INOTIFY,
   LS_EPG,
   LS_EPGDB,
   LS_EPGGRAB,
