@@ -201,8 +201,10 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       ADD(u.dmc_fe_qam.fec_inner,   fec,   "auto");
 
     // for sat>ip compliance
-	if (flags & SATIP_SETUP_SPECINV)
-	    strcat(buf, "&specinv=0");
+    if (flags & SATIP_SETUP_SPECINV0)
+      strcat(buf, "&specinv=0");
+    else if (flags & SATIP_SETUP_SPECINV1)
+      strcat(buf, "&specinv=1");
 
   } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBT ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {

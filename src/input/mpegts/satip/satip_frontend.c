@@ -216,6 +216,17 @@ satip_frontend_transport_mode_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+satip_frontend_specinv_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Do not use"),    0 },
+    { N_("Off"),           1 },
+    { N_("On"),            2 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 CLASS_DOC(satip_frontend)
 
 const idclass_t satip_frontend_class =
@@ -297,7 +308,7 @@ const idclass_t satip_frontend_class =
       .off      = offsetof(satip_frontend_t, sf_teardown_delay),
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "pass_weight",
       .name     = N_("Pass subscription weight"),
       .desc     = N_("Pass subscription weight to the SAT>IP server "
@@ -308,10 +319,11 @@ const idclass_t satip_frontend_class =
     {
       .type     = PT_BOOL,
       .id       = "specinv",
-      .name     = N_("Pass SPECINV"),
-      .desc     = N_("Pass Spectrum inversion."),
+      .name     = N_("Pass specinv"),
+      .desc     = N_("Pass Spectrum inversion to the SAT>IP server."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_specinv),
+      .list     = satip_frontend_specinv_list,
     },
     {
       .type     = PT_STR,
@@ -1815,10 +1827,12 @@ new_tune:
     rtsp_flags |= SATIP_SETUP_PILOT_ON;
   if (lfe->sf_device->sd_pids21)
     rtsp_flags |= SATIP_SETUP_PIDS21;
-  if (lfe->sf_specinv)
-      rtsp_flags |= SATIP_SETUP_SPECINV;
+  if (lfe->sf_specinv == 0)
+    rtsp_flags |= SATIP_SETUP_SPECINV0;
+  else if (lfe->sf_specinv > 0)
+    rtsp_flags |= SATIP_SETUP_SPECINV1;
   if (lfe->sf_device->sd_fe)
-        rtsp_flags |= SATIP_SETUP_FE;
+    rtsp_flags |= SATIP_SETUP_FE;
 
   r = -12345678;
   pthread_mutex_lock(&lfe->sf_dvr_lock);
