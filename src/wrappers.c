@@ -604,7 +604,7 @@ int regex_match_substring(tvh_regex_t *regex, unsigned number, char *buf, size_t
     ssize_t size = regex->re_posix_match[number].rm_eo - regex->re_posix_match[number].rm_so;
     if (size < 0 || size > (size_buf - 1))
       return -1;
-    strlcpy(buf, regex->re_posix_text + regex->re_posix_match[number].rm_so, size);
+    strlcpy(buf, regex->re_posix_text + regex->re_posix_match[number].rm_so, size + 1);
     return 0;
 #if ENABLE_PCRE || ENABLE_PCRE2
   } else {
