@@ -317,7 +317,7 @@ const idclass_t satip_frontend_class =
       .off      = offsetof(satip_frontend_t, sf_pass_weight),
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "specinv",
       .name     = N_("Pass specinv"),
       .desc     = N_("Pass Spectrum inversion to the SAT>IP server."),
