@@ -21,15 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include "tvheadend.h"
-#include "channels.h"
-#include "input/mpegts/dvb.h"
-#include "service.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
