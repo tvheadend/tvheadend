@@ -974,7 +974,7 @@ static int linuxdvb_ca_ops_enquiry
   explen = htsmsg_get_s32_or_default(enq, "explen", 0);
   text = htsmsg_get_str(enq, "text");
 
-  if (lca->lca_pin_reply && lca->lca_pin_str && lca->lca_pin_match_str &&
+  if (text && lca->lca_pin_reply && lca->lca_pin_str && lca->lca_pin_match_str &&
       (strlen(lca->lca_pin_str) == explen) &&
        strstr(text, lca->lca_pin_match_str)) {
     tvhtrace(LS_EN50221, "%s: answering to PIN enquiry", lca->lca_name);
