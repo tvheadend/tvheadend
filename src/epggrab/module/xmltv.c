@@ -680,7 +680,7 @@ static int _xmltv_parse_programme_tags
      * on old boxes/tablets that don't parse the newer fields or
      * don't display them.
      */
-    if (desc && scrape_onto_desc) {
+    if (scrape_onto_desc) {
       xmltv_appendit(&desc, credits_names, N_("Credits: "));
       xmltv_appendit(&desc, category, N_("Categories: "));
       xmltv_appendit(&desc, keyword, N_("Keywords: "));
