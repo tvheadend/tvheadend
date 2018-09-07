@@ -283,7 +283,7 @@ dvb_get_string
     *dst = 0; // empty string (confirmed!)
     return 0;
 
-  case 0x01 ... 0x0b:
+  case 0x01 ... 0x0b: /* ISO 8859-X */
     if (auto_pl_charset && (src[0] + 4) == 5)
       ic = convert_iso6937;
     else
@@ -291,11 +291,11 @@ dvb_get_string
     src++; srclen--;
     break;
 
-  case 0x0c ... 0x0f:
+  case 0x0c ... 0x0f: /* reserved for the future use */
     src++; srclen--;
     break;
 
-  case 0x10: /* Table A.4 */
+  case 0x10: /* ISO 8859 - Table A.4 */
     if(srclen < 3 || src[1] != 0 || src[2] == 0 || src[2] > 0x0f)
       return -1;
 
@@ -303,33 +303,38 @@ dvb_get_string
     src+=3; srclen-=3;
     break;
     
-  case 0x11:
+  case 0x11: /* ISO 10646 */
     ic = convert_ucs2;
     src++; srclen--;
     break;
 
-  case 0x13:
+  case 0x12: /* KSX1001-2004 - Korean Character Set - NYI! */
+    src++; srclen--;
+    break;
+
+  case 0x13: /* GB-2312-1980 */
     ic = convert_gb;
     src++; srclen--;
     break;
 
-  case 0x12:
-    src++; srclen--;
-    break;
-
-  case 0x14:
+  case 0x14: /* Big5 subset of ISO 10646 */
     ic = convert_ucs2;
     src++; srclen--;
     break;
 
-  case 0x15:
+  case 0x15: /* UTF-8 */
     ic = convert_utf8;
     src++; srclen--;
     break;
 
-  case 0x16 ... 0x1f:
+  case 0x16 ... 0x1e: /* reserved for the future use */
     src++; srclen--;
     break;
+
+  case 0x1f: /* Described by encoding_type_id, TS 101 162 */
+    if (srclen < 1)
+      return -1;
+    return -1; /* NYI */
 
   default:
     if (auto_pl_charset)
