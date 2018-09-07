@@ -468,6 +468,7 @@ static void
 descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di )
 {
   streaming_message_t *sm;
+  struct descramble_info *di2;
   int r;
 
   lock_assert(&t->s_stream_mutex);
@@ -480,7 +481,9 @@ descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di )
   }
   memcpy(t->s_descramble_info, di, sizeof(*di));
 
-  sm = streaming_msg_create(SMT_DESCRAMBLE_INFO);
+  di2 = malloc(sizeof(*di2));
+  memcpy(di2, di, sizeof(*di2));
+  sm = streaming_msg_create_data(SMT_DESCRAMBLE_INFO, di2);
   sm->sm_data = di;
 
   streaming_service_deliver((service_t *)t, sm);
