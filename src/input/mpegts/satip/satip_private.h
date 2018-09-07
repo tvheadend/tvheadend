@@ -287,7 +287,7 @@ satip_satconf_t *satip_satconf_get_position
 #define SATIP_SETUP_PIDS21   (1<<3)
 #define SATIP_SETUP_FE       (1<<4)
 #define SATIP_SETUP_SPECINV0 (1<<5)
-#define SATIP_SETUP_SPECINV1 (1<<5)
+#define SATIP_SETUP_SPECINV1 (1<<6)
 
 int
 satip_rtsp_setup( http_client_t *hc,
