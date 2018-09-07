@@ -595,6 +595,25 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
   return credits_names;
 }
 
+/*
+ * Convert the string list to a human-readable csv and append
+ * it to the desc with a prefix of name.
+ */
+static void xmltv_appendit(lang_str_t *desc, string_list_t *list, const char *name)
+{
+  if (!list) return;
+  char *str = string_list_2_csv(list, ',', 1);
+  if (str) {
+    lang_str_ele_t *e;
+    RB_FOREACH(e, desc, link) {
+      lang_str_append(desc, "\n\n", e->lang);
+      lang_str_append(desc, tvh_gettext_lang(e->lang, name), e->lang);
+      lang_str_append(desc, str, e->lang);
+    }
+    free(str);
+  }
+}
+
 /**
  * Parse tags inside of a programme
  */
@@ -654,22 +673,6 @@ static int _xmltv_parse_programme_tags
     if (scrape_extra && keyword)
       save |= epg_broadcast_set_keyword(ebc, keyword, &changes);
 
-    /* Convert the string list VAR to a human-readable csv and append
-     * it to the desc with a prefix of NAME.
-     */
-#define APPENDIT(VAR,NAME) \
-    if (VAR) { \
-      char *str = string_list_2_csv((VAR), ',', 1);				\
-      if (str) {								\
-        lang_str_ele_t *e;							\
-        RB_FOREACH(e, desc, link) {						\
-          lang_str_append(desc, "\n\n", e->lang);				\
-          lang_str_append(desc, tvh_gettext_lang(e->lang, (NAME)), e->lang);	\
-          lang_str_append(desc, str, e->lang);					\
-        }									\
-        free(str);								\
-      }										\
-    }
 
     /* Append the details on to the description, mainly for legacy
      * clients. This allow you to view the details in the description
@@ -677,9 +680,9 @@ static int _xmltv_parse_programme_tags
      * don't display them.
      */
     if (desc && scrape_onto_desc) {
-      APPENDIT(credits_names, N_("Credits: "));
-      APPENDIT(category, N_("Categories: "));
-      APPENDIT(keyword, N_("Keywords: "));
+      xmltv_appendit(desc, credits_names, N_("Credits: "));
+      xmltv_appendit(desc, category, N_("Categories: "));
+      xmltv_appendit(desc, keyword, N_("Keywords: "));
     }
 
     if (credits)          htsmsg_destroy(credits);
