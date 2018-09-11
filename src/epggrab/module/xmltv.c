@@ -599,19 +599,24 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
  * Convert the string list to a human-readable csv and append
  * it to the desc with a prefix of name.
  */
-static void xmltv_appendit(lang_str_t **desc, string_list_t *list, const char *name)
+static void xmltv_appendit(lang_str_t **_desc, string_list_t *list, const char *name)
 {
+  lang_str_t *desc;
+  lang_str_ele_t *e;
   if (!list) return;
-  if (!*desc) *desc = lang_str_create();
   char *str = string_list_2_csv(list, ',', 1);
-  if (str) {
-    lang_str_ele_t *e;
-    RB_FOREACH(e, *desc, link) {
-      lang_str_append(*desc, "\n\n", e->lang);
-      lang_str_append(*desc, tvh_gettext_lang(e->lang, name), e->lang);
-      lang_str_append(*desc, str, e->lang);
-    }
-    free(str);
+  if (!str) return;
+  desc = NULL;
+  RB_FOREACH(e, *_desc, link) {
+    if (!desc) desc = lang_str_create();
+    lang_str_append(desc, "\n\n", e->lang);
+    lang_str_append(desc, tvh_gettext_lang(e->lang, name), e->lang);
+    lang_str_append(desc, str, e->lang);
+  }
+  free(str);
+  if (desc) {
+    lang_str_destroy(*_desc);
+    *_desc = desc;
   }
 }
 
