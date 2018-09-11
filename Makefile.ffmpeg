@@ -571,6 +571,15 @@ $(LIB_ROOT)/$(FFNVCODEC)/.tvh_build: \
 		$(MAKE) -C $(LIB_ROOT)/$(FFNVCODEC) install
 	@touch $@
 
+else
+
+$(LIB_ROOT)/$(FFNVCODEC)/.tvh_download:
+	@mkdir $(LIB_ROOT)/$(FFNVCODEC)
+	@touch $@
+
+$(LIB_ROOT)/$(FFNVCODEC)/.tvh_build:
+	@touch $@
+
 endif
 
 
