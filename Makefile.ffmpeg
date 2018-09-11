@@ -577,7 +577,8 @@ $(LIB_ROOT)/$(FFNVCODEC)/.tvh_download:
 	@mkdir $(LIB_ROOT)/$(FFNVCODEC)
 	@touch $@
 
-$(LIB_ROOT)/$(FFNVCODEC)/.tvh_build:
+$(LIB_ROOT)/$(FFNVCODEC)/.tvh_build: \
+		$(LIB_ROOT)/$(FFNVCODEC)/.tvh_download
 	@touch $@
 
 endif
