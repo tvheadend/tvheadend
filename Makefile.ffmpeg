@@ -44,60 +44,68 @@ BSFS           = h264_mp4toannexb hevc_mp4toannexb
 FILTERS        = yadif format hwupload hwdownload scale null aresample anull
 HWACCELS       =
 
-YASM           = yasm-1.3.0
-YASM_TB        = $(YASM).tar.gz
-YASM_URL       = http://www.tortall.net/projects/yasm/releases/$(YASM_TB)
-YASM_SHA1      = b7574e9f0826bedef975d64d3825f75fbaeef55e
+NASM_VER       = 2.13.03
+NASM           = nasm-$(NASM_VER)
+NASM_TB        = $(NASM).tar.gz
+NASM_URL       = https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VER)/$(NASM_TB)
+NASM_SHA1      = fa15c35b6003518d8165ab507f31af5d3938e91f
 
-LIBX264        = x264-snapshot-20170515-2245
+LIBX264        = x264-snapshot-20180906-2245
 LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1   = 8079e472b3af5d54a20a8907d364b615a67fa6f2
+LIBX264_SHA1   = 454c3c96b7c6df19e36f09fffb2a25a60ec657ed
 
-LIBX265        = x265_2.4
+LIBX265        = x265_2.8
 LIBX265_TB     = $(LIBX265).tar.gz
 LIBX265_URL    = http://ftp.videolan.org/videolan/x265/$(LIBX265_TB)
-LIBX265_SHA1   = f8bfb348defa86fbfdce4dcc1d0c48c855e0e987
+LIBX265_SHA1   = e2ef1ad186d9581239463d4e5177a25bc57b9fc0
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
 else
 LIBX265_DIFFS  = libx265.pic.diff
 endif
 
-LIBVPX         = libvpx-1.6.1
-LIBVPX_TB      = $(LIBVPX).tar.bz2
-LIBVPX_URL     = http://storage.googleapis.com/downloads.webmproject.org/releases/webm/$(LIBVPX_TB)
-LIBVPX_SHA1    = a8bd0596915489d3bd8eded98d408ab8705e2f5d
+LIBVPX_VER     = 1.7.0
+LIBVPX         = libvpx-$(LIBVPX_VER)
+LIBVPX_TB      = $(LIBVPX).tar.gz
+LIBVPX_URL     = https://github.com/webmproject/libvpx/archive/v$(LIBVPX_VER)/$(LIBVPX_TB)
+LIBVPX_SHA1    = fb3d4b80596d1e3b1a7f53757d63e7d2b3eeb7c9
 
-LIBOGG         = libogg-1.3.2
+LIBOGG         = libogg-1.3.3
 LIBOGG_TB      = $(LIBOGG).tar.gz
 LIBOGG_URL     = http://downloads.xiph.org/releases/ogg/$(LIBOGG_TB)
-LIBOGG_SHA1    = df7f3977bbeda67306bc2a427257dd7375319d7d
+LIBOGG_SHA1    = 28ba40fd2e2d41988f658a0016fa7b534e509bc0
 
 LIBTHEORA      = libtheora-1.1.1
 LIBTHEORA_TB   = $(LIBTHEORA).tar.gz
 LIBTHEORA_URL  = http://downloads.xiph.org/releases/theora/$(LIBTHEORA_TB)
 LIBTHEORA_SHA1 = 0b91be522746a29351a5ee592fd8160940059303
 
-LIBVORBIS      = libvorbis-1.3.5
+LIBVORBIS      = libvorbis-1.3.6
 LIBVORBIS_TB   = $(LIBVORBIS).tar.gz
 LIBVORBIS_URL  = http://downloads.xiph.org/releases/vorbis/$(LIBVORBIS_TB)
-LIBVORBIS_SHA1 = 10c7fee173178d72855aa7593dfe49d9b3d6c804
+LIBVORBIS_SHA1 = 91f140c220d1fe3376d637dc5f3d046263784b1f
 
 LIBFDKAAC      = fdk-aac-0.1.4
 LIBFDKAAC_TB   = $(LIBFDKAAC).tar.gz
 LIBFDKAAC_URL  = https://freefr.dl.sourceforge.net/project/opencore-amr/fdk-aac/$(LIBFDKAAC_TB)
 LIBFDKAAC_SHA1 = 9215d19bdd911954fd5bc879c707ab571716ba0d
 
-LIBOPUS        = opus-1.2.1
+LIBOPUS        = opus-1.3-rc
 LIBOPUS_TB     = $(LIBOPUS).tar.gz
 LIBOPUS_URL    = https://archive.mozilla.org/pub/opus/$(LIBOPUS_TB)
-LIBOPUS_SHA1   = 35d108ca9d6a8d05e52d06c5421a5f95b39fdac9
+LIBOPUS_SHA1   = ea74356b762ac466637a40c82cdd3acbc35daa43
 
-FFMPEG         = ffmpeg-3.4.1
+FFNVCODEC_VER  = 8.1.24.2
+FFNVCODEC      = nv-codec-headers-n$(FFNVCODEC_VER)
+FFNVCODEC_TB   = $(FFNVCODEC).tar.gz
+FFNVCODEC_URL  = https://github.com/FFmpeg/nv-codec-headers/releases/download/n$(FFNVCODEC_VER)/nv-codec-headers-$(FFNVCODEC_VER).tar.gz
+FFNVCODEC_SHA1 = d500263b2fd92a32ac383ac87762648ecf8d325b
+
+FFMPEG         = ffmpeg-4.0.2
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = 4347db0b5a5cfc3847395b29aefb51d09cfdd697
+FFMPEG_SHA1    = 7b9deb74b4fcc665c5187dcd057b678e754b43d2
 
 # ##############################################################################
 # Library Config
@@ -109,8 +117,8 @@ EBUILDIR  := $(LIB_ROOT)/build
 EPREFIX0  := ffmpeg
 EPREFIX   := $(EBUILDIR)/$(EPREFIX0)
 LIB_FILES := \
-		$(LIB_ROOT)/$(YASM)/.tvh_download \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(NASM)/.tvh_download \
+		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBX264)/.tvh_download \
 		$(LIB_ROOT)/$(LIBX264)/.tvh_build \
 		$(LIB_ROOT)/$(LIBX265)/.tvh_download \
@@ -158,20 +166,20 @@ CONFIGURE := FFMPEG_PREFIX=$(EPREFIX) \
 CONFIGURE_PI := CC="$(COMPILER) $(CFLAGS_PI)" $(CONFIGURE)
 
 # ##############################################################################
-# YASM
+# NASM
 #
 
-$(LIB_ROOT)/$(YASM)/.tvh_download:
-	$(call DOWNLOAD,$(YASM_URL),$(LIB_ROOT)/$(YASM_TB),$(YASM_SHA1))
-	$(call UNTAR,$(YASM_TB),z)
+$(LIB_ROOT)/$(NASM)/.tvh_download:
+	$(call DOWNLOAD,$(NASM_URL),$(LIB_ROOT)/$(NASM_TB),$(NASM_SHA1))
+	$(call UNTAR,$(NASM_TB),z)
 	@touch $@
 
-$(LIB_ROOT)/$(YASM)/.tvh_build: \
-		$(LIB_ROOT)/$(YASM)/.tvh_download
-	cd $(LIB_ROOT)/$(YASM) && $(CONFIGURE_PI) \
+$(LIB_ROOT)/$(NASM)/.tvh_build: \
+		$(LIB_ROOT)/$(NASM)/.tvh_download
+	cd $(LIB_ROOT)/$(NASM) && $(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib
-	DESTDIR=$(EBUILDIR) \
-		$(MAKE) -C $(LIB_ROOT)/$(YASM) install
+	INSTALLROOT=$(EBUILDIR) \
+		$(MAKE) -C $(LIB_ROOT)/$(NASM) install
 	@touch $@
 
 
@@ -206,7 +214,7 @@ $(LIB_ROOT)/$(LIBX264)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBX264)/.tvh_build: \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBX264)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBX264) && $(CONFIGURE) \
 		--extra-asflags="-DPIC" \
@@ -258,7 +266,7 @@ $(LIB_ROOT)/$(LIBX265)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBX265)/.tvh_build: \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBX265)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBX265)/build/linux && cmake -G "Unix Makefiles" \
 		-DCMAKE_INSTALL_PREFIX="/ffmpeg" \
@@ -266,6 +274,10 @@ $(LIB_ROOT)/$(LIBX265)/.tvh_build: \
 		../../source
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBX265)/build/linux install
+	mv $(EPREFIX)/lib/pkgconfig/x265.pc $(EPREFIX)/lib/pkgconfig/x265.pc.old
+	sed -e 's,-ldl,-ldl -lpthread,g' \
+		< $(EPREFIX)/lib/pkgconfig/x265.pc.old \
+		> $(EPREFIX)/lib/pkgconfig/x265.pc
 	@touch $@
 
 else
@@ -301,11 +313,11 @@ endif
 
 $(LIB_ROOT)/$(LIBVPX)/.tvh_download:
 	$(call DOWNLOAD,$(LIBVPX_URL),$(LIB_ROOT)/$(LIBVPX_TB),$(LIBVPX_SHA1))
-	$(call UNTAR,$(LIBVPX_TB),j)
+	$(call UNTAR,$(LIBVPX_TB),z)
 	@touch $@
 
 $(LIB_ROOT)/$(LIBVPX)/.tvh_build: \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVPX)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBVPX) && \
 		ASFLAGS="-DENABLE_PIC=1 -DPIC=1" $(CONFIGURE) \
@@ -343,7 +355,7 @@ $(LIB_ROOT)/$(LIBOGG)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBOGG)/.tvh_build: \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBOGG) && \
 		$(CONFIGURE_PI) \
@@ -381,7 +393,7 @@ $(LIB_ROOT)/$(LIBTHEORA)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBTHEORA)/.tvh_build: \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
 		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBTHEORA) && \
@@ -429,7 +441,7 @@ $(LIB_ROOT)/$(LIBVORBIS)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBVORBIS)/.tvh_build: \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBVORBIS) && \
@@ -513,7 +525,7 @@ $(LIB_ROOT)/$(LIBOPUS)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBOPUS)/.tvh_build: \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOPUS)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBOPUS) && $(CONFIGURE_PI) \
 		--disable-doc \
@@ -543,6 +555,21 @@ ifeq (yes,$(CONFIG_NVENC))
 
 EXTLIBS  += nvenc
 ENCODERS += h264_nvenc hevc_nvenc
+
+$(LIB_ROOT)/$(FFNVCODEC)/.tvh_download:
+	$(call DOWNLOAD,$(FFNVCODEC_URL),$(LIB_ROOT)/$(FFNVCODEC_TB),$(FFNVCODEC_SHA1))
+	$(call UNTAR,$(FFNVCODEC_TB),z)
+	@touch $@
+
+$(LIB_ROOT)/$(FFNVCODEC)/.tvh_build: \
+		$(LIB_ROOT)/$(FFNVCODEC)/.tvh_download
+	mv $(LIB_ROOT)/$(FFNVCODEC)/Makefile $(LIB_ROOT)/$(FFNVCODEC)/Makefile.old
+	sed -e 's,PREFIX = /usr/local,PREFIX ?= /usr/local,g' \
+		< $(LIB_ROOT)/$(FFNVCODEC)/Makefile.old \
+		> $(LIB_ROOT)/$(FFNVCODEC)/Makefile
+	DESTDIR=$(EBUILDIR) PREFIX=/ffmpeg \
+		$(MAKE) -C $(LIB_ROOT)/$(FFNVCODEC) install
+	@touch $@
 
 endif
 
@@ -623,7 +650,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBX264)/.tvh_build \
 		$(LIB_ROOT)/$(LIBX265)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVPX)/.tvh_build \
@@ -631,6 +658,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_build \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOPUS)/.tvh_build \
+		$(LIB_ROOT)/$(FFNVCODEC)/.tvh_build \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_download
 	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE) \
 		--disable-all \
@@ -639,7 +667,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		--extra-cflags="$(ECFLAGS)" \
 		--extra-libs="$(ELIBS)" \
 		--pkg-config="$(ROOTDIR)/support/pkg-config.ffmpeg" \
-		--enable-openssl --enable-protocol=tls_openssl \
+		--enable-openssl \
 		$(foreach component,$(COMPONENTS),--enable-$(component)) \
 		$(foreach extlib,$(EXTLIBS),--enable-$(extlib)) \
 		$(foreach protocol,$(PROTOCOLS),--enable-protocol=$(protocol)) \
