@@ -135,6 +135,8 @@ LIB_FILES := \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOPUS)/.tvh_download \
 		$(LIB_ROOT)/$(LIBOPUS)/.tvh_build \
+		$(LIB_ROOT)/$(FFNVCODEC)/.tvh_download \
+		$(LIB_ROOT)/$(FFNVCODEC)/.tvh_build \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_download \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_build \
 		$(EPREFIX)
