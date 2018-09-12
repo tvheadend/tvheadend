@@ -224,6 +224,17 @@ linuxdvb_satconf_class_get_childs ( idnode_t *o )
   return is;
 }
 
+static htsmsg_t *
+linuxdvb_satconf_class_highvol_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Do not set"),  0 },
+    { N_("Normal"), 1 },
+    { N_("Higher"), 2 }
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 /*
  * Generic satconf
  */
@@ -292,6 +303,21 @@ const idclass_t linuxdvb_satconf_class =
                      "this may cause interference with other devices "
                      "when the LNB is powered back up."),
       .off      = offsetof(linuxdvb_satconf_t, ls_lnb_poweroff),
+      .opts     = PO_ADVANCED,
+      .def.i    = 1
+    },
+    {
+      .type     = PT_INT,
+      .id       = "lnb_highvol",
+      .name     = N_("Higher LNB voltage"),
+      .desc     = N_("Some DVB devices have an optional ioctl that allows "
+                     "changing between normal voltage for LNB (13V/18V) to "
+                     "a higher voltage mode (usually, 14V/19V), meant to "
+                     "compensate for voltage loss on long cabling. "
+                     "Without that, it is not possible to properly switch "
+                     "the polarization."),
+      .list     = linuxdvb_satconf_class_highvol_list,
+      .off      = offsetof(linuxdvb_satconf_t, ls_lnb_highvol),
       .opts     = PO_ADVANCED,
       .def.i    = 1
     },
@@ -1777,6 +1803,13 @@ linuxdvb_diseqc_set_volt ( linuxdvb_satconf_t *ls, int vol )
   /* Already set ? */
   if (vol >= 0 && ls->ls_last_vol == vol + 1)
     return 0;
+  /* High voltage handling */
+  if (ls->ls_lnb_highvol > 0) {
+    int v = ls->ls_lnb_highvol > 1 ? 1 : 0;
+    tvhtrace(LS_DISEQC, "set hight voltage %d", v);
+    if (ioctl(linuxdvb_satconf_fe_fd(ls), FE_ENABLE_HIGH_LNB_VOLTAGE, v))
+      tvherror(LS_DISEQC, "failed to set high voltage %d (e=%s)", v, strerror(errno));
+  }
   /* Set voltage */
   tvhtrace(LS_DISEQC, "set voltage %dV", vol ? (vol < 0 ? 0 : 18) : 13);
   if (ioctl(linuxdvb_satconf_fe_fd(ls), FE_SET_VOLTAGE,
