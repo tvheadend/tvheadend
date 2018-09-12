@@ -348,9 +348,11 @@ const idclass_t profile_class =
     {
       .type     = PT_INT,
       .id       = "timeout",
-      .name     = N_("Timeout (sec) (0=infinite)"),
-      .desc     = N_("The number of seconds to wait for a stream to "
-                     "start."),
+      .name     = N_("Data timeout (sec) (0=infinite)"),
+      .desc     = N_("The number of seconds to wait for data. "
+                     "It handles the situations where no data "
+                     "are received at start or the input stream "
+                     "is stalled."),
       .off      = offsetof(profile_t, pro_timeout),
       .def.i    = 5,
       .group    = 1
