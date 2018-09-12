@@ -260,6 +260,7 @@ struct linuxdvb_satconf
    * LNB settings
    */
   int                    ls_lnb_poweroff;
+  int                    ls_lnb_highvol;
   uint32_t               ls_max_rotor_move;
   uint32_t               ls_min_rotor_move;
   double                 ls_site_lat;
