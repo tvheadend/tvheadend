@@ -38,6 +38,12 @@ lang_str_t     *lang_str_create2 ( const char *str, const char *lang );
 lang_str_t     *lang_str_copy    ( const lang_str_t *ls );
 
 /* Get elements */
+lang_str_ele_t *lang_str_get2_only ( const lang_str_t *ls, const char *lang );
+static inline const char *lang_str_get_only(const lang_str_t *ls, const char *lang)
+  {
+    lang_str_ele_t *e = lang_str_get2_only(ls, lang);
+    return e ? e->str : NULL;
+  }
 lang_str_ele_t *lang_str_get2    ( const lang_str_t *ls, const char *lang );
 static inline const char *lang_str_get(const lang_str_t *ls, const char *lang)
   {

@@ -605,6 +605,7 @@ xmltv_appendit(lang_str_t **_desc, string_list_t *list,
 {
   lang_str_t *desc, *lstr;
   lang_str_ele_t *e;
+  const char *s;
   if (!list) return;
   char *str = string_list_2_csv(list, ',', 1);
   if (!str) return;
@@ -613,7 +614,11 @@ xmltv_appendit(lang_str_t **_desc, string_list_t *list,
   if (lstr) {
     RB_FOREACH(e, lstr, link) {
       if (!desc) desc = lang_str_create();
-      lang_str_append(desc, "\n\n", e->lang);
+      s = *_desc ? lang_str_get_only(*_desc, e->lang) : NULL;
+      if (s) {
+        lang_str_append(desc, s, e->lang);
+        lang_str_append(desc, "\n\n", e->lang);
+      }
       lang_str_append(desc, tvh_gettext_lang(e->lang, name), e->lang);
       lang_str_append(desc, str, e->lang);
     }
