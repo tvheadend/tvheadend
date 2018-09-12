@@ -1284,7 +1284,7 @@ static inline int check_height(uint32_t h)
   return h < 100 || h > 16384;
 }
 
-void
+int
 hevc_decode_vps(parser_es_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
@@ -1295,7 +1295,7 @@ hevc_decode_vps(parser_es_t *st, bitstream_t *bs)
   uint32_t u, v;
 
   if (read_bits1(bs)) /* zero bit */
-    return ;
+    return -1;
 
   if((p = st->es_priv) == NULL)
     p = st->es_priv = calloc(1, sizeof(hevc_private_t));
@@ -1304,21 +1304,21 @@ hevc_decode_vps(parser_es_t *st, bitstream_t *bs)
 
   vps_id = read_bits(bs, 4);
   if (vps_id >= MAX_VPS_COUNT)
-    return;
+    return -1;
   vps = &p->vps[vps_id];
 
   if (read_bits(bs, 2) != 3) /* vps_reserved_three_2bits */
-    return;
+    return -1;
 
   skip_bits(bs, 6); /* vps_max_sublayers */
   max_sub_layers = read_bits(bs, 3) + 1;
   skip_bits1(bs);   /* vps_temporal_id_nesting */
 
   if (read_bits(bs, 16) != 0xffff) /* reserved */
-    return;
+    return -1;
 
   if (max_sub_layers > MAX_SUB_LAYERS)
-    return;
+    return -1;
 
   hvcc_parse_ptl(bs, NULL, max_sub_layers);
 
@@ -1334,7 +1334,7 @@ hevc_decode_vps(parser_es_t *st, bitstream_t *bs)
   num_layer_sets = read_golomb_ue(bs) + 1;
   if (num_layer_sets < 1 || num_layer_sets > 1024 ||
       (num_layer_sets - 1LL) * (max_layer_id + 1LL) > remaining_bits(bs))
-    return;
+    return -1;
 
   for (u = 1; u < num_layer_sets; u++)
     for (v = 0; v < max_layer_id; v++)
@@ -1346,6 +1346,7 @@ hevc_decode_vps(parser_es_t *st, bitstream_t *bs)
     vps->num_units_in_tick = read_bits(bs, 32);
     vps->time_scale        = read_bits(bs, 32);
   }
+  return 0;
 }
 
 static int
@@ -1417,7 +1418,7 @@ hevc_decode_vui(hevc_vui_t *vui, bitstream_t *bs)
   return 0;
 }
 
-void
+int
 hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
@@ -1433,7 +1434,7 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
   uint32_t log2_ctb_size, nb_st_rps;
 
   if (read_bits1(bs)) /* zero bit */
-    return;
+    return -1;
 
   if((p = st->es_priv) == NULL)
     p = st->es_priv = calloc(1, sizeof(hevc_private_t));
@@ -1442,21 +1443,21 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
 
   vps_id = read_bits(bs, 4);
   if (vps_id >= MAX_VPS_COUNT)
-    return;
+    return -1;
   vps = &p->vps[vps_id];
   if (!vps->valid)
-    return;
+    return -1;
 
   max_sub_layers = read_bits(bs, 3) + 1;
   if (max_sub_layers > MAX_SUB_LAYERS)
-    return;
+    return -1;
   skip_bits1(bs);     /* temporal_id_nesting */
 
   hvcc_parse_ptl(bs, NULL, max_sub_layers);
 
   sps_id = read_golomb_ue(bs);
   if (sps_id >= MAX_SPS_COUNT)
-    return;
+    return -1;
   sps = &p->sps[sps_id];
 
   chroma_format_idc = read_golomb_ue(bs);
@@ -1466,7 +1467,7 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
   width  = read_golomb_ue(bs);
   height = read_golomb_ue(bs);
   if (check_width(width) || check_height(height))
-    return;
+    return -1;
 
   if (read_bits1(bs)) { /* pic_conformance */
     read_golomb_ue(bs); /* left_offset */
@@ -1478,11 +1479,11 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
   bit_depth        = read_golomb_ue(bs);
   bit_depth_chroma = read_golomb_ue(bs);
   if (chroma_format_idc && bit_depth_chroma != bit_depth)
-    return;
+    return -1;
 
   log2_max_poc_lsb = read_golomb_ue(bs) + 4;
   if (log2_max_poc_lsb > 16)
-    return;
+    return -1;
 
   u = read_bits1(bs);   /* sublayer_ordering_info */
   for (u = u ? 0 : max_sub_layers - 1; u < max_sub_layers; u++) {
@@ -1493,16 +1494,16 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
 
   log2_min_cb_size = read_golomb_ue(bs) + 3;
   if (log2_min_cb_size < 3 || log2_min_cb_size > 30)
-    return;
+    return -1;
   log2_diff_max_min_coding_block_size = read_golomb_ue(bs);
   if (log2_diff_max_min_coding_block_size > 30)
-    return;
+    return -1;
   log2_min_tb_size = read_golomb_ue(bs) + 2;
   if (log2_min_tb_size >= log2_min_cb_size || log2_min_tb_size < 2)
-    return;
+    return -1;
   log2_diff_max_min_transform_block_size = read_golomb_ue(bs);
   if (log2_diff_max_min_transform_block_size > 30)
-    return;
+    return -1;
 
   read_golomb_ue(bs); /* max_transform_hierarchy_depth_inter */
   read_golomb_ue(bs); /* max_transform_hierarchy_depth_intra */
@@ -1538,7 +1539,7 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
 
   nb_st_rps = read_golomb_ue(bs);
   if (nb_st_rps > MAX_SHORT_TERM_RPS_COUNT)
-    return;
+    return -1;
 
   for (u = 0; u < nb_st_rps; u++) {
     if (u > 0 && read_bits1(bs)) { /* rps_predict */
@@ -1548,7 +1549,7 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
       u = read_golomb_ue(bs); /* rps->num_negative_pics */
       v = read_golomb_ue(bs); /* nb_positive_pics */
       if (u > MAX_REFS || v > MAX_REFS)
-        return;
+        return -1;
       for (i = 0; i < u; i++) {
         read_golomb_ue(bs);   /* delta_poc */
         skip_bits1(bs);       /* used */
@@ -1563,7 +1564,7 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
   if (read_bits1(bs)) { /* long_term_ref_pics_present */
     u = read_golomb_ue(bs); /* num_long_term_ref_pics_sps */
     if (u > 31)
-      return;
+      return -1;
     for (i = 0; i < u; i++) {
       skip_bits(bs, log2_max_poc_lsb);
       skip_bits1(bs);
@@ -1575,11 +1576,11 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
 
   if (read_bits1(bs))  /* vui_present */
     if (hevc_decode_vui(&sps->vui, bs))
-      return;
+      return -1;
 
   if (!vps->num_units_in_tick && !vps->time_scale &&
       !sps->vui.num_units_in_tick && !sps->vui.time_scale)
-    return;
+    return -1;
 
   sps->width = width;
   sps->height = height;
@@ -1587,16 +1588,17 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
   log2_ctb_size = log2_min_cb_size +
                   log2_diff_max_min_coding_block_size;
   if (log2_ctb_size > 18)
-    return;
+    return -1;
 
   sps->ctb_width  = (width  + (1 << log2_ctb_size) - 1) >> log2_ctb_size;
   sps->ctb_height = (height + (1 << log2_ctb_size) - 1) >> log2_ctb_size;
 
   sps->vps_id = vps_id;
   sps->valid = 1;
+  return -1;
 }
 
-void
+int
 hevc_decode_pps(parser_es_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
@@ -1604,7 +1606,7 @@ hevc_decode_pps(parser_es_t *st, bitstream_t *bs)
   uint32_t pps_id, sps_id;
 
   if (read_bits1(bs)) /* zero bit */
-    return ;
+    return -1;
 
   if((p = st->es_priv) == NULL)
     p = st->es_priv = calloc(1, sizeof(hevc_private_t));
@@ -1613,12 +1615,12 @@ hevc_decode_pps(parser_es_t *st, bitstream_t *bs)
 
   pps_id = read_golomb_ue(bs);
   if (pps_id >= MAX_PPS_COUNT)
-    return;
+    return -1;
   pps = &p->pps[pps_id];
 
   sps_id = read_golomb_ue(bs);
   if (sps_id >= MAX_SPS_COUNT || !p->sps[sps_id].valid)
-    return;
+    return -1;
 
   pps->sps_id = sps_id;
   pps->dependent_slice_segments = read_bits1(bs);
@@ -1626,6 +1628,7 @@ hevc_decode_pps(parser_es_t *st, bitstream_t *bs)
   pps->num_extra_slice_header_bits = read_bits(bs, 3);
 
   pps->valid = 1;
+  return 0;
 }
 
 int
