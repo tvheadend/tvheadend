@@ -70,6 +70,7 @@ typedef struct th_pkt {
       uint16_t pkt_aspect_den;
     } v;
     struct {
+      uint8_t pkt_keyframe;
       uint8_t pkt_channels;
       uint8_t pkt_sri;
       uint8_t pkt_ext_sri;

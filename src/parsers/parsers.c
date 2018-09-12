@@ -527,6 +527,7 @@ makeapkt(parser_t *t, parser_es_t *st, const void *buf,
 
   pkt->pkt_commercial = t->prs_tt_commercial_advice;
   pkt->pkt_duration = duration;
+  pkt->a.pkt_keyframe = 1;
   pkt->a.pkt_channels = channels;
   pkt->a.pkt_sri = sri;
   pkt->pkt_err = st->es_buf_a.sb_err;
