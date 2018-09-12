@@ -1522,9 +1522,10 @@ parse_h264(parser_t *t, parser_es_t *st, size_t len,
     case H264_NAL_PPS:
       if(!st->es_buf.sb_err) {
         void *f = h264_nal_deescape(&bs, buf + 4, len - 4);
-        h264_decode_pic_parameter_set(st, &bs);
+        int r = h264_decode_pic_parameter_set(st, &bs);
         free(f);
-        parser_global_data_move(st, buf, len);
+        if (r == 0)
+          parser_global_data_move(st, buf, len);
       }
       ret = PARSER_DROP;
       break;
