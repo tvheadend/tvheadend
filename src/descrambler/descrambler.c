@@ -426,7 +426,7 @@ void
 descrambler_service_stop ( service_t *t )
 {
   th_descrambler_t *td;
-  th_descrambler_runtime_t *dr = t->s_descramble;
+  th_descrambler_runtime_t *dr;
   th_descrambler_key_t *tk;
   th_descrambler_data_t *dd;
   void *p;
@@ -435,6 +435,7 @@ descrambler_service_stop ( service_t *t )
   while ((td = LIST_FIRST(&t->s_descramblers)) != NULL)
     td->td_stop(td);
   pthread_mutex_lock(&t->s_stream_mutex);
+  dr = t->s_descramble;
   t->s_descramble = NULL;
   t->s_descrambler = NULL;
   p = t->s_descramble_info;
