@@ -599,19 +599,24 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
  * Convert the string list to a human-readable csv and append
  * it to the desc with a prefix of name.
  */
-static void xmltv_appendit(lang_str_t **_desc, string_list_t *list, const char *name)
+static void
+xmltv_appendit(lang_str_t **_desc, string_list_t *list,
+               const char *name, lang_str_t *summary)
 {
-  lang_str_t *desc;
+  lang_str_t *desc, *lstr;
   lang_str_ele_t *e;
   if (!list) return;
   char *str = string_list_2_csv(list, ',', 1);
   if (!str) return;
   desc = NULL;
-  RB_FOREACH(e, *_desc, link) {
-    if (!desc) desc = lang_str_create();
-    lang_str_append(desc, "\n\n", e->lang);
-    lang_str_append(desc, tvh_gettext_lang(e->lang, name), e->lang);
-    lang_str_append(desc, str, e->lang);
+  lstr = *_desc ?: summary;
+  if (lstr) {
+    RB_FOREACH(e, lstr, link) {
+      if (!desc) desc = lang_str_create();
+      lang_str_append(desc, "\n\n", e->lang);
+      lang_str_append(desc, tvh_gettext_lang(e->lang, name), e->lang);
+      lang_str_append(desc, str, e->lang);
+    }
   }
   free(str);
   if (desc) {
@@ -660,8 +665,9 @@ static int _xmltv_parse_programme_tags
   if (save && (changes & EPG_CHANGED_CREATE))
     stats->broadcasts.created++;
 
-  /* Description (wait for episode first) */
+  /* Description/summary (wait for episode first) */
   _xmltv_parse_lang_str(&desc, tags, "desc");
+  _xmltv_parse_lang_str(&summary, tags, "summary");
 
   /* If user has requested it then retrieve additional information
    * from programme such as credits and keywords.
@@ -686,9 +692,9 @@ static int _xmltv_parse_programme_tags
      * don't display them.
      */
     if (scrape_onto_desc) {
-      xmltv_appendit(&desc, credits_names, N_("Credits: "));
-      xmltv_appendit(&desc, category, N_("Categories: "));
-      xmltv_appendit(&desc, keyword, N_("Keywords: "));
+      xmltv_appendit(&desc, credits_names, N_("Credits: "), summary);
+      xmltv_appendit(&desc, category, N_("Categories: "), summary);
+      xmltv_appendit(&desc, keyword, N_("Keywords: "), summary);
     }
 
     if (credits)          htsmsg_destroy(credits);
@@ -703,7 +709,6 @@ static int _xmltv_parse_programme_tags
     save |= epg_broadcast_set_description(ebc, desc, &changes);
 
   /* summary */
-  _xmltv_parse_lang_str(&summary, tags, "summary");
   if (summary)
     save |= epg_broadcast_set_summary(ebc, summary, &changes);
 
