@@ -104,6 +104,25 @@ tvheadend.durationLookupRange = function(value) {
     return durationString;
 };
 
+tvheadend.seachTitleWeb = function(index, title){
+    switch(index){
+        case 1:
+            window.open('http://akas.imdb.com/find?q=' + encodeURIComponent(title), '_blank');
+            break;
+        case 2:
+            window.open('https://www.thetvdb.com/search?q='+ encodeURIComponent(title)+'&l=en','_blank');
+            break;
+        case 3:
+            window.open(tvheadend.filmAffinityLanguage() + encodeURIComponent(title), '_blank');
+            break;
+    }
+};
+
+tvheadend.filmAffinityLanguage = function() {
+    if (tvh_locale_lang.search("es") !== -1) return 'https://www.filmaffinity.com/es/search.php?stext=';
+    else return 'https://www.filmaffinity.com/en/search.php?stext=';
+};
+
 tvheadend.epgDetails = function(event) {
 
     var content = '';
@@ -210,19 +229,36 @@ tvheadend.epgDetails = function(event) {
     var recording = event.dvrState.indexOf('recording') === 0;
     var scheduled = event.dvrState.indexOf('scheduled') === 0;
 
-    buttons.push(new Ext.Button({
-        disabled: !event.title,
-        handler: searchIMDB,
-        iconCls: 'imdb',
-        tooltip: _('Search IMDB (for title)'),
-    }));
+    var comboGetInfo = new Ext.form.ComboBox({
+        store: new Ext.data.ArrayStore({
+            data: [
+              [1, 'Find info from IMDB', 'imdb.png'],
+              [2, 'Find info from TheTVDB', 'thetvdb.png'],
+              [3, 'Find info from FilmAffinity', 'filmaffinity.png'],
+            ],
+            id: 0,
+            fields: ['value', 'text', 'url']
+        }),
+        triggerAction: 'all',
+        mode: 'local',
+        tpl : '<tpl for=".">' +
+              '<div class="x-combo-list-item" ><img src="../static/icons/{url}">&nbsp;&nbsp;{text}</div>' +
+              '</tpl>',
+        emptyText:'Find info from ...',
+        valueField: 'value',
+        displayField: 'text',
+        width: 160,
+        forceSelection : true,
+        editable: false,
+        listeners: {
+            select: function(combo, records, index) {
+                tvheadend.seachTitleWeb(combo.getValue(), event.title);
+            }
+        },
+    });
 
-    buttons.push(new Ext.Button({
-        disabled: !event.title,
-        handler: searchTheTVDB,
-        iconCls: 'thetvdb',
-        tooltip: _('Search TheTVDB (for title)'),
-    }));
+    if (event.title)
+        buttons.push(comboGetInfo);
 
     buttons.push(new Ext.Button({
         disabled: event.start > now || event.stop < now,
@@ -319,16 +355,6 @@ tvheadend.epgDetails = function(event) {
         html: content
     });
     win.show();
-
-    function searchIMDB() {
-        window.open('http://akas.imdb.com/find?q=' +
-                    encodeURIComponent(event.title), '_blank');
-    }
-
-    function searchTheTVDB(){
-        window.open('http://thetvdb.com/?string='+
-                    encodeURIComponent(event.title)+'&searchseriesid=&tab=listseries&function=Search','_blank');
-    }
 
     function playProgram() {
         var title = event.title;
