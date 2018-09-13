@@ -99,7 +99,6 @@ tvhcsa_des_descramble
 
 #if ENABLE_DVBCSA
   uint8_t *pkt;
-  int xc0;
   int ev_od;
   int len;
   int offset;
@@ -112,39 +111,34 @@ tvhcsa_des_descramble
    csa->csa_fill++;
 
    do { // handle this packet
-     xc0 = pkt[3] & 0xc0;
-     if(xc0 == 0x00) { // clear
+     if((pkt[3] & 0x80) == 0) // clear or reserved (0x40)
        break;
-     }
-     if(xc0 == 0x40) { // reserved
-       break;
-     }
-     if(xc0 == 0x80 || xc0 == 0xc0) { // encrypted
-       ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
-       pkt[3] &= 0x3f;  // consider it decrypted now
-       if(pkt[3] & 0x20) { // incomplete packet
-         offset = 4 + pkt[4] + 1;
-         len = 188 - offset;
-         n = len >> 3;
-         // FIXME: //residue = len - (n << 3);
-         if(n == 0) { // decrypted==encrypted!
-           break; // this doesn't need more processing
-         }
-       } else {
-         len = 184;
-         offset = 4;
-         // FIXME: //n = 23;
-         // FIXME: //residue = 0;
+     ev_od = pkt[3] & 0x40;
+     pkt[3] &= 0x3f;  // consider it decrypted now
+     if(pkt[3] & 0x20) { // incomplete packet
+       offset = 4 + pkt[4] + 1;
+       if (offset > 187) // invalid offset
+         break;
+       len = 188 - offset;
+       n = len >> 3;
+       // FIXME: //residue = len - (n << 3);
+       if(n == 0) { // decrypted==encrypted!
+         break; // this doesn't need more processing
        }
-       if(ev_od == 0) {
-         csa->csa_tsbbatch_even[csa->csa_fill_even].data = pkt + offset;
-         csa->csa_tsbbatch_even[csa->csa_fill_even].len = len;
-         csa->csa_fill_even++;
-       } else {
-         csa->csa_tsbbatch_odd[csa->csa_fill_odd].data = pkt + offset;
-         csa->csa_tsbbatch_odd[csa->csa_fill_odd].len = len;
-         csa->csa_fill_odd++;
-       }
+     } else {
+       len = 184;
+       offset = 4;
+       // FIXME: //n = 23;
+       // FIXME: //residue = 0;
+     }
+     if(ev_od == 0) {
+       csa->csa_tsbbatch_even[csa->csa_fill_even].data = pkt + offset;
+       csa->csa_tsbbatch_even[csa->csa_fill_even].len = len;
+       csa->csa_fill_even++;
+     } else {
+       csa->csa_tsbbatch_odd[csa->csa_fill_odd].data = pkt + offset;
+       csa->csa_tsbbatch_odd[csa->csa_fill_odd].len = len;
+       csa->csa_fill_odd++;
      }
    } while(0);
 
