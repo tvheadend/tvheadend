@@ -23,8 +23,6 @@
    fun:memalign
    fun:posix_memalign
    fun:av_malloc
-   fun:default_lockmgr_cb
-   fun:avpriv_lock_avformat
    fun:ff_openssl_init
    fun:ff_tls_init
    fun:avformat_network_init
@@ -38,6 +36,21 @@
    fun:memalign
    fun:posix_memalign
    fun:av_malloc
+   fun:default_lockmgr_cb
+   fun:avpriv_lock_avformat
+   fun:ff_openssl_init
+   fun:ff_tls_init
+   fun:avformat_network_init
+   fun:libav_init
+   fun:main
+}
+{
+   ffmpeg_openssl_init3
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:memalign
+   fun:posix_memalign
+   fun:av_malloc
    fun:av_malloc_array
    fun:ff_openssl_init
    fun:ff_tls_init
@@ -46,23 +59,25 @@
    fun:main
 }
 {
-   libx265_encode1
+   x265_api_get
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:calloc
    fun:_dlerror_run
    fun:dlopen@@GLIBC_2.2.5
-   fun:x265_api_get_116
+   fun:x265_api_get_160
    fun:libx265_encode_init_csp
-   fun:register_all
+   fun:av_codec_init_static
    fun:__pthread_once_slow
-   fun:register_all
-   fun:__pthread_once_slow
-   fun:libav_init
-   fun:main
+   fun:av_codec_iterate
+   fun:find_codec_by_name
+   fun:avcodec_find_encoder_by_name
+   fun:tvh_codec_register
+   fun:tvh_codecs_register
+   fun:codec_init
 }
 {
-   libx265_encode2
+   x265_api_get2
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:malloc
@@ -72,9 +87,9 @@
    fun:_dl_catch_error
    fun:_dlerror_run
    fun:dlopen@@GLIBC_2.2.5
-   fun:x265_api_get_116
+   fun:x265_api_get_160
    fun:libx265_encode_init_csp
-   fun:register_all
+   fun:av_codec_init_static
    fun:__pthread_once_slow
-   fun:register_all
+   fun:av_codec_iterate
 }
