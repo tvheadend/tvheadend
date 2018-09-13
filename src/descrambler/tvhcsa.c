@@ -122,6 +122,8 @@ tvhcsa_csa_cbc_descramble
      pkt[3] &= 0x3f;  // consider it decrypted now
      if(pkt[3] & 0x20) { // incomplete packet
        offset = 4 + pkt[4] + 1;
+       if (offset > 187) // invalid offset
+         break;
        len = 188 - offset;
        n = len >> 3;
        // FIXME: //residue = len - (n << 3);
