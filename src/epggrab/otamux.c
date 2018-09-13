@@ -113,6 +113,15 @@ epggrab_ota_timeout_get ( void )
   return timeout;
 }
 
+static void
+epggrab_ota_free_eit_plist ( epggrab_ota_mux_t *ota )
+{
+  epggrab_ota_mux_eit_plist_t *plist;
+
+  while ((plist = LIST_FIRST(&ota->om_eit_plist)) != NULL)
+    free(plist);
+}
+
 static int
 epggrab_ota_queue_one( epggrab_ota_mux_t *om )
 {
@@ -209,6 +218,9 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   assert(om->om_q_type == EPGGRAB_OTA_MUX_ACTIVE);
   TAILQ_REMOVE(&epggrab_ota_active, om, om_q_link);
   om->om_q_type = EPGGRAB_OTA_MUX_IDLE;
+  LIST_FOREACH(map, &om->om_modules, om_link)
+    if (map->om_module->stop)
+      map->om_module->stop(map, mm);
   if (reason == EPGGRAB_OTA_DONE_STOLEN) {
     /* Do not requeue completed muxes */
     if (!om->om_done && om->om_requeue) {
@@ -274,13 +286,13 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
         break;
       }
   }
+  epggrab_ota_free_eit_plist(om);
   LIST_FOREACH(map, &om->om_modules, om_link) {
     map->om_first    = 1;
     map->om_forced   = 0;
     if (modname && !strcmp(modname, map->om_module->id))
       map->om_forced = 1;
     map->om_complete = 0;
-    map->om_eit_state = EPGGRAB_OTA_MUX_EIT_IDLE;
     if (map->om_module->start(map, mm) < 0) {
       map->om_complete = 1;
     } else
@@ -777,6 +789,7 @@ epggrab_ota_load_one
   tvhtrace(LS_EPGGRAB, "loading config for %s", mm->mm_nicename);
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
+  LIST_INIT(&ota->om_eit_plist);
   ota->om_mux_uuid = mm->mm_id.in_uuid;
   if (RB_INSERT_SORTED(&epggrab_ota_all, ota, om_global_link, om_id_cmp)) {
     free(ota);
@@ -895,6 +908,7 @@ epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota  )
     free(map);
   }
   free(ota->om_force_modname);
+  epggrab_ota_free_eit_plist(ota);
   free(ota);
 }
 

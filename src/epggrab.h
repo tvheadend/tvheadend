@@ -34,6 +34,7 @@ typedef struct epggrab_module_ext   epggrab_module_ext_t;
 typedef struct epggrab_module_ota   epggrab_module_ota_t;
 typedef struct epggrab_module_ota_scraper   epggrab_module_ota_scraper_t;
 typedef struct epggrab_ota_mux      epggrab_ota_mux_t;
+typedef struct epggrab_ota_mux_eit_plist    epggrab_ota_mux_eit_plist_t;
 typedef struct epggrab_ota_map      epggrab_ota_map_t;
 typedef struct epggrab_ota_svc_link epggrab_ota_svc_link_t;
 
@@ -226,6 +227,12 @@ struct epggrab_ota_svc_link
   RB_ENTRY(epggrab_ota_svc_link) link;
 };
 
+struct epggrab_ota_mux_eit_plist {
+  LIST_ENTRY(epggrab_ota_mux_eit_plist) link;
+  const char *src;
+  void *priv;
+};
+
 /*
  * TODO: this could be embedded in the mux itself, but by using a soft-link
  *       and keeping it here I can somewhat isolate it from the mpegts code
@@ -253,6 +260,9 @@ struct epggrab_ota_mux
 
   TAILQ_ENTRY(epggrab_ota_mux)       om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
+
+  LIST_HEAD(, epggrab_ota_mux_eit_plist) om_eit_plist;
+  mtimer_t                           om_eit_timer;
 };
 
 /*
@@ -266,11 +276,6 @@ struct epggrab_ota_map
   uint8_t                             om_first;
   uint8_t                             om_forced;
   uint64_t                            om_tune_count;
-  enum {
-    EPGGRAB_OTA_MUX_EIT_IDLE,
-    EPGGRAB_OTA_MUX_EIT_NIT,
-    EPGGRAB_OTA_MUX_EIT_SDT
-  }                                   om_eit_state;
   RB_HEAD(,epggrab_ota_svc_link)      om_svcs;         ///< Muxes we carry data for
   void                               *om_opaque;
 };
@@ -284,6 +289,7 @@ struct epggrab_module_ota
 
   /* Transponder tuning */
   int  (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
+  int  (*stop)  ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
   int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                   struct mpegts_mux *mm );
   void  *opaque;

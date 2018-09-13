@@ -103,6 +103,8 @@ typedef struct eit_module_t
 
 static TAILQ_HEAD(, eit_private) eit_private_list;
 
+static void eit_install_handlers(void *aux);
+
 /* ************************************************************************
  * Status handling
  * ***********************************************************************/
@@ -1102,9 +1104,27 @@ static int _eit_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
   epggrab_module_ota_t *m = map->om_module;
+  epggrab_ota_mux_t *om;
 
   /* Disabled */
   if (!m->enabled && !map->om_forced) return -1;
+
+  om = epggrab_ota_find_mux(dm);
+  if (!om) return -1;
+
+  mtimer_arm_rel(&om->om_eit_timer, eit_install_handlers, dm, sec2mono(20));
+  return 0;
+}
+
+static int _eit_stop
+  ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
+{
+  epggrab_ota_mux_t *om;
+
+  om = epggrab_ota_find_mux(dm);
+  if (!om) return -1;
+
+  mtimer_disarm(&om->om_eit_timer);
 
   return 0;
 }
@@ -1180,45 +1200,48 @@ static int eit_nit_array_check(uint16_t val, uint16_t *array, int array_count)
   return 1;
 }
 
-static void eit_install_handlers
-  (mpegts_mux_t *dm, eit_private_t *priv, const char *src, int state)
+static void eit_install_handlers(void *aux)
 {
+  mpegts_mux_t *dm = aux;
   epggrab_ota_mux_t *om;
   epggrab_ota_map_t *map;
-  epggrab_module_ota_t *m = priv->module;
-  int pid, opts = 0;
+  epggrab_module_ota_t *m;
+  epggrab_ota_mux_eit_plist_t *plist;
+  eit_private_t *priv, *priv2;
+  int pid, opts;
+
+  om = epggrab_ota_find_mux(dm);
+  if (!om)
+    return;
+
+  priv = NULL;
+  LIST_FOREACH(plist, &om->om_eit_plist, link) {
+    priv2 = (eit_private_t *)plist->priv;
+    if (!priv || priv->module->priority < priv2->module->priority) {
+      m = priv->module;
+      LIST_FOREACH(map, &om->om_modules, om_link) {
+      if (map->om_module == m)
+        break;
+      }
+      if (!map || (!m->enabled && !map->om_forced)) {
+        tvhtrace(m->subsys, "handlers - module '%s' not enabled", m->id);
+        continue;
+      }
+      priv = priv2;
+    }
+  }
 
   if (priv->bat_pid) {
     mpegts_table_add(dm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback, NULL,
                      "ebat", LS_TBL_BASE, MT_CRC, priv->bat_pid, MPS_WEIGHT_EIT);
   }
 
-  om = epggrab_ota_find_mux(dm);
-  if (!om)
-    return;
-  if (state == EPGGRAB_OTA_MUX_EIT_SDT) {
-    /* check, if NIT EIT is already installed */
-    LIST_FOREACH(map, &om->om_modules, om_link)
-      if (map->om_eit_state == EPGGRAB_OTA_MUX_EIT_NIT)
-        return;
-  }
-  LIST_FOREACH(map, &om->om_modules, om_link) {
-    if (map->om_module == m)
-      break;
-  }
-  if (!map || (!m->enabled && !map->om_forced)) {
-    tvhtrace(m->subsys, "%s - module '%s' not enabled", src, m->id);
-    return;
-  }
-  if (map->om_eit_state != EPGGRAB_OTA_MUX_EIT_IDLE) {
-    tvhtrace(m->subsys, "%s - module '%s' already installed", src, m->id);
-    return;
-  }
-  map->om_eit_state = state;
+  m = priv->module;
 
-  tvhtrace(m->subsys, "%s - detected module '%s'", src, m->id);
+  tvhtrace(m->subsys, "handlers - detected module '%s'", m->id);
   priv = (eit_private_t *)m->opaque;
   pid = priv->pid;
+  opts = 0;
 
   /* Standard (0x12) */
   if (pid == 0) {
@@ -1229,7 +1252,28 @@ static void eit_install_handlers
   mpegts_table_add(dm, 0, 0, _eit_callback, map, map->om_module->id, LS_TBL_EIT,
                    MT_CRC | opts, pid, MPS_WEIGHT_EIT);
   // TODO: might want to limit recording to EITpf only
-  tvhdebug(m->subsys, "%s: installed table handlers (%s)", m->id, src);
+  tvhdebug(m->subsys, "%s: installed table handlers", m->id);
+}
+
+static void eit_queue_priv
+  (mpegts_mux_t *dm, const char *src, eit_private_t *priv)
+{
+  epggrab_ota_mux_t *om;
+  epggrab_ota_mux_eit_plist_t *plist, *plist2;
+
+  om = epggrab_ota_find_mux(dm);
+  if (!om)
+    return;
+
+  LIST_FOREACH(plist2, &om->om_eit_plist, link)
+    if (plist2->priv == priv)
+      return;
+
+  tvhtrace(LS_TBL_EIT, "%s - detected module '%s'", src, priv->module->id);
+  plist = calloc(1, sizeof(*plist));
+  plist->src = src;
+  plist->priv = priv;
+  LIST_INSERT_HEAD(&om->om_eit_plist, plist, link);
 }
 
 void eit_nit_callback
@@ -1267,7 +1311,7 @@ void eit_nit_callback
   if (!priv)
     return;
 
-  eit_install_handlers(dm, priv, "NIT", EPGGRAB_OTA_MUX_EIT_NIT);
+  eit_queue_priv(dm, "NIT", priv);
 }
 
 void eit_sdt_callback(mpegts_table_t *mt, uint32_t sdtpriv)
@@ -1275,12 +1319,6 @@ void eit_sdt_callback(mpegts_table_t *mt, uint32_t sdtpriv)
   mpegts_mux_t *dm = mt->mt_mux;
   eit_sdt_t *sdt;
   eit_private_t *priv = NULL;
-
-  /* do not rerun */
-  assert(mt->mt_bat == NULL || mt->mt_bat == mt);
-  if (mt->mt_bat)
-    return;
-  mt->mt_bat = mt;
 
   tvhtrace(LS_TBL_EIT, "SDT - tsid %04X (%d) onid %04X (%d) private %08X",
            dm->mm_tsid, dm->mm_tsid, dm->mm_onid, dm->mm_onid, sdtpriv);
@@ -1308,7 +1346,7 @@ void eit_sdt_callback(mpegts_table_t *mt, uint32_t sdtpriv)
   if (!priv)
     return;
 
-  eit_install_handlers(dm, priv, "SDT", EPGGRAB_OTA_MUX_EIT_SDT);
+  eit_queue_priv(dm, "SDT", priv);
 }
 
 static void _eit_scrape_clear(eit_module_t *mod)
@@ -1514,6 +1552,7 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
   ops = calloc(1, sizeof(*ops));
   priv = calloc(1, sizeof(*priv));
   ops->start = _eit_start;
+  ops->stop = _eit_stop;
   ops->done = _eit_done;
   ops->activate = _eit_activate;
   ops->process_data = _eit_process_data;
