@@ -63,6 +63,7 @@ static void epggrab_ota_kick ( int delay );
 
 static void epggrab_ota_timeout_cb ( void *p );
 static void epggrab_ota_data_timeout_cb ( void *p );
+static void epggrab_ota_handlers_timeout_cb ( void *p );
 static void epggrab_ota_kick_cb ( void *p );
 
 static void epggrab_mux_start ( mpegts_mux_t *mm, void *p );
@@ -113,13 +114,15 @@ epggrab_ota_timeout_get ( void )
   return timeout;
 }
 
-static void
+void
 epggrab_ota_free_eit_plist ( epggrab_ota_mux_t *ota )
 {
   epggrab_ota_mux_eit_plist_t *plist;
 
-  while ((plist = LIST_FIRST(&ota->om_eit_plist)) != NULL)
+  while ((plist = LIST_FIRST(&ota->om_eit_plist)) != NULL) {
+    LIST_REMOVE(plist, link);
     free(plist);
+  }
 }
 
 static int
@@ -214,6 +217,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
 
   mtimer_disarm(&om->om_timer);
   mtimer_disarm(&om->om_data_timer);
+  mtimer_disarm(&om->om_handlers_timer);
 
   assert(om->om_q_type == EPGGRAB_OTA_MUX_ACTIVE);
   TAILQ_REMOVE(&epggrab_ota_active, om, om_q_link);
@@ -274,11 +278,14 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 
   TAILQ_INSERT_TAIL(&epggrab_ota_active, om, om_q_link);
   om->om_q_type = EPGGRAB_OTA_MUX_ACTIVE;
+  om->om_detected = 0;
   grace = mpegts_input_grace(mmi->mmi_input, mm);
   mtimer_arm_rel(&om->om_timer, epggrab_ota_timeout_cb, om,
                  sec2mono(epggrab_ota_timeout_get() + grace));
   mtimer_arm_rel(&om->om_data_timer, epggrab_ota_data_timeout_cb, om,
                  sec2mono(30 + grace)); /* 30 seconds to receive any EPG info */
+  mtimer_arm_rel(&om->om_data_timer, epggrab_ota_handlers_timeout_cb, om,
+                 sec2mono(5 + grace));
   if (modname) {
     LIST_FOREACH(m, &epggrab_modules, link)
       if (!strcmp(m->id, modname)) {
@@ -473,6 +480,56 @@ epggrab_ota_data_timeout_cb ( void *p )
     epggrab_ota_complete_mark(om, 1);
   } else {
     tvhtrace(LS_EPGGRAB, "data timeout check succeed");
+  }
+}
+
+static void
+epggrab_ota_handlers_timeout2_cb ( void *p )
+{
+  epggrab_ota_mux_t *om = p;
+  epggrab_ota_map_t *map;
+  mpegts_mux_t *mm;
+
+  lock_assert(&global_lock);
+
+  if (!om)
+    return;
+
+  mm = mpegts_mux_find0(&om->om_mux_uuid);
+  if (!mm)
+    return;
+
+  /* Run handlers */
+  LIST_FOREACH(map, &om->om_modules, om_link) {
+    if (!map->om_complete && map->om_module->handlers)
+      map->om_module->handlers(map, mm);
+  }
+}
+
+static void
+epggrab_ota_handlers_timeout_cb ( void *p )
+{
+  epggrab_ota_mux_t *om = p;
+  epggrab_ota_map_t *map;
+
+  lock_assert(&global_lock);
+
+  if (!om)
+    return;
+
+  /* Test for any valid data reception */
+  LIST_FOREACH(map, &om->om_modules, om_link) {
+    if (!map->om_first)
+      break;
+  }
+
+  if (!om->om_detected && map == NULL) {
+    /* wait longer */
+    mtimer_arm_rel(&om->om_handlers_timer, epggrab_ota_handlers_timeout_cb,
+                   om, sec2mono(5));
+  } else {
+    mtimer_arm_rel(&om->om_handlers_timer, epggrab_ota_handlers_timeout2_cb,
+                   om, sec2mono(20));
   }
 }
 
@@ -898,6 +955,7 @@ epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota  )
 
   mtimer_disarm(&ota->om_timer);
   mtimer_disarm(&ota->om_data_timer);
+  mtimer_disarm(&ota->om_handlers_timer);
   if (head != NULL)
     TAILQ_REMOVE(head, ota, om_q_link);
   RB_REMOVE(&epggrab_ota_all, ota, om_global_link);

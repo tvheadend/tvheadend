@@ -728,6 +728,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   skel->activate     = ops->activate;
   skel->start        = ops->start;
   skel->stop         = ops->stop;
+  skel->handlers     = ops->handlers;
   skel->done         = ops->done;
   skel->tune         = ops->tune;
   skel->process_data = ops->process_data;

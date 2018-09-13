@@ -1740,14 +1740,8 @@ dvb_sdt_callback
   if (tableid != 0x42 && tableid != 0x46) return -1;
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, extraid, 8, &st, &sect, &last, &ver, 0);
-  if (r != 1) {
-    if (r == 0) {
-      /* install EIT handlers, but later than from optional NIT */
-      if (mm->mm_start_monoclock + sec2mono(10) < mclk())
-        eit_sdt_callback(mt, mt->mt_priv);
-    }
+  if (r != 1)
     return r;
-  }
 
   /* ID */
   tvhdebug(mt->mt_subsys, "%s: onid %04X (%d) tsid %04X (%d)",
@@ -1776,6 +1770,8 @@ dvb_sdt_callback
           return r;
       }
   }
+
+  eit_sdt_callback(mt, mt->mt_priv);
 
   /* Done */
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);

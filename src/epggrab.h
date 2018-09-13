@@ -246,8 +246,10 @@ struct epggrab_ota_mux
   uint8_t                            om_complete;     ///< Has completed a scan
   uint8_t                            om_requeue;      ///< Requeue when stolen
   uint8_t                            om_save;         ///< something changed
+  uint8_t                            om_detected;     ///< detected some activity
   mtimer_t                           om_timer;        ///< Per mux active timer
   mtimer_t                           om_data_timer;   ///< Any EPG data seen?
+  mtimer_t                           om_handlers_timer; ///< Run handlers callback
   int64_t                            om_retry_time;   ///< Next time to retry
 
   char                              *om_force_modname;///< Force this module
@@ -262,7 +264,6 @@ struct epggrab_ota_mux
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
 
   LIST_HEAD(, epggrab_ota_mux_eit_plist) om_eit_plist;
-  mtimer_t                           om_eit_timer;
 };
 
 /*
@@ -290,6 +291,7 @@ struct epggrab_module_ota
   /* Transponder tuning */
   int  (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
   int  (*stop)  ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
+  void (*handlers) (epggrab_ota_map_t *map, struct mpegts_mux *mm );
   int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                   struct mpegts_mux *mm );
   void  *opaque;

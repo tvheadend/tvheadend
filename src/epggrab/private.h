@@ -101,6 +101,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
 typedef struct epggrab_ota_module_ops {
     int (*start)     (epggrab_ota_map_t *map, struct mpegts_mux *mm);
     int (*stop)      (epggrab_ota_map_t *map, struct mpegts_mux *mm);
+    void (*handlers) (epggrab_ota_map_t *map, struct mpegts_mux *mm);
     int  (*activate) (void *m, int e);
     void (*done)     (void *m);
     int  (*tune)     (epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
@@ -138,6 +139,7 @@ epggrab_ota_mux_t *epggrab_ota_create
 void epggrab_ota_create_and_register_by_id
   ( epggrab_module_ota_t *mod, uint16_t onid, uint16_t tsid,
     int period, int interval, const char *name );
+void epggrab_ota_free_eit_plist ( epggrab_ota_mux_t *ota );
 
 /*
  * Delete
