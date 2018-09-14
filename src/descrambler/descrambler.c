@@ -487,6 +487,7 @@ descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di )
   streaming_service_deliver((service_t *)t, sm);
 }
 
+/* it's called inside s_stream_mutex lock! */
 static void
 descrambler_notify_nokey( th_descrambler_runtime_t *dr )
 {
@@ -497,10 +498,8 @@ descrambler_notify_nokey( th_descrambler_runtime_t *dr )
 
   di = calloc(1, sizeof(*di));
 
-  pthread_mutex_lock(&t->s_stream_mutex);
   di->pid = t->s_components.set_pmt_pid;
   descrambler_notify_deliver(t, di);
-  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 void
