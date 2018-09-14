@@ -894,7 +894,7 @@ channel_rename_and_save ( const char *from, const char *to )
 }
 
 int64_t
-channel_get_number ( channel_t *ch )
+channel_get_number ( const channel_t *ch )
 {
   int64_t n = 0;
   idnode_list_mapping_t *ilm;
@@ -1968,4 +1968,23 @@ channel_tag_done ( void )
   while ((ct = TAILQ_FIRST(&channel_tags)) != NULL)
     channel_tag_destroy(ct, 0);
   pthread_mutex_unlock(&global_lock);
+}
+
+int
+channel_has_correct_service_filter(const channel_t *ch, int svf)
+{
+  const idnode_list_mapping_t *ilm;
+  const service_t *service;
+  if (!ch || !svf || svf == PROFILE_SVF_NONE)
+    return 1;
+
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+    service = (const service_t*)ilm->ilm_in1;
+    if ((svf == PROFILE_SVF_SD && service_is_sdtv(service)) ||
+        (svf == PROFILE_SVF_HD && service_is_hdtv(service)) ||
+        (svf == PROFILE_SVF_UHD && service_is_uhdtv(service))) {
+      return 1;
+    }
+  }
+  return 0;
 }

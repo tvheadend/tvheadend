@@ -815,7 +815,7 @@ service_data_timeout(void *aux)
 }
 
 int
-service_is_sdtv(service_t *t)
+service_is_sdtv(const service_t *t)
 {
   char s_type;
   if(t->s_type_user == ST_UNSET)
@@ -834,7 +834,7 @@ service_is_sdtv(service_t *t)
 }
 
 int
-service_is_hdtv(service_t *t)
+service_is_hdtv(const service_t *t)
 {
   char s_type;
   if(t->s_type_user == ST_UNSET)
@@ -854,7 +854,7 @@ service_is_hdtv(service_t *t)
 }
 
 int
-service_is_uhdtv(service_t *t)
+service_is_uhdtv(const service_t *t)
 {
   char s_type;
   if(t->s_type_user == ST_UNSET)
@@ -876,7 +876,7 @@ service_is_uhdtv(service_t *t)
  *
  */
 int
-service_is_radio(service_t *t)
+service_is_radio(const service_t *t)
 {
   int ret = 0;
   char s_type;
@@ -902,7 +902,7 @@ service_is_radio(service_t *t)
  * Is encrypted
  */
 int
-service_is_encrypted(service_t *t)
+service_is_encrypted(const service_t *t)
 {
   elementary_stream_t *st;
   if (((mpegts_service_t *)t)->s_dvb_forcecaid == 0xffff)

@@ -428,16 +428,16 @@ const char *service_servicetype_txt(service_t *t);
 static inline uint16_t service_id16(void *t)
   { return ((service_t *)t)->s_components.set_service_id; }
 
-int service_is_sdtv(service_t *t);
-int service_is_uhdtv(service_t *t);
-int service_is_hdtv(service_t *t);
-int service_is_radio(service_t *t);
-int service_is_other(service_t *t);
+int service_is_sdtv(const service_t *t);
+int service_is_uhdtv(const service_t *t);
+int service_is_hdtv(const service_t *t);
+int service_is_radio(const service_t *t);
+int service_is_other(const service_t *t);
 
-static inline int service_is_tv( service_t *s)
+static inline int service_is_tv( const service_t *s)
   { return service_is_hdtv(s) || service_is_sdtv(s) || service_is_uhdtv(s); }
 
-int service_is_encrypted ( service_t *t );
+int service_is_encrypted ( const service_t *t );
 
 void service_set_enabled ( service_t *t, int enabled, int _auto );
 
