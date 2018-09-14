@@ -118,27 +118,36 @@ tvheadend.dvrDetails = function(uuid) {
 
         var buttons = [];
 
-        buttons.push(new Ext.Button({
-            handler: searchIMDB,
-            iconCls: 'imdb',
-            tooltip: _('Search IMDB (for title)'),
-        }));
+        var comboGetInfo = new Ext.form.ComboBox({
+            store: new Ext.data.ArrayStore({
+                data: [
+                  [1, 'Find info from IMDB', 'imdb.png'],
+                  [2, 'Find info from TheTVDB', 'thetvdb.png'],
+                  [3, 'Find info from FilmAffinity', 'filmaffinity.png'],
+                ],
+                id: 0,
+                fields: ['value', 'text', 'url']
+            }),
+            triggerAction: 'all',
+            mode: 'local',
+            tpl : '<tpl for=".">' +
+                  '<div class="x-combo-list-item" ><img src="../static/icons/{url}">&nbsp;&nbsp;{text}</div>' +
+                  '</tpl>',
+            emptyText:'Find info from ...',
+            valueField: 'value',
+            displayField: 'text',
+            width: 160,
+            forceSelection : true,
+            editable: false,
+            listeners: {
+                select: function(combo, records, index) {
+                    tvheadend.seachTitleWeb(combo.getValue(), title);
+                }
+            },
+        });
 
-        buttons.push(new Ext.Button({
-            handler: searchTheTVDB,
-            iconCls: 'thetvdb',
-            tooltip: _('Search TheTVDB (for title)'),
-        }));
-
-        function searchIMDB() {
-            window.open('http://akas.imdb.com/find?q=' +
-                        encodeURIComponent(title), '_blank');
-        }
-
-        function searchTheTVDB(){
-            window.open('http://thetvdb.com/?string='+
-                        encodeURIComponent(title)+'&searchseriesid=&tab=listseries&function=Search','_blank');
-        }
+        if (title)
+            buttons.push(comboGetInfo);
 
         var windowHeight = Ext.getBody().getViewSize().height - 150;
 
