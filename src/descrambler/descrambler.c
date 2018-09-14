@@ -472,12 +472,14 @@ descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di )
   int r;
 
   lock_assert(&t->s_stream_mutex);
-  if (!t->s_descramble_info)
+  if (!t->s_descramble_info) {
     t->s_descramble_info = calloc(1, sizeof(*di));
-  r = memcmp(t->s_descramble_info, di, sizeof(*di));
-  if (r == 0) { /* identical */
-    free(di);
-    return;
+  } else {
+    r = memcmp(t->s_descramble_info, di, sizeof(*di));
+    if (r == 0) { /* identical */
+      free(di);
+      return;
+    }
   }
   memcpy(t->s_descramble_info, di, sizeof(*di));
 
