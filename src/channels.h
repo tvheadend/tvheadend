@@ -197,7 +197,7 @@ char *channel_get_ename ( channel_t *ch, char *dst, size_t dstlen,
 static inline uint32_t channel_get_major ( int64_t chnum ) { return chnum / CHANNEL_SPLIT; }
 static inline uint32_t channel_get_minor ( int64_t chnum ) { return chnum % CHANNEL_SPLIT; }
 
-int64_t channel_get_number ( channel_t *ch );
+int64_t channel_get_number ( const channel_t *ch );
 int channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor );
 
 char *channel_get_number_as_str ( channel_t *ch, char *dst, size_t dstlen );
@@ -220,5 +220,6 @@ channel_t **channel_get_sorted_list_for_tag
   ( const char *sort_type, channel_tag_t *tag, int *_count );
 channel_tag_t **channel_tag_get_sorted_list
   ( const char *sort_type, int *_count );
+int channel_has_correct_service_filter(const channel_t *ch, int svf);
 
 #endif /* CHANNELS_H */

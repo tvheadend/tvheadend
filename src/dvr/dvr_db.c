@@ -1698,6 +1698,99 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
   return NULL;
 }
 
+/*** Return non-zero if the broadcast new_bcast is better for recording than the one for old_de. */
+static int
+dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_entry_t *old_de)
+{
+  if (!old_de || !old_de->de_bcast) return 1;            /* Old broadcast should always exist */
+  int old_services = 0;
+  int new_services = 0;
+  int64_t old_chnumber, new_chnumber;
+  const idnode_list_mapping_t *ilm;
+  const epg_broadcast_t *old_bcast = old_de->de_bcast;
+  const channel_t *old_channel = old_bcast->channel;
+  const channel_t *new_channel = new_bcast->channel;
+
+  /* Sanity check. */
+  if (!new_channel) return 0;
+  if (!old_channel) return 1;
+
+  /* Always prefer a recording that has the correct service profile
+   * (UHD, HD, SD).  Someone mentioned (#1846) that some channels can
+   * show a recording earlier in the week in SD then later in the week
+   * in HD so this would prefer the later HD recording if the user so
+   * desired.
+   */
+  if (old_de->de_config && old_de->de_config->dvr_profile &&
+      old_de->de_config->dvr_profile->pro_svfilter != PROFILE_SVF_NONE) {
+    const int svf = old_de->de_config->dvr_profile->pro_svfilter;
+    int old_has_svf = channel_has_correct_service_filter(old_channel, svf);
+    int new_has_svf = channel_has_correct_service_filter(new_channel, svf);
+
+    if (old_has_svf && !new_has_svf)
+      return 0;
+    if (!old_has_svf && new_has_svf)
+      return 1;
+    /* Also try "downgrading", where user asks for UHD, which we don't
+     * have, but we could give them HD.
+     */
+    if (svf == PROFILE_SVF_UHD && !old_has_svf) {
+      old_has_svf = channel_has_correct_service_filter(old_channel, PROFILE_SVF_HD);
+      new_has_svf = channel_has_correct_service_filter(new_channel, PROFILE_SVF_HD);
+
+      if (old_has_svf && !new_has_svf)
+        return 0;
+      if (!old_has_svf && new_has_svf)
+        return 1;
+    }
+  }
+
+  /* Ealier start time is better; prefers non-timeshift channel X to X+1.
+   * This gives us time to reschedule to X+1 if the recording on X fails.
+   */
+  if (new_bcast->start < old_bcast->start)
+    return 1;
+
+  /* Later broadcast is always worse. */
+  if (new_bcast->start > old_bcast->start)
+    return 0;
+
+  /* If here, we have the same time. */
+
+  /* Count the number of services each has. So, if a channel has multiple
+   * services we assume it's a better choice since we have more fallbacks
+   * if a tune fails.
+   */
+  LIST_FOREACH(ilm, &old_channel->ch_services, ilm_in2_link) {
+    ++old_services;
+  }
+  LIST_FOREACH(ilm, &new_channel->ch_services, ilm_in2_link) {
+    ++new_services;
+  }
+  if (new_services > old_services)
+    return 1;
+  if (old_services > new_services)
+    return 0;
+
+  /* Assume lower channel number is a better channel since they
+   * typically paid more to be higher up the EPG.
+   */
+  old_chnumber = channel_get_number(old_channel);
+  new_chnumber = channel_get_number(new_channel);
+  /* Prefer channels with a number to ones without a number */
+  if (!new_chnumber && old_chnumber)
+    return 0;
+  if (new_chnumber && !old_chnumber)
+    return 1;
+  if (new_chnumber < old_chnumber)
+    return 1;
+  if (new_chnumber > old_chnumber)
+    return 0;
+
+  /* All things being equal, prefer the existing recording */
+  return 0;
+}
+
 /**
  *
  */
@@ -1705,8 +1798,9 @@ void
 dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t *dae)
 {
   char buf[512];
+  char t1buf[32], t2buf[32];
   const char *s;
-  dvr_entry_t *de;
+  dvr_entry_t *de, *replace = NULL;
   uint32_t count = 0, max_count;
   htsmsg_t *conf;
 
@@ -1714,8 +1808,53 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
      NOTE: Semantic duplicate detection is deferred to the start time of recording and then done using _dvr_duplicate_event by dvr_timer_start_recording. */
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_bcast == e || epg_episode_match(de->de_bcast, e))
-      if (strcmp(dae->dae_owner ?: "", de->de_owner ?: "") == 0)
-        return;
+      if (strcmp(dae->dae_owner ?: "", de->de_owner ?: "") == 0) {
+        /* See if our new broadcast is better than our existing schedule */
+
+        /* Our autorec can never be better than a manually scheduled programme
+         * since user might schedule to avoid conflicts.
+         */
+        if (!de->de_autorec)
+          return;
+
+        /* Same broadcast, so new one can't be any better. */
+        if (de->de_bcast == e)
+          return;
+
+        /* Existing entry wasn't enabled? If so assume user does not
+         * want a new autorec scheduled that is enabled.
+         */
+        if (!de->de_enabled)
+          return;
+
+        /* If our new broadcast is "better" than the existing
+         * scheduled one, then the existing one can be
+         * replaced. Otherwise, we can return here and use the
+         * existing one as being the best recording to make.
+         */
+        if (!dvr_is_better_recording_timeslot(e, de))
+          return;
+
+        /* New broadcast is better than existing one that is
+         * scheduled. However, we still need to search to end of list
+         * since the new broadcast may already be scheduled somewhere
+         * else in the dvrentries.
+         */
+        replace = de;
+      }
+  }
+
+  /* Have an entry that is worse than our new broadcast so remove it now
+   * so that our max schedules check will be correct.
+   */
+  if (replace) {
+    tvhinfo(LS_DVR, "Autorecord \"%s\" Replacing existing dvr recording entry of \"%s\" on %s @ start %s with recording on %s @ start %s",
+            dae->dae_name, lang_str_get(e->title, NULL),
+            DVR_CH_NAME(replace),
+            gmtime2local(replace->de_bcast->start, t1buf, sizeof t1buf),
+            e->channel ? channel_get_name(e->channel, channel_blank_name) : channel_blank_name,
+            gmtime2local(e->start, t2buf, sizeof t2buf));
+    dvr_entry_destroy(replace, 1);
   }
 
   /* Handle max schedules limit for autorrecord */
