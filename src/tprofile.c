@@ -17,6 +17,7 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
 #include "tvhlog.h"
 #include "clock.h"
 #include "tprofile.h"
@@ -72,7 +73,13 @@ void tprofile_start1(tprofile_t *tprof, const char *id)
   pthread_mutex_lock(&tprofile_mutex);
   assert(tprof->start == 0);
   tprof->start = getfastmonoclock();
-  tprof->start_id = strdup(id);
+  if (id) {
+    tprof->start_id = strdup(id);
+  } else {
+    char buf[32];
+    snprintf(buf, sizeof(buf), "[%p]", tprof);
+    tprof->start_id = strdup(buf);
+  }
   pthread_mutex_unlock(&tprofile_mutex);
 }
 
