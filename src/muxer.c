@@ -29,10 +29,13 @@
 #include "muxer/muxer_libav.h"
 #endif
 
+/* Newer platforms such as FreeBSD 11.1 support fdatasync so only alias on older systems */
+#ifndef CONFIG_FDATASYNC
 #if defined(PLATFORM_DARWIN)
 #define fdatasync(fd)       fcntl(fd, F_FULLFSYNC)
 #elif defined(PLATFORM_FREEBSD)
 #define fdatasync(fd)       fsync(fd)
+#endif
 #endif
 
 /**
