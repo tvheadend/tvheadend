@@ -193,7 +193,7 @@ static int tvhpoll_add0
   struct kevent *ev = alloca(EV_SIZE * num * 2);
   for (i = j = 0; i < num; i++) {
     const int fd = evs[i].fd;
-    const void *ptr = evs[i].ptr;
+    void *ptr = evs[i].ptr;
     const uint32_t events = evs[i].events;
     const uint32_t oevents = tvhpoll_get_events(tp, fd);
     if (events == oevents) continue;
