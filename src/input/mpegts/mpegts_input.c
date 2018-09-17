@@ -1111,7 +1111,7 @@ static int data_noise ( mpegts_packet_t *mp )
 static inline int data_noise( mpegts_packet_t *mp ) { return 0; }
 #endif
 
-static int inline
+static inline int
 get_pcr ( const uint8_t *tsb, int64_t *rpcr )
 {
   int_fast64_t pcr;
@@ -1133,7 +1133,7 @@ get_pcr ( const uint8_t *tsb, int64_t *rpcr )
   return 1;
 }
 
-static int inline
+static inline int
 ts_sync_count ( const uint8_t *tsb, int len )
 {
   const uint8_t *start = tsb;

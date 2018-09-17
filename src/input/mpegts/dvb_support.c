@@ -660,7 +660,7 @@ static int dvb_verify(int val, int *table)
 
 const char *dvb_rolloff2str(int p)
 {
-  static char __thread buf[16];
+  static __thread char buf[16];
   const char *res = dvb_common2str(p);
   if (res)
     return res;
@@ -682,7 +682,7 @@ int dvb_str2rolloff(const char *p)
   return dvb_verify(atoi(p) * 10, rolloff_table);
 }
 
-const static struct strtab delsystab[] = {
+static const struct strtab delsystab[] = {
   { "NONE",         DVB_SYS_NONE },
   { "DVB-C",        DVB_SYS_DVBC_ANNEX_A },
   { "DVBC/ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
@@ -765,7 +765,7 @@ dvb_delsys2type ( mpegts_network_t *ln, dvb_fe_delivery_system_t delsys )
 
 const char *dvb_fec2str(int p)
 {
-  static char __thread buf[16];
+  static __thread char buf[16];
   const char *res = dvb_common2str(p);
   if (res)
     return res;
@@ -821,7 +821,7 @@ int dvb_str2fec(const char *p)
   return dvb_verify(hi * 100 + lo, fec_table);
 }
 
-const static struct strtab qamtab[] = {
+static const struct strtab qamtab[] = {
   { "NONE",      DVB_MOD_NONE },
   { "AUTO",      DVB_MOD_AUTO },
   { "QPSK",      DVB_MOD_QPSK },
@@ -863,7 +863,7 @@ dvb_str2val(qam);
 
 const char *dvb_bw2str(int p)
 {
-  static char __thread buf[17];
+  static __thread char buf[17];
   const char *res = dvb_common2str(p);
   if (res)
     return res;
@@ -897,7 +897,7 @@ int dvb_str2bw(const char *p)
   return dvb_verify(hi, bw_table);
 }
 
-const static struct strtab invertab[] = {
+static const struct strtab invertab[] = {
   { "NONE",  DVB_INVERSION_UNDEFINED },
   { "AUTO",  DVB_INVERSION_AUTO },
   { "ON",    DVB_INVERSION_ON },
@@ -905,7 +905,7 @@ const static struct strtab invertab[] = {
 };
 dvb_str2val(inver);
 
-const static struct strtab modetab[] = {
+static const struct strtab modetab[] = {
   { "NONE",  DVB_TRANSMISSION_MODE_NONE },
   { "AUTO",  DVB_TRANSMISSION_MODE_AUTO },
   { "1k",    DVB_TRANSMISSION_MODE_1K },
@@ -919,7 +919,7 @@ const static struct strtab modetab[] = {
 };
 dvb_str2val(mode);
 
-const static struct strtab guardtab[] = {
+static const struct strtab guardtab[] = {
   { "NONE",   DVB_GUARD_INTERVAL_NONE },
   { "AUTO",   DVB_GUARD_INTERVAL_AUTO },
   { "1/4",    DVB_GUARD_INTERVAL_1_4 },
@@ -935,7 +935,7 @@ const static struct strtab guardtab[] = {
 };
 dvb_str2val(guard);
 
-const static struct strtab hiertab[] = {
+static const struct strtab hiertab[] = {
   { "NONE", DVB_HIERARCHY_NONE },
   { "AUTO", DVB_HIERARCHY_AUTO },
   { "1",    DVB_HIERARCHY_1 },
@@ -944,7 +944,7 @@ const static struct strtab hiertab[] = {
 };
 dvb_str2val(hier);
 
-const static struct strtab poltab[] = {
+static const struct strtab poltab[] = {
   { "V", DVB_POLARISATION_VERTICAL },
   { "H", DVB_POLARISATION_HORIZONTAL },
   { "L", DVB_POLARISATION_CIRCULAR_LEFT },
@@ -953,7 +953,7 @@ const static struct strtab poltab[] = {
 };
 dvb_str2val(pol);
 
-const static struct strtab typetab[] = {
+static const struct strtab typetab[] = {
   {"DVB-T",     DVB_TYPE_T},
   {"DVB-C",     DVB_TYPE_C},
   {"DVB-S",     DVB_TYPE_S},
@@ -976,7 +976,7 @@ const static struct strtab typetab[] = {
 };
 dvb_str2val(type);
 
-const static struct strtab pilottab[] = {
+static const struct strtab pilottab[] = {
   {"NONE", DVB_PILOT_NONE},
   {"AUTO", DVB_PILOT_AUTO},
   {"ON",   DVB_PILOT_ON},
@@ -984,7 +984,7 @@ const static struct strtab pilottab[] = {
 };
 dvb_str2val(pilot);
 
-const static struct strtab plsmodetab[] = {
+static const struct strtab plsmodetab[] = {
   {"ROOT", DVB_PLS_ROOT},
   {"GOLD", DVB_PLS_GOLD},
   {"COMBO", DVB_PLS_COMBO},
@@ -1165,7 +1165,7 @@ dvb_sat_position_to_str(int position, char *buf, size_t buflen)
   return buf;
 }
 
-const int
+int
 dvb_sat_position_from_str( const char *buf )
 {
   const char *s = buf;

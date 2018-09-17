@@ -534,7 +534,7 @@ linuxdvb_ddci_rd_thread_statistic_clr ( linuxdvb_ddci_rd_thread_t *ddci_rd_threa
   ddci_rd_thread->lddci_recv_pkgCntSL = 0;
 }
 
-static int inline
+static inline int
 ddci_ts_sync_count ( const uint8_t *tsb, int len )
 {
   const uint8_t *start = tsb;

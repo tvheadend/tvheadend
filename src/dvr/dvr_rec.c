@@ -48,7 +48,7 @@ static void *dvr_thread(void *aux);
 static void dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc);
 
 
-const static int prio2weight[6] = {
+static const int prio2weight[6] = {
   [DVR_PRIO_IMPORTANT]   = 500,
   [DVR_PRIO_HIGH]        = 400,
   [DVR_PRIO_NORMAL]      = 300,

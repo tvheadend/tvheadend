@@ -81,7 +81,7 @@ const char *
 caid2name(uint16_t caid)
 {
   const char *s = NULL;
-  static char __thread buf[20];
+  static __thread char buf[20];
   struct caid_tab *tab;
   int i;
 

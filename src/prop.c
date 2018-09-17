@@ -36,7 +36,7 @@ const char *prop_ptr;
 /**
  *
  */
-const static struct strtab typetab[] = {
+static const struct strtab typetab[] = {
   { "bool",    PT_BOOL },
   { "int",     PT_INT },
   { "str",     PT_STR },
