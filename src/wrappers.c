@@ -656,7 +656,8 @@ int regex_match_substring_length(tvh_regex_t *regex, unsigned number)
 void *blacklisted_memcpy(void *dest, const void *src, size_t n)
   __attribute__((no_sanitize("thread")))
 {
-  uint8_t *d = dest, *s = src;
+  uint8_t *d = dest;
+  const uint8_t *s = src;
   while (n-- > 0) *d++ = *s++;
   return dest;
 }
