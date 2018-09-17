@@ -670,7 +670,7 @@ int dvb_mux_conf_str ( dvb_mux_conf_t *conf, char *buf, size_t bufsize );
 
 const char *dvb_sat_position_to_str( int position, char *buf, size_t buflen );
 
-const int dvb_sat_position_from_str( const char *buf );
+int dvb_sat_position_from_str( const char *buf );
 
 static inline int dvb_modulation_is_none_or_auto ( int modulation )
 {

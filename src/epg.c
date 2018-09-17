@@ -2471,7 +2471,7 @@ static const char **_epg_genre_names[16][16] = {
 
 static const char *_genre_get_name(int a, int b, const char *lang)
 {
-  static char __thread name[64];
+  static __thread char name[64];
   size_t l = 0;
   const char **p = _epg_genre_names[a][b];
   name[0] = '\0';

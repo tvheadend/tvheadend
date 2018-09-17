@@ -615,7 +615,7 @@ static void parse_mp4a_data(service_t *t, elementary_stream_t *st,
   }
 }
 
-const static int mpa_br[2][3][16] = {
+static const int mpa_br[2][3][16] = {
 {
   {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0},
   {0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, 0},
@@ -628,8 +628,8 @@ const static int mpa_br[2][3][16] = {
 }
 };
 
-const static int mpa_sr[4]  = {44100, 48000, 32000, 0};
-const static int mpa_sri[4] = {4,     3,     5,     0};
+static const int mpa_sr[4]  = {44100, 48000, 32000, 0};
+static const int mpa_sri[4] = {4,     3,     5,     0};
 
 static inline int
 mpa_valid_frame(uint32_t h)
@@ -733,9 +733,9 @@ parse_mpa(service_t *t, elementary_stream_t *st, size_t ilen,
 /**
  * (E)AC3 audio parser
  */
-const static int ac3_freq_tab[4] = {48000, 44100, 32000, 0};
+static const int ac3_freq_tab[4] = {48000, 44100, 32000, 0};
 
-const static uint16_t ac3_frame_size_tab[38][3] = {
+static const uint16_t ac3_frame_size_tab[38][3] = {
     { 64,   69,   96   },
     { 64,   70,   96   },
     { 80,   87,   120  },

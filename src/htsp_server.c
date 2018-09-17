@@ -3890,7 +3890,7 @@ htsp_event_delete(epg_broadcast_t *ebc)
   htsp_async_send(m, HTSP_ASYNC_EPG, HTSP_ASYNC_AUX_EPG, ebc);
 }
 
-const static char frametypearray[PKT_NTYPES] = {
+static const char frametypearray[PKT_NTYPES] = {
   [PKT_I_FRAME] = 'I',
   [PKT_P_FRAME] = 'P',
   [PKT_B_FRAME] = 'B',
