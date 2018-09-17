@@ -1526,7 +1526,7 @@ http_arg_get(http_arg_list_t *list, const char *name)
 char *
 http_arg_get_remove(struct http_arg_list *list, const char *name)
 {
-  static char __thread buf[128];
+  static __thread char buf[128];
   int empty;
   http_arg_t *ra;
   TAILQ_FOREACH(ra, list, link)

@@ -95,7 +95,7 @@ codec_get_type_string(AVCodec *self)
 const char *
 codec_get_title(AVCodec *self)
 {
-    static char __thread codec_title[TVH_TITLE_LEN];
+    static __thread char codec_title[TVH_TITLE_LEN];
 
     memset(codec_title, 0, sizeof(codec_title));
     if (

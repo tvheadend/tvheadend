@@ -185,7 +185,7 @@ tvh_codec_profile_get_name(TVHCodecProfile *self)
 const char *
 tvh_codec_profile_get_title(TVHCodecProfile *self)
 {
-    static char __thread profile_title[TVH_TITLE_LEN];
+    static __thread char profile_title[TVH_TITLE_LEN];
 
     memset(profile_title, 0, sizeof(profile_title));
     if (str_snprintf(profile_title, sizeof(profile_title),
