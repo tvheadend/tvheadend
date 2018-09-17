@@ -1103,7 +1103,7 @@ profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize, int muxer)
  *
  */
 
-const static int prio2weight[] = {
+static const int prio2weight[] = {
   [PROFILE_SPRIO_DVR_IMPORTANT]   = 525,
   [PROFILE_SPRIO_DVR_HIGH]        = 425,
   [PROFILE_SPRIO_DVR_NORMAL]      = 325,

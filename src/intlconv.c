@@ -92,7 +92,7 @@ intlconv_charset_id( const char *charset,
                      int transil,
                      int ignore_bad_chars )
 {
-  static char __thread buf[128];
+  static __thread char buf[128];
   const char *delim;
 
   if (charset == NULL || charset[0] == '\0' ||
