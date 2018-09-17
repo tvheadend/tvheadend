@@ -1809,7 +1809,14 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_bcast == e || epg_episode_match(de->de_bcast, e))
       if (strcmp(dae->dae_owner ?: "", de->de_owner ?: "") == 0) {
-        /* See if our new broadcast is better than our existing schedule */
+        /* See if our new broadcast is better than our existing schedule,
+         * but only if user want this overhead.
+         */
+        if (!dae->dae_config || !dae->dae_config->dvr_profile)
+          return;
+
+        if (!dae->dae_config->dvr_complex_scheduling)
+          return;
 
         /* Our autorec can never be better than a manually scheduled programme
          * since user might schedule to avoid conflicts.
