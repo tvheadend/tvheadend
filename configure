@@ -166,6 +166,12 @@ int test(int argc, char **argv) {
   return 0;
 }'
 
+check_cc_snippet fdatasync '#include <unistd.h>
+int test(int argc, char **argv) {
+  fdatasync(0);
+  return 0;
+}'
+
 check_cc_snippet getloadavg '#include <stdlib.h>
 void test() { getloadavg(NULL,0); }'
 
