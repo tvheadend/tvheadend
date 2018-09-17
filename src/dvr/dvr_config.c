@@ -973,6 +973,23 @@ const idclass_t dvr_config_class = {
       .group    = 1,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "complex-scheduling",
+      .name     = N_("For autorecs, attempt to find better time slots"),
+      .desc     = N_("When scheduling an autorec, this option attempts "
+                     "to schedule at the earliest time and on the 'best' "
+                     "channel (such as channel with the most failover services). "
+                     "This is useful when multiple timeshift "
+                     "and repeat channels are available. Without this option "
+                     "autorecs may get scheduled on timeshift channels "
+                     "instead of on primary channels. "
+                     "This scheduling "
+                     "requires extra overhead so is disabled by default."),
+      .off      = offsetof(dvr_config_t, dvr_complex_scheduling),
+      .opts     = PO_ADVANCED,
+      .group    = 1,
+    },
+    {
       .type     = PT_STR,
       .id       = "comment",
       .name     = N_("Comment"),
