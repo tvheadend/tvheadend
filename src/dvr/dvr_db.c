@@ -1715,6 +1715,12 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
   if (!new_channel) return 0;
   if (!old_channel) return 1;
 
+  /* If programme is recording then it is the "best", even if a better
+   * schedule is found after recording starts.
+   */
+  if (old_de->de_sched_state != DVR_SCHEDULED)
+    return 0;
+
   /* Always prefer a recording that has the correct service profile
    * (UHD, HD, SD).  Someone mentioned (#1846) that some channels can
    * show a recording earlier in the week in SD then later in the week
