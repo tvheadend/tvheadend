@@ -164,6 +164,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      (dae->dae_cat3 == NULL || *dae->dae_cat3 == 0) &&
      dae->dae_minduration <= 0 &&
      (dae->dae_maxduration <= 0 || dae->dae_maxduration > 24 * 3600) &&
+     dae->dae_minyear <= 0 &&
+     dae->dae_maxyear <= 0 &&
      dae->dae_serieslink_uri == NULL)
     return 0; // Avoid super wildcard match
 
@@ -258,6 +260,14 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 
   if(dae->dae_maxduration > 0) {
     if(duration > dae->dae_maxduration) return 0;
+  }
+
+  if(dae->dae_minyear > 0) {
+    if(e->copyright_year < dae->dae_minyear) return 0;
+  }
+
+  if(dae->dae_maxyear > 0) {
+    if(e->copyright_year > dae->dae_maxyear) return 0;
   }
 
   if(dae->dae_weekdays != 0x7f) {
@@ -892,6 +902,29 @@ dvr_autorec_entry_class_star_rating_list ( void *o, const char *lang )
   return m;
 }
 
+/** Generate a year list to make it easier to select min/max year */
+static htsmsg_t *
+dvr_autorec_entry_class_year_list ( void *o, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_t *e = htsmsg_create_map();
+  htsmsg_add_u32(e, "key", 0);
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("Any")));
+  htsmsg_add_msg(m, NULL, e);
+
+  uint32_t i;
+  /* We create the list from highest to lowest since you're more
+   * likely to want to record something recent.
+   */
+  for (i = 2020; i > 1900 ; i-=5) {
+    e = htsmsg_create_map();
+    htsmsg_add_u32(e, "key", i);
+    htsmsg_add_u32(e, "val", i);
+    htsmsg_add_msg(m, NULL, e);
+  }
+  return m;
+}
+
 static htsmsg_t *
 dvr_autorec_entry_class_content_type_list(void *o, const char *lang)
 {
@@ -1206,6 +1239,24 @@ const idclass_t dvr_autorec_entry_class = {
                      "longer than this duration."),
       .list     = dvr_autorec_entry_class_maxduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxduration),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "minyear",
+      .name     = N_("Minimum year"),
+      .desc     = N_("The earliest year for the programme. Programmes must be equal to or later than this year."),
+      .list     = dvr_autorec_entry_class_year_list,
+      .off      = offsetof(dvr_autorec_entry_t, dae_minyear),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "maxyear",
+      .name     = N_("Maximum year"),
+      .desc     = N_("The latest year for the programme. Programmes must be equal to or earlier than this year."),
+      .list     = dvr_autorec_entry_class_year_list,
+      .off      = offsetof(dvr_autorec_entry_t, dae_maxyear),
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {

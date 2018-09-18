@@ -891,7 +891,7 @@ tvheadend.dvr_settings = function(panel, index) {
 tvheadend.autorec_editor = function(panel, index) {
 
     var list = 'name,title,fulltext,channel,start,start_window,weekdays,' +
-               'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,' +
+               'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,minyear,maxyear,' +
                'star_rating,dedup,directory,config_name,comment,pri';
     var elist = 'enabled,start_extra,stop_extra,' +
                 (tvheadend.accessUpdate.admin ?
