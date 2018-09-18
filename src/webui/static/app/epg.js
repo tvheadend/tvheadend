@@ -15,22 +15,6 @@ insertCategoryClearOption = function(scope, records, options) {
     scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
 };
 
-tvheadend.category = tvheadend.idnode_get_enum({
-    url: 'api/channelcategory/list',
-    event: 'channelcategory',
-    listeners: {
-        'load': function(scope, records, options) {
-          insertCategoryClearOption(scope, records, options);
-          // If we have categories then we create the category
-          // search toolbar.
-          if (records.length) {
-            tvheadend.createToolbar2();
-          }
-        }
-    }
-});
-
-
 tvheadend.contentGroupLookupName = function(code) {
     ret = "";
     if (!code)
@@ -812,6 +796,20 @@ tvheadend.epg = function() {
 
     });
 
+  var category = tvheadend.idnode_get_enum({
+    url: 'api/channelcategory/list',
+    event: 'channelcategory',
+    listeners: {
+        'load': function(scope, records, options) {
+          insertCategoryClearOption(scope, records, options);
+          // If we have categories then we create the category
+          // search toolbar.
+          if (records.length) {
+            createToolbar2();
+          }
+        }
+    }});
+
     /// "cat" is the name of the category field.
     /// We have to pass the name, not the field, since the
     /// field is deleted and re-created inside clear filter.
@@ -820,7 +818,7 @@ tvheadend.epg = function() {
         loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
-        store: tvheadend.category,
+        store: category,
         mode: 'local',
         editable: true,
         forceSelection: true,
@@ -1151,15 +1149,16 @@ tvheadend.epg = function() {
     });
 
     /* Extra toolbar. Only created if we have categories on the server */
-    tvheadend.createToolbar2 = function() {
-        var tbar2 = new Ext.Toolbar({
-          items: [
-              epgFilterCat1, '-',
-              epgFilterCat2, '-',
-              epgFilterCat3, '-'
-          ]
-        });
-        panel.add(tbar2);
+    var createToolbar2 = function() {
+      var tb2container = Ext.DomHelper.append(panel.tbar, {tag:'div', id:Ext.id()}, true);
+      var tbar2 = new Ext.Toolbar({
+        renderTo: tb2container,
+        items: [
+          epgFilterCat1, '-',
+          epgFilterCat2, '-',
+          epgFilterCat3, '-'
+        ]
+      });
     }
 
     /**
