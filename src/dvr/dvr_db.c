@@ -1753,13 +1753,30 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
 
   /* Ealier start time is better; prefers non-timeshift channel X to X+1.
    * This gives us time to reschedule to X+1 if the recording on X fails.
+   *
+   * However, when creating an autorec, it can match a programme that has
+   * already started. If so, it's better to prefer the later recording so
+   * you get a full recording.
+   *
+   * So, if it's 09:10 and there is an hour long programme that
+   * started at 09:00 but is repeated at 10:00, then let's record at
+   * 10:00 instead and get the full hour, instead of at 09:10 and only
+   * get 50 minutes.
    */
-  if (new_bcast->start < old_bcast->start)
-    return 1;
+  if (new_bcast->start != old_bcast->start) {
+    if (new_bcast->start > old_bcast->start && time(NULL) >  old_bcast->start) {
+      return 1;
+    } else if (new_bcast->start < old_bcast->start && time(NULL) > new_bcast->start) {
+      return 0;
+    }
 
-  /* Later broadcast is always worse. */
-  if (new_bcast->start > old_bcast->start)
-    return 0;
+    if (new_bcast->start < old_bcast->start)
+      return 1;
+
+    /* Later broadcast is always worse. */
+    if (new_bcast->start > old_bcast->start)
+      return 0;
+  }
 
   /* If here, we have the same time. */
 
