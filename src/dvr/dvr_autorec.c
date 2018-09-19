@@ -1360,6 +1360,29 @@ dvr_autorec_update(void)
   }
 }
 
+static void
+dvr_autorec_async_reschedule_cb(void *ignored)
+{
+  tvhdebug(LS_DVR, "dvr_autorec_async_reschedule_cb - begin");
+  dvr_autorec_update();
+  tvhdebug(LS_DVR, "dvr_autorec_async_reschedule_cb - end");
+}
+
+void
+dvr_autorec_async_reschedule(void)
+{
+  tvhtrace(LS_DVR, "dvr_autorec_async_reschedule");
+  static mtimer_t reschedule_timer;
+  mtimer_disarm(&reschedule_timer);
+  /* We schedule the update after a brief period. This allows the
+   * system to quiesce in case the user is doing a large operation
+   * such as deleting numerous records due to disabling an autorec
+   * rule.
+   */
+  mtimer_arm_rel(&reschedule_timer, dvr_autorec_async_reschedule_cb, NULL,
+                 sec2mono(60));
+}
+
 /**
  *
  */

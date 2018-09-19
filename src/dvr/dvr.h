@@ -698,6 +698,8 @@ void dvr_autorec_init(void);
 void dvr_autorec_done(void);
 
 void dvr_autorec_update(void);
+/// Check autorec timers after a short delay.
+void dvr_autorec_async_reschedule(void);
 
 static inline int
   dvr_autorec_entry_verify(dvr_autorec_entry_t *dae, access_t *a, int readonly)
