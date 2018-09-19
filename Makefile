@@ -463,6 +463,11 @@ SRCS-INOTIFY = \
 	src/dvr/dvr_inotify.c
 SRCS-${CONFIG_INOTIFY} += $(SRCS-INOTIFY)
 I18N-C += $(SRCS-INOTIFY)
+ifeq ($(CONFIG_INOTIFY), yes)
+ifeq ($(PLATFORM), freebsd)
+LDFLAGS += -linotify
+endif
+endif
 
 # Avahi
 SRCS-AVAHI = \
