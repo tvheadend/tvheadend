@@ -1894,9 +1894,10 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
       if ((de->de_sched_state == DVR_SCHEDULED) ||
           (de->de_sched_state == DVR_RECORDING)) count++;
 
+    /* We drop this to a debug since on a reschedule numerous emitted */
     if (count >= max_count) {
-      tvhinfo(LS_DVR, "Autorecord \"%s\": Not scheduling \"%s\" because of autorecord max schedules limit reached",
-              dae->dae_name, lang_str_get(e->title, NULL));
+      tvhdebug(LS_DVR, "Autorecord \"%s\": Not scheduling \"%s\" because of autorecord max schedules limit reached",
+               dae->dae_name, lang_str_get(e->title, NULL));
       return;
     }
   }
@@ -2005,6 +2006,13 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
   if (de->de_child)
     dvr_entry_change_parent_child(de, NULL, de, delconf);
 
+  /* Trigger a reschedule in case this entry affects an autorec.  For
+   * example, deleting a recording could cause an autorec with a "max
+   * count" to be able to schedule a new recording.  We have to do
+   * this even if de was not an autorec since autorecs can interact
+   * with manually scheduled programmes.
+   */
+  dvr_autorec_async_reschedule();
   dvr_entry_dec_ref(de);
 }
 
