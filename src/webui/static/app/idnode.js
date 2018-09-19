@@ -339,6 +339,21 @@ tvheadend.IdNodeField = function(conf)
             props.renderer = Ext.ux.grid.CheckColumn.prototype.renderer;
         }
 
+        // Special handling for date/time fields.
+        if (ftype == 'date')
+        {
+            // When grouping, only use date and do not include
+            // timestamp, otherwise when grouping recordings, you can
+            // get hundreds of groups, each containing one recording.
+            // This format is for group section titles only, and not
+            // for normal display of dates nor for the display of
+            // dates inside of a group.
+            props.groupRenderer = function(v, m, r) {
+                var date = new Date(v*1000);
+                return date.toLocaleString(tvheadend.toLocaleFormat(), {weekday: 'short', day: 'numeric', month: 'long', year: 'numeric'});
+            }
+        };
+
         return props;
     };
 
