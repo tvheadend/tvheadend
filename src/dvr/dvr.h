@@ -76,6 +76,7 @@ typedef struct dvr_config {
   char *dvr_storage;
   int dvr_pri;
   int dvr_clone;
+  int dvr_complex_scheduling;
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
   uint32_t dvr_removal_days;
