@@ -108,250 +108,250 @@ tvheadend.filmAffinityLanguage = function() {
 };
 
 tvheadend.epgDetails = function(grid, index) {
-  // We need a unique DOM id in case user opens two dialogs.
-  var nextButtonId = Ext.id();
-  var confcomboButtonId = Ext.id();
+    // We need a unique DOM id in case user opens two dialogs.
+    var nextButtonId = Ext.id();
+    var confcomboButtonId = Ext.id();
 
-  function getDialogTitle(event) {
-    var fields = [];
-    fields.push(_('Broadcast Details'));
-    var evTitle = event.title;
-    if (evTitle && evTitle.length) fields.push(evTitle);
-    var evEp = event.episodeOnscreen;
-    if (evEp && evEp.length) fields.push(evEp);
-    var channelName = event.channelName;
-    if (channelName && channelName.length) fields.push(channelName);
-    return fields.join(' - ');
-  }
-
-  function getDialogContent(event) {
-    var content = '';
-    var duration = 0;
-    var chicon = 0;
-
-    if (event.start && event.stop && event.stop - event.start > 0)
-        duration = (event.stop - event.start) / 1000;
-
-    if (event.channelIcon != null && event.channelIcon.length > 0) {
-        content += '<img class="x-epg-chicon" src="' + event.channelIcon + '">';
-        chicon = 1;
+    function getDialogTitle(event) {
+      var fields = [];
+      fields.push(_('Broadcast Details'));
+      var evTitle = event.title;
+      if (evTitle && evTitle.length) fields.push(evTitle);
+      var evEp = event.episodeOnscreen;
+      if (evEp && evEp.length) fields.push(evEp);
+      var channelName = event.channelName;
+      if (channelName && channelName.length) fields.push(channelName);
+      return fields.join(' - ');
     }
 
-    if (chicon)
-        content += '<div class="x-epg-left">';
-    var icons = tvheadend.getContentTypeIcons(event, "x-dialog-category-large-icon");
-    if (icons)
-        content += '<div class="x-epg-icons">' + icons + '</div>';
-    content += '<div class="x-epg-title">' + event.title;
-    // Some OTA have the same subtitle and summary so don't display subtitle
-    // since summary can be long.
-    if (event.subtitle && (!event.summary || (event.summary && event.subtitle != event.summary)))
-        content += "&nbsp;:&nbsp;" + event.subtitle;
-    if (event.copyright_year)
-        content += "&nbsp;(" + event.copyright_year + ")";
-    content += '</div>';
-    if (event.episodeOnscreen)
-        content += '<div class="x-epg-title">' + event.episodeOnscreen + '</div>';
-    if (event.start)
-      content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Start Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(event.start) + '</span></div>';
-    if (event.stop)
-      content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('End Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(event.stop) + '</span></div>';
-    if (event.first_aired)
-      content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('First Aired') + ':</span><span class="x-epg-body">' + tvheadend.niceDateYearMonth(event.first_aired, event.start) + '</span></div>';
-    if (duration)
-      content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Duration') + ':</span><span class="x-epg-body">' + parseInt(duration / 60) + ' ' + _('min') + '</span></div>';
-    if (chicon) {
-      content += '</div>'; /* x-epg-left */
-      content += '<div class="x-epg-bottom">';
-    }
-    if (event.image != null && event.image.length > 0) {
-      content += '<img class="x-epg-image" src="' + event.image + '">';
-    }
-    content += '<hr class="x-epg-hr"/>';
-    if (event.summary)
-      content += '<div class="x-epg-summary">' + event.summary + '</div>';
-    if (event.description)
-      content += '<div class="x-epg-desc">' + tvheadend.labelFormattingParser(event.description) + '</div>';
-    if (event.summary || event.description)
+    function getDialogContent(event) {
+      var content = '';
+      var duration = 0;
+      var chicon = 0;
+
+      if (event.start && event.stop && event.stop - event.start > 0)
+          duration = (event.stop - event.start) / 1000;
+
+      if (event.channelIcon != null && event.channelIcon.length > 0) {
+          content += '<img class="x-epg-chicon" src="' + event.channelIcon + '">';
+          chicon = 1;
+      }
+
+      if (chicon)
+          content += '<div class="x-epg-left">';
+      var icons = tvheadend.getContentTypeIcons(event, "x-dialog-category-large-icon");
+      if (icons)
+          content += '<div class="x-epg-icons">' + icons + '</div>';
+      content += '<div class="x-epg-title">' + event.title;
+      // Some OTA have the same subtitle and summary so don't display subtitle
+      // since summary can be long.
+      if (event.subtitle && (!event.summary || (event.summary && event.subtitle != event.summary)))
+          content += "&nbsp;:&nbsp;" + event.subtitle;
+      if (event.copyright_year)
+          content += "&nbsp;(" + event.copyright_year + ")";
+      content += '</div>';
+      if (event.episodeOnscreen)
+          content += '<div class="x-epg-title">' + event.episodeOnscreen + '</div>';
+      if (event.start)
+        content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Start Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(event.start) + '</span></div>';
+      if (event.stop)
+        content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('End Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(event.stop) + '</span></div>';
+      if (event.first_aired)
+        content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('First Aired') + ':</span><span class="x-epg-body">' + tvheadend.niceDateYearMonth(event.first_aired, event.start) + '</span></div>';
+      if (duration)
+        content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Duration') + ':</span><span class="x-epg-body">' + parseInt(duration / 60) + ' ' + _('min') + '</span></div>';
+      if (chicon) {
+        content += '</div>'; /* x-epg-left */
+        content += '<div class="x-epg-bottom">';
+      }
+      if (event.image != null && event.image.length > 0) {
+        content += '<img class="x-epg-image" src="' + event.image + '">';
+      }
       content += '<hr class="x-epg-hr"/>';
-    content += tvheadend.getDisplayCredits(event.credits);
-    if (event.keyword)
-      content += tvheadend.sortAndAddArray(event.keyword, _('Keywords'));
-    if (event.category)
-      content += tvheadend.sortAndAddArray(event.category, _('Categories'));
-    if (event.starRating)
-      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Star Rating') + ':</span><span class="x-epg-desc">' + event.starRating + '</span></div>';
-    if (event.ageRating)
-      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Age Rating') + ':</span><span class="x-epg-desc">' + event.ageRating + '</span></div>';
-    if (event.genre) {
-      var genre = [];
-      Ext.each(event.genre, function(g) {
-        var g1 = tvheadend.contentGroupLookupName(g);
-        var g2 = tvheadend.contentGroupFullLookupName(g);
-        if (g1 == g2)
-          g1 = '';
-        if (g1 || g2)
-          genre.push((g1 ? '[' + g1 + '] ' : '') + g2);
+      if (event.summary)
+        content += '<div class="x-epg-summary">' + event.summary + '</div>';
+      if (event.description)
+        content += '<div class="x-epg-desc">' + tvheadend.labelFormattingParser(event.description) + '</div>';
+      if (event.summary || event.description)
+        content += '<hr class="x-epg-hr"/>';
+      content += tvheadend.getDisplayCredits(event.credits);
+      if (event.keyword)
+        content += tvheadend.sortAndAddArray(event.keyword, _('Keywords'));
+      if (event.category)
+        content += tvheadend.sortAndAddArray(event.category, _('Categories'));
+      if (event.starRating)
+        content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Star Rating') + ':</span><span class="x-epg-desc">' + event.starRating + '</span></div>';
+      if (event.ageRating)
+        content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Age Rating') + ':</span><span class="x-epg-desc">' + event.ageRating + '</span></div>';
+      if (event.genre) {
+        var genre = [];
+        Ext.each(event.genre, function(g) {
+          var g1 = tvheadend.contentGroupLookupName(g);
+          var g2 = tvheadend.contentGroupFullLookupName(g);
+          if (g1 == g2)
+            g1 = '';
+          if (g1 || g2)
+            genre.push((g1 ? '[' + g1 + '] ' : '') + g2);
+        });
+        content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Content Type') + ':</span><span class="x-epg-genre">' + genre.join(', ') + '</span></div>';
+      }
+      var tags = [];
+      if (event.hd > 1)
+        tags.push(_('UHDTV'));
+      else if (event.hd > 0)
+        tags.push(_('HDTV'));
+      if ('new' in event && event.new)
+        tags.push(_('New#EPG').split('#')[0]);
+      if (event.repeat)
+        tags.push(_('Repeat#EPG').split('#')[0]);
+      if (event.widescreen)
+        tags.push(_('Widescreen'));
+      if (event.aspect)
+        tags.push(_('Aspect') + ' ' + (event.aspect / 100.0));
+      if (event.lines)
+        tags.push(_('Lines') + ' ' + event.lines);
+      if (event.deafsigned)
+        tags.push(_('Deaf signed#EPG').split('#')[0]);
+      if (event.subtitled)
+        tags.push(_('Subtitled#EPG').split('#')[0]);
+      if (event.audiodesc)
+        tags.push(_('Audio description#EPG').split('#')[0]);
+      if (tags.length > 0)
+        content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Parameters') + ':</span><span class="x-epg-body">' + tags.join(', ') + '</span></div>';
+
+      content += '<div id="related"></div>';
+      content += '<div id="altbcast"></div>';
+      if (chicon)
+        content += '</div>'; /* x-epg-bottom */
+      return content;
+    }                             // getDialogContent
+
+    function getDialogButtons() {
+      var now = new Date();
+      var buttons = [];
+      var recording = event.dvrState.indexOf('recording') === 0;
+      var scheduled = event.dvrState.indexOf('scheduled') === 0;
+
+      var comboGetInfo = new Ext.form.ComboBox({
+          store: new Ext.data.ArrayStore({
+              data: [
+                [1, 'Find info from IMDB', 'imdb.png'],
+                [2, 'Find info from TheTVDB', 'thetvdb.png'],
+                [3, 'Find info from FilmAffinity', 'filmaffinity.png'],
+              ],
+              id: 0,
+              fields: ['value', 'text', 'url']
+          }),
+          triggerAction: 'all',
+          mode: 'local',
+          tpl : '<tpl for=".">' +
+                '<div class="x-combo-list-item" ><img src="../static/icons/{url}">&nbsp;&nbsp;{text}</div>' +
+                '</tpl>',
+          emptyText:'Find info from ...',
+          valueField: 'value',
+          displayField: 'text',
+          width: 160,
+          forceSelection : true,
+          editable: false,
+          listeners: {
+              select: function(combo, records, index) {
+                  tvheadend.seachTitleWeb(combo.getValue(), event.title);
+              }
+          },
       });
-      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Content Type') + ':</span><span class="x-epg-genre">' + genre.join(', ') + '</span></div>';
-    }
-    var tags = [];
-    if (event.hd > 1)
-      tags.push(_('UHDTV'));
-    else if (event.hd > 0)
-      tags.push(_('HDTV'));
-    if ('new' in event && event.new)
-      tags.push(_('New#EPG').split('#')[0]);
-    if (event.repeat)
-      tags.push(_('Repeat#EPG').split('#')[0]);
-    if (event.widescreen)
-      tags.push(_('Widescreen'));
-    if (event.aspect)
-      tags.push(_('Aspect') + ' ' + (event.aspect / 100.0));
-    if (event.lines)
-      tags.push(_('Lines') + ' ' + event.lines);
-    if (event.deafsigned)
-      tags.push(_('Deaf signed#EPG').split('#')[0]);
-    if (event.subtitled)
-      tags.push(_('Subtitled#EPG').split('#')[0]);
-    if (event.audiodesc)
-      tags.push(_('Audio description#EPG').split('#')[0]);
-    if (tags.length > 0)
-      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Parameters') + ':</span><span class="x-epg-body">' + tags.join(', ') + '</span></div>';
 
-    content += '<div id="related"></div>';
-    content += '<div id="altbcast"></div>';
-    if (chicon)
-      content += '</div>'; /* x-epg-bottom */
-    return content;
-  }                             // getDialogContent
+      if (event.title)
+          buttons.push(comboGetInfo);
 
-  function getDialogButtons() {
-    var now = new Date();
-    var buttons = [];
-    var recording = event.dvrState.indexOf('recording') === 0;
-    var scheduled = event.dvrState.indexOf('scheduled') === 0;
+      buttons.push(new Ext.Button({
+          disabled: event.start > now || event.stop < now,
+          handler: playProgram,
+          iconCls: 'control_play',
+          tooltip: _('Play this program'),
+          text: _("Play program")
+      }));
 
-    var comboGetInfo = new Ext.form.ComboBox({
-        store: new Ext.data.ArrayStore({
-            data: [
-              [1, 'Find info from IMDB', 'imdb.png'],
-              [2, 'Find info from TheTVDB', 'thetvdb.png'],
-              [3, 'Find info from FilmAffinity', 'filmaffinity.png'],
-            ],
-            id: 0,
-            fields: ['value', 'text', 'url']
-        }),
-        triggerAction: 'all',
-        mode: 'local',
-        tpl : '<tpl for=".">' +
-              '<div class="x-combo-list-item" ><img src="../static/icons/{url}">&nbsp;&nbsp;{text}</div>' +
-              '</tpl>',
-        emptyText:'Find info from ...',
-        valueField: 'value',
-        displayField: 'text',
-        width: 160,
-        forceSelection : true,
-        editable: false,
-        listeners: {
-            select: function(combo, records, index) {
-                tvheadend.seachTitleWeb(combo.getValue(), event.title);
-            }
-        },
-    });
+      if (tvheadend.accessUpdate.dvr) {
 
-    if (event.title)
-        buttons.push(comboGetInfo);
+          var store = new Ext.data.JsonStore({
+              autoload: true,
+              root: 'entries',
+              fields: ['key','val'],
+              id: 'key',
+              url: 'api/idnode/load',
+              baseParams: {
+                  'enum': 1,
+                  'class': 'dvrconfig'
+              },
+              sortInfo: {
+                  field: 'val',
+                  direction: 'ASC'
+              }
+          });
+          store.load();
 
-    buttons.push(new Ext.Button({
-        disabled: event.start > now || event.stop < now,
-        handler: playProgram,
-        iconCls: 'control_play',
-        tooltip: _('Play this program'),
-        text: _("Play program")
-    }));
+          if (recording) {
+            buttons.push(new Ext.Button({
+                handler: stopDVR,
+                iconCls: 'stopRec',
+                tooltip: _('Stop recording of this program'),
+                text: _("Stop recording")
+            }));
+          }
 
-    if (tvheadend.accessUpdate.dvr) {
+          if (scheduled) {
+            buttons.push(new Ext.Button({
+                handler: deleteDVR,
+                iconCls: 'remove',
+                tooltip: _('Delete scheduled recording of this program'),
+                text: _("Delete recording")
+            }));
+          }
 
-        var store = new Ext.data.JsonStore({
-            autoload: true,
-            root: 'entries',
-            fields: ['key','val'],
-            id: 'key',
-            url: 'api/idnode/load',
-            baseParams: {
-                'enum': 1,
-                'class': 'dvrconfig'
-            },
-            sortInfo: {
-                field: 'val',
-                direction: 'ASC'
-            }
-        });
-        store.load();
+          var confcombo = new Ext.ux.form.ComboAny({
+              id: confcomboButtonId,
+              store: store,
+              triggerAction: 'all',
+              mode: 'local',
+              valueField: 'key',
+              displayField: 'val',
+              name: 'config_name',
+              emptyText: _('(default DVR Profile)'),
+              value: '',
+              editable: false
+          });
 
-        if (recording) {
+          buttons.push(confcombo);
           buttons.push(new Ext.Button({
-              handler: stopDVR,
-              iconCls: 'stopRec',
-              tooltip: _('Stop recording of this program'),
-              text: _("Stop recording")
+              handler: recordEvent,
+              iconCls: 'rec',
+              tooltip: _('Record this program now'),
+              text: _('Record program')
           }));
-        }
-
-        if (scheduled) {
           buttons.push(new Ext.Button({
-              handler: deleteDVR,
-              iconCls: 'remove',
-              tooltip: _('Delete scheduled recording of this program'),
-              text: _("Delete recording")
+              handler: recordSeries,
+              iconCls: 'autoRec',
+              tooltip: _('Create an automatic recording rule to record all future programs that match the current query.'),
+              text: event.serieslinkUri ? _("Record series") : _("Autorec")
           }));
-        }
+          buttons.push(new Ext.Button({
+              id: nextButtonId,
+              handler: nextEvent,
+              iconCls: 'next',
+              tooltip: _('Go to next event'),
+              text: _("Next"),
+          }));
 
-        var confcombo = new Ext.ux.form.ComboAny({
-            id: confcomboButtonId,
-            store: store,
-            triggerAction: 'all',
-            mode: 'local',
-            valueField: 'key',
-            displayField: 'val',
-            name: 'config_name',
-            emptyText: _('(default DVR Profile)'),
-            value: '',
-            editable: false
-        });
+      } else {
 
-        buttons.push(confcombo);
-        buttons.push(new Ext.Button({
-            handler: recordEvent,
-            iconCls: 'rec',
-            tooltip: _('Record this program now'),
-            text: _('Record program')
-        }));
-        buttons.push(new Ext.Button({
-            handler: recordSeries,
-            iconCls: 'autoRec',
-            tooltip: _('Create an automatic recording rule to record all future programs that match the current query.'),
-            text: event.serieslinkUri ? _("Record series") : _("Autorec")
-        }));
-        buttons.push(new Ext.Button({
-            id: nextButtonId,
-            handler: nextEvent,
-            iconCls: 'next',
-            tooltip: _('Go to next event'),
-            text: _("Next"),
-        }));
+          buttons.push(new Ext.Button({
+              handler: function() { win.close(); },
+              text: _("Close")
+          }));
 
-    } else {
-
-        buttons.push(new Ext.Button({
-            handler: function() { win.close(); },
-            text: _("Close")
-        }));
-
-    }
-    return buttons;
-  }                             //getDialogButtons
+      }
+      return buttons;
+    }                             //getDialogButtons
 
     var current_index = index;
     var event = grid.getStore().getAt(index).data;
