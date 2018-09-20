@@ -166,6 +166,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      (dae->dae_maxduration <= 0 || dae->dae_maxduration > 24 * 3600) &&
      dae->dae_minyear <= 0 &&
      dae->dae_maxyear <= 0 &&
+     dae->dae_minseason <= 0 &&
+     dae->dae_maxseason <= 0 &&
      dae->dae_serieslink_uri == NULL)
     return 0; // Avoid super wildcard match
 
@@ -268,6 +270,14 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 
   if(dae->dae_maxyear > 0) {
     if(e->copyright_year > dae->dae_maxyear) return 0;
+  }
+
+  if(dae->dae_minseason > 0) {
+    if(e->epnum.s_num < dae->dae_minseason) return 0;
+  }
+
+  if(dae->dae_maxseason > 0) {
+    if(e->epnum.s_num > dae->dae_maxseason) return 0;
   }
 
   if(dae->dae_weekdays != 0x7f) {
@@ -1257,6 +1267,22 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("The latest year for the programme. Programmes must be equal to or earlier than this year."),
       .list     = dvr_autorec_entry_class_year_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxyear),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "minseason",
+      .name     = N_("Minimum season"),
+      .desc     = N_("The earliest season for the programme. Programmes must be equal to or later than this season."),
+      .off      = offsetof(dvr_autorec_entry_t, dae_minseason),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "maxseason",
+      .name     = N_("Maximum season"),
+      .desc     = N_("The latest season for the programme. Programmes must be equal to or earlier than this season."),
+      .off      = offsetof(dvr_autorec_entry_t, dae_maxseason),
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
