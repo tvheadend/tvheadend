@@ -107,8 +107,12 @@ tvheadend.filmAffinityLanguage = function() {
     else return 'https://www.filmaffinity.com/en/search.php?stext=';
 };
 
-tvheadend.epgDetails = function(event) {
+tvheadend.epgDetails = function(grid, index) {
+  // We need a unique DOM id in case user opens two dialogs.
+  var nextButtonId = Ext.id();
+  var confcomboButtonId = Ext.id();
 
+  function getDialogContent(event) {
     var content = '';
     var duration = 0;
     var chicon = 0;
@@ -207,7 +211,10 @@ tvheadend.epgDetails = function(event) {
     content += '<div id="altbcast"></div>';
     if (chicon)
       content += '</div>'; /* x-epg-bottom */
-    
+    return content;
+  }                             // getDialogContent
+
+  function getDialogButtons() {
     var now = new Date();
     var buttons = [];
     var recording = event.dvrState.indexOf('recording') === 0;
@@ -290,6 +297,7 @@ tvheadend.epgDetails = function(event) {
         }
 
         var confcombo = new Ext.ux.form.ComboAny({
+            id: confcomboButtonId,
             store: store,
             triggerAction: 'all',
             mode: 'local',
@@ -314,6 +322,13 @@ tvheadend.epgDetails = function(event) {
             tooltip: _('Create an automatic recording rule to record all future programs that match the current query.'),
             text: event.serieslinkUri ? _("Record series") : _("Autorec")
         }));
+        buttons.push(new Ext.Button({
+            id: nextButtonId,
+            handler: nextEvent,
+            iconCls: 'next',
+            tooltip: _('Go to next event'),
+            text: _("Next"),
+        }));
 
     } else {
 
@@ -323,9 +338,14 @@ tvheadend.epgDetails = function(event) {
         }));
 
     }
+    return buttons;
+  }                             //getDialogButtons
 
+    var current_index = index;
+    var event = grid.getStore().getAt(index).data;
+    var content = getDialogContent(event);
+    var buttons = getDialogButtons();
     var windowHeight = Ext.getBody().getViewSize().height - 150;
-
     var win = new Ext.Window({
         title: _('Broadcast Details'),
         iconCls: 'broadcast_details',
@@ -346,6 +366,30 @@ tvheadend.epgDetails = function(event) {
           title += ' / ' + event.episodeOnscreen;
         window.open('play/stream/channel/' + event.channelUuid +
                     '?title=' + encodeURIComponent(title), '_blank');
+    }
+
+    function nextEvent() {
+      var store = grid.getStore();
+      ++current_index;
+      event = store.getAt(current_index).data;
+      var content = getDialogContent(event);
+      var buttons = getDialogButtons(event);
+
+      win.removeAll();
+      // Can't update buttons at the same time...
+      win.update({html: content});
+      // ...so remove the buttons and re-add them.
+      var tbar = win.fbar;
+      tbar.removeAll();
+      Ext.each(buttons, function(btn) {
+        tbar.addButton(btn);
+      });
+      // If we're at the end of the store then disable the next
+      // button.  (getTotalCount is one-based).
+      if (current_index == store.getTotalCount() - 1)
+        tbar.getComponent(nextButtonId).disable();
+      // Finally, relayout.
+      win.doLayout();
     }
 
     function recordEvent() {
@@ -387,7 +431,7 @@ tvheadend.epgDetails = function(event) {
             url: url,
             params: {
                 event_id: event.eventId,
-                config_uuid: confcombo.getValue()
+                config_uuid: win.fbar.getComponent(confcomboButtonId).getValue()
             },
             success: function(response, options) {
                 win.close();
@@ -403,7 +447,7 @@ tvheadend.epg = function() {
     var lookup = '<span class="x-linked">&nbsp;</span>';
 
     var detailsfcn = function(grid, rec, act, row) {
-        new tvheadend.epgDetails(grid.getStore().getAt(row).data);
+        new tvheadend.epgDetails(grid, row);
     };
     var watchfcn = function(grid, rec, act, row) {
         var item = grid.getStore().getAt(row);
@@ -1273,7 +1317,7 @@ tvheadend.epg = function() {
     }
 
     function rowclicked(grid, index, e) {
-        new tvheadend.epgDetails(grid.getStore().getAt(index).data);
+        new tvheadend.epgDetails(grid, index);
     }
 
     function createAutoRec() {
