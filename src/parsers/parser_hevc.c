@@ -1595,7 +1595,7 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
 
   sps->vps_id = vps_id;
   sps->valid = 1;
-  return -1;
+  return 0;
 }
 
 int
