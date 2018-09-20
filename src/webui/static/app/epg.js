@@ -112,6 +112,18 @@ tvheadend.epgDetails = function(grid, index) {
   var nextButtonId = Ext.id();
   var confcomboButtonId = Ext.id();
 
+  function getDialogTitle(event) {
+    var fields = [];
+    fields.push(_('Broadcast Details'));
+    var evTitle = event.title;
+    if (evTitle && evTitle.length) fields.push(evTitle);
+    var evEp = event.episodeOnscreen;
+    if (evEp && evEp.length) fields.push(evEp);
+    var channelName = event.channelName;
+    if (channelName && channelName.length) fields.push(channelName);
+    return fields.join(' - ');
+  }
+
   function getDialogContent(event) {
     var content = '';
     var duration = 0;
@@ -346,8 +358,9 @@ tvheadend.epgDetails = function(grid, index) {
     var content = getDialogContent(event);
     var buttons = getDialogButtons();
     var windowHeight = Ext.getBody().getViewSize().height - 150;
+    var title = getDialogTitle(event);
     var win = new Ext.Window({
-        title: _('Broadcast Details'),
+        title: title,
         iconCls: 'broadcast_details',
         layout: 'fit',
         width: 800,
@@ -372,12 +385,14 @@ tvheadend.epgDetails = function(grid, index) {
       var store = grid.getStore();
       ++current_index;
       event = store.getAt(current_index).data;
+      var title = getDialogTitle(event);
       var content = getDialogContent(event);
       var buttons = getDialogButtons(event);
 
       win.removeAll();
       // Can't update buttons at the same time...
       win.update({html: content});
+      win.setTitle(title);
       // ...so remove the buttons and re-add them.
       var tbar = win.fbar;
       tbar.removeAll();
