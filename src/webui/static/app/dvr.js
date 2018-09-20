@@ -21,9 +21,16 @@ tvheadend.labelFormattingParser = function(description) {
     }else return description;
 };
 
-tvheadend.dvrDetails = function(uuid) {
-
-    function showit(d) {
+tvheadend.dvrDetails = function(grid, index) {
+    var current_index = index;
+    var win;
+    // We need a unique DOM id in case user opens two dialogs.
+    var nextButtonId = Ext.id();
+    function getDialogTitle(d) {
+      var params = d[0].params;
+      return params[1].value;
+    }
+    function getDialogContent(d) {
         var params = d[0].params;
         var chicon = params[0].value;
         var title = params[1].value;
@@ -115,7 +122,10 @@ tvheadend.dvrDetails = function(uuid) {
             content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Time Scheduler') + ':</span><span class="x-epg-body">' + timerec_caption + '</span></div>';
         if (chicon)
             content += '</div>'; /* x-epg-bottom */
+      return content
+    }
 
+  function getDialogButtons(title) {
         var buttons = [];
 
         var comboGetInfo = new Ext.form.ComboBox({
@@ -149,9 +159,23 @@ tvheadend.dvrDetails = function(uuid) {
         if (title)
             buttons.push(comboGetInfo);
 
-        var windowHeight = Ext.getBody().getViewSize().height - 150;
+        buttons.push(new Ext.Button({
+            id: nextButtonId,
+            handler: nextEvent,
+            iconCls: 'next',
+            tooltip: _('Go to next event'),
+            text: _("Next"),
+        }));
 
-        var win = new Ext.Window({
+    return buttons;
+  }                             // getDialogButtons
+
+  function showit(d) {
+       var title = getDialogTitle(d);
+       var content = getDialogContent(d);
+       var buttons = getDialogButtons(title);
+       var windowHeight = Ext.getBody().getViewSize().height - 150;
+       win = new Ext.Window({
             title: title,
             iconCls: 'info',
             layout: 'fit',
@@ -165,10 +189,12 @@ tvheadend.dvrDetails = function(uuid) {
         });
 
         win.show();
-    }
+     }
 
-    tvheadend.loading(1);
-    Ext.Ajax.request({
+    function load(store, index, cb) {
+      var uuid = store.getAt(index).id;
+      tvheadend.loading(1);
+      Ext.Ajax.request({
         url: 'api/idnode/load',
         params: {
             uuid: uuid,
@@ -180,12 +206,44 @@ tvheadend.dvrDetails = function(uuid) {
         success: function(d) {
             d = json_decode(d);
             tvheadend.loading(0),
-            showit(d);
+            cb(d);
         },
         failure: function(d) {
             tvheadend.loading(0);
         }
-    });
+      });
+    }                           // load
+
+    function nextEvent() {
+      var store = grid.getStore();
+        ++current_index;
+        load(store,current_index,updateit);
+      }
+
+     function updateit(d) {
+        var title = getDialogTitle(d);
+        var content = getDialogContent(d);
+        var buttons = getDialogButtons(title);
+        win.removeAll();
+        // Can't update buttons at the same time...
+        win.update({html: content});
+        win.setTitle(title);
+        // ...so remove the buttons and re-add them.
+        var tbar = win.fbar;
+        tbar.removeAll();
+        Ext.each(buttons, function(btn) {
+                         tbar.addButton(btn);
+                       });
+        // If we're at the end of the store then disable the next
+        // button.  (getTotalCount is one-based).
+        if (current_index == store.getTotalCount() - 1)
+          tbar.getComponent(nextButtonId).disable();
+        // Finally, relayout.
+        win.doLayout();
+     }
+
+    var store = grid.getStore();
+    load(store,index,showit);
 };
 
 tvheadend.dvrRowActions = function() {
@@ -202,7 +260,7 @@ tvheadend.dvrRowActions = function() {
                 iconCls: 'info',
                 qtip: _('Recording details'),
                 cb: function(grid, rec, act, row) {
-                    new tvheadend.dvrDetails(grid.getStore().getAt(row).id);
+                    new tvheadend.dvrDetails(grid, row);
                 }
             }
         ],
