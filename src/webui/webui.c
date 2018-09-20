@@ -292,14 +292,16 @@ http_stream_status ( void *opaque, htsmsg_t *m )
 {
   http_connection_t *hc = opaque;
   char buf[128];
+  const char *username;
 
   htsmsg_add_str(m, "type", "HTTP");
   if (hc->hc_proxy_ip) {
     tcp_get_str_from_ip(hc->hc_proxy_ip, buf, sizeof(buf));
     htsmsg_add_str(m, "proxy", buf);
   }
-  if (hc->hc_username)
-    htsmsg_add_str(m, "user", hc->hc_username);
+  username = http_username(hc);
+  if (username)
+    htsmsg_add_str(m, "user", username);
 }
 
 static inline void *
@@ -1070,7 +1072,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
                                          prch.prch_flags | SUBSCRIPTION_STREAMING |
                                            eflags,
                                          hc->hc_peer_ipstr,
-				         hc->hc_username,
+				         http_username(hc),
 				         http_arg_get(&hc->hc_args, "User-Agent"),
 				         NULL);
     if(s) {
@@ -1147,7 +1149,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
     s = subscription_create_from_mux(&prch, NULL, weight ?: 10, "HTTP",
                                      prch.prch_flags |
                                      SUBSCRIPTION_STREAMING,
-                                     hc->hc_peer_ipstr, hc->hc_username,
+                                     hc->hc_peer_ipstr, http_username(hc),
                                      http_arg_get(&hc->hc_args, "User-Agent"),
                                      NULL);
     if (s) {
@@ -1211,7 +1213,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
     s = subscription_create_from_channel(&prch,
                  NULL, weight, "HTTP",
                  prch.prch_flags | SUBSCRIPTION_STREAMING,
-                 hc->hc_peer_ipstr, hc->hc_username,
+                 hc->hc_peer_ipstr, http_username(hc),
                  http_arg_get(&hc->hc_args, "User-Agent"),
                  NULL);
 
@@ -1620,7 +1622,7 @@ page_dvrfile_preop(http_connection_t *hc, off_t file_start,
   if (priv->tcp_id && !hc->hc_no_output && content_len > 64*1024) {
     priv->sub = subscription_create_from_file("HTTP", priv->charset,
                                               priv->fname, hc->hc_peer_ipstr,
-                                              hc->hc_username,
+                                              http_username(hc),
                                               http_arg_get(&hc->hc_args, "User-Agent"));
     if (priv->sub == NULL) {
       http_stream_postop(priv->tcp_id);

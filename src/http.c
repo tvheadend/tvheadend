@@ -1148,6 +1148,17 @@ http_access_verify_channel(http_connection_t *hc, int mask,
 /**
  *
  */
+const char *
+http_username(http_connection_t *hc)
+{
+  if (strempty(hc->hc_username) && hc->hc_access)
+      return hc->hc_access->aa_username;
+  return hc->hc_username;
+}
+
+/**
+ *
+ */
 static int
 http_websocket_valid(http_connection_t *hc)
 {

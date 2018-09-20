@@ -215,6 +215,8 @@ static inline int http_args_empty(const http_arg_list_t *list) { return TAILQ_EM
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
+const char * http_username(http_connection_t *hc);
+
 void http_alive(http_connection_t *hc);
 
 void http_error(http_connection_t *hc, int error);
