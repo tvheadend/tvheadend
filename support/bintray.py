@@ -103,6 +103,8 @@ def do_upload(*args):
     data = open(file, 'rb').read()
     resp = Bintray(bpath).put(data, binary=1)
     if resp.code != 200 and resp.code != 201:
+        if resp.code == 409:
+            error(0, 'HTTP WARNING "%s" %s %s', resp.url, resp.code, resp.reason)
         error(10, 'HTTP ERROR "%s" %s %s', resp.url, resp.code, resp.reason)
 
 def get_ver(version):
