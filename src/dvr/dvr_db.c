@@ -1702,6 +1702,12 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
 static int
 dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_entry_t *old_de)
 {
+  /* If programme is recording (or completed) then it is the "best",
+   * even if a better schedule is found after recording starts.
+   */
+  if (old_de->de_sched_state != DVR_SCHEDULED)
+    return 0;
+
   if (!old_de || !old_de->de_bcast) return 1;            /* Old broadcast should always exist */
   int old_services = 0;
   int new_services = 0;
@@ -1714,12 +1720,6 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
   /* Sanity check. */
   if (!new_channel) return 0;
   if (!old_channel) return 1;
-
-  /* If programme is recording then it is the "best", even if a better
-   * schedule is found after recording starts.
-   */
-  if (old_de->de_sched_state != DVR_SCHEDULED)
-    return 0;
 
   /* Always prefer a recording that has the correct service profile
    * (UHD, HD, SD).  Someone mentioned (#1846) that some channels can
