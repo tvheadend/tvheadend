@@ -404,6 +404,8 @@ typedef struct dvr_autorec_entry {
   int dae_maxduration;
   int dae_minyear;
   int dae_maxyear;
+  int dae_minseason;
+  int dae_maxseason;
   uint32_t dae_retention;
   uint32_t dae_removal;
   uint32_t dae_btype;
