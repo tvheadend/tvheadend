@@ -1046,10 +1046,10 @@ main(int argc, char **argv)
   signal(SIGILL, handle_sigill);   // see handler..
 
   /* Set priviledges */
-  if(opt_fork || opt_group || opt_user) {
+  if((opt_fork && getuid() == 0) || opt_group || opt_user) {
     const char *homedir;
     struct group  *grp = getgrnam(opt_group ?: "video");
-    struct passwd *pw  = opt_user ? getpwnam(opt_user) : NULL;
+    struct passwd *pw  = getpwnam(opt_user ?: "daemon");
 
     if(grp != NULL) {
       gid = grp->gr_gid;
