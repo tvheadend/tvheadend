@@ -26,9 +26,23 @@ tvheadend.dvrDetails = function(grid, index) {
     var win;
     // We need a unique DOM id in case user opens two dialogs.
     var nextButtonId = Ext.id();
-    function getDialogTitle(d) {
+    // Our title is passed to search functions (such as imdb)
+    // So always ensure this does not contain channel info.
+    function getTitle(d) {
       var params = d[0].params;
       return params[1].value;
+    }
+
+    function getDialogTitle(d) {
+      var params = d[0].params;
+      var fields = [];
+      var evTitle = params[1].value;
+      if (evTitle && evTitle.length) fields.push(evTitle);
+      var evEp = params[4].value;
+      if (evEp && evEp.length) fields.push(evEp);
+      var channelname = params[22].value;
+      if (channelname && channelname.length) fields.push(channelname);
+      return fields.join(' - ');
     }
     function getDialogContent(d) {
         var params = d[0].params;
@@ -171,12 +185,12 @@ tvheadend.dvrDetails = function(grid, index) {
   }                             // getDialogButtons
 
   function showit(d) {
-       var title = getDialogTitle(d);
+       var dialogTitle = getDialogTitle(d);
        var content = getDialogContent(d);
-       var buttons = getDialogButtons(title);
+       var buttons = getDialogButtons(getTitle(d));
        var windowHeight = Ext.getBody().getViewSize().height - 150;
        win = new Ext.Window({
-            title: title,
+            title: dialogTitle,
             iconCls: 'info',
             layout: 'fit',
             width: 650,
@@ -201,7 +215,7 @@ tvheadend.dvrDetails = function(grid, index) {
             list: 'channel_icon,disp_title,disp_subtitle,disp_summary,episode_disp,start_real,stop_real,' +
                   'duration,disp_description,status,filesize,comment,duplicate,' +
                   'autorec_caption,timerec_caption,image,copyright_year,credits,keyword,category,' +
-                  'first_aired,genre',
+                  'first_aired,genre,channelname',
         },
         success: function(d) {
             d = json_decode(d);
@@ -221,13 +235,13 @@ tvheadend.dvrDetails = function(grid, index) {
       }
 
      function updateit(d) {
-        var title = getDialogTitle(d);
+        var dialogTitle = getDialogTitle(d);
         var content = getDialogContent(d);
-        var buttons = getDialogButtons(title);
+        var buttons = getDialogButtons(getTitle(d));
         win.removeAll();
         // Can't update buttons at the same time...
         win.update({html: content});
-        win.setTitle(title);
+        win.setTitle(dialogTitle);
         // ...so remove the buttons and re-add them.
         var tbar = win.fbar;
         tbar.removeAll();
