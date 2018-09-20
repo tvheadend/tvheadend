@@ -350,7 +350,7 @@ tvheadend.epgDetails = function(grid, index) {
         title: _('Broadcast Details'),
         iconCls: 'broadcast_details',
         layout: 'fit',
-        width: 675,
+        width: 800,
         height: windowHeight,
         constrainHeader: true,
         buttons: buttons,
