@@ -949,7 +949,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   dvr_entry_t *de, *de2;
   int64_t start, stop;
   htsmsg_t *m;
-  char ubuf[UUID_HEX_SIZE];
+  char ubuf[UUID_HEX_SIZE], ubuf2[UUID_HEX_SIZE];
   const char *s;
 
   if (conf) {
@@ -1032,7 +1032,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
           idnode_uuid_as_str(&de->de_id, ubuf),
           lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
           (int64_t)de2->de_start, de->de_creator ?: "",
-          idnode_uuid_as_str(&de2->de_id, ubuf));
+          idnode_uuid_as_str(&de2->de_id, ubuf2));
         dvr_entry_destroy(de, 1);
         return NULL;
       }
