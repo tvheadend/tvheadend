@@ -999,6 +999,26 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 
   LIST_INSERT_HEAD(&dvrentries, de, de_global_link);
 
+  /* We do early duplicate checking. Otherwise we have the scenario
+   * where we have a dvr entry already on disk and an autorec creates
+   * an entry that matches the same programme details in the future (a
+   * repeat), but we still create a dvr_entry for that schedule and
+   * then immediately cancel it when the start time arrives. So,
+   * instead, we cancel that duplicate here and now.
+   *
+   * Note: this check has to be done _after_ insert in to de_global_link
+   * otherwise the destroy will abort.
+   */
+  if (_dvr_duplicate_event(de)) {
+      tvhtrace(LS_DVR, "Entry was duplicate for %s \"%s\" on \"%s\" start time %"PRId64", "
+          "scheduled for recording by \"%s\"",
+          idnode_uuid_as_str(&de->de_id, ubuf),
+          lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+          (int64_t)de->de_start, de->de_creator ?: "");
+      dvr_entry_destroy(de, 1);
+      return NULL;
+  }
+
   if (de->de_channel && !de->de_dont_reschedule && !clone) {
     LIST_FOREACH(de2, &de->de_channel->ch_dvrs, de_channel_link)
       if(de2 != de &&
