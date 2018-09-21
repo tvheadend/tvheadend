@@ -207,7 +207,7 @@ typedef struct dvr_entry {
   LIST_ENTRY(dvr_entry) de_config_link;
 
   int de_enabled;
-
+  time_t de_create;             ///< Time entry was created
   time_t de_start;
   time_t de_stop;
 
