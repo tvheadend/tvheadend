@@ -947,7 +947,7 @@ dvr_entry_t *
 dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 {
   dvr_entry_t *de, *de2;
-  int64_t start, stop, create;
+  int64_t start, stop, create, now;
   htsmsg_t *m;
   char ubuf[UUID_HEX_SIZE], ubuf2[UUID_HEX_SIZE];
   const char *s;
@@ -983,7 +983,19 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   if (!htsmsg_get_s64(conf, "create", &create)) {
       de->de_create = create;
   } else {
-      de->de_create = time(NULL);
+      /* Old dvr entry without a create time, so fake one.  For
+       * entries that are older than a day, assume these are old
+       * (tvh4.2) recordings, so use the start time as the create
+       * time. This will allow user to order records by create time
+       * and get something reasonable. For all new records however, we
+       * use now since they will be written to disk.
+       */
+      now = time(NULL);
+      if (now > start && start < now - 86400)
+          create = start;
+      else
+          create = now;
+      de->de_create = create;
   }
 
   /* Extract episode info */
