@@ -990,7 +990,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
        * and get something reasonable. For all new records however, we
        * use now since they will be written to disk.
        */
-      now = time(NULL);
+      now = gclk();
       if (now > start && start < now - 86400)
           create = start;
       else
@@ -1803,9 +1803,9 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
    * get 50 minutes.
    */
   if (new_bcast->start != old_bcast->start) {
-    if (new_bcast->start > old_bcast->start && time(NULL) >  old_bcast->start) {
+    if (new_bcast->start > old_bcast->start && gclk() >  old_bcast->start) {
       return 1;
-    } else if (new_bcast->start < old_bcast->start && time(NULL) > new_bcast->start) {
+    } else if (new_bcast->start < old_bcast->start && gclk() > new_bcast->start) {
       return 0;
     }
 
@@ -2055,7 +2055,7 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
    * created and then immediately destroyed, giving a few seconds
    * lee-way in case of slow hardware.
    */
-  if (!de->de_create || time(NULL) - de->de_create > 10)
+  if (!de->de_create || gclk() - de->de_create > 10)
       dvr_autorec_async_reschedule();
   dvr_entry_dec_ref(de);
 }
