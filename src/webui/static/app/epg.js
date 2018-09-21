@@ -110,6 +110,7 @@ tvheadend.filmAffinityLanguage = function() {
 tvheadend.epgDetails = function(grid, index) {
     // We need a unique DOM id in case user opens two dialogs.
     var nextButtonId = Ext.id();
+    var previousButtonId = Ext.id();
     var confcomboButtonId = Ext.id();
 
     function getDialogTitle(event) {
@@ -335,6 +336,13 @@ tvheadend.epgDetails = function(grid, index) {
               text: event.serieslinkUri ? _("Record series") : _("Autorec")
           }));
           buttons.push(new Ext.Button({
+              id: previousButtonId,
+              handler: previousEvent,
+              iconCls: 'previous',
+              tooltip: _('Go to previous event'),
+              text: _("Previous"),
+          }));
+          buttons.push(new Ext.Button({
               id: nextButtonId,
               handler: nextEvent,
               iconCls: 'next',
@@ -355,6 +363,7 @@ tvheadend.epgDetails = function(grid, index) {
 
     var current_index = index;
     var event = grid.getStore().getAt(index).data;
+    var store = grid.getStore();
     var content = getDialogContent(event);
     var buttons = getDialogButtons();
     var windowHeight = Ext.getBody().getViewSize().height - 150;
@@ -363,7 +372,7 @@ tvheadend.epgDetails = function(grid, index) {
         title: title,
         iconCls: 'broadcast_details',
         layout: 'fit',
-        width: 800,
+        width: 850,
         height: windowHeight,
         constrainHeader: true,
         buttons: buttons,
@@ -372,6 +381,7 @@ tvheadend.epgDetails = function(grid, index) {
         html: content
     });
     win.show();
+    checkButtonAvailability(win.fbar);
 
     function playProgram() {
         var title = event.title;
@@ -381,10 +391,26 @@ tvheadend.epgDetails = function(grid, index) {
                     '?title=' + encodeURIComponent(title), '_blank');
     }
 
+    function previousEvent() {
+        --current_index;
+        event = store.getAt(current_index).data;
+        updateit();
+    }
     function nextEvent() {
-      var store = grid.getStore();
-      ++current_index;
-      event = store.getAt(current_index).data;
+        ++current_index;
+        event = store.getAt(current_index).data;
+        updateit();
+    }
+    function checkButtonAvailability(toolBar){
+        // If we're at the end of the store then disable the next
+        // or previous button.  (getTotalCount is one-based).
+        if (current_index == store.getTotalCount() - 1)
+          toolBar.getComponent(nextButtonId).disable();
+        if (current_index == 0)
+          toolBar.getComponent(previousButtonId).disable();
+    }
+
+    function updateit() {
       var title = getDialogTitle(event);
       var content = getDialogContent(event);
       var buttons = getDialogButtons(event);
@@ -399,10 +425,7 @@ tvheadend.epgDetails = function(grid, index) {
       Ext.each(buttons, function(btn) {
         tbar.addButton(btn);
       });
-      // If we're at the end of the store then disable the next
-      // button.  (getTotalCount is one-based).
-      if (current_index == store.getTotalCount() - 1)
-        tbar.getComponent(nextButtonId).disable();
+      checkButtonAvailability(tbar);
       // Finally, relayout.
       win.doLayout();
     }
