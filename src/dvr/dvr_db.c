@@ -947,7 +947,7 @@ dvr_entry_t *
 dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 {
   dvr_entry_t *de, *de2;
-  int64_t start, stop;
+  int64_t start, stop, create;
   htsmsg_t *m;
   char ubuf[UUID_HEX_SIZE], ubuf2[UUID_HEX_SIZE];
   const char *s;
@@ -978,6 +978,13 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   de->de_pri = DVR_PRIO_DEFAULT;
 
   idnode_load(&de->de_id, conf);
+
+  /* Time the node was created. */
+  if (!htsmsg_get_s64(conf, "create", &create)) {
+      de->de_create = create;
+  } else {
+      de->de_create = time(NULL);
+  }
 
   /* Extract episode info */
   s = htsmsg_get_str(conf, "episode");
@@ -2031,8 +2038,13 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
    * count" to be able to schedule a new recording.  We have to do
    * this even if de was not an autorec since autorecs can interact
    * with manually scheduled programmes.
+   *
+   * We avoid rescheduling for cases where the entry has only just been
+   * created and then immediately destroyed, giving a few seconds
+   * lee-way in case of slow hardware.
    */
-  dvr_autorec_async_reschedule();
+  if (!de->de_create || time(NULL) - de->de_create > 10)
+      dvr_autorec_async_reschedule();
   dvr_entry_dec_ref(de);
 }
 
@@ -2892,6 +2904,13 @@ dvr_entry_class_int_set(dvr_entry_t *de, int *v, int nv)
     return 1;
   }
   return 0;
+}
+
+static int
+dvr_entry_class_create_set(void *o, const void *v)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  return dvr_entry_class_time_set(de, &de->de_create, *(time_t *)v);
 }
 
 static int
@@ -3793,6 +3812,15 @@ const idclass_t dvr_entry_class = {
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable the entry."),
       .off      = offsetof(dvr_entry_t, de_enabled),
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "create",
+      .name     = N_("Time the entry was created"),
+      .desc     = N_("The create time of the entry describing the recording."),
+      .set      = dvr_entry_class_create_set,
+      .off      = offsetof(dvr_entry_t, de_create),
+      .opts     = PO_HIDDEN | PO_RDONLY | PO_NOUI,
     },
     {
       .type     = PT_TIME,
