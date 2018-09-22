@@ -460,6 +460,7 @@ tvheadend.epgDetails = function(grid, index) {
 
 tvheadend.epg = function() {
     var lookup = '<span class="x-linked">&nbsp;</span>';
+    var epgChannelCurrentIndex = 0;
 
     var detailsfcn = function(grid, rec, act, row) {
         new tvheadend.epgDetails(grid, row);
@@ -857,6 +858,18 @@ tvheadend.epg = function() {
         }
     });
 
+    var epgPrevChannel = new Ext.Button({
+        handler: epgPrevChannelCB,
+        iconCls: 'previous',
+        tooltip: _("Go to previous channel"),
+    });
+
+    var epgNextChannel = new Ext.Button({
+        handler: epgNextChannelCB,
+        iconCls: 'next',
+        tooltip: _("Go to next channel"),
+    });
+
     // Tags, uses global store
 
     var epgFilterChannelTags = new Ext.ux.form.ComboAny({
@@ -1072,7 +1085,8 @@ tvheadend.epg = function() {
         epgView.reset();
     }
 
-    epgFilterChannels.on('select', function(c, r) {
+    epgFilterChannels.on('select', function(c, r, index) {
+        epgChannelCurrentIndex = index;
         epgFilterChannelSet(r.data.key == -1 ? "" : r.data.key);
     });
 
@@ -1168,7 +1182,7 @@ tvheadend.epg = function() {
     var tbar = [
         epgMode, '-',
         epgFilterTitle, { text: _('Fulltext') }, epgFilterFulltext, { text: _('New only') }, epgFilterNewOnly, '-',
-        epgFilterChannels, '-',
+        epgPrevChannel, epgFilterChannels, epgNextChannel, '-',
         epgFilterChannelTags, '-',
         epgFilterContentGroup, '-',
         epgFilterDuration, '-',
@@ -1333,6 +1347,38 @@ tvheadend.epg = function() {
 
     function rowclicked(grid, index, e) {
         new tvheadend.epgDetails(grid, index);
+    }
+
+    function epgChannelSetCommon(delta) {
+        // Count is 1-based
+        var max = epgFilterChannels.store.getCount();
+        // Elem 0 is "clear filter" so we expect at least
+        // two items.
+        if (max < 2)
+            return;
+
+        epgChannelCurrentIndex += delta;
+        // Wrap-around seems to make sense for EPG since
+        // we have a text field showing the channel names.
+        if (epgChannelCurrentIndex < 1)
+            epgChannelCurrentIndex = max - 1;
+        else if (epgChannelCurrentIndex >= max)
+            epgChannelCurrentIndex = 1;
+
+        var text = epgFilterChannels.store.getAt(epgChannelCurrentIndex).get("val");
+        epgFilterChannels.setValue(text);
+        // We have to call our "value changed" cb ourselves, but with
+        // the associated key for it to be sent to the server for filtering.
+        var key = epgFilterChannels.store.getAt(epgChannelCurrentIndex).get("key");
+        epgFilterChannelSet(key);
+    }
+
+    function epgPrevChannelCB() {
+        epgChannelSetCommon(-1);
+    }
+
+    function epgNextChannelCB() {
+        epgChannelSetCommon(+1);
     }
 
     function createAutoRec() {
