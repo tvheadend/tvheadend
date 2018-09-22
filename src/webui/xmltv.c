@@ -119,6 +119,8 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
   epg_episode_num_t epnum;
   char start[32], stop[32], ubuf[UUID_HEX_SIZE];
   lang_str_ele_t *lse;
+  epg_genre_t *genre;
+  char buf[64];
 
   if (ebc->title == NULL) return;
   http_xmltv_time(start, ebc->start);
@@ -159,6 +161,15 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
     htsbuf_append_str(hq, "  </credits>\n");
   }
   _http_xmltv_programme_write_string_list(hq, ebc->category, "category");
+  LIST_FOREACH(genre, &ebc->genre, link) {
+    if (genre && genre->code) {
+      if (epg_genre_get_str(genre, 0, 1, buf, sizeof(buf), "en")) {
+        htsbuf_qprintf(hq, "  <category lang=\"en\">");
+        htsbuf_append_and_escape_xml(hq, buf);
+        htsbuf_append_str(hq, "</category>\n");
+      }
+    }
+  }
   _http_xmltv_programme_write_string_list(hq, ebc->keyword, "keyword");
 
   /* We can't use epg_broadcast_epnumber_format since we need a specific
