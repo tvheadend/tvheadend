@@ -323,12 +323,15 @@ tvheadend.epgDetails = function(grid, index) {
           });
 
           buttons.push(confcombo);
-          buttons.push(new Ext.Button({
-              handler: recordEvent,
-              iconCls: 'rec',
-              tooltip: _('Record this program now'),
-              text: _('Record program')
-          }));
+          // If the event is recording or the event is scheduled, we disable the record button
+          if (!recording && !scheduled) {
+            buttons.push(new Ext.Button({
+                handler: recordEvent,
+                iconCls: 'rec',
+                tooltip: _('Record this program now'),
+                text: _('Record program')
+            }));
+          }
           buttons.push(new Ext.Button({
               handler: recordSeries,
               iconCls: 'autoRec',
@@ -340,14 +343,12 @@ tvheadend.epgDetails = function(grid, index) {
               handler: previousEvent,
               iconCls: 'previous',
               tooltip: _('Go to previous event'),
-              text: _("Previous"),
           }));
           buttons.push(new Ext.Button({
               id: nextButtonId,
               handler: nextEvent,
               iconCls: 'next',
               tooltip: _('Go to next event'),
-              text: _("Next"),
           }));
 
       } else {
@@ -372,7 +373,7 @@ tvheadend.epgDetails = function(grid, index) {
         title: title,
         iconCls: 'broadcast_details',
         layout: 'fit',
-        width: 850,
+        width: 760,
         height: windowHeight,
         constrainHeader: true,
         buttons: buttons,

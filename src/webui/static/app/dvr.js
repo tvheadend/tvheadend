@@ -180,14 +180,12 @@ tvheadend.dvrDetails = function(grid, index) {
               handler: previousEvent,
               iconCls: 'previous',
               tooltip: _('Go to previous event'),
-              text: _("Previous"),
         }));
         buttons.push(new Ext.Button({
             id: nextButtonId,
             handler: nextEvent,
             iconCls: 'next',
             tooltip: _('Go to next event'),
-            text: _("Next"),
         }));
 
     return buttons;
@@ -202,7 +200,7 @@ tvheadend.dvrDetails = function(grid, index) {
             title: dialogTitle,
             iconCls: 'info',
             layout: 'fit',
-            width: 650,
+            width: 760,
             height: windowHeight,
             constrainHeader: true,
             buttonAlign: 'center',
