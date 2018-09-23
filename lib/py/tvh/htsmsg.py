@@ -174,7 +174,16 @@ def deserialize0(data, typ=HMF_MAP):
         name = data[:nlen]
         data = data[nlen:]
         if typ == HMF_STR:
-            item = data[:dlen]
+            # All of our strings _should_ be utf-8
+            # so need to decode them, otherwise
+            # everything looks fine until you
+            # substr the string elsewhere and
+            # get truncated characters and len is
+            # wrong.
+            try:
+                item = data[:dlen].decode('utf-8')
+            except:
+                item = data[:dlen]
         elif typ == HMF_BIN:
             item = HMFBin(data[:dlen])
         elif typ == HMF_S64:
