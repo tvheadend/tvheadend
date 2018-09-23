@@ -1472,6 +1472,11 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
       return 0;
     dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
     int code = dvr_rec_start(de, ss);
+    /* Persist entry so we save the filename details to avoid orphan
+     * files if we crash before the programme completes recording.
+     */
+    dvr_entry_changed(de);
+    htsp_dvr_entry_update(de);
     if(code == 0) {
       ret = 1;
       *started = 1;
