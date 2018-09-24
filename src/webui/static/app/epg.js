@@ -67,6 +67,7 @@ tvheadend.DurationStore = new Ext.data.SimpleStore({
     idIndex: 0,
     fields: ['identifier','label','minvalue','maxvalue'],
     data: [['-1', _('(Clear filter)'),"",""],
+           ['0',_('00:01:00 - 03:00:00'), 60, 10800],
            ['1',_('00:00:00 - 00:15:00'), 0, 900],
            ['2',_('00:15:00 - 00:30:00'), 900, 1800],
            ['3',_('00:30:00 - 01:00:00'), 1800, 3600],
