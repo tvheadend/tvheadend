@@ -3935,7 +3935,7 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Episode image."),
       .get      = dvr_entry_class_image_url_get_as_property,
       .off      = offsetof(dvr_entry_t, de_image),
-      .opts     = PO_HIDDEN | PO_RDONLY,
+      .opts     = PO_HIDDEN,
     },
     {
       .type     = PT_STR,
@@ -3943,7 +3943,7 @@ const idclass_t dvr_entry_class = {
       .name     = N_("Fanart image"),
       .desc     = N_("Fanart image."),
       .off      = offsetof(dvr_entry_t, de_fanart_image),
-      .opts     = PO_HIDDEN | PO_RDONLY,
+      .opts     = PO_HIDDEN,
     },
     {
       .type     = PT_LANGSTR,
