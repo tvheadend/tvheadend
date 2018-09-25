@@ -363,6 +363,16 @@ dvr_sub_description(const char *id, const char *fmt, const void *aux, char *tmp,
 }
 
 static const char *
+dvr_sub_uuid(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
+{
+  const dvr_entry_t *de = aux;
+  char ubuf[UUID_HEX_SIZE];
+  idnode_uuid_as_str(&de->de_id, ubuf);
+  strlcpy(tmp, ubuf, tmplen);
+  return tmp;
+}
+
+static const char *
 dvr_sub_episode(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
   const dvr_entry_t *de = aux;
@@ -831,6 +841,7 @@ static htsstr_substitute_t dvr_subs_postproc_entry[] = {
   { .id = "t",  .getval = dvr_sub_title },
   { .id = "s",  .getval = dvr_sub_subtitle_or_summary },
   { .id = "u",  .getval = dvr_sub_subtitle },
+  { .id = "U",  .getval = dvr_sub_uuid },
   { .id = "m",  .getval = dvr_sub_summary },
   { .id = "p",  .getval = dvr_sub_episode },
   { .id = "d",  .getval = dvr_sub_description },
