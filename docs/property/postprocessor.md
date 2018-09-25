@@ -26,6 +26,7 @@ Format | Description                               | Example value
 `%r`   | Number of errors during recording         |  0
 `%R`   | Number of data errors during recording    |  6
 `%i`   | Streams (comma separated)                 |  H264,AC3,TELETEXT
+`%U`   | Unique ID of recording                    |  3cf44328eda87a428ba9a8b14876ab80
 `%Z`   | Comment                                   |  A string
 
 *Example usage*
