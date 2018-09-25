@@ -2005,6 +2005,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   free(de->de_channel_name);
   free(de->de_epnum.text);
   free(de->de_image);
+  free(de->de_fanart_image);
   free(de->de_uri);
 
   free(de);
@@ -3934,6 +3935,14 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Episode image."),
       .get      = dvr_entry_class_image_url_get_as_property,
       .off      = offsetof(dvr_entry_t, de_image),
+      .opts     = PO_HIDDEN | PO_RDONLY,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "fanart_image",
+      .name     = N_("Fanart image"),
+      .desc     = N_("Fanart image."),
+      .off      = offsetof(dvr_entry_t, de_fanart_image),
       .opts     = PO_HIDDEN | PO_RDONLY,
     },
     {
