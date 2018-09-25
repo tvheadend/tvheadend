@@ -179,7 +179,7 @@ def deserialize0(data, typ=HMF_MAP):
             try:
                 item = data[:dlen].decode('utf-8')
             except:
-                item = data[:dlen]
+                item = data[:dlen].decode(errors='replace')
         elif typ == HMF_BIN:
             item = HMFBin(data[:dlen])
         elif typ == HMF_S64:
@@ -201,7 +201,11 @@ def deserialize0(data, typ=HMF_MAP):
         if islist:
             msg.append(item)
         else:
-            msg[name.decode()] = item
+            try:
+                n = name.decode(errors="replace")
+            except:
+                n = name
+            msg[n] = item
         data = data[dlen:]
     return msg
 
