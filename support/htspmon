@@ -79,7 +79,7 @@ try:
     log.info(msg, pretty=True)
 
 except KeyboardInterrupt: pass
-except Exception, e:
+except Exception as e:
   log.error(e)
   sys.exit(1) 
 
