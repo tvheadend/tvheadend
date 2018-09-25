@@ -29,7 +29,7 @@ import tvh.htsmsg as htsmsg
 # HTSP Client
 # ###########################################################################
 
-HTSP_PROTO_VERSION = 25
+HTSP_PROTO_VERSION = 33
 
 
 # Create passwd digest
