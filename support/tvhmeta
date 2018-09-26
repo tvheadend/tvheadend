@@ -1,0 +1,113 @@
+#! /usr/bin/env python
+
+# Update Tvheadend dvr record with additional external metadata
+# such as artwork.
+#
+# Sample usage:
+# ./tvhmeta --artwork-url http://art/img1.jpg --fanart-url http://art/img2.jpg --uuid 8fefddddaa8a57ae4335323222f8e83a1
+#
+# This program is a proof of concept in order to do end-to-end testing
+# between Tvheadend and frontend clients, and to allow developers to
+# produce wrapper scripts that do Internet lookups for fanart.
+#
+# Interface Stability:
+# Unstable: This program is undergoing frequent interface changes.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+from optparse import OptionParser
+import urllib
+# Python3 decided to rename things and break compatibility...
+try:
+  import urllib.parse
+  import urllib.request
+except:
+  pass
+try:
+  urlencode = urllib.parse.urlencode
+  urlopen = urllib.request.urlopen
+except:
+  urlencode = urllib.urlencode
+  urlopen = urllib.urlopen
+
+import base64
+import json
+import sys
+
+
+def request(user, password, host, port, url, data):
+  if user is not None and password is not None:
+    full_url = "http://{}:{}@{}:{}/{}".format(user,password,host,port,url)
+  else:
+    full_url = "http://{}:{}/{}".format(host,port,url)
+  print("Sending ", data, "to", full_url)
+  req = urlopen(full_url, data=bytearray(data, 'utf-8'))
+  return req.read().decode()
+
+def request_from_opt(opts, url, data):
+  return request(opts.user, opts.password, opts.host, opts.port, url, data)
+
+def do_artwork(opts):
+#user, password, host, port, url, data)
+  data = urlencode(
+    {"uuid" : opts.uuid,
+     "list" : "uuid,image,fanart_image",
+     "grid" : 1
+    })
+  exist = request_from_opt(opts, "api/idnode/load", data)
+  print(exist)
+
+  new_data_dict = {"uuid" : opts.uuid}
+  if opts.artwork_url is not None: new_data_dict['image'] = opts.artwork_url
+  if opts.fanart_url is not None: new_data_dict['fanart_image'] = opts.fanart_url
+
+  new_data = 'node=[' + json.dumps(new_data_dict) + ']';
+  replace = request_from_opt(opts, "api/idnode/save", new_data)
+  print(replace)
+
+  exist = request_from_opt(opts, "api/idnode/load", data)
+  print(exist)
+
+
+def process(argv):
+  optp = OptionParser()
+  optp.add_option('-a', '--host', default='localhost',
+                  help='Specify HTSP server hostname')
+  optp.add_option('-o', '--port', default=9981, type='int',
+                  help='Specify HTTP server port')
+  optp.add_option('-u', '--user', default=None,
+                  help='Specify HTTP authentication username')
+  optp.add_option('-p', '--password', default=None,
+                  help='Specify HTTP authentication password')
+  optp.add_option('--artwork-url', default=None,
+                  help='Specify artwork URL')
+  optp.add_option('--fanart-url', default=None,
+                  help='Specify fanart URL')
+  optp.add_option('--uuid', default=None,
+                  help='Specify UUID on which to operate')
+
+  (opts, args) = optp.parse_args(argv)
+  if (opts.artwork_url is None and opts.fanart_url is None):
+    print("Need --artwork-url and/or --fanart-url")
+    return 1
+  if (opts.uuid is None):
+    print("Need --uuid")
+    return 1
+  do_artwork(opts)
+
+
+if __name__ == '__main__':
+  try:
+    process(sys.argv)
+  except KeyboardInterrupt: pass
