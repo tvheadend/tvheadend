@@ -65,7 +65,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 33
+#define HTSP_PROTO_VERSION 34
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -1045,6 +1045,10 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     const char *image = dvr_entry_class_image_url_get(de);
     if(image && *image)
       htsmsg_add_str(out, "image", image);
+    /* htsmsg camelcase to be compatible with other names */
+    image = de->de_fanart_image;
+    if(image && *image)
+      htsmsg_add_str(out, "fanartImage", image);
     if (de->de_copyright_year)
       htsmsg_add_u32(out, "copyrightYear", de->de_copyright_year);
 
