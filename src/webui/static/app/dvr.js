@@ -24,6 +24,7 @@ tvheadend.labelFormattingParser = function(description) {
 tvheadend.dvrDetails = function(grid, index) {
     var current_index = index;
     var win;
+    var updateTimer;
     // We need a unique DOM id in case user opens two dialogs.
     var nextButtonId = Ext.id();
     var previousButtonId = Ext.id();
@@ -70,7 +71,12 @@ tvheadend.dvrDetails = function(grid, index) {
         var category = params[19].value;
         var first_aired = params[20].value;
         var genre = params[21].value;
-        var content = '';
+        /* channelname is unused param 22 */
+        var fanart_image = params[23].value;
+        var content = '<div class="dvr-details-dialog">' +
+        '<div class="dvr-details-dialog-background-image"></div>' +
+        '<div class="dvr-details-dialog-content">';
+
         var but;
 
         if (chicon != null && chicon.length > 0) {
@@ -110,9 +116,14 @@ tvheadend.dvrDetails = function(grid, index) {
             content += '</div>'; /* x-epg-left */
             content += '<div class="x-epg-bottom">';
         }
+        // If we have no image then use fanart image instead.
+        content += '<div class="x-epg-image-container">';
         if (image != null && image.length > 0) {
           content += '<img class="x-epg-image" src="' + image + '">';
+        } else if (fanart_image != null && fanart_image.length > 0) {
+          content += '<img class="x-epg-image" src="' + fanart_image + '">';
         }
+        content += '</div>';
 
         content += '<hr class="x-epg-hr"/>';
         if (summary && (!subtitle || subtitle != summary))
@@ -138,6 +149,7 @@ tvheadend.dvrDetails = function(grid, index) {
             content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Time Scheduler') + ':</span><span class="x-epg-body">' + timerec_caption + '</span></div>';
         if (chicon)
             content += '</div>'; /* x-epg-bottom */
+      content += '</div>';        //dialog content
       return content
     }
 
@@ -191,6 +203,55 @@ tvheadend.dvrDetails = function(grid, index) {
     return buttons;
   }                             // getDialogButtons
 
+  function updateDialogFanart(d) {
+      var params = d[0].params;
+      var image=params[15].value;
+      var fanart = params[23].value;
+
+      if (updateTimer)
+          clearInterval(updateTimer);
+
+      fanart_div = win.el.child(".dvr-details-dialog-background-image");
+      if (fanart != null && fanart.length > 0 && fanart_div) {
+          // Set the fanart image. The rest of the css _should_ by in the tv.css,
+          // but it seemed to ignore it when we applyStyles.
+          // We have to explicitly set width/height otherwise the box was 0px tall.
+          fanart_div.applyStyles({
+              'background' : 'url(' + fanart + ') center center no-repeat',
+              'opacity': 0.15,
+              'position': 'relative',
+              'width' : '100%',
+              'height': '100%',
+          });
+      }                        // Have fanart div
+
+      if (image != null && image.length > 0 &&
+          fanart != null && fanart.length > 0) {
+          // We have image and fanart, so alternate the images every x milliseconds.
+          var index = 0;
+          updateTimer = setInterval(function() {
+              if (win.isDestroyed) {
+                  clearInterval(updateTimer);
+                  return;
+              }
+              var img_div = win.el.child(".x-epg-image");
+              if (img_div && img_div.dom) {
+                  var img= img_div.dom;
+                  // The img.src can be changed by browser so it does
+                  // not match either fanart or image! So we use a
+                  // counter to determine which image should be displayed.
+                  if (++index % 2) {
+                      img.src = fanart;
+                  } else {
+                      img.src = image;
+                  }
+              } else {
+                  clearInterval(updateTimer);
+              }
+          }, 10 * 1000);
+      }
+  }                             //updateDialogFanart
+
   function showit(d) {
        var dialogTitle = getDialogTitle(d);
        var content = getDialogContent(d);
@@ -209,6 +270,7 @@ tvheadend.dvrDetails = function(grid, index) {
             html: content
         });
        win.show();
+       updateDialogFanart(d);
        checkButtonAvailability(win.fbar)
   }
 
@@ -222,7 +284,7 @@ tvheadend.dvrDetails = function(grid, index) {
             list: 'channel_icon,disp_title,disp_subtitle,disp_summary,episode_disp,start_real,stop_real,' +
                   'duration,disp_description,status,filesize,comment,duplicate,' +
                   'autorec_caption,timerec_caption,image,copyright_year,credits,keyword,category,' +
-                  'first_aired,genre,channelname',
+                  'first_aired,genre,channelname,fanart_image',
         },
         success: function(d) {
             d = json_decode(d);
@@ -267,6 +329,7 @@ tvheadend.dvrDetails = function(grid, index) {
         Ext.each(buttons, function(btn) {
             tbar.addButton(btn);
         });
+        updateDialogFanart(d);
         checkButtonAvailability(tbar);
         // Finally, relayout.
         win.doLayout();

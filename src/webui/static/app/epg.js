@@ -166,7 +166,9 @@ tvheadend.epgDetails = function(grid, index) {
         content += '<div class="x-epg-bottom">';
       }
       if (event.image != null && event.image.length > 0) {
+        content += '<div class="x-epg-image-container">';
         content += '<img class="x-epg-image" src="' + event.image + '">';
+        content += '</div>';
       }
       content += '<hr class="x-epg-hr"/>';
       if (event.summary)
