@@ -50,8 +50,15 @@ except:
 import json
 import sys
 import os
+# In development tree, the library is in ../lib/py, but in live it's
+# in the install bin directory (since it is an executable in its own
+# right)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib', 'py'))
-import tvh.tv_meta_tmdb as tv_meta_tmdb
+try:
+  import tvh.tv_meta_tmdb as tv_meta_tmdb
+except:
+  sys.path.insert(0, os.path.join(os.path.dirname(__file__), '.'))
+  import tv_meta_tmdb as tv_meta_tmdb
 
 class TvhMeta(object):
   def __init__(self, host, port, user, password):
