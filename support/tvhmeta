@@ -1,14 +1,20 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
 
-# Update Tvheadend dvr record with additional external metadata
-# such as artwork.
+# Update Tvheadend recordings with additional external metadata such
+# as artwork.
 #
-# Sample usage:
-# ./tvhmeta --artwork-url http://art/img1.jpg --fanart-url http://art/img2.jpg --uuid 8fefddddaa8a57ae4335323222f8e83a1
+# Currently only supports movies. Currently only updates artwork,
+# though future versions may also update other metadata (such as
+# imdb number).
 #
-# This program is a proof of concept in order to do end-to-end testing
-# between Tvheadend and frontend clients, and to allow developers to
-# produce wrapper scripts that do Internet lookups for fanart.
+# Sample usage is via a pre-processing rule in Tvheadend with extra
+# arguments of "--uuid %U --tmdb-key abcdef".
+#
+# This will then invoke the program as such:
+# ./tvhmeta --uuid 8fefddddaa8a57ae4335323222f8e83a1 --tmdb-key abcdef
+#
+# Optional arguments include:
+# --host, --port, --debug.
 #
 # Interface Stability:
 # Unstable: This program is undergoing frequent interface changes.
@@ -26,8 +32,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from optparse import OptionParser
 import urllib
+import logging
 # Python3 decided to rename things and break compatibility...
 try:
   import urllib.parse
@@ -41,73 +47,148 @@ except:
   urlencode = urllib.urlencode
   urlopen = urllib.urlopen
 
-import base64
 import json
 import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib', 'py'))
+import tvh.tv_meta_tmdb as tv_meta_tmdb
 
+class TvhMeta(object):
+  def __init__(self, host, port, user, password):
+    self.host = host
+    self.port = port
+    self.user = user
+    self.password = password
 
-def request(user, password, host, port, url, data):
-  if user is not None and password is not None:
-    full_url = "http://{}:{}@{}:{}/{}".format(user,password,host,port,url)
-  else:
-    full_url = "http://{}:{}/{}".format(host,port,url)
-  print("Sending ", data, "to", full_url)
-  req = urlopen(full_url, data=bytearray(data, 'utf-8'))
-  return req.read().decode()
+  def request(self, url, data):
+    """Send a request for data to Tvheadend."""
+    if self.user is not None and self.password is not None:
+        full_url = "http://{}:{}@{}:{}/{}".format(self.user,self.password,self.host,self.port,url)
+    else:
+        full_url = "http://{}:{}/{}".format(self.host,self.port,url)
 
-def request_from_opt(opts, url, data):
-  return request(opts.user, opts.password, opts.host, opts.port, url, data)
+    logging.debug("Sending %s to %s" % (data, full_url))
+    req = urlopen(full_url, data=bytearray(data, 'utf-8'))
+    ret = req.read().decode()
+    logging.debug("Received: %s", ret)
+    return ret
 
-def do_artwork(opts):
-#user, password, host, port, url, data)
-  data = urlencode(
-    {"uuid" : opts.uuid,
-     "list" : "uuid,image,fanart_image",
-     "grid" : 1
-    })
-  exist = request_from_opt(opts, "api/idnode/load", data)
-  print(exist)
+  def persist_artwork(self, uuid, artwork_url, fanart_url):
+    """Persist the artwork to Tvheadend."""
+    new_data_dict = {"uuid" : uuid}
+    if artwork_url is not None: new_data_dict['image'] = artwork_url
+    if fanart_url is not None: new_data_dict['fanart_image'] = fanart_url
 
-  new_data_dict = {"uuid" : opts.uuid}
-  if opts.artwork_url is not None: new_data_dict['image'] = opts.artwork_url
-  if opts.fanart_url is not None: new_data_dict['fanart_image'] = opts.fanart_url
+    new_data = 'node=[' + json.dumps(new_data_dict) + ']';
+    replace = self.request("api/idnode/save", new_data)
+    return replace
 
-  new_data = 'node=[' + json.dumps(new_data_dict) + ']';
-  replace = request_from_opt(opts, "api/idnode/save", new_data)
-  print(replace)
+  def fetch_and_persist_artwork(self, uuid, tmdb_key):
+    """Fetch artwork for the given uuid."""
+    data = urlencode(
+        {"uuid" : uuid,
+         "list" : "uuid,image,fanart_image,title,copyright_year,episode_disp",
+         "grid" : 1
+        })
+    # Our json looks like this:
+    # {"entries":[{"uuid":"abc..,"image":"...","fanart_image":"...","title":{"eng":"TITLE"},"copyright_year":2014}]}
+    # So go through the structure to get the record
+    recjson = self.request("api/idnode/load", data)
+    recall = json.loads(recjson)
+    recentries = recall["entries"]
+    if (len(recentries) == 0):
+        raise RuntimeError("No entries found for uuid " + uuid)
 
-  exist = request_from_opt(opts, "api/idnode/load", data)
-  print(exist)
+    rec = recentries[0]
+    title_tuple = rec["title"]
+    if title_tuple is None:
+        raise RuntimeError("Record has no title: " + data)
 
+    episode_disp = rec["episode_disp"]
+    if episode_disp is not None and episode_disp <> "":
+        logging.info("Program is an episode, not a movie, so no lookup possible for title %s episode %s" % (title_tuple, episode_disp))
+        raise RuntimeError("Program is an episode, not a movie: " + data)
 
-def process(argv):
-  optp = OptionParser()
-  optp.add_option('-a', '--host', default='localhost',
-                  help='Specify HTSP server hostname')
-  optp.add_option('-o', '--port', default=9981, type='int',
-                  help='Specify HTTP server port')
-  optp.add_option('-u', '--user', default=None,
-                  help='Specify HTTP authentication username')
-  optp.add_option('-p', '--password', default=None,
-                  help='Specify HTTP authentication password')
-  optp.add_option('--artwork-url', default=None,
-                  help='Specify artwork URL')
-  optp.add_option('--fanart-url', default=None,
-                  help='Specify fanart URL')
-  optp.add_option('--uuid', default=None,
-                  help='Specify UUID on which to operate')
+    if rec.has_key("image") and rec.has_key("fanart_image") and rec["image"] is not None and rec["fanart_image"] is not None:
+        logging.info("We have both image and fanart_image already for %s so nothing to do (%s)", uuid, recjson)
+        return
 
-  (opts, args) = optp.parse_args(argv)
-  if (opts.artwork_url is None and opts.fanart_url is None):
-    print("Need --artwork-url and/or --fanart-url")
-    return 1
-  if (opts.uuid is None):
-    print("Need --uuid")
-    return 1
-  do_artwork(opts)
+    year = rec["copyright_year"]
+    # Avoid passing in a zero year to our lookups.
+    if year == 0:
+        year = None
 
+    ####
+    # Now do the tmdb lookup.
+    art = None
+    poster = fanart = None
+    for lang in title_tuple:
+        title = title_tuple[lang]
+        logging.info("Trying title %s year %s in language %s", title, year, lang);
+        try:
+            art = tv_meta_tmdb.fetch_details(tmdb_key, title, year);
+            if art["poster"]: poster = art["poster"]
+            if art["fanart"]: fanart = art["fanart"]
+            if poster is None and fanart is None:
+                logger.error("Lookup success, but no artwork")
+            else:
+                break
+        except Exception as e:
+            logging.info("Lookup failed for title %s year %s in language %s with error %s", title, year, lang, e)
+            # And continue to next language
+
+    if art is None:
+        logging.error("Lookup completely failed for title %s year %s", title, year)
+        raise KeyError("Lookup completely failed for title %s year %s", title, year)
+
+    # Got map of fanart, poster
+    logging.info("Lookup success for title %s year %s with results %s", title, year, art)
+    if poster is None and fanart is None:
+        logging.info("No artwork found")
+    else:
+        self.persist_artwork(uuid, poster, fanart)
 
 if __name__ == '__main__':
+  def process(argv):
+    from optparse import OptionParser
+    optp = OptionParser()
+    optp.add_option('--tmdb-key', default=None,
+                    help='Specify authorization key.')
+    optp.add_option('--host', default='localhost',
+                    help='Specify HTSP server hostname')
+    optp.add_option('--port', default=9981, type='int',
+                    help='Specify HTTP server port')
+    optp.add_option('--user', default=None,
+                    help='Specify HTTP authentication username')
+    optp.add_option('--password', default=None,
+                    help='Specify HTTP authentication password')
+    optp.add_option('--artwork-url', default=None,
+                    help='For a specific artwork URL')
+    optp.add_option('--fanart-url', default=None,
+                    help='Force a specific fanart URL')
+    optp.add_option('--uuid', default=None,
+                    help='Specify UUID on which to operate')
+    optp.add_option('--debug', default=None, action="store_true",
+                    help='Enable debug.')
+
+    (opts, args) = optp.parse_args(argv)
+    if (opts.debug):
+        logging.root.setLevel(logging.DEBUG)
+
+    if (opts.uuid is None):
+        print("Need --uuid")
+        return 1
+    tvhmeta = TvhMeta(opts.host, opts.port, opts.user, opts.password)
+    # If they are explicitly specified on command line, then use them, otherwise do a lookup.
+    if (opts.artwork_url is not None and opts.fanart_url is not None):
+        tvhmeta.persist_artwork(opts.uuid, opts.artwork_url, opts.fanart_url)
+    else:
+        tvhmeta.fetch_and_persist_artwork(opts.uuid, opts.tmdb_key)
+
   try:
-    process(sys.argv)
+      logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(module)s:%(message)s')
+      process(sys.argv)
   except KeyboardInterrupt: pass
+  except (KeyError, RuntimeError) as err:
+      logging.error("Failed to process with error: " + str(err))
+      sys.exit(1)
