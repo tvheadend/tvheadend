@@ -34,6 +34,7 @@
 
 import urllib
 import logging
+import glob
 # Python3 decided to rename things and break compatibility...
 try:
   import urllib.parse
@@ -50,22 +51,82 @@ except:
 import json
 import sys
 import os
-# In development tree, the library is in ../lib/py, but in live it's
+# In development tree, the library is in ../lib/py/tvh, but in live it's
 # in the install bin directory (since it is an executable in its own
 # right)
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib', 'py'))
-try:
-  import tvh.tv_meta_tmdb as tv_meta_tmdb
-except:
-  sys.path.insert(0, os.path.join(os.path.dirname(__file__), '.'))
-  import tv_meta_tmdb as tv_meta_tmdb
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '.'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib', 'py', "tvh"))
 
 class TvhMeta(object):
-  def __init__(self, host, port, user, password):
+  def __init__(self, host, port, user, password, grabber_args):
     self.host = host
     self.port = port
     self.user = user
     self.password = password
+    self.grabber_args = grabber_args
+    logging.info("grabber_args=%s" % grabber_args)
+
+  @staticmethod
+  def get_meta_grabbers():
+    grabbers = set()
+    for i in sys.path:
+      for grabber in glob.glob(os.path.join(i, "tv_meta_*.py")):
+        (path,filename) = os.path.split(grabber)
+        filename = filename.replace(".py", "")
+        logging.debug("Adding grabber %s from %s" % (filename, grabber))
+        grabbers.add(filename)
+    return sorted(list(grabbers))
+
+  def _get_meta_grabbers_for_capability_common(self, capability):
+    grabbers = self.get_meta_grabbers()
+    logging.debug("Got grabbers %s" % grabbers)
+    ret = set()
+    for module_name in grabbers:
+      try:
+        logging.debug("Importing %s", module_name)
+        mod = __import__(module_name)
+        obj_fn = getattr(mod, module_name.capitalize())
+        cap_fn = getattr(mod, "get_capabilities")
+        capabilities = cap_fn()
+        logging.debug("Module %s has capabilities %s", module_name, capabilities)
+        if capabilities[capability]:
+          ret.add(module_name)
+      except Exception as e:
+        logging.exception("Could not import module %s when searching for %s: %s" % (module_name, capability, e))
+    return sorted(list(ret))
+
+  def get_meta_grabbers_for_movie(self):
+      return self._get_meta_grabbers_for_capability_common("supports_movie")
+
+  def get_meta_grabbers_for_tv(self):
+      return self._get_meta_grabbers_for_capability_common("supports_tv")
+
+  def _get_module_init_args(self, module_name):
+    """Return initialization arguments suitable for the module."""
+    if self.grabber_args is None:
+      return {}
+    args = {}
+    # Convert module name from "tv_meta_tmdb_simple" to "tmdb-simple",
+    # which is more like a command line option.
+    module_simple_name = module_name.replace("tv_meta_", "").replace("_", "-")
+    logging.debug("Using module simple name of %s for %s" % (module_simple_name, module_name))
+    # Then we find any arguments that have the prefix "tmdb-simple"
+    # and add them to our arguments.
+    for key in self.grabber_args:
+      # Only match keys for this module. So for "tv_meta_tmdb" and command line argument
+      # of "tmdb-key", we would have a simple module name of "tmdb" and would want to
+      # match "tmdb-" (to ensure we don't match with tmdbabc module).
+      if key.startswith(module_simple_name + "-"):
+        # We want the command line option "tmdb-key" to be passed to
+        # the module as simply "key" since modules don't want long
+        # prefixes on every argument.
+        value = self.grabber_args[key]
+        key = key.replace(module_simple_name + "-", "")
+        args[key] = value
+
+    logging.debug("Generated arguments for module %s of %s" % (module_name, args))
+    return args
+
 
   def request(self, url, data):
     """Send a request for data to Tvheadend."""
@@ -74,7 +135,7 @@ class TvhMeta(object):
     else:
         full_url = "http://{}:{}/{}".format(self.host,self.port,url)
 
-    logging.debug("Sending %s to %s" % (data, full_url))
+    logging.info("Sending %s to %s" % (data, full_url))
     req = urlopen(full_url, data=bytearray(data, 'utf-8'))
     ret = req.read().decode()
     logging.debug("Received: %s", ret)
@@ -90,11 +151,11 @@ class TvhMeta(object):
     replace = self.request("api/idnode/save", new_data)
     return replace
 
-  def fetch_and_persist_artwork(self, uuid, tmdb_key):
+  def fetch_and_persist_artwork(self, uuid, force_refresh, modules_movie, modules_tv):
     """Fetch artwork for the given uuid."""
     data = urlencode(
         {"uuid" : uuid,
-         "list" : "uuid,image,fanart_image,title,copyright_year,episode_disp",
+         "list" : "uuid,image,fanart_image,title,copyright_year,episode_disp,uri",
          "grid" : 1
         })
     # Our json looks like this:
@@ -111,36 +172,101 @@ class TvhMeta(object):
     if title_tuple is None:
         raise RuntimeError("Record has no title: " + data)
 
-    episode_disp = rec["episode_disp"]
-    if episode_disp is not None and episode_disp <> "":
-        logging.info("Program is an episode, not a movie, so no lookup possible for title %s episode %s" % (title_tuple, episode_disp))
-        raise RuntimeError("Program is an episode, not a movie: " + data)
-
-    if rec.has_key("image") and rec.has_key("fanart_image") and rec["image"] is not None and rec["fanart_image"] is not None:
+    if not force_refresh and rec.has_key("image") and rec.has_key("fanart_image") and rec["image"] is not None and rec["fanart_image"] is not None:
         logging.info("We have both image and fanart_image already for %s so nothing to do (%s)", uuid, recjson)
         return
 
+    episode_disp = rec["episode_disp"]
+    # We lazily create the objects only when needed so user can
+    # specify fallback grabbers that are only initialized when needed.
+    clients = {}
+    client_modules = {}
+    client_objects = {}
+    if episode_disp is not None and episode_disp <> "":
+        # TV episode, so load the tv modules
+        # Have to do len before split since split of an empty string
+        # returns one element...
+        if len(modules_tv) == 0:
+          logging.info("Program is an episode, not a movie, and no modules available for lookup possible for title %s episode %s" % (title_tuple, episode_disp))
+          raise RuntimeError("Program is an episode and no tv modules available " + data)
+        clients = modules_tv.split(",")
+    else:
+      # Import our modules for processing movies.
+      if len(modules_movie) == 0:
+          logging.info("Program is a movie, and no modules available for lookup possible for title %s" % (title_tuple))
+          raise RuntimeError("Program is movie and no movie modules available " + data)
+      clients = modules_movie.split(",")
+      
     year = rec["copyright_year"]
     # Avoid passing in a zero year to our lookups.
     if year == 0:
         year = None
 
+    # We fetch uri (programid) since some xmltv modules
+    # have artwork based on the id they provided.
+    if 'uri' in rec:
+      uri = rec["uri"]
+    else:
+      uri = None
+
     ####
-    # Now do the tmdb lookup.
+    # Now do the lookup.
     art = None
     poster = fanart = None
+
+    # If we're not forcing a refresh then use any existing values from
+    # the dvr record.
+    if not force_refresh:
+      if 'image' in rec and rec['image'] is not None and len(rec['image']):
+        poster = rec['image']
+      if 'fanart_image' in rec and rec['fanart_image'] is not None and len(rec['fanart_image']):
+        fanart = rec['fanart_image']
+
     for lang in title_tuple:
         title = title_tuple[lang]
-        logging.info("Trying title %s year %s in language %s", title, year, lang);
-        try:
-            art = tv_meta_tmdb.fetch_details(tmdb_key, title, year);
-            if art["poster"]: poster = art["poster"]
-            if art["fanart"]: fanart = art["fanart"]
-            if poster is None and fanart is None:
-                logger.error("Lookup success, but no artwork")
+        for module in clients:
+          logging.info("Trying title %s year %s uri %s in language %s with client %s", title, year, uri, lang, module);
+          try:
+            # Create an object inside the imported module (with same
+            # name as module, but initial letter as capital) for
+            # fetching the details.
+            #
+            # So module "tv_meta_tmdb.py" will have class
+            # "Tv_meta_tmdb" which contains functions fetch_details.
+            #
+            # Currently we only do one lookup per client, but in the
+            # future we may allow a "refresh all" option for
+            # re-parsing all recordings without artwork.
+            if module not in client_modules:
+              try:
+                logging.debug("Importing module %s" % module)
+                client_modules[module] = __import__(module)
+                obj_fn = getattr(client_modules[module], module.capitalize())
+                # We pass arguments to the module from the command line.
+                module_init_args = self._get_module_init_args(module)
+                obj = obj_fn(module_init_args)
+                client_objects[module] = obj
+              except Exception as e:
+                logging.exception("Failed to import and create module %s: %s" % (module, e))
+                raise
             else:
+              obj = client_objects[module]
+            logging.debug("Got object %s" % obj)
+            art = obj.fetch_details({
+              "title": title,
+              "year": year,
+              "episode_disp": episode_disp, # @todo Need to break this out in to season/episode, maybe subtitle too.
+              "programid": uri})
+
+            if poster is None and art["poster"] is not None: poster = art["poster"]
+            if fanart is None and art["fanart"] is not None: fanart = art["fanart"]
+            if poster is None and fanart is None:
+                logging.error("Lookup success, but still no artwork")
+            elif poster is not None and fanart is not None:
                 break
-        except Exception as e:
+            else:
+                logging.info("Got poster %s and fanart %s so will try and get more artwork from other providers (if any)" % (poster, fanart))
+          except Exception as e:
             logging.info("Lookup failed for title %s year %s in language %s with error %s", title, year, lang, e)
             # And continue to next language
 
@@ -156,45 +282,104 @@ class TvhMeta(object):
         self.persist_artwork(uuid, poster, fanart)
 
 if __name__ == '__main__':
+  def parse_remaining_args(argv):
+    """The parse_known_args returns an argv of unknown arguments.
+
+We split that in to a dict so we can pass to the grabbers.
+This allows us to pass additional command line options to the grabbers.
+
+Options are assumed to basically be name=value pairs or name (implied=1).
+Each module should prefix their arguments with the short name of the module.
+So for "tv_meta_tmdb" we would have "tmdb-key", "tmdb-user", etc.
+(since we have stripped the 'tv_meta_' bit).
+"""
+    ret = {}
+    if argv is None:
+      return ret
+
+    prev_arg = None
+
+    # We try to parse --key=value and --key (default to 1)
+    # and "--key value"
+    for arg in argv:
+      if arg.startswith("--"):
+        arg = arg[2:]
+
+        if '=' in arg:
+          (opt,value) = arg.split('=', 1)
+          ret[opt] = value
+          prev_arg = None
+        else:
+          ret[arg] = 1
+          prev_arg = arg
+      elif prev_arg is not None and '=' not in arg:
+        ret[prev_arg] = arg
+        prev_arg = None
+
+    logging.debug("Remaining args dict = %s" % ret)
+    return ret
+
+
+
   def process(argv):
-    from optparse import OptionParser
-    optp = OptionParser()
-    optp.add_option('--tmdb-key', default=None,
-                    help='Specify authorization key.')
-    optp.add_option('--host', default='localhost',
+    import argparse
+    optp = argparse.ArgumentParser(
+      description="Fetch additional metadata (such as artwork) for Tvheadend")
+    optp.add_argument('--host', default='localhost',
                     help='Specify HTSP server hostname')
-    optp.add_option('--port', default=9981, type='int',
+    optp.add_argument('--port', default=9981, type=int,
                     help='Specify HTTP server port')
-    optp.add_option('--user', default=None,
+    optp.add_argument('--user', default=None,
                     help='Specify HTTP authentication username')
-    optp.add_option('--password', default=None,
+    optp.add_argument('--password', default=None,
                     help='Specify HTTP authentication password')
-    optp.add_option('--artwork-url', default=None,
+    optp.add_argument('--artwork-url', default=None,
                     help='For a specific artwork URL')
-    optp.add_option('--fanart-url', default=None,
+    optp.add_argument('--fanart-url', default=None,
                     help='Force a specific fanart URL')
-    optp.add_option('--uuid', default=None,
+    optp.add_argument('--uuid', default=None,
                     help='Specify UUID on which to operate')
-    optp.add_option('--debug', default=None, action="store_true",
+    optp.add_argument('--force-refresh', default=None, action="store_true",
+                    help='Force refreshing artwork even if artwork exists.')
+    optp.add_argument('--modules-movie', default=None,
+                    help='Specify comma-separated list of modules for fetching artwork.')
+    optp.add_argument('--modules-tv', default=None,
+                    help='Specify comma-separated list of modules for fetching artwork.')
+    optp.add_argument('--list-grabbers', default=None, action="store_true",
+                    help='Generate a list of available grabbers'),
+    optp.add_argument('--debug', default=None, action="store_true",
                     help='Enable debug.')
 
-    (opts, args) = optp.parse_args(argv)
+    (opts, remaining_args) = optp.parse_known_args(argv)
     if (opts.debug):
         logging.root.setLevel(logging.DEBUG)
+    logging.debug("Got args %s and remaining_args %s" % (opts, remaining_args))
+
+    # Any unknown options are assumed to be options for the grabber
+    # modules.
+    grabber_args = parse_remaining_args(remaining_args)
+    tvhmeta = TvhMeta(opts.host, opts.port, opts.user, opts.password, grabber_args)
+    if (opts.list_grabbers):
+      print(json.dumps(tvhmeta.get_meta_grabbers()))
+      return 0
 
     if (opts.uuid is None):
         print("Need --uuid")
         return 1
-    tvhmeta = TvhMeta(opts.host, opts.port, opts.user, opts.password)
     # If they are explicitly specified on command line, then use them, otherwise do a lookup.
     if (opts.artwork_url is not None and opts.fanart_url is not None):
         tvhmeta.persist_artwork(opts.uuid, opts.artwork_url, opts.fanart_url)
     else:
-        tvhmeta.fetch_and_persist_artwork(opts.uuid, opts.tmdb_key)
+        if opts.modules_movie is None: opts.modules_movie = ','.join(tvhmeta.get_meta_grabbers_for_movie())
+        if opts.modules_tv is None: opts.modules_tv = ','.join(tvhmeta.get_meta_grabbers_for_tv())
+
+        logging.info("Got movie modules: [%s] tv modules [%s]" % (opts.modules_movie, opts.modules_tv))
+        tvhmeta.fetch_and_persist_artwork(opts.uuid, opts.force_refresh, opts.modules_movie, opts.modules_tv)
 
   try:
-      logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(module)s:%(message)s')
-      process(sys.argv)
+      logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:%(message)s')
+      # argv[0] is program name so don't pass that as args
+      process(sys.argv[1:])
   except KeyboardInterrupt: pass
   except (KeyError, RuntimeError) as err:
       logging.error("Failed to process with error: " + str(err))
