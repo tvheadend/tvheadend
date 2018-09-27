@@ -691,7 +691,13 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer)) \
 		$(foreach bsf,$(BSFS),--enable-bsf=$(bsf)) \
 		$(foreach filter,$(FILTERS),--enable-filter=$(filter)) \
-		$(foreach hwaccel,$(HWACCELS),--enable-hwaccel=$(hwaccel))
+		$(foreach hwaccel,$(HWACCELS),--enable-hwaccel=$(hwaccel)) \
+                --disable-programs \
+                --disable-doc \
+                --disable-htmlpages \
+                --disable-manpages \
+                --disable-podpages \
+                --disable-txtpages
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(FFMPEG) install
 	@touch $@
