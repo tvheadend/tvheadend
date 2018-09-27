@@ -68,7 +68,7 @@ OPTIONS=(
   "gtimer_check:no"
   "slow_memoryinfo:no"
   "libsystemd_daemon:no"
-  "bintray_cache:yes"
+  "pcloud_cache:yes"
 )
 
 #
