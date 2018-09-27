@@ -17,6 +17,7 @@
         "git-core",
         "liburiparser-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -42,6 +43,7 @@
         "git-core",
         "liburiparser-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -67,6 +69,7 @@
         "git-core",
         "liburiparser-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -91,6 +94,7 @@
         "git-core",
         "liburiparser-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -117,6 +121,7 @@
         "git-core",
         "liburiparser-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -143,6 +148,7 @@
         "git-core",
         "liburiparser-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -170,6 +176,7 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -197,6 +204,7 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -224,6 +232,7 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -251,6 +260,7 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -301,6 +311,7 @@
         "git-core",
         "liburiparser-dev",
         "python",
+        "python-requests",
         "dvb-apps",
         "debhelper",
         "ccache"
@@ -332,6 +343,7 @@
         "uriparser-devel",
         "pcre2-devel",
         "python",
+        "python-requests",
         "ccache"
       ],
       "buildcmd": [
@@ -361,6 +373,7 @@
         "uriparser-devel",
         "pcre2-devel",
         "python",
+        "python-requests",
         "ccache"
       ],
       "buildcmd": [
@@ -390,6 +403,7 @@
         "uriparser-devel",
         "pcre2-devel",
         "python",
+        "python-requests",
         "ccache"
       ],
       "buildcmd": [
@@ -415,6 +429,7 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache",
         "sudo",
@@ -445,6 +460,7 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache",
         "sudo",
