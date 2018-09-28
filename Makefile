@@ -659,6 +659,7 @@ clean:
 .PHONY: distclean
 distclean: clean
 	rm -rf ${ROOTDIR}/build.*
+	rm -rf ${ROOTDIR}/debian/.debhelper
 	rm -rf ${ROOTDIR}/data/dvb-scan
 	rm -f ${ROOTDIR}/.config.mk
 
