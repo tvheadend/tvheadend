@@ -1806,7 +1806,7 @@ linuxdvb_diseqc_set_volt ( linuxdvb_satconf_t *ls, int vol )
   /* High voltage handling */
   if (ls->ls_lnb_highvol > 0) {
     int v = ls->ls_lnb_highvol > 1 ? 1 : 0;
-    tvhtrace(LS_DISEQC, "set hight voltage %d", v);
+    tvhtrace(LS_DISEQC, "set high voltage %d", v);
     if (ioctl(linuxdvb_satconf_fe_fd(ls), FE_ENABLE_HIGH_LNB_VOLTAGE, v))
       tvherror(LS_DISEQC, "failed to set high voltage %d (e=%s)", v, strerror(errno));
   }
