@@ -105,8 +105,13 @@ _http_xmltv_add_episode_num(htsbuf_queue_t *hq, uint16_t num, uint16_t cnt)
    * counts are one-based.
    */
   if (num) htsbuf_qprintf(hq, "%d", num - 1);
-  htsbuf_append_str(hq, "/");
-  if (cnt) htsbuf_qprintf(hq, "%d", cnt);
+  /* Some clients can not handle "X", only "X/Y" or "/Y",
+   * so only output "/" if needed.
+   */
+  if (cnt) {
+    htsbuf_append_str(hq, "/");
+    htsbuf_qprintf(hq, "%d", cnt);
+  }
 }
 
 /*
