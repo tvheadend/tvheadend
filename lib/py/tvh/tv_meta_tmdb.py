@@ -1,6 +1,8 @@
 #! /usr/bin/env python2.7
 # Retrieve details for a movie from tmdb.
 #
+# This product uses the TMDb API but is not endorsed or certified by TMDb.
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
