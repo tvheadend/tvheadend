@@ -94,6 +94,8 @@ typedef struct dvr_config {
   int dvr_running;
   uint32_t dvr_cleanup_threshold_free;
   uint32_t dvr_cleanup_threshold_used;
+  int dvr_fetch_artwork;
+  char *dvr_fetch_artwork_options;
 
   muxer_config_t dvr_muxcnf;
 
