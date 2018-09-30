@@ -961,12 +961,26 @@ channel_get_source ( channel_t *ch, char *dst, size_t dstlen )
 {
   const char *s;
   idnode_list_mapping_t *ilm;
-  size_t l = 0;
+  /* Unique sorted string list since many services with
+   * same source may be mapped so we want to avoid
+   * 'DVB-S, DVB-S, DVB-S'.
+   */
+  string_list_t *sources = string_list_create();
+  char *csv;
   dst[0] = '\0';
   LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link)
     if ((s = service_get_source((service_t *)ilm->ilm_in1)))
-      tvh_strlcatf(dst, dstlen, l, "%s%s", l > 0 ? "," : "", s);
-  return l > 0 ? dst : NULL;
+      string_list_insert(sources, s);
+  /* We own the returned list */
+  csv = string_list_2_csv(sources, ',', 1);
+  string_list_destroy(sources);
+  if (csv) {
+    strlcpy(dst, csv, dstlen);
+    free(csv);
+    return dst;
+  } else {
+    return NULL;
+  }
 }
 
 static char *
