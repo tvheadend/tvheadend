@@ -58,7 +58,7 @@ static const int prio2weight[6] = {
 };
 
 /// Spawn a fetch of artwork for the entry.
-static void
+void
 dvr_spawn_fetch_artwork(dvr_entry_t *de)
 {
   const dvr_config_t *cfg;

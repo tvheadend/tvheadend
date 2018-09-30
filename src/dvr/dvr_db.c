@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
+#include <string_list.h>
 
 #include "settings.h"
 
@@ -44,6 +45,9 @@ static int dvr_in_init;
 #if ENABLE_DBUS_1
 static mtimer_t dvr_dbus_timer;
 #endif
+/// Periodically pre-fetch artwork for scheduled recordings.
+static mtimer_t dvr_fanart_timer;
+static string_list_t *dvr_fanart_to_prefetch;
 
 static void dvr_entry_deferred_destroy(dvr_entry_t *de);
 static void dvr_entry_set_timer(dvr_entry_t *de);
@@ -757,6 +761,53 @@ dvr_usage_count(access_t *aa)
   return used;
 }
 
+/// Add the entry details to a list of fanart to prefetch.
+/// We then periodically check the list to update artwork.
+/// We don't do the check too frequently since most providers
+/// have limits on how frequently artwork can be fetched.
+/// It doesn't matter if the entry gets deleted before we
+/// perform the check.
+static void
+dvr_entry_fanart_add_to_prefetch(const dvr_entry_t *de)
+{
+  char ubuf[UUID_HEX_SIZE];
+  if (!de || !de->de_enabled)
+    return;
+  /*  Nothing to do if we have images already */
+  if (de->de_image && de->de_fanart_image)
+    return;
+  /* User doesn't want us to fetch artwork */
+  if (de->de_config && !de->de_config->dvr_fetch_artwork)
+    return;
+
+  string_list_insert(dvr_fanart_to_prefetch,
+                     idnode_uuid_as_str(&de->de_id, ubuf));
+}
+
+static void
+dvr_entry_fanart_prefetch_cb(void *aux)
+{
+  lock_assert(&global_lock);
+
+  /* Only do one entry, even if list has many since we don't
+   * want to overload fanart providers.
+   */
+  char *id = string_list_remove_first(dvr_fanart_to_prefetch);
+  if (id) {
+    dvr_entry_t *de = dvr_entry_find_by_uuid(id);
+    if (de && de->de_config && de->de_config->dvr_fetch_artwork) {
+      tvhinfo(LS_DVR, "Prefetching artwork for %s \"%s\"", id, lang_str_get(de->de_title, NULL));
+      dvr_spawn_fetch_artwork(de);
+    }
+
+    free(id);
+  }
+
+  // Re-arm timer with a slight random factor to avoid queries at same
+  // time every hour.
+  mtimer_arm_rel(&dvr_fanart_timer, dvr_entry_fanart_prefetch_cb, NULL, sec2mono(3600 + random() % 900));
+}
+
 void
 dvr_entry_set_timer(dvr_entry_t *de)
 {
@@ -811,6 +862,7 @@ recording:
 
     dvr_entry_trace_time1(de, "start", start, "set timer - schedule");
     gtimer_arm_absn(&de->de_timer, dvr_timer_start_recording, de, start);
+    dvr_entry_fanart_add_to_prefetch(de);
 #if ENABLE_DBUS_1
     mtimer_arm_rel(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, sec2mono(5));
 #endif
@@ -4732,6 +4784,7 @@ dvr_entry_init(void)
   dvr_entry_t *de1, *de2;
 
   dvr_in_init = 1;
+  dvr_fanart_to_prefetch = string_list_create();
   idclass_register(&dvr_entry_class);
   rere = htsmsg_create_map();
   /* load config, but remove parent/child fields */
@@ -4767,6 +4820,10 @@ dvr_entry_init(void)
     de2 = LIST_NEXT(de1, de_global_link);
     dvr_entry_set_timer(de1);
   }
+
+  // After a while we get one new entry and prefetch artwork for an
+  // upcoming dvr entry.
+  mtimer_arm_rel(&dvr_fanart_timer, dvr_entry_fanart_prefetch_cb, NULL, sec2mono(3600));
 }
 
 void

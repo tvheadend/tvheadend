@@ -649,6 +649,8 @@ int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 void dvr_entry_changed(dvr_entry_t *de);
 
 void dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre);
+/// Spawn a fetch of artwork for the entry.
+void dvr_spawn_fetch_artwork(dvr_entry_t *de);
 
 void dvr_vfs_refresh_entry(dvr_entry_t *de);
 void dvr_vfs_remove_entry(dvr_entry_t *de);
