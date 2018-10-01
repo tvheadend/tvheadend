@@ -35,8 +35,8 @@ HTSP_PROTO_VERSION = 25
 # Create passwd digest
 def htsp_digest(user, passwd, chal):
     import hashlib
-    ret = hashlib.sha1(passwd + chal).digest()
-    return ret
+    salted = passwd.encode('utf-8') + chal
+    return hashlib.sha1(salted).digest()
 
 
 # Client object

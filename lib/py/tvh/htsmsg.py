@@ -67,7 +67,7 @@ HMF_BOOL = 7
 
 
 # Light wrapper for binary type
-class HMFBin(str):
+class HMFBin(bytes):
     pass
 
 
@@ -135,8 +135,10 @@ def binary_write(msg):
 
         if type(f) in [list, dict]:
             ret = ret + binary_write(f)
-        elif type(f) in [str, HMFBin]:
+        elif type(f) in [str]:
             ret = ret + f.encode()
+        elif type(f) in [HMFBin]:
+            ret = ret + f
         elif type(f) == int:
             while f:
                 ret = ret + struct.pack("B", (f & 0xFF))
