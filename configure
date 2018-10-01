@@ -148,6 +148,12 @@ check_cc_header execinfo
 check_cc_option mmx
 check_cc_option sse2
 check_cc_optionW unused-result
+# Some options from https://wiki.debian.org/Hardening
+check_cc_optionf stack-protector
+check_cc_optionf stack-protector-strong
+# Useful for multi-threaded programs
+check_cc_optionf stack-check
+check_cc_optionf PIE
 
 if check_cc '
 #if !defined(__clang__)
