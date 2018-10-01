@@ -50,13 +50,14 @@ class HTSPClient(object):
         self._name = name
         self._auth = None
         self._user = None
-        self._pass = None
+        self._auser = None
+        self._apass = None
 
     # Send
     def send(self, func, args={}):
         args['method'] = func
-        if self._user: args['username'] = self._user
-        if self._pass: args['digest'] = htsmsg.HMFBin(self._pass)
+        if self._auser: args['username'] = self._auser
+        if self._apass: args['digest'] = htsmsg.HMFBin(self._apass)
         log.debug('htsp tx:')
         log.debug(args, pretty=True)
         self._sock.send(htsmsg.serialize(args))
@@ -86,13 +87,16 @@ class HTSPClient(object):
 
     # Authenticate
     def authenticate(self, user, passwd=None):
-        self._user = user
+        self._auser = user
         if passwd:
-            self._pass = htsp_digest(user, passwd, self._auth)
+            self._apass = htsp_digest(user, passwd, self._auth)
         self.send('authenticate')
+        self._auser = None
+        self._apass = None
         resp = self.recv()
         if 'noaccess' in resp:
             raise Exception('Authentication failed')
+        self._user = user
 
     # Enable async receive
     def enableAsyncMetadata(self, args={}):
