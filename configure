@@ -137,7 +137,19 @@ fi
 
 # Valiate compiler
 check_cc || die 'No C compiler found'
-check_cc_header execinfo
+# We only want libunwind on non-linux plaforms where we have had bad
+# stack traces from existing implementation.
+if [ ${PLATFORM} = "freebsd" ]; then
+    check_cc_header libunwind
+    # If we don't have libunwind then fallback to execinfo.
+    if ! enabled libunwind
+    then
+        check_cc_header execinfo
+    fi
+
+else
+    check_cc_header execinfo
+fi
 check_cc_option mmx
 check_cc_option sse2
 check_cc_optionW unused-result
@@ -390,6 +402,9 @@ else
 
 fi
 
+if enabled libunwind; then
+    LDFLAGS="$LDFLAGS -lunwind"
+fi
 #
 # Gzip
 #
