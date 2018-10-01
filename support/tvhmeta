@@ -377,7 +377,7 @@ So for "tv_meta_tmdb" we would have "tmdb-key", "tmdb-user", etc.
         tvhmeta.fetch_and_persist_artwork(opts.uuid, opts.force_refresh, opts.modules_movie, opts.modules_tv)
 
   try:
-      logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:%(message)s')
+      logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:%(message)s', stream=sys.stdout)
       # argv[0] is program name so don't pass that as args
       process(sys.argv[1:])
   except KeyboardInterrupt: pass
