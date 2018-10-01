@@ -2069,6 +2069,8 @@ satip_frontend_hacks( satip_frontend_t *lfe )
 
   lfe->sf_tdelay = 50; /* should not hurt anything */
   lfe->sf_pass_weight = 1;
+  if (lfe->sf_type == DVB_TYPE_C)
+    lfe->sf_specinv = 1;
   if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
     if (lfe->sf_type == DVB_TYPE_S)
       lfe->sf_play2 = 1;
@@ -2078,7 +2080,6 @@ satip_frontend_hacks( satip_frontend_t *lfe )
               strstr(sd->sd_info.modelname, "FRITZ!")) {
     lfe->sf_play2 = 1;
   } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
-    lfe->sf_specinv = 1;
     lfe->sf_pass_weight = 0;
   }
 }
