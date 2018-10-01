@@ -1468,13 +1468,13 @@ epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b )
 
 const char *epg_broadcast_get_title ( epg_broadcast_t *b, const char *lang )
 {
-  if (!b && !b->title) return NULL;
+  if (!b || !b->title) return NULL;
   return lang_str_get(b->title, lang);
 }
 
 const char *epg_broadcast_get_subtitle ( epg_broadcast_t *b, const char *lang )
 {
-  if (!b && !b->subtitle) return NULL;
+  if (!b || !b->subtitle) return NULL;
   return lang_str_get(b->subtitle, lang);
 }
 
