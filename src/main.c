@@ -1112,9 +1112,9 @@ main(int argc, char **argv)
 
     /* Make dumpable */
     if (opt_dump) {
-#ifdef PLATFORM_LINUX
       if (chdir("/tmp"))
         tvhwarn(LS_START, "failed to change cwd to /tmp");
+#ifdef PLATFORM_LINUX
       prctl(PR_SET_DUMPABLE, 1);
 #else
       tvhwarn(LS_START, "Coredumps not implemented on your platform");
