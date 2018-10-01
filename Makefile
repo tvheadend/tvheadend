@@ -31,7 +31,8 @@ LANGUAGES ?= $(LANGUAGES_ALL)
 # Common compiler flags
 #
 
-CFLAGS  += -g
+# https://wiki.debian.org/Hardening
+CFLAGS  += -g -D_FORTIFY_SOURCE=2
 ifeq ($(CONFIG_CCDEBUG),yes)
 CFLAGS  += -O0
 else
