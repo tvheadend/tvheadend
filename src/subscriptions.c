@@ -401,7 +401,9 @@ subscription_reschedule(void)
     s->ths_current_instance = si;
 
     if(si == NULL) {
-      if (s->ths_last_error != error || s->ths_last_find + sec2mono(2) >= mclk()) {
+      if (s->ths_last_error != error ||
+          s->ths_last_find + sec2mono(2) >= mclk() ||
+          error == SM_CODE_TUNING_FAILED) {
         tvhtrace(LS_SUBSCRIPTION, "%04X: instance not available, retrying", shortid(s));
         if (s->ths_last_error != error)
           s->ths_last_find = mclk();
