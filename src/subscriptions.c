@@ -1020,6 +1020,7 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   profile_t *pro;
   char buf[284];
   const char *state;
+  htsmsg_t *l;
 
   htsmsg_add_u32(m, "id", s->ths_id);
   htsmsg_add_u32(m, "start", s->ths_start);
@@ -1084,6 +1085,23 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
 
   } else if(s->ths_dvrfile != NULL)
     htsmsg_add_str(m, "service", s->ths_dvrfile ?: "");
+
+#if ENABLE_MPEGTS
+  mpegts_service_t *ms = (mpegts_service_t *)s->ths_service;
+  mpegts_apids_t *pids;
+  if ((pids = ms->s_pids) != NULL) {
+    l = htsmsg_create_list();
+    if (pids->all) {
+      htsmsg_add_s32(l, NULL, 8192);
+    } else {
+      int i;
+      for (i = 0; i < pids->count; i++) {
+        htsmsg_add_s32(l, NULL, pids->pids[i].pid);
+      }
+    }
+    htsmsg_add_msg(m, "pids", l);
+  }
+#endif
 
   htsmsg_add_u32(m, "in", atomic_get(&s->ths_bytes_in_avg));
   htsmsg_add_u32(m, "out", atomic_get(&s->ths_bytes_out_avg));
