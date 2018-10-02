@@ -767,6 +767,39 @@ mpegts_service_satip_source ( service_t *t )
   return mn ? mn->mn_satip_source : -1;
 }
 
+static mpegts_apids_t *
+mpegts_service_pid_list_ ( service_t *t, void *owner )
+{
+  mpegts_service_t *ms = (mpegts_service_t*)t;
+  mpegts_apids_t *pids = NULL;
+  mpegts_input_t *mi = ms->s_dvb_active_input;
+  mpegts_mux_t *mm;
+  mpegts_pid_sub_t *mps;
+  mpegts_pid_t *mp;
+
+  if (mi == NULL) return NULL;
+  pthread_mutex_lock(&mi->mi_output_lock);
+  mm = ms->s_dvb_mux;
+  RB_FOREACH(mp, &mm->mm_pids, mp_link) {
+    RB_FOREACH(mps, &mp->mp_subs, mps_link) {
+      if (owner == NULL || mps->mps_owner == owner) {
+        if (pids == NULL)
+          pids = mpegts_pid_alloc();
+        mpegts_pid_add(pids, mp->mp_pid, 0);
+        break;
+      }
+    }
+  }
+  pthread_mutex_unlock(&mi->mi_output_lock);
+  return pids;
+}
+
+static mpegts_apids_t *
+mpegts_service_pid_list ( service_t *t )
+{
+  return mpegts_service_pid_list_(t, t);
+}
+
 static void
 mpegts_service_memoryinfo ( service_t *t, int64_t *size )
 {
@@ -843,6 +876,7 @@ mpegts_service_create0
   s->s_channel_icon   = mpegts_service_channel_icon;
   s->s_mapped         = mpegts_service_mapped;
   s->s_satip_source   = mpegts_service_satip_source;
+  s->s_pid_list       = mpegts_service_pid_list;
   s->s_memoryinfo     = mpegts_service_memoryinfo;
   s->s_unseen         = mpegts_service_unseen;
 
@@ -1116,6 +1150,12 @@ mpegts_service_unlink ( mpegts_service_t *master, mpegts_service_t *slave )
   return 0;
 }
 
+static mpegts_apids_t *
+mpegts_service_raw_pid_list ( service_t *t )
+{
+  return mpegts_service_pid_list_(t, NULL);
+}
+
 mpegts_service_t *
 mpegts_service_create_raw ( mpegts_mux_t *mm )
 {
@@ -1151,6 +1191,7 @@ mpegts_service_create_raw ( mpegts_mux_t *mm )
   s->s_link           = mpegts_service_link;
   s->s_unlink         = mpegts_service_unlink;
   s->s_satip_source   = mpegts_service_satip_source;
+  s->s_pid_list       = mpegts_service_raw_pid_list;
   s->s_memoryinfo     = mpegts_service_memoryinfo;
 
   pthread_mutex_lock(&s->s_stream_mutex);

@@ -43,6 +43,7 @@ struct mpegts_apids;
 struct profile_chain;
 struct source_info;
 struct descramble_info;
+struct mpegts_apids;
 
 /**
  *
@@ -224,6 +225,8 @@ typedef struct service {
   void (*s_delete)(struct service *t, int delconf);
 
   void (*s_unref)(struct service *t);
+
+  struct mpegts_apids *(*s_pid_list)(struct service *t);
 
   int (*s_satip_source)(struct service *t);
 
