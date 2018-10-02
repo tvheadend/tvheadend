@@ -32,11 +32,11 @@ LANGUAGES ?= $(LANGUAGES_ALL)
 #
 
 # https://wiki.debian.org/Hardening
-CFLAGS  += -g -D_FORTIFY_SOURCE=2
+CFLAGS  += -g
 ifeq ($(CONFIG_CCDEBUG),yes)
 CFLAGS  += -O0
 else
-CFLAGS  += -O2
+CFLAGS  += -O2 -D_FORTIFY_SOURCE=2
 endif
 ifeq ($(CONFIG_PIE),yes)
 CFLAGS  += -fPIE
