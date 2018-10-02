@@ -569,6 +569,8 @@ satip_device_hack( satip_device_t *sd )
     /* OctopusNet requires pids in the SETUP RTSP command */
   } else if (strstr(sd->sd_info.manufacturer, "Triax") &&
              strstr(sd->sd_info.modelname, "TSS400")) {
+    sd->sd_fullmux_ok  = 0;
+    sd->sd_pids_max    = 64;
     sd->sd_pilot_on    = 1;
   } else if (strcmp(sd->sd_info.modelname, "TVHeadend SAT>IP") == 0)  {
     sd->sd_pids_max    = 128;
