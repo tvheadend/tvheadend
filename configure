@@ -556,16 +556,17 @@ else
 
   if enabled_or_auto libav; then
     has_libav=true
+    has_resample=false
 
     check_pkg libavfilter   ">=6.31.100"  || has_libav=false
-    check_pkg libswresample ">=2.0.101"   || has_libav=false
-    check_pkg libavresample ">=3.0.0"     || has_libav=false
+    check_pkg libswresample ">=2.0.101"   && has_resample=true
+    check_pkg libavresample ">=3.0.0"     && has_resample=true
     check_pkg libswscale    ">=4.0.100"   || has_libav=false
     check_pkg libavformat   ">=57.25.100" || has_libav=false
     check_pkg libavcodec    ">=57.24.102" || has_libav=false
     check_pkg libavutil     ">=55.17.103" || has_libav=false
 
-    if $has_libav; then
+    if $has_libav -a $has_resample; then
       enable libav
     else
       echo "WARNING: none or old ffmpeg libraries were detected"
