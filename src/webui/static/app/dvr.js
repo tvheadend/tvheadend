@@ -222,6 +222,10 @@ tvheadend.dvrDetails = function(grid, index) {
               'position': 'relative',
               'width' : '100%',
               'height': '100%',
+              // This causes background image to scale on css3 with aspect ratio, image
+              // can overflow, vs. 'contain' which will leave blank space top+bottom to
+              // ensure image is fully displayed in the window
+              'background-size': 'cover',
           });
       }                        // Have fanart div
 
