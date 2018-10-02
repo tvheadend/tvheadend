@@ -58,7 +58,7 @@ string_list_remove_first(string_list_t *l)
   string_list_item_t *item = RB_FIRST(l);
   if (!item)
     return NULL;
-  ret = item->id;
+  ret = strdup(item->id);
   RB_REMOVE(l, item, h_link);
   free(item);
   return ret;
