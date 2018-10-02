@@ -316,11 +316,11 @@ def do_tidy(*args):
     files, sfiles = fedora_files('fedora')
     delete_up_to_count('fedora', sfiles, 10, fedora_delete)
 
-    files = get_files('misc', 'staticlib', 1)
-    for f in files:
-      a, b = f['path'].split('-')
-      f['sortkey'] = a + '*' + f['created']
-    delete_up_to_count('misc', files, 4)
+    #files = get_files('misc', 'staticlib', 1)
+    #for f in files:
+    #  a, b = f['path'].split('-')
+    #  f['sortkey'] = a + '*' + f['created']
+    #delete_up_to_count('misc', files, 4)
 
 def do_unknown(*args):
     r = 'Please, specify a valid command:\n'
