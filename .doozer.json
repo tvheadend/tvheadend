@@ -129,9 +129,14 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "ca-certificates",
+        "sudo",
       ],
       "buildcmd": [
+        "sudo mkdir /usr/local/share/ca-certificates/cacert.org",
+        "sudo wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt",
+        "sudo update-ca-certificates",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -157,9 +162,14 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "ca-certificates",
+        "sudo",
       ],
       "buildcmd": [
+        "sudo mkdir /usr/local/share/ca-certificates/cacert.org",
+        "sudo wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt",
+        "sudo update-ca-certificates",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -267,9 +277,14 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "ca-certificates",
+        "sudo",
       ],
       "buildcmd": [
+        "sudo mkdir /usr/local/share/ca-certificates/cacert.org",
+        "sudo wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt",
+        "sudo update-ca-certificates",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianjessie-armhf -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -292,6 +307,7 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
