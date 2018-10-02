@@ -847,7 +847,7 @@ ${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
 ifeq ($(CONFIG_PCLOUD_CACHE),yes)
 	$(MAKE) -f Makefile.ffmpeg libcacheget
 endif
-	$(MAKE) -f Makefile.ffmpeg
+	$(MAKE) -f Makefile.ffmpeg build
 
 # Static HDHOMERUN library
 
@@ -862,7 +862,7 @@ ${BUILDDIR}/hdhomerun/libhdhomerun/libhdhomerun.a: Makefile.hdhomerun
 ifeq ($(CONFIG_PCLOUD_CACHE),yes)
 	$(MAKE) -f Makefile.hdhomerun libcacheget
 endif
-	$(MAKE) -f Makefile.hdhomerun
+	$(MAKE) -f Makefile.hdhomerun build
 
 .PHONY: ffmpeg_rebuild
 ffmpeg_rebuild:

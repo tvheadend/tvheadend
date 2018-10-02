@@ -146,6 +146,7 @@ include $(DIR)/Makefile.static
 
 .PHONY: build $(PHONY)
 build: $(LIB_ROOT)/$(FFMPEG)/.tvh_build
+	$(call LIBCACHEGET_TIMESTAMP)
 
 
 # ##############################################################################

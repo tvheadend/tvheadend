@@ -53,6 +53,7 @@ include $(DIR)/Makefile.static
 
 .PHONY: build
 build: $(LIB_ROOT)/$(LIBHDHR)/.tvh_build
+	$(call LIBCACHEGET_TIMESTAMP)
 
 # ###########################################################################
 # Build Rules
