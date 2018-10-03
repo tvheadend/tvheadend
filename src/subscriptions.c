@@ -425,7 +425,9 @@ subscription_reschedule(void)
     s->ths_current_instance = si;
 
     if(si == NULL) {
-      if (s->ths_last_error != error || s->ths_last_find + sec2mono(2) >= mclk()) {
+      if (s->ths_last_error != error ||
+          s->ths_last_find + sec2mono(2) >= mclk() ||
+          error == SM_CODE_TUNING_FAILED) {
         tvhtrace(LS_SUBSCRIPTION, "%04X: instance not available, retrying", shortid(s));
         if (s->ths_last_error != error)
           s->ths_last_find = mclk();
@@ -1018,6 +1020,8 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   profile_t *pro;
   char buf[284];
   const char *state;
+  htsmsg_t *l;
+  mpegts_apids_t *pids = NULL;
 
   htsmsg_add_u32(m, "id", s->ths_id);
   htsmsg_add_u32(m, "start", s->ths_start);
@@ -1043,25 +1047,25 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
 
   htsmsg_add_str(m, "state", lang ? tvh_gettext_lang(lang, state) : state);
 
-  if(s->ths_hostname != NULL)
+  if (s->ths_hostname != NULL)
     htsmsg_add_str(m, "hostname", s->ths_hostname);
 
-  if(s->ths_username != NULL)
+  if (s->ths_username != NULL)
     htsmsg_add_str(m, "username", s->ths_username);
 
-  if(s->ths_client != NULL)
+  if (s->ths_client != NULL)
     htsmsg_add_str(m, "title", s->ths_client);
-  else if(s->ths_title != NULL)
+  else if (s->ths_title != NULL)
     htsmsg_add_str(m, "title", s->ths_title);
   
-  if(s->ths_channel != NULL)
+  if (s->ths_channel != NULL)
     htsmsg_add_str(m, "channel", channel_get_name(s->ths_channel, tvh_gettext_lang(lang, channel_blank_name)));
   
-  if((t = s->ths_service) != NULL) {
+  if ((t = s->ths_service) != NULL) {
     htsmsg_add_str(m, "service", service_adapter_nicename(t, buf, sizeof(buf)));
 
     pthread_mutex_lock(&t->s_stream_mutex);
-    if ((di = s->ths_service->s_descramble_info) != NULL) {
+    if ((di = t->s_descramble_info) != NULL) {
       if (di->caid == 0 && di->ecmtime == 0) {
         snprintf(buf, sizeof(buf), N_("Failed"));
       } else {
@@ -1073,6 +1077,23 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
     }
     pthread_mutex_unlock(&t->s_stream_mutex);
 
+    if (t->s_pid_list) {
+      pids = t->s_pid_list(t);
+      if (pids) {
+        l = htsmsg_create_list();
+        if (pids->all) {
+          htsmsg_add_u32(l, NULL, 65535);
+        } else {
+          int i;
+          for (i = 0; i < pids->count; i++) {
+            htsmsg_add_u32(l, NULL, pids->pids[i].pid);
+          }
+        }
+        htsmsg_add_msg(m, "pids", l);
+        mpegts_pid_destroy(&pids);
+      }
+    }
+
     if (s->ths_prch != NULL) {
       pro = s->ths_prch->prch_pro;
       if (pro)
@@ -1080,8 +1101,9 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
                        idnode_get_title(&pro->pro_id, lang, buf, sizeof(buf)));
     }
 
-  } else if(s->ths_dvrfile != NULL)
+  } else if (s->ths_dvrfile != NULL) {
     htsmsg_add_str(m, "service", s->ths_dvrfile ?: "");
+  }
 
   htsmsg_add_u32(m, "in", atomic_get(&s->ths_bytes_in_avg));
   htsmsg_add_u32(m, "out", atomic_get(&s->ths_bytes_out_avg));

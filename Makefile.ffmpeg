@@ -49,6 +49,7 @@ NASM           = nasm-$(NASM_VER)
 NASM_TB        = $(NASM).tar.gz
 NASM_URL       = https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VER)/$(NASM_TB)
 NASM_SHA1      = fa15c35b6003518d8165ab507f31af5d3938e91f
+NASM_DIFFS     = remove-invalid-pure_func-qualifiers.diff
 
 LIBX264        = x264-snapshot-20180906-2245
 LIBX264_TB     = $(LIBX264).tar.bz2
@@ -145,6 +146,7 @@ include $(DIR)/Makefile.static
 
 .PHONY: build $(PHONY)
 build: $(LIB_ROOT)/$(FFMPEG)/.tvh_build
+	$(call LIBCACHEGET_TIMESTAMP)
 
 
 # ##############################################################################
@@ -174,6 +176,7 @@ CONFIGURE_PI := CC="$(COMPILER) $(CFLAGS_PI)" $(CONFIGURE)
 $(LIB_ROOT)/$(NASM)/.tvh_download:
 	$(call DOWNLOAD,$(NASM_URL),$(LIB_ROOT)/$(NASM_TB),$(NASM_SHA1))
 	$(call UNTAR,$(NASM_TB),z)
+	$(call PATCH,$(NASM),$(NASM_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(NASM)/.tvh_build: \
@@ -488,7 +491,7 @@ $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download:
 
 $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBFDKAAC) && CXXFLAGS="-std=c++98" $(CONFIGURE_PI) \
+	cd $(LIB_ROOT)/$(LIBFDKAAC) && CXXFLAGS="-std=c++98 -fPIC" $(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBFDKAAC) install
@@ -689,7 +692,13 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer)) \
 		$(foreach bsf,$(BSFS),--enable-bsf=$(bsf)) \
 		$(foreach filter,$(FILTERS),--enable-filter=$(filter)) \
-		$(foreach hwaccel,$(HWACCELS),--enable-hwaccel=$(hwaccel))
+		$(foreach hwaccel,$(HWACCELS),--enable-hwaccel=$(hwaccel)) \
+                --disable-programs \
+                --disable-doc \
+                --disable-htmlpages \
+                --disable-manpages \
+                --disable-podpages \
+                --disable-txtpages
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(FFMPEG) install
 	@touch $@

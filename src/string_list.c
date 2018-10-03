@@ -50,6 +50,20 @@ string_list_destroy(string_list_t *l)
   free(l);
 }
 
+char *
+string_list_remove_first(string_list_t *l)
+{
+  char *ret = NULL;
+  if (!l) return NULL;
+  string_list_item_t *item = RB_FIRST(l);
+  if (!item)
+    return NULL;
+  ret = strdup(item->id);
+  RB_REMOVE(l, item, h_link);
+  free(item);
+  return ret;
+}
+
 static inline int
 string_list_item_cmp(const void *a, const void *b)
 {

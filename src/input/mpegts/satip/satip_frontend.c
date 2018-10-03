@@ -33,7 +33,7 @@
 typedef enum rtp_transport_mode
 {
   RTP_SERVER_DEFAULT,     // Use server configuretion
-  RTP_UDP,                // Use regular RTP
+  RTP_UDP,                // Use regular RTP/AVP_UDP
   RTP_INTERLEAVED,        // Use Interleaved RTP/AVP/TCP
 } rtp_transport_mode_t;
 
@@ -100,6 +100,15 @@ udp_rtp_packet_append( satip_frontend_t *lfe, uint8_t *p, int len, uint16_t seq 
 /*
  *
  */
+static int
+satip_frontend_rtsp_flags( satip_frontend_t *lfe )
+{
+  int rtsp_flags = lfe->sf_device->sd_tcp_mode ? RTP_INTERLEAVED : 0;
+  if (lfe->sf_transport_mode != RTP_SERVER_DEFAULT)
+    rtsp_flags = lfe->sf_transport_mode == RTP_INTERLEAVED ? SATIP_SETUP_TCP : 0;
+  return rtsp_flags;
+}
+
 static satip_frontend_t *
 satip_frontend_find_by_number( satip_device_t *sd, int num )
 {
@@ -608,6 +617,18 @@ const idclass_t satip_frontend_atsc_c_class =
 /* **************************************************************************
  * Class methods
  * *************************************************************************/
+
+static void
+satip_frontend_display_name ( mpegts_input_t *mi, char *buf, size_t len )
+{
+  satip_frontend_t *lfe = (satip_frontend_t *)mi;
+  char nname[60];
+  int rtsp_flags = satip_frontend_rtsp_flags(lfe);
+  snprintf(buf, len, "%s #%d (%s@%s)",
+           mi->mi_name ?: "", lfe->sf_number,
+           satip_device_nicename(lfe->sf_device, nname, sizeof(nname)),
+           rtsp_flags & SATIP_SETUP_TCP ? "TCP" : "UDP");
+}
 
 static int
 satip_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
@@ -1676,9 +1697,7 @@ new_tune:
   seq         = -1;
   lfe->sf_seq = -1;
   play2       = 1;
-  rtsp_flags  = lfe->sf_device->sd_tcp_mode;
-  if (lfe->sf_transport_mode != RTP_SERVER_DEFAULT)
-    rtsp_flags = lfe->sf_transport_mode == RTP_INTERLEAVED ? SATIP_SETUP_TCP : 0;
+  rtsp_flags  = satip_frontend_rtsp_flags(lfe);
 
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
     if (udp_bind_double(&rtp, &rtcp,
@@ -2183,6 +2202,8 @@ satip_frontend_hacks( satip_frontend_t *lfe )
 
   lfe->sf_tdelay = 50; /* should not hurt anything */
   lfe->sf_pass_weight = 1;
+  if (lfe->sf_type == DVB_TYPE_C)
+    lfe->sf_specinv = 1;
   if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
     if (lfe->sf_type == DVB_TYPE_S)
       lfe->sf_play2 = 1;
@@ -2192,7 +2213,6 @@ satip_frontend_hacks( satip_frontend_t *lfe )
               strstr(sd->sd_info.modelname, "FRITZ!")) {
     lfe->sf_play2 = 1;
   } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
-    lfe->sf_specinv = 1;
     lfe->sf_pass_weight = 0;
   }
 }
@@ -2203,7 +2223,7 @@ satip_frontend_create
 {
   const idclass_t *idc;
   const char *uuid = NULL, *override = NULL;
-  char id[16], lname[256], nname[60];
+  char id[16], lname[256];
   satip_frontend_t *lfe;
   uint32_t master = 0;
   int i;
@@ -2283,11 +2303,8 @@ satip_frontend_create
   /* Default name */
   if (!lfe->mi_name ||
       (strncmp(lfe->mi_name, "SAT>IP ", 7) == 0 &&
-       strstr(lfe->mi_name, " Tuner ") &&
-       strstr(lfe->mi_name, " #"))) {
-    snprintf(lname, sizeof(lname), "SAT>IP %s Tuner #%i (%s)",
-             dvb_type2str(type), num,
-             satip_device_nicename(sd, nname, sizeof(nname)));
+       strstr(lfe->mi_name, " Tuner"))) {
+    snprintf(lname, sizeof(lname), "SAT>IP %s Tuner", dvb_type2str(type));
     free(lfe->mi_name);
     lfe->mi_name = strdup(lname);
   }
@@ -2295,6 +2312,7 @@ satip_frontend_create
   /* Input callbacks */
   lfe->ti_wizard_get     = satip_frontend_wizard_get;
   lfe->ti_wizard_set     = satip_frontend_wizard_set;
+  lfe->mi_display_name   = satip_frontend_display_name;
   lfe->mi_is_enabled     = satip_frontend_is_enabled;
   lfe->mi_warm_mux       = satip_frontend_warm_mux;
   lfe->mi_start_mux      = satip_frontend_start_mux;

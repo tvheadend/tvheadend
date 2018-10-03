@@ -72,7 +72,7 @@ OPTIONS=(
   "gtimer_check:no"
   "slow_memoryinfo:no"
   "libsystemd_daemon:no"
-  "bintray_cache:yes"
+  "pcloud_cache:yes"
   "ddci:yes"
   "cclang_threadsan:no"
   "gperftools:no"
@@ -144,10 +144,28 @@ fi
 
 # Valiate compiler
 check_cc || die 'No C compiler found'
-check_cc_header execinfo
+# We only want libunwind on non-linux plaforms where we have had bad
+# stack traces from existing implementation.
+if [ ${PLATFORM} = "freebsd" ]; then
+    check_cc_header libunwind
+    # If we don't have libunwind then fallback to execinfo.
+    if ! enabled libunwind
+    then
+        check_cc_header execinfo
+    fi
+
+else
+    check_cc_header execinfo
+fi
 check_cc_option mmx
 check_cc_option sse2
 check_cc_optionW unused-result
+# Some options from https://wiki.debian.org/Hardening
+check_cc_optionf stack-protector
+check_cc_optionf stack-protector-strong
+# Useful for multi-threaded programs
+check_cc_optionf stack-check
+check_cc_optionf PIE
 
 if check_cc '
 #if !defined(__clang__)
@@ -402,6 +420,9 @@ else
 
 fi
 
+if enabled libunwind; then
+    LDFLAGS="$LDFLAGS -lunwind"
+fi
 #
 # Gzip
 #
@@ -596,16 +617,17 @@ else
 
   if enabled_or_auto libav; then
     has_libav=true
+    has_resample=false
 
     check_pkg libavfilter   ">=6.47.100"  || has_libav=false
-    check_pkg libswresample ">=2.1.100"   || has_libav=false
-    check_pkg libavresample ">=3.0.0"     || has_libav=false
+    check_pkg libswresample ">=2.1.100"   && has_resample=true
+    check_pkg libavresample ">=3.0.0"     && has_resample=true
     check_pkg libswscale    ">=4.1.100"   || has_libav=false
     check_pkg libavformat   ">=57.41.100" || has_libav=false
     check_pkg libavcodec    ">=57.48.101" || has_libav=false
     check_pkg libavutil     ">=55.28.100" || has_libav=false
 
-    if $has_libav; then
+    if $has_libav -a $has_resample; then
       enable libav
     else
       echo "WARNING: none or old ffmpeg libraries were detected"

@@ -31,11 +31,12 @@ LANGUAGES ?= $(LANGUAGES_ALL)
 # Common compiler flags
 #
 
+# https://wiki.debian.org/Hardening
 CFLAGS  += -g
 ifeq ($(CONFIG_CCDEBUG),yes)
 CFLAGS  += -O0
 else
-CFLAGS  += -O2
+CFLAGS  += -O2 -D_FORTIFY_SOURCE=2
 endif
 ifeq ($(CONFIG_PIE),yes)
 CFLAGS  += -fPIE
@@ -51,6 +52,9 @@ endif
 CFLAGS  += -Wall -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS  += -Wmissing-prototypes
 CFLAGS  += -fms-extensions -funsigned-char -fno-strict-aliasing
+ifeq ($(COMPILER), gcc)
+CFLAGS  += -Wno-stringop-truncation -Wno-stringop-overflow
+endif
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
 ifeq ($(CONFIG_ANDROID),yes)
@@ -725,6 +729,7 @@ clean:
 .PHONY: distclean
 distclean: clean
 	rm -rf ${ROOTDIR}/build.*
+	rm -rf ${ROOTDIR}/debian/.debhelper
 	rm -rf ${ROOTDIR}/data/dvb-scan
 	rm -f ${ROOTDIR}/.config.mk
 
@@ -839,10 +844,13 @@ ${BUILDDIR}/libffmpeg_stamp: ${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a
 	@touch $@
 
 ${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
-ifeq ($(CONFIG_BINTRAY_CACHE),yes)
+ifeq ($(CONFIG_PCLOUD_CACHE),yes)
 	$(MAKE) -f Makefile.ffmpeg libcacheget
+	$(MAKE) -f Makefile.ffmpeg build
+	$(MAKE) -f Makefile.ffmpeg libcacheput
+else
+	$(MAKE) -f Makefile.ffmpeg build
 endif
-	$(MAKE) -f Makefile.ffmpeg
 
 # Static HDHOMERUN library
 
@@ -854,10 +862,13 @@ ${BUILDDIR}/libhdhomerun_stamp: ${BUILDDIR}/hdhomerun/libhdhomerun/libhdhomerun.
 	@touch $@
 
 ${BUILDDIR}/hdhomerun/libhdhomerun/libhdhomerun.a: Makefile.hdhomerun
-ifeq ($(CONFIG_BINTRAY_CACHE),yes)
+ifeq ($(CONFIG_PCLOUD_CACHE),yes)
 	$(MAKE) -f Makefile.hdhomerun libcacheget
+	$(MAKE) -f Makefile.hdhomerun build
+	$(MAKE) -f Makefile.hdhomerun libcacheput
+else
+	$(MAKE) -f Makefile.hdhomerun build
 endif
-	$(MAKE) -f Makefile.hdhomerun
 
 .PHONY: ffmpeg_rebuild
 ffmpeg_rebuild:

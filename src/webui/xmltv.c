@@ -98,6 +98,22 @@ _http_xmltv_programme_write_string_list(htsbuf_queue_t *hq, const string_list_t*
   }
 }
 
+static void
+_http_xmltv_add_episode_num(htsbuf_queue_t *hq, uint16_t num, uint16_t cnt)
+{
+  /* xmltv numbers are zero-based not one-based, however the xmltv
+   * counts are one-based.
+   */
+  if (num) htsbuf_qprintf(hq, "%d", num - 1);
+  /* Some clients can not handle "X", only "X/Y" or "/Y",
+   * so only output "/" if needed.
+   */
+  if (cnt) {
+    htsbuf_append_str(hq, "/");
+    htsbuf_qprintf(hq, "%d", cnt);
+  }
+}
+
 /*
  *
  */
@@ -105,8 +121,11 @@ static void
 http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
                          channel_t *ch, epg_broadcast_t *ebc)
 {
+  epg_episode_num_t epnum;
   char start[32], stop[32], ubuf[UUID_HEX_SIZE];
   lang_str_ele_t *lse;
+  epg_genre_t *genre;
+  char buf[64];
 
   if (ebc->title == NULL) return;
   http_xmltv_time(start, ebc->start);
@@ -147,7 +166,30 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
     htsbuf_append_str(hq, "  </credits>\n");
   }
   _http_xmltv_programme_write_string_list(hq, ebc->category, "category");
+  LIST_FOREACH(genre, &ebc->genre, link) {
+    if (genre && genre->code) {
+      if (epg_genre_get_str(genre, 0, 1, buf, sizeof(buf), "en")) {
+        htsbuf_qprintf(hq, "  <category lang=\"en\">");
+        htsbuf_append_and_escape_xml(hq, buf);
+        htsbuf_append_str(hq, "</category>\n");
+      }
+    }
+  }
   _http_xmltv_programme_write_string_list(hq, ebc->keyword, "keyword");
+
+  /* We can't use epg_broadcast_epnumber_format since we need a specific
+   * format whereas that can return an arbitrary text string.
+   */
+  epg_broadcast_get_epnum(ebc, &epnum);
+  if (epnum.s_num || epnum.e_num || epnum.p_num) {
+    htsbuf_append_str(hq, "  <episode-num system=\"xmltv-ns\">");
+    _http_xmltv_add_episode_num(hq, epnum.s_num, epnum.s_cnt);
+    htsbuf_append_str(hq," . ");
+    _http_xmltv_add_episode_num(hq, epnum.e_num, epnum.e_cnt);
+    htsbuf_append_str(hq," . ");
+    _http_xmltv_add_episode_num(hq, epnum.p_num, epnum.p_cnt);
+    htsbuf_append_str(hq, "  </episode-num>");
+  }
   htsbuf_append_str(hq, "</programme>\n");
 }
 

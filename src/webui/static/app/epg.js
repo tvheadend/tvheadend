@@ -111,6 +111,7 @@ tvheadend.filmAffinityLanguage = function() {
 tvheadend.epgDetails = function(grid, index) {
     // We need a unique DOM id in case user opens two dialogs.
     var nextButtonId = Ext.id();
+    var previousButtonId = Ext.id();
     var confcomboButtonId = Ext.id();
 
     function getDialogTitle(event) {
@@ -166,7 +167,9 @@ tvheadend.epgDetails = function(grid, index) {
         content += '<div class="x-epg-bottom">';
       }
       if (event.image != null && event.image.length > 0) {
+        content += '<div class="x-epg-image-container">';
         content += '<img class="x-epg-image" src="' + event.image + '">';
+        content += '</div>';
       }
       content += '<hr class="x-epg-hr"/>';
       if (event.summary)
@@ -323,12 +326,15 @@ tvheadend.epgDetails = function(grid, index) {
           });
 
           buttons.push(confcombo);
-          buttons.push(new Ext.Button({
-              handler: recordEvent,
-              iconCls: 'rec',
-              tooltip: _('Record this program now'),
-              text: _('Record program')
-          }));
+          // If the event is recording or the event is scheduled, we disable the record button
+          if (!recording && !scheduled) {
+            buttons.push(new Ext.Button({
+                handler: recordEvent,
+                iconCls: 'rec',
+                tooltip: _('Record this program now'),
+                text: _('Record program')
+            }));
+          }
           buttons.push(new Ext.Button({
               handler: recordSeries,
               iconCls: 'autoRec',
@@ -336,11 +342,16 @@ tvheadend.epgDetails = function(grid, index) {
               text: event.serieslinkUri ? _("Record series") : _("Autorec")
           }));
           buttons.push(new Ext.Button({
+              id: previousButtonId,
+              handler: previousEvent,
+              iconCls: 'previous',
+              tooltip: _('Go to previous event'),
+          }));
+          buttons.push(new Ext.Button({
               id: nextButtonId,
               handler: nextEvent,
               iconCls: 'next',
               tooltip: _('Go to next event'),
-              text: _("Next"),
           }));
 
       } else {
@@ -356,6 +367,7 @@ tvheadend.epgDetails = function(grid, index) {
 
     var current_index = index;
     var event = grid.getStore().getAt(index).data;
+    var store = grid.getStore();
     var content = getDialogContent(event);
     var buttons = getDialogButtons();
     var windowHeight = Ext.getBody().getViewSize().height - 150;
@@ -364,7 +376,7 @@ tvheadend.epgDetails = function(grid, index) {
         title: title,
         iconCls: 'broadcast_details',
         layout: 'fit',
-        width: 800,
+        width: 760,
         height: windowHeight,
         constrainHeader: true,
         buttons: buttons,
@@ -373,6 +385,7 @@ tvheadend.epgDetails = function(grid, index) {
         html: content
     });
     win.show();
+    checkButtonAvailability(win.fbar);
 
     function playProgram() {
         var title = event.title;
@@ -382,10 +395,26 @@ tvheadend.epgDetails = function(grid, index) {
                     '?title=' + encodeURIComponent(title), '_blank');
     }
 
+    function previousEvent() {
+        --current_index;
+        event = store.getAt(current_index).data;
+        updateit();
+    }
     function nextEvent() {
-      var store = grid.getStore();
-      ++current_index;
-      event = store.getAt(current_index).data;
+        ++current_index;
+        event = store.getAt(current_index).data;
+        updateit();
+    }
+    function checkButtonAvailability(toolBar){
+        // If we're at the end of the store then disable the next
+        // or previous button.  (getTotalCount is one-based).
+        if (current_index == store.getTotalCount() - 1)
+          toolBar.getComponent(nextButtonId).disable();
+        if (current_index == 0)
+          toolBar.getComponent(previousButtonId).disable();
+    }
+
+    function updateit() {
       var title = getDialogTitle(event);
       var content = getDialogContent(event);
       var buttons = getDialogButtons(event);
@@ -400,10 +429,7 @@ tvheadend.epgDetails = function(grid, index) {
       Ext.each(buttons, function(btn) {
         tbar.addButton(btn);
       });
-      // If we're at the end of the store then disable the next
-      // button.  (getTotalCount is one-based).
-      if (current_index == store.getTotalCount() - 1)
-        tbar.getComponent(nextButtonId).disable();
+      checkButtonAvailability(tbar);
       // Finally, relayout.
       win.doLayout();
     }
@@ -461,6 +487,7 @@ tvheadend.epgDetails = function(grid, index) {
 
 tvheadend.epg = function() {
     var lookup = '<span class="x-linked">&nbsp;</span>';
+    var epgChannelCurrentIndex = 0;
 
     var detailsfcn = function(grid, rec, act, row) {
         new tvheadend.epgDetails(grid, row);
@@ -858,6 +885,18 @@ tvheadend.epg = function() {
         }
     });
 
+    var epgPrevChannel = new Ext.Button({
+        handler: epgPrevChannelCB,
+        iconCls: 'previous',
+        tooltip: _("Go to previous channel"),
+    });
+
+    var epgNextChannel = new Ext.Button({
+        handler: epgNextChannelCB,
+        iconCls: 'next',
+        tooltip: _("Go to next channel"),
+    });
+
     // Tags, uses global store
 
     var epgFilterChannelTags = new Ext.ux.form.ComboAny({
@@ -1073,7 +1112,8 @@ tvheadend.epg = function() {
         epgView.reset();
     }
 
-    epgFilterChannels.on('select', function(c, r) {
+    epgFilterChannels.on('select', function(c, r, index) {
+        epgChannelCurrentIndex = index;
         epgFilterChannelSet(r.data.key == -1 ? "" : r.data.key);
     });
 
@@ -1169,7 +1209,7 @@ tvheadend.epg = function() {
     var tbar = [
         epgMode, '-',
         epgFilterTitle, { text: _('Fulltext') }, epgFilterFulltext, { text: _('New only') }, epgFilterNewOnly, '-',
-        epgFilterChannels, '-',
+        epgPrevChannel, epgFilterChannels, epgNextChannel, '-',
         epgFilterChannelTags, '-',
         epgFilterContentGroup, '-',
         epgFilterDuration, '-',
@@ -1334,6 +1374,38 @@ tvheadend.epg = function() {
 
     function rowclicked(grid, index, e) {
         new tvheadend.epgDetails(grid, index);
+    }
+
+    function epgChannelSetCommon(delta) {
+        // Count is 1-based
+        var max = epgFilterChannels.store.getCount();
+        // Elem 0 is "clear filter" so we expect at least
+        // two items.
+        if (max < 2)
+            return;
+
+        epgChannelCurrentIndex += delta;
+        // Wrap-around seems to make sense for EPG since
+        // we have a text field showing the channel names.
+        if (epgChannelCurrentIndex < 1)
+            epgChannelCurrentIndex = max - 1;
+        else if (epgChannelCurrentIndex >= max)
+            epgChannelCurrentIndex = 1;
+
+        var text = epgFilterChannels.store.getAt(epgChannelCurrentIndex).get("val");
+        epgFilterChannels.setValue(text);
+        // We have to call our "value changed" cb ourselves, but with
+        // the associated key for it to be sent to the server for filtering.
+        var key = epgFilterChannels.store.getAt(epgChannelCurrentIndex).get("key");
+        epgFilterChannelSet(key);
+    }
+
+    function epgPrevChannelCB() {
+        epgChannelSetCommon(-1);
+    }
+
+    function epgNextChannelCB() {
+        epgChannelSetCommon(+1);
     }
 
     function createAutoRec() {

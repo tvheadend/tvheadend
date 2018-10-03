@@ -35,8 +35,9 @@
 # Config
 # ############################################################################
 
-[ -z "$BINTRAY_REPO" ] && BINTRAY_REPO=tvheadend/misc
-[ -z "$ARCH"         ] && ARCH=$(uname -m)
+[ -z "$PCLOUD_BASEDIR" ] && PCLOUD_BASEDIR=misc
+[ -z "$PCLOUD_HASHDIR" ] && PCLOUD_HASHDIR=kZ54ee7ZUvsSYmb9VGSpnmoVzcAUhpBXLq8k
+[ -z "$ARCH" ] && ARCH=$(uname -m)
 if [ -z "$CODENAME" ]; then
   CODENAME=$(lsb_release -irs 2> /dev/null)
   if [ -z "$CODENAME" -a -f /etc/lsb-release ]; then
@@ -51,7 +52,7 @@ if [ -z "$CODENAME" ]; then
     CODENAME="unknown"
   fi
 fi
-CODENAME=$(echo "$CODENAME" | tr '\n' ' ' | sed -e 's/[[:blank:]]*$//g' -e 's: :%20:g')
+CODENAME=$(echo "$CODENAME" | tr '\n' ' ' | sed -e 's/[[:blank:]]*$//g')
 
 # Convert amd64 to x86_64 (ensure uniformity)
 [ "${ARCH}" = "amd64" ] && ARCH=x86_64
@@ -67,13 +68,13 @@ CODENAME=$(echo "$CODENAME" | tr '\n' ' ' | sed -e 's/[[:blank:]]*$//g' -e 's: :
 
 function hash ()
 {
-  LIB_NAME=$1
+  LIB_NAME="$1"
   T="
 $(cat ${ROOTDIR}/Makefile.${LIB_NAME})
 $(grep ^CONFIG_ ${ROOTDIR}/.config.mk)
 "
-  H=$(echo ${T} | sha1sum | cut -d' ' -f1)
-  echo ${H}
+  H=$(echo "${T}" | sha1sum | cut -d' ' -f1)
+  echo "${H}"
 }
 
 #
@@ -81,36 +82,36 @@ $(grep ^CONFIG_ ${ROOTDIR}/.config.mk)
 #
 function download
 {
-  LIB_NAME=$1
+  LIB_NAME="$1"
   LIB_HASH=$(hash ${LIB_NAME})
-  P=${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz
+  P="${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
 
   # Cleanup
-  rm -f ${BUILDDIR}/.${LIB_NAME}*.tmp
+  rm -f "${BUILDDIR}/.${LIB_NAME}"*.tmp
 
   # Already downloaded
-  [ -f ${P} ] && return 0
+  [ -f "${P}" ] && return 0
 
   # Create directory
-  [ ! -d ${BUILDDIR} ] && mkdir -p ${BUILDDIR}
+  [ ! -d "${BUILDDIR}" ] && mkdir -p "${BUILDDIR}"
 
   # Attempt to fetch
-  N=staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz
-  URL="https://dl.bintray.com/${BINTRAY_REPO}/${N}"
-  echo "DOWNLOAD        ${URL}"
-  wget -O ${P}.tmp "${URL}"
+  N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
+
+  echo "DOWNLOAD        ${N} / ${PCLOUD_HASHDIR}"
+  ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp"
+
   R=$?
-  # Don't know why but having weird issue with curl not returning data
 
   # Failed
   if [ ${R} -ne 0 ]; then
     echo "FAILED TO DOWNLOAD ${URL} (BUT THIS IS NOT A FATAL ERROR! DO NOT REPORT THAT!)"
-    rm -f ${P}.tmp
+    rm -f "${P}.tmp"
     return ${R}
   fi
 
   # Move tmp file
-  mv ${P}.tmp ${P} || return 1
+  mv "${P}.tmp" "${P}" || return 1
 
   return ${R}
 }
@@ -120,30 +121,30 @@ function download
 #
 function unpack
 {
-  LIB_NAME=$1
+  LIB_NAME="$1"
   LIB_HASH=$(hash ${LIB_NAME})
-  P=${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz
-  U=${BUILDDIR}/.${LIB_NAME}.unpack
+  P="${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
+  U="${BUILDDIR}/.${LIB_NAME}.unpack"
 
   # Not downloaded
-  [ ! -f ${P} ] && return 1
+  [ ! -f "${P}" ] && return 1
 
   # Already unpacked?
-  if [ -f ${U} ]; then
-    H=$(cat ${U})
-    [ "${LIB_HASH}" = ${H} ] && return 0
+  if [ -f "${U}" ]; then
+    H=$(cat "${U}")
+    [ "${LIB_HASH}" = "${H}" ] && return 0
   fi
 
   # Cleanup
-  rm -rf ${BUILDDIR}/${LIB_NAME} || return 1
-  mkdir -p ${BUILDDIR}/${LIB_NAME} || return 1
+  rm -rf "${BUILDDIR}/${LIB_NAME}" || return 1
+  mkdir -p "${BUILDDIR}/${LIB_NAME}" || return 1
   
   # Unpack
   echo "UNPACK          ${P}"
-  tar -C ${BUILDDIR}/${LIB_NAME} -xf ${P} || return 1
+  tar -C "${BUILDDIR}/${LIB_NAME}" -xf "${P}" || return 1
 
   # Record
-  echo ${LIB_HASH} > ${U}
+  echo "${LIB_HASH}" > "${U}"
 }
 
 #
@@ -154,10 +155,10 @@ function upload
   LIB_NAME=$1; shift
   LIB_FILES=$*
   LIB_HASH=$(hash ${LIB_NAME})
-  P=${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz
+  P="${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
 
   # Can't upload
-  [ -z "${BINTRAY_USER}" -o -z "${BINTRAY_PASS}" ] && return 0
+  [ -z "${PCLOUD_USER}" -o -z "${PCLOUD_PASS}" ] && return 0
   
   # Don't need to upload
   [ -f "${P}" ] && return 0
@@ -170,13 +171,12 @@ function upload
   tar -C ${BUILDDIR}/${LIB_NAME} -zcf ${P}.tmp ${LIB_FILES} || return 1
 
   # Upload
-  N=staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz
-  BPATH="/content/${BINTRAY_REPO}/staticlib/${LIB_NAME}-${LIB_HASH}/${N};publish=1"
-  echo "UPLOAD          ${BPATH}"
-  ${ROOTDIR}/support/bintray.py upload ${BPATH} ${P}.tmp || return 1
+  N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
+  echo "UPLOAD          ${N}"
+  ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || return 1
 
   # Done
-  mv ${P}.tmp ${P} || return 1
+  mv "${P}.tmp" "${P}" || return 1
 }
 
 # Run command

@@ -113,6 +113,10 @@ tvh_input_stream_create_msg
   ( tvh_input_stream_t *st )
 {
   htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *l = NULL;
+  mpegts_apids_t *pids;
+  int i;
+
   htsmsg_add_str(m, "uuid", st->uuid);
   if (st->input_name)
     htsmsg_add_str(m, "input",  st->input_name);
@@ -120,6 +124,16 @@ tvh_input_stream_create_msg
     htsmsg_add_str(m, "stream", st->stream_name);
   htsmsg_add_u32(m, "subs", st->subs_count);
   htsmsg_add_u32(m, "weight", st->max_weight);
+  if ((pids = st->pids) != NULL) {
+    l = htsmsg_create_list();
+    if (pids->all) {
+      htsmsg_add_u32(l, NULL, 65535);
+    } else {
+      for (i = 0; i < pids->count; i++)
+        htsmsg_add_u32(l, NULL, pids->pids[i].pid);
+    }
+    htsmsg_add_msg(m, "pids", l);
+  }
   htsmsg_add_s32(m, "signal", st->stats.signal);
   htsmsg_add_u32(m, "signal_scale", st->stats.signal_scale);
   htsmsg_add_u32(m, "ber", st->stats.ber);
@@ -143,4 +157,5 @@ tvh_input_stream_destroy
   free(st->uuid);
   free(st->input_name);
   free(st->stream_name);
+  mpegts_pid_destroy(&st->pids);
 }

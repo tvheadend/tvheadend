@@ -851,7 +851,8 @@ mpegts_input_open_service
     TAILQ_FOREACH(st, &s->s_components.set_filter, es_filter_link)
       if ((s->s_scrambled_pass || st->es_type != SCT_CA) &&
           st->es_pid != s->s_components.set_pmt_pid &&
-          st->es_pid != s->s_components.set_pcr_pid) {
+          st->es_pid != s->s_components.set_pcr_pid &&
+          st->es_pid < 8192) {
         st->es_pid_opened = 1;
         mpegts_input_open_pid(mi, mm, st->es_pid, MPS_SERVICE, mpegts_mps_weight(st), s, reopen);
       }
@@ -1824,6 +1825,7 @@ mpegts_input_stream_status
   const service_t *t;
   mpegts_mux_t *mm = mmi->mmi_mux;
   mpegts_input_t *mi = mmi->mmi_input;
+  mpegts_pid_t *mp;
 
   LIST_FOREACH(t, &mm->mm_transports, s_active_link)
     if (((mpegts_service_t *)t)->s_dvb_mux == mm)
@@ -1839,6 +1841,17 @@ mpegts_input_stream_status
   st->stream_name = strdup(buf);
   st->subs_count  = s;
   st->max_weight  = w;
+
+  st->pids = mpegts_pid_alloc();
+  RB_FOREACH(mp, &mm->mm_pids, mp_link) {
+    if (mp->mp_pid == MPEGTS_TABLES_PID)
+      continue;
+    if (mp->mp_pid == MPEGTS_FULLMUX_PID)
+      st->pids->all = 1;
+    else
+      mpegts_pid_add(st->pids, mp->mp_pid, 0);
+  }
+
   pthread_mutex_lock(&mmi->tii_stats_mutex);
   st->stats.signal = mmi->tii_stats.signal;
   st->stats.snr    = mmi->tii_stats.snr;

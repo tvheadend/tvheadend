@@ -852,6 +852,11 @@ const idclass_t dvr_config_class = {
          .name   = N_("Miscellaneous Settings"),
          .number = 7,
       },
+      {
+         .name   = N_("Artwork Settings"),
+         .number = 8,
+         .column = 1,
+      },
       {}
   },
   .ic_properties = (const property_t[]){
@@ -988,6 +993,27 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_complex_scheduling),
       .opts     = PO_ADVANCED,
       .group    = 1,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "fetch-artwork",
+      .name     = N_("Fetch artwork for new recordings."),
+      .desc     = N_("Fetch additional artwork from installed providers. "
+                     "Tvheadend has a 'tmdb' provider for movies, which requires "
+                     "you to specify your authorized 'tmdb key' in the options below."),
+      .off      = offsetof(dvr_config_t, dvr_fetch_artwork),
+      .opts     = PO_ADVANCED,
+      .group    = 8,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "fetch-artwork-options",
+      .name     = N_("Additional command line options when fetching artwork for new recordings."),
+      .desc     = N_("Some artwork providers require additional arguments such as "
+                     "'--tmdb-key my_key_from_website'. These can be specified here."),
+      .off      = offsetof(dvr_config_t, dvr_fetch_artwork_options),
+      .opts     = PO_ADVANCED,
+      .group    = 8,
     },
     {
       .type     = PT_STR,

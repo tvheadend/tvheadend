@@ -36,6 +36,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
+extern gtimer_t epggrab_save_timer;
 
 /* **************************************************************************
  * Module Access
@@ -406,6 +407,25 @@ void epggrab_module_parse( void *m, htsmsg_t *data )
   tvhinfo(mod->subsys, "%s:  broadcasts tot=%5d new=%5d mod=%5d",
           mod->id, stats.broadcasts.total, stats.broadcasts.created,
           stats.broadcasts.modified);
+
+  /* Now we've parsed, do we need to save? */
+  if (save && epggrab_conf.epgdb_saveafterimport) {
+    tvhinfo(mod->subsys, "%s: scheduling save epg timer", mod->id);
+    pthread_mutex_lock(&global_lock);
+    /* Disarm any existing timer first (from a periodic save). */
+    gtimer_disarm(&epggrab_save_timer);
+    /* Reschedule for a few minutes away so if the user is
+     * refreshing from multiple xmltv sources we will give time for
+     * them to all complete before persisting, rather than persisting
+     * immediately after a parse.
+     *
+     * If periodic saving is enabled then the callback will then
+     * rearm the timer for x hours after the previous save.
+     */
+    gtimer_arm_rel(&epggrab_save_timer, epg_save_callback, NULL,
+                   60 * 2);
+    pthread_mutex_unlock(&global_lock);
+  }
 }
 
 /* **************************************************************************

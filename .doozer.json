@@ -18,6 +18,7 @@
         "libpcre3-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache",
         "libx11-xcb-dev"
@@ -45,6 +46,7 @@
         "libpcre3-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
@@ -71,6 +73,7 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
@@ -96,6 +99,7 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
@@ -123,10 +127,16 @@
         "libpcre3-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "ca-certificates",
+        "sudo",
       ],
       "buildcmd": [
+        "sudo mkdir /usr/local/share/ca-certificates/cacert.org",
+        "sudo wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt",
+        "sudo update-ca-certificates",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -150,10 +160,16 @@
         "libpcre3-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "ca-certificates",
+        "sudo",
       ],
       "buildcmd": [
+        "sudo mkdir /usr/local/share/ca-certificates/cacert.org",
+        "sudo wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt",
+        "sudo update-ca-certificates",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -177,6 +193,7 @@
         "libpcre3-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
@@ -204,6 +221,7 @@
         "libpcre3-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
@@ -230,6 +248,7 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
@@ -256,10 +275,16 @@
         "libpcre3-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "ca-certificates",
+        "sudo",
       ],
       "buildcmd": [
+        "sudo mkdir /usr/local/share/ca-certificates/cacert.org",
+        "sudo wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt",
+        "sudo update-ca-certificates",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianjessie-armhf -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -282,6 +307,7 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
@@ -308,6 +334,7 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
@@ -338,6 +365,7 @@
         "uriparser-devel",
         "pcre2-devel",
         "python",
+        "python-requests",
         "ccache"
       ],
       "buildcmd": [
@@ -367,6 +395,7 @@
         "uriparser-devel",
         "pcre2-devel",
         "python",
+        "python-requests",
         "ccache"
       ],
       "buildcmd": [
@@ -396,6 +425,7 @@
         "uriparser-devel",
         "pcre2-devel",
         "python",
+        "python-requests",
         "ccache"
       ],
       "buildcmd": [
@@ -421,6 +451,7 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],
@@ -447,6 +478,61 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
+        "python-requests",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt",
+      ]
+    },
+    "cosmic-amd64": {
+      "buildenv": "docker:ubuntu:cosmic",
+      "builddeps": [
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre2-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt",
+      ]
+    },
+    "cosmic-i386": {
+      "buildenv": "docker:i386/ubuntu:cosmic",
+      "builddeps": [
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre2-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
         "debhelper",
         "ccache"
       ],

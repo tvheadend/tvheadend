@@ -57,6 +57,33 @@ static const int prio2weight[6] = {
   [DVR_PRIO_NOTSET]      = 300, /* DVR_PRIO_NORMAL */
 };
 
+/// Spawn a fetch of artwork for the entry.
+void
+dvr_spawn_fetch_artwork(dvr_entry_t *de)
+{
+  const dvr_config_t *cfg;
+  /* Don't want to use _SC_ARG_MAX since it will be a large number */
+  char buf[1024];
+  char ubuf[UUID_HEX_SIZE];
+
+  /* Entry already have artwork? So nothing to do */
+  if (de->de_image && *de->de_image &&
+      de->de_fanart_image && *de->de_fanart_image)
+    return;
+
+  if (!de->de_config)
+    return;
+
+  cfg = de->de_config;
+  if (!cfg->dvr_fetch_artwork)
+    return;
+
+  snprintf(buf, sizeof buf, "tvhmeta --uuid %s %s",
+           idnode_uuid_as_str(&de->de_id, ubuf),
+           cfg->dvr_fetch_artwork_options);
+  dvr_spawn_cmd(de, buf, NULL, 1);
+}
+
 /**
  *
  */
@@ -154,6 +181,8 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   if (de->de_config->dvr_preproc)
     dvr_spawn_cmd(de, de->de_config->dvr_preproc, NULL, 1);
+  if (de->de_config->dvr_fetch_artwork)
+    dvr_spawn_fetch_artwork(de);
   return 0;
 }
 
@@ -360,6 +389,16 @@ static const char *
 dvr_sub_description(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
   return dvr_do_prefix(id, fmt, lang_str_get(((dvr_entry_t *)aux)->de_desc, NULL), tmp, tmplen);
+}
+
+static const char *
+dvr_sub_uuid(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
+{
+  const dvr_entry_t *de = aux;
+  char ubuf[UUID_HEX_SIZE];
+  idnode_uuid_as_str(&de->de_id, ubuf);
+  strlcpy(tmp, ubuf, tmplen);
+  return tmp;
 }
 
 static const char *
@@ -831,6 +870,7 @@ static htsstr_substitute_t dvr_subs_postproc_entry[] = {
   { .id = "t",  .getval = dvr_sub_title },
   { .id = "s",  .getval = dvr_sub_subtitle_or_summary },
   { .id = "u",  .getval = dvr_sub_subtitle },
+  { .id = "U",  .getval = dvr_sub_uuid },
   { .id = "m",  .getval = dvr_sub_summary },
   { .id = "p",  .getval = dvr_sub_episode },
   { .id = "d",  .getval = dvr_sub_description },
@@ -1472,6 +1512,11 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
       return 0;
     dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
     int code = dvr_rec_start(de, ss);
+    /* Persist entry so we save the filename details to avoid orphan
+     * files if we crash before the programme completes recording.
+     */
+    dvr_entry_changed(de);
+    htsp_dvr_entry_update(de);
     if(code == 0) {
       ret = 1;
       *started = 1;
