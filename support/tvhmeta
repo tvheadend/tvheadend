@@ -56,6 +56,7 @@ import os
 # right)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '.'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib', 'py', "tvh"))
+sys.path.append("/usr/local/bin")
 
 class TvhMeta(object):
   def __init__(self, host, port, user, password, grabber_args):
@@ -64,7 +65,7 @@ class TvhMeta(object):
     self.user = user
     self.password = password
     self.grabber_args = grabber_args
-    logging.info("grabber_args=%s" % grabber_args)
+    logging.debug("grabber_args=%s" % grabber_args)
 
   @staticmethod
   def get_meta_grabbers():
@@ -77,7 +78,7 @@ class TvhMeta(object):
         grabbers.add(filename)
     return sorted(list(grabbers))
 
-  def _get_meta_grabbers_for_capability_common(self, capability):
+  def _get_meta_grabbers_for_capability_common(self, capability = None, addfn = None):
     grabbers = self.get_meta_grabbers()
     logging.debug("Got grabbers %s" % grabbers)
     ret = set()
@@ -89,8 +90,11 @@ class TvhMeta(object):
         cap_fn = getattr(mod, "get_capabilities")
         capabilities = cap_fn()
         logging.debug("Module %s has capabilities %s", module_name, capabilities)
-        if capabilities[capability]:
-          ret.add(module_name)
+        if capability is None or capabilities[capability]:
+          if addfn:
+            addfn(mod, module_name, capabilities)
+          else:
+            ret.add(module_name)
       except Exception as e:
         logging.exception("Could not import module %s when searching for %s: %s" % (module_name, capability, e))
     return sorted(list(ret))
@@ -100,6 +104,12 @@ class TvhMeta(object):
 
   def get_meta_grabbers_for_tv(self):
       return self._get_meta_grabbers_for_capability_common("supports_tv")
+
+  def get_meta_grabbers_capabilities(self):
+      ret = {}
+      def addit(mod,module_name,capabilities): ret[module_name] = capabilities
+      self._get_meta_grabbers_for_capability_common(addfn = addit)
+      return ret
 
   def _get_module_init_args(self, module_name):
     """Return initialization arguments suitable for the module."""
@@ -346,7 +356,9 @@ So for "tv_meta_tmdb" we would have "tmdb-key", "tmdb-user", etc.
     optp.add_argument('--modules-tv', default=None,
                     help='Specify comma-separated list of modules for fetching artwork.')
     optp.add_argument('--list-grabbers', default=None, action="store_true",
-                    help='Generate a list of available grabbers'),
+                    help='Generate a list of available grabbers.'),
+    optp.add_argument('--list-grabber-capabilities', default=None, action="store_true",
+                    help='Generate a list of available grabbers with their capabilities.'),
     optp.add_argument('--debug', default=None, action="store_true",
                     help='Enable debug.')
 
@@ -360,7 +372,11 @@ So for "tv_meta_tmdb" we would have "tmdb-key", "tmdb-user", etc.
     grabber_args = parse_remaining_args(remaining_args)
     tvhmeta = TvhMeta(opts.host, opts.port, opts.user, opts.password, grabber_args)
     if (opts.list_grabbers):
-      print(json.dumps(tvhmeta.get_meta_grabbers()))
+      print(json.dumps(tvhmeta.get_meta_grabbers(), sort_keys=True))
+      return 0
+
+    if (opts.list_grabber_capabilities):
+      print(json.dumps(tvhmeta.get_meta_grabbers_capabilities(), sort_keys=True))
       return 0
 
     if (opts.uuid is None):
