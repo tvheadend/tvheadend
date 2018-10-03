@@ -26,7 +26,7 @@ def get_capabilities():
         "name": "tv_meta_tmdb",
         "version": "0.1",
         "description": "Grab movie details from TMDB.",
-        "supports_tv": False,
+        "supports_tv": True,
         "supports_movie": True,
         "required_config" : {
             "tmdb-key" : "string"
@@ -57,30 +57,39 @@ class Tv_meta_tmdb(object):
         return None
     return self.image_base_url + size + "/" + img
 
-
-  def _search_movie(self, title, year, lang = "en"):
+  def _search_common(self, title, year, lang, query_path, year_query_field):
       params = {
           'api_key' : self.tmdb_key,
           'language' : lang,
           'query' : title,
       };
+      # movie and tv call year field different things...
       if year:
-          params['primary_release_year'] = year
+          params[year_query_field] = year
 
-      logging.debug(params)
+      url = self.base_url + query_path
+      logging.debug("Search using %s with %s" % ( url, params))
       r = requests.get(
-          self.base_url + "search/movie",
+          url,
           params = params,
           headers = {'Content-Type': 'application/json',
                      # Does not support this: 'Accept-Language': self.languages
           })
       # List of matches
+      r.raise_for_status();
+      logging.debug(r.json())
       return r.json()['results']
 
-  def _search_movie_all_languages(self, title, year):
+  def _search_movie(self, title, year, lang = "en"):
+      return self._search_common(title, year, lang, "search/movie", "primary_release_year")
+
+  def _search_tv(self, title, year, lang = "en"):
+      return self._search_common(title, year, lang, "search/tv", "first_air_date_year")
+
+  def _search_all_languages_common(self, title, year, cb):
       for lang in self.languages.split(","):
           try:
-              res = self._search_movie(title, year, lang)
+              res = cb(title, year, lang)
               if res:
                   return res
           except:
@@ -88,19 +97,41 @@ class Tv_meta_tmdb(object):
               pass
       return None
 
+  def _search_movie_all_languages(self, title, year):
+      return self._search_all_languages_common(title, year, self._search_movie)
+
+  def _search_tv_all_languages(self, title, year):
+      return self._search_all_languages_common(title, year, self._search_tv)
+
+  def _search_all_languages(self, title, year, cb1, cb2):
+      res = cb1(title, year)
+      if res is None and cb2 is not None:
+          logging.debug("Trying again with other type")
+          res = cb2(title, year)
+      return res
+
+
   def fetch_details(self, args):
     logging.debug("Fetching with details %s " % args);
     title = args["title"]
     year = args["year"]
+    type = "movie" if 'type' not in args else args["type"]
 
     if title is None:
         logging.critical("Need a title");
         raise RuntimeError("Need a title");
 
-    res = self._search_movie_all_languages(title, year=year)
+    # Sometimes movies are actually tv shows, so if we have something
+    # that says it is a movie and the lookup fails, then search as a
+    # tv show instead.  We don't do the opposite for tv shows since
+    # they never get identified as a movie due to season and episode.
+    if type is None or type == 'movie':
+        res = self._search_all_languages(title, year, self._search_movie_all_languages, self._search_tv_all_languages)
+    else:
+        res = self._search_all_languages(title, year, self._search_tv_all_languages,  None)
     logging.debug(res)
     if res is None or len(res) == 0:
-        logging.error("Could not find any matching movie");
+        logging.info("Could not find any match for %s" % title);
         raise LookupError("Could not find match for " + title);
 
     # Assume first match is the best
@@ -130,6 +161,8 @@ if __name__ == '__main__':
                     help='Title to search for.')
     optp.add_option('--year', default=None, type="int",
                     help='Year to search for.')
+    optp.add_option('--type', default="movie",
+                    help='Type to search for, either tv or movie.')
     optp.add_option('--tmdb-languages', default=None,
                     help='Specify tmdb language codes separated by commas, such as "en,sv".')
     optp.add_option('--capabilities', default=None, action="store_true",
@@ -155,11 +188,13 @@ if __name__ == '__main__':
     print(json.dumps(grabber.fetch_details({
         "title": opts.title,
         "year" : opts.year,
+        "type" : opts.type,
         })))
 
   try:
       logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(module)s:%(message)s')
       sys.exit(process(sys.argv))
   except KeyboardInterrupt: pass
-  except (RuntimeError,LookupError):
+  except (RuntimeError,LookupError) as err:
+      logging.info("Got exception: " + str(err))
       sys.exit(1)
