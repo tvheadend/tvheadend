@@ -1006,6 +1006,22 @@ const idclass_t dvr_config_class = {
       .group    = 8,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "fetch-artwork-known-broadcasts-allow-unknown",
+      .name     = N_("Fetch artwork for unidentifiable broadcasts."),
+      .desc     = N_("Artwork fetching requires broadcasts to have good quality "
+                     "information that uniquely identifies them, such as "
+                     "year, season and episode. "
+                     "Without this information, lookups will frequently fail "
+                     "or return incorrect artwork. "
+                     "The default is to only lookup fanart for broadcasts that "
+                     "have high quality identifiable information. "
+                    ),
+      .off      = offsetof(dvr_config_t, dvr_fetch_artwork_allow_unknown),
+      .opts     = PO_ADVANCED,
+      .group    = 8,
+    },
+    {
       .type     = PT_STR,
       .id       = "fetch-artwork-options",
       .name     = N_("Additional command line options when fetching artwork for new recordings."),
