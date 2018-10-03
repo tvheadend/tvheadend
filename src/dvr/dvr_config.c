@@ -809,6 +809,7 @@ PROP_DOC(runningstate)
 PROP_DOC(dvrconfig_whitespace)
 PROP_DOC(dvrconfig_unsafe)
 PROP_DOC(dvrconfig_windows)
+PROP_DOC(dvrconfig_fanart)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
@@ -999,8 +1000,8 @@ const idclass_t dvr_config_class = {
       .id       = "fetch-artwork",
       .name     = N_("Fetch artwork for new recordings."),
       .desc     = N_("Fetch additional artwork from installed providers. "
-                     "Tvheadend has a 'tmdb' provider for movies, which requires "
-                     "you to specify your authorized 'tmdb key' in the options below."),
+                     "Tvheadend has a 'tmdb' and `tvdb' provider which require "
+                     "you to specify your authorized key in the options below."),
       .off      = offsetof(dvr_config_t, dvr_fetch_artwork),
       .opts     = PO_ADVANCED,
       .group    = 8,
@@ -1015,7 +1016,7 @@ const idclass_t dvr_config_class = {
                      "Without this information, lookups will frequently fail "
                      "or return incorrect artwork. "
                      "The default is to only lookup fanart for broadcasts that "
-                     "have high quality identifiable information. "
+                     "have high quality identifiable information."
                     ),
       .off      = offsetof(dvr_config_t, dvr_fetch_artwork_allow_unknown),
       .opts     = PO_ADVANCED,
@@ -1026,8 +1027,10 @@ const idclass_t dvr_config_class = {
       .id       = "fetch-artwork-options",
       .name     = N_("Additional command line options when fetching artwork for new recordings."),
       .desc     = N_("Some artwork providers require additional arguments such as "
-                     "'--tmdb-key my_key_from_website'. These can be specified here."),
+                     "'--tmdb-key my_key_from_website'. These can be specified here. "
+                     "See Help for full details."),
       .off      = offsetof(dvr_config_t, dvr_fetch_artwork_options),
+      .doc      = prop_doc_dvrconfig_fanart,
       .opts     = PO_ADVANCED,
       .group    = 8,
     },
