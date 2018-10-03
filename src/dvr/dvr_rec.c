@@ -66,7 +66,7 @@ dvr_spawn_fetch_artwork(dvr_entry_t *de)
   char ubuf[UUID_HEX_SIZE];
 
   if (!dvr_entry_allow_fanart_lookup(de))
-      return;
+    return;
 
   snprintf(buf, sizeof buf, "tvhmeta --uuid %s %s",
            idnode_uuid_as_str(&de->de_id, ubuf),

@@ -815,21 +815,33 @@ dvr_entry_fanart_add_to_prefetch(const dvr_entry_t *de)
 static void
 dvr_entry_fanart_prefetch_cb(void *aux)
 {
+  char *id;
+  dvr_entry_t *de;
+
   lock_assert(&global_lock);
 
   /* Only do one entry, even if list has many since we don't
    * want to overload fanart providers.
+   *
+   * However we may have items on the list that don't need
+   * fanart lookup, so skip over any of this.
    */
-  char *id = string_list_remove_first(dvr_fanart_to_prefetch);
-  if (id) {
-    dvr_entry_t *de = dvr_entry_find_by_uuid(id);
-    if (de && de->de_config && de->de_config->dvr_fetch_artwork) {
+  int done_one = 0;
+  while (!done_one) {
+    id = string_list_remove_first(dvr_fanart_to_prefetch);
+    /* No entries left on list? */
+    if (!id)
+      break;
+
+    de = dvr_entry_find_by_uuid(id);
+    if (dvr_entry_allow_fanart_lookup(de)) {
       tvhinfo(LS_DVR, "Prefetching artwork for %s \"%s\"", id, lang_str_get(de->de_title, NULL));
       dvr_spawn_fetch_artwork(de);
+      done_one = 1;
     }
 
     free(id);
-  }
+  } /* !done_one */
 
   // Re-arm timer with a slight random factor to avoid queries at same
   // time every hour.
