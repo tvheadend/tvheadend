@@ -28,6 +28,9 @@ def get_capabilities():
         "description": "Grab movie details from TMDB.",
         "supports_tv": False,
         "supports_movie": True,
+        "required_config" : {
+            "tmdb-key" : "string"
+        },
     }
 
 
