@@ -103,7 +103,7 @@ udp_rtp_packet_append( satip_frontend_t *lfe, uint8_t *p, int len, uint16_t seq 
 static int
 satip_frontend_rtsp_flags( satip_frontend_t *lfe )
 {
-  int rtsp_flags = lfe->sf_device->sd_tcp_mode ? RTP_INTERLEAVED : 0;
+  int rtsp_flags = lfe->sf_device->sd_tcp_mode ? SATIP_SETUP_TCP : 0;
   if (lfe->sf_transport_mode != RTP_SERVER_DEFAULT)
     rtsp_flags = lfe->sf_transport_mode == RTP_INTERLEAVED ? SATIP_SETUP_TCP : 0;
   return rtsp_flags;
