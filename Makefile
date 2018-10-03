@@ -846,8 +846,11 @@ ${BUILDDIR}/libffmpeg_stamp: ${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a
 ${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
 ifeq ($(CONFIG_PCLOUD_CACHE),yes)
 	$(MAKE) -f Makefile.ffmpeg libcacheget
-endif
 	$(MAKE) -f Makefile.ffmpeg build
+	$(MAKE) -f Makefile.ffmpeg libcacheput
+else
+	$(MAKE) -f Makefile.ffmpeg build
+endif
 
 # Static HDHOMERUN library
 
@@ -861,8 +864,11 @@ ${BUILDDIR}/libhdhomerun_stamp: ${BUILDDIR}/hdhomerun/libhdhomerun/libhdhomerun.
 ${BUILDDIR}/hdhomerun/libhdhomerun/libhdhomerun.a: Makefile.hdhomerun
 ifeq ($(CONFIG_PCLOUD_CACHE),yes)
 	$(MAKE) -f Makefile.hdhomerun libcacheget
-endif
 	$(MAKE) -f Makefile.hdhomerun build
+	$(MAKE) -f Makefile.hdhomerun libcacheput
+else
+	$(MAKE) -f Makefile.hdhomerun build
+endif
 
 .PHONY: ffmpeg_rebuild
 ffmpeg_rebuild:
