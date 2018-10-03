@@ -761,6 +761,39 @@ dvr_usage_count(access_t *aa)
   return used;
 }
 
+int
+dvr_entry_allow_fanart_lookup(const dvr_entry_t *de)
+{
+  char ubuf[UUID_HEX_SIZE];
+
+  /* User doesn't want us to fetch artwork? */
+  if (!de || !de->de_config || !de->de_config->dvr_fetch_artwork)
+    return 0;
+
+  /* Entry already have artwork? So nothing to do */
+  if (de->de_image && *de->de_image &&
+      de->de_fanart_image && *de->de_fanart_image)
+    return 0;
+
+  /* Allow any artwork even if we can't identify episode? */
+  if (de->de_config->dvr_fetch_artwork_allow_unknown)
+    return 1;
+
+  /* Only want 'good' episodes since ones with bad data will get
+   * bad artwork.  Good episodes have a season/episode (assume
+   * episode) or year (assume movie).
+   */
+  if (!de->de_epnum.s_num && !de->de_epnum.e_num &&
+      !de->de_copyright_year) {
+    tvhdebug(LS_DVR, "Ignoring fanart for entry without good data for %s \"%s\"",
+             lang_str_get(de->de_title, NULL),
+             idnode_uuid_as_str(&de->de_id, ubuf));
+    return 0;
+  }
+
+  return 1;
+}
+
 /// Add the entry details to a list of fanart to prefetch.
 /// We then periodically check the list to update artwork.
 /// We don't do the check too frequently since most providers
@@ -771,13 +804,8 @@ static void
 dvr_entry_fanart_add_to_prefetch(const dvr_entry_t *de)
 {
   char ubuf[UUID_HEX_SIZE];
-  if (!de || !de->de_enabled)
-    return;
-  /*  Nothing to do if we have images already */
-  if (de->de_image && de->de_fanart_image)
-    return;
-  /* User doesn't want us to fetch artwork */
-  if (de->de_config && !de->de_config->dvr_fetch_artwork)
+
+  if (!dvr_entry_allow_fanart_lookup(de))
     return;
 
   string_list_insert(dvr_fanart_to_prefetch,
