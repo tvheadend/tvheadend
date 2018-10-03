@@ -192,7 +192,7 @@ class TvhMeta(object):
     clients = {}
     client_modules = {}
     client_objects = {}
-    if episode_disp is not None and episode_disp <> "":
+    if episode_disp is not None and episode_disp != "":
         # TV episode, so load the tv modules
         # Have to do len before split since split of an empty string
         # returns one element...
@@ -262,9 +262,14 @@ class TvhMeta(object):
             else:
               obj = client_objects[module]
             logging.debug("Got object %s" % obj)
+            if episode_disp is not None and len(episode_disp) > 0:
+              type = "tv"
+            else:
+              type = "movie"
             art = obj.fetch_details({
               "title": title,
               "year": year,
+              "type": type,
               "episode_disp": episode_disp, # @todo Need to break this out in to season/episode, maybe subtitle too.
               "programid": uri})
 

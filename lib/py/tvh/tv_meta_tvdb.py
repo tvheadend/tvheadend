@@ -153,7 +153,7 @@ class Tv_meta_tvdb(object):
         try:
             tvdbid = self.tvdb.get_tvdbid(title)
         except:
-            logging.error("Could not find any matching episode");
+            logging.info("Could not find any matching episode for " + title);
             raise LookupError("Could not find match for " + title);
 
     poster = fanart = None
