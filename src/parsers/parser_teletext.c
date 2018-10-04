@@ -790,17 +790,16 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
       sub[off++] = '\n';
   }
 
+  /* Avoid multiple blank subtitles */
   if(off == 0 && st->es_blank)
-    return 0; // Avoid multiple blank subtitles
+    return 0;
 
   st->es_blank = !off;
 
   sub[off++] = 0;
 
   /* Check for a duplicate */
-  if ((ttm->ttm_last_sub_pts == pts ||
-       ttm->ttm_last_sub_pts == pts - 1) &&
-      strcmp((char *)ttm->ttm_last_sub_text, (char *)sub) == 0)
+  if (strcmp((char *)ttm->ttm_last_sub_text, (char *)sub) == 0)
     return 0;
 
   ttm->ttm_last_sub_pts = pts;
