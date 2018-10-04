@@ -38,7 +38,7 @@ class Tv_meta_tmdb(object):
 
   def __init__(self, args):
       if args is None or "key" not in args or args["key"] is None or args["key"] == "":
-          logging.critical("Need a tmdb-key")
+          logging.critical("Need a tmdb-key. No lookup available with this module.")
           raise RuntimeError("Need a tmdb key");
       self.tmdb_key = args["key"]
       self.base_url = "https://api.themoviedb.org/3/" if 'base-url' not in args else args['base-url']
