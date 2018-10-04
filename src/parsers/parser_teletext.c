@@ -39,6 +39,8 @@
 #include "input.h"
 #include "parser_teletext.h"
 
+#define MAX_SUB_TEXT_SIZE 2000
+
 /**
  *
  */
@@ -48,6 +50,8 @@ typedef struct tt_mag {
   uint8_t ttm_charset[2];
   uint8_t ttm_national;
   uint8_t ttm_page[23*40 + 1];
+  int64_t ttm_last_sub_pts;
+  uint8_t ttm_last_sub_text[MAX_SUB_TEXT_SIZE];
 } tt_mag_t;
 
 
@@ -700,7 +704,7 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
 {
   int i, j, start, off = 0;
   int k, current_color, is_font_tag_open, use_color_subs = 1;
-  uint8_t sub[2000];
+  uint8_t sub[MAX_SUB_TEXT_SIZE];
   uint8_t *cset, ch;
   int is_box = 0;
 
@@ -722,7 +726,7 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
           if (ch != current_color) {
             if (is_font_tag_open) {
               for (k = 0; k < 7; k++) {
-                if (off < sizeof(sub))
+                if (off < sizeof(sub) - 1)
                   sub[off++] = CLOSE_FONT[k];
               }
               is_font_tag_open = 0;
@@ -730,7 +734,7 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
             /* no need for font-tag for default-color */
             if (ch != 7) {
               for (k = 0; k < 22; k++) {
-                if (off < sizeof(sub))
+                if (off < sizeof(sub) - 1)
                   sub[off++] = COLOR_MAP[ch][k];
               }
               is_font_tag_open = 1;
@@ -757,16 +761,16 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
           if (ucs2 == 0) {
             /* nothing */
           } else if (ucs2 < 0x80) {
-            if (off < sizeof(sub))
+            if (off < sizeof(sub) - 1)
               sub[off++] = ucs2;
           } else if (ucs2 < 0x800) {
-            if (off + 1 < sizeof(sub)) {
+            if (off + 1 < sizeof(sub) - 1) {
               sub[off++] = (ucs2 >> 6)   | 0xc0;
               sub[off++] = (ucs2 & 0x3f) | 0x80;
             }
           } else {
             assert(ucs2 < 0xd800 || ucs2 >= 0xe000);
-            if (off + 2 < sizeof(sub)) {
+            if (off + 2 < sizeof(sub) - 1) {
               sub[off++] =  (ucs2 >> 12)        | 0xe0;
               sub[off++] = ((ucs2 >> 6) & 0x3f) | 0x80;
               sub[off++] =  (ucs2       & 0x3f) | 0x80;
@@ -777,12 +781,12 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
     }
     if (use_color_subs && is_font_tag_open) {
       for (k = 0; k < 7; k++) {
-        if (off < sizeof(sub))
+        if (off < sizeof(sub) - 1)
           sub[off++] = CLOSE_FONT[k];
       }
       is_font_tag_open = 0;
     }
-    if(start != off && off < sizeof(sub))
+    if(start != off && off < sizeof(sub) - 1)
       sub[off++] = '\n';
   }
 
@@ -792,6 +796,15 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
   st->es_blank = !off;
 
   sub[off++] = 0;
+
+  /* Check for a duplicate */
+  if ((ttm->ttm_last_sub_pts == pts ||
+       ttm->ttm_last_sub_pts == pts - 1) &&
+      strcmp((char *)ttm->ttm_last_sub_text, (char *)sub) == 0)
+    return 0;
+
+  ttm->ttm_last_sub_pts = pts;
+  strcpy((char *)ttm->ttm_last_sub_text, (char *)sub);
 
   th_pkt_t *pkt = pkt_alloc(st->es_type, sub, off, pts, pts);
   pkt->pkt_componentindex = st->es_index;
