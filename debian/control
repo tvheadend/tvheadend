@@ -8,7 +8,7 @@ Standards-Version: 3.7.3
 Package: tvheadend
 Architecture: any
 Depends: ${shlibs:Depends}, libavahi-client3, zlib1g, liburiparser1, bzip2
-Recommends: xmltv-util
+Recommends: xmltv-util, python, python-requests
 Enhances: showtime
 Replaces: hts-tvheadend
 Homepage: https://tvheadend.org
