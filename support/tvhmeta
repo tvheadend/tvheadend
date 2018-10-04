@@ -35,6 +35,7 @@
 import urllib
 import logging
 import glob
+import traceback
 # Python3 decided to rename things and break compatibility...
 try:
   import urllib.parse
@@ -257,7 +258,7 @@ class TvhMeta(object):
                 obj = obj_fn(module_init_args)
                 client_objects[module] = obj
               except Exception as e:
-                logging.exception("Failed to import and create module %s: %s" % (module, e))
+                logging.info("Failed to import and create module %s: %s" % (module, e))
                 raise
             else:
               obj = client_objects[module]
@@ -282,15 +283,18 @@ class TvhMeta(object):
             else:
                 logging.info("Got poster %s and fanart %s so will try and get more artwork from other providers (if any)" % (poster, fanart))
           except Exception as e:
-            logging.info("Lookup failed for title %s year %s in language %s with error %s", title, year, lang, e)
+            # Only include a traceback in debug mode, otherwise it
+            # clutters the text if user runs it without api keys.
+            extraText = " with error " + traceback.format_exc() if logging.root.isEnabledFor(logging.DEBUG) else ""
+            logging.info("Lookup failed with module %s for uuid %s title %s year %s in language %s%s", module, uuid, title, year, lang, extraText)
             # And continue to next language
 
-    if art is None:
-        logging.error("Lookup completely failed for title %s year %s", title, year)
-        raise KeyError("Lookup completely failed for title %s year %s", title, year)
+    if poster is None and fanart is None:
+        logging.error("Lookup completely failed for uuid %s title %s year %s", uuid, title, year)
+        raise KeyError("Lookup completely failed for uuid {} title {} year {}".format(uuid, title, year))
 
     # Got map of fanart, poster
-    logging.info("Lookup success for title %s year %s with results %s", title, year, art)
+    logging.info("Lookup success for uuid %s title %s year %s with results poster: %s fanart: %s", uuid, title, year, poster, fanart)
     if poster is None and fanart is None:
         logging.info("No artwork found")
     else:

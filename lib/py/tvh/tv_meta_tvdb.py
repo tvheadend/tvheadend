@@ -54,7 +54,7 @@ Exceptions are thrown to indicate data could not be retrieved.
       logging.info(args)
       for arg in (["key"]):
           if args is None or arg not in args or args[arg] is None or args[arg] == "":
-              logging.critical("Need a tvdb-"  + arg)
+              logging.critical("Need a tvdb-"  + arg + ". No lookup available with this module.")
               raise RuntimeError("Need a tvdb-" + arg);
 
       self.languages = "en"
