@@ -450,8 +450,8 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "icon",
       .name     = N_("User icon"),
-      .desc     = N_("The URL (or path) to the icon to use/used "
-                     "for the channel."),
+      .desc     = N_("The URL to the icon to use/used for the channel. "
+                     "The local files are referred using file:/// URLs."),
       .off      = offsetof(channel_t, ch_icon),
       .notify   = channel_class_icon_notify,
       .opts     = PO_ADVANCED,
