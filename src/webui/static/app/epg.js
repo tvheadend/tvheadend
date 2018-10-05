@@ -250,7 +250,7 @@ tvheadend.epgDetails = function(grid, index) {
           tpl : '<tpl for=".">' +
                 '<div class="x-combo-list-item" ><img src="../static/icons/{url}">&nbsp;&nbsp;{text}</div>' +
                 '</tpl>',
-          emptyText:'Find info from ...',
+          emptyText:'Find info from …',
           valueField: 'value',
           displayField: 'text',
           width: 160,
@@ -849,7 +849,7 @@ tvheadend.epg = function() {
     // Title search box
 
     var epgFilterTitle = new Ext.form.TextField({
-        emptyText: _('Search title...'),
+        emptyText: _('Search title…'),
         width: 200
     });
 
@@ -864,7 +864,7 @@ tvheadend.epg = function() {
     // Channels, uses global store
 
     var epgFilterChannels = new Ext.ux.form.ComboAny({
-        loadingText: _('Loading...'),
+        loadingText: _('Loading…'),
         width: 200,
         displayField: 'val',
         store: tvheadend.getChannels(),
@@ -873,7 +873,7 @@ tvheadend.epg = function() {
         forceSelection: true,
         triggerAction: 'all',
         typeAhead: true,
-        emptyText: _('Filter channel...'),
+        emptyText: _('Filter channel…'),
         listeners: {
             blur: function () {
                 if(this.getRawValue() == "" ) {
@@ -899,7 +899,7 @@ tvheadend.epg = function() {
     // Tags, uses global store
 
     var epgFilterChannelTags = new Ext.ux.form.ComboAny({
-        loadingText: _('Loading...'),
+        loadingText: _('Loading…'),
         width: 200,
         displayField: 'val',
         store: tvheadend.getChannelTags(),
@@ -908,7 +908,7 @@ tvheadend.epg = function() {
         forceSelection: true,
         triggerAction: 'all',
         typeAhead: true,
-        emptyText: _('Filter tag...'),
+        emptyText: _('Filter tag…'),
         listeners: {
             blur: function () {
                 if(this.getRawValue() == "" ) {
@@ -939,7 +939,7 @@ tvheadend.epg = function() {
     /// field is deleted and re-created inside clear filter.
     function createFilterCat(clearFilter, cat) {
       var filter = new Ext.ux.form.ComboAny({
-        loadingText: _('Loading...'),
+        loadingText: _('Loading…'),
         width: 200,
         displayField: 'val',
         store: category,
@@ -948,7 +948,7 @@ tvheadend.epg = function() {
         forceSelection: true,
         triggerAction: 'all',
         typeAhead: true,
-        emptyText: _('Filter category...'),
+        emptyText: _('Filter category…'),
         listeners: {
             blur: function () {
                 if(this.getRawValue() == "" ) {
@@ -990,7 +990,7 @@ tvheadend.epg = function() {
     // Content groups
 
     var epgFilterContentGroup = new Ext.ux.form.ComboAny({
-        loadingText: _('Loading...'),
+        loadingText: _('Loading…'),
         width: 200,
         displayField: 'val',
         store: tvheadend.ContentGroupStore,
@@ -999,7 +999,7 @@ tvheadend.epg = function() {
         forceSelection: true,
         triggerAction: 'all',
         typeAhead: true,
-        emptyText: _('Filter content type...'),
+        emptyText: _('Filter content type…'),
         listeners: {
             blur: function () {
                 if(this.getRawValue() == "" ) {
@@ -1011,7 +1011,7 @@ tvheadend.epg = function() {
     });
 
     var epgFilterDuration = new Ext.ux.form.ComboAny({
-        loadingText: _('Loading...'),
+        loadingText: _('Loading…'),
         width: 150,
         displayField: 'label',
         store: tvheadend.DurationStore,
@@ -1020,7 +1020,7 @@ tvheadend.epg = function() {
         forceSelection: true,
         triggerAction: 'all',
         typeAhead: true,
-        emptyText: _('Filter duration...'),
+        emptyText: _('Filter duration…'),
         listeners: {
             blur: function () {
                 if(this.getRawValue() == "" ) {
@@ -1186,7 +1186,7 @@ tvheadend.epg = function() {
     var epgView = new Ext.ux.grid.livegrid.GridView({
         nearLimit: 100,
         loadMask: {
-            msg: _('Buffering. Please wait...')
+            msg: _('Buffering. Please wait…')
         },
         listeners: {
             beforebuffer: {
