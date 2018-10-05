@@ -162,6 +162,55 @@ class TvhMeta(object):
     replace = self.request("api/idnode/save", new_data)
     return replace
 
+  def _lang3_to_lang2(self, lang3):
+    """Convert from ISO 639-2 (3 letter code) + region to ISO 639-1 (2 letter code)"""
+    # This is taken from tvh_locale.c, but "_" is replaced with "-" on the mapped side.
+    iso_map = {
+    "ach":    "ach",
+    "ady":    "ady",
+    "ara":    "ar",
+    "bul":    "bg",
+    "cze":    "cs",
+    "dan":    "da",
+    "ger":    "de",
+    "eng":    "en-US",
+    "eng_GB": "en-GB",
+    "eng_US": "en-US",
+    "spa":    "es",
+    "est":    "et",
+    "per":    "fa",
+    "fin":    "fi",
+    "fre":    "fr",
+    "heb":    "he",
+    "hrv":    "hr",
+    "hun":    "hu",
+    "ita":    "it",
+    "kor":    "ko",
+    "lav":    "lv",
+    "lit":    "lt",
+    "dut":    "nl",
+    "nor":    "no",
+    "pol":    "pl",
+    "por":    "pt",
+    "rum":    "ro",
+    "rus":    "ru",
+    "slv":    "sl",
+    "slo":    "sk",
+    "srp":    "sr",
+    "alb":    "sq",
+    "swe":    "sv",
+    "tur":    "tr",
+    "ukr":    "uk",
+    "chi":    "zh",
+    "chi_CN": "zh-Hans",
+    }
+    try:
+      return iso_map[lang]
+    except:
+      # No mapping. Return "English" as default.
+      return "en"
+
+
   def fetch_and_persist_artwork(self, uuid, force_refresh, modules_movie, modules_tv):
     """Fetch artwork for the given uuid."""
     data = urlencode(
@@ -269,6 +318,7 @@ class TvhMeta(object):
               type = "movie"
             art = obj.fetch_details({
               "title": title,
+              "language": self._lang3_to_lang2(lang),
               "year": year,
               "type": type,
               "episode_disp": episode_disp, # @todo Need to break this out in to season/episode, maybe subtitle too.

@@ -25,7 +25,7 @@ def get_capabilities():
     return {
         "name": "tv_meta_tmdb",
         "version": "0.1",
-        "description": "Grab movie details from TMDB.",
+        "description": "Grab movie/tv details from TMDB.",
         "supports_tv": True,
         "supports_movie": True,
         "required_config" : {
@@ -47,7 +47,7 @@ class Tv_meta_tmdb(object):
       self.poster_size = "w342" if 'poster-size' not in args else args["poster-size"]
       # Fanart sizes: w300, w780, w1280, original
       self.fanart_size = "original" if 'poster-size' not in args else args["fanart-size"]
-      self.languages = "en"
+      self.languages = None
       if 'languages' in args and args["languages"] is not None:
           self.languages = args["languages"]
 
@@ -86,8 +86,8 @@ class Tv_meta_tmdb(object):
   def _search_tv(self, title, year, lang = "en"):
       return self._search_common(title, year, lang, "search/tv", "first_air_date_year")
 
-  def _search_all_languages_common(self, title, year, cb):
-      for lang in self.languages.split(","):
+  def _search_all_languages_common(self, title, year, language, cb):
+      for lang in language.split(","):
           try:
               res = cb(title, year, lang)
               if res:
@@ -97,17 +97,17 @@ class Tv_meta_tmdb(object):
               pass
       return None
 
-  def _search_movie_all_languages(self, title, year):
-      return self._search_all_languages_common(title, year, self._search_movie)
+  def _search_movie_all_languages(self, title, year, language):
+      return self._search_all_languages_common(title, year, language, self._search_movie)
 
-  def _search_tv_all_languages(self, title, year):
-      return self._search_all_languages_common(title, year, self._search_tv)
+  def _search_tv_all_languages(self, title, year, language):
+      return self._search_all_languages_common(title, year, language, self._search_tv)
 
-  def _search_all_languages(self, title, year, cb1, cb2):
-      res = cb1(title, year)
+  def _search_all_languages(self, title, year, language, cb1, cb2):
+      res = cb1(title, year, language)
       if res is None and cb2 is not None:
           logging.debug("Trying again with other type")
-          res = cb2(title, year)
+          res = cb2(title, year, language)
       return res
 
 
@@ -115,6 +115,12 @@ class Tv_meta_tmdb(object):
     logging.debug("Fetching with details %s " % args);
     title = args["title"]
     year = args["year"]
+    if self.languages:          # User override
+        language = self.languages
+    elif "language" in args:
+        language = args["language"]
+    else:
+        language = "en"
     type = "movie" if 'type' not in args else args["type"]
 
     if title is None:
@@ -126,9 +132,9 @@ class Tv_meta_tmdb(object):
     # tv show instead.  We don't do the opposite for tv shows since
     # they never get identified as a movie due to season and episode.
     if type is None or type == 'movie':
-        res = self._search_all_languages(title, year, self._search_movie_all_languages, self._search_tv_all_languages)
+        res = self._search_all_languages(title, year, language, self._search_movie_all_languages, self._search_tv_all_languages)
     else:
-        res = self._search_all_languages(title, year, self._search_tv_all_languages,  None)
+        res = self._search_all_languages(title, year, language, self._search_tv_all_languages,  None)
     logging.debug(res)
     if res is None or len(res) == 0:
         logging.info("Could not find any match for %s" % title);
