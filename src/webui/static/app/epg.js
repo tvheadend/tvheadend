@@ -77,7 +77,7 @@ tvheadend.DurationStore = new Ext.data.SimpleStore({
 
 // Function to convert numeric duration to corresponding label string
 // Note: triggered by minimum duration only. This would fail if ranges
-// had the same minimum (e.g. 15-30 mins and 15-60 minutes) (which we don't have). 
+// had the same minimum (e.g. 15-30 mins and 15-60 minutes) (which we don't have).
 
 tvheadend.durationLookupRange = function(value) {
     durationString = "";
@@ -1239,6 +1239,7 @@ tvheadend.epg = function() {
         {
             text: _('Help'),
             iconCls: 'help',
+            tooltip: _('View help docs.')
             handler: function() {
                 new tvheadend.mdhelp('epg');
             }
@@ -1338,7 +1339,7 @@ tvheadend.epg = function() {
             }
         }
     });
-    
+
     // Always reload the store when the tab is activated
     panel.on('beforeshow', function() {
         epgStore.reload();
@@ -1414,7 +1415,7 @@ tvheadend.epg = function() {
     }
 
     function createAutoRec() {
-    
+
         if (!tvheadend.accessUpdate.dvr)
             return;
 
