@@ -1190,7 +1190,7 @@ int channel_set_icon ( channel_t *ch, const char *icon )
 {
   int save = 0;
   if (!ch || !icon) return 0;
-  if (!ch->ch_icon || strcmp(ch->ch_icon, icon) ) {
+  if (!ch->ch_icon || strcmp(ch->ch_icon, icon)) {
     if (ch->ch_icon) free(ch->ch_icon);
     ch->ch_icon = strdup(icon);
     save = 1;
