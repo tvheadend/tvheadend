@@ -24,7 +24,7 @@ import requests
 def get_capabilities():
     return {
         "name": "tv_meta_tmdb",
-        "version": "0.1",
+        # "version": "0.1",
         "description": "Grab movie/tv details from TMDB.",
         "supports_tv": True,
         "supports_movie": True,
