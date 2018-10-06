@@ -89,17 +89,22 @@ tvheadend.durationLookupRange = function(value) {
 };
 
 tvheadend.seachTitleWeb = function(index, title){
+    var url = '';
     switch(index){
         case 1:
-            window.open('http://akas.imdb.com/find?q=' + encodeURIComponent(title), '_blank');
+            url = 'http://akas.imdb.com/find?q=' + encodeURIComponent(title);
             break;
         case 2:
-            window.open('https://www.thetvdb.com/search?q='+ encodeURIComponent(title)+'&l=en','_blank');
+            url = 'https://www.thetvdb.com/search?q='+ encodeURIComponent(title)+'&l=en';
             break;
         case 3:
-            window.open(tvheadend.filmAffinityLanguage() + encodeURIComponent(title), '_blank');
+            url = tvheadend.filmAffinityLanguage() + encodeURIComponent(title);
+            break;
+        case 4:
+            url = 'https://www.csfd.cz/hledat/?q=' + encodeURIComponent(title);
             break;
     }
+    if (url) window.open(url, '_blank');
 };
 
 tvheadend.filmAffinityLanguage = function() {
@@ -238,9 +243,10 @@ tvheadend.epgDetails = function(grid, index) {
       var comboGetInfo = new Ext.form.ComboBox({
           store: new Ext.data.ArrayStore({
               data: [
-                [1, 'Find info from IMDB', 'imdb.png'],
-                [2, 'Find info from TheTVDB', 'thetvdb.png'],
-                [3, 'Find info from FilmAffinity', 'filmaffinity.png'],
+                [1, 'Query IMDB', 'imdb.png'],
+                [2, 'Query TheTVDB', 'thetvdb.png'],
+                [3, 'Query FilmAffinity', 'filmaffinity.png'],
+                [4, 'Query CSFD', 'csfd.png'],
               ],
               id: 0,
               fields: ['value', 'text', 'url']
@@ -271,7 +277,7 @@ tvheadend.epgDetails = function(grid, index) {
           handler: playProgram,
           iconCls: 'control_play',
           tooltip: _('Play this program'),
-          text: _("Play program")
+          text: _("Play")
       }));
 
       if (tvheadend.accessUpdate.dvr) {
@@ -331,7 +337,7 @@ tvheadend.epgDetails = function(grid, index) {
                 handler: recordEvent,
                 iconCls: 'rec',
                 tooltip: _('Record this program now'),
-                text: _('Record program')
+                text: _('Record')
             }));
           }
           buttons.push(new Ext.Button({
