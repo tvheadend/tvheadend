@@ -33,7 +33,7 @@ import requests
 def get_capabilities():
     return {
         "name": "tv_meta_tvdb",
-        "version": "0.1",
+        # "version": "0.1",
         "description": "Grab tv details from TVDB.",
         "supports_tv": True,
         "supports_movie": False,
