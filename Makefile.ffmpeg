@@ -301,7 +301,7 @@ endif
 
 $(LIB_ROOT)/$(LIBVPX)/.tvh_download:
 	$(call DOWNLOAD,$(LIBVPX_URL),$(LIB_ROOT)/$(LIBVPX_TB),$(LIBVPX_SHA1))
-	$(call UNTAR,$(LIBVPX_TB),j)
+	$(call UNTAR,$(LIBVPX_TB),z)
 	@touch $@
 
 $(LIB_ROOT)/$(LIBVPX)/.tvh_build: \
