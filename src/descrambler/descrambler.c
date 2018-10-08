@@ -730,7 +730,9 @@ cont:
     memcpy(tk->key_data[0], even, tk->key_csa.csa_keylen);
     tk->key_pid = pid;
     changed |= 1;
-    if (tk->key_timestamp[0] == 0) insert |= 1;
+    if (tk->key_timestamp[0] == 0 ||
+        descrambler_data_key_check(dr, 0x80, dr->dr_queue_total))
+      insert |= 1;
     tk->key_timestamp[0] = mclk();
     if (dr->dr_ecm_start[0] < dr->dr_ecm_start[1]) {
       dr->dr_ecm_start[0] = dr->dr_ecm_start[1];
@@ -746,7 +748,9 @@ cont:
     memcpy(tk->key_data[1], odd, tk->key_csa.csa_keylen);
     tk->key_pid = pid;
     changed |= 2;
-    if (tk->key_timestamp[1] == 0) insert |= 2;
+    if (tk->key_timestamp[1] == 0 ||
+        descrambler_data_key_check(dr, 0xc0, dr->dr_queue_total))
+      insert |= 2;
     tk->key_timestamp[1] = mclk();
     if (dr->dr_ecm_start[1] < dr->dr_ecm_start[0]) {
       dr->dr_ecm_start[1] = dr->dr_ecm_start[0];
