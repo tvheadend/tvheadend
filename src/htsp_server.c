@@ -65,7 +65,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 33
+#define HTSP_PROTO_VERSION 34
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -2042,7 +2042,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   time_t start, stop, start_extra, stop_extra, priority;
   const char *dvr_config_name, *title, *subtitle, *summary, *desc, *lang;
   channel_t *channel = NULL;
-  int enabled, retention, removal, playcount = -1, playposition = -1;
+  int enabled, retention, removal, playcount = -1, playposition = -1, prevrec;
 
   de = htsp_findDvrEntry(htsp, in, &out, 0);
   if (de == NULL)
@@ -2100,6 +2100,9 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
                         summary, desc, lang, start, stop, start_extra, stop_extra,
                         priority, retention, removal, playcount, playposition);
 
+  if (!htsmsg_get_s32(in, "prevrec", &prevrec)) {
+    dvr_entry_set_prevrec(de, prevrec);
+  }
   return htsp_success();
 }
 
