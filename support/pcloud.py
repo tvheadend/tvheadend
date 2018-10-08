@@ -361,7 +361,7 @@ def do_publink_download(*args):
     meta = pdata['metadata']
     if not meta:
         error(10, 'No metadata, object probably does not exist!')
-    s = split_path(path[1:])[:-1]
+    s = split_path(path[1:])
     s.reverse()
     name = s.pop()
     if meta['name'] != name:
