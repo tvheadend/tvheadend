@@ -1,33 +1,26 @@
---- source/CMakeLists.txt.old	2016-05-03 14:34:37.168396127 +0200
-+++ source/CMakeLists.txt	2016-05-03 14:35:35.551372285 +0200
-@@ -100,7 +100,7 @@
-     endif(NO_ATOMICS)
- endif(UNIX)
- 
--if(X64 AND NOT WIN32)
-+if(X64NONONO AND NOT WIN32)
-     option(ENABLE_PIC "Enable Position Independent Code" ON)
- else()
-     option(ENABLE_PIC "Enable Position Independent Code" OFF)
-@@ -166,6 +166,8 @@
+diff -urN ../x265_2.0.pic/source/CMakeLists.txt ./source/CMakeLists.txt
+--- ../x265_2.0.pic/source/CMakeLists.txt	2016-07-30 08:57:07.632539944 +0200
++++ ./source/CMakeLists.txt	2016-08-08 12:12:39.539380667 +0200
+@@ -168,7 +168,7 @@
+     add_definitions(-D__STDC_LIMIT_MACROS=1)
      add_definitions(-std=gnu++98)
      if(ENABLE_PIC)
-          add_definitions(-fPIC)
-+    else()
+-         add_definitions(-fPIC)
 +         add_definitions(-fPIE)
      endif(ENABLE_PIC)
      if(NATIVE_BUILD)
          if(INTEL_CXX)
---- source/cmake/CMakeASM_YASMInformation.cmake.old	2016-05-03 15:52:36.572122457 +0200
-+++ source/cmake/CMakeASM_YASMInformation.cmake	2016-05-03 15:53:18.939438179 +0200
-@@ -3,9 +3,7 @@
- 
- if(X64)
-     list(APPEND ASM_FLAGS -DARCH_X86_64=1)
--    if(ENABLE_PIC)
--        list(APPEND ASM_FLAGS -DPIC)
--    endif()
-+    list(APPEND ASM_FLAGS -DPIC)
-     if(APPLE)
-         set(ARGS -f macho64 -m amd64 -DPREFIX)
-     elseif(UNIX AND NOT CYGWIN)
+@@ -183,11 +183,11 @@
+         endif()
+     endif()
+     if(ARM AND CROSS_COMPILE_ARM)
+-        set(ARM_ARGS -march=armv6 -mfloat-abi=soft -mfpu=vfp -marm -fPIC)
++        set(ARM_ARGS -march=armv6 -mfloat-abi=soft -mfpu=vfp -marm -fPIE)
+     elseif(ARM)
+         find_package(Neon)
+         if(CPU_HAS_NEON)
+-            set(ARM_ARGS -mcpu=native -mfloat-abi=hard -mfpu=neon -marm -fPIC)
++            set(ARM_ARGS -mcpu=native -mfloat-abi=hard -mfpu=neon -marm -fPIE)
+             add_definitions(-DHAVE_NEON)
+         else()
+             set(ARM_ARGS -mcpu=native -mfloat-abi=hard -mfpu=vfp -marm)
