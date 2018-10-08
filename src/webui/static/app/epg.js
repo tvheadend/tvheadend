@@ -1239,7 +1239,7 @@ tvheadend.epg = function() {
         {
             text: _('Help'),
             iconCls: 'help',
-            tooltip: _('View help docs.')
+            tooltip: _('View help docs.'),
             handler: function() {
                 new tvheadend.mdhelp('epg');
             }
