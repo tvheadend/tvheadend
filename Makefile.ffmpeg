@@ -159,6 +159,7 @@ ELIBS     := -L$(EPREFIX)/lib -ldl
 CONFIGURE := FFMPEG_PREFIX=$(EPREFIX) \
              PKG_CONFIG=$(ROOTDIR)/support/pkg-config.ffmpeg \
              ./configure --prefix=/ffmpeg --enable-static --disable-shared
+CONFIGURE_PI := CC="$(COMPILER) $(CFLAGS_PI)" $(CONFIGURE)
 
 # ##############################################################################
 # NASM
@@ -168,10 +169,12 @@ $(LIB_ROOT)/$(NASM)/.tvh_download:
 	$(call DOWNLOAD,$(NASM_URL),$(LIB_ROOT)/$(NASM_TB),$(NASM_SHA1))
 	$(call UNTAR,$(NASM_TB),z)
 	$(call PATCH,$(NASM),$(NASM_DIFFS))
+	@touch $@
 
 $(LIB_ROOT)/$(NASM)/.tvh_build: \
 		$(LIB_ROOT)/$(NASM)/.tvh_download
 	cd $(LIB_ROOT)/$(NASM) && $(CONFIGURE_PI) \
+		--libdir=/$(EPREFIX0)/lib
 	INSTALLROOT=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(NASM) install
 	@touch $@
@@ -185,6 +188,7 @@ ifeq (yes,$(CONFIG_LIBX264))
 
 EXTLIBS  += libx264
 ENCODERS += libx264
+FFMPEG_DIFFS += ffmpeg.libx264.diff
 
 endif
 
@@ -245,6 +249,7 @@ ifeq (yes,$(CONFIG_LIBX265))
 
 EXTLIBS  += libx265
 ENCODERS += libx265
+FFMPEG_DIFFS += ffmpeg.libx265.diff
 
 endif
 
@@ -266,6 +271,10 @@ $(LIB_ROOT)/$(LIBX265)/.tvh_build: \
 		../../source
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBX265)/build/linux install
+	mv $(EPREFIX)/lib/pkgconfig/x265.pc $(EPREFIX)/lib/pkgconfig/x265.pc.old
+	sed -e 's,-ldl,-ldl -lpthread,g' \
+		< $(EPREFIX)/lib/pkgconfig/x265.pc.old \
+		> $(EPREFIX)/lib/pkgconfig/x265.pc
 	@touch $@
 
 else
@@ -313,7 +322,7 @@ $(LIB_ROOT)/$(LIBVPX)/.tvh_build: \
 		--disable-examples \
 		--disable-docs \
 		--disable-unit-tests \
-                $(LIBVPX_TARGET)
+		$(LIBVPX_TARGET)
 	DIST_DIR=$(EPREFIX) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBVPX) install
 	@touch $@
@@ -346,7 +355,7 @@ $(LIB_ROOT)/$(LIBOGG)/.tvh_build: \
 		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBOGG) && \
-		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		$(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBOGG) install
@@ -385,7 +394,7 @@ $(LIB_ROOT)/$(LIBTHEORA)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
 		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBTHEORA) && \
-		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		$(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib \
 		--with-ogg=$(EPREFIX) \
 		--disable-examples \
@@ -433,7 +442,7 @@ $(LIB_ROOT)/$(LIBVORBIS)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBVORBIS) && \
-		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		$(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib \
 		--with-ogg=$(EPREFIX)
 	DESTDIR=$(EBUILDIR) \
@@ -586,6 +595,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_download:
 	@mkdir -p $(EBUILDIR)
 	$(call DOWNLOAD,$(FFMPEG_URL),$(LIB_ROOT)/$(FFMPEG_TB),$(FFMPEG_SHA1))
 	$(call UNTAR,$(FFMPEG_TB),j)
+	$(call PATCH,$(FFMPEG),$(FFMPEG_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
@@ -611,7 +621,13 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		$(foreach encoder,$(ENCODERS),--enable-encoder=$(encoder)) \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer)) \
 		$(foreach bsf,$(BSFS),--enable-bsf=$(bsf)) \
-		$(foreach filter,$(FILTERS),--enable-filter=$(filter))
+		$(foreach filter,$(FILTERS),--enable-filter=$(filter)) \
+		--disable-programs \
+		--disable-doc \
+		--disable-htmlpages \
+		--disable-manpages \
+		--disable-podpages \
+		--disable-txtpages
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(FFMPEG) install
 	@touch $@

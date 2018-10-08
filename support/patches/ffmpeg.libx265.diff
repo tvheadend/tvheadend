@@ -1,0 +1,44 @@
+diff -urN ../ffmpeg-3.1.3.orig/libavcodec/libx265.c ./libavcodec/libx265.c
+--- ../ffmpeg-3.1.3.orig/libavcodec/libx265.c	2016-06-27 01:54:29.000000000 +0200
++++ ./libavcodec/libx265.c	2016-08-31 13:52:05.599612289 +0200
+@@ -252,6 +252,7 @@
+     int nnal;
+     int ret;
+     int i;
++    int pict_type;
+ 
+     ctx->api->picture_init(ctx->params, &x265pic);
+ 
+@@ -299,22 +300,27 @@
+     pkt->pts = x265pic_out.pts;
+     pkt->dts = x265pic_out.dts;
+ 
+-#if FF_API_CODED_FRAME
+-FF_DISABLE_DEPRECATION_WARNINGS
+     switch (x265pic_out.sliceType) {
+     case X265_TYPE_IDR:
+     case X265_TYPE_I:
+-        avctx->coded_frame->pict_type = AV_PICTURE_TYPE_I;
++        pict_type = AV_PICTURE_TYPE_I;
+         break;
+     case X265_TYPE_P:
+-        avctx->coded_frame->pict_type = AV_PICTURE_TYPE_P;
++        pict_type = AV_PICTURE_TYPE_P;
+         break;
+     case X265_TYPE_B:
+-        avctx->coded_frame->pict_type = AV_PICTURE_TYPE_B;
++        pict_type = AV_PICTURE_TYPE_B;
++        break;
++    default:
++        pict_type = AV_PICTURE_TYPE_NONE;
+         break;
+     }
++#if FF_API_CODED_FRAME
++FF_DISABLE_DEPRECATION_WARNINGS
++    avctx->coded_frame->pict_type = pict_type;
+ FF_ENABLE_DEPRECATION_WARNINGS
+ #endif
++    ff_side_data_set_encoder_stats(pkt, -1, NULL, 0, pict_type);
+ 
+     *got_packet = 1;
+     return 0;
