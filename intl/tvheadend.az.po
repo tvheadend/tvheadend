@@ -3,12 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Adrián Fülöp <adrian.fulop@t-email.hu>, 2015
-# Barna Peto <trex2004@gmail.com>, 2016
-# Frankovics András <frankovics.andras@outlook.com>, 2015
-# Levente Cseh <levente@csehs.com>, 2015-2017
-# Stolmar Tamas <transifex@knight.qualitis.hu>, 2016
-# Barna Peto <trex2004@gmail.com>, 2015-2016
+# Vusal Hasanov <vusal.maestro@gmail.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
@@ -16,11 +11,11 @@ msgstr ""
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
 "PO-Revision-Date: 2018-10-08 14:51+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
+"Language-Team: Azerbaijani (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/az/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: hu\n"
+"Language: az\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/main.c:530
@@ -28,31 +23,31 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr "\nTovábbi információért kérjük látogasson el a Tvheadend honlapjára:\nhttps://tvheadend.org\n"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:288
 msgid "# Mapped channels"
-msgstr " #Hozzárendelt csatornák"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:272
 msgid "# Muxes"
-msgstr "# Multiplexek"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:280
 msgid "# Services"
-msgstr "# Szolgáltatások"
+msgstr "# Xidmətlər"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:154
 msgid "# tune repeats"
-msgstr "#DiseqC ismétlések száma"
+msgstr ""
 
 #: src/dvr/dvr_config.c:686
 msgid "(Default profile)"
-msgstr "(Alapértelmezett profil)"
+msgstr ""
 
 #: src/webui/doc_md.c:129
 msgid "(Read-only)"
-msgstr "(csak olvasható)"
+msgstr "(Yalnız-oxuma)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:70
 msgid "0"
@@ -65,22 +60,22 @@ msgstr "1"
 #: src/dvr/dvr_db.c:2743 src/dvr/dvr_db.c:2767 src/dvr/dvr_config.c:722
 #: src/dvr/dvr_config.c:745
 msgid "1 day"
-msgstr "1 nap"
+msgstr "1 gün"
 
 #: src/dvr/dvr_db.c:2749 src/dvr/dvr_db.c:2773 src/dvr/dvr_config.c:728
 #: src/dvr/dvr_config.c:751
 msgid "1 month"
-msgstr "1 hónap"
+msgstr "1 ay"
 
 #: src/dvr/dvr_db.c:2746 src/dvr/dvr_db.c:2770 src/dvr/dvr_config.c:725
 #: src/dvr/dvr_config.c:748
 msgid "1 week"
-msgstr "1 hét"
+msgstr "1 həftə"
 
 #: src/dvr/dvr_db.c:2753 src/dvr/dvr_db.c:2777 src/dvr/dvr_config.c:732
 #: src/dvr/dvr_config.c:755
 msgid "1 year"
-msgstr "1 év"
+msgstr "1 il"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:80
 msgid "10"
@@ -121,21 +116,21 @@ msgstr "2"
 #: src/dvr/dvr_db.c:2750 src/dvr/dvr_db.c:2774 src/dvr/dvr_config.c:729
 #: src/dvr/dvr_config.c:752
 msgid "2 months"
-msgstr "2 hónap"
+msgstr "2 ay"
 
 #: src/dvr/dvr_db.c:2747 src/dvr/dvr_db.c:2771 src/dvr/dvr_config.c:726
 #: src/dvr/dvr_config.c:749
 msgid "2 weeks"
-msgstr "2 hét"
+msgstr "2 həftə"
 
 #: src/dvr/dvr_db.c:2754 src/dvr/dvr_db.c:2778 src/dvr/dvr_config.c:733
 #: src/dvr/dvr_config.c:756
 msgid "2 years"
-msgstr "2 év"
+msgstr "2 il"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:785
 msgid "2-Port switch (universal LNB)"
-msgstr "2 portos Disecq kapcsoló (Univerzális LNB)"
+msgstr "2-Portlu Switch (Universal LNB)"
 
 #: src/satip/server.c:613
 msgid "2632 bytes"
@@ -148,22 +143,22 @@ msgstr "3"
 #: src/dvr/dvr_db.c:2744 src/dvr/dvr_db.c:2768 src/dvr/dvr_config.c:723
 #: src/dvr/dvr_config.c:746
 msgid "3 days"
-msgstr "3 nap"
+msgstr "3 gün"
 
 #: src/dvr/dvr_db.c:2751 src/dvr/dvr_db.c:2775 src/dvr/dvr_config.c:730
 #: src/dvr/dvr_config.c:753
 msgid "3 months"
-msgstr "3 hónap"
+msgstr "3 ay"
 
 #: src/dvr/dvr_db.c:2748 src/dvr/dvr_db.c:2772 src/dvr/dvr_config.c:727
 #: src/dvr/dvr_config.c:750
 msgid "3 weeks"
-msgstr "3 hónap"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2755 src/dvr/dvr_db.c:2779 src/dvr/dvr_config.c:734
 #: src/dvr/dvr_config.c:757
 msgid "3 years"
-msgstr "3 év"
+msgstr ""
 
 #: src/satip/server.c:617
 msgid "32712 bytes"
@@ -175,7 +170,7 @@ msgstr "4"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:792
 msgid "4-Port switch (universal LNB)"
-msgstr "4 portos Disecq kapcsoló (Univerzális LNB)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:75
 msgid "5"
@@ -184,15 +179,15 @@ msgstr "5"
 #: src/dvr/dvr_db.c:2745 src/dvr/dvr_db.c:2769 src/dvr/dvr_config.c:724
 #: src/dvr/dvr_config.c:747
 msgid "5 days"
-msgstr "5 nap"
+msgstr ""
 
 #: src/profile.c:1684
 msgid "5.0"
-msgstr "5.0"
+msgstr ""
 
 #: src/profile.c:1685
 msgid "5.1"
-msgstr "5.1"
+msgstr ""
 
 #: src/satip/server.c:614
 msgid "5264 bytes"
@@ -205,7 +200,7 @@ msgstr "6"
 #: src/dvr/dvr_db.c:2752 src/dvr/dvr_db.c:2776 src/dvr/dvr_config.c:731
 #: src/dvr/dvr_config.c:754
 msgid "6 months"
-msgstr "6 hónap"
+msgstr ""
 
 #: src/profile.c:1686
 msgid "6.1"
@@ -221,7 +216,7 @@ msgstr "7"
 
 #: src/profile.c:1687
 msgid "7.1"
-msgstr "7.1"
+msgstr ""
 
 #: src/satip/server.c:615
 msgid "7896 bytes"
@@ -238,45 +233,45 @@ msgstr "9"
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:367
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:95
 msgid "A"
-msgstr "A"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1056
 msgid "A channel tag (e.g. a group of channels) to which this rule applies."
-msgstr "A csatorna cimke (p.l. egy csatorna csoport) amire ez a szabály érvényes"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:405
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:57
 msgid "AA"
-msgstr "AA"
+msgstr ""
 
 #: src/profile.c:1320
 msgid "AAC audio"
-msgstr "AAC audió"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:417
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:58
 msgid "AB"
-msgstr "AB"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:502
 msgid "AC-3 = descriptor 6"
-msgstr "AC-3 = descriptor 6"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:661
 msgid "AC-3 detection"
-msgstr "AC-3 felismerés"
+msgstr ""
 
 #: src/profile.c:1319
 msgid "AC3 audio"
-msgstr "AC3 audió"
+msgstr "AC3 audio"
 
 #: src/input/mpegts/mpegts_mux.c:394
 msgid "ACTIVE"
-msgstr "AKTÍV"
+msgstr "AKTİV"
 
 #: src/descrambler/constcw.c:349
 msgid "AES Constant Code Word"
-msgstr "AES Constant Code Word"
+msgstr ""
 
 #: src/config.c:1930
 msgid "AF11"
@@ -304,75 +299,75 @@ msgstr "AF23"
 
 #: src/config.c:1938
 msgid "AF31"
-msgstr "AF31"
+msgstr ""
 
 #: src/config.c:1939
 msgid "AF32"
-msgstr "AF32"
+msgstr ""
 
 #: src/config.c:1940
 msgid "AF33"
-msgstr "AF33"
+msgstr ""
 
 #: src/config.c:1942
 msgid "AF41"
-msgstr "AF41"
+msgstr ""
 
 #: src/config.c:1943
 msgid "AF42"
-msgstr "AF42"
+msgstr ""
 
 #: src/config.c:1944
 msgid "AF43"
-msgstr "AF43"
+msgstr ""
 
 #: src/esfilter.c:314 src/esfilter.c:370
 msgid "ANY"
-msgstr "ANY"
+msgstr ""
 
 #: src/tvhlog.c:101
 msgid "API"
-msgstr "API"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:162
 msgid "ATSC"
-msgstr "ATSC"
+msgstr ""
 
 #: src/tvhlog.c:162
 msgid "ATSC PSIP EPG"
-msgstr "ATSC PSIP EPG"
+msgstr ""
 
 #: src/tvhlog.c:114
 msgid "ATSC SI Tables"
-msgstr "ATSC SI táblák"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:152
 msgid "ATSC source ID"
-msgstr "ATSC forrás ID"
+msgstr ""
 
 #: src/satip/server.c:885
 msgid "ATSC-C"
-msgstr "ATSC-C"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:339
 msgid "ATSC-C Network"
-msgstr "ATSC-C hálózat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:583
 msgid "ATSC-C multiplex"
-msgstr "ATSC-C multiplex"
+msgstr ""
 
 #: src/satip/server.c:877
 msgid "ATSC-T"
-msgstr "ATSC-T"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:316
 msgid "ATSC-T Network"
-msgstr "ATSC-T hálózat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:542
 msgid "ATSC-T multiplex"
-msgstr "ATSC-T multiplex"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:225 src/input/mpegts/mpegts_mux_dvb.c:232
 #: src/input/mpegts/mpegts_mux_dvb.c:237 src/input/mpegts/mpegts_mux_dvb.c:244
@@ -386,36 +381,36 @@ msgstr "ATSC-T multiplex"
 #: src/input/mpegts/mpegts_mux_dvb.c:742 src/input/mpegts/mpegts_mux_dvb.c:746
 #: src/input/mpegts/mpegts_mux_dvb.c:797 src/input/mpegts/mpegts_mux_dvb.c:802
 msgid "AUTO"
-msgstr "AUTO"
+msgstr ""
 
 #: src/streaming.c:478
 msgid "Aborted by user"
-msgstr "Felhasználó által megszakítva"
+msgstr "İstifadəçi tərəfindən dayandırıldı"
 
 #: src/satip/server.c:705
 msgid "Accept remote subscription weight"
-msgstr "Távoli feliratkozás súlyának elfogadása"
+msgstr ""
 
 #: src/satip/server.c:706
 msgid "Accept the remote subscription weight (from the SAT>IP client)."
-msgstr "Távoli feliratkozás súlyának elfogadása ( a SAT>IP klienstől)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:654 src/input/mpegts/iptv/iptv.c:930
 msgid "Accept zero value for TSID"
-msgstr "Nullás érték elfogadása TSID-nek"
+msgstr ""
 
 #: src/access.c:1409
 msgid "Access"
-msgstr "Hozzáférés"
+msgstr ""
 
 #: src/tvhlog.c:96
 msgid "Access (ACL)"
-msgstr "Hozzáférés (ACL)"
+msgstr ""
 
 #: src/esfilter.c:687 src/esfilter.c:782 src/esfilter.c:877 src/esfilter.c:972
 #: src/esfilter.c:1077 src/esfilter.c:1159
 msgid "Action"
-msgstr "Művelet"
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:240
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:140
@@ -428,19 +423,19 @@ msgstr "Művelet"
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:187
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:204
 msgid "Active"
-msgstr "Aktív"
+msgstr ""
 
 #: src/streaming.c:461
 msgid "Adapter in use by another subscription"
-msgstr "A kártya használatban van egy másik előfizetésnél"
+msgstr ""
 
 #: src/main.c:881
 msgid "Add file and line numbers to debug"
-msgstr "File- és sorszám hozzáadása nyomkövetéshez"
+msgstr ""
 
 #: src/main.c:882
 msgid "Add the thread ID to debug"
-msgstr "Folyamat ID hozzáadása a hibakereséshez"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:241
 msgid ""
@@ -469,35 +464,35 @@ msgstr "Admin"
 
 #: src/wizard.c:435
 msgid "Admin password"
-msgstr "Admin jelszó"
+msgstr "Admin şifrəsi"
 
 #: src/wizard.c:424
 msgid "Admin username"
-msgstr "Admin felhasználónév"
+msgstr "Admin adı"
 
 #: src/wizard.c:401
 msgid "Administrator login"
-msgstr "Adminisztrátori belépés"
+msgstr "Administrator girişi"
 
 #: src/epg.c:2299
 msgid "Adult movie"
-msgstr "Felnőtt film"
+msgstr "18+ Videol"
 
 #: src/access.c:1386 src/access.c:1501 src/config.c:1958
 msgid "Advanced"
-msgstr "Haladó"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:813
 msgid "Advanced (non-universal LNBs, rotors, etc.)"
-msgstr "Haladó (nem univerzális LNB-k, forgatók, stb.)"
+msgstr ""
 
 #: src/epg.c:2293
 msgid "Adventure"
-msgstr "Kaland"
+msgstr "Macəra"
 
 #: src/epg.c:2459
 msgid "Advertisement / Shopping"
-msgstr "Reklám / Vásárlás"
+msgstr "Reklam / Alış-veriş"
 
 #: src/input/mpegts/iptv/iptv.c:738
 msgid "After creating the network scan it for services."
@@ -505,7 +500,7 @@ msgstr ""
 
 #: src/access.c:1345
 msgid "All (Streaming plus DVR)"
-msgstr "Minden (streaming és DVR)"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1260
 msgid ""
@@ -515,37 +510,37 @@ msgstr ""
 
 #: src/config.c:1969
 msgid "All lower-case"
-msgstr "Minden kisbetűs"
+msgstr ""
 
 #: src/webui/extjs.c:236
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
-msgstr "Minden adományt a szerver infrastruktúra támogatására és tesztberendezések vásárlására fordítunk."
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:931
 msgid "All: Record if different description"
-msgstr "Minden: Felvétel ha eltérő a leírás"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:927
 msgid "All: Record if different episode number"
-msgstr "Minden: Felvétel ha különbözik az epizód száma"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:929
 msgid "All: Record if different subtitle"
-msgstr "Minden: Felvétel, ha különbözik a feliratnyelv"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:937
 msgid "All: Record once per day"
-msgstr "Minden: Felvétel naponta egyszer"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:933
 msgid "All: Record once per month"
-msgstr "Minden: Felvétel havonta egyszer"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:935
 msgid "All: Record once per week"
-msgstr "Minden: Felvétel hetente egyszer"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:137
 msgid "Allow all PIDs"
@@ -586,7 +581,7 @@ msgstr ""
 
 #: src/access.c:1781
 msgid "Allow/Disallow access to the 'Configuration' tab."
-msgstr ""
+msgstr "\"Konfiqurasiya\" bölməsinə Giriş/Qadağa"
 
 #: src/access.c:1773
 msgid ""
@@ -599,27 +594,27 @@ msgstr ""
 
 #: src/wizard.c:414
 msgid "Allowed network"
-msgstr "Lehetséges hálózat"
+msgstr "İcazə verilən şəbəkə"
 
 #: src/access.c:1634
 msgid "Allowed networks"
-msgstr "Engedélyezett hálózat"
+msgstr "İcazə verilən şəbəkələr"
 
 #: src/main.c:824
 msgid "Alternate PID path"
-msgstr "Egyéb PID útvonal"
+msgstr ""
 
 #: src/main.c:819
 msgid "Alternate configuration path"
-msgstr "Egyéb beállítási útvonal"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:753
 msgid "Altitude (in meters)."
-msgstr "Tengerszinttől mért magasság (m)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:752
 msgid "Altitude (meters)"
-msgstr "Tengerszinttől mért magasság (m)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:289
 msgid ""
@@ -648,7 +643,7 @@ msgstr ""
 
 #: src/epg.c:2436
 msgid "Animals"
-msgstr "Állat"
+msgstr "Heyvanlar"
 
 #: src/satip/server.c:668
 msgid "Anonymize"
@@ -656,7 +651,7 @@ msgstr ""
 
 #: src/access.c:1749
 msgid "Anonymize HTSP access"
-msgstr "Anonimizált HTSP elérés"
+msgstr ""
 
 #: src/profile.c:1317 src/profile.c:1648 src/dvr/dvr_autorec.c:626
 #: src/dvr/dvr_autorec.c:661 src/dvr/dvr_autorec.c:675
@@ -664,19 +659,19 @@ msgstr "Anonimizált HTSP elérés"
 #: src/dvr/dvr_autorec.c:1091 src/dvr/dvr_autorec.c:1104
 #: src/dvr/dvr_timerec.c:405
 msgid "Any"
-msgstr "Bármi"
+msgstr "Hər hansı"
 
 #: src/epg.c:2399
 msgid "Arts"
-msgstr "Művészetek"
+msgstr ""
 
 #: src/epg.c:2411 src/epg.c:2412 src/epg.c:2413 src/epg.c:2414
 msgid "Arts / Culture (without music)"
-msgstr "Művészet/kultúra (kivéve zene)"
+msgstr ""
 
 #: src/epg.c:2409
 msgid "Arts magazines"
-msgstr "Művészeti magazinok"
+msgstr ""
 
 #: src/wizard.c:962
 msgid "Assign predefined muxes to networks"
@@ -688,19 +683,19 @@ msgstr ""
 
 #: src/epg.c:2351
 msgid "Athletics"
-msgstr "Atlétika"
+msgstr ""
 
 #: src/esfilter.c:721
 msgid "Audio Stream Filter"
-msgstr "Audió stream szűrő"
+msgstr ""
 
 #: src/profile.c:1948
 msgid "Audio bitrate (kb/s) (0=auto)"
-msgstr "Audió bitráta (kb/s) (0=Auto)"
+msgstr ""
 
 #: src/profile.c:1949
 msgid "Audio bitrate to use for transcoding."
-msgstr "Audio bitráta transzkódoláshoz"
+msgstr ""
 
 #: src/profile.c:1865
 msgid "Audio channel layout."
@@ -708,7 +703,7 @@ msgstr ""
 
 #: src/profile.c:1936
 msgid "Audio codec"
-msgstr "Audio kódec"
+msgstr ""
 
 #: src/profile.c:1937
 msgid ""
@@ -718,15 +713,15 @@ msgstr ""
 
 #: src/profile.c:1331
 msgid "Audio stream"
-msgstr "Audió stream"
+msgstr ""
 
 #: src/profile.c:1336
 msgid "Audio type"
-msgstr "Audió típus"
+msgstr ""
 
 #: src/profile.c:2266
 msgid "Audio-only stream"
-msgstr "Csak audió stream"
+msgstr ""
 
 #: src/tvhlog.c:125
 msgid "Audioes muxer"
@@ -734,44 +729,44 @@ msgstr ""
 
 #: src/webui/webui.c:250
 msgid "Authenticated user"
-msgstr "Azonosított felhasználó"
+msgstr ""
 
 #: src/satip/server.c:601
 msgid "Auto"
-msgstr "Auto"
+msgstr ""
 
 #: src/service.c:145
 msgid "Auto check disabled"
-msgstr "Automatikus ellenőrzés kikapcsolva"
+msgstr ""
 
 #: src/service.c:144
 msgid "Auto check enabled"
-msgstr "Automatikus ellenőrzés bekapcsolva"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3494
 msgid "Auto record"
-msgstr "Automatikus felvétel"
+msgstr "Avto yazılış"
 
 #: src/dvr/dvr_db.c:3503
 msgid "Auto record caption"
-msgstr "Automatikus felvétel felirat"
+msgstr ""
 
 #: src/dvr/dvr_db.c:1576
 #, c-format
 msgid "Auto recording%s%s"
-msgstr "Automatikus felvétel%s%s"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3511
 msgid "Auto time record"
-msgstr "Automatikus időzített felvétel"
+msgstr ""
 
 #: src/bouquet.c:990
 msgid "Auto-Map to channels"
-msgstr "Automatikus csatorna-hozzárendelés"
+msgstr ""
 
 #: src/service.c:187
 msgid "Automatic checking"
-msgstr "Automatikus ellenőrzés"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3504
 msgid "Automatic recording caption."
@@ -794,7 +789,7 @@ msgstr ""
 
 #: src/channels.c:441
 msgid "Automatically map EPG source"
-msgstr "Automatikusan  EPG forrás hozzárendelése"
+msgstr ""
 
 #: src/wizard.c:1110
 msgid "Automatically map all available services to channels."
@@ -806,11 +801,11 @@ msgstr ""
 
 #: src/channels.c:389
 msgid "Automatically name from network"
-msgstr "Automatikus névadás a hálozatból"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3495
 msgid "Automatically record."
-msgstr "Automatikus felvétel"
+msgstr ""
 
 #: src/epggrab.c:304
 msgid ""
@@ -835,46 +830,46 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:1012
 msgid "Autorec maximum count (0=unlimited)"
-msgstr "Automata rögzítés maximális száma (0 - korlátlan)"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1022
 msgid "Autorec maximum schedules limit (0=unlimited)"
-msgstr "Automata rögzítés ütemezésének maximális száma (0 - korlátlan)"
+msgstr ""
 
 #: src/tvhlog.c:99
 msgid "Avahi"
-msgstr "Avahi"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:379
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:96
 msgid "B"
-msgstr "B"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:429
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:59
 msgid "BA"
-msgstr "BA"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:441
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:60
 msgid "BB"
-msgstr "BB"
+msgstr ""
 
 #: src/subscriptions.c:1036
 msgid "Bad"
-msgstr "Rossz"
+msgstr ""
 
 #: src/htsp_server.c:1397
 msgid "Bad request"
-msgstr "Rossz kérés"
+msgstr ""
 
 #: src/epg.c:2381 src/epg.c:2387
 msgid "Ballet"
-msgstr "Balett"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:225 src/input/mpegts/mpegts_mux_dvb.c:683
 msgid "Bandwidth"
-msgstr "Sávszélesség"
+msgstr ""
 
 #: src/tvhlog.c:110
 msgid "Base DVB SI Tables (PAT,CAT,PMT,SDT etc.)"
@@ -882,15 +877,15 @@ msgstr ""
 
 #: src/webui/extjs.c:210
 msgid "Based on software from"
-msgstr "Az innen származó szoftver alapján"
+msgstr ""
 
 #: src/access.c:1385 src/access.c:1496 src/access.c:1539 src/config.c:1957
 msgid "Basic"
-msgstr "Alap"
+msgstr "Əsas"
 
 #: src/input/mpegts/satip/satip.c:350
 msgid "Bind to specific local IP address."
-msgstr "Helyi IP-címhez rendelés."
+msgstr ""
 
 #: src/profile.c:1926
 msgid "Bitrate to use for the transcode. See Help for details."
@@ -898,35 +893,35 @@ msgstr ""
 
 #: src/access.c:1407
 msgid "Blue"
-msgstr "Kék"
+msgstr "Mavi"
 
 #: src/tvhlog.c:100
 msgid "Bonjour"
-msgstr "Bonjour"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:463
 msgid "Boot ID"
-msgstr "Boot ID"
+msgstr ""
 
 #: src/tvhlog.c:131
 msgid "Bouquet"
-msgstr "Csokor"
+msgstr ""
 
 #: src/channels.c:525
 msgid "Bouquet (auto)"
-msgstr "Csokor (auto)"
+msgstr ""
 
 #: src/bouquet.c:1073
 msgid "Bouquet source."
-msgstr "Csokor forrás."
+msgstr ""
 
 #: src/bouquet.c:970
 msgid "Bouquets"
-msgstr "Csokrok"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1240
 msgid "Brand"
-msgstr "Márka"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1241
 msgid "Branding information (if available)."
@@ -934,27 +929,27 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3555
 msgid "Broadcast"
-msgstr "Sugárzás"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1067
 msgid "Broadcast type"
-msgstr "Adás típus"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3556
 msgid "Broadcast."
-msgstr "Adás."
+msgstr ""
 
 #: src/epg.c:2407
 msgid "Broadcasting"
-msgstr "Sugárzás"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:269
 msgid "Buffering limit (ms)"
-msgstr "Pufferelési limit (ms)"
+msgstr ""
 
 #: src/webui/extjs.c:214
 msgid "Build"
-msgstr "Build"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:189
 msgid ""
@@ -968,60 +963,60 @@ msgstr ""
 
 #: src/tvhlog.c:136
 msgid "CA (descrambling) Client"
-msgstr "CA (visszafejtő) kliens"
+msgstr ""
 
 #: src/descrambler/constcw.c:288 src/descrambler/constcw.c:354
 msgid "CA ID"
-msgstr "CA ID"
+msgstr ""
 
 #: src/esfilter.c:1006
 msgid "CA Stream Filter"
-msgstr "CA stream szűrő"
+msgstr ""
 
 #: src/descrambler/caclient.c:180
 #, c-format
 msgid "CA client %i"
-msgstr "CA-kliens %i"
+msgstr ""
 
 #: src/esfilter.c:1023
 msgid "CA identification"
-msgstr "CA-azonosítás"
+msgstr ""
 
 #: src/esfilter.c:1033
 msgid "CA provider"
-msgstr "CA-szolgáltató"
+msgstr ""
 
 #: src/service.c:229
 msgid "CAID"
-msgstr "CAID"
+msgstr ""
 
 #: src/descrambler/capmt.c:2427
 msgid "CAPMT (Linux Network DVBAPI)"
-msgstr "CAPMT (Linux DVBAPI)"
+msgstr ""
 
 #: src/tvhlog.c:138
 msgid "CAPMT CA Client"
-msgstr "CAPMT CA kliens"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:254
 msgid "CAPMT interval (in ms)."
-msgstr "CAPMT intervallum (ms)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:253
 msgid "CAPMT interval (ms)"
-msgstr "CAPMT intervallum (ms)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:262
 msgid "CAPMT query interval (ms)"
-msgstr "CAPMT lekérdezési intervallum (ms)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:263
 msgid "CAPMT query interval (ms)."
-msgstr "CAPMT lekérdezési intervallum (ms)"
+msgstr ""
 
 #: src/tvhlog.c:157
 msgid "CI Module"
-msgstr "CI-modul"
+msgstr ""
 
 #: src/tvhlog.c:78
 msgid "CPU"
@@ -1033,19 +1028,19 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:597 src/input/mpegts/mpegts_service.c:176
 msgid "CRID authority"
-msgstr "CRID engedély"
+msgstr ""
 
 #: src/config.c:1928
 msgid "CS0"
-msgstr "CS0"
+msgstr ""
 
 #: src/config.c:1929
 msgid "CS1"
-msgstr "CS1"
+msgstr ""
 
 #: src/config.c:1933
 msgid "CS2"
-msgstr "CS2"
+msgstr ""
 
 #: src/config.c:1937
 msgid "CS3"
@@ -1069,49 +1064,49 @@ msgstr "CS7"
 
 #: src/tvhlog.c:137
 msgid "CSA (descrambling)"
-msgstr "CA (visszafejtő)"
+msgstr ""
 
 #: src/tvhlog.c:139
 msgid "CWC CA Client"
-msgstr "CWC CA kliens"
+msgstr ""
 
 #: src/dvr/dvr_config.c:889
 msgid "Cache scheme"
-msgstr "Gyorsítótár vázlat"
+msgstr ""
 
 #: src/descrambler/capmt.c:2442
 msgid "Camd.socket filename / IP Address (TCP mode)"
-msgstr "Camd.socket file-név / IP-cím (TCP mód)"
+msgstr ""
 
 #: src/epg.c:2368
 msgid "Cartoons"
-msgstr "Rajzfilmek"
+msgstr ""
 
 #: src/access.c:1644
 msgid "Change parameters"
-msgstr "Paraméterek változtatása"
+msgstr ""
 
 #: src/tvhlog.c:128 src/service.c:200 src/dvr/dvr_db.c:3261
 #: src/dvr/dvr_autorec.c:1042 src/dvr/dvr_timerec.c:570
 msgid "Channel"
-msgstr "Csatorna"
+msgstr "Kanal"
 
 #: src/channels.c:1428
 msgid "Channel Tags"
-msgstr "Csatorna-címkék"
+msgstr ""
 
 #: src/htsp_server.c:1589 src/htsp_server.c:1631 src/htsp_server.c:1716
 #: src/htsp_server.c:1886 src/htsp_server.c:2446 src/htsp_server.c:2449
 msgid "Channel does not exist"
-msgstr "A csatorna nem létezik"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3272
 msgid "Channel icon"
-msgstr "Csatorna ikon"
+msgstr "Kanal işarəsi"
 
 #: src/dvr/dvr_db.c:3273
 msgid "Channel icon URL."
-msgstr "Csatorna ikon URL."
+msgstr ""
 
 #: src/epggrab/channel.c:842
 msgid "Channel icon as defined in EPG data."
@@ -1119,11 +1114,11 @@ msgstr ""
 
 #: src/config.c:2359
 msgid "Channel icon name scheme"
-msgstr "Csatorna ikon-név rendszer"
+msgstr ""
 
 #: src/config.c:2346
 msgid "Channel icon path"
-msgstr "Csatorna ikon útvonal"
+msgstr "Kanal işarəsinin yerləşdiyi bölmə"
 
 #: src/bouquet.c:1000
 msgid "Channel mapping options"
@@ -1131,15 +1126,15 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3280
 msgid "Channel name"
-msgstr "Csatorna-név"
+msgstr "Kanal adı"
 
 #: src/htsp_server.c:2391
 msgid "Channel not found"
-msgstr "A csatorna nem található"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:175
 msgid "Channel number"
-msgstr "Csatorna szám"
+msgstr "Kanal nömrəsi"
 
 #: src/epggrab/channel.c:834
 msgid "Channel number as defined in EPG data."
@@ -1147,11 +1142,11 @@ msgstr ""
 
 #: src/bouquet.c:1114
 msgid "Channel number offset"
-msgstr "Csatorna szám offszet"
+msgstr ""
 
 #: src/access.c:1422
 msgid "Channel number range"
-msgstr "Csatorna számozás tartomány"
+msgstr ""
 
 #: src/epggrab/module/xmltv.c:760
 msgid "Channel numbers (heuristic)"
@@ -1159,23 +1154,23 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:906
 msgid "Channel numbers from"
-msgstr "Csatorna számozás kezdőérték"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1055
 msgid "Channel tag"
-msgstr "Csatorna-cimke"
+msgstr ""
 
 #: src/htsp_server.c:1722
 msgid "Channel tag does not exist"
-msgstr "A csatorna-címke nem létezik"
+msgstr ""
 
 #: src/bouquet.c:1028
 msgid "Channel tag reference"
-msgstr "Csatorna-cimke referencia "
+msgstr ""
 
 #: src/access.c:1427 src/access.c:1835 src/input/mpegts/iptv/iptv_mux.c:238
 msgid "Channel tags"
-msgstr "Csatorna-cimkék"
+msgstr ""
 
 #: src/access.c:1836
 msgid "Channel tags the user is allowed access to/excluded from."
@@ -1191,7 +1186,7 @@ msgstr ""
 
 #: src/channels.c:370 src/profile.c:1864 src/epggrab/channel.c:850
 msgid "Channels"
-msgstr "Csatornák"
+msgstr "Kanallar"
 
 #: src/epggrab/channel.c:851
 msgid "Channels EPG data is used by."
@@ -1200,7 +1195,7 @@ msgstr ""
 #: src/input/mpegts/mpegts_network.c:253 src/input/mpegts/mpegts_mux.c:626
 #: src/input/mpegts/mpegts_service.c:203
 msgid "Character set"
-msgstr "Karakterkészlet"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1280
 msgid ""
@@ -1210,11 +1205,11 @@ msgstr ""
 
 #: src/tvhlog.c:146
 msgid "Charset"
-msgstr "Karakter készlet"
+msgstr ""
 
 #: src/service_mapper.c:507
 msgid "Check availability"
-msgstr "Elérhetőség ellenőrzése"
+msgstr ""
 
 #: src/service.c:188
 msgid ""
@@ -1236,55 +1231,55 @@ msgstr ""
 #: src/epg.c:2369 src/epg.c:2370 src/epg.c:2371 src/epg.c:2372 src/epg.c:2373
 #: src/epg.c:2374 src/epg.c:2375 src/epg.c:2376 src/epg.c:2377 src/epg.c:2378
 msgid "Children's / Youth Programs"
-msgstr "Gyermek / Ifjúsági műsorok"
+msgstr ""
 
 #: src/epg.c:2363
 msgid "Children's / Youth programs"
-msgstr "Gyermek / Ifjúsági műsorok"
+msgstr ""
 
 #: src/epg.c:2405
 msgid "Cinema"
-msgstr "Mozi"
+msgstr "Kino"
 
 #: src/esfilter.c:602 src/profile.c:299 src/descrambler/caclient.c:257
 msgid "Class"
-msgstr "Osztály"
+msgstr ""
 
 #: src/epg.c:2298
 msgid "Classical"
-msgstr "Klasszikus"
+msgstr ""
 
 #: src/epg.c:2383
 msgid "Classical music"
-msgstr "Klasszikus zene"
+msgstr ""
 
 #: src/streaming.c:582
 msgid "Clean effects"
-msgstr "Tiszta effektusok"
+msgstr ""
 
 #: src/descrambler/caclient.c:279
 msgid "Client name"
-msgstr "Kliens név"
+msgstr ""
 
 #: src/dvr/dvr_config.c:925
 msgid "Clone scheduled entry on error"
-msgstr "Hiba esetén klónozza a bejegyzést"
+msgstr ""
 
 #: src/descrambler/cwc.c:1837
 msgid "Code Word Client (newcamd)"
-msgstr "Kódszó kliens (newcamd)"
+msgstr ""
 
 #: src/epg.c:2295
 msgid "Comedy"
-msgstr "Vígjáték"
+msgstr "Komediya"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:159
 msgid "Command delay time (ms) (10-200)"
-msgstr "Parancs késleltetési idő (ms) (10-200)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:109
 msgid "Command time (ms) (10-100)"
-msgstr "Parancs idő (ms) (10-100)"
+msgstr ""
 
 #: src/access.c:1846 src/access.c:2065 src/access.c:2201 src/channels.c:1507
 #: src/esfilter.c:709 src/esfilter.c:804 src/esfilter.c:899 src/esfilter.c:994
@@ -1293,11 +1288,11 @@ msgstr "Parancs idő (ms) (10-100)"
 #: src/dvr/dvr_autorec.c:1285 src/dvr/dvr_timerec.c:674
 #: src/dvr/dvr_config.c:868 src/descrambler/caclient.c:287
 msgid "Comment"
-msgstr "Megjegyzés"
+msgstr "Rəy"
 
 #: src/dvr/dvr_db.c:636
 msgid "Commercial break"
-msgstr "Reklámszünet"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1126
 msgid ""
@@ -1308,19 +1303,19 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:125
 msgid "Committed"
-msgstr "Jóváhagyott"
+msgstr ""
 
 #: src/dvr/dvr_db.c:668
 msgid "Completed OK"
-msgstr "Befejezve OK"
+msgstr ""
 
 #: src/config.c:2232
 msgid "Compress EPG database"
-msgstr "EPG adatbázis tömörítése"
+msgstr ""
 
 #: src/config.c:2233
 msgid "Compress the EPG database to reduce disk I/O and space."
-msgstr "EPG adatbázis tömörítése a lemez I/O műveletek és a méret csökkentésének érdekében"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:397
 msgid ""
@@ -1330,61 +1325,61 @@ msgstr ""
 
 #: src/config.c:2184
 msgid "Conditional Access"
-msgstr "Feltételes hozzáférés"
+msgstr ""
 
 #: src/descrambler/caclient.c:244
 msgid "Conditional Access Client"
-msgstr "Feltételes hozzáférés ügyfél"
+msgstr ""
 
 #: src/descrambler/constcw.c:289 src/descrambler/constcw.c:355
 msgid "Conditional Access Identification."
-msgstr "Feltételes hozzáférés azonosítás"
+msgstr ""
 
 #: src/tvhlog.c:95 src/profile.c:290 src/profile.c:1105 src/profile.c:1230
 #: src/profile.c:1485 src/profile.c:1829 src/epggrab/channel.c:751
 msgid "Configuration"
-msgstr "Beállítás"
+msgstr "Konfiqurasiya"
 
 #: src/config.c:2022
 msgid "Configuration - Base"
-msgstr "Beállítás - Alapok"
+msgstr ""
 
 #: src/imagecache.c:79
 msgid "Configuration - Image Cache"
-msgstr "Beállítás - Átmeneti képtároló"
+msgstr ""
 
 #: src/satip/server.c:629
 msgid "Configuration - SAT>IP Server"
-msgstr "Beállítás - SAT>IP szerver"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:471
 msgid "Configuration ID"
-msgstr "Beállítás ID"
+msgstr ""
 
 #: src/dvr/dvr_config.c:857
 msgid "Configuration name"
-msgstr "Konfiguráció neve"
+msgstr "Konfiqurasiya adı"
 
 #: src/config.c:2058
 msgid "Configuration version"
-msgstr "Konfiguráció verziója"
+msgstr ""
 
 #: src/access.c:1787
 msgid "Connection limit type"
-msgstr "Csatlakozás korlátozás típusa"
+msgstr ""
 
 #: src/access.c:1442
 msgid "Connection limits"
-msgstr "Csatlakozási korlátok"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:232 src/input/mpegts/mpegts_mux_dvb.c:327
 #: src/input/mpegts/mpegts_mux_dvb.c:605 src/input/mpegts/mpegts_mux_dvb.c:797
 msgid "Constellation"
-msgstr "Csillagkép"
+msgstr ""
 
 #: src/profile.c:1842
 msgid "Container"
-msgstr "Tároló"
+msgstr ""
 
 #: src/profile.c:1843
 msgid "Container to use for the transcoded stream."
@@ -1392,23 +1387,23 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:895
 msgid "Content character set"
-msgstr "Tartalom betűtípusa"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:177
 msgid "Content reference identifier authority."
-msgstr "Tartalom referencia azonosító hatóság."
+msgstr ""
 
 #: src/dvr/dvr_db.c:3546 src/dvr/dvr_autorec.c:1077
 msgid "Content type"
-msgstr "Tartalom típusa"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3547
 msgid "Content type."
-msgstr "Tartalom típusa."
+msgstr ""
 
 #: src/epg.c:2328
 msgid "Contest"
-msgstr "Verseny"
+msgstr ""
 
 #: src/profile.c:391
 msgid "Continue if descrambling fails"
@@ -1424,19 +1419,19 @@ msgstr ""
 
 #: src/config.c:2144
 msgid "Cookie expiration (days)"
-msgstr "Sütik lejárata (nap)"
+msgstr ""
 
 #: src/epg.c:2458
 msgid "Cooking"
-msgstr "Főző-műsor"
+msgstr ""
 
 #: src/profile.c:1737
 msgid "Copy codec type"
-msgstr "Kodektípus másolása"
+msgstr ""
 
 #: src/profile.c:1679
 msgid "Copy layout"
-msgstr "Másolat kinézete"
+msgstr ""
 
 #: src/memoryinfo.c:69
 msgid "Count of objects"
@@ -1473,7 +1468,7 @@ msgstr ""
 
 #: src/service_mapper.c:542
 msgid "Create a provider name tag."
-msgstr "Szolgáltatói név-címkék létrehozása."
+msgstr ""
 
 #: src/wizard.c:1128
 msgid "Create and associate a network tag to created channels."
@@ -1489,7 +1484,7 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:887
 msgid "Create bouquet"
-msgstr "Csoport létrehozása"
+msgstr ""
 
 #: src/bouquet.c:794
 msgid "Create bouquet tag"
@@ -1505,7 +1500,7 @@ msgstr ""
 
 #: src/service_mapper.c:549 src/bouquet.c:809
 msgid "Create network name tags"
-msgstr "Hálózati név tag-ek létrehozása"
+msgstr ""
 
 #: src/service_mapper.c:550
 msgid "Create network name tags (set by provider)."
@@ -1513,19 +1508,19 @@ msgstr ""
 
 #: src/wizard.c:1127
 msgid "Create network tags"
-msgstr "Hálózati címkék létrehozása"
+msgstr ""
 
 #: src/service_mapper.c:541 src/bouquet.c:804
 msgid "Create provider name tags"
-msgstr "Szolgáltatói név tag-ek létrehozása"
+msgstr ""
 
 #: src/wizard.c:1118
 msgid "Create provider tags"
-msgstr "Szolgáltatói címkék létrehozása"
+msgstr ""
 
 #: src/bouquet.c:1014
 msgid "Create tags"
-msgstr "Címke létrehozása"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1115
 msgid ""
@@ -1539,35 +1534,35 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:248
 msgid "Created"
-msgstr "Létrehozott"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3410 src/dvr/dvr_autorec.c:1275 src/dvr/dvr_timerec.c:664
 msgid "Creator"
-msgstr "Szerző"
+msgstr ""
 
 #: src/tvhlog.c:97 src/input/mpegts/mpegts_mux_sched.c:153
 msgid "Cron"
-msgstr "Cron"
+msgstr ""
 
 #: src/epggrab.c:338
 msgid "Cron multi-line"
-msgstr "Cron több-soros"
+msgstr ""
 
 #: src/epg.c:2399
 msgid "Culture (without music)"
-msgstr "Kultúra (kivéve zene)"
+msgstr ""
 
 #: src/epg.c:2409
 msgid "Culture magazines"
-msgstr "Művészeti magazinok"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:384
 msgid "Current RTSP port."
-msgstr "Jelenlegi RTSP port."
+msgstr ""
 
 #: src/epg.c:2309
 msgid "Current affairs"
-msgstr "Jelenlegi afférok"
+msgstr ""
 
 #: src/memoryinfo.c:70
 msgid "Current number of objects."
@@ -1579,51 +1574,51 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:416
 msgid "Current tuner configuration."
-msgstr "Jelenlegi tuner beállítások."
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:231
 msgid "Custom HTTP headers"
-msgstr "Egyedi HTTP fejléc"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:431
 msgid "DAB Network"
-msgstr "DAB hálózat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:874
 msgid "DAB multiplex"
-msgstr "DAB multiplex"
+msgstr ""
 
 #: src/tvhlog.c:98
 msgid "DBUS"
-msgstr "DBUS"
+msgstr ""
 
 #: src/main.c:834
 msgid "DBus - use the session message bus instead of the system one"
-msgstr "DBus - a jelenlegi üzenet használata a rendszer helyett"
+msgstr ""
 
 #: src/descrambler/constcw.c:283
 msgid "DES Constant Code Word"
-msgstr "DES Constant Code Word"
+msgstr ""
 
 #: src/descrambler/cwc.c:1875
 msgid "DES Key."
-msgstr "DES kulcs."
+msgstr ""
 
 #: src/descrambler/cwc.c:1874
 msgid "DES key"
-msgstr "DES kulcs"
+msgstr ""
 
 #: src/config.c:2167
 msgid "DSCP/TOS for streaming"
-msgstr "DSCP/TOS a streaming-hez"
+msgstr ""
 
 #: src/tvhlog.c:147
 msgid "DVB"
-msgstr "DVB"
+msgstr ""
 
 #: src/tvhlog.c:140
 msgid "DVB CAM Client"
-msgstr "DVB CAM kliens"
+msgstr ""
 
 #: src/tvhlog.c:111
 msgid "DVB CSA (descrambling) Tables"
@@ -1631,15 +1626,15 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3462
 msgid "DVB EPG ID"
-msgstr "DVB EPG ID"
+msgstr ""
 
 #: src/tvhlog.c:112
 msgid "DVB EPG Tables"
-msgstr "DVB EPG táblák"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:149
 msgid "DVB Inputs - Networks"
-msgstr "DVB bemenetek - Hálózatok"
+msgstr ""
 
 #: src/tvhlog.c:109
 msgid "DVB SI Tables"
@@ -1651,71 +1646,71 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:136
 msgid "DVB multiplex"
-msgstr "DVB multiplex"
+msgstr ""
 
 #: src/config.c:2041
 msgid "DVB scan files"
-msgstr "DVB scan file-ok"
+msgstr ""
 
 #: src/config.c:2288
 msgid "DVB scan files path"
-msgstr "DVB scan file-ok elérési útvonala"
+msgstr ""
 
 #: src/satip/server.c:861
 msgid "DVB-C"
-msgstr "DVB-C"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:260
 msgid "DVB-C Network"
-msgstr "DVB-C hálózat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:305
 msgid "DVB-C multiplex"
-msgstr "DVB-C multiplex"
+msgstr ""
 
 #: src/satip/server.c:869
 msgid "DVB-C2"
-msgstr "DVB-C2"
+msgstr ""
 
 #: src/satip/server.c:829
 msgid "DVB-S"
-msgstr "DVB-S"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:283
 msgid "DVB-S Network"
-msgstr "DVB-S hálózat"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:247
 msgid "DVB-S Satellite Configuration"
-msgstr "DVB-S műhold konfiguráció"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:436
 msgid "DVB-S multiplex"
-msgstr "DVB-S multiplex"
+msgstr ""
 
 #: src/satip/server.c:837
 msgid "DVB-S2"
-msgstr "DVB-S2"
+msgstr ""
 
 #: src/satip/server.c:845
 msgid "DVB-T"
-msgstr "DVB-T"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:237
 msgid "DVB-T Network"
-msgstr "DVB-T hálózat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:208
 msgid "DVB-T multiplex"
-msgstr "DVB-T multiplex"
+msgstr ""
 
 #: src/satip/server.c:853
 msgid "DVB-T2"
-msgstr "DVB-T2"
+msgstr ""
 
 #: src/access.c:1347
 msgid "DVR"
-msgstr "DVR"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:986
 msgid "DVR - Auto-recording (Autorecs)"
@@ -1723,7 +1718,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:804
 msgid "DVR - Profiles"
-msgstr "DVR - profilok"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:522
 msgid "DVR - Time-based Recording (Timers)"
@@ -1735,57 +1730,57 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:814
 msgid "DVR behavior"
-msgstr "DVR működés"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2742 src/dvr/dvr_db.c:2766 src/dvr/dvr_db.c:3389
 #: src/dvr/dvr_autorec.c:1229 src/dvr/dvr_timerec.c:645
 msgid "DVR configuration"
-msgstr "DVR beállítások"
+msgstr ""
 
 #: src/access.c:1760
 msgid "DVR configuration profiles"
-msgstr "DVR beállítási profilok"
+msgstr ""
 
 #: src/access.c:1432
 msgid "DVR configurations"
-msgstr "DVR beállítások"
+msgstr ""
 
 #: src/htsp_server.c:1960
 msgid "DVR entry not found"
-msgstr "DVR bejegyzés nem található"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3361 src/dvr/dvr_autorec.c:1201 src/dvr/dvr_timerec.c:635
 #: src/dvr/dvr_config.c:914
 msgid "DVR file retention period"
-msgstr "DVR file tárolás"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3351 src/dvr/dvr_autorec.c:1191 src/dvr/dvr_timerec.c:625
 msgid "DVR log retention"
-msgstr "DVR log tárolása"
+msgstr ""
 
 #: src/dvr/dvr_config.c:903
 msgid "DVR log retention period"
-msgstr "DVR log tárolási periódus"
+msgstr ""
 
 #: src/profile.c:256
 msgid "DVR override: high"
-msgstr "DVR felülbírálása: magas"
+msgstr ""
 
 #: src/profile.c:255
 msgid "DVR override: important"
-msgstr "DVR felülbírálása: fontos"
+msgstr ""
 
 #: src/profile.c:258
 msgid "DVR override: low"
-msgstr "DVR felülbírálása: alacsony"
+msgstr ""
 
 #: src/profile.c:257
 msgid "DVR override: normal"
-msgstr "DVR felülbírálása: normális"
+msgstr ""
 
 #: src/profile.c:259
 msgid "DVR override: unimportant"
-msgstr "DVR felülbírálása: nem fontos"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:646
 msgid "DVR profile to use/used for the recording."
@@ -1793,7 +1788,7 @@ msgstr ""
 
 #: src/htsp_server.c:2399 src/htsp_server.c:2760
 msgid "DVR schedule does not exist"
-msgstr "DVR időzítő nem létezik"
+msgstr ""
 
 #: src/htsp_server.c:2768
 msgid "DVR schedule does not have a file yet"
@@ -1801,15 +1796,15 @@ msgstr ""
 
 #: src/htsp_server.c:2347
 msgid "DVR schedule not found"
-msgstr "DVR időzítő nem található"
+msgstr ""
 
 #: src/epg.c:2381
 msgid "Dance"
-msgstr "Tánc"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3453
 msgid "Data errors"
-msgstr "Adathibák"
+msgstr ""
 
 #: src/epggrab/channel.c:789
 msgid "Data path (if applicable)."
@@ -1821,7 +1816,7 @@ msgstr ""
 
 #: src/dvr/dvr_timerec.c:603
 msgid "Days of Week"
-msgstr "Hét napjai"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1135
 msgid "Days of the week to which the rule should apply."
@@ -1829,59 +1824,59 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1134
 msgid "Days of week"
-msgstr "Hét napjai"
+msgstr ""
 
 #: src/epg.c:2313
 msgid "Debate"
-msgstr "Vitaműsor"
+msgstr ""
 
 #: src/tvhlog.c:791
 msgid "Debug libav log"
-msgstr "Részletesebb libav naplózás"
+msgstr ""
 
 #: src/main.c:870
 msgid "Debug options"
-msgstr "Debug opciók"
+msgstr ""
 
 #: src/tvhlog.c:752
 msgid "Debug subsystems"
-msgstr "Debug alrendszerek"
+msgstr ""
 
 #: src/tvhlog.c:743
 msgid "Debug to syslog"
-msgstr "Debug naplózás a syslog-ba"
+msgstr ""
 
 #: src/tvhlog.c:764
 msgid "Debug trace (low-level)"
-msgstr "Debug trace (alacsony-szintű)"
+msgstr ""
 
 #: src/tvhlog.c:709
 msgid "Debugging"
-msgstr "Nyomkövetés"
+msgstr ""
 
 #: src/access.c:1384 src/access.c:1396 src/config.c:1927 src/profile.c:318
 msgid "Default"
-msgstr "Alapértelmezett"
+msgstr ""
 
 #: src/config.c:2217
 msgid "Default language(s)"
-msgstr "Alapértelmezett nyelv(ek)"
+msgstr ""
 
 #: src/access.c:1679
 msgid "Default language."
-msgstr "Alapértelmezett nyelv"
+msgstr ""
 
 #: src/http.c:581
 msgid "Default login"
-msgstr "Alapértelmezett belépés"
+msgstr ""
 
 #: src/profile.c:347
 msgid "Default priority"
-msgstr "Alapértelmezett prioritás"
+msgstr ""
 
 #: src/access.c:1657
 msgid "Default user interface level."
-msgstr "Alapértelmezett felhasználói szint"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:408
 msgid "Define network group to limit network usage."
@@ -1893,27 +1888,27 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux_dvb.c:778 src/input/mpegts/mpegts_mux_dvb.c:831
 #: src/input/mpegts/mpegts_mux_dvb.c:877
 msgid "Delivery system"
-msgstr "Szállítási rendszer"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:104
 msgid "Demux path"
-msgstr "Demux elérési útvonal"
+msgstr ""
 
 #: src/satip/server.c:715
 msgid "Descramble services (limit per mux)"
-msgstr "Szolgáltatások dekodolása (mux szerinti korlátozás)"
+msgstr ""
 
 #: src/tvhlog.c:134
 msgid "Descrambler"
-msgstr "Titkosítás feloldás"
+msgstr ""
 
 #: src/tvhlog.c:135
 msgid "Descrambler EMM"
-msgstr "Titkosítás feloldás EMM"
+msgstr ""
 
 #: src/config.c:2195
 msgid "Descrambler buffer (TS packets)"
-msgstr "Dekódolő puffer (TS csomagok)"
+msgstr ""
 
 #: src/profile.c:403
 msgid "Descrambling timeout (ms)"
@@ -1921,24 +1916,24 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3324 src/dvr/dvr_db.c:3332
 msgid "Description"
-msgstr "Leírás"
+msgstr ""
 
 #: src/epg.c:2292
 msgid "Detective"
-msgstr "Detektív"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:479
 msgid "Device ID"
-msgstr "Eszköz ID"
+msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:222
 msgid "Device model"
-msgstr "Eszköz típus"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:147
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:279
 msgid "Device path"
-msgstr "Eszköz elérési útvonal"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:120
 msgid "Device path in sysfs"
@@ -1951,7 +1946,7 @@ msgid ""
 "tells your router the prority in which to give packets sent from Tvheadend, "
 "this option does not usually need changing. See "
 "https://en.wikipedia.org/wiki/Differentiated_services for more information. "
-msgstr "Differentiated Services Code Point / Type of Service: a service class beállítása, amit a Tvheadend küld minden csomaggal. A választástól függően ez közli a routerrel, hogy milyen prioritással küldje tovább a Tvhheadend által továbbított csomagokat, ez a beállítás általában nem igényel változtatást. Lásd: https://en.wikipedia.org/wiki/Differentiated_services további információkért. "
+msgstr ""
 
 #: src/config.c:2119
 msgid ""
@@ -1962,11 +1957,11 @@ msgstr ""
 
 #: src/tvhlog.c:141 src/dvr/dvr_db.c:3178
 msgid "Digital Video Recorder"
-msgstr "Digitális Videó Felvevő"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3429 src/dvr/dvr_autorec.c:1013 src/dvr/dvr_timerec.c:559
 msgid "Directory"
-msgstr "Könyvtár"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:560
 msgid ""
@@ -1977,7 +1972,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:1151
 msgid "Directory permissions (octal, e.g. 0775)"
-msgstr "Könyvtárengedélyek (oktális, pl. 0775)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3430
 msgid "Directory used by the entry."
@@ -1986,11 +1981,11 @@ msgstr ""
 #: src/input/mpegts/mpegts_network.c:136 src/input/mpegts/mpegts_mux.c:471
 #: src/input/mpegts/mpegts_mux.c:481
 msgid "Disable"
-msgstr "Kikapcsol"
+msgstr ""
 
 #: src/main.c:891
 msgid "Disable DVB bouquets"
-msgstr "DVB csokrok kikapcsolása"
+msgstr ""
 
 #: src/satip/server.c:800
 msgid "Disable RTP/AVP/TCP support"
@@ -1998,7 +1993,7 @@ msgstr ""
 
 #: src/main.c:849
 msgid "Disable SAT>IP client"
-msgstr "SAT>IP kliens letiltása"
+msgstr ""
 
 #: src/satip/server.c:677
 msgid "Disable UPnP"
@@ -2014,23 +2009,23 @@ msgstr ""
 
 #: src/main.c:889
 msgid "Disable all access control checks"
-msgstr "Minden hozzáférési-elérés vizsgálatának kikapcsolása"
+msgstr ""
 
 #: src/main.c:872
 msgid "Disable debug on stderr"
-msgstr "Debug stderr interfészen kikapcsolása"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:365
 msgid "Disable device/firmware-specific workarounds"
-msgstr "Eszköz / firmware-specifikus megoldások kikapcsolása"
+msgstr ""
 
 #: src/main.c:874
 msgid "Disable syslog (all messages)"
-msgstr "Rendszernapló letiltása (minden üzenet)"
+msgstr ""
 
 #: src/channels.c:359 src/epggrab/module/xmltv.c:769
 msgid "Disabled"
-msgstr "Kikapcsolt"
+msgstr ""
 
 #: src/satip/server.c:737
 msgid ""
@@ -2045,15 +2040,15 @@ msgstr ""
 
 #: src/epg.c:2313
 msgid "Discussion"
-msgstr "Beszélgetés"
+msgstr ""
 
 #: src/tvhlog.c:156 src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1688
 msgid "DiseqC"
-msgstr "DiseqC"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:274
 msgid "DiseqC repeats"
-msgstr "DiseqC ismétlés"
+msgstr ""
 
 #: src/satip/server.c:792
 msgid "Do not send X_SATIPM3U information in the XML description to clients."
@@ -2071,11 +2066,11 @@ msgstr ""
 
 #: src/profile.c:1735 src/input/mpegts/satip/satip_frontend.c:143
 msgid "Do not use"
-msgstr "Ne használd"
+msgstr ""
 
 #: src/epg.c:2312 src/epg.c:2418
 msgid "Documentary"
-msgstr "Dokumentum"
+msgstr ""
 
 #: src/profile.c:392
 msgid ""
@@ -2085,43 +2080,43 @@ msgstr ""
 
 #: src/main.c:820
 msgid "Don't backup configuration tree at upgrade"
-msgstr "Konfigurációs fa frissítésének mellőzése mentés esetén."
+msgstr ""
 
 #: src/dvr/dvr_config.c:1251
 msgid "Don't include the title in the filename."
-msgstr "Ne szerepeljen a cím a fájlnévben"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1250
 msgid "Don't include title in filename"
-msgstr "Cím használatának mellőzése a fájlnévben"
+msgstr ""
 
 #: src/dvr/dvr_config.c:711
 msgid "Don't keep"
-msgstr "Ne tartsa meg"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3478
 msgid "Don't re-record"
-msgstr "Ne rögzítsen újra"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3479
 msgid "Don't re-record if recording fails."
-msgstr "Ne ismételje meg a felvételt, ha első alkalommal sikertelen"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3471
 msgid "Don't re-schedule if recording fails."
-msgstr "Ne időzítse újra, ha a felvétel nem sikerül"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3470
 msgid "Don't reschedule"
-msgstr "Ne ütemezze újra"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:235
 msgid "Don't use the provider's channel numbers."
-msgstr "Szolgáltatói csatorna számozás figyelmen kívül hagyása."
+msgstr ""
 
 #: src/epg.c:2291 src/epg.c:2298 src/epg.c:2299
 msgid "Drama"
-msgstr "Dráma"
+msgstr ""
 
 #: src/satip/server.c:736
 msgid "Drop \"fe=\" parameter"
@@ -2129,19 +2124,19 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1180
 msgid "Duplicate handling"
-msgstr "dupla bejegyzések kezelése"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1181
 msgid "Duplicate recording handling."
-msgstr "Duplikált felvétel kezelése."
+msgstr ""
 
 #: src/config.c:1946
 msgid "EF"
-msgstr "EF"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:671
 msgid "EIT - skip TSID check"
-msgstr "EIT - TSID ellenőrzésének kihagyása"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:263
 msgid "EIT time offset"
@@ -2149,11 +2144,11 @@ msgstr ""
 
 #: src/tvhlog.c:144
 msgid "EPG Database"
-msgstr "EPG adatbázis"
+msgstr ""
 
 #: src/tvhlog.c:145 src/epggrab/module.c:111
 msgid "EPG Grabber"
-msgstr "EPG letöltő"
+msgstr ""
 
 #: src/epggrab/channel.c:742
 msgid "EPG Grabber Channel"
@@ -2165,7 +2160,7 @@ msgstr ""
 
 #: src/wizard.c:188
 msgid "EPG Language (priority order)"
-msgstr "EPG nyelv (prioritás sorrend)"
+msgstr ""
 
 #: src/epggrab/channel.c:808
 msgid "EPG data ID."
@@ -2173,7 +2168,7 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:187
 msgid "EPG name"
-msgstr "EPG név"
+msgstr ""
 
 #: src/config.c:2244
 msgid "EPG overlap cut"
@@ -2181,7 +2176,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:537
 msgid "EPG scan"
-msgstr "EPG szkennelés"
+msgstr ""
 
 #: src/epggrab.c:375
 msgid "EPG scan time-out in seconds (30-7200)"
@@ -2189,32 +2184,32 @@ msgstr ""
 
 #: src/channels.c:455
 msgid "EPG source"
-msgstr "EPG forrása"
+msgstr ""
 
 #: src/dvr/dvr_config.c:987
 msgid "EPG update window"
-msgstr "EPG frissítési ablak"
+msgstr ""
 
 #: src/epg.c:2417 src/epg.c:2419
 msgid "Economics"
-msgstr "Gazdaság"
+msgstr ""
 
 #: src/epg.c:2435
 msgid "Education"
-msgstr "Oktatás"
+msgstr ""
 
 #: src/epg.c:2443 src/epg.c:2444 src/epg.c:2445 src/epg.c:2446 src/epg.c:2447
 #: src/epg.c:2448 src/epg.c:2449 src/epg.c:2450
 msgid "Education / Science / Factual topics"
-msgstr "Oktatás / tudomány / tényfeltáró"
+msgstr ""
 
 #: src/epg.c:2367
 msgid "Educational"
-msgstr "Oktatási"
+msgstr ""
 
 #: src/tvhlog.c:143
 msgid "Electronic Program Guide"
-msgstr "Elektronikus műsor újság"
+msgstr ""
 
 #: src/tvhlog.c:132
 msgid "Elementary Stream Filter"
@@ -2222,43 +2217,43 @@ msgstr ""
 
 #: src/esfilter.c:589
 msgid "Elementary stream filter"
-msgstr "Alapvető stream szűrő"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:472
 msgid "Enable"
-msgstr "Engedélyezés"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:482
 msgid "Enable (auto)"
-msgstr "Engedélyez (automatikus)"
+msgstr ""
 
 #: src/main.c:832
 msgid "Enable DBus"
-msgstr "DBUS engedélyezése"
+msgstr ""
 
 #: src/config.c:2312
 msgid "Enable NTP driver"
-msgstr "NTP meghajtó engedélyezése"
+msgstr ""
 
 #: src/main.c:888
 msgid "Enable coredumps for daemon"
-msgstr "Coredump-ok engedélyezése a daemon-hoz"
+msgstr ""
 
 #: src/main.c:871
 msgid "Enable debug on stderr"
-msgstr "Debug stderr interfészen  engedelyezése"
+msgstr ""
 
 #: src/main.c:876
 msgid "Enable debug subsystems"
-msgstr "Debug alrendszerek engedelyezése"
+msgstr ""
 
 #: src/main.c:875
 msgid "Enable debug to file"
-msgstr "Debug file-ba  engedelyezése"
+msgstr ""
 
 #: src/main.c:873
 msgid "Enable debug to syslog"
-msgstr "Debug syslog-ba  engedelyezése"
+msgstr ""
 
 #: src/access.c:1825
 msgid ""
@@ -2270,17 +2265,17 @@ msgstr ""
 msgid ""
 "Enable if the SAT>IP box requests plts=on parameter in the SETUP RTSP "
 "command for DVB-S2 muxes."
-msgstr "Engedélyezze, ha a SAT>IP box a plts=on paramétert kér a SETUP RTSP parancsban DVB-S2 mux esetén."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:341
 msgid ""
 "Enable if the SAT>IP box requires pids=21 parameter in the SETUP RTSP "
 "command"
-msgstr "Engedélyezze, ha a SAT>IP box a pids=21 paramétert kér a SETUP RTSP parancsban."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:311
 msgid "Enable if the SAT>IP box supports the addpids/delpids commands."
-msgstr "Engedélyezze, ha a SAT>IP box támogatja az addpids/delpids parancsokat."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:320
 msgid ""
@@ -2297,21 +2292,21 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:267
 msgid "Enable or disable fast input switching."
-msgstr "A gyors bemeneti kapcsolás engedélyezése vagy tiltása."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:275
 msgid "Enable or disable full mux mode."
-msgstr "A teljes mux üzemmód engedélyezése vagy tiltása."
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:195
 msgid ""
 "Enable or disable ignoring of Event Information Table (EIT) data on this "
 "mux."
-msgstr "Az esemény információs tábla (Event Information Table (EIT)) adatainak figyelmen kívül hagyásának engedélyezése vagy tiltása ezen a mux-on."
+msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:356
 msgid "Enable or disable this configuration."
-msgstr "Jelenlegi konfiguráció engedélyezése vagy tiltása."
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:289
 msgid "Enable over-the-air program guide (EPG) scanning on this input device."
@@ -2319,13 +2314,13 @@ msgstr ""
 
 #: src/tvhlog.c:734
 msgid "Enable syslog"
-msgstr "Syslog engedélyezése"
+msgstr ""
 
 #: src/config.c:2302
 msgid ""
 "Enable system time updates. This will only work if the user running "
 "Tvheadend has rights to update the system clock (normally only root)."
-msgstr "Rendszeridő frissítésének engedélyezése. Ez csak akkor működik, ha a Tvheadend-et futtató felhasználónak van jogosultsága a rendszeróra állításához. (Általában ez csak root jogokkal működik)."
+msgstr ""
 
 #: src/config.c:2185
 msgid ""
@@ -2335,15 +2330,15 @@ msgstr ""
 
 #: src/esfilter.c:617
 msgid "Enable this filter."
-msgstr "Szűrő engedélyezése"
+msgstr ""
 
 #: src/main.c:878
 msgid "Enable trace subsystems"
-msgstr "Trace alrendszerek engedelyezése"
+msgstr ""
 
 #: src/main.c:886
 msgid "Enable web UI debug (non-minified JS)"
-msgstr "Webes felületének debug-olásának engedélyezése (nem-minimalizált JS)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:525
 msgid ""
@@ -2353,11 +2348,11 @@ msgstr ""
 
 #: src/descrambler/caclient.c:273
 msgid "Enable/Disable CA client."
-msgstr " CA kliens engedélyezése/tiltása."
+msgstr ""
 
 #: src/service.c:180
 msgid "Enable/Disable service."
-msgstr "Szolgáltatás engedélyezése/tiltása."
+msgstr ""
 
 #: src/access.c:1620
 msgid "Enable/Disable the entry."
@@ -2365,7 +2360,7 @@ msgstr ""
 
 #: src/timeshift.c:194
 msgid "Enable/Disable timeshift."
-msgstr "Időeltolás engedélyezése/tiltása."
+msgstr ""
 
 #: src/epggrab/channel.c:761
 msgid "Enable/disable EPG data for the entry."
@@ -2373,11 +2368,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:226
 msgid "Enable/disable LNA."
-msgstr "LNA engedélyezése/tiltása."
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:999
 msgid "Enable/disable auto-rec rule."
-msgstr "Automatikus felvétel szabály engedélyezése/tiltása."
+msgstr ""
 
 #: src/tvhlog.c:744
 msgid "Enable/disable debugging output to syslog."
@@ -2413,7 +2408,7 @@ msgstr ""
 
 #: src/profile.c:309 src/dvr/dvr_config.c:847
 msgid "Enable/disable profile."
-msgstr "Profil engedélyezése/tiltása."
+msgstr ""
 
 #: src/bouquet.c:982
 msgid "Enable/disable the bouquet."
@@ -2421,7 +2416,7 @@ msgstr ""
 
 #: src/channels.c:382
 msgid "Enable/disable the channel."
-msgstr "Csatorna engedélyezése/tiltása."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:212
 msgid "Enable/disable the device."
@@ -2456,15 +2451,15 @@ msgstr ""
 #: src/input/mpegts/satip/satip_satconf.c:355 src/timeshift.c:193
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:211
 msgid "Enabled"
-msgstr "Engedélyezett"
+msgstr ""
 
 #: src/service.c:221
 msgid "Encrypted"
-msgstr "Kódolt"
+msgstr ""
 
 #: src/htsp_server.c:886
 msgid "Encrypted service"
-msgstr "Kódolt csatorna"
+msgstr ""
 
 #: src/wizard.c:454
 msgid "Enter a non-admin user password."
@@ -2521,32 +2516,32 @@ msgstr ""
 
 #: src/epg.c:2366
 msgid "Entertainment programs for 10 to 16"
-msgstr "Szórakoztató programok 10-től 16-ig"
+msgstr ""
 
 #: src/epg.c:2365
 msgid "Entertainment programs for 6 to 14"
-msgstr "Szórakoztató programok 6-tól 14-ig"
+msgstr ""
 
 #: src/epg.c:2436
 msgid "Environment"
-msgstr "Környezet"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:224
 msgid "Environment (pipe)"
-msgstr "Környezet (pipe)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3564
 msgid "Episode"
-msgstr "Epizód"
+msgstr ""
 
 #: src/dvr/dvr_db.c:820
 #, c-format
 msgid "Episode %d"
-msgstr "Epizód %d"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3565
 msgid "Episode number/ID."
-msgstr "Rész száma/ID."
+msgstr ""
 
 #: src/epg.c:2355
 msgid "Equestrian"
@@ -2554,7 +2549,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3437
 msgid "Error code"
-msgstr "Hibakód"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3438
 msgid "Error code of entry."
@@ -2562,11 +2557,11 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3445
 msgid "Errors"
-msgstr "Hibák"
+msgstr ""
 
 #: src/descrambler/constcw.c:324 src/descrambler/constcw.c:390
 msgid "Even key"
-msgstr "Páros kulcs"
+msgstr ""
 
 #: src/descrambler/constcw.c:325 src/descrambler/constcw.c:391
 msgid "Even key."
@@ -2578,39 +2573,39 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:791
 msgid "Every day"
-msgstr "Minden nap"
+msgstr ""
 
 #: src/access.c:1824
 msgid "Exclude channel tags"
-msgstr "Csatorna címkék mellőzése"
+msgstr ""
 
 #: src/epg.c:2439
 msgid "Expeditions"
-msgstr "Expedíciók"
+msgstr ""
 
 #: src/epg.c:2406
 msgid "Experimental film"
-msgstr "Kísérleti film"
+msgstr ""
 
 #: src/access.c:1387 src/config.c:1959
 msgid "Expert"
-msgstr "Haladó"
+msgstr ""
 
 #: src/satip/server.c:640
 msgid "Exported tuners"
-msgstr "Exportált tunerek"
+msgstr ""
 
 #: src/epggrab/module.c:60
 msgid "External"
-msgstr "Külső"
+msgstr ""
 
 #: src/epggrab/module.c:199
 msgid "External EPG grabber"
-msgstr "Külső EPG letöltő"
+msgstr ""
 
 #: src/satip/server.c:771
 msgid "External IP (NAT)"
-msgstr "Külső IP cím (NAT)"
+msgstr ""
 
 #: src/epggrab/module/pyepg.c:471
 msgid "External PyEPG Grabber"
@@ -2622,7 +2617,7 @@ msgstr ""
 
 #: src/bouquet.c:1044
 msgid "External URL"
-msgstr "Külső URL"
+msgstr ""
 
 #: src/bouquet.c:1045
 msgid "External URL of the bouquet."
@@ -2634,23 +2629,23 @@ msgstr ""
 
 #: src/epggrab/module.c:186
 msgid "Extra arguments"
-msgstr "Plussz paraméterek"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1113
 msgid "Extra start time"
-msgstr "Plussz kezdési idő"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1123
 msgid "Extra stop time"
-msgstr "Plussz leállítási időpont"
+msgstr ""
 
 #: src/dvr/dvr_config.c:946
 msgid "Extra warming up time (seconds)"
-msgstr "Plussz bemelegítési idő (másodperc)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:401
 msgid "FAIL"
-msgstr "SIKERTELEN"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:319
 msgid "FE supported"
@@ -2659,24 +2654,24 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux_dvb.c:332 src/input/mpegts/mpegts_mux_dvb.c:467
 #: src/input/mpegts/mpegts_mux_dvb.c:610 src/input/mpegts/mpegts_mux_dvb.c:802
 msgid "FEC"
-msgstr "FEC"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:254
 msgid "FEC high"
-msgstr "FEC magas"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:259
 msgid "FEC low"
-msgstr "FEC alacsony"
+msgstr ""
 
 #: src/epg.c:2435
 msgid "Factual topics"
-msgstr "Tényszerű témák"
+msgstr ""
 
 #: src/subscriptions.c:1062
 #, c-format
 msgid "Failed"
-msgstr "Sikertelen"
+msgstr ""
 
 #: src/htsp_server.c:2777
 msgid "Failed to open image"
@@ -2688,15 +2683,15 @@ msgstr ""
 
 #: src/epg.c:2294
 msgid "Fantasy"
-msgstr "Fantasy"
+msgstr ""
 
 #: src/epg.c:2410
 msgid "Fashion"
-msgstr "Divat"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:266
 msgid "Fast input switch"
-msgstr "Gyors bemenet váltás"
+msgstr ""
 
 #: src/tvhlog.c:117
 msgid "Fastscan DVB"
@@ -2704,15 +2699,15 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:661
 msgid "File missing"
-msgstr "Hiányzó fájl"
+msgstr ""
 
 #: src/dvr/dvr_db.c:650
 msgid "File not created"
-msgstr "A fájl nem lett létrehozva"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1092
 msgid "File permissions (octal, e.g. 0664)"
-msgstr "Fájl jogosultságok (oktális, pl. 0664)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3486
 msgid "File removed"
@@ -2720,11 +2715,11 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3580
 msgid "File size"
-msgstr "Fájlméret"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3421
 msgid "Filename"
-msgstr "Fájlnév"
+msgstr ""
 
 #: src/tvhlog.c:724
 msgid "Filename (including path)"
@@ -2732,11 +2727,11 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:1102
 msgid "Filename character set"
-msgstr "Fájlnév karakterkészlete"
+msgstr ""
 
 #: src/dvr/dvr_config.c:830
 msgid "Filename options"
-msgstr "Fájlnév tulajdonságai"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3422
 msgid "Filename used by the entry."
@@ -2748,15 +2743,15 @@ msgstr ""
 
 #: src/epg.c:2405
 msgid "Film"
-msgstr "Film"
+msgstr ""
 
 #: src/epg.c:2401
 msgid "Fine arts"
-msgstr "Szépművészet"
+msgstr ""
 
 #: src/wizard.c:1192 src/dvr/dvr_db.c:642
 msgid "Finished"
-msgstr "Befejezett"
+msgstr ""
 
 #: src/epggrab/module/xmltv.c:770
 msgid "First word"
@@ -2768,19 +2763,19 @@ msgstr ""
 
 #: src/epg.c:2457
 msgid "Fitness and health"
-msgstr "Fitness és egészség"
+msgstr ""
 
 #: src/epg.c:2384
 msgid "Folk"
-msgstr "Népzene"
+msgstr ""
 
 #: src/epg.c:2296
 msgid "Folkloric"
-msgstr "Népi"
+msgstr ""
 
 #: src/epg.c:2348
 msgid "Football"
-msgstr "Labdarúgás"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:263
 msgid "For example: 12610500. This frequency is 12610.5Mhz or 12.6105Ghz."
@@ -2796,11 +2791,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:483
 msgid "Force (auto)"
-msgstr "Kényszerít (automatikus)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:232
 msgid "Force CA ID (e.g. 0x2600)"
-msgstr " CA ID Kényszerítés (pl.. 0x2600)"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:373
 #: src/input/mpegts/satip/satip_frontend.c:243
@@ -2808,7 +2803,7 @@ msgid ""
 "Force all network connections to this tuner to be made over the specified IP"
 " address, similar to the setting for the SAT>IP device itself. Setting this "
 "overrides the device-specific setting."
-msgstr "Kényszerítse az összes hálózati kapcsolatot, amely ehhez a tunerhez csatlakozik, hogy ezen a IP-n keresztül jöjjön létre,  hasonlóan a  SAT> IP eszköz beállításához.Ez  a beállítás  felülírja az eszköz-specifikus beállításokat."
+msgstr ""
 
 #: src/epggrab.c:353
 msgid "Force an initial EPG grab at start-up."
@@ -2820,15 +2815,15 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:203
 msgid "Force old status"
-msgstr "Régi stilusú státusz lekérés kényszerítése"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:330
 msgid "Force pilot for DVB-S2"
-msgstr "Pilot mód kényszerítése  DVB-S2 -re"
+msgstr ""
 
 #: src/profile.c:361
 msgid "Force priority"
-msgstr "Prioritás kényszerítése"
+msgstr ""
 
 #: src/profile.c:362
 msgid "Force profile to use this priority."
@@ -2848,14 +2843,14 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:213
 msgid "Force teardown delay"
-msgstr "Szétszerelés - teardown késleltetés"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:214
 msgid ""
 "Force the delay between RTSP TEARDOWN and RTSP SETUP command (value from "
 "'Next tune delay in ms' is used). Some devices are not able to handle quick "
 "continuous tuning."
-msgstr "Kényszerítse  a késést  az RTSP TEARDOWN és RTSP SETUP parancsoknál (értékét a next tune delay in ms beallításból kapja). Egyes készülékek nem képesek kezelni a gyors folytonos hangolást."
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:203
 msgid ""
@@ -2868,11 +2863,11 @@ msgstr ""
 msgid ""
 "Force the local UDP Port number here. The number should be even (RTP port). "
 "The next odd number (+1) will be used as the RTCP port."
-msgstr "Kényszerítse az itt megadott lokális UDP-port számának használatát. A érték páros kell, hogy legyen (RTP port). A következő páratlan szám (+1) lesz használva mint  RTCP port."
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:233
 msgid "Force usage of entered CA ID on this service."
-msgstr "A beírt CA ID kényszerített használata ennél a szolgáltatásnál."
+msgstr ""
 
 #: src/streaming.c:435
 msgid "Forced OK"
@@ -2880,32 +2875,32 @@ msgstr ""
 
 #: src/epg.c:2439
 msgid "Foreign countries"
-msgstr "Külföldi országok"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2757 src/dvr/dvr_db.c:2781 src/dvr/dvr_config.c:736
 #: src/dvr/dvr_config.c:759
 msgid "Forever"
-msgstr "végtelen"
+msgstr ""
 
 #: src/main.c:821
 msgid "Fork and run as daemon"
-msgstr "Fork-ol és futtat mind daemon"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1138
 msgid "Format string"
-msgstr "Karakter formátum"
+msgstr ""
 
 #: src/wizard.c:1025
 msgid "Found muxes"
-msgstr "Talált mux-ok"
+msgstr ""
 
 #: src/wizard.c:1034
 msgid "Found services"
-msgstr "Talált szolgáltatások"
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:320
 msgid "Free subscription weight"
-msgstr "Szabad feliratozások súlya"
+msgstr ""
 
 #: src/dvr/dvr_config.c:869
 msgid "Free-form field, enter whatever you like here."
@@ -2927,60 +2922,60 @@ msgstr ""
 #: src/esfilter.c:710 src/esfilter.c:805 src/esfilter.c:900 src/esfilter.c:995
 #: src/esfilter.c:1100 src/esfilter.c:1182
 msgid "Free-format text field. Enter whatever you like here."
-msgstr "Szabad formátumú szöveges mező. Írjon be bármit ide."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:155
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:193
 msgid "Frequency"
-msgstr "Frekvencia"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:219 src/input/mpegts/mpegts_mux_dvb.c:314
 #: src/input/mpegts/mpegts_mux_dvb.c:551 src/input/mpegts/mpegts_mux_dvb.c:592
 #: src/input/mpegts/mpegts_mux_dvb.c:677 src/input/mpegts/mpegts_mux_dvb.c:784
 #: src/input/mpegts/mpegts_mux_dvb.c:883
 msgid "Frequency (Hz)"
-msgstr "Frekvencia (Hz)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:544
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:608
 msgid "Frequency (MHz)"
-msgstr "Frekvencia (MHz)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:545
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:609
 msgid "Frequency (in MHz)."
-msgstr "Frekvencia (MHz-ben)."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:445 src/input/mpegts/mpegts_mux_dvb.c:837
 msgid "Frequency (kHz)"
-msgstr "Frekvencia (kHz)"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:773
 msgid "Fri"
-msgstr "Pé"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:399
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:215
 msgid "Friendly name"
-msgstr "Barátságos név"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:112
 #: src/input/mpegts/satip/satip_frontend.c:163
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:571
 msgid "Frontend number"
-msgstr "Fejegység száma"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:88
 msgid "Frontend path"
-msgstr "Fejegység  elérési útvonal"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:288
 msgid "Full DiseqC"
-msgstr "Teljes DiseqC"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:274
 msgid "Full mux RX mode supported"
-msgstr "Teljes MUX RX mód támogatás"
+msgstr ""
 
 #: src/channels.c:1481
 msgid ""
@@ -2990,47 +2985,47 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:822
 msgid "Full pathname specification"
-msgstr "Teljes elérési útvonal meghatározása"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1034
 msgid "Full-text"
-msgstr "Teljes szöveg"
+msgstr ""
 
 #: src/epg.c:2441
 msgid "Further education"
-msgstr "További oktatás"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:472
 msgid "GOTOX"
-msgstr "GOTOX"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:127
 msgid "GOTOX position"
-msgstr "GOTOX pozicíó"
+msgstr ""
 
 #: src/epg.c:2327 src/epg.c:2328
 msgid "Game show"
-msgstr "Vetélkedő"
+msgstr ""
 
 #: src/epg.c:2460
 msgid "Gardening"
-msgstr "Kertészkedés"
+msgstr ""
 
 #: src/satip/server.c:636
 msgid "General"
-msgstr "Általános"
+msgstr ""
 
 #: src/epggrab.c:262
 msgid "General configuration"
-msgstr "Általános beállítás"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:263
 msgid "Generic"
-msgstr "Általános"
+msgstr ""
 
 #: src/main.c:814
 msgid "Generic options"
-msgstr "Általános opciók"
+msgstr ""
 
 #: src/tvhlog.c:120
 msgid "Global Headers"
@@ -3053,63 +3048,63 @@ msgstr ""
 
 #: src/access.c:1408
 msgid "Gray"
-msgstr "Szürke"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:244 src/input/mpegts/mpegts_mux_dvb.c:690
 msgid "Guard interval"
-msgstr "Figelési intervallum"
+msgstr ""
 
 #: src/service.c:159
 msgid "HD TV"
-msgstr "HD TV"
+msgstr ""
 
 #: src/profile.c:270
 msgid "HD: high definition"
-msgstr "HD: Magas felbontású"
+msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:613
 msgid "HDHomeRun ATSC-C frontend"
-msgstr "HDHomeRun ATSC-C frontend"
+msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:603
 msgid "HDHomeRun ATSC-T frontend"
-msgstr "HDHomeRun ATSC-T frontend"
+msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:565
 msgid "HDHomeRun DVB frontend"
-msgstr "HDHomeRun DVB fejegység"
+msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:593
 msgid "HDHomeRun DVB-C frontend"
-msgstr "HDHomeRun DVB-C fejegység"
+msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:583
 msgid "HDHomeRun DVB-T frontend"
-msgstr "HDHomeRun DVB-T fejegység"
+msgstr ""
 
 #: src/tvhlog.c:122
 msgid "HEVC - H.265"
-msgstr "HEVC - H.265"
+msgstr ""
 
 #: src/access.c:1506 src/access.c:1544
 msgid "HTSP"
-msgstr "HTSP"
+msgstr ""
 
 #: src/tvhlog.c:107
 msgid "HTSP Answer"
-msgstr "HTSP válasz"
+msgstr ""
 
 #: src/profile.c:2250
 msgid "HTSP Default Stream Settings"
-msgstr "HTSP Alapértelmezett Stream Beállítások"
+msgstr ""
 
 #: src/tvhlog.c:106
 msgid "HTSP Request"
-msgstr "HTSP kérés"
+msgstr ""
 
 #: src/tvhlog.c:104
 msgid "HTSP Server"
-msgstr "HTSP szerver"
+msgstr ""
 
 #: src/profile.c:1036
 msgid "HTSP Stream Profile"
@@ -3128,7 +3123,7 @@ msgstr ""
 
 #: src/config.c:2154
 msgid "HTTP CORS origin"
-msgstr "HTTP CORS kezdeti érték"
+msgstr ""
 
 #: src/tvhlog.c:103
 msgid "HTTP Client"
@@ -3136,27 +3131,27 @@ msgstr ""
 
 #: src/tvhlog.c:102
 msgid "HTTP Server"
-msgstr "HTSP szerver"
+msgstr ""
 
 #: src/epg.c:2455
 msgid "Handicraft"
-msgstr "Kézművesség"
+msgstr ""
 
 #: src/streaming.c:583
 msgid "Hearing impaired"
-msgstr "Hallássérült"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:249
 msgid "Hierarchy"
-msgstr "Hierarchia"
+msgstr ""
 
 #: src/profile.c:251 src/dvr/dvr_db.c:2730
 msgid "High"
-msgstr "Magas"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:219
 msgid "High bitrate mode (CI+ CAMs only)"
-msgstr "Magas bitráta mód (CI+ CAM )"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_lnb.c:74
 msgid "High frequency offset"
@@ -3180,11 +3175,11 @@ msgstr ""
 
 #: src/epg.c:2298
 msgid "Historical movie"
-msgstr "Történelmi film"
+msgstr ""
 
 #: src/epg.c:2294
 msgid "Horror"
-msgstr "Horror"
+msgstr ""
 
 #: src/descrambler/cwc.c:1859
 msgid "Hostname (or IP) of the server."
@@ -3192,21 +3187,21 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1858
 msgid "Hostname/IP"
-msgstr "Hostname/IP"
+msgstr ""
 
 #: src/imagecache.c:115
 msgid ""
 "How frequently it will re-try fetching an image that has failed to be "
 "fetched."
-msgstr "Milyen gyakran próbálja újra letölteni a képet, amelyet nem sikerült letöltenie."
+msgstr ""
 
 #: src/imagecache.c:107
 msgid "How frequently the upstream provider is checked for changes."
-msgstr "Milyen gyakran ellenőrizze a feltöltő szolgáltatót változások miatt."
+msgstr ""
 
 #: src/epggrab/channel.c:807
 msgid "ID"
-msgstr "ID"
+msgstr ""
 
 #: src/wizard.c:816
 msgid "ID of the network."
@@ -3214,7 +3209,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:392
 msgid "IDLE"
-msgstr "üresjárat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:403
 msgid "IGNORE"
@@ -3223,15 +3218,15 @@ msgstr ""
 #: src/input/mpegts/satip/satip.c:372
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:201
 msgid "IP address"
-msgstr "IP-cím"
+msgstr ""
 
 #: src/access.c:2142
 msgid "IP blocking"
-msgstr "IP blokkolás"
+msgstr ""
 
 #: src/tvhlog.c:152 src/input/mpegts/iptv/iptv.c:136
 msgid "IPTV"
-msgstr "IPTV"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:872
 msgid "IPTV Automatic Network"
@@ -3239,23 +3234,23 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:118
 msgid "IPTV Multiplex"
-msgstr "IPTV-multiplex"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:731
 msgid "IPTV Network"
-msgstr "IPTV-hálózat"
+msgstr ""
 
 #: src/tvhlog.c:153
 msgid "IPTV PCR"
-msgstr "IPTV PCR"
+msgstr ""
 
 #: src/tvhlog.c:154
 msgid "IPTV Subcription"
-msgstr "IPTV előfizetés"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:143
 msgid "IPTV input"
-msgstr "IPTV-bemenet"
+msgstr ""
 
 #: src/satip/server.c:810
 msgid "IPTV signal level"
@@ -3263,47 +3258,47 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:385
 msgid "ISDB-C Network"
-msgstr "ISDB-C hálózat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:775
 msgid "ISDB-C multiplex"
-msgstr "ISDB-C multiplex"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:408
 msgid "ISDB-S Network"
-msgstr "ISDB-S hálózat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:828
 msgid "ISDB-S multiplex"
-msgstr "ISDB-S multiplex"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:362
 msgid "ISDB-T Network"
-msgstr "ISDB-T hálózat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:668
 msgid "ISDB-T multiplex"
-msgstr "ISDB-T multiplex"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:484
 msgid "ISI (Stream ID)"
-msgstr "ISI (Stream ID)"
+msgstr ""
 
 #: src/epggrab/channel.c:663 src/epggrab/channel.c:841
 msgid "Icon"
-msgstr "Ikon"
+msgstr ""
 
 #: src/channels.c:1480
 msgid "Icon (full URL)"
-msgstr "Ikon (teljes URL)"
+msgstr ""
 
 #: src/channels.c:432 src/channels.c:1490 src/input/mpegts/iptv/iptv_mux.c:194
 msgid "Icon URL"
-msgstr "Ikon URL"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:806
 msgid "Icon base URL"
-msgstr "Ikon elérési URL "
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:807
 msgid "Icon base URL."
@@ -3311,23 +3306,23 @@ msgstr ""
 
 #: src/channels.c:1498
 msgid "Icon has title"
-msgstr "Ikon címmel rendelkezik"
+msgstr ""
 
 #: src/webui/extjs.c:211
 msgid "Icons from"
-msgstr "Ikonok forrása"
+msgstr ""
 
 #: src/subscriptions.c:1024
 msgid "Idle"
-msgstr "üresjárat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:311
 msgid "Idle scan"
-msgstr "Üresjáratú szkennelés-engedélyezése"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:207
 msgid "Idle scan muxes"
-msgstr "Üresjáratú MUX szkennelés-engedélyezése"
+msgstr ""
 
 #: src/dvr/dvr_config.c:926
 msgid ""
@@ -3360,7 +3355,7 @@ msgid ""
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
 "the access control from within the Tvheadend web interface."
-msgstr "Abban az esetben ha nem létezik felhasználói fiók\nHozzon létre egy bejegyzést felhasználónév és jelszó nélkül\nhasználja elővigyázattal, ugyanis korlátlan hozzáférést biztosít egészen addig, míg nem hoz létre/modoítja a létező felhasználót a webes felületen"
+msgstr ""
 
 #: src/channels.c:1499
 msgid ""
@@ -3398,19 +3393,19 @@ msgstr ""
 
 #: src/webui/extjs.c:235
 msgid "If you'd like to support the project, please consider a donation."
-msgstr "Ha támogatni szeretnéd a programot, fontold meg a támogatását."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:470
 msgid "Ignore"
-msgstr "Elutasít"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:194
 msgid "Ignore EPG (EIT)"
-msgstr "EPG figyelmen kívül hagyása (EIT)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:503
 msgid "Ignore descriptor 5"
-msgstr "Hagyja figyelmen kívül az 5-ös leírót"
+msgstr ""
 
 #: src/service_mapper.c:519
 msgid "Ignore encryption flag, include encrypted services anyway."
@@ -3418,16 +3413,16 @@ msgstr ""
 
 #: src/imagecache.c:98
 msgid "Ignore invalid SSL certificate"
-msgstr "Érvénytelen SSL tanusitvány figyelmen kívül hagyása"
+msgstr ""
 
 #: src/imagecache.c:99
 msgid ""
 "Ignore invalid/unverifiable (expired, self-certified, etc.) certificates"
-msgstr "Hagyja figyelmen kívül  az érvénytelen / ellenőrizhetetlenek (lejárt, öntanúsított, stb) tanúsítványokat."
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:234
 msgid "Ignore provider's channel numbers"
-msgstr "Szolgáltatói csatorna számozás figyelmen kívül hagyása"
+msgstr ""
 
 #: src/tvhlog.c:108
 msgid "Image Cache"
@@ -3435,27 +3430,27 @@ msgstr ""
 
 #: src/main.c:887
 msgid "Immediately abort"
-msgstr "Azonnali megszakítás"
+msgstr ""
 
 #: src/profile.c:250 src/dvr/dvr_db.c:2729
 msgid "Important"
-msgstr "Fontos"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1197
 msgid "Include channel name in filename"
-msgstr "Csatorna nevének használata a fájlnévben"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1208
 msgid "Include date in filename"
-msgstr "Dátum használata a fájlnévben"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1230
 msgid "Include episode in filename"
-msgstr "Epizód nevének használata a fájlnévben"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1240
 msgid "Include subtitle in filename"
-msgstr "Felirat használata a fájlnévben"
+msgstr ""
 
 #: src/timeshift.c:294
 msgid "Include teletext"
@@ -3495,51 +3490,51 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:1219
 msgid "Include time in filename"
-msgstr "Idő használata a fájlnévben"
+msgstr ""
 
 #: src/access.c:1612 src/esfilter.c:609 src/descrambler/caclient.c:265
 msgid "Index"
-msgstr "Index"
+msgstr ""
 
 #: src/config.c:2254
 msgid "Information area"
-msgstr "Információs terület"
+msgstr ""
 
 #: src/epg.c:2367
 msgid "Informational"
-msgstr "Tájékoztató jellegű"
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:297
 msgid "Initial scan"
-msgstr "Üresjáratú szkennelés-engedélyezése"
+msgstr ""
 
 #: src/input.c:29
 msgid "Input base"
-msgstr "Bemenet alapcíme"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:178
 msgid "Input buffer (bytes)"
-msgstr "Bemeneti puffer (bájtban)"
+msgstr ""
 
 #: src/input.c:36
 msgid "Input instance"
-msgstr "Bemeneti példány"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:96
 msgid "Input path"
-msgstr "Bemenet elérési útja"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:154
 msgid "Interface"
-msgstr "Felület"
+msgstr ""
 
 #: src/channels.c:1462 src/epggrab/module.c:59
 msgid "Internal"
-msgstr "Belső"
+msgstr ""
 
 #: src/epggrab/module.c:172
 msgid "Internal EPG grabber"
-msgstr "Belső EPG letöltő"
+msgstr ""
 
 #: src/epggrab/module/pyepg.c:464
 msgid "Internal PyEPG Grabber"
@@ -3551,19 +3546,19 @@ msgstr ""
 
 #: src/htsp_server.c:1796
 msgid "Internal error"
-msgstr "Belső hiba"
+msgstr ""
 
 #: src/epggrab.c:266
 msgid "Internal grabber"
-msgstr "Belső letöltő"
+msgstr ""
 
 #: src/epg.c:2313
 msgid "Interview"
-msgstr "Interjú"
+msgstr ""
 
 #: src/dvr/dvr_db.c:644 src/dvr/dvr_db.c:676 src/dvr/dvr_timerec.c:426
 msgid "Invalid"
-msgstr "Érvénytelen"
+msgstr ""
 
 #: src/htsp_server.c:1792
 msgid "Invalid EPG object request"
@@ -3572,7 +3567,7 @@ msgstr ""
 #: src/main.c:973
 #, c-format
 msgid "Invalid adapter number '%s'\n"
-msgstr "Érvénytelen eszköz szám '%s'\n"
+msgstr ""
 
 #: src/htsp_server.c:1301 src/htsp_server.c:1304 src/htsp_server.c:1587
 #: src/htsp_server.c:1605 src/htsp_server.c:1705 src/htsp_server.c:1782
@@ -3590,19 +3585,19 @@ msgstr ""
 #: src/htsp_server.c:2799 src/htsp_server.c:2851 src/htsp_server.c:2887
 #: src/htsp_server.c:2915
 msgid "Invalid file"
-msgstr "Érvénytelen file"
+msgstr ""
 
 #: src/htsp_server.c:2802 src/htsp_server.c:2918 src/htsp_server.c:2928
 msgid "Invalid parameters"
-msgstr "Érvénytelen paraméterek"
+msgstr ""
 
 #: src/streaming.c:475
 msgid "Invalid service"
-msgstr "Érvénytelen szolgáltatás"
+msgstr ""
 
 #: src/streaming.c:446
 msgid "Invalid target"
-msgstr "Érvénytelen cél"
+msgstr ""
 
 #: src/webui/doc_md.c:118
 msgid "Items"
@@ -3610,11 +3605,11 @@ msgstr ""
 
 #: src/epg.c:2385
 msgid "Jazz"
-msgstr "Jazz"
+msgstr ""
 
 #: src/satip/server.c:602
 msgid "Keep"
-msgstr "Megtart"
+msgstr ""
 
 #: src/timeshift.c:274
 msgid ""
@@ -3640,49 +3635,49 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:208
 msgid "Kill signal (pipe)"
-msgstr "Kill szignál (pipe)"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:216
 msgid "Kill timeout (pipe/secs)"
-msgstr "Kill szignál maximális időkorlát (pipe/másodperc)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:225
 msgid "LNA (low noise amplifier)"
-msgstr "LNA (alacsony zajszintű erőstő)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_lnb.c:61
 msgid "LNB"
-msgstr "LNB"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1539
 msgid "LNB type"
-msgstr "LNB-típus"
+msgstr ""
 
 #: src/access.c:1447 src/access.c:1678 src/esfilter.c:644 src/esfilter.c:738
 #: src/esfilter.c:833 src/esfilter.c:928 src/esfilter.c:1128
 #: src/profile.c:1875 src/wizard.c:197
 msgid "Language"
-msgstr "Nyelv"
+msgstr ""
 
 #: src/wizard.c:209
 msgid "Language 1"
-msgstr "1. nyelv"
+msgstr ""
 
 #: src/wizard.c:219
 msgid "Language 2"
-msgstr "2. nyelv"
+msgstr ""
 
 #: src/wizard.c:229
 msgid "Language 3"
-msgstr "3. nyelv"
+msgstr ""
 
 #: src/config.c:2033
 msgid "Language settings"
-msgstr "Nyelvi beállítások"
+msgstr ""
 
 #: src/epg.c:2442
 msgid "Languages"
-msgstr "Nyelvek"
+msgstr ""
 
 #: src/memoryinfo.c:62
 msgid "Largest size the object has reached."
@@ -3698,11 +3693,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:256
 msgid "Last seen"
-msgstr "Utoljára látott"
+msgstr ""
 
 #: src/config.c:2067
 msgid "Last updated from"
-msgstr "Legutoljára frissítve"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:700
 msgid "Layer A: Constellation"
@@ -3755,11 +3750,11 @@ msgstr ""
 #: src/epg.c:2453 src/epg.c:2461 src/epg.c:2462 src/epg.c:2463 src/epg.c:2464
 #: src/epg.c:2465 src/epg.c:2466 src/epg.c:2467 src/epg.c:2468
 msgid "Leisure hobbies"
-msgstr "Szabadidő, hobbi"
+msgstr ""
 
 #: src/access.c:1797
 msgid "Limit connections"
-msgstr "Kapcsolatok korlátozása"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:176
 msgid "Limited/limit scanning to this network ID only."
@@ -3767,15 +3762,15 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:356
 msgid "Linked input"
-msgstr "Csatolt bemenet"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:197
 msgid "Linux DVB CA"
-msgstr "Linux DVB CA"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:74
 msgid "Linux DVB frontend"
-msgstr "Linux DVB felület"
+msgstr ""
 
 #: src/tvhlog.c:155
 msgid "LinuxDVB Input"
@@ -3783,11 +3778,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:131
 msgid "LinuxDVB adapter"
-msgstr "LinuxDVB eszköz"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:226
 msgid "LinuxDVB network"
-msgstr "LinuxDVB hálózat"
+msgstr ""
 
 #: src/access.c:1635
 msgid "List of allowed IPv4 or IPv6 hosts or networks (comma-separated)."
@@ -3799,35 +3794,35 @@ msgstr ""
 
 #: src/descrambler/capmt.c:2450
 msgid "Listen / Connect port"
-msgstr "Kapcsolatvárási/csatlakozási port"
+msgstr ""
 
 #: src/main.c:855
 msgid "Listen on IPv6"
-msgstr "Szerver kapcsolatot vár IPv6 -on"
+msgstr ""
 
 #: src/epg.c:2404
 msgid "Literature"
-msgstr "Irodalom"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:482
 msgid "Local (server) time"
-msgstr "Helyi (szerver) idő"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:349
 msgid "Local bind IP address"
-msgstr "Helyileg bekütődő IP-cím"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:136
 msgid "Local channel minor"
-msgstr "Helyi csatorna - alsó"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:128
 msgid "Local channel number"
-msgstr "Helyi csatornaszám"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:511
 msgid "Local discovery IP address"
-msgstr "IP-cím lokális felderítése "
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:945
 msgid "Local: Record if different description"
@@ -3859,15 +3854,15 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:495
 msgid "Location"
-msgstr "Helyszín"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:496
 msgid "Location details of the SAT>IP Server."
-msgstr "A SAT>IP szerver helyzetének részletei."
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:221
 msgid "Lock preferred CA PID"
-msgstr "Preferált CA PID lock-olása"
+msgstr ""
 
 #: src/tvhlog.c:87
 msgid "Locking"
@@ -3876,19 +3871,19 @@ msgstr ""
 #: src/esfilter.c:700 src/esfilter.c:795 src/esfilter.c:890 src/esfilter.c:985
 #: src/esfilter.c:1090 src/esfilter.c:1172
 msgid "Log"
-msgstr "Log"
+msgstr ""
 
 #: src/descrambler/cwc.c:1851
 msgid "Login password."
-msgstr "Belépési jelszó."
+msgstr ""
 
 #: src/descrambler/cwc.c:1843
 msgid "Login username."
-msgstr "Belépési felhasználónév."
+msgstr ""
 
 #: src/config.c:1917
 msgid "Login/Logout"
-msgstr "Be/kijelentkezés"
+msgstr ""
 
 #: src/webui/comet.c:340
 msgid "Loglevel debug: disabled"
@@ -3900,11 +3895,11 @@ msgstr ""
 
 #: src/webui/webui.c:240
 msgid "Logout"
-msgstr "Kilépés"
+msgstr ""
 
 #: src/profile.c:253 src/dvr/dvr_db.c:2732
 msgid "Low"
-msgstr "Alacsony"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_lnb.c:67
 msgid "Low frequency offset"
@@ -3920,11 +3915,11 @@ msgstr ""
 
 #: src/profile.c:1321
 msgid "MP4 audio"
-msgstr "MP4 audió"
+msgstr ""
 
 #: src/profile.c:1571 src/profile.c:1670
 msgid "MP4/av-lib"
-msgstr "MP4/av-lib"
+msgstr ""
 
 #: src/profile.c:1318
 msgid "MPEG-2 audio"
@@ -3932,15 +3927,15 @@ msgstr ""
 
 #: src/profile.c:1666
 msgid "MPEG-PS (DVD)/av-lib"
-msgstr "MPEG-PS (DVD)/av-lib"
+msgstr ""
 
 #: src/tvhlog.c:148
 msgid "MPEG-TS"
-msgstr "MPEG-TS"
+msgstr ""
 
 #: src/tvhlog.c:169
 msgid "MPEG-TS File"
-msgstr "MPEG-TS file"
+msgstr ""
 
 #: src/tvhlog.c:170
 msgid "MPEG-TS Input Debug"
@@ -3948,7 +3943,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:513
 msgid "MPEG-TS Multiplex"
-msgstr "MPEG-TS Multiplex"
+msgstr ""
 
 #: src/tvhlog.c:118
 msgid "MPEG-TS Parser"
@@ -3956,11 +3951,11 @@ msgstr ""
 
 #: src/profile.c:2214
 msgid "MPEG-TS Pass-thru"
-msgstr "MPEG-TS áteresztés"
+msgstr ""
 
 #: src/profile.c:1102
 msgid "MPEG-TS Pass-thru/built-in"
-msgstr "MPEG-TS áteresztés/beépített"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:89
 msgid "MPEG-TS Service"
@@ -3968,51 +3963,51 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:232
 msgid "MPEG-TS input"
-msgstr "MPEG-TS bemenet"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:44
 msgid "MPEG-TS multiplex PHY"
-msgstr "MPEG-TS multiplex PHY"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:912
 msgid "MPEG-TS raw service"
-msgstr "MPEG-TS raw szolgáltatás"
+msgstr ""
 
 #: src/profile.c:1418 src/profile.c:1665
 msgid "MPEG-TS/av-lib"
-msgstr "MPEG-TS/av-lib"
+msgstr ""
 
 #: src/epg.c:2418
 msgid "Magazines"
-msgstr "Magazinok"
+msgstr ""
 
 #: src/tvhlog.c:79
 msgid "Main"
-msgstr "Fő"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1072
 msgid "Maintain free storage space in MiB"
-msgstr "Elérhető tárhely MIB-ben"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1082
 msgid "Maintain used storage space in MiB (0=disabled)"
-msgstr "Használt tárhely fenntartása  MB-ban (0=kikapcsolva)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2780 src/dvr/dvr_config.c:735
 msgid "Maintained space"
-msgstr "Tárhely fenntartása"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1173
 msgid "Make subdirectories per channel"
-msgstr "Alkönyvtárak csatornánkénti létrehozása"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1161
 msgid "Make subdirectories per day"
-msgstr "Alkönyvtárak naponkénti létrehozása"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1185
 msgid "Make subdirectories per title"
-msgstr "Alkönyvtárak cím szerinti létrehozása"
+msgstr ""
 
 #: src/access.c:1554
 msgid "Manage all"
@@ -4020,47 +4015,47 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:423
 msgid "Manufacturer"
-msgstr "Gyártó"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:431
 msgid "Manufacturer URL"
-msgstr "Gyártói URL"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:456
 msgid "Manufacturer's model number."
-msgstr "Gyártói modell száma."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:440
 msgid "Manufacturer's product description."
-msgstr "Gyártói termékleírás."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:432
 msgid "Manufacturer's product information page for the device."
-msgstr "A gyártó termékinformációs oldala."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:448
 msgid "Manufacturer's product name."
-msgstr "Gyártói terméknév."
+msgstr ""
 
 #: src/wizard.c:1109
 msgid "Map all services"
-msgstr "Minden szolgáltatás hozzárendelése"
+msgstr ""
 
 #: src/service_mapper.c:518 src/bouquet.c:731
 msgid "Map encrypted services"
-msgstr "Titkosított szolgáltatások összerendelése."
+msgstr ""
 
 #: src/bouquet.c:726
 msgid "Map radio channels"
-msgstr "Rádio-csatorna szolgáltatások hozzárendelése"
+msgstr ""
 
 #: src/bouquet.c:721
 msgid "Map unnamed channels"
-msgstr "Névvel nem rendelkező csatornák hozzárendelése"
+msgstr ""
 
 #: src/bouquet.c:716
 msgid "Map zero-numbered channels"
-msgstr "0-s sorszámmal rendelkező csatornák hozzárendelése"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:645
 msgid "Mapped"
@@ -4068,55 +4063,55 @@ msgstr ""
 
 #: src/epg.c:2356
 msgid "Martial sports"
-msgstr "Küzdősportok"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:317
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:348
 #: src/input/mpegts/satip/satip_frontend.c:365
 #: src/input/mpegts/satip/satip_frontend.c:397
 msgid "Master tuner"
-msgstr "Fő tuner"
+msgstr ""
 
 #: src/profile.c:2234
 msgid "Matroska"
-msgstr "Matroska"
+msgstr ""
 
 #: src/profile.c:1668
 msgid "Matroska (mkv)/av-lib"
-msgstr "Matroska (mkv)/av-lib"
+msgstr ""
 
 #: src/profile.c:1227 src/profile.c:1663
 msgid "Matroska (mkv)/built-in"
-msgstr "Matroska (mkv)/beépített"
+msgstr ""
 
 #: src/tvhlog.c:126
 msgid "Matroska muxer"
-msgstr "Matroska muxer"
+msgstr ""
 
 #: src/profile.c:1234 src/profile.c:1489
 msgid "Matroska specific"
-msgstr "Matroska specifikus"
+msgstr ""
 
 #: src/profile.c:1482
 msgid "Matroska/av-lib"
-msgstr "Matroska/av-lib"
+msgstr ""
 
 #: src/access.c:1816
 msgid "Maximal channel number"
-msgstr "Maximális csatorna szám"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:779
 msgid "Maximum # input streams"
-msgstr "Maximális számú bemeneti streamek"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:128
 #: src/input/mpegts/satip/satip.c:292
 msgid "Maximum PIDs"
-msgstr "Maximum PID"
+msgstr ""
 
 #: src/timeshift.c:251
 msgid "Maximum RAM size (MB)"
-msgstr "Maximális RAM méret (MB)"
+msgstr ""
 
 #: src/dvr/dvr_config.c:988
 msgid ""
@@ -4126,15 +4121,15 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:788
 msgid "Maximum bandwidth (Kbps)"
-msgstr "Maximális sávszélesség (Kbps)"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1211
 msgid "Maximum count (0=default)"
-msgstr "Maximális szám (0=alapértelmezett)"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1157
 msgid "Maximum duration"
-msgstr "Maximális időtartam"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:789
 msgid "Maximum input bandwidth."
@@ -4143,23 +4138,23 @@ msgstr ""
 #: src/input/mpegts/satip/satip.c:302
 msgid ""
 "Maximum length in characters for the command setting PIDs to the SAT>IP box."
-msgstr "Maximális karakterhossz a PID parancs beállításoknak a SAT> IP mezőben."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:301
 msgid "Maximum length of PIDs"
-msgstr "PID-ek maximális hoszza"
+msgstr ""
 
 #: src/timeshift.c:221
 msgid "Maximum period (mins)"
-msgstr "Maximális periódus (percben)"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1220
 msgid "Maximum schedules limit (0=default)"
-msgstr "Maximális betervezésének száma (0=alapértelmezett)"
+msgstr ""
 
 #: src/timeshift.c:240
 msgid "Maximum size (MB)"
-msgstr "Maximális méret (MB)"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:797
 msgid "Maximum time to wait (in seconds) for a stream before a timeout."
@@ -4167,23 +4162,23 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:796
 msgid "Maximum timeout (seconds)"
-msgstr "Maximális időkorlát (másodperben)"
+msgstr ""
 
 #: src/epg.c:2438
 msgid "Medicine"
-msgstr "Gyógyászat"
+msgstr ""
 
 #: src/epg.c:2296
 msgid "Melodrama"
-msgstr "Melodráma"
+msgstr ""
 
 #: src/memoryinfo.c:36
 msgid "Memory Information"
-msgstr "Memoria Információ"
+msgstr ""
 
 #: src/service_mapper.c:526 src/bouquet.c:736
 msgid "Merge same name"
-msgstr "Ugyanazon nevek összevonása"
+msgstr ""
 
 #: src/service_mapper.c:527
 msgid "Merge services with the same name into one channel."
@@ -4195,47 +4190,47 @@ msgstr ""
 
 #: src/access.c:1807
 msgid "Minimal channel number"
-msgstr "Minimális csatorna szám"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1146
 msgid "Minimum duration"
-msgstr "Minimális időtartam"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:709
 msgid "Minimum rotor time (seconds)"
-msgstr "Minimális forgató időtartam (másodperben)"
+msgstr ""
 
 #: src/service.c:146
 msgid "Missing In PAT/SDT"
-msgstr "Hiányzik a PAT/SDT -ben"
+msgstr ""
 
 #: src/descrambler/capmt.c:2433
 msgid "Mode"
-msgstr "Üzemmód"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:439
 msgid "Model description"
-msgstr "Üzemmód leírás"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:447
 msgid "Model name"
-msgstr "Modell név"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:455
 msgid "Model number"
-msgstr "Modell szám"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:463 src/input/mpegts/mpegts_mux_dvb.c:557
 msgid "Modulation"
-msgstr "Moduláció"
+msgstr ""
 
 #: src/epggrab/channel.c:779
 msgid "Module"
-msgstr "Modul"
+msgstr ""
 
 #: src/epggrab/channel.c:769
 msgid "Module ID"
-msgstr "Modul ID"
+msgstr ""
 
 #: src/epggrab/channel.c:770
 msgid "Module ID used to grab EPG data."
@@ -4243,7 +4238,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:769
 msgid "Mon"
-msgstr "Hét"
+msgstr ""
 
 #: src/tvhlog.c:81
 msgid "Monitonic timer"
@@ -4251,11 +4246,11 @@ msgstr ""
 
 #: src/profile.c:1680
 msgid "Mono"
-msgstr "Mono"
+msgstr ""
 
 #: src/main.c:884
 msgid "More verbose libav log"
-msgstr "Részletesebb libav naplózás"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:762
 msgid "Motor rate (in milliseconds/deg)."
@@ -4263,31 +4258,31 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:761
 msgid "Motor rate (milliseconds/deg)"
-msgstr "Forgatási sebesség (milli/fok)"
+msgstr ""
 
 #: src/epg.c:2352
 msgid "Motor sport"
-msgstr "Motorsport"
+msgstr ""
 
 #: src/epg.c:2456
 msgid "Motoring"
-msgstr "Motor"
+msgstr ""
 
 #: src/epg.c:2291
 msgid "Movie"
-msgstr "Film"
+msgstr ""
 
 #: src/epg.c:2300 src/epg.c:2301 src/epg.c:2302 src/epg.c:2303 src/epg.c:2304
 #: src/epg.c:2305 src/epg.c:2306
 msgid "Movie / drama"
-msgstr "Film / dráma"
+msgstr ""
 
 #: src/epggrab.c:339
 msgid ""
 "Multiple lines of the cron time specification. The default cron triggers the"
 " internal grabbers daily at 12:04 and 00:04. See Help on how to define your "
 "own."
-msgstr "Többsoros cron idő meghatározásának. Az alapértelmezett cron kiváltja a Over-the-air EPG gyüjtőt, naponta 02:04 és 14:04 időpontokban . A súgóban több információt megtalál, hogyan határozzon meg a sajátot."
+msgstr ""
 
 #: src/epggrab.c:362
 msgid ""
@@ -4298,21 +4293,21 @@ msgstr ""
 
 #: src/epg.c:2381
 msgid "Music"
-msgstr "Zene"
+msgstr ""
 
 #: src/epg.c:2388 src/epg.c:2389 src/epg.c:2390 src/epg.c:2391 src/epg.c:2392
 #: src/epg.c:2393 src/epg.c:2394 src/epg.c:2395 src/epg.c:2396
 msgid "Music / Ballet / Dance"
-msgstr "Zene / balett / tánc"
+msgstr ""
 
 #: src/epg.c:2386
 msgid "Musical"
-msgstr "Musical"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:104
 #: src/input/mpegts/mpegts_mux_sched.c:145
 msgid "Mux"
-msgstr "Mux"
+msgstr ""
 
 #: src/tvhlog.c:149 src/input/mpegts/mpegts_mux_sched.c:127
 msgid "Mux Scheduler"
@@ -4320,19 +4315,19 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:112
 msgid "Mux UUID"
-msgstr "Mux UUID"
+msgstr ""
 
 #: src/satip/server.c:746
 msgid "Mux handling"
-msgstr "Mux kezelés"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:168
 msgid "Mux name"
-msgstr "Mux neve"
+msgstr ""
 
 #: src/streaming.c:459
 msgid "Mux not enabled"
-msgstr "A MUX nem engedélyezett"
+msgstr ""
 
 #: src/tvhlog.c:123
 msgid "Muxer"
@@ -4343,7 +4338,7 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:94
 msgid "NONE"
-msgstr "EGYIK SEM"
+msgstr ""
 
 #: src/channels.c:398 src/channels.c:1455 src/bouquet.c:1037
 #: src/memoryinfo.c:45 src/epggrab/module.c:128 src/epggrab/channel.c:673
@@ -4353,7 +4348,7 @@ msgstr "EGYIK SEM"
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1514
 #: src/input/mpegts/satip/satip_satconf.c:362
 msgid "Name"
-msgstr "Név"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3606
 msgid "Name (or date) of program the entry is a rerun of."
@@ -4377,7 +4372,7 @@ msgstr ""
 
 #: src/dvr/dvr_timerec.c:543
 msgid "Name of the entry."
-msgstr "A bejegyzés neve."
+msgstr ""
 
 #: src/epggrab/channel.c:780
 msgid "Name of the module used to grab EPG data."
@@ -4391,19 +4386,19 @@ msgstr ""
 
 #: src/wizard.c:808 src/input/mpegts/mpegts_network.c:160
 msgid "Name of the network."
-msgstr "A hálózat neve."
+msgstr ""
 
 #: src/dvr/dvr_config.c:858
 msgid "Name of the profile."
-msgstr "A profil neve."
+msgstr ""
 
 #: src/channels.c:1456
 msgid "Name of the tag."
-msgstr "A címke neve."
+msgstr ""
 
 #: src/wizard.c:569 src/wizard.c:577
 msgid "Name of the tuner."
-msgstr "Tuner neve."
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:281
 msgid "Name of the tuner/adapter."
@@ -4411,59 +4406,59 @@ msgstr ""
 
 #: src/epggrab/channel.c:823
 msgid "Names"
-msgstr "Nevek"
+msgstr ""
 
 #: src/epg.c:2437
 msgid "Natural sciences"
-msgstr "Természettudományok"
+msgstr ""
 
 #: src/epg.c:2436
 msgid "Nature"
-msgstr "Természet"
+msgstr ""
 
 #: src/wizard.c:783 src/wizard.c:807 src/input/mpegts/mpegts_mux.c:548
 #: src/input/mpegts/mpegts_service.c:96
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:194
 msgid "Network"
-msgstr "Hálózat"
+msgstr ""
 
 #: src/wizard.c:561
 msgid "Network "
-msgstr "Hálózat"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:553
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:617
 msgid "Network A"
-msgstr "A hálózat"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:565
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:629
 msgid "Network B"
-msgstr "B hálózat"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:641
 msgid "Network C"
-msgstr "C hálózat"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:653
 msgid "Network D"
-msgstr "D hálózat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:175
 msgid "Network ID (limit scanning)"
-msgstr "Hálózat ID (szkennelés korlátozás)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:556
 msgid "Network UUID"
-msgstr "Hálózati UUID"
+msgstr ""
 
 #: src/wizard.c:397
 msgid "Network access"
-msgstr "Hálózati hozzáférés"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:183
 msgid "Network discovery"
-msgstr "Hálózati felderítés"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:368
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:554
@@ -4511,32 +4506,32 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:159
 msgid "Network name"
-msgstr "Hálózat neve"
+msgstr ""
 
 #: src/access.c:2191
 msgid "Network prefix"
-msgstr "Hálózati előtag"
+msgstr ""
 
 #: src/wizard.c:670
 msgid "Network settings"
-msgstr "Hálózati beállítások"
+msgstr ""
 
 #: src/wizard.c:584 src/input/mpegts/satip/satip_frontend.c:264
 #: src/input/mpegts/satip/satip_frontend.c:429
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:229
 msgid "Network type"
-msgstr "Hálózat típusa"
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:345
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:341
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1529
 #: src/input/mpegts/satip/satip_satconf.c:415
 msgid "Networks"
-msgstr "Hálózatok"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:963
 msgid "New / premiere / unknown"
-msgstr "Újdonság / premier / ismeretlen"
+msgstr ""
 
 #: src/http.c:584
 msgid "New login"
@@ -4556,57 +4551,57 @@ msgstr ""
 
 #: src/epg.c:2309 src/epg.c:2310
 msgid "News"
-msgstr "Hírek"
+msgstr ""
 
 #: src/epg.c:2314 src/epg.c:2315 src/epg.c:2316 src/epg.c:2317 src/epg.c:2318
 #: src/epg.c:2319 src/epg.c:2320 src/epg.c:2321 src/epg.c:2322 src/epg.c:2323
 #: src/epg.c:2324
 msgid "News / Current Affairs"
-msgstr "Hírek / Aktuális"
+msgstr ""
 
 #: src/epg.c:2311
 msgid "News magazine"
-msgstr "Hírmagazin"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:181
 msgid "Next tune delay in ms (0-2000)"
-msgstr "Hangolási parancs késleltetési idő millisec.-ben (0-2000)"
+msgstr ""
 
 #: src/access.c:1397
 msgid "No"
-msgstr "Nem"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:124
 msgid "No PIN"
-msgstr "Nincs PIN"
+msgstr ""
 
 #: src/streaming.c:483
 msgid "No access"
-msgstr "Nincs hozzáférés"
+msgstr ""
 
 #: src/main.c:986
 msgid "No adapters specified!\n"
-msgstr "Nincs meghatározott eszköz\n"
+msgstr ""
 
 #: src/streaming.c:473
 msgid "No assigned adapters"
-msgstr "Nincs hozzárendelt adapter"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:793
 msgid "No days"
-msgstr "Nincsenek napok"
+msgstr ""
 
 #: src/streaming.c:481
 msgid "No descrambler"
-msgstr "Nincs kititkosító"
+msgstr ""
 
 #: src/streaming.c:457
 msgid "No free adapter"
-msgstr "Nincs szabad adapter"
+msgstr ""
 
 #: src/streaming.c:485
 msgid "No input detected"
-msgstr "Nincs érzékelt bemenet"
+msgstr ""
 
 #: src/config.c:1968
 msgid "No scheme"
@@ -4614,15 +4609,15 @@ msgstr ""
 
 #: src/streaming.c:471
 msgid "No service assigned to channel"
-msgstr "Nincs szolgáltatás hozzárendelve a csatornához"
+msgstr ""
 
 #: src/streaming.c:465
 msgid "No service enabled"
-msgstr "Nincs engedélyezett szolgáltatás"
+msgstr ""
 
 #: src/streaming.c:469
 msgid "No source available"
-msgstr "Nincs forrás"
+msgstr ""
 
 #: src/tvhlog.c:89
 msgid "Node subsystem"
@@ -4633,46 +4628,46 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:486
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:403
 msgid "None"
-msgstr "Egyik sem"
+msgstr ""
 
 #: src/profile.c:252 src/dvr/dvr_db.c:2731
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:232
 msgid "Normal"
-msgstr "Normál"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:283
 msgid ""
 "Not all SAT>IP servers use the same signal scaling. Change this setting if "
 "the signal level displayed within Tvheadend looks too low."
-msgstr "Nem minden SAT> IP szerver használja ugyanazt a jel-léptéket. Változtassa meg ezt, ha a Tvheadend-ben megjelenített jelszint túl alacsonynak tűnik."
+msgstr ""
 
 #: src/streaming.c:487
 msgid "Not enough disk space"
-msgstr "Nincs elég tárhely"
+msgstr ""
 
 #: src/htsp_server.c:2818
 msgid "Not enough memory"
-msgstr "Nincs elég memória"
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:211
 msgid "Not linked"
-msgstr "Nem linkelt"
+msgstr ""
 
 #: src/channels.c:358 src/profile.c:1662 src/dvr/dvr_db.c:2728
 msgid "Not set"
-msgstr "Nincs beállítva"
+msgstr ""
 
 #: src/dvr/dvr_config.c:768
 msgid "Not set (none or channel configuration)"
-msgstr "Nem beállított (egy sem vagy csatorna beállítás hiányzik)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3158 src/dvr/dvr_autorec.c:668
 msgid "Not set (use channel or DVR configuration)"
-msgstr "Nem beállított (csatorna használata vagy DVR beállítás)"
+msgstr ""
 
 #: src/channels.c:410 src/epggrab/channel.c:668 src/epggrab/channel.c:833
 msgid "Number"
-msgstr "Szám"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3362
 msgid "Number of days to keep the file."
@@ -4730,7 +4725,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:379
 msgid "Number of seconds to wait before timing out."
-msgstr "Lejárat előtti várakozási idő másodpercekben."
+msgstr ""
 
 #: src/bouquet.c:1082
 msgid "Number of services."
@@ -4742,39 +4737,39 @@ msgstr ""
 
 #: src/main.c:899
 msgid "Number of tsfile tuners"
-msgstr "Tsfile tőnerek száma"
+msgstr ""
 
 #: src/streaming.c:433 src/input/mpegts/mpegts_mux.c:400
 msgid "OK"
-msgstr "OK"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:402
 msgid "OK (partial)"
-msgstr "OK (részleges)"
+msgstr ""
 
 #: src/descrambler/capmt.c:2414
 msgid "OSCam (rev >= 9095)"
-msgstr "OSCam (rev >= 9095)"
+msgstr ""
 
 #: src/descrambler/capmt.c:2412
 msgid "OSCam TCP (rev >= 9574)"
-msgstr "OSCam TCP (rev >= 9574)"
+msgstr ""
 
 #: src/descrambler/capmt.c:2410
 msgid "OSCam net protocol (rev >= 10389)"
-msgstr "OSCam net protokol (rev >= 10389)"
+msgstr ""
 
 #: src/descrambler/capmt.c:2411
 msgid "OSCam new pc-nodmx (rev >= 10389)"
-msgstr "OSCam új pc-nodmx (rev >= 10389)"
+msgstr ""
 
 #: src/descrambler/capmt.c:2413
 msgid "OSCam pc-nodmx (rev >= 9756)"
-msgstr "OSCam pc-nodmx (rev >= 9756)"
+msgstr ""
 
 #: src/descrambler/constcw.c:334 src/descrambler/constcw.c:400
 msgid "Odd key"
-msgstr "Páratlan kulcs"
+msgstr ""
 
 #: src/descrambler/constcw.c:335 src/descrambler/constcw.c:401
 msgid "Odd key."
@@ -4783,7 +4778,7 @@ msgstr ""
 #: src/input/mpegts/mpegts_service.c:76
 #: src/input/mpegts/satip/satip_frontend.c:144
 msgid "Off"
-msgstr "Ki"
+msgstr ""
 
 #: src/bouquet.c:1115
 msgid "Offset the mapped channel numbers by x (value here + channel number)."
@@ -4791,16 +4786,16 @@ msgstr ""
 
 #: src/descrambler/capmt.c:2415
 msgid "Older OSCam"
-msgstr "Régebbi OSCam"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:77
 #: src/input/mpegts/satip/satip_frontend.c:145
 msgid "On"
-msgstr "Be"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2756 src/dvr/dvr_config.c:758
 msgid "On file removal"
-msgstr "File eltávolításánál"
+msgstr ""
 
 #: src/timeshift.c:200
 msgid "On-demand (no first rewind)"
@@ -4818,39 +4813,39 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:489
 msgid "Only Bulsatcom 39E"
-msgstr "Csak Bulsatcom 39E"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:484
 msgid "Only EIT"
-msgstr "Csak EIT"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:492
 msgid "Only OpenTV Sky Ausat"
-msgstr "Csak OpenTV Sky Ausat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:491
 msgid "Only OpenTV Sky Italia"
-msgstr "Csak OpenTV Sky Italia"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:490
 msgid "Only OpenTV Sky UK"
-msgstr "Csak OpenTV Sky UK"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:485
 msgid "Only PSIP (ATSC)"
-msgstr "CSak PSIP (ATSC)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:486
 msgid "Only UK Freesat"
-msgstr "Csak UK Freesat"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:487
 msgid "Only UK Freeview"
-msgstr "Csak UK Freeview"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:488
 msgid "Only Viasat Baltic"
-msgstr "Csak Viasat Baltic"
+msgstr ""
 
 #: src/timeshift.c:201
 msgid ""
@@ -4875,14 +4870,14 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:78
 msgid "Only preferred CA PID"
-msgstr "Csak preferált CA PID"
+msgstr ""
 
 #: src/config.c:2325
 msgid ""
 "Only update the system clock (doesn't affect NTP driver) if the delta "
 "between the system clock and DVB time is greater than this. This can help "
 "stop excessive oscillations on the system clock."
-msgstr "Csak akkor frissítse a rendszer órát (nem befolyásolja az NTP drivert) ha a külömbség a rendszer óra és DVB idő között nagyobb, mint az izz beállított érték. Ez segít a túlzott  rendszer óra oszcillációk ellen."
+msgstr ""
 
 #: src/main.c:838
 msgid "Only use specified DVB adapters (comma-separated, -1 = none)"
@@ -4896,15 +4891,15 @@ msgstr ""
 
 #: src/tvhlog.c:163
 msgid "OpenTV EPG"
-msgstr "OpenTV EPG"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:144
 msgid "OpenTV channel number"
-msgstr "OpenTV csatorna szám"
+msgstr ""
 
 #: src/epg.c:2386
 msgid "Opera"
-msgstr "Opera"
+msgstr ""
 
 #: src/bouquet.c:1001
 msgid "Options to use/used when mapping - see Help for details."
@@ -4917,23 +4912,23 @@ msgstr ""
 #: src/input/mpegts/mpegts_network_dvb.c:301
 #: src/input/mpegts/mpegts_mux_dvb.c:509
 msgid "Orbital position"
-msgstr "Műhold-pozíció"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:680
 msgid "Orbital positions"
-msgstr "Műhold-pozíciók"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:681
 msgid "Orbital positions."
-msgstr "Műhold-helyzetek."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:580
 msgid "Original network ID"
-msgstr "Eredeti hálózat ID"
+msgstr ""
 
 #: src/descrambler/capmt.c:2434
 msgid "Oscam mode."
-msgstr "Oscam üzemmód."
+msgstr ""
 
 #: src/esfilter.c:1111
 msgid "Other Stream Filter"
@@ -4941,27 +4936,27 @@ msgstr ""
 
 #: src/main.c:903
 msgid "Output directory for tsdebug"
-msgstr "Kimenő mappa tsdebug-nak"
+msgstr ""
 
 #: src/epggrab/module.c:58
 msgid "Over-the-air"
-msgstr "OTA"
+msgstr ""
 
 #: src/epggrab.c:361
 msgid "Over-the-air Cron multi-line"
-msgstr "OTA Cron job több-soros"
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:288
 msgid "Over-the-air EPG"
-msgstr "Over-the-air EPG"
+msgstr ""
 
 #: src/epggrab/module.c:217
 msgid "Over-the-air EPG grabber"
-msgstr "Over-the-air EPG letöltő"
+msgstr ""
 
 #: src/epggrab.c:270
 msgid "Over-the-air grabbers"
-msgstr "Over-the-air letöltők"
+msgstr ""
 
 #: src/service.c:155
 msgid "Override disabled"
@@ -4970,11 +4965,11 @@ msgstr ""
 #: src/input/mpegts/satip/satip_frontend.c:265
 #: src/input/mpegts/satip/satip_frontend.c:430
 msgid "Override the frontend type."
-msgstr "Frontend típusának felülbírálata."
+msgstr ""
 
 #: src/dvr/dvr_db.c:3400 src/dvr/dvr_autorec.c:1267 src/dvr/dvr_timerec.c:656
 msgid "Owner"
-msgstr "Tulajdonos"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3401 src/dvr/dvr_timerec.c:657
 msgid "Owner of the entry."
@@ -4986,16 +4981,16 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:393
 msgid "PEND"
-msgstr "FÜGGŐ"
+msgstr ""
 
 #: src/esfilter.c:677 src/esfilter.c:772 src/esfilter.c:867 src/esfilter.c:962
 #: src/esfilter.c:1067 src/esfilter.c:1149
 msgid "PID"
-msgstr "PID"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:340
 msgid "PIDs 21 in setup"
-msgstr "PID 21 beállítás alatt"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:534
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:598
@@ -5003,11 +4998,11 @@ msgstr "PID 21 beállítás alatt"
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:206
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:235
 msgid "PIN"
-msgstr "PIN"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:244
 msgid "PIN inquiry match string"
-msgstr "PIN víszgálatot ellenőrző szó"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:245
 msgid "PIN inquiry match string."
@@ -5016,19 +5011,19 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:535
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:599
 msgid "PIN."
-msgstr "PIN."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:266
 msgid "PLP ID"
-msgstr "PLP ID"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:499
 msgid "PLS code"
-msgstr "PLS kód"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:491
 msgid "PLS mode"
-msgstr "PLS mód"
+msgstr ""
 
 #: src/config.c:2130
 msgid ""
@@ -5041,7 +5036,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3528
 msgid "Parent entry"
-msgstr "Szülő bejegyzés"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3529
 msgid "Parent entry."
@@ -5057,13 +5052,13 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:224
 msgid "Pass subscription weight"
-msgstr "Előfizetői súly továbbadása"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:225
 msgid ""
 "Pass subscription weight to the SAT>IP server (Tvheadend specific "
 "extension)."
-msgstr "Előfizetői súly továbbadása a SAT>IP szervereknek (Tvheadend specifikus kiterjesztés)."
+msgstr ""
 
 #: src/tvhlog.c:124
 msgid "Pass-thru muxer"
@@ -5075,7 +5070,7 @@ msgstr ""
 
 #: src/access.c:2048 src/wizard.c:453 src/descrambler/cwc.c:1850
 msgid "Password"
-msgstr "Jelszó"
+msgstr ""
 
 #: src/access.c:2049
 msgid "Password for the entry."
@@ -5083,24 +5078,24 @@ msgstr ""
 
 #: src/access.c:2057
 msgid "Password2"
-msgstr "Jelszó2"
+msgstr ""
 
 #: src/epggrab/module.c:177 src/epggrab/module.c:204 src/epggrab/channel.c:788
 msgid "Path"
-msgstr "Elérési útvonal"
+msgstr ""
 
 #: src/config.c:2372
 msgid ""
 "Path to a directory (folder) containing your picon collection. See Help for "
 "more detailed information."
-msgstr "A picon gyűjtemény könyvtárára mutató útvonal. (Ld. a súgót további információkért)."
+msgstr ""
 
 #: src/config.c:2347
 msgid ""
 "Path to an icon for this channel. This can be named however you wish, as "
 "either a local (file://) or remote (http://) image. See Help for more "
 "infomation."
-msgstr "A csatorna ikonjára mutató útvonal.Ennek elnevezése lehet barmilyen formátumban, helyi fájl (file://) vagy távoli (http://) elérési  útvonalként.  Ld. a súgót további információkért."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:89
 msgid "Path to the frontend used by the device."
@@ -5141,19 +5136,19 @@ msgstr ""
 
 #: src/epg.c:2400
 msgid "Performing arts"
-msgstr "Előadóművészet"
+msgstr ""
 
 #: src/epggrab.c:315
 msgid "Periodically save EPG to disk (hours)"
-msgstr "EPG lemezre mentése periodikusan(órákban)"
+msgstr ""
 
 #: src/access.c:1666 src/config.c:2098
 msgid "Persistent user interface level"
-msgstr "Perszisztens felhasználói-felület szint"
+msgstr ""
 
 #: src/epg.c:2438
 msgid "Physiology"
-msgstr "Élettan"
+msgstr ""
 
 #: src/profile.c:1337
 msgid "Pick the stream with given audio type only."
@@ -5161,7 +5156,7 @@ msgstr ""
 
 #: src/config.c:2049
 msgid "Picon"
-msgstr "Csatorna ikon"
+msgstr ""
 
 #: src/config.c:2383
 msgid "Picon name scheme"
@@ -5169,11 +5164,11 @@ msgstr ""
 
 #: src/config.c:2371
 msgid "Picon path"
-msgstr "Picon útvonal"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:477
 msgid "Pilot"
-msgstr "Próba"
+msgstr ""
 
 #: src/webui/webui.c:253
 #, c-format
@@ -5186,11 +5181,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:459
 msgid "Polarization"
-msgstr "Polarizáció"
+msgstr ""
 
 #: src/epg.c:2417
 msgid "Political issues"
-msgstr "Politikai problémák"
+msgstr ""
 
 #: src/tvhlog.c:83
 msgid "Poll multiplexer"
@@ -5198,15 +5193,15 @@ msgstr ""
 
 #: src/epg.c:2382
 msgid "Pop"
-msgstr "Pop"
+msgstr ""
 
 #: src/epg.c:2403
 msgid "Popular culture"
-msgstr "Népszerű kultúra"
+msgstr ""
 
 #: src/descrambler/cwc.c:1867
 msgid "Port"
-msgstr "Port"
+msgstr ""
 
 #: src/descrambler/cwc.c:1868
 msgid "Port to connect to."
@@ -5220,32 +5215,32 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:186
 #: src/input/mpegts/satip/satip_satconf.c:387
 msgid "Position"
-msgstr "Pozicíó"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:388
 msgid "Position of the input."
-msgstr "Bemenet pozíciója."
+msgstr ""
 
 #: src/dvr/dvr_config.c:1042
 msgid "Post-processor command"
-msgstr "Posztprocesszor parancs"
+msgstr ""
 
 #: src/channels.c:482 src/dvr/dvr_db.c:3234 src/dvr/dvr_config.c:976
 msgid "Post-recording padding"
-msgstr "Rögzítés utáni ráhagyás"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1052
 msgid "Post-remove command"
-msgstr "Utólagos törlés parancs"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:146
 msgid "Power save"
-msgstr "Energia takarékos"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:152
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:101
 msgid "Power-up time (ms) (15-200)"
-msgstr "Bekapcsolás idő (ms) (15-200)"
+msgstr ""
 
 #: src/wizard.c:797 src/input/mpegts/mpegts_network_dvb.c:242
 #: src/input/mpegts/mpegts_network_dvb.c:265
@@ -5257,7 +5252,7 @@ msgstr "Bekapcsolás idő (ms) (15-200)"
 #: src/input/mpegts/mpegts_network_dvb.c:413
 #: src/input/mpegts/mpegts_network_dvb.c:436
 msgid "Pre-defined muxes"
-msgstr "Előre meghatározott muxok"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1031
 msgid "Pre-processor command"
@@ -5265,19 +5260,19 @@ msgstr ""
 
 #: src/channels.c:467 src/dvr/dvr_db.c:3206 src/dvr/dvr_config.c:959
 msgid "Pre-recording padding"
-msgstr "Rögzítés előtti ráhagyás"
+msgstr ""
 
 #: src/epg.c:2364
 msgid "Pre-school children's programs"
-msgstr "Óvodás programok"
+msgstr ""
 
 #: src/config.c:2336
 msgid "Prefer picons over channel name"
-msgstr "Csatorna ikonok előnyben részesítése a csatorna nevekkel szemben"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:212
 msgid "Preferred CA PID"
-msgstr "Preferált CA PID"
+msgstr ""
 
 #: src/profile.c:1876
 msgid "Preferred audio language."
@@ -5285,19 +5280,19 @@ msgstr ""
 
 #: src/profile.c:426
 msgid "Preferred service video type"
-msgstr "Preferált szervíz video típus"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:487
 msgid "Presentation"
-msgstr "Bemutató"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:488
 msgid "Presentation details."
-msgstr "Megjelenítési részletek."
+msgstr ""
 
 #: src/epg.c:2407
 msgid "Press"
-msgstr "Sajtó"
+msgstr ""
 
 #: src/access.c:1667
 msgid ""
@@ -5317,11 +5312,11 @@ msgstr ""
 #: src/input/mpegts/satip/satip_satconf.c:370 src/input/mpegts/iptv/iptv.c:755
 #: src/input/mpegts/iptv/iptv_mux.c:123
 msgid "Priority"
-msgstr "Prioritás"
+msgstr ""
 
 #: src/service.c:211
 msgid "Priority (-10..10)"
-msgstr "Prioritás (-10..10)"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:616
 msgid ""
@@ -5337,11 +5332,11 @@ msgstr ""
 
 #: src/channels.c:1470
 msgid "Private"
-msgstr "Privát"
+msgstr ""
 
 #: src/profile.c:328
 msgid "Profile name"
-msgstr "Profilnév"
+msgstr ""
 
 #: src/esfilter.c:678 src/esfilter.c:773 src/esfilter.c:868 src/esfilter.c:963
 #: src/esfilter.c:1068 src/esfilter.c:1150
@@ -5349,7 +5344,7 @@ msgid ""
 "Program identification (PID) number to compare. Zero means any. This "
 "comparison is processed only when service comparison is active and for the "
 "Conditional Access filter."
-msgstr "(PID) szám összehasonlítására. Nulla jelenése bármennyi. \nEz az összehasonlítás akkor van feldolgozva, amikor a szolgáltatás feldolgozása aktiválva van CAS - korlátozott hozzáférésü rendszer -  filter részére."
+msgstr ""
 
 #: src/dvr/dvr_db.c:3333
 msgid "Program synopsis (display only)."
@@ -5361,15 +5356,15 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:168
 msgid "Provider"
-msgstr "Szolgáltató"
+msgstr ""
 
 #: src/descrambler/constcw.c:297 src/descrambler/constcw.c:363
 msgid "Provider ID"
-msgstr "Szolgáltató ID"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:167 src/input/mpegts/mpegts_mux.c:572
 msgid "Provider network name"
-msgstr "Hálózat neve"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:168
 msgid "Provider's network name."
@@ -5377,11 +5372,11 @@ msgstr ""
 
 #: src/epg.c:2438
 msgid "Psychology"
-msgstr "Pszichológia"
+msgstr ""
 
 #: src/epg.c:2368
 msgid "Puppets"
-msgstr "Bábok"
+msgstr ""
 
 #: src/tvhlog.c:164
 msgid "PyEPG Import"
@@ -5389,15 +5384,15 @@ msgstr ""
 
 #: src/profile.c:1683
 msgid "Quad (4.0)"
-msgstr "Quad (4.0)"
+msgstr ""
 
 #: src/epg.c:2328
 msgid "Quiz"
-msgstr "Kvíz"
+msgstr ""
 
 #: src/timeshift.c:273
 msgid "RAM only"
-msgstr "Csak RAM-ban"
+msgstr ""
 
 #: src/satip/server.c:758
 msgid "RTP over TCP payload"
@@ -5413,15 +5408,15 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:383
 msgid "RTSP port"
-msgstr "RTSP Port"
+msgstr ""
 
 #: src/satip/server.c:658
 msgid "RTSP port (554 or 9983, 0 = disable)"
-msgstr "RTSP Port (554 vagy 9983), 0 = letiltás"
+msgstr ""
 
 #: src/service.c:157
 msgid "Radio"
-msgstr "Rádió"
+msgstr ""
 
 #: src/profile.c:1667
 msgid "Raw Audio Stream"
@@ -5429,11 +5424,11 @@ msgstr ""
 
 #: src/imagecache.c:106
 msgid "Re-fetch period (hours)"
-msgstr "Újrapróbálkozási idő (órákban)"
+msgstr ""
 
 #: src/bouquet.c:1062 src/input/mpegts/iptv/iptv.c:913
 msgid "Re-fetch period (mins)"
-msgstr "Újrapróbálkozási idő (percben)"
+msgstr ""
 
 #: src/bouquet.c:1063
 msgid "Re-fetch the bouquet every x minutes."
@@ -5442,25 +5437,25 @@ msgstr ""
 #: src/dvr/dvr_db.c:1313
 #, c-format
 msgid "Re-record%s%s"
-msgstr "Újrarögzítés %s%s"
+msgstr ""
 
 #: src/imagecache.c:114
 msgid "Re-try period (hours)"
-msgstr "Újrapróbálkozási idő (órákban)"
+msgstr ""
 
 #: src/htsp_server.c:2825
 msgid "Read error"
-msgstr "Olvasási hiba"
+msgstr ""
 
 #: src/satip/server.c:659
 msgid ""
 "Real Time Streaming Protocol (RTSP) port the server should listen on (554 or"
 " 9983, 0 = disable)."
-msgstr "A szerver által használt Real Time Streaming Protokol (RTSP) port. (554 vagy 9983, 0=kikapcsolt). "
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:925
 msgid "Record all"
-msgstr "Összes rögzítése"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:604
 msgid "Record on these days only."
@@ -5468,7 +5463,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:818
 msgid "Recording file options"
-msgstr "Felvett fájl tulajdonságai"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3581
 msgid "Recording file size."
@@ -5480,11 +5475,11 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:1062
 msgid "Recording system path"
-msgstr "Felvétel elérési útvonala"
+msgstr ""
 
 #: src/satip/server.c:603
 msgid "Reject"
-msgstr "Tiltás"
+msgstr ""
 
 #: src/satip/server.c:604
 msgid "Reject exact match"
@@ -5496,23 +5491,23 @@ msgstr ""
 
 #: src/epg.c:2402
 msgid "Religion"
-msgstr "Vallás"
+msgstr ""
 
 #: src/epg.c:2298
 msgid "Religious"
-msgstr "Vallási"
+msgstr ""
 
 #: src/epg.c:2420
 msgid "Remarkable people"
-msgstr "Ismert emberek"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:936
 msgid "Remove HTTP arguments"
-msgstr "HTTP argumentumok törlése"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1259
 msgid "Remove all unsafe characters from filename"
-msgstr "Nem biztonságos karakterek eltávolítása a fájlnévből"
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:334 src/input/mpegts/iptv/iptv.c:815
 msgid "Remove scrambled bits"
@@ -5526,7 +5521,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:965
 msgid "Repeated"
-msgstr "Ismételt"
+msgstr ""
 
 #: src/satip/server.c:686
 msgid ""
@@ -5536,7 +5531,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:1270
 msgid "Replace whitespace in title with '-'"
-msgstr "Szóköz '-' re cserélése"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1271
 msgid "Replaces all whitespace in the title with '-'."
@@ -5544,7 +5539,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:227
 msgid "Reply to CAM PIN inquiries"
-msgstr "Válaszoljon CAM PIN kérésekre"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:228
 msgid "Reply to PIN inquiries."
@@ -5552,31 +5547,31 @@ msgstr ""
 
 #: src/epg.c:2418
 msgid "Reports"
-msgstr "Jelentések"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3605
 msgid "Rerun of"
-msgstr "Újrafuttatása"
+msgstr ""
 
 #: src/streaming.c:587
 msgid "Reserved"
-msgstr "Foglalt"
+msgstr ""
 
 #: src/profile.c:1852
 msgid "Resolution (height)"
-msgstr "Felbontás (magasság)"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:201
 msgid "Respawn (pipe)"
-msgstr "Újrakezdése (pipe)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_sched.c:170
 msgid "Restart"
-msgstr "Újraindítás"
+msgstr ""
 
 #: src/profile.c:380
 msgid "Restart on error"
-msgstr "Újraindítás hiba esetén"
+msgstr ""
 
 #: src/profile.c:381
 msgid ""
@@ -5603,7 +5598,7 @@ msgstr ""
 
 #: src/channels.c:536
 msgid "Reuse EPG from"
-msgstr "EPG újrafelhasználása"
+msgstr ""
 
 #: src/channels.c:537
 msgid "Reuse the EPG from another channel."
@@ -5611,7 +5606,7 @@ msgstr ""
 
 #: src/profile.c:1154
 msgid "Rewrite EIT"
-msgstr "EIT újraírása"
+msgstr ""
 
 #: src/profile.c:1155
 msgid ""
@@ -5621,11 +5616,11 @@ msgstr ""
 
 #: src/profile.c:1109
 msgid "Rewrite MPEG-TS SI tables"
-msgstr "MPEG-TS SI táblák újraírása"
+msgstr ""
 
 #: src/profile.c:1130
 msgid "Rewrite PAT"
-msgstr "PAT újraírása"
+msgstr ""
 
 #: src/profile.c:1131
 msgid ""
@@ -5635,7 +5630,7 @@ msgstr ""
 
 #: src/profile.c:1118 src/satip/server.c:725
 msgid "Rewrite PMT"
-msgstr "PMT újraírása"
+msgstr ""
 
 #: src/profile.c:1119
 msgid ""
@@ -5651,7 +5646,7 @@ msgstr ""
 
 #: src/profile.c:1142
 msgid "Rewrite SDT"
-msgstr "SDT újraírása"
+msgstr ""
 
 #: src/profile.c:1143
 msgid ""
@@ -5665,51 +5660,51 @@ msgstr ""
 
 #: src/epg.c:2382
 msgid "Rock"
-msgstr "Rock"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:472
 msgid "Rolloff"
-msgstr "Rolloff"
+msgstr ""
 
 #: src/epg.c:2297
 msgid "Romance"
-msgstr "Romantika"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:697
 msgid "Rotor initialization time (seconds)"
-msgstr "Forgató inicializálásának időtartama indítás után (másodperben)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1557
 msgid "Rotor type"
-msgstr "Forgató típusa"
+msgstr ""
 
 #: src/main.c:823
 msgid "Run as group"
-msgstr "Futtatás az alábbi felhasználócsportként"
+msgstr ""
 
 #: src/main.c:822
 msgid "Run as user"
-msgstr "Futtatás felhasználóként"
+msgstr ""
 
 #: src/subscriptions.c:1032 src/dvr/dvr_db.c:634
 msgid "Running"
-msgstr "Futó"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:164
 msgid "SAT->IP frontend number."
-msgstr "SAT->IP frontend szám."
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:453
 msgid "SAT>IP ATSC-C Frontend"
-msgstr "SAT>IP ATSC-C Frontend"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:443
 msgid "SAT>IP ATSC-T Frontend"
-msgstr "SAT>IP ATSC-T Frontend"
+msgstr ""
 
 #: src/tvhlog.c:159 src/input/mpegts/satip/satip.c:230
 msgid "SAT>IP Client"
-msgstr "SAT>IP kliens"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:157
 msgid "SAT>IP DVB Frontend"
@@ -5741,13 +5736,13 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:245
 msgid "SAT>IP DVB-T frequency (Hz)"
-msgstr "SAT>IP DVB-T frekvencia (Hz)"
+msgstr ""
 
 #: src/main.c:844
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
-msgstr "SAT>IP RTSP port szám a szerverhez\n(alapértelmezett: -1 = kikapcsolt, 0 = webconfig, standard port érték 554)"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:339
 msgid "SAT>IP Satellite Configuration"
@@ -5763,14 +5758,14 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:244
 msgid "SAT>IP source number"
-msgstr "SAT>IP Forrás Száma"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:524
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:588
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:161
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:199
 msgid "SCR (ID)"
-msgstr "SCR (ID)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:525
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:589
@@ -5779,39 +5774,39 @@ msgstr ""
 
 #: src/service.c:158
 msgid "SD TV"
-msgstr "SD TV"
+msgstr ""
 
 #: src/profile.c:269
 msgid "SD: standard definition"
-msgstr "SD: Normál felbontású"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:107
 msgid "SIGHUP"
-msgstr "SIGHUP"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:106
 msgid "SIGINT"
-msgstr "SIGINT"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:104
 msgid "SIGKILL"
-msgstr "SIGKILL"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "SIGTERM"
-msgstr "SIGTERM"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:108
 msgid "SIGUSR1"
-msgstr "SIGUSR1"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:109
 msgid "SIGUSR2"
-msgstr "SIGUSR2"
+msgstr ""
 
 #: src/bouquet.c:1053 src/input/mpegts/iptv/iptv.c:922
 msgid "SSL verify peer"
-msgstr "SSL pár ellenőrzés"
+msgstr ""
 
 #: src/tvhlog.c:75
 msgid "START"
@@ -5823,33 +5818,33 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:774
 msgid "Sat"
-msgstr "Sat"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1491
 msgid "Satconf"
-msgstr "Satconf"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:306
 msgid "Satellite config"
-msgstr "Műhold-beállítás"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:134
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:151
 msgid "Satellite longitude"
-msgstr "Műhold hosszúsági fok"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:135
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:152
 msgid "Satellite longitude."
-msgstr "Műhold hosszúsági fok."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:128
 msgid "Satellite position."
-msgstr "Műhold-pozíció."
+msgstr "Sputnikin mövqeyi"
 
 #: src/input/mpegts/satip/satip_frontend.c:353
 msgid "Satellite positions"
-msgstr "Műhold-pozíciók"
+msgstr "Sputnik mövqeləri"
 
 #: src/epggrab.c:327
 msgid "Save EPG to disk after xmltv import"
@@ -5857,23 +5852,23 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:737
 msgid "Scan after creation"
-msgstr "Szkennelés létrehozás után"
+msgstr "Yaratdıqdan dərhal sonra Axtar"
 
 #: src/wizard.c:776
 msgid "Scan progress"
-msgstr ""
+msgstr "Axtarır"
 
 #: src/input/mpegts/mpegts_network.c:296
 msgid "Scan queue length"
-msgstr "Szkennelési sor hossza"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:617
 msgid "Scan result"
-msgstr "Szkennelés eredmény"
+msgstr "Axtarış nəticələri"
 
 #: src/wizard.c:1047 src/input/mpegts/mpegts_mux.c:605
 msgid "Scan status"
-msgstr "Szkennelés státusz"
+msgstr ""
 
 #: src/tvhlog.c:168
 msgid "Scanfile"
@@ -5881,7 +5876,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:936
 msgid "Schedule a re-recording if more errors than (0=off)"
-msgstr "Újrafelvétel ütemezése több mint x észlelt hiba után (0=Ki)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_sched.c:154
 msgid "Schedule frequency (in cron format)."
@@ -5889,7 +5884,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3597
 msgid "Schedule status"
-msgstr "Időzítés státusza"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3598
 msgid "Schedule status."
@@ -5901,15 +5896,15 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:624
 msgid "Scheduled for recording"
-msgstr "Újravételezésre időzítve"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3218
 msgid "Scheduled start time"
-msgstr "Időzítés kezdési időpont"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3245
 msgid "Scheduled stop time"
-msgstr "Időzítés leállítási időpont"
+msgstr ""
 
 #: src/config.c:2360
 msgid ""
@@ -5919,15 +5914,15 @@ msgstr ""
 
 #: src/epg.c:2367
 msgid "School programs"
-msgstr "Iskolai műsorok"
+msgstr ""
 
 #: src/epg.c:2435
 msgid "Science"
-msgstr "Tudomány"
+msgstr ""
 
 #: src/epg.c:2294
 msgid "Science fiction"
-msgstr "Sci-Fi"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1043
 msgid "Script/program to run when a recording completes."
@@ -5945,12 +5940,12 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1249
 msgid "Season"
-msgstr "Évad"
+msgstr ""
 
 #: src/dvr/dvr_db.c:820
 #, c-format
 msgid "Season %d"
-msgstr "%d. Évad"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1250
 msgid "Season information (if available)."
@@ -5958,7 +5953,7 @@ msgstr ""
 
 #: src/htsp_server.c:2938
 msgid "Seek error"
-msgstr "Keresési hiba"
+msgstr ""
 
 #: src/wizard.c:585
 msgid "Select an available network type for this tuner."
@@ -6000,7 +5995,7 @@ msgstr ""
 msgid ""
 "Select the list of languages (in order of priority) to be used for supplying"
 " EPG information to clients that don't provide their own configuration."
-msgstr "Válassza ki az EPG információ szolgáltatásnál használt nyelvet (fontossági sorrendben) ami abban az esetben használt, ahol a kliens nem szolgáltatja a saját konfigurációját"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:366
 #: src/input/mpegts/satip/satip_frontend.c:398
@@ -6011,13 +6006,13 @@ msgid ""
 " be equal.if you set other tuner as master, then this tuner will act like a "
 "slave one and tvheadend will assure that this tuner will not use "
 "incompatible parameters (position, polarization, lo-hi)."
-msgstr "Válassza ki a fő tunert. A jelet az univerzális LNB-től el lehet osztani egy egszerű koaxiális kábellel (nem multiswitch-el) több kimenetre. Ebben az esetben a helyzet, polarizáció valamint alacsony-magas frekvenciatartományok azonosak kell, hogy legyenek. Ha egy másik tunert allítunk be master tunernek, akkor ez a tuner másodlagos tunerként fog viselkedni és a tvheadend biztosíttani fogja, hogy ez a tuner ne hasznájon nem-kompatibilis paramétereket (helyet, polarizáció, frekvenciatartomány)"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:354
 msgid ""
 "Select the number of satellite positions supported by the SAT>IP hardware "
 "and your coaxial cable wiring."
-msgstr "Válassza ki a SAT>IP hardver által támogatott müholdpoziciők számát és a koaxiális kábelezés tipusát."
+msgstr ""
 
 #: src/config.c:2289
 msgid ""
@@ -6057,11 +6052,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:271
 msgid "Send CAPMT query"
-msgstr "Küldjön CAPMT lekérdezést"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:192
 msgid "Send full PLAY cmd"
-msgstr "Küldjön tejes LEJÁTSZÁS parancsot"
+msgstr ""
 
 #: src/config.c:2206
 msgid ""
@@ -6073,15 +6068,15 @@ msgstr ""
 msgid ""
 "Send the full RTSP PLAY command after full RTSP SETUP command. Some devices "
 "firmware require this to get an MPEG-TS stream."
-msgstr "Küldje el a teljes RTSP PLAY parancsot minden teljes RTSP setup parancs után. Egyes eszközök megkövetelik ezt ahhoz, hogy MPEG-TS streamelést biztosítsanak."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:407
 msgid "Serial number"
-msgstr "Gyári szám"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1258
 msgid "Series link"
-msgstr "Sorozat hozzáférés"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1259
 msgid "Series link ID."
@@ -6089,43 +6084,43 @@ msgstr ""
 
 #: src/epg.c:2298
 msgid "Serious"
-msgstr "Komoly"
+msgstr ""
 
 #: src/epg.c:2383
 msgid "Serious music"
-msgstr "Komoly zene"
+msgstr ""
 
 #: src/config.c:2029 src/input/mpegts/satip/satip.c:503
 msgid "Server"
-msgstr "Szerver"
+msgstr ""
 
 #: src/satip/server.c:649
 msgid "Server UUID"
-msgstr "Szerver UUID"
+msgstr ""
 
 #: src/main.c:854
 msgid "Server connectivity"
-msgstr "Szerverkapcsolat"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:504
 msgid "Server details."
-msgstr "Szerver részletei."
+msgstr "Server barədə"
 
 #: src/tvhlog.c:127 src/service.c:169 src/esfilter.c:654 src/esfilter.c:748
 #: src/esfilter.c:843 src/esfilter.c:938 src/esfilter.c:1043
 #: src/esfilter.c:1138
 msgid "Service"
-msgstr "Szolgáltatás"
+msgstr "Xidmət"
 
 #: src/input/mpegts/mpegts_mux.c:680 src/input/mpegts/mpegts_service.c:120
 #: src/input/mpegts/iptv/iptv.c:746 src/descrambler/constcw.c:315
 #: src/descrambler/constcw.c:381
 msgid "Service ID"
-msgstr "Szolgáltatás ID"
+msgstr ""
 
 #: src/tvhlog.c:130
 msgid "Service Mapper"
-msgstr "Szolgáltatás összerendelő"
+msgstr ""
 
 #: src/service_mapper.c:487
 msgid "Service Mapping (Map services to channels)"
@@ -6133,20 +6128,20 @@ msgstr ""
 
 #: src/main.c:818
 msgid "Service configuration"
-msgstr "Szolgáltatás konfiguráció"
+msgstr ""
 
 #: src/bouquet.c:929
 #, c-format
 msgid "Service count %zi"
-msgstr "Szolgátatások száma %zi"
+msgstr ""
 
 #: src/wizard.c:1139
 msgid "Service mapping"
-msgstr "Szolgáltatás összerendelés"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:160 src/input/mpegts/iptv/iptv_mux.c:181
 msgid "Service name"
-msgstr "Szolgáltatás neve"
+msgstr ""
 
 #: src/epggrab/channel.c:816
 msgid "Service name found in EPG data."
@@ -6164,11 +6159,11 @@ msgstr ""
 
 #: src/service.c:250
 msgid "Service raw"
-msgstr "Szolgáltatás raw"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:184
 msgid "Service type"
-msgstr "Szolgáltatás típus"
+msgstr ""
 
 #: src/service.c:238
 msgid ""
@@ -6179,7 +6174,7 @@ msgstr ""
 #: src/channels.c:504 src/service_mapper.c:497 src/bouquet.c:1081
 #: src/bouquet.c:1099 src/input/mpegts/mpegts_mux.c:637
 msgid "Services"
-msgstr "Szolgáltatások"
+msgstr ""
 
 #: src/channels.c:505
 msgid "Services associated with the channel."
@@ -6195,11 +6190,11 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:363
 msgid "Set the display name."
-msgstr "Név beállítása."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:293
 msgid "Set the maxiumum packet identifiers your SAT>IP server supports."
-msgstr "A maximális csomagazonosító, amit a SAT>IP szerver támogat."
+msgstr ""
 
 #: src/config.c:2078
 msgid ""
@@ -6208,7 +6203,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:371
 msgid "Set the priority of this configuration."
-msgstr "Ezen beállítás prioritása."
+msgstr ""
 
 #: src/config.c:2087
 msgid "Sets the default interface view level (next to the Help button)."
@@ -6216,7 +6211,7 @@ msgstr ""
 
 #: src/tvhlog.c:94 src/tvhlog.c:715 src/epggrab/module.c:119
 msgid "Settings"
-msgstr "Beállítások"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:240
 msgid "Shift PTS (ms)"
@@ -6224,7 +6219,7 @@ msgstr ""
 
 #: src/epg.c:2327
 msgid "Show"
-msgstr "Show"
+msgstr ""
 
 #: src/epg.c:2331 src/epg.c:2332 src/epg.c:2333 src/epg.c:2334 src/epg.c:2335
 #: src/epg.c:2336 src/epg.c:2337 src/epg.c:2338 src/epg.c:2339 src/epg.c:2340
@@ -6240,17 +6235,17 @@ msgstr ""
 
 #: src/main.c:815
 msgid "Show this page"
-msgstr "Oldal megjelenítése"
+msgstr ""
 
 #: src/main.c:816
 msgid "Show version information"
-msgstr "Verzió információ megjelenítése"
+msgstr ""
 
 #: src/config.c:2255
 msgid ""
 "Show, hide and sort the various details that appear on the interface next to"
 " the About tab."
-msgstr "Mutat, elrejt és rendez különböző részletet, amelyek az interfészen jelennek meg, a Tvheadend-ről fül mellett."
+msgstr ""
 
 #: src/satip/server.c:811
 msgid "Signal level for IPTV sources (0-240)."
@@ -6258,48 +6253,48 @@ msgstr ""
 
 #: src/streaming.c:467
 msgid "Signal quality too poor"
-msgstr "Jelminőség túk gyenge"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:282
 msgid "Signal scale (240 or 100)"
-msgstr "Jel slála  (240 vagy 100)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:718
 msgid "Site latitude"
-msgstr "Fekvés szélességi fok"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:719
 msgid "Site latitude."
-msgstr "Helyszín szélességi fok."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:726
 msgid "Site longitude"
-msgstr "Fekvés hosszúsági fok"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:727
 msgid "Site longitude."
-msgstr "Helyszín hosszúsági fok."
+msgstr ""
 
 #: src/memoryinfo.c:53
 msgid "Size"
-msgstr "Méret"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:357
 msgid "Skip TS packets (0-200)"
-msgstr "TS csomagok kihagyása (0-200)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:672
 msgid ""
 "Skip TSID checking. For when providers use invalid Transport Stream IDs."
-msgstr "A TSID ellenőrzés kihagyása. Olyan esetekre, amikor a szolgáltatók érvénytelen Transport Stream ID-t használnak."
+msgstr ""
 
 #: src/dvr/dvr_config.c:1125
 msgid "Skip commercials"
-msgstr "Reklámok kihagyása"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:167
 msgid "Skip initial bytes"
-msgstr "Kezdeti x bájt kihagyása"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:196
 msgid ""
@@ -6314,11 +6309,11 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:358
 msgid "Skip x number of transport packets."
-msgstr "x számú transport csomag elvetése."
+msgstr ""
 
 #: src/dvr/dvr_db.c:3537
 msgid "Slave entry"
-msgstr "Szolga bejegyzés"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3538
 msgid "Slave entry."
@@ -6326,29 +6321,29 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:287
 msgid "Slot state"
-msgstr "Slot státusz"
+msgstr ""
 
 #: src/epg.c:2296
 msgid "Soap"
-msgstr "Szappanopera"
+msgstr ""
 
 #: src/epg.c:2348
 msgid "Soccer"
-msgstr "Foci"
+msgstr ""
 
 #: src/epg.c:2417 src/epg.c:2440
 msgid "Social"
-msgstr "Közösségi"
+msgstr ""
 
 #: src/epg.c:2421 src/epg.c:2422 src/epg.c:2423 src/epg.c:2424 src/epg.c:2425
 #: src/epg.c:2426 src/epg.c:2427 src/epg.c:2428 src/epg.c:2429 src/epg.c:2430
 #: src/epg.c:2431 src/epg.c:2432
 msgid "Social / Political issues / Economics"
-msgstr "Társadalom / politika / gazdaság"
+msgstr ""
 
 #: src/epg.c:2419
 msgid "Social advisory"
-msgstr "Társadalmi célú hirdetés"
+msgstr ""
 
 #: src/descrambler/capmt.c:2443
 msgid "Socket or IP Address (when in TCP mode)."
@@ -6364,7 +6359,7 @@ msgstr ""
 
 #: src/channels.c:1447
 msgid "Sort index"
-msgstr "Indexek rendszerezése"
+msgstr ""
 
 #: src/channels.c:1448
 msgid "Sort index."
@@ -6372,19 +6367,19 @@ msgstr ""
 
 #: src/bouquet.c:1072
 msgid "Source"
-msgstr "Forrás"
+msgstr ""
 
 #: src/streaming.c:442
 msgid "Source deleted"
-msgstr "Forrás törölve"
+msgstr ""
 
 #: src/streaming.c:440
 msgid "Source quality is bad"
-msgstr "Forrás rossz minőségű"
+msgstr ""
 
 #: src/streaming.c:438
 msgid "Source reconfigured"
-msgstr "Forrás újrabeállítva"
+msgstr ""
 
 #: src/profile.c:1885
 msgid "Source video codec"
@@ -6392,7 +6387,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:734
 msgid "Southern hemisphere (latitude direction)"
-msgstr "Déli félteke (szélesség irányában)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:735
 msgid "Southern hemisphere (latitude direction)."
@@ -6404,7 +6399,7 @@ msgstr ""
 
 #: src/epg.c:2346
 msgid "Special events (Olympic Games, World Cup, etc.)"
-msgstr "Különleges események (Olimpia, Világkupák, stb.)"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:270
 msgid ""
@@ -6415,23 +6410,23 @@ msgstr ""
 
 #: src/main.c:865
 msgid "Specify User-Agent header for the http client"
-msgstr "Adja meg az User-Agent - felhasználókliens fejlécet a HTTP kliensnek"
+msgstr ""
 
 #: src/main.c:861
 msgid "Specify alternative htsp port"
-msgstr "Alternatív htsp port megadása"
+msgstr ""
 
 #: src/main.c:857
 msgid "Specify alternative http port"
-msgstr "Alternatív http port megadása"
+msgstr ""
 
 #: src/main.c:859
 msgid "Specify alternative http webroot"
-msgstr "Alternatív http webroot megadása"
+msgstr ""
 
 #: src/main.c:856
 msgid "Specify bind address"
-msgstr "Bind IP címének megadása"
+msgstr ""
 
 #: src/main.c:842
 msgid "Specify bind address for SAT>IP server"
@@ -6439,7 +6434,7 @@ msgstr ""
 
 #: src/main.c:863
 msgid "Specify extra htsp port"
-msgstr "Alternatív htsp port megadása"
+msgstr ""
 
 #: src/access.c:1645
 msgid "Specify the parameters to be changed. See Help for details."
@@ -6447,35 +6442,35 @@ msgstr ""
 
 #: src/epg.c:2440
 msgid "Spiritual sciences"
-msgstr "Lelki tudományok"
+msgstr ""
 
 #: src/epg.c:2345 src/epg.c:2357 src/epg.c:2358 src/epg.c:2359 src/epg.c:2360
 msgid "Sports"
-msgstr "Sportok"
+msgstr ""
 
 #: src/epg.c:2347
 msgid "Sports magazines"
-msgstr "Sportműsorok"
+msgstr ""
 
 #: src/epg.c:2349
 msgid "Squash"
-msgstr "Fallabda"
+msgstr ""
 
 #: src/config.c:1979 src/input/mpegts/mpegts_mux.c:501
 msgid "Standard"
-msgstr "Standard"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:580
 msgid "Start"
-msgstr "Kezdés"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1087
 msgid "Start after"
-msgstr "Kezdés időpont után"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1100
 msgid "Start before"
-msgstr "Kezdés időpont előtt"
+msgstr ""
 
 #: src/channels.c:468
 msgid ""
@@ -6506,39 +6501,39 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3197
 msgid "Start time"
-msgstr "Kezdés Időpontja"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3588 src/descrambler/caclient.c:294
 msgid "Status"
-msgstr "Állapot"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:188
 msgid "Status period (ms)"
-msgstr "Állapot periódus (ms-ban)"
+msgstr ""
 
 #: src/profile.c:1681
 msgid "Stereo"
-msgstr "Sztereó"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:591
 msgid "Stop"
-msgstr "Leállítás"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3226
 msgid "Stop time"
-msgstr "Leállítási idő"
+msgstr ""
 
 #: src/timeshift.c:211
 msgid "Storage path"
-msgstr "Tárhely elérési útvonal"
+msgstr ""
 
 #: src/config.c:1918
 msgid "Storage space"
-msgstr "Tárhely"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:845
 msgid "Stream ID"
-msgstr "Stream ID"
+msgstr ""
 
 #: src/profile.c:281
 msgid "Stream Profile"
@@ -6547,7 +6542,7 @@ msgstr ""
 #: src/esfilter.c:664 src/esfilter.c:759 src/esfilter.c:854 src/esfilter.c:949
 #: src/esfilter.c:1054 src/profile.c:1345
 msgid "Stream index"
-msgstr "Stream index"
+msgstr ""
 
 #: src/profile.c:1346
 msgid "Stream index (starts with zero)."
@@ -6555,7 +6550,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:876
 msgid "Stream profile"
-msgstr "Stream-profil"
+msgstr ""
 
 #: src/htsp_server.c:2498
 msgid "Stream setup error"
@@ -6564,11 +6559,11 @@ msgstr ""
 #: src/esfilter.c:633 src/esfilter.c:727 src/esfilter.c:822 src/esfilter.c:917
 #: src/esfilter.c:1012 src/esfilter.c:1117
 msgid "Stream type"
-msgstr "Stream típus"
+msgstr ""
 
 #: src/access.c:1346 src/access.c:1707
 msgid "Streaming"
-msgstr "Stream-elés"
+msgstr ""
 
 #: src/tvhlog.c:133
 msgid "Streaming Profile"
@@ -6584,23 +6579,23 @@ msgstr ""
 #: src/input/mpegts/mpegts_input.c:267 src/input/mpegts/iptv/iptv.c:767
 #: src/input/mpegts/iptv/iptv_mux.c:131
 msgid "Streaming priority"
-msgstr "Stream-profil"
+msgstr ""
 
 #: src/access.c:1437 src/access.c:1721
 msgid "Streaming profiles"
-msgstr "Stream-profilok"
+msgstr ""
 
 #: src/dvr/dvr_config.c:826
 msgid "Subdirectory options"
-msgstr "Alkönyvtár opciók"
+msgstr ""
 
 #: src/main.c:893
 msgid "Subscribe to a service permanently"
-msgstr "Előfizetés adott szolgáltatásra véglegesen"
+msgstr ""
 
 #: src/tvhlog.c:129
 msgid "Subscription"
-msgstr "Előfizetés"
+msgstr ""
 
 #: src/htsp_server.c:2592 src/htsp_server.c:2619 src/htsp_server.c:2663
 #: src/htsp_server.c:2690 src/htsp_server.c:2718
@@ -6609,19 +6604,19 @@ msgstr ""
 
 #: src/streaming.c:444
 msgid "Subscription overridden"
-msgstr "Előfizetés felülbírálva"
+msgstr ""
 
 #: src/satip/server.c:695
 msgid "Subscription weight"
-msgstr "Előfizetés súlyzó"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:147
 msgid "Substitute formatters"
-msgstr "Helyettesítő formázók"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3307 src/dvr/dvr_db.c:3315
 msgid "Subtitle"
-msgstr "Felirat"
+msgstr ""
 
 #: src/esfilter.c:911
 msgid "Subtitle Stream Filter"
@@ -6629,7 +6624,7 @@ msgstr ""
 
 #: src/profile.c:1958
 msgid "Subtitle codec"
-msgstr "Felirat kódec"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3316
 msgid "Subtitle of the program (if any) (display only)."
@@ -6641,15 +6636,15 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:775
 msgid "Sun"
-msgstr "Vas"
+msgstr ""
 
 #: src/profile.c:1682
 msgid "Surround (2 front, rear mono)"
-msgstr "Térhatás(2 első, monó hát)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:688
 msgid "Switch before rotor"
-msgstr "Switch motor előtt"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_lnb.c:81
 msgid "Switch frequency offset"
@@ -6667,33 +6662,33 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1548
 msgid "Switch type"
-msgstr "Switch típus"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:106
 #, c-format
 msgid "Switch: %s"
-msgstr "Switch: %s"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:322 src/input/mpegts/mpegts_mux_dvb.c:453
 #: src/input/mpegts/mpegts_mux_dvb.c:600 src/input/mpegts/mpegts_mux_dvb.c:792
 msgid "Symbol rate (Sym/s)"
-msgstr "Szimbólum sebesség(Sym/s)"
+msgstr ""
 
 #: src/dvr/dvr_config.c:712
 msgid "Sync"
-msgstr "Sync"
+msgstr ""
 
 #: src/dvr/dvr_config.c:713
 msgid "Sync + Don't keep"
-msgstr "Sync+ne tartsa meg"
+msgstr ""
 
 #: src/dvr/dvr_config.c:710
 msgid "System"
-msgstr "Rendszer"
+msgstr ""
 
 #: src/tvhlog.c:91
 msgid "TCP Protocol"
-msgstr "TCP protokoll"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:396
 msgid "TV Adapters - Linux ATSC-C Frontend"
@@ -6777,15 +6772,15 @@ msgstr ""
 
 #: src/tvhlog.c:161
 msgid "TVHDHomeRun Client"
-msgstr "TVHDHomeRun ügyfél"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1114
 msgid "Tag files with metadata"
-msgstr "Fájlok címkézése metaadatokkal"
+msgstr ""
 
 #: src/channels.c:515
 msgid "Tags"
-msgstr "Címkek"
+msgstr ""
 
 #: src/channels.c:516
 msgid "Tags linked/to link to the channel."
@@ -6793,15 +6788,15 @@ msgstr ""
 
 #: src/epg.c:2330
 msgid "Talk show"
-msgstr "Talk show"
+msgstr ""
 
 #: src/epg.c:2350
 msgid "Team sports (excluding football)"
-msgstr "Csapat sportok (focit kivéve)"
+msgstr ""
 
 #: src/epg.c:2437
 msgid "Technology"
-msgstr "Technika"
+msgstr ""
 
 #: src/esfilter.c:816
 msgid "Teletext Stream Filter"
@@ -6809,35 +6804,35 @@ msgstr ""
 
 #: src/esfilter.c:823
 msgid "Teletext stream type is only available for this filter."
-msgstr "A Teletext stream típus csak ennél a szűrőnél alkalmazható. "
+msgstr ""
 
 #: src/epg.c:2349
 msgid "Tennis"
-msgstr "Tenisz"
+msgstr ""
 
 #: src/subscriptions.c:1028
 msgid "Testing"
-msgstr "Tesztelés"
+msgstr ""
 
 #: src/main.c:898
 msgid "Testing options"
-msgstr "Tesztelési tulajdonságok"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:153
 msgid "The ATSC source ID as set by the provider."
-msgstr "A szolgáltató által beállított ATSC forrás ID."
+msgstr ""
 
 #: src/esfilter.c:1034
 msgid "The CA provider to compare. Leave blank to apply to all providers."
-msgstr "A CA szolgáltató, összehasonlításhoz. Hagyja üresen az összes szolgáltatóra történő alkalmazáshoz."
+msgstr ""
 
 #: src/esfilter.c:1013
 msgid "The CA stream type is only available for this filter."
-msgstr "A CA stream típus csak ennél a szűrőnél alkalmazható. "
+msgstr ""
 
 #: src/esfilter.c:1024
 msgid "The CAID to compare. Leave blank to apply to all IDs."
-msgstr "CAID az összehasonlításhoz. Hagyja üresen az összes ID-ra történő alkalmazáshoz."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:288
 msgid "The CAM slot status."
@@ -6855,7 +6850,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:598
 msgid "The Content reference identifier (CRID) authority."
-msgstr "A Content reference identifier (CRID) hatóság."
+msgstr ""
 
 #: src/dvr/dvr_db.c:3390
 msgid "The DVR profile to be used/used by the recording."
@@ -6884,11 +6879,11 @@ msgstr ""
 
 #: src/esfilter.c:1118
 msgid "The MPEGTS stream type is only available for this filter."
-msgstr "Az MPEGTS stream típus csak ennél a szűrőnél alkalmazható. "
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:145
 msgid "The OpenTV channel number as set by the provider."
-msgstr "Az OpenTV csatorna sorszáma, ahogyan a szolgáltató beállította."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:236
 msgid "The PIN to use."
@@ -6906,15 +6901,15 @@ msgstr ""
 msgid ""
 "The Preferred Conditional Access Packet Identifier. Used for decrypting "
 "scrambled streams."
-msgstr "A Preferred Conditional Access Packet Identifier. Titkosított stream-ek visszafejtéséhez használandó."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:400
 msgid "The SAT>IP server's name."
-msgstr "A SAT>IP szerver neve."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:392
 msgid "The SAT>IP server's universally unique identifier."
-msgstr "A SAT>IP szerver általánosan egyedi azonosítója."
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:245
 msgid "The SAT>IP source number."
@@ -6922,7 +6917,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:512
 msgid "The SAT>IP's discovered IP address."
-msgstr "A SAT>IP által megtalált IP-cím."
+msgstr ""
 
 #: src/channels.c:423
 msgid ""
@@ -6936,7 +6931,7 @@ msgstr ""
 
 #: src/esfilter.c:728
 msgid "The audio stream types the filter should apply to."
-msgstr "A szűrő által használt audio stream típusok."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:226 src/input/mpegts/mpegts_mux_dvb.c:684
 msgid ""
@@ -6975,7 +6970,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:204
 msgid "The character encoding for this service (e.g. UTF-8)."
-msgstr "Szolgáltatás karakterkódolása (pl. UTF-8)."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:627
 msgid ""
@@ -6991,25 +6986,25 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:464
 msgid "The current boot ID."
-msgstr "Jelenlegi boot ID."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:472
 msgid "The current configuration ID."
-msgstr "Jelenlegi beállítási azonosító ID."
+msgstr ""
 
 #: src/config.c:2059
 msgid "The current configuration version."
-msgstr "Jelenlegi beállítás verziója."
+msgstr ""
 
 #: src/config.c:2267
 msgid ""
 "The default language to use if the user  language isn't set in the Access "
 "Entries tab."
-msgstr "A használandó, alapértelmezett nyelv, amennyiben a felhasználói nyelv nincs beállítva a hozzáférések fülön."
+msgstr ""
 
 #: src/satip/server.c:696
 msgid "The default subscription weight for each subscription."
-msgstr "Az alapértelmezett előfizetői súlyozás minden egyes előfizetéshez."
+msgstr ""
 
 #: src/config.c:2277
 msgid ""
@@ -7043,7 +7038,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:480
 msgid "The device ID."
-msgstr "Az eszköz ID-je."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:121
 msgid "The device path in sysfs filesystem (/sys)."
@@ -7051,7 +7046,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:408
 msgid "The device's serial number."
-msgstr "Az eszköz sorozatszáma."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:255
 msgid ""
@@ -7081,7 +7076,7 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux_dvb.c:678 src/input/mpegts/mpegts_mux_dvb.c:785
 #: src/input/mpegts/mpegts_mux_dvb.c:838 src/input/mpegts/mpegts_mux_dvb.c:884
 msgid "The frequency of the mux (in Hertz)."
-msgstr "A mux frekvenciája (Hertz-ben)."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:446
 msgid "The frequency of the mux/transponder in Hertz."
@@ -7180,7 +7175,7 @@ msgstr ""
 msgid ""
 "The locking mechanism selection for The Preferred Conditional Access Packet "
 "Identifier. See Help for more information."
-msgstr "A használt blokkolási mechanizmus az előnyben részesített CAS csomag azonosítónál. Lásd a Súgót további informácókért."
+msgstr ""
 
 #: src/esfilter.c:665 src/esfilter.c:760 src/esfilter.c:855 src/esfilter.c:950
 #: src/esfilter.c:1055
@@ -7189,11 +7184,11 @@ msgid ""
 "all filters.Example: If filter is set to AC3 audio type and the language to "
 "'eng' and there are two AC3 'eng' streams in the service, the first stream "
 "could be identified using number 1 and the second using number 2."
-msgstr "Az összehasonlítandó logikai adatfolyam indexe. Ne feledje, hogy ez az index  minden szürő használatával van kiszámítva.\nPélda:  Ha szűrő AC3 audio típusra, a nyelv \"hun\" -ra van beállítva , és  két AC3 \"hun\"  típusú hang adatfolyam van a  szolgáltatásban, akkor az első adatfolyamot 1-es számmal, a másodikat 2-es számmal lehet azonosítani."
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:424
 msgid "The manufacturer of the SAT>IP server."
-msgstr "A SAT>IP szerver gyártója."
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1158
 msgid ""
@@ -7238,7 +7233,7 @@ msgstr ""
 
 #: src/satip/server.c:716
 msgid "The maximum number of services to decrypt per mux."
-msgstr "A mux-onkénti szolgáltatások visszafejtésének száma."
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1212
 msgid "The maximum number of times this rule can be triggered."
@@ -7265,15 +7260,15 @@ msgid ""
 "The minimum delay before tuning in milliseconds after tuner stop. If the "
 "time between the previous and next start is greater than this value then the"
 " delay is not applied."
-msgstr "A minimális késleltetás újrahangolás esetén az előző keresés után.  Ha az idő  az előző és a következő kezdet között meghaladja ezt az értéket, akkor a késleltetés nincs alkalmazva."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:464 src/input/mpegts/mpegts_mux_dvb.c:558
 msgid "The modulation used on the mux."
-msgstr "A mux-on hasznát moduláció."
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:105
 msgid "The mux the service is on."
-msgstr "A szolgáltatás mux-a."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_sched.c:146
 msgid "The mux to play when the entry is triggered."
@@ -7281,7 +7276,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:113
 msgid "The mux's universally unique identifier."
-msgstr "A mux általánosan egyedi azonosítója."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:565
 msgid "The name (or frequency) the mux is on."
@@ -7311,7 +7306,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:97
 msgid "The network the service is on."
-msgstr "A szolgáltatás hálózata."
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:756
 msgid ""
@@ -7329,7 +7324,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:416
 msgid "The networks using this configuration."
-msgstr "A hálózatok, amelyek ezt a beállítást használják."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:557
 msgid "The networks' universally unique identifier (UUID)."
@@ -7337,35 +7332,35 @@ msgstr ""
 
 #: src/satip/server.c:886
 msgid "The number of ATSC-C (Cable/AnnexB) tuners to export."
-msgstr "Az exportálandó ATSC-C (kábel/AnnexB) tuner-ek száma."
+msgstr ""
 
 #: src/satip/server.c:878
 msgid "The number of ATSC-T (Terresterial) tuners to export."
-msgstr "Az exportálandó ATSC-T (földfelszíni) tuner-ek száma."
+msgstr ""
 
 #: src/satip/server.c:862
 msgid "The number of DVB-C (Cable) tuners to export."
-msgstr "Az exportálandó DVB-C (kábel) tuner-ek száma."
+msgstr ""
 
 #: src/satip/server.c:870
 msgid "The number of DVB-C2 (Cable) tuners to export."
-msgstr "Az exportálandó DVB-C2 (kábel) tuner-ek száma."
+msgstr ""
 
 #: src/satip/server.c:830
 msgid "The number of DVB-S (Satellite) tuners to export."
-msgstr "Az exportálandó DVB-S (műholdas) tuner-ek száma."
+msgstr ""
 
 #: src/satip/server.c:838
 msgid "The number of DVB-S2 (Satellite) tuners to export."
-msgstr "Az exportálandó DVB-S2 (műholdas) tuner-ek száma."
+msgstr ""
 
 #: src/satip/server.c:846
 msgid "The number of DVB-T (Terresterial) tuners to export."
-msgstr "Az exportálandó DVB-T (földfelszíni) tuner-ek száma."
+msgstr ""
 
 #: src/satip/server.c:854
 msgid "The number of DVB-T2 (Terresterial) tuners to export."
-msgstr "Az exportálandó DVB-T2 (földfelszíni) tuner-ek száma."
+msgstr ""
 
 #: src/config.c:2196
 msgid ""
@@ -7385,7 +7380,7 @@ msgstr ""
 
 #: src/config.c:2145
 msgid "The number of days cookies set by Tvheadend should expire."
-msgstr "A Tvheadend által használt sütik lejárati ideje napokban."
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:297
 msgid "The number of muxes left to scan on this network."
@@ -7444,15 +7439,15 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:169
 msgid "The provider's name."
-msgstr "A szolgáltató neve."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:581
 msgid "The provider's network ID."
-msgstr "A szolgáltató hálózati azonosítója."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:573
 msgid "The provider's network name."
-msgstr "A szolgáltatói hálózat neve."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:328 src/input/mpegts/mpegts_mux_dvb.c:606
 #: src/input/mpegts/mpegts_mux_dvb.c:798
@@ -7478,7 +7473,7 @@ msgstr ""
 msgid ""
 "The rule action defines the operation when all comparisons succeed. See Help"
 " for more information on what the various rules do."
-msgstr "A szabály definiálja a műveletet amennyiben az összehasonlítások sikeresek. További információkért, hogy a különböző szabályok mire használhatóak, nézze meg a súgót."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:307
 msgid "The satellite configuration to use."
@@ -7488,7 +7483,7 @@ msgstr ""
 msgid ""
 "The scan state. New muxes will automatically be changed to the PEND state. "
 "You can change this to ACTIVE to queue a scan of this mux."
-msgstr "A keresés állapota. Az új mux-ok automatikusan PEND állapotba váltanak. Átkapcsolhatja ACTIVE-ba, hogy egy új keresést időzítsen a mux-hoz."
+msgstr ""
 
 #: src/dvr/dvr_db.c:3219
 msgid "The scheduled start time, including any padding."
@@ -7517,7 +7512,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:121
 msgid "The service ID as set by the provider."
-msgstr "A szolgáltató által beállított service ID."
+msgstr ""
 
 #: src/descrambler/constcw.c:316
 msgid "The service ID."
@@ -7525,14 +7520,14 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:161
 msgid "The service name as set by the provider."
-msgstr "A szolgáltató által beállított szolgáltatás neve."
+msgstr ""
 
 #: src/esfilter.c:749 src/esfilter.c:844 src/esfilter.c:939
 #: src/esfilter.c:1044 src/esfilter.c:1139
 msgid ""
 "The service the filter should apply to. Leave blank to apply the filter to "
 "all services."
-msgstr "A szolgáltatás amihez a szűrő tartozik.Hagyja üresen az összes szolgáltatásra történő alkalmazáshoz."
+msgstr ""
 
 #: src/esfilter.c:655
 msgid ""
@@ -7544,15 +7539,15 @@ msgstr ""
 msgid ""
 "The service type flag as defined by the DVB specifications (e.g. 0x02 = "
 "radio, 0x11 = MPEG2 HD TV, 0x19 = H.264 HD TV)"
-msgstr "A service type flag ahogyan a DVB specifikáció definiálja (pl. 0x02 = rádió, 0x11 = MPEG2 HD TV, 0x19 = H.264 HD TV)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:137
 msgid "The service's channel minor as set by the provider."
-msgstr "A szolgáltatás csatornájának minor-ja, a szolgáltató beállításai szerint. "
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:129
 msgid "The service's channel number as set by the provider."
-msgstr "A szolgáltatás csatornájának sorszáma, a szolgáltató beállítása alapján."
+msgstr ""
 
 #: src/service.c:222
 msgid "The service's encryption status."
@@ -7603,7 +7598,7 @@ msgstr ""
 
 #: src/esfilter.c:918
 msgid "The subtitle stream types the filter should apply to."
-msgstr "A szűrő által használt felirat stream típusai."
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:323
 msgid "The symbol rate used on the mux."
@@ -7615,7 +7610,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:601 src/input/mpegts/mpegts_mux_dvb.c:793
 msgid "The symbol rate."
-msgstr "Jelsebesség."
+msgstr ""
 
 #: src/dvr/dvr_db.c:3227
 msgid "The time the entry stops/stopped being recorded."
@@ -7653,7 +7648,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:589
 msgid "The transport stream ID of the mux within the network."
-msgstr "A mux hálózaton belüli transport stream ID-ja."
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:257
 msgid ""
@@ -7680,23 +7675,23 @@ msgstr ""
 
 #: src/esfilter.c:634
 msgid "The video stream types the filter should apply to."
-msgstr "A szűrő által használt videó stream típusai."
+msgstr ""
 
 #: src/access.c:1457 src/config.c:2276
 msgid "Theme"
-msgstr "Téma"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:280
 #: src/input/mpegts/satip/satip_frontend.c:333
 msgid "This tuner"
-msgstr "Ez a tuner"
+msgstr ""
 
 #: src/config.c:2313
 msgid ""
 "This will create an NTP driver (using shmem interface) that you can feed "
 "into ntpd. This can be run without root privileges, but generally the "
 "performance is not that great."
-msgstr "Ez egy NTP meghajtót hoz létre (az shmem interfész használatával) amit az ntpd-be küldhet. Ez root jogosultságok nélkül futtatható, de a teljesítménye nem túl kiemelkedő."
+msgstr ""
 
 #: src/tvhlog.c:82
 msgid "Thread"
@@ -7704,15 +7699,15 @@ msgstr ""
 
 #: src/epg.c:2292
 msgid "Thriller"
-msgstr "Thriller"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:772
 msgid "Thu"
-msgstr "Csüt"
+msgstr ""
 
 #: src/tvhlog.c:84 src/config.c:1919
 msgid "Time"
-msgstr "Idő"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:110
 msgid "Time (in milliseconds) for a command to complete."
@@ -7732,16 +7727,16 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:673
 msgid "Time missed"
-msgstr "Kihagyott alkamak"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3520
 msgid "Time record caption"
-msgstr "Időrekord vétele"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:152
 #, c-format
 msgid "Time recording%s%s"
-msgstr "Vételek idelye%s%s"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:581
 msgid "Time to start the recording/time the recording started."
@@ -7753,19 +7748,19 @@ msgstr ""
 
 #: src/config.c:2045
 msgid "Time update"
-msgstr "Idő frissítése"
+msgstr ""
 
 #: src/profile.c:370
 msgid "Timeout (sec) (0=infinite)"
-msgstr "Időtúllépés (másodperc) (0 = végtelen)"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:378
 msgid "Timeout (seconds)"
-msgstr "Időtúllépést (másodperc)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_sched.c:162
 msgid "Timeout (secs)"
-msgstr "Időtúllépés (másodperc)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3521
 msgid "Timer-based automatic record caption."
@@ -7777,15 +7772,15 @@ msgstr ""
 
 #: src/tvhlog.c:167 src/timeshift.c:183
 msgid "Timeshift"
-msgstr "Időeltolás"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3290 src/dvr/dvr_db.c:3298 src/dvr/dvr_timerec.c:549
 msgid "Title"
-msgstr "Cím"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1025
 msgid "Title (regexp)"
-msgstr "Cím (regexp)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3299
 msgid "Title of the program (display only)."
@@ -7793,7 +7788,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3291
 msgid "Title of the program."
-msgstr "Műsor címe."
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:550
 msgid "Title of the recording - this is used to generate the filename."
@@ -7801,11 +7796,11 @@ msgstr ""
 
 #: src/webui/extjs.c:223
 msgid "Toggle details"
-msgstr "Részletek közötti váltás"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:139
 msgid "Tone burst"
-msgstr "Tone burst"
+msgstr ""
 
 #: src/dvr/dvr_db.c:664
 msgid "Too many data errors"
@@ -7837,23 +7832,23 @@ msgstr ""
 
 #: src/epg.c:2454
 msgid "Tourism / Travel"
-msgstr "Túrizmus / Utazás"
+msgstr ""
 
 #: src/tvhlog.c:776
 msgid "Trace subsystems"
-msgstr "Trace alrendszerek "
+msgstr ""
 
 #: src/epg.c:2403
 msgid "Traditional arts"
-msgstr "Hagyományos művészetek"
+msgstr ""
 
 #: src/epg.c:2384
 msgid "Traditional music"
-msgstr "Hagyományos zene"
+msgstr ""
 
 #: src/tvhlog.c:151
 msgid "Transcode"
-msgstr "Átkódolás"
+msgstr ""
 
 #: src/profile.c:1886
 msgid ""
@@ -7865,19 +7860,19 @@ msgstr ""
 
 #: src/profile.c:1826
 msgid "Transcode/av-lib"
-msgstr "Átkódolás/av-lib"
+msgstr ""
 
 #: src/profile.c:1833
 msgid "Transcoding"
-msgstr "Átkódolás"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:237
 msgid "Transmission mode"
-msgstr "Átviteli mód"
+msgstr ""
 
 #: src/descrambler/constcw.c:306 src/descrambler/constcw.c:372
 msgid "Transponder ID"
-msgstr "Transzponder ID"
+msgstr ""
 
 #: src/tvhlog.c:119
 msgid "Transport Stream"
@@ -7885,7 +7880,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:588
 msgid "Transport stream ID"
-msgstr "Transzport stream ID"
+msgstr ""
 
 #: src/epggrab/module/xmltv.c:762
 msgid ""
@@ -7895,43 +7890,43 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:770
 msgid "Tue"
-msgstr "Ke"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:263
 msgid "Tune before DiseqC"
-msgstr "Hangolás  DiseqC előtt"
+msgstr ""
 
 #: src/wizard.c:568
 msgid "Tuner"
-msgstr "Tuner"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:242
 msgid "Tuner bind IP address"
-msgstr "Tuner bind IP-címe"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:246 src/input/mpegts/satip/satip.c:415
 msgid "Tuner configuration"
-msgstr "Tuner beállítás"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:247
 msgid "Tuner configuration."
-msgstr "Tuner beállítás"
+msgstr ""
 
 #: src/streaming.c:463
 msgid "Tuning failed"
-msgstr "Sikertelen hangolás "
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:301
 msgid "Turn off LNB when idle"
-msgstr "LNB lekapcsolása üresjáraton"
+msgstr ""
 
 #: src/config.c:2077
 msgid "Tvheadend server name"
-msgstr "Tvheadend szerver neve"
+msgstr ""
 
 #: src/epggrab/module.c:137
 msgid "Type"
-msgstr "Típus"
+msgstr ""
 
 #: src/service.c:237
 msgid "Type override"
@@ -7939,11 +7934,11 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:171
 msgid "UDP RTP port number (2 ports)"
-msgstr "UDP RTP port száma (2 port)"
+msgstr ""
 
 #: src/service.c:160
 msgid "UHD TV"
-msgstr "UHD TV"
+msgstr ""
 
 #: src/profile.c:271
 msgid "UHD: ultra high definition"
@@ -7951,12 +7946,12 @@ msgstr ""
 
 #: src/tvhlog.c:93
 msgid "UPnP Protocol"
-msgstr "UPnP protokoll"
+msgstr ""
 
 #: src/tvhlog.c:90 src/wizard.c:823 src/dvr/dvr_db.c:3572
 #: src/input/mpegts/iptv/iptv.c:877 src/input/mpegts/iptv/iptv_mux.c:139
 msgid "URL"
-msgstr "URL"
+msgstr ""
 
 #: src/wizard.c:824
 msgid "URL of the M3U playlist."
@@ -7964,172 +7959,172 @@ msgstr ""
 
 #: src/main.c:851
 msgid "URL with the SAT>IP server XML location"
-msgstr "SAT> IP szerver  XML eléresének URL-je"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3573
 msgid "URL."
-msgstr "URL."
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:476
 msgid "USALS"
-msgstr "USALS"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:481
 msgid "UTC"
-msgstr "UTC"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:498
 msgid "UTC+ 1"
-msgstr "UTC+ 1"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:499
 msgid "UTC+ 2"
-msgstr "UTC+ 2"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:500
 msgid "UTC+ 3"
-msgstr "UTC+ 3"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:501
 msgid "UTC+ 4"
-msgstr "UTC+ 4"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:502
 msgid "UTC+ 4:30"
-msgstr "UTC+ 4:30"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:503
 msgid "UTC+ 5"
-msgstr "UTC+ 5"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:504
 msgid "UTC+ 5:30"
-msgstr "UTC+ 5:30"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:505
 msgid "UTC+ 5:45"
-msgstr "UTC+ 5:45"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:506
 msgid "UTC+ 6"
-msgstr "UTC+ 6"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:507
 msgid "UTC+ 6:30"
-msgstr "UTC+ 6:30"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:508
 msgid "UTC+ 7"
-msgstr "UTC+ 7"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:509
 msgid "UTC+ 8"
-msgstr "UTC+ 8"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:510
 msgid "UTC+ 8:45"
-msgstr "UTC+ 8:45"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:511
 msgid "UTC+ 9"
-msgstr "UTC+ 9"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:512
 msgid "UTC+ 9:30"
-msgstr "UTC+ 9:30"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:513
 msgid "UTC+10"
-msgstr "UTC+10"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:514
 msgid "UTC+10:30"
-msgstr "UTC+10:30"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:515
 msgid "UTC+11"
-msgstr "UTC+11"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:516
 msgid "UTC+12"
-msgstr "UTC+12"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:517
 msgid "UTC+12:45"
-msgstr "UTC+12:45"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:518
 msgid "UTC+13"
-msgstr "UTC+13"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:519
 msgid "UTC+14"
-msgstr "UTC+14"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:483
 msgid "UTC- 1"
-msgstr "UTC- 1"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:484
 msgid "UTC- 2"
-msgstr "UTC- 2"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:485
 msgid "UTC- 2:30"
-msgstr "UTC- 2:30"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:486
 msgid "UTC- 3"
-msgstr "UTC- 3"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:487
 msgid "UTC- 3:30"
-msgstr "UTC- 3:30"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:488
 msgid "UTC- 4"
-msgstr "UTC- 4"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:489
 msgid "UTC- 4:30"
-msgstr "UTC- 4:30"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:490
 msgid "UTC- 5"
-msgstr "UTC- 5"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:491
 msgid "UTC- 6"
-msgstr "UTC- 6"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:492
 msgid "UTC- 7"
-msgstr "UTC- 7"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:493
 msgid "UTC- 8"
-msgstr "UTC- 8"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:494
 msgid "UTC- 9"
-msgstr "UTC- 9"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:495
 msgid "UTC- 9:30"
-msgstr "UTC- 9:30"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:496
 msgid "UTC-10"
-msgstr "UTC-10"
+msgstr ""
 
 #: src/input/mpegts/dvb_support.c:497
 msgid "UTC-11"
-msgstr "UTC-11"
+msgstr ""
 
 #: src/tvhlog.c:88 src/input/mpegts/satip/satip.c:391
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:208
 msgid "UUID"
-msgstr "UUID"
+msgstr ""
 
 #: src/htsp_server.c:1452
 msgid "Unable to get system UTC time"
@@ -8153,27 +8148,27 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:132
 msgid "Uncommitted"
-msgstr "Uncommitted"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:146
 msgid "Uncommitted first"
-msgstr "Uncommitted előbb"
+msgstr ""
 
 #: src/tvhlog.c:158
 msgid "Unicable (EN50494)"
-msgstr "Unicable (EN50494)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:70
 msgid "Unicable I (EN50494)"
-msgstr "Unicable I (EN50494)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:799
 msgid "Unicable I switch (universal LNB)"
-msgstr "Unicable I kapcsoló (univerzális LNB)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:77
 msgid "Unicable II (EN50607)"
-msgstr "Unicable II (EN50607)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:806
 msgid "Unicable II switch (universal LNB)"
@@ -8181,44 +8176,44 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1566
 msgid "Unicable type"
-msgstr "Unicable típus"
+msgstr ""
 
 #: src/profile.c:254 src/dvr/dvr_db.c:2733
 msgid "Unimportant"
-msgstr "Jelentékelen"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:778
 msgid "Universal LNB only"
-msgstr "Csak univerzális LNB "
+msgstr ""
 
 #: src/satip/server.c:650
 msgid "Universally unique identifier. Read only."
-msgstr "Általánosan egyedi azonosító. Csak olvasható."
+msgstr ""
 
 #: src/epggrab/module.c:61 src/dvr/dvr_timerec.c:94 src/dvr/dvr_config.c:709
 msgid "Unknown"
-msgstr "Ismeretlen"
+msgstr ""
 
 #: src/htsp_server.c:2781
 msgid "Unknown file"
-msgstr "Ismeretlen file"
+msgstr ""
 
 #: src/streaming.c:490
 #, c-format
 msgid "Unknown reason (%i)"
-msgstr "Ismeretlen ok (%i)"
+msgstr ""
 
 #: src/timeshift.c:263
 msgid "Unlimited size"
-msgstr "Végtelen méret"
+msgstr ""
 
 #: src/timeshift.c:229
 msgid "Unlimited time"
-msgstr "Korlátlan idő"
+msgstr ""
 
 #: src/profile.c:249
 msgid "Unset (default)"
-msgstr "Nem beállított(alapértelmezett)"
+msgstr ""
 
 #: src/descrambler/cwc.c:1893
 msgid "Update Entitlement Management Messages from one mux only."
@@ -8226,35 +8221,35 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1884
 msgid "Update card (EMM)"
-msgstr "Kártya (EMM) frissítése"
+msgstr ""
 
 #: src/epggrab.c:303
 msgid "Update channel icon"
-msgstr "Csatornaikon frissítése"
+msgstr ""
 
 #: src/epggrab.c:279
 msgid "Update channel name"
-msgstr "Csatornanév frissítése"
+msgstr ""
 
 #: src/epggrab.c:291
 msgid "Update channel number"
-msgstr "Csatornaszám frissítése"
+msgstr ""
 
 #: src/dvr/dvr_config.c:776
 msgid "Update disabled"
-msgstr "Frissítés kikapcsolva"
+msgstr ""
 
 #: src/config.c:2301
 msgid "Update time"
-msgstr "Idő frissítése"
+msgstr ""
 
 #: src/config.c:2324
 msgid "Update tolerance (ms)"
-msgstr "Frissítési tolerancia (ms)"
+msgstr ""
 
 #: src/epggrab/channel.c:797
 msgid "Updated"
-msgstr "Frissített"
+msgstr ""
 
 #: src/descrambler/cwc.c:1892
 msgid "Updates from one mux (EMM)"
@@ -8270,11 +8265,11 @@ msgstr ""
 #: src/main.c:499
 #, c-format
 msgid "Usage: %s [OPTIONS]\n"
-msgstr "Használat:%s [opciók]\n\n"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:662
 msgid "Use AC-3 detection."
-msgstr "AC-3 felismerés használata."
+msgstr ""
 
 #: src/channels.c:492 src/dvr/dvr_config.c:1000
 msgid ""
@@ -8284,7 +8279,7 @@ msgstr ""
 
 #: src/channels.c:491 src/dvr/dvr_config.c:999
 msgid "Use EPG running state"
-msgstr "Következtessen az EPG állapotából"
+msgstr ""
 
 #: src/config.c:2118
 msgid "Use HTTP digest authentication"
@@ -8300,23 +8295,23 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:1279
 msgid "Use Windows-compatible filenames"
-msgstr "Használjon Windows-kompatibilis fájlneveket"
+msgstr ""
 
 #: src/main.c:867
 msgid "Use XSPF playlist instead of M3U"
-msgstr "Használjon XSPF lejátszás listát  M3U helyett"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:345
 msgid ""
 "Use a pre-defined list of ATSC-C muxes. Note: these lists can sometimes be "
 "outdated and may cause scanning to take longer than usual."
-msgstr "Egy előre definiált ATSC-C mux-lista használata. Megjegyzés: Ezek a listák néha régiek lehetnek és azt eredményezhetik, hogy a keresés hosszabb időt vesz igénybe, mint általában."
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:322
 msgid ""
 "Use a pre-defined list of ATSC-T muxes. Note: these lists can sometimes be "
 "outdated and may cause scanning to take longer than usual."
-msgstr "Egy előre definiált ATSC-T mux-lista használata. Megjegyzés: Ezek a listák néha régiek lehetnek és azt eredményezhetik, hogy a keresés hosszabb időt vesz igénybe, mint általában."
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:437
 msgid ""
@@ -8328,19 +8323,19 @@ msgstr ""
 msgid ""
 "Use a pre-defined list of DVB-C muxes. Note: these lists can sometimes be "
 "outdated and may cause scanning to take longer than usual."
-msgstr "Egy előre definiált DVB-C mux-lista használata. Megjegyzés: Ezek a listák néha régiek lehetnek és azt eredményezhetik, hogy a keresés hosszabb időt vesz igénybe, mint általában."
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:289
 msgid ""
 "Use a pre-defined list of DVB-S/S2 muxes. Note: these lists can sometimes be"
 " outdated and may cause scanning to take longer than usual."
-msgstr "Egy előre definiált DVB-S/S2 mux-lista használata. Megjegyzés: Ezek a listák néha régiek lehetnek és azt eredményezhetik, hogy a keresés hosszabb időt vesz igénybe, mint általában."
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:243
 msgid ""
 "Use a pre-defined list of DVB-T muxes. Note: these lists can sometimes be "
 "outdated and may cause scanning to take longer than usual."
-msgstr "Egy előre definiált DVB-T mux-lista használata. Megjegyzés: Ezek a listák néha régiek lehetnek és azt eredményezhetik, hogy a keresés hosszabb időt vesz igénybe, mint általában."
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:391
 msgid ""
@@ -8366,7 +8361,7 @@ msgstr ""
 
 #: src/profile.c:1702
 msgid "Use original"
-msgstr "Eredeti használata"
+msgstr ""
 
 #: src/config.c:2205
 msgid "Use packet backlog"
@@ -8374,7 +8369,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:225
 msgid "Use service IDs as channel numbers"
-msgstr "Használja a szolgáltatás azonosítókat csatornaszámként"
+msgstr ""
 
 #: src/channels.c:1463
 msgid "Use tag internally (don't expose to clients)."
@@ -8394,7 +8389,7 @@ msgstr ""
 
 #: src/streaming.c:448 src/dvr/dvr_db.c:652
 msgid "User access error"
-msgstr "Felhasználó hozzáférési hiba"
+msgstr ""
 
 #: src/htsp_server.c:1648 src/htsp_server.c:1745 src/htsp_server.c:1884
 #: src/htsp_server.c:1965 src/htsp_server.c:2130 src/htsp_server.c:2168
@@ -8411,11 +8406,11 @@ msgstr ""
 
 #: src/channels.c:422
 msgid "User icon"
-msgstr "Felhasználoi ikon"
+msgstr ""
 
 #: src/access.c:1462 src/access.c:1656 src/config.c:2086
 msgid "User interface level"
-msgstr "Felhasználófelület szint"
+msgstr ""
 
 #: src/config.c:2109
 msgid "User interface quick tips (tooltips)"
@@ -8423,24 +8418,24 @@ msgstr ""
 
 #: src/config.c:2266
 msgid "User language"
-msgstr "Felhasználó nyelve"
+msgstr ""
 
 #: src/streaming.c:450 src/dvr/dvr_db.c:654
 msgid "User limit reached"
-msgstr "Felhasználói korlát elérve"
+msgstr ""
 
 #: src/wizard.c:405
 msgid "User login"
-msgstr "Felhasználói belépés"
+msgstr ""
 
 #: src/streaming.c:454
 msgid "User request"
-msgstr "Felhasználói kérés"
+msgstr ""
 
 #: src/access.c:1627 src/access.c:2040 src/wizard.c:444
 #: src/descrambler/cwc.c:1842
 msgid "Username"
-msgstr "Felhasználónév"
+msgstr ""
 
 #: src/access.c:1628
 msgid "Username for the entry (login username)."
@@ -8454,23 +8449,23 @@ msgstr ""
 
 #: src/access.c:1599
 msgid "Users - Access Entries"
-msgstr "Felhasználók - Hozzáférés szabályozási adatok"
+msgstr ""
 
 #: src/access.c:2173
 msgid "Users - IP Blocking"
-msgstr "Felhasználók - IP blokkolás"
+msgstr ""
 
 #: src/access.c:2021
 msgid "Users - Passwords"
-msgstr "Felhasználók - jelszavak"
+msgstr ""
 
 #: src/epg.c:2329
 msgid "Variety show"
-msgstr "Varieté show"
+msgstr ""
 
 #: src/bouquet.c:1054
 msgid "Verify the SSL certificate."
-msgstr "SSL tanúsitvány ellenőrzése."
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:923
 msgid "Verify the peer's SSL."
@@ -8485,7 +8480,7 @@ msgstr ""
 
 #: src/epg.c:2406
 msgid "Video"
-msgstr "Video"
+msgstr ""
 
 #: src/esfilter.c:627
 msgid "Video Stream Filter"
@@ -8493,11 +8488,11 @@ msgstr ""
 
 #: src/profile.c:1925
 msgid "Video bitrate (kb/s) (0=auto)"
-msgstr "Video bitráta (kb/s) (0=Auto)"
+msgstr ""
 
 #: src/profile.c:1902
 msgid "Video codec"
-msgstr "Video kódec"
+msgstr ""
 
 #: src/profile.c:1914
 msgid "Video codec preset"
@@ -8515,7 +8510,7 @@ msgstr ""
 
 #: src/access.c:1735
 msgid "Video recorder"
-msgstr "Videó-felvevő"
+msgstr ""
 
 #: src/access.c:1736
 msgid ""
@@ -8531,47 +8526,47 @@ msgstr ""
 
 #: src/streaming.c:584
 msgid "Visually impaired commentary/audio description"
-msgstr "Kommentár látássérülteknek"
+msgstr ""
 
 #: src/profile.c:1322
 msgid "Vorbis audio"
-msgstr "Vorbis audió"
+msgstr ""
 
 #: src/profile.c:1243 src/profile.c:1498
 msgid "WEBM"
-msgstr "WEBM"
+msgstr ""
 
 #: src/profile.c:1669
 msgid "WEBM/av-lib"
-msgstr "WEBM/av-lib"
+msgstr ""
 
 #: src/profile.c:1664
 msgid "WEBM/built-in"
-msgstr "WEBM/beépített"
+msgstr ""
 
 #: src/profile.c:2305
 msgid "WEBTV profile H264/AAC/MPEG-TS"
-msgstr "WEBTV profil H264/AAC/MPEG-TS"
+msgstr ""
 
 #: src/profile.c:2326
 msgid "WEBTV profile H264/AAC/Matroska"
-msgstr "WEBTV profil H264/AAC/Matroska"
+msgstr ""
 
 #: src/profile.c:2284
 msgid "WEBTV profile VP8/Vorbis/WEBM"
-msgstr "WEBTV profil VP8/Vorbis/WEBM"
+msgstr ""
 
 #: src/dvr/dvr_db.c:640
 msgid "Waiting for EPG running flag"
-msgstr "Várjon az EPG státusz flag-re"
+msgstr ""
 
 #: src/dvr/dvr_db.c:632
 msgid "Waiting for program start"
-msgstr "Várakozás a műsorkezdésre"
+msgstr ""
 
 #: src/dvr/dvr_db.c:630
 msgid "Waiting for stream"
-msgstr "Stream-re várakozás"
+msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:357
 msgid ""
@@ -8583,63 +8578,63 @@ msgstr ""
 
 #: src/epg.c:2293
 msgid "War"
-msgstr "Háború"
+msgstr ""
 
 #: src/epg.c:2353
 msgid "Water sport"
-msgstr "Vizisport"
+msgstr ""
 
 #: src/streaming.c:452
 msgid "Weak stream"
-msgstr "Gyenge stream"
+msgstr ""
 
 #: src/epg.c:2310
 msgid "Weather report"
-msgstr "Időjárás-jelentés"
+msgstr ""
 
 #: src/tvhlog.c:166
 msgid "Web User Interface"
-msgstr "WEB-es felhasználói felület"
+msgstr ""
 
 #: src/access.c:1772 src/wizard.c:184
 msgid "Web interface"
-msgstr "Webes felület"
+msgstr ""
 
 #: src/access.c:1452 src/access.c:1687
 msgid "Web interface language"
-msgstr "Webes felület nyelve"
+msgstr ""
 
 #: src/access.c:1688
 msgid "Web interface language."
-msgstr "Webes felület nyelve."
+msgstr ""
 
 #: src/access.c:1697
 msgid "Web interface theme."
-msgstr "Webes felület témája."
+msgstr ""
 
 #: src/access.c:1696
 msgid "Web theme"
-msgstr "Web téma"
+msgstr ""
 
 #: src/config.c:2037
 msgid "Web user interface"
-msgstr "WEB-es felület"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:771
 msgid "Wed"
-msgstr "Sze"
+msgstr ""
 
 #: src/wizard.c:243 src/wizard.c:467
 msgid "Welcome - Tvheadend - your TV streaming server and video recorder"
-msgstr "Üdvözöljük - Tvheadend - az Ön streaming szervere és videórögzítője"
+msgstr ""
 
 #: src/epg.c:2293
 msgid "Western"
-msgstr "Western"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:743
 msgid "Western hemisphere (latitude direction)"
-msgstr "Nyugati félteke (szélesség irányában)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:744
 msgid "Western hemisphere (latitude direction)."
@@ -8676,15 +8671,15 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:249
 msgid "When the service was first identified and recorded."
-msgstr "Amikor a szolgáltatás először került azonosításra és bejegyzésre."
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:257
 msgid "When the service was last seen during a mux scan."
-msgstr "Amikor a szolgáltatás utoljára volt látható egy mux keresésnél."
+msgstr ""
 
 #: src/epg.c:2354
 msgid "Winter sports"
-msgstr "Téli sportok"
+msgstr ""
 
 #: src/timeshift.c:284
 msgid ""
@@ -8695,25 +8690,25 @@ msgstr ""
 
 #: src/access.c:1853 src/access.c:2072 src/input/mpegts/mpegts_network.c:304
 msgid "Wizard"
-msgstr "Varázsló"
+msgstr ""
 
 #: src/descrambler/capmt.c:2416
 msgid "Wrapper (capmt_ca.so)"
-msgstr "Illesztő (capmt_ca.so)"
+msgstr ""
 
 #: src/esfilter.c:701 src/esfilter.c:796 src/esfilter.c:891 src/esfilter.c:986
 #: src/esfilter.c:1091 src/esfilter.c:1173
 msgid ""
 "Write a short message to log identifying the matched parameters. It is "
 "useful for debugging your setup or structure of incoming streams."
-msgstr "Írjon egy rövid üzenetet a loghoz, a megtalált paramétereket azonosítandó. Hasznos a beállítások hibakeresésénél és a bejövő stream-ek szerkezeténél."
+msgstr ""
 
 #: src/epggrab.c:316
 msgid ""
 "Writes the current in-memory EPG database to disk every x hours, so should a"
 " crash/unexpected shutdown occur EPG data is saved periodically to the "
 "database (re-read on next startup). Set to 0 to disable."
-msgstr "Írja ki  a jelenleg memóriában tárolt EPG adatbázist lemezre  x óránként, így  egy  váratlan leállás esetében az EPG adatok időszakosan ki lesznek menteve a tárolóba (a következő induláskor újra be lesz töltve). Ha az érték 0, akkor le van tiltva."
+msgstr ""
 
 #: src/epggrab.c:328
 msgid ""
@@ -8724,130 +8719,130 @@ msgstr ""
 
 #: src/tvhlog.c:165
 msgid "XMLTV EPG Import"
-msgstr "XMLTV EPG importálás"
+msgstr ""
 
 #: src/access.c:1398
 msgid "Yes"
-msgstr "Igen"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:310
 msgid "addpids/delpids supported"
-msgstr "addpids/delpids támogatva"
+msgstr ""
 
 #: src/profile.c:1789
 msgid "bd: nvenc(h264 / h265)"
-msgstr "bd: nvenc(h264 / h265)"
+msgstr ""
 
 #: src/profile.c:1793
 msgid "default: nvenc(h264 / h265)"
-msgstr "alapértelmezett: nvenc(h264 / h265)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:142
 msgid "en50494"
-msgstr "en50494"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:180
 msgid "en50607"
-msgstr "en50607"
+msgstr ""
 
 #: src/profile.c:1781
 msgid "fast: h264 / h265 / qsv(h264 / h265)"
-msgstr "gyors: h264 / h265 / qsv(h264 / h265)"
+msgstr ""
 
 #: src/profile.c:1780
 msgid "faster: h264 / h265 / qsv(h264)"
-msgstr "gyorsabb: h264 / h265 / qsv(h264)"
+msgstr ""
 
 #: src/profile.c:1788
 msgid "hp: nvenc(h264 / h265)"
-msgstr "hp: nvenc(h264 / h265)"
+msgstr ""
 
 #: src/profile.c:1787
 msgid "hq: nvenc(h264 / h265)"
-msgstr "hq: nvenc(h264 / h265)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3127
 msgid "hrs"
-msgstr "óra"
+msgstr ""
 
 #: src/main.c:928
 #, c-format
 msgid "invalid option specified [%s]"
-msgstr "Érvénytelen beállítás lett megadva [%s]"
+msgstr ""
 
 #: src/tvhlog.c:150
 msgid "libav / ffmpeg"
-msgstr "libav / ffmpeg"
+msgstr ""
 
 #: src/profile.c:1790
 msgid "ll: nvenc(h264 / h265)"
-msgstr "ll: nvenc(h264 / h265)"
+msgstr ""
 
 #: src/profile.c:1792
 msgid "llhp: nvenc(h264 / h265)"
-msgstr "llhp: nvenc(h264 / h265)"
+msgstr ""
 
 #: src/profile.c:1791
 msgid "llhq: nvenc(h264 / h265)"
-msgstr "llhq: nvenc(h264 / h265)"
+msgstr ""
 
 #: src/webui/webui.c:258
 msgid "logout"
-msgstr "kilépés"
+msgstr ""
 
 #: src/profile.c:1782
 msgid "medium: h264 / h265 / qsv(h264 / h265)"
-msgstr "közepes: h264 / h265 / qsv(h264 / h265)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3128
 msgid "min"
-msgstr "perc"
+msgstr ""
 
 #: src/dvr/dvr_db.c:3129
 msgid "mins"
-msgstr "percek"
+msgstr ""
 
 #: src/main.c:937
 #, c-format
 msgid "option %s requires a value"
-msgstr "%s opció értéket igényel"
+msgstr ""
 
 #: src/profile.c:1786
 msgid "placebo: h264 / h265"
-msgstr "placebo: h264 / h265"
+msgstr ""
 
 #: src/webui/webui.c:269
 msgid "return"
-msgstr "vissza"
+msgstr ""
 
 #: src/profile.c:1783
 msgid "slow: h264 / h265 / qsv(h264 / h265)"
-msgstr "lassú: h264 / h265 / qsv(h264 / h265)"
+msgstr ""
 
 #: src/profile.c:1784
 msgid "slower: h264 / h265 / qsv(h264)"
-msgstr "lassabb: h264 / h265 / qsv(h264)"
+msgstr ""
 
 #: src/profile.c:1778
 msgid "superfast: h264 / h265"
-msgstr "szuper gyors: h264 / h265"
+msgstr ""
 
 #: src/main.c:900
 msgid "tsfile input (mux file)"
-msgstr "tsfile bement (mux fájl)"
+msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:179
 msgid "tvhdhomerun client"
-msgstr "tvhdhomerun ügyfél"
+msgstr ""
 
 #: src/profile.c:1777
 msgid "ultrafast: h264 / h265"
-msgstr "ultra gyors: h264 / h265"
+msgstr ""
 
 #: src/profile.c:1779
 msgid "veryfast: h264 / h265 / qsv(h264)"
-msgstr "nagyon gyors: h264 / h265 / qsv(h264)"
+msgstr ""
 
 #: src/profile.c:1785
 msgid "veryslow: h264 / h265 / qsv(h264)"
-msgstr "nagyon lassú: h264 / h265 / qsv(h264)"
+msgstr ""

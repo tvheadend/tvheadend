@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Vusal Hasanov <vusal.maestro@gmail.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
@@ -10,12 +11,12 @@ msgstr ""
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
 "PO-Revision-Date: 2018-10-08 14:51+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Serbian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/sr/)\n"
+"Language-Team: Azerbaijani (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/az/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: sr\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Language: az\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/docs_inc.c:1963
 msgid ""
@@ -43,21 +44,21 @@ msgstr ""
 #: src/docs_inc.c:3783 src/docs_inc.c:3800 src/docs_inc.c:3863
 #: src/docs_inc.c:3930 src/docs_inc.c:4003 src/docs_inc.c:4038
 msgid "!"
-msgstr ""
+msgstr "!"
 
 #: src/docs_inc.c:4312
 #, c-format
 msgid "%C"
-msgstr ""
+msgstr "%C"
 
 #: src/docs_inc.c:4546
 #, c-format
 msgid "%F"
-msgstr ""
+msgstr "%F"
 
 #: src/docs_inc.c:4550
 msgid "%R"
-msgstr ""
+msgstr "%R"
 
 #: src/docs_inc.c:4322
 msgid "%U"
@@ -371,11 +372,11 @@ msgstr ""
 
 #: src/docs_inc.c:3542 src/docs_inc.c:3566
 msgid "- common in most of Europe"
-msgstr ""
+msgstr "- Əksər Avropa ölkələri"
 
 #: src/docs_inc.c:3574
 msgid "- common in north and central America"
-msgstr ""
+msgstr "- Şimali və Mərkəzi Amerika ölkələri"
 
 #: src/docs_inc.c:3550
 msgid "- common in north and central America and parts of south Asia"
@@ -748,7 +749,7 @@ msgstr ""
 
 #: src/docs_inc.c:2959 src/docs_inc.c:3844
 msgid "Add a new profile."
-msgstr ""
+msgstr "Yeni profil əlavə et."
 
 #: src/docs_inc.c:1946
 msgid "Add entry"
@@ -775,7 +776,7 @@ msgstr ""
 
 #: src/docs_inc.c:4223
 msgid "Admin"
-msgstr ""
+msgstr "Admin"
 
 #: src/docs_inc.c:1873 src/docs_inc.c:5122 src/docs_inc.c:5145
 msgid "Advanced"
@@ -813,7 +814,7 @@ msgstr ""
 
 #: src/docs_inc.c:1649 src/docs_inc.c:1799
 msgid "All channels"
-msgstr ""
+msgstr "Bütün kanallar"
 
 #: src/docs_inc.c:4353
 msgid "All lower-case"

@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Aurimantas Kulisauskas <meskiokas@gmail.com>, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
@@ -10,12 +11,12 @@ msgstr ""
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
 "PO-Revision-Date: 2018-10-08 14:51+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Serbian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/sr/)\n"
+"Language-Team: Lithuanian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/lt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: sr\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Language: lt\n"
+"Plural-Forms: nplurals=4; plural=(n % 10 == 1 && (n % 100 > 19 || n % 100 < 11) ? 0 : (n % 10 >= 2 && n % 10 <=9) && (n % 100 > 19 || n % 100 < 11) ? 1 : n % 1 != 0 ? 2: 3);\n"
 
 #: src/docs_inc.c:1963
 msgid ""
@@ -1123,23 +1124,23 @@ msgstr ""
 
 #: src/docs_inc.c:2176
 msgid "Available CA types"
-msgstr ""
+msgstr "Prieinami CA tipai"
 
 #: src/docs_inc.c:4705 src/docs_inc.c:4792 src/docs_inc.c:4884
 msgid "BBC world"
-msgstr ""
+msgstr "BBC world"
 
 #: src/docs_inc.c:4955
 msgid "BUSY"
-msgstr ""
+msgstr "UŽIMTAS"
 
 #: src/docs_inc.c:1297
 msgid "Base"
-msgstr ""
+msgstr "Pagrindinis"
 
 #: src/docs_inc.c:4668 src/docs_inc.c:5114
 msgid "Base Config"
-msgstr ""
+msgstr "Pagrindinė Konfigūracija"
 
 #: src/docs_inc.c:2666
 msgid "Base DVB SI Tables (PAT,CAT,PMT,SDT etc.)"
@@ -1155,7 +1156,7 @@ msgstr ""
 
 #: src/docs_inc.c:1869 src/docs_inc.c:5118 src/docs_inc.c:5141
 msgid "Basic"
-msgstr ""
+msgstr "Pagrindinė"
 
 #: src/docs_inc.c:979 src/docs_inc.c:1259
 msgid "Basic Requirements"
@@ -1182,31 +1183,31 @@ msgstr ""
 
 #: src/docs_inc.c:3
 msgid "Before You Begin"
-msgstr ""
+msgstr "Prieš Pradedant"
 
 #: src/docs_inc.c:1265
 msgid "Before you begin (concepts)"
-msgstr ""
+msgstr "Prieš pradedant (koncepcija)"
 
 #: src/docs_inc.c:1147
 msgid "Bit Error Ratio"
-msgstr ""
+msgstr "Bitų Klaidų Santykis"
 
 #: src/docs_inc.c:5081
 msgid "Blue"
-msgstr ""
+msgstr "Mėlyna"
 
 #: src/docs_inc.c:2626
 msgid "Bonjour"
-msgstr ""
+msgstr "Bonjour"
 
 #: src/docs_inc.c:2429 src/docs_inc.c:2435 src/docs_inc.c:2746
 msgid "Bouquet"
-msgstr ""
+msgstr "Buketas"
 
 #: src/docs_inc.c:177 src/docs_inc.c:1329
 msgid "Bouquets"
-msgstr ""
+msgstr "Buketai"
 
 #: src/docs_inc.c:2070
 msgid "Bouquets are broadcaster-defined groupings and orders of channels."
@@ -1226,7 +1227,7 @@ msgstr ""
 
 #: src/docs_inc.c:465 src/docs_inc.c:495 src/docs_inc.c:519
 msgid "Browser"
-msgstr ""
+msgstr "Naršyklė"
 
 #: src/docs_inc.c:253
 msgid "Build Tvheadend as you normally would, see the"
@@ -1240,7 +1241,7 @@ msgstr ""
 
 #: src/docs_inc.c:3806
 msgid "Built-in"
-msgstr ""
+msgstr "Integruota"
 
 #: src/docs_inc.c:353 src/docs_inc.c:1029 src/docs_inc.c:1081
 #: src/docs_inc.c:1119 src/docs_inc.c:1187 src/docs_inc.c:1497
@@ -1255,14 +1256,14 @@ msgstr ""
 #: src/docs_inc.c:3913 src/docs_inc.c:3940 src/docs_inc.c:4017
 #: src/docs_inc.c:4046
 msgid "Button"
-msgstr ""
+msgstr "Mygtukas"
 
 #: src/docs_inc.c:349 src/docs_inc.c:1493 src/docs_inc.c:3408
 #: src/docs_inc.c:3433 src/docs_inc.c:3458 src/docs_inc.c:3479
 #: src/docs_inc.c:3867 src/docs_inc.c:3888 src/docs_inc.c:3909
 #: src/docs_inc.c:4013
 msgid "Buttons"
-msgstr ""
+msgstr "Mygtukai"
 
 #: src/docs_inc.c:561
 msgid ""
@@ -1273,43 +1274,43 @@ msgstr ""
 
 #: src/docs_inc.c:2762
 msgid "CA (descrambling) Client"
-msgstr ""
+msgstr "CA (iššifravimo) Klientas"
 
 #: src/docs_inc.c:1373
 msgid "CA Stream Filters"
-msgstr ""
+msgstr "CA Srauto Filtrai"
 
 #: src/docs_inc.c:1385 src/docs_inc.c:2182
 msgid "CAPMT (Linux Network DVBAPI)"
-msgstr ""
+msgstr "CAPMT (Linux tinklo DVBAPI)"
 
 #: src/docs_inc.c:2770
 msgid "CAPMT CA Client"
-msgstr ""
+msgstr "CAPMT CA Klientas"
 
 #: src/docs_inc.c:2838
 msgid "CI Module"
-msgstr ""
+msgstr "CI Modulis"
 
 #: src/docs_inc.c:2548 src/docs_inc.c:2550
 msgid "CPU"
-msgstr ""
+msgstr "CPU"
 
 #: src/docs_inc.c:2532 src/docs_inc.c:2534
 msgid "CRASH"
-msgstr ""
+msgstr "LUŽO"
 
 #: src/docs_inc.c:2766
 msgid "CSA (descrambling)"
-msgstr ""
+msgstr "CSA (iššifravimas)"
 
 #: src/docs_inc.c:2774
 msgid "CWC CA Client"
-msgstr ""
+msgstr "CWC CA Klientas"
 
 #: src/docs_inc.c:1563
 msgid "Cable (DVB-C/ATSC-C/ISDB-C)"
-msgstr ""
+msgstr "Kabelinė (DVB-C/ATSC-C/ISDB-C)"
 
 #: src/docs_inc.c:3538
 msgid "Cable TV, delivered via a cable to your house"
@@ -1325,7 +1326,7 @@ msgstr ""
 
 #: src/docs_inc.c:4021
 msgid "Cancel"
-msgstr ""
+msgstr "Atšaukti"
 
 #: src/docs_inc.c:4023
 msgid "Cancel mapping and close the dialog."

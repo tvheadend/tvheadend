@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-03-29 21:07+0200\n"
-"PO-Revision-Date: 2017-04-22 06:05+0000\n"
-"Last-Translator: Jinbaek Lee <jinb92@gmail.com>\n"
+"POT-Creation-Date: 2018-10-08 16:49+0200\n"
+"PO-Revision-Date: 2018-10-08 14:51+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Korean (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -119,7 +119,7 @@ msgstr "중단"
 msgid "Abort the selected recording"
 msgstr "선택한 녹화를 중단"
 
-#: src/webui/static/app/tvheadend.js:836
+#: src/webui/static/app/tvheadend.js:804
 msgid "About"
 msgstr "정보"
 
@@ -135,23 +135,23 @@ msgstr "접근 항목"
 msgid "Active"
 msgstr "활성"
 
-#: src/webui/static/app/idnode.js:1793 src/webui/static/app/idnode.js:2289
+#: src/webui/static/app/idnode.js:1788 src/webui/static/app/idnode.js:2284
 msgid "Add"
 msgstr "추가"
 
-#: src/webui/static/app/idnode.js:1791 src/webui/static/app/idnode.js:2287
+#: src/webui/static/app/idnode.js:1786 src/webui/static/app/idnode.js:2282
 msgid "Add a new entry"
 msgstr "새 항목 추가"
 
-#: src/webui/static/app/idnode.js:1363 src/webui/static/app/idnode.js:1558
+#: src/webui/static/app/idnode.js:1356 src/webui/static/app/idnode.js:1553
 msgid "Add {0}"
 msgstr "{0} 추가"
 
-#: src/webui/static/app/idnode.js:594 src/webui/static/app/idnode.js:610
+#: src/webui/static/app/idnode.js:588 src/webui/static/app/idnode.js:604
 msgid "Advanced"
 msgstr "고급"
 
-#: src/webui/static/app/idnode.js:1043
+#: src/webui/static/app/idnode.js:1035
 msgid "Advanced Settings"
 msgstr "고급 설정"
 
@@ -163,7 +163,7 @@ msgstr "이후"
 msgid "After filtering and reordering (without PCR and PMT)"
 msgstr "애프터 필터링과 재배열 (PCR 및 PMT 제외)"
 
-#: src/webui/static/app/epg.js:607 src/webui/static/app/epg.js:608
+#: src/webui/static/app/epg.js:618 src/webui/static/app/epg.js:619
 msgid "Age"
 msgstr "연령"
 
@@ -171,13 +171,14 @@ msgstr "연령"
 msgid "Age Rating"
 msgstr "연령 등급"
 
-#: src/webui/static/app/idnode.js:1940 src/webui/static/app/idnode.js:1979
+#: src/webui/static/app/idnode.js:1935 src/webui/static/app/idnode.js:1974
+#: src/webui/static/app/epg.js:672
 msgid "All"
 msgstr "모두"
 
-#: src/webui/static/app/idnode.js:1153 src/webui/static/app/idnode.js:1166
-#: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1483
-#: src/webui/static/app/idnode.js:1501 src/webui/static/app/idnode.js:1511
+#: src/webui/static/app/idnode.js:1145 src/webui/static/app/idnode.js:1158
+#: src/webui/static/app/idnode.js:1167 src/webui/static/app/idnode.js:1478
+#: src/webui/static/app/idnode.js:1496 src/webui/static/app/idnode.js:1506
 msgid "Apply"
 msgstr "적용"
 
@@ -189,7 +190,7 @@ msgstr "아래 런타임 설정 변경 사항을 적용합니다."
 msgid "Apply configuration (run-time only)"
 msgstr "설정 적용 (런타임 전용)"
 
-#: src/webui/static/app/idnode.js:1482
+#: src/webui/static/app/idnode.js:1477
 msgid "Apply settings"
 msgstr "설정 적용"
 
@@ -233,7 +234,7 @@ msgstr "8월"
 msgid "August"
 msgstr "8월"
 
-#: src/webui/static/app/epg.js:1063
+#: src/webui/static/app/epg.js:1125
 msgid "Auto Recorder"
 msgstr "자동 녹화기"
 
@@ -250,7 +251,7 @@ msgstr "자동 녹화"
 msgid "Autorecs"
 msgstr "자동 녹화"
 
-#: src/webui/static/app/idnode.js:446 src/webui/static/app/idnode.js:691
+#: src/webui/static/app/idnode.js:445 src/webui/static/app/idnode.js:685
 msgid "Available"
 msgstr "가용"
 
@@ -262,7 +263,7 @@ msgstr "BER"
 msgid "Bandwidth (kb/s)"
 msgstr "대역폭 (kb/s)"
 
-#: src/webui/static/app/status.js:732 src/webui/static/app/status.js:825
+#: src/webui/static/app/status.js:753 src/webui/static/app/status.js:846
 msgid "Bandwidth monitor"
 msgstr "대역폭 모니터"
 
@@ -270,11 +271,11 @@ msgstr "대역폭 모니터"
 msgid "Base"
 msgstr "기본"
 
-#: src/webui/static/app/idnode.js:592 src/webui/static/app/idnode.js:604
+#: src/webui/static/app/idnode.js:586 src/webui/static/app/idnode.js:598
 msgid "Basic"
 msgstr "기초"
 
-#: src/webui/static/app/idnode.js:1041
+#: src/webui/static/app/idnode.js:1033
 msgid "Basic Settings"
 msgstr "기초 설정"
 
@@ -294,13 +295,13 @@ msgstr "채널 묶음"
 msgid "Broadcast Details"
 msgstr "방송 정보"
 
-#: src/webui/static/app/epg.js:381
+#: src/webui/static/app/epg.js:385
 msgid "Broadcast details"
 msgstr "방송 정보"
 
-#: src/webui/static/app/epg.js:870
-msgid "Buffering. Please wait..."
-msgstr "버퍼링 중. 기다리세요..."
+#: src/webui/static/app/epg.js:924
+msgid "Buffering. Please wait…"
+msgstr ""
 
 #: src/webui/static/app/caclient.js:32
 msgid "CA"
@@ -323,7 +324,7 @@ msgid "CAs"
 msgstr "CAs"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
-#: src/webui/static/app/idnode.js:1110 src/webui/static/app/idnode.js:1522
+#: src/webui/static/app/idnode.js:1102 src/webui/static/app/idnode.js:1517
 msgid "Cancel"
 msgstr "취소"
 
@@ -331,7 +332,7 @@ msgstr "취소"
 msgid "Cancel Connection"
 msgstr "연결 취소"
 
-#: src/webui/static/app/idnode.js:1521
+#: src/webui/static/app/idnode.js:1516
 msgid "Cancel operation"
 msgstr "작업 취소"
 
@@ -343,25 +344,25 @@ msgstr "선택한 연결을 취소하시겠습니까?"
 msgid "Cancel this connection"
 msgstr "이 연결 취소"
 
-#: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1511
+#: src/webui/static/app/idnode.js:1167 src/webui/static/app/idnode.js:1506
 msgid "Cannot apply"
 msgstr "적용할 수 없음"
 
-#: src/webui/static/app/idnode.js:622
+#: src/webui/static/app/idnode.js:616
 msgid "Change the user interface level (basic, advanced, expert)"
 msgstr "사용자 인터페이스 레벨 변경 (기초, 고급, 전문가)"
 
-#: src/webui/static/app/idnode.js:1167 src/webui/static/app/idnode.js:1502
+#: src/webui/static/app/idnode.js:1159 src/webui/static/app/idnode.js:1497
 msgid "Changes were applied!"
 msgstr "변경 사항이 적용되었습니다!"
 
-#: src/webui/static/app/chconf.js:232 src/webui/static/app/epg.js:585
-#: src/webui/static/app/epg.js:586 src/webui/static/app/epg.js:1067
+#: src/webui/static/app/chconf.js:232 src/webui/static/app/epg.js:596
+#: src/webui/static/app/epg.js:597 src/webui/static/app/epg.js:1129
 #: src/webui/static/app/status.js:113
 msgid "Channel"
 msgstr "채널"
 
-#: src/webui/static/app/tvheadend.js:759
+#: src/webui/static/app/tvheadend.js:727
 msgid "Channel / EPG"
 msgstr "채널 / EPG"
 
@@ -401,15 +402,23 @@ msgstr "통계 비우기"
 msgid "Clear statistics for selected input?"
 msgstr "선택한 입력에 대한 통계를 지우시겠습니까?"
 
+#: src/webui/static/app/status.js:619
+msgid "Client Address"
+msgstr "클라이언트 주소"
+
 #: src/webui/static/app/caclient.js:34
 msgid "Client Name"
 msgstr "클라이언트 이름"
 
-#: src/webui/static/app/idnode.js:1430 src/webui/static/app/idnode.js:2299
+#: src/webui/static/app/status.js:625
+msgid "Client Port"
+msgstr "클라이언트 포트"
+
+#: src/webui/static/app/idnode.js:1425 src/webui/static/app/idnode.js:2294
 msgid "Clone"
 msgstr "복제"
 
-#: src/webui/static/app/idnode.js:2297
+#: src/webui/static/app/idnode.js:2292
 msgid "Clone a new entry"
 msgstr "새 항목 복제"
 
@@ -429,7 +438,7 @@ msgstr "Comet 실패"
 msgid "Comment"
 msgstr "코멘트"
 
-#: src/webui/static/app/status.js:781
+#: src/webui/static/app/status.js:802
 msgid "Compression ratio"
 msgstr "압축률"
 
@@ -437,16 +446,16 @@ msgstr "압축률"
 msgid "Conditional Access Client"
 msgstr "조건부 클라이언트 접근"
 
-#: src/webui/static/app/tvhlog.js:17 src/webui/static/app/tvheadend.js:698
+#: src/webui/static/app/tvhlog.js:17 src/webui/static/app/tvheadend.js:666
 msgid "Configuration"
 msgstr "설정"
 
-#: src/webui/static/app/status.js:673
+#: src/webui/static/app/status.js:694
 msgid "Connections"
 msgstr "연결"
 
-#: src/webui/static/app/epg.js:145 src/webui/static/app/epg.js:614
-#: src/webui/static/app/epg.js:615
+#: src/webui/static/app/epg.js:145 src/webui/static/app/epg.js:625
+#: src/webui/static/app/epg.js:626
 msgid "Content Type"
 msgstr "컨텐트 종류"
 
@@ -454,34 +463,34 @@ msgstr "컨텐트 종류"
 msgid "Continuity Errors"
 msgstr "연속 오류"
 
-#: src/webui/static/app/idnode.js:1456
+#: src/webui/static/app/idnode.js:1451
 msgid "Create"
 msgstr "생성"
 
-#: src/webui/static/app/epg.js:883
+#: src/webui/static/app/epg.js:937
 msgid "Create AutoRec"
 msgstr "자동녹화 생성"
 
-#: src/webui/static/app/epg.js:262 src/webui/static/app/epg.js:885
+#: src/webui/static/app/epg.js:262 src/webui/static/app/epg.js:939
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
 msgstr "현재 쿼리에 맞는 앞으로의 프로그램을 녹화하기 위한 자동 녹화 규칙을 만듭니다."
 
-#: src/webui/static/app/idnode.js:1455
+#: src/webui/static/app/idnode.js:1450
 msgid "Create new entry"
 msgstr "새 항목 생성"
 
-#: src/webui/static/app/epg.js:1085
+#: src/webui/static/app/epg.js:1147
 msgid "Created from EPG query"
 msgstr "EPG 쿼리에서 생성됨"
 
-#: src/webui/static/app/epg.js:1072
+#: src/webui/static/app/epg.js:1134
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
 msgstr "현재 %d개 이벤트 적중(녹화)"
 
-#: src/webui/static/app/tvheadend.js:740
+#: src/webui/static/app/tvheadend.js:708
 msgid "DVB Inputs"
 msgstr "DVB 입력"
 
@@ -493,7 +502,7 @@ msgstr "DVR"
 msgid "Deaf signed#EPG"
 msgstr "청각장애인 보조#EPG"
 
-#: src/webui/static/app/tvheadend.js:810
+#: src/webui/static/app/tvheadend.js:778
 msgid "Debugging"
 msgstr "디버깅"
 
@@ -505,7 +514,7 @@ msgstr "12월"
 msgid "December"
 msgstr "12월"
 
-#: src/webui/static/app/idnode.js:1807 src/webui/static/app/idnode.js:2312
+#: src/webui/static/app/idnode.js:1802 src/webui/static/app/idnode.js:2307
 msgid "Delete"
 msgstr "삭제"
 
@@ -517,7 +526,7 @@ msgstr "녹화 삭제"
 msgid "Delete scheduled recording of this program"
 msgstr "이 프로그램의 예약된 녹화 삭제"
 
-#: src/webui/static/app/idnode.js:1805 src/webui/static/app/idnode.js:2310
+#: src/webui/static/app/idnode.js:1800 src/webui/static/app/idnode.js:2305
 msgid "Delete selected entries"
 msgstr "선택한 항목 삭제"
 
@@ -538,7 +547,7 @@ msgid "Detailed stream info"
 msgstr "상세 스트림 정보"
 
 #: src/webui/static/app/mpegts.js:169 src/webui/static/app/mpegts.js:317
-#: src/webui/static/app/epg.js:367 src/webui/static/app/epg.js:368
+#: src/webui/static/app/epg.js:371 src/webui/static/app/epg.js:372
 #: src/webui/static/app/dvr.js:137 src/webui/static/app/dvr.js:138
 msgid "Details"
 msgstr "상세 정보"
@@ -595,9 +604,9 @@ msgstr "저장소에서 선택한 녹화를 제거하시겠습니까?"
 msgid "Do you really want to remove this recording?"
 msgstr "이 녹화를 제거하시겠습니까?"
 
-#: src/webui/static/app/epg.js:1046 src/webui/static/app/epg.js:1052
-#: src/webui/static/app/epg.js:1055 src/webui/static/app/epg.js:1058
-#: src/webui/static/app/epg.js:1061
+#: src/webui/static/app/epg.js:1108 src/webui/static/app/epg.js:1114
+#: src/webui/static/app/epg.js:1117 src/webui/static/app/epg.js:1120
+#: src/webui/static/app/epg.js:1123
 msgid "Don't care"
 msgstr "상관 없음"
 
@@ -609,8 +618,8 @@ msgstr "다운로드"
 msgid "Download the selected recording"
 msgstr "선택한 녹화 다운로드"
 
-#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:569
-#: src/webui/static/app/epg.js:570 src/webui/static/app/epg.js:1070
+#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:579
+#: src/webui/static/app/epg.js:580 src/webui/static/app/epg.js:1132
 #: src/webui/static/app/dvr.js:52
 msgid "Duration"
 msgstr "길이"
@@ -639,36 +648,36 @@ msgstr "EPG 그래버 모듈"
 msgid "EPG Grabber Name"
 msgstr "EPG 그래버 이름"
 
-#: src/webui/static/app/epg.js:993
+#: src/webui/static/app/epg.js:1052
 msgid "EPG Update"
 msgstr "EPG 업데이트"
 
-#: src/webui/static/app/idnode.js:1284 src/webui/static/app/idnode.js:1894
+#: src/webui/static/app/idnode.js:1276 src/webui/static/app/idnode.js:1889
 msgid "Edit"
 msgstr "편집"
 
-#: src/webui/static/app/idnode.js:1892
+#: src/webui/static/app/idnode.js:1887
 msgid "Edit selected entry"
 msgstr "선택한 항목 편집"
 
-#: src/webui/static/app/idnode.js:1321 src/webui/static/app/idnode.js:1908
+#: src/webui/static/app/idnode.js:1313 src/webui/static/app/idnode.js:1903
 msgid "Edit {0}"
 msgstr "{0} 편집"
 
-#: src/webui/static/app/idnode.js:1318
+#: src/webui/static/app/idnode.js:1310
 msgid "Edit {0} ({1} entries)"
 msgstr "{0} 편집 ({1} 항목)"
 
-#: src/webui/static/app/epg.js:928
+#: src/webui/static/app/epg.js:984
 msgid "Electronic Program Guide"
 msgstr "전자 프로그램 가이드"
 
-#: src/webui/static/app/tvheadend.js:1049
+#: src/webui/static/app/tvheadend.js:1024
 msgid "Enable debug output"
 msgstr "디버그 출력 활성"
 
-#: src/webui/static/app/epg.js:114 src/webui/static/app/epg.js:561
-#: src/webui/static/app/epg.js:562
+#: src/webui/static/app/epg.js:114 src/webui/static/app/epg.js:571
+#: src/webui/static/app/epg.js:572
 msgid "End Time"
 msgstr "끝 시간"
 
@@ -676,7 +685,7 @@ msgstr "끝 시간"
 msgid "Enter Filter Text..."
 msgstr "필터 텍스트 입력..."
 
-#: src/webui/static/app/epg.js:544 src/webui/static/app/epg.js:545
+#: src/webui/static/app/epg.js:554 src/webui/static/app/epg.js:555
 msgid "Episode"
 msgstr "에피소드"
 
@@ -688,7 +697,7 @@ msgstr "에러"
 msgid "Errors"
 msgstr "에러"
 
-#: src/webui/static/app/epg.js:935
+#: src/webui/static/app/epg.js:991
 msgid "Events"
 msgstr "이벤트"
 
@@ -696,11 +705,11 @@ msgstr "이벤트"
 msgid "Every day"
 msgstr "매일"
 
-#: src/webui/static/app/idnode.js:595 src/webui/static/app/idnode.js:616
+#: src/webui/static/app/idnode.js:589 src/webui/static/app/idnode.js:610
 msgid "Expert"
 msgstr "전문가"
 
-#: src/webui/static/app/idnode.js:1045
+#: src/webui/static/app/idnode.js:1037
 msgid "Expert Settings"
 msgstr "전문가 설정"
 
@@ -728,21 +737,21 @@ msgstr "2월"
 msgid "File size"
 msgstr "파일 크기"
 
-#: src/webui/static/app/epg.js:675
-msgid "Filter channel..."
-msgstr "채널 필터..."
+#: src/webui/static/app/epg.js:707
+msgid "Filter channel…"
+msgstr ""
 
-#: src/webui/static/app/epg.js:722
-msgid "Filter content type..."
-msgstr "컨텐트 종류 필터..."
+#: src/webui/static/app/epg.js:754
+msgid "Filter content type…"
+msgstr ""
 
-#: src/webui/static/app/epg.js:743
-msgid "Filter duration..."
-msgstr "길이 필터..."
+#: src/webui/static/app/epg.js:775
+msgid "Filter duration…"
+msgstr ""
 
-#: src/webui/static/app/epg.js:698
-msgid "Filter tag..."
-msgstr "태그 필터..."
+#: src/webui/static/app/epg.js:730
+msgid "Filter tag…"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
@@ -772,7 +781,7 @@ msgstr "강제 스캔"
 msgid "Force new scan (all muxes) for selected networks"
 msgstr "선택한 네트워크에 새로 강제 스캔 (모든 먹스)"
 
-#: src/webui/static/app/tvheadend.js:988
+#: src/webui/static/app/tvheadend.js:956
 msgid "Free"
 msgstr "여유"
 
@@ -784,27 +793,27 @@ msgstr "금"
 msgid "Friday"
 msgstr "금요일"
 
-#: src/webui/static/app/tvheadend.js:603
+#: src/webui/static/app/tvheadend.js:566
 msgid "Fullscreen"
 msgstr "전체 화면"
 
-#: src/webui/static/app/epg.js:890 src/webui/static/app/epg.js:1048
+#: src/webui/static/app/epg.js:945 src/webui/static/app/epg.js:1110
 msgid "Fulltext"
 msgstr "전체 내용"
 
-#: src/webui/static/app/tvheadend.js:708
+#: src/webui/static/app/tvheadend.js:676
 msgid "General"
 msgstr "일반"
 
-#: src/webui/static/app/epg.js:1069
+#: src/webui/static/app/epg.js:1131
 msgid "Genre"
 msgstr "장르"
 
-#: src/webui/static/app/tvheadend.js:978
+#: src/webui/static/app/tvheadend.js:946
 msgid "GiB"
 msgstr "GiB"
 
-#: src/webui/static/app/idnode.js:1633
+#: src/webui/static/app/idnode.js:1628
 msgid "Grid Update"
 msgstr "그리드 업데이트"
 
@@ -816,10 +825,10 @@ msgstr "이 필드로 그룹"
 msgid "HDTV"
 msgstr "HDTV"
 
-#: src/webui/static/app/idnode.js:1209 src/webui/static/app/idnode.js:2052
-#: src/webui/static/app/idnode.js:2439 src/webui/static/app/idnode.js:2877
-#: src/webui/static/app/epg.js:914 src/webui/static/app/status.js:193
-#: src/webui/static/app/status.js:486 src/webui/static/app/status.js:636
+#: src/webui/static/app/idnode.js:1201 src/webui/static/app/idnode.js:2047
+#: src/webui/static/app/idnode.js:2434 src/webui/static/app/idnode.js:2874
+#: src/webui/static/app/epg.js:969 src/webui/static/app/status.js:193
+#: src/webui/static/app/status.js:486 src/webui/static/app/status.js:657
 #: src/webui/static/app/servicemapper.js:53
 msgid "Help"
 msgstr "도움말"
@@ -828,11 +837,11 @@ msgstr "도움말"
 msgid "Help for"
 msgstr "도움말: "
 
-#: src/webui/static/app/idnode.js:1956
+#: src/webui/static/app/idnode.js:1951
 msgid "Hide"
 msgstr "숨기기"
 
-#: src/webui/static/app/idnode.js:2387
+#: src/webui/static/app/idnode.js:2382
 msgid "Hide passwords"
 msgstr "암호 숨기기"
 
@@ -843,10 +852,6 @@ msgstr "호스트 이름"
 #: src/webui/static/app/status.js:81
 msgid "ID"
 msgstr "아이디"
-
-#: src/webui/static/app/status.js:616
-msgid "IP Address"
-msgstr "IP 주소"
 
 #: src/webui/static/app/acleditor.js:106
 msgid "IP Blocking Record"
@@ -864,7 +869,7 @@ msgstr "무시됨"
 msgid "Image Cache"
 msgstr "이미지 캐시"
 
-#: src/webui/static/app/status.js:779
+#: src/webui/static/app/status.js:800
 msgid "In"
 msgstr "In"
 
@@ -872,7 +877,7 @@ msgstr "In"
 msgid "Index"
 msgstr "인덱스"
 
-#: src/webui/static/app/status.js:372 src/webui/static/app/status.js:869
+#: src/webui/static/app/status.js:372 src/webui/static/app/status.js:890
 msgid "Input"
 msgstr "입력"
 
@@ -904,7 +909,7 @@ msgstr "6월"
 msgid "June"
 msgstr "6월"
 
-#: src/webui/static/app/tvheadend.js:982
+#: src/webui/static/app/tvheadend.js:950
 msgid "KiB"
 msgstr "KiB"
 
@@ -924,7 +929,7 @@ msgstr "마지막 페이지"
 msgid "Lines"
 msgstr "라인"
 
-#: src/webui/static/app/tvheadend.js:559
+#: src/webui/static/app/tvheadend.js:522
 msgid "Live TV Player"
 msgstr "라이브 TV 플레이어"
 
@@ -933,14 +938,17 @@ msgid "Loading, please wait..."
 msgstr "로드 중, 기다리세요..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
-#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:666
-#: src/webui/static/app/epg.js:689 src/webui/static/app/epg.js:713
-#: src/webui/static/app/epg.js:734 src/webui/static/app/tvheadend.js:497
-#: src/webui/static/app/tvheadend.js:535
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/tvheadend.js:459
+#: src/webui/static/app/tvheadend.js:498
 msgid "Loading..."
 msgstr "로드 중..."
 
-#: src/webui/static/app/tvheadend.js:959
+#: src/webui/static/app/epg.js:698 src/webui/static/app/epg.js:721
+#: src/webui/static/app/epg.js:745 src/webui/static/app/epg.js:766
+msgid "Loading…"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:927
 msgid "Logged in as"
 msgstr "로그인: "
 
@@ -1032,7 +1040,7 @@ msgstr "메모리 정보 항목"
 msgid "Message"
 msgstr "메시지"
 
-#: src/webui/static/app/tvheadend.js:980
+#: src/webui/static/app/tvheadend.js:948
 msgid "MiB"
 msgstr "MiB"
 
@@ -1044,11 +1052,11 @@ msgstr "월"
 msgid "Monday"
 msgstr "월요일"
 
-#: src/webui/static/app/idnode.js:1863 src/webui/static/app/idnode.js:2359
+#: src/webui/static/app/idnode.js:1858 src/webui/static/app/idnode.js:2354
 msgid "Move Down"
 msgstr "아래로 이동"
 
-#: src/webui/static/app/idnode.js:1838 src/webui/static/app/idnode.js:2338
+#: src/webui/static/app/idnode.js:1833 src/webui/static/app/idnode.js:2333
 msgid "Move Up"
 msgstr "위로 이동"
 
@@ -1060,19 +1068,19 @@ msgstr "채널 아래로 이동"
 msgid "Move channel one number up"
 msgstr "채널 위로 이동"
 
-#: src/webui/static/app/idnode.js:1861
+#: src/webui/static/app/idnode.js:1856
 msgid "Move selected entries down"
 msgstr "선택 항목 아래로 이동"
 
-#: src/webui/static/app/idnode.js:1836
+#: src/webui/static/app/idnode.js:1831
 msgid "Move selected entries up"
 msgstr "선택 항목 위로 이동"
 
-#: src/webui/static/app/idnode.js:2357
+#: src/webui/static/app/idnode.js:2352
 msgid "Move selected entry down"
 msgstr "선택 항목 아래로 이동"
 
-#: src/webui/static/app/idnode.js:2336
+#: src/webui/static/app/idnode.js:2331
 msgid "Move selected entry up"
 msgstr "선택 항목 위로 이동"
 
@@ -1133,7 +1141,7 @@ msgstr "표시할 항목 없음"
 msgid "No days"
 msgstr "날 없음"
 
-#: src/webui/static/app/tvheadend.js:962
+#: src/webui/static/app/tvheadend.js:930
 msgid "No verified access"
 msgstr "인증된 접근 없음"
 
@@ -1142,7 +1150,7 @@ msgstr "인증된 접근 없음"
 msgid "No {0} to display"
 msgstr "표시할 {0} 없음"
 
-#: src/webui/static/app/idnode.js:1941 src/webui/static/app/mpegts.js:206
+#: src/webui/static/app/idnode.js:1936 src/webui/static/app/mpegts.js:206
 #: src/webui/static/app/mpegts.js:216
 msgid "None"
 msgstr "없음"
@@ -1163,7 +1171,11 @@ msgstr "11월"
 msgid "November"
 msgstr "11월"
 
-#: src/webui/static/app/epg.js:576 src/webui/static/app/epg.js:577
+#: src/webui/static/app/epg.js:673
+msgid "Now"
+msgstr ""
+
+#: src/webui/static/app/epg.js:587 src/webui/static/app/epg.js:588
 msgid "Number"
 msgstr "번호"
 
@@ -1203,7 +1215,7 @@ msgstr "다른 스트림 필터"
 msgid "Other Stream Filters"
 msgstr "다른 스트림 필터"
 
-#: src/webui/static/app/status.js:780
+#: src/webui/static/app/status.js:801
 msgid "Out"
 msgstr "출력"
 
@@ -1223,12 +1235,12 @@ msgstr "PID"
 msgid "Page"
 msgstr "페이지"
 
-#: src/webui/static/app/idnode.js:2469 src/webui/static/app/idnode.js:2652
+#: src/webui/static/app/idnode.js:2464 src/webui/static/app/idnode.js:2649
 #: src/webui/static/app/epg.js:169
 msgid "Parameters"
 msgstr "매개변수"
 
-#: src/webui/static/app/idnode.js:1939
+#: src/webui/static/app/idnode.js:1934
 msgid "Parent disabled"
 msgstr "부모 비활성"
 
@@ -1240,7 +1252,7 @@ msgstr "암호"
 msgid "Passwords"
 msgstr "암호"
 
-#: src/webui/static/app/tvheadend.js:588
+#: src/webui/static/app/tvheadend.js:551
 msgid "Pause"
 msgstr "일시 정지"
 
@@ -1253,7 +1265,7 @@ msgstr "페이지당"
 #: src/webui/static/app/chconf.js:245 src/webui/static/app/chconf.js:246
 #: src/webui/static/app/dvr.js:476 src/webui/static/app/dvr.js:477
 #: src/webui/static/app/dvr.js:613 src/webui/static/app/dvr.js:614
-#: src/webui/static/app/tvheadend.js:484 src/webui/static/app/tvheadend.js:571
+#: src/webui/static/app/tvheadend.js:440 src/webui/static/app/tvheadend.js:534
 msgid "Play"
 msgstr "재생"
 
@@ -1269,7 +1281,7 @@ msgstr "프로그램 재생"
 msgid "Play this program"
 msgstr "이 프로그램 재생"
 
-#: src/webui/static/app/tvheadend.js:484
+#: src/webui/static/app/tvheadend.js:440
 msgid "Play this stream"
 msgstr "이 스트림 재생"
 
@@ -1307,7 +1319,7 @@ msgstr "프로필"
 msgid "Profile Name"
 msgstr "프로필 이름"
 
-#: src/webui/static/app/epg.js:499 src/webui/static/app/epg.js:500
+#: src/webui/static/app/epg.js:509 src/webui/static/app/epg.js:510
 msgid "Progress"
 msgstr "진행"
 
@@ -1328,7 +1340,7 @@ msgstr "내부 EPG 그래버 다시 시작"
 msgid "Re-run all internal EPG grabbers to import EPG data now"
 msgstr "EPG 데이터를 가져오도록 모든 내부 EPG 그래버 재시작"
 
-#: src/webui/static/app/idnode.js:1047
+#: src/webui/static/app/idnode.js:1039
 msgid "Read-only Info"
 msgstr "읽기 전용 정보"
 
@@ -1348,7 +1360,7 @@ msgstr "시리즈 녹화"
 msgid "Record this program now"
 msgstr "이 프로그램 지금 녹화"
 
-#: src/webui/static/app/tvheadend.js:790
+#: src/webui/static/app/tvheadend.js:758
 msgid "Recording"
 msgstr "녹화"
 
@@ -1408,7 +1420,7 @@ msgstr "먹스를 다시 스캔하여 채널 묶음을 수정합니다."
 msgid "Reset (clear) the selected icon URLs"
 msgstr "선택한 아이콘 URL 재설정 (비우기)"
 
-#: src/webui/static/app/epg.js:896
+#: src/webui/static/app/epg.js:951
 msgid "Reset All"
 msgstr "모두 재설정"
 
@@ -1416,12 +1428,12 @@ msgstr "모두 재설정"
 msgid "Reset Icon"
 msgstr "아이콘 재설정"
 
-#: src/webui/static/app/epg.js:898
+#: src/webui/static/app/epg.js:953
 msgid "Reset all filters (show all)"
 msgstr "모든 필터 재설정 (모두 보기)"
 
-#: src/webui/static/app/idnode.js:1777 src/webui/static/app/idnode.js:2274
-#: src/webui/static/app/idnode.js:2810
+#: src/webui/static/app/idnode.js:1772 src/webui/static/app/idnode.js:2269
+#: src/webui/static/app/idnode.js:2807
 msgid "Revert pending changes (marked with red border)"
 msgstr "보류중인 내용 원래대로 (빨간 표시)"
 
@@ -1441,8 +1453,8 @@ msgstr "토"
 msgid "Saturday"
 msgstr "토요일"
 
-#: src/webui/static/app/idnode.js:1120 src/webui/static/app/idnode.js:1752
-#: src/webui/static/app/idnode.js:2254 src/webui/static/app/idnode.js:2791
+#: src/webui/static/app/idnode.js:1112 src/webui/static/app/idnode.js:1747
+#: src/webui/static/app/idnode.js:2249 src/webui/static/app/idnode.js:2788
 msgid "Save"
 msgstr "저장"
 
@@ -1450,8 +1462,8 @@ msgstr "저장"
 msgid "Save & Next"
 msgstr "저장 & 다음"
 
-#: src/webui/static/app/idnode.js:1750 src/webui/static/app/idnode.js:2252
-#: src/webui/static/app/idnode.js:2789
+#: src/webui/static/app/idnode.js:1745 src/webui/static/app/idnode.js:2247
+#: src/webui/static/app/idnode.js:2786
 msgid "Save pending changes (marked with red border)"
 msgstr "보류중인 내용 저장 (빨간 표시)"
 
@@ -1471,23 +1483,23 @@ msgstr "IMDB (제목으로) 검색"
 msgid "Search TheTVDB (for title)"
 msgstr "TheTVDB (제목으로) 검색"
 
-#: src/webui/static/app/epg.js:655
-msgid "Search title..."
-msgstr "제목 검색..."
+#: src/webui/static/app/epg.js:687
+msgid "Search title…"
+msgstr ""
 
-#: src/webui/static/app/tvheadend.js:504
+#: src/webui/static/app/tvheadend.js:466
 msgid "Select channel..."
 msgstr "채널 선택..."
 
-#: src/webui/static/app/tvheadend.js:541
+#: src/webui/static/app/tvheadend.js:504
 msgid "Select stream profile..."
 msgstr "스트림 프로필 선택..."
 
-#: src/webui/static/app/idnode.js:461 src/webui/static/app/idnode.js:714
+#: src/webui/static/app/idnode.js:460 src/webui/static/app/idnode.js:708
 msgid "Select {0} ..."
 msgstr "{0} 선택..."
 
-#: src/webui/static/app/idnode.js:445 src/webui/static/app/idnode.js:690
+#: src/webui/static/app/idnode.js:444 src/webui/static/app/idnode.js:684
 msgid "Selected"
 msgstr "선택됨"
 
@@ -1498,6 +1510,14 @@ msgstr "9월"
 #: src/webui/static/app/i18n-post.js:28
 msgid "September"
 msgstr "9월"
+
+#: src/webui/static/app/status.js:644
+msgid "Server Address"
+msgstr "서버 주소"
+
+#: src/webui/static/app/status.js:650
+msgid "Server Port"
+msgstr "서버 포트"
 
 #: src/webui/static/app/mpegts.js:352 src/webui/static/app/status.js:120
 msgid "Service"
@@ -1516,7 +1536,7 @@ msgstr "서비스 정보: "
 msgid "Services"
 msgstr "서비스"
 
-#: src/webui/static/app/idnode.js:991
+#: src/webui/static/app/idnode.js:983
 msgid "Settings"
 msgstr "설정"
 
@@ -1524,11 +1544,11 @@ msgstr "설정"
 msgid "Show in Groups"
 msgstr "그룹으로 표시"
 
-#: src/webui/static/app/idnode.js:2381
+#: src/webui/static/app/idnode.js:2376
 msgid "Show or hide passwords"
 msgstr "암호 표시/숨기기"
 
-#: src/webui/static/app/idnode.js:2383 src/webui/static/app/idnode.js:2387
+#: src/webui/static/app/idnode.js:2378 src/webui/static/app/idnode.js:2382
 msgid "Show passwords"
 msgstr "암호 표시"
 
@@ -1548,7 +1568,7 @@ msgstr "내림차순 정렬"
 msgid "Star Rating"
 msgstr "별 평가"
 
-#: src/webui/static/app/epg.js:599 src/webui/static/app/epg.js:600
+#: src/webui/static/app/epg.js:610 src/webui/static/app/epg.js:611
 msgid "Stars"
 msgstr "별"
 
@@ -1556,8 +1576,8 @@ msgstr "별"
 msgid "Start"
 msgstr "시작"
 
-#: src/webui/static/app/epg.js:112 src/webui/static/app/epg.js:552
-#: src/webui/static/app/epg.js:553
+#: src/webui/static/app/epg.js:112 src/webui/static/app/epg.js:562
+#: src/webui/static/app/epg.js:563
 msgid "Start Time"
 msgstr "시작 시각"
 
@@ -1569,7 +1589,7 @@ msgstr "초기 설정 마법사 시작"
 msgid "Start wizard"
 msgstr "마법사 시작"
 
-#: src/webui/static/app/status.js:628
+#: src/webui/static/app/status.js:637
 msgid "Started"
 msgstr "시작됨"
 
@@ -1577,11 +1597,11 @@ msgstr "시작됨"
 msgid "State"
 msgstr "상태"
 
-#: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:683
+#: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:704
 msgid "Status"
 msgstr "상태"
 
-#: src/webui/static/app/dvr.js:215 src/webui/static/app/tvheadend.js:595
+#: src/webui/static/app/dvr.js:215 src/webui/static/app/tvheadend.js:558
 msgid "Stop"
 msgstr "정지"
 
@@ -1597,12 +1617,12 @@ msgstr "이 프로그램 녹화 정지"
 msgid "Stop the selected recording"
 msgstr "선택한 녹화 정지"
 
-#: src/webui/static/app/tvheadend.js:985
+#: src/webui/static/app/tvheadend.js:953
 msgid "Storage space"
 msgstr "저장소 공간"
 
 #: src/webui/static/app/status.js:378 src/webui/static/app/status.js:525
-#: src/webui/static/app/tvheadend.js:777
+#: src/webui/static/app/tvheadend.js:745
 msgid "Stream"
 msgstr "스트림"
 
@@ -1626,7 +1646,7 @@ msgstr "서브 번호."
 msgid "Subscriptions"
 msgstr "요청"
 
-#: src/webui/static/app/epg.js:536 src/webui/static/app/epg.js:537
+#: src/webui/static/app/epg.js:546 src/webui/static/app/epg.js:547
 msgid "Subtitle"
 msgstr "자막"
 
@@ -1662,7 +1682,7 @@ msgstr "선택한 채널의 번호를 교환합니다."
 msgid "TV adapters"
 msgstr "TV 어댑터"
 
-#: src/webui/static/app/epg.js:1068
+#: src/webui/static/app/epg.js:1130
 msgid "Tag"
 msgstr "태그"
 
@@ -1698,7 +1718,7 @@ msgstr "이 필드의 최대값은 {0}임"
 msgid "The minimum length for this field is {0}"
 msgstr "이 필드의 최저 길이는 {0}임"
 
-#: src/webui/static/app/idnode.js:1430
+#: src/webui/static/app/idnode.js:1425
 msgid "The selected entry is the original!"
 msgstr "선택한 항목은 원래대로입니다!"
 
@@ -1746,7 +1766,7 @@ msgstr "최저 날짜 미만"
 msgid "This field is required"
 msgstr "필수 항목"
 
-#: src/webui/static/app/epg.js:1063
+#: src/webui/static/app/epg.js:1125
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
@@ -1776,8 +1796,8 @@ msgstr "타이머"
 msgid "Timeshift"
 msgstr "타임시프트"
 
-#: src/webui/static/app/epg.js:522 src/webui/static/app/epg.js:523
-#: src/webui/static/app/epg.js:1066 src/webui/static/app/status.js:106
+#: src/webui/static/app/epg.js:532 src/webui/static/app/epg.js:533
+#: src/webui/static/app/epg.js:1128 src/webui/static/app/status.js:106
 msgid "Title"
 msgstr "제목"
 
@@ -1785,7 +1805,7 @@ msgstr "제목"
 msgid "Today"
 msgstr "오늘"
 
-#: src/webui/static/app/tvheadend.js:613
+#: src/webui/static/app/tvheadend.js:576
 msgid "Toggle mute"
 msgstr "음소거 토글"
 
@@ -1794,7 +1814,7 @@ msgstr "음소거 토글"
 msgid "Toggle re-record functionality"
 msgstr "재녹화 기능 토글"
 
-#: src/webui/static/app/tvheadend.js:988
+#: src/webui/static/app/tvheadend.js:956
 msgid "Total"
 msgstr "전체"
 
@@ -1818,17 +1838,17 @@ msgstr "화요일"
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
 msgstr "새 이벤트를 지금 가져오도록 OTA EPG 먹스를 조절함"
 
-#: src/webui/static/app/tvheadend.js:1024
+#: src/webui/static/app/tvheadend.js:999
 msgid "Tvheadend Web-Panel"
 msgstr "Tvheadend 웹 패널"
 
-#: src/webui/static/app/tvheadend.js:1045
+#: src/webui/static/app/tvheadend.js:1020
 msgid "Tvheadend log"
 msgstr "Tvheadend 로그"
 
 #: src/webui/static/app/caclient.js:48 src/webui/static/app/esfilter.js:32
 #: src/webui/static/app/mpegts.js:74 src/webui/static/app/mpegts.js:167
-#: src/webui/static/app/status.js:610
+#: src/webui/static/app/status.js:613
 msgid "Type"
 msgstr "종류"
 
@@ -1844,8 +1864,8 @@ msgstr "마법사 페이지를 가져올 수 없습니다!"
 msgid "Uncorrected Blocks"
 msgstr "수정되지 않은 블록"
 
-#: src/webui/static/app/idnode.js:1779 src/webui/static/app/idnode.js:2276
-#: src/webui/static/app/idnode.js:2812
+#: src/webui/static/app/idnode.js:1774 src/webui/static/app/idnode.js:2271
+#: src/webui/static/app/idnode.js:2809
 msgid "Undo"
 msgstr "되돌리기"
 
@@ -1861,15 +1881,15 @@ msgstr "다가오는 / 현재 녹화"
 msgid "Upcoming Recording"
 msgstr "다가오는 녹화"
 
-#: src/webui/static/app/tvheadend.js:988
+#: src/webui/static/app/tvheadend.js:956
 msgid "Used by tvheadend"
 msgstr "tvheadend가 사용"
 
-#: src/webui/static/app/status.js:99 src/webui/static/app/status.js:622
+#: src/webui/static/app/status.js:99 src/webui/static/app/status.js:631
 msgid "Username"
 msgstr "사용자 이름"
 
-#: src/webui/static/app/tvheadend.js:724
+#: src/webui/static/app/tvheadend.js:692
 msgid "Users"
 msgstr "사용자"
 
@@ -1881,23 +1901,27 @@ msgstr "비디오 스트림 필터"
 msgid "Video Stream Filters"
 msgstr "비디오 스트림 필터"
 
-#: src/webui/static/app/idnode.js:624
+#: src/webui/static/app/epg.js:971
+msgid "View help docs."
+msgstr ""
+
+#: src/webui/static/app/idnode.js:618
 msgid "View level"
 msgstr "보기 수준"
 
-#: src/webui/static/app/idnode.js:627
+#: src/webui/static/app/idnode.js:621
 msgid "View level: "
 msgstr "보기 수준: "
 
-#: src/webui/static/app/tvheadend.js:622
+#: src/webui/static/app/tvheadend.js:585
 msgid "Volume"
 msgstr "볼륨"
 
-#: src/webui/static/app/epg.js:903
+#: src/webui/static/app/epg.js:390 src/webui/static/app/epg.js:958
 msgid "Watch TV"
 msgstr "TV 시청"
 
-#: src/webui/static/app/epg.js:905
+#: src/webui/static/app/epg.js:960
 msgid "Watch live TV in a new browser window."
 msgstr "TV를 새 브라우저 창에서 시청합니다."
 
@@ -1929,7 +1953,7 @@ msgstr "마법사 - 페이지 \"{0}\" 찾을 수 없음"
 msgid "Yes"
 msgstr "예"
 
-#: src/webui/static/app/idnode.js:473 src/webui/static/app/idnode.js:856
+#: src/webui/static/app/idnode.js:470 src/webui/static/app/idnode.js:848
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
 msgstr "값을 제공하셔야 합니다 - 8진법 chmod 표기를 사용, 예: 0664"
 
@@ -1960,15 +1984,15 @@ msgid ""
 msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
 
 #: src/webui/static/app/idnode.js:363 src/webui/static/app/idnode.js:364
-#: src/webui/static/app/epg.js:466 src/webui/static/app/epg.js:468
+#: src/webui/static/app/epg.js:476 src/webui/static/app/epg.js:478
 msgid "hrs"
 msgstr "시간"
 
-#: src/webui/static/app/tvheadend.js:963
+#: src/webui/static/app/tvheadend.js:931
 msgid "login"
 msgstr "로그인"
 
-#: src/webui/static/app/tvheadend.js:960
+#: src/webui/static/app/tvheadend.js:928
 msgid "logout"
 msgstr "로그아웃"
 
@@ -2003,8 +2027,8 @@ msgid "m/d/y#DatePicker"
 msgstr "y/m/d#DatePicker"
 
 #: src/webui/static/app/idnode.js:364 src/webui/static/app/idnode.js:366
-#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:468
-#: src/webui/static/app/epg.js:471 src/webui/static/app/dvr.js:52
+#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:478
+#: src/webui/static/app/epg.js:481 src/webui/static/app/dvr.js:52
 msgid "min"
 msgstr "분"
 

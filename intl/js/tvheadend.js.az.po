@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Vusal Hasanov <vusal.maestro@gmail.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
@@ -10,12 +11,12 @@ msgstr ""
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
 "PO-Revision-Date: 2018-10-08 14:51+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Persian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/fa/)\n"
+"Language-Team: Azerbaijani (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/az/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: fa\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Language: az\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/webui/static/app/i18n-post.js:137
 msgid "&#160;OK&#160;"
@@ -32,11 +33,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:210
 msgid "(None)"
-msgstr ""
+msgstr "(Heç nə)"
 
 #: src/webui/static/app/epg.js:247
 msgid "(default DVR Profile)"
-msgstr ""
+msgstr "(standart DVR profili)"
 
 #: src/webui/static/app/i18n-post.js:59
 msgid "0 #monthNumber"
@@ -120,7 +121,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:804
 msgid "About"
-msgstr ""
+msgstr "İnfo"
 
 #: src/webui/static/app/acleditor.js:24
 msgid "Access Entries"
@@ -132,11 +133,11 @@ msgstr ""
 
 #: src/webui/static/app/servicemapper.js:22
 msgid "Active"
-msgstr ""
+msgstr "Aktiv"
 
 #: src/webui/static/app/idnode.js:1788 src/webui/static/app/idnode.js:2284
 msgid "Add"
-msgstr ""
+msgstr "Əlavə et"
 
 #: src/webui/static/app/idnode.js:1786 src/webui/static/app/idnode.js:2282
 msgid "Add a new entry"
@@ -148,11 +149,11 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:588 src/webui/static/app/idnode.js:604
 msgid "Advanced"
-msgstr ""
+msgstr "Qabaqcıl"
 
 #: src/webui/static/app/idnode.js:1035
 msgid "Advanced Settings"
-msgstr ""
+msgstr "Qabaqcıl tənximləmələr"
 
 #: src/webui/static/app/i18n-post.js:279
 msgid "After"
@@ -179,7 +180,7 @@ msgstr ""
 #: src/webui/static/app/idnode.js:1167 src/webui/static/app/idnode.js:1478
 #: src/webui/static/app/idnode.js:1496 src/webui/static/app/idnode.js:1506
 msgid "Apply"
-msgstr ""
+msgstr "Tətbiq et"
 
 #: src/webui/static/app/tvhlog.js:25
 msgid "Apply any changes made below to the run-time configuration."
@@ -191,7 +192,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1477
 msgid "Apply settings"
-msgstr ""
+msgstr "Tənzimləmələri tətbiq et"
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
@@ -231,7 +232,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:27
 msgid "August"
-msgstr ""
+msgstr "Avqust"
 
 #: src/webui/static/app/epg.js:1125
 msgid "Auto Recorder"
@@ -268,7 +269,7 @@ msgstr ""
 
 #: src/webui/static/app/config.js:29
 msgid "Base"
-msgstr ""
+msgstr "Baza"
 
 #: src/webui/static/app/idnode.js:586 src/webui/static/app/idnode.js:598
 msgid "Basic"
@@ -325,7 +326,7 @@ msgstr ""
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
 #: src/webui/static/app/idnode.js:1102 src/webui/static/app/idnode.js:1517
 msgid "Cancel"
-msgstr ""
+msgstr "İmtina et"
 
 #: src/webui/static/app/status.js:559
 msgid "Cancel Connection"
@@ -359,7 +360,7 @@ msgstr ""
 #: src/webui/static/app/epg.js:597 src/webui/static/app/epg.js:1129
 #: src/webui/static/app/status.js:113
 msgid "Channel"
-msgstr "کانال"
+msgstr "Kanal"
 
 #: src/webui/static/app/tvheadend.js:727
 msgid "Channel / EPG"
@@ -367,11 +368,11 @@ msgstr ""
 
 #: src/webui/static/app/cteditor.js:10
 msgid "Channel Tag"
-msgstr ""
+msgstr "Kanal Teq'i"
 
 #: src/webui/static/app/cteditor.js:11
 msgid "Channel Tags"
-msgstr ""
+msgstr "Kanal Teq'ləri"
 
 #: src/webui/static/app/chconf.js:199
 msgid "Channel number operations"
@@ -379,7 +380,7 @@ msgstr ""
 
 #: src/webui/static/app/chconf.js:233
 msgid "Channels"
-msgstr ""
+msgstr "Kanallar"
 
 #: src/webui/static/app/i18n-post.js:134
 msgid "Choose a month (Control+Up/Down to move years)"
@@ -395,7 +396,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:289 src/webui/static/app/status.js:292
 msgid "Clear statistics"
-msgstr ""
+msgstr "Statistikanı sil"
 
 #: src/webui/static/app/status.js:293
 msgid "Clear statistics for selected input?"
@@ -403,11 +404,11 @@ msgstr ""
 
 #: src/webui/static/app/status.js:619
 msgid "Client Address"
-msgstr ""
+msgstr "Qəbul edənin ünvanı"
 
 #: src/webui/static/app/caclient.js:34
 msgid "Client Name"
-msgstr ""
+msgstr "Qəbul edənin adı"
 
 #: src/webui/static/app/status.js:625
 msgid "Client Port"
@@ -435,7 +436,7 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:67
 msgid "Comment"
-msgstr ""
+msgstr "Rəy"
 
 #: src/webui/static/app/status.js:802
 msgid "Compression ratio"
@@ -447,7 +448,7 @@ msgstr ""
 
 #: src/webui/static/app/tvhlog.js:17 src/webui/static/app/tvheadend.js:666
 msgid "Configuration"
-msgstr ""
+msgstr "Konfiqurasiya"
 
 #: src/webui/static/app/status.js:694
 msgid "Connections"
@@ -456,7 +457,7 @@ msgstr ""
 #: src/webui/static/app/epg.js:145 src/webui/static/app/epg.js:625
 #: src/webui/static/app/epg.js:626
 msgid "Content Type"
-msgstr "نوع محتوا"
+msgstr ""
 
 #: src/webui/static/app/status.js:430
 msgid "Continuity Errors"
@@ -464,7 +465,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1451
 msgid "Create"
-msgstr ""
+msgstr "Yarat"
 
 #: src/webui/static/app/epg.js:937
 msgid "Create AutoRec"
@@ -491,7 +492,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:708
 msgid "DVB Inputs"
-msgstr ""
+msgstr "DVB qurğular"
 
 #: src/webui/static/app/epg.js:352
 msgid "DVR"
@@ -507,15 +508,15 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:46
 msgid "Dec"
-msgstr ""
+msgstr "Dek"
 
 #: src/webui/static/app/i18n-post.js:31
 msgid "December"
-msgstr ""
+msgstr "Dekabr"
 
 #: src/webui/static/app/idnode.js:1802 src/webui/static/app/idnode.js:2307
 msgid "Delete"
-msgstr ""
+msgstr "Sil"
 
 #: src/webui/static/app/epg.js:236
 msgid "Delete recording"
@@ -549,15 +550,15 @@ msgstr ""
 #: src/webui/static/app/epg.js:371 src/webui/static/app/epg.js:372
 #: src/webui/static/app/dvr.js:137 src/webui/static/app/dvr.js:138
 msgid "Details"
-msgstr ""
+msgstr "Ətraflı"
 
 #: src/webui/static/app/dvr.js:865
 msgid "Digital Video Recorder"
-msgstr ""
+msgstr "Rəqəmsal Video Yazıcı "
 
 #: src/webui/static/app/dvr.js:705
 msgid "Digital Video Recorder Profile"
-msgstr ""
+msgstr "Rəqəmsal Video Yazıcı profili"
 
 #: src/webui/static/app/dvr.js:706
 msgid "Digital Video Recorder Profiles"
@@ -565,7 +566,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
 msgid "Disabled"
-msgstr ""
+msgstr "Aktiv deyil"
 
 #: src/webui/static/app/config.js:135
 msgid "Discover SAT>IP servers"
@@ -581,11 +582,11 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:594
 msgid "Do you really want to delete the selected recordings?"
-msgstr ""
+msgstr "Seçilmiş video qeydləri silmək istəyirsiniz?"
 
 #: src/webui/static/app/tvheadend.js:327
 msgid "Do you really want to delete the selection?"
-msgstr ""
+msgstr "Seçiləni silmək istəyirsiniz?"
 
 #: src/webui/static/app/dvr.js:233
 msgid "Do you really want to gracefully stop/unschedule the selection?"
@@ -611,7 +612,7 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:339 src/webui/static/app/dvr.js:505
 msgid "Download"
-msgstr ""
+msgstr "Yüklə"
 
 #: src/webui/static/app/dvr.js:337 src/webui/static/app/dvr.js:503
 msgid "Download the selected recording"
@@ -621,7 +622,7 @@ msgstr ""
 #: src/webui/static/app/epg.js:580 src/webui/static/app/epg.js:1132
 #: src/webui/static/app/dvr.js:52
 msgid "Duration"
-msgstr ""
+msgstr "Müddət"
 
 #: src/webui/static/app/epggrab.js:41
 msgid "EPG Grabber"
@@ -653,7 +654,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1276 src/webui/static/app/idnode.js:1889
 msgid "Edit"
-msgstr ""
+msgstr "Düzəliş et"
 
 #: src/webui/static/app/idnode.js:1887
 msgid "Edit selected entry"
@@ -690,11 +691,11 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:238
 msgid "Error"
-msgstr ""
+msgstr "Xəta"
 
 #: src/webui/static/app/status.js:159
 msgid "Errors"
-msgstr ""
+msgstr "Xətalar"
 
 #: src/webui/static/app/epg.js:991
 msgid "Events"
@@ -726,15 +727,15 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:36
 msgid "Feb"
-msgstr ""
+msgstr "Fev"
 
 #: src/webui/static/app/i18n-post.js:21
 msgid "February"
-msgstr ""
+msgstr "Fevral"
 
 #: src/webui/static/app/dvr.js:65
 msgid "File size"
-msgstr ""
+msgstr "Faylın həcmi"
 
 #: src/webui/static/app/epg.js:707
 msgid "Filter channel…"
@@ -758,7 +759,7 @@ msgstr ""
 
 #: src/webui/static/app/wizard.js:160
 msgid "Finish"
-msgstr ""
+msgstr "Son"
 
 #: src/webui/static/app/dvr.js:453
 msgid "Finished Recording"
@@ -782,7 +783,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:956
 msgid "Free"
-msgstr ""
+msgstr "Boş"
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
@@ -794,7 +795,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:566
 msgid "Fullscreen"
-msgstr ""
+msgstr "Tam Ekran"
 
 #: src/webui/static/app/epg.js:945 src/webui/static/app/epg.js:1110
 msgid "Fulltext"
@@ -806,7 +807,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:1131
 msgid "Genre"
-msgstr ""
+msgstr "Cins"
 
 #: src/webui/static/app/tvheadend.js:946
 msgid "GiB"
@@ -830,7 +831,7 @@ msgstr ""
 #: src/webui/static/app/status.js:486 src/webui/static/app/status.js:657
 #: src/webui/static/app/servicemapper.js:53
 msgid "Help"
-msgstr ""
+msgstr "Kömək"
 
 #: src/webui/static/app/tvheadend.js:182
 msgid "Help for"
@@ -838,11 +839,11 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1951
 msgid "Hide"
-msgstr ""
+msgstr "Gizlə"
 
 #: src/webui/static/app/idnode.js:2382
 msgid "Hide passwords"
-msgstr ""
+msgstr "Şifrələri gizlə"
 
 #: src/webui/static/app/status.js:92
 msgid "Hostname"
@@ -886,11 +887,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:35
 msgid "Jan"
-msgstr ""
+msgstr "Yan"
 
 #: src/webui/static/app/i18n-post.js:20
 msgid "January"
-msgstr ""
+msgstr "Yanvar"
 
 #: src/webui/static/app/i18n-post.js:41
 msgid "Jul"
@@ -1110,11 +1111,11 @@ msgstr ""
 #: src/webui/static/app/mpegts.js:66 src/webui/static/app/mpegts.js:72
 #: src/webui/static/app/mpegts.js:105
 msgid "Network"
-msgstr ""
+msgstr "Şəbəkə"
 
 #: src/webui/static/app/mpegts.js:67
 msgid "Networks"
-msgstr ""
+msgstr "Şəbəkələr"
 
 #: src/webui/static/app/epg.js:153
 msgid "New#EPG"
@@ -1152,7 +1153,7 @@ msgstr ""
 #: src/webui/static/app/idnode.js:1936 src/webui/static/app/mpegts.js:206
 #: src/webui/static/app/mpegts.js:216
 msgid "None"
-msgstr "هیچکدام"
+msgstr ""
 
 #: src/webui/static/app/tvheadend.js:247
 msgid "Not Available"
@@ -1176,7 +1177,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:587 src/webui/static/app/epg.js:588
 msgid "Number"
-msgstr "شماره"
+msgstr ""
 
 #: src/webui/static/app/chconf.js:190
 msgid "Number Down"
@@ -1192,15 +1193,15 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:110
 msgid "OK"
-msgstr "تایید"
+msgstr "OK"
 
 #: src/webui/static/app/i18n-post.js:44
 msgid "Oct"
-msgstr ""
+msgstr "Okt"
 
 #: src/webui/static/app/i18n-post.js:29
 msgid "October"
-msgstr ""
+msgstr "Oktyabr"
 
 #: src/webui/static/app/i18n-post.js:281
 msgid "On#DateFilter"
@@ -1245,11 +1246,11 @@ msgstr ""
 
 #: src/webui/static/app/acleditor.js:70
 msgid "Password"
-msgstr "رمز"
+msgstr ""
 
 #: src/webui/static/app/acleditor.js:71
 msgid "Passwords"
-msgstr "رمزها"
+msgstr ""
 
 #: src/webui/static/app/tvheadend.js:551
 msgid "Pause"
@@ -1266,7 +1267,7 @@ msgstr ""
 #: src/webui/static/app/dvr.js:613 src/webui/static/app/dvr.js:614
 #: src/webui/static/app/tvheadend.js:440 src/webui/static/app/tvheadend.js:534
 msgid "Play"
-msgstr ""
+msgstr "Bax"
 
 #: src/webui/static/tv.js:466
 msgid "Play Selected Channel"
@@ -1274,11 +1275,11 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:200
 msgid "Play program"
-msgstr ""
+msgstr "Proqrama bax"
 
 #: src/webui/static/app/epg.js:199
 msgid "Play this program"
-msgstr ""
+msgstr "Bu proqrama bax"
 
 #: src/webui/static/app/tvheadend.js:440
 msgid "Play this stream"
@@ -1286,7 +1287,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:161
 msgid "Please Wait..."
-msgstr ""
+msgstr "Gözləyin..."
 
 #: src/webui/static/app/tvheadend.js:240
 msgid "Please check Tvheadend is running and try again."
@@ -1316,7 +1317,7 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:707
 msgid "Profile Name"
-msgstr "اسم پروفایل"
+msgstr ""
 
 #: src/webui/static/app/epg.js:509 src/webui/static/app/epg.js:510
 msgid "Progress"
@@ -1341,7 +1342,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1039
 msgid "Read-only Info"
-msgstr ""
+msgstr "Yalnız-oxunuş barədə"
 
 #: src/webui/static/app/comet.js:28
 msgid "Reconnected to Tvheadend"
@@ -1369,7 +1370,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
 msgid "Refresh"
-msgstr ""
+msgstr "Yenilə"
 
 #: src/webui/static/app/dvr.js:416
 msgid "Remove"
@@ -1446,7 +1447,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:99
 msgid "Sat"
-msgstr "ماهواره"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:89
 msgid "Saturday"
@@ -1455,11 +1456,11 @@ msgstr ""
 #: src/webui/static/app/idnode.js:1112 src/webui/static/app/idnode.js:1747
 #: src/webui/static/app/idnode.js:2249 src/webui/static/app/idnode.js:2788
 msgid "Save"
-msgstr ""
+msgstr "Yaddaşa yaz"
 
 #: src/webui/static/app/wizard.js:160
 msgid "Save & Next"
-msgstr ""
+msgstr "Yaddaşa yaz və İrəli"
 
 #: src/webui/static/app/idnode.js:1745 src/webui/static/app/idnode.js:2247
 #: src/webui/static/app/idnode.js:2786
@@ -1488,7 +1489,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:466
 msgid "Select channel..."
-msgstr ""
+msgstr "Kanal seç..."
 
 #: src/webui/static/app/tvheadend.js:504
 msgid "Select stream profile..."
@@ -1533,7 +1534,7 @@ msgstr ""
 
 #: src/webui/static/app/mpegts.js:353
 msgid "Services"
-msgstr "خدمات"
+msgstr ""
 
 #: src/webui/static/app/idnode.js:983
 msgid "Settings"
@@ -1549,7 +1550,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:2378 src/webui/static/app/idnode.js:2382
 msgid "Show passwords"
-msgstr ""
+msgstr "Şifrələri göstər"
 
 #: src/webui/static/app/status.js:465
 msgid "Signal Strength"
@@ -1573,12 +1574,12 @@ msgstr ""
 
 #: src/webui/static/app/status.js:134
 msgid "Start"
-msgstr "شروع"
+msgstr "Başla"
 
 #: src/webui/static/app/epg.js:112 src/webui/static/app/epg.js:562
 #: src/webui/static/app/epg.js:563
 msgid "Start Time"
-msgstr "زمان شروع"
+msgstr ""
 
 #: src/webui/static/app/config.js:11
 msgid "Start initial configuration wizard"
@@ -1598,11 +1599,11 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:704
 msgid "Status"
-msgstr "وضعیت"
+msgstr "Vəziyyət"
 
 #: src/webui/static/app/dvr.js:215 src/webui/static/app/tvheadend.js:558
 msgid "Stop"
-msgstr "توقف"
+msgstr "Dayandır"
 
 #: src/webui/static/app/epg.js:227
 msgid "Stop recording"
@@ -1647,7 +1648,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:546 src/webui/static/app/epg.js:547
 msgid "Subtitle"
-msgstr "زیرنویس"
+msgstr "Alt yazı"
 
 #: src/webui/static/app/esfilter.js:99
 msgid "Subtitle Stream Filter"
@@ -1663,7 +1664,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
-msgstr "یکشنبه"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:83
 msgid "Sunday"
@@ -1679,7 +1680,7 @@ msgstr ""
 
 #: src/webui/static/app/tvadapters.js:6
 msgid "TV adapters"
-msgstr ""
+msgstr "TV adapterləri"
 
 #: src/webui/static/app/epg.js:1130
 msgid "Tag"
@@ -1773,7 +1774,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
-msgstr "پنج شنبه"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:87
 msgid "Thursday"
@@ -1802,7 +1803,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:125
 msgid "Today"
-msgstr ""
+msgstr "Bu gün"
 
 #: src/webui/static/app/tvheadend.js:576
 msgid "Toggle mute"
@@ -1827,7 +1828,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:95
 msgid "Tue"
-msgstr "سه شنبه"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:85
 msgid "Tuesday"
@@ -1870,7 +1871,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:458 src/webui/static/app/status.js:478
 msgid "Unknown"
-msgstr "ناشناخته"
+msgstr "Naməlum"
 
 #: src/webui/static/app/dvr.js:288
 msgid "Upcoming / Current Recordings"
@@ -1886,7 +1887,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:99 src/webui/static/app/status.js:631
 msgid "Username"
-msgstr "نام کاربری"
+msgstr "İstifadəçi adı"
 
 #: src/webui/static/app/tvheadend.js:692
 msgid "Users"
@@ -1914,7 +1915,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:585
 msgid "Volume"
-msgstr ""
+msgstr "Səs"
 
 #: src/webui/static/app/epg.js:390 src/webui/static/app/epg.js:958
 msgid "Watch TV"
@@ -1926,7 +1927,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:96
 msgid "Wed"
-msgstr "چهارشنبه"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:86
 msgid "Wednesday"
@@ -1938,7 +1939,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:157
 msgid "Widescreen"
-msgstr ""
+msgstr "Geniş Ekran"
 
 #: src/webui/static/app/dvr.js:39
 msgid "Will be skipped"
@@ -1950,7 +1951,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
 msgid "Yes"
-msgstr ""
+msgstr "Bəli"
 
 #: src/webui/static/app/idnode.js:470 src/webui/static/app/idnode.js:848
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
@@ -1985,7 +1986,7 @@ msgstr ""
 #: src/webui/static/app/idnode.js:363 src/webui/static/app/idnode.js:364
 #: src/webui/static/app/epg.js:476 src/webui/static/app/epg.js:478
 msgid "hrs"
-msgstr "ساعت"
+msgstr ""
 
 #: src/webui/static/app/tvheadend.js:931
 msgid "login"
@@ -2029,7 +2030,7 @@ msgstr ""
 #: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:478
 #: src/webui/static/app/epg.js:481 src/webui/static/app/dvr.js:52
 msgid "min"
-msgstr "دقیقه"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:145
 msgid "of {0}"
