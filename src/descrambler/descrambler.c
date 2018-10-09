@@ -185,20 +185,24 @@ descrambler_data_key_check(th_descrambler_runtime_t *dr, uint8_t key, int len)
 {
   th_descrambler_data_t *dd;
   int off = 0, l;
+  uint_fast8_t ki;
 
   if ((dd = TAILQ_FIRST(&dr->dr_queue)) == NULL)
-    return 0;
+    return len;
   while (len > 0) {
     while (dd && dd->dd_sbuf.sb_data == NULL)
       dd = TAILQ_NEXT(dd, dd_link);
     if (dd == NULL) break;
     l = dd->dd_sbuf.sb_ptr;
-    for (off = 0; off < l && len > 0; off += 128, l -= 128)
-      if ((dd->dd_sbuf.sb_data[off + 3] & 0xc0) != key)
-        return 0;
+    for (off = 0; off < l && len > 0; off += 128, l -= 128) {
+      ki = dd->dd_sbuf.sb_data[off + 3];
+      if (ki == 0) continue;
+      if ((ki & 0xc0) != key) return -1;
+      len -= 128;
+    }
     dd = TAILQ_NEXT(dd, dd_link);
   }
-  return 1;
+  return len;
 }
 
 static int
@@ -731,7 +735,7 @@ cont:
     tk->key_pid = pid;
     changed |= 1;
     if (tk->key_timestamp[0] == 0 ||
-        descrambler_data_key_check(dr, 0x80, dr->dr_queue_total))
+        descrambler_data_key_check(dr, 0x80, dr->dr_queue_total) >= 0)
       insert |= 1;
     tk->key_timestamp[0] = mclk();
     if (dr->dr_ecm_start[0] < dr->dr_ecm_start[1]) {
@@ -749,7 +753,7 @@ cont:
     tk->key_pid = pid;
     changed |= 2;
     if (tk->key_timestamp[1] == 0 ||
-        descrambler_data_key_check(dr, 0xc0, dr->dr_queue_total))
+        descrambler_data_key_check(dr, 0xc0, dr->dr_queue_total) >= 0)
       insert |= 2;
     tk->key_timestamp[1] = mclk();
     if (dr->dr_ecm_start[1] < dr->dr_ecm_start[0]) {
@@ -1187,7 +1191,7 @@ next:
       if (tk->key_start == 0) {
         /* do not use the first TS packet to decide - it may be wrong */
         while (dr->dr_queue_total > dr->dr_initial_paritycheck) {
-          if (descrambler_data_key_check(dr, ki & 0xc0, dr->dr_initial_paritycheck)) {
+          if (descrambler_data_key_check(dr, ki & 0xc0, dr->dr_initial_paritycheck) == 0) {
             tvhtrace(LS_DESCRAMBLER, "initial stream key[%d] set to %s for service \"%s\"",
                                     tk->key_pid, (ki & 0x40) ? "odd" : "even",
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
