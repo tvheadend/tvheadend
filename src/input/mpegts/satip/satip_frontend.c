@@ -726,7 +726,8 @@ satip_frontend_update_pids
             mpegts_pid_add(&tr->sf_pids, s->s_pmt_pid, w);
             mpegts_pid_add(&tr->sf_pids, s->s_pcr_pid, w);
             TAILQ_FOREACH(st, &s->s_components, es_link)
-              mpegts_pid_add(&tr->sf_pids, st->es_pid, w);
+              if (st->es_pid < MPEGTS_FULLMUX_PID)
+                mpegts_pid_add(&tr->sf_pids, st->es_pid, w);
           }
         }
       } else if (mp->mp_pid < MPEGTS_FULLMUX_PID) {
