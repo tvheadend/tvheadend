@@ -165,12 +165,15 @@ typedef struct caid {
  * List of EMM subscribers
  */
 #define EMM_PID_UNKNOWN ((uint16_t)-1)
+#define EMM_MAX_PIDS 128
 
 typedef struct descrambler_emm {
   TAILQ_ENTRY(descrambler_emm) link;
 
   uint16_t caid;
-  uint16_t pid;
+  uint16_t pid[EMM_MAX_PIDS];
+  uint8_t pidcount;
+
   unsigned int to_be_removed:1;
 
   descrambler_section_callback_t callback;

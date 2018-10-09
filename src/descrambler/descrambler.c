@@ -1538,6 +1538,7 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
   uint8_t dtag, dlen;
   uint16_t caid = 0, pid = 0;
   TAILQ_HEAD(,descrambler_emm) removing;
+  uint32_t i;
 
   tvhtrace(LS_DESCRAMBLER, "CAT data (len %d)", len);
   tvhlog_hexdump(LS_DESCRAMBLER, data, len);
@@ -1561,24 +1562,39 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
     TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link)
       if (emm->caid == caid) {
         emm->to_be_removed = 0;
-        if (emm->pid == EMM_PID_UNKNOWN) {
-          tvhtrace(LS_DESCRAMBLER, "attach emm caid %04X (%i) pid %04X (%i)", caid, caid, pid, pid);
-          emm->pid = pid;
+        if (emm->pidcount < EMM_MAX_PIDS) {
+          tvhtrace(LS_DESCRAMBLER, "attach emm caid %04X (%i) pid %04X (%i) dlen=%d", caid, caid, pid, pid, dlen);
           descrambler_open_pid_(mux, emm->opaque, pid, emm->callback, NULL);
+          emm->pid[emm->pidcount++] = pid;
+          // Get more pids for seca
+          if ((caid>>8) == 0x01) {
+            data += 5;
+            dlen -= 5;
+            while (dlen >= 4) {
+              if (emm->pidcount < EMM_MAX_PIDS) {
+                pid = emm->pid[emm->pidcount++] = ((data[0] << 8) | data[1]) & 0x1fff;
+                tvhtrace(LS_DESCRAMBLER, "attach emm caid %04X (%i) pid %04X (%i) dlen=%d", caid, caid, pid, pid, dlen);
+                descrambler_open_pid_(mux, emm->opaque, pid, emm->callback, NULL);
+              }
+              data += 4;
+              dlen -= 4;
+            }
+          }
         }
-      }
+       }
     pthread_mutex_unlock(&mux->mm_descrambler_lock);
 next:
     data += dlen;
     len  -= dlen;
   }
+
   TAILQ_INIT(&removing);
   pthread_mutex_lock(&mux->mm_descrambler_lock);
   TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link)
     if (emm->to_be_removed) {
-      if (emm->pid != EMM_PID_UNKNOWN) {
+      for (i=0; i<emm->pidcount; i++) {
         caid = emm->caid;
-        pid  = emm->pid;
+        pid  = emm->pid[i];
         tvhtrace(LS_DESCRAMBLER, "close emm caid %04X (%i) pid %04X (%i)", caid, caid, pid, pid);
         descrambler_close_pid_(mux, emm->opaque, pid);
       }
@@ -1587,8 +1603,9 @@ next:
     }
   pthread_mutex_unlock(&mux->mm_descrambler_lock);
   while ((emm = TAILQ_FIRST(&removing)) != NULL) {
-    if (emm->pid != EMM_PID_UNKNOWN)
-      caclient_caid_update(mux, emm->caid, emm->pid, 0);
+    for (i=0; i<emm->pidcount; i++) {
+      caclient_caid_update(mux, emm->caid, emm->pid[i], 0);
+    }
     TAILQ_REMOVE(&removing, emm, link);
     free(emm);
   }
@@ -1601,6 +1618,7 @@ descrambler_open_emm( mpegts_mux_t *mux, void *opaque, int caid,
   descrambler_emm_t *emm;
   caid_t *c;
   int pid = EMM_PID_UNKNOWN;
+  uint8_t i;
 
   if (mux == NULL)
     return 0;
@@ -1616,17 +1634,17 @@ unlock:
   }
   emm = calloc(1, sizeof(*emm));
   emm->caid     = caid;
-  emm->pid      = EMM_PID_UNKNOWN;
+  emm->pidcount = 0;
   emm->opaque   = opaque;
   emm->callback = callback;
   LIST_FOREACH(c, &mux->mm_descrambler_caids, link) {
     if (c->caid == caid) {
-      emm->pid = pid = c->pid;
-      break;
+      emm->pid[emm->pidcount++] = pid = c->pid;
     }
   }
   TAILQ_INSERT_TAIL(&mux->mm_descrambler_emms, emm, link);
-  if (pid != EMM_PID_UNKNOWN) {
+  for (i=0; i<emm->pidcount; i++) {
+    pid = emm->pid[emm->pidcount];
     tvhtrace(LS_DESCRAMBLER,
              "attach emm caid %04X (%i) pid %04X (%i) - direct",
              caid, caid, pid, pid);
@@ -1641,6 +1659,7 @@ descrambler_close_emm( mpegts_mux_t *mux, void *opaque, int caid )
 {
   descrambler_emm_t *emm;
   int pid;
+  uint8_t i;
 
   if (mux == NULL)
     return 0;
@@ -1653,8 +1672,8 @@ descrambler_close_emm( mpegts_mux_t *mux, void *opaque, int caid )
     return 0;
   }
   TAILQ_REMOVE(&mux->mm_descrambler_emms, emm, link);
-  pid  = emm->pid;
-  if (pid != EMM_PID_UNKNOWN) {
+  for (i=0; i<emm->pidcount; i++) {
+    pid  = emm->pid[i];
     caid = emm->caid;
     tvhtrace(LS_DESCRAMBLER, "close emm caid %04X (%i) pid %04X (%i) - direct", caid, caid, pid, pid);
     descrambler_close_pid_(mux, opaque, pid);
