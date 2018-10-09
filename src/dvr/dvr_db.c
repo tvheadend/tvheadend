@@ -2032,6 +2032,7 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
             gmtime2local(replace->de_bcast->start, t1buf, sizeof t1buf),
             e->channel ? channel_get_name(e->channel, channel_blank_name) : channel_blank_name,
             gmtime2local(e->start, t2buf, sizeof t2buf));
+    dvr_entry_delete(replace);
     dvr_entry_destroy(replace, 1);
   }
 
