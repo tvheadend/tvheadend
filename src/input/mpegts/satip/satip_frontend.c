@@ -103,7 +103,7 @@ udp_rtp_packet_append( satip_frontend_t *lfe, uint8_t *p, int len, uint16_t seq 
 static int
 satip_frontend_rtsp_flags( satip_frontend_t *lfe )
 {
-  int rtsp_flags = lfe->sf_device->sd_tcp_mode ? RTP_INTERLEAVED : 0;
+  int rtsp_flags = lfe->sf_device->sd_tcp_mode ? SATIP_SETUP_TCP : 0;
   if (lfe->sf_transport_mode != RTP_SERVER_DEFAULT)
     rtsp_flags = lfe->sf_transport_mode == RTP_INTERLEAVED ? SATIP_SETUP_TCP : 0;
   return rtsp_flags;
@@ -902,7 +902,8 @@ satip_frontend_update_pids
             mpegts_pid_add(&tr->sf_pids, s->s_components.set_pmt_pid, w);
             mpegts_pid_add(&tr->sf_pids, s->s_components.set_pcr_pid, w);
             TAILQ_FOREACH(st, &s->s_components.set_all, es_link)
-              mpegts_pid_add(&tr->sf_pids, st->es_pid, w);
+              if (st->es_pid < MPEGTS_FULLMUX_PID)
+                mpegts_pid_add(&tr->sf_pids, st->es_pid, w);
           }
         }
       } else if (mp->mp_pid < MPEGTS_FULLMUX_PID) {
@@ -2202,8 +2203,6 @@ satip_frontend_hacks( satip_frontend_t *lfe )
 
   lfe->sf_tdelay = 50; /* should not hurt anything */
   lfe->sf_pass_weight = 1;
-  if (lfe->sf_type == DVB_TYPE_C)
-    lfe->sf_specinv = 1;
   if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
     if (lfe->sf_type == DVB_TYPE_S)
       lfe->sf_play2 = 1;
@@ -2213,6 +2212,7 @@ satip_frontend_hacks( satip_frontend_t *lfe )
               strstr(sd->sd_info.modelname, "FRITZ!")) {
     lfe->sf_play2 = 1;
   } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
+    lfe->sf_specinv = 1;
     lfe->sf_pass_weight = 0;
   }
 }

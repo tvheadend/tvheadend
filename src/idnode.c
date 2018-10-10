@@ -335,12 +335,12 @@ idnode_get_display
     } else if (p->list) {
       htsmsg_t *l = p->list(self, lang), *m;
       htsmsg_field_t *f;
-      uint32_t k, v;
+      int32_t k, v;
       const char *s;
-      if (l && !idnode_get_u32(self, p->id, &v))
+      if (l && !idnode_get_u32(self, p->id, (uint32_t *)&v))
         HTSMSG_FOREACH(f, l) {
           m = htsmsg_field_get_map(f);
-          if (!htsmsg_get_u32(m, "key", &k) &&
+          if (!htsmsg_get_s32(m, "key", &k) &&
               (s = htsmsg_get_str(m, "val")) != NULL &&
               v == k) {
             r = strdup(s);

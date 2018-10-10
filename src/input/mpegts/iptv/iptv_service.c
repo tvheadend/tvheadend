@@ -19,6 +19,7 @@
 
 #include "iptv_private.h"
 #include "settings.h"
+#include "config.h"
 
 extern const idclass_t mpegts_service_class;
 
@@ -70,15 +71,26 @@ iptv_service_channel_icon ( service_t *s )
   iptv_mux_t       *im = (iptv_mux_t *)is->s_dvb_mux;
   iptv_network_t   *in = (iptv_network_t *)im->mm_network;
   const char       *ic = im->mm_iptv_icon;
+  const char       *dir = NULL;
   if (ic && ic[0]) {
     if (strncmp(ic, "http://", 7) == 0 ||
-        strncmp(ic, "https://", 8) == 0)
+        strncmp(ic, "https://", 8) == 0 ||
+        strncmp(ic, "file:///", 8) == 0)
       return ic;
-    if (strncmp(ic, "file:///", 8) == 0)
-      return ic + 7;
-    if (strncmp(ic, "file://", 7) == 0)
+    if (strncmp(ic, "file://", 7) == 0) {
+      const char *chicon = config.chicon_path;
       ic += 7;
-    if (in && in->in_icon_url && in->in_icon_url[0]) {
+      if (chicon && chicon[0] >= ' ' && chicon[0] <= 122) {
+        dir = chicon;
+      } else {
+        dir = "file:///";
+      }
+    } else {
+      if (in && in->in_icon_url && in->in_icon_url[0])
+        dir = in->in_icon_url;
+    }
+    if (dir && ic) {
+      while (ic[0] == '/') ic++;
       snprintf(prop_sbuf, PROP_SBUF_LEN, "%s/%s", in->in_icon_url, ic);
       return prop_sbuf;
     }

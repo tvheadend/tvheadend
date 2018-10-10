@@ -22,6 +22,7 @@ def env(key):
 
 PCLOUD_USER=env('PCLOUD_USER')
 PCLOUD_PASS=env('PCLOUD_PASS')
+PCLOUD_CA_CERTS=env('PCLOUD_CA_CERTS') or os.path.dirname(os.path.realpath(__file__)) + '/pcloud-ca-bundle.crt'
 
 DEBUG=False
 
@@ -117,7 +118,7 @@ class PyCloud(object):
         params.update(kw)
         #log.debug('Doing request to %s%s', self.endpoint, method)
         #log.debug('Params: %s', params)
-        resp = self.session.get(self.endpoint + method, params=params, timeout=30)
+        resp = self.session.get(self.endpoint + method, params=params, timeout=30, verify=PCLOUD_CA_CERTS)
         if json:
             return resp.json()
         else:
@@ -172,10 +173,7 @@ class PyCloud(object):
 
     def _upload(self, method, files, **kwargs):
         kwargs['auth'] = self.auth_token
-        resp = self.session.post(
-            self.endpoint + method,
-            files=files,
-            data=kwargs)
+        resp = self.session.post(self.endpoint + method, files=files, data=kwargs, verify=PCLOUD_CA_CERTS)
         return resp.json()
 
     @RequiredParameterCheck(('files', 'data'))
@@ -356,14 +354,14 @@ def do_publink_download(*args):
     if len(args) < 3: error(1, 'download [root-hash] [full path] [output path]')
     session = requests.Session()
     path = pcloud_normpath(args[1])
-    resp = session.get('https://my.pcloud.com/publink/show?code=%s' % args[0], timeout=30)
+    resp = session.get('https://my.pcloud.com/publink/show?code=%s' % args[0], timeout=30, verify=PCLOUD_CA_CERTS)
     if resp.status_code != 200:
         error(10, 'Unable to retreive publink %s', args[0])
     pdata = pcloud_extract_publink_data(resp.content)
     meta = pdata['metadata']
     if not meta:
         error(10, 'No metadata, object probably does not exist!')
-    s = split_path(path[1:])[:-1]
+    s = split_path(path[1:])
     s.reverse()
     name = s.pop()
     if meta['name'] != name:
@@ -386,14 +384,14 @@ def do_publink_download(*args):
             error(10, 'Folder name "%s" not found', name)
     if not fctx:
         error(10, 'Filename "%s" not found', path)
-    resp = session.get('https://api.pcloud.com/getpublinkdownload?fileid=%s&hashCache=%s&code=%s' % (fctx['fileid'], fctx['hash'], args[0]), timeout=30)
+    resp = session.get('https://api.pcloud.com/getpublinkdownload?fileid=%s&hashCache=%s&code=%s' % (fctx['fileid'], fctx['hash'], args[0]), timeout=30, verify=PCLOUD_CA_CERTS)
     if resp.status_code != 200:
         error(10, 'Unable to get file json for "%s"!' % path)
     j = resp.json()
     if len(j['hosts']) <= 0:
         error(10, 'No hosts?')
     for idx in range(len(j['hosts'])):
-        resp = session.get('https://%s%s' % (j['hosts'][idx], j['path']), timeout=30)
+        resp = session.get('https://%s%s' % (j['hosts'][idx], j['path']), timeout=30, verify=PCLOUD_CA_CERTS)
         if resp.status_code == 200:
             break
     if resp.status_code != 200:
