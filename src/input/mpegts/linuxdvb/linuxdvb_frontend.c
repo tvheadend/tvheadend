@@ -1875,6 +1875,9 @@ linuxdvb_frontend_tune0
           DVB_NO_STREAM_ID_FILTER;
 #if DVB_VER_ATLEAST(5,9)
       S2CMD(DTV_STREAM_ID,       r);
+#if DVB_VER_ATLEAST(5,11)
+      S2CMD(DTV_SCRAMBLING_SEQUENCE_INDEX, dmc->dmc_fe_pls_code & 0x3FFFF);
+#endif
 #elif DVB_VER_ATLEAST(5,3)
       S2CMD(DTV_DVBT2_PLP_ID,    r);
 #endif
@@ -1913,6 +1916,9 @@ linuxdvb_frontend_tune0
         DVB_NO_STREAM_ID_FILTER;
 #if DVB_VER_ATLEAST(5,9)
     S2CMD(DTV_STREAM_ID,       r);
+#if DVB_VER_ATLEAST(5,11)
+      S2CMD(DTV_SCRAMBLING_SEQUENCE_INDEX, dmc->dmc_fe_pls_code & 0x3FFFF);
+#endif
 #elif DVB_VER_ATLEAST(5,3)
     S2CMD(DTV_DVBT2_PLP_ID,    r);
 #endif
