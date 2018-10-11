@@ -1044,12 +1044,14 @@ dvb_mux_conf_str_dvbc ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
     delsys = dvb_delsys2str(dmc->dmc_fe_delsys);
   return
   snprintf(buf, bufsize,
-           "%s freq %d sym %d mod %s fec %s",
+           "%s freq %d sym %d mod %s fec %s ds %d plp %d",
            delsys,
            dmc->dmc_fe_freq,
            dmc->u.dmc_fe_qam.symbol_rate,
            dvb_qam2str(dmc->dmc_fe_modulation),
-           dvb_fec2str(dmc->u.dmc_fe_qam.fec_inner));
+           dvb_fec2str(dmc->u.dmc_fe_qam.fec_inner),
+           dmc->dmc_fe_data_slice,
+           dmc->dmc_fe_stream_id);
 }
 
 static int

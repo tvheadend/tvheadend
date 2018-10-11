@@ -194,7 +194,10 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
         dmc->dmc_fe_modulation != DVB_MOD_NONE &&
         dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
       ADD(dmc_fe_modulation,          mtype, "64qam");
-    /* missing plp */
+    if (dmc->dmc_fe_stream_id != DVB_NO_STREAM_ID_FILTER) {
+      satip_rtsp_add_val("ds", buf, dmc->dmc_fe_data_slice & 0xff);
+      satip_rtsp_add_val("plp", buf, dmc->dmc_fe_stream_id & 0xff);
+    }
     if (dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_NONE &&
         dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_AUTO)
       /* note: OctopusNet device does not handle 'fec=auto' */
