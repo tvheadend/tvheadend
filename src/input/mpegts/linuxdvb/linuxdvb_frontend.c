@@ -1819,6 +1819,11 @@ linuxdvb_frontend_tune0
     S2CMD(DTV_SYMBOL_RATE,       p.u.qam.symbol_rate);
     S2CMD(DTV_MODULATION,        p.u.qam.modulation);
     S2CMD(DTV_INNER_FEC,         p.u.qam.fec_inner);
+    r = dmc->dmc_fe_stream_id != DVB_NO_STREAM_ID_FILTER ? (dmc->dmc_fe_stream_id & 0xFF) |
+          ((dmc->dmc_fe_data_slice & 0xFF)<<8) : DVB_NO_STREAM_ID_FILTER;
+#if DVB_VER_ATLEAST(5,9)
+    S2CMD(DTV_STREAM_ID,         r);
+#endif
 
   /* DVB-S */
   } else if (lfe->lfe_type == DVB_TYPE_S) {

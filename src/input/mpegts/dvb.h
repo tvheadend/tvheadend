@@ -611,6 +611,7 @@ typedef struct dvb_mux_conf
   int32_t                     dmc_fe_stream_id;
   dvb_fe_pls_mode_t           dmc_fe_pls_mode;
   uint32_t                    dmc_fe_pls_code;
+  uint32_t                    dmc_fe_data_slice;
   union {
     dvb_qpsk_config_t         dmc_fe_qpsk;
     dvb_qam_config_t          dmc_fe_qam;

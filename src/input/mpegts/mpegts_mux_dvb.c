@@ -332,6 +332,24 @@ const idclass_t dvb_mux_dvbc_class =
       MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO")),
       .desc     = N_("The forward error correction used on the mux."),
     },
+    {
+      .type     = PT_INT,
+      .id       = "plp_id",
+      .name     = N_("PLP ID"),
+      .desc     = N_("The physical layer pipe ID. "
+                     "Most people will not need to change this setting."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
+      .def.i	= DVB_NO_STREAM_ID_FILTER,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "data_slice",
+      .name     = N_("Data slice"),
+      .desc     = N_("Data slice code."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_data_slice),
+      .def.u32	= 0,
+      .opts     = PO_EXPERT
+    },
     {}
   }
 };
@@ -801,6 +819,24 @@ const idclass_t dvb_mux_isdb_c_class =
     {
       MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO")),
       .desc     = N_("The forward error correction used on the mux."),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "plp_id",
+      .name     = N_("PLP ID"),
+      .desc     = N_("The physical layer pipe ID. "
+                     "Most people will not need to change this setting."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
+      .def.i	= DVB_NO_STREAM_ID_FILTER,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "data_slice",
+      .name     = N_("Data slice"),
+      .desc     = N_("Data slice code."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_data_slice),
+      .def.u32	= 0,
+      .opts     = PO_EXPERT
     },
     {}
   }
