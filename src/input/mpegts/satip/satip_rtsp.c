@@ -67,6 +67,12 @@ satip_rtsp_add_val(const char *name, char *buf, uint32_t val)
   }
 }
 
+static void
+satip_rtsp_add_ival(const char *name, char *buf, uint32_t val)
+{
+  sprintf(buf + strlen(buf), "&%s=%i", name, val);
+}
+
 int
 satip_rtsp_setup( http_client_t *hc, int src, int fe,
                   int udp_port, const dvb_mux_conf_t *dmc, int flags,
@@ -170,33 +176,37 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
         dmc->dmc_fe_modulation != DVB_MOD_AUTO &&
         dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
       ADD(dmc_fe_modulation, mtype, "qpsk");
-    ADD(u.dmc_fe_qpsk.polarisation, pol,   "h"   );
+    ADD(u.dmc_fe_qpsk.polarisation, pol, "h");
     if (dmc->u.dmc_fe_qpsk.fec_inner != DVB_FEC_NONE &&
         dmc->u.dmc_fe_qpsk.fec_inner != DVB_FEC_AUTO)
-      ADD(u.dmc_fe_qpsk.fec_inner, fec,   "auto");
+      ADD(u.dmc_fe_qpsk.fec_inner, fec, "auto");
     if (dmc->dmc_fe_rolloff != DVB_ROLLOFF_NONE &&
         dmc->dmc_fe_rolloff != DVB_ROLLOFF_AUTO)
-      ADD(dmc_fe_rolloff, ro,    "0.35");
+      ADD(dmc_fe_rolloff, ro, "0.35");
     if (dmc->dmc_fe_pilot != DVB_PILOT_NONE &&
         dmc->dmc_fe_pilot != DVB_PILOT_AUTO) {
-      ADD(dmc_fe_pilot,plts,  "auto");
+      ADD(dmc_fe_pilot, plts, "auto");
     } else if ((flags & SATIP_SETUP_PILOT_ON) != 0 &&
                dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {
       strcat(buf, "&plts=on");
+    }
+    if (dmc->dmc_fe_stream_id != DVB_NO_STREAM_ID_FILTER) {
+      satip_rtsp_add_ival("isi", buf, dmc->dmc_fe_stream_id);
+      satip_rtsp_add_ival("plsc", buf, dmc->dmc_fe_pls_code);
     }
   } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_A ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_C) {
     satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
     satip_rtsp_add_val("sr", buf, dmc->u.dmc_fe_qam.symbol_rate);
-    ADD(dmc_fe_delsys, msys,  "dvbc");
+    ADD(dmc_fe_delsys, msys, "dvbc");
     if (dmc->dmc_fe_modulation != DVB_MOD_AUTO &&
         dmc->dmc_fe_modulation != DVB_MOD_NONE &&
         dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
-      ADD(dmc_fe_modulation,          mtype, "64qam");
+      ADD(dmc_fe_modulation, mtype, "64qam");
     if (dmc->dmc_fe_stream_id != DVB_NO_STREAM_ID_FILTER) {
-      satip_rtsp_add_val("ds", buf, dmc->dmc_fe_data_slice & 0xff);
-      satip_rtsp_add_val("plp", buf, dmc->dmc_fe_stream_id & 0xff);
+      satip_rtsp_add_ival("ds", buf, dmc->dmc_fe_data_slice & 0xff);
+      satip_rtsp_add_ival("plp", buf, dmc->dmc_fe_stream_id & 0xff);
     }
     if (dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_NONE &&
         dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_AUTO)
@@ -228,7 +238,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       ADD(u.dmc_fe_ofdm.guard_interval, gi, "18");
     if (dmc->dmc_fe_delsys == DVB_SYS_DVBT2)
       if (dmc->dmc_fe_stream_id != DVB_NO_STREAM_ID_FILTER)
-        satip_rtsp_add_val("plp", buf, (dmc->dmc_fe_stream_id & 0xff) * 1000);
+        satip_rtsp_add_ival("plp", buf, dmc->dmc_fe_stream_id & 0xff);
   } else if (dmc->dmc_fe_delsys == DVB_SYS_ATSC) {
     satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
     ADD(dmc_fe_delsys, msys, "atsc");
