@@ -133,6 +133,12 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     { .t = DVB_FEC_9_10,                      "910"   },
     { .t = TABLE_EOD }
   };
+  static tvh2satip_t plsm[] = {
+    { .t = DVB_PLS_ROOT,                      "root"  },
+    { .t = DVB_PLS_GOLD,                      "gold"  },
+    { .t = DVB_PLS_COMBO,                     "combo" },
+    { .t = TABLE_EOD }
+  };
   static tvh2satip_t tmode[] = {
     { .t = DVB_TRANSMISSION_MODE_AUTO,        "auto"  },
     { .t = DVB_TRANSMISSION_MODE_1K,          "1k"    },
@@ -192,6 +198,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     }
     if (dmc->dmc_fe_stream_id != DVB_NO_STREAM_ID_FILTER) {
       satip_rtsp_add_ival("isi", buf, dmc->dmc_fe_stream_id);
+      ADD(dmc_fe_pls_mode, plsm, "root");
       satip_rtsp_add_ival("plsc", buf, dmc->dmc_fe_pls_code);
     }
   } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_A ||
