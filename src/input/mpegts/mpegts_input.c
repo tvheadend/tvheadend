@@ -628,6 +628,10 @@ mpegts_input_close_pid
     }
   }
   if (!RB_FIRST(&mp->mp_subs)) {
+    if (mm->mm_last_pid == mp->mp_pid) {
+      mm->mm_last_pid = -1;
+      mm->mm_last_mp = NULL;
+    }
     RB_REMOVE(&mm->mm_pids, mp, mp_link);
     free(mp);
     return 1;
