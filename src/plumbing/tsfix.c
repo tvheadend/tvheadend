@@ -231,7 +231,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   pkt->pkt_dts &= PTS_MASK;
 
   /* Subtract the transport wide start offset */
-  dts = pkt->pkt_dts - ref;
+  dts = pts_diff(ref, pkt->pkt_dts);
 
   if (tfs->tfs_last_dts_norm == PTS_UNSET) {
     if (dts < 0 || pkt->pkt_err) {
