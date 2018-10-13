@@ -225,8 +225,8 @@ cwc_send_msg(void *cc, const uint8_t *msg, size_t len,
   if (len < 3)
     return -1;
 
-  /* note: the last 10 bytes is pad/checksum for des_encrypt() */
-  cm = malloc(sizeof(cc_message_t) + 12 + len + 10);
+  /* note: the last 16 bytes is pad/checksum for des_encrypt() */
+  cm = malloc(sizeof(cc_message_t) + 12 + len + 16);
 
   if (cm == NULL)
     return -1;
