@@ -4798,7 +4798,7 @@ dvr_entry_file_moved(const char *src, const char *dst)
     HTSMSG_FOREACH(f, de->de_files)
       if ((m = htsmsg_field_get_map(f)) != NULL) {
         filename = htsmsg_get_str(m, "filename");
-        if (strcmp(filename, src) == 0) {
+        if (filename && strcmp(filename, src) == 0) {
           htsmsg_set_str(m, "filename", dst);
           dvr_vfs_refresh_entry(de);
           r = 0;
