@@ -1170,6 +1170,23 @@ dvb_sat_position_from_str( const char *buf )
   return (maj * 10 + min) * (c == 'W' ? -1 : 1);
 }
 
+uint32_t
+dvb_sat_pls( dvb_mux_conf_t *dmc )
+{
+  if (dmc->dmc_fe_pls_mode == DVB_PLS_ROOT) {
+    uint32_t x, g;
+    const uint32_t root = dmc->dmc_fe_pls_code & 0x3ffff;
+
+    for (g = 0, x = 1; g < 0x3ffff; g++)  {
+      if (root == x)
+        return g;
+      x = (((x ^ (x >> 7)) & 1) << 17) | (x >> 1);
+    }
+    return 0x3ffff;
+  }
+  return dmc->dmc_fe_pls_code & 0x3ffff;
+}
+
 #endif /* ENABLE_MPEGTS_DVB */
 
 /**
