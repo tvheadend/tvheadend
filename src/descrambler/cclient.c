@@ -80,8 +80,16 @@ cc_service_ecm_pid_free(cc_service_t *ct)
 static void
 cc_free_card(cc_card_data_t *cd)
 {
+  emm_provider_t *emmp;
+  int i;
+
   LIST_REMOVE(cd, cs_card);
-  descrambler_close_emm(cd->cs_mux, cd, cd->cs_ra.caid);
+
+  descrambler_close_emm(cd->cs_mux, cd, cd->cs_ra.caid, 0);
+  emmp = cd->cs_ra.providers;
+  for (i = 0; i < cd->cs_ra.providers_count; i++, emmp++)
+    descrambler_close_emm(cd->cs_mux, cd, cd->cs_ra.caid, emmp->id);
+
   emm_reass_done(&cd->cs_ra);
   free(cd);
 }
@@ -1185,26 +1193,33 @@ cc_free(caclient_t *cac)
  *
  */
 void
-cc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint16_t pid, int valid)
+cc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint32_t prov, uint16_t pid, int valid)
 {
   cclient_t *cc = (cclient_t *)cac;;
   cc_card_data_t *pcard;
+  emm_provider_t *emmp;
+  int i;
 
   tvhtrace(cc->cc_subsys,
-           "%s: caid update event - client %s mux %p caid %04x (%i) pid %04x (%i) valid %i",
-           cc->cc_name, cac->cac_name, mux, caid, caid, pid, pid, valid);
+           "%s: caid update event - client %s mux %p caid %04x (%i) prov %06x (%i) pid %04x (%i) valid %i",
+           cc->cc_name, cac->cac_name, mux, caid, caid, prov, prov, pid, pid, valid);
   pthread_mutex_lock(&cc->cc_mutex);
   if (valid < 0 || cc->cc_running) {
     LIST_FOREACH(pcard, &cc->cc_cards, cs_card) {
       if (valid < 0 || pcard->cs_ra.caid == caid) {
         if (pcard->cs_mux && pcard->cs_mux != mux) continue;
-        if (valid > 0) {
-          pcard->cs_client = cc;
-          pcard->cs_mux    = mux;
-          descrambler_open_emm(mux, pcard, caid, cc_emm);
-        } else {
-          pcard->cs_mux    = NULL;
-          descrambler_close_emm(mux, pcard, caid);
+        emmp = pcard->cs_ra.providers;
+        for (i = 0; i < pcard->cs_ra.providers_count; i++, emmp++) {
+          if (prov == emmp->id) {
+		    if (valid > 0) {
+			  pcard->cs_client = cc;
+			  pcard->cs_mux    = mux;
+			  descrambler_open_emm(mux, pcard, caid, prov, cc_emm);
+		    } else {
+			  pcard->cs_mux    = NULL;
+			  descrambler_close_emm(mux, pcard, caid, prov);
+		    }
+          }
         }
       }
     }

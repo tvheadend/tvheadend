@@ -365,7 +365,7 @@ caclient_cat_update
 
 void
 caclient_caid_update
-  ( struct mpegts_mux *mux, uint16_t caid, uint16_t pid, int valid )
+  ( struct mpegts_mux *mux, uint16_t caid, uint32_t provid, uint16_t pid, int valid )
 {
   caclient_t *cac;
 
@@ -374,7 +374,7 @@ caclient_caid_update
   pthread_mutex_lock(&caclients_mutex);
   TAILQ_FOREACH(cac, &caclients, cac_link)
     if (cac->cac_caid_update && cac->cac_enabled)
-      cac->cac_caid_update(cac, mux, caid, pid, valid);
+      cac->cac_caid_update(cac, mux, caid, provid, pid, valid);
   pthread_mutex_unlock(&caclients_mutex);
 }
 
