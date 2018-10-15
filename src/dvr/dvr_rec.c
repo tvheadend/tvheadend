@@ -1586,6 +1586,17 @@ dvr_thread(void *aux)
   real_start = dvr_entry_get_start_time(de, 0);
   tvhtrace(LS_DVR, "%s - recoding thread started for \"%s\"",
            idnode_uuid_as_str(&de->de_id, ubuf), lang_str_get(de->de_title, NULL));
+  if (!running_disabled && de->de_bcast) {
+    real_start = gclk();
+    switch (de->de_bcast->running) {
+    case EPG_RUNNING_PAUSE:
+      atomic_set_time_t(&de->de_running_pause, real_start);
+      /* fall through */
+    case EPG_RUNNING_NOW:
+      atomic_set_time_t(&de->de_running_start, real_start);
+      break;
+    }
+  }
   dvr_thread_global_unlock(de);
 
   TAILQ_INIT(&backlog);
