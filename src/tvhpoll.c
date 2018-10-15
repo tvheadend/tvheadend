@@ -198,11 +198,11 @@ static int tvhpoll_add0
     const uint32_t oevents = tvhpoll_get_events(tp, fd);
     if (events == oevents) continue;
     tvhpoll_set_events(tp, fd, events);
-    if ((events & (TVHPOLL_OUT|TVHPOLL_IN)) == (TVHPOLL_OUT|TVHPOLL_IN)) {
-      EV_SET(ev+j, fd, EVFILT_READ|EVFILT_WRITE, EV_ADD, 0, 0, ptr);
-      j++;
-      continue;
-    }
+    /* Unlike poll, the kevent is not a bitmask (on FreeBSD,
+     * EVILT_READ=-1, EVFILT_WRITE=-2). That means if you OR them
+     * together then you only actually register READ, not WRITE. So,
+     * register them separately here.
+     */
     if (events & TVHPOLL_OUT) {
       EV_SET(ev+j, fd, EVFILT_WRITE, EV_ADD, 0, 0, ptr);
       j++;
