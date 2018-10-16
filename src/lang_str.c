@@ -288,7 +288,7 @@ lang_str_t *lang_str_deserialize_map ( htsmsg_t *map )
   if (ret) {
     HTSMSG_FOREACH(f, map) {
       if ((str = htsmsg_field_get_string(f))) {
-        lang_str_add(ret, str, f->hmf_name);
+        lang_str_add(ret, str, htsmsg_field_name(f));
       }
     }
   }

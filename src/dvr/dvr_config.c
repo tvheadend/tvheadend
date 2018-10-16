@@ -1447,7 +1447,7 @@ dvr_config_init(void)
   if ((l = hts_settings_load("dvr/config")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if ((m = htsmsg_get_map_by_field(f)) == NULL) continue;
-      (void)dvr_config_create(NULL, f->hmf_name, m);
+      (void)dvr_config_create(NULL, htsmsg_field_name(f), m);
     }
     htsmsg_destroy(l);
   }

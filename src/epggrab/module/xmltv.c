@@ -236,7 +236,7 @@ static void get_episode_info
 
   HTSMSG_FOREACH(f, tags) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
-       strcmp(f->hmf_name, "episode-num") ||
+       strcmp(htsmsg_field_name(f), "episode-num") ||
        (a = htsmsg_get_map(c, "attrib")) == NULL ||
        (cdata = htsmsg_get_str(c, "cdata")) == NULL ||
        (sys = htsmsg_get_str(a, "system")) == NULL)
@@ -327,7 +327,7 @@ xmltv_parse_accessibility
   const char *str;
 
   HTSMSG_FOREACH(f, m) {
-    if(!strcmp(f->hmf_name, "subtitles")) {
+    if(!strcmp(htsmsg_field_name(f), "subtitles")) {
       if ((tag = htsmsg_get_map_by_field(f))) {
         str = htsmsg_xml_get_attr_str(tag, "type");
         if (str && !strcmp(str, "teletext"))
@@ -335,7 +335,7 @@ xmltv_parse_accessibility
         else if (str && !strcmp(str, "deaf-signed"))
           save |= epg_broadcast_set_is_deafsigned(ebc, 1, changes);
       }
-    } else if (!strcmp(f->hmf_name, "audio-described")) {
+    } else if (!strcmp(htsmsg_field_name(f), "audio-described")) {
       save |= epg_broadcast_set_is_audio_desc(ebc, 1, changes);
     }
   }
@@ -453,7 +453,7 @@ static int _xmltv_parse_age_rating
 
   htsmsg_field_t *f;
   HTSMSG_FOREACH(f, body) {
-    if (!strcmp(f->hmf_name, "rating") && (rating = htsmsg_get_map_by_field(f))) {
+    if (!strcmp(htsmsg_field_name(f), "rating") && (rating = htsmsg_get_map_by_field(f))) {
       if ((tags  = htsmsg_get_map(rating, "tags"))) {
         if ((s1 = htsmsg_xml_get_cdata_str(tags, "value"))) {
           /* We map some common ratings since some movies only
@@ -492,7 +492,7 @@ static epg_genre_list_t
   htsmsg_field_t *f;
   epg_genre_list_t *egl = NULL;
   HTSMSG_FOREACH(f, tags) {
-    if (!strcmp(f->hmf_name, "category") && (e = htsmsg_get_map_by_field(f))) {
+    if (!strcmp(htsmsg_field_name(f), "category") && (e = htsmsg_get_map_by_field(f))) {
       if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
       epg_genre_list_add_by_str(egl, htsmsg_get_str(e, "cdata"), NULL);
     }
@@ -511,7 +511,7 @@ _xmltv_parse_lang_str ( lang_str_t **ls, htsmsg_t *tags, const char *tname )
   const char *lang;
 
   HTSMSG_FOREACH(f, tags) {
-    if (!strcmp(f->hmf_name, tname) && (e = htsmsg_get_map_by_field(f))) {
+    if (!strcmp(htsmsg_field_name(f), tname) && (e = htsmsg_get_map_by_field(f))) {
       if (!*ls) *ls = lang_str_create();
       lang = NULL;
       if ((attrib = htsmsg_get_map(e, "attrib")))
@@ -532,7 +532,7 @@ static string_list_t *
   string_list_t *tag_list = NULL;
 
   HTSMSG_FOREACH(f, tags) {
-    if (!strcmp(f->hmf_name, tagname) && (e = htsmsg_get_map_by_field(f))) {
+    if (!strcmp(htsmsg_field_name(f), tagname) && (e = htsmsg_get_map_by_field(f))) {
       const char *str = htsmsg_get_str(e, "cdata");
       if (str && *str) {
         if (!tag_list) tag_list = string_list_create();
@@ -574,11 +574,11 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
   htsmsg_field_t *f;
 
   HTSMSG_FOREACH(f, credits_tags) {
-    if ((!strcmp(f->hmf_name, "actor") ||
-         !strcmp(f->hmf_name, "director") ||
-         !strcmp(f->hmf_name, "guest") ||
-         !strcmp(f->hmf_name, "presenter") ||
-         !strcmp(f->hmf_name, "writer")
+    if ((!strcmp(htsmsg_field_name(f), "actor") ||
+         !strcmp(htsmsg_field_name(f), "director") ||
+         !strcmp(htsmsg_field_name(f), "guest") ||
+         !strcmp(htsmsg_field_name(f), "presenter") ||
+         !strcmp(htsmsg_field_name(f), "writer")
          ) &&
         (e = htsmsg_get_map_by_field(f)))  {
       const char* str = htsmsg_get_str(e, "cdata");
@@ -587,7 +587,7 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
         string_list_insert(credits_names, str);
 
         if (!*out_credits) *out_credits = htsmsg_create_map();
-        htsmsg_add_str(*out_credits, str, f->hmf_name);
+        htsmsg_add_str(*out_credits, str, htsmsg_field_name(f));
       }
     }
   }
@@ -889,7 +889,7 @@ static int _xmltv_parse_channel
 
   HTSMSG_FOREACH(f, tags) {
     if (!(subtag = htsmsg_field_get_map(f))) continue;
-    if (strcmp(f->hmf_name, "display-name") == 0) {
+    if (strcmp(htsmsg_field_name(f), "display-name") == 0) {
       name = htsmsg_get_str(subtag, "cdata");
       const char *cur = name;
 
@@ -932,7 +932,7 @@ static int _xmltv_parse_channel
       if (cur && *cur)
         htsmsg_add_str_exclusive(dnames, cur);
     }
-    else if (strcmp(f->hmf_name, "icon") == 0) {
+    else if (strcmp(htsmsg_field_name(f), "icon") == 0) {
       if ((attribs = htsmsg_get_map(subtag,  "attrib")) != NULL &&
           (icon    = htsmsg_get_str(attribs, "src"))    != NULL) {
         save |= epggrab_channel_set_icon(ch, icon);
@@ -972,11 +972,11 @@ static int _xmltv_parse_tv
 
   HTSMSG_FOREACH(f, tags) {
     save = 0;
-    if(!strcmp(f->hmf_name, "channel")) {
+    if(!strcmp(htsmsg_field_name(f), "channel")) {
       pthread_mutex_lock(&global_lock);
       save = _xmltv_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
       pthread_mutex_unlock(&global_lock);
-    } else if(!strcmp(f->hmf_name, "programme")) {
+    } else if(!strcmp(htsmsg_field_name(f), "programme")) {
       pthread_mutex_lock(&global_lock);
       save = _xmltv_parse_programme(mod, htsmsg_get_map_by_field(f), stats);
       if (save) epg_updated();

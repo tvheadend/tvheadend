@@ -160,7 +160,7 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
     htsmsg_field_t *f;
     HTSMSG_FOREACH(f, ebc->credits) {
       htsbuf_qprintf(hq, "    <%s>", f->u.str);
-      htsbuf_append_and_escape_xml(hq, f->hmf_name);
+      htsbuf_append_and_escape_xml(hq, htsmsg_field_name(f));
       htsbuf_qprintf(hq, "</%s>\n", f->u.str);
     }
     htsbuf_append_str(hq, "  </credits>\n");

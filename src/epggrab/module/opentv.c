@@ -807,12 +807,12 @@ static void _opentv_genre_load ( htsmsg_t *m )
   htsmsg_t *e;
   htsmsg_field_t *f;
   HTSMSG_FOREACH(f, m) {
-    if ((e = htsmsg_get_list(m, f->hmf_name))) {
-      if ((r = _opentv_genre_load_one(f->hmf_name, e))) {
+    if ((e = htsmsg_get_list(m, htsmsg_field_name(f)))) {
+      if ((r = _opentv_genre_load_one(htsmsg_field_name(f), e))) {
         if (r > 0) 
-          tvhdebug(LS_OPENTV, "genre map %s loaded", f->hmf_name);
+          tvhdebug(LS_OPENTV, "genre map %s loaded", htsmsg_field_name(f));
         else
-          tvhwarn(LS_OPENTV, "genre map %s failed", f->hmf_name);
+          tvhwarn(LS_OPENTV, "genre map %s failed", htsmsg_field_name(f));
       }
     }
   }
@@ -846,12 +846,12 @@ static void _opentv_dict_load ( htsmsg_t *m )
   htsmsg_t *e;
   htsmsg_field_t *f;
   HTSMSG_FOREACH(f, m) {
-    if ((e = htsmsg_get_list(m, f->hmf_name))) {
-      if ((r = _opentv_dict_load_one(f->hmf_name, e))) {
+    if ((e = htsmsg_get_list(m, htsmsg_field_name(f)))) {
+      if ((r = _opentv_dict_load_one(htsmsg_field_name(f), e))) {
         if (r > 0) 
-          tvhdebug(LS_OPENTV, "dictionary %s loaded", f->hmf_name);
+          tvhdebug(LS_OPENTV, "dictionary %s loaded", htsmsg_field_name(f));
         else
-          tvhwarn(LS_OPENTV, "dictionary %s failed", f->hmf_name);
+          tvhwarn(LS_OPENTV, "dictionary %s failed", htsmsg_field_name(f));
       }
     }
   } 
@@ -965,11 +965,11 @@ static void _opentv_prov_load ( htsmsg_t *m )
   htsmsg_field_t *f;
   HTSMSG_FOREACH(f, m) {
     if ((e = htsmsg_get_map_by_field(f))) {
-      if ((r = _opentv_prov_load_one(f->hmf_name, e))) {
+      if ((r = _opentv_prov_load_one(htsmsg_field_name(f), e))) {
         if (r > 0)
-          tvhdebug(LS_OPENTV, "provider %s loaded", f->hmf_name);
+          tvhdebug(LS_OPENTV, "provider %s loaded", htsmsg_field_name(f));
         else
-          tvhwarn(LS_OPENTV, "provider %s failed", f->hmf_name);
+          tvhwarn(LS_OPENTV, "provider %s failed", htsmsg_field_name(f));
       }
     }
   }

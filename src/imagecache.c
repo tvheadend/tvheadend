@@ -431,7 +431,7 @@ imagecache_init ( void )
   if ((m = hts_settings_load("imagecache/meta"))) {
     HTSMSG_FOREACH(f, m) {
       if (!(e   = htsmsg_get_map_by_field(f))) continue;
-      if (!(id  = atoi(f->hmf_name))) continue;
+      if (!(id  = atoi(htsmsg_field_name(f)))) continue;
       if (!(url = htsmsg_get_str(e, "url"))) continue;
       img          = calloc(1, sizeof(imagecache_image_t));
       img->id      = id;

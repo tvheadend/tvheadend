@@ -238,7 +238,7 @@ static void _epggrab_load ( void )
     idnode_load(&epggrab_conf.idnode, m);
     if ((a = htsmsg_get_map(m, "modules"))) {
       HTSMSG_FOREACH(f, a) {
-        mod = epggrab_module_find_by_id(f->hmf_name);
+        mod = epggrab_module_find_by_id(htsmsg_field_name(f));
         map = htsmsg_field_get_map(f);
         if (mod && map) {
           idnode_load(&mod->idnode, map);

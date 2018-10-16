@@ -2558,7 +2558,7 @@ profile_init(void)
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_field_get_map(f)))
         continue;
-      (void)profile_create(f->hmf_name, e, 0);
+      (void)profile_create(htsmsg_field_name(f), e, 0);
     }
     htsmsg_destroy(c);
   }

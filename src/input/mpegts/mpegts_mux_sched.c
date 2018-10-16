@@ -367,7 +367,7 @@ mpegts_mux_sched_init ( void )
   if ((c = hts_settings_load_r(1, "muxsched"))) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_field_get_map(f))) continue;
-      mpegts_mux_sched_create(f->hmf_name, e);
+      mpegts_mux_sched_create(htsmsg_field_name(f), e);
     }
     htsmsg_destroy(c);
   }

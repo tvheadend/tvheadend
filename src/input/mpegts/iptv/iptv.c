@@ -1099,7 +1099,7 @@ iptv_network_create0
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
-      im = iptv_mux_create0(in, f->hmf_name, e);
+      im = iptv_mux_create0(in, htsmsg_field_name(f), e);
       mpegts_mux_post_create((mpegts_mux_t *)im);
     }
     htsmsg_destroy(c);
@@ -1151,9 +1151,9 @@ iptv_network_init ( void )
     if (!(e = htsmsg_get_map_by_field(f)))  continue;
     if (!(e = htsmsg_get_map(e, "config"))) continue;
     if (htsmsg_get_str(e, "url"))
-      iptv_network_create0(f->hmf_name, e, &iptv_auto_network_class);
+      iptv_network_create0(htsmsg_field_name(f), e, &iptv_auto_network_class);
     else
-      iptv_network_create0(f->hmf_name, e, &iptv_network_class);
+      iptv_network_create0(htsmsg_field_name(f), e, &iptv_network_class);
   }
   htsmsg_destroy(c);
 }

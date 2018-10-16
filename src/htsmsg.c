@@ -117,33 +117,32 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
   size_t nsize;
   htsmsg_field_t *f;
   
-  nsize = name ? strlen(name) + 1 : 1;
-  f = malloc(sizeof(htsmsg_field_t) + nsize + esize);
-  if(f == NULL)
-    return NULL;
-  TAILQ_INSERT_TAIL(&msg->hm_fields, f, hmf_link);
-
-  if(msg->hm_islist) {
+  if (msg->hm_islist) {
     assert(name == NULL || *name == '\0');
+    name = NULL;
+    flags |= HMF_NONAME;
   } else {
     assert(name != NULL);
   }
 
-  if (name) {
-    strcpy((char *)f->hmf_name, name);
-  } else {
-    ((char *)f->hmf_name)[0] = '\0';
-  }
+  nsize = name ? htsmsg_malloc_align(type, strlen(name) + 1) : 0;
+  f = malloc(sizeof(htsmsg_field_t) + nsize + esize);
+  if (f == NULL)
+    return NULL;
+  TAILQ_INSERT_TAIL(&msg->hm_fields, f, hmf_link);
 
-  if(esize) {
+  if (name)
+    strcpy((char *)f->_hmf_name, name);
+
+  if (esize) {
     if(type == HMF_STR) {
-      f->hmf_str = f->hmf_name + nsize;
+      f->hmf_str = f->_hmf_name + nsize;
     } else if(type == HMF_UUID) {
-      f->hmf_uuid = (uint8_t *)f->hmf_name + nsize;
+      f->hmf_uuid = (uint8_t *)f->_hmf_name + nsize;
     } else if(type == HMF_LIST || type == HMF_MAP) {
-      f->hmf_msg = (htsmsg_t *)(f->hmf_name + nsize);
+      f->hmf_msg = (htsmsg_t *)(f->_hmf_name + nsize);
     } else if(type == HMF_BIN) {
-      f->hmf_bin = f->hmf_name + nsize;
+      f->hmf_bin = f->_hmf_name + nsize;
       f->hmf_binsize = esize;
     }
   }
@@ -170,7 +169,7 @@ htsmsg_field_find(const htsmsg_t *msg, const char *name)
   if (msg == NULL || name == NULL)
     return NULL;
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-    if(!strcmp(f->hmf_name, name))
+    if(!strcmp(htsmsg_field_name(f), name))
       return f;
   }
   return NULL;
@@ -1178,7 +1177,7 @@ htsmsg_print0(htsmsg_t *msg, int indent)
 
     for(i = 0; i < indent; i++) printf("\t");
 
-    printf("%s (", f->hmf_name);
+    printf("%s (", htsmsg_field_name(f));
 
     switch(f->hmf_type) {
 
@@ -1283,7 +1282,7 @@ htsmsg_copy_i(htsmsg_t *dst, const htsmsg_t *src)
   htsmsg_field_t *f;
 
   TAILQ_FOREACH(f, &src->hm_fields, hmf_link)
-    htsmsg_copy_f(dst, f, f->hmf_name);
+    htsmsg_copy_f(dst, f, htsmsg_field_name(f));
 }
 
 htsmsg_t *
@@ -1328,7 +1327,7 @@ htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2)
 
     if (f1->hmf_type != f2->hmf_type)
       return 1;
-    if (strcmp(f1->hmf_name, f2->hmf_name))
+    if (strcmp(htsmsg_field_name(f1), htsmsg_field_name(f2)))
       return 1;
 
     switch(f1->hmf_type) {
@@ -1399,7 +1398,7 @@ htsmsg_get_map_by_field_if_name(htsmsg_field_t *f, const char *name)
 {
   if(f->hmf_type != HMF_MAP)
     return NULL;
-  if(strcmp(f->hmf_name, name))
+  if(strcmp(htsmsg_field_name(f), name))
     return NULL;
   return f->hmf_msg;
 }

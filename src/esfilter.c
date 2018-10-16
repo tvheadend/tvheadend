@@ -1208,7 +1208,7 @@ esfilter_init(void)
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f)))
       continue;
-    esfilter_create(-1, f->hmf_name, e, 0);
+    esfilter_create(-1, htsmsg_field_name(f), e, 0);
   }
   htsmsg_destroy(c);
 

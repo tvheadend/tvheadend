@@ -918,7 +918,7 @@ dvb_network_create0
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
-      lm = dvb_mux_create1(ln, f->hmf_name, e);
+      lm = dvb_mux_create1(ln, htsmsg_field_name(f), e);
       mpegts_mux_post_create((mpegts_mux_t *)lm);
     }
     htsmsg_destroy(c);
@@ -995,7 +995,7 @@ void dvb_network_init ( void )
       if (strcmp(s, "dvb_network_atsc") == 0)
         s = "dvb_network_atsc_t";
       if(!strcmp(dvb_network_classes[i]->ic_class, s)) {
-        dvb_network_create0(f->hmf_name, dvb_network_classes[i], e);
+        dvb_network_create0(htsmsg_field_name(f), dvb_network_classes[i], e);
         break;
       }
     }

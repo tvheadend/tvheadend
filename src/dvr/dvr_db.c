@@ -4835,12 +4835,12 @@ dvr_entry_init(void)
       parent = htsmsg_get_str(c, "parent");
       child = htsmsg_get_str(c, "child");
       if (parent && parent[0])
-        htsmsg_set_str(rere, parent, f->hmf_name);
+        htsmsg_set_str(rere, parent, htsmsg_field_name(f));
       if (child && child[0])
-        htsmsg_set_str(rere, f->hmf_name, child);
+        htsmsg_set_str(rere, htsmsg_field_name(f), child);
       htsmsg_delete_field(c, "parent");
       htsmsg_delete_field(c, "child");
-      (void)dvr_entry_create(f->hmf_name, c, 0);
+      (void)dvr_entry_create(htsmsg_field_name(f), c, 0);
     }
     htsmsg_destroy(l);
   }
@@ -4849,7 +4849,7 @@ dvr_entry_init(void)
   HTSMSG_FOREACH(f, rere) {
     if((child = htsmsg_field_get_str(f)) == NULL)
       continue;
-    parent = f->hmf_name;
+    parent = htsmsg_field_name(f);
     de1 = dvr_entry_find_by_uuid(parent);
     de2 = dvr_entry_find_by_uuid(child);
     dvr_entry_change_parent_child(de1, de2, NULL, 0);
@@ -4876,4 +4876,5 @@ dvr_entry_done(void)
       dvr_rec_unsubscribe(de);
     dvr_entry_destroy(de, 0);
   }
+  string_list_destroy(dvr_fanart_to_prefetch);
 }

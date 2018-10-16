@@ -709,7 +709,7 @@ dvr_timerec_init(void)
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
         continue;
-      (void)dvr_timerec_create(f->hmf_name, c);
+      (void)dvr_timerec_create(htsmsg_field_name(f), c);
     }
     htsmsg_destroy(l);
   }

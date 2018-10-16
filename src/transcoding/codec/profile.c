@@ -72,7 +72,7 @@ tvh_codec_profile_load(htsmsg_field_t *config)
     const char *name = NULL;
 
     if ((conf = htsmsg_field_get_map(config)) &&
-        tvh_codec_profile_create(conf, config->hmf_name, 0)) {
+        tvh_codec_profile_create(conf, htsmsg_field_name(config), 0)) {
         tvherror(LS_CODEC, "unable to load codec profile: '%s'",
                  (name = htsmsg_get_str(conf, "name")) ? name : "<unknown>");
     }

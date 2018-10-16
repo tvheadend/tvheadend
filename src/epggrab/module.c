@@ -120,8 +120,8 @@ epggrab_module_ota_scrapper_config_list ( void *o, const char *lang )
     htsmsg_field_t *f;
     HTSMSG_FOREACH(f, config) {
       e = htsmsg_create_map();
-      htsmsg_add_str(e, "key", f->hmf_name);
-      htsmsg_add_str(e, "val", f->hmf_name);
+      htsmsg_add_str(e, "key", htsmsg_field_name(f));
+      htsmsg_add_str(e, "val", htsmsg_field_name(f));
       htsmsg_add_msg(m, NULL, e);
     }
     htsmsg_destroy(config);
@@ -446,7 +446,7 @@ void epggrab_module_channels_load ( const char *modid )
         if (mod == NULL || strcmp(mod->id, id))
           mod = epggrab_module_find_by_id(id);
         if (mod)
-          epggrab_channel_create(mod, e, f->hmf_name);
+          epggrab_channel_create(mod, e, htsmsg_field_name(f));
       }
     }
     htsmsg_destroy(m);

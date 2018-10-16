@@ -2236,7 +2236,7 @@ access_init(int createdefault, int noacl)
   if ((c = hts_settings_load("ipblock")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
-      (void)ipblock_entry_create(f->hmf_name, m);
+      (void)ipblock_entry_create(htsmsg_field_name(f), m);
     }
     htsmsg_destroy(c);
   }
@@ -2245,7 +2245,7 @@ access_init(int createdefault, int noacl)
   if ((c = hts_settings_load("passwd")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
-      (void)passwd_entry_create(f->hmf_name, m);
+      (void)passwd_entry_create(htsmsg_field_name(f), m);
     }
     htsmsg_destroy(c);
   }
@@ -2254,7 +2254,7 @@ access_init(int createdefault, int noacl)
   if ((c = hts_settings_load("accesscontrol")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
-      (void)access_entry_create(f->hmf_name, m);
+      (void)access_entry_create(htsmsg_field_name(f), m);
     }
     htsmsg_destroy(c);
     access_entry_reindex();

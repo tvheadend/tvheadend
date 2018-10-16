@@ -103,7 +103,7 @@ notify_thread ( void *p )
     pthread_mutex_lock(&global_lock);
 
     HTSMSG_FOREACH(f, q)
-      notify_by_msg(f->hmf_name, htsmsg_detach_submsg(f), 0);
+      notify_by_msg(htsmsg_field_name(f), htsmsg_detach_submsg(f), 0);
 
     /* Finished */
     pthread_mutex_unlock(&global_lock);

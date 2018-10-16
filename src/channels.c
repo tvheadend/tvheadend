@@ -1464,7 +1464,7 @@ channel_init ( void )
   channel_in_load = 1;
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f))) continue;
-    (void)channel_create(f->hmf_name, e, NULL);
+    (void)channel_create(htsmsg_field_name(f), e, NULL);
   }
   channel_in_load = 0;
   htsmsg_destroy(c);
@@ -1967,7 +1967,7 @@ channel_tag_init ( void )
   if ((c = hts_settings_load("channel/tag")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
-      (void)channel_tag_create(f->hmf_name, m);
+      (void)channel_tag_create(htsmsg_field_name(f), m);
     }
     htsmsg_destroy(c);
   }

@@ -1556,7 +1556,7 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
   if (map) {
     HTSMSG_FOREACH(f, map) {
       nit = calloc(1, sizeof(*nit));
-      nit->name = f->hmf_name[0] ? strdup(f->hmf_name) : NULL;
+      nit->name = htsmsg_field_name(f)[0] ? strdup(htsmsg_field_name(f)) : NULL;
       if ((e = htsmsg_field_get_map(f)) != NULL) {
         eit_parse_list(e, "onid", nit->onid, ARRAY_SIZE(nit->onid), &nit->onid_count);
         eit_parse_list(e, "tsid", nit->tsid, ARRAY_SIZE(nit->tsid), &nit->tsid_count);
@@ -1580,13 +1580,13 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
   map = htsmsg_get_map(conf, "hacks");
   if (map) {
     HTSMSG_FOREACH(f, map) {
-      if (strcmp(f->hmf_name, "interest-4e") == 0)
+      if (strcmp(htsmsg_field_name(f), "interest-4e") == 0)
         priv->hacks |= EIT_HACK_INTEREST4E;
-      else if (strcmp(f->hmf_name, "extra-mux-lookup") == 0)
+      else if (strcmp(htsmsg_field_name(f), "extra-mux-lookup") == 0)
         priv->hacks |= EIT_HACK_EXTRAMUXLOOKUP;
-      else if (strcmp(f->hmf_name, "svc-net-lookup") == 0)
+      else if (strcmp(htsmsg_field_name(f), "svc-net-lookup") == 0)
         priv->hacks |= EIT_HACK_EXTRAMUXLOOKUP;
-      else if (strcmp(f->hmf_name, "bat") == 0) {
+      else if (strcmp(htsmsg_field_name(f), "bat") == 0) {
         if (!(e = htsmsg_field_get_map(f))) continue;
         priv->bat_pid = htsmsg_get_s32_or_default(e, "pid", 0);
       }
@@ -1619,7 +1619,7 @@ void eit_init ( void )
   }
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f))) continue;
-    eit_init_one(f->hmf_name, e);
+    eit_init_one(htsmsg_field_name(f), e);
   }
   htsmsg_destroy(c);
 }

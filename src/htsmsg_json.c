@@ -49,7 +49,7 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
       htsbuf_append(hq, indentor, indent < 16 ? indent : 16);
 
     if(!isarray) {
-      htsbuf_append_and_escape_jsonstr(hq, f->hmf_name);
+      htsbuf_append_and_escape_jsonstr(hq, htsmsg_field_name(f));
       htsbuf_append(hq, ": ", pretty ? 2 : 1);
     }
 

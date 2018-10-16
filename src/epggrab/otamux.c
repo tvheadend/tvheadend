@@ -914,7 +914,7 @@ epggrab_ota_init ( void )
   if ((c = hts_settings_load_r(1, "epggrab/otamux"))) {
     HTSMSG_FOREACH(f, c) {
       if (!(m  = htsmsg_field_get_map(f))) continue;
-      epggrab_ota_load_one(f->hmf_name, m); 
+      epggrab_ota_load_one(htsmsg_field_name(f), m); 
     }
     htsmsg_destroy(c);
   }

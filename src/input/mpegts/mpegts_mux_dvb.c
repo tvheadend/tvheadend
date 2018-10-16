@@ -1260,7 +1260,7 @@ dvb_mux_create0
   if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f))) continue;
-      mpegts_service_create1(f->hmf_name, (mpegts_mux_t *)lm, 0, 0, e);
+      mpegts_service_create1(htsmsg_field_name(f), (mpegts_mux_t *)lm, 0, 0, e);
     }
     htsmsg_destroy(c2);
   }

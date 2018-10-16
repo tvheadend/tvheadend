@@ -1286,7 +1286,7 @@ int epg_broadcast_set_credits
           } else {
             add_sep = 1;
           }
-          lang_str_append(b->credits_cached, f->hmf_name, NULL);
+          lang_str_append(b->credits_cached, htsmsg_field_name(f), NULL);
         }
       } else {
         if (b->credits_cached) {

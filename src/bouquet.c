@@ -1266,7 +1266,7 @@ bouquet_init(void)
   if ((c = hts_settings_load("bouquet")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
-      bq = bouquet_create(f->hmf_name, m, NULL, NULL);
+      bq = bouquet_create(htsmsg_field_name(f), m, NULL, NULL);
       if (bq)
         bq->bq_saveflag = 0;
     }
@@ -1296,7 +1296,7 @@ bouquet_service_resolve(void)
         if ((e = htsmsg_field_get_map(f)) == NULL) continue;
         lcn = htsmsg_get_s64_or_default(e, "lcn", 0);
         tag = htsmsg_get_str(e, "tag");
-        s = service_find_by_uuid(f->hmf_name);
+        s = service_find_by_uuid(htsmsg_field_name(f));
         if (s)
           bouquet_add_service(bq, s, lcn, tag);
       }

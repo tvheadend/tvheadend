@@ -381,7 +381,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
   if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_field_get_map(f))) continue;
-      (void)iptv_service_create0(im, 0, 0, f->hmf_name, e);
+      (void)iptv_service_create0(im, 0, 0, htsmsg_field_name(f), e);
     }
   } else if (in->in_service_id) {
     conf = htsmsg_create_map();
