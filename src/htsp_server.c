@@ -1282,15 +1282,12 @@ htsp_build_event
       htsmsg_add_str(out, "description", str);
   }
 
-  if (e->credits) {
+  if (e->credits)
     htsmsg_add_msg(out, "credits", htsmsg_copy(e->credits));
-  }
-  if (e->category) {
-    htsmsg_add_msg(out, "category", string_list_to_htsmsg(e->category));
-  }
-  if (e->keyword) {
-    htsmsg_add_msg(out, "keyword", string_list_to_htsmsg(e->keyword));
-  }
+  if (e->category)
+    string_list_serialize(e->category, out, "category");
+  if (e->keyword)
+    string_list_serialize(e->keyword, out, "keyword");
 
   if (e->serieslink)
     htsmsg_add_str(out, "serieslinkUri", e->serieslink->uri);
