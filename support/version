@@ -8,7 +8,7 @@ FILE=$1
 
 # Calculate version
 if [ -d ".git" ]; then
-  VER=$(cd "$(dirname "$0")"/..; git describe --dirty --match "v*" 2> /dev/null)
+  VER=$(cd "$(dirname "$0")"/..; git describe --dirty --tags --match "v*" 2> /dev/null)
   if [ $? -ne 0 ]; then
     # Git describe failed, maybe "--dirty" option is not available
     # Adding "-unknown" postfix to mark this situation
