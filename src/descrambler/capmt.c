@@ -2510,7 +2510,6 @@ capmt_service_start(caclient_t *cac, service_t *s)
   ct              = calloc(1, sizeof(capmt_service_t));
   ct->ct_capmt    = capmt;
   ct->ct_adapter  = tuner;
-  ct->ct_multipid = descrambler_multi_pid((th_descrambler_t *)ct);
 
   i = 0;
   TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
@@ -2553,6 +2552,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
   LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);
 
+  ct->ct_multipid = descrambler_multi_pid((th_descrambler_t *)ct);
   descrambler_change_keystate((th_descrambler_t *)td, DS_READY, 0);
 
   /* wake-up idle thread */
