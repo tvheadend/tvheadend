@@ -1620,17 +1620,19 @@ http_serve_file(http_connection_t *hc, const char *fname,
                 int fconv, const char *content,
                 int (*preop)(http_connection_t *hc, off_t file_start,
                              size_t content_len, void *opaque),
+                int (*postop)(http_connection_t *hc, off_t file_start,
+                              size_t content_len, off_t file_size, void *opaque),
                 void (*stats)(http_connection_t *hc, size_t len, void *opaque),
                 void *opaque)
 {
-  int fd, ret;
+  int fd, ret, close_ret;
   struct stat st;
   const char *range;
   char *basename;
   char *str, *str0;
   char range_buf[255];
   char *disposition = NULL;
-  off_t content_len, chunk;
+  off_t content_len, total_len, chunk;
   intmax_t file_start, file_end;
   htsbuf_queue_t q;
 #if defined(PLATFORM_LINUX)
@@ -1695,7 +1697,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
     return HTTP_STATUS_OK;
   }
 
-  content_len = file_end - file_start+1;
+  content_len = total_len = file_end - file_start+1;
   
   sprintf(range_buf, "bytes %jd-%jd/%jd",
           file_start, file_end, (intmax_t)st.st_size);
@@ -1754,8 +1756,17 @@ http_serve_file(http_connection_t *hc, const char *fname,
         stats(hc, r, opaque);
     }
   }
+
   http_send_end(hc);
-  close(fd);
+  close_ret = close(fd);
+  if (close_ret != 0)
+    ret = close_ret;
+
+  /* We do postop _after_ the close since close will block until the
+   * buffers have been received by the client.
+   */
+  if (ret == 0 && postop)
+    ret = postop(hc, file_start, total_len, st.st_size, opaque);
 
   return ret;
 }
@@ -1777,7 +1788,6 @@ page_dvrfile_preop(http_connection_t *hc, off_t file_start,
                    size_t content_len, void *opaque)
 {
   page_dvrfile_priv_t *priv = opaque;
-  dvr_entry_t *de;
 
   pthread_mutex_lock(&global_lock);
   priv->tcp_id = http_stream_preop(hc);
@@ -1792,19 +1802,41 @@ page_dvrfile_preop(http_connection_t *hc, off_t file_start,
       priv->tcp_id = NULL;
     }
   }
-  /* Play count + 1 when write access */
-  if (!hc->hc_no_output && file_start <= 0) {
+  pthread_mutex_unlock(&global_lock);
+  if (priv->tcp_id == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
+  return 0;
+}
+
+static int
+page_dvrfile_postop(http_connection_t *hc,
+                    off_t file_start,
+                    size_t content_len,
+                    off_t file_size,
+                    void *opaque)
+{
+  dvr_entry_t *de;
+  const page_dvrfile_priv_t *priv = opaque;
+  /* We are fully played when we send the last segment */
+  const int is_fully_played = file_start + content_len >= file_size;
+  tvhdebug(LS_HTTP, "page_dvrfile_postop: file start=%ld content len=%ld file size=%ld done=%d",
+           (long)file_start, (long)content_len, (long)file_size, is_fully_played);
+
+  if (!is_fully_played)
+    return 0;
+
+  pthread_mutex_lock(&global_lock);
+  /* Play count + 1 when not doing HEAD */
+  if (!hc->hc_no_output) {
     de = dvr_entry_find_by_uuid(priv->uuid);
     if (de == NULL)
       de = dvr_entry_find_by_id(atoi(priv->uuid));
     if (de && !dvr_entry_verify(de, hc->hc_access, 0)) {
-      de->de_playcount = de->de_playcount + 1;
+      dvr_entry_incr_playcount(de);
       dvr_entry_changed(de);
     }
   }
   pthread_mutex_unlock(&global_lock);
-  if (priv->tcp_id == NULL)
-    return HTTP_STATUS_NOT_ALLOWED;
   return 0;
 }
 
@@ -1859,7 +1891,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   pthread_mutex_unlock(&global_lock);
 
   ret = http_serve_file(hc, priv.fname, 1, priv.content,
-                        page_dvrfile_preop, page_dvrfile_stats, &priv);
+                        page_dvrfile_preop, page_dvrfile_postop, page_dvrfile_stats, &priv);
 
   pthread_mutex_lock(&global_lock);
   if (priv.sub)
@@ -1906,7 +1938,7 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
   if (r)
     return HTTP_STATUS_NOT_FOUND;
 
-  return http_serve_file(hc, fname, 0, NULL, NULL, NULL, NULL);
+  return http_serve_file(hc, fname, 0, NULL, NULL, NULL, NULL, NULL);
 }
 
 /**

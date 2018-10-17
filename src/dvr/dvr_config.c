@@ -747,6 +747,47 @@ dvr_config_class_removal_list ( void *o, const char *lang )
 }
 
 static htsmsg_t *
+dvr_config_class_remove_after_playback_list ( void *o, const char *lang )
+{
+  enum {
+    ONE_MINUTE = 60,
+    ONE_HOUR = ONE_MINUTE * 60,
+    ONE_DAY = ONE_HOUR * 24
+  };
+
+  /* We want a few "soon" options (other than immediately) since that
+   * gives the user time to restart the playback if they accidentally
+   * skipped to the end and marked it as watched, whereas immediately
+   * would immediately delete that recording (and we don't yet support
+   * undelete).
+   */
+  static const struct strtab_u32 tab[] = {
+    { N_("Never"),              0 },
+    { N_("Immediately"),        1 },
+    { N_("1 minute"),           ONE_MINUTE },
+    { N_("10 minutes"),         ONE_MINUTE * 10 },
+    { N_("30 minutes"),         ONE_MINUTE * 30 },
+    { N_("1 hour"),             ONE_HOUR },
+    { N_("2 hours"),            ONE_HOUR * 2 },
+    { N_("4 hour"),             ONE_HOUR * 4 },
+    { N_("8 hour"),             ONE_HOUR * 8 },
+    { N_("12 hours"),           ONE_HOUR * 12 },
+    { N_("1 day"),              ONE_DAY },
+    { N_("2 days"),             ONE_DAY * 2 },
+    { N_("3 days"),             ONE_DAY * 3 },
+    { N_("5 days"),             ONE_DAY * 5 },
+    { N_("1 week"),             ONE_DAY * 7 },
+    { N_("2 weeks"),            ONE_DAY * 14 },
+    { N_("3 weeks"),            ONE_DAY * 21 },
+    { N_("1 month"),            ONE_DAY * 31 }, /* Approximations based on RET_REM */
+    { N_("2 months"),           ONE_DAY * 62 },
+    { N_("3 months"),           ONE_DAY * 92 },
+  };
+  return strtab2htsmsg_u32(tab, 1, lang);
+}
+
+
+static htsmsg_t *
 dvr_config_class_retention_list ( void *o, const char *lang )
 {
   static const struct strtab_u32 tab[] = {
@@ -928,6 +969,25 @@ const idclass_t dvr_config_class = {
       .def.u32  = DVR_RET_REM_FOREVER,
       .list     = dvr_config_class_removal_list,
       .opts     = PO_DOC_NLIST,
+      .group    = 1,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "remove-after-playback",
+      .name     = N_("Automatically delete played recordings"),
+      .desc     = N_("Number of minutes after playback has finished "
+                     "before file should be automatically removed "
+                     "(unless its retention is 'forever'). "
+                     "Note that some clients may pre-cache playback "
+                     "which means the recording will be marked as "
+                     "played when the client has cached the data, "
+                     "which may be before the end of the programme is "
+                     "actually watched."
+                    ),
+      .off      = offsetof(dvr_config_t, dvr_removal_after_playback),
+      .def.u32  = 0,
+      .list     = dvr_config_class_remove_after_playback_list,
+      .opts     = PO_ADVANCED,
       .group    = 1,
     },
     {

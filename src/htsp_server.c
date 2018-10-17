@@ -2913,7 +2913,7 @@ htsp_method_file_close(htsp_connection_t *htsp, htsmsg_t *in)
     int save = 0;
     /* Only allow incrementing playcount on file close, the rest can be done with "updateDvrEntry" */
     if (htsp->htsp_version < 27 || htsmsg_get_u32_or_default(in, "playcount", HTSP_DVR_PLAYCOUNT_INCR) == HTSP_DVR_PLAYCOUNT_INCR) {
-      de->de_playcount++;
+      dvr_entry_incr_playcount(de);
       save = 1;
     }
     if(htsp->htsp_version >= 27 && !htsmsg_get_u32(in, "playposition", &u32)) {

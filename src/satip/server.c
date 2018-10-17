@@ -257,7 +257,7 @@ satip_server_satip_m3u(http_connection_t *hc)
   if (hts_settings_buildpath(path, sizeof(path), "satip.m3u"))
     return HTTP_STATUS_SERVICE;
 
-  return http_serve_file(hc, path, 0, MIME_M3U, NULL, NULL, NULL);
+  return http_serve_file(hc, path, 0, MIME_M3U, NULL, NULL, NULL, NULL);
 }
 
 int

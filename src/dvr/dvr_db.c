@@ -60,6 +60,8 @@ static void dvr_timer_start_recording(void *aux);
 static void dvr_timer_stop_recording(void *aux);
 static int dvr_entry_rerecord(dvr_entry_t *de);
 static time_t dvr_entry_get_segment_stop_extra(dvr_entry_t *de);
+static void dvr_entry_watched_timer_arm(dvr_entry_t* de);
+static void dvr_entry_watched_timer_disarm(dvr_entry_t* de);
 
 static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de);
 
@@ -1039,7 +1041,7 @@ dvr_entry_t *
 dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 {
   dvr_entry_t *de, *de2;
-  int64_t start, stop, create, now;
+  int64_t start, stop, create, watched, now;
   htsmsg_t *m;
   char ubuf[UUID_HEX_SIZE], ubuf2[UUID_HEX_SIZE];
   const char *s;
@@ -1088,6 +1090,11 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
       else
           create = now;
       de->de_create = create;
+  }
+  if (!htsmsg_get_s64(conf, "watched", &watched)) {
+    de->de_watched = watched;
+  } else {
+    de->de_watched = 0;
   }
 
   /* Extract episode info */
@@ -1151,6 +1158,11 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 
   if (!clone)
     dvr_entry_set_timer(de);
+
+  /* Entry is marked for deletion, so set timer. */
+  if (de->de_watched)
+    dvr_entry_watched_timer_arm(de);
+
   htsp_dvr_entry_add(de);
   dvr_vfs_refresh_entry(de);
 
@@ -2124,6 +2136,7 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
 
   gtimer_disarm(&de->de_timer);
   mtimer_disarm(&de->de_deferred_timer);
+  gtimer_disarm(&de->de_watched_timer);
 #if ENABLE_DBUS_1
   mtimer_arm_rel(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, sec2mono(2));
 #endif
@@ -2208,9 +2221,77 @@ static void
 dvr_timer_expire(void *aux)
 {
   dvr_entry_t *de = aux;
-  dvr_entry_destroy(de, 1);
+  tvhinfo(LS_DVR, "Watched timer expiring \"%s\"",
+          lang_str_get(de->de_title, NULL));
+  /* Force the watched timer to be reset. This ensures it
+   * cannot be re-triggered on a restart of tvheadend.
+   */
+  de->de_watched = 0;
+  dvr_entry_changed(de);
+  /* Allow re-record if recording errors */
+  dvr_entry_cancel_remove(de, 1);
 }
 
+static void
+dvr_entry_watched_timer_cb(void *aux)
+{
+  tvhtrace(LS_DVR, "Entry watched cb");
+  dvr_timer_expire(aux);
+}
+
+static void
+dvr_entry_watched_timer_arm(dvr_entry_t* de)
+{
+  if (!de || !de->de_watched ||
+      dvr_entry_get_removal_days(de) == DVR_RET_REM_FOREVER ||
+      !de->de_config || !de->de_config->dvr_removal_after_playback)
+    return;
+
+  char t1buf[32];
+  const time_t now = gclk();
+  char ubuf[UUID_HEX_SIZE];
+  time_t when = de->de_watched + de->de_config->dvr_removal_after_playback;
+
+  /* We could just call the cb ourselves, but we'll set a timer if
+   * the event is in the past so that we are always async.
+   * This avoids any potential problems with caller trying to
+   * reference our de after it is destroyed.
+   */
+  if (when < now)
+    when = now;
+  tvhinfo(LS_DVR, "Arming watched timer to delete \"%s\" %s @ %s (now+%"PRId64")",
+          lang_str_get(de->de_title, NULL),
+          idnode_uuid_as_str(&de->de_id, ubuf),
+          gmtime2local(when, t1buf, sizeof t1buf),
+          (int64_t)when-now);
+  gtimer_arm_absn(&de->de_watched_timer, dvr_entry_watched_timer_cb, de, when);
+}
+
+static void
+dvr_entry_watched_timer_disarm(dvr_entry_t* de)
+{
+  if (de) {
+    dvr_entry_trace(de, "watched timer - disarm");
+    de->de_watched = 0;
+    gtimer_disarm(&de->de_watched_timer);
+  }
+}
+
+/// Check if user wants played entries to be automatically deleted
+/// If so, arm the timers.
+static void
+dvr_entry_watched_set_watched(dvr_entry_t* de)
+{
+  if (!de)
+    return;
+
+  /* User wants entry deleted after it is played, so mark earliest
+   * "deleted" timestamp and arm.
+   */
+  de->de_watched = gclk();
+  if (de->de_config && de->de_config->dvr_removal_after_playback)
+    dvr_entry_watched_timer_arm(de);
+}
 
 /**
  *
@@ -2274,6 +2355,25 @@ static char *dvr_updated_str(char *buf, size_t buflen, int flags)
   return buf;
 }
 
+int
+dvr_entry_set_playcount(dvr_entry_t *de, uint32_t playcount)
+{
+  if (de->de_playcount == playcount)
+    return 0;
+  de->de_playcount = playcount;
+  if (de->de_playcount)
+    dvr_entry_watched_set_watched(de);
+  else                          /* Not watched, so disarm timer */
+    dvr_entry_watched_timer_disarm(de);
+  return 1;
+}
+
+int
+dvr_entry_incr_playcount(dvr_entry_t *de)
+{
+  return dvr_entry_set_playcount(de, de->de_playcount + 1);
+}
+
 /**
  *
  */
@@ -2324,7 +2424,7 @@ static dvr_entry_t *_dvr_entry_update
     }
     if (de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_COMPLETED) {
       if (playcount >= 0 && playcount != de->de_playcount) {
-        de->de_playcount = playcount;
+        dvr_entry_set_playcount(de, playcount);
         save |= DVR_UPDATED_PLAYCOUNT;
       }
       if (playposition >= 0 && playposition != de->de_playposition) {
@@ -3926,6 +4026,14 @@ const idclass_t dvr_entry_class = {
       .set      = dvr_entry_class_create_set,
       .off      = offsetof(dvr_entry_t, de_create),
       .opts     = PO_HIDDEN | PO_RDONLY | PO_NOUI,
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "watched",
+      .name     = N_("Time the entry was last watched"),
+      .desc     = N_("Time the entry was last watched."),
+      .off      = offsetof(dvr_entry_t, de_watched),
+      .opts     = PO_RDONLY,
     },
     {
       .type     = PT_TIME,
