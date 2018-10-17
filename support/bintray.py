@@ -191,6 +191,7 @@ def get_bintray_params(filename, hint=None):
     return (basename, args, extra)
 
 def do_publish(*args):
+    return
     if len(args) < 1: error(1, 'upload [file with the file list]')
     if not DEBUG:
         branches = os.popen('git branch --contains HEAD').readlines()
