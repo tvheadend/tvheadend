@@ -42,6 +42,8 @@ http_serve_file(http_connection_t *hc, const char *fname,
                 int fconv, const char *content,
                 int (*preop)(http_connection_t *hc, off_t file_start,
                              size_t content_len, void *opaque),
+                int (*postop)(http_connection_t *hc, off_t file_start,
+                              size_t content_len, off_t file_size, void *opaque),
                 void (*stats)(http_connection_t *hc, size_t len, void *opaque),
                 void *opaque);
 

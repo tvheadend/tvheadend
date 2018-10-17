@@ -80,6 +80,7 @@ typedef struct dvr_config {
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
   uint32_t dvr_removal_days;
+  uint32_t dvr_removal_after_playback;
   uint32_t dvr_autorec_max_count;
   uint32_t dvr_autorec_max_sched_count;
   char *dvr_charset;
@@ -200,6 +201,7 @@ typedef struct dvr_entry {
   char *de_channel_name;
 
   gtimer_t de_timer;
+  gtimer_t de_watched_timer;
   mtimer_t de_deferred_timer;
 
   /**
@@ -211,6 +213,7 @@ typedef struct dvr_entry {
 
   int de_enabled;
   time_t de_create;             ///< Time entry was created
+  time_t de_watched;            ///< Time entry was last watched
   time_t de_start;
   time_t de_stop;
 
@@ -557,6 +560,9 @@ void dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf);
 
 int dvr_entry_set_state(dvr_entry_t *de, dvr_entry_sched_state_t state,
                         dvr_rs_state_t rec_state, int error_code);
+
+int dvr_entry_set_playcount(dvr_entry_t *de, uint32_t playcount);
+int dvr_entry_incr_playcount(dvr_entry_t *de);
 
 const char *dvr_entry_status(dvr_entry_t *de);
 
