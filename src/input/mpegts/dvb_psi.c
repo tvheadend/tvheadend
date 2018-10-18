@@ -1017,8 +1017,6 @@ dvb_pat_callback
                          NULL, "pmt", LS_TBL_BASE,
                          MT_CRC | MT_QUICKREQ | MT_ONESHOT | MT_SCANSUBS,
                          pid, MPS_WEIGHT_PMT_SCAN);
-        if (s->s_pmt_mon && (save & 2) != 0) /* PMT PID change? */
-          mpegts_input_open_pmt_monitor(mm, s);
         if (save)
           service_request_save((service_t*)s);
       }
