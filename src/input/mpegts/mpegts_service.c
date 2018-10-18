@@ -922,7 +922,7 @@ mpegts_service_find
     if (service_id16(s) == sid) {
       if (pmt_pid && pmt_pid != s->s_components.set_pmt_pid) {
         s->s_components.set_pmt_pid = pmt_pid;
-        if (save) *save = 1;
+        if (save) *save = 3;
       }
       if (create) {
         if ((save && *save) || s->s_dvb_last_seen + 3600 < gclk()) {

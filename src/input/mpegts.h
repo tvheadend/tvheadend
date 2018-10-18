@@ -1022,6 +1022,7 @@ elementary_stream_t *mpegts_input_open_service_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, service_t *s,
     streaming_component_type_t stype, int pid, int weight, int create );
 
+void mpegts_input_open_pmt_monitor ( mpegts_mux_t *mm, mpegts_service_t *s );
 void mpegts_input_open_cat_monitor ( mpegts_mux_t *mm, mpegts_service_t *s );
 
 void tsdebug_encode_keys

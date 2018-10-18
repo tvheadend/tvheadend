@@ -810,9 +810,22 @@ fin:
 }
 
 void
+mpegts_input_open_pmt_monitor
+  ( mpegts_mux_t *mm, mpegts_service_t *s )
+{
+    if (s->s_pmt_mon)
+      mpegts_table_destroy(s->s_pmt_mon);
+    s->s_pmt_mon =
+      mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK,
+                       dvb_pmt_callback, s, "pmt", LS_TBL_BASE,
+                       MT_CRC, s->s_components.set_pmt_pid, MPS_WEIGHT_PMT);
+}
+
+void
 mpegts_input_open_cat_monitor
   ( mpegts_mux_t *mm, mpegts_service_t *s )
 {
+  assert(s->s_cat_mon == NULL);
   s->s_cat_mon =
     mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK,
                      mpegts_input_cat_pass_callback, s, "cat",
@@ -885,11 +898,8 @@ no_pids:
   pthread_mutex_unlock(&mi->mi_output_lock);
 
   /* Add PMT monitor */
-  if(s->s_type == STYPE_STD) {
-    s->s_pmt_mon =
-      mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK,
-                       dvb_pmt_callback, s, "pmt", LS_TBL_BASE,
-                       MT_CRC, s->s_components.set_pmt_pid, MPS_WEIGHT_PMT);
+  if (s->s_type == STYPE_STD) {
+    mpegts_input_open_pmt_monitor(mm, s);
     if (s->s_scrambled_pass && (flags & SUBSCRIPTION_EMM) != 0)
       mpegts_input_open_cat_monitor(mm, s);
   }
