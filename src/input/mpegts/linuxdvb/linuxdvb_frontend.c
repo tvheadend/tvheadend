@@ -1837,7 +1837,7 @@ linuxdvb_frontend_tune0
       S2CMD(DTV_STREAM_ID,       r);
 #if DVB_VER_ATLEAST(5,11)
       r = dvb_sat_pls(dmc);
-      if (r != 1) /* default PLS gold code */
+      if (r != 0) /* default PLS gold code */
         S2CMD(DTV_SCRAMBLING_SEQUENCE_INDEX, r);
 #endif
 #elif DVB_VER_ATLEAST(5,3)
@@ -1880,7 +1880,7 @@ linuxdvb_frontend_tune0
     S2CMD(DTV_STREAM_ID,       r);
 #if DVB_VER_ATLEAST(5,11)
     r = dvb_sat_pls(dmc);
-    if (r != 1) /* default PLS gold code */
+    if (r != 0) /* default PLS gold code */
       S2CMD(DTV_SCRAMBLING_SEQUENCE_INDEX, r);
 #endif
 #elif DVB_VER_ATLEAST(5,3)
