@@ -1570,11 +1570,16 @@ htsmsg_t *
 idnode_slist_get ( idnode_t *in, idnode_slist_t *options )
 {
   htsmsg_t *l = htsmsg_create_list();
-  int *ip;
+  int val;
 
   for (; options->id; options++) {
-    ip = (void *)in + options->off;
-    if (*ip)
+    if (options->get)
+      val = options->get(in, options);
+    else if (options->off)
+      val = *(int *)((void *)in + options->off);
+    else
+      val = 0;
+    if (val)
       htsmsg_add_str(l, NULL, options->id);
   }
   return l;
@@ -1589,28 +1594,30 @@ idnode_slist_set ( idnode_t *in, idnode_slist_t *options, const htsmsg_t *vals )
   const char *s;
 
   for (o = options; o->id; o++) {
-    ip = (void *)in + o->off;
-    if (!changed) {
-      HTSMSG_FOREACH(f, vals) {
-        if ((s = htsmsg_field_get_str(f)) == NULL)
-          continue;
-        if (strcmp(s, o->id))
-          continue;
-        if (*ip == 0) changed = 1;
-        break;
-      }
-      if (f == NULL && *ip) changed = 1;
-    }
-    *ip = 0;
-  }
-  HTSMSG_FOREACH(f, vals) {
-    if ((s = htsmsg_field_get_str(f)) == NULL)
-      continue;
-    for (o = options; o->id; o++) {
-      if (strcmp(o->id, s)) continue;
+    if (o->off) {
       ip = (void *)in + o->off;
-      *ip = 1;
+    } else {
+      ip = NULL;
+    }
+    HTSMSG_FOREACH(f, vals) {
+      if ((s = htsmsg_field_get_str(f)) == NULL)
+        continue;
+      if (strcmp(s, o->id))
+        continue;
+      if (o->set) {
+        changed |= o->set(in, o, 1);
+      } else if (*ip == 0) {
+        *ip = changed = 1;
+      }
       break;
+    }
+    if (f == NULL) {
+      if (o->set) {
+        changed |= o->set(in, o, 0);
+      } else if (*ip) {
+        *ip = 0;
+        changed = 1;
+      }
     }
   }
   return changed;

@@ -63,7 +63,7 @@ tvheadend.acleditor = function(panel, index)
 
 tvheadend.passwdeditor = function(panel, index)
 {
-    var list = 'enabled,username,password,comment';
+    var list = 'enabled,username,password,auth,authcode,comment';
 
     tvheadend.idnode_grid(panel, {
         url: 'api/passwd/entry',
@@ -73,7 +73,9 @@ tvheadend.passwdeditor = function(panel, index)
         columns: {
             enabled:  { width: 120 },
             username: { width: 250 },
-            password: { width: 250 }
+            password: { width: 250 },
+            auth:     { width: 250 },
+            authcode: { width: 250 }
         },
         tabIndex: index,
         edit: {

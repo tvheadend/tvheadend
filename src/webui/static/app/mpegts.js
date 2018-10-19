@@ -126,7 +126,7 @@ tvheadend.muxes = function(panel, index)
                         if (title) title += ' / ';
                         title += r.data['network'];
                     }
-                    return tvheadend.playLink('play/stream/mux/' + r.id, title);
+                    return tvheadend.playLink('stream/mux/' + r.id, title);
                 }
             }
         ],
@@ -398,7 +398,7 @@ tvheadend.services = function(panel, index)
                         if (title) title += ' / ';
                         title += r.data['provider'];
                     }
-                    return tvheadend.playLink('play/stream/service/' + r.id, title);
+                    return tvheadend.playLink('stream/service/' + r.id, title);
                 }
             },
             {

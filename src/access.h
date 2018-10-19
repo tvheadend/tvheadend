@@ -60,7 +60,10 @@ typedef struct passwd_entry {
   char *pw_password;
   char *pw_password2;
 
+  char *pw_auth;
+
   int   pw_enabled;
+  int   pw_auth_enabled;
   int   pw_wizard;
 
   char *pw_comment;
@@ -174,6 +177,7 @@ typedef struct access {
   int       aa_uilevel;
   int       aa_uilevel_nochange;
   char     *aa_theme;
+  char     *aa_auth;
 } access_t;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);
@@ -283,6 +287,12 @@ access_get_by_username(const char *username);
  */
 access_t *
 access_get_by_addr(struct sockaddr_storage *src);
+
+/**
+ *
+ */
+access_t *
+access_get_by_auth(struct sockaddr_storage *src, const char *id);
 
 /**
  *

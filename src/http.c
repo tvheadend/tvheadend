@@ -960,6 +960,24 @@ http_access_verify_ticket(http_connection_t *hc)
 /**
  *
  */
+static void
+http_access_verify_auth(http_connection_t *hc)
+{
+  const char *auth_id;
+
+  if (hc->hc_access)
+    return;
+  auth_id = http_arg_get(&hc->hc_req_args, "auth");
+  hc->hc_access = access_get_by_auth(hc->hc_peer, auth_id);
+  if (hc->hc_access == NULL)
+    return;
+  tvhinfo(hc->hc_subsys, "%s: using auth %s for %s",
+	  hc->hc_peer_ipstr, auth_id, hc->hc_url);
+}
+
+/**
+ *
+ */
 struct http_verify_structure {
   char *password;
   char *d_ha1;
@@ -1087,6 +1105,11 @@ http_access_verify(http_connection_t *hc, int mask)
   http_access_verify_ticket(hc);
   if (hc->hc_access)
     res = access_verify2(hc->hc_access, mask);
+  if (res) {
+    http_access_verify_auth(hc);
+    if (hc->hc_access)
+      res = access_verify2(hc->hc_access, mask);
+  }
 
   if (res) {
     access_destroy(hc->hc_access);
@@ -1119,10 +1142,14 @@ http_access_verify_channel(http_connection_t *hc, int mask,
   http_access_verify_ticket(hc);
   if (hc->hc_access) {
     res = access_verify2(hc->hc_access, mask);
-
-    if (!res && !channel_access(ch, hc->hc_access, 0))
-      res = -1;
+    if (res) {
+      http_access_verify_auth(hc);
+      if (hc->hc_access)
+        res = access_verify2(hc->hc_access, mask);
+    }
   }
+  if (!res && !channel_access(ch, hc->hc_access, 0))
+    res = -1;
 
   if (res) {
     access_destroy(hc->hc_access);
@@ -1135,12 +1162,10 @@ http_access_verify_channel(http_connection_t *hc, int mask,
     http_verify_free(&v);
     if (hc->hc_access) {
       res = access_verify2(hc->hc_access, mask);
-
       if (!res && !channel_access(ch, hc->hc_access, 0))
         res = -1;
     }
   }
-
 
   return res;
 }

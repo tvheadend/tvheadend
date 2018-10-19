@@ -117,11 +117,15 @@ struct idnode_save {
 /*
  * Simple list
  */
-typedef struct idnode_slist {
+typedef struct idnode_slist idnode_slist_t;
+struct idnode_slist {
   const char       *id;
   const char       *name;
   size_t            off;
-} idnode_slist_t;
+  
+  int             (*set)(void *self, idnode_slist_t *entry, int val);
+  int             (*get)(void *self, idnode_slist_t *entry);
+};
 
 /*
  * Node list mapping definition

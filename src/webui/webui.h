@@ -23,8 +23,9 @@
 #include "idnode.h"
 #include "http.h"
 
-#define MIME_M3U "audio/x-mpegurl"
-#define MIME_E2 "application/x-e2-bouquet"
+#define MIME_M3U      "audio/x-mpegurl"
+#define MIME_E2       "application/x-e2-bouquet"
+#define MIME_XSPF_XML "application/xspf+xml"
 
 void webui_init(int xspf);
 void webui_done(void);

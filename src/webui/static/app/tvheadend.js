@@ -798,7 +798,7 @@ tvheadend.niceDateYearMonth = function(dt, refdate) {
  */
 tvheadend.playLink = function(link, title) {
     if (title) title = '?title=' + encodeURIComponent(title);
-    return '<a href="' + link + title + '">' +
+    return '<a href="play/ticket/' + link + title + '">' +
            '<img src="static/icons/control_play.png" class="playlink" title="' +
            _('Play this stream') + '" alt="' + _('Play') + '"/></a>';
 }
