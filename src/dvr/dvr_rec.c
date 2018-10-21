@@ -128,10 +128,10 @@ dvr_rec_subscribe(dvr_entry_t *de)
       return -EOVERFLOW;
     }
   }
-  access_destroy(aa);
 
   if(stat(de->de_config->dvr_storage, &st) || !S_ISDIR(st.st_mode)) {
     tvherror(LS_DVR, "the directory '%s' is not accessible", de->de_config->dvr_storage);
+    access_destroy(aa);
     return -EIO;
   }
 
@@ -149,6 +149,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
                profile_get_name(pro), channel_get_name(de->de_channel, channel_blank_name));
       profile_chain_close(prch);
       free(prch);
+      access_destroy(aa);
       return -EINVAL;
     }
   }
@@ -161,6 +162,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
              channel_get_name(de->de_channel, channel_blank_name), profile_get_name(pro));
     profile_chain_close(prch);
     free(prch);
+    access_destroy(aa);
     return -EINVAL;
   }
 
@@ -173,6 +175,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
     dvr_spawn_cmd(de, de->de_config->dvr_preproc, NULL, 1);
   if (de->de_config->dvr_fetch_artwork)
     dvr_spawn_fetch_artwork(de);
+  access_destroy(aa);
   return 0;
 }
 
