@@ -103,7 +103,7 @@ page_playlist_authpath(int urlauth)
   switch (urlauth) {
   case URLAUTH_NONE:    return "";
   case URLAUTH_TICKET:  return "/ticket";
-  case URLAUTH_CODE: return "/auth";
+  case URLAUTH_CODE:    return "/auth";
   default: assert(0);   return "";
   };
 }
@@ -1099,6 +1099,8 @@ static int
 page_http_playlist_auth
   (http_connection_t *hc, const char *remain, void *opaque)
 {
+  if (hc->hc_access == NULL || strempty(hc->hc_access->aa_auth))
+    return HTTP_STATUS_UNAUTHORIZED;
   return page_http_playlist_(hc, remain, opaque, URLAUTH_CODE);
 }
 
@@ -1583,6 +1585,8 @@ page_play_ticket(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_play_auth(http_connection_t *hc, const char *remain, void *opaque)
 {
+  if (hc->hc_access == NULL || strempty(hc->hc_access->aa_auth))
+    return HTTP_STATUS_UNAUTHORIZED;
   return page_play_(hc, remain, opaque, URLAUTH_CODE);
 }
 
