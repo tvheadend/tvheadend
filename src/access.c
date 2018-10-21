@@ -867,6 +867,7 @@ access_get_by_auth(struct sockaddr_storage *src, const char *id)
     return NULL;
   a = access_get(src, pw->pw_username, access_get_by_auth_verify, NULL);
   a->aa_rights &= ACCESS_STREAMING;
+  tvh_str_set(&a->aa_auth, id);
   return a;
 }
 

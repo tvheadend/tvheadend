@@ -1006,7 +1006,7 @@ page_http_playlist_
     case PLAYLIST_SATIP_M3U: cs = "satip/channels"; break;
     default:                 cs = "channels"; break;
     }
-    snprintf(buf, sizeof(buf), "playlist%s/%s", page_playlist_authpath(urlauth), cs);
+    snprintf(buf, sizeof(buf), "/playlist%s/%s", page_playlist_authpath(urlauth), cs);
     http_redirect(hc, buf, &hc->hc_req_args, 0);
     return HTTP_STATUS_FOUND;
   }
@@ -1062,12 +1062,12 @@ page_http_playlist_
     if (s[0] != '\0' && strcmp(s, "m3u") && strcmp(s, "m3u8"))
       r = HTTP_STATUS_BAD_REQUEST;
     else if(!strcmp(cmd, "tags"))
-      r = http_tag_list_playlist(hc, urlauth, pltype);
+      r = http_tag_list_playlist(hc, pltype, urlauth);
     else if(!strcmp(cmd, "channels"))
-      r = http_channel_list_playlist(hc, urlauth, pltype);
+      r = http_channel_list_playlist(hc, pltype, urlauth);
     else if(pltype != PLAYLIST_SATIP_M3U &&
             !strcmp(cmd, "recordings"))
-      r = http_dvr_list_playlist(hc, urlauth, pltype);
+      r = http_dvr_list_playlist(hc, pltype, urlauth);
     else {
       r = HTTP_STATUS_BAD_REQUEST;
     }
@@ -1530,13 +1530,13 @@ page_play_path_modify5(http_connection_t *hc, const char *path, int *cut)
 }
 
 static char *
-page_play_path_modify12(http_connection_t *hc, const char *path, int *cut)
+page_play_path_modify10(http_connection_t *hc, const char *path, int *cut)
 {
-  return page_play_path_modify_(hc, path, cut, 12);
+  return page_play_path_modify_(hc, path, cut, 10);
 }
 
 static char *
-page_play_path_modify16(http_connection_t *hc, const char *path, int *cut)
+page_play_path_modify12(http_connection_t *hc, const char *path, int *cut)
 {
   return page_play_path_modify_(hc, path, cut, 12);
 }
@@ -2026,7 +2026,7 @@ webui_init(int xspf)
 
   http_path_add_modify("/play", NULL, page_play, ACCESS_ANONYMOUS, page_play_path_modify5);
   http_path_add_modify("/play/ticket", NULL, page_play_ticket, ACCESS_ANONYMOUS, page_play_path_modify12);
-  http_path_add_modify("/play/auth", NULL, page_play_auth, ACCESS_ANONYMOUS, page_play_path_modify16);
+  http_path_add_modify("/play/auth", NULL, page_play_auth, ACCESS_ANONYMOUS, page_play_path_modify10);
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_ANONYMOUS);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
   http_path_add("/playlist", NULL, page_http_playlist, ACCESS_ANONYMOUS);
