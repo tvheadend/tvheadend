@@ -181,6 +181,7 @@ http_resolve(http_connection_t *hc, http_path_t *_hp,
     break;
 
   case '?':
+    *v = 0; /* terminate remaining url */
     *argsp = v + 1;
     break;
 
