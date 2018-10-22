@@ -290,6 +290,8 @@ enum streaming_message_type {
 #define SM_CODE_NO_ADAPTERS               209
 #define SM_CODE_INVALID_SERVICE           210
 #define SM_CODE_CHN_NOT_ENABLED           211
+#define SM_CODE_DATA_TIMEOUT              212
+#define SM_CODE_OTHER_SERVICE             213
 
 #define SM_CODE_ABORTED                   300
 

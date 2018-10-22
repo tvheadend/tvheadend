@@ -492,6 +492,10 @@ streaming_code2txt(int code)
     return N_("Invalid service");
   case SM_CODE_CHN_NOT_ENABLED:
     return N_("No channel enabled");
+  case SM_CODE_DATA_TIMEOUT:
+    return N_("No A/V data received");
+  case SM_CODE_OTHER_SERVICE:
+    return N_("Other service without A/V streams");
 
   case SM_CODE_ABORTED:
     return N_("Aborted by user");

@@ -363,11 +363,11 @@ service_mapper_thread ( void *aux )
   service_mapper_item_t *smi;
   profile_chain_t prch;
   th_subscription_t *sub;
-  int run, working = 0;
+  int run, working = 0, r;
   streaming_queue_t *sq;
   streaming_message_t *sm;
   const char *err = NULL;
-  uint64_t timeout;
+  uint64_t timeout, timeout_other;
 
   profile_chain_init(&prch, NULL, NULL);
   prch.prch_st = &prch.prch_sq.sq_st;
@@ -420,31 +420,44 @@ service_mapper_thread ( void *aux )
 
     /* Wait */
     run = 1;
-    pthread_mutex_lock(&sq->sq_mutex);
     timeout = mclk() + sec2mono(30);
+    timeout_other = mclk() + sec2mono(5);
     while(tvheadend_is_running() && run) {
 
       if (timeout < mclk()) {
         run = 0;
-        err = streaming_code2txt(SM_CODE_BAD_SOURCE);
+        err = streaming_code2txt(SM_CODE_DATA_TIMEOUT);
         break;
       }
 
+      if (timeout_other < mclk()) {
+        pthread_mutex_lock(&global_lock);
+        r = service_is_other(s);
+        pthread_mutex_unlock(&global_lock);
+        if (r) {
+          run = 0;
+          err = streaming_code2txt(SM_CODE_OTHER_SERVICE);
+          break;
+        }
+      }
+
       /* Wait for message */
+      pthread_mutex_lock(&sq->sq_mutex);
       while((sm = TAILQ_FIRST(&sq->sq_queue)) == NULL) {
         tvh_cond_wait(&sq->sq_cond, &sq->sq_mutex);
         if (!tvheadend_is_running())
           break;
       }
+      if (sm)
+        streaming_queue_remove(sq, sm);
+      pthread_mutex_unlock(&sq->sq_mutex);
       if (!tvheadend_is_running())
         break;
-
-      streaming_queue_remove(sq, sm);
-      pthread_mutex_unlock(&sq->sq_mutex);
 
       switch (sm->sm_type) {
       case SMT_GRACE:
         timeout += sec2mono(sm->sm_code);
+        timeout_other = sec2mono(sm->sm_code);
         break;
       case SMT_PACKET:
         run = 0;
@@ -470,6 +483,7 @@ service_mapper_thread ( void *aux )
     if (!tvheadend_is_running())
       break;
 
+    pthread_mutex_lock(&sq->sq_mutex);
     streaming_queue_clear(&sq->sq_queue);
     pthread_mutex_unlock(&sq->sq_mutex);
  
