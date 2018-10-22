@@ -65,11 +65,11 @@ dvr_rec_subscribe(dvr_entry_t *de)
   char buf[100];
   int weight;
   profile_t *pro;
-  profile_chain_t *prch;
+  profile_chain_t *prch = NULL;
   struct sockaddr_storage sa;
   access_t *aa;
   uint32_t rec_count, net_count;
-  int c1, c2;
+  int ret = 0, c1, c2;
   struct stat st;
 
   assert(de->de_s == NULL);
@@ -82,15 +82,16 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   snprintf(buf, sizeof(buf), "DVR: %s", lang_str_get(de->de_title, NULL));
 
-  if (de->de_owner && de->de_owner[0] != '\0')
+  if (de->de_owner && de->de_owner[0] != '\0') {
     aa = access_get_by_username(de->de_owner);
-  else if (de->de_creator && de->de_creator[0] != '\0' &&
-           tcp_get_ip_from_str(de->de_creator, &sa) != NULL)
+  } else if (de->de_creator && de->de_creator[0] != '\0' &&
+           tcp_get_ip_from_str(de->de_creator, &sa) != NULL) {
     aa = access_get_by_addr(&sa);
-  else {
+  } else {
     tvherror(LS_DVR, "unable to find access (owner '%s', creator '%s')",
              de->de_owner, de->de_creator);
-    return -EPERM;
+    ret = -EPERM;
+    goto _return;
   }
 
   if (aa->aa_conn_limit || aa->aa_conn_limit_dvr) {
@@ -104,15 +105,15 @@ dvr_rec_subscribe(dvr_entry_t *de)
                       "(limit %u, dvr limit %u, active DVR %u, streaming %u)",
                aa->aa_username ?: "", aa->aa_representative ?: "",
                aa->aa_conn_limit, aa->aa_conn_limit_dvr, rec_count, net_count);
-      access_destroy(aa);
-      return -EOVERFLOW;
+      ret = -EOVERFLOW;
+      goto _return;
     }
   }
 
   if(stat(de->de_config->dvr_storage, &st) || !S_ISDIR(st.st_mode)) {
     tvherror(LS_DVR, "the directory '%s' is not accessible", de->de_config->dvr_storage);
-    access_destroy(aa);
-    return -EIO;
+    ret = -EIO;
+    goto _return;
   }
 
   pro = de->de_config->dvr_profile;
@@ -128,9 +129,8 @@ dvr_rec_subscribe(dvr_entry_t *de)
       tvherror(LS_DVR, "unable to create channel streaming default chain '%s' for '%s'",
                profile_get_name(pro), channel_get_name(de->de_channel));
       profile_chain_close(prch);
-      free(prch);
-      access_destroy(aa);
-      return -EINVAL;
+      ret = -EINVAL;
+      goto _return;
     }
   }
 
@@ -140,10 +140,8 @@ dvr_rec_subscribe(dvr_entry_t *de)
   if (de->de_s == NULL) {
     tvherror(LS_DVR, "unable to create new channel subcription for '%s' profile '%s'",
              channel_get_name(de->de_channel), profile_get_name(pro));
-    profile_chain_close(prch);
-    free(prch);
-    access_destroy(aa);
-    return -EINVAL;
+    ret = -EINVAL;
+    goto _return;
   }
 
   de->de_chain = prch;
@@ -154,7 +152,13 @@ dvr_rec_subscribe(dvr_entry_t *de)
   if (de->de_config->dvr_preproc)
     dvr_spawn_cmd(de, de->de_config->dvr_preproc, NULL, 1);
   access_destroy(aa);
-  return 0;
+  return ret;
+
+_return:
+  profile_chain_close(prch);
+  free(prch);
+  access_destroy(aa);
+  return ret;
 }
 
 /**

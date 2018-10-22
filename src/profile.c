@@ -985,6 +985,9 @@ int profile_chain_weight(profile_chain_t *prch, int custom)
 void
 profile_chain_close(profile_chain_t *prch)
 {
+  if (prch == NULL)
+    return;
+
   profile_sharer_destroy(prch);
 
 #if ENABLE_TIMESHIFT
