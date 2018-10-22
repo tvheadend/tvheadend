@@ -1961,7 +1961,7 @@ static void
 passwd_entry_new_auth(passwd_entry_t *pw)
 {
   static const char table[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.";
   uint8_t buf[20], *in;
   char id[42], *dst;
   unsigned int bits;
