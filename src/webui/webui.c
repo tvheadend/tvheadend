@@ -513,6 +513,7 @@ http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
                       const char *logo, const char *epgid,
                       int urlauth, access_t *access)
 {
+  const char *delim = "?";
   htsbuf_append_str(hq, "#EXTINF:-1");
   if (logo) {
     if (strncmp(logo, "imagecache/", 11) == 0)
@@ -529,14 +530,17 @@ http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
   case URLAUTH_NONE:
     break;
   case URLAUTH_TICKET:
-    htsbuf_qprintf(hq, "?ticket=%s", access_ticket_create(url_remain, access));
+    htsbuf_qprintf(hq, "%sticket=%s", delim, access_ticket_create(url_remain, access));
+    delim = "&";
     break;
   case URLAUTH_CODE:
-    if (!strempty(access->aa_auth))
-      htsbuf_qprintf(hq, "?auth=%s", access->aa_auth);
+    if (!strempty(access->aa_auth)) {
+      htsbuf_qprintf(hq, "%sauth=%s", delim, access->aa_auth);
+      delim = "&";
+    }
     break;
   }
-  htsbuf_qprintf(hq, "&profile=%s\n", profile);
+  htsbuf_qprintf(hq, "%sprofile=%s\n", delim, profile);
 }
 
 /*
