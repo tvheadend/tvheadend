@@ -355,7 +355,7 @@ service_mapper_thread ( void *aux )
     /* Wait */
     run = 1;
     pthread_mutex_lock(&sq->sq_mutex);
-    timeout = mclk() + mono2sec(30);
+    timeout = mclk() + sec2mono(30);
     while(tvheadend_is_running() && run) {
 
       if (timeout < mclk()) {
@@ -378,7 +378,7 @@ service_mapper_thread ( void *aux )
 
       switch (sm->sm_type) {
       case SMT_GRACE:
-        timeout += mono2sec(sm->sm_code);
+        timeout += sec2mono(sm->sm_code);
         break;
       case SMT_PACKET:
         run = 0;
