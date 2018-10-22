@@ -525,18 +525,19 @@ http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
   if (chnum)
     htsbuf_qprintf(hq, " tvg-chno=\"%s\"", chnum);
   htsbuf_qprintf(hq, ",%s\n%s%s", svcname, hostpath, url_remain);
+  htsbuf_qprintf(hq, "?profile=%s", profile);
   switch (urlauth) {
   case URLAUTH_NONE:
+    htsbuf_qprintf(hq, "\n");
     break;
   case URLAUTH_TICKET:
-    htsbuf_qprintf(hq, "?ticket=%s", access_ticket_create(url_remain, access));
+    htsbuf_qprintf(hq, "&ticket=%s\n", access_ticket_create(url_remain, access));
     break;
   case URLAUTH_CODE:
     if (!strempty(access->aa_auth))
-      htsbuf_qprintf(hq, "?auth=%s", access->aa_auth);
+      htsbuf_qprintf(hq, "&auth=%s\n", access->aa_auth);
     break;
   }
-  htsbuf_qprintf(hq, "&profile=%s\n", profile);
 }
 
 /*
