@@ -478,7 +478,6 @@ service_mapper_thread ( void *aux )
       }
 
       streaming_msg_free(sm);
-      pthread_mutex_lock(&sq->sq_mutex);
     }
     if (!tvheadend_is_running())
       break;
