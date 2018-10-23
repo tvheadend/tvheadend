@@ -69,6 +69,7 @@ typedef struct config {
   int iptv_tpool_count;
   char *date_mask;
   int label_formatting;
+  uint32_t ticket_expires;
 } config_t;
 
 extern const idclass_t config_class;
