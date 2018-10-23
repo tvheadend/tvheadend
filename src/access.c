@@ -39,8 +39,6 @@
 #include "tcp.h"
 #include "lang_codes.h"
 
-#define TICKET_LIFETIME (5*60) /* in seconds */
-
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
 struct passwd_entry_queue passwd_entries;
@@ -124,7 +122,7 @@ access_ticket_timeout(void *aux)
 const char *
 access_ticket_create(const char *resource, access_t *a)
 {
-  const int64_t lifetime = sec2mono(TICKET_LIFETIME);
+  const int64_t lifetime = sec2mono(config.ticket_expires);
   uint8_t buf[20];
   char id[41];
   uint_fast32_t i;
