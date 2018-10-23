@@ -303,6 +303,8 @@ access_copy(access_t *src)
   }
   if (src->aa_chtags)
     dst->aa_chtags  = htsmsg_copy(src->aa_chtags);
+  if (src->aa_auth)
+    dst->aa_auth = strdup(src->aa_auth);
   return dst;
 }
 
