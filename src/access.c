@@ -716,6 +716,7 @@ access_get(struct sockaddr_storage *src, const char *username, verify_callback_t
   access_t *a = access_alloc();
   access_entry_t *ae;
   int nouser = tvh_str_default(username, NULL) == NULL;
+  char *s;
 
   if (!access_noacl && access_ip_blocked(src))
     return a;
@@ -727,8 +728,9 @@ access_get(struct sockaddr_storage *src, const char *username, verify_callback_t
                        superuser_username, superuser_password))
       return access_full(a);
   } else {
-    a->aa_representative = malloc(50);
-    tcp_get_str_from_ip(src, a->aa_representative, 50);
+    s = alloca(50);
+    tcp_get_str_from_ip(src, s, 50);
+    a->aa_representative = strdup(s);
     if(!passwd_verify2(username, verify, aux,
                        superuser_username, superuser_password))
       return access_full(a);
@@ -815,9 +817,10 @@ access_get_by_addr(struct sockaddr_storage *src)
 {
   access_t *a = access_alloc();
   access_entry_t *ae;
+  char buf[50];
 
-  a->aa_representative = malloc(50);
-  tcp_get_str_from_ip(src, a->aa_representative, 50);
+  tcp_get_str_from_ip(src, buf, sizeof(buf));
+  a->aa_representative = strdup(buf);
 
   if(access_noacl)
     return access_full(a);
