@@ -1199,6 +1199,7 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
         }
         var helpBtn = new Ext.Button({
             text: _('Help'),
+            tooltip: _('View help docs.'),
             iconCls: 'help',
             handler: help
         });
@@ -2045,6 +2046,7 @@ tvheadend.idnode_grid = function(panel, conf)
         buttons.push(abuttons.uilevel ? '-' : '->');
         buttons.push({
             text: _('Help'),
+            tooltip: _('View help docs.'),
             iconCls: 'help',
             handler: help
         });
@@ -2432,6 +2434,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         buttons.push(abuttons.uilevel ? '-' : '->');
         buttons.push({
             text: _('Help'),
+            tooltip: _('View help docs.'),
             iconCls: 'help',
             handler: help
         });
@@ -2872,6 +2875,7 @@ tvheadend.idnode_simple = function(panel, conf)
         buttons.push(abuttons.uilevel ? '-' : '->');
         buttons.push({
             text: _('Help'),
+            tooltip: _('View help docs.'),
             iconCls: 'help',
             handler: help
         });
