@@ -51,6 +51,7 @@ tvheadend.service_mapper_status = function(panel, index)
         layout: 'fit',
         tbar: ['->', {
              text: _('Help'),
+             tooltip: _('View help docs.'),
              iconCls: 'help',
              handler: function() {
                  new tvheadend.mdhelp('status_service_mapper')

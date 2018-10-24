@@ -1238,6 +1238,7 @@ tvheadend.epg = function() {
         '-',
         {
             text: _('Help'),
+            tooltip: _('View help docs.'),
             iconCls: 'help',
             tooltip: _('View help docs.'),
             handler: function() {
