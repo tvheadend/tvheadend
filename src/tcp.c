@@ -575,7 +575,7 @@ tcp_connection_launch
   (int fd, void (*status) (void *opaque, htsmsg_t *m), access_t *aa)
 {
   tcp_server_launch_t *tsl, *res;
-  uint32_t used = 0, used2;
+  uint32_t used, used2;
   int64_t started = mclk();
   int c1, c2;
 
@@ -588,6 +588,7 @@ tcp_connection_launch
 
 try_again:
   res = NULL;
+  used = 0;
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->fd == fd) {
       res = tsl;
