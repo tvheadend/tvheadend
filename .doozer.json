@@ -560,9 +560,6 @@
         "sudo"
       ],
       "buildcmd": [
-        "sudo apt-get -y purge makedev; sudo apt-get -y install makedev || true",
-        "sudo rm /var/lib/dpkg/info/makedev.postinst; sudo apt-get install -f",
-        "sudo ./Autobuild.sh -o deps -t ${TARGET}",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt",
       ]
@@ -591,9 +588,6 @@
         "sudo"
       ],
       "buildcmd": [
-        "sudo apt-get -y purge makedev; sudo apt-get -y install makedev || true",
-        "sudo rm /var/lib/dpkg/info/makedev.postinst; sudo apt-get install -f",
-        "sudo ./Autobuild.sh -o deps -t ${TARGET}",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt",
       ]
