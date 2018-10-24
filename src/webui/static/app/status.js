@@ -210,6 +210,7 @@ tvheadend.status_subs = function(panel, index)
         subs = new Ext.grid.GridPanel({
             tbar: ['->', {
                 text: _('Help'),
+                tooltip: _('View help docs.'),
                 iconCls: 'help',
                 handler: function() {
                     new tvheadend.mdhelp('status_subscriptions')
@@ -544,6 +545,7 @@ tvheadend.status_streams = function(panel, index)
             },
             '->',{
                 text: _('Help'),
+                tooltip: _('View help docs.'),
                 iconCls: 'help',
                 handler: function() {
                     new tvheadend.mdhelp('status_stream')
@@ -740,6 +742,7 @@ tvheadend.status_conns = function(panel, index) {
         grid = new Ext.grid.GridPanel({
             tbar: ['->', {
                 text: _('Help'),
+                tooltip: _('View help docs.'),
                 iconCls: 'help',
                 handler: function() {
                     new tvheadend.mdhelp('status_connections')
