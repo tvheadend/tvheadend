@@ -557,7 +557,8 @@
         "python-requests",
         "debhelper",
         "ccache",
-        "sudo"
+        "sudo",
+        "dvb-apps"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -585,7 +586,8 @@
         "python-requests",
         "debhelper",
         "ccache",
-        "sudo"
+        "sudo",
+        "dvb-apps"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
