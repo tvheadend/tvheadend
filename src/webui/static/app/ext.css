@@ -656,6 +656,10 @@
     width: 100px;
 }
 
+.x-nice-customformat {
+    display: inline-block;
+    width: 18em;
+}
 
 .x-nice-dayofweek {
     display: inline-block;
