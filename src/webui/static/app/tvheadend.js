@@ -746,9 +746,13 @@ Ext.Ajax.request({
  */
 tvheadend.niceDate = function(dt) {
     var d = new Date(dt);
-    return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.toLocaleFormat(), {weekday: 'long'}) + '</div>' +
-           '<div class="x-nice-date">' + d.toLocaleDateString(tvheadend.toLocaleFormat()) + '</div>' +
-           '<div class="x-nice-time">' + d.toLocaleTimeString() + '</div>';
+    if (/([%][MmsSyYdhq]+)/.test(tvheadend.date_mask)){
+           return '<div class=".x-nice-customformat">' + tvheadend.toCustomDate(d, tvheadend.date_mask) + '</div>';
+    }else{
+           return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.toLocaleFormat(), {weekday: 'long'}) + '</div>' +
+                  '<div class="x-nice-date">' + d.toLocaleDateString(tvheadend.toLocaleFormat(), {day: '2-digit', month: '2-digit', year: 'numeric'}) + '</div>' +
+                  '<div class="x-nice-time">' + d.toLocaleTimeString(tvheadend.toLocaleFormat(), {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}) + '</div>';
+    }
 }
 
 /* Date format when time is not needed, e.g., first_aired time is
@@ -790,7 +794,7 @@ tvheadend.niceDateYearMonth = function(dt, refdate) {
       }
     }
     return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.toLocaleFormat(), {weekday: 'long'}) + '</div>' +
-           '<div class="x-nice-date">' + d.toLocaleDateString(tvheadend.toLocaleFormat()) + '</div>';
+           '<div class="x-nice-date">' + d.toLocaleDateString(tvheadend.toLocaleFormat(), {day: '2-digit', month: '2-digit', year: 'numeric'}) + '</div>';
 }
 
 /*
