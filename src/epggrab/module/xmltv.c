@@ -34,7 +34,6 @@
 #include "channels.h"
 #include "spawn.h"
 #include "file.h"
-#include "htsstr.h"
 #include "string_list.h"
 
 #include "lang_str.h"

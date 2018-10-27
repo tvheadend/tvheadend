@@ -25,8 +25,6 @@
 #include <sys/stat.h>
 #include <libgen.h> /* basename */
 
-#include "htsstr.h"
-
 #include "tvheadend.h"
 #include "streaming.h"
 #include "tcp.h"

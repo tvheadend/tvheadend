@@ -16,10 +16,38 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef TVHEADEND_STRINGS_H
-#define TVHEADEND_STRINGS_H
+#ifndef TVHEADEND_STRING_H
+#define TVHEADEND_STRING_H
 
 #include "build.h"
+
+static inline int strempty(const char *c)
+  { return c == NULL || *c == '\0'; }
+
+char *hts_strndup(const char *str, size_t len);
+
+char *htsstr_unescape(char *str);
+
+char *htsstr_unescape_to(const char *src, char *dst, size_t dstlen);
+
+const char *htsstr_escape_find(const char *src, size_t upto_index);
+
+char **htsstr_argsplit(const char *str);
+
+void htsstr_argsplit_free(char **argv);
+
+typedef struct {
+  const char *id;
+  const char *(*getval)(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen);
+} htsstr_substitute_t;
+
+const char *
+htsstr_substitute_find(const char *src, int first);
+
+char *
+htsstr_substitute(const char *src, char *dst, size_t dstlen,
+                  int first, htsstr_substitute_t *sub, const void *aux,
+                  char *tmp, size_t tmplen);
 
 static inline size_t tvh_strlen(const char *s)
 {
@@ -99,4 +127,4 @@ int put_utf8(char *out, int c);
 
 char *utf8_lowercase_inplace(char *s);
 
-#endif /* TVHEADEND_STRINGS_H */
+#endif /* TVHEADEND_STRING_H */

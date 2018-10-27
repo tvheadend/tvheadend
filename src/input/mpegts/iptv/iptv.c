@@ -21,7 +21,6 @@
 #include "tvhpoll.h"
 #include "tcp.h"
 #include "settings.h"
-#include "htsstr.h"
 #include "channels.h"
 #include "packet.h"
 #include "config.h"
