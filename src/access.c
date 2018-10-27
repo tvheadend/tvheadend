@@ -122,7 +122,7 @@ access_ticket_timeout(void *aux)
 const char *
 access_ticket_create(const char *resource, access_t *a)
 {
-  const int64_t lifetime = sec2mono(config.ticket_expires);
+  const int64_t lifetime = sec2mono(MINMAX(config.ticket_expires, 30, 3600));
   uint8_t buf[20];
   char id[41];
   uint_fast32_t i;
