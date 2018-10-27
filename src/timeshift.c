@@ -417,12 +417,12 @@ timeshift_destroy(streaming_target_t *pad)
   /* Ensure the threads exits */
   // Note: this is a workaround for the fact the Q might have been flushed
   //       in reader thread (VERY unlikely)
-  pthread_mutex_lock(&ts->state_mutex);
+  tvh_mutex_lock(&ts->state_mutex);
   sm = streaming_msg_create(SMT_EXIT);
   streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
   if (!ts->exit)
     timeshift_write_exit(ts->rd_pipe.wr);
-  pthread_mutex_unlock(&ts->state_mutex);
+  tvh_mutex_unlock(&ts->state_mutex);
 
   /* Wait for all threads */
   pthread_join(ts->rd_thread, NULL);
@@ -484,7 +484,7 @@ streaming_target_t *timeshift_create
   ts->seek.frame = NULL;
   ts->ram_segments = 0;
   ts->file_segments = 0;
-  pthread_mutex_init(&ts->state_mutex, NULL);
+  tvh_mutex_init(&ts->state_mutex, NULL);
 
   /* Initialise output */
   tvh_pipe(O_NONBLOCK, &ts->rd_pipe);
@@ -492,8 +492,8 @@ streaming_target_t *timeshift_create
   /* Initialise input */
   streaming_queue_init(&ts->wr_queue, 0, 0);
   streaming_target_init(&ts->input, &timeshift_input_ops, ts, 0);
-  tvhthread_create(&ts->wr_thread, NULL, timeshift_writer, ts, "tshift-wr");
-  tvhthread_create(&ts->rd_thread, NULL, timeshift_reader, ts, "tshift-rd");
+  tvh_thread_create(&ts->wr_thread, NULL, timeshift_writer, ts, "tshift-wr");
+  tvh_thread_create(&ts->rd_thread, NULL, timeshift_reader, ts, "tshift-rd");
 
   /* Update index */
   timeshift_index++;

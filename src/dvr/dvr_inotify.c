@@ -16,16 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tvheadend.h"
-
-#include <unistd.h>
-#include <assert.h>
-#include <poll.h>
-#include <signal.h>
-#include <pthread.h>
 #include <sys/inotify.h>
 #include <sys/stat.h>
+#include <signal.h>
 
+#include "tvheadend.h"
 #include "redblack.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
@@ -76,7 +71,7 @@ void dvr_inotify_init ( void )
     return;
   }
 
-  tvhthread_create(&dvr_inotify_tid, NULL, _dvr_inotify_thread, NULL, "dvr-inotify");
+  tvh_thread_create(&dvr_inotify_tid, NULL, _dvr_inotify_thread, NULL, "dvr-inotify");
 }
 
 /**
@@ -86,7 +81,7 @@ void dvr_inotify_done ( void )
 {
   int fd = atomic_exchange(&_inot_fd, -1);
   if (fd >= 0) blacklisted_close(fd);
-  pthread_kill(dvr_inotify_tid, SIGTERM);
+  tvh_thread_kill(dvr_inotify_tid, SIGTERM);
   pthread_join(dvr_inotify_tid, NULL);
   SKEL_FREE(dvr_inotify_entry_skel);
 }
@@ -398,7 +393,7 @@ void* _dvr_inotify_thread ( void *p )
       break;
 
     /* Process */
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     while (i < len) {
       ev = (struct inotify_event *)&buf[i];
       tvhtrace(LS_DVR_INOTIFY, "i=%d len=%d name=%s", i, len, ev->name);
@@ -452,7 +447,7 @@ void* _dvr_inotify_thread ( void *p )
       cookie_prev = cookie;
       tvhdebug(LS_DVR_INOTIFY, "i=%d len=%d cookie_prev=%d from_prev=%s fd=%d EOR", i, len, cookie_prev, from_prev, fromfd_prev);
     }
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
 
   return NULL;

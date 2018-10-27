@@ -17,6 +17,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <signal.h>
+
 #include "iptv_private.h"
 #include "tvhpoll.h"
 #include "tcp.h"
@@ -25,22 +27,11 @@
 #include "packet.h"
 #include "config.h"
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <signal.h>
-#include <pthread.h>
-
 /* **************************************************************************
  * IPTV state
  * *************************************************************************/
 
-pthread_mutex_t iptv_lock;
+tvh_mutex_t iptv_lock;
 
 typedef struct iptv_thread_pool {
   TAILQ_ENTRY(iptv_thread_pool) link;
@@ -152,7 +143,7 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
 
   TAILQ_FOREACH(pool, &iptv_tpool, link) {
     mi2 = pool->input;
-    pthread_mutex_lock(&mi2->mi_output_lock);
+    tvh_mutex_lock(&mi2->mi_output_lock);
     LIST_FOREACH(mmi, &mi2->mi_mux_active, mmi_active_link)
       if (mmi->mmi_mux->mm_network == (mpegts_network_t *)in) {
         w = mpegts_mux_instance_weight(mmi);
@@ -162,7 +153,7 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
         }
         if (w >= weight) h++; else l++;
       }
-    pthread_mutex_unlock(&mi2->mi_output_lock);
+    tvh_mutex_unlock(&mi2->mi_output_lock);
   }
 
   tvhtrace(LS_IPTV_SUB, "is free[%p]: h = %d, l = %d, rw = %d", mm, h, l, rw);
@@ -391,7 +382,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   }
 
   /* Start */
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
   s = im->mm_iptv_url_raw;
   im->mm_iptv_url_raw = raw ? strdup(raw) : NULL;
   if (im->mm_iptv_url_raw) {
@@ -405,7 +396,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
       im->mm_active  = NULL;
     }
   }
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
 
   urlreset(&url);
   free(s);
@@ -445,7 +436,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   iptv_thread_pool_t *pool = ((iptv_input_t *)mi)->mi_tpool;
   uint32_t u32;
 
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
 
   mtimer_disarm(&im->im_pause_timer);
 
@@ -463,7 +454,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   u32 = --pool->streams;
 
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
 
   if (u32 == 0)
     iptv_input_thread_manage(iptv_tpool_safe_count(), 0);
@@ -506,7 +497,7 @@ iptv_input_unpause ( void *aux )
   iptv_mux_t *im = aux;
   iptv_input_t *mi;
   int pause;
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
   pause = 0;
   if (im->mm_active) {
     mi = (iptv_input_t *)im->mm_active->mmi_input;
@@ -517,7 +508,7 @@ iptv_input_unpause ( void *aux )
       im->im_handler->pause(mi, im, 0);
     }
   }
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
   if (pause)
     mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, sec2mono(1));
 }
@@ -547,7 +538,7 @@ iptv_input_thread ( void *aux )
     im = ev.ptr;
     r  = 0;
 
-    pthread_mutex_lock(&iptv_lock);
+    tvh_mutex_lock(&iptv_lock);
 
     /* Only when active */
     if (im->mm_active) {
@@ -563,13 +554,13 @@ iptv_input_thread ( void *aux )
         im->im_handler->pause(mi, im, 1);
     }
 
-    pthread_mutex_unlock(&iptv_lock);
+    tvh_mutex_unlock(&iptv_lock);
 
     if (r == 1) {
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
       if (im->mm_active)
         mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, sec2mono(1));
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
     }
   }
   return NULL;
@@ -1231,14 +1222,14 @@ iptv_input_thread_manage(int count, int force)
     pool = calloc(1, sizeof(*pool));
     pool->poll = tvhpoll_create(10);
     pool->input = iptv_create_input(pool);
-    tvhthread_create(&pool->thread, NULL, iptv_input_thread, pool, "iptv");
+    tvh_thread_create(&pool->thread, NULL, iptv_input_thread, pool, "iptv");
     TAILQ_INSERT_TAIL(&iptv_tpool, pool, link);
     iptv_tpool_count++;
   }
   while (iptv_tpool_count > count) {
     TAILQ_FOREACH(pool, &iptv_tpool, link)
       if (pool->streams == 0 || force) {
-        pthread_kill(pool->thread, SIGTERM);
+        tvh_thread_kill(pool->thread, SIGTERM);
         pthread_join(pool->thread, NULL);
         TAILQ_REMOVE(&iptv_tpool, pool, link);
         mpegts_input_stop_all((mpegts_input_t*)pool->input);
@@ -1256,7 +1247,7 @@ iptv_input_thread_manage(int count, int force)
 void iptv_init ( void )
 {
   TAILQ_INIT(&iptv_tpool);
-  pthread_mutex_init(&iptv_lock, NULL);
+  tvh_mutex_init(&iptv_lock, NULL);
 
   /* Register handlers */
   iptv_http_init();
@@ -1278,14 +1269,14 @@ void iptv_init ( void )
 
 void iptv_done ( void )
 {
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   iptv_input_thread_manage(0, 1);
   assert(TAILQ_EMPTY(&iptv_tpool));
   mpegts_network_unregister_builder(&iptv_auto_network_class);
   mpegts_network_unregister_builder(&iptv_network_class);
   mpegts_network_class_delete(&iptv_auto_network_class, 0);
   mpegts_network_class_delete(&iptv_network_class, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 /******************************************************************************

@@ -55,7 +55,7 @@ mpegts_mux_instance_delete
   idnode_unlink(&tii->tii_id);
   LIST_REMOVE(mmi, mmi_mux_link);
   LIST_REMOVE(tii, tii_input_link);
-  pthread_mutex_destroy(&mmi->tii_stats_mutex);
+  tvh_mutex_destroy(&mmi->tii_stats_mutex);
   free(mmi);
 }
 
@@ -70,7 +70,7 @@ mpegts_mux_instance_create0
     return NULL;
   }
 
-  pthread_mutex_init(&mmi->tii_stats_mutex, NULL);
+  tvh_mutex_init(&mmi->tii_stats_mutex, NULL);
 
   /* Setup links */
   mmi->mmi_mux   = mm;
@@ -880,7 +880,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
   mpegts_input_flush_mux(mi, mm);
 
   /* Ensure PIDs are cleared */
-  pthread_mutex_lock(&mi->mi_output_lock);
+  tvh_mutex_lock(&mi->mi_output_lock);
   mm->mm_last_pid = -1;
   mm->mm_last_mp = NULL;
   while ((mp = RB_FIRST(&mm->mm_pids))) {
@@ -911,7 +911,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
     RB_REMOVE(&mm->mm_pids, mp, mp_link);
     free(mp);
   }
-  pthread_mutex_unlock(&mi->mi_output_lock);
+  tvh_mutex_unlock(&mi->mi_output_lock);
 
   /* Scanning */
   mpegts_network_scan_mux_cancel(mm, 1);
@@ -932,10 +932,10 @@ mpegts_mux_update_pids_cb ( void *aux )
   if (mm && mm->mm_active) {
     mi = mm->mm_active->mmi_input;
     if (mi) {
-      pthread_mutex_lock(&mi->mi_output_lock);
+      tvh_mutex_lock(&mi->mi_output_lock);
       mm->mm_update_pids_flag = 0;
       mi->mi_update_pids(mi, mm);
-      pthread_mutex_unlock(&mi->mi_output_lock);
+      tvh_mutex_unlock(&mi->mi_output_lock);
     }
   }
 }
@@ -978,11 +978,11 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
   if (subscribe && !mt->mt_subscribed) {
     mpegts_table_grab(mt);
     mt->mt_subscribed = 1;
-    pthread_mutex_unlock(&mm->mm_tables_lock);
-    pthread_mutex_lock(&mi->mi_output_lock);
+    tvh_mutex_unlock(&mm->mm_tables_lock);
+    tvh_mutex_lock(&mi->mi_output_lock);
     mpegts_input_open_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt->mt_weight, mt, 0);
-    pthread_mutex_unlock(&mi->mi_output_lock);
-    pthread_mutex_lock(&mm->mm_tables_lock);
+    tvh_mutex_unlock(&mi->mi_output_lock);
+    tvh_mutex_lock(&mm->mm_tables_lock);
     mpegts_table_release(mt);
   }
 }
@@ -998,11 +998,11 @@ mpegts_mux_unsubscribe_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   if (mt->mt_subscribed) {
     mpegts_table_grab(mt);
     mt->mt_subscribed = 0;
-    pthread_mutex_unlock(&mm->mm_tables_lock);
-    pthread_mutex_lock(&mi->mi_output_lock);
+    tvh_mutex_unlock(&mm->mm_tables_lock);
+    tvh_mutex_lock(&mi->mi_output_lock);
     mpegts_input_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
-    pthread_mutex_unlock(&mi->mi_output_lock);
-    pthread_mutex_lock(&mm->mm_tables_lock);
+    tvh_mutex_unlock(&mi->mi_output_lock);
+    tvh_mutex_lock(&mm->mm_tables_lock);
     mpegts_table_release(mt);
   }
   if ((mt->mt_flags & MT_DEFER) && mt->mt_defer_cmd == MT_DEFER_OPEN_PID) {
@@ -1093,7 +1093,7 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
   assert(mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
 
   /* Log */
-  pthread_mutex_lock(&mm->mm_tables_lock);
+  tvh_mutex_lock(&mm->mm_tables_lock);
   mpegts_table_consistency_check(mm);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_flags & MT_QUICKREQ) {
@@ -1109,7 +1109,7 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
       tvhdebug(LS_MPEGTS, "%s - %04X (%d) %s %s", buf, mt->mt_pid, mt->mt_pid, mt->mt_name, s);
     }
   }
-  pthread_mutex_unlock(&mm->mm_tables_lock);
+  tvh_mutex_unlock(&mm->mm_tables_lock);
 
   /* override if all tables were found */
   if (res < 0 && incomplete <= 0 && total > 2)
@@ -1150,14 +1150,14 @@ mpegts_mux_scan_timeout ( void *aux )
   
   /* Check tables */
 again:
-  pthread_mutex_lock(&mm->mm_tables_lock);
+  tvh_mutex_lock(&mm->mm_tables_lock);
   mpegts_table_consistency_check(mm);
   c = q = w = 0;
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (!(mt->mt_flags & MT_QUICKREQ) && !mt->mt_working) continue;
     if (!mt->mt_count) {
       mpegts_table_grab(mt);
-      pthread_mutex_unlock(&mm->mm_tables_lock);
+      tvh_mutex_unlock(&mm->mm_tables_lock);
       mpegts_table_destroy(mt);
       mpegts_table_release(mt);
       goto again;
@@ -1169,7 +1169,7 @@ again:
       c++;
     }
   }
-  pthread_mutex_unlock(&mm->mm_tables_lock);
+  tvh_mutex_unlock(&mm->mm_tables_lock);
       
   /* No DATA - give up now */
   if (!c) {
@@ -1233,13 +1233,13 @@ mpegts_mux_create0
   mm->mm_open_table          = mpegts_mux_open_table;
   mm->mm_unsubscribe_table   = mpegts_mux_unsubscribe_table;
   mm->mm_close_table         = mpegts_mux_close_table;
-  pthread_mutex_init(&mm->mm_tables_lock, NULL);
+  tvh_mutex_init(&mm->mm_tables_lock, NULL);
   TAILQ_INIT(&mm->mm_table_queue);
   TAILQ_INIT(&mm->mm_defer_tables);
   LIST_INIT(&mm->mm_descrambler_caids);
   TAILQ_INIT(&mm->mm_descrambler_tables);
   TAILQ_INIT(&mm->mm_descrambler_emms);
-  pthread_mutex_init(&mm->mm_descrambler_lock, NULL);
+  tvh_mutex_init(&mm->mm_descrambler_lock, NULL);
 
   mm->mm_last_pid            = -1;
   mm->mm_created             = gclk();
@@ -1457,7 +1457,7 @@ mpegts_mux_tuning_error ( const char *mux_uuid, mpegts_mux_instance_t *mmi_match
         if (mmi->mmi_input)
           mmi->mmi_input->mi_tuning_error(mmi->mmi_input, mm);
     }
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
 }
 

@@ -31,9 +31,9 @@ static int
 api_mapper_stop
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   service_mapper_stop();
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }
@@ -57,9 +57,9 @@ static int
 api_mapper_status
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   *resp = api_mapper_status_msg();
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return 0;
 }
 
@@ -119,16 +119,16 @@ api_service_streams
   if (!(uuid = htsmsg_get_str(args, "uuid")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   /* Couldn't find */
   if (!(s = service_find_by_uuid(uuid))) {
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return EINVAL;
   }
 
   /* Build response */
-  pthread_mutex_lock(&s->s_stream_mutex);
+  tvh_mutex_lock(&s->s_stream_mutex);
   st = htsmsg_create_list();
   stf = htsmsg_create_list();
   if (s->s_components.set_pcr_pid) {
@@ -157,7 +157,7 @@ api_service_streams
   htsmsg_add_str(*resp, "name", s->s_nicename);
   if (s->s_hbbtv)
     hbbtv = htsmsg_copy(s->s_hbbtv);
-  pthread_mutex_unlock(&s->s_stream_mutex);
+  tvh_mutex_unlock(&s->s_stream_mutex);
 
   htsmsg_add_msg(*resp, "streams", st);
   htsmsg_add_msg(*resp, "fstreams", stf);
@@ -165,7 +165,7 @@ api_service_streams
     htsmsg_add_msg(*resp, "hbbtv", hbbtv);
 
   /* Done */
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return 0;
 }
 
@@ -176,9 +176,9 @@ api_service_remove_unseen
   int days = htsmsg_get_s32_or_default(args, "days", 7);
   const char *type = htsmsg_get_str(args, "type");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   service_remove_unseen(type, days);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return 0;
 }
 

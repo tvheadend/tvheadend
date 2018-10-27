@@ -1729,9 +1729,9 @@ dvb_sdt_mux
 
     /* Update nice name */
     if (save2) {
-      pthread_mutex_lock(&s->s_stream_mutex);
+      tvh_mutex_lock(&s->s_stream_mutex);
       service_make_nicename((service_t*)s);
-      pthread_mutex_unlock(&s->s_stream_mutex);
+      tvh_mutex_unlock(&s->s_stream_mutex);
       tvhdebug(mt->mt_subsys, "%s:  nicename %s", mt->mt_name, s->s_nicename);
       save = 1;
     }
@@ -2102,9 +2102,9 @@ dvb_fs_sdt_mux
 
     if (save) {
       /* Update nice name */
-      pthread_mutex_lock(&s->s_stream_mutex);
+      tvh_mutex_lock(&s->s_stream_mutex);
       service_make_nicename((service_t*)s);
-      pthread_mutex_unlock(&s->s_stream_mutex);
+      tvh_mutex_unlock(&s->s_stream_mutex);
       tvhdebug(mt->mt_subsys, "%s:  nicename %s", mt->mt_name, s->s_nicename);
       /* Save changes */
       idnode_changed(&s->s_id);

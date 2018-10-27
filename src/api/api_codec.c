@@ -34,7 +34,7 @@ api_codec_list(access_t *perm, void *opaque, const char *op,
     int err = ENOMEM;
 
     if ((list = htsmsg_create_list())) {
-        pthread_mutex_lock(&global_lock);
+        tvh_mutex_lock(&global_lock);
         SLIST_FOREACH(tvh_codec, &tvh_codecs, link) {
             if (!(map = idclass_serialize(tvh_codec_get_class(tvh_codec),
                                           perm->aa_lang_ui))) {
@@ -46,7 +46,7 @@ api_codec_list(access_t *perm, void *opaque, const char *op,
             htsmsg_add_str(map, "title", tvh_codec_get_title(tvh_codec));
             htsmsg_add_msg(list, NULL, map);
         }
-        pthread_mutex_unlock(&global_lock);
+        tvh_mutex_unlock(&global_lock);
         if (list) {
             if ((*resp = htsmsg_create_map())) {
                 htsmsg_add_msg(*resp, "entries", list);
@@ -72,7 +72,7 @@ api_codec_profile_list(access_t *perm, void *opaque, const char *op,
     int err = ENOMEM;
 
     if ((list = htsmsg_create_list())) {
-        pthread_mutex_lock(&global_lock);
+        tvh_mutex_lock(&global_lock);
         LIST_FOREACH(tvh_profile, &tvh_codec_profiles, link) {
             if (!(map = htsmsg_create_map())) {
                 htsmsg_destroy(list);
@@ -87,7 +87,7 @@ api_codec_profile_list(access_t *perm, void *opaque, const char *op,
                            tvh_codec_profile_get_status(tvh_profile));
             htsmsg_add_msg(list, NULL, map);
         }
-        pthread_mutex_unlock(&global_lock);
+        tvh_mutex_unlock(&global_lock);
         if (list) {
             if ((*resp = htsmsg_create_map())) {
                 htsmsg_add_msg(*resp, "entries", list);
@@ -114,9 +114,9 @@ api_codec_profile_create(access_t *perm, void *opaque, const char *op,
     if ((codec_name = htsmsg_get_str(args, "class")) &&
         (conf = htsmsg_get_map(args, "conf"))) {
         htsmsg_set_str(conf, "codec_name", codec_name);
-        pthread_mutex_lock(&global_lock);
+        tvh_mutex_lock(&global_lock);
         err = (err = tvh_codec_profile_create(conf, NULL, 1)) ? -err : 0;
-        pthread_mutex_unlock(&global_lock);
+        tvh_mutex_unlock(&global_lock);
     }
     return err;
 }

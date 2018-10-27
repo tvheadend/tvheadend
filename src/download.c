@@ -114,7 +114,7 @@ download_fetch_complete(http_client_t *hc)
       last_url++;
   }
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   if (dn->http_client == NULL)
     goto out;
@@ -129,7 +129,7 @@ download_fetch_complete(http_client_t *hc)
   mtimer_arm_rel(&dn->fetch_timer, download_fetch_done, hc, 0);
 
 out:
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   urlreset(&u);
   return 0;

@@ -442,7 +442,7 @@ esfilter_build_ca_enum(int provider)
 
   lock_assert(&global_lock);
   TAILQ_FOREACH(s, &service_all, s_all_link) {
-    pthread_mutex_lock(&s->s_stream_mutex);
+    tvh_mutex_lock(&s->s_stream_mutex);
     TAILQ_FOREACH(es, &s->s_components.set_all, es_link) {
       LIST_FOREACH(ca, &es->es_caids, link) {
         v = provider ? ca->providerid : ca->caid;
@@ -453,7 +453,7 @@ esfilter_build_ca_enum(int provider)
           a[count++] = v;
       }
     }
-    pthread_mutex_unlock(&s->s_stream_mutex);
+    tvh_mutex_unlock(&s->s_stream_mutex);
   }
   qsort(a, count, sizeof(uint32_t), esfilter_build_ca_cmp);
 
@@ -1222,10 +1222,10 @@ esfilter_done(void)
   esfilter_t *esf;
   int i;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   for (i = 0; i <= ESF_CLASS_LAST; i++) {
     while ((esf = TAILQ_FIRST(&esfilters[i])) != NULL)
       esfilter_delete(esf, 0);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

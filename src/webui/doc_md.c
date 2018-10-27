@@ -216,15 +216,15 @@ md_class(htsbuf_queue_t *hq, const char *clazz, const char *lang,
   const char *s, **doc;
   int nl = 0;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   ic = idclass_find(clazz);
   if (ic == NULL) {
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return HTTP_STATUS_NOT_FOUND;
   }
   doc = idclass_get_doc(ic);
   m = idclass_serializedoc(ic, lang);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   if (hdr) {
     s = htsmsg_get_str(m, "caption");
     if (s) {
@@ -250,10 +250,10 @@ http_markdown_classes(http_connection_t *hc)
   const idclass_t *ic;
   htsbuf_queue_t *hq = &hc->hc_reply;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   all = idclass_find_all();
   if (all == NULL) {
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return HTTP_STATUS_NOT_FOUND;
   }
   for (all2 = all; *all2; all2++) {
@@ -263,7 +263,7 @@ http_markdown_classes(http_connection_t *hc)
       htsbuf_append(hq, "\n", 1);
     }
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   free(all);
   return 0;

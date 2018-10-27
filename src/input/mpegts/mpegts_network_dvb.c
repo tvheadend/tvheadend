@@ -1007,13 +1007,13 @@ void dvb_network_done ( void )
 {
   int i;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   /* Unregister class builders */
   for (i = 0; i < ARRAY_SIZE(dvb_network_classes); i++) {
     mpegts_network_unregister_builder(dvb_network_classes[i]);
     mpegts_network_class_delete(dvb_network_classes[i], 0);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   dvb_charset_done();
   scanfile_done();

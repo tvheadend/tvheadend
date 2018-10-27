@@ -35,7 +35,7 @@ api_caclient_list
   char buf[384];
 
   l = htsmsg_create_list();
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   TAILQ_FOREACH(cac, &caclients, cac_link) {
     e = htsmsg_create_map();
     htsmsg_add_uuid(e, "uuid", &cac->cac_id.in_uuid);
@@ -43,7 +43,7 @@ api_caclient_list
     htsmsg_add_str(e, "status", caclient_get_status(cac));
     htsmsg_add_msg(l, NULL, e);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
   return 0;
@@ -84,13 +84,13 @@ api_caclient_create
     return EINVAL;
   htsmsg_set_str(conf, "class", clazz);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   cac = caclient_create(NULL, conf, 1);
   if (cac)
     api_idnode_create(resp, &cac->cac_id);
   else
     err = -EINVAL;
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return err;
 }

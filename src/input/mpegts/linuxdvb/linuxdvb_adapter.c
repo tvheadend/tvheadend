@@ -384,7 +384,7 @@ linuxdvb_adapter_add ( const char *path )
   /* Note: some of the below can take a while, so we relinquish the lock
    *       to stop us blocking everyhing else
    */
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   /* Process each frontend */
   for (i = 0; i < 32; i++) {
@@ -438,7 +438,7 @@ linuxdvb_adapter_add ( const char *path )
     }
 
     /* Create/Find adapter */
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     if (!la) {
       la = linuxdvb_adapter_new(path, a, dfi.name, name, &conf, &save);
       if (la == NULL) {
@@ -481,7 +481,7 @@ linuxdvb_adapter_add ( const char *path )
 #else
     linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, type, name);
 #endif
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
 
   /* Process each CA device */
@@ -575,7 +575,7 @@ linuxdvb_adapter_add ( const char *path )
     }
 #endif /* ENABLE_DDCI */
 
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
 
     if (!la) {
       snprintf(name, sizeof(name), "CAM #%d", i);
@@ -594,7 +594,7 @@ linuxdvb_adapter_add ( const char *path )
       for (j = 0; j < cac.slot_num; j++)
         linuxdvb_ca_create(caconf, lcat, j);
     }
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
 #endif /* ENABLE_LINUXDVB_CA */
 
@@ -603,7 +603,7 @@ linuxdvb_adapter_add ( const char *path )
     htsmsg_destroy(conf);
 
   /* Relock before exit */
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   /* Adapter couldn't be opened; there's nothing to work with  */
   if (!la)
@@ -792,7 +792,7 @@ linuxdvb_adapter_done ( void )
   linuxdvb_adapter_t *la;
   tvh_hardware_t *th, *n;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   fsmonitor_del("/dev/dvb", &devdvbmon);
   fsmonitor_del("/dev", &devmon);
   for (th = LIST_FIRST(&tvh_hardware); th != NULL; th = n) {
@@ -805,5 +805,5 @@ linuxdvb_adapter_done ( void )
 #if ENABLE_LINUXDVB_CA
   linuxdvb_ca_done();
 #endif
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

@@ -311,7 +311,7 @@ typedef struct service {
    * This mutex also protects all elementary_stream_t instances for this
    * transport.
    */
-  pthread_mutex_t s_stream_mutex;
+  tvh_mutex_t s_stream_mutex;
 
   /**
    *

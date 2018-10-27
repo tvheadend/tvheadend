@@ -17,13 +17,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdarg.h>
-#include <pthread.h>
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
 #include <sys/stat.h>
-#include <libgen.h> /* basename */
+#include <ctype.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -164,7 +159,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   de->de_chain = prch;
 
   atomic_set(&de->de_thread_shutdown, 0);
-  tvhthread_create(&de->de_thread, NULL, dvr_thread, de, "dvr");
+  tvh_thread_create(&de->de_thread, NULL, dvr_thread, de, "dvr");
 
   if (de->de_config->dvr_preproc)
     dvr_spawn_cmd(de, de->de_config->dvr_preproc, NULL, 1);
@@ -1400,7 +1395,7 @@ dvr_thread_global_lock(dvr_entry_t *de, int *run)
     *run = 0;
     return 0;
   }
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   return 1;
 }
 
@@ -1410,7 +1405,7 @@ dvr_thread_global_lock(dvr_entry_t *de, int *run)
 static inline void
 dvr_thread_global_unlock(dvr_entry_t *de)
 {
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   atomic_dec(&de->de_thread_shutdown, 1);
 }
 
@@ -1606,7 +1601,7 @@ dvr_thread(void *aux)
 
   TAILQ_INIT(&backlog);
 
-  pthread_mutex_lock(&sq->sq_mutex);
+  tvh_mutex_lock(&sq->sq_mutex);
   while(run) {
     sm = TAILQ_FIRST(&sq->sq_queue);
     if(sm == NULL) {
@@ -1642,7 +1637,7 @@ dvr_thread(void *aux)
       tvhtrace(LS_DVR, "%s - running flag changed from %d to %d",
                idnode_uuid_as_str(&de->de_id, ubuf), old_epg_running, epg_running);
 
-    pthread_mutex_unlock(&sq->sq_mutex);
+    tvh_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
 
@@ -1858,9 +1853,9 @@ fin:
     }
 
     streaming_msg_free(sm);
-    pthread_mutex_lock(&sq->sq_mutex);
+    tvh_mutex_lock(&sq->sq_mutex);
   }
-  pthread_mutex_unlock(&sq->sq_mutex);
+  tvh_mutex_unlock(&sq->sq_mutex);
 
   streaming_queue_clear(&backlog);
 

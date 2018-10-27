@@ -19,7 +19,7 @@
 #ifndef __IMAGE_CACHE_H__
 #define __IMAGE_CACHE_H__
 
-#include <pthread.h>
+#include "tvh_thread.h"
 #include "idnode.h"
 
 struct imagecache_config {
@@ -34,7 +34,7 @@ struct imagecache_config {
 extern struct imagecache_config imagecache_conf;
 extern const idclass_t imagecache_class;
 
-extern pthread_mutex_t imagecache_mutex;
+extern tvh_mutex_t imagecache_mutex;
 
 void     imagecache_init     ( void );
 void	 imagecache_done     ( void );

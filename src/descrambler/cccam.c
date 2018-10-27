@@ -1047,8 +1047,8 @@ caclient_t *cccam_create(void)
   cccam->cc_subsys = LS_CCCAM;
   cccam->cc_id     = "cccam";
 
-  pthread_mutex_init(&cccam->cc_mutex, NULL);
-  tvh_cond_init(&cccam->cc_cond);
+  tvh_mutex_init(&cccam->cc_mutex, NULL);
+  tvh_cond_init(&cccam->cc_cond, 1);
   cccam->cac_free         = cc_free;
   cccam->cac_start        = cc_service_start;
   cccam->cac_conf_changed = cccam_conf_changed;

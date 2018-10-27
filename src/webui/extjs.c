@@ -16,17 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <sys/socket.h>
-
-#include <arpa/inet.h>
-
 #include "htsmsg.h"
 #include "htsmsg_json.h"
 

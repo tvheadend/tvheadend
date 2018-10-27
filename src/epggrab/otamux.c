@@ -54,7 +54,7 @@ gtimer_t                     epggrab_ota_start_timer;
 int                          epggrab_ota_running;
 int                          epggrab_ota_pending_flag;
 
-pthread_mutex_t              epggrab_ota_mutex;
+tvh_mutex_t                  epggrab_ota_mutex;
 
 SKEL_DECLARE(epggrab_ota_mux_skel, epggrab_ota_mux_t);
 SKEL_DECLARE(epggrab_svc_link_skel, epggrab_ota_svc_link_t);
@@ -709,12 +709,12 @@ epggrab_ota_start_cb ( void *p )
 
   epggrab_ota_kick(1);
 
-  pthread_mutex_lock(&epggrab_ota_mutex);
+  tvh_mutex_lock(&epggrab_ota_mutex);
   if (!cron_multi_next(epggrab_ota_cron_multi, gclk(), &next))
     epggrab_ota_next_arm(next);
   else
     tvhwarn(LS_EPGGRAB, "ota cron config invalid or unset");
-  pthread_mutex_unlock(&epggrab_ota_mutex);
+  tvh_mutex_unlock(&epggrab_ota_mutex);
 }
 
 static void
@@ -722,7 +722,7 @@ epggrab_ota_arm ( time_t last )
 {
   time_t next;
 
-  pthread_mutex_lock(&epggrab_ota_mutex);
+  tvh_mutex_lock(&epggrab_ota_mutex);
 
   if (!cron_multi_next(epggrab_ota_cron_multi, time(NULL), &next)) {
     /* do not trigger the next EPG scan for 1/2 hour */
@@ -733,7 +733,7 @@ epggrab_ota_arm ( time_t last )
     tvhwarn(LS_EPGGRAB, "ota cron config invalid or unset");
   }
 
-  pthread_mutex_unlock(&epggrab_ota_mutex);
+  tvh_mutex_unlock(&epggrab_ota_mutex);
 }
 
 /*
@@ -893,7 +893,7 @@ epggrab_ota_init ( void )
   TAILQ_INIT(&epggrab_ota_pending);
   TAILQ_INIT(&epggrab_ota_active);
 
-  pthread_mutex_init(&epggrab_ota_mutex, NULL);
+  tvh_mutex_init(&epggrab_ota_mutex, NULL);
 
   /* Add listener */
   static mpegts_listener_t ml = {
@@ -997,10 +997,10 @@ epggrab_ota_set_cron ( void )
 {
   lock_assert(&global_lock);
 
-  pthread_mutex_lock(&epggrab_ota_mutex);
+  tvh_mutex_lock(&epggrab_ota_mutex);
   free(epggrab_ota_cron_multi);
   epggrab_ota_cron_multi = cron_multi_set(epggrab_conf.ota_cron);
-  pthread_mutex_unlock(&epggrab_ota_mutex);
+  tvh_mutex_unlock(&epggrab_ota_mutex);
   epggrab_ota_arm((time_t)-1);
 }
 

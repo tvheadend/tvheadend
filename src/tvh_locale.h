@@ -18,6 +18,8 @@
 #ifndef __TVH_LOCALE_H__
 #define __TVH_LOCALE_H__
 
+#include <stdio.h>
+
 const char *tvh_gettext_get_lang(const char *lang);
 const char *tvh_gettext_lang(const char *lang, const char *s);
 static inline const char *tvh_gettext(const char *s)

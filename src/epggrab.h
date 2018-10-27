@@ -21,8 +21,6 @@
 
 #include "idnode.h"
 
-#include <pthread.h>
-
 /* **************************************************************************
  * Typedefs/Forward decls
  * *************************************************************************/
@@ -360,7 +358,7 @@ void epggrab_queue_data(epggrab_module_t *mod,
  * Configuration
  */
 extern epggrab_module_list_t epggrab_modules;
-extern pthread_mutex_t       epggrab_mutex;
+extern tvh_mutex_t           epggrab_mutex;
 extern int                   epggrab_running;
 extern int                   epggrab_ota_running;
 

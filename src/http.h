@@ -144,7 +144,7 @@ typedef struct http_connection {
   struct sockaddr_storage *hc_proxy_ip;
   struct sockaddr_storage *hc_local_ip;
 
-  pthread_mutex_t  *hc_paths_mutex;
+  tvh_mutex_t *hc_paths_mutex;
   http_path_list_t *hc_paths;
   int (*hc_process)(struct http_connection *hc, htsbuf_queue_t *spill);
 
@@ -154,7 +154,7 @@ typedef struct http_connection {
   htsbuf_queue_t  hc_reply;
 
   int             hc_extra_insend;
-  pthread_mutex_t hc_extra_lock;
+  tvh_mutex_t     hc_extra_lock;
   int             hc_extra_chunks;
   htsbuf_queue_t  hc_extra;
 
@@ -340,7 +340,7 @@ struct http_client {
 
   TAILQ_ENTRY(http_client) hc_link;
 
-  pthread_mutex_t hc_mutex;
+  tvh_mutex_t  hc_mutex;
 
   int          hc_id;
   int          hc_fd;

@@ -377,10 +377,10 @@ void
 mpegts_mux_sched_done ( void )
 {
   mpegts_mux_sched_t *mms;
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((mms = LIST_FIRST(&mpegts_mux_sched_all)))
     mpegts_mux_sched_delete(mms, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 /******************************************************************************

@@ -74,7 +74,7 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
 {
   streaming_queue_t *sq = opauqe;
 
-  pthread_mutex_lock(&sq->sq_mutex);
+  tvh_mutex_lock(&sq->sq_mutex);
 
   /* queue size protection */
   if (sq->sq_maxsize && sq->sq_maxsize < sq->sq_size) {
@@ -85,7 +85,7 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
   }
 
   tvh_cond_signal(&sq->sq_cond, 0);
-  pthread_mutex_unlock(&sq->sq_mutex);
+  tvh_mutex_unlock(&sq->sq_mutex);
 }
 
 /**
@@ -97,9 +97,9 @@ streaming_queue_info(void *opaque, htsmsg_t *list)
   streaming_queue_t *sq = opaque;
   size_t size;
   char buf[256];
-  pthread_mutex_lock(&sq->sq_mutex);
+  tvh_mutex_lock(&sq->sq_mutex);
   size = sq->sq_size;
-  pthread_mutex_unlock(&sq->sq_mutex);
+  tvh_mutex_unlock(&sq->sq_mutex);
   snprintf(buf, sizeof(buf), "streaming queue %p size %zd", sq, size);
   htsmsg_add_str(list, NULL, buf);
   return list;
@@ -128,8 +128,8 @@ streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
 
   streaming_target_init(&sq->sq_st, &ops, sq, reject_filter);
 
-  pthread_mutex_init(&sq->sq_mutex, NULL);
-  tvh_cond_init(&sq->sq_cond);
+  tvh_mutex_init(&sq->sq_mutex, NULL);
+  tvh_cond_init(&sq->sq_cond, 1);
   TAILQ_INIT(&sq->sq_queue);
 
   sq->sq_maxsize = maxsize;
@@ -144,7 +144,7 @@ streaming_queue_deinit(streaming_queue_t *sq)
 {
   sq->sq_size = 0;
   streaming_queue_clear(&sq->sq_queue);
-  pthread_mutex_destroy(&sq->sq_mutex);
+  tvh_mutex_destroy(&sq->sq_mutex);
   tvh_cond_destroy(&sq->sq_cond);
 }
 
@@ -640,7 +640,7 @@ void streaming_init(void)
 
 void streaming_done(void)
 {
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   memoryinfo_unregister(&streaming_msg_memoryinfo);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

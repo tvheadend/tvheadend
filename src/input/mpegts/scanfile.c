@@ -911,11 +911,11 @@ scanfile_init ( const char *muxconf_path, int lock )
 
   if (!initialized) {
     if (lock)
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
     memoryinfo_register(&scanfile_memoryinfo);
     initialized = 1;
     if (lock)
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
   }
 
   scanfile_total_load = 0;
@@ -946,12 +946,12 @@ scanfile_init ( const char *muxconf_path, int lock )
     scanfile_regions_load = NULL;
   } else {
     if (lock)
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
     scanfile_done();
     scanfile_regions = scanfile_regions_load;
     scanfile_regions_load = NULL;
     if (lock)
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
   }
 }
 

@@ -34,10 +34,10 @@ api_bouquet_list
   char ubuf[UUID_HEX_SIZE];
 
   l = htsmsg_create_list();
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   RB_FOREACH(bq, &bouquets, bq_link)
     htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&bq->bq_id, ubuf), bq->bq_name ?: ""));
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
 
@@ -68,11 +68,11 @@ api_bouquet_create
   if (s == NULL || *s == '\0')
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   bq = bouquet_create(NULL, conf, NULL, NULL);
   if (bq)
     api_idnode_create(resp, &bq->bq_id);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }
@@ -92,14 +92,14 @@ bouquet_cb
   if ((uuids = htsmsg_field_get_list(f))) {
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_str(f))) continue;
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
       cb(uuid);
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
     }
   } else if ((uuid = htsmsg_field_get_str(f))) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     r = cb(uuid);
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   } else {
     return -EINVAL;
   }

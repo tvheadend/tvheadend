@@ -181,7 +181,7 @@ extern const idclass_t iptv_mux_class;
 
 extern iptv_network_t *iptv_network;
 
-extern pthread_mutex_t iptv_lock;
+extern tvh_mutex_t iptv_lock;
 
 int iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int allow_pipe );
 

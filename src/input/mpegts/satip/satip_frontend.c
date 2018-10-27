@@ -145,7 +145,7 @@ satip_frontend_signal_cb( void *aux )
                        ((dvb_mux_t *)mmi->mmi_mux)->lm_tuning.dmc_fe_delsys);
     lfe->sf_tables = 1;
   }
-  pthread_mutex_lock(&mmi->tii_stats_mutex);
+  tvh_mutex_lock(&mmi->tii_stats_mutex);
   sigstat.status_text  = signal2str(lfe->sf_status);
   sigstat.snr          = mmi->tii_stats.snr;
   sigstat.signal       = mmi->tii_stats.signal;
@@ -157,14 +157,14 @@ satip_frontend_signal_cb( void *aux )
   sigstat.tc_bit       = mmi->tii_stats.tc_bit;
   sigstat.ec_block     = mmi->tii_stats.ec_block;
   sigstat.tc_block     = mmi->tii_stats.tc_block;
-  pthread_mutex_unlock(&mmi->tii_stats_mutex);
+  tvh_mutex_unlock(&mmi->tii_stats_mutex);
   memset(&sm, 0, sizeof(sm));
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(svc, &mmi->mmi_mux->mm_transports, s_active_link) {
-    pthread_mutex_lock(&svc->s_stream_mutex);
+    tvh_mutex_lock(&svc->s_stream_mutex);
     streaming_service_deliver(svc, streaming_msg_clone(&sm));
-    pthread_mutex_unlock(&svc->s_stream_mutex);
+    tvh_mutex_unlock(&svc->s_stream_mutex);
   }
   mtimer_arm_rel(&lfe->sf_monitor_timer, satip_frontend_signal_cb,
                  lfe, ms2mono(250));
@@ -781,7 +781,7 @@ satip_frontend_stop_mux
   /* Stop tune */
   tvh_write(lfe->sf_dvr_pipe.wr, "", 1);
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   tr = lfe->sf_req;
   if (tr && tr != lfe->sf_req_thread) {
     mpegts_pid_done(&tr->sf_pids_tuned);
@@ -790,7 +790,7 @@ satip_frontend_stop_mux
   }
   lfe->sf_running = 0;
   lfe->sf_req = NULL;
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
 }
 
 static int
@@ -856,15 +856,15 @@ satip_frontend_start_mux
   tr->sf_netlimit   = lfe->sf_netlimit;
   tr->sf_netgroup   = lfe->sf_netgroup;
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   lfe->sf_req       = tr;
   lfe->sf_running   = 1;
   lfe->sf_tables    = 0;
   lfe->sf_atsc_c    = lm->lm_tuning.dmc_fe_modulation != DVB_MOD_VSB_8;
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
-  pthread_mutex_lock(&mmi->tii_stats_mutex);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&mmi->tii_stats_mutex);
   lfe->sf_status    = SIGNAL_NONE;
-  pthread_mutex_unlock(&mmi->tii_stats_mutex);
+  tvh_mutex_unlock(&mmi->tii_stats_mutex);
 
   /* notify thread that we are ready */
   tvh_write(lfe->sf_dvr_pipe.wr, "s", 1);
@@ -884,7 +884,7 @@ satip_frontend_update_pids
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   if ((tr = lfe->sf_req) != NULL) {
     mpegts_pid_done(&tr->sf_pids);
     RB_FOREACH(mp, &mm->mm_pids, mp_link) {
@@ -915,7 +915,7 @@ satip_frontend_update_pids
     if (lfe->sf_device->sd_pids21)
       mpegts_pid_add(&tr->sf_pids, 21, MPS_WEIGHT_PMT_SCAN);
   }
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
 
   tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
 }
@@ -933,14 +933,14 @@ satip_frontend_open_service
   if (!lfe->sf_device->sd_can_weight)
     return;
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   if ((tr = lfe->sf_req) != NULL && tr->sf_mmi != NULL) {
-    pthread_mutex_lock(&mi->mi_output_lock);
+    tvh_mutex_lock(&mi->mi_output_lock);
     w = mpegts_mux_instance_weight(tr->sf_mmi);
     tr->sf_weight = MAX(w, weight);
-    pthread_mutex_unlock(&mi->mi_output_lock);
+    tvh_mutex_unlock(&mi->mi_output_lock);
   }
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
 
   tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
 }
@@ -1007,7 +1007,7 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
    * -a BER lower than 2x10-4 after Viterbi for DVB-S
    * -a PER lower than 10-7 for DVB-S2
    */
-  pthread_mutex_lock(&mmi->tii_stats_mutex);
+  tvh_mutex_lock(&mmi->tii_stats_mutex);
   while (len >= 12) {
     if ((rtcp[0] & 0xc0) != 0x80)	        /* protocol version: v2 */
       goto fail;
@@ -1097,7 +1097,7 @@ ok:
     status              = SIGNAL_FAINT;
   lfe->sf_status        = status;
 fail:
-  pthread_mutex_unlock(&mmi->tii_stats_mutex);
+  tvh_mutex_unlock(&mmi->tii_stats_mutex);
 }
 
 static int
@@ -1112,12 +1112,12 @@ satip_frontend_pid_changed( http_client_t *rtsp,
   int max_pids_count = sd->sd_pids_max;
   mpegts_apids_t wpid, padd, pdel;
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
 
   tr = lfe->sf_req_thread;
 
   if (!lfe->sf_running || !lfe->sf_req || !tr) {
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    tvh_mutex_unlock(&lfe->sf_dvr_lock);
     return 0;
   }
 
@@ -1127,7 +1127,7 @@ all:
     i = tr->sf_pids_tuned.all;
     mpegts_pid_done(&tr->sf_pids_tuned);
     tr->sf_pids_tuned.all = 1;
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    tvh_mutex_unlock(&lfe->sf_dvr_lock);
     if (i)
       goto skip;
     setup = (char *)"all";
@@ -1151,7 +1151,7 @@ all:
       sprintf(setup + strlen(setup), ",%i", wpid.pids[i].pid);
     mpegts_pid_copy(&tr->sf_pids_tuned, &wpid);
     tr->sf_pids_tuned.all = 0;
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    tvh_mutex_unlock(&lfe->sf_dvr_lock);
     mpegts_pid_done(&wpid);
 
     if (!j || setup[0] == '\0')
@@ -1188,7 +1188,7 @@ all:
 
     mpegts_pid_copy(&tr->sf_pids_tuned, &wpid);
     tr->sf_pids_tuned.all = 0;
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    tvh_mutex_unlock(&lfe->sf_dvr_lock);
 
     mpegts_pid_done(&wpid);
     mpegts_pid_done(&padd);
@@ -1224,7 +1224,7 @@ satip_frontend_other_is_waiting( satip_frontend_t *lfe )
   if (lfe->sf_type != DVB_TYPE_S)
     return 0;
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_req) {
     hash1 = lfe->sf_req->sf_netposhash;
     limit = (limit0 = lfe->sf_req->sf_netlimit) - 1;
@@ -1232,19 +1232,19 @@ satip_frontend_other_is_waiting( satip_frontend_t *lfe )
   } else {
     hash1 = limit0 = limit = group = 0;
   }
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
 
   if (hash1 == 0)
     return 0;
 
   r = count = 0;
-  pthread_mutex_lock(&sd->sd_tune_mutex);
+  tvh_mutex_lock(&sd->sd_tune_mutex);
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) count++;
   hashes = alloca(sizeof(int) * count);
   memset(hashes, 0, sizeof(int) * count);
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
     if (lfe2 == lfe) continue;
-    pthread_mutex_lock(&lfe2->sf_dvr_lock);
+    tvh_mutex_lock(&lfe2->sf_dvr_lock);
     cont = 0;
     if (limit0 > 0) {
       cont = group > 0 && lfe2->sf_req_thread && group != lfe2->sf_req_thread->sf_netgroup;
@@ -1253,7 +1253,7 @@ satip_frontend_other_is_waiting( satip_frontend_t *lfe )
              (lfe2->sf_master && lfe->sf_number != lfe2->sf_master);
     }
     hash2 = lfe2->sf_req_thread ? lfe2->sf_req_thread->sf_netposhash : 0;
-    pthread_mutex_unlock(&lfe2->sf_dvr_lock);
+    tvh_mutex_unlock(&lfe2->sf_dvr_lock);
     if (cont || hash2 == 0) continue;
     if (hash2 != hash1) {
       for (i = 0; i < count; i++) {
@@ -1266,7 +1266,7 @@ satip_frontend_other_is_waiting( satip_frontend_t *lfe )
       }
     }
   }
-  pthread_mutex_unlock(&sd->sd_tune_mutex);
+  tvh_mutex_unlock(&sd->sd_tune_mutex);
   return r > limit;
 }
 
@@ -1291,12 +1291,12 @@ satip_frontend_wake_other_waiting
     if ((lfe->sf_master && lfe2->sf_number != lfe->sf_master) ||
         (lfe2->sf_master && lfe->sf_number != lfe2->sf_master))
       continue;
-    while (pthread_mutex_trylock(&lfe2->sf_dvr_lock))
+    while (tvh_mutex_trylock(&lfe2->sf_dvr_lock))
       tvh_usleep(1000);
     hash2 = lfe2->sf_req ? lfe2->sf_req->sf_netposhash : 0;
     if (hash2 != 0 && hash1 != hash2 && lfe2->sf_running)
       tvh_write(lfe2->sf_dvr_pipe.wr, "o", 1);
-    pthread_mutex_unlock(&lfe2->sf_dvr_lock);
+    tvh_mutex_unlock(&lfe2->sf_dvr_lock);
   }
 
 end:
@@ -1409,10 +1409,10 @@ satip_frontend_shutdown
   sbuf_free(&lfe->sf_sbuf);
 
 wake:
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   satip_frontend_wake_other_waiting(lfe, tr);
   satip_frontend_request_cleanup(lfe, tr);
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
 }
 
 static void
@@ -1422,15 +1422,15 @@ satip_frontend_tuning_error ( satip_frontend_t *lfe, satip_tune_req_t *tr )
   mpegts_mux_instance_t *mmi;
   char uuid[UUID_HEX_SIZE];
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_running && lfe->sf_req == tr &&
       (mmi = tr->sf_mmi) != NULL && (mm = mmi->mmi_mux) != NULL) {
     idnode_uuid_as_str(&mm->mm_id, uuid);
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    tvh_mutex_unlock(&lfe->sf_dvr_lock);
     mpegts_mux_tuning_error(uuid, mmi);
     return;
   }
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
 }
 
 static void
@@ -1532,13 +1532,14 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
 
     if (lfe->sf_sbuf.sb_ptr > 64 * 1024 ||
         lfe->sf_last_data_tstamp + sec2mono(1) <= mclk()) {
-      pthread_mutex_lock(&lfe->sf_dvr_lock);
+      tvh_mutex_lock(&lfe->sf_dvr_lock);
       if (lfe->sf_req == lfe->sf_req_thread) {
         mmi = lfe->sf_req->sf_mmi;
         atomic_add(&mmi->tii_stats.unc, unc);
         mpegts_input_recv_packets(mmi, &lfe->sf_sbuf, 0, NULL);
       }
-      pthread_mutex_unlock(&lfe->sf_dvr_lock);
+      tvh_mutex_unlock(&lfe->sf_dvr_lock);
+      lfe->sf_last_data_tstamp = mclk();
     }
     lfe->sf_last_data_tstamp = mclk();
 
@@ -1548,11 +1549,11 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
     len -= 4;
     memmove(b, b + 4, len);
 
-    pthread_mutex_lock(&lfe->sf_dvr_lock);
+    tvh_mutex_lock(&lfe->sf_dvr_lock);
     if (lfe->sf_req == lfe->sf_req_thread)
       satip_frontend_decode_rtcp(lfe, lfe->sf_display_name,
                                  lfe->sf_req->sf_mmi, b, len);
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    tvh_mutex_unlock(&lfe->sf_dvr_lock);
 
   }
 
@@ -1605,10 +1606,10 @@ satip_frontend_input_thread ( void *aux )
    * New tune
    */
 new_tune:
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_req)
     mpegts_pid_done(&lfe->sf_req->sf_pids_tuned);
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
 
   udp_rtp_packet_destroy_all(lfe);
   sbuf_free(sb);
@@ -1690,10 +1691,10 @@ new_tune:
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   satip_frontend_request_cleanup(lfe, tr);
   lfe->sf_req_thread = tr = lfe->sf_req;
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
 
   if (!lfe->sf_req_thread)
     goto new_tune;
@@ -1745,10 +1746,10 @@ new_tune:
 
   i = 0;
   if (!rtsp) {
-    pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
+    tvh_mutex_lock(&lfe->sf_device->sd_tune_mutex);
     u64 = lfe_master->sf_last_tune;
     i = lfe_master->sf_tdelay;
-    pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
+    tvh_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
     if (i < 0)
       i = 0;
     if (i > 2000)
@@ -1808,9 +1809,9 @@ new_tune:
 
   }
 
-  pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
+  tvh_mutex_lock(&lfe->sf_device->sd_tune_mutex);
   lfe_master->sf_last_tune = getfastmonoclock();
-  pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
+  tvh_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
 
   i = 0;
   if (!rtsp) {
@@ -1863,7 +1864,7 @@ new_tune:
     rtsp_flags |= SATIP_SETUP_FE;
 
   r = -12345678;
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_req == lfe->sf_req_thread) {
     lfe->sf_req->sf_weight_tuned = lfe->sf_req->sf_weight;
     r = satip_rtsp_setup(rtsp,
@@ -1872,7 +1873,7 @@ new_tune:
                          rtsp_flags,
                          lfe->sf_req->sf_weight);
   }
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
   if (r < 0) {
     if (r != -12345678)
       tvherror(LS_SATIP, "%s - failed to tune (%i)", buf, r);
@@ -1995,7 +1996,7 @@ new_tune:
                         rtsp->hc_rtsp_session, rtsp->hc_rtsp_stream_id);
             if (lfe->sf_play2) {
               r = -12345678;
-              pthread_mutex_lock(&lfe->sf_dvr_lock);
+              tvh_mutex_lock(&lfe->sf_dvr_lock);
               if (lfe->sf_req == lfe->sf_req_thread) {
                 lfe->sf_req->sf_weight_tuned = lfe->sf_req->sf_weight;
                 r = satip_rtsp_setup(rtsp, position, lfe->sf_number,
@@ -2003,7 +2004,7 @@ new_tune:
                                      rtsp_flags | SATIP_SETUP_PLAY,
                                      lfe->sf_req->sf_weight);
               }
-              pthread_mutex_unlock(&lfe->sf_dvr_lock);
+              tvh_mutex_unlock(&lfe->sf_dvr_lock);
               if (r < 0) {
                 tvherror(LS_SATIP, "%s - failed to tune2 (%i)", buf, r);
                 satip_frontend_tuning_error(lfe, tr);
@@ -2059,10 +2060,10 @@ new_tune:
       c = recv(rtcp->fd, b, sizeof(b), MSG_DONTWAIT);
       if (c > 0) {
         lfe->sf_last_activity_tstamp = mclk();
-        pthread_mutex_lock(&lfe->sf_dvr_lock);
-        if (lfe->sf_req == lfe->sf_req_thread)
+        tvh_mutex_lock(&lfe->sf_dvr_lock);
+       if (lfe->sf_req == lfe->sf_req_thread)
           satip_frontend_decode_rtcp(lfe, buf, mmi, b, c);
-        pthread_mutex_unlock(&lfe->sf_dvr_lock);
+        tvh_mutex_unlock(&lfe->sf_dvr_lock);
       }
       continue;
     }
@@ -2090,13 +2091,13 @@ new_tune:
       if (satip_frontend_rtp_decode(lfe, &seq, &unc, iovec[i].iov_base, iovec[i].iov_len) == 0)
         continue;
     }
-    pthread_mutex_lock(&lfe->sf_dvr_lock);
+    tvh_mutex_lock(&lfe->sf_dvr_lock);
     if (lfe->sf_req == lfe->sf_req_thread) {
       atomic_add(&mmi->tii_stats.unc, unc);
       mpegts_input_recv_packets(mmi, sb, 0, NULL);
     } else
       fatal = 1;
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    tvh_mutex_unlock(&lfe->sf_dvr_lock);
   }
 
   sbuf_free(sb);
@@ -2126,17 +2127,17 @@ done:
   rtcp = rtp = NULL;
 
   if (lfe->sf_teardown_delay && lfe_master) {
-    pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
+    tvh_mutex_lock(&lfe->sf_device->sd_tune_mutex);
     lfe->sf_last_tune = lfe_master->sf_last_tune = getfastmonoclock();
-    pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
+    tvh_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
   }
 
   if (!exit_flag)
     goto new_tune;
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  tvh_mutex_lock(&lfe->sf_dvr_lock);
   satip_frontend_request_cleanup(lfe, tr);
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  tvh_mutex_unlock(&lfe->sf_dvr_lock);
 
   if (rtsp)
     http_client_close(rtsp);
@@ -2305,7 +2306,7 @@ satip_frontend_create
   lfe->sf_pass_weight = 1;
   satip_frontend_hacks(lfe);
   TAILQ_INIT(&lfe->sf_satconf);
-  pthread_mutex_init(&lfe->sf_dvr_lock, NULL);
+  tvh_mutex_init(&lfe->sf_dvr_lock, NULL);
   lfe = (satip_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
   if (!lfe) return NULL;
 
@@ -2363,8 +2364,8 @@ satip_frontend_create
   }
 
   tvh_pipe(O_NONBLOCK, &lfe->sf_dvr_pipe);
-  tvhthread_create(&lfe->sf_dvr_thread, NULL,
-                   satip_frontend_input_thread, lfe, "satip-front");
+  tvh_thread_create(&lfe->sf_dvr_thread, NULL,
+                    satip_frontend_input_thread, lfe, "satip-front");
 
   return lfe;
 }

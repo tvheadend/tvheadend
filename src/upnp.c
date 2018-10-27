@@ -16,23 +16,14 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <fcntl.h>
-#include <errno.h>
+#include "tvheadend.h"
+#include "tvhpoll.h"
+#include "upnp.h"
+
 #include <signal.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-
-#include "tvheadend.h"
-#include "tvhpoll.h"
-#include "upnp.h"
 
 #if defined(PLATFORM_FREEBSD) || ENABLE_ANDROID
 #include <sys/types.h>
@@ -41,7 +32,7 @@
 
 int              upnp_running;
 static pthread_t upnp_tid;
-pthread_mutex_t  upnp_lock;
+tvh_mutex_t      upnp_lock;
 
 TAILQ_HEAD(upnp_active_services, upnp_service);
 
@@ -64,18 +55,18 @@ static struct sockaddr_storage upnp_ipv4_multicast;
  */
 upnp_service_t *upnp_service_create0( upnp_service_t *us )
 {
-  pthread_mutex_lock(&upnp_lock);
+  tvh_mutex_lock(&upnp_lock);
   TAILQ_INSERT_TAIL(&upnp_services, us, us_link);
-  pthread_mutex_unlock(&upnp_lock);
+  tvh_mutex_unlock(&upnp_lock);
   return us;
 }
 
 void upnp_service_destroy( upnp_service_t *us )
 {
-  pthread_mutex_lock(&upnp_lock);
+  tvh_mutex_lock(&upnp_lock);
   TAILQ_REMOVE(&upnp_services, us, us_link);
   us->us_destroy(us);
-  pthread_mutex_unlock(&upnp_lock);
+  tvh_mutex_unlock(&upnp_lock);
   free(us);
 }
 
@@ -99,9 +90,9 @@ upnp_send( htsbuf_queue_t *q, struct sockaddr_storage *storage,
     data->storage = *storage;
   data->delay_ms = delay_ms;
   data->from_multicast = from_multicast;
-  pthread_mutex_lock(&upnp_lock);
+  tvh_mutex_lock(&upnp_lock);
   TAILQ_INSERT_TAIL(&upnp_data_write, data, data_link);
-  pthread_mutex_unlock(&upnp_lock);
+  tvh_mutex_unlock(&upnp_lock);
 }
 
 /*
@@ -184,7 +175,7 @@ upnp_thread( void *aux )
     }
 
     while (delay_ms == 0) {
-      pthread_mutex_lock(&upnp_lock);
+      tvh_mutex_lock(&upnp_lock);
       data = TAILQ_FIRST(&upnp_data_write);
       if (data) {
         delay_ms = data->delay_ms;
@@ -195,7 +186,7 @@ upnp_thread( void *aux )
           data = NULL;
         }
       }
-      pthread_mutex_unlock(&upnp_lock);
+      tvh_mutex_unlock(&upnp_lock);
       if (data == NULL)
         break;
       upnp_dump_data(data);
@@ -209,11 +200,11 @@ upnp_thread( void *aux )
 
   /* flush the write queue (byebye messages) */
   while (1) {
-    pthread_mutex_lock(&upnp_lock);
+    tvh_mutex_lock(&upnp_lock);
     data = TAILQ_FIRST(&upnp_data_write);
     if (data)
       TAILQ_REMOVE(&upnp_data_write, data, data_link);
-    pthread_mutex_unlock(&upnp_lock);
+    tvh_mutex_unlock(&upnp_lock);
     if (data == NULL)
       break;
     tvh_safe_usleep((long)data->delay_ms * 1000);
@@ -245,11 +236,11 @@ upnp_server_init(const char *bindaddr)
   r = inet_pton(AF_INET, "239.255.255.250", &IP_AS_V4(upnp_ipv4_multicast, addr));
   assert(r);
 
-  pthread_mutex_init(&upnp_lock, NULL);
+  tvh_mutex_init(&upnp_lock, NULL);
   TAILQ_INIT(&upnp_data_write);
   TAILQ_INIT(&upnp_services);
   atomic_set(&upnp_running, 1);
-  tvhthread_create(&upnp_tid, NULL, upnp_thread, (char *)bindaddr, "upnp");
+  tvh_thread_create(&upnp_tid, NULL, upnp_thread, (char *)bindaddr, "upnp");
 }
 
 void
@@ -259,7 +250,7 @@ upnp_server_done(void)
   upnp_service_t *us;
 
   atomic_set(&upnp_running, 0);
-  pthread_kill(upnp_tid, SIGTERM);
+  tvh_thread_kill(upnp_tid, SIGTERM);
   pthread_join(upnp_tid, NULL);
   while ((us = TAILQ_FIRST(&upnp_services)) != NULL)
     upnp_service_destroy(us);

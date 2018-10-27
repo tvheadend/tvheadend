@@ -26,7 +26,7 @@
 /*
  * Globals
  */
-pthread_mutex_t          tsfile_lock;
+tvh_mutex_t          tsfile_lock;
 mpegts_network_t         *tsfile_network;
 tsfile_input_list_t      tsfile_inputs;
 
@@ -52,14 +52,14 @@ static mpegts_service_t *
 tsfile_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
-  pthread_mutex_lock(&tsfile_lock);
+  tvh_mutex_lock(&tsfile_lock);
   mpegts_service_t *s = mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
 
   // TODO: HACK: REMOVE ME
   if (s) {
     s->s_config_save = tsfile_service_config_save;
     s->s_delete = tsfile_service_delete;
-    pthread_mutex_unlock(&tsfile_lock);
+    tvh_mutex_unlock(&tsfile_lock);
     channel_t *c = channel_create(NULL, NULL, NULL);
     if (c) {
       c->ch_dont_save = 1;
@@ -67,7 +67,7 @@ tsfile_network_create_service
     }
   }
   else
-    pthread_mutex_unlock(&tsfile_lock);
+    tvh_mutex_unlock(&tsfile_lock);
 
   return s;
 }
@@ -81,7 +81,7 @@ void tsfile_init ( int tuners )
   tsfile_input_t *mi;
 
   /* Mutex - used for minor efficiency in service processing */
-  pthread_mutex_init(&tsfile_lock, NULL);
+  tvh_mutex_init(&tsfile_lock, NULL);
 
   /* Shared network */
   tsfile_network = calloc(1, sizeof(*tsfile_network));
@@ -108,7 +108,7 @@ void
 tsfile_done ( void )
 {
   tsfile_input_t *mi;
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((mi = LIST_FIRST(&tsfile_inputs))) {
     LIST_REMOVE(mi, tsi_link);
     mpegts_input_stop_all((mpegts_input_t*)mi);
@@ -116,7 +116,7 @@ tsfile_done ( void )
     // doesn't close the pipe!
   }
   mpegts_network_class_delete(&mpegts_network_class, 1);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 /*

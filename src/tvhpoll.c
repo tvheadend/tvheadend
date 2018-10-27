@@ -41,7 +41,7 @@
 
 struct tvhpoll
 {
-  pthread_mutex_t lock;
+  tvh_mutex_t lock;
   uint8_t *events;
   uint32_t events_off;
   uint32_t nevents;
@@ -142,7 +142,7 @@ tvhpoll_create ( size_t n )
   fd = -1;
 #endif
   tvhpoll_t *tp = calloc(1, sizeof(tvhpoll_t));
-  pthread_mutex_init(&tp->lock, NULL);
+  tvh_mutex_init(&tp->lock, NULL);
   tp->fd = fd;
   tvhpoll_alloc(tp, n);
   return tp;
@@ -157,7 +157,7 @@ void tvhpoll_destroy ( tvhpoll_t *tp )
   close(tp->fd);
 #endif
   free(tp->events);
-  pthread_mutex_destroy(&tp->lock);
+  tvh_mutex_destroy(&tp->lock);
   free(tp);
 }
 
@@ -229,9 +229,9 @@ int tvhpoll_add
 {
   int r;
 
-  pthread_mutex_lock(&tp->lock);
+  tvh_mutex_lock(&tp->lock);
   r = tvhpoll_add0(tp, evs, num);
-  pthread_mutex_unlock(&tp->lock);
+  tvh_mutex_unlock(&tp->lock);
   return r;
 }
 
@@ -286,9 +286,9 @@ int tvhpoll_rem
 {
   int r;
 
-  pthread_mutex_lock(&tp->lock);
+  tvh_mutex_lock(&tp->lock);
   r = tvhpoll_rem0(tp, evs, num);
-  pthread_mutex_unlock(&tp->lock);
+  tvh_mutex_unlock(&tp->lock);
   return r;
 }
 
@@ -305,7 +305,7 @@ int tvhpoll_set
 {
   tvhpoll_event_t *lev, *ev;
   int i, j, k, r;
-  pthread_mutex_lock(&tp->lock);
+  tvh_mutex_lock(&tp->lock);
   lev = alloca(tp->nevents * sizeof(*lev));
   for (i = k = 0; i < tp->nevents; i++)
     if (tp->events[i]) {
@@ -323,7 +323,7 @@ int tvhpoll_set
   r = tvhpoll_rem0(tp, lev, k);
   if (r == 0)
     r = tvhpoll_add0(tp, evs, num);
-  pthread_mutex_unlock(&tp->lock);
+  tvh_mutex_unlock(&tp->lock);
   return r;
 }
 

@@ -24,8 +24,6 @@
 #include "htsbuf.h"
 #include "tvhdhomerun.h"
 
-#include "libhdhomerun/hdhomerun.h"
-
 typedef struct tvhdhomerun_device_info tvhdhomerun_device_info_t;
 typedef struct tvhdhomerun_device      tvhdhomerun_device_t;
 typedef struct tvhdhomerun_frontend    tvhdhomerun_frontend_t;
@@ -100,14 +98,14 @@ struct tvhdhomerun_frontend
 
   // input thread..
   pthread_t                      hf_input_thread;
-  pthread_mutex_t                hf_input_thread_mutex;        /* used in condition signaling */
+  tvh_mutex_t                    hf_input_thread_mutex;        /* used in condition signaling */
   tvh_cond_t                     hf_input_thread_cond;         /* used in condition signaling */
   th_pipe_t                      hf_input_thread_pipe;         /* IPC with input thread */
   uint8_t                        hf_input_thread_running;      // Indicates if input_thread is running.
   uint8_t                        hf_input_thread_terminating;  // Used for terminating the input_thread.
 
   // Global lock for the libhdhomerun library since it seems to have some threading-issues.
-  pthread_mutex_t                hf_hdhomerun_device_mutex;
+  tvh_mutex_t                    hf_hdhomerun_device_mutex;
 
   /*
    * Reception

@@ -16,17 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _GNU_SOURCE
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <time.h>
-#include <assert.h>
 
 #include "settings.h"
 #include "tvheadend.h"
@@ -243,7 +233,7 @@ imagecache_new_contents ( imagecache_image_t *img,
   fwrite(data, dsize, 1, fp);
   fclose(fp);
   unlink(path);
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   memcpy(img->sha1, sha1, 20);
   if (!empty) {
     /* change id - contents changed */
@@ -257,7 +247,7 @@ imagecache_new_contents ( imagecache_image_t *img,
       tvherror(LS_IMAGECACHE, "unable to rename file '%s' to '%s'", tpath, path);
   }
   imagecache_image_save(img);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return r;
 }
 
@@ -285,7 +275,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   snprintf(tpath, sizeof(tpath), "%s.tmp", path);
   
   /* Fetch (release lock, incase of delays) */
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   urlinit(&url);
 
@@ -331,7 +321,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
 
   /* Process */
 error_lock:
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 error:
   if (NULL != hc) http_client_close(hc);
   urlreset(&url);
@@ -357,7 +347,7 @@ imagecache_thread ( void *p )
 {
   imagecache_image_t *img;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while (tvheadend_is_running()) {
 
     /* Check we're enabled */
@@ -379,7 +369,7 @@ imagecache_thread ( void *p )
     /* Fetch */
     (void)imagecache_image_fetch(img);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return NULL;
 }
@@ -439,7 +429,7 @@ imagecache_init ( void )
 
   /* Create threads */
 #if ENABLE_IMAGECACHE
-  tvh_cond_init(&imagecache_cond);
+  tvh_cond_init(&imagecache_cond, 1);
   TAILQ_INIT(&imagecache_queue);
 #endif
 
@@ -482,7 +472,7 @@ imagecache_init ( void )
 
   /* Start threads */
 #if ENABLE_IMAGECACHE
-  tvhthread_create(&imagecache_tid, NULL, imagecache_thread, NULL, "imagecache");
+  tvh_thread_create(&imagecache_tid, NULL, imagecache_thread, NULL, "imagecache");
 
   /* Re-try timer */
   // TODO: this could be more efficient by being targetted, however

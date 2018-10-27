@@ -74,7 +74,7 @@ typedef struct timeshift_file
 
   TAILQ_ENTRY(timeshift_file) link;     ///< List entry
 
-  pthread_mutex_t               ram_lock; ///< Mutex for the ram array access
+  tvh_mutex_t               ram_lock; ///< Mutex for the ram array access
 } timeshift_file_t;
 
 typedef TAILQ_HEAD(timeshift_file_list,timeshift_file) timeshift_file_list_t;
@@ -113,7 +113,7 @@ typedef struct timeshift {
     TS_PAUSE,
     TS_PLAY,
   }                           state;       ///< Play state
-  pthread_mutex_t             state_mutex; ///< Protect state changes
+  tvh_mutex_t             state_mutex; ///< Protect state changes
   uint8_t                     exit;        ///< Exit from the main input thread
   uint8_t                     full;        ///< Buffer is full
 

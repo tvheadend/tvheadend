@@ -44,7 +44,7 @@ const idclass_t *caclient_classes[] = {
 };
 
 struct caclient_entry_queue caclients;
-static pthread_mutex_t caclients_mutex;
+static tvh_mutex_t caclients_mutex;
 
 static const idclass_t *
 caclient_class_find(const char *name)
@@ -136,14 +136,14 @@ caclient_create
   }
   if (conf)
     idnode_load(&cac->cac_id, conf);
-  pthread_mutex_lock(&caclients_mutex);
+  tvh_mutex_lock(&caclients_mutex);
   if (cac->cac_index) {
     TAILQ_INSERT_SORTED(&caclients, cac, cac_link, cac_cmp);
   } else {
     TAILQ_INSERT_TAIL(&caclients, cac, cac_link);
     caclient_reindex();
   }
-  pthread_mutex_unlock(&caclients_mutex);
+  tvh_mutex_unlock(&caclients_mutex);
   if (save)
     idnode_changed((idnode_t *)cac);
   cac->cac_conf_changed(cac);
@@ -160,9 +160,9 @@ caclient_delete(caclient_t *cac, int delconf)
   cac->cac_conf_changed(cac);
   if (delconf)
     hts_settings_remove("caclient/%s", idnode_uuid_as_str(&cac->cac_id, ubuf));
-  pthread_mutex_lock(&caclients_mutex);
+  tvh_mutex_lock(&caclients_mutex);
   TAILQ_REMOVE(&caclients, cac, cac_link);
-  pthread_mutex_unlock(&caclients_mutex);
+  tvh_mutex_unlock(&caclients_mutex);
   idnode_unlink(&cac->cac_id);
   if (cac->cac_free)
     cac->cac_free(cac);
@@ -338,11 +338,11 @@ caclient_start ( struct service *t )
 {
   caclient_t *cac;
 
-  pthread_mutex_lock(&caclients_mutex);
+  tvh_mutex_lock(&caclients_mutex);
   TAILQ_FOREACH(cac, &caclients, cac_link)
     if (cac->cac_enabled)
       cac->cac_start(cac, t);
-  pthread_mutex_unlock(&caclients_mutex);
+  tvh_mutex_unlock(&caclients_mutex);
 #if ENABLE_TSDEBUG
   tsdebugcw_service_start(t);
 #endif
@@ -356,11 +356,11 @@ caclient_cat_update
 
   lock_assert(&global_lock);
 
-  pthread_mutex_lock(&caclients_mutex);
+  tvh_mutex_lock(&caclients_mutex);
   TAILQ_FOREACH(cac, &caclients, cac_link)
     if (cac->cac_cat_update && cac->cac_enabled)
       cac->cac_cat_update(cac, mux, data, len);
-  pthread_mutex_unlock(&caclients_mutex);
+  tvh_mutex_unlock(&caclients_mutex);
 }
 
 void
@@ -371,11 +371,11 @@ caclient_caid_update
 
   lock_assert(&global_lock);
 
-  pthread_mutex_lock(&caclients_mutex);
+  tvh_mutex_lock(&caclients_mutex);
   TAILQ_FOREACH(cac, &caclients, cac_link)
     if (cac->cac_caid_update && cac->cac_enabled)
       cac->cac_caid_update(cac, mux, caid, provid, pid, valid);
-  pthread_mutex_unlock(&caclients_mutex);
+  tvh_mutex_unlock(&caclients_mutex);
 }
 
 void
@@ -402,10 +402,10 @@ caclient_foreach(void (*cb)(caclient_t *))
 {
   caclient_t *cac;
 
-  pthread_mutex_lock(&caclients_mutex);
+  tvh_mutex_lock(&caclients_mutex);
   TAILQ_FOREACH(cac, &caclients, cac_link)
     cb(cac);
-  pthread_mutex_unlock(&caclients_mutex);
+  tvh_mutex_unlock(&caclients_mutex);
 }
 
 /*
@@ -418,7 +418,7 @@ caclient_init(void)
   htsmsg_field_t *f;
   const idclass_t **r;
 
-  pthread_mutex_init(&caclients_mutex, NULL);
+  tvh_mutex_init(&caclients_mutex, NULL);
   TAILQ_INIT(&caclients);
   idclass_register(&caclient_class);
 #if ENABLE_TSDEBUG
@@ -442,11 +442,11 @@ caclient_init(void)
     caclient_t *cac;
 
     dvbcam_init();
-    pthread_mutex_lock(&caclients_mutex);
+    tvh_mutex_lock(&caclients_mutex);
     TAILQ_FOREACH(cac, &caclients, cac_link)
       if (idnode_is_instance(&cac->cac_id, &caclient_dvbcam_class))
         break;
-    pthread_mutex_unlock(&caclients_mutex);
+    tvh_mutex_unlock(&caclients_mutex);
     if (cac == NULL) {
       c = htsmsg_create_map();
       htsmsg_add_str(c, "class", "caclient_dvbcam");
@@ -464,8 +464,8 @@ caclient_done(void)
 {
   caclient_t *cac;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((cac = TAILQ_FIRST(&caclients)) != NULL)
     caclient_delete(cac, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

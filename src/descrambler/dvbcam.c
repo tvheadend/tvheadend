@@ -74,7 +74,7 @@ typedef struct dvbcam {
 static TAILQ_HEAD(,dvbcam_active_service) dvbcam_active_services;
 static TAILQ_HEAD(,dvbcam_active_cam) dvbcam_active_cams;
 
-static pthread_mutex_t dvbcam_mutex;
+static tvh_mutex_t dvbcam_mutex;
 
 /*
  *
@@ -84,11 +84,11 @@ dvbcam_status_update0(caclient_t *cac)
 {
   int status = CACLIENT_STATUS_NONE;
 
-  pthread_mutex_lock(&dvbcam_mutex);
+  tvh_mutex_lock(&dvbcam_mutex);
   if (TAILQ_FIRST(&dvbcam_active_cams))
     status = CACLIENT_STATUS_CONNECTED;
   caclient_set_status(cac, status);
-  pthread_mutex_unlock(&dvbcam_mutex);
+  tvh_mutex_unlock(&dvbcam_mutex);
 }
 
 /*
@@ -173,7 +173,7 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
 
   tvhtrace(LS_DVBCAM, "register cam %p caids_count %u", lca->lca_name, caids_count);
 
-  pthread_mutex_lock(&dvbcam_mutex);
+  tvh_mutex_lock(&dvbcam_mutex);
 
   TAILQ_FOREACH(ac, &dvbcam_active_cams, global_link) {
     if (ac->ca == lca) {
@@ -199,7 +199,7 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
   call_update = ac_first == NULL;
 
 reterr:
-  pthread_mutex_unlock(&dvbcam_mutex);
+  tvh_mutex_unlock(&dvbcam_mutex);
 
   if (call_update)
     dvbcam_status_update();
@@ -218,7 +218,7 @@ dvbcam_unregister_cam(linuxdvb_ca_t *lca)
 
   tvhtrace(LS_DVBCAM, "unregister cam %s", lca->lca_name);
 
-  pthread_mutex_lock(&dvbcam_mutex);
+  tvh_mutex_lock(&dvbcam_mutex);
 
   /* delete entry */
   for (ac = TAILQ_FIRST(&dvbcam_active_cams); ac != NULL; ac = ac_next) {
@@ -239,7 +239,7 @@ dvbcam_unregister_cam(linuxdvb_ca_t *lca)
 
   call_update = TAILQ_EMPTY(&dvbcam_active_cams);
 
-  pthread_mutex_unlock(&dvbcam_mutex);
+  tvh_mutex_unlock(&dvbcam_mutex);
 
   if (call_update)
     dvbcam_status_update();
@@ -288,8 +288,8 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
   uint8_t *capmt;
   size_t capmt_len;
 
-  pthread_mutex_lock(&s->s_stream_mutex);
-  pthread_mutex_lock(&dvbcam_mutex);
+  tvh_mutex_lock(&s->s_stream_mutex);
+  tvh_mutex_lock(&dvbcam_mutex);
 
   /* find this service in the list of active services */
   TAILQ_FOREACH(as, &dvbcam_active_services, global_link)
@@ -343,8 +343,8 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
     tvherror(LS_DVBCAM, "CAPMT unable to build");
   }
 done:
-  pthread_mutex_unlock(&dvbcam_mutex);
-  pthread_mutex_unlock(&s->s_stream_mutex);
+  tvh_mutex_unlock(&dvbcam_mutex);
+  tvh_mutex_unlock(&s->s_stream_mutex);
 }
 
 static void
@@ -357,7 +357,7 @@ dvbcam_service_destroy(th_descrambler_t *td)
   uint8_t *capmt;
   size_t capmt_len;
 
-  pthread_mutex_lock(&dvbcam_mutex);
+  tvh_mutex_lock(&dvbcam_mutex);
   ac = as->ac;
   if (as->last_pmt) {
     if (ac) {
@@ -393,7 +393,7 @@ dvbcam_service_destroy(th_descrambler_t *td)
       break;
     }
   }
-  pthread_mutex_unlock(&dvbcam_mutex);
+  tvh_mutex_unlock(&dvbcam_mutex);
   mpegts_pid_done(&as->ecm_pids);
   mpegts_pid_done(&as->cat_pids);
   free(as->cat_data);
@@ -452,8 +452,8 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
   mpegts_pid_init(&ecm_to_close);
 #endif
 
-  pthread_mutex_lock(&t->s_stream_mutex);
-  pthread_mutex_lock(&dvbcam_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&dvbcam_mutex);
 
   /* is there already a CAM associated to the service? */
   TAILQ_FOREACH(as, &dvbcam_active_services, global_link) {
@@ -615,16 +615,16 @@ update_pid:
   mpegts_pid_copy(&as->ecm_pids, &ecm_pids);
 #endif
 
-  pthread_mutex_unlock(&dvbcam_mutex);
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&dvbcam_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
 
 #if ENABLE_DDCI
   if (as && as->lddci) {
     mm = ((mpegts_service_t *)t)->s_dvb_mux;
     mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
     if (mi) {
-      pthread_mutex_lock(&mi->mi_output_lock);
-      pthread_mutex_lock(&t->s_stream_mutex);
+      tvh_mutex_lock(&mi->mi_output_lock);
+      tvh_mutex_lock(&t->s_stream_mutex);
       mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE | MPS_NOPOSTDEMUX,
                             MPS_WEIGHT_CAT, t, 0);
       ((mpegts_service_t *)t)->s_cat_opened = 1;
@@ -633,8 +633,8 @@ update_pid:
                              MPS_WEIGHT_CA, t, 0);
       for (i = 0; i < ecm_to_close.count; i++)
         mpegts_input_close_pid(mi, mm, ecm_to_close.pids[i].pid, MPS_SERVICE, t);
-      pthread_mutex_unlock(&t->s_stream_mutex);
-      pthread_mutex_unlock(&mi->mi_output_lock);
+      tvh_mutex_unlock(&t->s_stream_mutex);
+      tvh_mutex_unlock(&mi->mi_output_lock);
       mpegts_mux_update_pids(mm);
     }
   }
@@ -645,8 +645,8 @@ update_pid:
   return;
 
 end:
-  pthread_mutex_unlock(&dvbcam_mutex);
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&dvbcam_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
 }
 
 /*
@@ -705,7 +705,7 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
     return;
 
   services_count = 0;
-  pthread_mutex_lock(&dvbcam_mutex);
+  tvh_mutex_lock(&dvbcam_mutex);
   /* look for CAID in all services */
   TAILQ_FOREACH(as, &dvbcam_active_services, global_link) {
     if (!as->lddci) continue;
@@ -733,26 +733,26 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
     } else
       tvherror(LS_DVBCAM, "CAT update error (array overflow)");
   }
-  pthread_mutex_unlock(&dvbcam_mutex);
+  tvh_mutex_unlock(&dvbcam_mutex);
 
   if (services_count > 0) {
     mi = mux->mm_active ? mux->mm_active->mmi_input : NULL;
     if (mi) {
-      pthread_mutex_lock(&mi->mi_output_lock);
+      tvh_mutex_lock(&mi->mi_output_lock);
       for (i = 0; i < services_count; i++) {
         sp = &services[i];
-        pthread_mutex_lock(&sp->service->s_stream_mutex);
+        tvh_mutex_lock(&sp->service->s_stream_mutex);
         for (i = 0; i < sp->to_open.count; i++)
           mpegts_input_open_pid(mi, mux, sp->to_open.pids[i].pid, MPS_SERVICE,
                                MPS_WEIGHT_CAT, sp->service, 0);
         for (i = 0; i < sp->to_close.count; i++)
           mpegts_input_close_pid(mi, mux, sp->to_close.pids[i].pid, MPS_SERVICE,
                                  sp->service);
-        pthread_mutex_unlock(&sp->service->s_stream_mutex);
+        tvh_mutex_unlock(&sp->service->s_stream_mutex);
         mpegts_pid_done(&sp->to_open);
         mpegts_pid_done(&sp->to_close);
       }
-      pthread_mutex_unlock(&mi->mi_output_lock);
+      tvh_mutex_unlock(&mi->mi_output_lock);
       mpegts_mux_update_pids(mux);
     }
   }
@@ -915,7 +915,7 @@ caclient_t *dvbcam_create(void)
 void
 dvbcam_init(void)
 {
-  pthread_mutex_init(&dvbcam_mutex, NULL);
+  tvh_mutex_init(&dvbcam_mutex, NULL);
   TAILQ_INIT(&dvbcam_active_services);
   TAILQ_INIT(&dvbcam_active_cams);
 }

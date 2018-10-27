@@ -97,7 +97,7 @@ struct satip_device
   int                        sd_skip_ts;
   int                        sd_disable_workarounds;
   int                        sd_wake_ref;
-  pthread_mutex_t            sd_tune_mutex;
+  tvh_mutex_t            sd_tune_mutex;
   TAILQ_HEAD(,satip_frontend)sd_serialize_queue;
 };
 
@@ -156,7 +156,7 @@ struct satip_frontend
    */
   pthread_t                  sf_dvr_thread;
   th_pipe_t                  sf_dvr_pipe;
-  pthread_mutex_t            sf_dvr_lock;
+  tvh_mutex_t            sf_dvr_lock;
   int                        sf_thread;
   int                        sf_running;
   int                        sf_tables;

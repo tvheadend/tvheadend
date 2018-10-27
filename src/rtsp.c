@@ -17,7 +17,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
 #include <signal.h>
 #include "tvheadend.h"
 #include "htsbuf.h"

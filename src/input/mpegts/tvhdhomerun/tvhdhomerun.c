@@ -17,6 +17,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "libhdhomerun/hdhomerun.h"
+
 #include "tvheadend.h"
 #include "input.h"
 #include "htsbuf.h"
@@ -80,7 +82,7 @@ static int tvhdhomerun_discoveries_count;
 static struct tvhdhomerun_discovery_queue tvhdhomerun_discoveries;
 
 static pthread_t tvhdhomerun_discovery_tid;
-static pthread_mutex_t tvhdhomerun_discovery_lock;
+static tvh_mutex_t tvhdhomerun_discovery_lock;
 static tvh_cond_t tvhdhomerun_discovery_cond;
 
 static void
@@ -398,7 +400,7 @@ tvhdhomerun_device_discovery_thread( void *aux )
         numDevices--;
         struct hdhomerun_discover_device_t* cDev = &result_list[numDevices];
         if ( cDev->device_type == HDHOMERUN_DEVICE_TYPE_TUNER ) {
-          pthread_mutex_lock(&global_lock);
+          tvh_mutex_lock(&global_lock);
           tvhdhomerun_device_t *existing = tvhdhomerun_device_find(cDev->device_id);
           if ( tvheadend_is_running() ) {
             if ( !existing ) {
@@ -424,12 +426,12 @@ tvhdhomerun_device_discovery_thread( void *aux )
               tvhdhomerun_device_create(cDev);
             }
           }
-          pthread_mutex_unlock(&global_lock);
+          tvh_mutex_unlock(&global_lock);
         }
       }
     }
 
-    pthread_mutex_lock(&tvhdhomerun_discovery_lock);
+    tvh_mutex_lock(&tvhdhomerun_discovery_lock);
     brk = 0;
     if (tvheadend_is_running()) {
       brk = tvh_cond_timedwait(&tvhdhomerun_discovery_cond,
@@ -437,7 +439,7 @@ tvhdhomerun_device_discovery_thread( void *aux )
                                mclk() + sec2mono(15));
       brk = !ERRNO_AGAIN(brk) && brk != ETIMEDOUT;
     }
-    pthread_mutex_unlock(&tvhdhomerun_discovery_lock);
+    tvh_mutex_unlock(&tvhdhomerun_discovery_lock);
     if (brk)
       break;
   }
@@ -461,11 +463,11 @@ void tvhdhomerun_init ( void )
   idclass_register(&tvhdhomerun_frontend_atsc_c_class);
   idclass_register(&tvhdhomerun_frontend_cablecard_class);
   TAILQ_INIT(&tvhdhomerun_discoveries);
-  pthread_mutex_init(&tvhdhomerun_discovery_lock, NULL);
-  tvh_cond_init(&tvhdhomerun_discovery_cond);
-  tvhthread_create(&tvhdhomerun_discovery_tid, NULL,
-                   tvhdhomerun_device_discovery_thread,
-                   NULL, "hdhm-disc");
+  tvh_mutex_init(&tvhdhomerun_discovery_lock, NULL);
+  tvh_cond_init(&tvhdhomerun_discovery_cond, 1);
+  tvh_thread_create(&tvhdhomerun_discovery_tid, NULL,
+                    tvhdhomerun_device_discovery_thread,
+                    NULL, "hdhm-disc");
 }
 
 void tvhdhomerun_done ( void )
@@ -473,12 +475,12 @@ void tvhdhomerun_done ( void )
   tvh_hardware_t *th, *n;
   tvhdhomerun_discovery_t *d, *nd;
 
-  pthread_mutex_lock(&tvhdhomerun_discovery_lock);
+  tvh_mutex_lock(&tvhdhomerun_discovery_lock);
   tvh_cond_signal(&tvhdhomerun_discovery_cond, 0);
-  pthread_mutex_unlock(&tvhdhomerun_discovery_lock);
+  tvh_mutex_unlock(&tvhdhomerun_discovery_lock);
   pthread_join(tvhdhomerun_discovery_tid, NULL);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   for (th = LIST_FIRST(&tvh_hardware); th != NULL; th = n) {
     n = LIST_NEXT(th, th_link);
     if (idnode_is_instance(&th->th_id, &tvhdhomerun_device_class)) {
@@ -489,7 +491,7 @@ void tvhdhomerun_done ( void )
     nd = TAILQ_NEXT(d, disc_link);
     tvhdhomerun_discovery_destroy(d, 1);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   hdhomerun_debug_destroy(hdhomerun_debug_obj);
 }
 

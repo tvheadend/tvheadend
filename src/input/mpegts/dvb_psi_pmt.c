@@ -579,7 +579,7 @@ dvb_pmt_callback
   /* Process */
   tvhdebug(mt->mt_subsys, "%s: sid %04X (%d)", mt->mt_name, sid, sid);
   update = 0;
-  pthread_mutex_lock(&s->s_stream_mutex);
+  tvh_mutex_lock(&s->s_stream_mutex);
   update = dvb_psi_parse_pmt(mt, service_nicename((service_t *)s),
                              &s->s_components, ptr, len);
   if (update) {
@@ -607,7 +607,7 @@ dvb_pmt_callback
     mpegts_service_autoenable(s, "PAT and PMT");
     s->s_verified = 1;
   }
-  pthread_mutex_unlock(&s->s_stream_mutex);
+  tvh_mutex_unlock(&s->s_stream_mutex);
   if (restart)
     service_restart((service_t*)s);
   if (update & (PMT_UPDATE_NEW_CA_STREAM|PMT_UPDATE_NEW_CAID|

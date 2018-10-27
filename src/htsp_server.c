@@ -16,6 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <fcntl.h>
+#include <sys/stat.h>
+
 #include "tvheadend.h"
 #include "atomic.h"
 #include "config.h"
@@ -39,24 +42,6 @@
 #include "timeshift.h"
 #endif
 
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <signal.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <limits.h>
 #include "settings.h"
 
 /* **************************************************************************
@@ -171,7 +156,7 @@ typedef struct htsp_connection {
 
   struct htsp_msg_q_queue htsp_active_output_queues;
 
-  pthread_mutex_t htsp_out_mutex;
+  tvh_mutex_t htsp_out_mutex;
   tvh_cond_t htsp_out_cond;
 
   htsp_msg_q_t htsp_hmq_ctrl;
@@ -342,7 +327,7 @@ htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq, int dead)
 {
   htsp_msg_t *hm;
 
-  pthread_mutex_lock(&htsp->htsp_out_mutex);
+  tvh_mutex_lock(&htsp->htsp_out_mutex);
 
   if(hmq->hmq_length)
     TAILQ_REMOVE(&htsp->htsp_active_output_queues, hmq, hmq_link);
@@ -356,7 +341,7 @@ htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq, int dead)
   hmq->hmq_length = 0;
   hmq->hmq_payload = 0;
   hmq->hmq_dead = dead;
-  pthread_mutex_unlock(&htsp->htsp_out_mutex);
+  tvh_mutex_unlock(&htsp->htsp_out_mutex);
 }
 
 /**
@@ -407,7 +392,7 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
     pktbuf_ref_inc(pb);
   hm->hm_payloadsize = payloadsize;
   
-  pthread_mutex_lock(&htsp->htsp_out_mutex);
+  tvh_mutex_lock(&htsp->htsp_out_mutex);
 
   assert(!hmq->hmq_dead);
 
@@ -426,7 +411,7 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
   hmq->hmq_length++;
   hmq->hmq_payload += payloadsize;
   tvh_cond_signal(&htsp->htsp_out_cond, 0);
-  pthread_mutex_unlock(&htsp->htsp_out_mutex);
+  tvh_mutex_unlock(&htsp->htsp_out_mutex);
 }
 
 /**
@@ -744,10 +729,10 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd, dvr_entry_t *d
   struct stat st;
 
   if (fd <= 0) {
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     fd = tvh_open(path, O_RDONLY, 0);
     tvhdebug(LS_HTSP, "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     if(fd == -1)
       return htsp_error(htsp, N_("Unable to open file"));
   }
@@ -807,9 +792,9 @@ htsp_file_destroy(htsp_file_t *hf)
   tvhdebug(LS_HTSP, "Closed opened file %s", hf->hf_path);
   LIST_REMOVE(hf, hf_link);
   if (hf->hf_subscription) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     subscription_unsubscribe(hf->hf_subscription, UNSUBSCRIBE_FINAL);
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
   free(hf->hf_path);
   close(hf->hf_fd);
@@ -1418,7 +1403,7 @@ htsp_method_api(htsp_connection_t *htsp, htsmsg_t *in)
   const char *remain;
   int r;
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   args   = htsmsg_get_map(in, "args");
   remain = htsmsg_get_str(in, "path");
@@ -1451,7 +1436,7 @@ htsp_method_api(htsp_connection_t *htsp, htsmsg_t *in)
 
   htsmsg_destroy(args2);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   return ret;
 }
 
@@ -2862,7 +2847,7 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
 
   fd = hf->hf_fd;
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   /* Seek (optional) */
   if (!htsmsg_get_s64(in, "offset", &off))
@@ -2891,7 +2876,7 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_add_bin_alloc(rep, "data", m, r);
 
 error:
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   return e ? htsp_error(htsp, e) : rep;
 }
 
@@ -2924,9 +2909,9 @@ htsp_method_file_close(htsp_connection_t *htsp, htsmsg_t *in)
       dvr_entry_changed(de);
   }
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   htsp_file_destroy(hf);
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   return htsmsg_create_map();
 }
 
@@ -2946,13 +2931,13 @@ htsp_method_file_stat(htsp_connection_t *htsp, htsmsg_t *in)
 
   fd = hf->hf_fd;
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   rep = htsmsg_create_map();
   if(!fstat(fd, &st)) {
     htsmsg_add_s64(rep, "size", st.st_size);
     htsmsg_add_s64(rep, "mtime", st.st_mtime);
   }
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   return rep;
 }
@@ -2989,17 +2974,17 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
   }
 
   fd = hf->hf_fd;
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   if ((off = lseek(fd, off, whence)) < 0) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     return htsp_error(htsp, N_("Seek error"));
   }
 
   rep = htsmsg_create_map();
   htsmsg_add_s64(rep, "offset", off);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   return rep;
 }
 
@@ -3233,7 +3218,7 @@ htsp_read_loop(htsp_connection_t *htsp)
     return 1;
   }
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   htsp->htsp_granted_access = access_get_by_addr(htsp->htsp_peer);
   htsp->htsp_granted_access->aa_rights |= ACCESS_HTSP_INTERFACE;
@@ -3241,7 +3226,7 @@ htsp_read_loop(htsp_connection_t *htsp)
   tcp_id = tcp_connection_launch(htsp->htsp_fd, streaming, htsp_server_status,
                                  htsp->htsp_granted_access);
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   if (tcp_id == NULL)
     return 0;
@@ -3257,7 +3242,7 @@ readmsg:
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
       break;
 
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     if (htsp_authenticate(htsp, m)) {
       tcp_connection_land(tcp_id);
       tcp_id = tcp_connection_launch(htsp->htsp_fd, streaming, htsp_server_status,
@@ -3282,7 +3267,7 @@ readmsg:
               htsp_methods[i].privmask) !=
                 htsp_methods[i].privmask) {
 
-      	    pthread_mutex_unlock(&global_lock);
+      	    tvh_mutex_unlock(&global_lock);
             /* Classic authentication failed delay */
             tvh_safe_usleep(250000);
 
@@ -3321,7 +3306,7 @@ readmsg:
     }
 
 send_reply_with_unlock:
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
 
     if(reply != NULL) /* Methods can do all the replying inline */
       htsp_reply(htsp, m, reply);
@@ -3329,9 +3314,9 @@ send_reply_with_unlock:
     htsmsg_destroy(m);
   }
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   tcp_connection_land(tcp_id);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return tvheadend_is_running() ? r : 0;
 }
 
@@ -3348,7 +3333,7 @@ htsp_write_scheduler(void *aux)
   size_t dlen;
   int r;
 
-  pthread_mutex_lock(&htsp->htsp_out_mutex);
+  tvh_mutex_lock(&htsp->htsp_out_mutex);
 
   while(htsp->htsp_writer_run) {
 
@@ -3373,12 +3358,12 @@ htsp_write_scheduler(void *aux)
       }
     }
 
-    pthread_mutex_unlock(&htsp->htsp_out_mutex);
+    tvh_mutex_unlock(&htsp->htsp_out_mutex);
 
     if (htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX) != 0) {
       tvhwarn(LS_HTSP, "%s: failed to serialize data", htsp->htsp_logname);
       htsp_msg_destroy(hm);
-      pthread_mutex_lock(&htsp->htsp_out_mutex);
+      tvh_mutex_lock(&htsp->htsp_out_mutex);
       continue;
     }
 
@@ -3386,7 +3371,7 @@ htsp_write_scheduler(void *aux)
 
     r = tvh_write(htsp->htsp_fd, dptr, dlen);
     free(dptr);
-    pthread_mutex_lock(&htsp->htsp_out_mutex);
+    tvh_mutex_lock(&htsp->htsp_out_mutex);
     
     if (r) {
       tvhinfo(LS_HTSP, "%s: Write error -- %s",
@@ -3397,7 +3382,7 @@ htsp_write_scheduler(void *aux)
   // Shutdown socket to make receive thread terminate entire HTSP connection
 
   shutdown(htsp->htsp_fd, SHUT_RDWR);
-  pthread_mutex_unlock(&htsp->htsp_out_mutex);
+  tvh_mutex_unlock(&htsp->htsp_out_mutex);
   return NULL;
 }
 
@@ -3436,10 +3421,10 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   htsp.htsp_writer_run = 1;
 
   LIST_INSERT_HEAD(&htsp_connections, &htsp, htsp_link);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
-  tvhthread_create(&htsp.htsp_writer_thread, NULL,
-                   htsp_write_scheduler, &htsp, "htsp-write");
+  tvh_thread_create(&htsp.htsp_writer_thread, NULL,
+                    htsp_write_scheduler, &htsp, "htsp-write");
 
   /**
    * Reader loop
@@ -3453,7 +3438,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
    * Ok, we're back, other end disconnected. Clean up stuff.
    */
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   /* no async notifications from now */
   if(htsp.htsp_async_mode)
@@ -3470,12 +3455,12 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   while((s = LIST_FIRST(&htsp.htsp_subscriptions)) != NULL)
     htsp_subscription_destroy(&htsp, s);
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
-  pthread_mutex_lock(&htsp.htsp_out_mutex);
+  tvh_mutex_lock(&htsp.htsp_out_mutex);
   htsp.htsp_writer_run = 0;
   tvh_cond_signal(&htsp.htsp_out_cond, 0);
-  pthread_mutex_unlock(&htsp.htsp_out_mutex);
+  tvh_mutex_unlock(&htsp.htsp_out_mutex);
 
   pthread_join(htsp.htsp_writer_thread, NULL);
 
@@ -3499,7 +3484,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   close(fd);
   
   /* Free memory (leave lock in place, for parent method) */
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   free(htsp.htsp_logname);
   free(htsp.htsp_peername);
   free(htsp.htsp_username);
@@ -3557,12 +3542,12 @@ htsp_register(void)
 void
 htsp_done(void)
 {
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   if (htsp_server_2)
     tcp_server_delete(htsp_server_2);
   if (htsp_server)
     tcp_server_delete(htsp_server);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 /* **************************************************************************
@@ -4060,7 +4045,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
      * Figure out real time queue delay 
      */
     
-    pthread_mutex_lock(&htsp->htsp_out_mutex);
+    tvh_mutex_lock(&htsp->htsp_out_mutex);
 
     int64_t min_dts = PTS_UNSET;
     int64_t max_dts = PTS_UNSET;
@@ -4085,7 +4070,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
     htsmsg_add_s64(m, "delay", max_dts - min_dts);
 
-    pthread_mutex_unlock(&htsp->htsp_out_mutex);
+    tvh_mutex_unlock(&htsp->htsp_out_mutex);
 
     htsmsg_add_u32(m, "Bdrops", hs->hs_dropstats[PKT_B_FRAME]);
     htsmsg_add_u32(m, "Pdrops", hs->hs_dropstats[PKT_P_FRAME]);

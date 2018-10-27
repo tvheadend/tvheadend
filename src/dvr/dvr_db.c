@@ -17,17 +17,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <assert.h>
-#include <string.h>
 #include <ctype.h>
-#include <string_list.h>
-
-#include "settings.h"
 
 #include "tvheadend.h"
+#include "settings.h"
 #include "dvr.h"
 #include "htsp_server.h"
 #include "streaming.h"
@@ -4918,7 +4911,7 @@ dvr_entry_file_moved(const char *src, const char *dst)
 
   if (!src || !dst || src[0] == '\0' || dst[0] == '\0' || access(dst, R_OK))
     return r;
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (htsmsg_is_empty(de->de_files)) continue;
     chg = 0;
@@ -4935,7 +4928,7 @@ dvr_entry_file_moved(const char *src, const char *dst)
     if (chg)
       idnode_changed(&de->de_id);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return r;
 }
 

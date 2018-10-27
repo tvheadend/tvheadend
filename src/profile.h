@@ -145,7 +145,7 @@ typedef struct profile_sharer {
   uint32_t                  prsh_do_queue: 1;
   uint32_t                  prsh_queue_run: 1;
   pthread_t                 prsh_queue_thread;
-  pthread_mutex_t           prsh_queue_mutex;
+  tvh_mutex_t               prsh_queue_mutex;
   tvh_cond_t                prsh_queue_cond;
   TAILQ_HEAD(,profile_sharer_message) prsh_queue;
   streaming_target_t        prsh_input;

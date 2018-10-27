@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
+#include <tvh_thread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -180,10 +180,10 @@ const tvh_caps_t tvheadend_capabilities[] = {
   { NULL, NULL }
 };
 
-pthread_mutex_t global_lock;
-pthread_mutex_t tasklet_lock;
-pthread_mutex_t fork_lock;
-pthread_mutex_t atomic_lock;
+tvh_mutex_t global_lock;
+tvh_mutex_t tasklet_lock;
+tvh_mutex_t fork_lock;
+tvh_mutex_t atomic_lock;
 
 /*
  * Locals
@@ -195,7 +195,7 @@ static pthread_t mtimer_tid;
 static pthread_t mtimer_tick_tid;
 static tprofile_t mtimer_profile;
 static LIST_HEAD(, gtimer) gtimers;
-static pthread_cond_t gtimer_cond;
+static tvh_cond_t gtimer_cond;
 static tprofile_t gtimer_profile;
 static TAILQ_HEAD(, tasklet) tasklets;
 static tvh_cond_t tasklet_cond;
@@ -222,8 +222,8 @@ void
 doexit(int x)
 {
   if (pthread_self() != main_tid)
-    pthread_kill(main_tid, SIGTERM);
-  pthread_cond_signal(&gtimer_cond);
+    tvh_thread_kill(main_tid, SIGTERM);
+  tvh_cond_signal(&gtimer_cond, 0);
   tvh_cond_signal(&mtimer_cond, 1);
   atomic_set(&tvheadend_running, 0);
   signal(x, doexit);
@@ -341,7 +341,7 @@ GTIMER_FCN(gtimer_arm_absn)
   LIST_INSERT_SORTED(&gtimers, gti, gti_link, gtimercmp);
 
   if (LIST_FIRST(&gtimers) == gti)
-    pthread_cond_signal(&gtimer_cond); // force timer re-check
+    tvh_cond_signal(&gtimer_cond, 0); // force timer re-check
 }
 
 /**
@@ -391,7 +391,7 @@ tasklet_arm_alloc(tsk_callback_t *callback, void *opaque)
 void
 tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque)
 {
-  pthread_mutex_lock(&tasklet_lock);
+  tvh_mutex_lock(&tasklet_lock);
 
   if (tsk->tsk_callback != NULL)
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
@@ -404,7 +404,7 @@ tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque)
   if (TAILQ_FIRST(&tasklets) == tsk)
     tvh_cond_signal(&tasklet_cond, 0);
 
-  pthread_mutex_unlock(&tasklet_lock);
+  tvh_mutex_unlock(&tasklet_lock);
 }
 
 /**
@@ -413,7 +413,7 @@ tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque)
 void
 tasklet_disarm(tasklet_t *tsk)
 {
-  pthread_mutex_lock(&tasklet_lock);
+  tvh_mutex_lock(&tasklet_lock);
 
   if(tsk->tsk_callback) {
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
@@ -422,7 +422,7 @@ tasklet_disarm(tasklet_t *tsk)
     if (tsk->tsk_free) tsk->tsk_free(tsk);
   }
 
-  pthread_mutex_unlock(&tasklet_lock);
+  tvh_mutex_unlock(&tasklet_lock);
 }
 
 static void
@@ -430,7 +430,7 @@ tasklet_flush()
 {
   tasklet_t *tsk;
 
-  pthread_mutex_lock(&tasklet_lock);
+  tvh_mutex_lock(&tasklet_lock);
 
   while ((tsk = TAILQ_FIRST(&tasklets)) != NULL) {
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
@@ -442,7 +442,7 @@ tasklet_flush()
     }
   }
 
-  pthread_mutex_unlock(&tasklet_lock);
+  tvh_mutex_unlock(&tasklet_lock);
 }
 
 /**
@@ -455,9 +455,9 @@ tasklet_thread ( void *aux )
   tsk_callback_t *tsk_cb;
   void *opaque;
 
-  tvhthread_renice(20);
+  tvh_thread_renice(20);
 
-  pthread_mutex_lock(&tasklet_lock);
+  tvh_mutex_lock(&tasklet_lock);
   while (tvheadend_is_running()) {
     tsk = TAILQ_FIRST(&tasklets);
     if (tsk == NULL) {
@@ -475,12 +475,12 @@ tasklet_thread ( void *aux )
     }
     /* now, the callback can be safely called */
     if (tsk_cb) {
-      pthread_mutex_unlock(&tasklet_lock);
+      tvh_mutex_unlock(&tasklet_lock);
       tsk_cb(opaque, 0);
-      pthread_mutex_lock(&tasklet_lock);
+      tvh_mutex_lock(&tasklet_lock);
     }
   }
-  pthread_mutex_unlock(&tasklet_lock);
+  tvh_mutex_unlock(&tasklet_lock);
 
   return NULL;
 }
@@ -611,16 +611,16 @@ mtimer_thread(void *aux)
   int64_t now, next;
   const char *id;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while (tvheadend_is_running() && atomic_get(&tvheadend_mainloop) == 0)
     tvh_cond_wait(&mtimer_cond, &global_lock);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   while (tvheadend_is_running()) {
     now = mdispatch_clock_update();
 
     /* Global monoclock timers */
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
 
     next = now + sec2mono(3600);
 
@@ -654,7 +654,7 @@ mtimer_thread(void *aux)
 
     /* Wait */
     tvh_cond_timedwait(&mtimer_cond, &global_lock, next);
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
 
   return NULL;
@@ -678,7 +678,7 @@ mainloop(void)
     ts.tv_nsec = 0;
 
     /* Global timers */
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
 
     // TODO: there is a risk that if timers re-insert themselves to
     //       the top of the list with a 0 offset we could loop indefinitely
@@ -714,8 +714,8 @@ mainloop(void)
     }
 
     /* Wait */
-    pthread_cond_timedwait(&gtimer_cond, &global_lock, &ts);
-    pthread_mutex_unlock(&global_lock);
+    tvh_cond_timedwait(&gtimer_cond, &global_lock, (intptr_t )&ts);
+    tvh_mutex_unlock(&global_lock);
   }
 }
 
@@ -749,13 +749,13 @@ main(int argc, char **argv)
   main_tid = pthread_self();
 
   /* Setup global mutexes */
-  pthread_mutex_init(&fork_lock, NULL);
-  pthread_mutex_init(&global_lock, NULL);
-  pthread_mutex_init(&tasklet_lock, NULL);
-  pthread_mutex_init(&atomic_lock, NULL);
-  tvh_cond_init(&mtimer_cond);
-  pthread_cond_init(&gtimer_cond, NULL);
-  tvh_cond_init(&tasklet_cond);
+  tvh_mutex_init(&fork_lock, NULL);
+  tvh_mutex_init(&global_lock, NULL);
+  tvh_mutex_init(&tasklet_lock, NULL);
+  tvh_mutex_init(&atomic_lock, NULL);
+  tvh_cond_init(&mtimer_cond, 1);
+  tvh_cond_init(&gtimer_cond, 0);
+  tvh_cond_init(&tasklet_cond, 1);
   TAILQ_INIT(&tasklets);
 
   /* Defaults */
@@ -1155,7 +1155,7 @@ main(int argc, char **argv)
     tvhlog_options &= ~TVHLOG_OPT_DECORATE;
 
   /* Initialise clock */
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   __mdispatch_clock = getmonoclock();
   __gdispatch_clock = time(NULL);
 
@@ -1205,9 +1205,9 @@ main(int argc, char **argv)
 
   epg_in_load = 1;
 
-  tvhthread_create(&mtimer_tick_tid, NULL, mtimer_tick_thread, NULL, "mtick");
-  tvhthread_create(&mtimer_tid, NULL, mtimer_thread, NULL, "mtimer");
-  tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
+  tvh_thread_create(&mtimer_tick_tid, NULL, mtimer_tick_thread, NULL, "mtick");
+  tvh_thread_create(&mtimer_tid, NULL, mtimer_thread, NULL, "mtimer");
+  tvh_thread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
 
 #if CONFIG_LINUXDVB_CA
   en50221_register_apps();
@@ -1265,7 +1265,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, epg_updated); // cleanup now all prev ref's should have been created
   epg_in_load = 0;
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   tvhftrace(LS_MAIN, watchdog_init);
 
@@ -1291,14 +1291,14 @@ main(int argc, char **argv)
   if(opt_abort)
     abort();
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   tvheadend_mainloop = 1;
   tvh_cond_signal(&mtimer_cond, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   mainloop();
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   tvh_cond_signal(&mtimer_cond, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   pthread_join(mtimer_tid, NULL);
 
 #if ENABLE_DBUS_1
@@ -1317,13 +1317,13 @@ main(int argc, char **argv)
 
   // Note: the locking is obviously a bit redundant, but without
   //       we need to disable the gtimer_arm call in epg_save()
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   tvhftrace(LS_MAIN, epg_save);
 
 #if ENABLE_TIMESHIFT
   tvhftrace(LS_MAIN, timeshift_term);
 #endif
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   tvhftrace(LS_MAIN, epggrab_done);
 #if ENABLE_MPEGTS
@@ -1431,16 +1431,6 @@ tvh_str_update(char **strp, const char *src)
   free(*strp);
   *strp = strdup(src);
   return 1;
-}
-
-
-/**
- *
- */
-void
-scopedunlock(pthread_mutex_t **mtxp)
-{
-  pthread_mutex_unlock(*mtxp);
 }
 
 

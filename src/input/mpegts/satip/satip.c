@@ -66,7 +66,7 @@ satip_device_block( const char *addr, int block )
   satip_frontend_t *lfe;
   int val = block < 0 ? 0 : block;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   TVH_HARDWARE_FOREACH(th) {
     if (!idnode_is_instance(&th->th_id, &satip_device_class))
       continue;
@@ -81,7 +81,7 @@ satip_device_block( const char *addr, int block )
               block < 0 ? "stopped" : (block > 0 ? "allowed" : "disabled"));
     }
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 static char *
@@ -621,7 +621,7 @@ satip_device_create( satip_device_info_t *info )
     return NULL;
   }
 
-  pthread_mutex_init(&sd->sd_tune_mutex, NULL);
+  tvh_mutex_init(&sd->sd_tune_mutex, NULL);
 
   TAILQ_INIT(&sd->sd_frontends);
   TAILQ_INIT(&sd->sd_serialize_queue);
@@ -1012,10 +1012,10 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   info.tunercfg = strdup(tunercfg);
   htsmsg_destroy(xml);
   xml = NULL;
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   if (!satip_device_find(info.uuid))
     satip_device_create(&info);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   free(info.myaddr);
   free(info.location);
   free(info.server);
@@ -1173,7 +1173,7 @@ satip_discovery_service_received
     return;
   }
 
-  pthread_mutex_lock(&global_lock);  
+  tvh_mutex_lock(&global_lock);  
   i = 1;
   if (!satip_discovery_find(d) && !satip_device_find(d->uuid)) {
     TAILQ_INSERT_TAIL(&satip_discoveries, d, disc_link);
@@ -1181,7 +1181,7 @@ satip_discovery_service_received
     mtimer_arm_rel(&satip_discovery_timerq, satip_discovery_timerq_cb, NULL, ms2mono(250));
     i = 0;
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   if (i) /* duplicate */
     satip_discovery_destroy(d, 0);
   return;
@@ -1190,10 +1190,10 @@ add_uuid:
   if (deviceid == NULL || uuid == NULL)
     return;
   /* if new uuid was discovered, retrigger MSEARCH */
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   if (!satip_device_find(uuid))
     mtimer_arm_rel(&satip_discovery_timer, satip_discovery_timer_cb, NULL, sec2mono(5));
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 static void
@@ -1344,7 +1344,7 @@ void satip_done ( void )
   tvh_hardware_t *th, *n;
   satip_discovery_t *d, *nd;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   for (th = LIST_FIRST(&tvh_hardware); th != NULL; th = n) {
     n = LIST_NEXT(th, th_link);
     if (idnode_is_instance(&th->th_id, &satip_device_class)) {
@@ -1355,5 +1355,5 @@ void satip_done ( void )
     nd = TAILQ_NEXT(d, disc_link);
     satip_discovery_destroy(d, 1);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

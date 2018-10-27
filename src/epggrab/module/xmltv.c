@@ -965,28 +965,28 @@ static int _xmltv_parse_tv
   if((tags = htsmsg_get_map(body, "tags")) == NULL)
     return 0;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   epggrab_channel_begin_scan(mod);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   HTSMSG_FOREACH(f, tags) {
     save = 0;
     if(!strcmp(htsmsg_field_name(f), "channel")) {
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
       save = _xmltv_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
     } else if(!strcmp(htsmsg_field_name(f), "programme")) {
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
       save = _xmltv_parse_programme(mod, htsmsg_get_map_by_field(f), stats);
       if (save) epg_updated();
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
     }
     gsave |= save;
   }
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   epggrab_channel_end_scan(mod);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return gsave;
 }

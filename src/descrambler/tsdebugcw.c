@@ -40,7 +40,7 @@ typedef struct tsdebugcw_request {
   tsdebugcw_service_t *ct;
 } tsdebugcw_request_t;
 
-pthread_mutex_t tsdebugcw_mutex;
+tvh_mutex_t tsdebugcw_mutex;
 TAILQ_HEAD(,tsdebugcw_request) tsdebugcw_requests;
 
 /*
@@ -61,7 +61,7 @@ tsdebugcw_service_destroy(th_descrambler_t *td)
   tsdebugcw_service_t *ct = (tsdebugcw_service_t *)td;
   tsdebugcw_request_t *ctr, *ctrnext;
 
-  pthread_mutex_lock(&tsdebugcw_mutex);
+  tvh_mutex_lock(&tsdebugcw_mutex);
   for (ctr = TAILQ_FIRST(&tsdebugcw_requests); ctr; ctr = ctrnext) {
     ctrnext = TAILQ_NEXT(ctr, link);
     if (ctr->ct == ct) {
@@ -69,7 +69,7 @@ tsdebugcw_service_destroy(th_descrambler_t *td)
       free(ctr);
     }
   }
-  pthread_mutex_unlock(&tsdebugcw_mutex);
+  tvh_mutex_unlock(&tsdebugcw_mutex);
 
   LIST_REMOVE(td, td_service_link);
   free(ct->td_nicename);
@@ -103,10 +103,10 @@ tsdebugcw_service_start(service_t *t)
   td->td_service       = t;
   td->td_stop          = tsdebugcw_service_destroy;
   td->td_ecm_reset     = tsdebugcw_ecm_reset;
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
   descrambler_change_keystate((th_descrambler_t *)td, DS_READY, 0);
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
 }
 
 /*
@@ -135,9 +135,9 @@ tsdebugcw_new_keys(service_t *t, int type, uint16_t pid, uint8_t *odd, uint8_t *
     memcpy(ct->tdcw_key_even, even, keylen);
   ctr = malloc(sizeof(*ctr));
   ctr->ct = ct;
-  pthread_mutex_lock(&tsdebugcw_mutex);
+  tvh_mutex_lock(&tsdebugcw_mutex);
   TAILQ_INSERT_TAIL(&tsdebugcw_requests, ctr, link);
-  pthread_mutex_unlock(&tsdebugcw_mutex);
+  tvh_mutex_unlock(&tsdebugcw_mutex);
 }
 
 /*
@@ -150,11 +150,11 @@ tsdebugcw_go(void)
   tsdebugcw_service_t *ct;
 
   while (1) {
-    pthread_mutex_lock(&tsdebugcw_mutex);
+    tvh_mutex_lock(&tsdebugcw_mutex);
     ctr = TAILQ_FIRST(&tsdebugcw_requests);
     if (ctr)
       TAILQ_REMOVE(&tsdebugcw_requests, ctr, link);
-    pthread_mutex_unlock(&tsdebugcw_mutex);
+    tvh_mutex_unlock(&tsdebugcw_mutex);
     if (!ctr) break;
     ct = ctr->ct;
     descrambler_keys((th_descrambler_t *)ct,
@@ -170,6 +170,6 @@ tsdebugcw_go(void)
 void
 tsdebugcw_init(void)
 {
-  pthread_mutex_init(&tsdebugcw_mutex, NULL);
+  tvh_mutex_init(&tsdebugcw_mutex, NULL);
   TAILQ_INIT(&tsdebugcw_requests);
 }

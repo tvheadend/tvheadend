@@ -52,7 +52,7 @@ api_channel_list
   if (numbers && !sort) sort = "numname";
   blank = tvh_gettext_lang(perm->aa_lang_ui, channel_blank_name);
   l = htsmsg_create_list();
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   chlist = channel_get_sorted_list(sort, cfg, &count);
   for (i = 0; i < count; i++) {
     ch = chlist[i];
@@ -66,7 +66,7 @@ api_channel_list
     }
     htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&ch->ch_id, ubuf), name));
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   free(chlist);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
@@ -96,11 +96,11 @@ api_channel_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   ch = channel_create(NULL, conf, NULL);
   if (ch)
     api_idnode_create(resp, &ch->ch_id);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }
@@ -115,9 +115,9 @@ api_channel_rename
   if (!(to = htsmsg_get_str(args, "to")))
     return -EINVAL;
   /* We need the lock since we are altering details */
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   const int num_match = channel_rename_and_save(from, to);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return num_match > 0 ? 0 : -ENOENT;
 }
@@ -132,7 +132,7 @@ api_channel_tag_list
   char buf[128], ubuf[UUID_HEX_SIZE], *name;
 
   l = htsmsg_create_list();
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if (cfg || channel_tag_access(ct, perm, 0)) {
       if (ct->ct_enabled) {
@@ -143,7 +143,7 @@ api_channel_tag_list
       }
       htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&ct->ct_id, ubuf), name));
     }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
   return 0;
@@ -171,11 +171,11 @@ api_channel_tag_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   ct = channel_tag_create(NULL, conf);
   if (ct)
     api_idnode_create(resp, &ct->ct_id);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }
@@ -191,7 +191,7 @@ api_channel_cat_list
   string_list_t *sl = string_list_create();
   const string_list_item_t *item;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   /* Build string_list of all categories the user is allowed
    * to see.
    */
@@ -209,7 +209,7 @@ api_channel_cat_list
       }
     }
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   /* Now we have the unique list, convert it for GUI. */
   RB_FOREACH(item, sl, h_link) {

@@ -19,6 +19,9 @@
 #ifndef TVHEADEND_STRING_H
 #define TVHEADEND_STRING_H
 
+#include <string.h>
+#include <stdlib.h>
+
 #include "build.h"
 
 static inline int strempty(const char *c)

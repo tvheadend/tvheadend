@@ -73,7 +73,7 @@ iptv_http_safe_global_lock( http_priv_t *hp )
   while (1) {
     if (im->mm_active == NULL || hp->shutdown)
       return 0;
-    r = pthread_mutex_trylock(&global_lock);
+    r = tvh_mutex_trylock(&global_lock);
     if (r == 0)
       break;
     if (r != EBUSY)
@@ -81,7 +81,7 @@ iptv_http_safe_global_lock( http_priv_t *hp )
     sched_yield();
     if (im->mm_active == NULL || hp->shutdown)
       return 0;
-    r = pthread_mutex_trylock(&global_lock);
+    r = tvh_mutex_trylock(&global_lock);
     if (r == 0)
       break;
     if (r == EBUSY)
@@ -254,7 +254,7 @@ iptv_http_header ( http_client_t *hc )
     } else {
       iptv_input_recv_flush(hp->im);
     }
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     hp->started = 1;
   }
   return 0;
@@ -287,7 +287,7 @@ iptv_http_data
     return 0;
   }
 
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
 
   if (hp->hls_encrypted) {
     off = im->mm_iptv_buffer.sb_ptr;
@@ -308,7 +308,7 @@ iptv_http_data
     memcpy(hp->hls_aes128.tmp + hp->hls_aes128.tmp_len, buf, len);
     hp->hls_aes128.tmp_len += len;
     if (off == im->mm_iptv_buffer.sb_ptr) {
-      pthread_mutex_unlock(&iptv_lock);
+      tvh_mutex_unlock(&iptv_lock);
       return 0;
     }
     buf = im->mm_iptv_buffer.sb_data + im->mm_iptv_buffer.sb_ptr;
@@ -343,12 +343,12 @@ iptv_http_data
     if (iptv_input_recv_packets(im, len) == 1)
       pause = hc->hc_pause = 1;
 
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
 
   if (pause && iptv_http_safe_global_lock(hp)) {
     if (im->mm_active && !hp->shutdown)
       mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, sec2mono(1));
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
   return 0;
 }
@@ -364,10 +364,10 @@ iptv_http_reconnect ( http_client_t *hc, const char *url )
 
   urlinit(&u);
   if (!urlparse(url, &u)) {
-    pthread_mutex_lock(&hc->hc_mutex);
+    tvh_mutex_lock(&hc->hc_mutex);
     hc->hc_keepalive = 0;
     r = http_client_simple_reconnect(hc, &u, HTTP_VERSION_1_1);
-    pthread_mutex_unlock(&hc->hc_mutex);
+    tvh_mutex_unlock(&hc->hc_mutex);
     if (r < 0)
       tvherror(LS_IPTV, "cannot reopen http client: %d'", r);
   } else {
@@ -558,9 +558,9 @@ iptv_http_stop
   http_priv_t *hp = im->im_data;
 
   hp->shutdown = 1;
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
   http_client_close(hp->hc);
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
   im->im_data = NULL;
   sbuf_free(&hp->m3u_sbuf);
   sbuf_free(&hp->key_sbuf);

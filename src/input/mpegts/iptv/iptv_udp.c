@@ -66,10 +66,10 @@ iptv_udp_stop
   udp_multirecv_t *um = im->im_data;
 
   im->im_data = NULL;
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
   udp_multirecv_free(um);
   free(um);
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
 }
 
 static ssize_t

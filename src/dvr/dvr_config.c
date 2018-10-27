@@ -17,11 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <assert.h>
-#include <string.h>
 
 #include "settings.h"
 
@@ -1547,11 +1543,11 @@ dvr_done(void)
 #if ENABLE_INOTIFY
   dvr_inotify_done();
 #endif
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   dvr_entry_done();
   while ((cfg = LIST_FIRST(&dvrconfigs)) != NULL)
     dvr_config_destroy(cfg, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   dvr_autorec_done();
   dvr_timerec_done();
   dvr_disk_space_done();

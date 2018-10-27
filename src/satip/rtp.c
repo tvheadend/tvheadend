@@ -73,14 +73,14 @@ typedef struct satip_rtp_session {
   uint16_t seq;
   signal_status_t sig;
   int sig_lock;
-  pthread_mutex_t lock;
+  tvh_mutex_t lock;
   http_connection_t *hc;
   sbuf_t table_data;
   void (*no_data_cb)(void *opaque);
   void *no_data_opaque;
 } satip_rtp_session_t;
 
-static pthread_mutex_t satip_rtp_lock;
+static tvh_mutex_t satip_rtp_lock;
 static pthread_t satip_rtcp_tid;
 static int satip_rtcp_run;
 static TAILQ_HEAD(, satip_rtp_session) satip_rtp_sessions;
@@ -365,9 +365,9 @@ found:
 static void
 satip_rtp_signal_status(satip_rtp_session_t *rtp, signal_status_t *sig)
 {
-  pthread_mutex_lock(&rtp->lock);
+  tvh_mutex_lock(&rtp->lock);
   rtp->sig = *sig;
-  pthread_mutex_unlock(&rtp->lock);
+  tvh_mutex_unlock(&rtp->lock);
 }
 
 static void *
@@ -386,7 +386,7 @@ satip_rtp_thread(void *aux)
   tvhdebug(LS_SATIPS, "RTP streaming to %s:%d open", peername,
            tcp ? ntohs(IP_PORT(rtp->peer)) : rtp->port);
 
-  pthread_mutex_lock(&sq->sq_mutex);
+  tvh_mutex_lock(&sq->sq_mutex);
   while (rtp->sq && !fatal) {
     sm = TAILQ_FIRST(&sq->sq_queue);
     if (sm == NULL) {
@@ -403,7 +403,7 @@ satip_rtp_thread(void *aux)
       continue;
     }
     streaming_queue_remove(sq, sm);
-    pthread_mutex_unlock(&sq->sq_mutex);
+    tvh_mutex_unlock(&sq->sq_mutex);
 
     switch (sm->sm_type) {
     case SMT_MPEGTS:
@@ -413,12 +413,12 @@ satip_rtp_thread(void *aux)
       if (r > 0)
         atomic_set(&rtp->sig_lock, 1);
       if (atomic_get(&rtp->allow_data)) {
-        pthread_mutex_lock(&rtp->lock);
+        tvh_mutex_lock(&rtp->lock);
         if (tcp)
           r = satip_rtp_tcp_loop(rtp, pktbuf_ptr(pb), r);
         else
           r = satip_rtp_loop(rtp, pktbuf_ptr(pb), r);
-        pthread_mutex_unlock(&rtp->lock);
+        tvh_mutex_unlock(&rtp->lock);
         if (r) fatal = 1;
       }
       break;
@@ -446,9 +446,9 @@ satip_rtp_thread(void *aux)
     }
 
     streaming_msg_free(sm);
-    pthread_mutex_lock(&sq->sq_mutex);
+    tvh_mutex_lock(&sq->sq_mutex);
   }
-  pthread_mutex_unlock(&sq->sq_mutex);
+  tvh_mutex_unlock(&sq->sq_mutex);
 
   tvhdebug(LS_SATIPS, "RTP streaming to %s:%d closed (%s request)%s",
            peername,
@@ -522,7 +522,7 @@ void *satip_rtp_queue(th_subscription_t *subs,
   rtp->frontend = frontend;
   rtp->dmc = *dmc;
   rtp->source = source;
-  pthread_mutex_init(&rtp->lock, NULL);
+  tvh_mutex_init(&rtp->lock, NULL);
 
   dscp = config.dscp >= 0 ? config.dscp : IPTOS_DSCP_EF;
   socket_set_dscp(rtp->fd_rtp, dscp, NULL, 0);
@@ -539,10 +539,10 @@ void *satip_rtp_queue(th_subscription_t *subs,
 
   tvhtrace(LS_SATIPS, "rtp queue %p", rtp);
 
-  pthread_mutex_lock(&satip_rtp_lock);
+  tvh_mutex_lock(&satip_rtp_lock);
   TAILQ_INSERT_TAIL(&satip_rtp_sessions, rtp, link);
-  tvhthread_create(&rtp->tid, NULL, satip_rtp_thread, rtp, "satip-rtp");
-  pthread_mutex_unlock(&satip_rtp_lock);
+  tvh_thread_create(&rtp->tid, NULL, satip_rtp_thread, rtp, "satip-rtp");
+  tvh_mutex_unlock(&satip_rtp_lock);
   return rtp;
 }
 
@@ -552,9 +552,9 @@ void satip_rtp_allow_data(void *_rtp)
 
   if (rtp == NULL)
     return;
-  pthread_mutex_lock(&satip_rtp_lock);
+  tvh_mutex_lock(&satip_rtp_lock);
   atomic_set(&rtp->allow_data, 1);
-  pthread_mutex_unlock(&satip_rtp_lock);
+  tvh_mutex_unlock(&satip_rtp_lock);
 }
 
 void satip_rtp_update_pids(void *_rtp, mpegts_apids_t *pids)
@@ -563,11 +563,11 @@ void satip_rtp_update_pids(void *_rtp, mpegts_apids_t *pids)
 
   if (rtp == NULL)
     return;
-  pthread_mutex_lock(&satip_rtp_lock);
-  pthread_mutex_lock(&rtp->lock);
+  tvh_mutex_lock(&satip_rtp_lock);
+  tvh_mutex_lock(&rtp->lock);
   mpegts_pid_copy(&rtp->pids, pids);
-  pthread_mutex_unlock(&rtp->lock);
-  pthread_mutex_unlock(&satip_rtp_lock);
+  tvh_mutex_unlock(&rtp->lock);
+  tvh_mutex_unlock(&satip_rtp_lock);
 }
 
 void satip_rtp_update_pmt_pids(void *_rtp, mpegts_apids_t *pmt_pids)
@@ -578,8 +578,8 @@ void satip_rtp_update_pmt_pids(void *_rtp, mpegts_apids_t *pmt_pids)
 
   if (rtp == NULL)
     return;
-  pthread_mutex_lock(&satip_rtp_lock);
-  pthread_mutex_lock(&rtp->lock);
+  tvh_mutex_lock(&satip_rtp_lock);
+  tvh_mutex_lock(&rtp->lock);
   TAILQ_FOREACH(tbl, &rtp->pmt_tables, link)
     if (!mpegts_pid_rexists(pmt_pids, tbl->pid))
       tbl->remove_mark = 1;
@@ -603,8 +603,8 @@ void satip_rtp_update_pmt_pids(void *_rtp, mpegts_apids_t *pmt_pids)
       free(tbl);
     }
   }
-  pthread_mutex_unlock(&rtp->lock);
-  pthread_mutex_unlock(&satip_rtp_lock);
+  tvh_mutex_unlock(&rtp->lock);
+  tvh_mutex_unlock(&satip_rtp_lock);
 }
 
 void satip_rtp_close(void *_rtp)
@@ -615,15 +615,15 @@ void satip_rtp_close(void *_rtp)
 
   if (rtp == NULL)
     return;
-  pthread_mutex_lock(&satip_rtp_lock);
+  tvh_mutex_lock(&satip_rtp_lock);
   tvhtrace(LS_SATIPS, "rtp close %p", rtp);
   TAILQ_REMOVE(&satip_rtp_sessions, rtp, link);
   sq = rtp->sq;
-  pthread_mutex_lock(&sq->sq_mutex);
+  tvh_mutex_lock(&sq->sq_mutex);
   rtp->sq = NULL;
   tvh_cond_signal(&sq->sq_cond, 0);
-  pthread_mutex_unlock(&sq->sq_mutex);
-  pthread_mutex_unlock(&satip_rtp_lock);
+  tvh_mutex_unlock(&sq->sq_mutex);
+  tvh_mutex_unlock(&satip_rtp_lock);
   pthread_join(rtp->tid, NULL);
   if (rtp->port == RTSP_TCP_DATA) {
     http_extra_destroy(rtp->hc);
@@ -637,7 +637,7 @@ void satip_rtp_close(void *_rtp)
     TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
     free(tbl);
   }
-  pthread_mutex_destroy(&rtp->lock);
+  tvh_mutex_destroy(&rtp->lock);
   free(rtp);
 }
 
@@ -860,11 +860,11 @@ int satip_rtp_status(void *_rtp, char *buf, int len)
   buf[0] = '\0';
   if (rtp == NULL)
     return 0;
-  pthread_mutex_lock(&satip_rtp_lock);
-  pthread_mutex_lock(&rtp->lock);
+  tvh_mutex_lock(&satip_rtp_lock);
+  tvh_mutex_lock(&rtp->lock);
   r = satip_status_build(rtp, buf, len);
-  pthread_mutex_unlock(&rtp->lock);
-  pthread_mutex_unlock(&satip_rtp_lock);
+  tvh_mutex_unlock(&rtp->lock);
+  tvh_mutex_unlock(&satip_rtp_lock);
   return r;
 }
 
@@ -877,9 +877,9 @@ satip_rtcp_build(satip_rtp_session_t *rtp, uint8_t *msg)
   char buf[1500];
   int len, len2;
 
-  pthread_mutex_lock(&rtp->lock);
+  tvh_mutex_lock(&rtp->lock);
   len = satip_status_build(rtp, buf, sizeof(buf));
-  pthread_mutex_unlock(&rtp->lock);
+  tvh_mutex_unlock(&rtp->lock);
 
   len = len2 = MIN(len, RTCP_PAYLOAD - 16);
   if (len == 0)
@@ -931,7 +931,7 @@ satip_rtcp_thread(void *aux)
       if (!atomic_get(&satip_rtcp_run))
         goto end;
     } while (us > 0);
-    pthread_mutex_lock(&satip_rtp_lock);
+    tvh_mutex_lock(&satip_rtp_lock);
     TAILQ_FOREACH(rtp, &satip_rtp_sessions, link) {
       if (rtp->sq == NULL || rtp->disable_rtcp) continue;
       len = satip_rtcp_build(rtp, msg);
@@ -968,7 +968,7 @@ satip_rtcp_thread(void *aux)
         }
       }
     }
-    pthread_mutex_unlock(&satip_rtp_lock);
+    tvh_mutex_unlock(&satip_rtp_lock);
   }
 end:
   return NULL;
@@ -980,14 +980,14 @@ end:
 void satip_rtp_init(int boot)
 {
   TAILQ_INIT(&satip_rtp_sessions);
-  pthread_mutex_init(&satip_rtp_lock, NULL);
+  tvh_mutex_init(&satip_rtp_lock, NULL);
 
   if (boot)
     atomic_set(&satip_rtcp_run, 0);
 
   if (!boot && !atomic_get(&satip_rtcp_run)) {
     atomic_set(&satip_rtcp_run, 1);
-    tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL, "satip-rtcp");
+    tvh_thread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL, "satip-rtcp");
   }
 }
 
@@ -999,7 +999,7 @@ void satip_rtp_done(void)
   assert(TAILQ_EMPTY(&satip_rtp_sessions));
   if (atomic_get(&satip_rtcp_run)) {
     atomic_set(&satip_rtcp_run, 0);
-    pthread_kill(satip_rtcp_tid, SIGTERM);
+    tvh_thread_kill(satip_rtcp_tid, SIGTERM);
     pthread_join(satip_rtcp_tid, NULL);
   }
 }

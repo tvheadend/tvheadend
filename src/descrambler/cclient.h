@@ -156,7 +156,7 @@ typedef struct cclient {
   /* Thread */
   pthread_t cc_tid;
   tvh_cond_t cc_cond;
-  pthread_mutex_t cc_mutex;
+  tvh_mutex_t cc_mutex;
   th_pipe_t cc_pipe;
 
   /* Database */

@@ -61,7 +61,7 @@ static ssize_t _write
   size_t alloc;
   ssize_t ret;
   if (tsf->ram) {
-    pthread_mutex_lock(&tsf->ram_lock);
+    tvh_mutex_lock(&tsf->ram_lock);
     if (tsf->ram_size < tsf->woff + count) {
       if (tsf->ram_size >= timeshift_conf.ram_segment_size)
         alloc = MAX(count, 64*1024);
@@ -70,7 +70,7 @@ static ssize_t _write
       ram = realloc(tsf->ram, tsf->ram_size + alloc);
       if (ram == NULL) {
         tvhwarn(LS_TIMESHIFT, "RAM timeshift memalloc failed");
-        pthread_mutex_unlock(&tsf->ram_lock);
+        tvh_mutex_unlock(&tsf->ram_lock);
         return -1;
       }
       memoryinfo_append(&timeshift_memoryinfo_ram, alloc);
@@ -79,7 +79,7 @@ static ssize_t _write
     }
     memcpy(tsf->ram + tsf->woff, buf, count);
     tsf->woff += count;
-    pthread_mutex_unlock(&tsf->ram_lock);
+    tvh_mutex_unlock(&tsf->ram_lock);
     return count;
   }
   ret = _write_fd(tsf->wfd, buf, count);
@@ -353,7 +353,7 @@ static void _process_msg
     case SMT_SIGNAL_STATUS:
     case SMT_START:
     case SMT_MPEGTS:
-      pthread_mutex_lock(&ts->state_mutex);
+      tvh_mutex_lock(&ts->state_mutex);
       if (!teletext) /* do not use time from teletext packets */
         ts->buf_time = sm->sm_time;
       if (ts->state == TS_LIVE) {
@@ -378,7 +378,7 @@ static void _process_msg
           timeshift_file_put(tsf);
         }
       }
-      pthread_mutex_unlock(&ts->state_mutex);
+      tvh_mutex_unlock(&ts->state_mutex);
       break;
   }
 
@@ -387,12 +387,12 @@ static void _process_msg
   return;
 
 live:
-  pthread_mutex_lock(&ts->state_mutex);
+  tvh_mutex_lock(&ts->state_mutex);
   if (ts->state == TS_LIVE)
     streaming_target_deliver2(ts->output, sm);
   else
     streaming_msg_free(sm);
-  pthread_mutex_unlock(&ts->state_mutex);
+  tvh_mutex_unlock(&ts->state_mutex);
 }
 
 void *timeshift_writer ( void *aux )
@@ -402,7 +402,7 @@ void *timeshift_writer ( void *aux )
   streaming_queue_t *sq = &ts->wr_queue;
   streaming_message_t *sm;
 
-  pthread_mutex_lock(&sq->sq_mutex);
+  tvh_mutex_lock(&sq->sq_mutex);
 
   while (run) {
 
@@ -413,13 +413,13 @@ void *timeshift_writer ( void *aux )
       continue;
     }
     streaming_queue_remove(sq, sm);
-    pthread_mutex_unlock(&sq->sq_mutex);
+    tvh_mutex_unlock(&sq->sq_mutex);
 
     _process_msg(ts, sm, &run);
 
-    pthread_mutex_lock(&sq->sq_mutex);
+    tvh_mutex_lock(&sq->sq_mutex);
   }
 
-  pthread_mutex_unlock(&sq->sq_mutex);
+  tvh_mutex_unlock(&sq->sq_mutex);
   return NULL;
 }

@@ -484,7 +484,7 @@ api_epg_grid
   limit = htsmsg_get_u32_or_default(args, "limit", 50);
 
   /* Query the EPG */
-  pthread_mutex_lock(&global_lock); 
+  tvh_mutex_lock(&global_lock);
   epg_query(&eq, perm);
 
   /* Build response */
@@ -495,7 +495,7 @@ api_epg_grid
     if (!(e = api_epg_entry(eq.result[i], lang, perm, &blank))) continue;
     htsmsg_add_msg(l, NULL, e);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   epg_query_free(&eq);
   free(lang);
@@ -598,11 +598,11 @@ api_epg_alternative
 
   /* Main Job */
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
   if (e)
     api_epg_episode_broadcasts(perm, l, lang, e, &entries, e);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   free(lang);
 
   /* Build response */
@@ -628,13 +628,13 @@ api_epg_related
 
   /* Main Job */
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
   serieslink = e->serieslink;
   if (serieslink)
     entries = api_epg_episode_sorted(serieslink, perm, l, lang, e);
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   free(lang);
 
   /* Build response */
@@ -663,7 +663,7 @@ api_epg_load
       return -EINVAL;
 
   /* Main Job */
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   if (ids) {
     HTSMSG_FOREACH(f, ids) {
@@ -681,7 +681,7 @@ api_epg_load
       entries++;
     }
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   free(lang);
 
   /* Build response */

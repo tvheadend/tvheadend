@@ -840,7 +840,7 @@ static int _eit_process_event
   _eit_scrape_text(eit_mod, &ev);
 
   if (lock)
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
   svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
   if (svc && eit_mod->opaque) {
     LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
@@ -852,7 +852,7 @@ static int _eit_process_event
     }
   }
   if (lock)
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
 
 #if TODO_ADD_EXTRA
   if (ev.extra)    htsmsg_destroy(ev.extra);
@@ -890,9 +890,9 @@ _eit_process_data(void *m, void *data, uint32_t len)
   }
 
   if (save) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     epg_updated();
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
 }
 

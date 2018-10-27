@@ -35,7 +35,7 @@ static char *satip_server_bindaddr;
 static int satip_server_rtsp_port;
 static int satip_server_rtsp_port_locked;
 static upnp_service_t *satips_upnp_discovery;
-static pthread_mutex_t satip_server_reinit;
+static tvh_mutex_t satip_server_reinit;
 
 static void satip_server_save(void);
 
@@ -138,7 +138,7 @@ satip_server_http_xml(http_connection_t *hc)
 
   htsbuf_queue_init(&q, 0);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
     if (mn->mn_satip_source == 0)
       continue;
@@ -184,7 +184,7 @@ satip_server_http_xml(http_connection_t *hc)
       }
     }
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   if (!dvbs)
     srcs = 0;
 
@@ -997,9 +997,9 @@ static void satip_server_init_common(const char *prefix, int announce)
   rtp_src_ip = strdup(satip_server_conf.satip_rtp_src_ip ?: "");
 
   if (announce)
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
 
-  pthread_mutex_lock(&satip_server_reinit);
+  tvh_mutex_lock(&satip_server_reinit);
 
   satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf, rtp_src_ip, nat_ip, nat_port);
   satip_server_info(prefix, descramble, muxcnf);
@@ -1007,10 +1007,10 @@ static void satip_server_init_common(const char *prefix, int announce)
   if (announce)
     satips_upnp_send_announce();
 
-  pthread_mutex_unlock(&satip_server_reinit);
+  tvh_mutex_unlock(&satip_server_reinit);
 
   if (announce)
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
 
   free(nat_ip);
   free(rtp_src_ip);
@@ -1026,11 +1026,11 @@ static void satip_server_save(void)
     if (satip_server_rtsp_port > 0) {
       satip_server_init_common("re", 1);
     } else {
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
       tvhinfo(LS_SATIPS, "SAT>IP Server shutdown");
       satip_server_rtsp_done();
       satips_upnp_send_byebye();
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
     }
   }
 }
@@ -1050,7 +1050,7 @@ void satip_server_boot(void)
 
 void satip_server_init(const char *bindaddr, int rtsp_port)
 {
-  pthread_mutex_init(&satip_server_reinit, NULL);
+  tvh_mutex_init(&satip_server_reinit, NULL);
 
   http_server_ip = NULL;
 

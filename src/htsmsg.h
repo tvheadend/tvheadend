@@ -75,7 +75,7 @@ typedef struct htsmsg_field {
     } bin;
     htsmsg_t *msg;
     double dbl;
-    int bool;
+    int boolean;
   } u;
 
 #if ENABLE_SLOW_MEMORYINFO
@@ -91,7 +91,7 @@ typedef struct htsmsg_field {
 #define hmf_bin     u.bin.data
 #define hmf_binsize u.bin.len
 #define hmf_dbl     u.dbl
-#define hmf_bool    u.bool
+#define hmf_bool    u.boolean
 
 // backwards compat
 #define htsmsg_get_map_by_field(f) htsmsg_field_get_map(f)

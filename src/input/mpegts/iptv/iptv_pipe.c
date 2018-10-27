@@ -114,9 +114,9 @@ iptv_pipe_read ( iptv_input_t *mi, iptv_mux_t *im )
                  rd, r < 0 ? strerror(errno) : "No data");
       } else {
         /* avoid deadlock here */
-        pthread_mutex_unlock(&iptv_lock);
-        pthread_mutex_lock(&global_lock);
-        pthread_mutex_lock(&iptv_lock);
+        tvh_mutex_unlock(&iptv_lock);
+        tvh_mutex_lock(&global_lock);
+        tvh_mutex_lock(&iptv_lock);
         if (im->mm_active) {
           if (iptv_pipe_start(mi, im, im->mm_iptv_url_raw, NULL)) {
             tvherror(LS_IPTV, "unable to respawn %s", im->mm_iptv_url_raw);
@@ -125,9 +125,9 @@ iptv_pipe_read ( iptv_input_t *mi, iptv_mux_t *im )
             im->mm_iptv_respawn_last = mclk();
           }
         }
-        pthread_mutex_unlock(&iptv_lock);
-        pthread_mutex_unlock(&global_lock);
-        pthread_mutex_lock(&iptv_lock);
+        tvh_mutex_unlock(&iptv_lock);
+        tvh_mutex_unlock(&global_lock);
+        tvh_mutex_lock(&iptv_lock);
       }
       break;
     }

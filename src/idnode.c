@@ -41,7 +41,7 @@ typedef struct idclass_link
   RB_ENTRY(idclass_link) link;
 } idclass_link_t;
 
-pthread_mutex_t                 idnode_mutex = PTHREAD_MUTEX_INITIALIZER;
+tvh_mutex_t                     idnode_mutex;
 static idnodes_rb_t             idnodes;
 static RB_HEAD(,idclass_link)   idclasses;
 static RB_HEAD(,idclass_link)   idrootclasses;
@@ -52,7 +52,7 @@ static pthread_t  save_tid;
 static int        save_running;
 static mtimer_t   save_timer;
 
-static pthread_mutex_t idnode_lnotify_mutex = PTHREAD_MUTEX_INITIALIZER;
+static tvh_mutex_t idnode_lnotify_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
 static tvh_uuid_set_t  idnode_lnotify_set;
 static tvh_uuid_set_t  idnode_lnotify_title_set;
 
@@ -1951,17 +1951,17 @@ save_thread ( void *aux )
   uuid_set_init(&set, 10);
   uuid_set_init(&tset, 10);
 
-  tvhthread_renice(15);
+  tvh_thread_renice(15);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   while (atomic_get(&save_running)) {
     if ((ise = TAILQ_FIRST(&idnodes_save)) == NULL ||
         ise->ise_reqtime + IDNODE_SAVE_DELAY > mclk()) {
-      pthread_mutex_lock(&idnode_lnotify_mutex);
+      tvh_mutex_lock(&idnode_lnotify_mutex);
       lnotify = !uuid_set_empty(&idnode_lnotify_set) ||
                 !uuid_set_empty(&idnode_lnotify_title_set);
-      pthread_mutex_unlock(&idnode_lnotify_mutex);
+      tvh_mutex_unlock(&idnode_lnotify_mutex);
       if (lnotify)
         goto lnotifygo;
       if (ise)
@@ -1974,16 +1974,16 @@ save_thread ( void *aux )
       m = idnode_savefn(ise->ise_node, filename, sizeof(filename));
       ise->ise_node->in_save = NULL;
       TAILQ_REMOVE(&idnodes_save, ise, ise_link);
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
       free(ise);
       if (m) {
         hts_settings_save(m, "%s", filename);
         htsmsg_destroy(m);
       }
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
     }
 lnotifygo:
-    pthread_mutex_lock(&idnode_lnotify_mutex);
+    tvh_mutex_lock(&idnode_lnotify_mutex);
     if (!uuid_set_empty(&idnode_lnotify_set)) {
       set = idnode_lnotify_set;
       uuid_set_init(&idnode_lnotify_set, 10);
@@ -1992,7 +1992,7 @@ lnotifygo:
       tset = idnode_lnotify_title_set;
       uuid_set_init(&idnode_lnotify_title_set, 10);
     }
-    pthread_mutex_unlock(&idnode_lnotify_mutex);
+    tvh_mutex_unlock(&idnode_lnotify_mutex);
     if (!uuid_set_empty(&set)) {
       UUID_SET_FOREACH(uuid, &set, u32) {
         in = idnode_find0(uuid, NULL, NULL);
@@ -2017,16 +2017,16 @@ lnotifygo:
     m = idnode_savefn(ise->ise_node, filename, sizeof(filename));
     ise->ise_node->in_save = NULL;
     TAILQ_REMOVE(&idnodes_save, ise, ise_link);
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     free(ise);
     if (m) {
       hts_settings_save(m, "%s", filename);
       htsmsg_destroy(m);
     }
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
   }
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return NULL;
 }
 
@@ -2036,17 +2036,17 @@ lnotifygo:
 
 void idnode_lnotify_changed( void *in )
 {
-  pthread_mutex_lock(&idnode_lnotify_mutex);
+  tvh_mutex_lock(&idnode_lnotify_mutex);
   uuid_set_add(&idnode_lnotify_set, &((idnode_t *)in)->in_uuid);
-  pthread_mutex_unlock(&idnode_lnotify_mutex);
+  tvh_mutex_unlock(&idnode_lnotify_mutex);
   tvh_cond_signal(&save_cond, 0);
 }
 
 void idnode_lnotify_title_changed( void *in )
 {
-  pthread_mutex_lock(&idnode_lnotify_mutex);
+  tvh_mutex_lock(&idnode_lnotify_mutex);
   uuid_set_add(&idnode_lnotify_title_set, &((idnode_t *)in)->in_uuid);
-  pthread_mutex_unlock(&idnode_lnotify_mutex);
+  tvh_mutex_unlock(&idnode_lnotify_mutex);
   tvh_cond_signal(&save_cond, 0);
 }
 
@@ -2057,11 +2057,12 @@ void idnode_lnotify_title_changed( void *in )
 void
 idnode_boot(void)
 {
+  tvh_mutex_init(&idnode_mutex, NULL);
   RB_INIT(&idnodes);
   RB_INIT(&idclasses);
   RB_INIT(&idrootclasses);
   TAILQ_INIT(&idnodes_save);
-  tvh_cond_init(&save_cond);
+  tvh_cond_init(&save_cond, 1);
   uuid_set_init(&idnode_lnotify_set, 10);
   uuid_set_init(&idnode_lnotify_title_set, 10);
 }
@@ -2070,7 +2071,7 @@ void
 idnode_init(void)
 {
   atomic_set(&save_running, 1);
-  tvhthread_create(&save_tid, NULL, save_thread, NULL, "save");
+  tvh_thread_create(&save_tid, NULL, save_thread, NULL, "save");
 }
 
 void
@@ -2078,10 +2079,10 @@ idnode_done(void)
 {
   idclass_link_t *il;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   atomic_set(&save_running, 0);
   tvh_cond_signal(&save_cond, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   pthread_join(save_tid, NULL);
   mtimer_disarm(&save_timer);
 

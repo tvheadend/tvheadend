@@ -561,9 +561,9 @@ _opentv_process_data
   memcpy(&od, data, sizeof(od));
   data += sizeof(od);
   len -= sizeof(od);
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   opentv_parse_event_section(mod, od.cid, od.mjd, data, len);
-  pthread_mutex_unlock(&global_lock);  
+  tvh_mutex_unlock(&global_lock);  
 }
 
 /* ************************************************************************

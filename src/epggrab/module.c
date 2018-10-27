@@ -16,12 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <string.h>
-#include <pthread.h>
-#include <unistd.h>
 #include <signal.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -36,6 +31,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
+
 extern gtimer_t epggrab_save_timer;
 
 /* **************************************************************************
@@ -411,7 +407,7 @@ void epggrab_module_parse( void *m, htsmsg_t *data )
   /* Now we've parsed, do we need to save? */
   if (save && epggrab_conf.epgdb_saveafterimport) {
     tvhinfo(mod->subsys, "%s: scheduling save epg timer", mod->id);
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     /* Disarm any existing timer first (from a periodic save). */
     gtimer_disarm(&epggrab_save_timer);
     /* Reschedule for a few minutes away so if the user is
@@ -424,7 +420,7 @@ void epggrab_module_parse( void *m, htsmsg_t *data )
      */
     gtimer_arm_rel(&epggrab_save_timer, epg_save_callback, NULL,
                    60 * 2);
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
 }
 
@@ -632,7 +628,7 @@ epggrab_module_done_socket( void *m )
   shutdown(sock, SHUT_RDWR);
   close(sock);
   if (mod->tid) {
-    pthread_kill(mod->tid, SIGQUIT);
+    tvh_thread_kill(mod->tid, SIGQUIT);
     pthread_join(mod->tid, NULL);
   }
   mod->tid = 0;
@@ -690,7 +686,7 @@ epggrab_module_activate_socket ( void *m, int a )
     pthread_attr_init(&tattr);
     mod->active = 1;
     atomic_set(&mod->sock, sock);
-    tvhthread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod, "epggrabso");
+    tvh_thread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod, "epggrabso");
   }
   return 1;
 }

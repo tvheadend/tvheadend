@@ -33,9 +33,9 @@ api_imagecache_clean
   if (htsmsg_get_bool(args, "clean", &b))
     return EINVAL;
   if (b) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     imagecache_clean();
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
   return 0;
 }
@@ -48,9 +48,9 @@ api_imagecache_trigger
   if (htsmsg_get_bool(args, "trigger", &b))
     return EINVAL;
   if (b) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     imagecache_trigger();
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
   return 0;
 }

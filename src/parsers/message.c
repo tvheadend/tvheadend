@@ -16,15 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <assert.h>
-
 #include "parsers.h"
 #include "../input/mpegts/dvb_psi_hbbtv.h"
 #include "packet.h"

@@ -41,8 +41,8 @@
 
 #define TRANSPORT_RECOVERY 4 /* in seconds */
 
-static pthread_mutex_t linuxdvb_ca_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t linuxdvb_capmt_mutex = PTHREAD_MUTEX_INITIALIZER;
+static tvh_mutex_t linuxdvb_ca_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+static tvh_mutex_t linuxdvb_capmt_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
 static th_pipe_t linuxdvb_ca_pipe;
 static pthread_t linuxdvb_ca_threadid;
 static mtimer_t linuxdvb_ca_thread_join_timer;
@@ -201,14 +201,14 @@ linuxdvb_ca_close_fd( linuxdvb_transport_t *lcat, int reset )
   linuxdvb_ca_t *lca;
   linuxdvb_ca_write_t *lcw;
 
-  pthread_mutex_lock(&linuxdvb_capmt_mutex);
+  tvh_mutex_lock(&linuxdvb_capmt_mutex);
   LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
     while ((lcw = TAILQ_FIRST(&lca->lca_write_queue)) != NULL) {
       TAILQ_REMOVE(&lca->lca_write_queue, lcw, lcw_link);
       free(lcw);
     }
   }
-  pthread_mutex_unlock(&linuxdvb_capmt_mutex);
+  tvh_mutex_unlock(&linuxdvb_capmt_mutex);
 
   if (fd < 0)
     return;
@@ -223,14 +223,14 @@ linuxdvb_ca_close_fd( linuxdvb_transport_t *lcat, int reset )
   tvhtrace(LS_EN50221, "%s: close %s (fd %d)",
            lcat->lcat_name, lcat->lcat_ca_path, fd);
   close(fd);
-  pthread_mutex_lock(&linuxdvb_capmt_mutex);
+  tvh_mutex_lock(&linuxdvb_capmt_mutex);
   LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
     while ((lcw = TAILQ_FIRST(&lca->lca_write_queue)) != NULL) {
       TAILQ_REMOVE(&lca->lca_write_queue, lcw, lcw_link);
       free(lcw);
     }
   }
-  pthread_mutex_unlock(&linuxdvb_capmt_mutex);
+  tvh_mutex_unlock(&linuxdvb_capmt_mutex);
   if (reset)
     en50221_transport_reset(lcat->lcat_transport);
 }
@@ -301,7 +301,7 @@ linuxdvb_ca_thread ( void *aux )
     evp->ptr = &linuxdvb_ca_pipe;
     evp++;
     evcnt = 1;
-    pthread_mutex_lock(&linuxdvb_ca_mutex);
+    tvh_mutex_lock(&linuxdvb_ca_mutex);
     LIST_FOREACH(lcat, &linuxdvb_all_transports, lcat_all_link) {
       if (lcat->lcat_ca_fd < 0) {
         if (!lcat->lcat_enabled)
@@ -312,7 +312,7 @@ linuxdvb_ca_thread ( void *aux )
           continue;
       } else if (!lcat->lcat_enabled) {
         if (lcat->lcat_ca_fd >= 0 && lcat->lcat_close_time < mclk()) {
-          pthread_mutex_lock(&linuxdvb_capmt_mutex);
+          tvh_mutex_lock(&linuxdvb_capmt_mutex);
           busy = 0;
           LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
             slot = en50221_transport_find_slot(lcat->lcat_transport,
@@ -321,7 +321,7 @@ linuxdvb_ca_thread ( void *aux )
               busy |= TAILQ_EMPTY(&slot->cil_write_queue) ? 0 : 2;
             busy |= TAILQ_EMPTY(&lca->lca_write_queue) ? 0 : 1;
           }
-          pthread_mutex_unlock(&linuxdvb_capmt_mutex);
+          tvh_mutex_unlock(&linuxdvb_capmt_mutex);
           tvhtrace(LS_EN50221, "%s: busy %x", lcat->lcat_name, busy);
           if (!busy)
             linuxdvb_ca_close_fd(lcat, 1);
@@ -344,14 +344,14 @@ linuxdvb_ca_thread ( void *aux )
       evp++;
       evcnt++;
     }
-    pthread_mutex_unlock(&linuxdvb_ca_mutex);
+    tvh_mutex_unlock(&linuxdvb_ca_mutex);
     tvhpoll_set(poll, ev, evcnt);
 
     r = tvhpoll_wait(poll, ev, evcnt, waitms);
     if (r < 0 && ERRNO_AGAIN(errno))
       continue;
 
-    pthread_mutex_lock(&linuxdvb_ca_mutex);
+    tvh_mutex_lock(&linuxdvb_ca_mutex);
     tm2 = mclk();
     monitor = (tm2 - tm) > (MONOCLOCK_RESOLUTION / 4); /* 250ms */
     if (monitor)
@@ -414,11 +414,11 @@ linuxdvb_ca_thread ( void *aux )
       LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
         cquit = 0;
         while (!cquit) {
-          pthread_mutex_lock(&linuxdvb_capmt_mutex);
+          tvh_mutex_lock(&linuxdvb_capmt_mutex);
           lcw = TAILQ_FIRST(&lca->lca_write_queue);
           if (lcw)
             TAILQ_REMOVE(&lca->lca_write_queue, lcw, lcw_link);
-          pthread_mutex_unlock(&linuxdvb_capmt_mutex);
+          tvh_mutex_unlock(&linuxdvb_capmt_mutex);
           if (lcw == NULL) {
             lca->lca_capmt_blocked = 0;
             break;
@@ -431,9 +431,9 @@ linuxdvb_ca_thread ( void *aux )
               lcat->lcat_fatal_time = mclk();
               linuxdvb_ca_close_fd(lcat, 1);
             } else if (r > 0) {
-              pthread_mutex_lock(&linuxdvb_capmt_mutex);
+              tvh_mutex_lock(&linuxdvb_capmt_mutex);
               TAILQ_INSERT_HEAD(&lca->lca_write_queue, lcw, lcw_link);
-              pthread_mutex_unlock(&linuxdvb_capmt_mutex);
+              tvh_mutex_unlock(&linuxdvb_capmt_mutex);
               cquit = 1;
             } else {
               free(lcw);
@@ -450,7 +450,7 @@ linuxdvb_ca_thread ( void *aux )
           waitms = 1;
       }
     }
-    pthread_mutex_unlock(&linuxdvb_ca_mutex);
+    tvh_mutex_unlock(&linuxdvb_ca_mutex);
   }
 
   tvhpoll_destroy(poll);
@@ -463,8 +463,8 @@ static void linuxdvb_ca_thread_create(void)
 {
   if (linuxdvb_ca_threadid)
     return;
-  tvhthread_create(&linuxdvb_ca_threadid, NULL, linuxdvb_ca_thread,
-                   NULL, "lnxdvb-ca");
+  tvh_thread_create(&linuxdvb_ca_threadid, NULL, linuxdvb_ca_thread,
+                    NULL, "lnxdvb-ca");
   if (tvh_pipe(O_NONBLOCK, &linuxdvb_ca_pipe)) {
     tvherror(LS_EN50221, "unable to create thread pipe");
     pthread_join(linuxdvb_ca_threadid, NULL);
@@ -500,10 +500,10 @@ static int linuxdvb_ca_write_cmd
   lcw->cmd = cmd;
   memcpy(lcw->data, data, datalen);
 
-  pthread_mutex_lock(&linuxdvb_capmt_mutex);
+  tvh_mutex_lock(&linuxdvb_capmt_mutex);
   trigger = TAILQ_EMPTY(&lca->lca_write_queue);
   TAILQ_INSERT_TAIL(&lca->lca_write_queue, lcw, lcw_link);
-  pthread_mutex_unlock(&linuxdvb_capmt_mutex);
+  tvh_mutex_unlock(&linuxdvb_capmt_mutex);
 
   if (trigger)
     tvh_write(linuxdvb_ca_pipe.wr, "w", 1);
@@ -746,9 +746,9 @@ linuxdvb_ca_create
   /* Transport link */
   lca->lca_transport = lcat;
   LIST_INSERT_HEAD(&lcat->lcat_slots, lca, lca_link);
-  pthread_mutex_lock(&linuxdvb_ca_mutex);
+  tvh_mutex_lock(&linuxdvb_ca_mutex);
   LIST_INSERT_HEAD(&linuxdvb_all_cas, lca, lca_all_link);
-  pthread_mutex_unlock(&linuxdvb_ca_mutex);
+  tvh_mutex_unlock(&linuxdvb_ca_mutex);
 
   if (conf)
     idnode_load(&lca->lca_id, conf);
@@ -763,13 +763,13 @@ static void linuxdvb_ca_destroy( linuxdvb_ca_t *lca )
   if (lca == NULL)
     return;
   dvbcam_unregister_cam(lca);
-  pthread_mutex_lock(&linuxdvb_ca_mutex);
+  tvh_mutex_lock(&linuxdvb_ca_mutex);
   LIST_REMOVE(lca, lca_all_link);
   while ((lcw = TAILQ_FIRST(&lca->lca_write_queue)) != NULL) {
     TAILQ_REMOVE(&lca->lca_write_queue, lcw, lcw_link);
     free(lcw);
   }
-  pthread_mutex_unlock(&linuxdvb_ca_mutex);
+  tvh_mutex_unlock(&linuxdvb_ca_mutex);
   LIST_REMOVE(lca, lca_link);
   idnode_unlink(&lca->lca_id);
   free(lca->lca_pin_str);
@@ -1039,9 +1039,9 @@ linuxdvb_transport_t *linuxdvb_transport_create
 #endif
 
   LIST_INSERT_HEAD(&la->la_ca_transports, lcat, lcat_link);
-  pthread_mutex_lock(&linuxdvb_ca_mutex);
+  tvh_mutex_lock(&linuxdvb_ca_mutex);
   LIST_INSERT_HEAD(&linuxdvb_all_transports, lcat, lcat_all_link);
-  pthread_mutex_unlock(&linuxdvb_ca_mutex);
+  tvh_mutex_unlock(&linuxdvb_ca_mutex);
   return lcat;
 }
 
@@ -1051,9 +1051,9 @@ void linuxdvb_transport_destroy ( linuxdvb_transport_t *lcat )
 
   if (lcat == NULL)
     return;
-  pthread_mutex_lock(&linuxdvb_ca_mutex);
+  tvh_mutex_lock(&linuxdvb_ca_mutex);
   LIST_REMOVE(lcat, lcat_all_link);
-  pthread_mutex_unlock(&linuxdvb_ca_mutex);
+  tvh_mutex_unlock(&linuxdvb_ca_mutex);
   while ((ca = LIST_FIRST(&lcat->lcat_slots)) != NULL)
     linuxdvb_ca_destroy(ca);
   LIST_REMOVE(lcat, lcat_link);

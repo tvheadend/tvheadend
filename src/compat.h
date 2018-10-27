@@ -18,6 +18,10 @@
 #ifndef TVH_COMPAT_H
 #define TVH_COMPAT_H
 
+#if ENABLE_LOCKOWNER || ENABLE_ANDROID
+#include <sys/syscall.h>
+#endif
+
 #if ENABLE_ANDROID
 #ifndef index
 #define index(...) strchr(__VA_ARGS__)

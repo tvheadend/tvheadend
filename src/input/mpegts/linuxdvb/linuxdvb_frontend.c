@@ -732,9 +732,9 @@ linuxdvb_frontend_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   /* Stop other active frontend (should be only one) */
   LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
     if (lfe2 == lfe || strcmp(lfe2->lfe_fe_path, lfe->lfe_fe_path)) continue;
-    pthread_mutex_lock(&lfe2->mi_output_lock);
+    tvh_mutex_lock(&lfe2->mi_output_lock);
     lmmi = LIST_FIRST(&lfe2->mi_mux_active);
-    pthread_mutex_unlock(&lfe2->mi_output_lock);
+    tvh_mutex_unlock(&lfe2->mi_output_lock);
     if (lmmi) {
       /* Stop */
       lmmi->mmi_mux->mm_stop(lmmi->mmi_mux, 1, SM_CODE_ABORTED);
@@ -801,7 +801,7 @@ linuxdvb_frontend_update_pids
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
 
-  pthread_mutex_lock(&lfe->lfe_dvr_lock);
+  tvh_mutex_lock(&lfe->lfe_dvr_lock);
   mpegts_pid_done(&lfe->lfe_pids);
   RB_FOREACH(mp, &mm->mm_pids, mp_link) {
     if (mp->mp_pid == MPEGTS_FULLMUX_PID)
@@ -811,7 +811,7 @@ linuxdvb_frontend_update_pids
         mpegts_pid_add(&lfe->lfe_pids, mp->mp_pid, mps->mps_weight);
     }
   }
-  pthread_mutex_unlock(&lfe->lfe_dvr_lock);
+  tvh_mutex_unlock(&lfe->lfe_dvr_lock);
 
   if (lfe->lfe_dvr_pipe.wr > 0)
     tvh_write(lfe->lfe_dvr_pipe.wr, "c", 1);
@@ -955,15 +955,15 @@ linuxdvb_frontend_monitor ( void *aux )
   
       /* Start input */
       tvh_pipe(O_NONBLOCK, &lfe->lfe_dvr_pipe);
-      pthread_mutex_lock(&lfe->lfe_dvr_lock);
-      tvhthread_create(&lfe->lfe_dvr_thread, NULL,
-                       linuxdvb_frontend_input_thread, lfe, "lnxdvb-front");
+      tvh_mutex_lock(&lfe->lfe_dvr_lock);
+      tvh_thread_create(&lfe->lfe_dvr_thread, NULL,
+                        linuxdvb_frontend_input_thread, lfe, "lnxdvb-front");
       do {
         e = tvh_cond_wait(&lfe->lfe_dvr_cond, &lfe->lfe_dvr_lock);
         if (e == ETIMEDOUT)
           break;
       } while (ERRNO_AGAIN(e));
-      pthread_mutex_unlock(&lfe->lfe_dvr_lock);
+      tvh_mutex_unlock(&lfe->lfe_dvr_lock);
 
       /* Table handlers */
       psi_tables_install((mpegts_input_t *)lfe, mm,
@@ -986,7 +986,7 @@ linuxdvb_frontend_monitor ( void *aux )
   }
 
 
-  pthread_mutex_lock(&mmi->tii_stats_mutex);
+  tvh_mutex_lock(&mmi->tii_stats_mutex);
 
   /* Statistics - New API */
 #if DVB_VER_ATLEAST(5,10)
@@ -1232,12 +1232,12 @@ linuxdvb_frontend_monitor ( void *aux )
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
 
-  pthread_mutex_unlock(&mmi->tii_stats_mutex);
+  tvh_mutex_unlock(&mmi->tii_stats_mutex);
 
   LIST_FOREACH(s, &mmi->mmi_mux->mm_transports, s_active_link) {
-    pthread_mutex_lock(&s->s_stream_mutex);
+    tvh_mutex_lock(&s->s_stream_mutex);
     streaming_service_deliver(s, streaming_msg_clone(&sm));
-    pthread_mutex_unlock(&s->s_stream_mutex);
+    tvh_mutex_unlock(&s->s_stream_mutex);
   }
 }
 
@@ -1325,7 +1325,7 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
   int all = lfe->lfe_pids.all;
   char buf[512];
 
-  pthread_mutex_lock(&lfe->lfe_dvr_lock);
+  tvh_mutex_lock(&lfe->lfe_dvr_lock);
 
   if (!all) {
     overlimit = mpegts_pid_weighted(&wpid, &lfe->lfe_pids, max, MPS_WEIGHT_ALLLIMIT);
@@ -1358,7 +1358,7 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
 
   tuned->all = lfe->lfe_pids.all;
 
-  pthread_mutex_unlock(&lfe->lfe_dvr_lock);
+  tvh_mutex_unlock(&lfe->lfe_dvr_lock);
 }
 
 static void *
@@ -1384,11 +1384,11 @@ linuxdvb_frontend_input_thread ( void *aux )
   }
 
   /* Get MMI */
-  pthread_mutex_lock(&lfe->lfe_dvr_lock);
+  tvh_mutex_lock(&lfe->lfe_dvr_lock);
   lfe->mi_display_name((mpegts_input_t*)lfe, name, sizeof(name));
   mmi = LIST_FIRST(&lfe->mi_mux_active);
   tvh_cond_signal(&lfe->lfe_dvr_cond, 0);
-  pthread_mutex_unlock(&lfe->lfe_dvr_lock);
+  tvh_mutex_unlock(&lfe->lfe_dvr_lock);
   if (mmi == NULL) return NULL;
 
   /* Open DVR */
@@ -2210,8 +2210,8 @@ linuxdvb_frontend_create
   LIST_INSERT_HEAD(&la->la_frontends, lfe, lfe_link);
 
   /* DVR lock/cond */
-  pthread_mutex_init(&lfe->lfe_dvr_lock, NULL);
-  tvh_cond_init(&lfe->lfe_dvr_cond);
+  tvh_mutex_init(&lfe->lfe_dvr_lock, NULL);
+  tvh_cond_init(&lfe->lfe_dvr_cond, 1);
   mpegts_pid_init(&lfe->lfe_pids);
  
   /* Create satconf */

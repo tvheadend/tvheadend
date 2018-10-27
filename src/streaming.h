@@ -354,11 +354,11 @@ struct streaming_queue {
 
   streaming_target_t sq_st;
 
-  pthread_mutex_t sq_mutex;    /* Protects sp_queue */
-  tvh_cond_t  sq_cond;         /* Condvar for signalling new packets */
+  tvh_mutex_t sq_mutex;    /* Protects sp_queue */
+  tvh_cond_t  sq_cond;     /* Condvar for signalling new packets */
 
-  size_t          sq_maxsize;  /* Max queue size (bytes) */
-  size_t          sq_size;     /* Actual queue size (bytes) - only data */
+  size_t      sq_maxsize;  /* Max queue size (bytes) */
+  size_t      sq_size;     /* Actual queue size (bytes) - only data */
 
   struct streaming_message_queue sq_queue;
 

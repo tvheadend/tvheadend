@@ -1312,8 +1312,8 @@ bouquet_done(void)
 {
   bouquet_t *bq;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((bq = RB_FIRST(&bouquets)) != NULL)
     bouquet_destroy(bq);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

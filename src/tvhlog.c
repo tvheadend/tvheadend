@@ -17,7 +17,6 @@
  */
 
 #include "tvhlog.h"
-#include <pthread.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +39,7 @@ char                    *tvhlog_path;
 bitops_ulong_t           tvhlog_debug[TVHLOG_BITARRAY];
 bitops_ulong_t           tvhlog_trace[TVHLOG_BITARRAY];
 pthread_t                tvhlog_tid;
-pthread_mutex_t          tvhlog_mutex;
+tvh_mutex_t              tvhlog_mutex;
 tvh_cond_t               tvhlog_cond;
 TAILQ_HEAD(,tvhlog_msg)  tvhlog_queue;
 int                      tvhlog_queue_size;
@@ -335,7 +334,7 @@ tvhlog_thread ( void *p )
   FILE *fp = NULL;
   tvhlog_msg_t *msg;
 
-  pthread_mutex_lock(&tvhlog_mutex);
+  tvh_mutex_lock(&tvhlog_mutex);
   while (tvhlog_run) {
 
     /* Wait */
@@ -363,13 +362,13 @@ tvhlog_thread ( void *p )
       }
     }
     options  = tvhlog_options;
-    pthread_mutex_unlock(&tvhlog_mutex);
+    tvh_mutex_unlock(&tvhlog_mutex);
     tvhlog_process(msg, options, &fp, path);
-    pthread_mutex_lock(&tvhlog_mutex);
+    tvh_mutex_lock(&tvhlog_mutex);
   }
   if (fp)
     fclose(fp);
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
   return NULL;
 }
 
@@ -398,11 +397,11 @@ void tvhlogv ( const char *file, int line, int severity,
   if (!ok)
     return;
 
-  pthread_mutex_lock(&tvhlog_mutex);
+  tvh_mutex_lock(&tvhlog_mutex);
 
   /* Check for full */
   if (tvhlog_queue_full) {
-    pthread_mutex_unlock(&tvhlog_mutex);
+    tvh_mutex_unlock(&tvhlog_mutex);
     return;
   }
 
@@ -447,7 +446,7 @@ void tvhlogv ( const char *file, int line, int severity,
 #if TVHLOG_THREAD
   }
 #endif
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
 }
 
 
@@ -536,8 +535,8 @@ tvhlog_init ( int level, int options, const char *path )
   memset(tvhlog_debug, 0, sizeof(tvhlog_debug));
   tvhlog_run     = 1;
   openlog("tvheadend", LOG_PID, LOG_DAEMON);
-  pthread_mutex_init(&tvhlog_mutex, NULL);
-  tvh_cond_init(&tvhlog_cond);
+  tvh_mutex_init(&tvhlog_mutex, NULL);
+  tvh_cond_init(&tvhlog_cond, 1);
   TAILQ_INIT(&tvhlog_queue);
 }
 
@@ -545,7 +544,7 @@ void
 tvhlog_start ( void )
 {
   idclass_register(&tvhlog_conf_class);
-  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL, "log");
+  tvh_thread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL, "log");
 }
 
 void
@@ -553,18 +552,18 @@ tvhlog_end ( void )
 {
   FILE *fp = NULL;
   tvhlog_msg_t *msg;
-  pthread_mutex_lock(&tvhlog_mutex);
+  tvh_mutex_lock(&tvhlog_mutex);
   tvhlog_run = 0;
   tvh_cond_signal(&tvhlog_cond, 0);
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
   pthread_join(tvhlog_tid, NULL);
-  pthread_mutex_lock(&tvhlog_mutex);
+  tvh_mutex_lock(&tvhlog_mutex);
   while ((msg = TAILQ_FIRST(&tvhlog_queue)) != NULL) {
     TAILQ_REMOVE(&tvhlog_queue, msg, link);
     tvhlog_process(msg, tvhlog_options, &fp, tvhlog_path);
   }
   tvhlog_queue_full = 1;
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
   if (fp)
     fclose(fp);
   free(tvhlog_path);
@@ -586,14 +585,14 @@ tvhlog_class_path_set ( void *o, const void *v )
 {
   const char *s = v;
   if (strcmp(s ?: "", tvhlog_path ?: "")) {
-    pthread_mutex_lock(&tvhlog_mutex);
+    tvh_mutex_lock(&tvhlog_mutex);
     free(tvhlog_path);
     tvhlog_path = strdup(s ?: "");
     if (tvhlog_path && tvhlog_path[0])
       tvhlog_options |= TVHLOG_OPT_DBG_FILE;
     else
       tvhlog_options &= ~TVHLOG_OPT_DBG_FILE;
-    pthread_mutex_unlock(&tvhlog_mutex);
+    tvh_mutex_unlock(&tvhlog_mutex);
     return 1;
   }
   return 0;
@@ -640,12 +639,12 @@ tvhlog_class_enable_syslog_get ( void *o )
 static int
 tvhlog_class_enable_syslog_set ( void *o, const void *v )
 {
-  pthread_mutex_lock(&tvhlog_mutex);
+  tvh_mutex_lock(&tvhlog_mutex);
   if (*(int *)v)
     tvhlog_options |= TVHLOG_OPT_SYSLOG;
   else
     tvhlog_options &= ~TVHLOG_OPT_SYSLOG;
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
   return 1;
 }
 
@@ -660,12 +659,12 @@ tvhlog_class_debug_syslog_get ( void *o )
 static int
 tvhlog_class_debug_syslog_set ( void *o, const void *v )
 {
-  pthread_mutex_lock(&tvhlog_mutex);
+  tvh_mutex_lock(&tvhlog_mutex);
   if (*(int *)v)
     tvhlog_options |= TVHLOG_OPT_DBG_SYSLOG;
   else
     tvhlog_options &= ~TVHLOG_OPT_DBG_SYSLOG;
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
   return 1;
 }
 
@@ -695,13 +694,13 @@ tvhlog_class_libav_get ( void *o )
 static int
 tvhlog_class_libav_set ( void *o, const void *v )
 {
-  pthread_mutex_lock(&tvhlog_mutex);
+  tvh_mutex_lock(&tvhlog_mutex);
   if (*(int *)v)
     tvhlog_options |= TVHLOG_OPT_LIBAV;
   else
     tvhlog_options &= ~TVHLOG_OPT_LIBAV;
   libav_set_loglevel();
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
   return 1;
 }
 

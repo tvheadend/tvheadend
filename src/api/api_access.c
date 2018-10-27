@@ -45,10 +45,10 @@ api_passwd_entry_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   if ((pw = passwd_entry_create(NULL, conf)) != NULL)
     api_idnode_create(resp, &pw->pw_id);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }
@@ -77,10 +77,10 @@ api_ipblock_entry_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   if ((ib = ipblock_entry_create(NULL, conf)) != NULL)
     api_idnode_create(resp, &ib->ib_id);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }
@@ -149,10 +149,10 @@ api_access_entry_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   if ((ae = access_entry_create(NULL, conf)) != NULL)
     api_idnode_create(resp, &ae->ae_id);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }

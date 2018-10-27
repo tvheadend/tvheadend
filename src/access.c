@@ -16,21 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <ctype.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-
 #include "tvheadend.h"
+#include <ctype.h>
+#include <arpa/inet.h>
 #include "config.h"
 #include "access.h"
 #include "settings.h"
@@ -2493,7 +2481,7 @@ access_done(void)
   passwd_entry_t *pw;
   ipblock_entry_t *ib;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((ae = TAILQ_FIRST(&access_entries)) != NULL)
     access_entry_destroy(ae, 0);
   while ((at = TAILQ_FIRST(&access_tickets)) != NULL)
@@ -2506,5 +2494,5 @@ access_done(void)
   superuser_username = NULL;
   free((void *)superuser_password);
   superuser_password = NULL;
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

@@ -16,26 +16,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <poll.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
 #include <fcntl.h>
-#include <errno.h>
+#include <poll.h>
 #include <signal.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <ifaddrs.h>
+#include <netdb.h>
 
 #include "tvheadend.h"
 #include "tcp.h"
@@ -619,9 +610,9 @@ try_again:
                  sused, used2);
         return NULL;
       }
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
       tvh_safe_usleep(250000);
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
       if (!tcp_socket_dead(fd) && tvheadend_is_running())
         goto try_again;
       return NULL;
@@ -712,7 +703,7 @@ tcp_server_start(void *aux)
 
   /* Start */
   time(&tsl->started);
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   tsl->id = ++tcp_server_launch_id;
   if (!tsl->id) tsl->id = ++tcp_server_launch_id;
   tsl->ops.start(tsl->fd, &tsl->opaque, &tsl->peer, &tsl->self);
@@ -721,7 +712,7 @@ tcp_server_start(void *aux)
   if (tsl->ops.stop) tsl->ops.stop(tsl->opaque);
   LIST_REMOVE(tsl, alink);
   LIST_INSERT_HEAD(&tcp_server_join, tsl, jlink);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   if (atomic_get(&tcp_server_running))
     tvh_write(tcp_server_pipe.wr, &c, 1);
   return NULL;
@@ -756,10 +747,10 @@ tcp_server_loop(void *aux)
       r = read(tcp_server_pipe.rd, &c, 1);
       if (r > 0) {
 next:
-        pthread_mutex_lock(&global_lock);
+        tvh_mutex_lock(&global_lock);
         while ((tsl = LIST_FIRST(&tcp_server_join)) != NULL) {
           LIST_REMOVE(tsl, jlink);
-          pthread_mutex_unlock(&global_lock);
+          tvh_mutex_unlock(&global_lock);
           pthread_join(tsl->tid, NULL);
           free(tsl);
           goto next;
@@ -768,7 +759,7 @@ next:
           LIST_REMOVE(ts, link);
           free(ts);
         }
-        pthread_mutex_unlock(&global_lock);
+        tvh_mutex_unlock(&global_lock);
       }
       continue;
     }
@@ -805,10 +796,10 @@ next:
         continue;
       }
 
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
       LIST_INSERT_HEAD(&tcp_server_active, tsl, alink);
-      pthread_mutex_unlock(&global_lock);
-      tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl, "tcp-start");
+      tvh_mutex_unlock(&global_lock);
+      tvh_thread_create(&tsl->tid, NULL, tcp_server_start, tsl, "tcp-start");
     }
   }
   tvhtrace(LS_TCP, "server thread finished");
@@ -1171,7 +1162,7 @@ tcp_server_init(void)
   tvhpoll_add1(tcp_server_poll, tcp_server_pipe.rd, TVHPOLL_IN, &tcp_server_pipe);
 
   atomic_set(&tcp_server_running, 1);
-  tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL, "tcp-loop");
+  tvh_thread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL, "tcp-loop");
 }
 
 void
@@ -1185,39 +1176,39 @@ tcp_server_done(void)
   atomic_set(&tcp_server_running, 0);
   tvh_write(tcp_server_pipe.wr, &c, 1);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->ops.cancel)
       tsl->ops.cancel(tsl->opaque);
     if (tsl->fd >= 0)
       shutdown(tsl->fd, SHUT_RDWR);
-    pthread_kill(tsl->tid, SIGTERM);
+    tvh_thread_kill(tsl->tid, SIGTERM);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   pthread_join(tcp_server_tid, NULL);
   tvh_pipe_close(&tcp_server_pipe);
   tvhpoll_destroy(tcp_server_poll);
   
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   t = mclk();
   while (LIST_FIRST(&tcp_server_active) != NULL) {
     if (t + sec2mono(5) < mclk())
       tvhtrace(LS_TCP, "tcp server %p active too long", LIST_FIRST(&tcp_server_active));
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     tvh_safe_usleep(20000);
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
   }
   while ((tsl = LIST_FIRST(&tcp_server_join)) != NULL) {
     LIST_REMOVE(tsl, jlink);
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     pthread_join(tsl->tid, NULL);
     free(tsl);
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
   }
   while ((ts = LIST_FIRST(&tcp_server_delete_list)) != NULL) {
     LIST_REMOVE(ts, link);
     free(ts);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

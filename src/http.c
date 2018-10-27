@@ -16,22 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <signal.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <openssl/md5.h>
-
 #include "tvheadend.h"
 #include "tcp.h"
 #include "http.h"
@@ -49,7 +33,7 @@
 void *http_server;
 static int http_server_running;
 
-static pthread_mutex_t http_paths_mutex = PTHREAD_MUTEX_INITIALIZER;
+static tvh_mutex_t http_paths_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
 static http_path_list_t http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
@@ -125,7 +109,7 @@ http_resolve(http_connection_t *hc, http_path_t *_hp,
 
   while (1) {
 
-    pthread_mutex_lock(hc->hc_paths_mutex);
+    tvh_mutex_lock(hc->hc_paths_mutex);
     LIST_FOREACH(hp, hc->hc_paths, hp_link) {
       if(!strncmp(path, hp->hp_path, hp->hp_len)) {
         if(path[hp->hp_len] == 0 ||
@@ -138,7 +122,7 @@ http_resolve(http_connection_t *hc, http_path_t *_hp,
       *_hp = *hp;
       hp = _hp;
     }
-    pthread_mutex_unlock(hc->hc_paths_mutex);
+    tvh_mutex_unlock(hc->hc_paths_mutex);
 
     if(hp == NULL)
       return 0;
@@ -237,7 +221,7 @@ static const char *cachemonths[12] = {
 typedef struct http_nonce {
   RB_ENTRY(http_nonce) link;
   mtimer_t expire;
-  char nonce[MD5_DIGEST_LENGTH*2+1];
+  char nonce[16*2+1];
 } http_nonce_t;
 
 static RB_HEAD(, http_nonce) http_nonces;
@@ -269,14 +253,14 @@ http_get_nonce(void)
     snprintf(stamp, sizeof(stamp), "%"PRId64, mono);
     m = md5sum(stamp, 1);
     strlcpy(n->nonce, m, sizeof(stamp));
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     if (RB_INSERT_SORTED(&http_nonces, n, link, http_nonce_cmp)) {
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
       free(m);
       continue; /* get unique md5 */
     }
     mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(30));
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     break;
   }
   return m;
@@ -290,14 +274,14 @@ http_nonce_exists(const char *nonce)
   if (nonce == NULL)
     return 0;
   strlcpy(tmp.nonce, nonce, sizeof(tmp.nonce));
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   n = RB_FIND(&http_nonces, &tmp, link, http_nonce_cmp);
   if (n) {
     mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(2*60));
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return 1;
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return 0;
 }
 
@@ -798,7 +782,7 @@ http_extra_destroy(http_connection_t *hc)
 {
   htsbuf_data_t *hd, *hd_next;
 
-  pthread_mutex_lock(&hc->hc_extra_lock);
+  tvh_mutex_lock(&hc->hc_extra_lock);
   for (hd = TAILQ_FIRST(&hc->hc_extra.hq_q); hd; hd = hd_next) {
     hd_next = TAILQ_NEXT(hd, hd_link);
     if (hd->hd_data_off <= 0) {
@@ -806,7 +790,7 @@ http_extra_destroy(http_connection_t *hc)
       atomic_dec(&hc->hc_extra_chunks, 1);
     }
   }
-  pthread_mutex_unlock(&hc->hc_extra_lock);
+  tvh_mutex_unlock(&hc->hc_extra_lock);
 }
 
 /**
@@ -824,7 +808,7 @@ http_extra_flush(http_connection_t *hc)
   while (1) {
     r = -1;
     serr = 0;
-    pthread_mutex_lock(&hc->hc_extra_lock);
+    tvh_mutex_lock(&hc->hc_extra_lock);
     if (atomic_add(&hc->hc_extra_insend, 0) != 1)
       goto unlock;
     hd = TAILQ_FIRST(&hc->hc_extra.hq_q);
@@ -844,7 +828,7 @@ http_extra_flush(http_connection_t *hc)
       hc->hc_extra.hq_size -= r;
     }
 unlock:
-    pthread_mutex_unlock(&hc->hc_extra_lock);
+    tvh_mutex_unlock(&hc->hc_extra_lock);
 
     if (r < 0) {
       if (ERRNO_AGAIN(serr))
@@ -871,7 +855,7 @@ http_extra_flush_partial(http_connection_t *hc)
 
   atomic_add(&hc->hc_extra_insend, 1);
 
-  pthread_mutex_lock(&hc->hc_extra_lock);
+  tvh_mutex_lock(&hc->hc_extra_lock);
   hd = TAILQ_FIRST(&hc->hc_extra.hq_q);
   if (hd && hd->hd_data_off > 0) {
     data = hd->hd_data;
@@ -881,7 +865,7 @@ http_extra_flush_partial(http_connection_t *hc)
     atomic_dec(&hc->hc_extra_chunks, 1);
     htsbuf_data_free(&hc->hc_extra, hd);
   }
-  pthread_mutex_unlock(&hc->hc_extra_lock);
+  tvh_mutex_unlock(&hc->hc_extra_lock);
   if (data) {
     r = tvh_write(hc->hc_fd, data + off, size - off);
     free(data);
@@ -910,14 +894,14 @@ http_extra_send_prealloc(http_connection_t *hc, const void *data,
                          size_t data_len, int may_discard)
 {
   if (data == NULL) return 0;
-  pthread_mutex_lock(&hc->hc_extra_lock);
+  tvh_mutex_lock(&hc->hc_extra_lock);
   if (!may_discard || hc->hc_extra.hq_size <= 1024*1024) {
     atomic_add(&hc->hc_extra_chunks, 1);
     htsbuf_append_prealloc(&hc->hc_extra, data, data_len);
   } else {
     free((void *)data);
   }
-  pthread_mutex_unlock(&hc->hc_extra_lock);
+  tvh_mutex_unlock(&hc->hc_extra_lock);
   return http_extra_flush(hc);
 }
 
@@ -1640,9 +1624,9 @@ http_path_add_modify(const char *path, void *opaque, http_callback_t *callback,
   hp->hp_accessmask = accessmask;
   hp->hp_path_modify = path_modify;
   hp->hp_flags    = 0;
-  pthread_mutex_lock(&http_paths_mutex);
+  tvh_mutex_lock(&http_paths_mutex);
   LIST_INSERT_HEAD(&http_paths, hp, hp_link);
-  pthread_mutex_unlock(&http_paths_mutex);
+  tvh_mutex_unlock(&http_paths_mutex);
   return hp;
 }
 
@@ -1862,7 +1846,7 @@ http_serve_requests(http_connection_t *hc)
   char *argv[3], *c, *s, *cmdline = NULL, *hdrline = NULL;
   int n, r, delim;
 
-  pthread_mutex_init(&hc->hc_extra_lock, NULL);
+  tvh_mutex_init(&hc->hc_extra_lock, NULL);
   http_arg_init(&hc->hc_args);
   http_arg_init(&hc->hc_req_args);
   htsbuf_queue_init(&spill, 0);
@@ -2000,7 +1984,7 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   http_connection_t hc;
 
   /* Note: global_lock held on entry */
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   memset(&hc, 0, sizeof(http_connection_t));
   *opaque = &hc;
 
@@ -2017,7 +2001,7 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   close(fd);
 
   // Note: leave global_lock held for parent
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   *opaque = NULL;
 }
 
@@ -2062,22 +2046,22 @@ http_server_done(void)
   http_path_t *hp;
   http_nonce_t *n;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   atomic_set(&http_server_running, 0);
   if (http_server)
     tcp_server_delete(http_server);
   http_server = NULL;
-  pthread_mutex_lock(&http_paths_mutex);
+  tvh_mutex_lock(&http_paths_mutex);
   while ((hp = LIST_FIRST(&http_paths)) != NULL) {
     LIST_REMOVE(hp, hp_link);
     free((void *)hp->hp_path);
     free(hp);
   }
-  pthread_mutex_unlock(&http_paths_mutex);
+  tvh_mutex_unlock(&http_paths_mutex);
   while ((n = RB_FIRST(&http_nonces)) != NULL) {
     mtimer_disarm(&n->expire);
     RB_REMOVE(&http_nonces, n, link);
     free(n);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

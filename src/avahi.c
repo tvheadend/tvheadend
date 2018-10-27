@@ -312,7 +312,7 @@ avahi_init(void)
 {
   if (!avahi_required())
     return;
-  tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL, "avahi");
+  tvh_thread_create(&avahi_tid, NULL, avahi_thread, NULL, "avahi");
 }
 
 void
@@ -321,7 +321,7 @@ avahi_done(void)
   if (!avahi_required())
     return;
   avahi_simple_poll_quit(avahi_asp);
-  pthread_kill(avahi_tid, SIGTERM);
+  tvh_thread_kill(avahi_tid, SIGTERM);
   pthread_join(avahi_tid, NULL);
   avahi_simple_poll_free((AvahiSimplePoll *)avahi_poll);
 }
