@@ -513,13 +513,28 @@ http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
                       const char *logo, const char *epgid,
                       int urlauth, access_t *access)
 {
-  const char *delim = "?";
+  const char *delim = "?", *ticket = NULL;
+  if (urlauth == URLAUTH_TICKET)
+    ticket = access_ticket_create(url_remain, access);
   htsbuf_append_str(hq, "#EXTINF:-1");
   if (logo) {
-    if (strncmp(logo, "imagecache/", 11) == 0)
-      htsbuf_qprintf(hq, " logo=\"%s/%s\"", hostpath, logo);
-    else
+    if (strncmp(logo, "imagecache/", 11) == 0) {
+      htsbuf_qprintf(hq, " logo=\"%s/%s", hostpath, logo);
+      switch (urlauth) {
+      case URLAUTH_NONE:
+        break;
+      case URLAUTH_TICKET:
+        htsbuf_qprintf(hq, "?ticket=%s", ticket);
+        break;
+      case URLAUTH_CODE:
+        if (!strempty(access->aa_auth))
+          htsbuf_qprintf(hq, "?auth=%s", access->aa_auth);
+        break;
+      }
+      htsbuf_append_str(hq, "\"");
+    } else {
       htsbuf_qprintf(hq, " logo=\"%s\"", logo);
+    }
   }
   if (epgid)
     htsbuf_qprintf(hq, " tvg-id=\"%s\"", epgid);
@@ -530,7 +545,7 @@ http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
   case URLAUTH_NONE:
     break;
   case URLAUTH_TICKET:
-    htsbuf_qprintf(hq, "%sticket=%s", delim, access_ticket_create(url_remain, access));
+    htsbuf_qprintf(hq, "%sticket=%s", delim, ticket);
     delim = "&";
     break;
   case URLAUTH_CODE:
@@ -588,10 +603,13 @@ http_satip_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
   snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
   htsbuf_append_str(hq, "#EXTINF:-1");
   if (logo) {
-    if (strncmp(logo, "imagecache/", 11) == 0)
+    if (strncmp(logo, "imagecache/", 11) == 0) {
       htsbuf_qprintf(hq, " logo=%s/%s", hostpath, logo);
-    else
+      if (urlauth == URLAUTH_CODE && !strempty(access->aa_auth))
+        htsbuf_qprintf(hq, "?auth=%s", access->aa_auth);
+    } else {
       htsbuf_qprintf(hq, " logo=%s", logo);
+    }
   }
   htsbuf_qprintf(hq, ",%s\n%s%s?profile=pass", name, hostpath, buf);
   if (urlauth == URLAUTH_CODE && !strempty(access->aa_auth))

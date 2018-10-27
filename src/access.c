@@ -140,7 +140,6 @@ access_ticket_create(const char *resource, access_t *a)
       return at->at_id;
   }
 
-
   at = calloc(1, sizeof(access_ticket_t));
 
   uuid_random(buf, sizeof(buf));
