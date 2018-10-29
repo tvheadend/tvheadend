@@ -728,9 +728,8 @@ profile_input_queue(void *opaque, streaming_message_t *sm)
   psm->psm_sm = sm;
   pthread_mutex_lock(&prsh->prsh_queue_mutex);
   if (prsh->prsh_queue_run) {
-    if (TAILQ_FIRST(&prsh->prsh_queue))
-      tvh_cond_signal(&prsh->prsh_queue_cond, 0);
     TAILQ_INSERT_TAIL(&prsh->prsh_queue, psm, psm_link);
+    tvh_cond_signal(&prsh->prsh_queue_cond, 0);
   } else {
     streaming_msg_free(sm);
     free(psm);
