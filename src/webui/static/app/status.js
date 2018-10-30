@@ -655,7 +655,8 @@ tvheadend.status_conns = function(panel, index) {
                     type: 'date',
                     dateFormat: 'U', /* unix time */
                     sortType: Ext.data.SortTypes.asDate
-                }
+                },
+                { name: 'streaming' }
             ],
             url: 'api/status/connections',
             autoLoad: true,
@@ -718,6 +719,12 @@ tvheadend.status_conns = function(panel, index) {
                 header: _("Started"),
                 dataIndex: 'started',
                 renderer: renderDate,
+                sortable: true
+            }, {
+                width: 50,
+                id: 'streaming',
+                header: _("Streaming"),
+                dataIndex: 'streaming',
                 sortable: true
             }, {
                 width: 50,

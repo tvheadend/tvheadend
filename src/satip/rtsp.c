@@ -1724,7 +1724,7 @@ rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   tcp_get_str_from_ip(peer, buf + strlen(buf), sizeof(buf) - strlen(buf));
   aa.aa_representative = buf;
 
-  tcp = tcp_connection_launch(fd, rtsp_stream_status, &aa);
+  tcp = tcp_connection_launch(fd, 1, rtsp_stream_status, &aa);
 
   /* Note: global_lock held on entry */
   pthread_mutex_unlock(&global_lock);

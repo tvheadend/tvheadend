@@ -530,6 +530,7 @@ typedef struct tcp_server_launch {
   pthread_t tid;
   uint32_t id;
   int fd;
+  int streaming;
   tcp_server_ops_t ops;
   void *opaque;
   char *representative;
@@ -572,10 +573,10 @@ tcp_connection_count(access_t *aa)
  */
 void *
 tcp_connection_launch
-  (int fd, void (*status) (void *opaque, htsmsg_t *m), access_t *aa)
+  (int fd, int streaming, void (*status) (void *opaque, htsmsg_t *m), access_t *aa)
 {
   tcp_server_launch_t *tsl, *res;
-  uint32_t used, used2;
+  uint32_t sused, used2;
   int64_t started = mclk();
   int c1, c2;
 
@@ -588,7 +589,7 @@ tcp_connection_launch
 
 try_again:
   res = NULL;
-  used = 0;
+  sused = 0;
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->fd == fd) {
       res = tsl;
@@ -597,7 +598,8 @@ try_again:
       continue;
     }
     if (!strcmp(aa->aa_representative ?: "", tsl->representative ?: ""))
-      used++;
+      if (tsl->streaming)
+        sused++;
   }
   if (res == NULL)
     return NULL;
@@ -605,8 +607,8 @@ try_again:
   if (aa->aa_conn_limit || aa->aa_conn_limit_streaming) {
     used2 = aa->aa_conn_limit ? dvr_usage_count(aa) : 0;
     /* the rule is: allow if one condition is OK */
-    c1 = aa->aa_conn_limit ? used + used2 >= aa->aa_conn_limit : -1;
-    c2 = aa->aa_conn_limit_streaming ? used >= aa->aa_conn_limit_streaming : -1;
+    c1 = aa->aa_conn_limit ? sused + used2 >= aa->aa_conn_limit : -1;
+    c2 = aa->aa_conn_limit_streaming ? sused >= aa->aa_conn_limit_streaming : -1;
 
     if (c1 && c2) {
       if (started + sec2mono(5) < mclk()) {
@@ -614,7 +616,7 @@ try_again:
                         "(limit %u, streaming limit %u, active streaming %u, DVR %u)",
                  aa->aa_username ?: "", aa->aa_representative ?: "",
                  aa->aa_conn_limit, aa->aa_conn_limit_streaming,
-                 used, used2);
+                 sused, used2);
         return NULL;
       }
       pthread_mutex_unlock(&global_lock);
@@ -628,6 +630,7 @@ try_again:
 
   res->representative = aa->aa_representative ? strdup(aa->aa_representative) : NULL;
   res->status = status;
+  res->streaming = streaming;
   LIST_INSERT_HEAD(&tcp_server_launches, res, link);
   notify_reload("connections");
   return res;
@@ -1135,6 +1138,7 @@ tcp_server_connections ( void )
     htsmsg_add_str(e, "peer", buf);
     htsmsg_add_u32(e, "peer_port", ntohs(IP_PORT(tsl->peer)));
     htsmsg_add_s64(e, "started", tsl->started);
+    htsmsg_add_u32(e, "streaming", tsl->streaming);
     tsl->status(tsl->opaque, e);
     htsmsg_add_msg(l, NULL, e);
   }

@@ -327,7 +327,7 @@ http_stream_status ( void *opaque, htsmsg_t *m )
 static inline void *
 http_stream_preop ( http_connection_t *hc )
 {
-  return tcp_connection_launch(hc->hc_fd, http_stream_status, hc->hc_access);
+  return tcp_connection_launch(hc->hc_fd, 1, http_stream_status, hc->hc_access);
 }
 
 static inline void
