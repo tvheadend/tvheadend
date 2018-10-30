@@ -386,6 +386,62 @@
         "support/bintray.py publish filelist.txt"
       ]
     },
+    "buster-amd64": {
+      "buildenv": "docker:debian:buster",
+      "builddeps": [
+        "lsb-release",
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre3-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "buster-i386": {
+      "buildenv": "docker:i386/debian:buster",
+      "builddeps": [
+        "lsb-release",
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre3-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
     "raspbian-jessie": {
       "buildenv": "raspbian-jessie",
       "builddeps": [
@@ -560,5 +616,6 @@
         "./configure --disable-dvbscan && make -C rpm build-doozer",
         "BINTRAY_REPO=centos support/bintray.py publish filelist.txt",
       ]
-    },
+    }
+  }
 }
