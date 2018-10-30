@@ -952,7 +952,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_drop_fe",
       .name   = N_("Drop \"fe=\" parameter"),
       .desc   = N_("Discard the frontend parameter in RTSP requests, "
-                   "as some clients incorretly use it."),
+                   "as some clients incorrectly use it."),
       .off    = offsetof(struct satip_server_conf, satip_drop_fe),
       .opts   = PO_EXPERT,
       .group  = 5,
