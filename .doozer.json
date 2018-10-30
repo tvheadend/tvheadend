@@ -108,10 +108,9 @@
         "support/bintray.py publish filelist.txt"
       ]
     },
-    "jessie-i386": {
-      "buildenv": "jessie-i386",
+    "xenial-arm64": {
+      "buildenv": "xenial-arm64",
       "builddeps": [
-        "lsb-release",
         "cmake",
         "git",
         "build-essential",
@@ -124,67 +123,7 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-        "libpcre3-dev",
-        "libdvbcsa-dev",
-        "python",
-        "python-requests",
-        "debhelper",
-        "ccache",
-        "sudo",
-      ],
-      "buildcmd": [
-        "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/master/src/urllib3/contrib/pyopenssl.py",
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "jessie-amd64": {
-      "buildenv": "jessie-amd64",
-      "builddeps": [
-        "lsb-release",
-        "cmake",
-        "git",
-        "build-essential",
-        "pkg-config",
-        "gettext",
-        "libavahi-client-dev",
-        "libssl-dev",
-        "zlib1g-dev",
-        "wget",
-        "bzip2",
-        "git-core",
-        "liburiparser-dev",
-        "libpcre3-dev",
-        "libdvbcsa-dev",
-        "python",
-        "python-requests",
-        "debhelper",
-        "ccache",
-        "sudo",
-      ],
-      "buildcmd": [
-        "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/master/src/urllib3/contrib/pyopenssl.py",
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "stretch-i386": {
-      "buildenv": "stretch-i386",
-      "builddeps": [
-        "lsb-release",
-        "cmake",
-        "git",
-        "build-essential",
-        "pkg-config",
-        "gettext",
-        "libavahi-client-dev",
-        "libssl-dev",
-        "zlib1g-dev",
-        "wget",
-        "bzip2",
-        "git-core",
-        "liburiparser-dev",
-        "libpcre3-dev",
+        "libpcre2-dev",
         "libdvbcsa-dev",
         "python",
         "python-requests",
@@ -192,35 +131,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "stretch-amd64": {
-      "buildenv": "stretch-amd64",
-      "builddeps": [
-        "lsb-release",
-        "cmake",
-        "git",
-        "build-essential",
-        "pkg-config",
-        "gettext",
-        "libavahi-client-dev",
-        "libssl-dev",
-        "zlib1g-dev",
-        "wget",
-        "bzip2",
-        "git-core",
-        "liburiparser-dev",
-        "libpcre3-dev",
-        "libdvbcsa-dev",
-        "python",
-        "python-requests",
-        "debhelper",
-        "ccache"
-      ],
-      "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -249,178 +160,6 @@
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "raspbian-jessie": {
-      "buildenv": "raspbian-jessie",
-      "builddeps": [
-        "cmake",
-        "git",
-        "build-essential",
-        "pkg-config",
-        "gettext",
-        "libavahi-client-dev",
-        "libssl-dev",
-        "zlib1g-dev",
-        "wget",
-        "bzip2",
-        "git-core",
-        "liburiparser-dev",
-        "libpcre3-dev",
-        "libdvbcsa-dev",
-        "python",
-        "python-requests",
-        "debhelper",
-        "ccache",
-        "sudo",
-      ],
-      "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianjessie-armhf -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "raspbian-stretch": {
-      "buildenv": "raspbian-stretch",
-      "builddeps": [
-        "cmake",
-        "git",
-        "build-essential",
-        "pkg-config",
-        "gettext",
-        "libavahi-client-dev",
-        "libssl-dev",
-        "zlib1g-dev",
-        "wget",
-        "bzip2",
-        "git-core",
-        "liburiparser-dev",
-        "libpcre2-dev",
-        "libdvbcsa-dev",
-        "python",
-        "python-requests",
-        "debhelper",
-        "ccache"
-      ],
-      "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianstretch-armhf -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "xenial-arm64": {
-      "buildenv": "xenial-arm64",
-      "builddeps": [
-        "cmake",
-        "git",
-        "build-essential",
-        "pkg-config",
-        "gettext",
-        "libavahi-client-dev",
-        "libssl-dev",
-        "zlib1g-dev",
-        "wget",
-        "bzip2",
-        "git-core",
-        "liburiparser-dev",
-        "libpcre2-dev",
-        "libdvbcsa-dev",
-        "python",
-        "python-requests",
-        "debhelper",
-        "ccache"
-      ],
-      "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "fedora27-x86_64": {
-      "buildenv": "docker:fedora:27",
-      "builddeps": [
-        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-27.noarch.rpm"],
-        "gcc-c++",
-        "which",
-        "rpm-build",
-        "rpmdevtools",
-        "git",
-        "make",
-        "cmake",
-        "gettext-devel",
-        "dbus-devel",
-        "avahi-devel",
-        "openssl-devel",
-        "zlib-devel",
-        "libdvbcsa-devel",
-        "wget",
-        "bzip2",
-        "uriparser-devel",
-        "pcre2-devel",
-        "python",
-        "python-requests",
-        "ccache"
-      ],
-      "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "fedora28-x86_64": {
-      "buildenv": "docker:fedora:28",
-      "builddeps": [
-        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-28.noarch.rpm"],
-        "gcc-c++",
-        "which",
-        "rpm-build",
-        "rpmdevtools",
-        "git",
-        "make",
-        "cmake",
-        "gettext-devel",
-        "dbus-devel",
-        "avahi-devel",
-        "openssl-devel",
-        "zlib-devel",
-        "libdvbcsa-devel",
-        "wget",
-        "bzip2",
-        "uriparser-devel",
-        "pcre2-devel",
-        "python",
-        "python-requests",
-        "ccache"
-      ],
-      "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer",
-        "support/bintray.py publish filelist.txt"
-      ]
-    },
-    "centos7-x86_64": {
-      "buildenv": "docker:centos:7",
-      "builddeps": [
-        ["https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm"],
-        "gcc-c++",
-        "which",
-        "rpm-build",
-        "rpmdevtools",
-        "git",
-        "make",
-        "cmake",
-        "gettext-devel",
-        "dbus-devel",
-        "avahi-devel",
-        "openssl-devel",
-        "zlib-devel",
-        "libdvbcsa-devel",
-        "wget",
-        "bzip2",
-        "uriparser-devel",
-        "pcre2-devel",
-        "python",
-        "python-requests",
-        "ccache"
-      ],
-      "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer",
-        "BINTRAY_REPO=centos support/bintray.py publish filelist.txt",
       ]
     },
     "bionic-amd64": {
@@ -531,5 +270,295 @@
         "support/bintray.py publish filelist.txt",
       ]
     },
-  }
+    "jessie-amd64": {
+      "buildenv": "jessie-amd64",
+      "builddeps": [
+        "lsb-release",
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre3-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
+        "debhelper",
+        "ccache",
+        "sudo",
+      ],
+      "buildcmd": [
+        "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/master/src/urllib3/contrib/pyopenssl.py",
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "jessie-i386": {
+      "buildenv": "jessie-i386",
+      "builddeps": [
+        "lsb-release",
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre3-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
+        "debhelper",
+        "ccache",
+        "sudo",
+      ],
+      "buildcmd": [
+        "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/master/src/urllib3/contrib/pyopenssl.py",
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "stretch-amd64": {
+      "buildenv": "stretch-amd64",
+      "builddeps": [
+        "lsb-release",
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre3-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "stretch-i386": {
+      "buildenv": "stretch-i386",
+      "builddeps": [
+        "lsb-release",
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre3-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "raspbian-jessie": {
+      "buildenv": "raspbian-jessie",
+      "builddeps": [
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre3-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
+        "debhelper",
+        "ccache",
+        "sudo",
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianjessie-armhf -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "raspbian-stretch": {
+      "buildenv": "raspbian-stretch",
+      "builddeps": [
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre2-dev",
+        "libdvbcsa-dev",
+        "python",
+        "python-requests",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianstretch-armhf -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "fedora27-x86_64": {
+      "buildenv": "docker:fedora:27",
+      "builddeps": [
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-27.noarch.rpm"],
+        "gcc-c++",
+        "which",
+        "rpm-build",
+        "rpmdevtools",
+        "git",
+        "make",
+        "cmake",
+        "gettext-devel",
+        "dbus-devel",
+        "avahi-devel",
+        "openssl-devel",
+        "zlib-devel",
+        "libdvbcsa-devel",
+        "wget",
+        "bzip2",
+        "uriparser-devel",
+        "pcre2-devel",
+        "python",
+        "python-requests",
+        "ccache"
+      ],
+      "buildcmd": [
+        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "fedora28-x86_64": {
+      "buildenv": "docker:fedora:28",
+      "builddeps": [
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-28.noarch.rpm"],
+        "gcc-c++",
+        "which",
+        "rpm-build",
+        "rpmdevtools",
+        "git",
+        "make",
+        "cmake",
+        "gettext-devel",
+        "dbus-devel",
+        "avahi-devel",
+        "openssl-devel",
+        "zlib-devel",
+        "libdvbcsa-devel",
+        "wget",
+        "bzip2",
+        "uriparser-devel",
+        "pcre2-devel",
+        "python",
+        "python-requests",
+        "ccache"
+      ],
+      "buildcmd": [
+        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "fedora29-x86_64": {
+      "buildenv": "docker:fedora:29",
+      "builddeps": [
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-29.noarch.rpm"],
+        "gcc-c++",
+        "which",
+        "rpm-build",
+        "rpmdevtools",
+        "git",
+        "make",
+        "cmake",
+        "gettext-devel",
+        "dbus-devel",
+        "avahi-devel",
+        "openssl-devel",
+        "zlib-devel",
+        "libdvbcsa-devel",
+        "wget",
+        "bzip2",
+        "uriparser-devel",
+        "pcre2-devel",
+        "python",
+        "python-requests",
+        "ccache"
+      ],
+      "buildcmd": [
+        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "support/bintray.py publish filelist.txt"
+      ]
+    },
+    "centos7-x86_64": {
+      "buildenv": "docker:centos:7",
+      "builddeps": [
+        ["https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm"],
+        "gcc-c++",
+        "which",
+        "rpm-build",
+        "rpmdevtools",
+        "git",
+        "make",
+        "cmake",
+        "gettext-devel",
+        "dbus-devel",
+        "avahi-devel",
+        "openssl-devel",
+        "zlib-devel",
+        "libdvbcsa-devel",
+        "wget",
+        "bzip2",
+        "uriparser-devel",
+        "pcre2-devel",
+        "python",
+        "python-requests",
+        "ccache"
+      ],
+      "buildcmd": [
+        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "BINTRAY_REPO=centos support/bintray.py publish filelist.txt",
+      ]
+    },
 }
