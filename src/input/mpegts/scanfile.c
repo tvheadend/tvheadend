@@ -595,6 +595,10 @@ scanfile_load_dvbv5
       mux->dmc_fe_pls_code = (r>>8)&0x3FFFF;
     }
 
+    if (htsmsg_get_u32(l, "PLS_CODE", &mux->dmc_fe_pls_code) == 0)
+      mux->dmc_fe_pls_mode = 1;
+    htsmsg_get_u32(l, "PLS_MODE", &mux->dmc_fe_pls_mode);
+
     if ((x = htsmsg_get_str(l, "POLARIZATION"))) {
       char pol[2];
       pol[0] = x[0]; pol[1] = '\0';
