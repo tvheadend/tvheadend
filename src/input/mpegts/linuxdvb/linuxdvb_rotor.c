@@ -131,7 +131,7 @@ const idclass_t linuxdvb_rotor_gotox_class =
       .type   = PT_DBL,
       .id     = "sat_lon",
       .name   = N_("Satellite longitude"),
-      .desc   = N_("Satellite longitude."),
+      .desc   = N_("Satellite longitude (like 9.0 (east) or -33.0 (west))."),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
     {}
@@ -148,7 +148,7 @@ const idclass_t linuxdvb_rotor_usals_class =
       .type   = PT_DBL,
       .id     = "sat_lon",
       .name   = N_("Satellite longitude"),
-      .desc   = N_("Satellite longitude."),
+      .desc   = N_("Satellite longitude (like 9.0 (east) or -33.0 (west))."),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
  
