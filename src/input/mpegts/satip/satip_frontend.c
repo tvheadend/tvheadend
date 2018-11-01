@@ -1602,6 +1602,11 @@ satip_frontend_input_thread ( void *aux )
    * New tune
    */
 new_tune:
+  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  if (lfe->sf_req)
+    mpegts_pid_done(&lfe->sf_req->sf_pids_tuned);
+  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+
   udp_rtp_packet_destroy_all(lfe);
   sbuf_free(sb);
   udp_multirecv_free(&um);
@@ -1650,9 +1655,9 @@ new_tune:
           tvhtrace(LS_SATIP, "%s - input thread received shutdown", buf);
           exit_flag = 1;
           goto done;
-        } else if (b[0] == 's') {
+        } else if (b[0] == 's' || b[0] == 'c') {
           tvhtrace(LS_SATIP, "%s - start", buf);
-          start = 1;
+          start |= 1;
         }
       }
     }
