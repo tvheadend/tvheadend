@@ -1803,6 +1803,7 @@ linuxdvb_diseqc_send
 int
 linuxdvb_diseqc_set_volt ( linuxdvb_satconf_t *ls, int vol )
 {
+  vol = vol < 0 ? -1 : !!(vol > 0);
   /* Already set ? */
   if (vol >= 0 && ls->ls_last_vol == vol + 1)
     return 0;
@@ -1823,7 +1824,7 @@ linuxdvb_diseqc_set_volt ( linuxdvb_satconf_t *ls, int vol )
   }
   if (vol >= 0)
     tvh_safe_usleep(15000);
-  ls->ls_last_vol = vol ? (vol < 0 ? 0 : 2) : 1;
+  ls->ls_last_vol = vol + 1;
   return 0;
 }
 
