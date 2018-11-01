@@ -872,11 +872,20 @@ linuxdvb_satconf_post_stop_mux
   ( linuxdvb_satconf_t *ls )
 {
   ls->ls_mmi = NULL;
+}
+
+int
+linuxdvb_satconf_power_save
+  ( linuxdvb_satconf_t *ls )
+{
+  if (ls->ls_active_diseqc) /* wait for the timer to finish things */
+    return 1;
   mtimer_disarm(&ls->ls_diseqc_timer);
   if (ls->ls_frontend && ls->ls_lnb_poweroff) {
     linuxdvb_diseqc_set_volt(ls, -1);
     linuxdvb_satconf_reset(ls);
   }
+  return 0;
 }
 
 int
@@ -937,6 +946,16 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
   /* Get beans in a row */
   mpegts_mux_instance_t *mmi   = ls->ls_mmi;
+
+  if (mmi == NULL && ls->ls_active_diseqc) {
+    /* handle the rotor position update */
+    if (ls->ls_active_diseqc == lse->lse_rotor)
+      lse->lse_rotor->ld_post(lse->lse_rotor, ls, lse);
+    ls->ls_active_diseqc = NULL;
+    linuxdvb_satconf_power_save(ls);
+    return 0;
+  }
+
   linuxdvb_frontend_t   *lfe   = (linuxdvb_frontend_t*)ls->ls_frontend;
   dvb_mux_t             *lm    = (dvb_mux_t*)mmi->mmi_mux;
   linuxdvb_diseqc_t     *lds[] = {
@@ -978,6 +997,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   }
 
   /* Diseqc */  
+  ls->ls_active_diseqc = NULL;
   for (i = ls->ls_diseqc_idx; i < ARRAY_SIZE(lds); i++) {
     if (!lds[i]) continue;
     r = lds[i]->ld_tune(lds[i], lm, ls, lse, vol, pol, band, freq);
@@ -987,6 +1007,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
     /* Pending */
     if (r != 0) {
+      ls->ls_active_diseqc = lds[i];
       tvhtrace(LS_DISEQC, "waiting %d seconds to finish setup for %s", r, lds[i]->ld_type);
       mtimer_arm_rel(&ls->ls_diseqc_timer, linuxdvb_satconf_ele_tune_cb, lse, sec2mono(r));
       ls->ls_diseqc_idx = i + 1;
@@ -996,7 +1017,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
   /* Do post things (store position for rotor) */
   if (lse->lse_rotor)
-    lse->lse_rotor->ld_post(lse->lse_rotor, lm, ls, lse);
+    lse->lse_rotor->ld_post(lse->lse_rotor, ls, lse);
 
   /* LNB settings */
   /* EN50494 devices have another mechanism to select polarization */
@@ -1100,6 +1121,10 @@ linuxdvb_satconf_start_mux
   /* Diseqc */
   ls->ls_mmi        = mmi;
   ls->ls_diseqc_idx = 0;
+  if (lse->lse_rotor)
+    if (lse->lse_rotor->ld_start(lse->lse_rotor, (dvb_mux_t *)mmi->mmi_mux, ls, lse))
+      return 0;
+
   return linuxdvb_satconf_ele_tune(lse);
 }
 

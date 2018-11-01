@@ -432,6 +432,7 @@ linuxdvb_rotor_tune
     int vol, int pol, int band, int freq )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
+  int res;
 
   if (linuxdvb_rotor_check_orbital_pos(lr, lm, ls))
     return 0;
@@ -442,20 +443,40 @@ linuxdvb_rotor_tune
 
   /* GotoX */
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
-    return linuxdvb_rotor_gotox_tune(lr, lm, lsp, ls);
-
+    res = linuxdvb_rotor_gotox_tune(lr, lm, lsp, ls);
   /* USALS */
-  return linuxdvb_rotor_usals_tune(lr, lm, lsp, ls);
+  else
+    res = linuxdvb_rotor_usals_tune(lr, lm, lsp, ls);
+
+  if (res < 0)
+    return res;
+
+  lsp->ls_last_queued_pos = pos_to_integer(lr->lr_sat_lon);
+  return res;
+}
+
+static int
+linuxdvb_rotor_start
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls )
+{
+  linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
+  int pos = pos_to_integer(lr->lr_sat_lon);
+  if (lsp->ls_last_queued_pos == pos)
+    return 1;
+  lsp->ls_last_queued_pos = 0;
+  return 0;
 }
 
 static int
 linuxdvb_rotor_post
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+  ( linuxdvb_diseqc_t *ld,
     linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
   lsp->ls_last_orbital_pos = pos_to_integer(lr->lr_sat_lon);
+  lsp->ls_last_queued_pos = 0;
   return 0;
 }
 
@@ -502,6 +523,7 @@ linuxdvb_rotor_create0
                                    NULL, linuxdvb_rotor_all[i].idc, conf,
                                    linuxdvb_rotor_all[i].name, ls);
       if (ld) {
+        ld->ld_start = linuxdvb_rotor_start;
         ld->ld_tune  = linuxdvb_rotor_tune;
         ld->ld_grace = linuxdvb_rotor_grace;
         ld->ld_post  = linuxdvb_rotor_post;
