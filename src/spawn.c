@@ -520,6 +520,8 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
 
   if(p == -1) {
     pthread_mutex_unlock(&fork_lock);
+    close(fd[0]);
+    close(fd[1]);
     tvherror(LS_SPAWN, "Unable to fork() for \"%s\" -- %s",
              prog, strerror(errno));
     return -1;
@@ -647,6 +649,8 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
 
   if(p == -1) {
     pthread_mutex_unlock(&fork_lock);
+    close(fd[0]);
+    close(fd[1]);
     tvherror(LS_SPAWN, "Unable to fork() for \"%s\" -- %s",
              prog, strerror(errno));
     // do not pass the local variable outside
@@ -781,8 +785,14 @@ spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_s
 
   spawn_enq(prog, p);
 
-  if (pid)
+  if (pid) {
     *pid = p;
+
+    // make the spawned process a session leader so killing the
+    // process group recursively kills any child process that
+    // might have been spawned
+    setpgid(p, p);
+  }
 
   // do not pass the local variable outside
   if (argv[0] == bin)
