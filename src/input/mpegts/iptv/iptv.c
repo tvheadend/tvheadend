@@ -419,6 +419,9 @@ iptv_input_close_fds ( iptv_input_t *mi, iptv_mux_t *im )
 {
   iptv_thread_pool_t *pool = mi->mi_tpool;
 
+  if (im->mm_iptv_fd > 0 || im->mm_iptv_fd2 > 0)
+    tvhtrace(LS_IPTV, "iptv_input_close_fds %d %d", im->mm_iptv_fd, im->mm_iptv_fd2);
+
   /* Close file */
   if (im->mm_iptv_fd > 0) {
     tvhpoll_rem1(pool->poll, im->mm_iptv_fd);

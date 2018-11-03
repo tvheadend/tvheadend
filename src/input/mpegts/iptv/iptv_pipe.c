@@ -54,6 +54,8 @@ iptv_pipe_start
     goto err;
   }
 
+  tvhtrace(LS_IPTV, "iptv pipe: spawned \"%s\" rd %d pid %d", argv[0], rd, pid);
+
   spawn_free_args(argv);
   spawn_free_args(envp);
 
@@ -108,8 +110,8 @@ iptv_pipe_read ( iptv_input_t *mi, iptv_mux_t *im )
       im->im_data = NULL;
       spawn_kill(pid, tvh_kill_to_sig(im->mm_iptv_kill), im->mm_iptv_kill_timeout);
       if (mclk() < im->mm_iptv_respawn_last + sec2mono(2)) {
-        tvherror(LS_IPTV, "stdin pipe unexpectedly closed: %s",
-                 r < 0 ? strerror(errno) : "No data");
+        tvherror(LS_IPTV, "stdin pipe %d unexpectedly closed: %s",
+                 rd, r < 0 ? strerror(errno) : "No data");
       } else {
         /* avoid deadlock here */
         pthread_mutex_unlock(&iptv_lock);
