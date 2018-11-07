@@ -1172,7 +1172,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
 
   hints = muxer_hints_create(http_arg_get(&hc->hc_args, "User-Agent"));
 
-  profile_chain_init(&prch, pro, service);
+  profile_chain_init(&prch, pro, service, 1);
   if (!profile_chain_open(&prch, NULL, hints, 0, qsize)) {
 
     s = subscription_create_from_service(&prch, NULL, weight, "HTTP",
@@ -1314,7 +1314,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
   hints = muxer_hints_create(http_arg_get(&hc->hc_args, "User-Agent"));
 
-  profile_chain_init(&prch, pro, ch);
+  profile_chain_init(&prch, pro, ch, 1);
   if (!profile_chain_open(&prch, NULL, hints, 0, qsize)) {
 
     s = subscription_create_from_channel(&prch,

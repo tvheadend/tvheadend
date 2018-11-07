@@ -369,7 +369,7 @@ service_mapper_thread ( void *aux )
   const char *err = NULL;
   uint64_t timeout, timeout_other;
 
-  profile_chain_init(&prch, NULL, NULL);
+  profile_chain_init(&prch, NULL, NULL, 1);
   prch.prch_st = &prch.prch_sq.sq_st;
   sq = &prch.prch_sq;
 

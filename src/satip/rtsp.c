@@ -391,9 +391,7 @@ rtsp_slave_add
   pthread_mutex_unlock(&master->s_stream_mutex);
   master->s_link(master, slave);
   sub->service = slave;
-  profile_chain_init(&sub->prch, NULL, NULL);
-  sub->prch.prch_st = &sub->prch.prch_sq.sq_st;
-  sub->prch.prch_id = slave;
+  profile_chain_init(&sub->prch, NULL, slave, 0);
   snprintf(buf, sizeof(buf), "SAT>IP Slave/%s", slave->s_nicename);
   sub->ths = subscription_create_from_service(&sub->prch, NULL,
                                               SUBSCRIPTION_NONE,

@@ -1020,15 +1020,17 @@ profile_sharer_destroy(profile_chain_t *prch)
  *
  */
 void
-profile_chain_init(profile_chain_t *prch, profile_t *pro, void *id)
+profile_chain_init(profile_chain_t *prch, profile_t *pro, void *id, int queue)
 {
   memset(prch, 0, sizeof(*prch));
   if (pro)
     profile_grab(pro);
   prch->prch_pro = pro;
   prch->prch_id  = id;
-  streaming_queue_init(&prch->prch_sq, 0, 0);
-  prch->prch_sq_used = 1;
+  if (queue) {
+    streaming_queue_init(&prch->prch_sq, 0, 0);
+    prch->prch_sq_used = 1;
+  }
   LIST_INSERT_HEAD(&profile_chains, prch, prch_link);
   prch->prch_linked = 1;
   prch->prch_stop = 1;
