@@ -393,9 +393,8 @@ rtsp_slave_add
   sub->service = slave;
   profile_chain_init(&sub->prch, NULL, slave, 0);
   snprintf(buf, sizeof(buf), "SAT>IP Slave/%s", slave->s_nicename);
-  sub->ths = subscription_create_from_service(&sub->prch, NULL,
-                                              SUBSCRIPTION_NONE,
-                                              buf, 0, NULL, NULL,
+  sub->ths = subscription_create_from_service(&sub->prch, NULL, rs->used_weight,
+                                              buf, SUBSCRIPTION_NONE, NULL, NULL,
                                               buf, NULL);
   if (sub->ths == NULL) {
     tvherror(LS_SATIPS, "%i/%s/%i: unable to subscribe service %s\n",
@@ -594,6 +593,7 @@ rtsp_start
   mpegts_mux_t *mux;
   mpegts_service_t *svc;
   dvb_mux_conf_t dmc;
+  slave_subscription_t *sub;
   char buf[384];
   int res = HTTP_STATUS_NOT_ALLOWED, qsize = 3000000, created = 0, weight;
 
@@ -700,8 +700,11 @@ pids:
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     satip_rtp_update_pids(rs->rtp_handle, &rs->pids);
-    if (rs->used_weight != weight && weight > 0)
+    if (rs->used_weight != weight && weight > 0) {
       subscription_set_weight(rs->subs, rs->used_weight = weight);
+      LIST_FOREACH(sub, &rs->slaves, link)
+        subscription_set_weight(sub->ths, weight);
+    }
   }
   if (cmd != RTSP_CMD_DESCRIBE && rs->rtp_handle == NULL) {
     if (rs->mux == NULL)
