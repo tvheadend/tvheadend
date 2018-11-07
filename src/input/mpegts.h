@@ -967,6 +967,7 @@ void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );
 void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
 
 void mpegts_mux_nice_name( mpegts_mux_t *mm, char *buf, size_t len );
+void mpegts_mux_update_nice_name( mpegts_mux_t *mm );
 
 int mpegts_mux_class_scan_state_set ( void *, const void * );
 

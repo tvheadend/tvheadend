@@ -241,9 +241,7 @@ mpegts_mux_instance_start
   }
 
   /* Update nicename */
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  free(mm->mm_nicename);
-  mm->mm_nicename = strdup(buf);
+  mpegts_mux_update_nice_name(mm);
 
   /* Dead service check */
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
@@ -1257,7 +1255,6 @@ mpegts_mux_t *
 mpegts_mux_post_create ( mpegts_mux_t *mm )
 {
   mpegts_network_t *mn;
-  char buf[256];
 
   if (mm == NULL)
     return NULL;
@@ -1266,9 +1263,8 @@ mpegts_mux_post_create ( mpegts_mux_t *mm )
   if (mm->mm_enabled == MM_IGNORE)
     mm->mm_scan_result = MM_SCAN_IGNORE;
 
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace(LS_MPEGTS, "%s - created", buf);
-  mm->mm_nicename = strdup(buf);
+  mpegts_mux_update_nice_name(mm);
+  tvhtrace(LS_MPEGTS, "%s - created", mm->mm_nicename);
 
   /* Initial scan */
   if (mm->mm_scan_result == MM_SCAN_NONE || !mn->mn_skipinitscan)
@@ -1375,6 +1371,16 @@ mpegts_mux_nice_name( mpegts_mux_t *mm, char *buf, size_t len )
   len -= 4;
   if (mm->mm_network && mm->mm_network->mn_display_name)
     mm->mm_network->mn_display_name(mm->mm_network, buf, len);
+}
+
+void
+mpegts_mux_update_nice_name( mpegts_mux_t *mm )
+{
+  char buf[256];
+
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
+  free(mm->mm_nicename);
+  mm->mm_nicename = strdup(buf);
 }
 
 /* **************************************************************************

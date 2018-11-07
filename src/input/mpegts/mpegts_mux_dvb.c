@@ -1246,6 +1246,8 @@ dvb_mux_create0
   lm->mm_display_name     = dvb_mux_display_name;
   lm->mm_config_save      = dvb_mux_config_save;
 
+  mpegts_mux_update_nice_name(mm);
+
   /* No config */
   if (!conf) return lm;
 
