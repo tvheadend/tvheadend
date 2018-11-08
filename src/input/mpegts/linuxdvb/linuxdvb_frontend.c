@@ -381,7 +381,7 @@ const idclass_t linuxdvb_frontend_dvbs_slave_class =
                      "case, the position, the polarization and low-high "
                      "band settings must be equal. If you set another "
                      "tuner as master, then this tuner will act as "
-                     "a slave and tvheadend will assure that this tuner "
+                     "a slave and Tvheadend will assure that this tuner "
                      "will not use incompatible parameters (position, "
                      "polarization, lo-hi)."),
       .list     = linuxdvb_frontend_dvbs_class_master_enum,

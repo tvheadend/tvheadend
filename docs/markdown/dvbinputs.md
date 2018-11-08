@@ -8,13 +8,13 @@ Contents                                                         | Description
 [Networks](class/mpegts_network)                                 | Where you configure networks
 [Muxes](class/mpegts_mux)                                        | Where you configure multiplexes
 [Services](class/mpegts_service)                                 | Discovered service(s) management
-[Mux Schedulers](class/mpegts_mux_sched)                         | Where you configure mux schedulers - schedule tvheadend to tune to a specific mux to receive different types of data, EMMs, EIT etc
+[Mux Schedulers](class/mpegts_mux_sched)                         | Where you configure mux schedulers - schedule Tvheadend to tune to a specific mux to receive different types of data, EMMs, EIT etc
 
 ---
 
 ## Overview
 
-This tab is where you configure how tvheadend manages your adapters/input, 
+This tab is where you configure/manage your adapters/input,
 networks, muxes and services.
 
 
@@ -36,16 +36,16 @@ networks, muxes and services.
 
 ## TV Adapters
 
-The adapter tree lists the available frontends, LNB configuration and 
-so on related to your device(s) in sections. Clicking on these sections 
-will display available parameters and device information. Bold sections 
-and a green dot indicate that it's enabled. A red dot indicates that it's 
-disabled. Please see the [Introduction](introduction) (Using the Interface) for 
+The adapter tree lists the available frontends, LNB configuration and
+so on related to your device(s) in sections. Clicking on these sections
+will display available parameters and device information. Bold sections
+and a green dot indicate that it's enabled. A red dot indicates that it's
+disabled. Please see the [Introduction](introduction) (Using the Interface) for
 details on how to use the tree/split panel.
 
 ### An Example TV Adapter Tree
 
-Here is an example of a device tree - yours will follow the same layout, 
+Here is an example of a device tree - yours will follow the same layout,
 but this is just to give you an idea as to what all the bits mean.
 
 !['DVB Input tree explained' Tab](static/img/doc/dvbinputs/the_tree_explained.png)

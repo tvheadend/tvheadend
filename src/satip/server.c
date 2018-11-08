@@ -69,7 +69,7 @@ satip_server_http_xml(http_connection_t *hc)
 <friendlyName>%s%s</friendlyName>\n\
 <manufacturer>TVHeadend Team</manufacturer>\n\
 <manufacturerURL>http://tvheadend.org</manufacturerURL>\n\
-<modelDescription>TVHeadend %s</modelDescription>\n\
+<modelDescription>Tvheadend %s</modelDescription>\n\
 <modelName>TVHeadend SAT>IP</modelName>\n\
 <modelNumber>1.1</modelNumber>\n\
 <modelURL></modelURL>\n\

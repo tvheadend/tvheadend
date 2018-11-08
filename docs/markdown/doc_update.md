@@ -2,7 +2,7 @@
 
 The documentation is written in markdown, and then converted for
 direct inclusion to tvheadend binary. The markdown processor in
-tvheadend binary adds other information from the internal
+Tvheadend binary adds other information from the internal
 class system.
 
 The User Guide

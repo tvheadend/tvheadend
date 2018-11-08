@@ -8,7 +8,7 @@
 
 <tvh_include>inc/config_notes</tvh_include>
 
-* You can put a custom M3U playlist (which will be advertised to clients) in your tvheadend configuration directory - filename *satip.m3u*.
+* You can put a custom M3U playlist (which will be advertised to clients) in your Tvheadend configuration directory - filename *satip.m3u*.
 
 ---
 
