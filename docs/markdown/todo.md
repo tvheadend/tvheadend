@@ -11,7 +11,7 @@ They're just some of the areas I'm aware of that we need to close off before rel
 
 3. Obviously, fill in the minor gaps as highlighted in the document: buttons, descriptions, etc.
 
-4. Generate new webUI help pages and push them to the tvheadend repo
+4. Generate new webUI help pages and push them to the Tvheadend repo
 
 5. Check all link from tvh (e.g. there are no help buttons on the 'Stream' tabs)
 

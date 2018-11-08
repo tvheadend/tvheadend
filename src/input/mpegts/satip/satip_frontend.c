@@ -499,7 +499,7 @@ const idclass_t satip_frontend_dvbs_class =
                      "case, the position, the polarization and low-high "
                      "band settings must be equal."
                      "if you set other tuner as master, then this tuner "
-                     "will act like a slave one and tvheadend will "
+                     "will act like a slave one and Tvheadend will "
                      "assure that this tuner will not use incompatible "
                      "parameters (position, polarization, lo-hi)."),
       .set      = satip_frontend_dvbs_class_master_set,
@@ -540,7 +540,7 @@ const idclass_t satip_frontend_dvbs_slave_class =
                      "case, the position, the polarization and low-high "
                      "band settings must be equal."
                      "if you set other tuner as master, then this tuner "
-                     "will act like a slave one and tvheadend will "
+                     "will act like a slave one and Tvheadend will "
                      "assure that this tuner will not use incompatible "
                      "parameters (position, polarization, lo-hi)."),
       .set      = satip_frontend_dvbs_class_master_set,

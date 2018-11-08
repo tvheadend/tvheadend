@@ -1539,7 +1539,7 @@ dobackup(const char *oldver)
     tvherror(LS_CONFIG, "executed in directory '%s'", root);
     tvherror(LS_CONFIG, "please DON'T report this as an error, you may use --nobackup to skip");
     tvherror(LS_CONFIG, "... or run the above command in the printed directory");
-    tvherror(LS_CONFIG, "... using the same user/group as for the tvheadend executable");
+    tvherror(LS_CONFIG, "... using the same user/group as for the Tvheadend executable");
     tvherror(LS_CONFIG, "... to check the reason for the unfinished backup");
     free(s);
     htsbuf_queue_flush(&q);

@@ -145,7 +145,7 @@ const idclass_t iptv_mux_class =
       .name     = N_("Use A/V library"),
       .desc     = N_("The input stream is remuxed with A/V library (libav or"
                      " or ffmpeg) to the MPEG-TS format which is accepted by"
-                     " tvheadend."),
+                     " Tvheadend."),
       .list     = iptv_mux_libav_enum,
       .off      = offsetof(iptv_mux_t, mm_iptv_libav),
     },

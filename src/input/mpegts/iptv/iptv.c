@@ -785,7 +785,7 @@ const idclass_t iptv_network_class = {
       .name     = N_("Use A/V library"),
       .desc     = N_("The input stream is remuxed with A/V library (libav or"
                      " or ffmpeg) to the MPEG-TS format which is accepted by"
-                     " tvheadend."),
+                     " Tvheadend."),
       .off      = offsetof(iptv_network_t, in_libav),
       .opts     = PO_ADVANCED
     },

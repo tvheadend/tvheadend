@@ -23,7 +23,7 @@ another person.
 
 So this program allow you to pass two command line arguments.
 
-The first argument is the name of the EIT scraper file (read by tvheadend) that
+The first argument is the name of the EIT scraper file (read by Tvheadend) that
 is typically in the epggrab/eit/conf directory.
 
 The second argument is a test input file which is in JSON format and lives

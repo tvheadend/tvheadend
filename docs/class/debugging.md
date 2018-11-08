@@ -8,7 +8,7 @@ Contents                                          | Description
 
 ## Overview
 
-This tab is used to configure various debugging options in tvheadend.
+This tab is used to configure various debugging options in Tvheadend.
 
 !['Debugging tab'](static/img/doc/debugging/tab.png)
 
@@ -37,7 +37,7 @@ command-line parameters.
 
 ## Subsystems
 
-The following options can be passed to tvheadend to provide detailed debugging 
+The following options can be passed to Tvheadend to provide detailed debugging 
 information while the application is running.
 
 

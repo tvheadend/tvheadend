@@ -1249,7 +1249,7 @@ ST: urn:ses-com:device:SatIPServer:1\r\n"
 
   htsbuf_queue_init(&q, 0);
   htsbuf_append(&q, MSG, sizeof(MSG)-1);
-  htsbuf_qprintf(&q, "USER-AGENT: unix/1.0 UPnP/1.1 TVHeadend/%s\r\n", tvheadend_version);
+  htsbuf_qprintf(&q, "USER-AGENT: unix/1.0 UPnP/1.1 tvheadend/%s\r\n", tvheadend_version);
   htsbuf_append(&q, "\r\n", 2);
   upnp_send(&q, NULL, 0, 0);
   htsbuf_queue_flush(&q);

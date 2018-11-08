@@ -444,7 +444,7 @@ check-box so that the changes are applied to all (selected) entries.
 This guide is intended to give you a high-level overview of how to set
 up and use Tvheadend. It does not aim to provide a complete description
 of every step or answer every question: more details are available on the
-tvheadend [wiki](https://tvheadend.org/projects/tvheadend/wiki).
+Tvheadend [wiki](https://tvheadend.org/projects/tvheadend/wiki).
 
 Tvheadend includes copies of many of these pages in the application, which
 is easier to find when you're wondering what to do next.

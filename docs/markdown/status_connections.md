@@ -38,7 +38,7 @@ This is a read-only tab; nothing is configurable.
 : The data port(s) used by the client device.
 
 **Username**
-: The username used to access tvheadend (a blank cell indicates no username was supplied).
+: The username used to access Tvheadend (a blank cell indicates no username was supplied).
 
 **Started**
 : Date the connection started - YYYY-MM-DD HH:MM:SS.
