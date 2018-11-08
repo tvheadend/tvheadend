@@ -948,8 +948,6 @@ http_access_verify_ticket(http_connection_t *hc)
 {
   const char *ticket_id;
 
-  if (hc->hc_access)
-    return;
   ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
   hc->hc_access = access_ticket_verify2(ticket_id, hc->hc_url);
   if (hc->hc_access == NULL)
@@ -966,8 +964,6 @@ http_access_verify_auth(http_connection_t *hc)
 {
   const char *auth_id;
 
-  if (hc->hc_access)
-    return;
   auth_id = http_arg_get(&hc->hc_req_args, "auth");
   hc->hc_access = access_get_by_auth(hc->hc_peer, auth_id);
   if (hc->hc_access == NULL)
@@ -1103,13 +1099,15 @@ http_access_verify(http_connection_t *hc, int mask)
   struct http_verify_structure v;
   int res = -1;
 
-  http_access_verify_ticket(hc);
-  if (hc->hc_access)
-    res = access_verify2(hc->hc_access, mask);
-  if (res) {
-    http_access_verify_auth(hc);
+  if (hc->hc_access == NULL) {
+    http_access_verify_ticket(hc);
     if (hc->hc_access)
       res = access_verify2(hc->hc_access, mask);
+    if (res) {
+      http_access_verify_auth(hc);
+      if (hc->hc_access)
+        res = access_verify2(hc->hc_access, mask);
+    }
   }
 
   if (res) {
@@ -1135,38 +1133,16 @@ int
 http_access_verify_channel(http_connection_t *hc, int mask,
                            struct channel *ch)
 {
-  struct http_verify_structure v;
-  int res = -1;
+  int res = 0;
 
-  assert(ch);
-
-  http_access_verify_ticket(hc);
-  if (hc->hc_access) {
-    res = access_verify2(hc->hc_access, mask);
-    if (res) {
-      http_access_verify_auth(hc);
-      if (hc->hc_access)
-        res = access_verify2(hc->hc_access, mask);
-    }
+  if (hc->hc_access == NULL) {
+    res = http_access_verify(hc, mask);
+    if (res)
+      return res;
   }
-  if (!res && !channel_access(ch, hc->hc_access, 0))
+
+  if (!channel_access(ch, hc->hc_access, 0))
     res = -1;
-
-  if (res) {
-    access_destroy(hc->hc_access);
-    if (http_verify_prepare(hc, &v)) {
-      hc->hc_access = NULL;
-      return -1;
-    }
-    hc->hc_access = access_get(hc->hc_peer, hc->hc_username,
-                               http_verify_callback, &v);
-    http_verify_free(&v);
-    if (hc->hc_access) {
-      res = access_verify2(hc->hc_access, mask);
-      if (!res && !channel_access(ch, hc->hc_access, 0))
-        res = -1;
-    }
-  }
 
   return res;
 }
