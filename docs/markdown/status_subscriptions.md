@@ -29,17 +29,20 @@ This is a read-only tab; nothing is configurable.
 : Hostname/IP address using the subscription.
 
 **Username**
-: Username using the subscription - a blank cell indicates the 
+: Username using the subscription - a blank cell indicates the
 subscriber didn't supply a username.
 
 **Title**
-: Title of the application using the subscription - you will sometimes 
-see "epggrab" here, this is an internal subscription used by tvheadend 
+: Title of the application using the subscription - you will sometimes
+see "epggrab" here, this is an internal subscription used by Tvheadend
 to grab EPG data.
 
 **Channel**
-: The name of the [channel](class/channel) the subscription is using - 
+: The name of the [channel](class/channel) the subscription is using -
 if the subscription is streaming a service/mux this cell will be blank.
+
+**Service**
+: The service used by the subscription.
 
 **Profile**
 : The name of the [profile](class/profile) the subscription is using.
@@ -55,6 +58,9 @@ State         | Description
 Running       | The subscription is active - the stream is being sent.
 Idle          | The subscription is idling, waiting for the subscriber.
 Testing       | Tvheadend is testing the requested stream to see if it's available - if a subscription stays in this state too long it may indicate a signal issue.
+
+**PID list**
+: Input source Program Identification (PIDs) numbers in use by the subscription.
 
 **Descramble**
 : The CAID used to descramble the stream.

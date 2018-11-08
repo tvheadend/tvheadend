@@ -23,7 +23,7 @@ This is a read-only tab; nothing is configurable.
 ## Items
 
 **Sweep/Clean Icon !['Status - Stream' Tab](static/icons/clean.png)**
-: Clear all "Uncorrected Blocks", "BER", etc stats. 
+: Clear all "Uncorrected Blocks", "BER", etc stats.
 
 **Input**
 : Device used to receive the stream.
@@ -32,7 +32,10 @@ This is a read-only tab; nothing is configurable.
 : Number of subscriptions using the stream.
 
 **Weight**
-: Stream weighting. 
+: Stream weighting.
+
+**PID list**
+: Input source Program Identification (PIDs) numbers in use.
 
 **Bandwidth**
 : Total stream input bandwidth.
@@ -44,23 +47,23 @@ This is a read-only tab; nothing is configurable.
 : [Packet Error Ratio](https://en.wikipedia.org/wiki/Bit_error_rate#Packet_error_ratio)
 
 **Uncorrected Blocks**
-: Number of uncorrected blocks. A value higher than 0 can indicate a 
+: Number of uncorrected blocks. A value higher than 0 can indicate a
 weak signal or interference, note that some devices can send a false value.
 
 **Transport Errors**
-: Number of transport streams errors. A fast increasing value here can 
-indicate signal issues. Device drivers can sometimes send garbage data at 
-the beginning of a stream, as long as the value doesn't increase at a fast 
+: Number of transport streams errors. A fast increasing value here can
+indicate signal issues. Device drivers can sometimes send garbage data at
+the beginning of a stream, as long as the value doesn't increase at a fast
 pace and you have no playback issues, there is nothing to worry about.
 
 **Continuity Errors**
 : Continuity Count Error. Number of stream errors, a high value here can indicate a signal problem.
 
 **SNR**
-: Signal (To) Noise Ratio. [The level of a desired signal to the level of background noise](https://en.wikipedia.org/wiki/Signal-to-noise_ratio), 
-note that not all devices supply correct signal information, 
+: Signal (To) Noise Ratio. [The level of a desired signal to the level of background noise](https://en.wikipedia.org/wiki/Signal-to-noise_ratio),
+note that not all devices supply correct signal information,
 the value here can sometimes be ambiguous.
 
 **Signal Strength**
-: The signal strength as reported by the device, note that not all devices 
+: The signal strength as reported by the device, note that not all devices
 supply correct signal information, the value here can sometimes be ambiguous

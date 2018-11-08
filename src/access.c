@@ -2168,6 +2168,8 @@ passwd_entry_class_auth_set ( void *obj, const void *p )
 }
 
 CLASS_DOC(passwd)
+PROP_DOC(auth)
+PROP_DOC(authcode)
 
 const idclass_t passwd_entry_class = {
   .ic_class      = "passwd",
@@ -2218,6 +2220,7 @@ const idclass_t passwd_entry_class = {
       .id       = "auth",
       .name     = N_("Persistent authentication"),
       .desc     = N_("Manage persistent authentication for HTTP streaming."),
+      .doc      = prop_doc_auth,
       .list     = passwd_entry_class_auth_enum,
       .get      = passwd_entry_class_auth_get,
       .set      = passwd_entry_class_auth_set,
@@ -2228,7 +2231,8 @@ const idclass_t passwd_entry_class = {
       .type     = PT_STR,
       .id       = "authcode",
       .name     = N_("Persistent authentication code"),
-      .desc     = N_("The code which may be used for the HTTP streaming."),
+      .desc     = N_("The code which may be used for HTTP streaming."),
+      .doc      = prop_doc_authcode,
       .off      = offsetof(passwd_entry_t, pw_auth),
       .opts     = PO_RDONLY,
     },
