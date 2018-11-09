@@ -1543,3 +1543,26 @@ htsmsg_is_string_in_list(htsmsg_t *list, const char *str)
   }
   return 0;
 }
+
+/*
+ *
+ */
+int
+htsmsg_remove_string_from_list(htsmsg_t *list, const char *str)
+{
+  const char *s;
+  htsmsg_field_t *f;
+
+  if (list == NULL || !list->hm_islist)
+    return 0;
+  HTSMSG_FOREACH(f, list) {
+    s = htsmsg_field_get_str(f);
+    if (s == NULL)
+      continue;
+    if (!strcasecmp(s, str)) {
+      htsmsg_field_destroy(list, f);
+      return 1;
+    }
+  }
+  return 0;
+}

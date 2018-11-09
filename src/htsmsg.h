@@ -512,6 +512,8 @@ htsmsg_t *htsmsg_create_key_val(const char *key, const char *val);
 
 int htsmsg_is_string_in_list(htsmsg_t *list, const char *str);
 
+int htsmsg_remove_string_from_list(htsmsg_t *list, const char *str);
+
 /**
  *
  */
