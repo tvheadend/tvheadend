@@ -719,13 +719,16 @@ int
 channel_access(channel_t *ch, access_t *a, int disabled)
 {
   char ubuf[UUID_HEX_SIZE];
+  idnode_list_mapping_t *ilm;
+  htsmsg_field_t *f;
 
   if (!a)
     return 0;
 
   if (!ch) {
     /* If user has full rights, allow access to removed chanels */
-    if (a->aa_chrange == NULL && a->aa_chtags == NULL)
+    if (a->aa_chrange == NULL && a->aa_chtags == NULL &&
+        a->aa_chtags_exclude == NULL)
       return 1;
     return 0;
   }
@@ -743,20 +746,21 @@ channel_access(channel_t *ch, access_t *a, int disabled)
   }
 
   /* Channel tag check */
-  if (a->aa_chtags) {
-    idnode_list_mapping_t *ilm;
-    htsmsg_field_t *f;
-    HTSMSG_FOREACH(f, a->aa_chtags) {
-      LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link) {
+  if (a->aa_chtags_exclude) {
+    HTSMSG_FOREACH(f, a->aa_chtags_exclude)
+      LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link)
         if (!strcmp(htsmsg_field_get_str(f) ?: "",
                     idnode_uuid_as_str(ilm->ilm_in1, ubuf)))
-          goto chtags_ok;
-      }
-    }
+          return 0;
+  }
+  if (a->aa_chtags) {
+    HTSMSG_FOREACH(f, a->aa_chtags)
+      LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link)
+        if (!strcmp(htsmsg_field_get_str(f) ?: "",
+                    idnode_uuid_as_str(ilm->ilm_in1, ubuf)))
+          return 1;
     return 0;
   }
-chtags_ok:
-
   return 1;
 }
 
@@ -1658,6 +1662,10 @@ channel_tag_get_icon(channel_tag_t *ct)
 int
 channel_tag_access(channel_tag_t *ct, access_t *a, int disabled)
 {
+  htsmsg_field_t *f;
+  char ubuf[UUID_HEX_SIZE];
+  const char *uuid = idnode_uuid_as_str(&ct->ct_id, ubuf);
+
   if (!ct)
     return 0;
 
@@ -1668,17 +1676,17 @@ channel_tag_access(channel_tag_t *ct, access_t *a, int disabled)
     return 1;
 
   /* Channel tag check */
+  if (a->aa_chtags_exclude) {
+    HTSMSG_FOREACH(f, a->aa_chtags_exclude)
+      if (!strcmp(htsmsg_field_get_str(f) ?: "", uuid))
+        return 0;
+  }
   if (a->aa_chtags) {
-    htsmsg_field_t *f;
-    char ubuf[UUID_HEX_SIZE];
-    const char *uuid = idnode_uuid_as_str(&ct->ct_id, ubuf);
     HTSMSG_FOREACH(f, a->aa_chtags)
       if (!strcmp(htsmsg_field_get_str(f) ?: "", uuid))
-        goto chtags_ok;
+        return 1;
     return 0;
   }
-chtags_ok:
-
   return 1;
 }
 

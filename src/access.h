@@ -167,6 +167,7 @@ typedef struct access {
   htsmsg_t *aa_dvrcfgs;
   uint64_t *aa_chrange;
   int       aa_chrange_count;
+  htsmsg_t *aa_chtags_exclude;
   htsmsg_t *aa_chtags;
   int       aa_match;
   uint32_t  aa_conn_limit;
