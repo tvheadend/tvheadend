@@ -86,7 +86,7 @@ access_ticket_find(const char *id)
     /* assume that newer tickets are hit more probably */
     TAILQ_FOREACH_REVERSE(at, &access_tickets, access_ticket_queue, at_link)
       if(!strcmp(at->at_id, id))
-	return at;
+        return at;
   }
   
   return NULL;
@@ -287,7 +287,9 @@ access_copy(access_t *src)
       memcpy(dst->aa_chrange, src->aa_chrange, l);
   }
   if (src->aa_chtags)
-    dst->aa_chtags  = htsmsg_copy(src->aa_chtags);
+    dst->aa_chtags = htsmsg_copy(src->aa_chtags);
+  if (src->aa_chtags_exclude)
+    dst->aa_chtags_exclude = htsmsg_copy(src->aa_chtags_exclude);
   if (src->aa_auth)
     dst->aa_auth = strdup(src->aa_auth);
   return dst;
@@ -342,6 +344,7 @@ access_destroy(access_t *a)
   htsmsg_destroy(a->aa_profiles);
   htsmsg_destroy(a->aa_dvrcfgs);
   htsmsg_destroy(a->aa_chtags);
+  htsmsg_destroy(a->aa_chtags_exclude);
   free(a);
 }
 
@@ -498,6 +501,20 @@ access_dump_a(access_t *a)
                    (long long)a->aa_chrange[first+1]);
   }
 
+  if (a->aa_chtags_exclude) {
+    first = 1;
+    HTSMSG_FOREACH(f, a->aa_chtags_exclude) {
+      channel_tag_t *ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
+      if (ct) {
+        tvh_strlcatf(buf, sizeof(buf), l, "%s'%s'",
+                 first ? ", exclude tags=" : ",", ct->ct_name ?: "");
+        first = 0;
+      }
+    }
+  } else {
+    tvh_strlcatf(buf, sizeof(buf), l, ", exclude tag=ANY");
+  }
+
   if (a->aa_chtags) {
     first = 1;
     HTSMSG_FOREACH(f, a->aa_chtags) {
@@ -610,32 +627,24 @@ access_update(access_t *a, access_entry_t *ae)
   }
 
   if (ae->ae_change_chtags) {
-    if (ae->ae_chtags_exclude && !LIST_EMPTY(&ae->ae_chtags)) {
-      channel_tag_t *ct;
-      TAILQ_FOREACH(ct, &channel_tags, ct_link) {
-        if(ct && ct->ct_name[0] != '\0') {
-          LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
-            channel_tag_t *ct2 = (channel_tag_t *)ilm->ilm_in2;
-            if (ct == ct2) break;
-          }
-          if (ilm == NULL) {
-            if (a->aa_chtags == NULL)
-              a->aa_chtags = htsmsg_create_list();
-            htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id, ubuf));
-          }
-        }
-      }
+    if (LIST_EMPTY(&ae->ae_chtags)) {
+      idnode_list_destroy(&ae->ae_chtags, ae);
     } else {
-      if (LIST_EMPTY(&ae->ae_chtags)) {
-        idnode_list_destroy(&ae->ae_chtags, ae);
-      } else {
-        LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
-          channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in2;
-          if(ct && ct->ct_name[0] != '\0') {
-            if (a->aa_chtags == NULL)
-              a->aa_chtags = htsmsg_create_list();
-            htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id, ubuf));
+      htsmsg_t **lst;
+      LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
+        channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in2;
+        if(ct && ct->ct_name[0] != '\0') {
+          const char *ct_uuid = idnode_uuid_as_str(&ct->ct_id, ubuf);
+          if (ae->ae_chtags_exclude) {
+            lst = &a->aa_chtags_exclude;
+          } else {
+            lst = &a->aa_chtags;
+            /* adding a tag down the chain removes it from exclude list */
+            htsmsg_remove_string_from_list(a->aa_chtags_exclude, ct_uuid);
           }
+          if (*lst == NULL)
+            *lst = htsmsg_create_list();
+          htsmsg_add_str_exclusive(*lst, ct_uuid);
         }
       }
     }
@@ -735,7 +744,7 @@ access_get(struct sockaddr_storage *src, const char *username, verify_callback_t
     if(ae->ae_username[0] != '*') {
       /* acl entry requires username to match */
       if(username == NULL || strcmp(username, ae->ae_username))
-	continue; /* Didn't get one */
+        continue; /* Didn't get one */
     }
 
     if(!netmask_verify(&ae->ae_ipmasks, src))
