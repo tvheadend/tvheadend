@@ -1343,8 +1343,8 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         if (!('time' in panel.extra)) return;
         var d = stime ? new Date(stime) : new Date();
         var el = Ext.get(panel.extra.time.tabEl).child('span.x-tab-strip-extra-comp', true);
-        el.innerHTML = '<b>' + d.toLocaleTimeString() + '</b>';
-        el.qtip = d.toLocaleString(tvheadend.toLocaleFormat());
+        el.innerHTML = '<b>' + d.toLocaleString(tvheadend.toLocaleFormat(), {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}); + '</b>';
+        el.qtip = tvheadend.toCustomDate(d, tvheadend.date_mask);
     },
 
     onLoginCmdClicked: function(e) {
