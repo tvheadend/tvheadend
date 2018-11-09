@@ -177,9 +177,24 @@ satip_rtp_send(satip_rtp_session_t *rtp)
       packets++;
       copy = 0;
     }
-    r = udp_multisend_send(&rtp->um, rtp->fd_rtp, packets);
-    if (r < 0)
-      return r;
+    while (1) {
+      r = udp_multisend_send(&rtp->um, rtp->fd_rtp, packets);
+      if (r < 0) {
+        if (errno == EINTR)
+          continue;
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          tvh_usleep(100);
+          continue;
+        }
+        tvhtrace(LS_SATIPS, "rtp udp multisend failed (errno %d)", errno);
+        return r;
+      }
+      break;
+    }
+    if (r != packets) {
+      tvhtrace(LS_SATIPS, "rtp udp multisend failed (packets %d written %d)", packets, r);
+      return -1;
+    }
     if (copy)
       memcpy(v->iov_base, v2->iov_base, len = v2->iov_len);
     else
