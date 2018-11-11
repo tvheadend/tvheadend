@@ -229,7 +229,7 @@ cc_remove_card(cclient_t *cc, cc_card_data_t *pcard)
           cc_get_card_name(pcard, buf, sizeof(buf)));
 
   /* invalidate all requests */
-  LIST_FOREACH(ct, &cc->cc_services, cs_link)
+  LIST_FOREACH(ct, &cc->cc_services, cs_link) {
     for (ep = LIST_FIRST(&ct->cs_ecm_pids); ep; ep = epn) {
       epn = LIST_NEXT(ep, ep_link);
       for (es = LIST_FIRST(&ep->ep_sections); es; es = esn) {
@@ -248,13 +248,13 @@ cc_remove_card(cclient_t *cc, cc_card_data_t *pcard)
       if (LIST_EMPTY(&ep->ep_sections))
         cc_free_ecm_pid(ep);
     }
+    if (changed) {
+      ct->cs_capid = 0xffff;
+      ct->ecm_state = ECM_INIT;
+    }
+  }
 
   cc_free_card(pcard);
-
-  if (changed) {
-    ct->cs_capid = 0xffff;
-    ct->ecm_state = ECM_INIT;
-  }
 }
 
 /**
