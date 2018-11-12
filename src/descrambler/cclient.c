@@ -251,6 +251,7 @@ cc_remove_card(cclient_t *cc, cc_card_data_t *pcard)
     if (changed) {
       ct->cs_capid = 0xffff;
       ct->ecm_state = ECM_INIT;
+      changed = 0;
     }
   }
 
