@@ -36,15 +36,17 @@ path prefix). The proxy server *MUST* pass this webroot path in the HTTP
 request, otherwise an access to the Tvheadend server will end with
 the endless redirect loop.
 
-Example for nginx (--http_root=/my/tvh/server):
+Example for nginx (--http_root /my/tvh/server):
 
 ```
-location /my/tvh/server {
-  proxy_pass http://1.1.1.1:9981;
-  proxy_set_header Host $host;
-  proxy_set_header X-Real-IP $remote_addr;
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-}
+	location /my/tvh/server {
+		proxy_pass http://1.1.1.1:9981;
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "upgrade";
+	}
 ```
 
 Example for apache (--http_root=/my/tvh/server):
