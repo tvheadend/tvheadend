@@ -26,8 +26,8 @@
 #include "udp.h"
 #include "tvhpoll.h"
 
-#define IPTV_BUF_SIZE    (300*188)
-#define IPTV_PKTS        32
+#define IPTV_BUF_SIZE    (9000*188)
+#define IPTV_PKTS        128
 #define IPTV_PKT_PAYLOAD 1472
 
 typedef struct iptv_input   iptv_input_t;
