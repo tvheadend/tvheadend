@@ -120,7 +120,7 @@ parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
     goto deliver;
   }
 
-  diff = st->es_type == SCT_DVBSUB ? 8*90000 : 6*90000;
+  diff = st->es_type == SCT_DVBSUB ? 32*90000 : 24*90000;
   d = pts_diff(pkt->pkt_pcr, (pkt->pkt_dts + 30000) & PTS_MASK);
 
   if (d > diff || d == PTS_UNSET) {
