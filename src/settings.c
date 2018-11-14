@@ -401,10 +401,10 @@ hts_settings_remove(const char *pathfmt, ...)
  *
  */
 int
-hts_settings_open_file(int for_write, const char *pathfmt, ...)
+hts_settings_open_file(int flags, const char *pathfmt, ...)
 {
   char path[PATH_MAX];
-  int flags;
+  int _flags;
   va_list ap;
 
   /* Build path */
@@ -413,13 +413,16 @@ hts_settings_open_file(int for_write, const char *pathfmt, ...)
   va_end(ap);
 
   /* Create directories */
-  if (for_write)
+  if (flags & HTS_SETTINGS_OPEN_WRITE)
     if (hts_settings_makedirs(path)) return -1;
 
   /* Open file */
-  flags = for_write ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
+  _flags = (flags & HTS_SETTINGS_OPEN_WRITE) ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
 
-  return tvh_open(path, flags, S_IRUSR | S_IWUSR);
+  if (flags & HTS_SETTINGS_OPEN_DIRECT)
+    return open(path, _flags, S_IRUSR | S_IWUSR);
+
+  return tvh_open(path, _flags, S_IRUSR | S_IWUSR);
 }
 
 /*

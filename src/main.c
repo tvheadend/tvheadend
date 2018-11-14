@@ -794,7 +794,8 @@ main(int argc, char **argv)
               opt_nobackup     = 0,
               opt_nobat        = 0,
               opt_subsystems   = 0,
-              opt_tprofile     = 0;
+              opt_tprofile     = 0,
+              opt_thread_debug = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -904,6 +905,7 @@ main(int argc, char **argv)
 #endif
 
     { 0, "tprofile", N_("Gather timing statistics for the code"), OPT_BOOL, &opt_tprofile },
+    { 0, "thrdebug", N_("Thread debugging"), OPT_INT, &opt_thread_debug },
 
   };
 
@@ -1038,6 +1040,8 @@ main(int argc, char **argv)
   }
   if (opt_log_debug)
     log_debug  = opt_log_debug;
+
+  tvh_thread_init(opt_thread_debug);
 
   tvhlog_init(log_level, log_options, opt_logpath);
   tvhlog_set_debug(log_debug);
@@ -1374,6 +1378,8 @@ main(int argc, char **argv)
 
   tvhftrace(LS_MAIN, config_done);
   tvhftrace(LS_MAIN, hts_settings_done);
+
+  tvh_thread_done();
 
   if(opt_fork)
     unlink(opt_pidpath);

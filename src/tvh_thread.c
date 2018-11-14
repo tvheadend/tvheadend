@@ -1,4 +1,5 @@
 #define __USE_GNU
+#define TVH_THREAD_C 1
 #include "tvheadend.h"
 #include <assert.h>
 #include <fcntl.h>
@@ -6,8 +7,8 @@
 #include <sys/resource.h>
 #include <unistd.h>
 #include <signal.h>
-#define TVH_THREAD_C 1
-#include "tvh_thread.h"
+
+#include "settings.h"
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
@@ -17,6 +18,13 @@
 #ifdef PLATFORM_FREEBSD
 #include <pthread_np.h>
 #endif
+
+int tvh_thread_debug;
+static int tvhwatch_done;
+static pthread_t thrwatch_tid;
+static pthread_mutex_t thrwatch_mutex = PTHREAD_MUTEX_INITIALIZER;
+static TAILQ_HEAD(, tvh_mutex) thrwatch_mutexes = TAILQ_HEAD_INITIALIZER(thrwatch_mutexes);
+static int64_t tvh_thread_crash_time;
 
 /*
  * thread routines
@@ -33,8 +41,25 @@ thread_state {
   char name[17];
 };
 
+static void
+thread_get_name(pthread_t tid, char *buf, int len)
+{
+  buf[0] = '?';
+  buf[1] = '\0';
+#if defined(PLATFORM_LINUX)
+  /* Set name */
+  if (len >= 16)
+    prctl(PR_GET_NAME, buf);
+#elif defined(PLATFORM_FREEBSD)
+  /* Get name of thread */
+  //pthread_get_name_np(tid, buf); ???
+#elif defined(PLATFORM_DARWIN)
+  // ???
+#endif
+}
+
 static void *
-thread_wrapper ( void *p )
+thread_wrapper(void *p)
 {
   struct thread_state *ts = p;
   sigset_t set;
@@ -117,6 +142,7 @@ tvh_thread_renice(int value)
 
 int tvh_mutex_init(tvh_mutex_t *restrict mutex, const pthread_mutexattr_t *restrict attr)
 {
+  memset(mutex, 0, sizeof(*mutex));
   return pthread_mutex_init(&mutex->mutex, attr);
 }
 
@@ -125,21 +151,64 @@ int tvh_mutex_destroy(tvh_mutex_t *mutex)
   return pthread_mutex_destroy(&mutex->mutex);
 }
 
-int tvh_mutex_lock(tvh_mutex_t *mutex)
+static void tvh_mutex_add_to_list(tvh_mutex_t *mutex, const char *filename, int lineno)
 {
-  return pthread_mutex_lock(&mutex->mutex);
+  pthread_mutex_lock(&thrwatch_mutex);
+  if (filename != NULL) {
+    mutex->thread = pthread_self();
+    mutex->filename = filename;
+    mutex->lineno = lineno;
+  }
+  mutex->tstamp = getfastmonoclock();
+  TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
+  TAILQ_INSERT_HEAD(&thrwatch_mutexes, mutex, link);
+  pthread_mutex_unlock(&thrwatch_mutex);
 }
 
-int tvh_mutex_trylock(tvh_mutex_t *mutex)
+static void tvh_mutex_remove_from_list(tvh_mutex_t *mutex)
 {
-  return pthread_mutex_trylock(&mutex->mutex);
+  pthread_mutex_lock(&thrwatch_mutex);
+  TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
+  mutex->filename = NULL;
+  mutex->lineno = 0;
+  pthread_mutex_unlock(&thrwatch_mutex);
 }
 
-int tvh_mutex_unlock(tvh_mutex_t *mutex)
+static void tvh_mutex_remove_from_list_keep_info(tvh_mutex_t *mutex)
 {
-  return pthread_mutex_unlock(&mutex->mutex);
+  pthread_mutex_lock(&thrwatch_mutex);
+  TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
+  pthread_mutex_unlock(&thrwatch_mutex);
 }
 
+int tvh__mutex_lock(tvh_mutex_t *mutex, const char *filename, int lineno)
+{
+  int r;
+  tvh_mutex_add_to_list(mutex, filename, lineno);
+  r = pthread_mutex_lock(&mutex->mutex);
+  if (r)
+    tvh_mutex_remove_from_list(mutex);
+  return r;
+}
+
+int tvh__mutex_trylock(tvh_mutex_t *mutex, const char *filename, int lineno)
+{
+  int r;
+  tvh_mutex_add_to_list(mutex, filename, lineno);
+  r = pthread_mutex_trylock(&mutex->mutex);
+  if (r)
+    tvh_mutex_remove_from_list(mutex);
+  return r;
+}
+
+int tvh__mutex_unlock(tvh_mutex_t *mutex)
+{
+  int r;
+  r = pthread_mutex_unlock(&mutex->mutex);
+  if (r == 0)
+    tvh_mutex_remove_from_list(mutex);
+  return r;
+}
 
 int
 tvh_mutex_timedlock
@@ -208,13 +277,22 @@ int
 tvh_cond_wait
   ( tvh_cond_t *cond, tvh_mutex_t *mutex)
 {
-  return pthread_cond_wait(&cond->cond, &mutex->mutex);
+  int r;
+  
+  tvh_mutex_remove_from_list_keep_info(mutex);
+  r = pthread_cond_wait(&cond->cond, &mutex->mutex);
+  tvh_mutex_add_to_list(mutex, NULL, -1);
+  return r;
 }
 
 int
 tvh_cond_timedwait
   ( tvh_cond_t *cond, tvh_mutex_t *mutex, int64_t monoclock )
 {
+  int r;
+
+  tvh_mutex_remove_from_list_keep_info(mutex);
+  
 #if defined(PLATFORM_DARWIN)
   /* Use a relative timedwait implementation */
   int64_t now = getmonoclock();
@@ -228,19 +306,27 @@ tvh_cond_timedwait
   ts.tv_nsec = (relative % MONOCLOCK_RESOLUTION) *
                (1000000000ULL/MONOCLOCK_RESOLUTION);
 
-  return pthread_cond_timedwait_relative_np(&cond->cond, &mutex->mutex, &ts);
+  r = pthread_cond_timedwait_relative_np(&cond->cond, &mutex->mutex, &ts);
 #else
   struct timespec ts;
   ts.tv_sec = monoclock / MONOCLOCK_RESOLUTION;
   ts.tv_nsec = (monoclock % MONOCLOCK_RESOLUTION) *
                (1000000000ULL/MONOCLOCK_RESOLUTION);
-  return pthread_cond_timedwait(&cond->cond, &mutex->mutex, &ts);
+  r = pthread_cond_timedwait(&cond->cond, &mutex->mutex, &ts);
 #endif
+
+  tvh_mutex_add_to_list(mutex, NULL, -1);
+  return r;
 }
 
 int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec *ts)
 {
-  return pthread_cond_timedwait(&cond->cond, &mutex->mutex, ts);
+  int r;
+  
+  tvh_mutex_remove_from_list_keep_info(mutex);
+  r = pthread_cond_timedwait(&cond->cond, &mutex->mutex, ts);
+  tvh_mutex_add_to_list(mutex, NULL, -1);
+  return r;
 }
 
 void
@@ -248,4 +334,60 @@ tvh_mutex_not_held(const char *file, int line)
 {
   fprintf(stderr, "Mutex not held at %s:%d\n", file, line);
   abort();
+}
+
+static void tvh_thread_mutex_deadlock(tvh_mutex_t *mutex)
+{
+  int fd = hts_settings_open_file(HTS_SETTINGS_OPEN_WRITE | HTS_SETTINGS_OPEN_DIRECT, "mutex-deadlock.txt");
+  if (fd < 0) fd = fileno(stderr);
+  int sid = mutex->mutex.__data.__owner; /* unportable */
+  char name[256];
+  thread_get_name(mutex->thread, name, sizeof(name));
+  FILE *f = fdopen(fd, "w");
+  fprintf(f, "Thread %i: %s\n", sid, name);
+  fprintf(f, "  locked in: %s:%i\n", mutex->filename, mutex->lineno);
+  fclose(f);
+  abort();
+}
+
+static void *tvh_thread_watch_thread(void *aux)
+{
+  int64_t now;
+  tvh_mutex_t *mutex, dmutex;
+
+  while (!tvhwatch_done) {
+    pthread_mutex_lock(&thrwatch_mutex);
+    now = getfastmonoclock();
+    mutex = TAILQ_LAST(&thrwatch_mutexes, tvh_mutex_queue);
+    if (mutex && mutex->tstamp + sec2mono(5) < now) {
+      pthread_mutex_unlock(&thrwatch_mutex);
+      tvh_thread_mutex_deadlock(mutex);
+    }
+    pthread_mutex_unlock(&thrwatch_mutex);
+    if (tvh_thread_debug == 12345678 && tvh_thread_crash_time < getfastmonoclock()) {
+      tvh_thread_debug--;
+      tvh_mutex_init(&dmutex, NULL);
+      tvh_mutex_lock(&dmutex);
+    }
+    tvh_usleep(1000000);
+  }
+  return NULL;
+}
+
+void tvh_thread_init(int debug_level)
+{
+  tvh_thread_debug = debug_level;
+  tvh_thread_crash_time = getfastmonoclock() + sec2mono(15);
+  if (debug_level > 0) {
+    tvhwatch_done = 0;
+    tvh_thread_create(&thrwatch_tid, NULL, tvh_thread_watch_thread, NULL, "thrwatch");
+  }
+}
+
+void tvh_thread_done(void)
+{
+  if (tvh_thread_debug > 0) {
+    tvhwatch_done = 1;
+    pthread_join(thrwatch_tid, NULL);
+  }
 }
