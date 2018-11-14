@@ -993,6 +993,7 @@ dvb_mux_conf_init ( mpegts_network_t *ln,
   dmc->dmc_fe_inversion = DVB_INVERSION_AUTO;
   dmc->dmc_fe_pilot     = DVB_PILOT_AUTO;
   dmc->dmc_fe_stream_id = DVB_NO_STREAM_ID_FILTER;
+  dmc->dmc_fe_pls_mode  = DVB_PLS_GOLD;
   switch (dmc->dmc_fe_type) {
   case DVB_TYPE_S:
     dmc->u.dmc_fe_qpsk.orbital_pos = INT_MAX;
