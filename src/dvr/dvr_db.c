@@ -1606,8 +1606,9 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
    * AND episode are present since OTA often have just "Ep 1" without
    * giving the season.
    */
-  if (de1->de_epnum.e_num && de2->de_epnum.e_num)
-    return de1->de_epnum.e_num == de2->de_epnum.e_num ? DUP : NOT_DUP;
+  if (de1->de_epnum.s_num && de1->de_epnum.e_num &&
+      de2->de_epnum.s_num && de2->de_epnum.e_num)
+    return de1->de_epnum.s_num == de2->de_epnum.s_num && de1->de_epnum.e_num == de2->de_epnum.e_num ? DUP : NOT_DUP;
 
   /* Only one has season and episode? Then can't be a dup with the
    * other one that doesn't have season+episode
