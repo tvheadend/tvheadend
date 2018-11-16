@@ -1610,10 +1610,26 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
       de2->de_epnum.s_num && de2->de_epnum.e_num)
     return de1->de_epnum.s_num == de2->de_epnum.s_num && de1->de_epnum.e_num == de2->de_epnum.e_num ? DUP : NOT_DUP;
 
-  /* Only one has season and episode? Then can't be a dup with the
-   * other one that doesn't have season+episode
+  /* If we don't have Season & Episode, then we will try matching just
+   * season and just episode (if available). This is because if OTA
+   * has just "Ep 1" then we don't know the season (so we would have
+   * season 0 internally even though it could be S1 or S2), so we
+   * can't know if it is a DUP with another showing of "Ep 1" (could
+   * be different season), but we _do_ know that if they differ then
+   * it's definitely a different episode.
+   *
+   * So:
+   * - Ep1 == Ep1 ==> don't know if it's a dup or not
+   * - Ep1 != Ep2 ==> definitely not a dup.
+   * - S1 == S1 ==> don't know if dup or not
+   * - S1 != S2 ==> definitely not a dup.
+   * This assumes consistent metadata (so always have Season & Episode
+   * info, or always only have same partial info of just season or
+   * just episode).
    */
-  if (de1->de_epnum.e_num || de2->de_epnum.e_num)
+  if (de1->de_epnum.s_num != de2->de_epnum.s_num)
+    return NOT_DUP;
+  if (de1->de_epnum.e_num != de2->de_epnum.e_num)
     return NOT_DUP;
 
   /* Now, near the end, we can check for unequal programme ids. We do
