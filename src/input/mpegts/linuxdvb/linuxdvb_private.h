@@ -70,7 +70,6 @@ struct linuxdvb_adapter
   char    *la_name;
   char    *la_rootpath;
   int      la_dvb_number;
-  int      la_exclusive; /* one frontend at a time */
 
   /*
    * Frontends

@@ -370,7 +370,6 @@ linuxdvb_adapter_add ( const char *path )
   int delsys, fenum, type5;
   dvb_fe_type_t fetypes[DVB_TYPE_LAST+1];
   struct dtv_property cmd;
-  linuxdvb_frontend_t *lfe;
 #endif
 
   tvhtrace(LS_LINUXDVB, "scanning adapter %s", path);
@@ -609,29 +608,6 @@ linuxdvb_adapter_add ( const char *path )
   /* Adapter couldn't be opened; there's nothing to work with  */
   if (!la)
     return;
-
-#if DVB_VER_ATLEAST(5,5)
-  memset(fetypes, 0, sizeof(fetypes));
-  LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
-    fetypes[lfe->lfe_type]++;
-  for (i = j = r = 0; i < ARRAY_SIZE(fetypes); i++) {
-    if (fetypes[i] > 1)
-      r++;
-    else if (fetypes[i] > 0)
-      j++;
-  }
-  if (r && j) {
-    la->la_exclusive = 1;
-    for (i = 0; i < ARRAY_SIZE(fetypes); i++)
-      if (fetypes[i] > 0)
-        tvhwarn(LS_LINUXDVB, "adapter %d has tuner count %d for type %s (wrong config)",
-                            a, fetypes[i], dvb_type2str(i));
-  } else if (!r && j > 1) {
-    la->la_exclusive = 1;
-  }
-  if (la->la_exclusive)
-    tvhinfo(LS_LINUXDVB, "adapter %d setting exclusive flag", a);
-#endif
 
   /* Save configuration */
   if (save && la)

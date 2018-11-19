@@ -63,10 +63,22 @@ const void *
 linuxdvb_frontend_class_active_get ( void *obj )
 {
   int *active;
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)obj;
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)obj, *lfe2;
   active = (int *)mpegts_input_class_active_get(obj);
-  if (!(*active) && lfe->lfe_adapter->la_exclusive)
-    *active = lfe->lfe_adapter->la_is_enabled(lfe->lfe_adapter);
+  if (!(*active)) {
+    if (lfe->mi_is_enabled((mpegts_input_t*)lfe, NULL, 0, -1) != MI_IS_ENABLED_NEVER) {
+      *active = 1;
+      return active;
+    }
+    LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
+      if (lfe2 == lfe || strcmp(lfe2->lfe_fe_path, lfe->lfe_fe_path))
+        continue;
+      if (lfe2->mi_is_enabled((mpegts_input_t*)lfe2, NULL, 0, -1) != MI_IS_ENABLED_NEVER) {
+        *active = 1;
+        return active;
+      }
+    }
+  }
   return active;
 }
 
@@ -508,13 +520,13 @@ linuxdvb_frontend_open_fd ( linuxdvb_frontend_t *lfe, const char *name )
     return 0;
 
   /* Share FD across frontends */
-  if (lfe->lfe_adapter->la_exclusive) {
-    LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-      if (lfe2->lfe_fe_fd > 0) {
-        lfe->lfe_fe_fd = dup(lfe2->lfe_fe_fd);
-        extra = " (shared)";
-        break;
-      }
+  LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
+    if (lfe2 == lfe || strcmp(lfe->lfe_fe_path, lfe2->lfe_fe_path))
+      continue;
+    if (lfe2->lfe_fe_fd > 0) {
+      lfe->lfe_fe_fd = dup(lfe2->lfe_fe_fd);
+      extra = " (shared)";
+      break;
     }
   }
 
@@ -555,13 +567,12 @@ static int
 linuxdvb_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
   int w = 0;
-  linuxdvb_adapter_t *la = ((linuxdvb_frontend_t*)mi)->lfe_adapter;
-  linuxdvb_frontend_t *lfe;
-  if (la->la_exclusive) {
-    LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
-      w = MAX(w, mpegts_input_get_weight((mpegts_input_t*)lfe, mm, flags, weight));
-  } else {
-    w = mpegts_input_get_weight(mi, mm, flags, weight);
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2;
+  w = mpegts_input_get_weight(mi, mm, flags, weight);
+  LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
+    if (lfe2 == lfe || strcmp(lfe->lfe_fe_path, lfe2->lfe_fe_path))
+      continue;
+    w = MAX(w, mpegts_input_get_weight((mpegts_input_t*)lfe2, mm, flags, weight));
   }
   return w;
 }
@@ -640,15 +651,13 @@ linuxdvb_frontend_is_enabled
 
 
 ok:
-  if (lfe->lfe_adapter->la_exclusive) {
-    w = -1;
-    LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-      if (lfe2 == lfe) continue;
-      w = MAX(w, mpegts_input_get_weight((mpegts_input_t *)lfe2, mm, flags, weight));
-    }
-    if (w >= weight)
-      return MI_IS_ENABLED_RETRY;
+  w = -1;
+  LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
+    if (lfe2 == lfe || strcmp(lfe2->lfe_fe_path, lfe->lfe_fe_path)) continue;
+    w = MAX(w, mpegts_input_get_weight((mpegts_input_t *)lfe2, mm, flags, weight));
   }
+  if (w >= weight)
+    return MI_IS_ENABLED_RETRY;
 
   return MI_IS_ENABLED_OK;
 }
@@ -725,12 +734,9 @@ linuxdvb_frontend_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   if (r)
     return r;
 
-  if (!lfe->lfe_adapter->la_exclusive)
-    return 0;
-
   /* Stop other active frontend (should be only one) */
   LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-    if (lfe2 == lfe) continue;
+    if (lfe2 == lfe || strcmp(lfe2->lfe_fe_path, lfe->lfe_fe_path)) continue;
     pthread_mutex_lock(&lfe2->mi_output_lock);
     lmmi = LIST_FIRST(&lfe2->mi_mux_active);
     pthread_mutex_unlock(&lfe2->mi_output_lock);
