@@ -1496,7 +1496,11 @@ http_client_reconnect
   if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {
     ssl = calloc(1, sizeof(*ssl));
     hc->hc_ssl = ssl;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
     ssl->ctx   = SSL_CTX_new(SSLv23_client_method());
+#else
+    ssl->ctx   = SSL_CTX_new(TLS_client_method());
+#endif
     if (ssl->ctx == NULL) {
       tvherror(LS_HTTPC, "%04X: Unable to get SSL_CTX", shortid(hc));
       goto err1;
