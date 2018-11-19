@@ -1171,6 +1171,11 @@ main(int argc, char **argv)
   SSL_library_init();
 #endif
 
+#ifndef OPENSSL_NO_ENGINE
+  /* ENGINE init */
+  ENGINE_load_builtin_engines();
+#endif
+
   /* Rand seed */
   randseed.thread_id = (void *)main_tid;
   gettimeofday(&randseed.tv, NULL);
