@@ -66,12 +66,8 @@ linuxdvb_frontend_class_active_get ( void *obj )
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)obj, *lfe2;
   active = (int *)mpegts_input_class_active_get(obj);
   if (!(*active)) {
-    if (lfe->mi_is_enabled((mpegts_input_t*)lfe, NULL, 0, -1) != MI_IS_ENABLED_NEVER) {
-      *active = 1;
-      return active;
-    }
     LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-      if (lfe2 == lfe || strcmp(lfe2->lfe_fe_path, lfe->lfe_fe_path))
+      if (strcmp(lfe2->lfe_fe_path, lfe->lfe_fe_path))
         continue;
       if (lfe2->mi_is_enabled((mpegts_input_t*)lfe2, NULL, 0, -1) != MI_IS_ENABLED_NEVER) {
         *active = 1;
@@ -568,9 +564,8 @@ linuxdvb_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, 
 {
   int w = 0;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2;
-  w = mpegts_input_get_weight(mi, mm, flags, weight);
   LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-    if (lfe2 == lfe || strcmp(lfe->lfe_fe_path, lfe2->lfe_fe_path))
+    if (strcmp(lfe->lfe_fe_path, lfe2->lfe_fe_path))
       continue;
     w = MAX(w, mpegts_input_get_weight((mpegts_input_t*)lfe2, mm, flags, weight));
   }
