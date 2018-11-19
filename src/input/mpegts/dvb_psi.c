@@ -1041,14 +1041,62 @@ end:
 /*
  * CAT processing
  */
+void
+dvb_cat_decode( const uint8_t *data, int len,
+                void (*add_emm)(void *aux, uint16_t caid, uint32_t prov, uint16_t pid),
+                void *aux )
+{
+  uint8_t dtag, dlen, dlen2;
+  uint16_t caid = 0, pid = 0;
+  uint32_t prov;
+  const uint8_t *data2;
+  int len2;
+  card_type_t ctype;
+
+  while (len > 2) {
+    dtag = *data++;
+    dlen = *data++;
+    len -= 2;
+    if (dtag != DVB_DESC_CA || len < 4 || dlen < 4)
+      goto next;
+    caid =  (data[0] << 8) | data[1];
+    pid  = ((data[2] << 8) | data[3]) & 0x1fff;
+    if (pid > 0) {
+      ctype = detect_card_type(caid);
+      add_emm(aux, caid, 0, pid);
+      if (ctype == CARD_SECA) {
+        dlen2 = dlen - 5;
+        data2 = data + 5;
+        len2  = len - 5;
+        while (dlen2 >= 4 && len2 >= 4) {
+          pid = ((data2[0] << 8) | data2[1]) & 0xfff;
+          prov = (data2[2] << 8) | data2[3];
+          add_emm(aux, caid, prov, pid);
+          data2 += 4;
+          len2 -= 4;
+          dlen2 -= 4;
+        }
+      }
+    }
+next:
+    data += dlen;
+    len  -= dlen;
+  }
+}
+
+static void
+dvb_cat_entry(void *_mt, uint16_t caid, uint32_t prov, uint16_t pid)
+{
+  mpegts_table_t *mt = _mt;
+  tvhdebug(mt->mt_subsys, "%s:  caid %04X (%d) pid %04X (%d)",
+           mt->mt_name, (uint16_t)caid, (uint16_t)caid, pid, pid);
+}
+
 int
 dvb_cat_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
   int r, sect, last, ver;
-  uint8_t dtag, dlen;
-  uint16_t pid; 
-  uintptr_t caid;
   mpegts_mux_t             *mm  = mt->mt_mux;
   mpegts_psi_table_state_t *st  = NULL;
 
@@ -1062,27 +1110,8 @@ dvb_cat_callback
   /* Send CAT data for descramblers */
   descrambler_cat_data(mm, ptr, len);
 
-  while(len > 2) {
-    dtag = *ptr++;
-    dlen = *ptr++;
-    len -= 2;
-
-    switch(dtag) {
-      case DVB_DESC_CA:
-        if (len >= 4 && dlen >= 4) {
-          caid = extract_2byte(ptr);
-          pid  = extract_pid(ptr + 2);
-          tvhdebug(mt->mt_subsys, "%s:  caid %04X (%d) pid %04X (%d)",
-                   mt->mt_name, (uint16_t)caid, (uint16_t)caid, pid, pid);
-        }
-        break;
-      default:
-        break;
-    }
-
-    ptr += dlen;
-    len -= dlen;
-  }
+  /* show CAT data */
+  dvb_cat_decode(ptr, len, dvb_cat_entry, mt);
 
   /* Finish */
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);

@@ -1532,8 +1532,9 @@ descrambler_flush_tables( mpegts_mux_t *mux )
 }
 
 static void descrambler_cat_entry
-  ( mpegts_mux_t *mux, uint16_t caid, uint32_t prov, uint16_t pid )
+  ( void *_mux, uint16_t caid, uint32_t prov, uint16_t pid )
 {
+  mpegts_mux_t *mux = _mux;
   descrambler_emm_t *emm;
   caclient_caid_update(mux, caid, prov, pid, 1);
   pthread_mutex_lock(&mux->mm_descrambler_lock);
@@ -1586,12 +1587,6 @@ void
 descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
 {
   descrambler_emm_t *emm;
-  uint8_t dtag, dlen, dlen2;
-  uint16_t caid = 0, pid = 0;
-  uint32_t prov;
-  const uint8_t *data2;
-  int len2;
-  card_type_t ctype;
 
   tvhtrace(LS_DESCRAMBLER, "CAT data (len %d)", len);
   tvhlog_hexdump(LS_DESCRAMBLER, data, len);
@@ -1600,35 +1595,7 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
   TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link)
     emm->to_be_removed = 1;
   pthread_mutex_unlock(&mux->mm_descrambler_lock);
-  while (len > 2) {
-    dtag = *data++;
-    dlen = *data++;
-    len -= 2;
-    if (dtag != DVB_DESC_CA || len < 4 || dlen < 4)
-      goto next;
-    caid =  (data[0] << 8) | data[1];
-    pid  = ((data[2] << 8) | data[3]) & 0x1fff;
-    if (pid > 0) {
-      ctype = detect_card_type(caid);
-      descrambler_cat_entry(mux, caid, 0, pid);
-      if (ctype == CARD_SECA) {
-        dlen2 = dlen - 5;
-        data2 = data + 5;
-        len2  = len - 5;
-        while (dlen2 >= 4 && len2 >= 4) {
-          pid = ((data2[0] << 8) | data2[1]) & 0xfff;
-          prov = (data2[2] << 8) | data2[3];
-          descrambler_cat_entry(mux, caid, prov, pid);
-          data2 += 4;
-          len2 -= 4;
-          dlen2 -= 4;
-        }
-      }
-    }
-next:
-    data += dlen;
-    len  -= dlen;
-  }
+  dvb_cat_decode(data, len, descrambler_cat_entry, mux);
   descrambler_cat_clean(mux);
 }
 

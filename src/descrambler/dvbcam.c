@@ -666,6 +666,27 @@ typedef struct __cat_update {
   mpegts_apids_t to_close;
 } __cat_update_t;
 
+typedef struct __cat_entry {
+  mpegts_apids_t *pids;
+  mpegts_service_t *service;
+} __cat_entry_t;
+
+/*
+ *
+ */
+#if ENABLE_DDCI
+static void dvbcam_cat_entry
+  ( void *_aux, uint16_t caid, uint32_t prov, uint16_t pid )
+{
+  __cat_entry_t *aux = _aux;
+  if (!mpegts_pid_rexists(aux->pids, pid)) {
+    mpegts_pid_add(aux->pids, pid, 0);
+    tvhtrace(LS_DVBCAM, "%p: add EMM PID %d (%04X) for CAID %04X",
+                        aux->service, pid, pid, caid);
+  }
+}
+#endif
+
 /*
  *
  */
@@ -677,13 +698,8 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
   int i, services_count;
   dvbcam_active_service_t *as;
   mpegts_apids_t pids;
-  const uint8_t *data1;
-  int len1;
-  uint8_t dtag;
-  uint8_t dlen;
-  uint16_t caid;
-  uint16_t pid;
   mpegts_input_t *mi;
+  __cat_entry_t cat_aux;
 
   if (len <= 0)
     return;
@@ -708,24 +724,9 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
       mpegts_pid_init(&sp->to_open);
       mpegts_pid_init(&sp->to_close);
       mpegts_pid_init(&pids);
-      data1 = data;
-      len1  = len;
-      while (len1 > 2) {
-        dtag = *data1++;
-        dlen = *data1++;
-        len1 -= 2;
-        if (dtag == DVB_DESC_CA && len1 >= 4 && dlen >= 4) {
-          caid =  (data1[0] << 8) | data1[1];
-          pid  = ((data1[2] << 8) | data1[3]) & 0x1fff;
-          if (dvbcam_service_check_caid(as, caid) && pid != 0) {
-            tvhtrace(LS_DVBCAM, "%p: add EMM PID %d (%04X) for CAID %04X",
-                                sp->service, pid, pid, caid);
-            mpegts_pid_add(&pids, pid, 0);
-          }
-        }
-        data1 += dlen;
-        len1  -= dlen;
-      }
+      cat_aux.pids = &pids;
+      cat_aux.service = sp->service;
+      dvb_cat_decode(data, len, dvbcam_cat_entry, &cat_aux);
       mpegts_pid_compare(&pids, &as->cat_pids, &sp->to_open, &sp->to_close);
       mpegts_pid_copy(&as->cat_pids, &pids);
       mpegts_pid_done(&pids);

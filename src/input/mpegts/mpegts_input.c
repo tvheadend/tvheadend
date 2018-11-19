@@ -704,20 +704,59 @@ int mpegts_mps_weight(elementary_stream_t *st)
      return MPS_WEIGHT_ESOTHER + MIN(st->es_index, 49);
 }
 
+typedef struct __cat_pass_aux {
+  mpegts_input_t *mi;
+  mpegts_mux_t *mm;
+  service_t *service;
+} __cat_pass_aux_t;
+
+static void
+mpegts_input_cat_pass_entry
+  (void *_aux, uint16_t caid, uint32_t prov, uint16_t pid)
+{
+  __cat_pass_aux_t *aux = _aux;
+  elementary_stream_t *es;
+  caid_t *c;
+
+  tvhdebug(LS_TBL_BASE, "cat:  pass: caid %04X (%d) pid %04X (%d)",
+           (uint16_t)caid, (uint16_t)caid, pid, pid);
+  es = mpegts_input_open_service_pid(aux->mi, aux->mm, aux->service,
+                                     SCT_CAT, pid, MPS_WEIGHT_CAT, 1);
+  if (es) {
+    LIST_FOREACH(c, &es->es_caids, link) {
+      if (c->pid == pid) {
+        c->caid = caid;
+        c->delete_me = 0;
+        es->es_delete_me = 0;
+        break;
+      }
+    }
+    if (c == NULL) {
+      c = malloc(sizeof(caid_t));
+      c->caid = caid;
+      c->providerid = 0;
+      c->use = 1;
+      c->pid = pid;
+      c->delete_me = 0;
+      c->filter = 0;
+      LIST_INSERT_HEAD(&es->es_caids, c, link);
+      es->es_delete_me = 0;
+    }
+  }
+}
+
 static int
 mpegts_input_cat_pass_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
   int r, sect, last, ver;
-  uint8_t dtag, dlen;
-  uint16_t pid;
-  uintptr_t caid;
   mpegts_mux_t             *mm  = mt->mt_mux;
   mpegts_psi_table_state_t *st  = NULL;
   service_t                *s   = mt->mt_opaque;
   mpegts_input_t           *mi;
   elementary_stream_t      *es, *next;
   caid_t                   *c, *cn;
+  __cat_pass_aux_t aux;
 
   /* Start */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
@@ -742,50 +781,10 @@ mpegts_input_cat_pass_callback
       c->delete_me = 1;
   }
 
-  while(len > 2) {
-    dtag = *ptr++;
-    dlen = *ptr++;
-    len -= 2;
-
-    switch(dtag) {
-      case DVB_DESC_CA:
-        if (len >= 4 && dlen >= 4 && mm->mm_active) {
-          caid = ( ptr[0]         << 8) | ptr[1];
-          pid  = ((ptr[2] & 0x1f) << 8) | ptr[3];
-          tvhdebug(LS_TBL_BASE, "cat:  pass: caid %04X (%d) pid %04X (%d)",
-                   (uint16_t)caid, (uint16_t)caid, pid, pid);
-          es = mpegts_input_open_service_pid(mi, mm, s, SCT_CAT, pid,
-                                             MPS_WEIGHT_CAT, 1);
-          if (es) {
-            LIST_FOREACH(c, &es->es_caids, link) {
-              if (c->pid == pid) {
-                c->caid = caid;
-                c->delete_me = 0;
-                es->es_delete_me = 0;
-                break;
-              }
-            }
-            if (c == NULL) {
-              c = malloc(sizeof(caid_t));
-              c->caid = caid;
-              c->providerid = 0;
-              c->use = 1;
-              c->pid = pid;
-              c->delete_me = 0;
-              c->filter = 0;
-              LIST_INSERT_HEAD(&es->es_caids, c, link);
-              es->es_delete_me = 0;
-            }
-          }
-        }
-        break;
-      default:
-        break;
-    }
-
-    ptr += dlen;
-    len -= dlen;
-  }
+  aux.mi = mi;
+  aux.mm = mm;
+  aux.service = s;
+  dvb_cat_decode(ptr, len, mpegts_input_cat_pass_entry, &aux);
 
   for (es = TAILQ_FIRST(&s->s_components.set_all); es != NULL; es = next) {
     next = TAILQ_NEXT(es, es_link);

@@ -1065,6 +1065,10 @@ void mpegts_table_consistency_check(mpegts_mux_t *mm);
 
 void dvb_bat_destroy(struct mpegts_table *mt);
 
+void dvb_cat_decode( const uint8_t *data, int len,
+                     void (*add_emm)(void *aux, uint16_t caid, uint32_t prov, uint16_t pid),
+                     void *aux );
+
 int dvb_pat_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int dvb_cat_callback
