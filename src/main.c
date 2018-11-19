@@ -89,7 +89,9 @@
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
+#endif
 
 pthread_t main_tid;
 
@@ -1162,10 +1164,13 @@ main(int argc, char **argv)
   sigprocmask(SIG_BLOCK, &set, NULL);
   trap_init(argv[0]);
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   /* SSL library init */
   OPENSSL_config(NULL);
   SSL_load_error_strings();
   SSL_library_init();
+#endif
+
   /* Rand seed */
   randseed.thread_id = (void *)main_tid;
   gettimeofday(&randseed.tv, NULL);
@@ -1368,8 +1373,11 @@ main(int argc, char **argv)
   if(opt_fork)
     unlink(opt_pidpath);
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   /* OpenSSL - welcome to the "cleanup" hell */
+#ifndef OPENSSL_NO_ENGINE
   ENGINE_cleanup();
+#endif
   RAND_cleanup();
   CRYPTO_cleanup_all_ex_data();
   EVP_cleanup();
@@ -1383,6 +1391,7 @@ main(int argc, char **argv)
   sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 #endif
   /* end of OpenSSL cleanup code */
+#endif
 
 #if ENABLE_DBUS_1
   extern void dbus_shutdown(void);
