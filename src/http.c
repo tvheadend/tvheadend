@@ -1097,33 +1097,32 @@ int
 http_access_verify(http_connection_t *hc, int mask)
 {
   struct http_verify_structure v;
-  int res = -1;
 
-  if (hc->hc_access == NULL) {
-    http_access_verify_ticket(hc);
-    if (hc->hc_access)
-      res = access_verify2(hc->hc_access, mask);
-    if (res) {
-      http_access_verify_auth(hc);
-      if (hc->hc_access)
-        res = access_verify2(hc->hc_access, mask);
-    }
+  /* quick path */
+  if (hc->hc_access)
+    return access_verify2(hc->hc_access, mask);
+
+  /* tickets */
+  http_access_verify_ticket(hc);
+  if (hc->hc_access && !access_verify2(hc->hc_access, mask))
+    return 0;
+
+  http_access_verify_auth(hc);
+  if (hc->hc_access && !access_verify2(hc->hc_access, mask))
+    return 0;
+
+  access_destroy(hc->hc_access);
+  if (http_verify_prepare(hc, &v)) {
+    hc->hc_access = NULL;
+    return -1;
   }
+  hc->hc_access = access_get(hc->hc_peer, hc->hc_username,
+                             http_verify_callback, &v);
+  http_verify_free(&v);
+  if (hc->hc_access)
+    return access_verify2(hc->hc_access, mask);
 
-  if (res) {
-    access_destroy(hc->hc_access);
-    if (http_verify_prepare(hc, &v)) {
-      hc->hc_access = NULL;
-      return -1;
-    }
-    hc->hc_access = access_get(hc->hc_peer, hc->hc_username,
-                               http_verify_callback, &v);
-    http_verify_free(&v);
-    if (hc->hc_access)
-      res = access_verify2(hc->hc_access, mask);
-  }
-
-  return res;
+  return -1;
 }
 
 /**
@@ -1133,18 +1132,10 @@ int
 http_access_verify_channel(http_connection_t *hc, int mask,
                            struct channel *ch)
 {
-  int res = 0;
+  if (http_access_verify(hc, mask))
+    return -1;
 
-  if (hc->hc_access == NULL) {
-    res = http_access_verify(hc, mask);
-    if (res)
-      return res;
-  }
-
-  if (!channel_access(ch, hc->hc_access, 0))
-    res = -1;
-
-  return res;
+  return channel_access(ch, hc->hc_access, 0) ? 0 : -1;
 }
 
 /**
