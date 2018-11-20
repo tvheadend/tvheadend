@@ -74,7 +74,7 @@ api_epg_add_channel ( htsmsg_t *m, channel_t *ch, const char *blank )
 static htsmsg_t *
 api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const char **blank )
 {
-  const char *s;
+  const char *s, *blank2 = NULL;
   char buf[64];
   channel_t     *ch = eb->channel;
   htsmsg_t *m, *m2;
@@ -85,6 +85,8 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
 
   if (!ch) return NULL;
 
+  if (blank == NULL)
+    blank = &blank2;
   if (*blank == NULL)
     *blank = tvh_gettext_lang(lang, channel_blank_name);
 
