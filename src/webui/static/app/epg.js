@@ -1166,10 +1166,11 @@ tvheadend.epg = function() {
     epgFilterTitle.on('valid', function(c) {
         var value = c.getValue();
 
-        if (value.length < 1)
-            value = null;
-
-        if (epgStore.baseParams.title !== value) {
+        if (value.length < 1) {
+            delete epgStore.baseParams.title;
+            epgView.reset();
+        }
+        else if (epgStore.baseParams.title !== value) {
             epgStore.baseParams.title = value;
             epgView.reset();
         }
