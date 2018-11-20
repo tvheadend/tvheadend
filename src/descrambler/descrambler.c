@@ -29,7 +29,7 @@
 #include "dvbcam.h"
 #include "streaming.h"
 
-#if 0
+#if 1
 #define DEBUG2 1
 #define debug2(fmt, ...) tvhtrace(LS_DESCRAMBLER, fmt, ##__VA_ARGS__)
 #else
@@ -1026,7 +1026,7 @@ descrambler_descramble ( service_t *t,
     tk = (tsb[3] & 0x80) != 0 ? key_find_struct(dr, tsb, t) : dr->dr_key_last;
   }  
 
-  if (dr->dr_queue_total == 0 && (tsb[3] & 0x80) == 0) {
+  if (dr->dr_queue_total == 0 && (tsb[3] & 0x80) != 0) {
     if (tk && tk->key_csa.csa_type != DESCRAMBLER_NONE) {
       debug2("%p: descramble0 %d, %s[%d]", dr, len, keystr(tsb), extractpid(tsb));
       tk->key_csa.csa_descramble(&tk->key_csa, (mpegts_service_t *)t, tsb, len);
