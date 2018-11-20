@@ -748,7 +748,7 @@ cont:
     even = empty;
   }
   if (odd && memcmp(empty, odd, tk->key_csa.csa_keylen)) {
-    j++;
+    //j++;
     memcpy(tk->key_data[1], odd, tk->key_csa.csa_keylen);
     tk->key_pid = pid;
     changed |= 2;
