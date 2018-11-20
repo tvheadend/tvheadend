@@ -4480,7 +4480,8 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Broadcast."),
       .set      = dvr_entry_class_broadcast_set,
       .get      = dvr_entry_class_broadcast_get,
-      .opts     = PO_RDONLY | PO_NOUI,
+      /* Has to be available to UI for "show duplicate" from dvr upcoming */
+      .opts     = PO_RDONLY | PO_HIDDEN,
     },
     {
       .type     = PT_STR,
