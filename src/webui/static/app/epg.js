@@ -3,6 +3,84 @@ insertContentGroupClearOption = function(scope, records, options) {
     scope.insert(0,new placeholder({val: _('(Clear filter)'), key: '-1'}));
 };
 
+epgDetailsfcn = function(grid, rec, act, row) {
+    new tvheadend.epgDetails(grid, row);
+};
+
+// Each column model needs their own copy
+// since it gets explicitly detstroyed.
+var getEPGEventDetails = function() {
+    var ra = new Ext.ux.grid.RowActions({
+        id: 'details',
+        header: _('Details'),
+        tooltip: _('Details'),
+        width: 67,
+        dataIndex: 'actions',
+        callbacks: {
+            'recording':      epgDetailsfcn,
+            'recordingError': epgDetailsfcn,
+            'scheduled':      epgDetailsfcn,
+            'completed':      epgDetailsfcn,
+            'completedError': epgDetailsfcn
+        },
+        actions: [
+            {
+                iconCls: 'broadcast_details',
+                qtip: _('Broadcast details'),
+                cb: epgDetailsfcn
+            },
+            {
+                iconIndex: 'dvrState'
+            }
+        ]
+    });
+    // RowActions do not have a destroy function which means when the
+    // ColumnModel is destroyed (such as in a dialog box), then we get
+    // an exception.  So define our own null destroy function.
+    ra.destroy=function() {}
+    return ra;
+}
+
+tvheadend.epgCometUpdate = function(m, epgStore) {
+    if ('delete' in m)
+        Ext.each(m['delete'], function(d) {
+            var r = epgStore.getById(d);
+            if (r)
+              epgStore.remove(r);
+        });
+    if (m.update || m.dvr_update || m.dvr_delete) {
+        var a = m.update || m.dvr_update || m.dvr_delete;
+        if (m.update && m.dvr_update)
+            var a = m.update.concat(m.dvr_update);
+        if (m.update || m.dvr_update)
+            a = a.concat(m.dvr_delete);
+        var ids = [];
+        Ext.each(a, function (id) {
+            var r = epgStore.getById(id);
+            if (r)
+              ids.push(r.id);
+        });
+        if (ids) {
+            Ext.Ajax.request({
+                url: 'api/epg/events/load',
+                params: {
+                    eventId: Ext.encode(ids)
+                },
+                success: function(d) {
+                    d = json_decode(d);
+                    Ext.each(d, function(jd) {
+                        tvheadend.replace_entry(epgStore.getById(jd.eventId), jd);
+                    });
+                },
+                failure: function(response, options) {
+                    Ext.MessageBox.alert(_('EPG Update'), response.statusText);
+                }
+            });
+        }
+    }
+};
+
+
 tvheadend.ContentGroupStore = tvheadend.idnode_get_enum({
     url: 'api/epg/content_type/list',
     listeners: {
@@ -346,6 +424,19 @@ tvheadend.epgDetails = function(grid, index) {
               tooltip: _('Create an automatic recording rule to record all future programs that match the current query.'),
               text: event.serieslinkUri ? _("Record series") : _("Autorec")
           }));
+
+          var eventId = event.eventId;
+          buttons.push(new Ext.Toolbar.Button({
+              handler: function() { epgAlternativeShowingsDialog(eventId, true) },
+              iconCls: 'duprec',
+              tooltip: _('Find alternative showings for the DVR entry.'),
+          }));
+          buttons.push(new Ext.Toolbar.Button({
+              handler: function() { epgAlternativeShowingsDialog(eventId, false) },
+              iconCls: 'epgrelated',
+              tooltip: _('Find related showings for the DVR entry.'),
+          }));
+
           buttons.push(new Ext.Button({
               id: previousButtonId,
               handler: previousEvent,
@@ -371,8 +462,8 @@ tvheadend.epgDetails = function(grid, index) {
     }                             //getDialogButtons
 
     var current_index = index;
-    var event = grid.getStore().getAt(index).data;
     var store = grid.getStore();
+    var event = store.getAt(index).data;
     var content = getDialogContent(event);
     var buttons = getDialogButtons();
     var windowHeight = Ext.getBody().getViewSize().height - 150;
@@ -494,39 +585,12 @@ tvheadend.epg = function() {
     var lookup = '<span class="x-linked">&nbsp;</span>';
     var epgChannelCurrentIndex = 0;
 
-    var detailsfcn = function(grid, rec, act, row) {
-        new tvheadend.epgDetails(grid, row);
-    };
     var watchfcn = function(grid, rec, act, row) {
         var item = grid.getStore().getAt(row);
         new tvheadend.VideoPlayer(item.data.channelUuid);
     };
 
-    var eventdetails = new Ext.ux.grid.RowActions({
-        id: 'details',
-        header: _('Details'),
-        tooltip: _('Details'),
-        width: 67,
-        dataIndex: 'actions',
-        callbacks: {
-            'recording':      detailsfcn,
-            'recordingError': detailsfcn,
-            'scheduled':      detailsfcn,
-            'completed':      detailsfcn,
-            'completedError': detailsfcn
-        },
-        actions: [
-            {
-                iconCls: 'broadcast_details',
-                qtip: _('Broadcast details'),
-                cb: detailsfcn
-            },
-            {
-                iconIndex: 'dvrState'
-            }
-        ]
-    });
-
+    var eventdetails = getEPGEventDetails();
     var eventactions = new Ext.ux.grid.RowActions({
         id: 'eventactions',
         header: _('Actions'),
@@ -1304,42 +1368,7 @@ tvheadend.epg = function() {
     tvheadend.comet.on('epg', function(m) {
         if (!panel.isVisible())
             return;
-        if ('delete' in m)
-            Ext.each(m['delete'], function(d) {
-                var r = epgStore.getById(d);
-                if (r)
-                  epgStore.remove(r);
-            });
-        if (m.update || m.dvr_update || m.dvr_delete) {
-            var a = m.update || m.dvr_update || m.dvr_delete;
-            if (m.update && m.dvr_update)
-                var a = m.update.concat(m.dvr_update);
-            if (m.update || m.dvr_update)
-                a = a.concat(m.dvr_delete);
-            var ids = [];
-            Ext.each(a, function (id) {
-                var r = epgStore.getById(id);
-                if (r)
-                  ids.push(r.id);
-            });
-            if (ids) {
-                Ext.Ajax.request({
-                    url: 'api/epg/events/load',
-                    params: {
-                        eventId: Ext.encode(ids)
-                    },
-                    success: function(d) {
-                        d = json_decode(d);
-                        Ext.each(d, function(jd) {
-                            tvheadend.replace_entry(epgStore.getById(jd.eventId), jd);
-                        });
-                    },
-                    failure: function(response, options) {
-                        Ext.MessageBox.alert(_('EPG Update'), response.statusText);
-                    }
-                });
-            }
-        }
+        tvheadend.epgCometUpdate(m, epgStore);
     });
 
     // Always reload the store when the tab is activated

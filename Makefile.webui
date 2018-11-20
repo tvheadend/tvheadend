@@ -150,6 +150,7 @@ JAVASCRIPT += $(ROOTPATH)/app/timeshift.js
 endif
 JAVASCRIPT += $(ROOTPATH)/app/chconf.js
 JAVASCRIPT += $(ROOTPATH)/app/epg.js
+JAVASCRIPT += $(ROOTPATH)/app/epgevent.js
 JAVASCRIPT += $(ROOTPATH)/app/dvr.js
 JAVASCRIPT += $(ROOTPATH)/app/epggrab.js
 JAVASCRIPT += $(ROOTPATH)/app/config.js

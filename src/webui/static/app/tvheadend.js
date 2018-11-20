@@ -277,6 +277,24 @@ tvheadend.getContentTypeIcons = function(rec, style) {
     tvheadend.applyHighResIconPath(tvheadend.uniqueArray(ret_minor)).join("") + '</span>';
 }
 
+tvheadend.renderCustomDate = function(value, meta, record) {
+    if (value) {
+        var dt = new Date(value);
+        return tvheadend.toCustomDate(dt,tvheadend.date_mask);
+    }
+    return "";
+}
+
+tvheadend.renderExtraText = function(value, meta, record) {
+    value = record.data.subtitle;
+    if (!value) {
+        value = record.data.summary;
+        if (!value)
+            value = record.data.description;
+    }
+  return value;
+}
+
 tvheadend.displayCategoryIcon = function(value, meta, record, ri, ci, store) {
   if (value == null)
     return '';
