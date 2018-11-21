@@ -159,9 +159,10 @@ tvheadend.dvrDetails = function(grid, index) {
         var comboGetInfo = new Ext.form.ComboBox({
             store: new Ext.data.ArrayStore({
                 data: [
-                  [1, 'Find info from IMDB', 'imdb.png'],
-                  [2, 'Find info from TheTVDB', 'thetvdb.png'],
-                  [3, 'Find info from FilmAffinity', 'filmaffinity.png'],
+                  [1, 'Query IMDB', 'imdb.png'],
+                  [2, 'Query TheTVDB', 'thetvdb.png'],
+                  [3, 'Query FilmAffinity', 'filmaffinity.png'],
+                  [4, 'Query CSFD', 'csfd.png'],
                 ],
                 id: 0,
                 fields: ['value', 'text', 'url']
