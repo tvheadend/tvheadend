@@ -323,6 +323,7 @@ tvheadend.IdNodeField = function(conf)
             header: this.text,
             editor: this.editor({create: false}),
             renderer: cfg.renderer ? cfg.renderer(this.store) : this.renderer(this.store),
+            groupRenderer: cfg.groupRenderer ? cfg.groupRenderer(this.store) : this.renderer(this.store),
             editable: !this.rdonly,
             hidden: this.get_hidden(uilevel),
             filter: {
