@@ -627,7 +627,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
               'sched_status,errors,data_errors,config_name,owner,creator,comment,genre',
         columns: {
             disp_title: {
-                renderer: tvheadend.displayWithYearAndDuplicateRenderer()
+                renderer: tvheadend.displayWithYearAndDuplicateRenderer(),
+                groupRenderer: tvheadend.displayWithoutYearRenderer(),
             },
             disp_extratext: {
                 renderer: tvheadend.displayWithDuplicateRenderer()
@@ -938,6 +939,7 @@ tvheadend.dvr_failed = function(panel, index) {
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
+                groupRenderer: tvheadend.displayWithoutYearRenderer(),
             },
             channel: {
                 renderer: tvheadend.dvrChannelRenderer(),
@@ -1016,6 +1018,7 @@ tvheadend.dvr_removed = function(panel, index) {
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
+                groupRenderer: tvheadend.displayWithoutYearRenderer(),
             },
             channel: {
                 renderer: tvheadend.dvrChannelRenderer(),
