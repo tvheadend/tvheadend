@@ -457,6 +457,14 @@ tvheadend.displayWithYearRenderer = function(v, meta, rec) {
     }
 }
 
+tvheadend.displayWithoutYearRenderer = function(v, meta, rec) {
+    return function() {
+        return function(v, meta, rec) {
+            return v;
+        }
+    }
+}
+
 tvheadend.dvrButtonFcn = function(store, select, _url, q) {
     var r = select.getSelections();
     if (r && r.length > 0) {
@@ -810,6 +818,7 @@ tvheadend.dvr_finished = function(panel, index) {
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
+                groupRenderer: tvheadend.displayWithoutYearRenderer(),
             },
             channel: {
                 renderer: tvheadend.dvrChannelRenderer(),
