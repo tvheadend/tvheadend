@@ -1348,7 +1348,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       tvhinfo(LS_TRANSCODE, "%04X: Using preset %s", shortid(t), t->t_props.tp_vcodec_preset);
 
       // All modern devices should support "high" profile
-      av_dict_set(&opts, "profile", "high", 0);
+      //av_dict_set(&opts, "profile", "high", 0);
 
       if (t->t_props.tp_vbitrate < 64) {
         // encode with specified quality and optimize for low latency
