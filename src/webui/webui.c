@@ -177,7 +177,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_root2(http_connection_t *hc, const char *remain, void *opaque)
 {
-  if (!tvheadend_webroot) return 1;
+  if (!tvheadend_webroot) return HTTP_STATUS_NOT_FOUND;
   http_redirect(hc, "/", &hc->hc_req_args, 0);
   return 0;
 }
