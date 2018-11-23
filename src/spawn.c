@@ -302,7 +302,9 @@ spawn_reaper(void)
   LIST_FOREACH(s, &spawns, link)
     if (s->killed && s->killed < mclk()) {
       /* kill the whole process group */
-      kill(-(s->pid), SIGKILL);
+      r = kill(-(s->pid), SIGKILL);
+      if (r && errno == EPERM)
+        tvherror(LS_SPAWN, "Unable to kill task pid %d (not enough permissions)", s->pid);
     }
   pthread_mutex_unlock(&spawn_mutex);
 }
@@ -328,8 +330,11 @@ spawn_kill(pid_t pid, int sig, int timeout)
         s->killed = mclk() + sec2mono(MINMAX(timeout, 5, 3600));
       /* kill the whole process group */
       r = kill(-pid, sig);
-      if (r < 0)
+      if (r < 0) {
+        if (errno == EPERM)
+          tvherror(LS_SPAWN, "Unable to kill task pid %d (not enough permissions)", s->pid);
         r = -errno;
+      }
     }
     pthread_mutex_unlock(&spawn_mutex);
   }
