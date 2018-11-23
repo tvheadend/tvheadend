@@ -780,7 +780,7 @@ const idclass_t tvhlog_conf_class = {
       .name   = N_("Debug subsystems"),
       .desc   = N_("Enter comma-separated list of subsystems you want "
                    "debugging output for (e.g. "
-                   "linuxdvb,subscriptions,mpegts)."),
+                   "linuxdvb,subscription,mpegts)."),
       .get    = tvhlog_class_debugsubs_get,
       .set    = tvhlog_class_debugsubs_set,
       .opts   = PO_MULTILINE,
@@ -791,7 +791,7 @@ const idclass_t tvhlog_conf_class = {
       .id     = "tracesubs",
       .name   = N_("Trace subsystems"),
       .desc   = N_("Enter comma-separated list of subsystems you want "
-                   "to get traces for (e.g linuxdvb,subscriptions,mpegts)."),
+                   "to get traces for (e.g linuxdvb,subscription,mpegts)."),
       .get    = tvhlog_class_tracesubs_get,
       .set    = tvhlog_class_tracesubs_set,
 #if !ENABLE_TRACE
