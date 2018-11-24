@@ -2002,19 +2002,3 @@ channel_has_correct_service_filter(const channel_t *ch, int svf)
   }
   return 0;
 }
-
-int channel_multi_services_active(const channel_t *ch)
-{
-  const idnode_list_mapping_t *ilm;
-  const service_t *service;
-  int cnt = 0;
-  if (!ch) return 0;
-  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
-    service = (const service_t*)ilm->ilm_in1;
-    if (service->s_enabled) {
-      if (++cnt > 1)
-        return 1;
-    }
-  }
-  return 0;
-}
