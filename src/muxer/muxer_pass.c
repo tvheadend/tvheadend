@@ -800,5 +800,8 @@ pass_muxer_create(const muxer_config_t *m_cfg,
   dvb_table_parse_init(&pm->pm_eit, "pass-eit", LS_TBL_PASS, DVB_EIT_PID,
                        0, 0, pm);
 
+  if (pm->m_config.u.pass.m_rewrite_sid > 0)
+    pm->m_caps |= MC_CAP_ANOTHER_SERVICE;
+
   return (muxer_t *)pm;
 }

@@ -450,6 +450,9 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       break;
 
     case SMT_STOP:
+      if((mux->m_caps & MC_CAP_ANOTHER_SERVICE) != 0 &&
+         channel_multi_services_active(s->ths_channel))
+        break;
       if(sm->sm_code != SM_CODE_SOURCE_RECONFIGURED) {
         tvhwarn(LS_WEBUI,  "Stop streaming %s, %s", hc->hc_url_orig, 
                 streaming_code2txt(sm->sm_code));

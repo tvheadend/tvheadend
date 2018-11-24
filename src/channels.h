@@ -221,5 +221,6 @@ channel_t **channel_get_sorted_list_for_tag
 channel_tag_t **channel_tag_get_sorted_list
   ( const char *sort_type, int *_count );
 int channel_has_correct_service_filter(const channel_t *ch, int svf);
+int channel_multi_services_active(const channel_t *ch);
 
 #endif /* CHANNELS_H */

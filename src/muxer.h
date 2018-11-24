@@ -24,6 +24,8 @@
 
 #define MC_IS_EOS_ERROR(e) ((e) == EPIPE || (e) == ECONNRESET)
 
+#define MC_CAP_ANOTHER_SERVICE (1<<0)	/* I can stream another service (SID must match!) */
+
 typedef enum {
   MC_UNKNOWN     = 0,
   MC_MATROSKA    = 1,
@@ -120,6 +122,7 @@ typedef struct muxer {
 
   int                    m_eos;        /* End of stream */
   int                    m_errors;     /* Number of errors */
+  int                    m_caps;       /* Capabilities */
   muxer_config_t         m_config;     /* general configuration */
   muxer_hints_t         *m_hints;      /* other hints */
 } muxer_t;
