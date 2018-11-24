@@ -303,9 +303,13 @@ service_remove_subscriber(service_t *t, th_subscription_t *s,
                           int reason)
 {
   lock_assert(&global_lock);
+  th_subscription_t *s_next;
 
   if(s == NULL) {
-    while((s = LIST_FIRST(&t->s_subscriptions)) != NULL) {
+    for (s = LIST_FIRST(&t->s_subscriptions); s; s = s_next) {
+      s_next = LIST_NEXT(s, ths_service_link);
+      if (reason == SM_CODE_SVC_NOT_ENABLED && s->ths_channel == NULL)
+        continue; /* not valid for raw service subscriptions */
       subscription_unlink_service(s, reason);
     }
   } else {
