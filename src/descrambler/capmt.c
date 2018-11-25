@@ -1998,7 +1998,7 @@ capmt_thread(void *aux)
       d = 60;
     }
 
-    tvhinfo(LS_CAPMT, "%s: Automatic reconnection attempt in in %d seconds", capmt_name(capmt), d);
+    tvhinfo(LS_CAPMT, "%s: Automatic reconnection attempt in %d seconds", capmt_name(capmt), d);
 
     mono = mclk() + sec2mono(d);
     do {
