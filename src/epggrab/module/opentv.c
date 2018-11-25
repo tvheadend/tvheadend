@@ -602,43 +602,44 @@ done:
     sta->os_map->om_first = 0; /* valid data mark */
     tvhtrace(mt->mt_subsys, "%s: pid %d complete remain %d",
              mt->mt_name, mt->mt_pid, sta->os_refcount-1);
+
+    /* wait for more data, eat whole time window */
+    if (mt->mt_table == OPENTV_TITLE_BASE) {
+      if (sta->os_titles_start + sec2mono(mod->titles_time) >= mclk())
+        return 0;
+    } else {
+      if (sta->os_summaries_start + sec2mono(mod->summaries_time) < mclk())
+        return 0;
+    }
   
     /* Last PID */
     if (sta->os_refcount == 1) {
-  
       if (mt->mt_table == OPENTV_TITLE_BASE) {
-        if (sta->os_titles_start + sec2mono(mod->titles_time) < mclk()) {
-          int *t;
-          tvhinfo(mt->mt_subsys, "%s: titles complete", mt->mt_name);
+        int *t;
+        tvhinfo(mt->mt_subsys, "%s: titles complete", mt->mt_name);
 
-          /* Summaries */
-          t = mod->summary;
-          while (*t) {
-            mpegts_table_t *mt2;
-            mt2 = mpegts_table_add(mt->mt_mux,
-                                   OPENTV_SUMMARY_BASE, OPENTV_TABLE_MASK,
-                                   opentv_table_callback, sta,
-                                   mod->id, LS_OPENTV, MT_CRC, *t++,
-                                   MPS_WEIGHT_EIT);
-            if (mt2) {
-              sta->os_refcount++;
-              mt2->mt_destroy    = opentv_status_destroy;
-            }
+        /* Install tables for summaries */
+        t = mod->summary;
+        while (*t) {
+          mpegts_table_t *mt2;
+          mt2 = mpegts_table_add(mt->mt_mux,
+                                 OPENTV_SUMMARY_BASE, OPENTV_TABLE_MASK,
+                                 opentv_table_callback, sta,
+                                 mod->id, LS_OPENTV, MT_CRC, *t++,
+                                 MPS_WEIGHT_EIT);
+          if (mt2) {
+            sta->os_refcount++;
+            mt2->mt_destroy = opentv_status_destroy;
           }
-          mpegts_table_destroy(mt);
-          sta->os_summaries_start = mclk();
         }
+        sta->os_summaries_start = mclk();
       } else {
-        if (sta->os_summaries_start + sec2mono(mod->summaries_time) < mclk()) {
-          tvhinfo(mt->mt_subsys, "%s: summaries complete", mt->mt_name);
-          mpegts_table_destroy(mt);
-          if (ota)
-            epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
-        }
+        tvhinfo(mt->mt_subsys, "%s: summaries complete", mt->mt_name);
+        if (ota)
+          epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
       }
-    } else {
-      mpegts_table_destroy(mt);
     }
+    mpegts_table_destroy(mt);
   }
 
   return 0;
@@ -691,7 +692,7 @@ opentv_bat_callback
       if (mt2) {
         if (!mt2->mt_destroy) {
           sta->os_refcount++;
-          mt2->mt_destroy    = opentv_status_destroy;
+          mt2->mt_destroy = opentv_status_destroy;
         }
       }
     }
