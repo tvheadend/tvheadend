@@ -1581,7 +1581,7 @@ satip_frontend_input_thread ( void *aux )
   int rtsp_flags, position, reply;
   uint32_t seq, unc;
   udp_multirecv_t um;
-  uint64_t u64, u64_2;
+  uint64_t u64, u64_2, last_data;
   long stream_id;
 
   /* If set - the thread will be cancelled */
@@ -1885,6 +1885,8 @@ new_tune:
   udp_rtp_packet_destroy_all(lfe);
   lfe->sf_skip_ts = MINMAX(lfe->sf_device->sd_skip_ts, 0, 200) * 188;
   
+  last_data = mclk();
+
   while ((reply || running) && !fatal) {
 
     nfds = tvhpoll_wait(efd, ev, 1, ms);
@@ -1924,6 +1926,13 @@ new_tune:
       changing = 0;
       if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
         reply = 1;
+      continue;
+    }
+
+    if (last_data + sec2mono(5) < mclk()) {
+      tvhwarn(LS_SATIP, "%s - no data received, restarting RTSP", buf);
+      satip_frontend_tuning_error(lfe, tr);
+      fatal = 1;
       continue;
     }
 
@@ -2046,6 +2055,7 @@ new_tune:
     if (ev[0].ptr == rtcp) {
       c = recv(rtcp->fd, b, sizeof(b), MSG_DONTWAIT);
       if (c > 0) {
+        last_data = mclk();
         pthread_mutex_lock(&lfe->sf_dvr_lock);
         if (lfe->sf_req == lfe->sf_req_thread)
           satip_frontend_decode_rtcp(lfe, buf, mmi, b, c);
@@ -2069,6 +2079,8 @@ new_tune:
       tvherror(LS_SATIP, "%s - multirecv error %d (%s)",
                buf, errno, strerror(errno));
       break;
+    } else {
+      last_data = mclk();
     }
 
     for (i = 0, unc = 0; i < tc; i++) {
