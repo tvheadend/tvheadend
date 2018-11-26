@@ -284,7 +284,7 @@ psip_complete_table(psip_status_t *ps, mpegts_table_t *mt)
  * Description routines
  * ***********************************************************************/
 
-/* Compare language codes */
+/* Compare eventid codes */
 static int _desc_cmp ( void *a, void *b )
 {
   return (int)(((psip_desc_t*)a)->pd_eventid) -
