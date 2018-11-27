@@ -714,7 +714,7 @@ mainloop(void)
     }
 
     /* Wait */
-    tvh_cond_timedwait(&gtimer_cond, &global_lock, (intptr_t )&ts);
+    tvh_cond_timedwait_ts(&gtimer_cond, &global_lock, &ts);
     tvh_mutex_unlock(&global_lock);
   }
 }

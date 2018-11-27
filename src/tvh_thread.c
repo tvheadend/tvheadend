@@ -255,10 +255,12 @@ tvh_cond_init
    */
   r = 0;
 #else
-  r = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
-  if (r) {
-    fprintf(stderr, "Unable to set monotonic clocks for conditions! (%d)", r);
-    abort();
+  if (monotonic) {
+    r = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+    if (r) {
+      fprintf(stderr, "Unable to set monotonic clocks for conditions! (%d)", r);
+      abort();
+    }
   }
 #endif
   return pthread_cond_init(&cond->cond, &attr);
