@@ -76,7 +76,7 @@ int tvh_thread_create
 int tvh_thread_kill(pthread_t thread, int sig);
 int tvh_thread_renice(int value);
 
-int tvh_mutex_init(tvh_mutex_t *restrict mutex, const pthread_mutexattr_t *restrict attr);
+int tvh_mutex_init(tvh_mutex_t *mutex, const pthread_mutexattr_t *attr);
 int tvh_mutex_destroy(tvh_mutex_t *mutex);
 int tvh__mutex_lock(tvh_mutex_t *mutex, const char *filename, int lineno);
 #define tvh_mutex_lock(_mutex)					\

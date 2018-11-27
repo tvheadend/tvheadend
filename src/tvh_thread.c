@@ -140,7 +140,7 @@ tvh_thread_renice(int value)
   return ret;
 }
 
-int tvh_mutex_init(tvh_mutex_t *restrict mutex, const pthread_mutexattr_t *restrict attr)
+int tvh_mutex_init(tvh_mutex_t *mutex, const pthread_mutexattr_t *attr)
 {
   memset(mutex, 0, sizeof(*mutex));
   return pthread_mutex_init(&mutex->mutex, attr);
