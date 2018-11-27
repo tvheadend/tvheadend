@@ -104,9 +104,9 @@ const idclass_t imagecache_class = {
     },
     {
       .type   = PT_U32,
-      .id     = "",
+      .id     = "expire",
       .name   = N_("Expire time"),
-      .desc   = N_("The time in hours after the cached URL will "
+      .desc   = N_("The time in days after the cached URL will "
                    "be removed. The time starts when the URL was "
                    "lastly requested. Zero means unlimited cache "
                    "(not recommended)."),
