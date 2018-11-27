@@ -434,6 +434,32 @@ access_ip_blocked(struct sockaddr_storage *src)
  *
  */
 static void
+access_dump_tags
+  (const char *prefix, char *buf, size_t buflen, size_t *_l, htsmsg_t *tags)
+{
+  size_t l = *_l;
+  if (tags) {
+    int first = 1;
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, tags) {
+      channel_tag_t *ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
+      if (ct) {
+        if (first)
+          tvh_strlcatf(buf, sizeof(buf), l, ", %s tags=", prefix);
+        tvh_strlcatf(buf, sizeof(buf), l, "%s'%s'", first ? "" : ",", ct->ct_name ?: "");
+        first = 0;
+      }
+    }
+  } else {
+    tvh_strlcatf(buf, sizeof(buf), l, ", %s tag=ANY", prefix);
+  }
+  *_l = l;
+}
+
+/*
+ *
+ */
+static void
 access_dump_a(access_t *a)
 {
   htsmsg_field_t *f;
@@ -501,33 +527,9 @@ access_dump_a(access_t *a)
                    (long long)a->aa_chrange[first+1]);
   }
 
-  if (a->aa_chtags_exclude) {
-    first = 1;
-    HTSMSG_FOREACH(f, a->aa_chtags_exclude) {
-      channel_tag_t *ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
-      if (ct) {
-        tvh_strlcatf(buf, sizeof(buf), l, "%s'%s'",
-                 first ? ", exclude tags=" : ",", ct->ct_name ?: "");
-        first = 0;
-      }
-    }
-  } else {
-    tvh_strlcatf(buf, sizeof(buf), l, ", exclude tag=ANY");
-  }
 
-  if (a->aa_chtags) {
-    first = 1;
-    HTSMSG_FOREACH(f, a->aa_chtags) {
-      channel_tag_t *ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
-      if (ct) {
-        tvh_strlcatf(buf, sizeof(buf), l, "%s'%s'",
-                 first ? ", tags=" : ",", ct->ct_name ?: "");
-        first = 0;
-      }
-    }
-  } else {
-    tvh_strlcatf(buf, sizeof(buf), l, ", tag=ANY");
-  }
+  access_dump_tags("exclude ", buf, sizeof(buf), &l, a->aa_chtags_exclude);
+  access_dump_tags("", buf, sizeof(buf), &l, a->aa_chtags);
 
   tvhtrace(LS_ACCESS, "%s", buf);
 }
@@ -630,18 +632,20 @@ access_update(access_t *a, access_entry_t *ae)
     if (LIST_EMPTY(&ae->ae_chtags)) {
       idnode_list_destroy(&ae->ae_chtags, ae);
     } else {
-      htsmsg_t **lst;
+      htsmsg_t **lst, *lst2;
       LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
         channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in2;
         if(ct && ct->ct_name[0] != '\0') {
           const char *ct_uuid = idnode_uuid_as_str(&ct->ct_id, ubuf);
           if (ae->ae_chtags_exclude) {
             lst = &a->aa_chtags_exclude;
+            lst2 = a->aa_chtags;
           } else {
             lst = &a->aa_chtags;
-            /* adding a tag down the chain removes it from exclude list */
-            htsmsg_remove_string_from_list(a->aa_chtags_exclude, ct_uuid);
+            lst2 = a->aa_chtags_exclude;
           }
+          /* remove the tag from the accepted or exclude list */
+          htsmsg_remove_string_from_list(lst2, ct_uuid);
           if (*lst == NULL)
             *lst = htsmsg_create_list();
           htsmsg_add_str_exclusive(*lst, ct_uuid);
