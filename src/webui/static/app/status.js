@@ -106,7 +106,7 @@ tvheadend.status_subs = function(panel, index)
             {
                 width: 80,
                 id: 'title',
-                header: _("Title0"),
+                header: _("Title"),
                 dataIndex: 'title',
                 sortable: true
             },
