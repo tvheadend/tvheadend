@@ -905,7 +905,9 @@ main(int argc, char **argv)
 #endif
 
     { 0, "tprofile", N_("Gather timing statistics for the code"), OPT_BOOL, &opt_tprofile },
+#if ENABLE_TRACE
     { 0, "thrdebug", N_("Thread debugging"), OPT_INT, &opt_thread_debug },
+#endif
 
   };
 

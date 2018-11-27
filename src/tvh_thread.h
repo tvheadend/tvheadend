@@ -23,6 +23,7 @@
 #include <pthread.h>
 
 #include "queue.h"
+#include "build.h"
 
 typedef struct {
   pthread_cond_t cond;
@@ -32,11 +33,13 @@ TAILQ_HEAD(tvh_mutex_queue, tvh_mutex);
 
 typedef struct tvh_mutex {
   pthread_mutex_t mutex;
+#if ENABLE_TRACE
   pthread_t thread;
   const char *filename;
   int lineno;
   int64_t tstamp;
   TAILQ_ENTRY(tvh_mutex) link;
+#endif
 } tvh_mutex_t;
 
 /*
@@ -63,7 +66,9 @@ lock_assert0(tvh_mutex_t *l, const char *file, int line)
  *
  */
 
+#if ENABLE_TRACE
 extern int tvh_thread_debug;
+#endif
 
 void tvh_thread_init(int debug_level);
 void tvh_thread_done(void);
@@ -78,6 +83,7 @@ int tvh_thread_renice(int value);
 
 int tvh_mutex_init(tvh_mutex_t *mutex, const pthread_mutexattr_t *attr);
 int tvh_mutex_destroy(tvh_mutex_t *mutex);
+#if ENABLE_TRACE
 int tvh__mutex_lock(tvh_mutex_t *mutex, const char *filename, int lineno);
 #define tvh_mutex_lock(_mutex)					\
  ({								\
@@ -99,6 +105,20 @@ static inline int tvh_mutex_unlock(tvh_mutex_t *mutex)
     return pthread_mutex_unlock(&mutex->mutex);
   return tvh__mutex_unlock(mutex);
 }
+#else
+static inline int tvh_mutex_lock(tvh_mutex_t *mutex)
+{
+  return pthread_mutex_lock(&mutex->mutex);
+}
+static inline int tvh_mutex_trylock(tvh_mutex_t *mutex)
+{
+  return pthread_mutex_trylock(&mutex->mutex);
+}
+static inline int tvh_mutex_unlock(tvh_mutex_t *mutex)
+{
+  return pthread_mutex_unlock(&mutex->mutex);
+}
+#endif
 int tvh_mutex_timedlock(tvh_mutex_t *mutex, int64_t usec);
 
 int tvh_cond_init(tvh_cond_t *cond, int monotonic);
