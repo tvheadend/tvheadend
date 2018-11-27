@@ -1350,7 +1350,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   mpegts_mux_t *mm = NULL;
 #endif
   const char *str;
-  int weight = 0;
+  int weight = 0, r;
 
   hc->hc_keep_alive = 0;
 
@@ -1364,6 +1364,8 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
 
   if ((str = http_arg_get(&hc->hc_req_args, "weight")))
     weight = atoi(str);
+
+  tvh_mutex_lock(&global_lock);
 
   if(!strcmp(components[0], "channelid")) {
     ch = channel_find_by_id(atoi(components[1]));
@@ -1383,16 +1385,19 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   if(ch != NULL) {
-    return http_stream_channel(hc, ch, weight);
+    r = http_stream_channel(hc, ch, weight);
   } else if(service != NULL) {
-    return http_stream_service(hc, service, weight);
+    r = http_stream_service(hc, service, weight);
 #if ENABLE_MPEGTS
   } else if(mm != NULL) {
-    return http_stream_mux(hc, mm, weight);
+    r = http_stream_mux(hc, mm, weight);
 #endif
   } else {
-    return HTTP_STATUS_BAD_REQUEST;
+    r = HTTP_STATUS_BAD_REQUEST;
   }
+
+  tvh_mutex_unlock(&global_lock);
+  return r;
 }
 
 /**

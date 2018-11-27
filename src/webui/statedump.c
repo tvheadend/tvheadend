@@ -162,7 +162,9 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 		 tvh_binshasum[18],
 		 tvh_binshasum[19]);
 
+  tvh_mutex_lock(&global_lock);
   dumpchannels(hq);
+  tvh_mutex_unlock(&global_lock);
 
   http_output_content(hc, "text/plain; charset=UTF-8");
   return 0;
