@@ -1522,6 +1522,8 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
   if (len < 4)
     return -EINVAL;
 
+  lfe->sf_last_activity_tstamp = mclk();
+
   if (b[1] == 0) {
 
     unc = 0;
@@ -1537,8 +1539,8 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
         mpegts_input_recv_packets(mmi, &lfe->sf_sbuf, 0, NULL);
       }
       pthread_mutex_unlock(&lfe->sf_dvr_lock);
-      lfe->sf_last_data_tstamp = mclk();
     }
+    lfe->sf_last_data_tstamp = mclk();
 
   } else if (b[1] == 1) {
 
@@ -1553,6 +1555,7 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
   }
+
   return 0;
 }
 
@@ -1581,7 +1584,7 @@ satip_frontend_input_thread ( void *aux )
   int rtsp_flags, position, reply;
   uint32_t seq, unc;
   udp_multirecv_t um;
-  uint64_t u64, u64_2, last_data;
+  uint64_t u64, u64_2;
   long stream_id;
 
   /* If set - the thread will be cancelled */
@@ -1885,7 +1888,7 @@ new_tune:
   udp_rtp_packet_destroy_all(lfe);
   lfe->sf_skip_ts = MINMAX(lfe->sf_device->sd_skip_ts, 0, 200) * 188;
   
-  last_data = mclk();
+  lfe->sf_last_activity_tstamp = mclk();
 
   while ((reply || running) && !fatal) {
 
@@ -1929,7 +1932,7 @@ new_tune:
       continue;
     }
 
-    if (last_data + sec2mono(5) < mclk()) {
+    if (lfe->sf_last_activity_tstamp + sec2mono(5) < mclk()) {
       tvhwarn(LS_SATIP, "%s - no data received, restarting RTSP", buf);
       satip_frontend_tuning_error(lfe, tr);
       fatal = 1;
@@ -2055,7 +2058,7 @@ new_tune:
     if (ev[0].ptr == rtcp) {
       c = recv(rtcp->fd, b, sizeof(b), MSG_DONTWAIT);
       if (c > 0) {
-        last_data = mclk();
+        lfe->sf_last_activity_tstamp = mclk();
         pthread_mutex_lock(&lfe->sf_dvr_lock);
         if (lfe->sf_req == lfe->sf_req_thread)
           satip_frontend_decode_rtcp(lfe, buf, mmi, b, c);
@@ -2080,7 +2083,7 @@ new_tune:
                buf, errno, strerror(errno));
       break;
     } else {
-      last_data = mclk();
+      lfe->sf_last_activity_tstamp = mclk();
     }
 
     for (i = 0, unc = 0; i < tc; i++) {

@@ -172,7 +172,8 @@ struct satip_frontend
   const char *               sf_display_name;
   uint32_t                   sf_seq;
   dvb_mux_t                 *sf_curmux;
-  time_t                     sf_last_data_tstamp;
+  int64_t                    sf_last_data_tstamp;
+  int64_t                    sf_last_activity_tstamp;
   int                        sf_netlimit;
   int                        sf_netgroup;
   int                        sf_netposhash;
