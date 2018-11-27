@@ -165,10 +165,21 @@ static void tvh_mutex_add_to_list(tvh_mutex_t *mutex, const char *filename, int 
   pthread_mutex_unlock(&thrwatch_mutex);
 }
 
+static void tvh_mutex_check_interval(tvh_mutex_t *mutex)
+{
+  if (tvh_thread_debug > 10000) {
+    int64_t ms = (tvh_thread_debug - 10000) * 1000;
+    int64_t diff = getfastmonoclock() - mutex->tstamp;
+    if (diff > ms)
+      printf("mutex %p at %s:%d took %lldms\n", mutex, mutex->filename, mutex->lineno, diff / (MONOCLOCK_RESOLUTION / 1000));
+  }
+}
+
 static void tvh_mutex_remove_from_list(tvh_mutex_t *mutex)
 {
   pthread_mutex_lock(&thrwatch_mutex);
   TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
+  tvh_mutex_check_interval(mutex);
   mutex->filename = NULL;
   mutex->lineno = 0;
   pthread_mutex_unlock(&thrwatch_mutex);
@@ -178,26 +189,23 @@ static void tvh_mutex_remove_from_list_keep_info(tvh_mutex_t *mutex)
 {
   pthread_mutex_lock(&thrwatch_mutex);
   TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
+  tvh_mutex_check_interval(mutex);
   pthread_mutex_unlock(&thrwatch_mutex);
 }
 
 int tvh__mutex_lock(tvh_mutex_t *mutex, const char *filename, int lineno)
 {
-  int r;
-  tvh_mutex_add_to_list(mutex, filename, lineno);
-  r = pthread_mutex_lock(&mutex->mutex);
-  if (r)
-    tvh_mutex_remove_from_list(mutex);
+  int r = pthread_mutex_lock(&mutex->mutex);
+  if (r == 0)
+    tvh_mutex_add_to_list(mutex, filename, lineno);
   return r;
 }
 
 int tvh__mutex_trylock(tvh_mutex_t *mutex, const char *filename, int lineno)
 {
-  int r;
-  tvh_mutex_add_to_list(mutex, filename, lineno);
-  r = pthread_mutex_trylock(&mutex->mutex);
-  if (r)
-    tvh_mutex_remove_from_list(mutex);
+  int r = pthread_mutex_trylock(&mutex->mutex);
+  if (r == 0)
+    tvh_mutex_add_to_list(mutex, filename, lineno);
   return r;
 }
 
