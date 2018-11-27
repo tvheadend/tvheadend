@@ -11,6 +11,7 @@ purge)
         HTS_HOME=`getent passwd $HTS_USER | cut -d':' -f6`
         rm -rf "${HTS_HOME}/.hts/tvheadend"
     fi
+    db_purge
    ;;
 esac
 
