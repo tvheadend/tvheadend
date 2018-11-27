@@ -46,6 +46,7 @@ tvheadend.status_subs = function(panel, index)
                 { name: 'hostname', sortType: stypei },
                 { name: 'username', sortType: stype },
                 { name: 'title', sortType: stype },
+                { name: 'client', sortType: stype },
                 { name: 'channel', sortType: stype },
                 { name: 'service', sortType: stype },
                 { name: 'profile', sortType: stype },
@@ -105,8 +106,15 @@ tvheadend.status_subs = function(panel, index)
             {
                 width: 80,
                 id: 'title',
-                header: _("Title"),
+                header: _("Title0"),
                 dataIndex: 'title',
+                sortable: true
+            },
+            {
+                width: 80,
+                id: 'client',
+                header: _("Client / User agent"),
+                dataIndex: 'client',
                 sortable: true
             },
             {

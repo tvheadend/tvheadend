@@ -1039,8 +1039,9 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
     htsmsg_add_str(m, "username", s->ths_username);
 
   if (s->ths_client != NULL)
-    htsmsg_add_str(m, "title", s->ths_client);
-  else if (s->ths_title != NULL)
+    htsmsg_add_str(m, "client", s->ths_client);
+
+  if (s->ths_title != NULL)
     htsmsg_add_str(m, "title", s->ths_title);
   
   if (s->ths_channel != NULL)
