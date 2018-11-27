@@ -93,3 +93,53 @@
    fun:__pthread_once_slow
    fun:av_codec_iterate
 }
+{
+   x265_api_get3
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:x265_api_get_160
+   fun:libx265_encode_init_csp
+   fun:register_all
+   fun:__pthread_once_slow
+   fun:register_all
+   fun:__pthread_once_slow
+   fun:libav_init
+   fun:main
+}
+{
+   x265_api_get4
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_dl_signal_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:x265_api_get_160
+   fun:libx265_encode_init_csp
+   fun:register_all
+   fun:__pthread_once_slow
+   fun:register_all
+}
+{
+   libjack1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib64/libjack.so.0.1.0
+   fun:_dl_init
+   obj:/usr/lib64/ld-2.25.so
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}
