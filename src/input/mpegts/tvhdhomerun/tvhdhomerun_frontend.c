@@ -438,6 +438,16 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
     case DVB_TYPE_CABLECARD:
       snprintf(channel_buf, sizeof(channel_buf), "%u", dmc->u.dmc_fe_cablecard.vchannel);
       break;
+    case DVB_TYPE_ATSC_T:
+      switch(dmc->dmc_fe_modulation) {
+        case DVB_MOD_VSB_8:
+          snprintf(channel_buf, sizeof(channel_buf), "auto6t:%u", dmc->dmc_fe_freq);
+          break;
+        default:
+          snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
+          break;
+      }
+      break;
     default:
       snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
       break;
