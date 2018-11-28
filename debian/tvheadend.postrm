@@ -15,16 +15,4 @@ purge)
    ;;
 esac
 
-if db_get tvheadend/admin_username; then
-    db_reset tvheadend/admin_username;
-fi
-
-if db_get tvheadend/admin_password; then
-    db_reset tvheadend/admin_password;
-fi
-
-if db_get tvheadend/last_notes; then
-    db_reset tvheadend/last_notes;
-fi
-
 exit 0
