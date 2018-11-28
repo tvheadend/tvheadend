@@ -21,13 +21,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
 
 #if ENABLE_EXECINFO
 #include <execinfo.h>
 #endif
 
 #include "bitops.h"
+#include "settings.h"
 #include "libav.h"
+#include "tcp.h"
 #include "webui/webui.h"
 
 #define TVHLOG_BITARRAY ((LS_LAST + (BITS_PER_LONG - 1)) / BITS_PER_LONG)
@@ -44,6 +50,10 @@ tvh_cond_t               tvhlog_cond;
 TAILQ_HEAD(,tvhlog_msg)  tvhlog_queue;
 int                      tvhlog_queue_size;
 int                      tvhlog_queue_full;
+#if ENABLE_TRACE
+int                      tvhlog_rtfd = STDOUT_FILENO;
+struct sockaddr_storage  tvhlog_rtss;
+#endif
 
 #define TVHLOG_QUEUE_MAXSIZE 10000
 #define TVHLOG_THREAD 1
@@ -523,6 +533,37 @@ tvhlog_backtrace_printf(const char *fmt, ...)
 }
 
 /*
+ *
+ */
+#if ENABLE_TRACE
+static void tvhdbgv(int subsys, const char *fmt, va_list *args)
+{
+  char buf[2048];
+  size_t l = 0;
+
+  if (tvhlog_rtfd < 0) return;
+  tvh_strlcatf(buf, sizeof(buf), l, "%s: ", tvhlog_subsystems[subsys].name);
+  l += vsnprintf(buf + l, sizeof(buf) - l, fmt, *args);
+  if (l + 1 < sizeof(buf))
+    buf[l++] = '\n';
+  sendto(tvhlog_rtfd, buf, l, 0, (struct sockaddr *)&tvhlog_rtss, sizeof(struct sockaddr_in));
+}
+#endif
+
+/*
+ *
+ */
+#if ENABLE_TRACE
+void tvhdbg(int subsys, const char *fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  tvhdbgv(subsys, fmt, &args);
+  va_end(args);
+}
+#endif
+
+/*
  * Initialise
  */
 void
@@ -538,6 +579,17 @@ tvhlog_init ( int level, int options, const char *path )
   tvh_mutex_init(&tvhlog_mutex, NULL);
   tvh_cond_init(&tvhlog_cond, 1);
   TAILQ_INIT(&tvhlog_queue);
+#if ENABLE_TRACE
+  {
+    const char *rtport0 = getenv("TVHEADEND_RTLOG_UDP_PORT");
+    int rtport = atoi(rtport0);
+    if (rtport > 0) {
+      tvhlog_rtfd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
+      tcp_get_ip_from_str("127.0.0.1", &tvhlog_rtss);
+      IP_AS_V4(tvhlog_rtss, port) = htons(rtport);
+    }
+  }
+#endif
 }
 
 void
@@ -552,7 +604,6 @@ tvhlog_end ( void )
 {
   FILE *fp = NULL;
   tvhlog_msg_t *msg;
-  tvh_mutex_lock(&tvhlog_mutex);
   tvhlog_run = 0;
   tvh_cond_signal(&tvhlog_cond, 0);
   tvh_mutex_unlock(&tvhlog_mutex);
@@ -567,6 +618,12 @@ tvhlog_end ( void )
   if (fp)
     fclose(fp);
   free(tvhlog_path);
+#if ENABLE_TRACE
+  if (tvhlog_rtfd >= 0) {
+    close(tvhlog_rtfd);
+    tvhlog_rtfd = 1;
+  }
+#endif
   closelog();
 }
 

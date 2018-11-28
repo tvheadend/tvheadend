@@ -245,4 +245,10 @@ static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
 
 void tvhlog_backtrace_printf(const char *fmt, ...);
 
+#if ENABLE_TRACE
+void tvhdbg(int subsys, const char *fmt, ...);
+#else
+static void tvhdbg(int subsys, const char *fmt, ...) {};
+#endif
+
 #endif /* __TVH_LOGGING_H__ */

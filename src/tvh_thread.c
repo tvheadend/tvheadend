@@ -178,7 +178,9 @@ static void tvh_mutex_check_interval(tvh_mutex_t *mutex)
     int64_t ms = (tvh_thread_debug - 10000) * 1000;
     int64_t diff = getfastmonoclock() - mutex->tstamp;
     if (diff > ms)
-      printf("mutex %p at %s:%d took %lldms\n", mutex, mutex->filename, mutex->lineno, diff / (MONOCLOCK_RESOLUTION / 1000));
+      tvhdbg(LS_THREAD, "mutex %p at %s:%d took %lldms",
+             mutex, mutex->filename, mutex->lineno,
+             diff / (MONOCLOCK_RESOLUTION / 1000));
   }
 }
 #endif
