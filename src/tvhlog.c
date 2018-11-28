@@ -582,7 +582,7 @@ tvhlog_init ( int level, int options, const char *path )
 #if ENABLE_TRACE
   {
     const char *rtport0 = getenv("TVHEADEND_RTLOG_UDP_PORT");
-    int rtport = atoi(rtport0);
+    int rtport = rtport0 ? atoi(rtport0) : 0;
     if (rtport > 0) {
       tvhlog_rtfd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
       tcp_get_ip_from_str("127.0.0.1", &tvhlog_rtss);
