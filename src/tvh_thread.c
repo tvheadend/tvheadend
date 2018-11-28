@@ -9,6 +9,7 @@
 #include <signal.h>
 
 #include "settings.h"
+#include "htsbuf.h"
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
@@ -384,12 +385,23 @@ static void tvh_thread_mutex_deadlock(tvh_mutex_t *mutex)
   int fd = hts_settings_open_file(HTS_SETTINGS_OPEN_WRITE | HTS_SETTINGS_OPEN_DIRECT, "mutex-deadlock.txt");
   if (fd < 0) fd = fileno(stderr);
   int sid = mutex->mutex.__data.__owner; /* unportable */
-  char name[256];
+  char name[256], *s;
+  htsbuf_queue_t q;
+  size_t l;
+
   thread_get_name(mutex->thread, name, sizeof(name));
-  FILE *f = fdopen(fd, "w");
-  fprintf(f, "Thread %i: %s\n", sid, name);
-  fprintf(f, "  locked in: %s:%i\n", mutex->filename, mutex->lineno);
-  fclose(f);
+
+  htsbuf_queue_init(&q, 0);
+  htsbuf_qprintf(&q, "Thread %i: %s\n", sid, name);
+  htsbuf_qprintf(&q, "  locked in: %s:%i\n", mutex->filename, mutex->lineno);
+
+  s = htsbuf_to_string(&q);
+  l = s ? strlen(s) : 0;
+  if (l > 0) {
+    tvh_write(fd, s, l);
+    tvh_write(STDERR_FILENO, s, l);
+  }
+
   abort();
 }
 #endif
