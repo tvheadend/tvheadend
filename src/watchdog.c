@@ -71,7 +71,7 @@ void watchdog_init(void)
 
     watchdog_exiting = 0;
     tvh_cond_init(&watchdog_exiting_cond, 1);
-    pthread_mutex_init(&watchdog_exiting_mutex, NULL);
+    tv_mutex_init(&watchdog_exiting_mutex, NULL);
 
     tvh_thread_create(&watchdog_tid, NULL, watchdog_thread, NULL, "systemd watchdog");
   }
@@ -88,6 +88,6 @@ void watchdog_done(void)
     pthread_join(watchdog_tid, NULL);
 
     tvh_cond_destroy(&watchdog_exiting_cond);
-    pthread_mutex_destroy(&watchdog_exiting_mutex);
+    tvh_mutex_destroy(&watchdog_exiting_mutex);
   }
 }
