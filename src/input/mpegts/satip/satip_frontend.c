@@ -2035,7 +2035,8 @@ new_tune:
         default:
           if (rtsp->hc_code >= 400) {
             tvherror(LS_SATIP, "%s - RTSP cmd error %d (%s) [%i-%i]",
-                     buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
+                     buf, r, r > 0 ? http_client_con2str(r) : strerror(-r),
+                     rtsp->hc_cmd, rtsp->hc_code);
             satip_frontend_tuning_error(lfe, tr);
             fatal = 1;
           }

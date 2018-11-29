@@ -120,6 +120,25 @@ http_client_busy( http_client_t *hc )
   return !!hc->hc_refcnt;
 }
 
+static struct strtab HTTP_statetab[] = {
+  { "WAIT_REQUEST",  HTTP_CON_WAIT_REQUEST },
+  { "READ_HEADER",   HTTP_CON_READ_HEADER },
+  { "END",           HTTP_CON_END },
+  { "POST_DATA",     HTTP_CON_POST_DATA },
+  { "SENDING",       HTTP_CON_SENDING },
+  { "SENT",          HTTP_CON_SENT },
+  { "RECEIVING",     HTTP_CON_RECEIVING },
+  { "DONE",          HTTP_CON_DONE },
+  { "IDLE",          HTTP_CON_IDLE },
+  { "OK",            HTTP_CON_OK }
+};
+
+const char *
+http_client_con2str(http_state_t val)
+{
+  return val2str(val, HTTP_statetab);
+}
+
 /*
  *
  */
@@ -1744,17 +1763,6 @@ http_client_testsuite_data_received( http_client_t *hc, void *data, size_t len )
   return 0;
 }
 
-static struct strtab HTTP_contab[] = {
-  { "WAIT_REQUEST", HTTP_CON_WAIT_REQUEST },
-  { "READ_HEADER",  HTTP_CON_READ_HEADER },
-  { "END",          HTTP_CON_END },
-  { "POST_DATA",    HTTP_CON_POST_DATA },
-  { "SENDING",      HTTP_CON_SENDING },
-  { "SENT",         HTTP_CON_SENT },
-  { "RECEIVING",    HTTP_CON_RECEIVING },
-  { "DONE",         HTTP_CON_DONE },
-};
-
 static struct strtab ERRNO_tab[] = {
   { "EPERM",           EPERM },
   { "ENOENT",          ENOENT },
@@ -1975,7 +1983,7 @@ http_client_testsuite_run( void )
     } else if (strncmp(s, "Port=", 5) == 0) {
       port = atoi(s + 5);
     } else if (strncmp(s, "ExpectedError=", 14) == 0) {
-      r = str2val(s + 14, HTTP_contab);
+      r = str2val(s + 14, HTTP_statetab);
       if (r < 0) {
         r = str2val(s + 14, ERRNO_tab);
         if (r < 0) {

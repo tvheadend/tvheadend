@@ -436,6 +436,8 @@ struct http_client {
 void http_client_init ( void );
 void http_client_done ( void );
 
+const char * http_client_con2str(http_state_t state);
+
 http_client_t*
 http_client_connect ( void *aux, http_ver_t ver, const char *scheme,
                       const char *host, int port, const char *bindaddr );
