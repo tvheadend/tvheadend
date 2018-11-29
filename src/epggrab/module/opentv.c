@@ -242,7 +242,7 @@ static void opentv_add_entry(opentv_status_t *sta, opentv_event_t *ev)
     entry->event = *ev;
     free(nentry);
   }
-  memset(&ev, 0, sizeof(ev));
+  memset(ev, 0, sizeof(*ev));
 }
 
 /* Parse huffman encoded string */
