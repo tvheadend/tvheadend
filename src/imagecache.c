@@ -56,8 +56,6 @@ typedef struct imagecache_image
 static int                            imagecache_id;
 static RB_HEAD(,imagecache_image)     imagecache_by_id;
 static RB_HEAD(,imagecache_image)     imagecache_by_url;
-static tvh_cond_t                     imagecache_cond;
-static TAILQ_HEAD(, imagecache_image) imagecache_queue;
 SKEL_DECLARE(imagecache_skel, imagecache_image_t);
 
 #if ENABLE_IMAGECACHE
@@ -127,9 +125,12 @@ const idclass_t imagecache_class = {
   }
 };
 
+static tvh_cond_t                     imagecache_cond;
+static TAILQ_HEAD(, imagecache_image) imagecache_queue;
 static mtimer_t                       imagecache_timer;
 #endif
 
+#if ENABLE_IMAGECACHE
 static int
 sha1_empty( const uint8_t *sha1 )
 {
@@ -139,6 +140,7 @@ sha1_empty( const uint8_t *sha1 )
       return 0;
   return 1;
 }
+#endif
 
 static int
 url_cmp ( imagecache_image_t *a, imagecache_image_t *b )
@@ -152,6 +154,7 @@ id_cmp ( imagecache_image_t *a, imagecache_image_t *b )
   return (a->id - b->id);
 }
 
+#if ENABLE_IMAGECACHE
 static htsmsg_t *
 imagecache_image_htsmsg ( imagecache_image_t *img )
 {
@@ -180,7 +183,6 @@ imagecache_image_save ( imagecache_image_t *img )
 }
 
 
-#if ENABLE_IMAGECACHE
 static void
 imagecache_new_id ( imagecache_image_t *i )
 {
@@ -196,9 +198,11 @@ imagecache_new_id ( imagecache_image_t *i )
 static void
 imagecache_image_add ( imagecache_image_t *img )
 {
+  int oldstate = img->state;
   if (strncasecmp("file://", img->url, 7)) {
     img->state = QUEUED;
-    TAILQ_INSERT_TAIL(&imagecache_queue, img, q_link);
+    if (oldstate != SAVE && oldstate != QUEUED)
+      TAILQ_INSERT_TAIL(&imagecache_queue, img, q_link);
     tvh_cond_signal(&imagecache_cond, 1);
   } else {
     time(&img->updated);
@@ -355,31 +359,6 @@ error:
   return res;
 };
 
-static void
-imagecache_timer_cb ( void *p )
-{
-  time_t now = gclk(), when;
-  imagecache_image_t *img, *img_next;
-  for (img = RB_FIRST(&imagecache_by_url); img; img = img_next) {
-    img_next = RB_NEXT(img, url_link);
-    if (imagecache_conf.expire > 0 && img->accessed > 0) {
-      when = img->accessed + imagecache_conf.expire * 24 * 3600;
-      if (when < now) {
-        tvhdebug(LS_IMAGECACHE, "expired: %s", img->url);
-        imagecache_destroy(img, 1);
-      }
-    }
-    if (img->state != IDLE) continue;
-    when = img->failed ? imagecache_conf.fail_period
-                       : imagecache_conf.ok_period;
-    when = img->updated + (when * 3600);
-    if (when < now)
-      imagecache_image_add(img);
-  }
-}
-
-#endif /* ENABLE_IMAGECACHE */
-
 static void *
 imagecache_thread ( void *p )
 {
@@ -408,7 +387,6 @@ imagecache_thread ( void *p )
       htsmsg_destroy(m);
       tvh_mutex_lock(&global_lock);
 
-#if ENABLE_IMAGECACHE
     } else if (img->state == QUEUED) {
       /* Process */
       img->state = FETCHING;
@@ -416,13 +394,37 @@ imagecache_thread ( void *p )
 
       /* Fetch */
       (void)imagecache_image_fetch(img);
-#endif
     }
   }
   tvh_mutex_unlock(&global_lock);
 
   return NULL;
 }
+
+static void
+imagecache_timer_cb ( void *p )
+{
+  time_t now = gclk(), when;
+  imagecache_image_t *img, *img_next;
+  for (img = RB_FIRST(&imagecache_by_url); img; img = img_next) {
+    img_next = RB_NEXT(img, url_link);
+    if (imagecache_conf.expire > 0 && img->accessed > 0) {
+      when = img->accessed + imagecache_conf.expire * 24 * 3600;
+      if (when < now) {
+        tvhdebug(LS_IMAGECACHE, "expired: %s", img->url);
+        imagecache_destroy(img, 1);
+      }
+    }
+    if (img->state != IDLE) continue;
+    when = img->failed ? imagecache_conf.fail_period
+                       : imagecache_conf.ok_period;
+    when = img->updated + (when * 3600);
+    if (when < now)
+      imagecache_image_add(img);
+  }
+}
+
+#endif /* ENABLE_IMAGECACHE */
 
 /*
  * Initialise
@@ -471,7 +473,7 @@ imagecache_init ( void )
       img           = calloc(1, sizeof(imagecache_image_t));
       img->id       = id;
       img->url      = strdup(url);
-      img->accessed = htsmsg_get_s64_or_default(e, "accessed", gclk());
+      img->accessed = htsmsg_get_s64_or_default(e, "accessed", 0);
       img->updated  = htsmsg_get_s64_or_default(e, "updated", 0);
       sha1 = htsmsg_get_str(e, "sha1");
       if (sha1 && strlen(sha1) == 40)
@@ -487,6 +489,10 @@ imagecache_init ( void )
       i = RB_INSERT_SORTED(&imagecache_by_id, img, id_link, id_cmp);
       assert(!i);
 #if ENABLE_IMAGECACHE
+      if (img->accessed == 0) {
+        img->accessed = gclk();
+        imagecache_image_save(img);
+      }
       if (!img->updated)
         imagecache_image_add(img);
 #endif
@@ -496,10 +502,10 @@ imagecache_init ( void )
     htsmsg_destroy(m);
   }
 
+#if ENABLE_IMAGECACHE
   /* Start threads */
   tvh_thread_create(&imagecache_tid, NULL, imagecache_thread, NULL, "imagecache");
 
-#if ENABLE_IMAGECACHE
   /* Re-try timer */
   // TODO: this could be more efficient by being targetted, however
   //       the reality its not necessary and I'd prefer to avoid dumping
@@ -535,15 +541,17 @@ imagecache_done ( void )
 
 #if ENABLE_IMAGECACHE
   mtimer_disarm(&imagecache_timer);
-#endif
   tvh_cond_signal(&imagecache_cond, 1);
   pthread_join(imagecache_tid, NULL);
+#endif
   while ((img = RB_FIRST(&imagecache_by_id)) != NULL) {
+#if ENABLE_IMAGECACHE
     if (img->state == SAVE) {
       htsmsg_t *m = imagecache_image_htsmsg(img);
       hts_settings_save(m, "imagecache/meta/%d", img->id);
       htsmsg_destroy(m);
     }
+#endif
     imagecache_destroy(img, 0);
   }
   SKEL_FREE(imagecache_skel);
@@ -637,9 +645,12 @@ imagecache_trigger( void )
 int
 imagecache_get_id ( const char *url )
 {
-  int id = 0, save = 0;
-  time_t clk;
+  int id = 0;
   imagecache_image_t *i;
+#if ENABLE_IMAGECACHE
+  int save = 0;
+  time_t clk;
+#endif
 
   lock_assert(&global_lock);
 
@@ -666,8 +677,8 @@ imagecache_get_id ( const char *url )
 #if ENABLE_IMAGECACHE
     imagecache_new_id(i);
     imagecache_image_add(i);
-#endif
     save = 1;
+#endif
   }
 #if ENABLE_IMAGECACHE
   if (!strncasecmp(url, "file://", 7) || imagecache_conf.enabled)
@@ -677,6 +688,7 @@ imagecache_get_id ( const char *url )
     id = i->id;
 #endif
 
+#if ENABLE_IMAGECACHE
   clk = gclk();
   if (clk != i->accessed) {
     i->accessed = clk;
@@ -684,6 +696,7 @@ imagecache_get_id ( const char *url )
   }
   if (save || i->state != IDLE)
     imagecache_image_save(i);
+#endif
   return id;
 }
 
