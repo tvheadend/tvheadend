@@ -19,11 +19,11 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>
 #include <netdb.h>

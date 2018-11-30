@@ -390,7 +390,7 @@ static void tvh_thread_mutex_deadlock(tvh_mutex_t *mutex)
 {
   int fd = hts_settings_open_file(HTS_SETTINGS_OPEN_WRITE | HTS_SETTINGS_OPEN_DIRECT, "mutex-deadlock.txt");
   if (fd < 0) fd = fileno(stderr);
-#if __GLIBC__
+#if defined(PLATFORM_LINUX) && __GLIBC__
   int sid = mutex->mutex.__data.__owner; /* unportable */
 #else
   int sid = -1;

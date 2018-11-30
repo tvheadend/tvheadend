@@ -1,5 +1,7 @@
 #define _GNU_SOURCE
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <fcntl.h>
 #include "tvheadend.h"
 #include "tvhregex.h"
