@@ -1,6 +1,8 @@
 /*
  *  Icon file server operations
  *  Copyright (C) 2012 Andy Brown
+ *            (C) 2015-2018 Jaroslav Kysela
+ *
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,6 +56,8 @@ typedef struct imagecache_image
 static int                            imagecache_id;
 static RB_HEAD(,imagecache_image)     imagecache_by_id;
 static RB_HEAD(,imagecache_image)     imagecache_by_url;
+static tvh_cond_t                     imagecache_cond;
+static TAILQ_HEAD(, imagecache_image) imagecache_queue;
 SKEL_DECLARE(imagecache_skel, imagecache_image_t);
 
 #if ENABLE_IMAGECACHE
@@ -123,8 +127,6 @@ const idclass_t imagecache_class = {
   }
 };
 
-static tvh_cond_t                     imagecache_cond;
-static TAILQ_HEAD(, imagecache_image) imagecache_queue;
 static mtimer_t                       imagecache_timer;
 #endif
 
@@ -353,6 +355,31 @@ error:
   return res;
 };
 
+static void
+imagecache_timer_cb ( void *p )
+{
+  time_t now = gclk(), when;
+  imagecache_image_t *img, *img_next;
+  for (img = RB_FIRST(&imagecache_by_url); img; img = img_next) {
+    img_next = RB_NEXT(img, url_link);
+    if (imagecache_conf.expire > 0 && img->accessed > 0) {
+      when = img->accessed + imagecache_conf.expire * 24 * 3600;
+      if (when < now) {
+        tvhdebug(LS_IMAGECACHE, "expired: %s", img->url);
+        imagecache_destroy(img, 1);
+      }
+    }
+    if (img->state != IDLE) continue;
+    when = img->failed ? imagecache_conf.fail_period
+                       : imagecache_conf.ok_period;
+    when = img->updated + (when * 3600);
+    if (when < now)
+      imagecache_image_add(img);
+  }
+}
+
+#endif /* ENABLE_IMAGECACHE */
+
 static void *
 imagecache_thread ( void *p )
 {
@@ -381,6 +408,7 @@ imagecache_thread ( void *p )
       htsmsg_destroy(m);
       tvh_mutex_lock(&global_lock);
 
+#if ENABLE_IMAGECACHE
     } else if (img->state == QUEUED) {
       /* Process */
       img->state = FETCHING;
@@ -388,6 +416,7 @@ imagecache_thread ( void *p )
 
       /* Fetch */
       (void)imagecache_image_fetch(img);
+#endif
     }
   }
   tvh_mutex_unlock(&global_lock);
@@ -395,37 +424,10 @@ imagecache_thread ( void *p )
   return NULL;
 }
 
-static void
-imagecache_timer_cb ( void *p )
-{
-  time_t now = gclk(), when;
-  imagecache_image_t *img, *img_next;
-  for (img = RB_FIRST(&imagecache_by_url); img; img = img_next) {
-    img_next = RB_NEXT(img, url_link);
-    if (imagecache_conf.expire > 0 && img->accessed > 0) {
-      when = img->accessed + imagecache_conf.expire * 24 * 3600;
-      if (when < now) {
-        tvhdebug(LS_IMAGECACHE, "expired: %s", img->url);
-        imagecache_destroy(img, 1);
-      }
-    }
-    if (img->state != IDLE) continue;
-    when = img->failed ? imagecache_conf.fail_period
-                       : imagecache_conf.ok_period;
-    when = img->updated + (when * 3600);
-    if (when < now)
-      imagecache_image_add(img);
-  }
-}
-
-#endif /* ENABLE_IMAGECACHE */
-
 /*
  * Initialise
  */
-#if ENABLE_IMAGECACHE
 pthread_t imagecache_tid;
-#endif
 
 void
 imagecache_init ( void )
@@ -495,9 +497,9 @@ imagecache_init ( void )
   }
 
   /* Start threads */
-#if ENABLE_IMAGECACHE
   tvh_thread_create(&imagecache_tid, NULL, imagecache_thread, NULL, "imagecache");
 
+#if ENABLE_IMAGECACHE
   /* Re-try timer */
   // TODO: this could be more efficient by being targetted, however
   //       the reality its not necessary and I'd prefer to avoid dumping
@@ -533,9 +535,9 @@ imagecache_done ( void )
 
 #if ENABLE_IMAGECACHE
   mtimer_disarm(&imagecache_timer);
+#endif
   tvh_cond_signal(&imagecache_cond, 1);
   pthread_join(imagecache_tid, NULL);
-#endif
   while ((img = RB_FIRST(&imagecache_by_id)) != NULL) {
     if (img->state == SAVE) {
       htsmsg_t *m = imagecache_image_htsmsg(img);
@@ -577,7 +579,6 @@ imagecache_clean( void )
 
   lock_assert(&global_lock);
 
-#if ENABLE_IMAGECACHE
   /* remove all cached data, except the one actually fetched */
   for (img = RB_FIRST(&imagecache_by_id); img; img = next) {
     next = RB_NEXT(img, id_link);
@@ -585,7 +586,6 @@ imagecache_clean( void )
       continue;
     imagecache_destroy(img, 1);
   }
-#endif
 
   tvhinfo(LS_IMAGECACHE, "clean request");
   /* remove unassociated data */
