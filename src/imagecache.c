@@ -41,9 +41,10 @@ typedef struct imagecache_image
   uint8_t     sha1[20]; ///< Contents hash
   enum {
     IDLE,
+    SAVE,
     QUEUED,
     FETCHING
-  }           state;    ///< fetch status
+  }           state;    ///< save/fetch status
 
   TAILQ_ENTRY(imagecache_image) q_link;   ///< Fetch Q link
   RB_ENTRY(imagecache_image)    id_link;  ///< Index by ID
@@ -149,8 +150,8 @@ id_cmp ( imagecache_image_t *a, imagecache_image_t *b )
   return (a->id - b->id);
 }
 
-static void
-imagecache_image_save ( imagecache_image_t *img )
+static htsmsg_t *
+imagecache_image_htsmsg ( imagecache_image_t *img )
 {
   char hex[41];
   htsmsg_t *m = htsmsg_create_map();
@@ -163,9 +164,19 @@ imagecache_image_save ( imagecache_image_t *img )
     bin2hex(hex, sizeof(hex), img->sha1, 20);
     htsmsg_add_str(m, "sha1", hex);
   }
-  hts_settings_save(m, "imagecache/meta/%d", img->id);
-  htsmsg_destroy(m);
+  return m;
 }
+
+static void
+imagecache_image_save ( imagecache_image_t *img )
+{
+  if (img->state != SAVE && img->state != QUEUED && img->state != FETCHING) {
+    img->state = SAVE;
+    TAILQ_INSERT_TAIL(&imagecache_queue, img, q_link);
+    tvh_cond_signal(&imagecache_cond, 1);
+  }
+}
+
 
 #if ENABLE_IMAGECACHE
 static void
@@ -362,12 +373,22 @@ imagecache_thread ( void *p )
       continue;
     }
 
-    /* Process */
-    img->state = FETCHING;
-    TAILQ_REMOVE(&imagecache_queue, img, q_link);
+    if (img->state == SAVE) {
+      /* Do save outside global mutex */
+      htsmsg_t *m = imagecache_image_htsmsg(img);
+      tvh_mutex_unlock(&global_lock);
+      hts_settings_save(m, "imagecache/meta/%d", img->id);
+      htsmsg_destroy(m);
+      tvh_mutex_lock(&global_lock);
 
-    /* Fetch */
-    (void)imagecache_image_fetch(img);
+    } else if (img->state == QUEUED) {
+      /* Process */
+      img->state = FETCHING;
+      TAILQ_REMOVE(&imagecache_queue, img, q_link);
+
+      /* Fetch */
+      (void)imagecache_image_fetch(img);
+    }
   }
   tvh_mutex_unlock(&global_lock);
 
@@ -467,6 +488,8 @@ imagecache_init ( void )
       if (!img->updated)
         imagecache_image_add(img);
 #endif
+      if (imagecache_id <= id)
+        imagecache_id = id + 1;
     }
     htsmsg_destroy(m);
   }
@@ -513,8 +536,14 @@ imagecache_done ( void )
   tvh_cond_signal(&imagecache_cond, 1);
   pthread_join(imagecache_tid, NULL);
 #endif
-  while ((img = RB_FIRST(&imagecache_by_id)) != NULL)
+  while ((img = RB_FIRST(&imagecache_by_id)) != NULL) {
+    if (img->state == SAVE) {
+      htsmsg_t *m = imagecache_image_htsmsg(img);
+      hts_settings_save(m, "imagecache/meta/%d", img->id);
+      htsmsg_destroy(m);
+    }
     imagecache_destroy(img, 0);
+  }
   SKEL_FREE(imagecache_skel);
 }
 
@@ -653,7 +682,7 @@ imagecache_get_id ( const char *url )
     i->accessed = clk;
     save = 1;
   }
-  if (save && i->state != IDLE)
+  if (save || i->state != IDLE)
     imagecache_image_save(i);
   return id;
 }
