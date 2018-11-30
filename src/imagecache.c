@@ -445,10 +445,11 @@ imagecache_init ( void )
       if (!(e   = htsmsg_get_map_by_field(f))) continue;
       if (!(id  = atoi(htsmsg_field_name(f)))) continue;
       if (!(url = htsmsg_get_str(e, "url"))) continue;
-      img          = calloc(1, sizeof(imagecache_image_t));
-      img->id      = id;
-      img->url     = strdup(url);
-      img->updated = htsmsg_get_s64_or_default(e, "updated", 0);
+      img           = calloc(1, sizeof(imagecache_image_t));
+      img->id       = id;
+      img->url      = strdup(url);
+      img->accessed = htsmsg_get_s64_or_default(e, "accessed", gclk());
+      img->updated  = htsmsg_get_s64_or_default(e, "updated", 0);
       sha1 = htsmsg_get_str(e, "sha1");
       if (sha1 && strlen(sha1) == 40)
         hex2bin(img->sha1, 20, sha1);
