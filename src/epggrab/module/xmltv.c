@@ -1150,6 +1150,7 @@ static void _xmltv_load_grabbers ( void )
   char *outbuf;
   char name[1000];
   char *tmp, *tmp2 = NULL, *path;
+  epggrab_module_t *mod;
 
   /* Load data */
   if (spawn_and_give_stdout(XMLTV_FIND, NULL, NULL, &rd, NULL, 1) >= 0)
@@ -1202,7 +1203,6 @@ static void _xmltv_load_grabbers ( void )
           if (strstr(de->d_name, XMLTV_GRAB) != de->d_name) continue;
           if (de->d_name[0] && de->d_name[strlen(de->d_name)-1] == '~') continue;
           snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
-          if (epggrab_module_find_by_id(bin)) continue;
           if (stat(bin, &st)) continue;
           if (!(st.st_mode & S_IEXEC)) continue;
           if (!S_ISREG(st.st_mode)) continue;
@@ -1212,9 +1212,15 @@ static void _xmltv_load_grabbers ( void )
             close(rd);
             if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';
             snprintf(name, sizeof(name), "XMLTV: %s", outbuf);
-            epggrab_module_int_create(NULL, &epggrab_mod_int_xmltv_class,
-                                      bin, LS_XMLTV, "xmltv", name, 3, bin,
-                                      NULL, _xmltv_parse, NULL);
+            mod = epggrab_module_find_by_id(bin);
+            if (mod) {
+              free((void *)mod->name);
+              mod->name = strdup(outbuf);
+            } else {
+              epggrab_module_int_create(NULL, &epggrab_mod_int_xmltv_class,
+                                        bin, LS_XMLTV, "xmltv", name, 3, bin,
+                                        NULL, _xmltv_parse, NULL);
+            }
             free(outbuf);
           } else {
             if (rd >= 0)
