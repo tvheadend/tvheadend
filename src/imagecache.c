@@ -343,7 +343,6 @@ error:
   if (NULL != hc) http_client_close(hc);
   urlreset(&url);
   tvhpoll_destroy(efd);
-  img->state = IDLE;
   time(&img->updated); // even if failed (possibly request sooner?)
   if (res) {
     if (!img->failed) {
@@ -379,9 +378,12 @@ imagecache_thread ( void *p )
       continue;
     }
 
+    TAILQ_REMOVE(&imagecache_queue, img, q_link);
+
     if (img->state == SAVE) {
       /* Do save outside global mutex */
       htsmsg_t *m = imagecache_image_htsmsg(img);
+      img->state = IDLE;
       tvh_mutex_unlock(&global_lock);
       hts_settings_save(m, "imagecache/meta/%d", img->id);
       htsmsg_destroy(m);
@@ -390,10 +392,13 @@ imagecache_thread ( void *p )
     } else if (img->state == QUEUED) {
       /* Process */
       img->state = FETCHING;
-      TAILQ_REMOVE(&imagecache_queue, img, q_link);
 
       /* Fetch */
       (void)imagecache_image_fetch(img);
+      img->state = IDLE;
+
+    } else {
+      img->state = IDLE;
     }
   }
   tvh_mutex_unlock(&global_lock);
@@ -694,7 +699,7 @@ imagecache_get_id ( const char *url )
     i->accessed = clk;
     save = 1;
   }
-  if (save || i->state != IDLE)
+  if (save)
     imagecache_image_save(i);
 #endif
   return id;
