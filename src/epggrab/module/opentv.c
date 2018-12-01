@@ -214,6 +214,7 @@ static opentv_entry_t *opentv_find_entry(opentv_status_t *sta, uint16_t eid)
 {
   opentv_entry_t *oe, _tmp;
 
+  if (sta == NULL) return NULL;
   _tmp.event.eid = eid;
   oe = RB_FIND(&sta->os_entries, &_tmp, link, _entry_cmp);
   return oe;
