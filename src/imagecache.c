@@ -390,10 +390,8 @@ imagecache_thread ( void *p )
       tvh_mutex_lock(&global_lock);
 
     } else if (img->state == QUEUED) {
-      /* Process */
-      img->state = FETCHING;
-
       /* Fetch */
+      img->state = FETCHING;
       (void)imagecache_image_fetch(img);
       img->state = IDLE;
 
