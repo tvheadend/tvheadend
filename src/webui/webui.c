@@ -1607,6 +1607,79 @@ page_play_auth(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ *
+ */
+static const char *webui_dvbapi_get_service_type(mpegts_service_t *ms)
+{
+  switch(ms->s_dvb_servicetype) {
+   case 0x01:
+   case 0x11:
+   default:
+     return "TV";
+
+   case 0x02:
+   case 0x07:
+   case 0x0a:
+     return "Radio";
+
+   case 0x03:
+     return "Teletext";
+
+   case 0x0c:
+     return "Data";
+  }
+}
+
+static int
+page_srvid2(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  service_t *t;
+  mpegts_service_t *ms;
+  caid_t *ca;
+  elementary_stream_t *st;
+  int first;
+  char buf1[16], buf2[16], buf3[16];
+
+  if (hc->hc_access == NULL || strempty(hc->hc_access->aa_auth))
+    return HTTP_STATUS_UNAUTHORIZED;
+  tvh_mutex_lock(&global_lock);
+  TAILQ_FOREACH(t, &service_all, s_all_link) {
+    if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
+      continue;
+    ms = (mpegts_service_t *)t;
+    first = 1;
+    TAILQ_FOREACH(st, &t->s_components.set_all, es_link) {
+      LIST_FOREACH(ca, &st->es_caids, link)
+        ca->filter = 0;
+      LIST_FOREACH(ca, &st->es_caids, link) {
+        if (ms->s_components.set_service_id == 0) continue;
+        if (first) {
+          snprintf(buf1, sizeof(buf1), "%04X:", ms->s_components.set_service_id);
+          first = 0;
+        } else {
+          buf1[0] = ','; buf1[1] = '\0';
+        }
+        snprintf(buf2, sizeof(buf2), "%04X", ca->caid);
+        if (ca->providerid > 0)
+          snprintf(buf3, sizeof(buf3), "@%06X", ca->providerid);
+        else
+          buf3[0] = '\0';
+        htsbuf_qprintf(hq, "%s%s%s", buf1, buf2, buf3);
+      }
+    }
+    if (first) continue;
+    htsbuf_qprintf(hq, "|%s|%s||%s\n",
+                   strempty(ms->s_dvb_svcname) ? "???" : ms->s_dvb_svcname,
+                   webui_dvbapi_get_service_type(ms),
+                   ms->s_dvb_mux->mm_network->mn_provider_network_name ?: "");
+  }
+  tvh_mutex_unlock(&global_lock);
+  http_output_content(hc, "text/plain");
+  return 0;
+}
+
+/**
  * Send a file
  */
 int
@@ -2085,6 +2158,7 @@ webui_init(int xspf)
   http_path_add("/playlist/ticket", NULL, page_http_playlist_ticket, ACCESS_ANONYMOUS);
   http_path_add("/playlist/auth", NULL, page_http_playlist_auth, ACCESS_ANONYMOUS);
   http_path_add("/xmltv", NULL, page_xmltv, ACCESS_ANONYMOUS);
+  http_path_add("/special/srvid2", NULL, page_srvid2, ACCESS_ADMIN);
   http_path_add("/markdown", NULL, page_markdown, ACCESS_ANONYMOUS);
 
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
