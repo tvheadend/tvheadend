@@ -416,11 +416,11 @@ static void *tvh_thread_watch_thread(void *aux)
   int64_t now;
   tvh_mutex_t *mutex, dmutex;
 
-  while (!tvhwatch_done) {
+  while (!atomic_get(&tvhwatch_done)) {
     pthread_mutex_lock(&thrwatch_mutex);
     now = getfastmonoclock();
     mutex = TAILQ_LAST(&thrwatch_mutexes, tvh_mutex_queue);
-    if (mutex && mutex->tstamp + sec2mono(55) < now) {
+    if (mutex && mutex->tstamp + sec2mono(5) < now) {
       pthread_mutex_unlock(&thrwatch_mutex);
       tvh_thread_mutex_deadlock(mutex);
     }
@@ -442,7 +442,7 @@ void tvh_thread_init(int debug_level)
   tvh_thread_debug = debug_level;
   tvh_thread_crash_time = getfastmonoclock() + sec2mono(15);
   if (debug_level > 0) {
-    tvhwatch_done = 0;
+    atomic_set(&tvhwatch_done, 0);
     tvh_thread_create(&thrwatch_tid, NULL, tvh_thread_watch_thread, NULL, "thrwatch");
   }
 #endif
@@ -452,7 +452,7 @@ void tvh_thread_done(void)
 {
 #if ENABLE_TRACE
   if (tvh_thread_debug > 0) {
-    tvhwatch_done = 1;
+    atomic_set(&tvhwatch_done, 1);
     pthread_join(thrwatch_tid, NULL);
   }
 #endif

@@ -569,7 +569,7 @@ void tvhdbg(int subsys, const char *fmt, ...)
 void
 tvhlog_init ( int level, int options, const char *path )
 {
-  tvhlog_level   = level;
+  atomic_set(&tvhlog_level, level);
   tvhlog_options = options;
   tvhlog_path    = path ? strdup(path) : NULL;
   memset(tvhlog_trace, 0, sizeof(tvhlog_trace));
