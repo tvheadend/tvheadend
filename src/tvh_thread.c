@@ -199,16 +199,6 @@ static void tvh_mutex_remove_from_list(tvh_mutex_t *mutex)
 #endif
 
 #if ENABLE_TRACE
-static void tvh_mutex_remove_from_list_keep_info(tvh_mutex_t *mutex)
-{
-  pthread_mutex_lock(&thrwatch_mutex);
-  TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
-  tvh_mutex_check_interval(mutex);
-  pthread_mutex_unlock(&thrwatch_mutex);
-}
-#endif
-
-#if ENABLE_TRACE
 int tvh__mutex_lock(tvh_mutex_t *mutex, const char *filename, int lineno)
 {
   int r = pthread_mutex_lock(&mutex->mutex);
@@ -308,14 +298,16 @@ int
 tvh_cond_wait
   ( tvh_cond_t *cond, tvh_mutex_t *mutex)
 {
+  const char *filename = mutex->filename;
+  const int lineno = mutex->lineno;
   int r;
   
 #if ENABLE_TRACE
-  tvh_mutex_remove_from_list_keep_info(mutex);
+  tvh_mutex_remove_from_list(mutex);
 #endif
   r = pthread_cond_wait(&cond->cond, &mutex->mutex);
 #if ENABLE_TRACE
-  tvh_mutex_add_to_list(mutex, NULL, -1);
+  tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
 }
@@ -324,10 +316,12 @@ int
 tvh_cond_timedwait
   ( tvh_cond_t *cond, tvh_mutex_t *mutex, int64_t monoclock )
 {
+  const char *filename = mutex->filename;
+  const int lineno = mutex->lineno;
   int r;
 
 #if ENABLE_TRACE
-  tvh_mutex_remove_from_list_keep_info(mutex);
+  tvh_mutex_remove_from_list(mutex);
 #endif
   
 #if defined(PLATFORM_DARWIN)
@@ -353,21 +347,23 @@ tvh_cond_timedwait
 #endif
 
 #if ENABLE_TRACE
-  tvh_mutex_add_to_list(mutex, NULL, -1);
+  tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
 }
 
 int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec *ts)
 {
+  const char *filename = mutex->filename;
+  const int lineno = mutex->lineno;
   int r;
   
 #if ENABLE_TRACE
-  tvh_mutex_remove_from_list_keep_info(mutex);
+  tvh_mutex_remove_from_list(mutex);
 #endif
   r = pthread_cond_timedwait(&cond->cond, &mutex->mutex, ts);
 #if ENABLE_TRACE
-  tvh_mutex_add_to_list(mutex, NULL, -1);
+  tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
 }
