@@ -187,9 +187,13 @@ static void tvh_mutex_check_interval(tvh_mutex_t *mutex)
 #endif
 
 #if ENABLE_TRACE
-static void tvh_mutex_remove_from_list(tvh_mutex_t *mutex)
+static void tvh_mutex_remove_from_list(tvh_mutex_t *mutex, const char **filename, int *lineno)
 {
   pthread_mutex_lock(&thrwatch_mutex);
+  if (filename)
+    *filename = mutex->filename;
+  if (lineno)
+    *lineno = mutex->lineno;
   TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
   tvh_mutex_check_interval(mutex);
   mutex->filename = NULL;
@@ -224,7 +228,7 @@ int tvh__mutex_unlock(tvh_mutex_t *mutex)
   int r;
   r = pthread_mutex_unlock(&mutex->mutex);
   if (r == 0)
-    tvh_mutex_remove_from_list(mutex);
+    tvh_mutex_remove_from_list(mutex, NULL, NULL);
   return r;
 }
 #endif
@@ -298,12 +302,12 @@ int
 tvh_cond_wait
   ( tvh_cond_t *cond, tvh_mutex_t *mutex)
 {
-  const char *filename = mutex->filename;
-  const int lineno = mutex->lineno;
   int r;
   
 #if ENABLE_TRACE
-  tvh_mutex_remove_from_list(mutex);
+  const char *filename;
+  int lineno;
+  tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
   r = pthread_cond_wait(&cond->cond, &mutex->mutex);
 #if ENABLE_TRACE
@@ -316,12 +320,12 @@ int
 tvh_cond_timedwait
   ( tvh_cond_t *cond, tvh_mutex_t *mutex, int64_t monoclock )
 {
-  const char *filename = mutex->filename;
-  const int lineno = mutex->lineno;
   int r;
 
 #if ENABLE_TRACE
-  tvh_mutex_remove_from_list(mutex);
+  const char *filename;
+  int lineno;
+  tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
   
 #if defined(PLATFORM_DARWIN)
@@ -354,12 +358,12 @@ tvh_cond_timedwait
 
 int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec *ts)
 {
-  const char *filename = mutex->filename;
-  const int lineno = mutex->lineno;
   int r;
   
 #if ENABLE_TRACE
-  tvh_mutex_remove_from_list(mutex);
+  const char *filename;
+  int lineno;
+  tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
   r = pthread_cond_timedwait(&cond->cond, &mutex->mutex, ts);
 #if ENABLE_TRACE
@@ -416,7 +420,7 @@ static void *tvh_thread_watch_thread(void *aux)
     pthread_mutex_lock(&thrwatch_mutex);
     now = getfastmonoclock();
     mutex = TAILQ_LAST(&thrwatch_mutexes, tvh_mutex_queue);
-    if (mutex && mutex->tstamp + sec2mono(5) < now) {
+    if (mutex && mutex->tstamp + sec2mono(55) < now) {
       pthread_mutex_unlock(&thrwatch_mutex);
       tvh_thread_mutex_deadlock(mutex);
     }
