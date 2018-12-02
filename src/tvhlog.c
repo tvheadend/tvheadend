@@ -604,6 +604,7 @@ tvhlog_end ( void )
 {
   FILE *fp = NULL;
   tvhlog_msg_t *msg;
+  tvh_mutex_lock(&tvhlog_mutex);
   tvhlog_run = 0;
   tvh_cond_signal(&tvhlog_cond, 0);
   tvh_mutex_unlock(&tvhlog_mutex);
