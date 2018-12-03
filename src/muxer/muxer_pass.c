@@ -361,8 +361,12 @@ pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   sbuf[10] = pm->pm_dst_onid >> 8;
   sbuf[11] = pm->pm_dst_onid;
 
-  if (sid != pm->pm_src_sid)
+  if (sid != pm->pm_src_sid) {
     len = 14; /* no events, just keep the SI tables consistent */
+    sbuf[1] &= 0xf0;
+    sbuf[1] |= (len - 3) & 0x0f;
+    sbuf[2] = (len - 3) & 0xff;
+  }
 
   len = dvb_table_append_crc32(sbuf, len, len + 4);
   if (len > 0 && (olen = dvb_table_remux(mt, sbuf, len, &out)) > 0) {
