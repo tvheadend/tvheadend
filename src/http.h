@@ -217,6 +217,8 @@ int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
 const char * http_username(http_connection_t *hc);
 
+int http_noaccess_code(http_connection_t *hc);
+
 void http_alive(http_connection_t *hc);
 
 void http_error(http_connection_t *hc, int error);

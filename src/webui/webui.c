@@ -153,7 +153,7 @@ page_login(http_connection_t *hc, const char *remain, void *opaque)
     http_redirect(hc, "/", &hc->hc_req_args, 0);
     return 0;
   } else {
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
   }
 }
 
@@ -622,7 +622,7 @@ http_channel_playlist(http_connection_t *hc, int pltype, int urlauth, channel_t 
   char ubuf[UUID_HEX_SIZE];
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
   hostpath = http_get_hostpath(hc);
@@ -674,9 +674,8 @@ http_tag_playlist(http_connection_t *hc, int pltype, int urlauth, channel_tag_t 
   channel_t **chlist;
   int idx, count = 0;
 
-  if(hc->hc_access == NULL ||
-     access_verify2(hc->hc_access, ACCESS_STREAMING))
-    return HTTP_STATUS_UNAUTHORIZED;
+  if (access_verify2(hc->hc_access, ACCESS_STREAMING))
+    return http_noaccess_code(hc);
 
   lang = hc->hc_access->aa_lang_ui;
   hq = &hc->hc_reply;
@@ -736,9 +735,8 @@ http_tag_list_playlist(http_connection_t *hc, int pltype, int urlauth)
   const char *blank, *sort, *lang;
   idnode_list_mapping_t *ilm;
 
-  if(hc->hc_access == NULL ||
-     access_verify2(hc->hc_access, ACCESS_STREAMING))
-    return HTTP_STATUS_UNAUTHORIZED;
+  if (access_verify2(hc->hc_access, ACCESS_STREAMING))
+    return http_noaccess_code(hc);
 
   lang = hc->hc_access->aa_lang_ui;
   hq = &hc->hc_reply;
@@ -806,9 +804,8 @@ http_channel_list_playlist(http_connection_t *hc, int pltype, int urlauth)
   char *profile, *hostpath;
   const char *name, *blank, *sort, *lang;
 
-  if(hc->hc_access == NULL ||
-     access_verify2(hc->hc_access, ACCESS_STREAMING))
-    return HTTP_STATUS_UNAUTHORIZED;
+  if (access_verify2(hc->hc_access, ACCESS_STREAMING))
+    return http_noaccess_code(hc);
 
   hq = &hc->hc_reply;
 
@@ -935,7 +932,7 @@ http_dvr_playlist(http_connection_t *hc, int pltype, int urlauth, dvr_entry_t *d
     return HTTP_STATUS_BAD_REQUEST;
 
   if(http_access_verify(hc, ACCESS_RECORDER))
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
 
   if(dvr_entry_verify(de, hc->hc_access, 1))
     return HTTP_STATUS_NOT_FOUND;
@@ -1113,7 +1110,7 @@ page_http_playlist_auth
   (http_connection_t *hc, const char *remain, void *opaque)
 {
   if (hc->hc_access == NULL || strempty(hc->hc_access->aa_auth))
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
   return page_http_playlist_(hc, remain, opaque, URLAUTH_CODE);
 }
 
@@ -1135,7 +1132,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   int flags, eflags = 0;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
 
   if ((str = http_arg_get(&hc->hc_req_args, "descramble")))
     if (strcmp(str, "0") == 0)
@@ -1208,7 +1205,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   int res = HTTP_STATUS_SERVICE, i;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
 
   if((tcp_id = http_stream_preop(hc)) == NULL)
     return HTTP_STATUS_NOT_ALLOWED;
@@ -1287,7 +1284,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   int res = HTTP_STATUS_SERVICE;
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
 
   if(!(pro = profile_find_by_list(hc->hc_access->aa_profiles,
                                   http_arg_get(&hc->hc_req_args, "profile"),
@@ -1567,12 +1564,11 @@ page_play_(http_connection_t *hc, const char *remain, void *opaque, int urlauth)
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  if(hc->hc_access == NULL ||
-     access_verify2(hc->hc_access, ACCESS_OR |
+  if(access_verify2(hc->hc_access, ACCESS_OR |
                                    ACCESS_STREAMING |
                                    ACCESS_ADVANCED_STREAMING |
                                    ACCESS_RECORDER))
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
 
   playlist = http_arg_get(&hc->hc_req_args, "playlist");
   if (playlist) {
@@ -1602,7 +1598,7 @@ static int
 page_play_auth(http_connection_t *hc, const char *remain, void *opaque)
 {
   if (hc->hc_access == NULL || strempty(hc->hc_access->aa_auth))
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
   return page_play_(hc, remain, opaque, URLAUTH_CODE);
 }
 
@@ -1642,7 +1638,7 @@ page_srvid2(http_connection_t *hc, const char *remain, void *opaque)
   char buf1[16], buf2[16], buf3[16];
 
   if (hc->hc_access == NULL || strempty(hc->hc_access->aa_auth))
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
   tvh_mutex_lock(&global_lock);
   TAILQ_FOREACH(t, &service_all, s_all_link) {
     if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
@@ -1928,12 +1924,11 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   if(remain == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-  if(hc->hc_access == NULL ||
-     (access_verify2(hc->hc_access, ACCESS_OR |
-                                    ACCESS_STREAMING |
-                                    ACCESS_ADVANCED_STREAMING |
-                                    ACCESS_RECORDER)))
-    return HTTP_STATUS_UNAUTHORIZED;
+  if(access_verify2(hc->hc_access, ACCESS_OR |
+                                   ACCESS_STREAMING |
+                                   ACCESS_ADVANCED_STREAMING |
+                                   ACCESS_RECORDER))
+    return http_noaccess_code(hc);
 
   tvh_mutex_lock(&global_lock);
   de = dvr_entry_find_by_uuid(remain);
@@ -1945,7 +1940,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
   if(dvr_entry_verify(de, hc->hc_access, 1)) {
     tvh_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
+    return http_noaccess_code(hc);
   }
 
   priv.uuid = remain;
@@ -1984,15 +1979,14 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  if(hc->hc_access == NULL ||
-     (access_verify2(hc->hc_access, ACCESS_OR |
-                                    ACCESS_WEB_INTERFACE |
-                                    ACCESS_STREAMING |
-                                    ACCESS_ADVANCED_STREAMING |
-                                    ACCESS_HTSP_STREAMING |
-                                    ACCESS_HTSP_RECORDER |
-                                    ACCESS_RECORDER)))
-    return HTTP_STATUS_UNAUTHORIZED;
+  if(access_verify2(hc->hc_access, ACCESS_OR |
+                                   ACCESS_WEB_INTERFACE |
+                                   ACCESS_STREAMING |
+                                   ACCESS_ADVANCED_STREAMING |
+                                   ACCESS_HTSP_STREAMING |
+                                   ACCESS_HTSP_RECORDER |
+                                   ACCESS_RECORDER))
+    return http_noaccess_code(hc);
 
   if(sscanf(remain, "%d", &id) != 1)
     return HTTP_STATUS_BAD_REQUEST;
