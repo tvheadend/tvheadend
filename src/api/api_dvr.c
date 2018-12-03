@@ -462,9 +462,11 @@ api_dvr_autorec_create_by_series
   epg_broadcast_t *e;
   htsmsg_t *entries, *entries2 = NULL, *m, *l = NULL;
   htsmsg_field_t *f;
-  const char *config_uuid, *s;
+  const char *config_uuid, *s, *title;
   int count = 0;
   char ubuf[UUID_HEX_SIZE];
+  const char * msg = " - Created from EPG query";
+  char *comment;
 
   if (!(entries = htsmsg_get_list(args, "entries"))) {
     entries = entries2 = api_dvr_entry_create_from_single(args);
@@ -484,11 +486,14 @@ api_dvr_autorec_create_by_series
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
       dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
       if (cfg) {
+        title = epg_broadcast_get_title(e, NULL);
+        comment = alloca(strlen(title) + strlen(msg) + 1);
+        sprintf(comment, "%s%s", title, msg);
         dae = dvr_autorec_add_series_link(idnode_uuid_as_str(&cfg->dvr_id, ubuf),
                                           e,
                                           perm->aa_username,
                                           perm->aa_representative,
-                                          "Created from EPG query");
+                                          comment);
         if (dae) {
           if (l == NULL)
             l = htsmsg_create_list();
