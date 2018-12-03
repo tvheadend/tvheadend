@@ -305,13 +305,15 @@ tvh_cond_wait
   int r;
   
 #if ENABLE_TRACE
-  const char *filename;
-  int lineno;
-  tvh_mutex_remove_from_list(mutex, &filename, &lineno);
+  const char *filename = NULL;
+  int lineno = -1;
+  if (tvh_thread_debug > 0)
+    tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
   r = pthread_cond_wait(&cond->cond, &mutex->mutex);
 #if ENABLE_TRACE
-  tvh_mutex_add_to_list(mutex, filename, lineno);
+  if (tvh_thread_debug > 0)
+    tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
 }
@@ -323,9 +325,10 @@ tvh_cond_timedwait
   int r;
 
 #if ENABLE_TRACE
-  const char *filename;
-  int lineno;
-  tvh_mutex_remove_from_list(mutex, &filename, &lineno);
+  const char *filename = NULL;
+  int lineno = -1;
+  if (tvh_thread_debug > 0)
+    tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
   
 #if defined(PLATFORM_DARWIN)
@@ -351,7 +354,8 @@ tvh_cond_timedwait
 #endif
 
 #if ENABLE_TRACE
-  tvh_mutex_add_to_list(mutex, filename, lineno);
+  if (tvh_thread_debug > 0)
+    tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
 }
@@ -361,13 +365,15 @@ int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec 
   int r;
   
 #if ENABLE_TRACE
-  const char *filename;
-  int lineno;
-  tvh_mutex_remove_from_list(mutex, &filename, &lineno);
+  const char *filename = NULL;
+  int lineno = -1;
+  if (tvh_thread_debug > 0)
+    tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
   r = pthread_cond_timedwait(&cond->cond, &mutex->mutex, ts);
 #if ENABLE_TRACE
-  tvh_mutex_add_to_list(mutex, filename, lineno);
+  if (tvh_thread_debug > 0)
+    tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
 }
