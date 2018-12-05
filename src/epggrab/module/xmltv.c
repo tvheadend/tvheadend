@@ -582,7 +582,7 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
          ) &&
         (e = htsmsg_get_map_by_field(f)))  {
       const char* str = htsmsg_get_str(e, "cdata");
-      char *s, *str2 = NULL, *saveptr;
+      char *s, *str2 = NULL, *saveptr = NULL;
       if (str == NULL) continue;
       if (strstr(str, "|") == 0) {
       
