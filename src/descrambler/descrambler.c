@@ -689,7 +689,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
     snprintf(pidname, sizeof(pidname), "[%d]", pid);
   ktype = descrambler_keytype2str(type);
 
-  if (tvhcsa_set_type(&tk->key_csa, type) < 0) {
+  if (tvhcsa_set_type(&tk->key_csa, (mpegts_service_t *)t, type) < 0) {
     if (tk->key_type_overwritten)
       goto end;
     if (type == DESCRAMBLER_CSA_CBC && tk->key_csa.csa_type == DESCRAMBLER_DES_NCB) {
@@ -706,7 +706,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
             ktype, ((mpegts_service_t *)t)->s_dvb_svcname);
     tvhcsa_destroy(&tk->key_csa);
     tvhcsa_init(&tk->key_csa);
-    if (tvhcsa_set_type(&tk->key_csa, type) < 0)
+    if (tvhcsa_set_type(&tk->key_csa, (mpegts_service_t *)t, type) < 0)
       goto end;
     tk->key_valid = 0;
   }

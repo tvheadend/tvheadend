@@ -27,6 +27,7 @@ struct elementary_stream;
 #if ENABLE_DVBCSA
 #include <dvbcsa/dvbcsa.h>
 #endif
+#include "tvhlog.h"
 
 typedef struct tvhcsa
 {
@@ -45,6 +46,7 @@ typedef struct tvhcsa
   int      csa_cluster_size;
   uint8_t *csa_tsbcluster;
   int      csa_fill;
+  int      csa_fill_size;
 
 #if ENABLE_DVBCSA
   struct dvbcsa_bs_batch_s *csa_tsbbatch_even;
@@ -56,12 +58,13 @@ typedef struct tvhcsa
   struct dvbcsa_bs_key_s *csa_key_odd;
 #endif
   void *csa_priv;
+  tvhlog_limit_t tvhcsa_loglimit;
 
 } tvhcsa_t;
 
 #if ENABLE_TVHCSA
 
-int  tvhcsa_set_type( tvhcsa_t *csa, int type );
+int  tvhcsa_set_type( tvhcsa_t *csa, struct mpegts_service *s, int type );
 
 void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even );
 void tvhcsa_set_key_odd ( tvhcsa_t *csa, const uint8_t *odd );
@@ -71,7 +74,7 @@ void tvhcsa_destroy ( tvhcsa_t *csa );
 
 #else
 
-static inline int tvhcsa_set_type( tvhcsa_t *csa, int type ) { return -1; }
+static inline int tvhcsa_set_type( tvhcsa_t *csa, struct mpegts_service *s, int type ) { return -1; }
 
 static inline void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even ) { };
 static inline void tvhcsa_set_key_odd ( tvhcsa_t *csa, const uint8_t *odd ) { };
