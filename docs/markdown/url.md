@@ -97,3 +97,9 @@ channelid     | One channel specified by short channel ID
 tag           | Tagged channels specified by UUID or tag name
 tagname       | Tagged channels specified by tag name
 tagid         | Tagged channels specified by short tag ID
+
+
+### /special/srvid2
+
+Copy this contents to your oscam.srvid2 and start/restart
+the server.

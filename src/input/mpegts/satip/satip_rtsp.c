@@ -170,7 +170,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     buf[0] = '\0';
 
   if (flags & SATIP_SETUP_FE)
-	  sprintf(buf + strlen(buf), "fe=%i", fe);
+    sprintf(buf + strlen(buf), "fe=%i", fe);
 
   if (dmc->dmc_fe_delsys == DVB_SYS_DVBS ||
       dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {

@@ -217,6 +217,8 @@ int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
 const char * http_username(http_connection_t *hc);
 
+int http_noaccess_code(http_connection_t *hc);
+
 void http_alive(http_connection_t *hc);
 
 void http_error(http_connection_t *hc, int error);
@@ -435,6 +437,8 @@ struct http_client {
 
 void http_client_init ( void );
 void http_client_done ( void );
+
+const char * http_client_con2str(http_state_t state);
 
 http_client_t*
 http_client_connect ( void *aux, http_ver_t ver, const char *scheme,

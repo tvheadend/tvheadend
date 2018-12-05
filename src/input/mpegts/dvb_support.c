@@ -42,6 +42,9 @@ static int convert_iso_8859[16] = {
 #define convert_ucs2 16
 #define convert_gb   17
 
+#define conv_lower(dst, dstlen, c) \
+  if (c >= 0x20 || c == '\n') { *(dst++) = c; (*dstlen)--; }
+
 static inline size_t conv_gb(const uint8_t *src, size_t srclen,
                              char *dst, size_t *dstlen)
 {
@@ -56,8 +59,11 @@ static inline size_t conv_gb(const uint8_t *src, size_t srclen,
 static inline int encode_utf8(unsigned int c, char *outb, int outleft)
 {
   if (c <= 0x7F && outleft >= 1) {
-    *outb = c;
-    return 1;
+    if (c >= 0x20 || c == '\n') {
+      *outb = c;
+      return 1;
+    }
+    return 0;
   } else if (c <= 0x7FF && outleft >=2) {
     *outb++ = ((c >>  6) & 0x1F) | 0xC0;
     *outb++ = ( c        & 0x3F) | 0x80;
@@ -113,9 +119,15 @@ static inline size_t conv_utf8(const uint8_t *src, size_t srclen,
                                char *dst, size_t *dstlen)
 {
   while (srclen>0 && (*dstlen)>0) {
-    *dst = (char) *src;
-    srclen--; (*dstlen)--;
-    src++; dst++;
+    uint_fast8_t c = *src;
+    if (c <= 0x7f) {
+      conv_lower(dst, dstlen, c);
+    } else {
+      *(dst++) = c;
+      (*dstlen)--;
+    }
+    srclen--;
+    src++;
   }
   if (srclen>0) {
     errno = E2BIG;
@@ -131,12 +143,9 @@ static inline size_t conv_8859(int conv,
   uint16_t *table = conv_8859_table[conv];
 
   while (srclen>0 && (*dstlen)>0) {
-    uint8_t c = *src;
+    uint_fast8_t c = *src;
     if (c <= 0x7f) {
-      // lower half of iso-8859-* is identical to utf-8
-      *dst = (char) *src;
-      (*dstlen)--;
-      dst++;
+      conv_lower(dst, dstlen, c);
     } else if (c <= 0x9f) {
       // codes 0x80 - 0x9f (control codes) are ignored except CR/LF
       if (c == 0x8a) {
@@ -147,7 +156,7 @@ static inline size_t conv_8859(int conv,
     } else {
       // map according to character table, skipping
       // unmapped chars (value 0 in the table)
-      uint16_t uc = table[c-0xa0];
+      uint_fast16_t uc = table[c-0xa0];
       if (uc != 0) {
         int len = encode_utf8(uc, dst, *dstlen);
         if (len == -1) {
@@ -173,12 +182,9 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
                               char *dst, size_t *dstlen)
 {
   while (srclen>0 && (*dstlen)>0) {
-    uint8_t c = *src;
+    uint_fast8_t c = *src;
     if (c <= 0x7f) {
-      // lower half of iso6937 is identical to utf-8
-      *dst = (char) *src;
-      (*dstlen)--;
-      dst++;
+      conv_lower(dst, dstlen, c);
     } else if (c <= 0x9f) {
       // codes 0x80 - 0x9f (control codes) are ignored except CR/LF
       if (c == 0x8a) {

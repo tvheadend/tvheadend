@@ -48,7 +48,7 @@ webui_api_handler
     switch (r) {
       case EPERM:
       case EACCES:
-        r = HTTP_STATUS_UNAUTHORIZED;
+        r = http_noaccess_code(hc);
         break;
       case ENOENT:
       case ENOSYS:

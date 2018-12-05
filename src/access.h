@@ -263,9 +263,9 @@ access_get_theme(access_t *a);
  * Return 0 if access is granted, -1 otherwise
  */
 static inline int access_verify2(const access_t *a, uint32_t mask)
-  { return (mask & ACCESS_OR) ?
+  { return a ? ((mask & ACCESS_OR) ?
       ((a->aa_rights & mask) ? 0 : -1) :
-      ((a->aa_rights & mask) == mask ? 0 : -1); }
+      ((a->aa_rights & mask) == mask ? 0 : -1)) : -1; }
 
 int access_verify_list(htsmsg_t *list, const char *item);
 

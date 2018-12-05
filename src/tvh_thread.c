@@ -187,23 +187,17 @@ static void tvh_mutex_check_interval(tvh_mutex_t *mutex)
 #endif
 
 #if ENABLE_TRACE
-static void tvh_mutex_remove_from_list(tvh_mutex_t *mutex)
+static void tvh_mutex_remove_from_list(tvh_mutex_t *mutex, const char **filename, int *lineno)
 {
   pthread_mutex_lock(&thrwatch_mutex);
+  if (filename)
+    *filename = mutex->filename;
+  if (lineno)
+    *lineno = mutex->lineno;
   TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
   tvh_mutex_check_interval(mutex);
   mutex->filename = NULL;
   mutex->lineno = 0;
-  pthread_mutex_unlock(&thrwatch_mutex);
-}
-#endif
-
-#if ENABLE_TRACE
-static void tvh_mutex_remove_from_list_keep_info(tvh_mutex_t *mutex)
-{
-  pthread_mutex_lock(&thrwatch_mutex);
-  TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
-  tvh_mutex_check_interval(mutex);
   pthread_mutex_unlock(&thrwatch_mutex);
 }
 #endif
@@ -234,7 +228,7 @@ int tvh__mutex_unlock(tvh_mutex_t *mutex)
   int r;
   r = pthread_mutex_unlock(&mutex->mutex);
   if (r == 0)
-    tvh_mutex_remove_from_list(mutex);
+    tvh_mutex_remove_from_list(mutex, NULL, NULL);
   return r;
 }
 #endif
@@ -311,11 +305,15 @@ tvh_cond_wait
   int r;
   
 #if ENABLE_TRACE
-  tvh_mutex_remove_from_list_keep_info(mutex);
+  const char *filename = NULL;
+  int lineno = -1;
+  if (tvh_thread_debug > 0)
+    tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
   r = pthread_cond_wait(&cond->cond, &mutex->mutex);
 #if ENABLE_TRACE
-  tvh_mutex_add_to_list(mutex, NULL, -1);
+  if (tvh_thread_debug > 0)
+    tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
 }
@@ -327,7 +325,10 @@ tvh_cond_timedwait
   int r;
 
 #if ENABLE_TRACE
-  tvh_mutex_remove_from_list_keep_info(mutex);
+  const char *filename = NULL;
+  int lineno = -1;
+  if (tvh_thread_debug > 0)
+    tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
   
 #if defined(PLATFORM_DARWIN)
@@ -353,7 +354,8 @@ tvh_cond_timedwait
 #endif
 
 #if ENABLE_TRACE
-  tvh_mutex_add_to_list(mutex, NULL, -1);
+  if (tvh_thread_debug > 0)
+    tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
 }
@@ -363,11 +365,15 @@ int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec 
   int r;
   
 #if ENABLE_TRACE
-  tvh_mutex_remove_from_list_keep_info(mutex);
+  const char *filename = NULL;
+  int lineno = -1;
+  if (tvh_thread_debug > 0)
+    tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
   r = pthread_cond_timedwait(&cond->cond, &mutex->mutex, ts);
 #if ENABLE_TRACE
-  tvh_mutex_add_to_list(mutex, NULL, -1);
+  if (tvh_thread_debug > 0)
+    tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
 }
@@ -384,7 +390,7 @@ static void tvh_thread_mutex_deadlock(tvh_mutex_t *mutex)
 {
   int fd = hts_settings_open_file(HTS_SETTINGS_OPEN_WRITE | HTS_SETTINGS_OPEN_DIRECT, "mutex-deadlock.txt");
   if (fd < 0) fd = fileno(stderr);
-#ifdef PLATFORM_LINUX
+#if defined(PLATFORM_LINUX) && __GLIBC__
   int sid = mutex->mutex.__data.__owner; /* unportable */
 #else
   int sid = -1;
@@ -416,7 +422,7 @@ static void *tvh_thread_watch_thread(void *aux)
   int64_t now;
   tvh_mutex_t *mutex, dmutex;
 
-  while (!tvhwatch_done) {
+  while (!atomic_get(&tvhwatch_done)) {
     pthread_mutex_lock(&thrwatch_mutex);
     now = getfastmonoclock();
     mutex = TAILQ_LAST(&thrwatch_mutexes, tvh_mutex_queue);
@@ -442,7 +448,7 @@ void tvh_thread_init(int debug_level)
   tvh_thread_debug = debug_level;
   tvh_thread_crash_time = getfastmonoclock() + sec2mono(15);
   if (debug_level > 0) {
-    tvhwatch_done = 0;
+    atomic_set(&tvhwatch_done, 0);
     tvh_thread_create(&thrwatch_tid, NULL, tvh_thread_watch_thread, NULL, "thrwatch");
   }
 #endif
@@ -452,7 +458,7 @@ void tvh_thread_done(void)
 {
 #if ENABLE_TRACE
   if (tvh_thread_debug > 0) {
-    tvhwatch_done = 1;
+    atomic_set(&tvhwatch_done, 1);
     pthread_join(thrwatch_tid, NULL);
   }
 #endif

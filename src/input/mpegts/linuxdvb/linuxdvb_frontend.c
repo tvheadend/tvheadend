@@ -2096,6 +2096,7 @@ linuxdvb_frontend_create
   linuxdvb_frontend_t *lfe;
   htsmsg_t *scconf;
   ssize_t r;
+  int fd;
 
   /* Internal config ID */
   snprintf(id, sizeof(id), "%s #%d", dvb_type2str(type), number);
@@ -2218,6 +2219,13 @@ linuxdvb_frontend_create
   if (lfe->lfe_type == DVB_TYPE_S && !lfe->lfe_satconf && !muuid) {
     scconf = conf ? htsmsg_get_map(conf, "satconf") : NULL;
     lfe->lfe_satconf = linuxdvb_satconf_create(lfe, scconf);
+  }
+
+  /* Special enigma2 settings - DMX_SET_SOURCE */
+  fd = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
+  if (fd >= 0) {
+    ioctl(fd, _IOW('o', 49, int), &lfe->lfe_number);
+    close(fd);
   }
 
   /* Double check enabled */

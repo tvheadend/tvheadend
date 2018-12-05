@@ -1585,7 +1585,7 @@ satip_frontend_input_thread ( void *aux )
   int rtsp_flags, position, reply;
   uint32_t seq, unc;
   udp_multirecv_t um;
-  uint64_t u64, u64_2;
+  uint64_t u64, u64_2, fatal_timeout;
   long stream_id;
 
   /* If set - the thread will be cancelled */
@@ -1890,6 +1890,7 @@ new_tune:
   lfe->sf_skip_ts = MINMAX(lfe->sf_device->sd_skip_ts, 0, 200) * 188;
   
   lfe->sf_last_activity_tstamp = mclk();
+  fatal_timeout = sec2mono(5 + MINMAX(lfe->sf_grace_period, 0, 60));
 
   while ((reply || running) && !fatal) {
 
@@ -1933,7 +1934,7 @@ new_tune:
       continue;
     }
 
-    if (lfe->sf_last_activity_tstamp + sec2mono(5) < mclk()) {
+    if (lfe->sf_last_activity_tstamp + fatal_timeout < mclk()) {
       tvhwarn(LS_SATIP, "%s - no data received, restarting RTSP", buf);
       satip_frontend_tuning_error(lfe, tr);
       fatal = 1;
@@ -2035,7 +2036,8 @@ new_tune:
         default:
           if (rtsp->hc_code >= 400) {
             tvherror(LS_SATIP, "%s - RTSP cmd error %d (%s) [%i-%i]",
-                     buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
+                     buf, r, r > 0 ? http_client_con2str(r) : strerror(-r),
+                     rtsp->hc_cmd, rtsp->hc_code);
             satip_frontend_tuning_error(lfe, tr);
             fatal = 1;
           }
@@ -2061,7 +2063,7 @@ new_tune:
       if (c > 0) {
         lfe->sf_last_activity_tstamp = mclk();
         tvh_mutex_lock(&lfe->sf_dvr_lock);
-       if (lfe->sf_req == lfe->sf_req_thread)
+        if (lfe->sf_req == lfe->sf_req_thread)
           satip_frontend_decode_rtcp(lfe, buf, mmi, b, c);
         tvh_mutex_unlock(&lfe->sf_dvr_lock);
       }

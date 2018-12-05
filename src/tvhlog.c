@@ -569,7 +569,7 @@ void tvhdbg(int subsys, const char *fmt, ...)
 void
 tvhlog_init ( int level, int options, const char *path )
 {
-  tvhlog_level   = level;
+  atomic_set(&tvhlog_level, level);
   tvhlog_options = options;
   tvhlog_path    = path ? strdup(path) : NULL;
   memset(tvhlog_trace, 0, sizeof(tvhlog_trace));
@@ -604,6 +604,7 @@ tvhlog_end ( void )
 {
   FILE *fp = NULL;
   tvhlog_msg_t *msg;
+  tvh_mutex_lock(&tvhlog_mutex);
   tvhlog_run = 0;
   tvh_cond_signal(&tvhlog_cond, 0);
   tvh_mutex_unlock(&tvhlog_mutex);
