@@ -1165,7 +1165,7 @@ function accessUpdate(o) {
 
         cp.add(tsdvr);
 
-        /* CSA */
+        /* CAs */
         if (tvheadend.capabilities.indexOf('caclient') !== -1)
             tvheadend.caclient(cp, 6);
 
