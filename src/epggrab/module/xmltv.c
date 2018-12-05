@@ -573,21 +573,46 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
   htsmsg_field_t *f;
 
   HTSMSG_FOREACH(f, credits_tags) {
-    if ((!strcmp(htsmsg_field_name(f), "actor") ||
-         !strcmp(htsmsg_field_name(f), "director") ||
-         !strcmp(htsmsg_field_name(f), "guest") ||
-         !strcmp(htsmsg_field_name(f), "presenter") ||
-         !strcmp(htsmsg_field_name(f), "writer")
+    const char *fname = htsmsg_field_name(f);
+    if ((!strcmp(fname, "actor") ||
+         !strcmp(fname, "director") ||
+         !strcmp(fname, "guest") ||
+         !strcmp(fname, "presenter") ||
+         !strcmp(fname, "writer")
          ) &&
         (e = htsmsg_get_map_by_field(f)))  {
       const char* str = htsmsg_get_str(e, "cdata");
-      if (str) {
+      char *s, *str2 = NULL, *saveptr;
+      if (str == NULL) continue;
+      if (strstr(str, "|") == 0) {
+      
+        if (strlen(str) > 255) {
+          str2 = strdup(str);
+          str2[256] = '\0';
+          str = str2;
+        }
+      
         if (!credits_names) credits_names = string_list_create();
         string_list_insert(credits_names, str);
 
         if (!*out_credits) *out_credits = htsmsg_create_map();
-        htsmsg_add_str(*out_credits, str, htsmsg_field_name(f));
+        htsmsg_add_str(*out_credits, str, fname);
+      } else {
+        for (s = str2 = strdup(str); ; s = NULL) {
+          s = strtok_r(s, "|", &saveptr);
+          if (s == NULL) break;
+
+          if (strlen(s) > 255)
+            s[256] = '\0';
+
+          if (!credits_names) credits_names = string_list_create();
+          string_list_insert(credits_names, s);
+
+          if (!*out_credits) *out_credits = htsmsg_create_map();
+          htsmsg_add_str(*out_credits, s, fname);
+        }
       }
+      free(str2);
     }
   }
 
