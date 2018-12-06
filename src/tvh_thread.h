@@ -31,13 +31,24 @@ typedef struct {
 
 TAILQ_HEAD(tvh_mutex_queue, tvh_mutex);
 
-typedef struct tvh_mutex {
-  pthread_mutex_t mutex;
 #if ENABLE_TRACE
-  pthread_t thread;
+typedef struct tvh_mutex_waiter {
+  LIST_ENTRY(tvh_mutex_waiter) link;
+  long tid;
   const char *filename;
   int lineno;
   int64_t tstamp;
+} tvh_mutex_waiter_t;
+#endif
+
+typedef struct tvh_mutex {
+  pthread_mutex_t mutex;
+#if ENABLE_TRACE
+  long tid;
+  const char *filename;
+  int lineno;
+  int64_t tstamp;
+  LIST_HEAD(, tvh_mutex_waiter) waiters;
   TAILQ_ENTRY(tvh_mutex) link;
 #endif
 } tvh_mutex_t;
