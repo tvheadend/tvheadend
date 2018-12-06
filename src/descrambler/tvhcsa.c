@@ -180,12 +180,7 @@ tvhcsa_set_type( tvhcsa_t *csa, struct mpegts_service *s, int type )
     tvhtrace(LS_CSA, "%p: service \"%s\" using CSA batch size = %d for decryption",    
                 csa, ((mpegts_service_t *)s)->s_dvb_svcname, csa->csa_cluster_size );       
 
-    /* Note: the optimized routines might read memory after last TS packet */
-    /*       allocate safe memory and fill it with zeros */
-    /*   (this was only necessary for ffdecsa) */
-//    csa->csa_tsbcluster    = malloc((csa->csa_cluster_size + 1) * 188);
     csa->csa_tsbcluster    = malloc(csa->csa_fill_size * 188);
-//    memset(csa->csa_tsbcluster + csa->csa_cluster_size * 188, 0, 188);
 #if ENABLE_DVBCSA
     csa->csa_tsbbatch_even = malloc((csa->csa_cluster_size + 1) *
                                     sizeof(struct dvbcsa_bs_batch_s));
