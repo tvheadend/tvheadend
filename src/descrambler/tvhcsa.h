@@ -27,6 +27,7 @@ struct elementary_stream;
 #if ENABLE_DVBCSA
 #include <dvbcsa/dvbcsa.h>
 #endif
+#include "tvhlog.h"
 
 typedef struct tvhcsa
 {
@@ -57,6 +58,7 @@ typedef struct tvhcsa
   struct dvbcsa_bs_key_s *csa_key_odd;
 #endif
   void *csa_priv;
+  tvhlog_limit_t tvhcsa_loglimit;
 
 } tvhcsa_t;
 

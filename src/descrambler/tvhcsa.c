@@ -124,7 +124,8 @@ tvhcsa_csa_cbc_descramble
      if(pkt[3] & 0x20) {	// incomplete packet
        offset = 4 + pkt[4] + 1;
        if (offset > 188-8){	// invalid offset (residue handling?)
-         tvhwarn(LS_TVHCSA, "invalid payload offset in packet for service \"%s\"   offset=%ld pkt[3]=0x%02x pkt[4]=0x%02x",    
+         if (tvhlog_limit(&csa->tvhcsa_loglimit, 10))
+	   tvhwarn(LS_TVHCSA, "invalid payload offset in packet for service \"%s\"   offset=%ld pkt[3]=0x%02x pkt[4]=0x%02x",    
 			    ((mpegts_service_t *)s)->s_dvb_svcname, offset, pkt[3], pkt[4]);       
          break;			// no more processing
        }
