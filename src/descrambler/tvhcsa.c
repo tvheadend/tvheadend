@@ -73,7 +73,7 @@ tvhcsa_csa_cbc_flush
   ( tvhcsa_t *csa, struct mpegts_service *s )
 {
 #if ENABLE_DVBCSA
-  tvhtrace(LS_TVHCSA, "%p: CSA flush - descramble packets for service \"%s\"  MAX=%d  even=%d  odd=%d   fill=%d ",    
+  tvhtrace(LS_CSA, "%p: CSA flush - descramble packets for service \"%s\"  MAX=%d  even=%d  odd=%d   fill=%d ",    
          csa,((mpegts_service_t *)s)->s_dvb_svcname, csa->csa_cluster_size,csa->csa_fill_even,csa->csa_fill_odd,csa->csa_fill );       
 
   if(csa->csa_fill_even) {
@@ -125,7 +125,7 @@ tvhcsa_csa_cbc_descramble
        offset = 4 + pkt[4] + 1;
        if (offset > 188-8){	// invalid offset (residue handling?)
          if (tvhlog_limit(&csa->tvhcsa_loglimit, 10))
-	   tvhwarn(LS_TVHCSA, "invalid payload offset in packet for service \"%s\"   offset=%ld pkt[3]=0x%02x pkt[4]=0x%02x",    
+	   tvhwarn(LS_CSA, "invalid payload offset in packet for service \"%s\"   offset=%ld pkt[3]=0x%02x pkt[4]=0x%02x",    
 			    ((mpegts_service_t *)s)->s_dvb_svcname, offset, pkt[3], pkt[4]);       
          break;			// no more processing
        }
@@ -177,7 +177,7 @@ tvhcsa_set_type( tvhcsa_t *csa, struct mpegts_service *s, int type )
     csa->csa_cluster_size  = 0;
 #endif
     csa->csa_fill_size  = 3 * csa->csa_cluster_size;
-    tvhtrace(LS_TVHCSA, "%p: service \"%s\" using CSA batch size = %d for decryption",    
+    tvhtrace(LS_CSA, "%p: service \"%s\" using CSA batch size = %d for decryption",    
                 csa, ((mpegts_service_t *)s)->s_dvb_svcname, csa->csa_cluster_size );       
 
     /* Note: the optimized routines might read memory after last TS packet */
