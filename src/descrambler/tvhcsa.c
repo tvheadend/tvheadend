@@ -122,10 +122,12 @@ tvhcsa_csa_cbc_descramble
      ev_od = pkt[3] & 0x40;
      pkt[3] &= 0x3f; 		// consider it decrypted now
      if(pkt[3] & 0x20) {	// incomplete packet
+       if(!(pkt[3] & 0x10))    // no payload - but why scrambled???
+         break;
        offset = 4 + pkt[4] + 1;
-       if (offset > 188-8){	// invalid offset (residue handling?)
-         if (tvhlog_limit(&csa->tvhcsa_loglimit, 10))
-           tvhwarn(LS_CSA, "invalid payload offset in packet for service \"%s\" (offset=%d pkt[3]=0x%02x pkt[4]=0x%02x)",
+       if (offset > 188-1){	// invalid offset (residue handling?)
+         if (tvhlog_limit(&csa->tvhcsa_loglimit, 30))
+           tvhtrace(LS_CSA, "invalid payload offset in packet for service \"%s\" (offset=%d pkt[3]=0x%02x pkt[4]=0x%02x)",
                            ((mpegts_service_t *)s)->s_dvb_svcname, (int)offset, pkt[3], pkt[4]);
          break;			// no more processing
        }
