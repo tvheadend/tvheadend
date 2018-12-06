@@ -566,7 +566,7 @@ EOF
 
   # Add build config string declaration
   cat >> "${CONFIG_H}" <<EOF
-#define DESCRAMBLER_MAX_KEYS 64
+#define DESCRAMBLER_MAX_KEYS 8
 EOF
 
   # Add build config string declaration
