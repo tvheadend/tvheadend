@@ -4977,13 +4977,6 @@ dvr_entry_init(void)
     }
     htsmsg_destroy(l);
   }
-  /* We update the autorec entries so any that are no longer matching
-   * the current schedule get deleted. This avoids the problem where
-   * autorec entries remain even when user has deleted the epgdb
-   * or modified their settings between runs.
-   */
-  tvhinfo(LS_DVR, "Purging obsolete autorec entries for current schedule");
-  dvr_autorec_purge_obsolete_timers();
   dvr_in_init = 0;
   /* process parent/child mapping */
   HTSMSG_FOREACH(f, rere) {

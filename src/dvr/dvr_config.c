@@ -1527,6 +1527,15 @@ dvr_init(void)
   dvr_autorec_init();
   dvr_timerec_init();
   dvr_entry_init();
+
+  /* We update the autorec entries so any that are no longer matching
+   * the current schedule get deleted. This avoids the problem where
+   * autorec entries remain even when user has deleted the epgdb
+   * or modified their settings between runs.
+   */
+  tvhinfo(LS_DVR, "Purging obsolete autorec entries for current schedule");
+  dvr_autorec_purge_obsolete_timers();
+
   dvr_autorec_update();
   dvr_timerec_update();
   dvr_disk_space_init();
