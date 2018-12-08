@@ -52,7 +52,7 @@ static pthread_t  save_tid;
 static int        save_running;
 static mtimer_t   save_timer;
 
-static tvh_mutex_t idnode_lnotify_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+static tvh_mutex_t idnode_lnotify_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 static tvh_uuid_set_t  idnode_lnotify_set;
 static tvh_uuid_set_t  idnode_lnotify_title_set;
 

@@ -31,7 +31,7 @@
 #include "tcp.h"
 #include "memoryinfo.h"
 
-static tvh_mutex_t comet_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+static tvh_mutex_t comet_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 static tvh_cond_t comet_cond;
 static int comet_waiting;
 

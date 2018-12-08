@@ -41,7 +41,7 @@
 
 extern char **environ;
 
-tvh_mutex_t spawn_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+tvh_mutex_t spawn_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 
 static LIST_HEAD(, spawn) spawns;
 

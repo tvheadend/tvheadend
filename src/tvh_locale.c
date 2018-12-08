@@ -30,7 +30,7 @@ struct tvh_locale {
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
-tvh_mutex_t tvh_gettext_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+tvh_mutex_t tvh_gettext_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 
 /*
  *

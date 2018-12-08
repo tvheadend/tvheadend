@@ -500,7 +500,7 @@ lang_code_lookup_t* lang_codes_code2b = NULL;
 lang_code_lookup_t* lang_codes_code1 = NULL;
 lang_code_lookup_t* lang_codes_code2t = NULL;
 
-tvh_mutex_t lang_code_split_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+tvh_mutex_t lang_code_split_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 RB_HEAD(,lang_code_list) lang_code_split_tree = { NULL, NULL, NULL, 0 };
 
 /* **************************************************************************

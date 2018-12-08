@@ -25,6 +25,9 @@
 #include "queue.h"
 #include "build.h"
 
+#define TVH_THREAD_MUTEX_MAGIC1 0xd76a338a
+#define TVH_THREAD_MUTEX_MAGIC2 0xf93a6421
+
 typedef struct {
   pthread_cond_t cond;
 } tvh_cond_t;
@@ -44,12 +47,14 @@ typedef struct tvh_mutex_waiter {
 typedef struct tvh_mutex {
   pthread_mutex_t mutex;
 #if ENABLE_TRACE
+  uint32_t magic1;
   long tid;
   const char *filename;
   int lineno;
   int64_t tstamp;
   LIST_HEAD(, tvh_mutex_waiter) waiters;
   TAILQ_ENTRY(tvh_mutex) link;
+  uint32_t magic2;
 #endif
 } tvh_mutex_t;
 
@@ -72,6 +77,18 @@ lock_assert0(tvh_mutex_t *l, const char *file, int line)
 }
 
 #define lock_assert(l) lock_assert0(l, __FILE__, __LINE__)
+
+#if ENABLE_TRACE
+#define TVH_THREAD_MUTEX_INITIALIZER { \
+  .magic1 = TVH_THREAD_MUTEX_MAGIC1, \
+  .magic2 = TVH_THREAD_MUTEX_MAGIC2, \
+  .mutex = PTHREAD_MUTEX_INITIALIZER, \
+}
+#else
+#define TVH_THREAD_MUTEX_INITIALIZER { \
+  .mutex = PTHREAD_MUTEX_INITIALIZER, \
+}
+#endif
 
 /*
  *

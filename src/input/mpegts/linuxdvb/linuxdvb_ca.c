@@ -41,8 +41,8 @@
 
 #define TRANSPORT_RECOVERY 4 /* in seconds */
 
-static tvh_mutex_t linuxdvb_ca_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
-static tvh_mutex_t linuxdvb_capmt_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+static tvh_mutex_t linuxdvb_ca_mutex = TVH_THREAD_MUTEX_INITIALIZER;
+static tvh_mutex_t linuxdvb_capmt_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 static th_pipe_t linuxdvb_ca_pipe;
 static pthread_t linuxdvb_ca_threadid;
 static mtimer_t linuxdvb_ca_thread_join_timer;

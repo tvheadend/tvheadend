@@ -30,6 +30,10 @@ static TAILQ_HEAD(, tvh_mutex) thrwatch_mutexes = TAILQ_HEAD_INITIALIZER(thrwatc
 static int64_t tvh_thread_crash_time;
 #endif
 
+#if ENABLE_TRACE
+static void tvh_thread_mutex_failed(tvh_mutex_t *mutex, const char *reason);
+#endif
+
 /*
  * thread routines
  */
@@ -134,14 +138,34 @@ tvh_thread_renice(int value)
   return ret;
 }
 
+#if ENABLE_TRACE
+static void tvh_mutex_check_magic(tvh_mutex_t *mutex)
+{
+  if (mutex &&
+      mutex->magic1 == TVH_THREAD_MUTEX_MAGIC1 &&
+      mutex->magic2 == TVH_THREAD_MUTEX_MAGIC2)
+    return;
+  tvh_thread_mutex_failed(mutex, "magic");
+}
+#else
+static inline void tvh_mutex_check_magic(tvh_mutex_t *mutex)
+{
+}
+#endif
+
 int tvh_mutex_init(tvh_mutex_t *mutex, const pthread_mutexattr_t *attr)
 {
   memset(mutex, 0, sizeof(*mutex));
+#if ENABLE_TRACE
+  mutex->magic1 = TVH_THREAD_MUTEX_MAGIC1;
+  mutex->magic2 = TVH_THREAD_MUTEX_MAGIC2;
+#endif
   return pthread_mutex_init(&mutex->mutex, attr);
 }
 
 int tvh_mutex_destroy(tvh_mutex_t *mutex)
 {
+  tvh_mutex_check_magic(mutex);
   return pthread_mutex_destroy(&mutex->mutex);
 }
 
@@ -224,7 +248,9 @@ tvh_mutex_remove_from_waiters(tvh_mutex_waiter_t *w)
 #if ENABLE_TRACE
 int tvh__mutex_lock(tvh_mutex_t *mutex, const char *filename, int lineno)
 {
-  tvh_mutex_waiter_t *w = tvh_mutex_add_to_waiters(mutex, filename, lineno);
+  tvh_mutex_waiter_t *w;
+  tvh_mutex_check_magic(mutex);
+  w = tvh_mutex_add_to_waiters(mutex, filename, lineno);
   int r = pthread_mutex_lock(&mutex->mutex);
   tvh_mutex_remove_from_waiters(w);
   if (r == 0)
@@ -236,6 +262,7 @@ int tvh__mutex_lock(tvh_mutex_t *mutex, const char *filename, int lineno)
 #if ENABLE_TRACE
 int tvh__mutex_trylock(tvh_mutex_t *mutex, const char *filename, int lineno)
 {
+  tvh_mutex_check_magic(mutex);
   int r = pthread_mutex_trylock(&mutex->mutex);
   if (r == 0)
     tvh_mutex_add_to_list(mutex, filename, lineno);
@@ -246,8 +273,8 @@ int tvh__mutex_trylock(tvh_mutex_t *mutex, const char *filename, int lineno)
 #if ENABLE_TRACE
 int tvh__mutex_unlock(tvh_mutex_t *mutex)
 {
-  int r;
-  r = pthread_mutex_unlock(&mutex->mutex);
+  tvh_mutex_check_magic(mutex);
+  int r = pthread_mutex_unlock(&mutex->mutex);
   if (r == 0)
     tvh_mutex_remove_from_list(mutex, NULL, NULL);
   return r;
@@ -261,6 +288,7 @@ tvh_mutex_timedlock
   int64_t finish = getfastmonoclock() + usec;
   int retcode;
 
+  tvh_mutex_check_magic(mutex);
   while ((retcode = pthread_mutex_trylock (&mutex->mutex)) == EBUSY) {
     if (getfastmonoclock() >= finish)
       return ETIMEDOUT;
@@ -328,6 +356,7 @@ tvh_cond_wait
 #if ENABLE_TRACE
   const char *filename = NULL;
   int lineno = -1;
+  tvh_mutex_check_magic(mutex);
   if (tvh_thread_debug > 0)
     tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
@@ -348,6 +377,7 @@ tvh_cond_timedwait
 #if ENABLE_TRACE
   const char *filename = NULL;
   int lineno = -1;
+  tvh_mutex_check_magic(mutex);
   if (tvh_thread_debug > 0)
     tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
@@ -388,6 +418,7 @@ int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec 
 #if ENABLE_TRACE
   const char *filename = NULL;
   int lineno = -1;
+  tvh_mutex_check_magic(mutex);
   if (tvh_thread_debug > 0)
     tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
@@ -434,13 +465,14 @@ static void tvh_thread_deadlock_write(htsbuf_queue_t *q)
 #endif
 
 #if ENABLE_TRACE
-static void tvh_thread_mutex_deadlock(tvh_mutex_t *mutex)
+static void tvh_thread_mutex_failed(tvh_mutex_t *mutex, const char *reason)
 {
   htsbuf_queue_t q;
   tvh_mutex_t *m;
   tvh_mutex_waiter_t *w;
 
   htsbuf_queue_init(&q, 0);
+  htsbuf_qprintf(&q, "REASON: %s\n", reason);
   htsbuf_qprintf(&q, "mutex %p locked in: %s:%i (thread %ld)\n", mutex, mutex->filename, mutex->lineno, mutex->tid);
   LIST_FOREACH(w, &mutex->waiters, link)
     htsbuf_qprintf(&q, "mutex %p   waiting in: %s:%i (thread %ld)\n", mutex, w->filename, w->lineno, w->tid);
@@ -468,7 +500,7 @@ static void *tvh_thread_watch_thread(void *aux)
     mutex = TAILQ_LAST(&thrwatch_mutexes, tvh_mutex_queue);
     if (mutex && mutex->tstamp + sec2mono(5) < now) {
       pthread_mutex_unlock(&thrwatch_mutex);
-      tvh_thread_mutex_deadlock(mutex);
+      tvh_thread_mutex_failed(mutex, "deadlock");
     }
     pthread_mutex_unlock(&thrwatch_mutex);
     if (tvh_thread_debug == 12345678 && tvh_thread_crash_time < getfastmonoclock()) {

@@ -33,7 +33,7 @@
 void *http_server;
 static int http_server_running;
 
-static tvh_mutex_t http_paths_mutex = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+static tvh_mutex_t http_paths_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 static http_path_list_t http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
