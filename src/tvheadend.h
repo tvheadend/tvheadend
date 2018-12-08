@@ -127,8 +127,13 @@ extern int tvheadend_htsp_port;
 
 typedef void (mti_callback_t)(void *opaque);
 
+#define MTIMER_MAGIC1 0x0d62a9de
+
 typedef struct mtimer {
   LIST_ENTRY(mtimer) mti_link;
+#if ENABLE_TRACE
+  uint32_t mti_magic1;
+#endif
   mti_callback_t *mti_callback;
   void *mti_opaque;
   int64_t mti_expire;
@@ -155,10 +160,15 @@ void mtimer_disarm(mtimer_t *mti);
  * global timer (based on the current system time - time())
  */
 
+#define GTIMER_MAGIC1 0x8a6f238f
+
 typedef void (gti_callback_t)(void *opaque);
 
 typedef struct gtimer {
   LIST_ENTRY(gtimer) gti_link;
+#if ENABLE_TRACE
+  uint32_t gti_magic1;
+#endif
   gti_callback_t *gti_callback;
   void *gti_opaque;
   time_t gti_expire;

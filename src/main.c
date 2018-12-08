@@ -259,6 +259,21 @@ mtimercmp(mtimer_t *a, mtimer_t *b)
   return safecmp(a->mti_expire, b->mti_expire);
 }
 
+#if ENABLE_TRACE
+static void mtimer_magic_check(mtimer_t *mti)
+{
+  if (mti->mti_magic1 != MTIMER_MAGIC1) {
+    tvhdbg(LS_MAIN, "mtimer magic check failed for %p", mti);
+    tvherror(LS_MAIN, "mtimer magic check failed for %p", mti);
+    abort();
+  }
+}
+#else
+static inline void mtimer_magic_check(mtimer_t *mti)
+{
+}
+#endif
+
 /**
  *
  */
@@ -268,9 +283,14 @@ GTIMER_FCN(mtimer_arm_abs)
 {
   lock_assert(&global_lock);
 
-  if (mti->mti_callback != NULL)
+  if (mti->mti_callback != NULL) {
+    mtimer_magic_check(mti);
     LIST_REMOVE(mti, mti_link);
+  }
 
+#if ENABLE_TRACE
+  mti->mti_magic1   = MTIMER_MAGIC1;
+#endif
   mti->mti_callback = callback;
   mti->mti_opaque   = opaque;
   mti->mti_expire   = when;
@@ -305,6 +325,7 @@ void
 mtimer_disarm(mtimer_t *mti)
 {
   if(mti->mti_callback) {
+    mtimer_magic_check(mti);
     LIST_REMOVE(mti, mti_link);
     mti->mti_callback = NULL;
   }
@@ -319,6 +340,21 @@ gtimercmp(gtimer_t *a, gtimer_t *b)
   return safecmp(a->gti_expire, b->gti_expire);
 }
 
+#if ENABLE_TRACE
+static void gtimer_magic_check(gtimer_t *gti)
+{
+  if (gti->gti_magic1 != GTIMER_MAGIC1) {
+    tvhdbg(LS_MAIN, "gtimer magic check failed for %p", gti);
+    tvherror(LS_MAIN, "gtimer magic check failed for %p", gti);
+    abort();
+  }
+}
+#else
+static inline void gtimer_magic_check(mtimer_t *gti)
+{
+}
+#endif
+
 /**
  *
  */
@@ -328,9 +364,14 @@ GTIMER_FCN(gtimer_arm_absn)
 {
   lock_assert(&global_lock);
 
-  if (gti->gti_callback != NULL)
+  if (gti->gti_callback != NULL) {
+    gtimer_magic_check(gti);
     LIST_REMOVE(gti, gti_link);
+  }
 
+#if ENABLE_TRACE
+  gti->gti_magic1   = GTIMER_MAGIC1;
+#endif
   gti->gti_callback = callback;
   gti->gti_opaque   = opaque;
   gti->gti_expire   = when;
@@ -365,6 +406,7 @@ void
 gtimer_disarm(gtimer_t *gti)
 {
   if(gti->gti_callback) {
+    gtimer_magic_check(gti);
     LIST_REMOVE(gti, gti_link);
     gti->gti_callback = NULL;
   }
