@@ -1959,10 +1959,15 @@ static uint8_t _epg_genre_find_by_name ( const char *name, const char *lang )
 {
   uint8_t a, b;
   const char *s;
+  const char **p, *s2;
   for (a = 1; a < 11; a++) {
     for (b = 0; b < 16; b++) {
       s = _genre_get_name(a, b, lang);
       if (_genre_str_match(name, s))
+        return (a << 4) | b;
+      p = _epg_genre_names[a][b];
+      /* Try localized lookup of just the component. */
+      if (p && *p && (s2 = tvh_gettext_lang(lang, *p)) && !strcmp(name, s2))
         return (a << 4) | b;
     }
   }
