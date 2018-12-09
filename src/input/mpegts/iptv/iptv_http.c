@@ -32,8 +32,11 @@ typedef struct http_priv {
   iptv_input_t  *mi;
   iptv_mux_t    *im;
   http_client_t *hc;
+  gtimer_t       kick_timer;
   uint8_t        shutdown;
   uint8_t        started;
+  uint8_t        flush;
+  uint8_t        unpause;
   sbuf_t         m3u_sbuf;
   sbuf_t         key_sbuf;
   int            m3u_header;
@@ -60,35 +63,6 @@ typedef struct http_priv {
 /***/
 
 static int iptv_http_complete_key ( http_client_t *hc );
-
-/*
- *
- */
-static int
-iptv_http_safe_global_lock( http_priv_t *hp )
-{
-  iptv_mux_t *im = hp->im;
-  int r;
-
-  while (1) {
-    if (im->mm_active == NULL || hp->shutdown)
-      return 0;
-    r = tvh_mutex_trylock(&global_lock);
-    if (r == 0)
-      break;
-    if (r != EBUSY)
-      continue;
-    sched_yield();
-    if (im->mm_active == NULL || hp->shutdown)
-      return 0;
-    r = tvh_mutex_trylock(&global_lock);
-    if (r == 0)
-      break;
-    if (r == EBUSY)
-      tvh_safe_usleep(10000);
-  }
-  return 1;
-}
 
 /*
  *
@@ -205,6 +179,38 @@ iptv_http_data_aes128 ( http_priv_t *hp, sbuf_t *sb, int off )
 }
 
 /*
+ *
+ */
+static void
+iptv_http_kick_cb( void *aux )
+{
+  http_client_t *hc = aux;
+  http_priv_t *hp;
+  iptv_mux_t *im;
+
+  if (hc == NULL) return;
+  hp = hc->hc_aux;
+  if (hp == NULL) return;
+  im = hp->im;
+  if (im == NULL) return;
+  if (hp->flush) {
+    hp->flush = 0;
+    if (!hp->started) {
+      iptv_input_mux_started(hp->mi, im);
+    } else {
+      iptv_input_recv_flush(im);
+    }
+    hp->started = 1;
+  }
+
+  if (hp->unpause) {
+    hp->unpause = 0;
+    if (im->mm_active && !hp->shutdown)
+      mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, sec2mono(1));
+  }
+}
+
+/*
  * Connected
  */
 static int
@@ -248,15 +254,8 @@ iptv_http_header ( http_client_t *hc )
 
   hp->m3u_header = 0;
   hp->off = 0;
-  if (iptv_http_safe_global_lock(hp)) {
-    if (!hp->started) {
-      iptv_input_mux_started(hp->mi, hp->im);
-    } else {
-      iptv_input_recv_flush(hp->im);
-    }
-    tvh_mutex_unlock(&global_lock);
-    hp->started = 1;
-  }
+  hp->flush = 1;
+  gtimer_arm_rel(&hp->kick_timer, iptv_http_kick_cb, hc, 0);
   return 0;
 }
 
@@ -343,13 +342,11 @@ iptv_http_data
     if (iptv_input_recv_packets(im, len) == 1)
       pause = hc->hc_pause = 1;
 
+  if (pause) hp->unpause = 1;
   tvh_mutex_unlock(&iptv_lock);
 
-  if (pause && iptv_http_safe_global_lock(hp)) {
-    if (im->mm_active && !hp->shutdown)
-      mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, sec2mono(1));
-    tvh_mutex_unlock(&global_lock);
-  }
+  if (pause)
+    gtimer_arm_rel(&hp->kick_timer, iptv_http_kick_cb, hc, 0);
   return 0;
 }
 
@@ -558,6 +555,7 @@ iptv_http_stop
   http_priv_t *hp = im->im_data;
 
   hp->shutdown = 1;
+  gtimer_disarm(&hp->kick_timer);
   tvh_mutex_unlock(&iptv_lock);
   http_client_close(hp->hc);
   tvh_mutex_lock(&iptv_lock);
