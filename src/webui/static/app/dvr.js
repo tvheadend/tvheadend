@@ -240,6 +240,8 @@ tvheadend.dvrDetails = function(grid, index) {
               // can overflow, vs. 'contain' which will leave blank space top+bottom to
               // ensure image is fully displayed in the window
               'background-size': 'cover',
+              // Image can not be clicked on (so events propagate to buttons).
+              'pointer-events': 'none',
           });
       }                        // Have fanart div
 
