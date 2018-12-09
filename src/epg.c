@@ -1466,7 +1466,7 @@ epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b )
   return RB_NEXT(b, sched_link);
 }
 
-const char *epg_broadcast_get_title ( epg_broadcast_t *b, const char *lang )
+const char *epg_broadcast_get_title ( const epg_broadcast_t *b, const char *lang )
 {
   if (!b || !b->title) return NULL;
   return lang_str_get(b->title, lang);
