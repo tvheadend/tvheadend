@@ -233,7 +233,7 @@ tvheadend.dvrDetails = function(grid, index) {
           fanart_div.applyStyles({
               'background' : 'url(' + fanart + ') center center no-repeat',
               'opacity': 0.15,
-              'position': 'relative',
+              'position': 'absolute',
               'width' : '100%',
               'height': '100%',
               // This causes background image to scale on css3 with aspect ratio, image
