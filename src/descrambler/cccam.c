@@ -333,6 +333,9 @@ cccam_decode_card_data_reply(cccam_t *cccam, uint8_t *msg)
   psa = nprov ? alloca(nprov * sizeof(uint8_t *)) : NULL;
   saa = nprov ? alloca(nprov * 8) : NULL;
 
+  if (pid == NULL || psa == NULL || saa == NULL)
+    return -ENOMEM;
+
   msg2 = msg + 25;
   memset(saa, 0, nprov * 8);
   for (i = 0; i < nprov; i++) {
