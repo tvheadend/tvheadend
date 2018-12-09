@@ -3420,6 +3420,8 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   htsp.htsp_peer = source;
   htsp.htsp_writer_run = 1;
 
+  tvh_mutex_init(&htsp.htsp_out_mutex, NULL);
+
   LIST_INSERT_HEAD(&htsp_connections, &htsp, htsp_link);
   tvh_mutex_unlock(&global_lock);
 
