@@ -280,7 +280,7 @@ tvheadend.dvrDetails = function(grid, index) {
             title: dialogTitle,
             iconCls: 'info',
             layout: 'fit',
-            width: 760,
+            width: 790,
             height: windowHeight,
             constrainHeader: true,
             buttonAlign: 'center',
