@@ -420,7 +420,7 @@ int epg_broadcast_set_age_rating
 epg_broadcast_t *epg_broadcast_get_prev( epg_broadcast_t *b );
 epg_broadcast_t *epg_broadcast_get_next( epg_broadcast_t *b );
 const char *epg_broadcast_get_title 
-  ( epg_broadcast_t *b, const char *lang );
+  ( const epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_subtitle
   ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_summary

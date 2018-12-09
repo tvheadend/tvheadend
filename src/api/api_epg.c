@@ -628,8 +628,9 @@ api_epg_related
   uint32_t id, entries = 0;
   htsmsg_t *l = htsmsg_create_list();
   epg_broadcast_t *e;
-  char *lang;
-  epg_set_t *serieslink;
+  char *lang, *title_esc, *title_anchor;
+  epg_set_t *serieslink = NULL;
+  const char *title = NULL;
   
   if (htsmsg_get_u32(args, "eventId", &id))
     return -EINVAL;
@@ -638,9 +639,34 @@ api_epg_related
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   tvh_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
-  serieslink = e->serieslink;
-  if (serieslink)
+  /* e might not exist if it is a dvr entry that does not exist in the epg */
+  if (e)
+    serieslink = e->serieslink;
+  if (serieslink) {
     entries = api_epg_episode_sorted(serieslink, perm, l, lang, e);
+  } else {
+    /* Ensure we have a title in the query we are generating.  If no
+     * title, then we return a dummy message.
+     */
+    title = epg_broadcast_get_title(e, lang);
+    if (title) {
+      /* Need to escape/anchor the search, otherwise the film "elf"
+       *  matches titles containing "self".
+       */
+      title_esc = regexp_escape(title);
+      title_anchor = alloca(strlen(title_esc) + 3);
+      sprintf(title_anchor, "^%s$", title_esc);
+      htsmsg_add_str(args, "title", title_anchor);
+      free(title_esc);
+
+      /* Have to unlock here since grid will re-lock */
+      tvh_mutex_unlock(&global_lock);
+      free(lang);
+      /* And let the grid do the query for us */
+      return api_epg_grid(perm, opaque, op, args, resp);
+    }
+    /*FALLTHRU*/
+  }
 
   tvh_mutex_unlock(&global_lock);
   free(lang);
