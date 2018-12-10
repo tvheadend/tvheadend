@@ -677,10 +677,8 @@ mtimer_thread(void *aux)
   tvh_mutex_unlock(&mtimer_lock);
 
   while (tvheadend_is_running()) {
-    now = mdispatch_clock_update();
-
     /* Global monoclock timers */
-
+    now = mdispatch_clock_update();
     next = now + sec2mono(3600);
 
     while (1) {
@@ -749,10 +747,9 @@ mainloop(void)
       tvh_mutex_lock(&gtimer_lock);
       gti = LIST_FIRST(&gtimers);
       if (gti == NULL || gti->gti_expire > now) {
-        if (gti) {
+        if (gti)
           ts.tv_sec = gti->gti_expire;
-          tvh_mutex_unlock(&gtimer_lock);
-        }
+        tvh_mutex_unlock(&gtimer_lock);
         break;
       }
 
