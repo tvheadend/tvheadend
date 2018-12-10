@@ -1965,10 +1965,24 @@ static uint8_t _epg_genre_find_by_name ( const char *name, const char *lang )
       s = _genre_get_name(a, b, lang);
       if (_genre_str_match(name, s))
         return (a << 4) | b;
+      /* Try non-localized lookup since many non-English xmltv systems
+       * use English category names which would not match the
+       * localized genre strings.
+       */
+      if (lang != NULL) {
+        s = _genre_get_name(a, b, NULL);
+        if (_genre_str_match(name, s))
+          return (a << 4) | b;
+      }
       p = _epg_genre_names[a][b];
       /* Try localized lookup of just the component. */
       if (p && *p && (s2 = tvh_gettext_lang(lang, *p)) && !strcmp(name, s2))
         return (a << 4) | b;
+      /* Also try non-localized lookup. */
+      if (lang != NULL) {
+        if (p && *p && (s2 = tvh_gettext_lang(NULL, *p)) && !strcmp(name, s2))
+          return (a << 4) | b;
+      }
     }
   }
   return 0; // undefined
