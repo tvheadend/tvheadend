@@ -235,6 +235,7 @@ static void qprofile_log_qstats(void)
     qprof_next = LIST_NEXT(qprof, link);
     if (qprof->changed == 0) continue;
     diff = qprof->tstamp ? mono - qprof->tstamp : 1;
+    if (diff == 0) diff = 1;
     tvhtrace(LS_QPROF, "%s: max/avg/cnt/drop/dropcnt=%"
                        PRIu64"/%"PRIu64"/%"PRIu64"/%"PRIu64"/%"PRIu64
                        " (max=%s -%"PRId64"sec) BW=%"PRId64"%s",
