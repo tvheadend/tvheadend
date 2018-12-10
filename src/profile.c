@@ -864,11 +864,9 @@ profile_sharer_find(profile_chain_t *prch)
   if (!prsh) {
     prsh = calloc(1, sizeof(*prsh));
     prsh->prsh_do_queue = do_queue;
-    if (do_queue) {
-      tvh_mutex_init(&prsh->prsh_queue_mutex, NULL);
-      tvh_cond_init(&prsh->prsh_queue_cond, 1);
-      TAILQ_INIT(&prsh->prsh_queue);
-    }
+    tvh_mutex_init(&prsh->prsh_queue_mutex, NULL);
+    tvh_cond_init(&prsh->prsh_queue_cond, 1);
+    TAILQ_INIT(&prsh->prsh_queue);
     streaming_target_init(&prsh->prsh_input, &profile_sharer_input_ops, prsh, 0);
     LIST_INIT(&prsh->prsh_chains);
   }
