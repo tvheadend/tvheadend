@@ -543,10 +543,13 @@ imagecache_done ( void )
   imagecache_image_t *img;
 
 #if ENABLE_IMAGECACHE
+  tvh_mutex_lock(&global_lock);
   mtimer_disarm(&imagecache_timer);
+  tvh_mutex_unlock(&global_lock);
   tvh_cond_signal(&imagecache_cond, 1);
   pthread_join(imagecache_tid, NULL);
 #endif
+  tvh_mutex_lock(&global_lock);
   while ((img = RB_FIRST(&imagecache_by_id)) != NULL) {
 #if ENABLE_IMAGECACHE
     if (img->state == SAVE) {
@@ -557,6 +560,7 @@ imagecache_done ( void )
 #endif
     imagecache_destroy(img, 0);
   }
+  tvh_mutex_unlock(&global_lock);
   SKEL_FREE(imagecache_skel);
 }
 

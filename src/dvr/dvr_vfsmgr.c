@@ -509,11 +509,13 @@ dvr_disk_space_done(void)
   dvr_vfs_t *vfs;
 
   tasklet_disarm(&dvr_disk_space_tasklet);
+  tvh_mutex_lock(&global_lock);
   mtimer_disarm(&dvr_disk_space_timer);
   while ((vfs = LIST_FIRST(&dvrvfs_list)) != NULL) {
     LIST_REMOVE(vfs, link);
     free(vfs);
   }
+  tvh_mutex_unlock(&global_lock);
 }
 
 /**

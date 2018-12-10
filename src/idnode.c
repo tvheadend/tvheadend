@@ -2084,6 +2084,9 @@ idnode_done(void)
   tvh_cond_signal(&save_cond, 0);
   tvh_mutex_unlock(&global_lock);
   pthread_join(save_tid, NULL);
+
+  tvh_mutex_lock(&global_lock);
+
   mtimer_disarm(&save_timer);
 
   while ((il = RB_FIRST(&idclasses)) != NULL) {
@@ -2098,6 +2101,8 @@ idnode_done(void)
 
   uuid_set_free(&idnode_lnotify_set);
   uuid_set_free(&idnode_lnotify_title_set);
+
+  tvh_mutex_unlock(&global_lock);
 }
 
 /******************************************************************************
