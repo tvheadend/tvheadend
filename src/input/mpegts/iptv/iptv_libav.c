@@ -188,13 +188,13 @@ iptv_libav_start
   la->mux = im;
   tvh_pipe(O_NONBLOCK, &la->pipe);
   im->mm_iptv_fd = la->pipe.rd;
-  iptv_input_fd_started(mi, im, 1);
+  iptv_input_fd_started(mi, im);
   atomic_set(&la->running, 1);
   atomic_set(&la->pause, 0);
   sbuf_init(&la->sbuf);
   tvh_thread_create(&la->thread, NULL, iptv_libav_thread, la, "libavinput");
   if (raw[0])
-    iptv_input_mux_started(mi, im);
+    iptv_input_mux_started(mi, im, 1);
   return 0;
 }
 
