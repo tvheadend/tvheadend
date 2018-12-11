@@ -195,14 +195,14 @@ iptv_http_kick_cb( void *aux )
   if (im == NULL) return;
   if (hp->flush) {
     hp->flush = 0;
+    tvh_mutex_lock(&iptv_lock);
     if (!hp->started) {
       iptv_input_mux_started(hp->mi, im);
     } else {
-      tvh_mutex_lock(&iptv_lock);
       iptv_input_recv_flush(im);
-      tvh_mutex_unlock(&iptv_lock);
     }
     hp->started = 1;
+    tvh_mutex_unlock(&iptv_lock);
   }
 
   if (hp->unpause) {
