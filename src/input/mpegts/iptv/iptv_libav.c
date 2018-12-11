@@ -47,6 +47,7 @@ iptv_libav_write_packet(void *opaque, uint8_t *buf, int buf_size)
 {
   iptv_libav_priv_t *la = opaque;
 
+  printf("av write: %d\n", buf_size);
   if (buf_size > 0) {
     tvh_mutex_lock(&la->lock);
     if (la->sbuf.sb_ptr < 5*1024*1024) {

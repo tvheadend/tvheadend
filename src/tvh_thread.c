@@ -480,9 +480,9 @@ tvh_thread_mutex_failed
     htsbuf_qprintf(&q, "mutex %p   waiting in: %s:%i (thread %ld)\n", mutex, w->filename, w->lineno, w->tid);
   TAILQ_FOREACH(m, &thrwatch_mutexes, link) {
     if (m == mutex) continue;
-    htsbuf_qprintf(&q, "mutex %p other in: %s:%i (thread %ld)\n", mutex, mutex->filename, mutex->lineno, mutex->tid);
+    htsbuf_qprintf(&q, "mutex %p other in: %s:%i (thread %ld)\n", m, m->filename, m->lineno, m->tid);
     LIST_FOREACH(w, &m->waiters, link)
-      htsbuf_qprintf(&q, "mutex %p   waiting in: %s:%i (thread %ld)\n", mutex, w->filename, w->lineno, w->tid);
+      htsbuf_qprintf(&q, "mutex %p   waiting in: %s:%i (thread %ld)\n", m, w->filename, w->lineno, w->tid);
   }
   tvh_thread_deadlock_write(&q);
   tvh_safe_usleep(2000000);
