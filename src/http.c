@@ -1114,6 +1114,7 @@ http_access_verify(http_connection_t *hc, int mask)
       else
         hc->hc_auth_type = HC_AUTH_ADDR;
     }
+    return r;
   }
 
   return -1;
