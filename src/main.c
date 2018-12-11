@@ -361,7 +361,7 @@ static void gtimer_magic_check(gtimer_t *gti)
   }
 }
 #else
-static inline void gtimer_magic_check(mtimer_t *gti)
+static inline void gtimer_magic_check(gtimer_t *gti)
 {
 }
 #endif
