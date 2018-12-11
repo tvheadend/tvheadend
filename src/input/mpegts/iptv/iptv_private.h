@@ -61,7 +61,7 @@ struct iptv_input
 
 int  iptv_input_fd_started ( iptv_input_t *mi, iptv_mux_t *im );
 void iptv_input_close_fds ( iptv_input_t *mi, iptv_mux_t *im );
-void iptv_input_mux_started ( iptv_input_t *mi, iptv_mux_t *im );
+void iptv_input_mux_started ( iptv_input_t *mi, iptv_mux_t *im, int reset );
 int  iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len );
 void iptv_input_recv_flush ( iptv_mux_t *im );
 void iptv_input_pause_handler ( iptv_input_t *mi, iptv_mux_t *im, int pause );

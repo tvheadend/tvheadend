@@ -55,7 +55,7 @@ iptv_udp_start
   udp_multirecv_init(um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
   im->im_data = um;
 
-  iptv_input_mux_started(mi, im);
+  iptv_input_mux_started(mi, im, 1);
   return 0;
 }
 

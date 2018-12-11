@@ -108,7 +108,7 @@ iptv_file_start
   fp->fd = fd;
   tvh_cond_init(&fp->cond, 1);
   im->im_data = fp;
-  iptv_input_mux_started(mi, im);
+  iptv_input_mux_started(mi, im, 1);
   tvh_thread_create(&fp->tid, NULL, iptv_file_thread, im, "iptvfile");
   return 0;
 }

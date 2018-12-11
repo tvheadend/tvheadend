@@ -188,7 +188,7 @@ iptv_libav_start
   la->mux = im;
   tvh_pipe(O_NONBLOCK, &la->pipe);
   im->mm_iptv_fd = la->pipe.rd;
-  iptv_input_fd_started(mi, im);
+  iptv_input_fd_started(mi, im, 1);
   atomic_set(&la->running, 1);
   atomic_set(&la->pause, 0);
   sbuf_init(&la->sbuf);

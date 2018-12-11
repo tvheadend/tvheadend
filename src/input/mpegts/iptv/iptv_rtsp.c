@@ -113,7 +113,7 @@ iptv_rtsp_header ( http_client_t *hc )
     hc->hc_cmd = HTTP_CMD_NONE;
     tvh_mutex_lock(&global_lock);
     if (im->mm_active)
-      iptv_input_mux_started((iptv_input_t *)im->mm_active->mmi_input, im);
+      iptv_input_mux_started((iptv_input_t *)im->mm_active->mmi_input, im, 1);
     mtimer_arm_rel(&rp->alive_timer, iptv_rtsp_alive_cb, im,
                    sec2mono(MAX(1, (hc->hc_rtp_timeout / 2) - 1)));
     tvh_mutex_unlock(&global_lock);

@@ -68,7 +68,7 @@ iptv_pipe_start
   im->mm_iptv_respawn_last = mclk();
 
   if (url)
-    iptv_input_mux_started(mi, im);
+    iptv_input_mux_started(mi, im, 1);
   return 0;
 
 err:

@@ -682,10 +682,11 @@ iptv_input_fd_started ( iptv_input_t *mi, iptv_mux_t *im )
 }
 
 void
-iptv_input_mux_started ( iptv_input_t *mi, iptv_mux_t *im )
+iptv_input_mux_started ( iptv_input_t *mi, iptv_mux_t *im, int reset )
 {
   /* Allocate input buffer */
-  sbuf_reset_and_alloc(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
+  if (reset)
+    sbuf_reset_and_alloc(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
 
   im->im_pcr = PTS_UNSET;
   im->im_pcr_pid = MPEGTS_PID_NONE;

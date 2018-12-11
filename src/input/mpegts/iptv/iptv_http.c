@@ -197,7 +197,7 @@ iptv_http_kick_cb( void *aux )
     hp->flush = 0;
     tvh_mutex_lock(&iptv_lock);
     if (!hp->started) {
-      iptv_input_mux_started(hp->mi, im);
+      iptv_input_mux_started(hp->mi, im, 0);
     } else {
       iptv_input_recv_flush(im);
     }
@@ -515,6 +515,8 @@ iptv_http_start
   http_priv_t *hp;
   http_client_t *hc;
   int r;
+
+  sbuf_reset_and_alloc(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
 
   hp = calloc(1, sizeof(*hp));
   hp->mi = mi;
