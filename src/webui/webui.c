@@ -1637,8 +1637,6 @@ page_srvid2(http_connection_t *hc, const char *remain, void *opaque)
   int first;
   char buf1[16], buf2[16], buf3[16];
 
-  if (hc->hc_access == NULL || strempty(hc->hc_access->aa_auth))
-    return http_noaccess_code(hc);
   tvh_mutex_lock(&global_lock);
   TAILQ_FOREACH(t, &service_all, s_all_link) {
     if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
