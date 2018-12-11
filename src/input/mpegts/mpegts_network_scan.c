@@ -397,7 +397,6 @@ tsid_lookup:
         mux->u.dmc_fe_qpsk.fec_inner = DVB_FEC_AUTO;
         mux->dmc_fe_modulation = dvbs2 ? DVB_MOD_PSK_8 : DVB_MOD_QPSK;
         mux->dmc_fe_rolloff = DVB_ROLLOFF_AUTO;
-        mux->dmc_fe_pls_code = 1;
 
         mm = (mpegts_mux_t*)dvb_mux_create0((dvb_network_t*)mn,
                                             MPEGTS_ONID_NONE,
