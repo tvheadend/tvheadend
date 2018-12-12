@@ -368,6 +368,9 @@ void dvb_table_parse_init
   ( mpegts_psi_table_t *mt, const char *name, int subsys, int pid,
     uint8_t table, uint8_t mask, void *opaque );
 
+void dvb_table_parse_reinit_input ( mpegts_psi_table_t *mt );
+void dvb_table_parse_reinit_output ( mpegts_psi_table_t *mt );
+
 void dvb_table_parse_done ( mpegts_psi_table_t *mt);
 
 void dvb_table_parse

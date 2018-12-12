@@ -452,6 +452,24 @@ void dvb_table_parse_init
   mt->mt_sect.ps_mask = mask;
 }
 
+void dvb_table_parse_reinit_input
+  ( mpegts_psi_table_t *mt )
+{
+  dvb_table_release(mt);
+  mt->mt_last_complete = 0;
+  mt->mt_complete = mt->mt_incomplete = 0;
+  mt->mt_finished = 0;
+  mt->mt_sect.ps_cc = -1;
+  mt->mt_sect.ps_offset = 0;
+  mt->mt_sect.ps_lock = 0;
+}
+
+void dvb_table_parse_reinit_output
+  ( mpegts_psi_table_t *mt )
+{
+  mt->mt_sect.ps_cco = 0;
+}
+
 void dvb_table_parse_done( mpegts_psi_table_t *mt )
 {
   dvb_table_release(mt);
