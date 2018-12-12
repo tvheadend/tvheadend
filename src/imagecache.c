@@ -68,7 +68,7 @@ static void imagecache_destroy(imagecache_image_t *img, int delconf);
 
 static inline time_t clkwrap(time_t clk)
 {
-  return clk / 4096; /* more than one hour */
+  return clk / 8192; /* more than two hours */
 }
 
 CLASS_DOC(imagecache)
