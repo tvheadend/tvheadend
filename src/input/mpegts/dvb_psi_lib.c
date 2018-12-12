@@ -121,11 +121,7 @@ mpegts_psi_section_reassemble0
     cb = NULL;
   }
 
-  uint32_t r;
-  if(crc && (r = tvh_crc32(p, tsize, 0xffffffff)) != 0) {
-    tvhtrace(LS_MPEGTS, "crc %08x %08x\n", r, tvh_crc32(p, tsize + 4, 0xffffffff));
-    tvhlog_hexdump(LS_MPEGTS, data, len);
-    tvhlog_hexdump(LS_MPEGTS, p, tsize);
+  if(crc && tvh_crc32(p, tsize, 0xffffffff)) {
     if (cb && tvhlog_limit(&mt->mt_err_log, 10)) {
       tvhwarn(mt->mt_subsys, "%s: %s: invalid checksum (len %i, errors %zi)",
               mt->mt_name, logpref, tsize, mt->mt_err_log.count);
@@ -195,7 +191,6 @@ mpegts_psi_section_reassemble
   return;
 
 wrong_state:
-  tvhlog_hexdump(LS_MPEGTS, tsb, 188);
   mt->mt_sect.ps_lock = 0;
 }
 
