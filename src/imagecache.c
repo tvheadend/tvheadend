@@ -66,6 +66,11 @@ struct imagecache_config imagecache_conf = {
 static htsmsg_t *imagecache_class_save(idnode_t *self, char *filename, size_t fsize);
 static void imagecache_destroy(imagecache_image_t *img, int delconf);
 
+static inline time_t clkwrap(time_t clk)
+{
+  return clk / 4096; /* more than one hour */
+}
+
 CLASS_DOC(imagecache)
 
 const idclass_t imagecache_class = {
@@ -675,7 +680,7 @@ imagecache_get_id ( const char *url )
     id = i->id;
 
   clk = gclk();
-  if (clk != i->accessed) {
+  if (clkwrap(clk) != clkwrap(i->accessed)) {
     i->accessed = clk;
     save = 1;
   }
