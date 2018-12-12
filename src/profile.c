@@ -1346,7 +1346,7 @@ const idclass_t profile_mpegts_pass_class =
       .id       = "sid",
       .name     = N_("Rewrite Service ID"),
       .desc     = N_("Rewrite service identifier (SID) using the specified "
-                     "value (usually 1)."),
+                     "value (usually 1). Zero means no rewrite."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sid),
       .set      = profile_pass_rewrite_sid_set,
       .opts     = PO_EXPERT,
@@ -1359,7 +1359,9 @@ const idclass_t profile_mpegts_pass_class =
       .name     = N_("Rewrite PMT"),
       .desc     = N_("Rewrite PMT (Program Map Table) packets to only "
                      "include information about the currently-streamed "
-                     "service."),
+                     "service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pmt),
       .set      = profile_pass_rewrite_pmt_set,
       .opts     = PO_EXPERT,
@@ -1372,7 +1374,9 @@ const idclass_t profile_mpegts_pass_class =
       .name     = N_("Rewrite PAT"),
       .desc     = N_("Rewrite PAT (Program Association Table) packets "
                      "to only include information about the currently-"
-                     "streamed service."),
+                     "streamed service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pat),
       .set      = profile_pass_rewrite_pat_set,
       .opts     = PO_EXPERT,
@@ -1385,7 +1389,9 @@ const idclass_t profile_mpegts_pass_class =
       .name     = N_("Rewrite SDT"),
       .desc     = N_("Rewrite SDT (Service Description Table) packets "
                      "to only include information about the currently-"
-                     "streamed service."),
+                     "streamed service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sdt),
       .set      = profile_pass_rewrite_sdt_set,
       .opts     = PO_EXPERT,
@@ -1398,7 +1404,9 @@ const idclass_t profile_mpegts_pass_class =
       .name     = N_("Rewrite NIT"),
       .desc     = N_("Rewrite NIT (Network Information Table) packets "
                      "to only include information about the currently-"
-                     "streamed service."),
+                     "streamed service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_nit),
       .set      = profile_pass_rewrite_nit_set,
       .opts     = PO_EXPERT,
@@ -1411,7 +1419,9 @@ const idclass_t profile_mpegts_pass_class =
       .name     = N_("Rewrite EIT"),
       .desc     = N_("Rewrite EIT (Event Information Table) packets "
                      "to only include information about the currently-"
-                     "streamed service."),
+                     "streamed service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_eit),
       .set      = profile_pass_rewrite_eit_set,
       .opts     = PO_EXPERT,
