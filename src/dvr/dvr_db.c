@@ -3855,50 +3855,61 @@ dvr_entry_class_channel_icon_url_get(void *o)
   dvr_entry_t *de = (dvr_entry_t *)o;
   channel_t *ch = de->de_channel;
   if (ch == NULL) {
-    prop_ptr = NULL;
+    prop_ptr = "";
   } else {
-    prop_ptr = channel_get_icon(ch);
+    return channel_class_get_icon(ch);
   }
+  return &prop_ptr;
+}
+
+const char *
+dvr_entry_get_image(const dvr_entry_t *de)
+{
+  if (de->de_bcast && de->de_bcast && de->de_bcast->image)
+    return de->de_bcast->image;
+  if (de->de_image)
+    return de->de_image;
+  return NULL;
+}
+
+const char *
+dvr_entry_get_fanart_image(const dvr_entry_t *de)
+{
+  return de->de_fanart_image;
+}
+
+static const void *
+dvr_entry_class_image_get0(dvr_entry_t *de, const char *image)
+{
+  prop_ptr = imagecache_get_propstr(image, prop_sbuf, PROP_SBUF_LEN);
   if (prop_ptr == NULL)
     prop_ptr = "";
   return &prop_ptr;
 }
 
 static const void *
-dvr_entry_class_image_url_get_as_property(void *o)
+dvr_entry_class_image_get(void *o)
 {
-  dvr_entry_t *de = (dvr_entry_t *)o;
-  static const char *s = "";
-  /* We prefer the image from the broadcast to the one currently
-   * persisted.  This is because a programme scheduled far in the
-   * future may have a generic image that will be updated nearer the
-   * broadcast date with a more specific image.
-   */
-  if (de->de_bcast && de->de_bcast && de->de_bcast->image) {
-    snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", de->de_bcast->image);
-    return &prop_sbuf_ptr;
-  }
-
-  if (de->de_image) {
-    prop_ptr = de->de_image;
-    return &prop_ptr;
-  }
-
-  return &s;
+  return dvr_entry_class_image_get0(o, dvr_entry_get_image(o));
 }
 
-const char *
-dvr_entry_class_image_url_get(const dvr_entry_t *o)
+static void
+dvr_entry_class_image_notify(void *o, const char *lang)
 {
-    const void *image = dvr_entry_class_image_url_get_as_property((void*)o);
-    if (!image) return NULL;
-    const char *image_str = *(const char**)image;
-    if (!image_str) return NULL;
-    if (!*image_str) return NULL;
-    return image_str;
+  (void)imagecache_get_id(dvr_entry_get_image(o));
 }
 
+static const void *
+dvr_entry_class_fanart_image_get(void *o)
+{
+  return dvr_entry_class_image_get0(o, dvr_entry_get_fanart_image(o));
+}
 
+static void
+dvr_entry_class_fanart_image_notify(void *o, const char *lang)
+{
+  (void)imagecache_get_id(dvr_entry_get_fanart_image(o));
+}
 
 static const void *
 dvr_entry_class_duplicate_get(void *o)
@@ -4157,7 +4168,8 @@ const idclass_t dvr_entry_class = {
       .id       = "image", /* Name chosen to be compatible with api_epg */
       .name     = N_("Episode image"),
       .desc     = N_("Episode image."),
-      .get      = dvr_entry_class_image_url_get_as_property,
+      .get      = dvr_entry_class_image_get,
+      .notify   = dvr_entry_class_image_notify,
       .off      = offsetof(dvr_entry_t, de_image),
       .opts     = PO_HIDDEN,
     },
@@ -4166,6 +4178,8 @@ const idclass_t dvr_entry_class = {
       .id       = "fanart_image",
       .name     = N_("Fanart image"),
       .desc     = N_("Fanart image."),
+      .get      = dvr_entry_class_fanart_image_get,
+      .notify   = dvr_entry_class_fanart_image_notify,
       .off      = offsetof(dvr_entry_t, de_fanart_image),
       .opts     = PO_HIDDEN,
     },

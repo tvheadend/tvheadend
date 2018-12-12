@@ -326,7 +326,7 @@ int http_access_verify_channel(http_connection_t *hc, int mask,
 
 void http_parse_args(http_arg_list_t *list, char *args);
 
-char *http_get_hostpath(http_connection_t *hc);
+char *http_get_hostpath(http_connection_t *hc, char *buf, size_t buflen);
 
 /*
  * HTTP/RTSP Client

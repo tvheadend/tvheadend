@@ -22,6 +22,7 @@
 #include "channels.h"
 #include "http.h"
 #include "string_list.h"
+#include "imagecache.h"
 
 /*
  *
@@ -72,12 +73,14 @@ http_xmltv_channel_add(htsbuf_queue_t *hq, const char *hostpath, channel_t *ch)
   htsbuf_append_and_escape_xml(hq, channel_get_name(ch, ""));
   htsbuf_append_str(hq, "</display-name>\n");
   if (icon) {
-    if (strncmp(icon, "imagecache/", 11) == 0)
-      htsbuf_qprintf(hq, "  <icon src=\"%s/", hostpath);
-    else
+    int id = imagecache_get_id(icon);
+    if (id) {
+      htsbuf_qprintf(hq, "  <icon src=\"%s/imagecache/%d\"/>\n", hostpath, id);
+    } else {
       htsbuf_append_str(hq, "  <icon src=\"");
-    htsbuf_append_and_escape_xml(hq, icon);
-    htsbuf_append_str(hq, "\"/>\n");
+      htsbuf_append_and_escape_xml(hq, icon);
+      htsbuf_append_str(hq, "\"/>\n");
+    }
   }
   htsbuf_append_str(hq, "</channel>\n");
 }
@@ -211,17 +214,16 @@ http_xmltv_programme_add(htsbuf_queue_t *hq, const char *hostpath, channel_t *ch
 static int
 http_xmltv_channel(http_connection_t *hc, channel_t *channel)
 {
-  char *hostpath;
+  char hostpath[512];
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
     return http_noaccess_code(hc);
 
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
   http_xmltv_begin(&hc->hc_reply);
   http_xmltv_channel_add(&hc->hc_reply, hostpath, channel);
   http_xmltv_programme_add(&hc->hc_reply, hostpath, channel);
   http_xmltv_end(&hc->hc_reply);
-  free(hostpath);
   return 0;
 }
 
@@ -233,13 +235,13 @@ static int
 http_xmltv_tag(http_connection_t *hc, channel_tag_t *tag)
 {
   idnode_list_mapping_t *ilm;
-  char *hostpath;
+  char hostpath[512];
   channel_t *ch;
 
   if (access_verify2(hc->hc_access, ACCESS_STREAMING))
     return http_noaccess_code(hc);
 
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
 
   http_xmltv_begin(&hc->hc_reply);
   LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
@@ -256,7 +258,6 @@ http_xmltv_tag(http_connection_t *hc, channel_tag_t *tag)
   }
   http_xmltv_end(&hc->hc_reply);
 
-  free(hostpath);
   return 0;
 }
 
@@ -267,12 +268,12 @@ static int
 http_xmltv_channel_list(http_connection_t *hc)
 {
   channel_t *ch;
-  char *hostpath;
+  char hostpath[512];
 
   if (access_verify2(hc->hc_access, ACCESS_STREAMING))
     return http_noaccess_code(hc);
 
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
 
   http_xmltv_begin(&hc->hc_reply);
   CHANNEL_FOREACH(ch) {
@@ -287,7 +288,6 @@ http_xmltv_channel_list(http_connection_t *hc)
   }
   http_xmltv_end(&hc->hc_reply);
 
-  free(hostpath);
   return 0;
 }
 

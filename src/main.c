@@ -165,9 +165,6 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_SATIP_SERVER
   { "satip_server", NULL },
 #endif
-#if ENABLE_IMAGECACHE
-  { "imagecache", (uint32_t*)&imagecache_conf.enabled },
-#endif
 #if ENABLE_TIMESHIFT
   { "timeshift", (uint32_t *)&timeshift_conf.enabled },
 #endif

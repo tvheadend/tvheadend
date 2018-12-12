@@ -155,6 +155,8 @@ channel_t *channel_find_by_number(const char *no);
 
 htsmsg_t * channel_class_get_list(void *o, const char *lang);
 
+const void * channel_class_get_icon ( void *obj );
+
 int channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags );
 
 channel_tag_t *channel_tag_create(const char *uuid, htsmsg_t *conf);

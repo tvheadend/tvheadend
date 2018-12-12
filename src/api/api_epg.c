@@ -54,7 +54,7 @@ static void
 api_epg_add_channel ( htsmsg_t *m, channel_t *ch, const char *blank )
 {
   int64_t chnum;
-  char buf[32];
+  char buf[128];
   const char *s;
   htsmsg_add_str(m, "channelName", channel_get_name(ch, blank));
   htsmsg_add_uuid(m, "channelUuid", &ch->ch_id.in_uuid);
@@ -67,16 +67,20 @@ api_epg_add_channel ( htsmsg_t *m, channel_t *ch, const char *blank )
       snprintf(buf, sizeof(buf), "%u", maj);
     htsmsg_add_str(m, "channelNumber", buf);
   }
-  if ((s = channel_get_icon(ch)) != NULL)
-    htsmsg_add_str(m, "channelIcon", s);
+  s = channel_get_icon(ch);
+  if (!strempty(s)) {
+    s = imagecache_get_propstr(s, buf, sizeof(buf));
+    if (s)
+      htsmsg_add_str(m, "channelIcon", s);
+  }
 }
 
 static htsmsg_t *
 api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, const char **blank )
 {
   const char *s, *blank2 = NULL;
-  char buf[64];
-  channel_t     *ch = eb->channel;
+  char buf[32];
+  channel_t *ch = eb->channel;
   htsmsg_t *m, *m2;
   epg_episode_num_t epnum;
   epg_genre_t *eg;
@@ -170,8 +174,12 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
     htsmsg_add_str(m, "episodeOnscreen", buf);
 
   /* Image */
-  if (eb->image)
-    htsmsg_add_str(m, "image", eb->image);
+  s = eb->image;
+  if (!strempty(s)) {
+    s = imagecache_get_propstr(s, buf, sizeof(buf));
+    if (s)
+      htsmsg_add_str(m, "image", s);
+  }
 
   /* Rating */
   if (eb->star_rating)

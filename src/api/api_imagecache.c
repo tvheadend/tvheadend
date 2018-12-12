@@ -23,8 +23,6 @@
 #include "api.h"
 #include "imagecache.h"
 
-#if ENABLE_IMAGECACHE
-
 static int
 api_imagecache_clean
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
@@ -68,12 +66,3 @@ api_imagecache_init ( void )
 
   api_register_all(ah);
 }
-
-#else /* ENABLE_IMAGECACHE */
-
-void 
-api_imagecache_init ( void )
-{
-}
-
-#endif

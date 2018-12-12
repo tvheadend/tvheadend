@@ -508,9 +508,10 @@ http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
   if (urlauth == URLAUTH_TICKET)
     ticket = access_ticket_create(url_remain, access);
   htsbuf_append_str(hq, "#EXTINF:-1");
-  if (logo) {
-    if (strncmp(logo, "imagecache/", 11) == 0) {
-      htsbuf_qprintf(hq, " logo=\"%s/%s", hostpath, logo);
+  if (!strempty(logo)) {
+    int id = imagecache_get_id(logo);
+    if (id) {
+      htsbuf_qprintf(hq, " logo=\"%s/imagecache/%d", hostpath, id);
       switch (urlauth) {
       case URLAUTH_NONE:
         break;
@@ -578,7 +579,7 @@ http_satip_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
   const char *name, *logo;
   idnode_list_mapping_t *ilm;
   service_t *s = NULL;
-  int src;
+  int id, src;
 
   LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
     /* cannot handle channels with more services for SAT>IP */
@@ -591,16 +592,15 @@ http_satip_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
     return;
   name = channel_get_name(ch, blank);
   logo = channel_get_icon(ch);
+  id = imagecache_get_id(logo);
   snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
   htsbuf_append_str(hq, "#EXTINF:-1");
-  if (logo) {
-    if (strncmp(logo, "imagecache/", 11) == 0) {
-      htsbuf_qprintf(hq, " logo=%s/%s", hostpath, logo);
-      if (urlauth == URLAUTH_CODE && !strempty(access->aa_auth))
-        htsbuf_qprintf(hq, "?auth=%s", access->aa_auth);
-    } else {
-      htsbuf_qprintf(hq, " logo=%s", logo);
-    }
+  if (id) {
+    htsbuf_qprintf(hq, " logo=%s/imagecache/%d", hostpath, id);
+    if (urlauth == URLAUTH_CODE && !strempty(access->aa_auth))
+      htsbuf_qprintf(hq, "?auth=%s", access->aa_auth);
+  } else if (!strempty(logo)) {
+    htsbuf_qprintf(hq, " logo=%s", logo);
   }
   htsbuf_qprintf(hq, ",%s\n%s%s?profile=pass", name, hostpath, buf);
   if (urlauth == URLAUTH_CODE && !strempty(access->aa_auth))
@@ -615,8 +615,8 @@ static int
 http_channel_playlist(http_connection_t *hc, int pltype, int urlauth, channel_t *channel)
 {
   htsbuf_queue_t *hq;
-  char buf[255], chnum[32];
-  char *profile, *hostpath;
+  char buf[255], hostpath[512], chnum[32];
+  char *profile;
   const char *name, *blank;
   const char *lang = hc->hc_access->aa_lang_ui;
   char ubuf[UUID_HEX_SIZE];
@@ -625,7 +625,7 @@ http_channel_playlist(http_connection_t *hc, int pltype, int urlauth, channel_t 
     return http_noaccess_code(hc);
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
 
   hq = &hc->hc_reply;
 
@@ -654,7 +654,6 @@ http_channel_playlist(http_connection_t *hc, int pltype, int urlauth, channel_t 
 
   }
 
-  free(hostpath);
   free(profile);
   return 0;
 }
@@ -667,8 +666,8 @@ static int
 http_tag_playlist(http_connection_t *hc, int pltype, int urlauth, channel_tag_t *tag)
 {
   htsbuf_queue_t *hq;
-  char buf[255], chnum[32], ubuf[UUID_HEX_SIZE];
-  char *profile, *hostpath;
+  char buf[255], hostpath[512], chnum[32], ubuf[UUID_HEX_SIZE];
+  char *profile;
   const char *name, *blank, *sort, *lang;
   channel_t *ch;
   channel_t **chlist;
@@ -680,7 +679,7 @@ http_tag_playlist(http_connection_t *hc, int pltype, int urlauth, channel_tag_t 
   lang = hc->hc_access->aa_lang_ui;
   hq = &hc->hc_reply;
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
   sort = http_arg_get(&hc->hc_req_args, "sort");
   chlist = channel_get_sorted_list_for_tag(sort, tag, &count);
 
@@ -710,7 +709,6 @@ http_tag_playlist(http_connection_t *hc, int pltype, int urlauth, channel_tag_t 
   }
 
   free(chlist);
-  free(hostpath);
   free(profile);
   return 0;
 }
@@ -723,7 +721,7 @@ static int
 http_tag_list_playlist(http_connection_t *hc, int pltype, int urlauth)
 {
   htsbuf_queue_t *hq;
-  char buf[255];
+  char buf[255], hostpath[512];
   channel_tag_t *ct;
   channel_tag_t **ctlist;
   channel_t *ch;
@@ -731,7 +729,7 @@ http_tag_list_playlist(http_connection_t *hc, int pltype, int urlauth)
   int labelidx = 0;
   int idx, count = 0;
   int chidx, chcount = 0;
-  char *profile, *hostpath;
+  char *profile;
   const char *blank, *sort, *lang;
   idnode_list_mapping_t *ilm;
 
@@ -741,7 +739,7 @@ http_tag_list_playlist(http_connection_t *hc, int pltype, int urlauth)
   lang = hc->hc_access->aa_lang_ui;
   hq = &hc->hc_reply;
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
   sort = http_arg_get(&hc->hc_req_args, "sort");
   ctlist = channel_tag_get_sorted_list(sort, &count);
 
@@ -758,7 +756,8 @@ http_tag_list_playlist(http_connection_t *hc, int pltype, int urlauth)
     if (pltype == PLAYLIST_M3U) {
       snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
       http_m3u_playlist_add(hq, hostpath, buf, profile, ct->ct_name, NULL,
-                            channel_tag_get_icon(ct), NULL, urlauth, hc->hc_access);
+                            channel_tag_get_icon(ct),
+                            NULL, urlauth, hc->hc_access);
     } else if (pltype == PLAYLIST_E2) {
       htsbuf_qprintf(hq, "#SERVICE 1:64:%d:0:0:0:0:0:0:0::%s\n", labelidx++, ct->ct_name);
       htsbuf_qprintf(hq, "#DESCRIPTION %s\n", ct->ct_name);
@@ -784,7 +783,6 @@ http_tag_list_playlist(http_connection_t *hc, int pltype, int urlauth)
   free(ctlist);
   free(chlist);
 
-  free(hostpath);
   free(profile);
   return 0;
 }
@@ -797,11 +795,11 @@ static int
 http_channel_list_playlist(http_connection_t *hc, int pltype, int urlauth)
 {
   htsbuf_queue_t *hq;
-  char buf[255], chnum[32], ubuf[UUID_HEX_SIZE];
+  char buf[255], hostpath[512], chnum[32], ubuf[UUID_HEX_SIZE];
   channel_t *ch;
   channel_t **chlist;
   int idx = 0, count = 0;
-  char *profile, *hostpath;
+  char *profile;
   const char *name, *blank, *sort, *lang;
 
   if (access_verify2(hc->hc_access, ACCESS_STREAMING))
@@ -811,7 +809,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype, int urlauth)
 
   lang = hc->hc_access->aa_lang_ui;
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
   sort = http_arg_get(&hc->hc_req_args, "sort");
   chlist = channel_get_sorted_list(sort, 0, &count);
   blank = tvh_gettext_lang(lang, channel_blank_name);
@@ -840,7 +838,6 @@ http_channel_list_playlist(http_connection_t *hc, int pltype, int urlauth)
   }
 
   free(chlist);
-  free(hostpath);
   free(profile);
   return 0;
 }
@@ -854,10 +851,9 @@ static int
 http_dvr_list_playlist(http_connection_t *hc, int pltype, int urlauth)
 {
   htsbuf_queue_t *hq;
-  char buf[255], ubuf[UUID_HEX_SIZE];
+  char buf[255], hostpath[512], ubuf[UUID_HEX_SIZE];
   dvr_entry_t *de;
   const char *uuid;
-  char *hostpath;
   off_t fsize;
   time_t durration;
   struct tm tm;
@@ -867,7 +863,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype, int urlauth)
     return HTTP_STATUS_BAD_REQUEST;
 
   hq = &hc->hc_reply;
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
 
   htsbuf_append_str(hq, "#EXTM3U\n");
   LIST_FOREACH(de, &dvrentries, de_global_link) {
@@ -909,7 +905,6 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype, int urlauth)
     htsbuf_append_str(hq, "\n");
   }
 
-  free(hostpath);
   return 0;
 }
 
@@ -920,13 +915,12 @@ static int
 http_dvr_playlist(http_connection_t *hc, int pltype, int urlauth, dvr_entry_t *de)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  char buf[255], ubuf[UUID_HEX_SIZE];
+  char buf[255], hostpath[512], ubuf[UUID_HEX_SIZE];
   const char *ticket_id = NULL, *uuid;
   time_t durration = 0;
   off_t fsize = 0;
   int bandwidth = 0, ret = 0;
   struct tm tm;  
-  char *hostpath;
 
   if(pltype != PLAYLIST_M3U)
     return HTTP_STATUS_BAD_REQUEST;
@@ -937,8 +931,8 @@ http_dvr_playlist(http_connection_t *hc, int pltype, int urlauth, dvr_entry_t *d
   if(dvr_entry_verify(de, hc->hc_access, 1))
     return HTTP_STATUS_NOT_FOUND;
 
-  hostpath  = http_get_hostpath(hc);
-  durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de, 0);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
+  durration = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de, 0);
   fsize = dvr_get_filesize(de, 0);
 
   if(fsize) {
@@ -971,7 +965,6 @@ http_dvr_playlist(http_connection_t *hc, int pltype, int urlauth, dvr_entry_t *d
     ret = HTTP_STATUS_NOT_FOUND;
   }
 
-  free(hostpath);
   return ret;
 }
 
@@ -1405,12 +1398,12 @@ static int
 page_xspf(http_connection_t *hc, const char *remain, void *opaque, int urlauth)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  char buf[80], *hostpath;
+  char buf[80], hostpath[512];
   const char *title, *profile, *ticket, *image, *delim = "?";
 
   if ((title = http_arg_get(&hc->hc_req_args, "title")) == NULL)
     title = "TVHeadend Stream";
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
   htsbuf_qprintf(hq, "\
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\
 <playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">\r\n\
@@ -1418,7 +1411,6 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque, int urlauth)
      <track>\r\n\
        <title>%s</title>\r\n\
        <location>%s/%s", title, hostpath, remain);
-  free(hostpath);
   profile = http_arg_get(&hc->hc_req_args, "profile");
   if (profile) {
     htsbuf_qprintf(hq, "?profile=%s", profile);
@@ -1466,17 +1458,16 @@ static int
 page_m3u(http_connection_t *hc, const char *remain, void *opaque, int urlauth)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  char buf[80], *hostpath;
+  char buf[80], hostpath[512];
   const char *title, *profile, *ticket, *delim = "?";
 
   if ((title = http_arg_get(&hc->hc_req_args, "title")) == NULL)
     title = "TVHeadend Stream";
-  hostpath = http_get_hostpath(hc);
+  http_get_hostpath(hc, hostpath, sizeof(hostpath));
   htsbuf_qprintf(hq, "\
 #EXTM3U\r\n\
 #EXTINF:-1,%s\r\n\
 %s/%s", title, hostpath, remain);
-  free(hostpath);
   profile = http_arg_get(&hc->hc_req_args, "profile");
   if (profile) {
     htsbuf_qprintf(hq, "?profile=%s", profile);

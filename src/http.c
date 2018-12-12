@@ -909,19 +909,18 @@ http_extra_send_prealloc(http_connection_t *hc, const void *data,
  *
  */
 char *
-http_get_hostpath(http_connection_t *hc)
+http_get_hostpath(http_connection_t *hc, char *buf, size_t buflen)
 {
-  char buf[256];
   const char *host, *proto;
 
   host  = http_arg_get(&hc->hc_args, "Host") ?:
           http_arg_get(&hc->hc_args, "X-Forwarded-Host");
   proto = http_arg_get(&hc->hc_args, "X-Forwarded-Proto");
 
-  snprintf(buf, sizeof(buf), "%s://%s%s",
+  snprintf(buf, buflen, "%s://%s%s",
            proto ?: "http", host ?: "localhost", tvheadend_webroot ?: "");
 
-  return strdup(buf);
+  return buf;
 }
 
 /**

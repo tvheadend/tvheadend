@@ -34,7 +34,6 @@ OPTIONS=(
   "dvbscan:yes"
   "timeshift:yes"
   "trace:yes"
-  "imagecache:auto"
   "avahi:auto"
   "zlib:auto"
   "libav:auto"
@@ -699,13 +698,6 @@ if enabled_or_auto tvhcsa; then
   else
     disable tvhcsa
   fi
-fi
-
-#
-# Icon caching
-#
-if enabled_or_auto imagecache; then
-  enable imagecache
 fi
 
 #

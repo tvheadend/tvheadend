@@ -66,9 +66,6 @@ tvheadend.baseconf = function(panel, index) {
 
 tvheadend.imgcacheconf = function(panel, index) {
 
-    if (tvheadend.capabilities.indexOf('imagecache') === -1)
-        return;
-
     var cleanButton = {
         name: 'clean',
         builder: function() {

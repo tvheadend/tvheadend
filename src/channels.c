@@ -58,6 +58,18 @@ ch_id_cmp ( channel_t *a, channel_t *b )
   return channel_get_id(a) - channel_get_id(b);
 }
 
+static void
+channel_load_icon ( channel_t *ch )
+{
+  (void)imagecache_get_id(channel_get_icon(ch));
+}
+
+static void
+channel_tag_load_icon ( channel_tag_t *tag )
+{
+  (void)imagecache_get_id(channel_tag_get_icon(tag));
+}
+
 /* **************************************************************************
  * Class definition
  * *************************************************************************/
@@ -209,13 +221,15 @@ channel_class_icon_notify ( void *obj, const char *lang )
 {
   channel_t *ch = obj;
   if (!ch->ch_load)
-    (void)channel_get_icon(obj);
+    channel_load_icon(obj);
 }
 
-static const void *
+const void *
 channel_class_get_icon ( void *obj )
 {
   prop_ptr = channel_get_icon(obj);
+  if (!strempty(prop_ptr))
+    prop_ptr = imagecache_get_propstr(prop_ptr, prop_sbuf, PROP_SBUF_LEN);
   return &prop_ptr;
 }
 
@@ -1032,7 +1046,7 @@ channel_get_icon ( channel_t *ch )
              *picon  = config.picon_path,
              *icon   = ch->ch_icon,
              *chname, *icn;
-  int id, i, pick, prefer = config.prefer_picon ? 1 : 0;
+  int i, pick, prefer = config.prefer_picon ? 1 : 0;
   char c;
 
   if (tvh_str_default(icon, NULL) == NULL)
@@ -1170,14 +1184,7 @@ found:
     icon = buf2;
   }
 
-  /* Lookup imagecache ID */
-  if ((id = imagecache_get_id(icon))) {
-    snprintf(buf, sizeof(buf), "imagecache/%d", id);
-  } else {
-    strlcpy(buf, icon, sizeof(buf));
-  }
-
-  return buf;
+  return icon;
 }
 
 int channel_set_icon ( channel_t *ch, const char *icon )
@@ -1259,7 +1266,7 @@ channel_create0
   htsp_channel_add(ch);
 
   /* determine icon URL */
-  (void)channel_get_icon(ch);
+  channel_load_icon(ch);
 
   return ch;
 }
@@ -1634,16 +1641,7 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
 const char *
 channel_tag_get_icon(channel_tag_t *ct)
 {
-  static char buf[64];
-  const char *icon  = ct->ct_icon;
-  int id;
-
-  /* Lookup imagecache ID */
-  if ((id = imagecache_get_id(icon))) {
-    snprintf(buf, sizeof(buf), "imagecache/%d", id);
-    return buf;
-  }
-  return icon;
+  return ct->ct_icon;
 }
 
 /**
@@ -1720,13 +1718,15 @@ channel_tag_class_get_title
 static void
 channel_tag_class_icon_notify ( void *obj, const char *lang )
 {
-  (void)channel_tag_get_icon(obj);
+  channel_tag_load_icon(obj);
 }
 
 static const void *
 channel_tag_class_get_icon ( void *obj )
 {
   prop_ptr = channel_tag_get_icon(obj);
+  if (!strempty(prop_ptr))
+    prop_ptr = imagecache_get_propstr(prop_ptr, prop_sbuf, PROP_SBUF_LEN);
   return &prop_ptr;
 }
 
