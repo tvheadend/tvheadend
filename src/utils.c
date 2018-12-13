@@ -410,6 +410,14 @@ sbuf_realloc(sbuf_t *sb, int len)
 }
 
 void
+sbuf_replace(sbuf_t *sb, sbuf_t *src)
+{
+  sbuf_free(sb);
+  *sb = *src;
+  sbuf_init(src);
+}
+
+void
 sbuf_append(sbuf_t *sb, const void *data, int len)
 {
   sbuf_alloc(sb, len);
