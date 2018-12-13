@@ -37,7 +37,6 @@ typedef struct http_priv {
   gtimer_t       kick_timer;
   uint8_t        shutdown;
   uint8_t        started;
-  uint8_t        flush;
   uint8_t        unpause;
   sbuf_t         m3u_sbuf;
   sbuf_t         key_sbuf;
@@ -193,17 +192,6 @@ iptv_http_kick_cb( void *aux )
   if (hp == NULL) return;
   im = hp->im;
   if (im == NULL) return;
-  if (hp->flush) {
-    hp->flush = 0;
-    tvh_mutex_lock(&iptv_lock);
-    if (!hp->started) {
-      iptv_input_mux_started(hp->mi, im, 0);
-    } else {
-      iptv_input_recv_flush(im);
-    }
-    hp->started = 1;
-    tvh_mutex_unlock(&iptv_lock);
-  }
 
   if (hp->unpause) {
     hp->unpause = 0;
@@ -256,8 +244,10 @@ iptv_http_header ( http_client_t *hc )
 
   hp->m3u_header = 0;
   hp->off = 0;
-  hp->flush = 1;
-  gtimer_arm_rel(&hp->kick_timer, iptv_http_kick_cb, hc, 0);
+  tvh_mutex_lock(&iptv_lock);
+  iptv_input_recv_flush(im);
+  tvh_mutex_unlock(&iptv_lock);
+
   return 0;
 }
 
@@ -538,6 +528,7 @@ iptv_http_start
   sbuf_init(&hp->m3u_sbuf);
   sbuf_init(&hp->key_sbuf);
   sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
+  iptv_input_mux_started(hp->mi, im, 1);
   http_client_register(hc);          /* register to the HTTP thread */
   r = http_client_simple(hc, u);
   if (r < 0) {
