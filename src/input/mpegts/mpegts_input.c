@@ -1303,7 +1303,7 @@ end:
 
 static void
 mpegts_input_table_dispatch
-  ( mpegts_mux_t *mm, const char *logprefix, const uint8_t *tsb, int tsb_len )
+  ( mpegts_mux_t *mm, const char *logprefix, const uint8_t *tsb, int tsb_len, int fast )
 {
   int i, len = 0, c = 0;
   const uint8_t *tsb2, *tsb2_end;
@@ -1317,6 +1317,10 @@ mpegts_input_table_dispatch
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     c++;
     if (mt->mt_destroyed || !mt->mt_subscribed || mt->mt_pid != pid)
+      continue;
+    if (fast && (mt->mt_flags & MT_FAST) == 0)
+      continue;
+    if (!fast && (mt->mt_flags & MT_FAST) != 0)
       continue;
     mpegts_table_grab(mt);
     tprofile_start(&mt->mt_profile, "dispatch");
@@ -1340,6 +1344,38 @@ mpegts_input_table_dispatch
     tprofile_finish(&mt->mt_profile);
     mpegts_table_release(mt);
   }
+}
+
+static void
+mpegts_input_table_restart
+  ( mpegts_mux_t *mm, const char *logprefix, int fast )
+{
+  mpegts_table_t *mt;
+  tvh_mutex_lock(&mm->mm_tables_lock);
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    if (fast && (mt->mt_flags & MT_FAST) == 0)
+      continue;
+    if (!fast && (mt->mt_flags & MT_FAST) != 0)
+      continue;
+    mt->mt_sect.ps_cc = -1;
+  }
+  tvh_mutex_unlock(&mm->mm_tables_lock);
+}
+
+static mpegts_table_feed_t *
+mpegts_input_table_feed_create ( mpegts_input_t *mi, mpegts_mux_t *mm, uint8_t *tsb, int llen )
+{
+  mpegts_table_feed_t *mtf;
+
+  mtf = malloc(sizeof(mpegts_table_feed_t) + MAX(llen, MPEGTS_MTF_ALLOC_CHUNK));
+  mtf->mtf_cc_restart = 0;
+  mtf->mtf_len = llen;
+  memcpy(mtf->mtf_tsb, tsb, llen);
+  mtf->mtf_mux = mm;
+  mi->mi_table_queue_size += llen;
+  memoryinfo_alloc(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + llen);
+  TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
+  return mtf;
 }
 
 static void
@@ -1397,12 +1433,28 @@ mpegts_input_process
   int table_wakeup = 0;
   mpegts_mux_t *mm = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi;
+  mpegts_table_feed_t *mtf;
   uint64_t tspos;
 
   if (mm == NULL || (mmi = mm->mm_active) == NULL)
     return 0;
 
   assert(mm == mmi->mmi_mux);
+
+  if (mpkt->mp_cc_restart) {
+    LIST_FOREACH(s, &mm->mm_transports, s_active_link)
+      TAILQ_FOREACH(st, &s->s_components.set_all, es_link)
+        st->es_cc = -1;
+    RB_FOREACH(mp, &mm->mm_pids, mp_link) {
+      mp->mp_cc = 0xff;
+      if (mp->mp_type & MPS_FTABLE) {
+        mpegts_input_table_restart(mm, mm->mm_nicename, 1);
+      } else {
+        mtf = mpegts_input_table_feed_create(mi, mm, NULL, 0);
+        mtf->mtf_cc_restart = 1;
+      }
+    }
+  }
 
   /* Process */
   tspos = mm->mm_input_pos;
@@ -1492,7 +1544,7 @@ mpegts_input_process
       if (type & (MPS_TABLE | MPS_FTABLE)) {
         if (!(tsb[1] & 0x80)) {
           if (type & MPS_FTABLE)
-            mpegts_input_table_dispatch(mm, mm->mm_nicename, tsb, llen);
+            mpegts_input_table_dispatch(mm, mm->mm_nicename, tsb, llen, 1);
           if (type & MPS_TABLE) {
             if (mi->mi_table_queue_size >= 2*1024*1024) {
               if (tvhlog_limit(&mi->mi_input_queue_loglimit, 10)) {
@@ -1501,7 +1553,7 @@ mpegts_input_process
                   mpegts_input_analyze_table_queue(mi);
               }
             } else {
-              mpegts_table_feed_t *mtf = TAILQ_LAST(&mi->mi_table_queue, mpegts_table_feed_queue);
+              mtf = TAILQ_LAST(&mi->mi_table_queue, mpegts_table_feed_queue);
               if (mtf && mtf->mtf_mux == mm && mtf->mtf_len + llen <= MPEGTS_MTF_ALLOC_CHUNK) {
                 pid2 = (mtf->mtf_tsb[1] << 8) | mtf->mtf_tsb[2];
                 if (pid == pid2) {
@@ -1516,15 +1568,8 @@ mpegts_input_process
               } else {
                 mtf = NULL;
               }
-              if (mtf == NULL) {
-                mtf = malloc(sizeof(mpegts_table_feed_t) + MAX(llen, MPEGTS_MTF_ALLOC_CHUNK));
-                mtf->mtf_len = llen;
-                memcpy(mtf->mtf_tsb, tsb, llen);
-                mtf->mtf_mux = mm;
-                mi->mi_table_queue_size += llen;
-                memoryinfo_alloc(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + llen);
-                TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
-              }
+              if (mtf == NULL)
+                mpegts_input_table_feed_create(mi, mm, tsb, llen);
               table_wakeup = 1;
             }
           }
@@ -1558,12 +1603,6 @@ done:
     sm.sm_data = pb;
     streaming_pad_deliver(&mmi->mmi_streaming_pad, streaming_msg_clone(&sm));
     pktbuf_ref_dec(pb);
-  }
-
-  if (mpkt->mp_cc_restart) {
-    LIST_FOREACH(s, &mm->mm_transports, s_active_link)
-      TAILQ_FOREACH(st, &s->s_components.set_all, es_link)
-        st->es_cc = -1;
   }
 
   /* Wake table */
@@ -1771,8 +1810,11 @@ mpegts_input_table_thread ( void *aux )
     tvh_mutex_lock(&global_lock);
     if (atomic_get(&mi->mi_running)) {
       mm = mtf->mtf_mux;
-      if (mm && mm->mm_active)
-        mpegts_input_table_dispatch(mm, mm->mm_nicename, mtf->mtf_tsb, mtf->mtf_len);
+      if (mm && mm->mm_active) {
+        if (mtf->mtf_cc_restart)
+          mpegts_input_table_restart(mm, mm->mm_nicename, 0);
+        mpegts_input_table_dispatch(mm, mm->mm_nicename, mtf->mtf_tsb, mtf->mtf_len, 0);
+      }
     }
     tvh_mutex_unlock(&global_lock);
 

@@ -61,7 +61,7 @@ typedef TAILQ_HEAD(mpegts_mux_queue,mpegts_mux) mpegts_mux_queue_t;
 typedef LIST_HEAD (,mpegts_mux)                 mpegts_mux_list_t;
 typedef LIST_HEAD (,mpegts_network_link)        mpegts_network_link_list_t;
 typedef TAILQ_HEAD(mpegts_table_feed_queue, mpegts_table_feed)
-  mpegts_table_feed_queue_t;
+                                                mpegts_table_feed_queue_t;
 
 /* Classes */
 extern const idclass_t mpegts_network_class;
@@ -287,6 +287,7 @@ struct mpegts_table
 
 struct mpegts_table_feed {
   TAILQ_ENTRY(mpegts_table_feed) mtf_link;
+  uint8_t mtf_cc_restart;
   int mtf_len;
   mpegts_mux_t *mtf_mux;
   uint8_t mtf_tsb[0];
