@@ -1574,7 +1574,7 @@ dvr_thread(void *aux)
   int commercial = COMMERCIAL_UNKNOWN;
   int running_disabled;
   int64_t packets = 0, dts_offset = PTS_UNSET;
-  time_t real_start, start_time = 0, running_start = 0, running_stop = 0;
+  time_t now, real_start, start_time = 0, running_start = 0, running_stop = 0;
   char *postproc;
   char ubuf[UUID_HEX_SIZE];
 
@@ -1587,13 +1587,13 @@ dvr_thread(void *aux)
   tvhtrace(LS_DVR, "%s - recoding thread started for \"%s\"",
            idnode_uuid_as_str(&de->de_id, ubuf), lang_str_get(de->de_title, NULL));
   if (!running_disabled && de->de_bcast) {
-    real_start = gclk();
+    now = gclk();
     switch (de->de_bcast->running) {
     case EPG_RUNNING_PAUSE:
-      atomic_set_time_t(&de->de_running_pause, real_start);
+      atomic_set_time_t(&de->de_running_pause, now);
       /* fall through */
     case EPG_RUNNING_NOW:
-      atomic_set_time_t(&de->de_running_start, real_start);
+      atomic_set_time_t(&de->de_running_start, now);
       break;
     }
   }
