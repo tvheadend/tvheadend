@@ -1541,7 +1541,6 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
       tvh_mutex_unlock(&lfe->sf_dvr_lock);
       lfe->sf_last_data_tstamp = mclk();
     }
-    lfe->sf_last_data_tstamp = mclk();
 
   } else if (b[1] == 1) {
 
