@@ -484,10 +484,10 @@ iptv_input_pause_check ( iptv_mux_t *im )
   im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
   im->im_pcr &= PTS_MASK;
   if (old != im->im_pcr)
-    tvhtrace(LS_IPTV_PCR, "pcr: updated %"PRId64", time start %"PRId64", limit %"PRId64,
-             im->im_pcr, im->im_pcr_start, limit);
+    tvhtrace(LS_IPTV_PCR, "updated %"PRId64", time start %"PRId64", limit %"PRId64", diff %"PRId64,
+             im->im_pcr, im->im_pcr_start, limit, im->im_pcr_end - im->im_pcr_start);
 
-  /* queued more than 3 seconds? trigger the pause */
+  /* queued more than threshold? trigger the pause */
   return im->im_pcr_end - im->im_pcr_start >= limit;
 }
 
@@ -502,6 +502,7 @@ iptv_input_unpause ( void *aux )
   if (im->mm_active) {
     mi = (iptv_input_t *)im->mm_active->mmi_input;
     if (iptv_input_pause_check(im)) {
+      tvhtrace(LS_IPTV_PCR, "paused (in unpause)");
       pause = 1;
     } else {
       tvhtrace(LS_IPTV_PCR, "unpause timer callback");
@@ -619,7 +620,7 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
   mmi = im->mm_active;
   if (mmi) {
     if (iptv_input_pause_check(im)) {
-      tvhtrace(LS_IPTV_PCR, "pcr: paused");
+      tvhtrace(LS_IPTV_PCR, "paused");
       return 1;
     }
     mpegts_input_recv_packets(mmi, &im->mm_iptv_buffer,
@@ -633,18 +634,18 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
           im->im_pcr = pcr.pcr_first;
           im->im_pcr_start = getfastmonoclock();
           im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
-          tvhtrace(LS_IPTV_PCR, "pcr: first %"PRId64" last %"PRId64", time start %"PRId64", end %"PRId64,
+          tvhtrace(LS_IPTV_PCR, "first %"PRId64" last %"PRId64", time start %"PRId64", end %"PRId64,
                    pcr.pcr_first, pcr.pcr_last, im->im_pcr_start, im->im_pcr_end);
         }
       } else {
         s64 = pts_diff(im->im_pcr, pcr.pcr_last);
         if (s64 != PTS_UNSET) {
           im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
-          tvhtrace(LS_IPTV_PCR, "pcr: last %"PRId64", time end %"PRId64, pcr.pcr_last, im->im_pcr_end);
+          tvhtrace(LS_IPTV_PCR, "last %"PRId64", time end %"PRId64, pcr.pcr_last, im->im_pcr_end);
         }
       }
       if (iptv_input_pause_check(im)) {
-        tvhtrace(LS_IPTV_PCR, "pcr: paused");
+        tvhtrace(LS_IPTV_PCR, "paused");
         return 1;
       }
     }
