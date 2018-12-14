@@ -3594,10 +3594,8 @@ htsp_async_send_cb(http_async_send_cb_t cb, int mode, void *aux)
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link)
     if (htsp->htsp_async_mode & mode) {
       m = cb(htsp, aux);
-      if (m != NULL) {
+      if (m != NULL)
         htsp_send_message(htsp, m, NULL);
-        htsmsg_destroy(m);
-      }
     }
 }
 
