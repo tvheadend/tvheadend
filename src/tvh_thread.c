@@ -500,7 +500,7 @@ static void *tvh_thread_watch_thread(void *aux)
     pthread_mutex_lock(&thrwatch_mutex);
     now = getfastmonoclock();
     mutex = TAILQ_LAST(&thrwatch_mutexes, tvh_mutex_queue);
-    if (mutex && mutex->tstamp + sec2mono(55) < now) {
+    if (mutex && mutex->tstamp + sec2mono(5) < now) {
       pthread_mutex_unlock(&thrwatch_mutex);
       tvh_thread_mutex_failed(mutex, "deadlock", __FILE__, __LINE__);
     }
