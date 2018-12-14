@@ -93,9 +93,11 @@ static void _epggrab_module_grab ( epggrab_module_int_t *mod )
 static void *_epggrab_internal_thread( void *aux )
 {
   epggrab_module_t *mod;
-  int err, confver = -1; // force first run
+  int err, confver;
   struct timespec ts;
   time_t t;
+
+  confver   = epggrab_conf.int_initial ? -1 /* force first run */ : epggrab_confver;
 
   /* Setup timeout */
   ts.tv_nsec = 0; 
@@ -279,8 +281,6 @@ static void _epggrab_load ( void )
 static void
 epggrab_class_changed(idnode_t *self)
 {
-  /* Register */
-  epggrab_rerun_internal();
 }
 
 static htsmsg_t *
@@ -427,6 +427,15 @@ const idclass_t epggrab_class = {
     },
     {
       .type   = PT_BOOL,
+      .id     = "int_initial",
+      .name   = N_("Force initial EPG grab at start-up (internal grabbers)"),
+      .desc   = N_("Force an initial EPG grab at start-up (internal grabbers)."),
+      .off    = offsetof(epggrab_conf_t, int_initial),
+      .opts   = PO_ADVANCED,
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
       .id     = "ota_initial",
       .name   = N_("Force initial EPG grab at start-up"),
       .desc   = N_("Force an initial EPG grab at start-up."),
@@ -491,6 +500,7 @@ void epggrab_init ( void )
 
   /* Defaults */
   epggrab_conf.cron               = NULL;
+  epggrab_conf.int_initial        = 1;
   epggrab_conf.channel_rename     = 0;
   epggrab_conf.channel_renumber   = 0;
   epggrab_conf.channel_reicon     = 0;

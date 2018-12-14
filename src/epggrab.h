@@ -322,6 +322,7 @@ typedef struct epggrab_conf {
   char                 *ota_cron;
   uint32_t              ota_timeout;
   uint32_t              ota_initial;
+  uint32_t              int_initial;
 } epggrab_conf_t;
 
 /*
