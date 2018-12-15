@@ -282,6 +282,7 @@ struct linuxdvb_satconf
   int                    ls_last_tone_off;
   int                    ls_last_orbital_pos;
   int                    ls_last_queued_pos;
+  char                   *ls_external_cmd;
 };
 
 /*
