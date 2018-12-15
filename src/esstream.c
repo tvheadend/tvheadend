@@ -447,21 +447,23 @@ ignore:
  * Add a new stream to a service
  */
 elementary_stream_t *
-elementary_stream_create
-  (elementary_set_t *set, int pid, streaming_component_type_t type)
+elementary_stream_create_parent
+  (elementary_set_t *set, int pid, int parent_pid, streaming_component_type_t type)
 {
   elementary_stream_t *st;
-  int i = 0;
   int idx = 0;
 
   TAILQ_FOREACH(st, &set->set_all, es_link) {
     if(st->es_index > idx)
       idx = st->es_index;
-    i++;
-    if(pid != -1 && st->es_pid == pid)
+    if(pid != -1 && st->es_pid == pid) {
+      if (parent_pid >= 0 && st->es_parent_pid != parent_pid)
+        goto create;
       return st;
+    }
   }
 
+create:
   st = calloc(1, sizeof(elementary_stream_t));
   st->es_index = idx + 1;
 
@@ -472,6 +474,7 @@ elementary_stream_create
   st->es_service = set->set_service;
 
   st->es_pid = pid;
+  st->es_parent_pid = parent_pid > 0 ? parent_pid : 0;
 
   elementary_stream_make_nicename(st, set->set_nicename);
 
@@ -492,6 +495,21 @@ elementary_stream_find_(elementary_set_t *set, int pid)
       set->set_last_pid = pid;
       return st;
     }
+  }
+  return NULL;
+}
+
+/**
+ * Find an elementary stream in a service with specific parent pid
+ */
+elementary_stream_t *
+elementary_stream_find_parent(elementary_set_t *set, int pid, int parent_pid)
+{
+  elementary_stream_t *st;
+
+  TAILQ_FOREACH(st, &set->set_all, es_link) {
+    if(st->es_pid == pid && st->es_parent_pid == parent_pid)
+      return st;
   }
   return NULL;
 }
