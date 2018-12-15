@@ -757,6 +757,15 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .def.i    = 0
     },
     {
+      .type     = PT_STR,
+      .id       = "external_cmd",
+      .name     = N_("External command"),
+      .desc     = N_("Command to move the dish with rotor external."),
+      .off      = offsetof(linuxdvb_satconf_t, ls_external_cmd),
+      .opts     = PO_ADVANCED,
+      .def.i    = 0
+    },
+    {
       .type     = PT_U32,
       .id       = "motor_rate",
       .name     = N_("Motor rate (milliseconds/deg)"),
