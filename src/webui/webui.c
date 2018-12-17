@@ -1582,7 +1582,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
       if (str0 == NULL)
         return HTTP_STATUS_INTERNAL;
       htsbuf_queue_init(&q, 0);
-      htsbuf_append_and_escape_url(&q, basename);
+      htsbuf_append_and_escape_rfc8187(&q, basename);
       str = htsbuf_to_string(&q);
       r = 50 + strlen(str0) + strlen(str);
       disposition = alloca(r);
