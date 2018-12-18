@@ -274,6 +274,8 @@ Apply configuration (run time only)      | Apply the entered debugging settings.
                                          | **Configuration -> Debugging -> Configuration only.**
 Clear all statistics                     | Reset all stream statistics, e.g. BER, PER etc.. 
                                          | **Status -> Stream only.**
+Drop (displayed) connections             | Drop the currently-shown active connections.
+                                         | **Status -> Connections only.**
 View Level                               | Show/Hide more advanced options.
 Help                                     | Display the help page.
                                          | **Icon-only buttons**
