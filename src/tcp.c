@@ -665,6 +665,21 @@ tcp_connection_cancel(uint32_t id)
     }
 }
 
+/**
+ *
+ */
+void
+tcp_connection_cancel_all(void)
+{
+  tcp_server_launch_t *tsl;
+
+  lock_assert(&global_lock);
+
+  LIST_FOREACH(tsl, &tcp_server_active, alink)
+    if (tsl->ops.cancel)
+      tsl->ops.cancel(tsl->opaque);
+}
+
 /*
  *
  */
