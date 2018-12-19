@@ -845,6 +845,7 @@ tt_subtitle_deliver(parser_t *t, parser_es_t *parent, tt_mag_t *ttm)
 
   TAILQ_FOREACH(es, &t->prs_components.set_filter, es_filter_link) {
     st = (parser_es_t *)es;
+    if (st->es_type != SCT_TELETEXT) continue;
     if (parent->es_pid == st->es_parent_pid &&
       ttm->ttm_curpage == st->es_pid -  PID_TELETEXT_BASE) {
       if (extract_subtitle(t, st, ttm, ttm->ttm_current_pts))

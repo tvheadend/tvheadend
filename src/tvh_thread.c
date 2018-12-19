@@ -475,9 +475,11 @@ tvh_thread_mutex_failed
 
   htsbuf_queue_init(&q, 0);
   htsbuf_qprintf(&q, "REASON: %s (%s:%d)\n", reason, filename, lineno);
-  htsbuf_qprintf(&q, "mutex %p locked in: %s:%i (thread %ld)\n", mutex, mutex->filename, mutex->lineno, mutex->tid);
-  LIST_FOREACH(w, &mutex->waiters, link)
-    htsbuf_qprintf(&q, "mutex %p   waiting in: %s:%i (thread %ld)\n", mutex, w->filename, w->lineno, w->tid);
+  if (mutex) {
+    htsbuf_qprintf(&q, "mutex %p locked in: %s:%i (thread %ld)\n", mutex, mutex->filename, mutex->lineno, mutex->tid);
+    LIST_FOREACH(w, &mutex->waiters, link)
+      htsbuf_qprintf(&q, "mutex %p   waiting in: %s:%i (thread %ld)\n", mutex, w->filename, w->lineno, w->tid);
+  }
   TAILQ_FOREACH(m, &thrwatch_mutexes, link) {
     if (m == mutex) continue;
     htsbuf_qprintf(&q, "mutex %p other in: %s:%i (thread %ld)\n", m, m->filename, m->lineno, m->tid);

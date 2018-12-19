@@ -183,28 +183,23 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
     int page = (ptr[3] & 0x7 ?: 8) * 100 + (ptr[4] >> 4) * 10 + (ptr[4] & 0xf);
     int type = ptr[3] >> 3;
 
-    if(type == 2 || type == 5) {
+    if(page > 0 && (type == 2 || type == 5)) {
       // 2 = subtitle page, 5 = subtitle page [hearing impaired]
 
       // We put the teletext subtitle driven streams on a list of pids
       // higher than normal MPEG TS (0x2000 ++)
       int pid = DVB_TELETEXT_BASE + page;
     
-      st = elementary_stream_find(set, pid);
+      st = elementary_stream_find_parent(set, pid, parent_pid);
       if (st == NULL || st->es_type != SCT_TEXTSUB) {
         r |= PMT_UPDATE_NEW_STREAM;
-        st = elementary_stream_create(set, pid, SCT_TEXTSUB);
+        st = elementary_stream_create_parent(set, pid, parent_pid, SCT_TEXTSUB);
       }
 
       lang = lang_code_get2((const char*)ptr, 3);
       if(memcmp(st->es_lang,lang,3)) {
         r |= PMT_UPDATE_LANGUAGE;
         memcpy(st->es_lang, lang, 4);
-      }
-
-      if(st->es_parent_pid != parent_pid) {
-        r |= PMT_UPDATE_PARENT_PID;
-        st->es_parent_pid = parent_pid;
       }
 
       // Check es_delete_me so we only compute position once per PMT update
@@ -390,10 +385,10 @@ dvb_psi_parse_pmt
         break;
 
       case DVB_DESC_TELETEXT:
-        if(estype == 0x06)
+        if(estype == 0x06) {
           hts_stream_type = SCT_TELETEXT;
-  
-        update |= psi_desc_teletext(set, ptr, dlen, pid, &tt_position);
+          update |= psi_desc_teletext(set, ptr, dlen, pid, &tt_position);
+        }
         break;
 
       case DVB_DESC_AC3:
@@ -524,7 +519,7 @@ dvb_psi_parse_pmt
 
   if (update) {
     tvhdebug(mt->mt_subsys, "%s: Service \"%s\" PMT (version %d) updated"
-     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
      mt->mt_name,
      nicename, version,
      update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
@@ -540,7 +535,6 @@ dvb_psi_parse_pmt
      update&PMT_UPDATE_NEW_CA_STREAM     ? ", New CA stream":"",
      update&PMT_UPDATE_NEW_CAID          ? ", New CAID":"",
      update&PMT_UPDATE_CA_PROVIDER_CHANGE? ", CA provider changed":"",
-     update&PMT_UPDATE_PARENT_PID        ? ", Parent PID changed":"",
      update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
      update&PMT_UPDATE_CAID_PID          ? ", CAID PID changed":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");

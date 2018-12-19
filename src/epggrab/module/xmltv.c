@@ -588,7 +588,7 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
       
         if (strlen(str) > 255) {
           str2 = strdup(str);
-          str2[256] = '\0';
+          str2[255] = '\0';
           str = str2;
         }
       
@@ -603,7 +603,7 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
           if (s == NULL) break;
 
           if (strlen(s) > 255)
-            s[256] = '\0';
+            s[255] = '\0';
 
           if (!credits_names) credits_names = string_list_create();
           string_list_insert(credits_names, s);

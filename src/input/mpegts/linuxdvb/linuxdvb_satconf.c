@@ -757,6 +757,15 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .def.i    = 0
     },
     {
+      .type     = PT_STR,
+      .id       = "external_cmd",
+      .name     = N_("External rotor command"),
+      .desc     = N_("Command to move the dish with an external command."),
+      .off      = offsetof(linuxdvb_satconf_t, ls_rotor_extcmd),
+      .opts     = PO_ADVANCED,
+      .def.i    = 0
+    },
+    {
       .type     = PT_U32,
       .id       = "motor_rate",
       .name     = N_("Motor rate (milliseconds/deg)"),
@@ -1676,6 +1685,7 @@ linuxdvb_satconf_destroy ( linuxdvb_satconf_t *ls, int delconf )
   }
   idnode_save_check(&ls->ls_id, 1);
   idnode_unlink(&ls->ls_id);
+  free(ls->ls_rotor_extcmd);
   free(ls);
 }
 

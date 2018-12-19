@@ -101,9 +101,17 @@ api_connections_cancel
   htsmsg_field_t *f;
   htsmsg_t *ids;
   uint32_t id;
+  const char *s;
 
   if (!(f = htsmsg_field_find(args, "id")))
     return EINVAL;
+  s = htsmsg_field_get_str(f);
+  if (s && strcmp(s, "all") == 0) {
+    tvh_mutex_lock(&global_lock);
+    tcp_connection_cancel_all();
+    tvh_mutex_unlock(&global_lock);
+    return 0;
+  }
   if (!(ids = htsmsg_field_get_list(f)))
     if (htsmsg_field_get_u32(f, &id))
       return EINVAL;

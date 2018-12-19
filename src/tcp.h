@@ -160,6 +160,7 @@ void *tcp_connection_launch(int fd, int streaming,
                             struct access *aa);
 void tcp_connection_land(void *tcp_id);
 void tcp_connection_cancel(uint32_t id);
+void tcp_connection_cancel_all(void);
 
 htsmsg_t *tcp_server_connections ( void );
 

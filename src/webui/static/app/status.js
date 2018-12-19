@@ -755,7 +755,26 @@ tvheadend.status_conns = function(panel, index) {
             }]);
 
         grid = new Ext.grid.GridPanel({
-            tbar: ['->', {
+            tbar: [
+            {
+                text: _('Drop all connections'),
+                tooltip: _('Drop (current) connections to Tvheadend.'),
+                iconCls: 'cancel',
+                handler: function() {
+                    Ext.MessageBox.confirm(_('Drop Connections'),
+                            _('Drop all current connections?'),
+                            function(button) {
+                                if (button === 'no')
+                                    return;
+                                Ext.Ajax.request({
+                                    url: 'api/connections/cancel',
+                                    params: { id: 'all' }
+                                });
+                            }
+                    );
+                }
+            },
+            '->', {
                 text: _('Help'),
                 tooltip: _('View help docs.'),
                 iconCls: 'help',
