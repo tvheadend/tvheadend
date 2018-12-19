@@ -766,11 +766,9 @@ tvheadend.status_conns = function(panel, index) {
                             function(button) {
                                 if (button === 'no')
                                     return;
-                                store.each(function(obj) {
-                                    Ext.Ajax.request({
-                                        url: 'api/connections/cancel',
-                                        params: { id: obj.id }
-                                    });
+                                Ext.Ajax.request({
+                                    url: 'api/connections/cancel',
+                                    params: { id: 'all' }
                                 });
                             }
                     );
