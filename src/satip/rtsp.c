@@ -1139,6 +1139,8 @@ rtsp_parse_cmd
 
   } else if (msys == DVB_SYS_ATSC || msys == DVB_SYS_DVBC_ANNEX_B) {
 
+    freq *= 1000;
+    if (freq < 0) goto end;
     if (!TAILQ_EMPTY(&hc->hc_req_args)) goto eargs;
 
   } else {
