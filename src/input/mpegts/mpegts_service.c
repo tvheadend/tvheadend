@@ -692,7 +692,7 @@ mpegts_service_find_e2(uint32_t stype, uint32_t sid, uint32_t tsid,
   switch (hash & 0xFFFF0000) {
   case 0xFFFF0000: idc = &dvb_mux_dvbc_class; break;
   case 0xEEEE0000: idc = &dvb_mux_dvbt_class; break;
-  case 0xDDDD0000: idc = &dvb_mux_dvbt_class; break;
+  case 0xDDDD0000: idc = &dvb_mux_atsc_t_class; break;
   default:         idc = &dvb_mux_dvbs_class; break;
   }
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
