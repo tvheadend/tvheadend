@@ -623,6 +623,10 @@ cc_session(cclient_t *cc)
         tvhlog_hexdump(cc->cc_subsys, rbuf.sb_data + rbuf.sb_ptr - len, len);
         if (cc->cc_read(cc, &rbuf))
           break;
+      } else {
+        tvhtrace(cc->cc_subsys, "%s: %s", cc->cc_name,
+                 len == 0 ? "connection close" : "read error");
+        break;
       }
     } else {
       abort();
