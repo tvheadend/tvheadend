@@ -194,11 +194,11 @@ descrambler_data_key_check(th_descrambler_runtime_t *dr, uint8_t key, int len)
       dd = TAILQ_NEXT(dd, dd_link);
     if (dd == NULL) break;
     l = dd->dd_sbuf.sb_ptr;
-    for (off = 0; off < l && len > 0; off += 128, l -= 128) {
+    for (off = 0; off < l && len > 0; off += 188, l -= 188) {
       ki = dd->dd_sbuf.sb_data[off + 3];
       if (ki == 0) continue;
       if ((ki & 0xc0) != key) return -1;
-      len -= 128;
+      len -= 188;
     }
     dd = TAILQ_NEXT(dd, dd_link);
   }
