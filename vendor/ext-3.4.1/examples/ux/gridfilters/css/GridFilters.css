@@ -28,11 +28,11 @@ Build date: 2013-04-03 15:07:25
 }
 
 .x-grid3-hd-row .ux-filtered-column .x-grid3-hd-inner {
-	/* background-image: urL(../images/header_bg.gif); */
+	background-image: urL(../images/header_bg.gif);
 }
 
 .ux-filtered-column .x-grid3-hd-btn {
-	/* background-image: urL(../images/hd-btn.gif); */
+	background-image: urL(../images/hd-btn.gif);
 }
 */
 .x-grid3-hd-row td.ux-filtered-column {   

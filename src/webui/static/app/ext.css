@@ -836,7 +836,7 @@
 }
 
 .dvr-details-dialog {
-    postition: relative;
+    position: relative;
 }
 .dvr-details-dialog-background-image {
     /* Details in here are overridden by  code */
