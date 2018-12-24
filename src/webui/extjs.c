@@ -84,6 +84,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
 
+  htsbuf_append_str(hq, "<!DOCTYPE html>\n");
   htsbuf_append_str(hq, "<html>\n");
   htsbuf_append_str(hq, "<head>\n");
 
