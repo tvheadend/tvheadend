@@ -114,7 +114,7 @@ Ext.onReady(tvheadend.app.init, tvheadend.app);\
 		 "\tpadding:0;\n"
 		 "\tborder:0 none;\n"
 		 "\toverflow:hidden;\n"
-		 "\theight:100%%;\n"
+		 "\theight:100%;\n"
 		 "}\n"
 		 "#systemlog {\n"
 		 "\tfont:normal 12px courier; font-weight: bold;\n"
