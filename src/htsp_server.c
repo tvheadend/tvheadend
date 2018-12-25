@@ -2822,8 +2822,11 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_file_open(htsp, filename, 0, de);
 
   } else if ((s2 = tvh_strbegins(str, "imagecache/")) != NULL) {
-    int fd = -1;
-    if (!imagecache_filename(atoi(s2), buf, sizeof(buf)))
+    int r, fd = -1;
+    tvh_mutex_unlock(&global_lock);
+    r = imagecache_filename(atoi(s2), buf, sizeof(buf));
+    tvh_mutex_lock(&global_lock);
+    if (r == 0)
       fd = tvh_open(buf, O_RDONLY, 0);
     if (fd < 0)
       return htsp_error(htsp, N_("Failed to open image"));

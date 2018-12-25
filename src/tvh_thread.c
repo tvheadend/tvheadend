@@ -433,6 +433,7 @@ int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec 
 void
 tvh_mutex_not_held(const char *file, int line)
 {
+  tvherror(LS_THREAD, "Mutex not held at %s:%d", file, line);
   fprintf(stderr, "Mutex not held at %s:%d\n", file, line);
   abort();
 }

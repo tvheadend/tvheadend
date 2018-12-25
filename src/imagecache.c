@@ -36,6 +36,7 @@
 typedef struct imagecache_image
 {
   int         id;       ///< Internal ID
+  int         ref;      ///< Number of references
   const char *url;      ///< Upstream URL
   uint8_t     failed;   ///< Last update failed
   uint8_t     savepend; ///< Pending save
@@ -54,9 +55,10 @@ typedef struct imagecache_image
   RB_ENTRY(imagecache_image)    url_link; ///< Index by URL
 } imagecache_image_t;
 
-static int                            imagecache_id;
-static RB_HEAD(,imagecache_image)     imagecache_by_id;
-static RB_HEAD(,imagecache_image)     imagecache_by_url;
+tvh_mutex_t imagecache_lock = TVH_THREAD_MUTEX_INITIALIZER;
+static int imagecache_id;
+static RB_HEAD(,imagecache_image) imagecache_by_id;
+static RB_HEAD(,imagecache_image) imagecache_by_url;
 SKEL_DECLARE(imagecache_skel, imagecache_image_t);
 
 struct imagecache_config imagecache_conf = {
@@ -132,7 +134,24 @@ const idclass_t imagecache_class = {
 
 static tvh_cond_t                     imagecache_cond;
 static TAILQ_HEAD(, imagecache_image) imagecache_queue;
-static mtimer_t                       imagecache_timer;
+
+static void
+imagecache_incref(imagecache_image_t *img)
+{
+  lock_assert(&imagecache_lock);
+  assert(img->ref > 0);
+  img->ref++;
+}
+
+static void
+imagecache_decref(imagecache_image_t *img)
+{
+  lock_assert(&imagecache_lock);
+  if (--img->ref == 0) {
+    free((void *)img->url);
+    free(img);
+  }
+}
 
 static inline int
 sha1_empty( const uint8_t *sha1 )
@@ -252,7 +271,7 @@ imagecache_new_contents ( imagecache_image_t *img,
   fwrite(data, dsize, 1, fp);
   fclose(fp);
   unlink(path);
-  tvh_mutex_lock(&global_lock);
+  tvh_mutex_lock(&imagecache_lock);
   memcpy(img->sha1, sha1, 20);
   if (!empty) {
     /* change id - contents changed */
@@ -266,7 +285,7 @@ imagecache_new_contents ( imagecache_image_t *img,
       tvherror(LS_IMAGECACHE, "unable to rename file '%s' to '%s'", tpath, path);
   }
   imagecache_image_save(img);
-  tvh_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&imagecache_lock);
   return r;
 }
 
@@ -280,21 +299,21 @@ imagecache_image_fetch ( imagecache_image_t *img )
   tvhpoll_t *efd = NULL;
   http_client_t *hc = NULL;
 
-  lock_assert(&global_lock);
+  lock_assert(&imagecache_lock);
 
   if (img->url == NULL || img->url[0] == '\0')
     return res;
 
   /* Open file  */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data/%d",
-                              img->id))
+                             img->id))
     goto error;
   if (hts_settings_makedirs(path))
     goto error;
   snprintf(tpath, sizeof(tpath), "%s.tmp", path);
-  
+
   /* Fetch (release lock, incase of delays) */
-  tvh_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&imagecache_lock);
 
   urlinit(&url);
 
@@ -340,9 +359,9 @@ imagecache_image_fetch ( imagecache_image_t *img )
 
   /* Process */
 error_lock:
-  tvh_mutex_lock(&global_lock);
-error:
   if (NULL != hc) http_client_close(hc);
+  tvh_mutex_lock(&imagecache_lock);
+error:
   urlreset(&url);
   tvhpoll_destroy(efd);
   time(&img->updated); // even if failed (possibly request sooner?)
@@ -360,23 +379,52 @@ error:
   return res;
 };
 
+static void
+imagecache_timer ( void )
+{
+  time_t now, when;
+  imagecache_image_t *img, *img_next;
+
+  tvh_mutex_lock(&imagecache_lock);
+  now = gclk();
+  for (img = RB_FIRST(&imagecache_by_url); img; img = img_next) {
+    img_next = RB_NEXT(img, url_link);
+    if (imagecache_conf.expire > 0 && img->accessed > 0) {
+      when = img->accessed + imagecache_conf.expire * 24 * 3600;
+      if (when < now) {
+        tvhdebug(LS_IMAGECACHE, "expired: %s", img->url);
+        imagecache_destroy(img, 1);
+        continue;
+      }
+    }
+    if (img->state != IDLE) continue;
+    when = img->failed ? imagecache_conf.fail_period
+                       : imagecache_conf.ok_period;
+    when = img->updated + (when * 3600);
+    if (when < now)
+      imagecache_image_add(img);
+  }
+  tvh_mutex_unlock(&imagecache_lock);
+}
+
 static void *
 imagecache_thread ( void *p )
 {
   imagecache_image_t *img;
+  int64_t timer_expire = mclk() + sec2mono(600);
 
-  tvh_mutex_lock(&global_lock);
+  tvh_mutex_lock(&imagecache_lock);
   while (tvheadend_is_running()) {
 
-    /* Check we're enabled */
-    if (!imagecache_conf.enabled) {
-      tvh_cond_wait(&imagecache_cond, &global_lock);
-      continue;
+    /* Timer expired */
+    if (timer_expire < mclk()) {
+      timer_expire = mclk() + sec2mono(600);
+      imagecache_timer();
     }
 
     /* Get entry */
     if (!(img = TAILQ_FIRST(&imagecache_queue))) {
-      tvh_cond_wait(&imagecache_cond, &global_lock);
+      tvh_cond_timedwait(&imagecache_cond, &imagecache_lock, timer_expire);
       continue;
     }
 
@@ -388,13 +436,14 @@ retry:
       htsmsg_t *m = imagecache_image_htsmsg(img);
       img->state = IDLE;
       img->savepend = 0;
-      tvh_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&imagecache_lock);
       hts_settings_save(m, "imagecache/meta/%d", img->id);
       htsmsg_destroy(m);
-      tvh_mutex_lock(&global_lock);
+      tvh_mutex_lock(&imagecache_lock);
 
     } else if (img->state == QUEUED) {
       /* Fetch */
+      imagecache_incref(img);
       if (imagecache_conf.enabled) {
         img->state = FETCHING;
         (void)imagecache_image_fetch(img);
@@ -404,37 +453,15 @@ retry:
         goto retry;
       }
       img->state = IDLE;
+      imagecache_decref(img);
 
     } else {
       img->state = IDLE;
     }
   }
-  tvh_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&imagecache_lock);
 
   return NULL;
-}
-
-static void
-imagecache_timer_cb ( void *p )
-{
-  time_t now = gclk(), when;
-  imagecache_image_t *img, *img_next;
-  for (img = RB_FIRST(&imagecache_by_url); img; img = img_next) {
-    img_next = RB_NEXT(img, url_link);
-    if (imagecache_conf.expire > 0 && img->accessed > 0) {
-      when = img->accessed + imagecache_conf.expire * 24 * 3600;
-      if (when < now) {
-        tvhdebug(LS_IMAGECACHE, "expired: %s", img->url);
-        imagecache_destroy(img, 1);
-      }
-    }
-    if (img->state != IDLE) continue;
-    when = img->failed ? imagecache_conf.fail_period
-                       : imagecache_conf.ok_period;
-    when = img->updated + (when * 3600);
-    if (when < now)
-      imagecache_image_add(img);
-  }
 }
 
 /*
@@ -507,12 +534,6 @@ imagecache_init ( void )
 
   /* Start threads */
   tvh_thread_create(&imagecache_tid, NULL, imagecache_thread, NULL, "imagecache");
-
-  /* Re-try timer */
-  // TODO: this could be more efficient by being targetted, however
-  //       the reality its not necessary and I'd prefer to avoid dumping
-  //       100's of timers into the global pool
-  mtimer_arm_rel(&imagecache_timer, imagecache_timer_cb, NULL, sec2mono(600));
 }
 
 
@@ -528,8 +549,7 @@ imagecache_destroy ( imagecache_image_t *img, int delconf )
   }
   RB_REMOVE(&imagecache_by_url, img, url_link);
   RB_REMOVE(&imagecache_by_id, img, id_link);
-  free((void *)img->url);
-  free(img);
+  imagecache_decref(img);
 }
 
 /*
@@ -540,12 +560,11 @@ imagecache_done ( void )
 {
   imagecache_image_t *img;
 
-  tvh_mutex_lock(&global_lock);
-  mtimer_disarm(&imagecache_timer);
-  tvh_mutex_unlock(&global_lock);
+  tvh_mutex_lock(&imagecache_lock);
   tvh_cond_signal(&imagecache_cond, 1);
+  tvh_mutex_unlock(&imagecache_lock);
   pthread_join(imagecache_tid, NULL);
-  tvh_mutex_lock(&global_lock);
+  tvh_mutex_lock(&imagecache_lock);
   while ((img = RB_FIRST(&imagecache_by_id)) != NULL) {
     if (img->state == SAVE) {
       htsmsg_t *m = imagecache_image_htsmsg(img);
@@ -554,7 +573,7 @@ imagecache_done ( void )
     }
     imagecache_destroy(img, 0);
   }
-  tvh_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&imagecache_lock);
   SKEL_FREE(imagecache_skel);
 }
 
@@ -584,7 +603,7 @@ imagecache_clean( void )
   char path[PATH_MAX], *name;
   int i, n;
 
-  lock_assert(&global_lock);
+  tvh_mutex_lock(&imagecache_lock);
 
   /* remove all cached data, except the one actually fetched */
   for (img = RB_FIRST(&imagecache_by_id); img; img = next) {
@@ -598,7 +617,7 @@ imagecache_clean( void )
   /* remove unassociated data */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data")) {
     tvherror(LS_IMAGECACHE, "clean - buildpath");
-    return;
+    goto done;
   }
   if((n = fb_scandir(path, &namelist)) < 0)
     goto done;
@@ -615,7 +634,10 @@ imagecache_clean( void )
     hts_settings_remove("imagecache/data/%s", name);
   }
   free(namelist);
+
 done:
+  tvh_mutex_unlock(&imagecache_lock);
+
   imagecache_trigger();
 }
 
@@ -627,13 +649,13 @@ imagecache_trigger( void )
 {
   imagecache_image_t *img;
 
-  lock_assert(&global_lock);
-
+  tvh_mutex_lock(&imagecache_lock);
   tvhinfo(LS_IMAGECACHE, "load triggered");
   RB_FOREACH(img, &imagecache_by_url, url_link) {
     if (img->state != IDLE) continue;
     imagecache_image_add(img);
   }
+  tvh_mutex_unlock(&imagecache_lock);
 }
 
 /*
@@ -650,8 +672,6 @@ imagecache_get_id ( const char *url )
   int save = 0;
   time_t clk;
 
-  lock_assert(&global_lock);
-
   /* Invalid */
   if (!url || url[0] == '\0' || !strstr(url, "://"))
     return 0;
@@ -664,10 +684,13 @@ imagecache_get_id ( const char *url )
   SKEL_ALLOC(imagecache_skel);
   imagecache_skel->url = url;
 
+  tvh_mutex_lock(&imagecache_lock);
+
   /* Create/Find */
   i = RB_INSERT_SORTED(&imagecache_by_url, imagecache_skel, url_link, url_cmp);
   if (!i) {
     i = imagecache_skel;
+    i->ref = 1;
     i->url = strdup(url);
     SKEL_USED(imagecache_skel);
     save = 1;
@@ -686,6 +709,9 @@ imagecache_get_id ( const char *url )
   }
   if (save)
     imagecache_image_save(i);
+
+  tvh_mutex_unlock(&imagecache_lock);
+
   return id;
 }
 
@@ -707,15 +733,17 @@ imagecache_get_propstr ( const char *image, char *buf, size_t buflen )
 int
 imagecache_filename ( int id, char *name, size_t len )
 {
-  imagecache_image_t skel, *i;
+  imagecache_image_t skel, *i = NULL;
   char *fn;
 
-  lock_assert(&global_lock);
+  tvh_mutex_lock(&imagecache_lock);
 
   /* Find */
   skel.id = id;
   if (!(i = RB_FIND(&imagecache_by_id, &skel, id_link, id_cmp)))
-    return -1;
+    goto out_error;
+
+  imagecache_incref(i);
 
   /* Local file */
   if (!strncasecmp(i->url, "file://", 7)) {
@@ -736,9 +764,9 @@ imagecache_filename ( int id, char *name, size_t len )
     } else if (i->state == FETCHING) {
       mono = mclk() + sec2mono(5);
       do {
-        e = tvh_cond_timedwait(&imagecache_cond, &global_lock, mono);
+        e = tvh_cond_timedwait(&imagecache_cond, &imagecache_lock, mono);
         if (e == ETIMEDOUT)
-          return -1;
+          goto out_error;
       } while (ERRNO_AGAIN(e));
 
     /* Attempt to fetch */
@@ -747,11 +775,18 @@ imagecache_filename ( int id, char *name, size_t len )
       TAILQ_REMOVE(&imagecache_queue, i, q_link);
       e = imagecache_image_fetch(i);
       if (e)
-        return -1;
+        goto out_error;
     }
     if (hts_settings_buildpath(name, len, "imagecache/data/%d", i->id))
-      return -1;
+      goto out_error;
   }
 
+  imagecache_decref(i);
+  tvh_mutex_unlock(&imagecache_lock);
   return 0;
+
+out_error:
+  if (i) imagecache_decref(i);
+  tvh_mutex_unlock(&imagecache_lock);
+  return -1;
 }

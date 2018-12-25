@@ -30,11 +30,8 @@ api_imagecache_clean
   int b;
   if (htsmsg_get_bool(args, "clean", &b))
     return EINVAL;
-  if (b) {
-    tvh_mutex_lock(&global_lock);
+  if (b)
     imagecache_clean();
-    tvh_mutex_unlock(&global_lock);
-  }
   return 0;
 }
 
@@ -45,11 +42,8 @@ api_imagecache_trigger
   int b;
   if (htsmsg_get_bool(args, "trigger", &b))
     return EINVAL;
-  if (b) {
-    tvh_mutex_lock(&global_lock);
+  if (b)
     imagecache_trigger();
-    tvh_mutex_unlock(&global_lock);
-  }
   return 0;
 }
 

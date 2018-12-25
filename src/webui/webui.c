@@ -1981,9 +1981,7 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
 
   /* Fetch details */
-  tvh_mutex_lock(&global_lock);
   r = imagecache_filename(id, fname, sizeof(fname));
-  tvh_mutex_unlock(&global_lock);
 
   if (r)
     return HTTP_STATUS_NOT_FOUND;
