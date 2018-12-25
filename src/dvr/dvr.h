@@ -201,7 +201,6 @@ typedef struct dvr_entry {
   char *de_channel_name;
 
   gtimer_t de_timer;
-  gtimer_t de_notify_timer;
   gtimer_t de_watched_timer;
   mtimer_t de_deferred_timer;
 
