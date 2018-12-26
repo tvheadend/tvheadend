@@ -385,7 +385,6 @@ imagecache_timer ( void )
   time_t now, when;
   imagecache_image_t *img, *img_next;
 
-  tvh_mutex_lock(&imagecache_lock);
   now = gclk();
   for (img = RB_FIRST(&imagecache_by_url); img; img = img_next) {
     img_next = RB_NEXT(img, url_link);
@@ -404,7 +403,6 @@ imagecache_timer ( void )
     if (when < now)
       imagecache_image_add(img);
   }
-  tvh_mutex_unlock(&imagecache_lock);
 }
 
 static void *
