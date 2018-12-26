@@ -450,6 +450,7 @@ retry:
       }
       if (img->savepend) {
         img->state = SAVE;
+        imagecache_decref(img);
         goto retry;
       }
       img->state = IDLE;
@@ -504,6 +505,7 @@ imagecache_init ( void )
       if (!(url = htsmsg_get_str(e, "url"))) continue;
       img           = calloc(1, sizeof(imagecache_image_t));
       img->id       = id;
+      img->ref      = 1;
       img->url      = strdup(url);
       img->accessed = htsmsg_get_s64_or_default(e, "accessed", 0);
       img->updated  = htsmsg_get_s64_or_default(e, "updated", 0);
