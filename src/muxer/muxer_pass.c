@@ -364,8 +364,8 @@ pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   if (sid != pm->pm_src_sid) {
     len = 14; /* no events, just keep the SI tables consistent */
     sbuf[1] &= 0xf0;
-    sbuf[1] |= (len - 3) & 0x0f;
-    sbuf[2] = (len - 3) & 0xff;
+    sbuf[1] |= ((len - 3 + 4) >> 8) & 0x0f;
+    sbuf[2] = (len - 3 + 4) & 0xff;
   }
 
   len = dvb_table_append_crc32(sbuf, len, len + 4);
