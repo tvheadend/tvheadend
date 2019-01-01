@@ -202,7 +202,6 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       satip_rtsp_add_ival("plsc", buf, dmc->dmc_fe_pls_code);
     }
   } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_A ||
-             dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_C) {
     satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
     satip_rtsp_add_val("sr", buf, dmc->u.dmc_fe_qam.symbol_rate);
