@@ -275,7 +275,7 @@ struct epggrab_ota_map
   uint8_t                             om_first;
   uint8_t                             om_forced;
   uint64_t                            om_tune_count;
-  RB_HEAD(,epggrab_ota_svc_link)      om_svcs;         ///< Muxes we carry data for
+  RB_HEAD(,epggrab_ota_svc_link)      om_svcs;         ///< Services we carry data for
   void                               *om_opaque;
 };
 

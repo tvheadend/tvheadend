@@ -16,8 +16,23 @@
     },
     "priv": 1179861332,
     "hacks": {
-       "eit": 1,
+       "slave": "uk_freesat_eit",
        "bat": { "pid": 3002 },
+       "interest-4e": 1
+    }
+  },
+
+  "uk_freesat_eit": {
+    "name": {
+      "eng": "UK: Freesat"
+    },
+    "prio": 6,
+    "conv": "huffman",
+    "nit": {
+      "Freesat": 1
+    },
+    "priv": 1179861332,
+    "hacks": {
        "interest-4e": 1
     }
   },

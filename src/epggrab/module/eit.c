@@ -62,6 +62,7 @@ typedef struct eit_private
   uint32_t sdt_enable;
   uint32_t hacks;
   uint32_t priv;
+  char slave[32];
   LIST_HEAD(, eit_nit) nit;
   LIST_HEAD(, eit_sdt) sdt;
   epggrab_ota_module_ops_t *ops;
@@ -69,10 +70,9 @@ typedef struct eit_private
 
 #define EIT_CONV_HUFFMAN            1
 
-#define EIT_HACK_EIT                (1<<0)
-#define EIT_HACK_INTEREST4E         (1<<1)
-#define EIT_HACK_EXTRAMUXLOOKUP     (1<<2)
-#define EIT_HACK_SVCNETLOOKUP       (1<<3)
+#define EIT_HACK_INTEREST4E         (1<<0)
+#define EIT_HACK_EXTRAMUXLOOKUP     (1<<1)
+#define EIT_HACK_SVCNETLOOKUP       (1<<2)
 
 /* Queued data structure */
 typedef struct eit_data
@@ -1110,6 +1110,25 @@ static int _eit_start
   return 0;
 }
 
+static void _eit_install_one_handler
+  ( mpegts_mux_t *dm, epggrab_ota_map_t *map )
+{
+  epggrab_module_ota_t *m = map->om_module;
+  eit_private_t *priv = m->opaque;
+  int pid = priv->pid;
+  int opts = 0;
+
+  /* Standard (0x12) */
+  if (pid == 0) {
+    pid  = DVB_EIT_PID;
+    opts = MT_RECORD;
+  }
+
+  mpegts_table_add(dm, 0, 0, _eit_callback, map, map->om_module->id, LS_TBL_EIT,
+                   MT_CRC | opts, pid, MPS_WEIGHT_EIT);
+  tvhdebug(m->subsys, "%s: installed table handler (pid %d)", m->id, pid);
+}
+
 static void _eit_install_handlers
   ( epggrab_ota_map_t *_map, mpegts_mux_t *dm )
 {
@@ -1118,7 +1137,6 @@ static void _eit_install_handlers
   epggrab_module_ota_t *m, *m2;
   epggrab_ota_mux_eit_plist_t *plist;
   eit_private_t *priv, *priv2;
-  int pid, opts;
 
   om = epggrab_ota_find_mux(dm);
   if (!om)
@@ -1155,33 +1173,21 @@ static void _eit_install_handlers
   m = priv->module;
 
   tvhtrace(m->subsys, "handlers - detected module '%s'", m->id);
-  priv = (eit_private_t *)m->opaque;
-  pid = priv->pid;
-  opts = 0;
 
-  /* Standard (0x12) */
-  if (pid == 0) {
-    pid  = DVB_EIT_PID;
-    opts = MT_RECORD;
-  }
-
-  if (priv->hacks & EIT_HACK_EIT) {
-    m2 = (epggrab_module_ota_t *)epggrab_module_find_by_id("eit");
+  if (!strempty(priv->slave)) {
+    m2 = (epggrab_module_ota_t *)epggrab_module_find_by_id(priv->slave);
     if (m2 && m2->enabled) {
       LIST_FOREACH(map2, &om->om_modules, om_link)
         if (map2->om_module == m2)
          break;
       if (map2) {
-        mpegts_table_add(dm, 0, 0, _eit_callback, map2, map->om_module->id, LS_TBL_EIT,
-                         MT_CRC | MT_RECORD, DVB_EIT_PID, MPS_WEIGHT_EIT);
-        tvhdebug(m->subsys, "%s: installed table handler (pid %d)", m2->id, DVB_EIT_PID);
+        tvhtrace(m->subsys, "handlers - detected slave module '%s'", m2->id);
+        _eit_install_one_handler(dm, map2);
       }
     }
   }
 
-  mpegts_table_add(dm, 0, 0, _eit_callback, map, map->om_module->id, LS_TBL_EIT,
-                   MT_CRC | opts, pid, MPS_WEIGHT_EIT);
-  tvhdebug(m->subsys, "%s: installed table handler (pid %d)", m->id, pid);
+  _eit_install_one_handler(dm, map);
 }
 
 static int _eit_activate(void *m, int e)
@@ -1594,9 +1600,10 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
   map = htsmsg_get_map(conf, "hacks");
   if (map) {
     HTSMSG_FOREACH(f, map) {
-      if (strcmp(htsmsg_field_name(f), "eit") == 0)
-        priv->hacks |= EIT_HACK_EIT;
-      else if (strcmp(htsmsg_field_name(f), "interest-4e") == 0)
+      if (strcmp(htsmsg_field_name(f), "slave") == 0) {
+        s = htsmsg_field_get_str(f);
+        if (s) strncpy(priv->slave, s, sizeof(priv->slave) - 1);
+      } else if (strcmp(htsmsg_field_name(f), "interest-4e") == 0)
         priv->hacks |= EIT_HACK_INTEREST4E;
       else if (strcmp(htsmsg_field_name(f), "extra-mux-lookup") == 0)
         priv->hacks |= EIT_HACK_EXTRAMUXLOOKUP;
