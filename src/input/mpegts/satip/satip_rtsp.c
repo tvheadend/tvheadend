@@ -226,6 +226,15 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     else if (flags & SATIP_SETUP_SPECINV1)
       strcat(buf, "&specinv=1");
 
+  } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B) {
+
+    satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
+    ADD(dmc_fe_delsys, msys, "dvbcb");
+    if (dmc->dmc_fe_modulation != DVB_MOD_AUTO &&
+        dmc->dmc_fe_modulation != DVB_MOD_NONE &&
+        dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
+      ADD(dmc_fe_modulation, mtype, "256qam");
+
   } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBT ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {
     satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
