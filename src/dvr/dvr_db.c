@@ -1390,7 +1390,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
   if ((de2 = de->de_parent) != NULL) {
     if (de->de_sched_state == DVR_COMPLETED &&
         de->de_errors == 0 &&
-        de->de_data_errors < de->de_parent->de_data_errors) {
+        de->de_data_errors < de2->de_data_errors) {
       fsize1 = dvr_get_filesize(de, DVR_FILESIZE_TOTAL);
       fsize2 = dvr_get_filesize(de2, DVR_FILESIZE_TOTAL);
       if (fsize1 / 5 < fsize2 / 6) {
@@ -1399,7 +1399,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
         dvr_entry_cancel_delete(de2, 1);
       }
     } else if (de->de_sched_state == DVR_COMPLETED) {
-      if(dvr_get_filesize(de, 0) < 0) {
+      if (dvr_get_filesize(de, 0) < 0) {
 delete_me:
         dvr_entry_cancel_delete(de, 0);
         dvr_entry_rerecord(de2);
