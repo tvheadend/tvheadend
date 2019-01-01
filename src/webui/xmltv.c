@@ -68,10 +68,22 @@ http_xmltv_channel_add(htsbuf_queue_t *hq, const char *hostpath, channel_t *ch)
 {
   const char *icon = channel_get_icon(ch);
   char ubuf[UUID_HEX_SIZE];
+  int64_t lcn;
   htsbuf_qprintf(hq, "<channel id=\"%s\">\n  <display-name>",
                  idnode_uuid_as_str(&ch->ch_id, ubuf));
   htsbuf_append_and_escape_xml(hq, channel_get_name(ch, ""));
   htsbuf_append_str(hq, "</display-name>\n");
+  lcn = channel_get_number(ch);
+  if (lcn > 0) {
+    if (channel_get_minor(lcn)) {
+      htsbuf_qprintf(hq, "  <display-name>%u.%u</display-name>\n",
+                     channel_get_major(lcn),
+                     channel_get_minor(lcn));
+    } else {
+      htsbuf_qprintf(hq, "  <display-name>%u</display-name>\n",
+                     channel_get_major(lcn));
+    }
+  }
   if (icon) {
     int id = imagecache_get_id(icon);
     if (id) {
