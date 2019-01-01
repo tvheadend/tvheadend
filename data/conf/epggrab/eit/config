@@ -8,10 +8,15 @@
     "pid": 3003,
     "conv": "huffman",
     "nit": {
-      "Freesat": 1
+      "Freesat": {
+        "onid": 59,
+        "nbid": 59,
+        "tsid": 2315
+      }
     },
     "priv": 1179861332,
     "hacks": {
+       "eit": 1,
        "bat": { "pid": 3002 },
        "interest-4e": 1
     }
