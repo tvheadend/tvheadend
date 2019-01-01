@@ -98,6 +98,9 @@ tag           | Tagged channels specified by UUID or tag name
 tagname       | Tagged channels specified by tag name
 tagid         | Tagged channels specified by short tag ID
 
+Option     | Explanation
+-----------|------------------------------------------------------------------------------
+lcn        | Use _lcn_ tag instead _display-name_ (standard) for the channel number
 
 ### /special/srvid2
 

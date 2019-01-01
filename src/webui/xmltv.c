@@ -24,6 +24,8 @@
 #include "string_list.h"
 #include "imagecache.h"
 
+#define XMLTV_FLAG_LCN		(1<<0)
+
 /*
  *
  */
@@ -64,10 +66,11 @@ http_xmltv_end(htsbuf_queue_t *hq)
  *
  */
 static void
-http_xmltv_channel_add(htsbuf_queue_t *hq, const char *hostpath, channel_t *ch)
+http_xmltv_channel_add(htsbuf_queue_t *hq, int flags, const char *hostpath, channel_t *ch)
 {
   const char *icon = channel_get_icon(ch);
   char ubuf[UUID_HEX_SIZE];
+  const char *tag;
   int64_t lcn;
   htsbuf_qprintf(hq, "<channel id=\"%s\">\n  <display-name>",
                  idnode_uuid_as_str(&ch->ch_id, ubuf));
@@ -75,13 +78,14 @@ http_xmltv_channel_add(htsbuf_queue_t *hq, const char *hostpath, channel_t *ch)
   htsbuf_append_str(hq, "</display-name>\n");
   lcn = channel_get_number(ch);
   if (lcn > 0) {
+    tag = (flags & XMLTV_FLAG_LCN) ? "lcn" : "display-name";
     if (channel_get_minor(lcn)) {
-      htsbuf_qprintf(hq, "  <display-name>%u.%u</display-name>\n",
-                     channel_get_major(lcn),
-                     channel_get_minor(lcn));
+      htsbuf_qprintf(hq, "  <%s>%u.%u</%s>\n",
+                     tag, channel_get_major(lcn),
+                     channel_get_minor(lcn), tag);
     } else {
-      htsbuf_qprintf(hq, "  <display-name>%u</display-name>\n",
-                     channel_get_major(lcn));
+      htsbuf_qprintf(hq, "  <%s>%u</%s>\n",
+                     tag, channel_get_major(lcn), tag);
     }
   }
   if (icon) {
@@ -224,7 +228,7 @@ http_xmltv_programme_add(htsbuf_queue_t *hq, const char *hostpath, channel_t *ch
  * Output a XMLTV containing a single channel
  */
 static int
-http_xmltv_channel(http_connection_t *hc, channel_t *channel)
+http_xmltv_channel(http_connection_t *hc, int flags, channel_t *channel)
 {
   char hostpath[512];
 
@@ -233,7 +237,7 @@ http_xmltv_channel(http_connection_t *hc, channel_t *channel)
 
   http_get_hostpath(hc, hostpath, sizeof(hostpath));
   http_xmltv_begin(&hc->hc_reply);
-  http_xmltv_channel_add(&hc->hc_reply, hostpath, channel);
+  http_xmltv_channel_add(&hc->hc_reply, flags, hostpath, channel);
   http_xmltv_programme_add(&hc->hc_reply, hostpath, channel);
   http_xmltv_end(&hc->hc_reply);
   return 0;
@@ -244,7 +248,7 @@ http_xmltv_channel(http_connection_t *hc, channel_t *channel)
  * Output a playlist containing all channels with a specific tag
  */
 static int
-http_xmltv_tag(http_connection_t *hc, channel_tag_t *tag)
+http_xmltv_tag(http_connection_t *hc, int flags, channel_tag_t *tag)
 {
   idnode_list_mapping_t *ilm;
   char hostpath[512];
@@ -260,7 +264,7 @@ http_xmltv_tag(http_connection_t *hc, channel_tag_t *tag)
     ch = (channel_t *)ilm->ilm_in2;
     if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
-    http_xmltv_channel_add(&hc->hc_reply, hostpath, ch);
+    http_xmltv_channel_add(&hc->hc_reply, flags, hostpath, ch);
   }
   LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
@@ -277,7 +281,7 @@ http_xmltv_tag(http_connection_t *hc, channel_tag_t *tag)
  * Output a flat playlist with all channels
  */
 static int
-http_xmltv_channel_list(http_connection_t *hc)
+http_xmltv_channel_list(http_connection_t *hc, int flags)
 {
   channel_t *ch;
   char hostpath[512];
@@ -291,7 +295,7 @@ http_xmltv_channel_list(http_connection_t *hc)
   CHANNEL_FOREACH(ch) {
     if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
-    http_xmltv_channel_add(&hc->hc_reply, hostpath, ch);
+    http_xmltv_channel_add(&hc->hc_reply, flags, hostpath, ch);
   }
   CHANNEL_FOREACH(ch) {
     if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
@@ -309,8 +313,8 @@ http_xmltv_channel_list(http_connection_t *hc)
 int
 page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
 {
-  char *components[2], *cmd;
-  int nc, r;
+  char *components[2], *cmd, *str;
+  int nc, r, flags = 0;
   channel_t *ch = NULL;
   channel_tag_t *tag = NULL;
 
@@ -327,6 +331,9 @@ page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
 
   if (nc == 2)
     http_deescape(components[1]);
+
+  if ((str = http_arg_get(&hc->hc_req_args, "lcn")))
+    if (atoll(str) > 0) flags |= XMLTV_FLAG_LCN;
 
   tvh_mutex_lock(&global_lock);
 
@@ -346,12 +353,12 @@ page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
     tag = channel_tag_find_by_uuid(components[1]);
 
   if (ch) {
-    r = http_xmltv_channel(hc, ch);
+    r = http_xmltv_channel(hc, flags, ch);
   } else if (tag) {
-    r = http_xmltv_tag(hc, tag);
+    r = http_xmltv_tag(hc, flags, tag);
   } else {
     if (!strcmp(cmd, "channels")) {
-      r = http_xmltv_channel_list(hc);
+      r = http_xmltv_channel_list(hc, flags);
     } else {
       r = HTTP_STATUS_BAD_REQUEST;
     }
