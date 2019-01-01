@@ -24,7 +24,7 @@
 
   "uk_freesat_eit": {
     "name": {
-      "eng": "UK: Freesat"
+      "eng": "UK: Freesat (EIT)"
     },
     "prio": 6,
     "conv": "huffman",
