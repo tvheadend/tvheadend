@@ -1458,7 +1458,7 @@ main(int argc, char **argv)
 #if !defined(OPENSSL_NO_COMP)
   COMP_zlib_cleanup();
 #endif
-  ERR_remove_state(0);
+  ERR_remove_thread_state(NULL);
   ERR_free_strings();
 #if !defined(OPENSSL_NO_COMP) && OPENSSL_VERSION_NUMBER < 0x1010006f
   sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
