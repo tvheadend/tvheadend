@@ -1147,6 +1147,10 @@ static void _eit_install_handlers
   LIST_FOREACH(plist, &om->om_eit_plist, link) {
     priv2 = (eit_private_t *)plist->priv;
     if (!priv || priv->module->priority < priv2->module->priority) {
+      /* ignore priority for the slave, always prefer master */
+      if (priv && strcmp(priv->slave, priv2->module->id) == 0)
+        continue;
+      /* find the ota map */
       m = priv2->module;
       LIST_FOREACH(map, &om->om_modules, om_link) {
         if (map->om_module == m)
