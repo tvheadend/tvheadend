@@ -23753,7 +23753,7 @@ Ext.layout.TableLayout = Ext.extend(Ext.layout.ContainerLayout, {
             target.addClass('x-table-layout-ct');
 
             this.table = target.createChild(
-                Ext.apply({tag:'table', cls:'x-table-layout', cellspacing: 0, cn: {tag: 'tbody'}}, this.tableAttrs), null, true);
+                Ext.apply({tag:'table', cls:'x-table-layout', style: 'border-collapse: collapse;', cn: {tag: 'tbody'}}, this.tableAttrs), null, true);
         }
         this.renderAll(ct, target);
     },
@@ -23818,7 +23818,7 @@ Ext.layout.TableLayout = Ext.extend(Ext.layout.ContainerLayout, {
         // Ensure we have our inner table to get cells to render into.
         if(!this.table){
             this.table = target.createChild(
-                Ext.apply({tag:'table', cls:'x-table-layout', cellspacing: 0, cn: {tag: 'tbody'}}, this.tableAttrs), null, true);
+                Ext.apply({tag:'table', cls:'x-table-layout', style: 'border-collapse: collapse;', cn: {tag: 'tbody'}}, this.tableAttrs), null, true);
         }
         if(c && !c.rendered){
             c.render(this.getNextCell(c));
@@ -25711,29 +25711,29 @@ Ext.layout.ToolbarLayout = Ext.extend(Ext.layout.ContainerLayout, {
      * injected into this string inside the td.x-toolbar-left element during onLayout.
      */
     tableHTML: [
-        '<table cellspacing="0" class="x-toolbar-ct">',
+        '<table class="x-toolbar-ct" style="border-collapse: collapse;">',
             '<tbody>',
                 '<tr>',
-                    '<td class="x-toolbar-left" align="{0}">',
-                        '<table cellspacing="0">',
+                    '<td class="x-toolbar-left" style="text-align: {0};">',
+                        '<table style="border-collapse: collapse;">',
                             '<tbody>',
                                 '<tr class="x-toolbar-left-row"></tr>',
                             '</tbody>',
                         '</table>',
                     '</td>',
-                    '<td class="x-toolbar-right" align="right">',
-                        '<table cellspacing="0" class="x-toolbar-right-ct">',
+                    '<td class="x-toolbar-right" style="text-align: right;">',
+                        '<table class="x-toolbar-right-ct" style="border-collapse: collapse;">',
                             '<tbody>',
                                 '<tr>',
                                     '<td>',
-                                        '<table cellspacing="0">',
+                                        '<table style="border-collapse: collapse;">',
                                             '<tbody>',
                                                 '<tr class="x-toolbar-right-row"></tr>',
                                             '</tbody>',
                                         '</table>',
                                     '</td>',
                                     '<td>',
-                                        '<table cellspacing="0">',
+                                        '<table style="border-collapse: collapse;">',
                                             '<tbody>',
                                                 '<tr class="x-toolbar-extras-row"></tr>',
                                             '</tbody>',
@@ -28616,7 +28616,7 @@ cp.colors = ['000000', '993300', '333300'];
         };
         Ext.ColorPalette.superclass.onRender.call(this, container, position);
         var t = this.tpl || new Ext.XTemplate(
-            '<tpl for="."><a href="#" class="color-{.}" hidefocus="on"><em><span style="background:#{.}" class="x-unselectable" unselectable="on">&#160;</span></em></a></tpl>'
+            '<tpl for="."><a href="#" class="color-{.}" hidefocus="on"><em><span style="background:#{.}" class="x-unselectable">&#160;</span></em></a></tpl>'
         );
         t.overwrite(this.el, this.colors);
         this.mon(this.el, this.clickEvent, this.handleClick, this, {delegate: 'a'});
@@ -28967,9 +28967,9 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
     // private
     onRender : function(container, position){
         var m = [
-             '<table cellspacing="0">',
+             '<table style="border-collapse: collapse;">',
                 '<tr><td class="x-date-left"><a href="#" title="', this.prevText ,'">&#160;</a></td><td class="x-date-middle" align="center"></td><td class="x-date-right"><a href="#" title="', this.nextText ,'">&#160;</a></td></tr>',
-                '<tr><td colspan="3"><table class="x-date-inner" cellspacing="0"><thead><tr>'],
+                '<tr><td colspan="3"><table class="x-date-inner" style="border-collapse: collapse;"><thead><tr>'],
                 dn = this.dayNames,
                 i;
         for(i = 0; i < 7; i++){
@@ -29097,7 +29097,7 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
     // private
     createMonthPicker : function(){
         if(!this.monthPicker.dom.firstChild){
-            var buf = ['<table border="0" cellspacing="0">'];
+            var buf = ['<table style="border-collapse: collapse; border: 0;">'];
             for(var i = 0; i < 6; i++){
                 buf.push(
                     '<tr><td class="x-date-mp-month"><a href="#">', Date.getShortMonthName(i), '</a></td>',
@@ -47040,7 +47040,7 @@ Ext.list.ListView = Ext.extend(Ext.DataView, {
             this.internalTpl = new Ext.XTemplate(
                 '<div class="x-list-header"><div class="x-list-header-inner">',
                     '<tpl for="columns">',
-                    '<div style="width:{[values.width*100]}%;text-align:{align};"><em class="x-unselectable" unselectable="on" id="',this.id, '-xlhd-{#}">',
+                    '<div style="width:{[values.width*100]}%;text-align:{align};"><em class="x-unselectable" id="',this.id, '-xlhd-{#}">',
                         '{header}',
                     '</em></div>',
                     '</tpl>',
@@ -49032,9 +49032,9 @@ Ext.Button = Ext.extend(Ext.BoxComponent, {
             if(!Ext.Button.buttonTemplate){
                 // hideous table template
                 Ext.Button.buttonTemplate = new Ext.Template(
-                    '<table id="{4}" cellspacing="0" class="x-btn {3}"><tbody class="{1}">',
+                    '<table id="{4}" class="x-btn {3}" style="border-collapse: collapse;"><tbody class="{1}">',
                     '<tr><td class="x-btn-tl"><i>&#160;</i></td><td class="x-btn-tc"></td><td class="x-btn-tr"><i>&#160;</i></td></tr>',
-                    '<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{2} x-unselectable" unselectable="on"><button type="{0}"></button></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
+                    '<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{2} x-unselectable"><button type="{0}"></button></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
                     '<tr><td class="x-btn-bl"><i>&#160;</i></td><td class="x-btn-bc"></td><td class="x-btn-br"><i>&#160;</i></td></tr>',
                     '</tbody></table>');
                 Ext.Button.buttonTemplate.compile();
@@ -64792,7 +64792,7 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field,  {
      * @cfg {String/Object} autoCreate A DomHelper element spec, or true for a default element spec (defaults to
      * {tag: 'input', type: 'checkbox', autocomplete: 'off'})
      */
-    defaultAutoCreate : { tag: 'input', type: 'checkbox', autocomplete: 'off'},
+    defaultAutoCreate : { tag: 'input', type: 'checkbox'},
     /**
      * @cfg {String} inputValue The value that should go into the generated input element's value attribute
      */
@@ -71948,7 +71948,7 @@ viewConfig: {
      * @type Ext.Template
      */
     headerTpl: new Ext.Template(
-        '<table border="0" cellspacing="0" cellpadding="0" style="{tstyle}">',
+        '<table style="{tstyle} padding: 0; border-collapse: collapse; border: 0;">',
             '<thead>',
                 '<tr class="x-grid3-hd-row">{cells}</tr>',
             '</thead>',
@@ -72001,7 +72001,7 @@ viewConfig: {
             ].join(""),
         
             innerText = [
-                '<table class="x-grid3-row-table" border="0" cellspacing="0" cellpadding="0" style="{tstyle}">',
+                '<table class="x-grid3-row-table" style="{tstyle} padding: 0; border-collapse: collapse; border: 0;">',
                      '<tbody>',
                         '<tr>{cells}</tr>',
                         this.enableRowBody ? rowBodyText : '',
