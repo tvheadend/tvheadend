@@ -2797,7 +2797,7 @@ a.x-grid3-hd-btn:hover {
     vertical-align: middle;
     font-family: tahoma;
     font-size: 11px;
-    padding: auto 1px;
+    padding: 1px;
     display: table-cell;
 }
 
