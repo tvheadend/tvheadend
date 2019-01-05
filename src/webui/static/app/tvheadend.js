@@ -171,7 +171,7 @@ var catmap_minor = {
   "science fiction" : "extraterrestrial_alien",
   "spielshows" : "game_die",
   "talkshows" : "speaking_head_in_silhouette",
-  "volksmusic" : "musical_note",
+  "volksmusik" : "musical_note",
   "wassersport" : "swimmer",
   "zeichentrick" : "pencil"
 };
