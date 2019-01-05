@@ -609,9 +609,6 @@ li.x-menu-list-item div {
 .x-trigger-wrap-focus .x-form-spinner-clickdown{
     background-position:-153px 0;
 }
-.x-trigger-wrap-focus .x-form-trigger{
-    border-bottom: 1px solid #7eadd9;
-}
 
 .x-form-field-wrap .x-form-spinner-splitter {
 	line-height:1px;
