@@ -76,6 +76,21 @@ static void epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota 
  * Utilities
  * *************************************************************************/
 
+htsmsg_t *epggrab_ota_module_id_list ( const char *lang )
+{
+  htsmsg_t *l = eit_module_id_list(lang);
+  htsmsg_concat(l, opentv_module_id_list(lang));
+  htsmsg_concat(l, psip_module_id_list(lang));
+  return l;
+}
+
+const char *epggrab_ota_check_module_id( const char *id )
+{
+  return eit_check_module_id(id) ?:
+         opentv_check_module_id(id) ?:
+         psip_check_module_id(id);
+}
+
 static int
 om_id_cmp   ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
 {
@@ -547,21 +562,6 @@ epggrab_ota_kick_cb ( void *p )
   } networks[64], *net;	/* more than 64 networks? - you're a king */
   int i, r, networks_count = 0, epg_flag, kick = 1;
   const char *modname;
-  static const char *modnames[] = {
-    [MM_EPG_DISABLE]                 = NULL,
-    [MM_EPG_ENABLE]                  = NULL,
-    [MM_EPG_FORCE]                   = NULL,
-    [MM_EPG_ONLY_EIT]                = "eit",
-    [MM_EPG_ONLY_PSIP]               = "psip",
-    [MM_EPG_ONLY_UK_FREESAT]         = "uk_freesat",
-    [MM_EPG_ONLY_UK_FREEVIEW]        = "uk_freeview",
-    [MM_EPG_ONLY_UK_CABLE_VIRGIN]    = "uk_cable_virgin",
-    [MM_EPG_ONLY_VIASAT_BALTIC]      = "viasat_baltic",
-    [MM_EPG_ONLY_BULSATCOM_39E]      = "Bulsatcom_39E",
-    [MM_EPG_ONLY_OPENTV_SKY_UK]      = "opentv-skyuk",
-    [MM_EPG_ONLY_OPENTV_SKY_ITALIA]  = "opentv-skyit",
-    [MM_EPG_ONLY_OPENTV_SKY_AUSAT]   = "opentv-ausat",
-  };
 
   lock_assert(&global_lock);
 
@@ -611,9 +611,12 @@ next_one:
   epg_flag = MM_EPG_DISABLE;
   if (mm->mm_is_enabled(mm)) {
     epg_flag = mm->mm_is_epg(mm);
-    if (epg_flag > MM_EPG_LAST)
+    if (epg_flag > MM_EPG_LAST) {
       epg_flag = MM_EPG_ENABLE;
-    modname  = epg_flag >= 0 ? modnames[epg_flag] : NULL;
+    } else if (epg_flag == MM_EPG_MANUAL) {
+      modname = epggrab_ota_check_module_id(mm->mm_epg_module_id);
+      if (!modname) epg_flag = MM_EPG_ENABLE;
+    }
   }
 
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE) {

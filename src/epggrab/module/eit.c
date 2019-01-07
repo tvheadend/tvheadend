@@ -55,6 +55,7 @@ typedef struct eit_sdt {
 typedef struct eit_private
 {
   TAILQ_ENTRY(eit_private) link;
+  lang_str_t *name;
   epggrab_module_ota_t *module;
   uint16_t pid;
   uint16_t bat_pid;
@@ -1457,6 +1458,7 @@ static void _eit_done0( eit_private_t *priv )
     free(nit);
   }
   free(priv->ops);
+  lang_str_destroy(priv->name);
   free(priv);
 }
 
@@ -1619,6 +1621,7 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
       }
     }
   }
+  priv->name = name_str;
   if (name_str) {
     priv->module = (epggrab_module_ota_t *)
       eit_module_ota_create(id, LS_TBL_EIT, NULL,
@@ -1629,7 +1632,6 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
     tvherror(LS_TBL_EIT, "missing name for '%s' in config", id);
     _eit_done0(priv);
   }
-  lang_str_destroy(name_str);
 }
 
 void eit_init ( void )
@@ -1649,6 +1651,34 @@ void eit_init ( void )
     eit_init_one(htsmsg_field_name(f), e);
   }
   htsmsg_destroy(c);
+}
+
+htsmsg_t *eit_module_id_list( const char *lang )
+{
+  eit_private_t *priv, *priv2;
+  htsmsg_t *e, *l = htsmsg_create_list();
+
+  TAILQ_FOREACH(priv, &eit_private_list, link) {
+    TAILQ_FOREACH(priv2, &eit_private_list, link)
+      if (strcmp(priv2->slave, priv->module->id) == 0)
+        break;
+    if (priv2) continue; /* show only parents */
+    e = htsmsg_create_key_val(priv->module->id, lang_str_get(priv->name, lang));
+    htsmsg_add_msg(l, NULL, e);
+  }
+  return l;
+}
+
+const char *eit_check_module_id ( const char *id )
+{
+  eit_private_t *priv;
+
+  if (!id) return NULL;
+  TAILQ_FOREACH(priv, &eit_private_list, link) {
+    if (strcmp(id, priv->module->id) == 0)
+      return priv->module->id;
+  }
+  return NULL;
 }
 
 void eit_done ( void )

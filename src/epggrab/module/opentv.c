@@ -1066,6 +1066,31 @@ static void _opentv_prov_load ( htsmsg_t *m )
   htsmsg_destroy(m);
 }
 
+htsmsg_t *opentv_module_id_list( const char *lang )
+{
+  epggrab_module_t *m;
+  htsmsg_t *e, *l = htsmsg_create_list();
+
+  LIST_FOREACH(m, &epggrab_modules, link) {
+    if (strncmp(m->id, "opentv-", 7)) continue;
+    e = htsmsg_create_key_val(m->id, m->name);
+    htsmsg_add_msg(l, NULL, e);
+  }
+  return l;
+}
+
+const char *opentv_check_module_id ( const char *id )
+{
+  epggrab_module_t *m;
+
+  if (!id || strncmp(id, "opentv-", 7))
+    return NULL;
+  LIST_FOREACH(m, &epggrab_modules, link)
+    if (strcmp(m->id, id) == 0)
+      return m->id;
+  return NULL;
+}
+
 /* ************************************************************************
  * Module Setup
  * ***********************************************************************/

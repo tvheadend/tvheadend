@@ -396,6 +396,8 @@ void epggrab_channel_mod ( struct channel *ch );
  */
 void epggrab_ota_queue_mux( struct mpegts_mux *mm );
 epggrab_ota_mux_t *epggrab_ota_find_mux ( struct mpegts_mux *mm );
+htsmsg_t *epggrab_ota_module_id_list( const char *lang );
+const char *epggrab_ota_check_module_id( const char *id );
 
 #endif /* __EPGGRAB_H__ */
 

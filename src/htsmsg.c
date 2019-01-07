@@ -266,6 +266,23 @@ htsmsg_create_list(void)
 }
 
 
+
+/*
+ *
+ */
+void
+htsmsg_concat(htsmsg_t *msg, htsmsg_t *sub)
+{
+  if (sub == NULL)
+    return;
+  assert(msg->hm_islist == sub->hm_islist);
+  if (msg->hm_islist != sub->hm_islist)
+    return;
+  TAILQ_CONCAT(&msg->hm_fields, &sub->hm_fields, hmf_link);
+  htsmsg_destroy(sub);
+}
+
+
 /*
  *
  */

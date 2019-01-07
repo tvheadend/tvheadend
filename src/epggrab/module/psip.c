@@ -762,6 +762,21 @@ static int _psip_tune
   return r;
 }
 
+htsmsg_t *psip_module_id_list( const char *lang )
+{
+  htsmsg_t *e, *l = htsmsg_create_list();
+  e = htsmsg_create_key_val("psip", "PSIP: ATSC Grabber");
+  htsmsg_add_msg(l, NULL, e);
+  return l;
+}
+
+const char *psip_check_module_id ( const char *id )
+{
+  if (id && strcmp(id, "psip") == 0)
+    return "psip";
+  return NULL;
+}
+
 void psip_init ( void )
 {
   static epggrab_ota_module_ops_t ops = {
