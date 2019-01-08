@@ -129,5 +129,6 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 int put_utf8(char *out, int c);
 
 char *utf8_lowercase_inplace(char *s);
+char *utf8_validate_inplace(char *s);
 
 #endif /* TVHEADEND_STRING_H */

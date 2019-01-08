@@ -319,6 +319,40 @@ char *utf8_lowercase_inplace(char *s)
   return r;
 }
 
+static int utf8_len(char first)
+{
+  if ((first & 0xe0) == 0xc0) return 2;
+  if ((first & 0xf0) == 0xe0) return 3;
+  if ((first & 0xf8) == 0xf0) return 4;
+  if ((first & 0xfc) == 0xf8) return 5;
+  if ((first & 0xfe) == 0xfc) return 6;
+  assert(0);
+  return 1;
+}
+
+/*
+ * Remove the partial utf8 character at the end of the string
+ */
+char *utf8_validate_inplace(char *s)
+{
+  if (s == NULL) return NULL;
+  size_t i, l = strlen(s);
+  if (l < 1) return s;
+  for (i = l; i > 0; i--) {
+    char c = s[i-1];
+    if ((c & 0x80) == 0) {
+      if (l != i) s[i] = '\0';
+      break;
+    }
+    if ((c & 0xc0) == 0xc0) {
+      if (1 + l - i != utf8_len(c))
+        s[i-1] = '\0';
+      break;
+    }
+  }
+  return s;
+}
+
 /**
  *
  */
