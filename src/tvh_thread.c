@@ -496,14 +496,18 @@ tvh_thread_mutex_failed
 #if ENABLE_TRACE
 static void *tvh_thread_watch_thread(void *aux)
 {
-  int64_t now;
+  int64_t now, limit;
   tvh_mutex_t *mutex, dmutex;
+  const char *s;
 
+  s = getenv("TVHEADEND_THREAD_WATCH_LIMIT");
+  limit = s ? atol(s) : 5;
+  limit = MINMAX(limit, 5, 120);
   while (!atomic_get(&tvhwatch_done)) {
     pthread_mutex_lock(&thrwatch_mutex);
     now = getfastmonoclock();
     mutex = TAILQ_LAST(&thrwatch_mutexes, tvh_mutex_queue);
-    if (mutex && mutex->tstamp + sec2mono(5) < now) {
+    if (mutex && mutex->tstamp + sec2mono(limit) < now) {
       pthread_mutex_unlock(&thrwatch_mutex);
       tvh_thread_mutex_failed(mutex, "deadlock", __FILE__, __LINE__);
     }
