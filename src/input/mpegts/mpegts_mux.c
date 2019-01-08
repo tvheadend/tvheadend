@@ -484,6 +484,7 @@ mpegts_mux_epg_list ( void *o, const char *lang )
     { N_("Enable (auto)"),            MM_EPG_ENABLE },
     { N_("Force (auto)"),             MM_EPG_FORCE },
     { N_("Manual selection"),         MM_EPG_MANUAL },
+    { N_("Auto-Detected"),            MM_EPG_DETECTED },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -1352,6 +1353,25 @@ mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
     return 0;
   tvh_str_update(&mm->mm_crid_authority, defauth);
   tvhtrace(LS_MPEGTS, "%s - set crid authority %s", mm->mm_nicename, defauth);
+  idnode_changed(&mm->mm_id);
+  return 1;
+}
+
+int
+mpegts_mux_set_epg_module ( mpegts_mux_t *mm, const char *modid )
+{
+  switch (mm->mm_epg) {
+  case MM_EPG_ENABLE:
+  case MM_EPG_DETECTED:
+    break;
+  default:
+    return 0;
+  }
+  if (modid && !strcmp(modid, mm->mm_epg_module_id ?: ""))
+    return 0;
+  mm->mm_epg = MM_EPG_DETECTED;
+  tvh_str_update(&mm->mm_epg_module_id, modid);
+  tvhtrace(LS_MPEGTS, "%s - set EPG module id %s", mm->mm_nicename, modid);
   idnode_changed(&mm->mm_id);
   return 1;
 }

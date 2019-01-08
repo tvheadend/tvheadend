@@ -697,12 +697,8 @@ _psip_mgt_callback
 static int _psip_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
-  epggrab_module_ota_t *m = map->om_module;
   mpegts_table_t *mt;
   psip_status_t *ps;
-
-  /* Disabled */
-  if (!m->enabled && !map->om_forced) return -1;
 
   ps = calloc(1, sizeof(*ps));
   TAILQ_INIT(&ps->ps_tables);
@@ -730,14 +726,10 @@ static int _psip_tune
   ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
   int r = 0;
-  epggrab_module_ota_t *m = map->om_module;
   mpegts_service_t *s;
   epggrab_ota_svc_link_t *osl, *nxt;
 
   lock_assert(&global_lock);
-
-  /* Disabled */
-  if (!m->enabled) return 0;
 
   /* Have gathered enough info to decide */
   if (!om->om_complete)

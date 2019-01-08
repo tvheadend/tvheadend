@@ -411,9 +411,9 @@ enum mpegts_mux_epg_flag
   MM_EPG_DISABLE,
   MM_EPG_ENABLE,
   MM_EPG_FORCE,
-  MM_EPG_MANUAL
+  MM_EPG_MANUAL = 100,
+  MM_EPG_DETECTED
 };
-#define MM_EPG_LAST MM_EPG_MANUAL
 
 enum mpegts_mux_ac3_flag
 {
@@ -942,6 +942,7 @@ int mpegts_mux_set_network_name ( mpegts_mux_t *mm, const char *name );
 int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
 int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );
 int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );
+int mpegts_mux_set_epg_module ( mpegts_mux_t *mm, const char *modid );
 
 void mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe );
 void mpegts_mux_unsubscribe_table ( mpegts_mux_t *mm, mpegts_table_t *mt );

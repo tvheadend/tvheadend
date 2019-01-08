@@ -813,7 +813,6 @@ static int _opentv_start
   };
 
   /* Ignore */
-  if (!m->enabled && !map->om_forced) return -1;
   if (mod->tsid != mm->mm_tsid) return -1;
 
   /* Install tables */
@@ -967,11 +966,9 @@ static void _opentv_done( void *m )
 static int _opentv_tune
   ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
-  epggrab_module_ota_t *m = map->om_module;
-  opentv_module_t *mod = (opentv_module_t*)m;
+  opentv_module_t *mod = (opentv_module_t*)map->om_module;
 
   /* Ignore */
-  if (!m->enabled) return 0;
   if (mod->tsid != mm->mm_tsid) return 0;
 
   return 1;

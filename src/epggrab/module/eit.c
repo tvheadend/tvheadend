@@ -1103,11 +1103,6 @@ complete:
 static int _eit_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
-  epggrab_module_ota_t *m = map->om_module;
-
-  /* Disabled */
-  if (!m->enabled && !map->om_forced) return -1;
-
   return 0;
 }
 
@@ -1138,30 +1133,37 @@ static void _eit_install_handlers
   epggrab_module_ota_t *m, *m2;
   epggrab_ota_mux_eit_plist_t *plist;
   eit_private_t *priv, *priv2;
+  const char *modname;
 
   om = epggrab_ota_find_mux(dm);
   if (!om)
     return;
+  modname = om->om_force_modname;
 
   priv = NULL;
   map = NULL;
-  LIST_FOREACH(plist, &om->om_eit_plist, link) {
-    priv2 = (eit_private_t *)plist->priv;
-    if (!priv || priv->module->priority < priv2->module->priority) {
-      /* ignore priority for the slave, always prefer master */
-      if (priv && strcmp(priv->slave, priv2->module->id) == 0)
-        continue;
-      /* find the ota map */
-      m = priv2->module;
-      LIST_FOREACH(map, &om->om_modules, om_link) {
-        if (map->om_module == m)
-          break;
+  if (strempty(modname)) {
+    LIST_FOREACH(plist, &om->om_eit_plist, link) {
+      priv2 = (eit_private_t *)plist->priv;
+      if (!priv || priv->module->priority < priv2->module->priority) {
+        /* ignore priority for the slave, always prefer master */
+        if (priv && strcmp(priv->slave, priv2->module->id) == 0)
+          continue;
+        /* find the ota map */
+        m = priv2->module;
+        map = epggrab_ota_find_map(om, m);
+        if (!map || !m->enabled) {
+          tvhtrace(m->subsys, "handlers - module '%s' not enabled", m->id);
+          continue;
+        }
+        priv = priv2;
       }
-      if (!map || (!m->enabled && !map->om_forced)) {
-        tvhtrace(m->subsys, "handlers - module '%s' not enabled", m->id);
-        continue;
-      }
-      priv = priv2;
+    }
+  } else {
+    m = (epggrab_module_ota_t *)epggrab_module_find_by_id(modname);
+    if (m) {
+      priv = (eit_private_t *)m->opaque;
+      map = epggrab_ota_find_map(om, m);
     }
   }
 
@@ -1181,10 +1183,8 @@ static void _eit_install_handlers
 
   if (!strempty(priv->slave)) {
     m2 = (epggrab_module_ota_t *)epggrab_module_find_by_id(priv->slave);
-    if (m2 && m2->enabled) {
-      LIST_FOREACH(map2, &om->om_modules, om_link)
-        if (map2->om_module == m2)
-         break;
+    if (m2) {
+      map2 = epggrab_ota_find_map(om, m2);
       if (map2) {
         tvhtrace(m->subsys, "handlers - detected slave module '%s'", m2->id);
         _eit_install_one_handler(dm, map2);
@@ -1193,6 +1193,8 @@ static void _eit_install_handlers
   }
 
   _eit_install_one_handler(dm, map);
+
+  mpegts_mux_set_epg_module(dm, m->id);
 }
 
 static int _eit_activate(void *m, int e)
@@ -1223,14 +1225,10 @@ static int _eit_tune
   ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
   int r = 0;
-  epggrab_module_ota_t *m = map->om_module;
   mpegts_service_t *s;
   epggrab_ota_svc_link_t *osl, *nxt;
 
   lock_assert(&global_lock);
-
-  /* Disabled */
-  if (!m->enabled) return 0;
 
   /* Have gathered enough info to decide */
   if (!om->om_complete)

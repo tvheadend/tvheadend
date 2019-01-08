@@ -76,7 +76,18 @@ static void epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota 
  * Utilities
  * *************************************************************************/
 
-htsmsg_t *epggrab_ota_module_id_list ( const char *lang )
+epggrab_ota_map_t *epggrab_ota_find_map
+  ( epggrab_ota_mux_t *om, epggrab_module_ota_t *m )
+{
+  epggrab_ota_map_t *map;
+
+  LIST_FOREACH(map, &om->om_modules, om_link)
+    if (map->om_module == m)
+      return map;
+  return NULL;
+}
+
+htsmsg_t *epggrab_ota_module_id_list( const char *lang )
 {
   htsmsg_t *l = eit_module_id_list(lang);
   htsmsg_concat(l, opentv_module_id_list(lang));
@@ -279,7 +290,8 @@ epggrab_ota_complete_mark ( epggrab_ota_mux_t *om, int done )
 static void
 epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
-  epggrab_module_t  *m;
+  epggrab_module_t *m;
+  epggrab_module_ota_t *omod;
   epggrab_ota_map_t *map;
   char *modname = om->om_force_modname;
   mpegts_mux_instance_t *mmi = mm->mm_active;
@@ -299,8 +311,12 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
                  sec2mono(epggrab_ota_timeout_get() + grace));
   mtimer_arm_rel(&om->om_data_timer, epggrab_ota_data_timeout_cb, om,
                  sec2mono(30 + grace)); /* 30 seconds to receive any EPG info */
-  mtimer_arm_rel(&om->om_data_timer, epggrab_ota_handlers_timeout_cb, om,
-                 sec2mono(5 + grace));
+  if (strempty(modname)) {
+    mtimer_arm_rel(&om->om_data_timer, epggrab_ota_handlers_timeout_cb, om,
+                   sec2mono(5 + grace));
+  } else {
+    mtimer_disarm(&om->om_data_timer);
+  }
   if (modname) {
     LIST_FOREACH(m, &epggrab_modules, link)
       if (!strcmp(m->id, modname)) {
@@ -310,15 +326,20 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
   }
   epggrab_ota_free_eit_plist(om);
   LIST_FOREACH(map, &om->om_modules, om_link) {
-    map->om_first    = 1;
-    map->om_forced   = 0;
-    if (modname && !strcmp(modname, map->om_module->id))
-      map->om_forced = 1;
+    omod = map->om_module;
+    map->om_first = 1;
     map->om_complete = 0;
-    if (map->om_module->start(map, mm) < 0) {
+    if (omod->enabled && !strempty(modname) && strcmp(modname, omod->id)) {
       map->om_complete = 1;
-    } else
-      tvhdebug(map->om_module->subsys, "%s: grab started", map->om_module->id);
+      continue;
+    }
+    if (!omod->enabled || omod->start(map, mm) < 0) {
+      map->om_complete = 1;
+    } else {
+      tvhdebug(map->om_module->subsys, "%s: grab started", omod->id);
+    }
+    if (!strempty(modname))
+      omod->handlers(map, mm);
   }
 }
 
@@ -397,10 +418,8 @@ epggrab_ota_register
     }
   }
   
-  /* Find module entry */
-  LIST_FOREACH(map, &ota->om_modules, om_link)
-    if (map->om_module == mod)
-      break;
+  /* Find module map */
+  map = epggrab_ota_find_map(ota, mod);
   if (!map) {
     map = calloc(1, sizeof(epggrab_ota_map_t));
     RB_INIT(&map->om_svcs);
@@ -611,11 +630,15 @@ next_one:
   epg_flag = MM_EPG_DISABLE;
   if (mm->mm_is_enabled(mm)) {
     epg_flag = mm->mm_is_epg(mm);
-    if (epg_flag > MM_EPG_LAST) {
-      epg_flag = MM_EPG_ENABLE;
-    } else if (epg_flag == MM_EPG_MANUAL) {
+    modname = NULL;
+    if (epg_flag == MM_EPG_MANUAL || epg_flag == MM_EPG_DETECTED) {
       modname = epggrab_ota_check_module_id(mm->mm_epg_module_id);
-      if (!modname) epg_flag = MM_EPG_ENABLE;
+      if (strempty(modname)) {
+        epg_flag = MM_EPG_ENABLE;
+        modname = NULL;
+      }
+    } else if (epg_flag > MM_EPG_FORCE) {
+      epg_flag = MM_EPG_ENABLE;
     }
   }
 
@@ -627,7 +650,7 @@ next_one:
   /* Check we have modules attached and enabled */
   i = r = 0;
   LIST_FOREACH(map, &om->om_modules, om_link) {
-    if (map->om_module->tune(map, om, mm)) {
+    if (map->om_module->enabled && map->om_module->tune(map, om, mm)) {
       i++;
       if (modname && !strcmp(modname, map->om_module->id))
         r = 1;
@@ -638,10 +661,10 @@ next_one:
     goto done;
   }
 
-  /* Some init stuff */
-  free(om->om_force_modname);
-  om->om_force_modname = modname ? strdup(modname) : NULL;
+  /* Force the grabber */
+  tvh_str_set(&om->om_force_modname, modname);
 
+  /* Subscribe */
   om->om_requeue = 1;
   if ((r = mpegts_mux_subscribe(mm, NULL, "epggrab",
                                 SUBSCRIPTION_PRIO_EPG,
