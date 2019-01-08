@@ -326,8 +326,10 @@ dvr_do_prefix(const char *id, const char *fmt, const char *s, char *tmp, size_t 
     tmp[0] = '\0';
   } else if (s[0] && !isalpha(id[0])) {
     snprintf(tmp, tmplen, "%c%s", id[0], s);
+    utf8_validate_inplace(tmp);
   } else {
     strlcpy(tmp, s, tmplen);
+    utf8_validate_inplace(tmp);
   }
   return dvr_clean_directory_separator(tmp, tmp, tmplen);
 }
