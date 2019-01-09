@@ -337,9 +337,9 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
       map->om_complete = 1;
     } else {
       tvhdebug(map->om_module->subsys, "%s: grab started", omod->id);
+      if (!strempty(modname) && omod->handlers)
+        omod->handlers(map, mm);
     }
-    if (!strempty(modname))
-      omod->handlers(map, mm);
   }
 }
 
