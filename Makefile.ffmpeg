@@ -44,22 +44,22 @@ BSFS           = h264_mp4toannexb hevc_mp4toannexb
 FILTERS        = yadif format hwupload hwdownload scale null aresample anull
 HWACCELS       =
 
-NASM_VER       = 2.13.03
+NASM_VER       = 2.14.02
 NASM           = nasm-$(NASM_VER)
 NASM_TB        = $(NASM).tar.gz
 NASM_URL       = https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VER)/$(NASM_TB)
-NASM_SHA1      = fa15c35b6003518d8165ab507f31af5d3938e91f
+NASM_SHA1      = bfa67d0d33f0c7b00c50d9f1bd33fd4d5df3c5d5
 NASM_DIFFS     = remove-invalid-pure_func-qualifiers.diff
 
-LIBX264        = x264-snapshot-20180906-2245
+LIBX264        = x264-snapshot-20190108-2245
 LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1   = 454c3c96b7c6df19e36f09fffb2a25a60ec657ed
+LIBX264_SHA1   = 6d216c7892b9c886aa6b18a580698083136e2fdc
 
-LIBX265        = x265_2.8
+LIBX265        = x265_2.9
 LIBX265_TB     = $(LIBX265).tar.gz
 LIBX265_URL    = http://ftp.videolan.org/videolan/x265/$(LIBX265_TB)
-LIBX265_SHA1   = e2ef1ad186d9581239463d4e5177a25bc57b9fc0
+LIBX265_SHA1   = 3c005b4ab409c6f996b36ad88d780ff85fbc9abf
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
 else
@@ -97,16 +97,16 @@ LIBOPUS_TB     = $(LIBOPUS).tar.gz
 LIBOPUS_URL    = https://archive.mozilla.org/pub/opus/$(LIBOPUS_TB)
 LIBOPUS_SHA1   = ea74356b762ac466637a40c82cdd3acbc35daa43
 
-FFNVCODEC_VER  = 8.1.24.2
+FFNVCODEC_VER  = 8.2.15.6
 FFNVCODEC      = nv-codec-headers-n$(FFNVCODEC_VER)
 FFNVCODEC_TB   = $(FFNVCODEC).tar.gz
 FFNVCODEC_URL  = https://github.com/FFmpeg/nv-codec-headers/releases/download/n$(FFNVCODEC_VER)/nv-codec-headers-$(FFNVCODEC_VER).tar.gz
-FFNVCODEC_SHA1 = d500263b2fd92a32ac383ac87762648ecf8d325b
+FFNVCODEC_SHA1 = 57eb91aab785b1adeb2d17c95fd1bba32e6f53d9
 
-FFMPEG         = ffmpeg-4.0.2
+FFMPEG         = ffmpeg-4.1
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = 7b9deb74b4fcc665c5187dcd057b678e754b43d2
+FFMPEG_SHA1    = dbbecc574c0a57687271165a618353d4ddbd8cfa
 
 # ##############################################################################
 # Library Config
@@ -183,7 +183,7 @@ $(LIB_ROOT)/$(NASM)/.tvh_build: \
 		$(LIB_ROOT)/$(NASM)/.tvh_download
 	cd $(LIB_ROOT)/$(NASM) && $(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib
-	INSTALLROOT=$(EBUILDIR) \
+	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(NASM) install
 	@touch $@
 
