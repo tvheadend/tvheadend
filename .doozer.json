@@ -558,6 +558,8 @@
         "debhelper",
         "ccache",
         "sudo",
+        "makedev",
+        "udev",
         "dvb-apps"
       ],
       "buildcmd": [
@@ -587,6 +589,8 @@
         "debhelper",
         "ccache",
         "sudo",
+        "makedev",
+        "udev",
         "dvb-apps"
       ],
       "buildcmd": [
