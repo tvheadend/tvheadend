@@ -9,6 +9,7 @@ install: ${PROG} ${MAN}
 	install ${PROG} ${DESTDIR}${bindir}/tvheadend
 	install support/tvhmeta ${DESTDIR}${bindir}/tvhmeta
 	install lib/py/tvh/tv_meta_tmdb.py ${DESTDIR}${bindir}/tv_meta_tmdb.py
+	install lib/py/tvh/tv_meta_tvdb.py ${DESTDIR}${bindir}/tv_meta_tvdb.py
 	install -d ${DESTDIR}${mandir}/man1
 	install ${MAN} ${DESTDIR}${mandir}/man1/tvheadend.1
 
