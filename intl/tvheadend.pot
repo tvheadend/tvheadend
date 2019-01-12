@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-08 16:49+0200\n"
+"POT-Creation-Date: 2019-01-12 09:58+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -180,11 +180,11 @@ msgstr ""
 msgid "5 days"
 msgstr ""
 
-#: src/profile.c:1684
+#: src/profile.c:1689
 msgid "5.0"
 msgstr ""
 
-#: src/profile.c:1685
+#: src/profile.c:1690
 msgid "5.1"
 msgstr ""
 
@@ -201,7 +201,7 @@ msgstr ""
 msgid "6 months"
 msgstr ""
 
-#: src/profile.c:1686
+#: src/profile.c:1691
 msgid "6.1"
 msgstr ""
 
@@ -213,7 +213,7 @@ msgstr ""
 msgid "7"
 msgstr ""
 
-#: src/profile.c:1687
+#: src/profile.c:1692
 msgid "7.1"
 msgstr ""
 
@@ -243,7 +243,7 @@ msgstr ""
 msgid "AA"
 msgstr ""
 
-#: src/profile.c:1320
+#: src/profile.c:1325
 msgid "AAC audio"
 msgstr ""
 
@@ -260,7 +260,7 @@ msgstr ""
 msgid "AC-3 detection"
 msgstr ""
 
-#: src/profile.c:1319
+#: src/profile.c:1324
 msgid "AC3 audio"
 msgstr ""
 
@@ -352,7 +352,7 @@ msgstr ""
 msgid "ATSC-C Network"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:583
+#: src/input/mpegts/mpegts_mux_dvb.c:601
 msgid "ATSC-C multiplex"
 msgstr ""
 
@@ -364,7 +364,7 @@ msgstr ""
 msgid "ATSC-T Network"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:542
+#: src/input/mpegts/mpegts_mux_dvb.c:560
 msgid "ATSC-T multiplex"
 msgstr ""
 
@@ -372,13 +372,13 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux_dvb.c:237 src/input/mpegts/mpegts_mux_dvb.c:244
 #: src/input/mpegts/mpegts_mux_dvb.c:249 src/input/mpegts/mpegts_mux_dvb.c:254
 #: src/input/mpegts/mpegts_mux_dvb.c:259 src/input/mpegts/mpegts_mux_dvb.c:327
-#: src/input/mpegts/mpegts_mux_dvb.c:332 src/input/mpegts/mpegts_mux_dvb.c:557
-#: src/input/mpegts/mpegts_mux_dvb.c:605 src/input/mpegts/mpegts_mux_dvb.c:610
-#: src/input/mpegts/mpegts_mux_dvb.c:683 src/input/mpegts/mpegts_mux_dvb.c:690
-#: src/input/mpegts/mpegts_mux_dvb.c:696 src/input/mpegts/mpegts_mux_dvb.c:700
-#: src/input/mpegts/mpegts_mux_dvb.c:719 src/input/mpegts/mpegts_mux_dvb.c:723
-#: src/input/mpegts/mpegts_mux_dvb.c:742 src/input/mpegts/mpegts_mux_dvb.c:746
-#: src/input/mpegts/mpegts_mux_dvb.c:797 src/input/mpegts/mpegts_mux_dvb.c:802
+#: src/input/mpegts/mpegts_mux_dvb.c:332 src/input/mpegts/mpegts_mux_dvb.c:575
+#: src/input/mpegts/mpegts_mux_dvb.c:623 src/input/mpegts/mpegts_mux_dvb.c:628
+#: src/input/mpegts/mpegts_mux_dvb.c:701 src/input/mpegts/mpegts_mux_dvb.c:708
+#: src/input/mpegts/mpegts_mux_dvb.c:714 src/input/mpegts/mpegts_mux_dvb.c:718
+#: src/input/mpegts/mpegts_mux_dvb.c:737 src/input/mpegts/mpegts_mux_dvb.c:741
+#: src/input/mpegts/mpegts_mux_dvb.c:760 src/input/mpegts/mpegts_mux_dvb.c:764
+#: src/input/mpegts/mpegts_mux_dvb.c:815 src/input/mpegts/mpegts_mux_dvb.c:820
 msgid "AUTO"
 msgstr ""
 
@@ -651,7 +651,7 @@ msgstr ""
 msgid "Anonymize HTSP access"
 msgstr ""
 
-#: src/profile.c:1317 src/profile.c:1648 src/dvr/dvr_autorec.c:626
+#: src/profile.c:1322 src/profile.c:1653 src/dvr/dvr_autorec.c:626
 #: src/dvr/dvr_autorec.c:661 src/dvr/dvr_autorec.c:675
 #: src/dvr/dvr_autorec.c:682 src/dvr/dvr_autorec.c:961
 #: src/dvr/dvr_autorec.c:1091 src/dvr/dvr_autorec.c:1104
@@ -687,37 +687,37 @@ msgstr ""
 msgid "Audio Stream Filter"
 msgstr ""
 
-#: src/profile.c:1948
+#: src/profile.c:1953
 msgid "Audio bitrate (kb/s) (0=auto)"
 msgstr ""
 
-#: src/profile.c:1949
+#: src/profile.c:1954
 msgid "Audio bitrate to use for transcoding."
 msgstr ""
 
-#: src/profile.c:1865
+#: src/profile.c:1870
 msgid "Audio channel layout."
 msgstr ""
 
-#: src/profile.c:1936
+#: src/profile.c:1941
 msgid "Audio codec"
 msgstr ""
 
-#: src/profile.c:1937
+#: src/profile.c:1942
 msgid ""
 "Audio codec to use for the transcode. \"Do not use\" will disable audio "
 "output."
 msgstr ""
 
-#: src/profile.c:1331
+#: src/profile.c:1336
 msgid "Audio stream"
 msgstr ""
 
-#: src/profile.c:1336
+#: src/profile.c:1341
 msgid "Audio type"
 msgstr ""
 
-#: src/profile.c:2266
+#: src/profile.c:2271
 msgid "Audio-only stream"
 msgstr ""
 
@@ -865,7 +865,7 @@ msgstr ""
 msgid "Ballet"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:225 src/input/mpegts/mpegts_mux_dvb.c:683
+#: src/input/mpegts/mpegts_mux_dvb.c:225 src/input/mpegts/mpegts_mux_dvb.c:701
 msgid "Bandwidth"
 msgstr ""
 
@@ -885,7 +885,7 @@ msgstr ""
 msgid "Bind to specific local IP address."
 msgstr ""
 
-#: src/profile.c:1926
+#: src/profile.c:1931
 msgid "Bitrate to use for the transcode. See Help for details."
 msgstr ""
 
@@ -1182,7 +1182,7 @@ msgstr ""
 msgid "Channel update options"
 msgstr ""
 
-#: src/channels.c:370 src/profile.c:1864 src/epggrab/channel.c:850
+#: src/channels.c:370 src/profile.c:1869 src/epggrab/channel.c:850
 msgid "Channels"
 msgstr ""
 
@@ -1205,7 +1205,7 @@ msgstr ""
 msgid "Charset"
 msgstr ""
 
-#: src/service_mapper.c:507
+#: src/service_mapper.c:522
 msgid "Check availability"
 msgstr ""
 
@@ -1215,7 +1215,7 @@ msgid ""
 "field will change to Missing In PAT/SDT."
 msgstr ""
 
-#: src/service_mapper.c:508
+#: src/service_mapper.c:523
 msgid ""
 "Check services for availability. If enabled, services that are not currently "
 "broadcasting (or can't be decrypted) will be ignored. Leave disabled if you "
@@ -1333,8 +1333,8 @@ msgstr ""
 msgid "Conditional Access Identification."
 msgstr ""
 
-#: src/tvhlog.c:95 src/profile.c:290 src/profile.c:1105 src/profile.c:1230
-#: src/profile.c:1485 src/profile.c:1829 src/epggrab/channel.c:751
+#: src/tvhlog.c:95 src/profile.c:290 src/profile.c:1110 src/profile.c:1235
+#: src/profile.c:1490 src/profile.c:1834 src/epggrab/channel.c:751
 msgid "Configuration"
 msgstr ""
 
@@ -1371,15 +1371,15 @@ msgid "Connection limits"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:232 src/input/mpegts/mpegts_mux_dvb.c:327
-#: src/input/mpegts/mpegts_mux_dvb.c:605 src/input/mpegts/mpegts_mux_dvb.c:797
+#: src/input/mpegts/mpegts_mux_dvb.c:623 src/input/mpegts/mpegts_mux_dvb.c:815
 msgid "Constellation"
 msgstr ""
 
-#: src/profile.c:1842
+#: src/profile.c:1847
 msgid "Container"
 msgstr ""
 
-#: src/profile.c:1843
+#: src/profile.c:1848
 msgid "Container to use for the transcoded stream."
 msgstr ""
 
@@ -1423,11 +1423,11 @@ msgstr ""
 msgid "Cooking"
 msgstr ""
 
-#: src/profile.c:1737
+#: src/profile.c:1742
 msgid "Copy codec type"
 msgstr ""
 
-#: src/profile.c:1679
+#: src/profile.c:1684
 msgid "Copy layout"
 msgstr ""
 
@@ -1435,7 +1435,7 @@ msgstr ""
 msgid "Count of objects"
 msgstr ""
 
-#: src/service_mapper.c:534
+#: src/service_mapper.c:549
 msgid "Create SDTV/HDTV/Radio tags."
 msgstr ""
 
@@ -1464,7 +1464,7 @@ msgid ""
 "be ISO standard YYYY-MM-DD."
 msgstr ""
 
-#: src/service_mapper.c:542
+#: src/service_mapper.c:557
 msgid "Create a provider name tag."
 msgstr ""
 
@@ -1496,11 +1496,11 @@ msgstr ""
 msgid "Create files using these permissions."
 msgstr ""
 
-#: src/service_mapper.c:549 src/bouquet.c:809
+#: src/service_mapper.c:564 src/bouquet.c:809
 msgid "Create network name tags"
 msgstr ""
 
-#: src/service_mapper.c:550
+#: src/service_mapper.c:565
 msgid "Create network name tags (set by provider)."
 msgstr ""
 
@@ -1508,7 +1508,7 @@ msgstr ""
 msgid "Create network tags"
 msgstr ""
 
-#: src/service_mapper.c:541 src/bouquet.c:804
+#: src/service_mapper.c:556 src/bouquet.c:804
 msgid "Create provider name tags"
 msgstr ""
 
@@ -1526,7 +1526,7 @@ msgid ""
 "possible)."
 msgstr ""
 
-#: src/service_mapper.c:533 src/bouquet.c:799
+#: src/service_mapper.c:548 src/bouquet.c:799
 msgid "Create type-based tags"
 msgstr ""
 
@@ -1582,7 +1582,7 @@ msgstr ""
 msgid "DAB Network"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:874
+#: src/input/mpegts/mpegts_mux_dvb.c:910
 msgid "DAB multiplex"
 msgstr ""
 
@@ -1682,7 +1682,7 @@ msgstr ""
 msgid "DVB-S Satellite Configuration"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:436
+#: src/input/mpegts/mpegts_mux_dvb.c:454
 msgid "DVB-S multiplex"
 msgstr ""
 
@@ -1808,6 +1808,14 @@ msgstr ""
 msgid "Data path (if applicable)."
 msgstr ""
 
+#: src/input/mpegts/mpegts_mux_dvb.c:347 src/input/mpegts/mpegts_mux_dvb.c:835
+msgid "Data slice"
+msgstr ""
+
+#: src/input/mpegts/mpegts_mux_dvb.c:348 src/input/mpegts/mpegts_mux_dvb.c:836
+msgid "Data slice code."
+msgstr ""
+
 #: src/epggrab/channel.c:798
 msgid "Date the EPG data was last updated (not set for OTA grabbers)."
 msgstr ""
@@ -1881,10 +1889,10 @@ msgid "Define network group to limit network usage."
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:211 src/input/mpegts/mpegts_mux_dvb.c:308
-#: src/input/mpegts/mpegts_mux_dvb.c:439 src/input/mpegts/mpegts_mux_dvb.c:545
-#: src/input/mpegts/mpegts_mux_dvb.c:586 src/input/mpegts/mpegts_mux_dvb.c:671
-#: src/input/mpegts/mpegts_mux_dvb.c:778 src/input/mpegts/mpegts_mux_dvb.c:831
-#: src/input/mpegts/mpegts_mux_dvb.c:877
+#: src/input/mpegts/mpegts_mux_dvb.c:457 src/input/mpegts/mpegts_mux_dvb.c:563
+#: src/input/mpegts/mpegts_mux_dvb.c:604 src/input/mpegts/mpegts_mux_dvb.c:689
+#: src/input/mpegts/mpegts_mux_dvb.c:796 src/input/mpegts/mpegts_mux_dvb.c:867
+#: src/input/mpegts/mpegts_mux_dvb.c:913
 msgid "Delivery system"
 msgstr ""
 
@@ -2061,7 +2069,7 @@ msgstr ""
 msgid "Do not set"
 msgstr ""
 
-#: src/profile.c:1735 src/input/mpegts/satip/satip_frontend.c:143
+#: src/profile.c:1740 src/input/mpegts/satip/satip_frontend.c:143
 msgid "Do not use"
 msgstr ""
 
@@ -2393,7 +2401,7 @@ msgstr ""
 msgid "Enable/disable offering of Entitlement Management Message updates."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:478
+#: src/input/mpegts/mpegts_mux_dvb.c:496
 msgid "Enable/disable pilot tone."
 msgstr ""
 
@@ -2645,8 +2653,8 @@ msgstr ""
 msgid "FE supported"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:332 src/input/mpegts/mpegts_mux_dvb.c:467
-#: src/input/mpegts/mpegts_mux_dvb.c:610 src/input/mpegts/mpegts_mux_dvb.c:802
+#: src/input/mpegts/mpegts_mux_dvb.c:332 src/input/mpegts/mpegts_mux_dvb.c:485
+#: src/input/mpegts/mpegts_mux_dvb.c:628 src/input/mpegts/mpegts_mux_dvb.c:820
 msgid "FEC"
 msgstr ""
 
@@ -2924,9 +2932,9 @@ msgid "Frequency"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:219 src/input/mpegts/mpegts_mux_dvb.c:314
-#: src/input/mpegts/mpegts_mux_dvb.c:551 src/input/mpegts/mpegts_mux_dvb.c:592
-#: src/input/mpegts/mpegts_mux_dvb.c:677 src/input/mpegts/mpegts_mux_dvb.c:784
-#: src/input/mpegts/mpegts_mux_dvb.c:883
+#: src/input/mpegts/mpegts_mux_dvb.c:569 src/input/mpegts/mpegts_mux_dvb.c:610
+#: src/input/mpegts/mpegts_mux_dvb.c:695 src/input/mpegts/mpegts_mux_dvb.c:802
+#: src/input/mpegts/mpegts_mux_dvb.c:919
 msgid "Frequency (Hz)"
 msgstr ""
 
@@ -2940,7 +2948,7 @@ msgstr ""
 msgid "Frequency (in MHz)."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:445 src/input/mpegts/mpegts_mux_dvb.c:837
+#: src/input/mpegts/mpegts_mux_dvb.c:463 src/input/mpegts/mpegts_mux_dvb.c:873
 msgid "Frequency (kHz)"
 msgstr ""
 
@@ -3044,7 +3052,7 @@ msgstr ""
 msgid "Gray"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:244 src/input/mpegts/mpegts_mux_dvb.c:690
+#: src/input/mpegts/mpegts_mux_dvb.c:244 src/input/mpegts/mpegts_mux_dvb.c:708
 msgid "Guard interval"
 msgstr ""
 
@@ -3088,7 +3096,7 @@ msgstr ""
 msgid "HTSP Answer"
 msgstr ""
 
-#: src/profile.c:2250
+#: src/profile.c:2255
 msgid "HTSP Default Stream Settings"
 msgstr ""
 
@@ -3100,7 +3108,7 @@ msgstr ""
 msgid "HTSP Server"
 msgstr ""
 
-#: src/profile.c:1036
+#: src/profile.c:1041
 msgid "HTSP Stream Profile"
 msgstr ""
 
@@ -3254,7 +3262,7 @@ msgstr ""
 msgid "ISDB-C Network"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:775
+#: src/input/mpegts/mpegts_mux_dvb.c:793
 msgid "ISDB-C multiplex"
 msgstr ""
 
@@ -3262,7 +3270,7 @@ msgstr ""
 msgid "ISDB-S Network"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:828
+#: src/input/mpegts/mpegts_mux_dvb.c:864
 msgid "ISDB-S multiplex"
 msgstr ""
 
@@ -3270,11 +3278,11 @@ msgstr ""
 msgid "ISDB-T Network"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:668
+#: src/input/mpegts/mpegts_mux_dvb.c:686
 msgid "ISDB-T multiplex"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:484
+#: src/input/mpegts/mpegts_mux_dvb.c:502
 msgid "ISI (Stream ID)"
 msgstr ""
 
@@ -3401,7 +3409,7 @@ msgstr ""
 msgid "Ignore descriptor 5"
 msgstr ""
 
-#: src/service_mapper.c:519
+#: src/service_mapper.c:534
 msgid "Ignore encryption flag, include encrypted services anyway."
 msgstr ""
 
@@ -3648,7 +3656,7 @@ msgid "LNB type"
 msgstr ""
 
 #: src/access.c:1447 src/access.c:1678 src/esfilter.c:644 src/esfilter.c:738
-#: src/esfilter.c:833 src/esfilter.c:928 src/esfilter.c:1128 src/profile.c:1875
+#: src/esfilter.c:833 src/esfilter.c:928 src/esfilter.c:1128 src/profile.c:1880
 #: src/wizard.c:197
 msgid "Language"
 msgstr ""
@@ -3693,51 +3701,51 @@ msgstr ""
 msgid "Last updated from"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:700
+#: src/input/mpegts/mpegts_mux_dvb.c:718
 msgid "Layer A: Constellation"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:696
+#: src/input/mpegts/mpegts_mux_dvb.c:714
 msgid "Layer A: FEC"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:706
+#: src/input/mpegts/mpegts_mux_dvb.c:724
 msgid "Layer A: Segment count"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:713
+#: src/input/mpegts/mpegts_mux_dvb.c:731
 msgid "Layer A: Time interleaving"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:723
+#: src/input/mpegts/mpegts_mux_dvb.c:741
 msgid "Layer B: Constellation"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:719
+#: src/input/mpegts/mpegts_mux_dvb.c:737
 msgid "Layer B: FEC"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:729
+#: src/input/mpegts/mpegts_mux_dvb.c:747
 msgid "Layer B: Segment count"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:736
+#: src/input/mpegts/mpegts_mux_dvb.c:754
 msgid "Layer B: Time interleaving"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:746
+#: src/input/mpegts/mpegts_mux_dvb.c:764
 msgid "Layer C: Constellation"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:742
+#: src/input/mpegts/mpegts_mux_dvb.c:760
 msgid "Layer C: FEC"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:752
+#: src/input/mpegts/mpegts_mux_dvb.c:770
 msgid "Layer C: Segment count"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:759
+#: src/input/mpegts/mpegts_mux_dvb.c:777
 msgid "Layer C: Time interleaving"
 msgstr ""
 
@@ -3907,19 +3915,19 @@ msgstr ""
 msgid "Lowest starting channel number."
 msgstr ""
 
-#: src/profile.c:1321
+#: src/profile.c:1326
 msgid "MP4 audio"
 msgstr ""
 
-#: src/profile.c:1571 src/profile.c:1670
+#: src/profile.c:1576 src/profile.c:1675
 msgid "MP4/av-lib"
 msgstr ""
 
-#: src/profile.c:1318
+#: src/profile.c:1323
 msgid "MPEG-2 audio"
 msgstr ""
 
-#: src/profile.c:1666
+#: src/profile.c:1671
 msgid "MPEG-PS (DVD)/av-lib"
 msgstr ""
 
@@ -3943,11 +3951,11 @@ msgstr ""
 msgid "MPEG-TS Parser"
 msgstr ""
 
-#: src/profile.c:2214
+#: src/profile.c:2219
 msgid "MPEG-TS Pass-thru"
 msgstr ""
 
-#: src/profile.c:1102
+#: src/profile.c:1107
 msgid "MPEG-TS Pass-thru/built-in"
 msgstr ""
 
@@ -3967,7 +3975,7 @@ msgstr ""
 msgid "MPEG-TS raw service"
 msgstr ""
 
-#: src/profile.c:1418 src/profile.c:1665
+#: src/profile.c:1423 src/profile.c:1670
 msgid "MPEG-TS/av-lib"
 msgstr ""
 
@@ -4035,7 +4043,7 @@ msgstr ""
 msgid "Map all services"
 msgstr ""
 
-#: src/service_mapper.c:518 src/bouquet.c:731
+#: src/service_mapper.c:533 src/bouquet.c:731
 msgid "Map encrypted services"
 msgstr ""
 
@@ -4066,15 +4074,15 @@ msgstr ""
 msgid "Master tuner"
 msgstr ""
 
-#: src/profile.c:2234
+#: src/profile.c:2239
 msgid "Matroska"
 msgstr ""
 
-#: src/profile.c:1668
+#: src/profile.c:1673
 msgid "Matroska (mkv)/av-lib"
 msgstr ""
 
-#: src/profile.c:1227 src/profile.c:1663
+#: src/profile.c:1232 src/profile.c:1668
 msgid "Matroska (mkv)/built-in"
 msgstr ""
 
@@ -4082,11 +4090,11 @@ msgstr ""
 msgid "Matroska muxer"
 msgstr ""
 
-#: src/profile.c:1234 src/profile.c:1489
+#: src/profile.c:1239 src/profile.c:1494
 msgid "Matroska specific"
 msgstr ""
 
-#: src/profile.c:1482
+#: src/profile.c:1487
 msgid "Matroska/av-lib"
 msgstr ""
 
@@ -4170,11 +4178,11 @@ msgstr ""
 msgid "Memory Information"
 msgstr ""
 
-#: src/service_mapper.c:526 src/bouquet.c:736
+#: src/service_mapper.c:541 src/bouquet.c:736
 msgid "Merge same name"
 msgstr ""
 
-#: src/service_mapper.c:527
+#: src/service_mapper.c:542
 msgid "Merge services with the same name into one channel."
 msgstr ""
 
@@ -4214,7 +4222,7 @@ msgstr ""
 msgid "Model number"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:463 src/input/mpegts/mpegts_mux_dvb.c:557
+#: src/input/mpegts/mpegts_mux_dvb.c:481 src/input/mpegts/mpegts_mux_dvb.c:575
 msgid "Modulation"
 msgstr ""
 
@@ -4238,7 +4246,7 @@ msgstr ""
 msgid "Monitonic timer"
 msgstr ""
 
-#: src/profile.c:1680
+#: src/profile.c:1685
 msgid "Mono"
 msgstr ""
 
@@ -4647,7 +4655,7 @@ msgstr ""
 msgid "Not linked"
 msgstr ""
 
-#: src/channels.c:358 src/profile.c:1662 src/dvr/dvr_db.c:2728
+#: src/channels.c:358 src/profile.c:1667 src/dvr/dvr_db.c:2728
 msgid "Not set"
 msgstr ""
 
@@ -4904,7 +4912,7 @@ msgid "Options used when updating channels."
 msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:301
-#: src/input/mpegts/mpegts_mux_dvb.c:509
+#: src/input/mpegts/mpegts_mux_dvb.c:527
 msgid "Orbital position"
 msgstr ""
 
@@ -5007,15 +5015,16 @@ msgstr ""
 msgid "PIN."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:266
+#: src/input/mpegts/mpegts_mux_dvb.c:266 src/input/mpegts/mpegts_mux_dvb.c:338
+#: src/input/mpegts/mpegts_mux_dvb.c:826
 msgid "PLP ID"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:499
+#: src/input/mpegts/mpegts_mux_dvb.c:517
 msgid "PLS code"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:491
+#: src/input/mpegts/mpegts_mux_dvb.c:509
 msgid "PLS mode"
 msgstr ""
 
@@ -5143,7 +5152,7 @@ msgstr ""
 msgid "Physiology"
 msgstr ""
 
-#: src/profile.c:1337
+#: src/profile.c:1342
 msgid "Pick the stream with given audio type only."
 msgstr ""
 
@@ -5159,7 +5168,7 @@ msgstr ""
 msgid "Picon path"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:477
+#: src/input/mpegts/mpegts_mux_dvb.c:495
 msgid "Pilot"
 msgstr ""
 
@@ -5172,7 +5181,7 @@ msgid ""
 "reauthenticate."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:459
+#: src/input/mpegts/mpegts_mux_dvb.c:477
 msgid "Polarization"
 msgstr ""
 
@@ -5267,7 +5276,7 @@ msgstr ""
 msgid "Preferred CA PID"
 msgstr ""
 
-#: src/profile.c:1876
+#: src/profile.c:1881
 msgid "Preferred audio language."
 msgstr ""
 
@@ -5375,7 +5384,7 @@ msgstr ""
 msgid "PyEPG Import"
 msgstr ""
 
-#: src/profile.c:1683
+#: src/profile.c:1688
 msgid "Quad (4.0)"
 msgstr ""
 
@@ -5411,7 +5420,7 @@ msgstr ""
 msgid "Radio"
 msgstr ""
 
-#: src/profile.c:1667
+#: src/profile.c:1672
 msgid "Raw Audio Stream"
 msgstr ""
 
@@ -5550,7 +5559,7 @@ msgstr ""
 msgid "Reserved"
 msgstr ""
 
-#: src/profile.c:1852
+#: src/profile.c:1857
 msgid "Resolution (height)"
 msgstr ""
 
@@ -5597,35 +5606,35 @@ msgstr ""
 msgid "Reuse the EPG from another channel."
 msgstr ""
 
-#: src/profile.c:1154
+#: src/profile.c:1159
 msgid "Rewrite EIT"
 msgstr ""
 
-#: src/profile.c:1155
+#: src/profile.c:1160
 msgid ""
 "Rewrite EIT (Event Information Table) packets to only include information "
 "about the currently-streamed service."
 msgstr ""
 
-#: src/profile.c:1109
+#: src/profile.c:1114
 msgid "Rewrite MPEG-TS SI tables"
 msgstr ""
 
-#: src/profile.c:1130
+#: src/profile.c:1135
 msgid "Rewrite PAT"
 msgstr ""
 
-#: src/profile.c:1131
+#: src/profile.c:1136
 msgid ""
 "Rewrite PAT (Program Association Table) packets to only include information "
 "about the currently-streamed service."
 msgstr ""
 
-#: src/profile.c:1118 src/satip/server.c:725
+#: src/profile.c:1123 src/satip/server.c:725
 msgid "Rewrite PMT"
 msgstr ""
 
-#: src/profile.c:1119
+#: src/profile.c:1124
 msgid ""
 "Rewrite PMT (Program Map Table) packets to only include information about "
 "the currently-streamed service."
@@ -5637,11 +5646,11 @@ msgid ""
 "the currently streamed service."
 msgstr ""
 
-#: src/profile.c:1142
+#: src/profile.c:1147
 msgid "Rewrite SDT"
 msgstr ""
 
-#: src/profile.c:1143
+#: src/profile.c:1148
 msgid ""
 "Rewrite SDT (Service Description Table) packets to only include information "
 "about the currently-streamed service."
@@ -5655,7 +5664,7 @@ msgstr ""
 msgid "Rock"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:472
+#: src/input/mpegts/mpegts_mux_dvb.c:490
 msgid "Rolloff"
 msgstr ""
 
@@ -5973,7 +5982,7 @@ msgid ""
 "Select scheme to generate the picon names (standard, force service type to 1)"
 msgstr ""
 
-#: src/profile.c:1959
+#: src/profile.c:1964
 msgid "Select subtitle codec to use for transcoding."
 msgstr ""
 
@@ -6034,7 +6043,7 @@ msgid ""
 "built-in webserver."
 msgstr ""
 
-#: src/service_mapper.c:498
+#: src/service_mapper.c:513
 msgid "Select/Selected services to map."
 msgstr ""
 
@@ -6114,7 +6123,7 @@ msgstr ""
 msgid "Service Mapper"
 msgstr ""
 
-#: src/service_mapper.c:487
+#: src/service_mapper.c:502
 msgid "Service Mapping (Map services to channels)"
 msgstr ""
 
@@ -6163,7 +6172,7 @@ msgid ""
 "the stream."
 msgstr ""
 
-#: src/channels.c:504 src/service_mapper.c:497 src/bouquet.c:1081
+#: src/channels.c:504 src/service_mapper.c:512 src/bouquet.c:1081
 #: src/bouquet.c:1099 src/input/mpegts/mpegts_mux.c:637
 msgid "Services"
 msgstr ""
@@ -6373,7 +6382,7 @@ msgstr ""
 msgid "Source reconfigured"
 msgstr ""
 
-#: src/profile.c:1885
+#: src/profile.c:1890
 msgid "Source video codec"
 msgstr ""
 
@@ -6503,7 +6512,7 @@ msgstr ""
 msgid "Status period (ms)"
 msgstr ""
 
-#: src/profile.c:1681
+#: src/profile.c:1686
 msgid "Stereo"
 msgstr ""
 
@@ -6523,7 +6532,7 @@ msgstr ""
 msgid "Storage space"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:845
+#: src/input/mpegts/mpegts_mux_dvb.c:881
 msgid "Stream ID"
 msgstr ""
 
@@ -6532,11 +6541,11 @@ msgid "Stream Profile"
 msgstr ""
 
 #: src/esfilter.c:664 src/esfilter.c:759 src/esfilter.c:854 src/esfilter.c:949
-#: src/esfilter.c:1054 src/profile.c:1345
+#: src/esfilter.c:1054 src/profile.c:1350
 msgid "Stream index"
 msgstr ""
 
-#: src/profile.c:1346
+#: src/profile.c:1351
 msgid "Stream index (starts with zero)."
 msgstr ""
 
@@ -6614,7 +6623,7 @@ msgstr ""
 msgid "Subtitle Stream Filter"
 msgstr ""
 
-#: src/profile.c:1958
+#: src/profile.c:1963
 msgid "Subtitle codec"
 msgstr ""
 
@@ -6630,7 +6639,7 @@ msgstr ""
 msgid "Sun"
 msgstr ""
 
-#: src/profile.c:1682
+#: src/profile.c:1687
 msgid "Surround (2 front, rear mono)"
 msgstr ""
 
@@ -6661,8 +6670,8 @@ msgstr ""
 msgid "Switch: %s"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:322 src/input/mpegts/mpegts_mux_dvb.c:453
-#: src/input/mpegts/mpegts_mux_dvb.c:600 src/input/mpegts/mpegts_mux_dvb.c:792
+#: src/input/mpegts/mpegts_mux_dvb.c:322 src/input/mpegts/mpegts_mux_dvb.c:471
+#: src/input/mpegts/mpegts_mux_dvb.c:618 src/input/mpegts/mpegts_mux_dvb.c:810
 msgid "Symbol rate (Sym/s)"
 msgstr ""
 
@@ -6881,11 +6890,11 @@ msgstr ""
 msgid "The PIN to use."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:500
+#: src/input/mpegts/mpegts_mux_dvb.c:518
 msgid "The Physical Layer Scrambling (PLS) code used on the mux."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:492
+#: src/input/mpegts/mpegts_mux_dvb.c:510
 msgid "The Physical Layer Scrambling (PLS) mode used on the mux."
 msgstr ""
 
@@ -6925,7 +6934,7 @@ msgstr ""
 msgid "The audio stream types the filter should apply to."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:226 src/input/mpegts/mpegts_mux_dvb.c:684
+#: src/input/mpegts/mpegts_mux_dvb.c:226 src/input/mpegts/mpegts_mux_dvb.c:702
 msgid ""
 "The bandwidth the mux uses. If you're not sure of the value leave as AUTO "
 "but be aware that tuning may fail as some drivers do not like the AUTO "
@@ -7010,17 +7019,17 @@ msgid ""
 "delivery system selected here."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:878
+#: src/input/mpegts/mpegts_mux_dvb.c:914
 msgid "The delivery system used by the mux."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:309 src/input/mpegts/mpegts_mux_dvb.c:779
+#: src/input/mpegts/mpegts_mux_dvb.c:309 src/input/mpegts/mpegts_mux_dvb.c:797
 msgid "The delivery system used by your cable provider."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:440 src/input/mpegts/mpegts_mux_dvb.c:546
-#: src/input/mpegts/mpegts_mux_dvb.c:587 src/input/mpegts/mpegts_mux_dvb.c:672
-#: src/input/mpegts/mpegts_mux_dvb.c:832
+#: src/input/mpegts/mpegts_mux_dvb.c:458 src/input/mpegts/mpegts_mux_dvb.c:564
+#: src/input/mpegts/mpegts_mux_dvb.c:605 src/input/mpegts/mpegts_mux_dvb.c:690
+#: src/input/mpegts/mpegts_mux_dvb.c:868
 msgid "The delivery system used by your provider."
 msgstr ""
 
@@ -7052,25 +7061,25 @@ msgid ""
 "this setting."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:333 src/input/mpegts/mpegts_mux_dvb.c:611
-#: src/input/mpegts/mpegts_mux_dvb.c:803
+#: src/input/mpegts/mpegts_mux_dvb.c:333 src/input/mpegts/mpegts_mux_dvb.c:629
+#: src/input/mpegts/mpegts_mux_dvb.c:821
 msgid "The forward error correction used on the mux."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:468
+#: src/input/mpegts/mpegts_mux_dvb.c:486
 msgid ""
 "The forward error correction. Most people will not need to change this "
 "setting."
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220 src/input/mpegts/mpegts_mux_dvb.c:315
-#: src/input/mpegts/mpegts_mux_dvb.c:552 src/input/mpegts/mpegts_mux_dvb.c:593
-#: src/input/mpegts/mpegts_mux_dvb.c:678 src/input/mpegts/mpegts_mux_dvb.c:785
-#: src/input/mpegts/mpegts_mux_dvb.c:838 src/input/mpegts/mpegts_mux_dvb.c:884
+#: src/input/mpegts/mpegts_mux_dvb.c:570 src/input/mpegts/mpegts_mux_dvb.c:611
+#: src/input/mpegts/mpegts_mux_dvb.c:696 src/input/mpegts/mpegts_mux_dvb.c:803
+#: src/input/mpegts/mpegts_mux_dvb.c:874 src/input/mpegts/mpegts_mux_dvb.c:920
 msgid "The frequency of the mux (in Hertz)."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:446
+#: src/input/mpegts/mpegts_mux_dvb.c:464
 msgid "The frequency of the mux/transponder in Hertz."
 msgstr ""
 
@@ -7078,7 +7087,7 @@ msgstr ""
 msgid "The frontend number given to the device."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:245 src/input/mpegts/mpegts_mux_dvb.c:691
+#: src/input/mpegts/mpegts_mux_dvb.c:245 src/input/mpegts/mpegts_mux_dvb.c:709
 msgid ""
 "The guard interval used by the mux. If you're not sure of the value leave as "
 "AUTO."
@@ -7107,51 +7116,51 @@ msgstr ""
 msgid "The language to which the filter should apply."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:701
+#: src/input/mpegts/mpegts_mux_dvb.c:719
 msgid "The layer A constellation."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:697
+#: src/input/mpegts/mpegts_mux_dvb.c:715
 msgid "The layer A forward error correction."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:707
+#: src/input/mpegts/mpegts_mux_dvb.c:725
 msgid "The layer A segment count."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:714
+#: src/input/mpegts/mpegts_mux_dvb.c:732
 msgid "The layer A time interleaving."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:724
+#: src/input/mpegts/mpegts_mux_dvb.c:742
 msgid "The layer B constellation."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:720
+#: src/input/mpegts/mpegts_mux_dvb.c:738
 msgid "The layer B forward error correction."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:730
+#: src/input/mpegts/mpegts_mux_dvb.c:748
 msgid "The layer B segment count."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:737
+#: src/input/mpegts/mpegts_mux_dvb.c:755
 msgid "The layer B time interleaving."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:747
+#: src/input/mpegts/mpegts_mux_dvb.c:765
 msgid "The layer C constellation."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:743
+#: src/input/mpegts/mpegts_mux_dvb.c:761
 msgid "The layer C forward error correction."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:753
+#: src/input/mpegts/mpegts_mux_dvb.c:771
 msgid "The layer C segment count."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:760
+#: src/input/mpegts/mpegts_mux_dvb.c:778
 msgid "The layer C time interleaving."
 msgstr ""
 
@@ -7254,7 +7263,7 @@ msgid ""
 "delay is not applied."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:464 src/input/mpegts/mpegts_mux_dvb.c:558
+#: src/input/mpegts/mpegts_mux_dvb.c:482 src/input/mpegts/mpegts_mux_dvb.c:576
 msgid "The modulation used on the mux."
 msgstr ""
 
@@ -7386,7 +7395,7 @@ msgstr ""
 msgid "The number of services currently mapped to channels."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:510
+#: src/input/mpegts/mpegts_mux_dvb.c:528
 msgid "The orbital position of the satellite the mux is on."
 msgstr ""
 
@@ -7398,7 +7407,8 @@ msgstr ""
 msgid "The outcome of the last scan performed."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:267
+#: src/input/mpegts/mpegts_mux_dvb.c:267 src/input/mpegts/mpegts_mux_dvb.c:339
+#: src/input/mpegts/mpegts_mux_dvb.c:827
 msgid ""
 "The physical layer pipe ID. Most people will not need to change this setting."
 msgstr ""
@@ -7407,7 +7417,7 @@ msgstr ""
 msgid "The playlist's character set."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:460
+#: src/input/mpegts/mpegts_mux_dvb.c:478
 msgid "The polarization used on the mux."
 msgstr ""
 
@@ -7440,8 +7450,8 @@ msgstr ""
 msgid "The provider's network name."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:328 src/input/mpegts/mpegts_mux_dvb.c:606
-#: src/input/mpegts/mpegts_mux_dvb.c:798
+#: src/input/mpegts/mpegts_mux_dvb.c:328 src/input/mpegts/mpegts_mux_dvb.c:624
+#: src/input/mpegts/mpegts_mux_dvb.c:816
 msgid ""
 "The quadrature amplitude modulation (QAM) used by the mux. If you're not "
 "sure of the value leave as AUTO."
@@ -7455,7 +7465,7 @@ msgstr ""
 msgid "The recording/entry status."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:473
+#: src/input/mpegts/mpegts_mux_dvb.c:491
 msgid "The rolloff used on the mux."
 msgstr ""
 
@@ -7568,7 +7578,7 @@ msgstr ""
 msgid "The start time of the recording."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:485 src/input/mpegts/mpegts_mux_dvb.c:846
+#: src/input/mpegts/mpegts_mux_dvb.c:503 src/input/mpegts/mpegts_mux_dvb.c:882
 msgid "The stream ID used for the mux."
 msgstr ""
 
@@ -7595,11 +7605,11 @@ msgstr ""
 msgid "The symbol rate used on the mux."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:454
+#: src/input/mpegts/mpegts_mux_dvb.c:472
 msgid "The symbol rate used on the mux/transponder."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:601 src/input/mpegts/mpegts_mux_dvb.c:793
+#: src/input/mpegts/mpegts_mux_dvb.c:619 src/input/mpegts/mpegts_mux_dvb.c:811
 msgid "The symbol rate."
 msgstr ""
 
@@ -7841,7 +7851,7 @@ msgstr ""
 msgid "Transcode"
 msgstr ""
 
-#: src/profile.c:1886
+#: src/profile.c:1891
 msgid ""
 "Transcode video only if source video codec matches. \"Any\" ignores source "
 "video codec checking and always transcodes. If no codec match is found, "
@@ -7849,11 +7859,11 @@ msgid ""
 "with the parameters in this profile. Separate codec names with comma."
 msgstr ""
 
-#: src/profile.c:1826
+#: src/profile.c:1831
 msgid "Transcode/av-lib"
 msgstr ""
 
-#: src/profile.c:1833
+#: src/profile.c:1838
 msgid "Transcoding"
 msgstr ""
 
@@ -8280,7 +8290,7 @@ msgstr ""
 msgid "Use PROXY protocol & X-Forwarded-For"
 msgstr ""
 
-#: src/profile.c:1244 src/profile.c:1499
+#: src/profile.c:1249 src/profile.c:1504
 msgid "Use WEBM format."
 msgstr ""
 
@@ -8350,7 +8360,7 @@ msgstr ""
 msgid "Use only this service ID, filter out others."
 msgstr ""
 
-#: src/profile.c:1702
+#: src/profile.c:1707
 msgid "Use original"
 msgstr ""
 
@@ -8462,7 +8472,7 @@ msgstr ""
 msgid "Verify the peer's SSL."
 msgstr ""
 
-#: src/profile.c:1853
+#: src/profile.c:1858
 msgid ""
 "Vertical resolution (height) of the output video stream. Horizontal "
 "resolution is adjusted automatically to preserve aspect ratio. When set to "
@@ -8477,23 +8487,23 @@ msgstr ""
 msgid "Video Stream Filter"
 msgstr ""
 
-#: src/profile.c:1925
+#: src/profile.c:1930
 msgid "Video bitrate (kb/s) (0=auto)"
 msgstr ""
 
-#: src/profile.c:1902
+#: src/profile.c:1907
 msgid "Video codec"
 msgstr ""
 
-#: src/profile.c:1914
+#: src/profile.c:1919
 msgid "Video codec preset"
 msgstr ""
 
-#: src/profile.c:1915
+#: src/profile.c:1920
 msgid "Video codec preset to use for transcoding."
 msgstr ""
 
-#: src/profile.c:1903
+#: src/profile.c:1908
 msgid ""
 "Video codec to use for the transcode. \"Do not use\" will disable video "
 "output."
@@ -8518,31 +8528,31 @@ msgstr ""
 msgid "Visually impaired commentary/audio description"
 msgstr ""
 
-#: src/profile.c:1322
+#: src/profile.c:1327
 msgid "Vorbis audio"
 msgstr ""
 
-#: src/profile.c:1243 src/profile.c:1498
+#: src/profile.c:1248 src/profile.c:1503
 msgid "WEBM"
 msgstr ""
 
-#: src/profile.c:1669
+#: src/profile.c:1674
 msgid "WEBM/av-lib"
 msgstr ""
 
-#: src/profile.c:1664
+#: src/profile.c:1669
 msgid "WEBM/built-in"
 msgstr ""
 
-#: src/profile.c:2305
+#: src/profile.c:2310
 msgid "WEBTV profile H264/AAC/MPEG-TS"
 msgstr ""
 
-#: src/profile.c:2326
+#: src/profile.c:2331
 msgid "WEBTV profile H264/AAC/Matroska"
 msgstr ""
 
-#: src/profile.c:2284
+#: src/profile.c:2289
 msgid "WEBTV profile VP8/Vorbis/WEBM"
 msgstr ""
 
@@ -8719,11 +8729,11 @@ msgstr ""
 msgid "addpids/delpids supported"
 msgstr ""
 
-#: src/profile.c:1789
+#: src/profile.c:1794
 msgid "bd: nvenc(h264 / h265)"
 msgstr ""
 
-#: src/profile.c:1793
+#: src/profile.c:1798
 msgid "default: nvenc(h264 / h265)"
 msgstr ""
 
@@ -8735,19 +8745,19 @@ msgstr ""
 msgid "en50607"
 msgstr ""
 
-#: src/profile.c:1781
+#: src/profile.c:1786
 msgid "fast: h264 / h265 / qsv(h264 / h265)"
 msgstr ""
 
-#: src/profile.c:1780
+#: src/profile.c:1785
 msgid "faster: h264 / h265 / qsv(h264)"
 msgstr ""
 
-#: src/profile.c:1788
+#: src/profile.c:1793
 msgid "hp: nvenc(h264 / h265)"
 msgstr ""
 
-#: src/profile.c:1787
+#: src/profile.c:1792
 msgid "hq: nvenc(h264 / h265)"
 msgstr ""
 
@@ -8764,15 +8774,15 @@ msgstr ""
 msgid "libav / ffmpeg"
 msgstr ""
 
-#: src/profile.c:1790
+#: src/profile.c:1795
 msgid "ll: nvenc(h264 / h265)"
 msgstr ""
 
-#: src/profile.c:1792
+#: src/profile.c:1797
 msgid "llhp: nvenc(h264 / h265)"
 msgstr ""
 
-#: src/profile.c:1791
+#: src/profile.c:1796
 msgid "llhq: nvenc(h264 / h265)"
 msgstr ""
 
@@ -8780,7 +8790,7 @@ msgstr ""
 msgid "logout"
 msgstr ""
 
-#: src/profile.c:1782
+#: src/profile.c:1787
 msgid "medium: h264 / h265 / qsv(h264 / h265)"
 msgstr ""
 
@@ -8797,7 +8807,7 @@ msgstr ""
 msgid "option %s requires a value"
 msgstr ""
 
-#: src/profile.c:1786
+#: src/profile.c:1791
 msgid "placebo: h264 / h265"
 msgstr ""
 
@@ -8805,15 +8815,15 @@ msgstr ""
 msgid "return"
 msgstr ""
 
-#: src/profile.c:1783
+#: src/profile.c:1788
 msgid "slow: h264 / h265 / qsv(h264 / h265)"
 msgstr ""
 
-#: src/profile.c:1784
+#: src/profile.c:1789
 msgid "slower: h264 / h265 / qsv(h264)"
 msgstr ""
 
-#: src/profile.c:1778
+#: src/profile.c:1783
 msgid "superfast: h264 / h265"
 msgstr ""
 
@@ -8825,14 +8835,14 @@ msgstr ""
 msgid "tvhdhomerun client"
 msgstr ""
 
-#: src/profile.c:1777
+#: src/profile.c:1782
 msgid "ultrafast: h264 / h265"
 msgstr ""
 
-#: src/profile.c:1779
+#: src/profile.c:1784
 msgid "veryfast: h264 / h265 / qsv(h264)"
 msgstr ""
 
-#: src/profile.c:1785
+#: src/profile.c:1790
 msgid "veryslow: h264 / h265 / qsv(h264)"
 msgstr ""
