@@ -7,14 +7,14 @@
 # Mark Clarkstone, 2015
 # Mark Clarkstone, 2015-2016
 # Prof Yaffle, 2015
-# Prof Yaffle, 2015-2016
+# Prof Yaffle, 2015-2016,2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
-"PO-Revision-Date: 2018-10-08 14:51+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2018-10-15 12:07+0000\n"
+"Last-Translator: Prof Yaffle\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -305,7 +305,7 @@ msgstr "Broadcast details"
 
 #: src/webui/static/app/epg.js:924
 msgid "Buffering. Please wait…"
-msgstr ""
+msgstr "Buffering. Please wait…"
 
 #: src/webui/static/app/caclient.js:32
 msgid "CA"
@@ -743,19 +743,19 @@ msgstr "File size"
 
 #: src/webui/static/app/epg.js:707
 msgid "Filter channel…"
-msgstr ""
+msgstr "Filter channel…"
 
 #: src/webui/static/app/epg.js:754
 msgid "Filter content type…"
-msgstr ""
+msgstr "Filter content type…"
 
 #: src/webui/static/app/epg.js:775
 msgid "Filter duration…"
-msgstr ""
+msgstr "Filter duration…"
 
 #: src/webui/static/app/epg.js:730
 msgid "Filter tag…"
-msgstr ""
+msgstr "Filter tag…"
 
 #: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
@@ -950,7 +950,7 @@ msgstr "Loading..."
 #: src/webui/static/app/epg.js:698 src/webui/static/app/epg.js:721
 #: src/webui/static/app/epg.js:745 src/webui/static/app/epg.js:766
 msgid "Loading…"
-msgstr ""
+msgstr "Loading…"
 
 #: src/webui/static/app/tvheadend.js:927
 msgid "Logged in as"
@@ -1177,7 +1177,7 @@ msgstr "November"
 
 #: src/webui/static/app/epg.js:673
 msgid "Now"
-msgstr ""
+msgstr "Now"
 
 #: src/webui/static/app/epg.js:587 src/webui/static/app/epg.js:588
 msgid "Number"
@@ -1489,7 +1489,7 @@ msgstr "Search TheTVDB (for title)"
 
 #: src/webui/static/app/epg.js:687
 msgid "Search title…"
-msgstr ""
+msgstr "Search title…"
 
 #: src/webui/static/app/tvheadend.js:466
 msgid "Select channel..."
@@ -1907,7 +1907,7 @@ msgstr "Video Stream Filters"
 
 #: src/webui/static/app/epg.js:971
 msgid "View help docs."
-msgstr ""
+msgstr "View help docs."
 
 #: src/webui/static/app/idnode.js:618
 msgid "View level"

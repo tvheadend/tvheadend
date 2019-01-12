@@ -10,7 +10,7 @@
 # Cedric Octave <transifex@octvcdrc.fr>, 2016
 # Frédéric Ethève <portab2fred@mail.com>, 2015
 # Glandos <bugs-transifex@antipoul.fr>, 2015
-# Pablo Rodríguez <trujulu@gmail.com>, 2015
+# Pablo <trujulu@gmail.com>, 2015
 # Philippe Teissier <philippe.teissier@gmail.com>, 2015
 # PY RENAUT <pyrenaut@gmail.com>, 2015-2017
 # Sylvebois <thomasghaye@hotmail.com>, 2017

@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# nextlooper42, 2019
 # Tomas Rusnak <linkermail@gmail.com>, 2017-2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
-"PO-Revision-Date: 2018-10-08 14:51+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2019-01-09 09:11+0000\n"
+"Last-Translator: nextlooper42\n"
 "Language-Team: Slovak (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/sk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -31,7 +32,7 @@ msgstr "# Namapované kanály"
 
 #: src/input/mpegts/mpegts_network.c:272
 msgid "# Muxes"
-msgstr "# Multiplexeri"
+msgstr "# Multiplexy"
 
 #: src/input/mpegts/mpegts_network.c:280
 msgid "# Services"
@@ -95,7 +96,7 @@ msgstr "13"
 
 #: src/satip/server.c:612
 msgid "1316 bytes"
-msgstr ""
+msgstr "1316 bajtov"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:84
 msgid "14"
@@ -107,7 +108,7 @@ msgstr "15"
 
 #: src/satip/server.c:616
 msgid "16356 bytes"
-msgstr ""
+msgstr "16356 bajtov"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "2"
@@ -134,7 +135,7 @@ msgstr "2-Portový prepínač (univerzálne LNB)"
 
 #: src/satip/server.c:613
 msgid "2632 bytes"
-msgstr ""
+msgstr "2632 bajtov"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:73
 msgid "3"
@@ -162,7 +163,7 @@ msgstr "3 roky"
 
 #: src/satip/server.c:617
 msgid "32712 bytes"
-msgstr ""
+msgstr "32712 bajtov"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "4"
@@ -191,7 +192,7 @@ msgstr "5.1"
 
 #: src/satip/server.c:614
 msgid "5264 bytes"
-msgstr ""
+msgstr "5264 bajtov"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:76
 msgid "6"
@@ -208,7 +209,7 @@ msgstr "6.1"
 
 #: src/satip/server.c:618
 msgid "65424 bytes"
-msgstr ""
+msgstr "65424 bajtov"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:77
 msgid "7"
@@ -220,7 +221,7 @@ msgstr "7.1"
 
 #: src/satip/server.c:615
 msgid "7896 bytes"
-msgstr ""
+msgstr "7896 bajtov"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:78
 msgid "8"
@@ -427,7 +428,7 @@ msgstr "Aktívne"
 
 #: src/streaming.c:461
 msgid "Adapter in use by another subscription"
-msgstr "Adaptér je používaný"
+msgstr "Adaptér je používaný iným predplatným"
 
 #: src/main.c:881
 msgid "Add file and line numbers to debug"
@@ -544,11 +545,11 @@ msgstr "Všetko: Nahrávať týždenne"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:137
 msgid "Allow all PIDs"
-msgstr ""
+msgstr "Povoliť všetky PIDy"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:138
 msgid "Allow all PIDs (no filter) when the 'Maximum PIDs' limit is reached."
-msgstr ""
+msgstr "Povoliť všetky PIDy (bez filtra), keď je dosiahnutý limit 'Maximálny PID'."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:220
 msgid "Allow high bitrate mode (CI+ CAMs only)."
@@ -647,7 +648,7 @@ msgstr "Zvieratá"
 
 #: src/satip/server.c:668
 msgid "Anonymize"
-msgstr ""
+msgstr "Anonymizovať"
 
 #: src/access.c:1749
 msgid "Anonymize HTSP access"
@@ -675,7 +676,7 @@ msgstr "Umelecké magazíny"
 
 #: src/wizard.c:962
 msgid "Assign predefined muxes to networks"
-msgstr "Priradiť predefinované multiplexeri k sieťam"
+msgstr "Priradiť predefinované multiplexy k sieťam"
 
 #: src/input/mpegts/mpegts_input.c:346
 msgid "Associate this device with one or more networks."
@@ -725,7 +726,7 @@ msgstr "Iba audio"
 
 #: src/tvhlog.c:125
 msgid "Audioes muxer"
-msgstr "Audio multiplexer"
+msgstr "Audio multiplexy"
 
 #: src/webui/webui.c:250
 msgid "Authenticated user"
@@ -1892,7 +1893,7 @@ msgstr "Systém doručovania"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:104
 msgid "Demux path"
-msgstr "Cesta k demultiplexeru"
+msgstr "Cesta k demultiplexu"
 
 #: src/satip/server.c:715
 msgid "Descramble services (limit per mux)"
@@ -2265,7 +2266,7 @@ msgstr ""
 msgid ""
 "Enable if the SAT>IP box requests plts=on parameter in the SETUP RTSP "
 "command for DVB-S2 muxes."
-msgstr ""
+msgstr "Povoľte pokiaľ SAT>IP box vyžaduje parameter plts=on v príkaze SETUP RTSP pre DVB-S2 multiplexy."
 
 #: src/input/mpegts/satip/satip.c:341
 msgid ""
@@ -2344,7 +2345,7 @@ msgstr "Povoliť ladenie webového rozhrania (neminimalizovaný JS)"
 msgid ""
 "Enable, disable or ignore the mux. When the mux is marked as ignore, all "
 "discovered services are removed."
-msgstr ""
+msgstr "Povolí, zakáže alebo ignoruje multiplex. Keď je multiplex označený ako ignorovaný, všetky objavené služby su odstránené."
 
 #: src/descrambler/caclient.c:273
 msgid "Enable/Disable CA client."
@@ -2892,7 +2893,7 @@ msgstr "Formát reťazca"
 
 #: src/wizard.c:1025
 msgid "Found muxes"
-msgstr "Vyhľadané multiplexi"
+msgstr "Nájdené multiplexy"
 
 #: src/wizard.c:1034
 msgid "Found services"
@@ -2975,7 +2976,7 @@ msgstr "Plný DiseqC"
 
 #: src/input/mpegts/satip/satip.c:274
 msgid "Full mux RX mode supported"
-msgstr ""
+msgstr "Plný RX mód multiplexu je podporovaný"
 
 #: src/channels.c:1481
 msgid ""
@@ -4323,15 +4324,15 @@ msgstr "Ovládanie multiplexu"
 
 #: src/input/mpegts/iptv/iptv_mux.c:168
 msgid "Mux name"
-msgstr "Meno multiplexu"
+msgstr "Názov multiplexu"
 
 #: src/streaming.c:459
 msgid "Mux not enabled"
-msgstr "Multiplex neaktivovaný"
+msgstr "Nepovolený multiplex"
 
 #: src/tvhlog.c:123
 msgid "Muxer"
-msgstr "Multiplexer"
+msgstr "Muxer"
 
 #: src/input/mpegts/mpegts_mux.c:399
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:56
@@ -5062,11 +5063,11 @@ msgstr ""
 
 #: src/tvhlog.c:124
 msgid "Pass-thru muxer"
-msgstr ""
+msgstr "Pass-thru muxer"
 
 #: src/tvhlog.c:115
 msgid "Passthrough Muxer SI Tables"
-msgstr ""
+msgstr "SI tabuľky Passthrough Muxeru"
 
 #: src/access.c:2048 src/wizard.c:453 src/descrambler/cwc.c:1850
 msgid "Password"
@@ -5965,7 +5966,7 @@ msgstr "Vybrať jazyky EPG s najvyššou prioritou (predvolené)."
 
 #: src/satip/server.c:747
 msgid "Select how Tvheadend should handle muxes. See Help for details."
-msgstr "Vybrať ako Tvheadend može pracovať s mutliplexami. Viac informácií v návode."
+msgstr "Vyberte, akým spôsobom bude Tvheadend narábať s multiplexami. Podrobnejšie detaily nájdete v Nápovede."
 
 #: src/wizard.c:230
 msgid "Select low priority EPG language."
@@ -7268,7 +7269,7 @@ msgstr "Modulácia použitá pre multiplex."
 
 #: src/input/mpegts/mpegts_service.c:105
 msgid "The mux the service is on."
-msgstr "Multiplex ku ktorému je služba priradená."
+msgstr "Multiplex, ku ktorému je služba priradená."
 
 #: src/input/mpegts/mpegts_mux_sched.c:146
 msgid "The mux to play when the entry is triggered."
@@ -7384,7 +7385,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:297
 msgid "The number of muxes left to scan on this network."
-msgstr ""
+msgstr "Počet multiplexov zostávajúcich na skenovanie na tejto sieti."
 
 #: src/profile.c:371
 msgid "The number of seconds to wait for a stream to start."
@@ -7396,7 +7397,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:510
 msgid "The orbital position of the satellite the mux is on."
-msgstr ""
+msgstr "Orbitálna pozícia satelitu na ktorom je multiplex."
 
 #: src/input/mpegts/mpegts_network_dvb.c:302
 msgid "The orbital position of the satellite your dish is pointing at."

@@ -7,14 +7,14 @@
 # Mark Clarkstone, 2015
 # Mark Clarkstone, 2015-2016
 # Prof Yaffle, 2015
-# Prof Yaffle, 2015-2016
+# Prof Yaffle, 2015-2016,2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
-"PO-Revision-Date: 2018-10-08 14:51+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2018-10-15 12:10+0000\n"
+"Last-Translator: Prof Yaffle\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -99,7 +99,7 @@ msgstr "13"
 
 #: src/satip/server.c:612
 msgid "1316 bytes"
-msgstr ""
+msgstr "1316 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:84
 msgid "14"
@@ -111,7 +111,7 @@ msgstr "15"
 
 #: src/satip/server.c:616
 msgid "16356 bytes"
-msgstr ""
+msgstr "16356 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "2"
@@ -138,7 +138,7 @@ msgstr "2-Port switch (universal LNB)"
 
 #: src/satip/server.c:613
 msgid "2632 bytes"
-msgstr ""
+msgstr "2632 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:73
 msgid "3"
@@ -166,7 +166,7 @@ msgstr "3 years"
 
 #: src/satip/server.c:617
 msgid "32712 bytes"
-msgstr ""
+msgstr "32712 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "4"
@@ -195,7 +195,7 @@ msgstr "5.1"
 
 #: src/satip/server.c:614
 msgid "5264 bytes"
-msgstr ""
+msgstr "5264 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:76
 msgid "6"
@@ -212,7 +212,7 @@ msgstr "6.1"
 
 #: src/satip/server.c:618
 msgid "65424 bytes"
-msgstr ""
+msgstr "65424 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:77
 msgid "7"
@@ -224,7 +224,7 @@ msgstr "7.1"
 
 #: src/satip/server.c:615
 msgid "7896 bytes"
-msgstr ""
+msgstr "7896 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:78
 msgid "8"
@@ -548,11 +548,11 @@ msgstr "All: Record once per week"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:137
 msgid "Allow all PIDs"
-msgstr ""
+msgstr "Allow all PIDs"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:138
 msgid "Allow all PIDs (no filter) when the 'Maximum PIDs' limit is reached."
-msgstr ""
+msgstr "Allow all PIDs (no filter) when the 'Maximum PIDs' limit is reached."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:220
 msgid "Allow high bitrate mode (CI+ CAMs only)."
@@ -651,7 +651,7 @@ msgstr "Animals"
 
 #: src/satip/server.c:668
 msgid "Anonymize"
-msgstr ""
+msgstr "Anonymise"
 
 #: src/access.c:1749
 msgid "Anonymize HTSP access"
@@ -1730,7 +1730,7 @@ msgstr "DVR - Time-based Recording (Timers)"
 
 #: src/tvhlog.c:142
 msgid "DVR Inotify"
-msgstr ""
+msgstr "DVR Inotify"
 
 #: src/dvr/dvr_config.c:814
 msgid "DVR behavior"
@@ -1993,7 +1993,7 @@ msgstr "Disable DVB bouquets"
 
 #: src/satip/server.c:800
 msgid "Disable RTP/AVP/TCP support"
-msgstr ""
+msgstr "Disable RTP/AVP/TCP support"
 
 #: src/main.c:849
 msgid "Disable SAT>IP client"
@@ -2001,11 +2001,11 @@ msgstr "Disable SAT>IP client"
 
 #: src/satip/server.c:677
 msgid "Disable UPnP"
-msgstr ""
+msgstr "Disable UPnP"
 
 #: src/satip/server.c:678
 msgid "Disable UPnP discovery."
-msgstr ""
+msgstr "Disable UPnP discovery."
 
 #: src/satip/server.c:791
 msgid "Disable X_SATIPM3U tag"
@@ -2035,7 +2035,7 @@ msgstr "Disabled"
 msgid ""
 "Discard the frontend parameter in RTSP requests, as some clients incorretly "
 "use it."
-msgstr ""
+msgstr "Discard the front-end parameter in RTSP requests, as some clients incorrectly use it."
 
 #: src/input/mpegts/mpegts_network.c:184
 msgid ""
@@ -2066,7 +2066,7 @@ msgstr "Do not send any stream specific information to the HTSP client like sign
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:231
 msgid "Do not set"
-msgstr ""
+msgstr "Do not set"
 
 #: src/profile.c:1735 src/input/mpegts/satip/satip_frontend.c:143
 msgid "Do not use"
@@ -2124,7 +2124,7 @@ msgstr "Drama"
 
 #: src/satip/server.c:736
 msgid "Drop \"fe=\" parameter"
-msgstr ""
+msgstr "Drop \"fe=\" parameter"
 
 #: src/dvr/dvr_autorec.c:1180
 msgid "Duplicate handling"
@@ -2286,7 +2286,7 @@ msgid ""
 "Enable if the SAT>IP box supports the frontend identifier. This allows the "
 "auto-tuner allocation, but it might cause trouble for boxes with different "
 "tuner reception connections like satellite inputs."
-msgstr ""
+msgstr "Enable if the SAT>IP box supports the front-end identifier. This allows automatic tuner allocation, but it might cause trouble for boxes with different tuner reception connections like satellite inputs."
 
 #: src/input/mpegts/satip/satip.c:258
 msgid ""
@@ -2511,7 +2511,7 @@ msgstr "Enter external IP if behind Network address translation (NAT). Asterisk 
 msgid ""
 "Enter external PORT if behind Forwarding redirection.(0 = use the same local"
 " port)."
-msgstr ""
+msgstr "Enter external PORT if behind forwarding redirection.(0 = use the same local port)."
 
 #: src/tvhlog.c:725
 msgid ""
@@ -2617,7 +2617,7 @@ msgstr "External PyEPG Grabber"
 
 #: src/satip/server.c:781
 msgid "External RTSP port (NAT)"
-msgstr ""
+msgstr "External RTSP port (NAT)"
 
 #: src/bouquet.c:1044
 msgid "External URL"
@@ -2653,7 +2653,7 @@ msgstr "FAIL"
 
 #: src/input/mpegts/satip/satip.c:319
 msgid "FE supported"
-msgstr ""
+msgstr "FE supported"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:332 src/input/mpegts/mpegts_mux_dvb.c:467
 #: src/input/mpegts/mpegts_mux_dvb.c:610 src/input/mpegts/mpegts_mux_dvb.c:802
@@ -2783,15 +2783,15 @@ msgstr "Football"
 
 #: src/input/mpegts/iptv/iptv_mux.c:263
 msgid "For example: 12610500. This frequency is 12610.5Mhz or 12.6105Ghz."
-msgstr ""
+msgstr "For example: 12610500. This frequency is 12610.5Mhz or 12.6105Ghz."
 
 #: src/input/mpegts/iptv/iptv_mux.c:255
 msgid "For example: 312000000. This frequency is 312Mhz."
-msgstr ""
+msgstr "For example: 312000000. This frequency is 312Mhz."
 
 #: src/input/mpegts/iptv/iptv_mux.c:247
 msgid "For example: 658000000. This frequency is 658Mhz."
-msgstr ""
+msgstr "For example: 658000000. This frequency is 658Mhz."
 
 #: src/input/mpegts/mpegts_mux.c:483
 msgid "Force (auto)"
@@ -2839,11 +2839,11 @@ msgstr "Force service type to 1"
 
 #: src/satip/server.c:820
 msgid "Force signal level"
-msgstr ""
+msgstr "Force signal level"
 
 #: src/satip/server.c:821
 msgid "Force signal level for all streaming (1-240, 0=do not use)."
-msgstr ""
+msgstr "Force signal level for all streaming (1-240, 0=do not use)."
 
 #: src/input/mpegts/satip/satip_frontend.c:213
 msgid "Force teardown delay"
@@ -2875,7 +2875,7 @@ msgstr "Force usage of entered CA ID on this service."
 
 #: src/streaming.c:435
 msgid "Forced OK"
-msgstr ""
+msgstr "Forced OK"
 
 #: src/epg.c:2439
 msgid "Foreign countries"
@@ -3163,11 +3163,11 @@ msgstr "High frequency offset"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:233
 msgid "Higher"
-msgstr ""
+msgstr "Higher"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:312
 msgid "Higher LNB voltage"
-msgstr ""
+msgstr "Higher LNB voltage"
 
 #: src/access.c:1817
 msgid "Highest channel number the user can access."
@@ -3258,7 +3258,7 @@ msgstr "IPTV input"
 
 #: src/satip/server.c:810
 msgid "IPTV signal level"
-msgstr ""
+msgstr "IPTV signal level"
 
 #: src/input/mpegts/mpegts_network_dvb.c:385
 msgid "ISDB-C Network"
@@ -3619,7 +3619,7 @@ msgstr "Keep"
 msgid ""
 "Keep timeshift buffers in RAM only. With this option enabled, the amount of "
 "rewind time is limited by how much RAM TVHeadend is allowed."
-msgstr "Keep timeshift buffers in RAM only. With this option enabled, the amount of rewind time is limited by how much RAM TVHeadend is allowed."
+msgstr "Keep timeshift buffers in RAM only. With this option enabled, the amount of rewind time is limited by how much RAM Tvheadend is allowed."
 
 #: src/dvr/dvr_config.c:1073
 msgid "Keep x amount of storage space free."
@@ -5048,11 +5048,11 @@ msgstr "Parent entry."
 
 #: src/input/mpegts/satip/satip_frontend.c:234
 msgid "Pass Spectrum inversion to the SAT>IP server."
-msgstr ""
+msgstr "Pass Spectrum inversion to the SAT>IP server."
 
 #: src/input/mpegts/satip/satip_frontend.c:233
 msgid "Pass specinv"
-msgstr ""
+msgstr "Pass specinv"
 
 #: src/input/mpegts/satip/satip_frontend.c:224
 msgid "Pass subscription weight"
@@ -5400,7 +5400,7 @@ msgstr "RAM only"
 
 #: src/satip/server.c:758
 msgid "RTP over TCP payload"
-msgstr ""
+msgstr "RTP over TCP payload"
 
 #: src/input/mpegts/satip/satip.c:257
 msgid "RTP/AVP/TCP (embedded data)"
@@ -5521,7 +5521,7 @@ msgstr "Remove scrambled bits"
 msgid ""
 "Remove server support for RTP/AVP/TCP transfer mode (embedded data in the "
 "RTSP session)."
-msgstr ""
+msgstr "Remove server support for RTP/AVP/TCP transfer mode (embedded data in the RTSP session)."
 
 #: src/dvr/dvr_autorec.c:965
 msgid "Repeated"
@@ -5531,7 +5531,7 @@ msgstr "Repeated"
 msgid ""
 "Replace the full Transport Stream with a range 0x00-0x02,0x10-0x1F,0x1FFB "
 "pids only."
-msgstr ""
+msgstr "Replace the full Transport Stream with a range 0x00-0x02,0x10-0x1F,0x1FFB pids only."
 
 #: src/dvr/dvr_config.c:1270
 msgid "Replace whitespace in title with '-'"
@@ -5590,7 +5590,7 @@ msgstr "Restart when the subscription is overriden (in then timeout time window)
 
 #: src/satip/server.c:685
 msgid "Restrict \"pids=all\""
-msgstr ""
+msgstr "Restrict \"pids=all\""
 
 #: src/access.c:1788
 msgid "Restrict connections to this type."
@@ -5720,7 +5720,7 @@ msgstr "SAT>IP DVB-C Frontend"
 
 #: src/input/mpegts/iptv/iptv_mux.c:253
 msgid "SAT>IP DVB-C frequency (Hz)"
-msgstr ""
+msgstr "SAT>IP DVB-C frequency (Hz)"
 
 #: src/input/mpegts/satip/satip_frontend.c:347
 msgid "SAT>IP DVB-S Frontend"
@@ -5732,7 +5732,7 @@ msgstr "SAT>IP DVB-S Slave Frontend"
 
 #: src/input/mpegts/iptv/iptv_mux.c:261
 msgid "SAT>IP DVB-S frequency (kHz)"
-msgstr ""
+msgstr "SAT>IP DVB-S frequency (kHz)"
 
 #: src/input/mpegts/satip/satip_frontend.c:259
 msgid "SAT>IP DVB-T Frontend"
@@ -5852,7 +5852,7 @@ msgstr "Satellite positions"
 
 #: src/epggrab.c:327
 msgid "Save EPG to disk after xmltv import"
-msgstr ""
+msgstr "Save EPG to disk after xmltv import"
 
 #: src/input/mpegts/iptv/iptv.c:737
 msgid "Scan after creation"
@@ -6029,7 +6029,7 @@ msgid ""
 "Select the payload size for RTP contents used in the TCP embedded data mode."
 " Some implementations like ffmpeg and VideoLAN have maximum limit 7896 "
 "bytes. The recommended value for tvheadend is 16356 or 32712 bytes."
-msgstr ""
+msgstr "Select the payload size for RTP contents used in the TCP embedded data mode. Some implementations like ffmpeg and VideoLAN have maximum limit 7896 bytes. The recommended value for tvheadend is 16356 or 32712 bytes."
 
 #: src/input/mpegts/mpegts_network.c:264
 msgid "Select the time offset for EIT events."
@@ -6235,7 +6235,7 @@ msgstr "Show / Game show"
 msgid ""
 "Show only information for sessions which are initiated from an IP address of"
 " the requester."
-msgstr ""
+msgstr "Show only information for sessions which are initiated from an IP address of the requester."
 
 #: src/main.c:815
 msgid "Show this page"
@@ -6253,7 +6253,7 @@ msgstr "Show, hide and sort the various details that appear on the interface nex
 
 #: src/satip/server.c:811
 msgid "Signal level for IPTV sources (0-240)."
-msgstr ""
+msgstr "Signal level for IPTV sources (0-240)."
 
 #: src/streaming.c:467
 msgid "Signal quality too poor"
@@ -6359,7 +6359,7 @@ msgid ""
 "voltage for LNB (13V/18V) to a higher voltage mode (usually, 14V/19V), meant"
 " to compensate for voltage loss on long cabling. Without that, it is not "
 "possible to properly switch the polarization."
-msgstr ""
+msgstr "Some DVB devices have an optional ioctl that allows a change between normal voltage for LNB (13V/18V) to a higher voltage mode (usually, 14V/19V). This is meant to compensate for voltage loss on long cabling. Without this, it is not possible to properly switch polarisation."
 
 #: src/channels.c:1447
 msgid "Sort index"
@@ -6497,7 +6497,7 @@ msgid ""
 "13:00 and you set a padding of 5 minutes it will start recording at 12:54:30"
 " (including a warm-up time of 30 seconds). If this isn't specified, any pre-"
 "recording padding as set in the channel or DVR entry will be used."
-msgstr "Start recording earlier than the defined Start recording earlier than the defined start time by x minutes: for example, if a programme is to start at 13:00 and you set a padding of 5 minutes, it will start recording at 12:54:30 (including a warm-up time of 30 seconds). If this isn't specified, any pre-recording padding as set in the channel or DVR entry will be used."
+msgstr "Start recording earlier than the defined start time by x minutes: for example, if a programme is to start at 13:00 and you set a padding of 5 minutes, it will start recording at 12:54:30 (including a warm-up time of 30 seconds). If this isn't specified, any pre-recording padding as set in the channel or DVR entry will be used."
 
 #: src/dvr/dvr_autorec.c:1114
 msgid "Start recording earlier than the defined start time by x minutes."
@@ -6927,7 +6927,7 @@ msgstr "The SAT>IP's discovered IP address."
 msgid ""
 "The URL to the icon to use/used for the channel. The local files are "
 "referred using file:/// URLs."
-msgstr ""
+msgstr "The URL to the icon to use/used for the channel. The local files are referred using file:/// URLs."
 
 #: src/input/mpegts/iptv/iptv.c:878
 msgid "The URL to the playlist."
@@ -8719,7 +8719,7 @@ msgid ""
 "Writes the current in-memory EPG database to disk shortly after an xmltv "
 "import has completed, so should a crash/unexpected shutdown occur EPG data "
 "is saved (re-read on next startup)."
-msgstr ""
+msgstr "Writes the current in-memory EPG database to disk shortly after an xmltv import has completed, so should a crash/unexpected shutdown occur EPG data is saved (re-read on next startup)."
 
 #: src/tvhlog.c:165
 msgid "XMLTV EPG Import"

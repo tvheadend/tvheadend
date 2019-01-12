@@ -7,9 +7,10 @@
 # David <djrm05@gmail.com>, 2015
 # denise <denise_amiga@hotmail.com>, 2015
 # Israel Perez <iperezme@gmail.com>, 2015
-# Josu Lazkano <josu.lazkano@gmail.com>, 2016
-# Pablo Rodríguez <trujulu@gmail.com>, 2015
-# Pablo Rodríguez <trujulu@gmail.com>, 2015-2018
+# Josu Lazkano <josu.lazkano@gmail.com>, 2016,2018
+# Pablo <trujulu@gmail.com>, 2015
+# Pablo <trujulu@gmail.com>, 2015-2018
+# Pablo <trujulu@gmail.com>, 2019
 # Pepe Gomez <jagcos@gmail.com>, 2015
 # Salvador Gonzalez <salva.gonzalez@gmail.com>, 2015
 msgid ""
@@ -17,8 +18,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
-"PO-Revision-Date: 2018-10-08 14:51+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2019-01-10 18:24+0000\n"
+"Last-Translator: Pablo <trujulu@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -39,7 +40,7 @@ msgstr "# Canales mapeados"
 
 #: src/input/mpegts/mpegts_network.c:272
 msgid "# Muxes"
-msgstr "# Multiplexores"
+msgstr "# Muxes"
 
 #: src/input/mpegts/mpegts_network.c:280
 msgid "# Services"
@@ -47,7 +48,7 @@ msgstr "# Servicios"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:154
 msgid "# tune repeats"
-msgstr "# Repite sintonización"
+msgstr "# Repitir sintonización"
 
 #: src/dvr/dvr_config.c:686
 msgid "(Default profile)"
@@ -103,7 +104,7 @@ msgstr "13"
 
 #: src/satip/server.c:612
 msgid "1316 bytes"
-msgstr ""
+msgstr "1316 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:84
 msgid "14"
@@ -115,7 +116,7 @@ msgstr "15"
 
 #: src/satip/server.c:616
 msgid "16356 bytes"
-msgstr ""
+msgstr "16356 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "2"
@@ -142,7 +143,7 @@ msgstr "Switch de 2 puertos (LNB universal)"
 
 #: src/satip/server.c:613
 msgid "2632 bytes"
-msgstr ""
+msgstr "2632 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:73
 msgid "3"
@@ -170,7 +171,7 @@ msgstr "3 años"
 
 #: src/satip/server.c:617
 msgid "32712 bytes"
-msgstr ""
+msgstr "32712 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "4"
@@ -199,7 +200,7 @@ msgstr "5.1"
 
 #: src/satip/server.c:614
 msgid "5264 bytes"
-msgstr ""
+msgstr "5264 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:76
 msgid "6"
@@ -216,7 +217,7 @@ msgstr "6.1"
 
 #: src/satip/server.c:618
 msgid "65424 bytes"
-msgstr ""
+msgstr "65424 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:77
 msgid "7"
@@ -228,7 +229,7 @@ msgstr "7.1"
 
 #: src/satip/server.c:615
 msgid "7896 bytes"
-msgstr ""
+msgstr "7896 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:78
 msgid "8"
@@ -351,7 +352,7 @@ msgstr "Tablas ATSC SI"
 
 #: src/input/mpegts/mpegts_service.c:152
 msgid "ATSC source ID"
-msgstr "Origen de ID ATSC"
+msgstr "Fuente ID ATSC"
 
 #: src/satip/server.c:885
 msgid "ATSC-C"
@@ -397,7 +398,7 @@ msgstr "Cancelado por el usuario"
 
 #: src/satip/server.c:705
 msgid "Accept remote subscription weight"
-msgstr "Acepta el peso de suscripción remota"
+msgstr "Acepta el peso de suscripción remoto"
 
 #: src/satip/server.c:706
 msgid "Accept the remote subscription weight (from the SAT>IP client)."
@@ -552,11 +553,11 @@ msgstr "Todos: Grabar una vez a la semana"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:137
 msgid "Allow all PIDs"
-msgstr ""
+msgstr "Permitir todos los PIDs"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:138
 msgid "Allow all PIDs (no filter) when the 'Maximum PIDs' limit is reached."
-msgstr ""
+msgstr "Permitir todos los PIDs (sin filtrar) cuando \"Máximos PIDs\" es alcanzado."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:220
 msgid "Allow high bitrate mode (CI+ CAMs only)."
@@ -655,7 +656,7 @@ msgstr "Animales"
 
 #: src/satip/server.c:668
 msgid "Anonymize"
-msgstr ""
+msgstr "Anonimizar"
 
 #: src/access.c:1749
 msgid "Anonymize HTSP access"
@@ -805,7 +806,7 @@ msgstr "Mapear automáticamente todos los servicios disponibles a canales."
 
 #: src/bouquet.c:991
 msgid "Automatically map channels defined within the bouquet."
-msgstr "Mapear automáticamente los canales definidos en el bouquet."
+msgstr "Mapear automáticamente los canales definidos en el paquete."
 
 #: src/channels.c:389
 msgid "Automatically name from network"
@@ -885,7 +886,7 @@ msgstr "Tablas Base DVB SI (PAT,CAT,PMT,SDT etc.)"
 
 #: src/webui/extjs.c:210
 msgid "Based on software from"
-msgstr "Basado en software de"
+msgstr "Basado en el software de"
 
 #: src/access.c:1385 src/access.c:1496 src/access.c:1539 src/config.c:1957
 msgid "Basic"
@@ -913,19 +914,19 @@ msgstr "ID de Arranque"
 
 #: src/tvhlog.c:131
 msgid "Bouquet"
-msgstr "Rama"
+msgstr "Paquete"
 
 #: src/channels.c:525
 msgid "Bouquet (auto)"
-msgstr "Rama (auto)"
+msgstr "Paquete (automático)"
 
 #: src/bouquet.c:1073
 msgid "Bouquet source."
-msgstr "Origen de paquete."
+msgstr "Fuente de paquete."
 
 #: src/bouquet.c:970
 msgid "Bouquets"
-msgstr "Bouquets"
+msgstr "Paquetes"
 
 #: src/dvr/dvr_autorec.c:1240
 msgid "Brand"
@@ -1329,7 +1330,7 @@ msgstr "Comprimir la base de datos de EPG para reducir la E/S del disco y el esp
 msgid ""
 "Concurrent limit per network position (src=) for satellite SAT>IP tuners. "
 "The first limit number is for src=1 (AA), second for src=2 (AB) etc."
-msgstr "Límite concurrente por posición de la red (src=) para sintonizadores SAT>IP. El primero es el número límite para src=1 (AA), en segundo lugar para src=2 (AB), etc."
+msgstr "Límite concurrente por posición de la red (src=) para sintonizadores satélite SAT>IP. El primero es el número límite para src=1 (AA), en segundo lugar para src=2 (AB), etc."
 
 #: src/config.c:2184
 msgid "Conditional Access"
@@ -1358,7 +1359,7 @@ msgstr "Configuración - Caché de Imagen"
 
 #: src/satip/server.c:629
 msgid "Configuration - SAT>IP Server"
-msgstr "Configuración - SAT>Server IP"
+msgstr "Configuración - Servidor SAT>IP"
 
 #: src/input/mpegts/satip/satip.c:471
 msgid "Configuration ID"
@@ -1451,7 +1452,7 @@ msgstr "Crear categorías SDTV/HDTV/Radio."
 
 #: src/input/mpegts/iptv/iptv.c:888
 msgid "Create a bouquet from the playlist."
-msgstr "Crear un nuevo bouquet desde la lista."
+msgstr "Crear un nuevo paquete desde la lista."
 
 #: src/dvr/dvr_config.c:1174
 msgid ""
@@ -1492,11 +1493,11 @@ msgstr "Crear y unir estas categorías a los canales a la hora de mapear."
 
 #: src/input/mpegts/iptv/iptv.c:887
 msgid "Create bouquet"
-msgstr "Crear Rama"
+msgstr "Crear paquete"
 
 #: src/bouquet.c:794
 msgid "Create bouquet tag"
-msgstr "Crear etiqueta de rama"
+msgstr "Crear etiqueta de paquete"
 
 #: src/dvr/dvr_config.c:1152
 msgid "Create directories using these permissions."
@@ -1734,7 +1735,7 @@ msgstr "DVR - Grabaciones basadas en tiempo (Temporizadores)"
 
 #: src/tvhlog.c:142
 msgid "DVR Inotify"
-msgstr ""
+msgstr "Inotificar DVR"
 
 #: src/dvr/dvr_config.c:814
 msgid "DVR behavior"
@@ -1840,11 +1841,11 @@ msgstr "Debate"
 
 #: src/tvhlog.c:791
 msgid "Debug libav log"
-msgstr "Depurar registro libdav"
+msgstr "Depurar registro libav"
 
 #: src/main.c:870
 msgid "Debug options"
-msgstr "Opciones de desarrollo"
+msgstr "Opciones de depuración"
 
 #: src/tvhlog.c:752
 msgid "Debug subsystems"
@@ -1864,7 +1865,7 @@ msgstr "Depuración"
 
 #: src/access.c:1384 src/access.c:1396 src/config.c:1927 src/profile.c:318
 msgid "Default"
-msgstr "Por Defecto"
+msgstr "Por defecto"
 
 #: src/config.c:2217
 msgid "Default language(s)"
@@ -1993,23 +1994,23 @@ msgstr "Deshabilitar"
 
 #: src/main.c:891
 msgid "Disable DVB bouquets"
-msgstr "Deshabilitar DVB bouquets"
+msgstr "Deshabilitar paquetes DVB"
 
 #: src/satip/server.c:800
 msgid "Disable RTP/AVP/TCP support"
-msgstr ""
+msgstr "Desactivar soporte RTP/AVP/TCP"
 
 #: src/main.c:849
 msgid "Disable SAT>IP client"
-msgstr "Deshabilitar SAT>IP"
+msgstr "Deshabilitar cliente SAT>IP"
 
 #: src/satip/server.c:677
 msgid "Disable UPnP"
-msgstr ""
+msgstr "Deshabilitar UPnP"
 
 #: src/satip/server.c:678
 msgid "Disable UPnP discovery."
-msgstr ""
+msgstr "Deshabilitar búsqueda UPnP"
 
 #: src/satip/server.c:791
 msgid "Disable X_SATIPM3U tag"
@@ -2039,12 +2040,12 @@ msgstr "Deshabilitado"
 msgid ""
 "Discard the frontend parameter in RTSP requests, as some clients incorretly "
 "use it."
-msgstr ""
+msgstr "Descartar el parámetro de interfaz en las peticiones RTSP, ya que algunos clientes no lo utilizan."
 
 #: src/input/mpegts/mpegts_network.c:184
 msgid ""
 "Discover more muxes using the Network Information Table (if available)."
-msgstr "Descubrir nuevos multiplexores utilizando la Tabla de Información de Red (NIT) si está disponible."
+msgstr "Descubrir nuevos muxes utilizando la Tabla de Información de Red (NIT) si está disponible."
 
 #: src/epg.c:2313
 msgid "Discussion"
@@ -2056,7 +2057,7 @@ msgstr "DiseqC"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:274
 msgid "DiseqC repeats"
-msgstr "Repite DiseqC"
+msgstr "Repetir DiseqC"
 
 #: src/satip/server.c:792
 msgid "Do not send X_SATIPM3U information in the XML description to clients."
@@ -2070,7 +2071,7 @@ msgstr "No enviar ninguna información específica de retransmisión al cliente 
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:231
 msgid "Do not set"
-msgstr ""
+msgstr "No configurar"
 
 #: src/profile.c:1735 src/input/mpegts/satip/satip_frontend.c:143
 msgid "Do not use"
@@ -2128,7 +2129,7 @@ msgstr "Drama"
 
 #: src/satip/server.c:736
 msgid "Drop \"fe=\" parameter"
-msgstr ""
+msgstr "No utilizar parámetro \"fe=\""
 
 #: src/dvr/dvr_autorec.c:1180
 msgid "Duplicate handling"
@@ -2290,7 +2291,7 @@ msgid ""
 "Enable if the SAT>IP box supports the frontend identifier. This allows the "
 "auto-tuner allocation, but it might cause trouble for boxes with different "
 "tuner reception connections like satellite inputs."
-msgstr ""
+msgstr "Habilitar si el dispositivo SAT>IP soporta identificadores de interfaz. Esto permite la auto-asignación de adaptadores, pero puedo causar problemas con dispositivos con diferentes adaptadores de recepción, como varias entradas diferentes de satélite."
 
 #: src/input/mpegts/satip/satip.c:258
 msgid ""
@@ -2420,7 +2421,7 @@ msgstr "Activar/desactivar perfil."
 
 #: src/bouquet.c:982
 msgid "Enable/disable the bouquet."
-msgstr "Activar/desactivar el bouquet."
+msgstr "Activar/desactivar el paquete."
 
 #: src/channels.c:382
 msgid "Enable/disable the channel."
@@ -2515,7 +2516,7 @@ msgstr "Introduzca la IP externa si está detrás de una Traducción de direccio
 msgid ""
 "Enter external PORT if behind Forwarding redirection.(0 = use the same local"
 " port)."
-msgstr ""
+msgstr "Introduce el PUERTO externo si se encuentra detrás de una redirección. (0 = usar el mismo puerto que el local)"
 
 #: src/tvhlog.c:725
 msgid ""
@@ -2621,7 +2622,7 @@ msgstr "Capturador PyEPG externo"
 
 #: src/satip/server.c:781
 msgid "External RTSP port (NAT)"
-msgstr ""
+msgstr "Puerto externo RTSP (NAT)"
 
 #: src/bouquet.c:1044
 msgid "External URL"
@@ -2629,7 +2630,7 @@ msgstr "Enlace Externo"
 
 #: src/bouquet.c:1045
 msgid "External URL of the bouquet."
-msgstr "URL externa del bouquet."
+msgstr "URL externa del paquete."
 
 #: src/epggrab/module/xmltv.c:798
 msgid "External XMLTV EPG Grabber"
@@ -2657,7 +2658,7 @@ msgstr "FALLO"
 
 #: src/input/mpegts/satip/satip.c:319
 msgid "FE supported"
-msgstr ""
+msgstr "FE soportado"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:332 src/input/mpegts/mpegts_mux_dvb.c:467
 #: src/input/mpegts/mpegts_mux_dvb.c:610 src/input/mpegts/mpegts_mux_dvb.c:802
@@ -2787,15 +2788,15 @@ msgstr "Futbol"
 
 #: src/input/mpegts/iptv/iptv_mux.c:263
 msgid "For example: 12610500. This frequency is 12610.5Mhz or 12.6105Ghz."
-msgstr ""
+msgstr "Por ejemplo: 12610500. Esta frecuencia es 12610.5MhzMhz o 12.6105Ghz."
 
 #: src/input/mpegts/iptv/iptv_mux.c:255
 msgid "For example: 312000000. This frequency is 312Mhz."
-msgstr ""
+msgstr "Por ejemplo: 312000000. Esta frecuencia es 312Mhz."
 
 #: src/input/mpegts/iptv/iptv_mux.c:247
 msgid "For example: 658000000. This frequency is 658Mhz."
-msgstr ""
+msgstr "Por ejemplo: 658000000. Esta frecuencia es 658Mhz."
 
 #: src/input/mpegts/mpegts_mux.c:483
 msgid "Force (auto)"
@@ -2843,11 +2844,11 @@ msgstr "Forzar tipo de servicio a 1"
 
 #: src/satip/server.c:820
 msgid "Force signal level"
-msgstr ""
+msgstr "Forzar nivel de señal"
 
 #: src/satip/server.c:821
 msgid "Force signal level for all streaming (1-240, 0=do not use)."
-msgstr ""
+msgstr "Forzar nivel de señal para todo streaming (1-240, 0=no utilizar)."
 
 #: src/input/mpegts/satip/satip_frontend.c:213
 msgid "Force teardown delay"
@@ -2879,7 +2880,7 @@ msgstr "Forzar el uso del CA ID introducido en este servicio."
 
 #: src/streaming.c:435
 msgid "Forced OK"
-msgstr ""
+msgstr "OK Forzado"
 
 #: src/epg.c:2439
 msgid "Foreign countries"
@@ -3060,7 +3061,7 @@ msgstr "Gris"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:244 src/input/mpegts/mpegts_mux_dvb.c:690
 msgid "Guard interval"
-msgstr "Intervalo de guardado"
+msgstr "Intervalo de guarda"
 
 #: src/service.c:159
 msgid "HD TV"
@@ -3167,11 +3168,11 @@ msgstr "Offset en alta frecuencia"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:233
 msgid "Higher"
-msgstr ""
+msgstr "Superior"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:312
 msgid "Higher LNB voltage"
-msgstr ""
+msgstr "Voltaje Superior a LNB"
 
 #: src/access.c:1817
 msgid "Highest channel number the user can access."
@@ -3262,7 +3263,7 @@ msgstr "Entrada de IPTV"
 
 #: src/satip/server.c:810
 msgid "IPTV signal level"
-msgstr ""
+msgstr "Nivel de señal IPTV"
 
 #: src/input/mpegts/mpegts_network_dvb.c:385
 msgid "ISDB-C Network"
@@ -3421,7 +3422,7 @@ msgstr "Ignorar el indicador de cifrado, incluir servicios codificados de todos 
 
 #: src/imagecache.c:98
 msgid "Ignore invalid SSL certificate"
-msgstr "Ignorar certificado inválido SSL"
+msgstr "Ignorar certificado SSL inválido"
 
 #: src/imagecache.c:99
 msgid ""
@@ -4051,7 +4052,7 @@ msgstr "Mapear todos los servicios"
 
 #: src/service_mapper.c:518 src/bouquet.c:731
 msgid "Map encrypted services"
-msgstr "Mapa de cifrado de servicios"
+msgstr "Mapear canales encriptados"
 
 #: src/bouquet.c:726
 msgid "Map radio channels"
@@ -4372,7 +4373,7 @@ msgstr "Nombre del objeto."
 
 #: src/bouquet.c:1038
 msgid "Name of the bouquet."
-msgstr "Nombre del bouquet."
+msgstr "Nombre del paquete."
 
 #: src/descrambler/caclient.c:280
 msgid "Name of the client."
@@ -4625,7 +4626,7 @@ msgstr "No hay un servicio habilitado"
 
 #: src/streaming.c:469
 msgid "No source available"
-msgstr "Origen no disponible"
+msgstr "Fuente no disponible"
 
 #: src/tvhlog.c:89
 msgid "Node subsystem"
@@ -4663,7 +4664,7 @@ msgstr "Sin unir"
 
 #: src/channels.c:358 src/profile.c:1662 src/dvr/dvr_db.c:2728
 msgid "Not set"
-msgstr "Sin configurar"
+msgstr "No configurado"
 
 #: src/dvr/dvr_config.c:768
 msgid "Not set (none or channel configuration)"
@@ -4757,23 +4758,23 @@ msgstr "OK (parcial)"
 
 #: src/descrambler/capmt.c:2414
 msgid "OSCam (rev >= 9095)"
-msgstr "OSCam (rev >= 9095)"
+msgstr "OSCam (versión >= 9095)"
 
 #: src/descrambler/capmt.c:2412
 msgid "OSCam TCP (rev >= 9574)"
-msgstr "OSCam TCP (rev >= 9574)"
+msgstr "OSCam TCP (versión >= 9574)"
 
 #: src/descrambler/capmt.c:2410
 msgid "OSCam net protocol (rev >= 10389)"
-msgstr "OSCam net protocol (rev >= 10389)"
+msgstr "OSCam net protocol (versión >= 10389)"
 
 #: src/descrambler/capmt.c:2411
 msgid "OSCam new pc-nodmx (rev >= 10389)"
-msgstr "OSCam pc-nodmx nuevo (rev >= 10389)"
+msgstr "OSCam nuevo pc-nodmx (versión >= 10389)"
 
 #: src/descrambler/capmt.c:2413
 msgid "OSCam pc-nodmx (rev >= 9756)"
-msgstr "OSCam pc-nodmx (rev >= 9756)"
+msgstr "OSCam pc-nodmx (versión >= 9756)"
 
 #: src/descrambler/constcw.c:334 src/descrambler/constcw.c:400
 msgid "Odd key"
@@ -5052,11 +5053,11 @@ msgstr "Entrada de causa"
 
 #: src/input/mpegts/satip/satip_frontend.c:234
 msgid "Pass Spectrum inversion to the SAT>IP server."
-msgstr ""
+msgstr "Pasar inversión de espectro al servidor SAT>IP."
 
 #: src/input/mpegts/satip/satip_frontend.c:233
 msgid "Pass specinv"
-msgstr ""
+msgstr "Pasar specinv"
 
 #: src/input/mpegts/satip/satip_frontend.c:224
 msgid "Pass subscription weight"
@@ -5066,7 +5067,7 @@ msgstr "Pasar peso de suscripción"
 msgid ""
 "Pass subscription weight to the SAT>IP server (Tvheadend specific "
 "extension)."
-msgstr "Pase el peso de la suscripción a SAT>iP (extensión específica de Tvheadend)."
+msgstr "Pase el peso de la suscripción al servidor SAT>iP (extensión específica de Tvheadend)."
 
 #: src/tvhlog.c:124
 msgid "Pass-thru muxer"
@@ -5404,7 +5405,7 @@ msgstr "Solo RAM"
 
 #: src/satip/server.c:758
 msgid "RTP over TCP payload"
-msgstr ""
+msgstr "Carga útil RTP sobre TCP"
 
 #: src/input/mpegts/satip/satip.c:257
 msgid "RTP/AVP/TCP (embedded data)"
@@ -5440,7 +5441,7 @@ msgstr "Periodo de Recuperación (mins)"
 
 #: src/bouquet.c:1063
 msgid "Re-fetch the bouquet every x minutes."
-msgstr "Re-descargar el bouquet cada x mins."
+msgstr "Re-descargar el paquetizado cada x mins."
 
 #: src/dvr/dvr_db.c:1313
 #, c-format
@@ -5525,7 +5526,7 @@ msgstr "Eliminar los bits codificados"
 msgid ""
 "Remove server support for RTP/AVP/TCP transfer mode (embedded data in the "
 "RTSP session)."
-msgstr ""
+msgstr "Eliminar soporte del servidor para el modo de transferencia RTP/AVP/TCP (contenidos RTP usados en TCP en modo de datos incrustados)."
 
 #: src/dvr/dvr_autorec.c:965
 msgid "Repeated"
@@ -5535,7 +5536,7 @@ msgstr "Repetido"
 msgid ""
 "Replace the full Transport Stream with a range 0x00-0x02,0x10-0x1F,0x1FFB "
 "pids only."
-msgstr ""
+msgstr "Reemplazar toda la trama de transporte por un rango de pids únicamente;  0x00-0x02,0x10-0x1F,0x1FFB."
 
 #: src/dvr/dvr_config.c:1270
 msgid "Replace whitespace in title with '-'"
@@ -5594,7 +5595,7 @@ msgstr "Reiniciar cuando la suscripción sea sobreescrita (en la ventana de tiem
 
 #: src/satip/server.c:685
 msgid "Restrict \"pids=all\""
-msgstr ""
+msgstr "Restringir \"pids=all\""
 
 #: src/access.c:1788
 msgid "Restrict connections to this type."
@@ -5606,7 +5607,7 @@ msgstr "Modo de registro restrictivo (no es administrador)"
 
 #: src/channels.c:536
 msgid "Reuse EPG from"
-msgstr "Reusar guía desde"
+msgstr "Reusar EPG desde"
 
 #: src/channels.c:537
 msgid "Reuse the EPG from another channel."
@@ -5712,7 +5713,7 @@ msgstr "índice SAT>IP ATSC-T"
 
 #: src/tvhlog.c:159 src/input/mpegts/satip/satip.c:230
 msgid "SAT>IP Client"
-msgstr "SAT>Cliente IP"
+msgstr "Cliente SAT>IP"
 
 #: src/input/mpegts/satip/satip_frontend.c:157
 msgid "SAT>IP DVB Frontend"
@@ -5724,7 +5725,7 @@ msgstr "Índice SAT>IP DVB-C"
 
 #: src/input/mpegts/iptv/iptv_mux.c:253
 msgid "SAT>IP DVB-C frequency (Hz)"
-msgstr ""
+msgstr "Frecuencia (en Hz) para SAT>IP DVB-C"
 
 #: src/input/mpegts/satip/satip_frontend.c:347
 msgid "SAT>IP DVB-S Frontend"
@@ -5736,7 +5737,7 @@ msgstr "Interfaz esclava SAT>IP DVB-S"
 
 #: src/input/mpegts/iptv/iptv_mux.c:261
 msgid "SAT>IP DVB-S frequency (kHz)"
-msgstr ""
+msgstr "Frecuencia (en kHz) para SAT>IP DVB-S"
 
 #: src/input/mpegts/satip/satip_frontend.c:259
 msgid "SAT>IP DVB-T Frontend"
@@ -5762,7 +5763,7 @@ msgstr "Servidor SAT>IP"
 
 #: src/tvhlog.c:116
 msgid "SAT>IP Server SI Tables"
-msgstr "Tablas SAT>Servidor IP SI"
+msgstr "Tablas SAT>IP SI de Servidor"
 
 #: src/input/mpegts/mpegts_network.c:244
 msgid "SAT>IP source number"
@@ -5834,7 +5835,7 @@ msgstr "Satconf"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:306
 msgid "Satellite config"
-msgstr "Configuración de satelite"
+msgstr "Configuración de satélite"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:134
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:151
@@ -5856,7 +5857,7 @@ msgstr "Posiciones de satélite"
 
 #: src/epggrab.c:327
 msgid "Save EPG to disk after xmltv import"
-msgstr ""
+msgstr "Guardar EPG en el disco después de importación xmltv"
 
 #: src/input/mpegts/iptv/iptv.c:737
 msgid "Scan after creation"
@@ -6033,7 +6034,7 @@ msgid ""
 "Select the payload size for RTP contents used in the TCP embedded data mode."
 " Some implementations like ffmpeg and VideoLAN have maximum limit 7896 "
 "bytes. The recommended value for tvheadend is 16356 or 32712 bytes."
-msgstr ""
+msgstr "Seleccione el tamaño de carga útil para los contenidos RTP usados en TCP en modo de datos incrustados. Algunas implementaciones como ffmpeg o VideoLAN tienen un límite máximo de 7896 bytes. El valor recomendado para tvheadend es  16356 o 32712 bytes."
 
 #: src/input/mpegts/mpegts_network.c:264
 msgid "Select the time offset for EIT events."
@@ -6239,7 +6240,7 @@ msgstr "Show / Show de juegos"
 msgid ""
 "Show only information for sessions which are initiated from an IP address of"
 " the requester."
-msgstr ""
+msgstr "Mostrar solo información para las sesiones que se inician desde una dirección IP del solicitante."
 
 #: src/main.c:815
 msgid "Show this page"
@@ -6257,7 +6258,7 @@ msgstr "Mostrar, ocultar y ordenar los diversos detalles que aparecen en la inte
 
 #: src/satip/server.c:811
 msgid "Signal level for IPTV sources (0-240)."
-msgstr ""
+msgstr "Nivel de señal para fuentes IPTV (0-240)."
 
 #: src/streaming.c:467
 msgid "Signal quality too poor"
@@ -6363,7 +6364,7 @@ msgid ""
 "voltage for LNB (13V/18V) to a higher voltage mode (usually, 14V/19V), meant"
 " to compensate for voltage loss on long cabling. Without that, it is not "
 "possible to properly switch the polarization."
-msgstr ""
+msgstr "Algunos dispositivos DVB tinen una llamada en el driver que permite cambiar entre el voltaje normal del LNB (13V/18V) a un modo de voltaje incrementado (generalmente, 14V/19V), con intención de compensar las perdidas de voltaje en un cableado largo. Sin esta opción puede ser dificil cambiar de polarización en determinadas instalaciones."
 
 #: src/channels.c:1447
 msgid "Sort index"
@@ -6375,11 +6376,11 @@ msgstr "Índice de clasificación."
 
 #: src/bouquet.c:1072
 msgid "Source"
-msgstr "Origen"
+msgstr "Fuente"
 
 #: src/streaming.c:442
 msgid "Source deleted"
-msgstr "Origen eliminado"
+msgstr "Fuente eliminada"
 
 #: src/streaming.c:440
 msgid "Source quality is bad"
@@ -6391,7 +6392,7 @@ msgstr "Fuente reconfigurada"
 
 #: src/profile.c:1885
 msgid "Source video codec"
-msgstr "Códec de video de origen"
+msgstr "Fuente de Códec de video"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:734
 msgid "Southern hemisphere (latitude direction)"
@@ -6438,7 +6439,7 @@ msgstr "Especificar dirección unida"
 
 #: src/main.c:842
 msgid "Specify bind address for SAT>IP server"
-msgstr "Especificar dirección unida para SAT>Servidor IP"
+msgstr "Especificar dirección unida para servidor SAT>IP"
 
 #: src/main.c:863
 msgid "Specify extra htsp port"
@@ -6931,7 +6932,7 @@ msgstr "La dirección IP descubierta por SAT>IP"
 msgid ""
 "The URL to the icon to use/used for the channel. The local files are "
 "referred using file:/// URLs."
-msgstr ""
+msgstr "La URL para el icono a usar por el canal. Los archivos locales pueden ser usados con la estructura file:///."
 
 #: src/input/mpegts/iptv/iptv.c:878
 msgid "The URL to the playlist."
@@ -6950,7 +6951,7 @@ msgstr "El ancho de banda utilizando por el MUX. Si no está seguro de el valor 
 
 #: src/channels.c:526
 msgid "The bouquet the channel is associated with."
-msgstr "El Bouquet al que está asociado el canal."
+msgstr "El paquete al que está asociado el canal."
 
 #: src/dvr/dvr_config.c:890
 msgid ""
@@ -6970,7 +6971,7 @@ msgstr "El canal al que se aplica esta regla, por ejemplo, el canal que está ap
 
 #: src/service.c:201
 msgid "The channel this service is mapped to."
-msgstr "El canal de este servicio al que esta asignado."
+msgstr "El canal al que este servicio esta mapeado."
 
 #: src/input/mpegts/mpegts_network.c:254
 msgid "The character encoding for this network (e.g. UTF-8)."
@@ -7098,7 +7099,7 @@ msgstr "El número de índice dado al dispositivo."
 msgid ""
 "The guard interval used by the mux. If you're not sure of the value leave as"
 " AUTO."
-msgstr "El intervalo de guardado utilizado por el mux. Si no está seguro del valor a utilizar, déje el valor como AUTO."
+msgstr "El intervalo de guarda utilizado por el mux. Si no está seguro del valor a utilizar, déje el valor como AUTO."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:250
 msgid ""
@@ -7816,7 +7817,7 @@ msgstr "Demasiados errores de datos"
 
 #: src/input/mpegts/mpegts_network.c:289
 msgid "Total number of mapped channels on this network."
-msgstr "Número total de canales asignados en esta red."
+msgstr "Número total de canales mapeados en esta red."
 
 #: src/input/mpegts/mpegts_network.c:273
 msgid "Total number of muxes found on this network."
@@ -7967,7 +7968,7 @@ msgstr "URL para la lista de reproducción M3U."
 
 #: src/main.c:851
 msgid "URL with the SAT>IP server XML location"
-msgstr "URL con la locación XML de SAT>IP"
+msgstr "URL con la locación XML del servidor SAT>IP"
 
 #: src/dvr/dvr_db.c:3573
 msgid "URL."
@@ -8723,7 +8724,7 @@ msgid ""
 "Writes the current in-memory EPG database to disk shortly after an xmltv "
 "import has completed, so should a crash/unexpected shutdown occur EPG data "
 "is saved (re-read on next startup)."
-msgstr ""
+msgstr "Escribir la base de datos de EPG actual en memoria poco tiempo depués de que la importación xmltv se haya completado, por lo que un crasheo/apagado inesperado podría ocurrir y el EPG se encontraría guardado (re-leido al inicio)."
 
 #: src/tvhlog.c:165
 msgid "XMLTV EPG Import"

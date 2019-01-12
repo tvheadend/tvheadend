@@ -4,14 +4,15 @@
 # 
 # Translators:
 # esfomeado esfomeado <vps1992@live.com.pt>, 2016
+# Miguel Couto <miguel.couto@vodafone.pt>, 2018
 # Orlando Rocha <ornrocha@gmail.com>, 2015-2016
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
-"PO-Revision-Date: 2018-10-08 14:51+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2018-10-29 22:43+0000\n"
+"Last-Translator: Miguel Couto <miguel.couto@vodafone.pt>\n"
 "Language-Team: Portuguese (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -96,7 +97,7 @@ msgstr "13"
 
 #: src/satip/server.c:612
 msgid "1316 bytes"
-msgstr ""
+msgstr "1316 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:84
 msgid "14"
@@ -108,7 +109,7 @@ msgstr "15"
 
 #: src/satip/server.c:616
 msgid "16356 bytes"
-msgstr ""
+msgstr "16356 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "2"
@@ -135,7 +136,7 @@ msgstr "2-Porta variável (LNB universal)"
 
 #: src/satip/server.c:613
 msgid "2632 bytes"
-msgstr ""
+msgstr "2632 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:73
 msgid "3"
@@ -163,7 +164,7 @@ msgstr "3 anos"
 
 #: src/satip/server.c:617
 msgid "32712 bytes"
-msgstr ""
+msgstr "32712 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "4"
@@ -192,7 +193,7 @@ msgstr "5.1"
 
 #: src/satip/server.c:614
 msgid "5264 bytes"
-msgstr ""
+msgstr "5264 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:76
 msgid "6"
@@ -209,7 +210,7 @@ msgstr "6.1"
 
 #: src/satip/server.c:618
 msgid "65424 bytes"
-msgstr ""
+msgstr "65424 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:77
 msgid "7"
@@ -221,7 +222,7 @@ msgstr "7.1"
 
 #: src/satip/server.c:615
 msgid "7896 bytes"
-msgstr ""
+msgstr "7896 bytes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:78
 msgid "8"
@@ -247,7 +248,7 @@ msgstr "AA"
 
 #: src/profile.c:1320
 msgid "AAC audio"
-msgstr ""
+msgstr "AAC audio"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:417
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:58
@@ -264,7 +265,7 @@ msgstr "Detecção AC-3"
 
 #: src/profile.c:1319
 msgid "AC3 audio"
-msgstr ""
+msgstr "AC3 audio"
 
 #: src/input/mpegts/mpegts_mux.c:394
 msgid "ACTIVE"
@@ -328,7 +329,7 @@ msgstr "QUALQUER UM"
 
 #: src/tvhlog.c:101
 msgid "API"
-msgstr ""
+msgstr "API"
 
 #: src/input/mpegts/iptv/iptv_mux.c:162
 msgid "ATSC"
@@ -336,7 +337,7 @@ msgstr "ATSC"
 
 #: src/tvhlog.c:162
 msgid "ATSC PSIP EPG"
-msgstr ""
+msgstr "ATSC PSIP EPG"
 
 #: src/tvhlog.c:114
 msgid "ATSC SI Tables"
@@ -398,7 +399,7 @@ msgstr "Aceitar subscrição remota (do cliente SAT>IP)"
 
 #: src/input/mpegts/mpegts_mux.c:654 src/input/mpegts/iptv/iptv.c:930
 msgid "Accept zero value for TSID"
-msgstr ""
+msgstr "Aceite zero para TSID"
 
 #: src/access.c:1409
 msgid "Access"
@@ -424,7 +425,7 @@ msgstr "Acção"
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:187
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:204
 msgid "Active"
-msgstr ""
+msgstr "Activo"
 
 #: src/streaming.c:461
 msgid "Adapter in use by another subscription"
@@ -497,7 +498,7 @@ msgstr "Publicidade"
 
 #: src/input/mpegts/iptv/iptv.c:738
 msgid "After creating the network scan it for services."
-msgstr ""
+msgstr "Depois de criar a rede, pesquisar os serviços."
 
 #: src/access.c:1345
 msgid "All (Streaming plus DVR)"
@@ -537,7 +538,7 @@ msgstr "Todos: Gravar uma vez por dia"
 
 #: src/dvr/dvr_autorec.c:933
 msgid "All: Record once per month"
-msgstr ""
+msgstr "Todos: Registo uma vez por mês"
 
 #: src/dvr/dvr_autorec.c:935
 msgid "All: Record once per week"
@@ -545,11 +546,11 @@ msgstr "Todos: Gravar uma vez por semana"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:137
 msgid "Allow all PIDs"
-msgstr ""
+msgstr "Permite todos PIDs"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:138
 msgid "Allow all PIDs (no filter) when the 'Maximum PIDs' limit is reached."
-msgstr ""
+msgstr "Permite todos PIDs (sem filtro) quando o 'Máximo de PIDs' ter atingido o limite."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:220
 msgid "Allow high bitrate mode (CI+ CAMs only)."
@@ -582,12 +583,12 @@ msgstr "Permitir o armazenamento de video em tempo real até atingir o limite de
 
 #: src/access.c:1781
 msgid "Allow/Disallow access to the 'Configuration' tab."
-msgstr ""
+msgstr "Permitir/Não Permitir acesso à aba de 'Configuração'."
 
 #: src/access.c:1773
 msgid ""
 "Allow/Disallow web interface access (this  includes access to the EPG)."
-msgstr ""
+msgstr "Permitir/Não permitir acesso ao interface web (isto inclui o acesso ao EPG)."
 
 #: src/access.c:1761
 msgid "Allowed DVR profiles. This limits the profiles the user has access to."
@@ -627,7 +628,7 @@ msgstr "Enviar sempre a sequência DiseqC, incluindo a informação do LNB (volt
 
 #: src/channels.c:390
 msgid "Always use the name defined by the network."
-msgstr ""
+msgstr "Apenas usa a definição do nome pela rede."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:204
 msgid ""
@@ -648,7 +649,7 @@ msgstr "Animais"
 
 #: src/satip/server.c:668
 msgid "Anonymize"
-msgstr ""
+msgstr "Anonimizar"
 
 #: src/access.c:1749
 msgid "Anonymize HTSP access"
@@ -668,11 +669,11 @@ msgstr "Artes"
 
 #: src/epg.c:2411 src/epg.c:2412 src/epg.c:2413 src/epg.c:2414
 msgid "Arts / Culture (without music)"
-msgstr ""
+msgstr "Arte / Cultura (sem música)"
 
 #: src/epg.c:2409
 msgid "Arts magazines"
-msgstr ""
+msgstr "Magazine de arte"
 
 #: src/wizard.c:962
 msgid "Assign predefined muxes to networks"
@@ -714,7 +715,7 @@ msgstr "Codec de áudio a utilizar na conversão. \"Do not use (não utilizar)\"
 
 #: src/profile.c:1331
 msgid "Audio stream"
-msgstr ""
+msgstr "Stream audio"
 
 #: src/profile.c:1336
 msgid "Audio type"
@@ -722,7 +723,7 @@ msgstr ""
 
 #: src/profile.c:2266
 msgid "Audio-only stream"
-msgstr ""
+msgstr "Stream só audio"
 
 #: src/tvhlog.c:125
 msgid "Audioes muxer"
@@ -730,7 +731,7 @@ msgstr ""
 
 #: src/webui/webui.c:250
 msgid "Authenticated user"
-msgstr ""
+msgstr "Utilizador autenticado"
 
 #: src/satip/server.c:601
 msgid "Auto"
@@ -898,7 +899,7 @@ msgstr "Azul"
 
 #: src/tvhlog.c:100
 msgid "Bonjour"
-msgstr ""
+msgstr "Bom dia"
 
 #: src/input/mpegts/satip/satip.c:463
 msgid "Boot ID"
@@ -1147,7 +1148,7 @@ msgstr "Tolerância no número do canal "
 
 #: src/access.c:1422
 msgid "Channel number range"
-msgstr ""
+msgstr "Intervalo de posições de canais"
 
 #: src/epggrab/module/xmltv.c:760
 msgid "Channel numbers (heuristic)"
@@ -8454,11 +8455,11 @@ msgstr ""
 
 #: src/access.c:2173
 msgid "Users - IP Blocking"
-msgstr ""
+msgstr "Utilizadores - Bloqueador IP"
 
 #: src/access.c:2021
 msgid "Users - Passwords"
-msgstr ""
+msgstr "Utilizadores - Palavras-passes"
 
 #: src/epg.c:2329
 msgid "Variety show"
@@ -8523,7 +8524,7 @@ msgstr ""
 
 #: src/access.c:1549
 msgid "View all"
-msgstr ""
+msgstr "Ver todos"
 
 #: src/streaming.c:584
 msgid "Visually impaired commentary/audio description"
@@ -8531,7 +8532,7 @@ msgstr "Comentário de deficiência visual/ descrição do som"
 
 #: src/profile.c:1322
 msgid "Vorbis audio"
-msgstr ""
+msgstr "Audio Vorbis"
 
 #: src/profile.c:1243 src/profile.c:1498
 msgid "WEBM"
@@ -8595,7 +8596,7 @@ msgstr "Meteorologia "
 
 #: src/tvhlog.c:166
 msgid "Web User Interface"
-msgstr ""
+msgstr "Utilizador Interface Web"
 
 #: src/access.c:1772 src/wizard.c:184
 msgid "Web interface"
@@ -8680,7 +8681,7 @@ msgstr ""
 
 #: src/epg.c:2354
 msgid "Winter sports"
-msgstr ""
+msgstr "Desportos de inverno"
 
 #: src/timeshift.c:284
 msgid ""
@@ -8720,7 +8721,7 @@ msgstr ""
 
 #: src/tvhlog.c:165
 msgid "XMLTV EPG Import"
-msgstr ""
+msgstr "Importar XMLTV EPG"
 
 #: src/access.c:1398
 msgid "Yes"
@@ -8744,7 +8745,7 @@ msgstr "en50494"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:180
 msgid "en50607"
-msgstr ""
+msgstr "en50607"
 
 #: src/profile.c:1781
 msgid "fast: h264 / h265 / qsv(h264 / h265)"
@@ -8773,7 +8774,7 @@ msgstr "Opção especificada inválida [%s]"
 
 #: src/tvhlog.c:150
 msgid "libav / ffmpeg"
-msgstr ""
+msgstr "libav / ffmpeg"
 
 #: src/profile.c:1790
 msgid "ll: nvenc(h264 / h265)"
@@ -8789,7 +8790,7 @@ msgstr "llhq: nvenc(h264 / h265)"
 
 #: src/webui/webui.c:258
 msgid "logout"
-msgstr ""
+msgstr "Terminar sessão"
 
 #: src/profile.c:1782
 msgid "medium: h264 / h265 / qsv(h264 / h265)"
@@ -8814,7 +8815,7 @@ msgstr "placebo: h264 / h265"
 
 #: src/webui/webui.c:269
 msgid "return"
-msgstr ""
+msgstr "voltar"
 
 #: src/profile.c:1783
 msgid "slow: h264 / h265 / qsv(h264 / h265)"

@@ -4,13 +4,14 @@
 # 
 # Translators:
 # Levente Cseh <levente@csehs.com>, 2017
+# Zsigus Attila <zsigus.attila@gmail.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
-"PO-Revision-Date: 2018-10-08 14:51+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2018-12-08 11:54+0000\n"
+"Last-Translator: Zsigus Attila <zsigus.attila@gmail.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -76,7 +77,7 @@ msgstr "%x"
 
 #: src/docs_inc.c:2198 src/docs_inc.c:2273
 msgid "'Accept/OK Icon'"
-msgstr ""
+msgstr "'Elfogadás/OK Ikon'"
 
 #: src/docs_inc.c:3379
 msgid "'Access Control - Entries tab'"

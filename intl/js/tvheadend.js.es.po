@@ -4,8 +4,8 @@
 # 
 # Translators:
 # Alex Platero <unhomen@gmail.com>, 2016-2017
-# Pablo Rodríguez <trujulu@gmail.com>, 2015
-# Pablo Rodríguez <trujulu@gmail.com>, 2015-2018
+# Pablo <trujulu@gmail.com>, 2015
+# Pablo <trujulu@gmail.com>, 2015-2018
 # Pepe Gomez <jagcos@gmail.com>, 2015
 # Salvador Gonzalez <salva.gonzalez@gmail.com>, 2015
 msgid ""
@@ -13,8 +13,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
-"PO-Revision-Date: 2018-10-08 14:51+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2018-12-05 14:20+0000\n"
+"Last-Translator: Pablo <trujulu@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -305,7 +305,7 @@ msgstr "Detalles de emisión"
 
 #: src/webui/static/app/epg.js:924
 msgid "Buffering. Please wait…"
-msgstr ""
+msgstr "Generando caché. Por favor, espere...."
 
 #: src/webui/static/app/caclient.js:32
 msgid "CA"
@@ -368,7 +368,7 @@ msgstr "Canal"
 
 #: src/webui/static/app/tvheadend.js:727
 msgid "Channel / EPG"
-msgstr "Canal / EPG"
+msgstr "Canales / EPG"
 
 #: src/webui/static/app/cteditor.js:10
 msgid "Channel Tag"
@@ -392,7 +392,7 @@ msgstr "Elegir un mes (Control+Arriba/Abajo para mover los años)"
 
 #: src/webui/static/app/config.js:78
 msgid "Clean image (icon) cache"
-msgstr "Limpiar caché de imagen (icono)"
+msgstr "Limpiar caché de imagenes (iconos)"
 
 #: src/webui/static/app/config.js:76
 msgid "Clean image cache on storage"
@@ -540,11 +540,11 @@ msgstr "Decodificación"
 
 #: src/webui/static/app/chconf.js:151
 msgid "Detach from bouquet"
-msgstr "Separar del bouquet"
+msgstr "Desasociar el paquete"
 
 #: src/webui/static/app/chconf.js:153
 msgid "Detach selected channels from bouquet"
-msgstr "Separar los canales seleccionados del bouquet."
+msgstr "Desasociar los canales seleccionados del paquete."
 
 #: src/webui/static/app/mpegts.js:321
 msgid "Detailed stream info"
@@ -558,15 +558,15 @@ msgstr "Detalles"
 
 #: src/webui/static/app/dvr.js:865
 msgid "Digital Video Recorder"
-msgstr "Grabador de Vídeo Digital"
+msgstr "Grabador de Video Digital"
 
 #: src/webui/static/app/dvr.js:705
 msgid "Digital Video Recorder Profile"
-msgstr "Perfil de Grabador de Vídeo Digital"
+msgstr "Perfil de Grabador de Video Digital"
 
 #: src/webui/static/app/dvr.js:706
 msgid "Digital Video Recorder Profiles"
-msgstr "Perfiles de Grabador de Vídeo Digital"
+msgstr "Perfiles de Grabador de Video Digital"
 
 #: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
 msgid "Disabled"
@@ -743,19 +743,19 @@ msgstr "Tamaño de archivo"
 
 #: src/webui/static/app/epg.js:707
 msgid "Filter channel…"
-msgstr ""
+msgstr "Filtrar canal..."
 
 #: src/webui/static/app/epg.js:754
 msgid "Filter content type…"
-msgstr ""
+msgstr "Filtrar tipo de contenido..."
 
 #: src/webui/static/app/epg.js:775
 msgid "Filter duration…"
-msgstr ""
+msgstr "Filtrar duración..."
 
 #: src/webui/static/app/epg.js:730
 msgid "Filter tag…"
-msgstr ""
+msgstr "Filtrar categoría..."
 
 #: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
@@ -803,7 +803,7 @@ msgstr "Pantalla completa"
 
 #: src/webui/static/app/epg.js:945 src/webui/static/app/epg.js:1110
 msgid "Fulltext"
-msgstr "Texto lleno"
+msgstr "Texto completo"
 
 #: src/webui/static/app/tvheadend.js:676
 msgid "General"
@@ -950,7 +950,7 @@ msgstr "Cargando..."
 #: src/webui/static/app/epg.js:698 src/webui/static/app/epg.js:721
 #: src/webui/static/app/epg.js:745 src/webui/static/app/epg.js:766
 msgid "Loading…"
-msgstr ""
+msgstr "Cargando..."
 
 #: src/webui/static/app/tvheadend.js:927
 msgid "Logged in as"
@@ -982,7 +982,7 @@ msgstr "Mapear todos los servicios"
 
 #: src/webui/static/app/mpegts.js:248 src/webui/static/app/chconf.js:145
 msgid "Map all services to channels"
-msgstr "Mapear todos los servicios para canales"
+msgstr "Mapear todos los servicios a canales"
 
 #: src/webui/static/app/mpegts.js:244 src/webui/static/app/chconf.js:141
 msgid "Map selected services"
@@ -990,7 +990,7 @@ msgstr "Mapear serviciones seleccionados"
 
 #: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:139
 msgid "Map selected services to channels"
-msgstr "Mapear los servicios seleccionados para canales"
+msgstr "Mapear los servicios seleccionados a canales"
 
 #: src/webui/static/app/mpegts.js:255 src/webui/static/app/chconf.js:158
 #: src/webui/static/app/servicemapper.js:119
@@ -1002,7 +1002,7 @@ msgstr "Mapear servicios"
 #: src/webui/static/app/servicemapper.js:116
 #: src/webui/static/app/servicemapper.js:132
 msgid "Map services to channels"
-msgstr "Mapear servicios para canales"
+msgstr "Mapear servicios a canales"
 
 #: src/webui/static/app/servicemapper.js:9
 msgid "Mapped"
@@ -1165,7 +1165,7 @@ msgstr "No disponible"
 
 #: src/webui/static/app/idnode.js:355
 msgid "Not set"
-msgstr "No seleccionado"
+msgstr "No configurado"
 
 #: src/webui/static/app/i18n-post.js:45
 msgid "Nov"
@@ -1177,7 +1177,7 @@ msgstr "Noviembre"
 
 #: src/webui/static/app/epg.js:673
 msgid "Now"
-msgstr ""
+msgstr "Ahora"
 
 #: src/webui/static/app/epg.js:587 src/webui/static/app/epg.js:588
 msgid "Number"
@@ -1418,7 +1418,7 @@ msgstr "Repetir#EPG"
 
 #: src/webui/static/app/cteditor.js:42
 msgid "Rescan the mux for changes to the bouquet."
-msgstr "Volver a analizar los muxes por los cambios del bouquet."
+msgstr "Volver a analizar los muxes por los cambios del paquete."
 
 #: src/webui/static/app/chconf.js:218
 msgid "Reset (clear) the selected icon URLs"
@@ -1489,7 +1489,7 @@ msgstr "Buscar en TVDB (por título)"
 
 #: src/webui/static/app/epg.js:687
 msgid "Search title…"
-msgstr ""
+msgstr "Buscar título..."
 
 #: src/webui/static/app/tvheadend.js:466
 msgid "Select channel..."
@@ -1583,7 +1583,7 @@ msgstr "Inicio"
 #: src/webui/static/app/epg.js:112 src/webui/static/app/epg.js:562
 #: src/webui/static/app/epg.js:563
 msgid "Start Time"
-msgstr "Tiempo de Inicio"
+msgstr "Hora de inicio"
 
 #: src/webui/static/app/config.js:11
 msgid "Start initial configuration wizard"
@@ -1803,7 +1803,7 @@ msgstr "Desfase temporal"
 #: src/webui/static/app/epg.js:532 src/webui/static/app/epg.js:533
 #: src/webui/static/app/epg.js:1128 src/webui/static/app/status.js:106
 msgid "Title"
-msgstr "Título"
+msgstr "Agente reproductor"
 
 #: src/webui/static/app/i18n-post.js:125
 msgid "Today"
@@ -1899,15 +1899,15 @@ msgstr "Usuarios"
 
 #: src/webui/static/app/esfilter.js:48
 msgid "Video Stream Filter"
-msgstr "Filtro del retransmisión de video"
+msgstr "Filtro de retransmisión de video"
 
 #: src/webui/static/app/esfilter.js:49
 msgid "Video Stream Filters"
-msgstr "Filtros del retransmisión de video"
+msgstr "Filtros de retransmisión de video"
 
 #: src/webui/static/app/epg.js:971
 msgid "View help docs."
-msgstr ""
+msgstr "Ver documentos de ayuda."
 
 #: src/webui/static/app/idnode.js:618
 msgid "View level"

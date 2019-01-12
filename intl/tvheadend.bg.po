@@ -7,14 +7,15 @@
 # Miroslav Diviqm <diviqm@mail.bg>, 2015
 # Peter <zinonino91@gmail.com>, 2015
 # saen acro <saentist@gmail.com>, 2015-2017
+# Tsvetomir Tsvetkov <cv3tk0@gmail.com>, 2018
 # Любомир Василев, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-08 16:49+0200\n"
-"PO-Revision-Date: 2018-10-08 14:51+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2018-10-30 23:52+0000\n"
+"Last-Translator: Tsvetomir Tsvetkov <cv3tk0@gmail.com>\n"
 "Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2601,7 +2602,7 @@ msgstr ""
 
 #: src/epggrab/module.c:60
 msgid "External"
-msgstr ""
+msgstr "Външен"
 
 #: src/epggrab/module.c:199
 msgid "External EPG grabber"
@@ -2621,7 +2622,7 @@ msgstr ""
 
 #: src/bouquet.c:1044
 msgid "External URL"
-msgstr ""
+msgstr "Външен адрес"
 
 #: src/bouquet.c:1045
 msgid "External URL of the bouquet."
@@ -7711,7 +7712,7 @@ msgstr "Четвъртък"
 
 #: src/tvhlog.c:84 src/config.c:1919
 msgid "Time"
-msgstr ""
+msgstr "Време"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:110
 msgid "Time (in milliseconds) for a command to complete."
@@ -7926,7 +7927,7 @@ msgstr "Изключване на конвертора при бездейств
 
 #: src/config.c:2077
 msgid "Tvheadend server name"
-msgstr ""
+msgstr "Име на сървъра"
 
 #: src/epggrab/module.c:137
 msgid "Type"
