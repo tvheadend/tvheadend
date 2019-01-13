@@ -911,7 +911,7 @@ parse_ac3(parser_t *t, parser_es_t *st, size_t ilen,
           uint32_t next_startcode, int sc_offset)
 {
   int i, len, count, ver, bsid, fscod, frmsizcod, fsize, fsize2, duration, sri;
-  int sr, sr2, rate, acmod, lfeon, channels, versions[2];
+  int sr, sr2, rate, acmod, lfeon, channels, versions[2], verchg = 0;
   int64_t dts;
   const uint8_t *buf, *p;
   bitstream_t bs;
@@ -1004,7 +1004,7 @@ ok:
   }
   assert(i <= st->es_buf_a.sb_ptr);
   ver = versions[0] + versions[1];
-  if (ver > 4 && ver - count > 2) {
+  if (verchg++ == 0 && ver > 4 && ver - count > 2) {
     if (versions[0] - 2 > versions[1]) {
       tvhtrace(LS_PARSER, "%d: stream changed to AC3 type", st->es_index);
       st->es_audio_version = 1;
