@@ -952,7 +952,7 @@ epggrab_ota_trigger ( int secs )
   lock_assert(&global_lock);
 
   /* notify another system layers, that we will do EPG OTA */
-  secs = MIN(1, MAX(secs, 7*24*3600));
+  secs = MINMAX(secs, 1, 7*24*3600);
   dbus_emit_signal_s64("/epggrab/ota", "next", time(NULL) + secs);
   epggrab_ota_pending_flag = 1;
   epggrab_ota_kick(secs);
@@ -965,6 +965,7 @@ epggrab_ota_post ( void )
 
   /* Init timer (call after full init - wait for network tuners) */
   if (epggrab_conf.ota_initial) {
+    tvhtrace(LS_EPGGRAB, "ota initial scan in 15 seconds");
     epggrab_ota_trigger(15);
     t = time(NULL);
   }
