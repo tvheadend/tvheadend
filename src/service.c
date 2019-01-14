@@ -449,6 +449,10 @@ service_find_instance
         break;
       }
   } else {
+    if (!s->s_is_enabled(s, flags)) {
+      *error = SM_CODE_SVC_NOT_ENABLED;
+      return NULL;
+    }
     r = s->s_enlist(s, ti, sil, flags, weight);
   }
 
