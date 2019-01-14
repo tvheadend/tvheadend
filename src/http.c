@@ -334,6 +334,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
       htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n", config.cors_origin);
       htsbuf_append_str(&hdrs, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
       htsbuf_append_str(&hdrs, "Access-Control-Allow-Headers: x-requested-with,authorization\r\n");
+      htsbuf_append_str(&hdrs, "Access-Control-Allow-Credentials: true\r\n");
     }
   }
   
