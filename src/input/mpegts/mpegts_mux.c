@@ -800,7 +800,7 @@ mpegts_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
 static int
 mpegts_mux_is_enabled ( mpegts_mux_t *mm )
 {
-  return mm->mm_enabled == MM_ENABLE;
+  return mm->mm_network->mn_enabled && mm->mm_enabled == MM_ENABLE;
 }
 
 static int

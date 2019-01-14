@@ -367,6 +367,7 @@ struct mpegts_network
   /*
    * Configuration
    */
+  int      mn_enabled;
   uint16_t mn_nid;
   uint16_t mn_satip_source;
   int      mn_autodiscovery;

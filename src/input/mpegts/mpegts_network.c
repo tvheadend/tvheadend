@@ -170,6 +170,13 @@ const idclass_t mpegts_network_class =
   .ic_get_title  = mpegts_network_class_get_title,
   .ic_properties = (const property_t[]){
     {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = N_("Enabled"),
+      .desc     = N_("Enable/Disable network."),
+      .off      = offsetof(mpegts_network_t, mn_enabled),
+    },
+    {
       .type     = PT_STR,
       .id       = "networkname",
       .name     = N_("Network name"),
@@ -538,6 +545,7 @@ mpegts_network_create0
   mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
 
   /* Defaults */
+  mn->mn_enabled = 1;
   mn->mn_satpos = INT_MAX;
   mn->mn_skipinitscan = 1;
   mn->mn_autodiscovery = MN_DISCOVERY_NEW;
@@ -757,6 +765,7 @@ mpegts_network_find_active_service
   mpegts_mux_t *mm;
   mpegts_service_t *s;
 
+  if (!mn->mn_enabled) return NULL;
   LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
     if (mm->mm_enabled != MM_ENABLE) continue;
     s = mpegts_mux_find_service(mm, sid);
