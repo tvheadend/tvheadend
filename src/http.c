@@ -331,10 +331,10 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   if (hc->hc_version != RTSP_VERSION_1_0){
     htsbuf_qprintf(&hdrs, "Server: %s\r\n", config_get_http_server_name());
     if (config.cors_origin && config.cors_origin[0]) {
-      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n", config.cors_origin);
-      htsbuf_append_str(&hdrs, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
-      htsbuf_append_str(&hdrs, "Access-Control-Allow-Headers: x-requested-with,authorization\r\n");
-      htsbuf_append_str(&hdrs, "Access-Control-Allow-Credentials: true\r\n");
+      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n%s%s%s", config.cors_origin,
+                            "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n",
+                            "Access-Control-Allow-Headers: x-requested-with,authorization\r\n",
+                            "Access-Control-Allow-Credentials: true\r\n");
     }
   }
   
