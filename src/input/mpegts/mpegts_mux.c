@@ -1484,7 +1484,7 @@ mpegts_mux_tuning_error ( const char *mux_uuid, mpegts_mux_instance_t *mmi_match
     if (mm) {
       if ((mmi = mm->mm_active) != NULL && mmi == mmi_match)
         if (mmi->mmi_input)
-          mmi->mmi_input->mi_tuning_error(mmi->mmi_input, mm);
+          mmi->mmi_input->mi_error(mmi->mmi_input, mm, TSS_TUNING);
     }
     tvh_mutex_unlock(&global_lock);
   }

@@ -1058,14 +1058,14 @@ mpegts_input_has_subscription ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static void
-mpegts_input_tuning_error ( mpegts_input_t *mi, mpegts_mux_t *mm )
+mpegts_input_error ( mpegts_input_t *mi, mpegts_mux_t *mm, int tss_flags )
 {
   service_t *t, *t_next;
   tvh_mutex_lock(&mi->mi_output_lock);
   for (t = LIST_FIRST(&mm->mm_transports); t; t = t_next) {
     t_next = LIST_NEXT(t, s_active_link);
     tvh_mutex_lock(&t->s_stream_mutex);
-    service_set_streaming_status_flags(t, TSS_TUNING);
+    service_set_streaming_status_flags(t, tss_flags);
     tvh_mutex_unlock(&t->s_stream_mutex);
   }
   tvh_mutex_unlock(&mi->mi_output_lock);
@@ -2096,7 +2096,7 @@ mpegts_input_create0
   mi->mi_stopping_mux         = mpegts_input_stopping_mux;
   mi->mi_stopped_mux          = mpegts_input_stopped_mux;
   mi->mi_has_subscription     = mpegts_input_has_subscription;
-  mi->mi_tuning_error         = mpegts_input_tuning_error;
+  mi->mi_error                = mpegts_input_error;
   mi->ti_get_streams          = mpegts_input_get_streams;
   mi->ti_clear_stats          = mpegts_input_clear_stats;
 
