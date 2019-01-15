@@ -31,6 +31,22 @@ static bouquet_t * mpegts_network_bouquet_get (mpegts_network_t *, int);
  * Class definition
  * ***************************************************************************/
 
+static void
+mpegts_network_class_notify_enabled ( void *obj, const char *lang )
+{
+  mpegts_network_t *mn = (mpegts_network_t*)obj;
+  mpegts_mux_instance_t *mmi;
+  mpegts_mux_t *mm;
+  if (!mn->mn_enabled) {
+    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      mmi = mm->mm_active;
+      if (!mmi) continue;
+      assert(mm == mmi->mmi_mux);
+      mm->mm_stop(mm, 1, SM_CODE_ABORTED);
+    }
+  }
+}
+
 static htsmsg_t *
 mpegts_network_class_save
   ( idnode_t *in, char *filename, size_t fsize )
@@ -175,6 +191,7 @@ const idclass_t mpegts_network_class =
       .name     = N_("Enabled"),
       .desc     = N_("Enable/Disable network."),
       .off      = offsetof(mpegts_network_t, mn_enabled),
+      .notify   = mpegts_network_class_notify_enabled,
     },
     {
       .type     = PT_STR,
