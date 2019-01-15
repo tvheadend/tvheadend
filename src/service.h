@@ -319,19 +319,19 @@ typedef struct service {
   int s_streaming_status;
 
   // Progress
-#define TSS_INPUT_HARDWARE   0x1
-#define TSS_INPUT_SERVICE    0x2
-#define TSS_MUX_PACKETS      0x4
-#define TSS_PACKETS          0x8
-#define TSS_NO_ACCESS        0x10
-#define TSS_CA_CHECK         0x20
+#define TSS_INPUT_HARDWARE   0x00000001
+#define TSS_INPUT_SERVICE    0x00000002
+#define TSS_MUX_PACKETS      0x00000004
+#define TSS_PACKETS          0x00000008
+#define TSS_NO_ACCESS        0x00000010
+#define TSS_CA_CHECK         0x00000020
 
 
   // Errors
-#define TSS_GRACEPERIOD      0x10000
-#define TSS_NO_DESCRAMBLER   0x20000
-#define TSS_TIMEOUT          0x40000
-#define TSS_TUNING           0x80000
+#define TSS_GRACEPERIOD      0x00010000
+#define TSS_NO_DESCRAMBLER   0x00020000
+#define TSS_TIMEOUT          0x00040000
+#define TSS_TUNING           0x00080000
 
 #define TSS_ERRORS           0xffff0000
 
