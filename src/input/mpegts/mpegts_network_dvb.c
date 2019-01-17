@@ -705,8 +705,7 @@ dvb_network_create_mux
   ln = (dvb_network_t*)mn;
   mm = dvb_network_find_mux(ln, dmc, onid, tsid, 0, 0);
   if (!mm && (ln->mn_autodiscovery != MN_DISCOVERY_DISABLE || force)) {
-    cls = dvb_network_mux_class((mpegts_network_t *)ln);
-    save |= dvb_fe_type_by_network_class(cls) == dmc->dmc_fe_type;
+    save |= dvb_fe_type_by_network_class(ln->mn_id.in_class) == dmc->dmc_fe_type;
     if (save && dmc->dmc_fe_type == DVB_TYPE_S) {
       satpos = dvb_network_get_orbital_pos(mn);
       /* do not allow to mix satellite positions */
