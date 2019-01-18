@@ -110,7 +110,10 @@
       "eng": "UK: Cable Virgin"
     },
     "nit": {
-      "FIXMEFIXME": 1
+      "": {
+        onid: 61472,
+        nbid: 41015
+      }
     },
     "pid": 700,
     "prio": 5,
