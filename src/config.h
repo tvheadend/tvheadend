@@ -70,6 +70,9 @@ typedef struct config {
   char *date_mask;
   int label_formatting;
   uint32_t ticket_expires;
+  char *hdhomerun_ip;
+  char *local_ip;
+  int local_port;
 } config_t;
 
 extern const idclass_t config_class;

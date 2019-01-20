@@ -1707,6 +1707,9 @@ config_boot
   config.iptv_tpool_count = 2;
   config.date_mask = strdup("");
   config.label_formatting = 0;
+  config.hdhomerun_ip = strdup("");
+  config.local_ip = strdup("");
+  config.local_port = 0;
 
   idclass_register(&config_class);
 
@@ -1843,6 +1846,8 @@ void config_done ( void )
   free(config.picon_path);
   free(config.cors_origin);
   free(config.date_mask);
+  free(config.hdhomerun_ip);
+  free(config.local_ip);
   file_unlock(config_lock, config_lock_fd);
 }
 
@@ -2133,6 +2138,43 @@ const idclass_t config_class = {
                    "config."),
       .off    = offsetof(config_t, full_version),
       .opts   = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
+      .group  = 1
+    },
+    {
+      .type   = PT_STR,
+      .id     = "hdhomerun_ip",
+      .name   = N_("HDHomerun IP Address"),
+      .desc   = N_("IP address of the HDHomerun device. This is needed if you "
+                   "plan to run TVheadend in a container and you want to stream "
+                   "from an HDHomerun without enabling host networking for "
+                   "the container."),
+      .off    = offsetof(config_t, hdhomerun_ip),
+      .opts   = PO_HIDDEN | PO_EXPERT,
+      .group  = 1
+    },
+    {
+      .type   = PT_STR,
+      .id     = "local_ip",
+      .name   = N_("Local IP Address"),
+      .desc   = N_("IP address of the HDHomerun device. This is needed if you "
+                   "plan to run TVheadend in a container and you want to stream "
+                   "from an HDHomerun without enabling host networking for "
+                   "the container."),
+      .off    = offsetof(config_t, local_ip),
+      .opts   = PO_HIDDEN | PO_EXPERT,
+      .group  = 1
+    },
+    {
+      .type   = PT_INT,
+      .id     = "local_port",
+      .name   = N_("Local Socket Port Number"),
+      .desc   = N_("Port number of the UDP listener. This listener listens "
+                   "for traffic from the HDHomerun device. This is needed if "
+                   "you plan to run TVheadend in a container and you want to "
+                   "stream from an HDHomerun without enabling host networking "
+                   "for the container."),
+      .off    = offsetof(config_t, local_port),
+      .opts   = PO_HIDDEN | PO_EXPERT,
       .group  = 1
     },
     {
