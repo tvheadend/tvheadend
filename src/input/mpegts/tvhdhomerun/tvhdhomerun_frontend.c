@@ -26,6 +26,9 @@
 #include "tcp.h"
 #include "tvhdhomerun_private.h"
 
+#include <arpa/inet.h>
+#include "config.h"
+
 static int
 tvhdhomerun_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
@@ -91,6 +94,10 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   /* local IP */
   /* TODO: this is nasty */
   local_ip = hdhomerun_device_get_local_machine_addr(hfe->hf_hdhomerun_tuner);
+  if ((*config.local_ip != 0) && inet_pton(AF_INET, config.local_ip, &local_ip))
+  {
+    local_ip = ntohl(local_ip);
+  }
 
   /* first setup a local socket for the device to stream to */
   sockfd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
@@ -126,7 +133,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   memset(&sock_addr, 0, sizeof(sock_addr));
   sock_addr.sin_family = AF_INET;
   sock_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  sock_addr.sin_port = 0;
+  sock_addr.sin_port = config.local_port==0?0:htons(config.local_port);
   if(bind(sockfd, (struct sockaddr *) &sock_addr, sizeof(sock_addr)) != 0) {
     tvherror(LS_TVHDHOMERUN, "failed bind socket: %d", errno);
     close(sockfd);
