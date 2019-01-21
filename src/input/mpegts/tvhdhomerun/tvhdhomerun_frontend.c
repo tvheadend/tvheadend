@@ -133,7 +133,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   memset(&sock_addr, 0, sizeof(sock_addr));
   sock_addr.sin_family = AF_INET;
   sock_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  sock_addr.sin_port = config.local_port==0?0:htons(config.local_port);
+  sock_addr.sin_port = config.local_port==0?0:htons(config.local_port + hfe->hf_tunerNumber);
   if(bind(sockfd, (struct sockaddr *) &sock_addr, sizeof(sock_addr)) != 0) {
     tvherror(LS_TVHDHOMERUN, "failed bind socket: %d", errno);
     close(sockfd);
