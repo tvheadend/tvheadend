@@ -2168,11 +2168,17 @@ const idclass_t config_class = {
       .type   = PT_INT,
       .id     = "local_port",
       .name   = N_("Local Socket Port Number"),
-      .desc   = N_("Port number of the UDP listener. This listener listens "
-                   "for traffic from the HDHomerun device. This is needed if "
-                   "you plan to run TVheadend in a container and you want to "
-                   "stream from an HDHomerun without enabling host networking "
-                   "for the container."),
+      .desc   = N_("Starting port number of the UDP listeners. The listeners "
+                   "listen for traffic from the HDHomerun tuners. This is "
+                   "needed if you plan to run TVheadend in a container and "
+                   "you want to stream from an HDHomerun without enabling "
+                   "host networking for the container. Set this to 0 if you "
+                   "want the port numbers to be assigned dynamically. If you "
+                   "have multiple tuners, this will be the start of the port "
+                   "range. For example, if you have 4 tuners and you set this "
+                   "to 9983, then tuner 0 will talk to port 9983, tuner 1 "
+                   "will talk to port 9984, tuner 2 will talk to port 9985, "
+                   "and tuner 3 will talk to port 9986."),
       .off    = offsetof(config_t, local_port),
       .opts   = PO_HIDDEN | PO_EXPERT,
       .group  = 1
