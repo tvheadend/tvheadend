@@ -387,18 +387,14 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
 static uint32_t
 tvhdhomerun_ip( void )
 {
-  static int homerun_ip_initialized = 0;
-  static uint32_t ip = 0;
+  if (*config.hdhomerun_ip == 0) return 0;
 
-  if (!homerun_ip_initialized)
-  {
-    if ((*config.hdhomerun_ip != 0) && inet_pton(AF_INET, config.hdhomerun_ip, &ip))
-    {
-      tvhinfo(LS_TVHDHOMERUN, "HDHomerun IP set to %s", config.hdhomerun_ip);
-      ip = ntohl(ip);
-    }
-    homerun_ip_initialized = 1;
-  }
+  uint32_t ip = 0;
+  if (inet_pton(AF_INET, config.hdhomerun_ip, &ip))
+    ip = ntohl(ip);
+  else
+    tvhwarn(LS_TVHDHOMERUN, "Could not parse IP address %s", config.hdhomerun_ip);
+
   return ip;
 }
 
