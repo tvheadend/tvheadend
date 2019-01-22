@@ -566,6 +566,13 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_max    = 64;
     sd->sd_pilot_on    = 1;
+  } else if (strstr(sd->sd_info.manufacturer, "KATHREIN") &&
+       (strstr(sd->sd_info.modelname, "EXIP-4124") ||
+        strstr(sd->sd_info.modelname, "EXIP-418") ||
+        strstr(sd->sd_info.modelname, "EXIP-414"))) { 
+    sd->sd_fullmux_ok  = 0;
+    sd->sd_pids_max    = 64;
+    sd->sd_pilot_on    = 1;
   } else if (strcmp(sd->sd_info.modelname, "TVHeadend SAT>IP") == 0)  {
     sd->sd_pids_max    = 128;
     sd->sd_pids_len    = 2048;
