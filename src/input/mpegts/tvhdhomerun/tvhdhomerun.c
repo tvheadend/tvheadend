@@ -393,7 +393,7 @@ tvhdhomerun_ip( void )
   if (inet_pton(AF_INET, config.hdhomerun_ip, &ip))
     ip = ntohl(ip);
   else
-    tvhwarn(LS_TVHDHOMERUN, "Could not parse IP address %s", config.hdhomerun_ip);
+    tvherror(LS_TVHDHOMERUN, "Could not parse IP address %s", config.hdhomerun_ip);
 
   return ip;
 }

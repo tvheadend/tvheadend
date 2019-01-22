@@ -93,11 +93,12 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
   /* local IP */
   /* TODO: this is nasty */
-  local_ip = hdhomerun_device_get_local_machine_addr(hfe->hf_hdhomerun_tuner);
-  if ((*config.local_ip != 0) && inet_pton(AF_INET, config.local_ip, &local_ip))
-  {
+  if (*config.local_ip == 0)
+    local_ip = hdhomerun_device_get_local_machine_addr(hfe->hf_hdhomerun_tuner);
+  else if (inet_pton(AF_INET, config.local_ip, &local_ip))
     local_ip = ntohl(local_ip);
-  }
+  else
+    tvherror(LS_TVHDHOMERUN, "failed to parse local IP (%s)", config.local_ip);
 
   /* first setup a local socket for the device to stream to */
   sockfd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
