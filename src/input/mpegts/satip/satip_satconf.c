@@ -392,11 +392,9 @@ const idclass_t satip_satconf_class =
     {
       .type     = PT_INT,
       .id       = "network_limit",
-      .name     = N_("Network limit per position"),
-      .desc     = N_("Concurrent limit per network position (src=) "
-                     "for satellite SAT>IP tuners. "
-                     "The first limit number is for src=1 (AA), second "
-                     "for src=2 (AB) etc."),
+      .name     = N_("Network limit per group"),
+      .desc     = N_("Concurrent input limit per network group "
+                     "for satellite SAT>IP tuners."),
       .opts     = PO_EXPERT,
       .off      = offsetof(satip_satconf_t, sfc_network_limit),
     },
@@ -404,7 +402,10 @@ const idclass_t satip_satconf_class =
       .type     = PT_INT,
       .id       = "network_group",
       .name     = N_("Network group"),
-      .desc     = N_("Define network group to limit network usage."),
+      .desc     = N_("Define network group to limit network usage (value 1-1000). "
+                     "All SAT>IP positions in the same group must have "
+                     "identical network limit, otherwise the limiting "
+                     "will not work correctly."),
       .opts     = PO_EXPERT,
       .off      = offsetof(satip_satconf_t, sfc_network_group),
     },
