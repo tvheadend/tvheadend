@@ -953,24 +953,42 @@ parse_pids(char *p, mpegts_apids_t *pids)
 }
 
 static int
-parse_transport(http_connection_t *hc)
+parse_transport(http_connection_t *hc, char *destip, size_t destip_len)
 {
   const char *s = http_arg_get(&hc->hc_args, "Transport");
   const char *u;
+  char *x;
   int a, b;
   if (!s)
     return -1;
-  if (strncmp(s, "RTP/AVP;unicast;client_port=", 28) == 0) {
-    for (s += 28, u = s; isdigit(*u); u++);
-    if (*u != '-')
+  destip[0] = '\0';
+  if (strncmp(s, "RTP/AVP;unicast;", 16) == 0) {
+    s += 16;
+    a = -1;
+    while (*s) {
+      if (strncmp(s, "destination=", 12) == 0) {
+        s += 12;
+        strlcpy(destip, s, destip_len);
+        for (x = destip; *x && *x != ';'; x++);
+        *x = '\0';
+        for (; *s && *s != ';'; s++);
+        if (*s != '\0' && *s != ';') return -1;
+        if (*s == ';') s++;
+        continue;
+      }
+      if (strncmp(s, "client_port=", 12) == 0) {
+        for (s += 12, u = s; isdigit(*u); u++);
+        if (*u != '-') return -1;
+        a = atoi(s);
+        for (s = ++u; isdigit(*s); s++);
+        if (*s != '\0' && *s != ';') return -1;
+        b = atoi(u);
+        if (a + 1 != b) return -1;
+        if (*s == ';') s++;
+        continue;
+      }
       return -1;
-    a = atoi(s);
-    for (s = ++u; isdigit(*s); s++);
-    if (*s != '\0' && *s != ';')
-      return -1;
-    b = atoi(u);
-    if (a + 1 != b)
-      return -1;
+    }
     return a;
   } else if ((strncmp(s, "RTP/AVP/TCP;interleaved=0-1", 27) == 0) &&
              !satip_server_conf.satip_notcp_mode) {
@@ -1062,8 +1080,8 @@ rtsp_parse_cmd
       alloc_stream_id = 1;
     } else {
       if (!has_args && rs->state == STATE_DESCRIBE) {
-        r = parse_transport(hc);
-        if (r < 0) {
+        r = parse_transport(hc, buf, sizeof(buf));
+        if (r < 0 || (buf[0] && strcmp(buf, hc->hc_peer_ipstr))) {
           errcode = HTTP_STATUS_BAD_TRANSFER;
           goto end;
         }
@@ -1072,8 +1090,8 @@ rtsp_parse_cmd
         goto ok;
       }
     }
-    r = parse_transport(hc);
-    if (r < 0) {
+    r = parse_transport(hc, buf, sizeof(buf));
+    if (r < 0 || (buf[0] && strcmp(buf, hc->hc_peer_ipstr))) {
       errcode = HTTP_STATUS_BAD_TRANSFER;
       goto end;
     }
