@@ -425,9 +425,21 @@ _dvr_get_tvshows_subdir(const dvr_entry_t *de)
   return "tvshows";
 }
 
+/// Scraper friendly sub-type options bitmask.
+typedef enum {
+  DVR_SF_WITHOUT_SUBDIR         = 0x0, /*< X.ts and Y.ts - movies and tvshows not in subdir */
+  DVR_SF_WITH_GENRE_SUBDIR      = 0x1, /*< tvmovies and tvshows */
+  DVR_SF_WITH_PER_SEASON_SUBDIR = 0x2, /*< X/Season S/Y.ts - separate dir per-season */
+  DVR_SF_WITH_PER_MOVIE_SUBDIR  = 0x4  /*< X/X.ts - separate dir per-movie */
+} dvr_sf_t;
+
 static const char *
-_dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen, int with_genre_subdir)
+_dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen, dvr_sf_t subdir_type)
 {
+  /* Directory to use for no season/special season when using
+   * per-season directories. Kodi "naming tv shows/Special Episodes".
+   */
+  static const char special_season_dir[] = "Season 0"; /* Deliberately not localized. */
   const dvr_entry_t *de = aux;
   epg_broadcast_t *ebc = de->de_bcast;
 
@@ -502,7 +514,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
 
   tvhdebug(LS_DVR, "fmt = %s is_movie = %d content_type = %d", fmt ?: "<none>", is_movie, de->de_content_type);
 
-  char *date_buf = NULL, *episode_buf = NULL;
+  char *date_buf = NULL, *episode_buf = NULL, *season_dir = NULL;
 
   if (is_movie) {
     /* Include the year if available. This helps scraper differentiate
@@ -562,13 +574,26 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
      * and moving them easier since they get tracked by inotify on
      * just the one directory.
      *
+     * However, we allow the user to select variants to use multiple
+     * directories for people who so desire.
+     *
      * Example format below:
-     *   "tvmovies/title (yyyy)"            (with genre_subdir)
-     *   "title (yyyy)"                     (without genre_subdir)
-     *   "title"                            (without genre_subdir, no airdate)
+     *   "tvmovies/title (yyyy)"              (with genre_subdir)
+     *   "tvmovies/title (yyyy)/title (yyyy)" (with genre_subdir + per movie subdir)
+     *   "title (yyyy)"                       (without genre_subdir)
+     *   "title"                              (without genre_subdir, no airdate)
      */
-    if (with_genre_subdir)
+    if ((subdir_type & DVR_SF_WITH_GENRE_SUBDIR) == DVR_SF_WITH_GENRE_SUBDIR)
       tvh_strlcatf(tmp, tmplen, offset, "%s/", _dvr_get_tvmovies_subdir(de));
+
+    /* For 'per movie subdir' we want "title (YYYY)/" or "title/" if no year but don't want "(YYYY)" (no title) */
+    if ((subdir_type & DVR_SF_WITH_PER_MOVIE_SUBDIR) == DVR_SF_WITH_PER_MOVIE_SUBDIR && !strempty(title_buf)) {
+      tvh_strlcatf(tmp, tmplen, offset, "%s", title_buf);
+      if (!strempty(date_buf))
+        tvh_strlcatf(tmp, tmplen, offset, " (%s)", date_buf);
+      /* Then add trailing directory slash */
+      tvh_strlcatf(tmp, tmplen, offset, "%s", "/");
+    }
 
     if (!strempty(title_buf))
       tvh_strlcatf(tmp, tmplen, offset, "%s", title_buf);
@@ -588,15 +613,35 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
      * We put the episode number before the subtitle to make it easier
      * to see if we are missing episodes when you do ls.
      *
+     * User can optionally choose to have episodes in per-season directories.
+     *
      * Example formats below:
      *   "tvshows/title/title - S01E02 - subtitle" (with genre_subdir)
+     *   "tvshows/title/Season 1/title - S01E02 - subtitle" (with genre and per season subdir)
      *   "title - S01E02 - subtitle"               (without genre_subdir)
      *   "title - subtitle_2001-05-04"             (without genre_subdir, long running show)
      *   "title - subtitle"                        (without genre_subdir, no epg info on show)
      */
-    if (with_genre_subdir)
+    if ((subdir_type & DVR_SF_WITH_GENRE_SUBDIR) == DVR_SF_WITH_GENRE_SUBDIR)
       tvh_strlcatf(tmp, tmplen, offset, "%s/", _dvr_get_tvshows_subdir(de));
-    if (!strempty(title_buf))
+
+    if ((subdir_type & DVR_SF_WITH_PER_SEASON_SUBDIR) == DVR_SF_WITH_PER_SEASON_SUBDIR &&
+        !strempty(title_buf)) {
+      season_dir = alloca(256);
+      /* Note we do _not_ localize the word "Season" so we are consistent
+       * with what appears to be de facto directory naming conventions.
+       * For example the program Plex states: "Be sure to use the English word
+       * "Season" as noted above, even if your content is in another language."
+       * There seems to be disagreement between tools on whether it should be
+       * "Season 1" (Emby, Kodi) or "Season 01" (Plex).
+       */
+      epg_broadcast_epnumber_format(ebc, season_dir, 256,
+                                    NULL, "Season %d", NULL, NULL, NULL);
+      /* E.g., "Simpsons/Season 1/Simpsons", to which we'll later add " - S01E02"
+       * Or "Simpsons/Season 0/Simpsons" for a tv special.
+       */
+      tvh_strlcatf(tmp, tmplen, offset, "%s/%s/%s", title_buf, strempty(season_dir) ? special_season_dir : season_dir, title_buf);
+    } else if (!strempty(title_buf))
       tvh_strlcatf(tmp, tmplen, offset, "%s/%s", title_buf, title_buf);
     if (!strempty(episode_buf))
       tvh_strlcatf(tmp, tmplen, offset, " - %s", episode_buf);
@@ -612,13 +657,25 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
 static const char *
 dvr_sub_scraper_friendly_with_genre_subdir(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
-  return _dvr_sub_scraper_friendly(id, fmt, aux, tmp, tmplen, 1);
+  return _dvr_sub_scraper_friendly(id, fmt, aux, tmp, tmplen, DVR_SF_WITH_GENRE_SUBDIR);
+}
+
+static const char *
+dvr_sub_scraper_friendly_with_genre_subdir_full(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
+{
+  return _dvr_sub_scraper_friendly(id, fmt, aux, tmp, tmplen, DVR_SF_WITH_GENRE_SUBDIR | DVR_SF_WITH_PER_SEASON_SUBDIR | DVR_SF_WITH_PER_MOVIE_SUBDIR);
 }
 
 static const char *
 dvr_sub_scraper_friendly_without_genre_subdir(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
-  return _dvr_sub_scraper_friendly(id, fmt, aux, tmp, tmplen, 0);
+  return _dvr_sub_scraper_friendly(id, fmt, aux, tmp, tmplen, DVR_SF_WITHOUT_SUBDIR);
+}
+
+static const char *
+dvr_sub_scraper_friendly_without_genre_subdir_full(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
+{
+  return _dvr_sub_scraper_friendly(id, fmt, aux, tmp, tmplen, DVR_SF_WITHOUT_SUBDIR | DVR_SF_WITH_PER_SEASON_SUBDIR | DVR_SF_WITH_PER_MOVIE_SUBDIR);
 }
 
 static const char *
@@ -752,9 +809,11 @@ static htsstr_substitute_t dvr_subs_entry[] = {
   { .id = "q",   .getval = dvr_sub_scraper_friendly_with_genre_subdir },
   { .id = "1q",  .getval = dvr_sub_scraper_friendly_with_genre_subdir },
   { .id = "2q",  .getval = dvr_sub_scraper_friendly_with_genre_subdir },
+  { .id = "3q",  .getval = dvr_sub_scraper_friendly_with_genre_subdir_full },
   { .id = "Q",   .getval = dvr_sub_scraper_friendly_without_genre_subdir },
   { .id = "1Q",  .getval = dvr_sub_scraper_friendly_without_genre_subdir },
   { .id = "2Q",  .getval = dvr_sub_scraper_friendly_without_genre_subdir },
+  { .id = "3Q",  .getval = dvr_sub_scraper_friendly_without_genre_subdir_full },
   { .id = NULL,  .getval = NULL }
 };
 
