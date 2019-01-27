@@ -309,19 +309,24 @@ dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(duration > dae->dae_maxduration) return 0;
   }
 
-  if(dae->dae_minyear > 0) {
+  /* Only do year/season checks when programme guide has these values available.
+   * This is because you might have "minseason=5" but Christmas specials have no
+   * no season (or season=0) and many people still want them to be picked up by
+   * default.
+   */
+  if(e->copyright_year && dae->dae_minyear > 0) {
     if(e->copyright_year < dae->dae_minyear) return 0;
   }
 
-  if(dae->dae_maxyear > 0) {
+  if(e->copyright_year && dae->dae_maxyear > 0) {
     if(e->copyright_year > dae->dae_maxyear) return 0;
   }
 
-  if(dae->dae_minseason > 0) {
+  if(e->epnum.s_num && dae->dae_minseason > 0) {
     if(e->epnum.s_num < dae->dae_minseason) return 0;
   }
 
-  if(dae->dae_maxseason > 0) {
+  if(e->epnum.s_num && dae->dae_maxseason > 0) {
     if(e->epnum.s_num > dae->dae_maxseason) return 0;
   }
 
