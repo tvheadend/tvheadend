@@ -1250,6 +1250,10 @@ tvheadend.autorec_editor = function(panel, index) {
             maxsched:     { width: 80 },
             star_rating:  { width: 80 },
             config_name:  { width: 120 },
+            minyear:      { width: 100 },
+            maxyear:      { width: 100 },
+            minseason:    { width: 100 },
+            maxseason:    { width: 100 },
             owner:        { width: 100 },
             creator:      { width: 200 },
             comment:      { width: 200 }
@@ -1269,7 +1273,7 @@ tvheadend.autorec_editor = function(panel, index) {
         del: true,
         list: 'enabled,name,title,fulltext,channel,tag,start,start_window,' +
               'weekdays,minduration,maxduration,record,btype,content_type,cat1,cat2,cat3' +
-              'star_rating,pri,dedup,directory,config_name,owner,creator,comment',
+              'star_rating,pri,dedup,directory,config_name,minseason,maxseason,minyear,maxyear,owner,creator,comment',
         sort: {
           field: 'name',
           direction: 'ASC'
