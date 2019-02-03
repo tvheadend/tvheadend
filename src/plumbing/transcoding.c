@@ -1804,7 +1804,7 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   char *str, *token, *saveptr, codec_list[sizeof(tp->tp_src_vcodec)];
   int codec_match=0;
 
-  strncpy(codec_list, tp->tp_src_vcodec, sizeof(tp->tp_src_vcodec)-1);
+  strlcpy(codec_list, tp->tp_src_vcodec, sizeof(codec_list));
 
   tvhtrace(LS_TRANSCODE, "src_vcodec=\"%s\" ssc_type=%d (%s)\n",
 		  tp->tp_src_vcodec,
@@ -2130,10 +2130,10 @@ transcoder_set_properties(streaming_target_t *st,
   transcoder_t *t = (transcoder_t *)st;
   transcoder_props_t *tp = &t->t_props;
 
-  strncpy(tp->tp_vcodec, props->tp_vcodec, sizeof(tp->tp_vcodec)-1);
-  strncpy(tp->tp_vcodec_preset, props->tp_vcodec_preset, sizeof(tp->tp_vcodec_preset)-1);
-  strncpy(tp->tp_acodec, props->tp_acodec, sizeof(tp->tp_acodec)-1);
-  strncpy(tp->tp_scodec, props->tp_scodec, sizeof(tp->tp_scodec)-1);
+  strlcpy(tp->tp_vcodec, props->tp_vcodec, sizeof(tp->tp_vcodec));
+  strlcpy(tp->tp_vcodec_preset, props->tp_vcodec_preset, sizeof(tp->tp_vcodec_preset));
+  strlcpy(tp->tp_acodec, props->tp_acodec, sizeof(tp->tp_acodec));
+  strlcpy(tp->tp_scodec, props->tp_scodec, sizeof(tp->tp_scodec));
   tp->tp_channels   = props->tp_channels;
   tp->tp_vbitrate   = props->tp_vbitrate;
   tp->tp_abitrate   = props->tp_abitrate;
@@ -2141,7 +2141,7 @@ transcoder_set_properties(streaming_target_t *st,
 
   memcpy(tp->tp_language, props->tp_language, 4);
 
-  strncpy(tp->tp_src_vcodec, props->tp_src_vcodec, sizeof(tp->tp_src_vcodec)-1);
+  strlcpy(tp->tp_src_vcodec, props->tp_src_vcodec, sizeof(tp->tp_src_vcodec));
 }
 
 
