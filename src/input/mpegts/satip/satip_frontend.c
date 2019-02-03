@@ -1047,7 +1047,8 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
             mmi->tii_stats.snr = 12 * 0xffff / 15;
           }
           goto ok;          
-        } else if (strncmp(s, "ver=1.0;", 8) == 0) {
+        } else if (strncmp(s, "ver=1.0;", 8) == 0 ||
+                   strncmp(s, "ver=1.2;", 8) == 0) {
           if ((s = strstr(s + 8, ";tuner=")) == NULL)
             goto fail;
           s += 7;
