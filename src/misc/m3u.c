@@ -161,7 +161,7 @@ htsmsg_t *parse_m3u
           x = get_m3u_str(data + 1, &data, &delim);
           if (*p && *x) {
             y = intlconv_to_utf8safestr(charset_id, x, strlen(x)*2);
-            htsmsg_add_str(item, p, y);
+            htsmsg_add_str(item, p, y ?: ".invalid.charset.");
             free(y);
           }
           get_m3u_str_post(&data, delim);
@@ -180,7 +180,7 @@ htsmsg_t *parse_m3u
       data = until_eol(data);
       if (p && *p) {
         y = intlconv_to_utf8safestr(charset_id, p, strlen(p)*2);
-        htsmsg_add_str(item, "m3u-name", y);
+        htsmsg_add_str(item, "m3u-name", y ?: ".invalid.charset.");
         free(y);
       }
       continue;
