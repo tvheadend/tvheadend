@@ -216,6 +216,17 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
   return r;
 }
 
+/**
+ *
+ */
+static void
+dvb_pmt_hbbtv_table_remove(mpegts_mux_t *mm, elementary_stream_t *st)
+{
+  mpegts_table_t *mt = mpegts_table_find(mm, "hbbtv", st);
+  if (mt)
+    mpegts_table_destroy(mt);
+}
+
 /** 
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
  */
@@ -509,6 +520,8 @@ dvb_psi_parse_pmt
     }
 
     if(st->es_delete_me) {
+      if (st->es_type == SCT_HBBTV)
+        dvb_pmt_hbbtv_table_remove(mt->mt_mux, st);
       elementary_set_stream_destroy(set, st);
       update |= PMT_UPDATE_STREAM_DELETED;
     }
@@ -547,14 +560,13 @@ int
 dvb_pmt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r, sect, last, ver, restart, hbbtv = 0;
+  int r, sect, last, ver, restart;
   uint32_t update;
   uint16_t sid;
   mpegts_mux_t *mm = mt->mt_mux;
   mpegts_service_t *s;
   elementary_stream_t *es;
   mpegts_psi_table_state_t *st  = NULL;
-  uint16_t hbbtv_pids[16];
 
   /* Start */
   if (len < 2) return -1;
@@ -579,10 +591,6 @@ dvb_pmt_callback
   if (update) {
     if (s->s_status == SERVICE_RUNNING)
       elementary_set_filter_build(&s->s_components);
-    TAILQ_FOREACH(es, &s->s_components.set_filter, es_filter_link) {
-      if (hbbtv >= ARRAY_SIZE(hbbtv_pids)) break;
-      hbbtv_pids[hbbtv++] = es->es_pid;
-    }
     service_request_save((service_t*)s);
   }
   /* Only restart if something that our clients worry about did change */
@@ -607,11 +615,17 @@ dvb_pmt_callback
   if (update & (PMT_UPDATE_NEW_CA_STREAM|PMT_UPDATE_NEW_CAID|
                 PMT_UPDATE_CAID_DELETED|PMT_UPDATE_CAID_PID))
     descrambler_caid_changed((service_t *)s);
-  for (r = 0; r < hbbtv; r++)
+
+  TAILQ_FOREACH(es, &s->s_components.set_filter, es_filter_link) {
+    if (es->es_type != SCT_HBBTV) continue;
+    tvhdebug(mt->mt_subsys, "%s:    install hbbtv pid %04X (%d)",
+             mt->mt_name, es->es_pid, es->es_pid);
     mpegts_table_add(mm, DVB_HBBTV_BASE, DVB_HBBTV_MASK,
-                     dvb_hbbtv_callback, NULL, "hbbtv", LS_TBL_BASE,
-                     MT_CRC | MT_FULL | MT_QUICKREQ | MT_ONESHOT | MT_SCANSUBS,
-                     hbbtv_pids[r], MPS_WEIGHT_HBBTV_SCAN);
+                     dvb_hbbtv_callback, es, "hbbtv", LS_TBL_BASE,
+                     MT_CRC | MT_FULL | MT_QUICKREQ | MT_ONESHOT,
+                     es->es_pid, MPS_WEIGHT_HBBTV_SCAN);
+
+  }
 
 #if ENABLE_LINUXDVB_CA
   dvbcam_pmt_data(s, ptr, len);
