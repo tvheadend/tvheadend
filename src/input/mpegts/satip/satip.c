@@ -261,8 +261,8 @@ const idclass_t satip_device_class =
       .id       = "tcp_mode",
       .name     = N_("RTP/AVP/TCP transport supported"),
       .desc     = N_("The server suports the Interlaved TCP transfer mode "
-                     "(embedded data in the RTSP session). And this option "
-                     "enables this mode in all tuners by default."),
+                     "(embedded data in the RTSP session). Selecting this "
+                     "option enables this mode in all tuners by default."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_tcp_mode),
     },
