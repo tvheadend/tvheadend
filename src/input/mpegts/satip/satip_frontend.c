@@ -962,6 +962,7 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
                             mpegts_mux_instance_t *mmi,
                             uint8_t *rtcp, size_t len )
 {
+  const satip_device_t *device = lfe->sf_device;
   signal_state_t status;
   uint16_t l, sl;
   char *s;
@@ -1034,10 +1035,10 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
 __ver12:
           if (n < 4)
             goto fail;
-          if (atoi(argv[0]) != lfe->sf_number)
+          if (atoi(argv[0]) != lfe->sf_number && device->sd_sig_tunerno)
             goto fail;
           mmi->tii_stats.signal =
-            atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
+            atoi(argv[1]) * 0xffff / device->sd_sig_scale;
           mmi->tii_stats.signal_scale =
             SIGNAL_STATUS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
@@ -1059,10 +1060,10 @@ __ver12:
           n = http_tokenize(s, argv, ARRAY_SIZE(argv), ',');
           if (n < 4)
             goto fail;
-          if (atoi(argv[0]) != lfe->sf_number)
+          if (atoi(argv[0]) != lfe->sf_number && device->sd_sig_tunerno)
             goto fail;
           mmi->tii_stats.signal =
-            atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
+            atoi(argv[1]) * 0xffff / device->sd_sig_scale;
           mmi->tii_stats.signal_scale =
             SIGNAL_STATUS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
@@ -1075,10 +1076,10 @@ __ver12:
           n = http_tokenize(s + 14, argv, 4, ',');
           if (n < 4)
             goto fail;
-          if (atoi(argv[0]) != lfe->sf_number)
+          if (atoi(argv[0]) != lfe->sf_number && device->sd_sig_tunerno)
             goto fail;
           mmi->tii_stats.signal =
-            atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
+            atoi(argv[1]) * 0xffff / device->sd_sig_scale;
           mmi->tii_stats.signal_scale =
             SIGNAL_STATUS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)

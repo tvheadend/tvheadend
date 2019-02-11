@@ -88,6 +88,7 @@ struct satip_device
   int                        sd_pids_deladd;
   int                        sd_fe;
   int                        sd_sig_scale;
+  int                        sd_sig_tunerno;
   char                      *sd_tunercfg;
   int                        sd_pids21;
   int                        sd_pilot_on;

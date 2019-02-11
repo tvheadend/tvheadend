@@ -373,6 +373,16 @@ const idclass_t satip_device_class =
       .off      = offsetof(satip_device_t, sd_disable_workarounds),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "sigtunerno",
+      .name     = N_("Check tuner-number in signal-status messages"),
+      .desc     = N_("This is a workaround for some tuners that mess up "
+                     "the numbers of tuners. Turn this off when you are not "
+                     "seeing signal strength on all tuners but only on some."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_sig_tunerno),
+    },
+    {
       .type     = PT_STR,
       .id       = "addr",
       .name     = N_("IP address"),
@@ -620,6 +630,7 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_pids_deladd = 1;
   sd->sd_fe          = 1;
   sd->sd_sig_scale   = 240;
+  sd->sd_sig_tunerno = 1;
   sd->sd_dbus_allow  = 1;
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
