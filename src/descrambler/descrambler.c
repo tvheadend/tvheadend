@@ -232,6 +232,52 @@ descrambler_data_analyze(th_descrambler_runtime_t *dr,
 /*
  *
  */
+static void
+descrambler_destroy_ecmsec(descrambler_ecmsec_t *des)
+{
+  LIST_REMOVE(des, link);
+  free(des->last_data);
+  if (atomic_dec(&des->refcnt, 1) == 0)
+    free(des);
+}
+
+static void
+descrambler_destroy_all_ecmsecs(descrambler_section_t *ds)
+{
+  descrambler_ecmsec_t *des;
+  while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL)
+    descrambler_destroy_ecmsec(des);
+}
+
+static void
+descrambler_destroy_section ( descrambler_section_t *ds, int emm )
+{
+  ds->callback(ds->opaque, -1, NULL, 0, emm);
+  descrambler_destroy_all_ecmsecs(ds);
+  free(ds);
+}
+
+static void
+descrambler_destroy_table_( descrambler_table_t *dt )
+{
+  mpegts_table_destroy(dt->table);
+  free(dt);
+}
+
+static void
+descrambler_destroy_table( descrambler_table_t *dt, int emm )
+{
+  descrambler_section_t *ds;
+  while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
+    TAILQ_REMOVE(&dt->sections, ds, link);
+    descrambler_destroy_section(ds, emm);
+  }
+  descrambler_destroy_table_(dt);
+}
+
+/*
+ *
+ */
 static struct strtab ecmparitytab[] = {
   { "default",  ECM_PARITY_DEFAULT },
   { "standard", ECM_PARITY_80EVEN_81ODD },
@@ -820,7 +866,6 @@ descrambler_flush_table_data( service_t *t )
   mpegts_mux_t *mux = ms->s_dvb_mux;
   descrambler_table_t *dt;
   descrambler_section_t *ds;
-  descrambler_ecmsec_t *des;
 
   if (mux == NULL)
     return;
@@ -830,12 +875,7 @@ descrambler_flush_table_data( service_t *t )
     if (dt->table == NULL || dt->table->mt_service != ms)
       continue;
     TAILQ_FOREACH(ds, &dt->sections, link)
-      while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
-        LIST_REMOVE(des, link);
-        free(des->last_data);
-        if (atomic_dec(&des->refcnt, 1) == 0)
-          free(des);
-      }
+      descrambler_destroy_all_ecmsecs(ds);
   }
   tvh_mutex_unlock(&mux->mm_descrambler_lock);
 }
@@ -1448,7 +1488,6 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
 {
   descrambler_table_t *dt;
   descrambler_section_t *ds;
-  descrambler_ecmsec_t *des;
   int flags;
 
   if (mux == NULL)
@@ -1461,19 +1500,11 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
     TAILQ_FOREACH(ds, &dt->sections, link) {
       if (ds->opaque == opaque) {
         TAILQ_REMOVE(&dt->sections, ds, link);
-        ds->callback(ds->opaque, -1, NULL, 0, (flags & MT_FAST) == 0);
-        while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
-          LIST_REMOVE(des, link);
-          free(des->last_data);
-          if (atomic_dec(&des->refcnt, 1) == 0)
-            free(des);
-        }
+        descrambler_destroy_section(ds, (flags & MT_FAST) == 0);
         if (TAILQ_FIRST(&dt->sections) == NULL) {
           TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
-          mpegts_table_destroy(dt->table);
-          free(dt);
+          descrambler_destroy_table_(dt);
         }
-        free(ds);
         tvhtrace(LS_DESCRAMBLER, "mux %p close pid %04X (%i) (flags 0x%04x) for %p", mux, pid, pid, flags, opaque);
         return 1;
       }
@@ -1497,8 +1528,6 @@ void
 descrambler_flush_tables( mpegts_mux_t *mux )
 {
   descrambler_table_t *dt;
-  descrambler_section_t *ds;
-  descrambler_ecmsec_t *des;
   descrambler_emm_t *emm;
 
   if (mux == NULL)
@@ -1508,20 +1537,8 @@ descrambler_flush_tables( mpegts_mux_t *mux )
   tvh_mutex_lock(&mux->mm_descrambler_lock);
   mux->mm_descrambler_flush = 1;
   while ((dt = TAILQ_FIRST(&mux->mm_descrambler_tables)) != NULL) {
-    while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
-      TAILQ_REMOVE(&dt->sections, ds, link);
-      ds->callback(ds->opaque, -1, NULL, 0, (dt->table->mt_flags & MT_FAST) ? 0 : 1);
-      while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
-        LIST_REMOVE(des, link);
-        free(des->last_data);
-        if (atomic_dec(&des->refcnt, 1) == 0)
-          free(des);
-      }
-      free(ds);
-    }
     TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
-    mpegts_table_destroy(dt->table);
-    free(dt);
+    descrambler_destroy_table(dt, (dt->table->mt_flags & MT_FAST) == 0);
   }
   while ((emm = TAILQ_FIRST(&mux->mm_descrambler_emms)) != NULL) {
     TAILQ_REMOVE(&mux->mm_descrambler_emms, emm, link);
