@@ -96,6 +96,7 @@ struct satip_device
   int                        sd_dbus_allow;
   int                        sd_skip_ts;
   int                        sd_disable_workarounds;
+  int                        sd_signal_ignore_tunernumber;
   int                        sd_wake_ref;
   tvh_mutex_t            sd_tune_mutex;
   TAILQ_HEAD(,satip_frontend)sd_serialize_queue;

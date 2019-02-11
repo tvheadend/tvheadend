@@ -1029,7 +1029,8 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           n = http_tokenize(s + 14, argv, 4, ',');
           if (n < 4)
             goto fail;
-          if (atoi(argv[0]) != lfe->sf_number)
+          if (atoi(argv[0]) != lfe->sf_number &&
+              !lfe->sf_device->sd_signal_ignore_tunernumber)
             goto fail;
           mmi->tii_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
@@ -1047,14 +1048,16 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
             mmi->tii_stats.snr = 12 * 0xffff / 15;
           }
           goto ok;          
-        } else if (strncmp(s, "ver=1.0;", 8) == 0) {
+        } else if (strncmp(s, "ver=1.0;", 8) == 0 ||
+                   strncmp(s, "ver=1.2;", 8) == 0) {
           if ((s = strstr(s + 8, ";tuner=")) == NULL)
             goto fail;
           s += 7;
           n = http_tokenize(s, argv, 4, ',');
           if (n < 4)
             goto fail;
-          if (atoi(argv[0]) != lfe->sf_number)
+          if (atoi(argv[0]) != lfe->sf_number &&
+              !lfe->sf_device->sd_signal_ignore_tunernumber)
             goto fail;
           mmi->tii_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
@@ -1070,7 +1073,8 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           n = http_tokenize(s + 14, argv, 4, ',');
           if (n < 4)
             goto fail;
-          if (atoi(argv[0]) != lfe->sf_number)
+          if (atoi(argv[0]) != lfe->sf_number &&
+              !lfe->sf_device->sd_signal_ignore_tunernumber)
             goto fail;
           mmi->tii_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;

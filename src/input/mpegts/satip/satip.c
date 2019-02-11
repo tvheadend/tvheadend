@@ -373,6 +373,16 @@ const idclass_t satip_device_class =
       .off      = offsetof(satip_device_t, sd_disable_workarounds),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "signalignoretunernumber",
+      .name     = N_("Ignore tuner-number in signal-status messages"),
+      .desc     = N_("This is a workaround for some tuners that mess up "
+                     "the numbers of tuners. Enable this when you are not "
+                     "seeing signal strength on all tuners but only on some"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_signal_ignore_tunernumber),
+    },
+    {
       .type     = PT_STR,
       .id       = "addr",
       .name     = N_("IP address"),
