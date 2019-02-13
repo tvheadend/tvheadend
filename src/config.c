@@ -1691,6 +1691,7 @@ config_boot
   config.idnode.in_class = &config_class;
   config.ui_quicktips = 1;
   config.http_auth = HTTP_AUTH_DIGEST;
+  config.http_auth_algo = HTTP_AUTH_ALGO_SHA512_256;
   config.proxy = 0;
   config.realm = strdup("tvheadend");
   config.info_area = strdup("login,storage,time");
@@ -2042,6 +2043,17 @@ config_class_http_auth_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+config_class_http_auth_algo_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("MD5"),                   HTTP_AUTH_ALGO_MD5 },
+    { N_("SHA-256"),               HTTP_AUTH_ALGO_SHA256 },
+    { N_("SHA-512/256"),           HTTP_AUTH_ALGO_SHA512_256 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 #if ENABLE_MPEGTS_DVB
 static void
 config_muxconfpath_notify_cb(void *opaque, int disarmed)
@@ -2389,6 +2401,16 @@ const idclass_t config_class = {
                    "This option should be enabled for standard usage."),
       .list   = config_class_http_auth_list,
       .off    = offsetof(config_t, http_auth),
+      .opts   = PO_EXPERT,
+      .group  = 5
+    },
+    {
+      .type   = PT_INT,
+      .id     = "digest_algo",
+      .name   = N_("Digest hash type"),
+      .desc   = N_("The hash algorithm type for the digest authentication."),
+      .list   = config_class_http_auth_algo_list,
+      .off    = offsetof(config_t, http_auth_algo),
       .opts   = PO_EXPERT,
       .group  = 5
     },

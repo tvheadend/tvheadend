@@ -20,7 +20,7 @@
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
-#include <openssl/md5.h>
+#include <openssl/evp.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
@@ -557,18 +557,49 @@ sbuf_read(sbuf_t *sb, int fd)
   return n;
 }
 
+static char *
+openssl_hash ( const char *str, int lowercase, const EVP_MD *md, int len )
+{
+  uint8_t hash[len];
+  char *ret = malloc((len * 2) + 1);
+  const char *fmt = lowercase ? "%02x" : "%02X";
+  EVP_MD_CTX *mdctx;
+  int i;
+
+  if ((mdctx = EVP_MD_CTX_create()) == NULL)
+    return NULL;
+  if (EVP_DigestInit_ex(mdctx, md, NULL) != 0)
+    goto __error;
+  if (EVP_DigestUpdate(mdctx, str, strlen(str)) != 0)
+    goto __error;
+  if (EVP_DigestFinal_ex(mdctx, hash, NULL))
+    goto __error;
+  for (i = 0; i < len; i++)
+    sprintf(ret + i*2, fmt, hash[i]);
+  ret[len*2] = '\0';
+  EVP_MD_CTX_destroy(mdctx);
+  return ret;
+__error:
+  EVP_MD_CTX_destroy(mdctx);
+  return NULL;
+}
+
 char *
 md5sum ( const char *str, int lowercase )
 {
-  uint8_t md5[MD5_DIGEST_LENGTH];
-  char *ret = malloc((MD5_DIGEST_LENGTH * 2) + 1);
-  int i;
+  return openssl_hash(str, lowercase, EVP_md5(), 16);
+}
 
-  MD5((const unsigned char*)str, strlen(str), md5);
-  for (i = 0; i < MD5_DIGEST_LENGTH; i++)
-    sprintf(&ret[i*2], lowercase ? "%02x" : "%02X", md5[i]);
-  ret[MD5_DIGEST_LENGTH*2] = '\0';
-  return ret;
+char *
+sha256sum ( const char *str, int lowercase )
+{
+  return openssl_hash(str, lowercase, EVP_sha256(), 32);
+}
+
+char *
+sha512sum256 ( const char *str, int lowercase )
+{
+  return openssl_hash(str, lowercase, EVP_sha512_256(), 32);
 }
 
 #define FILE_MODE_BITS(x) (x&(S_IRWXU|S_IRWXG|S_IRWXO))

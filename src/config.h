@@ -35,6 +35,7 @@ typedef struct config {
   int uilevel_nochange;
   int ui_quicktips;
   int http_auth;
+  int http_auth_algo;
   int proxy;
   char *realm;
   char *wizard;

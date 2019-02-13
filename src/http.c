@@ -221,7 +221,8 @@ static const char *cachemonths[12] = {
 typedef struct http_nonce {
   RB_ENTRY(http_nonce) link;
   mtimer_t expire;
-  char nonce[16*2+1];
+  int algo;
+  char nonce[64*2+1];
 } http_nonce_t;
 
 static RB_HEAD(, http_nonce) http_nonces;
@@ -229,6 +230,8 @@ static RB_HEAD(, http_nonce) http_nonces;
 static int
 http_nonce_cmp(const void *a, const void *b)
 {
+  int algo = ((http_nonce_t *)a)->algo - ((http_nonce_t *)b)->algo;
+  if (algo != 0) return algo;
   return strcmp(((http_nonce_t *)a)->nonce, ((http_nonce_t *)b)->nonce);
 }
 
@@ -241,9 +244,23 @@ http_nonce_timeout(void *aux)
 }
 
 static char *
-http_get_nonce(void)
+http_get_digest_hash(int algo, const char *msg)
+{
+  switch (algo) {
+  case HTTP_AUTH_ALGO_MD5:
+    return md5sum(msg, 1);
+  case HTTP_AUTH_ALGO_SHA256:
+    return sha256sum(msg, 1);
+  default:
+    return sha512sum256(msg, 1);
+  }
+}
+
+static void
+http_get_nonce(http_connection_t *hc)
 {
   struct http_nonce *n = calloc(1, sizeof(*n));
+  const int algo = config.http_auth_algo;
   char stamp[33], *m;
   int64_t mono;
 
@@ -251,28 +268,31 @@ http_get_nonce(void)
     mono = getmonoclock();
     mono ^= 0xa1687211885fcd30LL;
     snprintf(stamp, sizeof(stamp), "%"PRId64, mono);
-    m = md5sum(stamp, 1);
-    strlcpy(n->nonce, m, sizeof(stamp));
+    m = http_get_digest_hash(algo, stamp);
+    n->algo = algo;
+    strlcpy(n->nonce, m, sizeof(n->nonce));
     tvh_mutex_lock(&global_lock);
     if (RB_INSERT_SORTED(&http_nonces, n, link, http_nonce_cmp)) {
       tvh_mutex_unlock(&global_lock);
       free(m);
-      continue; /* get unique md5 */
+      continue; /* get unique hash */
     }
     mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(30));
     tvh_mutex_unlock(&global_lock);
     break;
   }
-  return m;
+  hc->hc_nonce_algo = algo;
+  hc->hc_nonce = m;
 }
 
 static int
-http_nonce_exists(const char *nonce)
+http_nonce_exists(int algo, const char *nonce)
 {
   struct http_nonce *n, tmp;
 
   if (nonce == NULL)
     return 0;
+  tmp.algo = algo;
   strlcpy(tmp.nonce, nonce, sizeof(tmp.nonce));
   tvh_mutex_lock(&global_lock);
   n = RB_FIND(&http_nonces, &tmp, link, http_nonce_cmp);
@@ -286,12 +306,12 @@ http_nonce_exists(const char *nonce)
 }
 
 static char *
-http_get_opaque(const char *realm, const char *nonce)
+http_get_opaque(http_connection_t *hc, const char *realm)
 {
-  char *a = alloca(strlen(realm) + strlen(nonce) + 1);
+  char *a = alloca(strlen(realm) + strlen(hc->hc_nonce) + 1);
   strcpy(a, realm);
-  strcat(a, nonce);
-  return md5sum(a, 1);
+  strcat(a, hc->hc_nonce);
+  return http_get_digest_hash(hc->hc_nonce_algo, a);
 }
 
 /**
@@ -301,7 +321,7 @@ void
 http_alive(http_connection_t *hc)
 {
   if (hc->hc_nonce)
-    http_nonce_exists(hc->hc_nonce); /* update timer */
+    http_nonce_exists(hc->hc_nonce_algo, hc->hc_nonce); /* update timer */
 }
 
 /**
@@ -368,20 +388,18 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     if (config.http_auth == HTTP_AUTH_DIGEST ||
         config.http_auth == HTTP_AUTH_PLAIN_DIGEST) {
       if (hc->hc_nonce == NULL)
-        hc->hc_nonce = http_get_nonce();
-      char *opaque = http_get_opaque(realm, hc->hc_nonce);
-      htsbuf_append_str(&hdrs, "WWW-Authenticate: Digest realm=\"");
-      htsbuf_append_str(&hdrs, realm);
-      htsbuf_append_str(&hdrs, "\", qop=\"auth\", nonce=\"");
-      htsbuf_append_str(&hdrs, hc->hc_nonce);
-      htsbuf_append_str(&hdrs, "\", opaque=\"");
-      htsbuf_append_str(&hdrs, opaque);
-      htsbuf_append_str(&hdrs, "\"\r\n");
+        http_get_nonce(hc);
+      char *opaque = http_get_opaque(hc, realm);
+      htsbuf_qprintf(&hdrs, "WWW-Authenticate: Digest realm=\"%s\"", realm);
+      if (config.http_auth_algo != HTTP_AUTH_ALGO_MD5)
+        htsbuf_qprintf(&hdrs, ", algorithm=%s",
+                       config.http_auth_algo == HTTP_AUTH_ALGO_SHA256 ?
+                         "SHA-256" : "SHA-512-256");
+      htsbuf_qprintf(&hdrs, ", qop=\"auth\", nonce=\"%s\"", hc->hc_nonce);
+      htsbuf_qprintf(&hdrs, ", opaque=\"%s\"\r\n", opaque);
       free(opaque);
     } else {
-      htsbuf_append_str(&hdrs, "WWW-Authenticate: Basic realm=\"");
-      htsbuf_append_str(&hdrs, realm);
-      htsbuf_append_str(&hdrs, "\"\r\n");
+      htsbuf_qprintf(&hdrs, "WWW-Authenticate: Basic realm=\"%s\"\r\n", realm);
     }
   }
 
@@ -979,11 +997,12 @@ http_verify_callback(void *aux, const char *passwd)
    int res;
 
    if (v->d_ha1) {
+     const int algo = v->hc->hc_nonce_algo;
      snprintf(ha1, sizeof(ha1), "%s:%s", v->d_ha1, passwd);
-     m = md5sum(ha1, 1);
+     m = http_get_digest_hash(algo, ha1);
      snprintf(all, sizeof(all), "%s:%s", m, v->d_all);
      free(m);
-     m = md5sum(all, 1);
+     m = http_get_digest_hash(algo, all);
      res = strcmp(m, v->d_response) == 0;
      free(m);
      return res;
@@ -1016,7 +1035,7 @@ http_verify_prepare(http_connection_t *hc, struct http_verify_structure *v)
       goto end;
      
     if (strcasecmp(qop, "auth-int") == 0) {
-      m = md5sum(hc->hc_post_data ?: "", 1);
+      m = http_get_digest_hash(hc->hc_nonce_algo, hc->hc_post_data ?: "");
       snprintf(all, sizeof(all), "%s:%s:%s", method, uri, m);
       free(m);
       m = NULL;
@@ -1026,7 +1045,7 @@ http_verify_prepare(http_connection_t *hc, struct http_verify_structure *v)
       goto end;
     }
 
-    m = md5sum(all, 1);
+    m = http_get_digest_hash(hc->hc_nonce_algo, all);
     if (tvh_str_default(qop, NULL) == NULL) {
       snprintf(all, sizeof(all), "%s:%s", hc->hc_nonce, m);
       goto set;
@@ -1444,7 +1463,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
         if (config.http_auth == HTTP_AUTH_DIGEST ||
             config.http_auth == HTTP_AUTH_PLAIN_DIGEST) {
           v = http_get_header_value(argv[1], "nonce");
-          if (v == NULL || !http_nonce_exists(v)) {
+          if (v == NULL || !http_nonce_exists(config.http_auth_algo, v)) {
             free(v);
             http_error(hc, HTTP_STATUS_UNAUTHORIZED);
             return -1;
