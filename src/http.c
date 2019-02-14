@@ -390,12 +390,12 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
       if (hc->hc_nonce == NULL)
         http_get_nonce(hc);
       char *opaque = http_get_opaque(hc, realm);
-      htsbuf_qprintf(&hdrs, "WWW-Authenticate: Digest realm=\"%s\"", realm);
+      htsbuf_qprintf(&hdrs, "WWW-Authenticate: Digest realm=\"%s\", qop=auth", realm);
       if (config.http_auth_algo != HTTP_AUTH_ALGO_MD5)
         htsbuf_qprintf(&hdrs, ", algorithm=%s",
                        config.http_auth_algo == HTTP_AUTH_ALGO_SHA256 ?
                          "SHA-256" : "SHA-512-256");
-      htsbuf_qprintf(&hdrs, ", qop=\"auth\", nonce=\"%s\"", hc->hc_nonce);
+      htsbuf_qprintf(&hdrs, ", nonce=\"%s\"", hc->hc_nonce);
       htsbuf_qprintf(&hdrs, ", opaque=\"%s\"\r\n", opaque);
       free(opaque);
     } else {

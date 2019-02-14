@@ -568,11 +568,11 @@ openssl_hash ( const char *str, int lowercase, const EVP_MD *md, int len )
 
   if ((mdctx = EVP_MD_CTX_create()) == NULL)
     return NULL;
-  if (EVP_DigestInit_ex(mdctx, md, NULL) != 0)
+  if (EVP_DigestInit_ex(mdctx, md, NULL) != 1)
     goto __error;
-  if (EVP_DigestUpdate(mdctx, str, strlen(str)) != 0)
+  if (EVP_DigestUpdate(mdctx, str, strlen(str)) != 1)
     goto __error;
-  if (EVP_DigestFinal_ex(mdctx, hash, NULL))
+  if (EVP_DigestFinal_ex(mdctx, hash, NULL) != 1)
     goto __error;
   for (i = 0; i < len; i++)
     sprintf(ret + i*2, fmt, hash[i]);
