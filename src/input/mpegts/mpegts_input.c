@@ -473,7 +473,7 @@ int
 mpegts_mps_cmp ( mpegts_pid_sub_t *a, mpegts_pid_sub_t *b )
 {
   const int mask = MPS_SERVICE;
-  if ((a->mps_type & mask) != (b->mps_type & mask)) {
+  if ((a->mps_type & mask) != (b->mps_type & mask))
     return (a->mps_type & mask) ? 1 : -1;
   if (a->mps_owner < b->mps_owner) return -1;
   if (a->mps_owner > b->mps_owner) return 1;
