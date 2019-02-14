@@ -26,6 +26,8 @@
 #include "htsmsg_json.h"
 #include "compat.h"
 
+#include "openssl/opensslv.h"
+
 #if ENABLE_ANDROID
 #include <sys/socket.h>
 #endif
@@ -266,7 +268,7 @@ http_get_nonce(http_connection_t *hc)
     mono ^= 0xa1687211885fcd30LL;
     xor ^= 0xf6e398624aa55013LL;
     snprintf(stamp, sizeof(stamp), "A!*Fz32%"PRId64"%"PRId64, mono, xor);
-    m = sha512sum256_base64(stamp);
+    m = sha256sum_base64(stamp);
     if (m == NULL) return -1;
     strlcpy(n->nonce, m, sizeof(n->nonce));
     tvh_mutex_lock(&global_lock);
@@ -308,7 +310,7 @@ http_get_opaque(http_connection_t *hc, const char *realm)
   char *a = alloca(strlen(realm) + strlen(hc->hc_nonce) + 1);
   strcpy(a, realm);
   strcat(a, hc->hc_nonce);
-  return sha512sum256_base64(a);
+  return sha256sum_base64(a);
 }
 
 /**
@@ -402,10 +404,17 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
       char *opaque;
       if (hc->hc_nonce == NULL && http_get_nonce(hc)) goto __noauth;
       opaque = http_get_opaque(hc, realm);
+      if (opaque == NULL) goto __noauth;
       if (config.http_auth_algo != HTTP_AUTH_ALGO_MD5)
         http_auth_header(&hdrs, realm,
                          config.http_auth_algo == HTTP_AUTH_ALGO_SHA256 ?
-                           "SHA-256" : "SHA-512-256", hc->hc_nonce, opaque);
+                           "SHA-256" :
+#if OPENSSL_VERSION_NUMBER >= 0x1010101fL
+                             "SHA-512-256",
+#else
+                             "SHA-256",
+#endif
+                           hc->hc_nonce, opaque);
       http_auth_header(&hdrs, realm, NULL, hc->hc_nonce, opaque);
       free(opaque);
     } else {

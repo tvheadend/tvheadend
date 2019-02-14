@@ -21,6 +21,7 @@
 #include <string.h>
 #include <assert.h>
 #include <openssl/evp.h>
+#include <openssl/opensslv.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
@@ -610,16 +611,20 @@ sha256sum ( const char *str, int lowercase )
 char *
 sha512sum256 ( const char *str, int lowercase )
 {
+#if OPENSSL_VERSION_NUMBER >= 0x1010101fL
   return openssl_hash_hexstr(str, lowercase, EVP_sha512_256(), 32);
+#else
+  return NULL;
+#endif
 }
 
 char *
-sha512sum256_base64 ( const char *str )
+sha256sum_base64 ( const char *str )
 {
   uint8_t hash[32];
   char *out = malloc(64);
   if (out == NULL) return NULL;
-  if (openssl_hash(hash, (const uint8_t *)str, strlen(str), EVP_sha512_256()) == NULL) {
+  if (openssl_hash(hash, (const uint8_t *)str, strlen(str), EVP_sha256()) == NULL) {
     free(out);
     return NULL;
   }

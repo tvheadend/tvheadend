@@ -274,7 +274,7 @@ static inline int64_t ts_rescale_inv(int64_t ts, int tb)
 char *md5sum ( const char *str, int lowercase );
 char *sha256sum ( const char *str, int lowercase );
 char *sha512sum256 ( const char *str, int lowercase );
-char *sha512sum256_base64 ( const char *str );
+char *sha256sum_base64 ( const char *str );
 
 int makedirs ( int subsys, const char *path, int mode, int mstrict, gid_t gid, uid_t uid );
 
