@@ -36,6 +36,7 @@ static int satip_server_rtsp_port;
 static int satip_server_rtsp_port_locked;
 static upnp_service_t *satips_upnp_discovery;
 static tvh_mutex_t satip_server_reinit;
+static int bound_port;
 
 static void satip_server_save(void);
 
@@ -556,7 +557,7 @@ static void satips_rtsp_port(int def)
   int rtsp_port = satip_server_rtsp_port;
   if (!satip_server_rtsp_port_locked)
     rtsp_port = satip_server_conf.satip_rtsp > 0 ? satip_server_conf.satip_rtsp : def;
-  if (getuid() != 0 && rtsp_port > 0 && rtsp_port < 1024) {
+  if (getuid() != 0 && rtsp_port > 0 && rtsp_port < 1024 && bound_port != rtsp_port) {
     tvherror(LS_SATIPS, "RTSP port %d specified but no root perms, using 9983", rtsp_port);
     rtsp_port = 9983;
   }
@@ -995,6 +996,7 @@ static void satip_server_init_common(const char *prefix, int announce)
   nat_ip = strdup(satip_server_conf.satip_nat_ip ?: "");
   nat_port = satip_server_conf.satip_nat_rtsp ?: satip_server_rtsp_port;
   rtp_src_ip = strdup(satip_server_conf.satip_rtp_src_ip ?: "");
+  bound_port = satip_server_rtsp_port;
 
   if (announce)
     tvh_mutex_unlock(&global_lock);
