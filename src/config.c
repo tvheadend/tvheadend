@@ -1691,7 +1691,7 @@ config_boot
   config.idnode.in_class = &config_class;
   config.ui_quicktips = 1;
   config.http_auth = HTTP_AUTH_DIGEST;
-  config.http_auth_algo = HTTP_AUTH_ALGO_SHA256;
+  config.http_auth_algo = HTTP_AUTH_ALGO_MD5;
   config.proxy = 0;
   config.realm = strdup("tvheadend");
   config.info_area = strdup("login,storage,time");
