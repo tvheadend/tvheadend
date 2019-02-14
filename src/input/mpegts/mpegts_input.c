@@ -464,12 +464,9 @@ mpegts_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 int
 mpegts_mps_cmp ( mpegts_pid_sub_t *a, mpegts_pid_sub_t *b )
 {
-  if (a->mps_type != b->mps_type) {
-    if (a->mps_type & MPS_SERVICE)
-      return 1;
-    else
-      return -1;
-  }
+  const int mask = MPS_SERVICE;
+  if ((a->mps_type & mask) != (b->mps_type & mask)) {
+    return (a->mps_type & mask) ? 1 : -1;
   if (a->mps_owner < b->mps_owner) return -1;
   if (a->mps_owner > b->mps_owner) return 1;
   return 0;
