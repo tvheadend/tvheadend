@@ -213,7 +213,7 @@ char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size)
 {
   static const char b64[] =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  char *ret, *dst;
+  char *dst;
   unsigned i_bits = 0;
   int i_shift = 0;
   int bytes_remaining = in_size;
@@ -221,7 +221,7 @@ char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size)
   if (in_size >= UINT_MAX / 4 ||
       out_size < BASE64_SIZE(in_size))
       return NULL;
-  ret = dst = out;
+  dst = out;
   while (bytes_remaining) {
     i_bits = (i_bits << 8) + *in++;
     bytes_remaining--;
@@ -231,11 +231,11 @@ char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size)
       i_shift -= 6;
     } while (i_shift > 6 || (bytes_remaining == 0 && i_shift > 0));
   }
-  while ((dst - ret) & 3)
+  while ((dst - out) & 3)
     *dst++ = '=';
   *dst = '\0';
 
-  return ret;
+  return out;
 }
 
 /**
@@ -557,49 +557,73 @@ sbuf_read(sbuf_t *sb, int fd)
   return n;
 }
 
-static char *
-openssl_hash ( const char *str, int lowercase, const EVP_MD *md, int len )
+static uint8_t *
+openssl_hash ( uint8_t *hash, const uint8_t *msg, size_t msglen, const EVP_MD *md )
 {
-  uint8_t hash[len];
-  char *ret = malloc((len * 2) + 1);
-  const char *fmt = lowercase ? "%02x" : "%02X";
   EVP_MD_CTX *mdctx;
-  int i;
 
   if ((mdctx = EVP_MD_CTX_create()) == NULL)
     return NULL;
   if (EVP_DigestInit_ex(mdctx, md, NULL) != 1)
     goto __error;
-  if (EVP_DigestUpdate(mdctx, str, strlen(str)) != 1)
+  if (EVP_DigestUpdate(mdctx, msg, msglen) != 1)
     goto __error;
   if (EVP_DigestFinal_ex(mdctx, hash, NULL) != 1)
     goto __error;
-  for (i = 0; i < len; i++)
-    sprintf(ret + i*2, fmt, hash[i]);
-  ret[len*2] = '\0';
   EVP_MD_CTX_destroy(mdctx);
-  return ret;
+  return hash;
 __error:
   EVP_MD_CTX_destroy(mdctx);
   return NULL;
 }
 
+static char *
+openssl_hash_hexstr ( const char *str, int lowercase, const EVP_MD *md, int len )
+{
+  int i;
+  uint8_t hash[len];
+  char *ret = malloc((len * 2) + 1);
+  const char *fmt = lowercase ? "%02x" : "%02X";
+  if (ret == NULL) return NULL;
+  if (openssl_hash(hash, (const uint8_t *)str, strlen(str), md) == NULL) {
+    free(ret);
+    return NULL;
+  }
+  for (i = 0; i < len; i++)
+    sprintf(ret + i*2, fmt, hash[i]);
+  ret[len*2] = '\0';
+  return ret;
+}
+
 char *
 md5sum ( const char *str, int lowercase )
 {
-  return openssl_hash(str, lowercase, EVP_md5(), 16);
+  return openssl_hash_hexstr(str, lowercase, EVP_md5(), 16);
 }
 
 char *
 sha256sum ( const char *str, int lowercase )
 {
-  return openssl_hash(str, lowercase, EVP_sha256(), 32);
+  return openssl_hash_hexstr(str, lowercase, EVP_sha256(), 32);
 }
 
 char *
 sha512sum256 ( const char *str, int lowercase )
 {
-  return openssl_hash(str, lowercase, EVP_sha512_256(), 32);
+  return openssl_hash_hexstr(str, lowercase, EVP_sha512_256(), 32);
+}
+
+char *
+sha512sum256_base64 ( const char *str )
+{
+  uint8_t hash[32];
+  char *out = malloc(64);
+  if (out == NULL) return NULL;
+  if (openssl_hash(hash, (const uint8_t *)str, strlen(str), EVP_sha512_256()) == NULL) {
+    free(out);
+    return NULL;
+  }
+  return base64_encode(out, 64, hash, 32);
 }
 
 #define FILE_MODE_BITS(x) (x&(S_IRWXU|S_IRWXG|S_IRWXO))

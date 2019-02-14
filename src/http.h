@@ -174,7 +174,6 @@ typedef struct http_connection {
   char *hc_password;
   char *hc_authhdr;
   char *hc_nonce;
-  int   hc_nonce_algo;
   access_t *hc_access;
   enum {
     HC_AUTH_NONE,
