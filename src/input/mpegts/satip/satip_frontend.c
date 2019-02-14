@@ -1024,9 +1024,14 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
         s = (char *)rtcp + 16;
         tvhtrace(LS_SATIP, "Status string: '%s'", s);
         status = SIGNAL_NONE;
-        if (strncmp(s, "ver=0.9;tuner=", 14) == 0 ||
-            strncmp(s, "ver=1.2;tuner=", 14) == 0) {
-          n = http_tokenize(s + 14, argv, 4, ',');
+        if (strncmp(s, "ver=1.2;src=1;tuner=", 20) == 0) {
+          /* broken FritzBox 6490/6590 */
+          n = http_tokenize(s + 20, argv, ARRAY_SIZE(argv), ',');
+          goto __ver12;
+        } else if (strncmp(s, "ver=0.9;tuner=", 14) == 0 ||
+                   strncmp(s, "ver=1.2;tuner=", 14) == 0) {
+          n = http_tokenize(s + 14, argv, ARRAY_SIZE(argv), ',');
+__ver12:
           if (n < 4)
             goto fail;
           if (atoi(argv[0]) != lfe->sf_number)
@@ -1051,7 +1056,7 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if ((s = strstr(s + 8, ";tuner=")) == NULL)
             goto fail;
           s += 7;
-          n = http_tokenize(s, argv, 4, ',');
+          n = http_tokenize(s, argv, ARRAY_SIZE(argv), ',');
           if (n < 4)
             goto fail;
           if (atoi(argv[0]) != lfe->sf_number)
