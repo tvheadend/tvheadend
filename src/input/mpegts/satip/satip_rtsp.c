@@ -278,24 +278,43 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
   return rtsp_setup(hc, stream, buf, NULL, udp_port, udp_port + 1);
 }
 
-static const char *
-satip_rtsp_pids_strip( const char *s, int maxlen )
+static int
+satip_rtsp_pids_split( http_client_t *hc, const char **pids, int size,
+                       const char *s, int maxlen )
 {
   char *ptr;
+  int idx = 0;
 
   if (s == NULL)
-    return NULL;
+    return 0;
   while (*s == ',')
     s++;
-  while (strlen(s) > maxlen) {
-    ptr = strrchr(s, ',');
-    if (ptr == NULL)
+  while (idx < size) {
+    if (strlen(s) <= maxlen)
+      goto _out;
+    ptr = (char *)s + maxlen - 1;
+    while (ptr != s && *ptr != ',') ptr--;
+    if (ptr == s)
       abort();
+    pids[idx++] = s;
     *ptr = '\0';
+    s = ptr + 1;
   }
+_out:
   if (*s == '\0')
-    return NULL;
-  return s;
+    return 0;
+  if (idx < size)
+    pids[idx++] = s;
+  else
+    tvherror(LS_SATIP, "%04X: PLAY params - PID split overflow!", hc->hc_id);
+  return idx;
+}
+
+static int
+satip_rtsp_play0( http_client_t *hc, int index, const char *stream, const char *query )
+{
+  tvhtrace(LS_SATIP, "%04X: PLAY params[%d] - %s", hc->hc_id, index, query);
+  return rtsp_play(hc, stream, query);
 }
 
 int
@@ -303,56 +322,64 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
                  const char *addpids, const char *delpids,
                  int max_pids_len, int weight )
 {
-  htsbuf_queue_t q;
   char *stream = NULL;
-  char _stream[32];
-  char *query;
-  int r, split = 0;
+  char _stream[32], _w[16];
+  const char *p[8], *add[8], *del[8];
+  int pcnt, addcnt, delcnt;
+  int i, r, index = 0;
+  char buf[max_pids_len + 32];
 
-  pids    = satip_rtsp_pids_strip(pids   , max_pids_len);
-  addpids = satip_rtsp_pids_strip(addpids, max_pids_len);
-  delpids = satip_rtsp_pids_strip(delpids, max_pids_len);
+  if (max_pids_len < 32)
+    max_pids_len = 32;
 
-  if (pids == NULL && addpids == NULL && delpids == NULL && weight <= 0)
+  pcnt    = satip_rtsp_pids_split(hc, p, ARRAY_SIZE(p), pids, max_pids_len);
+  addcnt  = satip_rtsp_pids_split(hc, add, ARRAY_SIZE(add), addpids, max_pids_len);
+  delcnt  = satip_rtsp_pids_split(hc, del, ARRAY_SIZE(del), delpids, max_pids_len);
+
+  if (pcnt == 0 && addcnt == 0 && delcnt == 0 && weight <= 0)
     return -EINVAL;
 
-  //printf("pids = '%s' addpids = '%s' delpids = '%s'\n", pids, addpids, delpids);
-
-  htsbuf_queue_init(&q, 0);
-  /* pids setup and add/del requests cannot be mixed per specification */
-  if (pids) {
-    htsbuf_qprintf(&q, "pids=%s", pids);
-  } else {
-    if (delpids)
-      htsbuf_qprintf(&q, "delpids=%s", delpids);
-    if (addpids) {
-      if (delpids) {
-        /* try to maintain the maximum request size - simple split */
-        if (strlen(addpids) + strlen(delpids) >= max_pids_len)
-          split = 1;
-        else
-          htsbuf_append(&q, "&", 1);
-      }
-      if (!split)
-        htsbuf_qprintf(&q, "addpids=%s", addpids);
-    }
-  }
-  if (weight)
-    htsbuf_qprintf(&q, "%stvhweight=%d", htsbuf_empty(&q) ? "" : "&", weight);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);
-  query = htsbuf_to_string(&q);
-  tvhtrace(LS_SATIP, "%04X: PLAY params - %s", hc->hc_id, query);
-  r = rtsp_play(hc, stream, query);
-  free(query);
-  if (r >= 0 && split) {
-    htsbuf_queue_init(&q, 0);
-    htsbuf_qprintf(&q, "addpids=%s", addpids);
-    query = htsbuf_to_string(&q);
-    tvhtrace(LS_SATIP, "%04X: PLAY params (split) - %s", hc->hc_id, query);
-    r = rtsp_play(hc, stream, query);
-    free(query);
+
+  if (weight)
+    snprintf(_w, sizeof(_w), "&tvhweight=%d", weight);
+
+  /* pids setup and add/del requests cannot be mixed per specification */
+  /* do the proper split */
+  if (pcnt > 0) {
+    snprintf(buf, sizeof(buf), "pids=%s%s", p[0], _w);
+    satip_rtsp_play0(hc, index++, stream, buf);
+    for (i = 1; i < pcnt; i++) {
+      snprintf(buf, sizeof(buf), "addpids=%s%s", p[i], _w);
+      r = satip_rtsp_play0(hc, index++, stream, buf);
+      if (r < 0)
+        return r;
+    }
+  } else {
+    for (i = 0; i < delcnt - 1; i++) {
+      snprintf(buf, sizeof(buf), "delpids=%s%s", del[i], _w);
+      r = satip_rtsp_play0(hc, index++, stream, buf);
+      if (r < 0)
+        return r;
+    }
+    if (i == delcnt - 1 && addcnt > 0 &&
+        strlen(del[i]) + strlen(add[0]) <= max_pids_len) {
+      snprintf(buf, sizeof(buf), "delpids=%s&addpids=%s%s", del[i], add[0], _w);
+      r = satip_rtsp_play0(hc, index++, stream, buf);
+      if (r < 0)
+        return r;
+      i = 1;
+    } else {
+      i = 0;
+    }
+    for ( ; i < addcnt; i++) {
+      snprintf(buf, sizeof(buf), "addpids=%s%s", add[i], _w);
+      r = satip_rtsp_play0(hc, index++, stream, buf);
+      if (r < 0)
+        return r;
+    }
   }
   return r;
 }
