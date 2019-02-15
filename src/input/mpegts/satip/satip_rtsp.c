@@ -373,6 +373,12 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
         return r;
       i = 1;
     } else {
+      if (i < delcnt) {
+        snprintf(buf, sizeof(buf), "delpids=%s%s", del[i], _w);
+        r = satip_rtsp_play0(hc, index++, stream, buf);
+        if (r < 0)
+          return r;
+      }
       i = 0;
     }
     for ( ; i < addcnt; i++) {
