@@ -326,7 +326,7 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
   char _stream[32], _w[16];
   const char *p[8], *add[8], *del[8];
   int pcnt, addcnt, delcnt;
-  int i, r, index = 0;
+  int i, r = 0, index = 0;
   char buf[max_pids_len + 32];
 
   if (max_pids_len < 32)
