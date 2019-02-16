@@ -345,6 +345,8 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
 
   if (weight)
     snprintf(_w, sizeof(_w), "&tvhweight=%d", weight);
+  else
+    _w[0] = '\0';
 
   /* pids setup and add/del requests cannot be mixed per specification */
   /* do the proper split */
