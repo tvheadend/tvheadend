@@ -92,6 +92,7 @@
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
 #endif
+#include "htsmsg_json.h"
 
 pthread_t main_tid;
 
@@ -869,7 +870,8 @@ main(int argc, char **argv)
              *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL,
              *opt_user_agent   = NULL,
-             *opt_satip_bindaddr = NULL;
+             *opt_satip_bindaddr = NULL,
+             *opt_jsondump     = NULL;
   static char *__opt_satip_xml[10];
   str_list_t  opt_satip_xml    = { .max = 10, .num = 0, .str = __opt_satip_xml };
   static char *__opt_satip_tsfile[10];
@@ -878,6 +880,7 @@ main(int argc, char **argv)
     {   0, NULL,        N_("Generic options"),         OPT_BOOL, NULL         },
     { 'h', "help",      N_("Show this page"),          OPT_BOOL, &opt_help    },
     { 'v', "version",   N_("Show version information"),OPT_BOOL, &opt_version },
+    {   0, "jsondump",  N_("Dump configuration file as json"), OPT_STR, &opt_jsondump },
 
     {   0, NULL,        N_("Service configuration"),   OPT_BOOL, NULL         },
     { 'c', "config",    N_("Alternate configuration path"), OPT_STR,  &opt_config  },
@@ -1018,6 +1021,15 @@ main(int argc, char **argv)
       show_version(argv[0]);
     if (opt_subsystems)
       show_subsystems(argv[0]);
+    if (opt_jsondump) {
+      htsmsg_t *hts = hts_settings_load(opt_jsondump);
+      if (hts) {
+        printf("%s", htsmsg_json_serialize_to_str(hts,1));
+        return 0;
+      }
+      fprintf(stderr, _("Couldn't load configuration %s\n"), opt_jsondump);
+      return 0;
+    }
   }
 
   /* Additional cmdline processing */
