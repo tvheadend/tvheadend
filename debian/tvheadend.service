@@ -1,6 +1,6 @@
 [Unit]
 Description=Tvheadend - a TV streaming server and DVR
-After=syslog.target network.target auditd.service
+After=auditd.service syslog.target network.target local-fs.target *.mount
 
 [Service]
 EnvironmentFile=/etc/default/tvheadend
