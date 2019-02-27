@@ -38,6 +38,7 @@ typedef struct iptv_thread_pool {
   pthread_t thread;
   iptv_input_t *input;
   tvhpoll_t *poll;
+  int running;
   uint32_t streams;
 } iptv_thread_pool_t;
 
@@ -524,7 +525,7 @@ iptv_input_thread ( void *aux )
   iptv_input_t *mi;
   tvhpoll_event_t ev;
 
-  while ( tvheadend_is_running() ) {
+  while ( pool->running && tvheadend_is_running() ) {
     nfds = tvhpoll_wait(pool->poll, &ev, 1, -1);
     if ( nfds < 0 ) {
       if (tvheadend_is_running() && !ERRNO_AGAIN(errno)) {
@@ -1224,6 +1225,7 @@ iptv_input_thread_manage(int count, int force)
     pool = calloc(1, sizeof(*pool));
     pool->poll = tvhpoll_create(10);
     pool->input = iptv_create_input(pool);
+    pool->running = 1;
     tvh_thread_create(&pool->thread, NULL, iptv_input_thread, pool, "iptv");
     TAILQ_INSERT_TAIL(&iptv_tpool, pool, link);
     iptv_tpool_count++;
@@ -1231,7 +1233,8 @@ iptv_input_thread_manage(int count, int force)
   while (iptv_tpool_count > count) {
     TAILQ_FOREACH(pool, &iptv_tpool, link)
       if (pool->streams == 0 || force) {
-        tvh_thread_kill(pool->thread, SIGTERM);
+        pool->running = 0;
+        tvh_thread_kill(pool->thread, SIGQUIT);
         pthread_join(pool->thread, NULL);
         TAILQ_REMOVE(&iptv_tpool, pool, link);
         mpegts_input_stop_all((mpegts_input_t*)pool->input);
