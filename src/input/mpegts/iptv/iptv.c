@@ -48,7 +48,7 @@ int iptv_tpool_count = 0;
 iptv_thread_pool_t *iptv_tpool_last = NULL;
 gtimer_t iptv_tpool_manage_timer;
 
-static void iptv_input_thread_manage(int count, int force);
+static void iptv_input_thread_manage_cb(void *aux);
 
 static inline int iptv_tpool_safe_count(void)
 {
@@ -459,7 +459,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   tvh_mutex_unlock(&iptv_lock);
 
   if (u32 == 0)
-    iptv_input_thread_manage(iptv_tpool_safe_count(), 0);
+    gtimer_arm_rel(&iptv_tpool_manage_timer, iptv_input_thread_manage_cb, NULL, 0);
 }
 
 static void
@@ -1253,6 +1253,12 @@ iptv_input_thread_manage(int count, int force)
     if (pool == NULL)
       break;
   }
+}
+
+static void
+iptv_input_thread_manage_cb(void *aux)
+{
+  iptv_input_thread_manage(iptv_tpool_safe_count(), 0);
 }
 
 void iptv_init ( void )
