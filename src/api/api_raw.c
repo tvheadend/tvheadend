@@ -184,13 +184,11 @@ api_idnode_raw_import
   int count = 0;
   const idnodes_rb_t *domain = NULL;
 
-  htsmsg_print(args);
   if (!(f = htsmsg_field_find(args, "node")))
     return EINVAL;
   if (!(msg = htsmsg_field_get_list(f)))
     if (!(msg = htsmsg_field_get_map(f)))
       return EINVAL;
-  htsmsg_print(msg);
 
   tvh_mutex_lock(&global_lock);
 

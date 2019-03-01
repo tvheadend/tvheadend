@@ -124,10 +124,8 @@ def do_get(*args):
 def do_export(*args):
     if len(args) < 1: error(1, 'get [uuid]')
     body = do_get0('raw/export', {'uuid':args[0]})
-    if type(body) != type({}):
+    if type(body) != type([]):
         error(11, 'Unknown data')
-    if 'entries' in body:
-        body = body['entries']
     if len(body) == 1:
         body = body[0]
     if not 'uuid' in body:
