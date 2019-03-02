@@ -343,6 +343,7 @@ struct mpegts_network
    * Scanning
    */
   mpegts_mux_queue_t mn_scan_pend;    // Pending muxes
+  mpegts_mux_queue_t mn_scan_ipend;   // Pending muxes (idle)
   mpegts_mux_queue_t mn_scan_active;  // Active muxes
   mtimer_t           mn_scan_timer;   // Timer for activity
   mtimer_t           mn_bouquet_timer;
@@ -385,6 +386,7 @@ typedef enum mpegts_mux_scan_state
 {
   MM_SCAN_STATE_IDLE,     // Nothing
   MM_SCAN_STATE_PEND,     // Queue'd pending scan
+  MM_SCAN_STATE_IPEND,    // Queue'd pending scan - idle queue
   MM_SCAN_STATE_ACTIVE,   // Scan is active
 } mpegts_mux_scan_state_t;
 

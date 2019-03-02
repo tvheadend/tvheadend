@@ -558,6 +558,7 @@ mpegts_network_create0
 
   /* Initialise scanning */
   TAILQ_INIT(&mn->mn_scan_pend);
+  TAILQ_INIT(&mn->mn_scan_ipend);
   TAILQ_INIT(&mn->mn_scan_active);
   mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
 

@@ -31,6 +31,12 @@ mpegts_network_scan_notify ( mpegts_mux_t *mm )
   idnode_notify_changed(&mm->mm_network->mn_id);
 }
 
+/*
+ * rules:
+ *   1) prefer weight
+ *   2) prefer muxes with the newer timestamp (scan interrupted?)
+ *   3) do standard mux sorting
+ */
 static int
 mm_cmp ( mpegts_mux_t *a, mpegts_mux_t *b )
 {
@@ -44,53 +50,105 @@ mm_cmp ( mpegts_mux_t *a, mpegts_mux_t *b )
   return r;
 }
 
+/*
+ * rules:
+ *   1) prefer weight
+ *   2) prefer muxes with the oldest timestamp
+ *   3) do standard mux sorting
+ */
+static int
+mm_cmp_idle ( mpegts_mux_t *a, mpegts_mux_t *b )
+{
+  int r = b->mm_scan_weight - a->mm_scan_weight;
+  if (r == 0) {
+    int64_t l = a->mm_start_monoclock - b->mm_start_monoclock;
+    if (l == 0)
+      return mpegts_mux_compare(a, b);
+    r = l > 0 ? 1 : -1;
+  }
+  return r;
+}
+
+static void
+mpegts_network_scan_queue_del0 ( mpegts_mux_t *mm )
+{
+  mpegts_network_t *mn = mm->mm_network;
+  if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE) {
+    TAILQ_REMOVE(&mn->mn_scan_active, mm, mm_scan_link);
+  } else if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
+    TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
+  } else if (mm->mm_scan_state == MM_SCAN_STATE_IPEND) {
+    TAILQ_REMOVE(&mn->mn_scan_ipend, mm, mm_scan_link);
+  }
+}
+
+static int
+mpegts_network_scan_do_mux ( mpegts_mux_queue_t *q, mpegts_mux_t *mm )
+{
+  int r, state = mm->mm_scan_state;
+
+  assert(state == MM_SCAN_STATE_PEND ||
+         state == MM_SCAN_STATE_IPEND ||
+         state == MM_SCAN_STATE_ACTIVE);
+
+  /* Don't try to subscribe already tuned muxes */
+  if (mm->mm_active) return 0;
+
+  /* Attempt to tune */
+  r = mpegts_mux_subscribe(mm, NULL, "scan", mm->mm_scan_weight,
+                           mm->mm_scan_flags |
+                           SUBSCRIPTION_ONESHOT |
+                           SUBSCRIPTION_TABLES);
+
+  /* Started */
+  state = mm->mm_scan_state;
+  if (!r) {
+    assert(state == MM_SCAN_STATE_ACTIVE);
+    return 0;
+  }
+  assert(state == MM_SCAN_STATE_PEND ||
+         state == MM_SCAN_STATE_IPEND);
+
+  /* No free tuners - stop */
+  if (r == SM_CODE_NO_FREE_ADAPTER || r == SM_CODE_NO_ADAPTERS)
+    return -1;
+
+  /* No valid tuners (subtly different, might be able to tuner a later
+   * mux)
+   */
+  if (r == SM_CODE_NO_VALID_ADAPTER && mm->mm_is_enabled(mm))
+    return 0;
+
+  /* Failed */
+  TAILQ_REMOVE(q, mm, mm_scan_link);
+  if (mm->mm_scan_result != MM_SCAN_FAIL) {
+    mm->mm_scan_result = MM_SCAN_FAIL;
+    idnode_changed(&mm->mm_id);
+  }
+  mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
+  mm->mm_scan_weight = 0;
+  mpegts_network_scan_notify(mm);
+  return 0;
+}
+
 void
 mpegts_network_scan_timer_cb ( void *p )
 {
   mpegts_network_t *mn = p;
   mpegts_mux_t *mm, *nxt = NULL;
-  int r;
 
-  /* Process Q */
+  /* Process standard Q */
   for (mm = TAILQ_FIRST(&mn->mn_scan_pend); mm != NULL; mm = nxt) {
     nxt = TAILQ_NEXT(mm, mm_scan_link);
-    assert(mm->mm_scan_state == MM_SCAN_STATE_PEND || mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
-
-    /* Don't try to subscribe already tuned muxes */
-    if (mm->mm_active) continue;
-
-    /* Attempt to tune */
-    r = mpegts_mux_subscribe(mm, NULL, "scan", mm->mm_scan_weight,
-                             mm->mm_scan_flags |
-                             SUBSCRIPTION_ONESHOT |
-                             SUBSCRIPTION_TABLES);
-
-    /* Started */
-    if (!r) {
-      assert(mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
-      continue;
-    }
-    assert(mm->mm_scan_state == MM_SCAN_STATE_PEND);
-
-    /* No free tuners - stop */
-    if (r == SM_CODE_NO_FREE_ADAPTER || r == SM_CODE_NO_ADAPTERS)
+    if (mpegts_network_scan_do_mux(&mn->mn_scan_pend, mm))
       break;
+  }
 
-    /* No valid tuners (subtly different, might be able to tuner a later
-     * mux)
-     */
-    if (r == SM_CODE_NO_VALID_ADAPTER && mm->mm_is_enabled(mm))
-      continue;
-
-    /* Failed */
-    TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
-    if (mm->mm_scan_result != MM_SCAN_FAIL) {
-      mm->mm_scan_result = MM_SCAN_FAIL;
-      idnode_changed(&mm->mm_id);
-    }
-    mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
-    mm->mm_scan_weight = 0;
-    mpegts_network_scan_notify(mm);
+  /* Process idle Q */
+  for (mm = TAILQ_FIRST(&mn->mn_scan_ipend); mm != NULL; mm = nxt) {
+    nxt = TAILQ_NEXT(mm, mm_scan_link);
+    if (mpegts_network_scan_do_mux(&mn->mn_scan_ipend, mm))
+      break;
   }
 
   /* Re-arm timer. Really this is just a safety measure as we'd normally
@@ -102,6 +160,25 @@ mpegts_network_scan_timer_cb ( void *p )
 /******************************************************************************
  * Mux transition
  *****************************************************************************/
+
+static void
+mpegts_network_scan_mux_add ( mpegts_network_t *mn, mpegts_mux_t *mm )
+{
+  TAILQ_INSERT_SORTED_R(&mn->mn_scan_ipend, mpegts_mux_queue, mm,
+                        mm_scan_link, mm_cmp);
+  mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb,
+                 mn, sec2mono(10));
+}
+
+static void
+mpegts_network_scan_idle_mux_add ( mpegts_network_t *mn, mpegts_mux_t *mm )
+{
+  mm->mm_scan_weight = SUBSCRIPTION_PRIO_SCAN_IDLE;
+  TAILQ_INSERT_SORTED_R(&mn->mn_scan_ipend, mpegts_mux_queue, mm,
+                        mm_scan_link, mm_cmp_idle);
+  mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb,
+                 mn, sec2mono(10));
+}
 
 /* Finished */
 static inline void
@@ -124,20 +201,19 @@ mpegts_network_scan_mux_done0
   mpegts_mux_unsubscribe_by_name(mm, "scan");
   mm->mm_scan_state = state;
 
-  if (state == MM_SCAN_STATE_PEND) {
+  if (state == MM_SCAN_STATE_PEND || state == MM_SCAN_STATE_IPEND) {
     if (weight || mn->mn_idlescan) {
-      if (!weight)
-        mm->mm_scan_weight = SUBSCRIPTION_PRIO_SCAN_IDLE;
-      TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
-      TAILQ_INSERT_SORTED_R(&mn->mn_scan_pend, mpegts_mux_queue,
-                            mm, mm_scan_link, mm_cmp);
-      mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, sec2mono(10));
+      mpegts_network_scan_queue_del0(mm);
+      if (weight == 0 || weight == SUBSCRIPTION_PRIO_SCAN_IDLE)
+        mpegts_network_scan_idle_mux_add(mn, mm);
+      else
+        mpegts_network_scan_mux_add(mn, mm);
       weight = 0;
     } else {
       mpegts_network_scan_queue_del(mm);
     }
   } else {
-    if (!weight && mn->mn_idlescan)
+    if (weight == 0 && mn->mn_idlescan)
       weight = SUBSCRIPTION_PRIO_SCAN_IDLE;
     mpegts_network_scan_queue_del(mm);
   }
@@ -154,14 +230,14 @@ mpegts_network_scan_mux_done0
 
 /* Failed - couldn't start */
 void
-mpegts_network_scan_mux_fail    ( mpegts_mux_t *mm )
+mpegts_network_scan_mux_fail ( mpegts_mux_t *mm )
 {
   mpegts_network_scan_mux_done0(mm, MM_SCAN_FAIL, 0);
 }
 
 /* Completed succesfully */
 void
-mpegts_network_scan_mux_done    ( mpegts_mux_t *mm )
+mpegts_network_scan_mux_done ( mpegts_mux_t *mm )
 {
   mm->mm_scan_flags = 0;
   mpegts_network_scan_mux_done0(mm, MM_SCAN_OK, 0);
@@ -176,7 +252,7 @@ mpegts_network_scan_mux_partial ( mpegts_mux_t *mm )
 
 /* Interrupted (re-add) */
 void
-mpegts_network_scan_mux_cancel  ( mpegts_mux_t *mm, int reinsert )
+mpegts_network_scan_mux_cancel ( mpegts_mux_t *mm, int reinsert )
 {
   if (reinsert) {
     if (mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
@@ -196,11 +272,12 @@ void
 mpegts_network_scan_mux_active ( mpegts_mux_t *mm )
 {
   mpegts_network_t *mn = mm->mm_network;
-  if (mm->mm_scan_state != MM_SCAN_STATE_PEND)
+  if (mm->mm_scan_state != MM_SCAN_STATE_PEND &&
+      mm->mm_scan_state != MM_SCAN_STATE_IPEND)
     return;
+  mpegts_network_scan_queue_del0(mm);
   mm->mm_scan_state = MM_SCAN_STATE_ACTIVE;
   mm->mm_scan_init  = 0;
-  TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
   TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
 }
 
@@ -211,8 +288,7 @@ mpegts_network_scan_mux_reactivate ( mpegts_mux_t *mm )
   mpegts_network_t *mn = mm->mm_network;
   if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE)
     return;
-  if (mm->mm_scan_state == MM_SCAN_STATE_PEND)
-    TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
+  mpegts_network_scan_queue_del0(mm);
   mm->mm_scan_init  = 0;
   mm->mm_scan_state = MM_SCAN_STATE_ACTIVE;
   TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
@@ -226,12 +302,8 @@ void
 mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
 {
   mpegts_network_t *mn = mm->mm_network;
-  if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE) {
-    TAILQ_REMOVE(&mn->mn_scan_active, mm, mm_scan_link);
-  } else if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
-    TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
-  }
   tvhdebug(LS_MPEGTS, "removing mux %s from scan queue", mm->mm_nicename);
+  mpegts_network_scan_queue_del0(mm);
   mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
   mm->mm_scan_weight = 0;
   mtimer_disarm(&mm->mm_scan_timeout);
@@ -243,7 +315,7 @@ void
 mpegts_network_scan_queue_add
   ( mpegts_mux_t *mm, int weight, int flags, int delay )
 {
-  int reload = 0;
+  int requeue = 0;
   mpegts_network_t *mn = mm->mm_network;
 
   if (!mm->mm_is_enabled(mm)) return;
@@ -252,7 +324,7 @@ mpegts_network_scan_queue_add
 
   if (weight > mm->mm_scan_weight) {
     mm->mm_scan_weight = weight;
-    reload             = 1;
+    requeue = 1;
   }
 
   /* Already active */
@@ -260,22 +332,29 @@ mpegts_network_scan_queue_add
     return;
 
   /* Remove entry (or ignore) */
-  if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
-    if (!reload)
+  if (mm->mm_scan_state == MM_SCAN_STATE_PEND ||
+      mm->mm_scan_state == MM_SCAN_STATE_IPEND) {
+    if (!requeue)
       return;
-    TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
+    mpegts_network_scan_queue_del0(mm);
   }
 
   tvhdebug(LS_MPEGTS, "adding mux %s to scan queue weight %d flags %04X",
                       mm->mm_nicename, weight, flags);
 
   /* Add new entry */
-  mm->mm_scan_state  = MM_SCAN_STATE_PEND;
   mm->mm_scan_flags |= flags;
   if (mm->mm_scan_flags == 0)
     mm->mm_scan_flags = SUBSCRIPTION_IDLESCAN;
-  TAILQ_INSERT_SORTED_R(&mn->mn_scan_pend, mpegts_mux_queue,
-                        mm, mm_scan_link, mm_cmp);
+  if (weight == SUBSCRIPTION_PRIO_SCAN_IDLE) {
+    mm->mm_scan_state  = MM_SCAN_STATE_IPEND;
+    TAILQ_INSERT_SORTED_R(&mn->mn_scan_ipend, mpegts_mux_queue,
+                          mm, mm_scan_link, mm_cmp_idle);
+  } else {
+    mm->mm_scan_state  = MM_SCAN_STATE_PEND;
+    TAILQ_INSERT_SORTED_R(&mn->mn_scan_pend, mpegts_mux_queue,
+                          mm, mm_scan_link, mm_cmp);
+  }
   mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, sec2mono(delay));
   mpegts_network_scan_notify(mm);
 }

@@ -94,7 +94,8 @@ mpegts_mux_scan_active
   int t;
 
   /* Setup scan */
-  if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
+  if (mm->mm_scan_state == MM_SCAN_STATE_PEND ||
+      mm->mm_scan_state == MM_SCAN_STATE_IPEND) {
     mpegts_network_scan_mux_active(mm);
 
     /* Get timeout */
@@ -391,9 +392,10 @@ mpegts_mux_class_get_name ( void *ptr )
 
 static struct strtab
 scan_state_tab[] = {
-  { N_("IDLE"),   MM_SCAN_STATE_IDLE },
-  { N_("PEND"),   MM_SCAN_STATE_PEND },
-  { N_("ACTIVE"), MM_SCAN_STATE_ACTIVE },
+  { N_("IDLE"),        MM_SCAN_STATE_IDLE },
+  { N_("PEND"),        MM_SCAN_STATE_PEND },
+  { N_("IDLE PEND"),   MM_SCAN_STATE_IPEND },
+  { N_("ACTIVE"),      MM_SCAN_STATE_ACTIVE },
 };
 
 static struct strtab
@@ -416,7 +418,9 @@ mpegts_mux_class_scan_state_set ( void *o, const void *p )
     return 0;
   
   /* Start */
-  if (state == MM_SCAN_STATE_PEND || state == MM_SCAN_STATE_ACTIVE) {
+  if (state == MM_SCAN_STATE_PEND ||
+      state == MM_SCAN_STATE_IPEND ||
+      state == MM_SCAN_STATE_ACTIVE) {
 
     /* Start (only if required) */
     mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_USER,
