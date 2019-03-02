@@ -501,7 +501,7 @@ static void *tvh_thread_watch_thread(void *aux)
   const char *s;
 
   s = getenv("TVHEADEND_THREAD_WATCH_LIMIT");
-  limit = s ? atol(s) : 5;
+  limit = s ? atol(s) : 15;
   limit = MINMAX(limit, 5, 120);
   while (!atomic_get(&tvhwatch_done)) {
     pthread_mutex_lock(&thrwatch_mutex);
