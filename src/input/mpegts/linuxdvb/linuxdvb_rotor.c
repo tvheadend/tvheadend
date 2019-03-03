@@ -343,16 +343,22 @@ sat_angle( linuxdvb_rotor_t *lr, linuxdvb_satconf_ele_t *ls )
 
 static int
 linuxdvb_rotor_extcmd
-  (linuxdvb_rotor_t *lr, linuxdvb_satconf_t *ls)
+  (linuxdvb_rotor_t *lr, linuxdvb_satconf_ele_t *lse)
 {
   int outlen = -1, rd = -1;
   char outbuf[100];
-  char num[10];
-  char *argv[] = {NULL, num, NULL};
-  int ret = -1;
+  char satpos[10];
+  char satlon[10];
+  char satangle[10];
 
-  snprintf(num, sizeof(num), "%u", lr->lr_position);
-  if (spawn_and_give_stdout(ls->ls_rotor_extcmd, argv, NULL, &rd, NULL, 1) >= 0) {
+  char *argv[] = {NULL, satpos, satlon, satangle, NULL};
+  int ret = -1;
+  int angle=sat_angle(lr,lse);
+
+  snprintf(satpos, sizeof(satpos), "%u", lr->lr_position);
+  snprintf(satlon, sizeof(satlon), "%.1f", lr->lr_sat_lon);
+  snprintf(satangle, sizeof(satangle), "%d", angle);
+  if (spawn_and_give_stdout(lse->lse_parent->ls_rotor_extcmd, argv, NULL, &rd, NULL, 1) >= 0) {
     outlen = read(rd, outbuf, 99);
     if (outlen>0) {
       outbuf[outlen]=0;
@@ -376,11 +382,11 @@ linuxdvb_rotor_extcmd
 
 static int
 linuxdvb_external_grace
-  ( linuxdvb_rotor_t *lr, linuxdvb_satconf_t *ls)
+  ( linuxdvb_rotor_t *lr, linuxdvb_satconf_ele_t *lse)
 {
-  int ret = linuxdvb_rotor_extcmd(lr, ls);
+  int ret = linuxdvb_rotor_extcmd(lr, lse);
   if (ret<0)
-    return ls->ls_max_rotor_move;
+    return lse->lse_parent->ls_max_rotor_move;
   return ret;
 }
 
@@ -393,7 +399,7 @@ linuxdvb_rotor_grace
   int newpos, delta, tunit, min, res;
 
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_external_class))
-    return linuxdvb_external_grace(lr, ls);
+    return linuxdvb_external_grace(lr, ld->ld_satconf);
 
   if (!ls->ls_last_orbital_pos || ls->ls_motor_rate == 0)
     return ls->ls_max_rotor_move;
@@ -469,7 +475,7 @@ linuxdvb_rotor_external_tune
   ( linuxdvb_rotor_t *lr, dvb_mux_t *lm,
     linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls )
 {
-  return linuxdvb_rotor_extcmd(lr, lsp);
+  return linuxdvb_rotor_extcmd(lr, ls);
 }
 
 /* USALS */
