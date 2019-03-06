@@ -1167,7 +1167,7 @@ static void _eit_install_handlers
     }
   }
 
-  if (!priv)
+  if (!priv || !map)
     return;
 
   epggrab_ota_free_eit_plist(om);
