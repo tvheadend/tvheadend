@@ -1887,7 +1887,8 @@ void satip_server_rtsp_done(void)
   if (rtsp_server)
     tcp_server_delete(rtsp_server);
   tvh_mutex_unlock(&global_lock);
-  rtsp_close_sessions();
+  if (rtsp_server)
+    rtsp_close_sessions();
   tvh_mutex_lock(&global_lock);
   rtsp_server = NULL;
   rtsp_port = -1;
