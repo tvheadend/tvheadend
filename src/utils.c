@@ -359,9 +359,9 @@ char *utf8_validate_inplace(char *s)
  */
 
 static void
-sbuf_alloc_fail(int len)
+sbuf_alloc_fail(size_t len)
 {
-  fprintf(stderr, "Unable to allocate %d bytes\n", len);
+  fprintf(stderr, "Unable to allocate %jd bytes\n", len);
   abort();
 }
 
@@ -557,6 +557,10 @@ sbuf_read(sbuf_t *sb, int fd)
     sb->sb_ptr += n;
   return n;
 }
+
+/**
+ *
+ */
 
 static uint8_t *
 openssl_hash ( uint8_t *hash, const uint8_t *msg, size_t msglen, const EVP_MD *md )
