@@ -361,7 +361,7 @@ char *utf8_validate_inplace(char *s)
 static void
 sbuf_alloc_fail(size_t len)
 {
-  fprintf(stderr, "Unable to allocate %jd bytes\n", len);
+  fprintf(stderr, "Unable to allocate %zd bytes\n", len);
   abort();
 }
 
