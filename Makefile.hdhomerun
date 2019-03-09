@@ -48,6 +48,7 @@ LIB_FILES      := \
 			$(LIB_ROOT)/$(LIBHDHR)/.tvh_build \
 			$(LIB_ROOT)/libhdhomerun/libhdhomerun.a \
 			$(LIB_ROOT)/libhdhomerun/*.h
+LIB_DIFFS      := hdhomerun.diff
 
 include $(DIR)/Makefile.static
 
@@ -79,6 +80,7 @@ $(LIB_ROOT)/$(LIBHDHR)/.tvh_download:
 	$(call DOWNLOAD,$(LIBHDHR_URL),$(LIB_ROOT)/$(LIBHDHR_TB),$(LIBHDHR_SHA1))
 	$(call UNTAR,$(LIBHDHR_TB),z)
 	ln -sf libhdhomerun $(LIB_ROOT)/$(LIBHDHR)
+	$(call PATCH,$(LIBHDHR),$(LIB_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(LIBHDHR)/.tvh_build: \
