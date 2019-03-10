@@ -56,7 +56,7 @@ struct http_client_ssl {
   char    *rbio_buf;
   size_t   rbio_size;
   size_t   rbio_pos;
-  
+
   BIO     *wbio;
   char    *wbio_buf;
   size_t   wbio_size;
@@ -890,7 +890,7 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
     if (!hdr && hc->hc_rpos >= hc->hc_csize)
       return 1;
     return 0;
-  }  
+  }
 
   csize = hc->hc_csize == (size_t)-1 ? 0 : hc->hc_csize;
   l = len;
@@ -1505,7 +1505,11 @@ http_client_reconnect
   if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {
     ssl = calloc(1, sizeof(*ssl));
     hc->hc_ssl = ssl;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
     ssl->ctx   = SSL_CTX_new(SSLv23_client_method());
+#else
+    ssl->ctx   = SSL_CTX_new(TLS_client_method());
+#endif
     if (ssl->ctx == NULL) {
       tvherror(LS_HTTPC, "%04X: Unable to get SSL_CTX", shortid(hc));
       goto err1;
@@ -1552,7 +1556,7 @@ errnval:
 }
 
 http_client_t *
-http_client_connect 
+http_client_connect
   ( void *aux, http_ver_t ver, const char *scheme,
     const char *host, int port, const char *bindaddr )
 {
@@ -1593,7 +1597,7 @@ http_client_register( http_client_t *hc )
 {
   assert(hc->hc_data_received || hc->hc_conn_closed || hc->hc_data_complete);
   assert(hc->hc_efd == NULL);
-  
+
   pthread_mutex_lock(&http_lock);
 
   TAILQ_INSERT_TAIL(&http_clients, hc, hc_link);
