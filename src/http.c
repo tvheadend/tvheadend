@@ -1052,7 +1052,7 @@ http_verify_prepare(http_connection_t *hc, struct http_verify_structure *v)
     char all[1024];
     int res = -1;
 
-    if (algo1 == NULL) {
+    if (algo1 == NULL || strcasecmp(algo1, "MD5") == 0) {
       v->algo = HTTP_AUTH_ALGO_MD5;
     } else if (strcasecmp(algo1, "SHA-256") == 0) {
       v->algo = HTTP_AUTH_ALGO_SHA256;
