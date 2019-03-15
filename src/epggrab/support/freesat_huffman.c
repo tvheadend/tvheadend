@@ -5808,9 +5808,9 @@ size_t freesat_huffman_decode
 				nextCh = (value >> 24) & 0xff;
 				bitShift = 8;
 				if ((nextCh & 0x80) == 0) {
-					if (nextCh < ' ')
-						nextCh = STOP;
 					lastch = nextCh;
+					if ((nextCh < 0x20) && (nextCh != '\n'))
+						nextCh = ESCAPE;
 				}
 			} else {
 				indx = (unsigned int) lastch;
