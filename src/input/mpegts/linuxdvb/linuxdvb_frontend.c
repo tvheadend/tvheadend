@@ -2115,7 +2115,7 @@ linuxdvb_frontend_create
   const char *str, *uuid = NULL, *muuid = NULL;
   char id[16], lname[256], buf[256];
   linuxdvb_frontend_t *lfe;
-  htsmsg_t *scconf;
+  htsmsg_t *oconf = conf, *scconf;
   ssize_t r;
   int fd;
 
@@ -2129,7 +2129,8 @@ linuxdvb_frontend_create
   /* Tuner slave */
   snprintf(buf, sizeof(buf), "master for #%d", number);
   if (conf && type == DVB_TYPE_S) {
-    muuid = htsmsg_get_str(conf, buf);
+    /* use the original configuration here */
+    muuid = htsmsg_get_str(oconf, buf);
     if (muuid && uuid && !strcmp(muuid, uuid))
       muuid = NULL;
   }
