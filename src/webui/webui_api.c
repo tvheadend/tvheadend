@@ -36,11 +36,17 @@ webui_api_handler
   /* Build arguments */
   args = htsmsg_create_map();
   TAILQ_FOREACH(ha, &hc->hc_req_args, link) {
+    if (ha->val == NULL) {
+      r = EINVAL;
+      goto destroy_args;
+    }
     htsmsg_add_str(args, ha->key, ha->val);
   }
       
   /* Call */
   r = api_exec(hc->hc_access, remain, args, &resp);
+
+destroy_args:
   htsmsg_destroy(args);
   
   /* Convert error */
