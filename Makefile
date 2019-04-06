@@ -56,7 +56,7 @@ ifeq ($(COMPILER), gcc)
 CFLAGS  += -Wno-stringop-truncation -Wno-stringop-overflow
 endif
 CFLAGS  += -D_FILE_OFFSET_BITS=64
-CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
+CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR} -I${ROOTDIR}/vendor/duktape/src
 ifeq ($(CONFIG_ANDROID),yes)
 LDFLAGS += -ldl -lm
 else
@@ -212,6 +212,7 @@ SRCS-1 = \
 	src/uuid.c \
 	src/main.c \
 	src/tvhlog.c \
+	src/tvhjs.c \
 	src/tprofile.c \
 	src/idnode.c \
 	src/prop.c \
@@ -364,6 +365,9 @@ SRCS-2 += \
 	src/muxer/ebml.c \
 	src/muxer/muxer_mkv.c \
 	src/muxer/muxer_audioes.c
+
+SRCS-2 += \
+        vendor/duktape/src/duktape.c
 
 SRCS += $(SRCS-2)
 I18N-C += $(SRCS-2)

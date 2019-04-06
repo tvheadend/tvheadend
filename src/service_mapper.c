@@ -27,6 +27,8 @@
 #include "profile.h"
 #include "bouquet.h"
 #include "api.h"
+#include "tvhjs.h"
+#include "duktape.h"
 
 typedef struct service_mapper_item {
   TAILQ_ENTRY(service_mapper_item) link;
@@ -198,9 +200,16 @@ channel_t *
 service_mapper_process
   ( const service_mapper_conf_t *conf, service_t *s, bouquet_t *bq )
 {
+  const int level = bq ? LS_BOUQUET : LS_SERVICE_MAPPER;
   channel_t *chn = NULL;
   const char *name, *tagname;
   char *tidy_name = NULL;
+  duk_context *ctx = NULL;
+  duk_idx_t ctxTop = 0;
+  const char *js_name = NULL;
+  const char *js = conf->script;
+  const char *js_msg = NULL;
+  int js_severity = LOG_ERR;
   htsmsg_field_t *f;
   htsmsg_t *m;
 
@@ -219,6 +228,79 @@ service_mapper_process
 
   /* Find existing channel */
   name = service_get_channel_name(s);
+
+  /* Do we have JavaScript to execute?
+   *
+   * The function will take an object and return null if user
+   * does not want the channel mapped, otherwise it will return
+   * the channel name to use, for example capitalize letter or
+   * convert "SE: Fjorton" to "Fjorton SE" (#4715).
+   *
+   * Example JavaScript:
+   * "({smMapName : function(svc) { print(svc.name + '/' + svc.sid); return svc.name; }})";
+   */
+  if (!strempty(js)) {
+    ctx = tvhjs_get_ctx();
+    ctxTop = duk_get_top(ctx);
+    tvhdebug(level, "JS='%s'", js);
+
+    if (duk_peval_string(ctx, js) != 0) {
+      /* Something seriously wrong with script. So ignore channel mapping. */
+      tvherror(level, "Failed to eval script: '%s'", js);
+      service_mapper_stat.ignore++;
+      goto exit;
+    }
+
+    /* Name of user's JavaScript function to call. */
+    duk_push_string(ctx, "smMapName");
+    /* Now build up the argument list of one object */
+    duk_push_object(ctx);
+    duk_push_string(ctx, name);
+    duk_put_prop_string(ctx, -2, "name");
+    duk_push_int(ctx, service_id16(s));
+    duk_put_prop_string(ctx, -2, "sid");
+
+    /* And call our JS object with one object argument.
+     * We -3 since our stack is [func] [name-of-func] [map-obj] [top]
+     *
+     * Only success if call is successful and top of stack ("-1")
+     * is either a string or a null value.
+     */
+    if (duk_pcall_prop(ctx, -3, 1) == 0 &&
+        (duk_is_string(ctx, -1) ||
+         duk_is_null_or_undefined(ctx, -1))) {
+      /* Success */
+      js_name = duk_get_string_default(ctx, -1, NULL);
+
+      if (!strempty(js_name)) {
+        /* The name we will now use is the one the user has supplied. */
+        name = js_name;
+      } else {
+        /* Empty/null string means "do not map this channel". For
+         * example, user might not want channels with "shopping" in
+         * their names mapped.  So ignore the entry.
+         */
+        js_msg = "Ignoring mapping of channel due to user script.";
+        js_severity = LOG_INFO;
+      }
+    } else {
+      /* Call failed or got a bad return result such as an object. */
+      js_msg = "Failed in call to user script.";
+      js_severity = LOG_ERR;
+    } /* Bad call to script */
+
+    /* If we had some type of 'fail' message then we ignore the mapping. */
+    if (js_msg) {
+      /* Failure reason is in stack position -1 from top for errors,
+       * otherwise it would contain the thing returned from the
+       * script.
+       */
+      tvhlog(js_severity, level, "%s Got '%s' for channel '%s' Script: '%s'",
+               js_msg, duk_safe_to_string(ctx, -1), name?:"<null>", js);
+      service_mapper_stat.ignore++;
+      goto exit;
+    } /* Not mapped */
+  } /* Got JavaScript to execute */
 
   if (conf->tidy_channel_name && name) {
     size_t len = strlen(name);
@@ -243,7 +325,7 @@ service_mapper_process
         if (len && isspace(tidy_name[len-1]))
           tidy_name[len-1] = 0;
 
-        tvhdebug(bq ? LS_BOUQUET : LS_SERVICE_MAPPER,
+        tvhdebug(level,
                  "%s: generated tidy_name [%s] from [%s]",
                  s->s_nicename, tidy_name, name);
 
@@ -289,11 +371,21 @@ service_mapper_process
      * for "5 HD" and the service_mapper_link then uses "5 HD" as the
      * name.
      *
-     * We only set the name if we explicitly have a tidy name.
-     * Otherwise we let channel use the defaults.
+     * We only set the name if we explicitly have a tidy name or a
+     * JavaScript name.  Otherwise we let channel use the defaults.
+     * We prefer the tidy name since it allows the user to tick the
+     * "tidy name" options and just return the channel name as-is
+     * for the majority of cases. However, in the case where we
+     * have no tidy name (such as channel name "5"), then we will
+     * use the JavaScript name.
+     *
+     * The "channel_set_name" will ignore the change if we are setting
+     * the channel to the same name it already has.
      */
     if (tidy_name && *tidy_name)
       channel_set_name(chn, tidy_name);
+    else if (js_name)
+      channel_set_name(chn, js_name);
 
     /* Type tags */
     if (conf->type_tags) {
@@ -342,6 +434,9 @@ service_mapper_process
 
   /* Remove */
 exit:
+  /* Reset the JS stack to remove all arguments/return values */
+  if (ctx)
+    duk_set_top(ctx, ctxTop);
   service_mapper_remove(s);
   return chn;
 }
@@ -662,6 +757,20 @@ static const idclass_t service_mapper_conf_class = {
       .desc   = N_("Create network name tags (set by provider)."),
       .off    = offsetof(service_mapper_t, d.network_tags),
       .opts   = PO_ADVANCED
+    },
+    {
+      .type   = PT_STR,
+      .id     = "script",
+      .name   = N_("Script"),
+      .desc   = N_("JavaScript for advanced channel naming. "
+                   "The script is passed a single object containing the "
+                   "channel name and service id. It should return null if the "
+                   "channel should not be mapped, or the channel "
+                   "name to use. "
+                   "An example would be '({smMapName : function(svc) { print(svc.name + '/' + svc.sid); return svc.name; }})'"
+                  ),
+      .off    = offsetof(service_mapper_t, d.script),
+      .opts   = PO_ADVANCED | PO_MULTILINE
     },
     {}
   }
