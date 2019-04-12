@@ -34,6 +34,8 @@ typedef struct bouquet_download {
 
 bouquet_tree_t bouquets;
 
+static int bouquet_init_completed = 0;
+
 static void bouquet_remove_service(bouquet_t *bq, service_t *s, int delconf);
 static void bouquet_download_trigger(bouquet_t *bq);
 static void bouquet_download_stop(void *aux);
@@ -328,6 +330,151 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
       idnode_changed(&ch->ch_id);
 }
 
+
+static const char *
+bouquet_get_global_bouquet_src(void)
+{
+  static const char src[] = "tvh-network://global-bouquet";
+  return src;
+}
+
+
+/// The global bouquet is a virtual bouquet. It contains services from
+/// other bouquets which are enabled and have maptoch disabled. If the
+/// global bouquet is enabled and has maptoch enabled then it means
+/// mappings such as "merge same name" can be done using services from
+/// multiple bouquets (which may be from different sources such as
+/// DVB-T and DVB-S).
+static bouquet_t *
+bouquet_get_global_bouquet(void)
+{
+  static const char name[] = "Tvheadend Network";
+  bouquet_t *global_bq;
+  enum { BOUQUET_CREATE = 1 };
+
+  /* Still initializing, so don't do anything with a global bouquet yet otherwise
+   * we run the risk of creating a new global bouquet before we load the config
+   * from disk.
+   */
+  if (!bouquet_init_completed)
+    return NULL;
+
+  global_bq = bouquet_find_by_source(name, bouquet_get_global_bouquet_src(), BOUQUET_CREATE);
+  if (!global_bq->bq_comment)
+    bouquet_change_comment(global_bq, "Tvheadend", 1);
+  return global_bq;
+}
+
+/// Internal function to scan a single bouquet and collect all
+/// services on that bouquet in to active_svcs and add them to the
+/// global bouquet.
+static void
+bouquet_global_rescan_single_bouquet(const bouquet_t *bq, idnode_set_t *active_svcs)
+{
+  size_t z;
+  bouquet_t *global_bq = bouquet_get_global_bouquet();
+  service_t *s;
+  const service_lcn_t *lcn;
+
+  /* Global bouquet must be enabled and mapping to channels to have
+   * any services.
+   */
+  if (!global_bq || !global_bq->bq_enabled || !global_bq->bq_maptoch)
+    return;
+
+  /* Don't want to include disabled bouquets or ones already mapping
+   * to channels for themselves.
+   */
+  if (!bq || !bq->bq_enabled || bq->bq_maptoch || bq == global_bq)
+    return;
+
+  for (z = 0; z < bq->bq_services->is_count; z++) {
+    s = (service_t *)bq->bq_services->is_array[z];
+    LIST_FOREACH(lcn, &s->s_lcns, sl_link) {
+      if (lcn->sl_bouquet != bq) continue;
+      bouquet_add_service(global_bq, s, (int64_t)lcn->sl_lcn, NULL);
+      idnode_set_add(active_svcs, &s->s_id, NULL, NULL);
+    }
+  }
+}
+
+
+/// Callback function to rescan the global bouquet
+/// for active services and update the stats.
+static void
+bouquet_global_rescan_cb(void *unused)
+{
+  bouquet_t *global_bq = bouquet_get_global_bouquet();
+  if (!global_bq)
+    return;
+
+  size_t z;
+  const bouquet_t *bq;
+  idnode_set_t *active_svcs = idnode_set_create(1);
+  service_t *s;
+
+  tvhtrace(LS_BOUQUET, "Rescanning global bouquet");
+
+  /* We rescan every bouquet to build up a list of which
+   * services are still active. We only scan bouquets
+   * that are enabled and do not have maptoch set
+   * (since they are doing their own mappings).
+   */
+
+  /* If our bouquet is disabled/not mapping channels then we can't
+   * have any services
+   */
+  if (global_bq->bq_enabled && global_bq->bq_maptoch) {
+    RB_FOREACH(bq, &bouquets, bq_link)  {
+      bouquet_global_rescan_single_bouquet(bq, active_svcs);
+    }
+  }
+
+  /* Now we have our list of services, remove any that should no longer exist in the
+   * global bouquet.
+   */
+  for (z = 0; z < global_bq->bq_services->is_count; z++) {
+    s = (service_t *)global_bq->bq_services->is_array[z];
+    if (!idnode_set_exists(active_svcs, &s->s_id)) {
+        bouquet_remove_service(global_bq, s, 1);
+    }
+  }
+
+  bouquet_completed(global_bq, active_svcs->is_count);
+  idnode_set_free(active_svcs);
+}
+
+/// We only want to rescan after a short delay. So, if a lot of events
+/// are happening such as deleting lots of services or lots of
+/// networks complete scanning at the same time, we can wait a short
+/// while for the global bouquet to be updated rather than wasting CPU
+/// doing multiple scans. For example, my system can have 20 bouquets
+/// a second complete scanning, so we wait until the system is less
+/// busy.
+static void
+bouquet_global_rescan_i(int64_t mono)
+{
+  static mtimer_t bouquet_global_bouquet_rescan_timer;
+  mtimer_arm_rel(&bouquet_global_bouquet_rescan_timer, bouquet_global_rescan_cb, NULL, mono);
+}
+
+static void
+bouquet_global_rescan(void)
+{
+  bouquet_global_rescan_i(sec2mono(5));
+}
+
+
+/// Even though we say "now", it could get delayed
+/// if the system is busy.
+static void
+bouquet_global_rescan_now(void)
+{
+  bouquet_global_rescan_i(sec2mono(0));
+}
+
+
+
 /*
  *
  */
@@ -336,6 +483,7 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag)
 {
   service_lcn_t *tl;
   idnode_list_mapping_t *ilm;
+  bouquet_t *global_bq = NULL;
 
   lock_assert(&global_lock);
 
@@ -376,6 +524,11 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag)
   if (!bq->bq_in_load &&
       !idnode_set_exists(bq->bq_active_services, &s->s_id))
     idnode_set_add(bq->bq_active_services, &s->s_id, NULL, NULL);
+
+  global_bq = bouquet_get_global_bouquet();
+  if (global_bq && bq != global_bq && global_bq->bq_enabled) {
+    bouquet_global_rescan();
+  }
 }
 
 /*
@@ -424,11 +577,19 @@ bouquet_notify_service_enabled(service_t *t)
 static void
 bouquet_remove_service(bouquet_t *bq, service_t *s, int delconf)
 {
+  bouquet_t *global_bq;
   tvhtrace(LS_BOUQUET, "remove service %s from %s",
            s->s_nicename, bq->bq_name ?: "<unknown>");
   idnode_set_remove(bq->bq_services, &s->s_id);
   if (delconf)
     bouquet_unmap_channel(bq, s);
+  /* Also schedule global bouquet to check which services should be
+   * available.
+   */
+  global_bq = bouquet_get_global_bouquet();
+  if (global_bq && bq != global_bq && global_bq->bq_enabled) {
+    bouquet_global_rescan();
+  }
 }
 
 /*
@@ -582,6 +743,12 @@ bouquet_delete(bouquet_t *bq)
     bq->bq_services = idnode_set_create(1);
     idnode_changed(&bq->bq_id);
   }
+
+  /* Do a full rescan of global bouquet to ensure it no longer has
+   * entries from this deleted bouquet.
+   */
+  if (bq != bouquet_get_global_bouquet())
+    bouquet_global_rescan();
 }
 
 /**
@@ -614,6 +781,8 @@ bouquet_scan ( bouquet_t *bq )
       mpegts_network_uuid = bq->bq_src + 17;
     else if (strncmp(bq->bq_src, "exturl://", 9) == 0)
       return bouquet_download_trigger(bq);
+    else if (strcmp(bq->bq_src, bouquet_get_global_bouquet_src()) == 0)
+      return bouquet_global_rescan_now();
 
     if (mpegts_network_uuid) {
       mpegts_network_t *mn = mpegts_network_find(mpegts_network_uuid);
@@ -712,12 +881,23 @@ bouquet_class_enabled_notify ( void *obj, const char *lang )
   if (bq->bq_enabled)
     bouquet_scan(bq);
   bouquet_map_to_channels(bq);
+
+  /* We have to do the scan even for global bouquet since if global bouquet
+   * is disabled then it has to remove the services it had, and if it is
+   * enabled then we want to update the service list.
+   */
+  bq == bouquet_get_global_bouquet() ? bouquet_global_rescan_now() : bouquet_global_rescan();
 }
 
 static void
 bouquet_class_maptoch_notify ( void *obj, const char *lang )
 {
-  bouquet_map_to_channels((bouquet_t *)obj);
+  bouquet_t *bq = obj;
+  bouquet_map_to_channels(bq);
+  /* Ensure any service changes are reflected in the global bouquet */
+  if (bq != bouquet_get_global_bouquet()) {
+    bouquet_global_rescan();
+  }
 }
 
 static void
@@ -1272,6 +1452,15 @@ bouquet_init(void)
     }
     htsmsg_destroy(c);
   }
+
+  /* Now indicate init has completed. Otherwise what happens is we
+   * load a bouquet, internally create a global bouquet to map
+   * services from that bouquet, then later load the global bouquet
+   * from disk. So, we flag when init has completed to indicate that
+   * we can now proceed with the global bouquet if it does not exist.
+   */
+  bouquet_init_completed = 1;
+  bouquet_global_rescan_now();
 }
 
 void
