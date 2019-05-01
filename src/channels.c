@@ -823,10 +823,10 @@ void channel_remove_subscriber
  * *************************************************************************/
 
 const char *
-channel_get_name ( channel_t *ch, const char *blank )
+channel_get_name ( const channel_t *ch, const char *blank )
 {
   const char *s;
-  idnode_list_mapping_t *ilm;
+  const idnode_list_mapping_t *ilm;
   if (ch->ch_name && *ch->ch_name) return ch->ch_name;
   LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link)
     if ((s = service_get_channel_name((service_t *)ilm->ilm_in1)))
