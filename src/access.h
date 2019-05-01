@@ -100,6 +100,11 @@ enum {
   ACCESS_XMLTV_OUTPUT_FORMAT_BASIC_NO_HASH,
 };
 
+enum {
+  ACCESS_HTSP_OUTPUT_FORMAT_ALL = 0,
+  ACCESS_HTSP_OUTPUT_FORMAT_BASIC,
+};
+
 typedef struct access_entry {
   idnode_t ae_id;
 
@@ -131,6 +136,7 @@ typedef struct access_entry {
   uint32_t ae_conn_limit;
   int ae_change_conn_limit;
   int ae_xmltv_output_format;
+  int ae_htsp_output_format;
 
   int ae_dvr;
   int ae_htsp_dvr;
@@ -179,6 +185,7 @@ typedef struct access {
   int       aa_match;
   uint32_t  aa_conn_limit;
   uint32_t  aa_xmltv_output_format;
+  uint32_t  aa_htsp_output_format;
   uint32_t  aa_conn_limit_streaming;
   uint32_t  aa_conn_limit_dvr;
   uint32_t  aa_conn_streaming;
