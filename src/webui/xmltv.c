@@ -161,6 +161,18 @@ _http_xmltv_add_episode_num(htsbuf_queue_t *hq, uint16_t num, uint16_t cnt)
   }
 }
 
+/// Output a start tag for the tag and include a lang="xx" _only_ if we
+/// have more than one language. This avoids outputting lots of tags for
+/// the common case of only having one language, so is useful for very low
+/// memory devices.
+#define HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq,rb_tree,lang_str,tag)  \
+  do {                                                                  \
+    htsbuf_qprintf(hq, "  <%s", tag);                                   \
+    if (rb_tree->entries != 1)                                          \
+      htsbuf_qprintf(hq, " lang=\"%s\"", lang_str->lang);               \
+    htsbuf_append_str(hq,">");                                          \
+  } while(0)
+
 /** Output long description fields of the programme which are
  * not output for basic/limited devices.
  */
@@ -177,7 +189,7 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
     RB_FOREACH(lse, ebc->subtitle, link) {
       /* Ignore empty sub-titles */
       if (!strempty(lse->str)) {
-          htsbuf_qprintf(hq, "  <sub-title lang=\"%s\">", lse->lang);
+          HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, ebc->subtitle, lse, "sub-title");
           htsbuf_append_and_escape_xml(hq, lse->str);
           htsbuf_append_str(hq, "</sub-title>\n");
         }
@@ -185,13 +197,13 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
 
   if (ebc->description)
     RB_FOREACH(lse, ebc->description, link) {
-      htsbuf_qprintf(hq, "  <desc lang=\"%s\">", lse->lang);
+      HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, ebc->description, lse, "desc");
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</desc>\n");
     }
   else if (ebc->summary)
     RB_FOREACH(lse, ebc->summary, link) {
-      htsbuf_qprintf(hq, "  <desc lang=\"%s\">", lse->lang);
+      HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, ebc->summary, lse, "desc");
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</desc>\n");
     }
@@ -239,7 +251,7 @@ http_xmltv_programme_one(const http_connection_t *hc,
   htsbuf_append_and_escape_xml(hq, http_xmltv_channel_get_name(hc, ch, ubuf, sizeof ubuf));
   htsbuf_qprintf(hq, "\">\n");
   RB_FOREACH(lse, ebc->title, link) {
-    htsbuf_qprintf(hq, "  <title lang=\"%s\">", lse->lang);
+    HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, ebc->title, lse, "title");
     htsbuf_append_and_escape_xml(hq, lse->str);
     htsbuf_append_str(hq, "</title>\n");
   }
