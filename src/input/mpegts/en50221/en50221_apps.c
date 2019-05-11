@@ -496,7 +496,7 @@ getmenutext
     return r;
   if (l2 > 0) {
     txt = alloca(l2 * 2 + 1);
-    if (dvb_get_string(txt, l2 * 2 + 1, p2, l2, NULL, NULL) > 0 && txt[0]) {
+    if (dvb_get_string(txt, l2 * 2 + 1, p2, l2, NULL, NULL) == 0 && txt[0]) {
       if (list) {
         c = htsmsg_get_list(app->cia_menu, key);
         if (c == NULL) {
