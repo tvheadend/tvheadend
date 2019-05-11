@@ -501,7 +501,7 @@ getmenutext
         c = htsmsg_get_list(app->cia_menu, key);
         if (c == NULL) {
           c = htsmsg_create_list();
-          htsmsg_add_msg(app->cia_menu, key, c);
+          c = htsmsg_add_msg(app->cia_menu, key, c);
         }
         tvhtrace(LS_EN50221, "%s:  add to %s '%s'", app->cia_name, key, txt);
         htsmsg_add_str(c, NULL, txt);
