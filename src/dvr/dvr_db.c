@@ -1484,11 +1484,7 @@ typedef int (*_dvr_duplicate_fcn_t)(dvr_entry_t *de, dvr_entry_t *de2, void **au
 
 static int _dvr_duplicate_epnum(dvr_entry_t *de, dvr_entry_t *de2, void **aux)
 {
-  if (de->de_epnum.e_num && de2->de_epnum.e_num)
-    return de->de_epnum.e_num == de2->de_epnum.e_num;
-  if (de->de_epnum.text && de2->de_epnum.text)
-    return strcmp(de->de_epnum.text, de2->de_epnum.text) == 0;
-  return 0;
+  return ! epg_episode_number_cmp(&(de->de_epnum), &(de2->de_epnum)) ;
 }
 
 static int _dvr_duplicate_title(dvr_entry_t *de, dvr_entry_t *de2, void **aux)
