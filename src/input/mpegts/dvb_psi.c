@@ -106,18 +106,14 @@ extract_4byte(const uint8_t *ptr)
 static inline uint16_t
 extract_tsid(const uint8_t *ptr)
 {
-  uint16_t r = (ptr[0] << 8) | ptr[1];
-  if (r == MPEGTS_TSID_NONE) r = 55555;
-  return r;
+  return (ptr[0] << 8) | ptr[1];
 }
 
 
 static inline uint16_t
 extract_onid(const uint8_t *ptr)
 {
-  uint16_t r = (ptr[0] << 8) | ptr[1];
-  if (r == MPEGTS_ONID_NONE) r = 55555;
-  return r;
+  return (ptr[0] << 8) | ptr[1];
 }
 
 
@@ -176,21 +172,19 @@ mpegts_mux_tsid_check(mpegts_mux_t *mm, mpegts_table_t *mt, uint16_t tsid)
     return 1;
   }
   tvhdebug(mt->mt_subsys, "%s: %p: tsid %04X (%d)", mt->mt_name, mm, tsid, tsid);
-  if (mm->mm_tsid != MPEGTS_TSID_NONE) {
-    if (mm->mm_tsid && mm->mm_tsid != tsid) {
-      if (++mm->mm_tsid_checks > 12) {
-        tvhwarn(mt->mt_subsys, "%s: %s: TSID change detected - old %04x (%d), new %04x (%d)",
-                mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
-      } else {
-        if (tvhtrace_enabled()) {
-          tvhtrace(mt->mt_subsys, "%s: %s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
-                   mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
-        }
-        return -1; /* keep rolling */
+  if (mm->mm_tsid && mm->mm_tsid != tsid) {
+    if (++mm->mm_tsid_checks > 12) {
+      tvhwarn(mt->mt_subsys, "%s: %s: TSID change detected - old %04x (%d), new %04x (%d)",
+              mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
+    } else {
+      if (tvhtrace_enabled()) {
+        tvhtrace(mt->mt_subsys, "%s: %s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
+                 mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
       }
+      return -1; /* keep rolling */
     }
-    mm->mm_tsid_checks = -100;
   }
+  mm->mm_tsid_checks = -100;
   mpegts_mux_set_tsid(mm, tsid, 1);
   return 0;
 }
