@@ -108,6 +108,11 @@ typedef struct dmx_filter {
 #define CAPMT_MSG_NODUP    0x04
 #define CAPMT_MSG_HELLO    0x08
 
+// pmt modes
+#define CAPMT_PMTMODE_AUTO      0
+#define CAPMT_PMTMODE_INDEX     1  // mix enigma2 / PC boxtype messages
+#define CAPMT_PMTMODE_UNIVERSAL 2  // use fixed PC boxtype messages
+
 // limits
 #define MAX_CA       16
 #define MAX_INDEX    64
@@ -249,6 +254,8 @@ typedef struct capmt {
   char *capmt_sockfile;
   int   capmt_port;
   int   capmt_oscam;
+  int   capmt_pmtmode;
+  int   capmt_oscam_rev;
 
   /* capmt sockets */
   int   sids[MAX_SOCKETS];
@@ -1364,8 +1371,11 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
     uint16_t protover = sbuf_peek_u16(sb, offset);
     int offset2       = offset + 2;
     char *info        = capmt_peek_str(sb, &offset2);
+    char *rev         = info ? strstr(info, "build r") : NULL;
 
     tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (protocol version %d)", capmt_name(capmt), info, protover);
+    if (rev)
+      capmt->capmt_oscam_rev = strtol(rev + 7, NULL, 10);
 
     free(info);
 
@@ -1594,6 +1604,7 @@ handle_single(capmt_t *capmt)
             } else {
               cmd_size -= 4;
               offset = 4;
+              break;
             }
           } else if (cmd_size == 0)
             break;
@@ -2021,7 +2032,22 @@ capmt_send_request(capmt_service_t *ct, int lm)
   uint16_t onid = t->s_dvb_mux->mm_onid;
   const int adapter_num = ct->ct_adapter;
   const int wrapper = capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER;
-  const int pc_desc = !wrapper && adapter_num >= 8;
+  int pc_desc = 0;
+
+  /* choose the PMT composing mode */
+  if (!wrapper) {
+    switch (capmt->capmt_pmtmode) {
+    case CAPMT_PMTMODE_INDEX:
+      pc_desc = 0;
+      break;
+    case CAPMT_PMTMODE_UNIVERSAL:
+      pc_desc = 1;
+      break;
+    default:
+      pc_desc = adapter_num >= 8 || capmt->capmt_oscam_rev >= 11396;
+      break;
+    }
+  }
 
   /* buffer for capmt */
   int pos = 0, pos2;
@@ -2418,7 +2444,16 @@ caclient_capmt_class_oscam_mode_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
-CLASS_DOC(caclient_capmt)
+static htsmsg_t *
+caclient_capmt_class_pmtmode_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Auto"),			         CAPMT_PMTMODE_AUTO },
+    { N_("Byte index tag order"),                CAPMT_PMTMODE_INDEX },
+    { N_("Universal tag order"),                 CAPMT_PMTMODE_UNIVERSAL },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
 
 const idclass_t caclient_capmt_class =
 {
@@ -2451,6 +2486,16 @@ const idclass_t caclient_capmt_class =
       .desc     = N_("Port to listen on or to connect to."),
       .off      = offsetof(capmt_t, capmt_port),
       .def.i    = 9000
+    },
+    {
+      .type     = PT_INT,
+      .id       = "pmtmode",
+      .name     = N_("PMT Mode"),
+      .desc     = N_("PMT mode."),
+      .off      = offsetof(capmt_t, capmt_pmtmode),
+      .list     = caclient_capmt_class_pmtmode_list,
+      .def.i    = CAPMT_PMTMODE_AUTO,
+      .opts     = PO_DOC_NLIST,
     },
     { }
   }
