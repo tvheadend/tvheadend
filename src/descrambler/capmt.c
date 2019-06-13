@@ -2455,6 +2455,8 @@ caclient_capmt_class_pmtmode_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+CLASS_DOC(caclient_capmt)
+
 const idclass_t caclient_capmt_class =
 {
   .ic_super      = &caclient_class,
