@@ -1508,8 +1508,8 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
 
     uint16_t protover = sbuf_peek_u16(sb, offset);
     int offset2       = offset + 2;
-    char *info        = capmt_peek_str(sb, &offset2);
-    char *rev         = info ? strstr(info, "build r") : NULL;
+    char *info        = capmt_peek_str(sb, &offset2) ?: "<unknown>";
+    char *rev         = strstr(info, "build r");
 
     tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (protocol version %d)", capmt_name(capmt), info, protover);
     if (rev)
