@@ -1957,8 +1957,7 @@ linuxdvb_frontend_tune1
 
   /* Start monitor */
   if (!r) {
-    time(&lfe->lfe_monitor);
-    lfe->lfe_monitor += 4;
+    lfe->lfe_monitor = mclk() + sec2mono(4);
     mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, ms2mono(50));
     lfe->lfe_ready = 1;
   }
