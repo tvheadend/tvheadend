@@ -30,8 +30,8 @@
 #include "mpegts/dvb.h"
 #include "subscriptions.h"
 
-#define MPEGTS_ONID_NONE        0xFFFF
-#define MPEGTS_TSID_NONE        0xFFFF
+#define MPEGTS_ONID_NONE        0x10000
+#define MPEGTS_TSID_NONE        0x10000
 #define MPEGTS_FULLMUX_PID      0x2000
 #define MPEGTS_TABLES_PID       0x2001
 #define MPEGTS_PID_NONE         0xFFFF
@@ -338,7 +338,7 @@ struct mpegts_network
   void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
   htsmsg_t *        (*mn_config_save)  (mpegts_network_t*, char *filename, size_t fsize);
   mpegts_mux_t*     (*mn_create_mux)
-    (mpegts_network_t*, void *origin, uint16_t onid, uint16_t tsid,
+    (mpegts_network_t*, void *origin, uint32_t onid, uint32_t tsid,
      void *conf, int force);
   mpegts_service_t* (*mn_create_service)
     (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
@@ -429,8 +429,8 @@ struct mpegts_mux
   LIST_ENTRY(mpegts_mux)  mm_network_link;
   mpegts_network_t       *mm_network;
   char                   *mm_provider_network_name;
-  uint16_t                mm_onid;
-  uint16_t                mm_tsid;
+  uint32_t                mm_onid;
+  uint32_t                mm_tsid;
   int                     mm_tsid_checks;
   int                     mm_tsid_accept_zero_value;
   tvhlog_limit_t          mm_tsid_loglimit;
@@ -853,7 +853,7 @@ static inline mpegts_network_t *mpegts_network_find(const char *uuid)
   { return idnode_find(uuid, &mpegts_network_class, NULL); }
 
 mpegts_mux_t *mpegts_network_find_mux
-  (mpegts_network_t *mn, uint16_t onid, uint16_t tsid, int check);
+  (mpegts_network_t *mn, uint32_t onid, uint32_t tsid, int check);
 
 mpegts_service_t *mpegts_network_find_active_service
   (mpegts_network_t *mn, uint16_t sid, mpegts_mux_t **rmm);
@@ -873,7 +873,7 @@ void mpegts_network_wizard_create ( const char *clazz, htsmsg_t **nlist, const c
 
 mpegts_mux_t *mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,
-    mpegts_network_t *mn, uint16_t onid, uint16_t tsid,
+    mpegts_network_t *mn, uint32_t onid, uint32_t tsid,
     htsmsg_t *conf );
 
 #define mpegts_mux_create(type, uuid, mn, onid, tsid, conf)\
@@ -934,8 +934,8 @@ int mpegts_mux_instance_start
 int mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi );
 
 int mpegts_mux_set_network_name ( mpegts_mux_t *mm, const char *name );
-int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
-int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );
+int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint32_t tsid, int force );
+int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint32_t onid );
 int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );
 
 void mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe );
