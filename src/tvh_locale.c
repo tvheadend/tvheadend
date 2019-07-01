@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include "tvh_thread.h"
 #include "tvh_locale.h"
 #include "tvh_string.h"
