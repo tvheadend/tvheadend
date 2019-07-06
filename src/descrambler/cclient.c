@@ -1159,7 +1159,8 @@ add:
   mpegts_pid_done(&epids);
 
   for (i = 0; i < ct->cs_epids.count; i++)
-    descrambler_open_pid(ct->cs_mux, ct, ct->cs_epids.pids[i].pid,
+    descrambler_open_pid(ct->cs_mux, ct,
+                         DESCRAMBLER_ECM_PID(ct->cs_epids.pids[i].pid),
                          cc_table_input, t);
 
   if (reuse & 2) {
@@ -1216,14 +1217,14 @@ cc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint32_t prov,
         emmp = pcard->cs_ra.providers;
         for (i = 0; i < pcard->cs_ra.providers_count; i++, emmp++) {
           if (prov == emmp->id) {
-		    if (valid > 0) {
-			  pcard->cs_client = cc;
-			  pcard->cs_mux    = mux;
-			  descrambler_open_emm(mux, pcard, caid, prov, cc_emm);
-		    } else {
-			  pcard->cs_mux    = NULL;
-			  descrambler_close_emm(mux, pcard, caid, prov);
-		    }
+            if (valid > 0) {
+              pcard->cs_client = cc;
+              pcard->cs_mux    = mux;
+              descrambler_open_emm(mux, pcard, caid, prov, cc_emm);
+            } else {
+              pcard->cs_mux    = NULL;
+              descrambler_close_emm(mux, pcard, caid, prov);
+            }
           }
         }
       }
