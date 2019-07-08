@@ -1,6 +1,11 @@
 [Unit]
 Description=Tvheadend - a TV streaming server and DVR
-After=auditd.service syslog.target network.target local-fs.target *.mount
+# Add existing services you want started before Tvheadend, e.g, mount
+# units..
+# After=auditd.service syslog.target network.target local-fs.target mnt-recordings.mount
+# See "man systemd.mount" or view https://www.freedesktop.org/software/systemd/man/systemd.mount.html
+
+After=auditd.service syslog.target network.target local-fs.target
 
 [Service]
 EnvironmentFile=/etc/default/tvheadend
