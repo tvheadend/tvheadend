@@ -131,7 +131,7 @@ struct iptv_mux
   char                 *mm_iptv_epgid;
 
   int                   mm_iptv_respawn;
-  time_t                mm_iptv_respawn_last;
+  int64_t               mm_iptv_respawn_last;
   int                   mm_iptv_kill;
   int                   mm_iptv_kill_timeout;
   char                 *mm_iptv_env;
