@@ -133,7 +133,7 @@ struct linuxdvb_frontend
   int                       lfe_ioctls;
   int                       lfe_nodata;
   int                       lfe_freq;
-  time_t                    lfe_monitor;
+  int64_t                   lfe_monitor;
   mtimer_t                  lfe_monitor_timer;
   tvhlog_limit_t            lfe_status_log;
 
