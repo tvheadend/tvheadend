@@ -2090,7 +2090,7 @@ capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
   case SCT_MPEG2VIDEO: type = 0x02; break;
   case SCT_MPEG2AUDIO: type = 0x04; break;
   case SCT_AC3:        type = 0x81; break;
-  case SCT_EAC3:       type = 0x81; break;
+  case SCT_EAC3:       type = 0x87; break;
   case SCT_MP4A:       type = 0x0f; break;
   case SCT_AAC:        type = 0x11; break;
   case SCT_H264:       type = 0x1b; break;
