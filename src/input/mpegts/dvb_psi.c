@@ -2425,6 +2425,10 @@ psi_parse_pmt
     case 0x81:
       hts_stream_type = SCT_AC3;
       break;
+          
+    case 0x87:
+      hts_stream_type = SCT_EAC3;
+      break;
     
     case 0x0f:
       hts_stream_type = SCT_MP4A;
@@ -2507,7 +2511,7 @@ psi_parse_pmt
         break;
 
       case DVB_DESC_EAC3:
-        if(estype == 0x06 || estype == 0x81)
+        if(estype == 0x06 || estype == 0x87)
           hts_stream_type = SCT_EAC3;
         break;
 
