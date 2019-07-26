@@ -1859,6 +1859,8 @@ new_tune:
   position = lfe_master->sf_position;
   if (lfe->sf_device->sd_pilot_on)
     rtsp_flags |= SATIP_SETUP_PILOT_ON;
+  if (lfe->sf_device->sd_rolloff_on)
+    rtsp_flags |= SATIP_SETUP_ROLLOFF_ON;
   if (lfe->sf_device->sd_pids21)
     rtsp_flags |= SATIP_SETUP_PIDS21;
   if (lfe->sf_specinv == 0)
