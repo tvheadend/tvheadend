@@ -92,6 +92,7 @@ struct satip_device
   char                      *sd_tunercfg;
   int                        sd_pids21;
   int                        sd_pilot_on;
+  int                        sd_rolloff_on;
   int                        sd_no_univ_lnb;
   int                        sd_can_weight;
   int                        sd_dbus_allow;
@@ -283,13 +284,14 @@ satip_satconf_t *satip_satconf_get_position
  * RTSP part
  */
 
-#define SATIP_SETUP_TCP      (1<<0)
-#define SATIP_SETUP_PLAY     (1<<1)
-#define SATIP_SETUP_PILOT_ON (1<<2)
-#define SATIP_SETUP_PIDS21   (1<<3)
-#define SATIP_SETUP_FE       (1<<4)
-#define SATIP_SETUP_SPECINV0 (1<<5)
-#define SATIP_SETUP_SPECINV1 (1<<6)
+#define SATIP_SETUP_TCP        (1<<0)
+#define SATIP_SETUP_PLAY       (1<<1)
+#define SATIP_SETUP_PILOT_ON   (1<<2)
+#define SATIP_SETUP_ROLLOFF_ON (1<<3)
+#define SATIP_SETUP_PIDS21     (1<<4)
+#define SATIP_SETUP_FE         (1<<5)
+#define SATIP_SETUP_SPECINV0   (1<<6)
+#define SATIP_SETUP_SPECINV1   (1<<7)
 
 int
 satip_rtsp_setup( http_client_t *hc,

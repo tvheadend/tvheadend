@@ -342,6 +342,16 @@ const idclass_t satip_device_class =
     },
     {
       .type     = PT_BOOL,
+      .id       = "rolloffon",
+      .name     = N_("Force rolloff for DVB-S2"),
+      .desc     = N_("Enable if the SAT>IP box requests ro=0.35 "
+                     "parameter in the SETUP RTSP command for DVB-S2 "
+                     "muxes."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_rolloff_on),
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "pids21",
       .name     = N_("PIDs 21 in setup"),
       .desc     = N_("Enable if the SAT>IP box requires pids=21 "
@@ -579,20 +589,20 @@ satip_device_hack( satip_device_t *sd )
     /* OctopusNet requires pids in the SETUP RTSP command */
   } else if (strstr(sd->sd_info.manufacturer, "Triax") &&
              strstr(sd->sd_info.modelname, "TSS400")) {
-    /* Rolloff is required to tune into DVB-S2 muxes */
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_max    = 64;
     sd->sd_pids_len    = 255;
     sd->sd_pilot_on    = 1;
+    sd->sd_rolloff_on  = 1;
   } else if (strstr(sd->sd_info.manufacturer, "KATHREIN") &&
             (strstr(sd->sd_info.modelname, "EXIP-4124") ||
              strstr(sd->sd_info.modelname, "EXIP-418") ||
              strstr(sd->sd_info.modelname, "EXIP-414"))) {
-    /* Rolloff is required to tune into DVB-S2 muxes */
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_max    = 64;
     sd->sd_pids_len    = 255;
     sd->sd_pilot_on    = 1;
+    sd->sd_rolloff_on  = 1;
   } else if (strcmp(sd->sd_info.modelname, "TVHeadend SAT>IP") == 0)  {
     sd->sd_pids_max    = 128;
     sd->sd_pids_len    = 2048;
