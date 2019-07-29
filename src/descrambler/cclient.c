@@ -1023,7 +1023,8 @@ cc_service_destroy0(cclient_t *cc, th_descrambler_t *td)
   int i;
 
   for (i = 0; i < ct->cs_epids.count; i++)
-    descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids.pids[i].pid);
+    descrambler_close_pid(ct->cs_mux, ct,
+                          DESCRAMBLER_ECM_PID(ct->cs_epids.pids[i].pid));
   mpegts_pid_done(&ct->cs_epids);
 
   cc_service_ecm_pid_free(ct);
