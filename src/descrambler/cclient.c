@@ -1020,11 +1020,12 @@ static void
 cc_service_destroy0(cclient_t *cc, th_descrambler_t *td)
 {
   cc_service_t *ct = (cc_service_t *)td;
-  int i;
+  int i, pid;
 
-  for (i = 0; i < ct->cs_epids.count; i++)
-    descrambler_close_pid(ct->cs_mux, ct,
-                          DESCRAMBLER_ECM_PID(ct->cs_epids.pids[i].pid));
+  for (i = 0; i < ct->cs_epids.count; i++) {
+    pid = DESCRAMBLER_ECM_PID(ct->cs_epids.pids[i].pid);
+    descrambler_close_pid(ct->cs_mux, ct, pid);
+  }
   mpegts_pid_done(&ct->cs_epids);
 
   cc_service_ecm_pid_free(ct);
@@ -1069,7 +1070,7 @@ cc_service_start(caclient_t *cac, service_t *t)
   caid_t *c;
   cc_card_data_t *pcard;
   char buf[512];
-  int i, reuse = 0, prefpid, prefpid_lock, forcecaid;
+  int i, pid, reuse = 0, prefpid, prefpid_lock, forcecaid;
   mpegts_apids_t epids;
 
   extern const idclass_t mpegts_service_class;
@@ -1107,15 +1108,16 @@ cc_service_start(caclient_t *cac, service_t *t)
   if (ct) {
     reuse = 1;
     for (i = 0; i < ct->cs_epids.count; i++) {
+      pid = ct->cs_epids.pids[i].pid;
       TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
-        if (st->es_pid != ct->cs_epids.pids[i].pid) continue;
+        if (st->es_pid != pid) continue;
         LIST_FOREACH(c, &st->es_caids, link)
           if (c->use && c->caid == pcard->cs_ra.caid)
             break;
         if (c) break;
       }
       if (st == NULL) {
-        descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids.pids[i].pid);
+        descrambler_close_pid(ct->cs_mux, ct, DESCRAMBLER_ECM_PID(pid));
         reuse |= 2;
       }
     }
@@ -1159,10 +1161,10 @@ add:
   mpegts_pid_copy(&ct->cs_epids, &epids);
   mpegts_pid_done(&epids);
 
-  for (i = 0; i < ct->cs_epids.count; i++)
-    descrambler_open_pid(ct->cs_mux, ct,
-                         DESCRAMBLER_ECM_PID(ct->cs_epids.pids[i].pid),
-                         cc_table_input, t);
+  for (i = 0; i < ct->cs_epids.count; i++) {
+    pid = DESCRAMBLER_ECM_PID(ct->cs_epids.pids[i].pid);
+    descrambler_open_pid(ct->cs_mux, ct, pid, cc_table_input, t);
+  }
 
   if (reuse & 2) {
     ct->cs_capid = 0xffff;
