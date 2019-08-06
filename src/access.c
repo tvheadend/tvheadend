@@ -570,6 +570,7 @@ access_update(access_t *a, access_entry_t *ae)
     switch (ae->ae_conn_limit_type) {
     case ACCESS_CONN_LIMIT_TYPE_ALL:
       a->aa_conn_limit = ae->ae_conn_limit;
+      break;
     case ACCESS_CONN_LIMIT_TYPE_STREAMING:
       a->aa_conn_limit_streaming = ae->ae_conn_limit;
       break;
