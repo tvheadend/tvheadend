@@ -111,8 +111,8 @@ dvr_rec_subscribe(dvr_entry_t *de)
     rec_count = dvr_usage_count(aa);
     net_count = aa->aa_conn_limit ? tcp_connection_count(aa) : 0;
     /* the rule is: allow if one condition is OK */
-    c1 = aa->aa_conn_limit ? rec_count + net_count >= aa->aa_conn_limit : -1;
-    c2 = aa->aa_conn_limit_dvr ? rec_count >= aa->aa_conn_limit_dvr : -1;
+    c1 = aa->aa_conn_limit ? rec_count + net_count > aa->aa_conn_limit : -1;
+    c2 = aa->aa_conn_limit_dvr ? rec_count > aa->aa_conn_limit_dvr : -1;
     if (c1 && c2) {
       tvherror(LS_DVR, "multiple connections are not allowed for user '%s' from '%s' "
                       "(limit %u, dvr limit %u, active DVR %u, streaming %u)",
