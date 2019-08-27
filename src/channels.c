@@ -638,6 +638,9 @@ channel_make_fuzzy_name(const char *name)
     /* Strip trailing 'UHD'. */
     if (*ch == 'U' && *(ch+1) == 'H' && *(ch+2) == 'D' && *(ch+3) == 0)
       break;
+    /* Strip trailing 'FHD'. */
+    if (*ch == 'F' && *(ch+1) == 'H' && *(ch+2) == 'D' && *(ch+3) == 0)
+      break;
 
     if (!isspace(*ch)) {
       *ch_fuzzy++ = tolower(*ch);
@@ -1996,6 +1999,7 @@ channel_has_correct_service_filter(const channel_t *ch, int svf)
     service = (const service_t*)ilm->ilm_in1;
     if ((svf == PROFILE_SVF_SD && service_is_sdtv(service)) ||
         (svf == PROFILE_SVF_HD && service_is_hdtv(service)) ||
+        (svf == PROFILE_SVF_FHD && service_is_fhdtv(service)) ||
         (svf == PROFILE_SVF_UHD && service_is_uhdtv(service))) {
       return 1;
     }

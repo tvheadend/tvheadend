@@ -1875,7 +1875,7 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
   if (!old_channel) return 1;
 
   /* Always prefer a recording that has the correct service profile
-   * (UHD, HD, SD).  Someone mentioned (#1846) that some channels can
+   * (UHD, FHD, HD, SD).  Someone mentioned (#1846) that some channels can
    * show a recording earlier in the week in SD then later in the week
    * in HD so this would prefer the later HD recording if the user so
    * desired.
@@ -1890,10 +1890,29 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
       return 0;
     if (!old_has_svf && new_has_svf)
       return 1;
-    /* Also try "downgrading", where user asks for UHD, which we don't
+    /* Also try "downgrading", where user asks for FHD, which we don't
      * have, but we could give them HD.
      */
+    if (svf == PROFILE_SVF_FHD && !old_has_svf) {
+      old_has_svf = channel_has_correct_service_filter(old_channel, PROFILE_SVF_HD);
+      new_has_svf = channel_has_correct_service_filter(new_channel, PROFILE_SVF_HD);
+
+      if (old_has_svf && !new_has_svf)
+        return 0;
+      if (!old_has_svf && new_has_svf)
+        return 1;
+    }
+
+    /* Also try "downgrading", where user asks for UHD, which we don't
+     * have, but we could give them FHD, then HD.
+     */
     if (svf == PROFILE_SVF_UHD && !old_has_svf) {
+      old_has_svf = channel_has_correct_service_filter(old_channel, PROFILE_SVF_FHD);
+      new_has_svf = channel_has_correct_service_filter(new_channel, PROFILE_SVF_FHD);
+      
+      if (!old_has_svf && new_has_svf)
+        return 1;
+
       old_has_svf = channel_has_correct_service_filter(old_channel, PROFILE_SVF_HD);
       new_has_svf = channel_has_correct_service_filter(new_channel, PROFILE_SVF_HD);
 
