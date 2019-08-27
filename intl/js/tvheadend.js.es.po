@@ -1840,6 +1840,10 @@ msgstr "Tipo"
 msgid "UHDTV"
 msgstr "UHDTV"
 
+#: src/webui/static/app/epg.js:150
+msgid "FHDTV"
+msgstr "FHDTV"
+
 #: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
 msgstr "¡Incapaz de obtener la página del asistente!"

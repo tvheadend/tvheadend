@@ -1838,6 +1838,10 @@ msgstr ""
 msgid "UHDTV"
 msgstr ""
 
+#: src/webui/static/app/epg.js:150
+msgid "FHDTV"
+msgstr ""
+
 #: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
 msgstr ""

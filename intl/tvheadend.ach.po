@@ -7565,8 +7565,16 @@ msgstr ""
 msgid "UHD TV"
 msgstr ""
 
+#: src/webui/static/app/epg.js:150
+msgid "FHDTV"
+msgstr ""
+
 #: src/profile.c:269
 msgid "UHD: ultra high definition"
+msgstr ""
+
+#: src/profile.c:270
+msgid "FHD: full high definition"
 msgstr ""
 
 #: src/tvhlog.c:93

@@ -7569,9 +7569,17 @@ msgstr "UDP RTP port number (2 ports)"
 msgid "UHD TV"
 msgstr "UHD TV"
 
+#: src/service.c:160
+msgid "FHD TV"
+msgstr "FHD TV"
+
 #: src/profile.c:269
 msgid "UHD: ultra high definition"
 msgstr "UHD: ultra high definition"
+
+#: src/profile.c:269
+msgid "FHD: full high definition"
+msgstr "FHD: full high definition"
 
 #: src/tvhlog.c:93
 msgid "UPnP Protocol"

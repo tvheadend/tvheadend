@@ -230,9 +230,9 @@ service_mapper_process
       // 4HD\0   len=3,  HD at pos 1 (3-2)
       // 4\0     len=1
       if (name[len-2] == 'H' && name[len-1] == 'D') {
-        /* Ends in HD but does it end in UHD? */
+        /* Ends in HD but does it end in UHD/FHD? */
         tidy_name = tvh_strdupa(name);
-        if (len > 3 && name[len-3] == 'U')
+        if (len > 3 && (name[len-3] == 'U' || name[len-3] == 'F'))
           tidy_name[len-3] = 0;
         else
           tidy_name[len-2] = 0;
@@ -300,6 +300,9 @@ service_mapper_process
       if (service_is_uhdtv(s)) {
         channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
         channel_tag_map(channel_tag_find_by_name("UHDTV", 1), chn, chn);
+      } else if (service_is_fhdtv(s)) {
+        channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
+        channel_tag_map(channel_tag_find_by_name("FHDTV", 1), chn, chn);
       } else if (service_is_hdtv(s)) {
         channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
         channel_tag_map(channel_tag_find_by_name("HDTV", 1), chn, chn);
