@@ -64,6 +64,7 @@ typedef struct muxer_config {
    */
   int                  m_file_permissions;
   int                  m_directory_permissions; 
+  int                  m_output_chunk; /* > 0 if muxer output needs writing in chunks */   
 
   /*
    * type specific section

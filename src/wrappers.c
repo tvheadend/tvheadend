@@ -88,6 +88,32 @@ tvh_write(int fd, const void *buf, size_t len)
 }
 
 int
+tvh_write_in_chunks(int fd, const void *buf, size_t len, size_t chunkSize)
+{
+  int64_t limit = mclk() + sec2mono(25);
+  ssize_t c;
+  ssize_t towrite;
+
+  while (len) {
+    towrite = (len > chunkSize) ? chunkSize : len;
+    c = write(fd, buf, towrite);
+    if (c < 0) {
+      if (ERRNO_AGAIN(errno)) {
+        if (mclk() > limit)
+          break;
+        tvh_safe_usleep(100);
+        continue;
+      }
+      break;
+    }
+    len -= c;
+    buf += c;
+  }
+
+  return len ? 1 : 0;
+}
+
+int
 tvh_nonblock_write(int fd, const void *buf, size_t len)
 {
   ssize_t c;

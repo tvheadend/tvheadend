@@ -168,7 +168,8 @@ udp_bind ( int subsystem, const char *name,
   uc->ifname               = ifname ? strdup(ifname) : NULL;
   uc->subsystem            = subsystem;
   uc->name                 = name ? strdup(name) : NULL;
-  uc->rxtxsize             = rxsize;
+  uc->rxsize               = rxsize;
+  uc->txsize               = txsize;
 
   if (udp_resolve(uc, &uc->ip, uc->host, port, &uc->multicast, 1)) {
     udp_close(uc);
@@ -203,13 +204,15 @@ udp_bind ( int subsystem, const char *name,
 
   /* IPv4 */
   if (uc->ip.ss_family == AF_INET) {
-    /* Bind */
+    /* Bind useful for receiver subsystem (not for udp streamer) */
+    if (subsystem != LS_UDP) {
     if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in))) {
       inet_ntop(AF_INET, &IP_AS_V4(uc->ip, addr), buf, sizeof(buf));
       tvherror(subsystem, "%s - cannot bind %s:%hu [e=%s]",
                name, buf, ntohs(IP_AS_V4(uc->ip, port)), strerror(errno));
       goto error;
     }
+    }  
 
     if (uc->multicast) {
       /* Join multicast group */
@@ -381,7 +384,7 @@ udp_sendinit ( int subsystem, const char *name,
   uc->ifname               = ifname ? strdup(ifname) : NULL;
   uc->subsystem            = subsystem;
   uc->name                 = name ? strdup(name) : NULL;
-  uc->rxtxsize             = txsize;
+  uc->txsize               = txsize;
 
   /* Open socket */
   if ((fd = tvh_socket(uc->ip.ss_family, SOCK_DGRAM, 0)) == -1) {
