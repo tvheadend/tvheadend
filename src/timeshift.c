@@ -282,8 +282,8 @@ const idclass_t timeshift_conf_class = {
       .type   = PT_BOOL,
       .id     = "ram_fit",
       .name   = N_("Fit to RAM (cut rewind)"),
-      .desc   = N_("With \"RAM only\" enabled, and when \"Maximum RAM "
-                   "size\" is reached, remove the oldest segment in the "
+      .desc   = N_("With 'RAM only' enabled, and when 'Maximum RAM "
+                   "size' is reached, remove the oldest segment in the "
                    "buffer instead of replacing it completely. Note, "
                    "this may reduce the amount of rewind time."),
       .off    = offsetof(timeshift_conf_t, ram_fit),

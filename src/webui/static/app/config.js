@@ -8,7 +8,7 @@ tvheadend.baseconf = function(panel, index) {
         name: 'wizard',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Start initial configuration wizard'),
+                tooltip: _('Start initial configuration wizard.'),
                 iconCls: 'wizard',
                 text: _('Start wizard')
             });
@@ -70,7 +70,7 @@ tvheadend.imgcacheconf = function(panel, index) {
         name: 'clean',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Clean image cache on storage'),
+                tooltip: _('Clean image cache on storage.'),
                 iconCls: 'clean',
                 text: _('Clean image (icon) cache')
             });
@@ -87,7 +87,7 @@ tvheadend.imgcacheconf = function(panel, index) {
         name: 'trigger',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Re-fetch images'),
+                tooltip: _('Re-fetch images.'),
                 iconCls: 'fetch_images',
                 text: _('Re-fetch images'),
             });
@@ -127,7 +127,7 @@ tvheadend.satipsrvconf = function(panel, index) {
         name: 'discover',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Look for new SAT>IP servers'),
+                tooltip: _('Look for new SAT>IP servers.'),
                 iconCls: 'find',
                 text: _('Discover SAT>IP servers')
             });

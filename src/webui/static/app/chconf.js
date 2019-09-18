@@ -136,24 +136,24 @@ tvheadend.channel_tab = function(panel, index)
             var m = new Ext.menu.Menu()
             m.add({
                 name: 'mapsel',
-                tooltip: _('Map selected services to channels'),
+                tooltip: _('Map selected services to channels.'),
                 iconCls: 'clone',
                 text: _('Map selected services'),
             });
             m.add({
                 name: 'mapall',
-                tooltip: _('Map all services to channels'),
+                tooltip: _('Map all services to channels.'),
                 iconCls: 'clone',
                 text: _('Map all services'),
             });
             m.add({
                 name: 'bqdetach',
-                tooltip: _('Detach from bouquet'),
+                tooltip: _('Detach from bouquet.'),
                 iconCls: 'bouquets',
                 text: _('Detach selected channels from bouquet'),
             });
             return new Ext.Toolbar.Button({
-                tooltip: _('Map services to channels'),
+                tooltip: _('Map services to channels.'),
                 iconCls: 'clone',
                 text: _('Map services'),
                 menu: m,
@@ -173,30 +173,30 @@ tvheadend.channel_tab = function(panel, index)
             var m = new Ext.menu.Menu()
             m.add({
                 name: 'lowno',
-                tooltip: _('Assign lowest free channel number'),
+                tooltip: _('Assign lowest free channel number.'),
                 iconCls: 'chnumops_low',
                 text: _('Assign Number')
             });
             m.add({
                 name: 'noup',
-                tooltip: _('Move channel one number up'),
+                tooltip: _('Move channel one number up.'),
                 iconCls: 'chnumops_up',
                 text: _('Number Up')
             });
             m.add({
                 name: 'nodown',
-                tooltip: _('Move channel one number down'),
+                tooltip: _('Move channel one number down.'),
                 iconCls: 'chnumops_down',
                 text: _('Number Down')
             });
             m.add({
                 name: 'swap',
-                tooltip: _('Swap the numbers for the two selected channels'),
+                tooltip: _('Swap the numbers for the two selected channels.'),
                 iconCls: 'chnumops_swap',
                 text: _('Swap Numbers')
             });
             return new Ext.Toolbar.Button({
-                tooltip: _('Channel number operations'),
+                tooltip: _('Channel number operations.'),
                 iconCls: 'chnumops',
                 text: _('Number operations'),
                 menu: m,
@@ -215,7 +215,7 @@ tvheadend.channel_tab = function(panel, index)
         name: 'iconreset',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Reset (clear) the selected icon URLs'),
+                tooltip: _('Reset (clear) the selected icon URLs.'),
                 iconCls: 'resetIcon',
                 text: _('Reset Icon'),
                 disabled: false
@@ -243,7 +243,7 @@ tvheadend.channel_tab = function(panel, index)
             {
                 width: 50,
                 header: _('Play'),
-                tooltip: _('Play'),
+                tooltip: _('Play.'),
                 renderer: function(v, o, r) {
                     var title = '';
                     if (r.data['number'])

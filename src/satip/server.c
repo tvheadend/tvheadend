@@ -773,7 +773,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_nat_rtsp",
       .name   = N_("External RTSP port (NAT)"),
-      .desc   = N_("Enter external PORT if behind Forwarding redirection."
+      .desc   = N_("Enter external PORT if behind Forwarding redirection. "
                    "(0 = use the same local port)."),
       .off    = offsetof(struct satip_server_conf, satip_nat_rtsp),
       .opts   = PO_EXPERT,
@@ -943,7 +943,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_restrict_pids_all",
       .name   = N_("Restrict \"pids=all\""),
       .desc   = N_("Replace the full Transport Stream with a range "
-                   "0x00-0x02,0x10-0x1F,0x1FFB pids only."),
+                   "0x00-0x02, 0x10-0x1F, 0x1FFB pids only."),
       .off    = offsetof(struct satip_server_conf, satip_restrict_pids_all),
       .opts   = PO_EXPERT,
       .group  = 5,

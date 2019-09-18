@@ -205,13 +205,13 @@ tvheadend.dvrDetails = function(grid, index) {
               id: previousButtonId,
               handler: previousEvent,
               iconCls: 'previous',
-              tooltip: _('Go to previous event'),
+              tooltip: _('Go to previous event.'),
         }));
         buttons.push(new Ext.Button({
             id: nextButtonId,
             handler: nextEvent,
             iconCls: 'next',
-            tooltip: _('Go to next event'),
+            tooltip: _('Go to next event.'),
         }));
 
     return buttons;
@@ -340,7 +340,7 @@ tvheadend.dvrDetails = function(grid, index) {
     var eventdetails = new Ext.ux.grid.RowActions({
         id: 'details',
         header: _('Details'),
-        tooltip: _('Details'),
+        tooltip: _('Details.'),
         width: 67,
         dataIndex: 'actions',
         callbacks: {
@@ -381,14 +381,14 @@ tvheadend.dvrDetails = function(grid, index) {
                     width: 250,
                     id: 'title',
                     header: _("Title"),
-                    tooltip: _("Title"),
+                    tooltip: _("Title."),
                     dataIndex: 'title',
                   },
                   {
                     width: 250,
                     id: 'extratext',
                     header: _("Extra text"),
-                    tooltip: _("Extra text: subtitle or summary or description"),
+                    tooltip: _("Extra text: subtitle or summary or description."),
                     dataIndex: 'extratext',
                     renderer: dvrRenderExtraText
                   },
@@ -396,7 +396,7 @@ tvheadend.dvrDetails = function(grid, index) {
                     width: 200,
                     id: 'start',
                     header: _("Start Time"),
-                    tooltip: _("Start Time"),
+                    tooltip: _("Start Time."),
                     dataIndex: 'start',
                     renderer: dvrRenderDate
                   },
@@ -404,7 +404,7 @@ tvheadend.dvrDetails = function(grid, index) {
                 width: 200,
                 id: 'stop',
                 header: _("End Time"),
-                tooltip: _("End Time"),
+                tooltip: _("End Time."),
                 dataIndex: 'stop',
                 renderer: dvrRenderDate
             },
@@ -412,7 +412,7 @@ tvheadend.dvrDetails = function(grid, index) {
                 width: 250,
                 id: 'channelName',
                 header: _("Channel"),
-                tooltip: _("Channel"),
+                tooltip: _("Channel."),
                 dataIndex: 'channelName',
             },
                 ],
@@ -516,7 +516,7 @@ tvheadend.dvrRowActions = function() {
     return new Ext.ux.grid.RowActions({
         id: 'details',
         header: _('Details'),
-        tooltip: _('Details'),
+        tooltip: _('Details.'),
         width: 45,
         actions: [
             {
@@ -676,7 +676,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         name: 'stop',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Stop the selected recording'),
+                tooltip: _('Stop the selected recording.'),
                 iconCls: 'stopRec',
                 text: _('Stop'),
                 disabled: true
@@ -692,7 +692,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         name: 'abort',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Abort the selected recording'),
+                tooltip: _('Abort the selected recording.'),
                 iconCls: 'abort',
                 text: _('Abort'),
                 disabled: true
@@ -822,7 +822,7 @@ tvheadend.dvr_finished = function(panel, index) {
         name: 'download',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Download the selected recording'),
+                tooltip: _('Download the selected recording.'),
                 iconCls: 'download',
                 text: _('Download'),
                 disabled: true
@@ -841,7 +841,7 @@ tvheadend.dvr_finished = function(panel, index) {
         name: 'rerecord',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Toggle re-record functionality'),
+                tooltip: _('Toggle re-record functionality.'),
                 iconCls: 'rerecord',
                 text: _('Re-record'),
                 disabled: true
@@ -856,7 +856,7 @@ tvheadend.dvr_finished = function(panel, index) {
         name: 'move',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Mark the selected recording as failed'),
+                tooltip: _('Mark the selected recording as failed.'),
                 iconCls: 'movetofailed',
                 text: _('Move to failed'),
                 disabled: true
@@ -871,7 +871,7 @@ tvheadend.dvr_finished = function(panel, index) {
         name: 'remove',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Remove the selected recording from storage'),
+                tooltip: _('Remove the selected recording from storage.'),
                 iconCls: 'remove',
                 text: _('Remove'),
                 disabled: true
@@ -977,7 +977,7 @@ tvheadend.dvr_finished = function(panel, index) {
             {
                 width: 40,
                 header: _("Play"),
-                tooltip: _("Play"),
+                tooltip: _("Play."),
                 renderer: function(v, o, r) {
                     var title = r.data['disp_title'];
                     if (r.data['episode_disp'])
@@ -1007,7 +1007,7 @@ tvheadend.dvr_failed = function(panel, index) {
         name: 'download',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Download the selected recording'),
+                tooltip: _('Download the selected recording.'),
                 iconCls: 'download',
                 text: _('Download'),
                 disabled: true
@@ -1026,7 +1026,7 @@ tvheadend.dvr_failed = function(panel, index) {
         name: 'rerecord',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Toggle re-record functionality'),
+                tooltip: _('Toggle re-record functionality.'),
                 iconCls: 'rerecord',
                 text: _('Re-record'),
                 disabled: true
@@ -1041,7 +1041,7 @@ tvheadend.dvr_failed = function(panel, index) {
         name: 'move',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Mark the selected recording as finished'),
+                tooltip: _('Mark the selected recording as finished.'),
                 iconCls: 'movetofinished',
                 text: _('Move to finished'),
                 disabled: true
@@ -1097,7 +1097,7 @@ tvheadend.dvr_failed = function(panel, index) {
             {
                 width: 40,
                 header: _("Play"),
-                tooltip: _("Play"),
+                tooltip: _("Play."),
                 renderer: function(v, o, r) {
                     var title = r.data['disp_title'];
                     if (r.data['episode_disp'])
@@ -1124,7 +1124,7 @@ tvheadend.dvr_removed = function(panel, index) {
         name: 'rerecord',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Toggle re-record functionality'),
+                tooltip: _('Toggle re-record functionality.'),
                 iconCls: 'rerecord',
                 text: _('Re-record'),
                 disabled: true

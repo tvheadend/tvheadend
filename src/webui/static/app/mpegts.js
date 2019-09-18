@@ -31,7 +31,7 @@ tvheadend.networks = function(panel, index)
         name: 'scan',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Force new scan (all muxes) for selected networks'),
+                tooltip: _('Force new scan (all muxes) for selected networks.'),
                 iconCls: 'find',
                 text: _('Force Scan'),
                 disabled: true
@@ -119,7 +119,7 @@ tvheadend.muxes = function(panel, index)
             {
                 width: 50,
                 header: _('Play'),
-                tooltip: _('Play'),
+                tooltip: _('Play.'),
                 renderer: function(v, o, r) {
                     var title = r.data['name'];
                     if (r.data['network']) {
@@ -270,18 +270,18 @@ tvheadend.services = function(panel, index)
                 var m = new Ext.menu.Menu()
                 m.add({
                     name: 'mapsel',
-                    tooltip: _('Map selected services to channels'),
+                    tooltip: _('Map selected services to channels.'),
                     iconCls: 'clone',
                     text: _('Map selected services'),
                 });
                 m.add({
                     name: 'mapall',
-                    tooltip: _('Map all services to channels'),
+                    tooltip: _('Map all services to channels.'),
                     iconCls: 'clone',
                     text: _('Map all services'),
                 });
                 return new Ext.Toolbar.Button({
-                    tooltip: _('Map services to channels'),
+                    tooltip: _('Map services to channels.'),
                     iconCls: 'clone',
                     text: _('Map services'),
                     menu: m,
@@ -320,18 +320,18 @@ tvheadend.services = function(panel, index)
                 var m = new Ext.menu.Menu()
                 m.add({
                     name: 'rmunsnpat',
-                    tooltip: _('Remove old services marked as missing in PAT/SDT which were not detected more than 7 days (last seen column)'),
+                    tooltip: _('Remove old services marked as missing in PAT/SDT which were not detected more than 7 days (last seen column).'),
                     iconCls: 'remove',
                     text: _('Remove unseen services (PAT/SDT) (7 days+)'),
                 });
                 m.add({
                     name: 'rmunsn',
-                    tooltip: _('Remove old services which were not detected more than 7 days (last seen column)'),
+                    tooltip: _('Remove old services which were not detected more than 7 days (last seen column).'),
                     iconCls: 'remove',
                     text: _('Remove all unseen services (7 days+)'),
                 });
                 return new Ext.Toolbar.Button({
-                    tooltip: _('Maintenance operations'),
+                    tooltip: _('Maintenance operations.'),
                     iconCls: 'wrench',
                     text: _('Maintenance'),
                     menu: m,
@@ -391,7 +391,7 @@ tvheadend.services = function(panel, index)
             {
                 width: 50,
                 header: _('Play'),
-                tooltip: _('Play'),
+                tooltip: _('Play.'),
                 renderer: function(v, o, r) {
                     var title = r.data['svcname'];
                     if (r.data['provider']) {

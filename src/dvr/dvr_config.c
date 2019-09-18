@@ -1178,7 +1178,7 @@ const idclass_t dvr_config_class = {
       .id       = "cache",
       .name     = N_("Cache scheme"),
       .desc     = N_("The cache scheme to use/used to store recordings. "
-                     "Leave as \"system\" unless you have a special use "
+                     "Leave as 'system' unless you have a special use "
                      "case for one of the others. See Help for details."),
       .doc      = prop_doc_cache_scheme,
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_cache),
@@ -1375,7 +1375,7 @@ const idclass_t dvr_config_class = {
       .id       = "epg-running",
       .name     = N_("Use EPG running state"),
       .desc     = N_("Use EITp/f to decide event start/stop. This is "
-                     "also known as \"Accurate Recording\". See Help "
+                     "also known as 'Accurate Recording'. See Help "
                      "for details."),
       .doc      = prop_doc_runningstate,
       .off      = offsetof(dvr_config_t, dvr_running),

@@ -4,7 +4,7 @@ tvheadend.epggrab_rerun_button = function() {
         builder: function() {
             return new Ext.Toolbar.Button({
                 text: _("Re-run Internal EPG Grabbers"),
-                tooltip: _('Re-run all internal EPG grabbers to import EPG data now'),
+                tooltip: _('Re-run all internal EPG grabbers to import EPG data now.'),
                 iconCls: 'find',
             });
         },
@@ -24,7 +24,7 @@ tvheadend.epggrab_base = function(panel, index) {
         builder: function() {
             return new Ext.Toolbar.Button({
                 text: _("Trigger OTA EPG Grabber"),
-                tooltip: _('Tune to the over-the-air EPG muxes to grab new events now'),
+                tooltip: _('Tune to the over-the-air EPG muxes to grab new events now.'),
                 iconCls: 'find',
             });
         },

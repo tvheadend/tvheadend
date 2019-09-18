@@ -629,7 +629,7 @@ tvheadend.idnode_uilevel_menu = function(uilevel, handler)
         handler: selected
     });
     b = new Ext.Toolbar.Button({
-        tooltip: _('Change the user interface level (basic, advanced, expert)'),
+        tooltip: _('Change the user interface level (basic, advanced, expert).'),
         iconCls: 'uilevel',
         text: _('View level') + ': ' + text(uilevel),
         menu: m,
@@ -1492,7 +1492,7 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
 
         /* Buttons */
         abuttons.save = new Ext.Button({
-            tooltip: _('Create new entry'),
+            tooltip: _('Create new entry.'),
             text: _('Create'),
             iconCls: 'add',
             hidden: true,
@@ -1519,7 +1519,7 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
         buttons.push(abuttons.save);
 
         abuttons.apply = new Ext.Button({
-            tooltip: _('Apply settings'),
+            tooltip: _('Apply settings.'),
             text: _('Apply'),
             iconCls: 'apply',
             hidden: true,
@@ -1558,7 +1558,7 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
         buttons.push(abuttons.apply);
 
         abuttons.cancel = new Ext.Button({
-            tooltip: _('Cancel operation'),
+            tooltip: _('Cancel operation.'),
             text: _('Cancel'),
             iconCls: 'cancelButton',
             handler: function() {
@@ -1805,7 +1805,7 @@ tvheadend.idnode_grid = function(panel, conf)
         /* Top bar */
         if (!conf.readonly) {
             abuttons.save = new Ext.Toolbar.Button({
-                tooltip: _('Save pending changes (marked with red border)'),
+                tooltip: _('Save pending changes (marked with red border).'),
                 iconCls: 'save',
                 text: _('Save'),
                 disabled: true,
@@ -1832,7 +1832,7 @@ tvheadend.idnode_grid = function(panel, conf)
             });
             buttons.push(abuttons.save);
             abuttons.undo = new Ext.Toolbar.Button({
-                tooltip: _('Revert pending changes (marked with red border)'),
+                tooltip: _('Revert pending changes (marked with red border).'),
                 iconCls: 'undo',
                 text: _('Undo'),
                 disabled: true,
@@ -1846,7 +1846,7 @@ tvheadend.idnode_grid = function(panel, conf)
             if (buttons.length > 0)
                 buttons.push('-');
             abuttons.add = new Ext.Toolbar.Button({
-                tooltip: _('Add a new entry'),
+                tooltip: _('Add a new entry.'),
                 iconCls: 'add',
                 text: _('Add'),
                 disabled: false,
@@ -1860,7 +1860,7 @@ tvheadend.idnode_grid = function(panel, conf)
             if (!conf.add && buttons.length > 0)
                 buttons.push('-');
             abuttons.del = new Ext.Toolbar.Button({
-                tooltip: _('Delete selected entries'),
+                tooltip: _('Delete selected entries.'),
                 iconCls: 'remove',
                 text: _('Delete'),
                 disabled: true,
@@ -1891,7 +1891,7 @@ tvheadend.idnode_grid = function(panel, conf)
         }
         if (conf.move) {
             abuttons.up = new Ext.Toolbar.Button({
-                tooltip: _('Move selected entries up'),
+                tooltip: _('Move selected entries up.'),
                 iconCls: 'moveup',
                 text: _('Move Up'),
                 disabled: true,
@@ -1916,7 +1916,7 @@ tvheadend.idnode_grid = function(panel, conf)
             });
             buttons.push(abuttons.up);
             abuttons.down = new Ext.Toolbar.Button({
-                tooltip: _('Move selected entries down'),
+                tooltip: _('Move selected entries down.'),
                 iconCls: 'movedown',
                 text: _('Move Down'),
                 disabled: true,
@@ -1947,7 +1947,7 @@ tvheadend.idnode_grid = function(panel, conf)
         }
         if (!conf.readonly || conf.edit) {
             abuttons.edit = new Ext.Toolbar.Button({
-                tooltip: _('Edit selected entry'),
+                tooltip: _('Edit selected entry.'),
                 iconCls: 'edit',
                 text: _('Edit'),
                 disabled: true,
@@ -2320,7 +2320,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
 
         /* Top bar */
         abuttons.save = new Ext.Toolbar.Button({
-            tooltip: _('Save pending changes (marked with red border)'),
+            tooltip: _('Save pending changes (marked with red border).'),
             iconCls: 'save',
             text: _('Save'),
             disabled: true,
@@ -2342,7 +2342,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         });
         buttons.push(abuttons.save);
         abuttons.undo = new Ext.Toolbar.Button({
-            tooltip: _('Revert pending changes (marked with red border)'),
+            tooltip: _('Revert pending changes (marked with red border).'),
             iconCls: 'undo',
             text: _('Undo'),
             disabled: true,
@@ -2355,7 +2355,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         buttons.push('-');
         if (conf.add) {
             abuttons.add = new Ext.Toolbar.Button({
-                tooltip: _('Add a new entry'),
+                tooltip: _('Add a new entry.'),
                 iconCls: 'add',
                 text: _('Add'),
                 disabled: false,
@@ -2368,7 +2368,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
             });
             buttons.push(abuttons.add);
             abuttons.clone = new Ext.Toolbar.Button({
-                tooltip: _('Clone a new entry'),
+                tooltip: _('Clone a new entry.'),
                 iconCls: 'clone',
                 text: _('Clone'),
                 disabled: false,
@@ -2381,7 +2381,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         }
         if (conf.del) {
             abuttons.del = new Ext.Toolbar.Button({
-                tooltip: _('Delete selected entries'),
+                tooltip: _('Delete selected entries.'),
                 iconCls: 'remove',
                 text: _('Delete'),
                 disabled: true,
@@ -2407,7 +2407,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         }
         if (conf.move) {
             abuttons.up = new Ext.Toolbar.Button({
-                tooltip: _('Move selected entry up'),
+                tooltip: _('Move selected entry up.'),
                 iconCls: 'moveup',
                 text: _('Move Up'),
                 disabled: true,
@@ -2428,7 +2428,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
             });
             buttons.push(abuttons.up);
             abuttons.down = new Ext.Toolbar.Button({
-                tooltip: _('Move selected entry down'),
+                tooltip: _('Move selected entry down.'),
                 iconCls: 'movedown',
                 text: _('Move Down'),
                 disabled: true,
@@ -2452,7 +2452,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         if (conf.hidepwd) {
             buttons.push('-');
             abuttons.add = new Ext.Toolbar.Button({
-                tooltip: _('Show or hide passwords'),
+                tooltip: _('Show or hide passwords.'),
                 iconCls: 'eye',
                 text: _('Show passwords'),
                 disabled: false,
@@ -2867,7 +2867,7 @@ tvheadend.idnode_simple = function(panel, conf)
 
         /* Top bar */
         abuttons.save = new Ext.Toolbar.Button({
-            tooltip: conf.saveTooltip || _('Save pending changes (marked with red border)'),
+            tooltip: conf.saveTooltip || _('Save pending changes (marked with red border).'),
             iconCls: 'save',
             text: conf.saveText || _('Save'),
             disabled: true,
@@ -2888,7 +2888,7 @@ tvheadend.idnode_simple = function(panel, conf)
         });
         buttons.push(abuttons.save);
         abuttons.undo = new Ext.Toolbar.Button({
-            tooltip: _('Revert pending changes (marked with red border)'),
+            tooltip: _('Revert pending changes (marked with red border).'),
             iconCls: 'undo',
             text: _('Undo'),
             disabled: true,

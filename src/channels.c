@@ -536,7 +536,7 @@ const idclass_t channel_class = {
       .name     = N_("Use EPG running state"),
       .desc     = N_("Use EITp/f to decide "
                      "event start/stop. This is also known as "
-                     "\"Accurate Recording\". See Help for details."),
+                     "'Accurate Recording'. See Help for details."),
       .doc      = prop_doc_runningstate,
       .off      = offsetof(channel_t, ch_epg_running),
       .list     = channel_class_epg_running_list,

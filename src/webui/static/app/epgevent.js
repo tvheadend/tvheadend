@@ -94,14 +94,14 @@ function epgAlternativeShowingsDialog(eventId, alternative) {
                     width: 250,
                     id: 'title',
                     header: _("Title"),
-                    tooltip: _("Title"),
+                    tooltip: _("Title."),
                     dataIndex: 'title',
                 },
                 {
                     width: 250,
                     id: 'extratext',
                     header: _("Extra text"),
-                    tooltip: _("Extra text: subtitle or summary or description"),
+                    tooltip: _("Extra text: subtitle or summary or description."),
                     dataIndex: 'extratext',
                     renderer: tvheadend.renderExtraText
                 },
@@ -109,14 +109,14 @@ function epgAlternativeShowingsDialog(eventId, alternative) {
                     width: 100,
                     id: 'episodeOnscreen',
                     header: _("Episode"),
-                    tooltip: _("Episode"),
+                    tooltip: _("Episode."),
                     dataIndex: 'episodeOnscreen',
                 },
                 {
                     width: 200,
                     id: 'start',
                     header: _("Start Time"),
-                    tooltip: _("Start Time"),
+                    tooltip: _("Start Time."),
                     dataIndex: 'start',
                     renderer: tvheadend.renderCustomDate
                 },
@@ -124,7 +124,7 @@ function epgAlternativeShowingsDialog(eventId, alternative) {
                     width: 200,
                     id: 'stop',
                     header: _("End Time"),
-                    tooltip: _("End Time"),
+                    tooltip: _("End Time."),
                     dataIndex: 'stop',
                     renderer: tvheadend.renderCustomDate
                 },
@@ -132,7 +132,7 @@ function epgAlternativeShowingsDialog(eventId, alternative) {
                     width: 250,
                     id: 'channelName',
                     header: _("Channel"),
-                    tooltip: _("Channel"),
+                    tooltip: _("Channel."),
                     dataIndex: 'channelName',
                 },
             ],
@@ -187,7 +187,7 @@ var epgShowRelatedButtonConf = {
     name: 'epgrelated',
     builder: function() {
         return new Ext.Toolbar.Button({
-            tooltip: _('Display dialog of related broadcasts'),
+            tooltip: _('Display dialog of related broadcasts.'),
             iconCls: 'epgrelated',
             text: _('Related broadcasts'),
             disabled: true
@@ -202,7 +202,7 @@ var epgShowAlternativesButtonConf = {
     name: 'epgalt',
     builder: function() {
         return new Ext.Toolbar.Button({
-            tooltip: _('Display dialog showing alternative broadcasts'),
+            tooltip: _('Display dialog showing alternative broadcasts.'),
             iconCls: 'duprec',
             text: _('Alternative showings'),
             disabled: true

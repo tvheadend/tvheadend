@@ -307,7 +307,7 @@ tvheadend.contentTypeAction = {
   width: 75,
   id: 'category',
   header: _("Content Icons"),
-  tooltip: _("Content Icons"),
+  tooltip: _("Content Icons."),
   dataIndex: 'category',
   renderer: tvheadend.displayCategoryIcon,
 };
@@ -518,7 +518,7 @@ tvheadend.mdhelp = function(pagename) {
             {
                 iconCls: 'moveup',
                 text: _('Back to top'),
-                tooltip: _('Back to top'),
+                tooltip: _('Back to top.'),
                 handler: function() {
                     document.getElementById('jump').scrollIntoView();
                 },
@@ -916,7 +916,7 @@ tvheadend.VideoPlayer = function(channelId) {
             '-',
             {
                 iconCls: 'control_play',
-                tooltip: _('Play'),
+                tooltip: _('Play.'),
                 handler: function() {
                     if (!videoPlayer.isIdle()) { //probobly paused
                         videoPlayer.play();
@@ -933,14 +933,14 @@ tvheadend.VideoPlayer = function(channelId) {
             },
             {
                 iconCls: 'control_pause',
-                tooltip: _('Pause'),
+                tooltip: _('Pause.'),
                 handler: function() {
                     videoPlayer.pause();
                 }
             },
             {
                 iconCls: 'control_stop',
-                tooltip: _('Stop'),
+                tooltip: _('Stop.'),
                 handler: function() {
                     videoPlayer.stop();
                 }
@@ -948,7 +948,7 @@ tvheadend.VideoPlayer = function(channelId) {
             '-',
             {
                 iconCls: 'control_fullscreen',
-                tooltip: _('Fullscreen'),
+                tooltip: _('Fullscreen.'),
                 handler: function() {
                     videoPlayer.fullscreen();
                 }
@@ -958,7 +958,7 @@ tvheadend.VideoPlayer = function(channelId) {
             '-',
             {
                 iconCls: 'control_mute',
-                tooltip: _('Toggle mute'),
+                tooltip: _('Toggle mute.'),
                 handler: function() {
                     var muted = videoPlayer.muteToggle();
                     slider.setDisabled(muted);
@@ -967,7 +967,7 @@ tvheadend.VideoPlayer = function(channelId) {
             },
             {
                 iconCls: 'control_volume',
-                tooltip: _('Volume'),
+                tooltip: _('Volume.'),
                 disabled: true
             }],
         items: [videoPlayer]

@@ -2238,7 +2238,7 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "chname_num",
       .name   = N_("Channel name with numbers"),
-      .desc   = N_("Add channel numbers to the channel name list"),
+      .desc   = N_("Add channel numbers to the channel name list."),
       .off    = offsetof(config_t, chname_num),
       .group  = 2,
       .def.i  = 1
@@ -2247,7 +2247,7 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "chname_src",
       .name   = N_("Channel name with sources"),
-      .desc   = N_("Add sources (like DVB-T string) to the channel name list"),
+      .desc   = N_("Add sources (like DVB-T string) to the channel name list."),
       .off    = offsetof(config_t, chname_src),
       .group  = 2
     },
@@ -2255,7 +2255,7 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "date_mask",
       .name   = N_("Custom date Format"),
-      .desc   = N_("Custom date mask like (%yyyy-%M-%dd %h:%m:%s)"),
+      .desc   = N_("Custom date mask like (%yyyy-%M-%dd %h:%m:%s)."),
       .opts   = PO_ADVANCED,
       .off    = offsetof(config_t, date_mask),
       .group  = 2,
@@ -2264,7 +2264,7 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "label_formatting",
       .name   = N_("Kodi label formatting support"),
-      .desc   = N_("Enable parser for kodi label formatting"),
+      .desc   = N_("Enable parser for kodi label formatting."),
       .off    = offsetof(config_t, label_formatting),
       .group  = 2
     },
@@ -2367,7 +2367,7 @@ const idclass_t config_class = {
       .id     = "piconscheme",
       .name   = N_("Picon name scheme"),
       .desc   = N_("Select scheme to generate the picon names "
-                   "(standard, force service type to 1)"),
+                   "(standard, force service type to 1)."),
       .list   = config_class_piconscheme_list,
       .doc    = prop_doc_config_picon_servicetype,
       .off    = offsetof(config_t, picon_scheme),

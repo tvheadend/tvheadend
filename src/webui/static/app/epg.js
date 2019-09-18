@@ -13,7 +13,7 @@ var getEPGEventDetails = function() {
     var ra = new Ext.ux.grid.RowActions({
         id: 'details',
         header: _('Details'),
-        tooltip: _('Details'),
+        tooltip: _('Details.'),
         width: 67,
         dataIndex: 'actions',
         callbacks: {
@@ -354,7 +354,7 @@ tvheadend.epgDetails = function(grid, index) {
           disabled: event.start > now || event.stop < now,
           handler: playProgram,
           iconCls: 'control_play',
-          tooltip: _('Play this program'),
+          tooltip: _('Play this program.'),
           text: _("Play")
       }));
 
@@ -381,7 +381,7 @@ tvheadend.epgDetails = function(grid, index) {
             buttons.push(new Ext.Button({
                 handler: stopDVR,
                 iconCls: 'stopRec',
-                tooltip: _('Stop recording of this program'),
+                tooltip: _('Stop recording of this program.'),
                 text: _("Stop recording")
             }));
           }
@@ -390,7 +390,7 @@ tvheadend.epgDetails = function(grid, index) {
             buttons.push(new Ext.Button({
                 handler: deleteDVR,
                 iconCls: 'remove',
-                tooltip: _('Delete scheduled recording of this program'),
+                tooltip: _('Delete scheduled recording of this program.'),
                 text: _("Delete recording")
             }));
           }
@@ -414,7 +414,7 @@ tvheadend.epgDetails = function(grid, index) {
             buttons.push(new Ext.Button({
                 handler: recordEvent,
                 iconCls: 'rec',
-                tooltip: _('Record this program now'),
+                tooltip: _('Record this program now.'),
                 text: _('Record')
             }));
           }
@@ -441,13 +441,13 @@ tvheadend.epgDetails = function(grid, index) {
               id: previousButtonId,
               handler: previousEvent,
               iconCls: 'previous',
-              tooltip: _('Go to previous event'),
+              tooltip: _('Go to previous event.'),
           }));
           buttons.push(new Ext.Button({
               id: nextButtonId,
               handler: nextEvent,
               iconCls: 'next',
-              tooltip: _('Go to next event'),
+              tooltip: _('Go to next event.'),
           }));
 
       } else {
@@ -594,7 +594,7 @@ tvheadend.epg = function() {
     var eventactions = new Ext.ux.grid.RowActions({
         id: 'eventactions',
         header: _('Actions'),
-        tooltip: _('Actions'),
+        tooltip: _('Actions.'),
         width: 67,
         dataIndex: 'actions',
         actions: [
@@ -740,7 +740,7 @@ tvheadend.epg = function() {
             new Ext.ux.grid.ProgressColumn({
                 width: 100,
                 header: _("Progress"),
-                tooltip: _("Progress"),
+                tooltip: _("Progress."),
                 dataIndex: 'progress',
                 colored: false,
                 ceiling: 100,
@@ -764,7 +764,7 @@ tvheadend.epg = function() {
                 width: 250,
                 id: 'title',
                 header: _("Title"),
-                tooltip: _("Title"),
+                tooltip: _("Title."),
                 dataIndex: 'title',
                 renderer: function(value, meta, record) {
                     var clickable = tvheadend.regexEscape(record.data['title']) !=
@@ -779,7 +779,7 @@ tvheadend.epg = function() {
                 width: 250,
                 id: 'extratext',
                 header: _("Extra text"),
-                tooltip: _("Extra text: subtitle or summary or description"),
+                tooltip: _("Extra text: subtitle or summary or description."),
                 dataIndex: 'extratext',
                 renderer: renderExtraText
             },
@@ -787,7 +787,7 @@ tvheadend.epg = function() {
                 width: 100,
                 id: 'episodeOnscreen',
                 header: _("Episode"),
-                tooltip: _("Episode"),
+                tooltip: _("Episode."),
                 dataIndex: 'episodeOnscreen',
                 renderer: renderText
             },
@@ -795,7 +795,7 @@ tvheadend.epg = function() {
                 width: 100,
                 id: 'start',
                 header: _("Start Time"),
-                tooltip: _("Start Time"),
+                tooltip: _("Start Time."),
                 dataIndex: 'start',
                 renderer: renderDate
             },
@@ -804,7 +804,7 @@ tvheadend.epg = function() {
                 hidden: true,
                 id: 'stop',
                 header: _("End Time"),
-                tooltip: _("End Time"),
+                tooltip: _("End Time."),
                 dataIndex: 'stop',
                 renderer: renderDate
             },
@@ -812,7 +812,7 @@ tvheadend.epg = function() {
                 width: 100,
                 id: 'duration',
                 header: _("Duration"),
-                tooltip: _("Duration"),
+                tooltip: _("Duration."),
                 dataIndex: 'duration',
                 renderer: renderDuration
             },
@@ -820,7 +820,7 @@ tvheadend.epg = function() {
                 width: 60,
                 id: 'channelNumber',
                 header: _("Number"),
-                tooltip: _("Number"),
+                tooltip: _("Number."),
                 align: 'right',
                 dataIndex: 'channelNumber',
                 renderer: renderText
@@ -829,7 +829,7 @@ tvheadend.epg = function() {
                 width: 250,
                 id: 'channelName',
                 header: _("Channel"),
-                tooltip: _("Channel"),
+                tooltip: _("Channel."),
                 dataIndex: 'channelName',
                 renderer: function(value, meta, record) {
                     var clickable = record.data['channelUuid'] !==
@@ -843,7 +843,7 @@ tvheadend.epg = function() {
                 width: 50,
                 id: 'starRating',
                 header: _("Stars"),
-                tooltip: _("Stars"),
+                tooltip: _("Stars."),
                 dataIndex: 'starRating',
                 renderer: renderInt
             },
@@ -851,14 +851,14 @@ tvheadend.epg = function() {
                 width: 50,
                 id: 'ageRating',
                 header: _("Age"),
-                tooltip: _("Age"),
+                tooltip: _("Age."),
                 dataIndex: 'ageRating',
                 renderer: renderInt
             }, {
                 width: 250,
                 id: 'genre',
                 header: _("Content Type"),
-                tooltip: _("Content Type"),
+                tooltip: _("Content Type."),
                 dataIndex: 'genre',
                 renderer: function(vals, meta, record) {
                     var r = [];
@@ -957,13 +957,13 @@ tvheadend.epg = function() {
     var epgPrevChannel = new Ext.Button({
         handler: epgPrevChannelCB,
         iconCls: 'previous',
-        tooltip: _("Go to previous channel"),
+        tooltip: _("Go to previous channel."),
     });
 
     var epgNextChannel = new Ext.Button({
         handler: epgNextChannelCB,
         iconCls: 'next',
-        tooltip: _("Go to next channel"),
+        tooltip: _("Go to next channel."),
     });
 
     // Tags, uses global store
@@ -1286,7 +1286,7 @@ tvheadend.epg = function() {
         {
             text: _('Reset All'),
             iconCls: 'resetIcon',
-            tooltip: _('Reset all filters (show all)'),
+            tooltip: _('Reset all filters (show all).'),
             handler: epgQueryClear
         },
         '->',
