@@ -145,7 +145,7 @@ const idclass_t iptv_mux_class =
       .name     = N_("Use A/V library"),
       .desc     = N_("The input stream is remuxed with A/V library (libav or"
                      " or ffmpeg) to the MPEG-TS format which is accepted by"
-                     " tvheadend."),
+                     " Tvheadend."),
       .list     = iptv_mux_libav_enum,
       .off      = offsetof(iptv_mux_t, mm_iptv_libav),
     },
@@ -335,13 +335,12 @@ iptv_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   iptv_mux_t *im = (iptv_mux_t*)mm;
   if(im->mm_iptv_muxname) {
-    strncpy(buf, im->mm_iptv_muxname, len);
-    buf[len-1] = '\0';
+    strlcpy(buf, im->mm_iptv_muxname, len);
   } else if(im->mm_iptv_url_sane) {
-    strncpy(buf, im->mm_iptv_url_sane, len);
-    buf[len-1] = '\0';
-  } else
+    strlcpy(buf, im->mm_iptv_url_sane, len);
+  } else {
     *buf = 0;
+  }
 }
 
 /*
@@ -382,7 +381,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
   if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_field_get_map(f))) continue;
-      (void)iptv_service_create0(im, 0, 0, f->hmf_name, e);
+      (void)iptv_service_create0(im, 0, 0, htsmsg_field_name(f), e);
     }
   } else if (in->in_service_id) {
     conf = htsmsg_create_map();

@@ -65,14 +65,14 @@ api_profile_list
 
   sflags |= SUBSCRIPTION_PACKET|SUBSCRIPTION_MPEGTS;
   l = htsmsg_create_list();
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   TAILQ_FOREACH(pro, &profiles, pro_link) {
     idnode_uuid_as_str(&pro->pro_id, ubuf);
     if (!cfg && (!profile_verify(pro, sflags) || !api_profile_find(perm, ubuf)))
       continue;
     htsmsg_add_msg(l, NULL, htsmsg_create_key_val(ubuf, profile_get_name(pro)));
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
   return 0;
@@ -87,12 +87,12 @@ api_profile_builders
 
   l = htsmsg_create_list();
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   /* List of available builder classes */
   LIST_FOREACH(pb, &profile_builders, link)
     if ((e = idclass_serialize(pb->clazz, perm->aa_lang_ui)))
       htsmsg_add_msg(l, NULL, e);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   /* Output */
   *resp = htsmsg_create_map();
@@ -116,13 +116,13 @@ api_profile_create
     return EINVAL;
   htsmsg_set_str(conf, "class", clazz);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   pro = profile_create(NULL, conf, 1);
   if (pro)
     api_idnode_create(resp, &pro->pro_id);
   else
     err = -EINVAL;
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return err;
 }

@@ -31,17 +31,17 @@ api_idnode_classes
   const idclass_t *ic;
 
   *resp = htsmsg_create_map();
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   all = idclass_find_all();
   if (all == NULL) {
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return EINVAL;
   }
   for (all2 = all; *all2; all2++) {
     ic = *all2;
     htsmsg_add_str(*resp, ic->ic_class, ic->ic_caption ?: "");
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   free(all);
   return 0;
@@ -102,13 +102,13 @@ api_idnode_raw_export
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {
     const idclass_t *idc;
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     idc = idclass_find(class);
     if (idc)
       err = api_idnode_raw_export_by_class0(perm, (void*)idc, NULL, args, resp);
     else
       err = EINVAL;
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return err;
   }
   
@@ -119,7 +119,7 @@ api_idnode_raw_export
     if (!(uuid = htsmsg_field_get_str(f)))
       return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   l = htsmsg_create_list();
 
   /* Multiple */
@@ -167,7 +167,7 @@ api_idnode_raw_export
     htsmsg_destroy(l);
   }
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return err;
 }
@@ -184,15 +184,13 @@ api_idnode_raw_import
   int count = 0;
   const idnodes_rb_t *domain = NULL;
 
-  htsmsg_print(args);
   if (!(f = htsmsg_field_find(args, "node")))
     return EINVAL;
   if (!(msg = htsmsg_field_get_list(f)))
     if (!(msg = htsmsg_field_get_map(f)))
       return EINVAL;
-  htsmsg_print(msg);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   /* Single or Foreach */
   if (!msg->hm_islist) {
@@ -261,7 +259,7 @@ api_idnode_raw_import
   // TODO: return updated UUIDs?
 
 exit:
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return err;
 }

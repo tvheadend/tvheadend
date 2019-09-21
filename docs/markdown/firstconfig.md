@@ -19,7 +19,7 @@ pressing the **Start wizard** button in **Configuration -> General -> Base**.
 [Introduction](introduction) before continuing with the wizard, as it 
 contains lots of useful info!
 
-### 1. Welcome/Language
+### 1. Welcome
 
 The first part of the wizard is where you select the basic language settings, 
 if you don't enter a preferred language, US English will be used as a 
@@ -52,7 +52,7 @@ is not recommended that you allow anonymous access to the admin account.
 If you plan on accessing Tvheadend over the Internet, make sure you use 
 strong credentials and do not allow anonymous access at all. 
 
-### 3. Network Settings
+### 3. Tuner and Network
 
 Many tuners are able to receive different signal types, If you receive 
 your channels through an..
@@ -73,7 +73,7 @@ Internet m3u playlist            | ```IPTV```
   Selecting more than one tuner per device can thus result in unexpected
   behavior.
   
-### 4. Assign Predefined Muxes to Networks
+### 4. Predefined Muxes
 
 Assign predefined muxes to networks. To save you from manually entering
 muxes, Tvheadend includes predefined mux lists. Please select an option 
@@ -89,7 +89,7 @@ from the list for each network.
 * Networks already configured will not be shown.
 * Selecting the wrong list may cause the scan (on the next page) to fail.
 
-### 5. Scanning for Services
+### 5. Scanning
 
 Tvheadend should now be scanning for available services. Please wait until the
 scan completes.
@@ -258,7 +258,7 @@ or record).
   
 See [Services](class/mpegts_service) for a detailed look into service mapping.
 
-**Bouquets**: Many service providers use bouquets for channel management and just 
+**Bouquets**: Many service providers - mostly those using satellite - use bouquets for channel management and just 
 like a standard set-top box Tvheadend can use these to automatically 
 manage and keep your channels up-to-date. If you would like to use 
 bouquets see [here](class/bouquet).

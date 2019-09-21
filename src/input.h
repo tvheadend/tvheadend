@@ -24,6 +24,7 @@
 #include "streaming.h"
 
 struct htsmsg;
+struct mpegts_apids;
 
 /*
  * Type-defs
@@ -77,6 +78,8 @@ struct tvh_input_stream {
   int   subs_count;   ///< Number of subcscriptions
   int   max_weight;   ///< Current max weight
 
+  struct mpegts_apids *pids; ///< active PID list
+
   tvh_input_stream_stats_t stats;
 };
 
@@ -90,6 +93,7 @@ struct tvh_input {
 
   void (*ti_get_streams) (tvh_input_t *, tvh_input_stream_list_t*);
   void (*ti_clear_stats) (tvh_input_t *);
+
   struct htsmsg *(*ti_wizard_get) (tvh_input_t *, const char *);
   void (*ti_wizard_set)  (tvh_input_t *, struct htsmsg *, const char *);
 };
@@ -102,7 +106,7 @@ struct tvh_input_instance {
 
   LIST_ENTRY(tvh_input_instance) tii_input_link;
 
-  pthread_mutex_t          tii_stats_mutex;
+  tvh_mutex_t              tii_stats_mutex;
   tvh_input_stream_stats_t tii_stats;
 
   void (*tii_delete) (tvh_input_instance_t *tii);

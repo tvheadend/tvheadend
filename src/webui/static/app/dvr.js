@@ -5,9 +5,49 @@
 /**
  *
  */
-tvheadend.dvrDetails = function(uuid) {
 
-    function showit(d) {
+tvheadend.labelFormattingParser = function(description) {
+    if (tvheadend.label_formatting){
+        return description.replace(/\[COLOR\s(.*?)\]/g, '<font style="color:$1">')
+	                   .replace(/\[\/COLOR\]/g, '<\/font>')
+	                   .replace(/\[B\]/g, '<b>')
+	                   .replace(/\[\/B\]/g, '<\/b>')
+	                   .replace(/\[I\]/g, '<i>')
+	                   .replace(/\[CR\]/g, '<br>')
+	                   .replace(/\[\/I\]/g, '<\/i>')
+	                   .replace(/\[UPPERCASE\](.*)\[\/UPPERCASE\]/g, function(match, group) {return group.toUpperCase();})
+	                   .replace(/\[LOWERCASE\](.*)\[\/LOWERCASE\]/g, function(match, group) {return group.toLowerCase();})
+	                   .replace(/\[CAPITALIZE\](.*)\[\/CAPITALIZE\]/g, function(match, group) {return group.split(/\s+/).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');});
+    }else return description;
+};
+
+tvheadend.dvrDetails = function(grid, index) {
+    var current_index = index;
+    var win;
+    var updateTimer;
+    // We need a unique DOM id in case user opens two dialogs.
+    var nextButtonId = Ext.id();
+    var previousButtonId = Ext.id();
+    // Our title is passed to search functions (such as imdb)
+    // So always ensure this does not contain channel info.
+    function getTitle(d) {
+      var params = d[0].params;
+      return params[1].value;
+    }
+
+    function getDialogTitle(d) {
+      var params = d[0].params;
+      var fields = [];
+      var evTitle = params[1].value;
+      if (evTitle && evTitle.length) fields.push(evTitle);
+      var evEp = params[4].value;
+      if (evEp && evEp.length) fields.push(evEp);
+      var channelname = params[22].value;
+      if (channelname && channelname.length) fields.push(channelname);
+      return fields.join(' - ');
+    }
+
+    function getDialogContent(d) {
         var params = d[0].params;
         var chicon = params[0].value;
         var title = params[1].value;
@@ -31,7 +71,12 @@ tvheadend.dvrDetails = function(uuid) {
         var category = params[19].value;
         var first_aired = params[20].value;
         var genre = params[21].value;
-        var content = '';
+        /* channelname is unused param 22 */
+        var fanart_image = params[23].value;
+        var content = '<div class="dvr-details-dialog">' +
+        '<div class="dvr-details-dialog-background-image"></div>' +
+        '<div class="dvr-details-dialog-content">';
+
         var but;
 
         if (chicon != null && chicon.length > 0) {
@@ -71,15 +116,20 @@ tvheadend.dvrDetails = function(uuid) {
             content += '</div>'; /* x-epg-left */
             content += '<div class="x-epg-bottom">';
         }
+        // If we have no image then use fanart image instead.
+        content += '<div class="x-epg-image-container">';
         if (image != null && image.length > 0) {
           content += '<img class="x-epg-image" src="' + image + '">';
+        } else if (fanart_image != null && fanart_image.length > 0) {
+          content += '<img class="x-epg-image" src="' + fanart_image + '">';
         }
+        content += '</div>';
 
         content += '<hr class="x-epg-hr"/>';
         if (summary && (!subtitle || subtitle != summary))
             content += '<div class="x-epg-summary">' + summary + '</div>';
         if (desc) {
-            content += '<div class="x-epg-desc">' + desc + '</div>';
+            content += '<div class="x-epg-desc">' + tvheadend.labelFormattingParser(desc) + '</div>';
             content += '<hr class="x-epg-hr"/>';
         }
         content += tvheadend.getDisplayCredits(credits);
@@ -99,65 +149,367 @@ tvheadend.dvrDetails = function(uuid) {
             content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Time Scheduler') + ':</span><span class="x-epg-body">' + timerec_caption + '</span></div>';
         if (chicon)
             content += '</div>'; /* x-epg-bottom */
+      content += '</div>';        //dialog content
+      return content
+    }
 
+  function getDialogButtons(d) {
+        var title = getTitle(d);
         var buttons = [];
+        var eventId = d[0].params[24].value;
 
-        buttons.push(new Ext.Button({
-            handler: searchIMDB,
-            iconCls: 'imdb',
-            tooltip: _('Search IMDB (for title)'),
+        var comboGetInfo = new Ext.form.ComboBox({
+            store: new Ext.data.ArrayStore({
+                data: [
+                  [1, 'Query IMDB', 'imdb.png'],
+                  [2, 'Query TheTVDB', 'thetvdb.png'],
+                  [3, 'Query FilmAffinity', 'filmaffinity.png'],
+                  [4, 'Query CSFD', 'csfd.png'],
+                ],
+                id: 0,
+                fields: ['value', 'text', 'url']
+            }),
+            triggerAction: 'all',
+            mode: 'local',
+            tpl : '<tpl for=".">' +
+                  '<div class="x-combo-list-item" ><img src="../static/icons/{url}">&nbsp;&nbsp;{text}</div>' +
+                  '</tpl>',
+            emptyText:'Find info from ...',
+            valueField: 'value',
+            displayField: 'text',
+            width: 160,
+            forceSelection : true,
+            editable: false,
+            listeners: {
+                select: function(combo, records, index) {
+                    tvheadend.seachTitleWeb(combo.getValue(), title);
+                }
+            },
+        });
+
+        if (title)
+            buttons.push(comboGetInfo);
+
+        buttons.push(new Ext.Toolbar.Button({
+            handler: function() { epgAlternativeShowingsDialog(eventId, true) },
+            iconCls: 'duprec',
+            tooltip: _('Find alternative showings for the DVR entry.'),
+        }));
+        buttons.push(new Ext.Toolbar.Button({
+            handler: function() { epgAlternativeShowingsDialog(eventId, false) },
+            iconCls: 'epgrelated',
+            tooltip: _('Find related showings for the DVR entry.'),
         }));
 
         buttons.push(new Ext.Button({
-            handler: searchTheTVDB,
-            iconCls: 'thetvdb',
-            tooltip: _('Search TheTVDB (for title)'),
+              id: previousButtonId,
+              handler: previousEvent,
+              iconCls: 'previous',
+              tooltip: _('Go to previous event'),
+        }));
+        buttons.push(new Ext.Button({
+            id: nextButtonId,
+            handler: nextEvent,
+            iconCls: 'next',
+            tooltip: _('Go to next event'),
         }));
 
-        function searchIMDB() {
-            window.open('http://akas.imdb.com/find?q=' +
-                        encodeURIComponent(title), '_blank');
-        }
+    return buttons;
+  }                             // getDialogButtons
 
-        function searchTheTVDB(){
-            window.open('http://thetvdb.com/?string='+
-                        encodeURIComponent(title)+'&searchseriesid=&tab=listseries&function=Search','_blank');
-        }
+  function updateDialogFanart(d) {
+      var params = d[0].params;
+      var image=params[15].value;
+      var fanart = params[23].value;
 
-        var win = new Ext.Window({
-            title: title,
+      if (updateTimer)
+          clearInterval(updateTimer);
+
+      fanart_div = win.el.child(".dvr-details-dialog-background-image");
+      if (fanart != null && fanart.length > 0 && fanart_div) {
+          // Set the fanart image. The rest of the css _should_ by in the tv.css,
+          // but it seemed to ignore it when we applyStyles.
+          // We have to explicitly set width/height otherwise the box was 0px tall.
+          fanart_div.applyStyles({
+              'background' : 'url(' + fanart + ') center center no-repeat',
+              'opacity': 0.15,
+              'position': 'absolute',
+              'width' : '100%',
+              'height': '100%',
+              // This causes background image to scale on css3 with aspect ratio, image
+              // can overflow, vs. 'contain' which will leave blank space top+bottom to
+              // ensure image is fully displayed in the window
+              'background-size': 'cover',
+              // Image can not be clicked on (so events propagate to buttons).
+              'pointer-events': 'none',
+          });
+      }                        // Have fanart div
+
+      if (image != null && image.length > 0 &&
+          fanart != null && fanart.length > 0) {
+          // We have image and fanart, so alternate the images every x milliseconds.
+          var index = 0;
+          updateTimer = setInterval(function() {
+              if (win.isDestroyed) {
+                  clearInterval(updateTimer);
+                  return;
+              }
+              var img_div = win.el.child(".x-epg-image");
+              if (img_div && img_div.dom) {
+                  var img= img_div.dom;
+                  // The img.src can be changed by browser so it does
+                  // not match either fanart or image! So we use a
+                  // counter to determine which image should be displayed.
+                  if (++index % 2) {
+                      img.src = fanart;
+                  } else {
+                      img.src = image;
+                  }
+              } else {
+                  clearInterval(updateTimer);
+              }
+          }, 10 * 1000);
+      }
+  }                             //updateDialogFanart
+
+  function showit(d) {
+       var dialogTitle = getDialogTitle(d);
+       var content = getDialogContent(d);
+       var buttons = getDialogButtons(d);
+       var windowHeight = Ext.getBody().getViewSize().height - 150;
+
+       win = new Ext.Window({
+            title: dialogTitle,
             iconCls: 'info',
             layout: 'fit',
-            width: 650,
-            height: 450,
+            width: 790,
+            height: windowHeight,
             constrainHeader: true,
             buttonAlign: 'center',
+            autoScroll: true,
             buttons: buttons,
             html: content
         });
+       win.show();
+       updateDialogFanart(d);
+       checkButtonAvailability(win.fbar)
+  }
 
-        win.show();
-    }
-
-    tvheadend.loading(1);
-    Ext.Ajax.request({
+  function load(store, index, cb) {
+      var uuid = store.getAt(index).id;
+      tvheadend.loading(1);
+      Ext.Ajax.request({
         url: 'api/idnode/load',
         params: {
             uuid: uuid,
             list: 'channel_icon,disp_title,disp_subtitle,disp_summary,episode_disp,start_real,stop_real,' +
                   'duration,disp_description,status,filesize,comment,duplicate,' +
                   'autorec_caption,timerec_caption,image,copyright_year,credits,keyword,category,' +
-                  'first_aired,genre',
+                  'first_aired,genre,channelname,fanart_image,broadcast',
         },
         success: function(d) {
             d = json_decode(d);
             tvheadend.loading(0),
-            showit(d);
+            cb(d);
         },
         failure: function(d) {
             tvheadend.loading(0);
         }
+      });
+  }                           // load
+
+  function previousEvent(b, e) {
+      --current_index;
+      load(store,current_index,updateit);
+  }
+  function nextEvent(b, e) {
+      ++current_index;
+      var cbWin = b.findParentByType(Ext.Window);
+      load(store,current_index,updateit);
+  }
+  function dvrAlternativeShowings(eventId) {
+      var store = getAlternativeShowingsStore(eventId);
+
+    var detailsfcn = function(grid, rec, act, row) {
+      var store = grid.getStore();
+      var event = store.getAt(row);
+      var data = event.data;
+        new tvheadend.epgDetails(grid, row);
+    };
+
+    var eventdetails = new Ext.ux.grid.RowActions({
+        id: 'details',
+        header: _('Details'),
+        tooltip: _('Details'),
+        width: 67,
+        dataIndex: 'actions',
+        callbacks: {
+            'recording':      detailsfcn,
+            'recordingError': detailsfcn,
+            'scheduled':      detailsfcn,
+            'completed':      detailsfcn,
+            'completedError': detailsfcn
+        },
+        actions: [
+            {
+                iconCls: 'broadcast_details',
+                qtip: _('Broadcast details'),
+                cb: detailsfcn
+            },
+            {
+                iconIndex: 'dvrState'
+            }
+        ]
     });
+
+     var epgView = new Ext.ux.grid.livegrid.GridView({
+         nearLimit: 100,
+         loadMask: {
+             msg: _('Buffering. Please wait…')
+         },
+ });
+
+    var grid = new Ext.ux.grid.livegrid.GridPanel({
+              store: store,
+              plugins: [eventdetails],
+              iconCls: 'epg',
+              view: epgView,
+              cm: new Ext.grid.ColumnModel({
+                columns: [
+                  eventdetails,
+                  {
+                    width: 250,
+                    id: 'title',
+                    header: _("Title"),
+                    tooltip: _("Title"),
+                    dataIndex: 'title',
+                  },
+                  {
+                    width: 250,
+                    id: 'extratext',
+                    header: _("Extra text"),
+                    tooltip: _("Extra text: subtitle or summary or description"),
+                    dataIndex: 'extratext',
+                    renderer: dvrRenderExtraText
+                  },
+                  {
+                    width: 200,
+                    id: 'start',
+                    header: _("Start Time"),
+                    tooltip: _("Start Time"),
+                    dataIndex: 'start',
+                    renderer: dvrRenderDate
+                  },
+            {
+                width: 200,
+                id: 'stop',
+                header: _("End Time"),
+                tooltip: _("End Time"),
+                dataIndex: 'stop',
+                renderer: dvrRenderDate
+            },
+            {
+                width: 250,
+                id: 'channelName',
+                header: _("Channel"),
+                tooltip: _("Channel"),
+                dataIndex: 'channelName',
+            },
+                ],
+              }),
+       });                      // grid
+
+
+       var windowHeight = Ext.getBody().getViewSize().height - 150;
+
+       win = new Ext.Window({
+            title: 'Alternative Showings',
+            iconCls: 'info',
+            layout: 'fit',
+            width: 1200,
+            height: windowHeight,
+            constrainHeader: true,
+            buttonAlign: 'center',
+            autoScroll: true,
+            items: grid,
+        });
+        // Handle comet updates until user closes dialog.
+        var update = function(m) {
+            tvheadend.epgCometUpdate(m, store);
+        };
+       tvheadend.comet.on('epg', update);
+       win.on('close', function(panel, opts) {
+           tvheadend.comet.un('epg', update);
+       });
+
+       win.show();
+       updateDialogFanart(d);
+       checkButtonAvailability(win.fbar)
+  }
+
+  function load(store, index, cb) {
+      var uuid = store.getAt(index).id;
+      tvheadend.loading(1);
+      Ext.Ajax.request({
+        url: 'api/idnode/load',
+        params: {
+            uuid: uuid,
+            list: 'channel_icon,disp_title,disp_subtitle,disp_summary,episode_disp,start_real,stop_real,' +
+                  'duration,disp_description,status,filesize,comment,duplicate,' +
+                  'autorec_caption,timerec_caption,image,copyright_year,credits,keyword,category,' +
+                  'first_aired,genre,channelname,fanart_image,broadcast',
+        },
+        success: function(d) {
+            d = json_decode(d);
+            tvheadend.loading(0),
+            cb(d);
+        },
+        failure: function(d) {
+            tvheadend.loading(0);
+        }
+      });
+  }                           // load
+
+  function previousEvent() {
+      --current_index;
+      load(store,current_index,updateit);
+  }
+  function nextEvent() {
+      ++current_index;
+      load(store,current_index,updateit);
+  }
+
+  function checkButtonAvailability(toolBar){
+        // If we're at the end of the store then disable the next
+        // or previous button.  (getTotalCount is one-based).
+        if (current_index == store.getTotalCount() - 1)
+          toolBar.getComponent(nextButtonId).disable();
+        if (current_index == 0)
+          toolBar.getComponent(previousButtonId).disable();
+    }
+
+  function updateit(d) {
+        var dialogTitle = getDialogTitle(d);
+        var content = getDialogContent(d);
+        var buttons = getDialogButtons(d);
+        win.removeAll();
+        // Can't update buttons at the same time...
+        win.update({html: content});
+        win.setTitle(dialogTitle);
+        // ...so remove the buttons and re-add them.
+        var tbar = win.fbar;
+        tbar.removeAll();
+        Ext.each(buttons, function(btn) {
+            tbar.addButton(btn);
+        });
+        updateDialogFanart(d);
+        checkButtonAvailability(tbar);
+        // Finally, relayout.
+        win.doLayout();
+  }
+
+    var store = grid.getStore();
+    load(store,index,showit);
 };
 
 tvheadend.dvrRowActions = function() {
@@ -174,7 +526,7 @@ tvheadend.dvrRowActions = function() {
                 iconCls: 'info',
                 qtip: _('Recording details'),
                 cb: function(grid, rec, act, row) {
-                    new tvheadend.dvrDetails(grid.getStore().getAt(row).id);
+                    new tvheadend.dvrDetails(grid, row);
                 }
             }
         ],
@@ -274,6 +626,14 @@ tvheadend.displayWithYearRenderer = function(v, meta, rec) {
     }
 }
 
+tvheadend.displayWithoutYearRenderer = function(v, meta, rec) {
+    return function() {
+        return function(v, meta, rec) {
+            return v;
+        }
+    }
+}
+
 tvheadend.dvrButtonFcn = function(store, select, _url, q) {
     var r = select.getSelections();
     if (r && r.length > 0) {
@@ -360,29 +720,6 @@ tvheadend.dvr_upcoming = function(panel, index) {
         }
     };
 
-    function updateDupText(button, dup) {
-        button.setText(dup ? _('Hide duplicates') : _('Show duplicates'));
-    }
-
-    var dupButton = {
-        name: 'dup',
-        builder: function() {
-            return new Ext.Toolbar.Button({
-                tooltip: _('Toggle the view of the duplicate DVR entries.'),
-                iconCls: 'duprec',
-                text: _('Show duplicates')
-            });
-        },
-        callback: function(conf, e, store, select) {
-            duplicates ^= 1;
-            select.grid.colModel.setHidden(columnId, !duplicates);
-            select.grid.bottomToolbar.changePage(0);
-            updateDupText(this, duplicates);
-            store.baseParams.duplicates = duplicates;
-            store.reload();
-        }
-    };
-
     function selected(s, abuttons) {
         var recording = 0;
         s.each(function(s) {
@@ -392,20 +729,14 @@ tvheadend.dvr_upcoming = function(panel, index) {
         abuttons.stop.setDisabled(recording < 1);
         abuttons.abort.setDisabled(recording < 1);
         abuttons.prevrec.setDisabled(recording >= 1);
+        var r = s.getSelections();
+        abuttons.epgalt.setDisabled(r.length <= 0);
+        abuttons.epgrelated.setDisabled(r.length <= 0);
     }
 
     function beforeedit(e, grid) {
         if (e.record.data.sched_status == 'recording')
             return false;
-    }
-
-    function viewready(grid) {
-        var d = grid.store.baseParams.duplicates;
-        updateDupText(grid.abuttons['dup'], d);
-        if (!d) {
-            columnId = grid.colModel.findColumnIndex('duplicate');
-            grid.colModel.setHidden(columnId, true);
-        }
     }
 
     tvheadend.idnode_grid(panel, {
@@ -433,10 +764,11 @@ tvheadend.dvr_upcoming = function(panel, index) {
         del: true,
         list: 'category,enabled,duplicate,disp_title,disp_extratext,episode_disp,' +
               'channel,image,copyright_year,start_real,stop_real,duration,pri,filesize,' +
-              'sched_status,errors,data_errors,config_name,owner,creator,comment,genre',
+              'sched_status,errors,data_errors,config_name,owner,creator,comment,genre,broadcast',
         columns: {
             disp_title: {
-                renderer: tvheadend.displayWithYearAndDuplicateRenderer()
+                renderer: tvheadend.displayWithYearAndDuplicateRenderer(),
+                groupRenderer: tvheadend.displayWithoutYearRenderer(),
             },
             disp_extratext: {
                 renderer: tvheadend.displayWithDuplicateRenderer()
@@ -468,10 +800,9 @@ tvheadend.dvr_upcoming = function(panel, index) {
             actions,
             tvheadend.contentTypeAction,
         ],
-        tbar: [stopButton, abortButton, prevrecButton, dupButton],
+        tbar: [stopButton, abortButton, prevrecButton, epgShowRelatedButtonConf, epgShowAlternativesButtonConf],
         selected: selected,
         beforeedit: beforeedit,
-        viewready: viewready
     });
 
     return panel;
@@ -599,6 +930,11 @@ tvheadend.dvr_finished = function(panel, index) {
 
     function viewready(grid) {
         grid.abuttons['grouping'].setText(groupingText(!grid.store.groupField));
+        if (grid.store.groupField){
+          grid.bottomToolbar.pageSize = 999999999 // Select all rows
+          grid.bottomToolbar.changePage(0);
+          grid.store.reload();
+        }
     }
 
     tvheadend.idnode_grid(panel, {
@@ -622,6 +958,7 @@ tvheadend.dvr_finished = function(panel, index) {
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
+                groupRenderer: tvheadend.displayWithoutYearRenderer(),
             },
             channel: {
                 renderer: tvheadend.dvrChannelRenderer(),
@@ -645,7 +982,7 @@ tvheadend.dvr_finished = function(panel, index) {
                     var title = r.data['disp_title'];
                     if (r.data['episode_disp'])
                         title += ' / ' + r.data['episode_disp'];
-                    return tvheadend.playLink('play/dvrfile/' + r.id, title);
+                    return tvheadend.playLink('dvrfile/' + r.id, title);
                 }
             }],
         tbar: [removeButton, downloadButton, rerecordButton, moveButton, groupingButton],
@@ -741,6 +1078,7 @@ tvheadend.dvr_failed = function(panel, index) {
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
+                groupRenderer: tvheadend.displayWithoutYearRenderer(),
             },
             channel: {
                 renderer: tvheadend.dvrChannelRenderer(),
@@ -764,7 +1102,7 @@ tvheadend.dvr_failed = function(panel, index) {
                     var title = r.data['disp_title'];
                     if (r.data['episode_disp'])
                         title += ' / ' + r.data['episode_disp'];
-                    return tvheadend.playLink('play/dvrfile/' + r.id, title);
+                    return tvheadend.playLink('dvrfile/' + r.id, title);
                 }
             }],
         tbar: [downloadButton, rerecordButton, moveButton],
@@ -819,6 +1157,7 @@ tvheadend.dvr_removed = function(panel, index) {
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
+                groupRenderer: tvheadend.displayWithoutYearRenderer(),
             },
             channel: {
                 renderer: tvheadend.dvrChannelRenderer(),
@@ -867,7 +1206,7 @@ tvheadend.dvr_settings = function(panel, index) {
 tvheadend.autorec_editor = function(panel, index) {
 
     var list = 'name,title,fulltext,channel,start,start_window,weekdays,' +
-               'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,' +
+               'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,minyear,maxyear,minseason,maxseason,' +
                'star_rating,dedup,directory,config_name,comment,pri';
     var elist = 'enabled,start_extra,stop_extra,' +
                 (tvheadend.accessUpdate.admin ?
@@ -911,6 +1250,10 @@ tvheadend.autorec_editor = function(panel, index) {
             maxsched:     { width: 80 },
             star_rating:  { width: 80 },
             config_name:  { width: 120 },
+            minyear:      { width: 100 },
+            maxyear:      { width: 100 },
+            minseason:    { width: 100 },
+            maxseason:    { width: 100 },
             owner:        { width: 100 },
             creator:      { width: 200 },
             comment:      { width: 200 }
@@ -930,7 +1273,7 @@ tvheadend.autorec_editor = function(panel, index) {
         del: true,
         list: 'enabled,name,title,fulltext,channel,tag,start,start_window,' +
               'weekdays,minduration,maxduration,record,btype,content_type,cat1,cat2,cat3' +
-              'star_rating,pri,dedup,directory,config_name,owner,creator,comment',
+              'star_rating,pri,dedup,directory,config_name,minseason,maxseason,minyear,maxyear,owner,creator,comment',
         sort: {
           field: 'name',
           direction: 'ASC'

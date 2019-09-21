@@ -16,12 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <string.h>
-#include <pthread.h>
-#include <unistd.h>
 #include <signal.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -36,6 +31,8 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
+
+extern gtimer_t epggrab_save_timer;
 
 /* **************************************************************************
  * Module Access
@@ -119,8 +116,8 @@ epggrab_module_ota_scrapper_config_list ( void *o, const char *lang )
     htsmsg_field_t *f;
     HTSMSG_FOREACH(f, config) {
       e = htsmsg_create_map();
-      htsmsg_add_str(e, "key", f->hmf_name);
-      htsmsg_add_str(e, "val", f->hmf_name);
+      htsmsg_add_str(e, "key", htsmsg_field_name(f));
+      htsmsg_add_str(e, "val", htsmsg_field_name(f));
       htsmsg_add_msg(m, NULL, e);
     }
     htsmsg_destroy(config);
@@ -406,6 +403,25 @@ void epggrab_module_parse( void *m, htsmsg_t *data )
   tvhinfo(mod->subsys, "%s:  broadcasts tot=%5d new=%5d mod=%5d",
           mod->id, stats.broadcasts.total, stats.broadcasts.created,
           stats.broadcasts.modified);
+
+  /* Now we've parsed, do we need to save? */
+  if (save && epggrab_conf.epgdb_saveafterimport) {
+    tvhinfo(mod->subsys, "%s: scheduling save epg timer", mod->id);
+    tvh_mutex_lock(&global_lock);
+    /* Disarm any existing timer first (from a periodic save). */
+    gtimer_disarm(&epggrab_save_timer);
+    /* Reschedule for a few minutes away so if the user is
+     * refreshing from multiple xmltv sources we will give time for
+     * them to all complete before persisting, rather than persisting
+     * immediately after a parse.
+     *
+     * If periodic saving is enabled then the callback will then
+     * rearm the timer for x hours after the previous save.
+     */
+    gtimer_arm_rel(&epggrab_save_timer, epg_save_callback, NULL,
+                   60 * 2);
+    tvh_mutex_unlock(&global_lock);
+  }
 }
 
 /* **************************************************************************
@@ -426,7 +442,7 @@ void epggrab_module_channels_load ( const char *modid )
         if (mod == NULL || strcmp(mod->id, id))
           mod = epggrab_module_find_by_id(id);
         if (mod)
-          epggrab_channel_create(mod, e, f->hmf_name);
+          epggrab_channel_create(mod, e, htsmsg_field_name(f));
       }
     }
     htsmsg_destroy(m);
@@ -612,7 +628,7 @@ epggrab_module_done_socket( void *m )
   shutdown(sock, SHUT_RDWR);
   close(sock);
   if (mod->tid) {
-    pthread_kill(mod->tid, SIGQUIT);
+    tvh_thread_kill(mod->tid, SIGQUIT);
     pthread_join(mod->tid, NULL);
   }
   mod->tid = 0;
@@ -652,7 +668,7 @@ epggrab_module_activate_socket ( void *m, int a )
 
     memset(&addr, 0, sizeof(struct sockaddr_un));
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, mod->path, 100);
+    strlcpy(addr.sun_path, mod->path, sizeof(addr.sun_path));
     if (bind(sock, (struct sockaddr*)&addr,
              sizeof(struct sockaddr_un)) != 0) {
       tvherror(mod->subsys, "%s: failed to bind socket: %s", mod->id, strerror(errno));
@@ -670,7 +686,7 @@ epggrab_module_activate_socket ( void *m, int a )
     pthread_attr_init(&tattr);
     mod->active = 1;
     atomic_set(&mod->sock, sock);
-    tvhthread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod, "epggrabso");
+    tvh_thread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod, "epggrabso");
   }
   return 1;
 }
@@ -727,6 +743,8 @@ epggrab_module_ota_t *epggrab_module_ota_create
   skel->type         = EPGGRAB_OTA;
   skel->activate     = ops->activate;
   skel->start        = ops->start;
+  skel->stop         = ops->stop;
+  skel->handlers     = ops->handlers;
   skel->done         = ops->done;
   skel->tune         = ops->tune;
   skel->process_data = ops->process_data;

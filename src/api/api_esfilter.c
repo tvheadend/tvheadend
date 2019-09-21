@@ -44,11 +44,11 @@ api_esfilter_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   esf = esfilter_create(cls, NULL, conf, 1);
   if (esf)
     api_idnode_create(resp, &esf->esf_id);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }

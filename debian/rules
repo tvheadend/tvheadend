@@ -1,8 +1,12 @@
 #!/usr/bin/make -f
 export DH_VERBOSE=1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
 	dh $@ --with-systemd
+
+override_dh_builddeb:
+	dh_builddeb -- -Zgzip
 
 override_dh_auto_configure:
 	dh_auto_configure -- ${AUTOBUILD_CONFIGURE_EXTRA} ${JOBSARGS}

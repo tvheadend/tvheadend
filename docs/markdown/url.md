@@ -15,14 +15,20 @@ playlist | Playlist type, can be *xspf* or *m3u*
 
 **Example:** `http://127.0.0.1:9981/play/stream/channelname/Life?playlist=xspf`
 
-### /playlist[/TYPE][/WHAT][/IDENTIFIER]
+### /playlist[/AUTH][/TYPE][/WHAT][/IDENTIFIER]
 
 Return the m3u playlist in Enigma2 format. By default (if the rest of path
 is ommitted), an redirection answer will be sent where /channels remainder
 is used.
 
 TYPE          | Playlist type
---------------|----------------------------------------
+--------------|------------------------------------------------------------
+*empty*       | default - HTTP authentication
+ticket        | temporary ticket valid for 5 minutes
+auth          | pernament code which must be enabled in the password table
+
+TYPE          | Playlist type
+--------------|------------------------------------------------------------
 *empty*       | M3U
 e2            | Enigma2
 satip         | M3U using SAT>IP extensions
@@ -91,3 +97,12 @@ channelid     | One channel specified by short channel ID
 tag           | Tagged channels specified by UUID or tag name
 tagname       | Tagged channels specified by tag name
 tagid         | Tagged channels specified by short tag ID
+
+Option     | Explanation
+-----------|------------------------------------------------------------------------------
+lcn        | Use _lcn_ tag instead _display-name_ (standard) for the channel number
+
+### /special/srvid2
+
+Copy this contents to your oscam.srvid2 and start/restart
+the server.

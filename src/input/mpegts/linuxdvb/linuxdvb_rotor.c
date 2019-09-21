@@ -55,6 +55,8 @@ double gazimuth, gelevation;
 
 #endif
 
+#include "spawn.h"
+
 /* **************************************************************************
  * Class definition
  * *************************************************************************/
@@ -131,7 +133,31 @@ const idclass_t linuxdvb_rotor_gotox_class =
       .type   = PT_DBL,
       .id     = "sat_lon",
       .name   = N_("Satellite longitude"),
-      .desc   = N_("Satellite longitude."),
+      .desc   = N_("Satellite longitude (like 9.0 (east) or -33.0 (west))."),
+      .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
+    },
+    {}
+  }
+};
+
+const idclass_t linuxdvb_rotor_external_class =
+{
+  .ic_super       = &linuxdvb_rotor_class,
+  .ic_class       = "linuxdvb_rotor_external",
+  .ic_caption     = N_("TV Adapters - SatConfig - External Rotor"),
+  .ic_properties  = (const property_t[]) {
+    {
+      .type   = PT_U16,
+      .id     = "position",
+      .name   = N_("External position"),
+      .desc   = N_("Position to send to the external command"),
+      .off    = offsetof(linuxdvb_rotor_t, lr_position),
+    },
+    {
+      .type   = PT_DBL,
+      .id     = "sat_lon",
+      .name   = N_("Satellite longitude"),
+      .desc   = N_("Satellite longitude (like 9.0 (east) or -33.0 (west))."),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
     {}
@@ -148,7 +174,7 @@ const idclass_t linuxdvb_rotor_usals_class =
       .type   = PT_DBL,
       .id     = "sat_lon",
       .name   = N_("Satellite longitude"),
-      .desc   = N_("Satellite longitude."),
+      .desc   = N_("Satellite longitude (like 9.0 (east) or -33.0 (west))."),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
  
@@ -316,12 +342,64 @@ sat_angle( linuxdvb_rotor_t *lr, linuxdvb_satconf_ele_t *ls )
  * *************************************************************************/
 
 static int
+linuxdvb_rotor_extcmd
+  (linuxdvb_rotor_t *lr, linuxdvb_satconf_ele_t *lse)
+{
+  int outlen = -1, rd = -1;
+  char outbuf[100];
+  char satpos[10];
+  char satlon[10];
+  char satangle[10];
+
+  char *argv[] = {NULL, satpos, satlon, satangle, NULL};
+  int ret = -1;
+  int angle=sat_angle(lr,lse);
+
+  snprintf(satpos, sizeof(satpos), "%u", lr->lr_position);
+  snprintf(satlon, sizeof(satlon), "%.1f", lr->lr_sat_lon);
+  snprintf(satangle, sizeof(satangle), "%d", angle);
+  if (spawn_and_give_stdout(lse->lse_parent->ls_rotor_extcmd, argv, NULL, &rd, NULL, 1) >= 0) {
+    outlen = read(rd, outbuf, 99);
+    if (outlen>0) {
+      outbuf[outlen]=0;
+      tvhdebug(LS_DISEQC, "external command replied %s",outbuf);
+      if (outbuf[0]>='0' && outbuf[0]<='9')
+        ret=atoi(outbuf);
+    } else {
+      if (outlen==0)
+        tvherror(LS_DISEQC, "no output from external command");
+      else
+        tvherror(LS_DISEQC, "error reading from external command");
+    }
+  } else {
+    tvherror(LS_DISEQC, "cannot spawn external command");
+  }
+  if (rd>=0)
+    close(rd);
+  tvhinfo(LS_DISEQC, "linuxdvb_rotor_extcmd moving to %d returned %d", lr->lr_position, ret);
+  return ret;
+}
+
+static int
+linuxdvb_external_grace
+  ( linuxdvb_rotor_t *lr, linuxdvb_satconf_ele_t *lse)
+{
+  int ret = linuxdvb_rotor_extcmd(lr, lse);
+  if (ret<0)
+    return lse->lse_parent->ls_max_rotor_move;
+  return ret;
+}
+
+static int
 linuxdvb_rotor_grace
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
   linuxdvb_satconf_t *ls = ld->ld_satconf->lse_parent;
   int newpos, delta, tunit, min, res;
+
+  if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_external_class))
+    return linuxdvb_external_grace(lr, ld->ld_satconf);
 
   if (!ls->ls_last_orbital_pos || ls->ls_motor_rate == 0)
     return ls->ls_max_rotor_move;
@@ -391,6 +469,15 @@ linuxdvb_rotor_gotox_tune
   return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);
 }
 
+/* External */
+static int
+linuxdvb_rotor_external_tune
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls )
+{
+  return linuxdvb_rotor_extcmd(lr, ls);
+}
+
 /* USALS */
 static int
 linuxdvb_rotor_usals_tune
@@ -432,6 +519,7 @@ linuxdvb_rotor_tune
     int vol, int pol, int band, int freq )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
+  int res;
 
   if (linuxdvb_rotor_check_orbital_pos(lr, lm, ls))
     return 0;
@@ -442,20 +530,43 @@ linuxdvb_rotor_tune
 
   /* GotoX */
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
-    return linuxdvb_rotor_gotox_tune(lr, lm, lsp, ls);
-
+    res = linuxdvb_rotor_gotox_tune(lr, lm, lsp, ls);
+  /* External */
+  else if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_external_class))
+    res = linuxdvb_rotor_external_tune(lr, lm, lsp, ls);
   /* USALS */
-  return linuxdvb_rotor_usals_tune(lr, lm, lsp, ls);
+  else
+    res = linuxdvb_rotor_usals_tune(lr, lm, lsp, ls);
+
+  if (res < 0)
+    return res;
+
+  lsp->ls_last_queued_pos = pos_to_integer(lr->lr_sat_lon);
+  return res;
+}
+
+static int
+linuxdvb_rotor_start
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls )
+{
+  linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
+  int pos = pos_to_integer(lr->lr_sat_lon);
+  if (lsp->ls_last_queued_pos == pos)
+    return 1;
+  lsp->ls_last_queued_pos = 0;
+  return 0;
 }
 
 static int
 linuxdvb_rotor_post
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+  ( linuxdvb_diseqc_t *ld,
     linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
   lsp->ls_last_orbital_pos = pos_to_integer(lr->lr_sat_lon);
+  lsp->ls_last_queued_pos = 0;
   return 0;
 }
 
@@ -470,6 +581,10 @@ struct {
   {
     .name = N_("GOTOX"),
     .idc  = &linuxdvb_rotor_gotox_class
+  },
+  {
+    .name = N_("EXTERNAL"),
+    .idc  = &linuxdvb_rotor_external_class
   },
   {
     .name = N_("USALS"),
@@ -502,6 +617,7 @@ linuxdvb_rotor_create0
                                    NULL, linuxdvb_rotor_all[i].idc, conf,
                                    linuxdvb_rotor_all[i].name, ls);
       if (ld) {
+        ld->ld_start = linuxdvb_rotor_start;
         ld->ld_tune  = linuxdvb_rotor_tune;
         ld->ld_grace = linuxdvb_rotor_grace;
         ld->ld_post  = linuxdvb_rotor_post;

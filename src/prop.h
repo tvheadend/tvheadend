@@ -72,13 +72,15 @@ typedef enum {
  * min/max/step helpers
  */
 #define INTEXTRA_RANGE(min, max, step) \
-  ((1<<31)|(((step)&0x7f)<<24)|(((max)&0xfff)<<12)|((min)&0xfff))
+  ((1<<31U)|(((step)&0x7fU)<<24)|(((max)&0xfffU)<<12)|((min)&0xfffU))
 
-#define INTEXTRA_IS_RANGE(e) (((e) & (1<<31)) != 0)
+#define INTEXTRA_IS_RANGE(e) (((e) & (1<<31U)) != 0)
 #define INTEXTRA_IS_SPLIT(e) !INTEXTRA_IS_RANGE(e)
-#define INTEXTRA_GET_STEP(e) (((e)>>24)&0x7f)
+#define INTEXTRA_GET_STEP(e) (((e)>>24)&0x7fU)
 #define INTEXTRA_GET_MAX(e)  ((e)&(1<<23)?-(0x800-(((e)>>12)&0x7ff)):(((e)>>12)&0x7ff))
 #define INTEXTRA_GET_MIN(e)  ((e)&(1<<11)?-(0x800-((e)&0x7ff)):((e)&0x7ff))
+#define INTEXTRA_GET_UMAX(e) (((e)>>12)&0xfff)
+#define INTEXTRA_GET_UMIN(e) ((e)&0xfff)
 
 /*
  * Property definition

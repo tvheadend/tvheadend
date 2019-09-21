@@ -16,24 +16,19 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tvheadend.h"
-
-#include <unistd.h>
-#include <assert.h>
-#include <poll.h>
-#include <signal.h>
-#include <pthread.h>
 #include <sys/inotify.h>
 #include <sys/stat.h>
+#include <signal.h>
 
+#include "tvheadend.h"
 #include "redblack.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
 
 /* inotify limits */
-#define EVENT_SIZE    ( sizeof (struct inotify_event) )
-#define EVENT_BUF_LEN ( 10 * ( EVENT_SIZE + 16 ) )
-#define EVENT_MASK    IN_CREATE    | IN_DELETE     | IN_DELETE_SELF |\
+#define EVENT_SIZE    (sizeof(struct inotify_event))
+#define EVENT_BUF_LEN (5 * EVENT_SIZE + NAME_MAX)
+#define EVENT_MASK    IN_DELETE    | IN_DELETE_SELF | \
                       IN_MOVE_SELF | IN_MOVED_FROM | IN_MOVED_TO
                       
 static int                         _inot_fd;
@@ -76,7 +71,7 @@ void dvr_inotify_init ( void )
     return;
   }
 
-  tvhthread_create(&dvr_inotify_tid, NULL, _dvr_inotify_thread, NULL, "dvr-inotify");
+  tvh_thread_create(&dvr_inotify_tid, NULL, _dvr_inotify_thread, NULL, "dvr-inotify");
 }
 
 /**
@@ -86,7 +81,7 @@ void dvr_inotify_done ( void )
 {
   int fd = atomic_exchange(&_inot_fd, -1);
   if (fd >= 0) blacklisted_close(fd);
-  pthread_kill(dvr_inotify_tid, SIGTERM);
+  tvh_thread_kill(dvr_inotify_tid, SIGTERM);
   pthread_join(dvr_inotify_tid, NULL);
   SKEL_FREE(dvr_inotify_entry_skel);
 }
@@ -378,6 +373,10 @@ void* _dvr_inotify_thread ( void *p )
   const char *from;
   int fromfd;
   int cookie;
+  struct inotify_event *ev;
+  char from_prev[NAME_MAX + 1] = "";
+  int fromfd_prev = 0;
+  int cookie_prev = 0;
 
   while (tvheadend_is_running()) {
 
@@ -394,9 +393,10 @@ void* _dvr_inotify_thread ( void *p )
       break;
 
     /* Process */
-    pthread_mutex_lock(&global_lock);
-    while ( i < len ) {
-      struct inotify_event *ev = (struct inotify_event*)&buf[i];
+    tvh_mutex_lock(&global_lock);
+    while (i < len) {
+      ev = (struct inotify_event *)&buf[i];
+      tvhtrace(LS_DVR_INOTIFY, "i=%d len=%d name=%s", i, len, ev->name);
       i += EVENT_SIZE + ev->len;
       if (i > len)
         break;
@@ -406,12 +406,21 @@ void* _dvr_inotify_thread ( void *p )
         from   = ev->name;
         fromfd = ev->wd;
         cookie = ev->cookie;
+        tvhtrace(LS_DVR_INOTIFY, "i=%d len=%d from=%s cookie=%d ", i, len, from, cookie);
         continue;
 
-      } else if ((ev->mask & IN_MOVED_TO) && from && ev->cookie == cookie) {
-        _dvr_inotify_moved(fromfd, from, ev->name, ev->wd);
-        from = NULL;
-      
+      } else if (ev->mask & IN_MOVED_TO) {
+        tvhtrace(LS_DVR_INOTIFY, "i=%d len=%d to_cookie=%d from_cookie=%d cookie_prev=%d", i, len, ev->cookie, cookie, cookie_prev);
+          if (from && ev->cookie == cookie) {
+            _dvr_inotify_moved(fromfd, from, ev->name, ev->wd);
+            from = NULL;
+	    cookie = 0;
+          } else if (from_prev[0] != '\0' && ev->cookie == cookie_prev) {
+             _dvr_inotify_moved(fromfd_prev, from_prev, ev->name, ev->wd);
+             from_prev[0] = '\0';
+	     cookie_prev = 0;
+	  }
+
       /* Removed */
       } else if (ev->mask & IN_DELETE) {
         _dvr_inotify_delete(ev->wd, ev->name);
@@ -424,17 +433,21 @@ void* _dvr_inotify_thread ( void *p )
       } else if (ev->mask & IN_DELETE_SELF) {
         _dvr_inotify_delete_all(ev->wd);
       }
-
-      if (from) {
-        _dvr_inotify_moved(fromfd, from, NULL, -1);
-        from   = NULL;
-        cookie = 0;
-      }
     }
+    // if still old "from", assume matching "to" is not coming
+    if (from_prev[0] != '\0') {
+      _dvr_inotify_moved(fromfd_prev, from_prev, NULL, -1);
+      from_prev[0] = '\0';
+      cookie_prev = 0;
+    }
+    // if unmatched "from", save in case matching "to" is coming in next read
     if (from) {
-      _dvr_inotify_moved(fromfd, from, NULL, -1);
+      strcpy(from_prev, from);
+      fromfd_prev = fromfd;
+      cookie_prev = cookie;
+      tvhdebug(LS_DVR_INOTIFY, "i=%d len=%d cookie_prev=%d from_prev=%s fd=%d EOR", i, len, cookie_prev, from_prev, fromfd_prev);
     }
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
 
   return NULL;

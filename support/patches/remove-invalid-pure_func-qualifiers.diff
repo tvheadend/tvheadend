@@ -1,0 +1,42 @@
+--- include/nasmlib.h.orig	2019-01-09 09:12:53.215611786 +0100
++++ include/nasmlib.h	2019-01-09 09:17:15.318274490 +0100
+@@ -150,7 +150,7 @@
+ #elif defined(HAVE_STRICMP)
+ #define nasm_stricmp stricmp
+ #else
+-int pure_func nasm_stricmp(const char *, const char *);
++int nasm_stricmp(const char *, const char *);
+ #endif
+ 
+ #if defined(HAVE_STRNCASECMP)
+@@ -158,10 +158,10 @@
+ #elif defined(HAVE_STRNICMP)
+ #define nasm_strnicmp strnicmp
+ #else
+-int pure_func nasm_strnicmp(const char *, const char *, size_t);
++int nasm_strnicmp(const char *, const char *, size_t);
+ #endif
+ 
+-int pure_func nasm_memicmp(const char *, const char *, size_t);
++int nasm_memicmp(const char *, const char *, size_t);
+ 
+ #if defined(HAVE_STRSEP)
+ #define nasm_strsep strsep
+@@ -170,7 +170,7 @@
+ #endif
+ 
+ #ifndef HAVE_DECL_STRNLEN
+-size_t pure_func strnlen(const char *, size_t);
++size_t strnlen(const char *, size_t);
+ #endif
+ 
+ /* This returns the numeric value of a given 'digit'. */
+@@ -306,7 +306,7 @@
+ char * safe_alloc nasm_basename(const char *path);
+ char * safe_alloc nasm_catfile(const char *dir, const char *path);
+ 
+-const char * pure_func prefix_name(int);
++const char * prefix_name(int);
+ 
+ /*
+  * Wrappers around fopen()... for future change to a dedicated structure

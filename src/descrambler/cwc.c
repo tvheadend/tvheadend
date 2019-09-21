@@ -225,8 +225,8 @@ cwc_send_msg(void *cc, const uint8_t *msg, size_t len,
   if (len < 3)
     return -1;
 
-  /* note: the last 10 bytes is pad/checksum for des_encrypt() */
-  cm = malloc(sizeof(cc_message_t) + 12 + len + 10);
+  /* note: the last 16 bytes is pad/checksum for des_encrypt() */
+  cm = malloc(sizeof(cc_message_t) + 12 + len + 16);
 
   if (cm == NULL)
     return -1;
@@ -786,8 +786,8 @@ caclient_t *cwc_create(void)
   cwc->cc_subsys = LS_CWC;
   cwc->cc_id     = "newcamd";
 
-  pthread_mutex_init(&cwc->cc_mutex, NULL);
-  tvh_cond_init(&cwc->cc_cond);
+  tvh_mutex_init(&cwc->cc_mutex, NULL);
+  tvh_cond_init(&cwc->cc_cond, 1);
   cwc->cac_free         = cwc_free;
   cwc->cac_start        = cc_service_start;
   cwc->cac_conf_changed = cwc_conf_changed;

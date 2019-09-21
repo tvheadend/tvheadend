@@ -500,7 +500,7 @@ lang_code_lookup_t* lang_codes_code2b = NULL;
 lang_code_lookup_t* lang_codes_code1 = NULL;
 lang_code_lookup_t* lang_codes_code2t = NULL;
 
-pthread_mutex_t lang_code_split_mutex = PTHREAD_MUTEX_INITIALIZER;
+tvh_mutex_t lang_code_split_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 RB_HEAD(,lang_code_list) lang_code_split_tree = { NULL, NULL, NULL, 0 };
 
 /* **************************************************************************
@@ -632,7 +632,7 @@ const lang_code_list_t *lang_code_split ( const char *codes )
   /* No config */
   if (!codes) return NULL;
 
-  pthread_mutex_lock(&lang_code_split_mutex);
+  tvh_mutex_lock(&lang_code_split_mutex);
 
   skel.langs = (char *)codes;
   ret = RB_FIND(&lang_code_split_tree, &skel, link, _split_cmp);
@@ -663,7 +663,7 @@ const lang_code_list_t *lang_code_split ( const char *codes )
   }
 
 unlock:
-  pthread_mutex_unlock(&lang_code_split_mutex);
+  tvh_mutex_unlock(&lang_code_split_mutex);
   return ret;
 }
 
@@ -722,13 +722,13 @@ char *lang_code_user( const char *ucode )
 void lang_code_done( void )
 {
   lang_code_list_t *lcs;
-  pthread_mutex_lock(&lang_code_split_mutex);
+  tvh_mutex_lock(&lang_code_split_mutex);
   while ((lcs = RB_FIRST(&lang_code_split_tree)) != NULL) {
     RB_REMOVE(&lang_code_split_tree, lcs, link);
     free((char *)lcs->langs);
     free(lcs);
   }
-  pthread_mutex_unlock(&lang_code_split_mutex);
+  tvh_mutex_unlock(&lang_code_split_mutex);
   lang_code_free(lang_codes_code2b);
   lang_code_free(lang_codes_code1);
   lang_code_free(lang_codes_code2t);

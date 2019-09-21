@@ -32,7 +32,7 @@ typedef struct {
   int running;
   int pause;
   pthread_t thread;
-  pthread_mutex_t lock;
+  tvh_mutex_t lock;
   th_pipe_t pipe;
   AVFormatContext *ictx;
   AVFormatContext *octx;
@@ -48,21 +48,21 @@ iptv_libav_write_packet(void *opaque, uint8_t *buf, int buf_size)
   iptv_libav_priv_t *la = opaque;
 
   if (buf_size > 0) {
-    pthread_mutex_lock(&la->lock);
+    tvh_mutex_lock(&la->lock);
     if (la->sbuf.sb_ptr < 5*1024*1024) {
       while (atomic_get(&la->pause)) {
         if (!atomic_get(&la->running))
           goto fin;
-        pthread_mutex_unlock(&la->lock);
+        tvh_mutex_unlock(&la->lock);
         tvh_usleep(500000);
-        pthread_mutex_lock(&la->lock);
+        tvh_mutex_lock(&la->lock);
       }
       sbuf_append(&la->sbuf, buf, buf_size);
       /* notify iptv layer that we have new data to read */
       if (write(la->pipe.wr, "", 1)) {};
     }
 fin:
-    pthread_mutex_unlock(&la->lock);
+    tvh_mutex_unlock(&la->lock);
   }
   return 0;
 }
@@ -180,7 +180,7 @@ iptv_libav_start
   iptv_libav_priv_t *la = calloc(1, sizeof(*la));
 
   assert(raw);
-  pthread_mutex_init(&la->lock, NULL);
+  tvh_mutex_init(&la->lock, NULL);
   im->im_opaque = la;
   if (strncmp(raw, "libav:", 6) == 0)
     raw += 6;
@@ -192,9 +192,9 @@ iptv_libav_start
   atomic_set(&la->running, 1);
   atomic_set(&la->pause, 0);
   sbuf_init(&la->sbuf);
-  tvhthread_create(&la->thread, NULL, iptv_libav_thread, la, "libavinput");
+  tvh_thread_create(&la->thread, NULL, iptv_libav_thread, la, "libavinput");
   if (raw[0])
-    iptv_input_mux_started(mi, im);
+    iptv_input_mux_started(mi, im, 1);
   return 0;
 }
 
@@ -206,7 +206,7 @@ iptv_libav_stop
 
   atomic_set(&la->running, 0);
   im->im_opaque = NULL;
-  pthread_kill(la->thread, SIGUSR1);
+  tvh_thread_kill(la->thread, SIGUSR1);
   pthread_join(la->thread, NULL);
   tvh_pipe_close(&la->pipe);
   avformat_close_input(&la->ictx);
@@ -224,12 +224,12 @@ iptv_libav_read ( iptv_input_t *mi, iptv_mux_t *im )
 
   if (la == NULL)
     return 0;
-  pthread_mutex_lock(&la->lock);
+  tvh_mutex_lock(&la->lock);
   ret = la->sbuf.sb_ptr;
   sbuf_append_from_sbuf(&im->mm_iptv_buffer, &la->sbuf);
   sbuf_reset(&la->sbuf, WRITE_BUFFER_SIZE * 2);
   if (read(la->pipe.rd, buf, sizeof(buf))) {};
-  pthread_mutex_unlock(&la->lock);
+  tvh_mutex_unlock(&la->lock);
   return ret;
 }
 

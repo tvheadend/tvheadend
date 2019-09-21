@@ -151,7 +151,7 @@ emm_seca
     if (len >= 8) {
       /* XXX this part is untested but should do no harm */
       PROVIDERS_FOREACH(ra, i, ep)
-        if (memcmp(&data[5], &ep->sa[5], 3) == 0) {
+        if (memcmp(&data[5], &ep->sa[4], 3) == 0) {
           match = 1;
           break;
         }

@@ -55,7 +55,7 @@ iptv_udp_start
   udp_multirecv_init(um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
   im->im_data = um;
 
-  iptv_input_mux_started(mi, im);
+  iptv_input_mux_started(mi, im, 1);
   return 0;
 }
 
@@ -66,10 +66,10 @@ iptv_udp_stop
   udp_multirecv_t *um = im->im_data;
 
   im->im_data = NULL;
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
   udp_multirecv_free(um);
   free(um);
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
 }
 
 static ssize_t

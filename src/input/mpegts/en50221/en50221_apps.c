@@ -21,6 +21,7 @@
 #include <string.h>
 #include <time.h>
 #include "tvhlog.h"
+#include "tvh_string.h"
 #include "en50221.h"
 #include "input/mpegts/dvb.h"
 #include "descrambler/caid.h"
@@ -495,12 +496,12 @@ getmenutext
     return r;
   if (l2 > 0) {
     txt = alloca(l2 * 2 + 1);
-    if (dvb_get_string(txt, l2 * 2 + 1, p2, l2, NULL, NULL) > 0 && txt[0]) {
+    if (dvb_get_string(txt, l2 * 2 + 1, p2, l2, NULL, NULL) == 0 && txt[0]) {
       if (list) {
         c = htsmsg_get_list(app->cia_menu, key);
         if (c == NULL) {
           c = htsmsg_create_list();
-          htsmsg_add_msg(app->cia_menu, key, c);
+          c = htsmsg_add_msg(app->cia_menu, key, c);
         }
         tvhtrace(LS_EN50221, "%s:  add to %s '%s'", app->cia_name, key, txt);
         htsmsg_add_str(c, NULL, txt);

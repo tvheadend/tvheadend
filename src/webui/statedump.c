@@ -16,13 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "tvheadend.h"
 #include "http.h"
 #include "webui.h"
@@ -144,9 +137,6 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
 
-  scopedgloballock();
- 
-
   htsbuf_qprintf(hq, "Tvheadend %s  Binary SHA1: "
 		 "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 		 "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
@@ -172,7 +162,9 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 		 tvh_binshasum[18],
 		 tvh_binshasum[19]);
 
+  tvh_mutex_lock(&global_lock);
   dumpchannels(hq);
+  tvh_mutex_unlock(&global_lock);
 
   http_output_content(hc, "text/plain; charset=UTF-8");
   return 0;

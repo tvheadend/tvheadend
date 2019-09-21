@@ -228,6 +228,10 @@
     background-image: url(../icons/accept.png) !important;
 }
 
+.epgrelated {
+    background-image: url(../icons/clock.png) !important;
+}
+
 .duprec {
     background-image: url(../icons/control_repeat_blue.png) !important;
 }
@@ -656,6 +660,10 @@
     width: 100px;
 }
 
+.x-nice-customformat {
+    display: inline-block;
+    width: 18em;
+}
 
 .x-nice-dayofweek {
     display: inline-block;
@@ -791,12 +799,27 @@
     margin: 5px 5px 5px 10px;
 }
 
-.x-epg-image{
+/* Our image has to be inside an image container
+ * since when the image changes we don't want text
+ * to reflow. This image is not scaled to this size,
+ * it is simply the size of the container to avoid text
+ * flowing around it.
+ */
+.x-epg-image-container {
     float: right;
     margin-left: 5px;
     margin-right: 5px;
     margin-bottom: 5px;
     width: 20%;
+    height: 200px;
+    position: relative;
+}
+
+.x-epg-image{
+    width: 100%;                /*100% of the container*/
+    max-height: 100%;
+    z-index: 10;                /*Need higher z-index since we are inside a div*/
+    position: relative;         /*z-index only works with position of non-static (the default)*/
 }
 
 .x-epg-image:hover{
@@ -810,6 +833,18 @@
 
 .x-epg-duplicate {
     text-decoration: line-through;
+}
+
+.dvr-details-dialog {
+    position: relative;
+}
+.dvr-details-dialog-background-image {
+    /* Details in here are overridden by  code */
+}
+.dvr-details-dialog-content {
+    position: relative;
+    top: 0;
+    left: 0;
 }
 
 .tv-video-player {

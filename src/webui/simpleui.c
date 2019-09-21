@@ -16,14 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-
 #include "tvheadend.h"
 #include "http.h"
 #include "webui.h"
@@ -197,7 +189,7 @@ page_simple(http_connection_t *hc,
   
   htsbuf_qprintf(hq, "</form><hr>");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
 
   if(s != NULL) {
@@ -303,7 +295,7 @@ page_simple(http_connection_t *hc,
 
   dvr_query_free(&dqr);
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc);
@@ -326,10 +318,10 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   const char *s;
   htsmsg_t *conf;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   if(remain == NULL || (e = epg_broadcast_find_by_id(strtoll(remain, NULL, 10))) == NULL) {
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return 404;
   }
 
@@ -398,7 +390,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "%s", s);
   
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">To main page</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
@@ -418,10 +410,10 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   const char *rstatus;
   char ubuf[UUID_HEX_SIZE];
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   if(remain == NULL || (de = dvr_entry_find_by_id(atoi(remain))) == NULL) {
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return 404;
   }
   if((http_arg_get(&hc->hc_req_args, "clear")) != NULL) {
@@ -431,7 +423,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   if(de == NULL) {
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     http_redirect(hc, "/simple.html", &hc->hc_req_args, 0);
     return 0;
   }
@@ -476,7 +468,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "</form>");
   htsbuf_qprintf(hq, "%s", lang_str_get(de->de_desc, NULL));
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">To main page</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
@@ -521,7 +513,7 @@ page_status(http_connection_t *hc,
 #endif
   htsbuf_qprintf(hq,"<recordings>\n");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   dvr_query(&dqr);
   dvr_query_sort(&dqr);
@@ -589,7 +581,7 @@ page_status(http_connection_t *hc,
   htsbuf_qprintf(hq, "</recordings>\n<subscriptions>");
   htsbuf_qprintf(hq, "%d</subscriptions>\n",subscriptions_active());
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "</currentload>");
   http_output_content(hc, "text/xml");
@@ -609,9 +601,9 @@ page_epgsave(http_connection_t *hc,
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
                  "<epgflush>1</epgflush>\n");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   epg_save();
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   http_output_content(hc, "text/xml");
 

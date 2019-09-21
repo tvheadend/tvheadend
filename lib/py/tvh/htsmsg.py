@@ -19,21 +19,17 @@ Support for processing HTSMSG binary format
 """
 
 import sys
-
+import struct
 
 # ###########################################################################
 # Utilities
 # ###########################################################################
 
 def int2bin(i):
-    return chr(i >> 24 & 0xFF) + chr(i >> 16 & 0xFF) \
-           + chr(i >> 8 & 0xFF) + chr(i & 0xFF)
-
+    return struct.pack(">i", i)
 
 def bin2int(d):
-    return (ord(d[0]) << 24) + (ord(d[1]) << 16) \
-           + (ord(d[2]) << 8) + ord(d[3])
-
+    return struct.unpack(">i", d)[0]
 
 def uuid2int(uuid):
     if sys.byteorder == 'little':
@@ -71,27 +67,27 @@ HMF_BOOL = 7
 
 
 # Light wrapper for binary type
-class HMFBin(str):
+class HMFBin(bytes):
     pass
 
 
 # Convert python to HTSMSG type
 def hmf_type(f):
     if type(f) == list:
-        return HMF_LIST
+        ret = HMF_LIST
     elif type(f) == dict:
-        return HMF_MAP
+        ret = HMF_MAP
     elif type(f) == str:
-        return HMF_STR
+        ret = HMF_STR
     elif type(f) == int:
-        return HMF_S64
+        ret = HMF_S64
     elif type(f) == HMFBin:
-        return HMF_BIN
+        ret = HMF_BIN
     elif type(f) == bool:
-        return HMF_BOOL
+        ret = HMF_BOOL
     else:
         raise Exception('invalid type')
-
+    return struct.pack("B", ret)
 
 # Size for field
 def _binary_count(f):
@@ -124,26 +120,28 @@ def binary_count(msg):
 
 # Write out field in binary form
 def binary_write(msg):
-    ret = ''
+    ret = b''
     lst = type(msg) == list
     for f in msg:
         na = ''
         if not lst:
             na = f
             f = msg[f]
-        ret = ret + chr(hmf_type(f))
-        ret = ret + chr(len(na) & 0xFF)
+        ret = ret + hmf_type(f)
+        ret = ret + struct.pack("B", (len(na) & 0xFF))
         l = _binary_count(f)
         ret = ret + int2bin(l)
-        ret = ret + na
+        ret = ret + na.encode('utf-8')
 
         if type(f) in [list, dict]:
             ret = ret + binary_write(f)
-        elif type(f) in [str, HMFBin]:
+        elif type(f) in [str]:
+            ret = ret + f.encode()
+        elif type(f) in [HMFBin]:
             ret = ret + f
         elif type(f) == int:
             while f:
-                ret = ret + chr(f & 0xFF)
+                ret = ret + struct.pack("B", (f & 0xFF))
                 f = f >> 8
         else:
             raise Exception('invalid type')
@@ -164,8 +162,8 @@ def deserialize0(data, typ=HMF_MAP):
         islist = True
         msg = []
     while len(data) > 5:
-        typ = ord(data[0])
-        nlen = ord(data[1])
+        typ = data[0]
+        nlen = data[1]
         dlen = bin2int(data[2:6])
         data = data[6:]
 
@@ -174,14 +172,23 @@ def deserialize0(data, typ=HMF_MAP):
         name = data[:nlen]
         data = data[nlen:]
         if typ == HMF_STR:
-            item = data[:dlen]
+            # All of our strings _should_ be utf-8
+            # so need to decode them, otherwise
+            # everything looks fine until you
+            # substr the string elsewhere and
+            # get truncated characters and len is
+            # wrong.
+            try:
+                item = data[:dlen].decode('utf-8')
+            except:
+                item = data[:dlen].decode(errors='replace')
         elif typ == HMF_BIN:
             item = HMFBin(data[:dlen])
         elif typ == HMF_S64:
             item = 0
             i = dlen - 1
             while i >= 0:
-                item = (item << 8) | ord(data[i])
+                item = (item << 8) | data[i]
                 i = i - 1
         elif typ in [HMF_LIST, HMF_MAP]:
             item = deserialize0(data[:dlen], typ)
@@ -196,7 +203,11 @@ def deserialize0(data, typ=HMF_MAP):
         if islist:
             msg.append(item)
         else:
-            msg[name] = item
+            try:
+                n = name.decode(errors="replace")
+            except:
+                n = name
+            msg[n] = item
         data = data[dlen:]
     return msg
 
@@ -209,7 +220,7 @@ def deserialize(fp, rec=False):
             self._rec = rec
 
         def __iter__(self):
-            print '__iter__()'
+            print ('__iter__()')
             return self
 
         def _read(self, num):
@@ -232,13 +243,17 @@ def deserialize(fp, rec=False):
                 self._fp = None
                 raise StopIteration()
             num = bin2int(tmp)
-            data = ''
+            data = b''
             while len(data) < num:
                 tmp = self._read(num - len(data))
                 if not tmp:
                     raise Exception('failed to read from fp')
                 data = data + tmp
             if not self._rec: self._fp = None
+            # Python2 compatibility: data is a str in python2,
+            # and bytes in python3, so ensure we have consistency
+            # here.
+            data = bytearray(data)
             return deserialize0(data)
 
     ret = _Deserialize(fp, rec)

@@ -62,7 +62,7 @@
  * *************************************************************************/
 
 /* prevention of self raised DiSEqC collisions */
-static pthread_mutex_t linuxdvb_en50494_lock;
+static tvh_mutex_t linuxdvb_en50494_lock;
 
 static void
 linuxdvb_en50494_class_get_title
@@ -312,8 +312,8 @@ linuxdvb_en50494_tune
   /* wait until no other thread is setting up switch.
    * when an other thread was blocking, waiting 20ms.
    */
-  if (pthread_mutex_trylock(&linuxdvb_en50494_lock) != 0) {
-    if (pthread_mutex_lock(&linuxdvb_en50494_lock) != 0) {
+  if (tvh_mutex_trylock(&linuxdvb_en50494_lock) != 0) {
+    if (tvh_mutex_lock(&linuxdvb_en50494_lock) != 0) {
       tvherror(LS_EN50494,"failed to lock for tuning");
       return -1;
     }
@@ -380,7 +380,7 @@ linuxdvb_en50494_tune
       break;
     }
   }
-  pthread_mutex_unlock(&linuxdvb_en50494_lock);
+  tvh_mutex_unlock(&linuxdvb_en50494_lock);
 
   return ret == 0 ? 0 : -1;
 }
@@ -393,7 +393,7 @@ linuxdvb_en50494_tune
 void
 linuxdvb_en50494_init (void)
 {
-  if (pthread_mutex_init(&linuxdvb_en50494_lock, NULL) != 0) {
+  if (tvh_mutex_init(&linuxdvb_en50494_lock, NULL) != 0) {
     tvherror(LS_EN50494, "failed to init lock mutex");
   }
 }

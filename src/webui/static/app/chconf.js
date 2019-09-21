@@ -249,7 +249,7 @@ tvheadend.channel_tab = function(panel, index)
                     if (r.data['number'])
                       title += r.data['number'] + ' : ';
                     title += r.data['name'];
-                    return tvheadend.playLink('play/stream/channel/' + r.id, title);
+                    return tvheadend.playLink('stream/channel/' + r.id, title);
                 }
             }
         ],

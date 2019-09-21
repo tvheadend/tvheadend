@@ -521,8 +521,7 @@ epggrab_channel_find_by_id ( const char *id )
   char buf[1024];
   char *mid, *cid;
   epggrab_module_t *mod;
-  strncpy(buf, id, sizeof(buf));
-  buf[sizeof(buf)-1] = '\0';
+  strlcpy(buf, id, sizeof(buf));
   if ((mid = strtok_r(buf, "|", &cid)) && cid)
     if ((mod = epggrab_module_find_by_id(mid)) != NULL)
       return epggrab_channel_find(mod, cid, 0, NULL);

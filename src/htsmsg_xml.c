@@ -424,7 +424,7 @@ htsmsg_xml_parse_pi(xmlparser_t *xp, htsmsg_t *parent, char *src)
   while(1) {
     if(*src == 0) {
       xmlerr(xp, "Unexpected end of file during parsing of "
-	     "Processing instructions");
+	         "Processing instructions");
       return NULL;
     }
 
@@ -763,9 +763,7 @@ htsmsg_parse_prolog(xmlparser_t *xp, char *src)
   htsmsg_t *xmlpi;
   const char *encoding;
 
-  while(1) {
-    if(*src == 0)
-      break;
+  while(src != NULL && *src != 0) {
 
     while(is_xmlws(*src))
       src++;

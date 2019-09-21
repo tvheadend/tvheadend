@@ -86,7 +86,9 @@ struct satip_device
   int                        sd_pids_max;
   int                        sd_pids_len;
   int                        sd_pids_deladd;
+  int                        sd_fe;
   int                        sd_sig_scale;
+  int                        sd_sig_tunerno;
   char                      *sd_tunercfg;
   int                        sd_pids21;
   int                        sd_pilot_on;
@@ -96,7 +98,7 @@ struct satip_device
   int                        sd_skip_ts;
   int                        sd_disable_workarounds;
   int                        sd_wake_ref;
-  pthread_mutex_t            sd_tune_mutex;
+  tvh_mutex_t            sd_tune_mutex;
   TAILQ_HEAD(,satip_frontend)sd_serialize_queue;
 };
 
@@ -146,6 +148,7 @@ struct satip_frontend
   int                        sf_grace_period;
   int                        sf_teardown_delay;
   int                        sf_pass_weight;
+  int                        sf_specinv;
   int                        sf_delsys;
   char                      *sf_tuner_bindaddr;
 
@@ -154,7 +157,7 @@ struct satip_frontend
    */
   pthread_t                  sf_dvr_thread;
   th_pipe_t                  sf_dvr_pipe;
-  pthread_mutex_t            sf_dvr_lock;
+  tvh_mutex_t            sf_dvr_lock;
   int                        sf_thread;
   int                        sf_running;
   int                        sf_tables;
@@ -170,7 +173,8 @@ struct satip_frontend
   const char *               sf_display_name;
   uint32_t                   sf_seq;
   dvb_mux_t                 *sf_curmux;
-  time_t                     sf_last_data_tstamp;
+  int64_t                    sf_last_data_tstamp;
+  int64_t                    sf_last_activity_tstamp;
   int                        sf_netlimit;
   int                        sf_netgroup;
   int                        sf_netposhash;
@@ -283,6 +287,9 @@ satip_satconf_t *satip_satconf_get_position
 #define SATIP_SETUP_PLAY     (1<<1)
 #define SATIP_SETUP_PILOT_ON (1<<2)
 #define SATIP_SETUP_PIDS21   (1<<3)
+#define SATIP_SETUP_FE       (1<<4)
+#define SATIP_SETUP_SPECINV0 (1<<5)
+#define SATIP_SETUP_SPECINV1 (1<<6)
 
 int
 satip_rtsp_setup( http_client_t *hc,

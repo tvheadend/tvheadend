@@ -63,7 +63,7 @@ extern const idclass_t esfilter_class_other;
   SCT_MASK(SCT_CA)
 
 #define ESF_MASK_OTHER \
-  SCT_MASK(SCT_MPEGTS|SCT_HBBTV)
+  (SCT_MASK(SCT_MPEGTS) | SCT_MASK(SCT_HBBTV))
 
 extern uint32_t esfilterclsmask[];
 

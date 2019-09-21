@@ -52,7 +52,7 @@ iptv_file_thread ( void *aux )
 #if defined(PLATFORM_DARWIN)
   fcntl(fd, F_NOCACHE, 1);
 #endif
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
   while (!fp->shutdown && fd > 0) {
     while (!fp->shutdown && pause) {
       mono = mclk() + sec2mono(1);
@@ -65,9 +65,9 @@ iptv_file_thread ( void *aux )
     if (fp->shutdown)
       break;
     pause = 0;
-    pthread_mutex_unlock(&iptv_lock);
+    tvh_mutex_unlock(&iptv_lock);
     r = read(fd, buf, sizeof(buf));
-    pthread_mutex_lock(&iptv_lock);
+    tvh_mutex_lock(&iptv_lock);
     if (r == 0)
       break;
     if (r < 0) {
@@ -85,7 +85,7 @@ iptv_file_thread ( void *aux )
 #endif
     off += r;
   }
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
   return NULL;
 }
 
@@ -106,10 +106,10 @@ iptv_file_start
 
   fp = calloc(1, sizeof(*fp));
   fp->fd = fd;
-  tvh_cond_init(&fp->cond);
+  tvh_cond_init(&fp->cond, 1);
   im->im_data = fp;
-  iptv_input_mux_started(mi, im);
-  tvhthread_create(&fp->tid, NULL, iptv_file_thread, im, "iptvfile");
+  iptv_input_mux_started(mi, im, 1);
+  tvh_thread_create(&fp->tid, NULL, iptv_file_thread, im, "iptvfile");
   return 0;
 }
 
@@ -123,10 +123,10 @@ iptv_file_stop
     close(rd);
   fp->shutdown = 1;
   tvh_cond_signal(&fp->cond, 0);
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
   pthread_join(fp->tid, NULL);
   tvh_cond_destroy(&fp->cond);
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
   free(im->im_data);
   im->im_data = NULL;
 }

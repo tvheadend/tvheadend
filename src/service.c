@@ -16,21 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "tvheadend.h"
 #include "service.h"
 #include "subscriptions.h"
@@ -111,9 +96,9 @@ service_class_encrypted_get ( void *p )
 {
   static int t;
   service_t *s = p;
-  pthread_mutex_lock(&s->s_stream_mutex);
+  tvh_mutex_lock(&s->s_stream_mutex);
   t = service_is_encrypted(s);
-  pthread_mutex_unlock(&s->s_stream_mutex);
+  tvh_mutex_unlock(&s->s_stream_mutex);
   return &t;
 }
 
@@ -275,7 +260,7 @@ service_stop(service_t *t)
 
   descrambler_service_stop(t);
 
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
 
   t->s_tt_commercial_advice = COMMERCIAL_UNKNOWN;
 
@@ -287,7 +272,7 @@ service_stop(service_t *t)
   t->s_status = SERVICE_IDLE;
   tvhlog_limit_reset(&t->s_tei_log);
 
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
 }
 
 
@@ -303,9 +288,13 @@ service_remove_subscriber(service_t *t, th_subscription_t *s,
                           int reason)
 {
   lock_assert(&global_lock);
+  th_subscription_t *s_next;
 
   if(s == NULL) {
-    while((s = LIST_FIRST(&t->s_subscriptions)) != NULL) {
+    for (s = LIST_FIRST(&t->s_subscriptions); s; s = s_next) {
+      s_next = LIST_NEXT(s, ths_service_link);
+      if (reason == SM_CODE_SVC_NOT_ENABLED && s->ths_channel == NULL)
+        continue; /* not valid for raw service subscriptions */
       subscription_unlink_service(s, reason);
     }
   } else {
@@ -333,9 +322,9 @@ service_start(service_t *t, int instance, int weight, int flags,
   t->s_scrambled_pass   = !!(flags & SUBSCRIPTION_NODESCR);
   t->s_start_time       = mclk();
 
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
   elementary_set_filter_build(&t->s_components);
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
 
   descrambler_caid_changed(t);
 
@@ -344,7 +333,7 @@ service_start(service_t *t, int instance, int weight, int flags,
 
   descrambler_service_start(t);
 
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
 
   t->s_status = SERVICE_RUNNING;
 
@@ -353,7 +342,7 @@ service_start(service_t *t, int instance, int weight, int flags,
    */
   elementary_set_init_filter_streams(&t->s_components);
 
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
 
   if(t->s_grace_period != NULL)
     stimeout = t->s_grace_period(t);
@@ -460,6 +449,10 @@ service_find_instance
         break;
       }
   } else {
+    if (!s->s_is_enabled(s, flags)) {
+      *error = SM_CODE_SVC_NOT_ENABLED;
+      return NULL;
+    }
     r = s->s_enlist(s, ti, sil, flags, weight);
   }
 
@@ -487,9 +480,9 @@ service_find_instance
   TAILQ_FOREACH(si, sil, si_link) {
     const char *name = ch ? channel_get_name(ch, NULL) : NULL;
     if (!name && s) name = s->s_nicename;
-    tvhdebug(LS_SERVICE, "%d: %s si %p %s weight %d prio %d error %d",
+    tvhdebug(LS_SERVICE, "%d: %s si %p %s weight %d prio %d error %d (%s)",
              si->si_instance, name, si, si->si_source, si->si_weight, si->si_prio,
-             si->si_error);
+             si->si_error, streaming_code2txt(si->si_error));
   }
 
   /* Already running? */
@@ -708,7 +701,7 @@ service_create0
   else
     TAILQ_INSERT_TAIL(&service_all, t, s_all_link);
 
-  pthread_mutex_init(&t->s_stream_mutex, NULL);
+  tvh_mutex_init(&t->s_stream_mutex, NULL);
   t->s_type = service_type;
   t->s_type_user = ST_UNSET;
   t->s_source_type = source_type;
@@ -797,7 +790,7 @@ service_data_timeout(void *aux)
   service_t *t = aux;
   int flags = 0;
 
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
 
   if(!(t->s_streaming_status & TSS_PACKETS))
     flags |= TSS_GRACEPERIOD;
@@ -807,7 +800,7 @@ service_data_timeout(void *aux)
     service_set_streaming_status_flags(t, flags);
   t->s_streaming_live &= ~TSS_LIVE;
 
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
 
   if (t->s_timeout > 0)
     mtimer_arm_rel(&t->s_receive_timer, service_data_timeout, t,
@@ -815,7 +808,7 @@ service_data_timeout(void *aux)
 }
 
 int
-service_is_sdtv(service_t *t)
+service_is_sdtv(const service_t *t)
 {
   char s_type;
   if(t->s_type_user == ST_UNSET)
@@ -834,7 +827,7 @@ service_is_sdtv(service_t *t)
 }
 
 int
-service_is_hdtv(service_t *t)
+service_is_hdtv(const service_t *t)
 {
   char s_type;
   if(t->s_type_user == ST_UNSET)
@@ -854,7 +847,7 @@ service_is_hdtv(service_t *t)
 }
 
 int
-service_is_uhdtv(service_t *t)
+service_is_uhdtv(const service_t *t)
 {
   char s_type;
   if(t->s_type_user == ST_UNSET)
@@ -876,7 +869,7 @@ service_is_uhdtv(service_t *t)
  *
  */
 int
-service_is_radio(service_t *t)
+service_is_radio(const service_t *t)
 {
   int ret = 0;
   char s_type;
@@ -902,7 +895,7 @@ service_is_radio(service_t *t)
  * Is encrypted
  */
 int
-service_is_encrypted(service_t *t)
+service_is_encrypted(const service_t *t)
 {
   elementary_stream_t *st;
   if (((mpegts_service_t *)t)->s_dvb_forcecaid == 0xffff)
@@ -1028,9 +1021,9 @@ service_restart(service_t *t)
   tvhtrace(LS_SERVICE, "restarting service '%s'", t->s_nicename);
 
   if (t->s_type == STYPE_STD) {
-    pthread_mutex_lock(&t->s_stream_mutex);
+    tvh_mutex_lock(&t->s_stream_mutex);
     service_restart_streams(t);
-    pthread_mutex_unlock(&t->s_stream_mutex);
+    tvh_mutex_unlock(&t->s_stream_mutex);
 
     descrambler_caid_changed(t);
   }
@@ -1083,7 +1076,7 @@ service_update_elementary_stream(service_t *t, elementary_stream_t *src)
  *
  */
 
-static pthread_mutex_t pending_save_mutex;
+static tvh_mutex_t pending_save_mutex;
 static tvh_cond_t pending_save_cond;
 static struct service_queue pending_save_queue;
 
@@ -1096,7 +1089,7 @@ service_request_save(service_t *t)
   if (t->s_type != STYPE_STD)
     return;
 
-  pthread_mutex_lock(&pending_save_mutex);
+  tvh_mutex_lock(&pending_save_mutex);
 
   if(!t->s_ps_onqueue) {
     t->s_ps_onqueue = 1;
@@ -1105,7 +1098,7 @@ service_request_save(service_t *t)
     tvh_cond_signal(&pending_save_cond, 0);
   }
 
-  pthread_mutex_unlock(&pending_save_mutex);
+  tvh_mutex_unlock(&pending_save_mutex);
 }
 
 
@@ -1147,7 +1140,7 @@ service_saver(void *aux)
 {
   service_t *t;
 
-  pthread_mutex_lock(&pending_save_mutex);
+  tvh_mutex_lock(&pending_save_mutex);
 
   while(tvheadend_is_running()) {
 
@@ -1160,18 +1153,18 @@ service_saver(void *aux)
     TAILQ_REMOVE(&pending_save_queue, t, s_ps_link);
     t->s_ps_onqueue = 0;
 
-    pthread_mutex_unlock(&pending_save_mutex);
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_unlock(&pending_save_mutex);
+    tvh_mutex_lock(&global_lock);
 
     if(t->s_status != SERVICE_ZOMBIE && t->s_config_save)
       idnode_changed(&t->s_id);
     service_unref(t);
 
-    pthread_mutex_unlock(&global_lock);
-    pthread_mutex_lock(&pending_save_mutex);
+    tvh_mutex_unlock(&global_lock);
+    tvh_mutex_lock(&pending_save_mutex);
   }
 
-  pthread_mutex_unlock(&pending_save_mutex);
+  tvh_mutex_unlock(&pending_save_mutex);
   return NULL;
 }
 
@@ -1217,9 +1210,9 @@ service_init(void)
   TAILQ_INIT(&service_raw_remove);
   idclass_register(&service_class);
   idclass_register(&service_raw_class);
-  pthread_mutex_init(&pending_save_mutex, NULL);
-  tvh_cond_init(&pending_save_cond);
-  tvhthread_create(&service_saver_tid, NULL, service_saver, NULL, "service");
+  tvh_mutex_init(&pending_save_mutex, NULL);
+  tvh_cond_init(&pending_save_cond, 1);
+  tvh_thread_create(&service_saver_tid, NULL, service_saver, NULL, "service");
 }
 
 void
@@ -1227,16 +1220,16 @@ service_done(void)
 {
   service_t *t;
 
-  pthread_mutex_lock(&pending_save_mutex);
+  tvh_mutex_lock(&pending_save_mutex);
   tvh_cond_signal(&pending_save_cond, 0);
-  pthread_mutex_unlock(&pending_save_mutex);
+  tvh_mutex_unlock(&pending_save_mutex);
   pthread_join(service_saver_tid, NULL);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((t = TAILQ_FIRST(&service_raw_remove)) != NULL)
     service_destroy(t, 0);
   memoryinfo_unregister(&services_memoryinfo);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 /**
@@ -1283,9 +1276,9 @@ service_nicename(service_t *t)
 const char *
 service_adapter_nicename(service_t *t, char *buf, size_t len)
 {
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
   service_make_nicename0(t, buf, len, 1);
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
   return buf;
 }
 
@@ -1402,8 +1395,7 @@ service_instance_add(service_instance_list_t *sil,
   }
   si->si_weight = weight;
   si->si_prio   = prio;
-  strncpy(si->si_source, source ?: "<unknown>", sizeof(si->si_source));
-  si->si_source[sizeof(si->si_source)-1] = '\0';
+  strlcpy(si->si_source, source ?: "<unknown>", sizeof(si->si_source));
   TAILQ_INSERT_SORTED(sil, si, si_link, si_cmp);
   return si;
 }
@@ -1552,7 +1544,7 @@ void service_save ( service_t *t, htsmsg_t *m )
   htsmsg_add_u32(m, "pcr", t->s_components.set_pcr_pid);
   htsmsg_add_u32(m, "pmt", t->s_components.set_pmt_pid);
 
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
 
   list = htsmsg_create_list();
   TAILQ_FOREACH(st, &t->s_components.set_all, es_link) {
@@ -1612,7 +1604,7 @@ void service_save ( service_t *t, htsmsg_t *m )
 
   hbbtv = htsmsg_copy(t->s_hbbtv);
 
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
 
   htsmsg_add_msg(m, "stream", list);
   if (hbbtv)
@@ -1715,7 +1707,7 @@ void service_load ( service_t *t, htsmsg_t *c )
 
   idnode_load(&t->s_id, c);
 
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
   if(!htsmsg_get_s32(c, "verified", &s32))
     t->s_verified = s32;
   else
@@ -1758,7 +1750,7 @@ void service_load ( service_t *t, htsmsg_t *c )
       st = elementary_stream_create(&t->s_components, pid, type);
 
       if((v = htsmsg_get_str(c, "language")) != NULL)
-        strncpy(st->es_lang, lang_code_get(v), 3);
+        strlcpy(st->es_lang, lang_code_get(v), 4);
 
       if (SCT_ISAUDIO(type)) {
         if(!htsmsg_get_u32(c, "audio_type", &u32))
@@ -1804,5 +1796,5 @@ void service_load ( service_t *t, htsmsg_t *c )
   else
     elementary_stream_type_destroy(&t->s_components, SCT_PCR);
   elementary_set_sort_streams(&t->s_components);
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
 }

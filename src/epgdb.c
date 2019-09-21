@@ -21,7 +21,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <signal.h>
 #include <setjmp.h>
 
@@ -252,12 +251,12 @@ void epg_done ( void )
 {
   channel_t *ch;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   CHANNEL_FOREACH(ch)
     epg_channel_unlink(ch);
   epg_skel_done();
   memoryinfo_unregister(&epg_memoryinfo_broadcasts);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 /* **************************************************************************

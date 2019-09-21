@@ -23,7 +23,7 @@ another person.
 
 So this program allow you to pass two command line arguments.
 
-The first argument is the name of the EIT scraper file (read by tvheadend) that
+The first argument is the name of the EIT scraper file (read by Tvheadend) that
 is typically in the epggrab/eit/conf directory.
 
 The second argument is a test input file which is in JSON format and lives
@@ -123,18 +123,18 @@ class EITScrapeTest(object):
           text = result
           continue
         if result == expect:
-          print 'OK: Got correct result of "{result}" testing "{testing}" for "{text}" using "{pattern}"'.format(result=result, testing=testing, text=text, pattern=regex.text())
+          print ('OK: Got correct result of "{result}" testing "{testing}" for "{text}" using "{pattern}"'.format(result=result, testing=testing, text=text, pattern=regex.text()))
           self.num_ok = self.num_ok + 1
         else:
-          print 'FAIL: Got incorrect result of "{result}" expecting "{expect}" testing "{testing}" for "{text}" using "{pattern}"'.format(result=result, expect=expect, testing=testing, text=text, pattern=regex.text())
+          print ('FAIL: Got incorrect result of "{result}" expecting "{expect}" testing "{testing}" for "{text}" using "{pattern}"'.format(result=result, expect=expect, testing=testing, text=text, pattern=regex.text()))
           self.num_failed = self.num_failed + 1
         return
 
     if expect is None:
-      print 'OK: Got correct result of "<none>" testing "{testing}" for "{text}"'.format(testing=testing, text=text)
+      print ('OK: Got correct result of "<none>" testing "{testing}" for "{text}"'.format(testing=testing, text=text))
       self.num_ok = self.num_ok + 1
     else:
-      print 'FAIL: No match in "{text}" while testing "{testing}" and expecting "{expect}"'.format(text=text, testing=testing, expect=expect)
+      print ('FAIL: No match in "{text}" while testing "{testing}" and expecting "{expect}"'.format(text=text, testing=testing, expect=expect))
       self.num_failed = self.num_failed + 1
 
   def run_test_case(self, engine, test, regexes):
@@ -154,10 +154,10 @@ class EITScrapeTest(object):
       if canonical in ('comment', 'summary', 'title', 'language'):
         continue
       if canonical in ('age', 'genre'):
-        print 'Test case contains key "{key}" which is not currently tested for "{test}"'.format(key=key, test=test)
+        print ('Test case contains key "{key}" which is not currently tested for "{test}"'.format(key=key, test=test))
         continue
       if canonical not in regexes:
-        print 'Test case contains invalid key "{key}" (possible typo) for "{test}"'.format(key=key, test=test)
+        print ('Test case contains invalid key "{key}" (possible typo) for "{test}"'.format(key=key, test=test))
         raise SyntaxWarning('Test case contains invalid/unknown key {}'.format(key))
       if for_engine:
         keys_to_test.discard(canonical)
@@ -178,7 +178,7 @@ class EITScrapeTest(object):
       if regexes[canonical]:
         self.run_test_case_i(text, lang, regexes[canonical], test[key], key)
       else:
-        print 'FAIL: no regex defined for key "{key}"'.format(key=canonical)
+        print ('FAIL: no regex defined for key "{key}"'.format(key=canonical))
         self.num_failed = self.num_failed + 1
 
 
@@ -231,12 +231,12 @@ def main(argv):
   tester = EITScrapeTest()
 
   for test in tests['tests']:
-    print "Running test" + str(test)
+    print ("Running test" + str(test))
     pprint.pprint(test)
     tester.run_test_case(args.engine, test, regexes)
 
   # And show the results
-  print "\n\nSummary:\tNumOK: %s\tNumFailed: %s" %(tester.num_ok, tester.num_failed)
+  print ("\n\nSummary:\tNumOK: %s\tNumFailed: %s" %(tester.num_ok, tester.num_failed))
   return tester.num_failed
 
 if __name__ == "__main__":
@@ -248,5 +248,5 @@ if __name__ == "__main__":
       sys.exit(0)
 
   except SyntaxWarning as e:
-    print 'Failed with invalid input: "%s"' % (e)
+    print ('Failed with invalid input: "%s"' % (e))
     sys.exit(1)

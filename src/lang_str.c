@@ -84,8 +84,8 @@ lang_str_t *lang_str_copy ( const lang_str_t *ls )
   return ret;
 }
 
-/* Get language element */
-lang_str_ele_t *lang_str_get2
+/* Get language element, don't return first */
+lang_str_ele_t *lang_str_get2_only
   ( const lang_str_t *ls, const char *lang )
 {
   int i;
@@ -97,14 +97,24 @@ lang_str_ele_t *lang_str_get2
   /* Check config/requested langs */
   if ((langs = lang_code_split(lang)) != NULL) {
     for (i = 0; i < langs->codeslen; i++) {
-      strncpy(skel.lang, langs->codes[i]->code2b, sizeof(skel.lang));
+      strlcpy(skel.lang, langs->codes[i]->code2b, sizeof(skel.lang));
       if ((e = RB_FIND(ls, &skel, link, _lang_cmp)))
         break;
     }
   }
 
+  /* Return */
+  return e;
+}
+
+/* Get language element */
+lang_str_ele_t *lang_str_get2
+  ( const lang_str_t *ls, const char *lang )
+{
+  lang_str_ele_t *e = lang_str_get2_only(ls, lang);
+
   /* Use first available */
-  if (!e) e = RB_FIRST(ls);
+  if (!e && ls) e = RB_FIRST(ls);
 
   /* Return */
   return e;
@@ -130,7 +140,7 @@ static int _lang_str_add
   /* Create */
   if (!e) {
     e = malloc(sizeof(*e) + strlen(str) + 1);
-    strncpy(e->lang, lang, sizeof(e->lang));
+    strlcpy(e->lang, lang, sizeof(e->lang));
     strcpy(e->str, str);
     RB_INSERT_SORTED(ls, e, link, _lang_cmp);
     save = 1;
@@ -278,7 +288,7 @@ lang_str_t *lang_str_deserialize_map ( htsmsg_t *map )
   if (ret) {
     HTSMSG_FOREACH(f, map) {
       if ((str = htsmsg_field_get_string(f))) {
-        lang_str_add(ret, str, f->hmf_name);
+        lang_str_add(ret, str, htsmsg_field_name(f));
       }
     }
   }

@@ -51,7 +51,7 @@ LIST_HEAD(dbus_rpc_list, dbus_rpc);
 static struct dbus_signal_queue dbus_signals;
 static struct dbus_rpc_list dbus_rpcs;
 static th_pipe_t dbus_pipe;
-static pthread_mutex_t dbus_lock;
+static tvh_mutex_t dbus_lock;
 static int dbus_running;
 static int dbus_session;
 
@@ -76,9 +76,9 @@ dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
   strcpy(ds->obj_name + 14, obj_name);
   ds->sig_name = strdup(sig_name);
   ds->msg = msg;
-  pthread_mutex_lock(&dbus_lock);
+  tvh_mutex_lock(&dbus_lock);
   TAILQ_INSERT_TAIL(&dbus_signals, ds, link);
-  pthread_mutex_unlock(&dbus_lock);
+  tvh_mutex_unlock(&dbus_lock);
   unused = write(dbus_pipe.wr, "s", 1); /* do not wait here - no tvh_write() */
 }
 
@@ -273,9 +273,9 @@ dbus_register_rpc_s64(const char *call_name, void *opaque,
   rpc->call_name = strdup(call_name);
   rpc->rpc_s64 = fcn;
   rpc->opaque = opaque;
-  pthread_mutex_lock(&dbus_lock);
+  tvh_mutex_lock(&dbus_lock);
   LIST_INSERT_HEAD(&dbus_rpcs, rpc, link);
-  pthread_mutex_unlock(&dbus_lock);
+  tvh_mutex_unlock(&dbus_lock);
 }
 
 /**
@@ -289,9 +289,9 @@ dbus_register_rpc_str(const char *call_name, void *opaque,
   rpc->call_name = strdup(call_name);
   rpc->rpc_str = fcn;
   rpc->opaque = opaque;
-  pthread_mutex_lock(&dbus_lock);
+  tvh_mutex_lock(&dbus_lock);
   LIST_INSERT_HEAD(&dbus_rpcs, rpc, link);
-  pthread_mutex_unlock(&dbus_lock);
+  tvh_mutex_unlock(&dbus_lock);
 }
 
 /**
@@ -315,11 +315,11 @@ dbus_flush_queue(DBusConnection *conn)
   dbus_sig_t *ds;
 
   while (1) {
-    pthread_mutex_lock(&dbus_lock);
+    tvh_mutex_lock(&dbus_lock);
     ds = TAILQ_FIRST(&dbus_signals);
     if (ds)
       TAILQ_REMOVE(&dbus_signals, ds, link);
-    pthread_mutex_unlock(&dbus_lock);
+    tvh_mutex_unlock(&dbus_lock);
 
     if (ds == NULL)
       break;
@@ -407,11 +407,11 @@ dbus_server_thread(void *aux)
         continue;
       }
 
-      pthread_mutex_lock(&dbus_lock);
+      tvh_mutex_lock(&dbus_lock);
       LIST_FOREACH(rpc, &dbus_rpcs, link)
         if (dbus_message_is_method_call(msg, "org.tvheadend", rpc->call_name))
           break;
-      pthread_mutex_unlock(&dbus_lock);
+      tvh_mutex_unlock(&dbus_lock);
 
       if (rpc)
         dbus_reply_to_rpc(rpc, msg, conn);
@@ -436,7 +436,7 @@ void
 dbus_server_init(int enabled, int session)
 {
   dbus_session = session;
-  pthread_mutex_init(&dbus_lock, NULL);
+  tvh_mutex_init(&dbus_lock, NULL);
   TAILQ_INIT(&dbus_signals);
   LIST_INIT(&dbus_rpcs);
   if (enabled) {
@@ -451,7 +451,7 @@ void
 dbus_server_start(void)
 {
   if (dbus_pipe.wr > 0)
-    tvhthread_create(&dbus_tid, NULL, dbus_server_thread, NULL, "dbus");
+    tvh_thread_create(&dbus_tid, NULL, dbus_server_thread, NULL, "dbus");
 }
 
 void
@@ -463,7 +463,7 @@ dbus_server_done(void)
   atomic_set(&dbus_running, 0);
   if (dbus_pipe.wr > 0) {
     tvh_write(dbus_pipe.wr, "", 1);
-    pthread_kill(dbus_tid, SIGTERM);
+    tvh_thread_kill(dbus_tid, SIGTERM);
     pthread_join(dbus_tid, NULL);
   }
   dbus_flush_queue(NULL);

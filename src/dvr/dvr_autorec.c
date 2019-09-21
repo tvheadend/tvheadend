@@ -16,17 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
 #include <ctype.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
-#include <math.h>
-#include <time.h>
 
 #include "tvheadend.h"
 #include "settings.h"
@@ -104,6 +94,60 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del, int disabled)
   return bcast;
 }
 
+
+/**
+ * If autorec entry no longer matches autorec rule then it can be purged.
+ * @return 1 if it can be purged
+ */
+int
+dvr_autorec_entry_can_be_purged(const dvr_entry_t *de)
+{
+  /* Not an autorec so ignore */
+  if (!de->de_autorec)
+    return 0;
+
+  /* Entry is not scheduled (for example finished) so can not be purged */
+  if (de->de_sched_state != DVR_SCHEDULED)
+    return 0;
+
+  /* No broadcast matched when entry was reloaded from dvr/log */
+  if (!de->de_bcast)
+    return 1;
+
+  /* Confirm autorec still matches the broadcast */
+  return !dvr_autorec_cmp(de->de_autorec, de->de_bcast);
+}
+
+/**
+ * Purge any dvr_entry for autorec entries that
+ * no longer match the current schedule.
+ */
+void
+dvr_autorec_purge_obsolete_timers(void)
+{
+  dvr_entry_t *de;
+  int num_purged = 0;
+
+  LIST_FOREACH(de, &dvrentries, de_global_link) {
+    if (dvr_autorec_entry_can_be_purged(de)) {
+      char ubuf[UUID_HEX_SIZE];
+      char t1buf[32], t2buf[32];
+      tvhinfo(LS_DVR, "Entry %s can be purged for \"%s\" start %s stop %s",
+              idnode_uuid_as_str(&de->de_id, ubuf),
+              lang_str_get(de->de_title, NULL),
+              gmtime2local(de->de_start, t1buf, sizeof(t1buf)),
+              gmtime2local(de->de_stop, t2buf, sizeof(t2buf)));
+
+      dvr_entry_assign_broadcast(de, NULL);
+      dvr_entry_destroy(de, 1);
+      ++num_purged;
+    }
+  }
+  if (num_purged)
+    tvhinfo(LS_DVR, "Purged %d autorec entries that no longer match schedule", num_purged);
+}
+
+
 /**
  * Handle maxcount
  */
@@ -143,13 +187,14 @@ dvr_autorec_completed(dvr_autorec_entry_t *dae, int error_code)
 /**
  * return 1 if the event 'e' is matched by the autorec rule 'dae'
  */
-static int
-autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
+int
+dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
   idnode_list_mapping_t *ilm;
   dvr_config_t *cfg;
   double duration;
 
+  if (!e) return 0;
   if (!e->channel) return 0;
   if(dae->dae_enabled == 0 || dae->dae_weekdays == 0)
     return 0;
@@ -164,6 +209,10 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      (dae->dae_cat3 == NULL || *dae->dae_cat3 == 0) &&
      dae->dae_minduration <= 0 &&
      (dae->dae_maxduration <= 0 || dae->dae_maxduration > 24 * 3600) &&
+     dae->dae_minyear <= 0 &&
+     dae->dae_maxyear <= 0 &&
+     dae->dae_minseason <= 0 &&
+     dae->dae_maxseason <= 0 &&
      dae->dae_serieslink_uri == NULL)
     return 0; // Avoid super wildcard match
 
@@ -258,6 +307,27 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 
   if(dae->dae_maxduration > 0) {
     if(duration > dae->dae_maxduration) return 0;
+  }
+
+  /* Only do year/season checks when programme guide has these values available.
+   * This is because you might have "minseason=5" but Christmas specials have no
+   * no season (or season=0) and many people still want them to be picked up by
+   * default.
+   */
+  if(e->copyright_year && dae->dae_minyear > 0) {
+    if(e->copyright_year < dae->dae_minyear) return 0;
+  }
+
+  if(e->copyright_year && dae->dae_maxyear > 0) {
+    if(e->copyright_year > dae->dae_maxyear) return 0;
+  }
+
+  if(e->epnum.s_num && dae->dae_minseason > 0) {
+    if(e->epnum.s_num < dae->dae_minseason) return 0;
+  }
+
+  if(e->epnum.s_num && dae->dae_maxseason > 0) {
+    if(e->epnum.s_num > dae->dae_maxseason) return 0;
   }
 
   if(dae->dae_weekdays != 0x7f) {
@@ -665,7 +735,7 @@ dvr_autorec_entry_class_time_get(void *o, int tm)
   if (tm >= 0)
     snprintf(prop_sbuf, PROP_SBUF_LEN, "%02d:%02d", tm / 60, tm % 60);
   else
-    strncpy(prop_sbuf, N_("Any"), 16);
+    strlcpy(prop_sbuf, N_("Any"), PROP_SBUF_LEN);
   return &prop_sbuf_ptr;
 }
 
@@ -884,6 +954,29 @@ dvr_autorec_entry_class_star_rating_list ( void *o, const char *lang )
    * through the list to find programmes with a poor rating.
    */
   for (i = 100; i > 0 ; i-=5) {
+    e = htsmsg_create_map();
+    htsmsg_add_u32(e, "key", i);
+    htsmsg_add_u32(e, "val", i);
+    htsmsg_add_msg(m, NULL, e);
+  }
+  return m;
+}
+
+/** Generate a year list to make it easier to select min/max year */
+static htsmsg_t *
+dvr_autorec_entry_class_year_list ( void *o, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_t *e = htsmsg_create_map();
+  htsmsg_add_u32(e, "key", 0);
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("Any")));
+  htsmsg_add_msg(m, NULL, e);
+
+  uint32_t i;
+  /* We create the list from highest to lowest since you're more
+   * likely to want to record something recent.
+   */
+  for (i = 2020; i > 1900 ; i-=5) {
     e = htsmsg_create_map();
     htsmsg_add_u32(e, "key", i);
     htsmsg_add_u32(e, "val", i);
@@ -1210,6 +1303,40 @@ const idclass_t dvr_autorec_entry_class = {
     },
     {
       .type     = PT_U32,
+      .id       = "minyear",
+      .name     = N_("Minimum year"),
+      .desc     = N_("The earliest year for the programme. Programmes must be equal to or later than this year."),
+      .list     = dvr_autorec_entry_class_year_list,
+      .off      = offsetof(dvr_autorec_entry_t, dae_minyear),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "maxyear",
+      .name     = N_("Maximum year"),
+      .desc     = N_("The latest year for the programme. Programmes must be equal to or earlier than this year."),
+      .list     = dvr_autorec_entry_class_year_list,
+      .off      = offsetof(dvr_autorec_entry_t, dae_maxyear),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "minseason",
+      .name     = N_("Minimum season"),
+      .desc     = N_("The earliest season for the programme. Programmes must be equal to or later than this season."),
+      .off      = offsetof(dvr_autorec_entry_t, dae_minseason),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "maxseason",
+      .name     = N_("Maximum season"),
+      .desc     = N_("The latest season for the programme. Programmes must be equal to or earlier than this season."),
+      .off      = offsetof(dvr_autorec_entry_t, dae_maxseason),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U32,
       .id       = "pri",
       .name     = N_("Priority"),
       .desc     = N_("Priority of the recording. Higher priority entries "
@@ -1333,7 +1460,7 @@ dvr_autorec_init(void)
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
         continue;
-      (void)dvr_autorec_create(f->hmf_name, c);
+      (void)dvr_autorec_create(htsmsg_field_name(f), c);
     }
     htsmsg_destroy(l);
   }
@@ -1344,10 +1471,10 @@ dvr_autorec_done(void)
 {
   dvr_autorec_entry_t *dae;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((dae = TAILQ_FIRST(&autorec_entries)) != NULL)
     autorec_entry_destroy(dae, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 void
@@ -1358,6 +1485,29 @@ dvr_autorec_update(void)
     dvr_autorec_changed(dae, 0);
     dvr_autorec_completed(dae, 0);
   }
+}
+
+static void
+dvr_autorec_async_reschedule_cb(void *ignored)
+{
+  tvhdebug(LS_DVR, "dvr_autorec_async_reschedule_cb - begin");
+  dvr_autorec_update();
+  tvhdebug(LS_DVR, "dvr_autorec_async_reschedule_cb - end");
+}
+
+void
+dvr_autorec_async_reschedule(void)
+{
+  tvhtrace(LS_DVR, "dvr_autorec_async_reschedule");
+  static mtimer_t reschedule_timer;
+  mtimer_disarm(&reschedule_timer);
+  /* We schedule the update after a brief period. This allows the
+   * system to quiesce in case the user is doing a large operation
+   * such as deleting numerous records due to disabling an autorec
+   * rule.
+   */
+  mtimer_arm_rel(&reschedule_timer, dvr_autorec_async_reschedule_cb, NULL,
+                 sec2mono(60));
 }
 
 /**
@@ -1371,7 +1521,7 @@ dvr_autorec_check_event(epg_broadcast_t *e)
   if (e->channel && !e->channel->ch_enabled)
     return;
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if(autorec_cmp(dae, e))
+    if(dvr_autorec_cmp(dae, e))
       dvr_entry_create_by_autorec(1, e, dae);
   // Note: no longer updating event here as it will be done from EPG
   //       anyway
@@ -1393,7 +1543,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
   CHANNEL_FOREACH(ch) {
     if (!ch->ch_enabled) continue;
     RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
-      if(autorec_cmp(dae, e)) {
+      if(dvr_autorec_cmp(dae, e)) {
         enabled = 1;
         if (disabled) {
           for (p = disabled; *p && *p != e; p++);

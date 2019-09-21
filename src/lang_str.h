@@ -20,6 +20,7 @@
 #define __TVH_LANG_STR_H__
 
 #include "redblack.h"
+#include "tvh_string.h"
 #include "htsmsg.h"
 
 typedef struct lang_str_ele
@@ -38,6 +39,12 @@ lang_str_t     *lang_str_create2 ( const char *str, const char *lang );
 lang_str_t     *lang_str_copy    ( const lang_str_t *ls );
 
 /* Get elements */
+lang_str_ele_t *lang_str_get2_only ( const lang_str_t *ls, const char *lang );
+static inline const char *lang_str_get_only(const lang_str_t *ls, const char *lang)
+  {
+    lang_str_ele_t *e = lang_str_get2_only(ls, lang);
+    return e ? e->str : NULL;
+  }
 lang_str_ele_t *lang_str_get2    ( const lang_str_t *ls, const char *lang );
 static inline const char *lang_str_get(const lang_str_t *ls, const char *lang)
   {
@@ -74,8 +81,6 @@ lang_str_t     *lang_str_deserialize
 int             lang_str_compare ( const lang_str_t *ls1, const lang_str_t *ls2 );
 
 /* Is string empty? */
-static inline int strempty(const char *c)
-  { return c == NULL || *c == '\0'; }
 static inline int lang_str_empty(lang_str_t* str)
   { return strempty(lang_str_get(str, NULL)); }
 

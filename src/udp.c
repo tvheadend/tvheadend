@@ -129,7 +129,7 @@ udp_get_ifaddr( int fd, const char *ifname, struct in_addr *addr )
     return -1;
   
   memset(&ifreq, 0, sizeof(ifreq));
-  strncpy(ifreq.ifr_name, ifname, IFNAMSIZ-1);
+  strlcpy(ifreq.ifr_name, ifname, IFNAMSIZ);
   
   if (ioctl(fd, SIOCGIFADDR, &ifreq) < 0)
     return -1;

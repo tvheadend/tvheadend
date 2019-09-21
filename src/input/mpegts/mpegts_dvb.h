@@ -50,6 +50,7 @@ extern const idclass_t dvb_network_dvbc_class;
 extern const idclass_t dvb_network_dvbs_class;
 extern const idclass_t dvb_network_atsc_t_class;
 extern const idclass_t dvb_network_atsc_c_class;
+extern const idclass_t dvb_network_cablecard_class;
 extern const idclass_t dvb_network_isdb_t_class;
 extern const idclass_t dvb_network_isdb_c_class;
 extern const idclass_t dvb_network_isdb_s_class;
@@ -71,7 +72,7 @@ dvb_network_t *dvb_network_create0
   ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
 
 dvb_mux_t *dvb_network_find_mux
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid, int check, int approx_match );
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint32_t onid, uint32_t tsid, int check, int approx_match );
 
 const idclass_t *dvb_network_mux_class(mpegts_network_t *mn);
 int dvb_network_get_orbital_pos(mpegts_network_t *mn);
@@ -88,6 +89,7 @@ extern const idclass_t dvb_mux_dvbc_class;
 extern const idclass_t dvb_mux_dvbs_class;
 extern const idclass_t dvb_mux_atsc_t_class;
 extern const idclass_t dvb_mux_atsc_c_class;
+extern const idclass_t dvb_mux_cablecard_class;
 extern const idclass_t dvb_mux_isdb_t_class;
 extern const idclass_t dvb_mux_isdb_c_class;
 extern const idclass_t dvb_mux_isdb_s_class;
@@ -95,7 +97,7 @@ extern const idclass_t dvb_mux_dtmb_class;
 extern const idclass_t dvb_mux_dab_class;
 
 dvb_mux_t *dvb_mux_create0
-  (dvb_network_t *ln, uint16_t onid, uint16_t tsid,
+  (dvb_network_t *ln, uint32_t onid, uint32_t tsid,
    const dvb_mux_conf_t *dmc, const char *uuid, htsmsg_t *conf);
 
 #define dvb_mux_create1(n, u, c)\

@@ -22,6 +22,7 @@
 #include "iptv_private.h"
 #include "channels.h"
 #include "download.h"
+#include "epggrab.h"
 #include "misc/m3u.h"
 
 #include <fcntl.h>
@@ -36,7 +37,7 @@ typedef struct auto_private {
 /*
  *
  */
-static int _epgcfg_from_str(const char *str)
+static int _epgcfg_from_str(const char *str, char *manual, size_t manual_len)
 {
   static struct strtab cfgs[] = {
     { "0",                 MM_EPG_DISABLE },
@@ -48,18 +49,19 @@ static int _epgcfg_from_str(const char *str)
     { "enable",            MM_EPG_ENABLE },
     { "on",                MM_EPG_ENABLE },
     { "force",             MM_EPG_FORCE },
-    { "eit",               MM_EPG_ONLY_EIT },
-    { "uk_freesat",        MM_EPG_ONLY_UK_FREESAT },
-    { "uk_freeview",       MM_EPG_ONLY_UK_FREEVIEW },
-    { "viasat_baltic",     MM_EPG_ONLY_VIASAT_BALTIC },
-    { "opentv_sky_uk",     MM_EPG_ONLY_OPENTV_SKY_UK },
-    { "opentv_sky_italia", MM_EPG_ONLY_OPENTV_SKY_ITALIA },
-    { "opentv_sky_ausat",  MM_EPG_ONLY_OPENTV_SKY_AUSAT },
-    { "bulsatcom_39e",     MM_EPG_ONLY_BULSATCOM_39E },
-    { "psip",              MM_EPG_ONLY_PSIP },
     { NULL }
   };
-  return str ? str2val(str, cfgs) : -1;
+  int r = str ? str2val(str, cfgs) : -1;
+  if (manual) *manual = '\0';
+  if (r < 0) {
+    const char *s = epggrab_ota_check_module_id(str);
+    if (s) {
+      r = MM_EPG_MANUAL;
+      if (manual)
+        strlcpy(manual, s, manual_len);
+    }
+  }
+  return r;
 }
 
 /*
@@ -86,7 +88,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   int64_t chnum2, vlcprog;
   const char *url, *url2, *name, *logo, *epgid, *tags;
   char *s;
-  char custom[512], name2[128], buf[32], *n;
+  char custom[512], name2[128], buf[32], *moduleid, *n;
 
   url = htsmsg_get_str(item, "m3u-url");
 
@@ -126,7 +128,8 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     logo = htsmsg_get_str(item, "logo");
 
   epgid = htsmsg_get_str(item, "tvg-id");
-  epgcfg = _epgcfg_from_str(htsmsg_get_str(item, "tvh-epg"));
+  moduleid = alloca(64);
+  epgcfg = _epgcfg_from_str(htsmsg_get_str(item, "tvh-epg"), moduleid, 64);
   tags = htsmsg_get_str(item, "tvh-tags");
   if (!tags) tags = htsmsg_get_str(item, "group-title");
   if (tags) {
@@ -260,6 +263,11 @@ skip_url:
         im->mm_epg = epgcfg;
         change = 1;
       }
+      if (moduleid[0] && strcmp(im->mm_epg_module_id ?: "", moduleid)) {
+        free(im->mm_epg_module_id);
+        im->mm_epg_module_id = strdup(moduleid);
+        change = 1;
+      }
       if (muxprio >= 0 && im->mm_iptv_priority != muxprio) {
         im->mm_iptv_priority = muxprio;
         change = 1;
@@ -300,6 +308,8 @@ skip_url:
     htsmsg_add_str(conf, "iptv_hdr", custom);
   if (epgcfg >= 0)
     htsmsg_add_s32(conf, "epg", epgcfg);
+  if (moduleid[0])
+    htsmsg_add_str(conf, "epg_module_id", moduleid);
   if (in->in_tsid_accept_zero_value)
     htsmsg_add_s32(conf, "tsid_zero", 1);
   if (!htsmsg_get_s64(item, "vlc-program", &vlcprog) &&
@@ -448,7 +458,8 @@ iptv_auto_network_trigger0(void *aux)
   auto_private_t *ap = aux;
   iptv_network_t *in = ap->in_network;
 
-  download_start(&ap->in_download, in->in_url, ap);
+  if (in->mn_enabled)
+    download_start(&ap->in_download, in->in_url, ap);
   mtimer_arm_rel(&ap->in_auto_timer, iptv_auto_network_trigger0, ap,
                  sec2mono(MAX(1, in->in_refetch_period) * 60));
 }

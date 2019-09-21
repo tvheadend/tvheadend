@@ -16,17 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
 #include <ctype.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "settings.h"
 #include "config.h"
@@ -66,6 +56,18 @@ static int
 ch_id_cmp ( channel_t *a, channel_t *b )
 {
   return channel_get_id(a) - channel_get_id(b);
+}
+
+static void
+channel_load_icon ( channel_t *ch )
+{
+  (void)imagecache_get_id(channel_get_icon(ch));
+}
+
+static void
+channel_tag_load_icon ( channel_tag_t *tag )
+{
+  (void)imagecache_get_id(channel_tag_get_icon(tag));
 }
 
 /* **************************************************************************
@@ -219,13 +221,15 @@ channel_class_icon_notify ( void *obj, const char *lang )
 {
   channel_t *ch = obj;
   if (!ch->ch_load)
-    (void)channel_get_icon(obj);
+    channel_load_icon(obj);
 }
 
-static const void *
+const void *
 channel_class_get_icon ( void *obj )
 {
   prop_ptr = channel_get_icon(obj);
+  if (!strempty(prop_ptr))
+    prop_ptr = imagecache_get_propstr(prop_ptr, prop_sbuf, PROP_SBUF_LEN);
   return &prop_ptr;
 }
 
@@ -450,8 +454,8 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "icon",
       .name     = N_("User icon"),
-      .desc     = N_("The URL (or path) to the icon to use/used "
-                     "for the channel."),
+      .desc     = N_("The URL to the icon to use/used for the channel. "
+                     "The local files are referred using file:/// URLs."),
       .off      = offsetof(channel_t, ch_icon),
       .notify   = channel_class_icon_notify,
       .opts     = PO_ADVANCED,
@@ -719,13 +723,16 @@ int
 channel_access(channel_t *ch, access_t *a, int disabled)
 {
   char ubuf[UUID_HEX_SIZE];
+  idnode_list_mapping_t *ilm;
+  htsmsg_field_t *f;
 
   if (!a)
     return 0;
 
   if (!ch) {
     /* If user has full rights, allow access to removed chanels */
-    if (a->aa_chrange == NULL && a->aa_chtags == NULL)
+    if (a->aa_chrange == NULL && a->aa_chtags == NULL &&
+        a->aa_chtags_exclude == NULL)
       return 1;
     return 0;
   }
@@ -743,20 +750,21 @@ channel_access(channel_t *ch, access_t *a, int disabled)
   }
 
   /* Channel tag check */
-  if (a->aa_chtags) {
-    idnode_list_mapping_t *ilm;
-    htsmsg_field_t *f;
-    HTSMSG_FOREACH(f, a->aa_chtags) {
-      LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link) {
+  if (a->aa_chtags_exclude) {
+    HTSMSG_FOREACH(f, a->aa_chtags_exclude)
+      LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link)
         if (!strcmp(htsmsg_field_get_str(f) ?: "",
                     idnode_uuid_as_str(ilm->ilm_in1, ubuf)))
-          goto chtags_ok;
-      }
-    }
+          return 0;
+  }
+  if (a->aa_chtags) {
+    HTSMSG_FOREACH(f, a->aa_chtags)
+      LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link)
+        if (!strcmp(htsmsg_field_get_str(f) ?: "",
+                    idnode_uuid_as_str(ilm->ilm_in1, ubuf)))
+          return 1;
     return 0;
   }
-chtags_ok:
-
   return 1;
 }
 
@@ -894,23 +902,25 @@ channel_rename_and_save ( const char *from, const char *to )
 }
 
 int64_t
-channel_get_number ( channel_t *ch )
+channel_get_number ( const channel_t *ch )
 {
-  int64_t n = 0;
+  int64_t n = 0, v;
   idnode_list_mapping_t *ilm;
   if (ch->ch_number) {
     n = ch->ch_number;
   } else {
     if (ch->ch_bouquet) {
       LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
-        if ((n = bouquet_get_channel_number(ch->ch_bouquet, (service_t *)ilm->ilm_in1)))
-          break;
+        v = bouquet_get_channel_number(ch->ch_bouquet, (service_t *)ilm->ilm_in1);
+        if (v > 0 && (n == 0 || v < n))
+          n = v;
       }
     }
     if (n == 0) {
       LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
-        if ((n = service_get_channel_number((service_t *)ilm->ilm_in1)))
-          break;
+        v = service_get_channel_number((service_t *)ilm->ilm_in1);
+        if (v > 0 && (n == 0 || v < n))
+          n = v;
       }
     }
   }
@@ -961,12 +971,26 @@ channel_get_source ( channel_t *ch, char *dst, size_t dstlen )
 {
   const char *s;
   idnode_list_mapping_t *ilm;
-  size_t l = 0;
+  /* Unique sorted string list since many services with
+   * same source may be mapped so we want to avoid
+   * 'DVB-S, DVB-S, DVB-S'.
+   */
+  string_list_t *sources = string_list_create();
+  char *csv;
   dst[0] = '\0';
   LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link)
     if ((s = service_get_source((service_t *)ilm->ilm_in1)))
-      tvh_strlcatf(dst, dstlen, l, "%s%s", l > 0 ? "," : "", s);
-  return l > 0 ? dst : NULL;
+      string_list_insert(sources, s);
+  /* We own the returned list */
+  csv = string_list_2_csv(sources, ',', 1);
+  string_list_destroy(sources);
+  if (csv) {
+    strlcpy(dst, csv, dstlen);
+    free(csv);
+    return dst;
+  } else {
+    return NULL;
+  }
 }
 
 static char *
@@ -1024,7 +1048,7 @@ channel_get_icon ( channel_t *ch )
              *picon  = config.picon_path,
              *icon   = ch->ch_icon,
              *chname, *icn;
-  int id, i, pick, prefer = config.prefer_picon ? 1 : 0;
+  int i, pick, prefer = config.prefer_picon ? 1 : 0;
   char c;
 
   if (tvh_str_default(icon, NULL) == NULL)
@@ -1162,22 +1186,14 @@ found:
     icon = buf2;
   }
 
-  /* Lookup imagecache ID */
-  if ((id = imagecache_get_id(icon))) {
-    snprintf(buf, sizeof(buf), "imagecache/%d", id);
-  } else {
-    strncpy(buf, icon, sizeof(buf));
-    buf[sizeof(buf)-1] = '\0';
-  }
-
-  return buf;
+  return icon;
 }
 
 int channel_set_icon ( channel_t *ch, const char *icon )
 {
   int save = 0;
   if (!ch || !icon) return 0;
-  if (!ch->ch_icon || strcmp(ch->ch_icon, icon) ) {
+  if (!ch->ch_icon || strcmp(ch->ch_icon, icon)) {
     if (ch->ch_icon) free(ch->ch_icon);
     ch->ch_icon = strdup(icon);
     save = 1;
@@ -1252,7 +1268,7 @@ channel_create0
   htsp_channel_add(ch);
 
   /* determine icon URL */
-  (void)channel_get_icon(ch);
+  channel_load_icon(ch);
 
   return ch;
 }
@@ -1451,7 +1467,7 @@ channel_init ( void )
   channel_in_load = 1;
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f))) continue;
-    (void)channel_create(f->hmf_name, e, NULL);
+    (void)channel_create(htsmsg_field_name(f), e, NULL);
   }
   channel_in_load = 0;
   htsmsg_destroy(c);
@@ -1475,11 +1491,11 @@ channel_done ( void )
 {
   channel_t *ch;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((ch = RB_FIRST(&channels)) != NULL)
     channel_delete(ch, 0);
   memoryinfo_unregister(&channels_memoryinfo);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   channel_tag_done();
 }
 
@@ -1627,16 +1643,7 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
 const char *
 channel_tag_get_icon(channel_tag_t *ct)
 {
-  static char buf[64];
-  const char *icon  = ct->ct_icon;
-  int id;
-
-  /* Lookup imagecache ID */
-  if ((id = imagecache_get_id(icon))) {
-    snprintf(buf, sizeof(buf), "imagecache/%d", id);
-    return buf;
-  }
-  return icon;
+  return ct->ct_icon;
 }
 
 /**
@@ -1645,6 +1652,10 @@ channel_tag_get_icon(channel_tag_t *ct)
 int
 channel_tag_access(channel_tag_t *ct, access_t *a, int disabled)
 {
+  htsmsg_field_t *f;
+  char ubuf[UUID_HEX_SIZE];
+  const char *uuid = idnode_uuid_as_str(&ct->ct_id, ubuf);
+
   if (!ct)
     return 0;
 
@@ -1655,17 +1666,17 @@ channel_tag_access(channel_tag_t *ct, access_t *a, int disabled)
     return 1;
 
   /* Channel tag check */
+  if (a->aa_chtags_exclude) {
+    HTSMSG_FOREACH(f, a->aa_chtags_exclude)
+      if (!strcmp(htsmsg_field_get_str(f) ?: "", uuid))
+        return 0;
+  }
   if (a->aa_chtags) {
-    htsmsg_field_t *f;
-    char ubuf[UUID_HEX_SIZE];
-    const char *uuid = idnode_uuid_as_str(&ct->ct_id, ubuf);
     HTSMSG_FOREACH(f, a->aa_chtags)
       if (!strcmp(htsmsg_field_get_str(f) ?: "", uuid))
-        goto chtags_ok;
+        return 1;
     return 0;
   }
-chtags_ok:
-
   return 1;
 }
 
@@ -1709,13 +1720,15 @@ channel_tag_class_get_title
 static void
 channel_tag_class_icon_notify ( void *obj, const char *lang )
 {
-  (void)channel_tag_get_icon(obj);
+  channel_tag_load_icon(obj);
 }
 
 static const void *
 channel_tag_class_get_icon ( void *obj )
 {
   prop_ptr = channel_tag_get_icon(obj);
+  if (!strempty(prop_ptr))
+    prop_ptr = imagecache_get_propstr(prop_ptr, prop_sbuf, PROP_SBUF_LEN);
   return &prop_ptr;
 }
 
@@ -1954,7 +1967,7 @@ channel_tag_init ( void )
   if ((c = hts_settings_load("channel/tag")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
-      (void)channel_tag_create(f->hmf_name, m);
+      (void)channel_tag_create(htsmsg_field_name(f), m);
     }
     htsmsg_destroy(c);
   }
@@ -1965,8 +1978,27 @@ channel_tag_done ( void )
 {
   channel_tag_t *ct;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((ct = TAILQ_FIRST(&channel_tags)) != NULL)
     channel_tag_destroy(ct, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
+}
+
+int
+channel_has_correct_service_filter(const channel_t *ch, int svf)
+{
+  const idnode_list_mapping_t *ilm;
+  const service_t *service;
+  if (!ch || !svf || svf == PROFILE_SVF_NONE)
+    return 1;
+
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+    service = (const service_t*)ilm->ilm_in1;
+    if ((svf == PROFILE_SVF_SD && service_is_sdtv(service)) ||
+        (svf == PROFILE_SVF_HD && service_is_hdtv(service)) ||
+        (svf == PROFILE_SVF_UHD && service_is_uhdtv(service))) {
+      return 1;
+    }
+  }
+  return 0;
 }

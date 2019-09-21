@@ -155,10 +155,12 @@ int tcp_socket_dead(int fd);
 struct access;
 
 uint32_t tcp_connection_count(struct access *aa);
-void *tcp_connection_launch(int fd, void (*status) (void *opaque, htsmsg_t *m),
+void *tcp_connection_launch(int fd, int streaming,
+                            void (*status) (void *opaque, htsmsg_t *m),
                             struct access *aa);
 void tcp_connection_land(void *tcp_id);
 void tcp_connection_cancel(uint32_t id);
+void tcp_connection_cancel_all(void);
 
 htsmsg_t *tcp_server_connections ( void );
 

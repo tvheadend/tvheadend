@@ -21,8 +21,6 @@
 
 #include "idnode.h"
 
-#include <pthread.h>
-
 /* **************************************************************************
  * Typedefs/Forward decls
  * *************************************************************************/
@@ -34,6 +32,7 @@ typedef struct epggrab_module_ext   epggrab_module_ext_t;
 typedef struct epggrab_module_ota   epggrab_module_ota_t;
 typedef struct epggrab_module_ota_scraper   epggrab_module_ota_scraper_t;
 typedef struct epggrab_ota_mux      epggrab_ota_mux_t;
+typedef struct epggrab_ota_mux_eit_plist    epggrab_ota_mux_eit_plist_t;
 typedef struct epggrab_ota_map      epggrab_ota_map_t;
 typedef struct epggrab_ota_svc_link epggrab_ota_svc_link_t;
 
@@ -226,6 +225,12 @@ struct epggrab_ota_svc_link
   RB_ENTRY(epggrab_ota_svc_link) link;
 };
 
+struct epggrab_ota_mux_eit_plist {
+  LIST_ENTRY(epggrab_ota_mux_eit_plist) link;
+  const char *src;
+  void *priv;
+};
+
 /*
  * TODO: this could be embedded in the mux itself, but by using a soft-link
  *       and keeping it here I can somewhat isolate it from the mpegts code
@@ -239,8 +244,10 @@ struct epggrab_ota_mux
   uint8_t                            om_complete;     ///< Has completed a scan
   uint8_t                            om_requeue;      ///< Requeue when stolen
   uint8_t                            om_save;         ///< something changed
+  uint8_t                            om_detected;     ///< detected some activity
   mtimer_t                           om_timer;        ///< Per mux active timer
   mtimer_t                           om_data_timer;   ///< Any EPG data seen?
+  mtimer_t                           om_handlers_timer; ///< Run handlers callback
   int64_t                            om_retry_time;   ///< Next time to retry
 
   char                              *om_force_modname;///< Force this module
@@ -253,6 +260,8 @@ struct epggrab_ota_mux
 
   TAILQ_ENTRY(epggrab_ota_mux)       om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
+
+  LIST_HEAD(, epggrab_ota_mux_eit_plist) om_eit_plist;
 };
 
 /*
@@ -264,9 +273,8 @@ struct epggrab_ota_map
   epggrab_module_ota_t               *om_module;
   int                                 om_complete;
   uint8_t                             om_first;
-  uint8_t                             om_forced;
   uint64_t                            om_tune_count;
-  RB_HEAD(,epggrab_ota_svc_link)      om_svcs;         ///< Muxes we carry data for
+  RB_HEAD(,epggrab_ota_svc_link)      om_svcs;         ///< Services we carry data for
   void                               *om_opaque;
 };
 
@@ -279,6 +287,8 @@ struct epggrab_module_ota
 
   /* Transponder tuning */
   int  (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
+  int  (*stop)  ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
+  void (*handlers) (epggrab_ota_map_t *map, struct mpegts_mux *mm );
   int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                   struct mpegts_mux *mm );
   void  *opaque;
@@ -307,9 +317,11 @@ typedef struct epggrab_conf {
   uint32_t              channel_renumber;
   uint32_t              channel_reicon;
   uint32_t              epgdb_periodicsave;
+  uint32_t              epgdb_saveafterimport;
   char                 *ota_cron;
   uint32_t              ota_timeout;
   uint32_t              ota_initial;
+  uint32_t              int_initial;
 } epggrab_conf_t;
 
 /*
@@ -346,7 +358,7 @@ void epggrab_queue_data(epggrab_module_t *mod,
  * Configuration
  */
 extern epggrab_module_list_t epggrab_modules;
-extern pthread_mutex_t       epggrab_mutex;
+extern tvh_mutex_t           epggrab_mutex;
 extern int                   epggrab_running;
 extern int                   epggrab_ota_running;
 
@@ -383,6 +395,8 @@ void epggrab_channel_mod ( struct channel *ch );
  */
 void epggrab_ota_queue_mux( struct mpegts_mux *mm );
 epggrab_ota_mux_t *epggrab_ota_find_mux ( struct mpegts_mux *mm );
+htsmsg_t *epggrab_ota_module_id_list( const char *lang );
+const char *epggrab_ota_check_module_id( const char *id );
 
 #endif /* __EPGGRAB_H__ */
 

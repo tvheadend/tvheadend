@@ -290,6 +290,8 @@ enum streaming_message_type {
 #define SM_CODE_NO_ADAPTERS               209
 #define SM_CODE_INVALID_SERVICE           210
 #define SM_CODE_CHN_NOT_ENABLED           211
+#define SM_CODE_DATA_TIMEOUT              212
+#define SM_CODE_OTHER_SERVICE             213
 
 #define SM_CODE_ABORTED                   300
 
@@ -352,11 +354,11 @@ struct streaming_queue {
 
   streaming_target_t sq_st;
 
-  pthread_mutex_t sq_mutex;    /* Protects sp_queue */
-  tvh_cond_t  sq_cond;         /* Condvar for signalling new packets */
+  tvh_mutex_t sq_mutex;    /* Protects sp_queue */
+  tvh_cond_t  sq_cond;     /* Condvar for signalling new packets */
 
-  size_t          sq_maxsize;  /* Max queue size (bytes) */
-  size_t          sq_size;     /* Actual queue size (bytes) - only data */
+  size_t      sq_maxsize;  /* Max queue size (bytes) */
+  size_t      sq_size;     /* Actual queue size (bytes) - only data */
 
   struct streaming_message_queue sq_queue;
 

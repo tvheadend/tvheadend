@@ -27,7 +27,7 @@
 #include "webui/webui.h"
 
 static tvh_cond_t             notify_cond;
-static pthread_mutex_t        notify_mutex;
+static tvh_mutex_t        notify_mutex;
 static htsmsg_t              *notify_queue;
 static pthread_t              notify_tid;
 static void*                  notify_thread(void* p);
@@ -58,7 +58,7 @@ notify_delayed(const char *id, const char *event, const char *action)
   if (!tvheadend_is_running())
     return;
 
-  pthread_mutex_lock(&notify_mutex);
+  tvh_mutex_lock(&notify_mutex);
   if (notify_queue == NULL) {
     notify_queue = htsmsg_create_map();
   } else {
@@ -77,7 +77,7 @@ notify_delayed(const char *id, const char *event, const char *action)
   htsmsg_add_str(e, NULL, id);
   tvh_cond_signal(&notify_cond, 0);
 skip:
-  pthread_mutex_unlock(&notify_mutex);
+  tvh_mutex_unlock(&notify_mutex);
 }
 
 void *
@@ -86,7 +86,7 @@ notify_thread ( void *p )
   htsmsg_t *q = NULL;
   htsmsg_field_t *f;
 
-  pthread_mutex_lock(&notify_mutex);
+  tvh_mutex_lock(&notify_mutex);
 
   while (tvheadend_is_running()) {
 
@@ -97,23 +97,23 @@ notify_thread ( void *p )
     }
     q            = notify_queue;
     notify_queue = NULL;
-    pthread_mutex_unlock(&notify_mutex);
+    tvh_mutex_unlock(&notify_mutex);
 
     /* Process */
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
 
     HTSMSG_FOREACH(f, q)
-      notify_by_msg(f->hmf_name, htsmsg_detach_submsg(f), 0);
+      notify_by_msg(htsmsg_field_name(f), htsmsg_detach_submsg(f), 0);
 
     /* Finished */
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     htsmsg_destroy(q);
 
     /* Wait */
     tvh_safe_usleep(500000);
-    pthread_mutex_lock(&notify_mutex);
+    tvh_mutex_lock(&notify_mutex);
   }
-  pthread_mutex_unlock(&notify_mutex);
+  tvh_mutex_unlock(&notify_mutex);
 
   return NULL;
 }
@@ -125,19 +125,19 @@ notify_thread ( void *p )
 void notify_init( void )
 {
   notify_queue = NULL;
-  pthread_mutex_init(&notify_mutex, NULL);
-  tvh_cond_init(&notify_cond);
-  tvhthread_create(&notify_tid, NULL, notify_thread, NULL, "notify");
+  tvh_mutex_init(&notify_mutex, NULL);
+  tvh_cond_init(&notify_cond, 1);
+  tvh_thread_create(&notify_tid, NULL, notify_thread, NULL, "notify");
 }
 
 void notify_done( void )
 {
-  pthread_mutex_lock(&notify_mutex);
+  tvh_mutex_lock(&notify_mutex);
   tvh_cond_signal(&notify_cond, 0);
-  pthread_mutex_unlock(&notify_mutex);
+  tvh_mutex_unlock(&notify_mutex);
   pthread_join(notify_tid, NULL);
-  pthread_mutex_lock(&notify_mutex);
+  tvh_mutex_lock(&notify_mutex);
   htsmsg_destroy(notify_queue);
   notify_queue = NULL;
-  pthread_mutex_unlock(&notify_mutex);
+  tvh_mutex_unlock(&notify_mutex);
 }

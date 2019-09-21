@@ -16,14 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include <openssl/sha.h>
 
 #include "htsmsg.h"
@@ -39,7 +31,7 @@
 #include "tcp.h"
 #include "memoryinfo.h"
 
-static pthread_mutex_t comet_mutex = PTHREAD_MUTEX_INITIALIZER;
+static tvh_mutex_t comet_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 static tvh_cond_t comet_cond;
 static int comet_waiting;
 
@@ -102,7 +94,7 @@ comet_flush(void)
 {
   comet_mailbox_t *cmb, *next;
 
-  pthread_mutex_lock(&comet_mutex);
+  tvh_mutex_lock(&comet_mutex);
 
   for(cmb = LIST_FIRST(&mailboxes); cmb != NULL; cmb = next) {
     next = LIST_NEXT(cmb, cmb_link);
@@ -111,7 +103,7 @@ comet_flush(void)
        cmb->cmb_last_used && cmb->cmb_last_used + sec2mono(60) < mclk())
       cmb_destroy(cmb);
   }
-  pthread_mutex_unlock(&comet_mutex);
+  tvh_mutex_unlock(&comet_mutex);
 }
 
 /**
@@ -191,6 +183,8 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   htsmsg_add_u32(m, "quicktips", config.ui_quicktips);
   htsmsg_add_u32(m, "chname_num", config.chname_num);
   htsmsg_add_u32(m, "chname_src", config.chname_src);
+  htsmsg_add_str(m, "date_mask", config.date_mask);
+  htsmsg_add_u32(m, "label_formatting", config.label_formatting);
   if (!access_noacl)
     htsmsg_add_str(m, "username", username);
   if (hc->hc_peer_ipstr)
@@ -202,6 +196,9 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 
   if (config.cookie_expires)
     htsmsg_add_u32(m, "cookie_expires", config.cookie_expires);
+
+  if (config.ticket_expires)
+    htsmsg_add_u32(m, "ticket_expires", config.ticket_expires);
 
   if (config.info_area && config.info_area[0])
     htsmsg_add_str(m, "info_area", config.info_area);
@@ -297,9 +294,9 @@ comet_find_mailbox(http_connection_t *hc, const char *cometid, const char *lang,
   if (http_access_verify(hc, ACCESS_ADMIN)) {
     if (!cmb->cmb_restricted) {
       cmb->cmb_restricted = 1;
-      pthread_mutex_unlock(&comet_mutex);
+      tvh_mutex_unlock(&comet_mutex);
       comet_mailbox_add_logmsg(tvh_gettext_lang(lang, N_("Restricted log mode (no administrator)")), 0, 0);
-      pthread_mutex_lock(&comet_mutex);
+      tvh_mutex_lock(&comet_mutex);
     }
   }
 
@@ -323,10 +320,10 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   if(!im)
     tvh_safe_usleep(100000); /* Always sleep 0.1 sec to avoid comet storms */
 
-  pthread_mutex_lock(&comet_mutex);
+  tvh_mutex_lock(&comet_mutex);
   cmb = comet_find_mailbox(hc, cometid, lang, 1);
   if (cmb == NULL) {
-    pthread_mutex_unlock(&comet_mutex);
+    tvh_mutex_unlock(&comet_mutex);
     return HTTP_STATUS_BAD_REQUEST;
   }
 
@@ -340,13 +337,13 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
     } while (ERRNO_AGAIN(e));
     atomic_dec(&comet_waiting, 1);
     if (!atomic_get(&comet_running)) {
-      pthread_mutex_unlock(&comet_mutex);
+      tvh_mutex_unlock(&comet_mutex);
       return HTTP_STATUS_BAD_REQUEST;
     }
   }
 
   m = comet_message(cmb, 1, 0);
-  pthread_mutex_unlock(&comet_mutex);
+  tvh_mutex_unlock(&comet_mutex);
 
   htsmsg_json_serialize(m, &hc->hc_reply, 0);
   htsmsg_destroy(m);
@@ -368,7 +365,7 @@ comet_mailbox_dbg(http_connection_t *hc, const char *remain, void *opaque)
   if(cometid == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-  pthread_mutex_lock(&comet_mutex);
+  tvh_mutex_lock(&comet_mutex);
   cmb = comet_find_mailbox(hc, cometid, lang, 0);
   if (cmb) {
     char buf[64];
@@ -392,7 +389,7 @@ comet_mailbox_dbg(http_connection_t *hc, const char *remain, void *opaque)
 
     tvh_cond_signal(&comet_cond, 1);
   }
-  pthread_mutex_unlock(&comet_mutex);
+  tvh_mutex_unlock(&comet_mutex);
 
   http_output_content(hc, "text/plain; charset=UTF-8");
   return 0;
@@ -405,14 +402,14 @@ static void
 comet_mailbox_ws_msg(http_connection_t *hc, comet_mailbox_t *cmb, int first, htsmsg_t *msg)
 {
   htsmsg_t *m = NULL;
-  pthread_mutex_lock(&comet_mutex);
+  tvh_mutex_lock(&comet_mutex);
   if (!atomic_get(&comet_running)) {
-    pthread_mutex_unlock(&comet_mutex);
+    tvh_mutex_unlock(&comet_mutex);
     return;
   }
   m = comet_message(cmb, first, 1);
   cmb->cmb_last_used = 0;
-  pthread_mutex_unlock(&comet_mutex);
+  tvh_mutex_unlock(&comet_mutex);
   if (m) {
     http_websocket_send_json(hc, m);
     htsmsg_destroy(m);
@@ -433,12 +430,12 @@ comet_mailbox_ws(http_connection_t *hc, const char *remain, void *opaque)
 
   res = http_send_header_websocket(hc, "tvheadend-comet");
 
-  pthread_mutex_lock(&comet_mutex);
+  tvh_mutex_lock(&comet_mutex);
   cmb = comet_find_mailbox(hc, cometid, lang, 1);
   if (cmb)
     cmb->cmb_refcount++;
   atomic_add(&comet_waiting, 1);
-  pthread_mutex_unlock(&comet_mutex);
+  tvh_mutex_unlock(&comet_mutex);
   if (!cmb)
     return -1;
 
@@ -456,12 +453,12 @@ comet_mailbox_ws(http_connection_t *hc, const char *remain, void *opaque)
     }
   }
 
-  pthread_mutex_lock(&comet_mutex);
+  tvh_mutex_lock(&comet_mutex);
   assert(cmb->cmb_refcount > 0);
   cmb->cmb_refcount--;
   cmb->cmb_last_used = mclk();
   atomic_dec(&comet_waiting, 1);
-  pthread_mutex_unlock(&comet_mutex);
+  tvh_mutex_unlock(&comet_mutex);
 
   return res;
 }
@@ -475,11 +472,11 @@ comet_init(void)
   http_path_t *hp;
 
   memoryinfo_register(&comet_memoryinfo);
-  pthread_mutex_lock(&comet_mutex);
-  tvh_cond_init(&comet_cond);
+  tvh_mutex_lock(&comet_mutex);
+  tvh_cond_init(&comet_cond, 1);
   atomic_set(&comet_running, 1);
   atomic_set(&comet_waiting, 0);
-  pthread_mutex_unlock(&comet_mutex);
+  tvh_mutex_unlock(&comet_mutex);
   hp = http_path_add("/comet/ws", NULL, comet_mailbox_ws, ACCESS_WEB_INTERFACE);
   hp->hp_flags = HTTP_PATH_WEBSOCKET;
   http_path_add("/comet/poll",  NULL, comet_mailbox_poll, ACCESS_WEB_INTERFACE);
@@ -491,10 +488,10 @@ comet_done(void)
 {
   comet_mailbox_t *cmb;
 
-  pthread_mutex_lock(&comet_mutex);
+  tvh_mutex_lock(&comet_mutex);
   atomic_set(&comet_running, 0);
   tvh_cond_signal(&comet_cond, 1);
-  pthread_mutex_unlock(&comet_mutex);
+  tvh_mutex_unlock(&comet_mutex);
 
   while (atomic_get(&comet_waiting))
     tvh_usleep(10000);
@@ -504,9 +501,9 @@ comet_done(void)
   while ((cmb = LIST_FIRST(&mailboxes)) != NULL)
     cmb_destroy(cmb);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   memoryinfo_unregister(&comet_memoryinfo);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 /**
@@ -563,7 +560,7 @@ comet_mailbox_add_message(htsmsg_t *m, int isdebug, int rewrite)
   if (!atomic_get(&comet_running))
     return;
 
-  pthread_mutex_lock(&comet_mutex);
+  tvh_mutex_lock(&comet_mutex);
 
   if (atomic_get(&comet_running)) {
     LIST_FOREACH(cmb, &mailboxes, cmb_link) {
@@ -584,7 +581,7 @@ comet_mailbox_add_message(htsmsg_t *m, int isdebug, int rewrite)
     tvh_cond_signal(&comet_cond, 1);
   }
 
-  pthread_mutex_unlock(&comet_mutex);
+  tvh_mutex_unlock(&comet_mutex);
 }
 
 /**

@@ -35,6 +35,11 @@ char tvh_binshasum[20];
 #include <execinfo.h>
 #include <dlfcn.h>
 #endif
+#if ENABLE_LIBUNWIND
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -72,6 +77,7 @@ sappend(char *buf, size_t l, const char *fmt, ...)
 /**
  *
  */
+#ifndef ENABLE_LIBUNWIND
 #if ENABLE_EXECINFO
 static int
 addr2lineresolve(const char *binary, intptr_t addr, char *buf0, size_t buflen)
@@ -133,8 +139,30 @@ addr2lineresolve(const char *binary, intptr_t addr, char *buf0, size_t buflen)
   return 0;
 }
 #endif /* ENABLE_EXECINFO */
+#endif
 
+#if ENABLE_LIBUNWIND
+static void
+traphandler_libunwind()
+{
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "STACKTRACE");
+  unw_cursor_t cursor;
+  unw_context_t uc;
+  unw_word_t ip, sp;
+  char buf[128];
 
+  unw_getcontext(&uc);
+  unw_init_local(&cursor, &uc);
+  while (unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    unw_get_reg(&cursor, UNW_REG_SP, &sp);
+    unw_word_t offp = 0;
+    const int pn = unw_get_proc_name(&cursor, buf, sizeof buf, &offp);
+    if (pn) *buf=0;
+    tvhlog_spawn (LOG_ALERT, LS_CRASH, "%s+%lx (ip=%lx sp=%lx)", buf, (long)offp, (long)ip, (long)sp);
+  }
+}
+#endif
 
 static void 
 traphandler(int sig, siginfo_t *si, void *UC)
@@ -182,6 +210,17 @@ traphandler(int sig, siginfo_t *si, void *UC)
   }
 #endif
   tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s", tmpbuf);
+
+  /* Although libunwind is supported on Linux, our existing unwind
+   * handler is better (supplies line numbers). But, on FreeBSD, the
+   * libunwind provides better diagnostics since our existing unwind
+   * handler often terminates without a trace, or does not provide
+   * correct function name mapping.
+   */
+#if ENABLE_LIBUNWIND
+  traphandler_libunwind();
+  return;
+#endif
 
 #if ENABLE_EXECINFO
   tvhlog_spawn(LOG_ALERT, LS_CRASH, "STACKTRACE");

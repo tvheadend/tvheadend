@@ -22,21 +22,21 @@ Much of the code is pretty rough, but might help people get started
 with communicating with HTSP server
 """
 
-import log
-import htsmsg
+import tvh.log as log
+import tvh.htsmsg as htsmsg
 
 # ###########################################################################
 # HTSP Client
 # ###########################################################################
 
-HTSP_PROTO_VERSION = 25
+HTSP_PROTO_VERSION = 33
 
 
 # Create passwd digest
 def htsp_digest(user, passwd, chal):
     import hashlib
-    ret = hashlib.sha1(passwd + chal).digest()
-    return ret
+    salted = passwd.encode('utf-8') + chal
+    return hashlib.sha1(salted).digest()
 
 
 # Client object

@@ -332,6 +332,24 @@ const idclass_t dvb_mux_dvbc_class =
       MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO")),
       .desc     = N_("The forward error correction used on the mux."),
     },
+    {
+      .type     = PT_INT,
+      .id       = "plp_id",
+      .name     = N_("PLP ID"),
+      .desc     = N_("The physical layer pipe ID. "
+                     "Most people will not need to change this setting."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
+      .def.i	= DVB_NO_STREAM_ID_FILTER,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "data_slice",
+      .name     = N_("Data slice"),
+      .desc     = N_("Data slice code."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_data_slice),
+      .def.u32	= 0,
+      .opts     = PO_EXPERT
+    },
     {}
   }
 };
@@ -615,6 +633,42 @@ const idclass_t dvb_mux_atsc_c_class =
 };
 
 /*
+ * CableCARD
+ */
+const idclass_t dvb_mux_cablecard_class =
+{
+  .ic_super      = &dvb_mux_class,
+  .ic_class      = "dvb_mux_cablecard",
+  .ic_caption    = N_("CableCARD multiplex"),
+  .ic_properties = (const property_t[]){
+    {
+      .type = PT_U32,
+      .id   = "vchan",
+      .name = N_("Channel"),
+      .desc = N_("The channel on the cable provider's network."),
+      .off  = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_cablecard.vchannel),
+    },
+    {
+      .type = PT_U32,
+      .id   = "frequency",
+      .name = N_("Frequency (Hz)"),
+      .desc = N_("The frequency of the mux (in Hertz)."),
+      .off  = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
+      .opts = PO_RDONLY,
+    },
+    {
+      .type = PT_STR,
+      .id   = "vchan_name",
+      .name = N_("Callsign"),
+      .desc = N_("The channel's name or callsign as set by the cable provider."),
+      .off  = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_cablecard.name),
+      .opts = PO_RDONLY,
+    },
+    {}
+  }
+};
+
+/*
  * ISDB-T
  */
 
@@ -801,6 +855,24 @@ const idclass_t dvb_mux_isdb_c_class =
     {
       MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO")),
       .desc     = N_("The forward error correction used on the mux."),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "plp_id",
+      .name     = N_("PLP ID"),
+      .desc     = N_("The physical layer pipe ID. "
+                     "Most people will not need to change this setting."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
+      .def.i	= DVB_NO_STREAM_ID_FILTER,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "data_slice",
+      .name     = N_("Data slice"),
+      .desc     = N_("Data slice code."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_data_slice),
+      .def.u32	= 0,
+      .opts     = PO_EXPERT
     },
     {}
   }
@@ -1049,26 +1121,31 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
   uint32_t freq = lm->lm_tuning.dmc_fe_freq, freq2;
   char extra[8], buf2[5], *p;
-  if (ln->ln_type == DVB_TYPE_S) {
-    const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
-    if (s) extra[0] = *s;
-    extra[1] = '\0';
-  } else {
+
+  if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_CABLECARD)
+    snprintf(buf, len, "%u", lm->lm_tuning.u.dmc_fe_cablecard.vchannel);
+  else {
+    if (ln->ln_type == DVB_TYPE_S) {
+      const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
+      if (s) extra[0] = *s;
+      extra[1] = '\0';
+    } else {
+      freq /= 1000;
+      strcpy(extra, "MHz");
+    }
+    freq2 = freq % 1000;
     freq /= 1000;
-    strcpy(extra, "MHz");
+    snprintf(buf2, sizeof(buf2), "%03d", freq2);
+    p = buf2 + 2;
+    while (freq2 && (freq2 % 10) == 0) {
+      freq2 /= 10;
+      *(p--) = '\0';
+    }
+    if (freq2)
+      snprintf(buf, len, "%d.%s%s", freq, buf2, extra);
+    else
+      snprintf(buf, len, "%d%s", freq, extra);
   }
-  freq2 = freq % 1000;
-  freq /= 1000;
-  snprintf(buf2, sizeof(buf2), "%03d", freq2);
-  p = buf2 + 2;
-  while (freq2 && (freq2 % 10) == 0) {
-    freq2 /= 10;
-    *(p--) = '\0';
-  }
-  if (freq2)
-    snprintf(buf, len, "%d.%s%s", freq, buf2, extra);
-  else
-    snprintf(buf, len, "%d%s", freq, extra);
 }
 
 static void
@@ -1094,7 +1171,7 @@ dvb_mux_delete ( mpegts_mux_t *mm, int delconf )
 dvb_mux_t *
 dvb_mux_create0
   ( dvb_network_t *ln,
-    uint16_t onid, uint16_t tsid, const dvb_mux_conf_t *dmc,
+    uint32_t onid, uint32_t tsid, const dvb_mux_conf_t *dmc,
     const char *uuid, htsmsg_t *conf )
 {
   const idclass_t *idc;
@@ -1121,6 +1198,9 @@ dvb_mux_create0
     delsys = DVB_SYS_ATSC;
   } else if (ln->ln_type == DVB_TYPE_ATSC_C) {
     idc = &dvb_mux_atsc_c_class;
+    delsys = DVB_SYS_DVBC_ANNEX_B;
+  } else if (ln->ln_type == DVB_TYPE_CABLECARD) {
+    idc = &dvb_mux_cablecard_class;
     delsys = DVB_SYS_DVBC_ANNEX_B;
   } else if (ln->ln_type == DVB_TYPE_ISDB_T) {
     idc = &dvb_mux_isdb_t_class;
@@ -1166,6 +1246,8 @@ dvb_mux_create0
   lm->mm_display_name     = dvb_mux_display_name;
   lm->mm_config_save      = dvb_mux_config_save;
 
+  mpegts_mux_update_nice_name(mm);
+
   /* No config */
   if (!conf) return lm;
 
@@ -1180,7 +1262,7 @@ dvb_mux_create0
   if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f))) continue;
-      mpegts_service_create1(f->hmf_name, (mpegts_mux_t *)lm, 0, 0, e);
+      mpegts_service_create1(htsmsg_field_name(f), (mpegts_mux_t *)lm, 0, 0, e);
     }
     htsmsg_destroy(c2);
   }

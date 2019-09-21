@@ -63,6 +63,7 @@ typedef struct htsmsg_field {
 
 #define HMF_ALLOCED        0x1
 #define HMF_INALLOCED      0x2
+#define HMF_NONAME         0x4
 
   union {
     int64_t  s64;
@@ -74,13 +75,13 @@ typedef struct htsmsg_field {
     } bin;
     htsmsg_t *msg;
     double dbl;
-    int bool;
+    int boolean;
   } u;
 
 #if ENABLE_SLOW_MEMORYINFO
   size_t hmf_edata_size;
 #endif
-  const char hmf_name[0];
+  const char _hmf_name[0];
 } htsmsg_field_t;
 
 #define hmf_s64     u.s64
@@ -90,7 +91,7 @@ typedef struct htsmsg_field {
 #define hmf_bin     u.bin.data
 #define hmf_binsize u.bin.len
 #define hmf_dbl     u.dbl
-#define hmf_bool    u.bool
+#define hmf_bool    u.boolean
 
 // backwards compat
 #define htsmsg_get_map_by_field(f) htsmsg_field_get_map(f)
@@ -101,6 +102,25 @@ typedef struct htsmsg_field {
 #define HTSMSG_NEXT(f)         TAILQ_NEXT(f, hmf_link)
 
 /**
+ * Aligned memory allocation
+ */
+static inline size_t htsmsg_malloc_align(int type, size_t len)
+{
+  if (type == HMF_LIST || type == HMF_MAP)
+    return (len + (size_t)7) & ~(size_t)7;
+  return len;
+}
+
+/**
+ * Get a field name
+ */
+static inline const char *htsmsg_field_name(htsmsg_field_t *f)
+{
+  if (f->hmf_flags & HMF_NONAME) return "";
+  return f->_hmf_name;
+}
+
+/**
  * Create a new map
  */
 htsmsg_t *htsmsg_create_map(void);
@@ -109,6 +129,11 @@ htsmsg_t *htsmsg_create_map(void);
  * Create a new list
  */
 htsmsg_t *htsmsg_create_list(void);
+
+/**
+ * Concat msg2 to msg1 (list or map)
+ */
+void htsmsg_concat(htsmsg_t *msg1, htsmsg_t *msg2);
 
 /**
  * Remove a given field from a msg
@@ -491,6 +516,8 @@ htsmsg_t *htsmsg_csv_2_list(const char *str, char delim);
 htsmsg_t *htsmsg_create_key_val(const char *key, const char *val);
 
 int htsmsg_is_string_in_list(htsmsg_t *list, const char *str);
+
+int htsmsg_remove_string_from_list(htsmsg_t *list, const char *str);
 
 /**
  *

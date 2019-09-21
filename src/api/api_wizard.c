@@ -28,13 +28,13 @@
 static int
 wizard_page ( const char *page )
 {
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   if (strcmp(page, config.wizard ?: "")) {
     free(config.wizard);
     config.wizard = page[0] ? strdup(page) : NULL;
     idnode_changed(&config.idnode);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return 0;
 }
 

@@ -70,12 +70,12 @@ codec_init(void)
 void
 codec_done(void)
 {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
 
     // codec profiles
     tvh_codec_profiles_remove();
     // codecs
     tvh_codecs_forget();
 
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
 }

@@ -68,7 +68,8 @@ typedef struct caclient {
                          const uint8_t *data, int len);
   void (*cac_caid_update)(struct caclient *cac,
                           struct mpegts_mux *mux,
-                          uint16_t caid, uint16_t pid, int valid);
+                          uint16_t caid, uint32_t prov,
+                          uint16_t pid, int valid);
 } caclient_t;
 
 caclient_t *caclient_create
@@ -76,7 +77,8 @@ caclient_t *caclient_create
 
 void caclient_start( struct service *t );
 void caclient_caid_update(struct mpegts_mux *mux,
-                          uint16_t caid, uint16_t pid, int valid);
+                          uint16_t caid, uint32_t prov,
+                          uint16_t pid, int valid);
 void caclient_cat_update(struct mpegts_mux *mux,
                          const uint8_t *data, int len);
 

@@ -17,13 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdarg.h>
-#include <pthread.h>
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
 #include <sys/stat.h>
-#include <libgen.h> /* basename */
 
 #include "tvheadend.h"
 #include "dvr.h"
@@ -42,7 +36,7 @@ static int64_t dvr_disk_space_config_lastdelete;
 static int64_t dvr_bfree;
 static int64_t dvr_btotal;
 static int64_t dvr_bused;
-static pthread_mutex_t dvr_disk_space_mutex;
+static tvh_mutex_t dvr_disk_space_mutex;
 static mtimer_t dvr_disk_space_timer;
 static tasklet_t dvr_disk_space_tasklet;
 
@@ -78,8 +72,7 @@ dvr_vfs_find1(dvr_vfs_t *old, htsmsg_t *m)
     return dvr_vfs_find(old, &fsid);
   } else if ((s = htsmsg_get_str(m, "fsid0")) != NULL) {
     fsid.fsid = 0;
-    strncpy(fsid.id, s, sizeof(fsid.id)-1);
-    fsid.id[sizeof(fsid.id)-1] = '\0';
+    strlcpy(fsid.id, s, sizeof(fsid.id));
     return dvr_vfs_find(old, &fsid);
   }
   return NULL;
@@ -321,7 +314,7 @@ dvr_disk_space_check()
   dvr_vfs_t *dvfs;
   tvh_fsid_t fsid;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   dvr_disk_space_config_idx++;
   if (dvr_disk_space_config_idx > dvr_disk_space_config_size)
@@ -383,7 +376,7 @@ checking:
 
   dvr_disk_space_config_size = idx;
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 /**
@@ -400,16 +393,16 @@ dvr_get_disk_space_update(const char *path, int locked)
     return;
 
   if (!locked)
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
   dvfs = dvr_vfs_find(NULL, &fsid);
   if (!locked)
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
 
-  pthread_mutex_lock(&dvr_disk_space_mutex);
+  tvh_mutex_lock(&dvr_disk_space_mutex);
   dvr_bfree = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
   dvr_btotal = diskdata.f_frsize * (int64_t)diskdata.f_blocks;
   dvr_bused = dvfs ? dvfs->used_size : 0;
-  pthread_mutex_unlock(&dvr_disk_space_mutex);
+  tvh_mutex_unlock(&dvr_disk_space_mutex);
 }
 
 /**
@@ -502,7 +495,7 @@ void
 dvr_disk_space_init(void)
 {
   dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
-  pthread_mutex_init(&dvr_disk_space_mutex, NULL);
+  tvh_mutex_init(&dvr_disk_space_mutex, NULL);
   dvr_get_disk_space_update(cfg->dvr_storage, 1);
   mtimer_arm_rel(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, sec2mono(5));
 }
@@ -516,11 +509,13 @@ dvr_disk_space_done(void)
   dvr_vfs_t *vfs;
 
   tasklet_disarm(&dvr_disk_space_tasklet);
+  tvh_mutex_lock(&global_lock);
   mtimer_disarm(&dvr_disk_space_timer);
   while ((vfs = LIST_FIRST(&dvrvfs_list)) != NULL) {
     LIST_REMOVE(vfs, link);
     free(vfs);
   }
+  tvh_mutex_unlock(&global_lock);
 }
 
 /**
@@ -531,7 +526,7 @@ dvr_get_disk_space(int64_t *bfree, int64_t *bused, int64_t *btotal)
 {
   int res = 0;
 
-  pthread_mutex_lock(&dvr_disk_space_mutex);
+  tvh_mutex_lock(&dvr_disk_space_mutex);
   if (dvr_bfree || dvr_btotal) {
     *bfree = dvr_bfree;
     *bused = dvr_bused;
@@ -539,6 +534,6 @@ dvr_get_disk_space(int64_t *bfree, int64_t *bused, int64_t *btotal)
   } else {
     res = -EINVAL;
   }
-  pthread_mutex_unlock(&dvr_disk_space_mutex);
+  tvh_mutex_unlock(&dvr_disk_space_mutex);
   return res;
 }

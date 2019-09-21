@@ -17,13 +17,14 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
 #include "tvhlog.h"
 #include "clock.h"
 #include "tprofile.h"
 
 int tprofile_running;
-static pthread_mutex_t tprofile_mutex;
-static pthread_mutex_t qprofile_mutex;
+static tvh_mutex_t tprofile_mutex;
+static tvh_mutex_t qprofile_mutex;
 static LIST_HEAD(, tprofile) tprofile_all;
 static LIST_HEAD(, qprofile) qprofile_all;
 
@@ -31,9 +32,9 @@ void tprofile_init1(tprofile_t *tprof, const char *name)
 {
   memset(tprof, 0, sizeof(*tprof));
   tprof->name = strdup(name);
-  pthread_mutex_lock(&tprofile_mutex);
+  tvh_mutex_lock(&tprofile_mutex);
   LIST_INSERT_HEAD(&tprofile_all, tprof, link);
-  pthread_mutex_unlock(&tprofile_mutex);
+  tvh_mutex_unlock(&tprofile_mutex);
 }
 
 static void tprofile_time_done(tprofile_time_t *tpt)
@@ -56,24 +57,30 @@ static void tprofile_destroy(tprofile_t *tprof)
 void tprofile_done1(tprofile_t *tprof)
 {
   tprofile_t *fin = malloc(sizeof(*fin));
-  pthread_mutex_lock(&tprofile_mutex);
+  tvh_mutex_lock(&tprofile_mutex);
   LIST_REMOVE(tprof, link);
   if (fin) {
     *fin = *tprof;
     fin->changed = fin->finish = 1;
     LIST_INSERT_HEAD(&tprofile_all, fin, link);
   }
-  pthread_mutex_unlock(&tprofile_mutex);
+  tvh_mutex_unlock(&tprofile_mutex);
   if (!fin) tprofile_destroy(tprof);
 }
 
 void tprofile_start1(tprofile_t *tprof, const char *id)
 {
-  pthread_mutex_lock(&tprofile_mutex);
+  tvh_mutex_lock(&tprofile_mutex);
   assert(tprof->start == 0);
   tprof->start = getfastmonoclock();
-  tprof->start_id = strdup(id);
-  pthread_mutex_unlock(&tprofile_mutex);
+  if (id) {
+    tprof->start_id = strdup(id);
+  } else {
+    char buf[32];
+    snprintf(buf, sizeof(buf), "[%p]", tprof);
+    tprof->start_id = strdup(buf);
+  }
+  tvh_mutex_unlock(&tprofile_mutex);
 }
 
 static void
@@ -95,7 +102,7 @@ void tprofile_finish1(tprofile_t *tprof)
 {
   if (tprof->start) {
     uint64_t mono, diff;
-    pthread_mutex_lock(&tprofile_mutex);
+    tvh_mutex_lock(&tprofile_mutex);
     mono = getfastmonoclock();
     diff = mono - tprof->start;
     if (diff > tprof->tmax.t)
@@ -105,7 +112,7 @@ void tprofile_finish1(tprofile_t *tprof)
     tprof->start_id = NULL;
     tprof->start = 0;
     tprof->changed = 1;
-    pthread_mutex_unlock(&tprofile_mutex);
+    tvh_mutex_unlock(&tprofile_mutex);
   }
 }
 
@@ -113,9 +120,9 @@ void tprofile_queue_init1(qprofile_t *qprof, const char *name)
 {
   memset(qprof, 0, sizeof(*qprof));
   qprof->name = strdup(name);
-  pthread_mutex_lock(&qprofile_mutex);
+  tvh_mutex_lock(&qprofile_mutex);
   LIST_INSERT_HEAD(&qprofile_all, qprof, link);
-  pthread_mutex_unlock(&qprofile_mutex);
+  tvh_mutex_unlock(&qprofile_mutex);
 }
 
 static void qprofile_time_done(qprofile_time_t *qpt)
@@ -137,14 +144,14 @@ static void qprofile_destroy(qprofile_t *qprof)
 void tprofile_queue_done1(qprofile_t *qprof)
 {
   qprofile_t *fin = malloc(sizeof(*fin));
-  pthread_mutex_lock(&qprofile_mutex);
+  tvh_mutex_lock(&qprofile_mutex);
   LIST_REMOVE(qprof, link);
   if (fin) {
     *fin = *qprof;
     fin->changed = fin->finish = 1;
     LIST_INSERT_HEAD(&qprofile_all, fin, link);
   }
-  pthread_mutex_unlock(&qprofile_mutex);
+  tvh_mutex_unlock(&qprofile_mutex);
   if (!fin) qprofile_destroy(qprof);
 }
 
@@ -168,35 +175,35 @@ qprofile_avg_update(qprofile_avg_t *tpa, uint64_t val)
 void tprofile_queue_set1(qprofile_t *qprof, const char *id, uint64_t pos)
 {
   uint64_t mono;
-  pthread_mutex_lock(&qprofile_mutex);
+  tvh_mutex_lock(&qprofile_mutex);
   mono = getfastmonoclock();
   if (pos > qprof->qmax.pos)
     qprofile_time_replace(&qprof->qmax, id, mono, pos);
   qprofile_avg_update(&qprof->qavg, pos);
   qprof->changed = 1;
-  pthread_mutex_unlock(&qprofile_mutex);
+  tvh_mutex_unlock(&qprofile_mutex);
 }
 
 void tprofile_queue_add1(qprofile_t *qprof, const char *id, uint64_t count)
 {
-  pthread_mutex_lock(&qprofile_mutex);
+  tvh_mutex_lock(&qprofile_mutex);
   qprof->qsum += count;
-  pthread_mutex_unlock(&qprofile_mutex);
+  tvh_mutex_unlock(&qprofile_mutex);
 }
 
 void tprofile_queue_drop1(qprofile_t *qprof, const char *id, uint64_t count)
 {
-  pthread_mutex_lock(&qprofile_mutex);
+  tvh_mutex_lock(&qprofile_mutex);
   qprof->qdrop += count;
   qprof->qdropcnt++;
-  pthread_mutex_unlock(&qprofile_mutex);
+  tvh_mutex_unlock(&qprofile_mutex);
 }
 
 static void tprofile_log_tstats(void)
 {
   tprofile_t *tprof, *tprof_next;
 
-  pthread_mutex_lock(&tprofile_mutex);
+  tvh_mutex_lock(&tprofile_mutex);
   for (tprof = LIST_FIRST(&tprofile_all); tprof; tprof = tprof_next) {
     tprof_next = LIST_NEXT(tprof, link);
     if (tprof->changed == 0) continue;
@@ -214,7 +221,7 @@ static void tprofile_log_tstats(void)
     }
     tprof->changed = 0;
   }
-  pthread_mutex_unlock(&tprofile_mutex);
+  tvh_mutex_unlock(&tprofile_mutex);
 }
 
 static void qprofile_log_qstats(void)
@@ -222,12 +229,13 @@ static void qprofile_log_qstats(void)
   qprofile_t *qprof, *qprof_next;
   uint64_t mono, diff;
 
-  pthread_mutex_lock(&qprofile_mutex);
+  tvh_mutex_lock(&qprofile_mutex);
   mono = getfastmonoclock();
   for (qprof = LIST_FIRST(&qprofile_all); qprof; qprof = qprof_next) {
     qprof_next = LIST_NEXT(qprof, link);
     if (qprof->changed == 0) continue;
     diff = qprof->tstamp ? mono - qprof->tstamp : 1;
+    if (diff == 0) diff = 1;
     tvhtrace(LS_QPROF, "%s: max/avg/cnt/drop/dropcnt=%"
                        PRIu64"/%"PRIu64"/%"PRIu64"/%"PRIu64"/%"PRIu64
                        " (max=%s -%"PRId64"sec) BW=%"PRId64"%s",
@@ -248,7 +256,7 @@ static void qprofile_log_qstats(void)
     qprof->qsum = 0;
     qprof->tstamp = mono;
   }
-  pthread_mutex_unlock(&qprofile_mutex);
+  tvh_mutex_unlock(&qprofile_mutex);
 }
 
 void tprofile_log_stats1(void)
@@ -265,8 +273,8 @@ char *tprofile_get_json_stats(void)
 void tprofile_module_init(int enable)
 {
   tprofile_running = enable;
-  pthread_mutex_init(&tprofile_mutex, NULL);
-  pthread_mutex_init(&qprofile_mutex, NULL);
+  tvh_mutex_init(&tprofile_mutex, NULL);
+  tvh_mutex_init(&qprofile_mutex, NULL);
 }
 
 void tprofile_module_done(void)

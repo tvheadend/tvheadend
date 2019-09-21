@@ -44,7 +44,7 @@ api_mpegts_input_network_list
   if (!(uuid = htsmsg_get_str(args, "uuid")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   mi = mpegts_input_find(uuid);
   if (!mi)
@@ -65,7 +65,7 @@ api_mpegts_input_network_list
   htsmsg_add_msg(*resp, "entries", l);
 
 exit:
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return err;
 }
@@ -118,7 +118,7 @@ api_mpegts_network_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   mn = mpegts_network_build(class, conf);
   if (mn) {
     err = 0;
@@ -126,7 +126,7 @@ api_mpegts_network_create
   } else {
     err = EINVAL;
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return err;
 }
@@ -145,18 +145,18 @@ api_mpegts_network_scan
   if ((uuids = htsmsg_field_get_list(f))) {
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_str(f))) continue;
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
       mn = mpegts_network_find(uuid);
       if (mn && mn->mn_scan)
         mn->mn_scan(mn);
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
     }
   } else if ((uuid = htsmsg_field_get_str(f))) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     mn = mpegts_network_find(uuid);
     if (mn && mn->mn_scan)
       mn->mn_scan(mn);
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     if (!mn)
       return -ENOENT;
   } else {
@@ -178,7 +178,7 @@ api_mpegts_network_muxclass
   if (!(uuid = htsmsg_get_str(args, "uuid")))
     return EINVAL;
   
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   
   if (!(mn  = mpegts_network_find(uuid)))
     goto exit;
@@ -190,7 +190,7 @@ api_mpegts_network_muxclass
   err    = 0;
 
 exit:
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return err;
 }
 
@@ -209,7 +209,7 @@ api_mpegts_network_muxcreate
   if (!(conf = htsmsg_get_map(args, "conf")))
     return EINVAL;
   
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   
   if (!(mn  = mpegts_network_find(uuid)))
     goto exit;
@@ -221,7 +221,7 @@ api_mpegts_network_muxcreate
   err = 0;
 
 exit:
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return err;
 }
 
@@ -307,7 +307,7 @@ api_mpegts_mux_sched_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   mms = mpegts_mux_sched_create(NULL, conf);
   if (mms) {
     err = 0;
@@ -315,7 +315,7 @@ api_mpegts_mux_sched_create
   } else {
     err = EINVAL;
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return err;
 }

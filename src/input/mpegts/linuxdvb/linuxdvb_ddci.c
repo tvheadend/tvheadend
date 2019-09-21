@@ -1,4 +1,4 @@
- /*
+/*
  *  Tvheadend - Linux DVB DDCI
  *
  *  Copyright (C) 2017 Jasmin Jessich
@@ -48,7 +48,7 @@ typedef struct linuxdvb_ddci_thread
   int                       lddci_thread_running;
   int                       lddci_thread_stop;
   pthread_t                 lddci_thread;
-  pthread_mutex_t           lddci_thread_lock;
+  tvh_mutex_t           lddci_thread_lock;
   tvh_cond_t                lddci_thread_cond;
 } linuxdvb_ddci_thread_t;
 
@@ -64,7 +64,7 @@ typedef struct linuxdvb_ddci_send_buffer
   TAILQ_HEAD(,linuxdvb_ddci_send_packet)  lddci_send_buf_queue;
   uint64_t                                lddci_send_buf_size_max;
   uint64_t                                lddci_send_buf_size;
-  pthread_mutex_t                         lddci_send_buf_lock;
+  tvh_mutex_t                         lddci_send_buf_lock;
   tvh_cond_t                              lddci_send_buf_cond;
   tvhlog_limit_t                          lddci_send_buf_loglimit;
   int                                     lddci_send_buf_pkgCntW;
@@ -125,10 +125,10 @@ linuxdvb_ddci_mtimer_disarm ( mtimer_t *mti )
 {
   int locked;
 
-  locked = ! pthread_mutex_trylock(&global_lock);
+  locked = ! tvh_mutex_trylock(&global_lock);
   mtimer_disarm(mti);
   if (locked)
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
 }
 
 /* When a DD CI is enabled on the WEB UI, the global lock is held when the
@@ -143,10 +143,10 @@ linuxdvb_ddci_mtimer_arm_rel
 {
   int locked;
 
-  locked = ! pthread_mutex_trylock(&global_lock);
+  locked = ! tvh_mutex_trylock(&global_lock);
   mtimer_arm_rel(mti, callback, opaque, delta);
   if (locked)
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
 }
 
 
@@ -163,8 +163,8 @@ linuxdvb_ddci_thread_init
   ddci_thread->lddci = lddci;
   ddci_thread->lddci_thread_running = 0;
   ddci_thread->lddci_thread_stop = 0;
-  pthread_mutex_init(&ddci_thread->lddci_thread_lock, NULL);
-  tvh_cond_init(&ddci_thread->lddci_thread_cond);
+  tvh_mutex_init(&ddci_thread->lddci_thread_lock, NULL);
+  tvh_cond_init(&ddci_thread->lddci_thread_cond, 1);
 }
 
 static inline int
@@ -187,9 +187,8 @@ linuxdvb_ddci_thread_start
   int e = -1;
 
   if (!linuxdvb_ddci_thread_running(ddci_thread)) {
-    pthread_mutex_lock(&ddci_thread->lddci_thread_lock);
-    tvhthread_create(&ddci_thread->lddci_thread, NULL, thread_routine, arg,
-                     name);
+    tvh_mutex_lock(&ddci_thread->lddci_thread_lock);
+    tvh_thread_create(&ddci_thread->lddci_thread, NULL, thread_routine, arg, name);
     do {
       e = tvh_cond_wait(&ddci_thread->lddci_thread_cond,
                         &ddci_thread->lddci_thread_lock);
@@ -198,7 +197,7 @@ linuxdvb_ddci_thread_start
         break;
       }
     } while (ERRNO_AGAIN(e));
-    pthread_mutex_unlock(&ddci_thread->lddci_thread_lock);
+    tvh_mutex_unlock(&ddci_thread->lddci_thread_lock);
   }
 
   return e;
@@ -227,8 +226,8 @@ linuxdvb_ddci_send_buffer_init
   TAILQ_INIT(&ddci_snd_buf->lddci_send_buf_queue);
   ddci_snd_buf->lddci_send_buf_size_max = ddci_snd_buf_max;
   ddci_snd_buf->lddci_send_buf_size = 0;
-  pthread_mutex_init(&ddci_snd_buf->lddci_send_buf_lock, NULL);
-  tvh_cond_init(&ddci_snd_buf->lddci_send_buf_cond);
+  tvh_mutex_init(&ddci_snd_buf->lddci_send_buf_lock, NULL);
+  tvh_cond_init(&ddci_snd_buf->lddci_send_buf_cond, 1);
   tvhlog_limit_reset(&ddci_snd_buf->lddci_send_buf_loglimit);
   ddci_snd_buf->lddci_send_buf_pkgCntW = 0;
   ddci_snd_buf->lddci_send_buf_pkgCntR = 0;
@@ -257,7 +256,7 @@ linuxdvb_ddci_send_buffer_get
 {
   linuxdvb_ddci_send_packet_t  *sp;
 
-  pthread_mutex_lock(&ddci_snd_buf->lddci_send_buf_lock);
+  tvh_mutex_lock(&ddci_snd_buf->lddci_send_buf_lock);
 
   /* packet present? */
   sp = TAILQ_FIRST(&ddci_snd_buf->lddci_send_buf_queue);
@@ -280,7 +279,7 @@ linuxdvb_ddci_send_buffer_get
 
   linuxdvb_ddci_send_buffer_remove(ddci_snd_buf, sp);
 
-  pthread_mutex_unlock(&ddci_snd_buf->lddci_send_buf_lock);
+  tvh_mutex_unlock(&ddci_snd_buf->lddci_send_buf_lock);
 
   return sp;
 }
@@ -289,7 +288,7 @@ static void
 linuxdvb_ddci_send_buffer_put
   ( linuxdvb_ddci_send_buffer_t *ddci_snd_buf, const uint8_t *tsb, int len )
 {
-  pthread_mutex_lock(&ddci_snd_buf->lddci_send_buf_lock);
+  tvh_mutex_lock(&ddci_snd_buf->lddci_send_buf_lock);
 
   if (ddci_snd_buf->lddci_send_buf_size < ddci_snd_buf->lddci_send_buf_size_max) {
     linuxdvb_ddci_send_packet_t  *sp;
@@ -324,7 +323,7 @@ linuxdvb_ddci_send_buffer_put
       tvhwarn(LS_DDCI, "too much queued output data in send buffer, discarding new");
   }
 
-  pthread_mutex_unlock(&ddci_snd_buf->lddci_send_buf_lock);
+  tvh_mutex_unlock(&ddci_snd_buf->lddci_send_buf_lock);
 }
 
 static void
@@ -332,7 +331,7 @@ linuxdvb_ddci_send_buffer_clear ( linuxdvb_ddci_send_buffer_t *ddci_snd_buf )
 {
   linuxdvb_ddci_send_packet_t  *sp;
 
-  pthread_mutex_lock(&ddci_snd_buf->lddci_send_buf_lock);
+  tvh_mutex_lock(&ddci_snd_buf->lddci_send_buf_lock);
 
   while ((sp = TAILQ_FIRST(&ddci_snd_buf->lddci_send_buf_queue)))
   {
@@ -344,7 +343,7 @@ linuxdvb_ddci_send_buffer_clear ( linuxdvb_ddci_send_buffer_t *ddci_snd_buf )
   ddci_snd_buf->lddci_send_buf_pkgCntWL = 0;
   ddci_snd_buf->lddci_send_buf_pkgCntRL = 0;
 
-  pthread_mutex_unlock(&ddci_snd_buf->lddci_send_buf_lock);
+  tvh_mutex_unlock(&ddci_snd_buf->lddci_send_buf_lock);
 }
 
 static void
@@ -462,10 +461,10 @@ linuxdvb_ddci_wr_thread_stop ( linuxdvb_ddci_wr_thread_t *ddci_wr_thread )
   /* See function linuxdvb_ddci_wr_thread_buffer_put why we lock here.
    */
 
-  pthread_mutex_lock(&ddci_wr_thread->lddci_thread_lock);
+  tvh_mutex_lock(&ddci_wr_thread->lddci_thread_lock);
   linuxdvb_ddci_thread_stop(LDDCI_TO_THREAD(ddci_wr_thread));
   linuxdvb_ddci_send_buffer_clear(&ddci_wr_thread->lddci_send_buffer);
-  pthread_mutex_unlock(&ddci_wr_thread->lddci_thread_lock);
+  tvh_mutex_unlock(&ddci_wr_thread->lddci_thread_lock);
 }
 
 static inline void
@@ -480,10 +479,10 @@ linuxdvb_ddci_wr_thread_buffer_put
    * linuxdvb_ddci_wr_thread_start will then re-init the queue and the wrongly
    * stored data is lost -> memory leak.
    */
-  pthread_mutex_lock(&ddci_wr_thread->lddci_thread_lock);
+  tvh_mutex_lock(&ddci_wr_thread->lddci_thread_lock);
   if (linuxdvb_ddci_thread_running(LDDCI_TO_THREAD(ddci_wr_thread)))
     linuxdvb_ddci_send_buffer_put(&ddci_wr_thread->lddci_send_buffer, tsb, len );
-  pthread_mutex_unlock(&ddci_wr_thread->lddci_thread_lock);
+  tvh_mutex_unlock(&ddci_wr_thread->lddci_thread_lock);
 }
 
 
@@ -534,7 +533,7 @@ linuxdvb_ddci_rd_thread_statistic_clr ( linuxdvb_ddci_rd_thread_t *ddci_rd_threa
   ddci_rd_thread->lddci_recv_pkgCntSL = 0;
 }
 
-static int inline
+static inline int
 ddci_ts_sync_count ( const uint8_t *tsb, int len )
 {
   const uint8_t *start = tsb;

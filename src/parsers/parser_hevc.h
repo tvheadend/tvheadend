@@ -58,9 +58,9 @@ int isom_write_hvcc(sbuf_t *pb, const uint8_t *src, int size);
 
 th_pkt_t * hevc_convert_pkt(th_pkt_t *src);
 
-void hevc_decode_vps(parser_es_t *st, bitstream_t *bs);
-void hevc_decode_sps(parser_es_t *st, bitstream_t *bs);
-void hevc_decode_pps(parser_es_t *st, bitstream_t *bs);
+int hevc_decode_vps(parser_es_t *st, bitstream_t *bs);
+int hevc_decode_sps(parser_es_t *st, bitstream_t *bs);
+int hevc_decode_pps(parser_es_t *st, bitstream_t *bs);
 
 int hevc_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype);
 

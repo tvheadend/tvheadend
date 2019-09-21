@@ -42,6 +42,8 @@
  * Module structure
  * ***********************************************************************/
 
+typedef struct opentv_status opentv_status_t;
+
 /* Queued data */
 typedef struct opentv_data
 {
@@ -64,7 +66,6 @@ typedef struct opentv_genre
   RB_ENTRY(opentv_genre) h_link;
 } opentv_genre_t;
 
-
 /* Provider configuration */
 typedef struct opentv_module_t
 {
@@ -82,11 +83,12 @@ typedef struct opentv_module_t
   opentv_genre_t       *genre;
   int                   titles_time;
   int                   summaries_time;
-  eit_pattern_list_t p_snum;
-  eit_pattern_list_t p_enum;
-  eit_pattern_list_t p_pnum;
-  eit_pattern_list_t p_subt;
-  eit_pattern_list_t p_cleanup_title;
+  eit_pattern_list_t    p_snum;
+  eit_pattern_list_t    p_enum;
+  eit_pattern_list_t    p_pnum;
+  eit_pattern_list_t    p_subt;
+  eit_pattern_list_t    p_cleanup_title;
+  opentv_status_t      *sta;
 } opentv_module_t;
 
 /*
@@ -140,26 +142,40 @@ typedef struct opentv_event
   uint16_t               serieslink;  ///< Series link ID
 } opentv_event_t;
 
+/* Queued (unresolved) event entry */
+typedef struct opentv_entry {
+  RB_ENTRY(opentv_entry)  link;
+  opentv_event_t          event;
+} opentv_entry_t;
+
 /* Scan status */
-typedef struct opentv_status
+struct opentv_status
 {
-  opentv_module_t   *os_mod;
-  epggrab_ota_map_t *os_map;
-  int                os_refcount;
-  epggrab_ota_mux_t *os_ota;
-  int64_t            os_titles_start;
-  int64_t            os_summaries_start;
-} opentv_status_t;
+  opentv_module_t        *os_mod;
+  epggrab_ota_map_t      *os_map;
+  int                     os_refcount;
+  epggrab_ota_mux_t      *os_ota;
+  int64_t                 os_titles_start;
+  int64_t                 os_summaries_start;
+  RB_HEAD(, opentv_entry) os_entries;
+};
+
+static void opentv_remove_entry(opentv_status_t *sta, opentv_entry_t *entry);
 
 static void
 opentv_status_destroy ( mpegts_table_t *mt )
 {
   opentv_status_t *st = mt->mt_opaque;
+  opentv_entry_t *entry;
   lock_assert(&global_lock);
   assert(st->os_refcount > 0);
   --st->os_refcount;
-  if (!st->os_refcount) 
+  if (!st->os_refcount) {
+    while ((entry = RB_FIRST(&st->os_entries)) != NULL)
+      opentv_remove_entry(st, entry);
+    st->os_mod->sta = NULL;
     free(st);
+  }
 }
 
 /* ************************************************************************
@@ -177,6 +193,58 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
 /* ************************************************************************
  * OpenTV event processing
  * ***********************************************************************/
+
+/* Free the event */
+static void _opentv_event_free(opentv_event_t *ev)
+{
+  free(ev->title);
+  free(ev->summary);
+  free(ev->desc);
+}
+
+/* Compare event id codes */
+static int _entry_cmp ( void *a, void *b )
+{
+  return (int)(((opentv_entry_t*)a)->event.eid) -
+         (int)(((opentv_entry_t*)b)->event.eid);
+}
+
+/* Find event entry */
+static opentv_entry_t *opentv_find_entry(opentv_status_t *sta, uint16_t eid)
+{
+  opentv_entry_t *oe, _tmp;
+
+  if (sta == NULL) return NULL;
+  _tmp.event.eid = eid;
+  oe = RB_FIND(&sta->os_entries, &_tmp, link, _entry_cmp);
+  return oe;
+}
+
+/* Remove event entry */
+static void opentv_remove_entry(opentv_status_t *sta, opentv_entry_t *entry)
+{
+  if (entry) {
+    RB_REMOVE(&sta->os_entries, entry, link);
+    _opentv_event_free(&entry->event);
+    free(entry);
+  }
+}
+
+/* Add event entry */
+static void opentv_add_entry(opentv_status_t *sta, opentv_event_t *ev)
+{
+  opentv_entry_t *entry, *nentry = calloc(1, sizeof(*nentry));
+
+  if (sta == NULL) return;
+  nentry->event = *ev;
+  entry = RB_INSERT_SORTED(&sta->os_entries, nentry, link, _entry_cmp);
+  if (entry) {
+    _opentv_event_free(&entry->event);
+    entry->event = *ev;
+    free(nentry);
+  }
+  memset(ev, 0, sizeof(*ev));
+}
 
 /* Parse huffman encoded string */
 static char *_opentv_parse_string 
@@ -283,6 +351,104 @@ static int _opentv_parse_event
   return slen+4;
 }
 
+/* Add entry */
+static int
+opentv_do_event
+  (opentv_module_t *mod, epg_broadcast_t *ebc,
+   opentv_event_t *ev, channel_t *ch,
+   const char *lang, epg_changes_t *changes)
+{
+  int save = 0;
+  lang_str_t *ls;
+  char buffer[2048], *s;
+
+  /* Summary / Description */
+  if (ev->summary) {
+    tvhdebug(LS_OPENTV, "  summary '%s'", ev->summary);
+    ls = lang_str_create2(ev->summary, lang);
+    save |= epg_broadcast_set_summary(ebc, ls, changes);
+    lang_str_destroy(ls);
+  }
+  if (ev->desc) {
+    tvhdebug(LS_OPENTV, "  desc '%s'", ev->desc);
+    ls = lang_str_create2(ev->desc, lang);
+    save |= epg_broadcast_set_description(ebc, ls, changes);
+    lang_str_destroy(ls);
+  }
+
+  /*
+   * Series link
+   */
+
+  if (ev->serieslink) {
+    char suri[257], ubuf[UUID_HEX_SIZE];
+    snprintf(suri, 256, "opentv://channel-%s/series-%d",
+             channel_get_uuid(ch, ubuf), ev->serieslink);
+    save |= epg_broadcast_set_serieslink_uri(ebc, suri, changes);
+  }
+
+  /*
+   * Episode
+   */
+
+  if (ev->title) {
+    tvhdebug(LS_OPENTV, "    title '%s'", ev->title);
+
+    /* try to cleanup the title */
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), ev->title, lang, &mod->p_cleanup_title)) {
+      tvhtrace(LS_OPENTV, "  clean title '%s'", buffer);
+      s = buffer;
+    } else {
+      s = ev->title;
+    }
+    ls = lang_str_create2(s, lang);
+    save |= epg_broadcast_set_title(ebc, ls, changes);
+    lang_str_destroy(ls);
+  }
+  if (ev->cat) {
+    epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
+    epg_genre_list_add_by_eit(egl, ev->cat);
+    save |= epg_broadcast_set_genre(ebc, egl, changes);
+    epg_genre_list_destroy(egl);
+  }
+  if (ev->summary) {
+    epg_episode_num_t en;
+
+    memset(&en, 0, sizeof(en));
+    /* search for season number */
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), ev->summary, lang, &mod->p_snum))
+      if ((en.s_num = atoi(buffer)))
+        tvhtrace(LS_OPENTV,"  extract season number %d", en.s_num);
+    /* ...for episode number */
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), ev->summary, lang, &mod->p_enum))
+      if ((en.e_num = atoi(buffer)))
+        tvhtrace(LS_OPENTV,"  extract episode number %d", en.e_num);
+    /* ...for part number */
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), ev->summary, lang, &mod->p_pnum)) {
+      if (buffer[0] >= 'a' && buffer[0] <= 'z')
+        en.p_num = buffer[0] - 'a' + 1;
+      else
+        if (buffer[0] >= 'A' && buffer[0] <= 'Z')
+          en.p_num = buffer[0] - 'A' + 1;
+      if (en.p_num)
+        tvhtrace(LS_OPENTV,"  extract part number %d", en.p_num);
+    }
+    /* save any found number */
+    if (en.s_num || en.e_num || en.p_num)
+      save |= epg_broadcast_set_epnum(ebc, &en, changes);
+
+    /* ...for subtitle */
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), ev->summary, lang, &mod->p_subt)) {
+      tvhtrace(LS_OPENTV, "  extract subtitle '%s'", buffer);
+      ls = lang_str_create2(buffer, lang);
+      save |= epg_broadcast_set_subtitle(ebc, ls, changes);
+      lang_str_destroy(ls);
+    }
+  }
+
+  return save;
+}
+
 /* Parse an event section */
 static int
 opentv_parse_event_section_one
@@ -294,8 +460,7 @@ opentv_parse_event_section_one
   epggrab_module_t *src = (epggrab_module_t*)mod;
   epg_broadcast_t *ebc;
   opentv_event_t ev;
-  char buffer[2048], *s;
-  lang_str_t *ls;
+  opentv_entry_t *entry;
   epg_changes_t changes;
 
   /* Loop around event entries */
@@ -326,104 +491,29 @@ opentv_parse_event_section_one
     } else {
       ebc = epg_broadcast_find_by_eid(ch, ev.eid);
       tvhdebug(LS_OPENTV, "find by eid %d = %p", ev.eid, ebc);
-      if (ebc && ebc->grabber != src)
-        goto done;
+      if (ebc) {
+        if (ebc->grabber != src)
+          goto done;
+      } else {
+        opentv_add_entry(mod->sta, &ev);
+      }
       merge = 1;
     }
-    if (!ebc)
-      goto done;
-
-    /* Summary / Description */
-    if (ev.summary) {
-      tvhdebug(LS_OPENTV, "  summary '%s'", ev.summary);
-      ls = lang_str_create2(ev.summary, lang);
-      save |= epg_broadcast_set_summary(ebc, ls, &changes);
-      lang_str_destroy(ls);
-    }
-    if (ev.desc) {
-      tvhdebug(LS_OPENTV, "  desc '%s'", ev.desc);
-      ls = lang_str_create2(ev.desc, lang);
-      save |= epg_broadcast_set_description(ebc, ls, &changes);
-      lang_str_destroy(ls);
-    }
-
-    /*
-     * Series link
-     */
-
-    if (ev.serieslink) {
-      char suri[257], ubuf[UUID_HEX_SIZE];
-      snprintf(suri, 256, "opentv://channel-%s/series-%d",
-               channel_get_uuid(ch, ubuf), ev.serieslink);
-      save |= epg_broadcast_set_serieslink_uri(ebc, suri, &changes);
-    }
-
-    /*
-     * Episode
-     */
-
-    if (ev.title) {
-      tvhdebug(LS_OPENTV, "    title '%s'", ev.title);
-
-      /* try to cleanup the title */
-      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.title, lang, &mod->p_cleanup_title)) {
-        tvhtrace(LS_OPENTV, "  clean title '%s'", buffer);
-        s = buffer;
-      } else {
-        s = ev.title;
+    if (ebc) {
+      save |= opentv_do_event(mod, ebc, &ev, ch, lang, &changes);
+      if (!merge) {
+        entry = opentv_find_entry(mod->sta, ev.eid);
+        if (entry) {
+          save |= opentv_do_event(mod, ebc, &entry->event, ch, lang, &changes);
+          opentv_remove_entry(mod->sta, entry);
+        }
       }
-      ls = lang_str_create2(s, lang);
-      save |= epg_broadcast_set_title(ebc, ls, &changes);
-      lang_str_destroy(ls);
+      save |= epg_broadcast_change_finish(ebc, changes, merge);
     }
-    if (ev.cat) {
-      epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
-      epg_genre_list_add_by_eit(egl, ev.cat);
-      save |= epg_broadcast_set_genre(ebc, egl, &changes);
-      epg_genre_list_destroy(egl);
-    }
-    if (ev.summary) {
-      epg_episode_num_t en;
-
-      memset(&en, 0, sizeof(en));
-      /* search for season number */
-      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_snum))
-        if ((en.s_num = atoi(buffer)))
-          tvhtrace(LS_OPENTV,"  extract season number %d", en.s_num);
-      /* ...for episode number */
-      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_enum))
-        if ((en.e_num = atoi(buffer)))
-          tvhtrace(LS_OPENTV,"  extract episode number %d", en.e_num);
-      /* ...for part number */
-      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_pnum)) {
-        if (buffer[0] >= 'a' && buffer[0] <= 'z')
-          en.p_num = buffer[0] - 'a' + 1;
-        else
-          if (buffer[0] >= 'A' && buffer[0] <= 'Z')
-            en.p_num = buffer[0] - 'A' + 1;
-        if (en.p_num)
-          tvhtrace(LS_OPENTV,"  extract part number %d", en.p_num);
-      }
-      /* save any found number */
-      if (en.s_num || en.e_num || en.p_num)
-        save |= epg_broadcast_set_epnum(ebc, &en, &changes);
-
-      /* ...for subtitle */
-      if (eit_pattern_apply_list(buffer, sizeof(buffer), ev.summary, lang, &mod->p_subt)) {
-        tvhtrace(LS_OPENTV, "  extract subtitle '%s'", buffer);
-        ls = lang_str_create2(buffer, lang);
-        save |= epg_broadcast_set_subtitle(ebc, ls, &changes);
-        lang_str_destroy(ls);
-      }
-    }
-
-    save |= epg_broadcast_change_finish(ebc, changes, merge);
 
     /* Cleanup */
 done:
-    if (ev.title)   free(ev.title);
-    if (ev.summary) free(ev.summary);
-    if (ev.desc)    free(ev.desc);
+    _opentv_event_free(&ev);
   }
 
   return save;
@@ -472,9 +562,9 @@ _opentv_process_data
   memcpy(&od, data, sizeof(od));
   data += sizeof(od);
   len -= sizeof(od);
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   opentv_parse_event_section(mod, od.cid, od.mjd, data, len);
-  pthread_mutex_unlock(&global_lock);  
+  tvh_mutex_unlock(&global_lock);  
 }
 
 /* ************************************************************************
@@ -602,43 +692,28 @@ done:
     sta->os_map->om_first = 0; /* valid data mark */
     tvhtrace(mt->mt_subsys, "%s: pid %d complete remain %d",
              mt->mt_name, mt->mt_pid, sta->os_refcount-1);
+
+    /* wait for more data, eat whole time window */
+    if (mt->mt_table == OPENTV_TITLE_BASE) {
+      if (sta->os_titles_start + sec2mono(mod->titles_time) >= mclk())
+        return 0;
+    } else {
+      if (sta->os_summaries_start + sec2mono(mod->summaries_time) >= mclk())
+        return 0;
+    }
   
     /* Last PID */
     if (sta->os_refcount == 1) {
-  
       if (mt->mt_table == OPENTV_TITLE_BASE) {
-        if (sta->os_titles_start + sec2mono(mod->titles_time) < mclk()) {
-          int *t;
-          tvhinfo(mt->mt_subsys, "%s: titles complete", mt->mt_name);
-
-          /* Summaries */
-          t = mod->summary;
-          while (*t) {
-            mpegts_table_t *mt2;
-            mt2 = mpegts_table_add(mt->mt_mux,
-                                   OPENTV_SUMMARY_BASE, OPENTV_TABLE_MASK,
-                                   opentv_table_callback, sta,
-                                   mod->id, LS_OPENTV, MT_CRC, *t++,
-                                   MPS_WEIGHT_EIT);
-            if (mt2) {
-              sta->os_refcount++;
-              mt2->mt_destroy    = opentv_status_destroy;
-            }
-          }
-          mpegts_table_destroy(mt);
-          sta->os_summaries_start = mclk();
-        }
+        tvhinfo(mt->mt_subsys, "%s: titles complete", mt->mt_name);
+        sta->os_summaries_start = mclk();
       } else {
-        if (sta->os_summaries_start + sec2mono(mod->summaries_time) < mclk()) {
-          tvhinfo(mt->mt_subsys, "%s: summaries complete", mt->mt_name);
-          mpegts_table_destroy(mt);
-          if (ota)
-            epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
-        }
+        tvhinfo(mt->mt_subsys, "%s: summaries complete", mt->mt_name);
+        if (ota)
+          epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
       }
-    } else {
-      mpegts_table_destroy(mt);
     }
+    mpegts_table_destroy(mt);
   }
 
   return 0;
@@ -691,11 +766,27 @@ opentv_bat_callback
       if (mt2) {
         if (!mt2->mt_destroy) {
           sta->os_refcount++;
-          mt2->mt_destroy    = opentv_status_destroy;
+          mt2->mt_destroy = opentv_status_destroy;
         }
       }
     }
     sta->os_titles_start = mclk();
+
+    /* Install tables for summaries */
+    t = mod->summary;
+    while (*t) {
+      mpegts_table_t *mt2;
+      mt2 = mpegts_table_add(mt->mt_mux,
+                             OPENTV_SUMMARY_BASE, OPENTV_TABLE_MASK,
+                             opentv_table_callback, sta,
+                             mod->id, LS_OPENTV, MT_CRC, *t++,
+                             MPS_WEIGHT_EIT);
+      if (mt2) {
+        sta->os_refcount++;
+        mt2->mt_destroy = opentv_status_destroy;
+      }
+    }
+    sta->os_summaries_start = mclk();
 
     /* Remove BAT handler */
     mpegts_table_destroy(mt);
@@ -722,7 +813,6 @@ static int _opentv_start
   };
 
   /* Ignore */
-  if (!m->enabled && !map->om_forced) return -1;
   if (mod->tsid != mm->mm_tsid) return -1;
 
   /* Install tables */
@@ -741,7 +831,7 @@ static int _opentv_start
                           m->id, LS_OPENTV, MT_CRC, *t++,
                           MPS_WEIGHT_EIT);
     if (mt) {
-      mt->mt_mux_cb  = bat_desc;
+      mt->mt_mux_cb = bat_desc;
       if (!mt->mt_destroy) {
         sta->os_refcount++;
         mt->mt_destroy = opentv_status_destroy;
@@ -751,12 +841,11 @@ static int _opentv_start
   if (!sta->os_refcount)
     free(sta);
 
+  mod->sta = sta;
+
   // TODO: maybe if we had global cbs and event on complete we wouldn't
   //       have to potentially process the BAT twice (but is that really
   //       a big deal?)
-
-  // Note: we process the data in a serial fashion, first we do channels
-  //       then we do titles, then we do summaries
   return 0;
 }
 
@@ -807,12 +896,12 @@ static void _opentv_genre_load ( htsmsg_t *m )
   htsmsg_t *e;
   htsmsg_field_t *f;
   HTSMSG_FOREACH(f, m) {
-    if ((e = htsmsg_get_list(m, f->hmf_name))) {
-      if ((r = _opentv_genre_load_one(f->hmf_name, e))) {
+    if ((e = htsmsg_get_list(m, htsmsg_field_name(f)))) {
+      if ((r = _opentv_genre_load_one(htsmsg_field_name(f), e))) {
         if (r > 0) 
-          tvhdebug(LS_OPENTV, "genre map %s loaded", f->hmf_name);
+          tvhdebug(LS_OPENTV, "genre map %s loaded", htsmsg_field_name(f));
         else
-          tvhwarn(LS_OPENTV, "genre map %s failed", f->hmf_name);
+          tvhwarn(LS_OPENTV, "genre map %s failed", htsmsg_field_name(f));
       }
     }
   }
@@ -846,12 +935,12 @@ static void _opentv_dict_load ( htsmsg_t *m )
   htsmsg_t *e;
   htsmsg_field_t *f;
   HTSMSG_FOREACH(f, m) {
-    if ((e = htsmsg_get_list(m, f->hmf_name))) {
-      if ((r = _opentv_dict_load_one(f->hmf_name, e))) {
+    if ((e = htsmsg_get_list(m, htsmsg_field_name(f)))) {
+      if ((r = _opentv_dict_load_one(htsmsg_field_name(f), e))) {
         if (r > 0) 
-          tvhdebug(LS_OPENTV, "dictionary %s loaded", f->hmf_name);
+          tvhdebug(LS_OPENTV, "dictionary %s loaded", htsmsg_field_name(f));
         else
-          tvhwarn(LS_OPENTV, "dictionary %s failed", f->hmf_name);
+          tvhwarn(LS_OPENTV, "dictionary %s failed", htsmsg_field_name(f));
       }
     }
   } 
@@ -877,11 +966,9 @@ static void _opentv_done( void *m )
 static int _opentv_tune
   ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
-  epggrab_module_ota_t *m = map->om_module;
-  opentv_module_t *mod = (opentv_module_t*)m;
+  opentv_module_t *mod = (opentv_module_t*)map->om_module;
 
   /* Ignore */
-  if (!m->enabled) return 0;
   if (mod->tsid != mm->mm_tsid) return 0;
 
   return 1;
@@ -965,15 +1052,40 @@ static void _opentv_prov_load ( htsmsg_t *m )
   htsmsg_field_t *f;
   HTSMSG_FOREACH(f, m) {
     if ((e = htsmsg_get_map_by_field(f))) {
-      if ((r = _opentv_prov_load_one(f->hmf_name, e))) {
+      if ((r = _opentv_prov_load_one(htsmsg_field_name(f), e))) {
         if (r > 0)
-          tvhdebug(LS_OPENTV, "provider %s loaded", f->hmf_name);
+          tvhdebug(LS_OPENTV, "provider %s loaded", htsmsg_field_name(f));
         else
-          tvhwarn(LS_OPENTV, "provider %s failed", f->hmf_name);
+          tvhwarn(LS_OPENTV, "provider %s failed", htsmsg_field_name(f));
       }
     }
   }
   htsmsg_destroy(m);
+}
+
+htsmsg_t *opentv_module_id_list( const char *lang )
+{
+  epggrab_module_t *m;
+  htsmsg_t *e, *l = htsmsg_create_list();
+
+  LIST_FOREACH(m, &epggrab_modules, link) {
+    if (strncmp(m->id, "opentv-", 7)) continue;
+    e = htsmsg_create_key_val(m->id, m->name);
+    htsmsg_add_msg(l, NULL, e);
+  }
+  return l;
+}
+
+const char *opentv_check_module_id ( const char *id )
+{
+  epggrab_module_t *m;
+
+  if (!id || strncmp(id, "opentv-", 7))
+    return NULL;
+  LIST_FOREACH(m, &epggrab_modules, link)
+    if (strcmp(m->id, id) == 0)
+      return m->id;
+  return NULL;
 }
 
 /* ************************************************************************

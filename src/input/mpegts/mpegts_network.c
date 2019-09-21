@@ -31,6 +31,22 @@ static bouquet_t * mpegts_network_bouquet_get (mpegts_network_t *, int);
  * Class definition
  * ***************************************************************************/
 
+static void
+mpegts_network_class_notify_enabled ( void *obj, const char *lang )
+{
+  mpegts_network_t *mn = (mpegts_network_t*)obj;
+  mpegts_mux_instance_t *mmi;
+  mpegts_mux_t *mm;
+  if (!mn->mn_enabled) {
+    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      mmi = mm->mm_active;
+      if (!mmi) continue;
+      assert(mm == mmi->mmi_mux);
+      mm->mm_stop(mm, 1, SM_CODE_ABORTED);
+    }
+  }
+}
+
 static htsmsg_t *
 mpegts_network_class_save
   ( idnode_t *in, char *filename, size_t fsize )
@@ -169,6 +185,14 @@ const idclass_t mpegts_network_class =
   .ic_save       = mpegts_network_class_save,
   .ic_get_title  = mpegts_network_class_get_title,
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = N_("Enabled"),
+      .desc     = N_("Enable/Disable network."),
+      .off      = offsetof(mpegts_network_t, mn_enabled),
+      .notify   = mpegts_network_class_notify_enabled,
+    },
     {
       .type     = PT_STR,
       .id       = "networkname",
@@ -342,7 +366,7 @@ static void
 mpegts_network_display_name
   ( mpegts_network_t *mn, char *buf, size_t len )
 {
-  strncpy(buf, tvh_str_default(mn->mn_network_name, "unknown"), len);
+  strlcpy(buf, tvh_str_default(mn->mn_network_name, "unknown"), len);
 }
 
 static bouquet_t *
@@ -414,7 +438,7 @@ mpegts_network_config_save
 
 static mpegts_mux_t *
 mpegts_network_create_mux
-  ( mpegts_network_t *mn, void *origin, uint16_t sid, uint16_t tsid,
+  ( mpegts_network_t *mn, void *origin, uint32_t sid, uint32_t tsid,
     void *aux, int force )
 {
   return NULL;
@@ -534,10 +558,12 @@ mpegts_network_create0
 
   /* Initialise scanning */
   TAILQ_INIT(&mn->mn_scan_pend);
+  TAILQ_INIT(&mn->mn_scan_ipend);
   TAILQ_INIT(&mn->mn_scan_active);
   mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
 
   /* Defaults */
+  mn->mn_enabled = 1;
   mn->mn_satpos = INT_MAX;
   mn->mn_skipinitscan = 1;
   mn->mn_autodiscovery = MN_DISCOVERY_NEW;
@@ -736,7 +762,7 @@ mpegts_network_build
 
 mpegts_mux_t *
 mpegts_network_find_mux
-  ( mpegts_network_t *mn, uint16_t onid, uint16_t tsid, int check )
+  ( mpegts_network_t *mn, uint32_t onid, uint32_t tsid, int check )
 {
   mpegts_mux_t *mm;
 
@@ -757,6 +783,7 @@ mpegts_network_find_active_service
   mpegts_mux_t *mm;
   mpegts_service_t *s;
 
+  if (!mn->mn_enabled) return NULL;
   LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
     if (mm->mm_enabled != MM_ENABLE) continue;
     s = mpegts_mux_find_service(mm, sid);

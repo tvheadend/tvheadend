@@ -333,6 +333,9 @@ cccam_decode_card_data_reply(cccam_t *cccam, uint8_t *msg)
   psa = nprov ? alloca(nprov * sizeof(uint8_t *)) : NULL;
   saa = nprov ? alloca(nprov * 8) : NULL;
 
+  if (pid == NULL || psa == NULL || saa == NULL)
+    return -ENOMEM;
+
   msg2 = msg + 25;
   memset(saa, 0, nprov * 8);
   for (i = 0; i < nprov; i++) {
@@ -1047,8 +1050,8 @@ caclient_t *cccam_create(void)
   cccam->cc_subsys = LS_CCCAM;
   cccam->cc_id     = "cccam";
 
-  pthread_mutex_init(&cccam->cc_mutex, NULL);
-  tvh_cond_init(&cccam->cc_cond);
+  tvh_mutex_init(&cccam->cc_mutex, NULL);
+  tvh_cond_init(&cccam->cc_cond, 1);
   cccam->cac_free         = cc_free;
   cccam->cac_start        = cc_service_start;
   cccam->cac_conf_changed = cccam_conf_changed;

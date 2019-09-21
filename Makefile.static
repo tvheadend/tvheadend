@@ -29,20 +29,21 @@
 # Required inputs
 #
 #   LIB_NAME			- The name of the library used in files uploaded/downloaded
-#   LIB_FILES			-	The files to be packaged
+#   LIB_FILES			- The files to be packaged
 #
 # Optional inputs
 #
-#   BINTRAY_CACHE - Use cached builds from bintray
-#   BINTRAY_USER  - The bintray user account for uploads
-#   BINTRAY_PASS  - The bintray password
-#   BINTRAY_REPO  - The repo to upload to
+#   PCLOUD_CACHE    - Use cached builds from pcloud
+#   PCLOUD_USER     - The pcloud user account for uploads
+#   PCLOUD_PASS     - The pcloud password
+#   PCLOUD_BASEDIR  - The base directory for uploads
+#   PCLOUD_HASHDIR  - The public hash for the base directory for downloads
 #
 
 MAKEFILE      ?= $(firstword $(MAKEFILE_LIST))
 
 # ./configure override
-BINTRAY_CACHE ?= $(CONFIG_BINTRAY_CACHE)
+PCLOUD_CACHE ?= $(CONFIG_PCLOUD_CACHE)
 
 default: libcacheput
 
@@ -52,26 +53,33 @@ export CODENAME
 export ROOTDIR
 export BUILDDIR
 export LIBDIR
-export BINTRAY_CACHE
-export BINTRAY_USER
-export BINTRAY_PASS
-export BINTRAY_REPO
+export PCLOUD_CACHE
+export PCLOUD_USER
+export PCLOUD_PASS
+export PCLOUD_BASEDIR
+export PCLOUD_HASHDIR
 
 LIB_STATIC_STAMP := $(BUILDDIR)/$(LIB_NAME)_static_stamp
+
+define LIBCACHEGET_TIMESTAMP
+	@touch $(LIB_STATIC_STAMP)
+endef
 
 # Download cache
 .PHONY: libcacheget
 libcacheget:
-ifeq ($(BINTRAY_CACHE),yes)
-	@( $(ROOTDIR)/support/lib.sh download $(LIB_NAME) &&\
-	 $(ROOTDIR)/support/lib.sh unpack $(LIB_NAME) ) || true
-	@touch $(BUILDDIR)/$(LIB_NAME)_static_stamp
+ifeq ($(PCLOUD_CACHE),yes)
+	@if ! test -f $(LIB_STATIC_STAMP); then\
+           ( $(ROOTDIR)/support/lib.sh download $(LIB_NAME) &&\
+	     $(ROOTDIR)/support/lib.sh unpack $(LIB_NAME) ) || true;\
+           touch $(LIB_STATIC_STAMP);\
+         fi
 endif
 
 # Download and Upload on demand
 .PHONY: libcacheput
 libcacheput: build
-ifneq ($(BINTRAY_USER),)
+ifneq ($(PCLOUD_USER),)
 	@$(ROOTDIR)/support/lib.sh upload $(LIB_NAME) $(LIB_FILES)
 endif
 

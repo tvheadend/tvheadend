@@ -16,17 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
 #include <ctype.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
-#include <math.h>
-#include <time.h>
 
 #include "tvheadend.h"
 #include "settings.h"
@@ -414,7 +404,7 @@ dvr_timerec_entry_class_time_get(void *o, int tm)
   if (tm >= 0)
     snprintf(prop_sbuf, PROP_SBUF_LEN, "%02d:%02d", tm / 60, tm % 60);
   else
-    strncpy(prop_sbuf, N_("Any"), 16);
+    strlcpy(prop_sbuf, N_("Any"), PROP_SBUF_LEN);
   return &prop_sbuf_ptr;
 }
 
@@ -709,7 +699,7 @@ dvr_timerec_init(void)
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
         continue;
-      (void)dvr_timerec_create(f->hmf_name, c);
+      (void)dvr_timerec_create(htsmsg_field_name(f), c);
     }
     htsmsg_destroy(l);
   }
@@ -720,10 +710,10 @@ dvr_timerec_done(void)
 {
   dvr_timerec_entry_t *dte;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   while ((dte = TAILQ_FIRST(&timerec_entries)) != NULL)
     timerec_entry_destroy(dte, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 static void

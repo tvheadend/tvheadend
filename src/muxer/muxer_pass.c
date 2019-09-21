@@ -282,7 +282,7 @@ pass_muxer_nit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
         tvherror(LS_PASS, "NIT entry too long (%i)", ol);
         return;
       }
-      memcpy(out, buf, dlen + 2);
+      memcpy(out + ol, buf, dlen + 2);
       ol += dlen + 2;
     }
     dlen += 2;
@@ -292,7 +292,7 @@ pass_muxer_nit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   }
   out[8] &= 0xf0;
   out[8] |= ((ol - 10) >> 8) & 0x0f;
-  out[9] = ol - 10;
+  out[9] = (ol - 10) & 0xff;
 
   if (sizeof(out) - 32 < ol) {
     tvherror(LS_PASS, "NIT entry too long (%i)", ol);
@@ -301,8 +301,7 @@ pass_muxer_nit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 
   /* mux info length */
   lptr = ol;
-  out[ol++] = 0xf0;
-  out[ol++] = 0x00;
+  ol += 2;
 
   /* mux info */
   out[ol++] = pm->pm_dst_tsid >> 8;
@@ -317,8 +316,9 @@ pass_muxer_nit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   out[ol++] = pm->pm_dst_sid >> 8;
   out[ol++] = pm->pm_dst_sid;
   out[ol++] = 0x11;
-  out[lptr] = (ol - lptr - 2) >> 8;
-  out[lptr+1] = ol - lptr - 2;
+  /* update section length */
+  out[lptr+0] = 0xf0 | (ol - lptr - 2) >> 8;
+  out[lptr+1] = (ol - lptr - 2) & 0xff;
 
   /* update section length */
   out[1] = (out[1] & 0xf0) | ((ol + 4 - 3) >> 8);
@@ -343,14 +343,12 @@ pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   uint8_t *sbuf, *out;
   int olen;
 
-  /* filter out the other transponders */
-  if ((buf[0] < 0x50 && buf[0] != 0x4e) || buf[0] > 0x5f || len < 14)
+  /* filter out wrong tables */
+  if (buf[0] < 0x4e || buf[0] > 0x6f || len < 14)
     return;
 
   pm = (pass_muxer_t*)mt->mt_opaque;
   sid = (buf[3] << 8) | buf[4];
-  if (sid != pm->pm_src_sid)
-    return;
 
   /* TODO: set free_CA_mode bit to zero */
 
@@ -358,6 +356,17 @@ pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   memcpy(sbuf, buf, len);
   sbuf[3] = pm->pm_dst_sid >> 8;
   sbuf[4] = pm->pm_dst_sid;
+  sbuf[8] = pm->pm_dst_tsid >> 8;
+  sbuf[9] = pm->pm_dst_tsid;
+  sbuf[10] = pm->pm_dst_onid >> 8;
+  sbuf[11] = pm->pm_dst_onid;
+
+  if (sid != pm->pm_src_sid) {
+    len = 14; /* no events, just keep the SI tables consistent */
+    sbuf[1] &= 0xf0;
+    sbuf[1] |= ((len - 3 + 4) >> 8) & 0x0f;
+    sbuf[2] = (len - 3 + 4) & 0xff;
+  }
 
   len = dvb_table_append_crc32(sbuf, len, len + 4);
   if (len > 0 && (olen = dvb_table_remux(mt, sbuf, len, &out)) > 0) {
@@ -794,6 +803,9 @@ pass_muxer_create(const muxer_config_t *m_cfg,
                        DVB_NIT_BASE, DVB_NIT_MASK, pm);
   dvb_table_parse_init(&pm->pm_eit, "pass-eit", LS_TBL_PASS, DVB_EIT_PID,
                        0, 0, pm);
+
+  if (m_cfg->u.pass.m_rewrite_sid > 0)
+    pm->m_caps |= MC_CAP_ANOTHER_SERVICE;
 
   return (muxer_t *)pm;
 }

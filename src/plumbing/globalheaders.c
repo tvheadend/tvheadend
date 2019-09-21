@@ -35,7 +35,8 @@ typedef struct globalheaders {
 } globalheaders_t;
 
 /* note: there up to 2.5 sec diffs in some sources! */
-#define MAX_SCAN_TIME 5000  // in ms
+#define MAX_SCAN_TIME   5000  // in ms
+#define MAX_NOPKT_TIME  2500  // in ms
 
 /**
  *
@@ -236,7 +237,7 @@ headers_complete(globalheaders_t *gh)
        * - half timeout is reached without any packets seen
        * - maximal timeout is reached without metadata
        */
-      if(threshold || (qd[i] <= 0 && qd_max > (MAX_SCAN_TIME * 90) / 2)) {
+      if(threshold || (qd[i] <= 0 && qd_max > (MAX_NOPKT_TIME * 90))) {
 	ssc->ssc_disabled = 1;
         tvhdebug(LS_GLOBALHEADERS, "gh disable stream %d %s%s%s (PID %i) threshold %d qd %"PRId64" qd_max %"PRId64,
              ssc->es_index, streaming_component_type2txt(ssc->es_type),

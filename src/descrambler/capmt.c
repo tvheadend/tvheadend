@@ -16,24 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#include <pthread.h>
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
-#include <poll.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <errno.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <ctype.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/un.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #include <fcntl.h>
 
 #include "tvheadend.h"
@@ -113,6 +98,11 @@ typedef struct dmx_filter {
 #define CAPMT_CWMODE_OE22	1  // CA_SET_DESCR_MODE before CA_SET_DESCR
 #define CAPMT_CWMODE_OE22SW	2  // CA_SET_DESCR_MODE follows CA_SET_DESCR
 #define CAPMT_CWMODE_OE20	3  // DES signalled through PID index
+
+// pmt modes
+#define CAPMT_PMTMODE_AUTO      0
+#define CAPMT_PMTMODE_INDEX     1  // mix enigma2 / PC boxtype messages
+#define CAPMT_PMTMODE_UNIVERSAL 2  // use fixed PC boxtype messages
 
 // limits
 #define MAX_CA       16
@@ -269,6 +259,8 @@ typedef struct capmt {
   int   capmt_port;
   int   capmt_oscam;
   int   capmt_cwmode;
+  int   capmt_pmtmode;
+  int   capmt_oscam_rev;
 
   /* capmt sockets */
   int   sids[MAX_SOCKETS];
@@ -287,7 +279,7 @@ typedef struct capmt {
   capmt_demuxes_t capmt_demuxes;
   capmt_adapter_t capmt_adapters[MAX_CA];
   TAILQ_HEAD(, capmt_message) capmt_writeq;
-  pthread_mutex_t capmt_mutex;
+  tvh_mutex_t capmt_mutex;
   uint8_t         capmt_pmtversion;
 
   /* last key */
@@ -427,11 +419,11 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
     mux         = mmi ? mmi->mmi_mux : NULL;
     tvhtrace(LS_CAPMT, "%s: adding pid %d adapter %d, tuner %p, mmi %p, mux %p", capmt_name(capmt), pid, adapter, ca->ca_tuner, mmi, mux);
     if (mux) {
-      pthread_mutex_unlock(&capmt->capmt_mutex);
+      tvh_mutex_unlock(&capmt->capmt_mutex);
       descrambler_open_pid(mux, o,
                            s ? DESCRAMBLER_ECM_PID(pid) : pid,
                            capmt_table_input, (service_t *)s);
-      pthread_mutex_lock(&capmt->capmt_mutex);
+      tvh_mutex_lock(&capmt->capmt_mutex);
     }
   }
 }
@@ -467,9 +459,9 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid, uint32_t flags)
     pid = DESCRAMBLER_ECM_PID(pid);
   o->ecm = -1;
   if (mux) {
-    pthread_mutex_unlock(&capmt->capmt_mutex);
+    tvh_mutex_unlock(&capmt->capmt_mutex);
     descrambler_close_pid(mux, o, pid);
-    pthread_mutex_lock(&capmt->capmt_mutex);
+    tvh_mutex_lock(&capmt->capmt_mutex);
   }
   o->pid = PID_UNUSED;
 }
@@ -504,9 +496,9 @@ capmt_pid_flush_adapter(capmt_t *capmt, int adapter)
       o->pid = PID_BLOCKED;
       o->pid_refs = 0;
       if (mux) {
-        pthread_mutex_unlock(&capmt->capmt_mutex);
+        tvh_mutex_unlock(&capmt->capmt_mutex);
         descrambler_close_pid(mux, &ca->ca_pids[i], pid);
-        pthread_mutex_lock(&capmt->capmt_mutex);
+        tvh_mutex_lock(&capmt->capmt_mutex);
       }
       o->pid = PID_UNUSED;
     }
@@ -613,9 +605,9 @@ capmt_socket_close(capmt_t *capmt, int sock_idx)
 static void
 capmt_socket_close_lock(capmt_t *capmt, int sock_idx)
 {
-  pthread_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
   capmt_socket_close(capmt, sock_idx);
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 }
 
 /**
@@ -768,11 +760,11 @@ capmt_flush_queue(capmt_t *capmt, int del_only)
   capmt_message_t *msg;
 
   while (1) {
-    pthread_mutex_lock(&capmt->capmt_mutex);
+    tvh_mutex_lock(&capmt->capmt_mutex);
     msg = TAILQ_FIRST(&capmt->capmt_writeq);
     if (msg)
       TAILQ_REMOVE(&capmt->capmt_writeq, msg, cm_link);
-    pthread_mutex_unlock(&capmt->capmt_mutex);
+    tvh_mutex_unlock(&capmt->capmt_mutex);
     if (msg == NULL)
       break;
 
@@ -909,7 +901,7 @@ capmt_service_destroy(th_descrambler_t *td)
 
   mtimer_disarm(&ct->ct_ok_timer);
 
-  pthread_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
 
   /* send stop to client */
   if (!oscam_new)
@@ -940,7 +932,7 @@ capmt_service_destroy(th_descrambler_t *td)
   if (LIST_EMPTY(&capmt->capmt_services))
     capmt_init_demuxes(capmt);
 
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 
   free(ct->td_nicename);
   free(ct);
@@ -999,7 +991,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       filter_index >= MAX_FILTER ||
       pid > 8191)
     return;
-  pthread_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
   cf = &capmt->capmt_demuxes.filters[demux_index];
   if (cf->max && cf->adapter != adapter)
     goto end;
@@ -1062,7 +1054,7 @@ cont:
   if (cf->max <= filter_index)
     cf->max = filter_index + 1;
 end:
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 }
 
 static void
@@ -1086,7 +1078,7 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       demux_index >= MAX_INDEX ||
       filter_index >= MAX_FILTER)
     return;
-  pthread_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
   cf = &capmt->capmt_demuxes.filters[demux_index];
   filter = &cf->dmx[filter_index];
   if (filter->pid != pid)
@@ -1105,7 +1097,7 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     demux_index--;
   capmt->capmt_demuxes.max = demux_index == 255 ? 0 : demux_index + 1;
 end:
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 }
 
 static void
@@ -1115,7 +1107,7 @@ capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force)
   if (capmt_oscam_netproto(capmt))
     capmt_flush_queue(capmt, 0);
 
-  pthread_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
   if (capmt_oscam_new(capmt)) {
     if (!LIST_EMPTY(&capmt->capmt_services))
       capmt_enumerate_services(capmt, force);
@@ -1126,7 +1118,7 @@ capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force)
       LIST_FOREACH(ct, &capmt->capmt_services, ct_link)
         capmt_send_request(ct, CAPMT_LIST_ONLY);
   }
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 }
 
 #if CONFIG_LINUXDVB
@@ -1137,7 +1129,7 @@ capmt_abort(capmt_t *capmt, int keystate)
   mpegts_service_t *t;
   capmt_service_t *ct;
 
-  pthread_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
     t = (mpegts_service_t *)ct->td_service;
 
@@ -1151,7 +1143,7 @@ capmt_abort(capmt_t *capmt, int keystate)
       descrambler_change_keystate((th_descrambler_t *)ct, keystate, 1);
     }
   }
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 }
 #endif
 #endif
@@ -1173,7 +1165,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
   uint16_t *pids;
   int i, j, pid;
 
-  pthread_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
     t = (mpegts_service_t *)ct->td_service;
 
@@ -1213,7 +1205,7 @@ found:
     ct->ct_ok_flag = 1;
     descrambler_keys((th_descrambler_t *)ct, type, pid, even, odd);
   }
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 }
 
 static void
@@ -1267,7 +1259,7 @@ capmt_process_notify(capmt_t *capmt, uint8_t adapter,
   mpegts_service_t *t;
   capmt_service_t *ct;
 
-  pthread_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
     t = (mpegts_service_t *)ct->td_service;
 
@@ -1280,7 +1272,7 @@ capmt_process_notify(capmt_t *capmt, uint8_t adapter,
                        cardsystem, pid, ecmtime, hops, reader, from,
                        protocol);
   }
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 }                     
 
 static int
@@ -1517,8 +1509,11 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
     uint16_t protover = sbuf_peek_u16(sb, offset);
     int offset2       = offset + 2;
     char *info        = capmt_peek_str(sb, &offset2);
+    char *rev         = strstr(info, "build r");
 
     tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (protocol version %d)", capmt_name(capmt), info, protover);
+    if (rev)
+      capmt->capmt_oscam_rev = strtol(rev + 7, NULL, 10);
 
     free(info);
 
@@ -1747,6 +1742,7 @@ handle_single(capmt_t *capmt)
             } else {
               cmd_size -= 4;
               offset = 4;
+              break;
             }
           } else if (cmd_size == 0)
             break;
@@ -1872,7 +1868,7 @@ capmt_thread(void *aux)
 
   while (atomic_get(&capmt->capmt_running)) {
     fatal = 0;
-    pthread_mutex_lock(&capmt->capmt_mutex);
+    tvh_mutex_lock(&capmt->capmt_mutex);
     for (i = 0; i < MAX_CA; i++) {
       ca = &capmt->capmt_adapters[i];
       ca->ca_number = i;
@@ -1891,7 +1887,7 @@ capmt_thread(void *aux)
       capmt->capmt_sock_reconnect[i] = 0;
     }
     capmt_init_demuxes(capmt);
-    pthread_mutex_unlock(&capmt->capmt_mutex);
+    tvh_mutex_unlock(&capmt->capmt_mutex);
 
     /* Accessible */
     if (capmt->capmt_sockfile && !capmt_oscam_network(capmt) &&
@@ -1900,12 +1896,12 @@ capmt_thread(void *aux)
     else
       caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_READY);
     
-    pthread_mutex_lock(&capmt->capmt_mutex);
+    tvh_mutex_lock(&capmt->capmt_mutex);
 
     while(atomic_get(&capmt->capmt_running) && capmt->cac_enabled == 0)
       tvh_cond_wait(&capmt->capmt_cond, &capmt->capmt_mutex);
 
-    pthread_mutex_unlock(&capmt->capmt_mutex);
+    tvh_mutex_unlock(&capmt->capmt_mutex);
 
     if (!atomic_get(&capmt->capmt_running)) continue;
 
@@ -1965,7 +1961,7 @@ capmt_thread(void *aux)
 #endif
     }
 
-    pthread_mutex_lock(&capmt->capmt_mutex);
+    tvh_mutex_lock(&capmt->capmt_mutex);
 
     caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_DISCONNECTED);
 
@@ -1982,12 +1978,12 @@ capmt_thread(void *aux)
     if (atomic_get(&capmt->capmt_reconfigure)) {
       atomic_set(&capmt->capmt_reconfigure, 0);
       atomic_set(&capmt->capmt_running, 1);
-      pthread_mutex_unlock(&capmt->capmt_mutex);
+      tvh_mutex_unlock(&capmt->capmt_mutex);
       continue;
     }
 
     if (!atomic_get(&capmt->capmt_running)) {
-      pthread_mutex_unlock(&capmt->capmt_mutex);
+      tvh_mutex_unlock(&capmt->capmt_mutex);
       continue;
     }
 
@@ -1998,7 +1994,7 @@ capmt_thread(void *aux)
       d = 60;
     }
 
-    tvhinfo(LS_CAPMT, "%s: Automatic reconnection attempt in in %d seconds", capmt_name(capmt), d);
+    tvhinfo(LS_CAPMT, "%s: Automatic reconnection attempt in %d seconds", capmt_name(capmt), d);
 
     mono = mclk() + sec2mono(d);
     do {
@@ -2007,7 +2003,7 @@ capmt_thread(void *aux)
         break;
     } while (ERRNO_AGAIN(i) && atomic_get(&capmt->capmt_running));
 
-    pthread_mutex_unlock(&capmt->capmt_mutex);
+    tvh_mutex_unlock(&capmt->capmt_mutex);
   }
 
   tvhinfo(LS_CAPMT, "%s inactive", capmt_name(capmt));
@@ -2031,7 +2027,7 @@ capmt_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   /* Validate */
   if (data == NULL || len > 4096) return;
 
-  pthread_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
 
   for (demux_index = 0; demux_index < capmt->capmt_demuxes.max; demux_index++) {
     cf = &capmt->capmt_demuxes.filters[demux_index];
@@ -2063,7 +2059,7 @@ capmt_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
     }
   }
 
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 }
 
 static void
@@ -2132,8 +2128,8 @@ capmt_caid_change(th_descrambler_t *td)
   caid_t *c;
   int i, change = 0;
 
-  pthread_mutex_lock(&capmt->capmt_mutex);
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
 
   /* add missing A/V PIDs and ECM PIDs */
   i = 0;
@@ -2207,8 +2203,8 @@ capmt_caid_change(th_descrambler_t *td)
       capmt_send_stop(ct);
   }
 
-  pthread_mutex_unlock(&t->s_stream_mutex);
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 
   if (change)
     capmt_notify_server(capmt, ct, 1);
@@ -2234,8 +2230,22 @@ capmt_send_request(capmt_service_t *ct, int lm)
   uint16_t onid = t->s_dvb_mux->mm_onid;
   const int adapter_num = ct->ct_adapter;
   const int wrapper = capmt_oscam_so_wrapper(capmt);
-  const int pc_desc = !wrapper && adapter_num >= 8;
-  int i;
+  int i, pc_desc = 0;
+
+  /* choose the PMT composing mode */
+  if (!wrapper) {
+    switch (capmt->capmt_pmtmode) {
+    case CAPMT_PMTMODE_INDEX:
+      pc_desc = 0;
+      break;
+    case CAPMT_PMTMODE_UNIVERSAL:
+      pc_desc = 1;
+      break;
+    default:
+      pc_desc = adapter_num >= 8 || capmt->capmt_oscam_rev >= 11396;
+      break;
+    }
+  }
 
   /* buffer for capmt */
   int pos = 0, pos2;
@@ -2467,8 +2477,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
     tuner = lfe->lfe_adapter->la_dvb_number;
 #endif
 
-  pthread_mutex_lock(&capmt->capmt_mutex);
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&capmt->capmt_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
 
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link)
     /* skip, if we already have this service */
@@ -2495,7 +2505,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
       tvherror(LS_CAPMT,
                "%s: No free adapter slot available for service \"%s\"",
                capmt_name(capmt), t->s_dvb_svcname);
-      pthread_mutex_unlock(&capmt->capmt_mutex);
+      tvh_mutex_unlock(&capmt->capmt_mutex);
       return;
     }
   }
@@ -2510,7 +2520,6 @@ capmt_service_start(caclient_t *cac, service_t *s)
   ct              = calloc(1, sizeof(capmt_service_t));
   ct->ct_capmt    = capmt;
   ct->ct_adapter  = tuner;
-  ct->ct_multipid = descrambler_multi_pid((th_descrambler_t *)ct);
 
   i = 0;
   TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
@@ -2553,6 +2562,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
   LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);
 
+  ct->ct_multipid = descrambler_multi_pid((th_descrambler_t *)ct);
   descrambler_change_keystate((th_descrambler_t *)td, DS_READY, 0);
 
   /* wake-up idle thread */
@@ -2561,8 +2571,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
 fin:
   if (ct)
     mtimer_arm_rel(&ct->ct_ok_timer, capmt_ok_timer_cb, ct, sec2mono(3)/2);
-  pthread_mutex_unlock(&t->s_stream_mutex);
-  pthread_mutex_unlock(&capmt->capmt_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&capmt->capmt_mutex);
 
   if (change)
     capmt_notify_server(capmt, NULL, 0);
@@ -2635,23 +2645,23 @@ capmt_conf_changed(caclient_t *cac)
     if (!atomic_get(&capmt->capmt_running)) {
       atomic_set(&capmt->capmt_running, 1);
       atomic_set(&capmt->capmt_reconfigure, 0);
-      tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt, "capmt");
+      tvh_thread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt, "capmt");
       return;
     }
-    pthread_mutex_lock(&capmt->capmt_mutex);
+    tvh_mutex_lock(&capmt->capmt_mutex);
     atomic_set(&capmt->capmt_reconfigure, 1);
     tvh_cond_signal(&capmt->capmt_cond, 0);
-    pthread_mutex_unlock(&capmt->capmt_mutex);
+    tvh_mutex_unlock(&capmt->capmt_mutex);
     tvh_write(capmt->capmt_pipe.wr, "", 1);
   } else {
     if (!atomic_get(&capmt->capmt_running))
       return;
-    pthread_mutex_lock(&capmt->capmt_mutex);
+    tvh_mutex_lock(&capmt->capmt_mutex);
     atomic_set(&capmt->capmt_running, 0);
     atomic_set(&capmt->capmt_reconfigure, 0);
     tvh_cond_signal(&capmt->capmt_cond, 0);
     tid = capmt->capmt_tid;
-    pthread_mutex_unlock(&capmt->capmt_mutex);
+    tvh_mutex_unlock(&capmt->capmt_mutex);
     tvh_write(capmt->capmt_pipe.wr, "", 1);
     pthread_join(tid, NULL);
     caclient_set_status(cac, CACLIENT_STATUS_NONE);
@@ -2673,6 +2683,17 @@ caclient_capmt_class_cwmode_list ( void *o, const char *lang )
     { N_("Extended (OE 2.2)"),	                 CAPMT_CWMODE_OE22 },
     { N_("Extended (OE 2.2), mode follows key"), CAPMT_CWMODE_OE22SW },
     { N_("Extended DES (OE 2.0)"),	         CAPMT_CWMODE_OE20 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
+static htsmsg_t *
+caclient_capmt_class_pmtmode_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Auto"),			         CAPMT_PMTMODE_AUTO },
+    { N_("Byte index tag order"),                CAPMT_PMTMODE_INDEX },
+    { N_("Universal tag order"),                 CAPMT_PMTMODE_UNIVERSAL },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -2722,6 +2743,16 @@ const idclass_t caclient_capmt_class =
       .def.i    = CAPMT_CWMODE_AUTO,
       .opts     = PO_DOC_NLIST,
     },
+    {
+      .type     = PT_INT,
+      .id       = "pmtmode",
+      .name     = N_("PMT Mode"),
+      .desc     = N_("PMT mode."),
+      .off      = offsetof(capmt_t, capmt_pmtmode),
+      .list     = caclient_capmt_class_pmtmode_list,
+      .def.i    = CAPMT_PMTMODE_AUTO,
+      .opts     = PO_DOC_NLIST,
+    },
     { }
   }
 };
@@ -2735,8 +2766,8 @@ caclient_t *capmt_create(void)
 
   capmt->capmt_pmtversion = 1;
 
-  pthread_mutex_init(&capmt->capmt_mutex, NULL);
-  tvh_cond_init(&capmt->capmt_cond);
+  tvh_mutex_init(&capmt->capmt_mutex, NULL);
+  tvh_cond_init(&capmt->capmt_cond, 1);
   TAILQ_INIT(&capmt->capmt_writeq);
   tvh_pipe(O_NONBLOCK, &capmt->capmt_pipe);
 

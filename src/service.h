@@ -43,6 +43,7 @@ struct mpegts_apids;
 struct profile_chain;
 struct source_info;
 struct descramble_info;
+struct mpegts_apids;
 
 /**
  *
@@ -225,6 +226,8 @@ typedef struct service {
 
   void (*s_unref)(struct service *t);
 
+  struct mpegts_apids *(*s_pid_list)(struct service *t);
+
   int (*s_satip_source)(struct service *t);
 
   void (*s_memoryinfo)(struct service *t, int64_t *size);
@@ -308,7 +311,7 @@ typedef struct service {
    * This mutex also protects all elementary_stream_t instances for this
    * transport.
    */
-  pthread_mutex_t s_stream_mutex;
+  tvh_mutex_t s_stream_mutex;
 
   /**
    *
@@ -316,19 +319,19 @@ typedef struct service {
   int s_streaming_status;
 
   // Progress
-#define TSS_INPUT_HARDWARE   0x1
-#define TSS_INPUT_SERVICE    0x2
-#define TSS_MUX_PACKETS      0x4
-#define TSS_PACKETS          0x8
-#define TSS_NO_ACCESS        0x10
-#define TSS_CA_CHECK         0x20
+#define TSS_INPUT_HARDWARE   0x00000001
+#define TSS_INPUT_SERVICE    0x00000002
+#define TSS_MUX_PACKETS      0x00000004
+#define TSS_PACKETS          0x00000008
+#define TSS_NO_ACCESS        0x00000010
+#define TSS_CA_CHECK         0x00000020
 
 
   // Errors
-#define TSS_GRACEPERIOD      0x10000
-#define TSS_NO_DESCRAMBLER   0x20000
-#define TSS_TIMEOUT          0x40000
-#define TSS_TUNING           0x80000
+#define TSS_GRACEPERIOD      0x00010000
+#define TSS_NO_DESCRAMBLER   0x00020000
+#define TSS_TIMEOUT          0x00040000
+#define TSS_TUNING           0x00080000
 
 #define TSS_ERRORS           0xffff0000
 
@@ -428,16 +431,16 @@ const char *service_servicetype_txt(service_t *t);
 static inline uint16_t service_id16(void *t)
   { return ((service_t *)t)->s_components.set_service_id; }
 
-int service_is_sdtv(service_t *t);
-int service_is_uhdtv(service_t *t);
-int service_is_hdtv(service_t *t);
-int service_is_radio(service_t *t);
-int service_is_other(service_t *t);
-
-static inline int service_is_tv( service_t *s)
+int service_is_sdtv(const service_t *t);
+int service_is_uhdtv(const service_t *t);
+int service_is_hdtv(const service_t *t);
+int service_is_radio(const service_t *t);
+static inline int service_is_tv( const service_t *s)
   { return service_is_hdtv(s) || service_is_sdtv(s) || service_is_uhdtv(s); }
+static inline int service_is_other(const service_t *t)
+  { return !service_is_tv(t) && !service_is_radio(t); }
 
-int service_is_encrypted ( service_t *t );
+int service_is_encrypted ( const service_t *t );
 
 void service_set_enabled ( service_t *t, int enabled, int _auto );
 

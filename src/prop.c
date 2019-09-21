@@ -36,7 +36,7 @@ const char *prop_ptr;
 /**
  *
  */
-const static struct strtab typetab[] = {
+static const struct strtab typetab[] = {
   { "bool",    PT_BOOL },
   { "int",     PT_INT },
   { "str",     PT_STR },
@@ -385,7 +385,7 @@ prop_read_values
       total++;
       if (!htsmsg_field_get_bool(f, &b)) {
         if (b > 0) {
-          p = prop_find(pl, f->hmf_name);
+          p = prop_find(pl, htsmsg_field_name(f));
           if (p)
             prop_read_value(obj, p, m, p->id, optmask, lang);
           count++;
@@ -395,7 +395,7 @@ prop_read_values
     if (total && !count) {
       for (; pl->id; pl++) {
         HTSMSG_FOREACH(f, list)
-          if (!strcmp(pl->id, f->hmf_name))
+          if (!strcmp(pl->id, htsmsg_field_name(f)))
             break;
         if (f == NULL)
           prop_read_value(obj, pl, m, pl->id, optmask, lang);
@@ -544,9 +544,14 @@ prop_serialize_value
     if (INTEXTRA_IS_SPLIT(pl->intextra)) {
       htsmsg_add_u32(m, "intsplit", pl->intextra);
     } else {
-      htsmsg_add_s32(m, "intmax", INTEXTRA_GET_MAX(pl->intextra));
-      htsmsg_add_s32(m, "intmin", INTEXTRA_GET_MIN(pl->intextra));
-      htsmsg_add_s32(m, "intstep", INTEXTRA_GET_STEP(pl->intextra));
+      if (pl->type == PT_U32) {
+        htsmsg_add_u32(m, "intmax", INTEXTRA_GET_UMAX(pl->intextra));
+        htsmsg_add_u32(m, "intmin", INTEXTRA_GET_UMIN(pl->intextra));
+      } else {
+        htsmsg_add_s32(m, "intmax", INTEXTRA_GET_MAX(pl->intextra));
+        htsmsg_add_s32(m, "intmin", INTEXTRA_GET_MIN(pl->intextra));
+      }
+      htsmsg_add_u32(m, "intstep", INTEXTRA_GET_STEP(pl->intextra));
     }
   }
 
@@ -578,7 +583,7 @@ prop_serialize
     HTSMSG_FOREACH(f, list) {
       total++;
       if (!htsmsg_field_get_bool(f, &b) && b > 0) {
-        p = prop_find(pl, f->hmf_name);
+        p = prop_find(pl, htsmsg_field_name(f));
         if (p)
           prop_serialize_value(obj, p, msg, optmask, lang);
         count++;
@@ -587,7 +592,7 @@ prop_serialize
     if (total && !count) {
       for (; pl->id; pl++) {
         HTSMSG_FOREACH(f, list)
-          if (!strcmp(pl->id, f->hmf_name))
+          if (!strcmp(pl->id, htsmsg_field_name(f)))
             break;
         if (f == NULL)
           prop_serialize_value(obj, pl, msg, optmask, lang);

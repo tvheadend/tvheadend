@@ -113,7 +113,7 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
     if(len < namelen + datalen)
       return -1;
 
-    nlen = namelen ? namelen + 1 : 1;
+    nlen = namelen ? htsmsg_malloc_align(type, namelen + 1) : 0;
     tlen = sizeof(htsmsg_field_t) + nlen;
     if (type == HMF_STR) {
       tlen += datalen + 1;
@@ -135,25 +135,25 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
     f->hmf_flags = 0;
 
     if(namelen > 0) {
-      memcpy((char *)f->hmf_name, buf, namelen);
-      ((char *)f->hmf_name)[namelen] = 0;
+      memcpy((char *)f->_hmf_name, buf, namelen);
+      ((char *)f->_hmf_name)[namelen] = 0;
 
       buf += namelen;
       len -= namelen;
     } else {
-      ((char *)f->hmf_name)[0] = '\0';
+      f->hmf_flags |= HMF_NONAME;
     }
 
     switch(type) {
     case HMF_STR:
-      f->hmf_str = f->hmf_name + nlen;
+      f->hmf_str = f->_hmf_name + nlen;
       memcpy((char *)f->hmf_str, buf, datalen);
       ((char *)f->hmf_str)[datalen] = 0;
       f->hmf_flags |= HMF_INALLOCED;
       break;
 
     case HMF_UUID:
-      f->hmf_uuid = (uint8_t *)f->hmf_name + nlen;
+      f->hmf_uuid = (uint8_t *)f->_hmf_name + nlen;
       memcpy((char *)f->hmf_uuid, buf, UUID_BIN_SIZE);
       break;
 
@@ -172,7 +172,7 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
 
     case HMF_MAP:
     case HMF_LIST:
-      sub = f->hmf_msg = (htsmsg_t *)(f->hmf_name + nlen);
+      sub = f->hmf_msg = (htsmsg_t *)(f->_hmf_name + nlen);
       TAILQ_INIT(&sub->hm_fields);
       sub->hm_data = NULL;
       sub->hm_data_size = 0;
@@ -326,7 +326,7 @@ htsmsg_binary2_count(htsmsg_t *msg)
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
     l = htsmsg_binary2_field_length(f);
     len += 2 + htsmsg_binary2_length_count(l);
-    len += strlen(f->hmf_name);
+    len += strlen(htsmsg_field_name(f));
     len += l;
   }
   return len;
@@ -343,7 +343,7 @@ htsmsg_binary2_write(htsmsg_t *msg, uint8_t *ptr)
   int l, i, namelen;
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-    namelen = strlen(f->hmf_name);
+    namelen = strlen(htsmsg_field_name(f));
     assert(namelen <= 0xff);
     *ptr++ = f->hmf_type;
     *ptr++ = namelen;
@@ -352,7 +352,7 @@ htsmsg_binary2_write(htsmsg_t *msg, uint8_t *ptr)
     ptr = htsmsg_binary2_set_length(ptr, l);
 
     if(namelen > 0) {
-      memcpy(ptr, f->hmf_name, namelen);
+      memcpy(ptr, f->_hmf_name, namelen);
       ptr += namelen;
     }
 

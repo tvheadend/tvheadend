@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "htsstr.h"
+#include "tvh_string.h"
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 

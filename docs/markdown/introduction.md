@@ -211,71 +211,76 @@ to Add/Save/Edit-type functions, and a [grid](#grids) like a spreadsheet, a pane
 Below is a (VERY) long list of the buttons you'll find in Tvheadend, 
 They're listed here so you can quickly refer back to them at a later date (and know where to find them!).
 
-Button                              | Function
-------------------------------------|-------------------
-Save                                | Save any changes made to the grid/entries/panel.
-Undo                                | Revert any changes made since the last save.
-Add                                 | Display the *Add entry* dialog.
-Delete/Remove                       | Delete the selected entry/entries.
-Edit                                | Edit the selected entries.
-Reset All                           | Reset/clear all filters. 
-                                    | **Electronic Program Guide only.**
-Watch TV                            | Launches Live TV via HTML5 video. 
-                                    | **Electronic Program Guide only.**
-Create Autorec                      | Creates an auto-recording rule based on the current filter criteria. 
-                                    | **Electronic Program Guide only.**
-Play Program                        | Play the program.
-                                    | **Electronic Program Guide/Broadcast details only.**
-Record Program                      | Record the program/event.
-                                    | **Electronic Program Guide/Broadcast details only.**
-Autorec/Record Series               | Create an Auto-record entry matching the current program query. For events that have series-link information available the *Record Series* button will be shown instead.
-                                    | **Electronic Program Guide/Broadcast details only.**
-Force Scan                          | Forces a scan on the selected network(s) or bouquet(s).
-                                    | **Configuration -> DVB Inputs -> Networks/Configuration -> Channel / EPG -> Bouquets only.**
-Map Services                        | *Selected*: Map the selected services to channels. *All*: Map all services to channels. *Detach from bouquet*: Detach the (selected) services from it's bouquet (to prevent changes). 
-                                    | **Configuration -> Channel / EPG -> Channels/Configuration -> DVB Inputs -> Services only.**
-Maintenance                         | *Remove unseen services (PAT/SDT) (7 days+)*: Remove services marked as Missing in PAT/SDT for 7+ days. *Remove all unseen services*: Remove all services not seen for 7+ days. 
-                                    | **Configuration -> DVB Inputs -> Services only.**
-Number Operations                   | *Assign Number*: Assign the lowest available channel number(s) to the selected channel(s). *Number Up*: Increment the selected channel number(s) by 1. *Number Down*: Decrement the selected channel numbers by 1. *Swap Numbers*: Swap the numbers of the two selected channels. 
-                                    | **Configuration -> Channel / EPG -> Channels only.**
-Trigger OTA EPG Grabber             | Force an immediate tune to the OTA EPG mux(es) to request EPG updates. 
-                                    | **Configuration -> Channel / EPG -> EPG Grabber only.**
-Re-run Internal EPG Grabbers        | Re-run all enabled internal grabbers. 
-                                    | **Configuration -> Channel / EPG -> EPG Grabber/EPG Grabber Modules only.**
-Move Up                             | Move the selected entry up in the list. 
-                                    | **Configuration -> Users -> Access entries/Configuration -> Stream -> Stream filters only.**
-Move Down                           | Move the selected entry down in the list. 
-                                    | **Configuration -> Users -> Access entries/Configuration -> Stream -> Stream filters only.**
-Clone                               | Clone the currently selected entry.
-                                    | **Configuration -> Conditional Access (CAs)/Configuration -> Stream -> Stream/Codec Profiles only.**
-Show/Hide Passwords                 | Reveal/Hide password fields. 
-                                    | **Configuration -> Conditional Access (CAs) only.**
-Stop                                | Gracefully stop the selected in-progress recording entry/entries. 
-                                    | **Digital Video Recorder -> Upcoming / Current Recordings only.**
-Abort                               | Abruptly stop the selected in-progress recording entry/entries. 
-                                    | **Digital Video Recorder -> Upcoming / Current Recordings only.**
-Download                            | Download the selected recording. 
-                                    | **Digital Video Recorder -> Finished/Failed/Removed Recordings only.**
-Re-record                           | Re-schedule the selected entry/recording if possible.
-                                    | **Digital Video Recorder -> Finished/Failed/Removed Recordings only.**
-Move to failed                      | Move the selected recording entries to *Failed Recordings*. 
-                                    | **Digital Video Recorder -> Finished Recordings only.**
-Move to finished                    | Move the selected recording entries to the *Finished Recordings*. 
-                                    | **Digital Video Recorder -> Failed Recordings only.**
-Start wizard                        | Start the wizard. 
-                                    | **Configuration -> General -> Base only.**
-Clean image (icon) cache            | Clean-up the stored image files (empty cache and re-fetch icons). 
-                                    | **Configuration -> General -> Image cache only.**
-Re-fetch images                     | Re-refresh image cache (reload images from upstream providers). 
-                                    | **Configuration -> General -> Image cache only.**
-Discover SAT\>IP servers            | Attempt to discover more SAT>IP servers on the network. 
-                                    | **Configuration -> General -> SAT>IP Server only.**
-Apply configuration (run time only) | Apply the entered debugging settings. 
-                                    | **Configuration -> Debugging -> Configuration only.**
-Clear all statistics                | Reset all stream statistics, e.g. BER, PER etc.. 
-                                    | **Status -> Stream only.**
-View Level                          | Show/Hide more advanced options.
-Help                                | Display the help page.
+Button                                   | Function
+-----------------------------------------|-------------------
+Save                                     | Save any changes made to the grid/entries/panel.
+Undo                                     | Revert any changes made since the last save.
+Add                                      | Display the *Add entry* dialog.
+Delete/Remove                            | Delete the selected entry/entries.
+Edit                                     | Edit the selected entries.
+Reset All                                | Reset/clear all filters. 
+                                         | **Electronic Program Guide only.**
+Watch TV                                 | Launches Live TV via HTML5 video. 
+                                         | **Electronic Program Guide only.**
+Create Autorec                           | Creates an auto-recording rule based on the current filter criteria. 
+                                         | **Electronic Program Guide only.**
+Play                                     | Play the program.
+                                         | **Electronic Program Guide/Broadcast details only.**
+Record                                   | Record the program/event.
+                                         | **Electronic Program Guide/Broadcast details only.**
+Autorec/Record Series                    | Create an Auto-record entry matching the current program query. For events that have series-link information available the *Record Series* button will be shown instead.
+                                         | **Electronic Program Guide/Broadcast details only.**
+Force Scan                               | Forces a scan on the selected network(s) or bouquet(s).
+                                         | **Configuration -> DVB Inputs -> Networks/Configuration -> Channel / EPG -> Bouquets only.**
+Map Services                             | *Selected*: Map the selected services to channels. *All*: Map all services to channels. *Detach from bouquet*: Detach the (selected) services from it's bouquet (to prevent changes). 
+                                         | **Configuration -> Channel / EPG -> Channels/Configuration -> DVB Inputs -> Services only.**
+Maintenance                              | *Remove unseen services (PAT/SDT) (7 days+)*: Remove services marked as Missing in PAT/SDT for 7+ days. *Remove all unseen services*: Remove all services not seen for 7+ days. 
+                                         | **Configuration -> DVB Inputs -> Services only.**
+Number Operations                        | *Assign Number*: Assign the lowest available channel number(s) to the selected channel(s). *Number Up*: Increment the selected channel number(s) by 1. *Number Down*: Decrement the selected channel numbers by 1. *Swap Numbers*: Swap the numbers of the two selected channels. 
+                                         | **Configuration -> Channel / EPG -> Channels only.**
+Trigger OTA EPG Grabber                  | Force an immediate tune to the OTA EPG mux(es) to request EPG updates. 
+                                         | **Configuration -> Channel / EPG -> EPG Grabber only.**
+Re-run Internal EPG Grabbers             | Re-run all enabled internal grabbers. 
+                                         | **Configuration -> Channel / EPG -> EPG Grabber/EPG Grabber Modules only.**
+Move Up                                  | Move the selected entry up in the list. 
+                                         | **Configuration -> Users -> Access entries/Configuration -> Stream -> Stream filters only.**
+Move Down                                | Move the selected entry down in the list. 
+                                         | **Configuration -> Users -> Access entries/Configuration -> Stream -> Stream filters only.**
+Clone                                    | Clone the currently selected entry.
+                                         | **Configuration -> Conditional Access (CAs)/Configuration -> Stream -> Stream/Codec Profiles only.**
+Show/Hide Passwords                      | Reveal/Hide password fields. 
+                                         | **Configuration -> Conditional Access (CAs) only.**
+Stop                                     | Gracefully stop the selected in-progress recording entry/entries. 
+                                         | **Digital Video Recorder -> Upcoming / Current Recordings only.**
+Abort                                    | Abruptly stop the selected in-progress recording entry/entries. 
+                                         | **Digital Video Recorder -> Upcoming / Current Recordings only.**
+Download                                 | Download the selected recording. 
+                                         | **Digital Video Recorder -> Finished/Failed/Removed Recordings only.**
+Re-record                                | Re-schedule the selected entry/recording if possible.
+                                         | **Digital Video Recorder -> Finished/Failed/Removed Recordings only.**
+Move to failed                           | Move the selected recording entries to *Failed Recordings*. 
+                                         | **Digital Video Recorder -> Finished Recordings only.**
+Move to finished                         | Move the selected recording entries to the *Finished Recordings*. 
+                                         | **Digital Video Recorder -> Failed Recordings only.**
+Start wizard                             | Start the wizard. 
+                                         | **Configuration -> General -> Base only.**
+Clean image (icon) cache                 | Clean-up the stored image files (empty cache and re-fetch icons). 
+                                         | **Configuration -> General -> Image cache only.**
+Re-fetch images                          | Re-refresh image cache (reload images from upstream providers). 
+                                         | **Configuration -> General -> Image cache only.**
+Discover SAT\>IP servers                 | Attempt to discover more SAT>IP servers on the network. 
+                                         | **Configuration -> General -> SAT>IP Server only.**
+Apply configuration (run time only)      | Apply the entered debugging settings. 
+                                         | **Configuration -> Debugging -> Configuration only.**
+Clear all statistics                     | Reset all stream statistics, e.g. BER, PER etc.. 
+                                         | **Status -> Stream only.**
+Drop (displayed) connections             | Drop the currently-shown active connections.
+                                         | **Status -> Connections only.**
+View Level                               | Show/Hide more advanced options.
+Help                                     | Display the help page.
+                                         | **Icon-only buttons**
+!["Right Arrow"](static/img/doc/icons/arrow_right.png) (Next)  | Display/Jump to the next associated item, channel or EPG event.
+!["Left Arrow"](static/img/doc/icons/arrow_left.png) (Previous)   | Display/Jump to the previous associated item, channel or EPG event.
 
 Some of these buttons are only displayed in selected tabs/panels (noted in bold underneath).
 For items not listed above, refer to the associated Help page.
@@ -444,7 +449,7 @@ check-box so that the changes are applied to all (selected) entries.
 This guide is intended to give you a high-level overview of how to set
 up and use Tvheadend. It does not aim to provide a complete description
 of every step or answer every question: more details are available on the
-tvheadend [wiki](https://tvheadend.org/projects/tvheadend/wiki).
+Tvheadend [wiki](https://tvheadend.org/projects/tvheadend/wiki).
 
 Tvheadend includes copies of many of these pages in the application, which
 is easier to find when you're wondering what to do next.

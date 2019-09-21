@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #
 # Copyright (C) 2012 Adam Sutton <dev@adamsutton.me.uk>
 #
@@ -19,7 +19,7 @@ Connect to a HTSP server and monitor the asynchronous traffic
 """
 
 # System imports
-import os, sys, pprint
+import os, sys, pprint, traceback
 from optparse import OptionParser
 
 # System path
@@ -79,8 +79,9 @@ try:
     log.info(msg, pretty=True)
 
 except KeyboardInterrupt: pass
-except Exception, e:
+except Exception as e:
   log.error(e)
+  traceback.print_exc()
   sys.exit(1) 
 
 # ############################################################################

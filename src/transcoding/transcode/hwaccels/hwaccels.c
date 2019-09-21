@@ -29,12 +29,12 @@
 
 /* decoding ================================================================= */
 
+#if LIBAVCODEC_VERSION_MAJOR < 58
 /* lifted from libavcodec/utils.c */
 static AVHWAccel *
 find_hwaccel(enum AVCodecID codec_id, enum AVPixelFormat pix_fmt)
 {
     AVHWAccel *hwaccel = NULL;
-
     while ((hwaccel = av_hwaccel_next(hwaccel))) {
         if (hwaccel->id == codec_id && hwaccel->pix_fmt == pix_fmt) {
             return hwaccel;
@@ -42,16 +42,41 @@ find_hwaccel(enum AVCodecID codec_id, enum AVPixelFormat pix_fmt)
     }
     return NULL;
 }
+static inline int check_pix_fmt(AVCodecContext *avctx, enum AVPixelFormat pix_fmt)
+{
+    return find_hwaccel(avctx->codec_id, pix_fmt) == NULL;
+}
+#else
+static const AVCodecHWConfig *
+find_hwconfig(const AVCodec *codec, enum AVPixelFormat pix_fmt)
+{
+    const AVCodecHWConfig *hwcfg = NULL;
+    int i;
 
+    for (i = 0;; i++) {
+        hwcfg = avcodec_get_hw_config(codec, i);
+        if (!hwcfg)
+            break;
+        if (hwcfg->pix_fmt == pix_fmt)
+            return hwcfg;
+    }
+    return NULL;
+}
+static inline int check_pix_fmt(AVCodecContext *avctx, enum AVPixelFormat pix_fmt)
+{
+    return find_hwconfig(avctx->codec, pix_fmt) == NULL;
+}
+#endif
 
 static int
 hwaccels_decode_setup_context(AVCodecContext *avctx,
                               const enum AVPixelFormat pix_fmt)
 {
-    AVHWAccel *hwa = NULL;
+    const AVPixFmtDescriptor *desc;
 
-    if (!(hwa = find_hwaccel(avctx->codec_id, pix_fmt))) {
-        tvherror(LS_TRANSCODE, "no AVHWAccel for the pixel format");
+    if (check_pix_fmt(avctx, pix_fmt)) {
+        desc = av_pix_fmt_desc_get(pix_fmt);
+        tvherror(LS_TRANSCODE, "no HWAccel for the pixel format '%s'", desc ? desc->name : "<unk>");
         return AVERROR(ENOENT);
     }
     switch (pix_fmt) {

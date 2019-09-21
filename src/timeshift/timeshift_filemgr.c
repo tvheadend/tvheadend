@@ -16,13 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <fcntl.h>
-#include <string.h>
-#include <assert.h>
-#include <pthread.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -35,7 +29,7 @@
 static int                   timeshift_reaper_run;
 static timeshift_file_list_t timeshift_reaper_list;
 static pthread_t             timeshift_reaper_thread;
-static pthread_mutex_t       timeshift_reaper_lock;
+static tvh_mutex_t       timeshift_reaper_lock;
 static tvh_cond_t            timeshift_reaper_cond;
 
 uint64_t                     timeshift_total_size;
@@ -52,7 +46,7 @@ static void* timeshift_reaper_callback ( void *p )
   timeshift_index_iframe_t *ti;
   timeshift_index_data_t *tid;
   streaming_message_t *sm;
-  pthread_mutex_lock(&timeshift_reaper_lock);
+  tvh_mutex_lock(&timeshift_reaper_lock);
   while (timeshift_reaper_run) {
 
     /* Get next */
@@ -62,7 +56,7 @@ static void* timeshift_reaper_callback ( void *p )
       continue;
     }
     TAILQ_REMOVE(&timeshift_reaper_list, tsf, link);
-    pthread_mutex_unlock(&timeshift_reaper_lock);
+    tvh_mutex_unlock(&timeshift_reaper_lock);
 
     if (tsf->path) {
       tvhtrace(LS_TIMESHIFT, "remove file %s", tsf->path);
@@ -97,9 +91,9 @@ static void* timeshift_reaper_callback ( void *p )
     memoryinfo_free(&timeshift_memoryinfo, sizeof(*tsf));
     free(tsf);
 
-    pthread_mutex_lock(&timeshift_reaper_lock);
+    tvh_mutex_lock(&timeshift_reaper_lock);
   }
-  pthread_mutex_unlock(&timeshift_reaper_lock);
+  tvh_mutex_unlock(&timeshift_reaper_lock);
   tvhtrace(LS_TIMESHIFT, "reaper thread exit");
   return NULL;
 }
@@ -112,10 +106,10 @@ static void timeshift_reaper_remove ( timeshift_file_t *tsf )
     else
       tvhtrace(LS_TIMESHIFT, "queue file for removal - RAM segment time %li", (long)tsf->time);
   }
-  pthread_mutex_lock(&timeshift_reaper_lock);
+  tvh_mutex_lock(&timeshift_reaper_lock);
   TAILQ_INSERT_TAIL(&timeshift_reaper_list, tsf, link);
   tvh_cond_signal(&timeshift_reaper_cond, 0);
-  pthread_mutex_unlock(&timeshift_reaper_lock);
+  tvh_mutex_unlock(&timeshift_reaper_lock);
 }
 
 /* **************************************************************************
@@ -251,7 +245,7 @@ static timeshift_file_t * timeshift_filemgr_file_init
   TAILQ_INIT(&tsf->iframes);
   TAILQ_INIT(&tsf->sstart);
   TAILQ_INSERT_TAIL(&ts->files, tsf, link);
-  pthread_mutex_init(&tsf->ram_lock, NULL);
+  tvh_mutex_init(&tsf->ram_lock, NULL);
   return tsf;
 }
 
@@ -456,11 +450,11 @@ void timeshift_filemgr_init ( void )
 
   /* Start the reaper thread */
   timeshift_reaper_run = 1;
-  pthread_mutex_init(&timeshift_reaper_lock, NULL);
-  tvh_cond_init(&timeshift_reaper_cond);
+  tvh_mutex_init(&timeshift_reaper_lock, NULL);
+  tvh_cond_init(&timeshift_reaper_cond, 1);
   TAILQ_INIT(&timeshift_reaper_list);
-  tvhthread_create(&timeshift_reaper_thread, NULL,
-                   timeshift_reaper_callback, NULL, "tshift-reap");
+  tvh_thread_create(&timeshift_reaper_thread, NULL,
+                    timeshift_reaper_callback, NULL, "tshift-reap");
 }
 
 /*
@@ -471,10 +465,10 @@ void timeshift_filemgr_term ( void )
   char path[512];
 
   /* Wait for thread */
-  pthread_mutex_lock(&timeshift_reaper_lock);
+  tvh_mutex_lock(&timeshift_reaper_lock);
   timeshift_reaper_run = 0;
   tvh_cond_signal(&timeshift_reaper_cond, 0);
-  pthread_mutex_unlock(&timeshift_reaper_lock);
+  tvh_mutex_unlock(&timeshift_reaper_lock);
   pthread_join(timeshift_reaper_thread, NULL);
 
   /* Remove the lot */

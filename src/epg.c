@@ -1286,7 +1286,7 @@ int epg_broadcast_set_credits
           } else {
             add_sep = 1;
           }
-          lang_str_append(b->credits_cached, f->hmf_name, NULL);
+          lang_str_append(b->credits_cached, htsmsg_field_name(f), NULL);
         }
       } else {
         if (b->credits_cached) {
@@ -1466,15 +1466,15 @@ epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b )
   return RB_NEXT(b, sched_link);
 }
 
-const char *epg_broadcast_get_title ( epg_broadcast_t *b, const char *lang )
+const char *epg_broadcast_get_title ( const epg_broadcast_t *b, const char *lang )
 {
-  if (!b && !b->title) return NULL;
+  if (!b || !b->title) return NULL;
   return lang_str_get(b->title, lang);
 }
 
 const char *epg_broadcast_get_subtitle ( epg_broadcast_t *b, const char *lang )
 {
-  if (!b && !b->subtitle) return NULL;
+  if (!b || !b->subtitle) return NULL;
   return lang_str_get(b->subtitle, lang);
 }
 
@@ -1929,7 +1929,7 @@ static const char **_epg_genre_names[16][16] = {
 
 static const char *_genre_get_name(int a, int b, const char *lang)
 {
-  static char __thread name[64];
+  static __thread char name[64];
   size_t l = 0;
   const char **p = _epg_genre_names[a][b];
   name[0] = '\0';

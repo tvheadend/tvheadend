@@ -1010,7 +1010,8 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
 {
   int64_t pts = pkt->pkt_pts, delta, nxt;
   unsigned char c_delta_flags[3];
-  int video = t->tracktype == 1;
+  const int video = t->tracktype == 1;
+  const int audio = t->tracktype == 2;
   int keyframe = 0, skippable = 0;
 
   if (video) {
@@ -1093,6 +1094,7 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
 
   c_delta_flags[0] = delta >> 8;
   c_delta_flags[1] = delta;
+  if (audio && pkt->a.pkt_keyframe) keyframe = 1;
   c_delta_flags[2] = (keyframe << 7) | skippable;
   htsbuf_append(mk->cluster, c_delta_flags, 3);
   htsbuf_append(mk->cluster, data, len);

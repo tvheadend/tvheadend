@@ -55,7 +55,7 @@
 #include "config.h"
 
 static AvahiEntryGroup *group = NULL;
-static char *name = NULL;
+static char *name = NULL, *name2 = NULL;
 static AvahiSimplePoll *avahi_asp = NULL;
 static const AvahiPoll *avahi_poll = NULL;
 static int avahi_do_restart = 0;
@@ -89,7 +89,7 @@ entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
     /* A service name collision with a remote service
      * happened. Let's pick a new name */
     n = avahi_alternative_service_name(name);
-    avahi_free(name);
+    if (name != name2) avahi_free(name);
     name = n;
     
     tvherror(LS_AVAHI, "Service name collision, renaming service to '%s'", name);
@@ -200,7 +200,7 @@ create_services(AvahiClient *c)
   /* A service name collision with a local service happened. Let's
    * pick a new name */
   n = avahi_alternative_service_name(name);
-  avahi_free(name);
+  if (name != name2) avahi_free(name);
   name = n;
 
   tvherror(LS_AVAHI, "Service name collision, renaming service to '%s'", name);
@@ -268,7 +268,6 @@ static void *
 avahi_thread(void *aux)
 {
   AvahiClient *ac;
-  char *name2;
 
   do {
     if (avahi_poll)
@@ -296,6 +295,7 @@ avahi_thread(void *aux)
 
     name = NULL;
     avahi_free(name2);
+    name2 = NULL;
 
   } while (tvheadend_is_running() && avahi_do_restart);
 
@@ -312,7 +312,7 @@ avahi_init(void)
 {
   if (!avahi_required())
     return;
-  tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL, "avahi");
+  tvh_thread_create(&avahi_tid, NULL, avahi_thread, NULL, "avahi");
 }
 
 void
@@ -321,7 +321,7 @@ avahi_done(void)
   if (!avahi_required())
     return;
   avahi_simple_poll_quit(avahi_asp);
-  pthread_kill(avahi_tid, SIGTERM);
+  tvh_thread_kill(avahi_tid, SIGTERM);
   pthread_join(avahi_tid, NULL);
   avahi_simple_poll_free((AvahiSimplePoll *)avahi_poll);
 }

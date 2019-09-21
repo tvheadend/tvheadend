@@ -156,7 +156,7 @@ typedef struct cclient {
   /* Thread */
   pthread_t cc_tid;
   tvh_cond_t cc_cond;
-  pthread_mutex_t cc_mutex;
+  tvh_mutex_t cc_mutex;
   th_pipe_t cc_pipe;
 
   /* Database */
@@ -213,5 +213,5 @@ int cc_read(cclient_t *cc, void *buf, size_t len, int timeout);
 
 void cc_service_start(caclient_t *cac, service_t *t);
 void cc_free(caclient_t *cac);
-void cc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint16_t pid, int valid);
+void cc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint32_t provid, uint16_t pid, int valid);
 void cc_conf_changed(caclient_t *cac);

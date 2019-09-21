@@ -325,6 +325,27 @@ check_cc_optionW ()
   fi
 }
 
+# Check compiler option
+check_cc_optionf ()
+{
+  local opt=$1
+  local nam=$2
+  [ -z "$nam" ] && nam=$opt
+  nam=$(echo "f_$nam" | sed -e 's/[-=]/_/g')
+
+  printf "$TAB" "checking for cc -f$opt ..."
+
+  # Enable if supported
+  if check_cc "" -f${opt}; then
+    echo "ok"
+    enable $nam
+  else
+    echo "fail"
+    return 1
+  fi
+}
+
+
 # Check compiler library
 check_cc_lib ()
 {
@@ -545,7 +566,7 @@ EOF
 
   # Add build config string declaration
   cat >> "${CONFIG_H}" <<EOF
-#define DESCRAMBLER_MAX_KEYS 64
+#define DESCRAMBLER_MAX_KEYS 8
 EOF
 
   # Add build config string declaration

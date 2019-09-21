@@ -66,6 +66,8 @@ static inline void sbuf_alloc(sbuf_t *sb, int len)
 
 void sbuf_realloc(sbuf_t *sb, int len);
 
+void sbuf_replace(sbuf_t *sb, sbuf_t *src);
+
 void sbuf_append(sbuf_t *sb, const void *data, int len);
 void sbuf_append_from_sbuf(sbuf_t *sb, sbuf_t *src);
 

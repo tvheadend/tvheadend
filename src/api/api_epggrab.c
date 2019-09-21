@@ -39,7 +39,7 @@ api_epggrab_module_list
   htsmsg_t *l = htsmsg_create_list(), *m;
   epggrab_module_t *mod;
   char buf[384];
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   LIST_FOREACH(mod, &epggrab_modules, link) {
     m = htsmsg_create_map();
     htsmsg_add_uuid(m, "uuid", &mod->idnode.in_uuid);
@@ -47,7 +47,7 @@ api_epggrab_module_list
     htsmsg_add_str(m, "title", idnode_get_title(&mod->idnode, perm->aa_lang_ui, buf, sizeof(buf)));
     htsmsg_add_msg(l, NULL, m);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
   return 0;
@@ -61,9 +61,9 @@ api_epggrab_ota_trigger
   if (htsmsg_get_s32(args, "trigger", &s32))
     return EINVAL;
   if (s32 > 0) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     epggrab_ota_trigger(s32);
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
   return 0;
 }
@@ -76,9 +76,9 @@ api_epggrab_rerun_internal
   if (htsmsg_get_s32(args, "rerun", &s32))
     return EINVAL;
   if (s32 > 0) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     epggrab_rerun_internal();
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
   return 0;
 }

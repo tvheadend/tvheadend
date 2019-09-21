@@ -56,7 +56,8 @@ Examples are below based on different information in the EPG:
 - Countdown/Countdown (episode without guide season/episode information)
 
 The `$Q` and `$q` formats also have two numeric modifiers to select
-variant formats and can be used as `$1Q`, `$2Q`, `$1q`, and `$2q`.
+variant formats and can be used as `$1Q`, `$2Q`, `3Q`, `$1q`,  `$2q`,
+and `$3q`.
 
 The number 1 variant forces the recording to be formatted as a movie,
 ignoring the genre from the schedule.
@@ -66,6 +67,19 @@ tv series.
 
 These variants can be useful to work-around bad schedule data that gives
 incorrect genres for programmes.
+
+The number 3 variants (`$3Q` and `$3q`) is an alternative directory
+layout that can be used if your guide data has accurate programme
+information. It will put movies in separate directories for each movie
+and tvshows in separate per-season directories.
+
+Examples for `$3q` are:
+- tvmovies/Gladiator (2000)/Gladiator (2000)
+- tvshows/Bones/Season 5/Bones - S05E11
+
+Examples for `$3Q` are:
+- Gladiator (2000)/Gladiator (2000)
+- Bones/Season 5/Bones - S05E11
 
 Typically the `$q` and `$Q` formats would be combined with other
 modifiers to generate a complete filename such as `$q$n.$x`.

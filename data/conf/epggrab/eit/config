@@ -8,11 +8,31 @@
     "pid": 3003,
     "conv": "huffman",
     "nit": {
+      "Freesat": {
+        "onid": 59,
+        "nbid": 59,
+        "tsid": 2315
+      }
+    },
+    "priv": 1179861332,
+    "hacks": {
+       "slave": "uk_freesat_eit",
+       "bat": { "pid": 3002 },
+       "interest-4e": 1
+    }
+  },
+
+  "uk_freesat_eit": {
+    "name": {
+      "eng": "UK: Freesat (EIT)"
+    },
+    "prio": 6,
+    "conv": "huffman",
+    "nit": {
       "Freesat": 1
     },
     "priv": 1179861332,
     "hacks": {
-       "bat": { "pid": 3002 },
        "interest-4e": 1
     }
   },
@@ -69,6 +89,7 @@
       "Sirius": { "nbid": 85 },
       "Viasat": { "nbid": 86 }
     },
+    "pid": 37,
     "prio": 5
   },
 
@@ -77,8 +98,9 @@
       "eng": "Bulsatcom: Bula 39E"
     },
     "nit": {
-      "FIXMEFIXME": 1
+      "Telekom Romania": 28
     },
+    "priv": 24577,
     "pid": 299,
     "prio": 5
   },
@@ -88,7 +110,10 @@
       "eng": "UK: Cable Virgin"
     },
     "nit": {
-      "FIXMEFIXME": 1
+      "": {
+        "onid": 61472,
+        "nbid": 41015
+      }
     },
     "pid": 700,
     "prio": 5,
@@ -101,7 +126,8 @@
     "name": {
       "eng": "EIT: EPG Grabber"
     },
-    "prio": 1
+    "prio": 1,
+    "sdt_enable": 1
   }
 
 }

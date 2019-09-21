@@ -240,7 +240,7 @@ wizard_page_t *wizard_hello(const char *lang)
   };
   wizard_page_t *page =
     page_init("hello", "wizard_hello",
-    N_("Wizard - Welcome/Language"));
+    N_("Welcome"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_hello_t *w;
   htsmsg_t *m;
@@ -254,7 +254,7 @@ wizard_page_t *wizard_hello(const char *lang)
   page->aux = w = calloc(1, sizeof(wizard_hello_t));
 
   if (config.language_ui)
-    strncpy(w->ui_lang, config.language_ui, sizeof(w->ui_lang)-1);
+    strlcpy(w->ui_lang, config.language_ui, sizeof(w->ui_lang));
 
   m = htsmsg_csv_2_list(config.language, ',');
   f = m ? HTSMSG_FIRST(m) : NULL;
@@ -262,9 +262,9 @@ wizard_page_t *wizard_hello(const char *lang)
     s = htsmsg_field_get_string(f);
     if (s == NULL) break;
     switch (idx) {
-    case 0: strncpy(w->epg_lang1, s, sizeof(w->epg_lang1) - 1); break;
-    case 1: strncpy(w->epg_lang2, s, sizeof(w->epg_lang2) - 1); break;
-    case 2: strncpy(w->epg_lang3, s, sizeof(w->epg_lang3) - 1); break;
+    case 0: strlcpy(w->epg_lang1, s, sizeof(w->epg_lang1)); break;
+    case 1: strlcpy(w->epg_lang2, s, sizeof(w->epg_lang2)); break;
+    case 2: strlcpy(w->epg_lang3, s, sizeof(w->epg_lang3)); break;
     }
     f = HTSMSG_NEXT(f);
   }
@@ -464,7 +464,7 @@ wizard_page_t *wizard_login(const char *lang)
   };
   wizard_page_t *page =
     page_init("login", "wizard_login",
-    N_("Wizard - Access Control"));
+    N_("Access Control"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_login_t *w;
   access_entry_t *ae;
@@ -667,7 +667,7 @@ wizard_page_t *wizard_network(const char *lang)
     PREV_BUTTON(login),
     NEXT_BUTTON(muxes),
   };
-  wizard_page_t *page = page_init("network", "wizard_network", N_("Wizard - Network Settings"));
+  wizard_page_t *page = page_init("network", "wizard_network", N_("Tuner and Network"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_network_t *w;
   mpegts_network_t *mn;
@@ -959,7 +959,7 @@ wizard_page_t *wizard_muxes(const char *lang)
     PREV_BUTTON(network),
     NEXT_BUTTON(status),
   };
-  wizard_page_t *page = page_init("muxes", "wizard_muxes", N_("Wizard - Assign Predefined Muxes to Networks"));
+  wizard_page_t *page = page_init("muxes", "wizard_muxes", N_("Predefined Muxes"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_muxes_t *w;
   mpegts_network_t *mn;
@@ -1044,7 +1044,7 @@ wizard_page_t *wizard_status(const char *lang)
     NEXT_BUTTON(mapping),
     {}
   };
-  wizard_page_t *page = page_init("status", "wizard_status", N_("Wizard - Scanning for Services"));
+  wizard_page_t *page = page_init("status", "wizard_status", N_("Scanning"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   ic->ic_properties = props;
   ic->ic_groups = groups;
@@ -1136,7 +1136,7 @@ wizard_page_t *wizard_mapping(const char *lang)
     NEXT_BUTTON(channels),
     {}
   };
-  wizard_page_t *page = page_init("mapping", "wizard_mapping", N_("Wizard - Service Mapping"));
+  wizard_page_t *page = page_init("mapping", "wizard_mapping", N_("Service Mapping"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_mapping_t *w;
   ic->ic_properties = props;
@@ -1189,7 +1189,7 @@ wizard_page_t *wizard_channels(const char *lang)
     LAST_BUTTON(),
     {}
   };
-  wizard_page_t *page = page_init("channels", "wizard_channels", N_("Wizard - Finished"));
+  wizard_page_t *page = page_init("channels", "wizard_channels", N_("Finished"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   access_entry_t *ae;
 

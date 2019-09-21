@@ -51,13 +51,13 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
 
   assert(mm == mtm->mt_mux);
 
-  pthread_mutex_lock(&mm->mm_tables_lock);
+  tvh_mutex_lock(&mm->mm_tables_lock);
 
   if ((mtm->mt_flags & MT_ONESHOT) && (mtm->mt_complete && !mtm->mt_working))
     mm->mm_unsubscribe_table(mm, mtm);
 
   if (mm->mm_scan_state != MM_SCAN_STATE_ACTIVE) {
-    pthread_mutex_unlock(&mm->mm_tables_lock);
+    tvh_mutex_unlock(&mm->mm_tables_lock);
     return;
   }
 
@@ -68,12 +68,12 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
       tvhtrace(LS_MPEGTS, "table: mux %p no fastswitch %s %02X/%02X (%d) pid %04X (%d)",
                mm, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
                mt->mt_pid, mt->mt_pid);
-      pthread_mutex_unlock(&mm->mm_tables_lock);
+      tvh_mutex_unlock(&mm->mm_tables_lock);
       return;
     }
   }
 
-  pthread_mutex_unlock(&mm->mm_tables_lock);
+  tvh_mutex_unlock(&mm->mm_tables_lock);
 
   mpegts_mux_scan_done(mm, mm->mm_nicename, 1);
 }
@@ -119,7 +119,7 @@ mpegts_table_release_ ( mpegts_table_t *mt )
   tvhtrace(LS_MPEGTS, "table: mux %p free %s %02X/%02X (%d) pid %04X (%d)",
            mt->mt_mux, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
            mt->mt_pid, mt->mt_pid);
-  if (mt->mt_bat)
+  if (mt->mt_bat && mt->mt_bat != mt)
     dvb_bat_destroy(mt);
   if (mt->mt_destroy)
     mt->mt_destroy(mt);
@@ -154,10 +154,10 @@ mpegts_table_destroy ( mpegts_table_t *mt )
 {
   mpegts_mux_t *mm = mt->mt_mux;
 
-  pthread_mutex_lock(&mm->mm_tables_lock);
+  tvh_mutex_lock(&mm->mm_tables_lock);
   if (!mt->mt_destroyed)
     mpegts_table_destroy_(mt);
-  pthread_mutex_unlock(&mm->mm_tables_lock);
+  tvh_mutex_unlock(&mm->mm_tables_lock);
 }
 
 /**
@@ -182,7 +182,7 @@ mpegts_table_t *mpegts_table_find
 {
   mpegts_table_t *mt;
 
-  pthread_mutex_lock(&mm->mm_tables_lock);
+  tvh_mutex_lock(&mm->mm_tables_lock);
   mpegts_table_consistency_check(mm);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_opaque != opaque)
@@ -192,7 +192,7 @@ mpegts_table_t *mpegts_table_find
     mpegts_table_consistency_check(mm);
     break;
   }
-  pthread_mutex_unlock(&mm->mm_tables_lock);
+  tvh_mutex_unlock(&mm->mm_tables_lock);
   return mt;
 }
 
@@ -211,7 +211,7 @@ mpegts_table_add
   char buf[64];
 
   /* Check for existing */
-  pthread_mutex_lock(&mm->mm_tables_lock);
+  tvh_mutex_lock(&mm->mm_tables_lock);
   mpegts_table_consistency_check(mm);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_opaque != opaque)
@@ -238,7 +238,7 @@ mpegts_table_add
         mm->mm_open_table(mm, mt, 1);
     }
     mpegts_table_consistency_check(mm);
-    pthread_mutex_unlock(&mm->mm_tables_lock);
+    tvh_mutex_unlock(&mm->mm_tables_lock);
     return mt;
   }
   tvhtrace(LS_MPEGTS, "table: mux %p add %s %02X/%02X (%d) pid %04X (%d)",
@@ -274,7 +274,7 @@ mpegts_table_add
   }
   mm->mm_open_table(mm, mt, subscribe);
   mpegts_table_consistency_check(mm);
-  pthread_mutex_unlock(&mm->mm_tables_lock);
+  tvh_mutex_unlock(&mm->mm_tables_lock);
   return mt;
 }
 
@@ -287,7 +287,7 @@ mpegts_table_flush_all ( mpegts_mux_t *mm )
   mpegts_table_t        *mt;
 
   descrambler_flush_tables(mm);
-  pthread_mutex_lock(&mm->mm_tables_lock);
+  tvh_mutex_lock(&mm->mm_tables_lock);
   mpegts_table_consistency_check(mm);
   while ((mt = TAILQ_FIRST(&mm->mm_defer_tables))) {
     TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
@@ -303,7 +303,7 @@ mpegts_table_flush_all ( mpegts_mux_t *mm )
   assert(mm->mm_num_tables == 0);
   assert(TAILQ_FIRST(&mm->mm_defer_tables) == NULL);
   assert(LIST_FIRST(&mm->mm_tables) == NULL);
-  pthread_mutex_unlock(&mm->mm_tables_lock);
+  tvh_mutex_unlock(&mm->mm_tables_lock);
 }
 
 

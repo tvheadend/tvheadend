@@ -274,3 +274,34 @@ dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list)
   }
   free(list);
 }
+
+/*
+ * Delete cutpoint files
+ */
+void
+dvr_cutpoint_delete_files (const char *s)
+{
+  char *path, *dot;
+  int i;
+
+  path = alloca(strlen(s) + 1);
+
+  /* Check each cutlist extension */
+  for (i = 0; i < ARRAY_SIZE(dvr_cutpoint_parsers); i++) {
+
+    strcpy(path, s);
+    if ((dot = (strrchr(path, '.') + 1)))
+      *dot = 0;
+
+    strcat(path, dvr_cutpoint_parsers[i].ext);
+
+    /* Check file exists */
+    if (access(path, F_OK))
+      continue;
+
+    /* Delete File */
+    tvhinfo(LS_DVR, "Erasing cutpoint file '%s'", (const char *)path);
+    if (unlink(path))
+      tvherror(LS_DVR, "unable to remove cutpoint file '%s'", (const char *)path);
+  }
+}

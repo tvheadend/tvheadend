@@ -148,35 +148,19 @@ Icon                                                                  | Descript
 
 If you click on a single event, a popup will display detailed
 information about the event. It also allows you to schedule the event
-for recording by clicking on the *[Record program]* button.
-
-For EPG providers that supply series link information there will also be
-a *[Record series]* button that will record all entries in the series.
-
-![EPG Detail 1](static/img/doc/epg/series_link.png)
-
-For events without any series link information, an *[Autorec]* button
-will be provided to create a pseudo-series link using the autorec
-feature.
+for recording, find alternative events and more.
 
 ![EPG Detail 2](static/img/doc/epg/autorec.png)
 
-If you schedule any kind of recording from this point, you can choose a
-specific DVR profile that will apply to the recording or autorec rule.
-This will normally show as *(default)*, but you can define different
-profiles in the **Configuration -\> Recording -\> [Digital Video
-Recorder Profiles](class/dvrconfig)** tab. This allows you to set, for example, more post-
-broadcast padding for a channel that always runs late, or perhaps define
-a different post-processing command to strip adverts out on a commercial
-channel.
-
-You will also see *[Search IMDB]* and *[TheTVDB]* buttons to look for the program by name
-on imdb.com/thetvdb.com, and a *[Play program]* button to watch a program that’s already
-in progress. This second button downloads a playlist file (XSPF or M3U
-depending on your startup options); if your system is configured for it,
-this will automatically launch an appropriate player, otherwise you will
-need to manually open the playlist to start watching (normally a
-double-click on the downloaded file).
+Toolbar item                                                                          | Description
+--------------------------------------------------------------------------------------|------------
+Find info from ... drop-down                                                          | Query an online service for more information on an event. Opens in new window.
+![Play](static/img/doc/icons/control_play.png) *[Play]*                               | Download a playlist file (XSPF or M3U depending on your startup options); if your system is configured for it, this will automatically launch an appropriate player, otherwise you will need to manually open the playlist to start watching (normally a double-click on the downloaded file).
+(default DVR Profile) drop-down                                                       | Choose a specific DVR profile that will apply to the recording or autorec rule. You can define different profiles in the **Configuration -\> Recording -\> [Digital Video Recorder Profiles](class/dvrconfig)** tab. This allows you to set, for example, more post-broadcast padding for a channel that always runs late, or perhaps define a different post-processing command to strip adverts out on a commercial channel.
+![Record](static/img/doc/icons/rec.png) *[Record]*                                    | Record the displayed event.
+![Record Series](static/img/doc/icons/auto_rec.png) *[Record Series]* / *[Autorec]*   | **Record Series:** Series link, Record all EPG-defined episodes in the series/season. **Autorec:** Create a pseudo-series link using the autorec feature.
+![Alternative showings](static/img/doc/icons/control_repeat_blue.png)                 | List/Find alternative showings (exact matches) of this event.
+![Related events](static/img/doc/icons/clock.png)                                     | List/Find related EPG events. 
 
 To close the popup, just click on the [X] window button. The popup isn’t
 modal, so you don’t have to close it before doing something else, and

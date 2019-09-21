@@ -117,11 +117,15 @@ struct idnode_save {
 /*
  * Simple list
  */
-typedef struct idnode_slist {
+typedef struct idnode_slist idnode_slist_t;
+struct idnode_slist {
   const char       *id;
   const char       *name;
   size_t            off;
-} idnode_slist_t;
+  
+  int             (*set)(void *self, idnode_slist_t *entry, int val);
+  int             (*get)(void *self, idnode_slist_t *entry);
+};
 
 /*
  * Node list mapping definition
@@ -194,16 +198,16 @@ typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;
 
 extern idnode_t tvhlog_conf;
 extern const idclass_t tvhlog_conf_class;
-extern pthread_mutex_t idnode_mutex;
+extern tvh_mutex_t idnode_mutex;
 
 void idnode_boot(void);
 void idnode_init(void);
 void idnode_done(void);
 
 static inline void idnode_lock(void)
-  { pthread_mutex_lock(&idnode_mutex); }
+  { tvh_mutex_lock(&idnode_mutex); }
 static inline void idnode_unlock(void)
-  { pthread_mutex_unlock(&idnode_mutex); }
+  { tvh_mutex_unlock(&idnode_mutex); }
 
 #define IDNODE_SHORT_UUID (1<<0)
 

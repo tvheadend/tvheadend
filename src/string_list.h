@@ -60,6 +60,11 @@ void string_list_insert(string_list_t *l, const char *id);
 /// Insert a copy of lowercase id in to the sorted string list.
 void string_list_insert_lowercase(string_list_t *l, const char *id);
 
+/// Remove the first entry from the list and return ownership to the
+/// caller.
+char *string_list_remove_first(string_list_t *l)
+  __attribute__((warn_unused_result));
+
 /// Conversion function from sorted string list to an htsmsg.
 /// @return NULL if empty.
 struct htsmsg *string_list_to_htsmsg(const string_list_t *l)

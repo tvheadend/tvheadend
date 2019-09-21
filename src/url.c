@@ -129,7 +129,7 @@ urlparse ( const char *str, url_t *url )
     size_t len = x.afterLast - x.first;\
     if (len > sizeof(y) - 1) \
     { y[0] = '\0'; s = strndup(x.first, len); } else \
-    { s = NULL; strncpy(y, x.first, len); y[len] = '\0'; }\
+    { s = NULL; strlcpy(y, x.first, len + 1); }\
   } else {\
     s = NULL;\
     y[0] = '\0';\

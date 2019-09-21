@@ -45,6 +45,12 @@ else
 DEBUG = -debug
 endif
 
+ifeq ($(PLATFORM), freebsd)
+STAT_ARG=-f "%-35N %7z"
+else
+STAT_ARG=--printf="%-35n %7s\n"
+endif
+
 JAVASCRIPT =
 JAVASCRIPT2 =
 JAVASCRIPT_TV =
@@ -144,6 +150,7 @@ JAVASCRIPT += $(ROOTPATH)/app/timeshift.js
 endif
 JAVASCRIPT += $(ROOTPATH)/app/chconf.js
 JAVASCRIPT += $(ROOTPATH)/app/epg.js
+JAVASCRIPT += $(ROOTPATH)/app/epgevent.js
 JAVASCRIPT += $(ROOTPATH)/app/dvr.js
 JAVASCRIPT += $(ROOTPATH)/app/epggrab.js
 JAVASCRIPT += $(ROOTPATH)/app/config.js
@@ -194,22 +201,22 @@ define GO_JS
 	$(VV)$(CSS_PY) --in="$^" utf-check
 	$(VV)cat $^ > $@.tmp
 	$(VV)$(RUN_JS) < $@.tmp > $@.tmp2
-	@stat --printf="%-35n %7s\n" $@.tmp $@.tmp2
+	@stat $(STAT_ARG) $@.tmp $@.tmp2
 	$(VV)$(GZIPCMD) -c $@.tmp2 > $@.tmp
 	@rm $@.tmp2
 	@mv $@.tmp $@
-	@stat --printf="%-35n %7s\n" $@
+	@stat $(STAT_ARG) $@
 endef
 
 define GO_CSS
 	$(VV)$(CSS_PY) --in="$^" utf-check
 	$(VV)$(CSS_PY) --in="$^" > $@.tmp
 	$(VV)$(RUN_CSS) < $@.tmp > $@.tmp2
-	@stat --printf="%-35n %7s\n" $@.tmp $@.tmp2
+	@stat $(STAT_ARG) $@.tmp $@.tmp2
 	$(VV)$(GZIPCMD) -c $@.tmp2 > $@.tmp
 	@rm $@.tmp2
 	@mv $@.tmp $@
-	@stat --printf="%-35n %7s\n" $@
+	@stat $(STAT_ARG) $@
 endef
 
 define merge-po

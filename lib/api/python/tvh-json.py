@@ -7,7 +7,6 @@
 import os
 import sys
 import json
-import base64
 import traceback
 try:
     # Python 3
@@ -27,6 +26,9 @@ DEBUG=False
 TVH_API=env('TVH_API_URL', 'http://localhost:9981/api')
 TVH_USER=env('TVH_USER', None)
 TVH_PASS=env('TVH_PASS', None)
+TVH_AUTH=env('TVH_AUTH', 'digest')
+PWD_MGR = urllib.HTTPPasswordMgrWithDefaultRealm()
+PWD_MGR.add_password(None, TVH_API, TVH_USER, TVH_PASS)
 
 class Response(object):
     def __init__(self, response):
@@ -55,14 +57,19 @@ class TVHeadend(object):
     def __init__(self, path, headers=None):
         self._headers = headers or {}
         self._path = path or []
-        a = '%s:%s' % (TVH_USER, TVH_PASS)
-        self._auth = b'Basic ' + base64.b64encode(a.encode('utf-8'))
 
     def opener(self):
-        if DEBUG:
-            return urllib.build_opener(urllib.HTTPSHandler(debuglevel=1))
+        handlers = []
+        if TVH_AUTH == 'digest':
+            handlers.append(urllib.HTTPDigestAuthHandler(PWD_MGR))
+        elif TVH_AUTH == 'basic':
+            handlers.append(urllib.HTTPBasicAuthHandler(PWD_MGR))
         else:
-            return urllib.build_opener()
+            handlers.append(urllib.HTTPDigestAuthHandler(PWD_MGR))
+            handlers.append(urllib.HTTPBasicAuthHandler(PWD_MGR))
+        if DEBUG:
+            handlers.append(urllib.HTTPSHandler(debuglevel=1))
+        return urllib.build_opener(*handlers)
 
     def _push(self, data, binary=None, method='PUT'):
         content_type = None
@@ -76,7 +83,6 @@ class TVHeadend(object):
         request = urllib.Request(TVH_API + path, data=data)
         if content_type:
             request.add_header('Content-Type', content_type)
-        request.add_header('Authorization', self._auth)
         request.get_method = lambda: method
         try:
             r = Response(opener.open(request))
@@ -118,10 +124,8 @@ def do_get(*args):
 def do_export(*args):
     if len(args) < 1: error(1, 'get [uuid]')
     body = do_get0('raw/export', {'uuid':args[0]})
-    if type(body) != type({}):
+    if type(body) != type([]):
         error(11, 'Unknown data')
-    if 'entries' in body:
-        body = body['entries']
     if len(body) == 1:
         body = body[0]
     if not 'uuid' in body:
@@ -131,6 +135,8 @@ def do_export(*args):
 def do_exportcls(*args):
     if len(args) < 1: error(1, 'get [class]')
     body = do_get0('raw/export', {'class':args[0]})
+    if not body:
+        return
     if type(body) != type({}) and type(body) != type([]):
         error(11, 'Unknown data')
     if 'entries' in body:

@@ -41,7 +41,7 @@ while True:
   if cc & 0x10:
     cc &= 0x0f
     if pid in pids_cc and pids_cc[pid] != cc:
-      print 'cc err 0x%x != 0x%x for pid %04X (%4d) %d' % (cc, pids_cc[pid], pid, pid, fp.tell())
+      print 'cc err 0x%x != 0x%x for pid %04X (%4d) at %d' % (cc, pids_cc[pid], pid, pid, fp.tell())
       if pid not in pids_cc_err:
         pids_cc_err[pid] = 1
       else:

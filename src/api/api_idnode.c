@@ -131,7 +131,7 @@ api_idnode_grid
   api_idnode_grid_conf(perm, args, &conf);
 
   /* Create list */
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   cb(perm, &ins, &conf, args);
 
   /* Sort */
@@ -152,7 +152,7 @@ api_idnode_grid
     if (conf.limit > 0) conf.limit--;
   }
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   /* Output */
   *resp = htsmsg_create_map();
@@ -225,9 +225,9 @@ api_idnode_load_by_class
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int ret;
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   ret = api_idnode_load_by_class0(perm, opaque, op, args, resp);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return ret;
 }
 
@@ -244,13 +244,13 @@ api_idnode_load
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {
     const idclass_t *idc;
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     idc = idclass_find(class);
     if (idc)
       err = api_idnode_load_by_class0(perm, (void*)idc, NULL, args, resp);
     else
       err = EINVAL;
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return err;
   }
   
@@ -268,7 +268,7 @@ api_idnode_load
 
   flist = api_idnode_flist_conf(args, "list");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   /* Multiple */
   if (uuids) {
@@ -328,7 +328,7 @@ api_idnode_load
     htsmsg_destroy(l);
   }
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsmsg_destroy(flist);
 
@@ -346,9 +346,9 @@ api_idnode_load_simple
 
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     err = api_idnode_load_by_class0(perm, (void*)in->in_class, NULL, args, resp);
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return err;
   }
 
@@ -357,7 +357,7 @@ api_idnode_load_simple
 
   flist = api_idnode_flist_conf(args, "list");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   if (!idnode_perm(in, perm, NULL)) {
     l = htsmsg_create_list();
@@ -370,7 +370,7 @@ api_idnode_load_simple
     err = EPERM;
   }
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   if (l) {
     *resp = htsmsg_create_map();
@@ -400,7 +400,7 @@ api_idnode_save
     if (!(msg = htsmsg_field_get_map(f)))
       return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   /* Single or Foreach */
   if (!msg->hm_islist) {
@@ -469,7 +469,7 @@ api_idnode_save
   // TODO: return updated UUIDs?
 
 exit:
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return err;
 }
@@ -488,7 +488,7 @@ api_idnode_save_simple
   if (!(msg = htsmsg_field_get_map(f)))
       return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   /* Single */
   if (!idnode_perm(in, perm, msg)) {
@@ -498,7 +498,7 @@ api_idnode_save_simple
     err = EPERM;
   }
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return err;
 }
@@ -526,11 +526,11 @@ api_idnode_tree
   if (isroot && !(root || rootfn))
     return EINVAL;
 
- pthread_mutex_lock(&global_lock);
+ tvh_mutex_lock(&global_lock);
 
   if (!isroot || root) {
     if (!(node = idnode_find(isroot ? root : uuid, NULL, NULL))) {
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
       return EINVAL;
     }
   }
@@ -541,7 +541,7 @@ api_idnode_tree
   if (isroot && node) {
     htsmsg_t *m;
     if (idnode_perm(node, perm, NULL)) {
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
       return EINVAL;
     }
     m = idnode_serialize(node, perm->aa_lang_ui);
@@ -568,7 +568,7 @@ api_idnode_tree
       idnode_set_free(v);
     }
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }
@@ -582,7 +582,7 @@ api_idnode_class
   const idclass_t *idc;
   htsmsg_t *flist = api_idnode_flist_conf(args, "list");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   /* Lookup */
   if (!opaque) {
@@ -599,7 +599,7 @@ api_idnode_class
   *resp = idclass_serialize0(idc, flist, 0, perm->aa_lang_ui);
 
 exit:
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsmsg_destroy(flist);
 
@@ -634,11 +634,11 @@ api_idnode_handler
     htsmsg_add_str(msg, "__op__", op);
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_string(f))) continue;
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
       if ((in = idnode_find(uuid, idc, domain)) != NULL) {
         domain = in->in_domain;
         if (idnode_perm(in, perm, msg)) {
-          pthread_mutex_unlock(&global_lock);
+          tvh_mutex_unlock(&global_lock);
           pcnt++;
           continue;
         }
@@ -647,7 +647,7 @@ api_idnode_handler
           idnode_perm_unset(in);
         cnt++;
       }
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
       if (destroyed)
         sched_yield(); /* delete penalty */
     }
@@ -659,7 +659,7 @@ api_idnode_handler
   /* Single */
   } else {
     uuid = htsmsg_field_get_string(f);
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     if (!(in   = idnode_find(uuid, idc, NULL))) {
       err = ENOENT;
     } else {
@@ -674,7 +674,7 @@ api_idnode_handler
       }
       htsmsg_destroy(msg);
     }
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
 
 

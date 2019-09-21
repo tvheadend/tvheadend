@@ -19,7 +19,7 @@
 
 #include <fcntl.h>
 #include <signal.h>
-#include <pthread.h>
+
 #include "tvheadend.h"
 #include "tcp.h"
 #include "cclient.h"
@@ -80,8 +80,16 @@ cc_service_ecm_pid_free(cc_service_t *ct)
 static void
 cc_free_card(cc_card_data_t *cd)
 {
+  emm_provider_t *emmp;
+  int i;
+
   LIST_REMOVE(cd, cs_card);
-  descrambler_close_emm(cd->cs_mux, cd, cd->cs_ra.caid);
+
+  descrambler_close_emm(cd->cs_mux, cd, cd->cs_ra.caid, 0);
+  emmp = cd->cs_ra.providers;
+  for (i = 0; i < cd->cs_ra.providers_count; i++, emmp++)
+    descrambler_close_emm(cd->cs_mux, cd, cd->cs_ra.caid, emmp->id);
+
   emm_reass_done(&cd->cs_ra);
   free(cd);
 }
@@ -223,13 +231,13 @@ cc_remove_card(cclient_t *cc, cc_card_data_t *pcard)
   cc_ecm_section_t *es, *esn;
   emm_provider_t *emmp;
   char buf[256];
-  int i;
+  int i, changed = 0;
 
   tvhinfo(cc->cc_subsys, "%s: card %s removed", cc->cc_name,
           cc_get_card_name(pcard, buf, sizeof(buf)));
 
   /* invalidate all requests */
-  LIST_FOREACH(ct, &cc->cc_services, cs_link)
+  LIST_FOREACH(ct, &cc->cc_services, cs_link) {
     for (ep = LIST_FIRST(&ct->cs_ecm_pids); ep; ep = epn) {
       epn = LIST_NEXT(ep, ep_link);
       for (es = LIST_FIRST(&ep->ep_sections); es; es = esn) {
@@ -238,6 +246,7 @@ cc_remove_card(cclient_t *cc, cc_card_data_t *pcard)
           emmp = pcard->cs_ra.providers;
           for (i = 0; i < pcard->cs_ra.providers_count; i++, emmp++) {
             if (emmp->id == es->es_provid) {
+              changed = 1;
               cc_free_ecm_section(es);
               break;
             }
@@ -247,6 +256,12 @@ cc_remove_card(cclient_t *cc, cc_card_data_t *pcard)
       if (LIST_EMPTY(&ep->ep_sections))
         cc_free_ecm_pid(ep);
     }
+    if (changed) {
+      ct->cs_capid = 0xffff;
+      ct->ecm_state = ECM_INIT;
+      changed = 0;
+    }
+  }
 
   cc_free_card(pcard);
 }
@@ -277,7 +292,7 @@ cc_ecm_reset(th_descrambler_t *th)
   cc_ecm_pid_t *ep;
   cc_ecm_section_t *es;
 
-  pthread_mutex_lock(&cc->cc_mutex);
+  tvh_mutex_lock(&cc->cc_mutex);
   descrambler_change_keystate(th, DS_READY, 1);
   LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link)
     LIST_FOREACH(es, &ep->ep_sections, es_link) {
@@ -287,7 +302,7 @@ cc_ecm_reset(th_descrambler_t *th)
       es->es_data_len = 0;
     }
   ct->ecm_state = ECM_RESET;
-  pthread_mutex_unlock(&cc->cc_mutex);
+  tvh_mutex_unlock(&cc->cc_mutex);
   return 0;
 }
 
@@ -302,7 +317,7 @@ cc_ecm_idle(th_descrambler_t *th)
   cc_ecm_pid_t *ep;
   cc_ecm_section_t *es;
 
-  pthread_mutex_lock(&cc->cc_mutex);
+  tvh_mutex_lock(&cc->cc_mutex);
   LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link)
     LIST_FOREACH(es, &ep->ep_sections, es_link) {
       es->es_keystate = ES_IDLE;
@@ -311,7 +326,7 @@ cc_ecm_idle(th_descrambler_t *th)
       es->es_data_len = 0;
     }
   ct->ecm_state = ECM_RESET;
-  pthread_mutex_unlock(&cc->cc_mutex);
+  tvh_mutex_unlock(&cc->cc_mutex);
 }
 
 /**
@@ -430,7 +445,7 @@ forbid:
     es->es_resolved = 1;
 
     es3 = *es;
-    pthread_mutex_unlock(&cc->cc_mutex);
+    tvh_mutex_unlock(&cc->cc_mutex);
     descrambler_keys((th_descrambler_t *)ct, key_type, 0, key_even, key_odd);
     snprintf(chaninfo, sizeof(chaninfo), "%s:%i", cc->cc_hostname, cc->cc_port);
     descrambler_notify((th_descrambler_t *)ct,
@@ -438,7 +453,7 @@ forbid:
                        caid2name(es3.es_caid),
                        es3.es_capid, delay,
                        1, "", chaninfo, cc->cc_id);
-    pthread_mutex_lock(&cc->cc_mutex);
+    tvh_mutex_lock(&cc->cc_mutex);
   }
 }
 
@@ -509,9 +524,9 @@ cc_read(cclient_t *cc, void *buf, size_t len, int timeout)
 {
   int r;
 
-  pthread_mutex_unlock(&cc->cc_mutex);
+  tvh_mutex_unlock(&cc->cc_mutex);
   r = tcp_read_timeout(cc->cc_fd, buf, len, timeout);
-  pthread_mutex_lock(&cc->cc_mutex);
+  tvh_mutex_lock(&cc->cc_mutex);
 
   if (r && tvheadend_is_running())
     tvhwarn(cc->cc_subsys, "%s: read error %d (%s)",
@@ -589,11 +604,11 @@ cc_session(cclient_t *cc)
   tvhpoll_add1(poll, cc->cc_fd, TVHPOLL_IN, &cc->cc_fd);
   mono = mclk() + sec2mono(cc->cc_keepalive_interval);
   while (!cc_must_break(cc)) {
-    pthread_mutex_unlock(&cc->cc_mutex);
+    tvh_mutex_unlock(&cc->cc_mutex);
     r = tvhpoll_wait(poll, &ev, 1, 1000);
-    pthread_mutex_lock(&cc->cc_mutex);
+    tvh_mutex_lock(&cc->cc_mutex);
     if (r == 0)
-      continue;
+      goto keepalive;
     if (r < 0 && ERRNO_AGAIN(errno))
       continue;
     if (r < 0)
@@ -608,6 +623,10 @@ cc_session(cclient_t *cc)
         tvhlog_hexdump(cc->cc_subsys, rbuf.sb_data + rbuf.sb_ptr - len, len);
         if (cc->cc_read(cc, &rbuf))
           break;
+      } else {
+        tvhtrace(cc->cc_subsys, "%s: %s", cc->cc_name,
+                 len == 0 ? "connection close" : "read error");
+        break;
       }
     } else {
       abort();
@@ -623,6 +642,7 @@ cc_session(cclient_t *cc)
       }
       free(cm);
     }
+keepalive:
     if (mono < mclk()) {
       mono = mclk() + sec2mono(cc->cc_keepalive_interval);
       if (cc->cc_keepalive)
@@ -650,7 +670,7 @@ cc_thread(void *aux)
   int attempts = 0;
   int64_t mono;
 
-  pthread_mutex_lock(&cc->cc_mutex);
+  tvh_mutex_lock(&cc->cc_mutex);
 
   while(cc->cc_running) {
 
@@ -665,11 +685,11 @@ cc_thread(void *aux)
 
     tvhinfo(cc->cc_subsys, "%s: Attemping to connect to server", cc->cc_name);
 
-    pthread_mutex_unlock(&cc->cc_mutex);
+    tvh_mutex_unlock(&cc->cc_mutex);
 
     fd = tcp_connect(hostname, port, NULL, errbuf, sizeof(errbuf), 10);
 
-    pthread_mutex_lock(&cc->cc_mutex);
+    tvh_mutex_lock(&cc->cc_mutex);
 
     if(fd == -1) {
       attempts++;
@@ -720,7 +740,7 @@ cc_thread(void *aux)
   tvhinfo(cc->cc_subsys, "%s: Inactive, thread exit", cc->cc_name);
   cc_free_cards(cc);
   cc->cc_name = NULL;
-  pthread_mutex_unlock(&cc->cc_mutex);
+  tvh_mutex_unlock(&cc->cc_mutex);
   return NULL;
 }
 
@@ -801,7 +821,7 @@ cc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if (pcard->cs_mux == NULL)
     return;
   cc = pcard->cs_client;
-  pthread_mutex_lock(&cc->cc_mutex);
+  tvh_mutex_lock(&cc->cc_mutex);
   mux = pcard->cs_mux;
   if (pcard->cs_running && cc->cc_forward_emm && cc->cc_write_running) {
     if (cc->cc_emmex) {
@@ -815,7 +835,7 @@ cc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
     emm_filter(&pcard->cs_ra, data, len, mux, cc_emm_send, pcard);
   }
 end_of_job:
-  pthread_mutex_unlock(&cc->cc_mutex);
+  tvh_mutex_unlock(&cc->cc_mutex);
 }
 
 /**
@@ -843,8 +863,8 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if (len > 4096)
     return;
 
-  pthread_mutex_lock(&cc->cc_mutex);
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&cc->cc_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
 
   if (ct->td_keystate == DS_IDLE)
     goto end;
@@ -989,8 +1009,8 @@ found:
   }
 
 end:
-  pthread_mutex_unlock(&t->s_stream_mutex);
-  pthread_mutex_unlock(&cc->cc_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&cc->cc_mutex);
 }
 
 /**
@@ -1000,10 +1020,12 @@ static void
 cc_service_destroy0(cclient_t *cc, th_descrambler_t *td)
 {
   cc_service_t *ct = (cc_service_t *)td;
-  int i;
+  int i, pid;
 
-  for (i = 0; i < ct->cs_epids.count; i++)
-    descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids.pids[i].pid);
+  for (i = 0; i < ct->cs_epids.count; i++) {
+    pid = DESCRAMBLER_ECM_PID(ct->cs_epids.pids[i].pid);
+    descrambler_close_pid(ct->cs_mux, ct, pid);
+  }
   mpegts_pid_done(&ct->cs_epids);
 
   cc_service_ecm_pid_free(ct);
@@ -1028,9 +1050,9 @@ cc_service_destroy(th_descrambler_t *td)
   cc_service_t *ct = (cc_service_t *)td;
   cclient_t *cc = ct->cs_client;
 
-  pthread_mutex_lock(&cc->cc_mutex);
+  tvh_mutex_lock(&cc->cc_mutex);
   cc_service_destroy0(cc, td);
-  pthread_mutex_unlock(&cc->cc_mutex);
+  tvh_mutex_unlock(&cc->cc_mutex);
 }
 
 /**
@@ -1048,15 +1070,15 @@ cc_service_start(caclient_t *cac, service_t *t)
   caid_t *c;
   cc_card_data_t *pcard;
   char buf[512];
-  int i, reuse = 0, prefpid, prefpid_lock, forcecaid;
+  int i, pid, reuse = 0, prefpid, prefpid_lock, forcecaid;
   mpegts_apids_t epids;
 
   extern const idclass_t mpegts_service_class;
   if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
     return;
 
-  pthread_mutex_lock(&cc->cc_mutex);
-  pthread_mutex_lock(&t->s_stream_mutex);
+  tvh_mutex_lock(&cc->cc_mutex);
+  tvh_mutex_lock(&t->s_stream_mutex);
   LIST_FOREACH(ct, &cc->cc_services, cs_link) {
     if (ct->td_service == t && ct->cs_client == cc)
       break;
@@ -1086,15 +1108,16 @@ cc_service_start(caclient_t *cac, service_t *t)
   if (ct) {
     reuse = 1;
     for (i = 0; i < ct->cs_epids.count; i++) {
+      pid = ct->cs_epids.pids[i].pid;
       TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
-        if (st->es_pid != ct->cs_epids.pids[i].pid) continue;
+        if (st->es_pid != pid) continue;
         LIST_FOREACH(c, &st->es_caids, link)
           if (c->use && c->caid == pcard->cs_ra.caid)
             break;
         if (c) break;
       }
       if (st == NULL) {
-        descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids.pids[i].pid);
+        descrambler_close_pid(ct->cs_mux, ct, DESCRAMBLER_ECM_PID(pid));
         reuse |= 2;
       }
     }
@@ -1138,9 +1161,10 @@ add:
   mpegts_pid_copy(&ct->cs_epids, &epids);
   mpegts_pid_done(&epids);
 
-  for (i = 0; i < ct->cs_epids.count; i++)
-    descrambler_open_pid(ct->cs_mux, ct, ct->cs_epids.pids[i].pid,
-                         cc_table_input, t);
+  for (i = 0; i < ct->cs_epids.count; i++) {
+    pid = DESCRAMBLER_ECM_PID(ct->cs_epids.pids[i].pid);
+    descrambler_open_pid(ct->cs_mux, ct, pid, cc_table_input, t);
+  }
 
   if (reuse & 2) {
     ct->cs_capid = 0xffff;
@@ -1152,8 +1176,8 @@ add:
              cc->cc_name, service_nicename(t), reuse ? "re" : "", cc->cc_hostname, cc->cc_port);
 
 end:
-  pthread_mutex_unlock(&t->s_stream_mutex);
-  pthread_mutex_unlock(&cc->cc_mutex);
+  tvh_mutex_unlock(&t->s_stream_mutex);
+  tvh_mutex_unlock(&cc->cc_mutex);
 }
 
 /**
@@ -1178,31 +1202,38 @@ cc_free(caclient_t *cac)
  *
  */
 void
-cc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint16_t pid, int valid)
+cc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint32_t prov, uint16_t pid, int valid)
 {
   cclient_t *cc = (cclient_t *)cac;;
   cc_card_data_t *pcard;
+  emm_provider_t *emmp;
+  int i;
 
   tvhtrace(cc->cc_subsys,
-           "%s: caid update event - client %s mux %p caid %04x (%i) pid %04x (%i) valid %i",
-           cc->cc_name, cac->cac_name, mux, caid, caid, pid, pid, valid);
-  pthread_mutex_lock(&cc->cc_mutex);
+           "%s: caid update event - client %s mux %p caid %04x (%i) prov %06x (%i) pid %04x (%i) valid %i",
+           cc->cc_name, cac->cac_name, mux, caid, caid, prov, prov, pid, pid, valid);
+  tvh_mutex_lock(&cc->cc_mutex);
   if (valid < 0 || cc->cc_running) {
     LIST_FOREACH(pcard, &cc->cc_cards, cs_card) {
       if (valid < 0 || pcard->cs_ra.caid == caid) {
         if (pcard->cs_mux && pcard->cs_mux != mux) continue;
-        if (valid > 0) {
-          pcard->cs_client = cc;
-          pcard->cs_mux    = mux;
-          descrambler_open_emm(mux, pcard, caid, cc_emm);
-        } else {
-          pcard->cs_mux    = NULL;
-          descrambler_close_emm(mux, pcard, caid);
+        emmp = pcard->cs_ra.providers;
+        for (i = 0; i < pcard->cs_ra.providers_count; i++, emmp++) {
+          if (prov == emmp->id) {
+            if (valid > 0) {
+              pcard->cs_client = cc;
+              pcard->cs_mux    = mux;
+              descrambler_open_emm(mux, pcard, caid, prov, cc_emm);
+            } else {
+              pcard->cs_mux    = NULL;
+              descrambler_close_emm(mux, pcard, caid, prov);
+            }
+          }
         }
       }
     }
   }
-  pthread_mutex_unlock(&cc->cc_mutex);
+  tvh_mutex_unlock(&cc->cc_mutex);
 }
 
 /**
@@ -1221,32 +1252,32 @@ cc_conf_changed(caclient_t *cac)
       caclient_set_status(cac, CACLIENT_STATUS_NONE);
       return;
     }
-    pthread_mutex_lock(&cc->cc_mutex);
+    tvh_mutex_lock(&cc->cc_mutex);
     if (!cc->cc_running) {
       cc->cc_running = 1;
       tvh_pipe(O_NONBLOCK, &cc->cc_pipe);
       snprintf(tname, sizeof(tname), "cc-%s", cc->cc_id);
-      tvhthread_create(&cc->cc_tid, NULL, cc_thread, cc, tname);
-      pthread_mutex_unlock(&cc->cc_mutex);
+      tvh_thread_create(&cc->cc_tid, NULL, cc_thread, cc, tname);
+      tvh_mutex_unlock(&cc->cc_mutex);
       return;
     }
     cc->cc_reconfigure = 1;
     if(cc->cc_fd >= 0)
       shutdown(cc->cc_fd, SHUT_RDWR);
     tvh_cond_signal(&cc->cc_cond, 0);
-    pthread_mutex_unlock(&cc->cc_mutex);
+    tvh_mutex_unlock(&cc->cc_mutex);
   } else {
     if (!cc->cc_running)
       return;
-    pthread_mutex_lock(&cc->cc_mutex);
+    tvh_mutex_lock(&cc->cc_mutex);
     cc->cc_running = 0;
     tvh_cond_signal(&cc->cc_cond, 0);
     tid = cc->cc_tid;
     if (cc->cc_fd >= 0)
       shutdown(cc->cc_fd, SHUT_RDWR);
-    pthread_mutex_unlock(&cc->cc_mutex);
+    tvh_mutex_unlock(&cc->cc_mutex);
     tvh_write(cc->cc_pipe.wr, "q", 1);
-    pthread_kill(tid, SIGHUP);
+    tvh_thread_kill(tid, SIGHUP);
     pthread_join(tid, NULL);
     tvh_pipe_close(&cc->cc_pipe);
     caclient_set_status(cac, CACLIENT_STATUS_NONE);

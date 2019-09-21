@@ -335,8 +335,7 @@ scanfile_create_network
   int opos;
 
   /* Region */
-  strncpy(buf, name, sizeof(buf));
-  buf[sizeof(buf)-1] = '\0';
+  strlcpy(buf, name, sizeof(buf));
   if (!strcmp(type, "dvb-s")) {
     reg = scanfile_region_create(type, "geo", "Geo-synchronous Orbit");
   } else {
@@ -595,6 +594,10 @@ scanfile_load_dvbv5
       mux->dmc_fe_pls_mode = (r>>26)&0x3;
       mux->dmc_fe_pls_code = (r>>8)&0x3FFFF;
     }
+
+    if (htsmsg_get_u32(l, "PLS_CODE", &mux->dmc_fe_pls_code) == 0)
+      mux->dmc_fe_pls_mode = 1;
+    htsmsg_get_u32(l, "PLS_MODE", &mux->dmc_fe_pls_mode);
 
     if ((x = htsmsg_get_str(l, "POLARIZATION"))) {
       char pol[2];
@@ -908,11 +911,11 @@ scanfile_init ( const char *muxconf_path, int lock )
 
   if (!initialized) {
     if (lock)
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
     memoryinfo_register(&scanfile_memoryinfo);
     initialized = 1;
     if (lock)
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
   }
 
   scanfile_total_load = 0;
@@ -943,12 +946,12 @@ scanfile_init ( const char *muxconf_path, int lock )
     scanfile_regions_load = NULL;
   } else {
     if (lock)
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
     scanfile_done();
     scanfile_regions = scanfile_regions_load;
     scanfile_regions_load = NULL;
     if (lock)
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
   }
 }
 

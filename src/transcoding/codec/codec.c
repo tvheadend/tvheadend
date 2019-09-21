@@ -95,14 +95,14 @@ codec_get_type_string(AVCodec *self)
 const char *
 codec_get_title(AVCodec *self)
 {
-    static char __thread codec_title[TVH_TITLE_LEN];
+    static __thread char codec_title[TVH_TITLE_LEN];
 
     memset(codec_title, 0, sizeof(codec_title));
     if (
         str_snprintf(codec_title, sizeof(codec_title),
             self->long_name ? "%s: %s%s" : "%s%s%s",
             self->name, self->long_name ? self->long_name : "",
-            (self->capabilities & CODEC_CAP_EXPERIMENTAL) ? " (Experimental)" : "")
+            (self->capabilities & AV_CODEC_CAP_EXPERIMENTAL) ? " (Experimental)" : "")
        ) {
         return NULL;
     }

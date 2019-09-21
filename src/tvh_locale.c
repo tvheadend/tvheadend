@@ -17,11 +17,9 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pthread.h>
-#include "pthread.h"
+#include "tvh_thread.h"
 #include "tvh_locale.h"
+#include "tvh_string.h"
 #include "redblack.h"
 
 struct tvh_locale {
@@ -33,7 +31,7 @@ struct tvh_locale {
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
-pthread_mutex_t tvh_gettext_mutex = PTHREAD_MUTEX_INITIALIZER;
+tvh_mutex_t tvh_gettext_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 
 /*
  *
@@ -168,10 +166,10 @@ int tvh_gettext_langcode_valid(const char *code)
   struct lng ls;
   int ret;
 
-  pthread_mutex_lock(&tvh_gettext_mutex);
+  tvh_mutex_lock(&tvh_gettext_mutex);
   ls.tvh_lang = code;
   ret = RB_FIND(&lngs, &ls, link, lng_cmp) != NULL;
-  pthread_mutex_unlock(&tvh_gettext_mutex);
+  tvh_mutex_unlock(&tvh_gettext_mutex);
   return ret;
 }
 
@@ -198,8 +196,7 @@ static void tvh_gettext_default_init(void)
   if (p == NULL)
     p = (char *)"en_US";
 
-  strncpy(dflt, p, sizeof(dflt)-1);
-  dflt[sizeof(dflt)-1] = '\0';
+  strlcpy(dflt, p, sizeof(dflt));
   for (p = dflt; *p && *p != '.'; p++);
   if (*p == '.') *p = '\0';
 
@@ -219,7 +216,7 @@ static void tvh_gettext_default_init(void)
 
 const char *tvh_gettext_lang(const char *lang, const char *s)
 {
-  pthread_mutex_lock(&tvh_gettext_mutex);
+  tvh_mutex_lock(&tvh_gettext_mutex);
   if (lang == NULL) {
     s = msg_find(lng_default, s);
   } else {
@@ -232,7 +229,7 @@ const char *tvh_gettext_lang(const char *lang, const char *s)
         s = msg_find(lng_last, s);
     }
   }
-  pthread_mutex_unlock(&tvh_gettext_mutex);
+  tvh_mutex_unlock(&tvh_gettext_mutex);
   return s;
 }
 

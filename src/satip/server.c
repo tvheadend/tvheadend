@@ -35,7 +35,8 @@ static char *satip_server_bindaddr;
 static int satip_server_rtsp_port;
 static int satip_server_rtsp_port_locked;
 static upnp_service_t *satips_upnp_discovery;
-static pthread_mutex_t satip_server_reinit;
+static tvh_mutex_t satip_server_reinit;
+static int bound_port;
 
 static void satip_server_save(void);
 
@@ -69,7 +70,7 @@ satip_server_http_xml(http_connection_t *hc)
 <friendlyName>%s%s</friendlyName>\n\
 <manufacturer>TVHeadend Team</manufacturer>\n\
 <manufacturerURL>http://tvheadend.org</manufacturerURL>\n\
-<modelDescription>TVHeadend %s</modelDescription>\n\
+<modelDescription>Tvheadend %s</modelDescription>\n\
 <modelName>TVHeadend SAT>IP</modelName>\n\
 <modelNumber>1.1</modelNumber>\n\
 <modelURL></modelURL>\n\
@@ -81,28 +82,28 @@ satip_server_http_xml(http_connection_t *hc)
 <width>40</width>\n\
 <height>40</height>\n\
 <depth>16</depth>\n\
-<url>http://%s:%d/static/satip-icon40.png</url>\n\
+<url>http://%s:%d/static/img/satip-icon40.png</url>\n\
 </icon>\n\
 <icon>\n\
 <mimetype>image/jpeg</mimetype>\n\
 <width>40</width>\n\
 <height>40</height>\n\
 <depth>16</depth>\n\
-<url>http://%s:%d/static/satip-icon40.jpg</url>\n\
+<url>http://%s:%d/static/img/satip-icon40.jpg</url>\n\
 </icon>\n\
 <icon>\n\
 <mimetype>image/png</mimetype>\n\
 <width>120</width>\n\
 <height>120</height>\n\
 <depth>16</depth>\n\
-<url>http://%s:%d/static/satip-icon120.png</url>\n\
+<url>http://%s:%d/static/img/satip-icon120.png</url>\n\
 </icon>\n\
 <icon>\n\
 <mimetype>image/jpeg</mimetype>\n\
 <width>120</width>\n\
 <height>120</height>\n\
 <depth>16</depth>\n\
-<url>http://%s:%d/static/satip-icon120.jpg</url>\n\
+<url>http://%s:%d/static/img/satip-icon120.jpg</url>\n\
 </icon>\n\
 </iconList>\n\
 <presentationURL>http://%s:%d</presentationURL>\n\
@@ -138,7 +139,7 @@ satip_server_http_xml(http_connection_t *hc)
 
   htsbuf_queue_init(&q, 0);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
     if (mn->mn_satip_source == 0)
       continue;
@@ -184,7 +185,7 @@ satip_server_http_xml(http_connection_t *hc)
       }
     }
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   if (!dvbs)
     srcs = 0;
 
@@ -257,7 +258,7 @@ satip_server_satip_m3u(http_connection_t *hc)
   if (hts_settings_buildpath(path, sizeof(path), "satip.m3u"))
     return HTTP_STATUS_SERVICE;
 
-  return http_serve_file(hc, path, 0, MIME_M3U, NULL, NULL, NULL);
+  return http_serve_file(hc, path, 0, MIME_M3U, NULL, NULL, NULL, NULL);
 }
 
 int
@@ -556,7 +557,7 @@ static void satips_rtsp_port(int def)
   int rtsp_port = satip_server_rtsp_port;
   if (!satip_server_rtsp_port_locked)
     rtsp_port = satip_server_conf.satip_rtsp > 0 ? satip_server_conf.satip_rtsp : def;
-  if (getuid() != 0 && rtsp_port > 0 && rtsp_port < 1024) {
+  if (getuid() != 0 && rtsp_port > 0 && rtsp_port < 1024 && bound_port != rtsp_port) {
     tvherror(LS_SATIPS, "RTSP port %d specified but no root perms, using 9983", rtsp_port);
     rtsp_port = 9983;
   }
@@ -952,7 +953,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_drop_fe",
       .name   = N_("Drop \"fe=\" parameter"),
       .desc   = N_("Discard the frontend parameter in RTSP requests, "
-                   "as some clients incorretly use it."),
+                   "as some clients incorrectly use it."),
       .off    = offsetof(struct satip_server_conf, satip_drop_fe),
       .opts   = PO_EXPERT,
       .group  = 5,
@@ -995,11 +996,12 @@ static void satip_server_init_common(const char *prefix, int announce)
   nat_ip = strdup(satip_server_conf.satip_nat_ip ?: "");
   nat_port = satip_server_conf.satip_nat_rtsp ?: satip_server_rtsp_port;
   rtp_src_ip = strdup(satip_server_conf.satip_rtp_src_ip ?: "");
+  bound_port = satip_server_rtsp_port;
 
   if (announce)
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
 
-  pthread_mutex_lock(&satip_server_reinit);
+  tvh_mutex_lock(&satip_server_reinit);
 
   satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf, rtp_src_ip, nat_ip, nat_port);
   satip_server_info(prefix, descramble, muxcnf);
@@ -1007,10 +1009,10 @@ static void satip_server_init_common(const char *prefix, int announce)
   if (announce)
     satips_upnp_send_announce();
 
-  pthread_mutex_unlock(&satip_server_reinit);
+  tvh_mutex_unlock(&satip_server_reinit);
 
   if (announce)
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
 
   free(nat_ip);
   free(rtp_src_ip);
@@ -1026,11 +1028,11 @@ static void satip_server_save(void)
     if (satip_server_rtsp_port > 0) {
       satip_server_init_common("re", 1);
     } else {
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
       tvhinfo(LS_SATIPS, "SAT>IP Server shutdown");
       satip_server_rtsp_done();
       satips_upnp_send_byebye();
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
     }
   }
 }
@@ -1050,7 +1052,7 @@ void satip_server_boot(void)
 
 void satip_server_init(const char *bindaddr, int rtsp_port)
 {
-  pthread_mutex_init(&satip_server_reinit, NULL);
+  tvh_mutex_init(&satip_server_reinit, NULL);
 
   http_server_ip = NULL;
 
@@ -1086,7 +1088,7 @@ void satip_server_register(void)
     save = 1;
   }
 
-  if (satip_server_conf.satip_uuid == NULL) {
+  if (strempty(satip_server_conf.satip_uuid)) {
     /* This is not UPnP complaint UUID */
     if (uuid_set(&u, NULL)) {
       tvherror(LS_SATIPS, "Unable to create UUID");

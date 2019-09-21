@@ -17,16 +17,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <assert.h>
-#include <string.h>
 #include <ctype.h>
 
-#include "settings.h"
-
 #include "tvheadend.h"
+#include "settings.h"
 #include "dvr.h"
 #include "htsp_server.h"
 #include "streaming.h"
@@ -44,6 +38,9 @@ static int dvr_in_init;
 #if ENABLE_DBUS_1
 static mtimer_t dvr_dbus_timer;
 #endif
+/// Periodically pre-fetch artwork for scheduled recordings.
+static mtimer_t dvr_fanart_timer;
+static string_list_t *dvr_fanart_to_prefetch;
 
 static void dvr_entry_deferred_destroy(dvr_entry_t *de);
 static void dvr_entry_set_timer(dvr_entry_t *de);
@@ -56,6 +53,8 @@ static void dvr_timer_start_recording(void *aux);
 static void dvr_timer_stop_recording(void *aux);
 static int dvr_entry_rerecord(dvr_entry_t *de);
 static time_t dvr_entry_get_segment_stop_extra(dvr_entry_t *de);
+static void dvr_entry_watched_timer_arm(dvr_entry_t* de);
+static void dvr_entry_watched_timer_disarm(dvr_entry_t* de);
 
 static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de);
 
@@ -238,7 +237,7 @@ dvr_entry_set_state(dvr_entry_t *de, dvr_entry_sched_state_t state,
 /*
  *
  */
-static int
+int
 dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
 {
   char id[16];
@@ -757,6 +756,93 @@ dvr_usage_count(access_t *aa)
   return used;
 }
 
+int
+dvr_entry_allow_fanart_lookup(const dvr_entry_t *de)
+{
+  char ubuf[UUID_HEX_SIZE];
+
+  /* User doesn't want us to fetch artwork? */
+  if (!de || !de->de_config || !de->de_config->dvr_fetch_artwork)
+    return 0;
+
+  /* Entry already have artwork? So nothing to do */
+  if (de->de_image && *de->de_image &&
+      de->de_fanart_image && *de->de_fanart_image)
+    return 0;
+
+  /* Allow any artwork even if we can't identify episode? */
+  if (de->de_config->dvr_fetch_artwork_allow_unknown)
+    return 1;
+
+  /* Only want 'good' episodes since ones with bad data will get
+   * bad artwork.  Good episodes have a season/episode (assume
+   * episode) or year (assume movie).
+   */
+  if (!de->de_epnum.s_num && !de->de_epnum.e_num &&
+      !de->de_copyright_year) {
+    tvhdebug(LS_DVR, "Ignoring fanart for entry without good data for %s \"%s\"",
+             lang_str_get(de->de_title, NULL),
+             idnode_uuid_as_str(&de->de_id, ubuf));
+    return 0;
+  }
+
+  return 1;
+}
+
+/// Add the entry details to a list of fanart to prefetch.
+/// We then periodically check the list to update artwork.
+/// We don't do the check too frequently since most providers
+/// have limits on how frequently artwork can be fetched.
+/// It doesn't matter if the entry gets deleted before we
+/// perform the check.
+static void
+dvr_entry_fanart_add_to_prefetch(const dvr_entry_t *de)
+{
+  char ubuf[UUID_HEX_SIZE];
+
+  if (!dvr_entry_allow_fanart_lookup(de))
+    return;
+
+  string_list_insert(dvr_fanart_to_prefetch,
+                     idnode_uuid_as_str(&de->de_id, ubuf));
+}
+
+static void
+dvr_entry_fanart_prefetch_cb(void *aux)
+{
+  char *id;
+  dvr_entry_t *de;
+
+  lock_assert(&global_lock);
+
+  /* Only do one entry, even if list has many since we don't
+   * want to overload fanart providers.
+   *
+   * However we may have items on the list that don't need
+   * fanart lookup, so skip over any of this.
+   */
+  int done_one = 0;
+  while (!done_one) {
+    id = string_list_remove_first(dvr_fanart_to_prefetch);
+    /* No entries left on list? */
+    if (!id)
+      break;
+
+    de = dvr_entry_find_by_uuid(id);
+    if (dvr_entry_allow_fanart_lookup(de)) {
+      tvhinfo(LS_DVR, "Prefetching artwork for %s \"%s\"", id, lang_str_get(de->de_title, NULL));
+      dvr_spawn_fetch_artwork(de);
+      done_one = 1;
+    }
+
+    free(id);
+  } /* !done_one */
+
+  // Re-arm timer with a slight random factor to avoid queries at same
+  // time every hour.
+  mtimer_arm_rel(&dvr_fanart_timer, dvr_entry_fanart_prefetch_cb, NULL, sec2mono(3600 + random() % 900));
+}
+
 void
 dvr_entry_set_timer(dvr_entry_t *de)
 {
@@ -811,6 +897,7 @@ recording:
 
     dvr_entry_trace_time1(de, "start", start, "set timer - schedule");
     gtimer_arm_absn(&de->de_timer, dvr_timer_start_recording, de, start);
+    dvr_entry_fanart_add_to_prefetch(de);
 #if ENABLE_DBUS_1
     mtimer_arm_rel(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, sec2mono(5));
 #endif
@@ -947,9 +1034,9 @@ dvr_entry_t *
 dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 {
   dvr_entry_t *de, *de2;
-  int64_t start, stop;
+  int64_t start, stop, create, watched, now;
   htsmsg_t *m;
-  char ubuf[UUID_HEX_SIZE];
+  char ubuf[UUID_HEX_SIZE], ubuf2[UUID_HEX_SIZE];
   const char *s;
 
   if (conf) {
@@ -979,6 +1066,30 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 
   idnode_load(&de->de_id, conf);
 
+  /* Time the node was created. */
+  if (!htsmsg_get_s64(conf, "create", &create)) {
+      de->de_create = create;
+  } else {
+      /* Old dvr entry without a create time, so fake one.  For
+       * entries that are older than a day, assume these are old
+       * (tvh4.2) recordings, so use the start time as the create
+       * time. This will allow user to order records by create time
+       * and get something reasonable. For all new records however, we
+       * use now since they will be written to disk.
+       */
+      now = gclk();
+      if (now > start && start < now - 86400)
+          create = start;
+      else
+          create = now;
+      de->de_create = create;
+  }
+  if (!htsmsg_get_s64(conf, "watched", &watched)) {
+    de->de_watched = watched;
+  } else {
+    de->de_watched = 0;
+  }
+
   /* Extract episode info */
   s = htsmsg_get_str(conf, "episode");
   if (s) {
@@ -999,6 +1110,26 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 
   LIST_INSERT_HEAD(&dvrentries, de, de_global_link);
 
+  /* We do early duplicate checking. Otherwise we have the scenario
+   * where we have a dvr entry already on disk and an autorec creates
+   * an entry that matches the same programme details in the future (a
+   * repeat), but we still create a dvr_entry for that schedule and
+   * then immediately cancel it when the start time arrives. So,
+   * instead, we cancel that duplicate here and now.
+   *
+   * Note: this check has to be done _after_ insert in to de_global_link
+   * otherwise the destroy will abort.
+   */
+  if (_dvr_duplicate_event(de)) {
+      tvhtrace(LS_DVR, "Entry was duplicate for %s \"%s\" on \"%s\" start time %"PRId64", "
+          "scheduled for recording by \"%s\"",
+          idnode_uuid_as_str(&de->de_id, ubuf),
+          lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+          (int64_t)de->de_start, de->de_creator ?: "");
+      dvr_entry_destroy(de, 1);
+      return NULL;
+  }
+
   if (de->de_channel && !de->de_dont_reschedule && !clone) {
     LIST_FOREACH(de2, &de->de_channel->ch_dvrs, de_channel_link)
       if(de2 != de &&
@@ -1012,7 +1143,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
           idnode_uuid_as_str(&de->de_id, ubuf),
           lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
           (int64_t)de2->de_start, de->de_creator ?: "",
-          idnode_uuid_as_str(&de2->de_id, ubuf));
+          idnode_uuid_as_str(&de2->de_id, ubuf2));
         dvr_entry_destroy(de, 1);
         return NULL;
       }
@@ -1020,6 +1151,11 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 
   if (!clone)
     dvr_entry_set_timer(de);
+
+  /* Entry is marked for deletion, so set timer. */
+  if (de->de_watched)
+    dvr_entry_watched_timer_arm(de);
+
   htsp_dvr_entry_add(de);
   dvr_vfs_refresh_entry(de);
 
@@ -1254,7 +1390,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
   if ((de2 = de->de_parent) != NULL) {
     if (de->de_sched_state == DVR_COMPLETED &&
         de->de_errors == 0 &&
-        de->de_data_errors < de->de_parent->de_data_errors) {
+        de->de_data_errors < de2->de_data_errors) {
       fsize1 = dvr_get_filesize(de, DVR_FILESIZE_TOTAL);
       fsize2 = dvr_get_filesize(de2, DVR_FILESIZE_TOTAL);
       if (fsize1 / 5 < fsize2 / 6) {
@@ -1263,7 +1399,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
         dvr_entry_cancel_delete(de2, 1);
       }
     } else if (de->de_sched_state == DVR_COMPLETED) {
-      if(dvr_get_filesize(de, 0) < 0) {
+      if (dvr_get_filesize(de, 0) < 0) {
 delete_me:
         dvr_entry_cancel_delete(de, 0);
         dvr_entry_rerecord(de2);
@@ -1475,13 +1611,30 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
    * AND episode are present since OTA often have just "Ep 1" without
    * giving the season.
    */
-  if (de1->de_epnum.e_num && de2->de_epnum.e_num)
-    return de1->de_epnum.e_num == de2->de_epnum.e_num ? DUP : NOT_DUP;
+  if (de1->de_epnum.s_num && de1->de_epnum.e_num &&
+      de2->de_epnum.s_num && de2->de_epnum.e_num)
+    return de1->de_epnum.s_num == de2->de_epnum.s_num && de1->de_epnum.e_num == de2->de_epnum.e_num ? DUP : NOT_DUP;
 
-  /* Only one has season and episode? Then can't be a dup with the
-   * other one that doesn't have season+episode
+  /* If we don't have Season & Episode, then we will try matching just
+   * season and just episode (if available). This is because if OTA
+   * has just "Ep 1" then we don't know the season (so we would have
+   * season 0 internally even though it could be S1 or S2), so we
+   * can't know if it is a DUP with another showing of "Ep 1" (could
+   * be different season), but we _do_ know that if they differ then
+   * it's definitely a different episode.
+   *
+   * So:
+   * - Ep1 == Ep1 ==> don't know if it's a dup or not
+   * - Ep1 != Ep2 ==> definitely not a dup.
+   * - S1 == S1 ==> don't know if dup or not
+   * - S1 != S2 ==> definitely not a dup.
+   * This assumes consistent metadata (so always have Season & Episode
+   * info, or always only have same partial info of just season or
+   * just episode).
    */
-  if (de1->de_epnum.e_num || de2->de_epnum.e_num)
+  if (de1->de_epnum.s_num != de2->de_epnum.s_num)
+    return NOT_DUP;
+  if (de1->de_epnum.e_num != de2->de_epnum.e_num)
     return NOT_DUP;
 
   /* Now, near the end, we can check for unequal programme ids. We do
@@ -1698,6 +1851,122 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
   return NULL;
 }
 
+/*** Return non-zero if the broadcast new_bcast is better for recording than the one for old_de. */
+static int
+dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_entry_t *old_de)
+{
+  /* If programme is recording (or completed) then it is the "best",
+   * even if a better schedule is found after recording starts.
+   */
+  if (old_de->de_sched_state != DVR_SCHEDULED)
+    return 0;
+
+  if (!old_de || !old_de->de_bcast) return 1;            /* Old broadcast should always exist */
+  int old_services = 0;
+  int new_services = 0;
+  int64_t old_chnumber, new_chnumber;
+  const idnode_list_mapping_t *ilm;
+  const epg_broadcast_t *old_bcast = old_de->de_bcast;
+  const channel_t *old_channel = old_bcast->channel;
+  const channel_t *new_channel = new_bcast->channel;
+
+  /* Sanity check. */
+  if (!new_channel) return 0;
+  if (!old_channel) return 1;
+
+  /* Always prefer a recording that has the correct service profile
+   * (UHD, HD, SD).  Someone mentioned (#1846) that some channels can
+   * show a recording earlier in the week in SD then later in the week
+   * in HD so this would prefer the later HD recording if the user so
+   * desired.
+   */
+  if (old_de->de_config && old_de->de_config->dvr_profile &&
+      old_de->de_config->dvr_profile->pro_svfilter != PROFILE_SVF_NONE) {
+    const int svf = old_de->de_config->dvr_profile->pro_svfilter;
+    int old_has_svf = channel_has_correct_service_filter(old_channel, svf);
+    int new_has_svf = channel_has_correct_service_filter(new_channel, svf);
+
+    if (old_has_svf && !new_has_svf)
+      return 0;
+    if (!old_has_svf && new_has_svf)
+      return 1;
+    /* Also try "downgrading", where user asks for UHD, which we don't
+     * have, but we could give them HD.
+     */
+    if (svf == PROFILE_SVF_UHD && !old_has_svf) {
+      old_has_svf = channel_has_correct_service_filter(old_channel, PROFILE_SVF_HD);
+      new_has_svf = channel_has_correct_service_filter(new_channel, PROFILE_SVF_HD);
+
+      if (old_has_svf && !new_has_svf)
+        return 0;
+      if (!old_has_svf && new_has_svf)
+        return 1;
+    }
+  }
+
+  /* Ealier start time is better; prefers non-timeshift channel X to X+1.
+   * This gives us time to reschedule to X+1 if the recording on X fails.
+   *
+   * However, when creating an autorec, it can match a programme that has
+   * already started. If so, it's better to prefer the later recording so
+   * you get a full recording.
+   *
+   * So, if it's 09:10 and there is an hour long programme that
+   * started at 09:00 but is repeated at 10:00, then let's record at
+   * 10:00 instead and get the full hour, instead of at 09:10 and only
+   * get 50 minutes.
+   */
+  if (new_bcast->start != old_bcast->start) {
+    if (new_bcast->start > old_bcast->start && gclk() >  old_bcast->start) {
+      return 1;
+    } else if (new_bcast->start < old_bcast->start && gclk() > new_bcast->start) {
+      return 0;
+    }
+
+    if (new_bcast->start < old_bcast->start)
+      return 1;
+
+    /* Later broadcast is always worse. */
+    if (new_bcast->start > old_bcast->start)
+      return 0;
+  }
+
+  /* If here, we have the same time. */
+
+  /* Count the number of services each has. So, if a channel has multiple
+   * services we assume it's a better choice since we have more fallbacks
+   * if a tune fails.
+   */
+  LIST_FOREACH(ilm, &old_channel->ch_services, ilm_in2_link) {
+    ++old_services;
+  }
+  LIST_FOREACH(ilm, &new_channel->ch_services, ilm_in2_link) {
+    ++new_services;
+  }
+  if (new_services > old_services)
+    return 1;
+  if (old_services > new_services)
+    return 0;
+
+  /* Assume lower channel number is a better channel since they
+   * typically paid more to be higher up the EPG.
+   */
+  old_chnumber = channel_get_number(old_channel);
+  new_chnumber = channel_get_number(new_channel);
+  /* Prefer channels with a number to ones without a number */
+  if (!new_chnumber && old_chnumber)
+    return 0;
+  if (new_chnumber && !old_chnumber)
+    return 1;
+  if (new_chnumber < old_chnumber)
+    return 1;
+  if (new_chnumber > old_chnumber)
+    return 0;
+
+  /* All things being equal, prefer the existing recording */
+  return 0;
+}
+
 /**
  *
  */
@@ -1705,8 +1974,9 @@ void
 dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t *dae)
 {
   char buf[512];
+  char t1buf[32], t2buf[32];
   const char *s;
-  dvr_entry_t *de;
+  dvr_entry_t *de, *replace = NULL;
   uint32_t count = 0, max_count;
   htsmsg_t *conf;
 
@@ -1714,8 +1984,61 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
      NOTE: Semantic duplicate detection is deferred to the start time of recording and then done using _dvr_duplicate_event by dvr_timer_start_recording. */
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_bcast == e || epg_episode_match(de->de_bcast, e))
-      if (strcmp(dae->dae_owner ?: "", de->de_owner ?: "") == 0)
-        return;
+      if (strcmp(dae->dae_owner ?: "", de->de_owner ?: "") == 0) {
+        /* See if our new broadcast is better than our existing schedule,
+         * but only if user want this overhead.
+         */
+        if (!dae->dae_config || !dae->dae_config->dvr_profile)
+          return;
+
+        if (!dae->dae_config->dvr_complex_scheduling)
+          return;
+
+        /* Our autorec can never be better than a manually scheduled programme
+         * since user might schedule to avoid conflicts.
+         */
+        if (!de->de_autorec)
+          return;
+
+        /* Same broadcast, so new one can't be any better. */
+        if (de->de_bcast == e)
+          return;
+
+        /* Existing entry wasn't enabled? If so assume user does not
+         * want a new autorec scheduled that is enabled.
+         */
+        if (!de->de_enabled)
+          return;
+
+        /* If our new broadcast is "better" than the existing
+         * scheduled one, then the existing one can be
+         * replaced. Otherwise, we can return here and use the
+         * existing one as being the best recording to make.
+         */
+        if (!dvr_is_better_recording_timeslot(e, de))
+          return;
+
+        /* New broadcast is better than existing one that is
+         * scheduled. However, we still need to search to end of list
+         * since the new broadcast may already be scheduled somewhere
+         * else in the dvrentries.
+         */
+        replace = de;
+      }
+  }
+
+  /* Have an entry that is worse than our new broadcast so remove it now
+   * so that our max schedules check will be correct.
+   */
+  if (replace) {
+    tvhinfo(LS_DVR, "Autorecord \"%s\" Replacing existing dvr recording entry of \"%s\" on %s @ start %s with recording on %s @ start %s",
+            dae->dae_name, lang_str_get(e->title, NULL),
+            DVR_CH_NAME(replace),
+            gmtime2local(replace->de_bcast->start, t1buf, sizeof t1buf),
+            e->channel ? channel_get_name(e->channel, channel_blank_name) : channel_blank_name,
+            gmtime2local(e->start, t2buf, sizeof t2buf));
+    dvr_entry_delete(replace);
+    dvr_entry_destroy(replace, 1);
   }
 
   /* Handle max schedules limit for autorrecord */
@@ -1725,9 +2048,10 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
       if ((de->de_sched_state == DVR_SCHEDULED) ||
           (de->de_sched_state == DVR_RECORDING)) count++;
 
+    /* We drop this to a debug since on a reschedule numerous emitted */
     if (count >= max_count) {
-      tvhinfo(LS_DVR, "Autorecord \"%s\": Not scheduling \"%s\" because of autorecord max schedules limit reached",
-              dae->dae_name, lang_str_get(e->title, NULL));
+      tvhdebug(LS_DVR, "Autorecord \"%s\": Not scheduling \"%s\" because of autorecord max schedules limit reached",
+               dae->dae_name, lang_str_get(e->title, NULL));
       return;
     }
   }
@@ -1796,6 +2120,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   free(de->de_channel_name);
   free(de->de_epnum.text);
   free(de->de_image);
+  free(de->de_fanart_image);
   free(de->de_uri);
 
   free(de);
@@ -1822,6 +2147,7 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
 
   gtimer_disarm(&de->de_timer);
   mtimer_disarm(&de->de_deferred_timer);
+  gtimer_disarm(&de->de_watched_timer);
 #if ENABLE_DBUS_1
   mtimer_arm_rel(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, sec2mono(2));
 #endif
@@ -1836,6 +2162,18 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
   if (de->de_child)
     dvr_entry_change_parent_child(de, NULL, de, delconf);
 
+  /* Trigger a reschedule in case this entry affects an autorec.  For
+   * example, deleting a recording could cause an autorec with a "max
+   * count" to be able to schedule a new recording.  We have to do
+   * this even if de was not an autorec since autorecs can interact
+   * with manually scheduled programmes.
+   *
+   * We avoid rescheduling for cases where the entry has only just been
+   * created and then immediately destroyed, giving a few seconds
+   * lee-way in case of slow hardware.
+   */
+  if (!de->de_create || gclk() - de->de_create > 10)
+      dvr_autorec_async_reschedule();
   dvr_entry_dec_ref(de);
 }
 
@@ -1894,9 +2232,77 @@ static void
 dvr_timer_expire(void *aux)
 {
   dvr_entry_t *de = aux;
-  dvr_entry_destroy(de, 1);
+  tvhinfo(LS_DVR, "Watched timer expiring \"%s\"",
+          lang_str_get(de->de_title, NULL));
+  /* Force the watched timer to be reset. This ensures it
+   * cannot be re-triggered on a restart of tvheadend.
+   */
+  de->de_watched = 0;
+  dvr_entry_changed(de);
+  /* Allow re-record if recording errors */
+  dvr_entry_cancel_remove(de, 1);
 }
 
+static void
+dvr_entry_watched_timer_cb(void *aux)
+{
+  tvhtrace(LS_DVR, "Entry watched cb");
+  dvr_timer_expire(aux);
+}
+
+static void
+dvr_entry_watched_timer_arm(dvr_entry_t* de)
+{
+  if (!de || !de->de_watched ||
+      dvr_entry_get_removal_days(de) == DVR_RET_REM_FOREVER ||
+      !de->de_config || !de->de_config->dvr_removal_after_playback)
+    return;
+
+  char t1buf[32];
+  const time_t now = gclk();
+  char ubuf[UUID_HEX_SIZE];
+  time_t when = de->de_watched + de->de_config->dvr_removal_after_playback;
+
+  /* We could just call the cb ourselves, but we'll set a timer if
+   * the event is in the past so that we are always async.
+   * This avoids any potential problems with caller trying to
+   * reference our de after it is destroyed.
+   */
+  if (when < now)
+    when = now;
+  tvhinfo(LS_DVR, "Arming watched timer to delete \"%s\" %s @ %s (now+%"PRId64")",
+          lang_str_get(de->de_title, NULL),
+          idnode_uuid_as_str(&de->de_id, ubuf),
+          gmtime2local(when, t1buf, sizeof t1buf),
+          (int64_t)when-now);
+  gtimer_arm_absn(&de->de_watched_timer, dvr_entry_watched_timer_cb, de, when);
+}
+
+static void
+dvr_entry_watched_timer_disarm(dvr_entry_t* de)
+{
+  if (de) {
+    dvr_entry_trace(de, "watched timer - disarm");
+    de->de_watched = 0;
+    gtimer_disarm(&de->de_watched_timer);
+  }
+}
+
+/// Check if user wants played entries to be automatically deleted
+/// If so, arm the timers.
+static void
+dvr_entry_watched_set_watched(dvr_entry_t* de)
+{
+  if (!de)
+    return;
+
+  /* User wants entry deleted after it is played, so mark earliest
+   * "deleted" timestamp and arm.
+   */
+  de->de_watched = gclk();
+  if (de->de_config && de->de_config->dvr_removal_after_playback)
+    dvr_entry_watched_timer_arm(de);
+}
 
 /**
  *
@@ -1960,6 +2366,25 @@ static char *dvr_updated_str(char *buf, size_t buflen, int flags)
   return buf;
 }
 
+int
+dvr_entry_set_playcount(dvr_entry_t *de, uint32_t playcount)
+{
+  if (de->de_playcount == playcount)
+    return 0;
+  de->de_playcount = playcount;
+  if (de->de_playcount)
+    dvr_entry_watched_set_watched(de);
+  else                          /* Not watched, so disarm timer */
+    dvr_entry_watched_timer_disarm(de);
+  return 1;
+}
+
+int
+dvr_entry_incr_playcount(dvr_entry_t *de)
+{
+  return dvr_entry_set_playcount(de, de->de_playcount + 1);
+}
+
 /**
  *
  */
@@ -2010,7 +2435,7 @@ static dvr_entry_t *_dvr_entry_update
     }
     if (de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_COMPLETED) {
       if (playcount >= 0 && playcount != de->de_playcount) {
-        de->de_playcount = playcount;
+        dvr_entry_set_playcount(de, playcount);
         save |= DVR_UPDATED_PLAYCOUNT;
       }
       if (playposition >= 0 && playposition != de->de_playposition) {
@@ -2166,6 +2591,19 @@ dosave:
                lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
                updated ? " Timer" : "",
                dvr_updated_str(buf, sizeof(buf), save));
+    }
+    /* The updates could mean the autorec rule no longer matches the event,
+     * so we have to destroy the de and the conf and let the autorec rule
+     * re-create when it next matches.
+     *
+     * If de is not scheduled (i.e., recording) then do nothing with the
+     * rule since don't want to cancel items that are recording.
+     * Also if no event then this autorec can't match it so we should delete
+     * it.
+     */
+    if (dvr_autorec_entry_can_be_purged(de)) {
+        dvr_entry_assign_broadcast(de, NULL);
+        dvr_entry_destroy(de, 1);
     }
   }
 
@@ -2695,6 +3133,13 @@ dvr_entry_class_int_set(dvr_entry_t *de, int *v, int nv)
     return 1;
   }
   return 0;
+}
+
+static int
+dvr_entry_class_create_set(void *o, const void *v)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  return dvr_entry_class_time_set(de, &de->de_create, *(time_t *)v);
 }
 
 static int
@@ -3392,8 +3837,7 @@ static const void *
 dvr_entry_class_status_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  strncpy(prop_sbuf, dvr_entry_status(de), PROP_SBUF_LEN);
-  prop_sbuf[PROP_SBUF_LEN-1] = '\0';
+  strlcpy(prop_sbuf, dvr_entry_status(de), PROP_SBUF_LEN);
   return &prop_sbuf_ptr;
 }
 
@@ -3401,8 +3845,7 @@ static const void *
 dvr_entry_class_sched_status_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  strncpy(prop_sbuf, dvr_entry_schedstatus(de), PROP_SBUF_LEN);
-  prop_sbuf[PROP_SBUF_LEN-1] = '\0';
+  strlcpy(prop_sbuf, dvr_entry_schedstatus(de), PROP_SBUF_LEN);
   return &prop_sbuf_ptr;
 }
 
@@ -3412,50 +3855,61 @@ dvr_entry_class_channel_icon_url_get(void *o)
   dvr_entry_t *de = (dvr_entry_t *)o;
   channel_t *ch = de->de_channel;
   if (ch == NULL) {
-    prop_ptr = NULL;
+    prop_ptr = "";
   } else {
-    prop_ptr = channel_get_icon(ch);
+    return channel_class_get_icon(ch);
   }
+  return &prop_ptr;
+}
+
+const char *
+dvr_entry_get_image(const dvr_entry_t *de)
+{
+  if (de->de_bcast && de->de_bcast && de->de_bcast->image)
+    return de->de_bcast->image;
+  if (de->de_image)
+    return de->de_image;
+  return NULL;
+}
+
+const char *
+dvr_entry_get_fanart_image(const dvr_entry_t *de)
+{
+  return de->de_fanart_image;
+}
+
+static const void *
+dvr_entry_class_image_get0(dvr_entry_t *de, const char *image)
+{
+  prop_ptr = imagecache_get_propstr(image, prop_sbuf, PROP_SBUF_LEN);
   if (prop_ptr == NULL)
     prop_ptr = "";
   return &prop_ptr;
 }
 
 static const void *
-dvr_entry_class_image_url_get_as_property(void *o)
+dvr_entry_class_image_get(void *o)
 {
-  dvr_entry_t *de = (dvr_entry_t *)o;
-  static const char *s = "";
-  /* We prefer the image from the broadcast to the one currently
-   * persisted.  This is because a programme scheduled far in the
-   * future may have a generic image that will be updated nearer the
-   * broadcast date with a more specific image.
-   */
-  if (de->de_bcast && de->de_bcast && de->de_bcast->image) {
-    snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", de->de_bcast->image);
-    return &prop_sbuf_ptr;
-  }
-
-  if (de->de_image) {
-    prop_ptr = de->de_image;
-    return &prop_ptr;
-  }
-
-  return &s;
+  return dvr_entry_class_image_get0(o, dvr_entry_get_image(o));
 }
 
-const char *
-dvr_entry_class_image_url_get(const dvr_entry_t *o)
+static void
+dvr_entry_class_image_notify(void *o, const char *lang)
 {
-    const void *image = dvr_entry_class_image_url_get_as_property((void*)o);
-    if (!image) return NULL;
-    const char *image_str = *(const char**)image;
-    if (!image_str) return NULL;
-    if (!*image_str) return NULL;
-    return image_str;
+  (void)imagecache_get_id(dvr_entry_get_image(o));
 }
 
+static const void *
+dvr_entry_class_fanart_image_get(void *o)
+{
+  return dvr_entry_class_image_get0(o, dvr_entry_get_fanart_image(o));
+}
 
+static void
+dvr_entry_class_fanart_image_notify(void *o, const char *lang)
+{
+  (void)imagecache_get_id(dvr_entry_get_fanart_image(o));
+}
 
 static const void *
 dvr_entry_class_duplicate_get(void *o)
@@ -3601,6 +4055,23 @@ const idclass_t dvr_entry_class = {
     },
     {
       .type     = PT_TIME,
+      .id       = "create",
+      .name     = N_("Time the entry was created"),
+      .desc     = N_("The create time of the entry describing the recording."),
+      .set      = dvr_entry_class_create_set,
+      .off      = offsetof(dvr_entry_t, de_create),
+      .opts     = PO_HIDDEN | PO_RDONLY | PO_NOUI,
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "watched",
+      .name     = N_("Time the entry was last watched"),
+      .desc     = N_("Time the entry was last watched."),
+      .off      = offsetof(dvr_entry_t, de_watched),
+      .opts     = PO_RDONLY,
+    },
+    {
+      .type     = PT_TIME,
       .id       = "start",
       .name     = N_("Start time"),
       .desc     = N_("The start time of the recording."),
@@ -3697,9 +4168,20 @@ const idclass_t dvr_entry_class = {
       .id       = "image", /* Name chosen to be compatible with api_epg */
       .name     = N_("Episode image"),
       .desc     = N_("Episode image."),
-      .get      = dvr_entry_class_image_url_get_as_property,
+      .get      = dvr_entry_class_image_get,
+      .notify   = dvr_entry_class_image_notify,
       .off      = offsetof(dvr_entry_t, de_image),
-      .opts     = PO_HIDDEN | PO_RDONLY,
+      .opts     = PO_HIDDEN,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "fanart_image",
+      .name     = N_("Fanart image"),
+      .desc     = N_("Fanart image."),
+      .get      = dvr_entry_class_fanart_image_get,
+      .notify   = dvr_entry_class_fanart_image_notify,
+      .off      = offsetof(dvr_entry_t, de_fanart_image),
+      .opts     = PO_HIDDEN,
     },
     {
       .type     = PT_LANGSTR,
@@ -4018,7 +4500,8 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Broadcast."),
       .set      = dvr_entry_class_broadcast_set,
       .get      = dvr_entry_class_broadcast_get,
-      .opts     = PO_RDONLY | PO_NOUI,
+      /* Has to be available to UI for "show duplicate" from dvr upcoming */
+      .opts     = PO_RDONLY | PO_HIDDEN,
     },
     {
       .type     = PT_STR,
@@ -4455,14 +4938,14 @@ dvr_entry_file_moved(const char *src, const char *dst)
 
   if (!src || !dst || src[0] == '\0' || dst[0] == '\0' || access(dst, R_OK))
     return r;
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (htsmsg_is_empty(de->de_files)) continue;
     chg = 0;
     HTSMSG_FOREACH(f, de->de_files)
       if ((m = htsmsg_field_get_map(f)) != NULL) {
         filename = htsmsg_get_str(m, "filename");
-        if (strcmp(filename, src) == 0) {
+        if (filename && strcmp(filename, src) == 0) {
           htsmsg_set_str(m, "filename", dst);
           dvr_vfs_refresh_entry(de);
           r = 0;
@@ -4472,7 +4955,7 @@ dvr_entry_file_moved(const char *src, const char *dst)
     if (chg)
       idnode_changed(&de->de_id);
   }
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return r;
 }
 
@@ -4488,6 +4971,7 @@ dvr_entry_init(void)
   dvr_entry_t *de1, *de2;
 
   dvr_in_init = 1;
+  dvr_fanart_to_prefetch = string_list_create();
   idclass_register(&dvr_entry_class);
   rere = htsmsg_create_map();
   /* load config, but remove parent/child fields */
@@ -4498,12 +4982,12 @@ dvr_entry_init(void)
       parent = htsmsg_get_str(c, "parent");
       child = htsmsg_get_str(c, "child");
       if (parent && parent[0])
-        htsmsg_set_str(rere, parent, f->hmf_name);
+        htsmsg_set_str(rere, parent, htsmsg_field_name(f));
       if (child && child[0])
-        htsmsg_set_str(rere, f->hmf_name, child);
+        htsmsg_set_str(rere, htsmsg_field_name(f), child);
       htsmsg_delete_field(c, "parent");
       htsmsg_delete_field(c, "child");
-      (void)dvr_entry_create(f->hmf_name, c, 0);
+      (void)dvr_entry_create(htsmsg_field_name(f), c, 0);
     }
     htsmsg_destroy(l);
   }
@@ -4512,7 +4996,7 @@ dvr_entry_init(void)
   HTSMSG_FOREACH(f, rere) {
     if((child = htsmsg_field_get_str(f)) == NULL)
       continue;
-    parent = f->hmf_name;
+    parent = htsmsg_field_name(f);
     de1 = dvr_entry_find_by_uuid(parent);
     de2 = dvr_entry_find_by_uuid(child);
     dvr_entry_change_parent_child(de1, de2, NULL, 0);
@@ -4523,6 +5007,10 @@ dvr_entry_init(void)
     de2 = LIST_NEXT(de1, de_global_link);
     dvr_entry_set_timer(de1);
   }
+
+  // After a while we get one new entry and prefetch artwork for an
+  // upcoming dvr entry.
+  mtimer_arm_rel(&dvr_fanart_timer, dvr_entry_fanart_prefetch_cb, NULL, sec2mono(3600));
 }
 
 void
@@ -4535,4 +5023,5 @@ dvr_entry_done(void)
       dvr_rec_unsubscribe(de);
     dvr_entry_destroy(de, 0);
   }
+  string_list_destroy(dvr_fanart_to_prefetch);
 }

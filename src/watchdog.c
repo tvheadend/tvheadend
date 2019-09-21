@@ -22,7 +22,7 @@
 #include <systemd/sd-daemon.h>
 
 static pthread_t watchdog_tid;
-static pthread_mutex_t watchdog_exiting_mutex;
+static tvh_mutex_t watchdog_exiting_mutex;
 static tvh_cond_t watchdog_exiting_cond;
 static int watchdog_exiting;    /* 1 if exit has been requested */
 static int watchdog_enabled;    /* 1 if watchdog was enabled for the systemd unit */
@@ -33,7 +33,7 @@ static void* watchdog_thread(void* aux)
   int exiting = 0;
   (void) aux; /* ignore */
   sd_notify(0, "READY=1");
-  pthread_mutex_lock(&watchdog_exiting_mutex);
+  tvh_mutex_lock(&watchdog_exiting_mutex);
   while (!exiting) {
     if (!watchdog_exiting) {
       /*
@@ -42,14 +42,14 @@ static void* watchdog_thread(void* aux)
        */
       tvh_cond_timedwait(&watchdog_exiting_cond, &watchdog_exiting_mutex, mclk() + watchdog_interval_usec);
       if (!watchdog_exiting) {
-        pthread_mutex_lock(&global_lock);
-        pthread_mutex_unlock(&global_lock);
+        tvh_mutex_lock(&global_lock);
+        tvh_mutex_unlock(&global_lock);
         sd_notify(0, "WATCHDOG=1");
       }
     }
     exiting = watchdog_exiting;
   }
-  pthread_mutex_unlock(&watchdog_exiting_mutex);
+  tvh_mutex_unlock(&watchdog_exiting_mutex);
 
   return NULL;
 }
@@ -70,24 +70,24 @@ void watchdog_init(void)
     watchdog_interval_usec /= 2;
 
     watchdog_exiting = 0;
-    tvh_cond_init(&watchdog_exiting_cond);
-    pthread_mutex_init(&watchdog_exiting_mutex, NULL);
+    tvh_cond_init(&watchdog_exiting_cond, 1);
+    tvh_mutex_init(&watchdog_exiting_mutex, NULL);
 
-    tvhthread_create(&watchdog_tid, NULL, watchdog_thread, NULL, "systemd watchdog");
+    tvh_thread_create(&watchdog_tid, NULL, watchdog_thread, NULL, "systemd watchdog");
   }
 }
 
 void watchdog_done(void)
 {
   if (watchdog_enabled) {
-    pthread_mutex_lock(&watchdog_exiting_mutex);
+    tvh_mutex_lock(&watchdog_exiting_mutex);
     watchdog_exiting = 1;
     tvh_cond_signal(&watchdog_exiting_cond, 0);
-    pthread_mutex_unlock(&watchdog_exiting_mutex);
+    tvh_mutex_unlock(&watchdog_exiting_mutex);
 
     pthread_join(watchdog_tid, NULL);
 
     tvh_cond_destroy(&watchdog_exiting_cond);
-    pthread_mutex_destroy(&watchdog_exiting_mutex);
+    tvh_mutex_destroy(&watchdog_exiting_mutex);
   }
 }

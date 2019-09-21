@@ -183,28 +183,23 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
     int page = (ptr[3] & 0x7 ?: 8) * 100 + (ptr[4] >> 4) * 10 + (ptr[4] & 0xf);
     int type = ptr[3] >> 3;
 
-    if(type == 2 || type == 5) {
+    if(page > 0 && (type == 2 || type == 5)) {
       // 2 = subtitle page, 5 = subtitle page [hearing impaired]
 
       // We put the teletext subtitle driven streams on a list of pids
       // higher than normal MPEG TS (0x2000 ++)
       int pid = DVB_TELETEXT_BASE + page;
     
-      st = elementary_stream_find(set, pid);
+      st = elementary_stream_find_parent(set, pid, parent_pid);
       if (st == NULL || st->es_type != SCT_TEXTSUB) {
         r |= PMT_UPDATE_NEW_STREAM;
-        st = elementary_stream_create(set, pid, SCT_TEXTSUB);
+        st = elementary_stream_create_parent(set, pid, parent_pid, SCT_TEXTSUB);
       }
 
       lang = lang_code_get2((const char*)ptr, 3);
       if(memcmp(st->es_lang,lang,3)) {
         r |= PMT_UPDATE_LANGUAGE;
         memcpy(st->es_lang, lang, 4);
-      }
-
-      if(st->es_parent_pid != parent_pid) {
-        r |= PMT_UPDATE_PARENT_PID;
-        st->es_parent_pid = parent_pid;
       }
 
       // Check es_delete_me so we only compute position once per PMT update
@@ -219,6 +214,17 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
     size -= 5;
   }
   return r;
+}
+
+/**
+ *
+ */
+static void
+dvb_pmt_hbbtv_table_remove(mpegts_mux_t *mm, elementary_stream_t *st)
+{
+  mpegts_table_t *mt = mpegts_table_find(mm, "hbbtv", st);
+  if (mt)
+    mpegts_table_destroy(mt);
 }
 
 /** 
@@ -390,10 +396,10 @@ dvb_psi_parse_pmt
         break;
 
       case DVB_DESC_TELETEXT:
-        if(estype == 0x06)
+        if(estype == 0x06) {
           hts_stream_type = SCT_TELETEXT;
-  
-        update |= psi_desc_teletext(set, ptr, dlen, pid, &tt_position);
+          update |= psi_desc_teletext(set, ptr, dlen, pid, &tt_position);
+        }
         break;
 
       case DVB_DESC_AC3:
@@ -514,6 +520,8 @@ dvb_psi_parse_pmt
     }
 
     if(st->es_delete_me) {
+      if (st->es_type == SCT_HBBTV)
+        dvb_pmt_hbbtv_table_remove(mt->mt_mux, st);
       elementary_set_stream_destroy(set, st);
       update |= PMT_UPDATE_STREAM_DELETED;
     }
@@ -524,7 +532,7 @@ dvb_psi_parse_pmt
 
   if (update) {
     tvhdebug(mt->mt_subsys, "%s: Service \"%s\" PMT (version %d) updated"
-     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
      mt->mt_name,
      nicename, version,
      update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
@@ -540,7 +548,6 @@ dvb_psi_parse_pmt
      update&PMT_UPDATE_NEW_CA_STREAM     ? ", New CA stream":"",
      update&PMT_UPDATE_NEW_CAID          ? ", New CAID":"",
      update&PMT_UPDATE_CA_PROVIDER_CHANGE? ", CA provider changed":"",
-     update&PMT_UPDATE_PARENT_PID        ? ", Parent PID changed":"",
      update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
      update&PMT_UPDATE_CAID_PID          ? ", CAID PID changed":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
@@ -553,14 +560,13 @@ int
 dvb_pmt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r, sect, last, ver, restart, hbbtv = 0;
+  int r, sect, last, ver, restart;
   uint32_t update;
   uint16_t sid;
   mpegts_mux_t *mm = mt->mt_mux;
   mpegts_service_t *s;
   elementary_stream_t *es;
   mpegts_psi_table_state_t *st  = NULL;
-  uint16_t hbbtv_pids[16];
 
   /* Start */
   if (len < 2) return -1;
@@ -579,16 +585,12 @@ dvb_pmt_callback
   /* Process */
   tvhdebug(mt->mt_subsys, "%s: sid %04X (%d)", mt->mt_name, sid, sid);
   update = 0;
-  pthread_mutex_lock(&s->s_stream_mutex);
+  tvh_mutex_lock(&s->s_stream_mutex);
   update = dvb_psi_parse_pmt(mt, service_nicename((service_t *)s),
                              &s->s_components, ptr, len);
   if (update) {
     if (s->s_status == SERVICE_RUNNING)
       elementary_set_filter_build(&s->s_components);
-    TAILQ_FOREACH(es, &s->s_components.set_filter, es_filter_link) {
-      if (hbbtv >= ARRAY_SIZE(hbbtv_pids)) break;
-      hbbtv_pids[hbbtv++] = es->es_pid;
-    }
     service_request_save((service_t*)s);
   }
   /* Only restart if something that our clients worry about did change */
@@ -607,17 +609,23 @@ dvb_pmt_callback
     mpegts_service_autoenable(s, "PAT and PMT");
     s->s_verified = 1;
   }
-  pthread_mutex_unlock(&s->s_stream_mutex);
+  tvh_mutex_unlock(&s->s_stream_mutex);
   if (restart)
     service_restart((service_t*)s);
   if (update & (PMT_UPDATE_NEW_CA_STREAM|PMT_UPDATE_NEW_CAID|
                 PMT_UPDATE_CAID_DELETED|PMT_UPDATE_CAID_PID))
     descrambler_caid_changed((service_t *)s);
-  for (r = 0; r < hbbtv; r++)
+
+  TAILQ_FOREACH(es, &s->s_components.set_filter, es_filter_link) {
+    if (es->es_type != SCT_HBBTV) continue;
+    tvhdebug(mt->mt_subsys, "%s:    install hbbtv pid %04X (%d)",
+             mt->mt_name, es->es_pid, es->es_pid);
     mpegts_table_add(mm, DVB_HBBTV_BASE, DVB_HBBTV_MASK,
-                     dvb_hbbtv_callback, NULL, "hbbtv", LS_TBL_BASE,
-                     MT_CRC | MT_FULL | MT_QUICKREQ | MT_ONESHOT | MT_SCANSUBS,
-                     hbbtv_pids[r], MPS_WEIGHT_HBBTV_SCAN);
+                     dvb_hbbtv_callback, es, "hbbtv", LS_TBL_BASE,
+                     MT_CRC | MT_FULL | MT_QUICKREQ | MT_ONESHOT,
+                     es->es_pid, MPS_WEIGHT_HBBTV_SCAN);
+
+  }
 
 #if ENABLE_LINUXDVB_CA
   dvbcam_pmt_data(s, ptr, len);

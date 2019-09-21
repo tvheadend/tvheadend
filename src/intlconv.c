@@ -10,11 +10,11 @@ typedef struct intlconv_cache {
 
 static RB_HEAD(,intlconv_cache) intlconv_all;
 static intlconv_cache_t        *intlconv_last_ic;
-pthread_mutex_t                 intlconv_lock;
+tvh_mutex_t                 intlconv_lock;
 
 static RB_HEAD(,intlconv_cache) intlconv_src_all;
 static intlconv_cache_t        *intlconv_last_src_ic;
-pthread_mutex_t                 intlconv_lock_src;
+tvh_mutex_t                 intlconv_lock_src;
 
 static inline size_t
 tvh_iconv(iconv_t cd, char **inbuf, size_t *inbytesleft,
@@ -43,8 +43,8 @@ intlconv_test( void )
 void
 intlconv_init( void )
 {
-  pthread_mutex_init(&intlconv_lock, NULL);
-  pthread_mutex_init(&intlconv_lock_src, NULL);
+  tvh_mutex_init(&intlconv_lock, NULL);
+  tvh_mutex_init(&intlconv_lock_src, NULL);
   intlconv_test();
 }
 
@@ -53,7 +53,7 @@ intlconv_done( void )
 {
   intlconv_cache_t *ic;
 
-  pthread_mutex_lock(&intlconv_lock);
+  tvh_mutex_lock(&intlconv_lock);
   intlconv_last_ic = NULL;
   while ((ic = RB_FIRST(&intlconv_all)) != NULL) {
     iconv_close(ic->ic_handle);
@@ -68,7 +68,7 @@ intlconv_done( void )
     RB_REMOVE(&intlconv_src_all, ic, ic_link);
     free(ic);
   }
-  pthread_mutex_unlock(&intlconv_lock);
+  tvh_mutex_unlock(&intlconv_lock);
 }
 
 const char *
@@ -92,7 +92,7 @@ intlconv_charset_id( const char *charset,
                      int transil,
                      int ignore_bad_chars )
 {
-  static char __thread buf[128];
+  static __thread char buf[128];
   const char *delim;
 
   if (charset == NULL || charset[0] == '\0' ||
@@ -107,10 +107,8 @@ intlconv_charset_id( const char *charset,
     snprintf(buf, sizeof(buf), "%s%sTRANSLIT", charset, delim);
   else if (ignore_bad_chars)
     snprintf(buf, sizeof(buf), "%s%sIGNORE", charset, delim);
-  else {
-    strncpy(buf, charset, sizeof(buf));
-    buf[sizeof(buf)-1] = '\0';
-  }
+  else
+    strlcpy(buf, charset, sizeof(buf));
   return buf;
 }
 
@@ -125,12 +123,11 @@ intlconv_utf8( char *dst, size_t dst_size,
   ssize_t res;
 
   if (dst_charset_id == NULL) {
-    strncpy(dst, src_utf8, dst_size);
-    dst[dst_size - 1] = '\0';
+    strlcpy(dst, src_utf8, dst_size);
     return strlen(dst);
   }
   templ.ic_charset_id = (char *)dst_charset_id;
-  pthread_mutex_lock(&intlconv_lock);
+  tvh_mutex_lock(&intlconv_lock);
   if (intlconv_last_ic &&
       strcmp(intlconv_last_ic->ic_charset_id, dst_charset_id) == 0) {
     ic = intlconv_last_ic;
@@ -140,18 +137,18 @@ intlconv_utf8( char *dst, size_t dst_size,
   if (!ic) {
     iconv_t c = iconv_open(dst_charset_id, "UTF-8");
     if ((iconv_t)-1 == c) {
-      pthread_mutex_unlock(&intlconv_lock);
+      tvh_mutex_unlock(&intlconv_lock);
       return -EIO;
     }
     ic = malloc(sizeof(*ic));
     if (ic == NULL) {
-      pthread_mutex_unlock(&intlconv_lock);
+      tvh_mutex_unlock(&intlconv_lock);
       iconv_close(c);
       return -ENOMEM;
     }
     ic->ic_charset_id = strdup(dst_charset_id);
     if (ic->ic_charset_id == NULL) {
-      pthread_mutex_unlock(&intlconv_lock);
+      tvh_mutex_unlock(&intlconv_lock);
       free(ic);
       iconv_close(c);
       return -ENOMEM;
@@ -161,7 +158,7 @@ intlconv_utf8( char *dst, size_t dst_size,
   }
   intlconv_last_ic = ic;
 found:
-  pthread_mutex_unlock(&intlconv_lock);
+  tvh_mutex_unlock(&intlconv_lock);
   inbuf       = (char **)&src_utf8;
   inbuf_left  = strlen(src_utf8);
   outbuf      = &dst;
@@ -214,12 +211,11 @@ intlconv_to_utf8( char *dst, size_t dst_size,
   ssize_t res;
 
   if (src_charset_id == NULL) {
-    strncpy(dst, src, dst_size);
-    dst[dst_size - 1] = '\0';
+    strlcpy(dst, src, dst_size);
     return strlen(dst);
   }
   templ.ic_charset_id = (char *)src_charset_id;
-  pthread_mutex_lock(&intlconv_lock_src);
+  tvh_mutex_lock(&intlconv_lock_src);
   if (intlconv_last_src_ic &&
       strcmp(intlconv_last_src_ic->ic_charset_id, src_charset_id) == 0) {
     ic = intlconv_last_src_ic;
@@ -229,18 +225,18 @@ intlconv_to_utf8( char *dst, size_t dst_size,
   if (!ic) {
     iconv_t c = iconv_open("UTF-8", src_charset_id);
     if ((iconv_t)-1 == c) {
-      pthread_mutex_unlock(&intlconv_lock_src);
+      tvh_mutex_unlock(&intlconv_lock_src);
       return -EIO;
     }
     ic = malloc(sizeof(*ic));
     if (ic == NULL) {
-      pthread_mutex_unlock(&intlconv_lock_src);
+      tvh_mutex_unlock(&intlconv_lock_src);
       iconv_close(c);
       return -ENOMEM;
     }
     ic->ic_charset_id = strdup(src_charset_id);
     if (ic->ic_charset_id == NULL) {
-      pthread_mutex_unlock(&intlconv_lock_src);
+      tvh_mutex_unlock(&intlconv_lock_src);
       free(ic);
       iconv_close(c);
       return -ENOMEM;
@@ -250,7 +246,7 @@ intlconv_to_utf8( char *dst, size_t dst_size,
   }
   intlconv_last_src_ic = ic;
 found:
-  pthread_mutex_unlock(&intlconv_lock_src);
+  tvh_mutex_unlock(&intlconv_lock_src);
   inbuf       = (char **)&src;
   inbuf_left  = src_size;
   outbuf      = &dst;

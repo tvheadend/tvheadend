@@ -17,11 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <assert.h>
-#include <string.h>
 
 #include "settings.h"
 
@@ -747,6 +743,47 @@ dvr_config_class_removal_list ( void *o, const char *lang )
 }
 
 static htsmsg_t *
+dvr_config_class_remove_after_playback_list ( void *o, const char *lang )
+{
+  enum {
+    ONE_MINUTE = 60,
+    ONE_HOUR = ONE_MINUTE * 60,
+    ONE_DAY = ONE_HOUR * 24
+  };
+
+  /* We want a few "soon" options (other than immediately) since that
+   * gives the user time to restart the playback if they accidentally
+   * skipped to the end and marked it as watched, whereas immediately
+   * would immediately delete that recording (and we don't yet support
+   * undelete).
+   */
+  static const struct strtab_u32 tab[] = {
+    { N_("Never"),              0 },
+    { N_("Immediately"),        1 },
+    { N_("1 minute"),           ONE_MINUTE },
+    { N_("10 minutes"),         ONE_MINUTE * 10 },
+    { N_("30 minutes"),         ONE_MINUTE * 30 },
+    { N_("1 hour"),             ONE_HOUR },
+    { N_("2 hours"),            ONE_HOUR * 2 },
+    { N_("4 hour"),             ONE_HOUR * 4 },
+    { N_("8 hour"),             ONE_HOUR * 8 },
+    { N_("12 hours"),           ONE_HOUR * 12 },
+    { N_("1 day"),              ONE_DAY },
+    { N_("2 days"),             ONE_DAY * 2 },
+    { N_("3 days"),             ONE_DAY * 3 },
+    { N_("5 days"),             ONE_DAY * 5 },
+    { N_("1 week"),             ONE_DAY * 7 },
+    { N_("2 weeks"),            ONE_DAY * 14 },
+    { N_("3 weeks"),            ONE_DAY * 21 },
+    { N_("1 month"),            ONE_DAY * 31 }, /* Approximations based on RET_REM */
+    { N_("2 months"),           ONE_DAY * 62 },
+    { N_("3 months"),           ONE_DAY * 92 },
+  };
+  return strtab2htsmsg_u32(tab, 1, lang);
+}
+
+
+static htsmsg_t *
 dvr_config_class_retention_list ( void *o, const char *lang )
 {
   static const struct strtab_u32 tab[] = {
@@ -809,6 +846,7 @@ PROP_DOC(runningstate)
 PROP_DOC(dvrconfig_whitespace)
 PROP_DOC(dvrconfig_unsafe)
 PROP_DOC(dvrconfig_windows)
+PROP_DOC(dvrconfig_fanart)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
@@ -851,6 +889,11 @@ const idclass_t dvr_config_class = {
       {
          .name   = N_("Miscellaneous Settings"),
          .number = 7,
+      },
+      {
+         .name   = N_("Artwork Settings"),
+         .number = 8,
+         .column = 1,
       },
       {}
   },
@@ -926,6 +969,25 @@ const idclass_t dvr_config_class = {
     },
     {
       .type     = PT_U32,
+      .id       = "remove-after-playback",
+      .name     = N_("Automatically delete played recordings"),
+      .desc     = N_("Number of minutes after playback has finished "
+                     "before file should be automatically removed "
+                     "(unless its retention is 'forever'). "
+                     "Note that some clients may pre-cache playback "
+                     "which means the recording will be marked as "
+                     "played when the client has cached the data, "
+                     "which may be before the end of the programme is "
+                     "actually watched."
+                    ),
+      .off      = offsetof(dvr_config_t, dvr_removal_after_playback),
+      .def.u32  = 0,
+      .list     = dvr_config_class_remove_after_playback_list,
+      .opts     = PO_ADVANCED,
+      .group    = 1,
+    },
+    {
+      .type     = PT_U32,
       .id       = "pre-extra-time",
       .name     = N_("Pre-recording padding"),
       .desc     = N_("Start recording earlier than the defined start "
@@ -971,6 +1033,62 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_rerecord_errors),
       .opts     = PO_ADVANCED,
       .group    = 1,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "complex-scheduling",
+      .name     = N_("For autorecs, attempt to find better time slots"),
+      .desc     = N_("When scheduling an autorec, this option attempts "
+                     "to schedule at the earliest time and on the 'best' "
+                     "channel (such as channel with the most failover services). "
+                     "This is useful when multiple timeshift "
+                     "and repeat channels are available. Without this option "
+                     "autorecs may get scheduled on timeshift channels "
+                     "instead of on primary channels. "
+                     "This scheduling "
+                     "requires extra overhead so is disabled by default."),
+      .off      = offsetof(dvr_config_t, dvr_complex_scheduling),
+      .opts     = PO_ADVANCED,
+      .group    = 1,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "fetch-artwork",
+      .name     = N_("Fetch artwork for new recordings."),
+      .desc     = N_("Fetch additional artwork from installed providers. "
+                     "Tvheadend has a 'tmdb' and `tvdb' provider which require "
+                     "you to specify your authorized key in the options below."),
+      .off      = offsetof(dvr_config_t, dvr_fetch_artwork),
+      .opts     = PO_ADVANCED,
+      .group    = 8,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "fetch-artwork-known-broadcasts-allow-unknown",
+      .name     = N_("Fetch artwork for unidentifiable broadcasts."),
+      .desc     = N_("Artwork fetching requires broadcasts to have good quality "
+                     "information that uniquely identifies them, such as "
+                     "year, season and episode. "
+                     "Without this information, lookups will frequently fail "
+                     "or return incorrect artwork. "
+                     "The default is to only lookup fanart for broadcasts that "
+                     "have high quality identifiable information."
+                    ),
+      .off      = offsetof(dvr_config_t, dvr_fetch_artwork_allow_unknown),
+      .opts     = PO_ADVANCED,
+      .group    = 8,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "fetch-artwork-options",
+      .name     = N_("Additional command line options when fetching artwork for new recordings."),
+      .desc     = N_("Some artwork providers require additional arguments such as "
+                     "'--tmdb-key my_key_from_website'. These can be specified here. "
+                     "See Help for full details."),
+      .off      = offsetof(dvr_config_t, dvr_fetch_artwork_options),
+      .doc      = prop_doc_dvrconfig_fanart,
+      .opts     = PO_ADVANCED,
+      .group    = 8,
     },
     {
       .type     = PT_STR,
@@ -1385,7 +1503,7 @@ dvr_config_init(void)
   if ((l = hts_settings_load("dvr/config")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if ((m = htsmsg_get_map_by_field(f)) == NULL) continue;
-      (void)dvr_config_create(NULL, f->hmf_name, m);
+      (void)dvr_config_create(NULL, htsmsg_field_name(f), m);
     }
     htsmsg_destroy(l);
   }
@@ -1409,6 +1527,15 @@ dvr_init(void)
   dvr_autorec_init();
   dvr_timerec_init();
   dvr_entry_init();
+
+  /* We update the autorec entries so any that are no longer matching
+   * the current schedule get deleted. This avoids the problem where
+   * autorec entries remain even when user has deleted the epgdb
+   * or modified their settings between runs.
+   */
+  tvhinfo(LS_DVR, "Purging obsolete autorec entries for current schedule");
+  dvr_autorec_purge_obsolete_timers();
+
   dvr_autorec_update();
   dvr_timerec_update();
   dvr_disk_space_init();
@@ -1425,11 +1552,11 @@ dvr_done(void)
 #if ENABLE_INOTIFY
   dvr_inotify_done();
 #endif
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   dvr_entry_done();
   while ((cfg = LIST_FIRST(&dvrconfigs)) != NULL)
     dvr_config_destroy(cfg, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   dvr_autorec_done();
   dvr_timerec_done();
   dvr_disk_space_done();

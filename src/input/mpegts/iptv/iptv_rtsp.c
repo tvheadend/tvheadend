@@ -75,9 +75,9 @@ iptv_rtsp_header ( http_client_t *hc )
   if (im == NULL) {
     /* teardown (or teardown timeout) */
     if (hc->hc_cmd == RTSP_CMD_TEARDOWN) {
-      pthread_mutex_lock(&global_lock);
+      tvh_mutex_lock(&global_lock);
       mtimer_arm_rel(&hc->hc_close_timer, iptv_rtsp_close_cb, hc, 0);
-      pthread_mutex_unlock(&global_lock);
+      tvh_mutex_unlock(&global_lock);
     }
     return 0;
   }
@@ -111,12 +111,12 @@ iptv_rtsp_header ( http_client_t *hc )
         tvhwarn(LS_RTSP, "Can't connect to remote, RTCP receiver reports won't be sent");
     }
     hc->hc_cmd = HTTP_CMD_NONE;
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     if (im->mm_active)
-      iptv_input_mux_started((iptv_input_t *)im->mm_active->mmi_input, im);
+      iptv_input_mux_started((iptv_input_t *)im->mm_active->mmi_input, im, 1);
     mtimer_arm_rel(&rp->alive_timer, iptv_rtsp_alive_cb, im,
                    sec2mono(MAX(1, (hc->hc_rtp_timeout / 2) - 1)));
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     break;
   default:
     break;
@@ -225,7 +225,7 @@ iptv_rtsp_stop
   rp->hc->hc_aux = NULL;
   if (play)
     rtsp_teardown(rp->hc, rp->path, "");
-  pthread_mutex_unlock(&iptv_lock);
+  tvh_mutex_unlock(&iptv_lock);
   mtimer_disarm(&rp->alive_timer);
   udp_multirecv_free(&rp->um);
   if (!play)
@@ -235,7 +235,7 @@ iptv_rtsp_stop
   rtcp_destroy(rp->rtcp_info);
   free(rp->rtcp_info);
   free(rp);
-  pthread_mutex_lock(&iptv_lock);
+  tvh_mutex_lock(&iptv_lock);
 }
 
 static void
