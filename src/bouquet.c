@@ -1188,7 +1188,7 @@ parse_enigma2(bouquet_t *bq, char *data)
                                            uint32_t tsid, uint32_t onid,
                                            uint32_t hash);
   char *argv[11], *p, *tagname = NULL, *name;
-  long lv, stype, sid, tsid, onid, hash;
+  uint32_t lv, stype, sid, tsid, onid, hash;
   uint32_t seen = 0;
   int n, ver = 2;
 
@@ -1208,11 +1208,11 @@ service:
         if (strtol(argv[0], NULL, 0) != 1) goto next;  /* item type */
         lv = strtol(argv[1], NULL, 16);                /* service flags? */
         if (lv != 0 && lv != 0x64) goto next;
-        stype = strtol(argv[2], NULL, 16);             /* DVB service type */
-        sid   = strtol(argv[3], NULL, 16);             /* DVB service ID */
-        tsid  = strtol(argv[4], NULL, 16);
-        onid  = strtol(argv[5], NULL, 16);
-        hash  = strtol(argv[6], NULL, 16);
+        stype = strtoul(argv[2], NULL, 16);             /* DVB service type */
+        sid   = strtoul(argv[3], NULL, 16);             /* DVB service ID */
+        tsid  = strtoul(argv[4], NULL, 16);
+        onid  = strtoul(argv[5], NULL, 16);
+        hash  = strtoul(argv[6], NULL, 16);
         name  = n > 10 ? argv[10] : NULL;
         if (lv == 0) {
           service_t *s = mpegts_service_find_e2(stype, sid, tsid, onid, hash);
