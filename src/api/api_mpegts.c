@@ -244,7 +244,7 @@ api_mpegts_mux_grid
   }
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
-    //if (hide && !mn->mn_enabled) continue;
+    if (hide && !mn->mn_enabled) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
       if (hide == 2 && !mm->mm_is_enabled(mm)) continue;
       idnode_set_add(ins, (idnode_t*)mm, &conf->filter, perm->aa_lang_ui);
@@ -272,7 +272,7 @@ api_mpegts_service_grid
   }
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
-    //if (hide && !mn->mn_enabled) continue;
+    if (hide && !mn->mn_enabled) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
       if (hide && !mm->mm_is_enabled(mm)) continue;
       LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
