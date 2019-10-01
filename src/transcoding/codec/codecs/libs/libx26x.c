@@ -83,7 +83,7 @@ static const codec_profile_class_t codec_profile_libx26x_class = {
             {
                 .type     = PT_INT,
                 .id       = "crf",
-                .name     = N_("Constant Rate Factor (0=auto)"),
+                .name     = N_("Constant rate factor (0=auto)"),
                 .desc     = N_("Select the quality for constant quality mode [0-51]."),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,

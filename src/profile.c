@@ -1357,7 +1357,7 @@ const idclass_t profile_mpegts_pass_class =
       .type     = PT_BOOL,
       .id       = "rewrite_pmt",
       .name     = N_("Rewrite PMT"),
-      .desc     = N_("Rewrite PMT (Program Map Table) packets to only "
+      .desc     = N_("Rewrite PMT (program map table) packets to only "
                      "include information about the currently-streamed "
                      "service. "
                      "Rewrite can be unset only if 'Rewrite Service ID' "
@@ -1372,7 +1372,7 @@ const idclass_t profile_mpegts_pass_class =
       .type     = PT_BOOL,
       .id       = "rewrite_pat",
       .name     = N_("Rewrite PAT"),
-      .desc     = N_("Rewrite PAT (Program Association Table) packets "
+      .desc     = N_("Rewrite PAT (program association table) packets "
                      "to only include information about the currently-"
                      "streamed service. "
                      "Rewrite can be unset only if 'Rewrite Service ID' "
@@ -1387,7 +1387,7 @@ const idclass_t profile_mpegts_pass_class =
       .type     = PT_BOOL,
       .id       = "rewrite_sdt",
       .name     = N_("Rewrite SDT"),
-      .desc     = N_("Rewrite SDT (Service Description Table) packets "
+      .desc     = N_("Rewrite SDT (service description table) packets "
                      "to only include information about the currently-"
                      "streamed service. "
                      "Rewrite can be unset only if 'Rewrite Service ID' "
@@ -1402,7 +1402,7 @@ const idclass_t profile_mpegts_pass_class =
       .type     = PT_BOOL,
       .id       = "rewrite_nit",
       .name     = N_("Rewrite NIT"),
-      .desc     = N_("Rewrite NIT (Network Information Table) packets "
+      .desc     = N_("Rewrite NIT (network information table) packets "
                      "to only include information about the currently-"
                      "streamed service. "
                      "Rewrite can be unset only if 'Rewrite Service ID' "
@@ -1417,7 +1417,7 @@ const idclass_t profile_mpegts_pass_class =
       .type     = PT_BOOL,
       .id       = "rewrite_eit",
       .name     = N_("Rewrite EIT"),
-      .desc     = N_("Rewrite EIT (Event Information Table) packets "
+      .desc     = N_("Rewrite EIT (event information table) packets "
                      "to only include information about the currently-"
                      "streamed service. "
                      "Rewrite can be unset only if 'Rewrite Service ID' "
@@ -1505,7 +1505,7 @@ const idclass_t profile_mpegts_spawn_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts-spawn",
-  .ic_caption    = N_("MPEG-TS Spawn/built-in"),
+  .ic_caption    = N_("MPEG-TS spawn (built-in)"),
   .ic_groups     = (const property_group_t[]) {
     {
       .name   = N_("General Settings"),
@@ -1643,7 +1643,7 @@ const idclass_t profile_matroska_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-matroska",
-  .ic_caption    = N_("Matroska (mkv)/built-in"),
+  .ic_caption    = N_("Matroska (mkv) (built-in)"),
   .ic_groups     = (const property_group_t[]) {
     {
       .name   = N_("General Settings"),
@@ -1660,7 +1660,7 @@ const idclass_t profile_matroska_class =
       .type     = PT_BOOL,
       .id       = "webm",
       .name     = N_("WEBM"),
-      .desc     = N_("Use WEBM format."),
+      .desc     = N_("Use WEBM (web multimedia) format."),
       .off      = offsetof(profile_matroska_t, pro_webm),
       .opts     = PO_ADVANCED,
       .def.i    = 0,

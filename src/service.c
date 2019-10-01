@@ -211,7 +211,7 @@ const idclass_t service_class = {
       .type     = PT_BOOL,
       .id       = "encrypted",
       .name     = N_("Encrypted"),
-      .desc     = N_("The service's encryption status."),
+      .desc     = N_("Indicates whether the service is encrypted or not."),
       .get      = service_class_encrypted_get,
       .opts     = PO_NOSAVE | PO_RDONLY
     },
@@ -219,7 +219,7 @@ const idclass_t service_class = {
       .type     = PT_STR,
       .id       = "caid",
       .name     = N_("CAID"),
-      .desc     = N_("The Conditional Access ID used for the service."),
+      .desc     = N_("The conditional access ID used for the service."),
       .get      = service_class_caid_get,
       .opts     = PO_NOSAVE | PO_RDONLY | PO_HIDDEN | PO_EXPERT,
     },
@@ -227,8 +227,8 @@ const idclass_t service_class = {
       .type     = PT_INT,
       .id       = "s_type_user",
       .name     = N_("Type override"),
-      .desc     = N_("Service type override. This value will override the "
-                     "service type provided by the stream."),
+      .desc     = N_("Service type override. This will override the "
+                     "service type detected by Tvheadend for the service."),
       .list     = service_type_auto_list,
       .off      = offsetof(service_t, s_type_user),
       .opts     = PO_ADVANCED | PO_DOC_NLIST,

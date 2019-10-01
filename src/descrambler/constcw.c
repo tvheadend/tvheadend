@@ -26,7 +26,7 @@
  *
  */
 typedef struct constcw_service {
-  th_descrambler_t;  
+  th_descrambler_t;
   LIST_ENTRY(constcw_service) cs_link;
 } constcw_service_t;
 
@@ -100,16 +100,16 @@ constcw_ecm_reset(th_descrambler_t *th)
 /**
  * s_stream_mutex is held
  */
-static void 
+static void
 constcw_service_destroy(th_descrambler_t *td)
 {
-  constcw_service_t *ct = (constcw_service_t *)td; 
-  
+  constcw_service_t *ct = (constcw_service_t *)td;
+
   LIST_REMOVE(td, td_service_link);
   LIST_REMOVE(ct, cs_link);
   free(ct->td_nicename);
   free(ct);
-}   
+}
 
 /**
  * global_lock is held. Not that we care about that, but either way, it is.
@@ -332,7 +332,7 @@ const idclass_t caclient_ccw_csa_cbc_class =
       .type     = PT_U32,
       .id       = "providerid",
       .name     = N_("Provider ID"),
-      .desc     = N_("The provider's ID."),
+      .desc     = N_("The provider ID."),
       .off      = offsetof(constcw_t, ccw_providerid),
       .opts     = PO_HEXA,
       .def.u32  = 0,
@@ -478,7 +478,7 @@ const idclass_t caclient_ccw_aes_ecb_class =
       .type     = PT_U32,
       .id       = "providerid",
       .name     = N_("Provider ID"),
-      .desc     = N_("The provider's ID."),
+      .desc     = N_("The provider ID."),
       .off      = offsetof(constcw_t, ccw_providerid),
       .opts     = PO_HEXA,
       .def.u32  = 0,
@@ -551,7 +551,7 @@ const idclass_t caclient_ccw_aes128_ecb_class =
       .type     = PT_U32,
       .id       = "providerid",
       .name     = N_("Provider ID"),
-      .desc     = N_("The provider's ID."),
+      .desc     = N_("The provider ID."),
       .off      = offsetof(constcw_t, ccw_providerid),
       .opts     = PO_HEXA,
       .def.u32  = 0,
