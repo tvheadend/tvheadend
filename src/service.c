@@ -907,7 +907,7 @@ service_is_fhdtv(const service_t *t)
   else if (s_type == ST_NONE) {
     elementary_stream_t *st;
     TAILQ_FOREACH(st, &t->s_components.set_all, es_link)
-      if (SCT_ISVIDEO(st->es_type) && st->es_height == 1080)
+      if (SCT_ISVIDEO(st->es_type) && st->es_height >= 1080 && st->es_height < 1440)
         return 1;
   }
   return 0;
@@ -926,7 +926,7 @@ service_is_uhdtv(const service_t *t)
   else if (s_type == ST_NONE) {
     elementary_stream_t *st;
     TAILQ_FOREACH(st, &t->s_components.set_all, es_link)
-      if (SCT_ISVIDEO(st->es_type) && st->es_height > 1080)
+      if (SCT_ISVIDEO(st->es_type) && st->es_height >= 1440)
         return 1;
   }
   return 0;
