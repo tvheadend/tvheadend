@@ -619,7 +619,6 @@ http_channel_playlist(http_connection_t *hc, int pltype, int urlauth, channel_t 
   char *profile;
   const char *name, *blank;
   const char *lang = hc->hc_access->aa_lang_ui;
-  char ubuf[UUID_HEX_SIZE];
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
     return http_noaccess_code(hc);
@@ -640,7 +639,7 @@ http_channel_playlist(http_connection_t *hc, int pltype, int urlauth, channel_t 
     http_m3u_playlist_add(hq, hostpath, buf, profile, name,
                           channel_get_number_as_str(channel, chnum, sizeof(chnum)),
                           channel_get_icon(channel),
-                          channel_get_uuid(channel, ubuf),
+                          channel_get_epgid(channel),
                           urlauth, hc->hc_access);
 
   } else if (pltype == PLAYLIST_E2) {
@@ -666,7 +665,7 @@ static int
 http_tag_playlist(http_connection_t *hc, int pltype, int urlauth, channel_tag_t *tag)
 {
   htsbuf_queue_t *hq;
-  char buf[255], hostpath[512], chnum[32], ubuf[UUID_HEX_SIZE];
+  char buf[255], hostpath[512], chnum[32];
   char *profile;
   const char *name, *blank, *sort, *lang;
   channel_t *ch;
@@ -698,7 +697,7 @@ http_tag_playlist(http_connection_t *hc, int pltype, int urlauth, channel_tag_t 
       http_m3u_playlist_add(hq, hostpath, buf, profile, name,
                             channel_get_number_as_str(ch, chnum, sizeof(chnum)),
                             channel_get_icon(ch),
-                            channel_get_uuid(ch, ubuf),
+                            channel_get_epgid(ch),
                             urlauth, hc->hc_access);
     } else if (pltype == PLAYLIST_E2) {
       htsbuf_qprintf(hq, "#NAME %s\n", name);
@@ -795,7 +794,7 @@ static int
 http_channel_list_playlist(http_connection_t *hc, int pltype, int urlauth)
 {
   htsbuf_queue_t *hq;
-  char buf[255], hostpath[512], chnum[32], ubuf[UUID_HEX_SIZE];
+  char buf[255], hostpath[512], chnum[32];
   channel_t *ch;
   channel_t **chlist;
   int idx = 0, count = 0;
@@ -828,7 +827,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype, int urlauth)
       http_m3u_playlist_add(hq, hostpath, buf, profile, name,
                             channel_get_number_as_str(ch, chnum, sizeof(chnum)),
                             channel_get_icon(ch),
-                            channel_get_uuid(ch, ubuf),
+                            channel_get_epgid(ch),
                             urlauth, hc->hc_access);
     } else if (pltype == PLAYLIST_E2) {
       http_e2_playlist_add(hq, hostpath, buf, profile, name, urlauth, hc->hc_access);
