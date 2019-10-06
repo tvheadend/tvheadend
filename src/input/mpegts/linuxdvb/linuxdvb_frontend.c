@@ -1035,7 +1035,7 @@ linuxdvb_frontend_monitor ( void *aux )
   if(ioctl_check(lfe, 0) && !lfe->lfe_old_status &&
      !ioctl(lfe->lfe_fe_fd, FE_GET_PROPERTY, &dtv_prop)) {
     for (e = 0; e < dtv_prop.num; e++)
-      if (fe_properties[i].u.st.len > 0) {
+      if (fe_properties[e].u.st.len > 0) {
         gotprop = 1;
         break;
       }
