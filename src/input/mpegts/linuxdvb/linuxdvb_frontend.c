@@ -1031,24 +1031,29 @@ linuxdvb_frontend_monitor ( void *aux )
 
   logit = tvhlog_limit(&lfe->lfe_status_log, 3600);
 
+  gotprop = 0;
   if(ioctl_check(lfe, 0) && !lfe->lfe_old_status &&
      !ioctl(lfe->lfe_fe_fd, FE_GET_PROPERTY, &dtv_prop)) {
+    for (e = 0; e < dtv_prop.num; e++)
+      if (fe_properties[i].u.st.len > 0) {
+        gotprop = 1;
+        break;
+      }
+  }
+
+  if(gotprop) {
     /* Signal strength */
-    gotprop = 0;
     if(ioctl_check(lfe, 1) && fe_properties[0].u.st.len > 0) {
       if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
         mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
         mmi->tii_stats.signal = sig_multiply(fe_properties[0].u.st.stat[0].uvalue, lfe->lfe_sig_multiplier);
-        gotprop = 1;
       }
       else if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_DECIBEL) {
         mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_DECIBEL;
         mmi->tii_stats.signal = sig_multiply(fe_properties[0].u.st.stat[0].svalue, lfe->lfe_sig_multiplier);
-        gotprop = 1;
       }
       else if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_NOT_AVAILABLE) {
         mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
-        gotprop = 1;
       }
       else {
         ioctl_bad(lfe, 1);
@@ -1058,78 +1063,43 @@ linuxdvb_frontend_monitor ( void *aux )
                   fe_properties[0].u.st.stat[0].scale);
       }
     }
-    if(!gotprop && ioctl_check(lfe, 2)) {
-      /* try old API */
-      if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
-        mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-        mmi->tii_stats.signal = sig_multiply(u16, lfe->lfe_sig_multiplier);
-      }
-      else {
-        ioctl_bad(lfe, 2);
-        mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
-        if (logit)
-          tvhwarn(LS_LINUXDVB, "Unable to provide signal strength value.");
-      }
-    }
-
     /* ERROR_BIT_COUNT */
-    gotprop = 0;
     if(ioctl_check(lfe, 3) && fe_properties[1].u.st.len > 0) {
       if(fe_properties[1].u.st.stat[0].scale == FE_SCALE_COUNTER) {
         mmi->tii_stats.ec_bit = fe_properties[1].u.st.stat[0].uvalue;
-        gotprop = 1;
-      }
-      else {
+      } else {
         ioctl_bad(lfe, 3);
+        mmi->tii_stats.ec_bit = 0;
         if (logit)
           tvhwarn(LS_LINUXDVB, "Unhandled ERROR_BIT_COUNT scale: %d",
                   fe_properties[1].u.st.stat[0].scale);
       }
     }
     /* TOTAL_BIT_COUNT */
-    if(gotprop && (fe_properties[2].u.st.len > 0)) {
-      gotprop = 0;
+    if(fe_properties[2].u.st.len > 0) {
       if(ioctl_check(lfe, 4) && fe_properties[2].u.st.stat[0].scale == FE_SCALE_COUNTER) {
         mmi->tii_stats.tc_bit = fe_properties[2].u.st.stat[0].uvalue;
-        gotprop = 1;
-      }
-      else {
+      } else {
         ioctl_bad(lfe, 4);
-        mmi->tii_stats.ec_bit = 0; /* both values or none */
-        if (logit)
+        mmi->tii_stats.tc_bit = 0;
+        if (logit && fe_properties[2].u.st.stat[0].scale == FE_SCALE_COUNTER)
           tvhwarn(LS_LINUXDVB, "Unhandled TOTAL_BIT_COUNT scale: %d",
                   fe_properties[2].u.st.stat[0].scale);
       }
     }
-    if(!gotprop && ioctl_check(lfe, 5)) {
-      /* try old API */
-      if (!ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
-        mmi->tii_stats.ber = u32;
-      else {
-        ioctl_bad(lfe, 5);
-        if (logit)
-          tvhwarn(LS_LINUXDVB, "Unable to provide BER value.");
-      }
-    }
-    
     /* SNR */
-    gotprop = 0;
     if(ioctl_check(lfe, 6) && fe_properties[3].u.st.len > 0) {
       if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
         mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
         mmi->tii_stats.snr = sig_multiply(fe_properties[3].u.st.stat[0].uvalue, lfe->lfe_snr_multiplier);
-        gotprop = 1;
       }
       else if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_DECIBEL) {
         mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_DECIBEL;
         mmi->tii_stats.snr = sig_multiply(fe_properties[3].u.st.stat[0].svalue, lfe->lfe_snr_multiplier);
-        gotprop = 1;
       }
       else if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_NOT_AVAILABLE) {
         mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
-        gotprop = 1;
-      }
-      else {
+      } else {
         ioctl_bad(lfe, 6);
         mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
         if (logit)
@@ -1137,63 +1107,30 @@ linuxdvb_frontend_monitor ( void *aux )
                   fe_properties[3].u.st.stat[0].scale);
       }
     }
-    if(!gotprop && ioctl_check(lfe, 7)) {
-      /* try old API */
-      if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
-        mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-        mmi->tii_stats.snr = sig_multiply(u16, lfe->lfe_snr_multiplier);
-      }
-      else {
-        ioctl_bad(lfe, 7);
-        mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
-        if (logit)
-          tvhwarn(LS_LINUXDVB, "Unable to provide SNR value.");
-      }
-    }
-
     /* ERROR_BLOCK_COUNT == Uncorrected blocks (UNC) */
-    gotprop = 0;
     if(ioctl_check(lfe, 8) && fe_properties[4].u.st.len > 0) {
       if(fe_properties[4].u.st.stat[0].scale == FE_SCALE_COUNTER) {
         atomic_set(&mmi->tii_stats.unc, fe_properties[4].u.st.stat[0].uvalue);
         mmi->tii_stats.ec_block = fe_properties[4].u.st.stat[0].uvalue;
-        gotprop = 1;
-      }
-      else {
+      } else {
         ioctl_bad(lfe, 8);
+        atomic_set(&mmi->tii_stats.unc, 0);
+        mmi->tii_stats.ec_block = 0;
         if (logit)
           tvhwarn(LS_LINUXDVB, "Unhandled ERROR_BLOCK_COUNT scale: %d",
                   fe_properties[4].u.st.stat[0].scale);
       }
     }
-
     /* TOTAL_BLOCK_COUNT */
-    if(gotprop && (fe_properties[5].u.st.len > 0)) {
-      gotprop = 0;
-      if(ioctl_check(lfe, 9) && fe_properties[5].u.st.stat[0].scale == FE_SCALE_COUNTER) {
+    if(ioctl_check(lfe, 9) && fe_properties[5].u.st.len > 0) {
+      if(fe_properties[5].u.st.stat[0].scale == FE_SCALE_COUNTER) {
         mmi->tii_stats.tc_block = fe_properties[5].u.st.stat[0].uvalue;
-        gotprop = 1;
-      }
-      else {
+      } else {
         ioctl_bad(lfe, 9);
-        /* both values to none */
-        mmi->tii_stats.ec_block = 0;
-        atomic_set(&mmi->tii_stats.unc, 0);
+        mmi->tii_stats.tc_block = 0;
         if (logit)
           tvhwarn(LS_LINUXDVB, "Unhandled TOTAL_BLOCK_COUNT scale: %d",
-                 fe_properties[5].u.st.stat[0].scale);
-      }
-    }
-    if(!gotprop && ioctl_check(lfe, 10)) {
-      /* try old API */
-      if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32)) {
-        atomic_set(&mmi->tii_stats.unc, u32);
-        gotprop = 1;
-      }
-      else {
-        ioctl_bad(lfe, 10);
-        if (logit)
-          tvhwarn(LS_LINUXDVB, "Unable to provide UNC value.");
+                  fe_properties[5].u.st.stat[0].scale);
       }
     }
   /* Older API */
