@@ -177,27 +177,31 @@ else
 fi
 
 check_cc_snippet strlcat '#include <string.h>
-int test(int argc, char **argv) {
+#define TEST test
+int test() {
   char dst[10];
   strlcat("test", dst, sizeof(dst));
   return 0;
 }'
 
 check_cc_snippet strlcpy '#include <string.h>
-int test(int argc, char **argv) {
+#define TEST test
+int test() {
   char dst[10];
   strlcpy("test", dst, sizeof(dst));
   return 0;
 }'
 
 check_cc_snippet fdatasync '#include <unistd.h>
-int test(int argc, char **argv) {
+#define TEST test
+int test() {
   fdatasync(0);
   return 0;
 }'
 
 check_cc_snippet getloadavg '#include <stdlib.h>
-void test() { getloadavg(NULL,0); }'
+#define TEST test
+int test() { return getloadavg(NULL,0); }'
 
 check_cc_snippet atomic32 '#include <stdint.h>
 int test(int *ptr){
@@ -222,6 +226,7 @@ return __sync_fetch_and_add(ptr, (void *)1);
 }'
 
 check_cc_snippet bitops64 '#include <stdint.h>
+#define TEST test
 int test(void){
   int l = sizeof(long);
   return l == 8 ? 0 : 1;
@@ -312,6 +317,7 @@ int test(void)
 # note that iconv routines are mandatory
 check_cc_snippet libiconv '
 #include <iconv.h>
+#define TEST test
 int test(void)
 {
   iconv_t ic = iconv_open("ASCII", "ASCII");
@@ -327,6 +333,7 @@ fi
 
 check_cc_snippet ifnames '
 #include <net/if.h>
+#define TEST test
 int test(void)
 {
   struct if_nameindex *ifnames = if_nameindex();
@@ -336,6 +343,7 @@ int test(void)
 '
 
 check_cc_snippet cclang_threadsan '
+#define TEST test
 int test(void){
 #if __has_feature(thread_sanitizer)
   return 0;
