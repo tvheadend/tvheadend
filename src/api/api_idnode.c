@@ -264,7 +264,7 @@ api_idnode_load
   meta = htsmsg_get_s32_or_default(args, "meta", 0);
   grid = htsmsg_get_s32_or_default(args, "grid", 0);
   if (grid > 0 && meta > 0)
-    return -EINVAL;
+    return EINVAL;
 
   flist = api_idnode_flist_conf(args, "list");
 

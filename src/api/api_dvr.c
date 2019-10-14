@@ -553,11 +553,11 @@ api_dvr_entry_file_moved
 {
   const char *src, *dst;
   if (!(src = htsmsg_get_str(args, "src")))
-    return -EINVAL;
+    return EINVAL;
   if (!(dst = htsmsg_get_str(args, "dst")))
-    return -EINVAL;
+    return EINVAL;
   if (dvr_entry_file_moved(src, dst))
-    return -ENOENT;
+    return ENOENT;
   return 0;
 }
 

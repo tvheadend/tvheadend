@@ -141,7 +141,7 @@ api_mpegts_network_scan
   const char *uuid;
 
   if (!(f = htsmsg_field_find(args, "uuid")))
-    return -EINVAL;
+    return EINVAL;
   if ((uuids = htsmsg_field_get_list(f))) {
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_str(f))) continue;
@@ -158,9 +158,9 @@ api_mpegts_network_scan
       mn->mn_scan(mn);
     tvh_mutex_unlock(&global_lock);
     if (!mn)
-      return -ENOENT;
+      return ENOENT;
   } else {
-    return -EINVAL;
+    return EINVAL;
   }
 
   return 0;
@@ -371,11 +371,11 @@ api_dvb_scanfile_list
   scanfile_network_t *n;
 
   if (!type)
-    return -EINVAL;
+    return EINVAL;
 
   list = scanfile_find_region_list(type);
   if (!list)
-    return -EINVAL;
+    return EINVAL;
   
   l = htsmsg_create_list();
   LIST_FOREACH(r, &list->srl_regions, sfr_link) {

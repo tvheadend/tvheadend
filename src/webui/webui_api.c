@@ -51,6 +51,10 @@ destroy_args:
   
   /* Convert error */
   if (r) {
+    if (r < 0) {
+      tvherror(LS_HTTP, "negative error code %d for url '%s'", r, hc->hc_url);
+      r = ENOSYS;
+    }
     switch (r) {
       case EPERM:
       case EACCES:
