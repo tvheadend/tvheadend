@@ -43,9 +43,16 @@ linuxdvb_frontend_input_thread ( void *aux );
 /*
  *
  */
-static inline int sig_multiply(int value, int multiplier)
+static inline int sig_multiply ( int value, int multiplier )
 {
   return ((value * MAX(1, multiplier)) + 99) / 100;
+}
+
+static inline int lfe_group ( linuxdvb_frontend_t *lfe1,
+                                         linuxdvb_frontend_t *lfe2 )
+{
+  return strcmp(lfe1->lfe_dmx_path, lfe2->lfe_dmx_path) == 0 ||
+         strcmp(lfe1->lfe_fe_path, lfe2->lfe_fe_path) == 0;
 }
 
 /* **************************************************************************
@@ -67,7 +74,7 @@ linuxdvb_frontend_class_active_get ( void *obj )
   active = (int *)mpegts_input_class_active_get(obj);
   if (!(*active)) {
     LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-      if (strcmp(lfe2->lfe_fe_path, lfe->lfe_fe_path))
+      if (!lfe_group(lfe, lfe2))
         continue;
       if (lfe2->mi_is_enabled((mpegts_input_t*)lfe2, NULL, 0, -1) != MI_IS_ENABLED_NEVER) {
         *active = 1;
@@ -565,7 +572,7 @@ linuxdvb_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, 
   int w = 0;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2;
   LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-    if (strcmp(lfe->lfe_fe_path, lfe2->lfe_fe_path))
+    if (!lfe_group(lfe, lfe2))
       continue;
     w = MAX(w, mpegts_input_get_weight((mpegts_input_t*)lfe2, mm, flags, weight));
   }
@@ -648,7 +655,7 @@ linuxdvb_frontend_is_enabled
 ok:
   w = -1;
   LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-    if (lfe2 == lfe || strcmp(lfe2->lfe_fe_path, lfe->lfe_fe_path)) continue;
+    if (lfe2 == lfe || !lfe_group(lfe, lfe2)) continue;
     w = MAX(w, mpegts_input_get_weight((mpegts_input_t *)lfe2, mm, flags, weight));
   }
   if (w >= weight)
@@ -731,7 +738,7 @@ linuxdvb_frontend_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   /* Stop other active frontend (should be only one) */
   LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-    if (lfe2 == lfe || strcmp(lfe2->lfe_fe_path, lfe->lfe_fe_path)) continue;
+    if (lfe2 == lfe || !lfe_group(lfe, lfe2)) continue;
     tvh_mutex_lock(&lfe2->mi_output_lock);
     lmmi = LIST_FIRST(&lfe2->mi_mux_active);
     tvh_mutex_unlock(&lfe2->mi_output_lock);
