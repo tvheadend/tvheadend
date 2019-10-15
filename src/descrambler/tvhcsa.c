@@ -17,6 +17,10 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <assert.h>
+
 #include "tvhcsa.h"
 #include "input.h"
 #include "input/mpegts/tsdemux.h"
@@ -25,9 +29,6 @@
 #include "descrambler/algo/libaes128dec.h"
 #include "descrambler/algo/libdesdec.h"
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <assert.h>
 
 static void
 tvhcsa_empty_flush
