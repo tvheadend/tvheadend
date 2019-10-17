@@ -319,8 +319,6 @@ dvb_psi_parse_pmt
     switch(estype) {
     case 0x01:
     case 0x02:
-    case 0x80: // 0x80 is DigiCipher II (North American cable) encrypted MPEG-2
-      hts_stream_type = SCT_MPEG2VIDEO;
       break;
 
     case 0x03:
@@ -337,13 +335,10 @@ dvb_psi_parse_pmt
     case 0x06:
       /* 0x06 is Chinese Cable TV AC-3 audio track */
       /* but mark it so only when no more descriptors exist */
-      if (dllen > 1 || mux->mm_pmt_ac3 != MM_AC3_PMT_06)
-        break;
-      /* fall through to SCT_AC3 */
-    case 0x81:
-      hts_stream_type = SCT_AC3;
+      if (dllen <= 1 && mux->mm_pmt_ac3 == MM_AC3_PMT_06)
+        hts_stream_type = SCT_AC3;
       break;
-    
+
     case 0x0f:
       hts_stream_type = SCT_MP4A;
       break;
@@ -358,6 +353,18 @@ dvb_psi_parse_pmt
 
     case 0x24:
       hts_stream_type = SCT_HEVC;
+      break;
+
+    case 0x80:	/* DigiCipher II (North American cable) encrypted MPEG-2 */
+      hts_stream_type = SCT_MPEG2VIDEO;
+      break;
+
+    case 0x81:
+      hts_stream_type = SCT_AC3;
+      break;
+
+    case 0x87:	/* ATSC */
+      hts_stream_type = SCT_EAC3;
       break;
 
     default:
