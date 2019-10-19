@@ -319,6 +319,7 @@ dvb_psi_parse_pmt
     switch(estype) {
     case 0x01:
     case 0x02:
+      hts_stream_type = SCT_MPEG2VIDEO;
       break;
 
     case 0x03:
