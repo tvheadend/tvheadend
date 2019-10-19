@@ -292,8 +292,6 @@ access_copy(access_t *src)
     dst->aa_chtags_exclude = htsmsg_copy(src->aa_chtags_exclude);
   if (src->aa_auth)
     dst->aa_auth = strdup(src->aa_auth);
-  dst->aa_xmltv_output_format = src->aa_xmltv_output_format;
-  dst->aa_htsp_output_format = src->aa_htsp_output_format;
   return dst;
 }
 
@@ -689,9 +687,6 @@ access_update(access_t *a, access_entry_t *ae)
     else
       a->aa_rights |= ae->ae_rights;
   }
-
-  a->aa_xmltv_output_format = ae->ae_xmltv_output_format;
-  a->aa_htsp_output_format = ae->ae_htsp_output_format;
 }
 
 /**
@@ -1417,29 +1412,6 @@ access_entry_conn_limit_type_enum ( void *p, const char *lang )
   return strtab2htsmsg(conn_limit_type_tab, 1, lang);
 }
 
-static htsmsg_t *
-access_entry_xmltv_output_format_enum ( void *p, const char *lang )
-{
-  static struct strtab
-  xmltv_output_format_tab[] = {
-    { N_("All"),                           ACCESS_XMLTV_OUTPUT_FORMAT_ALL },
-    { N_("Basic"),                         ACCESS_XMLTV_OUTPUT_FORMAT_BASIC },
-    { N_("Basic Alternative (No Hash)"),   ACCESS_XMLTV_OUTPUT_FORMAT_BASIC_NO_HASH },
-  };
-  return strtab2htsmsg(xmltv_output_format_tab, 1, lang);
-}
-
-static htsmsg_t *
-access_entry_htsp_output_format_enum ( void *p, const char *lang )
-{
-  static struct strtab
-  htsp_output_format_tab[] = {
-    { N_("All"),                           ACCESS_HTSP_OUTPUT_FORMAT_ALL },
-    { N_("Basic"),                         ACCESS_HTSP_OUTPUT_FORMAT_BASIC },
-  };
-  return strtab2htsmsg(htsp_output_format_tab, 1, lang);
-}
-
 htsmsg_t *
 language_get_list ( void *obj, const char *lang )
 {
@@ -1684,8 +1656,6 @@ PROP_DOC(connection_limit)
 PROP_DOC(persistent_viewlevel)
 PROP_DOC(streaming_profile)
 PROP_DOC(change_parameters)
-PROP_DOC(xmltv_output_format)
-PROP_DOC(htsp_output_format)
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
@@ -1932,26 +1902,6 @@ const idclass_t access_entry_class = {
       .list     = channel_tag_class_get_list,
       .rend     = access_entry_chtag_rend,
       .opts     = PO_ADVANCED,
-    },
-    {
-      .type     = PT_INT,
-      .id       = "xmltv_output_format",
-      .name     = N_("Format for xmltv output"),
-      .desc     = N_("Specify format for xmltv output."),
-      .doc      = prop_doc_xmltv_output_format,
-      .off      = offsetof(access_entry_t, ae_xmltv_output_format),
-      .list     = access_entry_xmltv_output_format_enum,
-      .opts     = PO_ADVANCED | PO_DOC_NLIST,
-    },
-    {
-      .type     = PT_INT,
-      .id       = "htsp_output_format",
-      .name     = N_("Format for htsp output"),
-      .desc     = N_("Specify format for htsp output."),
-      .doc      = prop_doc_htsp_output_format,
-      .off      = offsetof(access_entry_t, ae_htsp_output_format),
-      .list     = access_entry_htsp_output_format_enum,
-      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,

@@ -1237,7 +1237,6 @@ htsp_build_event
   epg_episode_num_t epnum;
   const char *str;
   char buf[512];
-  const int of = htsp->htsp_granted_access->aa_htsp_output_format;
 
   /* Ignore? */
   if (update && e->updated <= update) return NULL;
@@ -1254,40 +1253,35 @@ htsp_build_event
   htsmsg_add_s64(out, "stop", e->stop);
   if ((str = epg_broadcast_get_title(e, lang)))
     htsmsg_add_str(out, "title", str);
-  /* For basic format, we want to skip the large text fields
-   * and go straight to doing the low-overhead fields.
-   */
-  if (of != ACCESS_HTSP_OUTPUT_FORMAT_BASIC) {
-    if (htsp->htsp_version < 32) {
-      if ((str = epg_broadcast_get_description(e, lang))) {
-        htsmsg_add_str(out, "description", str);
-        if ((str = epg_broadcast_get_summary(e, lang)))
-          htsmsg_add_str(out, "summary", str);
-        if ((str = epg_broadcast_get_subtitle(e, lang)))
-          htsmsg_add_str(out, "subtitle", str);
-      } else if ((str = epg_broadcast_get_summary(e, lang))) {
-        htsmsg_add_str(out, "description", str);
-        if ((str = epg_broadcast_get_subtitle(e, lang)))
-          htsmsg_add_str(out, "subtitle", str);
-      } else if ((str = epg_broadcast_get_subtitle(e, lang))) {
-        htsmsg_add_str(out, "description", str);
-      }
-    } else {
-      if ((str = epg_broadcast_get_subtitle(e, lang)))
-        htsmsg_add_str(out, "subtitle", str);
+  if (htsp->htsp_version < 32) {
+    if ((str = epg_broadcast_get_description(e, lang))) {
+      htsmsg_add_str(out, "description", str);
       if ((str = epg_broadcast_get_summary(e, lang)))
         htsmsg_add_str(out, "summary", str);
-      if ((str = epg_broadcast_get_description(e, lang)))
-        htsmsg_add_str(out, "description", str);
+      if ((str = epg_broadcast_get_subtitle(e, lang)))
+        htsmsg_add_str(out, "subtitle", str);
+    } else if ((str = epg_broadcast_get_summary(e, lang))) {
+      htsmsg_add_str(out, "description", str);
+      if ((str = epg_broadcast_get_subtitle(e, lang)))
+        htsmsg_add_str(out, "subtitle", str);
+    } else if ((str = epg_broadcast_get_subtitle(e, lang))) {
+      htsmsg_add_str(out, "description", str);
     }
-
-    if (e->credits)
-      htsmsg_add_msg(out, "credits", htsmsg_copy(e->credits));
-    if (e->category)
-      string_list_serialize(e->category, out, "category");
-    if (e->keyword)
-      string_list_serialize(e->keyword, out, "keyword");
+  } else {
+    if ((str = epg_broadcast_get_subtitle(e, lang)))
+      htsmsg_add_str(out, "subtitle", str);
+    if ((str = epg_broadcast_get_summary(e, lang)))
+      htsmsg_add_str(out, "summary", str);
+    if ((str = epg_broadcast_get_description(e, lang)))
+      htsmsg_add_str(out, "description", str);
   }
+
+  if (e->credits)
+    htsmsg_add_msg(out, "credits", htsmsg_copy(e->credits));
+  if (e->category)
+    string_list_serialize(e->category, out, "category");
+  if (e->keyword)
+    string_list_serialize(e->keyword, out, "keyword");
 
   if (e->serieslink)
     htsmsg_add_str(out, "serieslinkUri", e->serieslink->uri);
