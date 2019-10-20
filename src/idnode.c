@@ -852,7 +852,7 @@ idnode_filter_init
             p->type == PT_TIME) {
           int64_t v = f->u.n.n;
           if (INTEXTRA_IS_SPLIT(p->intextra) && p->intextra != f->u.n.intsplit) {
-            v = (v / MIN(1, f->u.n.intsplit)) * p->intextra;
+            v = (v / MAX(1, f->u.n.intsplit)) * p->intextra;
             f->u.n.n = v;
           }
         }
