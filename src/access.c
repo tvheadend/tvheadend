@@ -690,8 +690,10 @@ access_update(access_t *a, access_entry_t *ae)
       a->aa_rights |= ae->ae_rights;
   }
 
-  a->aa_xmltv_output_format = ae->ae_xmltv_output_format;
-  a->aa_htsp_output_format = ae->ae_htsp_output_format;
+  if (ae->ae_change_xmltv_output_format)
+    a->aa_xmltv_output_format = ae->ae_xmltv_output_format;
+  if (ae->ae_change_htsp_output_format)
+    a->aa_htsp_output_format = ae->ae_htsp_output_format;
 }
 
 /**
@@ -1121,6 +1123,8 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
     ae->ae_change_chrange = 1;
     ae->ae_change_chtags  = 1;
     ae->ae_change_rights  = 1;
+    ae->ae_change_xmltv_output_format = 1;
+    ae->ae_change_htsp_output_format = 1;
     ae->ae_htsp_streaming = 1;
     ae->ae_htsp_dvr       = 1;
     ae->ae_all_dvr        = 1;
@@ -1551,7 +1555,17 @@ static idnode_slist_t access_entry_class_change_slist[] = {
   {
     .id   = "change_uilevel",
     .name = N_("User interface level"),
-   .off  = offsetof(access_entry_t, ae_change_uilevel),
+    .off  = offsetof(access_entry_t, ae_change_uilevel),
+  },
+  {
+    .id   = "change_xmltv_output",
+    .name = N_("XMLTV output format"),
+    .off  = offsetof(access_entry_t, ae_change_xmltv_output_format),
+  },
+  {
+    .id   = "change_htsp_output",
+    .name = N_("HTSP output format"),
+    .off  = offsetof(access_entry_t, ae_change_htsp_output_format),
   },
   {}
 };

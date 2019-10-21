@@ -135,8 +135,12 @@ typedef struct access_entry {
   int ae_conn_limit_type;
   uint32_t ae_conn_limit;
   int ae_change_conn_limit;
+
   int ae_xmltv_output_format;
+  int ae_change_xmltv_output_format;
+
   int ae_htsp_output_format;
+  int ae_change_htsp_output_format;
 
   int ae_dvr;
   int ae_htsp_dvr;
