@@ -184,12 +184,12 @@ typedef struct access {
   htsmsg_t *aa_chtags;
   int       aa_match;
   uint32_t  aa_conn_limit;
-  uint32_t  aa_xmltv_output_format;
-  uint32_t  aa_htsp_output_format;
   uint32_t  aa_conn_limit_streaming;
   uint32_t  aa_conn_limit_dvr;
   uint32_t  aa_conn_streaming;
   uint32_t  aa_conn_dvr;
+  uint32_t  aa_xmltv_output_format;
+  uint32_t  aa_htsp_output_format;
   int       aa_uilevel;
   int       aa_uilevel_nochange;
   char     *aa_theme;
