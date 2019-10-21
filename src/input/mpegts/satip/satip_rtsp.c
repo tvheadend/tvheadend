@@ -185,11 +185,18 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     if (dmc->u.dmc_fe_qpsk.fec_inner != DVB_FEC_NONE &&
         dmc->u.dmc_fe_qpsk.fec_inner != DVB_FEC_AUTO)
       ADD(u.dmc_fe_qpsk.fec_inner, fec, "auto");
-    if ((dmc->dmc_fe_rolloff != DVB_ROLLOFF_NONE &&
-         dmc->dmc_fe_rolloff != DVB_ROLLOFF_AUTO) ||
-        ((flags & SATIP_SETUP_ROLLOFF_ON) != 0 &&
-         dmc->dmc_fe_delsys == DVB_SYS_DVBS2))
+    if (dmc->dmc_fe_rolloff != DVB_ROLLOFF_NONE &&
+        dmc->dmc_fe_rolloff != DVB_ROLLOFF_AUTO) {
       ADD(dmc_fe_rolloff, ro, "0.35");
+    } if (dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {
+      if (flags & SATIP_SETUP_ROLLOFF_20) {
+        satip_rtsp_add_val("ro", buf, 200);
+      } else if (flags & SATIP_SETUP_ROLLOFF_25) {
+        satip_rtsp_add_val("ro", buf, 250);
+      } else if (flags & SATIP_SETUP_ROLLOFF_35) {
+        satip_rtsp_add_val("ro", buf, 350);
+      }
+    }
     if (dmc->dmc_fe_pilot != DVB_PILOT_NONE &&
         dmc->dmc_fe_pilot != DVB_PILOT_AUTO) {
       ADD(dmc_fe_pilot, plts, "auto");

@@ -29,6 +29,11 @@
 
 #define SATIP_BUF_SIZE    (4000*188)
 
+#define SATIP_DEFAULT_ROLLOFF_AUTO	0
+#define SATIP_DEFAULT_ROLLOFF_35	1
+#define SATIP_DEFAULT_ROLLOFF_25	2
+#define SATIP_DEFAULT_ROLLOFF_20	3
+
 typedef struct satip_device_info satip_device_info_t;
 typedef struct satip_device      satip_device_t;
 typedef struct satip_tune_req    satip_tune_req_t;
@@ -92,7 +97,7 @@ struct satip_device
   char                      *sd_tunercfg;
   int                        sd_pids21;
   int                        sd_pilot_on;
-  int                        sd_rolloff_on;
+  int                        sd_default_rolloff;
   int                        sd_no_univ_lnb;
   int                        sd_can_weight;
   int                        sd_dbus_allow;
@@ -287,11 +292,13 @@ satip_satconf_t *satip_satconf_get_position
 #define SATIP_SETUP_TCP        (1<<0)
 #define SATIP_SETUP_PLAY       (1<<1)
 #define SATIP_SETUP_PILOT_ON   (1<<2)
-#define SATIP_SETUP_ROLLOFF_ON (1<<3)
-#define SATIP_SETUP_PIDS21     (1<<4)
-#define SATIP_SETUP_FE         (1<<5)
-#define SATIP_SETUP_SPECINV0   (1<<6)
-#define SATIP_SETUP_SPECINV1   (1<<7)
+#define SATIP_SETUP_ROLLOFF_20 (1<<3)
+#define SATIP_SETUP_ROLLOFF_25 (1<<4)
+#define SATIP_SETUP_ROLLOFF_35 (1<<5)
+#define SATIP_SETUP_PIDS21     (1<<6)
+#define SATIP_SETUP_FE         (1<<7)
+#define SATIP_SETUP_SPECINV0   (1<<8)
+#define SATIP_SETUP_SPECINV1   (1<<9)
 
 int
 satip_rtsp_setup( http_client_t *hc,
