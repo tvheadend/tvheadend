@@ -741,19 +741,21 @@ api_idnode_create_list( htsmsg_t **resp, htsmsg_t *list )
   htsmsg_add_msg(*resp, "uuid", list);
 }
 
+#define ACCESS_IDNODE (ACCESS_ANONYMOUS | ACCESS_NO_EMPTY_ARGS)
+
 void api_idnode_init ( void )
 {
   /*
    * note: permissions are verified using idnode_perm() calls
    */
   static api_hook_t ah[] = {
-    { "idnode/load",     ACCESS_ANONYMOUS, api_idnode_load,     NULL },
-    { "idnode/save",     ACCESS_ANONYMOUS, api_idnode_save,     NULL },
-    { "idnode/tree",     ACCESS_ANONYMOUS, api_idnode_tree,     NULL },
-    { "idnode/class",    ACCESS_ANONYMOUS, api_idnode_class,    NULL },
-    { "idnode/delete",   ACCESS_ANONYMOUS, api_idnode_delete,   NULL },
-    { "idnode/moveup",   ACCESS_ANONYMOUS, api_idnode_moveup,   NULL },
-    { "idnode/movedown", ACCESS_ANONYMOUS, api_idnode_movedown, NULL },
+    { "idnode/load",     ACCESS_IDNODE, api_idnode_load,     NULL },
+    { "idnode/save",     ACCESS_IDNODE, api_idnode_save,     NULL },
+    { "idnode/tree",     ACCESS_IDNODE, api_idnode_tree,     NULL },
+    { "idnode/class",    ACCESS_IDNODE, api_idnode_class,    NULL },
+    { "idnode/delete",   ACCESS_IDNODE, api_idnode_delete,   NULL },
+    { "idnode/moveup",   ACCESS_IDNODE, api_idnode_moveup,   NULL },
+    { "idnode/movedown", ACCESS_IDNODE, api_idnode_movedown, NULL },
     { NULL },
   };
 

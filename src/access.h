@@ -227,6 +227,7 @@ typedef struct access_ticket {
 #define ACCESS_FAILED_RECORDER    (1<<9)
 #define ACCESS_HTSP_ANONYMIZE     (1<<10)
 #define ACCESS_ADMIN              (1<<11)
+#define ACCESS_NO_EMPTY_ARGS      (1<<29)
 #define ACCESS_OR                 (1<<30)
 
 #define ACCESS_FULL \
@@ -235,6 +236,9 @@ typedef struct access_ticket {
    ACCESS_RECORDER | ACCESS_HTSP_RECORDER | \
    ACCESS_ALL_RECORDER | ACCESS_ALL_RW_RECORDER | \
    ACCESS_FAILED_RECORDER | ACCESS_ADMIN)
+
+#define ACCESS_INTERNAL \
+  (ACCESS_NO_EMPTY_ARGS)
 
 /**
  * Create a new ticket for the requested resource and generate a id for it
