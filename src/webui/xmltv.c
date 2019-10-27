@@ -269,7 +269,7 @@ http_xmltv_programme_one(const http_connection_t *hc,
    */
   epg_broadcast_get_epnum(ebc, &epnum);
   if (epnum.s_num || epnum.e_num || epnum.p_num) {
-    htsbuf_append_str(hq, "  <episode-num system=\"xmltv-ns\">");
+    htsbuf_append_str(hq, "  <episode-num system=\"xmltv_ns\">");
     _http_xmltv_add_episode_num(hq, epnum.s_num, epnum.s_cnt);
     htsbuf_append_str(hq," . ");
     _http_xmltv_add_episode_num(hq, epnum.e_num, epnum.e_cnt);
