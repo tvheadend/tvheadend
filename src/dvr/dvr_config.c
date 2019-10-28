@@ -127,6 +127,43 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
     res = dvr_config_find_by_name_default(NULL);
   return res;
 }
+static htsmsg_t *
+dvr_autorec_entry_class_record_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Record all"),
+        DVR_AUTOREC_RECORD_ALL },
+    { N_("All: Record if EPG/XMLTV indicates it is a unique programme"),
+        DVR_AUTOREC_RECORD_UNIQUE },
+    { N_("All: Record if different episode number"),
+        DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER },
+    { N_("All: Record if different subtitle"),
+        DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE },
+    { N_("All: Record if different description"),
+        DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION },
+    { N_("All: Record once per month"),
+        DVR_AUTOREC_RECORD_ONCE_PER_MONTH },
+    { N_("All: Record once per week"),
+        DVR_AUTOREC_RECORD_ONCE_PER_WEEK },
+    { N_("All: Record once per day"),
+        DVR_AUTOREC_RECORD_ONCE_PER_DAY },
+    { N_("Local: Record if different episode number"),
+        DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER },
+    { N_("Local: Record if different title"),
+        DVR_AUTOREC_LRECORD_DIFFERENT_TITLE },
+    { N_("Local: Record if different subtitle"),
+        DVR_AUTOREC_LRECORD_DIFFERENT_SUBTITLE },
+    { N_("Local: Record if different description"),
+        DVR_AUTOREC_LRECORD_DIFFERENT_DESCRIPTION },
+    { N_("Local: Record once per month"),
+        DVR_AUTOREC_LRECORD_ONCE_PER_MONTH },
+    { N_("Local: Record once per week"),
+        DVR_AUTOREC_LRECORD_ONCE_PER_WEEK },
+    { N_("Local: Record once per day"),
+        DVR_AUTOREC_LRECORD_ONCE_PER_DAY },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
 
 /**
  *
@@ -185,6 +222,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_cleanup_threshold_free = 1000; // keep 1000 MiB of free space on disk by default
   cfg->dvr_cleanup_threshold_used = 0;    // disabled
   cfg->dvr_autorec_max_count = 50;
+  cfg->dvr_autorec_record = DVR_AUTOREC_RECORD_ALL;
   cfg->dvr_format_tvmovies_subdir = strdup("tvmovies");
   cfg->dvr_format_tvshows_subdir = strdup("tvshows");
 
@@ -1402,6 +1440,17 @@ const idclass_t dvr_config_class = {
       .opts     = PO_ADVANCED,
       .group    = 6,
     },
+    {
+      .type     = PT_U32,
+      .id       = "autorec-record",
+      .name     = N_("Autorec duplicate handling"),
+      .desc     = N_("Duplicate recording handling."),
+      .off      = offsetof(dvr_config_t, dvr_autorec_record),
+      .list     = dvr_autorec_entry_class_record_list,
+      .opts     = PO_ADVANCED,
+      .def.i    = DVR_AUTOREC_RECORD_ALL,
+      .group    = 6,
+    },    
     {
       .type     = PT_BOOL,
       .id       = "skip-commercials",
