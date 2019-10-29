@@ -146,7 +146,7 @@ tvheadend.satipsrvconf = function(panel, index) {
         iconCls: 'satipsrvconf',
         tabIndex: index,
         comet: 'satip_server',
-        width: 600,
+        width: 610,
         labelWidth: 250,
         tbar: [discoverButton]
     });

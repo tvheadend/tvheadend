@@ -1833,6 +1833,10 @@ body.x-body-masked .x-window-plain .x-window-mc {
     background-image:url(../images/access/window/icon-error.gif);
 }
 
+.x-form-spinner-trigger {
+    width:17px!important;
+}
+
 .tmdb {
     content:url(../../../img/tmdb_white.png)!important;
 }
