@@ -1227,7 +1227,12 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 {
   int err;
 
-  if (http_access_verify(hc, hp->hp_accessmask)) {
+  /* this is a special case when client probably requires authentication */
+  if ((hp->hp_accessmask & ACCESS_NO_EMPTY_ARGS) != 0 && TAILQ_EMPTY(&hc->hc_req_args)) {
+    err = http_noaccess_code(hc);
+    goto destroy;
+  }
+  if (http_access_verify(hc, hp->hp_accessmask & ~ACCESS_INTERNAL)) {
     if ((hp->hp_flags & HTTP_PATH_NO_VERIFICATION) == 0) {
       err = http_noaccess_code(hc);
       goto destroy;

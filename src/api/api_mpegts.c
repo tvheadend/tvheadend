@@ -141,7 +141,7 @@ api_mpegts_network_scan
   const char *uuid;
 
   if (!(f = htsmsg_field_find(args, "uuid")))
-    return -EINVAL;
+    return EINVAL;
   if ((uuids = htsmsg_field_get_list(f))) {
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_str(f))) continue;
@@ -158,9 +158,9 @@ api_mpegts_network_scan
       mn->mn_scan(mn);
     tvh_mutex_unlock(&global_lock);
     if (!mn)
-      return -ENOENT;
+      return ENOENT;
   } else {
-    return -EINVAL;
+    return EINVAL;
   }
 
   return 0;
@@ -244,7 +244,7 @@ api_mpegts_mux_grid
   }
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
-    //if (hide && !mn->mn_enabled) continue;
+    if (hide && !mn->mn_enabled) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
       if (hide == 2 && !mm->mm_is_enabled(mm)) continue;
       idnode_set_add(ins, (idnode_t*)mm, &conf->filter, perm->aa_lang_ui);
@@ -272,7 +272,7 @@ api_mpegts_service_grid
   }
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
-    //if (hide && !mn->mn_enabled) continue;
+    if (hide && !mn->mn_enabled) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
       if (hide && !mm->mm_is_enabled(mm)) continue;
       LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
@@ -371,11 +371,11 @@ api_dvb_scanfile_list
   scanfile_network_t *n;
 
   if (!type)
-    return -EINVAL;
+    return EINVAL;
 
   list = scanfile_find_region_list(type);
   if (!list)
-    return -EINVAL;
+    return EINVAL;
   
   l = htsmsg_create_list();
   LIST_FOREACH(r, &list->srl_regions, sfr_link) {

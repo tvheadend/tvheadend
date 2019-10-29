@@ -1171,7 +1171,7 @@ dvb_mux_delete ( mpegts_mux_t *mm, int delconf )
 dvb_mux_t *
 dvb_mux_create0
   ( dvb_network_t *ln,
-    uint16_t onid, uint16_t tsid, const dvb_mux_conf_t *dmc,
+    uint32_t onid, uint32_t tsid, const dvb_mux_conf_t *dmc,
     const char *uuid, htsmsg_t *conf )
 {
   const idclass_t *idc;

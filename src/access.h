@@ -94,6 +94,17 @@ enum {
   ACCESS_CONN_LIMIT_TYPE_DVR,
 };
 
+enum {
+  ACCESS_XMLTV_OUTPUT_FORMAT_ALL = 0,
+  ACCESS_XMLTV_OUTPUT_FORMAT_BASIC,
+  ACCESS_XMLTV_OUTPUT_FORMAT_BASIC_NO_HASH,
+};
+
+enum {
+  ACCESS_HTSP_OUTPUT_FORMAT_ALL = 0,
+  ACCESS_HTSP_OUTPUT_FORMAT_BASIC,
+};
+
 typedef struct access_entry {
   idnode_t ae_id;
 
@@ -124,6 +135,12 @@ typedef struct access_entry {
   int ae_conn_limit_type;
   uint32_t ae_conn_limit;
   int ae_change_conn_limit;
+
+  int ae_xmltv_output_format;
+  int ae_change_xmltv_output_format;
+
+  int ae_htsp_output_format;
+  int ae_change_htsp_output_format;
 
   int ae_dvr;
   int ae_htsp_dvr;
@@ -175,6 +192,8 @@ typedef struct access {
   uint32_t  aa_conn_limit_dvr;
   uint32_t  aa_conn_streaming;
   uint32_t  aa_conn_dvr;
+  uint32_t  aa_xmltv_output_format;
+  uint32_t  aa_htsp_output_format;
   int       aa_uilevel;
   int       aa_uilevel_nochange;
   char     *aa_theme;
@@ -208,6 +227,7 @@ typedef struct access_ticket {
 #define ACCESS_FAILED_RECORDER    (1<<9)
 #define ACCESS_HTSP_ANONYMIZE     (1<<10)
 #define ACCESS_ADMIN              (1<<11)
+#define ACCESS_NO_EMPTY_ARGS      (1<<29)
 #define ACCESS_OR                 (1<<30)
 
 #define ACCESS_FULL \
@@ -216,6 +236,9 @@ typedef struct access_ticket {
    ACCESS_RECORDER | ACCESS_HTSP_RECORDER | \
    ACCESS_ALL_RECORDER | ACCESS_ALL_RW_RECORDER | \
    ACCESS_FAILED_RECORDER | ACCESS_ADMIN)
+
+#define ACCESS_INTERNAL \
+  (ACCESS_NO_EMPTY_ARGS)
 
 /**
  * Create a new ticket for the requested resource and generate a id for it

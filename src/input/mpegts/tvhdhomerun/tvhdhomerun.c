@@ -32,7 +32,8 @@
 
 #include "config.h"
 
-#ifdef HDHOMERUN_TAG_DEVICE_AUTH_BIN
+#if defined(HDHOMERUN_TAG_DEVICE_AUTH_BIN) \
+           || defined(HDHOMERUN_TAG_DEVICE_AUTH_BIN_DEPRECATED)
 #define hdhomerun_discover_find_devices_custom \
            hdhomerun_discover_find_devices_custom_v2
 #endif

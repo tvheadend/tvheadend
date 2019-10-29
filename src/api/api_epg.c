@@ -602,7 +602,7 @@ api_epg_alternative
   char *lang;
 
   if (htsmsg_get_u32(args, "eventId", &id))
-    return -EINVAL;
+    return EINVAL;
 
   /* Main Job */
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
@@ -633,7 +633,7 @@ api_epg_related
   const char *title = NULL;
   
   if (htsmsg_get_u32(args, "eventId", &id))
-    return -EINVAL;
+    return EINVAL;
 
   /* Main Job */
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
@@ -691,10 +691,10 @@ api_epg_load
   char *lang;
 
   if (!(f = htsmsg_field_find(args, "eventId")))
-    return -EINVAL;
+    return EINVAL;
   if (!(ids = htsmsg_field_get_list(f)))
     if (htsmsg_field_get_u32(f, &id))
-      return -EINVAL;
+      return EINVAL;
 
   /* Main Job */
   tvh_mutex_lock(&global_lock);

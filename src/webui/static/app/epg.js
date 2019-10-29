@@ -282,8 +282,10 @@ tvheadend.epgDetails = function(grid, index) {
         content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Content Type') + ':</span><span class="x-epg-genre">' + genre.join(', ') + '</span></div>';
       }
       var tags = [];
-      if (event.hd > 1)
+      if (event.hd > 2)
         tags.push(_('UHDTV'));
+      else if (event.hd > 1)
+        tags.push(_('FHDTV'));
       else if (event.hd > 0)
         tags.push(_('HDTV'));
       if ('new' in event && event.new)

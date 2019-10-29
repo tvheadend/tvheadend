@@ -226,6 +226,18 @@ satip_device_class_tunercfg_notify ( void *o, const char *lang )
     satip_device_destroy_later(sd, 100);
 }
 
+static htsmsg_t *
+satip_device_class_default_rolloff_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Auto"),  SATIP_DEFAULT_ROLLOFF_AUTO },
+    { N_("0.35"),  SATIP_DEFAULT_ROLLOFF_35 },
+    { N_("0.25"),  SATIP_DEFAULT_ROLLOFF_25 },
+    { N_("0.20"),  SATIP_DEFAULT_ROLLOFF_20 }
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 CLASS_DOC(satip_client)
 
 const idclass_t satip_device_class =
@@ -339,6 +351,17 @@ const idclass_t satip_device_class =
                      "muxes."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_pilot_on),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "default_rolloff",
+      .name     = N_("Send rolloff settings for DVB-S2"),
+      .desc     = N_("Enable if the SAT>IP box requires ro= "
+                     "parameter in the SETUP RTSP command for DVB-S2 "
+                     "muxes."),
+      .opts     = PO_ADVANCED,
+      .list     = satip_device_class_default_rolloff_list,
+      .off      = offsetof(satip_device_t, sd_default_rolloff),
     },
     {
       .type     = PT_BOOL,
@@ -579,20 +602,20 @@ satip_device_hack( satip_device_t *sd )
     /* OctopusNet requires pids in the SETUP RTSP command */
   } else if (strstr(sd->sd_info.manufacturer, "Triax") &&
              strstr(sd->sd_info.modelname, "TSS400")) {
-    /* Rolloff is required to tune into DVB-S2 muxes */
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_max    = 64;
     sd->sd_pids_len    = 255;
     sd->sd_pilot_on    = 1;
+    sd->sd_default_rolloff = SATIP_DEFAULT_ROLLOFF_35;
   } else if (strstr(sd->sd_info.manufacturer, "KATHREIN") &&
             (strstr(sd->sd_info.modelname, "EXIP-4124") ||
              strstr(sd->sd_info.modelname, "EXIP-418") ||
              strstr(sd->sd_info.modelname, "EXIP-414"))) {
-    /* Rolloff is required to tune into DVB-S2 muxes */
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_max    = 64;
     sd->sd_pids_len    = 255;
     sd->sd_pilot_on    = 1;
+    sd->sd_default_rolloff = SATIP_DEFAULT_ROLLOFF_35;
   } else if (strcmp(sd->sd_info.modelname, "TVHeadend SAT>IP") == 0)  {
     sd->sd_pids_max    = 128;
     sd->sd_pids_len    = 2048;
@@ -715,6 +738,9 @@ satip_device_create( satip_device_info_t *info )
       v2 = 1;
     } else if (strncmp(argv[i], "DVBC-", 5) == 0) {
       type = DVB_TYPE_C;
+      m = atoi(argv[i] + 5);
+    } else if (strncmp(argv[i], "ATSC-", 5) == 0) {
+      type = DVB_TYPE_ATSC_T;
       m = atoi(argv[i] + 5);
     } else if (strncmp(argv[i], "ATSCT-", 6) == 0) {
       type = DVB_TYPE_ATSC_T;

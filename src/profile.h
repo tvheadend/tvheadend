@@ -41,6 +41,7 @@ typedef enum {
   PROFILE_SVF_NONE = 0,
   PROFILE_SVF_SD,
   PROFILE_SVF_HD,
+  PROFILE_SVF_FHD,
   PROFILE_SVF_UHD
 } profile_svfilter_t;
 

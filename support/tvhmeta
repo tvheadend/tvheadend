@@ -148,7 +148,8 @@ class TvhMeta(object):
 
     logging.info("Sending %s to %s" % (data, full_url))
     req = urlopen(full_url, data=bytearray(data, 'utf-8'))
-    ret = req.read().decode()
+    resp = req.read();
+    ret = resp.decode('utf-8', errors='replace')
     logging.debug("Received: %s", ret)
     return ret
 

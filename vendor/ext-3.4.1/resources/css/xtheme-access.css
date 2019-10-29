@@ -1832,3 +1832,11 @@ body.x-body-masked .x-window-plain .x-window-mc {
 .x-window-dlg .ext-mb-error {
     background-image:url(../images/access/window/icon-error.gif);
 }
+
+.tmdb {
+    content:url(../../../img/tmdb_white.png)!important;
+}
+
+.tvdb {
+    content:url(../../../img/tvdb_white.png)!important;
+}

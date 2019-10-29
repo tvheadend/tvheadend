@@ -272,6 +272,7 @@ profile_class_svfilter_list ( void *o, const char *lang )
     { N_("None"),                       PROFILE_SVF_NONE },
     { N_("SD: standard definition"),    PROFILE_SVF_SD },
     { N_("HD: high definition"),        PROFILE_SVF_HD },
+    { N_("FHD: full high definition"), PROFILE_SVF_FHD },
     { N_("UHD: ultra high definition"), PROFILE_SVF_UHD },
   };
   return strtab2htsmsg(tab, 1, lang);

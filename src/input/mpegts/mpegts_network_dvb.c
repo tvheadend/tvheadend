@@ -533,7 +533,7 @@ dvb_network_check_orbital_pos ( int satpos1, int satpos2 )
 
 dvb_mux_t *
 dvb_network_find_mux
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid, int check, int approx_match )
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint32_t onid, uint32_t tsid, int check, int approx_match )
 {
   int deltaf, deltar;
   mpegts_mux_t *mm, *mm_alt = NULL;
@@ -676,7 +676,7 @@ dvb_network_mux_class
 
 static mpegts_mux_t *
 dvb_network_create_mux
-  ( mpegts_network_t *mn, void *origin, uint16_t onid, uint16_t tsid,
+  ( mpegts_network_t *mn, void *origin, uint32_t onid, uint32_t tsid,
     void *p, int force )
 {
   int save = 0, satpos;

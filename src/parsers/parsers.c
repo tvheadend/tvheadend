@@ -989,7 +989,6 @@ ok:
             read_bits(&bs, 2); // dsurmod
 
           lfeon = read_bits(&bs, 1);
-          channels = acmodtab[acmod] + lfeon;
         } else {
           acmod = (p[4] >> 1) & 0x7;
           lfeon = p[4] & 1;

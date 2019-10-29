@@ -40,6 +40,7 @@ typedef struct tvhpoll_event
 
 tvhpoll_t *tvhpoll_create(size_t num);
 void tvhpoll_destroy(tvhpoll_t *tp);
+void tvhpoll_set_trace(tvhpoll_t *tp, int subsys, int trace);
 int tvhpoll_set(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
 int tvhpoll_add(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
 int tvhpoll_add1(tvhpoll_t *tp, int fd, uint32_t events, void *ptr);
