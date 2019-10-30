@@ -720,7 +720,6 @@ static int epg_match_event_fuzzy(epg_broadcast_t *a, epg_broadcast_t *b)
   if (a->dvb_eid) {
     if (b->dvb_eid && a->dvb_eid == b->dvb_eid)
       return 1;
-    return 0;
   }
 
   /* Wrong length (+/-20%) */
