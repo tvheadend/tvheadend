@@ -153,7 +153,6 @@ htsstr_argsplit(const char *str) {
               htsstr_argsplit_add(&argv, &argc, start, s);
               start = NULL;
             }
-            s++;
           }
           break;
         case ' ':
