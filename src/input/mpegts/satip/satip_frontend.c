@@ -1832,27 +1832,16 @@ new_tune:
   }
 
   /* Setup poll */
-  memset(ev, 0, sizeof(ev));
   nfds = 0;
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
-    ev[nfds].events = TVHPOLL_IN;
-    ev[nfds].fd     = rtp->fd;
-    ev[nfds].ptr    = rtp;
-    nfds++;
-    ev[nfds].events = TVHPOLL_IN;
-    ev[nfds].fd     = rtcp->fd;
-    ev[nfds].ptr    = rtcp;
-    nfds++;
+    tvhpoll_event(&ev[nfds++], rtp->fd, TVHPOLL_IN, rtp);
+    tvhpoll_event(&ev[nfds++], rtcp->fd, TVHPOLL_IN, rtcp);
   } else {
     rtsp->hc_io_size           = 128 * 1024;
     rtsp->hc_rtp_data_received = satip_frontend_rtp_data_received;
   }
-  if (i) {
-    ev[nfds].events = TVHPOLL_IN;
-    ev[nfds].fd     = rtsp->hc_fd;
-    ev[nfds].ptr    = rtsp;
-    nfds++;
-  }
+  if (i)
+    tvhpoll_event(&ev[nfds++], rtsp->hc_fd, TVHPOLL_IN, rtsp);
   tvhpoll_add(efd, ev, nfds);
   rtsp->hc_efd = efd;
 
@@ -2125,13 +2114,12 @@ new_tune:
   udp_multirecv_free(&um);
   lfe->sf_curmux = NULL;
 
-  memset(ev, 0, sizeof(ev));
   nfds = 0;
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
-    ev[nfds++].fd = rtp->fd;
-    ev[nfds++].fd = rtcp->fd;
+    tvhpoll_event1(&ev[nfds++], rtp->fd);
+    tvhpoll_event1(&ev[nfds++], rtcp->fd);
   }
-  ev[nfds++].fd = lfe->sf_dvr_pipe.rd;
+  tvhpoll_event1(&ev[nfds++], lfe->sf_dvr_pipe.rd);
   tvhpoll_rem(efd, ev, nfds);
 
   if (exit_flag) {

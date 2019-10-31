@@ -171,13 +171,9 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
   /* the poll set includes the sockfd and the pipe for IPC */
   efd = tvhpoll_create(2);
-  memset(ev, 0, sizeof(ev));
-  ev[0].events = TVHPOLL_IN;
-  ev[0].fd     = sockfd;
-  ev[0].ptr    = hfe;
-  ev[1].events = TVHPOLL_IN;
-  ev[1].fd     = hfe->hf_input_thread_pipe.rd;
-  ev[1].ptr    = &hfe->hf_input_thread_pipe;
+  tvhpoll_event(ev+0, sockfd, TVHPOLL_IN, hfe);
+  tvhpoll_event(ev+1, hfe->hf_input_thread_pipe.rd, TVHPOLL_IN,
+                &hfe->hf_input_thread_pipe);
 
   r = tvhpoll_add(efd, ev, 2);
   if(r < 0)
