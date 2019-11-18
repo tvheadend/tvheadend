@@ -672,6 +672,16 @@ const idclass_t tvhdhomerun_frontend_cablecard_class =
   }
 };
 
+const idclass_t tvhdhomerun_frontend_isdbt_class =
+{
+  .ic_super      = &tvhdhomerun_frontend_class,
+  .ic_class      = "tvhdhomerun_frontend_isdbt",
+  .ic_caption    = N_("HDHomeRun ISDB-T frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
 static mpegts_network_t *
 tvhdhomerun_frontend_wizard_network ( tvhdhomerun_frontend_t *hfe )
 {
@@ -762,6 +772,8 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
     idc = &tvhdhomerun_frontend_atsc_c_class;
   else if (type == DVB_TYPE_CABLECARD)
     idc = &tvhdhomerun_frontend_cablecard_class;
+  else if (type == DVB_TYPE_ISDB_T)
+    idc = &tvhdhomerun_frontend_isdbt_class;
   else {
     tvherror(LS_TVHDHOMERUN, "unknown FE type %d", type);
     return NULL;
