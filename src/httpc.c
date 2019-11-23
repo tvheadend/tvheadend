@@ -1093,7 +1093,9 @@ header:
   }
   p = http_arg_get(&hc->hc_args, "Connection");
   if (p && ver != RTSP_VERSION_1_0) {
-    if (strcasecmp(p, "close") == 0)
+    if (strcasecmp(p, "close") == 0 || strcasecmp(p, "upgrade") == 0) /* Some servers
+      send the upgrade header to switch to http2 even though we did not request this.
+      Assume that we can not keep alive the connection in that case */
       hc->hc_keepalive = 0;
     else if (strcasecmp(p, "keep-alive")) /* no change for keep-alive */
       return http_client_flush(hc, -EINVAL);
