@@ -197,11 +197,12 @@ static void parse_xmltv_dd_progid
   (epggrab_module_t *mod, const char *s, char **uri, char **suri,
    epg_episode_num_t *epnum)
 {
-  char buf[128];
   if (strlen(s) < 2) return;
 
+  char* buf = (char *)malloc(strlen(s) + strlen(mod->id) + 13);
+  buf[strlen(s) + strlen(mod->id) + 12] = '\0';
   /* Raw URI */
-  snprintf(buf, sizeof(buf)-1, "ddprogid://%s/%s", mod->id, s);
+  snprintf(buf, strlen(s) + strlen(mod->id) + 12, "ddprogid://%s/%s", mod->id, s);
 
   /* SH - series without episode id so ignore */
   if (strncmp("SH", s, 2))
@@ -219,6 +220,7 @@ static void parse_xmltv_dd_progid
       if (buf[e+1]) sscanf(&buf[e+1], "%hu", &(epnum->e_num));
     }
   }
+  free(buf);
 }
 
 /**
