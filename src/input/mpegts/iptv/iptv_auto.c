@@ -249,7 +249,7 @@ skip_url:
         im->mm_iptv_epgid = epgid ? strdup(epgid) : NULL;
         change = 1;
       }
-      if (strcmp(im->mm_iptv_hdr ?: "", custom)) {
+      if (strcmp(im->mm_iptv_hdr ?: "", custom) && strcmp(custom, "")) {
         free(im->mm_iptv_hdr);
         im->mm_iptv_hdr = strdup(custom);
         change = 1;
