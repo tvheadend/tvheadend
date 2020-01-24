@@ -218,7 +218,7 @@ const idclass_t iptv_mux_class =
       .name     = N_("Kill timeout (pipe/secs)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_kill_timeout),
       .opts     = PO_EXPERT,
-      .def.i    = 5
+      .def.i    = 15
     },
     {
       .type     = PT_STR,
@@ -367,7 +367,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
   im->mm_free             = iptv_mux_free;
 
   if (!im->mm_iptv_kill_timeout)
-    im->mm_iptv_kill_timeout = 5;
+    im->mm_iptv_kill_timeout = 15;
 
   sbuf_init(&im->mm_iptv_buffer);
 
