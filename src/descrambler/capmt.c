@@ -2048,7 +2048,7 @@ capmt_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
           if ((data[i + 2] & f->mask[i]) != f->filter[i])
             break;
         }
-        if (i >= DMX_FILTER_SIZE && i + 2 <= len) {
+        if (i >= DMX_FILTER_SIZE || i + 2 == len) {
           tvhtrace(LS_CAPMT, "filter match pid %d len %d emm %d", pid, len, emm);
           capmt_filter_data(capmt,
                             o->adapter, demux_index,

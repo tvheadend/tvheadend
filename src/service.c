@@ -1549,7 +1549,7 @@ const char *
 service_get_source ( service_t *s )
 {
   if (s->s_source) return s->s_source(s);
-  return 0;
+  return NULL;
 }
 
 /*

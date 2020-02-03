@@ -235,6 +235,8 @@ elementary_set_filter_build(elementary_set_t *set)
   char service_ubuf[UUID_HEX_SIZE];
 
   t = set->set_service;
+  if (t == NULL)
+    return;
   idnode_uuid_as_str(&t->s_id, service_ubuf);
 
   /* rebuild the filtered and ordered components */

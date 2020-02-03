@@ -42,6 +42,10 @@
 struct tvhpoll
 {
   tvh_mutex_t lock;
+#if ENABLE_TRACE
+  int trace_subsys;
+  int trace_type;
+#endif
   uint8_t *events;
   uint32_t events_off;
   uint32_t nevents;
@@ -161,6 +165,15 @@ void tvhpoll_destroy ( tvhpoll_t *tp )
   free(tp);
 }
 
+void tvhpoll_set_trace ( tvhpoll_t *tp, int subsys, int type )
+{
+#if ENABLE_TRACE
+  assert(type == 0 || type == 1);
+  tp->trace_subsys = subsys;
+  tp->trace_type = type;
+#endif
+}
+
 static int tvhpoll_add0
   ( tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num )
 {
@@ -179,11 +192,25 @@ static int tvhpoll_add0
     if (events & TVHPOLL_ERR) ev.events |= EPOLLERR;
     if (events & TVHPOLL_HUP) ev.events |= EPOLLHUP;
     if (oevents) {
-      if (epoll_ctl(tp->fd, EPOLL_CTL_MOD, fd, &ev))
+#if ENABLE_TRACE
+      if (tp->trace_type == 1)
+        tvhtrace(tp->trace_subsys, "epoll mod: fd=%d events=%x oevents=%x ptr=%p",
+                                   fd, events, oevents, evs[i].ptr);
+#endif
+      if (epoll_ctl(tp->fd, EPOLL_CTL_MOD, fd, &ev)) {
+        tvherror(LS_TVHPOLL, "epoll mod failed [%s]", strerror(errno));
         break;
+      }
     } else {
-      if (epoll_ctl(tp->fd, EPOLL_CTL_ADD, fd, &ev))
+#if ENABLE_TRACE
+      if (tp->trace_type == 1)
+        tvhtrace(tp->trace_subsys, "epoll add: fd=%d events=%x ptr=%p",
+                                   fd, events, evs[i].ptr);
+#endif
+      if (epoll_ctl(tp->fd, EPOLL_CTL_ADD, fd, &ev)) {
+        tvherror(LS_TVHPOLL, "epoll add failed [%s]", strerror(errno));
         break;
+      }
     }
     tvhpoll_set_events(tp, fd, events);
   }
@@ -254,8 +281,15 @@ static int tvhpoll_rem0
   for (i = 0; i < num; i++) {
     const int fd = evs[i].fd;
     if (tvhpoll_get_events(tp, fd)) {
-      if (epoll_ctl(tp->fd, EPOLL_CTL_DEL, fd, NULL))
+#if ENABLE_TRACE
+      if (tp->trace_type == 1)
+        tvhtrace(tp->trace_subsys, "epoll rem: fd=%d events=%x",
+                                   fd, tvhpoll_get_events(tp, fd));
+#endif
+      if (epoll_ctl(tp->fd, EPOLL_CTL_DEL, fd, NULL)) {
+        tvherror(LS_TVHPOLL, "epoll del failed [%s]", strerror(errno));
         break;
+      }
       tvhpoll_set_events(tp, fd, 0);
     }
   }
@@ -345,6 +379,10 @@ int tvhpoll_wait
     evs[i].events = events2;
     evs[i].fd  = -1;
     evs[i].ptr = tp->ev[i].data.ptr;
+#if ENABLE_TRACE
+    if (tp->trace_type == 1)
+      tvhtrace(tp->trace_subsys, "epoll wait: events=%x ptr=%p", events2, tp->ev[i].data.ptr);
+#endif
   }
 #elif ENABLE_KQUEUE
   struct timespec tm, *to = NULL;
