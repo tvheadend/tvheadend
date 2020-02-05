@@ -49,6 +49,8 @@ intl/js/tvheadend.js.en_CZ.po
 intl/js/*.new
 src/webui/static/intl
 
+envy/
+
 #############
 ###Windows###
 #############

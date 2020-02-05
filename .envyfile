@@ -1,0 +1,31 @@
+environment:
+  system-packages:
+    - recipe: build-essential
+    - recipe: git
+    - recipe: pkg-config
+    - recipe: libssl-dev
+    - recipe: bzip2
+    - recipe: wget
+    - recipe: libavahi-client-dev
+    - recipe: zlib1g-dev
+    - recipe: libavcodec-dev
+    - recipe: libavutil-dev
+    - recipe: libavformat-dev
+    - recipe: libswscale-dev
+    - recipe: libavresample-dev
+    - recipe: gettext
+    - recipe: cmake
+    - recipe: python
+    - recipe: libdvbcsa-dev
+    - recipe: libpcre3-dev
+    - recipe: liburiparser-dev
+network:
+  ports:
+    - '9981:9981'
+actions:
+  - name: build
+    script: './configure && make'
+    help: 'Build tvheadend'
+  - name: run
+    script: './build.linux/tvheadend'
+    help: 'Run tvheadend'

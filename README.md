@@ -56,6 +56,17 @@ Thus, to start it, just type:
 
 Settings are stored in `$HOME/.hts/tvheadend`.
 
+Alternatively, you can use the [ENVy](http://envy-project.github.io/) environment
+manager to get your environment set up quickly. It won't be able to use DVB
+cards, but it's a faster way to get started working on Tvheadend.
+
+You can then (without installing dependencies manually) run:
+
+	$ envy up && envy build && envy run
+
+Note that `envy run` can take arguments like `-C` and they will be passed along
+to Tvheadend.
+
 How to build for OS X
 ---------------------
 
