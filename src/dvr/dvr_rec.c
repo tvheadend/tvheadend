@@ -272,6 +272,7 @@ cleanup_filename(dvr_config_t *cfg, char *s, int dosubs)
       *s = '-';
 
     else if (cfg->dvr_clean_title &&
+             strchr("äöüÄÖÜß", *s) == NULL &&
              ((*s < 32) || (*s > 122) ||
              (strchr("/:\\<>|*?\"", *s) != NULL)) &&
              dosubs)
