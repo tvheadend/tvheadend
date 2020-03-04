@@ -22,6 +22,7 @@ environment:
 network:
   ports:
     - '9981:9981'
+    - '9982:9982'
 actions:
   - name: build
     script: './configure && make'
