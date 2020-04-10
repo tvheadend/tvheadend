@@ -45,7 +45,7 @@ use the uid of 1 ('daemon' on most systems).
 Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to use the 'video' group. If the 'video' group does not exist, gid 1 ('daemon') will be used.
 .TP
 \fB\-p\fR \fIpidpath\fR, \fB\-\-pid \fR\fIpidpath\fR
-Specify alternative PID path file (default /var/run/tvheadend.pid).
+Specify alternative PID path file (default /run/tvheadend.pid).
 .TP
 \fB\-C\fR, \fB\-\-firstrun\fR
 If no user account exist then create one with no username and no
@@ -196,7 +196,7 @@ is run as a system daemon a dedicated user needs to be created and Tvheadend
 should be launched with the '-u' argument. Also notice that XMLTV will read/
 store cache and configuration from the same user home directory.
 .PP
-If daemonizing, Tvheadend will writes its pid in /var/run/tvheadend.pid
+If daemonizing, Tvheadend will writes its pid in /run/tvheadend.pid
 .SH "AUTHOR"
 .B Tvheadend
 and this man page is maintained by the Tvheadend team. Please see the 

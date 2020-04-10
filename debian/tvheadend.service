@@ -9,8 +9,8 @@ After=auditd.service syslog.target network.target local-fs.target
 
 [Service]
 EnvironmentFile=/etc/default/tvheadend
-ExecStart=/usr/bin/tvheadend -f -p /var/run/tvheadend.pid $OPTIONS
-PIDFile=/var/run/tvheadend.pid
+ExecStart=/usr/bin/tvheadend -f -p /run/tvheadend.pid $OPTIONS
+PIDFile=/run/tvheadend.pid
 Type=forking
 Restart=on-failure
 RestartSec=54s
