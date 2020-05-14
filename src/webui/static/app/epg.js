@@ -170,7 +170,7 @@ tvheadend.seachTitleWeb = function(index, title){
     var url = '';
     switch(index){
         case 1:
-            url = 'http://akas.imdb.com/find?q=' + encodeURIComponent(title);
+            url = 'https://www.imdb.com/find?q=' + encodeURIComponent(title);
             break;
         case 2:
             url = 'https://www.thetvdb.com/search?q='+ encodeURIComponent(title)+'&l=en';
