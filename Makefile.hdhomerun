@@ -34,7 +34,7 @@ endif
 
 LIBHDHR         = libhdhomerun_20200225
 LIBHDHR_TB      = $(LIBHDHR).tgz
-LIBHDHR_URL     = http://download.silicondust.com/hdhomerun/$(LIBHDHR_TB)
+LIBHDHR_URL     = https://download.silicondust.com/hdhomerun/$(LIBHDHR_TB)
 LIBHDHR_SHA1    = c8d16242d51423d38e3430f4542c1c8819ea6882
 
 # ###########################################################################
