@@ -227,7 +227,7 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
 
   /* Get base filename */
   // TODO: harcoded 3 for max extension
-  path = alloca(strlen(filename) + 3);
+  path = alloca(strlen(filename) + 4);
   strcpy(path, filename);
   sptr = strrchr(path, '.');
   if (!sptr) {
@@ -284,7 +284,8 @@ dvr_cutpoint_delete_files (const char *s)
   char *path, *dot;
   int i;
 
-  path = alloca(strlen(s) + 1);
+  // TODO: harcoded 3 for max extension
+  path = alloca(strlen(s) + 4);
 
   /* Check each cutlist extension */
   for (i = 0; i < ARRAY_SIZE(dvr_cutpoint_parsers); i++) {
