@@ -216,8 +216,8 @@
         "support/bintray.py publish filelist.txt",
       ]
     },
-    "cosmic-amd64": {
-      "buildenv": "docker:ubuntu:cosmic",
+    "focal-amd64": {
+      "buildenv": "docker:ubuntu:focal",
       "builddeps": [
         "cmake",
         "git",
@@ -243,8 +243,8 @@
         "support/bintray.py publish filelist.txt",
       ]
     },
-    "cosmic-i386": {
-      "buildenv": "docker:i386/ubuntu:cosmic",
+    "focal-i386": {
+      "buildenv": "docker:i386/ubuntu:focal",
       "builddeps": [
         "cmake",
         "git",
