@@ -92,6 +92,20 @@ parser_deliver_error(parser_t *t, parser_es_t *st)
   st->es_buf.sb_err = 0;
 }
 
+
+
+/**
+ * prs_rstlog
+ */
+static void
+parser_rstlog(parser_t *t, th_pkt_t *pkt)
+{
+  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
+  pkt_ref_dec(pkt); /* streaming_msg_create_pkt increses ref counter */
+  streaming_message_t *clone = streaming_msg_clone(sm);
+  TAILQ_INSERT_TAIL (&t->prs_rstlog, clone, sm_link);
+}
+
 /**
  *
  */
@@ -127,15 +141,20 @@ parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
 deliver:
   pkt->pkt_componentindex = st->es_index;
 
-  pkt_trace(LS_PARSER, pkt, "deliver");
-
   if (SCT_ISVIDEO(pkt->pkt_type)) {
     pkt->v.pkt_aspect_num = st->es_aspect_num;
     pkt->v.pkt_aspect_den = st->es_aspect_den;
   }
 
   /* Forward packet */
-  streaming_target_deliver2(t->prs_output, streaming_msg_create_pkt(pkt));
+  if(atomic_get(&st->es_service->s_pending_restart) == 1) {
+    /* Queue pkt to prs_rstlog if pending restart */
+    pkt_trace(LS_PARSER, pkt, "deliver to rstlog");
+    parser_rstlog(t, pkt);
+  } else {
+    pkt_trace(LS_PARSER, pkt, "deliver");
+    streaming_target_deliver2(t->prs_output, streaming_msg_create_pkt(pkt));
+  }
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);

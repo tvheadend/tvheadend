@@ -272,6 +272,21 @@ static void parser_clean_es(parser_es_t *pes)
   tvhlog_limit_reset(&pes->es_pcr_log);
 }
 
+static void
+parser_do_rstlog(parser_t *prs)
+{
+  streaming_message_t *sm;
+  th_pkt_t *pkt;
+  while ((sm = TAILQ_FIRST(&prs->prs_rstlog)) != NULL) {
+    TAILQ_REMOVE(&prs->prs_rstlog, sm, sm_link);
+    pkt = sm->sm_data;
+    pkt_trace(LS_PARSER, pkt, "deliver from rstlog");
+    streaming_target_deliver2(prs->prs_output, streaming_msg_create_pkt(pkt));
+    sm->sm_data = NULL;
+    streaming_msg_free(sm);
+  }
+}
+
 /**
  *
  */
@@ -300,6 +315,10 @@ static void parser_input_start(parser_t *prs, streaming_message_t *sm)
     prs->prs_pcr_boundary = 6*90000;
 
   streaming_target_deliver2(prs->prs_output, sm);
+  /* do_rstlog */
+  if (!TAILQ_EMPTY(&prs->prs_rstlog)) {
+    parser_do_rstlog(prs);
+  }
 }
 
 /**
@@ -359,6 +378,7 @@ parser_create(streaming_target_t *output, th_subscription_t *ts)
   prs->prs_output = output;
   prs->prs_subscription = ts;
   prs->prs_service = t;
+  TAILQ_INIT(&prs->prs_rstlog);
   elementary_set_init(&prs->prs_components, LS_PARSER, service_nicename(t), t);
   streaming_target_init(&prs->prs_input, &parser_input_ops, prs, 0);
   return &prs->prs_input;
@@ -374,6 +394,7 @@ parser_destroy(streaming_target_t *pad)
   parser_t *prs = (parser_t *)pad;
   elementary_stream_t *es;
   parser_es_t *pes;
+  streaming_queue_clear(&prs->prs_rstlog);
 
   TAILQ_FOREACH(es, &prs->prs_components.set_all, es_link) {
     pes = (parser_es_t *)es;

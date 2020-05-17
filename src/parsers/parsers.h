@@ -98,6 +98,8 @@ struct parser {
   commercial_advice_t prs_tt_commercial_advice;
   time_t prs_tt_clock;   /* Network clock as determined by teletext decoder */
 
+  /* restart_pending log */
+  struct streaming_message_queue prs_rstlog;
 };
 
 static inline int64_t
