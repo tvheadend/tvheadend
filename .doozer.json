@@ -234,10 +234,12 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python3",
+        "python3-pip",
         "debhelper",
         "ccache"
       ],
       "buildcmd": [
+        "pip3 install requests",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt",
       ]
@@ -260,10 +262,12 @@
         "libpcre2-dev",
         "libdvbcsa-dev",
         "python3",
+        "python3-pip",
         "debhelper",
         "ccache"
       ],
       "buildcmd": [
+        "pip3 install requests",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt",
       ]
