@@ -99,10 +99,10 @@ function download
   N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
 
   echo "DOWNLOAD        ${N} / ${PCLOUD_HASHDIR}"
-  if [[ "$(python3 -V)" =~ "Python 3" ]]; then
-    python3 ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp"
-  else
+  if [[ "$(python -V)" =~ "Python 2" ]]; then
     ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp"
+  else
+    python3 ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp"
   fi
 
   R=$?
@@ -177,10 +177,10 @@ function upload
   # Upload
   N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
   echo "UPLOAD          ${N}"
-  if [[ "$(python3 -V)" =~ "Python 3" ]]; then
-    python3 ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || return 1
-  else
+  if [[ "$(python -V)" =~ "Python 2" ]]; then
     ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || return 1
+  else
+    python3 ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || return 1
   fi
   
   # Done
