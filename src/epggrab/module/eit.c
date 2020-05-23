@@ -478,7 +478,12 @@ static int _eit_desc_crid
       /* Next */
       len -= 1 + r;
       ptr += 1 + r;
+    } else {
+      break;
     }
+  }
+  if (len > 3) {
+    return -1;
   }
 
   return 0;
