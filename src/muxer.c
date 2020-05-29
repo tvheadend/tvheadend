@@ -52,7 +52,7 @@ static struct strtab container_audio_mime[] = {
   { "audio/mpeg",               MC_MPEG2AUDIO },
   { "audio/ac3",                MC_AC3 },
   { "audio/aac",                MC_AAC },
-  { "audio/mp4",                MC_MP4A },
+  { "audio/aac",                MC_MP4A },
   { "audio/ogg",                MC_VORBIS },
   { "audio/mp4",                MC_AVMP4 },
   { "application/octet-stream", MC_PASS },
