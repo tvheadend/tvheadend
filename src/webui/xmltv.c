@@ -207,6 +207,11 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</desc>\n");
     }
+  if (ebc->image) {
+      htsbuf_append_str(hq, "  <icon src=\"");
+      htsbuf_append_and_escape_xml(hq, ebc->image);
+      htsbuf_append_str(hq, "\"/>\n");
+  }
   if (ebc->credits) {
     htsbuf_append_str(hq, "  <credits>\n");
     htsmsg_field_t *f;
