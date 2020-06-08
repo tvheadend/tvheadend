@@ -197,7 +197,8 @@ static void parse_xmltv_dd_progid
   (epggrab_module_t *mod, const char *s, char **uri, char **suri,
    epg_episode_num_t *epnum)
 {
-  if (strlen(s) < 2) return;
+  const int s_len = strlen(s);
+  if (s_len < 2) return;
 
   const int buf_size = s_len + strlen(mod->id) + 13;
   char * buf = (char *) malloc( buf_size);
@@ -212,7 +213,6 @@ static void parse_xmltv_dd_progid
 
   /* Episode */
   if (!strncmp("EP", s, 2)) {
-    int e = strlen(buf)-1;
     while (--e && buf[e] != '.') {}
     if (e) {
       buf[e] = '\0';
