@@ -220,6 +220,7 @@ static void parse_xmltv_dd_progid
       if (buf[e+1]) sscanf(&buf[e+1], "%hu", &(epnum->e_num));
     }
   }
+  free(buf);
 }
 
 /**
