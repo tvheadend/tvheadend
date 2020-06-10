@@ -214,6 +214,13 @@ void htsmsg_add_str_alloc(htsmsg_t *msg, const char *name, char *str);
 void htsmsg_add_str_exclusive(htsmsg_t *msg, const char *str);
 
 /**
+ * Add a string using printf-style for the value.
+ */
+void
+htsmsg_add_str_printf(htsmsg_t *msg, const char *name, const char *fmt, ...)
+  __attribute__((format(printf,3,4)));;
+
+/**
  * Add/update a string field
  */
 int  htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str);

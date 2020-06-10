@@ -1589,3 +1589,61 @@ htsmsg_remove_string_from_list(htsmsg_t *list, const char *str)
   }
   return 0;
 }
+
+
+// Based on htsbuf_vqprintf, but can't easily share code since we rely
+// on stack allocations.
+static void
+htsmsg_add_str_ap(htsmsg_t *msg, const char *name, const char *fmt, va_list ap0)
+{
+  // First try to format it on-stack
+  va_list ap;
+  int n;
+  size_t size;
+  char buf[100], *p, *np;
+
+  va_copy(ap, ap0);
+  n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  if(n > -1 && n < sizeof(buf)) {
+    htsmsg_add_str(msg, name, buf);
+    return;
+  }
+
+  // Else, do allocations
+  size = sizeof(buf) * 2;
+
+  p = malloc(size);
+  while (1) {
+    /* Try to print in the allocated space. */
+    va_copy(ap, ap0);
+    n = vsnprintf(p, size, fmt, ap);
+    va_end(ap);
+    if(n > -1 && n < size) {
+      htsmsg_add_str(msg, name, p);
+      // Copy taken by htsmsg_add_str.
+      free (p);
+      return;
+    }
+    /* Else try again with more space. */
+    if (n > -1)    /* glibc 2.1 */
+      size = n+1; /* precisely what is needed */
+    else           /* glibc 2.0 */
+      size *= 2;  /* twice the old size */
+    if ((np = realloc (p, size)) == NULL) {
+      free(p);
+      abort();
+    } else {
+      p = np;
+    }
+  }
+}
+
+void
+htsmsg_add_str_printf(htsmsg_t *msg, const char *name, const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  htsmsg_add_str_ap(msg, name, fmt, ap);
+  va_end(ap);
+}

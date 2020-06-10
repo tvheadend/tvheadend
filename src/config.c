@@ -2085,6 +2085,7 @@ PROP_DOC(config_channelicon_path)
 PROP_DOC(config_channelname_scheme)
 PROP_DOC(config_picon_path)
 PROP_DOC(config_picon_servicetype)
+PROP_DOC(config_hdhomerun_server_username)
 PROP_DOC(viewlevel_config)
 PROP_DOC(themes)
 
@@ -2505,6 +2506,93 @@ const idclass_t config_class = {
                    "and tuner 3 will talk to port 9986."),
       .off    = offsetof(config_t, local_port),
       .opts   = PO_HIDDEN | PO_EXPERT,
+      .group  = 6
+    },
+    {
+      .type   = PT_STR,
+      .id     = "hdhomerun_server_username",
+      .name   = N_("Tvheadend username for HDHomeRun Server Emulation"),
+      .desc   = N_("When Tvheadend is acting as an HDHomeRun Server "
+                   "(emulating an HDHomeRun device for downstream "
+                   "media devices to stream Live TV) then "
+                   "we use this user for determining permissions "
+                   "such as channels that can be streamed.  "
+                   "This user must have basic streaming permissions.  "
+                   "This user must also have persistent "
+                   "authentication enabled in the user password settings.  "
+                   "It is strongly recommended that IP Blocking is used to "
+                   "prevent access from outside your network."
+                  ),
+      .doc    = prop_doc_config_hdhomerun_server_username,
+      .off    = offsetof(config_t, hdhomerun_server_username),
+      .opts   = PO_EXPERT
+#if !ENABLE_HDHOMERUN_SERVER
+      | PO_PHIDDEN
+#endif
+      ,
+      .group  = 6,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "hdhomerun_server_tuner_count",
+      .name   = N_("Number of tuners to export for HDHomeRun Server Emulation"),
+      .desc   = N_("When Tvheadend is acting as an HDHomeRun Server "
+                   "(emulating an HDHomeRun device for downstream "
+                   "media devices to stream Live TV) then "
+                   "we tell clients that we have this number of tuners. "
+                   "This is necessary since some clients artificially limit "
+                   "connections based on tuner count, even though several "
+                   "channels may share a multiplex on one tuner. "
+                   "The HDHomeRun interface can not distinguish between "
+                   "different types of tuner in a mixed system with "
+                   "satellite, aerial and cable. "
+                   "The actual number or types of tuners used by Tvheadend is "
+                   "not affected by this value.  Tvheadend will "
+                   "allocate tuners automatically.  "
+                   "Set to zero for Tvheadend to use a default value."
+                  ),
+      .off    = offsetof(config_t, hdhomerun_server_tuner_count),
+      .opts   = PO_EXPERT
+#if !ENABLE_HDHOMERUN_SERVER
+      | PO_PHIDDEN
+#endif
+      ,
+      .group  = 6,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "hdhomerun_server_model_name",
+      .name   = N_("Tvheadend model name for HDHomeRun Server Emulation"),
+      .desc   = N_("When Tvheadend is acting as an HDHomeRun Server "
+                   "(emulating an HDHomeRun device for downstream "
+                   "media devices to stream Live TV) then "
+                   "we use this as the type of HDHomeRun model number "
+                   "that we send to clients.  Some clients may require "
+                   "a specific model number to work.  Leave blank "
+                   "for Tvheadend to use a default."
+                  ),
+      .off    = offsetof(config_t, hdhomerun_server_model_name),
+      .opts   = PO_EXPERT
+#if !ENABLE_HDHOMERUN_SERVER
+      | PO_PHIDDEN
+#endif
+      ,
+      .group  = 6,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "hdhomerun_server_enable",
+      .name   = N_("Enable HDHomeRun Server Emulation"),
+      .desc   = N_("Enable the Tvheadend server to emulate "
+                   "an HDHomeRun server.  This allows LiveTV "
+                   "to be used on some media servers."
+                  ),
+      .off    = offsetof(config_t, hdhomerun_server_enable),
+      .opts   = PO_EXPERT
+#if !ENABLE_HDHOMERUN_SERVER
+      | PO_PHIDDEN
+#endif
+,
       .group  = 6
     },
     {
