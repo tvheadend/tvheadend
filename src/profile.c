@@ -30,6 +30,7 @@
 #endif
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
+#include "input/mpegts/iptv/iptv_private.h"
 #endif
 #include "dvr/dvr.h"
 
@@ -640,6 +641,8 @@ profile_deliver(profile_chain_t *prch, streaming_message_t *sm)
     }
     sm2 = streaming_msg_create_data(SMT_START,
                                    streaming_start_copy(prsh->prsh_start_msg));
+    if (sm)
+      sm2->sm_s = sm->sm_s;
     streaming_target_deliver(prch->prch_post_share, sm2);
     prch->prch_start_pending = 0;
   }
@@ -1040,7 +1043,7 @@ profile_chain_init(profile_chain_t *prch, profile_t *pro, void *id, int queue)
  */
 int
 profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
-                   uint32_t timeshift_period, int flags)
+                   uint32_t timeshift_period, profile_work_flags_t flags)
 {
   profile_t *pro = prch->prch_pro;
   if (pro && pro->pro_work)
@@ -1153,6 +1156,10 @@ profile_chain_close(profile_chain_t *prch)
     timeshift_destroy(prch->prch_timeshift);
     prch->prch_timeshift = NULL;
   }
+  if(prch->prch_rtsp) {
+    rtsp_st_destroy(prch->prch_rtsp);
+    prch->prch_rtsp = NULL;
+  }
 #endif
   if (prch->prch_gh) {
     globalheaders_destroy(prch->prch_gh);
@@ -1204,7 +1211,7 @@ const idclass_t profile_htsp_class =
 static int
 profile_htsp_work(profile_chain_t *prch,
                   streaming_target_t *dst,
-                  uint32_t timeshift_period, int flags)
+                  uint32_t timeshift_period, profile_work_flags_t flags)
 {
   profile_sharer_t *prsh;
 
@@ -1212,9 +1219,17 @@ profile_htsp_work(profile_chain_t *prch,
   if (!prsh)
     goto fail;
 
+  if (!prsh->prsh_tsfix)
+    prsh->prsh_tsfix = tsfix_create(&prsh->prsh_input);
+  prch->prch_share = prsh->prsh_tsfix;
+
 #if ENABLE_TIMESHIFT
-  if (timeshift_period > 0)
-    dst = prch->prch_timeshift = timeshift_create(dst, timeshift_period);
+  if (flags & PROFILE_WORK_REMOTE_TS) {
+    dst = prch->prch_rtsp = rtsp_st_create(dst, prch);
+  } else {
+    if (timeshift_period > 0)
+      dst = prch->prch_timeshift = timeshift_create(dst, timeshift_period);
+  }
 #endif
 
   dst = prch->prch_gh = globalheaders_create(dst);
@@ -1222,10 +1237,6 @@ profile_htsp_work(profile_chain_t *prch,
   if (profile_sharer_create(prsh, prch, dst))
     goto fail;
 
-  if (!prsh->prsh_tsfix)
-    prsh->prsh_tsfix = tsfix_create(&prsh->prsh_input);
-
-  prch->prch_share = prsh->prsh_tsfix;
   prch->prch_flags = SUBSCRIPTION_PACKET;
   streaming_target_init(&prch->prch_input,
                         prsh->prsh_do_queue ?
@@ -2398,7 +2409,7 @@ profile_transcode_can_share(profile_chain_t *prch,
 static int
 profile_transcode_work(profile_chain_t *prch,
                        streaming_target_t *dst,
-                       uint32_t timeshift_period, int flags)
+                       uint32_t timeshift_period, profile_work_flags_t flags)
 {
   profile_sharer_t *prsh;
   profile_transcode_t *pro = (profile_transcode_t *)prch->prch_pro;

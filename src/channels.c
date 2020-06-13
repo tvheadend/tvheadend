@@ -542,6 +542,16 @@ const idclass_t channel_class = {
       .list     = channel_class_epg_running_list,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
+#if ENABLE_TIMESHIFT
+    {
+      .type     = PT_BOOL,
+      .id       = "remote_timeshift",
+      .name     = N_("Remote timeshift"),
+      .desc     = N_("Pass timeshift commands to a remote RTSP server"),
+      .off      = offsetof(channel_t, ch_remote_timeshift),
+      .opts     = PO_ADVANCED,
+    },
+#endif
     {
       .type     = PT_STR,
       .islist   = 1,

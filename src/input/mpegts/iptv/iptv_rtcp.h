@@ -36,7 +36,8 @@ typedef enum
   RTCP_RR   = 201,
   RTCP_SDES = 202,
   RTCP_BYE  = 203,
-  RTCP_APP  = 204
+  RTCP_APP  = 204,
+  RTCP_GF   = 205
 } rtcp_type_t;
 
 typedef enum
@@ -62,7 +63,7 @@ typedef struct
   unsigned int count : 5;     /* varies by packet type */
   unsigned int pt : 8;        /* RTCP packet type */
   uint16_t length;           /* pkt len in words, w/o this word */
-} rtcp_common_t;
+} rtcp_header_t;
 
 
 /*
@@ -84,7 +85,20 @@ typedef struct
   uint32_t jitter;           /* interarrival jitter */
   uint32_t lsr;              /* last SR packet from this source */
   uint32_t dlsr;             /* delay since last SR packet */
-} rtcp_rr_t;
+} rtcp_rr_block_t;
+
+
+
+/*
+ * Generic RTC Feedback block
+ */
+typedef struct
+{
+  uint32_t my_ssrc;          /* not used */
+  uint32_t ssrc;             /* data source being reported */
+  uint16_t pid;              /* first missing frame id */
+  uint16_t blp;              /* missing frame count */
+} rtcp_gf_t;
 
 /*
  * SDES item
@@ -103,83 +117,32 @@ typedef struct rtcp_sdes
 } rtcp_sdes_t;
 
 /*
- * One RTCP packet
+ * reception report (RR)
  */
 typedef struct
 {
-  rtcp_common_t common;     /* common header */
-
-  union
-  {
-
-    /* sender report (SR) */
-    struct
-    {
-      uint32_t ssrc;     /* sender generating this report */
-      uint32_t ntp_sec;  /* NTP timestamp */
-      uint32_t ntp_frac;
-      uint32_t rtp_ts;   /* RTP timestamp */
-      uint32_t psent;    /* packets sent */
-      uint32_t osent;    /* octets sent */
-      rtcp_rr_t rr[1];  /* variable-length list */
-    } sr;
-
-    /* reception report (RR) */
-    struct
-    {
-      uint32_t ssrc;     /* receiver generating this report */
-      rtcp_rr_t rr[1];  /* variable-length list */
-    } rr;
-
-    /* source description (SDES) */
-    rtcp_sdes_t sdes;
-
-    /* BYE */
-    struct
-    {
-      uint32_t src[1];   /* list of sources */
-      /* can't express trailing text for reason */
-    } bye;
-  } r;
-} rtcp_t;
-
-typedef struct iptv_rtcp_info {
-  /* Last transmitted packet timestamp */
-  time_t last_ts;
-  /* Next scheduled packet sending timestamp */
-  time_t next_ts;
-  
-  double average_packet_size;
-  
-  int members;
-  int senders;
-  
-  uint16_t last_received_sequence;
-  uint16_t sequence_cycle;
-  
-  /* Connection to the RTCP remote. Initialized by the RTSP code. */
-  udp_connection_t *connection;
-  
-  uint32_t source_ssrc;
-  uint32_t my_ssrc;
-} iptv_rtcp_info_t;
+  uint32_t ssrc;     /* receiver generating this report */
+  rtcp_rr_block_t rr[1];  /* variable-length list */
+} rtcp_rr_t;
 
 /*
  Init rtcp_info field of the rtsp_info.
  Return 0 if everything was OK.
  rtcp_destroy must be called when rtsp_info is destroyed.
  */
-int rtcp_init(iptv_rtcp_info_t *info);
+int rtcp_init(rtcp_t *info);
 
 /*
  Destroy rtcp_info field of rtsp_info.
  */
-int rtcp_destroy(iptv_rtcp_info_t *info);
+int rtcp_destroy(rtcp_t *info);
 
 /*
  Update RTCP informations.
  It can also send a RTCP RR packet if the timer has expired.
  */
-int rtcp_receiver_update(iptv_rtcp_info_t *info, uint8_t *rtp_packet);
+int rtcp_receiver_update(rtcp_t *info, uint8_t *rtp_packet);
+ssize_t rtcp_send_nak(rtcp_t *rtcp_info, uint32_t ssrc, uint16_t seqn, uint16_t len);
+int rtcp_connect(rtcp_t * info, char *url, char *host, int port, char *interface, char *nicename);
 #endif	/* IPTV_RTCP_H */
 
