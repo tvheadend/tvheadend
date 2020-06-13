@@ -411,8 +411,8 @@ iptv_input_close_fds ( iptv_input_t *mi, iptv_mux_t *im )
 {
   iptv_thread_pool_t *pool = mi->mi_tpool;
 
-  if (im->mm_iptv_fd > 0 || im->mm_iptv_fd2 > 0)
-    tvhtrace(LS_IPTV, "iptv_input_close_fds %d %d", im->mm_iptv_fd, im->mm_iptv_fd2);
+  if (im->mm_iptv_fd > 0 || im->im_rtcp_info.connection_fd > 0)
+    tvhtrace(LS_IPTV, "iptv_input_close_fds %d %d", im->mm_iptv_fd, im->im_rtcp_info.connection_fd);
 
   /* Close file */
   if (im->mm_iptv_fd > 0) {
@@ -423,11 +423,11 @@ iptv_input_close_fds ( iptv_input_t *mi, iptv_mux_t *im )
   }
 
   /* Close file2 */
-  if (im->mm_iptv_fd2 > 0) {
-    tvhpoll_rem1(pool->poll, im->mm_iptv_fd2);
-    udp_close(im->mm_iptv_connection2);
-    im->mm_iptv_connection2 = NULL;
-    im->mm_iptv_fd2 = -1;
+  if (im->im_rtcp_info.connection_fd > 0) {
+    tvhpoll_rem1(pool->poll, im->im_rtcp_info.connection_fd);
+    udp_close(im->im_rtcp_info.connection);
+    im->im_rtcp_info.connection = NULL;
+    im->im_rtcp_info.connection_fd = -1;
   }
 }
 
@@ -676,12 +676,12 @@ iptv_input_fd_started ( iptv_input_t *mi, iptv_mux_t *im )
   }
 
   /* Setup poll2 */
-  if (im->mm_iptv_fd2 > 0) {
+  if (im->im_rtcp_info.connection_fd > 0) {
     /* Error? */
-    if (tvhpoll_add1(tpool->poll, im->mm_iptv_fd2, TVHPOLL_IN, im) < 0) {
+    if (tvhpoll_add1(tpool->poll, im->im_rtcp_info.connection_fd, TVHPOLL_IN, im) < 0) {
       tvherror(LS_IPTV, "%s - failed to add to poll q (2)", im->mm_nicename);
-      close(im->mm_iptv_fd2);
-      im->mm_iptv_fd2 = -1;
+      close(im->im_rtcp_info.connection_fd);
+      im->im_rtcp_info.connection_fd = -1;
       return -1;
     }
   }

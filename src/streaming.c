@@ -201,7 +201,7 @@ streaming_target_disconnect(streaming_pad_t *sp, streaming_target_t *st)
 streaming_message_t *
 streaming_msg_create(streaming_message_type_t type)
 {
-  streaming_message_t *sm = malloc(sizeof(streaming_message_t));
+  streaming_message_t *sm = calloc(1, sizeof(streaming_message_t));
   memoryinfo_alloc(&streaming_msg_memoryinfo, sizeof(*sm));
   sm->sm_type = type;
 #if ENABLE_TIMESHIFT
@@ -432,6 +432,7 @@ streaming_service_deliver(service_t *t, streaming_message_t *sm)
 {
   if (atomic_set(&t->s_pending_restart, 0))
     service_restart_streams(t);
+  sm->sm_s = t;
   streaming_pad_deliver(&t->s_streaming_pad, sm);
 }
 
