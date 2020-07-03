@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 typedef struct json_deserializer {
   void *(*jd_create_map)(void *jd_opaque);
