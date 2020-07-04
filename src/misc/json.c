@@ -342,7 +342,7 @@ json_parse_value(const char *s, void *parent, const char *name,
   const char *s2;
   char *str;
   double d = 0;
-  long l = 0;
+  int64_t s64 = 0;
   void *c;
 
   if((c = json_parse_map(s, &s2, jd, opaque, failp, failmsg)) == NULL)
@@ -369,8 +369,8 @@ json_parse_value(const char *s, void *parent, const char *name,
     return s2;
   }
 
-  if((s2 = json_parse_integer(s, &l)) != NULL) {
-    jd->jd_add_s64(opaque, parent, name, l);
+  if((s2 = json_parse_integer(s, &s64)) != NULL) {
+    jd->jd_add_s64(opaque, parent, name, s64);
     return s2;
   } else if((s2 = json_parse_double(s, &d)) != NULL) {
     jd->jd_add_double(opaque, parent, name, d);
