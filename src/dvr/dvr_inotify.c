@@ -398,7 +398,7 @@ void* _dvr_inotify_thread ( void *p )
       ev = (struct inotify_event *)&buf[i];
       tvhtrace(LS_DVR_INOTIFY, "i=%d len=%d name=%s", i, len, ev->name);
       i += EVENT_SIZE + ev->len;
-      if (i > len)
+      if (i > len || i < 0)
         break;
 
       /* Moved */
