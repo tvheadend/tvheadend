@@ -3077,8 +3077,6 @@ dvr_entry_class_save(idnode_t *self, char *filename, size_t fsize)
             htsmsg_add_s64(c, "start", s64);
           if (!htsmsg_get_s64(e, "stop", &s64))
             htsmsg_add_s64(c, "stop", s64);
-          if (!htsmsg_get_s64(e, "size", &s64))
-            htsmsg_add_s64(c, "size", s64);
           htsmsg_add_msg(l, NULL, c);
         }
       }
