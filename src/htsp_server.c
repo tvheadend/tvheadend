@@ -50,7 +50,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 35
+#define HTSP_PROTO_VERSION 34
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -955,7 +955,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   htsmsg_field_t *f;
   const char *s = NULL, *error = NULL, *subscriptionError = NULL;
   const char *p, *last;
-  int64_t fsize = -1, start, stop, size;
+  int64_t fsize = -1, start, stop;
   uint32_t u32;
   char buf[512];
   char ubuf[UUID_HEX_SIZE];
@@ -1062,8 +1062,6 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
             htsmsg_set_s64(e, "start", start);
           if (!htsmsg_get_s64(m, "stop", &stop))
             htsmsg_set_s64(e, "stop", stop);
-          if (!htsmsg_get_s64(m, "size", &size))
-            htsmsg_set_s64(e, "size", size);
 
           htsmsg_add_msg(l, NULL, e);
         }
