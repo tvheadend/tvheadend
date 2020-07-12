@@ -30,7 +30,7 @@ static struct {
   { '<',  "&lt;"    },
   { '&',  "&amp;"   },
   { '\'', "&apos;"  },
-  { '"',  "&quote;" }
+  { '"',  "&quot;" }
 };
 
 static const char *html_escape_char ( const char chr )
