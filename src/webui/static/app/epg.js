@@ -173,7 +173,7 @@ tvheadend.seachTitleWeb = function(index, title){
             url = 'https://www.imdb.com/find?q=' + encodeURIComponent(title);
             break;
         case 2:
-            url = 'https://www.thetvdb.com/search?q='+ encodeURIComponent(title)+'&l=en';
+            url = 'https://www.thetvdb.com/search?query='+ encodeURIComponent(title)+'&l=en';
             break;
         case 3:
             url = tvheadend.filmAffinityLanguage() + encodeURIComponent(title);
