@@ -712,8 +712,8 @@ static int _eit_process_event_one
     *save |= epg_broadcast_set_episodelink_uri(ebc, ev->uri, &changes);
 
   /* Update Episode */
-  if (ev->is_new > 0)
-    *save |= epg_broadcast_set_is_new(ebc, ev->is_new - 1, &changes);
+  if (ev->is_new)
+    *save |= epg_broadcast_set_is_new(ebc, 1, &changes);
   *save |= epg_broadcast_set_is_bw(ebc, ev->bw, &changes);
   if (ev->title)
     *save |= epg_broadcast_set_title(ebc, ev->title, &changes);
