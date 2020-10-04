@@ -44,69 +44,72 @@ BSFS           = h264_mp4toannexb hevc_mp4toannexb
 FILTERS        = yadif format hwupload hwdownload scale null aresample anull
 HWACCELS       =
 
-NASM_VER       = 2.14.02
+NASM_VER       = 2.15.05
 NASM           = nasm-$(NASM_VER)
 NASM_TB        = $(NASM).tar.gz
 NASM_URL       = https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VER)/$(NASM_TB)
-NASM_SHA1      = bfa67d0d33f0c7b00c50d9f1bd33fd4d5df3c5d5
+NASM_SHA1      = 8a2a60b01d563c32dd216f94a99a20e6e31fd8aa
 NASM_DIFFS     = remove-invalid-pure_func-qualifiers.diff
 
-LIBX264        = x264-snapshot-20191216-2245
+LIBX264_VER    = db0d417728460c647ed4a847222a535b00d3dbcb
+LIBX264        = x264-$(LIBX264_VER)
 LIBX264_TB     = $(LIBX264).tar.bz2
-LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1   = 712f37aeabf3cb42f1ebe55588c33583636a7230
+LIBX264_URL    = https://code.videolan.org/videolan/x264/-/archive/$(LIBX264_VER)/$(LIBX264_TB)
+LIBX264_SHA1   = 7b8da6f4283207b8ad77bab8890e3807f32013df
 
-LIBX265        = x265_3.2
-LIBX265_TB     = $(LIBX265).tar.gz
-LIBX265_URL    = http://ftp.videolan.org/videolan/x265/$(LIBX265_TB)
-LIBX265_SHA1   = 5922f88d0997c47e2c95feee95dc98bcb2e54871
+LIBX265_VER    = 3.4
+LIBX265        = x265-$(LIBX265_VER)
+LIBX265_TB     = $(LIBX265_VER).tar.gz
+LIBX265_URL    = https://github.com/videolan/x265/archive/$(LIBX265_TB)
+LIBX265_SHA1   = eef65f2f9518f3396825675aa86bdf82a55aa0d9
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
 else
 LIBX265_DIFFS  = libx265.pic.diff
 endif
 
-LIBVPX_VER     = 1.8.2
+LIBVPX_VER     = 1.9.0-rc1
 LIBVPX         = libvpx-$(LIBVPX_VER)
 LIBVPX_TB      = $(LIBVPX).tar.gz
 LIBVPX_URL     = https://github.com/webmproject/libvpx/archive/v$(LIBVPX_VER)/$(LIBVPX_TB)
-LIBVPX_SHA1    = 7fbc7de47f59431fa2c5b76660f115963e83193d
+LIBVPX_SHA1    = 7609f22ecc7dbfcfd22075f6f62aa4ac2845f368
 
 LIBOGG         = libogg-1.3.4
 LIBOGG_TB      = $(LIBOGG).tar.gz
 LIBOGG_URL     = https://ftp.osuosl.org/pub/xiph/releases/ogg/$(LIBOGG_TB)
 LIBOGG_SHA1    = 851cef020b346d44893e5d1c3dab83c675d479d9
 
-LIBTHEORA      = libtheora-1.1.1
+LIBTHEORA      = libtheora-1.2.0alpha1
 LIBTHEORA_TB   = $(LIBTHEORA).tar.gz
 LIBTHEORA_URL  = https://ftp.osuosl.org/pub/xiph/releases/theora/$(LIBTHEORA_TB)
-LIBTHEORA_SHA1 = 0b91be522746a29351a5ee592fd8160940059303
+LIBTHEORA_SHA1 = f03e6b1648b7574a249ee19cd386ff3d5c9deb84
 
-LIBVORBIS      = libvorbis-1.3.6
+LIBVORBIS      = libvorbis-1.3.7
 LIBVORBIS_TB   = $(LIBVORBIS).tar.gz
 LIBVORBIS_URL  = https://ftp.osuosl.org/pub/xiph/releases/vorbis/$(LIBVORBIS_TB)
-LIBVORBIS_SHA1 = 91f140c220d1fe3376d637dc5f3d046263784b1f
+LIBVORBIS_SHA1 = 2b415495f89b103138a23da5017a2a00837c6c94
 
-LIBFDKAAC      = fdk-aac-0.1.6
+LIBFDKAAC      = fdk-aac-2.0.1
 LIBFDKAAC_TB   = $(LIBFDKAAC).tar.gz
 LIBFDKAAC_URL  = https://freefr.dl.sourceforge.net/project/opencore-amr/fdk-aac/$(LIBFDKAAC_TB)
-LIBFDKAAC_SHA1 = 574103e24fe45b3b89a92cc6a7a9d260c483b9e0
+LIBFDKAAC_SHA1 = 575e90e85321c5be44dcf743a40ea57ab0835928
 
 LIBOPUS        = opus-1.3.1
 LIBOPUS_TB     = $(LIBOPUS).tar.gz
 LIBOPUS_URL    = https://archive.mozilla.org/pub/opus/$(LIBOPUS_TB)
 LIBOPUS_SHA1   = ed226536537861c9f0f1ef7ca79dffc225bc181b
 
-FFNVCODEC_VER  = 8.2.15.10
+FFNVCODEC_VER  = 10.0.26.1
 FFNVCODEC      = nv-codec-headers-$(FFNVCODEC_VER)
 FFNVCODEC_TB   = $(FFNVCODEC).tar.gz
 FFNVCODEC_URL  = https://github.com/FFmpeg/nv-codec-headers/releases/download/n$(FFNVCODEC_VER)/nv-codec-headers-$(FFNVCODEC_VER).tar.gz
-FFNVCODEC_SHA1 = 80c3bd878e6b4a7d3a6a643ad6ad07a9f02bfe81
+FFNVCODEC_SHA1 = aac6b915284a8ff384f2123b1cb95e1b90525dc1
 
-FFMPEG         = ffmpeg-4.1.5
+FFMPEG         = ffmpeg-4.3.1
 FFMPEG_TB      = $(FFMPEG).tar.bz2
-FFMPEG_URL     = https://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = 850ca59493aa6d773a1346257c9fbee80ba6efe0
+FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
+FFMPEG_SHA1    = d7bf601a6fc904333ab261e73c4b602ea471e942
+
 
 # ##############################################################################
 # Library Config
@@ -257,7 +260,6 @@ ifeq (yes,$(CONFIG_LIBX265))
 
 EXTLIBS  += libx265
 ENCODERS += libx265
-FFMPEG_DIFFS += ffmpeg.libx265.diff
 
 endif
 
@@ -267,7 +269,6 @@ ifeq (yes,$(CONFIG_LIBX265_STATIC))
 $(LIB_ROOT)/$(LIBX265)/.tvh_download:
 	$(call DOWNLOAD,$(LIBX265_URL),$(LIB_ROOT)/$(LIBX265_TB),$(LIBX265_SHA1))
 	$(call UNTAR,$(LIBX265_TB),z)
-	$(call PATCH,$(LIBX265),$(LIBX265_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(LIBX265)/.tvh_build: \
