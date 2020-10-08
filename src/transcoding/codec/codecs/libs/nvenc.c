@@ -39,10 +39,22 @@
 #define NV_ENC_PARAMS_RC_CONSTQP               1
 #define NV_ENC_PARAMS_RC_VBR                   2
 #define NV_ENC_PARAMS_RC_CBR                   3
-#define NV_ENC_PARAMS_RC_VBR_MINQP             4
-#define NV_ENC_PARAMS_RC_2_PASS_QUALITY        5
-#define NV_ENC_PARAMS_RC_2_PASS_FRAMESIZE_CAP  6
-#define NV_ENC_PARAMS_RC_2_PASS_VBR            7
+//(deprecated)#define NV_ENC_PARAMS_RC_VBR_MINQP             4
+//(deprecated)#define NV_ENC_PARAMS_RC_2_PASS_QUALITY        5
+//(deprecated)#define NV_ENC_PARAMS_RC_2_PASS_FRAMESIZE_CAP  6
+//(deprecated)#define NV_ENC_PARAMS_RC_2_PASS_VBR            7
+#define NV_ENC_PARAMS_RC_CBR_LD_HQ             8
+#define NV_ENC_PARAMS_RC_CBR_HQ                16
+#define NV_ENC_PARAMS_RC_VBR_HQ                32
+
+#define  FF_PROFILE_H264_NVENC_BASELINE			    0
+#define  FF_PROFILE_H264_NVENC_MAIN			        1
+#define  FF_PROFILE_H264_NVENC_HIGH			        2
+#define  FF_PROFILE_H264_NVENC_HIGH_444_PREDICTIVE	3
+
+#define FF_PROFILE_HEVC_NVENC_MAIN			        0
+#define FF_PROFILE_HEVC_NVENC_MAIN_10			    1
+#define FF_PROFILE_HEVC_NVENC_REXT			        2
 
 #define AV_DICT_SET_CQ(d, v, a) \
     AV_DICT_SET_INT((d), "cq", (v) ? (v) : (a), AV_DICT_DONT_OVERWRITE)
@@ -79,12 +91,15 @@ tvh_codec_profile_nvenc_open(tvh_codec_profile_nvenc_t *self,
     };
     static const struct strtab rctab[] = {
         {"constqp",	      NV_ENC_PARAMS_RC_CONSTQP},
-        {"vbr",               NV_ENC_PARAMS_RC_VBR},
-        {"cbr",               NV_ENC_PARAMS_RC_CBR},
-        {"vbr_minqp",         NV_ENC_PARAMS_RC_VBR_MINQP},
-        {"ll_2pass_quality",  NV_ENC_PARAMS_RC_2_PASS_QUALITY},
-        {"ll_2pass_size",     NV_ENC_PARAMS_RC_2_PASS_FRAMESIZE_CAP},
-        {"vbr_2pass",         NV_ENC_PARAMS_RC_2_PASS_VBR},
+        {"vbr",           NV_ENC_PARAMS_RC_VBR},
+        {"cbr",           NV_ENC_PARAMS_RC_CBR},
+        //(deprecated){"vbr_minqp",         NV_ENC_PARAMS_RC_VBR_MINQP},
+        //(deprecated){"ll_2pass_quality",  NV_ENC_PARAMS_RC_2_PASS_QUALITY},
+        //(deprecated){"ll_2pass_size",     NV_ENC_PARAMS_RC_2_PASS_FRAMESIZE_CAP},
+        //(deprecated){"vbr_2pass",         NV_ENC_PARAMS_RC_2_PASS_VBR},
+        {"cbr_ld_hq",     NV_ENC_PARAMS_RC_CBR_LD_HQ},
+        {"cbr_hq",        NV_ENC_PARAMS_RC_CBR_HQ},
+        {"vbr_hq",        NV_ENC_PARAMS_RC_VBR_HQ},
     };
     const char *s;
 
@@ -136,13 +151,16 @@ codec_profile_nvenc_class_rc_list(void *obj, const char *lang)
 {
     static const struct strtab tab[] = {
         {N_("Auto"),				  NV_ENC_PARAMS_RC_AUTO},
-        {N_("Constant QP mode"),		  NV_ENC_PARAMS_RC_CONSTQP},
+        {N_("Constant QP mode"),      NV_ENC_PARAMS_RC_CONSTQP},
         {N_("VBR mode"),   			  NV_ENC_PARAMS_RC_VBR},
         {N_("CBR mode"), 	  		  NV_ENC_PARAMS_RC_CBR},
-        {N_("VBR mode with MinQP"), 	          NV_ENC_PARAMS_RC_VBR_MINQP},
-        {N_("VBR multi-pass LL quality mode"), 	  NV_ENC_PARAMS_RC_2_PASS_QUALITY},
-        {N_("VBR multi-pass LL frame size mode"), NV_ENC_PARAMS_RC_2_PASS_FRAMESIZE_CAP},
-        {N_("VBR multi-pass mode"), 		  NV_ENC_PARAMS_RC_2_PASS_VBR},
+        //(deprecated){N_("VBR mode with MinQP"), 	          NV_ENC_PARAMS_RC_VBR_MINQP},
+        //(deprecated){N_("VBR multi-pass LL quality mode"), 	  NV_ENC_PARAMS_RC_2_PASS_QUALITY},
+        //(deprecated){N_("VBR multi-pass LL frame size mode"), NV_ENC_PARAMS_RC_2_PASS_FRAMESIZE_CAP},
+        //(deprecated){N_("VBR multi-pass mode"), 		  NV_ENC_PARAMS_RC_2_PASS_VBR},
+        {N_("CBR LD HQ"),			  NV_ENC_PARAMS_RC_CBR_LD_HQ},
+        {N_("CBR High Quality"),	  NV_ENC_PARAMS_RC_CBR_HQ},
+        {N_("VBR High Quality"),   	  NV_ENC_PARAMS_RC_VBR_HQ},
     };
     return strtab2htsmsg(tab, 1, lang);
 }
@@ -229,10 +247,10 @@ static const codec_profile_class_t codec_profile_nvenc_class = {
 /* h264_nvenc =============================================================== */
 
 static const AVProfile nvenc_h264_profiles[] = {
-    { FF_PROFILE_H264_BASELINE,             "Baseline" },
-    { FF_PROFILE_H264_MAIN,                 "Main" },
-    { FF_PROFILE_H264_HIGH,                 "High" },
-    { FF_PROFILE_H264_HIGH_444_PREDICTIVE,  "High 444P" },
+    { FF_PROFILE_H264_NVENC_BASELINE,             "Baseline" },
+    { FF_PROFILE_H264_NVENC_MAIN,                 "Main" },
+    { FF_PROFILE_H264_NVENC_HIGH,                 "High" },
+    { FF_PROFILE_H264_NVENC_HIGH_444_PREDICTIVE,  "High 444P" },
     { FF_PROFILE_UNKNOWN },
 };
 
@@ -241,16 +259,16 @@ tvh_codec_profile_nvenc_h264_open(tvh_codec_profile_nvenc_t *self,
                                   AVDictionary **opts)
 {
     static const struct strtab profiletab[] = {
-        {"baseline",    FF_PROFILE_H264_BASELINE},
-        {"main",        FF_PROFILE_H264_MAIN},
-        {"high",        FF_PROFILE_H264_HIGH,},
-        {"high444p",    FF_PROFILE_H264_HIGH_444_PREDICTIVE},
+        {"baseline",    FF_PROFILE_H264_NVENC_BASELINE},
+        {"main",        FF_PROFILE_H264_NVENC_MAIN},
+        {"high",        FF_PROFILE_H264_NVENC_HIGH,},
+        {"high444p",    FF_PROFILE_H264_NVENC_HIGH_444_PREDICTIVE},
     };
     const char *s;
 
     if (self->nvenc_profile != FF_PROFILE_UNKNOWN &&
         (s = val2str(self->nvenc_profile, profiletab)) != NULL)
-      AV_DICT_SET(opts, "profile", s, 0);
+      AV_DICT_SET(opts, "profile", (s - 1), 0);
     return 0;
 }
 
@@ -279,8 +297,9 @@ TVHVideoCodec tvh_codec_nvenc_h264 = {
 /* hevc_nvenc =============================================================== */
 
 static const AVProfile nvenc_hevc_profiles[] = {
-    { FF_PROFILE_HEVC_MAIN,    "Main" },
-    { FF_PROFILE_HEVC_MAIN_10, "Main 10" },
+    { FF_PROFILE_HEVC_NVENC_MAIN,    "Main" },
+    { FF_PROFILE_HEVC_NVENC_MAIN_10, "Main 10" },
+    { FF_PROFILE_HEVC_NVENC_REXT, "Rext" },
     { FF_PROFILE_UNKNOWN },
 };
 
@@ -289,14 +308,15 @@ tvh_codec_profile_nvenc_hevc_open(tvh_codec_profile_nvenc_t *self,
                                   AVDictionary **opts)
 {
     static const struct strtab profiletab[] = {
-        {"main",        FF_PROFILE_HEVC_MAIN},
-        {"main10",      FF_PROFILE_HEVC_MAIN_10,},
+        {"main",        FF_PROFILE_HEVC_NVENC_MAIN},
+        {"main10",      FF_PROFILE_HEVC_NVENC_MAIN_10,},
+        {"rext",        FF_PROFILE_HEVC_NVENC_REXT,},
     };
     const char *s;
 
     if (self->nvenc_profile != FF_PROFILE_UNKNOWN &&
         (s = val2str(self->nvenc_profile, profiletab)) != NULL)
-      AV_DICT_SET(opts, "profile", s, 0);
+      AV_DICT_SET(opts, "profile", (s - 1), 0);
     AV_DICT_SET_INT(opts, "bf", 0, 0);
     return 0;
 }
