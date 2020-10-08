@@ -284,7 +284,7 @@ api_epg_filter_add_num
   else if (!strcmp(k, "episode"))
     api_epg_filter_set_num(&eq->episode, v1, v2, comp);
   else if (!strcmp(k, "stars"))
-    api_epg_filter_set_num(&eq->episode, v1, v2, comp);
+    api_epg_filter_set_num(&eq->stars, v1, v2, comp);
   else if (!strcmp(k, "age"))
     api_epg_filter_set_num(&eq->age, v1, v2, comp);
 }
