@@ -1,27 +1,28 @@
 diff -urN ../ffmpeg-3.1.3.orig/libavcodec/vaapi_encode.c ./libavcodec/vaapi_encode.c
 --- ../ffmpeg-3.1.3.orig/libavcodec/vaapi_encode.c	2016-06-27 01:54:29.000000000 +0200
 +++ ./libavcodec/vaapi_encode.c	2016-08-31 11:53:21.159413291 +0200
-@@ -26,6 +26,7 @@
- 
+@@ -26,6 +26,8 @@
+
  #include "vaapi_encode.h"
  #include "avcodec.h"
 +#include "internal.h"
- 
- static const char *picture_type_name[] = { "IDR", "I", "P", "B" };
- 
-@@ -395,7 +396,7 @@
-     VAAPIEncodeContext *ctx = avctx->priv_data;
-     VACodedBufferSegment *buf_list, *buf;
++#include "packet_internal.h"
+
+ const AVCodecHWConfigInternal *ff_vaapi_encode_hw_configs[] = {
+     HW_CONFIG_ENCODER_FRAMES(VAAPI, VAAPI),
+@@ -586,7 +588,7 @@ static int vaapi_encode_output(AVCodecCo
      VAStatus vas;
+     int total_size = 0;
+     uint8_t *ptr;
 -    int err;
-+    int err, pict_type;
- 
++    int err, pict_type;;
+
      err = vaapi_encode_wait(avctx, pic);
      if (err < 0)
-@@ -427,6 +428,28 @@
- 
+@@ -624,6 +626,28 @@ static int vaapi_encode_output(AVCodecCo
+
      pkt->pts = pic->pts;
- 
+
 +    switch (pic->type) {
 +    case PICTURE_TYPE_IDR:
 +    case PICTURE_TYPE_I:
