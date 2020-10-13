@@ -190,6 +190,7 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
                     check = VAProfileHEVCMain;
                     break;
                 case FF_PROFILE_HEVC_MAIN_10:
+                case FF_PROFILE_HEVC_REXT:
                     check = VAProfileHEVCMain10;
                     break;
                 default:

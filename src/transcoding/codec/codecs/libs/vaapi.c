@@ -163,7 +163,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
 /* h264_vaapi =============================================================== */
 
 static const AVProfile vaapi_h264_profiles[] = {
-    { FF_PROFILE_H264_BASELINE,             "Baseline" },
+    //{ FF_PROFILE_H264_BASELINE,             "Baseline" },
     { FF_PROFILE_H264_CONSTRAINED_BASELINE, "Constrained Baseline" },
     { FF_PROFILE_H264_MAIN,                 "Main" },
     { FF_PROFILE_H264_HIGH,                 "High" },
@@ -227,6 +227,8 @@ TVHVideoCodec tvh_codec_vaapi_h264 = {
 
 static const AVProfile vaapi_hevc_profiles[] = {
     { FF_PROFILE_HEVC_MAIN, "Main" },
+    { FF_PROFILE_HEVC_MAIN_10, "Main 10" },
+    { FF_PROFILE_HEVC_REXT, "Rext" },
     { FF_PROFILE_UNKNOWN },
 };
 
