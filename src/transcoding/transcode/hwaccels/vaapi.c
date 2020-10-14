@@ -170,9 +170,6 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
                 case FF_PROFILE_H264_HIGH:
                     check = VAProfileH264High;
                     break;
-                case FF_PROFILE_H264_BASELINE:
-                    check = VAProfileH264Baseline;
-                    break;
                 case FF_PROFILE_H264_CONSTRAINED_BASELINE:
                     check = VAProfileH264ConstrainedBaseline;
                     break;
