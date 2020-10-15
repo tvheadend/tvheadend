@@ -1,0 +1,33 @@
+{
+"environ" : [
+    {
+        "comment": "This section contains general information about this file to help people guess what regions it affects.",
+        "language": "pl",
+        "location": "pl",
+        "description": "POL DVB-C configuration for UPC network.",
+        "eitgrabber": ["eit"]
+    }
+],
+
+"tests" : [
+    {
+        "summary": "Lorem Ipsum."
+    },
+
+    {
+        "title": "Lorem Ipsum title. (odc. 123)",
+        "summary": "Lorem Ipsum summary. (odc. 123)",
+        "episode": "123"
+    },
+
+    {
+        "summary": "Lorem Ipsum. 4 (odc. 123)",
+        "season": "4", "episode": "123"
+    },
+
+    {
+        "summary": "Lorem Ipsum. 1234 (odc. 123)",
+        "episode": "123"
+    }
+]
+}
