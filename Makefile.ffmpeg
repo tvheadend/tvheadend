@@ -67,6 +67,7 @@ LIBX265_DIFFS  = libx265.pie.diff
 else
 LIBX265_DIFFS  = libx265.pic.diff
 endif
+LIBX265_DIFFS  += libx265-silence.patch
 
 LIBVPX_VER     = 1.9.0
 LIBVPX         = libvpx-$(LIBVPX_VER)

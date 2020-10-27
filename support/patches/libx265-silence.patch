@@ -1,0 +1,12 @@
+diff -urN ../x265_3.4/source/CMakeLists.old ./source/CMakeLists.txt
+--- ../x265_3.4/source/CMakeLists.old       2020-10-27 02:13:31.846580515 +0100
++++ ./source/CMakeLists.txt       2020-10-27 02:14:30.919996545 +0100
+@@ -557,7 +557,7 @@
+             list(APPEND ASM_OBJS ${ASM}.${SUFFIX})
+             add_custom_command(
+                 OUTPUT ${ASM}.${SUFFIX}
+-                COMMAND ${NASM_EXECUTABLE} ARGS ${NASM_FLAGS} ${ASM_SRC} -o ${ASM}.${SUFFIX}
++                COMMAND ${NASM_EXECUTABLE} ARGS -w-macro-params-legacy ${NASM_FLAGS} ${ASM_SRC} -o ${ASM}.${SUFFIX}
+                 DEPENDS ${ASM_SRC})
+         endforeach()
+     endif()
