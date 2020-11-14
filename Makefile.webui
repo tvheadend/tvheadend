@@ -48,7 +48,7 @@ endif
 ifeq ($(PLATFORM), freebsd)
 STAT_ARG=-f "%-35N %7z"
 else
-STAT_ARG=--printf="%-35n %7s\n"
+STAT_ARG=-c "%-35n %7s\n"
 endif
 
 JAVASCRIPT =
