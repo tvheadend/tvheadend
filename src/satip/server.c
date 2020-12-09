@@ -117,7 +117,7 @@ satip_server_http_xml(http_connection_t *hc)
   char *devicelist = NULL;
   htsbuf_queue_t q;
   mpegts_network_t *mn;
-  int dvbt = 0, dvbs = 0, dvbc = 0, atsc = 0;
+  int dvbt = 0, dvbs = 0, dvbc = 0, atsc = 0, isdbt = 0;
   int srcs = 0, delim = 0, tuners = 0, i, satipm3u = 0;
   struct xml_type_xtab *p;
   http_arg_list_t args;
@@ -131,6 +131,7 @@ satip_server_http_xml(http_connection_t *hc)
     { "DVBC2", &satip_server_conf.satip_dvbc2,  &dvbc },
     { "ATSCT", &satip_server_conf.satip_atsc_t, &atsc },
     { "ATSCC", &satip_server_conf.satip_atsc_c, &atsc },
+    { "ISDBT", &satip_server_conf.satip_isdb_t, &isdbt },
     {}
   };
 
@@ -153,6 +154,8 @@ satip_server_http_xml(http_connection_t *hc)
       dvbc++;
     else if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_t_class))
       atsc++;
+    else if (idnode_is_instance(&mn->mn_id, &dvb_network_isdb_t_class))
+      isdbt++;
 #if ENABLE_IPTV
     else if (idnode_is_instance(&mn->mn_id, &iptv_network_class)) {
       mpegts_mux_t *mm;
@@ -175,6 +178,7 @@ satip_server_http_xml(http_connection_t *hc)
   if (dvbc > 9) dvbc = 9;
   if (dvbs > 9) dvbs = 9;
   if (atsc > 9) atsc = 9;
+  if (isdbt > 9) isdbt = 9;
   for (p = xtab; p->id; p++) {
     i = *p->cptr;
     if (i > 0) {
@@ -886,6 +890,14 @@ const idclass_t satip_server_class = {
       .name   = N_("ATSC-C"),
       .desc   = N_("The number of ATSC-C (Cable/AnnexB) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_atsc_c),
+      .group  = 4,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_isdbt",
+      .name   = N_("ISDB-T"),
+      .desc   = N_("The number of ISDB-T (Terresterial) tuners to export."),
+      .off    = offsetof(struct satip_server_conf, satip_isdb_t),
       .group  = 4,
     },
     {

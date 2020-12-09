@@ -614,6 +614,16 @@ const idclass_t satip_frontend_atsc_c_class =
   }
 };
 
+const idclass_t satip_frontend_isdb_t_class =
+{
+  .ic_super      = &satip_frontend_class,
+  .ic_class      = "satip_frontend_isdb_t",
+  .ic_caption    = N_("SAT>IP ISDB-T Frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
 /* **************************************************************************
  * Class methods
  * *************************************************************************/
@@ -2310,6 +2320,8 @@ satip_frontend_create
     idc = &satip_frontend_atsc_t_class;
   else if (type == DVB_TYPE_ATSC_C)
     idc = &satip_frontend_atsc_c_class;
+  else if (type == DVB_TYPE_ISDB_T)
+    idc = &satip_frontend_isdb_t_class;
   else {
     tvherror(LS_SATIP, "unknown FE type %d", type);
     return NULL;

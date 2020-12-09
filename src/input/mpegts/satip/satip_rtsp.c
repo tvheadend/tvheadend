@@ -85,6 +85,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     { .t = DVB_SYS_DVBC_ANNEX_A,              "dvbc"  },
     { .t = DVB_SYS_DVBC_ANNEX_C,              "dvbc2" },
     { .t = DVB_SYS_ATSC,                      "atsc"  },
+    { .t = DVB_SYS_ISDBT,                     "isdbt" },
     { .t = DVB_SYS_DVBC_ANNEX_B,              "dvbcb" },
     { .t = TABLE_EOD }
   };
@@ -270,6 +271,13 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
         dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
       ADD(dmc_fe_modulation, mtype,
           dmc->dmc_fe_delsys == DVB_SYS_ATSC ? "8vsb" : "64qam");
+  } else if (dmc->dmc_fe_delsys == DVB_SYS_ISDBT) {
+    satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
+    ADD(dmc_fe_delsys, msys, "isdbt");
+    if (dmc->dmc_fe_modulation != DVB_MOD_AUTO &&
+        dmc->dmc_fe_modulation != DVB_MOD_NONE &&
+        dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
+      ADD(dmc_fe_modulation, mtype, "64qam");
   }
   if (weight > 0)
     satip_rtsp_add_val("tvhweight", buf, (uint32_t)weight * 1000);

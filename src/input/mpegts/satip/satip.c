@@ -204,6 +204,7 @@ static const char *satip_tunercfg_tab[] = {
   "DVBS2-4,DVBC-2",
   "DVBS2-4,DVBT-2,DVBC-2",
   "DVBS2-8,DVBT-4,DVBC-4",
+  "ISDB-T",
   NULL
 };
 
@@ -747,6 +748,9 @@ satip_device_create( satip_device_info_t *info )
       m = atoi(argv[i] + 6);
     } else if (strncmp(argv[i], "ATSCC-", 6) == 0) {
       type = DVB_TYPE_ATSC_C;
+      m = atoi(argv[i] + 6);
+    } else if (strncmp(argv[i], "ISDBT-", 6) == 0) {
+      type = DVB_TYPE_ISDB_T;
       m = atoi(argv[i] + 6);
     }
     if (type == DVB_TYPE_NONE) {
@@ -1375,6 +1379,7 @@ void satip_init ( int nosatip, str_list_t *clients )
   idclass_register(&satip_frontend_dvbs_slave_class);
   idclass_register(&satip_frontend_atsc_t_class);
   idclass_register(&satip_frontend_atsc_c_class);
+  idclass_register(&satip_frontend_isdb_t_class);
 
   idclass_register(&satip_satconf_class);
 

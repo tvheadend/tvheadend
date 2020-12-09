@@ -168,6 +168,13 @@ satip_rtsp_delsys(int fe, int *findex, const char **ftype)
     t = "ATSC-C";
     goto result;
   }
+  fe -= i;
+  i = satip_server_conf.satip_isdb_t;
+  if (fe <= i) {
+    res = DVB_SYS_ISDBT;
+    t = "ISDB-T";
+    goto result;
+  }
   tvh_mutex_unlock(&global_lock);
   return DVB_SYS_NONE;
 result:
@@ -760,6 +767,7 @@ msys_to_tvh(http_connection_t *hc)
     { "dvbc",  DVB_SYS_DVBC_ANNEX_A },
     { "dvbc2", DVB_SYS_DVBC_ANNEX_C },
     { "atsc",  DVB_SYS_ATSC },
+    { "isdbt",  DVB_SYS_ISDBT },
     { "dvbcb", DVB_SYS_DVBC_ANNEX_B }
   };
   const char *s = http_arg_get_remove(&hc->hc_req_args, "msys");
@@ -1223,7 +1231,7 @@ rtsp_parse_cmd
     dmc->dmc_fe_stream_id = plp;
     dmc->dmc_fe_pls_code = ds; /* check */
 
-  } else if (msys == DVB_SYS_ATSC || msys == DVB_SYS_DVBC_ANNEX_B) {
+  } else if (msys == DVB_SYS_ISDBT || msys == DVB_SYS_ATSC || msys == DVB_SYS_DVBC_ANNEX_B) {
 
     freq *= 1000;
     if (freq < 0) goto end;
