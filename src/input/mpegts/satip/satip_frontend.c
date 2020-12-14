@@ -864,6 +864,8 @@ satip_frontend_start_mux
   tvh_mutex_unlock(&lfe->sf_dvr_lock);
   tvh_mutex_lock(&mmi->tii_stats_mutex);
   lfe->sf_status    = SIGNAL_NONE;
+  mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
+  mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
   tvh_mutex_unlock(&mmi->tii_stats_mutex);
 
   /* notify thread that we are ready */
