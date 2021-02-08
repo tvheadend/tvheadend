@@ -528,7 +528,7 @@ http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
       }
       htsbuf_append_str(hq, "\"");
     } else {
-      htsbuf_qprintf(hq, " logo=\"%s\"", logo);
+      htsbuf_qprintf(hq, " tvg-logo=\"%s\"", logo);
     }
   }
   if (epgid)
