@@ -21,6 +21,7 @@
 #include "memutils.h"
 
 #include <libavutil/mem.h>
+#include <libavcodec/avcodec.h>
 
 
 static char *
@@ -107,7 +108,7 @@ str_snprintf(char *str, size_t size, const char *format, ...)
 uint8_t *
 pktbuf_copy_data(pktbuf_t *pb)
 {
-    uint8_t *data = av_malloc(pb->pb_size);
+    uint8_t *data = av_malloc(pb->pb_size + AV_INPUT_BUFFER_PADDING_SIZE);
     if (data)
         memcpy(data, pb->pb_data, pb->pb_size);
     return data;
