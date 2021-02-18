@@ -1,11 +1,11 @@
 Tvheadend
 ========================================
-(c) 2006 - 2020 Tvheadend Foundation CIC
+(c) 2006 - 2021 Tvheadend Foundation CIC
 
 Status
 ------
 
-[![Build Status](https://travis-ci.org/tvheadend/tvheadend.svg?branch=master)](https://travis-ci.org/tvheadend/tvheadend)
+[![Build Status](https://travis-ci.com/tvheadend/tvheadend.svg?branch=master)](https://travis-ci.com/tvheadend/tvheadend)
 
 [![Download](https://api.bintray.com/packages/tvheadend/deb/tvheadend/images/download.svg)](https://bintray.com/tvheadend/deb/tvheadend/)
 
