@@ -233,9 +233,10 @@ static void opentv_remove_entry(opentv_status_t *sta, opentv_entry_t *entry)
 /* Add event entry */
 static void opentv_add_entry(opentv_status_t *sta, opentv_event_t *ev)
 {
+  if (sta == NULL) return;
+
   opentv_entry_t *entry, *nentry = calloc(1, sizeof(*nentry));
 
-  if (sta == NULL) return;
   nentry->event = *ev;
   entry = RB_INSERT_SORTED(&sta->os_entries, nentry, link, _entry_cmp);
   if (entry) {

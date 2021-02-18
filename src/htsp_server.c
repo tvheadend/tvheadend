@@ -696,6 +696,9 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
   if (ch || !add) {
     htsmsg_add_str(conf, "channel", ch ? idnode_uuid_as_str(&ch->ch_id, ubuf) : "");
   }
+
+  htsmsg_destroy(days);
+
   return conf;
 }
 

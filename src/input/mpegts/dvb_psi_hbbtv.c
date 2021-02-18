@@ -95,6 +95,7 @@ dvb_psi_parse_hbbtv
         }
         break;
       case DVB_DESC_APP_NAME:
+        if(titles != NULL) htsmsg_destroy(titles);
         titles = htsmsg_create_list();
         while (dlen > 4) {
           r = dvb_get_string_with_len(title, sizeof(title), dptr + 3, dlen - 3, "UTF-8", NULL);
