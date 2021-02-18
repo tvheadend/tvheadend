@@ -1560,6 +1560,7 @@ linuxdvb_frontend_clear
     dvb_mux_t *lm = (dvb_mux_t*)mmi->mmi_mux;
     dvb_mux_conf_t *dmc = &lm->lm_tuning;
 
+    struct dtv_property delsys_p;
     memset(&delsys_p, 0, sizeof(delsys_p));
     struct dtv_properties delsys_cmdseq;
     memset(&delsys_cmdseq, 0, sizeof(delsys_cmdseq));
