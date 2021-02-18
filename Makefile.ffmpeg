@@ -270,6 +270,7 @@ ifeq (yes,$(CONFIG_LIBX265_STATIC))
 $(LIB_ROOT)/$(LIBX265)/.tvh_download:
 	$(call DOWNLOAD,$(LIBX265_URL),$(LIB_ROOT)/$(LIBX265_TB),$(LIBX265_SHA1))
 	$(call UNTAR,$(LIBX265_TB),z)
+	$(call PATCH,$(LIBX265),$(LIBX265_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(LIBX265)/.tvh_build: \
