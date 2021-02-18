@@ -1811,6 +1811,7 @@ linuxdvb_diseqc_send
   size_t c = 0;
 
   /* Build message */
+  memset(&message, 0, sizeof(message));
   message.msg_len = len + 3;
   message.msg[0]  = framing;
   message.msg[1]  = addr;
