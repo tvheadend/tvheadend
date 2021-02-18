@@ -645,6 +645,7 @@ config_migrate_v6 ( void )
           }
         }
       }
+      htsmsg_destroy(chs);
     }
     if (xchs) {
       HTSMSG_FOREACH(f, xchs) {
@@ -652,6 +653,7 @@ config_migrate_v6 ( void )
           hts_settings_save(xc, "epggrab/xmltv/channels/%s", htsmsg_field_name(f));
         }
       }
+      htsmsg_destroy(xchs);
     }
   }
   htsmsg_destroy(c);
