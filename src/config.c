@@ -184,7 +184,10 @@ config_migrate_v1_dvb_network
 
   /* Load the adapter config */
   if (!(tun = hts_settings_load("dvbadapters/%s", name))) return;
-  if (!(str = htsmsg_get_str(tun, "type"))) return;
+  if (!(str = htsmsg_get_str(tun, "type"))) {
+    htsmsg_destroy(tun);
+    return;
+  }
   type = str;
 
   /* Create network entry */
@@ -272,6 +275,7 @@ config_migrate_v1_dvb_network
   htsmsg_add_str(net, "networkname", name);
   hts_settings_save(net, "input/linuxdvb/networks/%s/config",
                     uuid_get_hex(&netu, ubuf));
+  htsmsg_destroy(tun);
   htsmsg_destroy(net);
 }
 
@@ -350,7 +354,7 @@ static void
 config_migrate_v1 ( void )
 {
   tvh_uuid_t netu, muxu, svcu, chnu;
-  htsmsg_t *c, *m, *e, *l;
+  htsmsg_t *c, *e, *l, *m = NULL;
   htsmsg_field_t *f;
   uint32_t u32;
   const char *str;
@@ -396,6 +400,7 @@ config_migrate_v1 ( void )
 
     /* Create a network */
     uuid_set(&netu, NULL);
+    if(m != NULL) htsmsg_destroy(m);
     m = htsmsg_create_map();
     htsmsg_add_str(m, "networkname",    "IPTV Network");
     htsmsg_add_u32(m, "skipinitscan",   1);
@@ -886,6 +891,7 @@ config_migrate_v9 ( void )
       hts_settings_remove("autorec/%s", htsmsg_field_name(f));
       hts_settings_save(e, "dvr/autorec/%s", htsmsg_field_name(f));
     }
+    htsmsg_destroy(c);
   }
 }
 

@@ -598,12 +598,14 @@ api_epg_alternative
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   uint32_t id, entries = 0;
-  htsmsg_t *l = htsmsg_create_list();
+  htsmsg_t *l;
   epg_broadcast_t *e;
   char *lang;
 
   if (htsmsg_get_u32(args, "eventId", &id))
     return EINVAL;
+
+  l = htsmsg_create_list();
 
   /* Main Job */
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
@@ -663,6 +665,7 @@ api_epg_related
       /* Have to unlock here since grid will re-lock */
       tvh_mutex_unlock(&global_lock);
       free(lang);
+      htsmsg_destroy(l);
       /* And let the grid do the query for us */
       return api_epg_grid(perm, opaque, op, args, resp);
     }
@@ -685,7 +688,7 @@ api_epg_load
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   uint32_t id = 0, entries = 0;
-  htsmsg_t *l = htsmsg_create_list(), *ids = NULL, *m;
+  htsmsg_t *l, *ids = NULL, *m;
   htsmsg_field_t *f;
   epg_broadcast_t *e;
   const char *blank = NULL;
@@ -696,6 +699,8 @@ api_epg_load
   if (!(ids = htsmsg_field_get_list(f)))
     if (htsmsg_field_get_u32(f, &id))
       return EINVAL;
+
+  l = htsmsg_create_list();
 
   /* Main Job */
   tvh_mutex_lock(&global_lock);
