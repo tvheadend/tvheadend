@@ -189,7 +189,7 @@ static void tvh_mutex_add_to_list(tvh_mutex_t *mutex, const char *filename, int 
 static void tvh_mutex_check_interval(tvh_mutex_t *mutex)
 {
   if (tvh_thread_debug > 10000) {
-    int64_t ms = (tvh_thread_debug - 10000) * 1000;
+    int64_t ms = ((int64_t)tvh_thread_debug - 10000) * 1000;
     int64_t diff = getfastmonoclock() - mutex->tstamp;
     if (diff > ms)
       tvhdbg(LS_THREAD, "mutex %p at %s:%d took %lldms",

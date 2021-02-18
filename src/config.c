@@ -148,6 +148,8 @@ config_migrate_v1_dvb_svcs
       hts_settings_save(svc, "input/linuxdvb/networks/%s/muxes/%s/services/%s",
                         netu, muxu, uuid_get_hex(&svcu, ubuf));
 
+      htsmsg_destroy(svc);
+
       /* Map to channel */
       if ((str = htsmsg_get_str(e, "channelname")))
         config_migrate_v1_chn_add_svc(channels, str, ubuf);
@@ -1283,6 +1285,7 @@ config_migrate_v19 ( void )
       hts_settings_save(m, "passwd/%s", uuid_get_hex(&u, ubuf));
       htsmsg_delete_field(e, "password2");
       hts_settings_save(e, "accesscontrol/%s", htsmsg_field_name(f));
+      htsmsg_destroy(m);
     }
   }
   htsmsg_destroy(c);
