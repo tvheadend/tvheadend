@@ -818,7 +818,6 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
     lang = "eng";
     if ((langs = lang_code_split(NULL)) != NULL) {
       lang = tvh_strdupa(langs->codes[0]->code2b);
-      free((void*)langs);
     }
 
     addtag(q, build_tag_string("COMMENT", comment, lang, 0, NULL));
