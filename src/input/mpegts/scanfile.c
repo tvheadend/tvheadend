@@ -331,7 +331,7 @@ scanfile_create_network
 {
   scanfile_region_t *reg = NULL;
   scanfile_network_t *net;
-  char buf[256], buf2[263], buf3[270], *str;
+  char buf[270], buf2[263], buf3[270], *str;
   int opos;
 
   /* Region */

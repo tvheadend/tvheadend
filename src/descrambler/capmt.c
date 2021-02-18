@@ -1838,6 +1838,7 @@ capmt_create_udp_socket(capmt_t *capmt, int *socket, int port)
   }
 
   struct sockaddr_in serv_addr;
+  memset(&serv_addr, 0, sizeof(serv_addr));
   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
   serv_addr.sin_port = htons( (unsigned short int)port);
   serv_addr.sin_family = AF_INET;

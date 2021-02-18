@@ -440,6 +440,7 @@ api_epg_grid
                 HTSMSG_FOREACH(f3, z)
                   if (!htsmsg_field_get_s64(f3, &v))
                     eq.genre[eq.genre_count++] = v;
+                htsmsg_destroy(z);
               }
             } else {
               if (!htsmsg_field_get_s64(f2, &v)) {
