@@ -555,7 +555,8 @@ rtsp_manage_descramble(session_t *rs)
       used++;
     } else if (!idnode_set_exists(found, &s->s_id)) {
       rtsp_slave_remove(rs, master, s);
-      si--;
+      if(si)
+          si--;
     }
   }
 
