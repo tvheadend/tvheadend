@@ -976,7 +976,7 @@ dvr_autorec_entry_class_year_list ( void *o, const char *lang )
   /* We create the list from highest to lowest since you're more
    * likely to want to record something recent.
    */
-  for (i = 2020; i > 1900 ; i-=5) {
+  for (i = 2025; i > 1900 ; i-=5) {
     e = htsmsg_create_map();
     htsmsg_add_u32(e, "key", i);
     htsmsg_add_u32(e, "val", i);
