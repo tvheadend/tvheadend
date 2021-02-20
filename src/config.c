@@ -391,6 +391,7 @@ config_migrate_v1 ( void )
       if ((str = htsmsg_get_str(e, "name"))) {
         htsmsg_add_str(m, "name", str);
         htsmsg_add_msg(channels, str, m);
+        m = NULL;
       }
     }
     htsmsg_destroy(c);
