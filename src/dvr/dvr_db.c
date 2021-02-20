@@ -2619,6 +2619,7 @@ dosave:
     if (dvr_autorec_entry_can_be_purged(de)) {
         dvr_entry_assign_broadcast(de, NULL);
         dvr_entry_destroy(de, 1);
+        de = NULL;
     }
   }
 
@@ -3882,9 +3883,9 @@ dvr_entry_class_channel_icon_url_get(void *o)
 const char *
 dvr_entry_get_image(const dvr_entry_t *de)
 {
-  if (de->de_bcast && de->de_bcast && de->de_bcast->image)
+  if (de && de->de_bcast && de->de_bcast->image)
     return de->de_bcast->image;
-  if (de->de_image)
+  if (de && de->de_image)
     return de->de_image;
   return NULL;
 }
@@ -3989,7 +3990,7 @@ dvr_entry_class_genre_get(void *o)
 {
   const dvr_entry_t *de = (dvr_entry_t *)o;
   htsmsg_t *l = htsmsg_create_list();
-  if (de->de_bcast && de->de_bcast) {
+  if (de && de->de_bcast) {
     epg_genre_t *eg;
     LIST_FOREACH(eg, &de->de_bcast->genre, link) {
       htsmsg_add_u32(l, NULL, eg->code);

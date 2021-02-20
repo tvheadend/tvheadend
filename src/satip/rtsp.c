@@ -673,6 +673,7 @@ rtsp_start
     }
     if (rs->mux == mux && rs->subs) {
       if (rs->no_data) {
+        dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
         tvhwarn(LS_SATIPS, "%i/%s/%i: subscription fails because mux %s can't tune",
                 rs->frontend, rs->session, rs->stream, buf);
         goto endclean;

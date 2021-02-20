@@ -297,6 +297,8 @@ multi:
   htsmsg_destroy(key);
   if (l == NULL)
     l = htsmsg_create_list();
+  if (item != NULL)
+    htsmsg_destroy(item);
   htsmsg_add_msg(m, "items", l);
   return m;
 }

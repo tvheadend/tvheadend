@@ -598,7 +598,6 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
   char ubuf[UUID_HEX_SIZE];
 
   conf = htsmsg_create_map();
-  days = htsmsg_create_list();
 
   if (autorec) { // autorec specific
     if (!(retval = htsmsg_get_u32(in, "minduration", &u32)) || add)
@@ -685,6 +684,7 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
 
   /* Weekdays only if present */
   if(!(retval = htsmsg_get_u32(in, "daysOfWeek", &u32))) {
+    days = htsmsg_create_list();
     int i;
     for (i = 0; i < 7; i++)
       if (u32 & (1 << i))
@@ -696,6 +696,7 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
   if (ch || !add) {
     htsmsg_add_str(conf, "channel", ch ? idnode_uuid_as_str(&ch->ch_id, ubuf) : "");
   }
+
   return conf;
 }
 
