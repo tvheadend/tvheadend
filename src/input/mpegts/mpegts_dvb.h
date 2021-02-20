@@ -38,6 +38,13 @@ typedef struct dvb_mux
    * Tuning information
    */
   dvb_mux_conf_t lm_tuning;
+
+  /*
+   * Frequencies for Mapping
+   */
+  uint32_t mm_dvb_satip_dvbt_freq;
+  uint32_t mm_dvb_satip_dvbc_freq;
+  uint32_t mm_dvb_satip_dvbs_freq;
 } dvb_mux_t;
 
 /*

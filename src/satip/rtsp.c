@@ -648,6 +648,24 @@ rtsp_start
         }
       }
 #endif
+      if (idnode_is_instance(&mn->mn_id, &dvb_network_class)) {
+        LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link) {
+          if (rs->dmc.dmc_fe_type == DVB_TYPE_T &&
+              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbt_freq) < 2000)
+            break;
+          if (rs->dmc.dmc_fe_type == DVB_TYPE_C &&
+              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbc_freq) < 2000)
+            break;
+          if (rs->dmc.dmc_fe_type == DVB_TYPE_S &&
+              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbs_freq) < 2000)
+            break;
+          }
+        if (mux) {
+          dmc = rs->dmc;
+          rs->perm_lock = 1;
+          break;
+        }
+      }
     }
     if (mux == NULL && mn2 &&
         (rtsp_muxcnf == MUXCNF_AUTO || rtsp_muxcnf == MUXCNF_KEEP)) {
