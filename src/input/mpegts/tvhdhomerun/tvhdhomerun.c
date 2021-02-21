@@ -154,8 +154,11 @@ tvhdhomerun_device_class_override_notify( void * obj, const char *lang )
   htsmsg_t *conf;
 
   conf = hts_settings_load("input/tvhdhomerun/adapters/%s", hd->hd_info.uuid);
-  if (conf)
-    conf = htsmsg_get_map(conf, "frontends");
+  if (conf) {
+    htsmsg_t *subconf = htsmsg_get_map(conf, "frontends");
+    htsmsg_destroy(conf);
+    conf = subconf;
+  }
 
   lock_assert(&global_lock);
 

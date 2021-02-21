@@ -101,8 +101,8 @@ static void
 parser_rstlog(parser_t *t, th_pkt_t *pkt)
 {
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
-  pkt_ref_dec(pkt); /* streaming_msg_create_pkt increses ref counter */
   streaming_message_t *clone = streaming_msg_clone(sm);
+  streaming_msg_free(sm);
   TAILQ_INSERT_TAIL (&t->prs_rstlog, clone, sm_link);
 }
 
