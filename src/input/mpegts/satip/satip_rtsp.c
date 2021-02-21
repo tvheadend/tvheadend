@@ -369,7 +369,9 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
   /* do the proper split */
   if (pcnt > 0) {
     snprintf(buf, sizeof(buf), "pids=%s%s", p[0], _w);
-    satip_rtsp_play0(hc, index++, stream, buf);
+    r = satip_rtsp_play0(hc, index++, stream, buf);
+    if (r < 0)
+      return r;
     for (i = 1; i < pcnt; i++) {
       snprintf(buf, sizeof(buf), "addpids=%s%s", p[i], _w);
       r = satip_rtsp_play0(hc, index++, stream, buf);

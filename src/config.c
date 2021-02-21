@@ -374,6 +374,7 @@ config_migrate_v1 ( void )
 
       /* Build entry */
       uuid_set(&chnu, NULL);
+      if(m != NULL) htsmsg_destroy(m);
       m = htsmsg_create_map();
       htsmsg_add_u32(m, "channelid", atoi(htsmsg_field_name(f)));
       htsmsg_add_str(m, "uuid", uuid_get_hex(&chnu, ubufc));

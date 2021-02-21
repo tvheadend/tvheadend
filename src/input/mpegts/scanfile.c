@@ -353,8 +353,10 @@ scanfile_create_network
       str++;
     }
   }
-  if (!reg)
+  if (!reg) {
+    free(buf);
     return -1;
+  }
 
   /* Network */
   str = buf;
