@@ -149,7 +149,6 @@ emm_seca
       match = memcmp(&data[3], &ra->ua[2], 6) == 0;
   } else if (data[0] == 0x84) {  // shared emm
     if (len >= 8) {
-      /* XXX this part is untested but should do no harm */
       PROVIDERS_FOREACH(ra, i, ep)
         if (memcmp(&data[5], &ep->sa[5], 3) == 0) {
           match = 1;
