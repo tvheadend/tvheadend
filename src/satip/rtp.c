@@ -140,8 +140,10 @@ satip_rtp_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 
   ol = dvb_table_append_crc32(out, ol, sizeof(out));
 
-  if (ol > 0 && (l = dvb_table_remux(mt, out, ol, &ob)) > 0)
+  if (ol > 0 && (l = dvb_table_remux(mt, out, ol, &ob)) > 0) {
     sbuf_append(&rtp->table_data, ob, l);
+    free(ob);
+  }
 }
 
 static void
