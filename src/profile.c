@@ -1005,6 +1005,11 @@ profile_sharer_destroy(profile_chain_t *prch)
         prsh->prsh_master = NULL;
       tvh_mutex_unlock(&prsh->prsh_queue_mutex);
     } else {
+#if ENABLE_LIBAV
+      if (prsh->prsh_transcoder)
+        transcoder_destroy(prsh->prsh_transcoder);
+      prsh->prsh_transcoder = NULL;
+#endif
       tvh_mutex_lock(&prsh->prsh_queue_mutex);
       prch->prch_sharer = NULL;
       prch->prch_post_share = NULL;
