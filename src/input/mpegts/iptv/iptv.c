@@ -335,6 +335,15 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   if (im->mm_active)
     return 0;
 
+  /* Reset Error Counters */
+  atomic_set(&mmi->tii_stats.unc, 0);
+  atomic_set(&mmi->tii_stats.cc, 0);
+  tvh_mutex_lock(&mmi->tii_stats_mutex);
+  mmi->tii_stats.te = 0;
+  mmi->tii_stats.ec_block = 0;
+  mmi->tii_stats.tc_block = 0;
+  tvh_mutex_unlock(&mmi->tii_stats_mutex);
+  
   /* Substitute things */
   if (im->mm_iptv_substitute && raw) {
     htsstr_substitute(raw, rawbuf, sizeof(rawbuf), '$', iptv_input_subst, mmi, buf, sizeof(buf));
