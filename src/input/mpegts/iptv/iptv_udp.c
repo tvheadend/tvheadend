@@ -37,7 +37,7 @@ iptv_udp_start
   ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
 {
   udp_connection_t *conn;
-  udp_multirecv_init(&im->im_um1, IPTV_PKTS, IPTV_PKT_PAYLOAD);
+  udp_multirecv_init(&im->im_um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
 
   /* Note: url->user is used for specifying multicast source address (SSM)
      here. The URL format is rtp://<srcaddr>@<grpaddr>:<port> */
@@ -56,7 +56,7 @@ iptv_udp_start
   if(im->mm_iptv_ret_url && rtcp_connect(&im->im_rtcp_info, im->mm_iptv_ret_url,
           NULL, 0, im->mm_iptv_interface, im->mm_nicename) == 0) {
       im->im_use_retransmission = 1;
-      udp_multirecv_init(&im->im_um2, IPTV_PKTS, IPTV_PKT_PAYLOAD);
+      udp_multirecv_init(&im->im_rtcp_info.um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
       sbuf_reset_and_alloc(&im->im_temp_buffer, IPTV_BUF_SIZE);
   }
 
@@ -72,9 +72,9 @@ iptv_udp_stop
 {
   im->im_data = NULL;
   tvh_mutex_unlock(&iptv_lock);
-  udp_multirecv_free(&im->im_um1);
-  if(&im->im_um2) {
-    udp_multirecv_free(&im->im_um2);
+  udp_multirecv_free(&im->im_um);
+  if(&im->im_rtcp_info.um) {
+    udp_multirecv_free(&im->im_rtcp_info.um);
   }
   if(&im->im_temp_buffer)
     sbuf_free(&im->im_temp_buffer);
@@ -88,7 +88,7 @@ iptv_udp_read ( iptv_input_t *mi, iptv_mux_t *im )
   struct iovec *iovec;
   ssize_t res = 0;
 
-  n = udp_multirecv_read(&im->im_um1, im->mm_iptv_fd, IPTV_PKTS, &iovec);
+  n = udp_multirecv_read(&im->im_um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
   if (n < 0)
     return -1;
 
@@ -124,7 +124,7 @@ iptv_rtp_read(iptv_mux_t *im, void (*pkt_cb)(iptv_mux_t *im, uint8_t *pkt, int l
   char is_ret_buffer = 0;
 
   if (im->im_use_retransmission) {
-    n = udp_multirecv_read(&im->im_um2, im->im_rtcp_info.connection_fd, IPTV_PKTS, &iovec);
+    n = udp_multirecv_read(&im->im_rtcp_info.um, im->im_rtcp_info.connection_fd, IPTV_PKTS, &iovec);
     if (n > 0 && !im->im_is_ce_detected) {
       tvhwarn(LS_IPTV, "RET receiving %d unexpected packets for %s", n,
           im->mm_nicename);
@@ -135,10 +135,10 @@ iptv_rtp_read(iptv_mux_t *im, void (*pkt_cb)(iptv_mux_t *im, uint8_t *pkt, int l
       im->im_rtcp_info.ce_cnt -= n;
       im->im_rtcp_info.last_received_sequence += n;
     } else {
-      n = udp_multirecv_read(&im->im_um1, im->mm_iptv_fd, IPTV_PKTS, &iovec);
+      n = udp_multirecv_read(&im->im_um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
     }
   } else
-    n = udp_multirecv_read(&im->im_um1, im->mm_iptv_fd, IPTV_PKTS, &iovec);
+    n = udp_multirecv_read(&im->im_um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
 
   if (n < 0)
     return -1;

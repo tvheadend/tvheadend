@@ -173,16 +173,16 @@ iptv_rtsp_header ( http_client_t *hc )
         hc->hc_rtcp_server_port, im->mm_iptv_interface, im->mm_nicename) == 0) {
       im->im_use_retransmission = 1;
     }
-    if (rp->start_position == 0) {
-      if (rtsp_play_decode(hc) == 0)
+    if (rtsp_play_decode(hc) == 0) {
+      if (rp->start_position == 0)
         rp->position = rp->start_position = hc->hc_rtsp_stream_start;
-      else
-        rp->position = rp->start_position = time(NULL);
-    } else if (rtsp_play_decode(hc) == 0) {
-      rp->position = hc->hc_rtsp_stream_start;
-      tvhdebug(LS_IPTV, "rtsp: position update: %" PRItime_t,
-          hc->hc_rtsp_stream_start);
-    }
+      else {
+        rp->position = hc->hc_rtsp_stream_start;
+        tvhdebug(LS_IPTV, "rtsp: position update: %" PRItime_t,
+            hc->hc_rtsp_stream_start);
+      }
+    } else
+      rp->position = rp->start_position = time(NULL);
     hc->hc_cmd = HTTP_CMD_NONE;
     tvh_mutex_lock(&global_lock);
     if (im->mm_active)
@@ -241,8 +241,8 @@ iptv_rtsp_data
       http_client_close(hc);
       return -1;
     }
-    udp_multirecv_init(&im->im_um1, IPTV_PKTS, IPTV_PKT_PAYLOAD);
-    udp_multirecv_init(&im->im_um2, IPTV_PKTS, IPTV_PKT_PAYLOAD);
+    udp_multirecv_init(&im->im_um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
+    udp_multirecv_init(&im->im_rtcp_info.um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
     sbuf_alloc_(&im->im_temp_buffer, IPTV_BUF_SIZE);
     break;
   case RTSP_CMD_GET_PARAMETER:
@@ -303,12 +303,11 @@ iptv_rtsp_start
     return SM_CODE_TUNING_FAILED;
   }
   rp = calloc(1, sizeof(*rp));
-  rtcp_init(&im->im_rtcp_info);
-  im->im_rtcp_info.connection = rtcp;
   rp->hc = hc;
   rp->path = strdup(u->path ?: "");
   rp->query = strdup(u->query ?: "");
 
+  rtcp_init(&im->im_rtcp_info);
   im->im_data = rp;
   im->mm_iptv_fd = rtp->fd;
   im->mm_iptv_connection = rtp;
@@ -340,8 +339,8 @@ iptv_rtsp_stop
     rtsp_teardown(rp->hc, rp->path, "");
   tvh_mutex_unlock(&iptv_lock);
   mtimer_disarm(&rp->alive_timer);
-  udp_multirecv_free(&im->im_um1);
-  udp_multirecv_free(&im->im_um2);
+  udp_multirecv_free(&im->im_um);
+  udp_multirecv_free(&im->im_rtcp_info.um);
   if (!play)
     http_client_close(rp->hc);
   free(rp->path);
@@ -463,16 +462,15 @@ void *rtsp_status_thread(void *p) {
 }
 
 static void rtsp_input(void *opaque, streaming_message_t *sm) {
-  int type = sm->sm_type;
   rtsp_st_t *pd = (rtsp_st_t*) opaque;
   iptv_mux_t *mux;
   streaming_skip_t *data;
   rtsp_priv_t *rp;
 
-  if(pd == NULL)
+  if(pd == NULL || sm == NULL)
     return;
 
-  switch (type) {
+  switch (sm->sm_type) {
   case SMT_GRACE:
     if (sm->sm_s != NULL)
       pd->im = (iptv_mux_t*) ((mpegts_service_t*) sm->sm_s)->s_dvb_mux;
@@ -522,7 +520,6 @@ static void rtsp_input(void *opaque, streaming_message_t *sm) {
 
 static htsmsg_t*
 rtsp_input_info(void *opaque, htsmsg_t *list) {
-
   return list;
 }
 

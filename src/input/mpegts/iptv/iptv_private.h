@@ -124,6 +124,7 @@ typedef struct {
   /* Connection to the RTCP remote */
   udp_connection_t *connection;
   int connection_fd;
+  udp_multirecv_t um;
 
   uint32_t source_ssrc;
   uint32_t my_ssrc;
@@ -172,6 +173,7 @@ struct iptv_mux
   uint32_t              mm_iptv_rtp_seq;
 
   sbuf_t                mm_iptv_buffer;
+  sbuf_t                im_temp_buffer;
 
   uint32_t              mm_iptv_buffer_limit;
 
@@ -189,11 +191,11 @@ struct iptv_mux
 
   void                 *im_opaque;
 
-  udp_multirecv_t      im_um1;
-  udp_multirecv_t      im_um2;
+  udp_multirecv_t      im_um;
+
   char                 im_use_retransmission;
-  sbuf_t               im_temp_buffer;
   char                 im_is_ce_detected;
+
   rtcp_t               im_rtcp_info;
 };
 

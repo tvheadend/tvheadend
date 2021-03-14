@@ -201,11 +201,12 @@ streaming_target_disconnect(streaming_pad_t *sp, streaming_target_t *st)
 streaming_message_t *
 streaming_msg_create(streaming_message_type_t type)
 {
-  streaming_message_t *sm = calloc(1, sizeof(streaming_message_t));
+  streaming_message_t *sm = malloc(sizeof(streaming_message_t));
   memoryinfo_alloc(&streaming_msg_memoryinfo, sizeof(*sm));
   sm->sm_type = type;
 #if ENABLE_TIMESHIFT
   sm->sm_time = 0;
+  sm->sm_s = NULL;
 #endif
   return sm;
 }
@@ -263,6 +264,7 @@ streaming_msg_clone(streaming_message_t *src)
   dst->sm_type      = src->sm_type;
 #if ENABLE_TIMESHIFT
   dst->sm_time      = src->sm_time;
+  dst->sm_s         = src->sm_s;
 #endif
 
   switch(src->sm_type) {
