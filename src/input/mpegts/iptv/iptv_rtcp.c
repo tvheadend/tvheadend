@@ -371,8 +371,8 @@ rtcp_send_nak(rtcp_t *rtcp_info, uint32_t ssrc, uint16_t seqn, uint16_t len)
           ssrc, n, (uint32_t )sizeof(network_buffer));
     }
 
-  // Cleanup
-  sbuf_free(&network_buffer);
+    // Cleanup
+    sbuf_free(&network_buffer);
   }
   return 0;
 }

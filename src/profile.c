@@ -641,8 +641,6 @@ profile_deliver(profile_chain_t *prch, streaming_message_t *sm)
     }
     sm2 = streaming_msg_create_data(SMT_START,
                                    streaming_start_copy(prsh->prsh_start_msg));
-    if (sm)
-      sm2->sm_s = sm->sm_s;
     streaming_target_deliver(prch->prch_post_share, sm2);
     prch->prch_start_pending = 0;
   }

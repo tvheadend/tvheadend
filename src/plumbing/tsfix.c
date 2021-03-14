@@ -237,10 +237,10 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   pkt->pkt_dts &= PTS_MASK;
 
   /* Subtract the transport wide start offset */
-  if (!tf->dts_offset_apply)
-    dts = pts_diff(ref, pkt->pkt_dts);
-  else
+  if (tf->dts_offset_apply)
     dts = pts_diff(ref, pkt->pkt_dts + tf->dts_offset);
+  else
+    dts = pts_diff(ref, pkt->pkt_dts);
 
   if (tfs->tfs_last_dts_norm == PTS_UNSET) {
     if (dts < 0 || pkt->pkt_err) {
@@ -632,7 +632,6 @@ static void
 tsfix_input(void *opaque, streaming_message_t *sm)
 {
   tsfix_t *tf = opaque;
-  timeshift_status_t *status;
 
   switch(sm->sm_type) {
   case SMT_PACKET:
@@ -642,7 +641,6 @@ tsfix_input(void *opaque, streaming_message_t *sm)
     }
     tsfix_input_packet(tf, sm);
     return;
-
   case SMT_START:
     tsfix_stop(tf);
     tsfix_start(tf, sm->sm_data);
@@ -650,26 +648,23 @@ tsfix_input(void *opaque, streaming_message_t *sm)
       streaming_msg_free(sm);
       return;
     }
-
     break;
-
   case SMT_STOP:
     tsfix_stop(tf);
     break;
   case SMT_TIMESHIFT_STATUS:
     if(tf->dts_offset == PTS_UNSET) {
+      timeshift_status_t *status;
       status = sm->sm_data;
       tf->dts_offset = status->shift;
     }
     streaming_msg_free(sm);
     return;
-
   case SMT_SKIP:
     if(tf->dts_offset != PTS_UNSET) {
       tf->dts_offset_apply = 1;
     }
     break;
-
   case SMT_GRACE:
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
@@ -679,7 +674,6 @@ tsfix_input(void *opaque, streaming_message_t *sm)
   case SMT_NOSTART_WARN:
   case SMT_MPEGTS:
   case SMT_SPEED:
-
     break;
   }
 
