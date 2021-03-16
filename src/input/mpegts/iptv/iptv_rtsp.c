@@ -492,7 +492,7 @@ static void rtsp_input(void *opaque, streaming_message_t *sm) {
     data = (streaming_skip_t*) sm->sm_data;
     rtsp_set_position(rp->hc,
         rp->range_start + ts_rescale(data->time, 1));
-    tvhinfo(LS_IPTV, "rtsp: skip: %" PRItime_t " + %" PRItime_t, rp->range_start,
+    tvhinfo(LS_IPTV, "rtsp: skip: %" PRItime_t " + %" PRId64, rp->range_start,
         ts_rescale(data->time, 1));
     streaming_msg_free(sm);
     break;
