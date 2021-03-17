@@ -26,6 +26,20 @@ Status
 
 [![Project Maintenance][maintenance-shield]
 
+[![traffic2badge](https://github.com/tvheadend/tvheadend/workflows/traffic2badge/badge.svg)](https://github.com/tvheadend/tvheadend/actions?query=workflow%3Atraffic2badge)
+[![Github last commit](https://img.shields.io/github/last-commit/tvheadend/tvheadend)](https://github.com/tvheadend/tvheadend)
+[![Github latest release](https://img.shields.io/github/v/release/tvheadend/tvheadend)](https://github.com/tvheadend/tvheadend/releases)
+[![Github license](https://img.shields.io/github/license/tvheadend/tvheadend)](./LICENSE)
+
+[![GitHub views](https://raw.githubusercontent.com/tvheadend/tvheadend/traffic/traffic-traffic-to-badge/views.svg)](https://github.com/tvheadend/tvheadend#README)
+[![GitHub views per week](https://raw.githubusercontent.com/tvheadend/tvheadend/traffic/traffic-traffic-to-badge/views_per_week.svg)](https://github.com/tvheadend/tvheadend#README)
+[![GitHub clones](https://raw.githubusercontent.com/tvheadend/tvheadend/traffic/traffic-traffic-to-badge/clones.svg)](https://github.com/tvheadend/tvheadend#README)
+[![GitHub clones per week](https://raw.githubusercontent.com/tvheadend/tvheadend/traffic/traffic-traffic-to-badge/clones_per_week.svg)](https://github.com/tvheadend/tvheadend#README)
+
+[![GitHub views](https://raw.githubusercontent.com/tvheadend/tvheadend/traffic/total_views.svg)](https://github.com/tvheadend/tvheadend#README)
+[![GitHub views per week](https://raw.githubusercontent.com/tvheadend/tvheadend/traffic/total_views_per_week.svg)](https://github.com/tvheadend/tvheadend#README)
+[![GitHub clones](https://raw.githubusercontent.com/tvheadend/tvheadend/traffic/total_clones.svg)](https://github.com/tvheadend/tvheadend#README)
+[![GitHub clones per week](https://raw.githubusercontent.com/tvheadend/tvheadend/traffic/total_clones_per_week.svg)](https://github.com/tvheadend/tvheadend#README)
 
 What it is
 ----------
