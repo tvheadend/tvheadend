@@ -14,10 +14,10 @@ Status
 [![GitHub Release Date][release-date-shield]][releases-link] 
 [![GitHub Releases][latest-download-shield]][traffic-link] 
 [![GitHub Releases][total-download-shield]][traffic-link] 
-[![Project Maintenance][maintenance-shield]] 
 [![GitHub Activity][activity-shield]][activity-link] 
 [![Open bugs][bugs-shield]][bugs-link] 
 [![Open enhancements][enhancements-shield]][enhancement-link]
+[![Project Maintenance][maintenance-shield]] 
 
 What it is
 ----------
