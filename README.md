@@ -1,4 +1,4 @@
-![TVHeadend Logo](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/satip-icon120.jpg) Tvheadend
+![TVHeadend Logo](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/satip-icon120.png) Tvheadend
 ========================================
 (c) 2006 - 2021 Tvheadend Foundation CIC
 
