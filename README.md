@@ -5,19 +5,27 @@ Tvheadend
 Status
 ------
 
-[![Build Status](https://travis-ci.org/tvheadend/tvheadend.svg?branch=master)](https://travis-ci.org/tvheadend/tvheadend) 
-[![Coverity Scan](https://scan.coverity.com/projects/2114/badge.svg)](https://scan.coverity.com/projects/2114) 
-[![Releases](https://img.shields.io/github/tag/tvheadend/tvheadend.svg?style=flat-square)](https://github.com/tvheadend/tvheadend/releases) 
-[![License](https://img.shields.io/badge/license-GPLv3-blue)](./LICENSE.md) 
-[![GitHub Activity](https://img.shields.io/github/commit-activity/y/tvheadend/tvheadend.svg?label=commits)] 
-[![GitHub Release][releases-shield]][releases-link] 
+[![Build Status](https://travis-ci.org/tvheadend/tvheadend.svg?branch=master)](https://travis-ci.org/tvheadend/tvheadend)
+[![Coverity Scan](https://scan.coverity.com/projects/2114/badge.svg)](https://scan.coverity.com/projects/2114)
+[![Releases](https://img.shields.io/github/tag/tvheadend/tvheadend.svg?style=flat-square)](https://github.com/tvheadend/tvheadend/releases)]
+[![License](https://img.shields.io/badge/license-GPLv3-blue)](./LICENSE.md) ![GitHub Activity](https://img.shields.io/github/commit-activity/y/tvheadend/tvheadend.svg?label=commits)
+
+[![GitHub Release][releases-shield]][releases-link]]
+
 [![GitHub Release Date][release-date-shield]][releases-link] 
-[![GitHub Releases][latest-download-shield]][traffic-link] 
-[![GitHub Releases][total-download-shield]][traffic-link] 
+
+[![GitHub Releases][latest-download-shield]][traffic-link]
+
+[![GitHub Releases][total-download-shield]][traffic-link]
+
 [![GitHub Activity][activity-shield]][activity-link] 
-[![Open bugs][bugs-shield]][bugs-link] 
+
+[![Open bugs][bugs-shield]][bugs-link]
+
 [![Open enhancements][enhancements-shield]][enhancement-link]
-[![Project Maintenance][maintenance-shield]] 
+
+[![Project Maintenance][maintenance-shield]
+
 
 What it is
 ----------
