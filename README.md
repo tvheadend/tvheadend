@@ -17,6 +17,8 @@ What it is
 
 Tvheadend is a TV streaming server and digital video recorder.
 
+![tvheadend front page](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/epg.png)
+
 It supports the following inputs:
 
   * DVB-C(2)
