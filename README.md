@@ -37,7 +37,7 @@ It supports the following outputs:
   * HTSP (own protocol)
   * SAT>IP
 
-Also can work with XMLTV EPG format
+Also it can work with XMLTV EPG format
 
 How to build for Linux
 ----------------------
