@@ -268,6 +268,7 @@ struct linuxdvb_satconf
   int                    ls_site_lat_south;
   int                    ls_site_lon_west;
   int                    ls_site_altitude;
+  int                    ls_rotor_weight;
   char                  *ls_rotor_extcmd;
   
   /*
