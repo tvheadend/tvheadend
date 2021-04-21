@@ -1282,10 +1282,10 @@ profile_pass_rewrite_sid_set (void *in, const void *v)
   const uint16_t *val = v;
   if (*val != pro->pro_rewrite_sid) {
     if (*val > 0) {
-      pro->pro_rewrite_pmt =
-      pro->pro_rewrite_pat =
-      pro->pro_rewrite_sdt =
-      pro->pro_rewrite_nit =
+      pro->pro_rewrite_pmt = 1;
+      pro->pro_rewrite_pat = 1;
+      pro->pro_rewrite_sdt = 1;
+      pro->pro_rewrite_nit = 1;
       pro->pro_rewrite_eit = 1;
     }
     pro->pro_rewrite_sid = *val;
@@ -1527,10 +1527,10 @@ profile_spawn_rewrite_sid_set (void *in, const void *v)
   const uint16_t *val = v;
   if (*val != pro->pro_rewrite_sid) {
     if (*val > 0) {
-      pro->pro_rewrite_pmt =
-      pro->pro_rewrite_pat =
-      pro->pro_rewrite_sdt =
-      pro->pro_rewrite_nit =
+      pro->pro_rewrite_pmt = 1;
+      pro->pro_rewrite_pat = 1;
+      pro->pro_rewrite_sdt = 1;
+      pro->pro_rewrite_nit = 1;
       pro->pro_rewrite_eit = 1;
     }
     pro->pro_rewrite_sid = *val;
