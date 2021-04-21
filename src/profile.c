@@ -1512,7 +1512,76 @@ typedef struct profile_mpegts_spawn {
   char *pro_mime;
   int   pro_killsig;
   int   pro_killtimeout;
+  uint16_t pro_rewrite_sid;
+  int pro_rewrite_pmt;
+  int pro_rewrite_pat;
+  int pro_rewrite_sdt;
+  int pro_rewrite_nit;
+  int pro_rewrite_eit;
 } profile_mpegts_spawn_t;
+
+static int
+profile_spawn_rewrite_sid_set (void *in, const void *v)
+{
+  profile_mpegts_spawn_t *pro = (profile_mpegts_spawn_t *)in;
+  const uint16_t *val = v;
+  if (*val != pro->pro_rewrite_sid) {
+    if (*val > 0) {
+      pro->pro_rewrite_pmt =
+      pro->pro_rewrite_pat =
+      pro->pro_rewrite_sdt =
+      pro->pro_rewrite_nit =
+      pro->pro_rewrite_eit = 1;
+    }
+    pro->pro_rewrite_sid = *val;
+    return 1;
+  }
+  return 0;
+}
+
+static int
+profile_spawn_int_set (void *in, const void *v, int *prop)
+{
+  profile_mpegts_spawn_t *pro = (profile_mpegts_spawn_t *)in;
+  int val = *(int *)v;
+  if (pro->pro_rewrite_sid > 0) val = 1;
+  if (val != *prop) {
+    *prop = val;
+    return 1;
+  }
+  return 0;
+}
+
+static int
+profile_spawn_rewrite_pmt_set (void *in, const void *v)
+{
+  return profile_spawn_int_set(in, v, &((profile_mpegts_spawn_t *)in)->pro_rewrite_pmt);
+}
+
+static int
+profile_spawn_rewrite_pat_set (void *in, const void *v)
+{
+  return profile_spawn_int_set(in, v, &((profile_mpegts_spawn_t *)in)->pro_rewrite_pat);
+}
+
+static int
+profile_spawn_rewrite_sdt_set (void *in, const void *v)
+{
+  return profile_spawn_int_set(in, v, &((profile_mpegts_spawn_t *)in)->pro_rewrite_sdt);
+}
+
+static int
+profile_spawn_rewrite_nit_set (void *in, const void *v)
+{
+  return profile_spawn_int_set(in, v, &((profile_mpegts_spawn_t *)in)->pro_rewrite_nit);
+}
+
+static int
+profile_spawn_rewrite_eit_set (void *in, const void *v)
+{
+  return profile_spawn_int_set(in, v, &((profile_mpegts_spawn_t *)in)->pro_rewrite_eit);
+}
+
 
 const idclass_t profile_mpegts_spawn_class =
 {
@@ -1527,6 +1596,10 @@ const idclass_t profile_mpegts_spawn_class =
     {
       .name   = N_("Spawn Settings"),
       .number = 2,
+    },
+    {
+      .name   = N_("Rewrite MPEG-TS SI Table(s) Settings"),
+      .number = 3,
     },
     {}
   },
@@ -1571,6 +1644,93 @@ const idclass_t profile_mpegts_spawn_class =
       .def.i    = 15,
       .group    = 2
     },
+    {
+      .type     = PT_U16,
+      .id       = "sid",
+      .name     = N_("Rewrite Service ID"),
+      .desc     = N_("Rewrite service identifier (SID) using the specified "
+                     "value (usually 1). Zero means no rewrite."),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_rewrite_sid),
+      .set      = profile_spawn_rewrite_sid_set,
+      .opts     = PO_EXPERT,
+      .def.i    = 1,
+      .group    = 3
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "rewrite_pmt",
+      .name     = N_("Rewrite PMT"),
+      .desc     = N_("Rewrite PMT (Program Map Table) packets to only "
+                     "include information about the currently-streamed "
+                     "service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_rewrite_pmt),
+      .set      = profile_spawn_rewrite_pmt_set,
+      .opts     = PO_EXPERT,
+      .def.i    = 1,
+      .group    = 3
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "rewrite_pat",
+      .name     = N_("Rewrite PAT"),
+      .desc     = N_("Rewrite PAT (Program Association Table) packets "
+                     "to only include information about the currently-"
+                     "streamed service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_rewrite_pat),
+      .set      = profile_spawn_rewrite_pat_set,
+      .opts     = PO_EXPERT,
+      .def.i    = 1,
+      .group    = 3
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "rewrite_sdt",
+      .name     = N_("Rewrite SDT"),
+      .desc     = N_("Rewrite SDT (Service Description Table) packets "
+                     "to only include information about the currently-"
+                     "streamed service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_rewrite_sdt),
+      .set      = profile_spawn_rewrite_sdt_set,
+      .opts     = PO_EXPERT,
+      .def.i    = 1,
+      .group    = 3
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "rewrite_nit",
+      .name     = N_("Rewrite NIT"),
+      .desc     = N_("Rewrite NIT (Network Information Table) packets "
+                     "to only include information about the currently-"
+                     "streamed service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_rewrite_nit),
+      .set      = profile_spawn_rewrite_nit_set,
+      .opts     = PO_EXPERT,
+      .def.i    = 1,
+      .group    = 3
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "rewrite_eit",
+      .name     = N_("Rewrite EIT"),
+      .desc     = N_("Rewrite EIT (Event Information Table) packets "
+                     "to only include information about the currently-"
+                     "streamed service. "
+                     "Rewrite can be unset only if 'Rewrite Service ID' "
+                     "is set to zero."),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_rewrite_eit),
+      .set      = profile_spawn_rewrite_eit_set,
+      .opts     = PO_EXPERT,
+      .def.i    = 1,
+      .group    = 3
+    },
     { }
   }
 };
@@ -1589,13 +1749,13 @@ profile_mpegts_spawn_reopen(profile_chain_t *prch,
     memset(&c, 0, sizeof(c));
   if (c.m_type != MC_RAW)
     c.m_type = MC_PASS;
+  c.u.pass.m_rewrite_sid = pro->pro_rewrite_sid;
+  c.u.pass.m_rewrite_pat = pro->pro_rewrite_pat;
+  c.u.pass.m_rewrite_pmt = pro->pro_rewrite_pmt;
+  c.u.pass.m_rewrite_sdt = pro->pro_rewrite_sdt;
+  c.u.pass.m_rewrite_nit = pro->pro_rewrite_nit;
+  c.u.pass.m_rewrite_eit = pro->pro_rewrite_eit;
 
-  c.u.pass.m_rewrite_sid = 1;
-  c.u.pass.m_rewrite_pat = 1;
-  c.u.pass.m_rewrite_pmt = 1;
-  c.u.pass.m_rewrite_sdt = 1;
-  c.u.pass.m_rewrite_nit = 1;
-  c.u.pass.m_rewrite_eit = 1;
   mystrset(&c.u.pass.m_cmdline, pro->pro_cmdline);
   mystrset(&c.u.pass.m_mime, pro->pro_mime);
   c.u.pass.m_killsig = pro->pro_killsig;
@@ -1638,6 +1798,12 @@ profile_mpegts_spawn_builder(void)
   pro->pro_free   = profile_mpegts_spawn_free;
   pro->pro_reopen = profile_mpegts_spawn_reopen;
   pro->pro_open   = profile_mpegts_spawn_open;
+  pro->pro_rewrite_sid = 1;
+  pro->pro_rewrite_pat = 1;
+  pro->pro_rewrite_pmt = 1;
+  pro->pro_rewrite_sdt = 1;
+  pro->pro_rewrite_nit = 1;
+  pro->pro_rewrite_eit = 1;
   pro->pro_killsig = TVH_KILL_TERM;
   pro->pro_killtimeout = 15;
   return (profile_t *)pro;
