@@ -40,7 +40,7 @@ struct lang_str;
 #define DVB_PAT_PID                   0x00
 #define DVB_CAT_PID                   0x01
 #define DVB_TSDT_PID                  0x02
-#define DVB_NIT_PID                   0x0F
+#define DVB_NIT_PID                   0x10
 #define DVB_SDT_PID                   0x11
 #define DVB_BAT_PID                   0x11
 #define DVB_EIT_PID                   0x12
