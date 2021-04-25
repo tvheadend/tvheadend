@@ -450,9 +450,22 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_rewrite_nit = !!pm->m_config.u.pass.m_rewrite_nit;
   pm->pm_rewrite_eit = !!pm->m_config.u.pass.m_rewrite_eit;
 
+  if (pm->pm_pmt_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
+    tvhwarn(LS_PASS, "SDT PID shared with A/V, rewrite disabled");
+    pm->pm_rewrite_sdt = 0;
+  }
+  if (pm->pm_pmt_pid == DVB_NIT_PID && pm->pm_rewrite_nit) {
+    tvhwarn(LS_PASS, "NIT PID shared with A/V, rewrite disabled");
+    pm->pm_rewrite_nit = 0;
+  }
+  if (pm->pm_pmt_pid == DVB_EIT_PID && pm->pm_rewrite_eit) {
+    tvhwarn(LS_PASS, "EIT PID shared with A/V, rewrite disabled");
+    pm->pm_rewrite_eit = 0;
+  }
+
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
-    tvhwarn(LS_PASS, "PID: %i; Type: %i; Is Video: %i; Is Audio: %i", ssc->es_pid, ssc->es_type, SCT_ISVIDEO(ssc->es_type), SCT_ISAUDIO(ssc->es_type));
+//    tvhwarn(LS_PASS, "PID: %i; Type: %i; Is Video: %i; Is Audio: %i", ssc->es_pid, ssc->es_type, SCT_ISVIDEO(ssc->es_type), SCT_ISAUDIO(ssc->es_type));
     if (!SCT_ISVIDEO(ssc->es_type) && !SCT_ISAUDIO(ssc->es_type))
       continue;
     if (ssc->es_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
@@ -628,7 +641,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
       pid = (tsb[1] & 0x1f) << 8 | tsb[2];
       l = mpegts_word_count(tsb, len2, 0x001FFF00);
 
-      tvhwarn(LS_PASS, "PID out of if: %i", pid);
+//      tvhwarn(LS_PASS, "PID out of if: %i", pid);
 
       /* Process */
       if ( (pm->m_config.u.pass.m_rewrite_pat && pid == DVB_PAT_PID) ||
@@ -637,7 +650,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
            (pm->pm_rewrite_nit && pid == DVB_NIT_PID) ||
            (pm->pm_rewrite_eit && pid == DVB_EIT_PID) ) {
 
-        tvhwarn(LS_PASS, "  PID in if: %i", pid);
+//        tvhwarn(LS_PASS, "  PID in if: %i", pid);
 
         /* Flush */
         if (len)
