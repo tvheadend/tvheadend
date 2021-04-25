@@ -452,19 +452,21 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_rewrite_nit = !!pm->m_config.u.pass.m_rewrite_nit;
   pm->pm_rewrite_eit = !!pm->m_config.u.pass.m_rewrite_eit;
 
-  if (pm->pm_pmt_pid == DVB_SDT_PID && pm->pm_rewrite_pmt) {
+  if (pm->pm_pmt_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
     tvhwarn(LS_PASS, "PMT PID shared with A/V, rewrite disabled");
     pm->pm_rewrite_pmt = 0;
-  }
-  if (pm->pm_pmt_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
     tvhwarn(LS_PASS, "SDT PID shared with A/V, rewrite disabled");
     pm->pm_rewrite_sdt = 0;
   }
   if (pm->pm_pmt_pid == DVB_NIT_PID && pm->pm_rewrite_nit) {
+    tvhwarn(LS_PASS, "PMT PID shared with A/V, rewrite disabled");
+    pm->pm_rewrite_pmt = 0;
     tvhwarn(LS_PASS, "NIT PID shared with A/V, rewrite disabled");
     pm->pm_rewrite_nit = 0;
   }
   if (pm->pm_pmt_pid == DVB_EIT_PID && pm->pm_rewrite_eit) {
+    tvhwarn(LS_PASS, "PMT PID shared with A/V, rewrite disabled");
+    pm->pm_rewrite_pmt = 0;
     tvhwarn(LS_PASS, "EIT PID shared with A/V, rewrite disabled");
     pm->pm_rewrite_eit = 0;
   }
@@ -673,13 +675,13 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 
         /* SDT */
         } else if (pid == DVB_SDT_PID) {
-          tvhwarn(LS_PASS, "    DVB_SDT_PID");
+//          tvhwarn(LS_PASS, "    DVB_SDT_PID");
           
           dvb_table_parse(&pm->pm_sdt, "-", tsb, l, 1, 0, pass_muxer_sdt_cb);
 
         /* NIT */
         } else if (pid == DVB_NIT_PID) {
-          tvhwarn(LS_PASS, "    DVB_NIT_PID");
+//          tvhwarn(LS_PASS, "    DVB_NIT_PID");
         
           dvb_table_parse(&pm->pm_nit, "-", tsb, l, 1, 0, pass_muxer_nit_cb);
 
