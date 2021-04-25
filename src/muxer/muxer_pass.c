@@ -48,6 +48,7 @@ typedef struct pass_muxer {
   streaming_start_t *pm_ss;
 
   /* TS muxing */
+  uint8_t  pm_rewrite_pmt;
   uint8_t  pm_rewrite_sdt;
   uint8_t  pm_rewrite_nit;
   uint8_t  pm_rewrite_eit;
@@ -446,10 +447,15 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
     pm->pm_dst_onid  = pm->pm_src_onid;
   }
   pm->pm_pmt_pid     = ss->ss_pmt_pid;
+  pm->pm_rewrite_pmt = !!pm->m_config.u.pass.m_rewrite_pmt;
   pm->pm_rewrite_sdt = !!pm->m_config.u.pass.m_rewrite_sdt;
   pm->pm_rewrite_nit = !!pm->m_config.u.pass.m_rewrite_nit;
   pm->pm_rewrite_eit = !!pm->m_config.u.pass.m_rewrite_eit;
 
+  if (pm->pm_pmt_pid == DVB_SDT_PID && pm->pm_rewrite_pmt) {
+    tvhwarn(LS_PASS, "PMT PID shared with A/V, rewrite disabled");
+    pm->pm_rewrite_pmt = 0;
+  }
   if (pm->pm_pmt_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
     tvhwarn(LS_PASS, "SDT PID shared with A/V, rewrite disabled");
     pm->pm_rewrite_sdt = 0;
@@ -482,7 +488,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
     }
   }
 
-  if (pm->m_config.u.pass.m_rewrite_pmt) {
+  if (pm->pm_rewrite_pmt) {
 
     if (pm->pm_ss)
       streaming_start_unref(pm->pm_ss);
@@ -632,7 +638,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   size_t  len = pktbuf_len(pb), len2;
   
   /* Rewrite PAT/PMT in operation */
-  if (pm->m_config.u.pass.m_rewrite_pat || pm->m_config.u.pass.m_rewrite_pmt ||
+  if (pm->m_config.u.pass.m_rewrite_pat || pm->pm_rewrite_pmt ||
       pm->pm_rewrite_sdt || pm->pm_rewrite_nit || pm->pm_rewrite_eit) {
 
     for (tsb = pktbuf_ptr(pb), len2 = pktbuf_len(pb), len = 0;
@@ -645,7 +651,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 
       /* Process */
       if ( (pm->m_config.u.pass.m_rewrite_pat && pid == DVB_PAT_PID) ||
-           (pm->m_config.u.pass.m_rewrite_pmt && pid == pm->pm_pmt_pid) ||
+           (pm->pm_rewrite_pmt && pid == pm->pm_pmt_pid) ||
            (pm->pm_rewrite_sdt && pid == DVB_SDT_PID) ||
            (pm->pm_rewrite_nit && pid == DVB_NIT_PID) ||
            (pm->pm_rewrite_eit && pid == DVB_EIT_PID) ) {
