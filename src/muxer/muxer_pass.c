@@ -670,7 +670,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 
         /* SDT */
         } else if (pid == DVB_SDT_PID) {
-          
+        
           dvb_table_parse(&pm->pm_sdt, "-", tsb, l, 1, 0, pass_muxer_sdt_cb);
 
         /* NIT */
