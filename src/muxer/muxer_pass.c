@@ -648,6 +648,8 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
       pid = (tsb[1] & 0x1f) << 8 | tsb[2];
       l = mpegts_word_count(tsb, len2, 0x001FFF00);
 
+      tvhwarn(LS_PASS, "PID: %i", pid);
+
       /* Process */
       if ( (pm->m_config.u.pass.m_rewrite_pat && pid == DVB_PAT_PID) ||
            (pm->pm_rewrite_pmt && pid == pm->pm_pmt_pid) ||
