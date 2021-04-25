@@ -452,7 +452,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
-    tvhwarn(LS_PASS, "PID: %s; Type: %s; Is Video: %s; Is Audio: %s", ssc->es_pid, ssc->es_type, SCT_ISVIDEO(ssc->es_type), SCT_ISAUDIO(ssc->es_type));
+    tvhwarn(LS_PASS, "PID: %i; Type: %i; Is Video: %i; Is Audio: %i", ssc->es_pid, ssc->es_type, SCT_ISVIDEO(ssc->es_type), SCT_ISAUDIO(ssc->es_type));
     if (!SCT_ISVIDEO(ssc->es_type) && !SCT_ISAUDIO(ssc->es_type))
       continue;
     if (ssc->es_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
