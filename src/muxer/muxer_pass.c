@@ -473,7 +473,6 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
-//    tvhwarn(LS_PASS, "PID: %i; Type: %i; Is Video: %i; Is Audio: %i", ssc->es_pid, ssc->es_type, SCT_ISVIDEO(ssc->es_type), SCT_ISAUDIO(ssc->es_type));
     if (!SCT_ISVIDEO(ssc->es_type) && !SCT_ISAUDIO(ssc->es_type))
       continue;
     if (ssc->es_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
@@ -649,16 +648,12 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
       pid = (tsb[1] & 0x1f) << 8 | tsb[2];
       l = mpegts_word_count(tsb, len2, 0x001FFF00);
 
-//      tvhwarn(LS_PASS, "PID out of if: %i", pid);
-
       /* Process */
       if ( (pm->m_config.u.pass.m_rewrite_pat && pid == DVB_PAT_PID) ||
            (pm->pm_rewrite_pmt && pid == pm->pm_pmt_pid) ||
            (pm->pm_rewrite_sdt && pid == DVB_SDT_PID) ||
            (pm->pm_rewrite_nit && pid == DVB_NIT_PID) ||
            (pm->pm_rewrite_eit && pid == DVB_EIT_PID) ) {
-
-//        tvhwarn(LS_PASS, "  PID in if: %i", pid);
 
         /* Flush */
         if (len)
@@ -675,13 +670,11 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 
         /* SDT */
         } else if (pid == DVB_SDT_PID) {
-//          tvhwarn(LS_PASS, "    DVB_SDT_PID");
           
           dvb_table_parse(&pm->pm_sdt, "-", tsb, l, 1, 0, pass_muxer_sdt_cb);
 
         /* NIT */
         } else if (pid == DVB_NIT_PID) {
-//          tvhwarn(LS_PASS, "    DVB_NIT_PID");
         
           dvb_table_parse(&pm->pm_nit, "-", tsb, l, 1, 0, pass_muxer_nit_cb);
 
