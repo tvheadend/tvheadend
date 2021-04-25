@@ -452,6 +452,10 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_rewrite_nit = !!pm->m_config.u.pass.m_rewrite_nit;
   pm->pm_rewrite_eit = !!pm->m_config.u.pass.m_rewrite_eit;
 
+  if (pm->pm_pmt_pid == DVB_SDT_PID && pm->pm_rewrite_pmt) {
+    tvhwarn(LS_PASS, "PMT PID shared with A/V, rewrite disabled");
+    pm->pm_rewrite_pmt = 0;
+  }
   if (pm->pm_pmt_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
     tvhwarn(LS_PASS, "PMT PID shared with A/V, rewrite disabled");
     pm->pm_rewrite_pmt = 0;
