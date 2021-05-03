@@ -1232,7 +1232,7 @@ next:
     while (*data && (*data == '\r' || *data == '\n')) data++;
   }
   bouquet_completed(bq, seen);
-  tvhinfo(LS_BOUQUET, "parsed Enigma%d bouquet %s (%d services)", ver, bq->bq_name, seen);
+  tvhinfo(LS_BOUQUET, "parsed Enigma%d bouquet %s (%u services)", ver, bq->bq_name, seen);
   return 0;
 }
 
