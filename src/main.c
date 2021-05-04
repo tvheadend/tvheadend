@@ -1356,7 +1356,7 @@ main(int argc, char **argv)
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
   tvhlog(LOG_NOTICE, LS_START, "HTS Tvheadend version %s started, "
-         "running as PID:%u UID:%u GID:%u, CWD:%s CNF:%s",
+         "running as PID:%d UID:%u GID:%u, CWD:%s CNF:%s",
          tvheadend_version,
          getpid(), getuid(), getgid(), getcwd(buf, sizeof(buf)),
          hts_settings_get_root());
