@@ -857,10 +857,10 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
   if (tvhtrace_enabled()) {
     const char *pro_name = prch->prch_pro ? profile_get_name(prch->prch_pro) : "<none>";
     if (ch)
-      tvhtrace(LS_SUBSCRIPTION, "%04X: creating subscription for %s weight %d using profile %s",
+      tvhtrace(LS_SUBSCRIPTION, "%04X: creating subscription for %s weight %u using profile %s",
                shortid(s), channel_get_name(ch, channel_blank_name), weight, pro_name);
     else
-      tvhtrace(LS_SUBSCRIPTION, "%04X: creating subscription for service %s weight %d using profile %s",
+      tvhtrace(LS_SUBSCRIPTION, "%04X: creating subscription for service %s weight %u using profile %s",
                shortid(s), service->s_nicename, weight, pro_name);
   }
   s->ths_channel = ch;
