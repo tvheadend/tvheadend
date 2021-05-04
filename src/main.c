@@ -1141,7 +1141,7 @@ main(int argc, char **argv)
           int i;
           for (i = 0; i < gnum; i++)
             snprintf(buf + strlen(buf), sizeof(buf) - 1 - strlen(buf),
-                     ",%d", glist[i]);
+                     ",%u", glist[i]);
           tvhlog(LOG_ALERT, LS_START,
                  "setgroups(%s) failed, do you have permission?", buf+1);
           return 1;
@@ -1171,12 +1171,12 @@ main(int argc, char **argv)
 
   if (gid != -1 && (getgid() != gid) && setgid(gid)) {
     tvhlog(LOG_ALERT, LS_START,
-           "setgid(%d) failed, do you have permission?", gid);
+           "setgid(%u) failed, do you have permission?", gid);
     return 1;
   }
   if (uid != -1 && (getuid() != uid) && setuid(uid)) {
     tvhlog(LOG_ALERT, LS_START,
-           "setuid(%d) failed, do you have permission?", uid);
+           "setuid(%u) failed, do you have permission?", uid);
     return 1;
   }
 
@@ -1356,7 +1356,7 @@ main(int argc, char **argv)
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
   tvhlog(LOG_NOTICE, LS_START, "HTS Tvheadend version %s started, "
-         "running as PID:%d UID:%d GID:%d, CWD:%s CNF:%s",
+         "running as PID:%u UID:%u GID:%u, CWD:%s CNF:%s",
          tvheadend_version,
          getpid(), getuid(), getgid(), getcwd(buf, sizeof(buf)),
          hts_settings_get_root());
