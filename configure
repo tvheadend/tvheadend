@@ -600,6 +600,7 @@ if enabled ffmpeg_static; then
     #check_cc_header nvEncodeAPI || \
     #  die "NVENC library (https://developer.nvidia.com/nvidia-video-codec-sdk) not found"
     enable nvenc
+    enable hwaccels
   else
     disable nvenc
   fi
