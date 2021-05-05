@@ -172,6 +172,7 @@ CONFIGURE := FFMPEG_PREFIX=$(EPREFIX) \
              PKG_CONFIG=$(ROOTDIR)/support/pkg-config.ffmpeg \
              ./configure --prefix=/ffmpeg --enable-static --disable-shared
 CONFIGURE_PI := CC="$(COMPILER) $(CFLAGS_PI)" $(CONFIGURE)
+CONFIGURE_FFMPEG := $(CONFIGURE)
 
 # ##############################################################################
 # NASM
@@ -561,8 +562,15 @@ endif
 
 ifeq (yes,$(CONFIG_NVENC))
 
-EXTLIBS  += nvenc
-ENCODERS += h264_nvenc hevc_nvenc
+## YOU MUST INSTALL CUDA from NVIDIA for "libnpp" 
+EXTLIBS   += nvenc cuvid libnpp
+ENCODERS  += h264_nvenc hevc_nvenc
+DECODERS  += h264_cuvid hevc_cuvid
+HWACCELS  += h264_nvdec hevc_nvdec vp8_nvdec vp9_nvdec mjpeg_nvdec mpeg1_nvdec mpeg2_nvdec mpeg4_nvdec
+ECFLAGS   += -I/usr/local/cuda/include
+
+## NVIDIA LIB for "libnpp" 
+CONFIGURE_FFMPEG += --extra-ldflags=-L/usr/local/cuda/lib64
 
 $(LIB_ROOT)/$(FFNVCODEC)/.tvh_download:
 	$(call DOWNLOAD,$(FFNVCODEC_URL),$(LIB_ROOT)/$(FFNVCODEC_TB),$(FFNVCODEC_SHA1))
@@ -678,7 +686,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBOPUS)/.tvh_build \
 		$(LIB_ROOT)/$(FFNVCODEC)/.tvh_build \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_download
-	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE) \
+	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE_FFMPEG) \
 		--disable-all \
 		--enable-gpl \
 		--enable-nonfree \
