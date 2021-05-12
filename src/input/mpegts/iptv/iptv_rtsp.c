@@ -256,7 +256,7 @@ iptv_rtsp_data
     break;
   default:
     if (len > 0) {
-      tvherror(LS_IPTV, "unknown data %zd received for '%s':\n%s", len,
+      tvherror(LS_IPTV, "unknown data %zu received for '%s':\n%s", len,
           im->mm_iptv_url_raw, (char* )buf);
     }
   }

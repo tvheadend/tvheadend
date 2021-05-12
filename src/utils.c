@@ -361,7 +361,7 @@ char *utf8_validate_inplace(char *s)
 static void
 sbuf_alloc_fail(size_t len)
 {
-  fprintf(stderr, "Unable to allocate %zd bytes\n", len);
+  fprintf(stderr, "Unable to allocate %zu bytes\n", len);
   abort();
 }
 
@@ -667,12 +667,12 @@ makedirs ( int subsys, const char *inpath, int mode,
             err = 0;
             tvhwarn(subsys, "Unable to change directory permissions "
                             "to \"%o\" for \"%s\" (keeping \"%o\")",
-                            mode, path, FILE_MODE_BITS(st.st_mode));
+                            (unsigned int)mode, path, FILE_MODE_BITS(st.st_mode));
             mode = FILE_MODE_BITS(st.st_mode);
           }
         }
         tvhtrace(subsys, "Creating directory \"%s\" with octal permissions "
-                         "\"%o\" gid %d uid %d", path, mode, gid, uid);
+                         "\"%o\" gid %u uid %u", path, (unsigned int)mode, gid, uid);
       } else {
         err   = S_ISDIR(st.st_mode) ? 0 : 1;
         errno = ENOTDIR;

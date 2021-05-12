@@ -164,7 +164,7 @@ static ssize_t _read_msg ( timeshift_file_t *tsf, int fd, streaming_message_t **
 
   /* Wrong data size */
   if (sz > 1024 * 1024) {
-    tvhtrace(LS_TIMESHIFT, "wrong msg size (%lld/0x%llx)", (long long)sz, (long long)sz);
+    tvhtrace(LS_TIMESHIFT, "wrong msg size (%lu/0x%lx)", sz, sz);
     return -1;
   }
 
@@ -493,7 +493,7 @@ static void timeshift_fill_status
   }
   status->full = ts->full;
   tvhtrace(LS_TIMESHIFT, "ts %d status start %"PRId64" end %"PRId64
-                        " current %"PRId64" state %d",
+                        " current %"PRId64" state %u",
            ts->id, start, end, current_time, ts->state);
   status->shift = ts_rescale_inv(end - current_time, 1000000);
   if (active) {
@@ -745,7 +745,7 @@ void *timeshift_reader ( void *p )
               }
               break;
             default:
-              tvherror(LS_TIMESHIFT, "ts %d invalid/unsupported skip type: %d", ts->id, skip->type);
+              tvherror(LS_TIMESHIFT, "ts %d invalid/unsupported skip type: %u", ts->id, skip->type);
               skip = NULL;
               break;
           }
@@ -826,7 +826,7 @@ void *timeshift_reader ( void *p )
         /* Report error */
         skip->type = SMT_SKIP_ERROR;
         skip       = NULL;
-        tvhdebug(LS_TIMESHIFT, "ts %d skip failed (%d)", ts->id, sm ? sm->sm_type : -1);
+        tvhdebug(LS_TIMESHIFT, "ts %d skip failed (%u)", ts->id, sm ? sm->sm_type : -1);
       }
       streaming_target_deliver2(ts->output, ctrl);
     } else {

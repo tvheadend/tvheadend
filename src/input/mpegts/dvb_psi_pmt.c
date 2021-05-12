@@ -627,7 +627,7 @@ dvb_pmt_callback
   TAILQ_FOREACH(es, &s->s_components.set_filter, es_filter_link) {
     if (es->es_type != SCT_HBBTV) continue;
     tvhdebug(mt->mt_subsys, "%s:    install hbbtv pid %04X (%d)",
-             mt->mt_name, es->es_pid, es->es_pid);
+             mt->mt_name, (unsigned int)es->es_pid, es->es_pid);
     mpegts_table_add(mm, DVB_HBBTV_BASE, DVB_HBBTV_MASK,
                      dvb_hbbtv_callback, es, "hbbtv", LS_TBL_BASE,
                      MT_CRC | MT_FULL | MT_QUICKREQ | MT_ONESHOT,

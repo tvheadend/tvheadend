@@ -123,7 +123,7 @@ mpegts_psi_section_reassemble0
 
   if(crc && tvh_crc32(p, tsize, 0xffffffff)) {
     if (cb && tvhlog_limit(&mt->mt_err_log, 10)) {
-      tvhwarn(mt->mt_subsys, "%s: %s: invalid checksum (len %i, errors %zi)",
+      tvhwarn(mt->mt_subsys, "%s: %s: invalid checksum (len %i, errors %zu)",
               mt->mt_name, logpref, tsize, mt->mt_err_log.count);
     }
     return -1;
@@ -299,7 +299,7 @@ dvb_table_end
         rem |= st->sections[sa];
       if (rem) return 1;
       tvhtrace(mt->mt_subsys, "%s:  tableid %02X extraid %016" PRIx64 " completed",
-               mt->mt_name, st->tableid, st->extraid);
+               mt->mt_name, (unsigned int)st->tableid, st->extraid);
       st->complete = 1;
       mt->mt_incomplete--;
       return dvb_table_complete(mt);
@@ -333,7 +333,7 @@ dvb_table_begin
     return -1;
 
   tvhtrace(mt->mt_subsys, "%s: pid %02X tableid %02X extraid %016" PRIx64 " len %d",
-           mt->mt_name, mt->mt_pid, tableid, extraid, len);
+           mt->mt_name, (unsigned int)mt->mt_pid, (unsigned int)tableid, extraid, len);
 
   /* Section info */
   if (sect && ret) {
@@ -408,7 +408,7 @@ dvb_table_reset(mpegts_psi_table_t *mt)
 {
   mpegts_psi_table_state_t *st;
 
-  tvhtrace(mt->mt_subsys, "%s: pid %02X complete reset", mt->mt_name, mt->mt_pid);
+  tvhtrace(mt->mt_subsys, "%s: pid %02X complete reset", mt->mt_name, (unsigned int)mt->mt_pid);
   mt->mt_incomplete = 0;
   mt->mt_complete   = 0;
   mt->mt_last_complete = 0;

@@ -61,7 +61,7 @@ void tvhlogv           ( const char *file, int line, int severity,
                          int subsys, const char *fmt, va_list *args );
 void _tvhlog           ( const char *file, int line, int severity,
                          int subsys, const char *fmt, ... )
-  __attribute__((format(printf,5,6)));
+                       __attribute__((format(printf,5,6)));
 void _tvhlog_hexdump   ( const char *file, int line, int severity,
                          int subsys, const uint8_t *data, ssize_t len );
 static inline void tvhlog_limit_reset ( tvhlog_limit_t *limit )
@@ -243,12 +243,15 @@ static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
   abort(); \
 } while (0)
 
-void tvhlog_backtrace_printf(const char *fmt, ...);
+void tvhlog_backtrace_printf(const char *fmt, ...)
+    __attribute__ ((format (printf, 1, 2)));
 
 #if ENABLE_TRACE
-void tvhdbg(int subsys, const char *fmt, ...);
+void tvhdbg(int subsys, const char *fmt, ...)
+    __attribute__ ((format (printf, 2, 3)));
 #else
-static inline void tvhdbg(int subsys, const char *fmt, ...) {};
+static inline void tvhdbg(int subsys, const char *fmt, ...) 
+    __attribute__ ((format (printf, 2, 3))) {};
 #endif
 
 #endif /* __TVH_LOGGING_H__ */

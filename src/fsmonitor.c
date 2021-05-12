@@ -73,7 +73,7 @@ fsmonitor_thread ( void* p )
       if (i > c)
         break;
       tvhtrace(LS_FSMONITOR, "event fd %d name %s mask %08X",
-               ev->wd, ev->len ? ev->name : NULL, ev->mask);
+               ev->wd, ev->len ? ev->name : "<NULL>", ev->mask);
 
       /* Find */
       // TODO: make this more efficient (especially if number of
@@ -165,7 +165,7 @@ fsmonitor_add ( const char *path, fsmonitor_t *fsm )
 
     /* Setup */
     fmp->fmp_path = strdup(path);
-    tvhdebug(LS_FSMONITOR, "watch %s", fmp->fmp_path);
+    tvhdebug(LS_FSMONITOR, "watch %s", fmp->fmp_path == NULL ? "<NULL>" : fmp->fmp_path);
   } else {
     free(skel);
   }

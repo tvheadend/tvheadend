@@ -367,8 +367,8 @@ rtcp_send_nak(rtcp_t *rtcp_info, uint32_t ssrc, uint16_t seqn, uint16_t len)
     n = udp_write(uc, network_buffer.sb_data, network_buffer.sb_ptr, &uc->peer);
     if (n) {
       tvhwarn(LS_IPTV,
-          "RTCP: Sending NAK report for SSRC 0x%x failed, no data send %d %d",
-          ssrc, n, (uint32_t )sizeof(network_buffer));
+          "RTCP: Sending NAK report for SSRC 0x%x failed, no data send %u %lu",
+          ssrc, n, sizeof(network_buffer));
     }
 
     // Cleanup

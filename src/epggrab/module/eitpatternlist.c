@@ -81,7 +81,7 @@ void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l, int flags
     pattern->filter = filter;
     pattern->langs = langs;
     if (regex_compile(&pattern->compiled, pattern->text, flags, LS_EPGGRAB)) {
-      tvhwarn(LS_EPGGRAB, "error compiling pattern \"%s\"", pattern->text);
+      tvhwarn(LS_EPGGRAB, "error compiling pattern \"%s\"", pattern->text == NULL ? "<NULL>" : pattern->text );
       free(pattern->langs);
       free(pattern->text);
       free(pattern);

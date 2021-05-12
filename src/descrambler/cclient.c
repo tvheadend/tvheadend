@@ -475,7 +475,7 @@ cc_find_pending_section(cclient_t *cc, uint32_t seq, cc_service_t **_ct)
           if (es->es_resolved) {
             mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
             tvhdebug(cc->cc_subsys,
-                     "%s: Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
+                     "%s: Ignore %sECM (PID %d) for service \"%s\" from %s (seq %u)",
                      cc->cc_name,
                      es->es_pending ? "duplicate " : "",
                      ep->ep_capid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
@@ -487,7 +487,7 @@ cc_find_pending_section(cclient_t *cc, uint32_t seq, cc_service_t **_ct)
             return es;
           }
         }
-  tvhwarn(cc->cc_subsys, "%s: Got unexpected ECM reply (seqno: %d)",
+  tvhwarn(cc->cc_subsys, "%s: Got unexpected ECM reply (seqno: %u)",
           cc->cc_name, seq);
   return NULL;
 }
@@ -535,7 +535,7 @@ cc_read(cclient_t *cc, void *buf, size_t len, int timeout)
   if (cc_must_break(cc))
     return ECONNABORTED;
 
-  tvhtrace(cc->cc_subsys, "%s: read len %zd", cc->cc_name, len);
+  tvhtrace(cc->cc_subsys, "%s: read len %zu", cc->cc_name, len);
   tvhlog_hexdump(cc->cc_subsys, buf, len);
   return r;
 }
@@ -991,7 +991,7 @@ found:
 
     if (cc->cc_send_ecm(cc, ct, es, pcard, data, len) == 0) {
       tvhdebug(cc->cc_subsys,
-               "%s: Sending ECM%s section=%d/%d for service \"%s\" (seqno: %d)",
+               "%s: Sending ECM%s section=%d/%d for service \"%s\" (seqno: %u)",
                cc->cc_name, chaninfo, section,
                ep->ep_last_section, t->s_dvb_svcname, es->es_seq);
       es->es_time = getfastmonoclock();
@@ -1210,7 +1210,7 @@ cc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint32_t prov,
   int i;
 
   tvhtrace(cc->cc_subsys,
-           "%s: caid update event - client %s mux %p caid %04x (%i) prov %06x (%i) pid %04x (%i) valid %i",
+           "%s: caid update event - client %s mux %p caid %04x (%i) prov %06x (%u) pid %04x (%i) valid %i",
            cc->cc_name, cac->cac_name, mux, caid, caid, prov, prov, pid, pid, valid);
   tvh_mutex_lock(&cc->cc_mutex);
   if (valid < 0 || cc->cc_running) {

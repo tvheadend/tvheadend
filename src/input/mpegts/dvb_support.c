@@ -463,7 +463,7 @@ atsc_get_string
 
       if (mode == 0 && compressiontype == 0) {
         tvhtrace(LS_MPEGTS, "atsc-str:    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
-                 j, compressiontype, mode, bytecount, bytecount, src);
+                 j, (unsigned int)compressiontype, (unsigned int)mode, bytecount, bytecount, src);
         memcpy(buf, src, bytecount);
         buf[bytecount] = '\0';
         if (ls == NULL)
@@ -471,7 +471,7 @@ atsc_get_string
         lang_str_append(ls, buf, langcode);
       } else {
         tvhtrace(LS_MPEGTS, "atsc-str:    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
-                 j, compressiontype, mode, bytecount);
+                 j, (unsigned int)compressiontype, (unsigned int)mode, bytecount);
       }
 
       /* FIXME: read compressed bytes */
@@ -1026,7 +1026,7 @@ dvb_mux_conf_str_dvbt ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
   snprintf(hp, sizeof(hp), "%s", dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_HP));
   return
   snprintf(buf, bufsize,
-           "%s freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s plp_id %d",
+           "%s freq %u bw %s cons %s hier %s code_rate %s:%s guard %s trans %s plp_id %d",
            dvb_delsys2str(dmc->dmc_fe_delsys),
            dmc->dmc_fe_freq,
            dvb_bw2str(dmc->u.dmc_fe_ofdm.bandwidth),
@@ -1049,7 +1049,7 @@ dvb_mux_conf_str_dvbc ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
     delsys = dvb_delsys2str(dmc->dmc_fe_delsys);
   return
   snprintf(buf, bufsize,
-           "%s freq %d sym %d mod %s fec %s ds %d plp %d",
+           "%s freq %u sym %u mod %s fec %s ds %u plp %d",
            delsys,
            dmc->dmc_fe_freq,
            dmc->u.dmc_fe_qam.symbol_rate,
@@ -1072,7 +1072,7 @@ dvb_mux_conf_str_dvbs ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
   }
   return
   snprintf(buf, bufsize,
-           "%s %sfreq %d %c sym %d fec %s mod %s roff %s is_id %d pls_mode %s pls_code %d",
+           "%s %sfreq %u %c sym %u fec %s mod %s roff %s is_id %d pls_mode %s pls_code %u",
            dvb_delsys2str(dmc->dmc_fe_delsys),
            satbuf,
            dmc->dmc_fe_freq,
@@ -1091,7 +1091,7 @@ dvb_mux_conf_str_atsc_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
   return
   snprintf(buf, bufsize,
-           "%s freq %d mod %s",
+           "%s freq %u mod %s",
            dvb_delsys2str(dmc->dmc_fe_delsys),
            dmc->dmc_fe_freq,
            dvb_qam2str(dmc->dmc_fe_modulation));
@@ -1112,7 +1112,7 @@ dvb_mux_conf_str_isdb_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
   snprintf(hp, sizeof(hp), "%s", dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_HP));
   return
   snprintf(buf, bufsize,
-           "%s freq %d bw %s guard %s A (%s,%s,%d,%d) B (%s,%s,%d,%d) C (%s,%s,%d,%d)",
+           "%s freq %u bw %s guard %s A (%s,%s,%u,%u) B (%s,%s,%u,%u) C (%s,%s,%u,%u)",
            dvb_delsys2str(dmc->dmc_fe_delsys),
            dmc->dmc_fe_freq,
            dvb_bw2str(dmc->u.dmc_fe_isdbt.bandwidth),

@@ -849,7 +849,7 @@ satip_frontend_start_mux
     /* Note: assume universal LNB */
     if (lm->lm_tuning.dmc_fe_freq < 10700000 ||
         lm->lm_tuning.dmc_fe_freq > 12750000) {
-      tvhwarn(LS_SATIP, "DVB-S/S2 frequency %d out of range universal LNB", lm->lm_tuning.dmc_fe_freq);
+      tvhwarn(LS_SATIP, "DVB-S/S2 frequency %u out of range universal LNB", lm->lm_tuning.dmc_fe_freq);
       return SM_CODE_TUNING_FAILED;
     }
   }
@@ -1974,7 +1974,7 @@ new_tune:
           rtsp = NULL;
           break;
         }
-        tvherror(LS_SATIP, "%s - RTSP error %d (%s) [%i-%i]",
+        tvherror(LS_SATIP, "%s - RTSP error %d (%s) [%u-%i]",
                  buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
         satip_frontend_tuning_error(lfe, tr);
         fatal = 1;
@@ -1988,7 +1988,7 @@ new_tune:
           if (!running)
             break;
           if (r < 0) {
-            tvherror(LS_SATIP, "%s - RTSP OPTIONS error %d (%s) [%i-%i]",
+            tvherror(LS_SATIP, "%s - RTSP OPTIONS error %d (%s) [%u-%i]",
                      buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
             satip_frontend_tuning_error(lfe, tr);
             fatal = 1;
@@ -2003,7 +2003,7 @@ new_tune:
                           rtsp->hc_rtcp_port != rtp_port + 1)) ||
                        ((rtsp_flags & SATIP_SETUP_TCP) != 0 &&
                          (rtsp->hc_rtp_tcp < 0 || rtsp->hc_rtcp_tcp < 0))) {
-            tvherror(LS_SATIP, "%s - RTSP SETUP error %d (%s) [%i-%i]",
+            tvherror(LS_SATIP, "%s - RTSP SETUP error %d (%s) [%u-%i]",
                      buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
             satip_frontend_tuning_error(lfe, tr);
             fatal = 1;
@@ -2054,7 +2054,7 @@ new_tune:
           /* fall thru */
         default:
           if (rtsp->hc_code >= 400) {
-            tvherror(LS_SATIP, "%s - RTSP cmd error %d (%s) [%i-%i]",
+            tvherror(LS_SATIP, "%s - RTSP cmd error %d (%s) [%u-%i]",
                      buf, r, r > 0 ? http_client_con2str(r) : strerror(-r),
                      rtsp->hc_cmd, rtsp->hc_code);
             satip_frontend_tuning_error(lfe, tr);
@@ -2323,7 +2323,7 @@ satip_frontend_create
   else if (type == DVB_TYPE_ISDB_T)
     idc = &satip_frontend_isdb_t_class;
   else {
-    tvherror(LS_SATIP, "unknown FE type %d", type);
+    tvherror(LS_SATIP, "unknown FE type %u", type);
     return NULL;
   }
 

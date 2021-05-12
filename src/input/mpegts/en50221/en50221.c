@@ -192,7 +192,7 @@ en50221_transport_pdu_write(en50221_transport_t *cit,
     buf[3] = datalen & 0xff;
     hlen = 4;
   } else {
-    tvherror(LS_EN50221, "%s: too much pdu data to write %zd",
+    tvherror(LS_EN50221, "%s: too much pdu data to write %zu",
                          cit->cit_name, datalen);
     return -EIO;
   }
@@ -263,7 +263,7 @@ int en50221_transport_read(en50221_transport_t *cit,
       return en50221_transport_broken(cit, data, datalen);
     }
     if (end - p < l) {
-      tvhtrace(LS_EN50221, "%s: invalid data received (%zd)", cit->cit_name, (size_t)(end - p));
+      tvhtrace(LS_EN50221, "%s: invalid data received (%zu)", cit->cit_name, (size_t)(end - p));
       break;
     }
     switch (tag) {
@@ -291,7 +291,7 @@ int en50221_transport_read(en50221_transport_t *cit,
       break;
     case CICAM_T_CTC_REPLY:
       if (l != 1) {
-        tvherror(LS_EN50221, "%s: invalid length %zd for tag 0x%02x", cit->cit_name, l, tag);
+        tvherror(LS_EN50221, "%s: invalid length %zu for tag 0x%02x", cit->cit_name, l, tag);
         return en50221_transport_broken(cit, data, datalen);
       }
       slot->cil_ready = 1;
@@ -579,14 +579,14 @@ static int en50221_slot_spdu_recv
   switch (data[0]) {
   case CICAM_ST_SESSION_NUMBER:
     if (datalen <= 4) {
-      tvherror(LS_EN50221, "%s: unhandled session number length %zd",
+      tvherror(LS_EN50221, "%s: unhandled session number length %zu",
                            cil->cil_name, datalen);
       return -EINVAL;
     }
     session = (data[2] << 8) | data[3];
     app = en50221_slot_find_session(cil, session);
     if (app == NULL) {
-      tvherror(LS_EN50221, "%s: unhandled session message length %zd "
+      tvherror(LS_EN50221, "%s: unhandled session message length %zu "
                            "session number 0x%04x",
                            cil->cil_name, datalen, session);
       return -EINVAL;
@@ -594,7 +594,7 @@ static int en50221_slot_spdu_recv
     return en50221_app_handle(app, data[1], data + 4, datalen - 4);
   case CICAM_ST_OPEN_SESSION_REQUEST:
     if (datalen != 6 || data[1] != 4) {
-      tvherror(LS_EN50221, "%s: unhandled open session request length %zd "
+      tvherror(LS_EN50221, "%s: unhandled open session request length %zu "
                            "data1 0x%02x", cil->cil_name, datalen, data[1]);
       return -EINVAL;
     }
@@ -622,7 +622,7 @@ static int en50221_slot_spdu_recv
     return en50221_app_open(app);
   case CICAM_ST_CREATE_SESSION_RESPONSE:
     if (datalen != 9 || data[1] != 7) {
-      tvherror(LS_EN50221, "%s: unhandled create session response length %zd "
+      tvherror(LS_EN50221, "%s: unhandled create session response length %zu "
                            "data1 0x%02x", cil->cil_name, datalen, data[1]);
       return -EINVAL;
     }
@@ -642,7 +642,7 @@ static int en50221_slot_spdu_recv
     break;
   case CICAM_ST_CLOSE_SESSION_REQUEST:
     if (datalen != 4 || data[1] != 2) {
-      tvherror(LS_EN50221, "%s: unhandled close session request length %zd "
+      tvherror(LS_EN50221, "%s: unhandled close session request length %zu "
                            "data1 0x%02x", cil->cil_name, datalen, data[1]);
       return -EINVAL;
     }
@@ -662,7 +662,7 @@ static int en50221_slot_spdu_recv
     return en50221_slot_pdu_send(cil, CICAM_T_DATA_LAST, buf, 5, 0);
   case CICAM_ST_CLOSE_SESSION_RESPONSE:
     if (datalen != 5 || data[1] != 3 || data[2]) {
-      tvherror(LS_EN50221, "%s: unhandled close session response length %zd "
+      tvherror(LS_EN50221, "%s: unhandled close session response length %zu "
                            "data1 0x%02x data2 0x%02x",
                            cil->cil_name, datalen, data[1], data[2]);
       return -EINVAL;
@@ -792,7 +792,7 @@ int en50221_app_pdu_send
     buf[9] = datalen & 0xff;
     hlen = 10;
   } else {
-    tvherror(LS_EN50221, "%s: too much apdu data to write %zd tag 0x%06x",
+    tvherror(LS_EN50221, "%s: too much apdu data to write %zu tag 0x%06x",
                          app->cia_name, datalen, atag);
     return -EIO;
   }

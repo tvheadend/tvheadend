@@ -410,7 +410,7 @@ void* _dvr_inotify_thread ( void *p )
         continue;
 
       } else if (ev->mask & IN_MOVED_TO) {
-        tvhtrace(LS_DVR_INOTIFY, "i=%d len=%d to_cookie=%d from_cookie=%d cookie_prev=%d", i, len, ev->cookie, cookie, cookie_prev);
+        tvhtrace(LS_DVR_INOTIFY, "i=%d len=%d to_cookie=%u from_cookie=%d cookie_prev=%d", i, len, ev->cookie, cookie, cookie_prev);
           if (from && ev->cookie == cookie) {
             _dvr_inotify_moved(fromfd, from, ev->name, ev->wd);
             from = NULL;

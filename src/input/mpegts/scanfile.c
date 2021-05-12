@@ -149,14 +149,14 @@ scanfile_load_dvbt ( dvb_mux_conf_t *mux, const char *line )
   if (*line == '2') {
     unsigned int system_id;
     dvb_mux_conf_init(NULL, mux, DVB_SYS_DVBT2);
-    r = sscanf(line+1, "%u %s", &mux->dmc_fe_stream_id, bw);
+    r = sscanf(line+1, "%d %s", &mux->dmc_fe_stream_id, bw);
     if (r == 2 && mux->dmc_fe_stream_id < 1000 && strstr(bw, "MHz") == 0) {
-      r = sscanf(line+1, "%u %u %u %10s %10s %10s %10s %10s %10s %10s",
+      r = sscanf(line+1, "%i %u %u %10s %10s %10s %10s %10s %10s %10s",
 	             &mux->dmc_fe_stream_id, &system_id, &mux->dmc_fe_freq, bw, fec, fec2, qam,
                      mode, guard, hier);
       if(r != 10) return 1;
     } else {
-      r = sscanf(line+1, "%u %10s %10s %10s %10s %10s %10s %10s %u",
+      r = sscanf(line+1, "%u %10s %10s %10s %10s %10s %10s %10s %i",
 	             &mux->dmc_fe_freq, bw, fec, fec2, qam,
                      mode, guard, hier, &mux->dmc_fe_stream_id);
       if(r == 8) mux->dmc_fe_stream_id = DVB_NO_STREAM_ID_FILTER; else
@@ -193,7 +193,7 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
 
   dvb_mux_conf_init(NULL, mux, v2 ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
 
-  r = sscanf(line, "%u %s %u %s %s %s %d %d %d",
+  r = sscanf(line, "%u %s %u %s %s %s %d %u %d",
 	           &mux->dmc_fe_freq, pol, &mux->u.dmc_fe_qpsk.symbol_rate,
              fec, rolloff, qam, &mux->dmc_fe_stream_id, &mux->dmc_fe_pls_code, (int*)&mux->dmc_fe_pls_mode);
   if (r < (4+v2)) return 1;

@@ -528,13 +528,13 @@ mpegts_input_open_pid
       if (mps2 == NULL) {
         LIST_INSERT_HEAD(&mm->mm_all_subs, mps, mps_svcraw_link);
         tvhdebug(LS_MPEGTS, "%s - open PID %s subscription [%04x/%p]",
-                 mm->mm_nicename, (type & MPS_TABLES) ? "tables" : "fullmux", type, owner);
+                 mm->mm_nicename, (type & MPS_TABLES) ? "tables" : "fullmux", (unsigned int)type, owner);
         mm->mm_update_pids_flag = 1;
       } else {
         if (!reopen) {
           tvherror(LS_MPEGTS,
                    "%s - open PID %04x (%d) failed, dupe sub (owner %p)",
-                   mm->mm_nicename, mp->mp_pid, mp->mp_pid, owner);
+                   mm->mm_nicename, (unsigned int)mp->mp_pid, mp->mp_pid, owner);
         }
         free(mps);
         mp = NULL;
@@ -546,12 +546,12 @@ mpegts_input_open_pid
       if (type & MPS_SERVICE)
         LIST_INSERT_HEAD(&mp->mp_svc_subs, mps, mps_svcraw_link);
       tvhdebug(LS_MPEGTS, "%s - open PID %04X (%d) [%d/%p]",
-               mm->mm_nicename, mp->mp_pid, mp->mp_pid, type, owner);
+               mm->mm_nicename, (unsigned int)mp->mp_pid, mp->mp_pid, type, owner);
       mm->mm_update_pids_flag = 1;
     } else {
       if (!reopen) {
         tvherror(LS_MPEGTS, "%s - open PID %04x (%d) failed, dupe sub (owner %p)",
-                 mm->mm_nicename, mp->mp_pid, mp->mp_pid, owner);
+                 mm->mm_nicename, (unsigned int)mp->mp_pid, mp->mp_pid, owner);
       }
       free(mps);
       mp = NULL;
@@ -577,7 +577,7 @@ mpegts_input_close_pid
     if (mps == NULL) return -1;
     tvhdebug(LS_MPEGTS, "%s - close PID %s subscription [%04x/%p]",
              mm->mm_nicename, pid == MPEGTS_TABLES_PID ? "tables" : "fullmux",
-             type, owner);
+             (unsigned int)type, owner);
     if (pid == MPEGTS_FULLMUX_PID)
       mpegts_input_close_pids(mi, mm, owner, 0);
     LIST_REMOVE(mps, mps_svcraw_link);
@@ -598,7 +598,7 @@ mpegts_input_close_pid
     }
     if (mps) {
       tvhdebug(LS_MPEGTS, "%s - close PID %04X (%d) [%d/%p]",
-               mm->mm_nicename, mp->mp_pid, mp->mp_pid, type, owner);
+               mm->mm_nicename, (unsigned int)mp->mp_pid, mp->mp_pid, type, owner);
       if (type & MPS_RAW)
         LIST_REMOVE(mps, mps_raw_link);
       if (type & MPS_SERVICE)
@@ -642,7 +642,7 @@ mpegts_input_update_pid_weight
     if (mps == NULL) return NULL;
     tvhdebug(LS_MPEGTS, "%s - update PID %s weight %d subscription [%04x/%p]",
              mm->mm_nicename, pid == MPEGTS_TABLES_PID ? "tables" : "fullmux",
-             weight, type, owner);
+             weight, (unsigned int)type, owner);
     mps->mps_weight = weight;
   } else {
     skel.mps_type   = type;
@@ -651,7 +651,7 @@ mpegts_input_update_pid_weight
     mps = RB_FIND(&mp->mp_subs, &skel, mps_link, mpegts_mps_cmp);
     if (mps == NULL) return NULL;
     tvhdebug(LS_MPEGTS, "%s - update PID %04X (%d) weight %d [%d/%p]",
-             mm->mm_nicename, mp->mp_pid, mp->mp_pid, weight, type, owner);
+             mm->mm_nicename, (unsigned int)mp->mp_pid, mp->mp_pid, weight, type, owner);
     mps->mps_weight = weight;
     mm->mm_update_pids_flag = 1;
   }

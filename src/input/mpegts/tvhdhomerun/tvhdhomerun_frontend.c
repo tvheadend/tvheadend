@@ -365,11 +365,11 @@ static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, int pid) {
   }
 
   memset(buf, 0x00, sizeof(buf));
-  snprintf(buf, sizeof(buf), "0x%04x", pid);
+  snprintf(buf, sizeof(buf), "0x%04x", (unsigned int)pid);
 
   if(strncmp(pfilter, buf, strlen(buf)) != 0) {
     memset(buf, 0x00, sizeof(buf));
-    snprintf(buf, sizeof(buf), "%s 0x%04x", pfilter, pid);
+    snprintf(buf, sizeof(buf), "%s 0x%04x", pfilter, (unsigned int)pid);
     tvhdebug(LS_TVHDHOMERUN, "setting pfilter to: %s", buf);
 
     tvh_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
@@ -401,10 +401,10 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
       symbol_rate = dmc->u.dmc_fe_qam.symbol_rate / 1000;
       switch(dmc->dmc_fe_modulation) {
         case DVB_MOD_QAM_64:
-          snprintf(channel_buf, sizeof(channel_buf), "a8qam64-%d:%u", symbol_rate, dmc->dmc_fe_freq);
+          snprintf(channel_buf, sizeof(channel_buf), "a8qam64-%u:%u", symbol_rate, dmc->dmc_fe_freq);
           break;
         case DVB_MOD_QAM_256:
-          snprintf(channel_buf, sizeof(channel_buf), "a8qam256-%d:%u", symbol_rate, dmc->dmc_fe_freq);
+          snprintf(channel_buf, sizeof(channel_buf), "a8qam256-%u:%u", symbol_rate, dmc->dmc_fe_freq);
           break;
         default:
           snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
@@ -775,7 +775,7 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
   else if (type == DVB_TYPE_ISDB_T)
     idc = &tvhdhomerun_frontend_isdbt_class;
   else {
-    tvherror(LS_TVHDHOMERUN, "unknown FE type %d", type);
+    tvherror(LS_TVHDHOMERUN, "unknown FE type %u", type);
     return NULL;
   }
 

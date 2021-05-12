@@ -122,7 +122,7 @@ uuid_set ( tvh_uuid_t *u, const char *str )
   if (str) {
     if (strlen(str) != UUID_HEX_SIZE - 1) {
       memset(u, 0, sizeof(*u));
-      tvherror(LS_UUID, "wrong uuid string size (%zd)", strlen(str));
+      tvherror(LS_UUID, "wrong uuid string size (%zu)", strlen(str));
       return -EINVAL;
     }
     if (hex2bin(u->bin, sizeof(u->bin), str)) {

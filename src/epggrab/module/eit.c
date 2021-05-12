@@ -647,7 +647,7 @@ static int _eit_process_event_one
                        " stop=%s, ebc=%p",
            svc->s_dvb_svcname ?: "(null)",
            ch ? channel_get_name(ch, channel_blank_name) : "(null)",
-           eid, tableid, running,
+           eid, (unsigned int)tableid, running,
            gmtime2local(start, tm1, sizeof(tm1)),
            gmtime2local(stop, tm2, sizeof(tm2)), ebc);
   if (!ebc) {
@@ -1015,8 +1015,8 @@ _eit_callback
       if (mm->mm_onid != MPEGTS_ONID_NONE &&
           mm->mm_tsid != MPEGTS_TSID_NONE)
         tvhtrace(LS_TBL_EIT,
-                "%s: invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
-                mt->mt_name, tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
+                "%s: invalid tsid found tid 0x%02X, onid:tsid %u:%u != %d:%d",
+                mt->mt_name, (unsigned int)tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
       mm = NULL;
     }
   }
@@ -1299,7 +1299,7 @@ void eit_nit_callback
   eit_nit_t *nit;
   eit_private_t *priv = NULL;
 
-  tvhtrace(LS_TBL_EIT, "NIT - tsid %04X (%d) onid %04X (%d) nbid %04X (%d) network name '%s' private %08X",
+  tvhtrace(LS_TBL_EIT, "NIT - tsid %04X (%u) onid %04X (%u) nbid %04X (%d) network name '%s' private %08X",
            dm->mm_tsid, dm->mm_tsid, dm->mm_onid, dm->mm_onid, nbid, nbid, name, nitpriv);
 
   TAILQ_FOREACH(priv, &eit_private_list, link) {
@@ -1336,7 +1336,7 @@ void eit_sdt_callback(mpegts_table_t *mt, uint32_t sdtpriv)
   eit_sdt_t *sdt;
   eit_private_t *priv = NULL;
 
-  tvhtrace(LS_TBL_EIT, "SDT - tsid %04X (%d) onid %04X (%d) private %08X",
+  tvhtrace(LS_TBL_EIT, "SDT - tsid %04X (%u) onid %04X (%u) private %08X",
            dm->mm_tsid, dm->mm_tsid, dm->mm_onid, dm->mm_onid, sdtpriv);
 
   TAILQ_FOREACH(priv, &eit_private_list, link) {

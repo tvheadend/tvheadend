@@ -718,7 +718,7 @@ dvb_network_create_mux
       if (tvhtrace_enabled()) {
         char buf[128];
         dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
-        tvhtrace(LS_MPEGTS, "mux %p %s onid %i tsid %i added to network %s (autodiscovery)",
+        tvhtrace(LS_MPEGTS, "mux %p %s onid %u tsid %u added to network %s (autodiscovery)",
                  mm, buf, onid, tsid, mm->mm_network->mn_network_name);
       }
     }
@@ -813,11 +813,11 @@ dvb_network_create_mux
       dvb_mux_conf_str(&tuning_old, buf, sizeof(buf));
       tvhlog(change ? LOG_WARNING : LOG_NOTICE, LS_MPEGTS,
              "mux %s%s %s (%08x)", muxname,
-             change ? " changed from" : " old params", buf, save);
+             change ? " changed from" : " old params", buf, (unsigned int)save);
       dvb_mux_conf_str(&tuning_new, buf, sizeof(buf));
       tvhlog(change ? LOG_WARNING : LOG_NOTICE, LS_MPEGTS,
              "mux %s%s %s (%08x)", muxname,
-             change ? " changed to  " : " new params", buf, save);
+             change ? " changed to  " : " new params", buf, (unsigned int)save);
       if (!change) save = 0;
     }
     if (save) lm->lm_tuning = tuning_new;

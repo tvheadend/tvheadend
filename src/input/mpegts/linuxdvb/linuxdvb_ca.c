@@ -121,7 +121,7 @@ linuxdvb_ca_slot_info( int fd, linuxdvb_transport_t *lcat, linuxdvb_ca_t *lca )
   csi.num = lca->lca_slotnum;
 
   if ((ioctl(fd, CA_GET_SLOT_INFO, &csi)) != 0) {
-    tvherror(LS_LINUXDVB, "%s: failed to get CAM slot %u info [e=%s]",
+    tvherror(LS_LINUXDVB, "%s: failed to get CAM slot %i info [e=%s]",
                           lca->lca_name, csi.num, strerror(errno));
     return -EIO;
   }
@@ -131,7 +131,7 @@ linuxdvb_ca_slot_info( int fd, linuxdvb_transport_t *lcat, linuxdvb_ca_t *lca )
     lca->lca_phys_layer = 0;
   } else {
     tvherror(LS_LINUXDVB, "%s: unable to communicated with slot type %08x",
-                          lca->lca_name, csi.type);
+                          lca->lca_name, (unsigned int)csi.type);
     return -EIO;
   }
   if (csi.flags & CA_CI_MODULE_READY) {
@@ -322,7 +322,7 @@ linuxdvb_ca_thread ( void *aux )
             busy |= TAILQ_EMPTY(&lca->lca_write_queue) ? 0 : 1;
           }
           tvh_mutex_unlock(&linuxdvb_capmt_mutex);
-          tvhtrace(LS_EN50221, "%s: busy %x", lcat->lcat_name, busy);
+          tvhtrace(LS_EN50221, "%s: busy %x", lcat->lcat_name, (unsigned int)busy);
           if (!busy)
             linuxdvb_ca_close_fd(lcat, 1);
         }
@@ -561,10 +561,10 @@ linuxdvb_ca_class_get_title
   const char *s;
   if (!lca->lca_enabled || state == CA_SLOT_STATE_EMPTY) {
     s = !lca->lca_enabled ? N_("disabled") : N_("slot empty");
-    snprintf(dst, dstsize, "ca%u-%u: %s", anum, snum,
+    snprintf(dst, dstsize, "ca%i-%i: %s", anum, snum,
              tvh_gettext_lang(lang, s));
   } else {
-    snprintf(dst, dstsize, "ca%u-%u: %s (%s)", anum, snum,
+    snprintf(dst, dstsize, "ca%i-%i: %s (%s)", anum, snum,
              lca->lca_modulename ?: "",
              tvh_gettext_lang(lang, ca_slot_state2str(state)));
   }
@@ -729,9 +729,9 @@ linuxdvb_ca_create
 
   /* Internal config ID */
   if (slotnum > 0) {
-    snprintf(id, sizeof(id), "ca%u-%u", lcat->lcat_number, slotnum);
+    snprintf(id, sizeof(id), "ca%i-%i", lcat->lcat_number, slotnum);
   } else {
-    snprintf(id, sizeof(id), "ca%u", lcat->lcat_number);
+    snprintf(id, sizeof(id), "ca%i", lcat->lcat_number);
   }
 
   conf = htsmsg_get_map(conf, id);
@@ -790,9 +790,9 @@ static void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *msg )
 
   /* Add to list */
   if (lca->lca_slotnum > 0)
-    snprintf(id, sizeof(id), "ca%u-%u", lcat->lcat_number, lca->lca_slotnum);
+    snprintf(id, sizeof(id), "ca%i-%u", lcat->lcat_number, lca->lca_slotnum);
   else
-    snprintf(id, sizeof(id), "ca%u", lcat->lcat_number);
+    snprintf(id, sizeof(id), "ca%i", lcat->lcat_number);
   htsmsg_add_msg(msg, id, m);
 }
 
@@ -867,7 +867,7 @@ static int linuxdvb_ca_ops_pdu_write
              lcat->lcat_name, strerror(r));
     return -r;
   } else if (l != datalen + 2) {
-    tvherror(LS_EN50221, "%s: partial write %zd (of %zd)",
+    tvherror(LS_EN50221, "%s: partial write %zd (of %zu)",
              lcat->lcat_name, l, datalen + 2);
     return -EIO;
   } else {
@@ -885,7 +885,7 @@ static int linuxdvb_ca_ops_apdu_write
   if (fd < 0)
     return -EIO;
   if (datalen > 256) {
-    tvherror(LS_EN50221, "%s: unable to write APDU with length %zd",
+    tvherror(LS_EN50221, "%s: unable to write APDU with length %zu",
              lcat->lcat_name, datalen);
     return -E2BIG;
   }
@@ -1140,14 +1140,14 @@ linuxdvb_ca_enqueue_capmt
   if (descramble && lca->lca_capmt_query &&
       !en50221_capmt_build_query(capmt, capmtlen, &capmt2, &capmtlen2)) {
     if (!linuxdvb_ca_write_cmd(lca, CA_WRITE_CMD_CAPMT_QUERY, capmt2, capmtlen2)) {
-      tvhtrace(LS_EN50221, "%s: CAPMT enqueued query (len %zd)", lca->lca_name, capmtlen2);
+      tvhtrace(LS_EN50221, "%s: CAPMT enqueued query (len %zu)", lca->lca_name, capmtlen2);
       en50221_capmt_dump(LS_EN50221, lca->lca_name, capmt2, capmtlen2);
     }
     free(capmt2);
   }
 
   if (!linuxdvb_ca_write_cmd(lca, CA_WRITE_CMD_CAPMT, capmt, capmtlen)) {
-    tvhtrace(LS_EN50221, "%s: CAPMT enqueued (len %zd)", lca->lca_name, capmtlen);
+    tvhtrace(LS_EN50221, "%s: CAPMT enqueued (len %zu)", lca->lca_name, capmtlen);
     en50221_capmt_dump(LS_EN50221, lca->lca_name, capmt, capmtlen);
   }
 

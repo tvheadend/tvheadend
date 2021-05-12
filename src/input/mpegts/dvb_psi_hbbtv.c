@@ -79,7 +79,7 @@ dvb_psi_parse_hbbtv
         l3 = *dptr++; dlen--;
         if (l3 > dlen || (l3 % 5)) goto dvberr;
         while (dlen >= 5 && l3 >= 5) {
-          tvhtrace(mt->mt_subsys, "%s:     profile %04X %d.%d.%d", mt->mt_name, (dptr[0] << 8) | dptr[1], dptr[2], dptr[3], dptr[4]);
+          tvhtrace(mt->mt_subsys, "%s:     profile %04X %d.%d.%d", mt->mt_name, (unsigned int)(dptr[0] << 8) | dptr[1], dptr[2], dptr[3], dptr[4]);
           dptr += 5;
           dlen -= 5;
           l3 -= 5;

@@ -57,7 +57,7 @@ ts_recv_packet0
         /* Let the hardware to stabilize and don't flood the log */
         if (t->s_start_time + sec2mono(1) < mclk() &&
             tvhlog_limit(&st->es_cc_log, 10))
-          tvhwarn(LS_TS, "%s Continuity counter error (total %zi)",
+          tvhwarn(LS_TS, "%s Continuity counter error (total %zu)",
                          st->es_nicename, st->es_cc_log.count);
         if (!error)
           errors++;
@@ -116,7 +116,7 @@ ts_recv_skipped0
         /* Let the hardware to stabilize and don't flood the log */
         if (t->s_start_time + sec2mono(1) < mclk() &&
             tvhlog_limit(&st->es_cc_log, 10))
-          tvhwarn(LS_TS, "%s Continuity counter error (total %zi)",
+          tvhwarn(LS_TS, "%s Continuity counter error (total %zu)",
                          st->es_nicename, st->es_cc_log.count);
       }
       st->es_cc = (cc + 1) & 0xf;
@@ -174,7 +174,7 @@ ts_recv_packet1
   if(error) {
     /* Transport Error Indicator */
     if (tvhlog_limit(&t->s_tei_log, 10))
-      tvhwarn(LS_TS, "%s Transport error indicator (total %zi)",
+      tvhwarn(LS_TS, "%s Transport error indicator (total %zu)",
               service_nicename((service_t*)t), t->s_tei_log.count);
   }
 

@@ -39,7 +39,7 @@
 #include <netinet/ip.h>
 #define COMPAT_IPTOS
 #include "compat.h"
-
+ 
 static void config_muxconfpath_notify ( void *o, const char *lang );
 
 void tvh_str_set(char **strp, const char *src);
@@ -424,7 +424,7 @@ config_migrate_v1 ( void )
       /* Create mux entry */
       uuid_set(&muxu, NULL);
       m = htsmsg_create_map();
-      snprintf(buf, sizeof(buf), "udp://%s:%d", str, u32);
+      snprintf(buf, sizeof(buf), "udp://%s:%u", str, u32);
       htsmsg_add_str(m, "iptv_url", buf);
       if ((str = htsmsg_get_str(e, "interface")))
         htsmsg_add_str(m, "iptv_interface", str);
@@ -698,7 +698,7 @@ config_migrate_simple ( const char *dir, htsmsg_t *list,
     else if (list) {
       htsmsg_t *m = htsmsg_create_map();
       char buf[16];
-      snprintf(buf, sizeof(buf), "%d", id);
+      snprintf(buf, sizeof(buf), "%u", id);
       htsmsg_add_str(m, "id", buf);
       htsmsg_add_str(m, "uuid", ubuf);
       htsmsg_add_msg(list, NULL, m);
@@ -1635,7 +1635,7 @@ config_migrate ( int backup )
 
   /* Run migrations */
   for ( ; v < ARRAY_SIZE(config_migrate_table); v++) {
-    tvhinfo(LS_CONFIG, "migrating config from v%d to v%d", v, v+1);
+    tvhinfo(LS_CONFIG, "migrating config from v%u to v%u", v, v+1);
     config_migrate_table[v]();
   }
 
@@ -1753,7 +1753,7 @@ config_boot
   /* And is usable */
   else if (access(path, R_OK | W_OK)) {
     tvhwarn(LS_START, "configuration path %s is not r/w"
-                     " for UID:%d GID:%d [e=%s],"
+                     " for UID:%u GID:%u [e=%s],"
                      " settings will not be saved",
             path, getuid(), getgid(), strerror(errno));
     return;
@@ -1768,7 +1768,7 @@ config_boot
     exit(78); /* config error */
 
   if (chown(config_lock, uid, gid))
-    tvhwarn(LS_CONFIG, "unable to chown lock file %s UID:%d GID:%d", config_lock, uid, gid);
+    tvhwarn(LS_CONFIG, "unable to chown lock file %s UID:%u GID:%u", config_lock, uid, gid);
 
   /* Load global settings */
   config2 = hts_settings_load("config");
@@ -1819,9 +1819,9 @@ config_init ( int backup )
 
   if (path == NULL || access(path, R_OK | W_OK)) {
     tvhwarn(LS_START, "configuration path %s is not r/w"
-                     " for UID:%d GID:%d [e=%s],"
+                     " for UID:%u GID:%u [e=%s],"
                      " settings will not be saved",
-            path, getuid(), getgid(), strerror(errno));
+            path == NULL ? "<NULL>": path, getuid(), getgid(), strerror(errno));
     return;
   }
 

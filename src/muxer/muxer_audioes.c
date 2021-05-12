@@ -169,7 +169,7 @@ audioes_muxer_open_file(muxer_t *m, const char *filename)
   int fd;
   audioes_muxer_t *am = (audioes_muxer_t*)m;
 
-  tvhtrace(LS_AUDIOES, "Creating file \"%s\" with file permissions \"%o\"", filename, am->m_config.m_file_permissions);
+  tvhtrace(LS_AUDIOES, "Creating file \"%s\" with file permissions \"%o\"", filename, (unsigned int)am->m_config.m_file_permissions);
  
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, am->m_config.m_file_permissions);
 

@@ -335,13 +335,13 @@ mpegts_service_enlist_raw
     r = mi->mi_is_enabled(mi, mmi->mmi_mux, flags, weight);
     if (r == MI_IS_ENABLED_NEVER) {
       tvhtrace(LS_MPEGTS, "enlist: input %p not enabled for mux %p service %s weight %d flags %x",
-                          mi, mmi->mmi_mux, s->s_nicename, weight, flags);
+                          mi, mmi->mmi_mux, s->s_nicename, weight, (unsigned int)flags);
       continue;
     }
     if (r == MI_IS_ENABLED_RETRY) {
       /* temporary error - retry later */
       tvhtrace(LS_MPEGTS, "enlist: input %p postponed for mux %p service %s weight %d flags %x",
-                          mi, mmi->mmi_mux, s->s_nicename, weight, flags);
+                          mi, mmi->mmi_mux, s->s_nicename, weight, (unsigned int)flags);
       errcnt++;
       continue;
     }
@@ -642,11 +642,11 @@ mpegts_service_channel_icon ( service_t *s )
 
     snprintf(prop_sbuf, PROP_SBUF_LEN,
              "picon://1_0_%X_%X_%X_%X_%X_0_0_0.png",
-             config.picon_scheme == PICON_ISVCTYPE ? 1 : ms->s_dvb_servicetype,
+             (unsigned int)(config.picon_scheme == PICON_ISVCTYPE ? 1 : ms->s_dvb_servicetype),
              service_id16(ms),
              ms->s_dvb_mux->mm_tsid,
              ms->s_dvb_mux->mm_onid,
-             hash);
+             (unsigned int)hash);
     return prop_sbuf;
   }
 #endif

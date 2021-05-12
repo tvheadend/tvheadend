@@ -100,7 +100,7 @@ streaming_queue_info(void *opaque, htsmsg_t *list)
   tvh_mutex_lock(&sq->sq_mutex);
   size = sq->sq_size;
   tvh_mutex_unlock(&sq->sq_mutex);
-  snprintf(buf, sizeof(buf), "streaming queue %p size %zd", sq, size);
+  snprintf(buf, sizeof(buf), "streaming queue %p size %zu", sq, size);
   htsmsg_add_str(list, NULL, buf);
   return list;
 }

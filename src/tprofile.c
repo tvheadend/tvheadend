@@ -207,7 +207,7 @@ static void tprofile_log_tstats(void)
   for (tprof = LIST_FIRST(&tprofile_all); tprof; tprof = tprof_next) {
     tprof_next = LIST_NEXT(tprof, link);
     if (tprof->changed == 0) continue;
-    tvhtrace(LS_TPROF, "%s: max/avg/cnt=%"PRIu64"ms/%"PRIu64"ms/%"PRIu64" (max=%s)%s",
+    tvhtrace(LS_TPROF, "%s: max/avg/cnt=%"PRIi64"ms/%"PRIi64"ms/%"PRIu64" (max=%s)%s",
              tprof->name,
              mono2ms(tprof->tmax.t),
              mono2ms(tprof->tavg.avg), tprof->tavg.count,
@@ -238,7 +238,7 @@ static void qprofile_log_qstats(void)
     if (diff == 0) diff = 1;
     tvhtrace(LS_QPROF, "%s: max/avg/cnt/drop/dropcnt=%"
                        PRIu64"/%"PRIu64"/%"PRIu64"/%"PRIu64"/%"PRIu64
-                       " (max=%s -%"PRId64"sec) BW=%"PRId64"%s",
+                       " (max=%s -%"PRId64"sec) BW=%"PRIu64"%s",
              qprof->name,
              qprof->qmax.pos,
              qprof->qavg.avg, qprof->qavg.count,

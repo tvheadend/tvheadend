@@ -54,7 +54,7 @@ satip_rtsp_setup_find(const char *prefix, tvh2satip_t *tbl,
 static void
 satip_rtsp_add_val(const char *name, char *buf, uint32_t val)
 {
-  sprintf(buf + strlen(buf), "&%s=%i", name, val / 1000);
+  sprintf(buf + strlen(buf), "&%s=%u", name, val / 1000);
   if (val % 1000) {
     char *sec = buf + strlen(buf);
     sprintf(sec, ".%03u", val % 1000);
@@ -69,7 +69,7 @@ satip_rtsp_add_val(const char *name, char *buf, uint32_t val)
 static void
 satip_rtsp_add_ival(const char *name, char *buf, uint32_t val)
 {
-  sprintf(buf + strlen(buf), "&%s=%i", name, val);
+  sprintf(buf + strlen(buf), "&%s=%u", name, val);
 }
 
 int
@@ -284,7 +284,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
   strcat(buf, "&pids=0");
   if (flags & SATIP_SETUP_PIDS21)
     strcat(buf, ",21");
-  tvhtrace(LS_SATIP, "%04X: SETUP params - %s", hc->hc_id, buf);
+  tvhtrace(LS_SATIP, "%04X: SETUP params - %s", (unsigned int)hc->hc_id, buf);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);
@@ -323,14 +323,14 @@ _out:
   if (idx < size)
     pids[idx++] = s;
   else
-    tvherror(LS_SATIP, "%04X: PLAY params - PID split overflow!", hc->hc_id);
+    tvherror(LS_SATIP, "%04X: PLAY params - PID split overflow!", (unsigned int)hc->hc_id);
   return idx;
 }
 
 static int
 satip_rtsp_play0( http_client_t *hc, int index, const char *stream, const char *query )
 {
-  tvhtrace(LS_SATIP, "%04X: PLAY params[%d] - %s", hc->hc_id, index, query);
+  tvhtrace(LS_SATIP, "%04X: PLAY params[%d] - %s", (unsigned int)hc->hc_id, index, query);
   return rtsp_play(hc, stream, query);
 }
 

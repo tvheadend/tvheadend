@@ -300,7 +300,7 @@ dvr_config_storage_check(dvr_config_t *cfg)
           "for DVR configuration \"%s\". "
           "Defaulting to to \"%s\". "
           "This can be changed from the web user interface.",
-          cfg->dvr_config_name, cfg->dvr_storage);
+          cfg->dvr_config_name, cfg->dvr_storage==NULL?"<NULL>":cfg->dvr_storage);
 }
 
 /**
