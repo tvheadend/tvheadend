@@ -1151,16 +1151,16 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
     }
     freq2 = freq % 1000;
     freq /= 1000;
-    snprintf(buf2, sizeof(buf2), "%03d", freq2);
+    snprintf(buf2, sizeof(buf2), "%03u", freq2);
     p = buf2 + 2;
     while (freq2 && (freq2 % 10) == 0) {
       freq2 /= 10;
       *(p--) = '\0';
     }
     if (freq2)
-      snprintf(buf, len, "%d.%s%s", freq, buf2, extra);
+      snprintf(buf, len, "%u.%s%s", freq, buf2, extra);
     else
-      snprintf(buf, len, "%d%s", freq, extra);
+      snprintf(buf, len, "%u%s", freq, extra);
   }
 }
 
@@ -1234,7 +1234,7 @@ dvb_mux_create0
     idc = &dvb_mux_dab_class;
     delsys = DVB_SYS_DAB;
   } else {
-    tvherror(LS_DVB, "unknown FE type %d", ln->ln_type);
+    tvherror(LS_DVB, "unknown FE type %u", ln->ln_type);
     return NULL;
   }
 

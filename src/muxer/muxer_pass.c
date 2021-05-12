@@ -550,7 +550,7 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   int fd;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  tvhtrace(LS_PASS, "Creating file \"%s\" with file permissions \"%o\"", filename, pm->m_config.m_file_permissions);
+  tvhtrace(LS_PASS, "Creating file \"%s\" with file permissions \"%o\"", filename, (unsigned int)pm->m_config.m_file_permissions);
  
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, pm->m_config.m_file_permissions);
 

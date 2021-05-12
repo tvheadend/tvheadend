@@ -1414,7 +1414,7 @@ mkv_muxer_open_file(muxer_t *m, const char *filename)
   int fd, permissions = mk->m_config.m_file_permissions;
 
   tvhtrace(LS_MKV, "Creating file \"%s\" with file permissions \"%o\"",
-           filename, permissions);
+           filename, (unsigned int)permissions);
 
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, permissions);
 

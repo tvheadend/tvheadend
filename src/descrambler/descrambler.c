@@ -309,7 +309,7 @@ descrambler_load_hints(htsmsg_t *m)
     hint.dh_interval = htsmsg_get_s32_or_default(e, "interval", 10000);
     hint.dh_paritycheck = htsmsg_get_s32_or_default(e, "paritycheck", 20);
     hint.dh_ecmparity = str2val_def(htsmsg_get_str(e, "ecmparity"), ecmparitytab, ECM_PARITY_DEFAULT);
-    tvhinfo(LS_DESCRAMBLER, "adding CAID %04X/%04X as%s%s%s interval %ums pc %d ep %s (%s)",
+    tvhinfo(LS_DESCRAMBLER, "adding CAID %04X/%04X as%s%s%s interval %ums pc %u ep %s (%s)",
                             hint.dh_caid, hint.dh_mask,
                             hint.dh_constcw ? " ConstCW" : "",
                             hint.dh_quickecm ? " QuickECM" : "",
@@ -563,7 +563,7 @@ descrambler_notify( th_descrambler_t *td,
   descramble_info_t *di;
 
   tvhdebug(LS_DESCRAMBLER, "info - service='%s' caid=%04X(%s) "
-                                   "provid=%06X ecmtime=%d hops=%d "
+                                   "provid=%06X ecmtime=%u hops=%d "
                                    "reader='%s' from='%s' protocol='%s'%s",
          t->s_dvb_svcname, caid, cardsystem, provid,
          ecmtime, hops, reader, from, protocol,
@@ -1466,7 +1466,8 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   ds->opaque      = opaque;
   LIST_INIT(&ds->ecmsecs);
   TAILQ_INSERT_TAIL(&dt->sections, ds, link);
-  tvhtrace(LS_DESCRAMBLER, "mux %p open pid %04X (%i) (flags 0x%04x) for %p", mux, pid, pid, flags, opaque);
+  tvhtrace(LS_DESCRAMBLER, "mux %p open pid %04X (%i) (flags 0x%04x) for %p", 
+      mux, (unsigned int)pid, pid, (unsigned int)flags, opaque);
   return 1;
 }
 
@@ -1505,7 +1506,8 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
           TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
           descrambler_destroy_table_(dt);
         }
-        tvhtrace(LS_DESCRAMBLER, "mux %p close pid %04X (%i) (flags 0x%04x) for %p", mux, pid, pid, flags, opaque);
+        tvhtrace(LS_DESCRAMBLER, "mux %p close pid %04X (%i) (flags 0x%04x) for %p", 
+            mux, (unsigned int)pid, pid, (unsigned int)flags, opaque);
         return 1;
       }
     }
@@ -1558,7 +1560,7 @@ static void descrambler_cat_entry
     if (emm->caid == caid && emm->prov == prov) {
       emm->to_be_removed = 0;
       if (emm->pid == EMM_PID_UNKNOWN) {
-        tvhtrace(LS_DESCRAMBLER, "attach emm caid %04X (%i) prov %06X (%i) pid %04X (%i)",
+        tvhtrace(LS_DESCRAMBLER, "attach emm caid %04X (%i) prov %06X (%u) pid %04X (%i)",
                                  caid, caid, prov, prov, pid, pid);
         emm->pid = pid;
         descrambler_open_pid_(mux, emm->opaque, pid, emm->callback, NULL);
@@ -1583,7 +1585,7 @@ static void descrambler_cat_clean( mpegts_mux_t *mux )
         caid = emm->caid;
         prov = emm->prov;
         pid  = emm->pid;
-        tvhtrace(LS_DESCRAMBLER, "close emm caid %04X (%i) prov %06X (%i) pid %04X (%i)",
+        tvhtrace(LS_DESCRAMBLER, "close emm caid %04X (%i) prov %06X (%u) pid %04X (%i)",
                                  caid, caid, prov, prov, pid, pid);
         descrambler_close_pid_(mux, emm->opaque, pid);
       }
@@ -1652,7 +1654,7 @@ unlock:
   if (pid != EMM_PID_UNKNOWN) {
     tvhtrace(LS_DESCRAMBLER,
              "attach emm caid %04X (%i) pid %04X (%i) - direct",
-             caid, caid, pid, pid);
+             (unsigned int)caid, caid, (unsigned int)pid, pid);
     descrambler_open_pid_(mux, opaque, pid, callback, NULL);
   }
   tvh_mutex_unlock(&mux->mm_descrambler_lock);
@@ -1681,7 +1683,7 @@ descrambler_close_emm( mpegts_mux_t *mux, void *opaque, int caid, int prov )
     caid = emm->caid;
     prov = emm->prov;
     tvhtrace(LS_DESCRAMBLER, "close emm caid %04X (%i) prov %06X (%i) pid %04X (%i) - direct",
-                             caid, caid, prov, prov, pid, pid);
+                             (unsigned int)caid, caid, (unsigned int)prov, prov, (unsigned int)pid, pid);
     descrambler_close_pid_(mux, opaque, pid);
   }
   tvh_mutex_unlock(&mux->mm_descrambler_lock);

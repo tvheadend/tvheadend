@@ -567,7 +567,7 @@ rtsp_manage_descramble(session_t *rs)
     idnode_set_remove(found, &s->s_id);
   }
   if (si < found->is_count)
-    tvhwarn(LS_SATIPS, "%i/%s/%i: limit for descrambled services reached (wanted %zd allowed %d)",
+    tvhwarn(LS_SATIPS, "%i/%s/%i: limit for descrambled services reached (wanted %zu allowed %d)",
             rs->frontend, rs->session, rs->stream,
             (used - si) + found->is_count, rtsp_descramble);
   

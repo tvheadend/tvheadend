@@ -353,7 +353,7 @@ en50221_app_appinfo_handle
   if (atag >= CICAM_AOT_APPLICATION_INFO &&
       atag <= CICAM_AOT_APPLICATION_INFO+2) {
     if (datalen < 6) {
-      tvherror(LS_EN50221, "%s: unknown length %zd for appinfo 0x%06x", app->cia_name, datalen, atag);
+      tvherror(LS_EN50221, "%s: unknown length %zu for appinfo 0x%06x", app->cia_name, datalen, atag);
       return -ENXIO;
     }
     type = data[0];

@@ -420,7 +420,7 @@ linuxdvb_adapter_add ( const char *path )
     snprintf(name, sizeof(name), "%s #%d", dfi.name, a);
     type = linuxdvb_get_type(dfi.type);
     if (type == DVB_TYPE_NONE) {
-      tvherror(LS_LINUXDVB, "unable to determine FE type %s - %i", fe_path, dfi.type);
+      tvherror(LS_LINUXDVB, "unable to determine FE type %s - %u", fe_path, dfi.type);
       continue;
     }
 

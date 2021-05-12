@@ -340,7 +340,7 @@ mpegts_network_scan_queue_add
   }
 
   tvhdebug(LS_MPEGTS, "adding mux %s to scan queue weight %d flags %04X",
-                      mm->mm_nicename, weight, flags);
+                      mm->mm_nicename, weight, (unsigned int)flags);
 
   /* Add new entry */
   mm->mm_scan_flags |= flags;
@@ -476,7 +476,8 @@ tsid_lookup:
           mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
           return;
         }
-    tvhinfo(LS_MPEGTS, "fastscan mux not found, position:%i, frequency:%i, polarisation:%c", satpos, freq, pol[0]);
+    tvhinfo(LS_MPEGTS, "fastscan mux not found, position:%i, frequency:%u, polarisation:%c", 
+        satpos, freq, pol[0]);
 
     // fastscan mux not found, try to add it automatically
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)

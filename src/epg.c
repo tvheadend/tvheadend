@@ -113,7 +113,7 @@ static void _epg_object_destroy
   ( epg_object_t *eo, epg_object_tree_t *tree )
 {
   assert(eo->refcount == 0);
-  tvhtrace(LS_EPG, "eo [%p, %u, %d] destroy",
+  tvhtrace(LS_EPG, "eo [%p, %u, %u] destroy",
            eo, eo->id, eo->type);
   if (eo->_updated) LIST_REMOVE(eo, up_link);
   RB_REMOVE(epg_id_tree(eo), eo, id_link);
@@ -122,7 +122,7 @@ static void _epg_object_destroy
 static void _epg_object_getref ( void *o )
 {
   epg_object_t *eo = o;
-  tvhtrace(LS_EPG, "eo [%p, %u, %d] getref %d",
+  tvhtrace(LS_EPG, "eo [%p, %u, %u] getref %d",
            eo, eo->id, eo->type, eo->refcount+1);
   if (eo->refcount == 0) LIST_REMOVE(eo, un_link);
   eo->refcount++;
@@ -131,7 +131,7 @@ static void _epg_object_getref ( void *o )
 static int _epg_object_putref ( void *o )
 {
   epg_object_t *eo = o;
-  tvhtrace(LS_EPG, "eo [%p, %u, %d] putref %d",
+  tvhtrace(LS_EPG, "eo [%p, %u, %u] putref %d",
            eo, eo->id, eo->type, eo->refcount-1);
   assert(eo->refcount>0);
   eo->refcount--;
@@ -145,7 +145,7 @@ static int _epg_object_putref ( void *o )
 static void _epg_object_set_updated0 ( void *o )
 {
   epg_object_t *eo = o;
-  tvhtrace(LS_EPG, "eo [%p, %u, %d] updated",
+  tvhtrace(LS_EPG, "eo [%p, %u, %u] updated",
            eo, eo->id, eo->type);
   eo->_updated = 1;
   eo->updated  = gclk();
@@ -186,7 +186,7 @@ static void _epg_object_create ( void *o )
   uint32_t id = eo->id;
   if (!id) eo->id = ++_epg_object_idx;
   if (!eo->id) eo->id = ++_epg_object_idx;
-  tvhtrace(LS_EPG, "eo [%p, %u, %d] created",
+  tvhtrace(LS_EPG, "eo [%p, %u, %u] created",
            eo, eo->id, eo->type);
   _epg_object_set_updated(eo);
   LIST_INSERT_HEAD(&epg_object_unref, eo, un_link);
@@ -216,7 +216,7 @@ static htsmsg_t * _epg_object_serialize ( void *o )
 {
   htsmsg_t *m;
   epg_object_t *eo = o;
-  tvhtrace(LS_EPG, "eo [%p, %u, %d] serialize",
+  tvhtrace(LS_EPG, "eo [%p, %u, %u] serialize",
            eo, eo->id, eo->type);
   if (!eo->id || !eo->type) return NULL;
   m = htsmsg_create_map();
@@ -242,8 +242,8 @@ static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
     _epg_object_set_updated(eo);
     eo->updated = s64;
   }
-  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s, %s] deserialize",
-           eo, eo->id, eo->type, s, eo->grabber ? eo->grabber->id : NULL);
+  tvhtrace(LS_EPG, "eo [%p, %u, %u, %s, %s] deserialize",
+           eo, eo->id, eo->type, s, eo->grabber ? eo->grabber->id : "<NULL>");
   return eo;
 }
 

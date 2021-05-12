@@ -164,7 +164,7 @@ psip_activate_table(psip_status_t *ps, psip_table_t *pt)
   mt->mt_destroy = psip_status_destroy;
   pt->pt_start = mclk();
   pt->pt_table = mt;
-  tvhtrace(LS_PSIP, "table activated - pid 0x%04X type 0x%04X", mt->mt_pid, pt->pt_type);
+  tvhtrace(LS_PSIP, "table activated - pid 0x%04X type 0x%04X", (unsigned int)mt->mt_pid, pt->pt_type);
   return mt;
 }
 
@@ -254,7 +254,7 @@ psip_complete_table(psip_status_t *ps, mpegts_table_t *mt)
       break;
     }
 
-  tvhtrace(LS_PSIP, "pid 0x%04X completed, found = %d", mt->mt_pid, pt != NULL);
+  tvhtrace(LS_PSIP, "pid 0x%04X completed, found = %d", (unsigned int)mt->mt_pid, pt != NULL);
 
   mpegts_table_destroy(mt);
 
@@ -372,7 +372,7 @@ _psip_eit_callback_channel
 
     dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
     size = titlelen + dlen + 12;
-    tvhtrace(LS_PSIP, "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
+    tvhtrace(LS_PSIP, "  %03d: titlelen %d, dlen %u", i, titlelen, dlen);
 
     if (size > len) break;
 
@@ -381,8 +381,8 @@ _psip_eit_callback_channel
     title = atsc_get_string(ptr+10, titlelen);
     if (title == NULL) continue;
 
-    tvhtrace(LS_PSIP, "  %03d: [%s] eventid 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
-             i, ch ? channel_get_name(ch, channel_blank_name) : "(null)",
+    tvhtrace(LS_PSIP, "  %03d: [%s] eventid 0x%04x at %"PRItime_t", duration %u, title: '%s' (%d bytes)",
+             i, ch ? channel_get_name(ch, channel_blank_name) : "<NULL>",
              eventid, start, length,
              lang_str_get(title, NULL), titlelen);
 
@@ -489,7 +489,7 @@ _psip_eit_callback
   if (r == 0) goto complete;
   if (r != 1) return r;
   tvhtrace(LS_PSIP, "0x%04x: EIT tsid %04X (%s), ver %d",
-		  mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
+		  (unsigned int)mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
 
   /* # events */
   count = ptr[6];
@@ -585,7 +585,7 @@ _psip_ett_callback
     goto done;
 
   if (!isevent) {
-    tvhtrace(LS_PSIP, "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
+    tvhtrace(LS_PSIP, "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", (unsigned int)mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
   } else {
     found = 1;
     description = atsc_get_string(ptr+10, len-10);
@@ -597,16 +597,16 @@ _psip_ett_callback
       if (ebc && ebc->grabber == mod) {
         save |= epg_broadcast_set_description(ebc, description, &changes);
         save |= epg_broadcast_change_finish(ebc, changes, 1);
-        tvhtrace(LS_PSIP, "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d) ['%s'], ver %d",
-                 mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid,
+        tvhtrace(LS_PSIP, "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%u) ['%s'], ver %d",
+                 (unsigned int)mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid,
                  lang_str_get(ebc->title, "eng"), ver);
       } else {
         found = 0;
       }
     }
     if (found == 0) {
-      tvhtrace(LS_PSIP, "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d), ver %d - no matching broadcast found [%.80s]",
-               mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, ver, lang_str_get(description, NULL));
+      tvhtrace(LS_PSIP, "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%u), ver %d - no matching broadcast found [%.80s]",
+               (unsigned int)mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, ver, lang_str_get(description, NULL));
       psip_add_desc(ps, eventid, ptr+10, len-10);
     }
     lang_str_destroy(description);
@@ -662,7 +662,8 @@ _psip_mgt_callback
   ptr  += 8;
   len  -= 8;
 
-  tvhtrace(LS_PSIP, "0x%04x: MGT tsid %04X (%d), ver %d, count %d", mt->mt_pid, tsid, tsid, ver, count);
+  tvhtrace(LS_PSIP, "0x%04x: MGT tsid %04X (%d), ver %d, count %d", 
+          (unsigned int)mt->mt_pid, tsid, tsid, ver, count);
 
   for (i = 0; i < count && len >= 11; i++) {
     unsigned int type, tablepid, tablever, tablesize;

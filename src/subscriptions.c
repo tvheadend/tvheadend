@@ -85,8 +85,8 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   LIST_INSERT_HEAD(&t->s_subscriptions, s, ths_service_link);
 
-  tvhtrace(LS_SUBSCRIPTION, "%04X: linking sub %p to svc %p type %i",
-           shortid(s), s, t, t->s_type);
+  tvhtrace(LS_SUBSCRIPTION, "%04X: linking sub %p to svc %p type %u",
+           (unsigned int)shortid(s), s, t, t->s_type);
 
   tvh_mutex_lock(&t->s_stream_mutex);
 
@@ -213,7 +213,7 @@ subscription_show_none(th_subscription_t *s)
     }
 #endif
   }
-  tvhnotice(LS_SUBSCRIPTION, "%04X: %s", shortid(s), buf);
+  tvhnotice(LS_SUBSCRIPTION, "%04X: %s", (unsigned int)shortid(s), buf);
 }
 
 static void
@@ -263,7 +263,7 @@ subscription_show_info(th_subscription_t *s)
   if (s->ths_client)
     tvh_strlcatf(buf, sizeof(buf), l, ", client=\"%s\"", s->ths_client);
 
-  tvhinfo(LS_SUBSCRIPTION, "%04X: %s", shortid(s), buf);
+  tvhinfo(LS_SUBSCRIPTION, "%04X: %s", (unsigned int)shortid(s), buf);
   service_source_info_free(&si);
 
   if (tvhtrace_enabled()) {
@@ -274,7 +274,7 @@ subscription_show_info(th_subscription_t *s)
     s->ths_input.st_ops.st_info(s->ths_input.st_opaque, list);
     HTSMSG_FOREACH(f, list)
       if ((x = htsmsg_field_get_str(f)) != NULL) {
-        tvhtrace(LS_SUBSCRIPTION, "%04X:  chain %02d: %s", shortid(s), i++, x);
+        tvhtrace(LS_SUBSCRIPTION, "%04X:  chain %02d: %s", (unsigned int)shortid(s), i++, x);
       }
     htsmsg_destroy(list);
   }
@@ -329,10 +329,10 @@ subscription_start_instance
 
   if (s->ths_channel)
     tvhtrace(LS_SUBSCRIPTION, "%04X: find service for %s weight %d",
-             shortid(s), channel_get_name(s->ths_channel, channel_blank_name), s->ths_weight);
+             (unsigned int)shortid(s), channel_get_name(s->ths_channel, channel_blank_name), s->ths_weight);
   else
     tvhtrace(LS_SUBSCRIPTION, "%04X: find instance for %s weight %d",
-             shortid(s), s->ths_service->s_nicename, s->ths_weight);
+             (unsigned int)shortid(s), s->ths_service->s_nicename, s->ths_weight);
   si = service_find_instance(s->ths_service, s->ths_channel,
                              s->ths_source, s->ths_prch,
                              &s->ths_instances, error, s->ths_weight,
@@ -384,7 +384,7 @@ subscription_reschedule(void)
 	continue; /* And it is not bad, so we're happy */
 
       tvhwarn(LS_SUBSCRIPTION, "%04X: service instance is bad, reason: %s",
-              shortid(s), streaming_code2txt(s->ths_testing_error));
+              (unsigned int)shortid(s), streaming_code2txt(s->ths_testing_error));
 
       tvh_mutex_lock(&t->s_stream_mutex);
       t->s_streaming_status = 0;
@@ -413,7 +413,7 @@ subscription_reschedule(void)
       if (s->ths_last_error != error ||
           s->ths_last_find + sec2mono(2) >= mclk() ||
           error == SM_CODE_TUNING_FAILED) {
-        tvhtrace(LS_SUBSCRIPTION, "%04X: instance not available, retrying", shortid(s));
+        tvhtrace(LS_SUBSCRIPTION, "%04X: instance not available, retrying", (unsigned int)shortid(s));
         if (s->ths_last_error != error)
           s->ths_last_find = mclk();
         s->ths_last_error = error;
@@ -422,10 +422,10 @@ subscription_reschedule(void)
       if (s->ths_flags & SUBSCRIPTION_RESTART) {
         if (s->ths_channel)
           tvhwarn(LS_SUBSCRIPTION, "%04X: restarting channel %s",
-                  shortid(s), channel_get_name(s->ths_channel, channel_blank_name));
+                  (unsigned int)shortid(s), channel_get_name(s->ths_channel, channel_blank_name));
         else
           tvhwarn(LS_SUBSCRIPTION, "%04X: restarting service %s",
-                  shortid(s), s->ths_service->s_nicename);
+                  (unsigned int)shortid(s), s->ths_service->s_nicename);
         s->ths_testing_error = 0;
         s->ths_current_instance = NULL;
         service_instance_list_clear(&s->ths_instances);
@@ -730,7 +730,7 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
   if (s->ths_client)
     tvh_strlcatf(buf, sizeof(buf), l, ", client=\"%s\"", s->ths_client);
   tvhlog((flags & UNSUBSCRIBE_QUIET) != 0 ? LOG_TRACE : LOG_INFO,
-         LS_SUBSCRIPTION, "%04X: %s", shortid(s), buf);
+         LS_SUBSCRIPTION, "%04X: %s", (unsigned int)shortid(s), buf);
 
   if (t)
     service_remove_subscriber(t, s, SM_CODE_OK);
@@ -858,10 +858,10 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
     const char *pro_name = prch->prch_pro ? profile_get_name(prch->prch_pro) : "<none>";
     if (ch)
       tvhtrace(LS_SUBSCRIPTION, "%04X: creating subscription for %s weight %u using profile %s",
-               shortid(s), channel_get_name(ch, channel_blank_name), weight, pro_name);
+               (unsigned int)shortid(s), channel_get_name(ch, channel_blank_name), weight, pro_name);
     else
       tvhtrace(LS_SUBSCRIPTION, "%04X: creating subscription for service %s weight %u using profile %s",
-               shortid(s), service->s_nicename, weight, pro_name);
+               (unsigned int)shortid(s), service->s_nicename, weight, pro_name);
   }
   s->ths_channel = ch;
   s->ths_service = service;
@@ -1259,7 +1259,7 @@ dummy_callback(void *opauqe, streaming_message_t *sm)
     break;
 
   case SMT_SERVICE_STATUS:
-    fprintf(stderr, "dummsubscription: %x\n", sm->sm_code);
+    fprintf(stderr, "dummsubscription: %x\n", (unsigned int)sm->sm_code);
     break;
   default:
     break;
@@ -1323,5 +1323,5 @@ subscription_dummy_join(const char *id, int first)
   prch->prch_st = st;
   s = subscription_create_from_service(prch, NULL, 1, "dummy", 0, NULL, NULL, "dummy", NULL);
 
-  tvhnotice(LS_SUBSCRIPTION, "%04X: Dummy join %s ok", shortid(s), id);
+  tvhnotice(LS_SUBSCRIPTION, "%04X: Dummy join %s ok", (unsigned int)shortid(s), id);
 }

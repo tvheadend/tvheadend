@@ -1358,7 +1358,7 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 
   tvh_str_update(&htsp->htsp_clientname, htsmsg_get_str(in, "clientname"));
 
-  tvhinfo(LS_HTSP, "%s: Welcomed client software: %s (HTSPv%d)",
+  tvhinfo(LS_HTSP, "%s: Welcomed client software: %s (HTSPv%u)",
 	  htsp->htsp_logname, name, v);
 
   htsmsg_add_u32(r, "htspversion", HTSP_PROTO_VERSION);
@@ -2453,7 +2453,7 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
     if (!htsp_user_access_channel(htsp, ch))
       return htsp_error(htsp, N_("User does not have access"));
 
-    snprintf(path, sizeof(path), "/stream/channelid/%d", id);
+    snprintf(path, sizeof(path), "/stream/channelid/%u", id);
     ticket = access_ticket_create(path, htsp->htsp_granted_access);
   } else if(!htsmsg_get_u32(in, "dvrId", &id)) {
     if (!(de = dvr_entry_find_by_id(id)))
@@ -2461,7 +2461,7 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
     if (!htsp_user_access_channel(htsp, de->de_channel))
       return htsp_error(htsp, N_("User does not have access"));
 
-    snprintf(path, sizeof(path), "/dvrfile/%d", id);
+    snprintf(path, sizeof(path), "/dvrfile/%u", id);
     ticket = access_ticket_create(path, htsp->htsp_granted_access);
   } else {
     return htsp_error(htsp, N_("Invalid arguments"));

@@ -347,7 +347,7 @@ parse_pes_header(parser_t *t, parser_es_t *st,
   st->es_curdts = PTS_UNSET;
   st->es_curpts = PTS_UNSET;
   if (tvhlog_limit(&st->es_pes_log, 10))
-    tvhwarn(LS_TS, "%s Corrupted PES header (errors %zi)",
+    tvhwarn(LS_TS, "%s Corrupted PES header (errors %zu)",
             st->es_nicename, st->es_pes_log.count);
   return -1;
 }

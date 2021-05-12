@@ -314,7 +314,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
     tsf_tmp = NULL;
     if (!ts->full) {
 
-      tvhtrace(LS_TIMESHIFT, "ts %d RAM total %"PRId64" requested %"PRId64" segment %"PRId64,
+      tvhtrace(LS_TIMESHIFT, "ts %d RAM total %"PRIu64" requested %"PRIu64" segment %"PRIu64,
                    ts->id, atomic_pre_add_u64(&timeshift_total_ram_size, 0),
                    timeshift_conf.ram_size, timeshift_conf.ram_segment_size);
       while (1) {

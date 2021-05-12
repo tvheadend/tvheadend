@@ -402,7 +402,7 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
     t = &ca->ca_pids[i];
     if (t->pid == pid && t->ecm == ecm) {
       t->pid_refs++;
-      tvhtrace(LS_CAPMT, "%s: adding pid %d adapter %d - reusing (%d)",
+      tvhtrace(LS_CAPMT, "%s: adding pid %d adapter %d - reusing (%u)",
                capmt_name(capmt), pid, adapter, t->pid_refs);
       return;
     }
@@ -1233,12 +1233,12 @@ capmt_send_key(capmt_t *capmt)
     if (cai->cipher_mode == CA_MODE_ECB) {
       type = DESCRAMBLER_AES_ECB;
     } else {
-      tvherror(LS_CAPMT, "uknown cipher mode %d", cai->cipher_mode);
+      tvherror(LS_CAPMT, "uknown cipher mode %u", cai->cipher_mode);
       return;
     }
     break;
   default:
-    tvherror(LS_CAPMT, "unknown crypto algorithm %d (mode %d)", cai->algo, cai->cipher_mode);
+    tvherror(LS_CAPMT, "unknown crypto algorithm %u (mode %u)", cai->algo, cai->cipher_mode);
     return;
   }
 
@@ -1359,7 +1359,7 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
     int i, j;
     ca_info_t *cai;
 
-    tvhdebug(LS_CAPMT, "%s: CA_SET_PID adapter %d index %d pid %d (0x%04x)", capmt_name(capmt), adapter, index, pid, pid);
+    tvhdebug(LS_CAPMT, "%s: CA_SET_PID adapter %d index %d pid %u (0x%04x)", capmt_name(capmt), adapter, index, pid, pid);
     if (index > 0x100 && index < 0x200 && (index & 0xff) < MAX_INDEX) {
       index &= 0xff;
       if (capmt->capmt_cwmode != CAPMT_CWMODE_OE20) {
@@ -1496,8 +1496,10 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
                          cardsystem, pid, ecmtime, hops, reader,
                          from, protocol);
                          
-    tvhdebug(LS_CAPMT, "%s: ECM_INFO: adapter=%d sid=%d caid=%04X(%s) pid=%04X provid=%06X ecmtime=%d hops=%d reader=%s from=%s protocol=%s",
-             capmt_name(capmt), adapter, sid, caid, cardsystem, pid, provid, ecmtime, hops, reader, from, protocol);
+    tvhdebug(LS_CAPMT, "%s: ECM_INFO: adapter=%d sid=%d caid=%04X(%s) pid=%04X provid=%06X ecmtime=%u hops=%d reader=%s from=%s protocol=%s",
+             capmt_name(capmt), adapter, sid, caid, cardsystem == NULL ? "<NULL>": cardsystem, pid, provid, ecmtime, hops, 
+             reader == NULL ? "<NULL>" : reader, 
+             from == NULL ? "<NULL>" : from, protocol == NULL ? "<NULL>" : protocol);
 
     free(protocol);
     free(from);
@@ -2070,7 +2072,7 @@ capmt_caid_add(capmt_service_t *ct, mpegts_service_t *t, int pid, caid_t *c)
 
   tvhdebug(LS_CAPMT,
           "%s: New caid 0x%04X:0x%06X (pid 0x%04X) for service \"%s\"",
-           capmt_name(ct->ct_capmt), c->caid, c->providerid, pid, t->s_dvb_svcname);
+           capmt_name(ct->ct_capmt), c->caid, c->providerid, (unsigned int)pid, t->s_dvb_svcname);
 
   cce = calloc(1, sizeof(capmt_caid_ecm_t));
   cce->cce_caid = c->caid;
@@ -2366,7 +2368,7 @@ capmt_send_request(capmt_service_t *ct, int lm)
     }
     pos = pos2;
     tvhdebug(LS_CAPMT, "%s: adding ECMPID=0x%X (%d), "
-             "CAID=0x%X (%d) PROVID=0x%X (%d), SID=%d, ADAPTER=%d",
+             "CAID=0x%X (%d) PROVID=0x%X (%u), SID=%d, ADAPTER=%d",
                capmt_name(capmt),
                cce2->cce_ecmpid, cce2->cce_ecmpid,
                cce2->cce_caid, cce2->cce_caid,

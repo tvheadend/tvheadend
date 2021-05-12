@@ -129,7 +129,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
     }
   }
 
-  snprintf(portstr, 6, "%u", port);
+  snprintf(portstr, 6, "%i", port);
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;
   res = getaddrinfo(hostname, portstr, &hints, &ai);

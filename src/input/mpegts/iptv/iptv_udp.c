@@ -200,7 +200,7 @@ iptv_rtp_read(iptv_mux_t *im, void (*pkt_cb)(iptv_mux_t *im, uint8_t *pkt, int l
             * (uint32_t) ((uint16_t) nseq - (uint16_t) (seq + 1));
         ssrc = (rtp[8] << 24) | (rtp[9] << 16) | (rtp[10] << 8) | rtp[11];
       /* Use uncorrectable value to notify RTP delivery issues */
-        tvhwarn(LS_IPTV, "RTP discontinuity for %s SSRC: 0x%x (%i != %i)", im->mm_nicename,
+        tvhwarn(LS_IPTV, "RTP discontinuity for %s SSRC: 0x%x (%u != %u)", im->mm_nicename,
             ssrc, seq + 1, nseq);
         if (im->im_use_retransmission && !im->im_is_ce_detected) {
           im->im_is_ce_detected = 1;
@@ -215,7 +215,7 @@ iptv_rtp_read(iptv_mux_t *im, void (*pkt_cb)(iptv_mux_t *im, uint8_t *pkt, int l
       ssrc = (rtp[8] << 24) | (rtp[9] << 16) | (rtp[10] << 8) | rtp[11];
       if (is_ret_buffer) {
         oseq = (rtp[12] << 8) | rtp[13];
-        tvhtrace(LS_IPTV, "RTP RET received SEQ %i OSN %i for SSRC: 0x%x", nseq, oseq, ssrc);
+        tvhtrace(LS_IPTV, "RTP RET received SEQ %u OSN %u for SSRC: 0x%x", nseq, oseq, ssrc);
         sbuf_append(&im->mm_iptv_buffer, rtp + hlen, len);
       } else
         sbuf_append(&im->im_temp_buffer, rtp + hlen, len);

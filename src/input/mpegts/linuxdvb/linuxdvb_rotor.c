@@ -376,7 +376,7 @@ linuxdvb_rotor_extcmd
   }
   if (rd>=0)
     close(rd);
-  tvhinfo(LS_DISEQC, "linuxdvb_rotor_extcmd moving to %d returned %d", lr->lr_position, ret);
+  tvhinfo(LS_DISEQC, "linuxdvb_rotor_extcmd moving to %u returned %d", lr->lr_position, ret);
   return ret;
 }
 
@@ -458,13 +458,13 @@ linuxdvb_rotor_gotox_tune
 
   for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
-      tvherror(LS_DISEQC, "failed to set GOTOX pos %d", lr->lr_position);
+      tvherror(LS_DISEQC, "failed to set GOTOX pos %u", lr->lr_position);
       return -1;
     }
     tvh_safe_usleep(MINMAX(lr->lr_cmd_time, 10, 100) * 1000);
   }
 
-  tvhdebug(LS_DISEQC, "rotor GOTOX pos %d sent", lr->lr_position);
+  tvhdebug(LS_DISEQC, "rotor GOTOX pos %u sent", lr->lr_position);
 
   return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);
 }

@@ -179,14 +179,14 @@ void epg_init ( void )
   if (remain > 12 && memcmp(rp, "\xff\xffGZIP01", 8) == 0 &&
       (rp[7] == '0' || rp[7] == '1')) {
     uint32_t orig = (rp[8] << 24) | (rp[9] << 16) | (rp[10] << 8) | rp[11];
-    tvhinfo(LS_EPGDB, "gzip format detected, inflating (ratio %.1f%% deflated size %zd)",
+    tvhinfo(LS_EPGDB, "gzip format detected, inflating (ratio %.1f%% deflated size %zu)",
            (float)((remain * 100.0) / orig), remain);
     rp = zlib_mem = tvh_gzip_inflate(rp + 12, remain - 12, orig);
     remain = rp ? orig : 0;
   }
 #endif
 
-  tvhinfo(LS_EPGDB, "parsing %zd bytes", remain);
+  tvhinfo(LS_EPGDB, "parsing %zu bytes", remain);
 
   /* Process */
   memset(&stats, 0, sizeof(stats));
@@ -317,11 +317,11 @@ static void epg_save_tsk_callback ( void *p, int dearmed )
       r = tvh_write(fd, sb->sb_data, orig = size);
     close(fd);
     if (r) {
-      tvherror(LS_EPGDB, "write error (size %zd)", orig);
+      tvherror(LS_EPGDB, "write error (size %zu)", orig);
       if (remove(tmppath))
         tvherror(LS_EPGDB, "unable to remove file %s", tmppath);
     } else {
-      tvhinfo(LS_EPGDB, "stored (size %zd)", orig);
+      tvhinfo(LS_EPGDB, "stored (size %zu)", orig);
       if (rename(tmppath, path))
         tvherror(LS_EPGDB, "unable to rename file %s to %s", tmppath, path);
     }

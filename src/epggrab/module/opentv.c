@@ -594,12 +594,14 @@ opentv_desc_channels
     cid  = ((int)buf[i+3] << 8) | buf[i+4];
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
     unk  = ((int)buf[i+7] << 8) | buf[i+8];
-    tvhtrace(LS_OPENTV, "%s:     sid %04X type %02X cid %04X cnum %d unk %04X", mt->mt_name, sid, type, cid, cnum, unk);
+    tvhtrace(LS_OPENTV, "%s:     sid %04X type %02X cid %04X cnum %d unk %04X", 
+            mt->mt_name, (unsigned int)sid, (unsigned int)type, 
+            (unsigned int)cid, cnum, (unsigned int)unk);
     cnum = cnum < 65535 ? cnum : 0;
 
     /* Find the service */
     svc = mpegts_service_find(mm, sid, 0, 0, NULL);
-    tvhtrace(LS_OPENTV, "%s:     svc %p [%s]", mt->mt_name, svc, svc ? svc->s_nicename : NULL);
+    tvhtrace(LS_OPENTV, "%s:     svc %p [%s]", mt->mt_name, svc, svc ? svc->s_nicename : "<NULL>");
     if (svc && svc->s_dvb_opentv_chnum != cnum &&
         (!svc->s_dvb_opentv_id || svc->s_dvb_opentv_id == unk)) {
       if (mod->bouquetid != nbid) {

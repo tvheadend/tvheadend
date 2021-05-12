@@ -143,7 +143,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
 
   bq2 = RB_INSERT_SORTED(&bouquets, bq, bq_link, _bq_cmp);
   if (bq2) {
-    tvherror(LS_BOUQUET, "found duplicate source id: '%s', remove duplicate config", bq->bq_src);
+    tvherror(LS_BOUQUET, "found duplicate source id: '%s', remove duplicate config", bq->bq_src == NULL ? "<NULL>" : bq->bq_src);
     bouquet_free(bq);
     return NULL;
   }
@@ -450,7 +450,7 @@ bouquet_completed(bouquet_t *bq, uint32_t seen)
     bq->bq_saveflag = 1;
   }
 
-  tvhtrace(LS_BOUQUET, "%s: completed: enabled=%d active=%zi old=%zi seen=%u",
+  tvhtrace(LS_BOUQUET, "%s: completed: enabled=%d active=%zu old=%zu seen=%u",
             bq->bq_name ?: "", bq->bq_enabled, bq->bq_active_services->is_count,
             bq->bq_services->is_count, seen);
 

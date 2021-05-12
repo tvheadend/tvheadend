@@ -158,7 +158,7 @@ esfilter_create
     }
   }
   if (!c) {
-    tvherror(LS_ESFILTER, "wrong class %d!", cls);
+    tvherror(LS_ESFILTER, "wrong class %u!", cls);
     abort();
   }
   if (idnode_insert(&esf->esf_id, uuid, c, 0)) {

@@ -175,11 +175,11 @@ mpegts_mux_tsid_check(mpegts_mux_t *mm, mpegts_table_t *mt, uint16_t tsid)
   if (mm->mm_tsid != MPEGTS_TSID_NONE) {
     if (mm->mm_tsid && mm->mm_tsid != tsid) {
       if (++mm->mm_tsid_checks > 12) {
-        tvhwarn(mt->mt_subsys, "%s: %s: TSID change detected - old %04x (%d), new %04x (%d)",
+        tvhwarn(mt->mt_subsys, "%s: %s: TSID change detected - old %04x (%u), new %04x (%d)",
                 mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
       } else {
         if (tvhtrace_enabled()) {
-          tvhtrace(mt->mt_subsys, "%s: %s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
+          tvhtrace(mt->mt_subsys, "%s: %s: ignore TSID - old %04x (%u), new %04x (%d) (checks %d)",
                    mt->mt_name, mm->mm_nicename, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
         }
         return -1; /* keep rolling */
@@ -1200,12 +1200,15 @@ dvb_bat_completed
         if (mc->u.dmc_fe_qpsk.orbital_pos != INT_MAX) {
           char buf[16];
           dvb_sat_position_to_str(mc->u.dmc_fe_qpsk.orbital_pos, buf, sizeof(buf));
-          snprintf(src, sizeof(src), "dvb-bouquet://dvbs,%s,%04X,%04X", buf, tsid, bi->nbid);
+          snprintf(src, sizeof(src), "dvb-bouquet://dvbs,%s,%04X,%04X", buf, 
+                  (unsigned int)tsid, bi->nbid);
         }
       } else if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbt_class)) {
-        snprintf(src, sizeof(src), "dvb-bouquet://dvbt,%04X,%04X", tsid, bi->nbid);
+        snprintf(src, sizeof(src), "dvb-bouquet://dvbt,%04X,%04X", 
+                (unsigned int)tsid, bi->nbid);
       } else if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbc_class)) {
-        snprintf(src, sizeof(src), "dvb-bouquet://dvbc,%04X,%04X", tsid, bi->nbid);
+        snprintf(src, sizeof(src), "dvb-bouquet://dvbc,%04X,%04X", 
+                (unsigned int)tsid, bi->nbid);
       }
       if (src[0])
         bq = bouquet_find_by_source(bi->name, src, !TAILQ_EMPTY(&bi->services));
@@ -1680,7 +1683,7 @@ dvb_sdt_mux
     }}
 
     tvhtrace(mt->mt_subsys, "%s:  type %02X (%d) name [%s] provider [%s] def_auth [%s]",
-             mt->mt_name, stype, stype, sname, sprov, sauth);
+             mt->mt_name, (unsigned int)stype, stype, sname, sprov, sauth);
     if (!s) continue;
 
     /* Update service type */
@@ -1902,11 +1905,11 @@ atsc_vct_callback
                 x = lang_str_get(ls, "eng");
               if (x)
                 snprintf(chname, sizeof(chname), "%s", x);
-              tvhdebug(mt->mt_subsys, "%s:  extended channel name: '%s' (%d bytes)", mt->mt_name, x, len);
+              tvhdebug(mt->mt_subsys, "%s:  extended channel name: '%s' (%u bytes)", mt->mt_name, x, len);
               lang_str_destroy(ls);
             }
           } else {
-            tvhdebug(mt->mt_subsys, "%s:  tag 0x%02x, len %d", mt->mt_name, tag, len);
+            tvhdebug(mt->mt_subsys, "%s:  tag 0x%02x, len %u", mt->mt_name, tag, len);
           }
           j += len + 2;
         }
@@ -1971,7 +1974,7 @@ atsc_stt_callback
   gps_utc_offset = ptr[10];
   is_dst = ptr[11] >> 7;
 
-  tvhdebug(mt->mt_subsys, "%s: system_time %d, gps_utc_offset %d, is DST %d",
+  tvhdebug(mt->mt_subsys, "%s: system_time %u, gps_utc_offset %u, is DST %d",
            mt->mt_name, systemtime, gps_utc_offset, is_dst);
 
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
@@ -2240,7 +2243,7 @@ psi_tables_default ( mpegts_mux_t *mm )
 static void
 psi_tables_dvb_fastscan( void *aux, bouquet_t *bq, const char *name, int pid )
 {
-  tvhtrace(LS_FASTSCAN, "adding table %04X (%i) for '%s'", pid, pid, name);
+  tvhtrace(LS_FASTSCAN, "adding table %04X (%i) for '%s'", (unsigned int)pid, pid, name);
   bq->bq_fastscan_nit = 1;
   bq->bq_fastscan_sdt = 1;
   mpegts_table_add(aux, DVB_FASTSCAN_NIT_BASE, DVB_FASTSCAN_MASK,

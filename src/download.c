@@ -122,7 +122,7 @@ download_fetch_complete(http_client_t *hc)
   if (hc->hc_code == HTTP_STATUS_OK && hc->hc_result == 0 && hc->hc_data_size > 0)
     dn->process(dn->aux, last_url, hc->hc_url, hc->hc_data, hc->hc_data_size);
   else
-    tvherror(dn->subsys, "unable to fetch data from url [%d-%d/%zd]",
+    tvherror(dn->subsys, "unable to fetch data from url [%d-%d/%zu]",
              hc->hc_code, hc->hc_result, hc->hc_data_size);
 
   /* note: http_client_close must be called outside http_client callbacks */

@@ -404,7 +404,7 @@ dvr_entry_get_retention_string ( dvr_entry_t *de )
   uint32_t retention = dvr_entry_get_retention_days(de);
 
   if (retention < DVR_RET_ONREMOVE)
-    snprintf(buf, sizeof(buf), "%i days", retention);
+    snprintf(buf, sizeof(buf), "%u days", retention);
   else if (retention == DVR_RET_ONREMOVE)
     return strdup("On file removal");
   else
@@ -420,7 +420,7 @@ dvr_entry_get_removal_string ( dvr_entry_t *de )
   uint32_t removal = dvr_entry_get_removal_days(de);
 
   if (removal < DVR_REM_SPACE)
-    snprintf(buf, sizeof(buf), "%i days", removal);
+    snprintf(buf, sizeof(buf), "%u days", removal);
   else if (removal == DVR_REM_SPACE)
     return strdup("Until space needed");
   else
@@ -2766,7 +2766,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_running_t running)
 
   if (e->dvb_eid == 0 || e->channel == NULL)
     return;
-  tvhtrace(LS_DVR, "dvr event running check for %s on %s running %d",
+  tvhtrace(LS_DVR, "dvr event running check for %s on %s running %u",
            epg_broadcast_get_title(e, NULL),
            channel_get_name(e->channel, channel_blank_name),
            running);
@@ -3126,7 +3126,7 @@ dvr_entry_class_get_title
         s = lang_str_get(de->de_desc, NULL);
     }
   }
-  snprintf(dst, dstsize, "%s", s);
+  snprintf(dst, dstsize, "%s", s == NULL ? "<NULL>" : s);
 }
 
 static int

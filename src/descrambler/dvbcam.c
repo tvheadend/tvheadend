@@ -171,7 +171,7 @@ dvbcam_register_cam(linuxdvb_ca_t * lca, uint16_t * caids,
   dvbcam_active_cam_t *ac, *ac_first;
   int registered = 0, call_update = 0;
 
-  tvhtrace(LS_DVBCAM, "register cam %p caids_count %u", lca->lca_name, caids_count);
+  tvhtrace(LS_DVBCAM, "register cam %p caids_count %i", lca->lca_name, caids_count);
 
   tvh_mutex_lock(&dvbcam_mutex);
 
@@ -607,7 +607,7 @@ update_pid:
       if (dvbcam_service_check_caid(as, c->caid)) {
         mpegts_pid_add(&ecm_pids, st->es_pid, 0);
         tvhtrace(LS_DVBCAM, "%s/%p: add ECM PID %d (%04X) for CAID %04X",
-                            ac->ca->lca_name, t, st->es_pid, st->es_pid, c->caid);
+                            ac->ca->lca_name, t, st->es_pid, (unsigned int)st->es_pid, c->caid);
       }
     }
   }

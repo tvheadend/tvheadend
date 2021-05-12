@@ -743,7 +743,7 @@ linuxdvb_ddci_create ( linuxdvb_transport_t *lcat, const char *ci_path)
   lddci = calloc(1, sizeof(*lddci));
   lddci->lcat = lcat;
   lddci->lddci_path = strdup(ci_path);
-  snprintf(lddci->lddci_id, sizeof(lddci->lddci_id), "ci%u",
+  snprintf(lddci->lddci_id, sizeof(lddci->lddci_id), "ci%i",
            lcat->lcat_adapter->la_dvb_number);
   lddci->lddci_fdW = -1;
   lddci->lddci_fdR = -1;

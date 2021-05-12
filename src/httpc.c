@@ -153,7 +153,8 @@ http_port( http_client_t *hc, const char *scheme, int port )
     else if (scheme && strcmp(scheme, "rtsp") == 0)
       port = 554;
     else {
-      tvherror(LS_HTTPC, "%04X: Unknown scheme '%s'", shortid(hc), scheme ? scheme : "");
+      tvherror(LS_HTTPC, "%04X: Unknown scheme '%s'", 
+              (unsigned int)shortid(hc), scheme ? scheme : "");
       return -EINVAL;
     }
   }
@@ -168,7 +169,7 @@ http_client_shutdown ( http_client_t *hc, int force, int reconnect )
 {
   struct http_client_ssl *ssl = hc->hc_ssl;
 
-  tvhtrace(LS_HTTPC, "%04X: shutdown", shortid(hc));
+  tvhtrace(LS_HTTPC, "%04X: shutdown", (unsigned int)shortid(hc));
   hc->hc_shutdown = 1;
   if (ssl) {
     if (!ssl->shutdown) {
@@ -213,12 +214,13 @@ http_client_poll_dir ( http_client_t *hc, int in, int out )
   int events = (in ? TVHPOLL_IN : 0) | (out ? TVHPOLL_OUT : 0);
   if (hc->hc_efd) {
     if (events == 0 && hc->hc_pause) {
-      tvhtrace(LS_HTTPC, "%04X: pausing input", shortid(hc));
+      tvhtrace(LS_HTTPC, "%04X: pausing input", (unsigned int)shortid(hc));
       if (hc->hc_pevents_pause == 0)
         hc->hc_pevents_pause = hc->hc_pevents;
       tvhpoll_rem1(hc->hc_efd, hc->hc_fd);
     } else if (hc->hc_pevents != events) {
-      tvhtrace(LS_HTTPC, "%04X: add poll for input%s (%x)", shortid(hc), out ? " and output" : "", events);
+      tvhtrace(LS_HTTPC, "%04X: add poll for input%s (%x)", 
+              (unsigned int)shortid(hc), out ? " and output" : "", (unsigned int)events);
       tvhpoll_add1(hc->hc_efd, hc->hc_fd, events | TVHPOLL_IN, hc);
     }
   }
@@ -232,7 +234,7 @@ http_client_unpause( http_client_t *hc )
 {
   if (hc->hc_pause) {
     int pevents_pause = hc->hc_pevents_pause;
-    tvhtrace(LS_HTTPC, "%04X: resuming input", shortid(hc));
+    tvhtrace(LS_HTTPC, "%04X: resuming input", (unsigned int)shortid(hc));
     hc->hc_pause = 0;
     hc->hc_pevents_pause = 0;
     http_client_poll_dir(hc, pevents_pause & TVHPOLL_IN,
@@ -272,7 +274,7 @@ static int
 http_client_flush( http_client_t *hc, int result )
 {
   hc->hc_result       = result;
-  tvhtrace(LS_HTTPC, "%04X: client flush %i", shortid(hc), result);
+  tvhtrace(LS_HTTPC, "%04X: client flush %i", (unsigned int)shortid(hc), result);
   if (result < 0)
     http_client_shutdown(hc, 0, 0);
   hc->hc_in_data      = 0;
@@ -468,7 +470,7 @@ http_client_ssl_send( http_client_t *hc, const void *buf, size_t len )
           if (SSL_get_peer_certificate(ssl->ssl) == NULL ||
               SSL_get_verify_result(ssl->ssl) != X509_V_OK) {
             tvherror(LS_HTTPC, "%04X: SSL peer verification failed (%s:%i)%s %li",
-                   shortid(hc), hc->hc_host, hc->hc_port,
+                   (unsigned int)shortid(hc), hc->hc_host, hc->hc_port,
                    SSL_get_peer_certificate(ssl->ssl) ? " X509" : "",
                    SSL_get_verify_result(ssl->ssl));
             errno = EPERM;
@@ -684,7 +686,8 @@ error:
   htsbuf_read(&q, body, body_size);
 
   if (tvhtrace_enabled()) {
-    tvhtrace(LS_HTTPC, "%04X: sending %s cmd", shortid(hc), http_ver2str(hc->hc_version));
+    tvhtrace(LS_HTTPC, "%04X: sending %s cmd", (unsigned int)shortid(hc), 
+            http_ver2str(hc->hc_version));
     tvhlog_hexdump(LS_HTTPC, body, body_size);
   }
 
@@ -707,7 +710,7 @@ http_client_finish( http_client_t *hc )
   http_client_wcmd_t *wcmd;
   int res;
 
-  tvhtrace(LS_HTTPC, "%04X: finishing", shortid(hc));
+  tvhtrace(LS_HTTPC, "%04X: finishing", (unsigned int)shortid(hc));
 
   assert(!hc->hc_in_rtp_data);
 
@@ -995,22 +998,22 @@ retry:
   else
     r = recv(hc->hc_fd, buf, hc->hc_io_size, MSG_DONTWAIT);
   if (r == 0) {
-    tvhtrace(LS_HTTPC, "%04X: end of stream", shortid(hc));
+    tvhtrace(LS_HTTPC, "%04X: end of stream", (unsigned int)shortid(hc));
     if (hc->hc_in_data && !hc->hc_keepalive) {
-      tvhtrace(LS_HTTPC, "%04X: no keep-alive, finishing", shortid(hc));
+      tvhtrace(LS_HTTPC, "%04X: no keep-alive, finishing", (unsigned int)shortid(hc));
       return http_client_finish(hc);
     }
     return http_client_flush(hc, -EIO);
   }
   if (r < 0) {
     if (errno == EIO && hc->hc_in_data && !hc->hc_keepalive) {
-      tvhtrace(LS_HTTPC, "%04X: error reading: %s", shortid(hc), strerror(errno));
-      tvhtrace(LS_HTTPC, "%04X: no keep-alive, finishing", shortid(hc));
+      tvhtrace(LS_HTTPC, "%04X: error reading: %s", (unsigned int)shortid(hc), strerror(errno));
+      tvhtrace(LS_HTTPC, "%04X: no keep-alive, finishing", (unsigned int)shortid(hc));
       return http_client_finish(hc);
     }
     if (ERRNO_AGAIN(errno))
       return HTTP_CON_RECEIVING;
-    tvhtrace(LS_HTTPC, "%04X: error reading: %s", shortid(hc), strerror(errno));
+    tvhtrace(LS_HTTPC, "%04X: error reading: %s", (unsigned int)shortid(hc), strerror(errno));
     return http_client_flush(hc, -errno);
   }
 
@@ -1019,11 +1022,11 @@ retry:
     if (res < 0)
       return http_client_flush(hc, res);
     if (res > 0) {
-      tvhtrace(LS_HTTPC, "%04X: data complete, finishing", shortid(hc));
+      tvhtrace(LS_HTTPC, "%04X: data complete, finishing", (unsigned int)shortid(hc));
       return http_client_finish(hc);
     }
     if (hc->hc_data_limit && r + hc->hc_rsize >= hc->hc_data_limit) {
-      tvhtrace(LS_HTTPC, "%04X: data overflow", shortid(hc));
+      tvhtrace(LS_HTTPC, "%04X: data overflow", (unsigned int)shortid(hc));
       return http_client_flush(hc, -EOVERFLOW);
     }
     goto retry;
@@ -1031,8 +1034,8 @@ retry:
 
   if (hc->hc_rsize < r + hc->hc_rpos) {
     if (hc->hc_rpos + r > hc->hc_io_size + 20*1024) {
-      tvhtrace(LS_HTTPC, "%04X: overflow, buf %zd pos %zd read %zd io %zd",
-               shortid(hc), hc->hc_rsize, hc->hc_rpos, r, hc->hc_io_size);
+      tvhtrace(LS_HTTPC, "%04X: overflow, buf %zu pos %zu read %zd io %zu",
+               (unsigned int)shortid(hc), hc->hc_rsize, hc->hc_rpos, r, hc->hc_io_size);
       return http_client_flush(hc, -EMSGSIZE);
     }
     hc->hc_rsize += hc->hc_rpos + r + 4*1024;
@@ -1065,7 +1068,7 @@ header:
   if (p == NULL)
     return http_client_flush(hc, -EINVAL);
   tvhtrace(LS_HTTPC, "%04X: %s answer '%s' (rcseq: %d)",
-           shortid(hc), http_ver2str(hc->hc_version), p, hc->hc_rcseq);
+           (unsigned int)shortid(hc), http_ver2str(hc->hc_version), p, hc->hc_rcseq);
   tvhlog_hexdump(LS_HTTPC, hc->hc_rbuf, hc->hc_hsize);
   if (http_tokenize(p, argv, 3, -1) != 3)
     return http_client_flush(hc, -EINVAL);
@@ -1236,7 +1239,7 @@ http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url
   if (url->port == 0) { /* default port */
     http_arg_set(h, "Host", url->host);
   } else {
-    snprintf(buf, sizeof(buf), "%s:%u", url->host,
+    snprintf(buf, sizeof(buf), "%s:%d", url->host,
                                         http_port(hc, url->scheme, url->port));
     http_arg_set(h, "Host", buf);
   }
@@ -1362,7 +1365,7 @@ http_client_redirected ( http_client_t *hc )
   urlinit(&u);
   if (urlparse(location2 ? location2 : location, &u)) {
     tvherror(LS_HTTPC, "%04X: redirection - cannot parse url '%s'",
-             shortid(hc), location2 ? location2 : location);
+             (unsigned int)shortid(hc), location2 ? location2 : location);
     free(location);
     return -EIO;
   }
@@ -1400,14 +1403,16 @@ http_client_ssl_peer_verify( http_client_t *hc, int verify )
     hc->hc_verify_peer = verify ? 1 : 0;
     if ((ssl = hc->hc_ssl) != NULL) {
       if (!SSL_CTX_set_default_verify_paths(ssl->ctx))
-        tvherror(LS_HTTPC, "%04X: SSL - unable to load CA certificates for verification", shortid(hc));
+        tvherror(LS_HTTPC, "%04X: SSL - unable to load CA certificates for verification", 
+                (unsigned int)shortid(hc));
       SSL_CTX_set_verify_depth(ssl->ctx, 1);
       SSL_CTX_set_verify(ssl->ctx,
                          hc->hc_verify_peer ? SSL_VERIFY_PEER : SSL_VERIFY_NONE,
                          NULL);
     }
   } else {
-    tvherror(LS_HTTPC, "%04X: SSL peer verification method must be set only once", shortid(hc));
+    tvherror(LS_HTTPC, "%04X: SSL peer verification method must be set only once", 
+            (unsigned int)shortid(hc));
   }
 }
 
@@ -1501,7 +1506,7 @@ http_client_reconnect
   port           = http_port(hc, scheme, port);
   hc->hc_fd      = tcp_connect(host, port, hc->hc_bindaddr, errbuf, sizeof(errbuf), -1);
   if (hc->hc_fd < 0) {
-    tvherror(LS_HTTPC, "%04X: Unable to connect to %s:%i - %s", shortid(hc), host, port, errbuf);
+    tvherror(LS_HTTPC, "%04X: Unable to connect to %s:%i - %s", (unsigned int)shortid(hc), host, port, errbuf);
     goto errnval;
   }
   hc->hc_pevents = 0;
@@ -1511,7 +1516,7 @@ http_client_reconnect
   hc->hc_scheme  = strdup(scheme);
   hc->hc_host    = strdup(host);
   hc->hc_einprogress = 1;
-  tvhtrace(LS_HTTPC, "%04X: Connected to %s:%i", shortid(hc), host, port);
+  tvhtrace(LS_HTTPC, "%04X: Connected to %s:%i", (unsigned int)shortid(hc), host, port);
   http_client_ssl_free(hc);
   if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {
     ssl = calloc(1, sizeof(*ssl));
@@ -1522,26 +1527,26 @@ http_client_reconnect
     ssl->ctx   = SSL_CTX_new(TLS_client_method());
 #endif
     if (ssl->ctx == NULL) {
-      tvherror(LS_HTTPC, "%04X: Unable to get SSL_CTX", shortid(hc));
+      tvherror(LS_HTTPC, "%04X: Unable to get SSL_CTX", (unsigned int)shortid(hc));
       goto err1;
     }
     /* do not use SSLv2 */
     SSL_CTX_set_options(ssl->ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_COMPRESSION);
     /* adjust cipher list */
     if (SSL_CTX_set_cipher_list(ssl->ctx, "HIGH:MEDIUM") != 1) {
-      tvherror(LS_HTTPC, "%04X: Unable to adjust SSL cipher list", shortid(hc));
+      tvherror(LS_HTTPC, "%04X: Unable to adjust SSL cipher list", (unsigned int)shortid(hc));
       goto err2;
     }
     ssl->rbio  = BIO_new(BIO_s_mem());
     ssl->wbio  = BIO_new(BIO_s_mem());
     ssl->ssl   = SSL_new(ssl->ctx);
     if (ssl->ssl == NULL || ssl->rbio == NULL || ssl->wbio == NULL) {
-      tvherror(LS_HTTPC, "%04X: Unable to get SSL handle", shortid(hc));
+      tvherror(LS_HTTPC, "%04X: Unable to get SSL handle", (unsigned int)shortid(hc));
       goto err3;
     }
     SSL_set_bio(ssl->ssl, ssl->rbio, ssl->wbio);
     if (!SSL_set_tlsext_host_name(ssl->ssl, host)) {
-      tvherror(LS_HTTPC, "%04X: Unable to set SSL hostname", shortid(hc));
+      tvherror(LS_HTTPC, "%04X: Unable to set SSL hostname", (unsigned int)shortid(hc));
       goto err4;
     }
   }
@@ -1652,7 +1657,7 @@ http_client_close ( http_client_t *hc )
   }
   http_client_shutdown(hc, 1, 0);
   http_client_flush(hc, 0);
-  tvhtrace(LS_HTTPC, "%04X: Closed", shortid(hc));
+  tvhtrace(LS_HTTPC, "%04X: Closed", (unsigned int)shortid(hc));
   while ((wcmd = TAILQ_FIRST(&hc->hc_wqueue)) != NULL)
     http_client_cmd_destroy(hc, wcmd);
   http_client_ssl_free(hc);

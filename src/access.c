@@ -470,7 +470,7 @@ access_dump_a(access_t *a)
   int first;
 
   tvh_strlcatf(buf, sizeof(buf), l,
-    "%s:%s [%c%c%c%c%c%c%c%c%c%c%c], conn=%u:s%u:r%u:l%u%s",
+    "%s:%s [%c%c%c%c%c%c%c%c%c%c%c], conn=%u:s%u:r%u:l%i%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
     a->aa_rights & ACCESS_STREAMING          ? 'S' : ' ',
@@ -524,9 +524,9 @@ access_dump_a(access_t *a)
 
   if (a->aa_chrange) {
     for (first = 0; first < a->aa_chrange_count; first += 2)
-      tvh_strlcatf(buf, sizeof(buf), l, ", [chmin=%llu, chmax=%llu]",
-                   (long long)a->aa_chrange[first],
-                   (long long)a->aa_chrange[first+1]);
+      tvh_strlcatf(buf, sizeof(buf), l, ", [chmin=%lu, chmax=%lu]",
+                   a->aa_chrange[first],
+                   a->aa_chrange[first+1]);
   }
 
 

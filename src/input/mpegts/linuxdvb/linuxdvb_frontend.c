@@ -953,7 +953,7 @@ linuxdvb_frontend_monitor ( void *aux )
              (fe_status & FE_HAS_LOCK) ?    " | LOCK"  : "",
              (fe_status & FE_TIMEDOUT) ?    "TIMEOUT" : "");
   } else {
-    tvhtrace(LS_LINUXDVB, "%s - status %d (%04X)", buf, status, fe_status);
+    tvhtrace(LS_LINUXDVB, "%s - status %u (%04X)", buf, status, fe_status);
   }
   retune = NOSIGNAL(fe_status) && NOSIGNAL(lfe->lfe_status) && !NOSIGNAL(lfe->lfe_status2);
   lfe->lfe_status2 = lfe->lfe_status;
@@ -1235,7 +1235,7 @@ linuxdvb_frontend_open_pid0
   }
 
   /* Install filter */
-  tvhtrace(LS_LINUXDVB, "%s - open PID %04X (%d) fd %d", name, pid, pid, fd);
+  tvhtrace(LS_LINUXDVB, "%s - open PID %04X (%d) fd %d", name, (unsigned int)pid, pid, fd);
   memset(&dmx_param, 0, sizeof(dmx_param));
   dmx_param.pid      = pid;
   dmx_param.input    = DMX_IN_FRONTEND;
@@ -1264,7 +1264,7 @@ linuxdvb_frontend_close_pid0
           pids_size--, pids++);
   if (pids_size == 0)
     return;
-  tvhtrace(LS_LINUXDVB, "%s - close PID %04X (%d) fd %d", name, pid, pid, pids->fd);
+  tvhtrace(LS_LINUXDVB, "%s - close PID %04X (%d) fd %d", name, (unsigned int)pid, pid, pids->fd);
   close(pids->fd);
   pids->fd = -1;
   pids->pid = -1;
@@ -1724,7 +1724,7 @@ linuxdvb_frontend_tune0
   if (tvhtrace_enabled()) {
     char buf2[256];
     dvb_mux_conf_str(&lm->lm_tuning, buf2, sizeof(buf2));
-    tvhtrace(LS_LINUXDVB, "tuner %s tuning to %s (freq %i)", buf1, buf2, freq);
+    tvhtrace(LS_LINUXDVB, "tuner %s tuning to %s (freq %u)", buf1, buf2, freq);
   }
   memset(&p, 0, sizeof(p));
   p.frequency                = dmc->dmc_fe_freq;
@@ -1763,7 +1763,7 @@ linuxdvb_frontend_tune0
     break;
 #endif
   default:
-    tvherror(LS_LINUXDVB, "%s - unknown FE type %d", buf1, dmc->dmc_fe_type);
+    tvherror(LS_LINUXDVB, "%s - unknown FE type %u", buf1, dmc->dmc_fe_type);
     return SM_CODE_TUNING_FAILED;
   }
 
@@ -1771,7 +1771,7 @@ linuxdvb_frontend_tune0
     p.frequency = lfe->lfe_freq = freq;
 
   if (dmc->dmc_fe_type != lfe->lfe_type) {
-    tvherror(LS_LINUXDVB, "%s - failed to tune [type does not match %i != %i]", buf1, dmc->dmc_fe_type, lfe->lfe_type);
+    tvherror(LS_LINUXDVB, "%s - failed to tune [type does not match %u != %u]", buf1, dmc->dmc_fe_type, lfe->lfe_type);
     return SM_CODE_TUNING_FAILED;
   }
 
@@ -2112,7 +2112,7 @@ linuxdvb_frontend_create
   else if (type == DVB_TYPE_DAB)
     idc = &linuxdvb_frontend_dab_class;
   else {
-    tvherror(LS_LINUXDVB, "unknown FE type %d", type);
+    tvherror(LS_LINUXDVB, "unknown FE type %u", type);
     return NULL;
   }
 

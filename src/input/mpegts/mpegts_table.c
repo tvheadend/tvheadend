@@ -67,7 +67,7 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
     if (!mt->mt_complete || mt->mt_working) {
       tvhtrace(LS_MPEGTS, "table: mux %p no fastswitch %s %02X/%02X (%d) pid %04X (%d)",
                mm, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
-               mt->mt_pid, mt->mt_pid);
+               (unsigned int)mt->mt_pid, mt->mt_pid);
       tvh_mutex_unlock(&mm->mm_tables_lock);
       return;
     }
@@ -118,7 +118,7 @@ mpegts_table_release_ ( mpegts_table_t *mt )
   dvb_table_release((mpegts_psi_table_t *)mt);
   tvhtrace(LS_MPEGTS, "table: mux %p free %s %02X/%02X (%d) pid %04X (%d)",
            mt->mt_mux, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
-           mt->mt_pid, mt->mt_pid);
+           (unsigned int)mt->mt_pid, mt->mt_pid);
   if (mt->mt_bat && mt->mt_bat != mt)
     dvb_bat_destroy(mt);
   if (mt->mt_destroy)
@@ -141,7 +141,7 @@ mpegts_table_destroy_ ( mpegts_table_t *mt )
 
   tvhtrace(LS_MPEGTS, "table: mux %p destroy %s %02X/%02X (%d) pid %04X (%d)",
            mm, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
-           mt->mt_pid, mt->mt_pid);
+           (unsigned int )mt->mt_pid, mt->mt_pid);
   mpegts_table_consistency_check(mm);
   mt->mt_destroyed = 1;
   mt->mt_mux->mm_close_table(mt->mt_mux, mt);
@@ -242,7 +242,7 @@ mpegts_table_add
     return mt;
   }
   tvhtrace(LS_MPEGTS, "table: mux %p add %s %02X/%02X (%d) pid %04X (%d)",
-           mm, name, tableid, mask, tableid, pid, pid);
+           mm, name, (unsigned int)tableid, (unsigned int)mask, tableid, (unsigned int)pid, pid);
 
   /* Create */
   mt = calloc(1, sizeof(mpegts_table_t));

@@ -935,7 +935,7 @@ htsmsg_field_get_string(htsmsg_field_t *f)
     htsmsg_field_set_str_force(f, buf);
     break;
   case HMF_DBL:
-    snprintf(buf, sizeof(buf), "%lf", f->hmf_dbl);
+    snprintf(buf, sizeof(buf), "%f", f->hmf_dbl);
     htsmsg_field_set_str_force(f, buf);
     break;
   }

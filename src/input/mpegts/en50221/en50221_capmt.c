@@ -297,7 +297,7 @@ void en50221_capmt_dump
   char hbuf[257];
 
   if (capmtlen < 6) {
-    tvhtrace(subsys, "%s: CAPMT short length %zd", prefix, capmtlen);
+    tvhtrace(subsys, "%s: CAPMT short length %zu", prefix, capmtlen);
     return;
   }
   tvhtrace(subsys, "%s: CAPMT list_management %02x sid %04x ver %02x",
@@ -366,5 +366,5 @@ void en50221_capmt_dump
     }
   }
   if (capmtlen)
-    tvhtrace(subsys, "%s: CAPMT wrong main length (%zd)", prefix, capmtlen);
+    tvhtrace(subsys, "%s: CAPMT wrong main length (%zu)", prefix, capmtlen);
 }

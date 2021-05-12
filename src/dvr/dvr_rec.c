@@ -102,7 +102,8 @@ dvr_rec_subscribe(dvr_entry_t *de)
     aa = access_get_by_addr(&sa);
   } else {
     tvherror(LS_DVR, "unable to find access (owner '%s', creator '%s')",
-             de->de_owner, de->de_creator);
+             de->de_owner == NULL ? "<NULL>" : de->de_owner, 
+             de->de_creator == NULL ? "<NULL>" : de->de_creator);
     ret = -EPERM;
     goto _return;
   }
@@ -513,7 +514,7 @@ _dvr_sub_scraper_friendly(const char *id, const char *fmt, const void *aux, char
     }
   }
 
-  tvhdebug(LS_DVR, "fmt = %s is_movie = %d content_type = %d", fmt ?: "<none>", is_movie, de->de_content_type);
+  tvhdebug(LS_DVR, "fmt = %s is_movie = %d content_type = %u", fmt ?: "<none>", is_movie, de->de_content_type);
 
   char *date_buf = NULL, *episode_buf = NULL, *season_dir = NULL;
 

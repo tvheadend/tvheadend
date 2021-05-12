@@ -913,7 +913,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
       while ((mps = RB_FIRST(&mp->mp_subs))) {
         tvhdebug(LS_MPEGTS, "%s - close PID %04X (%d) [%d/%p]",
                  mm->mm_nicename,
-                 mp->mp_pid, mp->mp_pid, mps->mps_type, mps->mps_owner);
+                 (unsigned int)mp->mp_pid, mp->mp_pid, mps->mps_type, mps->mps_owner);
         RB_REMOVE(&mp->mp_subs, mps, mps_link);
         if (mps->mps_type & (MPS_SERVICE|MPS_ALL))
           LIST_REMOVE(mps, mps_svcraw_link);
@@ -1120,7 +1120,7 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
         total++;
         incomplete++;
       }
-      tvhdebug(LS_MPEGTS, "%s - %04X (%d) %s %s", buf, mt->mt_pid, mt->mt_pid, mt->mt_name, s);
+      tvhdebug(LS_MPEGTS, "%s - %04X (%d) %s %s", buf, (unsigned int)mt->mt_pid, mt->mt_pid, mt->mt_name, s);
     }
   }
   tvh_mutex_unlock(&mm->mm_tables_lock);
@@ -1331,7 +1331,7 @@ mpegts_mux_set_onid ( mpegts_mux_t *mm, uint32_t onid )
   if (onid == mm->mm_onid)
     return 0;
   mm->mm_onid = onid;
-  tvhtrace(LS_MPEGTS, "%s - set onid %04X (%d)", mm->mm_nicename, onid, onid);
+  tvhtrace(LS_MPEGTS, "%s - set onid %04X (%u)", mm->mm_nicename, onid, onid);
   idnode_changed(&mm->mm_id);
   return 1;
 }
@@ -1344,7 +1344,7 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint32_t tsid, int force )
   if (!force && mm->mm_tsid != MPEGTS_TSID_NONE)
     return 0;
   mm->mm_tsid = tsid;
-  tvhtrace(LS_MPEGTS, "%s - set tsid %04X (%d)", mm->mm_nicename, tsid, tsid);
+  tvhtrace(LS_MPEGTS, "%s - set tsid %04X (%u)", mm->mm_nicename, tsid, tsid);
   idnode_changed(&mm->mm_id);
   mpegts_network_scan_mux_reactivate(mm);
   return 1;

@@ -158,7 +158,7 @@ upnp_thread( void *aux )
         if (size > 0 && tvhtrace_enabled()) {
           char tbuf[256];
           inet_ntop(ip.ss_family, IP_IN_ADDR(ip), tbuf, sizeof(tbuf));
-          tvhtrace(LS_UPNP, "%s - received data from %s:%hu [size=%zi]",
+          tvhtrace(LS_UPNP, "%s - received data from %s:%hu [size=%zu]",
                    conn == multicast ? "multicast" : "unicast",
                    tbuf, (unsigned short) ntohs(IP_PORT(ip)), size);
           tvhlog_hexdump(LS_UPNP, buf, size);
