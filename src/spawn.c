@@ -78,6 +78,9 @@ spawn_pipe_read( th_pipe_t *p, char **_buf, int level )
 
   if (buf == NULL) {
     buf = malloc(SPAWN_PIPE_READ_SIZE);
+    if (buf == NULL) {
+        tvhabort(LS_SPAWN,"malloc is NULL");
+    }
     buf[0] = '\0';
     buf[SPAWN_PIPE_READ_SIZE - 1] = 0;
     *_buf = buf;
@@ -343,6 +346,9 @@ static spawn_t *
 spawn_enq(const char *name, int pid)
 {
   spawn_t *s = calloc(1, sizeof(spawn_t));
+  if (s == NULL) {
+    tvhabort(LS_SPAWN,"calloc is NULL");
+  }
   s->name = strdup(name);
   s->pid = pid;
   tvh_mutex_lock(&spawn_mutex);
@@ -367,6 +373,9 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
 
   s = tvh_strdupa(cmd);
   *argv = calloc(argc, sizeof(char *));
+  if (argv == NULL) {
+    tvhabort(LS_SPAWN,"calloc is NULL");
+  }
 
   while (*s && i < argc - 1) {
     while (*s == ' ')
@@ -422,6 +431,9 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
         if (p) {
           l = strlen(*r);
           a = malloc(strlen(f) + strlen(r[1]) + 1);
+          if (a == NULL) {
+            tvhabort(LS_SPAWN,"malloc is NULL");
+          }
           *p = '\0';
           strcpy(a, f);
           strcat(a, r[1]);

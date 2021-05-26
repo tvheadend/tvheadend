@@ -139,6 +139,9 @@ fsmonitor_add ( const char *path, fsmonitor_t *fsm )
   lock_assert(&global_lock);
 
   skel = calloc(1, sizeof(fsmonitor_path_t));
+  if (skel == NULL) {
+    tvhabort(LS_FSMONITOR, "calloc is NULL");
+  }
   skel->fmp_path = (char*)path;
 
   /* Build mask */
@@ -178,6 +181,9 @@ fsmonitor_add ( const char *path, fsmonitor_t *fsm )
 
   /* Add */
   fml = calloc(1, sizeof(fsmonitor_link_t));
+  if (fml == NULL) {
+    tvhabort(LS_FSMONITOR, "calloc is NULL");
+  }
   fml->fml_path    = fmp;
   fml->fml_monitor = fsm;
   LIST_INSERT_HEAD(&fmp->fmp_monitors, fml, fml_plink);

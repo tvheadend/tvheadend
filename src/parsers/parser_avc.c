@@ -136,6 +136,10 @@ isom_write_avcc(sbuf_t *sb, const uint8_t *data, int len)
 
     if ((nal_type == H264_NAL_SPS) && (size >= 4) && (size <= UINT16_MAX)) {
       sps_array = realloc(sps_array,sizeof(uint8_t*)*(sps_count+1));
+      // if realloc return NULL then the old pointer is still valid
+      if (sps_array == NULL) {
+          tvhabort(LS_AVC, "realloc is NULL");
+      }
       sps_size_array = realloc(sps_size_array,sizeof(uint32_t)*(sps_count+1));
       sps_array[sps_count] = buf;
       sps_size_array[sps_count] = size;

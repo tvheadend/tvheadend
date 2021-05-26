@@ -229,8 +229,12 @@ dvb_fs_mux_add ( mpegts_table_t *mt, mpegts_mux_t *mm, mpegts_mux_t *mux )
   int i;
 
   uuid = idnode_uuid_as_str(&mux->mm_id, ubuf);
-  if (mm->mm_fastscan_muxes == NULL)
+  if (mm->mm_fastscan_muxes == NULL) {
     mm->mm_fastscan_muxes = calloc(DVB_FASTSCAN_MUXES, UUID_HEX_SIZE);
+    if (mm->mm_fastscan_muxes == NULL) {
+        tvhabort(LS_DVB, "calloc is NULL");
+    }
+  }
   for (i = 0; i < DVB_FASTSCAN_MUXES * UUID_HEX_SIZE; i += UUID_HEX_SIZE) {
     s = mm->mm_fastscan_muxes + i;
     if (s[0] == '\0')
@@ -553,6 +557,9 @@ dvb_bat_find_service( dvb_bat_id_t *bi, mpegts_service_t *s,
       break;
   if (!bs) {
     bs = calloc(1, sizeof(*bs));
+    if (bs == NULL) {
+        tvhabort(LS_DVB, "calloc is NULL");
+    }
     bs->svc = s;
     service_ref((service_t *)s);
     TAILQ_INSERT_TAIL(&bi->services, bs, link);
@@ -661,6 +668,9 @@ dvb_freesat_local_channels
           break;
       if (!fs) {
         fs = calloc(1, sizeof(*fs));
+        if (fs == NULL) {
+            tvhabort(LS_DVB, "calloc is NULL");
+        }
         fs->sid = sid;
         fs->regionid = regionid;
         fs->lcn = lcn;
@@ -698,6 +708,9 @@ dvb_freesat_regions
         break;
     if (!fr) {
       fr = calloc(1, sizeof(*fr));
+      if (fr == NULL) {
+          tvhabort(LS_DVB, "calloc is NULL");
+      }
       fr->regionid = id;
       strlcpy(fr->name, name, sizeof(fr->name));
       TAILQ_INIT(&fr->services);
@@ -925,6 +938,9 @@ dvb_bskyb_local_channels
         break;
     if (!fs) {
       fs = calloc(1, sizeof(*fs));
+      if (fs == NULL) {
+          tvhabort(LS_DVB, "calloc is NULL");
+      }
       fs->sid = sid;
       fs->regionid = regionid;
       fs->lcn = lcn != 0xffff ? lcn : 0;
@@ -938,6 +954,9 @@ dvb_bskyb_local_channels
       s = mpegts_service_find(mm, sid, 0, 0, NULL);
       if (s) {
         bs = calloc(1, sizeof(*bs));
+        if (bs == NULL) {
+          tvhabort(LS_DVB, "calloc is NULL");
+        }
         bs->svc = s;
         service_ref((service_t *)s);
         TAILQ_INSERT_TAIL(&bi->services, bs, link);
@@ -950,6 +969,9 @@ dvb_bskyb_local_channels
           break;
       if (!fr) {
         fr = calloc(1, sizeof(*fr));
+        if (fr == NULL) {
+          tvhabort(LS_DVB, "calloc is NULL");
+        }
         fr->regionid = regionid;
         /* Note: Poland provider on 13E uses also this bouquet format */
         if (bi->nbid < 0x1000 || bi->nbid > 0x1010 ||
@@ -1472,6 +1494,9 @@ dvb_nit_callback
       (tableid == 0x4A || tableid == DVB_FASTSCAN_NIT_BASE)) {
     if ((b = mt->mt_bat) == NULL) {
       b = calloc(1, sizeof(*b));
+      if (b == NULL) {
+          tvhabort(LS_DVB, "calloc is NULL");
+      }
       mt->mt_bat = b;
     }
     LIST_FOREACH(bi, &b->bats, link)
@@ -1479,6 +1504,9 @@ dvb_nit_callback
         break;
     if (!bi) {
       bi = calloc(1, sizeof(*bi));
+      if (bi == NULL) {
+          tvhabort(LS_DVB, "calloc is NULL");
+      }
       bi->nbid = nbid;
       TAILQ_INIT(&bi->services);
       TAILQ_INIT(&bi->fservices);

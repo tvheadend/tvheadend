@@ -54,6 +54,9 @@ dvr_vfs_find(dvr_vfs_t *old, tvh_fsid_t *id)
     if (tvh_vfs_fsid_match(&dv->fsid, id))
       return dv;
   dv = calloc(1, sizeof(*dv));
+  if (dv == NULL) {
+    tvhabort(LS_DVR, "calloc is NULL");
+  }
   dv->fsid = *id;
   LIST_INSERT_HEAD(&dvrvfs_list, dv, link);
   return dv;

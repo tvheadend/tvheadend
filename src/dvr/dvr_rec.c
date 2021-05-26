@@ -132,6 +132,9 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   pro = de->de_config->dvr_profile;
   prch = malloc(sizeof(*prch));
+  if (prch == NULL) {
+    tvhabort(LS_DVR, "malloc is NULL");
+  }
   profile_chain_init(prch, pro, de->de_channel, 1);
   if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, NULL, 0, 0)) {
     profile_chain_close(prch);

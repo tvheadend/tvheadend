@@ -26,6 +26,7 @@
 #include "dvr/dvr.h"
 #include "tcp.h"
 #include "lang_codes.h"
+#include "tvhlog.h"
 
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
@@ -129,6 +130,9 @@ access_ticket_create(const char *resource, access_t *a)
   }
 
   at = calloc(1, sizeof(access_ticket_t));
+  if (at == NULL) {
+    tvhabort(LS_ACCESS, "calloc is NULL");
+  }
 
   uuid_random(buf, sizeof(buf));
   bin2hex(id, sizeof(id), buf, sizeof(buf));
@@ -263,6 +267,10 @@ access_t *
 access_copy(access_t *src)
 {
   access_t *dst = malloc(sizeof(*dst));
+  if (dst == NULL) {
+    tvhabort(LS_ACCESS, "malloc is NULL");
+  }
+
   *dst = *src;
   if (src->aa_username)
     dst->aa_username = strdup(src->aa_username);
@@ -542,6 +550,9 @@ access_dump_a(access_t *a)
 static access_t *access_alloc(void)
 {
   access_t *a = calloc(1, sizeof(access_t));
+  if (a == NULL) {
+    tvhabort(LS_ACCESS, "calloc is NULL");
+  }
   a->aa_uilevel = -1;
   a->aa_uilevel_nochange = -1;
   return a;
@@ -724,7 +735,6 @@ access_get(struct sockaddr_storage *src, const char *username, verify_callback_t
   access_t *a = access_alloc();
   access_entry_t *ae;
   int nouser = tvh_str_default(username, NULL) == NULL;
-  char *s;
 
   if (!access_noacl && access_ip_blocked(src))
     return a;
@@ -736,7 +746,7 @@ access_get(struct sockaddr_storage *src, const char *username, verify_callback_t
                        superuser_username, superuser_password))
       return access_full(a);
   } else {
-    s = alloca(50);
+    char s[50];
     tcp_get_str_from_ip(src, s, 50);
     a->aa_representative = strdup(s);
     if(!passwd_verify2(username, verify, aux,
@@ -891,10 +901,16 @@ access_set_prefix_default(struct access_ipmask_queue *ais)
   access_ipmask_t *ai;
 
   ai = calloc(1, sizeof(access_ipmask_t));
+  if (ai == NULL) {
+      tvhabort(LS_ACCESS, "calloc is NULL");
+  }
   ai->ai_family = AF_INET6;
   TAILQ_INSERT_HEAD(ais, ai, ai_link);
 
   ai = calloc(1, sizeof(access_ipmask_t));
+  if (ai == NULL) {
+      tvhabort(LS_ACCESS, "calloc is NULL");
+  }
   ai->ai_family = AF_INET;
   TAILQ_INSERT_HEAD(ais, ai, ai_link);
 }
@@ -964,8 +980,12 @@ access_set_prefix(struct access_ipmask_queue *ais, const char *prefix, int dflt)
   tok = strtok_r(tokbuf, delim, &saveptr);
 
   while (tok != NULL) {
-    if (ai == NULL)
+    if (ai == NULL) {
       ai = calloc(1, sizeof(access_ipmask_t));
+      if (ai == NULL) {
+        tvhabort(LS_ACCESS, "calloc is NULL");
+      }
+    }
 
     if (strlen(tok) > sizeof(buf) - 1 || *tok == '\0')
       goto fnext;
@@ -1099,6 +1119,9 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
   lock_assert(&global_lock);
 
   ae = calloc(1, sizeof(access_entry_t));
+  if (ae == NULL) {
+      tvhabort(LS_ACCESS, "calloc is NULL");
+  }
 
   if (idnode_insert(&ae->ae_id, uuid, &access_entry_class, 0)) {
     if (uuid)
@@ -2065,6 +2088,9 @@ passwd_entry_create(const char *uuid, htsmsg_t *conf)
   lock_assert(&global_lock);
 
   pw = calloc(1, sizeof(passwd_entry_t));
+  if (pw == NULL) {
+      tvhabort(LS_ACCESS, "calloc is NULL");
+  }
 
   if (idnode_insert(&pw->pw_id, uuid, &passwd_entry_class, 0)) {
     if (uuid)
@@ -2344,6 +2370,9 @@ ipblock_entry_create(const char *uuid, htsmsg_t *conf)
   lock_assert(&global_lock);
 
   ib = calloc(1, sizeof(ipblock_entry_t));
+  if (ib == NULL) {
+      tvhabort(LS_ACCESS, "calloc is NULL");
+  }
 
   TAILQ_INIT(&ib->ib_ipmasks);
 

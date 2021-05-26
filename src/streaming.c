@@ -25,6 +25,7 @@
 #include "atomic.h"
 #include "service.h"
 #include "timeshift.h"
+#include "tvhlog.h"
 
 static memoryinfo_t streaming_msg_memoryinfo = { .my_name = "Streaming message" };
 
@@ -202,6 +203,9 @@ streaming_message_t *
 streaming_msg_create(streaming_message_type_t type)
 {
   streaming_message_t *sm = malloc(sizeof(streaming_message_t));
+  if (sm == NULL) {
+    tvhabort(LS_STREAMING, "malloc is NULL");
+  }
   memoryinfo_alloc(&streaming_msg_memoryinfo, sizeof(*sm));
   sm->sm_type = type;
 #if ENABLE_TIMESHIFT
@@ -259,6 +263,10 @@ streaming_msg_clone(streaming_message_t *src)
   streaming_message_t *dst = malloc(sizeof(streaming_message_t));
   streaming_start_t *ss;
 
+  if (dst == NULL) {
+    tvhabort(LS_STREAMING, "malloc is NULL");
+  }
+
   memoryinfo_alloc(&streaming_msg_memoryinfo, sizeof(*dst));
 
   dst->sm_type      = src->sm_type;
@@ -281,21 +289,33 @@ streaming_msg_clone(streaming_message_t *src)
 
   case SMT_SKIP:
     dst->sm_data = malloc(sizeof(streaming_skip_t));
+    if (dst->sm_data == NULL) {
+      tvhabort(LS_STREAMING, "malloc is NULL");
+    }
     memcpy(dst->sm_data, src->sm_data, sizeof(streaming_skip_t));
     break;
 
   case SMT_SIGNAL_STATUS:
     dst->sm_data = malloc(sizeof(signal_status_t));
+    if (dst->sm_data == NULL) {
+      tvhabort(LS_STREAMING, "malloc is NULL");
+    }
     memcpy(dst->sm_data, src->sm_data, sizeof(signal_status_t));
     break;
 
   case SMT_DESCRAMBLE_INFO:
     dst->sm_data = malloc(sizeof(descramble_info_t));
+    if (dst->sm_data == NULL) {
+      tvhabort(LS_STREAMING, "malloc is NULL");
+    }
     memcpy(dst->sm_data, src->sm_data, sizeof(descramble_info_t));
     break;
 
   case SMT_TIMESHIFT_STATUS:
     dst->sm_data = malloc(sizeof(timeshift_status_t));
+    if (dst->sm_data == NULL) {
+      tvhabort(LS_STREAMING, "malloc is NULL");
+    }
     memcpy(dst->sm_data, src->sm_data, sizeof(timeshift_status_t));
     break;
 
@@ -530,6 +550,9 @@ streaming_start_copy(const streaming_start_t *src)
     sizeof(streaming_start_component_t) * src->ss_num_components;
 
   streaming_start_t *dst = malloc(siz);
+  if (dst == NULL) {
+    tvhabort(LS_STREAMING, "malloc is NULL");
+  }
 
   memcpy(dst, src, siz);
   service_source_info_copy(&dst->ss_si, &src->ss_si);

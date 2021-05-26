@@ -20,6 +20,7 @@
 #include "tvheadend.h"
 #include "download.h"
 #include "spawn.h"
+#include "tvhlog.h"
 
 #include <signal.h>
 #include <fcntl.h>
@@ -50,6 +51,9 @@ download_file(download_t *dn, const char *filename)
     return -1;
   }
   data = malloc(st.st_size+1);
+  if (data == NULL) {
+    tvhabort(LS_DOWNLOAD, "malloc is NULL");
+  }
   off = 0;
   do {
     r = read(fd, data + off, st.st_size - off);

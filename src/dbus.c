@@ -70,8 +70,16 @@ dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
     return;
   }
   ds = calloc(1, sizeof(dbus_sig_t));
+  if (ds == NULL) {
+    tvhabort(LS_DBUS, "calloc is NULL");
+  }
+
   l = strlen(obj_name);
   ds->obj_name = malloc(l + 15);
+  if (ds->obj_name == NULL) {
+    tvhabort(LS_DBUS, "malloc is NULL");
+  }
+
   strcpy(ds->obj_name, "/org/tvheadend");
   strcpy(ds->obj_name + 14, obj_name);
   ds->sig_name = strdup(sig_name);
@@ -270,6 +278,10 @@ dbus_register_rpc_s64(const char *call_name, void *opaque,
                       int64_t (*fcn)(void *, const char *, int64_t))
 {
   dbus_rpc_t *rpc = calloc(1, sizeof(*rpc));
+  if (rpc == NULL) {
+    tvhabort(LS_DBUS, "calloc is NULL");
+  }
+
   rpc->call_name = strdup(call_name);
   rpc->rpc_s64 = fcn;
   rpc->opaque = opaque;
@@ -286,6 +298,10 @@ dbus_register_rpc_str(const char *call_name, void *opaque,
                       char *(*fcn)(void *, const char *, char *))
 {
   dbus_rpc_t *rpc = calloc(1, sizeof(*rpc));
+  if (rpc == NULL) {
+    tvhabort(LS_DBUS, "calloc is NULL");
+  }
+
   rpc->call_name = strdup(call_name);
   rpc->rpc_str = fcn;
   rpc->opaque = opaque;

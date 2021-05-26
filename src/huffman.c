@@ -22,6 +22,7 @@
 #include "huffman.h"
 #include "htsmsg.h"
 #include "settings.h"
+#include "tvhlog.h"
 
 void huffman_tree_destroy ( huffman_node_t *n )
 {
@@ -48,6 +49,9 @@ huffman_node_t *huffman_tree_build ( htsmsg_t *m )
   htsmsg_t *e;
   htsmsg_field_t *f;
   huffman_node_t *root = calloc(1, sizeof(huffman_node_t));
+  if (root == NULL) {
+    tvhabort(LS_HUFFMAN, "calloc is NULL");
+  }
   HTSMSG_FOREACH(f, m) {
     e = htsmsg_get_map_by_field(f);
     c = code = htsmsg_get_str(e, "code");
@@ -56,10 +60,20 @@ huffman_node_t *huffman_tree_build ( htsmsg_t *m )
       huffman_node_t *node = root;
       while (*c) {
         if ( *c == '0' ) {
-          if (!node->b0) node->b0 = calloc(1, sizeof(huffman_node_t));
+          if (!node->b0) {
+            node->b0 = calloc(1, sizeof(huffman_node_t));
+            if (node->b0 == NULL) {
+              tvhabort(LS_HUFFMAN, "calloc is NULL");
+            }
+          }
           node = node->b0;
         } else if ( *c == '1' ) {
-          if (!node->b1) node->b1 = calloc(1, sizeof(huffman_node_t));
+          if (!node->b1) {
+            node->b1 = calloc(1, sizeof(huffman_node_t));
+            if (node->b1 == NULL) {
+              tvhabort(LS_HUFFMAN, "calloc is NULL");
+            }
+          }
           node = node->b1;
         } else {
           huffman_tree_destroy(root);

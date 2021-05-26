@@ -29,6 +29,7 @@
 #include "input/mpegts/iptv/iptv_private.h"
 #include "service_mapper.h"
 #include "wizard.h"
+#include "tvhlog.h"
 
 /*
  *
@@ -120,6 +121,9 @@ static wizard_page_t *page_init
 {
   wizard_page_t *page = calloc(1, sizeof(*page));
   idclass_t *ic = calloc(1, sizeof(*ic));
+  if (page == NULL || ic == NULL) {
+    tvhabort(LS_WIZARD, "calloc is NULL");
+  }
   page->name = name;
   page->idnode.in_class = ic;
   ic->ic_caption = caption;
@@ -252,6 +256,9 @@ wizard_page_t *wizard_hello(const char *lang)
   ic->ic_groups = groups;
   ic->ic_changed = hello_changed;
   page->aux = w = calloc(1, sizeof(wizard_hello_t));
+  if (page->aux == NULL) {
+    tvhabort(LS_WIZARD, "calloc is NULL");
+  }
 
   if (config.language_ui)
     strlcpy(w->ui_lang, config.language_ui, sizeof(w->ui_lang));
@@ -474,6 +481,9 @@ wizard_page_t *wizard_login(const char *lang)
   ic->ic_groups = groups;
   ic->ic_changed = login_changed;
   page->aux = w = calloc(1, sizeof(wizard_login_t));
+  if (page->aux == NULL) {
+    tvhabort(LS_WIZARD, "calloc is NULL");
+  }
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
     if (!ae->ae_wizard)
@@ -677,6 +687,9 @@ wizard_page_t *wizard_network(const char *lang)
   int idx, nidx = 0;
 
   page->aux = w = calloc(1, sizeof(wizard_network_t));
+  if (page->aux == NULL) {
+    tvhabort(LS_WIZARD, "calloc is NULL");
+  }
   ic->ic_groups = groups;
   ic->ic_properties = w->props;
   ic->ic_changed = network_changed;
@@ -966,6 +979,9 @@ wizard_page_t *wizard_muxes(const char *lang)
   int idx, midx = 0;
 
   page->aux = w = calloc(1, sizeof(wizard_muxes_t));
+  if (page->aux == NULL) {
+    tvhabort(LS_WIZARD, "calloc is NULL");
+  }
   ic->ic_groups = groups;
   ic->ic_properties = w->props;
   ic->ic_changed = muxes_changed;
@@ -1142,6 +1158,9 @@ wizard_page_t *wizard_mapping(const char *lang)
   ic->ic_properties = props;
   ic->ic_changed = mapping_changed;
   page->aux = w = calloc(1, sizeof(wizard_mapping_t));
+  if (page->aux == NULL) {
+    tvhabort(LS_WIZARD, "calloc is NULL");
+  }
   w->provtags = service_mapper_conf.d.provider_tags;
   w->nettags = service_mapper_conf.d.network_tags;
   return page;

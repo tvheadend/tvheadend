@@ -295,6 +295,8 @@ trap_init(const char *ver)
 	  SHA1_Final(digest, &binsum);
 	}
 	free(m);
+      } else {
+        tvhinfo(LS_CRASH, "malloc is NULL");
       }
     }
     close(fd);

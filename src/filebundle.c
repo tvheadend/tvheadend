@@ -122,6 +122,9 @@ static fb_dir *_fb_opendir ( const char *root, const char *path )
   /* Open */
   if ((dir = opendir(path))) {
     ret         = calloc(1, sizeof(fb_dir));
+    if (ret == NULL) {
+      tvhabort(LS_FILEBUNDLE, "calloc is NULL");
+    }
     ret->type   = FB_DIRECT;
     ret->d.root = strdup(path);
     ret->d.cur  = dir;
@@ -156,6 +159,9 @@ fb_dir *fb_opendir ( const char *path )
     /* Found */
     if (fb) {
       ret = calloc(1, sizeof(fb_dir));
+      if (ret == NULL) {
+        tvhabort(LS_FILEBUNDLE, "calloc is NULL");
+      }
       ret->type   = FB_BUNDLE;
       ret->b.root = fb;
       ret->b.cur  = fb->d.child;
@@ -227,8 +233,14 @@ int fb_scandir ( const char *path, fb_dirent ***list )
   if (dir->type == FB_DIRECT) {
     if ((ret = scandir(dir->d.root, &de, NULL, NULL)) > 0) {
       *list = malloc(sizeof(fb_dirent*)*ret);
+      if (list == NULL) {
+        tvhabort(LS_FILEBUNDLE, "malloc is NULL");
+      }
       for (i = 0; i < ret; i++) {
         (*list)[i] = calloc(1, sizeof(fb_dirent));
+        if ((*list)[i] == NULL) {
+          tvhabort(LS_FILEBUNDLE, "calloc is NULL");
+        }
         strcpy((*list)[i]->name, de[i]->d_name);
         switch(de[i]->d_type) {
           case DT_DIR: 
@@ -257,9 +269,15 @@ int fb_scandir ( const char *path, fb_dirent ***list )
     ret = dir->b.root->d.count;
     fb  = dir->b.root->d.child;
     *list = malloc(ret * sizeof(fb_dirent*));
+    if (list == NULL) {
+      tvhabort(LS_FILEBUNDLE, "malloc is NULL");
+    }
     i = 0;
     while (fb) {
       (*list)[i] = calloc(1, sizeof(fb_dirent));
+      if ((*list)[i] == NULL) {
+        tvhabort(LS_FILEBUNDLE, "calloc is NULL");
+      }
       strlcpy((*list)[i]->name, fb->name, sizeof((*list)[i]->name));
       fb = fb->next;
       i++;
@@ -297,6 +315,9 @@ fb_file *fb_open2
     }
     if (fb) {
       ret               = calloc(1, sizeof(fb_file));
+      if (ret == NULL) {
+          tvhabort(LS_FILEBUNDLE, "calloc is NULL");
+      }
       ret->type         = FB_BUNDLE;
       ret->size         = fb->f.size;
       ret->gzip         = fb->f.orig != -1;
@@ -328,6 +349,9 @@ fb_file *fb_open2
       struct stat st;
       if (!stat(path, &st)) {
         ret         = calloc(1, sizeof(fb_file));
+        if (ret == NULL) {
+          tvhabort(LS_FILEBUNDLE, "calloc is NULL");
+        }
         ret->type   = FB_DIRECT;
         ret->size   = st.st_size;
         ret->gzip   = 0;
@@ -350,6 +374,9 @@ fb_file *fb_open2
       ret->buf = tvh_gzip_deflate(data, ret->size, &ret->size);
     } else {
       uint8_t *data = malloc(ret->size);
+      if (data == NULL) {
+          tvhabort(LS_FILEBUNDLE, "malloc is NULL");
+      }
       ssize_t c = fread(data, 1, ret->size, ret->d.cur);
       if (c == ret->size)
         ret->buf = tvh_gzip_deflate(data, ret->size, &ret->size);

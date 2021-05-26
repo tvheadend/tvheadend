@@ -294,6 +294,9 @@ muxer_hints_t *
 muxer_hints_create(const char *agent)
 {
   muxer_hints_t *hints = calloc(1, sizeof(*hints));
+  if (hints == NULL) {
+    tvhabort(LS_MUXER, "calloc is NULL");
+  }
   mystrset(&hints->mh_agent, agent);
   return hints;
 }

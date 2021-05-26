@@ -457,6 +457,9 @@ streaming_target_t *timeshift_create
   (streaming_target_t *out, time_t max_time)
 {
   timeshift_t *ts = calloc(1, sizeof(timeshift_t));
+  if (ts == NULL) {
+    tvhabort(LS_TIMESHIFT, "calloc is NULL");
+  }
 
   memoryinfo_alloc(&timeshift_memoryinfo, sizeof(timeshift_t));
 

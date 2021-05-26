@@ -242,6 +242,8 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
                 break;
             }
         }
+    } else {
+        tvhinfo(LS_TRANSCODE, "calloc is NULL");
     }
     return ss;
 }

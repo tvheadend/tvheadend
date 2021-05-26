@@ -502,6 +502,9 @@ imagecache_init ( void )
       if (!(id  = atoi(htsmsg_field_name(f)))) continue;
       if (!(url = htsmsg_get_str(e, "url"))) continue;
       img           = calloc(1, sizeof(imagecache_image_t));
+      if (img == NULL) {
+        tvhabort(LS_IMAGECACHE, "calloc is NULL");
+      }
       img->id       = id;
       img->ref      = 1;
       img->url      = strdup(url);

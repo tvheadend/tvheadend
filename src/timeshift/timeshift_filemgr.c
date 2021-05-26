@@ -179,6 +179,8 @@ void timeshift_filemgr_close ( timeshift_file_t *tsf )
       memoryinfo_append(&timeshift_memoryinfo_ram, tsf->ram_size - tsf->woff);
       tsf->ram = ram;
       tsf->ram_size = tsf->woff;
+    } else {
+      tvhinfo(LS_TIMESHIFT, "realloc is NULL");
     }
   }
   if (tsf->wfd >= 0)
@@ -237,6 +239,9 @@ static timeshift_file_t * timeshift_filemgr_file_init
   timeshift_file_t *tsf;
 
   tsf = calloc(1, sizeof(timeshift_file_t));
+  if (tsf == NULL) {
+      tvhabort(LS_TIMESHIFT, "calloc is NULL");
+  }
   memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*tsf));
   tsf->time     = mono2sec(start_time) / TIMESHIFT_FILE_PERIOD;
   tsf->last     = start_time;
@@ -325,6 +330,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
           tsf_tmp->ram_size = MIN(16*1024*1024, timeshift_conf.ram_segment_size);
           tsf_tmp->ram = malloc(tsf_tmp->ram_size);
           if (!tsf_tmp->ram) {
+            tvhinfo(LS_TIMESHIFT, "malloc is NULL");
             free(tsf_tmp);
             tsf_tmp = NULL;
           } else {
@@ -371,6 +377,9 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
           tvhtrace(LS_TIMESHIFT, "ts %d copy smt_start to new file%s",
                    ts->id, ti ? " (from last file)" : "");
           timeshift_index_data_t *ti2 = calloc(1, sizeof(timeshift_index_data_t));
+          if (ti2 == NULL) {
+              tvhabort(LS_TIMESHIFT, "calloc is NULL");
+          }
           if (ti) {
             memoryinfo_alloc(&timeshift_memoryinfo, sizeof(timeshift_index_data_t));
             sm = streaming_msg_clone(ti->data);

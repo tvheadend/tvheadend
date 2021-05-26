@@ -443,7 +443,7 @@ satips_upnp_discovery_received
 {
 #define MSEARCH "M-SEARCH * HTTP/1.1"
 
-  char *buf, *ptr, *saveptr;
+  char  *ptr, *saveptr;
   char *argv[10];
   char *st = NULL, *man = NULL, *host = NULL, *deviceid = NULL, *searchport = NULL;
   char buf2[64];
@@ -459,7 +459,7 @@ satips_upnp_discovery_received
 
 #undef MSEARCH
 
-  buf = alloca(len+1);
+  char buf[len+1];
   memcpy(buf, data, len);
   buf[len] = '\0';
   ptr = strtok_r(buf, "\r\n", &saveptr);

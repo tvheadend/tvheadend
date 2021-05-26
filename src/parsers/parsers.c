@@ -1212,6 +1212,10 @@ parser_global_data_move(parser_es_t *st, const uint8_t *data, size_t len, int re
     int len2 = drop_trailing_zeroes(data, len);
     st->es_global_data = realloc(st->es_global_data,
                                  st->es_global_data_len + len2);
+    // if realloc return NULL then the old pointer is still valid
+    if (st->es_global_data == NULL) {
+        tvhabort(LS_PARSER, "realloc is NULL");
+    }
     memcpy(st->es_global_data + st->es_global_data_len, data, len2);
     st->es_global_data_len += len2;
   }
@@ -1285,8 +1289,12 @@ parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
       if(parse_mpeg2video_seq_start(t, st, &bs) != PARSER_APPEND)
         return PARSER_RESET;
       parser_global_data_move(st, buf, len, 0);
-      if (!st->es_priv)
+      if (!st->es_priv) {
         st->es_priv = malloc(1); /* starting mark */
+        if (st->es_priv == NULL) {
+            tvhabort(LS_PARSER, "malloc is NULL");
+        }
+      }
     }
     return PARSER_DROP;
 

@@ -132,6 +132,10 @@ tsfix_add_stream(tsfix_t *tf, int index, streaming_component_type_t type)
 {
   tfstream_t *tfs = calloc(1, sizeof(tfstream_t));
 
+  if (tfs == NULL) {
+      tvhabort(LS_TSFIX, "calloc is NULL");
+  }
+
   tfs->tfs_type = type;
   if (SCT_ISVIDEO(type))
     tfs->tfs_video = 1;
@@ -702,6 +706,10 @@ streaming_target_t *
 tsfix_create(streaming_target_t *output)
 {
   tsfix_t *tf = calloc(1, sizeof(tsfix_t));
+
+  if (tf == NULL) {
+      tvhabort(LS_TSFIX, "calloc is NULL");
+  } 
 
   TAILQ_INIT(&tf->tf_ptsq);
 

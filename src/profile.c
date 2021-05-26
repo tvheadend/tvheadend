@@ -50,7 +50,13 @@ static profile_t *profile_default;
 void
 profile_register(const idclass_t *clazz, profile_builder_t builder)
 {
-  profile_build_t *pb = calloc(1, sizeof(*pb)), *pb2;
+  profile_build_t *pb = calloc(1, sizeof(*pb));
+  profile_build_t *pb2;
+
+  if (pb == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
+
   idclass_register(clazz);
   pb->clazz = clazz;
   pb->build = builder;
@@ -726,6 +732,9 @@ profile_input_queue(void *opaque, streaming_message_t *sm)
   profile_chain_t *prch = opaque;
   profile_sharer_t *prsh = prch->prch_sharer;
   profile_sharer_message_t *psm = malloc(sizeof(*psm));
+  if (psm == NULL) {
+    tvhabort(LS_PROFILE, "malloc is NULL");
+  }
   psm->psm_prch = prch;
   psm->psm_sm = sm;
   tvh_mutex_lock(&prsh->prsh_queue_mutex);
@@ -865,6 +874,9 @@ profile_sharer_find(profile_chain_t *prch)
   }
   if (!prsh) {
     prsh = calloc(1, sizeof(*prsh));
+    if (prsh == NULL) {
+      tvhabort(LS_PROFILE, "calloc is NULL");
+    }
     prsh->prsh_do_queue = do_queue;
     tvh_mutex_init(&prsh->prsh_queue_mutex, NULL);
     tvh_cond_init(&prsh->prsh_queue_cond, 1);
@@ -1257,6 +1269,9 @@ static profile_t *
 profile_htsp_builder(void)
 {
   profile_t *pro = calloc(1, sizeof(*pro));
+  if (pro == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_work   = profile_htsp_work;
   return pro;
@@ -1491,6 +1506,9 @@ static profile_t *
 profile_mpegts_pass_builder(void)
 {
   profile_mpegts_t *pro = calloc(1, sizeof(*pro));
+  if (pro == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
   pro->pro_sflags = SUBSCRIPTION_MPEGTS;
   pro->pro_reopen = profile_mpegts_pass_reopen;
   pro->pro_open   = profile_mpegts_pass_open;
@@ -1794,6 +1812,9 @@ static profile_t *
 profile_mpegts_spawn_builder(void)
 {
   profile_mpegts_spawn_t *pro = calloc(1, sizeof(*pro));
+  if (pro == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
   pro->pro_sflags = SUBSCRIPTION_MPEGTS;
   pro->pro_free   = profile_mpegts_spawn_free;
   pro->pro_reopen = profile_mpegts_spawn_reopen;
@@ -1905,6 +1926,9 @@ static profile_t *
 profile_matroska_builder(void)
 {
   profile_matroska_t *pro = calloc(1, sizeof(*pro));
+  if (pro == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_matroska_reopen;
   pro->pro_open   = profile_matroska_open;
@@ -2010,6 +2034,9 @@ static profile_t *
 profile_audio_builder(void)
 {
   profile_audio_t *pro = calloc(1, sizeof(*pro));
+  if (pro == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_audio_reopen;
   pro->pro_open   = profile_audio_open;
@@ -2078,6 +2105,9 @@ static profile_t *
 profile_libav_mpegts_builder(void)
 {
   profile_libav_mpegts_t *pro = calloc(1, sizeof(*pro));
+  if (pro == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_libav_mpegts_reopen;
   pro->pro_open   = profile_libav_mpegts_open;
@@ -2169,6 +2199,9 @@ static profile_t *
 profile_libav_matroska_builder(void)
 {
   profile_libav_matroska_t *pro = calloc(1, sizeof(*pro));
+  if (pro == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_libav_matroska_reopen;
   pro->pro_open   = profile_libav_matroska_open;
@@ -2232,6 +2265,9 @@ static profile_t *
 profile_libav_mp4_builder(void)
 {
   profile_libav_mp4_t *pro = calloc(1, sizeof(*pro));
+  if (pro == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_libav_mp4_reopen;
   pro->pro_open   = profile_libav_mp4_open;
@@ -2708,6 +2744,9 @@ static profile_t *
 profile_transcode_builder(void)
 {
   profile_transcode_t *pro = calloc(1, sizeof(*pro));
+  if (pro == NULL) {
+    tvhabort(LS_PROFILE, "calloc is NULL");
+  }
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_free   = profile_transcode_free;
   pro->pro_work   = profile_transcode_work;

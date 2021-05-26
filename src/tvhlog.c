@@ -439,6 +439,9 @@ void tvhlogv ( const char *file, int line, int severity,
 
   /* Store */
   tvhlog_msg_t *msg = calloc(1, sizeof(tvhlog_msg_t));
+  if (msg == NULL) {
+    tvhabort(LS_LOG, "calloc is NULL");
+  }
   gettimeofday(&msg->time, NULL);
   msg->msg      = strdup(buf);
   msg->severity = severity;

@@ -142,6 +142,7 @@ intlconv_utf8( char *dst, size_t dst_size,
     }
     ic = malloc(sizeof(*ic));
     if (ic == NULL) {
+      tvhinfo(LS_INTLCONV, "malloc is NULL");
       tvh_mutex_unlock(&intlconv_lock);
       iconv_close(c);
       return -ENOMEM;
@@ -176,14 +177,14 @@ intlconv_utf8safestr( const char *dst_charset_id,
                       const char *src_utf8,
                       size_t max_size )
 {
-  char *str, *res;
+  char *res;
   ssize_t r;
   size_t i;
 
   if (max_size == 0 || *src_utf8 == '\0')
     return strdup("");
 
-  str = alloca(max_size);
+  char str[max_size];
   r = intlconv_utf8(str, max_size, dst_charset_id, src_utf8);
   if (r <= 0)
     return NULL;
@@ -230,6 +231,7 @@ intlconv_to_utf8( char *dst, size_t dst_size,
     }
     ic = malloc(sizeof(*ic));
     if (ic == NULL) {
+      tvhinfo(LS_INTLCONV, "malloc is NULL");
       tvh_mutex_unlock(&intlconv_lock_src);
       iconv_close(c);
       return -ENOMEM;
@@ -264,13 +266,12 @@ intlconv_to_utf8safestr( const char *src_charset_id,
                          const char *src_str,
                          size_t max_size )
 {
-  char *str;
   ssize_t r;
 
   if (max_size == 0 || *src_str == '\0')
     return strdup("");
 
-  str = alloca(max_size);
+  char str[max_size];
   r = intlconv_to_utf8(str, max_size, src_charset_id, src_str, strlen(src_str));
   if (r <= 0)
     return NULL;

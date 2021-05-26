@@ -438,6 +438,9 @@ streaming_target_t *
 globalheaders_create(streaming_target_t *output)
 {
   globalheaders_t *gh = calloc(1, sizeof(globalheaders_t));
+  if (gh == NULL) {
+      tvhabort(LS_GLOBALHEADERS, "calloc is NULL");
+  }
 
   TAILQ_INIT(&gh->gh_holdq);
 

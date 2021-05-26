@@ -124,7 +124,6 @@ static int
 page_no_webroot(http_connection_t *hc, const char *remain, void *opaque)
 {
   size_t l;
-  char *s;
 
   /* not found checks */
   if (!tvheadend_webroot)
@@ -137,7 +136,7 @@ page_no_webroot(http_connection_t *hc, const char *remain, void *opaque)
   /* redirect if url is not in the specified webroot */
   if (!remain)
     remain = "";
-  s = alloca(2 + strlen(remain));
+  char s[2 + strlen(remain)];
   s[0] = '/';
   strcpy(s + 1, remain);
   http_redirect(hc, s, &hc->hc_req_args, 0);

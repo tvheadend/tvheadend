@@ -215,6 +215,9 @@ static ssize_t _read_msg ( timeshift_file_t *tsf, int fd, streaming_message_t **
     case SMT_MPEGTS:
     case SMT_PACKET:
       data = malloc(sz);
+      if (data == NULL) {
+          tvhabort(LS_TIMESHIFT, "malloc is NULL");
+      }
       r = _read_buf(tsf, fd, data, sz);
       if (r != sz) {
         free(data);
@@ -512,6 +515,9 @@ static void timeshift_status
   timeshift_status_t *status;
 
   status = calloc(1, sizeof(timeshift_status_t));
+  if (status == NULL) {
+      tvhabort(LS_TIMESHIFT, "calloc is NULL");
+  }
   timeshift_fill_status(ts, status, current_time);
   tsm = streaming_msg_create_data(SMT_TIMESHIFT_STATUS, status);
   streaming_target_deliver2(ts->output, tsm);

@@ -64,6 +64,10 @@ dvr_query_add_entry(dvr_query_result_t *dqr, dvr_entry_t *de)
     dqr->dqr_alloced = MAX(100, dqr->dqr_alloced * 2);
     dqr->dqr_array = realloc(dqr->dqr_array,
 			     dqr->dqr_alloced * sizeof(dvr_entry_t *));
+    // if realloc return NULL then the old pointer is still valid
+    if (dqr->dqr_array == NULL) {
+        tvhabort(LS_WEBUI, "realloc is NULL");
+    }
   }
   dqr->dqr_array[dqr->dqr_entries++] = de;
 }

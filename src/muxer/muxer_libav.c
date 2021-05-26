@@ -653,6 +653,9 @@ lav_muxer_create(const muxer_config_t *m_cfg,
   }
 
   lm = calloc(1, sizeof(lav_muxer_t));
+  if (lm == NULL) {
+      tvhabort(LS_LIBAV, "calloc is NULL");
+  }
   lm->m_open_stream  = lav_muxer_open_stream;
   lm->m_open_file    = lav_muxer_open_file;
   lm->m_init         = lav_muxer_init;

@@ -12,7 +12,6 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 {
   int severity = LOG_TVH_NOTIFY, l1, l2;
   const char *class_name;
-  char *fmt1;
 
   if (level != AV_LOG_QUIET &&
       ((level <= AV_LOG_INFO) || (tvhlog_options & TVHLOG_OPT_LIBAV))) {
@@ -24,7 +23,7 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 
     l1 = strlen(fmt);
     l2 = strlen(class_name);
-    fmt1 = alloca(l1 + l2 + 3);
+    char fmt1[l1 + l2 + 3];
 
     strcpy(fmt1, class_name);
     if (class_name[0])

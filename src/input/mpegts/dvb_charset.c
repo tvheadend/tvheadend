@@ -60,6 +60,8 @@ static void _charset_load_file()
           enc->charset = strdup(charset);
           LIST_INSERT_HEAD(&dvb_charset_list, enc, link);
           i++;
+        } else {
+          tvhinfo(LS_CHARSET, "calloc is NULL");
         }
       }
     };

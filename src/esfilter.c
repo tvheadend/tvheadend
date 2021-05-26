@@ -144,6 +144,10 @@ esfilter_create
   const idclass_t *c = NULL;
   uint32_t ct;
 
+  if (esf == NULL) {
+    tvhabort(LS_CHANNEL, "calloc is NULL");
+  } 
+
   lock_assert(&global_lock);
 
   esf->esf_caid = -1;
@@ -432,7 +436,7 @@ static htsmsg_t *
 esfilter_build_ca_enum(int provider)
 {
   htsmsg_t *l;
-  uint32_t *a = alloca(sizeof(uint32_t) * MAX_ITEMS);
+  uint32_t a[sizeof(uint32_t) * MAX_ITEMS];
   char buf[16], buf2[128];
   service_t *s;
   elementary_stream_t *es;

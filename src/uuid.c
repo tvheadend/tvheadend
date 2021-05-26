@@ -175,8 +175,10 @@ uuid_set_copy( tvh_uuid_set_t *dst, const tvh_uuid_set_t *src )
   dst->us_alloc_chunk = src->us_alloc_chunk;
   size = sizeof(tvh_uuid_t) * src->us_size;
   dst->us_array = malloc(size);
-  if (dst->us_array == NULL)
+  if (dst->us_array == NULL) {
+    tvhinfo(LS_UUID, "malloc is NULL");
     return NULL;
+  }
   memcpy(dst->us_array, src->us_array, size);
   dst->us_size = src->us_size;
   dst->us_count = src->us_count;
@@ -191,8 +193,10 @@ uuid_set_add ( tvh_uuid_set_t *us, const tvh_uuid_t *u )
 
   if (us->us_count >= us->us_size) {
     nu = realloc(us->us_array, sizeof(*u) * (us->us_size + us->us_alloc_chunk));
-    if (nu == NULL)
+    if (nu == NULL){
+      tvhinfo(LS_UUID, "realloc is NULL");
       return NULL;
+    }
     us->us_array = nu;
     us->us_size += us->us_alloc_chunk;
   }

@@ -475,7 +475,9 @@ epggrab_module_int_t *epggrab_module_int_create
 {
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_int_t));
-
+  if (skel == NULL) {
+      tvhabort(LS_EPGGRAB, "calloc is NULL");
+  }
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
                         cls ?: &epggrab_mod_int_class,
@@ -705,6 +707,10 @@ epggrab_module_ext_t *epggrab_module_ext_create
 
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ext_t));
+  if (skel == NULL) {
+      tvhabort(LS_EPGGRAB, "calloc is NULL");
+  }
+
   atomic_set(&skel->sock, -1);
 
   /* Pass through */
@@ -733,7 +739,9 @@ epggrab_module_ota_t *epggrab_module_ota_create
     const epggrab_ota_module_ops_t *ops )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
-
+  if (skel == NULL) {
+      tvhabort(LS_EPGGRAB, "calloc is NULL");
+  }
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
                         idclass ?: &epggrab_mod_ota_class,

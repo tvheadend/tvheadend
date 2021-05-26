@@ -164,14 +164,16 @@ cron_set ( cron_t *c, const char *str )
 cron_multi_t *
 cron_multi_set ( const char *str )
 {
-  char *s = str ? alloca(strlen(str) + 1) : NULL;
   char *line, *sptr = NULL;
   cron_t cron;
   cron_multi_t *cm = NULL, *cm2;
   int count = 0;
 
-  if (s == NULL)
+  if (str == NULL)
     return NULL;
+
+  char s[strlen(str) + 1];
+
   strcpy(s, str);
   line = strtok_r(s, "\n", &sptr);
   while (line) {

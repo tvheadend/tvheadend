@@ -438,6 +438,8 @@ tasklet_arm_alloc(tsk_callback_t *callback, void *opaque)
     memoryinfo_alloc(&tasklet_memoryinfo, sizeof(*tsk));
     tsk->tsk_free = free;
     tasklet_arm(tsk, callback, opaque);
+  } else {
+    tvhinfo(LS_MAIN, "calloc is NULL");
   }
   return tsk;
 }
@@ -1060,6 +1062,9 @@ main(int argc, char **argv)
       tmp = strdup(tvheadend_webroot);
     else {
       tmp = malloc(strlen(tvheadend_webroot)+2);
+      if (tmp == NULL) {
+        tvhabort(LS_MAIN, "malloc is NULL");
+      }
       *tmp = '/';
       strcpy(tmp+1, tvheadend_webroot);
     }

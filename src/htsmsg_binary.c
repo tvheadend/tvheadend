@@ -66,8 +66,10 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
         return -1;
     }
     f = malloc(tlen);
-    if (f == NULL)
+    if (f == NULL) {
+      tvhinfo(LS_HTSMSG, "malloc is NULL; continuing");
       return -1;
+    }
 #if ENABLE_SLOW_MEMORYINFO
     f->hmf_edata_size = tlen - sizeof(htsmsg_field_t);
     memoryinfo_alloc(&htsmsg_field_memoryinfo, tlen);
@@ -359,7 +361,9 @@ htsmsg_binary_serialize0(htsmsg_t *msg, void **datap, size_t *lenp, int maxlen)
     return -1;
 
   data = malloc(len);
-
+  if (data == NULL) {
+      tvhabort(LS_HTSMSG, "malloc is NULL");
+  }
   htsmsg_binary_write(msg, data);
   *datap = data;
   *lenp  = len;
@@ -380,6 +384,9 @@ htsmsg_binary_serialize(htsmsg_t *msg, void **datap, size_t *lenp, int maxlen)
     return -1;
 
   data = malloc(len + 4);
+  if (data == NULL) {
+      tvhabort(LS_HTSMSG, "malloc is NULL");
+  }
 
   data[0] = len >> 24;
   data[1] = len >> 16;

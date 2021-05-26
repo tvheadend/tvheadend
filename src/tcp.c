@@ -302,9 +302,15 @@ tcp_fill_htsbuf_from_fd(int fd, htsbuf_queue_t *hq)
   }
   
   hd = malloc(sizeof(htsbuf_data_t));
+  if (hd == NULL) {
+    tvhabort(LS_TCP, "malloc is NULL");
+  }
   
   hd->hd_data_size = 1000;
   hd->hd_data = malloc(hd->hd_data_size);
+  if (hd->hd_data == NULL) {
+    tvhabort(LS_TCP, "malloc is NULL");
+  }
 
   do {
     r = read(fd, hd->hd_data, hd->hd_data_size);
@@ -341,6 +347,9 @@ tcp_read_line(int fd, htsbuf_queue_t *spill)
   } while (len == -1);
 
   buf = malloc(len+1);
+  if (buf == NULL) {
+    tvhabort(LS_TCP, "malloc is NULL");
+  }
   
   htsbuf_read(spill, buf, len);
   buf[len] = 0;
@@ -789,6 +798,9 @@ next:
 
     if(ev.events & TVHPOLL_IN) {
       tsl = malloc(sizeof(tcp_server_launch_t));
+      if (tsl == NULL) {
+        tvhabort(LS_TCP, "malloc is NULL");
+      }
       tsl->ops            = ts->ops;
       tsl->opaque         = ts->opaque;
       tsl->status         = NULL;
@@ -898,6 +910,9 @@ void *tcp_server_create
   listen(fd, 511);
 
   ts = malloc(sizeof(tcp_server_t));
+  if (ts == NULL) {
+    tvhabort(LS_TCP, "malloc is NULL");
+  }
   ts->serverfd = fd;
   ts->bound  = bound;
   ts->ops    = *ops;
@@ -965,6 +980,9 @@ tcp_server_create
   if (found) {
     /* use the systemd provided socket */
     ts = malloc(sizeof(tcp_server_t));
+    if (ts == NULL) {
+      tvhabort(LS_TCP, "malloc is NULL");
+    }
     ts->serverfd = fd;
     ts->bound  = bound;
     ts->ops    = *ops;

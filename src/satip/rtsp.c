@@ -210,8 +210,10 @@ rtsp_new_session(const char *ipstr, int delsys, uint32_t nsession, int session)
   }
 
   rs = calloc(1, sizeof(*rs));
-  if (rs == NULL)
+  if (rs == NULL) {
+    tvhinfo(LS_RTSP, "calloc is NULL");
     return NULL;
+  }
 
   rs->peer_ipstr = strdup(ipstr);
   rs->nsession = nsession ?: session_number;
@@ -391,6 +393,10 @@ rtsp_slave_add
 {
   char buf[128];
   slave_subscription_t *sub = calloc(1, sizeof(*sub));
+
+  if (sub == NULL) {
+      tvhabort(LS_RTSP, "calloc is NULL");
+  }
 
   tvh_mutex_lock(&master->s_stream_mutex);
   if (master->s_slaves_pids == NULL)

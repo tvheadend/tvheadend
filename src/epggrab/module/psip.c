@@ -132,6 +132,9 @@ psip_update_table(psip_status_t *ps, uint16_t pid, int type)
     return pt;
   }
   pt = calloc(1, sizeof(*pt));
+  if (pt == NULL) {
+      tvhabort(LS_PSIP, "calloc is NULL");
+  }
   TAILQ_INSERT_TAIL(&ps->ps_tables, pt, pt_link);
   pt->pt_pid = pid;
 assign:
@@ -209,6 +212,9 @@ psip_reschedule_tables(psip_status_t *ps)
     }
   }
   tables = malloc(total * sizeof(psip_table_t *));
+  if (tables == NULL) {
+      tvhabort(LS_PSIP, "malloc is NULL");
+  }
 
   tvhtrace(LS_PSIP, "reschedule tables, total %d", total);
 
@@ -315,6 +321,9 @@ static void psip_add_desc
 {
   psip_desc_t *pc, *pd = calloc(1, sizeof(*pd));
 
+  if (pd == NULL) {
+      tvhabort(LS_PSIP, "calloc is NULL");
+  }
   pd->pd_eventid = eventid;
   pc = RB_INSERT_SORTED(&ps->ps_descs, pd, pd_link, _desc_cmp);
   if (pc) {
@@ -325,6 +334,9 @@ static void psip_add_desc
     free(pd->pd_data);
   }
   pd->pd_data = malloc(datalen);
+  if (pd->pd_data == NULL) {
+      tvhabort(LS_PSIP, "malloc is NULL");
+  }
   memcpy(pd->pd_data, data, datalen);
   pd->pd_datalen = datalen;
 }
@@ -701,6 +713,9 @@ static int _psip_start
   psip_status_t *ps;
 
   ps = calloc(1, sizeof(*ps));
+  if (ps == NULL) {
+      tvhabort(LS_PSIP, "calloc is NULL");
+  }
   TAILQ_INIT(&ps->ps_tables);
   ps->ps_mod      = map->om_module;
   ps->ps_map      = map;

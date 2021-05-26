@@ -353,6 +353,9 @@ pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   /* TODO: set free_CA_mode bit to zero */
 
   sbuf = malloc(len + 4);
+  if (sbuf == NULL) {
+      tvhabort(LS_PASS, "malloc is NULL");
+  }
   memcpy(sbuf, buf, len);
   sbuf[3] = pm->pm_dst_sid >> 8;
   sbuf[4] = pm->pm_dst_sid;
@@ -780,6 +783,9 @@ pass_muxer_create(const muxer_config_t *m_cfg,
     return NULL;
 
   pm = calloc(1, sizeof(pass_muxer_t));
+  if (pm == NULL) {
+      tvhabort(LS_PASS, "calloc is NULL");
+  }
   pm->m_open_stream  = pass_muxer_open_stream;
   pm->m_open_file    = pass_muxer_open_file;
   pm->m_init         = pass_muxer_init;

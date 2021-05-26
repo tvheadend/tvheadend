@@ -25,6 +25,7 @@
 
 #include "htsmsg_binary2.h"
 #include "memoryinfo.h"
+#include "tvhlog.h"
 
 static uint32_t htsmsg_binary2_count(htsmsg_t *msg);
 
@@ -125,8 +126,10 @@ htsmsg_binary2_des0(htsmsg_t *msg, const uint8_t *buf, uint32_t len)
         return -1;
     }
     f = malloc(tlen);
-    if (f == NULL)
+    if (f == NULL) {
+      tvhinfo(LS_HTSMSG, "malloc is NULL");
       return -1;
+    }
 #if ENABLE_SLOW_MEMORYINFO
     f->hmf_edata_size = tlen - sizeof(htsmsg_field_t);
     memoryinfo_alloc(&htsmsg_field_memoryinfo, tlen);
@@ -409,6 +412,9 @@ htsmsg_binary2_serialize0
     return -1;
 
   data = malloc(len);
+  if (data == NULL) {
+    tvhabort(LS_HTSMSG, "malloc is NULL");
+  }
 
   htsmsg_binary2_write(msg, data);
 
@@ -433,6 +439,9 @@ htsmsg_binary2_serialize
     return -1;
 
   data = malloc(len + llen);
+  if (data == NULL) {
+    tvhabort(LS_HTSMSG, "malloc is NULL");
+  }
 
   p = htsmsg_binary2_set_length(data, len);
   htsmsg_binary2_write(msg, p);

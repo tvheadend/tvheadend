@@ -234,8 +234,12 @@ parse_latm_audio_mux_element(parser_t *t, parser_es_t *st,
 
   init_rbits(&bs, data, len * 8);
 
-  if((latm = st->es_priv) == NULL)
+  if((latm = st->es_priv) == NULL) {
     latm = st->es_priv = calloc(1, sizeof(latm_private_t));
+    if (latm == NULL) {
+        tvhabort(LS_LATM, "calloc is NULL");
+    }
+  }
 
   if(!read_bits1(&bs))
     if (read_stream_mux_config(st, latm, &bs) < 0)

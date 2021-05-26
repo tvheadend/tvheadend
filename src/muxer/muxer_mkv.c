@@ -262,6 +262,9 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
   mk_track_t *tr;
 
   mk->tracks = calloc(1, sizeof(mk_track_t) * ss->ss_num_components);
+  if (mk->tracks == NULL) {
+      tvhabort(LS_MKV, "calloc is NULL");
+  }
   mk->ntracks = ss->ss_num_components;
   mk->cluster_maxsize = 4000000;
   for(i = 0; i < ss->ss_num_components; i++) {
@@ -939,6 +942,9 @@ static void
 addcue(mk_muxer_t *mk, int64_t pts, int tracknum)
 {
   mk_cue_t *mc = malloc(sizeof(mk_cue_t));
+  if (mc == NULL) {
+      tvhabort(LS_MKV, "malloc is NULL");
+  }
   mc->ts = pts;
   mc->tracknum = tracknum;
   mc->cluster_pos = mk->cluster_pos;
@@ -955,7 +961,9 @@ mk_add_chapter0(mk_muxer_t *mk, uint32_t uuid, int64_t ts)
   mk_chapter_t *ch;
 
   ch = malloc(sizeof(mk_chapter_t));
-
+  if (ch == NULL) {
+      tvhabort(LS_MKV, "malloc is NULL");
+  }
   ch->uuid = uuid;
   ch->ts = ts;
 
@@ -1547,6 +1555,9 @@ mkv_muxer_create(const muxer_config_t *m_cfg,
     return NULL;
 
   mk = calloc(1, sizeof(mk_muxer_t));
+  if (mk == NULL) {
+      tvhabort(LS_MKV, "calloc is NULL");
+  }
   mk->m_open_stream  = mkv_muxer_open_stream;
   mk->m_open_file    = mkv_muxer_open_file;
   mk->m_mime         = mkv_muxer_mime;

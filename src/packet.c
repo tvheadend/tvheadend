@@ -23,6 +23,7 @@
 #include "string.h"
 #include "atomic.h"
 #include "memoryinfo.h"
+#include "tvhlog.h"
 
 #ifndef PKTBUF_DATA_ALIGN
 #define PKTBUF_DATA_ALIGN 64
@@ -61,8 +62,10 @@ pkt_alloc(streaming_component_type_t type, const uint8_t *data, size_t datalen,
 
   if (datalen > 0) {
     payload = pktbuf_alloc(data, datalen);
-    if (payload == NULL)
+    if (payload == NULL) {
+      tvhinfo(LS_PACKET, "pktbuf_alloc is NULL");
       return NULL;
+    }
   } else {
     payload = NULL;
   }
@@ -77,6 +80,7 @@ pkt_alloc(streaming_component_type_t type, const uint8_t *data, size_t datalen,
     pkt->pkt_refcount = 1;
     memoryinfo_alloc(&pkt_memoryinfo, sizeof(*pkt));
   } else {
+    tvhinfo(LS_PACKET, "calloc is NULL");
     if (payload)
       pktbuf_ref_dec(payload);
   }
@@ -101,6 +105,8 @@ pkt_copy_shallow(th_pkt_t *pkt)
     pktbuf_ref_inc(n->pkt_payload);
 
     memoryinfo_alloc(&pkt_memoryinfo, sizeof(*pkt));
+  } else {
+    tvhinfo(LS_PACKET, "malloc is NULL");
   }
 
   return n;
@@ -123,7 +129,10 @@ pkt_copy_nodata(th_pkt_t *pkt)
     n->pkt_meta = n->pkt_payload = NULL;
 
     memoryinfo_alloc(&pkt_memoryinfo, sizeof(*pkt));
+  } else {
+    tvhinfo(LS_PACKET, "malloc is NULL");
   }
+
 
   return n;
 }
@@ -230,6 +239,8 @@ pktref_enqueue(struct th_pktref_queue *q, th_pkt_t *pkt)
     pr->pr_pkt = pkt;
     TAILQ_INSERT_TAIL(q, pr, pr_link);
     memoryinfo_alloc(&pktref_memoryinfo, sizeof(*pr));
+  } else {
+    tvhabort(LS_PACKET, "malloc is NULL");
   }
 }
 
@@ -246,6 +257,8 @@ pktref_enqueue_sorted(struct th_pktref_queue *q, th_pkt_t *pkt,
     pr->pr_pkt = pkt;
     TAILQ_INSERT_SORTED(q, pr, pr_link, cmp);
     memoryinfo_alloc(&pktref_memoryinfo, sizeof(*pr));
+  } else {
+    tvhabort(LS_PACKET, "malloc is NULL");
   }
 }
 
@@ -321,6 +334,8 @@ pktref_create(th_pkt_t *pkt)
   if (pr) {
     pr->pr_pkt = pkt;
     memoryinfo_alloc(&pktref_memoryinfo, sizeof(*pr));
+  } else {
+    tvhinfo(LS_PACKET, "malloc is NULL");
   }
   return pr;
 }
@@ -368,7 +383,7 @@ pktbuf_alloc(const uint8_t *data, size_t size)
   uint8_t *buffer;
 
   buffer = size > 0 ? malloc(size) : NULL;
-  if (buffer) {\
+  if (buffer) {
     if (data != NULL)
       memcpy(buffer, data, size);
   } else if (size > 0) {

@@ -532,6 +532,9 @@ static int _lang_code_lookup_add
 {
   lang_code_lookup_element_t *element;
   element = (lang_code_lookup_element_t *)calloc(1, sizeof(lang_code_lookup_element_t));
+  if (element == NULL) {
+    tvhabort(LS_LANG, "calloc is NULL");
+  }
   element->lang_code = code;
   RB_INSERT_SORTED(lookup_table, element, link, func);
   return 0;
@@ -546,8 +549,17 @@ static const lang_code_t *_lang_code_get ( const char *code, size_t len )
     const lang_code_t *c = lang_codes;
 
     lang_codes_code2b = (lang_code_lookup_t *)calloc(1, sizeof(lang_code_lookup_t));
+    if (lang_codes_code2b == NULL) {
+      tvhabort(LS_LANG, "calloc is NULL");
+    }
     lang_codes_code1 = (lang_code_lookup_t *)calloc(1, sizeof(lang_code_lookup_t));
+    if (lang_codes_code1 == NULL) {
+      tvhabort(LS_LANG, "calloc is NULL");
+    }
     lang_codes_code2t = (lang_code_lookup_t *)calloc(1, sizeof(lang_code_lookup_t));
+    if (lang_codes_code2t == NULL) {
+      tvhabort(LS_LANG, "calloc is NULL");
+    }
 
     while (c->code2b) {
       _lang_code_lookup_add(lang_codes_code2b, c, _lang_code2b_cmp);
@@ -660,6 +672,8 @@ const lang_code_list_t *lang_code_split ( const char *codes )
     ret->codeslen = n;
     ret->langs = strdup(codes);
     RB_INSERT_SORTED(&lang_code_split_tree, ret, link, _split_cmp);
+  } else {
+    tvhinfo(LS_LANG, "calloc is NULL");
   }
 
 unlock:
@@ -703,6 +717,9 @@ char *lang_code_user( const char *ucode )
   if (!ucode)
     return strdup(codes);
   ret = malloc(strlen(codes) + strlen(ucode) + 2);
+  if (ret == NULL) {
+    tvhabort(LS_LANG, "malloc is NULL");
+  }
   strcpy(ret, ucode);
   while (codes && *codes) {
     s = codes;

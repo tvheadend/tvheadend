@@ -391,6 +391,9 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   dvr_autorec_entry_t *dae;
 
   dae = calloc(1, sizeof(*dae));
+  if (dae == NULL) {
+    tvhabort(LS_DVR, "calloc is NULL");
+  }
 
   if (idnode_insert(&dae->dae_id, uuid, &dvr_autorec_entry_class, 0)) {
     if (uuid)

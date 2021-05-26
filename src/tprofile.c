@@ -57,6 +57,9 @@ static void tprofile_destroy(tprofile_t *tprof)
 void tprofile_done1(tprofile_t *tprof)
 {
   tprofile_t *fin = malloc(sizeof(*fin));
+  if (fin == NULL) {
+    tvhabort(LS_TPROF, "malloc is NULL");
+  }
   tvh_mutex_lock(&tprofile_mutex);
   LIST_REMOVE(tprof, link);
   if (fin) {
@@ -144,6 +147,9 @@ static void qprofile_destroy(qprofile_t *qprof)
 void tprofile_queue_done1(qprofile_t *qprof)
 {
   qprofile_t *fin = malloc(sizeof(*fin));
+  if (fin == NULL) {
+    tvhabort(LS_TPROF, "malloc is NULL");
+  }
   tvh_mutex_lock(&qprofile_mutex);
   LIST_REMOVE(qprof, link);
   if (fin) {

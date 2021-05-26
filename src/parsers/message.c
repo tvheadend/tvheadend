@@ -375,6 +375,9 @@ parser_create(streaming_target_t *output, th_subscription_t *ts)
   parser_t *prs = calloc(1, sizeof(parser_t));
   service_t *t = ts->ths_service;
 
+  if (prs == NULL) {
+      tvhabort(LS_PARSER, "calloc is NULL");
+  }
   prs->prs_output = output;
   prs->prs_subscription = ts;
   prs->prs_service = t;

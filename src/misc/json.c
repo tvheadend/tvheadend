@@ -74,6 +74,9 @@ json_parse_string(const char *s, const char **endp,
       /* End */
       l = s - start;
       r = malloc(l + 1);
+      if (r == NULL) {
+          tvhabort(LS_JSON, "malloc is NULL");
+      }
       memcpy(r, start, l);
       r[l] = 0;
 
