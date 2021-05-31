@@ -222,7 +222,7 @@ en50221_app_ca_handle
 }
 
 int en50221_send_capmt
-  (en50221_slot_t *slot, const uint8_t *capmt, uint8_t capmtlen)
+  (en50221_slot_t *slot, const uint8_t *capmt, size_t capmtlen)
 {
   en50221_app_t *app;
   app = en50221_slot_find_application(slot, CICAM_RI_CONDITIONAL_ACCESS_SUPPORT, ~0);
