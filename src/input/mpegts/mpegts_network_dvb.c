@@ -703,7 +703,7 @@ dvb_network_create_mux
   }
 
   ln = (dvb_network_t*)mn;
-  mm = dvb_network_find_mux(ln, dmc, onid, tsid, 0, 0);
+  mm = dvb_network_find_mux(ln, dmc, onid, tsid, 0, (ln->mn_autodiscovery == MN_DISCOVERY_CHANGE));
   if (!mm && (ln->mn_autodiscovery != MN_DISCOVERY_DISABLE || force)) {
     save |= dvb_fe_type_by_network_class(ln->mn_id.in_class) == dmc->dmc_fe_type;
     if (save && dmc->dmc_fe_type == DVB_TYPE_S) {
