@@ -861,7 +861,6 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype, int urlauth)
   off_t fsize;
   time_t durration;
   struct tm tm;
-  int bandwidth;
 
   if (pltype != PLAYLIST_M3U)
     return HTTP_STATUS_BAD_REQUEST;
@@ -872,7 +871,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype, int urlauth)
   htsbuf_append_str(hq, "#EXTM3U\n");
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     fsize = dvr_get_filesize(de, 0);
-    if(!fsize)
+    if(fsize <= 0)
       continue;
 
     if (de->de_channel &&
@@ -883,26 +882,21 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype, int urlauth)
       continue;
 
     durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de, 0);
-    bandwidth = ((8*fsize) / (durration*1024.0));
     strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
     
-    htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
     uuid = idnode_uuid_as_str(&de->de_id, ubuf);
-    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%s,BANDWIDTH=%d\n", uuid, bandwidth);
-    htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
-
     snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
     htsbuf_qprintf(hq, "%s%s", hostpath, buf);
 
     switch (urlauth) {
     case URLAUTH_TICKET:
-      htsbuf_qprintf(hq, "?ticket=%s\n", access_ticket_create(buf, hc->hc_access));
+      htsbuf_qprintf(hq, "?ticket=%s", access_ticket_create(buf, hc->hc_access));
       break;
     case URLAUTH_CODE:
       if (!strempty(hc->hc_access->aa_auth))
-        htsbuf_qprintf(hq, "?auth=%s\n", hc->hc_access->aa_auth);
+        htsbuf_qprintf(hq, "?auth=%s", hc->hc_access->aa_auth);
       break;
     }
     
