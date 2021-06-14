@@ -198,6 +198,7 @@ enum {
 #if ENABLE_DDCI
   LS_DDCI,
 #endif
+  LS_UDP,	
   LS_LAST     /* keep this last */
 };
 

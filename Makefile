@@ -226,6 +226,7 @@ SRCS-1 = \
 	src/access.c \
 	src/tcp.c \
 	src/udp.c \
+	src/udp_stream.c \
 	src/url.c \
 	src/http.c \
 	src/notify.c \

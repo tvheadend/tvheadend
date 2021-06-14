@@ -38,7 +38,8 @@ typedef struct udp_connection {
   int fd;
   int subsystem;
   char *name;
-  int rxtxsize;
+  int rxsize;
+  int txsize;
 } udp_connection_t;
 
 udp_connection_t *
