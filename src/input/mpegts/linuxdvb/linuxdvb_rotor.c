@@ -401,7 +401,7 @@ linuxdvb_rotor_grace
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_external_class))
     return linuxdvb_external_grace(lr, ld->ld_satconf);
 
-  if (!ls->ls_last_orbital_pos || ls->ls_motor_rate == 0)
+  if ((ls->ls_last_orbital_pos == INT_MAX) || ls->ls_motor_rate == 0)
     return ls->ls_max_rotor_move;
 
   newpos = pos_to_integer(lr->lr_sat_lon);
@@ -432,7 +432,7 @@ linuxdvb_rotor_check_orbital_pos
   int pos = lsp->ls_last_orbital_pos;
   char dir;
 
-  if (!pos)
+  if (pos == INT_MAX)
     return 0;
 
   if (abs(pos_to_integer(lr->lr_sat_lon) - pos) > 2)
@@ -523,6 +523,10 @@ linuxdvb_rotor_tune
 
   if (linuxdvb_rotor_check_orbital_pos(lr, lm, ls))
     return 0;
+  else if ( lsp->ls_rotor_weight > lsp->ls_mmi->mmi_start_weight ) {
+    tvherror(LS_DISEQC, "subscription priority is not high enough to control ROTOR");
+    return -1;
+  }
 
   /* Force to 18v (quicker movement) */
   if (linuxdvb_satconf_start(lsp, MINMAX(lr->lr_powerup_time, 15, 200), 1))

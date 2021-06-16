@@ -772,6 +772,17 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .desc     = N_("Motor rate (in milliseconds/deg)."),
       .off      = offsetof(linuxdvb_satconf_t, ls_motor_rate),
     },
+    {
+      .type    = PT_INT,
+      .id      = "rotor_priority",
+      .name    = N_("Rotor access priority"),
+      .desc    = N_("Allow rotor to move only for subscriptions with this"
+		    "priority and above. For example, set to 5 to prevent"
+		    "OTA EPG and other periodic scan from moving rotor."),
+      .off     = offsetof(linuxdvb_satconf_t, ls_rotor_weight),
+      .opts    = PO_ADVANCED,
+      .def.i   = 0
+    },
     {}
   }
 };
@@ -1222,6 +1233,7 @@ linuxdvb_satconf_create
   ls->ls_early_tune = 1;
   ls->ls_diseqc_full = 1;
   ls->ls_max_rotor_move = 120;
+  ls->ls_last_orbital_pos = INT_MAX;
 
   /* Create node */
   if (idnode_insert(&ls->ls_id, uuid, lst->idc, 0)) {
