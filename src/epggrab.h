@@ -249,6 +249,7 @@ struct epggrab_ota_mux
   mtimer_t                           om_data_timer;   ///< Any EPG data seen?
   mtimer_t                           om_handlers_timer; ///< Run handlers callback
   int64_t                            om_retry_time;   ///< Next time to retry
+  int                                om_retry_count;  ///< how may times have we retried
 
   char                              *om_force_modname;///< Force this module
 
