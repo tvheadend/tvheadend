@@ -32,7 +32,7 @@ tvheadend.bouquet = function(panel, index)
 {
     var list0 = 'name,maptoch,lcn_off,mapopt,chtag,source,services_count,services_seen,comment';
     var list  = 'enabled,rescan,' + list0;
-    var elist = 'enabled,rescan,ext_url,' + list0;
+    var elist = 'enabled,rescan,ext_url' + list0 + ",script";
     var alist = 'enabled,ext_url,' + list0;
 
     var scanButton = {

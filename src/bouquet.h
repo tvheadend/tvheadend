@@ -42,6 +42,7 @@ typedef struct bouquet {
   int           bq_mapmergename;
   int           bq_mapmergefuzzy;
   int           bq_tidychannelname;
+  char         *bq_mapscript;
   int           bq_chtag;
   int           bq_chtag_type_tags;
   int           bq_chtag_provider_tags;

@@ -31,6 +31,7 @@ typedef struct service_mapper_conf
   int type_tags;          ///< Create tags based on the service type (SDTV/HDTV/Radio)
   int provider_tags;      ///< Create tags based on provider name
   int network_tags;       ///< Create tags based on network name (useful for multi adapter equipments)
+  char *script;           ///< Script for advanced mapping
 } service_mapper_conf_t;
 
 typedef struct service_mapper {
