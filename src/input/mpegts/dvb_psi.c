@@ -2287,6 +2287,9 @@ psi_tables_atsc_c ( mpegts_mux_t *mm )
   mpegts_table_add(mm, DVB_VCT_C_BASE, DVB_VCT_MASK, atsc_vct_callback,
                    NULL, "vct", LS_TBL_ATSC, MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_VCT_PID, MPS_WEIGHT_VCT);
+    mpegts_table_add(mm, DVB_VCT_T_BASE, DVB_VCT_MASK, atsc_vct_callback,
+                   NULL, "vct", LS_TBL_ATSC, MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_VCT_PID, MPS_WEIGHT_VCT);
   mpegts_table_add(mm, DVB_ATSC_STT_BASE, DVB_ATSC_STT_MASK, atsc_stt_callback,
                    NULL, "stt", LS_TBL_ATSC, MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_ATSC_STT_PID, MPS_WEIGHT_STT);
