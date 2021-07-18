@@ -272,7 +272,7 @@
         "libpcre3-dev",
         "libdvbcsa-dev",
         "python",
-        "python-requests",
+        "python3-requests",
         "debhelper",
         "ccache"
       ],
@@ -300,7 +300,7 @@
         "libpcre3-dev",
         "libdvbcsa-dev",
         "python",
-        "python-requests",
+        "python3-requests",
         "debhelper",
         "ccache"
       ],
