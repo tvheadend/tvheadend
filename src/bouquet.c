@@ -91,6 +91,9 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   lock_assert(&global_lock);
 
   bq = calloc(1, sizeof(bouquet_t));
+  if (bq == NULL) {
+    tvhabort(LS_BOUQUET, "calloc is NULL");
+  }
   bq->bq_services = idnode_set_create(1);
   bq->bq_active_services = idnode_set_create(1);
   bq->bq_ext_url_period = 60;
@@ -133,6 +136,9 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
       snprintf(buf, sizeof(buf), "exturl://%s", idnode_uuid_as_str(&bq->bq_id, ubuf));
       bq->bq_src = strdup(buf);
       bq->bq_download = bqd = calloc(1, sizeof(*bqd));
+      if (bqd == NULL) {
+        tvhabort(LS_BOUQUET, "calloc is NULL");
+      }
       bqd->bq = bq;
       download_init(&bqd->download, LS_BOUQUET);
       bqd->download.process = bouquet_download_process;
@@ -356,6 +362,9 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag)
 
   if (!tl) {
     tl = calloc(1, sizeof(*tl));
+    if (tl == NULL) {
+      tvhabort(LS_BOUQUET, "calloc is NULL");
+    }
     tl->sl_bouquet = bq;
     LIST_INSERT_HEAD(&s->s_lcns, tl, sl_link);
     bq->bq_saveflag = 1;

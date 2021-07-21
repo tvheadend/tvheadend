@@ -162,6 +162,9 @@ create_services(AvahiClient *c)
     if (tvheadend_webui_port > 0) {
       if (tvheadend_webroot) {
         path = malloc(strlen(tvheadend_webroot) + 6);
+        if (path == NULL) {
+          tvhabort(LS_AVAHI, "malloc is NULL");
+        }
         sprintf(path, "path=%s", tvheadend_webroot);
       } else {
         path = strdup("path=/");

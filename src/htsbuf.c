@@ -25,6 +25,7 @@
 
 #include "tvheadend.h"
 #include "htsbuf.h"
+#include "tvhlog.h"
 
 /**
  *
@@ -47,6 +48,9 @@ htsbuf_queue_t *
 htsbuf_queue_alloc(unsigned int maxsize)
 {
   htsbuf_queue_t *hq = malloc(sizeof(htsbuf_queue_t));
+  if (hq == NULL) {
+    tvhabort(LS_HTSBUF, "malloc is NULL");
+  }
   htsbuf_queue_init(hq, maxsize);
   return hq;
 }
@@ -110,11 +114,17 @@ htsbuf_append(htsbuf_queue_t *hq, const void *buf, size_t len)
     return;
   
   hd = malloc(sizeof(htsbuf_data_t));
+  if (hd == NULL) {
+    tvhabort(LS_HTSBUF, "malloc is NULL");
+  }
   TAILQ_INSERT_TAIL(&hq->hq_q, hd, hd_link);
   
   c = MAX(len, 1000); /* Allocate 1000 bytes to support lots of small writes */
 
   hd->hd_data = malloc(c);
+  if (hd->hd_data == NULL) {
+    tvhabort(LS_HTSBUF, "malloc is NULL");
+  }
   hd->hd_data_size = c;
   hd->hd_data_len = len;
   hd->hd_data_off = 0;
@@ -133,6 +143,9 @@ htsbuf_append_prealloc(htsbuf_queue_t *hq, const void *buf, size_t len)
   hq->hq_size += len;
 
   hd = malloc(sizeof(htsbuf_data_t));
+  if (hd == NULL) {
+    tvhabort(LS_HTSBUF, "malloc is NULL");
+  }
   TAILQ_INSERT_TAIL(&hq->hq_q, hd, hd_link);
   
   hd->hd_data = (void *)buf;
@@ -266,6 +279,9 @@ htsbuf_vqprintf(htsbuf_queue_t *hq, const char *fmt, va_list ap0)
   size = sizeof(buf) * 2;
 
   p = malloc(size);
+  if (p == NULL) {
+    tvhabort(LS_HTSBUF, "malloc is NULL");
+  }
   while (1) {
     /* Try to print in the allocated space. */
     va_copy(ap, ap0);
@@ -339,6 +355,9 @@ void
 htsbuf_hexdump(htsbuf_queue_t *hq, const char *prefix)
 {
   void *r = malloc(hq->hq_size);
+  if (r == NULL) {
+    tvhabort(LS_HTSBUF, "malloc is NULL");
+  }
   htsbuf_peek(hq, r, hq->hq_size);
   hexdump(prefix, r, hq->hq_size);
   free(r);
@@ -581,6 +600,9 @@ char *
 htsbuf_to_string(htsbuf_queue_t *hq)
 {
   char *r = malloc(hq->hq_size + 1);
+  if (r == NULL) {
+    tvhabort(LS_HTSBUF, "malloc is NULL");
+  }
   r[hq->hq_size] = 0;
   htsbuf_read(hq, r, hq->hq_size);
   return r;

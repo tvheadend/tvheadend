@@ -26,6 +26,7 @@
 #include "dvr/dvr.h"
 #include "lang_codes.h"
 #include "string_list.h"
+#include "tvhlog.h"
 
 static htsmsg_t *
 api_epg_get_list ( const char *s )
@@ -433,9 +434,12 @@ api_epg_grid
                 uint32_t count = 0;
                 HTSMSG_FOREACH(f3, z)
                   count++;
-                if (ARRAY_SIZE(eq.genre_static) > count)
+                if (ARRAY_SIZE(eq.genre_static) > count) {
                   eq.genre = malloc(sizeof(eq.genre[0]) * count);
-                else
+                  if (eq.genre == NULL) {
+                    tvhabort(LS_API, "malloc is NULL");
+                  }
+                } else
                   eq.genre = eq.genre_static;
                 HTSMSG_FOREACH(f3, z)
                   if (!htsmsg_field_get_s64(f3, &v))
@@ -557,6 +561,10 @@ api_epg_episode_sorted(const struct epg_set *set,
         num_allocated = MAX(100, num_allocated + 100);
         /* We don't expect any/many reallocs so we store physical struct instead of pointers */
         bcast_entries = realloc(bcast_entries, num_allocated * sizeof(bcast_entry_t));
+        // if return value realloc is NULL then the old pointer is valid
+        if (bcast_entries == NULL) {
+          tvhabort(LS_API, "realloc is NULL");
+        }
       }
 
       new_bcast_entry.start = htsmsg_get_u32_or_default(m, "start", 0);

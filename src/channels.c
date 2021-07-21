@@ -641,6 +641,10 @@ channel_make_fuzzy_name(const char *name)
   char *ch_fuzzy = fuzzy_name;
   const char *ch = name;
 
+  if (fuzzy_name == NULL) {
+    tvhabort(LS_CHANNEL, "malloc is NULL");
+  }
+
   for (; *ch ; ++ch) {
     /* Strip trailing 'HD'. */
     if (*ch == 'H' && *(ch+1) == 'D' && *(ch+2) == 0)
@@ -1020,6 +1024,10 @@ svcnamepicons(const char *svcname)
       count++;
   }
   r = d = malloc(count * 4 + (s - svcname) + 1);
+  if (r == NULL) {
+    tvhabort(LS_CHANNEL, "malloc is NULL");
+  }
+
   for (s = svcname; *s; s++) {
     c = *s;
     if (c == '&') {
@@ -1396,6 +1404,9 @@ channel_get_sorted_list(const char *sort_type, int all, int *_count)
 {
   int count = 0;
   channel_t *ch, **chlist = malloc(channels_count * sizeof(channel_t *));
+  if (chlist == NULL) {
+    tvhabort(LS_CHANNEL, "malloc is NULL");
+  }
 
   CHANNEL_FOREACH(ch)
     if (all || ch->ch_enabled)
@@ -1415,6 +1426,10 @@ channel_get_sorted_list_for_tag
   int count = 0;
   channel_t *ch, **chlist = malloc(channels_count * sizeof(channel_t *));
   idnode_list_mapping_t *ilm;
+ 
+  if (chlist == NULL) {
+    tvhabort(LS_CHANNEL, "malloc is NULL");
+  } 
 
   LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
@@ -1586,6 +1601,11 @@ channel_tag_create(const char *uuid, htsmsg_t *conf)
   channel_tag_t *ct;
 
   ct = calloc(1, sizeof(channel_tag_t));
+
+  if (ct == NULL) {
+    tvhabort(LS_CHANNEL, "calloc is NULL");
+  }
+
   LIST_INIT(&ct->ct_ctms);
   LIST_INIT(&ct->ct_autorecs);
   LIST_INIT(&ct->ct_accesses);
@@ -1929,6 +1949,10 @@ channel_tag_get_sorted_list(const char *sort_type, int *_count)
   channel_tag_t *ct, **ctlist;
 
   ctlist = malloc(channel_tags_count * sizeof(channel_tag_t *));
+
+  if (ctlist == NULL) {
+    tvhabort(LS_CHANNEL, "malloc is NULL");
+  }
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(ct->ct_enabled && !ct->ct_internal)

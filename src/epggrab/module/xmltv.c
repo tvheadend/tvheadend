@@ -202,6 +202,9 @@ static void parse_xmltv_dd_progid
 
   const int buf_size = s_len + strlen(mod->id) + 13;
   char * buf = (char *) malloc( buf_size);
+  if (buf == NULL) {
+      tvhabort(LS_XMLTV, "malloc is NULL");
+  }
   /* Raw URI */
   int e = snprintf( buf, buf_size, "ddprogid://%s/%s", mod->id, s);
 
@@ -496,7 +499,12 @@ static epg_genre_list_t
   epg_genre_list_t *egl = NULL;
   HTSMSG_FOREACH(f, tags) {
     if (!strcmp(htsmsg_field_name(f), "category") && (e = htsmsg_get_map_by_field(f))) {
-      if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
+      if (!egl) {
+        egl = calloc(1, sizeof(epg_genre_list_t));
+        if (egl == NULL) {
+            tvhabort(LS_XMLTV, "calloc is NULL");
+        }
+      }
       epg_genre_list_add_by_str(egl, htsmsg_get_str(e, "cdata"), NULL);
     }
   }

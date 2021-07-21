@@ -1452,6 +1452,9 @@ service_instance_add(service_instance_list_t *sil,
 
   if(si == NULL) {
     si = calloc(1, sizeof(service_instance_t));
+    if (si == NULL) {
+      tvhabort(LS_SERVICE, "calloc is NULL");
+    }
     si->si_s = s;
     service_ref(s);
     si->si_instance = instance;
@@ -1703,6 +1706,9 @@ static void
 add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
 {
   caid_t *c = malloc(sizeof(caid_t));
+  if (c == NULL) {
+    tvhabort(LS_SERVICE, "malloc is NULL");
+  }
   c->caid = caid;
   c->providerid = providerid;
   c->pid = 0;

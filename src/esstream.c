@@ -227,7 +227,7 @@ void
 elementary_set_filter_build(elementary_set_t *set)
 {
   service_t *t;
-  elementary_stream_t *st, *st2, **sta;
+  elementary_stream_t *st, *st2;
   esfilter_t *esf;
   caid_t *ca, *ca2;
   int i, n, p, o, exclusive, sindex;
@@ -265,7 +265,7 @@ filter:
     n++;
   }
 
-  sta = alloca(sizeof(elementary_stream_t *) * n);
+  elementary_stream_t *sta[sizeof(elementary_stream_t *) * n];
 
   for (i = ESF_CLASS_VIDEO, p = 0; i <= ESF_CLASS_LAST; i++) {
     o = p;
@@ -467,6 +467,9 @@ elementary_stream_create_parent
 
 create:
   st = calloc(1, sizeof(elementary_stream_t));
+  if (st == NULL) {
+      tvhabort(LS_ESSTREAM, "calloc is NULL");
+  }
   st->es_index = idx + 1;
 
   st->es_type = type;
@@ -604,13 +607,13 @@ escmp(const void *A, const void *B)
 void
 elementary_set_sort_streams(elementary_set_t *set)
 {
-  elementary_stream_t *st, **v;
+  elementary_stream_t *st;
   int num = 0, i = 0;
 
   TAILQ_FOREACH(st, &set->set_all, es_link)
     num++;
 
-  v = alloca(num * sizeof(elementary_stream_t *));
+  elementary_stream_t *v[num * sizeof(elementary_stream_t *)];
   TAILQ_FOREACH(st, &set->set_all, es_link)
     v[i++] = st;
 
@@ -636,6 +639,9 @@ elementary_stream_build_start(elementary_set_t *set)
 
   ss = calloc(1, sizeof(streaming_start_t) +
 	      sizeof(streaming_start_component_t) * n);
+  if (ss == NULL) {
+      tvhabort(LS_ESSTREAM, "calloc is NULL");
+  }
 
   ss->ss_num_components = n;
 
@@ -670,6 +676,9 @@ elementary_stream_create_from_start
   for (n = 0; n < ss->ss_num_components; n++) {
     streaming_start_component_t *ssc = &ss->ss_components[n];
     st = calloc(1, es_size ?: sizeof(*st));
+    if (st == NULL) {
+        tvhabort(LS_ESSTREAM, "calloc is NULL");
+    }
     *(elementary_info_t *)st = *(elementary_info_t *)ssc;
     st->es_service = set->set_service;
     elementary_stream_make_nicename(st, set->set_nicename);

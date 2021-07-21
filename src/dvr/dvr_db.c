@@ -1050,6 +1050,9 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   }
 
   de = calloc(1, sizeof(*de));
+  if (de == NULL) {
+    tvhabort(LS_DVR, "calloc is NULL");
+  }
 
   if (idnode_insert(&de->de_id, uuid, &dvr_entry_class, IDNODE_SHORT_UUID)) {
     if (uuid)
@@ -1507,6 +1510,9 @@ static int _dvr_duplicate_per_month(dvr_entry_t *de, dvr_entry_t *de2, void **au
   struct tm *de1_start = *aux, de2_start;
   if (de1_start == NULL) {
     de1_start = calloc(1, sizeof(*de1_start));
+    if (de1_start == NULL) {
+      tvhabort(LS_DVR, "calloc is NULL");
+    }
     localtime_r(&de->de_start, de1_start);
     *aux = de1_start;
   }
@@ -1520,6 +1526,9 @@ static int _dvr_duplicate_per_week(dvr_entry_t *de, dvr_entry_t *de2, void **aux
   struct tm *de1_start = *aux, de2_start;
   if (de1_start == NULL) {
     de1_start = calloc(1, sizeof(*de1_start));
+    if (de1_start == NULL) {
+      tvhabort(LS_DVR, "calloc is NULL");
+    }
     localtime_r(&de->de_start, de1_start);
     de1_start->tm_mday -= (de1_start->tm_wday + 6) % 7; // week = mon-sun
     mktime(de1_start); // adjusts de_start
@@ -1537,6 +1546,9 @@ static int _dvr_duplicate_per_day(dvr_entry_t *de, dvr_entry_t *de2, void **aux)
   struct tm *de1_start = *aux, de2_start;
   if (de1_start == NULL) {
     de1_start = calloc(1, sizeof(*de1_start));
+    if (de1_start == NULL) {
+      tvhabort(LS_DVR, "calloc is NULL");
+    }
     localtime_r(&de->de_start, de1_start);
     *aux = de1_start;
   }

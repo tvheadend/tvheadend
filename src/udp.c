@@ -21,6 +21,7 @@
 #define _GNU_SOURCE
 #include "tvheadend.h"
 #include "udp.h"
+#include "tvhlog.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -162,6 +163,9 @@ udp_bind ( int subsystem, const char *name,
   socklen_t addrlen;
 
   uc = calloc(1, sizeof(udp_connection_t));
+  if (uc == NULL) {
+    tvhabort(LS_UDP, "calloc is NULL");
+  }
   uc->fd                   = -1;
   uc->host                 = bindaddr ? strdup(bindaddr) : NULL;
   uc->port                 = port;
@@ -377,6 +381,9 @@ udp_sendinit ( int subsystem, const char *name,
   udp_connection_t *uc;
 
   uc = calloc(1, sizeof(udp_connection_t));
+  if (uc == NULL) {
+    tvhabort(LS_UDP, "calloc is NULL");
+  }
   uc->fd                   = -1;
   uc->ifname               = ifname ? strdup(ifname) : NULL;
   uc->subsystem            = subsystem;
@@ -612,6 +619,9 @@ udp_multirecv_init( udp_multirecv_t *um, int packets, int psize )
   um->um_iovec   = malloc(packets * sizeof(struct iovec));
   um->um_riovec  = malloc(packets * sizeof(struct iovec));
   um->um_msg     = calloc(packets,  sizeof(struct mmsghdr));
+  if (um->um_data == NULL || um->um_iovec == NULL || um->um_riovec == NULL || um->um_msg) {
+    tvhabort(LS_UDP, "calloc/malloc is NULL");
+  }
   for (i = 0; i < packets; i++) {
     ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iov    = &um->um_iovec[i];
     ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iovlen = 1;
@@ -730,6 +740,9 @@ udp_multisend_init( udp_multisend_t *um, int packets, int psize,
   um->um_data    = malloc(packets * psize);
   um->um_iovec   = malloc(packets * sizeof(struct iovec));
   um->um_msg     = calloc(packets,  sizeof(struct mmsghdr));
+  if (um->um_data == NULL || um->um_iovec == NULL || um->um_msg) {
+    tvhabort(LS_UDP, "calloc/malloc is NULL");
+  }
   for (i = 0; i < packets; i++) {
     ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iov    = &um->um_iovec[i];
     ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iovlen = 1;

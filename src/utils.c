@@ -376,8 +376,10 @@ sbuf_init_fixed(sbuf_t *sb, int len)
 {
   memset(sb, 0, sizeof(sbuf_t));
   sb->sb_data = malloc(len);
-  if (sb->sb_data == NULL)
+  if (sb->sb_data == NULL) {
+    tvhinfo(LS_UTILS, "malloc is NULL");
     sbuf_alloc_fail(len);
+  }
   sb->sb_size = len;
 }
 
@@ -398,6 +400,8 @@ sbuf_reset(sbuf_t *sb, int max_len)
     if (n) {
       sb->sb_data = n;
       sb->sb_size = max_len;
+    } else {
+      tvhinfo(LS_UTILS, "realloc is NULL");
     }
   }
 }
@@ -415,14 +419,19 @@ sbuf_alloc_(sbuf_t *sb, int len)
   if(sb->sb_data == NULL) {
     sb->sb_size = len * 4 > 4000 ? len * 4 : 4000;
     sb->sb_data = malloc(sb->sb_size);
+    if (sb->sb_data == NULL) {
+      tvhinfo(LS_UTILS, "malloc is NULL");
+    }
     return;
   } else {
     sb->sb_size += len * 4;
     sb->sb_data = realloc(sb->sb_data, sb->sb_size);
   }
 
-  if(sb->sb_data == NULL)
+  if(sb->sb_data == NULL) {
+    tvhinfo(LS_UTILS, "realloc is NULL");
     sbuf_alloc_fail(sb->sb_size);
+  }
 }
 
 void
@@ -434,14 +443,16 @@ sbuf_realloc(sbuf_t *sb, int len)
       if (n) {
         sb->sb_data = n;
         sb->sb_size = len;
-      }
+      } 
     }
   } else {
     sb->sb_data = malloc(len);
     sb->sb_size = len;
   }
-  if (sb->sb_data == NULL)
+  if (sb->sb_data == NULL) {
+    tvhinfo(LS_UTILS, "alloc is NULL");
     sbuf_alloc_fail(len);
+  }
 }
 
 void

@@ -72,9 +72,8 @@ int
 hts_settings_makedirs ( const char *inpath )
 {
   size_t x = strlen(inpath) - 1;
-  char *path = alloca(x + 2);
+  char path[x + 2];
 
-  if (path == NULL) return -1;
   strcpy(path, inpath);
 
   while (x) {
@@ -229,6 +228,9 @@ hts_settings_load_one(const char *filename)
 
   /* Load data */
   mem    = malloc(size+1);
+  if (mem == NULL) {
+    tvhabort(LS_SETTINGS, "malloc is NULL");
+  }
   n      = fb_read(fp, mem, size);
   if (n >= 0) mem[n] = 0;
 

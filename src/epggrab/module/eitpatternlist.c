@@ -77,6 +77,9 @@ void eit_pattern_compile_list ( eit_pattern_list_t *list, htsmsg_t *l, int flags
       langs = get_languages_string(htsmsg_field_find(m, "lang"));
     }
     pattern = calloc(1, sizeof(eit_pattern_t));
+    if (pattern == NULL) {
+        tvhabort(LS_EPGGRAB, "calloc is NULL");
+    }
     pattern->text = strdup(text);
     pattern->filter = filter;
     pattern->langs = langs;

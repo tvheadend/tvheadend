@@ -53,8 +53,11 @@ lang_str_t *lang_str_create ( void )
 lang_str_t *lang_str_create2 ( const char *s, const char *lang )
 {
   lang_str_t *ls = lang_str_create();
-  if (ls)
+  if (ls) {
     lang_str_add(ls, s, lang);
+  } else {
+    tvhinfo(LS_LANG, "lang_str_create is NULL");
+  }
   return ls;
 }
 
@@ -76,9 +79,14 @@ lang_str_t *lang_str_copy ( const lang_str_t *ls )
 {
   lang_str_t *ret;
   lang_str_ele_t *e;
-  if (ls == NULL)
+  if (ls == NULL) {
+    tvhwarn(LS_LANG, "Parameter for lang_str_copy is NULL");
     return NULL;
+  }
   ret = lang_str_create();
+  if (ret == NULL) {
+      tvhabort(LS_LANG, "lang_str_create is NULL");
+  }
   RB_FOREACH(e, ls, link)
     lang_str_add(ret, e->str, e->lang);
   return ret;
@@ -140,6 +148,9 @@ static int _lang_str_add
   /* Create */
   if (!e) {
     e = malloc(sizeof(*e) + strlen(str) + 1);
+    if (e == NULL) {
+      tvhabort(LS_LANG, "malloc is NULL");
+    }
     strlcpy(e->lang, lang, sizeof(e->lang));
     strcpy(e->str, str);
     RB_INSERT_SORTED(ls, e, link, _lang_cmp);
@@ -153,6 +164,7 @@ static int _lang_str_add
       strcat(ae->str, str);
       save = 1;
     } else {
+      tvhinfo(LS_LANG, "realloc is NULL");
       ae = e;
     }
     RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
@@ -169,6 +181,7 @@ static int _lang_str_add
         strcpy(ae->str, str);
         save = 1;
       } else {
+        tvhinfo(LS_LANG, "realloc is NULL");
         ae = e;
       }
       RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
@@ -218,6 +231,9 @@ change:
   lang_str_destroy(*dst);
 change1:
   *dst = lang_str_create();
+  if (dst == NULL) {
+    tvhabort(LS_LANG, "lang_str_create ist NULL");
+  }
   lang_str_add(*dst, str, lang);
   return 1;
 }
@@ -275,6 +291,8 @@ void lang_str_serialize_one
     lang_str_add(l, str, lang);
     lang_str_serialize(l, m, f);
     lang_str_destroy(l);
+  } else {
+    tvhabort(LS_LANG, "lang_str_create is NULL");
   }
 }
 
@@ -291,6 +309,8 @@ lang_str_t *lang_str_deserialize_map ( htsmsg_t *map )
         lang_str_add(ret, str, htsmsg_field_name(f));
       }
     }
+  } else {
+    tvhinfo(LS_LANG, "lang_str_create is NULL");
   }
   return ret;
 }
@@ -305,6 +325,9 @@ lang_str_t *lang_str_deserialize ( htsmsg_t *m, const char *n )
     return lang_str_deserialize_map(a);
   } else if ((str = htsmsg_get_str(m, n))) {
     lang_str_t *ret = lang_str_create();
+    if (ret == NULL) {
+      tvhabort(LS_LANG, "lang_str_create is NULL");
+    }
     lang_str_add(ret, str, NULL);
     return ret;
   }

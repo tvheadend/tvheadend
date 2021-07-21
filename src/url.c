@@ -70,8 +70,10 @@ urlrecompose( url_t *url )
         (url->path ? strlen(url->path) : 0) +
         (url->query ? strlen(url->query) + 1 : 0);
   raw = malloc(len);
-  if (raw == NULL)
+  if (raw == NULL) {
+    tvhinfo(LS_URL, "malloc is NULL");
     return -ENOMEM;
+  }
   if (url->port > 0 && url->port <= 65535)
     snprintf(port, sizeof(port), ":%d", url->port);
   else
@@ -150,10 +152,18 @@ urlparse ( const char *str, url_t *url )
   path       = uri.pathHead;
   while (path) {
     uri_copy_static(buf, s, path->text);
-    if (url->path)
+    if (url->path) {
       url->path = realloc(url->path, strlen(url->path) + strlen(s ?: buf) + 2);
-    else
+      // if return value of realloc is NULL then the old pointer is still valid
+      if (url->path == NULL) {
+        tvhabort(LS_URL, "realloc is NULL");
+      }
+    } else {
       url->path = calloc(1, strlen(s ?: buf) + 2);
+      if (url->path == NULL) {
+        tvhabort(LS_URL, "calloc is NULL");
+      }
+    }
     strcat(url->path, "/");
     strcat(url->path, s ?: buf);
     path = path->next;
@@ -206,6 +216,9 @@ urlparse ( const char *str, url_t *url )
   /* Create regexp */
   if (!urlparse_exp) {
     urlparse_exp = calloc(1, sizeof(regex_t));
+    if (urlparse_exp == NULL) {
+      tvhabort(LS_URL, "calloc is NULL");
+    }
     if (regcomp(urlparse_exp, URL_RE, REG_ICASE | REG_EXTENDED)) {
       tvherror(LS_URL, "failed to compile regexp");
       exit(1);

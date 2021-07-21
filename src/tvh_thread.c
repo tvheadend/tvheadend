@@ -101,6 +101,9 @@ tvh_thread_create
 {
   int r;
   struct thread_state *ts = calloc(1, sizeof(struct thread_state));
+  if (ts == NULL) {
+    tvhabort(LS_THREAD, "calloc is NULL");
+  }
   pthread_attr_t _attr;
   if (attr == NULL) {
     pthread_attr_init(&_attr);
@@ -220,6 +223,9 @@ static tvh_mutex_waiter_t *
 tvh_mutex_add_to_waiters(tvh_mutex_t *mutex, const char *filename, int lineno)
 {
   tvh_mutex_waiter_t *w = malloc(sizeof(*w));
+  if (w == NULL) {
+    tvhabort(LS_THREAD, "malloc is NULL");
+  }
 
   pthread_mutex_lock(&thrwatch_mutex);
   if (filename != NULL) {

@@ -322,7 +322,7 @@ static int
 http_client_ssl_read_update( http_client_t *hc )
 {
   struct http_client_ssl *ssl = hc->hc_ssl;
-  char *rbuf = alloca(hc->hc_io_size);
+  char rbuf[hc->hc_io_size];
   ssize_t r, r2;
   size_t len;
 
@@ -354,6 +354,9 @@ http_client_ssl_read_update( http_client_t *hc )
   if (len) {
     if (ssl->rbio_pos + len > ssl->rbio_size) {
       ssl->rbio_buf = realloc(ssl->rbio_buf, ssl->rbio_pos + len);
+      if (ssl->rbio_buf == NULL) {
+        tvhabort(LS_HTTPC, "realloc is NULL");
+      }
       ssl->rbio_size += len;
     }
     memcpy(ssl->rbio_buf + ssl->rbio_pos, rbuf + (len - r), len);
@@ -393,6 +396,9 @@ http_client_ssl_write_update( http_client_t *hc )
     if (len) {
       if (ssl->wbio_pos + len > ssl->wbio_size) {
         ssl->wbio_buf = realloc(ssl->wbio_buf, ssl->wbio_pos + len);
+        if (ssl->wbio_buf == NULL) {
+          tvhabort(LS_HTTPC, "realloc is NULL");
+        }
         ssl->wbio_size += len;
       }
       memcpy(ssl->wbio_buf + ssl->wbio_pos, rbuf + (len - r), len);
@@ -617,6 +623,10 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   const char *s;
   int empty;
 
+  if (wcmd == NULL) {
+    tvhabort(LS_HTTPC, "calloc is NULL");
+  }
+
   if (hc->hc_shutdown) {
     if (header)
       http_arg_flush(header);
@@ -681,6 +691,9 @@ error:
 
   body_size = q.hq_size;
   body = malloc(body_size);
+  if (body == NULL) {
+    tvhabort(LS_HTTPC, "malloc is NULL");
+  }
   htsbuf_read(&q, body, body_size);
 
   if (tvhtrace_enabled()) {
@@ -788,6 +801,10 @@ http_client_data_copy( http_client_t *hc, char *buf, size_t len )
       return res;
   } else {
     hc->hc_data = realloc(hc->hc_data, hc->hc_data_size + len + 1);
+    // if realloc return NULL then the old pointer is still valid.
+    if (hc->hc_data == NULL) {
+      tvhabort(LS_HTTPC, "realloc is NULL");
+    }
     memcpy(hc->hc_data + hc->hc_data_size, buf, len);
     hc->hc_data_size += len;
     hc->hc_data[hc->hc_data_size] = '\0';
@@ -865,6 +882,10 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
         hc->hc_chunk_size += 2; /* CR-LF */
         if (hc->hc_chunk_alloc < hc->hc_chunk_size) {
           hc->hc_chunk = realloc(hc->hc_chunk, hc->hc_chunk_size + 1);
+          // if realloc return NULL then the old pointer is still valid
+          if(hc->hc_chunk == NULL) {
+            tvhabort(LS_HTTPC, "realloc is NULL");
+          }
           hc->hc_chunk[hc->hc_chunk_size] = '\0';
           hc->hc_chunk_alloc = hc->hc_chunk_size;
         }
@@ -875,6 +896,10 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
       l2 = hc->hc_chunk_csize + len;
       if (l2 > hc->hc_chunk_alloc) {
         hc->hc_chunk = realloc(hc->hc_chunk, l2 + 1);
+        // if realloc return NULL then the old pointer is still valid
+        if (hc->hc_chunk == NULL) {
+          tvhabort(LS_HTTPC, "realloc is NULL");
+        }
         hc->hc_chunk[l2] = '\0';
         hc->hc_chunk_alloc = l2;
       }
@@ -931,8 +956,13 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
   }
   if (l < len) {
     l2 = len - l;
-    if (l2 + 1 > hc->hc_rsize)
+    if (l2 + 1 > hc->hc_rsize) {
       hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize = l2 + 1);
+      // if realloc return NULL then the old pointer is still valid
+      if (hc->hc_rbuf == NULL) {
+        tvhabort(LS_HTTPC, "realloc is NULL");
+      }
+    }
     memcpy(hc->hc_rbuf, buf + l, l2);
     hc->hc_rbuf[l2] = '\0';
     hc->hc_rpos = l2;
@@ -943,7 +973,7 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
 static int
 http_client_run0( http_client_t *hc )
 {
-  char *buf, *saveptr, *argv[3], *d, *p;
+  char *saveptr, *argv[3], *d, *p;
   int ver, res, delimsize;
   ssize_t r;
   size_t len;
@@ -970,7 +1000,7 @@ http_client_run0( http_client_t *hc )
       return res;
   }
 
-  buf = alloca(hc->hc_io_size + 1);
+  char buf[hc->hc_io_size + 1];
   if (!hc->hc_in_data && !hc->hc_in_rtp_data && hc->hc_rpos > 3) {
     hc->hc_rbuf[hc->hc_rpos] = '\0';
     if (hc->hc_version == RTSP_VERSION_1_0 && hc->hc_rbuf[0] == '$')
@@ -1037,6 +1067,10 @@ retry:
     }
     hc->hc_rsize += hc->hc_rpos + r + 4*1024;
     hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize + 1);
+    // if realloc return NULL then the old pointer is still valid
+    if (hc->hc_rbuf == NULL) {
+      tvhabort(LS_HTTPC, "realloc is NULL");
+    }
   }
   memcpy(hc->hc_rbuf + hc->hc_rpos, buf, r);
   hc->hc_rpos += r;
@@ -1211,8 +1245,8 @@ http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
     size_t plen = strlen(pass);
     size_t ulen = strlen(user);
     size_t len = BASE64_SIZE(plen + ulen + 1) + 1;
-    char *buf = alloca(ulen + 1 + plen + 1);
-    char *cbuf = alloca(len + sizeof(BASIC) + 1);
+    char buf[ulen + 1 + plen + 1];
+    char cbuf[len + sizeof(BASIC) + 1];
     strcpy(buf, user);
     strcat(buf, ":");
     strcat(buf, pass);
@@ -1515,6 +1549,9 @@ http_client_reconnect
   http_client_ssl_free(hc);
   if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {
     ssl = calloc(1, sizeof(*ssl));
+    if (ssl == NULL) {
+      tvhabort(LS_HTTPC, "calloc is NULL");
+    }
     hc->hc_ssl = ssl;
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
     ssl->ctx   = SSL_CTX_new(SSLv23_client_method());
@@ -1576,6 +1613,9 @@ http_client_connect
   int r;
 
   hc             = calloc(1, sizeof(http_client_t));
+  if (hc == NULL) {
+    tvhabort(LS_HTTPC, "calloc is NULL");
+  }
   tvh_mutex_init(&hc->hc_mutex, NULL);
   hc->hc_id      = atomic_add(&tally, 1);
   hc->hc_aux     = aux;

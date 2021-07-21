@@ -28,6 +28,7 @@
 #include "misc/dbl.h"
 #include "htsmsg_json.h"
 #include "memoryinfo.h"
+#include "tvhlog.h"
 
 #if ENABLE_SLOW_MEMORYINFO
 memoryinfo_t htsmsg_memoryinfo = { .my_name = "htsmsg" };
@@ -133,8 +134,10 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
     nsize = 0;
   }
   f = malloc(sizeof(htsmsg_field_t) + nsize + esize);
-  if (f == NULL)
+  if (f == NULL) {
+    tvhinfo(LS_HTSMSG, "malloc is NULL");
     return NULL;
+  }
   TAILQ_INSERT_TAIL(&msg->hm_fields, f, hmf_link);
 
   if (name)
@@ -240,6 +243,8 @@ htsmsg_create_map(void)
 #if ENABLE_SLOW_MEMORYINFO
     memoryinfo_alloc(&htsmsg_memoryinfo, sizeof(htsmsg_t));
 #endif
+  } else {
+      tvhinfo(LS_HTSMSG, "malloc is NULL");
   }
   return msg;
 }
@@ -261,6 +266,8 @@ htsmsg_create_list(void)
 #if ENABLE_SLOW_MEMORYINFO
     memoryinfo_alloc(&htsmsg_memoryinfo, sizeof(htsmsg_t));
 #endif
+  } else {
+    tvhinfo(LS_HTSMSG, "malloc is NULL");
   }
   return msg;
 }
@@ -510,8 +517,10 @@ htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len)
     f->hmf_flags &= ~HMF_INALLOCED;
   }
   f->hmf_bin = malloc(len);
-  if (f->hmf_bin == NULL && len > 0)
+  if (f->hmf_bin == NULL && len > 0) {
+    tvhinfo(LS_HTSMSG, "malloc is NULL or len == 0");
     return 1;
+  }
   f->hmf_flags |= HMF_ALLOCED;
   f->hmf_binsize = len;
   memcpy((void *)f->hmf_bin, bin, len);
@@ -580,8 +589,10 @@ htsmsg_field_set_uuid(htsmsg_field_t *f, tvh_uuid_t *u)
     htsmsg_field_data_destroy(f);
     f->hmf_type = HMF_UUID;
     f->hmf_uuid = malloc(UUID_BIN_SIZE);
-    if (f->hmf_uuid == NULL)
+    if (f->hmf_uuid == NULL) {
+      tvhinfo(LS_HTSMSG, "malloc is NULL");
       return 1;
+    }
     f->hmf_flags |= HMF_ALLOCED;
   }
   memcpy((char *)f->hmf_uuid, u->bin, UUID_BIN_SIZE);
@@ -974,8 +985,10 @@ htsmsg_field_get_bin(htsmsg_field_t *f, const void **binp, size_t *lenp)
       return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
     l /= 2;
     p = malloc(l);
-    if (p == NULL)
+    if (p == NULL) {
+      tvhinfo(LS_HTSMSG, "malloc is NULL");
       return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+    }
     if (hex2bin(p, l, f->hmf_str)) {
       free(p);
       return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
@@ -1154,8 +1167,10 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
         free((void*)f->hmf_str);
       }
       l = f->hmf_msg  = malloc(sizeof(htsmsg_t));
-      if (l == NULL)
+      if (l == NULL) {
+        tvhinfo(LS_HTSMSG, "malloc is NULL");
         return NULL;
+      }
       f->hmf_type     = m->hm_islist ? HMF_LIST : HMF_MAP;
       f->hmf_flags   |= HMF_ALLOCED;
       l->hm_islist    = m->hm_islist;
@@ -1451,15 +1466,21 @@ htsmsg_list_2_csv(htsmsg_t *m, char delim, int human)
   const char *ssep;
   if (!m->hm_islist) return NULL;
 
+// If return value of realloc is NULL, then old pointer is still valid.
 #define REALLOC(l)\
   if ((alloc - used) < l) {\
     alloc = MAX((l)*2, alloc*2);\
     ret   = realloc(ret, alloc);\
+    if (ret == NULL) {\
+      tvhabort(LS_HTSMSG, "realloc is NULL");\
+    }\
   }\
 
   ret  = malloc(alloc = 512);
-  if (ret == NULL)
+  if (ret == NULL) {
+    tvhinfo(LS_HTSMSG, "malloc is NULL");
     return NULL;
+  }
   *ret = 0;
   used = 0;
   if (human) {

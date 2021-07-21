@@ -110,6 +110,9 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
       tvhtrace(LS_SERVICE_MAPPER, "  queue for checking");
       qd = 1;
       smi = malloc(sizeof(*smi));
+      if (smi == NULL) {
+        tvhabort(LS_SERVICE_MAPPER, "malloc is NULL");
+      }
       smi->s = s;
       smi->conf = *conf;
       TAILQ_INSERT_TAIL(&service_mapper_queue, smi, link);

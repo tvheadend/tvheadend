@@ -34,6 +34,7 @@
 #include "epggrab.h"
 #include "config.h"
 #include "memoryinfo.h"
+#include "tvhlog.h"
 
 #define EPG_DB_VERSION 3
 #define EPG_DB_ALLOC_STEP (1024*1024)
@@ -344,8 +345,10 @@ void epg_save ( void )
   epggrab_stats_t stats;
   extern gtimer_t epggrab_save_timer;
 
-  if (!sb)
+  if (sb == NULL){
+    tvhinfo(LS_EPGDB, "malloc is NULL; don't save epg");
     return;
+  }
 
   tvhinfo(LS_EPGDB, "snapshot start");
 

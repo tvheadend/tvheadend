@@ -139,6 +139,9 @@ dvb_psi_parse_hbbtv
       htsmsg_add_msg(map, "title", titles);
       titles = NULL;
       str = malloc(strlen(name) + strlen(location) + 1);
+      if (str == NULL) {
+          tvhabort(LS_DVB, "malloc is NULL");
+      }
       strcpy(str, name);
       strcat(str, location);
       htsmsg_add_str(map, "url", str);

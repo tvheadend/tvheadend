@@ -198,6 +198,30 @@ enum {
 #if ENABLE_DDCI
   LS_DDCI,
 #endif
+  LS_DOWNLOAD,
+  LS_ESSTREAM,
+  LS_FILEBUNDLE,
+  LS_HTSBUF,
+  LS_HTSMSG,
+  LS_HTSSTR,
+  LS_HUFFMAN,
+  LS_INTLCONV,
+  LS_LANG,
+  LS_PACKET,
+  LS_PROP,
+  LS_STREAMING,
+  LS_STRING,
+  LS_LOCAL,
+  LS_LOG,
+  LS_UDP,
+  LS_UTILS,
+  LS_WIZARD,
+  LS_ZLIB,
+  LS_JSON,
+  LS_AVC,
+  LS_H264,
+  LS_LATM,
+  LS_RTP,
   LS_LAST     /* keep this last */
 };
 

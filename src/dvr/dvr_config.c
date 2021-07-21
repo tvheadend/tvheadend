@@ -159,6 +159,9 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
     name = "";
 
   cfg = calloc(1, sizeof(dvr_config_t));
+  if (cfg == NULL) {
+    tvhabort(LS_DVR, "calloc is NULL");
+  }
   LIST_INIT(&cfg->dvr_entries);
   LIST_INIT(&cfg->dvr_autorec_entries);
   LIST_INIT(&cfg->dvr_timerec_entries);
@@ -363,6 +366,11 @@ dvr_insert_fmtstr(dvr_config_t *cfg, int idx, const char *str)
   size_t t = strlen(cfg->dvr_pathname);
   size_t l = strlen(str);
   char *n = malloc(t + l + 1);
+
+  if (n == NULL) {
+    tvhabort(LS_DVR, "malloc is NULL");
+  }
+
   memcpy(n, cfg->dvr_pathname, idx);
   memcpy(n + idx, str, l);
   memcpy(n + idx + l, cfg->dvr_pathname + idx, t - idx);

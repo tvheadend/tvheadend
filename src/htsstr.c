@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tvh_string.h"
+#include "tvhlog.h"
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
@@ -28,6 +29,9 @@ char *
 hts_strndup(const char *src, size_t len)
 {
   char *r = malloc(len + 1);
+  if (r == NULL) {
+    tvhabort(LS_HTSSTR, "malloc is NULL");
+  }
   r[len] = 0;
   return memcpy(r, src, len);
 }
@@ -127,6 +131,10 @@ htsstr_argsplit_add
   if (start)
     s = htsstr_unescape(hts_strndup(start, stop - start));
   *argv = realloc(*argv, sizeof((*argv)[0]) * (*argc + 1));
+  // if realloc return NULL, the old pointer is still valid.
+  if (argv == NULL) {
+    tvhabort(LS_HTSSTR, "realloc is NULL");
+  }
   (*argv)[(*argc)++] = s;
 }
 

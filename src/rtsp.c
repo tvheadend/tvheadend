@@ -36,7 +36,7 @@ rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
   size_t blen = 7 + strlen(hc->hc_host) +
                 (hc->hc_port != 554 ? 7 : 0) +
                 (path ? strlen(path) : 1) + 1;
-  char *buf = alloca(blen);
+  char buf[blen];
   char buf2[64];
   char buf_body[size + 3];
 

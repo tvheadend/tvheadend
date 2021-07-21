@@ -416,6 +416,9 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
 	  htsp_msg_q_t *hmq, int payloadsize)
 {
   htsp_msg_t *hm = malloc(sizeof(htsp_msg_t));
+  if (hm == NULL) {
+    tvhabort(LS_HTSP, "malloc is NULL");
+  }
 
   hm->hm_msg = m;
   hm->hm_pb = pb;
@@ -770,6 +773,9 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd, dvr_entry_t *d
   }
 
   htsp_file_t *hf = calloc(1, sizeof(htsp_file_t));
+  if (hf == NULL) {
+    tvhabort(LS_HTSP, "calloc is NULL");
+  }
   hf->hf_fd = fd;
   hf->hf_id = ++htsp->htsp_file_id;
   hf->hf_path = strdup(path);
@@ -2534,6 +2540,9 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   /* Initialize the HTSP subscription structure */
 
   hs = calloc(1, sizeof(htsp_subscription_t));
+  if (hs == NULL) {
+    tvhabort(LS_HTSP, "calloc is NULL");
+  }
 
   hs->hs_htsp = htsp;
   hs->hs_90khz = req90khz;
@@ -3196,8 +3205,12 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
   len = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
   if(len > 1024 * 1024)
     return EMSGSIZE;
-  if((buf = malloc(len)) == NULL)
+
+  buf = malloc(len);
+  if(buf == NULL) {
+    tvhinfo (LS_HTSP, "malloc is NULL");
     return ENOMEM;
+  }
 
   v = timeout ? tcp_read_timeout(htsp->htsp_fd, buf, len, timeout) : 
                 tcp_read(htsp->htsp_fd, buf, len);

@@ -48,6 +48,9 @@ h264_nal_deescape(bitstream_t *bs, const uint8_t *data, int size)
   const uint8_t *end, *end2;
 
   bs->rdata = d = malloc(size);
+  if (d == NULL) {
+      tvhabort(LS_H264, "malloc is NULL");
+  }
   bs->offset = 0;
 
   end2 = data + size;
@@ -232,6 +235,9 @@ h264_decode_seq_parameter_set(parser_es_t *st, bitstream_t *bs)
 
   if ((p = st->es_priv) == NULL) {
     p = st->es_priv = calloc(1, sizeof(h264_private_t));
+    if (p == NULL) {
+        tvhabort(LS_H264, "calloc is NULL");
+    }
     p->start = mclk();
   }
 
@@ -348,6 +354,9 @@ h264_decode_pic_parameter_set(parser_es_t *st, bitstream_t *bs)
 
   if((p = st->es_priv) == NULL) {
     p = st->es_priv = calloc(1, sizeof(h264_private_t));
+    if (p == NULL) {
+        tvhabort(LS_H264, "calloc is NULL");
+    }
     p->start = mclk();
   }
   

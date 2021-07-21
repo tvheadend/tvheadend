@@ -306,6 +306,9 @@ audioes_muxer_create(const muxer_config_t *m_cfg,
     return NULL;
 
   am = calloc(1, sizeof(audioes_muxer_t));
+  if (am == NULL) {
+      tvhabort(LS_AUDIOES, "calloc is NULL");
+  }
   am->m_open_stream  = audioes_muxer_open_stream;
   am->m_open_file    = audioes_muxer_open_file;
   am->m_mime         = audioes_muxer_mime;

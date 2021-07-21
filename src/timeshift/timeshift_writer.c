@@ -257,7 +257,9 @@ static void _update_smt_start ( timeshift_t *ts, streaming_start_t *ss )
 static void _handle_sstart ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
 {
   timeshift_index_data_t *ti = calloc(1, sizeof(timeshift_index_data_t));
-
+  if (ti == NULL) {
+      tvhabort(LS_TIMESHIFT, "calloc is NULL");
+  }
   memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
   ti->pos  = tsf->size;
   ti->data = sm;
@@ -287,6 +289,9 @@ static inline ssize_t _process_msg0
       if (pkt->pkt_componentindex == ts->vididx &&
           pkt->v.pkt_frametype    == PKT_I_FRAME) {
         timeshift_index_iframe_t *ti = calloc(1, sizeof(timeshift_index_iframe_t));
+        if (ti == NULL) {
+            tvhabort(LS_TIMESHIFT, "calloc is NULL");
+        }
         memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
         ti->pos  = tsf->size;
         ti->time = sm->sm_time;

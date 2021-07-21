@@ -767,6 +767,9 @@ subscription_create
    const char *username, const char *client)
 {
   th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
+  if (s == NULL) {
+    tvhabort(LS_SUBSCRIPTION, "calloc is NULL");
+  }
   profile_t *pro = prch ? prch->prch_pro : NULL;
   streaming_target_t *st = prch ? prch->prch_st : NULL;
   static int tally;
@@ -776,6 +779,9 @@ subscription_create
   if (!ops) ops = &subscription_input_direct_ops;
   if (!st) {
     st = calloc(1, sizeof(streaming_target_t));
+    if (st == NULL) {
+      tvhabort(LS_SUBSCRIPTION, "calloc is NULL");
+    }
     streaming_target_init(st, &subscription_input_null_ops, s, 0);
   }
 
@@ -980,6 +986,9 @@ subscription_create_from_file(const char *name,
   if (str == NULL)
     str = strdup("error");
   url = malloc(strlen(str) + 7 + 1);
+  if (url == NULL) {
+    tvhabort(LS_SUBSCRIPTION, "malloc is NULL");
+  }
   strcpy(url, "file://");
   strcat(url, str);
   ts->ths_dvrfile = url;
@@ -1233,6 +1242,9 @@ subscription_set_skip ( th_subscription_t *s, const streaming_skip_t *skip )
 
   sm = streaming_msg_create(SMT_SKIP);
   sm->sm_data = malloc(sizeof(streaming_skip_t));
+  if (sm->sm_data == NULL) {
+    tvhabort(LS_SUBSCRIPTION, "malloc is NULL");
+  }
   memcpy(sm->sm_data, skip, sizeof(streaming_skip_t));
 
   streaming_target_deliver(s->ths_output, sm);
@@ -1317,8 +1329,14 @@ subscription_dummy_join(const char *id, int first)
   }
 
   prch = calloc(1, sizeof(*prch));
+  if (prch == NULL) {
+    tvhabort(LS_SUBSCRIPTION, "calloc is NULL");
+  }
   prch->prch_id = t;
   st = calloc(1, sizeof(*st));
+  if (st == NULL) {
+    tvhabort(LS_SUBSCRIPTION, "calloc is NULL");
+  }
   streaming_target_init(st, &dummy_ops, NULL, 0);
   prch->prch_st = st;
   s = subscription_create_from_service(prch, NULL, 1, "dummy", 0, NULL, NULL, "dummy", NULL);

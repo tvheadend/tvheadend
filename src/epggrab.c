@@ -207,8 +207,10 @@ void epggrab_queue_data(epggrab_module_t *mod,
     return;
   len = sizeof(*eq) + len1 + len2;
   eq = malloc(len);
-  if (eq == NULL)
+  if (eq == NULL){
+    tvhinfo(LS_EPGGRAB, "malloc is NULL; can't queue epggrab data");
     return;
+  }
   eq->eq_len = len1 + len2;
   if (len1)
     memcpy(eq->eq_data, data1, len1);

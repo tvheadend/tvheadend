@@ -235,7 +235,11 @@ static void opentv_add_entry(opentv_status_t *sta, opentv_event_t *ev)
 {
   if (sta == NULL) return;
 
-  opentv_entry_t *entry, *nentry = calloc(1, sizeof(*nentry));
+  opentv_entry_t *entry;
+  opentv_entry_t *nentry = calloc(1, sizeof(*nentry));
+  if (nentry == NULL) {
+      tvhabort(LS_OPENTV, "calloc is NULL");
+  }
 
   nentry->event = *ev;
   entry = RB_INSERT_SORTED(&sta->os_entries, nentry, link, _entry_cmp);
@@ -258,6 +262,9 @@ static char *_opentv_parse_string
 
   // Note: unlikely decoded string will be longer (though its possible)
   ret = tmp = malloc(2*len);
+  if (tmp == NULL) {
+      tvhabort(LS_OPENTV, "malloc is NULL");
+  }
   *ret = 0;
   if (huffman_decode(prov->dict->codes, buf, len, 0x20, tmp, 2*len)) {
 
@@ -408,6 +415,9 @@ opentv_do_event
   }
   if (ev->cat) {
     epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
+    if (egl == NULL) {
+        tvhabort(LS_OPENTV, "calloc is NULL");
+    }
     epg_genre_list_add_by_eit(egl, ev->cat);
     save |= epg_broadcast_set_genre(ebc, egl, changes);
     epg_genre_list_destroy(egl);
@@ -824,6 +834,9 @@ static int _opentv_start
   while (*t) {
     if (!sta) {
       sta = calloc(1, sizeof(opentv_status_t));
+      if (sta == NULL) {
+          tvhabort(LS_OPENTV, "calloc is NULL");
+      }
       sta->os_mod = mod;
       sta->os_map = map;
     }
@@ -862,6 +875,9 @@ static int* _pid_list_to_array ( htsmsg_t *m )
   HTSMSG_FOREACH(f, m) 
     if (f->hmf_s64) i++;
   ret = calloc(i, sizeof(int));
+  if (ret == NULL) {
+      tvhabort(LS_OPENTV, "calloc is NULL");
+  }
   i   = 0;
   HTSMSG_FOREACH(f, m) 
     if (f->hmf_s64) {
@@ -875,6 +891,9 @@ static int _opentv_genre_load_one ( const char *id, htsmsg_t *m )
 {
   htsmsg_field_t *f;
   opentv_genre_t *genre = calloc(1, sizeof(opentv_genre_t));
+  if (genre == NULL) {
+      tvhabort(LS_OPENTV, "calloc is NULL");
+  }
   genre->id = (char*)id;
   if (RB_INSERT_SORTED(&_opentv_genres, genre, h_link, _genre_cmp)) {
     tvhdebug(LS_OPENTV, "ignore duplicate genre map %s", id);
@@ -912,6 +931,9 @@ static void _opentv_genre_load ( htsmsg_t *m )
 static int _opentv_dict_load_one ( const char *id, htsmsg_t *m )
 {
   opentv_dict_t *dict = calloc(1, sizeof(opentv_dict_t));
+  if (dict == NULL) {
+      tvhabort(LS_OPENTV, "calloc is NULL");
+  }
   dict->id = (char*)id;
   if (RB_INSERT_SORTED(&_opentv_dicts, dict, h_link, _dict_cmp)) {
     tvhdebug(LS_OPENTV, "ignore duplicate dictionary %s", id);
@@ -1020,8 +1042,11 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
 
   /* Create */
   sprintf(nbuf, "OpenTV: %s", name);
-  mod = (opentv_module_t *)
-    epggrab_module_ota_create(calloc(1, sizeof(opentv_module_t)),
+  void * epg_mem = calloc(1, sizeof(opentv_module_t));
+  if (epg_mem == NULL) {
+      tvhabort(LS_OPENTV, "calloc is NULL");
+  }
+  mod = (opentv_module_t *) epggrab_module_ota_create(epg_mem,
                               ibuf, LS_OPENTV, NULL, nbuf, 2, NULL, &ops);
 
   /* Add provider details */

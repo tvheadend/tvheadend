@@ -65,6 +65,9 @@ static void
 tvhpoll_alloc_events ( tvhpoll_t *tp, int fd )
 {
   tp->events = calloc(1, tp->nevents = 8);
+  if (tp->events == NULL) {
+    tvhabort(LS_TVHPOLL, "calloc is NULL");
+  }
   tp->events_off = fd;
 }
 
@@ -73,6 +76,9 @@ tvhpoll_realloc_events1 ( tvhpoll_t *tp, int fd )
 {
   uint32_t diff = tp->events_off - fd;
   uint8_t *evs = malloc(tp->nevents + diff);
+  if (evs == NULL) {
+    tvhabort(LS_TVHPOLL, "malloc is NULL");
+  }
   memset(evs, 0, diff);
   memcpy(evs + diff, tp->events, tp->nevents);
   free(tp->events);
@@ -86,6 +92,10 @@ tvhpoll_realloc_events2 ( tvhpoll_t *tp, int fd )
 {
   uint32_t size = (fd - tp->events_off) + 4;
   tp->events = realloc(tp->events, size);
+  // if the return value of realloc is NULL, the old pointer is still valid.
+  if (tp->events == NULL) {
+    tvhabort(LS_TVHPOLL, "realloc is NULL");
+  }
   memset(tp->events + tp->nevents, 0, size - tp->nevents);
   tp->nevents = size;
 }
@@ -122,6 +132,10 @@ tvhpoll_alloc ( tvhpoll_t *tp, uint32_t n )
 #if ENABLE_EPOLL || ENABLE_KQUEUE
   if (n > tp->nev) {
     tp->ev  = realloc(tp->ev, n * EV_SIZE);
+    // if the return value of realloc is NULL, the old pointer is still valid.
+    if (tp->ev == NULL) {
+      tvhabort(LS_TVHPOLL, "realloc is NULL");
+    }
     tp->nev = n;
   }
 #else
@@ -146,6 +160,9 @@ tvhpoll_create ( size_t n )
   fd = -1;
 #endif
   tvhpoll_t *tp = calloc(1, sizeof(tvhpoll_t));
+  if (tp == NULL) {
+    tvhabort(LS_TVHPOLL, "calloc is NULL");
+  }
   tvh_mutex_init(&tp->lock, NULL);
   tp->fd = fd;
   tvhpoll_alloc(tp, n);

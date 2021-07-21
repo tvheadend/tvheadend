@@ -24,6 +24,7 @@
 #include "prop.h"
 #include "tvh_locale.h"
 #include "lang_str.h"
+#include "tvhlog.h"
 
 char prop_sbuf[PROP_SBUF_LEN];
 const char *prop_sbuf_ptr = prop_sbuf;
@@ -626,6 +627,10 @@ prop_md_doc(const char **doc, const char *lang)
     } else {
       l += strlen(s) + 1;
       r = realloc(r, l);
+      // if the return value of realloc is NULL then the old pointer is still valid
+      if (r == NULL) {
+        tvhabort(LS_PROP, "realloc is NULL");
+      }
       strcat(r, s);
     }
   }

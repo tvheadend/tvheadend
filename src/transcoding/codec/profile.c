@@ -41,6 +41,8 @@ tvh_codec_profile_alloc(TVHCodec *codec, htsmsg_t *conf)
                 return NULL;
             }
         }
+    } else {
+        tvhinfo(LS_TRANSCODE, "calloc is NULL");
     }
     return self;
 }

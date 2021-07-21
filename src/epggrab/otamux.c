@@ -422,6 +422,9 @@ epggrab_ota_register
   map = epggrab_ota_find_map(ota, mod);
   if (!map) {
     map = calloc(1, sizeof(epggrab_ota_map_t));
+    if (map == NULL) {
+      tvhabort(LS_EPGGRAB, "calloc is NULL");
+    }
     RB_INIT(&map->om_svcs);
     map->om_module   = mod;
     LIST_INSERT_HEAD(&ota->om_modules, map, om_link);
@@ -872,6 +875,9 @@ epggrab_ota_load_one
   tvhtrace(LS_EPGGRAB, "loading config for %s", mm->mm_nicename);
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
+  if (ota == NULL) {
+    tvhabort(LS_EPGGRAB, "calloc is NULL");
+  }
   LIST_INIT(&ota->om_eit_plist);
   ota->om_mux_uuid = mm->mm_id.in_uuid;
   if (RB_INSERT_SORTED(&epggrab_ota_all, ota, om_global_link, om_id_cmp)) {
@@ -888,6 +894,9 @@ epggrab_ota_load_one
       continue;
     
     map = calloc(1, sizeof(epggrab_ota_map_t));
+    if (map == NULL) {
+      tvhabort(LS_EPGGRAB, "calloc is NULL");
+    }
     RB_INIT(&map->om_svcs);
     map->om_module   = mod;
     if ((l2 = htsmsg_get_list(e, "services")) != NULL) {

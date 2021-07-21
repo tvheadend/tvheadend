@@ -54,6 +54,7 @@
 
 #include "htsmsg_xml.h"
 #include "htsbuf.h"
+#include "tvhlog.h"
 
 TAILQ_HEAD(cdata_content_queue, cdata_content);
 
@@ -109,6 +110,9 @@ add_unicode(struct cdata_content_queue *ccq, int c)
   int r;
 
   cc = malloc(sizeof(cdata_content_t) + 6);
+  if (cc == NULL) {
+    tvhabort(LS_HTSMSG, "malloc is NULL");
+  }
   r = put_utf8(cc->cc_buf, c);
   if(r == 0) {
     free(cc);
@@ -281,13 +285,21 @@ htsmsg_xml_parse_attrib
     attriblen  -= 6;
 
     ns = malloc(sizeof(xmlns_t));
-
+    if (ns == NULL) {
+      tvhabort(LS_HTSMSG, "malloc is NULL");
+    }
     ns->xmlns_prefix = malloc(attriblen + 1);
+    if (ns->xmlns_prefix == NULL) {
+      tvhabort(LS_HTSMSG, "malloc is NULL");
+    }
     memcpy(ns->xmlns_prefix, attribname, attriblen);
     ns->xmlns_prefix[attriblen] = 0;
     ns->xmlns_prefix_len = attriblen;
 
     ns->xmlns_norm = malloc(payloadlen + 1);
+    if (ns->xmlns_norm == NULL) {
+      tvhabort(LS_HTSMSG, "malloc is NULL");
+    }
     memcpy(ns->xmlns_norm, payload, payloadlen);
     ns->xmlns_norm[payloadlen] = 0;
     ns->xmlns_norm_len = payloadlen;
@@ -388,6 +400,9 @@ htsmsg_xml_parse_tag(xmlparser_t *xp, htsmsg_t *parent, char *src)
 
 	  int llen = taglen - i - 1;
 	  char *n = malloc(ns->xmlns_norm_len + llen + 1);
+          if (n == NULL) {
+            tvhabort(LS_HTSMSG, "malloc is NULL");
+          }
 
 	  n[ns->xmlns_norm_len + llen] = 0;
 	  memcpy(n, ns->xmlns_norm, ns->xmlns_norm_len);
@@ -418,7 +433,6 @@ htsmsg_xml_parse_pi(xmlparser_t *xp, htsmsg_t *parent, char *src)
 {
   htsmsg_t *attrs;
   char *s = src;
-  char *piname;
   int l;
 
   while(1) {
@@ -438,7 +452,7 @@ htsmsg_xml_parse_pi(xmlparser_t *xp, htsmsg_t *parent, char *src)
     xmlerr(xp, "Invalid 'Processing instructions' name");
     return NULL;
   }
-  piname = alloca(l + 1);
+  char piname[l + 1];
   memcpy(piname, s, l);
   piname[l] = 0;
 
@@ -504,7 +518,6 @@ decode_label_reference
 {
   char *s = src;
   int l;
-  char *label;
 
   while(*src != 0 && *src != ';')
     src++;
@@ -516,7 +529,7 @@ decode_label_reference
   l = src - s;
   if(l < 1 || l > 65535)
     return NULL;
-  label = alloca(l + 1);
+  char label[l + 1];
   memcpy(label, s, l);
   label[l] = 0;
   src++;
@@ -638,6 +651,9 @@ htsmsg_xml_parse_cd0
 	continue;
       }
       cc = malloc(sizeof(cdata_content_t));
+      if (cc == NULL) {
+        tvhabort(LS_HTSMSG, "malloc is NULL");
+      }
       cc->cc_encoding = xp->xp_encoding;
       TAILQ_INSERT_TAIL(ccq, cc, cc_link);
       cc->cc_start = src;
@@ -705,6 +721,9 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
 
   } else if(c > 0) {
     body = malloc(c + 1);
+    if (body == NULL) {
+      tvhabort(LS_HTSMSG, "malloc is NULL");
+    }
     c = 0;
 
     while((cc = TAILQ_FIRST(&ccq)) != NULL) {

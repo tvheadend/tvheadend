@@ -17,6 +17,7 @@
  */
 
 #include "tvheadend.h"
+#include "tvhlog.h"
 
 #define ZLIB_CONST 1
 #include <zlib.h>
@@ -36,6 +37,9 @@ uint8_t *tvh_gzip_inflate ( const uint8_t *data, size_t size, size_t orig )
 
   /* Setup buffers */
   bufout = malloc(orig);
+  if (bufout == NULL) {
+    tvhabort(LS_ZLIB, "malloc is NULL");
+  }
 
   /* Setup zlib */
   memset(&zstr, 0, sizeof(zstr));
@@ -64,6 +68,9 @@ uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size )
 
   /* Setup buffers */
   bufout = malloc(orig);
+  if (bufout == NULL) {
+    tvhabort(LS_ZLIB, "malloc is NULL");
+  }
 
   /* Setup zlib */
   memset(&zstr, 0, sizeof(zstr));
@@ -80,6 +87,9 @@ uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size )
     /* Need more space */
     if (err == Z_OK && zstr.avail_out == 0) {
       bufout         = realloc(bufout, zstr.total_out * 2);
+      if (bufout == NULL) {
+        tvhabort(LS_ZLIB, "realloc is NULL");
+      }
       zstr.avail_out = zstr.total_out;
       zstr.next_out  = bufout + zstr.total_out;
       continue;
@@ -112,6 +122,9 @@ int tvh_gzip_deflate_fd ( int fd, const uint8_t *data, size_t orig, size_t *size
   *size  = 0;
   alloc  = MIN(orig, 256*1024);
   bufout = malloc(alloc);
+  if (bufout == NULL) {
+    tvhabort(LS_ZLIB, "malloc is NULL");
+  }
 
   /* Setup zlib */
   memset(&zstr, 0, sizeof(zstr));

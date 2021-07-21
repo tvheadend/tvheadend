@@ -136,6 +136,9 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
   if (!dvr_inotify_exists(e, de)) {
 
     dif = malloc(sizeof(*dif));
+    if (dif == NULL) {
+      tvhabort(LS_DVR, "malloc is NULL");
+    }
     dif->de = de;
 
     LIST_INSERT_HEAD(&e->entries, dif, link);

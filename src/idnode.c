@@ -674,6 +674,9 @@ idnode_find_all ( const idclass_t *idc, const idnodes_rb_t *domain )
   char ubuf[UUID_HEX_SIZE];
   tvhtrace(LS_IDNODE, "find class %s", idc->ic_class);
   idnode_set_t *is = calloc(1, sizeof(idnode_set_t));
+  if (is == NULL) {
+    tvhabort(LS_IDNODE, "calloc is NULL");
+  }
   if (domain == NULL)
     domain = idnode_domain(idc);
   if (domain == NULL) {
@@ -945,6 +948,9 @@ idnode_filter_add_str
   ( idnode_filter_t *filt, const char *key, const char *val, int comp )
 {
   idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  if (ele == NULL) {
+    tvhabort(LS_IDNODE, "calloc is NULL");
+  }
   ele->key  = strdup(key);
   ele->type = IF_STR;
   ele->comp = comp;
@@ -963,6 +969,9 @@ idnode_filter_add_num
   ( idnode_filter_t *filt, const char *key, int64_t val, int comp, int64_t intsplit )
 {
   idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  if (ele == NULL) {
+    tvhabort(LS_IDNODE, "calloc is NULL");
+  }
   ele->key  = strdup(key);
   ele->type = IF_NUM;
   ele->comp = comp;
@@ -976,6 +985,9 @@ idnode_filter_add_dbl
   ( idnode_filter_t *filt, const char *key, double dbl, int comp )
 {
   idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  if (ele == NULL) {
+    tvhabort(LS_IDNODE, "calloc is NULL");
+  }
   ele->key   = strdup(key);
   ele->type  = IF_DBL;
   ele->comp  = comp;
@@ -988,6 +1000,9 @@ idnode_filter_add_bool
   ( idnode_filter_t *filt, const char *key, int val, int comp )
 {
   idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  if (ele == NULL) {
+    tvhabort(LS_IDNODE, "calloc is NULL");
+  }
   ele->key  = strdup(key);
   ele->type = IF_BOOL;
   ele->comp = comp;
@@ -1020,6 +1035,10 @@ idnode_set_alloc
   if (is->is_alloc < alloc) {
     is->is_alloc = alloc;
     is->is_array = realloc(is->is_array, alloc * sizeof(idnode_t*));
+    // if return value of realloc is NULL then the old pointer is still valid
+    if (is->is_array == NULL) {
+      tvhabort(LS_IDNODE, "realloc is NULL");
+    }
   }
 }
 
@@ -1194,6 +1213,9 @@ idnode_save_queue ( idnode_t *self )
   if (self->in_save)
     return;
   ise = malloc(sizeof(*ise));
+  if (ise == NULL) {
+    tvhabort(LS_IDNODE, "malloc is NULL");
+  }
   ise->ise_node = self;
   ise->ise_reqtime = mclk();
   if (TAILQ_EMPTY(&idnodes_save) && atomic_get(&save_running))
@@ -1458,6 +1480,9 @@ idclass_find_all(void)
   if (count == 0)
     return NULL;
   ret = calloc(count + 1, sizeof(idclass_t *));
+  if (ret == NULL) {
+    tvhabort(LS_IDNODE, "calloc is NULL");
+  }
   RB_FOREACH(l, &idclasses, link)
     ret[i++] = l->idc;
   ret[i] = NULL;
@@ -1484,12 +1509,21 @@ idclass_find_children(const char *clazz)
       if (i <= count) {
         count += 50;
         ret = realloc(ret, count * sizeof(const idclass_t *));
+        // if realloc return NULL then the old pointer is still valid
+        if (ret == NULL) {
+          tvhabort(LS_IDNODE, "realloc is NULL");
+        }
       }
       ret[i++] = ic;
     }
   }
-  if (i <= count)
+  if (i <= count) {
     ret = realloc(ret, (count + 1) * sizeof(const idclass_t *));
+    // if realloc return NULL then the old pointer is still valid
+    if (ret == NULL) {
+      tvhabort(LS_IDNODE, "realloc is NULL");
+    }
+  }
   ret[i] = NULL;
   return ret;
 }
@@ -1684,6 +1718,9 @@ idnode_list_link ( idnode_t *in1, idnode_list_head_t *in1_list,
 
   /* Link */
   ilm = calloc(1, sizeof(idnode_list_mapping_t));
+  if (ilm == NULL) {
+    tvhabort(LS_IDNODE, "calloc is NULL");
+  }
   ilm->ilm_in1 = in1;
   ilm->ilm_in2 = in2;
   LIST_INSERT_HEAD(in1_list, ilm, ilm_in1_link);

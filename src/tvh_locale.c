@@ -21,6 +21,7 @@
 #include "tvh_locale.h"
 #include "tvh_string.h"
 #include "redblack.h"
+#include "tvhlog.h"
 
 struct tvh_locale {
   const char *lang;
@@ -72,6 +73,9 @@ static void msg_add_strings(struct lng *lng, const char **strings)
 
   for (p = strings; *p; p += 2) {
     m = calloc(1, sizeof(*m));
+    if (m == NULL) {
+      tvhabort(LS_LOCAL, "calloc is NULL");
+    }
     m->src = p[0];
     m->dst = p[1];
     if (RB_INSERT_SORTED(&lng->msgs, m, link, msg_cmp))
@@ -102,6 +106,9 @@ static inline int lng_cmp(const struct lng *a, const struct lng *b)
 static struct lng *lng_add(const char *tvh_lang, const char *locale_lang)
 {
   struct lng *l = calloc(1, sizeof(*l));
+  if (l == NULL) {
+    tvhabort(LS_LOCAL, "calloc is NULL");
+  }
   l->tvh_lang = tvh_lang;
   l->locale_lang = locale_lang;
   if (RB_INSERT_SORTED(&lngs, l, link, lng_cmp))

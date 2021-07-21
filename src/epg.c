@@ -803,11 +803,17 @@ epg_set_t *epg_set_broadcast_insert
   es = epg_set_broadcast_find_by_uri(tree, uri);
   if (!es) {
     es = malloc(sizeof(*es) + strlen(uri) + 1);
+    if (es == NULL) {
+      tvhabort(LS_EPG, "malloc is NULL");
+    }
     LIST_INIT(&es->broadcasts);
     strcpy(es->uri, uri);
     RB_INSERT_SORTED(tree, es, set_link, _set_uri_cmp);
   }
   item = malloc(sizeof(*item));
+  if (item == NULL) {
+    tvhabort(LS_EPG, "malloc is NULL");
+  }
   item->broadcast = b;
   LIST_INSERT_HEAD(&es->broadcasts, item, item_link);
   return es;
@@ -930,6 +936,9 @@ static epg_broadcast_t **_epg_broadcast_skel ( void )
   static epg_broadcast_t *skel = NULL;
   if (!skel) {
     skel = calloc(1, sizeof(epg_broadcast_t));
+    if (skel == NULL) {
+      tvhabort(LS_EPG, "calloc is NULL");
+    }
     skel->type = EPG_BROADCAST;
     skel->ops  = &_epg_broadcast_ops;
   }
@@ -1668,6 +1677,9 @@ epg_broadcast_t *epg_broadcast_deserialize
 
   if ((hm = htsmsg_get_list(m, "genre"))) {
     epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
+    if (egl == NULL) {
+      tvhabort(LS_EPG, "calloc is NULL");
+    }
     HTSMSG_FOREACH(f, hm) {
       epg_genre_t genre;
       genre.code = (uint8_t)f->hmf_s64;
@@ -2007,6 +2019,9 @@ int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
   g1 = LIST_FIRST(list);
   if (!g1) {
     g2 = calloc(1, sizeof(epg_genre_t));
+    if (g2 == NULL) {
+      tvhabort(LS_EPG, "calloc is NULL");
+    }
     g2->code = genre->code;
     LIST_INSERT_HEAD(list, g2, link);
   } else {
@@ -2024,6 +2039,9 @@ int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
       /* Insert before */
       if (g1->code > genre->code) {
         g2 = calloc(1, sizeof(epg_genre_t));
+        if (g2 == NULL) {
+          tvhabort(LS_EPG, "calloc is NULL");
+        }
         g2->code = genre->code;
         LIST_INSERT_BEFORE(g1, g2, link);
         break;
@@ -2032,6 +2050,9 @@ int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
       /* Insert after (end) */
       if (!(g2 = LIST_NEXT(g1, link))) {
         g2 = calloc(1, sizeof(epg_genre_t));
+        if (g2 == NULL) {
+          tvhabort(LS_EPG, "calloc is NULL");
+        }
         g2->code = genre->code;
         LIST_INSERT_AFTER(g1, g2, link);
         break;
@@ -2234,8 +2255,12 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
 
   /* More space */
   if (eq->entries == eq->allocated) {
-    eq->allocated = MAX(100, eq->allocated + 100);
-    eq->result    = realloc(eq->result, eq->allocated * sizeof(epg_broadcast_t *));
+    uint32_t new_eq_allocated = MAX(100, eq->allocated + 100);
+    epg_broadcast_t ** new_eq_result    = realloc(eq->result, new_eq_allocated * sizeof(epg_broadcast_t *));
+    if (new_eq_result != NULL) {
+      eq->allocated = new_eq_allocated;
+      eq->result = new_eq_result;
+    }
   }
 
   /* Store */

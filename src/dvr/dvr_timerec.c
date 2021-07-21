@@ -174,7 +174,9 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf)
   dvr_timerec_entry_t *dte;
 
   dte = calloc(1, sizeof(*dte));
-
+  if (dte == NULL) {
+    tvhabort(LS_DVR, "calloc is NULL");
+  }    
   if (idnode_insert(&dte->dte_id, uuid, &dvr_timerec_entry_class, 0)) {
     if (uuid)
       tvhwarn(LS_DVR, "invalid timerec entry uuid '%s'", uuid);

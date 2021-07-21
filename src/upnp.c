@@ -82,6 +82,9 @@ upnp_send( htsbuf_queue_t *q, struct sockaddr_storage *storage,
   if (!atomic_get(&upnp_running))
     return;
   data = calloc(1, sizeof(upnp_data_t));
+  if (data == NULL) {
+    tvhabort(LS_UPNP, "calloc is NULL");
+  }
   htsbuf_queue_init(&data->queue, 0);
   htsbuf_appendq(&data->queue, q);
   if (storage == NULL)

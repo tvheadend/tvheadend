@@ -314,6 +314,9 @@ satip_rtp_append_tcp_data(satip_rtp_session_t *rtp, uint8_t *data, size_t len)
 
   if (v->iov_base == NULL) {
     v->iov_base = malloc(rtp->tcp_payload);
+    if (v->iov_base == NULL) {
+        tvhabort(LS_RTP, "malloc is NULL");
+    }
     satip_rtp_header(rtp, v, 4);
   }
   assert(v->iov_len + len <= rtp->tcp_payload);
@@ -479,8 +482,10 @@ void *satip_rtp_queue(th_subscription_t *subs,
   socklen_t socklen;
   int dscp, payload;
 
-  if (rtp == NULL)
+  if (rtp == NULL) {
+    tvhinfo(LS_RTP, "calloc is NULL");
     return NULL;
+  }
 
   rtp->peer = *peer;
   rtp->peer2 = *peer;
@@ -592,6 +597,9 @@ void satip_rtp_update_pmt_pids(void *_rtp, mpegts_apids_t *pmt_pids)
         break;
     if (!tbl) {
       tbl = calloc(1, sizeof(*tbl));
+      if (tbl == NULL) {
+          tvhabort(LS_RTP, "calloc is NULL");
+      }
       dvb_table_parse_init(&tbl->tbl, "satip-pmt", LS_TBL_SATIP, pid,
                            DVB_PMT_BASE, DVB_PMT_MASK, rtp);
       tbl->pid = pid;
@@ -945,11 +953,12 @@ satip_rtcp_thread(void *aux)
       }
       if (rtp->port == RTSP_TCP_DATA) {
         msg1 = malloc(len);
-        if (msg1) {
+        if (msg1 != NULL) {
           memcpy(msg1, msg, len);
           err = satip_rtp_tcp_data(rtp, 1, msg1, len, 0);
           r = err ? -1 : 0;
         } else {
+          tvhinfo(LS_RTP, "malloc is NULL");
           r = -1;
           err = ENOMEM;
         }

@@ -159,8 +159,11 @@ dvr_parse_file
     line_count++;
 
     /* Alloc cut point */
-    if (!(cp = calloc(1, sizeof(dvr_cutpoint_t))))
+    cp = calloc(1, sizeof(dvr_cutpoint_t));
+    if (cp == NULL) {
+      tvhinfo(LS_DVR, "calloc is NULL");
       goto done;
+    }
 
     /* Parse */
     if (!parse(line, cp, &frate)) {
@@ -209,7 +212,7 @@ dvr_cutpoint_list_t *
 dvr_get_cutpoint_list (dvr_entry_t *de)
 {
   int i;
-  char *path, *sptr;
+  char *sptr;
   const char *filename;
   dvr_cutpoint_list_t *cuts;
 
@@ -221,13 +224,15 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
 
   /* Allocate list space */
   cuts = calloc(1, sizeof(dvr_cutpoint_list_t));
-  if (cuts == NULL)
+  if (cuts == NULL) {
+    tvhinfo(LS_DVR, "calloc is NULL");
     return NULL;
+  }
   TAILQ_INIT(cuts);
 
   /* Get base filename */
   // TODO: harcoded 3 for max extension plus 1 for termination
-  path = alloca(strlen(filename) + 4);
+  char path[strlen(filename) + 4];
   strcpy(path, filename);
   sptr = strrchr(path, '.');
   if (!sptr) {
@@ -281,11 +286,11 @@ dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list)
 void
 dvr_cutpoint_delete_files (const char *s)
 {
-  char *path, *dot;
+  char *dot;
   int i;
 
   // TODO: harcoded 3 for max extension, plus 1 for . and one for termination
-  path = alloca(strlen(s) + 5);
+  char path[strlen(s) + 5];
 
   /* Check each cutlist extension */
   for (i = 0; i < ARRAY_SIZE(dvr_cutpoint_parsers); i++) {

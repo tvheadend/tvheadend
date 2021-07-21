@@ -37,6 +37,8 @@ str_add(const char *sep, const char *str)
         } else {
             result[0] = '\0';
         }
+    } else {
+        tvhinfo(LS_TRANSCODE, "malloc is NULL");
     }
     return result;
 }
@@ -50,8 +52,10 @@ str_vjoin(const char *separator, va_list ap)
     size_t str_len = 0, result_size = 1;
 
     result = calloc(1, result_size);
-    if (result == NULL)
+    if (result == NULL) {
+        tvhinfo(LS_TRANSCODE, "calloc is NULL");
         return NULL;
+    }
     while ((va_str = va_arg(ap, const char *))) {
         str_len = strlen(va_str);
         if (str_len == 0)
@@ -65,6 +69,7 @@ str_vjoin(const char *separator, va_list ap)
                     strcpy(result + result_size - 1, str);
                     result_size += str_len;
                 } else {
+                    tvhinfo(LS_TRANSCODE, "realloc is NULL");
                     str_clear(str);
                     goto reterr;
                 }

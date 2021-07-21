@@ -395,7 +395,12 @@ static int _eit_desc_content
     if (*ptr == 0xb1)
       ev->bw = 1;
     else if (*ptr < 0xb0) {
-      if (!ev->genre) ev->genre = calloc(1, sizeof(epg_genre_list_t));
+      if (!ev->genre) {
+        ev->genre = calloc(1, sizeof(epg_genre_list_t));
+        if (ev->genre == NULL) {
+          tvhabort(LS_EPGGRAB, "calloc is NULL");
+        }
+      }
       epg_genre_list_add_by_eit(ev->genre, *ptr);
     }
     len -= 2;
@@ -1285,6 +1290,9 @@ static void eit_queue_priv
 
   tvhtrace(LS_TBL_EIT, "%s - detected module '%s'", src, priv->module->id);
   plist = calloc(1, sizeof(*plist));
+  if (plist == NULL) {
+      tvhabort(LS_EPGGRAB, "calloc is NULL");
+  }
   plist->src = src;
   plist->priv = priv;
   LIST_INSERT_HEAD(&om->om_eit_plist, plist, link);
@@ -1521,8 +1529,12 @@ static eit_module_t *eit_module_ota_create
     const char *name, int priority,
     epggrab_ota_module_ops_t *ops )
 {
+  void * epg_mem = calloc(1, sizeof(eit_module_t));
+  if (epg_mem == NULL) {
+    tvhabort(LS_EPGGRAB, "calloc is NULL");
+  }
   eit_module_t * mod = (eit_module_t *)
-    epggrab_module_ota_create(calloc(1, sizeof(eit_module_t)),
+  epggrab_module_ota_create( epg_mem,
                               id, subsys, saveid, name, priority,
                               &epggrab_mod_eit_class, ops);
   return mod;
@@ -1567,7 +1579,13 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
   lang_str_t *name_str = lang_str_deserialize(conf, "name");
 
   ops = calloc(1, sizeof(*ops));
+  if (ops == NULL) {
+      tvhabort(LS_EPGGRAB, "calloc is NULL");
+  }
   priv = calloc(1, sizeof(*priv));
+  if (priv == NULL) {
+      tvhabort(LS_EPGGRAB, "calloc is NULL");
+  }
   ops->start = _eit_start;
   ops->handlers = _eit_install_handlers;
   ops->done = _eit_done;
@@ -1585,6 +1603,9 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
   if (map) {
     HTSMSG_FOREACH(f, map) {
       nit = calloc(1, sizeof(*nit));
+      if (nit == NULL) {
+          tvhabort(LS_EPGGRAB, "calloc is NULL");
+      }
       nit->name = htsmsg_field_name(f)[0] ? strdup(htsmsg_field_name(f)) : NULL;
       if ((e = htsmsg_field_get_map(f)) != NULL) {
         eit_parse_list(e, "onid", nit->onid, ARRAY_SIZE(nit->onid), &nit->onid_count);
@@ -1599,6 +1620,9 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
   if (map) {
     HTSMSG_FOREACH(f, map) {
       sdt = calloc(1, sizeof(*sdt));
+      if (sdt == NULL) {
+          tvhabort(LS_EPGGRAB, "calloc is NULL");
+      }
       if ((e = htsmsg_field_get_map(f)) != NULL) {
         eit_parse_list(e, "onid", sdt->onid, ARRAY_SIZE(sdt->onid), &sdt->onid_count);
         eit_parse_list(e, "tsid", sdt->tsid, ARRAY_SIZE(sdt->tsid), &sdt->tsid_count);

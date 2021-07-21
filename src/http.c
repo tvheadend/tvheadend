@@ -263,6 +263,10 @@ http_get_nonce(http_connection_t *hc)
   int64_t mono;
   static int64_t xor;
 
+  if (n == NULL) {
+    tvhabort(LS_HTTP, "calloc is NULL");
+  }
+
   while (1) {
     mono = getmonoclock();
     mono ^= 0xa1687211885fcd30LL;
@@ -310,7 +314,7 @@ http_nonce_exists(const char *nonce)
 static char *
 http_get_opaque(http_connection_t *hc, const char *realm)
 {
-  char *a = alloca(strlen(realm) + strlen(hc->hc_nonce) + 1);
+  char a[strlen(realm) + strlen(hc->hc_nonce) + 1];
   strcpy(a, realm);
   strcat(a, hc->hc_nonce);
   return sha256sum_base64(a);
@@ -626,6 +630,9 @@ http_check_local_ip( http_connection_t *hc )
 {
   if (hc->hc_local_ip == NULL) {
     hc->hc_local_ip = malloc(sizeof(*hc->hc_local_ip));
+    if (hc->hc_local_ip == NULL) {
+      tvhabort(LS_HTTP, "malloc is NULL");
+    }
     *hc->hc_local_ip = *hc->hc_self;
     hc->hc_is_local_ip = ip_check_is_local_address(hc->hc_peer, hc->hc_self, hc->hc_local_ip) > 0;
   }
@@ -775,6 +782,9 @@ http_redirect(http_connection_t *hc, const char *location,
     htsbuf_queue_flush(&hq);
   } else if (!external && tvheadend_webroot && location[0] == '/') {
     loc = malloc(strlen(location) + strlen(tvheadend_webroot) + 1);
+    if (loc == NULL) {
+      tvhabort(LS_HTTP, "malloc is NULL");
+    }
     strcpy((char *)loc, tvheadend_webroot);
     strcat((char *)loc, location);
   }
@@ -924,6 +934,9 @@ http_extra_send(http_connection_t *hc, const void *data,
                 size_t data_len, int may_discard)
 {
   uint8_t *b = malloc(data_len);
+  if (b == NULL) {
+    tvhabort(LS_HTTP, "malloc is NULL");
+  }
   memcpy(b, data, data_len);
   return http_extra_send_prealloc(hc, b, data_len, may_discard);
 }
@@ -1358,6 +1371,9 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
      string processing on the content */
 
   hc->hc_post_data = malloc(hc->hc_post_len + 1);
+  if (hc->hc_post_data == NULL) {
+    tvhabort(LS_HTTP, "malloc is NULL");
+  }
   hc->hc_post_data[hc->hc_post_len] = 0;
 
   if(tcp_read_data(hc->hc_fd, hc->hc_post_data, hc->hc_post_len, spill) < 0)
@@ -1427,6 +1443,9 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   if (v) {
     if (hc->hc_proxy_ip == NULL)
       hc->hc_proxy_ip = malloc(sizeof(*hc->hc_proxy_ip));
+    if (hc->hc_proxy_ip == NULL) {
+        tvhabort(LS_HTTP, "malloc is NULL");
+    }
     *hc->hc_proxy_ip = *hc->hc_peer;
     if (tcp_get_ip_from_str(v, hc->hc_peer) == NULL) {
       http_error(hc, HTTP_STATUS_BAD_REQUEST);
@@ -1621,6 +1640,9 @@ http_arg_set(struct http_arg_list *list, const char *key, const char *val)
   http_arg_t *ra;
 
   ra = malloc(sizeof(http_arg_t));
+  if (ra == NULL) {
+    tvhabort(LS_HTTP, "malloc is NULL");
+  }
   TAILQ_INSERT_TAIL(list, ra, link);
   ra->key = strdup(key);
   ra->val = val ? strdup(val) : NULL;
@@ -1691,9 +1713,15 @@ http_path_add_modify(const char *path, void *opaque, http_callback_t *callback,
   http_path_t *hp = malloc(sizeof(http_path_t));
   char *tmp;
 
+  if (hp == NULL) {
+    tvhabort(LS_HTTP, "malloc is NULL");
+  }
   if (tvheadend_webroot) {
     size_t len = strlen(tvheadend_webroot) + strlen(path) + 1;
     hp->hp_path     = tmp = malloc(len);
+    if (tmp == NULL) {
+      tvhabort(LS_HTTP, "malloc is NULL");
+    }
     sprintf(tmp, "%s%s", tvheadend_webroot, path);
   } else
     hp->hp_path     = strdup(path);
@@ -1843,8 +1871,10 @@ again:
   if (plen > 5*1024*1024)
     return -1;
   p = malloc(plen + 1);
-  if (p == NULL)
+  if (p == NULL) {
+    tvhinfo(LS_HTTP, "malloc is NULL");
     return -1;
+  }
   if (tcp_read(hc->hc_fd, bl, 4))
     goto err1;
   if (tcp_read(hc->hc_fd, p, plen))

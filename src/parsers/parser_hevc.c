@@ -689,8 +689,10 @@ static uint8_t *nal_unit_extract_rbsp(const uint8_t *src, uint32_t src_len,
     uint32_t i, len;
 
     dst = malloc(src_len);
-    if (!dst)
+    if (dst==NULL){
+        tvhinfo(LS_HEVC, "malloc is NULL");
         return NULL;
+    }
 
     /* NAL unit header (2 bytes) */
     i = len = 0;
@@ -744,8 +746,10 @@ static int hvcc_array_add_nal_unit(uint8_t *nal_buf, uint32_t nal_size,
         uint8_t i;
 
         n = realloc(hvcc->array, (index + 1) * sizeof(HVCCNALUnitArray));
-        if (n == NULL)
+        if (n == NULL) {
+            tvhinfo(LS_HEVC, "realloc is NULL");
             return -1;
+        }
         hvcc->array = n;
 
         for (i = hvcc->numOfArrays; i <= index; i++)
@@ -757,13 +761,17 @@ static int hvcc_array_add_nal_unit(uint8_t *nal_buf, uint32_t nal_size,
     numNalus = array->numNalus;
 
     n = realloc(array->nalUnit, (numNalus + 1) * sizeof(uint8_t*));
-    if (n == NULL)
+    if (n == NULL) {
+        tvhinfo(LS_HEVC, "realloc is NULL");
         return -1;
+    }
     array->nalUnit = n;
 
     n = realloc(array->nalUnitLength, (numNalus + 1) * sizeof(uint16_t));
-    if (n == NULL)
+    if (n == NULL) {
+        tvhinfo(LS_HEVC, "realloc is NULL");
         return -1;
+    }
     array->nalUnitLength = n;
 
     array->nalUnit      [numNalus] = nal_buf;
@@ -1297,8 +1305,12 @@ hevc_decode_vps(parser_es_t *st, bitstream_t *bs)
   if (read_bits1(bs)) /* zero bit */
     return -1;
 
-  if((p = st->es_priv) == NULL)
+  if((p = st->es_priv) == NULL) {
     p = st->es_priv = calloc(1, sizeof(hevc_private_t));
+    if (p == NULL) {
+        tvhabort(LS_HEVC, "calloc is NULL");
+    }
+  }
 
   skip_bits(bs, 15);  /* NAL type, Layer ID, Temporal ID */
 
@@ -1436,8 +1448,12 @@ hevc_decode_sps(parser_es_t *st, bitstream_t *bs)
   if (read_bits1(bs)) /* zero bit */
     return -1;
 
-  if((p = st->es_priv) == NULL)
+  if((p = st->es_priv) == NULL) {
     p = st->es_priv = calloc(1, sizeof(hevc_private_t));
+    if (p == NULL) {
+        tvhabort(LS_HEVC, "calloc is NULL");
+    }
+  }
 
   skip_bits(bs, 15);  /* NAL type, Layer ID, Temporal ID */
 
@@ -1608,8 +1624,12 @@ hevc_decode_pps(parser_es_t *st, bitstream_t *bs)
   if (read_bits1(bs)) /* zero bit */
     return -1;
 
-  if((p = st->es_priv) == NULL)
+  if((p = st->es_priv) == NULL) {
     p = st->es_priv = calloc(1, sizeof(hevc_private_t));
+    if (p == NULL) {
+        tvhabort(LS_HEVC, "calloc is NULL");
+    }
+  }
 
   skip_bits(bs, 15);  /* NAL type, Layer ID, Temporal ID */
 
@@ -1646,8 +1666,12 @@ hevc_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype)
   if (read_bits1(bs)) /* zero bit */
     return -1;
 
-  if((p = st->es_priv) == NULL)
+  if((p = st->es_priv) == NULL) {
       p = st->es_priv = calloc(1, sizeof(hevc_private_t));
+      if (p == NULL) {
+          tvhabort(LS_HEVC, "calloc is NULL");
+      }
+  }
 
   nal_type = read_bits(bs, 6);
   skip_bits(bs, 6);   /* Layer ID */

@@ -120,6 +120,10 @@ comet_mailbox_create(const char *lang)
   int i;
   SHA_CTX sha1;
 
+  if (cmb == NULL) {
+      tvhabort(LS_WEBUI, "calloc is NULL");
+  }
+
   gettimeofday(&tv, NULL);
 
   SHA1_Init(&sha1);
