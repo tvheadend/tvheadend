@@ -269,7 +269,7 @@
       ],
       "buildcmd": [
         "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/1.26.6/src/urllib3/contrib/pyopenssl.py",
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --nowerror ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -299,7 +299,7 @@
       ],
       "buildcmd": [
         "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/1.26.6/src/urllib3/contrib/pyopenssl.py",
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --nowerror ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -669,7 +669,7 @@
       ],
       "buildcmd": [
         "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
-        "BINTRAY_REPO=centos support/bintray.py publish filelist.txt",
+        "BINTRAY_REPO=centos support/bintray.py publish filelist.txt"
       ]
     }
   }
