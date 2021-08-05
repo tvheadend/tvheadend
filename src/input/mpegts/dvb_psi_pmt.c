@@ -437,6 +437,14 @@ dvb_psi_parse_pmt
           hts_stream_type = SCT_EAC3;
         break;
 
+      case DVB_DESC_ANCILLARY_DATA:
+        if(dlen < 1 || hts_stream_type != SCT_UNKNOWN)
+          break;
+
+        if(estype == 0x89 && (ptr[0] & 0x40) == 0x40) // ancillary_data_id 0x40 : RDS via UECP
+          hts_stream_type = SCT_RDS;
+        break;
+
       default:
         break;
       }
