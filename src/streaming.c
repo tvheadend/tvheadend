@@ -570,6 +570,7 @@ static struct strtab streamtypetab[] = {
   { "CAT",        SCT_CAT },
   { "CA",         SCT_CA },
   { "HBBTV",      SCT_HBBTV },
+  { "RDS",        SCT_RDS },
   { "MPEG2VIDEO", SCT_MPEG2VIDEO },
   { "MPEG2AUDIO", SCT_MPEG2AUDIO },
   { "H264",       SCT_H264 },

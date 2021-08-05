@@ -45,6 +45,7 @@ enum streaming_component_type {
   SCT_CAT,     /* MPEG-TS CAT (EMM) data */
   SCT_CA,      /* MPEG-TS ECM data */
   SCT_HBBTV,   /* HBBTV info */
+  SCT_RDS,     /* Radio Data System */
   /* standard codecs */
   SCT_MPEG2VIDEO,
   SCT_MPEG2AUDIO,
