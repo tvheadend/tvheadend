@@ -50,7 +50,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 35
+#define HTSP_PROTO_VERSION 36
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -4213,6 +4213,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
         htsmsg_add_u32(c, "channels", ssc->es_channels);
       if (ssc->es_sri)
         htsmsg_add_u32(c, "rate", ssc->es_sri);
+      htsmsg_add_u32(c, "rds_uecp", ssc->es_rds_uecp == 0 ? 0 : 1);
     }
 
     if (ssc->ssc_gh)
