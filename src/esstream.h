@@ -105,6 +105,7 @@ struct elementary_info {
   uint8_t es_sri;
   uint8_t es_ext_sri;
   uint16_t es_channels;
+  uint8_t es_rds_uecp; /* RDS via UECP data present */
 
   uint16_t es_composition_id;
   uint16_t es_ancillary_id;
