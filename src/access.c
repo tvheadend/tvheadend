@@ -524,9 +524,9 @@ access_dump_a(access_t *a)
 
   if (a->aa_chrange) {
     for (first = 0; first < a->aa_chrange_count; first += 2)
-      tvh_strlcatf(buf, sizeof(buf), l, ", [chmin=%lu, chmax=%lu]",
-                   a->aa_chrange[first],
-                   a->aa_chrange[first+1]);
+      tvh_strlcatf(buf, sizeof(buf), l, ", [chmin=%llu, chmax=%llu]",
+                   (long long)a->aa_chrange[first],
+                   (long long)a->aa_chrange[first+1]);
   }
 
 
