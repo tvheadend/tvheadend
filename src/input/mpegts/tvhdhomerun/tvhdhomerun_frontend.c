@@ -328,61 +328,6 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   }
 }
 
-static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, int pid) {
-  char *pfilter;
-  char buf[1024];
-  int res;
-
-  if (hfe->hf_type == DVB_TYPE_CABLECARD)
-    return;
-
-  /* a full mux subscription should specificly set the filter */
-  if (pid == MPEGTS_FULLMUX_PID) {
-    tvhdebug(LS_TVHDHOMERUN, "setting PID filter full mux");
-    tvh_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
-    res = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, "0x0000-0x1FFF");
-    tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
-    if(res < 1)
-      tvherror(LS_TVHDHOMERUN, "failed to set_tuner_filter to 0x0000 - 0x1FFF");
-    return;
-  }
-
-  /* get the current filter */
-  tvh_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
-  res = hdhomerun_device_get_tuner_filter(hfe->hf_hdhomerun_tuner, &pfilter);
-  tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
-  if(res < 1) {
-      tvherror(LS_TVHDHOMERUN, "failed to get_tuner_filter: %d", res);
-      return;
-  }
-
-  tvhdebug(LS_TVHDHOMERUN, "current pfilter: %s", pfilter);
-
-  /* make sure the pid maps to a max of 0x1FFF, API will reject the call otherwise */
-  if(pid > 0x1FFF) {
-    tvherror(LS_TVHDHOMERUN, "pid %d is too large, masking to API maximum of 0x1FFF", pid);
-    pid = (pid & 0x1FFF);
-  }
-
-  memset(buf, 0x00, sizeof(buf));
-  snprintf(buf, sizeof(buf), "0x%04x", pid);
-
-  if(strncmp(pfilter, buf, strlen(buf)) != 0) {
-    memset(buf, 0x00, sizeof(buf));
-    snprintf(buf, sizeof(buf), "%s 0x%04x", pfilter, pid);
-    tvhdebug(LS_TVHDHOMERUN, "setting pfilter to: %s", buf);
-
-    tvh_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
-    res = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, buf);
-    tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
-    if(res < 1)
-      tvherror(LS_TVHDHOMERUN, "failed to set_tuner_filter: %d", res);
-  } else {
-    //tvhdebug(LS_TVHDHOMERUN, "pid 0x%x already present in pfilter", pid);
-    return;
-  }
-}
-
 static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_instance_t *mmi)
 {
   hfe->hf_status          = SIGNAL_NONE;
@@ -550,8 +495,14 @@ static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
   int i;
+  int res;
 
-  //tvhdebug(LS_TVHDHOMERUN, "Update pids\n");
+  /* The length of the buffer for list of hdhomerun formatted list of pids. MUST BE GREATER THAN 14! */
+  const unsigned int bufferSize = 1024;
+
+  /* Temporary storage for preparing the list of pid ranges to send to the hdhomerun device by the set filter command.
+   * (hdhomerun's filter format example: "0x0000-0x0001 0x0030-0x0031 0x0034-0x0036 0x00a0-0x00a1 0x00a4-0x00a5 0x1ffb") */
+  char buffer[bufferSize];
 
   mpegts_pid_init(&pids);
   RB_FOREACH(mp, &mm->mm_pids, mp_link) {
@@ -564,10 +515,87 @@ static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *
   }
 
   mpegts_pid_weighted(&wpids, &pids, 128 /* max? */, MPS_WEIGHT_ALLLIMIT);
-  for (i = 0; i < wpids.count; i++)
-    tvhdhomerun_device_open_pid(hfe, wpids.pids[i].pid);
-  if (wpids.all)
-    tvhdhomerun_device_open_pid(hfe, MPEGTS_FULLMUX_PID);
+  if (hfe->hf_type == DVB_TYPE_CABLECARD)
+    return;
+
+  buffer[0] = '\0'; /* Initialize buffer to handle the case where no pids are requested. */
+
+  /* Check if the turn-on-all-pids flag is set.  If so, ask the hdhomerun to send all pids ("0x0000-0x1fff").  */
+  if(wpids.all) {
+      tvhdebug(LS_TVHDHOMERUN, "setting PID filter full mux");
+      snprintf(buffer, bufferSize, "0x0000-0x1fff");
+  }
+  /* Otherwise, if we have any pids, proceed to find consecutive runs of pids to group them into a list of ranges. */
+  else {
+    if(wpids.count > 0) {
+
+      /* 'begin' is the first pid in a consecutive run of pids.
+       * 'prev' is the previous pid while walking the list of pids and
+       * 'curr' is the current pid. */
+      int begin, prev, curr;
+
+      const char *endBuffer = buffer + bufferSize; /* Have the address after the end of buffer on hand to help avoid writing past the buffer. */
+      char *pBuffer = buffer; /* Move this pointer through the buffer as we write formatted pids. */
+      int firstDelimiter = -1; /* Set this to 'true' so that we can skip writing the first delimiter/space. */
+
+      void appendPidRange(int a, int b) /* A local function that writes a range of pids to the 'buffer'.  This function is called more than once. */
+      {
+        if(firstDelimiter) /* Don't bother printing a space before the first range of pids. */
+          firstDelimiter = 0;  /* Set this to false the first time. */
+        else {
+          if(pBuffer < endBuffer) /* Check if 'buffer' is full. */
+            pBuffer += snprintf(pBuffer, endBuffer-pBuffer, " "); /* After the first range, separate pid ranges by a space. */
+        }
+        if(pBuffer < endBuffer) { /* Check if 'buffer' is full. */
+          if(a == b)
+            pBuffer += snprintf(pBuffer, endBuffer-pBuffer, "0x%04x", a); /* First and last pid in a range are the same, then that one pid is appended. */
+          else
+            pBuffer += snprintf(pBuffer, endBuffer-pBuffer, "0x%04x-0x%04x", a, b); /* Append a range of pids to 'buffer'. */
+        }
+      }
+
+      /* Walk the list of pids and keep track of runs of consecutive pids. Setup the state for the first pid. */
+      for (i = 1, prev = begin = wpids.pids[0].pid; i < wpids.count; i++) {
+
+        curr = wpids.pids[i].pid;
+        /* make sure the pid maps to a max of 0x1FFF, API will reject the call otherwise */
+        if(curr > 0x1FFF) {
+          tvherror(LS_TVHDHOMERUN, "pid %d is too large, masking to API maximum of 0x1FFF", curr);
+          curr = (curr & 0x1FFF);
+        }
+
+        /* Check to see if there is a break in a run of consecutive pids. */
+        if(prev + 1 != curr) {
+          /* If the current pid is NOT +1 more than the previous pid, then this is the end of a range of pids.
+           * Write out this range of consecutive pids. */
+          appendPidRange(begin, prev);
+
+          /* Also, this is the start of a new range of pids.  Set 'begin' to the beginning of the next range. */
+          begin = curr;
+        }
+        prev = curr;  /* At bottom of the loop, current pid is now the previous pid. */
+        if(pBuffer >= endBuffer)  /* We have reached the end of the 'buffer', no need to continue walking through the list. */
+          break;
+      }
+      /* We are at the end of the list of pids, write the final range of consecutive pids to the 'buffer'. */
+      appendPidRange(begin, prev);
+
+      if(pBuffer >= endBuffer) { /* We could not fit the list of ranges of pids into the 'buffer' and have an incomplete/mangled 'buffer'
+                                * so as a backup, we will request all pids except NULL packets (0x1fff). */
+        tvhdebug(LS_TVHDHOMERUN, "pfilter list is too big for buffer[%d] = \"%s\"(truncated)", bufferSize, buffer);
+        snprintf(buffer, bufferSize, "0x0000-0x1ffe");
+      }
+    }
+  }
+  tvhdebug(LS_TVHDHOMERUN, "setting pfilter to: %s", buffer);
+
+  tvh_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
+  /* Send the specially formatted list of pid ranges to the hdhomerun device. */
+  res = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, buffer);
+  tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
+  if(res < 1)
+    tvherror(LS_TVHDHOMERUN, "failed to set_tuner_filter: %d", res);
+
   mpegts_pid_done(&wpids);
   mpegts_pid_done(&pids);
 }
