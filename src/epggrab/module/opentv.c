@@ -496,12 +496,12 @@ opentv_parse_event_section_one
       ebc = epg_broadcast_find_by_time(ch, src, ev.start, ev.stop,
                                        1, &save, &changes);
       tvhdebug(LS_OPENTV, "find by time start %"PRItime_t " stop "
-               "%"PRItime_t " eid %d = %p",
-               ev.start, ev.stop, ev.eid, ebc);
+               "%"PRItime_t " ch %"PRId64" eid %d = %p",
+               ev.start, ev.stop, ch->ch_number, ev.eid, ebc);
       save |= epg_broadcast_set_dvb_eid(ebc, ev.eid, &changes);
     } else {
       ebc = epg_broadcast_find_by_eid(ch, ev.eid);
-      tvhdebug(LS_OPENTV, "find by eid %d = %p", ev.eid, ebc);
+      tvhdebug(LS_OPENTV, "find by ch %"PRId64" eid %d = %p", ch->ch_number, ev.eid, ebc);
       if (ebc) {
         if (ebc->grabber != src)
           goto done;
@@ -517,6 +517,8 @@ opentv_parse_event_section_one
         if (entry) {
           save |= opentv_do_event(mod, ebc, &entry->event, ch, lang, &changes);
           opentv_remove_entry(mod->sta, entry);
+        } else {
+          merge = 1;
         }
       }
       save |= epg_broadcast_change_finish(ebc, changes, merge);
