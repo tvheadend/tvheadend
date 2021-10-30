@@ -112,7 +112,7 @@ parser_rstlog(parser_t *t, th_pkt_t *pkt)
 static void
 parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
 {
-  int64_t d, diff, dts_increse;
+  int64_t d, diff, dts_increase;
 
   assert(pkt->pkt_type == st->es_type);
 
@@ -126,8 +126,8 @@ parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
   }
 
   diff = st->es_type == SCT_DVBSUB ? 8*90000 : 6*90000;
-  dts_increse = st->es_type == SCT_DVBSUB ? 120000 : 30000;
-  d = pts_diff(pkt->pkt_pcr, (pkt->pkt_dts + dts_increse) & PTS_MASK);
+  dts_increase = st->es_type == SCT_DVBSUB ? 120000 : 30000;
+  d = pts_diff(pkt->pkt_pcr, (pkt->pkt_dts + dts_increase) & PTS_MASK);
   
   if (d > diff || d == PTS_UNSET) {
     if (d != PTS_UNSET && tvhlog_limit(&st->es_pcr_log, 2))
