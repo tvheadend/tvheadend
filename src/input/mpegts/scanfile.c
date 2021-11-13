@@ -132,9 +132,9 @@ scanfile_load_atsc ( dvb_mux_conf_t *mux, const char *line )
   char qam[20];
   int r;
 
+  dvb_mux_conf_init(NULL, mux, DVB_SYS_ATSC);
   r = sscanf(line, "%u %s", &mux->dmc_fe_freq, qam);
   if (r != 2) return 1;
-  dvb_mux_conf_init(NULL, mux, DVB_SYS_ATSC);
   if ((mux->dmc_fe_modulation = dvb_str2qam(qam)) == -1) return 1;
 
   return 0;
