@@ -29,6 +29,7 @@
 #include <ctype.h>
 #include <signal.h>
 #include <net/if.h>
+#include <errno.h>
 
 #include <openssl/sha.h>
 
@@ -701,7 +702,10 @@ rmtree ( const char *path )
   while (!readdir_r(dir, &de, &der) && der) {
     if (!strcmp("..", de.d_name) || !strcmp(".", de.d_name))
       continue;
-    snprintf(buf, sizeof(buf), "%s/%s", path, de.d_name);
+    if (snprintf(buf, sizeof(buf), "%s/%s", path, de.d_name) >= sizeof(buf)) {
+        err = -ENAMETOOLONG;
+        break;
+    }
     err = stat(buf, &st);
     if (err) break;
     if (S_ISDIR(st.st_mode))
