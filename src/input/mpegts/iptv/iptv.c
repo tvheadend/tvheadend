@@ -137,7 +137,7 @@ static mpegts_mux_instance_t *
 iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
                      iptv_is_free_t *conf, int weight, int *lweight )
 {
-  int h = 0, l = 0, w, rw = INT_MAX;
+  int h = 0, l = 0, mux_running = 0, w, rw = INT_MAX;
   mpegts_mux_instance_t *mmi, *rmmi = NULL;
   iptv_input_t *mi2;
   iptv_network_t *in = (iptv_network_t *)mm->mm_network;
@@ -148,6 +148,7 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
     tvh_mutex_lock(&mi2->mi_output_lock);
     LIST_FOREACH(mmi, &mi2->mi_mux_active, mmi_active_link)
       if (mmi->mmi_mux->mm_network == (mpegts_network_t *)in) {
+        mux_running = mux_running || mmi->mmi_mux == mm;
         w = mpegts_mux_instance_weight(mmi);
         if (w < rw && (!conf->active || mmi->mmi_mux != mm)) {
           rmmi = mmi;
@@ -157,6 +158,10 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
       }
     tvh_mutex_unlock(&mi2->mi_output_lock);
   }
+
+  /* If we are checking if an input is free, return null if the mux's input is already running */
+  if (!conf->active && !conf->weight && !conf->warm && mux_running)
+    return NULL;
 
   tvhtrace(LS_IPTV_SUB, "is free[%p]: h = %d, l = %d, rw = %d", mm, h, l, rw);
 
