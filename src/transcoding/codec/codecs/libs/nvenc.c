@@ -324,17 +324,19 @@ tvh_codec_profile_nvenc_h264_open(tvh_codec_profile_nvenc_t *self,
     }
 
     if (self->nvenc_profile != NV_ENC_PROFILE_UNKNOWN &&
-        (s = val2str(self->nvenc_profile, profiletab)) != NULL)
-      AV_DICT_SET(opts, "profile", s, 0);
-      // ------ Set Defaults ---------
-      AV_DICT_SET_INT(opts, "qmin", "-1", 0);
-      AV_DICT_SET_INT(opts, "qmax", "-1", 0);
-      AV_DICT_SET_INT(opts, "qdiff", "-1", 0);
-      AV_DICT_SET_INT(opts, "qblur", "-1", 0);
-      AV_DICT_SET_INT(opts, "qcomp", "-1", 0);
-      AV_DICT_SET_INT(opts, "g", "250", 0);
-      AV_DICT_SET_INT(opts, "bf", "0", 0);
-      AV_DICT_SET_INT(opts, "refs", "0", 0);
+        (s = val2str(self->nvenc_profile, profiletab)) != NULL) {
+        AV_DICT_SET(opts, "profile", s, 0);
+    }
+    
+    // ------ Set Defaults ---------
+    AV_DICT_SET_INT(opts, "qmin", "-1", 0);
+    AV_DICT_SET_INT(opts, "qmax", "-1", 0);
+    AV_DICT_SET_INT(opts, "qdiff", "-1", 0);
+    AV_DICT_SET_INT(opts, "qblur", "-1", 0);
+    AV_DICT_SET_INT(opts, "qcomp", "-1", 0);
+    AV_DICT_SET_INT(opts, "g", "250", 0);
+    AV_DICT_SET_INT(opts, "bf", "0", 0);
+    AV_DICT_SET_INT(opts, "refs", "0", 0);
     return 0;
 }
 
