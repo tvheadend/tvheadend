@@ -333,7 +333,7 @@ $(LIB_ROOT)/$(LIBVPX)/.tvh_build: \
 		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVPX)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBVPX) && \
-		ASFLAGS="-DENABLE_PIC=1 -DPIC=1" $(CONFIGURE) \
+		ASFLAGS="--defsym ENABLE_PIC=1 --defsym PIC=1" $(CONFIGURE) \
 		--extra-cflags="$(CFLAGS_PI)" \
 		--disable-examples \
 		--disable-docs \
