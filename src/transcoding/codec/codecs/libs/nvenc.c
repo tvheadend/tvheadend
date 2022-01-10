@@ -52,7 +52,7 @@
 #define NV_ENC_HEVC_PROFILE_MAIN_10 			    1
 #define NV_ENC_HEVC_PROFILE_REXT			        2
 
-#define NV_ENC_PROFILE_UNKNOWN                      4
+#define NV_ENC_PROFILE_UNKNOWN                      FF_PROFILE_UNKNOWN
 
 #define NV_ENC_LEVEL_AUTOSELECT                     0
 

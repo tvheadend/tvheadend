@@ -26,7 +26,7 @@
 #include "transcoding/memutils.h"
 
 
-#define AUTO_STR "Auto"
+#define AUTO_STR "auto"
 
 #define ADD_ENTRY(l, m, kt, k, vt, v) \
     do { \
@@ -166,9 +166,6 @@ tvh_codec_base_get_opts(TVHCodec *self, uint32_t opts, int visible);
 
 htsmsg_t *
 tvh_codec_get_list_profiles(TVHCodec *self);
-
-/*htsmsg_t *
-tvh_codec_get_list_level(TVHCodec *self);*/
 
 /* codec_profile_video_class */
 
