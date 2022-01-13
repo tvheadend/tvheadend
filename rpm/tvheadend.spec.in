@@ -1,6 +1,8 @@
-%global ref @REF@
+%global owner tvheadend
+%global project tvheadend
 %global commit @COMMIT@
-%global shortcommit %(c=%{commit}; echo ${c:0:7})
+%global shortcommit %(c=%{commit}; echo ${c:0:9})
+%global revision @REVISION@
 
 %global tvheadend_user %{name}
 %global tvheadend_group %{name}
@@ -15,60 +17,68 @@ License:        GPLv3
 Group:          Applications/Multimedia
 URL:            http://tvheadend.org
 
-Source:         https://github.com/tvheadend/tvheadend/archive/%{ref}/tvheadend-%{commit}.tar.gz
+Source:         https://github.com/tvheadend/tvheadend/archive/%{shortcommit}/tvheadend-%{shortcommit}.tar.gz
 #Patch999:      test.patch
 
 BuildRequires:  bzip2
 BuildRequires:  gcc
-BuildRequires:  gettext
+BuildRequires:  gettext gettext-devel
 BuildRequires:  gzip
 BuildRequires:  systemd-units
-BuildRequires:  gettext-devel
 BuildRequires:  dbus-devel
 BuildRequires:  avahi-devel
 BuildRequires:  avahi-libs
 BuildRequires:  libdvbcsa-devel
 BuildRequires:  openssl-devel
-BuildRequires:  wget python git
-BuildRequires:  cmake
-BuildRequires:  python2
+BuildRequires:  ffmpeg-devel libvpx-devel opus-devel x264-devel x265-devel
+BuildRequires:  cmake git python3 wget
 
 %{?systemd_requires}
 Requires:       bzip2
+Requires:       dtv-scan-tables
+Requires:       hdhomerun ffmpeg
 Requires:       tar
-
+Requires:       uriparser
 
 %description
 Tvheadend is a TV streaming server with Digital Video Recorder functionality
 for Linux supporting DVB, ATSC, IPTV, SAT>IP, HDHomeRun as input sources.
-
 It can be used as a back-end to HTTP (VLC, MPlayer), HTSP (Movian, Kodi),
 SAT>IP and various other clients using these protocols.
 
+%description -l de
+Tvheadend ist ein TV-Streaming-Server für Linux mit Digital Video Recorder-
+Funktionalität, der DVB, ATSC, IPTV, SAT>IP sowie HDHomeRun als Eingabequellen
+unterstützt.
+Es kann als Backend für HTTP (VLC, MPlayer), HTSP (Movian, Kodi),
+SAT>IP und verschiedene andere Clients, die diese Protokolle benutzen,
+verwendet werden.
+
+%global debug_package %{nil}
 
 %prep
 %setup -q -n tvheadend-%{commit}
 #%patch999 -p1 -b .test
 
-
 %build
 echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
-%ifarch %arm
-      %configure --disable-lockowner --disable-ffmpeg_static
-%else
-      %configure --disable-lockowner --enable-ffmpeg_static --enable-libx265
-%endif
-%make_build PYTHON=python2
-
+./configure --disable-ffmpeg_static \
+ --enable-dvbcsa \
+ --enable-hdhomerun_client \
+ --enable-libsystemd_daemon \
+ --prefix=%{_prefix}
+make
+# change python shebang
+sed -i 's/python/python3/' support/tvhmeta
+sed -i 's/python/python3/' lib/py/tvh/tv_meta_tmdb.py
+sed -i 's/python/python3/' lib/py/tvh/tv_meta_tvdb.py
 
 %install
 %make_install
 
 install -Dpm 0644 rpm/tvheadend.sysconfig %{buildroot}%{_sysconfdir}/sysconfig/%{name}
 install -Dpm 0644 rpm/tvheadend.service %{buildroot}%{_unitdir}/%{name}.service
-
 install -dm 0755 %{buildroot}%{_sharedstatedir}/%{name}/
-
 chmod 0644 %{buildroot}%{_mandir}/man1/%{name}.1
 
 
@@ -86,18 +96,14 @@ if ! getent passwd tvheadend > /dev/null ; then
 fi
 exit 0
 
-
 %post
 %systemd_post %{name}.service
-
 
 %preun
 %systemd_preun %{name}.service
 
-
 %postun
 %systemd_postun_with_restart %{name}.service
-
 
 %files
 %doc CONTRIBUTING.md README.md
@@ -109,8 +115,16 @@ exit 0
 %{_mandir}/man1/*.1.*
 %attr(-,%{tvheadend_user},%{tvheadend_group}) %dir %{_sharedstatedir}/%{tvheadend_user}/
 
-
 %changelog
+* Wed October  1 2021 Erich Kuester <erich.kuester@arcor.de> 4.3.0-3
+- build latest version for Fedora 34
+
+* Wed May 25 2021 Erich Kuester <erich.kuester@arcor.de> 4.3.0-2
+- build latest version for Fedora 33/34
+
+* Sun Jan 10 2021 Erich Kuester <erich.kuester@arcor.de> 4.3.0-1
+- build latest version for Fedora 33
+
 * Fri Apr 20 2018 Jaroslav Kysela <perex@perex.cz> 4.2.6-1
 - many fixes
 

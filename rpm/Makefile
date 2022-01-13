@@ -17,8 +17,8 @@
 #
 
 TOPDIR   := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
-
-include $(TOPDIR)/../.config.mk
+# actually not needed so commented out
+#include $(TOPDIR)/../.config.mk
 
 SPEC     ?= tvheadend.spec.in
 
@@ -27,6 +27,7 @@ COMMIT1   = $(shell git rev-parse $(COMMIT))
 FVERSION  = $(shell cd .. && git describe --match "v*" $(COMMIT1) | sed "s/^v//")
 VERSION   = $(shell echo "$(FVERSION)" | cut -d '-' -f 1)
 RELEASE   = $(shell echo "$(FVERSION)" | cut -d '-' -f 2-10 | sed "s/-/~/g")
+REVISION  = $(shell git describe HEAD | sed 's/^[^-]*-//')
 VERSION  ?= "0.0.0"
 RELEASE  ?= 1
 ifeq ($(VERSION),$(RELEASE))
@@ -44,6 +45,7 @@ tvheadend.spec: $(SPEC)
 	     -e 's/@RELEASE@/$(RELEASE)/g' \
 	     -e 's/@REF@/$(REF)/g' \
 	     -e 's/@COMMIT@/$(COMMITR)/g' \
+	     -e 's/@REVISION@/$(REVISION)/g' \
 		$< > $@
 
 SOURCES:
