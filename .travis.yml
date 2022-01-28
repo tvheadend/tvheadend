@@ -3,11 +3,11 @@
 #
 
 sudo: required
-dist: trusty
+dist: bionic
 language: c
 before_install:
   - sudo apt-get -qqy update && sudo apt-get install fakeroot -qqy
   - git fetch --unshallow
-  - sudo ./Autobuild.sh -t trusty-amd64 -o deps
+  - sudo ./Autobuild.sh -t bionic-amd64 -o deps
 script:
-  - sudo ./Autobuild.sh -t trusty-amd64
+  - sudo ./Autobuild.sh -t bionic-amd64

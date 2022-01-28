@@ -108,8 +108,9 @@ dvr_rec_subscribe(dvr_entry_t *de)
   }
 
   if (aa->aa_conn_limit || aa->aa_conn_limit_dvr) {
-    rec_count = dvr_usage_count(aa);
+    rec_count = dvr_usage_count(aa) - 1; /* substract self */
     net_count = aa->aa_conn_limit ? tcp_connection_count(aa) : 0;
+    assert(rec_count >= 0);
     /* the rule is: allow if one condition is OK */
     c1 = aa->aa_conn_limit ? rec_count + net_count >= aa->aa_conn_limit : -1;
     c2 = aa->aa_conn_limit_dvr ? rec_count >= aa->aa_conn_limit_dvr : -1;

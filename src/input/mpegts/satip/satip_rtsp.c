@@ -85,6 +85,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     { .t = DVB_SYS_DVBC_ANNEX_A,              "dvbc"  },
     { .t = DVB_SYS_DVBC_ANNEX_C,              "dvbc2" },
     { .t = DVB_SYS_ATSC,                      "atsc"  },
+    { .t = DVB_SYS_ISDBT,                     "isdbt" },
     { .t = DVB_SYS_DVBC_ANNEX_B,              "dvbcb" },
     { .t = TABLE_EOD }
   };
@@ -186,8 +187,17 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
         dmc->u.dmc_fe_qpsk.fec_inner != DVB_FEC_AUTO)
       ADD(u.dmc_fe_qpsk.fec_inner, fec, "auto");
     if (dmc->dmc_fe_rolloff != DVB_ROLLOFF_NONE &&
-        dmc->dmc_fe_rolloff != DVB_ROLLOFF_AUTO)
+        dmc->dmc_fe_rolloff != DVB_ROLLOFF_AUTO) {
       ADD(dmc_fe_rolloff, ro, "0.35");
+    } if (dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {
+      if (flags & SATIP_SETUP_ROLLOFF_20) {
+        satip_rtsp_add_val("ro", buf, 200);
+      } else if (flags & SATIP_SETUP_ROLLOFF_25) {
+        satip_rtsp_add_val("ro", buf, 250);
+      } else if (flags & SATIP_SETUP_ROLLOFF_35) {
+        satip_rtsp_add_val("ro", buf, 350);
+      }
+    }
     if (dmc->dmc_fe_pilot != DVB_PILOT_NONE &&
         dmc->dmc_fe_pilot != DVB_PILOT_AUTO) {
       ADD(dmc_fe_pilot, plts, "auto");
@@ -261,6 +271,13 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
         dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
       ADD(dmc_fe_modulation, mtype,
           dmc->dmc_fe_delsys == DVB_SYS_ATSC ? "8vsb" : "64qam");
+  } else if (dmc->dmc_fe_delsys == DVB_SYS_ISDBT) {
+    satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
+    ADD(dmc_fe_delsys, msys, "isdbt");
+    if (dmc->dmc_fe_modulation != DVB_MOD_AUTO &&
+        dmc->dmc_fe_modulation != DVB_MOD_NONE &&
+        dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
+      ADD(dmc_fe_modulation, mtype, "64qam");
   }
   if (weight > 0)
     satip_rtsp_add_val("tvhweight", buf, (uint32_t)weight * 1000);
@@ -352,7 +369,9 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
   /* do the proper split */
   if (pcnt > 0) {
     snprintf(buf, sizeof(buf), "pids=%s%s", p[0], _w);
-    satip_rtsp_play0(hc, index++, stream, buf);
+    r = satip_rtsp_play0(hc, index++, stream, buf);
+    if (r < 0)
+      return r;
     for (i = 1; i < pcnt; i++) {
       snprintf(buf, sizeof(buf), "addpids=%s%s", p[i], _w);
       r = satip_rtsp_play0(hc, index++, stream, buf);

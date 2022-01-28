@@ -125,6 +125,7 @@ tvh_video_context_open_decoder(TVHContext *self, AVDictionary **opts)
     }
     mystrset(&self->hw_accel_device, self->profile->device);
 #endif
+    self->iavctx->time_base = av_make_q(1, 90000); // MPEG-TS uses a fixed timebase of 90kHz
     return 0;
 }
 
@@ -171,7 +172,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
         self->iavctx->framerate = av_make_q(30, 1);
     }
     self->oavctx->framerate = self->iavctx->framerate;
-    self->oavctx->ticks_per_frame = self->iavctx->ticks_per_frame;
+    self->oavctx->ticks_per_frame = (90000 * self->iavctx->framerate.den) / self->iavctx->framerate.num; // We assume 90kHz as timebase which is mandatory for MPEG-TS
     ticks_per_frame = av_make_q(self->oavctx->ticks_per_frame, 1);
     self->oavctx->time_base = av_inv_q(av_mul_q(
         self->oavctx->framerate, ticks_per_frame));

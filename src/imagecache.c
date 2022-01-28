@@ -299,6 +299,8 @@ imagecache_image_fetch ( imagecache_image_t *img )
   tvhpoll_t *efd = NULL;
   http_client_t *hc = NULL;
 
+  urlinit(&url);
+
   lock_assert(&imagecache_lock);
 
   if (img->url == NULL || img->url[0] == '\0')
@@ -314,8 +316,6 @@ imagecache_image_fetch ( imagecache_image_t *img )
 
   /* Fetch (release lock, incase of delays) */
   tvh_mutex_unlock(&imagecache_lock);
-
-  urlinit(&url);
 
   /* Build command */
   tvhdebug(LS_IMAGECACHE, "fetch %s", img->url);

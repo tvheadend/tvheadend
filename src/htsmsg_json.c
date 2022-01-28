@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "htsmsg_json.h"
 #include "htsbuf.h"
@@ -166,7 +167,7 @@ add_string(void *opaque, void *parent, const char *name,  char *str)
 }
 
 static void 
-add_long(void *opaque, void *parent, const char *name, long v)
+add_s64(void *opaque, void *parent, const char *name, int64_t v)
 {
   htsmsg_add_s64(parent, name, v);
 }
@@ -197,7 +198,7 @@ static const json_deserializer_t json_to_htsmsg = {
   .jd_destroy_obj     = destroy_obj,
   .jd_add_obj         = add_obj,
   .jd_add_string      = add_string,
-  .jd_add_long        = add_long,
+  .jd_add_s64         = add_s64,
   .jd_add_double      = add_double,
   .jd_add_bool        = add_bool,
   .jd_add_null        = add_null,

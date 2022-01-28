@@ -31,8 +31,15 @@ Format | Description                               | Example value
 
 *Example usage*
 
-To use special characters (e.g. spaces), either put the string in quotes or
-escape the individual characters.
+To use special characters (e.g. spaces), either put the string in double quotes
+or escape the individual characters.
 
 ```/path/to/ffmpeg -i "%f" -vcodec libx264 -acodec copy "/path/with white space/%b"```
 
+The command is executed as-is, without a shell. To redirect command output or
+chain commands, wrap the command in a shell, e.g.
+
+```
+sh -c "df -P -h /recordings >/config/.markers/recording-post-process"
+sh -c "df -P -h /recordings | tee /config/.markers/recording-post-process"
+```

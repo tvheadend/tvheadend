@@ -44,69 +44,75 @@ BSFS           = h264_mp4toannexb hevc_mp4toannexb
 FILTERS        = yadif format hwupload hwdownload scale null aresample anull
 HWACCELS       =
 
-NASM_VER       = 2.14.02
+NASM_VER       = 2.15.05
 NASM           = nasm-$(NASM_VER)
 NASM_TB        = $(NASM).tar.gz
 NASM_URL       = https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VER)/$(NASM_TB)
-NASM_SHA1      = bfa67d0d33f0c7b00c50d9f1bd33fd4d5df3c5d5
+NASM_SHA1      = 8a2a60b01d563c32dd216f94a99a20e6e31fd8aa
 NASM_DIFFS     = remove-invalid-pure_func-qualifiers.diff
 
-LIBX264        = x264-snapshot-20190108-2245
+LIBX264_VER    = d2907f67227cbf38ac957efed84c532b12ce19cc
+LIBX264        = x264-$(LIBX264_VER)
 LIBX264_TB     = $(LIBX264).tar.bz2
-LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1   = 6d216c7892b9c886aa6b18a580698083136e2fdc
+LIBX264_URL    = https://code.videolan.org/videolan/x264/-/archive/$(LIBX264_VER)/$(LIBX264_TB)
+LIBX264_SHA1   = 6b69f9af34ddfb9bc0bbfedb0b41a0b8b6c2771a
 
-LIBX265        = x265_2.9
+LIBX265_VER    = 3.5
+LIBX265        = x265_$(LIBX265_VER)
 LIBX265_TB     = $(LIBX265).tar.gz
-LIBX265_URL    = http://ftp.videolan.org/videolan/x265/$(LIBX265_TB)
-LIBX265_SHA1   = 3c005b4ab409c6f996b36ad88d780ff85fbc9abf
+LIBX265_URL    = https://bitbucket.org/multicoreware/x265_git/downloads/$(LIBX265_TB)
+LIBX265_SHA1   = dc8e70f441991289a9a34fd37e1649d59435bfae
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
 else
 LIBX265_DIFFS  = libx265.pic.diff
 endif
+LIBX265_DIFFS  += libx265-silence.patch
 
-LIBVPX_VER     = 1.7.0
+LIBVPX_VER     = 1.9.0
 LIBVPX         = libvpx-$(LIBVPX_VER)
 LIBVPX_TB      = $(LIBVPX).tar.gz
 LIBVPX_URL     = https://github.com/webmproject/libvpx/archive/v$(LIBVPX_VER)/$(LIBVPX_TB)
-LIBVPX_SHA1    = fb3d4b80596d1e3b1a7f53757d63e7d2b3eeb7c9
+LIBVPX_SHA1    = 2ab8203ad8922bdf3256e4a197d1348fa8db9a62
 
-LIBOGG         = libogg-1.3.3
+LIBOGG         = libogg-1.3.4
 LIBOGG_TB      = $(LIBOGG).tar.gz
-LIBOGG_URL     = http://downloads.xiph.org/releases/ogg/$(LIBOGG_TB)
-LIBOGG_SHA1    = 28ba40fd2e2d41988f658a0016fa7b534e509bc0
+LIBOGG_URL     = https://ftp.osuosl.org/pub/xiph/releases/ogg/$(LIBOGG_TB)
+LIBOGG_SHA1    = 851cef020b346d44893e5d1c3dab83c675d479d9
 
-LIBTHEORA      = libtheora-1.1.1
+LIBTHEORA      = libtheora-1.2.0alpha1
 LIBTHEORA_TB   = $(LIBTHEORA).tar.gz
-LIBTHEORA_URL  = http://downloads.xiph.org/releases/theora/$(LIBTHEORA_TB)
-LIBTHEORA_SHA1 = 0b91be522746a29351a5ee592fd8160940059303
+LIBTHEORA_URL  = https://ftp.osuosl.org/pub/xiph/releases/theora/$(LIBTHEORA_TB)
+LIBTHEORA_SHA1 = f03e6b1648b7574a249ee19cd386ff3d5c9deb84
 
-LIBVORBIS      = libvorbis-1.3.6
+LIBVORBIS      = libvorbis-1.3.7
 LIBVORBIS_TB   = $(LIBVORBIS).tar.gz
-LIBVORBIS_URL  = http://downloads.xiph.org/releases/vorbis/$(LIBVORBIS_TB)
-LIBVORBIS_SHA1 = 91f140c220d1fe3376d637dc5f3d046263784b1f
+LIBVORBIS_URL  = https://ftp.osuosl.org/pub/xiph/releases/vorbis/$(LIBVORBIS_TB)
+LIBVORBIS_SHA1 = 2b415495f89b103138a23da5017a2a00837c6c94
 
-LIBFDKAAC      = fdk-aac-0.1.4
-LIBFDKAAC_TB   = $(LIBFDKAAC).tar.gz
-LIBFDKAAC_URL  = https://freefr.dl.sourceforge.net/project/opencore-amr/fdk-aac/$(LIBFDKAAC_TB)
-LIBFDKAAC_SHA1 = 9215d19bdd911954fd5bc879c707ab571716ba0d
 
-LIBOPUS        = opus-1.3-rc
+LIBFDKAAC_VER  = 2.0.2
+LIBFDKAAC      = fdk-aac-$(LIBFDKAAC_VER)
+LIBFDKAAC_TB   = v$(LIBFDKAAC_VER).tar.gz
+LIBFDKAAC_URL  = https://github.com/mstorsjo/fdk-aac/archive/refs/tags/$(LIBFDKAAC_TB)
+LIBFDKAAC_SHA1 = 8d711c298d1a562f8e5bedb0ca8dc39365efe93b
+
+LIBOPUS        = opus-1.3.1
 LIBOPUS_TB     = $(LIBOPUS).tar.gz
 LIBOPUS_URL    = https://archive.mozilla.org/pub/opus/$(LIBOPUS_TB)
-LIBOPUS_SHA1   = ea74356b762ac466637a40c82cdd3acbc35daa43
+LIBOPUS_SHA1   = ed226536537861c9f0f1ef7ca79dffc225bc181b
 
-FFNVCODEC_VER  = 8.2.15.6
-FFNVCODEC      = nv-codec-headers-n$(FFNVCODEC_VER)
+FFNVCODEC_VER  = 11.1.5.0
+FFNVCODEC      = nv-codec-headers-$(FFNVCODEC_VER)
 FFNVCODEC_TB   = $(FFNVCODEC).tar.gz
 FFNVCODEC_URL  = https://github.com/FFmpeg/nv-codec-headers/releases/download/n$(FFNVCODEC_VER)/nv-codec-headers-$(FFNVCODEC_VER).tar.gz
-FFNVCODEC_SHA1 = 57eb91aab785b1adeb2d17c95fd1bba32e6f53d9
+FFNVCODEC_SHA1 = 89bee0d3025b813c513084ad8546b0261623fbb0
 
-FFMPEG         = ffmpeg-4.1.1
+FFMPEG         = ffmpeg-4.4.1
 FFMPEG_TB      = $(FFMPEG).tar.bz2
-FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = 9076734d98fb8d6ad1cff8f8f68228afa0bb2204
+FFMPEG_URL     = https://ffmpeg.org/releases/$(FFMPEG_TB)
+FFMPEG_SHA1    = 49306f284475014b8e68bff886aaeeaf0723810c
+
 
 # ##############################################################################
 # Library Config
@@ -164,10 +170,13 @@ endif
 ECFLAGS   := -I$(EPREFIX)/include $(CFLAGS_PI)
 ELIBS     := -L$(EPREFIX)/lib -ldl
 
+AUTOGEN   := ./autogen.sh
+
 CONFIGURE := FFMPEG_PREFIX=$(EPREFIX) \
              PKG_CONFIG=$(ROOTDIR)/support/pkg-config.ffmpeg \
              ./configure --prefix=/ffmpeg --enable-static --disable-shared
 CONFIGURE_PI := CC="$(COMPILER) $(CFLAGS_PI)" $(CONFIGURE)
+CONFIGURE_FFMPEG := $(CONFIGURE)
 
 # ##############################################################################
 # NASM
@@ -257,7 +266,6 @@ ifeq (yes,$(CONFIG_LIBX265))
 
 EXTLIBS  += libx265
 ENCODERS += libx265
-FFMPEG_DIFFS += ffmpeg.libx265.diff
 
 endif
 
@@ -325,7 +333,7 @@ $(LIB_ROOT)/$(LIBVPX)/.tvh_build: \
 		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVPX)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBVPX) && \
-		ASFLAGS="-DENABLE_PIC=1 -DPIC=1" $(CONFIGURE) \
+		ASFLAGS="--defsym ENABLE_PIC=1 --defsym PIC=1" $(CONFIGURE) \
 		--extra-cflags="$(CFLAGS_PI)" \
 		--disable-examples \
 		--disable-docs \
@@ -491,7 +499,7 @@ $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download:
 
 $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBFDKAAC) && CXXFLAGS="-std=c++98 -fPIC" $(CONFIGURE_PI) \
+	cd $(LIB_ROOT)/$(LIBFDKAAC) && $(AUTOGEN) && CXXFLAGS="-std=c++98 -fPIC" $(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBFDKAAC) install
@@ -558,8 +566,15 @@ endif
 
 ifeq (yes,$(CONFIG_NVENC))
 
-EXTLIBS  += nvenc
-ENCODERS += h264_nvenc hevc_nvenc
+## YOU MUST INSTALL CUDA from NVIDIA for "libnpp" 
+EXTLIBS   += nvenc cuvid libnpp
+ENCODERS  += h264_nvenc hevc_nvenc
+DECODERS  += h264_cuvid hevc_cuvid
+HWACCELS  += h264_nvdec hevc_nvdec vp8_nvdec vp9_nvdec mjpeg_nvdec mpeg1_nvdec mpeg2_nvdec mpeg4_nvdec
+ECFLAGS   += -I/usr/local/cuda/include
+
+## NVIDIA LIB for "libnpp" 
+CONFIGURE_FFMPEG += --extra-ldflags=-L/usr/local/cuda/lib64
 
 $(LIB_ROOT)/$(FFNVCODEC)/.tvh_download:
 	$(call DOWNLOAD,$(FFNVCODEC_URL),$(LIB_ROOT)/$(FFNVCODEC_TB),$(FFNVCODEC_SHA1))
@@ -675,7 +690,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBOPUS)/.tvh_build \
 		$(LIB_ROOT)/$(FFNVCODEC)/.tvh_build \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_download
-	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE) \
+	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE_FFMPEG) \
 		--disable-all \
 		--enable-gpl \
 		--enable-nonfree \

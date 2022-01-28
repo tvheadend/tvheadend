@@ -123,7 +123,7 @@ int tvh__mutex_trylock(tvh_mutex_t *mutex, const char *filename, int lineno);
 #define tvh_mutex_trylock(_mutex)				\
  ({								\
     tvh_thread_debug == 0 ?					\
-      pthread_mutex_lock(&(_mutex)->mutex) :			\
+      pthread_mutex_trylock(&(_mutex)->mutex) :			\
       tvh__mutex_trylock((_mutex), __FILE__, __LINE__);		\
  })
 int tvh__mutex_unlock(tvh_mutex_t *mutex);

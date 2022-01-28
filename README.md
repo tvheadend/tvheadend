@@ -1,18 +1,24 @@
+![TVHeadend Logo](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/satip-icon120.png)
 Tvheadend
 ========================================
-(c) 2006 - 2017 Tvheadend Foundation CIC
+(c) 2006 - 2021 Tvheadend Foundation CIC
 
 Status
 ------
 
 [![Build Status](https://travis-ci.org/tvheadend/tvheadend.svg?branch=master)](https://travis-ci.org/tvheadend/tvheadend)
-
-[![Download](https://api.bintray.com/packages/tvheadend/deb/tvheadend/images/download.svg)](https://bintray.com/tvheadend/deb/tvheadend/)
-
 [![Coverity Scan](https://scan.coverity.com/projects/2114/badge.svg)](https://scan.coverity.com/projects/2114)
+[![Github last commit](https://img.shields.io/github/last-commit/tvheadend/tvheadend)](https://github.com/tvheadend/tvheadend)
+
+[![Releases](https://img.shields.io/github/tag/tvheadend/tvheadend.svg?style=flat-square)](https://github.com/tvheadend/tvheadend/releases)
+[![License](https://img.shields.io/badge/license-GPLv3-blue)](./LICENSE.md) 
+[![GitHub Activity](https://img.shields.io/github/commit-activity/y/tvheadend/tvheadend.svg?label=commits)](https://github.com/tvheadend/tvheadend/commits)
+
 
 What it is
 ----------
+
+![tvheadend front page](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/epg.png)
 
 Tvheadend is a TV streaming server and digital video recorder.
 
@@ -69,13 +75,12 @@ Transcoding is currently not supported.
 Packages
 --------
 
-The latest official packages can be downloaded from https://bintray.com/tvheadend/.
+Install instructions for various distributions can be found at the [Wiki](https://tvheadend.org/projects/tvheadend/wiki/Download).
 
 Further information
 -------------------
 
 For more information about building, including generating packages, please visit:
-* https://tvheadend.org/projects/tvheadend/wiki/Download
 * https://tvheadend.org/projects/tvheadend/wiki/Building
 * https://tvheadend.org/projects/tvheadend/wiki/Packaging
 * https://tvheadend.org/projects/tvheadend/wiki/Git

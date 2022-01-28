@@ -63,6 +63,7 @@ struct satip_server_conf {
   int satip_dvbc2;
   int satip_atsc_t;
   int satip_atsc_c;
+  int satip_isdb_t;
   int satip_max_sessions;
   int satip_max_user_connections;
   char *satip_nat_ip;

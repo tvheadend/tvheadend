@@ -20,6 +20,8 @@
 #include "mpegts/fastscan.h"
 #include "memoryinfo.h"
 
+struct mpegts_listeners mpegts_listeners;
+
 extern memoryinfo_t mpegts_input_queue_memoryinfo;
 extern memoryinfo_t mpegts_input_table_memoryinfo;
 

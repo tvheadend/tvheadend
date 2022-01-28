@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.7
+#! /usr/bin/env python
 
 # Update Tvheadend recordings with additional external metadata such
 # as artwork.
@@ -233,7 +233,7 @@ class TvhMeta(object):
     if title_tuple is None:
         raise RuntimeError("Record has no title: " + data)
 
-    if not force_refresh and rec.has_key("image") and rec.has_key("fanart_image") and rec["image"] is not None and rec["fanart_image"] is not None:
+    if not force_refresh and "image" in rec and "fanart_image" in rec and rec["image"] is not None and rec["image"] != "" and rec["fanart_image"] is not None and rec["fanart_image"] != "":
         logging.info("We have both image and fanart_image already for %s so nothing to do (%s)", uuid, recjson)
         return
 

@@ -148,6 +148,8 @@ config_migrate_v1_dvb_svcs
       hts_settings_save(svc, "input/linuxdvb/networks/%s/muxes/%s/services/%s",
                         netu, muxu, uuid_get_hex(&svcu, ubuf));
 
+      htsmsg_destroy(svc);
+
       /* Map to channel */
       if ((str = htsmsg_get_str(e, "channelname")))
         config_migrate_v1_chn_add_svc(channels, str, ubuf);
@@ -184,7 +186,10 @@ config_migrate_v1_dvb_network
 
   /* Load the adapter config */
   if (!(tun = hts_settings_load("dvbadapters/%s", name))) return;
-  if (!(str = htsmsg_get_str(tun, "type"))) return;
+  if (!(str = htsmsg_get_str(tun, "type"))) {
+    htsmsg_destroy(tun);
+    return;
+  }
   type = str;
 
   /* Create network entry */
@@ -272,6 +277,7 @@ config_migrate_v1_dvb_network
   htsmsg_add_str(net, "networkname", name);
   hts_settings_save(net, "input/linuxdvb/networks/%s/config",
                     uuid_get_hex(&netu, ubuf));
+  htsmsg_destroy(tun);
   htsmsg_destroy(net);
 }
 
@@ -350,7 +356,7 @@ static void
 config_migrate_v1 ( void )
 {
   tvh_uuid_t netu, muxu, svcu, chnu;
-  htsmsg_t *c, *m, *e, *l;
+  htsmsg_t *c, *e, *l, *m = NULL;
   htsmsg_field_t *f;
   uint32_t u32;
   const char *str;
@@ -368,6 +374,7 @@ config_migrate_v1 ( void )
 
       /* Build entry */
       uuid_set(&chnu, NULL);
+      if(m != NULL) htsmsg_destroy(m);
       m = htsmsg_create_map();
       htsmsg_add_u32(m, "channelid", atoi(htsmsg_field_name(f)));
       htsmsg_add_str(m, "uuid", uuid_get_hex(&chnu, ubufc));
@@ -385,6 +392,7 @@ config_migrate_v1 ( void )
       if ((str = htsmsg_get_str(e, "name"))) {
         htsmsg_add_str(m, "name", str);
         htsmsg_add_msg(channels, str, m);
+        m = NULL;
       }
     }
     htsmsg_destroy(c);
@@ -396,6 +404,7 @@ config_migrate_v1 ( void )
 
     /* Create a network */
     uuid_set(&netu, NULL);
+    if(m != NULL) htsmsg_destroy(m);
     m = htsmsg_create_map();
     htsmsg_add_str(m, "networkname",    "IPTV Network");
     htsmsg_add_u32(m, "skipinitscan",   1);
@@ -645,6 +654,7 @@ config_migrate_v6 ( void )
           }
         }
       }
+      htsmsg_destroy(chs);
     }
     if (xchs) {
       HTSMSG_FOREACH(f, xchs) {
@@ -652,6 +662,7 @@ config_migrate_v6 ( void )
           hts_settings_save(xc, "epggrab/xmltv/channels/%s", htsmsg_field_name(f));
         }
       }
+      htsmsg_destroy(xchs);
     }
   }
   htsmsg_destroy(c);
@@ -884,6 +895,7 @@ config_migrate_v9 ( void )
       hts_settings_remove("autorec/%s", htsmsg_field_name(f));
       hts_settings_save(e, "dvr/autorec/%s", htsmsg_field_name(f));
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1275,6 +1287,7 @@ config_migrate_v19 ( void )
       hts_settings_save(m, "passwd/%s", uuid_get_hex(&u, ubuf));
       htsmsg_delete_field(e, "password2");
       hts_settings_save(e, "accesscontrol/%s", htsmsg_field_name(f));
+      htsmsg_destroy(m);
     }
   }
   htsmsg_destroy(c);

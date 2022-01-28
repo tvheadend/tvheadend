@@ -193,31 +193,31 @@ rtcp_interval(int members, int senders, double rtcp_bw, int we_sent, double avg_
  Version and padding are set to fixed values, i.e. 2 and 0;
  */
 static void
-rtcp_append_headers(sbuf_t *buffer, rtcp_t *packet)
+rtcp_append_headers(sbuf_t *buffer, rtcp_header_t *packet)
 {
-  packet->common.version = 2;
-  packet->common.p = 0;
-  
   uint8_t byte = 0;
-  byte |= packet->common.version << 6;
-  byte |= packet->common.p << 5;
-  byte |= packet->common.count;
+  packet->version = 2;
+  packet->p = 0;
+
+  byte |= packet->version << 6;
+  byte |= packet->p << 5;
+  byte |= packet->count;
   sbuf_put_byte(buffer, byte);
-  byte = packet->common.pt;
+  byte = packet->pt;
   sbuf_put_byte(buffer, byte);
-  sbuf_append(buffer, &packet->common.length, sizeof(packet->common.length));
+  sbuf_append(buffer, &packet->length, sizeof(packet->length));
 }
 
 /*
  Append RTCP receiver report data to the buffer.
  */
 static void
-rtcp_append_rr(sbuf_t *buffer, rtcp_t *packet)
+rtcp_append_rr(sbuf_t *buffer, rtcp_rr_t *packet)
 {
   uint8_t byte = 0;
-  rtcp_rr_t report = packet->r.rr.rr[0];
+  rtcp_rr_block_t report = packet->rr[0];
   
-  sbuf_append(buffer, &packet->r.rr.ssrc, sizeof(packet->r.rr.ssrc));
+  sbuf_append(buffer, &packet->ssrc, sizeof(packet->ssrc));
   sbuf_append(buffer, &report.ssrc, sizeof(report.ssrc));
   byte = report.fraction;
   sbuf_put_byte(buffer, byte);
@@ -237,10 +237,22 @@ rtcp_append_rr(sbuf_t *buffer, rtcp_t *packet)
 }
 
 /*
+ Append RTCP NAK data to the buffer.
+ */
+static void
+rtcp_append_nak(sbuf_t *buffer, rtcp_gf_t *packet)
+{
+  sbuf_append(buffer, &packet->my_ssrc, sizeof(packet->my_ssrc));
+  sbuf_append(buffer, &packet->ssrc, sizeof(packet->ssrc));
+  sbuf_append(buffer, &packet->pid, sizeof(packet->pid));
+  sbuf_append(buffer, &packet->blp, sizeof(packet->blp));
+}
+
+/*
  Just send the buffer to the host in the rtcp_info.
  */
 static void
-rtcp_send(iptv_rtcp_info_t *info, sbuf_t *buffer)
+rtcp_send(rtcp_t *info, sbuf_t *buffer)
 {
   tvhdebug(LS_IPTV, "RTCP: Sending receiver report");
   // We don't care of the result right now
@@ -252,10 +264,11 @@ rtcp_send(iptv_rtcp_info_t *info, sbuf_t *buffer)
  It uses the actual informations stored in rtcp_info.
  */
 static void
-rtcp_send_rr(iptv_rtcp_info_t *info)
+rtcp_send_rr(rtcp_t *info)
 {
-  rtcp_rr_t report;
-  
+  rtcp_rr_block_t report;
+  rtcp_header_t header;
+  rtcp_rr_t packet;
   report.ssrc = htonl(info->source_ssrc);
   
   // Fill in the extended last sequence
@@ -277,18 +290,17 @@ rtcp_send_rr(iptv_rtcp_info_t *info)
   report.jitter = htonl(12);
   
   // Build the full packet
-  rtcp_t packet;
-  packet.common.pt = RTCP_RR;
-  packet.common.count = 1;
+  header.pt = RTCP_RR;
+  header.count = 1;
   // TODO : set the real length
-  packet.common.length = htons(7);
-  packet.r.rr.ssrc = htonl(info->my_ssrc);
-  packet.r.rr.rr[0] = report;
+  header.length = htons(7);
+  packet.ssrc = htonl(info->my_ssrc);
+  packet.rr[0] = report;
   
   // Build the network packet
   sbuf_t network_buffer;
   sbuf_init(&network_buffer);
-  rtcp_append_headers(&network_buffer, &packet);
+  rtcp_append_headers(&network_buffer, &header);
   rtcp_append_rr(&network_buffer, &packet);
   
   // Send it
@@ -300,12 +312,115 @@ rtcp_send_rr(iptv_rtcp_info_t *info)
   sbuf_free(&network_buffer);
 }
 
-int
-rtcp_init(iptv_rtcp_info_t * info)
-
+ssize_t
+rtcp_send_nak(rtcp_t *rtcp_info, uint32_t ssrc, uint16_t seqn, uint16_t len)
 {
-  uint32_t rnd;
+  rtcp_header_t rtcp_header;
+  rtcp_gf_t rtcp_data;
+  sbuf_t network_buffer;
+  uint32_t n;
+  uint16_t blp = 0;
+  udp_connection_t *uc = rtcp_info->connection;
 
+  if (len > rtcp_info->nak_req_limit) {
+    seqn += len - rtcp_info->nak_req_limit;
+    len = rtcp_info->nak_req_limit;
+  }
+  tvhinfo(LS_IPTV,
+      "RTCP: Sending NAK report for SSRC 0x%x, missing: %d, following packets: %d",
+      ssrc, seqn, len - 1);
+
+  rtcp_info->last_received_sequence = seqn;
+  rtcp_info->ce_cnt = len;
+
+  // Build the full packet
+  rtcp_header.version = 2;
+  rtcp_header.p = 0;
+  rtcp_header.count = 1; // Generic NAK
+  rtcp_header.pt = RTCP_GF;
+  rtcp_header.length = htons(3);
+  rtcp_data.my_ssrc = 0;
+  rtcp_data.ssrc = htonl(ssrc);
+
+  while (len > 0) {
+    len--;
+    rtcp_data.pid = htons(seqn);
+    if (len > 16) {
+      blp = 0xffff;
+      len -= 16;
+      seqn += 17;
+    } else {
+      blp = 0;
+      for (n = 0; n < len; n++) {
+        blp |= 1 << n;
+      }
+      len = 0;
+    }
+    rtcp_data.blp = htons(blp);
+
+    // Build the network packet
+    sbuf_init(&network_buffer);
+    rtcp_append_headers(&network_buffer, &rtcp_header);
+    rtcp_append_nak(&network_buffer, &rtcp_data);
+
+    // Send it
+    n = udp_write(uc, network_buffer.sb_data, network_buffer.sb_ptr, &uc->peer);
+    if (n) {
+      tvhwarn(LS_IPTV,
+          "RTCP: Sending NAK report for SSRC 0x%x failed, no data send %d %d",
+          ssrc, n, (uint32_t )sizeof(network_buffer));
+    }
+
+    // Cleanup
+    sbuf_free(&network_buffer);
+  }
+  return 0;
+}
+
+int
+rtcp_connect(rtcp_t * info, char *url, char *host, int port, char *interface, char *nicename)
+{
+  udp_connection_t *rtcp_conn;
+  url_t rtcp_url;
+
+  if (info->connection == NULL) {
+    rtcp_conn = udp_bind(LS_IPTV, nicename, NULL, 0, NULL, interface,
+    IPTV_BUF_SIZE, 1024);
+    if (rtcp_conn == NULL || rtcp_conn == UDP_FATAL_ERROR) {
+      tvhwarn(LS_IPTV, "%s - Unable to bind, RTCP won't be available",
+          nicename);
+      return -1;
+    }
+    info->connection_fd = rtcp_conn->fd;
+    info->connection = rtcp_conn;
+  }
+
+  urlinit(&rtcp_url);
+  if (host == NULL) {
+    if (urlparse(url ? : "", &rtcp_url)) {
+      tvhwarn(LS_IPTV, "%s - invalid RTCP URL, should be rtp://HOST:PORT [%s]",
+          nicename, url);
+      goto fail;
+    }
+    host = rtcp_url.host;
+    port = rtcp_url.port;
+  }
+
+  if (udp_connect(info->connection, "rtcp", host, port)) {
+    tvhwarn(LS_IPTV, "%s - Unable to connect, RTCP won't be available",
+        nicename);
+    goto fail;
+  }
+  urlreset(&rtcp_url);
+  return 0;
+fail:
+  urlreset(&rtcp_url);
+  return -1;
+}
+
+int
+rtcp_init(rtcp_t * info)
+{
   info->last_ts = 0;
   info->next_ts = 0;
   info->members = 2;
@@ -314,17 +429,14 @@ rtcp_init(iptv_rtcp_info_t * info)
   info->sequence_cycle = 1;
   info->source_ssrc = 0;
   info->average_packet_size = 52;
-  
-  // Fill my SSRC
-  uuid_random((uint8_t *)&rnd, sizeof(random));
-  info->my_ssrc = rnd;
-  srand48(rnd * 0x4232a9b9);
+  info->my_ssrc = 0; // Since we are not transmitting, set this to 0
+  info->nak_req_limit = 128; // This appears to be a safe limit
   
   return 0;
 }
 
 int
-rtcp_destroy(iptv_rtcp_info_t *info)
+rtcp_destroy(rtcp_t *info)
 {
   return 0;
 }
@@ -333,7 +445,7 @@ rtcp_destroy(iptv_rtcp_info_t *info)
  * Buffer is a raw RTP buffer
  */
 int
-rtcp_receiver_update(iptv_rtcp_info_t *info, uint8_t *buffer)
+rtcp_receiver_update(rtcp_t *info, uint8_t *buffer)
 {
   union {
     uint8_t bytes[2];

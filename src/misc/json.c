@@ -20,6 +20,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include "json.h"
 #include "dbl.h"
@@ -303,7 +304,7 @@ json_parse_double(const char *s, double *dp)
  *
  */
 static char *
-json_parse_integer(const char *s, long *lp)
+json_parse_integer(const char *s, int64_t *lp)
 {
   char *ep;
   while(*s > 0 && *s < 33)
@@ -319,8 +320,8 @@ json_parse_integer(const char *s, long *lp)
   if(s2[0] == '.' || s2[0] == 'e' || s2[0] == 'E')
     return NULL; // Is floating point
 
-  long v = strtol(s, &ep, 10);
-  if(v == LONG_MIN || v == LONG_MAX)
+  int64_t v = strtoll(s, &ep, 10);
+  if(v == INT64_MIN || v == INT64_MAX)
     return NULL;
 
   if(ep == s)
@@ -341,7 +342,7 @@ json_parse_value(const char *s, void *parent, const char *name,
   const char *s2;
   char *str;
   double d = 0;
-  long l = 0;
+  int64_t s64 = 0;
   void *c;
 
   if((c = json_parse_map(s, &s2, jd, opaque, failp, failmsg)) == NULL)
@@ -368,8 +369,8 @@ json_parse_value(const char *s, void *parent, const char *name,
     return s2;
   }
 
-  if((s2 = json_parse_integer(s, &l)) != NULL) {
-    jd->jd_add_long(opaque, parent, name, l);
+  if((s2 = json_parse_integer(s, &s64)) != NULL) {
+    jd->jd_add_s64(opaque, parent, name, s64);
     return s2;
   } else if((s2 = json_parse_double(s, &d)) != NULL) {
     jd->jd_add_double(opaque, parent, name, d);

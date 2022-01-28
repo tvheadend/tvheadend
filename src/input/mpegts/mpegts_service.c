@@ -559,6 +559,7 @@ mpegts_service_channel_name ( service_t *s )
 static const char *
 mpegts_service_source ( service_t *s )
 {
+#if ENABLE_MPEGTS_DVB
   mpegts_service_t *ms = (mpegts_service_t*)s;
   const idclass_t *mux_idc = ms->s_dvb_mux->mm_id.in_class;
   if (mux_idc == &dvb_mux_dvbs_class)   return "DVB-S";
@@ -571,6 +572,7 @@ mpegts_service_source ( service_t *s )
   if (mux_idc == &dvb_mux_isdb_s_class) return "ISDB-S";
   if (mux_idc == &dvb_mux_dtmb_class)   return "DTMB";
   if (mux_idc == &dvb_mux_dab_class)    return "DAB";
+#endif
   return NULL;
 }
 

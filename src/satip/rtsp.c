@@ -168,6 +168,13 @@ satip_rtsp_delsys(int fe, int *findex, const char **ftype)
     t = "ATSC-C";
     goto result;
   }
+  fe -= i;
+  i = satip_server_conf.satip_isdb_t;
+  if (fe <= i) {
+    res = DVB_SYS_ISDBT;
+    t = "ISDB-T";
+    goto result;
+  }
   tvh_mutex_unlock(&global_lock);
   return DVB_SYS_NONE;
 result:
@@ -548,7 +555,8 @@ rtsp_manage_descramble(session_t *rs)
       used++;
     } else if (!idnode_set_exists(found, &s->s_id)) {
       rtsp_slave_remove(rs, master, s);
-      si--;
+      if(si)
+          si--;
     }
   }
 
@@ -641,6 +649,24 @@ rtsp_start
         }
       }
 #endif
+      if (idnode_is_instance(&mn->mn_id, &dvb_network_class)) {
+        LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link) {
+          if (rs->dmc.dmc_fe_type == DVB_TYPE_T &&
+              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbt_freq) < 2000)
+            break;
+          if (rs->dmc.dmc_fe_type == DVB_TYPE_C &&
+              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbc_freq) < 2000)
+            break;
+          if (rs->dmc.dmc_fe_type == DVB_TYPE_S &&
+              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbs_freq) < 2000)
+            break;
+          }
+        if (mux) {
+          dmc = rs->dmc;
+          rs->perm_lock = 1;
+          break;
+        }
+      }
     }
     if (mux == NULL && mn2 &&
         (rtsp_muxcnf == MUXCNF_AUTO || rtsp_muxcnf == MUXCNF_KEEP)) {
@@ -666,6 +692,7 @@ rtsp_start
     }
     if (rs->mux == mux && rs->subs) {
       if (rs->no_data) {
+        dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
         tvhwarn(LS_SATIPS, "%i/%s/%i: subscription fails because mux %s can't tune",
                 rs->frontend, rs->session, rs->stream, buf);
         goto endclean;
@@ -760,6 +787,7 @@ msys_to_tvh(http_connection_t *hc)
     { "dvbc",  DVB_SYS_DVBC_ANNEX_A },
     { "dvbc2", DVB_SYS_DVBC_ANNEX_C },
     { "atsc",  DVB_SYS_ATSC },
+    { "isdbt",  DVB_SYS_ISDBT },
     { "dvbcb", DVB_SYS_DVBC_ANNEX_B }
   };
   const char *s = http_arg_get_remove(&hc->hc_req_args, "msys");
@@ -1223,7 +1251,7 @@ rtsp_parse_cmd
     dmc->dmc_fe_stream_id = plp;
     dmc->dmc_fe_pls_code = ds; /* check */
 
-  } else if (msys == DVB_SYS_ATSC || msys == DVB_SYS_DVBC_ANNEX_B) {
+  } else if (msys == DVB_SYS_ISDBT || msys == DVB_SYS_ATSC || msys == DVB_SYS_DVBC_ANNEX_B) {
 
     freq *= 1000;
     if (freq < 0) goto end;

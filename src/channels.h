@@ -82,6 +82,7 @@ typedef struct channel
   int                   ch_dvr_extra_time_pre;
   int                   ch_dvr_extra_time_post;
   int                   ch_epg_running;
+  int                   ch_remote_timeshift;
   LIST_HEAD(, dvr_entry)         ch_dvrs;
   LIST_HEAD(, dvr_autorec_entry) ch_autorecs;
   LIST_HEAD(, dvr_timerec_entry) ch_timerecs;
@@ -181,7 +182,7 @@ void channel_tag_unmap(channel_t *ch, void *origin);
 
 int channel_tag_access(channel_tag_t *ct, struct access *a, int disabled);
 
-const char *channel_get_name ( channel_t *ch, const char *blank );
+const char *channel_get_name ( const channel_t *ch, const char *blank );
 int channel_set_name ( channel_t *ch, const char *name );
 /// User API convenience function to rename all channels that
 /// match "from". Lock must be held prior to call.

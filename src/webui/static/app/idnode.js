@@ -2731,7 +2731,7 @@ tvheadend.idnode_tree = function(panel, conf)
                         uuid = n.attributes.uuid;
                         current = new tvheadend.idnode_editor(uilevel, n.attributes, {
                             title: _('Parameters'),
-                            width: 550,
+                            width: 560,
                             noautoWidth: true,
                             fixedHeight: true,
                             noApply: true,

@@ -1,4 +1,5 @@
 #! /bin/sh
+# pidfile: /var/run/tvheadend.pid
 ### BEGIN INIT INFO
 # Provides:          tvheadend
 # Required-Start:    $local_fs $remote_fs udev

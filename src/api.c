@@ -67,6 +67,7 @@ api_exec ( access_t *perm, const char *subsystem,
   api_hook_t h;
   api_link_t *ah, skel;
   const char *op;
+  uint32_t access;
 
   /* Args and response must be set */
   if (!args || !resp || !subsystem)
@@ -84,7 +85,11 @@ api_exec ( access_t *perm, const char *subsystem,
     return ENOSYS; // TODO: is this really the right error code?
   }
 
-  if (access_verify2(perm, ah->hook->ah_access))
+  access = ah->hook->ah_access;
+  if ((access & ACCESS_NO_EMPTY_ARGS) != 0 && htsmsg_is_empty(args))
+    return EPERM;
+
+  if (access_verify2(perm, access & ~ACCESS_INTERNAL))
     return EPERM;
 
   /* Extract method */

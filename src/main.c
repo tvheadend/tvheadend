@@ -862,7 +862,7 @@ main(int argc, char **argv)
              *opt_logpath      = NULL,
              *opt_log_debug    = NULL,
              *opt_log_trace    = NULL,
-             *opt_pidpath      = "/var/run/tvheadend.pid",
+             *opt_pidpath      = "/run/tvheadend.pid",
 #if ENABLE_LINUXDVB
              *opt_dvb_adapters = NULL,
 #endif

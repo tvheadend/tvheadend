@@ -426,11 +426,16 @@ struct http_client {
   int          hc_rtcp_tcp;
   int          hc_rtcp_server_port;
   int          hc_rtp_multicast:1;
+  int          hc_rtp_avpf:1;
   long         hc_rtsp_stream_id;
   int          hc_rtp_timeout;
   char        *hc_rtsp_user;
   char        *hc_rtsp_pass;
   char         hc_rtsp_keep_alive_cmd;
+  time_t       hc_rtsp_stream_start;
+  time_t       hc_rtsp_range_start;
+  time_t       hc_rtsp_range_end;
+  float        hc_rtsp_scale;
 
   struct http_client_ssl *hc_ssl; /* ssl internals */
 
@@ -489,12 +494,15 @@ rtsp_send( http_client_t *hc, http_cmd_t cmd, const char *path,
                       
 void rtsp_clear_session( http_client_t *hc );
 
-int rtsp_options_decode( http_client_t *hc );
 static inline int rtsp_options( http_client_t *hc ) {
   return rtsp_send(hc, RTSP_CMD_OPTIONS, NULL, NULL, NULL);
 }
 
-int rtsp_setup_decode( http_client_t *hc, int satip );
+static inline int
+rtsp_describe( http_client_t *hc, const char *path, const char *query ) {
+  return rtsp_send(hc, RTSP_CMD_DESCRIBE, path, query, NULL);
+}
+
 int rtsp_setup( http_client_t *hc, const char *path, const char *query,
                 const char *multicast_addr, int rtp_port, int rtcp_port );
 
@@ -515,10 +523,15 @@ rtsp_teardown( http_client_t *hc, const char *path, const char *query ) {
 
 int rtsp_get_parameter( http_client_t *hc, const char *parameter );
 
-int rtsp_describe_decode( http_client_t *hc );
-static inline int
-rtsp_describe( http_client_t *hc, const char *path, const char *query ) {
-  return rtsp_send(hc, RTSP_CMD_DESCRIBE, path, query, NULL);
-}
+int rtsp_set_speed( http_client_t *hc, float speed );
 
+int rtsp_set_position( http_client_t *hc, time_t position );
+
+int rtsp_describe_decode( http_client_t *hc, const char *buf, size_t len );
+
+int rtsp_setup_decode( http_client_t *hc, int satip );
+
+int rtsp_options_decode( http_client_t *hc );
+
+int rtsp_play_decode( http_client_t *hc );
 #endif /* HTTP_H_ */

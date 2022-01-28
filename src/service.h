@@ -183,6 +183,7 @@ typedef struct service {
     ST_OTHER,
     ST_SDTV,
     ST_HDTV,
+    ST_FHDTV,
     ST_UHDTV,
     ST_RADIO
   } s_servicetype;
@@ -433,10 +434,11 @@ static inline uint16_t service_id16(void *t)
 
 int service_is_sdtv(const service_t *t);
 int service_is_uhdtv(const service_t *t);
+int service_is_fhdtv(const service_t *t);
 int service_is_hdtv(const service_t *t);
 int service_is_radio(const service_t *t);
 static inline int service_is_tv( const service_t *s)
-  { return service_is_hdtv(s) || service_is_sdtv(s) || service_is_uhdtv(s); }
+  { return service_is_hdtv(s) || service_is_sdtv(s) || service_is_uhdtv(s) || service_is_fhdtv(s); }
 static inline int service_is_other(const service_t *t)
   { return !service_is_tv(t) && !service_is_radio(t); }
 

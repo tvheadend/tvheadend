@@ -153,7 +153,6 @@ htsstr_argsplit(const char *str) {
               htsstr_argsplit_add(&argv, &argc, start, s);
               start = NULL;
             }
-            s++;
           }
           break;
         case ' ':
@@ -286,3 +285,29 @@ htsstr_substitute(const char *src, char *dst, size_t dstlen,
     *dst = '\0';
   return res;
 }
+
+#if 0
+/*
+ * gcc -g -I ../build.linux/ -o test htsstr.c
+ */
+void main(int argc, char *argv[])
+{
+  char *strings[] = {
+    "sh -c '/bin/df -P -h /recordings >/config/.markers/recording-pre-process'",
+    "sh -c \"/bin/df -P -h /recordings >/config/.markers/recording-pre-process\"",
+    "bash -c '/bin/df -P -h /recordings >/config/.markers/recording-pre-process'",
+    "bash -c \"/bin/df -P -h /recordings | tee /config/.markers/recording-pre-process\"",
+    NULL,
+  };
+  char **s = strings, **x;
+  while (*s) {
+    printf("Test for >>>%s<<<\n", *s);
+    x = htsstr_argsplit(*s);
+    while (*x) {
+      printf("  >%s<\n", *x);
+      x++;
+    }
+    s++;
+  }
+}
+#endif

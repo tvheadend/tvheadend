@@ -1484,11 +1484,7 @@ typedef int (*_dvr_duplicate_fcn_t)(dvr_entry_t *de, dvr_entry_t *de2, void **au
 
 static int _dvr_duplicate_epnum(dvr_entry_t *de, dvr_entry_t *de2, void **aux)
 {
-  if (de->de_epnum.e_num && de2->de_epnum.e_num)
-    return de->de_epnum.e_num == de2->de_epnum.e_num;
-  if (de->de_epnum.text && de2->de_epnum.text)
-    return strcmp(de->de_epnum.text, de2->de_epnum.text) == 0;
-  return 0;
+  return ! epg_episode_number_cmp(&(de->de_epnum), &(de2->de_epnum)) ;
 }
 
 static int _dvr_duplicate_title(dvr_entry_t *de, dvr_entry_t *de2, void **aux)
@@ -1875,7 +1871,7 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
   if (!old_channel) return 1;
 
   /* Always prefer a recording that has the correct service profile
-   * (UHD, HD, SD).  Someone mentioned (#1846) that some channels can
+   * (UHD, FHD, HD, SD).  Someone mentioned (#1846) that some channels can
    * show a recording earlier in the week in SD then later in the week
    * in HD so this would prefer the later HD recording if the user so
    * desired.
@@ -1890,10 +1886,29 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
       return 0;
     if (!old_has_svf && new_has_svf)
       return 1;
-    /* Also try "downgrading", where user asks for UHD, which we don't
+    /* Also try "downgrading", where user asks for FHD, which we don't
      * have, but we could give them HD.
      */
+    if (svf == PROFILE_SVF_FHD && !old_has_svf) {
+      old_has_svf = channel_has_correct_service_filter(old_channel, PROFILE_SVF_HD);
+      new_has_svf = channel_has_correct_service_filter(new_channel, PROFILE_SVF_HD);
+
+      if (old_has_svf && !new_has_svf)
+        return 0;
+      if (!old_has_svf && new_has_svf)
+        return 1;
+    }
+
+    /* Also try "downgrading", where user asks for UHD, which we don't
+     * have, but we could give them FHD, then HD.
+     */
     if (svf == PROFILE_SVF_UHD && !old_has_svf) {
+      old_has_svf = channel_has_correct_service_filter(old_channel, PROFILE_SVF_FHD);
+      new_has_svf = channel_has_correct_service_filter(new_channel, PROFILE_SVF_FHD);
+      
+      if (!old_has_svf && new_has_svf)
+        return 1;
+
       old_has_svf = channel_has_correct_service_filter(old_channel, PROFILE_SVF_HD);
       new_has_svf = channel_has_correct_service_filter(new_channel, PROFILE_SVF_HD);
 
@@ -2604,6 +2619,7 @@ dosave:
     if (dvr_autorec_entry_can_be_purged(de)) {
         dvr_entry_assign_broadcast(de, NULL);
         dvr_entry_destroy(de, 1);
+        de = NULL;
     }
   }
 
@@ -3062,6 +3078,8 @@ dvr_entry_class_save(idnode_t *self, char *filename, size_t fsize)
             htsmsg_add_s64(c, "start", s64);
           if (!htsmsg_get_s64(e, "stop", &s64))
             htsmsg_add_s64(c, "stop", s64);
+          if (!htsmsg_get_s64(e, "size", &s64))
+            htsmsg_add_s64(c, "size", s64);
           htsmsg_add_msg(l, NULL, c);
         }
       }
@@ -3865,9 +3883,9 @@ dvr_entry_class_channel_icon_url_get(void *o)
 const char *
 dvr_entry_get_image(const dvr_entry_t *de)
 {
-  if (de->de_bcast && de->de_bcast && de->de_bcast->image)
+  if (de && de->de_bcast && de->de_bcast->image)
     return de->de_bcast->image;
-  if (de->de_image)
+  if (de && de->de_image)
     return de->de_image;
   return NULL;
 }
@@ -3972,7 +3990,7 @@ dvr_entry_class_genre_get(void *o)
 {
   const dvr_entry_t *de = (dvr_entry_t *)o;
   htsmsg_t *l = htsmsg_create_list();
-  if (de->de_bcast && de->de_bcast) {
+  if (de && de->de_bcast) {
     epg_genre_t *eg;
     LIST_FOREACH(eg, &de->de_bcast->genre, link) {
       htsmsg_add_u32(l, NULL, eg->code);

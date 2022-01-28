@@ -218,7 +218,7 @@ int en50221_extract_len
  * random public functions
  */
 int en50221_send_capmt
-  (en50221_slot_t *slot, const uint8_t *capmt, uint8_t capmtlen);
+  (en50221_slot_t *slot, const uint8_t *capmt, size_t capmtlen);
 int en50221_pcmcia_data_rate(en50221_slot_t *slot, uint8_t rate);
 int en50221_mmi_answer
   (en50221_slot_t *slot, const uint8_t *data, size_t datalen);

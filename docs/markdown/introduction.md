@@ -455,5 +455,4 @@ Tvheadend includes copies of many of these pages in the application, which
 is easier to find when you're wondering what to do next.
 
 If you get really stuck, there's the [forum](https://tvheadend.org/projects/tvheadend/boards)
-and IRC (*#hts* on *freenode*) - [Kiwi IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts) or Freenode's [webchat](http://webchat.freenode.net) are good web
-clients if you don't already have an IRC client installed.
+and IRC (*#hts* on *Libera*). If you don't have a client installed you can use the [webchat](https://web.libera.chat/?nick=tvhhelp|?#hts).

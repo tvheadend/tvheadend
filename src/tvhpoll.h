@@ -38,8 +38,22 @@ typedef struct tvhpoll_event
 #define TVHPOLL_ERR 0x08
 #define TVHPOLL_HUP 0x10
 
+static inline
+tvhpoll_event_t *tvhpoll_event
+  (tvhpoll_event_t *ev, int fd, uint32_t events, void *ptr)
+{
+  ev->fd = fd; ev->events = events; ev->ptr = ptr; return ev;
+}
+
+static inline
+tvhpoll_event_t *tvhpoll_event1(tvhpoll_event_t *ev, int fd)
+{
+  ev->fd = fd; ev->events = 0; ev->ptr = NULL; return ev;
+}
+
 tvhpoll_t *tvhpoll_create(size_t num);
 void tvhpoll_destroy(tvhpoll_t *tp);
+void tvhpoll_set_trace(tvhpoll_t *tp, int subsys, int trace);
 int tvhpoll_set(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
 int tvhpoll_add(tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num);
 int tvhpoll_add1(tvhpoll_t *tp, int fd, uint32_t events, void *ptr);

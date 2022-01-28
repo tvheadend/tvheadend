@@ -133,8 +133,8 @@ void tvh_hardware_delete ( tvh_hardware_t *th );
 extern const idclass_t tvh_input_class;
 extern const idclass_t tvh_input_instance_class;
 
-tvh_input_list_t    tvh_inputs;
-tvh_hardware_list_t tvh_hardware;
+extern tvh_input_list_t    tvh_inputs;
+extern tvh_hardware_list_t tvh_hardware;
 
 #define TVH_INPUT_FOREACH(x) LIST_FOREACH(x, &tvh_inputs, ti_link)
 #define TVH_HARDWARE_FOREACH(x) LIST_FOREACH(x, &tvh_hardware, th_link)

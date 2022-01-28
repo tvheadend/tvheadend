@@ -1149,7 +1149,7 @@ typedef struct mpegts_listener
   void (*ml_mux_delete) (mpegts_mux_t *mm, void *p);
 } mpegts_listener_t;
 
-LIST_HEAD(,mpegts_listener) mpegts_listeners;
+extern LIST_HEAD(mpegts_listeners, mpegts_listener) mpegts_listeners;
 
 #define mpegts_add_listener(ml)\
   LIST_INSERT_HEAD(&mpegts_listeners, ml, ml_link)

@@ -1,0 +1,14 @@
+diff -urN ./Makefile.original ./Makefile
+--- ./Makefile.original	2019-03-09 12:11:36.506168804 +0100
++++ ./Makefile	2019-03-09 12:11:44.490392155 +0100
+@@ -11,8 +11,8 @@
+ LIBSRCS += hdhomerun_sock_posix.c
+ LIBSRCS += hdhomerun_video.c
+ 
++#CC    := $(CROSS_COMPILE)gcc
++#STRIP := $(CROSS_COMPILE)strip
+-CC    := $(CROSS_COMPILE)gcc
+-STRIP := $(CROSS_COMPILE)strip
+ 
+ CFLAGS += -O2 -Wall -Wextra -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wpointer-arith -Wno-unused-parameter
+ LDFLAGS += -lpthread

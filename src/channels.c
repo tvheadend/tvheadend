@@ -542,6 +542,16 @@ const idclass_t channel_class = {
       .list     = channel_class_epg_running_list,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
+#if ENABLE_TIMESHIFT
+    {
+      .type     = PT_BOOL,
+      .id       = "remote_timeshift",
+      .name     = N_("Remote timeshift"),
+      .desc     = N_("Pass timeshift commands to a remote RTSP server"),
+      .off      = offsetof(channel_t, ch_remote_timeshift),
+      .opts     = PO_ADVANCED,
+    },
+#endif
     {
       .type     = PT_STR,
       .islist   = 1,
@@ -637,6 +647,9 @@ channel_make_fuzzy_name(const char *name)
       break;
     /* Strip trailing 'UHD'. */
     if (*ch == 'U' && *(ch+1) == 'H' && *(ch+2) == 'D' && *(ch+3) == 0)
+      break;
+    /* Strip trailing 'FHD'. */
+    if (*ch == 'F' && *(ch+1) == 'H' && *(ch+2) == 'D' && *(ch+3) == 0)
       break;
 
     if (!isspace(*ch)) {
@@ -820,10 +833,10 @@ void channel_remove_subscriber
  * *************************************************************************/
 
 const char *
-channel_get_name ( channel_t *ch, const char *blank )
+channel_get_name ( const channel_t *ch, const char *blank )
 {
   const char *s;
-  idnode_list_mapping_t *ilm;
+  const idnode_list_mapping_t *ilm;
   if (ch->ch_name && *ch->ch_name) return ch->ch_name;
   LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link)
     if ((s = service_get_channel_name((service_t *)ilm->ilm_in1)))
@@ -1996,6 +2009,7 @@ channel_has_correct_service_filter(const channel_t *ch, int svf)
     service = (const service_t*)ilm->ilm_in1;
     if ((svf == PROFILE_SVF_SD && service_is_sdtv(service)) ||
         (svf == PROFILE_SVF_HD && service_is_hdtv(service)) ||
+        (svf == PROFILE_SVF_FHD && service_is_fhdtv(service)) ||
         (svf == PROFILE_SVF_UHD && service_is_uhdtv(service))) {
       return 1;
     }

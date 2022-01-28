@@ -170,10 +170,10 @@ tvheadend.seachTitleWeb = function(index, title){
     var url = '';
     switch(index){
         case 1:
-            url = 'http://akas.imdb.com/find?q=' + encodeURIComponent(title);
+            url = 'https://www.imdb.com/find?q=' + encodeURIComponent(title);
             break;
         case 2:
-            url = 'https://www.thetvdb.com/search?q='+ encodeURIComponent(title)+'&l=en';
+            url = 'https://www.thetvdb.com/search?query='+ encodeURIComponent(title)+'&l=en';
             break;
         case 3:
             url = tvheadend.filmAffinityLanguage() + encodeURIComponent(title);
@@ -282,8 +282,10 @@ tvheadend.epgDetails = function(grid, index) {
         content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Content Type') + ':</span><span class="x-epg-genre">' + genre.join(', ') + '</span></div>';
       }
       var tags = [];
-      if (event.hd > 1)
+      if (event.hd > 2)
         tags.push(_('UHDTV'));
+      else if (event.hd > 1)
+        tags.push(_('FHDTV'));
       else if (event.hd > 0)
         tags.push(_('HDTV'));
       if ('new' in event && event.new)

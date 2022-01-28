@@ -39,7 +39,8 @@
 #define PMT_UPDATE_CA_PROVIDER_CHANGE (1<<12)
 #define PMT_UPDATE_CAID_DELETED       (1<<13)
 #define PMT_UPDATE_CAID_PID           (1<<14)
-#define PMT_REORDERED                 (1<<15)
+#define PMT_UPDATE_RDS_UECP           (1<<15)
+#define PMT_REORDERED                 (1<<16)
 
 uint32_t dvb_psi_parse_pmt
   (mpegts_table_t *mt, const char *nicename, elementary_set_t *set,

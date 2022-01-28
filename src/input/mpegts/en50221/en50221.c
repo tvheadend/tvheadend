@@ -174,12 +174,12 @@ en50221_transport_pdu_write(en50221_transport_t *cit,
                             uint8_t tag, const uint8_t *data,
                             size_t datalen)
 {
-  uint8_t *buf = alloca(6 + datalen);
+  uint8_t *buf = alloca(8 + datalen);
   size_t hlen;
 
   buf[0] = tag;
   datalen++;
-  if (datalen < 0x80) {
+if (datalen < 0x80) {
     buf[1] = datalen & 0x7f;
     hlen = 2;
   } else if (datalen < 0x100) {
@@ -191,10 +191,19 @@ en50221_transport_pdu_write(en50221_transport_t *cit,
     buf[2] = datalen >> 8;
     buf[3] = datalen & 0xff;
     hlen = 4;
+  } else if (datalen < 0x1000000) {
+    buf[1] = 0x83;
+    buf[2] = datalen >> 16;
+    buf[3] = (datalen >> 8) & 0xff;
+    buf[4] = datalen & 0xff;
+    hlen = 5;
   } else {
-    tvherror(LS_EN50221, "%s: too much pdu data to write %zd",
-                         cit->cit_name, datalen);
-    return -EIO;
+    buf[1] = 0x84;
+    buf[2] = datalen >> 24;
+    buf[3] = (datalen >> 16) & 0xff;
+    buf[4] = (datalen >> 8) & 0xff;
+    buf[5] = datalen & 0xff;
+    hlen = 6;
   }
   buf[hlen++] = tcnum;
   if (datalen > 1)
@@ -768,7 +777,7 @@ int en50221_app_pdu_send
 {
   en50221_slot_t *slot = app->cia_slot;
   en50221_transport_t *cit = slot->cil_transport;
-  uint8_t *buf = alloca(datalen + 10), *p, tag;
+  uint8_t *buf = alloca(datalen + 12), *p, tag;
   size_t hlen, buflen, tlen;
   int r;
 
@@ -783,18 +792,27 @@ int en50221_app_pdu_send
     buf[7] = datalen & 0x7f;
     hlen = 8;
   } else if (datalen < 0x100) {
-    buf[7] = 0x82;
+    buf[7] = 0x81;
     buf[8] = datalen & 0xff;
     hlen = 9;
   } else if (datalen < 0x10000) {
-    buf[7] = 0x83;
+    buf[7] = 0x82;
     buf[8] = datalen >> 8;
     buf[9] = datalen & 0xff;
     hlen = 10;
+  } else if (datalen < 0x1000000) {
+    buf[7] = 0x83;
+    buf[8] = datalen >> 16;
+    buf[9] = (datalen >> 8) & 0xff;
+    buf[10] = datalen & 0xff;
+    hlen = 11;
   } else {
-    tvherror(LS_EN50221, "%s: too much apdu data to write %zd tag 0x%06x",
-                         app->cia_name, datalen, atag);
-    return -EIO;
+    buf[7] = 0x84;
+    buf[8] = datalen >> 24;
+    buf[9] = (datalen >> 16) & 0xff;
+    buf[10] = (datalen >> 8) & 0xff;
+    buf[11] = datalen & 0xff;
+    hlen = 12;
   }
   if (datalen > 0)
     memcpy(buf + hlen, data, datalen);

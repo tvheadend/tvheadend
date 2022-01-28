@@ -99,7 +99,7 @@ function download
   N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
 
   echo "DOWNLOAD        ${N} / ${PCLOUD_HASHDIR}"
-  ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp"
+  ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp" || python3 ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp"
 
   R=$?
 
@@ -173,8 +173,8 @@ function upload
   # Upload
   N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
   echo "UPLOAD          ${N}"
-  ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || return 1
-
+  ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || python3 ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || return 1
+  
   # Done
   mv "${P}.tmp" "${P}" || return 1
 }

@@ -983,13 +983,13 @@ tvheadend.stream_bw_monitor = function(id) {
                 render: {
                     scope: this,
                     fn: function(item) {
-                        chart.streamTo(item.el.dom, 15000);
+                        chart.streamTo(item.el.dom, 1000);
                     }
                 },
                 resize: {
                     scope: this,
                     fn: function(item) {
-                        chart.render(item.el.dom, 15000);
+                        chart.render(item.el.dom, 1000);
                     }
                 }
             }

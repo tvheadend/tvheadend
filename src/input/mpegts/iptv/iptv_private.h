@@ -25,8 +25,9 @@
 #include "url.h"
 #include "udp.h"
 #include "tvhpoll.h"
+#include "profile.h"
 
-#define IPTV_BUF_SIZE    (300*188)
+#define IPTV_BUF_SIZE    (2000*188)
 #define IPTV_PKTS        32
 #define IPTV_PKT_PAYLOAD 1472
 
@@ -104,6 +105,31 @@ struct iptv_network
 
 iptv_network_t *iptv_network_create0 ( const char *uuid, htsmsg_t *conf, const idclass_t *idc );
 
+typedef struct {
+  /* Last transmitted packet timestamp */
+  time_t last_ts;
+  /* Next scheduled packet sending timestamp */
+  time_t next_ts;
+
+  double average_packet_size;
+
+  int members;
+  int senders;
+
+  uint16_t last_received_sequence;
+  uint16_t ce_cnt;
+  uint16_t sequence_cycle;
+  uint16_t nak_req_limit;
+
+  /* Connection to the RTCP remote */
+  udp_connection_t *connection;
+  int connection_fd;
+  udp_multirecv_t um;
+
+  uint32_t source_ssrc;
+  uint32_t my_ssrc;
+} rtcp_t;
+
 struct iptv_mux
 {
   mpegts_mux_t;
@@ -112,14 +138,17 @@ struct iptv_mux
   int                   mm_iptv_streaming_priority;
   int                   mm_iptv_fd;
   udp_connection_t     *mm_iptv_connection;
-  int                   mm_iptv_fd2;
-  udp_connection_t     *mm_iptv_connection2;
   char                 *mm_iptv_url;
   char                 *mm_iptv_url_sane;
   char                 *mm_iptv_url_raw;
   char                 *mm_iptv_url_cmpid;
+  char                 *mm_iptv_ret_url;
+  char                 *mm_iptv_ret_url_sane;
+  char                 *mm_iptv_ret_url_raw;
+  char                 *mm_iptv_ret_url_cmpid;
   char                 *mm_iptv_interface;
 
+  int                   mm_iptv_send_reports;
   int                   mm_iptv_substitute;
   int                   mm_iptv_libav;
   int                   mm_iptv_atsc;
@@ -131,7 +160,7 @@ struct iptv_mux
   char                 *mm_iptv_epgid;
 
   int                   mm_iptv_respawn;
-  time_t                mm_iptv_respawn_last;
+  int64_t               mm_iptv_respawn_last;
   int                   mm_iptv_kill;
   int                   mm_iptv_kill_timeout;
   char                 *mm_iptv_env;
@@ -144,6 +173,7 @@ struct iptv_mux
   uint32_t              mm_iptv_rtp_seq;
 
   sbuf_t                mm_iptv_buffer;
+  sbuf_t                im_temp_buffer;
 
   uint32_t              mm_iptv_buffer_limit;
 
@@ -160,6 +190,13 @@ struct iptv_mux
   int                   im_delete_flag;
 
   void                 *im_opaque;
+
+  udp_multirecv_t      im_um;
+
+  char                 im_use_retransmission;
+  char                 im_is_ce_detected;
+
+  rtcp_t               im_rtcp_info;
 };
 
 iptv_mux_t* iptv_mux_create0
@@ -198,11 +235,27 @@ void iptv_pipe_init    ( void );
 void iptv_file_init    ( void );
 void iptv_libav_init   ( void );
 
-ssize_t iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
-                        void (*pkt_cb)(iptv_mux_t *im, uint8_t *buf, int len) );
+ssize_t iptv_rtp_read(iptv_mux_t *im, void (*pkt_cb)(iptv_mux_t *im, uint8_t *buf, int len));
 
 void iptv_input_unpause ( void *aux );
 
+struct rtsp_st {
+  // Note: input MUST BE FIRST in struct
+  streaming_target_t          input;      ///< Input source
+  streaming_target_t          *output;    ///< Output dest
+  streaming_target_t          *tsfix;
+  pthread_t                   st_thread;
+  volatile int                run;
+  volatile int                rtsp_input_start;
+  iptv_mux_t *im;
+};
+
+typedef struct rtsp_st rtsp_st_t;
+#if ENABLE_TIMESHIFT
+void *rtsp_status_thread(void *p) ;
+streaming_target_t* rtsp_st_create(streaming_target_t *out, profile_chain_t *prch);
+void rtsp_st_destroy(streaming_target_t *st);
+#endif
 #endif /* __IPTV_PRIVATE_H__ */
 
 /******************************************************************************

@@ -163,7 +163,6 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
 /* h264_vaapi =============================================================== */
 
 static const AVProfile vaapi_h264_profiles[] = {
-    { FF_PROFILE_H264_BASELINE,             "Baseline" },
     { FF_PROFILE_H264_CONSTRAINED_BASELINE, "Constrained Baseline" },
     { FF_PROFILE_H264_MAIN,                 "Main" },
     { FF_PROFILE_H264_HIGH,                 "High" },
@@ -177,6 +176,9 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
     // bit_rate or qp
     if (self->bit_rate) {
         AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_INT(opts, "maxrate", (self->bit_rate) * 1000, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * 2, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     }
     else {
         AV_DICT_SET_QP(opts, self->qp, 20);
@@ -224,6 +226,8 @@ TVHVideoCodec tvh_codec_vaapi_h264 = {
 
 static const AVProfile vaapi_hevc_profiles[] = {
     { FF_PROFILE_HEVC_MAIN, "Main" },
+    { FF_PROFILE_HEVC_MAIN_10, "Main 10" },
+    { FF_PROFILE_HEVC_REXT, "Rext" },
     { FF_PROFILE_UNKNOWN },
 };
 
@@ -234,6 +238,9 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
     // bit_rate or qp
     if (self->bit_rate) {
         AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_INT(opts, "maxrate", (self->bit_rate) * 1000, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * 2, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     }
     else {
         AV_DICT_SET_QP(opts, self->qp, 25);
@@ -241,6 +248,7 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
     // max_b_frames
     // XXX: remove when b-frames handling in vaapi_encode is fixed
     AV_DICT_SET_INT(opts, "bf", 0, 0);
+
     return 0;
 }
 

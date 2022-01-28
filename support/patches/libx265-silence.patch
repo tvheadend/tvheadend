@@ -1,0 +1,32 @@
+diff -urN ../x265_3.4/source/CMakeLists.old ./source/CMakeLists.txt
+--- ../x265_3.4/source/CMakeLists.old       2020-10-27 02:13:31.846580515 +0100
++++ ./source/CMakeLists.txt       2020-10-27 02:14:30.919996545 +0100
+@@ -557,7 +557,7 @@
+             list(APPEND ASM_OBJS ${ASM}.${SUFFIX})
+             add_custom_command(
+                 OUTPUT ${ASM}.${SUFFIX}
+-                COMMAND ${NASM_EXECUTABLE} ARGS ${NASM_FLAGS} ${ASM_SRC} -o ${ASM}.${SUFFIX}
++                COMMAND ${NASM_EXECUTABLE} ARGS -w-macro-params-legacy ${NASM_FLAGS} ${ASM_SRC} -o ${ASM}.${SUFFIX}
+                 DEPENDS ${ASM_SRC})
+         endforeach()
+     endif()
+--- ./x265_3.4/source/cmake/CMakeASM_NASMInformation.cmake
++++ ./source/cmake/CMakeASM_NASMInformation.cmake
+@@ -2,7 +2,7 @@
+ set(CMAKE_ASM${ASM_DIALECT}_SOURCE_FILE_EXTENSIONS asm)
+
+ if(X64)
+-    list(APPEND ASM_FLAGS -DARCH_X86_64=1 -I ${CMAKE_CURRENT_SOURCE_DIR}/../common/x86/)
++    list(APPEND ASM_FLAGS -w-macro-params-legacy -DARCH_X86_64=1 -I ${CMAKE_CURRENT_SOURCE_DIR}/../common/x86/)
+     if(ENABLE_PIC)
+         list(APPEND ASM_FLAGS -DPIC)
+     endif()
+@@ -14,7 +14,7 @@
+         set(ARGS -f win64)
+     endif()
+ else()
+-    list(APPEND ASM_FLAGS -DARCH_X86_64=0 -I ${CMAKE_CURRENT_SOURCE_DIR}/../common/x86/)
++    list(APPEND ASM_FLAGS -w-macro-params-legacy -DARCH_X86_64=0 -I ${CMAKE_CURRENT_SOURCE_DIR}/../common/x86/)
+     if(APPLE)
+         set(ARGS -f macho32 -DPREFIX)
+     elseif(UNIX AND NOT CYGWIN)

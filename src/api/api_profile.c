@@ -121,7 +121,7 @@ api_profile_create
   if (pro)
     api_idnode_create(resp, &pro->pro_id);
   else
-    err = -EINVAL;
+    err = EINVAL;
   tvh_mutex_unlock(&global_lock);
 
   return err;

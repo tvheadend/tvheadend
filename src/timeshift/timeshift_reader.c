@@ -541,9 +541,7 @@ void *timeshift_reader ( void *p )
   tvhpoll_event_t ev = { 0 };
 
   pd = tvhpoll_create(1);
-  ev.fd     = ts->rd_pipe.rd;
-  ev.events = TVHPOLL_IN;
-  tvhpoll_add(pd, &ev, 1);
+  tvhpoll_add1(pd, ts->rd_pipe.rd, TVHPOLL_IN, NULL);
 
   /* Output */
   while (run) {

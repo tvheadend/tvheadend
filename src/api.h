@@ -38,7 +38,7 @@ typedef int (*api_callback_t)
 typedef struct api_hook
 {
   const char         *ah_subsystem;
-  int                 ah_access;
+  uint32_t            ah_access;
   api_callback_t      ah_callback;
   void               *ah_opaque;
 } api_hook_t;

@@ -92,6 +92,20 @@ parser_deliver_error(parser_t *t, parser_es_t *st)
   st->es_buf.sb_err = 0;
 }
 
+
+
+/**
+ * prs_rstlog
+ */
+static void
+parser_rstlog(parser_t *t, th_pkt_t *pkt)
+{
+  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
+  streaming_message_t *clone = streaming_msg_clone(sm);
+  streaming_msg_free(sm);
+  TAILQ_INSERT_TAIL (&t->prs_rstlog, clone, sm_link);
+}
+
 /**
  *
  */
@@ -127,15 +141,20 @@ parser_deliver(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
 deliver:
   pkt->pkt_componentindex = st->es_index;
 
-  pkt_trace(LS_PARSER, pkt, "deliver");
-
   if (SCT_ISVIDEO(pkt->pkt_type)) {
     pkt->v.pkt_aspect_num = st->es_aspect_num;
     pkt->v.pkt_aspect_den = st->es_aspect_den;
   }
 
   /* Forward packet */
-  streaming_target_deliver2(t->prs_output, streaming_msg_create_pkt(pkt));
+  if(atomic_get(&st->es_service->s_pending_restart) == 1) {
+    /* Queue pkt to prs_rstlog if pending restart */
+    pkt_trace(LS_PARSER, pkt, "deliver to rstlog");
+    parser_rstlog(t, pkt);
+  } else {
+    pkt_trace(LS_PARSER, pkt, "deliver");
+    streaming_target_deliver2(t->prs_output, streaming_msg_create_pkt(pkt));
+  }
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);
@@ -989,7 +1008,6 @@ ok:
             read_bits(&bs, 2); // dsurmod
 
           lfeon = read_bits(&bs, 1);
-          channels = acmodtab[acmod] + lfeon;
         } else {
           acmod = (p[4] >> 1) & 0x7;
           lfeon = p[4] & 1;
@@ -1900,6 +1918,59 @@ parse_hbbtv(parser_t *t, parser_es_t *st, const uint8_t *data,
 }
 
 /**
+ * RDS parser
+ */
+static void
+parse_rds(parser_t *t, parser_es_t *st, const uint8_t *data,
+          int len, int start)
+{
+  th_pkt_t *pkt;
+  int psize, hlen;
+  const uint8_t *buf;
+  const uint8_t *d;
+
+  if(start) {
+    /* Payload unit start */
+    st->es_parser_state = 1;
+    sbuf_reset(&st->es_buf, 4000);
+  }
+
+  if(st->es_parser_state == 0)
+    return;
+
+  sbuf_append(&st->es_buf, data, len);
+
+  if(st->es_buf.sb_ptr < 6)
+    return;
+  d = st->es_buf.sb_data;
+
+  psize = d[4] << 8 | d[5];
+
+  if(st->es_buf.sb_ptr != psize + 6)
+    return;
+
+  st->es_parser_state = 0;
+
+  hlen = parse_pes_header(t, st, d + 6, st->es_buf.sb_ptr - 6);
+  if(hlen < 0)
+    return;
+
+  psize -= hlen;
+  buf = d + 6 + hlen;
+
+  if(psize < 2 || buf[0] != 0xfe || buf[psize-1] != 0xff)
+    return;
+
+  if(psize > 2) {
+    pkt = pkt_alloc(st->es_type, buf, psize,
+                    t->prs_current_pcr, t->prs_current_pcr, t->prs_current_pcr);
+    pkt->pkt_err = st->es_buf.sb_err;
+    parser_deliver(t, st, pkt);
+    sbuf_reset(&st->es_buf, 4000);
+  }
+}
+
+/**
  * for debugging
  */
 #if 0
@@ -1988,6 +2059,10 @@ parse_mpeg_ts(parser_t *t, parser_es_t *st, const uint8_t *data,
 
   case SCT_HBBTV:
     st->es_parse_callback = parse_hbbtv;
+    break;
+
+  case SCT_RDS:
+    st->es_parse_callback = parse_rds;
     break;
 
   default:

@@ -452,8 +452,7 @@ int regex_match_substring_length(tvh_regex_t *regex, unsigned number)
  * Sanitizer helpers to avoid false positives
  */
 #if ENABLE_CCLANG_THREADSAN
-void *blacklisted_memcpy(void *dest, const void *src, size_t n)
-  __attribute__((no_sanitize("thread")))
+void __attribute__((no_sanitize_thread)) *blacklisted_memcpy(void *dest, const void *src, size_t n) 
 {
   uint8_t *d = dest;
   const uint8_t *s = src;
@@ -463,8 +462,7 @@ void *blacklisted_memcpy(void *dest, const void *src, size_t n)
 
 void *dlsym(void *handle, const char *symbol);
 
-int blacklisted_close(int fd)
-  __attribute__((no_sanitize("thread")))
+int __attribute__((no_sanitize_thread)) blacklisted_close(int fd)
 {
   // close(fd); // sanitizer reports errors in close()
   return 0;

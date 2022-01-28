@@ -111,15 +111,15 @@ api_channel_rename
 {
   const char *from, *to;
   if (!(from = htsmsg_get_str(args, "from")))
-    return -EINVAL;
+    return EINVAL;
   if (!(to = htsmsg_get_str(args, "to")))
-    return -EINVAL;
+    return EINVAL;
   /* We need the lock since we are altering details */
   tvh_mutex_lock(&global_lock);
   const int num_match = channel_rename_and_save(from, to);
   tvh_mutex_unlock(&global_lock);
 
-  return num_match > 0 ? 0 : -ENOENT;
+  return num_match > 0 ? 0 : ENOENT;
 }
 
 static int

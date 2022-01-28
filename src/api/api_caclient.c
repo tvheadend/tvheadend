@@ -89,7 +89,7 @@ api_caclient_create
   if (cac)
     api_idnode_create(resp, &cac->cac_id);
   else
-    err = -EINVAL;
+    err = EINVAL;
   tvh_mutex_unlock(&global_lock);
 
   return err;

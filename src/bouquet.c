@@ -1188,7 +1188,7 @@ parse_enigma2(bouquet_t *bq, char *data)
                                            uint32_t tsid, uint32_t onid,
                                            uint32_t hash);
   char *argv[11], *p, *tagname = NULL, *name;
-  long lv, stype, sid, tsid, onid, hash;
+  uint32_t lv, stype, sid, tsid, onid, hash;
   uint32_t seen = 0;
   int n, ver = 2;
 
@@ -1198,7 +1198,7 @@ parse_enigma2(bouquet_t *bq, char *data)
       if (*data) { *data = '\0'; data++; }
       if (bq->bq_name == NULL || bq->bq_name[0] == '\0')
         bq->bq_name = strdup(p);
-    } if (strncmp(data, "#SERVICE ", 9) == 0) {
+    } else if (strncmp(data, "#SERVICE ", 9) == 0) {
       data += 9, p = data;
 service:
       while (*data && *data != '\r' && *data != '\n') data++;
@@ -1208,11 +1208,11 @@ service:
         if (strtol(argv[0], NULL, 0) != 1) goto next;  /* item type */
         lv = strtol(argv[1], NULL, 16);                /* service flags? */
         if (lv != 0 && lv != 0x64) goto next;
-        stype = strtol(argv[2], NULL, 16);             /* DVB service type */
-        sid   = strtol(argv[3], NULL, 16);             /* DVB service ID */
-        tsid  = strtol(argv[4], NULL, 16);
-        onid  = strtol(argv[5], NULL, 16);
-        hash  = strtol(argv[6], NULL, 16);
+        stype = strtoul(argv[2], NULL, 16);             /* DVB service type */
+        sid   = strtoul(argv[3], NULL, 16);             /* DVB service ID */
+        tsid  = strtoul(argv[4], NULL, 16);
+        onid  = strtoul(argv[5], NULL, 16);
+        hash  = strtoul(argv[6], NULL, 16);
         name  = n > 10 ? argv[10] : NULL;
         if (lv == 0) {
           service_t *s = mpegts_service_find_e2(stype, sid, tsid, onid, hash);
@@ -1232,7 +1232,7 @@ next:
     while (*data && (*data == '\r' || *data == '\n')) data++;
   }
   bouquet_completed(bq, seen);
-  tvhinfo(LS_BOUQUET, "parsed Enigma%d bouquet %s (%d services)", ver, bq->bq_name, seen);
+  tvhinfo(LS_BOUQUET, "parsed Enigma%d bouquet %s (%u services)", ver, bq->bq_name, seen);
   return 0;
 }
 

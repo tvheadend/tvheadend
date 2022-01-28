@@ -138,13 +138,8 @@ upnp_thread( void *aux )
   if (unicast == NULL || unicast == UDP_FATAL_ERROR)
     goto error;
 
-  memset(&ev, 0, sizeof(ev));
-  ev[0].fd     = multicast->fd;
-  ev[0].events = TVHPOLL_IN;
-  ev[0].ptr    = multicast;
-  ev[1].fd     = unicast->fd;
-  ev[1].events = TVHPOLL_IN;
-  ev[1].ptr    = unicast;
+  tvhpoll_event(ev+0, multicast->fd, TVHPOLL_IN, multicast);
+  tvhpoll_event(ev+1, unicast->fd, TVHPOLL_IN, unicast);
   tvhpoll_add(poll, ev, 2);
 
   delay_ms = 0;

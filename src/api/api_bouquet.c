@@ -88,7 +88,7 @@ bouquet_cb
   int r = 0;
 
   if (!(f = htsmsg_field_find(args, "uuid")))
-    return -EINVAL;
+    return EINVAL;
   if ((uuids = htsmsg_field_get_list(f))) {
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_str(f))) continue;
@@ -101,7 +101,7 @@ bouquet_cb
     r = cb(uuid);
     tvh_mutex_unlock(&global_lock);
   } else {
-    return -EINVAL;
+    return EINVAL;
   }
 
   return r;
@@ -114,7 +114,7 @@ static int bouquet_cb_scan(const char *uuid)
     bouquet_scan(bq);
     return 0;
   }
-  return -ENOENT;
+  return ENOENT;
 }
 
 static int
@@ -131,7 +131,7 @@ static int bouquet_cb_detach(const char *uuid)
     bouquet_detach(ch);
     return 0;
   }
-  return -ENOENT;
+  return ENOENT;
 }
 
 static int

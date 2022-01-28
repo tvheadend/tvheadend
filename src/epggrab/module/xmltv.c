@@ -197,11 +197,13 @@ static void parse_xmltv_dd_progid
   (epggrab_module_t *mod, const char *s, char **uri, char **suri,
    epg_episode_num_t *epnum)
 {
-  char buf[128];
-  if (strlen(s) < 2) return;
+  const int s_len = strlen(s);
+  if (s_len < 2) return;
 
+  const int buf_size = s_len + strlen(mod->id) + 13;
+  char * buf = (char *) malloc( buf_size);
   /* Raw URI */
-  snprintf(buf, sizeof(buf)-1, "ddprogid://%s/%s", mod->id, s);
+  int e = snprintf( buf, buf_size, "ddprogid://%s/%s", mod->id, s);
 
   /* SH - series without episode id so ignore */
   if (strncmp("SH", s, 2))
@@ -211,14 +213,14 @@ static void parse_xmltv_dd_progid
 
   /* Episode */
   if (!strncmp("EP", s, 2)) {
-    int e = strlen(buf)-1;
-    while (e && buf[e] != '.') e--;
+    while (--e && buf[e] != '.') {}
     if (e) {
       buf[e] = '\0';
       *suri = strdup(buf);
       if (buf[e+1]) sscanf(&buf[e+1], "%hu", &(epnum->e_num));
     }
   }
+  free(buf);
 }
 
 /**
@@ -270,8 +272,10 @@ xmltv_parse_vid_quality
   if ((str = htsmsg_xml_get_cdata_str(m, "quality"))) {
     if (strstr(str, "HD")) {
       hd    = 1;
-    } else if (strstr(str, "UHD")) {
+    } else if (strstr(str, "FHD")) {
       hd    = 2;
+    } else if (strstr(str, "UHD")) {
+      hd    = 3;
     } else if (strstr(str, "480")) {
       lines  = 480;
       aspect = 150;
@@ -284,15 +288,15 @@ xmltv_parse_vid_quality
       aspect = 178;
     } else if (strstr(str, "1080")) {
       lines  = 1080;
-      hd     = 1;
+      hd     = 2;
       aspect = 178;
     } else if (strstr(str, "1716")) {
       lines  = 1716;
-      hd     = 2;
+      hd     = 3;
       aspect = 239;
     } else if (strstr(str, "2160")) {
       lines  = 2160;
-      hd     = 2;
+      hd     = 3;
       aspect = 178;
     }
   }

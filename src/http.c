@@ -269,7 +269,10 @@ http_get_nonce(http_connection_t *hc)
     xor ^= 0xf6e398624aa55013LL;
     snprintf(stamp, sizeof(stamp), "A!*Fz32%"PRId64"%"PRId64, mono, xor);
     m = sha256sum_base64(stamp);
-    if (m == NULL) return -1;
+    if (m == NULL) {
+      free(n);
+      return -1;
+    }
     strlcpy(n->nonce, m, sizeof(n->nonce));
     tvh_mutex_lock(&global_lock);
     if (RB_INSERT_SORTED(&http_nonces, n, link, http_nonce_cmp)) {
@@ -1104,6 +1107,7 @@ end:
     free(response);
     free(qop);
     free(uri);
+    free(algo1);
     free(realm);
     free(nonce_count);
     free(cnonce);
@@ -1227,7 +1231,12 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 {
   int err;
 
-  if (http_access_verify(hc, hp->hp_accessmask)) {
+  /* this is a special case when client probably requires authentication */
+  if ((hp->hp_accessmask & ACCESS_NO_EMPTY_ARGS) != 0 && TAILQ_EMPTY(&hc->hc_req_args)) {
+    err = http_noaccess_code(hc);
+    goto destroy;
+  }
+  if (http_access_verify(hc, hp->hp_accessmask & ~ACCESS_INTERNAL)) {
     if ((hp->hp_flags & HTTP_PATH_NO_VERIFICATION) == 0) {
       err = http_noaccess_code(hc);
       goto destroy;

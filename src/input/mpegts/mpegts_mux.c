@@ -162,13 +162,13 @@ mpegts_mux_subscribe_linked
 
   tvhtrace(LS_MPEGTS, "subscribe linked");
 
+  if (!mi2)
+    return;
+  
   if (!mpegts_mux_keep_exists(mi) && (r = mpegts_mux_subscribe_keep(mm, mi))) {
     serr = "active1";
     goto fatal;
   }
-
-  if (!mi2)
-    return;
 
   if (mpegts_mux_keep_exists(mi2))
     return;
@@ -1132,10 +1132,10 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
   if (res < 0) {
     /* is threshold 3 missing tables enough? */
     if (incomplete > 0 && total > incomplete && incomplete <= 3) {
-      tvhinfo(LS_MPEGTS, "%s - scan complete (partial - %d/%d tables)", buf, total, incomplete);
+      tvhinfo(LS_MPEGTS, "%s - scan complete (partial - %d/%d tables)", buf, incomplete, total);
       mpegts_network_scan_mux_partial(mm);
     } else {
-      tvhwarn(LS_MPEGTS, "%s - scan timed out (%d/%d tables)", buf, total, incomplete);
+      tvhwarn(LS_MPEGTS, "%s - scan timed out (%d/%d tables)", buf, incomplete, total);
       mpegts_network_scan_mux_fail(mm);
     }
   } else if (res) {
