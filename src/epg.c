@@ -1083,7 +1083,7 @@ epg_broadcast_t *epg_broadcast_find_by_eid ( channel_t *ch, uint16_t eid )
 {
   epg_broadcast_t *e;
   RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
-    if (e->dvb_eid == eid) return e;
+    if (e->dvb_eid == eid && e->stop > gclk()) return e;
   }
   return NULL;
 }
