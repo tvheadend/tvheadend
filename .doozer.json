@@ -492,7 +492,8 @@
         "python3",
         "python3-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "python-is-python3"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -520,7 +521,8 @@
         "python3",
         "python3-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "python-is-python3",
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -603,9 +605,10 @@
         "bzip2",
         "uriparser-devel",
         "pcre2-devel",
-        "python",
-        "python-requests",
-        "ccache"
+        "python3",
+        "python-requests3",
+        "ccache",
+        "python-is-python3"
       ],
       "buildcmd": [
         "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
@@ -633,9 +636,10 @@
         "bzip2",
         "uriparser-devel",
         "pcre2-devel",
-        "python",
-        "python-requests",
-        "ccache"
+        "python3",
+        "python3-requests",
+        "ccache",
+        "python-is-python3"
       ],
       "buildcmd": [
         "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
