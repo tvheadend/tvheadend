@@ -31,7 +31,7 @@ BuildRequires:  libdvbcsa-devel
 BuildRequires:  openssl-devel
 BuildRequires:  wget python git
 BuildRequires:  cmake
-BuildRequires:  python2
+BuildRequires:  python3
 
 %{?systemd_requires}
 Requires:       bzip2
@@ -58,7 +58,7 @@ echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
 %else
       %configure --disable-lockowner --enable-ffmpeg_static --enable-libx265 --nowerror
 %endif
-%make_build PYTHON=python2
+%make_build PYTHON=python3
 
 
 %install
