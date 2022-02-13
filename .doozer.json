@@ -489,7 +489,7 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "libdvbcsa-dev",
-        "python",
+        "python3",
         "python3-requests",
         "debhelper",
         "ccache"
@@ -517,7 +517,7 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "libdvbcsa-dev",
-        "python",
+        "python3",
         "python3-requests",
         "debhelper",
         "ccache"
@@ -608,7 +608,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -638,7 +638,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -668,7 +668,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
+        "make -C rpm build-doozer",
         "BINTRAY_REPO=centos support/bintray.py publish filelist.txt"
       ]
     }
