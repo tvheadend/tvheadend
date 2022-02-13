@@ -56,7 +56,7 @@ echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
 %ifarch %arm
       %configure --disable-lockowner --disable-ffmpeg_static
 %else
-      %configure --disable-lockowner --enable-ffmpeg_static --enable-libx265
+      %configure --disable-lockowner --enable-ffmpeg_static --enable-libx265 --nowerror
 %endif
 %make_build PYTHON=python2
 
