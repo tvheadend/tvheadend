@@ -495,7 +495,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -523,7 +523,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -608,7 +608,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "make -C rpm build-doozer",
+        "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -638,7 +638,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "make -C rpm build-doozer",
+        "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -668,7 +668,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "make -C rpm build-doozer",
+        "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
         "BINTRAY_REPO=centos support/bintray.py publish filelist.txt"
       ]
     }
