@@ -664,6 +664,7 @@
         "uriparser-devel",
         "pcre2-devel",
         "python3",
+        "python3-requests",
         "python",
         "python-requests",
         "ccache"
