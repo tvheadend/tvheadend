@@ -663,6 +663,7 @@
         "bzip2",
         "uriparser-devel",
         "pcre2-devel",
+        "python3",
         "python",
         "python-requests",
         "ccache"
