@@ -489,14 +489,14 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "libdvbcsa-dev",
-        "python",
+        "python3",
         "python3-requests",
         "debhelper",
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "python3 support/bintray.py publish filelist.txt"
       ]
     },
     "sid-i386": {
@@ -517,14 +517,14 @@
         "liburiparser-dev",
         "libpcre3-dev",
         "libdvbcsa-dev",
-        "python",
+        "python3",
         "python3-requests",
         "debhelper",
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
-        "support/bintray.py publish filelist.txt"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "python3 support/bintray.py publish filelist.txt"
       ]
     },
     "raspbian-jessie": {
@@ -582,10 +582,10 @@
         "support/bintray.py publish filelist.txt"
       ]
     },
-    "fedora28-x86_64": {
-      "buildenv": "docker:fedora:28",
+    "fedora34-x86_64": {
+      "buildenv": "docker:fedora:34",
       "builddeps": [
-        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-28.noarch.rpm"],
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-34.noarch.rpm"],
         "gcc-c++",
         "which",
         "rpm-build",
@@ -608,14 +608,14 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
     },
-    "fedora29-x86_64": {
-      "buildenv": "docker:fedora:29",
+    "fedora35-x86_64": {
+      "buildenv": "docker:fedora:35",
       "builddeps": [
-        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-29.noarch.rpm"],
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-35.noarch.rpm"],
         "gcc-c++",
         "which",
         "rpm-build",
@@ -638,7 +638,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
     },
@@ -663,6 +663,8 @@
         "bzip2",
         "uriparser-devel",
         "pcre2-devel",
+        "python3",
+        "python3-requests",
         "python",
         "python-requests",
         "ccache"
