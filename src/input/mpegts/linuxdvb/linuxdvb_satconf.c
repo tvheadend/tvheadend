@@ -2,6 +2,7 @@
  *  Tvheadend - Linux DVB satconf
  *
  *  Copyright (C) 2013 Adam Sutton
+ *  Copyright (C) 2022 Hans Petter Selasky
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -321,6 +322,38 @@ const idclass_t linuxdvb_satconf_class =
       .off      = offsetof(linuxdvb_satconf_t, ls_lnb_highvol),
       .opts     = PO_ADVANCED,
       .def.i    = 1
+    },
+    {
+      .type     = PT_STR,
+      .id       = "vendor_diseqc_0",
+      .name     = N_("Vendor DISEQC[0] command(s)"),
+      .desc     = N_("Command sequence for DISEQC[0] (VDR synax)"),
+      .off      = offsetof(linuxdvb_satconf_t, ls_vendor_diseqc[0]),
+      .opts	= PO_ADVANCED,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "vendor_diseqc_1",
+      .name     = N_("Vendor DISEQC[1] command(s)"),
+      .desc     = N_("Command sequence for DISEQC[1] (VDR synax)"),
+      .off      = offsetof(linuxdvb_satconf_t, ls_vendor_diseqc[1]),
+      .opts	= PO_ADVANCED,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "vendor_diseqc_2",
+      .name     = N_("Vendor DISEQC[2] command(s)"),
+      .desc     = N_("Command sequence for DISEQC[2] (VDR synax)"),
+      .off      = offsetof(linuxdvb_satconf_t, ls_vendor_diseqc[2]),
+      .opts	= PO_ADVANCED,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "vendor_diseqc_3",
+      .name     = N_("Vendor DISEQC[3] command(s)"),
+      .desc     = N_("Command sequence for DISEQC[3] (VDR synax)"),
+      .off      = offsetof(linuxdvb_satconf_t, ls_vendor_diseqc[3]),
+      .opts	= PO_ADVANCED,
     },
     {}
   }
@@ -942,6 +975,144 @@ linuxdvb_satconf_start ( linuxdvb_satconf_t *ls, int delay, int vol )
     tvh_safe_usleep((delay-15)*1000);
   }
   return 0;
+}
+
+/* List of supported DISEQC vendor commands:
+ * =========================================
+ *   t         tone off
+ *   T         tone automatic on
+ *   F         voltage off (0V)
+ *   v         voltage automatic on (13V/18V)
+ *   V         voltage automatic on (13V/18V)
+ *   A         mini A
+ *   B         mini B
+ *   Wn        wait n milliseconds (n may be any positive integer number)
+ *   [xx ...]  hex code sequence (max. 6)
+ */
+
+static void skip_until(const char **pptr, const char *match)
+{
+  char c;
+  const char *ptr = *pptr;
+
+  while ((c = *ptr) != 0) {
+    if (strchr(match, c) != NULL)
+      break;
+    ptr++;
+  }
+  *pptr = ptr;
+}
+
+static void skip_while(const char **pptr, const char *match)
+{
+  char c;
+  const char *ptr = *pptr;
+
+  while ((c = *ptr) != 0) {
+    if (strchr(match, c) == NULL)
+      break;
+    ptr++;
+  }
+  *pptr = ptr;
+}
+
+int linuxdvb_diseqc_vendor(int fe_fd, int voltage, int band, const char *cmds)
+{
+  struct dvb_diseqc_master_cmd diseqcmd;
+  char *end;
+  long temp;
+  int retval = 0;
+
+  if (cmds == NULL)
+    return (-1);
+
+  while (1) {
+    skip_while(&cmds, " \t");
+
+    if (*cmds == 0)
+      goto done;
+
+    switch (*cmds) {
+    case 't':
+      cmds++;
+      if (fe_fd > -1)
+	ioctl(fe_fd, FE_SET_TONE, SEC_TONE_OFF);
+      break;
+    case 'T':
+      cmds++;
+      if (fe_fd > -1 && band == 0)
+	ioctl(fe_fd, FE_SET_TONE, SEC_TONE_OFF);
+      if (fe_fd > -1 && band != 0)
+	ioctl(fe_fd, FE_SET_TONE, SEC_TONE_ON);
+      break;
+    case 'F':
+      cmds++;
+      if (fe_fd > -1)
+	ioctl(fe_fd, FE_SET_VOLTAGE, SEC_VOLTAGE_OFF);
+      break;
+    case 'v':
+    case 'V':
+      cmds++;
+      if (fe_fd > -1 && voltage == 0)
+	ioctl(fe_fd, FE_SET_VOLTAGE, SEC_VOLTAGE_13);
+      if (fe_fd > -1 && voltage != 0)
+	ioctl(fe_fd, FE_SET_VOLTAGE, SEC_VOLTAGE_18);
+      break;
+    case 'A':
+      cmds++;
+      if (fe_fd > -1)
+	ioctl(fe_fd, FE_DISEQC_SEND_BURST, SEC_MINI_A);
+      break;
+    case 'B':
+      cmds++;
+      if (fe_fd > -1)
+	ioctl(fe_fd, FE_DISEQC_SEND_BURST, SEC_MINI_B);
+      break;
+    case 'W':
+      cmds++;
+      temp = strtol(cmds, &end, 10);
+      if (end == cmds || temp < 0 || temp > 10000) {
+	retval = -1;
+	goto done;
+      }
+      if (fe_fd > -1)
+	tvh_safe_usleep(1000 * temp);
+      break;
+    case '[':
+      memset(&diseqcmd, 0, sizeof(diseqcmd));
+      cmds++;
+      while (1) {
+	skip_while(&cmds, " \t");
+	if (*cmds == 0) {
+	  retval = -1;
+	  goto done;
+	} else if (*cmds == ']') {
+	  cmds++;
+	  if (fe_fd > -1)
+	    ioctl(fe_fd, FE_DISEQC_SEND_MASTER_CMD, &diseqcmd);
+	  break;
+	} else {
+	  temp = strtol(cmds, &end, 16);
+	  if (end == cmds)
+	    break;
+	  if (diseqcmd.msg_len >=
+	      (sizeof(diseqcmd.msg) / sizeof(diseqcmd.msg[0]))) {
+	    retval = -1;
+	    goto done;
+	  }
+	  diseqcmd.msg[diseqcmd.msg_len++] = temp & 0xFF;
+	  cmds = end;
+	}
+      }
+      break;
+    default:
+      retval = -1;
+      goto done;
+    }
+    skip_until(&cmds, " \t");
+  }
+ done:
+  return (retval);
 }
 
 static void linuxdvb_satconf_ele_tune_cb ( void *o );

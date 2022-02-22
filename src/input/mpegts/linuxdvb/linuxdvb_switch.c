@@ -186,6 +186,13 @@ linuxdvb_switch_tune
     if (linuxdvb_satconf_start(lsp, MINMAX(ls->ls_powerup_time, 15, 200), pol))
       return -1;
 
+    if (ls->ls_committed >= 0 && ls->ls_committed <= 3) {
+      if (lsp->ls_vendor_diseqc[ls->ls_committed] != NULL &&
+          lsp->ls_vendor_diseqc[ls->ls_committed][0]) {
+        return linuxdvb_diseqc_vendor(fd, vol, band, lsp->ls_vendor_diseqc[ls->ls_committed]);
+      }
+    }
+
     com = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
     slp = MINMAX(ls->ls_sleep_time, 25, 200) * 1000;
 

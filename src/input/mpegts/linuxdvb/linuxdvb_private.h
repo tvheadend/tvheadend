@@ -254,6 +254,7 @@ struct linuxdvb_satconf
   int                    ls_diseqc_repeats;
   int                    ls_diseqc_full;
   int                    ls_switch_rotor;
+  char                  *ls_vendor_diseqc[4];
 
   /*
    * LNB settings
@@ -523,6 +524,7 @@ static inline int linuxdvb_unicable_is_en50494( const char *str )
 
 void linuxdvb_en50494_init (void);
 
+int linuxdvb_diseqc_vendor(int fe_fd, int voltage, int band, const char *cmds);
 int linuxdvb_diseqc_raw_send (int fd, int len, ...);
 int
 linuxdvb_diseqc_send
