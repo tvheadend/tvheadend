@@ -970,6 +970,17 @@ const idclass_t satip_server_class = {
       .opts   = PO_EXPERT,
       .group  = 5,
     },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_drop_src",
+      .name   = N_("Drop \"src=\" parameter"),
+      .desc   = N_("Discard the source parameter in RTSP requests "
+                   "for DVB-C tuners, as some clients (e.g. Plex) "
+                   "incorrectly use it."),
+      .off    = offsetof(struct satip_server_conf, satip_drop_src),
+      .opts   = PO_EXPERT,
+      .group  = 5,
+    },
     {}
   },
 };

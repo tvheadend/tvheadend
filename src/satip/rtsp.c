@@ -1221,6 +1221,8 @@ rtsp_parse_cmd
 
   } else if (msys == DVB_SYS_DVBC_ANNEX_A || msys == DVB_SYS_DVBC_ANNEX_C) {
 
+    if(satip_server_conf.satip_drop_src)
+      http_arg_get_remove(&hc->hc_req_args, "src");
     freq *= 1000;
     if (freq < 0) goto end;
     c2tft = atoi(http_arg_get_remove(&hc->hc_req_args, "c2tft") ?: "0");

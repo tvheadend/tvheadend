@@ -52,6 +52,7 @@ struct satip_server_conf {
   int satip_anonymize;
   int satip_noupnp;
   int satip_drop_fe;
+  int satip_drop_src;
   int satip_restrict_pids_all;
   int satip_iptv_sig_level;
   int satip_force_sig_level;
