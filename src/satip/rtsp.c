@@ -1157,12 +1157,12 @@ rtsp_parse_cmd
   mtype = mtype_to_tvh(hc);
   if (mtype == DVB_MOD_NONE) goto end;
 
-  src = 1;
+  src = http_arg_get(&hc->hc_req_args, "src") ?
+    atoi(http_arg_get_remove(&hc->hc_req_args, "src")) : 1;
+  if (src < 1) goto end;
 
   if (msys == DVB_SYS_DVBS || msys == DVB_SYS_DVBS2) {
 
-    src = atoi(http_arg_get_remove(&hc->hc_req_args, "src") ?: "0");
-    if (src < 1) goto end;
     pol = pol_to_tvh(hc);
     if (pol < 0) goto end;
     sr = atof(http_arg_get_remove(&hc->hc_req_args, "sr") ?: "0") * 1000;
