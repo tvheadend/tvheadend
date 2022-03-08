@@ -33,6 +33,9 @@ typedef struct {
     TVHVideoCodecProfile;
     int qp;
     int quality;
+    double buff_factor;
+    int rc_mode;
+    int tier;
 } tvh_codec_profile_vaapi_t;
 
 #if defined(__linux__)
@@ -143,6 +146,27 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .def.d    = 0,
             },
             {
+                .type     = PT_DBL,
+                .id       = "buff_factor",
+                .name     = N_("Buffer factor"),
+                .desc     = N_("Size of transcoding buffer (buffer=bitrate*1000*factor). Good factor is 3."),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, buff_factor),
+                .def.d    = 3,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "rc_mode",
+                .name     = N_("Rate control mode"),
+                .desc     = N_("Set rate control mode (from 0 to 6).[0=auto 1=CQP 2=CBR 3=VBR 4=ICQ 5=QVBR 6=AVBR]"),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, rc_mode),
+                .intextra = INTEXTRA_RANGE(0, 6, 0),
+                .def.d    = 0,
+            },
+            {
                 .type     = PT_INT,
                 .id       = "qp",
                 .name     = N_("Constant QP (0=auto)"),
@@ -175,10 +199,14 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
 {
     // bit_rate or qp
     if (self->bit_rate) {
+        if (self->buff_factor <= 0) {
+            self->buff_factor = 3;
+        }
         AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
         AV_DICT_SET_INT(opts, "maxrate", (self->bit_rate) * 1000, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * 3, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * self->buff_factor, AV_DICT_DONT_OVERWRITE);
         AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
     }
     else {
         AV_DICT_SET_QP(opts, self->qp, 20);
@@ -238,16 +266,21 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
     // bit_rate or qp
     if (self->bit_rate) {
         AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        if (self->buff_factor <= 0) {
+            self->buff_factor = 3;
+        }
         AV_DICT_SET_INT(opts, "maxrate", (self->bit_rate) * 1000, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * 3, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * self->buff_factor, AV_DICT_DONT_OVERWRITE);
         AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "tier", self->tier, AV_DICT_DONT_OVERWRITE);
     }
     else {
         AV_DICT_SET_QP(opts, self->qp, 25);
     }
     // max_b_frames
     // XXX: remove when b-frames handling in vaapi_encode is fixed
-    AV_DICT_SET_INT(opts, "bf", 0, 0);
+    //AV_DICT_SET_INT(opts, "bf", 0, 0);  //seems to be fixed
 
     return 0;
 }
@@ -257,7 +290,22 @@ static const codec_profile_class_t codec_profile_vaapi_hevc_class = {
     {
         .ic_super      = (idclass_t *)&codec_profile_vaapi_class,
         .ic_class      = "codec_profile_vaapi_hevc",
-        .ic_caption    = N_("vaapi_hevc")
+        .ic_caption    = N_("vaapi_hevc"),
+        .ic_properties = (const property_t[]){
+            {
+                .type     = PT_INT,
+                .id       = "tier",
+                .name     = N_("Tier"),
+                .desc     = N_("Set tier (general_tier_flag) [0=main 1=high]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, tier),
+                .intextra = INTEXTRA_RANGE(0, 1, 0),
+                .def.i    = 0,
+            },
+            {}
+        }
     },
     .open = (codec_profile_open_meth)tvh_codec_profile_vaapi_hevc_open,
 };
