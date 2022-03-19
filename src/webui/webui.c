@@ -336,7 +336,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   int run = 1, started = 0;
   streaming_queue_t *sq = &prch->prch_sq;
   muxer_t *mux = prch->prch_muxer;
-  int ptimeout, grace = 20, r;
+  /* int ptimeout, grace = 20, r; */
+  int ptimeout, grace = 600, r; /* kegbeach: set grace to 600 */
   struct timeval tp;
   streaming_start_t *ss_copy;
   int64_t lastpkt, mono;
@@ -352,8 +353,9 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     socket_set_dscp(hc->hc_fd, config.dscp, NULL, 0);
 
   lastpkt = mclk();
-  ptimeout = prch->prch_pro ? prch->prch_pro->pro_timeout : 5;
-
+  /* ptimeout = prch->prch_pro ? prch->prch_pro->pro_timeout : 5; */
+  ptimeout = prch->prch_pro ? prch->prch_pro->pro_timeout : 600; /* kegbeach: set ptimeout to 600 */
+	
   if (hc->hc_no_output) {
     tvh_mutex_lock(&sq->sq_mutex);
     sq->sq_maxsize = 100000;
@@ -410,7 +412,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       break;
 
     case SMT_START:
-      grace = 10;
+      /* grace = 10; */
+      grace = 600; /* kegbeach: set grace to 600 */
       if(!started) {
         tvhdebug(LS_WEBUI, "%s streaming %s",
                  hc->hc_no_output ? "Probe" : "Start", hc->hc_url_orig);
