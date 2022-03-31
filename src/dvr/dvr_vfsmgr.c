@@ -36,6 +36,7 @@ static int64_t dvr_disk_space_config_lastdelete;
 static int64_t dvr_bfree;
 static int64_t dvr_btotal;
 static int64_t dvr_bused;
+static int64_t last_clearedBytes;
 static tvh_mutex_t dvr_disk_space_mutex;
 static mtimer_t dvr_disk_space_timer;
 static tasklet_t dvr_disk_space_tasklet;
@@ -203,20 +204,21 @@ dvr_disk_space_cleanup(dvr_config_t *cfg, int include_active)
 
   dvfs = dvr_vfs_find(NULL, &fsid);
 
+  /* When deleting a file from the disk, the system needs some time to actually do this */
+  /* If calling this function too soon after the previous call, statvfs might be wrong/not updated yet */
+  /* Also our caller may be using outdated information */
+  /* Assume that the last call cleared enough space and return the same number of cleared bytes */
+  if (dvr_disk_space_config_lastdelete + sec2mono(10) > mclk()) {
+    tvhtrace(LS_DVR,"disk space cleanup called <10s after last call - returning same cleared byte count");
+    return last_clearedBytes;
+  }
+
   availBytes    = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
   requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
   diskBytes     = diskdata.f_frsize * (int64_t)diskdata.f_blocks;
   usedBytes     = dvfs->used_size;
   maximalBytes  = MIB(cfg->dvr_cleanup_threshold_used);
   configName    = cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile";
-
-  /* When deleting a file from the disk, the system needs some time to actually do this */
-  /* If calling this function to fast after the previous call, statvfs might be wrong/not updated yet */
-  /* So we are risking to delete more files than needed, so allow 10s for the system to handle previous deletes */
-  if (dvr_disk_space_config_lastdelete + sec2mono(10) > mclk()) {
-    tvhwarn(LS_DVR,"disk space cleanup for config \"%s\" is not allowed now", configName);
-    return -1;
-  }
 
   if (diskBytes < requiredBytes) {
     tvhwarn(LS_DVR,"disk space cleanup for config \"%s\", required free space \"%"PRId64" MiB\" is smaller than the total disk size!",
@@ -295,7 +297,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg, int include_active)
 finish:
   tvhtrace(LS_DVR, "disk space cleanup for config \"%s\", cleared \"%"PRId64" MB\" of disk space, new free disk space \"%"PRId64" MiB\", new used disk space \"%"PRId64" MiB\"",
            configName, TOMIB(clearedBytes), TOMIB(availBytes), TOMIB(usedBytes));
-
+  last_clearedBytes = clearedBytes;
   return clearedBytes;
 }
 
