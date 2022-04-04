@@ -666,7 +666,7 @@ void dvr_spawn_fetch_artwork(dvr_entry_t *de);
 void dvr_vfs_refresh_entry(dvr_entry_t *de);
 void dvr_vfs_remove_entry(dvr_entry_t *de);
 int64_t dvr_vfs_update_filename(const char *filename, htsmsg_t *fdata);
-int64_t dvr_vfs_rec_start_check(dvr_config_t *cfg);
+int dvr_vfs_rec_start_check(dvr_config_t *cfg);
 
 void dvr_disk_space_boot(void);
 void dvr_disk_space_init(void);

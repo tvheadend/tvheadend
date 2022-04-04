@@ -179,6 +179,7 @@ dvr_vfs_update_filename(const char *filename, htsmsg_t *fdata)
 /**
  * Cleanup old recordings for this config until the dvr_cleanup_threshold is reached
  * Only "Keep until space needed" recordings are deleted, starting with the oldest one
+ * Return -1 on failure, -2 if disk stats unstable (no action taken), otherwise number of bytes cleaned
  */
 static int64_t
 dvr_disk_space_cleanup(dvr_config_t *cfg, int include_active)
@@ -203,20 +204,20 @@ dvr_disk_space_cleanup(dvr_config_t *cfg, int include_active)
 
   dvfs = dvr_vfs_find(NULL, &fsid);
 
+  /* When deleting a file from the disk, the system needs some time to actually do this */
+  /* If calling this function too soon after the previous call, statvfs might be wrong/not updated yet */
+  /* So return a "disk stats unreliable" status */
+  if (dvr_disk_space_config_lastdelete + sec2mono(10) > mclk()) {
+    tvhtrace(LS_DVR,"disk space cleanup called <10s after last call - ignoring");
+    return -2;
+  }
+
   availBytes    = diskdata.f_frsize * (int64_t)diskdata.f_bavail;
   requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
   diskBytes     = diskdata.f_frsize * (int64_t)diskdata.f_blocks;
   usedBytes     = dvfs->used_size;
   maximalBytes  = MIB(cfg->dvr_cleanup_threshold_used);
   configName    = cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile";
-
-  /* When deleting a file from the disk, the system needs some time to actually do this */
-  /* If calling this function to fast after the previous call, statvfs might be wrong/not updated yet */
-  /* So we are risking to delete more files than needed, so allow 10s for the system to handle previous deletes */
-  if (dvr_disk_space_config_lastdelete + sec2mono(10) > mclk()) {
-    tvhwarn(LS_DVR,"disk space cleanup for config \"%s\" is not allowed now", configName);
-    return -1;
-  }
 
   if (diskBytes < requiredBytes) {
     tvhwarn(LS_DVR,"disk space cleanup for config \"%s\", required free space \"%"PRId64" MiB\" is smaller than the total disk size!",
@@ -445,10 +446,10 @@ dvr_get_disk_space_cb(void *aux)
 }
 
 /**
- * Returns the available disk space for a new recording.
- * If '0' (= below configured minimum), a new recording should not be started.
+ * Check the available disk space for a new recording.
+ * If '0' (= error or below configured minimum), a new recording should not be started.
  */
-int64_t
+int
 dvr_vfs_rec_start_check(dvr_config_t *cfg)
 {
   struct statvfs diskdata;
@@ -471,12 +472,16 @@ dvr_vfs_rec_start_check(dvr_config_t *cfg)
   if (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used)) {
     /* Not enough space to start recording, check if cleanup helps */
     cleanedBytes = dvr_disk_space_cleanup(cfg, 0);
+    if (cleanedBytes == -1)
+      return 0;
+    else if (cleanedBytes == -2)    // Disk stats may be unreliable, continue anyway
+      return 1;
     availBytes += cleanedBytes;
     usedBytes -= cleanedBytes;
     if (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used))
       return 0;
   }
-  return availBytes;
+  return 1;
 }
 
 /**
