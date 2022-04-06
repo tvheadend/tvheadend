@@ -616,7 +616,7 @@ sha256sum ( const char *str, int lowercase )
 char *
 sha512sum256 ( const char *str, int lowercase )
 {
-#if OPENSSL_VERSION_NUMBER >= 0x1010101fL
+#if OPENSSL_VERSION_NUMBER >= 0x1010101fL && !defined(LIBRESSL_VERSION_NUMBER)
   return openssl_hash_hexstr(str, lowercase, EVP_sha512_256(), 32);
 #else
   return NULL;
