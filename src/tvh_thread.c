@@ -463,6 +463,7 @@ static void tvh_thread_deadlock_write(htsbuf_queue_t *q)
     tvhdbg(LS_THREAD, "%s", s2);
   }
   if (fd != fd_stderr) close(fd);
+  free(s);
 }
 #endif
 
