@@ -1,7 +1,7 @@
 ![TVHeadend Logo](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/satip-icon120.png)
 Tvheadend
 ========================================
-(c) 2006 - 2021 Tvheadend Foundation CIC
+(c) 2006 - 2022 Tvheadend Foundation CIC
 
 Status
 ------
