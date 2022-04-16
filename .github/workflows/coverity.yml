@@ -34,13 +34,12 @@ jobs:
       run: |
         tar czvf tvheadend.tgz cov-int
         curl \
-          --form project=ruby \
           --form token=$TOKEN \
           --form email=$EMAIL \
           --form file=@tvheadend.tgz \
-          --form version=trunk \
+          --form version="`./build.linux/tvheadend -v | awk -F ' ' '{print $3}'`" \
           --form description="`./build.linux/tvheadend -v | awk -F ' ' '{print $3}'`" \
-          https://scan.coverity.com/builds?project=ruby
+          https://scan.coverity.com/builds?project=tvheadend%2Ftvheadend
       env:
         TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
         EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}
