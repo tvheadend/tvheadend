@@ -20,5 +20,6 @@ jobs:
       run: ./configure --disable-dvbcscan --disable-tvhcsa
     - uses: vapier/coverity-scan-action@v1
       with:
+        project: 'tvheadend/tvheadend'
         email: ${{ secrets.COVERITY_SCAN_EMAIL }}
         token: ${{ secrets.COVERITY_SCAN_TOKEN }}
