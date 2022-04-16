@@ -67,6 +67,8 @@ typedef struct tsfix {
   int tf_wait_for_video;
   int64_t tf_tsref;
   int64_t tf_start_time;
+  int64_t dts_offset;
+  int dts_offset_apply;
 
   struct th_pktref_queue tf_ptsq;
   struct th_pktref_queue tf_backlog;
@@ -235,7 +237,10 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   pkt->pkt_dts &= PTS_MASK;
 
   /* Subtract the transport wide start offset */
-  dts = pts_diff(ref, pkt->pkt_dts);
+  if (tf->dts_offset_apply)
+    dts = pts_diff(ref, pkt->pkt_dts + tf->dts_offset);
+  else
+    dts = pts_diff(ref, pkt->pkt_dts);
 
   if (tfs->tfs_last_dts_norm == PTS_UNSET) {
     if (dts < 0 || pkt->pkt_err) {
@@ -266,7 +271,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
         }
 	tfs->tfs_bad_dts++;
         if (tfs->tfs_bad_dts < 5) {
-	  tvherror(LS_TSFIX,
+	  tvhwarn(LS_TSFIX,
 		   "transport stream %s, DTS discontinuity. "
 		   "DTS = %" PRId64 ", last = %" PRId64,
 		   streaming_component_type2txt(tfs->tfs_type),
@@ -636,7 +641,6 @@ tsfix_input(void *opaque, streaming_message_t *sm)
     }
     tsfix_input_packet(tf, sm);
     return;
-
   case SMT_START:
     tsfix_stop(tf);
     tsfix_start(tf, sm->sm_data);
@@ -645,11 +649,22 @@ tsfix_input(void *opaque, streaming_message_t *sm)
       return;
     }
     break;
-
   case SMT_STOP:
     tsfix_stop(tf);
     break;
-
+  case SMT_TIMESHIFT_STATUS:
+    if(tf->dts_offset == PTS_UNSET) {
+      timeshift_status_t *status;
+      status = sm->sm_data;
+      tf->dts_offset = status->shift;
+    }
+    streaming_msg_free(sm);
+    return;
+  case SMT_SKIP:
+    if(tf->dts_offset != PTS_UNSET) {
+      tf->dts_offset_apply = 1;
+    }
+    break;
   case SMT_GRACE:
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
@@ -659,8 +674,6 @@ tsfix_input(void *opaque, streaming_message_t *sm)
   case SMT_NOSTART_WARN:
   case SMT_MPEGTS:
   case SMT_SPEED:
-  case SMT_SKIP:
-  case SMT_TIMESHIFT_STATUS:
     break;
   }
 
@@ -694,7 +707,7 @@ tsfix_create(streaming_target_t *output)
 
   tf->tf_output = output;
   tf->tf_start_time = mclk();
-
+  tf->dts_offset = PTS_UNSET;
   streaming_target_init(&tf->tf_input, &tsfix_input_ops, tf, 0);
   return &tf->tf_input;
 }

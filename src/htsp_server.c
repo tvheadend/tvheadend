@@ -50,7 +50,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 35
+#define HTSP_PROTO_VERSION 36
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -2520,10 +2520,14 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   profile_id = htsmsg_get_str(in, "profile");
 
 #if ENABLE_TIMESHIFT
-  if (timeshift_conf.enabled) {
-    timeshiftPeriod = htsmsg_get_u32_or_default(in, "timeshiftPeriod", 0);
-    if (!timeshift_conf.unlimited_period)
-      timeshiftPeriod = MIN(timeshiftPeriod, timeshift_conf.max_period * 60);
+  if(ch->ch_remote_timeshift) {
+    timeshiftPeriod = ~0;
+  } else {
+    if (timeshift_conf.enabled) {
+      timeshiftPeriod = htsmsg_get_u32_or_default(in, "timeshiftPeriod", 0);
+      if (!timeshift_conf.unlimited_period)
+        timeshiftPeriod = MIN(timeshiftPeriod, timeshift_conf.max_period * 60);
+    }
   }
 #endif
 
@@ -2541,18 +2545,24 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   streaming_target_init(&hs->hs_input, &htsp_streaming_input_ops, hs, 0);
 
 #if ENABLE_TIMESHIFT
-  if (timeshiftPeriod != 0) {
-    if (timeshiftPeriod == ~0)
-      tvhdebug(LS_HTSP, "using timeshift buffer (unlimited)");
-    else
-      tvhdebug(LS_HTSP, "using timeshift buffer (%u mins)", timeshiftPeriod / 60);
+  if (ch->ch_remote_timeshift) {
+    tvhdebug(LS_HTSP, "using remote timeshift (RTSP)");
+  } else {
+    if (timeshiftPeriod != 0) {
+      if (timeshiftPeriod == ~0)
+        tvhdebug(LS_HTSP, "using timeshift buffer (unlimited)");
+      else
+        tvhdebug(LS_HTSP, "using timeshift buffer (%u mins)",
+            timeshiftPeriod / 60);
+    }
   }
 #endif
 
   pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id,
                              "htsp", SUBSCRIPTION_PACKET | SUBSCRIPTION_HTSP);
   profile_chain_init(&hs->hs_prch, pro, ch, 1);
-  if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, 0)) {
+  if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, ch->ch_remote_timeshift ?
+      PROFILE_WORK_REMOTE_TS : PROFILE_WORK_NONE)) {
     tvherror(LS_HTSP, "unable to create profile chain '%s'", profile_get_name(pro));
     profile_chain_close(&hs->hs_prch);
     free(hs);
@@ -2576,8 +2586,12 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     htsmsg_add_u32(rep, "weight", hs->hs_s->ths_weight >= 0 ? hs->hs_s->ths_weight : 0);
 
 #if ENABLE_TIMESHIFT
-  if(timeshiftPeriod)
+  if (ch->ch_remote_timeshift) {
     htsmsg_add_u32(rep, "timeshiftPeriod", timeshiftPeriod);
+  } else {
+    if (timeshiftPeriod)
+      htsmsg_add_u32(rep, "timeshiftPeriod", timeshiftPeriod);
+  }
 #endif
 
   htsp_reply(htsp, in, rep);
@@ -4199,6 +4213,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
         htsmsg_add_u32(c, "channels", ssc->es_channels);
       if (ssc->es_sri)
         htsmsg_add_u32(c, "rate", ssc->es_sri);
+      htsmsg_add_u32(c, "rds_uecp", ssc->es_rds_uecp == 0 ? 0 : 1);
     }
 
     if (ssc->ssc_gh)

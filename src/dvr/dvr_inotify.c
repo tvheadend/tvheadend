@@ -442,7 +442,7 @@ void* _dvr_inotify_thread ( void *p )
     }
     // if unmatched "from", save in case matching "to" is coming in next read
     if (from) {
-      strcpy(from_prev, from);
+      strlcpy(from_prev, from, 255);
       fromfd_prev = fromfd;
       cookie_prev = cookie;
       tvhdebug(LS_DVR_INOTIFY, "i=%d len=%d cookie_prev=%d from_prev=%s fd=%d EOR", i, len, cookie_prev, from_prev, fromfd_prev);

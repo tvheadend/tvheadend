@@ -565,7 +565,8 @@ api_epg_episode_sorted(const struct epg_set *set,
     }
   }
 
-  tvh_qsort_r(bcast_entries, num_entries, sizeof(bcast_entry_t), api_epg_sort_by_time_t, 0);
+  if(bcast_entries != NULL)
+    tvh_qsort_r(bcast_entries, num_entries, sizeof(bcast_entry_t), api_epg_sort_by_time_t, 0);
 
   for (i=0; i<num_entries; ++i) {
     htsmsg_t *m = bcast_entries[i].m;
@@ -629,7 +630,7 @@ api_epg_related
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   uint32_t id, entries = 0;
-  htsmsg_t *l = htsmsg_create_list();
+  htsmsg_t *l;
   epg_broadcast_t *e;
   char *lang, *title_esc, *title_anchor;
   epg_set_t *serieslink = NULL;
@@ -637,6 +638,8 @@ api_epg_related
   
   if (htsmsg_get_u32(args, "eventId", &id))
     return EINVAL;
+
+  l = htsmsg_create_list();
 
   /* Main Job */
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));

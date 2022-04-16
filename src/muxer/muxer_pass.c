@@ -662,9 +662,10 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
         } else if (pid == DVB_EIT_PID) {
         
           dvb_table_parse(&pm->pm_eit, "-", tsb, l, 1, 0, pass_muxer_eit_cb);
-
+        }
+		
         /* PMT */
-        } else {
+        if (pid == pm->pm_pmt_pid) {
 
           dvb_table_parse(&pm->pm_pmt, "-", tsb, l, 1, 0, pass_muxer_pmt_cb);
 

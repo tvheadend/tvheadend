@@ -412,7 +412,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
         http_auth_header(&hdrs, realm,
                          config.http_auth_algo == HTTP_AUTH_ALGO_SHA256 ?
                            "SHA-256" :
-#if OPENSSL_VERSION_NUMBER >= 0x1010101fL
+#if OPENSSL_VERSION_NUMBER >= 0x1010101fL && !defined(LIBRESSL_VERSION_NUMBER)
                              "SHA-512-256",
 #else
                              "SHA-256",

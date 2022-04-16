@@ -94,42 +94,46 @@ static void *_epggrab_internal_thread( void *aux )
 {
   epggrab_module_t *mod;
   int err, confver;
-  struct timespec ts;
+  struct timespec cron_next, current_time;
   time_t t;
 
   confver   = epggrab_conf.int_initial ? -1 /* force first run */ : epggrab_confver;
 
   /* Setup timeout */
-  ts.tv_nsec = 0; 
-  ts.tv_sec  = time(NULL) + 120;
+  clock_gettime(CLOCK_REALTIME, &cron_next);
+  cron_next.tv_nsec = 0;
+  cron_next.tv_sec  += 120;
 
   /* Time for other jobs */
   while (atomic_get(&epggrab_running)) {
     tvh_mutex_lock(&epggrab_mutex);
     err = ETIMEDOUT;
     while (atomic_get(&epggrab_running)) {
-      err = tvh_cond_timedwait_ts(&epggrab_cond, &epggrab_mutex, &ts);
+      err = tvh_cond_timedwait_ts(&epggrab_cond, &epggrab_mutex, &cron_next);
       if (err == ETIMEDOUT) break;
     }
     tvh_mutex_unlock(&epggrab_mutex);
     if (err == ETIMEDOUT) break;
   }
 
-  time(&ts.tv_sec);
+  clock_gettime(CLOCK_REALTIME, &cron_next);
+  cron_next.tv_nsec = 0;
 
   while (atomic_get(&epggrab_running)) {
 
     /* Check for config change */
     tvh_mutex_lock(&epggrab_mutex);
     while (atomic_get(&epggrab_running) && confver == epggrab_confver) {
-      err = tvh_cond_timedwait_ts(&epggrab_cond, &epggrab_mutex, &ts);
+      err = tvh_cond_timedwait_ts(&epggrab_cond, &epggrab_mutex, &cron_next);
       if (err == ETIMEDOUT) break;
     }
     confver    = epggrab_confver;
-    if (!cron_multi_next(epggrab_cron_multi, time(NULL), &t))
-      ts.tv_sec = t;
+
+    clock_gettime(CLOCK_REALTIME, &current_time);
+    if (!cron_multi_next(epggrab_cron_multi, current_time.tv_sec, &t))
+      cron_next.tv_sec = t;
     else
-      ts.tv_sec += 60;
+      cron_next.tv_sec += 60;
     tvh_mutex_unlock(&epggrab_mutex);
 
     /* Run grabber(s) */

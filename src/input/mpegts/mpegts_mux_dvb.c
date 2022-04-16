@@ -530,6 +530,22 @@ const idclass_t dvb_mux_dvbs_class =
       .get      = dvb_mux_dvbs_class_orbital_get,
       .opts     = PO_ADVANCED | PO_RDONLY
     },
+    {
+      .type     = PT_U32,
+      .id       = "dvb_satip_dvbc_freq",
+      .name     = N_("SAT>IP DVB-C frequency (Hz)"),
+      .off      = offsetof(dvb_mux_t, mm_dvb_satip_dvbc_freq),
+      .desc     = N_("For example: 312000000. This frequency is 312Mhz."),
+      .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_U32,
+      .id       = "dvb_satip_dvbt_freq",
+      .name     = N_("SAT>IP DVB-T frequency (Hz)"),
+      .off      = offsetof(dvb_mux_t, mm_dvb_satip_dvbt_freq),
+      .desc     = N_("For example: 312000000. This frequency is 312Mhz."),
+      .opts     = PO_ADVANCED
+    },
     {}
   }
 };

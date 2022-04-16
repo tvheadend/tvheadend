@@ -248,6 +248,7 @@ dvb_psi_parse_pmt
   int position;
   int tt_position;
   int video_stream;
+  int rds_uecp;
   int pcr_shared = 0;
   const char *lang;
   uint8_t audio_type, audio_version;
@@ -309,6 +310,7 @@ dvb_psi_parse_pmt
     hts_stream_type = SCT_UNKNOWN;
     composition_id = -1;
     ancillary_id = -1;
+    rds_uecp = 0;
     position = 0;
     tt_position = 1000;
     lang = NULL;
@@ -437,6 +439,17 @@ dvb_psi_parse_pmt
           hts_stream_type = SCT_EAC3;
         break;
 
+      case DVB_DESC_ANCILLARY_DATA:
+        if(dlen < 1)
+          break;
+
+        if((ptr[0] & 0x40) == 0x40) /* ancillary_data_id : RDS via UECP */
+          rds_uecp = 1;
+
+        if(rds_uecp && hts_stream_type == SCT_UNKNOWN && estype == 0x89)
+          hts_stream_type = SCT_RDS;
+        break;
+
       default:
         break;
       }
@@ -502,6 +515,11 @@ dvb_psi_parse_pmt
         update |= PMT_UPDATE_ANCILLARY_ID;
       }
 
+      if(st->es_rds_uecp != rds_uecp) {
+        st->es_rds_uecp = rds_uecp;
+        update |= PMT_UPDATE_RDS_UECP;
+      }
+
       if (st->es_pid == set->set_pcr_pid)
         pcr_shared = 1;
     }
@@ -540,7 +558,7 @@ dvb_psi_parse_pmt
 
   if (update) {
     tvhdebug(mt->mt_subsys, "%s: Service \"%s\" PMT (version %d) updated"
-     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
      mt->mt_name,
      nicename, version,
      update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
@@ -558,6 +576,7 @@ dvb_psi_parse_pmt
      update&PMT_UPDATE_CA_PROVIDER_CHANGE? ", CA provider changed":"",
      update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
      update&PMT_UPDATE_CAID_PID          ? ", CAID PID changed":"",
+     update&PMT_UPDATE_RDS_UECP          ? ", RDS UECP flag changed":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
   }
 

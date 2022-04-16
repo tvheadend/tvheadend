@@ -1854,7 +1854,7 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
   /* If programme is recording (or completed) then it is the "best",
    * even if a better schedule is found after recording starts.
    */
-  if (old_de->de_sched_state != DVR_SCHEDULED)
+  if (old_de && old_de->de_sched_state != DVR_SCHEDULED)
     return 0;
 
   if (!old_de || !old_de->de_bcast) return 1;            /* Old broadcast should always exist */

@@ -2507,6 +2507,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
                "%s: No free adapter slot available for service \"%s\"",
                capmt_name(capmt), t->s_dvb_svcname);
       tvh_mutex_unlock(&capmt->capmt_mutex);
+      tvh_mutex_unlock(&t->s_stream_mutex);
       return;
     }
   }

@@ -115,7 +115,7 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
         return cfg;
       if (!res) {
         res = dvr_config_find_by_uuid(uuid2);
-        if (!res->dvr_enabled)
+        if (res != NULL && !res->dvr_enabled)
           res = NULL;
       }
     }

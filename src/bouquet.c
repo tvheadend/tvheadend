@@ -1198,7 +1198,7 @@ parse_enigma2(bouquet_t *bq, char *data)
       if (*data) { *data = '\0'; data++; }
       if (bq->bq_name == NULL || bq->bq_name[0] == '\0')
         bq->bq_name = strdup(p);
-    } if (strncmp(data, "#SERVICE ", 9) == 0) {
+    } else if (strncmp(data, "#SERVICE ", 9) == 0) {
       data += 9, p = data;
 service:
       while (*data && *data != '\r' && *data != '\n') data++;
@@ -1232,7 +1232,7 @@ next:
     while (*data && (*data == '\r' || *data == '\n')) data++;
   }
   bouquet_completed(bq, seen);
-  tvhinfo(LS_BOUQUET, "parsed Enigma%d bouquet %s (%d services)", ver, bq->bq_name, seen);
+  tvhinfo(LS_BOUQUET, "parsed Enigma%d bouquet %s (%u services)", ver, bq->bq_name, seen);
   return 0;
 }
 

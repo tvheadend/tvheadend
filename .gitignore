@@ -57,3 +57,5 @@ src/webui/static/intl
 Thumbs.db
 #Folder config file
 Desktop.ini
+#macOS files
+.DS_Store

@@ -72,13 +72,20 @@ iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int
   }
 
   return 0;
-}                                              
+}
 
 static int
 iptv_mux_url_set ( void *p, const void *v )
 {
   iptv_mux_t *im = p;
   return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 1, 1);
+}
+
+static int
+iptv_mux_ret_url_set ( void *p, const void *v )
+{
+  iptv_mux_t *im = p;
+  return iptv_url_set(&im->mm_iptv_ret_url, &im->mm_iptv_ret_url_sane, v, 0, 0);
 }
 
 #if ENABLE_LIBAV
@@ -123,6 +130,24 @@ const idclass_t iptv_mux_class =
       .off      = offsetof(iptv_mux_t, mm_iptv_url),
       .set      = iptv_mux_url_set,
       .opts     = PO_MULTILINE
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "iptv_send_reports",
+      .name     = N_("Send RTCP status reports"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_send_reports),
+      .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_ret_url",
+      .name     = N_("Retransmission URL"),
+      .desc     = N_("Manually setup a retransmission URL for Multicast streams."
+                     " For RTSP streams this URL is automatically setup"
+                     " if this value is not set."),
+      .off      = offsetof(iptv_mux_t, mm_iptv_ret_url),
+      .set      = iptv_mux_ret_url_set,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
@@ -305,6 +330,10 @@ iptv_mux_free ( mpegts_mux_t *mm )
   free(im->mm_iptv_url_sane);
   free(im->mm_iptv_url_raw);
   free(im->mm_iptv_url_cmpid);
+  free(im->mm_iptv_ret_url);
+  free(im->mm_iptv_ret_url_sane);
+  free(im->mm_iptv_ret_url_raw);
+  free(im->mm_iptv_ret_url_cmpid);
   free(im->mm_iptv_muxname);
   free(im->mm_iptv_interface);
   free(im->mm_iptv_svcname);

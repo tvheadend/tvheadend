@@ -19,6 +19,7 @@
 
 #include "tvheadend.h"
 #include "iptv_private.h"
+#include "iptv_rtcp.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -36,7 +37,7 @@ iptv_udp_start
   ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
 {
   udp_connection_t *conn;
-  udp_multirecv_t *um;
+  udp_multirecv_init(&im->im_um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
 
   /* Note: url->user is used for specifying multicast source address (SSM)
      here. The URL format is rtp://<srcaddr>@<grpaddr>:<port> */
@@ -47,13 +48,19 @@ iptv_udp_start
   if (conn == NULL)
     return -1;
 
-  /* Done */
   im->mm_iptv_fd         = conn->fd;
   im->mm_iptv_connection = conn;
 
-  um = calloc(1, sizeof(*um));
-  udp_multirecv_init(um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
-  im->im_data = um;
+  /* Setup the RTCP Retransmission connection when configured */
+  rtcp_init(&im->im_rtcp_info);
+  if(im->mm_iptv_ret_url && rtcp_connect(&im->im_rtcp_info, im->mm_iptv_ret_url,
+          NULL, 0, im->mm_iptv_interface, im->mm_nicename) == 0) {
+      im->im_use_retransmission = 1;
+      udp_multirecv_init(&im->im_rtcp_info.um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
+      sbuf_reset_and_alloc(&im->im_temp_buffer, IPTV_BUF_SIZE);
+  }
+
+  im->mm_iptv_rtp_seq = -1;
 
   iptv_input_mux_started(mi, im, 1);
   return 0;
@@ -63,12 +70,14 @@ static void
 iptv_udp_stop
   ( iptv_input_t *mi, iptv_mux_t *im )
 {
-  udp_multirecv_t *um = im->im_data;
-
   im->im_data = NULL;
   tvh_mutex_unlock(&iptv_lock);
-  udp_multirecv_free(um);
-  free(um);
+  udp_multirecv_free(&im->im_um);
+  if(&im->im_rtcp_info.um) {
+    udp_multirecv_free(&im->im_rtcp_info.um);
+  }
+  if(&im->im_temp_buffer)
+    sbuf_free(&im->im_temp_buffer);
   tvh_mutex_lock(&iptv_lock);
 }
 
@@ -77,10 +86,9 @@ iptv_udp_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
   int i, n;
   struct iovec *iovec;
-  udp_multirecv_t *um = im->im_data;
   ssize_t res = 0;
 
-  n = udp_multirecv_read(um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
+  n = udp_multirecv_read(&im->im_um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
   if (n < 0)
     return -1;
 
@@ -105,17 +113,33 @@ iptv_udp_read ( iptv_input_t *mi, iptv_mux_t *im )
 }
 
 ssize_t
-iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
-                void (*pkt_cb)(iptv_mux_t *im, uint8_t *pkt, int len) )
+iptv_rtp_read(iptv_mux_t *im, void (*pkt_cb)(iptv_mux_t *im, uint8_t *pkt, int len))
 {
   ssize_t len, hlen;
   uint8_t *rtp;
-  int i, n;
-  uint32_t seq, nseq, unc = 0;
+  int i, n = 0;
+  uint32_t seq, nseq, oseq, ssrc, unc = 0;
   struct iovec *iovec;
   ssize_t res = 0;
+  char is_ret_buffer = 0;
 
-  n = udp_multirecv_read(um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
+  if (im->im_use_retransmission) {
+    n = udp_multirecv_read(&im->im_rtcp_info.um, im->im_rtcp_info.connection_fd, IPTV_PKTS, &iovec);
+    if (n > 0 && !im->im_is_ce_detected) {
+      tvhwarn(LS_IPTV, "RET receiving %d unexpected packets for %s", n,
+          im->mm_nicename);
+    }
+    else if (n > 0) {
+      tvhtrace(LS_IPTV, "RET receiving %d packets for %s", n, im->mm_nicename);
+      is_ret_buffer = 1;
+      im->im_rtcp_info.ce_cnt -= n;
+      im->im_rtcp_info.last_received_sequence += n;
+    } else {
+      n = udp_multirecv_read(&im->im_um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
+    }
+  } else
+    n = udp_multirecv_read(&im->im_um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
+
   if (n < 0)
     return -1;
 
@@ -138,12 +162,16 @@ iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
     if ((rtp[0] & 0xC0) != 0x80)
       continue;
 
-    /* MPEG-TS */
-    if ((rtp[1] & 0x7F) != 33)
+    /* MPEG-TS or DynamicRTP */
+    if ((rtp[1] & 0x7F) != 33 && (rtp[1] & 0x7F) != 96)
       continue;
 
     /* Header length (4bytes per CSRC) */
     hlen = ((rtp[0] & 0xf) * 4) + 12;
+    if (is_ret_buffer) {
+      /* Skip OSN (original sequence number) field for RET packets */
+      hlen += 2;
+    }
     if (rtp[0] & 0x10) {
       if (len < hlen+4)
         continue;
@@ -155,18 +183,59 @@ iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
 
     len -= hlen;
 
-    /* Use uncorrectable value to notify RTP delivery issues */
     nseq = (rtp[2] << 8) | rtp[3];
-    if (seq == -1)
+    if (seq == -1 || nseq == 0)
       seq = nseq;
-    else if (((seq + 1) & 0xffff) != nseq) {
-      unc += (len / 188) * (uint32_t)((uint16_t)nseq-(uint16_t)(seq+1));
-      tvhtrace(LS_IPTV, "RTP discontinuity (%i != %i)", seq + 1, nseq);
+    /* Some sources will send the retransmission packets as part of the regular
+     * stream, we can only detect them by checking for the expected seqn. */
+    if (im->im_is_ce_detected && !is_ret_buffer && nseq == im->im_rtcp_info.last_received_sequence) {
+      is_ret_buffer = 1;
+      im->im_rtcp_info.ce_cnt --;
+      im->im_rtcp_info.last_received_sequence ++;
     }
-    seq = nseq;
 
-    /* Move data */
-    sbuf_append(&im->mm_iptv_buffer, rtp + hlen, len);
+    if (!is_ret_buffer) {
+      if(seq != nseq && ((seq + 1) & 0xffff) != nseq) {
+        unc += (len / 188)
+            * (uint32_t) ((uint16_t) nseq - (uint16_t) (seq + 1));
+        ssrc = (rtp[8] << 24) | (rtp[9] << 16) | (rtp[10] << 8) | rtp[11];
+      /* Use uncorrectable value to notify RTP delivery issues */
+        tvhwarn(LS_IPTV, "RTP discontinuity for %s SSRC: 0x%x (%i != %i)", im->mm_nicename,
+            ssrc, seq + 1, nseq);
+        if (im->im_use_retransmission && !im->im_is_ce_detected) {
+          im->im_is_ce_detected = 1;
+          rtcp_send_nak(&im->im_rtcp_info, ssrc, seq + 1, nseq - seq - 1);
+        }
+      }
+      seq = nseq;
+    }
+
+    if (im->im_is_ce_detected) {
+      /* Move data to RET buffer */
+      ssrc = (rtp[8] << 24) | (rtp[9] << 16) | (rtp[10] << 8) | rtp[11];
+      if (is_ret_buffer) {
+        oseq = (rtp[12] << 8) | rtp[13];
+        tvhtrace(LS_IPTV, "RTP RET received SEQ %i OSN %i for SSRC: 0x%x", nseq, oseq, ssrc);
+        sbuf_append(&im->mm_iptv_buffer, rtp + hlen, len);
+      } else
+        sbuf_append(&im->im_temp_buffer, rtp + hlen, len);
+      /* If we received all RET packets dump the temporary buffer back into the iptv buffer,
+       * or if it takes too long just continue as normal. RET packet rate can be a lot slower
+       * then the main stream so this can take some time. */
+      if(im->im_rtcp_info.ce_cnt > 0 && im->im_temp_buffer.sb_ptr > 1600 * IPTV_PKT_PAYLOAD) {
+        tvhwarn(LS_IPTV, "RTP RET waiting for packets timeout for SSRC: 0x%x", ssrc);
+        im->im_rtcp_info.ce_cnt = 0;
+      }
+      if(im->im_rtcp_info.ce_cnt <= 0) {
+        im->im_rtcp_info.ce_cnt = 0;
+        im->im_is_ce_detected = 0;
+        sbuf_append_from_sbuf(&im->mm_iptv_buffer, &im->im_temp_buffer);
+        sbuf_reset_and_alloc(&im->im_temp_buffer, IPTV_BUF_SIZE);
+      }
+    } else {
+      /* Move data */
+      sbuf_append(&im->mm_iptv_buffer, rtp + hlen, len);
+    }
     res += len;
   }
 
@@ -180,9 +249,7 @@ iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
 static ssize_t
 iptv_udp_rtp_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
-  udp_multirecv_t *um = im->im_data;
-
-  return iptv_rtp_read(im, um, NULL);
+  return iptv_rtp_read(im, NULL);
 }
 
 /*

@@ -75,6 +75,7 @@ OPTIONS=(
   "ddci:yes"
   "cclang_threadsan:no"
   "gperftools:no"
+  "execinfo:auto"
 )
 
 #
@@ -150,11 +151,23 @@ if [ ${PLATFORM} = "freebsd" ]; then
     # If we don't have libunwind then fallback to execinfo.
     if ! enabled libunwind
     then
-        check_cc_header execinfo
+        if enabled_or_auto execinfo; then
+            if check_cc_header execinfo; then
+                enable execinfo
+            else
+                die "execinfo.h not found (use --disable-execinfo)"
+           fi
+        fi
     fi
 
 else
-    check_cc_header execinfo
+    if enabled_or_auto execinfo; then
+        if check_cc_header execinfo; then
+            enable execinfo
+        else
+            die "execinfo.h not found (use --disable-execinfo)"
+        fi
+    fi
 fi
 check_cc_option mmx
 check_cc_option sse2
@@ -600,6 +613,7 @@ if enabled ffmpeg_static; then
     #check_cc_header nvEncodeAPI || \
     #  die "NVENC library (https://developer.nvidia.com/nvidia-video-codec-sdk) not found"
     enable nvenc
+    enable hwaccels
   else
     disable nvenc
   fi

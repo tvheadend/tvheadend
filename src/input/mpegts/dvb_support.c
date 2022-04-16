@@ -338,8 +338,6 @@ dvb_get_string
     break;
 
   case 0x1f: /* Described by encoding_type_id, TS 101 162 */
-    if (srclen < 1)
-      return -1;
     return -1; /* NYI */
 
   default:

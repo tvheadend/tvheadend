@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # Retrieve details for a movie from tmdb.
 #
 # This product uses the TMDb API but is not endorsed or certified by TMDb.

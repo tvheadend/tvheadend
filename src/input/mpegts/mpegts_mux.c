@@ -162,13 +162,13 @@ mpegts_mux_subscribe_linked
 
   tvhtrace(LS_MPEGTS, "subscribe linked");
 
+  if (!mi2)
+    return;
+  
   if (!mpegts_mux_keep_exists(mi) && (r = mpegts_mux_subscribe_keep(mm, mi))) {
     serr = "active1";
     goto fatal;
   }
-
-  if (!mi2)
-    return;
 
   if (mpegts_mux_keep_exists(mi2))
     return;

@@ -555,7 +555,8 @@ rtsp_manage_descramble(session_t *rs)
       used++;
     } else if (!idnode_set_exists(found, &s->s_id)) {
       rtsp_slave_remove(rs, master, s);
-      si--;
+      if(si)
+          si--;
     }
   }
 
@@ -648,6 +649,24 @@ rtsp_start
         }
       }
 #endif
+      if (idnode_is_instance(&mn->mn_id, &dvb_network_class)) {
+        LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link) {
+          if (rs->dmc.dmc_fe_type == DVB_TYPE_T &&
+              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbt_freq) < 2000)
+            break;
+          if (rs->dmc.dmc_fe_type == DVB_TYPE_C &&
+              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbc_freq) < 2000)
+            break;
+          if (rs->dmc.dmc_fe_type == DVB_TYPE_S &&
+              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbs_freq) < 2000)
+            break;
+          }
+        if (mux) {
+          dmc = rs->dmc;
+          rs->perm_lock = 1;
+          break;
+        }
+      }
     }
     if (mux == NULL && mn2 &&
         (rtsp_muxcnf == MUXCNF_AUTO || rtsp_muxcnf == MUXCNF_KEEP)) {
@@ -1138,12 +1157,12 @@ rtsp_parse_cmd
   mtype = mtype_to_tvh(hc);
   if (mtype == DVB_MOD_NONE) goto end;
 
-  src = 1;
+  src = http_arg_get(&hc->hc_req_args, "src") ?
+    atoi(http_arg_get_remove(&hc->hc_req_args, "src")) : 1;
+  if (src < 1) goto end;
 
   if (msys == DVB_SYS_DVBS || msys == DVB_SYS_DVBS2) {
 
-    src = atoi(http_arg_get_remove(&hc->hc_req_args, "src") ?: "0");
-    if (src < 1) goto end;
     pol = pol_to_tvh(hc);
     if (pol < 0) goto end;
     sr = atof(http_arg_get_remove(&hc->hc_req_args, "sr") ?: "0") * 1000;

@@ -941,6 +941,24 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
 }
 
 static int
+http_arg_contains(const char *arg, const char *val)
+{
+  char *a, *next, *p;
+  /* copy will be modified by strsep() */
+  a = strdup(arg);
+  for (next = p = a; p != NULL; p = strsep(&next, ",")) {
+    /* skip whitespace */
+    p += strspn(p, " \t\r\n");
+    if (strcasecmp(p, val) == 0) {
+      free(a);
+      return 1;
+    }
+  }
+  free(a);
+  return 0;
+}
+
+static int
 http_client_run0( http_client_t *hc )
 {
   char *buf, *saveptr, *argv[3], *d, *p;
@@ -1093,7 +1111,7 @@ header:
   }
   p = http_arg_get(&hc->hc_args, "Connection");
   if (p && ver != RTSP_VERSION_1_0) {
-    if (strcasecmp(p, "close") == 0 || strcasecmp(p, "upgrade") == 0) /* Some servers
+    if (http_arg_contains(p, "close") || http_arg_contains(p, "upgrade")) /* Some servers
       send the upgrade header to switch to http2 even though we did not request this.
       Assume that we can not keep alive the connection in that case */
       hc->hc_keepalive = 0;

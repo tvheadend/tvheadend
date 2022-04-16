@@ -299,6 +299,10 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
       l = f->hmf_bool ? 1 : 0;
       break;
 
+    case HMF_UUID:
+      l = UUID_BIN_SIZE;
+      break;
+
     default:
       abort();
     }
@@ -339,6 +343,10 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
     case HMF_BOOL:
       if (f->hmf_bool)
         ptr[0] = 1;
+      break;
+		    
+    case HMF_UUID:
+      memcpy(ptr, f->hmf_uuid, UUID_BIN_SIZE);
       break;
     }
     ptr += l;

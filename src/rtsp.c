@@ -37,7 +37,7 @@ rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
                 (hc->hc_port != 554 ? 7 : 0) +
                 (path ? strlen(path) : 1) + 1;
   char *buf = alloca(blen);
-  char buf2[11];
+  char buf2[64];
   char buf_body[size + 3];
 
   if (hc->hc_rtsp_session) {
@@ -118,11 +118,6 @@ rtsp_setup_decode( http_client_t *hc, int satip )
   char *argv[32], *argv2[2], *p;
   int i, n, j;
 
-#if 0
-  { http_arg_t *ra;
-  TAILQ_FOREACH(ra, &hc->hc_args, link)
-    printf("  %s: %s\n", ra->key, ra->val); }
-#endif
   rtsp_clear_session(hc);
   if (hc->hc_code != 200)
     return -EIO;
@@ -186,7 +181,8 @@ rtsp_setup_decode( http_client_t *hc, int satip )
       }
     }
   } else if (!strcasecmp(argv[0], "RTP/AVP") ||
-             !strcasecmp(argv[0], "RTP/AVP/UDP")) {
+             !strcasecmp(argv[0], "RTP/AVP/UDP") ||
+             !strcasecmp(argv[0], "RTP/AVPF/UDP")) {
     if (n < 3)
       return -EIO;
     hc->hc_rtp_multicast = strcasecmp(argv[1], "multicast") == 0;
@@ -228,6 +224,28 @@ rtsp_setup_decode( http_client_t *hc, int satip )
 }
 
 int
+rtsp_play_decode( http_client_t *hc )
+{
+  char *argv[32], *p;
+  int n;
+
+  if (hc->hc_code != 200)
+    return -EIO;
+  p = http_arg_get(&hc->hc_args, "Range");
+  if (p == NULL)
+    return -EIO;
+  n = http_tokenize(p, argv, 32, '=');
+  if (n < 1 || strncmp(argv[0], "npt", 3))
+    return -EIO;
+  hc->hc_rtsp_stream_start = strtoumax(argv[1], NULL, 10);
+  p = http_arg_get(&hc->hc_args, "Scale");
+  if (p == NULL)
+    return -EIO;
+  hc->hc_rtsp_scale = strtof(p, NULL);
+  return 0;
+}
+
+int
 rtsp_setup( http_client_t *hc,
             const char *path, const char *query,
             const char *multicast_addr,
@@ -243,6 +261,9 @@ rtsp_setup( http_client_t *hc,
     snprintf(transport, sizeof(transport),
       "RTP/AVP;multicast;destination=%s;ttl=1;client_port=%i-%i",
       multicast_addr, rtp_port, rtcp_port);
+  } else if(hc->hc_rtp_avpf) {
+    snprintf(transport, sizeof(transport),
+      "RTP/AVPF/UDP;unicast;client_port=%i-%i", rtp_port, rtcp_port);
   } else {
     snprintf(transport, sizeof(transport),
       "RTP/AVP;unicast;client_port=%i-%i", rtp_port, rtcp_port);
@@ -253,16 +274,36 @@ rtsp_setup( http_client_t *hc,
   return rtsp_send(hc, RTSP_CMD_SETUP, path, query, &h);
 }
 
-int
-rtsp_describe_decode( http_client_t *hc )
-{
-  http_arg_t *ra;  
+int rtsp_describe_decode(http_client_t *hc, const char *buf, size_t len) {
+  const char *p;
+  char transport[64];
+  int n, t, transport_type;
 
-  /* TODO: Probably rewrite the data to the htsmsg tree ? */
-  printf("describe: %i\n", hc->hc_code);
-  TAILQ_FOREACH(ra, &hc->hc_args, link)
-    printf("  %s: %s\n", ra->key, ra->val);
-  printf("data:\n%s\n",    hc->hc_data);
+  p = http_arg_get(&hc->hc_args, "Content-Type");
+  if (p == NULL || strncmp(p, "application/sdp", 15)) {
+    tvhwarn(LS_RTSP, "describe: unkwown response content");
+    return -EIO;
+  }
+  for (n = 0; n < len; n++) {
+    p = buf + n;
+    if (strncmp(p, "a=range", 7) == 0) {
+      // Parse remote timeshift buffer info
+      if (strncmp(p + 8, "npt=", 4) == 0) {
+        sscanf(p + 8, "npt=%" PRItime_t "-%" PRItime_t, &hc->hc_rtsp_range_start,
+            &hc->hc_rtsp_range_end);
+      }
+    }
+    if (strncmp(p, "m=video", 7) == 0) {
+      // Parse and select RTP/AVPF stream if available for retransmission support
+      if (sscanf(p, "m=video %d %s %d\n", &t, transport, &transport_type) == 3) {
+        tvhtrace(LS_RTSP, "describe: found transport: %d %s %d", t, transport,
+            transport_type);
+        if (strncmp(transport, "RTP/AVPF", 8) == 0) {
+          hc->hc_rtp_avpf = 1;
+        }
+      }
+    }
+  }
   return HTTP_CON_OK;
 }
 
@@ -272,4 +313,24 @@ rtsp_get_parameter( http_client_t *hc, const char *parameter ) {
   http_arg_init(&hdr);
   http_arg_set(&hdr, "Content-Type", "text/parameters");
   return rtsp_send_ext(hc, RTSP_CMD_GET_PARAMETER, NULL, NULL, &hdr, parameter, strlen(parameter));
+}
+
+int
+rtsp_set_speed( http_client_t *hc, float speed ) {
+  char buf[64];
+  http_arg_list_t h;
+  http_arg_init(&h);
+  snprintf(buf, sizeof(buf), "%.2f", speed);
+  http_arg_set(&h, "Scale", buf);
+  return rtsp_send(hc, RTSP_CMD_PLAY, NULL, NULL, &h);
+}
+
+int
+rtsp_set_position( http_client_t *hc, time_t position ) {
+  char buf[64];
+  http_arg_list_t h;
+  http_arg_init(&h);
+  snprintf(buf, sizeof(buf), "npt=%" PRItime_t "-", position);
+  http_arg_set(&h, "Range", buf);
+  return rtsp_send(hc, RTSP_CMD_PLAY, NULL, NULL, &h);
 }

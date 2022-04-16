@@ -132,9 +132,9 @@ scanfile_load_atsc ( dvb_mux_conf_t *mux, const char *line )
   char qam[20];
   int r;
 
+  dvb_mux_conf_init(NULL, mux, DVB_SYS_ATSC);
   r = sscanf(line, "%u %s", &mux->dmc_fe_freq, qam);
   if (r != 2) return 1;
-  dvb_mux_conf_init(NULL, mux, DVB_SYS_ATSC);
   if ((mux->dmc_fe_modulation = dvb_str2qam(qam)) == -1) return 1;
 
   return 0;
@@ -331,11 +331,12 @@ scanfile_create_network
 {
   scanfile_region_t *reg = NULL;
   scanfile_network_t *net;
-  char buf[270], buf2[263], buf3[270], *str;
+  char *buf, *buf2, *buf3, *str;
   int opos;
 
   /* Region */
-  strlcpy(buf, name, sizeof(buf));
+  buf = malloc(strlen(name) + 1);
+  strcpy(buf, name);
   if (!strcmp(type, "dvb-s")) {
     reg = scanfile_region_create(type, "geo", "Geo-synchronous Orbit");
   } else {
@@ -352,8 +353,10 @@ scanfile_create_network
       str++;
     }
   }
-  if (!reg)
+  if (!reg) {
+    free(buf);
     return -1;
+  }
 
   /* Network */
   str = buf;
@@ -364,12 +367,21 @@ scanfile_create_network
   *str = '\0';
   opos = INT_MAX;
   if (!strcmp(type, "dvb-s") && scanfile_network_dvbs_pos(buf, &opos)) {
-    snprintf(buf3, sizeof(buf3), "%c%3i.%i%c:%s", opos < 0 ? '<' : '>',
+    int sizeneeded = snprintf(NULL, 0, "%c%3i.%i%c:%s", opos < 0 ? '<' : '>',
                                                    abs(opos) / 10, abs(opos) % 10,
                                                    opos < 0 ? 'W' :'E', buf);
-    strcpy(buf, buf3);
+
+    buf3 = malloc(sizeneeded + 1);
+
+    snprintf(buf3, sizeneeded, "%c%3i.%i%c:%s", opos < 0 ? '<' : '>',
+                                                   abs(opos) / 10, abs(opos) % 10,
+                                                   opos < 0 ? 'W' :'E', buf);
+    free(buf);
+    buf = buf3;
   }
-  snprintf(buf2, sizeof(buf2), "%s_%s", type, buf);
+  int sizeneeded = snprintf(NULL, 0, "%s_%s", type, buf);
+  buf2 = malloc(sizeneeded + 1);
+  snprintf(buf2, sizeneeded, "%s_%s", type, buf);
   net = calloc(1, sizeof(scanfile_network_t));
   memoryinfo_alloc(&scanfile_memoryinfo, sizeof(*net) + strlen(buf2) + 1 + strlen(buf) + 1 +
                                                         strlen(path) + 1 + strlen(type) + 1);
@@ -379,6 +391,9 @@ scanfile_create_network
   net->sfn_type = strdup(type);
   net->sfn_satpos = opos;
   LIST_INSERT_SORTED(&reg->sfr_networks, net, sfn_link, scanfile_network_cmp);
+
+  free(buf);
+  free(buf2);
 
   *_net = net;
   return 0;

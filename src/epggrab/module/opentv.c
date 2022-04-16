@@ -140,6 +140,7 @@ typedef struct opentv_event
   char                  *desc;        ///< Event description
   uint8_t                cat;         ///< Event category
   uint16_t               serieslink;  ///< Series link ID
+  int                    cid;         ///< Channel ID
 } opentv_event_t;
 
 /* Queued (unresolved) event entry */
@@ -202,20 +203,28 @@ static void _opentv_event_free(opentv_event_t *ev)
   free(ev->desc);
 }
 
-/* Compare event id codes */
+/* Compare event id and channel id codes */
 static int _entry_cmp ( void *a, void *b )
 {
-  return (int)(((opentv_entry_t*)a)->event.eid) -
-         (int)(((opentv_entry_t*)b)->event.eid);
+  int eid_cmp, cid_cmp;
+
+  eid_cmp = (int)(((opentv_entry_t*)a)->event.eid) -
+            (int)(((opentv_entry_t*)b)->event.eid);
+
+  cid_cmp = ((opentv_entry_t*)a)->event.cid -
+            ((opentv_entry_t*)b)->event.cid;
+
+  return eid_cmp != 0 ? eid_cmp : cid_cmp;
 }
 
 /* Find event entry */
-static opentv_entry_t *opentv_find_entry(opentv_status_t *sta, uint16_t eid)
+static opentv_entry_t *opentv_find_entry(opentv_status_t *sta, uint16_t eid, int cid)
 {
   opentv_entry_t *oe, _tmp;
 
   if (sta == NULL) return NULL;
   _tmp.event.eid = eid;
+  _tmp.event.cid = cid;
   oe = RB_FIND(&sta->os_entries, &_tmp, link, _entry_cmp);
   return oe;
 }
@@ -341,6 +350,7 @@ static int _opentv_parse_event
   }
 
   ev->eid = ((uint16_t)buf[0] << 8) | buf[1];
+  ev->cid = cid;
 
   /* Process records */ 
   while (i < slen+4) {
@@ -486,12 +496,12 @@ opentv_parse_event_section_one
       ebc = epg_broadcast_find_by_time(ch, src, ev.start, ev.stop,
                                        1, &save, &changes);
       tvhdebug(LS_OPENTV, "find by time start %"PRItime_t " stop "
-               "%"PRItime_t " eid %d = %p",
-               ev.start, ev.stop, ev.eid, ebc);
+               "%"PRItime_t " ch %"PRId64" eid %d = %p",
+               ev.start, ev.stop, ch->ch_number, ev.eid, ebc);
       save |= epg_broadcast_set_dvb_eid(ebc, ev.eid, &changes);
     } else {
       ebc = epg_broadcast_find_by_eid(ch, ev.eid);
-      tvhdebug(LS_OPENTV, "find by eid %d = %p", ev.eid, ebc);
+      tvhdebug(LS_OPENTV, "find by ch %"PRId64" eid %d = %p", ch->ch_number, ev.eid, ebc);
       if (ebc) {
         if (ebc->grabber != src)
           goto done;
@@ -503,10 +513,12 @@ opentv_parse_event_section_one
     if (ebc) {
       save |= opentv_do_event(mod, ebc, &ev, ch, lang, &changes);
       if (!merge) {
-        entry = opentv_find_entry(mod->sta, ev.eid);
+        entry = opentv_find_entry(mod->sta, ev.eid, cid);
         if (entry) {
           save |= opentv_do_event(mod, ebc, &entry->event, ch, lang, &changes);
           opentv_remove_entry(mod->sta, entry);
+        } else {
+          merge = 1;
         }
       }
       save |= epg_broadcast_change_finish(ebc, changes, merge);
