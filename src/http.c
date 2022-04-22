@@ -370,7 +370,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     if (config.cors_origin && config.cors_origin[0]) {
       htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n%s%s%s", config.cors_origin,
                             "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n",
-                            "Access-Control-Allow-Headers: x-requested-with,authorization\r\n",
+                            "Access-Control-Allow-Headers: x-requested-with,authorization,content-type\r\n",
                             "Access-Control-Allow-Credentials: true\r\n");
     }
   }
