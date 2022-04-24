@@ -182,9 +182,11 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "sudo"
       ],
       "buildcmd": [
+        "sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt",
       ]
@@ -209,15 +211,71 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "sudo"
       ],
       "buildcmd": [
+        "sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt",
       ]
     },
     "focal-amd64": {
       "buildenv": "docker:ubuntu:focal",
+      "builddeps": [
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre2-dev",
+        "libdvbcsa-dev",
+        "python3",
+        "python3-requests",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "python3 support/bintray.py publish filelist.txt",
+      ]
+    },
+    "jammy-amd64": {
+      "buildenv": "docker:ubuntu:jammy",
+      "builddeps": [
+        "cmake",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libpcre2-dev",
+        "libdvbcsa-dev",
+        "python3",
+        "python3-requests",
+        "debhelper",
+        "ccache"
+      ],
+      "buildcmd": [
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "python3 support/bintray.py publish filelist.txt",
+      ]
+    },
+    "jammy-i386": {
+      "buildenv": "docker:i386/ubuntu:jammy",
       "builddeps": [
         "cmake",
         "git",
@@ -265,9 +323,10 @@
         "python-requests",
         "debhelper",
         "ccache",
-        "sudo",
+        "sudo"
       ],
       "buildcmd": [
+        "sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y",
         "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/1.26.6/src/urllib3/contrib/pyopenssl.py",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --nowerror ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
@@ -298,6 +357,7 @@
         "sudo",
       ],
       "buildcmd": [
+        "sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y",
         "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/1.26.6/src/urllib3/contrib/pyopenssl.py",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --nowerror ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
@@ -324,9 +384,11 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "sudo"
       ],
       "buildcmd": [
+        "sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
@@ -352,9 +414,11 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "sudo"
       ],
       "buildcmd": [
+        "sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y",
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
         "support/bintray.py publish filelist.txt"
       ]
