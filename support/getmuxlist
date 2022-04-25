@@ -5,9 +5,7 @@
 
 # Arguments
 [ -z "$BRANCH" ] && BRANCH=tvheadend
-URL_SCHEME=https
-[ ! -z "$DOOZER_JOBID" ] && URL_SCHEME=https
-[ -z "$URL" ] && URL=${URL_SCHEME}://github.com/tvheadend/dtv-scan-tables.git
+[ -z "$URL" ] && URL=https://github.com/tvheadend/dtv-scan-tables.git
 DIR="$1" && [ -z "$DIR" ] && DIR=$(dirname "$0")/../data/dvb-scan
 
 # Update
