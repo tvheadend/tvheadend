@@ -1,26 +1,38 @@
-name: Build Tvheadend CI
+name: Build Tvheadend Repo
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
     branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-  build:
-
+ build-raspberry:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        arch: [armv6l, armv7l, aarch64]
+        include:
+        - arch: armv6l
+          cpu: arm1176
+          base_image: raspios_lite:latest
+          cpu_info: raspberrypi_zero_w
+        - arch: armv7l
+          cpu: cortex-a7
+          base_image: raspios_lite:latest
+          cpu_info: raspberrypi_3b
+        - arch: aarch64
+          cpu: cortex-a53
+          base_image: raspios_lite_arm64:latest
+          cpu_info: raspberrypi_zero2_w_arm64_w
     steps:
-    - uses: actions/checkout@v3
+    - uses: pguyot/arm-runner-action@v2
       with:
-        fetch-depth: 0
-    - name: dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
-    - name: build
-      run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+        base_image: ${{ matrix.base_image }}
+        cpu: ${{ matrix.cpu }}
+        cpu_info: ${{ matrix.cpu_info }}
+        commands: |
+          sudo apt-get update
+          sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
+          AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
