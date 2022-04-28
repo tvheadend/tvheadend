@@ -29,8 +29,6 @@ jobs:
           base_image: raspios_lite_arm64:latest
           cpu_info: raspberrypi_zero2_w_arm64_w
     steps:
-    - name: Setup git
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
@@ -67,8 +65,6 @@ jobs:
            distro: jessie
 
     steps:
-      - name: Setup git
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -123,16 +119,15 @@ jobs:
           run: |
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
 
-  build-deb-amd64:
+  build-deb-native:
     runs-on: ubuntu-latest
+    name: Build on native ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["ubuntu:bionic"]
+        container: ["ubuntu:bionic", "ubuntu:focal", "ubuntu:impish", "ubuntu:jammy", "ubuntu:trusty", "ubuntu:xenial"]
     container:
       image: ${{ matrix.container }}
     steps:
-      - name: Setup git
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
