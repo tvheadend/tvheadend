@@ -29,6 +29,11 @@ jobs:
           base_image: raspios_lite_arm64:latest
           cpu_info: raspberrypi_zero2_w_arm64_w
     steps:
+    - name: Setup git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - uses: pguyot/arm-runner-action@v2
       with:
         base_image: ${{ matrix.base_image }}
@@ -62,6 +67,8 @@ jobs:
            distro: jessie
 
     steps:
+      - name: Setup git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -124,6 +131,8 @@ jobs:
     container:
       image: ${{ matrix.container }}
     steps:
+      - name: Setup git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
