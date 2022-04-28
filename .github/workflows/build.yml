@@ -47,8 +47,8 @@ jobs:
     # Run steps on a matrix
     strategy:
       matrix:
-       - arch: [ armv7, aarch64]
-       - distro: [ stretch, buster, bullseye, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04 ]
+       arch: [ armv7, aarch64]
+       distro: [ stretch, buster, bullseye, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04 ]
        include:
          - arch: armv6
            distro: jessie
