@@ -101,7 +101,7 @@ jobs:
           # publicly in your project's package repository, so it is vital that
           # no secrets are present in the container state or logs.
           install: |
-            (( "${{ matrix.distro }}" == "jessie")); then sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list; fi
+            if (( "${{ matrix.distro }}" == "jessie")); then sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list; fi
             case "${{ matrix.distro }}" in
               ubuntu*|jessie|stretch|buster|bullseye)
                 apt-get update -y
