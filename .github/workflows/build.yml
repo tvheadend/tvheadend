@@ -101,10 +101,8 @@ jobs:
           # publicly in your project's package repository, so it is vital that
           # no secrets are present in the container state or logs.
           install: |
+            (( ${{ matrix.distro }} == "jessie")); then sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list; fi
             case "${{ matrix.distro }}" in
-              jessie)
-                sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list
-                ;&
               ubuntu*|jessie|stretch|buster|bullseye)
                 apt-get update -y
                 apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
@@ -136,6 +134,8 @@ jobs:
     steps:
       - name: Add git ppa
         run: |
+          apt-get update -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
           add-apt-repository ppa:git-core/ppa -y
       - name: dependencies
         run: |
