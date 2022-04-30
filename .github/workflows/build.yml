@@ -39,7 +39,7 @@ jobs:
         cpu_info: ${{ matrix.cpu_info }}
         image_additional_mb: 10000
         commands: |
-          sudo apt-get update
+          sudo apt-get update -y
           sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
           AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
 
@@ -102,9 +102,12 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             case "${{ matrix.distro }}" in
+              jessie)
+                sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list
+                ;;&
               ubuntu*|jessie|stretch|buster|bullseye)
-                apt-get update -q -y
-                apt-get install -q -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
+                apt-get update -y
+                apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
                 ;;
               fedora*)
                 dnf -y update
@@ -118,6 +121,7 @@ jobs:
 
           # Produce a binary artifact
           run: |
+            git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
 
   build-deb-native:
@@ -130,10 +134,18 @@ jobs:
     container:
       image: ${{ matrix.container }}
     steps:
+      - name: Add git ppa
+        run: |
+          apt-get update -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y add-apt-repository
+          add-apt-repository ppa:git-core/ppa -y
       - name: dependencies
         run: |
-          apt-get update
-          apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
+          apt-get update -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache
+      - name: pcre-dependency
+        run: |
+          DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
