@@ -351,11 +351,6 @@ Ext.ux.ItemSelector = Ext.extend(Ext.form.Field,  {
 		var tb = p.body.first();
 		this.el.setWidth(p.body.first().getWidth());
 		p.body.removeClass();
-		
-		this.hiddenName = this.name;
-		var hiddenTag={tag: "input", type: "hidden", value: "", name:this.name};
-		this.hiddenField = this.el.createChild(hiddenTag);
-		this.valueChanged(this.toStore);
 	},
 	
 	initValue:Ext.emptyFn,
@@ -502,12 +497,16 @@ Ext.ux.ItemSelector = Ext.extend(Ext.form.Field,  {
 			record = store.getAt(i);
 			values.push(record.get(this.valueField));
 		}
-		this.hiddenField.dom.value = values.join(this.delimiter);
-		this.fireEvent('change', this, this.getValue(), this.hiddenField.dom.value);
+		this.value = values;
+		this.fireEvent('change', this, this.getValue(), this.value);
 	},
 	
 	getValue : function() {
-		return this.hiddenField.dom.value;
+		return this.value;
+	},
+
+	setValue: function(values) {
+		return null;
 	},
 	
 	onRowDblClick : function(vw, index, node, e) {

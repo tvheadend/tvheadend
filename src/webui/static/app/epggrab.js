@@ -1,398 +1,101 @@
-tvheadend.epggrabChannels = new Ext.data.JsonStore({
-    root: 'entries',
-    url: 'epggrab',
-    baseParams: {
-        op: 'channelList'
-    },
-    fields: ['id', 'mod', 'name', 'icon', 'number', 'channel', 'mod-id',
-        'mod-name']
-});
-
-tvheadend.epggrab = function(panel, index) {
-
-    /* ****************************************************************
-     * Data
-     * ***************************************************************/
-
-    /*
-     * Module lists (I'm sure there is a better way!)
-     */
-    var EPGGRAB_MODULE_INTERNAL = "internal";
-    var EPGGRAB_MODULE_EXTERNAL = "external";
-    var EPGGRAB_MODULE_OTA = "ota";
-
-    var moduleStore = new Ext.data.JsonStore({
-        root: 'entries',
-        url: 'epggrab',
-        baseParams: {
-            op: 'moduleList'
+tvheadend.epggrab_rerun_button = function() {
+    return {
+        name: 'trigger',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                text: _("Re-run Internal EPG Grabbers"),
+                tooltip: _('Re-run all internal EPG grabbers to import EPG data now'),
+                iconCls: 'find',
+            });
         },
-        autoLoad: true,
-        fields: ['id', 'name', 'path', 'type', 'enabled']
-    });
-    var internalModuleStore = new Ext.data.Store({
-        recordType: moduleStore.recordType
-    });
-    var externalModuleStore = new Ext.data.Store({
-        recordType: moduleStore.recordType
-    });
-    var otaModuleStore = new Ext.data.Store({
-        recordType: moduleStore.recordType
-    });
-    moduleStore.on('load', function() {
-        moduleStore.filterBy(function(r) {
-            return r.get('type') === EPGGRAB_MODULE_INTERNAL;
-        });
-        r = new internalModuleStore.recordType({
-            id: '',
-            name: 'Disabled'
-        });
-        internalModuleStore.add(r);
-        moduleStore.each(function(r) {
-            internalModuleStore.add(r.copy());
-        });
-        moduleStore.filterBy(function(r) {
-            return r.get('type') === EPGGRAB_MODULE_EXTERNAL;
-        });
-        moduleStore.each(function(r) {
-            externalModuleStore.add(r.copy());
-        });
-        moduleStore.filterBy(function(r) {
-            return r.get('type') === EPGGRAB_MODULE_OTA;
-        });
-        moduleStore.each(function(r) {
-            otaModuleStore.add(r.copy());
-        });
-        moduleStore.filterBy(function(r) {
-            return r.get('type') !== EPGGRAB_MODULE_INTERNAL;
-        });
+        callback: function(conf) {
+            tvheadend.Ajax({
+               url: 'api/epggrab/internal/rerun',
+               params: { rerun: 1 },
+            });
+        }
+    };
+}
+
+tvheadend.epggrab_base = function(panel, index) {
+
+    var triggerButton = {
+        name: 'trigger',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                text: _("Trigger OTA EPG Grabber"),
+                tooltip: _('Tune to the over-the-air EPG muxes to grab new events now'),
+                iconCls: 'find',
+            });
+        },
+        callback: function(conf) {
+            tvheadend.Ajax({
+               url: 'api/epggrab/ota/trigger',
+               params: { trigger: 1 },
+            });
+        }
+    };
+
+    tvheadend.idnode_simple(panel, {
+        url: 'api/epggrab/config',
+        title: _('EPG Grabber'),
+        iconCls: 'baseconf',
+        comet: 'epggrab',
+        tabIndex: index,
+        width: 550,
+        labelWidth: 200,
+        tbar: [triggerButton, tvheadend.epggrab_rerun_button()]
     });
 
-    /* Enable module in one of the stores (will auto update primary) */
-    function moduleSelect(r, e) {
-        r.set('enabled', e);
-        t = moduleStore.getById(r.id);
-        if (t)
-            t.set('enabled', e);
-    }
+}
 
-    /*
-     * Basic Config
-     */
+tvheadend.epggrab_map = function(panel, index) {
 
-    var confreader = new Ext.data.JsonReader({
-        root: 'epggrabSettings'
-    }, ['module', 'cron', 'channel_rename', 'channel_renumber',
-        'channel_reicon', 'epgdb_periodicsave',
-        'ota_cron', 'ota_timeout', 'ota_initial']);
-
-    /* ****************************************************************
-     * Basic Fields
-     * ***************************************************************/
-
-    /*
-     * Cron setup
-     */
-    var internalCron = new Ext.form.TextArea({
-        fieldLabel: 'Cron multi-line',
-        name: 'cron',
-        width: 300,
-    });
-
-    /*
-     * Module selector
-     */
-    var internalModule = new Ext.form.ComboBox({
-        fieldLabel: 'Module',
-        hiddenName: 'module',
-        width: 300,
-        valueField: 'id',
-        displayField: 'name',
-        forceSelection: true,
-        editable: false,
-        mode: 'local',
-        triggerAction: 'all',
-        store: internalModuleStore
-    });
-
-    /*
-     * Channel handling
-     */
-    var channelRename = new Ext.form.Checkbox({
-        name: 'channel_rename',
-        fieldLabel: 'Update channel name'
-    });
-
-    var channelRenumber = new Ext.form.Checkbox({
-        name: 'channel_renumber',
-        fieldLabel: 'Update channel number'
-    });
-
-    var channelReicon = new Ext.form.Checkbox({
-        name: 'channel_reicon',
-        fieldLabel: 'Update channel icon'
-    });
-
-    var epgPeriodicSave = new Ext.form.NumberField({
-        width: 30,
-        allowNegative: false,
-        allowDecimals: false,
-        minValue: 0,
-        maxValue: 24,
-        value: 0,
-        fieldLabel: 'Periodic save EPG to disk',
-        name: 'epgdb_periodicsave'
-    });
-
-    /*
-     * Simple fields
-     */
-    var simplePanel = new Ext.form.FieldSet({
-        title: 'General Config',
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        items: [channelRename, channelRenumber, channelReicon, epgPeriodicSave]
-    });
-
-    /*
-     * Internal grabber
-     */
-    var internalPanel = new Ext.form.FieldSet({
-        title: 'Internal Grabber',
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        items: [internalCron, internalModule]
-    });
-
-    /* ****************************************************************
-     * Advanced Fields
-     * ***************************************************************/
-
-    /*
-     * External modules
-     */
-    var externalSelectionModel = new Ext.grid.CheckboxSelectionModel({
-        singleSelect: false,
-        listeners: {
-            'rowselect': function(s, ri, r) {
-                moduleSelect(r, 1);
-            },
-            'rowdeselect': function(s, ri, r) {
-                moduleSelect(r, 0);
-            }
+    tvheadend.idnode_grid(panel, {
+        url: 'api/epggrab/channel',
+        all: 1,
+        titleS: _('EPG Grabber Channel'),
+        titleP: _('EPG Grabber Channels'),
+        iconCls: 'baseconf',
+        tabIndex: index,
+        uilevel: 'expert',
+        del: true,
+        sort: {
+          field: 'name',
+          direction: 'ASC'
         }
     });
 
-    var externalColumnModel = new Ext.grid.ColumnModel([externalSelectionModel,
-        {
-            header: 'Module',
-            dataIndex: 'name',
-            width: 200,
-            sortable: false
-        }, {
-            header: 'Path',
-            dataIndex: 'path',
-            width: 300,
-            sortable: false
-        }]);
+    return panel;
 
-    var externalGrid = new Ext.grid.EditorGridPanel({
-        store: externalModuleStore,
-        cm: externalColumnModel,
-        sm: externalSelectionModel,
-        width: 600,
-        height: 150,
-        frame: false,
-        viewConfig: {
-            forceFit: true
-        },
-        iconCls: 'icon-grid'
+}
+
+tvheadend.epggrab_mod = function(panel, index) {
+
+    var actions = new Ext.ux.grid.RowActions({
+        id: 'status',
+        header: '',
+        width: 45,
+        actions: [ { iconIndex: 'status' } ],
+        destroy: function() { }
     });
 
-    var externalPanel = new Ext.form.FieldSet({
-        title: 'External Interfaces',
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        items: [externalGrid]
+    tvheadend.idnode_form_grid(panel, {
+        tabIndex: index,
+        uilevel: 'advanced',
+        clazz: 'epggrab_mod',
+        comet: 'epggrab_mod',
+        titleS: _('EPG Grabber Module'),
+        titleP: _('EPG Grabber Modules'),
+        titleC: _('EPG Grabber Name'),
+        iconCls: 'baseconf',
+        key: 'uuid',
+        val: 'title',
+        fields: ['uuid', 'title', 'status'],
+        list: { url: 'api/epggrab/module/list', params: { } },
+        lcol: [actions],
+        plugins: [actions],
+        tbar: [tvheadend.epggrab_rerun_button()]
     });
 
-    /*
-     * OTA modules
-     */
-
-    var otaSelectionModel = new Ext.grid.CheckboxSelectionModel({
-        singleSelect: false,
-        listeners: {
-            'rowselect': function(s, ri, r) {
-                moduleSelect(r, 1);
-            },
-            'rowdeselect': function(s, ri, r) {
-                moduleSelect(r, 0);
-            }
-        }
-    });
-
-    var otaColumnModel = new Ext.grid.ColumnModel([otaSelectionModel, {
-            header: 'Module',
-            dataIndex: 'name',
-            width: 200,
-            sortable: false
-        }]);
-
-    var otaGrid = new Ext.grid.EditorGridPanel({
-        store: otaModuleStore,
-        cm: otaColumnModel,
-        sm: otaSelectionModel,
-        width: 600,
-        height: 150,
-        frame: false,
-        viewConfig: {
-            forceFit: true
-        },
-        iconCls: 'icon-grid'
-    });
-
-    var otaInitial = new Ext.form.Checkbox({
-        name: 'ota_initial',
-        fieldLabel: 'Force initial EPG scan at startup'
-    });
-
-    var otaCron = new Ext.form.TextArea({
-        fieldLabel: 'Over-the-air Cron multi-line',
-        name: 'ota_cron',
-        width: 300,
-    });
-
-    var otaTimeout = new Ext.form.NumberField({
-        width: 30,
-        allowNegative: false,
-        allowDecimals: false,
-        minValue: 30,
-        maxValue: 7200,
-        value: 600,
-        fieldLabel: 'EPG scan timeout in seconds (30-7200)',
-        name: 'ota_timeout'
-    });
-
-    var otaPanel = new Ext.form.FieldSet({
-        title: 'Over-the-air Grabbers',
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        items: [otaInitial, otaCron, otaTimeout, otaGrid]
-    });
-
-    /* ****************************************************************
-     * Form
-     * ***************************************************************/
-
-    var saveButton = new Ext.Button({
-        text: "Save configuration",
-        tooltip: 'Save changes made to configuration below',
-        iconCls: 'save',
-        handler: saveChanges
-    });
-
-    var helpButton = new Ext.Button({
-        text: 'Help',
-        handler: function() {
-            new tvheadend.help('EPG Grab Configuration', 'config_epggrab.html');
-        }
-    });
-
-    var confpanel = new Ext.FormPanel({
-        title: 'EPG Grabber',
-        iconCls: 'xml',
-        border: false,
-        bodyStyle: 'padding:15px',
-        labelAlign: 'left',
-        labelWidth: 150,
-        waitMsgTarget: true,
-        reader: confreader,
-        layout: 'form',
-        defaultType: 'textfield',
-        autoHeight: true,
-        items: [simplePanel, internalPanel, otaPanel, externalPanel],
-        tbar: [saveButton, '->', helpButton]
-    });
-
-    /* ****************************************************************
-     * Load/Save
-     * ***************************************************************/
-
-    /* HACK: get display working */
-    externalGrid.on('render', function() {
-        delay = new Ext.util.DelayedTask(function() {
-            rows = [];
-            externalModuleStore.each(function(r) {
-                if (r.get('enabled'))
-                    rows.push(r);
-            });
-            externalSelectionModel.selectRecords(rows);
-        });
-        delay.delay(100);
-    });
-    otaGrid.on('render', function() {
-        delay = new Ext.util.DelayedTask(function() {
-            rows = [];
-            otaModuleStore.each(function(r) {
-                if (r.get('enabled'))
-                    rows.push(r);
-            });
-            otaSelectionModel.selectRecords(rows);
-        });
-        delay.delay(100);
-    });
-
-    confpanel.on('render', function() {
-
-        /* Hack to get display working */
-        delay = new Ext.util.DelayedTask(function() {
-            simplePanel.doLayout(false);
-            internalPanel.doLayout(false);
-            externalPanel.doLayout(false);
-            otaPanel.doLayout(false);
-        });
-        delay.delay(100);
-
-        confpanel.getForm().load({
-            url: 'epggrab',
-            params: {
-                op: 'loadSettings'
-            },
-            success: function(form, action) {
-                confpanel.enable();
-            }
-        });
-    });
-
-    function saveChanges() {
-        mods = [];
-        moduleStore.each(function(r) {
-            mods.push({
-                id: r.get('id'),
-                enabled: r.get('enabled') ? 1 : 0
-            });
-        });
-        mods = Ext.util.JSON.encode(mods);
-        confpanel.getForm().submit({
-            url: 'epggrab',
-            params: {
-                op: 'saveSettings',
-                external: mods
-            },
-            waitMsg: 'Saving Data...',
-            success: function(form, action) {
-                externalModuleStore.commitChanges();
-            },
-            failure: function(form, action) {
-                Ext.Msg.alert('Save failed', action.result.errormsg);
-            }
-        });
-    }
-
-    tvheadend.paneladd(panel, confpanel, index);
 };

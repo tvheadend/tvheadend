@@ -31,25 +31,32 @@ typedef struct udp_connection {
   int multicast;
   char *ifname;
   struct sockaddr_storage ip;
+  char *peer_host;
+  int peer_port;
+  int peer_multicast;
+  struct sockaddr_storage peer;
   int fd;
-  char *subsystem;
+  int subsystem;
   char *name;
   int rxtxsize;
 } udp_connection_t;
 
 udp_connection_t *
-udp_bind ( const char *subsystem, const char *name,
-           const char *bindaddr, int port,
-           const char *ifname, int rxsize );
+udp_bind ( int subsystem, const char *name,
+           const char *bindaddr, int port, const char *multicast_src,
+           const char *ifname, int rxsize, int txsize );
 int
 udp_bind_double ( udp_connection_t **_u1, udp_connection_t **_u2,
-                  const char *subsystem, const char *name1,
+                  int subsystem, const char *name1,
                   const char *name2, const char *host, int port,
-                  const char *ifname, int rxsize1, int rxsize2 );
+                  const char *ifname, int rxsize1, int rxsize2,
+                  int txsize1, int txsize2 );
 udp_connection_t *
-udp_connect ( const char *subsystem, const char *name,
-              const char *host, int port,
-              const char *ifname, int txsize );
+udp_sendinit ( int subsystem, const char *name,
+               const char *ifname, int txsize );
+int
+udp_connect ( udp_connection_t *uc, const char *name,
+              const char *host, int port );
 void
 udp_close ( udp_connection_t *uc );
 int
@@ -76,5 +83,22 @@ int
 udp_multirecv_read( udp_multirecv_t *um, int fd, int packets,
                     struct iovec **iovec );
 
+typedef struct udp_multisend {
+  int             um_psize;
+  int             um_packets;
+  uint8_t        *um_data;
+  struct iovec   *um_iovec;
+  struct mmsghdr *um_msg;
+} udp_multisend_t;
+
+void
+udp_multisend_init( udp_multisend_t *um, int packets, int psize,
+                    struct iovec **iovec );
+void
+udp_multisend_clean( udp_multisend_t *um );
+void
+udp_multisend_free( udp_multisend_t *um );
+int
+udp_multisend_send( udp_multisend_t *um, int fd, int packets );
 
 #endif /* UDP_H_ */

@@ -1,6 +1,6 @@
 /*
  *  TVheadend
- *  Copyright (C) 2007 - 2010 Andreas �man
+ *  Copyright (C) 2007 - 2010 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,12 +21,17 @@
 
 #include "idnode.h"
 #include "queue.h"
+#include "streaming.h"
+
+struct htsmsg;
+struct mpegts_apids;
 
 /*
  * Type-defs
  */
 typedef struct tvh_hardware           tvh_hardware_t;
 typedef struct tvh_input              tvh_input_t;
+typedef struct tvh_input_instance     tvh_input_instance_t;
 typedef struct tvh_input_stream       tvh_input_stream_t;
 typedef struct tvh_input_stream_stats tvh_input_stream_stats_t;
 
@@ -73,6 +78,8 @@ struct tvh_input_stream {
   int   subs_count;   ///< Number of subcscriptions
   int   max_weight;   ///< Current max weight
 
+  struct mpegts_apids *pids; ///< active PID list
+
   tvh_input_stream_stats_t stats;
 };
 
@@ -84,7 +91,26 @@ struct tvh_input {
 
   LIST_ENTRY(tvh_input) ti_link;
 
-  void (*ti_get_streams) (struct tvh_input *, tvh_input_stream_list_t*);
+  void (*ti_get_streams) (tvh_input_t *, tvh_input_stream_list_t*);
+  void (*ti_clear_stats) (tvh_input_t *);
+
+  struct htsmsg *(*ti_wizard_get) (tvh_input_t *, const char *);
+  void (*ti_wizard_set)  (tvh_input_t *, struct htsmsg *, const char *);
+};
+
+/*
+ * Generic input instance super-class
+ */
+struct tvh_input_instance {
+  idnode_t tii_id;
+
+  LIST_ENTRY(tvh_input_instance) tii_input_link;
+
+  tvh_mutex_t              tii_stats_mutex;
+  tvh_input_stream_stats_t tii_stats;
+
+  void (*tii_delete) (tvh_input_instance_t *tii);
+  void (*tii_clear_stats) (tvh_input_instance_t *tii);
 };
 
 /*
@@ -95,6 +121,8 @@ struct tvh_hardware {
   LIST_ENTRY(tvh_hardware)     th_link;
 };
 
+void tvh_hardware_init(void);
+
 void *tvh_hardware_create0
   ( void *o, const idclass_t *idc, const char *uuid, htsmsg_t *conf );
 void tvh_hardware_delete ( tvh_hardware_t *th );
@@ -103,9 +131,10 @@ void tvh_hardware_delete ( tvh_hardware_t *th );
  * Class and Global list defs
  */
 extern const idclass_t tvh_input_class;
+extern const idclass_t tvh_input_instance_class;
 
-tvh_input_list_t    tvh_inputs;
-tvh_hardware_list_t tvh_hardware;
+extern tvh_input_list_t    tvh_inputs;
+extern tvh_hardware_list_t tvh_hardware;
 
 #define TVH_INPUT_FOREACH(x) LIST_FOREACH(x, &tvh_inputs, ti_link)
 #define TVH_HARDWARE_FOREACH(x) LIST_FOREACH(x, &tvh_hardware, th_link)
@@ -114,19 +143,23 @@ tvh_hardware_list_t tvh_hardware;
  * Methods
  */
 
-void input_init ( void );
-
 htsmsg_t * tvh_input_stream_create_msg ( tvh_input_stream_t *st );
 
 void tvh_input_stream_destroy ( tvh_input_stream_t *st );
 
+static inline tvh_input_t *
+tvh_input_find_by_uuid(const char *uuid)
+  { return (tvh_input_t*)idnode_find(uuid, &tvh_input_class, NULL); }
+
+static inline tvh_input_instance_t *
+tvh_input_instance_find_by_uuid(const char *uuid)
+  { return (tvh_input_instance_t*)idnode_find(uuid, &tvh_input_instance_class, NULL); }
+
+void tvh_input_instance_clear_stats ( tvh_input_instance_t *tii );
+
 /*
  * Input subsystem includes
  */
-
-#if ENABLE_MPEGPS
-#include "input/mpegps.h"
-#endif
 
 #if ENABLE_MPEGTS
 #include "input/mpegts.h"
@@ -146,6 +179,9 @@ void tvh_input_stream_destroy ( tvh_input_stream_t *st );
 #endif
 #if ENABLE_SATIP_CLIENT
 #include "input/mpegts/satip/satip.h"
+#endif
+#if ENABLE_HDHOMERUN_CLIENT
+#include "input/mpegts/tvhdhomerun/tvhdhomerun.h"
 #endif
 #endif
 

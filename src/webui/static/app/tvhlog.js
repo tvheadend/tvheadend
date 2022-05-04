@@ -1,119 +1,42 @@
 tvheadend.tvhlog = function(panel, index) {
-    /*
-     * Basic Config
-     */
-    var confreader = new Ext.data.JsonReader({
-        root: 'config'
-    }, ['tvhlog_path', 'tvhlog_dbg_syslog', 'tvhlog_trace_on',
-        'tvhlog_debug', 'tvhlog_trace']);
 
-    /* ****************************************************************
-     * Form Fields
-     * ***************************************************************/
-
-    var tvhlogLogPath = new Ext.form.TextField({
-        fieldLabel: 'Debug log path',
-        name: 'tvhlog_path',
-        allowBlank: true,
-        width: 400
-    });
-
-    var tvhlogToSyslog = new Ext.form.Checkbox({
-        name: 'tvhlog_dbg_syslog',
-        fieldLabel: 'Debug to syslog'
-    });
-
-    var tvhlogTraceOn = new Ext.form.Checkbox({
-        name: 'tvhlog_trace_on',
-        fieldLabel: 'Debug trace (low-level stuff)'
-    });
-
-    var tvhlogDebugSubsys = new Ext.form.TextField({
-        fieldLabel: 'Debug subsystems',
-        name: 'tvhlog_debug',
-        allowBlank: true,
-        width: 400
-    });
-
-    var tvhlogTraceSubsys = new Ext.form.TextField({
-        fieldLabel: 'Trace subsystems',
-        name: 'tvhlog_trace',
-        allowBlank: true,
-        width: 400
-    });
-
-    /* ****************************************************************
-     * Form
-     * ***************************************************************/
-
-    var saveButton = new Ext.Button({
-        text: "Save configuration",
-        tooltip: 'Save changes made to configuration below',
-        iconCls: 'save',
-        handler: saveChanges
-    });
-
-    var helpButton = new Ext.Button({
-        text: 'Help',
-        handler: function() {
-            new tvheadend.help('Debug Configuration', 'config_tvhlog.html');
-        }
-    });
-
-    var DebuggingPanel = new Ext.form.FieldSet({
-        title: 'Debugging Options',
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        animCollapse : true,
-        items: [tvhlogLogPath, tvhlogToSyslog,
-            tvhlogTraceOn, tvhlogDebugSubsys, tvhlogTraceSubsys]
-    });
-
-    var confpanel = new Ext.form.FormPanel({
-        title: 'Debugging',
-        iconCls: 'wrench',
-        border: false,
-        bodyStyle: 'padding:15px',
-        labelAlign: 'left',
-        labelWidth: 200,
-        waitMsgTarget: true,
-        reader: confreader,
-        layout: 'form',
-        defaultType: 'textfield',
-        autoHeight: true,
-        items: [DebuggingPanel],
-        tbar: [saveButton, '->', helpButton]
-    });
-
-    /* ****************************************************************
-     * Load/Save
-     * ***************************************************************/
-
-    confpanel.on('render', function() {
-        confpanel.getForm().load({
-            url: 'tvhlog',
-            params: {
-                op: 'loadSettings'
-            },
-            success: function(form, action) {
-                confpanel.enable();
-            }
-        });
-    });
-
-    function saveChanges() {
-        confpanel.getForm().submit({
-            url: 'tvhlog',
-            params: {
-                op: 'saveSettings'
-            },
-            waitMsg: 'Saving Data...',
-            failure: function(form, action) {
-                Ext.Msg.alert('Save failed', action.result.errormsg);
-            }
-        });
+    function onchange(form, field, nval, oval) {
+       var f = form.getForm();
+       var enable_syslog = f.findField('enable_syslog');
+       var debug_syslog = f.findField('syslog');
+       if (debug_syslog.cbEl)
+         debug_syslog.setDisabled(!enable_syslog.getValue() || enable_syslog.disabled);
+       var trace = f.findField('trace');
+       var tracesubs = f.findField('tracesubs');
+       if (tracesubs.cbEl)
+         tracesubs.setDisabled(!trace.getValue() || trace.disabled);
     }
 
-    tvheadend.paneladd(panel, confpanel, index);
+    tvheadend.idnode_simple(panel, {
+        url: 'api/tvhlog/config',
+        title: _('Configuration'),
+        iconCls: 'debug',
+        tabIndex: index,
+        comet: 'tvhlog_conf',
+        labelWidth: 180,
+        width: 530,
+        onchange: onchange,
+        saveText: _("Apply configuration (run-time only)"),
+        saveTooltip: _('Apply any changes made below to the run-time configuration.') + '<br/>' +
+                     _('They will be lost when the application next restarts.')
+    });
+
+};
+
+tvheadend.memoryinfo = function(panel, index)
+{
+    tvheadend.idnode_grid(panel, {
+        url: 'api/memoryinfo',
+        titleS: _('Memory Information Entry'),
+        titleP: _('Memory Information Entries'),
+        iconCls: 'exclamation',
+        tabIndex: index,
+        uilevel: 'expert',
+        readonly: true
+    });
 };

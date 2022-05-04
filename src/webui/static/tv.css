@@ -1,5 +1,5 @@
 body {
-    font-size : 150%;
+    font-size : 100%;
     color     : #b2afa8;
     background: black;
 }
@@ -82,16 +82,26 @@ body {
     height: 100%;
 }
 
+.tv-channel-list-header {
+    z-index : 1;
+    position: static;
+    height  : 87%;
+}
+
+.tv-channel-list-content {
+    z-index : 1;
+    position: static;
+    height  : 87%;
+    overflow: auto;
+}
+
 .tv-channel-list {
     z-index : 1;
-    position: fixed;
-    top     : 8%;
-    left    : 5%;
-    height  : 80%;
+    height  : 95%;
 }
 
 .tv-video-idle {
-    background-image     : url(../docresources/tvheadendlogo.png);
+    background-image     : url(../static/img/logobig.png);
 }
 
 .tv-video-loading {
@@ -114,4 +124,68 @@ body {
     background-attachment: fixed;
     background-position  : center;
     height: 100%;
+}
+
+/* Paging Toolbar - lifted from ext-all-notheme.css */
+
+.x-tbar-page-number{
+	width:30px;
+	height:14px;
+}
+
+.ext-ie .x-tbar-page-number{
+    margin-top: 2px;
+}
+
+.x-paging-info {
+    position:absolute;
+    top:5px;
+    right: 8px;
+}
+
+/* Buttons */
+
+.x-btn-text{
+    height:50px;
+    width:300px;
+}
+
+.x-tbar-page-first{
+    background:url(./extjs/resources/images/default/grid/page-first.gif) no-repeat;
+    border:0px;
+    height:20px;
+    width:20px;
+    background-size: 20px;
+}
+
+.x-tbar-page-prev{
+    background:url(./extjs/resources/images/default/grid/page-prev.gif) no-repeat;
+    border:0px;
+    height:20px;
+    width:20px;
+    background-size: 20px;
+}
+
+.x-tbar-page-next{
+    background:url(./extjs/resources/images/default/grid/page-next.gif) no-repeat;
+    border:0px;
+    height:20px;
+    width:20px;
+    background-size: 20px;
+}
+
+.x-tbar-page-last{
+    background:url(./extjs/resources/images/default/grid/page-last.gif) no-repeat;
+    border:0px;
+    height:20px;
+    width:20px;
+    background-size: 20px;
+}
+
+.x-tbar-loading{
+    background:url(./extjs/resources/images/default/grid/refresh.gif) no-repeat;
+    border:0px;
+    height:20px;
+    width:20px;
+    background-size: 20px;
 }

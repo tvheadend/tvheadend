@@ -1,0 +1,18 @@
+[
+    {
+	"comment": "MPEG-TS Pass-thru",
+	"class": "profile-mpegts",
+	"name": "pass",
+	"default": 1
+    },
+    {
+	"comment": "Matroska",
+	"class": "profile-matroska",
+	"name": "matroska"
+    },
+    {
+	"comment": "HTSP Default Stream Settings",
+	"class": "profile-htsp",
+	"name": "htsp"
+    }
+]

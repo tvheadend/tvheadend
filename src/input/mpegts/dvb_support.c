@@ -1,6 +1,6 @@
 /*
  *  TV Input - DVB - Support/Conversion functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,6 +31,8 @@
 #include "dvb_charset_tables.h"
 #include "input.h"
 #include "intlconv.h"
+#include "lang_str.h"
+#include "settings.h"
 
 static int convert_iso_8859[16] = {
   -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, 11, 12, 13
@@ -39,6 +41,9 @@ static int convert_iso_8859[16] = {
 #define convert_iso6937 15
 #define convert_ucs2 16
 #define convert_gb   17
+
+#define conv_lower(dst, dstlen, c) \
+  if (c >= 0x20 || c == '\n') { *(dst++) = c; (*dstlen)--; }
 
 static inline size_t conv_gb(const uint8_t *src, size_t srclen,
                              char *dst, size_t *dstlen)
@@ -54,8 +59,11 @@ static inline size_t conv_gb(const uint8_t *src, size_t srclen,
 static inline int encode_utf8(unsigned int c, char *outb, int outleft)
 {
   if (c <= 0x7F && outleft >= 1) {
-    *outb = c;
-    return 1;
+    if (c >= 0x20 || c == '\n') {
+      *outb = c;
+      return 1;
+    }
+    return 0;
   } else if (c <= 0x7FF && outleft >=2) {
     *outb++ = ((c >>  6) & 0x1F) | 0xC0;
     *outb++ = ( c        & 0x3F) | 0x80;
@@ -80,13 +88,22 @@ static inline size_t conv_UCS2(const uint8_t *src, size_t srclen,char *dst, size
 {
   while (srclen>0 && (*dstlen)>0){
     uint16_t uc = *src<<8|*(src+1);
-    int len = encode_utf8(uc, dst, *dstlen);
-    if (len == -1) {
-      errno = E2BIG;
-      return -1;
+    if (uc >= 0xe080 && uc <= 0xe09f) {
+      // codes 0xe080 - 0xe09f (control codes) are ignored except CR/LF
+      if (uc == 0xe08a) {
+        *dst = '\n';
+        (*dstlen)--;
+        dst++;
+      }
     } else {
-      (*dstlen) -= len;
-      dst += len;
+      int len = encode_utf8(uc, dst, *dstlen);
+      if (len == -1) {
+        errno = E2BIG;
+        return -1;
+      } else {
+        (*dstlen) -= len;
+        dst += len;
+      }
     }
     srclen-=2;
     src+=2;
@@ -99,12 +116,18 @@ static inline size_t conv_UCS2(const uint8_t *src, size_t srclen,char *dst, size
 }
 
 static inline size_t conv_utf8(const uint8_t *src, size_t srclen,
-                              char *dst, size_t *dstlen)
+                               char *dst, size_t *dstlen)
 {
   while (srclen>0 && (*dstlen)>0) {
-    *dst = (char) *src;
-    srclen--; (*dstlen)--;
-    src++; dst++;
+    uint_fast8_t c = *src;
+    if (c <= 0x7f) {
+      conv_lower(dst, dstlen, c);
+    } else {
+      *(dst++) = c;
+      (*dstlen)--;
+    }
+    srclen--;
+    src++;
   }
   if (srclen>0) {
     errno = E2BIG;
@@ -120,18 +143,20 @@ static inline size_t conv_8859(int conv,
   uint16_t *table = conv_8859_table[conv];
 
   while (srclen>0 && (*dstlen)>0) {
-    uint8_t c = *src;
+    uint_fast8_t c = *src;
     if (c <= 0x7f) {
-      // lower half of iso-8859-* is identical to utf-8
-      *dst = (char) *src;
-      (*dstlen)--;
-      dst++;
+      conv_lower(dst, dstlen, c);
     } else if (c <= 0x9f) {
-      // codes 0x80 - 0x9f (control codes) are ignored
+      // codes 0x80 - 0x9f (control codes) are ignored except CR/LF
+      if (c == 0x8a) {
+        *dst = '\n';
+        (*dstlen)--;
+        dst++;
+      }
     } else {
       // map according to character table, skipping
       // unmapped chars (value 0 in the table)
-      uint16_t uc = table[c-0xa0];
+      uint_fast16_t uc = table[c-0xa0];
       if (uc != 0) {
         int len = encode_utf8(uc, dst, *dstlen);
         if (len == -1) {
@@ -157,14 +182,16 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
                               char *dst, size_t *dstlen)
 {
   while (srclen>0 && (*dstlen)>0) {
-    uint8_t c = *src;
+    uint_fast8_t c = *src;
     if (c <= 0x7f) {
-      // lower half of iso6937 is identical to utf-8
-      *dst = (char) *src;
-      (*dstlen)--;
-      dst++;
+      conv_lower(dst, dstlen, c);
     } else if (c <= 0x9f) {
-      // codes 0x80 - 0x9f (control codes) are ignored
+      // codes 0x80 - 0x9f (control codes) are ignored except CR/LF
+      if (c == 0x8a) {
+        *dst = '\n';
+        (*dstlen)--;
+        dst++;
+      }
     } else {
       uint16_t uc;
       if (c >= 0xc0 && c <= 0xcf) {
@@ -251,7 +278,7 @@ dvb_get_string
   }
 
   // check for automatic polish charset detection
-  if (dvb_charset && strcmp("PL_AUTO", dvb_charset) == 0) {
+  if (dvb_charset && strcmp("AUTO_POLISH", dvb_charset) == 0) {
     auto_pl_charset = 1;
     dvb_charset = NULL;
   }
@@ -259,9 +286,10 @@ dvb_get_string
   // automatic charset detection
   switch(src[0]) {
   case 0:
-    return -1;
+    *dst = 0; // empty string (confirmed!)
+    return 0;
 
-  case 0x01 ... 0x0b:
+  case 0x01 ... 0x0b: /* ISO 8859-X */
     if (auto_pl_charset && (src[0] + 4) == 5)
       ic = convert_iso6937;
     else
@@ -269,10 +297,11 @@ dvb_get_string
     src++; srclen--;
     break;
 
-  case 0x0c ... 0x0f:
-    return -1;
+  case 0x0c ... 0x0f: /* reserved for the future use */
+    src++; srclen--;
+    break;
 
-  case 0x10: /* Table A.4 */
+  case 0x10: /* ISO 8859 - Table A.4 */
     if(srclen < 3 || src[1] != 0 || src[2] == 0 || src[2] > 0x0f)
       return -1;
 
@@ -280,25 +309,36 @@ dvb_get_string
     src+=3; srclen-=3;
     break;
     
-  case 0x11:
+  case 0x11: /* ISO 10646 */
     ic = convert_ucs2;
     src++; srclen--;
     break;
 
-  case 0x13:
+  case 0x12: /* KSX1001-2004 - Korean Character Set - NYI! */
+    src++; srclen--;
+    break;
+
+  case 0x13: /* GB-2312-1980 */
     ic = convert_gb;
     src++; srclen--;
     break;
 
-  case 0x12:
-  case 0x14:
-    return -1;
-
-  case 0x15:
-    ic = convert_utf8;
+  case 0x14: /* Big5 subset of ISO 10646 */
+    ic = convert_ucs2;
+    src++; srclen--;
     break;
-  case 0x16 ... 0x1f:
-    return -1;
+
+  case 0x15: /* UTF-8 */
+    ic = convert_utf8;
+    src++; srclen--;
+    break;
+
+  case 0x16 ... 0x1e: /* reserved for the future use */
+    src++; srclen--;
+    break;
+
+  case 0x1f: /* Described by encoding_type_id, TS 101 162 */
+    return -1; /* NYI */
 
   default:
     if (auto_pl_charset)
@@ -335,9 +375,8 @@ dvb_get_string
 
   outlen = dstlen - 1;
 
-  if (dvb_convert(ic, src, srclen, dst, &outlen) == -1) {
+  if (dvb_convert(ic, src, srclen, dst, &outlen) == -1)
     return -1;
-  }
 
   len = dstlen - outlen - 1;
   dst[len] = 0;
@@ -382,12 +421,125 @@ atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen)
   *buf = 0;
 }
 
+lang_str_t *
+atsc_get_string
+  (const uint8_t *src, size_t srclen)
+{
+  lang_str_t *ls = NULL;
+  int i, j, stringcount, segmentcount;
+  int compressiontype, mode, bytecount;
+  char langcode[4];
+  char buf[256];
+
+  stringcount = src[0];
+  tvhtrace(LS_MPEGTS, "atsc-str: %d strings", stringcount);
+
+  src++;
+  srclen--;
+
+  langcode[3] = '\0';
+
+  for (i = 0; i < stringcount && srclen >= 4; i++) {
+    langcode[0]  = src[0];
+    langcode[1]  = src[1];
+    langcode[2]  = src[2];
+    segmentcount = src[3];
+
+    tvhtrace(LS_MPEGTS, "atsc-str:  %d: lang '%s', segments %d", i, langcode, segmentcount);
+
+    src    += 4;
+    srclen -= 4;
+
+    for (j = 0; j < segmentcount && srclen >= 3; j++) {
+      compressiontype = src[0];
+      mode            = src[1];
+      bytecount       = src[2];
+
+      src    += 3;
+      srclen -= 3;
+
+      if (bytecount > srclen)
+        return ls;
+
+      if (mode == 0 && compressiontype == 0) {
+        tvhtrace(LS_MPEGTS, "atsc-str:    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
+                 j, compressiontype, mode, bytecount, bytecount, src);
+        memcpy(buf, src, bytecount);
+        buf[bytecount] = '\0';
+        if (ls == NULL)
+          ls = lang_str_create();
+        lang_str_append(ls, buf, langcode);
+      } else {
+        tvhtrace(LS_MPEGTS, "atsc-str:    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
+                 j, compressiontype, mode, bytecount);
+      }
+
+      /* FIXME: read compressed bytes */
+      src += bytecount; srclen -= bytecount; // skip for now
+    }
+  }
+
+  return ls;
+}
+
+/*
+ *
+ */
+
+static struct strtab dvb_timezone_strtab[] = {
+  { N_("UTC"),        0 },
+  { N_("Local (server) time"), 1 },
+  { N_("UTC- 1"),    -1*60 },
+  { N_("UTC- 2"),    -2*60 },
+  { N_("UTC- 2:30"), -2*60-30 },
+  { N_("UTC- 3"),    -3*60 },
+  { N_("UTC- 3:30"), -3*60-30 },
+  { N_("UTC- 4"),    -4*60 },
+  { N_("UTC- 4:30"), -4*60-30 },
+  { N_("UTC- 5"),    -5*60 },
+  { N_("UTC- 6"),    -6*60 },
+  { N_("UTC- 7"),    -7*60 },
+  { N_("UTC- 8"),    -8*60 },
+  { N_("UTC- 9"),    -9*60 },
+  { N_("UTC- 9:30"), -9*60-30 },
+  { N_("UTC-10"),    -10*60 },
+  { N_("UTC-11"),    -11*60 },
+  { N_("UTC+ 1"),     1*60 },
+  { N_("UTC+ 2"),     2*60 },
+  { N_("UTC+ 3"),     3*60 },
+  { N_("UTC+ 4"),     4*60 },
+  { N_("UTC+ 4:30"),  4*60+30 },
+  { N_("UTC+ 5"),     5*60 },
+  { N_("UTC+ 5:30"),  5*60+30 },
+  { N_("UTC+ 5:45"),  5*60+45 },
+  { N_("UTC+ 6"),     6*60 },
+  { N_("UTC+ 6:30"),  6*60+30 },
+  { N_("UTC+ 7"),     7*60 },
+  { N_("UTC+ 8"),     8*60 },
+  { N_("UTC+ 8:45"),  8*60+45 },
+  { N_("UTC+ 9"),     9*60 },
+  { N_("UTC+ 9:30"),  9*60+30 },
+  { N_("UTC+10"),     10*60 },
+  { N_("UTC+10:30"),  10*60+30 },
+  { N_("UTC+11"),     11*60 },
+  { N_("UTC+12"),     12*60 },
+  { N_("UTC+12:45"),  12*60+45 },
+  { N_("UTC+13"),     13*60 },
+  { N_("UTC+14"),     14*60 }
+};
+
+htsmsg_t *
+dvb_timezone_enum ( void *p, const char *lang )
+{
+  return strtab2htsmsg(dvb_timezone_strtab, 1, lang);
+}
+
 /*
  * DVB time and date functions
  */
 
 time_t
-dvb_convert_date(const uint8_t *dvb_buf)
+dvb_convert_date(const uint8_t *dvb_buf, int tmzone)
 {
   int i;
   int year, month, day, hour, min, sec;
@@ -423,7 +575,50 @@ dvb_convert_date(const uint8_t *dvb_buf)
   dvb_time.tm_isdst = -1;
   dvb_time.tm_wday = 0;
   dvb_time.tm_yday = 0;
-  return (timegm(&dvb_time));
+
+  if (tmzone == 0) /* UTC */
+    return timegm(&dvb_time);
+  if (tmzone == 1) /* Local time */
+    return mktime(&dvb_time);
+
+  /* apply offset */
+  return timegm(&dvb_time) - tmzone * 60;
+}
+
+static time_t _gps_leap_seconds[17] = {
+	362793600,
+	394329600,
+	425865600,
+	489024000,
+	567993600,
+	631152000,
+	662688000,
+	709948800,
+	741484800,
+	773020800,
+	820454400,
+	867715200,
+	915148800,
+	1136073600,
+	1230768000,
+	1341100800,
+	1435708800,
+};
+
+time_t
+atsc_convert_gpstime(uint32_t gpstime)
+{
+  int i;
+  time_t out = gpstime + 315964800; // Add Unix - GPS epoch
+
+  for (i = (sizeof(_gps_leap_seconds)/sizeof(time_t)) - 1; i >= 0; i--) {
+    if (out > _gps_leap_seconds[i]) {
+      out -= i+1;
+      break;
+    }
+  }
+
+  return out;
 }
 
 /*
@@ -431,6 +626,7 @@ dvb_convert_date(const uint8_t *dvb_buf)
  */
 #if ENABLE_MPEGTS_DVB
 
+htsmsg_t *satellites;
 
 #define dvb_str2val(p)\
 const char *dvb_##p##2str (int p)         { return val2str(p, p##tab); }\
@@ -468,7 +664,7 @@ static int dvb_verify(int val, int *table)
 
 const char *dvb_rolloff2str(int p)
 {
-  static char __thread buf[16];
+  static __thread char buf[16];
   const char *res = dvb_common2str(p);
   if (res)
     return res;
@@ -490,24 +686,38 @@ int dvb_str2rolloff(const char *p)
   return dvb_verify(atoi(p) * 10, rolloff_table);
 }
 
-const static struct strtab delsystab[] = {
+static const struct strtab delsystab[] = {
   { "NONE",         DVB_SYS_NONE },
+  { "DVB-C",        DVB_SYS_DVBC_ANNEX_A },
   { "DVBC/ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
   { "DVBC_ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
+  { "ATSC-C",       DVB_SYS_DVBC_ANNEX_B },
+  { "CableCARD",    DVB_SYS_DVBC_ANNEX_B },
   { "DVBC/ANNEX_B", DVB_SYS_DVBC_ANNEX_B },
   { "DVBC_ANNEX_B", DVB_SYS_DVBC_ANNEX_B },
+  { "DVB-C/ANNEX-C",DVB_SYS_DVBC_ANNEX_C },
   { "DVBC/ANNEX_C", DVB_SYS_DVBC_ANNEX_C },
   { "DVBC_ANNEX_C", DVB_SYS_DVBC_ANNEX_C },
   { "DVBC_ANNEX_AC",DVB_SYS_DVBC_ANNEX_A }, /* for compatibility */
+  { "DVB-T",        DVB_SYS_DVBT },
   { "DVBT",         DVB_SYS_DVBT },
+  { "DVB-T2",       DVB_SYS_DVBT2 },
   { "DVBT2",        DVB_SYS_DVBT2 },
+  { "DVB-S",        DVB_SYS_DVBS },
   { "DVBS",         DVB_SYS_DVBS },
+  { "DVB-S2",       DVB_SYS_DVBS2 },
   { "DVBS2",        DVB_SYS_DVBS2 },
+  { "DVB-H",        DVB_SYS_DVBH },
   { "DVBH",         DVB_SYS_DVBH },
+  { "ISDB-T",       DVB_SYS_ISDBT },
   { "ISDBT",        DVB_SYS_ISDBT },
+  { "ISDB-S",       DVB_SYS_ISDBS },
   { "ISDBS",        DVB_SYS_ISDBS },
+  { "ISDB-C",       DVB_SYS_ISDBC },
   { "ISDBC",        DVB_SYS_ISDBC },
+  { "ATSC-T",       DVB_SYS_ATSC },
   { "ATSC",         DVB_SYS_ATSC },
+  { "ATSCM-H",      DVB_SYS_ATSCMH },
   { "ATSCMH",       DVB_SYS_ATSCMH },
   { "DTMB",         DVB_SYS_DTMB },
   { "DMBTH",        DVB_SYS_DTMB },	/* for compatibility */
@@ -519,26 +729,39 @@ const static struct strtab delsystab[] = {
 dvb_str2val(delsys);
 
 int
-dvb_delsys2type ( dvb_fe_delivery_system_t delsys )
+dvb_delsys2type ( mpegts_network_t *ln, dvb_fe_delivery_system_t delsys )
 {
   switch (delsys) {
     case DVB_SYS_DVBC_ANNEX_A:
-    case DVB_SYS_DVBC_ANNEX_B:
     case DVB_SYS_DVBC_ANNEX_C:
-    case DVB_SYS_ISDBC:
       return DVB_TYPE_C;
     case DVB_SYS_DVBT:
     case DVB_SYS_DVBT2:
     case DVB_SYS_TURBO:
-    case DVB_SYS_ISDBT:
       return DVB_TYPE_T;
     case DVB_SYS_DVBS:
     case DVB_SYS_DVBS2:
-    case DVB_SYS_ISDBS:
       return DVB_TYPE_S;
     case DVB_SYS_ATSC:
     case DVB_SYS_ATSCMH:
-      return DVB_TYPE_ATSC;
+      return DVB_TYPE_ATSC_T;
+    case DVB_SYS_DVBC_ANNEX_B:
+      if (ln && idnode_is_instance(&ln->mn_id, &dvb_network_dvbc_class))
+        return DVB_TYPE_C;
+      if (ln && idnode_is_instance(&ln->mn_id, &dvb_network_cablecard_class))
+        return DVB_TYPE_CABLECARD;
+      else
+        return DVB_TYPE_ATSC_C;
+    case DVB_SYS_ISDBT:
+      return DVB_TYPE_ISDB_T;
+    case DVB_SYS_ISDBC:
+      return DVB_TYPE_ISDB_C;
+    case DVB_SYS_ISDBS:
+      return DVB_TYPE_ISDB_S;
+    case DVB_SYS_DTMB:
+      return DVB_TYPE_DTMB;
+    case DVB_SYS_DAB:
+      return DVB_TYPE_DAB;
     default:
       return DVB_TYPE_NONE;
   }
@@ -546,7 +769,7 @@ dvb_delsys2type ( dvb_fe_delivery_system_t delsys )
 
 const char *dvb_fec2str(int p)
 {
-  static char __thread buf[16];
+  static __thread char buf[16];
   const char *res = dvb_common2str(p);
   if (res)
     return res;
@@ -602,7 +825,7 @@ int dvb_str2fec(const char *p)
   return dvb_verify(hi * 100 + lo, fec_table);
 }
 
-const static struct strtab qamtab[] = {
+static const struct strtab qamtab[] = {
   { "NONE",      DVB_MOD_NONE },
   { "AUTO",      DVB_MOD_AUTO },
   { "QPSK",      DVB_MOD_QPSK },
@@ -644,7 +867,7 @@ dvb_str2val(qam);
 
 const char *dvb_bw2str(int p)
 {
-  static char __thread buf[16];
+  static __thread char buf[17];
   const char *res = dvb_common2str(p);
   if (res)
     return res;
@@ -678,7 +901,7 @@ int dvb_str2bw(const char *p)
   return dvb_verify(hi, bw_table);
 }
 
-const static struct strtab invertab[] = {
+static const struct strtab invertab[] = {
   { "NONE",  DVB_INVERSION_UNDEFINED },
   { "AUTO",  DVB_INVERSION_AUTO },
   { "ON",    DVB_INVERSION_ON },
@@ -686,7 +909,7 @@ const static struct strtab invertab[] = {
 };
 dvb_str2val(inver);
 
-const static struct strtab modetab[] = {
+static const struct strtab modetab[] = {
   { "NONE",  DVB_TRANSMISSION_MODE_NONE },
   { "AUTO",  DVB_TRANSMISSION_MODE_AUTO },
   { "1k",    DVB_TRANSMISSION_MODE_1K },
@@ -700,7 +923,7 @@ const static struct strtab modetab[] = {
 };
 dvb_str2val(mode);
 
-const static struct strtab guardtab[] = {
+static const struct strtab guardtab[] = {
   { "NONE",   DVB_GUARD_INTERVAL_NONE },
   { "AUTO",   DVB_GUARD_INTERVAL_AUTO },
   { "1/4",    DVB_GUARD_INTERVAL_1_4 },
@@ -716,7 +939,7 @@ const static struct strtab guardtab[] = {
 };
 dvb_str2val(guard);
 
-const static struct strtab hiertab[] = {
+static const struct strtab hiertab[] = {
   { "NONE", DVB_HIERARCHY_NONE },
   { "AUTO", DVB_HIERARCHY_AUTO },
   { "1",    DVB_HIERARCHY_1 },
@@ -725,7 +948,7 @@ const static struct strtab hiertab[] = {
 };
 dvb_str2val(hier);
 
-const static struct strtab poltab[] = {
+static const struct strtab poltab[] = {
   { "V", DVB_POLARISATION_VERTICAL },
   { "H", DVB_POLARISATION_HORIZONTAL },
   { "L", DVB_POLARISATION_CIRCULAR_LEFT },
@@ -734,75 +957,137 @@ const static struct strtab poltab[] = {
 };
 dvb_str2val(pol);
 
-const static struct strtab typetab[] = {
-  {"DVB-T", DVB_TYPE_T},
-  {"DVB-C", DVB_TYPE_C},
-  {"DVB-S", DVB_TYPE_S},
-  {"ATSC",  DVB_TYPE_ATSC},
+static const struct strtab typetab[] = {
+  {"DVB-T",     DVB_TYPE_T},
+  {"DVB-C",     DVB_TYPE_C},
+  {"DVB-S",     DVB_TYPE_S},
+  {"ATSC-T",    DVB_TYPE_ATSC_T},
+  {"ATSC-C",    DVB_TYPE_ATSC_C},
+  {"CableCARD", DVB_TYPE_CABLECARD},
+  {"ISDB-T",    DVB_TYPE_ISDB_T},
+  {"ISDB-C",    DVB_TYPE_ISDB_C},
+  {"ISDB-S",    DVB_TYPE_ISDB_S},
+  {"DAB",       DVB_TYPE_DAB},
+  {"DVBT",      DVB_TYPE_T},
+  {"DVBC",      DVB_TYPE_C},
+  {"DVBS",      DVB_TYPE_S},
+  {"ATSC",      DVB_TYPE_ATSC_T},
+  {"ATSCT",     DVB_TYPE_ATSC_T},
+  {"ATSCC",     DVB_TYPE_ATSC_C},
+  {"ISDBT",     DVB_TYPE_ISDB_T},
+  {"ISDBC",     DVB_TYPE_ISDB_C},
+  {"ISDBS",     DVB_TYPE_ISDB_S}
 };
 dvb_str2val(type);
 
-const static struct strtab pilottab[] = {
+static const struct strtab pilottab[] = {
   {"NONE", DVB_PILOT_NONE},
   {"AUTO", DVB_PILOT_AUTO},
   {"ON",   DVB_PILOT_ON},
   {"OFF",  DVB_PILOT_OFF}
 };
 dvb_str2val(pilot);
+
+static const struct strtab plsmodetab[] = {
+  {"ROOT", DVB_PLS_ROOT},
+  {"GOLD", DVB_PLS_GOLD},
+  {"COMBO", DVB_PLS_COMBO},
+};
+dvb_str2val(plsmode);
 #undef dvb_str2val
+
+
+void
+dvb_mux_conf_init ( mpegts_network_t *ln,
+                    dvb_mux_conf_t *dmc,
+                    dvb_fe_delivery_system_t delsys )
+{
+  memset(dmc, 0, sizeof(*dmc));
+  dmc->dmc_fe_type      = dvb_delsys2type(ln, delsys);
+  dmc->dmc_fe_delsys    = delsys;
+  dmc->dmc_fe_inversion = DVB_INVERSION_AUTO;
+  dmc->dmc_fe_pilot     = DVB_PILOT_AUTO;
+  dmc->dmc_fe_stream_id = DVB_NO_STREAM_ID_FILTER;
+  dmc->dmc_fe_pls_mode  = DVB_PLS_GOLD;
+  switch (dmc->dmc_fe_type) {
+  case DVB_TYPE_S:
+    dmc->u.dmc_fe_qpsk.orbital_pos = INT_MAX;
+    break;
+  default:
+    break;
+  }
+}
+
 
 static int
 dvb_mux_conf_str_dvbt ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
+  char hp[16];
+  snprintf(hp, sizeof(hp), "%s", dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_HP));
   return
   snprintf(buf, bufsize,
-           "%s freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s",
+           "%s freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s plp_id %d",
            dvb_delsys2str(dmc->dmc_fe_delsys),
            dmc->dmc_fe_freq,
            dvb_bw2str(dmc->u.dmc_fe_ofdm.bandwidth),
            dvb_qam2str(dmc->dmc_fe_modulation),
            dvb_hier2str(dmc->u.dmc_fe_ofdm.hierarchy_information),
-           dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_HP),
-           dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_LP),
+           hp, dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_LP),
            dvb_guard2str(dmc->u.dmc_fe_ofdm.guard_interval),
-           dvb_mode2str(dmc->u.dmc_fe_ofdm.transmission_mode));
+           dvb_mode2str(dmc->u.dmc_fe_ofdm.transmission_mode),
+           dmc->dmc_fe_stream_id);
 }
 
 static int
 dvb_mux_conf_str_dvbc ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
+  const char *delsys;
+  if (dmc->dmc_fe_type == DVB_TYPE_C &&
+      dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B)
+    delsys = "DVB-C/ANNEX_B";
+  else
+    delsys = dvb_delsys2str(dmc->dmc_fe_delsys);
   return
   snprintf(buf, bufsize,
-           "%s freq %d sym %d mod %s fec %s",
-           dvb_delsys2str(dmc->dmc_fe_delsys),
+           "%s freq %d sym %d mod %s fec %s ds %d plp %d",
+           delsys,
            dmc->dmc_fe_freq,
            dmc->u.dmc_fe_qam.symbol_rate,
            dvb_qam2str(dmc->dmc_fe_modulation),
-           dvb_fec2str(dmc->u.dmc_fe_qam.fec_inner));
+           dvb_fec2str(dmc->u.dmc_fe_qam.fec_inner),
+           dmc->dmc_fe_data_slice,
+           dmc->dmc_fe_stream_id);
 }
 
 static int
 dvb_mux_conf_str_dvbs ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
   const char *pol = dvb_pol2str(dmc->u.dmc_fe_qpsk.polarisation);
-  const char dir = dmc->u.dmc_fe_qpsk.orbital_dir;
+  const int satpos = dmc->u.dmc_fe_qpsk.orbital_pos;
+  char satbuf[16];
+  if (satpos != INT_MAX) {
+    snprintf(satbuf, sizeof(satbuf), "%d.%d%c ", abs(satpos) / 10, abs(satpos) % 10, satpos < 0 ? 'W' : 'E');
+  } else {
+    satbuf[0] = '\0';
+  }
   return
   snprintf(buf, bufsize,
-           "%s pos %d.%d%c freq %d %c sym %d fec %s mod %s roff %s",
+           "%s %sfreq %d %c sym %d fec %s mod %s roff %s is_id %d pls_mode %s pls_code %d",
            dvb_delsys2str(dmc->dmc_fe_delsys),
-           dmc->u.dmc_fe_qpsk.orbital_pos / 10,
-           dmc->u.dmc_fe_qpsk.orbital_pos % 10,
-           dir >= ' ' && dir <= 'z' ? dir : '?',
+           satbuf,
            dmc->dmc_fe_freq,
            pol ? pol[0] : 'X',
            dmc->u.dmc_fe_qpsk.symbol_rate,
            dvb_fec2str(dmc->u.dmc_fe_qpsk.fec_inner),
            dvb_qam2str(dmc->dmc_fe_modulation),
-           dvb_rolloff2str(dmc->dmc_fe_rolloff));
+           dvb_rolloff2str(dmc->dmc_fe_rolloff),
+           dmc->dmc_fe_stream_id,
+           dvb_plsmode2str(dmc->dmc_fe_pls_mode),
+           dmc->dmc_fe_pls_code);
 }
 
 static int
-dvb_mux_conf_str_atsc ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
+dvb_mux_conf_str_atsc_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
   return
   snprintf(buf, bufsize,
@@ -810,6 +1095,40 @@ dvb_mux_conf_str_atsc ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
            dvb_delsys2str(dmc->dmc_fe_delsys),
            dmc->dmc_fe_freq,
            dvb_qam2str(dmc->dmc_fe_modulation));
+}
+
+static int
+dvb_mux_conf_str_cablecard(dvb_mux_conf_t *dmc, char *buf, size_t bufsize)
+{
+  return snprintf(buf, bufsize, "%s channel %u",
+      dvb_type2str(dmc->dmc_fe_type),
+      dmc->u.dmc_fe_cablecard.vchannel);
+}
+
+static int
+dvb_mux_conf_str_isdb_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
+{
+  char hp[16];
+  snprintf(hp, sizeof(hp), "%s", dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_HP));
+  return
+  snprintf(buf, bufsize,
+           "%s freq %d bw %s guard %s A (%s,%s,%d,%d) B (%s,%s,%d,%d) C (%s,%s,%d,%d)",
+           dvb_delsys2str(dmc->dmc_fe_delsys),
+           dmc->dmc_fe_freq,
+           dvb_bw2str(dmc->u.dmc_fe_isdbt.bandwidth),
+           dvb_guard2str(dmc->u.dmc_fe_isdbt.guard_interval),
+           dvb_fec2str(dmc->u.dmc_fe_isdbt.layers[0].fec),
+           dvb_qam2str(dmc->u.dmc_fe_isdbt.layers[0].modulation),
+           dmc->u.dmc_fe_isdbt.layers[0].segment_count,
+           dmc->u.dmc_fe_isdbt.layers[0].time_interleaving,
+           dvb_fec2str(dmc->u.dmc_fe_isdbt.layers[1].fec),
+           dvb_qam2str(dmc->u.dmc_fe_isdbt.layers[1].modulation),
+           dmc->u.dmc_fe_isdbt.layers[1].segment_count,
+           dmc->u.dmc_fe_isdbt.layers[1].time_interleaving,
+           dvb_fec2str(dmc->u.dmc_fe_isdbt.layers[2].fec),
+           dvb_qam2str(dmc->u.dmc_fe_isdbt.layers[2].modulation),
+           dmc->u.dmc_fe_isdbt.layers[2].segment_count,
+           dmc->u.dmc_fe_isdbt.layers[2].time_interleaving);
 }
 
 int
@@ -822,15 +1141,78 @@ dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
   case DVB_TYPE_T:
     return dvb_mux_conf_str_dvbt(dmc, buf, bufsize);
   case DVB_TYPE_C:
+  case DVB_TYPE_ATSC_C:
+  case DVB_TYPE_ISDB_C:
     return dvb_mux_conf_str_dvbc(dmc, buf, bufsize);
   case DVB_TYPE_S:
     return dvb_mux_conf_str_dvbs(dmc, buf, bufsize);
-  case DVB_TYPE_ATSC:
-    return dvb_mux_conf_str_atsc(dmc, buf, bufsize);
+  case DVB_TYPE_ATSC_T:
+    return dvb_mux_conf_str_atsc_t(dmc, buf, bufsize);
+  case DVB_TYPE_CABLECARD:
+    return dvb_mux_conf_str_cablecard(dmc, buf, bufsize);
+  case DVB_TYPE_ISDB_T:
+    return dvb_mux_conf_str_isdb_t(dmc, buf, bufsize);
   default:
     return
       snprintf(buf, bufsize, "UNKNOWN MUX CONFIG");
   }
+}
+
+const char *
+dvb_sat_position_to_str(int position, char *buf, size_t buflen)
+{
+  const int dec = position % 10;
+
+  if (!buf || !buflen)
+    return "";
+  snprintf(buf, buflen, "%d", abs(position / 10));
+  if (dec)
+    snprintf(buf + strlen(buf), buflen - strlen(buf), ".%d", abs(dec));
+  snprintf(buf + strlen(buf), buflen - strlen(buf), "%c", position < 0 ? 'W' : 'E');
+  return buf;
+}
+
+int
+dvb_sat_position_from_str( const char *buf )
+{
+  const char *s = buf;
+  int min, maj;
+  char c;
+
+  if (!buf)
+    return INT_MAX;
+  maj = atoi(s);
+  while (*s && *s != '.')
+    s++;
+  min = *s == '.' ? atoi(s + 1) : 0;
+  if (*s != '.') s = buf;
+  do {
+    c = *s++;
+  } while (c && c != 'W' && c != 'E');
+  if (!c)
+    return INT_MAX;
+  if (maj > 180 || maj < 0)
+    return INT_MAX;
+  if (min > 9 || min < 0)
+    return INT_MAX;
+  return (maj * 10 + min) * (c == 'W' ? -1 : 1);
+}
+
+uint32_t
+dvb_sat_pls( dvb_mux_conf_t *dmc )
+{
+  if (dmc->dmc_fe_pls_mode == DVB_PLS_ROOT) {
+    uint32_t x, g;
+    const uint32_t root = dmc->dmc_fe_pls_code & 0x3ffff;
+
+    for (g = 0, x = 1; g < 0x3ffff; g++)  {
+      if (root == x)
+        return g;
+      x = (((x ^ (x >> 7)) & 1) << 17) | (x >> 1);
+    }
+    return 0x3ffff;
+  }
+  return dmc->dmc_fe_pls_code & 0x3ffff;
 }
 
 #endif /* ENABLE_MPEGTS_DVB */
@@ -838,13 +1220,16 @@ dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 /**
  *
  */
+void dvb_init( void )
+{
+#if ENABLE_MPEGTS_DVB
+  satellites = hts_settings_load("satellites");
+#endif
+}
+
 void dvb_done( void )
 {
-  extern SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
-  extern SKEL_DECLARE(mpegts_pid_sub_skel, mpegts_pid_sub_t);
-  extern SKEL_DECLARE(mpegts_pid_skel, mpegts_pid_t);
-
-  SKEL_FREE(mpegts_table_state_skel);
-  SKEL_FREE(mpegts_pid_sub_skel);
-  SKEL_FREE(mpegts_pid_skel);
+#if ENABLE_MPEGTS_DVB
+  htsmsg_destroy(satellites);
+#endif
 }

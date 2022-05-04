@@ -46,11 +46,12 @@ extern const idclass_t esfilter_class_other;
 
 #define ESF_MASK_VIDEO \
   (SCT_MASK(SCT_MPEG2VIDEO) | SCT_MASK(SCT_H264) | SCT_MASK(SCT_VP8) | \
-   SCT_MASK(SCT_HEVC))
+   SCT_MASK(SCT_HEVC) | SCT_MASK(SCT_VP9) | SCT_MASK(SCT_THEORA))
 
 #define ESF_MASK_AUDIO \
   (SCT_MASK(SCT_MPEG2AUDIO) | SCT_MASK(SCT_AC3) | SCT_MASK(SCT_AAC) | \
-   SCT_MASK(SCT_EAC3) | SCT_MASK(SCT_MP4A) | SCT_MASK(SCT_VORBIS))
+   SCT_MASK(SCT_EAC3) | SCT_MASK(SCT_MP4A) | SCT_MASK(SCT_VORBIS) | \
+   SCT_MASK(SCT_OPUS) | SCT_MASK(SCT_FLAC))
 
 #define ESF_MASK_TELETEXT \
   SCT_MASK(SCT_TELETEXT)
@@ -62,7 +63,7 @@ extern const idclass_t esfilter_class_other;
   SCT_MASK(SCT_CA)
 
 #define ESF_MASK_OTHER \
-  SCT_MASK(SCT_MPEGTS)
+  (SCT_MASK(SCT_MPEGTS) | SCT_MASK(SCT_HBBTV) | SCT_MASK(SCT_RDS))
 
 extern uint32_t esfilterclsmask[];
 
@@ -73,7 +74,7 @@ extern struct esfilter_entry_queue esfilters[];
 typedef enum {
   ESFA_NONE = 0,
   ESFA_USE,		/* use this stream */
-  ESFA_ONCE,		/* use this stream once per language */
+  ESFA_ONE_TIME,	/* use this stream once per language */
   ESFA_EXCLUSIVE,       /* use this stream exclusively */
   ESFA_EMPTY,		/* use this stream when no streams were added */
   ESFA_IGNORE,

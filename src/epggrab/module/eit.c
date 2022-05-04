@@ -24,8 +24,86 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
+#include "eitpatternlist.h"
 #include "input.h"
 #include "input/mpegts/dvb_charset.h"
+#include "dvr/dvr.h"
+
+/* ************************************************************************
+ * Opaque
+ * ***********************************************************************/
+
+typedef struct eit_nit {
+  LIST_ENTRY(eit_nit) link;
+  char *name;
+  uint16_t onid[32];
+  uint16_t tsid[32];
+  uint16_t nbid[32];
+  int onid_count;
+  int tsid_count;
+  int nbid_count;
+} eit_nit_t;
+
+typedef struct eit_sdt {
+  LIST_ENTRY(eit_sdt) link;
+  uint16_t onid[32];
+  uint16_t tsid[32];
+  int onid_count;
+  int tsid_count;
+} eit_sdt_t;
+
+typedef struct eit_private
+{
+  TAILQ_ENTRY(eit_private) link;
+  lang_str_t *name;
+  epggrab_module_ota_t *module;
+  uint16_t pid;
+  uint16_t bat_pid;
+  int conv;
+  uint32_t sdt_enable;
+  uint32_t hacks;
+  uint32_t priv;
+  char slave[32];
+  LIST_HEAD(, eit_nit) nit;
+  LIST_HEAD(, eit_sdt) sdt;
+  epggrab_ota_module_ops_t *ops;
+} eit_private_t;
+
+#define EIT_CONV_HUFFMAN            1
+
+#define EIT_HACK_INTEREST4E         (1<<0)
+#define EIT_HACK_EXTRAMUXLOOKUP     (1<<1)
+#define EIT_HACK_SVCNETLOOKUP       (1<<2)
+
+/* Queued data structure */
+typedef struct eit_data
+{
+  tvh_uuid_t svc_uuid;
+  uint16_t   onid;
+  int        tableid;
+  int        sect;
+  int        local_time;
+  uint16_t   charset_len;
+  uint16_t   cridauth_len;
+  uint8_t    data[0];
+} eit_data_t;
+
+/* Provider configuration */
+typedef struct eit_module_t
+{
+  epggrab_module_ota_scraper_t  ;      ///< Base struct
+  int short_target;
+  int running_immediate;               ///< Handle quickly the events from the current table
+  eit_pattern_list_t p_snum;
+  eit_pattern_list_t p_enum;
+  eit_pattern_list_t p_airdate;        ///< Original air date parser
+  eit_pattern_list_t p_scrape_title;   ///< Scrape title from title + summary data
+  eit_pattern_list_t p_scrape_subtitle;///< Scrape subtitle from summary data
+  eit_pattern_list_t p_scrape_summary; ///< Scrape summary from summary data
+  eit_pattern_list_t p_is_new;         ///< Is programme new to air
+} eit_module_t;
+
+static TAILQ_HEAD(, eit_private) eit_private_list;
 
 /* ************************************************************************
  * Status handling
@@ -33,18 +111,23 @@
 
 typedef struct eit_event
 {
-  char              uri[257];
-  char              suri[257];
+  char              uri[529];
+  char              suri[529];
   
   lang_str_t       *title;
+  lang_str_t       *subtitle;
   lang_str_t       *summary;
   lang_str_t       *desc;
 
   const char       *default_charset;
 
+#if TODO_ADD_EXTRA
   htsmsg_t         *extra;
+#endif
 
   epg_genre_list_t *genre;
+
+  epg_episode_num_t en;
 
   uint8_t           hd, ws;
   uint8_t           ad, st, ds;
@@ -52,7 +135,19 @@ typedef struct eit_event
 
   uint8_t           parental;
 
+  uint8_t           is_new;
+  time_t            first_aired;
+  uint16_t          copyright_year;
+
 } eit_event_t;
+
+
+/*
+ * Forward declarations
+ */
+static void _eit_module_load_config(eit_module_t *mod);
+static void _eit_scrape_clear(eit_module_t *mod);
+static void _eit_done(void *mod);
 
 /* ************************************************************************
  * Diagnostics
@@ -66,12 +161,12 @@ _eit_dtag_dump
 #if APS_DEBUG
   int i = 0, j = 0;
   char tmp[100];
-  tvhlog(LOG_DEBUG, mod->id, "  dtag 0x%02X len %d", dtag, dlen);
+  tvhdebug(mod->subsys, "%s:  dtag 0x%02X len %d", mt->mt_name, dtag, dlen);
   while (i < dlen) {
     j += sprintf(tmp+j, "%02X ", buf[i]);
     i++;
     if ((i % 8) == 0 || (i == dlen)) {
-      tvhlog(LOG_DEBUG, mod->id, "    %s", tmp);
+      tvhdebug(mod->subsys, "%s:    %s", mt->mt_name, tmp);
       j = 0;
     }
   }
@@ -91,20 +186,15 @@ static dvb_string_conv_t _eit_freesat_conv[2] = {
  * Get string
  */
 static int _eit_get_string_with_len
-  ( epggrab_module_t *m,
+  ( epggrab_module_t *mod,
     char *dst, size_t dstlen, 
-		const uint8_t *src, size_t srclen, const char *charset )
+    const uint8_t *src, size_t srclen, const char *charset )
 {
+  epggrab_module_ota_t *m = (epggrab_module_ota_t *)mod;
   dvb_string_conv_t *cptr = NULL;
 
-  /* Enable huffman decode (for freeview and/or freesat) */
-  m = epggrab_module_find_by_id("uk_freesat");
-  if (m && m->enabled) {
+  if (((eit_private_t *)m->opaque)->conv == EIT_CONV_HUFFMAN)
     cptr = _eit_freesat_conv;
-  } else {
-    m = epggrab_module_find_by_id("uk_freeview");
-    if (m && m->enabled) cptr = _eit_freesat_conv;
-  }
 
   /* Convert */
   return dvb_get_string_with_len(dst, dstlen, src, srclen, charset, cptr);
@@ -134,7 +224,7 @@ static int _eit_desc_short_event
     return -1;
   } else if ( r > 1 ) {
     if (!ev->title) ev->title = lang_str_create();
-    lang_str_add(ev->title, buf, lang, 0);
+    lang_str_add(ev->title, buf, lang);
   }
 
   len -= r;
@@ -147,7 +237,7 @@ static int _eit_desc_short_event
     return -1;
   } else if ( r > 1 ) {
     if (!ev->summary) ev->summary = lang_str_create();
-    lang_str_add(ev->summary, buf, lang, 0);
+    lang_str_add(ev->summary, buf, lang);
   }
 
   return 0;
@@ -281,6 +371,14 @@ static int _eit_desc_component
     /* Described */
     if (t == 0x40 || t == 0x44)
       ev->ad = 1;
+
+  /* HEVC */
+  } else if ( c == 0x9 ) {
+
+    ev->ws = 1;
+    if (t > 3)
+      ev->hd = 2;
+
   }
 
   return 0;
@@ -333,7 +431,7 @@ static int _eit_desc_parental
  */
 static int _eit_desc_crid
   ( epggrab_module_t *mod, const uint8_t *ptr, int len,
-    eit_event_t *ev, mpegts_service_t *svc )
+    eit_event_t *ev, eit_data_t *ed )
 {
   int r;
   uint8_t type;
@@ -366,90 +464,339 @@ static int _eit_desc_crid
     
       if (crid) {
         if (strstr(buf, "crid://") == buf) {
-          strncpy(crid, buf, clen);
-          crid[clen-1] = '\0';
-        } else if ( *buf != '/' ) {
+          strlcpy(crid, buf, clen);
+        } else if (*buf != '/') {
           snprintf(crid, clen, "crid://%s", buf);
         } else {
-          const char *defauth = svc->s_dvb_cridauth;
-          if (!defauth)
-            defauth = svc->s_dvb_mux->mm_crid_authority;
-          if (defauth)
-            snprintf(crid, clen, "crid://%s%s", defauth, buf);
+          if (ed->cridauth_len)
+            snprintf(crid, clen, "crid://%s%s", ed->data, buf);
           else
-            snprintf(crid, clen, "crid://onid-%d%s", svc->s_dvb_mux->mm_onid, buf);
+            snprintf(crid, clen, "crid://onid-%d%s", ed->onid, buf);
         }
       }
 
       /* Next */
       len -= 1 + r;
       ptr += 1 + r;
+    } else {
+      break;
+    }
+  }
+  if (len > 3) {
+    return -1;
+  }
+
+  return 0;
+}
+
+/*
+ *
+ */
+static int positive_atoi(const char *s)
+{
+  int i = atoi(s);
+  return i >= 0 ? i : 0;
+}
+
+/* Scrape episode data from the broadcast data.
+ * @param str - string from broadcaster to search for all languages.
+ * @param eit_mod - our module with regex to use.
+ * @param ev - [out] modified event data.
+ */
+static void
+_eit_scrape_episode(lang_str_t *str,
+                    eit_module_t *eit_mod,
+                    eit_event_t *ev)
+{
+  lang_str_ele_t *se;
+  char buffer[2048];
+
+  if (!str) return;
+
+  /* search for season number */
+  RB_FOREACH(se, str, link) {
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_snum))
+      if ((ev->en.s_num = positive_atoi(buffer))) {
+        tvhtrace(LS_TBL_EIT,"  extract season number %d using %s", ev->en.s_num, eit_mod->id);
+        break;
+      }
+  }
+
+  /* ...for episode number */
+  RB_FOREACH(se, str, link) {
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_enum))
+     if ((ev->en.e_num = positive_atoi(buffer))) {
+       tvhtrace(LS_TBL_EIT,"  extract episode number %d using %s", ev->en.e_num, eit_mod->id);
+       break;
+     }
+  }
+
+  /* Extract original air date year */
+  RB_FOREACH(se, str, link) {
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_airdate)) {
+      if (strlen(buffer) == 4) {
+        /* Year component only, so assume it is the copyright year. */
+        ev->copyright_year = positive_atoi(buffer);
+        break;
+      }
+    }
+  }
+
+  /* Extract is_new flag. Any match is assumed to mean "new" */
+  RB_FOREACH(se, str, link) {
+    if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_is_new)) {
+      ev->is_new = 1;
+      break;
+    }
+  }
+}
+
+/* Scrape title/subtitle/summary data from the broadcast data.
+ * @param eit_mod - our module with regex to use.
+ * @param ev - [out] modified event data.
+ */
+static void
+_eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
+{
+  lang_str_ele_t *se;
+  char buffer[2048];
+
+  if (!ev->summary)
+    return;
+
+  /* UK Freeview/Freesat have a subtitle as part of the summary in the format
+   * "subtitle: desc". They may also have the title continue into the
+   * summary. So if configured, run scrapers for the title, the subtitle
+   * and the summary (the latter to tidy up).
+   */
+  if (ev->title && eit_mod->scrape_title) {
+    char title_summary[2048];
+    lang_str_t *ls = lang_str_create();
+    RB_FOREACH(se, ev->title, link) {
+      snprintf(title_summary, sizeof(title_summary), "%s %% %s",
+               se->str, lang_str_get(ev->summary, se->lang));
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), title_summary, se->lang, &eit_mod->p_scrape_title)) {
+        tvhtrace(LS_TBL_EIT, "  scrape title '%s' from '%s' using %s",
+                 buffer, title_summary, eit_mod->id);
+        lang_str_set(&ls, buffer, se->lang);
+      }
+    }
+    lang_str_set_multi(&ev->title, ls);
+    lang_str_destroy(ls);
+  }
+
+  if (eit_mod->scrape_subtitle) {
+    RB_FOREACH(se, ev->summary, link) {
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_scrape_subtitle)) {
+        tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s' from '%s' using %s",
+                 buffer, se->str, eit_mod->id);
+        lang_str_set(&ev->subtitle, buffer, se->lang);
+      }
+    }
+  }
+
+  if (eit_mod->scrape_summary) {
+    lang_str_t *ls = lang_str_create();
+    RB_FOREACH(se, ev->summary, link) {
+      if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_scrape_summary)) {
+        tvhtrace(LS_TBL_EIT, "  scrape summary '%s' from '%s' using %s",
+                 buffer, se->str, eit_mod->id);
+        lang_str_set(&ls, buffer, se->lang);
+      }
+    }
+    lang_str_set_multi(&ev->summary, ls);
+    lang_str_destroy(ls);
+  }
+}
+
+/* ************************************************************************
+ * EIT Event
+ * ***********************************************************************/
+
+static int _eit_process_event_one
+  ( epggrab_module_t *mod, int tableid, int sect,
+    mpegts_service_t *svc, channel_t *ch,
+    eit_event_t *ev,
+    const uint8_t *ptr, int len,
+    int local, int *save )
+{
+  int save2 = 0, rsonly = 0;
+  time_t start, stop;
+  uint16_t eid;
+  uint8_t running;
+  epg_broadcast_t *ebc, _ebc;
+  epg_running_t run;
+  epg_changes_t changes = 0;
+  char tm1[32], tm2[32];
+  int short_target = ((eit_module_t *)mod)->short_target;
+
+  /* Core fields */
+  eid   = ptr[0] << 8 | ptr[1];
+  start = dvb_convert_date(&ptr[2], local);
+  stop  = start + bcdtoint(ptr[7] & 0xff) * 3600 +
+                  bcdtoint(ptr[8] & 0xff) * 60 +
+                  bcdtoint(ptr[9] & 0xff);
+  running = (ptr[10] >> 5) & 0x07;
+
+  if (epg_channel_ignore_broadcast(ch, start))
+    return 0;
+
+  /* Find broadcast */
+  ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes);
+  tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, tbl=%02x, running=%d, start=%s,"
+                       " stop=%s, ebc=%p",
+           svc->s_dvb_svcname ?: "(null)",
+           ch ? channel_get_name(ch, channel_blank_name) : "(null)",
+           eid, tableid, running,
+           gmtime2local(start, tm1, sizeof(tm1)),
+           gmtime2local(stop, tm2, sizeof(tm2)), ebc);
+  if (!ebc) {
+    if (tableid == 0x4e)
+      rsonly = 1;
+    else
+      return 0;
+  }
+
+  if (rsonly) {
+    if (!ev->title)
+      goto running;
+    memset(&_ebc, 0, sizeof(_ebc));
+    _ebc.dvb_eid = eid;
+    _ebc.start = start;
+    _ebc.stop = stop;
+    _ebc.episodelink = epg_set_broadcast_find_by_uri(&epg_episodelinks, ev->uri);
+    _ebc.serieslink = epg_set_broadcast_find_by_uri(&epg_serieslinks, ev->suri);
+    _ebc.title = lang_str_copy(ev->title);
+    ebc = epg_match_now_next(ch, &_ebc);
+    tvhtrace(mod->subsys, "%s:  running state only ebc=%p", svc->s_dvb_svcname ?: "(null)", ebc);
+    lang_str_destroy(_ebc.title);
+    goto running;
+  } else {
+    *save = save2;
+  }
+
+  /*
+   * Broadcast
+   */
+
+  *save |= epg_broadcast_set_dvb_eid(ebc, eid, &changes);
+
+  /* Summary/Description */
+  if (ev->summary)
+    if (short_target != 0 ||
+        (ev->subtitle && lang_str_compare(ev->summary, ev->subtitle)))
+      *save |= epg_broadcast_set_summary(ebc, ev->summary, &changes);
+  if (ev->desc)
+    *save |= epg_broadcast_set_description(ebc, ev->desc, &changes);
+
+  /* Broadcast Metadata */
+  *save |= epg_broadcast_set_is_hd(ebc, ev->hd, &changes);
+  *save |= epg_broadcast_set_is_widescreen(ebc, ev->ws, &changes);
+  *save |= epg_broadcast_set_is_audio_desc(ebc, ev->ad, &changes);
+  *save |= epg_broadcast_set_is_subtitled(ebc, ev->st, &changes);
+  *save |= epg_broadcast_set_is_deafsigned(ebc, ev->ds, &changes);
+
+  /*
+   * Series link
+   */
+
+  if (*ev->suri)
+    *save |= epg_broadcast_set_serieslink_uri(ebc, ev->suri, &changes);
+
+  /*
+   * Episode
+   */
+
+  /* Find episode */
+  if (*ev->uri)
+    *save |= epg_broadcast_set_episodelink_uri(ebc, ev->uri, &changes);
+
+  /* Update Episode */
+  if (ev->is_new)
+    *save |= epg_broadcast_set_is_new(ebc, 1, &changes);
+  *save |= epg_broadcast_set_is_bw(ebc, ev->bw, &changes);
+  if (ev->title)
+    *save |= epg_broadcast_set_title(ebc, ev->title, &changes);
+  if (ev->genre)
+    *save |= epg_broadcast_set_genre(ebc, ev->genre, &changes);
+  if (ev->parental)
+    *save |= epg_broadcast_set_age_rating(ebc, ev->parental, &changes);
+  if (ev->subtitle)
+    *save |= epg_broadcast_set_subtitle(ebc, ev->subtitle, &changes);
+  else if ((short_target == 0 || short_target == 2) && ev->summary)
+    *save |= epg_broadcast_set_subtitle(ebc, ev->summary, &changes);
+#if TODO_ADD_EXTRA
+  if (ev->extra)
+    *save |= epg_broadcast_set_extra(ebc, extra, &changes);
+#endif
+  /* save any found episode number */
+  if (ev->en.s_num || ev->en.e_num || ev->en.p_num)
+    *save |= epg_broadcast_set_epnum(ebc, &ev->en, &changes);
+  if (ev->first_aired > 0)
+    *save |= epg_broadcast_set_first_aired(ebc, ev->first_aired, &changes);
+  if (ev->copyright_year > 0)
+    *save |= epg_broadcast_set_copyright_year(ebc, ev->copyright_year, &changes);
+
+  *save |= epg_broadcast_change_finish(ebc, changes, 0);
+
+
+running:
+  /* use running flag only for current broadcast */
+  if (ebc && running && tableid == 0x4e) {
+    if (sect == 0) {
+      switch (running) {
+      case 2:  run = EPG_RUNNING_WARM;  break;
+      case 3:  run = EPG_RUNNING_PAUSE; break;
+      case 4:  run = EPG_RUNNING_NOW;   break;
+      default: run = EPG_RUNNING_STOP;  break;
+      }
+      *save |= epg_broadcast_set_running(ebc, run);
+    } else if (sect == 1 && running != 2 && running != 3 && running != 4) {
     }
   }
 
   return 0;
 }
 
-
-/* ************************************************************************
- * EIT Event
- * ***********************************************************************/
-
 static int _eit_process_event
-  ( epggrab_module_t *mod, int tableid,
-    mpegts_service_t *svc, const uint8_t *ptr, int len,
-    int *resched, int *save )
+  ( epggrab_module_t *mod, eit_data_t *ed,
+    const uint8_t *ptr0, int len0,
+    int *save, int lock )
 {
-  int save2 = 0;
-  int ret, dllen;
-  time_t start, stop;
-  uint16_t eid;
-  uint8_t dtag, dlen;
-  epg_broadcast_t *ebc;
-  epg_episode_t *ee;
-  epg_serieslink_t *es;
+  eit_module_t *eit_mod = (eit_module_t *)mod;
+  idnode_list_mapping_t *ilm = NULL;
+  mpegts_service_t *svc;
+  channel_t *ch;
   eit_event_t ev;
-  channel_t *ch = LIST_FIRST(&svc->s_channels)->csm_chn;
+  const int tableid = ed->tableid;
+  const int sect = ed->sect;
+  const int local = ed->local_time;
+  const uint8_t *ptr;
+  int r, len;
+  uint8_t dtag, dlen;
+  int dllen;
 
-  if ( len < 12 ) return -1;
+  if (len0 < 12) return -1;
 
-  /* Core fields */
-  eid   = ptr[0] << 8 | ptr[1];
-  start = dvb_convert_date(&ptr[2]);
-  stop  = start + bcdtoint(ptr[7] & 0xff) * 3600 +
-                  bcdtoint(ptr[8] & 0xff) * 60 +
-                  bcdtoint(ptr[9] & 0xff);
-  dllen = ((ptr[10] & 0x0f) << 8) | ptr[11];
+  dllen = ((ptr0[10] & 0x0f) << 8) | ptr0[11];
+  len = len0 - 12;
+  ptr = ptr0 + 12;
 
-  len -= 12;
-  ptr += 12;
-  if ( len < dllen ) return -1;
-  ret  = 12 + dllen;
+  if (len < dllen) return -1;
 
-  /* Find broadcast */
-  ebc  = epg_broadcast_find_by_time(ch, start, stop, eid, 1, &save2);
-  tvhtrace("eit", "eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
-           eid, start, stop, ebc);
-  if (!ebc) return dllen + 12;
-
-  /* Mark re-schedule detect (only now/next) */
-  if (save2 && tableid < 0x50) *resched = 1;
-  *save |= save2;
-
-  /* Process tags */
   memset(&ev, 0, sizeof(ev));
-  ev.default_charset = dvb_charset_find(NULL, NULL, svc);
-
+  if (ed->charset_len)
+    ev.default_charset = (char *)ed->data + ed->cridauth_len;
   while (dllen > 2) {
-    int r;
     dtag = ptr[0];
     dlen = ptr[1];
-    tvhtrace(mod->id, "  dtag %02X dlen %d", dtag, dlen);
-    tvhlog_hexdump(mod->id, ptr+2, dlen);
 
     dllen -= 2;
     ptr   += 2;
     if (dllen < dlen) break;
+
+    tvhtrace(mod->subsys, "%s:  dtag %02X dlen %d", mod->id, dtag, dlen);
+    tvhlog_hexdump(mod->subsys, ptr, dlen);
 
     switch (dtag) {
       case DVB_DESC_SHORT_EVENT:
@@ -468,7 +815,7 @@ static int _eit_process_event
         r = _eit_desc_parental(mod, ptr, dlen, &ev);
         break;
       case DVB_DESC_CRID:
-        r = _eit_desc_crid(mod, ptr, dlen, &ev, svc);
+        r = _eit_desc_crid(mod, ptr, dlen, &ev, ed);
         break;
       default:
         r = 0;
@@ -481,91 +828,142 @@ static int _eit_process_event
     ptr   += dlen;
   }
 
-  /*
-   * Broadcast
+  /* Do all scraping here, outside the global lock.
+   *
+   * We search across all the main fields using the same regex and
+   * merge the results with the last match taking precendence.  So if
+   * EIT has episode in title and a different one in the description
+   * then we use the one from the description.
    */
-
-  /* Summary/Description */
-  if ( ev.summary )
-    *save |= epg_broadcast_set_summary2(ebc, ev.summary, mod);
-  if ( ev.desc )
-    *save |= epg_broadcast_set_description2(ebc, ev.desc, mod);
-
-  /* Broadcast Metadata */
-  *save |= epg_broadcast_set_is_hd(ebc, ev.hd, mod);
-  *save |= epg_broadcast_set_is_widescreen(ebc, ev.ws, mod);
-  *save |= epg_broadcast_set_is_audio_desc(ebc, ev.ad, mod);
-  *save |= epg_broadcast_set_is_subtitled(ebc, ev.st, mod);
-  *save |= epg_broadcast_set_is_deafsigned(ebc, ev.ds, mod);
-
-  /*
-   * Series link
-   */
-
-  if (*ev.suri) {
-    if ((es = epg_serieslink_find_by_uri(ev.suri, 1, save)))
-      *save |= epg_broadcast_set_serieslink(ebc, es, mod);
+  if (eit_mod->scrape_episode) {
+    if (ev.title)
+      _eit_scrape_episode(ev.title, eit_mod, &ev);
+    if (ev.desc)
+      _eit_scrape_episode(ev.desc, eit_mod, &ev);
+    if (ev.summary)
+      _eit_scrape_episode(ev.summary, eit_mod, &ev);
   }
 
-  /*
-   * Episode
-   */
+  _eit_scrape_text(eit_mod, &ev);
 
-  /* Find episode */
-  if (*ev.uri) {
-    if ((ee = epg_episode_find_by_uri(ev.uri, 1, save)))
-      *save |= epg_broadcast_set_episode(ebc, ee, mod);
+  if (lock)
+    tvh_mutex_lock(&global_lock);
+  svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
+  if (svc && eit_mod->opaque) {
+    LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
+      ch = (channel_t *)ilm->ilm_in2;
+      if (!ch->ch_enabled || ch->ch_epg_parent) continue;
+      if (_eit_process_event_one(mod, tableid, sect, svc, ch,
+                                 &ev, ptr0, len0, local, save) < 0)
+        break;
+    }
+  }
+  if (lock)
+    tvh_mutex_unlock(&global_lock);
 
-  /* Existing/Artificial */
-  } else
-    ee = epg_broadcast_get_episode(ebc, 1, save);
-
-  /* Update Episode */
-  if (ee) {
-    *save |= epg_episode_set_is_bw(ee, ev.bw, mod);
-    if ( ev.title )
-      *save |= epg_episode_set_title2(ee, ev.title, mod);
-    if ( ev.genre )
-      *save |= epg_episode_set_genre(ee, ev.genre, mod);
-    if ( ev.parental )
-      *save |= epg_episode_set_age_rating(ee, ev.parental, mod);
 #if TODO_ADD_EXTRA
-    if ( ev.extra )
-      *save |= epg_episode_set_extra(ee, extra, mod);
+  if (ev.extra)    htsmsg_destroy(ev.extra);
 #endif
+  if (ev.genre)    epg_genre_list_destroy(ev.genre);
+  if (ev.title)    lang_str_destroy(ev.title);
+  if (ev.subtitle) lang_str_destroy(ev.subtitle);
+  if (ev.summary)  lang_str_destroy(ev.summary);
+  if (ev.desc)     lang_str_destroy(ev.desc);
+
+  if (ilm)
+    return -1;
+  return 12 + (((ptr0[10] & 0x0f) << 8) | ptr0[11]);
+}
+
+static void
+_eit_process_data(void *m, void *data, uint32_t len)
+{
+  int save = 0, r;
+  size_t hlen;
+  eit_data_t *ed = data;
+
+  assert(len >= sizeof(ed));
+  hlen = sizeof(*ed) + ed->cridauth_len + ed->charset_len;
+  assert(len >= hlen);
+  data += hlen;
+  len -= hlen;
+
+  while (len) {
+    if ((r = _eit_process_event(m, ed, data, len, &save, 1)) < 0)
+      break;
+    assert(r > 0);
+    len -= r;
+    data += r;
   }
 
-  /* Tidy up */
-#if TODO_ADD_EXTRA
-  if (ev.extra)   htsmsg_destroy(ev.extra);
-#endif
-  if (ev.genre)   epg_genre_list_destroy(ev.genre);
-  if (ev.title)   lang_str_destroy(ev.title);
-  if (ev.summary) lang_str_destroy(ev.summary);
-  if (ev.desc)    lang_str_destroy(ev.desc);
+  if (save) {
+    tvh_mutex_lock(&global_lock);
+    epg_updated();
+    tvh_mutex_unlock(&global_lock);
+  }
+}
 
-  return ret;
+static void
+_eit_process_immediate(void *m, const void *ptr, uint32_t len, eit_data_t *ed)
+{
+  int save = 0, r;
+
+  while (len) {
+    if ((r = _eit_process_event(m, ed, ptr, len, &save, 0)) < 0)
+      break;
+    assert(r > 0);
+    len -= r;
+    ptr += r;
+  }
+
+  if (save)
+    epg_updated();
 }
 
 static int
 _eit_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r;
-  int sect, last, ver, save, resched;
+  int r, sect, last, ver;
   uint8_t  seg;
   uint16_t onid, tsid, sid;
-  uint32_t extraid;
+  uint32_t extraid, hacks;
   mpegts_service_t     *svc;
-  mpegts_mux_t         *mm  = mt->mt_mux;
-  epggrab_ota_map_t    *map = mt->mt_opaque;
-  epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
+  mpegts_mux_t         *mm;
+  epggrab_ota_map_t    *map;
+  epggrab_module_t     *mod;
   epggrab_ota_mux_t    *ota = NULL;
-  mpegts_table_state_t *st;
+  mpegts_psi_table_state_t *st;
+  th_subscription_t    *ths;
+  eit_data_t           *data;
+  const char           *cridauth, *charset;
+  int                   cridauth_len, charset_len, data_len;
+  eit_private_t        *priv;
+
+  if (!epggrab_ota_running)
+    return -1;
+
+  mm  = mt->mt_mux;
+  map = mt->mt_opaque;
+  mod = (epggrab_module_t *)map->om_module;
+  priv = (eit_private_t *)((epggrab_module_ota_t *)mod)->opaque;
+  if (priv == NULL)
+    return -1;
+  hacks = priv->hacks;
+
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
+  if (ths) {
+    subscription_add_bytes_in(ths, len);
+    subscription_add_bytes_out(ths, len);
+  }
 
   /* Validate */
-  if(tableid < 0x4e || tableid > 0x6f || len < 11)
+  if(tableid < 0x4e || tableid > 0x6f || len < 11) {
+    if (ths)
+      atomic_add(&ths->ths_total_err, 1);
     return -1;
+  }
 
   /* Basic info */
   sid     = ptr[0] << 8 | ptr[1];
@@ -575,14 +973,21 @@ _eit_callback
   extraid = ((uint32_t)tsid << 16) | sid;
   // TODO: extra ID should probably include onid
 
+  tvhtrace(LS_TBL_EIT, "%s: sid %i tsid %04x onid %04x seg %02x",
+           mt->mt_name, sid, tsid, onid, seg);
+
   /* Register interest */
-  if (tableid >= 0x50)
+  if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60) ||
+      (hacks & EIT_HACK_INTEREST4E) != 0 /* uk_freesat hack */)
     ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
-  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 11, &st, &sect, &last, &ver);
-  if (r != 1) return r;
-  if (st) {
+  r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
+                      tableid, extraid, 11, &st, &sect, &last, &ver, 0);
+  if (r == 0) goto complete;
+  if (r < 0) return r;
+  if (tableid != 0x4e && r != 1) return r;
+  if (st && r > 0) {
     uint32_t mask;
     int sa = seg & 0xF8;
     int sb = 7 - (seg & 0x07);
@@ -590,21 +995,28 @@ _eit_callback
     mask <<= (24 - (sa % 32));
     st->sections[sa/32] &= ~mask;
   }
+  
+  /* UK Cable Virgin: EPG data for services in other transponders is transmitted 
+  // in the 'actual' transpoder table IDs */
+  if ((hacks & EIT_HACK_EXTRAMUXLOOKUP) != 0 && (tableid == 0x50 || tableid == 0x4E)) {
+    mm = mpegts_network_find_mux(mm->mm_network, onid, tsid, 1);
+  }
+  if(!mm)
+    goto done;
 
   /* Get transport stream */
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
-  if(tableid == 0x4f || tableid >= 0x60) {
-    mm = mpegts_network_find_mux(mm->mm_network, onid, tsid);
-
+  if (tableid == 0x4f || tableid >= 0x60) {
+    mm = mpegts_network_find_mux(mm->mm_network, onid, tsid, 1);
   } else {
-    if (mm->mm_tsid != tsid ||
-        mm->mm_onid != onid) {
+    if ((mm->mm_tsid != tsid || mm->mm_onid != onid) &&
+        !mm->mm_eit_tsid_nocheck) {
       if (mm->mm_onid != MPEGTS_ONID_NONE &&
           mm->mm_tsid != MPEGTS_TSID_NONE)
-        tvhtrace("eit",
-                "invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
-                tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
+        tvhtrace(LS_TBL_EIT,
+                "%s: invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
+                mt->mt_name, tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
       mm = NULL;
     }
   }
@@ -613,9 +1025,19 @@ _eit_callback
 
   /* Get service */
   svc = mpegts_mux_find_service(mm, sid);
-  if (!svc)
-    goto done;
+  if (!svc) {
+    /* NZ Freesat: use main data */
+    if (hacks & EIT_HACK_SVCNETLOOKUP) {
+      svc = mpegts_network_find_active_service(mm->mm_network, sid, &mm);
+      if (svc)
+        goto svc_ok;
+    }
 
+    tvhtrace(LS_TBL_EIT, "sid %i not found", sid);
+    goto done;
+  }
+
+svc_ok:
   if (map->om_first) {
     map->om_tune_count++;
     map->om_first = 0;
@@ -623,32 +1045,57 @@ _eit_callback
 
   /* Register this */
   if (ota)
-    epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id), 1);
+    epggrab_ota_service_add(map, ota, &svc->s_id.in_uuid, 1);
 
   /* No point processing */
   if (!LIST_FIRST(&svc->s_channels))
     goto done;
 
-  /* Process events */
-  save = resched = 0;
+  if (svc->s_dvb_ignore_eit)
+    goto done;
+
+  /* Queue events */
   len -= 11;
   ptr += 11;
-  while (len) {
-    int r;
-    if ((r = _eit_process_event(mod, tableid, svc, ptr, len,
-                                &resched, &save)) < 0)
-      break;
-    len -= r;
-    ptr += r;
+  if (len >= 12) {
+    cridauth = svc->s_dvb_cridauth;
+    if (!cridauth)
+      cridauth = svc->s_dvb_mux->mm_crid_authority;
+    cridauth_len = cridauth ? strlen(cridauth) + 1 : 0;
+    charset = dvb_charset_find(NULL, NULL, svc);
+    charset_len = charset ? strlen(charset) + 1 : 0;
+    data_len = sizeof(*data) + cridauth_len + charset_len;
+    data = alloca(data_len);
+    data->tableid = tableid;
+    data->sect = sect;
+    data->svc_uuid = svc->s_id.in_uuid;
+    data->onid = onid;
+    data->local_time = mm->mm_network->mn_localtime;
+    if (cridauth_len) {
+      data->cridauth_len = cridauth_len;
+      memcpy(data->data, cridauth, cridauth_len);
+    } else {
+      data->cridauth_len = 0;
+    }
+    if (charset_len) {
+      data->charset_len = charset_len;
+      memcpy(data->data + cridauth_len, charset, charset_len);
+    } else {
+      data->charset_len = 0;
+    }
+    if (((eit_module_t *)mod)->running_immediate && tableid == 0x4e) {
+      /* handle running state immediately */
+      _eit_process_immediate(mod, ptr, len, data);
+    } else {
+      /* handle those data later */
+      epggrab_queue_data(mod, data, data_len, ptr, len);
+    }
   }
 
-  /* Update EPG */
-  if (resched) epggrab_resched();
-  if (save)    epg_updated();
-  
 done:
-  r = dvb_table_end(mt, st, sect);
-  if (ota && !r)
+  r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
+complete:
+  if (ota && !r && (tableid >= 0x50 && tableid < 0x60))
     epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
   
   return r;
@@ -661,51 +1108,132 @@ done:
 static int _eit_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
+  return 0;
+}
+
+static void _eit_install_one_handler
+  ( mpegts_mux_t *dm, epggrab_ota_map_t *map )
+{
   epggrab_module_ota_t *m = map->om_module;
-  int pid, opts = 0;
-
-  /* Disabled */
-  if (!m->enabled && !map->om_forced) return -1;
-
-  /* Freeview (switch to EIT, ignore if explicitly enabled) */
-  // Note: do this as PID is the same
-  if (!strcmp(m->id, "uk_freeview")) {
-    m = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
-    if (m->enabled) return -1;
-  }
-
-  /* Freesat (3002/3003) */
-  if (!strcmp("uk_freesat", m->id)) {
-    mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", MT_CRC, 3002);
-    pid = 3003;
-
-  /* Viasat Baltic (0x39) */
-  } else if (!strcmp("viasat_baltic", m->id)) {
-    pid = 0x39;
+  eit_private_t *priv = m->opaque;
+  int pid = priv->pid;
+  int opts = 0;
 
   /* Standard (0x12) */
-  } else {
-    pid  = 0x12;
+  if (pid == 0) {
+    pid  = DVB_EIT_PID;
     opts = MT_RECORD;
   }
-  mpegts_table_add(dm, 0, 0, _eit_callback, map, m->id, MT_CRC | opts, pid);
-  // TODO: might want to limit recording to EITpf only
-  tvhlog(LOG_DEBUG, m->id, "installed table handlers");
-  return 0;
+
+  mpegts_table_add(dm, 0, 0, _eit_callback, map, map->om_module->id, LS_TBL_EIT,
+                   MT_CRC | opts, pid, MPS_WEIGHT_EIT);
+  tvhdebug(m->subsys, "%s: installed table handler (pid %d)", m->id, pid);
+}
+
+static void _eit_install_handlers
+  ( epggrab_ota_map_t *_map, mpegts_mux_t *dm )
+{
+  epggrab_ota_mux_t *om;
+  epggrab_ota_map_t *map, *map2;
+  epggrab_module_ota_t *m, *m2;
+  epggrab_ota_mux_eit_plist_t *plist;
+  eit_private_t *priv, *priv2;
+  const char *modname;
+
+  om = epggrab_ota_find_mux(dm);
+  if (!om)
+    return;
+  modname = om->om_force_modname;
+
+  priv = NULL;
+  map = NULL;
+  if (strempty(modname)) {
+    LIST_FOREACH(plist, &om->om_eit_plist, link) {
+      priv2 = (eit_private_t *)plist->priv;
+      if (!priv || priv->module->priority < priv2->module->priority) {
+        /* ignore priority for the slave, always prefer master */
+        if (priv && strcmp(priv->slave, priv2->module->id) == 0)
+          continue;
+        /* find the ota map */
+        m = priv2->module;
+        map = epggrab_ota_find_map(om, m);
+        if (!map || !m->enabled) {
+          tvhtrace(m->subsys, "handlers - module '%s' not enabled", m->id);
+          continue;
+        }
+        priv = priv2;
+      }
+    }
+  } else {
+    m = (epggrab_module_ota_t *)epggrab_module_find_by_id(modname);
+    if (m) {
+      priv = (eit_private_t *)m->opaque;
+      map = epggrab_ota_find_map(om, m);
+    }
+  }
+
+  if (!priv || !map)
+    return;
+
+  epggrab_ota_free_eit_plist(om);
+
+  if (priv->bat_pid) {
+    mpegts_table_add(dm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback, NULL,
+                     "ebat", LS_TBL_BASE, MT_CRC, priv->bat_pid, MPS_WEIGHT_EIT);
+  }
+
+  m = priv->module;
+
+  tvhtrace(m->subsys, "handlers - detected module '%s'", m->id);
+
+  if (!strempty(priv->slave)) {
+    m2 = (epggrab_module_ota_t *)epggrab_module_find_by_id(priv->slave);
+    if (m2) {
+      map2 = epggrab_ota_find_map(om, m2);
+      if (map2) {
+        tvhtrace(m->subsys, "handlers - detected slave module '%s'", m2->id);
+        _eit_install_one_handler(dm, map2);
+      }
+    }
+  }
+
+  _eit_install_one_handler(dm, map);
+
+  mpegts_mux_set_epg_module(dm, m->id);
+}
+
+static int _eit_activate(void *m, int e)
+{
+  eit_module_t *mod = m;
+  tvhtrace(LS_TBL_EIT, "_eit_activate %s change to %d from %d with scrape_episode of %d and scrape_subtitle of %d",
+           mod->id, e, mod->active, mod->scrape_episode, mod->scrape_subtitle);
+  const int original_status = mod->active;
+
+  /* We expect to be activated/deactivated infrequently so free up the
+   * lists read from the config files and reload when the scraper is
+   * activated. This allows user to modify the config files and get
+   * them re-read easily.
+   */
+  _eit_scrape_clear(mod);
+
+  mod->active = e;
+
+  if (e) {
+    _eit_module_load_config(mod);
+  }
+
+  /* Return save if value has changed */
+  return e != original_status;
 }
 
 static int _eit_tune
   ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
   int r = 0;
-  epggrab_module_ota_t *m = map->om_module;
   mpegts_service_t *s;
   epggrab_ota_svc_link_t *osl, *nxt;
 
   lock_assert(&global_lock);
-
-  /* Disabled */
-  if (!m->enabled) return 0;
 
   /* Have gathered enough info to decide */
   if (!om->om_complete)
@@ -718,7 +1246,7 @@ static int _eit_tune
     nxt = RB_NEXT(osl, link);
     /* rule: if 5 mux scans fail for this service, remove it */
     if (osl->last_tune_count + 5 <= map->om_tune_count ||
-        !(s = mpegts_service_find_by_uuid(osl->uuid))) {
+        !(s = mpegts_service_find_by_uuid0(&osl->uuid))) {
       epggrab_ota_service_del(map, om, osl, 1);
     } else {
       if (LIST_FIRST(&s->s_channels))
@@ -729,19 +1257,437 @@ static int _eit_tune
   return r;
 }
 
+static int eit_nit_array_check(uint16_t val, uint16_t *array, int array_count)
+{
+  int i;
+
+  if (array_count <= 0)
+    return 0;
+  for (i = 0; i < array_count; i++)
+    if (array[i] == val)
+      return 0;
+  return 1;
+}
+
+static void eit_queue_priv
+  (mpegts_mux_t *dm, const char *src, eit_private_t *priv)
+{
+  epggrab_ota_mux_t *om;
+  epggrab_ota_mux_eit_plist_t *plist, *plist2;
+
+  om = epggrab_ota_find_mux(dm);
+  if (!om)
+    return;
+
+  LIST_FOREACH(plist2, &om->om_eit_plist, link)
+    if (plist2->priv == priv)
+      return;
+
+  tvhtrace(LS_TBL_EIT, "%s - detected module '%s'", src, priv->module->id);
+  plist = calloc(1, sizeof(*plist));
+  plist->src = src;
+  plist->priv = priv;
+  LIST_INSERT_HEAD(&om->om_eit_plist, plist, link);
+
+  om->om_detected = 1;
+}
+
+void eit_nit_callback
+  (mpegts_table_t *mt, uint16_t nbid, const char *name, uint32_t nitpriv)
+{
+  mpegts_mux_t *dm = mt->mt_mux;
+  eit_nit_t *nit;
+  eit_private_t *priv = NULL;
+
+  tvhtrace(LS_TBL_EIT, "NIT - tsid %04X (%d) onid %04X (%d) nbid %04X (%d) network name '%s' private %08X",
+           dm->mm_tsid, dm->mm_tsid, dm->mm_onid, dm->mm_onid, nbid, nbid, name, nitpriv);
+
+  TAILQ_FOREACH(priv, &eit_private_list, link) {
+    if (priv->priv && priv->priv != nitpriv)
+      continue;
+    if (LIST_FIRST(&priv->nit)) {
+      LIST_FOREACH(nit, &priv->nit, link) {
+        if (nit->name && strcmp(nit->name, name))
+          continue;
+        if (eit_nit_array_check(dm->mm_onid, nit->onid, nit->onid_count))
+          continue;
+        if (eit_nit_array_check(dm->mm_tsid, nit->tsid, nit->tsid_count))
+          continue;
+        if (eit_nit_array_check(nbid, nit->nbid, nit->nbid_count))
+          continue;
+        break;
+      }
+      if (nit)
+        break;
+    } else {
+      break;
+    }
+  }
+
+  if (!priv)
+    return;
+
+  eit_queue_priv(dm, "NIT", priv);
+}
+
+void eit_sdt_callback(mpegts_table_t *mt, uint32_t sdtpriv)
+{
+  mpegts_mux_t *dm = mt->mt_mux;
+  eit_sdt_t *sdt;
+  eit_private_t *priv = NULL;
+
+  tvhtrace(LS_TBL_EIT, "SDT - tsid %04X (%d) onid %04X (%d) private %08X",
+           dm->mm_tsid, dm->mm_tsid, dm->mm_onid, dm->mm_onid, sdtpriv);
+
+  TAILQ_FOREACH(priv, &eit_private_list, link) {
+    if (!priv->sdt_enable)
+      continue;
+    if (priv->priv && priv->priv != sdtpriv)
+      continue;
+    if (LIST_FIRST(&priv->sdt)) {
+      LIST_FOREACH(sdt, &priv->sdt, link) {
+        if (eit_nit_array_check(dm->mm_onid, sdt->onid, sdt->onid_count))
+          continue;
+        if (eit_nit_array_check(dm->mm_tsid, sdt->tsid, sdt->tsid_count))
+          continue;
+        break;
+      }
+      if (sdt)
+        break;
+    } else {
+      break;
+    }
+  }
+
+  if (!priv)
+    return;
+
+  eit_queue_priv(dm, "SDT", priv);
+}
+
+static void _eit_scrape_clear(eit_module_t *mod)
+{
+  eit_pattern_free_list(&mod->p_snum);
+  eit_pattern_free_list(&mod->p_enum);
+  eit_pattern_free_list(&mod->p_airdate);
+  eit_pattern_free_list(&mod->p_scrape_title);
+  eit_pattern_free_list(&mod->p_scrape_subtitle);
+  eit_pattern_free_list(&mod->p_scrape_summary);
+  eit_pattern_free_list(&mod->p_is_new);
+}
+
+static int _eit_scrape_load_one ( htsmsg_t *m, eit_module_t* mod )
+{
+  if (mod->scrape_episode) {
+    eit_pattern_compile_named_list(&mod->p_snum, m, "season_num");
+    eit_pattern_compile_named_list(&mod->p_enum, m, "episode_num");
+    eit_pattern_compile_named_list(&mod->p_airdate, m, "airdate");
+    eit_pattern_compile_named_list(&mod->p_is_new, m, "is_new");
+  }
+
+  if (mod->scrape_title) {
+    eit_pattern_compile_named_list(&mod->p_scrape_title, m, "scrape_title");
+  }
+
+  if (mod->scrape_subtitle) {
+    eit_pattern_compile_named_list(&mod->p_scrape_subtitle, m, "scrape_subtitle");
+  }
+
+  if (mod->scrape_summary) {
+    eit_pattern_compile_named_list(&mod->p_scrape_summary, m, "scrape_summary");
+  }
+
+  return 1;
+}
+
+static void _eit_module_load_config(eit_module_t *mod)
+{
+  if (!mod->scrape_episode && !mod->scrape_subtitle) {
+    tvhinfo(LS_TBL_EIT, "module %s - scraper disabled by config", mod->id);
+    return;
+  }
+
+  const char config_path[] = "epggrab/eit/scrape/%s";
+  /* Only use the user config if they have supplied one and it is not empty.
+   * Otherwise we default to using configuration based on the module
+   * name such as "uk_freeview".
+   */
+  const char *config_file = mod->scrape_config && *mod->scrape_config ?
+    mod->scrape_config : mod->id;
+
+  tvhinfo(LS_TBL_EIT, "scraper %s attempt to load config \"%s\"", mod->id, config_file);
+
+  htsmsg_t *m = hts_settings_load(config_path, config_file);
+  char *generic_name = NULL;
+  if (!m) {
+    /* No config file so try loading a generic config based on
+     * the first component of the id. In the above case it would
+     * be "uk". This allows config for a country to be shared across
+     * two grabbers such as DVB-T and DVB-S.
+     */
+    generic_name = strdup(config_file);
+    if (generic_name) {
+      char *underscore = strstr(generic_name, "_");
+      if (underscore) {
+        /* Terminate the string at the underscore */
+        *underscore = 0;
+        config_file = generic_name;
+        m = hts_settings_load(config_path, config_file);
+      }
+    }
+  }
+
+  if (m) {
+    const int r = _eit_scrape_load_one(m, mod);
+    if (r > 0)
+      tvhinfo(LS_TBL_EIT, "scraper %s loaded config \"%s\"", mod->id, config_file);
+    else
+      tvhwarn(LS_TBL_EIT, "scraper %s failed to load config \"%s\"", mod->id, config_file);
+    htsmsg_destroy(m);
+  } else {
+      tvhinfo(LS_TBL_EIT, "scraper %s no scraper config files found", mod->id);
+  }
+
+  if (generic_name)
+    free(generic_name);
+}
+
+static void _eit_done0( eit_private_t *priv )
+{
+  eit_nit_t *nit;
+  while ((nit = LIST_FIRST(&priv->nit)) != NULL) {
+    LIST_REMOVE(nit, link);
+    free(nit->name);
+    free(nit);
+  }
+  free(priv->ops);
+  lang_str_destroy(priv->name);
+  free(priv);
+}
+
+void _eit_done ( void *m )
+{
+  eit_module_t *mod = m;
+  eit_private_t *priv = mod->opaque;
+  _eit_scrape_clear(mod);
+  mod->opaque = NULL;
+  TAILQ_REMOVE(&eit_private_list, priv, link);
+  _eit_done0(priv);
+}
+
+static htsmsg_t *
+epggrab_mod_eit_class_short_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Subtitle"),  0 },
+    { N_("Summary"), 1 },
+    { N_("Subtitle and summary"), 2 }
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
+static const idclass_t epggrab_mod_eit_class = {
+  .ic_super      = &epggrab_mod_ota_scraper_class,
+  .ic_class      = "epggrab_mod_eit",
+  .ic_caption    = N_("Over-the-air EIT EPG grabber"),
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_INT,
+      .id     = "short_target",
+      .name   = N_("Short EIT description"),
+      .desc   = N_("Set the short EIT destription to given target (subtitle, summary or both)."),
+      .off    = offsetof(eit_module_t, short_target),
+      .list   = epggrab_mod_eit_class_short_list,
+      .group  = 1,
+      .opts   = PO_EXPERT,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "running_immediate",
+      .name   = N_("Running state immediately"),
+      .desc   = N_("Handle the running state (EITp/f) immediately. "
+                   "Usually, keep this off. It might increase "
+                   "the recordings accuracy on very slow systems."),
+      .off    = offsetof(eit_module_t, running_immediate),
+      .group  = 1,
+      .opts   = PO_EXPERT,
+    },
+    {}
+  }
+};
+
+static eit_module_t *eit_module_ota_create
+  ( const char *id, int subsys, const char *saveid,
+    const char *name, int priority,
+    epggrab_ota_module_ops_t *ops )
+{
+  eit_module_t * mod = (eit_module_t *)
+    epggrab_module_ota_create(calloc(1, sizeof(eit_module_t)),
+                              id, subsys, saveid, name, priority,
+                              &epggrab_mod_eit_class, ops);
+  return mod;
+}
+
+static void eit_parse_list
+  ( htsmsg_t *conf, const char *fname, uint16_t *list, int list_len, int *count )
+{
+  htsmsg_t *l = htsmsg_get_list(conf, fname);
+  htsmsg_field_t *f;
+  int val;
+  *count = 0;
+  if (l == 0) {
+    val = htsmsg_get_s32_or_default(conf, fname, -1);
+    if (val >= 0) {
+      list[0] = val;
+      *count = 1;
+    }
+    return;
+  }
+  HTSMSG_FOREACH(f, l) {
+    if (!htsmsg_field_get_s32(f, &val) && val >= 0 && val < 65536) {
+      *list++ = val;
+      (*count)++;
+      list_len--;
+    }
+    if (list_len == 0)
+      break;
+  }
+}
+
+static void eit_init_one ( const char *id, htsmsg_t *conf )
+{
+  epggrab_ota_module_ops_t *ops;
+  eit_private_t *priv;
+  eit_nit_t *nit;
+  eit_sdt_t *sdt;
+  const char *s;
+  htsmsg_t *map, *e;
+  htsmsg_field_t *f;
+  int prio = htsmsg_get_s32_or_default(conf, "prio", 1);
+  lang_str_t *name_str = lang_str_deserialize(conf, "name");
+
+  ops = calloc(1, sizeof(*ops));
+  priv = calloc(1, sizeof(*priv));
+  ops->start = _eit_start;
+  ops->handlers = _eit_install_handlers;
+  ops->done = _eit_done;
+  ops->activate = _eit_activate;
+  ops->process_data = _eit_process_data;
+  ops->tune = _eit_tune;
+  ops->opaque = priv;
+  priv->ops = ops;
+  priv->pid = htsmsg_get_s32_or_default(conf, "pid", 0);
+  s = htsmsg_get_str(conf, "conv");
+  if (s && strcmp(s, "huffman") == 0)
+    priv->conv = EIT_CONV_HUFFMAN;
+  priv->priv = htsmsg_get_u32_or_default(conf, "priv", 0);
+  map = htsmsg_get_map(conf, "nit");
+  if (map) {
+    HTSMSG_FOREACH(f, map) {
+      nit = calloc(1, sizeof(*nit));
+      nit->name = htsmsg_field_name(f)[0] ? strdup(htsmsg_field_name(f)) : NULL;
+      if ((e = htsmsg_field_get_map(f)) != NULL) {
+        eit_parse_list(e, "onid", nit->onid, ARRAY_SIZE(nit->onid), &nit->onid_count);
+        eit_parse_list(e, "tsid", nit->tsid, ARRAY_SIZE(nit->tsid), &nit->tsid_count);
+        eit_parse_list(e, "nbid", nit->nbid, ARRAY_SIZE(nit->nbid), &nit->nbid_count);
+      }
+      LIST_INSERT_HEAD(&priv->nit, nit, link);
+    }
+  }
+  priv->sdt_enable = htsmsg_get_u32_or_default(conf, "sdt_enable", 0);
+  map = htsmsg_get_map(conf, "sdt");
+  if (map) {
+    HTSMSG_FOREACH(f, map) {
+      sdt = calloc(1, sizeof(*sdt));
+      if ((e = htsmsg_field_get_map(f)) != NULL) {
+        eit_parse_list(e, "onid", sdt->onid, ARRAY_SIZE(sdt->onid), &sdt->onid_count);
+        eit_parse_list(e, "tsid", sdt->tsid, ARRAY_SIZE(sdt->tsid), &sdt->tsid_count);
+      }
+      LIST_INSERT_HEAD(&priv->sdt, sdt, link);
+    }
+  }
+  map = htsmsg_get_map(conf, "hacks");
+  if (map) {
+    HTSMSG_FOREACH(f, map) {
+      if (strcmp(htsmsg_field_name(f), "slave") == 0) {
+        s = htsmsg_field_get_str(f);
+        if (s) strncpy(priv->slave, s, sizeof(priv->slave) - 1);
+      } else if (strcmp(htsmsg_field_name(f), "interest-4e") == 0)
+        priv->hacks |= EIT_HACK_INTEREST4E;
+      else if (strcmp(htsmsg_field_name(f), "extra-mux-lookup") == 0)
+        priv->hacks |= EIT_HACK_EXTRAMUXLOOKUP;
+      else if (strcmp(htsmsg_field_name(f), "svc-net-lookup") == 0)
+        priv->hacks |= EIT_HACK_EXTRAMUXLOOKUP;
+      else if (strcmp(htsmsg_field_name(f), "bat") == 0) {
+        if (!(e = htsmsg_field_get_map(f))) continue;
+        priv->bat_pid = htsmsg_get_s32_or_default(e, "pid", 0);
+      }
+    }
+  }
+  priv->name = name_str;
+  if (name_str) {
+    priv->module = (epggrab_module_ota_t *)
+      eit_module_ota_create(id, LS_TBL_EIT, NULL,
+                            lang_str_get(name_str, NULL),
+                            prio, ops);
+    TAILQ_INSERT_TAIL(&eit_private_list, priv, link);
+  } else {
+    tvherror(LS_TBL_EIT, "missing name for '%s' in config", id);
+    _eit_done0(priv);
+  }
+}
+
 void eit_init ( void )
 {
-  static epggrab_ota_module_ops_t ops = {
-    .start = _eit_start,
-    .tune  = _eit_tune,
-  };
+  htsmsg_field_t *f;
+  htsmsg_t *c, *e;
 
-  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1, &ops, NULL);
-  epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5, &ops, NULL);
-  epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5, &ops, NULL);
-  epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5, &ops, NULL);
+  TAILQ_INIT(&eit_private_list);
+
+  c = hts_settings_load("epggrab/eit/config");
+  if (!c) {
+    tvhwarn(LS_TBL_EIT, "EIT configuration file missing");
+    return;
+  }
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    eit_init_one(htsmsg_field_name(f), e);
+  }
+  htsmsg_destroy(c);
+}
+
+htsmsg_t *eit_module_id_list( const char *lang )
+{
+  eit_private_t *priv, *priv2;
+  htsmsg_t *e, *l = htsmsg_create_list();
+
+  TAILQ_FOREACH(priv, &eit_private_list, link) {
+    TAILQ_FOREACH(priv2, &eit_private_list, link)
+      if (strcmp(priv2->slave, priv->module->id) == 0)
+        break;
+    if (priv2) continue; /* show only parents */
+    e = htsmsg_create_key_val(priv->module->id, lang_str_get(priv->name, lang));
+    htsmsg_add_msg(l, NULL, e);
+  }
+  return l;
+}
+
+const char *eit_check_module_id ( const char *id )
+{
+  eit_private_t *priv;
+
+  if (!id) return NULL;
+  TAILQ_FOREACH(priv, &eit_private_list, link) {
+    if (strcmp(id, priv->module->id) == 0)
+      return priv->module->id;
+  }
+  return NULL;
 }
 
 void eit_done ( void )
+{
+}
+
+void eit_load ( void )
 {
 }

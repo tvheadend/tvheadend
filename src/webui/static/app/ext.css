@@ -2,9 +2,9 @@
  * Ext JS Library 2.1
  * Copyright(c) 2006-2008, Ext JS, LLC.
  * licensing@extjs.com
- * 
+ *
  * http://extjs.com/license
- */ 
+ */
 #header {
     font-family: tahoma,arial;
     background-color: #507AAA;
@@ -12,12 +12,12 @@
     height: 5.3em;
     margin: 0;
     padding: 6px 8px 0 6px;
-    background: url("../img/bg-header.png") repeat-x scroll 0 0 transparent;
+    background: url(../img/bg-header.png) repeat-x scroll 0 0 transparent;
     height: 45px;
 }
 
 #header > h1 {
-    background: url("../img/logo.png") no-repeat scroll 10px 20% transparent;
+    background: url(../img/logo.png) no-repeat scroll 10px 20% transparent;
     color: #E0E0E0;
     font-size: 22px;
     padding: 2px 55px;
@@ -25,20 +25,21 @@
 }
 
 
-.x-tab-strip li.x-tab-login {
+.x-tab-strip li.x-tab-extra-comp {
     margin-left: 16px;
 }
 
-.x-tab-strip span.x-tab-strip-login {
+.x-tab-strip span.x-tab-strip-extra-comp {
     vertical-align: middle;
+    cursor: default;
     white-space: nowrap;
-    padding:4px 0px;
+    padding: 4px 0;
 }
 
-.x-tab-strip span.x-tab-strip-login-cmd {
+.x-tab-strip span.x-tab-strip-extra-click-comp {
     vertical-align: middle;
-    cursor:pointer;
-    padding:4px 0;
+    cursor: pointer;
+    padding: 4px 0;
     float: right;
 }
 
@@ -73,6 +74,24 @@
     border-right: 1px solid #d0d0d0;
 }
 
+.x-tree-node-leaf .x-tree-node-icon {
+    background-image: url(../icons/tv_cards.png);
+}
+
+.x-tree-node-on a::before {
+    content: " \25cf";
+    color: lightgreen;
+}
+
+.x-tree-node-on a {
+    font-weight: bold;
+}
+
+.x-tree-node-off a::before {
+    content: " \25cf";
+    color: lightcoral;
+}
+
 .ux-mselect {
     overflow: auto;
     background: white;
@@ -93,6 +112,13 @@
     border: 1px dotted #a3bae9 !important;
     background: #DFE8F6;
     cursor: pointer;
+}
+
+.ux-filtered-column {
+    font-style: italic !important;
+    font-weight: bold !important;
+    background-image: url(../icons/linked.gif) !important;
+    background-repeat: no-repeat;
 }
 
 .x-view-drag-insert-above {
@@ -154,6 +180,38 @@
     font-style: italic;
 }
 
+.find {
+    background-image: url(../icons/find.png) !important;
+}
+
+.wizard {
+    background-image: url(../icons/wand.png) !important;
+}
+
+.uilevel {
+    background-image: url(../icons/application_form.png) !important;
+}
+
+.uilevel_basic {
+    background-image: url(../icons/award_star_bronze_3.png) !important;
+}
+
+.uilevel_advanced {
+    background-image: url(../icons/award_star_silver_3.png) !important;
+}
+
+.uilevel_expert {
+    background-image: url(../icons/award_star_gold_3.png) !important;
+}
+
+.imdb {
+    background-image: url(../icons/imdb.png) !important;
+}
+
+.thetvdb {
+    background-image: url(../icons/thetvdb.png) !important;
+}
+
 .add {
     background-image: url(../icons/add.png) !important;
 }
@@ -164,6 +222,22 @@
 
 .remove {
     background-image: url(../icons/delete.png) !important;
+}
+
+.prevrec {
+    background-image: url(../icons/accept.png) !important;
+}
+
+.epgrelated {
+    background-image: url(../icons/clock.png) !important;
+}
+
+.duprec {
+    background-image: url(../icons/control_repeat_blue.png) !important;
+}
+
+.grouping {
+    background-image: url(../icons/control_repeat_blue.png) !important;
 }
 
 .cancel {
@@ -182,8 +256,16 @@
     background-image: url(../icons/save.png) !important;
 }
 
+.apply {
+    background-image: url(../icons/accept.png) !important;
+}
+
 .rec {
     background-image: url(../icons/rec.png) !important;
+}
+
+.stopRec {
+    background-image: url(../icons/stop_rec.png) !important;
 }
 
 .info {
@@ -202,6 +284,10 @@
     background-image: url(../icons/key.png) !important;
 }
 
+.pass {
+    background-image: url(../icons/pass.png) !important;
+}
+
 .tags {
     background-image: url(../icons/tag_blue.png) !important;
 }
@@ -216,6 +302,14 @@
 
 .group {
     background-image: url(../icons/group.png) !important;
+}
+
+.acl {
+    background-image: url(../icons/acl.png) !important;
+}
+
+.ip_block {
+    background-image: url(../icons/ip_block.png) !important;
 }
 
 .hardware {
@@ -242,12 +336,16 @@
     background-image: url(../icons/control_stop.png) !important;
 }
 
+.control_mute {
+    background-image: url(../icons/sound_mute.png) !important;
+}
+
 .control_volume {
     background-image: url(../icons/sound.png) !important;
 }
 
 .control_fullscreen {
-    background-image: url(../icons/arrow_out.png) !important;
+    background-image: url(../icons/full_screen.png) !important;
 }
 
 .newspaper {
@@ -283,7 +381,7 @@
 }
 
 .scheduled {
-    background-image: url(../icons/clock.png) !important;
+    background-image: url(../icons/scheduled.png) !important;
 }
 
 .recordingError {
@@ -291,7 +389,15 @@
 }
 
 .completed {
-    background-image: url(../icons/tick.png) !important;
+    background-image: url(../icons/accept.png) !important;
+}
+
+.completedRerecord {
+    background-image: url(../icons/add.png) !important;
+}
+
+.completedWarning {
+    background-image: url(../icons/bell.png) !important;
 }
 
 .completedError {
@@ -302,24 +408,40 @@
     background-image: url(../icons/rec.png) !important;
 }
 
-.bullet_add {
-    background-image: url(../icons/bullet_add.png) !important;
+.rerecord {
+    background-image: url(../icons/arrow_branch.png) !important;
 }
 
-.arrow_up {
+.chnumops {
+    background-image: url(../icons/brick.png) !important;
+}
+
+.chnumops_low {
+    background-image: url(../icons/world_add.png) !important;
+}
+
+.chnumops_up {
     background-image: url(../icons/arrow_up.png) !important;
 }
 
-.arrow_down {
+.chnumops_down {
     background-image: url(../icons/arrow_down.png) !important;
 }
 
-.arrow_switch {
+.chnumops_swap {
     background-image: url(../icons/arrow_switch.png) !important;
 }
 
-.stream_config {
+.film {
+    background-image: url(../icons/film.png) !important;
+}
+
+.film_edit {
     background-image: url(../icons/film_edit.png) !important;
+}
+
+.film_key {
+    background-image: url(../icons/film_key.png) !important;
 }
 
 .caclientNone {
@@ -338,6 +460,194 @@
     background-image: url(../icons/exclamation.png) !important;
 }
 
+.epggrabmodNone {
+    background-image: url(../icons/stop.png) !important;
+}
+
+.epggrabmodEnabled {
+    background-image: url(../icons/accept.png) !important;
+}
+
+.tvCards {
+    background-image: url(../icons/tv_cards.png) !important;
+}
+
+.networks {
+    background-image: url(../icons/networks.png) !important;
+}
+
+.muxes {
+    background-image: url(../icons/muxes.png) !important;
+}
+
+.muxSchedulers {
+    background-image: url(../icons/mux_schedulers.png) !important;
+}
+
+.services {
+    background-image: url(../icons/services.png) !important;
+}
+
+.teletext {
+    background-image: url(../icons/teletext.png) !important;
+}
+
+.subtitle {
+    background-image: url(../icons/subtitle.png) !important;
+}
+
+.serviceMapper {
+    background-image: url(../icons/service_mapper.png) !important;
+}
+
+.otherFilters {
+    background-image: url(../icons/other_filters.png) !important;
+}
+
+.channels {
+    background-image: url(../icons/channels.png) !important;
+}
+
+.channelTags{
+    background-image: url(../icons/channel_tags.png) !important;
+}
+
+.help{
+    background-image: url(../icons/help.png) !important;
+}
+
+.watchTv{
+    background-image: url(../icons/watch_tv.png) !important;
+}
+
+.autoRec{
+    background-image: url(../icons/auto_rec.png) !important;
+}
+
+.debug{
+    background-image: url(../icons/debug.png) !important;
+}
+
+.upcomingRec{
+    background-image: url(../icons/upcoming_rec.png) !important;
+}
+
+.finishedRec{
+    background-image: url(../icons/accept.png) !important;
+}
+
+.general{
+    background-image: url(../icons/general.png) !important;
+}
+
+.dvrprofiles{
+    background-image: url(../icons/dvrprofiles.png) !important;
+}
+
+.recordingtab{
+    background-image: url(../icons/recordingtab.png) !important;
+}
+
+.timeshift{
+    background-image: url(../icons/timeshift.png) !important;
+}
+
+.stream{
+    background-image: url(../icons/stream.png) !important;
+}
+
+.connections{
+    background-image: url(../icons/connections.png) !important;
+}
+
+.subscriptions{
+    background-image: url(../icons/subscriptions.png) !important;
+}
+
+.clean{
+    background-image: url(../icons/clean.png) !important;
+}
+
+.resetIcon{
+    background-image: url(../icons/reseticon.png) !important;
+}
+
+.dvr{
+    background-image: url(../icons/dvr.png) !important;
+}
+
+.epg{
+    background-image: url(../icons/epg.png) !important;
+}
+
+.broadcast_details{
+    background-image: url(../icons/broadcast_details.png) !important;
+}
+
+.timers{
+    background-image: url(../icons/time_schedules.png) !important;
+}
+
+.download{
+    background-image: url(../icons/download.png) !important;
+}
+
+.abort{
+    background-image: url(../icons/abort.png) !important;
+}
+
+.bouquets{
+    background-image: url(../icons/bouquets.png) !important;
+}
+
+.cancelButton{
+    background-image: url(../icons/cancel_button.png) !important;
+}
+
+.baseconf {
+    background-image: url(../icons/baseconf.png) !important;
+}
+
+.imgcacheconf {
+    background-image: url(../icons/imgcacheconf.png) !important;
+}
+
+.satipsrvconf {
+    background-image: url(../icons/satipsrvconf.png) !important;
+}
+
+.fetch_images {
+    background-image: url(../icons/fetch_images.png) !important;
+}
+
+.previous {
+    background-image: url(../icons/arrow_left.png) !important;
+}
+
+.next {
+    background-image: url(../icons/arrow_right.png) !important;
+}
+
+.finish {
+    background-image: url(../icons/accept.png) !important;
+}
+
+.movetofinished {
+    background-image: url(../icons/accept.png) !important;
+}
+
+.movetofailed {
+    background-image: url(../icons/exclamation.png) !important;
+}
+
+.codecDisabled {
+    background-image: url(../icons/plugin_disabled.png) !important;
+}
+
+.codecEnabled {
+    background-image: url(../icons/plugin.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
@@ -350,71 +660,191 @@
     width: 100px;
 }
 
+.x-nice-customformat {
+    display: inline-block;
+    width: 18em;
+}
+
+.x-nice-dayofweek {
+    display: inline-block;
+    width: 6em;
+}
+
+.x-nice-date {
+    display: inline-block;
+    text-align: center;
+    width: 6em;
+}
+
+.x-nice-time {
+    display: inline-block;
+    width: 6em;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.x-epg-hr {
+    margin: 0;
+}
+
+/* Although our other icons are 16x16, our fonts are 12px and these
+   icons are displayed next to text instead of in a toolbar. So if we
+   set our size to 16x16 then they are too big for the grid, so we
+   make the icons slightly smaller to compensate.  We don't make them
+   exactly 12px since 13px seems to fit without extending the lines
+   visibly whereas 14px makes it quite a bit bigger.
+*/
+.x-grid-category-icon {
+}
+
+.x-grid-category-icon img {
+    width: 13px;
+    height: 13px;
+    margin-right: 0.1em;
+}
+
+.x-grid-category-icon img:hover{
+    transform: scale(4,4);
+    /* Our parent is overflow: hidden so we need position to break out and
+     * be visible.
+     */
+    position: absolute;
+    /* Need a higher z-index otherwise we are hidden by progress bar */
+    z-index: 10;
+}
+
+/* Larger icons used in dialog boxes */
+.x-dialog-category-large-icon {
+}
+
+.x-dialog-category-large-icon img {
+    width: 32px;
+    height: 32px;
+    margin-right: 0.1em;
+}
+
+.x-dialog-category-large-icon img:hover{
+    transform: scale(2, 2);
+    /* We need a transform-origin to avoid being clipped in a dialog box */
+    transform-origin: top left;
+}
+
+.x-epg-icons {
+    float: left;
+    margin-left: 0.5em;
+}
+
 .x-epg-title {
     margin: 5px;
+    padding: 5px;
     font: normal 16px arial, tahoma, helvetica, sans-serif;
     font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid #000000;
+    white-space: pre-wrap;
 }
 
 .x-epg-subtitle {
     margin: 5px;
     font: normal 12px arial, tahoma, helvetica, sans-serif;
     font-weight: bold;
+    white-space: pre-wrap;
+}
+
+.x-epg-prefix {
+    display: inline-block;
+    width: 12em;
+    font-weight: bold;
+}
+
+.x-epg-body {
+    margin-left: 5px;
+    display: inline-block;
 }
 
 .x-epg-summary {
     margin: 5px;
     font-weight: bold;
+    white-space: pre-wrap;
 }
 
 .x-epg-desc {
     margin: 10px;
+    white-space: pre-wrap;
+}
+
+.x-epg-left {
+    float: left;
+    width: 78%;
+}
+
+.x-epg-bottom {
+    width: 100%;
+    margin: 5px 0 0 0;
+    clear: both;
 }
 
 .x-epg-chicon {
     float: right;
     margin: 5px;
-    max-width: 132px;
+    width: 20%;
     max-height: 99px;
 }
 
+.x-epg-time {
+    margin: 5px 5px 5px 10px;
+}
+
 .x-epg-meta {
-    font-style: italic;
-    margin: 5px;
+    margin: 5px 5px 5px 10px;
 }
 
-.x-epg-action {
-    font-weight: bold;
-    margin: 5px;
+/* Our image has to be inside an image container
+ * since when the image changes we don't want text
+ * to reflow. This image is not scaled to this size,
+ * it is simply the size of the container to avoid text
+ * flowing around it.
+ */
+.x-epg-image-container {
+    float: right;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    width: 20%;
+    height: 200px;
+    position: relative;
 }
 
-.hts-t-info {
-    float: left;
-    width: 100px;
+.x-epg-image{
+    width: 100%;                /*100% of the container*/
+    max-height: 100%;
+    z-index: 10;                /*Need higher z-index since we are inside a div*/
+    position: relative;         /*z-index only works with position of non-static (the default)*/
 }
 
-.hts-doc-text {
-    font: normal 11px verdana;
-    padding: 5px;
+.x-epg-image:hover{
+    transform: scale(1.7,1.7);
+    transform-origin: right;
 }
 
-.hts-doc-text dt {
-    padding-top: 10px;
-    font-weight: bold;
+.x-epg-genre {
+    margin-left: 5px;
 }
 
-.hts-doc-text dl {
-    padding-left: 10px;
-    padding-bottom: 10px;
+.x-epg-duplicate {
+    text-decoration: line-through;
 }
 
-.hts-doc-text li {
-    padding-top: 5px;
-    padding-bottom: 5px;
+.dvr-details-dialog {
+    position: relative;
 }
-
-.hts-doc-text img {
-    padding: 10px;
+.dvr-details-dialog-background-image {
+    /* Details in here are overridden by  code */
+}
+.dvr-details-dialog-content {
+    position: relative;
+    top: 0;
+    left: 0;
 }
 
 .tv-video-player {
@@ -427,10 +857,266 @@
     color: white;
 }
 
+.x-wizard-icon {
+    float: right;
+    margin: 0px auto;
+    border: none;
+    padding: 5px;
+    max-width: 25%
+}
+
+.x-wizard-description {
+    margin: 5px;
+    font: normal 12px arial, tahoma, helvetica, sans-serif;
+}
+
+.x-wizard-description ul {
+    list-style: disc outside;
+    padding-left: 15px;
+}
+
+.x-wizard-description p, .x-wizard-description li {
+    margin: 5px 0 0 0;
+    list-style: disc outside;
+}
+
+.x-wizard-description strong {
+    font-weight: bold;
+}
+
+/* Table styles for webUI help */
+
+.hts-doc-text table, .hts-doc-text th, .hts-doc-text td {
+    font-size: inherit;
+    border: 1px solid #98c0f4;
+    margin: 20px
+}
+
+.hts-doc-text td,.hts-doc-text th {
+    padding: 5px
+}
+
+.hts-doc-text table {
+    border-collapse: collapse
+}
+
+.hts-doc-text th {
+    text-align: center;
+    height: 2em;
+    background-color: #d9e8fb;
+    color: black;
+    font-weight: bold
+}
+
+.hts-doc-text tr:nth-child(even) {
+    background-color: #F2F7FE
+}
+
+/* Additional general text styles for webUI help */
+
+.hts-doc-text {
+    font: normal 11px verdana;
+    padding: 5px;
+}
+
+.hts-doc-text p {
+    margin-left: 1em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.hts-doc-text h2, h3, h4 {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    font-size: larger
+}
+
+.hts-doc-text h4 {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    color: #2163A6;
+}
+
+.hts-doc-text h5 {
+    margin-top: .7em;
+    margin-bottom: .7em;
+    color: #2163A6;
+}
+
+.hts-doc-text strong {
+    font-weight: bold
+}
+
+.hts-doc-text em {
+    font-style: italic
+}
+
+.hts-doc-text td img {
+    display: inline;
+    margin: -5px auto
+}
+
+/* List styles for webUI help */
+
+.hts-doc-text dt {
+    padding-top: 10px;
+    font-weight: bold;
+}
+
+.hts-doc-text dl {
+    padding-left: 10px;
+    padding-bottom: 10px;
+}
+
+.hts-doc-text ol {
+    list-style-type: arabic;
+    padding-left:3em
+}
+
+.hts-doc-text li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.hts-doc-text ul {
+    list-style-type:disc;
+    padding-left:3em
+}
+
+.hts-doc-text ul li {
+    padding-top: 0px;
+    padding-bottom: 0px
+}
+
+/* Additional image and caption styles for webUI help */
+
+.hts-doc-text img {
+    margin: 0px auto;
+    /* display: block; */
+    border: none;
+    padding: 10px;
+    max-width: 97%
+}
+
+.hts-doc-text p.caption {
+    font-weight: bold;
+    color: #2163A6;
+    font-style: italic;
+    text-align: center;
+    text-decoration: underline
+}
+
+/* Inline/block code styles for webUI help */
+
+.hts-doc-text code {
+    background-color: white;
+    border-color: #E1E4E5;
+    border-style: solid;
+    border-width: 1px;
+    color: darkred;
+    font-family:  'Courier New', Courier, monospace;
+    margin-left: 2em;
+    padding: 3px 5px 0 5px;
+    display: inline-block;
+}
+
+.hts-doc-text p code {
+    margin-left: 0;
+    display: initial;
+}
+
+.hts-doc-text li code {
+    margin-left: 0;
+    display: initial;
+}
+
+/* Styles for help TOC */
+
+.hts-doc-toc {
+    width: 200px;
+    padding: 0;
+    margin: 0 5px 0 5px;
+    float: right;
+    border-left: dotted 1px;
+    border-bottom: dotted 1px;
+}
+
+.hts-doc-toc a {
+    cursor: pointer;
+}
+
+.hts-doc-toc a:hover {
+    cursor: pointer;
+    background-color: black;
+    color: white;
+}
+
+.hts-doc-toc .hts-doc-anchor {
+    color: inherit;
+    text-decoration: inherit;
+    cursor: inherit;
+}
+
+.hts-doc-toc p {
+    margin: 3px 0 1px 5px;
+}
+
+.hts-doc-toc li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.hts-doc-toc ol {
+    list-style-type: arabic;
+    list-style-position: outside;
+    padding-left: 2em;
+}
+
+.hts-doc-toc ol li {
+    padding-top: 0px;
+    padding-bottom: 0px
+}
+
+.hts-doc-toc ul {
+    list-style-type: disc;
+    list-style-position: outside;
+    padding-left: 2em;
+}
+
+.hts-doc-toc ul ul {
+    list-style-type: circle;
+    list-style-position: outside;
+    padding-left: 1em;
+}
+
+.hts-doc-toc ul ul ul {
+    list-style-type: square;
+    list-style-position: outside;
+    padding-left: 1em;
+}
+
+.hts-doc-toc ul li {
+    padding-top: 0px;
+    padding-bottom: 0px
+}
+
+.hts-doc-text a {
+    cursor: pointer;
+    text-decoration: underline;
+    color: blue;
+}
+
+.hts-doc-text .hts-doc-anchor {
+    color: inherit;
+    text-decoration: inherit;
+    cursor: inherit;
+}
+
 .tv-video-idle {
-    background-image     : url(../../docresources/tvheadendlogo.png);
-    background-repeat    : no-repeat;
-    background-position  : center;
+    background-image: url(../../static/img/logomid.png);
+    background-size: 300px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .tv-video-message {
@@ -438,14 +1124,31 @@
     font-size: 150%;
 }
 
+.about-tab {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .about-title {
     font-size: 24px;
     font-weight: bold;
 }
 
-/** vim: ts=4:sw=4:nu:fdc=4:nospell 
+.playlink {
+    margin: -1px;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+.logobig {
+    width: 25%;
+    height: auto;
+}
+
+/** vim: ts=4:sw=4:nu:fdc=4:nospell
  *
- * Ext.ux.grid.RowActions.css 
+ * Ext.ux.grid.RowActions.css
  *
  * Style sheets for Grid RowActions Plugin
  *
@@ -457,7 +1160,7 @@
  * the Open Source LGPL 3.0 license.  Commercial use is permitted to the extent
  * that the code/component(s) do NOT become part of another Open Source or Commercially
  * licensed development library or toolkit without explicit permission.
- * 
+ *
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
 
@@ -538,10 +1241,10 @@
  * @version   $Id: Ext.ux.form.LovCombo.css 189 2008-04-16 21:01:06Z jozo $
  *
  * @license Ext.ux.form.LovCombo.css is licensed under the terms of the Open Source
- * LGPL 3.0 license. Commercial use is permitted to the extent that the 
+ * LGPL 3.0 license. Commercial use is permitted to the extent that the
  * code/component(s) do NOT become part of another Open Source or Commercially
  * licensed development library or toolkit without explicit permission.
- * 
+ *
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
 .ux-lovcombo-icon {
@@ -558,7 +1261,7 @@
 }
 
 .ux-lovcombo-icon-unchecked {
-    background: transparent 
+    background: transparent
         url(../extjs/resources/images/default/menu/unchecked.gif);
 }
 

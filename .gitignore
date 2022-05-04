@@ -1,18 +1,37 @@
 build.*
 .config.mk
 
+debian/debhelper-build-stamp
+filelist.txt
+
 src/version.c
+src/tvh_locale_inc.c
+src/docs_inc.[ch]
+src/webui/extjs-std.c
+src/webui/extjs-debug.c
+src/webui/extjs-tv-std.c
+src/webui/extjs-tv-debug.c
+src/webui/static/tvh.js.gz
+src/webui/static/tvh-tv.css.gz
+src/webui/static/tvh-tv.js.gz
+src/webui/static/tvh.*.css.gz
 
 data/dvb-scan
+
+libav_static
+libhdhomerun_static
 
 .cproject
 .project
 nbproject
 .settings
 
+*~
 *.pyc
 .*.sw[op]
 *.bak
+*.orig
+*.patch
 
 debian/changelog
 debian/files
@@ -20,3 +39,23 @@ debian/tvheadend
 debian/tvheadend-dbg
 debian/tvheadend*substvars
 debian/tvheadend*.debhelper*
+
+rpm/tvheadend.spec
+rpm/test.patch
+
+intl/tvheadend.en_CZ.po
+intl/*.new
+intl/js/tvheadend.js.en_CZ.po
+intl/js/*.new
+src/webui/static/intl
+
+#############
+###Windows###
+#############
+
+#windows image file cache
+Thumbs.db
+#Folder config file
+Desktop.ini
+#macOS files
+.DS_Store

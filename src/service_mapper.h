@@ -1,6 +1,6 @@
 /*
  *  Functions for transport probing
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,13 +19,25 @@
 #ifndef __TVH_SERVICE_MAPPER_H__
 #define __TVH_SERVICE_MAPPER_H__
 
+struct bouquet;
+
 typedef struct service_mapper_conf
 {
   int check_availability; ///< Check service is receivable
   int encrypted;          ///< Include encrypted services
   int merge_same_name;    ///< Merge entries with the same name
+  int merge_same_name_fuzzy;    ///< Merge entries with the same name with fuzzy matching (ignore case, etc)
+  int tidy_channel_name;  ///< Tidy channel name by removing trailing HD/UHD.
+  int type_tags;          ///< Create tags based on the service type (SDTV/HDTV/Radio)
   int provider_tags;      ///< Create tags based on provider name
+  int network_tags;       ///< Create tags based on network name (useful for multi adapter equipments)
 } service_mapper_conf_t;
+
+typedef struct service_mapper {
+  idnode_t idnode;
+  service_mapper_conf_t d;
+  htsmsg_t *services;
+} service_mapper_t;
 
 typedef struct service_mapper_status
 {
@@ -36,12 +48,13 @@ typedef struct service_mapper_status
   service_t *active;
 } service_mapper_status_t;
 
+extern service_mapper_t service_mapper_conf;
+
 void service_mapper_init   ( void );
 void service_mapper_done   ( void );
 
-// Start new mapping
-void service_mapper_start  
-  ( const service_mapper_conf_t *conf, htsmsg_t *uuids );
+// Start service mapper
+void service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids );
 
 // Stop pending services (remove from Q)
 void service_mapper_stop   ( void );
@@ -55,22 +68,12 @@ service_mapper_status_t service_mapper_status ( void );
 // Link service to channel
 int  service_mapper_link   ( struct service *s, struct channel *c, void *origin );
 
-// Unlink service from channel
-void service_mapper_unlink ( struct service *s, struct channel *c, void *origin );
+// Create new link
+int service_mapper_create ( idnode_t *s, idnode_t *c, void *origin );
 
-/**
- * Clean linkages that are marked for deletion
- *
- * Note: only ever pass one of s and c
- *
- * @param s       The service to clean linkages for
- * @param c       The channel to clean linkages for
- * @parma origin  Origin of the change (should be a service or a channel ptr).
- *                NULL = no save and notifications.
- *
- * @return 1 if changes were made, else 0
- */
-int service_mapper_clean ( struct service *s, struct channel *ch, void *origin );
+// Process one service
+struct channel *service_mapper_process
+  ( const service_mapper_conf_t *conf, struct service *s, struct bouquet *bq );
 
 // Resets the stat counters
 void service_mapper_reset_stats ( void );

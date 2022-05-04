@@ -1,0 +1,166 @@
+The directory contains configuration file for general regular
+expressions to be applied to the EPG.
+
+Configuration file format
+-------------------------
+
+A configuration file is in JSON format. Possible members of the top-level
+object are:
+
+* season_num
+* episode_num
+* airdate
+* is_new
+* scrape_title
+* scrape_subtitle
+* scrape_summary
+
+Each member's value is a list of regular expressions. Each regular
+expression must contain at least one sub-pattern, i.e. a pattern
+enclosed in (). Input data is matched against the first regex in the
+list. If no match is found, the second regex is tried, and so on until
+a match is found or the list exhausted. If a match is found, the result
+of the match is the contents of all the sub-patterns in the regular
+expression concatenated together.
+
+For each EPG episode, the title, description and summary are matched
+in turn against the season_num, episode_num, airdate and is_new regex lists.
+
+- season_num converts the contents of the match result to an integer,
+  and if successful sets the EPG season number.
+- episode_num converts the contents of the match result to an integer,
+  and if successful sets the EPG eipsode number.
+- airdate converts the contents of the match result to an integer,
+  and if successful sets the EPG copyright year.
+- is_new sets the EPG is_new flag on any match. Remember the regexp must
+  have at least one sub-pattern to make a successful match; in this case
+  the match result is ignored.
+
+Next, a combined title/summary text is made by joining the title, a space,
+and the summary. The combined text is matched against the scrape_title regex
+list. On a match, the EPG title is set to the match result.
+
+Then the summary is matched against the scrape_subtitle regex list. On a match,
+the EPG subtitle is set to the match result.
+
+Finally, the summary is matched against the scrape_summary regex list. On a
+match, the EPG summary is set to the match result.
+
+Filtering regular expressions
+-----------------------------
+
+Any regular expression in a list can be marked as a filtering regular
+expression. If the regular expression is marked as a filter, and it matches
+the input text, then the match result is not returned as a result, but
+instead replaces the original text to match, and matching continues with the
+next regular expression in the list. If a filter regular expression does
+not match, matching moves to the next regular expression in the list as
+usual.
+
+To mark a regular expression as a filter, it must be specified with an
+expanded definition with a "pattern" component. This is the regular expression
+pattern. It may also have an optional numeric "filter" component. If present,
+and not 0, the regular expression is a filter.
+
+For example, in the following list, the first regex is a filter that
+removes any first sentence starting "...". The following regexs see
+only the text following that sentence.
+
+{
+  "scrape_subtitle": [
+      {
+          "pattern": "^[.][.][.][^:.?!]*[.:?!] +(.*)",
+          "filter": 1
+      },
+      {
+          "pattern": "^[0-9]+/[0-9]+[.] +(.*)",
+          "filter": 1
+      },
+      "^([^:]+): "
+  ]
+}
+
+Given any of the following input texts, the above regex list matches
+'Subtitle here':
+
+...Continued title. 1/6. Subtitle here: rest of summary
+...Continued title. Subtitle here: rest of summary
+1/6. Subtitle here: rest of summary
+Subtitle here: rest of summary
+
+Regular expression engine
+-------------------------
+
+The top level regular expressions are POSIX regular expressions, and are
+executed using the C runtime library regular expression functions. The
+expressions are treated as extended POSIX regular expressions.
+
+If either the PCRE or the PCRE2 library are found during configuration,
+that library can be used for regular expression matching. If both are
+found, PCRE2 is used.
+
+Because there are differences in regular expression facilities and
+handling between POSIX, PCRE and PCRE2, you must specify an alternate
+regular expression appropriate for the engine. Alternate regular
+expressions are held as members of a top-level object "pcre" or "pcre2".
+For example:
+
+{
+  "scrape_subtitle": [
+      "^[.][.][.][^:.]*[.:] ([^.0-9][^:]*): ",
+      "^[0-9]+/[0-9]+[.] +([^:]*): ",
+      "^([^.0-9][^:]+): "
+  ],
+  "pcre": {
+      "scrape_subtitle": [
+          "^(?:[.][.][.][^:.]*[.:] +|[0-9]+/[0-9]+[.] +)?([^.0-9][^:]*): "
+      ]
+  }
+}
+
+A useful reference on the differences between POSIX, PCRE and PCRE2
+regular expressions is at
+http://www.regular-expressions.info/refbasic.html.
+
+Languages
+---------
+
+By default, regular expressions are applied to input text in any language.
+You can specify that a regular expression is appropriate only for a
+particular language or group of languages by using an expanded definition
+with a "lang" component. This component may be either a string with a single
+language identifier, or a list of language identifier strings. For
+example:
+
+{
+  "scrape_subtitle": [
+      {
+          "pattern": "^[.][.][.][^:.?!]*[.:?!] +(.*)",
+          "lang": "eng"
+      },
+      {
+          "pattern": "^[0-9]+/[0-9]+[.] +(.*)",
+          "lang": ["eng", "fre"]
+      },
+      "^([^:]+): "
+  ]
+}
+
+If the regular expression is marked with a language or group of languages,
+and the input text language does not match one of those specified for
+the regular expression, the regular expression is ignored and processing
+continues with the next regular expression in the list.
+
+Language codes must be 3 character ISO 639-2 B codes as listed in
+src/lang_codes.c.
+
+Testing
+-------
+
+There is a test harness for these files in the development tree at
+support/eitscrape_test.py with test harness files at
+support/testdata/eitscrape.
+
+WARNING: The test harness uses Python's re regular expression handling.
+Python regular expressions are neither POSIX nor PCRE, though in general
+they are closer to PCRE than POSIX.

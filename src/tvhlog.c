@@ -16,29 +16,44 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tvhlog.h"
-#include <pthread.h>
-#include <string.h>
 #include <stdio.h>
+#include "tvhlog.h"
+#include <string.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
 
+#if ENABLE_EXECINFO
+#include <execinfo.h>
+#endif
+
+#include "bitops.h"
+#include "settings.h"
+#include "libav.h"
+#include "tcp.h"
 #include "webui/webui.h"
 
-time_t                   dispatch_clock;
+#define TVHLOG_BITARRAY ((LS_LAST + (BITS_PER_LONG - 1)) / BITS_PER_LONG)
 
 int                      tvhlog_run;
 int                      tvhlog_level;
 int                      tvhlog_options;
 char                    *tvhlog_path;
-htsmsg_t                *tvhlog_debug;
-htsmsg_t                *tvhlog_trace;
+bitops_ulong_t           tvhlog_debug[TVHLOG_BITARRAY];
+bitops_ulong_t           tvhlog_trace[TVHLOG_BITARRAY];
 pthread_t                tvhlog_tid;
-pthread_mutex_t          tvhlog_mutex;
-pthread_cond_t           tvhlog_cond;
+tvh_mutex_t              tvhlog_mutex;
+tvh_cond_t               tvhlog_cond;
 TAILQ_HEAD(,tvhlog_msg)  tvhlog_queue;
 int                      tvhlog_queue_size;
 int                      tvhlog_queue_full;
+#if ENABLE_TRACE
+int                      tvhlog_rtfd = STDOUT_FILENO;
+struct sockaddr_storage  tvhlog_rtss;
+#endif
 
 #define TVHLOG_QUEUE_MAXSIZE 10000
 #define TVHLOG_THREAD 1
@@ -64,35 +79,143 @@ static const char *logtxtmeta[9][2] = {
   {"TRACE",     "\033[32m"},
 };
 
+tvhlog_subsys_t tvhlog_subsystems[] = {
+  [LS_NONE]          = { "<none>",        N_("None") },
+  [LS_START]         = { "START",         N_("START") },
+  [LS_STOP]          = { "STOP",          N_("STOP") },
+  [LS_CRASH]         = { "CRASH",         N_("CRASH") },
+  [LS_CPU]           = { "CPU",           N_("CPU") },
+  [LS_MAIN]          = { "main",          N_("Main") },
+  [LS_TPROF]         = { "tprof",         N_("Time profiling") },
+  [LS_QPROF]         = { "qprof",         N_("Queue profiling") },
+  [LS_THREAD]        = { "thread",        N_("Thread") },
+  [LS_TVHPOLL]       = { "tvhpoll",       N_("Poll multiplexer") },
+  [LS_TIME]          = { "time",          N_("Time") },
+  [LS_SPAWN]         = { "spawn",         N_("Spawn") },
+  [LS_FSMONITOR]     = { "fsmonitor",     N_("Filesystem monitor") },
+  [LS_LOCK]          = { "lock",          N_("Locking") },
+  [LS_UUID]          = { "uuid",          N_("UUID") },
+  [LS_IDNODE]        = { "idnode",        N_("Node subsystem") },
+  [LS_URL]           = { "url",           N_("URL") },
+  [LS_TCP]           = { "tcp",           N_("TCP Protocol") },
+  [LS_RTSP]          = { "rtsp",          N_("RTSP Protocol") },
+  [LS_UPNP]          = { "upnp",          N_("UPnP Protocol") },
+  [LS_SETTINGS]      = { "settings",      N_("Settings") },
+  [LS_CONFIG]        = { "config",        N_("Configuration") },
+  [LS_ACCESS]        = { "access",        N_("Access (ACL)") },
+  [LS_CRON]          = { "cron",          N_("Cron") },
+  [LS_DBUS]          = { "dbus",          N_("DBUS") },
+  [LS_AVAHI]         = { "avahi",         N_("Avahi") },
+  [LS_BONJOUR]       = { "bonjour",       N_("Bonjour") },
+  [LS_API]           = { "api",           N_("API") },
+  [LS_HTTP]          = { "http",          N_("HTTP Server") },
+  [LS_HTTPC]         = { "httpc",         N_("HTTP Client") },
+  [LS_HTSP]          = { "htsp",          N_("HTSP Server") },
+  [LS_HTSP_SUB]      = { "htsp-sub",      N_("HTSP Subscription") },
+  [LS_HTSP_REQ]      = { "htsp-req",      N_("HTSP Request") },
+  [LS_HTSP_ANS]      = { "htsp-ans",      N_("HTSP Answer") },
+  [LS_IMAGECACHE]    = { "imagecache",    N_("Image Cache") },
+  [LS_TBL]           = { "tbl",           N_("DVB SI Tables") },
+  [LS_TBL_BASE]      = { "tbl-base",      N_("Base DVB SI Tables (PAT,CAT,PMT,SDT etc.)") },
+  [LS_TBL_CSA]       = { "tbl-csa",       N_("DVB CSA (descrambling) Tables") },
+  [LS_TBL_EIT]       = { "tbl-eit",       N_("DVB EPG Tables") },
+  [LS_TBL_TIME]      = { "tbl-time",      N_("DVB Time Tables") },
+  [LS_TBL_ATSC]      = { "tbl-atsc",      N_("ATSC SI Tables") },
+  [LS_TBL_PASS]      = { "tbl-pass",      N_("Passthrough Muxer SI Tables") },
+  [LS_TBL_SATIP]     = { "tbl-satip",     N_("SAT>IP Server SI Tables") },
+  [LS_FASTSCAN]      = { "fastscan",      N_("Fastscan DVB") },
+  [LS_PCR]           = { "pcr",           N_("PCR Clocks") },
+  [LS_PARSER]        = { "parser",        N_("MPEG-TS Parser") },
+  [LS_TS]            = { "TS",            N_("Transport Stream") },
+  [LS_GLOBALHEADERS] = { "globalheaders", N_("Global Headers") },
+  [LS_TSFIX]         = { "tsfix",         N_("Time Stamp Fix") },
+  [LS_HEVC]          = { "hevc",          N_("HEVC - H.265") },
+  [LS_MUXER]         = { "muxer",         N_("Muxer") },
+  [LS_PASS]          = { "pass",          N_("Pass-thru muxer") },
+  [LS_AUDIOES]       = { "audioes",       N_("Audioes muxer") },
+  [LS_MKV]           = { "mkv",           N_("Matroska muxer") },
+  [LS_SERVICE]       = { "service",       N_("Service") },
+  [LS_CHANNEL]       = { "channel",       N_("Channel") },
+  [LS_SUBSCRIPTION]  = { "subscription",  N_("Subscription") },
+  [LS_SERVICE_MAPPER]= { "service-mapper",N_("Service Mapper") },
+  [LS_BOUQUET]       = { "bouquet",       N_("Bouquet") },
+  [LS_ESFILTER]      = { "esfilter",      N_("Elementary Stream Filter") },
+  [LS_PROFILE]       = { "profile",       N_("Streaming Profile") },
+  [LS_DESCRAMBLER]   = { "descrambler",   N_("Descrambler") },
+  [LS_DESCRAMBLER_EMM]={ "descrambler-emm",N_("Descrambler EMM") },
+  [LS_CACLIENT]      = { "caclient",      N_("CA (descrambling) Client") },
+  [LS_CSA]           = { "csa",           N_("CSA (descrambling)") },
+  [LS_CAPMT]         = { "capmt",         N_("CAPMT CA Client") },
+  [LS_CWC]           = { "cwc",           N_("CWC CA Client") },
+  [LS_CCCAM]         = { "cccam",         N_("CWC CCCam Client") },
+  [LS_DVBCAM]        = { "dvbcam",        N_("DVB CAM Client") },
+  [LS_DVR]           = { "dvr",           N_("Digital Video Recorder") },
+  [LS_DVR_INOTIFY]   = { "dvr-inotify",   N_("DVR Inotify") },
+  [LS_EPG]           = { "epg",           N_("Electronic Program Guide") },
+  [LS_EPGDB]         = { "epgdb",         N_("EPG Database") },
+  [LS_EPGGRAB]       = { "epggrab",       N_("EPG Grabber") },
+  [LS_CHARSET]       = { "charset",       N_("Charset") },
+  [LS_DVB]           = { "dvb",           N_("DVB") },
+  [LS_MPEGTS]        = { "mpegts",        N_("MPEG-TS") },
+  [LS_MUXSCHED]      = { "muxsched",      N_("Mux Scheduler") },
+  [LS_LIBAV]         = { "libav",         N_("libav / ffmpeg") },
+  [LS_TRANSCODE]     = { "transcode",     N_("Transcode") },
+  [LS_IPTV]          = { "iptv",          N_("IPTV") },
+  [LS_IPTV_PCR]      = { "iptv-pcr",      N_("IPTV PCR") },
+  [LS_IPTV_SUB]      = { "iptv-sub",      N_("IPTV Subcription") },
+  [LS_LINUXDVB]      = { "linuxdvb",      N_("LinuxDVB Input") },
+  [LS_DISEQC]        = { "diseqc",        N_("DiseqC") },
+  [LS_EN50221]       = { "en50221",       N_("CI Module") },
+  [LS_EN50494]       = { "en50494",       N_("Unicable (EN50494)") },
+  [LS_SATIP]         = { "satip",         N_("SAT>IP Client") },
+  [LS_SATIPS]        = { "satips",        N_("SAT>IP Server") },
+  [LS_TVHDHOMERUN]   = { "tvhdhomerun",   N_("TVHDHomeRun Client") },
+  [LS_PSIP]          = { "psip",          N_("ATSC PSIP EPG") },
+  [LS_OPENTV]        = { "opentv",        N_("OpenTV EPG") },
+  [LS_PYEPG]         = { "pyepg",         N_("PyEPG Import") },
+  [LS_XMLTV]         = { "xmltv",         N_("XMLTV EPG Import") },
+  [LS_WEBUI]         = { "webui",         N_("Web User Interface") },
+  [LS_TIMESHIFT]     = { "timeshift",     N_("Timeshift") },
+  [LS_SCANFILE]      = { "scanfile",      N_("Scanfile") },
+  [LS_TSFILE]        = { "tsfile",        N_("MPEG-TS File") },
+  [LS_TSDEBUG]       = { "tsdebug",       N_("MPEG-TS Input Debug") },
+  [LS_CODEC]         = { "codec",         N_("Codec") },
+  [LS_VAAPI]         = { "vaapi",         N_("VA-API") },
+#if ENABLE_DDCI
+  [LS_DDCI]          = { "ddci",          N_("DD-CI") },
+#endif
+
+};
+
 static void
-tvhlog_get_subsys ( htsmsg_t *ss, char *subsys, size_t len )
+tvhlog_get_subsys ( bitops_ulong_t *ss, char *subsys, size_t len )
 {
   size_t c = 0;
-  int first = 1;
-  htsmsg_field_t *f;
+  uint_fast32_t first = 1, i;
   *subsys = '\0';
-  if (ss) {
-    HTSMSG_FOREACH(f, ss) {
-      if (f->hmf_type != HMF_S64) continue;
-      c += snprintf(subsys+c, len-c, "%s%c%s",
-                    first ? "" : ",",
-                    f->hmf_s64 ? '+' : '-',
-                    f->hmf_name);
-      first = 0;
-    }
+  for (i = 0; i < LS_LAST; i++)
+    if (!test_bit(i, ss)) break;
+  if (i >= LS_LAST) {
+    tvh_strlcatf(subsys, len, c, "all");
+    return;
+  }
+  for (i = 0; i < LS_LAST; i++) {
+    if (!test_bit(i, ss)) continue;
+    tvh_strlcatf(subsys, len, c, "%s%s",
+                 first ? "" : ",",
+                 tvhlog_subsystems[i].name);
+    first = 0;
   }
 }
 
 /* Set subsys */
 static void
-tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
+tvhlog_set_subsys ( bitops_ulong_t *c, const char *subsys )
 {
-  uint32_t a;
+  uint_fast32_t a, i;
   char *s, *t, *r = NULL;
 
-  if (*c)
-    htsmsg_destroy(*c);
-  *c = NULL;
+  memset(c, 0, TVHLOG_BITARRAY * sizeof(bitops_ulong_t));
 
   if (!subsys)
     return;
@@ -102,19 +225,23 @@ tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
   while ( t ) {
     subsys = NULL;
     a      = 1;
-    if (!*t) goto next;
-    if (t[0] == '+' || t[0] == '-') {
-      a = t[0] == '+';
+    while (*t && (*t == '+' || *t == '-' || *t <= ' ')) {
+      if (*t > ' ')
+        a = *t == '+';
       t++;
     }
+    if (!*t) goto next;
     if (!strcmp(t, "all")) {
-      if (*c)
-        htsmsg_destroy(*c);
-      *c = NULL;
+      memset(c, a ? 0xff : 0, TVHLOG_BITARRAY * sizeof(bitops_ulong_t));
+    } else {
+      for (i = 0; i < LS_LAST; i++)
+        if (!strcmp(tvhlog_subsystems[i].name, t)) {
+          if (a) set_bit(i, c); else clear_bit(i, c);
+          break;
+        }
+      if (i >= LS_LAST)
+        tvherror(LS_CONFIG, "unknown subsystem '%s'", t);
     }
-    if (!*c)
-      *c = htsmsg_create_map();
-    htsmsg_set_u32(*c, t, a);
 next:
     t = strtok_r(NULL, ",", &r);
   }
@@ -124,13 +251,13 @@ next:
 void
 tvhlog_set_debug ( const char *subsys )
 {
-  tvhlog_set_subsys(&tvhlog_debug, subsys);
+  tvhlog_set_subsys(tvhlog_debug, subsys);
 }
 
 void
 tvhlog_set_trace ( const char *subsys )
 {
-  tvhlog_set_subsys(&tvhlog_trace, subsys);
+  tvhlog_set_subsys(tvhlog_trace, subsys);
 }
 
 void
@@ -167,17 +294,13 @@ tvhlog_process
   l = strftime(t, sizeof(t), "%F %T", &tm);// %d %H:%M:%S", &tm);
   if (options & TVHLOG_OPT_MILLIS) {
     int ms = msg->time.tv_usec / 1000;
-    snprintf(t+l, sizeof(t)-l, ".%03d", ms);
+    tvh_strlcatf(t, sizeof(t), l, ".%03d", ms);
   }
 
   /* Comet (debug must still be enabled??) */
-  if(msg->notify && msg->severity < LOG_TRACE) {
-    htsmsg_t *m = htsmsg_create_map();
+  if (msg->notify && msg->severity < LOG_TRACE) {
     snprintf(buf, sizeof(buf), "%s %s", t, msg->msg);
-    htsmsg_add_str(m, "notificationClass", "logmessage");
-    htsmsg_add_str(m, "logtxt", buf);
-    comet_mailbox_add_message(m, msg->severity >= LOG_DEBUG);
-    htsmsg_destroy(m);
+    comet_mailbox_add_logmsg(buf, msg->severity >= LOG_DEBUG, 0);
   }
 
   /* Console */
@@ -186,7 +309,7 @@ tvhlog_process
       const char *ltxt = logtxtmeta[msg->severity][0];
       const char *sgr  = logtxtmeta[msg->severity][1];
       const char *sgroff;
-    
+
       if (options & TVHLOG_OPT_DECORATE)
         sgroff = "\033[0m";
       else {
@@ -202,12 +325,12 @@ tvhlog_process
     if (options & TVHLOG_OPT_DBG_FILE || msg->severity < LOG_DEBUG) {
       const char *ltxt = logtxtmeta[msg->severity][0];
       if (!*fp)
-        *fp = fopen(path, "a");
+        *fp = tvh_fopen(path, "a");
       if (*fp)
         fprintf(*fp, "%s [%7s]:%s\n", t, ltxt, msg->msg);
     }
   }
-  
+
   free(msg->msg);
   free(msg);
 }
@@ -221,7 +344,7 @@ tvhlog_thread ( void *p )
   FILE *fp = NULL;
   tvhlog_msg_t *msg;
 
-  pthread_mutex_lock(&tvhlog_mutex);
+  tvh_mutex_lock(&tvhlog_mutex);
   while (tvhlog_run) {
 
     /* Wait */
@@ -231,7 +354,7 @@ tvhlog_thread ( void *p )
                     // but overall performance will be higher
         fp = NULL;
       }
-      pthread_cond_wait(&tvhlog_cond, &tvhlog_mutex);
+      tvh_cond_wait(&tvhlog_cond, &tvhlog_mutex);
       continue;
     }
     TAILQ_REMOVE(&tvhlog_queue, msg, link);
@@ -242,60 +365,53 @@ tvhlog_thread ( void *p )
     /* Copy options and path */
     if (!fp) {
       if (tvhlog_path) {
-        strncpy(buf, tvhlog_path, sizeof(buf));
+        strlcpy(buf, tvhlog_path, sizeof(buf));
         path = buf;
       } else {
         path = NULL;
       }
     }
-    options  = tvhlog_options; 
-    pthread_mutex_unlock(&tvhlog_mutex);
+    options  = tvhlog_options;
+    tvh_mutex_unlock(&tvhlog_mutex);
     tvhlog_process(msg, options, &fp, path);
-    pthread_mutex_lock(&tvhlog_mutex);
+    tvh_mutex_lock(&tvhlog_mutex);
   }
   if (fp)
     fclose(fp);
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
   return NULL;
 }
 
-void tvhlogv ( const char *file, int line,
-               int notify, int severity,
-               const char *subsys, const char *fmt, va_list *args )
+void tvhlogv ( const char *file, int line, int severity,
+               int subsys, const char *fmt, va_list *args )
 {
-  int ok, options;
+  int ok, options, notify;
   size_t l;
   char buf[1024];
 
-  pthread_mutex_lock(&tvhlog_mutex);
+  notify = (severity & LOG_TVH_NOTIFY) ? 1 : 0;
+  severity &= ~LOG_TVH_NOTIFY;
 
-  /* Check for full */
-  if (tvhlog_queue_full) {
-    pthread_mutex_unlock(&tvhlog_mutex);
-    return;
-  }
-
-  /* Check debug enabled (and cache config) */
-  options = tvhlog_options;
   if (severity >= LOG_DEBUG) {
     ok = 0;
-    if (severity <= tvhlog_level) {
-      if (tvhlog_trace) {
-        ok = htsmsg_get_u32_or_default(tvhlog_trace, "all", 0);
-        ok = htsmsg_get_u32_or_default(tvhlog_trace, subsys, ok);
-      }
-      if (!ok && severity == LOG_DEBUG && tvhlog_debug) {
-        ok = htsmsg_get_u32_or_default(tvhlog_debug, "all", 0);
-        ok = htsmsg_get_u32_or_default(tvhlog_debug, subsys, ok);
-      }
+    if (severity <= atomic_get(&tvhlog_level)) {
+      ok = test_bit(subsys, tvhlog_trace);
+      if (!ok && severity == LOG_DEBUG)
+        ok = test_bit(subsys, tvhlog_debug);
     }
   } else {
     ok = 1;
   }
 
   /* Ignore */
-  if (!ok) {
-    pthread_mutex_unlock(&tvhlog_mutex);
+  if (!ok)
+    return;
+
+  tvh_mutex_lock(&tvhlog_mutex);
+
+  /* Check for full */
+  if (tvhlog_queue_full) {
+    tvh_mutex_unlock(&tvhlog_mutex);
     return;
   }
 
@@ -308,17 +424,18 @@ void tvhlogv ( const char *file, int line,
   }
 
   /* Basic message */
+  options = tvhlog_options;
   l = 0;
   if (options & TVHLOG_OPT_THREAD) {
-    l += snprintf(buf + l, sizeof(buf) - l, "tid %ld: ", (long)pthread_self());
+    tvh_strlcatf(buf, sizeof(buf), l, "tid %ld: ", (long)pthread_self());
   }
-  l += snprintf(buf + l, sizeof(buf) - l, "%s: ", subsys);
+  tvh_strlcatf(buf, sizeof(buf), l, "%s: ", tvhlog_subsystems[subsys].name);
   if (options & TVHLOG_OPT_FILELINE && severity >= LOG_DEBUG)
-    l += snprintf(buf + l, sizeof(buf) - l, "(%s:%d) ", file, line);
+    tvh_strlcatf(buf, sizeof(buf), l, "(%s:%d) ", file, line);
   if (args)
-    l += vsnprintf(buf + l, sizeof(buf) - l, fmt, *args);
+    vsnprintf(buf + l, sizeof(buf) - l, fmt, *args);
   else
-    l += snprintf(buf + l, sizeof(buf) - l, "%s", fmt);
+    snprintf(buf + l, sizeof(buf) - l, "%s", fmt);
 
   /* Store */
   tvhlog_msg_t *msg = calloc(1, sizeof(tvhlog_msg_t));
@@ -330,7 +447,7 @@ void tvhlogv ( const char *file, int line,
   if (tvhlog_run) {
     TAILQ_INSERT_TAIL(&tvhlog_queue, msg, link);
     tvhlog_queue_size++;
-    pthread_cond_signal(&tvhlog_cond);
+    tvh_cond_signal(&tvhlog_cond, 0);
   } else {
 #endif
     FILE *fp = NULL;
@@ -339,20 +456,19 @@ void tvhlogv ( const char *file, int line,
 #if TVHLOG_THREAD
   }
 #endif
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
 }
 
 
 /*
  * Map args
  */
-void _tvhlog ( const char *file, int line,
-               int notify, int severity,
-               const char *subsys, const char *fmt, ... )
+void _tvhlog ( const char *file, int line, int severity,
+               int subsys, const char *fmt, ... )
 {
   va_list args;
   va_start(args, fmt);
-  tvhlogv(file, line, notify, severity, subsys, fmt, &args);
+  tvhlogv(file, line, severity, subsys, fmt, &args);
   va_end(args);
 }
 
@@ -361,28 +477,22 @@ void _tvhlog ( const char *file, int line,
  */
 #define HEXDUMP_WIDTH 16
 void
-_tvhlog_hexdump(const char *file, int line,
-                int notify, int severity,
-                const char *subsys,
-                const uint8_t *data, ssize_t len )
+_tvhlog_hexdump(const char *file, int line, int severity,
+                int subsys, const uint8_t *data, ssize_t len )
 {
-  int i, c, skip;
+  int i, c;
   char str[1024];
 
-  /* Don't process if trace is OFF */
-  pthread_mutex_lock(&tvhlog_mutex);
-  skip = (severity > tvhlog_level);
-  pthread_mutex_unlock(&tvhlog_mutex);
-  if (skip) return;
- 
+  /* Assume that severify was validated before call */
+
   /* Build and log output */
   while (len > 0) {
     c = 0;
     for (i = 0; i < HEXDUMP_WIDTH; i++) {
       if (i >= len)
-        c += snprintf(str+c, sizeof(str)-c, "   ");
+        tvh_strlcatf(str, sizeof(str), c, "   ");
       else
-        c += snprintf(str+c, sizeof(str)-c, "%02X ", data[i]);
+        tvh_strlcatf(str, sizeof(str), c, "%02X ", data[i]);
     }
     for (i = 0; i < HEXDUMP_WIDTH; i++) {
       if (i < len) {
@@ -395,34 +505,98 @@ _tvhlog_hexdump(const char *file, int line,
       c++;
     }
     str[c] = '\0';
-    tvhlogv(file, line, notify, severity, subsys, str, NULL);
+    tvhlogv(file, line, severity, subsys, str, NULL);
     len  -= HEXDUMP_WIDTH;
     data += HEXDUMP_WIDTH;
   }
 }
 
 /*
+ *
+ */
+void
+tvhlog_backtrace_printf(const char *fmt, ...)
+{
+#if ENABLE_EXECINFO
+  static void *frames[5];
+  int nframes = backtrace(frames, 5), i;
+  char **strings = backtrace_symbols(frames, nframes);
+  va_list args;
+
+  va_start(args, fmt);
+  vprintf(fmt, args);
+  va_end(args);
+  for (i = 0; i < nframes; i++)
+    printf("  %s\n", strings[i]);
+  free(strings);
+#endif
+}
+
+/*
+ *
+ */
+#if ENABLE_TRACE
+static void tvhdbgv(int subsys, const char *fmt, va_list *args)
+{
+  char buf[2048];
+  size_t l = 0;
+
+  if (tvhlog_rtfd < 0) return;
+  tvh_strlcatf(buf, sizeof(buf), l, "%s: ", tvhlog_subsystems[subsys].name);
+  l += vsnprintf(buf + l, sizeof(buf) - l, fmt, *args);
+  if (l + 1 < sizeof(buf))
+    buf[l++] = '\n';
+  sendto(tvhlog_rtfd, buf, l, 0, (struct sockaddr *)&tvhlog_rtss, sizeof(struct sockaddr_in));
+}
+#endif
+
+/*
+ *
+ */
+#if ENABLE_TRACE
+void tvhdbg(int subsys, const char *fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  tvhdbgv(subsys, fmt, &args);
+  va_end(args);
+}
+#endif
+
+/*
  * Initialise
  */
-void 
+void
 tvhlog_init ( int level, int options, const char *path )
 {
-  tvhlog_level   = level;
+  atomic_set(&tvhlog_level, level);
   tvhlog_options = options;
   tvhlog_path    = path ? strdup(path) : NULL;
-  tvhlog_trace   = NULL;
-  tvhlog_debug   = NULL;
+  memset(tvhlog_trace, 0, sizeof(tvhlog_trace));
+  memset(tvhlog_debug, 0, sizeof(tvhlog_debug));
   tvhlog_run     = 1;
   openlog("tvheadend", LOG_PID, LOG_DAEMON);
-  pthread_mutex_init(&tvhlog_mutex, NULL);
-  pthread_cond_init(&tvhlog_cond, NULL);
+  tvh_mutex_init(&tvhlog_mutex, NULL);
+  tvh_cond_init(&tvhlog_cond, 1);
   TAILQ_INIT(&tvhlog_queue);
+#if ENABLE_TRACE
+  {
+    const char *rtport0 = getenv("TVHEADEND_RTLOG_UDP_PORT");
+    int rtport = rtport0 ? atoi(rtport0) : 0;
+    if (rtport > 0) {
+      tvhlog_rtfd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
+      tcp_get_ip_from_str("127.0.0.1", &tvhlog_rtss);
+      IP_AS_V4(tvhlog_rtss, port) = htons(rtport);
+    }
+  }
+#endif
 }
 
 void
 tvhlog_start ( void )
 {
-  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL);
+  idclass_register(&tvhlog_conf_class);
+  tvh_thread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL, "log");
 }
 
 void
@@ -430,21 +604,269 @@ tvhlog_end ( void )
 {
   FILE *fp = NULL;
   tvhlog_msg_t *msg;
-  pthread_mutex_lock(&tvhlog_mutex);
+  tvh_mutex_lock(&tvhlog_mutex);
   tvhlog_run = 0;
-  pthread_cond_signal(&tvhlog_cond);
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_cond_signal(&tvhlog_cond, 0);
+  tvh_mutex_unlock(&tvhlog_mutex);
   pthread_join(tvhlog_tid, NULL);
-  pthread_mutex_lock(&tvhlog_mutex);
-  while (!(msg = TAILQ_FIRST(&tvhlog_queue))) {
+  tvh_mutex_lock(&tvhlog_mutex);
+  while ((msg = TAILQ_FIRST(&tvhlog_queue)) != NULL) {
     TAILQ_REMOVE(&tvhlog_queue, msg, link);
     tvhlog_process(msg, tvhlog_options, &fp, tvhlog_path);
   }
   tvhlog_queue_full = 1;
-  pthread_mutex_unlock(&tvhlog_mutex);
+  tvh_mutex_unlock(&tvhlog_mutex);
   if (fp)
     fclose(fp);
   free(tvhlog_path);
-  htsmsg_destroy(tvhlog_debug);
-  htsmsg_destroy(tvhlog_trace);
+#if ENABLE_TRACE
+  if (tvhlog_rtfd >= 0) {
+    close(tvhlog_rtfd);
+    tvhlog_rtfd = 1;
+  }
+#endif
+  closelog();
 }
+
+/*
+ * Configuration
+ */
+
+static const void *
+tvhlog_class_path_get ( void *o )
+{
+  return &tvhlog_path;
+}
+
+static int
+tvhlog_class_path_set ( void *o, const void *v )
+{
+  const char *s = v;
+  if (strcmp(s ?: "", tvhlog_path ?: "")) {
+    tvh_mutex_lock(&tvhlog_mutex);
+    free(tvhlog_path);
+    tvhlog_path = strdup(s ?: "");
+    if (tvhlog_path && tvhlog_path[0])
+      tvhlog_options |= TVHLOG_OPT_DBG_FILE;
+    else
+      tvhlog_options &= ~TVHLOG_OPT_DBG_FILE;
+    tvh_mutex_unlock(&tvhlog_mutex);
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+tvhlog_class_debugsubs_get ( void *o )
+{
+  static char *p = prop_sbuf;
+  tvhlog_get_debug(prop_sbuf, PROP_SBUF_LEN);
+  return &p;
+}
+
+static int
+tvhlog_class_debugsubs_set ( void *o, const void *v )
+{
+  tvhlog_set_debug((const char *)v);
+  return 1;
+}
+
+static const void *
+tvhlog_class_tracesubs_get ( void *o )
+{
+  static char *p = prop_sbuf;
+  tvhlog_get_trace(prop_sbuf, PROP_SBUF_LEN);
+  return &p;
+}
+
+static int
+tvhlog_class_tracesubs_set ( void *o, const void *v )
+{
+  tvhlog_set_trace((const char *)v);
+  return 1;
+}
+
+static const void *
+tvhlog_class_enable_syslog_get ( void *o )
+{
+  static int si;
+  si = (tvhlog_options & TVHLOG_OPT_SYSLOG) ? 1 : 0;
+  return &si;
+}
+
+static int
+tvhlog_class_enable_syslog_set ( void *o, const void *v )
+{
+  tvh_mutex_lock(&tvhlog_mutex);
+  if (*(int *)v)
+    tvhlog_options |= TVHLOG_OPT_SYSLOG;
+  else
+    tvhlog_options &= ~TVHLOG_OPT_SYSLOG;
+  tvh_mutex_unlock(&tvhlog_mutex);
+  return 1;
+}
+
+static const void *
+tvhlog_class_debug_syslog_get ( void *o )
+{
+  static int si;
+  si = (tvhlog_options & TVHLOG_OPT_DBG_SYSLOG) ? 1 : 0;
+  return &si;
+}
+
+static int
+tvhlog_class_debug_syslog_set ( void *o, const void *v )
+{
+  tvh_mutex_lock(&tvhlog_mutex);
+  if (*(int *)v)
+    tvhlog_options |= TVHLOG_OPT_DBG_SYSLOG;
+  else
+    tvhlog_options &= ~TVHLOG_OPT_DBG_SYSLOG;
+  tvh_mutex_unlock(&tvhlog_mutex);
+  return 1;
+}
+
+static const void *
+tvhlog_class_trace_get ( void *o )
+{
+  static int si;
+  si = atomic_get(&tvhlog_level) >= LOG_TRACE;
+  return &si;
+}
+
+static int
+tvhlog_class_trace_set ( void *o, const void *v )
+{
+  atomic_set(&tvhlog_level, *(int *)v ? LOG_TRACE : LOG_DEBUG);
+  return 1;
+}
+
+static const void *
+tvhlog_class_libav_get ( void *o )
+{
+  static int si;
+  si = (tvhlog_options & TVHLOG_OPT_LIBAV) ? 1 : 0;
+  return &si;
+}
+
+static int
+tvhlog_class_libav_set ( void *o, const void *v )
+{
+  tvh_mutex_lock(&tvhlog_mutex);
+  if (*(int *)v)
+    tvhlog_options |= TVHLOG_OPT_LIBAV;
+  else
+    tvhlog_options &= ~TVHLOG_OPT_LIBAV;
+  libav_set_loglevel();
+  tvh_mutex_unlock(&tvhlog_mutex);
+  return 1;
+}
+
+idnode_t tvhlog_conf = {
+  .in_class      = &tvhlog_conf_class
+};
+
+CLASS_DOC(debugging)
+
+const idclass_t tvhlog_conf_class = {
+  .ic_snode      = &tvhlog_conf,
+  .ic_class      = "tvhlog_conf",
+  .ic_caption    = N_("Debugging"),
+  .ic_doc        = tvh_doc_debugging_class,
+  .ic_event      = "tvhlog_conf",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("General Settings"),
+      .number = 1,
+    },
+    {
+      .name   = N_("Subsystem Output Settings"),
+      .number = 2,
+    },
+    {
+      .name   = N_("Miscellaneous Settings"),
+      .number = 3,
+    },
+    {}
+  },
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_STR,
+      .id     = "path",
+      .name   = N_("Filename (including path)"),
+      .desc   = N_("Enter the filename (including path) where "
+                   "Tvheadend should write the log."),
+      .get    = tvhlog_class_path_get,
+      .set    = tvhlog_class_path_set,
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "enable_syslog",
+      .name   = N_("Enable syslog"),
+      .desc   = N_("Enable/disable logging to syslog."),
+      .get    = tvhlog_class_enable_syslog_get,
+      .set    = tvhlog_class_enable_syslog_set,
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "syslog",
+      .name   = N_("Debug to syslog"),
+      .desc   = N_("Enable/disable debugging output to syslog."),
+      .get    = tvhlog_class_debug_syslog_get,
+      .set    = tvhlog_class_debug_syslog_set,
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "trace",
+      .name   = N_("Debug trace (low-level)"),
+      .desc   = N_("Enable/disable inclusion of low-level debug traces."),
+      .get    = tvhlog_class_trace_get,
+      .set    = tvhlog_class_trace_set,
+#if !ENABLE_TRACE
+      .opts   = PO_RDONLY | PO_HIDDEN,
+#endif
+      .group  = 1,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "debugsubs",
+      .name   = N_("Debug subsystems"),
+      .desc   = N_("Enter comma-separated list of subsystems you want "
+                   "debugging output for (e.g. "
+                   "linuxdvb,subscription,mpegts)."),
+      .get    = tvhlog_class_debugsubs_get,
+      .set    = tvhlog_class_debugsubs_set,
+      .opts   = PO_MULTILINE,
+      .group  = 2,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "tracesubs",
+      .name   = N_("Trace subsystems"),
+      .desc   = N_("Enter comma-separated list of subsystems you want "
+                   "to get traces for (e.g linuxdvb,subscription,mpegts)."),
+      .get    = tvhlog_class_tracesubs_get,
+      .set    = tvhlog_class_tracesubs_set,
+#if !ENABLE_TRACE
+      .opts   = PO_RDONLY | PO_HIDDEN |  PO_MULTILINE,
+#else
+      .opts   = PO_MULTILINE,
+#endif
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "libav",
+      .name   = N_("Debug libav log"),
+      .desc   = N_("Enable/disable libav log output."),
+      .get    = tvhlog_class_libav_get,
+      .set    = tvhlog_class_libav_set,
+      .group  = 3,
+    },
+    {}
+  }
+};

@@ -17,15 +17,31 @@
  */
 
 #include "input.h"
+#include "mpegts/fastscan.h"
+#include "memoryinfo.h"
+
+struct mpegts_listeners mpegts_listeners;
+
+extern memoryinfo_t mpegts_input_queue_memoryinfo;
+extern memoryinfo_t mpegts_input_table_memoryinfo;
 
 void
-mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
+mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
               str_list_t *tsfiles, int tstuners )
 {
   /* Register classes (avoid API 400 errors due to not yet defined) */
   idclass_register(&mpegts_network_class);
   idclass_register(&mpegts_mux_class);
+  idclass_register(&mpegts_mux_instance_class);
   idclass_register(&mpegts_service_class);
+  idclass_register(&mpegts_service_raw_class);
+
+  /* Memory info */
+  memoryinfo_register(&mpegts_input_queue_memoryinfo);
+  memoryinfo_register(&mpegts_input_table_memoryinfo);
+
+  /* FastScan init */
+  dvb_fastscan_init();
 
   /* Network scanner */
 #if ENABLE_MPEGTS
@@ -59,7 +75,12 @@ mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
 
   /* SAT>IP DVB client */
 #if ENABLE_SATIP_CLIENT
-  satip_init(satip_client);
+  satip_init(nosatip, satip_client);
+#endif
+
+ /* HDHomerun client */
+#if ENABLE_HDHOMERUN_CLIENT
+  tvhdhomerun_init();
 #endif
 
   /* Mux schedulers */
@@ -72,23 +93,27 @@ mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
 void
 mpegts_done ( void )
 {
-  tvhftrace("main", mpegts_network_scan_done);
-  tvhftrace("main", mpegts_mux_sched_done);
+  tvhftrace(LS_MAIN, mpegts_network_scan_done);
+  tvhftrace(LS_MAIN, mpegts_mux_sched_done);
 #if ENABLE_MPEGTS_DVB
-  tvhftrace("main", dvb_network_done);
+  tvhftrace(LS_MAIN, dvb_network_done);
 #endif
 #if ENABLE_IPTV
-  tvhftrace("main", iptv_done);
+  tvhftrace(LS_MAIN, iptv_done);
 #endif
 #if ENABLE_LINUXDVB
-  tvhftrace("main", linuxdvb_done);
+  tvhftrace(LS_MAIN, linuxdvb_done);
 #endif
 #if ENABLE_SATIP_CLIENT
-  tvhftrace("main", satip_done);
+  tvhftrace(LS_MAIN, satip_done);
+#endif
+#if ENABLE_HDHOMERUN_CLIENT
+  tvhftrace(LS_MAIN, tvhdhomerun_done);
 #endif
 #if ENABLE_TSFILE
-  tvhftrace("main", tsfile_done);
+  tvhftrace(LS_MAIN, tsfile_done);
 #endif
+  dvb_fastscan_done();
 }
 
 /******************************************************************************

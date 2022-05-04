@@ -1,42 +1,39 @@
-/**
- * Channel tags
- */
-insertChannelTagsClearOption = function( scope, records, options ){
-    var placeholder = Ext.data.Record.create(['key', 'val']);
-    scope.insert(0,new placeholder({key: '-1', val: '(Clear filter)'}));
-};
+tvheadend.getChannelTags = function() {
+    if (tvheadend._chtags)
+        return tvheadend._chtags;
+    tvheadend._chtags = tvheadend.idnode_get_enum({
+        url: 'api/channeltag/list',
+        event: 'channeltag',
+        listeners: {
+            'load': function(scope, records, options) {
+                var placeholder = Ext.data.Record.create(['key', 'val']);
+                scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
+            }
+        }
+    });
+    return tvheadend._chtags;
+}
 
-tvheadend.channelTags = tvheadend.idnode_get_enum({
-    url: 'api/channeltag/list',
-    event: 'channeltag',
-    listeners: {
-        'load': insertChannelTagsClearOption
-    }
-});
-
-tvheadend.comet.on('channeltags', function(m) {
-    if (m.reload != null)
-        tvheadend.channelTags.reload();
-});
-
-/**
- * Channels
- */
-tvheadend.channelrec = new Ext.data.Record.create(
-        ['name', 'chid', 'epggrabsrc', 'tags', 'ch_icon', 'epg_pre_start',
-            'epg_post_end', 'number']);
-
-insertChannelClearOption = function( scope, records, options ){
-    var placeholder = Ext.data.Record.create(['key', 'val']);
-    scope.insert(0,new placeholder({key: '-1', val: '(Clear filter)'}));
-};
-
-tvheadend.channels = tvheadend.idnode_get_enum({
-    url: 'api/channel/list',
-    listeners: {
-        'load': insertChannelClearOption
-    }
-});
+tvheadend.getChannels = function() {
+    if (tvheadend._channels)
+        return tvheadend._channels;
+    tvheadend._channels = tvheadend.idnode_get_enum({
+        url: 'api/channel/list',
+        params: {
+            'numbers': tvheadend.chname_num,
+            'sources': tvheadend.chname_src,
+        },
+        event: 'channel',
+        stype: 'none',
+        listeners: {
+            'load': function(scope, records, options) {
+                var placeholder = Ext.data.Record.create(['key', 'val']);
+                scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
+            }
+        }
+    });
+    return tvheadend._channels;
+}
 
 tvheadend.channel_tab = function(panel, index)
 {
@@ -49,48 +46,38 @@ tvheadend.channel_tab = function(panel, index)
         return a;
     }
 
-    function assign_low_number(ctx, e, store, sm) {
-        if (sm.getCount() !== 1)
-            return;
-
-        var nums = [];
-        store.each(function() {
-            var number = this.data.number;
-            if (typeof number === "number" && number > 0)
-                nums.push(number);
-        });
-
-        if (nums.length === 0)
-        {
-            sm.getSelected().set('number', 1);
-            return;
-        }
-
-        nums.sort(function(a, b) {
-            return (a - b);
-        });
-
+    function get_lowest_number(nums) {
+        nums.sort(function(a, b) { return (a - b); });
         var max = nums[nums.length - 1];
         var low = max + 1;
-
         for (var i = 1; i <= max; ++i)
-        {
-            var ct = false;
-            for (var j = 0; j < nums.length; ++j)
-                if (nums[j] === i)
-                {
-                    ct = true;
-                    break
-                }
-            if (!ct)
-            {
-                low = i;
-                break;
-            }
-        }
+            if (nums.indexOf(i) < 0)
+                return i;
+        return low;
+    }
 
-        sm.getSelected().set('number', low);
-        sm.selectNext();
+    function assign_low_number(ctx, e, store, sm) {
+        var nums = [];
+        store.each(function(rec) {
+            var number = rec.get('number');
+            if (typeof number === 'number' && number > 0)
+                nums.push(number);
+        });
+        if (nums.length === 0)
+            nums.push(0);
+
+        if (sm.getCount() === 1) {
+            sm.getSelected().set('number', get_lowest_number(nums));
+            sm.selectNext();
+        } else {
+            var sel = sm.getSelections();
+            var low = sel[0].get('number');
+            low = low ? low : get_lowest_number(nums);
+            Ext.each(sel, function(s) {
+                while (nums.indexOf(low) >= 0) low++;
+                s.set('number', low++);
+            });
+        }
     }
 
     function move_number_up(ctx, e, store, sm) {
@@ -130,97 +117,139 @@ tvheadend.channel_tab = function(panel, index)
         sel[1].set('number', tmp);
     }
 
+    function reset_icons(ctx, e, store, sm) {
+        Ext.each(sm.getSelections(), function(channel) {
+            channel.set('icon', '');
+        });
+    }
+
+    function bouquet_detach(ctx, e, store, sm) {
+        tvheadend.AjaxUUID(sm.getSelections(), {
+            url: 'api/bouquet/detach',
+            success: function(d) { store.reload(); }
+        });
+    }
+
     var mapButton = {
         name: 'map',
         builder: function() {
-            return new Ext.Toolbar.Button({
-                tooltip: 'Map services to channels',
+            var m = new Ext.menu.Menu()
+            m.add({
+                name: 'mapsel',
+                tooltip: _('Map selected services to channels'),
                 iconCls: 'clone',
-                text: 'Map Services',
+                text: _('Map selected services'),
+            });
+            m.add({
+                name: 'mapall',
+                tooltip: _('Map all services to channels'),
+                iconCls: 'clone',
+                text: _('Map all services'),
+            });
+            m.add({
+                name: 'bqdetach',
+                tooltip: _('Detach from bouquet'),
+                iconCls: 'bouquets',
+                text: _('Detach selected channels from bouquet'),
+            });
+            return new Ext.Toolbar.Button({
+                tooltip: _('Map services to channels'),
+                iconCls: 'clone',
+                text: _('Map services'),
+                menu: m,
                 disabled: false
             });
         },
-        callback: tvheadend.service_mapper
+        callback: {
+            mapall: tvheadend.service_mapper_all,
+            mapsel: tvheadend.service_mapper_none,
+            bqdetach: bouquet_detach
+        }
     };
 
-    var lowNoButton = {
-        name: 'lowno',
+    var chopsButton = {
+        name: 'chops',
         builder: function() {
+            var m = new Ext.menu.Menu()
+            m.add({
+                name: 'lowno',
+                tooltip: _('Assign lowest free channel number'),
+                iconCls: 'chnumops_low',
+                text: _('Assign Number')
+            });
+            m.add({
+                name: 'noup',
+                tooltip: _('Move channel one number up'),
+                iconCls: 'chnumops_up',
+                text: _('Number Up')
+            });
+            m.add({
+                name: 'nodown',
+                tooltip: _('Move channel one number down'),
+                iconCls: 'chnumops_down',
+                text: _('Number Down')
+            });
+            m.add({
+                name: 'swap',
+                tooltip: _('Swap the numbers for the two selected channels'),
+                iconCls: 'chnumops_swap',
+                text: _('Swap Numbers')
+            });
             return new Ext.Toolbar.Button({
-                tooltip: 'Assign lowest free channel number',
-                iconCls: 'bullet_add',
-                text: 'Assign Number',
+                tooltip: _('Channel number operations'),
+                iconCls: 'chnumops',
+                text: _('Number operations'),
+                menu: m,
                 disabled: false
             });
         },
-        callback: assign_low_number
+        callback: {
+            lowno: assign_low_number,
+            noup: move_number_up,
+            nodown: move_number_down,
+            swap: swap_numbers
+        }
     };
 
-    var noUpButton = {
-        name: 'noup',
+    var iconResetButton = {
+        name: 'iconreset',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Move channel one number up',
-                iconCls: 'arrow_up',
-                text: 'Number Up',
+                tooltip: _('Reset (clear) the selected icon URLs'),
+                iconCls: 'resetIcon',
+                text: _('Reset Icon'),
                 disabled: false
             });
         },
-        callback: move_number_up
-    };
-
-    var noDownButton = {
-        name: 'nodown',
-        builder: function() {
-            return new Ext.Toolbar.Button({
-                tooltip: 'Move channel one number down',
-                iconCls: 'arrow_down',
-                text: 'Number Down',
-                disabled: false
-            });
-        },
-        callback: move_number_down
-    };
-
-    var noSwapButton = {
-        name: 'swap',
-        builder: function() {
-            return new Ext.Toolbar.Button({
-                tooltip: 'Swap the two selected channels numbers',
-                iconCls: 'arrow_switch',
-                text: 'Swap Numbers',
-                disabled: false
-            });
-        },
-        callback: swap_numbers
+        callback: reset_icons
     };
 
     tvheadend.idnode_grid(panel, {
+        id: 'channels',
         url: 'api/channel',
+        all: 1,
         comet: 'channel',
-        titleS: 'Channel',
-        titleP: 'Channels',
+        titleS: _('Channel'),
+        titleP: _('Channels'),
+        iconCls: 'channels',
         tabIndex: index,
-        help: function() {
-            new tvheadend.help('Channels', 'config_channels.html');
-        },           
         add: {
             url: 'api/channel',
             create: {}
         },
         del: true,
-        tbar: [mapButton, lowNoButton, noUpButton, noDownButton, noSwapButton],
+        tbar: [mapButton, chopsButton, iconResetButton],
         lcol: [
             {
                 width: 50,
-                header: 'Play',
+                header: _('Play'),
+                tooltip: _('Play'),
                 renderer: function(v, o, r) {
                     var title = '';
                     if (r.data['number'])
                       title += r.data['number'] + ' : ';
                     title += r.data['name'];
-                    return "<a href='play/stream/channel/" + r.id +
-                           "?title=" + encodeURIComponent(title) + "'>Play</a>";
+                    return tvheadend.playLink('stream/channel/' + r.id, title);
                 }
             }
         ],

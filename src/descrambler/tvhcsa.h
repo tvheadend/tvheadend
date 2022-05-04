@@ -26,11 +26,8 @@ struct elementary_stream;
 #include "build.h"
 #if ENABLE_DVBCSA
 #include <dvbcsa/dvbcsa.h>
-#else
-#include "ffdecsa/FFdecsa.h"
 #endif
-
-#include "libaesdec/libaesdec.h"
+#include "tvhlog.h"
 
 typedef struct tvhcsa
 {
@@ -41,11 +38,15 @@ typedef struct tvhcsa
   int      csa_type;   /*< see DESCRAMBLER_* defines */
   int      csa_keylen;
   void   (*csa_descramble)
-              ( struct tvhcsa *csa, struct mpegts_service *s, const uint8_t *tsb );
+              ( struct tvhcsa *csa, struct mpegts_service *s,
+                const uint8_t *tsb, int len );
+  void   (*csa_flush)
+              ( struct tvhcsa *csa, struct mpegts_service *s );
 
   int      csa_cluster_size;
   uint8_t *csa_tsbcluster;
   int      csa_fill;
+  int      csa_fill_size;
 
 #if ENABLE_DVBCSA
   struct dvbcsa_bs_batch_s *csa_tsbbatch_even;
@@ -55,19 +56,32 @@ typedef struct tvhcsa
 
   struct dvbcsa_bs_key_s *csa_key_even;
   struct dvbcsa_bs_key_s *csa_key_odd;
-#else
-  void *csa_keys;
 #endif
-  void *csa_aes_keys;
-  
+  void *csa_priv;
+  tvhlog_limit_t tvhcsa_loglimit;
+
 } tvhcsa_t;
 
-int  tvhcsa_set_type( tvhcsa_t *csa, int type );
+#if ENABLE_TVHCSA
+
+int  tvhcsa_set_type( tvhcsa_t *csa, struct mpegts_service *s, int type );
 
 void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even );
 void tvhcsa_set_key_odd ( tvhcsa_t *csa, const uint8_t *odd );
 
 void tvhcsa_init    ( tvhcsa_t *csa );
 void tvhcsa_destroy ( tvhcsa_t *csa );
+
+#else
+
+static inline int tvhcsa_set_type( tvhcsa_t *csa, struct mpegts_service *s, int type ) { return -1; }
+
+static inline void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even ) { };
+static inline void tvhcsa_set_key_odd ( tvhcsa_t *csa, const uint8_t *odd ) { };
+
+static inline void tvhcsa_init ( tvhcsa_t *csa ) { };
+static inline void tvhcsa_destroy ( tvhcsa_t *csa ) { };
+
+#endif
 
 #endif /* __TVH_CSA_H__ */

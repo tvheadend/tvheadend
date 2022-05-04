@@ -36,6 +36,8 @@ typedef struct constcw_service {
 typedef struct constcw {
   caclient_t;
 
+  char     ccw_name[128];
+
   /* From configuration */
   uint16_t ccw_caid;           /* CA ID */
   uint32_t ccw_providerid;     /* CA provider ID */
@@ -52,7 +54,25 @@ typedef struct constcw {
 static const char *
 constcw_name(constcw_t *ccw)
 {
-  return idnode_get_title(&ccw->cac_id);
+  return idnode_get_title(&ccw->cac_id, NULL,
+                          ccw->ccw_name, sizeof(ccw->ccw_name));
+}
+
+/**
+ *
+ */
+static int
+constcw_algo(caclient_t *cac)
+{
+  constcw_t *ccw = (constcw_t *)cac;
+
+  if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_des_ncb_class))
+    return DESCRAMBLER_DES_NCB;
+  if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_aes_ecb_class))
+    return DESCRAMBLER_AES_ECB;
+  if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_aes128_ecb_class))
+    return DESCRAMBLER_AES128_ECB;
+  return DESCRAMBLER_CSA_CBC;
 }
 
 /**
@@ -63,9 +83,9 @@ constcw_key_size(caclient_t *cac)
 {
   constcw_t *ccw = (constcw_t *)cac;
 
-  if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_des_class))
-    return 8;
-  return 16;
+  if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_aes128_ecb_class))
+    return 16;
+  return 8;
 }
 
 /*
@@ -110,7 +130,10 @@ constcw_service_start(caclient_t *cac, service_t *t)
     return;
   mt = (mpegts_service_t *)t;
 
-  if (mt->s_dvb_service_id != ccw->ccw_sid)
+  if (mt->s_dvb_forcecaid && mt->s_dvb_forcecaid != ccw->ccw_caid)
+    return;
+
+  if (service_id16(mt) != ccw->ccw_sid)
     return;
 
   if (mt->s_dvb_mux->mm_tsid != ccw->ccw_tsid)
@@ -122,18 +145,20 @@ constcw_service_start(caclient_t *cac, service_t *t)
   if (ct)
     return;
 
-  pthread_mutex_lock(&t->s_stream_mutex);
-  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
-    LIST_FOREACH(c, &st->es_caids, link) {
-      if (c->use && c->caid == ccw->ccw_caid &&
-          c->providerid == ccw->ccw_providerid)
-        break;
+  if (!mt->s_dvb_forcecaid) {
+    tvh_mutex_lock(&t->s_stream_mutex);
+    TAILQ_FOREACH(st, &t->s_components.set_filter, es_filter_link) {
+      LIST_FOREACH(c, &st->es_caids, link) {
+        if (c->use && c->caid == ccw->ccw_caid &&
+            c->providerid == ccw->ccw_providerid)
+          break;
+      }
+      if (c) break;
     }
-    if (c) break;
+    tvh_mutex_unlock(&t->s_stream_mutex);
+    if (st == NULL)
+      return;
   }
-  pthread_mutex_unlock(&t->s_stream_mutex);
-  if (st == NULL)
-    return;
 
   ct                   = calloc(1, sizeof(constcw_service_t));
   td                   = (th_descrambler_t *)ct;
@@ -146,9 +171,8 @@ constcw_service_start(caclient_t *cac, service_t *t)
 
   LIST_INSERT_HEAD(&ccw->ccw_services, ct, cs_link);
 
-  descrambler_keys(td, constcw_key_size(cac) == 8 ?
-                   DESCRAMBLER_DES : DESCRAMBLER_AES,
-                   ccw->ccw_key_even, ccw->ccw_key_odd);
+  descrambler_keys(td, constcw_algo(cac),
+                   0, ccw->ccw_key_even, ccw->ccw_key_odd);
 }
 
 
@@ -163,9 +187,9 @@ constcw_free(caclient_t *cac)
 
   while((ct = LIST_FIRST(&ccw->ccw_services)) != NULL) {
     service_t *t = ct->td_service;
-    pthread_mutex_lock(&t->s_stream_mutex);
-    constcw_service_destroy((th_descrambler_t *)&ct);
-    pthread_mutex_unlock(&t->s_stream_mutex);
+    tvh_mutex_lock(&t->s_stream_mutex);
+    constcw_service_destroy((th_descrambler_t *)ct);
+    tvh_mutex_unlock(&t->s_stream_mutex);
   }
 }
 
@@ -240,15 +264,13 @@ constcw_class_key_odd_set(void *o, const void *v)
 static const void *
 constcw_class_key_get(void *o, const uint8_t *key)
 {
-  static char buf[64];
-  static const char *ret = buf;
   if (constcw_key_size(o) == 8) {
-    snprintf(buf, sizeof(buf),
+    snprintf(prop_sbuf, PROP_SBUF_LEN,
              "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
              key[0x0], key[0x1], key[0x2], key[0x3],
              key[0x4], key[0x5], key[0x6], key[0x7]);
   } else {
-    snprintf(buf, sizeof(buf),
+    snprintf(prop_sbuf, PROP_SBUF_LEN,
              "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:"
              "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
              key[0x0], key[0x1], key[0x2], key[0x3],
@@ -256,7 +278,7 @@ constcw_class_key_get(void *o, const uint8_t *key)
              key[0x8], key[0x9], key[0xa], key[0xb],
              key[0xc], key[0xd], key[0xe], key[0xf]);
   }
-  return &ret;
+  return &prop_sbuf_ptr;
 }
 
 static const void *
@@ -273,121 +295,309 @@ constcw_class_key_odd_get(void *o)
   return constcw_class_key_get(o, ccw->ccw_key_odd);
 }
 
-const idclass_t caclient_ccw_des_class =
+static property_group_t caclient_ic_groups[] = {
+    {
+      .name   = N_("Client"),
+      .number = 1,
+    },
+    {
+      .name   = N_("Filter"),
+      .number = 2,
+    },
+    {
+      .name   = N_("Keys"),
+      .number = 3,
+    },
+    {}
+};
+
+const idclass_t caclient_ccw_csa_cbc_class =
 {
   .ic_super      = &caclient_class,
-  .ic_class      = "caclient_ccw_des",
-  .ic_caption    = "DES Constant Code Word Client",
+  .ic_class      = "caclient_ccw_csa_cbc",
+  .ic_caption    = N_("CSA CBC Constant Code Word"),
+  .ic_groups     = caclient_ic_groups,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,
       .id       = "caid",
-      .name     = "CA ID",
+      .name     = N_("CA ID"),
+      .desc     = N_("Conditional Access Identification."),
       .off      = offsetof(constcw_t, ccw_caid),
       .opts     = PO_HEXA,
-      .def.u16  = 0x2600
+      .def.u16  = 0x2600,
+      .group    = 2,
     },
     {
       .type     = PT_U32,
       .id       = "providerid",
-      .name     = "Provider ID",
+      .name     = N_("Provider ID"),
+      .desc     = N_("The provider's ID."),
       .off      = offsetof(constcw_t, ccw_providerid),
       .opts     = PO_HEXA,
-      .def.u32  = 0
+      .def.u32  = 0,
+      .group    = 2,
     },
     {
       .type     = PT_U16,
       .id       = "tsid",
-      .name     = "Transponder ID",
+      .name     = N_("Transponder ID"),
+      .desc     = N_("The transponder ID."),
       .off      = offsetof(constcw_t, ccw_tsid),
       .opts     = PO_HEXA,
       .def.u16  = 1,
+      .group    = 2,
     },
     {
       .type     = PT_U16,
       .id       = "sid",
-      .name     = "Service ID",
+      .name     = N_("Service ID"),
+      .desc     = N_("The service ID."),
       .off      = offsetof(constcw_t, ccw_sid),
       .opts     = PO_HEXA,
       .def.u16  = 1,
+      .group    = 2,
     },
     {
       .type     = PT_STR,
       .id       = "key_even",
-      .name     = "Even Key",
+      .name     = N_("Even key"),
+      .desc     = N_("Even key."),
       .set      = constcw_class_key_even_set,
       .get      = constcw_class_key_even_get,
       .opts     = PO_PASSWORD,
       .def.s    = "00:00:00:00:00:00:00:00",
+      .group    = 3,
     },
     {
       .type     = PT_STR,
       .id       = "key_odd",
-      .name     = "Odd Key",
+      .name     = N_("Odd key"),
+      .desc     = N_("Odd key."),
       .set      = constcw_class_key_odd_set,
       .get      = constcw_class_key_odd_get,
       .opts     = PO_PASSWORD,
       .def.s    = "00:00:00:00:00:00:00:00",
+      .group    = 3,
     },
     { }
   }
 };
 
-const idclass_t caclient_ccw_aes_class =
+const idclass_t caclient_ccw_des_ncb_class =
 {
   .ic_super      = &caclient_class,
-  .ic_class      = "caclient_ccw_aes",
-  .ic_caption    = "AES Constant Code Word Client",
+  .ic_class      = "caclient_ccw_des_ncb",
+  .ic_caption    = N_("DES NCB Constant Code Word"),
+  .ic_groups     = caclient_ic_groups,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,
       .id       = "caid",
-      .name     = "CA ID",
+      .name     = N_("CA ID"),
+      .desc     = N_("Conditional Access Identification."),
       .off      = offsetof(constcw_t, ccw_caid),
       .opts     = PO_HEXA,
       .def.u16  = 0x2600,
+      .group    = 2,
     },
     {
       .type     = PT_U32,
       .id       = "providerid",
-      .name     = "Provider ID",
+      .name     = N_("Provider ID"),
+      .desc     = N_("The provider's ID."),
       .off      = offsetof(constcw_t, ccw_providerid),
       .opts     = PO_HEXA,
-      .def.u32  = 0
+      .def.u32  = 0,
+      .group    = 2,
     },
     {
       .type     = PT_U16,
       .id       = "tsid",
-      .name     = "Transponder ID",
+      .name     = N_("Transponder ID"),
+      .desc     = N_("The transponder ID."),
       .off      = offsetof(constcw_t, ccw_tsid),
       .opts     = PO_HEXA,
       .def.u16  = 1,
+      .group    = 2,
     },
     {
       .type     = PT_U16,
       .id       = "sid",
-      .name     = "Service ID",
+      .name     = N_("Service ID"),
+      .desc     = N_("The service ID."),
       .off      = offsetof(constcw_t, ccw_sid),
       .opts     = PO_HEXA,
       .def.u16  = 1,
+      .group    = 2,
     },
     {
       .type     = PT_STR,
       .id       = "key_even",
-      .name     = "Even Key",
+      .name     = N_("Even key"),
+      .desc     = N_("Even key."),
       .set      = constcw_class_key_even_set,
       .get      = constcw_class_key_even_get,
       .opts     = PO_PASSWORD,
-      .def.s    = "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00",
+      .def.s    = "00:00:00:00:00:00:00:00",
+      .group    = 3,
     },
     {
       .type     = PT_STR,
       .id       = "key_odd",
-      .name     = "Odd Key",
+      .name     = N_("Odd key"),
+      .desc     = N_("Odd key."),
+      .set      = constcw_class_key_odd_set,
+      .get      = constcw_class_key_odd_get,
+      .opts     = PO_PASSWORD,
+      .def.s    = "00:00:00:00:00:00:00:00",
+      .group    = 3,
+    },
+    { }
+  }
+};
+
+const idclass_t caclient_ccw_aes_ecb_class =
+{
+  .ic_super      = &caclient_class,
+  .ic_class      = "caclient_ccw_aes_ecb",
+  .ic_caption    = N_("AES ECB Constant Code Word"),
+  .ic_groups     = caclient_ic_groups,
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_U16,
+      .id       = "caid",
+      .name     = N_("CA ID"),
+      .desc     = N_("Conditional Access Identification."),
+      .off      = offsetof(constcw_t, ccw_caid),
+      .opts     = PO_HEXA,
+      .def.u16  = 0x2600,
+      .group    = 2,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "providerid",
+      .name     = N_("Provider ID"),
+      .desc     = N_("The provider's ID."),
+      .off      = offsetof(constcw_t, ccw_providerid),
+      .opts     = PO_HEXA,
+      .def.u32  = 0,
+      .group    = 2,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "tsid",
+      .name     = N_("Transponder ID"),
+      .desc     = N_("The transponder ID."),
+      .off      = offsetof(constcw_t, ccw_tsid),
+      .opts     = PO_HEXA,
+      .def.u16  = 1,
+      .group    = 2,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "sid",
+      .name     = N_("Service ID"),
+      .desc     = N_("The service ID."),
+      .off      = offsetof(constcw_t, ccw_sid),
+      .opts     = PO_HEXA,
+      .def.u16  = 1,
+      .group    = 2,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "key_even",
+      .name     = N_("Even key"),
+      .desc     = N_("Even key."),
+      .set      = constcw_class_key_even_set,
+      .get      = constcw_class_key_even_get,
+      .opts     = PO_PASSWORD,
+      .def.s    = "00:00:00:00:00:00:00:00",
+      .group    = 3,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "key_odd",
+      .name     = N_("Odd key"),
+      .desc     = N_("Odd key."),
+      .set      = constcw_class_key_odd_set,
+      .get      = constcw_class_key_odd_get,
+      .opts     = PO_PASSWORD,
+      .def.s    = "00:00:00:00:00:00:00:00",
+      .group    = 3,
+    },
+    { }
+  }
+};
+
+const idclass_t caclient_ccw_aes128_ecb_class =
+{
+  .ic_super      = &caclient_class,
+  .ic_class      = "caclient_ccw_aes128_ecb",
+  .ic_caption    = N_("AES128 ECB Constant Code Word"),
+  .ic_groups     = caclient_ic_groups,
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_U16,
+      .id       = "caid",
+      .name     = N_("CA ID"),
+      .desc     = N_("Conditional Access Identification."),
+      .off      = offsetof(constcw_t, ccw_caid),
+      .opts     = PO_HEXA,
+      .def.u16  = 0x2600,
+      .group    = 2,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "providerid",
+      .name     = N_("Provider ID"),
+      .desc     = N_("The provider's ID."),
+      .off      = offsetof(constcw_t, ccw_providerid),
+      .opts     = PO_HEXA,
+      .def.u32  = 0,
+      .group    = 2,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "tsid",
+      .name     = N_("Transponder ID"),
+      .desc     = N_("The transponder ID."),
+      .off      = offsetof(constcw_t, ccw_tsid),
+      .opts     = PO_HEXA,
+      .def.u16  = 1,
+      .group    = 2,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "sid",
+      .name     = N_("Service ID"),
+      .desc     = N_("The service ID"),
+      .off      = offsetof(constcw_t, ccw_sid),
+      .opts     = PO_HEXA,
+      .def.u16  = 1,
+      .group    = 2,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "key_even",
+      .name     = N_("Even key"),
+      .desc     = N_("Even key."),
+      .set      = constcw_class_key_even_set,
+      .get      = constcw_class_key_even_get,
+      .opts     = PO_PASSWORD,
+      .def.s    = "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00",
+      .group    = 3,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "key_odd",
+      .name     = N_("Odd key"),
+      .desc     = N_("Odd key."),
       .set      = constcw_class_key_odd_set,
       .get      = constcw_class_key_odd_get,
       .opts     = PO_PASSWORD,
       .def.s    = "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00",
+      .group    = 3,
     },
     { }
   }

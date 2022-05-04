@@ -1,0 +1,133 @@
+{
+
+  "uk_freesat": {
+    "name": {
+      "eng": "UK: Freesat"
+    },
+    "prio": 5,
+    "pid": 3003,
+    "conv": "huffman",
+    "nit": {
+      "Freesat": {
+        "onid": 59,
+        "nbid": 59,
+        "tsid": 2315
+      }
+    },
+    "priv": 1179861332,
+    "hacks": {
+       "slave": "uk_freesat_eit",
+       "bat": { "pid": 3002 },
+       "interest-4e": 1
+    }
+  },
+
+  "uk_freesat_eit": {
+    "name": {
+      "eng": "UK: Freesat (EIT)"
+    },
+    "prio": 6,
+    "conv": "huffman",
+    "nit": {
+      "Freesat": 1
+    },
+    "priv": 1179861332,
+    "hacks": {
+       "interest-4e": 1
+    }
+  },
+
+  "uk_freeview": {
+    "name": {
+      "eng": "UK: Freeview"
+    },
+    "nit": {
+      "": { "onid": 9018 }
+    },
+    "priv": 9018,
+    "prio": 5,
+    "conv": "huffman"
+  },
+
+  "nz_freeview2": {
+    "name": {
+      "eng": "New Zealand: Freeview Local"
+    },
+    "nit": {
+      "Freeview ": {
+        "onid": 8746,
+        "nbid": [ 13313, 13314, 13315, 13316 ],
+        "tsid": [ 26, 27, 28, 31, 32 ]
+      }
+    },
+    "prio": 5,
+    "conv": "huffman",
+    "hacks": {
+      "svc-net-lookup": 1
+    }
+  },
+
+  "nz_freeview1": {
+    "name": {
+      "eng": "New Zealand: Freeview Base"
+    },
+    "nit": {
+      "Freeview ": {
+        "onid": 8746,
+        "nbid": [ 13313, 13314, 13315, 13316 ]
+      }
+    },
+    "prio": 1,
+    "conv": "huffman"
+  },
+
+  "viasat_baltic": {
+    "name": {
+      "eng": "VIASAT: Baltic"
+    },
+    "nit": {
+      "Sirius": { "nbid": 85 },
+      "Viasat": { "nbid": 86 }
+    },
+    "pid": 37,
+    "prio": 5
+  },
+
+  "Bulsatcom_39E": {
+    "name": {
+      "eng": "Bulsatcom: Bula 39E"
+    },
+    "nit": {
+      "Telekom Romania": 28
+    },
+    "priv": 24577,
+    "pid": 299,
+    "prio": 5
+  },
+
+  "uk_cable_virgin": {
+    "name": {
+      "eng": "UK: Cable Virgin"
+    },
+    "nit": {
+      "": {
+        "onid": 61472,
+        "nbid": 41015
+      }
+    },
+    "pid": 700,
+    "prio": 5,
+    "hacks": {
+       "extra-mux-lookup": 1
+    }
+  },
+
+  "eit": {
+    "name": {
+      "eng": "EIT: EPG Grabber"
+    },
+    "prio": 1,
+    "sdt_enable": 1
+  }
+
+}

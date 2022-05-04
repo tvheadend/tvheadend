@@ -43,13 +43,12 @@ typedef struct linuxdvb_lnb_conf
   int lnb_switch;
 } linuxdvb_lnb_conf_t;
 
-static const char *
-linuxdvb_lnb_class_get_title ( idnode_t *o )
+static void
+linuxdvb_lnb_class_get_title
+  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
 {
-  static char buf[256];
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
-  snprintf(buf, sizeof(buf), "LNB: %s", ld->ld_type);
-  return buf;
+  snprintf(dst, dstsize, tvh_gettext_lang(lang, N_("LNB: %s")), ld->ld_type);
 }
 
 extern const idclass_t linuxdvb_diseqc_class;
@@ -58,8 +57,32 @@ const idclass_t linuxdvb_lnb_class =
 {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_lnb_basic",
-  .ic_caption     = "LNB",
+  .ic_caption     = N_("LNB"),
   .ic_get_title   = linuxdvb_lnb_class_get_title,
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_INT,
+      .id       = "lfo",
+      .name     = N_("Low frequency offset"),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .off      = offsetof(linuxdvb_lnb_conf_t, lnb_low),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "hfo",
+      .name     = N_("High frequency offset"),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .off      = offsetof(linuxdvb_lnb_conf_t, lnb_high),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "sfo",
+      .name     = N_("Switch frequency offset"),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .off      = offsetof(linuxdvb_lnb_conf_t, lnb_switch),
+    },
+    {}
+  }
 };
 
 /* **************************************************************************
@@ -81,6 +104,33 @@ linuxdvb_lnb_standard_freq
   else
     f -= lnb->lnb_low;
   return (uint32_t)abs(f);
+}
+
+static int
+linuxdvb_lnb_bandstack_match
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm1, dvb_mux_t *lm2 )
+{
+  /* everything is in one cable */
+  return 1;
+}
+
+static int
+linuxdvb_lnb_standard_match
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm1, dvb_mux_t *lm2 )
+{
+  linuxdvb_lnb_conf_t *lnb = (linuxdvb_lnb_conf_t*)l;
+  dvb_mux_conf_t      *dmc1 = &lm1->lm_tuning;
+  dvb_mux_conf_t      *dmc2 = &lm2->lm_tuning;
+
+  if (lnb->lnb_switch) {
+    uint32_t hi1 = dmc1->dmc_fe_freq > lnb->lnb_switch;
+    uint32_t hi2 = dmc2->dmc_fe_freq > lnb->lnb_switch;
+    if (hi1 != hi2)
+      return 0;
+  }
+  if (dmc1->u.dmc_fe_qpsk.polarisation != dmc2->u.dmc_fe_qpsk.polarisation)
+    return 0;
+  return 1;
 }
 
 static int
@@ -110,15 +160,11 @@ linuxdvb_lnb_inverted_pol
 
 static int 
 linuxdvb_lnb_standard_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls,
+    int vol, int pol, int band, int freq )
 {
-  /* en50494 does not use the voltage tune. this is happend in the switch */
-  if (ls->lse_en50494)
-    return 0;
-
-  /* note: differentiate between linuxdvb_lnb_standard_pol / linuxdvb_lnb_inverted_pol */
-  int pol = ((linuxdvb_lnb_t*)ld)->lnb_pol((linuxdvb_lnb_t*)ld, lm);
-  return linuxdvb_diseqc_set_volt(fd, pol);
+  return linuxdvb_diseqc_set_volt(ls->lse_parent, vol);
 }
 
 /*
@@ -158,25 +204,18 @@ linuxdvb_lnb_bandstack_pol
   return 0;
 }
 
-static int
-linuxdvb_lnb_bandstack_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
-{
-  int pol = linuxdvb_lnb_bandstack_pol((linuxdvb_lnb_t*)ld, lm);
-  return linuxdvb_diseqc_set_volt(fd, pol);
-}
-
 /* **************************************************************************
  * Static list
  * *************************************************************************/
 
-struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
+linuxdvb_lnb_conf_t linuxdvb_lnb_all[] = {
   {
     { {
       .ld_type    = "Universal",
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -190,6 +229,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -203,6 +243,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -216,6 +257,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -225,10 +267,25 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
   },
   {
     { {
+      .ld_type    = "C-Band (bandstack)",
+      .ld_tune    = linuxdvb_lnb_standard_tune,
+      },
+      .lnb_freq   = linuxdvb_lnb_bandstack_freq,
+      .lnb_match  = linuxdvb_lnb_bandstack_match,
+      .lnb_band   = linuxdvb_lnb_bandstack_band,
+      .lnb_pol    = linuxdvb_lnb_bandstack_pol,
+    },
+    .lnb_low    =  5150000,
+    .lnb_high   =  5750000,
+    .lnb_switch =  0,
+  },
+  {
+    { {
       .ld_type    = "Ku 10750",
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -242,6 +299,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -255,6 +313,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_inverted_pol,
     },
@@ -268,6 +327,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -281,6 +341,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -289,11 +350,25 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 11300000,
   },
   {
+     { {
+       .ld_type    = "C 5150/Ku 10750 (22kHz switch)",
+       .ld_tune    = linuxdvb_lnb_standard_tune,
+       },
+       .lnb_freq   = linuxdvb_lnb_standard_freq,
+       .lnb_band   = linuxdvb_lnb_standard_band,
+       .lnb_pol    = linuxdvb_lnb_standard_pol,
+     },
+     .lnb_low    =  5150000,
+     .lnb_high   = 10750000,
+     .lnb_switch = 11700000, /* 10750 + 950 (bottom of the receiver range 950Mhz-2150Mhz) */
+  },
+  {
     { {
       .ld_type    = "DBS",
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -304,15 +379,30 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
   {
     { {
       .ld_type    = "DBS Bandstack",
-      .ld_tune    = linuxdvb_lnb_bandstack_tune,
+      .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_bandstack_freq,
+      .lnb_match  = linuxdvb_lnb_bandstack_match,
       .lnb_band   = linuxdvb_lnb_bandstack_band,
       .lnb_pol    = linuxdvb_lnb_bandstack_pol,
     },
     .lnb_low    = 11250000,
     .lnb_high   = 14350000,
     .lnb_switch = 0,
+  },
+  {
+    { {
+      .ld_type    = "Ku 10700 (Australia)",
+      .ld_tune    = linuxdvb_lnb_standard_tune,
+      },
+      .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
+      .lnb_band   = linuxdvb_lnb_standard_band,
+      .lnb_pol    = linuxdvb_lnb_standard_pol,
+    },
+    .lnb_low    = 10700000,
+    .lnb_high   = 10700000,
+    .lnb_switch = 11800000,
   },
 };
 
@@ -321,7 +411,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
  * *************************************************************************/
 
 htsmsg_t *
-linuxdvb_lnb_list ( void *o )
+linuxdvb_lnb_list ( void *o, const char *lang )
 {
   int i;
   htsmsg_t *m = htsmsg_create_list();
@@ -334,26 +424,31 @@ linuxdvb_lnb_t *
 linuxdvb_lnb_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls )
 {
+  linuxdvb_lnb_conf_t *lsc = &linuxdvb_lnb_all[0], *lsc2;
   int i;
-
-  /* Setup static entries */
-  for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++)
-    if (!linuxdvb_lnb_all[i].ld_id.in_class)
-      idnode_insert(&linuxdvb_lnb_all[i].ld_id, NULL, &linuxdvb_lnb_class, 0);
 
   /* Find */
   if (name) {
-    for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++) {
-      if (!strcmp(linuxdvb_lnb_all[i].ld_type, name))
-        return (linuxdvb_lnb_t*)&linuxdvb_lnb_all[i];
-    }
+    for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++)
+      if (!strcmp(linuxdvb_lnb_all[i].ld_type, name)) {
+        lsc = &linuxdvb_lnb_all[i];
+        break;
+      }
   }
-  return (linuxdvb_lnb_t*)linuxdvb_lnb_all; // Universal
+
+  lsc2 = malloc(sizeof(linuxdvb_lnb_conf_t));
+  *lsc2 = *lsc;
+  return (linuxdvb_lnb_t *)
+            linuxdvb_diseqc_create0((linuxdvb_diseqc_t *)lsc2,
+                                    NULL, &linuxdvb_lnb_class,
+                                    conf, lsc->ld_type, ls);
 }
 
 void
 linuxdvb_lnb_destroy ( linuxdvb_lnb_t *lnb )
 {
+  linuxdvb_diseqc_destroy((linuxdvb_diseqc_t *)lnb);
+  free(lnb);
 }
 
 /******************************************************************************

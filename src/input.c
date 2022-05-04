@@ -18,9 +18,34 @@
 
 #include "input.h"
 #include "notify.h"
+#include "access.h"
 
 tvh_input_list_t    tvh_inputs;
 tvh_hardware_list_t tvh_hardware;
+
+const idclass_t tvh_input_class =
+{
+  .ic_class      = "tvh_input",
+  .ic_caption    = N_("Input base"),
+  .ic_perm_def   = ACCESS_ADMIN
+};
+
+const idclass_t tvh_input_instance_class =
+{
+  .ic_class      = "tvh_input_instance",
+  .ic_caption    = N_("Input instance"),
+  .ic_perm_def   = ACCESS_ADMIN
+};
+
+/*
+ *
+ */
+void
+tvh_hardware_init ( void )
+{
+  idclass_register(&tvh_input_class);
+  idclass_register(&tvh_input_instance_class);
+}
 
 /*
  * Create entry
@@ -43,6 +68,8 @@ tvh_hardware_create0
   /* Load config */
   if (conf)
     idnode_load(&th->th_id, conf);
+
+  notify_reload("hardware");
   
   return o;
 }
@@ -57,6 +84,24 @@ tvh_hardware_delete ( tvh_hardware_t *th )
   // TODO
   LIST_REMOVE(th, th_link);
   idnode_unlink(&th->th_id);
+  notify_reload("hardware");
+}
+
+/*
+ *
+ */
+
+void
+tvh_input_instance_clear_stats ( tvh_input_instance_t *tii )
+{
+  tvh_input_stream_stats_t *s = &tii->tii_stats;
+
+  atomic_set(&s->ber, 0);
+  atomic_set(&s->unc, 0);
+  atomic_set(&s->cc, 0);
+  atomic_set(&s->te, 0);
+  atomic_set(&s->ec_block, 0);
+  atomic_set(&s->tc_block, 0);
 }
 
 /*
@@ -68,6 +113,10 @@ tvh_input_stream_create_msg
   ( tvh_input_stream_t *st )
 {
   htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *l = NULL;
+  mpegts_apids_t *pids;
+  int i;
+
   htsmsg_add_str(m, "uuid", st->uuid);
   if (st->input_name)
     htsmsg_add_str(m, "input",  st->input_name);
@@ -75,10 +124,20 @@ tvh_input_stream_create_msg
     htsmsg_add_str(m, "stream", st->stream_name);
   htsmsg_add_u32(m, "subs", st->subs_count);
   htsmsg_add_u32(m, "weight", st->max_weight);
-  htsmsg_add_u32(m, "signal", st->stats.signal);
+  if ((pids = st->pids) != NULL) {
+    l = htsmsg_create_list();
+    if (pids->all) {
+      htsmsg_add_u32(l, NULL, 65535);
+    } else {
+      for (i = 0; i < pids->count; i++)
+        htsmsg_add_u32(l, NULL, pids->pids[i].pid);
+    }
+    htsmsg_add_msg(m, "pids", l);
+  }
+  htsmsg_add_s32(m, "signal", st->stats.signal);
   htsmsg_add_u32(m, "signal_scale", st->stats.signal_scale);
   htsmsg_add_u32(m, "ber", st->stats.ber);
-  htsmsg_add_u32(m, "snr", st->stats.snr);
+  htsmsg_add_s32(m, "snr", st->stats.snr);
   htsmsg_add_u32(m, "snr_scale", st->stats.snr_scale);
   htsmsg_add_u32(m, "unc", st->stats.unc);
   htsmsg_add_u32(m, "bps", st->stats.bps);
@@ -98,4 +157,5 @@ tvh_input_stream_destroy
   free(st->uuid);
   free(st->input_name);
   free(st->stream_name);
+  mpegts_pid_destroy(&st->pids);
 }

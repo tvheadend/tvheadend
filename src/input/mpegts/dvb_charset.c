@@ -67,7 +67,7 @@ static void _charset_load_file()
   };
 
   if (i > 0)
-    tvhlog(LOG_INFO, "charset", "%d entries loaded", i);
+    tvhinfo(LS_CHARSET, "%d entries loaded", i);
 }
 
 /*
@@ -115,7 +115,7 @@ const char *dvb_charset_find
   if (mm) {
     LIST_FOREACH(enc, &dvb_charset_list, link) {
       if (mm->mm_onid == enc->onid && mm->mm_tsid == enc->tsid) {
-        if (s && (s->s_dvb_service_id == enc->sid)) {
+        if (s && service_id16(s) == enc->sid) {
           ret = enc;
           break;
         } else if (!enc->sid) {
@@ -131,7 +131,7 @@ const char *dvb_charset_find
  * List of available charsets
  */
 htsmsg_t *
-dvb_charset_enum ( void *p )
+dvb_charset_enum ( void *p, const char *lang )
 {
   int i;
   static const char *charsets[] = {
@@ -155,6 +155,7 @@ dvb_charset_enum ( void *p )
     "UTF-8",
     "GB2312",
     "UCS2",
+    "AUTO_POLISH",
   };
   htsmsg_t *m = htsmsg_create_list();
   for ( i = 0; i < ARRAY_SIZE(charsets); i++)

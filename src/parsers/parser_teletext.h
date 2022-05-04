@@ -1,6 +1,6 @@
 /*
  *  Teletext parsing functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,9 +21,6 @@
 
 #define PID_TELETEXT_BASE 0x2000
 
-#include "input/mpegts.h"
-
-void teletext_input(struct mpegts_service *t, struct elementary_stream *st,
-		    const uint8_t *tsb);
+void teletext_input(parser_t *t, parser_es_t *st, const uint8_t *data, int len);
 
 #endif /* TELETEXT_H */

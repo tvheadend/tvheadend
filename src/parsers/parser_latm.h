@@ -1,6 +1,6 @@
 /*
  *  Packet parsing functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 #ifndef PARSER_LATM_H_
 #define PARSER_LATM_H_
 
-th_pkt_t *parse_latm_audio_mux_element(struct service *t,
-				       struct elementary_stream *st,
+th_pkt_t *parse_latm_audio_mux_element(parser_t *t,
+				       parser_es_t *st,
 				       const uint8_t *data, int len);
 
 #endif /* PARSER_LATM_H_ */

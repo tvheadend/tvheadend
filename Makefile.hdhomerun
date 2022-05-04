@@ -1,0 +1,93 @@
+#
+#  HDhomerun library build
+#  Copyright (C) 2014 Jaroslav Kysela
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+DIR :=  $(dir $(lastword $(MAKEFILE_LIST)))
+include $(DIR)/.config.mk
+
+unexport CFLAGS
+unexport LDFLAGS
+
+ifeq ($(CONFIG_PIE),yes)
+CFLAGS += -fPIE
+else
+CFLAGS += -fPIC
+endif
+
+# ###########################################################################
+# Upstream Packages
+# ###########################################################################
+
+LIBHDHR         = libhdhomerun_20210624
+LIBHDHR_TB      = $(LIBHDHR).tgz
+LIBHDHR_URL     = https://download.silicondust.com/hdhomerun/$(LIBHDHR_TB)
+LIBHDHR_SHA1    = 9db6089b956de4e58084b623937f5fc3231fff0b
+
+# ###########################################################################
+# Library Config
+# ###########################################################################
+
+LIB_NAME       := hdhomerun
+LIB_ROOT       := $(BUILDDIR)/$(LIB_NAME)
+LIB_FILES      := \
+			$(LIB_ROOT)/$(LIBHDHR)/.tvh_download \
+			$(LIB_ROOT)/$(LIBHDHR)/.tvh_build \
+			$(LIB_ROOT)/libhdhomerun/libhdhomerun.a \
+			$(LIB_ROOT)/libhdhomerun/*.h
+LIB_DIFFS      := hdhomerun.diff
+
+include $(DIR)/Makefile.static
+
+.PHONY: build
+build: $(LIB_ROOT)/$(LIBHDHR)/.tvh_build
+	$(call LIBCACHEGET_TIMESTAMP)
+
+# ###########################################################################
+# Build Rules
+# ###########################################################################
+
+export PATH := $(LIB_ROOT)/build/bin:$(PATH)
+
+#
+# libhdhomerun
+#
+
+-include $(LIB_ROOT)/$(LIBHDHR)/Makefile
+
+OBJS := $(foreach file,$(LIBSRCS),$(LIB_ROOT)/$(LIBHDHR)/$(basename $(file)).o)
+
+$(LIB_ROOT)/$(LIBHDHR)/%.o: $(LIB_ROOT)/$(LIBHDHR)/%.c
+	$(CC) -MD -MP $(CFLAGS) -fPIE -c -o $@ $<
+
+$(LIB_ROOT)/$(LIBHDHR)/libhdhomerun.a: $(OBJS)
+	$(AR) rcs $@ $^
+
+$(LIB_ROOT)/$(LIBHDHR)/.tvh_download:
+	$(call DOWNLOAD,$(LIBHDHR_URL),$(LIB_ROOT)/$(LIBHDHR_TB),$(LIBHDHR_SHA1))
+	$(call UNTAR,$(LIBHDHR_TB),z)
+	ln -sf libhdhomerun $(LIB_ROOT)/$(LIBHDHR)
+	$(call PATCH,$(LIBHDHR),$(LIB_DIFFS))
+	@touch $@
+
+$(LIB_ROOT)/$(LIBHDHR)/.tvh_build: \
+		$(LIB_ROOT)/$(LIBHDHR)/.tvh_download
+	$(MAKE) -f Makefile.hdhomerun $(LIB_ROOT)/$(LIBHDHR)/libhdhomerun.a
+	@touch $@
+
+.PHONY: static_libhdhr_clean
+static_libhdhr_clean:
+	@rm -rf $(LIB_ROOT)

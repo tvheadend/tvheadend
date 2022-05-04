@@ -16,13 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "tvheadend.h"
 #include "http.h"
 #include "webui.h"
@@ -59,7 +52,9 @@ dumpchannels(htsbuf_queue_t *hq)
 
   CHANNEL_FOREACH(ch) {
     
-    htsbuf_qprintf(hq, "%s (%d)\n", channel_get_name(ch), channel_get_id(ch));
+    htsbuf_qprintf(hq, "%s%s (%d)\n", !ch->ch_enabled ? "[DISABLED] " : "",
+                                      channel_get_name(ch, channel_blank_name),
+                                      channel_get_id(ch));
     chnum = channel_get_number(ch);
     if (channel_get_minor(chnum))
       snprintf(chbuf, sizeof(chbuf), "%u.%u",
@@ -69,11 +64,9 @@ dumpchannels(htsbuf_queue_t *hq)
       snprintf(chbuf, sizeof(chbuf), "%u", channel_get_major(chnum));
     htsbuf_qprintf(hq,
 		   "  refcount = %d\n"
-		   "  zombie = %d\n"
 		   "  number = %s\n"
 		   "  icon = %s\n\n",
 		   ch->ch_refcount,
-		   ch->ch_zombie,
 		   chbuf,
 		   channel_get_icon(ch) ?: "<none set>");
   }
@@ -144,9 +137,6 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
 
-  scopedgloballock();
- 
-
   htsbuf_qprintf(hq, "Tvheadend %s  Binary SHA1: "
 		 "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 		 "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
@@ -172,7 +162,9 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 		 tvh_binshasum[18],
 		 tvh_binshasum[19]);
 
+  tvh_mutex_lock(&global_lock);
   dumpchannels(hq);
+  tvh_mutex_unlock(&global_lock);
 
   http_output_content(hc, "text/plain; charset=UTF-8");
   return 0;

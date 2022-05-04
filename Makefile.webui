@@ -1,0 +1,325 @@
+#
+#  Tvheadend WEBUI interface
+#  Copyright (C) 2015 Jaroslav Kysela
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+#
+# Configuration
+#
+
+include $(dir $(lastword $(MAKEFILE_LIST)))Makefile.common
+IAM=$(firstword $(MAKEFILE_LIST))
+WEBDIR ?= src/webui
+LANGUAGES ?= $(LANGUAGES_ALL)
+ROOTPATH = static
+
+ifneq ($(WEBUI),)
+
+TOPDIR=$(dir $(IAM))
+include $(TOPDIR)/.config.mk
+EXTJSPATH = $(ROOTPATH)/extjs
+CSS_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/css.py
+RUN_JS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rjsmin-1.0.10/rjsmin.py
+RUN_CSS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rcssmin-1.0.5/rcssmin.py
+GZIPCMD += -n
+XGETTEXT2 ?= $(XGETTEXT) --language=JavaScript --from-code=utf-8  --add-comments=/ -k_ -kN_ -s
+MSGMERGE ?= msgmerge
+POJS_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/pojs.py
+
+ifeq ($(WEBUI),std)
+DEBUG =
+else
+DEBUG = -debug
+endif
+
+ifeq ($(PLATFORM), freebsd)
+STAT_ARG=-f "%-35N %7z"
+else
+STAT_ARG=--printf="%-35n %7s\n"
+endif
+
+JAVASCRIPT =
+JAVASCRIPT2 =
+JAVASCRIPT_TV =
+CSS_INIT =
+CSS_DONE =
+CSS_BLUE =
+CSS_GRAY =
+CSS_ACCESS =
+CSS_TV =
+
+#
+# base extjs files
+#
+
+JAVASCRIPT += $(EXTJSPATH)/adapter/ext/ext-base$(DEBUG).js
+JAVASCRIPT += $(EXTJSPATH)/ext-all$(DEBUG).js
+
+#
+# CSS
+#
+
+CSS_INIT   += $(EXTJSPATH)/resources/css/ext-all-notheme.css
+CSS_DONE   += $(ROOTPATH)/livegrid/resources/css/ext-ux-livegrid.css
+CSS_DONE   += $(EXTJSPATH)/examples/ux/gridfilters/css/GridFilters.css
+CSS_DONE   += $(EXTJSPATH)/examples/ux/gridfilters/css/RangeMenu.css
+CSS_DONE   += $(EXTJSPATH)/examples/ux/css/Spinner.css
+CSS_DONE   += static/xcheckbox/xcheckbox.css
+CSS_DONE   += static/app/ext.css
+
+CSS_BLUE   += $(EXTJSPATH)/resources/css/xtheme-blue.css
+CSS_BLUE2  += static/app/ext-blue.css
+
+CSS_GRAY   += $(EXTJSPATH)/resources/css/xtheme-gray.css
+CSS_GRAY2  += static/app/ext-gray.css
+
+CSS_ACCESS += $(EXTJSPATH)/resources/css/xtheme-access.css
+CSS_ACCESS2+= static/app/ext-access.css
+
+#
+# extjs extensions
+#
+
+MARKED      = $(ROOTPATH)/app/marked.js
+
+JAVASCRIPT += $(ROOTPATH)/app/i18n.js
+JAVASCRIPT += $(ROOTPATH)/app/extensions.js
+JAVASCRIPT += $(MARKED)
+JAVASCRIPT += $(ROOTPATH)/livegrid/livegrid-all.js
+JAVASCRIPT += $(ROOTPATH)/lovcombo/lovcombo-all.js
+JAVASCRIPT += $(ROOTPATH)/multiselect/multiselect.js
+JAVASCRIPT += $(ROOTPATH)/multiselect/ddview.js
+JAVASCRIPT += $(ROOTPATH)/xcheckbox/xcheckbox.js
+JAVASCRIPT += $(ROOTPATH)/checkcolumn/CheckColumn.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/GridFilters.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/Filter.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/BooleanFilter.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/DateFilter.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/ListFilter.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/NumericFilter.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/StringFilter.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/menu/ListMenu.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/menu/RangeMenu.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/Spinner.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/SpinnerField.js
+JAVASCRIPT += $(ROOTPATH)/app/i18n-post.js
+
+#
+# app itself
+#
+
+JAVASCRIPT += $(ROOTPATH)/app/namespace.js
+JAVASCRIPT += $(ROOTPATH)/smoothie.js
+JAVASCRIPT += $(ROOTPATH)/app/comet.js
+JAVASCRIPT += $(ROOTPATH)/app/cteditor.js
+JAVASCRIPT += $(ROOTPATH)/app/acleditor.js
+
+CACLIENT-$(CONFIG_CWC) = yes
+CACLIENT-$(CONFIG_CCCAM) = yes
+CACLIENT-$(CONFIG_CAPMT) = yes
+
+ifeq ($(CACLIENT-yes), yes)
+JAVASCRIPT += $(ROOTPATH)/app/caclient.js
+endif
+
+JAVASCRIPT += $(ROOTPATH)/app/tvadapters.js
+JAVASCRIPT += $(ROOTPATH)/app/idnode.js
+JAVASCRIPT += $(ROOTPATH)/app/profile.js
+ifeq ($(CONFIG_LIBAV), yes)
+JAVASCRIPT += $(ROOTPATH)/app/codec.js
+endif
+JAVASCRIPT += $(ROOTPATH)/app/esfilter.js
+ifeq ($(CONFIG_MPEGTS), yes)
+JAVASCRIPT += $(ROOTPATH)/app/mpegts.js
+endif
+ifeq ($(CONFIG_TIMESHIFT), yes)
+JAVASCRIPT += $(ROOTPATH)/app/timeshift.js
+endif
+JAVASCRIPT += $(ROOTPATH)/app/chconf.js
+JAVASCRIPT += $(ROOTPATH)/app/epg.js
+JAVASCRIPT += $(ROOTPATH)/app/epgevent.js
+JAVASCRIPT += $(ROOTPATH)/app/dvr.js
+JAVASCRIPT += $(ROOTPATH)/app/epggrab.js
+JAVASCRIPT += $(ROOTPATH)/app/config.js
+JAVASCRIPT += $(ROOTPATH)/app/tvhlog.js
+JAVASCRIPT += $(ROOTPATH)/app/status.js
+JAVASCRIPT += $(ROOTPATH)/app/wizard.js
+JAVASCRIPT += $(ROOTPATH)/tv.js
+JAVASCRIPT += $(ROOTPATH)/app/servicemapper.js
+
+JAVASCRIPT += $(ROOTPATH)/app/tvheadend.js
+
+#
+# tv
+#
+
+CSS_TV += $(ROOTPATH)/tv.css
+JAVASCRIPT_TV += $(EXTJSPATH)/adapter/ext/ext-base$(DEBUG).js
+JAVASCRIPT_TV += $(EXTJSPATH)/ext-all$(DEBUG).js
+JAVASCRIPT_TV += $(ROOTPATH)/app/i18n.js
+JAVASCRIPT_TV += $(ROOTPATH)/tv.js
+
+#
+# real source paths
+#
+
+JAVASCRIPT_SRC = $(foreach f,$(JAVASCRIPT),$(WEBDIR)/$(f))
+CSS_BLUE_SRC   = $(foreach f,$(CSS_INIT) $(CSS_BLUE) $(CSS_DONE) $(CSS_BLUE2),$(WEBDIR)/$(f))
+CSS_GRAY_SRC   = $(foreach f,$(CSS_INIT) $(CSS_GRAY) $(CSS_DONE) $(CSS_GRAY2),$(WEBDIR)/$(f))
+CSS_ACCESS_SRC = $(foreach f,$(CSS_INIT) $(CSS_ACCESS) $(CSS_DONE) $(CSS_ACCESS2),$(WEBDIR)/$(f))
+CSS_SRC        = $(CSS_BLUE_SRC) $(CSS_GRAY_SRC) $(CSS_ACCESS_SRC)
+
+JAVASCRIPT_TV_SRC = $(foreach f,$(JAVASCRIPT_TV),$(WEBDIR)/$(f))
+CSS_TV_SRC     = $(foreach f,$(CSS_TV),$(WEBDIR)/$(f))
+
+#
+# Internationalization
+#
+PO-FILES = $(foreach f,$(LANGUAGES),intl/js/tvheadend.js.$(f).po)
+JSI-FILES = $(foreach f,$(LANGUAGES),src/webui/static/intl/tvh.$(f).js.gz)
+
+endif # WEBUI defined
+
+ifndef V
+VV = @
+endif
+
+define GO_JS
+	$(VV)$(CSS_PY) --in="$^" utf-check
+	$(VV)cat $^ > $@.tmp
+	$(VV)$(RUN_JS) < $@.tmp > $@.tmp2
+	@stat $(STAT_ARG) $@.tmp $@.tmp2
+	$(VV)$(GZIPCMD) -c $@.tmp2 > $@.tmp
+	@rm $@.tmp2
+	@mv $@.tmp $@
+	@stat $(STAT_ARG) $@
+endef
+
+define GO_CSS
+	$(VV)$(CSS_PY) --in="$^" utf-check
+	$(VV)$(CSS_PY) --in="$^" > $@.tmp
+	$(VV)$(RUN_CSS) < $@.tmp > $@.tmp2
+	@stat $(STAT_ARG) $@.tmp $@.tmp2
+	$(VV)$(GZIPCMD) -c $@.tmp2 > $@.tmp
+	@rm $@.tmp2
+	@mv $@.tmp $@
+	@stat $(STAT_ARG) $@
+endef
+
+define merge-po
+	@if ! test -r "$(1)"; then \
+	  sed -e 's/Content-Type: text\/plain; charset=CHARSET/Content-Type: text\/plain; charset=utf-8/' < "$(2)" > "$(1).new"; \
+	else \
+	  $(MSGMERGE) -o $(1).new $(1) $(2); \
+	fi
+	@mv $(1).new $(1)
+endef
+
+define go-po
+	@printf "Building $(1)\n"
+	@mkdir -p $(dir $(1))
+	$(VV)$(POJS_PY) --in="$(2)" > $(1).new
+	@echo "tvh_locale_lang = '$(subst .,,$(suffix $(basename $(2))))';" >> $(1).new
+	$(VV)$(GZIPCMD) -c $(1).new > $@.new2
+	@rm $(1).new
+	@mv $(1).new2 $(1)
+endef
+
+all:
+	$(MAKE) -f $(IAM) WEBUI=std   compile-std
+	$(MAKE) -f $(IAM) WEBUI=debug compile-debug
+
+$(WEBDIR)/extjs-std.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
+	$(VV)printf 'extjs_lcss(hq, "redir/theme.css");\n' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
+	$(VV)printf 'extjs_load(hq, "static/tvh.js.gz");\n' >> $@
+
+$(WEBDIR)/extjs-debug.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
+	$(VV)printf '$(foreach f,$(CSS_INIT),extjs_lcss(hq, "$(f)");\n)' > $@
+	$(VV)printf 'extjs_lcss(hq, "redir/theme.debug.css");\n' >> $@
+	$(VV)printf '$(foreach f,$(CSS_DONE),extjs_lcss(hq, "$(f)");\n)' >> $@
+	$(VV)printf 'extjs_lcss(hq, "redir/theme.app.debug.css");\n' >> $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
+	$(VV)printf '$(foreach f,$(JAVASCRIPT),extjs_load(hq, "$(f)");\n)' >> $@
+
+$(WEBDIR)/extjs-tv-std.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)
+	$(VV)printf 'extjs_lcss(hq, "static/tvh-tv.css.gz");\n' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
+	$(VV)printf 'extjs_load(hq, "static/tvh-tv.js.gz");\n' >> $@
+
+$(WEBDIR)/extjs-tv-debug.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)
+	$(VV)printf '$(foreach f,$(CSS_TV),extjs_lcss(hq, "$(f)");\n)' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
+	$(VV)printf '$(foreach f,$(JAVASCRIPT_TV),extjs_load(hq, "$(f)");\n)' >> $@
+
+$(WEBDIR)/$(ROOTPATH)/tvh.js.gz: $(JAVASCRIPT_SRC)
+	$(call GO_JS)
+
+$(WEBDIR)/$(ROOTPATH)/tvh.blue.css.gz: $(CSS_BLUE_SRC)
+	$(call GO_CSS)
+
+$(WEBDIR)/$(ROOTPATH)/tvh.gray.css.gz: $(CSS_GRAY_SRC)
+	$(call GO_CSS)
+
+$(WEBDIR)/$(ROOTPATH)/tvh.access.css.gz: $(CSS_ACCESS_SRC)
+	$(call GO_CSS)
+
+$(WEBDIR)/$(ROOTPATH)/tvh-tv.js.gz: $(JAVASCRIPT_TV_SRC)
+	$(call GO_JS)
+
+$(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz: $(CSS_TV_SRC)
+	$(call GO_CSS)
+
+.PHONY: compile-std
+compile-std: $(WEBDIR)/$(ROOTPATH)/tvh.js.gz $(WEBDIR)/$(ROOTPATH)/tvh.blue.css.gz \
+             $(WEBDIR)/$(ROOTPATH)/tvh.gray.css.gz $(WEBDIR)/$(ROOTPATH)/tvh.access.css.gz \
+             $(WEBDIR)/$(ROOTPATH)/tvh-tv.js.gz $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz \
+             $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c $(JSI-FILES)
+	@echo "WEBUI std finished"
+
+.PHONY: compile-debug
+compile-debug: $(WEBDIR)/extjs-debug.c $(WEBDIR)/extjs-tv-debug.c
+	@echo "WEBUI debug finished"
+
+# Internationalization
+.PHONY: intl
+intl:
+	@printf "Building intl/js/tvheadend.js.pot\n"
+	@$(XGETTEXT2) -o intl/js/tvheadend.js.pot.new $(filter-out $(WEBDIR)/$(MARKED),$(JAVASCRIPT_SRC))
+	@sed -e 's/^"Language: /"Language: en/' < intl/js/tvheadend.js.pot.new > intl/js/tvheadend.js.pot
+
+intl/js/tvheadend.js.pot:
+
+#intl/js/tvheadend.js.en_US.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
+
+#intl/js/tvheadend.js.en_GB.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
+
+#intl/js/tvheadend.js.de.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
+
+src/webui/static/intl/tvh.%.js.gz: intl/js/tvheadend.js.%.po
+	$(call go-po,$@,$<)
+
+.PHONY:
+clean:
+	rm -f $(foreach f,tvh.js tvh.css tvh-tv.js tvh-tv.css,\
+		$(WEBDIR)/$(ROOTPATH)/$(f).gz \
+		$(WEBDIR)/$(ROOTPATH)/$(f).tmp \
+		$(WEBDIR)/$(ROOTPATH)/$(f).tmp2) \
+              $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c \
+              $(WEBDIR)/extjs-debug.c $(WEBDIR)/extjs-tv-debug.c

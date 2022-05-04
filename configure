@@ -10,37 +10,72 @@
 # ###########################################################################
 
 ROOTDIR=$(cd "$(dirname "$0")"; pwd)
+test -z "$PKG_CONFIG" && PKG_CONFIG=pkg-config
 
 #
 # Options
 #
 
 OPTIONS=(
+  "pie:yes"
+  "ccdebug:no"
+  "cardclient:auto"
   "cwc:yes"
+  "cccam:yes"
   "capmt:yes"
   "constcw:yes"
-  "v4l:no"
   "linuxdvb:yes"
+  "satip_server:yes"
   "satip_client:yes"
+  "hdhomerun_client:no"
+  "hdhomerun_static:yes"
   "iptv:yes"
   "tsfile:yes"
   "dvbscan:yes"
   "timeshift:yes"
   "trace:yes"
-  "imagecache:auto"
   "avahi:auto"
   "zlib:auto"
   "libav:auto"
+  "ffmpeg_static:yes"
+  "libx264:yes"
+  "libx264_static:yes"
+  "libx265:yes"
+  "libx265_static:yes"
+  "libvpx:yes"
+  "libvpx_static:yes"
+  "libtheora:yes"
+  "libtheora_static:yes"
+  "libvorbis:yes"
+  "libvorbis_static:yes"
+  "libfdkaac:no"
+  "libfdkaac_static:yes"
+  "libopus:yes"
+  "libopus_static:yes"
+  "nvenc:no"
+  "vaapi:auto"
+  "mmal:no"
+  "omx:no"
   "inotify:auto"
   "epoll:auto"
+  "pcre:auto"
+  "pcre2:auto"
   "uriparser:auto"
   "ccache:auto"
   "tvhcsa:auto"
   "bundle:no"
-  "dvbcsa:no"
+  "pngquant:no"
   "kqueue:no"
   "dbus_1:auto"
   "android:no"
+  "gtimer_check:no"
+  "slow_memoryinfo:no"
+  "libsystemd_daemon:no"
+  "pcloud_cache:yes"
+  "ddci:yes"
+  "cclang_threadsan:no"
+  "gperftools:no"
+  "execinfo:auto"
 )
 
 #
@@ -48,6 +83,10 @@ OPTIONS=(
 #
 
 . "$ROOTDIR/support/configure.inc"
+
+case "$ROOTDIR" in
+  *\ * ) die "The source directory contains a space. It is not supported."
+esac
 
 # ###########################################################################
 # Parse arguments
@@ -65,7 +104,10 @@ for opt do
     *dir|prefix)
       eval "$opt=$val"
       ;;
-    cc|cflags|ldflags|arch|cpu|platform|python)
+    gzip)
+      eval "$(toupper ${opt}CMD)=\"$val\""
+      ;;
+    cc|cflags|ldflags|arch|cpu|platform|python|bzip2|nowerror)
       eval "$(toupper $opt)=\"$val\""
       ;;
     enable-*)
@@ -102,9 +144,40 @@ fi
 
 # Valiate compiler
 check_cc || die 'No C compiler found'
-check_cc_header execinfo
+# We only want libunwind on non-linux plaforms where we have had bad
+# stack traces from existing implementation.
+if [ ${PLATFORM} = "freebsd" ]; then
+    check_cc_header libunwind
+    # If we don't have libunwind then fallback to execinfo.
+    if ! enabled libunwind
+    then
+        if enabled_or_auto execinfo; then
+            if check_cc_header execinfo; then
+                enable execinfo
+            else
+                die "execinfo.h not found (use --disable-execinfo)"
+           fi
+        fi
+    fi
+
+else
+    if enabled_or_auto execinfo; then
+        if check_cc_header execinfo; then
+            enable execinfo
+        else
+            die "execinfo.h not found (use --disable-execinfo)"
+        fi
+    fi
+fi
 check_cc_option mmx
 check_cc_option sse2
+check_cc_optionW unused-result
+# Some options from https://wiki.debian.org/Hardening
+check_cc_optionf stack-protector
+check_cc_optionf stack-protector-strong
+# Useful for multi-threaded programs
+check_cc_optionf stack-check
+check_cc_optionf PIE
 
 if check_cc '
 #if !defined(__clang__)
@@ -116,12 +189,60 @@ else
   COMPILER=gcc
 fi
 
-check_cc_snippet getloadavg '#include <stdlib.h> 
-void test() { getloadavg(NULL,0); }'
+check_cc_snippet strlcat '#include <string.h>
+#define TEST test
+int test() {
+  char dst[10];
+  strlcat("test", dst, sizeof(dst));
+  return 0;
+}'
+
+check_cc_snippet strlcpy '#include <string.h>
+#define TEST test
+int test() {
+  char dst[10];
+  strlcpy("test", dst, sizeof(dst));
+  return 0;
+}'
+
+check_cc_snippet fdatasync '#include <unistd.h>
+#define TEST test
+int test() {
+  fdatasync(0);
+  return 0;
+}'
+
+check_cc_snippet getloadavg '#include <stdlib.h>
+#define TEST test
+int test() { return getloadavg(NULL,0); }'
+
+check_cc_snippet atomic32 '#include <stdint.h>
+int test(int *ptr){
+return __sync_fetch_and_add(ptr, 1);
+}'
 
 check_cc_snippet atomic64 '#include <stdint.h>
 uint64_t test(uint64_t *ptr){
 return __sync_fetch_and_add(ptr, 1);
+}'
+
+check_cc_snippet atomic_time_t '#include <stdint.h>
+#include <time.h>
+uint64_t test(time_t *ptr){
+return __sync_fetch_and_add(ptr, 1);
+}'
+
+check_cc_snippet atomic_ptr '#include <stdint.h>
+#include <time.h>
+void *test(void * volatile *ptr){
+return __sync_fetch_and_add(ptr, (void *)1);
+}'
+
+check_cc_snippet bitops64 '#include <stdint.h>
+#define TEST test
+int test(void){
+  int l = sizeof(long);
+  return l == 8 ? 0 : 1;
 }'
 
 check_cc_snippet lockowner '
@@ -148,6 +269,7 @@ int test ( void )
 }' -lpthread
 
 check_cc_snippet qsort_r '
+#define __USE_GNU
 #include <stdlib.h>
 #define TEST test
 int test(void)
@@ -156,6 +278,28 @@ int test(void)
   return 0;
 }
 '
+
+check_cc_snippet stime '
+#include <time.h>
+#define TEST test
+int test(void)
+{
+  time_t t = 1;
+  stime(&t);
+  return 0;
+}
+'
+
+check_cc_snippet gmtoff '
+#include <time.h>
+#define TEST test
+int test(void)
+{
+  struct tm x;
+  x.tm_gmtoff = 0;
+  return 0;
+}
+' -DHAS_GMTOFF
 
 check_cc_snippet recvmmsg '
 #define _GNU_SOURCE
@@ -169,14 +313,55 @@ int test(void)
 }
 '
 
+check_cc_snippet sendmmsg '
+#define _GNU_SOURCE
+#include <stdlib.h>
+#include <sys/socket.h>
+#define TEST test
+int test(void)
+{
+  sendmmsg(0, NULL, 0, 0);
+  return 0;
+}
+'
+
+# a check for the external iconv library
+# for build-in libc iconv routines this check should fail
+# note that iconv routines are mandatory
 check_cc_snippet libiconv '
 #include <iconv.h>
+#define TEST test
 int test(void)
 {
   iconv_t ic = iconv_open("ASCII", "ASCII");
   return 0;
 }
 ' -liconv
+
+if enabled libiconv; then
+  printf "    ^ using external iconv library\n"
+else
+  printf "    ^ using build-in glibc iconv routines\n"
+fi
+
+check_cc_snippet ifnames '
+#include <net/if.h>
+#define TEST test
+int test(void)
+{
+  struct if_nameindex *ifnames = if_nameindex();
+  if_freenameindex(ifnames);
+  return 0;
+}
+'
+
+check_cc_snippet cclang_threadsan '
+#define TEST test
+int test(void){
+#if __has_feature(thread_sanitizer)
+  return 0;
+#endif
+}'
 
 #
 # Python
@@ -187,7 +372,11 @@ check_py_import gzip
 #
 # Binaries
 #
-check_bin bzip2 || echo 'WARN: no bzip2 binary found'
+check_bin ${PKG_CONFIG} bin_pkg_config || die 'no pkg-config binaries found'
+check_bin ${XGETTEXT} || die 'no gettext binaries found'
+check_bin ${MSGMERGE} || die 'no gettext binaries found'
+check_bin ${GZIPCMD} || die 'no gzip binary found'
+check_bin ${BZIP2} || echo 'WARN: no bzip2 binary found'
 
 #
 # SSL
@@ -219,11 +408,41 @@ check_cc_header 'linux/dvb/version' linuxdvbapi
 if enabled_or_auto linuxdvb; then
   if enabled linuxdvbapi; then
     enable linuxdvb
+    enable linuxdvb_ca
   elif enabled linuxdvb; then
     die "Linux DVB API not found (use --disable-linuxdvb)"
   fi
 fi
 
+if enabled linuxdvb; then
+  if enabled_or_auto ddci; then
+    enable ddci
+  fi
+else
+  disable ddci
+fi
+
+#
+# HDHomeRun - libhdhomerun
+#
+if enabled hdhomerun_static; then
+
+  enable hdhomerun_client
+
+else
+
+  if enabled_or_auto hdhomerun_client; then
+    if check_cc_header 'libhdhomerun/hdhomerun' libhdhomerun; then
+      enable  hdhomerun_client
+      LDFLAGS="$LDFLAGS -lhdhomerun"
+    fi
+  fi
+
+fi
+
+if enabled libunwind; then
+    LDFLAGS="$LDFLAGS -lunwind"
+fi
 #
 # Gzip
 #
@@ -236,10 +455,43 @@ if enabled_or_auto zlib; then
 fi
 
 #
+# SAT>IP server
+#
+if enabled_or_auto satip_server; then
+  enable upnp
+fi
+
+#
 # SAT>IP client
 #
 if enabled_or_auto satip_client; then
   enable upnp
+fi
+
+#
+# PCRE2
+#
+if enabled_or_auto pcre2; then
+  if check_pkg libpcre2-8; then
+    enable pcre2
+  elif enabled pcre2; then
+    die "pcre2 development support not found (use --disable-pcre2)"
+  fi
+fi
+
+#
+# PCRE
+#
+if enabled pcre2; then
+  disable pcre
+else
+  if enabled_or_auto pcre; then
+    if check_pkg libpcre; then
+      enable pcre
+    elif enabled pcre; then
+      die "pcre development support not found (use --disable-pcre)"
+    fi
+  fi
 fi
 
 #
@@ -274,31 +526,154 @@ if enabled_or_auto avahi; then
 fi
 
 #
-# libav
+# ffmpeg
 #
-if enabled_or_auto libav; then
+if enabled ffmpeg_static; then
+
+  enable libav
   has_libav=true
 
-  if $has_libav && ! check_pkg libavcodec ">=52.96.0"; then
-    has_libav=false
+  # libx264
+  if enabled libx264; then
+    if disabled libx264_static; then
+      check_pkg x264 ">=0.142" || die "x264 package not found"
+    fi
+  else
+    disable libx264_static
   fi
 
-  if $has_libav && ! check_pkg libavutil ">=50.43.0"; then
-    has_libav=false
+  # libx265
+  if enabled libx265; then
+    if disabled libx265_static; then
+      check_pkg x265 ">=1.5" || die "x265 package not found"
+    else
+      check_bin cmake || die "cmake not found"
+      check_cc_lib stdc++ stdcpp || die "libstdc++ not found"
+    fi
+  else
+    disable libx265_static
   fi
 
-  if $has_libav && ! check_pkg libavformat ">=53.10.0"; then
-    has_libav=false
+  # libvpx
+  if enabled libvpx; then
+    if disabled libvpx_static; then
+      check_pkg vpx ">=1.3.0" || die "vpx package not found"
+    fi
+  else
+    disable libvpx_static
   fi
 
-  if $has_libav && ! check_pkg libswscale ">=0.13.0"; then
-    has_libav=false
+  # libtheora
+  if enabled libtheora; then
+    if disabled libtheora_static; then
+      check_pkg theoraenc ">=1.1.1" || die "theoraenc package not found"
+      check_pkg theoradec ">=1.1.1" || die "theoradec package not found"
+      check_pkg theora    ">=1.1.1" || die "theora package not found"
+    else
+      enable libogg_static
+    fi
+  else
+    disable libtheora_static
   fi
 
-  if $has_libav; then
-    enable libav
-  elif enabled libav; then
-    die "libav development support not found (use --disable-libav)"
+  # libvorbis
+  if enabled libvorbis; then
+    if disabled libvorbis_static; then
+      check_pkg vorbisfile ">=1.3.4" || die "vorbisfile package not found"
+      check_pkg vorbisenc  ">=1.3.4" || die "vorbisenc package not found"
+      check_pkg vorbis     ">=1.3.4" || die "vorbis package not found"
+    else
+      enable libogg_static
+    fi
+  else
+    disable libvorbis_static
+  fi
+
+  # libfdk-aac
+  if enabled libfdkaac; then
+    if disabled libfdkaac_static; then
+      check_pkg fdk-aac ">=0.1.3" || die "fdk-aac package not found"
+    fi
+  else
+    disable libfdkaac_static
+  fi
+
+  # libopus
+  if enabled libopus; then
+    if disabled libopus_static; then
+      check_pkg opus ">=1.1" || die "opus package not found"
+    fi
+  else
+    disable libopus_static
+  fi
+
+  # nvenc
+  # latest ffmpeg has own code
+  if enabled_or_auto nvenc; then
+    #check_cc_header nvEncodeAPI || \
+    #  die "NVENC library (https://developer.nvidia.com/nvidia-video-codec-sdk) not found"
+    enable nvenc
+    enable hwaccels
+  else
+    disable nvenc
+  fi
+
+  # omx
+  if enabled omx; then
+    OLDCFLAGS=$CFLAGS
+    if [ -d "/opt/vc/include" ]; then
+      CFLAGS="-I/opt/vc/include $CFLAGS"
+    fi
+    check_cc_header "bcm_host" omx_rpi
+    if enabled omx_rpi; then
+      CFLAGS="-I/opt/vc/include/IL $OLDCFLAGS"
+      enable mmal
+    else
+      CFLAGS=$OLDCFLAGS
+    fi
+    check_cc_header OMX_Core omx || die "OpenMAX IL not found"
+  fi
+
+else
+
+  if enabled_or_auto libav; then
+    has_libav=true
+    has_resample=false
+
+    check_pkg libavfilter   ">=6.47.100"  || has_libav=false
+    check_pkg libswresample ">=2.1.100"   && has_resample=true
+    check_pkg libavresample ">=3.0.0"     && has_resample=true
+    check_pkg libswscale    ">=4.1.100"   || has_libav=false
+    check_pkg libavformat   ">=57.41.100" || has_libav=false
+    check_pkg libavcodec    ">=57.48.101" || has_libav=false
+    check_pkg libavutil     ">=55.28.100" || has_libav=false
+
+    if $has_libav -a $has_resample; then
+      enable libav
+    else
+      echo "WARNING: none or old ffmpeg libraries were detected"
+      echo "         * use --disable-libav or --enable-ffmpeg_static"
+      if enabled libav; then
+        die "ffmpeg development support not found"
+      fi
+    fi
+
+  fi
+
+fi
+
+#
+# vaapi
+#
+if enabled_or_auto vaapi; then
+  if enabled libav; then
+    if check_pkg libva ">=0.38.0"; then
+      check_pkg libva-drm ">=0.38.0" || die "libva-drm not found"
+      enable vaapi
+      enable hwaccels
+    elif enabled vaapi; then
+      die "vaapi (Video Acceleration (VA) API for Linux) not found"
+    fi
   fi
 fi
 
@@ -308,29 +683,42 @@ fi
 if enabled_or_auto inotify; then
   if check_cc_header "sys/inotify" inotify_h; then
     enable inotify
+    check_cc_snippet inotify_init1 '
+    #include <sys/inotify.h>
+    int test(void)
+    {
+      inotify_init1(IN_CLOEXEC);
+      return 0;
+    }
+    '
   elif enabled inotify; then
     die "Inotify support not found (use --disable-inotify)"
   fi
 fi
 
 #
-# libdvbcsa, tvhcsa
+# common card client
 #
-if enabled cwc || enabled capmt || enabled constcw; then
-  enable tvhcsa
-  if enabled dvbcsa; then
-    (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\
-     check_cc_lib    dvbcsa dvbcsa_l) ||\
-    die "Failed to find dvbcsa support (use --disable-dvbcsa)"
-    LDFLAGS="$LDFLAGS -ldvbcsa"
-  fi
+if enabled cwc || enabled cccam; then
+  enable cardclient
 fi
 
 #
-# Icon caching
+# libdvbcsa, tvhcsa
 #
-if enabled_or_auto imagecache; then
-  enable imagecache
+if enabled_or_auto tvhcsa; then
+  if enabled cwc || enabled cccam || enabled capmt || enabled constcw; then
+    enable tvhcsa
+    enable dvbcsa
+    if enabled dvbcsa; then
+      (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\
+       check_cc_lib    dvbcsa dvbcsa_l) ||\
+      die "Failed to find dvbcsa library"
+      LDFLAGS="$LDFLAGS -ldvbcsa"
+    fi
+  else
+    disable tvhcsa
+  fi
 fi
 
 #
@@ -341,6 +729,7 @@ if enabled dvbscan; then
   "${ROOTDIR}/support/getmuxlist"
   if [ $? -ne 0 ]; then
     echo "fail"
+    check_bin git || echo "FATAL: git binary not found (install the git package)"
     die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
   fi
   echo "ok"
@@ -351,6 +740,14 @@ fi
 #
 if [ ${PLATFORM} = "linux" ]; then
   enable epoll
+  check_cc_snippet epoll_create1 '
+  #include <sys/epoll.h>
+  int test(void)
+  {
+    epoll_create1(EPOLL_CLOEXEC);
+    return 0;
+  }
+  '
 fi
 
 #
@@ -361,21 +758,17 @@ if [ ${PLATFORM} = "freebsd" ] || [ ${PLATFORM} = "darwin" ]; then
 fi
 
 #
-# MPEGTS/PS support
+# MPEGTS support
 #
 disable mpegts
-disable mpegps
 disable mpegts_dvb
-if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client;
+if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client || \
+   enabled hdhomerun_client || enabled satip_server;
 then
   enable mpegts
 fi
-if enabled linuxdvb || enabled satip_client; then
+if enabled linuxdvb || enabled satip_client || enabled hdhomerun_client || enabled satip_server; then
   enable mpegts_dvb
-fi
-
-if enabled v4l; then
-  enable mpegps
 fi
 
 #
@@ -389,6 +782,16 @@ if enabled_or_auto dbus_1; then
   fi
 fi
 
+#
+# systemd
+#
+if enabled_or_auto libsystemd_daemon; then
+  if check_pkg libsystemd-daemon || check_pkg libsystemd; then
+    enable libsystemd_daemon
+  elif enabled libsystemd_daemon; then
+    die "libsystemd-daemon development support not found (use --disable-systemd_daemon)"
+  fi
+fi
 
 # ###########################################################################
 # Write config

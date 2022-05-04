@@ -1,0 +1,140 @@
+%global ref @REF@
+%global commit @COMMIT@
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
+
+%global tvheadend_user %{name}
+%global tvheadend_group %{name}
+%global tvheadend_group_number 283
+
+Name:           tvheadend
+Summary:        TV streaming server and Digital Video Recorder
+Version:        @VERSION@
+Release:        @RELEASE@%{?dist}
+
+License:        GPLv3
+Group:          Applications/Multimedia
+URL:            http://tvheadend.org
+
+Source:         https://github.com/tvheadend/tvheadend/archive/%{ref}/tvheadend-%{commit}.tar.gz
+#Patch999:      test.patch
+
+BuildRequires:  bzip2
+BuildRequires:  gcc
+BuildRequires:  gettext
+BuildRequires:  gzip
+BuildRequires:  systemd-units
+BuildRequires:  gettext-devel
+BuildRequires:  dbus-devel
+BuildRequires:  avahi-devel
+BuildRequires:  avahi-libs
+BuildRequires:  libdvbcsa-devel
+BuildRequires:  openssl-devel
+BuildRequires:  wget python git
+BuildRequires:  cmake
+BuildRequires:  python3
+
+%{?systemd_requires}
+Requires:       bzip2
+Requires:       tar
+
+
+%description
+Tvheadend is a TV streaming server with Digital Video Recorder functionality
+for Linux supporting DVB, ATSC, IPTV, SAT>IP, HDHomeRun as input sources.
+
+It can be used as a back-end to HTTP (VLC, MPlayer), HTSP (Movian, Kodi),
+SAT>IP and various other clients using these protocols.
+
+
+%prep
+%setup -q -n tvheadend-%{commit}
+#%patch999 -p1 -b .test
+
+
+%build
+echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
+%ifarch %arm
+      %configure --disable-lockowner --disable-ffmpeg_static
+%else
+      %configure --disable-lockowner --enable-ffmpeg_static --enable-libx265 --nowerror
+%endif
+%make_build PYTHON=python3
+
+
+%install
+%make_install
+
+install -Dpm 0644 rpm/tvheadend.sysconfig %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+install -Dpm 0644 rpm/tvheadend.service %{buildroot}%{_unitdir}/%{name}.service
+
+install -dm 0755 %{buildroot}%{_sharedstatedir}/%{name}/
+
+chmod 0644 %{buildroot}%{_mandir}/man1/%{name}.1
+
+
+%pre
+getent group tvheadend >/dev/null || groupadd -f -g %{tvheadend_group_number} -r tvheadend
+if ! getent passwd tvheadend > /dev/null ; then
+  if ! getent passwd %{tvheadend_group_number} > /dev/null ; then
+    useradd -r -l -u %{tvheadend_group_number} -g tvheadend \
+	    -d %{_sharedstatedir}/%{name}/ -s /sbin/nologin \
+	    -c "Tvheadend TV server" tvheadend
+  else
+    useradd -r -l -g tvheadend -d /home/tvheadend \
+            -s /sbin/nologin -c "Tvheadend TV server" tvheadend
+  fi
+fi
+exit 0
+
+
+%post
+%systemd_post %{name}.service
+
+
+%preun
+%systemd_preun %{name}.service
+
+
+%postun
+%systemd_postun_with_restart %{name}.service
+
+
+%files
+%doc CONTRIBUTING.md README.md
+%license LICENSE.md licenses/gpl-3.0.txt
+%{_bindir}/*
+%{_datadir}/%{name}/
+%{_unitdir}/*
+%config(noreplace) %{_sysconfdir}/sysconfig/%{name}
+%{_mandir}/man1/*.1.*
+%attr(-,%{tvheadend_user},%{tvheadend_group}) %dir %{_sharedstatedir}/%{tvheadend_user}/
+
+
+%changelog
+* Fri Apr 20 2018 Jaroslav Kysela <perex@perex.cz> 4.2.6-1
+- many fixes
+
+* Wed May 27 2015 Jaroslav Kysela <perex@perex.cz> 4.0.3-1
+- rpmlint fixes
+
+* Mon May 25 2015 Jaroslav Kysela <perex@perex.cz> 4.0.2-1
+- fix requires (libs) and improve description
+- add support for final version to Source
+
+* Thu May 21 2015 Jaroslav Kysela <perex@perex.cz> 4.0.1-1
+- changed versioning system (put changes and git hash to revision)
+
+* Thu May 14 2015 Jaroslav Kysela <perex@perex.cz> 3.9-2842
+- add python to BuildRequires
+
+* Wed Mar 25 2015 Bob Lightfoot <boblfoot@gmail.com> 3.9-2658-gb427d7e
+- Patching rpm spec file so the arm architecture builds properly
+
+* Mon Oct 13 2014 Jaroslav Kysela <perex@perex.cz> 3.9-1806-g6f3324e
+- RPM: Typo fixes
+
+* Mon Oct 13 2014 Jaroslav Kysela <perex@perex.cz> 3.9-1805-g14a7de8
+- RPM build - config fixes
+
+* Mon Oct 13 2014 Jaroslav Kysela <perex@perex.cz> 3.9-1803-g392dec0
+- Add basic RPM build support

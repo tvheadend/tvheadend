@@ -1,11 +1,22 @@
 tvheadend.tvadapters = function(panel, index) {
 
     tvheadend.idnode_tree(panel, {
+        id: 'tvadapters',
         url: 'api/hardware/tree',
-        title: 'TV adapters',
+        title: _('TV adapters'),
+        iconCls: 'tvCards',
         tabIndex: index,
-        help: function() {
-            new tvheadend.help('TV adapters', 'config_tvadapters.html');
+        comet: 'hardware',
+        node_added: function(n) {
+            var p = n.attributes.params;
+            if (!p) return;
+            for (var i = 0; i < p.length; i++)
+                if (p[i].id == "active" && p[i].value) {
+                    n.ui.addClass('x-tree-node-on');
+                    break;
+                }
+            if (i >= p.length)
+                    n.ui.addClass('x-tree-node-off');
         }
     });
 

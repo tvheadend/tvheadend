@@ -45,7 +45,7 @@ api_register ( const api_hook_t *hook )
   api_skel->hook = hook;
   t = RB_INSERT_SORTED(&api_hook_tree, api_skel, link, ah_cmp);
   if (t) {
-    tvherror("api", "trying to re-register subsystem");
+    tvherror(LS_API, "trying to re-register subsystem");
   } else {
     SKEL_USED(api_skel);
   }
@@ -67,6 +67,7 @@ api_exec ( access_t *perm, const char *subsystem,
   api_hook_t h;
   api_link_t *ah, skel;
   const char *op;
+  uint32_t access;
 
   /* Args and response must be set */
   if (!args || !resp || !subsystem)
@@ -80,11 +81,15 @@ api_exec ( access_t *perm, const char *subsystem,
   ah = RB_FIND(&api_hook_tree, &skel, link, ah_cmp);
 
   if (!ah) {
-    tvhwarn("api", "failed to find subsystem [%s]", subsystem);
+    tvhwarn(LS_API, "failed to find subsystem [%s]", subsystem);
     return ENOSYS; // TODO: is this really the right error code?
   }
 
-  if (access_verify2(perm, ah->hook->ah_access))
+  access = ah->hook->ah_access;
+  if ((access & ACCESS_NO_EMPTY_ARGS) != 0 && htsmsg_is_empty(args))
+    return EPERM;
+
+  if (access_verify2(perm, access & ~ACCESS_INTERNAL))
     return EPERM;
 
   /* Extract method */
@@ -111,20 +116,36 @@ api_serverinfo
   return 0;
 }
 
+static int
+api_pathlist
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  api_link_t *t;
+  *resp = htsmsg_create_list();
+  RB_FOREACH(t, &api_hook_tree, link) {
+    htsmsg_add_str(*resp, NULL, t->hook->ah_subsystem);
+  }
+  return 0;
+}
+
 void api_init ( void )
 {
   static api_hook_t h[] = {
     { "serverinfo", ACCESS_ANONYMOUS, api_serverinfo, NULL },
+    { "pathlist", ACCESS_ANONYMOUS, api_pathlist, NULL },
     { NULL, 0, NULL, NULL }
   };
   api_register_all(h);
 
   /* Subsystems */
   api_idnode_init();
+  api_idnode_raw_init();
+  api_config_init();
   api_input_init();
   api_mpegts_init();
   api_service_init();
   api_channel_init();
+  api_bouquet_init();
   api_epg_init();
   api_epggrab_init();
   api_status_init();
@@ -134,6 +155,12 @@ void api_init ( void )
   api_access_init();
   api_dvr_init();
   api_caclient_init();
+  api_codec_init();
+  api_profile_init();
+  api_language_init();
+  api_satip_server_init();
+  api_timeshift_init();
+  api_wizard_init();
 }
 
 void api_done ( void )

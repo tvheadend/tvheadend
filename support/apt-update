@@ -5,6 +5,8 @@
 # environment variables
 #
 
+#set -x
+
 # Terminate
 function die
 {
@@ -18,12 +20,25 @@ DIR=$(cd $(dirname "$0"); pwd)
 
 # Configuration
 TVH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
-[ -z "$TVH_DIST" ] && TVH_DIST="wheezy lucid precise quantal saucy trusty"
-[ -z "$TVH_ARCH" ] && TVH_ARCH="i386 amd64"
+
+# Builds
+[ -z "$TVH_BUILD" ] && TVH_BUILD="
+trusty:i386:amd64
+wily:i386:amd64
+xenial:i386:amd64
+wheezy:i386:amd64:armhf
+jessie:i386:amd64:armhf
+"
 
 # Options
 [ ! -z "$1" ] && REL=$1 || REL=master
 [ ! -z "$2" ] && PPA=$2 || PPA=unstable
+
+# Set default package
+[ -z "$DEBEMAIL"    ] && DEBEMAIL="apt@tvheadend.org"
+[ -z "$DEBFULLNAME" ] && DEBFULLNAME="Tvheadend (Package Signing Key)"
+export DEBEMAIL
+export DEBFULLNAME
 
 # Setup
 cd "$TVH_ROOT" || exit 1
@@ -48,22 +63,26 @@ cd "$TMPDIR/tvheadend" || die "failed to enter archived tree"
 cd ..
 
 # For each distro
-for d in $TVH_DIST; do
+for b in $TVH_BUILD; do
+  d=${b%%:*}
+  arch=${b##${d}:}
+  arch=${arch/:/ }
+
+  # Update version
   V=${VER}~${d}
   mv tvheadend "tvheadend-${V}"
   cd "tvheadend-${V}"
 
   # Create changelog
   ./support/changelog "$CHANGELOG" "$d" "$VER" || exit 1
-  
+
   # Build source package
-  dpkg-buildpackage -I.git* -S -sgpg -pgpg || exit 1
+  dpkg-buildpackage -d -I.git* -S -sgpg -pgpg || exit 1
 
   # Build
   if [ "$CMD" == "pbuilder" ]; then
-  
-    for a in $TVH_ARCH; do
-      pbuilder-dist $d $a ../tvheadend_${V}.dsc
+    for a in ${arch}; do
+      pbuilder-dist $d $a build ${PBUILDER_OPTS} ../tvheadend_${V}.dsc
     done
 
   # Upload

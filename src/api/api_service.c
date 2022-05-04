@@ -28,35 +28,12 @@
 #include "notify.h"
 
 static int
-api_mapper_start
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  service_mapper_conf_t conf = { 0 };
-  htsmsg_t *uuids;
-#define get_u32(x)\
-  conf.x = htsmsg_get_bool_or_default(args, #x, 0)
-  
-  /* Get config */
-  uuids = htsmsg_get_list(args, "uuids");
-  get_u32(check_availability);
-  get_u32(encrypted);
-  get_u32(merge_same_name);
-  get_u32(provider_tags);
-  
-  pthread_mutex_lock(&global_lock);
-  service_mapper_start(&conf, uuids);
-  pthread_mutex_unlock(&global_lock);
-
-  return 0;
-}
-
-static int
 api_mapper_stop
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   service_mapper_stop();
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }
@@ -72,7 +49,7 @@ api_mapper_status_msg ( void )
   htsmsg_add_u32(m, "fail",   stat.fail);
   htsmsg_add_u32(m, "ignore", stat.ignore);
   if (stat.active)
-    htsmsg_add_str(m, "active", idnode_uuid_as_str(&stat.active->s_id));
+    htsmsg_add_uuid(m, "active", &stat.active->s_id.in_uuid);
   return m;
 }
 
@@ -80,16 +57,16 @@ static int
 api_mapper_status
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   *resp = api_mapper_status_msg();
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
   return 0;
 }
 
 void
 api_service_mapper_notify ( void )
 {
-  notify_by_msg("servicemapper", api_mapper_status_msg());
+  notify_by_msg("servicemapper", api_mapper_status_msg(), 0);
 }
 
 static htsmsg_t *
@@ -105,6 +82,8 @@ api_service_streams_get_one ( elementary_stream_t *es, int use_filter )
     htsmsg_add_u32(e, "ancillary_id",   es->es_ancillary_id);
   } else if (SCT_ISAUDIO(es->es_type)) {
     htsmsg_add_u32(e, "audio_type",     es->es_audio_type);
+    if (es->es_audio_version)
+      htsmsg_add_u32(e, "audio_version", es->es_audio_version);
   } else if (SCT_ISVIDEO(es->es_type)) {
     htsmsg_add_u32(e, "width",          es->es_width);
     htsmsg_add_u32(e, "height",         es->es_height);
@@ -132,7 +111,7 @@ api_service_streams
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   const char *uuid;
-  htsmsg_t *e, *st, *stf;
+  htsmsg_t *e, *st, *stf, *hbbtv = NULL;
   service_t *s;
   elementary_stream_t *es;
 
@@ -140,45 +119,66 @@ api_service_streams
   if (!(uuid = htsmsg_get_str(args, "uuid")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   /* Couldn't find */
-  if (!(s = service_find(uuid))) {
-    pthread_mutex_unlock(&global_lock);
+  if (!(s = service_find_by_uuid(uuid))) {
+    tvh_mutex_unlock(&global_lock);
     return EINVAL;
   }
 
   /* Build response */
-  pthread_mutex_lock(&s->s_stream_mutex);
+  tvh_mutex_lock(&s->s_stream_mutex);
   st = htsmsg_create_list();
   stf = htsmsg_create_list();
-  if (s->s_pcr_pid) {
+  if (s->s_components.set_pcr_pid) {
     e = htsmsg_create_map();
-    htsmsg_add_u32(e, "pid", s->s_pcr_pid);
+    htsmsg_add_u32(e, "pid", s->s_components.set_pcr_pid);
     htsmsg_add_str(e, "type", "PCR");
     htsmsg_add_msg(st, NULL, e);
   }
-  if (s->s_pmt_pid) {
+  if (s->s_components.set_pmt_pid) {
     e = htsmsg_create_map();
-    htsmsg_add_u32(e, "pid", s->s_pmt_pid);
+    htsmsg_add_u32(e, "pid", s->s_components.set_pmt_pid);
     htsmsg_add_str(e, "type", "PMT");
     htsmsg_add_msg(st, NULL, e);
   }
-  TAILQ_FOREACH(es, &s->s_components, es_link)
+  TAILQ_FOREACH(es, &s->s_components.set_all, es_link) {
+    if (es->es_type == SCT_PCR) continue;
     htsmsg_add_msg(st, NULL, api_service_streams_get_one(es, 0));
-  if (TAILQ_FIRST(&s->s_filt_components) == NULL ||
-      s->s_status == SERVICE_IDLE)
-    service_build_filter(s);
-  TAILQ_FOREACH(es, &s->s_filt_components, es_filt_link)
+  }
+  if (elementary_set_has_streams(&s->s_components, 1) || s->s_status == SERVICE_IDLE)
+    elementary_set_filter_build(&s->s_components);
+  TAILQ_FOREACH(es, &s->s_components.set_filter, es_filter_link) {
+    if (es->es_type == SCT_PCR) continue;
     htsmsg_add_msg(stf, NULL, api_service_streams_get_one(es, 1));
+  }
   *resp = htsmsg_create_map();
   htsmsg_add_str(*resp, "name", s->s_nicename);
+  if (s->s_hbbtv)
+    hbbtv = htsmsg_copy(s->s_hbbtv);
+  tvh_mutex_unlock(&s->s_stream_mutex);
+
   htsmsg_add_msg(*resp, "streams", st);
   htsmsg_add_msg(*resp, "fstreams", stf);
-  pthread_mutex_unlock(&s->s_stream_mutex);
+  if (hbbtv)
+    htsmsg_add_msg(*resp, "hbbtv", hbbtv);
 
   /* Done */
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
+  return 0;
+}
+
+static int
+api_service_remove_unseen
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int days = htsmsg_get_s32_or_default(args, "days", 7);
+  const char *type = htsmsg_get_str(args, "type");
+
+  tvh_mutex_lock(&global_lock);
+  service_remove_unseen(type, days);
+  tvh_mutex_unlock(&global_lock);
   return 0;
 }
 
@@ -186,12 +186,13 @@ void api_service_init ( void )
 {
   extern const idclass_t service_class;
   static api_hook_t ah[] = {
-    { "service/mapper/start",   ACCESS_ADMIN, api_mapper_start,  NULL },
+    { "service/mapper/load",    ACCESS_ADMIN, api_idnode_load_simple, &service_mapper_conf },
+    { "service/mapper/save",    ACCESS_ADMIN, api_idnode_save_simple, &service_mapper_conf },
     { "service/mapper/stop",    ACCESS_ADMIN, api_mapper_stop,   NULL },
     { "service/mapper/status",  ACCESS_ADMIN, api_mapper_status, NULL },
-    { "service/list",           ACCESS_ANONYMOUS, api_idnode_load_by_class, 
-      (void*)&service_class },
-    { "service/streams",        ACCESS_ANONYMOUS, api_service_streams, NULL },
+    { "service/list",           ACCESS_ADMIN, api_idnode_load_by_class, (void*)&service_class },
+    { "service/streams",        ACCESS_ADMIN, api_service_streams, NULL },
+    { "service/removeunseen",   ACCESS_ADMIN, api_service_remove_unseen, NULL },
     { NULL },
   };
 
@@ -199,4 +200,4 @@ void api_service_init ( void )
 }
 
 
-#endif /* __TVH_API_IDNODE_H__ */
+#endif /* __TVH_API_SERVICE_H__ */

@@ -19,26 +19,36 @@
 #ifndef __TVH_TIMESHIFT_H__
 #define __TVH_TIMESHIFT_H__
 
-extern uint32_t  timeshift_enabled;
-extern int       timeshift_ondemand;
-extern char     *timeshift_path;
-extern int       timeshift_unlimited_period;
-extern uint32_t  timeshift_max_period;
-extern int       timeshift_unlimited_size;
-extern uint64_t  timeshift_max_size;
-extern uint64_t  timeshift_total_size;
+#include "idnode.h"
+#include "streaming.h"
+#include "memoryinfo.h"
 
-typedef struct timeshift_status
-{
-  int     full;
-  int64_t shift;
-  int64_t pts_start;
-  int64_t pts_end;
-} timeshift_status_t;
+typedef struct timeshift_conf {
+  idnode_t  idnode;
+  int       enabled;
+  int       ondemand;
+  char     *path;
+  int       unlimited_period;
+  uint32_t  max_period;
+  int       unlimited_size;
+  uint64_t  max_size;
+  uint64_t  total_size;
+  uint64_t  ram_size;
+  uint64_t  ram_segment_size;
+  uint64_t  total_ram_size;
+  int       ram_only;
+  int       ram_fit;
+  int       teletext;
+} timeshift_conf_t;
+
+extern struct timeshift_conf timeshift_conf;
+extern const idclass_t timeshift_conf_class;
+
+extern memoryinfo_t timeshift_memoryinfo;
+extern memoryinfo_t timeshift_memoryinfo_ram;
 
 void timeshift_init ( void );
 void timeshift_term ( void );
-void timeshift_save ( void );
 
 streaming_target_t *timeshift_create
   (streaming_target_t *out, time_t max_period);

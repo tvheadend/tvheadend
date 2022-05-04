@@ -18,9 +18,19 @@
 
 
 #include "tvheadend.h"
+#include "streaming.h"
 #include "packet.h"
 #include "string.h"
 #include "atomic.h"
+#include "memoryinfo.h"
+
+#ifndef PKTBUF_DATA_ALIGN
+#define PKTBUF_DATA_ALIGN 64
+#endif
+
+memoryinfo_t pkt_memoryinfo = { .my_name = "Packets" };
+memoryinfo_t pktbuf_memoryinfo = { .my_name = "Packet buffers" };
+memoryinfo_t pktref_memoryinfo = { .my_name = "Packet references" };
 
 /*
  *
@@ -28,12 +38,13 @@
 static void
 pkt_destroy(th_pkt_t *pkt)
 {
-  if(pkt->pkt_payload != NULL)
+  if (pkt) {
     pktbuf_ref_dec(pkt->pkt_payload);
+    pktbuf_ref_dec(pkt->pkt_meta);
 
-  if(pkt->pkt_header != NULL)
-    pktbuf_ref_dec(pkt->pkt_header);
-  free(pkt);
+    free(pkt);
+    memoryinfo_free(&pkt_memoryinfo, sizeof(*pkt));
+  }
 }
 
 
@@ -42,18 +53,81 @@ pkt_destroy(th_pkt_t *pkt)
  * suppoed to take care of)
  */
 th_pkt_t *
-pkt_alloc(const void *data, size_t datalen, int64_t pts, int64_t dts)
+pkt_alloc(streaming_component_type_t type, const uint8_t *data, size_t datalen,
+          int64_t pts, int64_t dts, int64_t pcr)
 {
   th_pkt_t *pkt;
+  pktbuf_t *payload;
+
+  if (datalen > 0) {
+    payload = pktbuf_alloc(data, datalen);
+    if (payload == NULL)
+      return NULL;
+  } else {
+    payload = NULL;
+  }
 
   pkt = calloc(1, sizeof(th_pkt_t));
-  if(datalen)
-    pkt->pkt_payload = pktbuf_alloc(data, datalen);
-  pkt->pkt_dts = dts;
-  pkt->pkt_pts = pts;
-  pkt->pkt_refcount = 1;
+  if (pkt) {
+    pkt->pkt_type = type;
+    pkt->pkt_payload = payload;
+    pkt->pkt_dts = dts;
+    pkt->pkt_pts = pts;
+    pkt->pkt_pcr = pcr;
+    pkt->pkt_refcount = 1;
+    memoryinfo_alloc(&pkt_memoryinfo, sizeof(*pkt));
+  } else {
+    if (payload)
+      pktbuf_ref_dec(payload);
+  }
   return pkt;
 }
+
+
+/**
+ *
+ */
+th_pkt_t *
+pkt_copy_shallow(th_pkt_t *pkt)
+{
+  th_pkt_t *n = malloc(sizeof(th_pkt_t));
+
+  if (n) {
+    blacklisted_memcpy(n, pkt, sizeof(*pkt));
+
+    n->pkt_refcount = 1;
+
+    pktbuf_ref_inc(n->pkt_meta);
+    pktbuf_ref_inc(n->pkt_payload);
+
+    memoryinfo_alloc(&pkt_memoryinfo, sizeof(*pkt));
+  }
+
+  return n;
+}
+
+
+/**
+ *
+ */
+th_pkt_t *
+pkt_copy_nodata(th_pkt_t *pkt)
+{
+  th_pkt_t *n = malloc(sizeof(th_pkt_t));
+
+  if (n) {
+    blacklisted_memcpy(n, pkt, sizeof(*pkt));
+
+    n->pkt_refcount = 1;
+
+    n->pkt_meta = n->pkt_payload = NULL;
+
+    memoryinfo_alloc(&pkt_memoryinfo, sizeof(*pkt));
+  }
+
+  return n;
+}
+
 
 /**
  *
@@ -84,6 +158,47 @@ pkt_ref_inc_poly(th_pkt_t *pkt, int n)
   atomic_add(&pkt->pkt_refcount, n);
 }
 
+/**
+ *
+ */
+void
+pkt_trace_(const char *file, int line, int subsys, th_pkt_t *pkt,
+           const char *fmt, ...)
+{
+  char buf[512], _pcr[22], _dts[22], _pts[22], _type[2], _meta[20];
+  va_list args;
+
+  va_start(args, fmt);
+  if (SCT_ISVIDEO(pkt->pkt_type) && pkt->v.pkt_frametype) {
+    _type[0] = pkt_frametype_to_char(pkt->v.pkt_frametype);
+    _type[1] = '\0';
+  } else {
+    _type[0] = '\0';
+  }
+  if (pkt->pkt_meta)
+    snprintf(_meta, sizeof(_meta), " meta %zu", pktbuf_len(pkt->pkt_meta));
+  else
+    _meta[0] = '\0';
+  snprintf(buf, sizeof(buf),
+           "%s%spkt stream %d %s%s%s"
+           " pcr %s dts %s pts %s"
+           " dur %d len %zu err %i%s%s",
+           fmt ? fmt : "",
+           fmt ? " (" : "",
+           pkt->pkt_componentindex,
+           streaming_component_type2txt(pkt->pkt_type),
+           _type[0] ? " type " : "", _type,
+           pts_to_string(pkt->pkt_pcr, _pcr),
+           pts_to_string(pkt->pkt_dts, _dts),
+           pts_to_string(pkt->pkt_pts, _pts),
+           pkt->pkt_duration,
+           pktbuf_len(pkt->pkt_payload),
+           pkt->pkt_err,
+           _meta,
+           fmt ? ")" : "");
+  tvhlogv(file, line, LOG_TRACE, subsys, buf, &args);
+  va_end(args);
+}
 
 /**
  *
@@ -93,10 +208,13 @@ pktref_clear_queue(struct th_pktref_queue *q)
 {
   th_pktref_t *pr;
 
-  while((pr = TAILQ_FIRST(q)) != NULL) {
-    TAILQ_REMOVE(q, pr, pr_link);
-    pkt_ref_dec(pr->pr_pkt);
-    free(pr);
+  if (q) {
+    while((pr = TAILQ_FIRST(q)) != NULL) {
+      TAILQ_REMOVE(q, pr, pr_link);
+      pkt_ref_dec(pr->pr_pkt);
+      free(pr);
+      memoryinfo_free(&pktref_memoryinfo, sizeof(*pr));
+    }
   }
 }
 
@@ -108,8 +226,27 @@ void
 pktref_enqueue(struct th_pktref_queue *q, th_pkt_t *pkt)
 {
   th_pktref_t *pr = malloc(sizeof(th_pktref_t));
-  pr->pr_pkt = pkt;
-  TAILQ_INSERT_TAIL(q, pr, pr_link);
+  if (pr) {
+    pr->pr_pkt = pkt;
+    TAILQ_INSERT_TAIL(q, pr, pr_link);
+    memoryinfo_alloc(&pktref_memoryinfo, sizeof(*pr));
+  }
+}
+
+
+/**
+ * Reference count is transfered to queue
+ */
+void
+pktref_enqueue_sorted(struct th_pktref_queue *q, th_pkt_t *pkt,
+                      int (*cmp)(const void *, const void *))
+{
+  th_pktref_t *pr = malloc(sizeof(th_pktref_t));
+  if (pr) {
+    pr->pr_pkt = pkt;
+    TAILQ_INSERT_SORTED(q, pr, pr_link, cmp);
+    memoryinfo_alloc(&pktref_memoryinfo, sizeof(*pr));
+  }
 }
 
 
@@ -119,67 +256,60 @@ pktref_enqueue(struct th_pktref_queue *q, th_pkt_t *pkt)
 void
 pktref_remove(struct th_pktref_queue *q, th_pktref_t *pr)
 {
-  TAILQ_REMOVE(q, pr, pr_link);
-  pkt_ref_dec(pr->pr_pkt);
-  free(pr);
+  if (pr) {
+    if (q)
+      TAILQ_REMOVE(q, pr, pr_link);
+    pkt_ref_dec(pr->pr_pkt);
+    free(pr);
+    memoryinfo_free(&pktref_memoryinfo, sizeof(*pr));
+  }
 }
-
 
 /**
  *
  */
 th_pkt_t *
-pkt_merge_header(th_pkt_t *pkt)
+pktref_first(struct th_pktref_queue *q)
 {
-  th_pkt_t *n;
-  size_t s;
+  th_pktref_t *pr;
 
-  if(pkt->pkt_header == NULL)
+  pr = TAILQ_FIRST(q);
+  if (pr)
+    return pr->pr_pkt;
+  return NULL;
+}
+
+/**
+ *
+ */
+th_pkt_t *
+pktref_get_first(struct th_pktref_queue *q)
+{
+  th_pktref_t *pr;
+  th_pkt_t *pkt;
+
+  pr = TAILQ_FIRST(q);
+  if (pr) {
+    pkt = pr->pr_pkt;
+    TAILQ_REMOVE(q, pr, pr_link);
+    free(pr);
+    memoryinfo_free(&pktref_memoryinfo, sizeof(*pr));
     return pkt;
-
-  n = malloc(sizeof(th_pkt_t));
-  *n = *pkt;
-
-  n->pkt_refcount = 1;
-  n->pkt_header = NULL;
-
-  s = pktbuf_len(pkt->pkt_payload) + pktbuf_len(pkt->pkt_header);
-  n->pkt_payload = pktbuf_alloc(NULL, s);
-
-  memcpy(pktbuf_ptr(n->pkt_payload),
-	 pktbuf_ptr(pkt->pkt_header),
-	 pktbuf_len(pkt->pkt_header));
-
-  memcpy(pktbuf_ptr(n->pkt_payload) + pktbuf_len(pkt->pkt_header),
-	 pktbuf_ptr(pkt->pkt_payload),
-	 pktbuf_len(pkt->pkt_payload));
-
-  pkt_ref_dec(pkt);
-  return n;
+  }
+  return NULL;
 }
-
-
 
 /**
  *
  */
-th_pkt_t *
-pkt_copy_shallow(th_pkt_t *pkt)
+void
+pktref_insert_head(struct th_pktref_queue *q, th_pkt_t *pkt)
 {
-  th_pkt_t *n = malloc(sizeof(th_pkt_t));
-  *n = *pkt;
+  th_pktref_t *pr;
 
-  n->pkt_refcount = 1;
-
-  if(n->pkt_header)
-    pktbuf_ref_inc(n->pkt_header);
-
-  if(n->pkt_payload)
-    pktbuf_ref_inc(n->pkt_payload);
-
-  return n;
+  pr = pktref_create(pkt);
+  TAILQ_INSERT_HEAD(q, pr, pr_link);
 }
-
 
 /**
  *
@@ -188,39 +318,72 @@ th_pktref_t *
 pktref_create(th_pkt_t *pkt)
 {
   th_pktref_t *pr = malloc(sizeof(th_pktref_t));
-  pr->pr_pkt = pkt;
+  if (pr) {
+    pr->pr_pkt = pkt;
+    memoryinfo_alloc(&pktref_memoryinfo, sizeof(*pr));
+  }
   return pr;
 }
 
+/*
+ *
+ */
 
-
-void 
-pktbuf_ref_dec(pktbuf_t *pb)
+void
+pktbuf_destroy(pktbuf_t *pb)
 {
-  if((atomic_add(&pb->pb_refcount, -1)) == 1) {
+  if (pb) {
+    memoryinfo_free(&pktbuf_memoryinfo, sizeof(*pb) + pb->pb_size);
     free(pb->pb_data);
     free(pb);
   }
 }
 
 void
-pktbuf_ref_inc(pktbuf_t *pb)
+pktbuf_ref_dec(pktbuf_t *pb)
 {
-  atomic_add(&pb->pb_refcount, 1);
+  if (pb) {
+    if((atomic_add(&pb->pb_refcount, -1)) == 1) {
+      memoryinfo_free(&pktbuf_memoryinfo, sizeof(*pb) + pb->pb_size);
+      free(pb->pb_data);
+      free(pb);
+    }
+  }
 }
 
 pktbuf_t *
-pktbuf_alloc(const void *data, size_t size)
+pktbuf_ref_inc(pktbuf_t *pb)
 {
-  pktbuf_t *pb = malloc(sizeof(pktbuf_t));
-  pb->pb_refcount = 1;
-  pb->pb_size = size;
-
-  if(size > 0) {
-    pb->pb_data = malloc(size);
-    if(data != NULL)
-      memcpy(pb->pb_data, data, size);
+  if (pb) {
+    atomic_add(&pb->pb_refcount, 1);
+    return pb;
   }
+  return NULL;
+}
+
+pktbuf_t *
+pktbuf_alloc(const uint8_t *data, size_t size)
+{
+  pktbuf_t *pb;
+  uint8_t *buffer;
+
+  buffer = size > 0 ? malloc(size) : NULL;
+  if (buffer) {\
+    if (data != NULL)
+      memcpy(buffer, data, size);
+  } else if (size > 0) {
+    return NULL;
+  }
+  pb = malloc(sizeof(pktbuf_t));
+  if (pb == NULL) {
+    free(buffer);
+    return NULL;
+  }
+  pb->pb_refcount = 1;
+  pb->pb_data = buffer;
+  pb->pb_size = size;
+  pb->pb_err = 0;
+  memoryinfo_alloc(&pktbuf_memoryinfo, sizeof(*pb) + size);
   return pb;
 }
 
@@ -228,8 +391,39 @@ pktbuf_t *
 pktbuf_make(void *data, size_t size)
 {
   pktbuf_t *pb = malloc(sizeof(pktbuf_t));
-  pb->pb_refcount = 1;
-  pb->pb_size = size;
-  pb->pb_data = data;
+  if (pb) {
+    pb->pb_refcount = 1;
+    pb->pb_size = size;
+    pb->pb_data = data;
+    memoryinfo_alloc(&pktbuf_memoryinfo, sizeof(*pb) + pb->pb_size);
+  }
   return pb;
+}
+
+pktbuf_t *
+pktbuf_append(pktbuf_t *pb, const void *data, size_t size)
+{
+  void *ndata;
+  if (pb == NULL)
+    return pktbuf_alloc(data, size);
+  ndata = realloc(pb->pb_data, pb->pb_size + size);
+  if (ndata) {
+    pb->pb_data = ndata;
+    memcpy(ndata + pb->pb_size, data, size);
+    pb->pb_size += size;
+    memoryinfo_append(&pktbuf_memoryinfo, size);
+  }
+  return pb;
+}
+
+/*
+ *
+ */
+
+const char *pts_to_string(int64_t pts, char *buf)
+{
+  if (pts == PTS_UNSET)
+    return strcpy(buf, "<unset>");
+  snprintf(buf, 22, "%"PRId64, pts);
+  return buf;
 }

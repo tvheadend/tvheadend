@@ -1,0 +1,60 @@
+a {
+    color: #ff9c33
+}
+
+.ux-mselect {
+    background: #33373d;
+}
+
+.ux-mselect-item {
+    font: normal 15px tahoma, arial, helvetica, sans-serif;
+    border: 1px solid #33373d;
+}
+
+.ux-mselect-selected {
+    border: 3px solid #ff9c33 !important;
+    background: #66676d;
+}
+
+.hts-doc-toc a:hover {
+    background-color: white;
+    color: black;
+    border: 2px solid #ff9c33
+}
+
+.hts-doc-text {
+    font: normal 15px verdana;
+}
+
+.hts-doc-text .hts-doc-anchor {
+    color: #ffc033;
+}
+
+.hts-doc-text a {
+    color: #ff9c33;
+}
+
+.hts-doc-text th {
+    background-color: white;
+}
+
+.hts-doc-text td {
+    border: 1px solid white;
+}
+
+.hts-doc-text tr:nth-child(even) {
+    background-color: #404046;
+}
+
+.hts-doc-text code {
+    background-color: initial;
+    color: #ff9c33;
+}
+
+.x-progress-text-back {
+    color: #fff;
+}
+
+.x-paging-info {
+    color: #fff;
+}

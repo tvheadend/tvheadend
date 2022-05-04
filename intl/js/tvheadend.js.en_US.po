@@ -1,0 +1,2050 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+# Jaroslav Kysela, 2015
+# Mark Clarkstone, 2016
+# Prof Yaffle, 2015-2016
+msgid ""
+msgstr ""
+"Project-Id-Version: Tvheadend\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-12-16 18:36+0100\n"
+"PO-Revision-Date: 2016-12-16 17:37+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
+"Language-Team: English (United States) (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/en_US/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_US\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/webui/static/app/i18n-post.js:137
+msgid "&#160;OK&#160;"
+msgstr "&#160;OK&#160;"
+
+#: src/webui/static/app/i18n-post.js:106
+msgid "(?:st|nd|rd|th)#parseCodes.S.s"
+msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
+
+#: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:27
+#: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
+msgid "(Clear filter)"
+msgstr "(Clear filter)"
+
+#: src/webui/static/app/i18n-post.js:210
+msgid "(None)"
+msgstr "(None)"
+
+#: src/webui/static/app/epg.js:247
+msgid "(default DVR Profile)"
+msgstr "(default DVR Profile)"
+
+#: src/webui/static/app/i18n-post.js:59
+msgid "0 #monthNumber"
+msgstr "0 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:224
+msgid "0,000.00#NumberColumn"
+msgstr "0,000.00#NumberColumn"
+
+#: src/webui/static/app/epg.js:69
+msgid "00:00:00 - 00:15:00"
+msgstr "00:00:00 - 00:15:00"
+
+#: src/webui/static/app/epg.js:70
+msgid "00:15:00 - 00:30:00"
+msgstr "00:15:00 - 00:30:00"
+
+#: src/webui/static/app/epg.js:71
+msgid "00:30:00 - 01:30:00"
+msgstr "00:30:00 - 01:30:00"
+
+#: src/webui/static/app/epg.js:72
+msgid "01:30:00 - 03:00:00"
+msgstr "01:30:00 - 03:00:00"
+
+#: src/webui/static/app/epg.js:73
+msgid "03:00:00 - No maximum"
+msgstr "03:00:00 - No maximum"
+
+#: src/webui/static/app/i18n-post.js:60
+msgid "1 #monthNumber"
+msgstr "1 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:69
+msgid "10 #monthNumber"
+msgstr "10 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:70
+msgid "11 #monthNumber"
+msgstr "11 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:61
+msgid "2 #monthNumber"
+msgstr "2 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:62
+msgid "3 #monthNumber"
+msgstr "3 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:63
+msgid "4 #monthNumber"
+msgstr "4 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:64
+msgid "5 #monthNumber"
+msgstr "5 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:65
+msgid "6 #monthNumber"
+msgstr "6 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:66
+msgid "7 #monthNumber"
+msgstr "7 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:67
+msgid "8 #monthNumber"
+msgstr "8 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:68
+msgid "9 #monthNumber"
+msgstr "9 #monthNumber"
+
+#: src/webui/static/app/dvr.js:245
+msgid "Abort"
+msgstr "Abort"
+
+#: src/webui/static/app/dvr.js:243
+msgid "Abort the selected recording"
+msgstr "Abort the selected recording"
+
+#: src/webui/static/app/tvheadend.js:836
+msgid "About"
+msgstr "About"
+
+#: src/webui/static/app/acleditor.js:24
+msgid "Access Entries"
+msgstr "Access Entries"
+
+#: src/webui/static/app/acleditor.js:23
+msgid "Access Entry"
+msgstr "Access Entry"
+
+#: src/webui/static/app/servicemapper.js:22
+msgid "Active"
+msgstr "Active"
+
+#: src/webui/static/app/idnode.js:1793 src/webui/static/app/idnode.js:2289
+msgid "Add"
+msgstr "Add"
+
+#: src/webui/static/app/idnode.js:1791 src/webui/static/app/idnode.js:2287
+msgid "Add a new entry"
+msgstr "Add a new entry"
+
+#: src/webui/static/app/idnode.js:1363 src/webui/static/app/idnode.js:1558
+msgid "Add {0}"
+msgstr "Add {0}"
+
+#: src/webui/static/app/idnode.js:594 src/webui/static/app/idnode.js:610
+msgid "Advanced"
+msgstr "Advanced"
+
+#: src/webui/static/app/idnode.js:1043
+msgid "Advanced Settings"
+msgstr "Advanced Settings"
+
+#: src/webui/static/app/i18n-post.js:279
+msgid "After"
+msgstr "After"
+
+#: src/webui/static/app/mpegts.js:209
+msgid "After filtering and reordering (without PCR and PMT)"
+msgstr "After filtering and reordering (without PCR and PMT)"
+
+#: src/webui/static/app/epg.js:607 src/webui/static/app/epg.js:608
+msgid "Age"
+msgstr "Age"
+
+#: src/webui/static/app/epg.js:134
+msgid "Age Rating"
+msgstr "Age Rating"
+
+#: src/webui/static/app/idnode.js:1940 src/webui/static/app/idnode.js:1979
+msgid "All"
+msgstr "All"
+
+#: src/webui/static/app/idnode.js:1153 src/webui/static/app/idnode.js:1166
+#: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1483
+#: src/webui/static/app/idnode.js:1501 src/webui/static/app/idnode.js:1511
+msgid "Apply"
+msgstr "Apply"
+
+#: src/webui/static/app/tvhlog.js:25
+msgid "Apply any changes made below to the run-time configuration."
+msgstr "Apply any changes made below to the run-time configuration."
+
+#: src/webui/static/app/tvhlog.js:24
+msgid "Apply configuration (run-time only)"
+msgstr "Apply configuration (run-time only)"
+
+#: src/webui/static/app/idnode.js:1482
+msgid "Apply settings"
+msgstr "Apply settings"
+
+#: src/webui/static/app/i18n-post.js:38
+msgid "Apr"
+msgstr "Apr"
+
+#: src/webui/static/app/i18n-post.js:23
+msgid "April"
+msgstr "April"
+
+#: src/webui/static/app/epg.js:159
+msgid "Aspect"
+msgstr "Aspect"
+
+#: src/webui/static/app/chconf.js:178
+msgid "Assign Number"
+msgstr "Assign Number"
+
+#: src/webui/static/app/chconf.js:176
+msgid "Assign lowest free channel number"
+msgstr "Assign lowest free channel number"
+
+#: src/webui/static/app/esfilter.js:65
+msgid "Audio Stream Filter"
+msgstr "Audio Stream Filter"
+
+#: src/webui/static/app/esfilter.js:66
+msgid "Audio Stream Filters"
+msgstr "Audio Stream Filters"
+
+#: src/webui/static/app/epg.js:167
+msgid "Audio description#EPG"
+msgstr "Audio description#EPG"
+
+#: src/webui/static/app/i18n-post.js:42
+msgid "Aug"
+msgstr "Aug"
+
+#: src/webui/static/app/i18n-post.js:27
+msgid "August"
+msgstr "August"
+
+#: src/webui/static/app/epg.js:1063
+msgid "Auto Recorder"
+msgstr "Auto Recorder"
+
+#: src/webui/static/app/tvheadend.js:368
+msgid "Auto-refresh"
+msgstr "Auto-refresh"
+
+#: src/webui/static/app/epg.js:263 src/webui/static/app/dvr.js:69
+#: src/webui/static/app/dvr.js:735
+msgid "Autorec"
+msgstr "Autorec"
+
+#: src/webui/static/app/dvr.js:736
+msgid "Autorecs"
+msgstr "Autorecs"
+
+#: src/webui/static/app/idnode.js:446 src/webui/static/app/idnode.js:691
+msgid "Available"
+msgstr "Available"
+
+#: src/webui/static/app/status.js:404
+msgid "BER"
+msgstr "BER"
+
+#: src/webui/static/app/status.js:396
+msgid "Bandwidth (kb/s)"
+msgstr "Bandwidth (kb/s)"
+
+#: src/webui/static/app/status.js:732 src/webui/static/app/status.js:825
+msgid "Bandwidth monitor"
+msgstr "Bandwidth monitor"
+
+#: src/webui/static/app/config.js:29
+msgid "Base"
+msgstr "Base"
+
+#: src/webui/static/app/idnode.js:592 src/webui/static/app/idnode.js:604
+msgid "Basic"
+msgstr "Basic"
+
+#: src/webui/static/app/idnode.js:1041
+msgid "Basic Settings"
+msgstr "Basic Settings"
+
+#: src/webui/static/app/i18n-post.js:280
+msgid "Before"
+msgstr "Before"
+
+#: src/webui/static/app/cteditor.js:73
+msgid "Bouquet"
+msgstr "Bouquet"
+
+#: src/webui/static/app/cteditor.js:74
+msgid "Bouquets"
+msgstr "Bouquets"
+
+#: src/webui/static/app/epg.js:276
+msgid "Broadcast Details"
+msgstr "Broadcast Details"
+
+#: src/webui/static/app/epg.js:381
+msgid "Broadcast details"
+msgstr "Broadcast details"
+
+#: src/webui/static/app/epg.js:870
+msgid "Buffering. Please wait..."
+msgstr "Buffering. Please wait..."
+
+#: src/webui/static/app/caclient.js:32
+msgid "CA"
+msgstr "CA"
+
+#: src/webui/static/app/esfilter.js:116
+msgid "CA Stream Filter"
+msgstr "CA Stream Filter"
+
+#: src/webui/static/app/esfilter.js:117
+msgid "CA Stream Filters"
+msgstr "CA Stream Filters"
+
+#: src/webui/static/app/mpegts.js:188
+msgid "CAIDS: "
+msgstr "CAIDS: "
+
+#: src/webui/static/app/caclient.js:33
+msgid "CAs"
+msgstr "CAs"
+
+#: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
+#: src/webui/static/app/idnode.js:1110 src/webui/static/app/idnode.js:1522
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/webui/static/app/status.js:559
+msgid "Cancel Connection"
+msgstr "Cancel Connection"
+
+#: src/webui/static/app/idnode.js:1521
+msgid "Cancel operation"
+msgstr "Cancel operation"
+
+#: src/webui/static/app/status.js:560
+msgid "Cancel the selected connection?"
+msgstr "Cancel the selected connection?"
+
+#: src/webui/static/app/status.js:556
+msgid "Cancel this connection"
+msgstr "Cancel this connection"
+
+#: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1511
+msgid "Cannot apply"
+msgstr "Cannot apply"
+
+#: src/webui/static/app/idnode.js:622
+msgid "Change the user interface level (basic, advanced, expert)"
+msgstr "Change the user interface level (basic, advanced, expert)"
+
+#: src/webui/static/app/idnode.js:1167 src/webui/static/app/idnode.js:1502
+msgid "Changes were applied!"
+msgstr "Changes were applied!"
+
+#: src/webui/static/app/chconf.js:232 src/webui/static/app/epg.js:585
+#: src/webui/static/app/epg.js:586 src/webui/static/app/epg.js:1067
+#: src/webui/static/app/status.js:113
+msgid "Channel"
+msgstr "Channel"
+
+#: src/webui/static/app/tvheadend.js:759
+msgid "Channel / EPG"
+msgstr "Channel / EPG"
+
+#: src/webui/static/app/cteditor.js:10
+msgid "Channel Tag"
+msgstr "Channel Tag"
+
+#: src/webui/static/app/cteditor.js:11
+msgid "Channel Tags"
+msgstr "Channel Tags"
+
+#: src/webui/static/app/chconf.js:199
+msgid "Channel number operations"
+msgstr "Channel number operations"
+
+#: src/webui/static/app/chconf.js:233
+msgid "Channels"
+msgstr "Channels"
+
+#: src/webui/static/app/i18n-post.js:134
+msgid "Choose a month (Control+Up/Down to move years)"
+msgstr "Choose a month (Control+Up/Down to move years)"
+
+#: src/webui/static/app/config.js:78
+msgid "Clean image (icon) cache"
+msgstr "Clean image (icon) cache"
+
+#: src/webui/static/app/config.js:76
+msgid "Clean image cache on storage"
+msgstr "Clean image cache on storage"
+
+#: src/webui/static/app/status.js:289 src/webui/static/app/status.js:292
+msgid "Clear statistics"
+msgstr "Clear statistics"
+
+#: src/webui/static/app/status.js:293
+msgid "Clear statistics for selected input?"
+msgstr "Clear statistics for selected input?"
+
+#: src/webui/static/app/caclient.js:34
+msgid "Client Name"
+msgstr "Client Name"
+
+#: src/webui/static/app/idnode.js:1430 src/webui/static/app/idnode.js:2299
+msgid "Clone"
+msgstr "Clone"
+
+#: src/webui/static/app/idnode.js:2297
+msgid "Clone a new entry"
+msgstr "Clone a new entry"
+
+#: src/webui/static/app/epg.js:270
+msgid "Close"
+msgstr "Close"
+
+#: src/webui/static/app/i18n-post.js:205
+msgid "Columns"
+msgstr "Columns"
+
+#: src/webui/static/app/comet.js:55
+msgid "Comet failure"
+msgstr "Comet failure"
+
+#: src/webui/static/app/dvr.js:67
+msgid "Comment"
+msgstr "Comment"
+
+#: src/webui/static/app/status.js:781
+msgid "Compression ratio"
+msgstr "Compression ratio"
+
+#: src/webui/static/app/caclient.js:46
+msgid "Conditional Access Client"
+msgstr "Conditional Access Client"
+
+#: src/webui/static/app/tvhlog.js:17 src/webui/static/app/tvheadend.js:698
+msgid "Configuration"
+msgstr "Configuration"
+
+#: src/webui/static/app/status.js:673
+msgid "Connections"
+msgstr "Connections"
+
+#: src/webui/static/app/epg.js:145 src/webui/static/app/epg.js:614
+#: src/webui/static/app/epg.js:615
+msgid "Content Type"
+msgstr "Content Type"
+
+#: src/webui/static/app/status.js:430
+msgid "Continuity Errors"
+msgstr "Continuity Errors"
+
+#: src/webui/static/app/idnode.js:1456
+msgid "Create"
+msgstr "Create"
+
+#: src/webui/static/app/epg.js:883
+msgid "Create AutoRec"
+msgstr "Create AutoRec"
+
+#: src/webui/static/app/epg.js:262 src/webui/static/app/epg.js:885
+msgid ""
+"Create an automatic recording rule to record all future programs that match "
+"the current query."
+msgstr "Create an automatic recording rule to record all future programs that match the current query."
+
+#: src/webui/static/app/idnode.js:1455
+msgid "Create new entry"
+msgstr "Create new entry"
+
+#: src/webui/static/app/epg.js:1085
+msgid "Created from EPG query"
+msgstr "Created from EPG query"
+
+#: src/webui/static/app/epg.js:1072
+#, javascript-format
+msgid "Currently this will match (and record) %d events."
+msgstr "Currently this will match (and record) %d events."
+
+#: src/webui/static/app/tvheadend.js:740
+msgid "DVB Inputs"
+msgstr "DVB Inputs"
+
+#: src/webui/static/app/epg.js:352
+msgid "DVR"
+msgstr "DVR"
+
+#: src/webui/static/app/epg.js:163
+msgid "Deaf signed#EPG"
+msgstr "Deaf signed#EPG"
+
+#: src/webui/static/app/tvheadend.js:810
+msgid "Debugging"
+msgstr "Debugging"
+
+#: src/webui/static/app/i18n-post.js:46
+msgid "Dec"
+msgstr "Dec"
+
+#: src/webui/static/app/i18n-post.js:31
+msgid "December"
+msgstr "December"
+
+#: src/webui/static/app/idnode.js:1807 src/webui/static/app/idnode.js:2312
+msgid "Delete"
+msgstr "Delete"
+
+#: src/webui/static/app/epg.js:236
+msgid "Delete recording"
+msgstr "Delete recording"
+
+#: src/webui/static/app/epg.js:235
+msgid "Delete scheduled recording of this program"
+msgstr "Delete scheduled recording of this program"
+
+#: src/webui/static/app/idnode.js:1805 src/webui/static/app/idnode.js:2310
+msgid "Delete selected entries"
+msgstr "Delete selected entries"
+
+#: src/webui/static/app/status.js:152
+msgid "Descramble"
+msgstr "Descramble"
+
+#: src/webui/static/app/chconf.js:151
+msgid "Detach from bouquet"
+msgstr "Detach from bouquet"
+
+#: src/webui/static/app/chconf.js:153
+msgid "Detach selected channels from bouquet"
+msgstr "Detach selected channels from bouquet"
+
+#: src/webui/static/app/mpegts.js:321
+msgid "Detailed stream info"
+msgstr "Detailed stream info"
+
+#: src/webui/static/app/mpegts.js:169 src/webui/static/app/mpegts.js:317
+#: src/webui/static/app/epg.js:367 src/webui/static/app/epg.js:368
+#: src/webui/static/app/dvr.js:137 src/webui/static/app/dvr.js:138
+msgid "Details"
+msgstr "Details"
+
+#: src/webui/static/app/dvr.js:865
+msgid "Digital Video Recorder"
+msgstr "Digital Video Recorder"
+
+#: src/webui/static/app/dvr.js:705
+msgid "Digital Video Recorder Profile"
+msgstr "Digital Video Recorder Profile"
+
+#: src/webui/static/app/dvr.js:706
+msgid "Digital Video Recorder Profiles"
+msgstr "Digital Video Recorder Profiles"
+
+#: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
+msgid "Disabled"
+msgstr "Disabled"
+
+#: src/webui/static/app/config.js:135
+msgid "Discover SAT>IP servers"
+msgstr "Discover SAT>IP servers"
+
+#: src/webui/static/app/i18n-post.js:151
+msgid "Displaying {0} - {1} of {2}"
+msgstr "Displaying {0} - {1} of {2}"
+
+#: src/webui/static/app/dvr.js:263
+msgid "Do you really want to abort/unschedule the selection?"
+msgstr "Do you really want to abort/unschedule the selection?"
+
+#: src/webui/static/app/dvr.js:594
+msgid "Do you really want to delete the selected recordings?"
+msgstr "Do you really want to delete the selected recordings?"
+
+#: src/webui/static/app/tvheadend.js:327
+msgid "Do you really want to delete the selection?"
+msgstr "Do you really want to delete the selection?"
+
+#: src/webui/static/app/dvr.js:233
+msgid "Do you really want to gracefully stop/unschedule the selection?"
+msgstr "Do you really want to gracefully stop/unschedule the selection?"
+
+#: src/webui/static/app/epg.js:324
+msgid "Do you really want to gracefully stop/unschedule this recording?"
+msgstr "Do you really want to gracefully stop/unschedule this recording?"
+
+#: src/webui/static/app/dvr.js:434
+msgid "Do you really want to remove the selected recordings from storage?"
+msgstr ""
+
+#: src/webui/static/app/epg.js:337
+msgid "Do you really want to remove this recording?"
+msgstr "Do you really want to remove this recording?"
+
+#: src/webui/static/app/epg.js:1046 src/webui/static/app/epg.js:1052
+#: src/webui/static/app/epg.js:1055 src/webui/static/app/epg.js:1058
+#: src/webui/static/app/epg.js:1061
+msgid "Don't care"
+msgstr "Don't care"
+
+#: src/webui/static/app/dvr.js:339 src/webui/static/app/dvr.js:505
+msgid "Download"
+msgstr "Download"
+
+#: src/webui/static/app/dvr.js:337 src/webui/static/app/dvr.js:503
+msgid "Download the selected recording"
+msgstr "Download the selected recording"
+
+#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:569
+#: src/webui/static/app/epg.js:570 src/webui/static/app/epg.js:1070
+#: src/webui/static/app/dvr.js:52
+msgid "Duration"
+msgstr "Duration"
+
+#: src/webui/static/app/epggrab.js:41
+msgid "EPG Grabber"
+msgstr "EPG Grabber"
+
+#: src/webui/static/app/epggrab.js:57
+msgid "EPG Grabber Channel"
+msgstr "EPG Grabber Channel"
+
+#: src/webui/static/app/epggrab.js:58
+msgid "EPG Grabber Channels"
+msgstr "EPG Grabber Channels"
+
+#: src/webui/static/app/epggrab.js:88
+msgid "EPG Grabber Module"
+msgstr "EPG Grabber Module"
+
+#: src/webui/static/app/epggrab.js:89
+msgid "EPG Grabber Modules"
+msgstr "EPG Grabber Modules"
+
+#: src/webui/static/app/epggrab.js:90
+msgid "EPG Grabber Name"
+msgstr "EPG Grabber Name"
+
+#: src/webui/static/app/epg.js:993
+msgid "EPG Update"
+msgstr "EPG Update"
+
+#: src/webui/static/app/idnode.js:1284 src/webui/static/app/idnode.js:1894
+msgid "Edit"
+msgstr "Edit"
+
+#: src/webui/static/app/idnode.js:1892
+msgid "Edit selected entry"
+msgstr "Edit selected entry"
+
+#: src/webui/static/app/idnode.js:1321 src/webui/static/app/idnode.js:1908
+msgid "Edit {0}"
+msgstr "Edit {0}"
+
+#: src/webui/static/app/idnode.js:1318
+msgid "Edit {0} ({1} entries)"
+msgstr "Edit {0} ({1} entries)"
+
+#: src/webui/static/app/epg.js:928
+msgid "Electronic Program Guide"
+msgstr "Electronic Program Guide"
+
+#: src/webui/static/app/tvheadend.js:1049
+msgid "Enable debug output"
+msgstr "Enable debug output"
+
+#: src/webui/static/app/epg.js:114 src/webui/static/app/epg.js:561
+#: src/webui/static/app/epg.js:562
+msgid "End Time"
+msgstr "End Time"
+
+#: src/webui/static/app/i18n-post.js:264 src/webui/static/app/i18n-post.js:270
+msgid "Enter Filter Text..."
+msgstr "Enter Filter Text..."
+
+#: src/webui/static/app/epg.js:544 src/webui/static/app/epg.js:545
+msgid "Episode"
+msgstr "Episode"
+
+#: src/webui/static/app/tvheadend.js:238
+msgid "Error"
+msgstr "Error"
+
+#: src/webui/static/app/status.js:159
+msgid "Errors"
+msgstr "Errors"
+
+#: src/webui/static/app/epg.js:935
+msgid "Events"
+msgstr "Events"
+
+#: src/webui/static/app/dvr.js:162
+msgid "Every day"
+msgstr "Every day"
+
+#: src/webui/static/app/idnode.js:595 src/webui/static/app/idnode.js:616
+msgid "Expert"
+msgstr "Expert"
+
+#: src/webui/static/app/idnode.js:1045
+msgid "Expert Settings"
+msgstr "Expert Settings"
+
+#: src/webui/static/app/servicemapper.js:13
+msgid "Failed"
+msgstr "Failed"
+
+#: src/webui/static/app/dvr.js:588
+msgid "Failed Recording"
+msgstr "Failed Recording"
+
+#: src/webui/static/app/dvr.js:589
+msgid "Failed Recordings"
+msgstr "Failed Recordings"
+
+#: src/webui/static/app/i18n-post.js:36
+msgid "Feb"
+msgstr "Feb"
+
+#: src/webui/static/app/i18n-post.js:21
+msgid "February"
+msgstr "February"
+
+#: src/webui/static/app/dvr.js:65
+msgid "File size"
+msgstr "File size"
+
+#: src/webui/static/app/epg.js:675
+msgid "Filter channel..."
+msgstr "Filter channel..."
+
+#: src/webui/static/app/epg.js:722
+msgid "Filter content type..."
+msgstr "Filter content type..."
+
+#: src/webui/static/app/epg.js:743
+msgid "Filter duration..."
+msgstr "Filter duration..."
+
+#: src/webui/static/app/epg.js:698
+msgid "Filter tag..."
+msgstr "Filter tag..."
+
+#: src/webui/static/app/i18n-post.js:253
+msgid "Filters"
+msgstr "Filters"
+
+#: src/webui/static/app/wizard.js:160
+msgid "Finish"
+msgstr "Finish"
+
+#: src/webui/static/app/dvr.js:453
+msgid "Finished Recording"
+msgstr "Finished Recording"
+
+#: src/webui/static/app/dvr.js:454
+msgid "Finished Recordings"
+msgstr "Finished Recordings"
+
+#: src/webui/static/app/i18n-post.js:146
+msgid "First Page"
+msgstr "First Page"
+
+#: src/webui/static/app/cteditor.js:44 src/webui/static/app/mpegts.js:36
+msgid "Force Scan"
+msgstr "Force Scan"
+
+#: src/webui/static/app/mpegts.js:34
+msgid "Force new scan (all muxes) for selected networks"
+msgstr "Force new scan (all muxes) for selected networks"
+
+#: src/webui/static/app/tvheadend.js:988
+msgid "Free"
+msgstr "Free"
+
+#: src/webui/static/app/i18n-post.js:98
+msgid "Fri"
+msgstr "Fri"
+
+#: src/webui/static/app/i18n-post.js:88
+msgid "Friday"
+msgstr "Friday"
+
+#: src/webui/static/app/tvheadend.js:603
+msgid "Fullscreen"
+msgstr "Fullscreen"
+
+#: src/webui/static/app/epg.js:890 src/webui/static/app/epg.js:1048
+msgid "Fulltext"
+msgstr "Fulltext"
+
+#: src/webui/static/app/tvheadend.js:708
+msgid "General"
+msgstr "General"
+
+#: src/webui/static/app/epg.js:1069
+msgid "Genre"
+msgstr "Genre"
+
+#: src/webui/static/app/tvheadend.js:978
+msgid "GiB"
+msgstr "GiB"
+
+#: src/webui/static/app/idnode.js:1633
+msgid "Grid Update"
+msgstr "Grid Update"
+
+#: src/webui/static/app/i18n-post.js:211
+msgid "Group By This Field"
+msgstr "Group By This Field"
+
+#: src/webui/static/app/epg.js:151
+msgid "HDTV"
+msgstr "HDTV"
+
+#: src/webui/static/app/idnode.js:1209 src/webui/static/app/idnode.js:2052
+#: src/webui/static/app/idnode.js:2439 src/webui/static/app/idnode.js:2877
+#: src/webui/static/app/epg.js:914 src/webui/static/app/status.js:193
+#: src/webui/static/app/status.js:486 src/webui/static/app/status.js:636
+#: src/webui/static/app/servicemapper.js:53
+msgid "Help"
+msgstr "Help"
+
+#: src/webui/static/app/tvheadend.js:182
+msgid "Help for"
+msgstr "Help for"
+
+#: src/webui/static/app/idnode.js:1956
+msgid "Hide"
+msgstr "Hide"
+
+#: src/webui/static/app/idnode.js:2387
+msgid "Hide passwords"
+msgstr "Hide passwords"
+
+#: src/webui/static/app/status.js:92
+msgid "Hostname"
+msgstr "Hostname"
+
+#: src/webui/static/app/status.js:81
+msgid "ID"
+msgstr "ID"
+
+#: src/webui/static/app/status.js:616
+msgid "IP Address"
+msgstr "IP Address"
+
+#: src/webui/static/app/acleditor.js:106
+msgid "IP Blocking Record"
+msgstr "IP Blocking Record"
+
+#: src/webui/static/app/acleditor.js:107
+msgid "IP Blocking Records"
+msgstr "IP Blocking Records"
+
+#: src/webui/static/app/servicemapper.js:17
+msgid "Ignored"
+msgstr "Ignored"
+
+#: src/webui/static/app/config.js:108
+msgid "Image Cache"
+msgstr "Image Cache"
+
+#: src/webui/static/app/status.js:779
+msgid "In"
+msgstr "In"
+
+#: src/webui/static/app/mpegts.js:165
+msgid "Index"
+msgstr "Index"
+
+#: src/webui/static/app/status.js:372 src/webui/static/app/status.js:869
+msgid "Input"
+msgstr "Input"
+
+#: src/webui/static/app/status.js:166
+msgid "Input (kb/s)"
+msgstr "Input (kb/s)"
+
+#: src/webui/static/app/i18n-post.js:35
+msgid "Jan"
+msgstr "Jan"
+
+#: src/webui/static/app/i18n-post.js:20
+msgid "January"
+msgstr "January"
+
+#: src/webui/static/app/i18n-post.js:41
+msgid "Jul"
+msgstr "Jul"
+
+#: src/webui/static/app/i18n-post.js:26
+msgid "July"
+msgstr "July"
+
+#: src/webui/static/app/i18n-post.js:40
+msgid "Jun"
+msgstr "Jun"
+
+#: src/webui/static/app/i18n-post.js:25
+msgid "June"
+msgstr "June"
+
+#: src/webui/static/app/tvheadend.js:982
+msgid "KiB"
+msgstr "KiB"
+
+#: src/webui/static/app/mpegts.js:168
+msgid "Language"
+msgstr "Language"
+
+#: src/webui/static/app/tvheadend.js:127
+msgid "Last Help Pages"
+msgstr "Last Help Pages"
+
+#: src/webui/static/app/i18n-post.js:149
+msgid "Last Page"
+msgstr "Last Page"
+
+#: src/webui/static/app/epg.js:161
+msgid "Lines"
+msgstr "Lines"
+
+#: src/webui/static/app/tvheadend.js:559
+msgid "Live TV Player"
+msgstr "Live TV Player"
+
+#: src/webui/static/app/tvheadend.js:350
+msgid "Loading, please wait..."
+msgstr "Loading, please wait..."
+
+#: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:666
+#: src/webui/static/app/epg.js:689 src/webui/static/app/epg.js:713
+#: src/webui/static/app/epg.js:734 src/webui/static/app/tvheadend.js:497
+#: src/webui/static/app/tvheadend.js:535
+msgid "Loading..."
+msgstr "Loading..."
+
+#: src/webui/static/app/tvheadend.js:959
+msgid "Logged in as"
+msgstr "Logged in as"
+
+#: src/webui/static/app/config.js:133
+msgid "Look for new SAT>IP servers"
+msgstr "Look for new SAT>IP servers"
+
+#: src/webui/static/app/mpegts.js:305
+msgid "Maintenance"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:303
+msgid "Maintenance operations"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:271
+msgid "Map All"
+msgstr "Map All"
+
+#: src/webui/static/app/mpegts.js:269
+msgid "Map Selected"
+msgstr "Map Selected"
+
+#: src/webui/static/app/mpegts.js:250 src/webui/static/app/chconf.js:147
+msgid "Map all services"
+msgstr "Map all services"
+
+#: src/webui/static/app/mpegts.js:248 src/webui/static/app/chconf.js:145
+msgid "Map all services to channels"
+msgstr "Map all services to channels"
+
+#: src/webui/static/app/mpegts.js:244 src/webui/static/app/chconf.js:141
+msgid "Map selected services"
+msgstr "Map selected services"
+
+#: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:139
+msgid "Map selected services to channels"
+msgstr "Map selected services to channels"
+
+#: src/webui/static/app/mpegts.js:255 src/webui/static/app/chconf.js:158
+#: src/webui/static/app/servicemapper.js:119
+#: src/webui/static/app/servicemapper.js:135
+msgid "Map services"
+msgstr "Map services"
+
+#: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:156
+#: src/webui/static/app/servicemapper.js:116
+#: src/webui/static/app/servicemapper.js:132
+msgid "Map services to channels"
+msgstr "Map services to channels"
+
+#: src/webui/static/app/servicemapper.js:9
+msgid "Mapped"
+msgstr "Mapped"
+
+#: src/webui/static/app/i18n-post.js:37
+msgid "Mar"
+msgstr "Mar"
+
+#: src/webui/static/app/i18n-post.js:22
+msgid "March"
+msgstr "March"
+
+#: src/webui/static/app/dvr.js:385
+msgid "Mark the selected recording as failed"
+msgstr "Mark the selected recording as failed"
+
+#: src/webui/static/app/dvr.js:551
+msgid "Mark the selected recording as finished"
+msgstr "Mark the selected recording as finished"
+
+#: src/webui/static/app/i18n-post.js:24
+msgid "May"
+msgstr "May"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
+msgstr "May#ShortNameForMay"
+
+#: src/webui/static/app/tvhlog.js:36
+msgid "Memory Information Entries"
+msgstr "Memory Information Entries"
+
+#: src/webui/static/app/tvhlog.js:35
+msgid "Memory Information Entry"
+msgstr "Memory Information Entry"
+
+#: src/webui/static/app/tvheadend.js:326
+msgid "Message"
+msgstr "Message"
+
+#: src/webui/static/app/tvheadend.js:980
+msgid "MiB"
+msgstr "MiB"
+
+#: src/webui/static/app/i18n-post.js:94
+msgid "Mon"
+msgstr "Mon"
+
+#: src/webui/static/app/i18n-post.js:84
+msgid "Monday"
+msgstr "Monday"
+
+#: src/webui/static/app/idnode.js:1863 src/webui/static/app/idnode.js:2359
+msgid "Move Down"
+msgstr "Move Down"
+
+#: src/webui/static/app/idnode.js:1838 src/webui/static/app/idnode.js:2338
+msgid "Move Up"
+msgstr "Move Up"
+
+#: src/webui/static/app/chconf.js:188
+msgid "Move channel one number down"
+msgstr "Move channel one number down"
+
+#: src/webui/static/app/chconf.js:182
+msgid "Move channel one number up"
+msgstr "Move channel one number up"
+
+#: src/webui/static/app/idnode.js:1861
+msgid "Move selected entries down"
+msgstr "Move selected entries down"
+
+#: src/webui/static/app/idnode.js:1836
+msgid "Move selected entries up"
+msgstr "Move selected entries up"
+
+#: src/webui/static/app/idnode.js:2357
+msgid "Move selected entry down"
+msgstr "Move selected entry down"
+
+#: src/webui/static/app/idnode.js:2336
+msgid "Move selected entry up"
+msgstr "Move selected entry up"
+
+#: src/webui/static/app/dvr.js:387
+msgid "Move to failed"
+msgstr "Move to failed"
+
+#: src/webui/static/app/dvr.js:553
+msgid "Move to finished"
+msgstr "Move to finished"
+
+#: src/webui/static/app/mpegts.js:97 src/webui/static/app/mpegts.js:103
+msgid "Mux"
+msgstr "Mux"
+
+#: src/webui/static/app/mpegts.js:390 src/webui/static/app/mpegts.js:398
+msgid "Mux Scheduler"
+msgstr "Mux Scheduler"
+
+#: src/webui/static/app/mpegts.js:391
+msgid "Mux Schedulers"
+msgstr "Mux Schedulers"
+
+#: src/webui/static/app/mpegts.js:98
+msgid "Muxes"
+msgstr "Muxes"
+
+#: src/webui/static/app/mpegts.js:66 src/webui/static/app/mpegts.js:72
+#: src/webui/static/app/mpegts.js:105
+msgid "Network"
+msgstr "Network"
+
+#: src/webui/static/app/mpegts.js:67
+msgid "Networks"
+msgstr "Networks"
+
+#: src/webui/static/app/epg.js:153
+msgid "New#EPG"
+msgstr "New#EPG"
+
+#: src/webui/static/app/i18n-post.js:132
+msgid "Next Month (Control+Right)"
+msgstr "Next Month (Control+Right)"
+
+#: src/webui/static/app/i18n-post.js:148
+msgid "Next Page"
+msgstr "Next Page"
+
+#: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:259
+msgid "No"
+msgstr "No"
+
+#: src/webui/static/app/i18n-post.js:152
+msgid "No data to display"
+msgstr "No data to display"
+
+#: src/webui/static/app/dvr.js:164
+msgid "No days"
+msgstr "No days"
+
+#: src/webui/static/app/tvheadend.js:962
+msgid "No verified access"
+msgstr "No verified access"
+
+#. / {0} title (lowercase), {1} title
+#: src/webui/static/app/tvheadend.js:363
+msgid "No {0} to display"
+msgstr "No {0} to display"
+
+#: src/webui/static/app/idnode.js:1941 src/webui/static/app/mpegts.js:206
+#: src/webui/static/app/mpegts.js:216
+msgid "None"
+msgstr "None"
+
+#: src/webui/static/app/tvheadend.js:247
+msgid "Not Available"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:355
+msgid "Not set"
+msgstr "Not set"
+
+#: src/webui/static/app/i18n-post.js:45
+msgid "Nov"
+msgstr "Nov"
+
+#: src/webui/static/app/i18n-post.js:30
+msgid "November"
+msgstr "November"
+
+#: src/webui/static/app/epg.js:576 src/webui/static/app/epg.js:577
+msgid "Number"
+msgstr "Number"
+
+#: src/webui/static/app/chconf.js:190
+msgid "Number Down"
+msgstr "Number Down"
+
+#: src/webui/static/app/chconf.js:184
+msgid "Number Up"
+msgstr "Number Up"
+
+#: src/webui/static/app/chconf.js:201
+msgid "Number operations"
+msgstr "Number operations"
+
+#: src/webui/static/app/i18n-post.js:110
+msgid "OK"
+msgstr "OK"
+
+#: src/webui/static/app/i18n-post.js:44
+msgid "Oct"
+msgstr "Oct"
+
+#: src/webui/static/app/i18n-post.js:29
+msgid "October"
+msgstr "October"
+
+#: src/webui/static/app/i18n-post.js:281
+msgid "On#DateFilter"
+msgstr "On#DateFilter"
+
+#: src/webui/static/app/esfilter.js:132
+msgid "Other Stream Filter"
+msgstr "Other Stream Filter"
+
+#: src/webui/static/app/esfilter.js:133
+msgid "Other Stream Filters"
+msgstr "Other Stream Filters"
+
+#: src/webui/static/app/status.js:780
+msgid "Out"
+msgstr "Out"
+
+#: src/webui/static/app/status.js:175
+msgid "Output (kb/s)"
+msgstr "Output (kb/s)"
+
+#: src/webui/static/app/status.js:411
+msgid "PER"
+msgstr "PER"
+
+#: src/webui/static/app/mpegts.js:166
+msgid "PID"
+msgstr "PID"
+
+#: src/webui/static/app/i18n-post.js:144
+msgid "Page"
+msgstr "Page"
+
+#: src/webui/static/app/idnode.js:2469 src/webui/static/app/idnode.js:2652
+#: src/webui/static/app/epg.js:169
+msgid "Parameters"
+msgstr "Parameters"
+
+#: src/webui/static/app/idnode.js:1939
+msgid "Parent disabled"
+msgstr "Parent disabled"
+
+#: src/webui/static/app/acleditor.js:70
+msgid "Password"
+msgstr "Password"
+
+#: src/webui/static/app/acleditor.js:71
+msgid "Passwords"
+msgstr "Passwords"
+
+#: src/webui/static/app/tvheadend.js:588
+msgid "Pause"
+msgstr "Pause"
+
+#: src/webui/static/app/tvheadend.js:374
+msgid "Per page"
+msgstr "Per page"
+
+#: src/webui/static/app/mpegts.js:121 src/webui/static/app/mpegts.js:122
+#: src/webui/static/app/mpegts.js:362 src/webui/static/app/mpegts.js:363
+#: src/webui/static/app/chconf.js:245 src/webui/static/app/chconf.js:246
+#: src/webui/static/app/dvr.js:476 src/webui/static/app/dvr.js:477
+#: src/webui/static/app/dvr.js:613 src/webui/static/app/dvr.js:614
+#: src/webui/static/app/tvheadend.js:484 src/webui/static/app/tvheadend.js:571
+msgid "Play"
+msgstr "Play"
+
+#: src/webui/static/tv.js:466
+msgid "Play Selected Channel"
+msgstr "Play Selected Channel"
+
+#: src/webui/static/app/epg.js:200
+msgid "Play program"
+msgstr "Play program"
+
+#: src/webui/static/app/epg.js:199
+msgid "Play this program"
+msgstr "Play this program"
+
+#: src/webui/static/app/tvheadend.js:484
+msgid "Play this stream"
+msgstr "Play this stream"
+
+#: src/webui/static/app/i18n-post.js:161
+msgid "Please Wait..."
+msgstr "Please Wait..."
+
+#: src/webui/static/app/tvheadend.js:240
+msgid "Please check Tvheadend is running and try again."
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:249
+msgid ""
+"Please take a look at the other Help pages (Table of Contents). If you still"
+" can't find what you're "
+msgstr ""
+
+#: src/webui/static/app/wizard.js:66
+msgid "Previous"
+msgstr "Previous"
+
+#: src/webui/static/app/i18n-post.js:133
+msgid "Previous Month (Control+Left)"
+msgstr "Previous Month (Control+Left)"
+
+#: src/webui/static/app/i18n-post.js:147
+msgid "Previous Page"
+msgstr "Previous Page"
+
+#: src/webui/static/app/status.js:127
+msgid "Profile"
+msgstr "Profile"
+
+#: src/webui/static/app/dvr.js:707
+msgid "Profile Name"
+msgstr "Profile Name"
+
+#: src/webui/static/app/epg.js:499 src/webui/static/app/epg.js:500
+msgid "Progress"
+msgstr "Progress"
+
+#: src/webui/static/app/config.js:93 src/webui/static/app/config.js:95
+msgid "Re-fetch images"
+msgstr "Re-fetch images"
+
+#: src/webui/static/app/dvr.js:358 src/webui/static/app/dvr.js:524
+#: src/webui/static/app/dvr.js:642
+msgid "Re-record"
+msgstr "Re-record"
+
+#: src/webui/static/app/epggrab.js:6
+msgid "Re-run Internal EPG Grabbers"
+msgstr "Re-run Internal EPG Grabbers"
+
+#: src/webui/static/app/epggrab.js:7
+msgid "Re-run all internal EPG grabbers to import EPG data now"
+msgstr "Re-run all internal EPG grabbers to import EPG data now"
+
+#: src/webui/static/app/idnode.js:1047
+msgid "Read-only Info"
+msgstr "Read-only Info"
+
+#: src/webui/static/app/comet.js:28
+msgid "Reconnected to Tvheadend"
+msgstr "Reconnected to Tvheadend"
+
+#: src/webui/static/app/epg.js:257
+msgid "Record program"
+msgstr "Record program"
+
+#: src/webui/static/app/epg.js:263
+msgid "Record series"
+msgstr "Record series"
+
+#: src/webui/static/app/epg.js:256
+msgid "Record this program now"
+msgstr "Record this program now"
+
+#: src/webui/static/app/tvheadend.js:790
+msgid "Recording"
+msgstr "Recording"
+
+#: src/webui/static/app/dvr.js:146
+msgid "Recording details"
+msgstr "Recording details"
+
+#: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
+msgid "Refresh"
+msgstr "Refresh"
+
+#: src/webui/static/app/dvr.js:416
+msgid "Remove"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:300
+msgid "Remove all unseen services (7 days+)"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:292
+msgid ""
+"Remove old services marked as missing in PAT/SDT which were not detected "
+"more than 7 days (last seen column)"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:298
+msgid ""
+"Remove old services which were not detected more than 7 days (last seen "
+"column)"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:414
+msgid "Remove the selected recording from storage"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:294
+msgid "Remove unseen services (PAT/SDT) (7 days+)"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:674
+msgid "Removed Recording"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:675
+msgid "Removed Recordings"
+msgstr ""
+
+#: src/webui/static/app/epg.js:155
+msgid "Repeat#EPG"
+msgstr "Repeat#EPG"
+
+#: src/webui/static/app/cteditor.js:42
+msgid "Rescan the mux for changes to the bouquet."
+msgstr "Rescan the mux for changes to the bouquet."
+
+#: src/webui/static/app/chconf.js:218
+msgid "Reset (clear) the selected icon URLs"
+msgstr "Reset (clear) the selected icon URLs"
+
+#: src/webui/static/app/epg.js:896
+msgid "Reset All"
+msgstr "Reset All"
+
+#: src/webui/static/app/chconf.js:220
+msgid "Reset Icon"
+msgstr "Reset Icon"
+
+#: src/webui/static/app/epg.js:898
+msgid "Reset all filters (show all)"
+msgstr "Reset all filters (show all)"
+
+#: src/webui/static/app/idnode.js:1777 src/webui/static/app/idnode.js:2274
+#: src/webui/static/app/idnode.js:2810
+msgid "Revert pending changes (marked with red border)"
+msgstr "Revert pending changes (marked with red border)"
+
+#: src/webui/static/app/config.js:148
+msgid "SAT>IP Server"
+msgstr "SAT>IP Server"
+
+#: src/webui/static/app/status.js:445
+msgid "SNR"
+msgstr "SNR"
+
+#: src/webui/static/app/i18n-post.js:99
+msgid "Sat"
+msgstr "Sat"
+
+#: src/webui/static/app/i18n-post.js:89
+msgid "Saturday"
+msgstr "Saturday"
+
+#: src/webui/static/app/idnode.js:1120 src/webui/static/app/idnode.js:1752
+#: src/webui/static/app/idnode.js:2254 src/webui/static/app/idnode.js:2791
+msgid "Save"
+msgstr "Save"
+
+#: src/webui/static/app/wizard.js:160
+msgid "Save & Next"
+msgstr "Save & Next"
+
+#: src/webui/static/app/idnode.js:1750 src/webui/static/app/idnode.js:2252
+#: src/webui/static/app/idnode.js:2789
+msgid "Save pending changes (marked with red border)"
+msgstr "Save pending changes (marked with red border)"
+
+#: src/webui/static/app/dvr.js:48
+msgid "Scheduled Start Time"
+msgstr "Scheduled Start Time"
+
+#: src/webui/static/app/dvr.js:50
+msgid "Scheduled Stop Time"
+msgstr "Scheduled Stop Time"
+
+#: src/webui/static/app/epg.js:185 src/webui/static/app/dvr.js:80
+msgid "Search IMDB (for title)"
+msgstr "Search IMDB (for title)"
+
+#: src/webui/static/app/epg.js:192 src/webui/static/app/dvr.js:86
+msgid "Search TheTVDB (for title)"
+msgstr "Search TheTVDB (for title)"
+
+#: src/webui/static/app/epg.js:655
+msgid "Search title..."
+msgstr "Search title..."
+
+#: src/webui/static/app/tvheadend.js:504
+msgid "Select channel..."
+msgstr "Select channel..."
+
+#: src/webui/static/app/tvheadend.js:541
+msgid "Select stream profile..."
+msgstr "Select stream profile..."
+
+#: src/webui/static/app/idnode.js:461 src/webui/static/app/idnode.js:714
+msgid "Select {0} ..."
+msgstr "Select {0} ..."
+
+#: src/webui/static/app/idnode.js:445 src/webui/static/app/idnode.js:690
+msgid "Selected"
+msgstr "Selected"
+
+#: src/webui/static/app/i18n-post.js:43
+msgid "Sep"
+msgstr "Sep"
+
+#: src/webui/static/app/i18n-post.js:28
+msgid "September"
+msgstr "September"
+
+#: src/webui/static/app/mpegts.js:352 src/webui/static/app/status.js:120
+msgid "Service"
+msgstr "Service"
+
+#: src/webui/static/app/servicemapper.js:33
+#: src/webui/static/app/servicemapper.js:49
+msgid "Service Mapper"
+msgstr "Service Mapper"
+
+#: src/webui/static/app/mpegts.js:219
+msgid "Service details for"
+msgstr "Service details for"
+
+#: src/webui/static/app/mpegts.js:353
+msgid "Services"
+msgstr "Services"
+
+#: src/webui/static/app/idnode.js:991
+msgid "Settings"
+msgstr "Settings"
+
+#: src/webui/static/app/i18n-post.js:212
+msgid "Show in Groups"
+msgstr "Show in Groups"
+
+#: src/webui/static/app/idnode.js:2381
+msgid "Show or hide passwords"
+msgstr "Show or hide passwords"
+
+#: src/webui/static/app/idnode.js:2383 src/webui/static/app/idnode.js:2387
+msgid "Show passwords"
+msgstr "Show passwords"
+
+#: src/webui/static/app/status.js:465
+msgid "Signal Strength"
+msgstr "Signal Strength"
+
+#: src/webui/static/app/i18n-post.js:203
+msgid "Sort Ascending"
+msgstr "Sort Ascending"
+
+#: src/webui/static/app/i18n-post.js:204
+msgid "Sort Descending"
+msgstr "Sort Descending"
+
+#: src/webui/static/app/epg.js:132
+msgid "Star Rating"
+msgstr "Star Rating"
+
+#: src/webui/static/app/epg.js:599 src/webui/static/app/epg.js:600
+msgid "Stars"
+msgstr "Stars"
+
+#: src/webui/static/app/status.js:134
+msgid "Start"
+msgstr "Start"
+
+#: src/webui/static/app/epg.js:112 src/webui/static/app/epg.js:552
+#: src/webui/static/app/epg.js:553
+msgid "Start Time"
+msgstr "Start Time"
+
+#: src/webui/static/app/config.js:11
+msgid "Start initial configuration wizard"
+msgstr "Start initial configuration wizard"
+
+#: src/webui/static/app/config.js:13
+msgid "Start wizard"
+msgstr "Start wizard"
+
+#: src/webui/static/app/status.js:628
+msgid "Started"
+msgstr "Started"
+
+#: src/webui/static/app/status.js:145
+msgid "State"
+msgstr "State"
+
+#: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:683
+msgid "Status"
+msgstr "Status"
+
+#: src/webui/static/app/dvr.js:215 src/webui/static/app/tvheadend.js:595
+msgid "Stop"
+msgstr "Stop"
+
+#: src/webui/static/app/epg.js:227
+msgid "Stop recording"
+msgstr "Stop recording"
+
+#: src/webui/static/app/epg.js:226
+msgid "Stop recording of this program"
+msgstr "Stop recording of this program"
+
+#: src/webui/static/app/dvr.js:213
+msgid "Stop the selected recording"
+msgstr "Stop the selected recording"
+
+#: src/webui/static/app/tvheadend.js:985
+msgid "Storage space"
+msgstr "Storage space"
+
+#: src/webui/static/app/status.js:378 src/webui/static/app/status.js:525
+#: src/webui/static/app/tvheadend.js:777
+msgid "Stream"
+msgstr "Stream"
+
+#: src/webui/static/app/esfilter.js:23 src/webui/static/app/esfilter.js:30
+msgid "Stream Profile"
+msgstr "Stream Profile"
+
+#: src/webui/static/app/esfilter.js:25
+msgid "Stream Profile Name"
+msgstr "Stream Profile Name"
+
+#: src/webui/static/app/esfilter.js:24
+msgid "Stream Profiles"
+msgstr "Stream Profiles"
+
+#: src/webui/static/app/status.js:384
+msgid "Subs No."
+msgstr "Subs No."
+
+#: src/webui/static/app/status.js:230
+msgid "Subscriptions"
+msgstr "Subscriptions"
+
+#: src/webui/static/app/epg.js:536 src/webui/static/app/epg.js:537
+msgid "Subtitle"
+msgstr "Subtitle"
+
+#: src/webui/static/app/esfilter.js:99
+msgid "Subtitle Stream Filter"
+msgstr "Subtitle Stream Filter"
+
+#: src/webui/static/app/esfilter.js:100
+msgid "Subtitle Stream Filters"
+msgstr "Subtitle Stream Filters"
+
+#: src/webui/static/app/epg.js:165
+msgid "Subtitled#EPG"
+msgstr "Subtitled#EPG"
+
+#: src/webui/static/app/i18n-post.js:93
+msgid "Sun"
+msgstr "Sun"
+
+#: src/webui/static/app/i18n-post.js:83
+msgid "Sunday"
+msgstr "Sunday"
+
+#: src/webui/static/app/chconf.js:196
+msgid "Swap Numbers"
+msgstr "Swap Numbers"
+
+#: src/webui/static/app/chconf.js:194
+msgid "Swap the numbers for the two selected channels"
+msgstr "Swap the numbers for the two selected channels"
+
+#: src/webui/static/app/tvadapters.js:6
+msgid "TV adapters"
+msgstr "TV adapters"
+
+#: src/webui/static/app/epg.js:1068
+msgid "Tag"
+msgstr "Tag"
+
+#: src/webui/static/app/esfilter.js:82
+msgid "Teletext Stream Filter"
+msgstr "Teletext Stream Filter"
+
+#: src/webui/static/app/esfilter.js:83
+msgid "Teletext Stream Filters"
+msgstr "Teletext Stream Filters"
+
+#: src/webui/static/app/dvr.js:595
+msgid "The associated file will be removed from storage."
+msgstr "The associated file will be removed from storage."
+
+#: src/webui/static/app/i18n-post.js:187
+msgid "The date in this field must be after {0}"
+msgstr "The date in this field must be after {0}"
+
+#: src/webui/static/app/i18n-post.js:188
+msgid "The date in this field must be before {0}"
+msgstr "The date in this field must be before {0}"
+
+#: src/webui/static/app/i18n-post.js:169
+msgid "The maximum length for this field is {0}"
+msgstr "The maximum length for this field is {0}"
+
+#: src/webui/static/app/i18n-post.js:179
+msgid "The maximum value for this field is {0}"
+msgstr "The maximum value for this field is {0}"
+
+#: src/webui/static/app/i18n-post.js:168
+msgid "The minimum length for this field is {0}"
+msgstr "The minimum length for this field is {0}"
+
+#: src/webui/static/app/idnode.js:1430
+msgid "The selected entry is the original!"
+msgstr "The selected entry is the original!"
+
+#: src/webui/static/app/i18n-post.js:234
+msgid "The time in this field must be equal to or after {0}"
+msgstr "The time in this field must be equal to or after {0}"
+
+#: src/webui/static/app/i18n-post.js:235
+msgid "The time in this field must be equal to or before {0}"
+msgstr "The time in this field must be equal to or before {0}"
+
+#: src/webui/static/app/i18n-post.js:164
+msgid "The value in this field is invalid"
+msgstr "The value in this field is invalid"
+
+#: src/webui/static/app/tvheadend.js:248
+msgid ""
+"There is no documentation associated with the Help button pressed, or there was an problem loading the page.\n"
+"\n"
+msgstr ""
+
+#: src/webui/static/app/comet.js:36
+msgid ""
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr "There seems to be a problem with the live update feed from Tvheadend. Trying to reconnect..."
+
+#: src/webui/static/app/tvheadend.js:239
+msgid "There was a problem displaying the Help!"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:26
+msgid "They will be lost when the application next restarts."
+msgstr "They will be lost when the application next restarts."
+
+#: src/webui/static/app/i18n-post.js:127
+msgid "This date is after the maximum date"
+msgstr "This date is after the maximum date"
+
+#: src/webui/static/app/i18n-post.js:126
+msgid "This date is before the minimum date"
+msgstr "This date is before the minimum date"
+
+#: src/webui/static/app/i18n-post.js:170
+msgid "This field is required"
+msgstr "This field is required"
+
+#: src/webui/static/app/epg.js:1063
+msgid ""
+"This will create an automatic rule that continuously scans the EPG for "
+"programs to record that match this query"
+msgstr "This will create an automatic rule that continuously scans the EPG for programs to record that match this query"
+
+#: src/webui/static/app/i18n-post.js:97
+msgid "Thu"
+msgstr "Thu"
+
+#: src/webui/static/app/i18n-post.js:87
+msgid "Thursday"
+msgstr "Thursday"
+
+#: src/webui/static/app/dvr.js:71
+msgid "Time Scheduler"
+msgstr "Time Scheduler"
+
+#: src/webui/static/app/dvr.js:810
+msgid "Timer"
+msgstr "Timer"
+
+#: src/webui/static/app/dvr.js:811
+msgid "Timers"
+msgstr "Timers"
+
+#: src/webui/static/app/timeshift.js:16
+msgid "Timeshift"
+msgstr "Timeshift"
+
+#: src/webui/static/app/epg.js:522 src/webui/static/app/epg.js:523
+#: src/webui/static/app/epg.js:1066 src/webui/static/app/status.js:106
+msgid "Title"
+msgstr "Title"
+
+#: src/webui/static/app/i18n-post.js:125
+msgid "Today"
+msgstr "Today"
+
+#: src/webui/static/app/tvheadend.js:613
+msgid "Toggle mute"
+msgstr "Toggle mute"
+
+#: src/webui/static/app/dvr.js:356 src/webui/static/app/dvr.js:522
+#: src/webui/static/app/dvr.js:640
+msgid "Toggle re-record functionality"
+msgstr "Toggle re-record functionality"
+
+#: src/webui/static/app/tvheadend.js:988
+msgid "Total"
+msgstr "Total"
+
+#: src/webui/static/app/status.js:424
+msgid "Transport Errors"
+msgstr "Transport Errors"
+
+#: src/webui/static/app/epggrab.js:26
+msgid "Trigger OTA EPG Grabber"
+msgstr "Trigger OTA EPG Grabber"
+
+#: src/webui/static/app/i18n-post.js:95
+msgid "Tue"
+msgstr "Tue"
+
+#: src/webui/static/app/i18n-post.js:85
+msgid "Tuesday"
+msgstr "Tuesday"
+
+#: src/webui/static/app/epggrab.js:27
+msgid "Tune to the over-the-air EPG muxes to grab new events now"
+msgstr "Tune to the over-the-air EPG muxes to grab new events now"
+
+#: src/webui/static/app/tvheadend.js:1024
+msgid "Tvheadend Web-Panel"
+msgstr "Tvheadend Web-Panel"
+
+#: src/webui/static/app/tvheadend.js:1045
+msgid "Tvheadend log"
+msgstr "Tvheadend log"
+
+#: src/webui/static/app/caclient.js:48 src/webui/static/app/esfilter.js:32
+#: src/webui/static/app/mpegts.js:74 src/webui/static/app/mpegts.js:167
+#: src/webui/static/app/status.js:610
+msgid "Type"
+msgstr "Type"
+
+#: src/webui/static/app/epg.js:149
+msgid "UHDTV"
+msgstr "UHDTV"
+
+#: src/webui/static/app/wizard.js:188
+msgid "Unable to obtain wizard page!"
+msgstr "Unable to obtain wizard page!"
+
+#: src/webui/static/app/status.js:418
+msgid "Uncorrected Blocks"
+msgstr "Uncorrected Blocks"
+
+#: src/webui/static/app/idnode.js:1779 src/webui/static/app/idnode.js:2276
+#: src/webui/static/app/idnode.js:2812
+msgid "Undo"
+msgstr "Undo"
+
+#: src/webui/static/app/status.js:458 src/webui/static/app/status.js:478
+msgid "Unknown"
+msgstr "Unknown"
+
+#: src/webui/static/app/dvr.js:288
+msgid "Upcoming / Current Recordings"
+msgstr "Upcoming / Current Recordings"
+
+#: src/webui/static/app/dvr.js:287
+msgid "Upcoming Recording"
+msgstr "Upcoming Recording"
+
+#: src/webui/static/app/tvheadend.js:988
+msgid "Used by tvheadend"
+msgstr "Used by tvheadend"
+
+#: src/webui/static/app/status.js:99 src/webui/static/app/status.js:622
+msgid "Username"
+msgstr "Username"
+
+#: src/webui/static/app/tvheadend.js:724
+msgid "Users"
+msgstr "Users"
+
+#: src/webui/static/app/esfilter.js:48
+msgid "Video Stream Filter"
+msgstr "Video Stream Filter"
+
+#: src/webui/static/app/esfilter.js:49
+msgid "Video Stream Filters"
+msgstr "Video Stream Filters"
+
+#: src/webui/static/app/idnode.js:624
+msgid "View level"
+msgstr "View level"
+
+#: src/webui/static/app/idnode.js:627
+msgid "View level: "
+msgstr "View level: "
+
+#: src/webui/static/app/tvheadend.js:622
+msgid "Volume"
+msgstr "Volume"
+
+#: src/webui/static/app/epg.js:903
+msgid "Watch TV"
+msgstr "Watch TV"
+
+#: src/webui/static/app/epg.js:905
+msgid "Watch live TV in a new browser window."
+msgstr "Watch live TV in a new browser window."
+
+#: src/webui/static/app/i18n-post.js:96
+msgid "Wed"
+msgstr "Wed"
+
+#: src/webui/static/app/i18n-post.js:86
+msgid "Wednesday"
+msgstr "Wednesday"
+
+#: src/webui/static/app/status.js:390
+msgid "Weight"
+msgstr "Weight"
+
+#: src/webui/static/app/epg.js:157
+msgid "Widescreen"
+msgstr "Widescreen"
+
+#: src/webui/static/app/dvr.js:39
+msgid "Will be skipped"
+msgstr "Will be skipped"
+
+#: src/webui/static/app/wizard.js:59
+msgid "Wizard - page \"{0}\" not found"
+msgstr "Wizard - page \"{0}\" not found"
+
+#: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
+msgid "Yes"
+msgstr "Yes"
+
+#: src/webui/static/app/idnode.js:473 src/webui/static/app/idnode.js:856
+msgid "You must provide a value - use octal chmod notation, e.g. 0664"
+msgstr "You must provide a value - use octal chmod notation, e.g. 0664"
+
+#: src/webui/static/app/i18n-post.js:243
+msgid "You must select at least one item in this group"
+msgstr "You must select at least one item in this group"
+
+#: src/webui/static/app/i18n-post.js:248
+msgid "You must select one item in this group"
+msgstr "You must select one item in this group"
+
+#: src/webui/static/app/dvr.js:39
+msgid "because it is a rerun of:"
+msgstr "because it is a rerun of:"
+
+#: src/webui/static/app/i18n-post.js:218
+msgid "false"
+msgstr "false"
+
+#: src/webui/static/app/i18n-post.js:237
+msgid "g:i A#TimeField"
+msgstr "g:i A#TimeField"
+
+#: src/webui/static/app/i18n-post.js:238
+msgid ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
+msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
+
+#: src/webui/static/app/idnode.js:363 src/webui/static/app/idnode.js:364
+#: src/webui/static/app/epg.js:466 src/webui/static/app/epg.js:468
+msgid "hrs"
+msgstr "hrs"
+
+#: src/webui/static/app/tvheadend.js:963
+msgid "login"
+msgstr "login"
+
+#: src/webui/static/app/tvheadend.js:960
+msgid "logout"
+msgstr "logout"
+
+#: src/webui/static/app/tvheadend.js:250
+msgid ""
+"looking for please see the "
+"[Wiki](http://tvheadend.org/projects/tvheadend/wiki) "
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:229
+msgid "m/d/Y#DateColumn"
+msgstr "m/d/Y#DateColumn"
+
+#: src/webui/static/app/i18n-post.js:282
+msgid "m/d/Y#DateFilter"
+msgstr "m/d/Y#DateFilter"
+
+#: src/webui/static/app/i18n-post.js:120
+msgid "m/d/Y#Format.date"
+msgstr "m/d/Y#Format.date"
+
+#: src/webui/static/app/i18n-post.js:191
+msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
+msgstr "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
+
+#: src/webui/static/app/i18n-post.js:190
+msgid "m/d/y#DateField"
+msgstr "m/d/y#DateField"
+
+#: src/webui/static/app/i18n-post.js:136
+msgid "m/d/y#DatePicker"
+msgstr "m/d/y#DatePicker"
+
+#: src/webui/static/app/idnode.js:364 src/webui/static/app/idnode.js:366
+#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:468
+#: src/webui/static/app/epg.js:471 src/webui/static/app/dvr.js:52
+msgid "min"
+msgstr "min"
+
+#: src/webui/static/app/i18n-post.js:145
+msgid "of {0}"
+msgstr "of {0}"
+
+#: src/webui/static/app/tvheadend.js:251
+msgid ""
+"or join the [IRC channel on "
+"freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)."
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:217
+msgid "true"
+msgstr "true"
+
+#: src/webui/static/app/i18n-post.js:135
+msgid "{0} (Spacebar)"
+msgstr "{0} (Spacebar)"
+
+#: src/webui/static/app/i18n-post.js:189
+msgid "{0} is not a valid date - it must be in the format {1}"
+msgstr "{0} is not a valid date - it must be in the format {1}"
+
+#: src/webui/static/app/i18n-post.js:180
+msgid "{0} is not a valid number"
+msgstr "{0} is not a valid number"
+
+#: src/webui/static/app/i18n-post.js:236
+msgid "{0} is not a valid time"
+msgstr "{0} is not a valid time"
+
+#: src/webui/static/app/i18n-post.js:14
+msgid "{0} selected row{1}"
+msgstr "{0} selected row{1}"
+
+#. / {0} start, {1} end, {2} total, {3} title
+#: src/webui/static/app/tvheadend.js:361
+msgid "{3} {0} - {1} of {2}"
+msgstr "{3} {0} - {1} of {2}"

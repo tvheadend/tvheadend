@@ -43,15 +43,52 @@ urlreset ( url_t *url )
 void
 urlcopy ( url_t *dst, const url_t *src )
 {
-  dst->scheme = strdup(src->scheme);
-  dst->user   = strdup(src->user);
-  dst->pass   = strdup(src->pass);
-  dst->host   = strdup(src->host);
+  dst->scheme = src->scheme ? strdup(src->scheme) : NULL;
+  dst->user   = src->user ? strdup(src->user) : NULL;
+  dst->pass   = src->pass ? strdup(src->pass) : NULL;
+  dst->host   = src->host ? strdup(src->host) : NULL;
   dst->port   = src->port;
-  dst->path   = strdup(src->path);
-  dst->query  = strdup(src->query);
-  dst->frag   = strdup(src->frag);
-  dst->raw    = strdup(src->raw);
+  dst->path   = src->path ? strdup(src->path) : NULL;
+  dst->query  = src->query ? strdup(src->query) : NULL;
+  dst->frag   = src->frag ? strdup(src->frag) : NULL;
+  dst->raw    = src->raw ? strdup(src->raw) : NULL;
+}
+
+int
+urlrecompose( url_t *url )
+{
+  size_t len;
+  char *raw, port[16];
+  const int user = url->user && url->user[0];
+  const int pass = url->pass && url->pass[0];
+
+  len = (url->scheme ? strlen(url->scheme) : 0) + 4 +
+        (user ? strlen(url->user) + 1 : 0) +
+        (pass ? strlen(url->pass) + 1 : 0) +
+        (url->host ? strlen(url->host) : 0) +
+        (url->port > 0 ? 6 : 0) +
+        (url->path ? strlen(url->path) : 0) +
+        (url->query ? strlen(url->query) + 1 : 0);
+  raw = malloc(len);
+  if (raw == NULL)
+    return -ENOMEM;
+  if (url->port > 0 && url->port <= 65535)
+    snprintf(port, sizeof(port), ":%d", url->port);
+  else
+    port[0] = '\0';
+  snprintf(raw, len, "%s%s%s%s%s%s%s%s%s%s%s",
+           url->scheme ?: "", url->scheme ? "://" : "",
+           user ? url->user : "",
+           (user && pass) ? ":" : "",
+           (user && pass) ? url->pass : "",
+           user ? "@" : "",
+           url->host ?: "", port,
+           url->path ?: "",
+           (url->query && url->query[0]) ? "?" : "",
+           url->query ?: "");
+  free(url->raw);
+  url->raw = raw;
+  return 0;
 }
 
 /* Use liburiparser if available */
@@ -87,12 +124,14 @@ urlparse ( const char *str, url_t *url )
     size_t len = x.afterLast - x.first;\
     y = strndup(x.first, len);\
   }
-#define uri_copy_static(y, x)\
+#define uri_copy_static(y, s, x)\
   if (x.first) {\
     size_t len = x.afterLast - x.first;\
-    strncpy(y, x.first, len);\
-    y[len] = '\0';\
+    if (len > sizeof(y) - 1) \
+    { y[0] = '\0'; s = strndup(x.first, len); } else \
+    { s = NULL; strlcpy(y, x.first, len + 1); }\
   } else {\
+    s = NULL;\
     y[0] = '\0';\
   }
   uri_copy(url->scheme, uri.scheme);
@@ -100,21 +139,25 @@ urlparse ( const char *str, url_t *url )
   uri_copy(url->user,   uri.userInfo);
   uri_copy(url->query,  uri.query);
   uri_copy(url->frag,   uri.fragment);
-  uri_copy_static(buf,  uri.portText);
-  if (*buf)
+  uri_copy_static(buf, s, uri.portText);
+  if (s) {
+    url->port = atoi(s);
+    free(s);
+  } else if (*buf)
     url->port = atoi(buf);
   else
     url->port = 0;
   path       = uri.pathHead;
   while (path) {
-    uri_copy_static(buf, path->text);
+    uri_copy_static(buf, s, path->text);
     if (url->path)
-      url->path = realloc(url->path, strlen(url->path) + strlen(buf) + 2);
+      url->path = realloc(url->path, strlen(url->path) + strlen(s ?: buf) + 2);
     else
-      url->path = calloc(1, strlen(buf) + 2);
+      url->path = calloc(1, strlen(s ?: buf) + 2);
     strcat(url->path, "/");
-    strcat(url->path, buf);
+    strcat(url->path, s ?: buf);
     path = path->next;
+    free(s);
   }
   // TODO: query/fragment
 
@@ -144,8 +187,8 @@ urlparse_done( void )
 // TODO: does not support ipv6
 #define UC "[a-z0-9_\\.!£$%^&-]"
 #define PC UC
-#define HC "[a-z0-9\\.-]"
-#define URL_RE "^([A-Za-z]+)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/[^\\?]*)?(.([^#]*))?(#(.*))?"
+#define HC "[a-z0-9_\\.-]"
+#define URL_RE "^([A-Za-z]+)://(("UC"+)(:("PC"+))?@|@)?("HC"+)(:([0-9]+))?(/[^\\?]*)?(.([^#]*))?(#(.*))?"
 
 static regex_t *urlparse_exp = NULL;
 
@@ -164,7 +207,7 @@ urlparse ( const char *str, url_t *url )
   if (!urlparse_exp) {
     urlparse_exp = calloc(1, sizeof(regex_t));
     if (regcomp(urlparse_exp, URL_RE, REG_ICASE | REG_EXTENDED)) {
-      tvherror("url", "failed to compile regexp");
+      tvherror(LS_URL, "failed to compile regexp");
       exit(1);
     }
   }

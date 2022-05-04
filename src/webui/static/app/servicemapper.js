@@ -2,26 +2,24 @@
  * Status dialog
  */
 
-tvheadend.service_mapper_status_panel = null;
-
 tvheadend.service_mapper_status = function(panel, index)
 {
     /* Fields */
     var ok = new Ext.form.Label({
-        fieldLabel: 'Mapped',
+        fieldLabel: _('Mapped'),
         text: '0'
     });
     var fail = new Ext.form.Label({
-        fieldLabel: 'Failed',
+        fieldLabel: _('Failed'),
         text: '0'
     });
     var ignore = new Ext.form.Label({
-        fieldLabel: 'Ignored',
+        fieldLabel: _('Ignored'),
         text: '0'
     });
     var active = new Ext.form.Label({
         width: 200,
-        fieldLabel: 'Active',
+        fieldLabel: _('Active'),
         text: ''
     });
     var prog = new Ext.ProgressBar({
@@ -30,8 +28,10 @@ tvheadend.service_mapper_status = function(panel, index)
 
     /* Panel */
     var mpanel = new Ext.FormPanel({
+        id: 'service_mapper',
         method: 'get',
-        title: 'Service Mapper',
+        title: _('Service Mapper'),
+        iconCls: 'serviceMapper',
         frame: true,
         border: true,
         bodyStyle: 'padding: 5px',
@@ -42,6 +42,22 @@ tvheadend.service_mapper_status = function(panel, index)
         defaultType: 'textfield',
         buttonAlign: 'left',
         items: [ok, ignore, fail, active, prog]
+    });
+
+    /* Top panel */
+    var tpanel = new Ext.Panel({
+        title: _('Service Mapper'),
+        iconCls: 'serviceMapper',
+        layout: 'fit',
+        tbar: ['->', {
+             text: _('Help'),
+             tooltip: _('View help docs.'),
+             iconCls: 'help',
+             handler: function() {
+                 new tvheadend.mdhelp('status_service_mapper')
+             }
+        }],
+        items: [mpanel]
     });
 
     /* Comet */
@@ -71,113 +87,77 @@ tvheadend.service_mapper_status = function(panel, index)
     });
 
     tvheadend.service_mapper_status_panel = mpanel;
-    tvheadend.paneladd(panel, mpanel, index);
+    tvheadend.paneladd(panel, tpanel, index);
 }
 
 /*
  * Start mapping
  */
-tvheadend.service_mapper = function(t, e, store, select)
+tvheadend.service_mapper_sel = function(t, e, store, select)
 {
     var panel = null;
     var win = null;
 
-    /* Form fields */
-    var availCheck = new Ext.form.Checkbox({
-        name: 'check_availability',
-        fieldLabel: 'Check availability',
-        checked: false
-    });
-    var ftaCheck = new Ext.form.Checkbox({
-        name: 'encrypted',
-        fieldLabel: 'Include encrypted services',
-        checked: false
-        // TODO: make dependent on CSA config
-    });
-    var mergeCheck = new Ext.form.Checkbox({
-        name: 'merge_same_name',
-        fieldLabel: 'Merge same name',
-        checked: false
-    });
-    var provtagCheck = new Ext.form.Checkbox({
-        name: 'provider_tags',
-        fieldLabel: 'Create provider tags',
-        checked: false
-    });
-
-    // TODO: provider list
-    items = [availCheck, ftaCheck, mergeCheck, provtagCheck];
-
-    /* Form */
-    var undoBtn = new Ext.Button({
-        text: 'Cancel',
-        handler: function() {
-            win.close();
-        }
-    });
-
-    var saveBtn = new Ext.Button({
-        text: 'Map',
-        tooltip: 'Begin mapping',
-        handler: function() {
-            p = null;
-            if (select) {
-                var r = select.getSelections();
-                if (r.length > 0) {
-                    var uuids = [];
-                    for (var i = 0; i < r.length; i++)
-                        uuids.push(r[i].id);
-                    p = {uuids: Ext.encode(uuids)};
-                }
+    function modify_data(conf, d) {
+        for (var i = 0; i < d.params.length; i++)
+           if (d.params[i].id === 'services')
+             break;
+        if (select && i < d.params.length) {
+            var r = select.getSelections();
+            if (r.length > 0) {
+                var uuids = [];
+                for (var j = 0; j < r.length; j++)
+                    uuids.push(r[j].id);
+                d.params[i].value = uuids;
             }
+        }
+    }
 
-
-            panel.getForm().submit({
-                url: 'api/service/mapper/start',
-                waitMessage: 'Mapping services...',
-                params: p
-            });
-
-            win.hide();
-
-            /* Dialog */
-            win = new Ext.Window({
-                title: 'Service Mapper Status',
-                layout: 'fit',
-                autoWidth: true,
-                autoHeight: true,
-                plain: false,
-                items: tvheadend.service_mapper_status_panel
-                        // TODO: buttons
-            });
-            win.show();
+    tvheadend.idnode_editor_win(tvheadend.uilevel, {
+        winTitle: _('Map services to channels'),
+        loadURL: 'api/service/mapper/load',
+        saveURL: 'api/service/mapper/save',
+        saveText: _('Map services'),
+        alwaysDirty: true,
+        noApply: true,
+        modifyData: select ? modify_data : null,
+        postsave: function() {
+            tvheadend.select_tab('service_mapper');
         }
     });
+}
 
-    panel = new Ext.FormPanel({
-        method: 'post',
-        frame: true,
-        border: true,
-        bodyStyle: 'padding: 5px',
-        labelAlign: 'left',
-        labelWidth: 200,
-        autoWidth: true,
-        autoHeight: true,
-        defaultType: 'textfield',
-        buttonAlign: 'left',
-        items: items,
-        buttons: [undoBtn, saveBtn]
+tvheadend.service_mapper0 = function(all)
+{
+    tvheadend.idnode_editor_win(tvheadend.uilevel, {
+        winTitle: _('Map services to channels'),
+        loadURL: 'api/service/mapper/load',
+        saveURL: 'api/service/mapper/save',
+        saveText: _('Map services'),
+        alwaysDirty: true,
+        noApply: true,
+        beforeShow: all ? function(panel, conf) {
+            var form = panel.getForm();
+            var services = form.findField('services');
+            services.on('afterrender', function() {
+                services.selectAll();
+            });
+            services.store.on('load', function() {
+                services.selectAll();
+            });
+        } : null,
+        postsave: function() {
+            tvheadend.select_tab('service_mapper');
+        }
     });
+}
 
-    /* Create window */
-    win = new Ext.Window({
-        title: 'Map services',
-        layout: 'fit',
-        autoWidth: true,
-        autoHeight: true,
-        plain: true,
-        items: panel
-    });
+tvheadend.service_mapper_all = function()
+{
+    tvheadend.service_mapper0(1);
+}
 
-    win.show();
+tvheadend.service_mapper_none = function()
+{
+    tvheadend.service_mapper0(0);
 }

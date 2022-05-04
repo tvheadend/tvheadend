@@ -16,16 +16,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "filebundle.h"
 #include "tvheadend.h"
+#include "filebundle.h"
 
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#if ENABLE_ZLIB
-#include <zlib.h>
-#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -46,7 +43,7 @@ struct filebundle_dir
     } d;
     struct {
       const filebundle_entry_t *root;
-      filebundle_entry_t       *cur;
+      const filebundle_entry_t *cur;
     } b;
   };
 };
@@ -68,91 +65,6 @@ struct filebundle_file
     } b;
   };
 };
-
-/* **************************************************************************
- * Compression/Decompression
- * *************************************************************************/
-
-#if (ENABLE_ZLIB && ENABLE_BUNDLE)
-static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
-{
-  int err;
-  z_stream zstr;
-  uint8_t *bufin, *bufout;
-
-  /* Setup buffers */
-  bufin  = malloc(size);
-  bufout = malloc(orig);
-  memcpy(bufin, data, size);
-
-  /* Setup zlib */
-  memset(&zstr, 0, sizeof(zstr));
-  inflateInit2(&zstr, 31);
-  zstr.avail_in  = size;
-  zstr.next_in   = bufin;
-  zstr.avail_out = orig;
-  zstr.next_out  = bufout;
-    
-  /* Decompress */
-  err = inflate(&zstr, Z_NO_FLUSH);
-  if ( err != Z_STREAM_END || zstr.avail_out != 0 ) {
-    free(bufout);
-    bufout = NULL;
-  }
-  free(bufin);
-  inflateEnd(&zstr);
-  
-  return bufout;
-}
-#endif
-
-#if ENABLE_ZLIB
-static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
-{
-  int err;
-  z_stream zstr;
-  uint8_t *bufin, *bufout;
-
-  /* Setup buffers */
-  bufin  = malloc(orig);
-  bufout = malloc(orig);
-  memcpy(bufin, data, orig);
-
-  /* Setup zlib */
-  memset(&zstr, 0, sizeof(zstr));
-  err = deflateInit2(&zstr, 9, Z_DEFLATED, 31, 9, Z_DEFAULT_STRATEGY);
-  zstr.avail_in  = orig;
-  zstr.next_in   = bufin;
-  zstr.avail_out = orig;
-  zstr.next_out  = bufout;
-    
-  /* Decompress */
-  while (1) {
-    err = deflate(&zstr, Z_FINISH);
-
-    /* Need more space */
-    if (err == Z_OK && zstr.avail_out == 0) {
-      bufout         = realloc(bufout, zstr.total_out * 2);
-      zstr.avail_out = zstr.total_out;
-      zstr.next_out  = bufout + zstr.total_out;
-      continue;
-    }
-
-    /* Error */
-    if ( (err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0 ) {
-      free(bufout);
-      bufout = NULL;
-    } else {
-      *size  = zstr.total_out;
-    }
-    break;
-  }
-  free(bufin);
-  deflateEnd(&zstr);
-  
-  return bufout;
-}
-#endif
 
 /* **************************************************************************
  * Miscellanous
@@ -230,7 +142,7 @@ fb_dir *fb_opendir ( const char *path )
     char *tmp1, *tmp2, *tmp3 = NULL;
     tmp1 = strdup(path);
     tmp2 = strtok_r(tmp1, "/", &tmp3);
-    filebundle_entry_t *fb = filebundle_root;
+    const filebundle_entry_t *fb = filebundle_root;
     while (fb && tmp2) {
       if (fb->type == FB_DIR && !strcmp(fb->name, tmp2)) {
         tmp2 = strtok_r(NULL, "/", &tmp3);
@@ -280,8 +192,7 @@ fb_dirent *fb_readdir ( fb_dir *dir )
   fb_dirent *ret = NULL;
   if (dir->type == FB_BUNDLE) {
     if (dir->b.cur) {
-      strncpy(dir->dirent.name, dir->b.cur->name, sizeof(dir->dirent.name)-1);
-      dir->dirent.name[sizeof(dir->dirent.name)-1] = '\0';
+      strlcpy(dir->dirent.name, dir->b.cur->name, sizeof(dir->dirent.name));
       dir->dirent.type = dir->b.cur->type;
       dir->b.cur       = dir->b.cur->next;
       ret              = &dir->dirent;
@@ -349,8 +260,7 @@ int fb_scandir ( const char *path, fb_dirent ***list )
     i = 0;
     while (fb) {
       (*list)[i] = calloc(1, sizeof(fb_dirent));
-      strncpy((*list)[i]->name, fb->name, sizeof((*list)[i]->name));
-      (*list)[i]->name[sizeof((*list)[i]->name)-1] = '\0';
+      strlcpy((*list)[i]->name, fb->name, sizeof((*list)[i]->name));
       fb = fb->next;
       i++;
     }
@@ -397,7 +307,7 @@ fb_file *fb_open2
 #if (ENABLE_ZLIB && ENABLE_BUNDLE)
         ret->gzip = 0;
         ret->size = fb->f.orig;
-        ret->buf  = _fb_inflate(fb->f.data, fb->f.size, fb->f.orig);
+        ret->buf  = tvh_gzip_inflate(fb->f.data, fb->f.size, fb->f.orig);
         if (!ret->buf) {
           free(ret);
           ret = NULL;
@@ -413,15 +323,18 @@ fb_file *fb_open2
   } else {
     char path[512];
     snprintf(path, sizeof(path), "%s/%s", dir->d.root, name);
-    FILE *fp = fopen(path, "rb");
+    FILE *fp = tvh_fopen(path, "rb");
     if (fp) {
       struct stat st;
-      stat(path, &st);
-      ret         = calloc(1, sizeof(fb_file));
-      ret->type   = FB_DIRECT;
-      ret->size   = st.st_size;
-      ret->gzip   = 0;
-      ret->d.cur  = fp;
+      if (!stat(path, &st)) {
+        ret         = calloc(1, sizeof(fb_file));
+        ret->type   = FB_DIRECT;
+        ret->size   = st.st_size;
+        ret->gzip   = 0;
+        ret->d.cur  = fp;
+      } else {
+        fclose(fp);
+      }
     }
   }
 
@@ -434,12 +347,12 @@ fb_file *fb_open2
     if (ret->type == FB_BUNDLE) {
       const uint8_t *data;
       data     = ret->b.root->f.data;
-      ret->buf = _fb_deflate(data, ret->size, &ret->size);
+      ret->buf = tvh_gzip_deflate(data, ret->size, &ret->size);
     } else {
       uint8_t *data = malloc(ret->size);
       ssize_t c = fread(data, 1, ret->size, ret->d.cur);
       if (c == ret->size)
-        ret->buf = _fb_deflate(data, ret->size, &ret->size);
+        ret->buf = tvh_gzip_deflate(data, ret->size, &ret->size);
       fclose(ret->d.cur);
       ret->d.cur = NULL;
       free(data);
@@ -523,6 +436,8 @@ ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
     fp->pos += count;
   } else if (fp->type == FB_DIRECT) {
     count = fread(buf, 1, count, fp->d.cur);
+    if (count <= 0)
+      return -1;
     fp->pos += count;
   } else {
     count = MIN(count, fp->b.root->f.size - fp->pos);
@@ -536,7 +451,7 @@ ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
 char *fb_gets ( fb_file *fp, void *buf, size_t count )
 {
   ssize_t c = 0, err;
-  while ((err = fb_read(fp, buf+c, 1)) && c < (count-1)) {
+  while ((err = fb_read(fp, buf+c, 1)) > 0 && c < (count-1)) {
     char b = ((char*)buf)[c];
     c++;
     if (b == '\n' || b == '\0') break;

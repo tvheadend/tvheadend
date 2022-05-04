@@ -18,16 +18,30 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <time.h>
+
+typedef void * volatile * atomic_refptr_t;
+
+extern tvh_mutex_t atomic_lock;
+
+/*
+ * Atomic FETCH and ADD operation
+ */
+
 static inline int
 atomic_add(volatile int *ptr, int incr)
 {
+#if ENABLE_ATOMIC32
   return __sync_fetch_and_add(ptr, incr);
-}
-
-static inline int
-atomic_exchange(volatile int *ptr, int new)
-{
-  return  __sync_lock_test_and_set(ptr, new);
+#else
+  int ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr += incr;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
 }
 
 static inline uint64_t
@@ -37,10 +51,59 @@ atomic_add_u64(volatile uint64_t *ptr, uint64_t incr)
   return __sync_fetch_and_add(ptr, incr);
 #else
   uint64_t ret;
-  pthread_mutex_lock(&atomic_lock);
+  tvh_mutex_lock(&atomic_lock);
   ret = *ptr;
   *ptr += incr;
-  pthread_mutex_unlock(&atomic_lock);
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline int64_t
+atomic_add_s64(volatile int64_t *ptr, int64_t incr)
+{
+#if ENABLE_ATOMIC64
+  return __sync_fetch_and_add(ptr, incr);
+#else
+  uint64_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr += incr;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline time_t
+atomic_add_time_t(volatile time_t *ptr, time_t incr)
+{
+#if ENABLE_ATOMIC_TIME_T
+  return __sync_fetch_and_add(ptr, incr);
+#else
+  time_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr += incr;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+/*
+ * Atomic ADD and FETCH operation
+ */
+
+static inline int64_t
+atomic_pre_add_s64(volatile int64_t *ptr, int64_t incr)
+{
+#if ENABLE_ATOMIC64
+  return __sync_add_and_fetch(ptr, incr);
+#else
+  int64_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  *ptr += incr;
+  ret = *ptr;
+  tvh_mutex_unlock(&atomic_lock);
   return ret;
 #endif
 }
@@ -52,10 +115,249 @@ atomic_pre_add_u64(volatile uint64_t *ptr, uint64_t incr)
   return __sync_add_and_fetch(ptr, incr);
 #else
   uint64_t ret;
-  pthread_mutex_lock(&atomic_lock);
+  tvh_mutex_lock(&atomic_lock);
   *ptr += incr;
   ret = *ptr;
-  pthread_mutex_unlock(&atomic_lock);
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+/*
+ * Atomic ADD and FETCH operation with PEAK (MAX)
+ */
+
+static inline int64_t
+atomic_pre_add_s64_peak(volatile int64_t *ptr, int64_t incr,
+                        volatile int64_t *peak)
+{
+#if ENABLE_ATOMIC64
+  int64_t ret = __sync_add_and_fetch(ptr, incr);
+  if (__sync_fetch_and_add(peak, 0) < ret)
+    __sync_lock_test_and_set(peak, ret);
+  return ret;
+#else
+  int64_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  *ptr += incr;
+  ret = *ptr;
+  if (*peak < ret)
+    *peak = ret;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+/*
+ * Atomic DEC operation
+ */
+
+static inline int
+atomic_dec(volatile int *ptr, int decr)
+{
+#if ENABLE_ATOMIC32
+  return __sync_fetch_and_sub(ptr, decr);
+#else
+  int ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr -= decr;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline uint64_t
+atomic_dec_u64(volatile uint64_t *ptr, uint64_t decr)
+{
+#if ENABLE_ATOMIC64
+  return __sync_fetch_and_sub(ptr, decr);
+#else
+  uint64_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr -= decr;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline int64_t
+atomic_dec_s64(volatile int64_t *ptr, int64_t decr)
+{
+#if ENABLE_ATOMIC64
+  return __sync_fetch_and_sub(ptr, decr);
+#else
+  int64_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr -= decr;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+/*
+ * Atomic EXCHANGE operation
+ */
+
+static inline int
+atomic_exchange(volatile int *ptr, int val)
+{
+#if ENABLE_ATOMIC32
+  return  __sync_lock_test_and_set(ptr, val);
+#else
+  int ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline uint64_t
+atomic_exchange_u64(volatile uint64_t *ptr, uint64_t val)
+{
+#if ENABLE_ATOMIC64
+  return  __sync_lock_test_and_set(ptr, val);
+#else
+  uint64_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline int64_t
+atomic_exchange_s64(volatile int64_t *ptr, int64_t val)
+{
+#if ENABLE_ATOMIC64
+  return  __sync_lock_test_and_set(ptr, val);
+#else
+  int64_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline time_t
+atomic_exchange_time_t(volatile time_t *ptr, time_t val)
+{
+#if ENABLE_ATOMIC_TIME_T
+  return  __sync_lock_test_and_set(ptr, val);
+#else
+  time_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline void *
+atomic_exchange_ptr(atomic_refptr_t ptr, void *val)
+{
+#if ENABLE_ATOMIC_PTR
+  return  __sync_lock_test_and_set(ptr, val);
+#else
+  void *ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  tvh_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+/*
+ * Atomic get operation
+ */
+
+static inline int
+atomic_get(volatile int *ptr)
+{
+  return atomic_add(ptr, 0);
+}
+
+static inline uint64_t
+atomic_get_u64(volatile uint64_t *ptr)
+{
+  return atomic_add_u64(ptr, 0);
+}
+
+static inline int64_t
+atomic_get_s64(volatile int64_t *ptr)
+{
+  return atomic_add_s64(ptr, 0);
+}
+
+static inline time_t
+atomic_get_time_t(volatile time_t *ptr)
+{
+  return atomic_add_time_t(ptr, 0);
+}
+
+/*
+ * Atomic set operation
+ */
+
+static inline int
+atomic_set(volatile int *ptr, int val)
+{
+  return atomic_exchange(ptr, val);
+}
+
+static inline uint64_t
+atomic_set_u64(volatile uint64_t *ptr, uint64_t val)
+{
+  return atomic_exchange_u64(ptr, val);
+}
+
+static inline int64_t
+atomic_set_s64(volatile int64_t *ptr, int64_t val)
+{
+  return atomic_exchange_s64(ptr, val);
+}
+
+static inline time_t
+atomic_set_time_t(volatile time_t *ptr, time_t val)
+{
+  return atomic_exchange_time_t(ptr, val);
+}
+
+static inline void *
+atomic_set_ptr(atomic_refptr_t ptr, void *val)
+{
+  return atomic_exchange_ptr(ptr, val);
+}
+
+/*
+ * Atomic set operation + peak (MAX)
+ */
+
+static inline int64_t
+atomic_set_s64_peak(volatile int64_t *ptr, int64_t val, volatile int64_t *peak)
+{
+#if ENABLE_ATOMIC64
+  int64_t ret = atomic_exchange_s64(ptr, val);
+  if (val > atomic_get_s64(peak))
+    atomic_set_s64(peak, val);
+  return ret;
+#else
+  int64_t ret;
+  tvh_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  if (val > *peak)
+    *peak = val;
+  tvh_mutex_unlock(&atomic_lock);
   return ret;
 #endif
 }

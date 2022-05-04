@@ -12,6 +12,7 @@ Template: tvheadend/admin_password
 Type: password
 Description: Administrator password.
 
-Template: tvheadend/webinterface
+Template: tvheadend/last_notes
 Type: note
-Description: After installation Tvheadend can be accessed via HTTP on port 9981. From this machine you can point your web-browser to http://localhost:9981/
+Description: After installation Tvheadend can be accessed via HTTP on port 9981. From this machine you can point your web-browser to http://localhost:9981/.
+ If you want to completely remove configuration, use your package managers --purge option, e.g, apt-get remove --purge tvheadend*

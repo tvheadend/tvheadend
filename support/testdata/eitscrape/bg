@@ -1,0 +1,53 @@
+{
+"environ" : [
+    {
+        "comment": "This section contains general information about this file to help people guess what regions it affects.",
+        "language": "bg",
+        "location": "bg",
+        "description": "Bulgaria DVB-T, DVB-S, and DVB-C configuration.",
+        "eitgrabber": ["Bulsatcom_39E", "eit"]
+    }
+],
+
+"tests" : [
+    {
+        "summary": "сезон 1, епизод 13, драма, романтичен, САЩ, 2014",
+        "season": "1", "episode": "13"
+    },
+    {
+        "comment": "This should get a multi-episode of 45 and 46 but currently returns only 45",
+        "summary": "сериал, еп. 45, 46",
+        "episode": "45"
+    },
+    {
+        "summary": "с. 5",
+        "season": "5"
+    },
+    {
+        "summary": "еп. 1, сез. 3,",
+        "season": "3", "episode": "1"
+    },
+    {
+        "summary": "еп. 2, stuff, 3, сез. ()",
+        "season": "3", "episode": "2"
+    },
+    {
+        "comment": "Culinary show, 3 episodes one-by-one and NOT episode 3",
+        "summary": "кулинарно предаване, 3 епизода",
+        "season": null, "episode": null
+    },
+    {
+        "comment": "Contains age rating of 15+, not currently scraped",
+        "summary": "еп. 7, комедия, САЩ, 2017. В ролите: Иса Рей, Ивон Орджи, Джей Елис, Лиса Джойс, Наташа Ротуел, [15+]",
+        "season": null, "episode": "7", "age": "15"
+    },
+    {
+        "summary": "сезон 4, епизод 12, криминален, драма, САЩ, 2016",
+        "season": "4", "episode": "12", "airdate": "2016"
+    },
+    {
+        "summary": "документален филм, 5 епизод",
+        "season": null, "episode": "5"
+    }
+    ]
+}

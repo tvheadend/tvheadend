@@ -30,15 +30,12 @@ api_intlconv_charset_enum
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   const char **chrst;
-  htsmsg_t *l, *e;
+  htsmsg_t *l;
   
   l = htsmsg_create_list();
   chrst = intlconv_charsets;
   while (*chrst) {
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", *chrst);
-    htsmsg_add_str(e, "val", *chrst);
-    htsmsg_add_msg(l, NULL, e);
+    htsmsg_add_msg(l, NULL, htsmsg_create_key_val(*chrst, *chrst));
     chrst++;
   }
   *resp = htsmsg_create_map();

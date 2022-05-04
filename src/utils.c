@@ -20,35 +20,22 @@
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
-#include <openssl/md5.h>
+#include <openssl/evp.h>
+#include <openssl/opensslv.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <ctype.h>
+#include <signal.h>
+#include <net/if.h>
+#include <errno.h>
+
+#include <openssl/sha.h>
+
 #include "tvheadend.h"
-
-#if defined(PLATFORM_DARWIN)
-#include <machine/endian.h>
-#elif defined(PLATFORM_FREEBSD)
-#include <sys/endian.h>
-#else
-#include <endian.h>
-#endif
-
-#ifndef BYTE_ORDER
-#define BYTE_ORDER __BYTE_ORDER
-#endif
-#ifndef LITTLE_ENDIAN
-#define LITTLE_ENDIAN __LITTLE_ENDIAN
-#endif
-#ifndef BIG_ENDIAN
-#define BIG_ENDIAN __BIG_ENDIAN
-#endif
-#if BYTE_ORDER == LITTLE_ENDIAN
-#define ENDIAN_SWAP_COND(x) (!(x))
-#else
-#define ENDIAN_SWAP_COND(x) (x)
-#endif
+#include "tvh_endian.h"
+#include "sbuf.h"
 
 /**
  * CRC32 
@@ -113,8 +100,10 @@ tvh_crc32(const uint8_t *data, size_t datalen, uint32_t crc)
  *
  */
 static const int sample_rates[16] = {
-    96000, 88200, 64000, 48000, 44100, 32000,
-    24000, 22050, 16000, 12000, 11025, 8000, 7350
+    96000, 88200, 64000, 48000,
+    44100, 32000, 24000, 22050,
+    16000, 12000, 11025,  8000,
+     7350,     0,     0,     0
 };
 
 /**
@@ -197,23 +186,24 @@ static const uint8_t map2[] =
 int 
 base64_decode(uint8_t *out, const char *in, int out_size)
 {
-    int i, v;
-    uint8_t *dst = out;
+  int i, v;
+  unsigned int index;
+  uint8_t *dst = out;
 
-    v = 0;
-    for (i = 0; in[i] && in[i] != '='; i++) {
-        unsigned int index= in[i]-43;
-        if (index >= sizeof(map2) || map2[index] == 0xff)
-            return -1;
-        v = (v << 6) + map2[index];
-        if (i & 3) {
-            if (dst - out < out_size) {
-                *dst++ = v >> (6 - 2 * (i & 3));
-            }
-        }
+  v = 0;
+  for (i = 0; *in && *in != '='; i++, in++) {
+    index = *in - 43;
+    if (index >= sizeof(map2) || map2[index] == 0xff)
+      return -1;
+    v = (v << 6) + map2[index];
+    if (i & 3) {
+      if (dst - out < out_size) {
+        *dst++ = v >> (6 - 2 * (i & 3));
+      }
     }
+  }
 
-    return dst - out;
+  return dst - out;
 }
 
 /*
@@ -221,35 +211,33 @@ base64_decode(uint8_t *out, const char *in, int out_size)
  * Simplified by Michael.
  * Fixed edge cases and made it work from data (vs. strings) by Ryan.
  */
-
 char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size)
 {
-    static const char b64[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    char *ret, *dst;
-    unsigned i_bits = 0;
-    int i_shift = 0;
-    int bytes_remaining = in_size;
+  static const char b64[] =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  char *dst;
+  unsigned i_bits = 0;
+  int i_shift = 0;
+  int bytes_remaining = in_size;
 
-    if (in_size >= UINT_MAX / 4 ||
-        out_size < BASE64_SIZE(in_size))
-        return NULL;
-    ret = dst = out;
-    while (bytes_remaining) {
-        i_bits = (i_bits << 8) + *in++;
-        bytes_remaining--;
-        i_shift += 8;
+  if (in_size >= UINT_MAX / 4 ||
+      out_size < BASE64_SIZE(in_size))
+      return NULL;
+  dst = out;
+  while (bytes_remaining) {
+    i_bits = (i_bits << 8) + *in++;
+    bytes_remaining--;
+    i_shift += 8;
+    do {
+      *dst++ = b64[(i_bits << 6 >> i_shift) & 0x3f];
+      i_shift -= 6;
+    } while (i_shift > 6 || (bytes_remaining == 0 && i_shift > 0));
+  }
+  while ((dst - out) & 3)
+    *dst++ = '=';
+  *dst = '\0';
 
-        do {
-            *dst++ = b64[(i_bits << 6 >> i_shift) & 0x3f];
-            i_shift -= 6;
-        } while (i_shift > 6 || (bytes_remaining == 0 && i_shift > 0));
-    }
-    while ((dst - ret) & 3)
-        *dst++ = '=';
-    *dst = '\0';
-
-    return ret;
+  return out;
 }
 
 /**
@@ -305,10 +293,76 @@ put_utf8(char *out, int c)
   return 6;
 }
 
-static void
-sbuf_alloc_fail(int len)
+char *utf8_lowercase_inplace(char *s)
 {
-  fprintf(stderr, "Unable to allocate %d bytes\n", len);
+  char *r = s;
+  uint8_t c;
+
+  for ( ; *s; s++) {
+    /* FIXME: this is really wrong version of lowercase for utf-8 */
+    /* but it's a deep issue with the different locale handling */
+    c = (uint8_t)*s;
+    if (c & 0x80) {
+      if ((c & 0xe0) == 0xc0) {
+        s++;
+        continue;
+      } else if ((c & 0xf0) == 0xe0) {
+        s++;
+        if (*s) s++;
+      } else if ((c & 0xf8) == 0xf0) {
+        s++;
+        if (*s) s++;
+        if (*s) s++;
+      }
+    }
+    if (c >= 'A' && c <= 'Z')
+      *(char *)s = c - 'A' + 'a';
+  }
+  return r;
+}
+
+static int utf8_len(char first)
+{
+  if ((first & 0xe0) == 0xc0) return 2;
+  if ((first & 0xf0) == 0xe0) return 3;
+  if ((first & 0xf8) == 0xf0) return 4;
+  if ((first & 0xfc) == 0xf8) return 5;
+  if ((first & 0xfe) == 0xfc) return 6;
+  assert(0);
+  return 1;
+}
+
+/*
+ * Remove the partial utf8 character at the end of the string
+ */
+char *utf8_validate_inplace(char *s)
+{
+  if (s == NULL) return NULL;
+  size_t i, l = strlen(s);
+  if (l < 1) return s;
+  for (i = l; i > 0; i--) {
+    char c = s[i-1];
+    if ((c & 0x80) == 0) {
+      if (l != i) s[i] = '\0';
+      break;
+    }
+    if ((c & 0xc0) == 0xc0) {
+      if (1 + l - i != utf8_len(c))
+        s[i-1] = '\0';
+      break;
+    }
+  }
+  return s;
+}
+
+/**
+ *
+ */
+
+static void
+sbuf_alloc_fail(size_t len)
+{
+  fprintf(stderr, "Unable to allocate %zd bytes\n", len);
   abort();
 }
 
@@ -352,20 +406,7 @@ sbuf_reset(sbuf_t *sb, int max_len)
 void
 sbuf_reset_and_alloc(sbuf_t *sb, int len)
 {
-  if (sb->sb_data) {
-    if (len != sb->sb_size) {
-      void *n = realloc(sb->sb_data, len);
-      if (n) {
-        sb->sb_data = n;
-        sb->sb_size = len;
-      }
-    }
-  } else {
-    sb->sb_data = malloc(len);
-    sb->sb_size = len;
-  }
-  if (sb->sb_data == NULL)
-    sbuf_alloc_fail(len);
+  sbuf_realloc(sb, len);
   sb->sb_ptr = sb->sb_err = 0;
 }
 
@@ -386,11 +427,53 @@ sbuf_alloc_(sbuf_t *sb, int len)
 }
 
 void
+sbuf_realloc(sbuf_t *sb, int len)
+{
+  if (sb->sb_data) {
+    if (len != sb->sb_size) {
+      void *n = realloc(sb->sb_data, len);
+      if (n) {
+        sb->sb_data = n;
+        sb->sb_size = len;
+      }
+    }
+  } else {
+    sb->sb_data = malloc(len);
+    sb->sb_size = len;
+  }
+  if (sb->sb_data == NULL)
+    sbuf_alloc_fail(len);
+}
+
+void
+sbuf_replace(sbuf_t *sb, sbuf_t *src)
+{
+  sbuf_free(sb);
+  *sb = *src;
+  sbuf_init(src);
+}
+
+void
 sbuf_append(sbuf_t *sb, const void *data, int len)
 {
   sbuf_alloc(sb, len);
   memcpy(sb->sb_data + sb->sb_ptr, data, len);
   sb->sb_ptr += len;
+}
+
+void
+sbuf_append_from_sbuf(sbuf_t *sb, sbuf_t *src)
+{
+  if (sb->sb_ptr == 0) {
+    sbuf_free(sb);
+    sb->sb_data = src->sb_data;
+    sb->sb_ptr = src->sb_ptr;
+    sb->sb_size = src->sb_size;
+    sbuf_steal_data(src);
+  } else {
+    sbuf_append(sb, src->sb_data, src->sb_ptr);
+    src->sb_ptr = 0;
+  }
 }
 
 void
@@ -476,49 +559,129 @@ sbuf_read(sbuf_t *sb, int fd)
   return n;
 }
 
-char *
-md5sum ( const char *str )
+/**
+ *
+ */
+
+static uint8_t *
+openssl_hash ( uint8_t *hash, const uint8_t *msg, size_t msglen, const EVP_MD *md )
+{
+  EVP_MD_CTX *mdctx;
+
+  if ((mdctx = EVP_MD_CTX_create()) == NULL)
+    return NULL;
+  if (EVP_DigestInit_ex(mdctx, md, NULL) != 1)
+    goto __error;
+  if (EVP_DigestUpdate(mdctx, msg, msglen) != 1)
+    goto __error;
+  if (EVP_DigestFinal_ex(mdctx, hash, NULL) != 1)
+    goto __error;
+  EVP_MD_CTX_destroy(mdctx);
+  return hash;
+__error:
+  EVP_MD_CTX_destroy(mdctx);
+  return NULL;
+}
+
+static char *
+openssl_hash_hexstr ( const char *str, int lowercase, const EVP_MD *md, int len )
 {
   int i;
-  static unsigned char md5[MD5_DIGEST_LENGTH];
-  char *ret = malloc((MD5_DIGEST_LENGTH * 2) + 1);
-  MD5((const unsigned char*)str, strlen(str), md5);
-  for ( i = 0; i < MD5_DIGEST_LENGTH; i++ ) {
-    sprintf(&ret[i*2], "%02X", md5[i]);
+  uint8_t hash[len];
+  char *ret = malloc((len * 2) + 1);
+  const char *fmt = lowercase ? "%02x" : "%02X";
+  if (ret == NULL) return NULL;
+  if (openssl_hash(hash, (const uint8_t *)str, strlen(str), md) == NULL) {
+    free(ret);
+    return NULL;
   }
-  ret[MD5_DIGEST_LENGTH*2] = '\0';
+  for (i = 0; i < len; i++)
+    sprintf(ret + i*2, fmt, hash[i]);
+  ret[len*2] = '\0';
   return ret;
 }
 
+char *
+md5sum ( const char *str, int lowercase )
+{
+  return openssl_hash_hexstr(str, lowercase, EVP_md5(), 16);
+}
+
+char *
+sha256sum ( const char *str, int lowercase )
+{
+  return openssl_hash_hexstr(str, lowercase, EVP_sha256(), 32);
+}
+
+char *
+sha512sum256 ( const char *str, int lowercase )
+{
+#if OPENSSL_VERSION_NUMBER >= 0x1010101fL && !defined(LIBRESSL_VERSION_NUMBER)
+  return openssl_hash_hexstr(str, lowercase, EVP_sha512_256(), 32);
+#else
+  return NULL;
+#endif
+}
+
+char *
+sha256sum_base64 ( const char *str )
+{
+  uint8_t hash[32];
+  char *out = malloc(64);
+  if (out == NULL) return NULL;
+  if (openssl_hash(hash, (const uint8_t *)str, strlen(str), EVP_sha256()) == NULL) {
+    free(out);
+    return NULL;
+  }
+  return base64_encode(out, 64, hash, 32);
+}
+
+#define FILE_MODE_BITS(x) (x&(S_IRWXU|S_IRWXG|S_IRWXO))
+
 int
-makedirs ( const char *inpath, int mode )
+makedirs ( int subsys, const char *inpath, int mode,
+           int mstrict, gid_t gid, uid_t uid )
 {
   int err, ok;
   size_t x;
   struct stat st;
-  char path[512];
+  char *path;
 
   if (!inpath || !*inpath) return -1;
 
   x  = 1;
   ok = 1;
-  strncpy(path, inpath, sizeof(path)-1);
-  path[sizeof(path)-1] = '\0';
+  path = alloca(strlen(inpath) + 1);
+  strcpy(path, inpath);
   while(ok) {
     ok = path[x];
     if (path[x] == '/' || !path[x]) {
       path[x] = 0;
       if (stat(path, &st)) {
         err = mkdir(path, mode);
-        tvhtrace("settings", "Creating directory \"%s\" with octal permissions \"%o\"", path, mode);
+        if (!err && gid != -1 && uid != -1)
+          err = chown(path, uid, gid);
+        if (!err && !stat(path, &st) &&
+            FILE_MODE_BITS(mode) != FILE_MODE_BITS(st.st_mode)) {
+          err = chmod(path, mode); /* override umode */
+          if (!mstrict) {
+            err = 0;
+            tvhwarn(subsys, "Unable to change directory permissions "
+                            "to \"%o\" for \"%s\" (keeping \"%o\")",
+                            mode, path, FILE_MODE_BITS(st.st_mode));
+            mode = FILE_MODE_BITS(st.st_mode);
+          }
+        }
+        tvhtrace(subsys, "Creating directory \"%s\" with octal permissions "
+                         "\"%o\" gid %d uid %d", path, mode, gid, uid);
       } else {
         err   = S_ISDIR(st.st_mode) ? 0 : 1;
         errno = ENOTDIR;
       }
       if (err) {
-	      tvhlog(LOG_ALERT, "settings", "Unable to create dir \"%s\": %s",
-	             path, strerror(errno));
-	      return -1;
+        tvhalert(subsys, "Unable to create dir \"%s\": %s",
+                 path, strerror(errno));
+        return -1;
       }
       path[x] = '/';
     }
@@ -533,13 +696,16 @@ rmtree ( const char *path )
   int err = 0;
   struct dirent de, *der;
   struct stat st;
-  char buf[512];
+  char buf[PATH_MAX];
   DIR *dir = opendir(path);
   if (!dir) return -1;
   while (!readdir_r(dir, &de, &der) && der) {
     if (!strcmp("..", de.d_name) || !strcmp(".", de.d_name))
       continue;
-    snprintf(buf, sizeof(buf), "%s/%s", path, de.d_name);
+    if (snprintf(buf, sizeof(buf), "%s/%s", path, de.d_name) >= sizeof(buf)) {
+        err = -ENAMETOOLONG;
+        break;
+    }
     err = stat(buf, &st);
     if (err) break;
     if (S_ISDIR(st.st_mode))
@@ -573,6 +739,7 @@ regexp_escape(const char* str)
       case '[':
       case ']':
       case '*':
+      case '^':
         *b = '\\';
         b++;
         /* -fallthrough */
@@ -585,4 +752,293 @@ regexp_escape(const char* str)
   }
   *b = 0;
   return tmp;
+}
+
+/* Converts an integer value to its hex character
+   http://www.geekhideout.com/urlcode.shtml */
+char to_hex(char code) {
+  static char hex[] = "0123456789abcdef";
+  return hex[code & 15];
+}
+
+/* Returns a url-encoded version of str
+   IMPORTANT: be sure to free() the returned string after use
+   http://www.geekhideout.com/urlcode.shtml */
+char *url_encode(const char *str)
+{
+  char *buf = malloc(strlen(str) * 3 + 1), *pbuf = buf;
+  while (*str) {
+    if (isalnum(*str) || *str == '-' || *str == '_' || *str == '.' || *str == '~')
+      *pbuf++ = *str;
+    /*else if (*str == ' ')
+      *pbuf++ = '+';*/
+    else 
+      *pbuf++ = '%', *pbuf++ = to_hex(*str >> 4), *pbuf++ = to_hex(*str & 15);
+    str++;
+  }
+  *pbuf = '\0';
+  return buf;
+}
+
+/**
+ * De-escape HTTP URL
+ */
+void
+http_deescape(char *s)
+{
+  char v, *d = s;
+
+  while(*s) {
+    if(*s == '+') {
+      *d++ = ' ';
+      s++;
+    } else if(*s == '%') {
+      s++;
+      switch(*s) {
+      case '0' ... '9':
+	v = (*s - '0') << 4;
+	break;
+      case 'a' ... 'f':
+	v = (*s - 'a' + 10) << 4;
+	break;
+      case 'A' ... 'F':
+	v = (*s - 'A' + 10) << 4;
+	break;
+      default:
+	*d = 0;
+	return;
+      }
+      s++;
+      switch(*s) {
+      case '0' ... '9':
+	v |= (*s - '0');
+	break;
+      case 'a' ... 'f':
+	v |= (*s - 'a' + 10);
+	break;
+      case 'A' ... 'F':
+	v |= (*s - 'A' + 10);
+	break;
+      default:
+	*d = 0;
+	return;
+      }
+      s++;
+
+      *d++ = v;
+    } else {
+      *d++ = *s++;
+    }
+  }
+  *d = 0;
+}
+
+/*
+ *
+ */
+
+static inline uint32_t mpegts_word32( const uint8_t *tsb )
+{
+  //assert(((intptr_t)tsb & 3) == 0);
+  return *(uint32_t *)tsb;
+}
+
+int
+mpegts_word_count ( const uint8_t *tsb, int len, uint32_t mask )
+{
+  uint32_t val;
+  int r = 0;
+
+#if BYTE_ORDER == LITTLE_ENDIAN
+  mask = bswap_32(mask);
+#endif
+
+  val  = mpegts_word32(tsb) & mask;
+
+  while (len >= 188) {
+    if (len >= 4*188 &&
+        (mpegts_word32(tsb+0*188) & mask) == val &&
+        (mpegts_word32(tsb+1*188) & mask) == val &&
+        (mpegts_word32(tsb+2*188) & mask) == val &&
+        (mpegts_word32(tsb+3*188) & mask) == val) {
+      r   += 4*188;
+      len -= 4*188;
+      tsb += 4*188;
+    } else if ((mpegts_word32(tsb) & mask) == val) {
+      r   += 188;
+      len -= 188;
+      tsb += 188;
+    } else {
+      break;
+    }
+  }
+
+  return r;
+}
+
+static void
+deferred_unlink_cb(void *s, int dearmed)
+{
+  if (unlink((const char *)s))
+    tvherror(LS_MAIN, "unable to remove file '%s'", (const char *)s);
+  free(s);
+}
+
+typedef struct {
+  char *filename;
+  char *rootdir;
+} deferred_unlink_t;
+
+static void
+deferred_unlink_dir_cb(void *s, int dearmed)
+{
+  deferred_unlink_t *du = s;
+  char *p;
+  int l;
+
+  if (unlink((const char *)du->filename))
+    tvherror(LS_MAIN, "unable to remove file '%s'", (const char *)du->filename);
+
+  /* Remove all directories up to rootdir */
+
+  l = strlen(du->filename) - 1;
+  p = du->filename;
+
+  for(; l >= 0; l--) {
+    if(p[l] == '/') {
+      p[l] = 0;
+      if(strncmp(p, du->rootdir, l) == 0)
+        break;
+      if(rmdir(p) == -1)
+        break;
+    }
+  }
+
+  free(du->filename);
+  free(du->rootdir);
+  free(du);
+}
+
+int
+deferred_unlink(const char *filename, const char *rootdir)
+{
+  deferred_unlink_t *du;
+  char *s, *p;
+  size_t l;
+  int r;
+  long max;
+
+  l = strlen(filename);
+  s = malloc(l + 9 + 1);
+  if (s == NULL)
+    return -ENOMEM;
+  max = pathconf(filename, _PC_NAME_MAX);
+  strcpy(s, filename);
+  if (l + 10 < max) {
+    p = strrchr(s, '/');
+    if (p && p[1])
+      p[1] = '.';
+    strcpy(s + l, ".removing");
+  } else {
+    p = strrchr(s, '/');
+    p = p && p[1] ? p + 1 : s;
+    memcpy(p, ".rm.", 4);
+  }
+  r = rename(filename, s);
+  if (r) {
+    r = -errno;
+    free(s);
+    return r;
+  }
+  if (rootdir == NULL){
+    dvr_cutpoint_delete_files (filename);
+    tasklet_arm_alloc(deferred_unlink_cb, s);
+  }
+  else {
+    du = calloc(1, sizeof(*du));
+    if (du == NULL) {
+      free(s);
+      return -ENOMEM;
+    }
+    du->filename = s;
+    du->rootdir = strdup(rootdir);
+    dvr_cutpoint_delete_files (filename);
+    tasklet_arm_alloc(deferred_unlink_dir_cb, du);
+  }
+  return 0;
+}
+
+void
+sha1_calc(uint8_t *dst,
+          const uint8_t *d1, size_t d1_len,
+          const uint8_t *d2, size_t d2_len)
+{
+  SHA_CTX shactx;
+
+  SHA1_Init(&shactx);
+  if (d1)
+    SHA1_Update(&shactx, d1, d1_len);
+  if (d2)
+    SHA1_Update(&shactx, d2, d2_len);
+  SHA1_Final(dst, &shactx);
+}
+
+uint32_t
+gcdU32(uint32_t a, uint32_t b)
+{
+  uint32_t r;
+  if (a < b) {
+    while((r = b % a) != 0) {
+      b = a;
+      a = r;
+    }
+    return a;
+  } else {
+    while((r = a % b) != 0) {
+      a = b;
+      b = r;
+    }
+    return b;
+  }
+}
+
+htsmsg_t *network_interfaces_enum(void *obj, const char *lang)
+{
+#if ENABLE_IFNAMES
+  htsmsg_t *list = htsmsg_create_list();
+  struct if_nameindex *ifnames = if_nameindex();
+
+  if (ifnames) {
+    struct if_nameindex *ifname;
+    for (ifname = ifnames; ifname->if_name; ifname++)
+      htsmsg_add_msg(list, NULL, htsmsg_create_key_val(ifname->if_name, ifname->if_name));
+    if_freenameindex(ifnames);
+  }
+
+  return list;
+#else
+  return NULL;
+#endif
+}
+
+const char *
+gmtime2local(time_t gmt, char *buf, size_t buflen)
+{
+  struct tm tm;
+  localtime_r(&gmt, &tm);
+  strftime(buf, buflen, "%F;%T(%z)", &tm);
+  return buf;
+}
+
+int
+tvh_kill_to_sig(int tvh_kill)
+{
+  switch (tvh_kill) {
+  case TVH_KILL_TERM: return SIGTERM;
+  case TVH_KILL_INT:  return SIGINT;
+  case TVH_KILL_HUP:  return SIGHUP;
+  case TVH_KILL_USR1: return SIGUSR1;
+  case TVH_KILL_USR2: return SIGUSR2;
+  }
+  return SIGKILL;
 }

@@ -36,19 +36,29 @@ webui_api_handler
   /* Build arguments */
   args = htsmsg_create_map();
   TAILQ_FOREACH(ha, &hc->hc_req_args, link) {
+    if (ha->val == NULL) {
+      r = EINVAL;
+      goto destroy_args;
+    }
     htsmsg_add_str(args, ha->key, ha->val);
   }
       
   /* Call */
   r = api_exec(hc->hc_access, remain, args, &resp);
+
+destroy_args:
   htsmsg_destroy(args);
   
   /* Convert error */
   if (r) {
+    if (r < 0) {
+      tvherror(LS_HTTP, "negative error code %d for url '%s'", r, hc->hc_url);
+      r = ENOSYS;
+    }
     switch (r) {
       case EPERM:
       case EACCES:
-        r = HTTP_STATUS_UNAUTHORIZED;
+        r = http_noaccess_code(hc);
         break;
       case ENOENT:
       case ENOSYS:

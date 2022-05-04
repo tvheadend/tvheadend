@@ -67,6 +67,7 @@ htsbuf_queue_free(htsbuf_queue_t *hq)
 void
 htsbuf_data_free(htsbuf_queue_t *hq, htsbuf_data_t *hd)
 {
+  hq->hq_size -= hd->hd_data_size - hd->hd_data_off;
   TAILQ_REMOVE(&hq->hq_q, hd, hd_link);
   free(hd->hd_data);
   free(hd);
@@ -352,12 +353,51 @@ htsbuf_append_and_escape_xml(htsbuf_queue_t *hq, const char *s)
 {
   const char *c = s;
   const char *e = s + strlen(s);
+  const char *esc = 0;
+  int h;
+
   if(e == s)
     return;
 
-  while(1) {
-    const char *esc;
-    switch(*c++) {
+  while(c<e) {
+    h = *c++;
+
+    if (h & 0x80) {
+      // Start of UTF-8.  But we sometimes have bad UTF-8 (#5909).
+      // So validate and handle bad characters.
+
+      // Number of top bits set indicates the total number of  bytes.
+      const int num_bytes =
+        ((h & 240) == 240) ? 4 :
+        ((h & 224) == 224) ? 3 :
+        ((h & 192) == 192) ? 2 : 0;
+
+      if (!num_bytes) {
+        // Completely invalid sequence, so we replace it with a space.
+        htsbuf_append(hq, s, c - s - 1);
+        htsbuf_append(hq, " ", 1);
+        s=c;
+        continue;
+      } else {
+        // Start of valid UTF-8.
+        if (e - c < num_bytes - 1) {
+          // Invalid sequence - too few characters left in buffer for the sequence.
+          // Append what we already have accumulated and ignore remaining characters.
+          htsbuf_append(hq, s, c - s - 1);
+          break;
+        } else {
+          // We should probably check each character in the range is also valid.
+          htsbuf_append(hq, s, c - s - 1);
+          htsbuf_append(hq, c-1, num_bytes);
+          s=c-1;
+          s+=num_bytes;
+          c=s;
+          continue;
+        }
+      }
+    }
+
+    switch(h) {
     case '<':  esc = "&lt;";   break;
     case '>':  esc = "&gt;";   break;
     case '&':  esc = "&amp;";  break;
@@ -368,7 +408,11 @@ htsbuf_append_and_escape_xml(htsbuf_queue_t *hq, const char *s)
     
     if(esc != NULL) {
       htsbuf_append(hq, s, c - s - 1);
-      htsbuf_append(hq, esc, strlen(esc));
+      htsbuf_append_str(hq, esc);
+      s = c;
+    } else if (h < 0x20 && h != 0x09 && h != 0x0a && h != 0x0d) {
+      /* allow XML 1.0 valid characters only */
+      htsbuf_append(hq, s, c - s - 1);
       s = c;
     }
     
@@ -397,26 +441,37 @@ htsbuf_append_and_escape_url(htsbuf_queue_t *hq, const char *s)
     char buf[4];
     C = *c++;
     
+    /* RFC 3986, section 3.4 */
     if((C >= '0' && C <= '9') ||
        (C >= 'a' && C <= 'z') ||
        (C >= 'A' && C <= 'Z') ||
-       C == '_' ||
-       C == '~' ||
-       C == '.' ||
-       C == '-') {
+       C == '/'  ||
+       C == ':'  ||
+       C == '@'  ||
+       C == '-'  ||
+       C == '.'  ||
+       C == '~'  ||
+       C == '!'  ||
+       C == '$'  ||
+       C == '\'' ||
+       C == '('  ||
+       C == ')'  ||
+       C == '*'  ||
+       C == ','  ||
+       C == ';') {
       esc = NULL;
     } else {
       static const char hexchars[16] = "0123456789ABCDEF";
       buf[0] = '%';
       buf[1] = hexchars[(C >> 4) & 0xf];
-      buf[2] = hexchars[C & 0xf];;
+      buf[2] = hexchars[C & 0xf];
       buf[3] = 0;
       esc = buf;
     }
 
     if(esc != NULL) {
       htsbuf_append(hq, s, c - s - 1);
-      htsbuf_append(hq, esc, strlen(esc));
+      htsbuf_append_str(hq, esc);
       s = c;
     }
     
@@ -427,6 +482,61 @@ htsbuf_append_and_escape_url(htsbuf_queue_t *hq, const char *s)
   }
 }
 
+/**
+ * RFC8187 (RFC5987) HTTP Header non-ASCII field encoding
+ */
+void
+htsbuf_append_and_escape_rfc8187(htsbuf_queue_t *hq, const char *s)
+{
+  const char *c = s;
+  const char *e = s + strlen(s);
+  char C;
+  if(e == s)
+    return;
+
+  while(1) {
+    const char *esc;
+    char buf[4];
+    C = *c++;
+
+    /* RFC 8187, section 3.2.1, attr-char */
+    if((C >= '0' && C <= '9') ||
+       (C >= 'a' && C <= 'z') ||
+       (C >= 'A' && C <= 'Z') ||
+       C == '!'  ||
+       C == '#'  ||
+       C == '$'  ||
+       C == '&'  ||
+       C == '+'  ||
+       C == '-'  ||
+       C == '.'  ||
+       C == '^'  ||
+       C == '_'  ||
+       C == '`'  ||
+       C == '|'  ||
+       C == '~') {
+      esc = NULL;
+    } else {
+      static const char hexchars[16] = "0123456789ABCDEF";
+      buf[0] = '%';
+      buf[1] = hexchars[(C >> 4) & 0xf];
+      buf[2] = hexchars[C & 0xf];
+      buf[3] = 0;
+      esc = buf;
+    }
+
+    if(esc != NULL) {
+      htsbuf_append(hq, s, c - s - 1);
+      htsbuf_append_str(hq, esc);
+      s = c;
+    }
+
+    if(c == e) {
+      htsbuf_append(hq, s, c - s);
+      break;
+    }
+  }
+}
 
 /**
  *
@@ -475,4 +585,3 @@ htsbuf_to_string(htsbuf_queue_t *hq)
   htsbuf_read(hq, r, hq->hq_size);
   return r;
 }
-

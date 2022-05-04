@@ -1,7 +1,15 @@
 #
-# Default configuration for tvheadend
-#
+# Default configuration for Tvheadend.
 
+# systemd
+# See tvheadend --help for more - default "-u hts -g video"
+OPTIONS="-u hts -g video"
+
+# sysvinit
+# 
+# Editing the following variables has no effect when using systemd
+# modify the OPTIONS variable (above) instead.
+#
 # TVH_ENABLED
 #   set to 0 to disable upstart job
 TVH_ENABLED=1

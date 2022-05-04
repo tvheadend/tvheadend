@@ -58,7 +58,12 @@ void htsbuf_append(htsbuf_queue_t *hq, const void *buf, size_t len);
 
 void htsbuf_append_prealloc(htsbuf_queue_t *hq, const void *buf, size_t len);
 
+static inline void htsbuf_append_str(htsbuf_queue_t *hq, const char *str)
+  { htsbuf_append(hq, str, strlen(str)); }
+
 void htsbuf_data_free(htsbuf_queue_t *hq, htsbuf_data_t *hd);
+
+static inline int htsbuf_empty(htsbuf_queue_t *hq) { return hq->hq_size == 0; }
 
 size_t htsbuf_read(htsbuf_queue_t *hq, void *buf, size_t len);
 
@@ -73,6 +78,8 @@ void htsbuf_appendq(htsbuf_queue_t *hq, htsbuf_queue_t *src);
 void htsbuf_append_and_escape_xml(htsbuf_queue_t *hq, const char *str);
 
 void htsbuf_append_and_escape_url(htsbuf_queue_t *hq, const char *s);
+
+void htsbuf_append_and_escape_rfc8187(htsbuf_queue_t *hq, const char *s);
 
 void htsbuf_append_and_escape_jsonstr(htsbuf_queue_t *hq, const char *s);
 

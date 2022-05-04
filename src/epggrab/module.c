@@ -16,12 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <string.h>
-#include <pthread.h>
-#include <unistd.h>
 #include <signal.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -37,6 +32,8 @@
 #include "epggrab.h"
 #include "epggrab/private.h"
 
+extern gtimer_t epggrab_save_timer;
+
 /* **************************************************************************
  * Module Access
  * *************************************************************************/
@@ -44,63 +41,330 @@
 epggrab_module_t* epggrab_module_find_by_id ( const char *id )
 {
   epggrab_module_t *m;
-  LIST_FOREACH(m, &epggrab_modules, link) {
-    if ( !strcmp(m->id, id) ) return m;
-  }
+  LIST_FOREACH(m, &epggrab_modules, link)
+    if (!strcmp(m->id, id))
+      return m;
   return NULL;
 }
 
-htsmsg_t *epggrab_module_list ( void )
+const char *
+epggrab_module_type(epggrab_module_t *mod)
 {
-  epggrab_module_t *m;
-  htsmsg_t *e, *a = htsmsg_create_list();
-  LIST_FOREACH(m, &epggrab_modules, link) {
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "id", m->id);
-    if (m->type == EPGGRAB_INT)
-      htsmsg_add_str(e, "type", "internal");
-    else if (m->type == EPGGRAB_EXT)
-      htsmsg_add_str(e, "type", "external");
-    else
-      htsmsg_add_str(e, "type", "ota");
-    htsmsg_add_u32(e, "enabled", m->enabled);
-    if(m->name) 
-      htsmsg_add_str(e, "name", m->name);
-    if(m->type == EPGGRAB_EXT) {
-      epggrab_module_ext_t *ext = (epggrab_module_ext_t*)m;
-      htsmsg_add_str(e, "path", ext->path);
-    }
-    htsmsg_add_msg(a, NULL, e);
+  switch (mod->type) {
+  case EPGGRAB_OTA: return N_("Over-the-air");
+  case EPGGRAB_INT: return N_("Internal");
+  case EPGGRAB_EXT: return N_("External");
+  default:          return N_("Unknown");
   }
-  return a;
 }
+
+const char *
+epggrab_module_get_status(epggrab_module_t *mod)
+{
+  if (mod->enabled)
+    return "epggrabmodEnabled";
+  return "epggrabmodNone";
+}
+
+/*
+ * Class
+ */
+
+static void epggrab_mod_class_title
+  (idnode_t *self, const char *lang, char *dst, size_t dstsize)
+{
+  epggrab_module_t *mod = (epggrab_module_t *)self;
+  const char *s1 = tvh_gettext_lang(lang, epggrab_module_type(mod));
+  const char *s2 = tvh_str_default(mod->name, mod->id);
+  snprintf(dst, dstsize, "%s: %s", s1, s2);
+}
+
+static void
+epggrab_mod_class_changed(idnode_t *self)
+{
+  epggrab_module_t *mod = (epggrab_module_t *)self;
+  epggrab_activate_module(mod, mod->enabled);
+  idnode_changed(&epggrab_conf.idnode);
+}
+
+static const void *epggrab_mod_class_type_get(void *o)
+{
+  static const char *s;
+  s = epggrab_module_type((epggrab_module_t *)o);
+  return &s;
+}
+
+static int epggrab_mod_class_type_set(void *o, const void *v)
+{
+  return 0;
+}
+
+static htsmsg_t *
+epggrab_module_ota_scrapper_config_list ( void *o, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_t *e = htsmsg_create_map();
+  htsmsg_add_str(e, "key", "");
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("Use default configuration")));
+  htsmsg_add_msg(m, NULL, e);
+  htsmsg_t *config;
+  /* We load all the config so we can get the names of ones that are
+   * valid. This is a bit of overhead but we are rarely called since
+   * this is for the configuration GUI drop-down.
+   */
+  if((config = hts_settings_load_r(1, "epggrab/eit/scrape")) != NULL) {
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, config) {
+      e = htsmsg_create_map();
+      htsmsg_add_str(e, "key", htsmsg_field_name(f));
+      htsmsg_add_str(e, "val", htsmsg_field_name(f));
+      htsmsg_add_msg(m, NULL, e);
+    }
+    htsmsg_destroy(config);
+  }
+  return m;
+}
+
+
+
+CLASS_DOC(epggrabber_modules)
+PROP_DOC(epggrabber_priority)
+
+const idclass_t epggrab_mod_class = {
+  .ic_class      = "epggrab_mod",
+  .ic_caption    = N_("Channels / EPG - EPG Grabber Modules"),
+  .ic_doc        = tvh_doc_epggrabber_modules_class,
+  .ic_event      = "epggrab_mod",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_get_title  = epggrab_mod_class_title,
+  .ic_changed    = epggrab_mod_class_changed,
+  .ic_groups     = (const property_group_t[]) {
+     {
+        .name   = N_("Grabber Settings"),
+        .number = 1,
+     },
+     {}
+  },
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_STR,
+      .id     = "name",
+      .name   = N_("Name"),
+      .desc   = N_("The EPG grabber name."),
+      .off    = offsetof(epggrab_module_t, name),
+      .opts   = PO_RDONLY,
+      .group  = 1,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "type",
+      .name   = N_("Type"),
+      .desc   = N_("The EPG grabber type."),
+      .get    = epggrab_mod_class_type_get,
+      .set    = epggrab_mod_class_type_set,
+      .opts   = PO_RDONLY | PO_LOCALE,
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "enabled",
+      .name   = N_("Enabled"),
+      .desc   = N_("Enable/disable the grabber."),
+      .off    = offsetof(epggrab_module_t, enabled),
+      .group  = 1,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "priority",
+      .name   = N_("Priority"),
+      .desc   = N_("Grabber priority. This option lets you pick which "
+                   "EPG grabber's data get used first. Priority is "
+                   "given to the grabber with the highest value set here. "
+                   "See Help for more info."),
+      .doc    = prop_doc_epggrabber_priority,
+      .off    = offsetof(epggrab_module_t, priority),
+      .opts   = PO_EXPERT,
+      .group  = 1
+    },
+    {}
+  }
+};
+
+const idclass_t epggrab_mod_int_class = {
+  .ic_super      = &epggrab_mod_class,
+  .ic_class      = "epggrab_mod_int",
+  .ic_caption    = N_("Internal EPG grabber"),
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_STR,
+      .id     = "path",
+      .name   = N_("Path"),
+      .desc   = N_("Path to the grabber executable."),
+      .off    = offsetof(epggrab_module_int_t, path),
+      .opts   = PO_RDONLY | PO_NOSAVE,
+      .group  = 1
+    },
+    {
+      .type   = PT_STR,
+      .id     = "args",
+      .name   = N_("Extra arguments"),
+      .desc   = N_("Additional arguments to pass to the grabber."),
+      .off    = offsetof(epggrab_module_int_t, args),
+      .opts   = PO_ADVANCED,
+      .group  = 1
+    },
+    {}
+  }
+};
+
+const idclass_t epggrab_mod_ext_class = {
+  .ic_super      = &epggrab_mod_class,
+  .ic_class      = "epggrab_mod_ext",
+  .ic_caption    = N_("External EPG grabber"),
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_STR,
+      .id     = "path",
+      .name   = N_("Path"),
+      .desc   = N_("Path to the socket Tvheadend will read data from."),
+      .off    = offsetof(epggrab_module_ext_t, path),
+      .opts   = PO_RDONLY | PO_NOSAVE,
+      .group  = 1
+    },
+    {}
+  }
+};
+
+const idclass_t epggrab_mod_ota_class = {
+  .ic_super      = &epggrab_mod_class,
+  .ic_class      = "epggrab_mod_ota",
+  .ic_caption    = N_("EPG - Over-the-air EPG Grabber"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
+const idclass_t epggrab_mod_ota_scraper_class = {
+  .ic_super      = &epggrab_mod_ota_class,
+  .ic_class      = "epggrab_mod_ota_scraper",
+  .ic_caption    = N_("Over-the-air EPG grabber with scraping"),
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name      = N_("EPG behaviour"),
+      .number    = 1,
+    },
+    {
+      .name      = N_("Scrape behaviour"),
+      .number    = 2,
+    },
+    {}
+  },
+  .ic_properties = (const property_t[]){
+    {
+      /* The "eit" grabber is used by a number of countries so
+       * we can't ship a config file named "eit" since regex use
+       * in the UK won't be the same as in Italy.
+       *
+       * So, this option allows the user to specify the configuration
+       * file to use from the ones that we do ship without them having
+       * to mess around in the filesystem copying files.
+       *
+       * For example they can simply specify "uk" to use its
+       * configuration file.
+       */
+      .type   = PT_STR,
+      .id     = "scrape_config",
+      .name   = N_("Scraper configuration to use"),
+      .desc   = N_("Configuration containing regular expressions to use for "
+                   "scraping additional information from the broadcast guide."
+                   "This option does not access or retrieve details from the "
+                   "Internet."
+                   "This can be left blank to use the default or "
+                   "set to one of the Tvheadend configurations from the "
+                   "epggrab/eit/scrape directory such as "
+                   "\"uk\" (without the quotes)."
+                  ),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_config),
+      .list   = epggrab_module_ota_scrapper_config_list,
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_episode",
+      .name   = N_("Scrape Episode"),
+      .desc   = N_("Enable/disable scraping episode details using the grabber."),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_episode),
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_title",
+      .name   = N_("Scrape Title"),
+      .desc   = N_("Enable/disable scraping title from the programme title and description. "
+                   "Some broadcasters can split the title over the separate title, "
+                   "and summary fields. This allows scraping of common split title formats "
+                   "from within the broadcast title and summary field if supported by the "
+                   "configuration file."
+                   ),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_title),
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_subtitle",
+      .name   = N_("Scrape Subtitle"),
+      .desc   = N_("Enable/disable scraping subtitle from the programme description. "
+                   "Some broadcasters do not send separate title, subtitle, description, "
+                   "and summary fields. This allows scraping of common subtitle formats "
+                   "from within the broadcast summary field if supported by the "
+                   "configuration file."
+                   ),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_subtitle),
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "scrape_summary",
+      .name   = N_("Scrape Summary"),
+      .desc   = N_("Enable/disable scraping summary from the programme description. "
+                   "Some broadcasters do not send separate title, subtitle, description, "
+                   "and summary fields. This allows scraping of a modified summary "
+                   "from within the broadcast summary field if supported by the "
+                   "configuration file."
+                   ),
+      .off    = offsetof(epggrab_module_ota_scraper_t, scrape_summary),
+      .group  = 2,
+    },
+    {}
+  }
+};
 
 /* **************************************************************************
  * Generic module routines
  * *************************************************************************/
 
 epggrab_module_t *epggrab_module_create
-  ( epggrab_module_t *skel, const char *id, const char *name, int priority,
-    epggrab_channel_tree_t *channels )
+  ( epggrab_module_t *skel, const idclass_t *cls,
+    const char *id, int subsys, const char *saveid,
+    const char *name, int priority )
 {
   assert(skel);
-  
+
   /* Setup */
   skel->id       = strdup(id);
+  skel->subsys   = subsys;
+  skel->saveid   = strdup(saveid ?: id);
   skel->name     = strdup(name);
   skel->priority = priority;
-  skel->channels = channels;
-  if (channels) {
-    skel->ch_save = epggrab_module_ch_save;
-    skel->ch_add  = epggrab_module_ch_add;
-    skel->ch_mod  = epggrab_module_ch_mod;
-    skel->ch_rem  = epggrab_module_ch_rem;
-  }
+  RB_INIT(&skel->channels);
+  TAILQ_INIT(&skel->data_queue);
 
   /* Insert */
   assert(!epggrab_module_find_by_id(id));
   LIST_INSERT_HEAD(&epggrab_modules, skel, link);
-  tvhlog(LOG_INFO, "epggrab", "module %s created", id);
+  tvhinfo(LS_EPGGRAB, "module %s created", id);
+
+  idnode_insert(&skel->idnode, NULL, cls, 0);
 
   return skel;
 }
@@ -110,129 +374,76 @@ epggrab_module_t *epggrab_module_create
  */
 void epggrab_module_parse( void *m, htsmsg_t *data )
 {
-  time_t tm1, tm2;
+  int64_t tm1, tm2;
   int save = 0;
   epggrab_stats_t stats;
   epggrab_module_int_t *mod = m;
 
   /* Parse */
   memset(&stats, 0, sizeof(stats));
-  pthread_mutex_lock(&global_lock);
-  time(&tm1);
+  tm1 = getfastmonoclock();
   save |= mod->parse(mod, data, &stats);
-  time(&tm2);
-  if (save) epg_updated();  
-  pthread_mutex_unlock(&global_lock);
+  tm2 = getfastmonoclock();
   htsmsg_destroy(data);
 
   /* Debug stats */
-  tvhlog(LOG_INFO, mod->id, "parse took %"PRItime_t" seconds", tm2 - tm1);
-  tvhlog(LOG_INFO, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
-         stats.channels.total, stats.channels.created,
-         stats.channels.modified);
-  tvhlog(LOG_INFO, mod->id, "  brands     tot=%5d new=%5d mod=%5d",
-         stats.brands.total, stats.brands.created,
-         stats.brands.modified);
-  tvhlog(LOG_INFO, mod->id, "  seasons    tot=%5d new=%5d mod=%5d",
-         stats.seasons.total, stats.seasons.created,
-         stats.seasons.modified);
-  tvhlog(LOG_INFO, mod->id, "  episodes   tot=%5d new=%5d mod=%5d",
-         stats.episodes.total, stats.episodes.created,
-         stats.episodes.modified);
-  tvhlog(LOG_INFO, mod->id, "  broadcasts tot=%5d new=%5d mod=%5d",
-         stats.broadcasts.total, stats.broadcasts.created,
-         stats.broadcasts.modified);
+  tvhinfo(mod->subsys, "%s: parse took %"PRId64" seconds", mod->id, mono2sec(tm2 - tm1));
+  tvhinfo(mod->subsys, "%s:  channels   tot=%5d new=%5d mod=%5d",
+          mod->id, stats.channels.total, stats.channels.created,
+          stats.channels.modified);
+  tvhinfo(mod->subsys, "%s:  brands     tot=%5d new=%5d mod=%5d",
+          mod->id, stats.brands.total, stats.brands.created,
+          stats.brands.modified);
+  tvhinfo(mod->subsys, "%s:  seasons    tot=%5d new=%5d mod=%5d",
+          mod->id, stats.seasons.total, stats.seasons.created,
+          stats.seasons.modified);
+  tvhinfo(mod->subsys, "%s:  episodes   tot=%5d new=%5d mod=%5d",
+          mod->id, stats.episodes.total, stats.episodes.created,
+          stats.episodes.modified);
+  tvhinfo(mod->subsys, "%s:  broadcasts tot=%5d new=%5d mod=%5d",
+          mod->id, stats.broadcasts.total, stats.broadcasts.created,
+          stats.broadcasts.modified);
+
+  /* Now we've parsed, do we need to save? */
+  if (save && epggrab_conf.epgdb_saveafterimport) {
+    tvhinfo(mod->subsys, "%s: scheduling save epg timer", mod->id);
+    tvh_mutex_lock(&global_lock);
+    /* Disarm any existing timer first (from a periodic save). */
+    gtimer_disarm(&epggrab_save_timer);
+    /* Reschedule for a few minutes away so if the user is
+     * refreshing from multiple xmltv sources we will give time for
+     * them to all complete before persisting, rather than persisting
+     * immediately after a parse.
+     *
+     * If periodic saving is enabled then the callback will then
+     * rearm the timer for x hours after the previous save.
+     */
+    gtimer_arm_rel(&epggrab_save_timer, epg_save_callback, NULL,
+                   60 * 2);
+    tvh_mutex_unlock(&global_lock);
+  }
 }
 
 /* **************************************************************************
  * Module channel routines
  * *************************************************************************/
 
-void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
+void epggrab_module_channels_load ( const char *modid )
 {
-  htsmsg_t *a = NULL, *m = htsmsg_create_map();
-  epggrab_module_t *mod = _m;
-  epggrab_channel_link_t *ecl;
-
-  if (ch->name)
-    htsmsg_add_str(m, "name", ch->name);
-  if (ch->icon)
-    htsmsg_add_str(m, "icon", ch->icon);
-  LIST_FOREACH(ecl, &ch->channels, ecl_epg_link) {
-    if (!a) a = htsmsg_create_list();
-    htsmsg_add_str(a, NULL, channel_get_uuid(ecl->ecl_channel));
-  }
-  if (a) htsmsg_add_msg(m, "channels", a);
-  if (ch->number)
-    htsmsg_add_u32(m, "number", ch->number);
-
-  hts_settings_save(m, "epggrab/%s/channels/%s", mod->id, ch->id);
-}
-
-void epggrab_module_ch_add ( void *m, channel_t *ch )
-{
-  epggrab_channel_t *egc;
-  epggrab_module_int_t *mod = m;
-  RB_FOREACH(egc, mod->channels, link) {
-    if (epggrab_channel_match_and_link(egc, ch)) break;
-  }
-}
-
-void epggrab_module_ch_rem ( void *m, channel_t *ch )
-{
-  epggrab_channel_link_t *ecl;
-  while ((ecl = LIST_FIRST(&ch->ch_epggrab)))
-    epggrab_channel_link_delete(ecl, 1);
-}
-
-void epggrab_module_ch_mod ( void *mod, channel_t *ch )
-{
-  return epggrab_module_ch_add(mod, ch);
-}
-
-static void _epggrab_module_channel_load 
-  ( epggrab_module_t *mod, htsmsg_t *m, const char *id )
-{
-  int save = 0;
-  const char *str;
-  uint32_t u32;
-  htsmsg_t *a;
-  htsmsg_field_t *f;
-  channel_t *ch;
-
-  epggrab_channel_t *egc
-    = epggrab_channel_find(mod->channels, id, 1, &save, mod);
-
-  if ((str = htsmsg_get_str(m, "name")))
-    egc->name = strdup(str);
-  if ((str = htsmsg_get_str(m, "icon")))
-    egc->icon = strdup(str);
-  if(!htsmsg_get_u32(m, "number", &u32))
-    egc->number = u32;
-  if ((a = htsmsg_get_list(m, "channels"))) {
-    HTSMSG_FOREACH(f, a) {
-      if ((str = htsmsg_field_get_str(f))) {
-        if ((ch = channel_find_by_uuid(str)))
-          epggrab_channel_link(egc, ch);
-      }
-    }
-
-  /* Compat with older 3.1 code */
-  } else if (!htsmsg_get_u32(m, "channel", &u32)) {
-    if ((ch = channel_find_by_id(u32)))
-      epggrab_channel_link(egc, ch);
-  }
-}
-
-void epggrab_module_channels_load ( epggrab_module_t *mod )
-{
+  epggrab_module_t *mod = NULL;
   htsmsg_t *m, *e;
   htsmsg_field_t *f;
-  if (!mod || !mod->channels) return;
-  if ((m = hts_settings_load("epggrab/%s/channels", mod->id))) {
+  const char *id;
+  if (!modid) return;
+  if ((m = hts_settings_load_r(1, "epggrab/%s/channels", modid))) {
     HTSMSG_FOREACH(f, m) {
-      if ((e = htsmsg_get_map_by_field(f)))
-        _epggrab_module_channel_load(mod, e, f->hmf_name);
+      if ((e = htsmsg_get_map_by_field(f))) {
+        id = htsmsg_get_str(e, "modid") ?: modid;
+        if (mod == NULL || strcmp(mod->id, id))
+          mod = epggrab_module_find_by_id(id);
+        if (mod)
+          epggrab_channel_create(mod, e, htsmsg_field_name(f));
+      }
     }
     htsmsg_destroy(m);
   }
@@ -246,28 +457,34 @@ static void
 epggrab_module_int_done( void *m )
 {
   epggrab_module_int_t *mod = m;
+  mod->active = 0;
   free((char *)mod->path);
+  mod->path = NULL;
+  free((char *)mod->args);
+  mod->args = NULL;
 }
 
 epggrab_module_int_t *epggrab_module_int_create
-  ( epggrab_module_int_t *skel,
-    const char *id, const char *name, int priority,
+  ( epggrab_module_int_t *skel, const idclass_t *cls,
+    const char *id, int subsys, const char *saveid,
+    const char *name, int priority,
     const char *path,
     char* (*grab) (void*m),
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
-    htsmsg_t* (*trans) (void *mod, char *data),
-    epggrab_channel_tree_t *channels )
+    htsmsg_t* (*trans) (void *mod, char *data) )
 {
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_int_t));
-  
+
   /* Pass through */
-  epggrab_module_create((epggrab_module_t*)skel, id, name, priority, channels);
+  epggrab_module_create((epggrab_module_t*)skel,
+                        cls ?: &epggrab_mod_int_class,
+                        id, subsys, saveid, name, priority);
 
   /* Int data */
   skel->type     = EPGGRAB_INT;
   skel->path     = strdup(path);
-  skel->channels = channels;
+  skel->args     = NULL;
   skel->grab     = grab  ?: epggrab_module_grab_spawn;
   skel->trans    = trans ?: epggrab_module_trans_xml;
   skel->parse    = parse;
@@ -277,22 +494,53 @@ epggrab_module_int_t *epggrab_module_int_create
 }
 
 char *epggrab_module_grab_spawn ( void *m )
-{ 
-  int        outlen;
+{
+  int        rd = -1, outlen;
   char       *outbuf;
   epggrab_module_int_t *mod = m;
+  char      **argv = NULL;
+  char       *path;
 
   /* Debug */
-  tvhlog(LOG_INFO, mod->id, "grab %s", mod->path);
+  tvhinfo(mod->subsys, "%s: grab %s", mod->id, mod->path);
 
-  /* Grab */
-  outlen = spawn_and_store_stdout(mod->path, NULL, &outbuf);
-  if ( outlen < 1 ) {
-    tvhlog(LOG_ERR, mod->id, "no output detected");
+  /* Extra arguments */
+  if (mod->args && mod->args[0]) {
+    path = alloca(strlen(mod->path) + strlen(mod->args) + 2);
+    strcpy(path, mod->path);
+    strcat(path, " ");
+    strcat(path, mod->args);
+  } else {
+    path = (char *)mod->path;
+  }
+
+  /* Arguments */
+  if (spawn_parse_args(&argv, 64, path, NULL)) {
+    tvherror(mod->subsys, "%s: unable to parse arguments", mod->id);
     return NULL;
   }
 
+  /* Grab */
+  outlen = spawn_and_give_stdout(argv[0], argv, NULL, &rd, NULL, 1);
+
+  spawn_free_args(argv);
+
+  if (outlen < 0)
+    goto error;
+
+  outlen = file_readall(rd, &outbuf);
+  if (outlen < 1)
+    goto error;
+
+  close(rd);
+
   return outbuf;
+
+error:
+  if (rd >= 0)
+    close(rd);
+  tvherror(mod->subsys, "%s: no output detected", mod->id);
+  return NULL;
 }
 
 
@@ -308,7 +556,7 @@ htsmsg_t *epggrab_module_trans_xml ( void *m,  char *c )
   /* Extract */
   ret = htsmsg_xml_deserialize(c, errbuf, sizeof(errbuf));
   if (!ret)
-    tvhlog(LOG_ERR, mod->id, "htsmsg_xml_deserialize error %s", errbuf);
+    tvherror(mod->subsys, "%s: htsmsg_xml_deserialize error %s", mod->id, errbuf);
   return ret;
 }
 
@@ -334,12 +582,12 @@ static void _epggrab_socket_handler ( epggrab_module_ext_t *mod, int s )
 
   /* Process */
   if ( data ) {
-    tvhlog(LOG_INFO, mod->id, "grab took %"PRItime_t" seconds", tm2 - tm1);
+    tvhinfo(mod->subsys, "%s: grab took %"PRItime_t" seconds", mod->id, tm2 - tm1);
     epggrab_module_parse(mod, data);
 
   /* Failed */
   } else {
-    tvhlog(LOG_ERR, mod->id, "failed to read data");
+    tvherror(mod->subsys, "%s: failed to read data", mod->id);
   }
 }
 
@@ -349,18 +597,19 @@ static void _epggrab_socket_handler ( epggrab_module_ext_t *mod, int s )
  */
 static void *_epggrab_socket_thread ( void *p )
 {
-  int s;
+  int s, s1;
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)p;
-  tvhlog(LOG_INFO, mod->id, "external socket enabled");
-  
-  while ( mod->enabled && mod->sock ) {
-    tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
-    s = accept(mod->sock, NULL, NULL);
-    if (s <= 0) continue;
-    tvhlog(LOG_DEBUG, mod->id, "got connection %d", s);
+  tvhinfo(mod->subsys, "%s: external socket enabled", mod->id);
+
+  while (mod->enabled && (s1 = atomic_get(&mod->sock)) >= 0) {
+    tvhdebug(mod->subsys, "%s: waiting for connection", mod->id);
+    s = accept(s1, NULL, NULL);
+    if (s < 0) continue;
+    tvhdebug(mod->subsys, "%s: got connection %d", mod->id, s);
     _epggrab_socket_handler(mod, s);
+    close(s);
   }
-  tvhlog(LOG_DEBUG, mod->id, "terminated");
+  tvhdebug(mod->subsys, "%s: terminated", mod->id);
   return NULL;
 }
 
@@ -374,13 +623,12 @@ epggrab_module_done_socket( void *m )
   int sock;
 
   assert(mod->type == EPGGRAB_EXT);
-  mod->enabled = 0;
-  sock = mod->sock;
-  mod->sock = 0;
+  mod->active = 0;
+  sock = atomic_exchange(&mod->sock, -1);
   shutdown(sock, SHUT_RDWR);
   close(sock);
   if (mod->tid) {
-    pthread_kill(mod->tid, SIGTERM);
+    tvh_thread_kill(mod->tid, SIGQUIT);
     pthread_join(mod->tid, NULL);
   }
   mod->tid = 0;
@@ -390,53 +638,55 @@ epggrab_module_done_socket( void *m )
 }
 
 /*
- * Enable socket module
+ * Activate socket module
  */
 static int
-epggrab_module_enable_socket ( void *m, uint8_t e )
+epggrab_module_activate_socket ( void *m, int a )
 {
   pthread_attr_t tattr;
   struct sockaddr_un addr;
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)m;
+  const char *path;
   assert(mod->type == EPGGRAB_EXT);
-  
+  int sock;
+
   /* Ignore */
-  if ( mod->enabled == e ) return 0;
+  if (mod->active == a) return 0;
 
   /* Disable */
-  if (!e) {
+  if (!a) {
+    path = strdup(mod->path);
     epggrab_module_done_socket(m);
-  
+    mod->path = path;
   /* Enable */
   } else {
     unlink(mod->path); // just in case!
     hts_settings_makedirs(mod->path);
 
-    mod->sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    assert(mod->sock);
+    sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    assert(sock >= 0);
 
     memset(&addr, 0, sizeof(struct sockaddr_un));
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, mod->path, 100);
-    if ( bind(mod->sock, (struct sockaddr*)&addr,
-             sizeof(struct sockaddr_un)) != 0 ) {
-      tvhlog(LOG_ERR, mod->id, "failed to bind socket");
-      close(mod->sock);
-      mod->sock = 0;
+    strlcpy(addr.sun_path, mod->path, sizeof(addr.sun_path));
+    if (bind(sock, (struct sockaddr*)&addr,
+             sizeof(struct sockaddr_un)) != 0) {
+      tvherror(mod->subsys, "%s: failed to bind socket: %s", mod->id, strerror(errno));
+      close(sock);
       return 0;
     }
 
-    if ( listen(mod->sock, 5) != 0 ) {
-      tvhlog(LOG_ERR, mod->id, "failed to listen on socket");
-      close(mod->sock);
-      mod->sock = 0;
+    if (listen(sock, 5) != 0) {
+      tvherror(mod->subsys, "%s: failed to listen on socket: %s", mod->id, strerror(errno));
+      close(sock);
       return 0;
     }
 
-    tvhlog(LOG_DEBUG, mod->id, "starting socket thread");
+    tvhdebug(mod->subsys, "%s: starting socket thread", mod->id);
     pthread_attr_init(&tattr);
-    mod->enabled = 1;
-    tvhthread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod);
+    mod->active = 1;
+    atomic_set(&mod->sock, sock);
+    tvh_thread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod, "epggrabso");
   }
   return 1;
 }
@@ -445,28 +695,29 @@ epggrab_module_enable_socket ( void *m, uint8_t e )
  * Create a module
  */
 epggrab_module_ext_t *epggrab_module_ext_create
-  ( epggrab_module_ext_t *skel,
-    const char *id, const char *name, int priority, const char *sockid,
+  ( epggrab_module_ext_t *skel, const idclass_t *cls,
+    const char *id, int subsys, const char *saveid,
+    const char *name, int priority, const char *sockid,
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
-    htsmsg_t* (*trans) (void *mod, char *data),
-    epggrab_channel_tree_t *channels )
+    htsmsg_t* (*trans) (void *mod, char *data) )
 {
   char path[512];
 
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ext_t));
-  
+  atomic_set(&skel->sock, -1);
+
   /* Pass through */
   hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid);
   epggrab_module_int_create((epggrab_module_int_t*)skel,
-                            id, name, priority, path,
-                            NULL, parse, trans,
-                            channels);
+                            cls ?: &epggrab_mod_ext_class,
+                            id, subsys, saveid, name, priority, path,
+                            NULL, parse, trans);
 
   /* Local */
-  skel->type   = EPGGRAB_EXT;
-  skel->enable = epggrab_module_enable_socket;
-  skel->done   = epggrab_module_done_socket;
+  skel->type     = EPGGRAB_EXT;
+  skel->activate = epggrab_module_activate_socket;
+  skel->done     = epggrab_module_done_socket;
 
   return skel;
 }
@@ -477,23 +728,27 @@ epggrab_module_ext_t *epggrab_module_ext_create
 
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
-    const char *id, const char *name, int priority,
-    epggrab_ota_module_ops_t *ops,
-    epggrab_channel_tree_t *channels )
+    const char *id, int subsys, const char *saveid,
+    const char *name, int priority, const idclass_t *idclass,
+    const epggrab_ota_module_ops_t *ops )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
-  
+
   /* Pass through */
-  epggrab_module_create((epggrab_module_t*)skel, id, name, priority, channels);
+  epggrab_module_create((epggrab_module_t*)skel,
+                        idclass ?: &epggrab_mod_ota_class,
+                        id, subsys, saveid, name, priority);
 
   /* Setup */
-  skel->type   = EPGGRAB_OTA;
-  skel->enable = ops->enable;
-  skel->start  = ops->start;
-  skel->done   = ops->done;
-  skel->tune   = ops->tune;
-  //TAILQ_INIT(&skel->muxes);
+  skel->type         = EPGGRAB_OTA;
+  skel->activate     = ops->activate;
+  skel->start        = ops->start;
+  skel->stop         = ops->stop;
+  skel->handlers     = ops->handlers;
+  skel->done         = ops->done;
+  skel->tune         = ops->tune;
+  skel->process_data = ops->process_data;
+  skel->opaque       = ops->opaque;
 
   return skel;
 }
-

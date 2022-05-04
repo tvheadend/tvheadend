@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "htsmsg_json.h"
 #include "htsbuf.h"
@@ -49,21 +50,26 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
       htsbuf_append(hq, indentor, indent < 16 ? indent : 16);
 
     if(!isarray) {
-      htsbuf_append_and_escape_jsonstr(hq, f->hmf_name ?: "noname");
-      htsbuf_append(hq, ": ", 2);
+      htsbuf_append_and_escape_jsonstr(hq, htsmsg_field_name(f));
+      htsbuf_append(hq, ": ", pretty ? 2 : 1);
     }
 
     switch(f->hmf_type) {
     case HMF_MAP:
-      htsmsg_json_write(&f->hmf_msg, hq, 0, indent + 1, pretty);
+      htsmsg_json_write(f->hmf_msg, hq, 0, indent + 1, pretty);
       break;
 
     case HMF_LIST:
-      htsmsg_json_write(&f->hmf_msg, hq, 1, indent + 1, pretty);
+      htsmsg_json_write(f->hmf_msg, hq, 1, indent + 1, pretty);
       break;
 
     case HMF_STR:
       htsbuf_append_and_escape_jsonstr(hq, f->hmf_str);
+      break;
+
+    case HMF_UUID:
+      uuid_get_hex((tvh_uuid_t *)f->hmf_uuid, buf);
+      htsbuf_append_and_escape_jsonstr(hq, buf);
       break;
 
     case HMF_BIN:
@@ -72,17 +78,17 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 
     case HMF_BOOL:
       s = f->hmf_bool ? "true" : "false";
-      htsbuf_append(hq, s, strlen(s));
+      htsbuf_append_str(hq, s);
       break;
 
     case HMF_S64:
       snprintf(buf, sizeof(buf), "%" PRId64, f->hmf_s64);
-      htsbuf_append(hq, buf, strlen(buf));
+      htsbuf_append_str(hq, buf);
       break;
 
     case HMF_DBL:
       my_double2str(buf, sizeof(buf), f->hmf_dbl);
-      htsbuf_append(hq, buf, strlen(buf));
+      htsbuf_append_str(hq, buf);
       break;
 
     default:
@@ -161,7 +167,7 @@ add_string(void *opaque, void *parent, const char *name,  char *str)
 }
 
 static void 
-add_long(void *opaque, void *parent, const char *name, long v)
+add_s64(void *opaque, void *parent, const char *name, int64_t v)
 {
   htsmsg_add_s64(parent, name, v);
 }
@@ -192,7 +198,7 @@ static const json_deserializer_t json_to_htsmsg = {
   .jd_destroy_obj     = destroy_obj,
   .jd_add_obj         = add_obj,
   .jd_add_string      = add_string,
-  .jd_add_long        = add_long,
+  .jd_add_s64         = add_s64,
   .jd_add_double      = add_double,
   .jd_add_bool        = add_bool,
   .jd_add_null        = add_null,

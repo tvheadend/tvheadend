@@ -45,7 +45,7 @@ fmp_cmp ( fsmonitor_path_t *a, fsmonitor_path_t *b )
 static void *
 fsmonitor_thread ( void* p )
 {
-  int c, i;
+  int fd, c, i;
   uint8_t buf[sizeof(struct inotify_event) * 10];
   char path[1024];
   struct inotify_event *ev;
@@ -53,22 +53,26 @@ fsmonitor_thread ( void* p )
   fsmonitor_link_t *fml;
   fsmonitor_t *fsm;
 
-  while (fsmonitor_fd >= 0) {
+  while (tvheadend_is_running()) {
+
+    fd = atomic_get(&fsmonitor_fd);
+    if (fd < 0)
+      break;
 
     /* Wait for event */
-    c = read(fsmonitor_fd, buf, sizeof(buf));
-    if (fsmonitor_fd < 0)
+    c = read(fd, buf, sizeof(buf));
+    if (c < 0)
       break;
 
     /* Process */
-    pthread_mutex_lock(&global_lock);
+    tvh_mutex_lock(&global_lock);
     i = 0;
     while ( i < c ) {
       ev = (struct inotify_event*)&buf[i];
       i += sizeof(struct inotify_event) + ev->len;
       if (i > c)
         break;
-      tvhtrace("fsmonitor", "event fd %d name %s mask %08X",
+      tvhtrace(LS_FSMONITOR, "event fd %d name %s mask %08X",
                ev->wd, ev->len ? ev->name : NULL, ev->mask);
 
       /* Find */
@@ -91,7 +95,7 @@ fsmonitor_thread ( void* p )
           fsm->fsm_delete(fsm, path);
       }
     }
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
   }
   return NULL;
 }
@@ -105,8 +109,8 @@ void
 fsmonitor_init ( void )
 {
   /* Intialise inotify */
-  fsmonitor_fd = inotify_init();
-  tvhthread_create0(&fsmonitor_tid, NULL, fsmonitor_thread, NULL, "fsmonitor");
+  atomic_set(&fsmonitor_fd, inotify_init1(IN_CLOEXEC));
+  tvh_thread_create(&fsmonitor_tid, NULL, fsmonitor_thread, NULL, "fsmonitor");
 }
 
 /*
@@ -115,10 +119,9 @@ fsmonitor_init ( void )
 void
 fsmonitor_done ( void )
 {
-  int fd = fsmonitor_fd;
-  fsmonitor_fd = -1;
-  close(fd);
-  pthread_kill(fsmonitor_tid, SIGTERM);
+  int fd = atomic_exchange(&fsmonitor_fd, -1);
+  if (fd >= 0) blacklisted_close(fd);
+  tvh_thread_kill(fsmonitor_tid, SIGTERM);
   pthread_join(fsmonitor_tid, NULL);
 }
 
@@ -128,7 +131,7 @@ fsmonitor_done ( void )
 int
 fsmonitor_add ( const char *path, fsmonitor_t *fsm )
 {
-  int mask;
+  int fd, mask;
   fsmonitor_path_t *skel;
   fsmonitor_path_t *fmp;
   fsmonitor_link_t *fml;
@@ -145,20 +148,24 @@ fsmonitor_add ( const char *path, fsmonitor_t *fsm )
   fmp = RB_INSERT_SORTED(&fsmonitor_paths, skel, fmp_link, fmp_cmp);
   if (!fmp) {
     fmp = skel;
-    fmp->fmp_fd = inotify_add_watch(fsmonitor_fd, path, mask);
+    fd  = atomic_get(&fsmonitor_fd);
+    if (fd >= 0)
+      fmp->fmp_fd = inotify_add_watch(fd, path, mask);
+    else
+      fmp->fmp_fd = -1;
 
     /* Failed */
     if (fmp->fmp_fd <= 0) {
       RB_REMOVE(&fsmonitor_paths, fmp, fmp_link);
       free(fmp);
-      tvhdebug("fsmonitor", "failed to add %s (exists?)", path);
+      tvhdebug(LS_FSMONITOR, "failed to add %s (exists?)", path);
       printf("ERROR: failed to add %s\n", path);
       return -1;
     }
 
     /* Setup */
     fmp->fmp_path = strdup(path);
-    tvhdebug("fsmonitor", "watch %s", fmp->fmp_path);
+    tvhdebug(LS_FSMONITOR, "watch %s", fmp->fmp_path);
   } else {
     free(skel);
   }
@@ -187,6 +194,7 @@ fsmonitor_del ( const char *path, fsmonitor_t *fsm )
   static fsmonitor_path_t skel;
   fsmonitor_path_t *fmp;
   fsmonitor_link_t *fml;
+  int fd;
 
   lock_assert(&global_lock);
 
@@ -210,9 +218,11 @@ fsmonitor_del ( const char *path, fsmonitor_t *fsm )
 
     /* Remove path */
     if (LIST_EMPTY(&fmp->fmp_monitors)) {
-      tvhdebug("fsmonitor", "unwatch %s", fmp->fmp_path);
+      tvhdebug(LS_FSMONITOR, "unwatch %s", fmp->fmp_path);
       RB_REMOVE(&fsmonitor_paths, fmp, fmp_link);
-      inotify_rm_watch(fsmonitor_fd, fmp->fmp_fd);
+      fd = atomic_get(&fsmonitor_fd);
+      if (fd >= 0)
+        inotify_rm_watch(fd, fmp->fmp_fd);
       free(fmp->fmp_path);
       free(fmp);
     }

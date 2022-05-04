@@ -27,18 +27,29 @@ typedef struct lang_code
   const char *code1;  ///< ISO 639-1
   const char *code2t; ///< ISO 639-2 T
   const char *desc;   ///< Description
+  const char *locale; ///< Locale variants (like US|GB or DE|BE)
 } lang_code_t;
 
 extern const lang_code_t lang_codes[];
+
+typedef struct lang_code_list
+{
+  RB_ENTRY(lang_code_list) link;
+  const char *langs;
+  int codeslen;
+  const lang_code_t *codes[0];
+} lang_code_list_t;
 
 /* Convert code to preferred internal code */
 const char *lang_code_get ( const char *code );
 const char *lang_code_get2 ( const char *code, size_t len );
 const lang_code_t *lang_code_get3 ( const char *code );
 
+const char *lang_code_preferred( void );
+char *lang_code_user( const char *ucode );
+
 /* Split list of codes as per HTTP Language-Accept spec */
-const char **lang_code_split ( const char *codes );
-const lang_code_t **lang_code_split2 ( const char *codes );
+const lang_code_list_t *lang_code_split ( const char *codes );
 
 /* Efficient code lookup */
 typedef struct lang_code_lookup_element {

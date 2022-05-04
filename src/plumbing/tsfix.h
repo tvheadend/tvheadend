@@ -23,8 +23,6 @@
 
 streaming_target_t *tsfix_create(streaming_target_t *output);
 
-void tsfix_set_start_time(streaming_target_t *pad, time_t start);
-
 void tsfix_destroy(streaming_target_t *gh);
 
 

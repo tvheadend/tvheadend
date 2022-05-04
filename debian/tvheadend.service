@@ -1,0 +1,26 @@
+[Unit]
+Description=Tvheadend - a TV streaming server and DVR
+# Add existing services you want started before Tvheadend, e.g, mount
+# units..
+# After=auditd.service syslog.target network.target local-fs.target mnt-recordings.mount
+# See "man systemd.mount" or view https://www.freedesktop.org/software/systemd/man/systemd.mount.html
+
+After=auditd.service syslog.target network.target local-fs.target
+
+[Service]
+EnvironmentFile=/etc/default/tvheadend
+ExecStart=/usr/bin/tvheadend -f -p /run/tvheadend.pid $OPTIONS
+PIDFile=/run/tvheadend.pid
+Type=forking
+Restart=on-failure
+RestartSec=54s
+
+# To enable watchdog functionality, uncomment these, remove Type=forking
+# and compile with --enable-libsystemd_daemon
+#Type=notify
+#WatchdogSec=1m
+#TimeoutStartSec=5m
+#TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

@@ -19,7 +19,6 @@
 
 #include "tvheadend.h"
 #include "esfilter.h"
-#include "lang_codes.h"
 #include "access.h"
 #include "api.h"
 
@@ -30,9 +29,8 @@ api_esfilter_grid
 {
   esfilter_t *esf;
 
-  TAILQ_FOREACH(esf, &esfilters[cls], esf_link) {
-    idnode_set_add(ins, (idnode_t*)esf, &conf->filter);
-  }
+  TAILQ_FOREACH(esf, &esfilters[cls], esf_link)
+    idnode_set_add(ins, (idnode_t*)esf, &conf->filter, perm->aa_lang_ui);
 }
 
 static int
@@ -41,13 +39,16 @@ api_esfilter_create
     esfilter_class_t cls )
 {
   htsmsg_t *conf;
+  esfilter_t *esf;
 
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
-  esfilter_create(cls, NULL, conf, 1);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_lock(&global_lock);
+  esf = esfilter_create(cls, NULL, conf, 1);
+  if (esf)
+    api_idnode_create(resp, &esf->esf_id);
+  tvh_mutex_unlock(&global_lock);
 
   return 0;
 }

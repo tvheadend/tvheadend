@@ -1,6 +1,6 @@
 /*
  *  tvheadend, WEBUI / HTML user interface
- *  Copyright (C) 2008 Andreas �man
+ *  Copyright (C) 2008 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,14 +15,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
 
 #include "tvheadend.h"
 #include "http.h"
@@ -112,6 +104,23 @@ dvr_query_free(dvr_query_result_t *dqr)
 }
 
 /**
+ *
+ */
+static dvr_entry_t *
+dvr_find_by_event(epg_broadcast_t *e)
+{
+  dvr_entry_t *de;
+
+  if (e->channel == NULL)
+    return NULL;
+
+  LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link)
+    if (de->de_bcast == e)
+      return de;
+  return NULL;
+}
+
+/**
  * Sorting functions
  */
 static int
@@ -165,6 +174,7 @@ page_simple(http_connection_t *hc,
   dvr_query_result_t dqr;
   const char *rstatus = NULL;
   const char *lang  = http_arg_get(&hc->hc_args, "Accept-Language");
+  char ubuf[UUID_HEX_SIZE];
 
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
@@ -179,7 +189,7 @@ page_simple(http_connection_t *hc,
   
   htsbuf_qprintf(hq, "</form><hr>");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
 
   if(s != NULL) {
@@ -187,9 +197,11 @@ page_simple(http_connection_t *hc,
 
     memset(&eq, 0, sizeof(eq));
     eq.lang = strdup(lang);
+    eq.fulltext = 1;
+    eq.stitle = strdup(s);
 
     //Note: force min/max durations for this interface to 0 and INT_MAX seconds respectively
-    epg_query(&eq);
+    epg_query(&eq, hc->hc_access);
 
     c = eq.entries;
 
@@ -221,7 +233,7 @@ page_simple(http_connection_t *hc,
 		      days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
 	}
 
-	de = dvr_entry_find_by_event(e);
+	de = dvr_find_by_event(e);
 	rstatus = de != NULL ? val2str(de->de_sched_state,
 				       recstatustxt) : NULL;
 
@@ -270,7 +282,7 @@ page_simple(http_connection_t *hc,
     rstatus = val2str(de->de_sched_state, recstatustxt);
 
 
-    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%s\">", idnode_uuid_as_str(&de->de_id));
+    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%s\">", idnode_uuid_as_str(&de->de_id, ubuf));
     
     htsbuf_qprintf(hq, 
 		"%02d:%02d-%02d:%02d&nbsp; %s",
@@ -283,7 +295,7 @@ page_simple(http_connection_t *hc,
 
   dvr_query_free(&dqr);
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc);
@@ -302,23 +314,28 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   dvr_entry_t *de;
   const char *rstatus;
   dvr_entry_sched_state_t dvr_status;
-  const char *lang  = http_arg_get(&hc->hc_args, "Accept-Language");
+  const char *lang = http_arg_get(&hc->hc_args, "Accept-Language");
   const char *s;
+  htsmsg_t *conf;
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
-  if(remain == NULL || (e = epg_broadcast_find_by_id(atoi(remain), NULL)) == NULL) {
-    pthread_mutex_unlock(&global_lock);
+  if(remain == NULL || (e = epg_broadcast_find_by_id(strtoll(remain, NULL, 10))) == NULL) {
+    tvh_mutex_unlock(&global_lock);
     return 404;
   }
 
-  de = dvr_entry_find_by_event(e);
+  de = dvr_find_by_event(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
-    de = dvr_entry_create_by_event(NULL, e, 0, 0, hc->hc_username ?: "anonymous", NULL,
-				   DVR_PRIO_NORMAL, 0);
+    conf = htsmsg_create_map();
+    htsmsg_add_str2(conf, "owner", hc->hc_username);
+    htsmsg_add_str2(conf, "creator", hc->hc_representative);
+    htsmsg_add_str(conf, "comment", "simpleui");
+    de = dvr_entry_create_from_htsmsg(conf, e);
+    htsmsg_destroy(conf);
   } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
-    de = dvr_entry_cancel(de);
+    de = dvr_entry_cancel(de, 0);
   }
 
   htsbuf_qprintf(hq, "<html>");
@@ -332,9 +349,9 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 	      days[a.tm_wday], a.tm_mday, a.tm_mon + 1,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
-  s = epg_episode_get_title(e->episode, lang);
+  s = epg_broadcast_get_title(e, lang);
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      channel_get_name(e->channel), s ?: "");
+	      channel_get_name(e->channel, lang), s ?: "");
   
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
@@ -373,7 +390,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "%s", s);
   
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">To main page</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
@@ -391,22 +408,23 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   struct tm a, b;
   dvr_entry_t *de;
   const char *rstatus;
+  char ubuf[UUID_HEX_SIZE];
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   if(remain == NULL || (de = dvr_entry_find_by_id(atoi(remain))) == NULL) {
-    pthread_mutex_unlock(&global_lock);
+    tvh_mutex_unlock(&global_lock);
     return 404;
   }
   if((http_arg_get(&hc->hc_req_args, "clear")) != NULL) {
-    de = dvr_entry_cancel(de);
+    de = dvr_entry_cancel(de, 0);
   } else if((http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
-    de = dvr_entry_cancel(de);
+    de = dvr_entry_cancel(de, 0);
   }
 
   if(de == NULL) {
-    pthread_mutex_unlock(&global_lock);
-    http_redirect(hc, "/simple.html", &hc->hc_req_args);
+    tvh_mutex_unlock(&global_lock);
+    http_redirect(hc, "/simple.html", &hc->hc_req_args, 0);
     return 0;
   }
 
@@ -428,7 +446,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
   htsbuf_qprintf(hq, "<form method=\"post\" action=\"/pvrinfo/%s\">",
-	         idnode_uuid_as_str(&de->de_id));
+	         idnode_uuid_as_str(&de->de_id, ubuf));
 
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
@@ -450,7 +468,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "</form>");
   htsbuf_qprintf(hq, "%s", lang_str_get(de->de_desc, NULL));
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">To main page</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
@@ -485,7 +503,7 @@ page_status(http_connection_t *hc,
 #ifdef ENABLE_GETLOADAVG
   loads = getloadavg (avg, 3); 
   if (loads == -1) {
-        tvhlog(LOG_DEBUG, "webui",  "Error getting load average from getloadavg()");
+        tvhdebug(LS_WEBUI,  "Error getting load average from getloadavg()");
         loads = 0;
         /* should we return an error or a 0 on error */
         htsbuf_qprintf(hq, "<systemload>0</systemload>\n");
@@ -495,7 +513,7 @@ page_status(http_connection_t *hc,
 #endif
   htsbuf_qprintf(hq,"<recordings>\n");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   dvr_query(&dqr);
   dvr_query_sort(&dqr);
@@ -511,7 +529,7 @@ page_status(http_connection_t *hc,
 
     if (DVR_SCHEDULED == de->de_sched_state)
     {
-      timelefttemp = (int) ((dvr_entry_get_start_time(de) - now) / 60); // output minutes
+      timelefttemp = (int) ((dvr_entry_get_start_time(de, 0) - now) / 60); // output minutes
       if (timelefttemp < timeleft)
         timeleft = timelefttemp;
     }
@@ -563,7 +581,7 @@ page_status(http_connection_t *hc,
   htsbuf_qprintf(hq, "</recordings>\n<subscriptions>");
   htsbuf_qprintf(hq, "%d</subscriptions>\n",subscriptions_active());
 
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "</currentload>");
   http_output_content(hc, "text/xml");
@@ -583,9 +601,9 @@ page_epgsave(http_connection_t *hc,
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
                  "<epgflush>1</epgflush>\n");
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   epg_save();
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   http_output_content(hc, "text/xml");
 

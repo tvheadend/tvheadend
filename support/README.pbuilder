@@ -1,0 +1,42 @@
+Pbuilder Setup
+==============
+
+Setup
+--------
+
+To use pbuilder you will need a couple of extra packages available:
+
+$ sudo apt-get install ubuntu-dev-tools qemu-user-static
+
+amd64, i386 and armhf/ARMv7+ (RPi2)
+-----------------------------------
+
+To pbuilder chroot's for amd64, i386 and armhf/ARMv7+ you can just use
+standard pbuilder-dist calls, e.g.
+
+$ pbuilder-dist trusty amd64 create
+$ pbuilder-dist sid armhf create
+
+armhf/ARMv6+ (RPi1 / Raspbian)
+------------------------------
+
+For Raspian compatible builds you will need to install some additional
+support and add some pbuilder-dist runtime options:
+
+$ wget http://archive.raspbian.org/raspbian/pool/main/r/raspbian-archive-keyring/raspbian-archive-keyring_20120528.2_all.deb
+$ dpkg -i raspbian-archive-keyring_20120528.2_all.deb
+
+$ export PBUILDER_DIST_DEBIAN_MIRROR=http://archive.raspbian.org/raspbian
+$ pbuilder-dist wheezy armhf create --debootstrapopts --keyring=/usr/share/keyrings/raspbian-archive-keyring.gpg --release-only
+
+Building
+--------
+
+To build Tvheadend packages with pbuilder (assuming you've created the 
+necessary pbuilder chroots) you can simply do the following:
+
+$ git clone https://github.com/tvheadend/tvheadend.git
+$ cd tvheadend
+$ TVH_BUILD="trusty:amd64 sid:armhf wheezy:armhf" ./support/pbuilder
+
+Generated images will be in ~/pbuilder/*result

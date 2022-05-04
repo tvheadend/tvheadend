@@ -26,8 +26,8 @@
 #include <CoreServices/CoreServices.h>
 
 typedef struct {
-  char *key;
-  char *value;
+  const char *key;
+  const char *value;
 } txt_rec_t;
 
 pthread_t bonjour_tid;
@@ -37,13 +37,13 @@ static void
 bonjour_callback(CFNetServiceRef theService, CFStreamError* error, void* info)
 {  
   if (error->error) {
-    tvhlog(LOG_ERR, "bonjour", "callback error (domain = %ld, error =%d)",
-           error->domain, error->error);   
+    tvherror(LS_BONJOUR, "callback error (domain = %ld, error =%d)",
+             error->domain, error->error);   
   } 
 }
 
 static void
-bonjour_start_service(CFNetServiceRef *svc, char *service_type,
+bonjour_start_service(CFNetServiceRef *svc, const char *service_type,
                       uint32_t port, txt_rec_t *txt)
 {
   CFStringRef str;
@@ -56,7 +56,7 @@ bonjour_start_service(CFNetServiceRef *svc, char *service_type,
 
   *svc = CFNetServiceCreate(NULL, CFSTR(""), str, CFSTR("Tvheadend"), port);
   if (!*svc) {
-    tvhlog(LOG_ERR, "bonjour", "service creation failed"); 
+    tvherror(LS_BONJOUR, "service creation failed"); 
     return;
   }
 
@@ -84,11 +84,11 @@ bonjour_start_service(CFNetServiceRef *svc, char *service_type,
   }
 
   if (!CFNetServiceRegisterWithOptions(*svc, 0, &error))
-    tvhlog(LOG_ERR, "bonjour", "registration failed (service type = %s, "
-           "domain = %ld, error =%d)", service_type, error.domain, error.error); 
+    tvherror(LS_BONJOUR, "registration failed (service type = %s, "
+             "domain = %ld, error =%d)", service_type, error.domain, error.error); 
   else
-    tvhlog(LOG_INFO, "bonjour", "service '%s' successfully established",
-           service_type);
+    tvherror(LS_BONJOUR, "service '%s' successfully established",
+             service_type);
 }
 
 static void
@@ -107,16 +107,20 @@ bonjour_init(void)
     { "path", tvheadend_webroot ? tvheadend_webroot : "/" },
     { .key = NULL }
   };
-  
-  bonjour_start_service(&svc_http, "_http._tcp", tvheadend_webui_port, 
-                        txt_rec_http);
 
-  bonjour_start_service(&svc_htsp, "_htsp._tcp", tvheadend_htsp_port, NULL);
+  if (tvheadend_webui_port > 0)
+    bonjour_start_service(&svc_http, "_http._tcp", tvheadend_webui_port,
+                          txt_rec_http);
+
+  if (tvheadend_htsp_port > 0)
+    bonjour_start_service(&svc_htsp, "_htsp._tcp", tvheadend_htsp_port, NULL);
 }
 
 void
 bonjour_done(void)
 {
-  bonjour_stop_service(&svc_http);
-  bonjour_stop_service(&svc_htsp);
+  if (tvheadend_webui_port > 0)
+    bonjour_stop_service(&svc_http);
+  if (tvheadend_htsp_port > 0)
+    bonjour_stop_service(&svc_htsp);
 }

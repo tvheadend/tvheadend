@@ -21,15 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include "tvheadend.h"
-#include "channels.h"
-#include "input/mpegts/dvb.h"
-#include "service.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
@@ -5808,9 +5800,9 @@ size_t freesat_huffman_decode
 				nextCh = (value >> 24) & 0xff;
 				bitShift = 8;
 				if ((nextCh & 0x80) == 0) {
-					if (nextCh < ' ')
-						nextCh = STOP;
 					lastch = nextCh;
+					if ((nextCh < 0x20) && (nextCh != '\n'))
+						nextCh = ESCAPE;
 				}
 			} else {
 				indx = (unsigned int) lastch;

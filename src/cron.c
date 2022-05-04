@@ -19,6 +19,7 @@
 
 #include "build.h"
 #include "cron.h"
+#include "tvheadend.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -110,12 +111,13 @@ cron_set ( cron_t *c, const char *str )
 {
   uint64_t ho, mi, mo, dm, dw;
   static const char *days[] = {
-    "sun", "mon", "tue", "wed", "thu", "fri", "sat"
+    "sun", "mon", "tue", "wed", "thu", "fri", "sat", NULL
   };
   static const char *months[] = {
     "ignore",
     "jan", "feb", "mar", "apr", "may", "jun",
-    "jul", "aug", "sep", "oct", "nov", "dec"
+    "jul", "aug", "sep", "oct", "nov", "dec",
+    NULL
   };
 
   /* Daily (01:01) */
@@ -163,7 +165,7 @@ cron_multi_t *
 cron_multi_set ( const char *str )
 {
   char *s = str ? alloca(strlen(str) + 1) : NULL;
-  char *line, *sptr;
+  char *line, *sptr = NULL;
   cron_t cron;
   cron_multi_t *cm = NULL, *cm2;
   int count = 0;
@@ -323,6 +325,16 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
   mktime(&tmp);
   nxt.tm_isdst = tmp.tm_isdst;
   *ret         = mktime(&nxt);
+  if (*ret <= now)
+    *ret = mktime(&tmp);
+  if (*ret <= now) {
+#ifndef CRON_TEST
+    tvherror(LS_CRON, "invalid time, now %"PRItime_t", result %"PRItime_t, now, *ret);
+#else
+    printf("ERROR: invalid time, now %"PRItime_t", result %"PRItime_t"\n", now, *ret);
+#endif
+    *ret = now + 600;
+  }
   return 0;
 }
 
@@ -349,8 +361,10 @@ cron_multi_next ( cron_multi_t *cm, const time_t now, time_t *ret )
 
 /*
  * Testing
+ *
+ *   gcc -g -DCRON_TEST -I./build.linux src/cron.c
  */
-#if 0
+#ifdef CRON_TEST
 static
 void print_bits ( uint64_t b, int n )
 {
@@ -369,7 +383,14 @@ main ( int argc, char **argv )
   struct tm tm;
   char buf[128];
 
-  time(&n);
+  if (argc < 2) {
+    printf("Specify: CRON [NOW]\n");
+    return 1;
+  }
+  if (argc > 2)
+    n = atol(argv[2]);
+  else
+    time(&n);
   if (cron_set(&c, argv[1]))
     printf("INVALID CRON: %s\n", argv[1]);
   else {
@@ -381,7 +402,7 @@ main ( int argc, char **argv )
 
     localtime_r(&n, &tm);
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", &tm);
-    printf("NOW: %s\n", buf);
+    printf("NOW: %ld - %s (DST %d) (ZONE %s)\n", (long)n, buf, tm.tm_isdst, tm.tm_zone);
 
     if (cron_next(&c, n, &n)) {
       printf("FAILED to find NEXT\n");
@@ -389,7 +410,7 @@ main ( int argc, char **argv )
     }
     localtime_r(&n, &tm);
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", &tm);
-    printf("NXT: %s\n", buf);
+    printf("NXT: %ld - %s (DST %d) (ZONE %s)\n", (long)n, buf, tm.tm_isdst, tm.tm_zone);
     
   }
   return 0;

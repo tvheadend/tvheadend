@@ -1,6 +1,6 @@
 /*
  *  Functions converting HTSMSGs to/from XML
- *  Copyright (C) 2008 Andreas �man
+ *  Copyright (C) 2008 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -204,8 +204,9 @@ xmlns_destroy(xmlns_t *ns)
  *
  */
 static char *
-htsmsg_xml_parse_attrib(xmlparser_t *xp, htsmsg_t *msg, char *src,
-			struct xmlns_list *xmlns_scope_list)
+htsmsg_xml_parse_attrib
+  (xmlparser_t *xp, htsmsg_t *msg, char *src,
+   struct xmlns_list *xmlns_scope_list)
 {
   char *attribname, *payload;
   int attriblen, payloadlen;
@@ -300,7 +301,7 @@ htsmsg_xml_parse_attrib(xmlparser_t *xp, htsmsg_t *msg, char *src,
   attribname[attriblen] = 0;
   payload[payloadlen] = 0;
 
-  f = htsmsg_field_add(msg, attribname, HMF_STR, 0);
+  f = htsmsg_field_add(msg, attribname, HMF_STR, 0, 0);
   f->hmf_str = payload;
   return src;
 }
@@ -409,10 +410,6 @@ htsmsg_xml_parse_tag(xmlparser_t *xp, htsmsg_t *parent, char *src)
   return src;
 }
 
-
-
-
-
 /**
  *
  */
@@ -427,7 +424,7 @@ htsmsg_xml_parse_pi(xmlparser_t *xp, htsmsg_t *parent, char *src)
   while(1) {
     if(*src == 0) {
       xmlerr(xp, "Unexpected end of file during parsing of "
-	     "Processing instructions");
+	         "Processing instructions");
       return NULL;
     }
 
@@ -479,7 +476,6 @@ htsmsg_xml_parse_pi(xmlparser_t *xp, htsmsg_t *parent, char *src)
   return src;
 }
 
-
 /**
  *
  */
@@ -503,8 +499,8 @@ xml_parse_comment(xmlparser_t *xp, char *src)
  *
  */
 static char *
-decode_label_reference(xmlparser_t *xp, 
-		       struct cdata_content_queue *ccq, char *src)
+decode_label_reference
+  (xmlparser_t *xp, struct cdata_content_queue *ccq, char *src)
 {
   char *s = src;
   int l;
@@ -547,9 +543,9 @@ decode_label_reference(xmlparser_t *xp,
  *
  */
 static char *
-htsmsg_xml_parse_cd0(xmlparser_t *xp, 
-		     struct cdata_content_queue *ccq, htsmsg_t *tags,
-		     htsmsg_t *pis, char *src, int raw)
+htsmsg_xml_parse_cd0
+  (xmlparser_t *xp,struct cdata_content_queue *ccq, htsmsg_t *tags,
+   htsmsg_t *pis, char *src, int raw)
 {
   cdata_content_t *cc = NULL;
   int c;
@@ -702,7 +698,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
     assert(cc != NULL);
     assert(TAILQ_NEXT(cc, cc_link) == NULL);
     
-    f = htsmsg_field_add(parent, "cdata", HMF_STR, 0);
+    f = htsmsg_field_add(parent, "cdata", HMF_STR, 0, 0);
     f->hmf_str = cc->cc_start;
     *cc->cc_end = 0;
     free(cc);
@@ -731,7 +727,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
     }
     body[c] = 0;
 
-    f = htsmsg_field_add(parent, "cdata", HMF_STR, HMF_ALLOCED);
+    f = htsmsg_field_add(parent, "cdata", HMF_STR, HMF_ALLOCED, 0);
     f->hmf_str = body;
 
   } else {
@@ -757,7 +753,6 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
   return src;
 }
 
-
 /**
  *
  */
@@ -768,9 +763,7 @@ htsmsg_parse_prolog(xmlparser_t *xp, char *src)
   htsmsg_t *xmlpi;
   const char *encoding;
 
-  while(1) {
-    if(*src == 0)
-      break;
+  while(src != NULL && *src != 0) {
 
     while(is_xmlws(*src))
       src++;
@@ -816,8 +809,6 @@ htsmsg_parse_prolog(xmlparser_t *xp, char *src)
   return src;
 }
 
-
-
 /**
  *
  */
@@ -827,11 +818,14 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
   htsmsg_t *m;
   xmlparser_t xp;
   char *src0 = src;
-  int i;
 
-  xp.xp_errmsg[0] = 0;
+  memset(&xp, 0, sizeof(xp));
   xp.xp_encoding = XML_ENCODING_UTF8;
   LIST_INIT(&xp.xp_namespaces);
+
+  /* check for UTF-8 BOM */
+  if(src[0] == 0xef && src[1] == 0xbb && src[2] == 0xbf)
+    memmove(src, src + 3, strlen(src) - 2);
 
   if((src = htsmsg_parse_prolog(&xp, src)) == NULL)
     goto err;
@@ -845,6 +839,7 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
 
   if(xp.xp_srcdataused) {
     m->hm_data = src0;
+    m->hm_data_size = strlen(src0) + 1;
   } else {
     free(src0);
   }
@@ -856,12 +851,9 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
   snprintf(errbuf, errbufsize, "%s", xp.xp_errmsg);
   
   /* Remove any odd chars inside of errmsg */
-  for(i = 0; i < errbufsize; i++) {
-    if(errbuf[i] < 32) {
-      errbuf[i] = 0;
-      break;
-    }
-  }
+  for ( ; *errbuf; errbuf++)
+    if (*errbuf < ' ')
+      *errbuf = ' ';
 
   return NULL;
 }
@@ -894,7 +886,7 @@ htsmsg_xml_get_cdata_u32(htsmsg_t *tags, const char *name, uint32_t *u32)
  * Get tag attribute
  */
 const char *
-htsmsg_xml_get_attr_str ( htsmsg_t *tag, const char *name )
+htsmsg_xml_get_attr_str(htsmsg_t *tag, const char *name)
 {
   htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
   if (attr) return htsmsg_get_str(attr, name);
@@ -902,7 +894,7 @@ htsmsg_xml_get_attr_str ( htsmsg_t *tag, const char *name )
 }
 
 int
-htsmsg_xml_get_attr_u32 ( htsmsg_t *tag, const char *name, uint32_t *ret )
+htsmsg_xml_get_attr_u32(htsmsg_t *tag, const char *name, uint32_t *ret)
 {
   htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
   if (attr) return htsmsg_get_u32(attr, name, ret);

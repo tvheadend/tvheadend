@@ -1,0 +1,145 @@
+{
+   dvbcsa_sbox_flush
+   Memcheck:Value8
+   fun:dvbcsa_bs_block_sbox
+   fun:dvbcsa_bs_block_decrypt_register
+   fun:dvbcsa_bs_block_decrypt_block
+   fun:dvbcsa_bs_block_decrypt_batch
+   fun:tvhcsa_csa_cbc_flush
+}
+{
+   dvbcsa_sbox_descramble
+   Memcheck:Value8
+   fun:dvbcsa_bs_block_sbox
+   fun:dvbcsa_bs_block_decrypt_register
+   fun:dvbcsa_bs_block_decrypt_block
+   fun:dvbcsa_bs_block_decrypt_batch
+   fun:tvhcsa_csa_cbc_descramble
+}
+{
+   ffmpeg_openssl_init1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:memalign
+   fun:posix_memalign
+   fun:av_malloc
+   fun:ff_openssl_init
+   fun:ff_tls_init
+   fun:avformat_network_init
+   fun:libav_init
+   fun:main
+}
+{
+   ffmpeg_openssl_init2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:memalign
+   fun:posix_memalign
+   fun:av_malloc
+   fun:default_lockmgr_cb
+   fun:avpriv_lock_avformat
+   fun:ff_openssl_init
+   fun:ff_tls_init
+   fun:avformat_network_init
+   fun:libav_init
+   fun:main
+}
+{
+   ffmpeg_openssl_init3
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:memalign
+   fun:posix_memalign
+   fun:av_malloc
+   fun:av_malloc_array
+   fun:ff_openssl_init
+   fun:ff_tls_init
+   fun:avformat_network_init
+   fun:libav_init
+   fun:main
+}
+{
+   x265_api_get
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:x265_api_get_160
+   fun:libx265_encode_init_csp
+   fun:av_codec_init_static
+   fun:__pthread_once_slow
+   fun:av_codec_iterate
+   fun:find_codec_by_name
+   fun:avcodec_find_encoder_by_name
+   fun:tvh_codec_register
+   fun:tvh_codecs_register
+   fun:codec_init
+}
+{
+   x265_api_get2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_dl_signal_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:x265_api_get_160
+   fun:libx265_encode_init_csp
+   fun:av_codec_init_static
+   fun:__pthread_once_slow
+   fun:av_codec_iterate
+}
+{
+   x265_api_get3
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:x265_api_get_160
+   fun:libx265_encode_init_csp
+   fun:register_all
+   fun:__pthread_once_slow
+   fun:register_all
+   fun:__pthread_once_slow
+   fun:libav_init
+   fun:main
+}
+{
+   x265_api_get4
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_dl_signal_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:x265_api_get_160
+   fun:libx265_encode_init_csp
+   fun:register_all
+   fun:__pthread_once_slow
+   fun:register_all
+}
+{
+   libjack1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib64/libjack.so.0.1.0
+   fun:_dl_init
+   obj:/usr/lib64/ld-2.25.so
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}

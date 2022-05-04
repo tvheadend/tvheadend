@@ -105,7 +105,7 @@ const lang_code_t lang_codes[] = {
   { "chb", NULL, NULL , "Chibcha" },
   { "che", "ce", NULL , "Chechen" },
   { "chg", NULL, NULL , "Chagatai" },
-  { "chi", "zh", "zho", "Chinese" },
+  { "chi", "zh", "zho", "Chinese", "CN" },
   { "chk", NULL, NULL , "Chuukese" },
   { "chm", NULL, NULL , "Mari" },
   { "chn", NULL, NULL , "Chinook jargon" },
@@ -145,7 +145,7 @@ const lang_code_t lang_codes[] = {
   { "egy", NULL, NULL , "Egyptian (Ancient)" },
   { "eka", NULL, NULL , "Ekajuk" },
   { "elx", NULL, NULL , "Elamite" },
-  { "eng", "en", NULL , "English" },
+  { "eng", "en", NULL , "English", "US|GB" },
   { "epo", "eo", NULL , "Esperanto" },
   { "est", "et", NULL , "Estonian" },
   { "ewe", "ee", NULL , "Ewe" },
@@ -408,7 +408,7 @@ const lang_code_t lang_codes[] = {
   { "sog", NULL, NULL , "Sogdian" },
   { "som", "so", NULL , "Somali" },
   { "son", NULL, NULL , "Songhai languages" },
-  { "spa", "es", NULL , "Spanish; Castilian" },
+  { "spa", "es", NULL , "Spanish" },
   { "srd", "sc", NULL , "Sardinian" },
   { "srn", NULL, NULL , "Sranan Tongo" },
   { "srp", "sr", NULL , "Serbian" },
@@ -422,6 +422,7 @@ const lang_code_t lang_codes[] = {
   { "swa", "sw", NULL , "Swahili" },
   { "swe", "sv", NULL , "Swedish" },
   { "syc", NULL, NULL , "Classical Syriac" },
+  { "syn", NULL, NULL , "Narration: (sync audio described)"},
   { "syr", NULL, NULL , "Syriac" },
   { "tah", "ty", NULL , "Tahitian" },
   { "tai", NULL, NULL , "Tai languages" },
@@ -499,6 +500,9 @@ lang_code_lookup_t* lang_codes_code2b = NULL;
 lang_code_lookup_t* lang_codes_code1 = NULL;
 lang_code_lookup_t* lang_codes_code2t = NULL;
 
+tvh_mutex_t lang_code_split_mutex = TVH_THREAD_MUTEX_INITIALIZER;
+RB_HEAD(,lang_code_list) lang_code_split_tree = { NULL, NULL, NULL, 0 };
+
 /* **************************************************************************
  * Functions
  * *************************************************************************/
@@ -507,22 +511,25 @@ lang_code_lookup_t* lang_codes_code2t = NULL;
 static int _lang_code2b_cmp ( void *a, void *b )
 {
   return strcmp(((lang_code_lookup_element_t*)a)->lang_code->code2b,
-      ((lang_code_lookup_element_t*)b)->lang_code->code2b);
+                ((lang_code_lookup_element_t*)b)->lang_code->code2b);
 }
 
 static int _lang_code1_cmp ( void *a, void *b )
 {
   return strcmp(((lang_code_lookup_element_t*)a)->lang_code->code1,
-      ((lang_code_lookup_element_t*)b)->lang_code->code1);
+                ((lang_code_lookup_element_t*)b)->lang_code->code1);
 }
 
 static int _lang_code2t_cmp ( void *a, void *b )
 {
   return strcmp(((lang_code_lookup_element_t*)a)->lang_code->code2t,
-      ((lang_code_lookup_element_t*)b)->lang_code->code2t);
+                ((lang_code_lookup_element_t*)b)->lang_code->code2t);
 }
 
-static int _lang_code_lookup_add( lang_code_lookup_t* lookup_table, const lang_code_t *code, int (*func)(void*, void*) ) {
+static int _lang_code_lookup_add
+  ( lang_code_lookup_t* lookup_table, const lang_code_t *code,
+    int (*func)(void*, void*) )
+{
   lang_code_lookup_element_t *element;
   element = (lang_code_lookup_element_t *)calloc(1, sizeof(lang_code_lookup_element_t));
   element->lang_code = code;
@@ -605,35 +612,18 @@ const lang_code_t *lang_code_get3 ( const char *code )
   return _lang_code_get(code, strlen(code ?: ""));
 }
 
-const char **lang_code_split ( const char *codes )
+static int _split_cmp(const void *_a, const void *_b)
 {
-  int i = 0;
-  const lang_code_t **lcs = lang_code_split2(codes);
-  const char **ret;
-
-  if(!lcs) return NULL;
-
-  while(lcs[i])
-    i++;
-
-  ret = calloc(1+i, sizeof(char*));
-
-  i = 0;
-  while(lcs[i]) {
-      ret[i] = lcs[i]->code2b;
-      i++;
-  }
-  ret[i] = NULL;
-  free(lcs);
-
-  return ret;
+  const lang_code_list_t *a = _a;
+  const lang_code_list_t *b = _b;
+  return strcmp(a->langs, b->langs);
 }
 
-const lang_code_t **lang_code_split2 ( const char *codes )
+const lang_code_list_t *lang_code_split ( const char *codes )
 {
   int n;
   const char *c, *p;
-  const lang_code_t **ret;
+  lang_code_list_t *ret, skel;
   const lang_code_t *co;
 
   /* Defaults */
@@ -642,30 +632,38 @@ const lang_code_t **lang_code_split2 ( const char *codes )
   /* No config */
   if (!codes) return NULL;
 
-  /* Count entries */
-  n = 0;
-  c = codes;
-  while (*c) {
-    if (*c == ',') n++;
-    c++;
-  }
-  ret = calloc(2+n, sizeof(lang_code_t*));
+  tvh_mutex_lock(&lang_code_split_mutex);
 
-  /* Create list */
-  n = 0;
-  p = c = codes;
-  while (*c) {
-    if (*c == ',') {
+  skel.langs = (char *)codes;
+  ret = RB_FIND(&lang_code_split_tree, &skel, link, _split_cmp);
+  if (ret)
+    goto unlock;
+
+  for (n = 1, p = codes; *p; p++)
+    if (*p == ',') n++;
+
+  ret = calloc(1, sizeof(lang_code_list_t) + n * sizeof(lang_code_t *));
+  if (ret) {
+    /* Create list */
+    for (n = 0, p = c = codes; *c; c++)
+      if (*c == ',') {
+        co = lang_code_get3(p);
+        if(co)
+          ret->codes[n++] = co;
+        p = c + 1;
+      }
+    if (*p) {
       co = lang_code_get3(p);
-      if(co)
-        ret[n++] = co;
-      p = c + 1;
+      if (co)
+        ret->codes[n++] = co;
     }
-    c++;
+    ret->codeslen = n;
+    ret->langs = strdup(codes);
+    RB_INSERT_SORTED(&lang_code_split_tree, ret, link, _split_cmp);
   }
-  if (*p) ret[n++] = lang_code_get3(p);
-  ret[n] = NULL;
 
+unlock:
+  tvh_mutex_unlock(&lang_code_split_mutex);
   return ret;
 }
 
@@ -681,8 +679,56 @@ static void lang_code_free( lang_code_lookup_t *l )
   free(l);
 }
 
+const char *lang_code_preferred( void )
+{
+  const char *codes = config_get_language(), *ret = "und";
+  const lang_code_t *co;
+
+  if (codes) {
+    co = lang_code_get3(codes);
+    if (co && co->code2b)
+      ret = co->code2b;
+  }
+
+  return ret;
+}
+
+char *lang_code_user( const char *ucode )
+{
+  const char *codes = config_get_language(), *s;
+  char *ret;
+
+  if (!codes)
+    return ucode ? strdup(ucode) : NULL;
+  if (!ucode)
+    return strdup(codes);
+  ret = malloc(strlen(codes) + strlen(ucode) + 2);
+  strcpy(ret, ucode);
+  while (codes && *codes) {
+    s = codes;
+    while (*s && *s != ',')
+      s++;
+    if (strncmp(codes, ucode, s - codes)) {
+      strcat(ret, ",");
+      strncat(ret, codes, s - codes);
+    }
+    if (*s && *s == ',')
+      s++;
+    codes = s;
+  }
+  return ret;
+}
+
 void lang_code_done( void )
 {
+  lang_code_list_t *lcs;
+  tvh_mutex_lock(&lang_code_split_mutex);
+  while ((lcs = RB_FIRST(&lang_code_split_tree)) != NULL) {
+    RB_REMOVE(&lang_code_split_tree, lcs, link);
+    free((char *)lcs->langs);
+    free(lcs);
+  }
+  tvh_mutex_unlock(&lang_code_split_mutex);
   lang_code_free(lang_codes_code2b);
   lang_code_free(lang_codes_code1);
   lang_code_free(lang_codes_code2t);

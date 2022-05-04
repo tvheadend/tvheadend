@@ -16,65 +16,46 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define MAX_RDBUF_SIZE 8192
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include "queue.h"
+#include "tvheadend.h"
 #include "file.h"
 	
-typedef struct file_read_buf {
-  TAILQ_ENTRY(file_read_buf) link;
-  int                        size;
-  char                       buf[MAX_RDBUF_SIZE];
-} file_read_buf_t;
-
-TAILQ_HEAD(file_read_buf_queue, file_read_buf);
+#define MAX_RDBUF_SIZE 8192
 
 size_t file_readall ( int fd, char **outp )
 {
-  int r, totalsize = 0;
-  struct file_read_buf_queue bufs;
-  file_read_buf_t *b = NULL;
-  char *outbuf;
+  size_t outsize = 0, totalsize = 0;
+  char *outbuf = NULL, *n;
+  int r;
 
-  TAILQ_INIT(&bufs);
-  while(1) {
-    if(b == NULL) {
-      b = malloc(sizeof(file_read_buf_t));
-      b->size = 0;
-      TAILQ_INSERT_TAIL(&bufs, b, link);
+  while (1) {
+    if(totalsize == outsize) {
+      n = realloc(outbuf, outsize += MAX_RDBUF_SIZE);
+      if (!n) {
+        free(outbuf);
+        return 0;
+      }
+      outbuf = n;
     }
 
-    r = read(fd, b->buf + b->size, MAX_RDBUF_SIZE - b->size);
-    if(r < 1)
+    r = read(fd, outbuf + totalsize, outsize - totalsize);
+    if(r < 1) {
+      if (ERRNO_AGAIN(errno))
+        continue;
       break;
-    b->size += r;
+    }
     totalsize += r;
-    if(b->size == MAX_RDBUF_SIZE)
-      b = NULL;
   } 
 
-  close(fd);
-
-  if(totalsize == 0) {
-    free(b);
-    *outp = NULL;
-    return 0;
-  }
-
-  outbuf = malloc(totalsize + 1);
-  r = 0;
-  while((b = TAILQ_FIRST(&bufs)) != NULL) {
-    memcpy(outbuf + r, b->buf, b->size);
-    r+= b->size;
-    TAILQ_REMOVE(&bufs, b, link);
-    free(b);
-  }
-  assert(r == totalsize);
   *outp = outbuf;
+  if (totalsize == outsize) {
+    n = realloc(outbuf, outsize += 1);
+    if (!n) {
+      free(outbuf);
+      return 0;
+    }
+    outbuf = n;
+  }
   outbuf[totalsize] = 0;
+
   return totalsize;
 }

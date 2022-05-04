@@ -19,8 +19,12 @@
 #ifndef HTSSETTINGS_H__
 #define HTSSETTINGS_H__
 
-#include "htsmsg.h"
 #include <stdarg.h>
+
+#include "htsmsg.h"
+
+#define HTS_SETTINGS_OPEN_WRITE		(1<<0)
+#define HTS_SETTINGS_OPEN_DIRECT	(1<<1)
 
 void hts_settings_init(const char *confpath);
 
@@ -36,7 +40,7 @@ void hts_settings_remove(const char *pathfmt, ...);
 
 const char *hts_settings_get_root(void);
 
-int hts_settings_open_file(int for_write, const char *pathfmt, ...);
+int hts_settings_open_file(int flags, const char *pathfmt, ...);
 
 int hts_settings_buildpath(char *dst, size_t dstsize, const char *pathfmt, ...);
 

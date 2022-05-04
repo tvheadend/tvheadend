@@ -1,0 +1,119 @@
+[
+  {
+    "name": "Canal Digitaal SD",
+    "position": 192,
+    "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 900
+  },
+  {
+    "name": "Canal Digitaal HD",
+    "position": 192,
+    "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 901
+  },
+  {
+    "name": "TV Vlaanderen SD",
+    "position": 192,
+    "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 910
+  },
+  {
+    "name": "TV Vlaanderen HD",
+    "position": 192,
+    "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 911
+  },
+  {
+    "name": "TéléSAT SD",
+    "position": 192,
+    "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 920
+  },
+  {
+    "name": "TéléSAT HD",
+    "position": 192,
+    "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 921
+  },
+  {
+    "name": "AustriaSat Astra1",
+    "position": 192,
+    "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 950
+  },
+  {
+    "name": "Canal Digitaal HD",
+    "position": 235,
+    "frequency": 12070000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 901
+  },
+  {
+    "name": "TV Vlaanderen HD",
+    "position": 235,
+    "frequency": 12070000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 911
+  },
+    {
+    "name": "TéléSAT HD",
+    "position": 235,
+    "frequency": 12187000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs2",
+    "pid": 921
+  },
+  {
+    "name": "AustriaSat Astra3",
+    "position": 235,
+    "frequency": 12187000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs2",
+    "pid": 950
+  },
+  {
+    "name": "Skylink: Czech Republic",
+    "position": 235,
+    "frequency": 12070000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 30
+  },
+  {
+    "name": "Skylink: Slovak Republic",
+    "position": 235,
+    "frequency": 12070000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
+    "pid": 31
+  }
+]

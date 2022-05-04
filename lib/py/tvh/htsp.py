@@ -22,83 +22,82 @@ Much of the code is pretty rough, but might help people get started
 with communicating with HTSP server
 """
 
-import htsmsg
-import log
+import tvh.log as log
+import tvh.htsmsg as htsmsg
 
 # ###########################################################################
 # HTSP Client
 # ###########################################################################
 
-HTSP_PROTO_VERSION = 6
+HTSP_PROTO_VERSION = 33
+
 
 # Create passwd digest
-def htsp_digest ( user, passwd, chal ):
-  import hashlib
-  ret = hashlib.sha1(passwd + chal).digest()
-  return ret
+def htsp_digest(user, passwd, chal):
+    import hashlib
+    salted = passwd.encode('utf-8') + chal
+    return hashlib.sha1(salted).digest()
+
 
 # Client object
-class HTSPClient:
+class HTSPClient(object):
+    # Setup connection
+    def __init__(self, addr, name='HTSP PyClient'):
+        import socket
 
-  # Setup connection
-  def __init__ ( self, addr, name = 'HTSP PyClient' ):
-    import socket
+        # Setup
+        self._sock = socket.create_connection(addr)
+        self._name = name
+        self._auth = None
+        self._user = None
+        self._pass = None
+
+    # Send
+    def send(self, func, args={}):
+        args['method'] = func
+        if self._user: args['username'] = self._user
+        if self._pass: args['digest'] = htsmsg.HMFBin(self._pass)
+        log.debug('htsp tx:')
+        log.debug(args, pretty=True)
+        self._sock.send(htsmsg.serialize(args))
+
+    # Receive
+    def recv(self):
+        ret = htsmsg.deserialize(self._sock, False)
+        log.debug('htsp rx:')
+        log.debug(ret, pretty=True)
+        return ret
 
     # Setup
-    self._sock = socket.create_connection(addr)
-    self._name = name
-    self._auth = None
-    self._user = None
-    self._pass = None
+    def hello(self):
+        args = {
+            'htspversion': HTSP_PROTO_VERSION,
+            'clientname': self._name
+        }
+        self.send('hello', args)
+        resp = self.recv()
 
-  # Send
-  def send ( self, func, args = {} ):
-    args['method'] = func
-    if self._user: args['username'] = self._user
-    if self._pass: args['digest']   = htsmsg.hmf_bin(self._pass)
-    log.debug('htsp tx:')
-    log.debug(args, pretty=True)
-    self._sock.send(htsmsg.serialize(args))
+        # Store
+        self._version = min(HTSP_PROTO_VERSION, resp['htspversion'])
+        self._auth = resp['challenge']
 
-  # Receive
-  def recv ( self ):
-    ret = htsmsg.deserialize(self._sock, False)
-    log.debug('htsp rx:')
-    log.debug(ret, pretty=True)
-    return ret
+        # Return response
+        return resp
 
-  # Setup
-  def hello ( self ):
-    args = {
-      'htspversion' : HTSP_PROTO_VERSION,
-      'clientname'  : self._name
-    }
-    self.send('hello', args)
-    resp = self.recv()
+    # Authenticate
+    def authenticate(self, user, passwd=None):
+        self._user = user
+        if passwd:
+            self._pass = htsp_digest(user, passwd, self._auth)
+        self.send('authenticate')
+        resp = self.recv()
+        if 'noaccess' in resp:
+            raise Exception('Authentication failed')
 
-    # Store
-    self._version = min(HTSP_PROTO_VERSION, resp['htspversion'])
-    self._auth    = resp['challenge']
-    
-    # Return response
-    return resp
+    # Enable async receive
+    def enableAsyncMetadata(self, args={}):
+        self.send('enableAsyncMetadata', args)
 
-  # Authenticate
-  def authenticate ( self, user, passwd = None ):
-    self._user = user
-    if passwd:
-      self._pass = htsp_digest(user, passwd, self._auth)
-    self.send('authenticate')
-    resp = self.recv()
-    if 'noaccess' in resp:
-      raise Exception('Authentication failed')
+    def disconnect(self):
+        self._sock.close()
 
-  # Enable async receive
-  def enableAsyncMetadata ( self, args = {} ):
-    self.send('enableAsyncMetadata', args)
-
-# ############################################################################
-# Editor Configuration
-#
-# vim:sts=2:ts=2:sw=2:et
-# ############################################################################

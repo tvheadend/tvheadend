@@ -32,9 +32,9 @@ typedef LIST_HEAD(,tsfile_input)   tsfile_input_list_t;
 /*
  * Globals
  */
-extern mpegts_network_t    tsfile_network;
+extern mpegts_network_t    *tsfile_network;
 extern tsfile_input_list_t tsfile_inputs;
-extern pthread_mutex_t     tsfile_lock;
+extern tvh_mutex_t     tsfile_lock;
 
 
 /*

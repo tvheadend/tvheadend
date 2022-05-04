@@ -19,9 +19,13 @@
 #ifndef LIBAV_H_
 #define LIBAV_H_
 
+#include "build.h"
+
+#if ENABLE_LIBAV
 
 #include <libavformat/avformat.h>
-#include "tvheadend.h"
+#include <libavfilter/avfilter.h>
+#include "esstream.h"
 
 /*
 Older versions of ffmpeg/libav don't have the AV_* prefix
@@ -53,7 +57,18 @@ This list must be updated every time we use a new AV_CODEC_ID
 enum AVCodecID streaming_component_type2codec_id(streaming_component_type_t type);
 streaming_component_type_t codec_id2streaming_component_type(enum AVCodecID id);
 int libav_is_encoder(AVCodec *codec);
+void libav_set_loglevel(void);
+void libav_vaapi_init_context(void *context);
 void libav_init(void);
+void libav_done(void);
+
+#else
+
+static inline void libav_set_loglevel(void) { };
+static inline void libav_vaapi_init_context(void *context) { };
+static inline void libav_init(void) { };
+static inline void libav_done(void) { };
 
 #endif
 
+#endif

@@ -17,27 +17,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 #include <ctype.h>
-#include <stdint.h>
-#include <assert.h>
 
 #include "tvheadend.h"
 #include "packet.h"
 #include "streaming.h"
 #include "service.h"
 #include "input.h"
+#include "parsers.h"
 #include "parser_teletext.h"
+
+#define MAX_SUB_TEXT_SIZE 2000
 
 /**
  *
@@ -48,6 +38,8 @@ typedef struct tt_mag {
   uint8_t ttm_charset[2];
   uint8_t ttm_national;
   uint8_t ttm_page[23*40 + 1];
+  int64_t ttm_last_sub_pts;
+  uint8_t ttm_last_sub_text[MAX_SUB_TEXT_SIZE];
 } tt_mag_t;
 
 
@@ -65,7 +57,7 @@ typedef struct tt_private {
 
 static void teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm);
 
-static void teletext_rundown_scan(mpegts_service_t *t, tt_private_t *ttp);
+static void teletext_rundown_scan(parser_t *t, tt_private_t *ttp);
 
 #define bitreverse(b) \
 (((b) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
@@ -481,6 +473,19 @@ hebrew_g0[37] = {
   /* 0x78 */ 0x05E8, 0x05E9, 0x05EA, 0x20AA, 0x2016, 0x00BE, 0x00F7, 0x25A0
 };
 
+static const uint8_t* COLOR_MAP[8] = {
+  // black (grey for visibility), red, green, yellow, blue, magenta, cyan, white
+  (uint8_t*) "<font color=\"#888888\">",
+  (uint8_t*) "<font color=\"#ff0000\">",
+  (uint8_t*) "<font color=\"#00ff00\">",
+  (uint8_t*) "<font color=\"#ffff00\">",
+  (uint8_t*) "<font color=\"#0000ff\">",
+  (uint8_t*) "<font color=\"#ff00ff\">",
+  (uint8_t*) "<font color=\"#00ffff\">",
+  (uint8_t*) "<font color=\"#ffffff\">"
+};
+static const uint8_t* CLOSE_FONT = (uint8_t*) "</font>";
+
 /**
  * cs Teletext character set as listed in ETS 300 706 section 15.
  * ss National character subset as listed in section 15, only
@@ -606,7 +611,7 @@ tt_construct_unix_time(uint8_t *buf)
   int i;
   struct tm tm;
 
-  t = dispatch_clock;
+  t = gclk();
   localtime_r(&t, &tm);
 
   tm.tm_hour = atoi((char *)buf);
@@ -649,7 +654,7 @@ is_tt_clock(const uint8_t *str)
  *
  */
 static int
-update_tt_clock(mpegts_service_t *t, const uint8_t *buf)
+update_tt_clock(parser_t *t, const uint8_t *buf)
 {
   uint8_t str[10];
   int i;
@@ -663,10 +668,10 @@ update_tt_clock(mpegts_service_t *t, const uint8_t *buf)
     return 0;
 
   ti = tt_construct_unix_time(str);
-  if(t->s_tt_clock == ti)
+  if(t->prs_tt_clock == ti)
     return 0;
 
-  t->s_tt_clock = ti;
+  t->prs_tt_clock = ti;
   //  printf("teletext clock is: %s", ctime(&ti));
   return 1;
 }
@@ -681,21 +686,22 @@ get_cset(uint8_t off)
   return char_table[off];
 }
 
-static void
-extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
-		 tt_mag_t *ttm, int64_t pts)
+static int
+extract_subtitle(parser_t *t, parser_es_t *st, tt_mag_t *ttm, int64_t pts)
 {
   int i, j, start, off = 0;
-  uint8_t sub[2000];
+  int k, current_color, is_font_tag_open, use_color_subs = 1;
+  uint8_t sub[MAX_SUB_TEXT_SIZE];
   uint8_t *cset, ch;
   int is_box = 0;
-  uint8_t first = 0;
 
   if ((cset = get_cset((ttm->ttm_charset[0] & ~7) + ttm->ttm_national)) == NULL)
     if ((cset = get_cset(ttm->ttm_charset[0])) == NULL)
       cset = char_table[0]; /* fallback */
 
   for (i = 0; i < 23; i++) {
+    is_font_tag_open = 0;
+    current_color = 7; /* white = default */
     start = off;
 
     for (j = 0; j < 40; j++) {
@@ -703,6 +709,26 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
 
       switch(ch) {
       case 0 ... 7:
+        if (use_color_subs) {
+          if (ch != current_color) {
+            if (is_font_tag_open) {
+              for (k = 0; k < 7; k++) {
+                if (off < sizeof(sub) - 1)
+                  sub[off++] = CLOSE_FONT[k];
+              }
+              is_font_tag_open = 0;
+            }
+            /* no need for font-tag for default-color */
+            if (ch != 7) {
+              for (k = 0; k < 22; k++) {
+                if (off < sizeof(sub) - 1)
+                  sub[off++] = COLOR_MAP[ch][k];
+              }
+              is_font_tag_open = 1;
+            }
+            current_color = ch;
+          }
+        }
 	break;
 
       case 0x0a:
@@ -716,25 +742,22 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
       default:
 	if (ch >= 0x20 && is_box && (start != off || ch > 0x20)) {
 
-          if (!first)
-            first = ch;
-
 	  uint16_t ucs2 = teletext_to_ucs2(cset[0], cset[2], ch);
 
           /* ucs2 -> utf8 conversion */
           if (ucs2 == 0) {
             /* nothing */
           } else if (ucs2 < 0x80) {
-            if (off < sizeof(sub))
+            if (off < sizeof(sub) - 1)
               sub[off++] = ucs2;
           } else if (ucs2 < 0x800) {
-            if (off + 1 < sizeof(sub)) {
+            if (off + 1 < sizeof(sub) - 1) {
               sub[off++] = (ucs2 >> 6)   | 0xc0;
               sub[off++] = (ucs2 & 0x3f) | 0x80;
             }
           } else {
             assert(ucs2 < 0xd800 || ucs2 >= 0xe000);
-            if (off + 2 < sizeof(sub)) {
+            if (off + 2 < sizeof(sub) - 1) {
               sub[off++] =  (ucs2 >> 12)        | 0xe0;
               sub[off++] = ((ucs2 >> 6) & 0x3f) | 0x80;
               sub[off++] =  (ucs2       & 0x3f) | 0x80;
@@ -743,31 +766,41 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
 	}
       }
     }
-    if(start != off && off < sizeof(sub))
+    if (use_color_subs && is_font_tag_open) {
+      for (k = 0; k < 7; k++) {
+        if (off < sizeof(sub) - 1)
+          sub[off++] = CLOSE_FONT[k];
+      }
+      is_font_tag_open = 0;
+    }
+    if(start != off && off < sizeof(sub) - 1)
       sub[off++] = '\n';
   }
 
+  /* Avoid multiple blank subtitles */
   if(off == 0 && st->es_blank)
-    return; // Avoid multiple blank subtitles
+    return 0;
 
   st->es_blank = !off;
 
-  if(st->es_curpts == pts)
-    pts++; // Avoid non-monotonic PTS
-
-  st->es_curpts = pts;
-
   sub[off++] = 0;
-  
-  th_pkt_t *pkt = pkt_alloc(sub, off, pts, pts);
+
+  /* Check for a duplicate */
+  if (strcmp((char *)ttm->ttm_last_sub_text, (char *)sub) == 0)
+    return 0;
+
+  ttm->ttm_last_sub_pts = pts;
+  strcpy((char *)ttm->ttm_last_sub_text, (char *)sub);
+
+  th_pkt_t *pkt = pkt_alloc(st->es_type, sub, off, pts, pts, pts);
   pkt->pkt_componentindex = st->es_index;
 
-  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
-  streaming_pad_deliver(&t->s_streaming_pad, sm);
-  streaming_msg_free(sm);
+  streaming_target_deliver2(t->prs_output, streaming_msg_create_pkt(pkt));
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);
+
+  return 1;
 }
 
 /**
@@ -802,18 +835,22 @@ dump_page(tt_mag_t *ttm)
 
 
 static void
-tt_subtitle_deliver(mpegts_service_t *t, elementary_stream_t *parent, tt_mag_t *ttm)
+tt_subtitle_deliver(parser_t *t, parser_es_t *parent, tt_mag_t *ttm)
 {
-  elementary_stream_t *st;
+  elementary_stream_t *es;
+  parser_es_t *st;
 
   if(ttm->ttm_current_pts == PTS_UNSET)
     return;
 
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-     if(parent->es_pid == st->es_parent_pid &&
-	ttm->ttm_curpage == st->es_pid -  PID_TELETEXT_BASE) {
-       extract_subtitle(t, st, ttm, ttm->ttm_current_pts);
-     }
+  TAILQ_FOREACH(es, &t->prs_components.set_filter, es_filter_link) {
+    st = (parser_es_t *)es;
+    if (st->es_type != SCT_TEXTSUB) continue;
+    if (parent->es_pid == st->es_parent_pid &&
+        ttm->ttm_curpage == st->es_pid - PID_TELETEXT_BASE) {
+      if (extract_subtitle(t, st, ttm, ttm->ttm_current_pts))
+        ttm->ttm_current_pts++; // Avoid duplicate (non-monotonic) PTS
+    }
   }
 }
 
@@ -821,7 +858,7 @@ tt_subtitle_deliver(mpegts_service_t *t, elementary_stream_t *parent, tt_mag_t *
  *
  */
 static void
-tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
+tt_decode_line(parser_t *t, parser_es_t *st, uint8_t *buf)
 {
   uint8_t mpag, line, s12, c;
   int page, magidx, i;
@@ -879,7 +916,7 @@ tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
     if(update_tt_clock(t, buf + 34))
       teletext_rundown_scan(t, ttp);
 
-    ttm->ttm_current_pts = t->s_current_pts;
+    ttm->ttm_current_pts = t->prs_current_pcr + (int64_t)st->es_service->s_pts_shift * 900;
     break;
 
   case 1 ... 23:
@@ -909,21 +946,21 @@ tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
  *
  */
 void
-teletext_input(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
+teletext_input
+  (parser_t *t, parser_es_t *st, const uint8_t *data, int len)
 {
-  int i, j;
-  const uint8_t *x;
+  int j;
   uint8_t buf[42];
 
-  x = tsb + 4;
-  for(i = 0; i < 4; i++) {
-    if(*x == 2 || *x == 3) {
+  data++; len--; /* first byte: 0x10 ? */
+
+  for (; len >= 46; data += 46, len -= 46) {
+    if (*data == 2 || *data == 3) {
       for(j = 0; j < 42; j++)
-	buf[j] = bitreverse(x[4 + j]);
+	buf[j] = bitreverse(data[4 + j]);
       tt_decode_line(t, st, buf);
     }
-    x += 46;
-  }
+ }
 }
 
 
@@ -993,14 +1030,22 @@ teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm)
 
 
 static void
-teletext_rundown_scan(mpegts_service_t *t, tt_private_t *ttp)
+teletext_rundown_scan(parser_t *prs, tt_private_t *ttp)
 {
   int i;
   uint8_t *l;
-  time_t now = t->s_tt_clock, start, stop;
-  th_commercial_advice_t ca;
+  mpegts_service_t *t;
+  time_t now = prs->prs_tt_clock, start, stop;
+  commercial_advice_t ca;
 
   if(ttp->ttp_rundown_valid == 0)
+    return;
+
+  if(TAILQ_EMPTY(&prs->prs_components.set_filter))
+    return;
+
+  t = (mpegts_service_t *)prs->prs_service;
+  if(t == NULL)
     return;
 
   if(t->s_dvb_svcname &&
@@ -1022,6 +1067,6 @@ teletext_rundown_scan(mpegts_service_t *t, tt_private_t *ttp)
     stop  = start + tt_time_to_len(l + 32);
     
     if(start <= now && stop > now)
-      t->s_tt_commercial_advice = ca;
+      prs->prs_tt_commercial_advice = ca;
   }
 }

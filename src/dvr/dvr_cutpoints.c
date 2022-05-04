@@ -73,7 +73,7 @@ dvr_parse_edl
   /* Sanity Checks */
   if(start < 0 || end < 0 || end < start || start == end ||
      action < DVR_CP_CUT || action > DVR_CP_COMM) {
-    tvhwarn("dvr", "Insane entry: start=%f, end=%f. Skipping.", start, end);
+    tvhwarn(LS_DVR, "Insane entry: start=%f, end=%f. Skipping.", start, end);
     return 1;
   }
 
@@ -120,7 +120,7 @@ dvr_parse_comskip
 
   /* Sanity Checks */
   if(start < 0 || end < 0 || end < start || start == end) {
-    tvherror("dvr", "Insane EDL entry: start=%d, end=%d. Skipping.", start, end);
+    tvherror(LS_DVR, "Insane EDL entry: start=%d, end=%d. Skipping.", start, end);
     return 1;
   }
 
@@ -145,7 +145,7 @@ dvr_parse_file
   dvr_cutpoint_t *cp = NULL;
   float frate = 0.0;
   char line[DVR_MAX_CUTPOINT_LINE];
-  FILE *file = fopen(path, "r");
+  FILE *file = tvh_fopen(path, "r");
 
   if (file == NULL)
     return -1;
@@ -210,11 +210,13 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
 {
   int i;
   char *path, *sptr;
+  const char *filename;
   dvr_cutpoint_list_t *cuts;
 
   /* Check this is a valid recording */
   assert(de != NULL);
-  if (de->de_filename == NULL)
+  filename = dvr_get_filename(de);
+  if (filename == NULL)
     return NULL;
 
   /* Allocate list space */
@@ -224,9 +226,9 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
   TAILQ_INIT(cuts);
 
   /* Get base filename */
-  // TODO: harcoded 3 for max extension
-  path = alloca(strlen(de->de_filename) + 3);
-  strcpy(path, de->de_filename);
+  // TODO: harcoded 3 for max extension plus 1 for termination
+  path = alloca(strlen(filename) + 4);
+  strcpy(path, filename);
   sptr = strrchr(path, '.');
   if (!sptr) {
     free(cuts);
@@ -271,4 +273,36 @@ dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list)
     free(cp);
   }
   free(list);
+}
+
+/*
+ * Delete cutpoint files
+ */
+void
+dvr_cutpoint_delete_files (const char *s)
+{
+  char *path, *dot;
+  int i;
+
+  // TODO: harcoded 3 for max extension, plus 1 for . and one for termination
+  path = alloca(strlen(s) + 5);
+
+  /* Check each cutlist extension */
+  for (i = 0; i < ARRAY_SIZE(dvr_cutpoint_parsers); i++) {
+
+    strcpy(path, s);
+    if ((dot = (strrchr(path, '.') + 1)))
+      *dot = 0;
+
+    strcat(path, dvr_cutpoint_parsers[i].ext);
+
+    /* Check file exists */
+    if (access(path, F_OK))
+      continue;
+
+    /* Delete File */
+    tvhinfo(LS_DVR, "Erasing cutpoint file '%s'", (const char *)path);
+    if (unlink(path))
+      tvherror(LS_DVR, "unable to remove cutpoint file '%s'", (const char *)path);
+  }
 }

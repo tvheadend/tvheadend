@@ -1,0 +1,27 @@
+[
+    {
+	"description": "WEBTV codec VP8",
+	"name": "webtv-vp8",
+	"codec_name": "libvpx",
+	"height": 384,
+        "deadline": 1,
+        "crf": 28,
+        "cpu-used": 8
+    },
+    {
+	"description": "WEBTV codec H264",
+	"name": "webtv-h264",
+	"codec_name": "libx264",
+	"height": 384
+    },
+    {
+	"description": "WEBTV codec Vorbis",
+	"name": "webtv-vorbis",
+	"codec_name": "vorbis"
+    },
+    {
+	"description": "WEBTV codec AAC",
+	"name": "webtv-aac",
+	"codec_name": "aac"
+    }
+]

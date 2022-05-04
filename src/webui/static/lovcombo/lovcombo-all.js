@@ -29,13 +29,75 @@ if('function' !== typeof RegExp.escape) {
 
 // create namespace
 Ext.ns('Ext.ux.form');
+
+/**
+ *
+ * @class Ext.ux.form.ComboAny
+ * @extends Ext.form.ComboBox
+ */
+Ext.ns('Ext.ux.form');
+Ext.ux.form.ComboAny = Ext.extend(Ext.form.ComboBox, {
+
+    doQuery: function(q, forceAll) {
+        q = Ext.isEmpty(q) ? '' : q;
+        var qe = {
+            query: q,
+            forceAll: forceAll,
+            combo: this,
+            cancel:false
+        };
+
+        if (this.fireEvent('beforequery', qe) === false || qe.cancel)
+            return false;
+
+        q = qe.query;
+        forceAll = qe.forceAll;
+        if (forceAll === true || (q.length >= this.minChars)) {
+            if (this.lastQuery !== q) {
+                this.lastQuery = q;
+                if (this.mode == 'local') {
+                    this.selectedIndex = -1;
+                    if (forceAll) {
+                        this.store.clearFilter();
+                    } else {
+                        /* supply the anyMatch option (last param) */
+                        this.store.filter(this.displayField, q, true);
+                    }
+                    this.onLoad();
+                } else {
+                    this.store.baseParams[this.queryParam] = q;
+                    this.store.load({ params: this.getParams(q) });
+                    this.expand();
+                }
+            } else {
+                this.selectedIndex = -1;
+                this.onLoad();
+            }
+        }
+    },
+    
+    onTypeAhead: function() {
+        if (this.store.getCount() > 0) {
+            var r = this.store.getAt(0);
+            var newValue = r.data[this.displayField];
+            var len = newValue.length;
+            var olen = this.getRawValue().length;
+            if (olen != len) {
+               this.setRawValue(newValue);
+               this.selectText(0, len);
+            }
+        }
+    }
+
+});
+
  
 /**
  *
  * @class Ext.ux.form.LovCombo
  * @extends Ext.form.ComboBox
  */
-Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
+Ext.ux.form.LovCombo = Ext.extend(Ext.ux.form.ComboAny, {
 
 	// {{{
     // configuration options
@@ -167,7 +229,10 @@ Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
 	 * @private
 	 */
 	,onBeforeQuery:function(qe) {
-		qe.query = qe.query.replace(new RegExp(this.getCheckedDisplay() + '[ ' + this.separator + ']*'), '');
+		if (qe.query) {
+		        var d = tvheadend.regexEscape(this.getCheckedDisplay());
+			qe.query = qe.query.replace(new RegExp(d + '[ ' + this.separator + ']*'), '');
+		}
 	} // eo function onBeforeQuery
 	// }}}
 	// {{{

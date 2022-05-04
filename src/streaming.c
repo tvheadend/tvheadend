@@ -26,6 +26,8 @@
 #include "service.h"
 #include "timeshift.h"
 
+static memoryinfo_t streaming_msg_memoryinfo = { .my_name = "Streaming message" };
+
 void
 streaming_pad_init(streaming_pad_t *sp)
 {
@@ -38,63 +40,101 @@ streaming_pad_init(streaming_pad_t *sp)
  *
  */
 void
-streaming_target_init(streaming_target_t *st, st_callback_t *cb, void *opaque,
-		      int reject_filter)
+streaming_target_init(streaming_target_t *st, streaming_ops_t *ops,
+                      void *opaque, int reject_filter)
 {
-  st->st_cb = cb;
+  st->st_ops = *ops;
   st->st_opaque = opaque;
   st->st_reject_filter = reject_filter;
 }
 
+/**
+ *
+ */
+static size_t
+streaming_message_data_size(streaming_message_t *sm)
+{
+  if (sm->sm_type == SMT_PACKET) {
+    th_pkt_t *pkt = sm->sm_data;
+    if (pkt && pkt->pkt_payload)
+      return pktbuf_len(pkt->pkt_payload);
+  } else if (sm->sm_type == SMT_MPEGTS) {
+    pktbuf_t *pkt_payload = sm->sm_data;
+    if (pkt_payload)
+      return pktbuf_len(pkt_payload);
+  }
+  return 0;
+}
 
 /**
  *
  */
-static void 
+static void
 streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
 {
   streaming_queue_t *sq = opauqe;
 
-  pthread_mutex_lock(&sq->sq_mutex);
+  tvh_mutex_lock(&sq->sq_mutex);
 
   /* queue size protection */
-  // TODO: would be better to update size as we go, but this would
-  //       require updates elsewhere to ensure all removals from the queue
-  //       are covered (new function)
-  if (sq->sq_maxsize && streaming_queue_size(&sq->sq_queue) >= sq->sq_maxsize)
+  if (sq->sq_maxsize && sq->sq_maxsize < sq->sq_size) {
     streaming_msg_free(sm);
-  else
+  } else {
     TAILQ_INSERT_TAIL(&sq->sq_queue, sm, sm_link);
+    sq->sq_size += streaming_message_data_size(sm);
+  }
 
-  pthread_cond_signal(&sq->sq_cond);
-  pthread_mutex_unlock(&sq->sq_mutex);
+  tvh_cond_signal(&sq->sq_cond, 0);
+  tvh_mutex_unlock(&sq->sq_mutex);
 }
 
+/**
+ *
+ */
+static htsmsg_t *
+streaming_queue_info(void *opaque, htsmsg_t *list)
+{
+  streaming_queue_t *sq = opaque;
+  size_t size;
+  char buf[256];
+  tvh_mutex_lock(&sq->sq_mutex);
+  size = sq->sq_size;
+  tvh_mutex_unlock(&sq->sq_mutex);
+  snprintf(buf, sizeof(buf), "streaming queue %p size %zd", sq, size);
+  htsmsg_add_str(list, NULL, buf);
+  return list;
+}
 
 /**
  *
  */
 void
-streaming_queue_init2(streaming_queue_t *sq, int reject_filter, size_t maxsize)
+streaming_queue_remove(streaming_queue_t *sq, streaming_message_t *sm)
 {
-  streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, reject_filter);
+  sq->sq_size -= streaming_message_data_size(sm);
+  TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+}
 
-  pthread_mutex_init(&sq->sq_mutex, NULL);
-  pthread_cond_init(&sq->sq_cond, NULL);
+/**
+ *
+ */
+void
+streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
+{
+  static streaming_ops_t ops = {
+    .st_cb   = streaming_queue_deliver,
+    .st_info = streaming_queue_info
+  };
+
+  streaming_target_init(&sq->sq_st, &ops, sq, reject_filter);
+
+  tvh_mutex_init(&sq->sq_mutex, NULL);
+  tvh_cond_init(&sq->sq_cond, 1);
   TAILQ_INIT(&sq->sq_queue);
 
   sq->sq_maxsize = maxsize;
+  sq->sq_size = 0;
 }
-
-/**
- *
- */
-void
-streaming_queue_init(streaming_queue_t *sq, int reject_filter)
-{
-  streaming_queue_init2(sq, reject_filter, 0); // 0 = unlimited
-}
-
 
 /**
  *
@@ -102,11 +142,25 @@ streaming_queue_init(streaming_queue_t *sq, int reject_filter)
 void
 streaming_queue_deinit(streaming_queue_t *sq)
 {
+  sq->sq_size = 0;
   streaming_queue_clear(&sq->sq_queue);
-  pthread_mutex_destroy(&sq->sq_mutex);
-  pthread_cond_destroy(&sq->sq_cond);
+  tvh_mutex_destroy(&sq->sq_mutex);
+  tvh_cond_destroy(&sq->sq_cond);
 }
 
+/**
+ *
+ */
+void
+streaming_queue_clear(struct streaming_message_queue *q)
+{
+  streaming_message_t *sm;
+
+  while((sm = TAILQ_FIRST(q)) != NULL) {
+    TAILQ_REMOVE(q, sm, sm_link);
+    streaming_msg_free(sm);
+  }
+}
 
 /**
  *
@@ -148,9 +202,11 @@ streaming_message_t *
 streaming_msg_create(streaming_message_type_t type)
 {
   streaming_message_t *sm = malloc(sizeof(streaming_message_t));
+  memoryinfo_alloc(&streaming_msg_memoryinfo, sizeof(*sm));
   sm->sm_type = type;
 #if ENABLE_TIMESHIFT
-  sm->sm_time      = 0;
+  sm->sm_time = 0;
+  sm->sm_s = NULL;
 #endif
   return sm;
 }
@@ -203,9 +259,12 @@ streaming_msg_clone(streaming_message_t *src)
   streaming_message_t *dst = malloc(sizeof(streaming_message_t));
   streaming_start_t *ss;
 
+  memoryinfo_alloc(&streaming_msg_memoryinfo, sizeof(*dst));
+
   dst->sm_type      = src->sm_type;
 #if ENABLE_TIMESHIFT
   dst->sm_time      = src->sm_time;
+  dst->sm_s         = src->sm_s;
 #endif
 
   switch(src->sm_type) {
@@ -217,7 +276,7 @@ streaming_msg_clone(streaming_message_t *src)
 
   case SMT_START:
     ss = dst->sm_data = src->sm_data;
-    atomic_add(&ss->ss_refcount, 1);
+    streaming_start_ref(ss);
     break;
 
   case SMT_SKIP:
@@ -230,6 +289,11 @@ streaming_msg_clone(streaming_message_t *src)
     memcpy(dst->sm_data, src->sm_data, sizeof(signal_status_t));
     break;
 
+  case SMT_DESCRAMBLE_INFO:
+    dst->sm_data = malloc(sizeof(descramble_info_t));
+    memcpy(dst->sm_data, src->sm_data, sizeof(descramble_info_t));
+    break;
+
   case SMT_TIMESHIFT_STATUS:
     dst->sm_data = malloc(sizeof(timeshift_status_t));
     memcpy(dst->sm_data, src->sm_data, sizeof(timeshift_status_t));
@@ -240,6 +304,7 @@ streaming_msg_clone(streaming_message_t *src)
   case SMT_STOP:
   case SMT_SERVICE_STATUS:
   case SMT_NOSTART:
+  case SMT_NOSTART_WARN:
     dst->sm_code = src->sm_code;
     break;
 
@@ -282,6 +347,9 @@ streaming_start_unref(streaming_start_t *ss)
 void
 streaming_msg_free(streaming_message_t *sm)
 {
+  if (!sm)
+    return;
+
   switch(sm->sm_type) {
   case SMT_PACKET:
     if(sm->sm_data)
@@ -298,11 +366,13 @@ streaming_msg_free(streaming_message_t *sm)
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
   case SMT_NOSTART:
+  case SMT_NOSTART_WARN:
   case SMT_SPEED:
     break;
 
   case SMT_SKIP:
   case SMT_SIGNAL_STATUS:
+  case SMT_DESCRAMBLE_INFO:
 #if ENABLE_TIMESHIFT
   case SMT_TIMESHIFT_STATUS:
 #endif
@@ -317,6 +387,7 @@ streaming_msg_free(streaming_message_t *sm)
   default:
     abort();
   }
+  memoryinfo_free(&streaming_msg_memoryinfo, sizeof(*sm));
   free(sm);
 }
 
@@ -326,10 +397,10 @@ streaming_msg_free(streaming_message_t *sm)
 void
 streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm)
 {
-  if(st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
+  if (st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
     streaming_msg_free(sm);
   else
-    st->st_cb(st->st_opaque, sm);
+    streaming_target_deliver(st, sm);
 }
 
 /**
@@ -338,62 +409,34 @@ streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm)
 void
 streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
 {
-  streaming_target_t *st, *next;
+  streaming_target_t *st, *next, *run = NULL;
 
-  for(st = LIST_FIRST(&sp->sp_targets);st; st = next) {
+  for (st = LIST_FIRST(&sp->sp_targets); st; st = next) {
     next = LIST_NEXT(st, st_link);
     assert(next != st);
-    if(st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
+    if (st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
       continue;
-    st->st_cb(st->st_opaque, streaming_msg_clone(sm));
+    if (run)
+      streaming_target_deliver(run, streaming_msg_clone(sm));
+    run = st;
   }
+  if (run)
+    streaming_target_deliver(run, sm);
+  else
+    streaming_msg_free(sm);
 }
-
 
 /**
  *
  */
 void
-streaming_queue_clear(struct streaming_message_queue *q)
+streaming_service_deliver(service_t *t, streaming_message_t *sm)
 {
-  streaming_message_t *sm;
-
-  while((sm = TAILQ_FIRST(q)) != NULL) {
-    TAILQ_REMOVE(q, sm, sm_link);
-    streaming_msg_free(sm);
-  }
+  if (atomic_set(&t->s_pending_restart, 0))
+    service_restart_streams(t);
+  sm->sm_s = t;
+  streaming_pad_deliver(&t->s_streaming_pad, sm);
 }
-
-
-/**
- *
- */
-size_t streaming_queue_size(struct streaming_message_queue *q)
-{
-  streaming_message_t *sm;
-  int size = 0;
-
-  TAILQ_FOREACH(sm, q, sm_link) {
-    if (sm->sm_type == SMT_PACKET)
-    {
-      th_pkt_t *pkt = sm->sm_data;
-      if (pkt && pkt->pkt_payload)
-      {
-        size += pkt->pkt_payload->pb_size;
-      }
-    }
-    else if (sm->sm_type == SMT_MPEGTS)
-    {
-      pktbuf_t *pkt_payload = sm->sm_data;
-      if (pkt_payload)
-      {
-        size += pkt_payload->pb_size;
-      }
-    }
-  }
-  return size;
-}
-
 
 /**
  *
@@ -404,46 +447,73 @@ streaming_code2txt(int code)
   static __thread char ret[64];
 
   switch(code) {
-  case SM_CODE_OK: return "OK";
-    
+  case SM_CODE_OK:
+    return N_("OK");
+  case SM_CODE_FORCE_OK:
+    return N_("Forced OK");
+
   case SM_CODE_SOURCE_RECONFIGURED:
-    return "Source reconfigured";
+    return N_("Source reconfigured");
   case SM_CODE_BAD_SOURCE:
-    return "Source quality is bad";
+    return N_("Source quality is bad");
   case SM_CODE_SOURCE_DELETED:
-    return "Source deleted";
+    return N_("Source deleted");
   case SM_CODE_SUBSCRIPTION_OVERRIDDEN:
-    return "Subscription overridden";
+    return N_("Subscription overridden");
+  case SM_CODE_INVALID_TARGET:
+    return N_("Invalid target");
+  case SM_CODE_USER_ACCESS:
+    return N_("User access error");
+  case SM_CODE_USER_LIMIT:
+    return N_("User limit reached");
+  case SM_CODE_WEAK_STREAM:
+    return N_("Weak stream");
+  case SM_CODE_USER_REQUEST:
+    return N_("User request");
+  case SM_CODE_PREVIOUSLY_RECORDED:
+    return N_("Previously recorded");
 
   case SM_CODE_NO_FREE_ADAPTER:
-    return "No free adapter";
+    return N_("No free adapter");
   case SM_CODE_MUX_NOT_ENABLED:
-    return "Mux not enabled";
+    return N_("Mux not enabled");
   case SM_CODE_NOT_FREE:
-    return "Adapter in use by other subscription";
+    return N_("Adapter in use by another subscription");
   case SM_CODE_TUNING_FAILED:
-    return "Tuning failed";
+    return N_("Tuning failed");
   case SM_CODE_SVC_NOT_ENABLED:
-    return "No service enabled";
+    return N_("No service enabled");
   case SM_CODE_BAD_SIGNAL:
-    return "Too bad signal quality";
+    return N_("Signal quality too poor");
   case SM_CODE_NO_SOURCE:
-    return "No source available";
+    return N_("No source available");
   case SM_CODE_NO_SERVICE:
-    return "No service assigned to channel";
+    return N_("No service assigned to channel");
+  case SM_CODE_NO_ADAPTERS:
+    return N_("No assigned adapters");
+  case SM_CODE_INVALID_SERVICE:
+    return N_("Invalid service");
+  case SM_CODE_CHN_NOT_ENABLED:
+    return N_("No channel enabled");
+  case SM_CODE_DATA_TIMEOUT:
+    return N_("No A/V data received");
+  case SM_CODE_OTHER_SERVICE:
+    return N_("Other service without A/V streams");
 
   case SM_CODE_ABORTED:
-    return "Aborted by user";
+    return N_("Aborted by user");
 
   case SM_CODE_NO_DESCRAMBLER:
-    return "No descrambler";
+    return N_("No descrambler");
   case SM_CODE_NO_ACCESS:
-    return "No access";
+    return N_("No access");
   case SM_CODE_NO_INPUT:
-    return "No input detected";
+    return N_("No input detected");
+  case SM_CODE_NO_SPACE:
+    return N_("Not enough disk space");
 
   default:
-    snprintf(ret, sizeof(ret), "Unknown reason (%i)", code);
+    snprintf(ret, sizeof(ret), _("Unknown reason (%i)"), code);
     return ret;
   }
 }
@@ -456,11 +526,11 @@ streaming_start_t *
 streaming_start_copy(const streaming_start_t *src)
 {
   int i;
-  size_t siz = sizeof(streaming_start_t) + 
+  size_t siz = sizeof(streaming_start_t) +
     sizeof(streaming_start_component_t) * src->ss_num_components;
-  
+
   streaming_start_t *dst = malloc(siz);
-  
+
   memcpy(dst, src, siz);
   service_source_info_copy(&dst->ss_si, &src->ss_si);
 
@@ -481,12 +551,11 @@ streaming_start_copy(const streaming_start_t *src)
 streaming_start_component_t *
 streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
 {
+  streaming_start_component_t *ssc;
   int i;
-  for(i = 0; i < ss->ss_num_components; i++) {
-    streaming_start_component_t *ssc = &ss->ss_components[i];
-    if(ssc->ssc_index == idx)
+  for(i = 0, ssc = ss->ss_components; i < ss->ss_num_components; i++, ssc++)
+    if(ssc->es_index == idx)
       return ssc;
-  }
   return NULL;
 }
 
@@ -496,21 +565,30 @@ streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
 static struct strtab streamtypetab[] = {
   { "NONE",       SCT_NONE },
   { "UNKNOWN",    SCT_UNKNOWN },
+  { "RAW",        SCT_RAW },
+  { "PCR",        SCT_PCR },
+  { "CAT",        SCT_CAT },
+  { "CA",         SCT_CA },
+  { "HBBTV",      SCT_HBBTV },
+  { "RDS",        SCT_RDS },
   { "MPEG2VIDEO", SCT_MPEG2VIDEO },
   { "MPEG2AUDIO", SCT_MPEG2AUDIO },
   { "H264",       SCT_H264 },
   { "AC3",        SCT_AC3 },
   { "TELETEXT",   SCT_TELETEXT },
   { "DVBSUB",     SCT_DVBSUB },
-  { "CA",         SCT_CA },
-  { "AAC",        SCT_AAC },
+  { "AAC-LATM",   SCT_AAC },
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
   { "EAC3",       SCT_EAC3 },
-  { "AAC-LATM",   SCT_MP4A },
+  { "AAC",        SCT_MP4A },
   { "VP8",        SCT_VP8 },
   { "VORBIS",     SCT_VORBIS },
   { "HEVC",       SCT_HEVC },
+  { "VP9",        SCT_VP9 },
+  { "THEORA",     SCT_THEORA },
+  { "OPUS",       SCT_OPUS },
+  { "FLAC",       SCT_FLAC },
 };
 
 /**
@@ -534,10 +612,39 @@ streaming_component_audio_type2desc(int audio_type)
   /* From ISO 13818-1 - ISO 639 language descriptor */
   switch(audio_type) {
     case 0: return ""; /* "Undefined" in the standard, but used for normal audio */
-    case 1: return "Clean effects";
-    case 2: return "Hearing impaired";
-    case 3: return "Visually impaired commentary";
+    case 1: return N_("Clean effects");
+    case 2: return N_("Hearing impaired");
+    case 3: return N_("Visually impaired commentary/audio description");
   }
 
-  return "Reserved";
+  return N_("Reserved");
+}
+
+static struct strtab signal_statetab[] = {
+  { "GOOD",       SIGNAL_GOOD    },
+  { "BAD",        SIGNAL_BAD     },
+  { "FAINT",      SIGNAL_FAINT   },
+  { "NONE",       SIGNAL_NONE    },
+};
+
+const char *signal2str(signal_state_t st)
+{
+  const char *r = val2str(st, signal_statetab);
+  if (!r) r = "UNKNOWN";
+  return r;
+}
+
+/*
+ *
+ */
+void streaming_init(void)
+{
+  memoryinfo_register(&streaming_msg_memoryinfo);
+}
+
+void streaming_done(void)
+{
+  tvh_mutex_lock(&global_lock);
+  memoryinfo_unregister(&streaming_msg_memoryinfo);
+  tvh_mutex_unlock(&global_lock);
 }

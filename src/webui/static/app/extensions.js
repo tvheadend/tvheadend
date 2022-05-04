@@ -21,306 +21,6 @@
  * for a future release, so this should not yet be treated as a final, stable API at this time.
  */
 
-/** 
- * @class Ext.ux.MultiSelect
- * @extends Ext.form.Field
- * A control that allows selection and form submission of multiple list items. The MultiSelect control
- * depends on the Ext.ux.DDView class to provide drag/drop capability both within the list and also 
- * between multiple MultiSelect controls (see the Ext.ux.ItemSelector).
- * 
- *  @history
- *    2008-06-19 bpm Original code contributed by Toby Stuart
- *    2008-06-19 bpm Docs and demo code clean up
- * 
- * @constructor
- * Create a new MultiSelect
- * @param {Object} config Configuration options
- */
-Ext.ux.Multiselect = Ext.extend(Ext.form.Field, {
-    /**
-     * @cfg {String} legend Wraps the object with a fieldset and specified legend.
-     */
-    /**
-     * @cfg {Store} store The {@link Ext.data.Store} used by the underlying Ext.ux.DDView.
-     */
-    /**
-     * @cfg {Ext.ux.DDView} view The Ext.ux.DDView used to render the multiselect list.
-     */
-    /**
-     * @cfg {String/Array} dragGroup The ddgroup name(s) for the DDView's DragZone (defaults to undefined). 
-     */
-    /**
-     * @cfg {String/Array} dropGroup The ddgroup name(s) for the DDView's DropZone (defaults to undefined). 
-     */
-    /**
-     * @cfg {Object/Array} tbar The top toolbar of the control. This can be a {@link Ext.Toolbar} object, a 
-     * toolbar config, or an array of buttons/button configs to be added to the toolbar.
-     */
-    /**
-     * @cfg {String} fieldName The name of the field to sort by when sorting is enabled.
-     */
-    /**
-     * @cfg {String} appendOnly True if the list should only allow append drops when drag/drop is enabled 
-     * (use for lists which are sorted, defaults to false).
-     */
-    appendOnly: false,
-    /**
-     * @cfg {Array} dataFields Inline data definition when not using a pre-initialised store. Known to cause problems 
-     * in some browswers for very long lists. Use store for large datasets.
-     */
-    dataFields: [],
-    /**
-     * @cfg {Array} data Inline data when not using a pre-initialised store. Known to cause problems in some 
-     * browswers for very long lists. Use store for large datasets.
-     */
-    data: [],
-    /**
-     * @cfg {Number} width Width in pixels of the control (defaults to 100).
-     */
-    width: 100,
-    /**
-     * @cfg {Number} height Height in pixels of the control (defaults to 100).
-     */
-    height: 100,
-    /**
-     * @cfg {String/Number} displayField Name/Index of the desired display field in the dataset (defaults to 0).
-     */
-    displayField: 0,
-    /**
-     * @cfg {String/Number} valueField Name/Index of the desired value field in the dataset (defaults to 1).
-     */
-    valueField: 1,
-    /**
-     * @cfg {Boolean} allowBlank True to require at least one item in the list to be selected, false to allow no 
-     * selection (defaults to true).
-     */
-    allowBlank: true,
-    /**
-     * @cfg {Number} minLength Minimum number of selections allowed (defaults to 0).
-     */
-    minLength: 0,
-    /**
-     * @cfg {Number} maxLength Maximum number of selections allowed (defaults to Number.MAX_VALUE). 
-     */
-    maxLength: Number.MAX_VALUE,
-    /**
-     * @cfg {String} blankText Default text displayed when the control contains no items (defaults to the same value as
-     * {@link Ext.form.TextField#blankText}.
-     */
-    blankText: Ext.form.TextField.prototype.blankText,
-    /**
-     * @cfg {String} minLengthText Validation message displayed when {@link #minLength} is not met (defaults to 'Minimum {0} 
-     * item(s) required').  The {0} token will be replaced by the value of {@link #minLength}.
-     */
-    minLengthText: 'Minimum {0} item(s) required',
-    /**
-     * @cfg {String} maxLengthText Validation message displayed when {@link #maxLength} is not met (defaults to 'Maximum {0} 
-     * item(s) allowed').  The {0} token will be replaced by the value of {@link #maxLength}.
-     */
-    maxLengthText: 'Maximum {0} item(s) allowed',
-    /**
-     * @cfg {String} delimiter The string used to delimit between items when set or returned as a string of values
-     * (defaults to ',').
-     */
-    delimiter: ',',
-    // DDView settings
-    copy: false,
-    allowDup: false,
-    allowTrash: false,
-    focusClass: undefined,
-    sortDir: 'ASC',
-    // private
-    defaultAutoCreate: {tag: "div"},
-    // private
-    initComponent: function() {
-        Ext.ux.Multiselect.superclass.initComponent.call(this);
-        this.addEvents({
-            'dblclick': true,
-            'click': true,
-            'change': true,
-            'drop': true
-        });
-    },
-    // private
-    onRender: function(ct, position) {
-        Ext.ux.Multiselect.superclass.onRender.call(this, ct, position);
-
-        var cls = 'ux-mselect';
-        var fs = new Ext.form.FieldSet({
-            renderTo: this.el,
-            title: this.legend,
-            height: this.height,
-            width: this.width,
-            style: "padding:0;",
-            tbar: this.tbar
-        });
-        //if(!this.legend)fs.el.down('.'+fs.headerCls).remove();
-        fs.body.addClass(cls);
-
-        var tpl = '<tpl for="."><div class="' + cls + '-item';
-        if (Ext.isIE || Ext.isIE7) {
-            tpl += '" unselectable=on';
-        } else {
-            tpl += ' x-unselectable"';
-        }
-        tpl += '>{' + this.displayField + '}</div></tpl>';
-
-        if (!this.store) {
-            this.store = new Ext.data.SimpleStore({
-                fields: this.dataFields,
-                data: this.data
-            });
-        }
-
-        this.view = new Ext.ux.DDView({
-            multiSelect: true,
-            store: this.store,
-            selectedClass: cls + "-selected",
-            tpl: tpl,
-            allowDup: this.allowDup,
-            copy: this.copy,
-            allowTrash: this.allowTrash,
-            dragGroup: this.dragGroup,
-            dropGroup: this.dropGroup,
-            itemSelector: "." + cls + "-item",
-            isFormField: false,
-            applyTo: fs.body,
-            appendOnly: this.appendOnly,
-            sortField: this.sortField,
-            sortDir: this.sortDir
-        });
-
-        fs.add(this.view);
-
-        this.view.on('click', this.onViewClick, this);
-        this.view.on('beforeClick', this.onViewBeforeClick, this);
-        this.view.on('dblclick', this.onViewDblClick, this);
-        this.view.on('drop', function(ddView, n, dd, e, data) {
-            return this.fireEvent("drop", ddView, n, dd, e, data);
-        }, this);
-
-        this.hiddenName = this.name;
-        var hiddenTag = {tag: "input", type: "hidden", value: "", name: this.name};
-        if (this.isFormField) {
-            this.hiddenField = this.el.createChild(hiddenTag);
-        } else {
-            this.hiddenField = Ext.get(document.body).createChild(hiddenTag);
-        }
-        fs.doLayout();
-    },
-    // private
-    initValue: Ext.emptyFn,
-    // private
-    onViewClick: function(vw, index, node, e) {
-        var arrayIndex = this.preClickSelections.indexOf(index);
-        if (arrayIndex !== -1)
-        {
-            this.preClickSelections.splice(arrayIndex, 1);
-            this.view.clearSelections(true);
-            this.view.select(this.preClickSelections);
-        }
-        this.fireEvent('change', this, this.getValue(), this.hiddenField.dom.value);
-        this.hiddenField.dom.value = this.getValue();
-        this.fireEvent('click', this, e);
-        this.validate();
-    },
-    // private
-    onViewBeforeClick: function(vw, index, node, e) {
-        this.preClickSelections = this.view.getSelectedIndexes();
-        if (this.disabled) {
-            return false;
-        }
-    },
-    // private
-    onViewDblClick: function(vw, index, node, e) {
-        return this.fireEvent('dblclick', vw, index, node, e);   },
-    /**
-     * Returns an array of data values for the selected items in the list. The values will be separated
-     * by {@link #delimiter}.
-     * @return {Array} value An array of string data values
-     */
-    getValue: function(valueField) {
-        var returnArray = [];
-        var selectionsArray = this.view.getSelectedIndexes();
-        if (selectionsArray.length === 0) {
-            return '';
-        }
-        for (var i = 0; i < selectionsArray.length; i++) {
-            returnArray.push(this.store.getAt(selectionsArray[i]).get(((valueField != null) ? valueField : this.valueField)));
-        }
-        return returnArray.join(this.delimiter);
-    },
-    /**
-     * Sets a delimited string (using {@link #delimiter}) or array of data values into the list.
-     * @param {String/Array} values The values to set
-     */
-    setValue: function(values) {
-        var index;
-        var selections = [];
-        this.view.clearSelections();
-        this.hiddenField.dom.value = '';
-
-        if (!values || (values === '')) {
-            return;
-        }
-
-        if (!(values instanceof Array)) {
-            values = values.split(this.delimiter);
-        }
-        for (var i = 0; i < values.length; i++) {
-            index = this.view.store.indexOf(this.view.store.query(this.valueField,
-                    new RegExp('^' + values[i] + '$', "i")).itemAt(0));
-            selections.push(index);
-        }
-        this.view.select(selections);
-        this.hiddenField.dom.value = this.getValue();
-        this.validate();
-    },
-    // inherit docs
-    reset: function() {
-        this.setValue('');
-    },
-    // inherit docs
-    getRawValue: function(valueField) {
-        var tmp = this.getValue(valueField);
-        if (tmp.length) {
-            tmp = tmp.split(this.delimiter);
-        }
-        else {
-            tmp = [];
-        }
-        return tmp;
-    },
-    // inherit docs
-    setRawValue: function(values) {
-        setValue(values);
-    },
-    // inherit docs
-    validateValue: function(value) {
-        if (value.length < 1) { // if it has no value
-            if (this.allowBlank) {
-                this.clearInvalid();
-                return true;
-            } else {
-                this.markInvalid(this.blankText);
-                return false;
-            }
-        }
-        if (value.length < this.minLength) {
-            this.markInvalid(String.format(this.minLengthText, this.minLength));
-            return false;
-        }
-        if (value.length > this.maxLength) {
-            this.markInvalid(String.format(this.maxLengthText, this.maxLength));
-            return false;
-        }
-        return true;
-    }
-});
-
-Ext.reg("multiselect", Ext.ux.Multiselect);
-
-
 
 /**
  * Ext.ux.grid.ProgressColumn - Ext.ux.grid.ProgressColumn is a grid plugin that
@@ -346,6 +46,7 @@ Ext.reg("multiselect", Ext.ux.Multiselect);
 /**
  * 22/07/2014: ceiling support backported from version 1.2, by Kai Sommerfeld
  * 01/08/2014: tvh_renderer fcn added by Jaroslav Kysela
+ * 09/06/2015: update timeout code added by Jaroslav Kysela
  */
 Ext.namespace('Ext.ux.grid');
 
@@ -357,6 +58,10 @@ Ext.ux.grid.ProgressColumn = function(config) {
 };
 
 Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
+    /**
+     * @cfg {Integer} update timeout in milliseconds (defaults to 0 - inactive)
+     */
+    timeout : 0,
     /**
      * @cfg {Integer} upper limit for full progress indicator (defaults to 100)
      */
@@ -405,6 +110,7 @@ Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
       return v;
     },
     renderer: function(v, p, record) {
+        var ov = v;
         v = this.tvh_renderer(v, p, record);
         if (typeof v === "string")
           return v; // custom string
@@ -430,11 +136,28 @@ Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
                 style = '-red';
         }
 
-        p.css += ' x-grid3-progresscol';
-        return String.format(
+        var res = String.format(
                 '<div class="x-progress-wrap"><div class="x-progress-inner"><div class="x-progress-bar{0}" style="width:{1}%;">{2}</div>' +
                 '</div>', style, value, text
                 );
+        if (!this.timerflag) {
+            p.css += ' x-grid3-progresscol';
+            if (this.timeout) {
+              var tid = Ext.id();
+              res = '<div id="' + tid + '">' + res + '</div>';
+              setInterval(this.runTimer, this.timeout, this, ov, p, record, tid);
+            }
+        }
+        return res;
+    },
+    runTimer: function(obj, v, p, record, tid) {
+        var dom = document.getElementById(tid);
+        if (dom) {
+           obj.timerflag = true;
+           var res = obj.renderer(v, p, record, tid);
+           obj.timerflag = false;
+           dom.innerHTML = res;
+        }
     }
 });
 
@@ -508,41 +231,41 @@ Ext.ux.grid.RowActions = function(config) {
     // {{{
     this.addEvents(
             /**
-             * @event beforeaction
+             * event beforeaction
              * Fires before action event. Return false to cancel the subsequent action event.
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Ext.data.Record} record Record corresponding to row clicked
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {Integer} rowIndex Index of clicked grid row
-             * @param {Integer} colIndex Index of clicked grid column that contains all action icons
+             * param {Ext.grid.GridPanel} grid
+             * param {Ext.data.Record} record Record corresponding to row clicked
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {Integer} rowIndex Index of clicked grid row
+             * param {Integer} colIndex Index of clicked grid column that contains all action icons
              */
             'beforeaction'
             /**
-             * @event action
+             * event action
              * Fires when icon is clicked
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Ext.data.Record} record Record corresponding to row clicked
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {Integer} rowIndex Index of clicked grid row
-             * @param {Integer} colIndex Index of clicked grid column that contains all action icons
+             * param {Ext.grid.GridPanel} grid
+             * param {Ext.data.Record} record Record corresponding to row clicked
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {Integer} rowIndex Index of clicked grid row
+             * param {Integer} colIndex Index of clicked grid column that contains all action icons
              */
             , 'action'
             /**
-             * @event beforegroupaction
+             * event beforegroupaction
              * Fires before group action event. Return false to cancel the subsequent groupaction event.
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Array} records Array of records in this group
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {String} groupId Identifies the group clicked
+             * param {Ext.grid.GridPanel} grid
+             * param {Array} records Array of records in this group
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {String} groupId Identifies the group clicked
              */
             , 'beforegroupaction'
             /**
-             * @event groupaction
+             * event groupaction
              * Fires when icon in a group header is clicked
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Array} records Array of records in this group
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {String} groupId Identifies the group clicked
+             * param {Ext.grid.GridPanel} grid
+             * param {Array} records Array of records in this group
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {String} groupId Identifies the group clicked
              */
             , 'groupaction'
             );
@@ -952,290 +675,6 @@ Ext.reg('rowactions', Ext.ux.grid.RowActions);
 
 // eof
 
-
-
-/**
- * Ext.ux.form.LovCombo, List of Values Combo
- *
- * @author    Ing. Jozef Sakáloš
- * @copyright (c) 2008, by Ing. Jozef Sakáloš
- * @date      16. April 2008
- * @version   $Id: Ext.ux.form.LovCombo.js 285 2008-06-06 09:22:20Z jozo $
- *
- * @license Ext.ux.form.LovCombo.js is licensed under the terms of the Open Source
- * LGPL 3.0 license. Commercial use is permitted to the extent that the 
- * code/component(s) do NOT become part of another Open Source or Commercially
- * licensed development library or toolkit without explicit permission.
- * 
- * License details: http://www.gnu.org/licenses/lgpl.html
- */
-
-/*global Ext */
-
-// add RegExp.escape if it has not been already added
-if ('function' !== typeof RegExp.escape) {
-    RegExp.escape = function(s) {
-        if ('string' !== typeof s) {
-            return s;
-        }
-        // Note: if pasting from forum, precede ]/\ with backslash manually
-        return s.replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
-    }; // eo function escape
-}
-
-// create namespace
-Ext.ns('Ext.ux.form');
-
-/**
- *
- * @class Ext.ux.form.LovCombo
- * @extends Ext.form.ComboBox
- */
-Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
-    // {{{
-    // configuration options
-    /**
-     * @cfg {String} checkField name of field used to store checked state.
-     * It is automatically added to existing fields.
-     * Change it only if it collides with your normal field.
-     */
-    checkField: 'checked'
-
-            /**
-             * @cfg {String} separator separator to use between values and texts
-             */
-    , separator: ','
-
-            /**
-             * @cfg {String/Array} tpl Template for items. 
-             * Change it only if you know what you are doing.
-             */
-            // }}}
-            // {{{
-    , initComponent: function() {
-
-        // template with checkbox
-        if (!this.tpl) {
-            this.tpl =
-                    '<tpl for=".">'
-                    + '<div class="x-combo-list-item">'
-                    + '<img src="' + Ext.BLANK_IMAGE_URL + '" '
-                    + 'class="ux-lovcombo-icon ux-lovcombo-icon-'
-                    + '{[values.' + this.checkField + '?"checked":"unchecked"' + ']}">'
-                    + '<div class="ux-lovcombo-item-text">{' + (this.displayField || 'text') + '}</div>'
-                    + '</div>'
-                    + '</tpl>'
-                    ;
-        }
-
-        // call parent
-        Ext.ux.form.LovCombo.superclass.initComponent.apply(this, arguments);
-
-        // install internal event handlers
-        this.on({
-            scope: this
-            , beforequery: this.onBeforeQuery
-            , blur: this.onRealBlur
-        });
-
-        // remove selection from input field
-        this.onLoad = this.onLoad.createSequence(function() {
-            if (this.el) {
-                var v = this.el.dom.value;
-                this.el.dom.value = '';
-                this.el.dom.value = v;
-            }
-        });
-
-    } // e/o function initComponent
-    // }}}
-    // {{{
-    /**
-     * Disables default tab key bahavior
-     * @private
-     */
-    , initEvents: function() {
-        Ext.ux.form.LovCombo.superclass.initEvents.apply(this, arguments);
-
-        // disable default tab handling - does no good
-        this.keyNav.tab = false;
-
-    } // eo function initEvents
-    // }}}
-    // {{{
-    /**
-     * clears value
-     */
-    , clearValue: function() {
-        this.value = '';
-        this.setRawValue(this.value);
-        this.store.clearFilter();
-        this.store.each(function(r) {
-            r.set(this.checkField, false);
-        }, this);
-        if (this.hiddenField) {
-            this.hiddenField.value = '';
-        }
-        this.applyEmptyText();
-    } // eo function clearValue
-    // }}}
-    // {{{
-    /**
-     * @return {String} separator (plus space) separated list of selected displayFields
-     * @private
-     */
-    , getCheckedDisplay: function() {
-        var re = new RegExp(this.separator, "g");
-        return this.getCheckedValue(this.displayField).replace(re, this.separator + ' ');
-    } // eo function getCheckedDisplay
-    // }}}
-    // {{{
-    /**
-     * @return {String} separator separated list of selected valueFields
-     * @private
-     */
-    , getCheckedValue: function(field) {
-        field = field || this.valueField;
-        var c = [];
-
-        // store may be filtered so get all records
-        var snapshot = this.store.snapshot || this.store.data;
-
-        snapshot.each(function(r) {
-            if (r.get(this.checkField)) {
-                c.push(r.get(field));
-            }
-        }, this);
-
-        return c.join(this.separator);
-    } // eo function getCheckedValue
-    // }}}
-    // {{{
-    /**
-     * beforequery event handler - handles multiple selections
-     * @param {Object} qe query event
-     * @private
-     */
-    , onBeforeQuery: function(qe) {
-        qe.query = qe.query.replace(new RegExp(this.getCheckedDisplay() + '[ ' + this.separator + ']*'), '');
-    } // eo function onBeforeQuery
-    // }}}
-    // {{{
-    /**
-     * blur event handler - runs only when real blur event is fired
-     */
-    , onRealBlur: function() {
-        this.list.hide();
-        var rv = this.getRawValue();
-        var rva = rv.split(new RegExp(RegExp.escape(this.separator) + ' *'));
-        var va = [];
-        var snapshot = this.store.snapshot || this.store.data;
-
-        // iterate through raw values and records and check/uncheck items
-        Ext.each(rva, function(v) {
-            snapshot.each(function(r) {
-                if (v === r.get(this.displayField)) {
-                    va.push(r.get(this.valueField));
-                }
-            }, this);
-        }, this);
-        this.setValue(va.join(this.separator));
-        this.store.clearFilter();
-    } // eo function onRealBlur
-    // }}}
-    // {{{
-    /**
-     * Combo's onSelect override
-     * @private
-     * @param {Ext.data.Record} record record that has been selected in the list
-     * @param {Number} index index of selected (clicked) record
-     */
-    , onSelect: function(record, index) {
-        if (this.fireEvent('beforeselect', this, record, index) !== false) {
-
-            // toggle checked field
-            record.set(this.checkField, !record.get(this.checkField));
-
-            // display full list
-            if (this.store.isFiltered()) {
-                this.doQuery(this.allQuery);
-            }
-
-            // set (update) value and fire event
-            this.setValue(this.getCheckedValue());
-            this.fireEvent('select', this, record, index);
-        }
-    } // eo function onSelect
-    // }}}
-    // {{{
-    /**
-     * Sets the value of the LovCombo
-     * @param {Mixed} v value
-     */
-    , setValue: function(v) {
-        if (v) {
-            v = '' + v;
-            if (this.valueField) {
-                this.store.clearFilter();
-                this.store.each(function(r) {
-                    var checked = !(!v.match(
-                            '(^|' + this.separator + ')' + RegExp.escape(r.get(this.valueField))
-                            + '(' + this.separator + '|$)'))
-                            ;
-
-                    r.set(this.checkField, checked);
-                }, this);
-                this.value = this.getCheckedValue();
-                this.setRawValue(this.getCheckedDisplay());
-                if (this.hiddenField) {
-                    this.hiddenField.value = this.value;
-                }
-            }
-            else {
-                this.value = v;
-                this.setRawValue(v);
-                if (this.hiddenField) {
-                    this.hiddenField.value = v;
-                }
-            }
-            if (this.el) {
-                this.el.removeClass(this.emptyClass);
-            }
-        }
-        else {
-            this.clearValue();
-        }
-    } // eo function setValue
-    // }}}
-    // {{{
-    /**
-     * Selects all items
-     */
-    , selectAll: function() {
-        this.store.each(function(record) {
-            // toggle checked field
-            record.set(this.checkField, true);
-        }, this);
-
-        //display full list
-        this.doQuery(this.allQuery);
-        this.setValue(this.getCheckedValue());
-    } // eo full selectAll
-    // }}}
-    // {{{
-    /**
-     * Deselects all items. Synonym for clearValue
-     */
-    , deselectAll: function() {
-        this.clearValue();
-    } // eo full deselectAll 
-    // }}}
-
-}); // eo extend
-
-// register xtype
-Ext.reg('lovcombo', Ext.ux.form.LovCombo);
-
 /**
  * @class Ext.ux.form.TwinDateTimeField
  * @extends Ext.form.Field
@@ -1287,6 +726,8 @@ Ext.ux.form.TwinDateField = Ext.extend(Ext.form.DateField, {
   }),
 
   setValue : Ext.form.DateField.prototype.setValue.createSequence(function(v) {
+    if (!this.triggers)
+      return;
     if (v !== null && v != '') {
       if (this.allowClear)
         this.getTrigger(0).show();
@@ -1427,8 +868,6 @@ Ext.ux.form.TwinDateTimeField = Ext.extend(Ext.form.Field, {
   initComponent : function() {
     // call parent initComponent
     Ext.ux.form.TwinDateTimeField.superclass.initComponent.call(this);
-
-    if (this.value) this.value = this.value * 1000;
 
     // create DateField
     var dateConfig = Ext.apply({}, {
@@ -1868,7 +1307,7 @@ Ext.ux.form.TwinDateTimeField = Ext.extend(Ext.form.Field, {
       return;
     }
     if ('number' === typeof val) {
-      val = new Date(val);
+      val = new Date(val * 1000);
     } else if ('string' === typeof val && this.hiddenFormat) {
       val = Date.parseDate(val, this.hiddenFormat);
     }
@@ -1890,6 +1329,7 @@ Ext.ux.form.TwinDateTimeField = Ext.extend(Ext.form.Field, {
       }
     }
     this.updateValue();
+    this.value = this.getValue();
   },
 
   /**
@@ -2014,3 +1454,114 @@ Ext.ux.form.TwinDateTimeField = Ext.extend(Ext.form.Field, {
   }
 });
 
+
+/**
+ *
+ */
+
+// create namespace
+Ext.ns('Ext.ux');
+
+/**
+ *
+ * @class Ext.ux.Window
+ * @extends Ext.Window
+ */
+Ext.ux.Window = Ext.extend(Ext.Window, {
+
+  initComponent : function() {
+    Ext.Window.superclass.initComponent.call(this);
+    Ext.EventManager.onWindowResize(this.keepItVisible, this, [true]);
+    this.originalWidth = 0;
+    this.originalHeight = 0;
+    /* exclusive window */
+    if (tvheadend.dialog)
+      tvheadend.dialog.close();
+    tvheadend.dialog = this;
+  },
+
+  beforeDestroy : function() {
+    Ext.EventManager.removeResizeListener(this.keepItVisible, this);
+    Ext.Window.superclass.beforeDestroy.call(this);
+    tvheadend.dialog = null;
+  },
+
+  keepItVisible : function(resize) {
+    var w = this.getWidth();
+    var h = this.getHeight();
+    var aw = Ext.lib.Dom.getViewWidth();
+    var ah = Ext.lib.Dom.getViewHeight();
+    var c = 0;
+
+    if (resize && this.originalWidth) {
+      w = this.originalWidth;
+      c = 1;
+    }
+    if (resize && this.originalHeight) {
+      h = this.originalHeight;
+      c = 1;
+    }
+
+    if (w > aw) {
+      w = aw;
+      c = 1;
+    }
+    if (h > ah) {
+      h = ah;
+      c = 1;
+    }
+    if (c) {
+      this.autoWidth = false;
+      this.autoHeight = false;
+      if (w === this.originalWidth)
+        w = w + 15;
+      this.setSize(w, h);
+      this.center();
+    } else if (resize) {
+      this.center();
+    } else {
+      return false;
+    }
+    return true;
+  },
+
+  setOriginSize : function(force) {
+    var w = this.getWidth();
+    var h = this.getHeight();
+    if (w > 200 && (force || this.originalWidth === 0))
+      this.originalWidth = w;
+    if (h > 100 && (force || this.originalHeight === 0))
+      this.originalHeight = h;
+    if (force && this.keepItVisible() === false)
+      this.center();
+  },
+
+  onShow : function() {
+    this.setOriginSize(false);
+    this.keepItVisible();
+  },
+
+  onResize : function() {
+    Ext.Window.superclass.onResize.apply(this, arguments);
+    this.keepItVisible(false);
+  },
+
+  syncShadow : function() {
+    Ext.Window.superclass.syncShadow.apply(this, arguments);
+    this.keepItVisible(false);
+  },
+
+});
+
+Ext.layout.Column2Layout = Ext.extend(Ext.layout.ColumnLayout, {
+
+  getLayoutTargetSize : function() {
+    var ret = Ext.layout.ColumnLayout.prototype.getLayoutTargetSize.call(this);
+    if (ret && ret.width > 20)
+      ret.width -= 20;
+    return ret;
+  }
+
+});
+
+Ext.Container.LAYOUTS['column2'] = Ext.layout.Column2Layout;

@@ -20,15 +20,9 @@
 #ifndef __TVH_TIME_H__
 #define __TVH_TIME_H__
 
-extern uint32_t tvhtime_update_enabled;
-extern uint32_t tvhtime_ntp_enabled;
-extern uint32_t tvhtime_tolerance;
+#include "idnode.h"
 
 void tvhtime_init ( void );
-void tvhtime_update ( struct tm *now );
-
-void tvhtime_set_update_enabled ( uint32_t on );
-void tvhtime_set_ntp_enabled ( uint32_t on );
-void tvhtime_set_tolerance ( uint32_t v );
+void tvhtime_update ( time_t utc, const char *srcname );
 
 #endif /* __TVH_TIME_H__ */

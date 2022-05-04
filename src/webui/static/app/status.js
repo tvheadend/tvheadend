@@ -20,8 +20,11 @@ tvheadend.status_subs = function(panel, index)
             r.data.channel = m.channel;
             r.data.service = m.service;
             r.data.state = m.state;
+            if (m.pids) r.data.pids = m.pids;
+            if (m.descramble) r.data.descramble = m.descramble;
+            if (m.profile) r.data.profile = m.profile;
             r.data.errors = m.errors;
-            r.data.in = m.in;
+            r.data['in'] = m['in'];
             r.data.out = m.out;
 
             store.afterEdit(r);
@@ -33,29 +36,36 @@ tvheadend.status_subs = function(panel, index)
         if (subs)
             return;
 
+        var stype = Ext.data.SortTypes.asUCString;
+        var stypei = Ext.data.SortTypes.asInt;
         store = new Ext.data.JsonStore({
             root: 'entries',
             totalProperty: 'totalCount',
             fields: [
-                { name: 'id' },
-                { name: 'hostname' },
-                { name: 'username' },
-                { name: 'title' },
-                { name: 'channel' },
-                { name: 'service' },
-                { name: 'state' },
-                { name: 'errors' },
-                { name: 'in' },
-                { name: 'out' },
+                { name: 'id', sortType: stype },
+                { name: 'hostname', sortType: stypei },
+                { name: 'username', sortType: stype },
+                { name: 'title', sortType: stype },
+                { name: 'client', sortType: stype },
+                { name: 'channel', sortType: stype },
+                { name: 'service', sortType: stype },
+                { name: 'profile', sortType: stype },
+                { name: 'state', sortType: stype },
+                { name: 'pids' },
+                { name: 'descramble', sortType: stype },
+                { name: 'errors', sortType: stypei },
+                { name: 'in', sortType: stypei },
+                { name: 'out', sortType: stypei },
                 {
                     name: 'start',
                     type: 'date',
-                    dateFormat: 'U' /* unix time */
+                    dateFormat: 'U', /* unix time */
+                    sortType: Ext.data.SortTypes.asDate
                 }
             ],
             url: 'api/status/subscriptions',
             autoLoad: true,
-            id: 'id'
+            id: 'id',
         });
         tvheadend.subsStore = store;
 
@@ -70,39 +80,70 @@ tvheadend.status_subs = function(panel, index)
         var subsCm = new Ext.grid.ColumnModel([
             {
                 width: 50,
+                id: 'id',
+                header: _("ID"),
+                dataIndex: 'id',
+                sortable: true,
+                renderer: function(v) {
+                    return ("0000000" + v.toString(16).toUpperCase()).substr(-8);
+                }
+
+            },
+            {
+                width: 50,
                 id: 'hostname',
-                header: "Hostname",
-                dataIndex: 'hostname'
+                header: _("Hostname"),
+                dataIndex: 'hostname',
+                sortable: true
             },
             {
                 width: 50,
                 id: 'username',
-                header: "Username",
-                dataIndex: 'username'
+                header: _("Username"),
+                dataIndex: 'username',
+                sortable: true
             },
             {
                 width: 80,
                 id: 'title',
-                header: "Title",
-                dataIndex: 'title'
+                header: _("Title"),
+                dataIndex: 'title',
+                sortable: true
+            },
+            {
+                width: 80,
+                id: 'client',
+                header: _("Client / User agent"),
+                dataIndex: 'client',
+                sortable: true
             },
             {
                 width: 50,
                 id: 'channel',
-                header: "Channel",
-                dataIndex: 'channel'
+                header: _("Channel"),
+                dataIndex: 'channel',
+                sortable: true
             },
             {
-                width: 200,
+                width: 210,
                 id: 'service',
-                header: "Service",
-                dataIndex: 'service'
-            }, 
+                header: _("Service"),
+                dataIndex: 'service',
+                sortable: true
+            },
+            {
+                width: 50,
+                id: 'profile',
+                header: _("Profile"),
+                dataIndex: 'profile',
+                sortable: true
+            },
             {
                 width: 50,
                 id: 'start',
-                header: "Start",
+                header: _("Start"),
                 dataIndex: 'start',
+                sortable: true,
                 renderer: function(v) {
                     var dt = new Date(v);
                     return dt.format('D j M H:i');
@@ -111,33 +152,61 @@ tvheadend.status_subs = function(panel, index)
             {
                 width: 50,
                 id: 'state',
-                header: "State",
-                dataIndex: 'state'
+                header: _("State"),
+                dataIndex: 'state',
+                sortable: true
+            },
+            {
+                width: 90,
+                id: 'pids',
+                header: _("PID list"),
+                dataIndex: 'pids',
+                sortable: false,
+                renderer: function(v) {
+                    var r = [];
+                    Ext.each(v, function(pid) {
+                      r.push(pid);
+                    });
+                    if (r.length < 1) return "";
+                    r.sort(function(a, b){return a-b});
+                    if (r[r.length - 1] == 65535) return _("all");
+                    return r.join(',');
+                }
+            },
+            {
+                width: 80,
+                id: 'descramble',
+                header: _("Descramble"),
+                dataIndex: 'descramble',
+                sortable: true
             },
             {
                 width: 50,
                 id: 'errors',
-                header: "Errors",
-                dataIndex: 'errors'
+                header: _("Errors"),
+                dataIndex: 'errors',
+                sortable: true
             },
             {
                 width: 50,
                 id: 'in',
-                header: "Input (kb/s)",
+                header: _("Input (kb/s)"),
                 dataIndex: 'in',
+                sortable: true,
                 listeners: { click: { fn: clicked } },
-                renderer: renderBw,
+                renderer: renderBw
             },
             {
                 width: 50,
                 id: 'out',
-                header: "Output (kb/s)",
+                header: _("Output (kb/s)"),
                 dataIndex: 'out',
+                sortable: true,
                 listeners: { click: { fn: clicked } },
-                renderer: renderBw,
+                renderer: renderBw
             }
         ]);
-        
+
         function clicked(column, grid, index, e) {
             if (column.dataIndex == 'in' || column.dataIndex == 'out') {
                 var id = grid.getStore().getAt(index).id;
@@ -147,6 +216,14 @@ tvheadend.status_subs = function(panel, index)
         }
 
         subs = new Ext.grid.GridPanel({
+            tbar: ['->', {
+                text: _('Help'),
+                tooltip: _('View help docs.'),
+                iconCls: 'help',
+                handler: function() {
+                    new tvheadend.mdhelp('status_subscriptions')
+                }
+            }],
             border: false,
             loadMask: true,
             stripeRows: true,
@@ -158,7 +235,7 @@ tvheadend.status_subs = function(panel, index)
                 forceFit: true
             }
         });
-        
+
         dpanel.add(subs);
         dpanel.doLayout(false, true);
     }
@@ -178,8 +255,8 @@ tvheadend.status_subs = function(panel, index)
         border: false,
         header: false,
         layout: 'fit',
-        title: 'Subscriptions',
-        iconCls: 'eye'
+        title: _('Subscriptions'),
+        iconCls: 'subscriptions'
     });
 
     tvheadend.paneladd(panel, dpanel, index);
@@ -209,6 +286,7 @@ tvheadend.status_streams = function(panel, index)
         }
         r.data.subs = m.subs;
         r.data.weight = m.weight;
+        r.data.pids = m.pids;
         r.data.signal = m.signal;
         r.data.ber = m.ber;
         r.data.unc = m.unc;
@@ -231,29 +309,59 @@ tvheadend.status_streams = function(panel, index)
         if (grid)
             return;
 
+        var actions = new Ext.ux.grid.RowActions({
+            header: '',
+            width: 10,
+            actions: [
+                {
+                    iconCls: 'clean',
+                    qtip: _('Clear statistics'),
+                    cb: function(grid, rec, act, row) {
+                        var uuid = grid.getStore().getAt(row).data.uuid;
+                        Ext.MessageBox.confirm(_('Clear statistics'),
+                            _('Clear statistics for selected input?'),
+                            function(button) {
+                                if (button === 'no')
+                                    return;
+                                Ext.Ajax.request({
+                                    url: 'api/status/inputclrstats',
+                                    params: { uuid: uuid }
+                                });
+                            }
+                       );
+                   }
+               }
+            ],
+            destroy: function() {
+            }
+        });
+
+        var stype = Ext.data.SortTypes.asUCString;
+        var stypei = Ext.data.SortTypes.asInt;
         store = new Ext.data.JsonStore({
             root: 'entries',
             totalProperty: 'totalCount',
             fields: [
                 { name: 'uuid' },
-                { name: 'input' },
-                { name: 'username' },
-                { name: 'stream' },
-                { name: 'subs' },
-                { name: 'weight' },
-                { name: 'signal' },
-                { name: 'ber' },
-                { name: 'unc' },
-                { name: 'snr' },
-                { name: 'bps' },
-                { name: 'cc' },
-                { name: 'te' },
+                { name: 'input', sortType: stype },
+                { name: 'username', sortType: stype },
+                { name: 'stream', sortType: stype },
+                { name: 'subs', sortType: stypei },
+                { name: 'weight', sortType: stypei },
+                { name: 'pids' },
+                { name: 'signal', sortType: stypei },
+                { name: 'ber', sortType: stypei },
+                { name: 'unc', sortType: stypei },
+                { name: 'snr', sortType: stypei },
+                { name: 'bps', sortType: stypei },
+                { name: 'cc', sortType: stypei },
+                { name: 'te', sortType: stypei },
                 { name: 'signal_scale' },
                 { name: 'snr_scale' },
-                { name: 'ec_bit' },
-                { name: 'tc_bit' },
-                { name: 'ec_block' },
-                { name: 'tc_block' }
+                { name: 'ec_bit', sortType: stypei },
+                { name: 'tc_bit', sorttype: stypei },
+                { name: 'ec_block', sortType: stypei },
+                { name: 'tc_block', sortType: stypei }
             ],
             url: 'api/status/inputs',
             autoLoad: true,
@@ -288,59 +396,87 @@ tvheadend.status_streams = function(panel, index)
         }
 
         var cm = new Ext.grid.ColumnModel([
+            actions,
             {
                 width: 120,
-                header: "Input",
-                dataIndex: 'input'
+                header: _("Input"),
+                dataIndex: 'input',
+                sortable: true
             },
             {
                 width: 100,
-                header: "Stream",
-                dataIndex: 'stream'
+                header: _("Stream"),
+                dataIndex: 'stream',
+                sortable: true
             },
             {
                 width: 50,
-                header: "Subs #",
-                dataIndex: 'subs'
+                header: _("Subs No."),
+                dataIndex: 'subs',
+                sortable: true
             },
             {
                 width: 50,
-                header: "Weight",
-                dataIndex: 'weight'
+                header: _("Weight"),
+                dataIndex: 'weight',
+                sortable: true
+            },
+            {
+                width: 100,
+                id: 'pids',
+                header: _("PID list"),
+                dataIndex: 'pids',
+                sortable: false,
+                renderer: function(v) {
+                    var r = [];
+                    Ext.each(v, function(pid) {
+                      r.push(pid);
+                    });
+                    if (r.length < 1) return "";
+                    r.sort(function(a, b){return a-b});
+                    if (r[r.length - 1] == 65535) return _("all");
+                    return r.join(',');
+                }
             },
             {
                 width: 50,
-                header: "Bandwidth (kb/s)",
+                header: _("Bandwidth (kb/s)"),
                 dataIndex: 'bps',
+                sortable: true,
                 renderer: renderBw,
-                listeners: { click: { fn: clicked } },
+                listeners: { click: { fn: clicked } }
             },
             {
                 width: 50,
-                header: "BER",
+                header: _("BER"),
                 dataIndex: 'ber',
+                sortable: true,
                 renderer: renderBer
             },
             {
                 width: 50,
-                header: "PER",
+                header: _("PER"),
                 dataIndex: 'tc_block',
+                sortable: true,
                 renderer: renderPer
             },
             {
                 width: 50,
-                header: "Uncorrected Blocks",
-                dataIndex: 'unc'
+                header: _("Uncorrected Blocks"),
+                dataIndex: 'unc',
+                sortable: true
             },
             {
                 width: 50,
-                header: "Transport Errors",
-                dataIndex: 'te'
+                header: _("Transport Errors"),
+                dataIndex: 'te',
+                sortable: true
             },
             {
                 width: 50,
-                header: "Continuity Errors",
-                dataIndex: 'cc'
+                header: _("Continuity Errors"),
+                dataIndex: 'cc',
+                sortable: true
             }
         ]);
 
@@ -353,7 +489,7 @@ tvheadend.status_streams = function(panel, index)
         }
 
         cm.config.push(new Ext.ux.grid.ProgressColumn({
-            header: "SNR",
+            header: _("SNR"),
             dataIndex: 'snr',
             width: 85,
             colored: true,
@@ -363,36 +499,66 @@ tvheadend.status_streams = function(panel, index)
                 if (scale == 1)
                   return v;
                 if (scale == 2 && v > 0) {
-                  var snr = v * 0.0001;
+                  var snr = v * 0.001;
                   return snr.toFixed(1) + " dB";
                 }
-                return '<span class="tvh-grid-unset">Unknown</span>';
+                return '<span class="tvh-grid-unset">' + _('Unknown') + '</span>';
             },
             destroy: function() {
             }
         }));
 
         cm.config.push(new Ext.ux.grid.ProgressColumn({
-            header: "Signal Strength",
+            header: _("Signal Strength"),
             dataIndex: 'signal',
             width: 85,
             colored: true,
             ceiling: 65535,
             tvh_renderer: function(v, p, record) {
-                var scale = record.get('snr_scale');
+                var scale = record.get('signal_scale');
                 if (scale == 1)
                   return v;
-                if (scale == 2 && v > 0) {
-                    var snr = v * 0.0001;
+                if (scale == 2) {
+                    var snr = v * 0.001;
                     return snr.toFixed(1) + " dBm";
                 }
-                return '<span class="tvh-grid-unset">Unknown</span>';
+                return '<span class="tvh-grid-unset">' + _('Unknown') + '</span>';
             },
             destroy: function() {
             }
         }));
 
         grid = new Ext.grid.GridPanel({
+            tbar: [
+            {
+                text: _('Clear all statistics'),
+                iconCls: 'clean',
+                handler: function() {
+                    store = tvheadend.streamStatusStore;
+                    if (!store || store == 'undefined') {
+                        return;
+                    }
+                    clearStat = function(record) {
+                        uuid = record.data.uuid;
+                        if (!uuid) {
+                            return;
+                        }
+                        Ext.Ajax.request({
+                            url: 'api/status/inputclrstats',
+                            params: { uuid: uuid }
+                        });
+                    }
+                    store.each(clearStat)
+                }
+            },
+            '->',{
+                text: _('Help'),
+                tooltip: _('View help docs.'),
+                iconCls: 'help',
+                handler: function() {
+                    new tvheadend.mdhelp('status_stream')
+                }
+            }],
             border: false,
             loadMask: true,
             stripeRows: true,
@@ -402,9 +568,10 @@ tvheadend.status_streams = function(panel, index)
             flex: 1,
             viewConfig: {
                 forceFit: true
-            }
+            },
+            plugins: [actions]
         });
-        
+
         dpanel.add(grid);
         dpanel.doLayout(false, true);
     }
@@ -421,11 +588,12 @@ tvheadend.status_streams = function(panel, index)
     }
 
     var dpanel = new Ext.Panel({
+        id: 'status_streams',
         border: false,
         header: false,
         layout: 'fit',
-        title: 'Stream',
-        iconCls: 'hardware'
+        title: _('Stream'),
+        iconCls: 'stream'
     });
 
     tvheadend.paneladd(panel, dpanel, index);
@@ -449,19 +617,54 @@ tvheadend.status_conns = function(panel, index) {
         if (grid)
             return;
 
+        var actions = new Ext.ux.grid.RowActions({
+            header: '',
+            width: 10,
+            actions: [
+                {
+                    iconCls: 'cancel',
+                    qtip: _('Cancel this connection'),
+                    cb: function(grid, rec, act, row) {
+                        var id = grid.getStore().getAt(row).data.id;
+                        Ext.MessageBox.confirm(_('Cancel Connection'),
+                            _('Cancel the selected connection?'),
+                            function(button) {
+                                if (button === 'no')
+                                    return;
+                                Ext.Ajax.request({
+                                    url: 'api/connections/cancel',
+                                    params: { id: id }
+                                });
+                            }
+                       );
+                   }
+               }
+            ],
+            destroy: function() {
+            }
+        });
+
+        var stype = Ext.data.SortTypes.asUCString;
         store = new Ext.data.JsonStore({
             root: 'entries',
             totalProperty: 'totalCount',
             fields: [
-                { name: 'id' },
-                { name: 'type' },
-                { name: 'peer' },
-                { name: 'user' },
+                { name: 'id', sortType: stype },
+                { name: 'type', sortType: stype },
+                { name: 'server', sortType: stype },
+                { name: 'server_port' },
+                { name: 'peer', sortType: stype },
+                { name: 'peer_port' },
+                { name: 'peer_extra_ports' },
+                { name: 'proxy' },
+                { name: 'user', sortType: stype },
                 {
                     name: 'started',
                     type: 'date',
-                    dateFormat: 'U' /* unix time */
-                }
+                    dateFormat: 'U', /* unix time */
+                    sortType: Ext.data.SortTypes.asDate
+                },
+                { name: 'streaming' }
             ],
             url: 'api/status/connections',
             autoLoad: true,
@@ -475,30 +678,110 @@ tvheadend.status_conns = function(panel, index) {
             return dt.format('Y-m-d H:i:s');
         }
 
-        var cm = new Ext.grid.ColumnModel([{
+        var cm = new Ext.grid.ColumnModel([
+            actions,
+            {
                 width: 50,
                 id: 'type',
-                header: "Type",
-                dataIndex: 'type'
+                header: _("Type"),
+                dataIndex: 'type',
+                sortable: true
             }, {
                 width: 50,
                 id: 'peer',
-                header: "IP Address",
-                dataIndex: 'peer'
+                header: _("Client Address"),
+                dataIndex: 'peer',
+                sortable: true
+            }, {
+                width: 50,
+                id: 'peer_port',
+                header: _("Client Port"),
+                dataIndex: 'peer_port',
+                sortable: true
+            }, {
+                width: 50,
+                id: 'peer_extra_ports',
+                header: _("Client Data Ports"),
+                dataIndex: 'peer_extra_ports',
+                sortable: false,
+                renderer: function(v) {
+                    if (!v) return '';
+                    var o = '';
+                    if ('tcp' in v)
+                        o += _("TCP") + ':' + v.tcp.join(',');
+                    if ('udp' in v) {
+                        if (o) o += ';';
+                        o += _("UDP") + ':' + v.udp.join(',');
+                    }
+                    return o;
+                }
             }, {
                 width: 50,
                 id: 'user',
-                header: "Username",
-                dataIndex: 'user'
+                header: _("Username"),
+                dataIndex: 'user',
+                sortable: true
             }, {
                 width: 50,
                 id: 'started',
-                header: "Started",
+                header: _("Started"),
                 dataIndex: 'started',
-                renderer: renderDate
+                renderer: renderDate,
+                sortable: true
+            }, {
+                width: 50,
+                id: 'streaming',
+                header: _("Streaming"),
+                dataIndex: 'streaming',
+                sortable: true
+            }, {
+                width: 50,
+                id: 'server',
+                header: _("Server Address"),
+                dataIndex: 'server',
+                sortable: true
+            }, {
+                width: 50,
+                id: 'server_port',
+                header: _("Server Port"),
+                dataIndex: 'server_port',
+                sortable: true
+            }, {
+                width: 50,
+                id: 'proxy',
+                header: _("Proxy Address"),
+                dataIndex: 'proxy',
+                sortable: true
             }]);
 
         grid = new Ext.grid.GridPanel({
+            tbar: [
+            {
+                text: _('Drop all connections'),
+                tooltip: _('Drop (current) connections to Tvheadend.'),
+                iconCls: 'cancel',
+                handler: function() {
+                    Ext.MessageBox.confirm(_('Drop Connections'),
+                            _('Drop all current connections?'),
+                            function(button) {
+                                if (button === 'no')
+                                    return;
+                                Ext.Ajax.request({
+                                    url: 'api/connections/cancel',
+                                    params: { id: 'all' }
+                                });
+                            }
+                    );
+                }
+            },
+            '->', {
+                text: _('Help'),
+                tooltip: _('View help docs.'),
+                iconCls: 'help',
+                handler: function() {
+                    new tvheadend.mdhelp('status_connections')
+                }
+            }],
             border: false,
             loadMask: true,
             stripeRows: true,
@@ -508,9 +791,10 @@ tvheadend.status_conns = function(panel, index) {
             flex: 1,
             viewConfig: {
                 forceFit: true
-            }
+            },
+            plugins: [actions]
         });
-        
+
         dpanel.add(grid);
         dpanel.doLayout(false, true);
     }
@@ -529,8 +813,8 @@ tvheadend.status_conns = function(panel, index) {
         border: false,
         header: false,
         layout: 'fit',
-        title: 'Connections',
-        iconCls: 'eye'
+        title: _('Connections'),
+        iconCls: 'connections'
     });
 
     tvheadend.paneladd(panel, dpanel, index);
@@ -539,11 +823,11 @@ tvheadend.status_conns = function(panel, index) {
 
 tvheadend.status = function() {
     var panel = new Ext.TabPanel({
-        title: 'Status',
+        title: _('Status'),
         autoScroll: true,
         activeTab: 0,
         iconCls: 'eye',
-        items: [],
+        items: []
     });
     tvheadend.status_streams(panel);
     tvheadend.status_subs(panel);
@@ -588,7 +872,7 @@ tvheadend.subscription_bw_monitor = function(id) {
     var comprLbl = new Ext.form.Label();
 
     var win = new Ext.Window({
-        title: 'Bandwidth monitor',
+        title: _('Bandwidth monitor'),
         layout: 'fit',
         resizable: false,
         width: 450 + 30,
@@ -630,14 +914,14 @@ tvheadend.subscription_bw_monitor = function(id) {
                 return;
             }
 
-            var input = Math.round(r.data.in / 125);
+            var input = Math.round(r.data['in'] / 125);
             var output = Math.round(r.data.out / 125);
-            var ratio = new Number(r.data.in / r.data.out).toPrecision(3);
+            var ratio = new Number(r.data['in'] / r.data.out).toPrecision(3);
 
             win.setTitle(r.data.channel);
-            inputLbl.setText('In: ' + input + ' kb/s');
-            outputLbl.setText('Out: ' + output + ' kb/s');
-            comprLbl.setText('Compression ratio: ' + ratio);
+            inputLbl.setText(_('In') + ': ' + input + ' kb/s');
+            outputLbl.setText(_('Out') + ': ' + output + ' kb/s');
+            comprLbl.setText(_('Compression ratio') + ': ' + ratio);
 
             inputSeries.append(new Date().getTime(), input);
             outputSeries.append(new Date().getTime(), output);
@@ -681,7 +965,7 @@ tvheadend.stream_bw_monitor = function(id) {
     var inputLbl = new Ext.form.Label();
 
     var win = new Ext.Window({
-        title: 'Bandwidth monitor',
+        title: _('Bandwidth monitor'),
         layout: 'fit',
         resizable: false,
         width: 450 + 30,
@@ -699,13 +983,13 @@ tvheadend.stream_bw_monitor = function(id) {
                 render: {
                     scope: this,
                     fn: function(item) {
-                        chart.streamTo(item.el.dom, 15000);
+                        chart.streamTo(item.el.dom, 1000);
                     }
                 },
                 resize: {
                     scope: this,
                     fn: function(item) {
-                        chart.render(item.el.dom, 15000);
+                        chart.render(item.el.dom, 1000);
                     }
                 }
             }
@@ -725,7 +1009,7 @@ tvheadend.stream_bw_monitor = function(id) {
 
             win.setTitle(r.data.input + ' (' + r.data.stream + ')');
             var input = Math.round(r.data.bps / 1024);
-            inputLbl.setText('Input: ' + input + ' kb/s');
+            inputLbl.setText(_('Input') + ': ' + input + ' kb/s');
             inputSeries.append(new Date().getTime(), input);
         }
     };

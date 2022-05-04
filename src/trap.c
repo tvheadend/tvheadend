@@ -35,6 +35,11 @@ char tvh_binshasum[20];
 #include <execinfo.h>
 #include <dlfcn.h>
 #endif
+#if ENABLE_LIBUNWIND
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -72,9 +77,10 @@ sappend(char *buf, size_t l, const char *fmt, ...)
 /**
  *
  */
+#ifndef ENABLE_LIBUNWIND
 #if ENABLE_EXECINFO
 static int
-add2lineresolve(const char *binary, void *addr, char *buf0, size_t buflen)
+addr2lineresolve(const char *binary, intptr_t addr, char *buf0, size_t buflen)
 {
   char *buf = buf0;
   int fd[2], r, f;
@@ -88,7 +94,7 @@ add2lineresolve(const char *binary, void *addr, char *buf0, size_t buflen)
   argv[3] = addrstr;
   argv[4] = NULL;
 
-  snprintf(addrstr, sizeof(addrstr), "%p", (void *)((intptr_t)addr-1));
+  snprintf(addrstr, sizeof(addrstr), "%p", (void *)(addr-1));
 
   if(pipe(fd) == -1)
     return -1;
@@ -133,8 +139,30 @@ add2lineresolve(const char *binary, void *addr, char *buf0, size_t buflen)
   return 0;
 }
 #endif /* ENABLE_EXECINFO */
+#endif
 
+#if ENABLE_LIBUNWIND
+static void
+traphandler_libunwind()
+{
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "STACKTRACE");
+  unw_cursor_t cursor;
+  unw_context_t uc;
+  unw_word_t ip, sp;
+  char buf[128];
 
+  unw_getcontext(&uc);
+  unw_init_local(&cursor, &uc);
+  while (unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    unw_get_reg(&cursor, UNW_REG_SP, &sp);
+    unw_word_t offp = 0;
+    const int pn = unw_get_proc_name(&cursor, buf, sizeof buf, &offp);
+    if (pn) *buf=0;
+    tvhlog_spawn (LOG_ALERT, LS_CRASH, "%s+%lx (ip=%lx sp=%lx)", buf, (long)offp, (long)ip, (long)sp);
+  }
+}
+#endif
 
 static void 
 traphandler(int sig, siginfo_t *si, void *UC)
@@ -148,12 +176,12 @@ traphandler(int sig, siginfo_t *si, void *UC)
   int nframes = backtrace(frames, MAXFRAMES);
   Dl_info dli;
 #endif
-#if defined(NGREG) || defined(ENABLE_EXECINFO)
+#if defined(NGREG) || ENABLE_EXECINFO
   int i;
 #endif
   const char *reason = NULL;
 
-  tvhlog_spawn(LOG_ALERT, "CRASH", "Signal: %d in %s ", sig, line1);
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "Signal: %d in %s ", sig, line1);
 
   switch(sig) {
   case SIGSEGV:
@@ -170,10 +198,10 @@ traphandler(int sig, siginfo_t *si, void *UC)
     break;
   }
 
-  tvhlog_spawn(LOG_ALERT, "CRASH", "Fault address %p (%s)",
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "Fault address %p (%s)",
 	       si->si_addr, reason ?: "N/A");
 
-  tvhlog_spawn(LOG_ALERT, "CRASH", "Loaded libraries: %s ", libs);
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "Loaded libraries: %s ", libs);
 #ifdef NGREG
   snprintf(tmpbuf, sizeof(tmpbuf), "Register dump [%d]: ", (int)NGREG);
 
@@ -181,38 +209,47 @@ traphandler(int sig, siginfo_t *si, void *UC)
     sappend(tmpbuf, sizeof(tmpbuf), "%016" PRIx64, uc->uc_mcontext.gregs[i]);
   }
 #endif
-  tvhlog_spawn(LOG_ALERT, "CRASH", "%s", tmpbuf);
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s", tmpbuf);
+
+  /* Although libunwind is supported on Linux, our existing unwind
+   * handler is better (supplies line numbers). But, on FreeBSD, the
+   * libunwind provides better diagnostics since our existing unwind
+   * handler often terminates without a trace, or does not provide
+   * correct function name mapping.
+   */
+#if ENABLE_LIBUNWIND
+  traphandler_libunwind();
+  return;
+#endif
 
 #if ENABLE_EXECINFO
-  tvhlog_spawn(LOG_ALERT, "CRASH", "STACKTRACE");
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "STACKTRACE");
 
   for(i = 0; i < nframes; i++) {
 
-    
     if(dladdr(frames[i], &dli)) {
 
       if(dli.dli_sname != NULL && dli.dli_saddr != NULL) {
-      	tvhlog_spawn(LOG_ALERT, "CRASH", "%s+0x%tx  (%s)",
-		     dli.dli_sname,
-		     frames[i] - dli.dli_saddr,
-		     dli.dli_fname);
-	continue;
+        tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s+0x%tx  (%s)",
+                     dli.dli_sname,
+                     frames[i] - dli.dli_saddr,
+                     dli.dli_fname);
+        continue;
       }
 
-      if(self[0] && !add2lineresolve(self, frames[i], buf, sizeof(buf))) {
-	tvhlog_spawn(LOG_ALERT, "CRASH", "%s %p", buf, frames[i]);
-	continue;
+      if(self[0] && !addr2lineresolve(self, frames[i] - dli.dli_fbase, buf, sizeof(buf))) {
+        tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p %p", buf, frames[i], dli.dli_fbase);
+        continue;
       }
 
       if(dli.dli_fname != NULL && dli.dli_fbase != NULL) {
-      	tvhlog_spawn(LOG_ALERT, "CRASH", "%s %p",
- 		     dli.dli_fname,
-		     frames[i]);
-	continue;
+        tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p %p",
+                     dli.dli_fname, frames[i], dli.dli_fbase);
+        continue;
       }
 
 
-      tvhlog_spawn(LOG_ALERT, "CRASH", "%p", frames[i]);
+      tvhlog_spawn(LOG_ALERT, LS_CRASH, "%p %p", frames[i], dli.dli_fbase);
     }
   }
 #endif
@@ -294,6 +331,11 @@ trap_init(const char *ver)
 
   dl_iterate_phdr(callback, NULL);
   
+#if ENABLE_EXECINFO
+  void *frames[MAXFRAMES];
+  /* warmup backtrace allocators */
+  backtrace(frames, MAXFRAMES);
+#endif
 
   memset(&sa, 0, sizeof(sa));
 

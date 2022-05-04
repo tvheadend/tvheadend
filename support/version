@@ -12,13 +12,20 @@ if [ -d ".git" ]; then
   if [ $? -ne 0 ]; then
     # Git describe failed, maybe "--dirty" option is not available
     # Adding "-unknown" postfix to mark this situation
-    VER=$(cd "$(dirname "$0")/.."; git describe --match "v*" 2> /dev/null)-unknown
+    VER=$(cd "$(dirname "$0")/.."; git describe --match "v*" 2> /dev/null)
+    [ -z "$VER" ] && VER="0.0.0-unknown"
   fi
-  VER=$(echo $VER | sed "s/^v//" | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/.\1~\2/")
+  VER=$(echo $VER | sed "s/^v//" | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/-\1~\2/")
 elif [ -f "$(dirname "$0")/../debian/changelog" ]; then
-  VER=$(head -1 "$(dirname "$0")/../debian/changelog" | awk '{ print $2 }' | tr -d '()' | cut -d '-' -f 1)
+  VER=$(head -1 "$(dirname "$0")/../debian/changelog" | awk '{ print $2 }' | tr -d '()' | cut -d '-' -f 1-2)
+elif [ -r "$(dirname "$0")/../rpm/version" ]; then
+  VER=$(cat "$(dirname "$0")/../rpm/version")
 else
-  VER="0.0.0~unknown"
+  VER=$(basename $(realpath $(dirname "$0")/..) | sed -e 's/^tvheadend-//' | sed -e 's/^tvheadend-v//')
+  case $VER in
+  [1-9]*\.[0-9]*) ;;
+  *) VER="0.0.0~unknown" ;;
+  esac
 fi
 
 # Output
