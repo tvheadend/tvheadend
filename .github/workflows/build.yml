@@ -128,7 +128,7 @@ jobs:
     name: Build on native ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["ubuntu:bionic", "ubuntu:focal", "ubuntu:impish", "ubuntu:jammy", "ubuntu:trusty", "ubuntu:xenial"]
+        container: ["ubuntu:bionic", "ubuntu:focal", "ubuntu:impish", "ubuntu:jammy", "ubuntu:trusty", "ubuntu:xenial", "i386/ubuntu:trusty", "i386/ubuntu:xenial", "debian:bookworm", "debian:bullseye", "debian:buster", "debian:sid", "debian:stretch", "i386/debian:bookworm", "i386/debian:bullseye", "i386/debian:buster", "i386/debian:sid", "i386/debian:stretch"]
     container:
       image: ${{ matrix.container }}
     steps:
