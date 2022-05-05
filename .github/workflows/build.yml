@@ -10,8 +10,6 @@ on:
 jobs:
   build-raspberry:
     runs-on: ubuntu-latest
-    container:
-      image: "i386/ubuntu:xenial"
     continue-on-error: true
     name: Build on Raspberry Pi ${{ matrix.arch }}
     strategy:
@@ -49,6 +47,8 @@ jobs:
   build-crosscompile:
     # The host should always be linux
     runs-on: ubuntu-latest
+    container:
+      image: "i386/ubuntu:xenial"
     continue-on-error: true
     name: Build on ${{ matrix.distro }} ${{ matrix.arch }}
     # Run steps on a matrix
