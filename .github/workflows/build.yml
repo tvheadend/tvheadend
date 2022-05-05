@@ -123,6 +123,12 @@ jobs:
           run: |
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+            cp tvheadend*.deb /artifacts/
+      - uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: artifacts/tvheadend*.deb
+          if-no-files-found: error
 
   build-deb-native:
     runs-on: ubuntu-latest
@@ -157,3 +163,8 @@ jobs:
         run: git config --global --add safe.directory /__w/tvheadend/tvheadend
       - name: build
         run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+      - uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: tvheadend*.deb
+          if-no-files-found: error
