@@ -10,6 +10,8 @@ on:
 jobs:
   build-raspberry:
     runs-on: ubuntu-latest
+    container:
+      image: "i386/ubuntu:xenial"
     continue-on-error: true
     name: Build on Raspberry Pi ${{ matrix.arch }}
     strategy:
@@ -148,11 +150,11 @@ jobs:
         run: |
           DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
       - uses: actions/checkout@v3
-        if: startsWith(matrix.container, 'i386') != true
+        if: startsWith(matrix.container, 'i386') != true && matrix.container != "debian:stretch"
         with:
           fetch-depth: 0
       - uses: actions/checkout@v1
-        if: startsWith(matrix.container, 'i386')
+        if: startsWith(matrix.container, 'i386') || matrix.container == "debian:stretch"
       - name: Workaround safe directory
         run: git config --global --add safe.directory /__w/tvheadend/tvheadend
       - name: build
