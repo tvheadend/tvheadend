@@ -135,7 +135,7 @@ jobs:
       image: ${{ matrix.container }}
     steps:
       - name: Add git ppa
-        if: startsWith(${{ matrix.container }}, 'ubuntu') || startsWith(${{ matrix.container }}, 'i386/ubuntu')
+        if: startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'i386/ubuntu')
         run: |
           apt-get update -y
           DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
@@ -148,11 +148,11 @@ jobs:
         run: |
           DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
       - uses: actions/checkout@v3
-        if: startsWith( ${{ matrix.container }}, 'i386') != true
+        if: startsWith(matrix.container, 'i386') != true
         with:
           fetch-depth: 0
       - uses: actions/checkout@v1
-        if: startsWith(${{ matrix.container }}, 'i386')
+        if: startsWith(matrix.container, 'i386')
       - name: Workaround safe directory
         run: git config --global --add safe.directory /__w/tvheadend/tvheadend
       - name: build
