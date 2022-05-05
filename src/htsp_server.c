@@ -50,7 +50,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 36
+#define HTSP_PROTO_VERSION 37
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -4371,8 +4371,12 @@ htsp_subscription_signal_status(htsp_subscription_t *hs, signal_status_t *sig)
     htsmsg_add_str(m, "feStatus",   sig->status_text);
     if((sig->snr != -2) && (sig->snr_scale == SIGNAL_STATUS_SCALE_RELATIVE))
       htsmsg_add_u32(m, "feSNR",    sig->snr);
+    if((sig->snr != -2) && (sig->snr_scale == SIGNAL_STATUS_SCALE_DECIBEL))
+      htsmsg_add_u32(m, "feSNRDb",    sig->snr);	  
     if((sig->signal != -2) && (sig->signal_scale == SIGNAL_STATUS_SCALE_RELATIVE))
       htsmsg_add_u32(m, "feSignal", sig->signal);
+    if((sig->signal != -2) && (sig->signal_scale == SIGNAL_STATUS_SCALE_DECIBEL))
+      htsmsg_add_u32(m, "feSignalDb", sig->signal);
     if(sig->ber != -2)
       htsmsg_add_u32(m, "feBER",    sig->ber);
     if(sig->unc != -2)
