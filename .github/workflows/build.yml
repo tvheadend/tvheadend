@@ -38,11 +38,17 @@ jobs:
         cpu: ${{ matrix.cpu }}
         cpu_info: ${{ matrix.cpu_info }}
         image_additional_mb: 10000
+        copy_artifact_path: ../tvheadend*.deb
         commands: |
           sudo apt-get update -y
           sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache
           DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
           AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Tvheadend-deb
+          path: tvheadend*.deb
+          if-no-files-found: error
 
   build-crosscompile:
     # The host should always be linux
@@ -123,10 +129,10 @@ jobs:
           run: |
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
-            cp tvheadend*.deb /artifacts/
+            cp ../tvheadend*.deb /artifacts/
       - uses: actions/upload-artifact@v3
         with:
-          name: my-artifact
+          name: Tvheadend-deb
           path: artifacts/tvheadend*.deb
           if-no-files-found: error
 
@@ -165,6 +171,6 @@ jobs:
         run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
       - uses: actions/upload-artifact@v3
         with:
-          name: my-artifact
-          path: tvheadend*.deb
+          name: Tvheadend-deb
+          path: ../tvheadend*.deb
           if-no-files-found: error
