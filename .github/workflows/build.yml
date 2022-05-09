@@ -172,6 +172,13 @@ jobs:
       - name: copy-result
         run: cp ../tvheadend*.deb .
       - uses: actions/upload-artifact@v3
+        if: startsWith(matrix.container, 'i386') != true
+        with:
+          name: Tvheadend-deb
+          path: tvheadend*.deb
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v1
+        if: startsWith(matrix.container, 'i386')
         with:
           name: Tvheadend-deb
           path: tvheadend*.deb
