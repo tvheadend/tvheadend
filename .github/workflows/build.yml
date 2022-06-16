@@ -181,4 +181,4 @@ jobs:
         if: startsWith(matrix.container, 'i386')
         with:
           name: Tvheadend-deb
-          path: /__w/tvheadend/tvheadend/tvheadend*.deb
+          path: /__w/tvheadend/tvheadend*.deb
