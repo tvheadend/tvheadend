@@ -171,6 +171,9 @@ jobs:
         run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
       - name: copy-result
         run: cp ../tvheadend*.deb . && pwd
+      - name: copy-result-i386
+        if: startsWith(matrix.container, 'i386')
+        run: mkdir artifacts && cp ../tvheadend*.deb artifacts
       - uses: actions/upload-artifact@v3
         if: startsWith(matrix.container, 'i386') != true
         with:
@@ -181,4 +184,4 @@ jobs:
         if: startsWith(matrix.container, 'i386')
         with:
           name: Tvheadend-deb
-          path: /__w/tvheadend*.deb
+          path: /__w/tvheadend/tvheadend/artifacts
