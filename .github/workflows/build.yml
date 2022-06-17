@@ -172,6 +172,7 @@ jobs:
       - name: copy-result
         run: cp ../tvheadend*.deb . && pwd
       - uses: actions/upload-artifact@v3
+        if: startsWith(matrix.container, 'i386') != true
         with:
           name: Tvheadend-deb
           path: tvheadend*.deb
