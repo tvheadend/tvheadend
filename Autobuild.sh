@@ -8,8 +8,6 @@
 
 set -eu
 
-source Autobuild/identify-os.sh
-
 BUILD_API_VERSION=3
 EXTRA_BUILD_NAME=""
 JARGS=""
@@ -55,6 +53,7 @@ do
 done
 
 if [[ -z $TARGET ]]; then
+    source Autobuild/identify-os.sh
     TARGET="$DISTRO-$ARCH"
 fi
 
