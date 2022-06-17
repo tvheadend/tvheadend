@@ -43,7 +43,7 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
           DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
-          AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+          AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh -p raspios
     - uses: actions/upload-artifact@v3
       with:
         name: Tvheadend-deb
