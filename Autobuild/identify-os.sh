@@ -3,8 +3,10 @@ UNAME=$(uname | tr "[:upper:]" "[:lower:]")
 # If Linux, try to determine specific distribution
 if [ "$UNAME" == "linux" ]; then
     # If available, use LSB to identify distribution
-    if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
+    if [ -x "$(command -v lsb_release)" ]; then
         export DISTRO=$(lsb_release -c | cut -d: -f2 | sed s/'^\t'//)
+    elif [ -f /etc/lsb-release ]; then
+         export DISTRO=$(awk -F= '/^DISTRIB_CODENAME/{print $2}' /etc/lsb-release)
     # Otherwise, use release info file
     elif [ -f /etc/os-release ]; then
         export DISTRO=$(awk -F= '/^VERSION_CODENAME/{print $2}' /etc/os-release)

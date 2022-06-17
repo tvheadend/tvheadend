@@ -1,2 +1,2 @@
-source Autobuild/aarch64.sh
+source Autobuild/armv7l.sh
 source Autobuild/bullseye.sh

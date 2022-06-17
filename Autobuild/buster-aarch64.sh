@@ -1,2 +1,2 @@
-source Autobuild/buster.sh
 source Autobuild/aarch64.sh
+source Autobuild/buster.sh

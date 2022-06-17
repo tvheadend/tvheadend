@@ -1,2 +1,2 @@
-source Autobuild/x86_64.sh
+source Autobuild/armv7l.sh
 source Autobuild/xenial.sh
