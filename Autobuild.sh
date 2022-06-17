@@ -44,6 +44,9 @@ do
       w)
 	  WORKINGDIR="$OPTARG"
 	  ;;
+      a)
+	  ARCHOVR="$OPTARG"
+	  ;;
       p)
           OSPREFIX="$OPTARG"
           ;;
