@@ -82,6 +82,7 @@ versioned_artifact() {
 git status
 
 if [ -f Autobuild/${TARGET}.sh ]; then
+    echo "Building for $TARGET"
     source Autobuild/${TARGET}.sh
 else
     echo "target $TARGET not supported"
