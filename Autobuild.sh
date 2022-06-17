@@ -13,13 +13,14 @@ EXTRA_BUILD_NAME=""
 JARGS=""
 JOBSARGS=""
 TARGET=""
+ARCHOVR=""
 RELEASE="--release"
 WORKINGDIR="/var/tmp/showtime-autobuild"
 FILELIST="$PWD/filelist.txt"
 OP="build"
 OSPREFIX=""
 
-while getopts "vht:e:j:w:o:p:c:" OPTION
+while getopts "vht:e:j:w:o:p:a:c:" OPTION
 do
   case $OPTION in
       v)
@@ -54,6 +55,9 @@ done
 
 if [[ -z $TARGET ]]; then
     source Autobuild/identify-os.sh
+    if ! [[ -z $ARCHOVR ]]; then
+        ARCH=$ARCHOVR
+    fi
     TARGET="$DISTRO-$ARCH"
 fi
 
