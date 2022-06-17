@@ -1,3 +1,2 @@
 AUTOBUILD_CONFIGURE_EXTRA="${AUTOBUILD_CONFIGURE_EXTRA:-} --arch=i686"
-DEBDIST=trusty
-source Autobuild/debian.sh
+source Autobuild/trusty.sh

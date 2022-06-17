@@ -8,16 +8,20 @@
 
 set -eu
 
+source Autobuild/identify-os.sh
+
 BUILD_API_VERSION=3
 EXTRA_BUILD_NAME=""
 JARGS=""
 JOBSARGS=""
-TARGET="debian"
+TARGET=""
 RELEASE="--release"
 WORKINGDIR="/var/tmp/showtime-autobuild"
 FILELIST="$PWD/filelist.txt"
 OP="build"
-while getopts "vht:e:j:w:o:c:" OPTION
+OSPREFIX=""
+
+while getopts "vht:e:j:w:o:p:c:" OPTION
 do
   case $OPTION in
       v)
@@ -41,6 +45,9 @@ do
       w)
 	  WORKINGDIR="$OPTARG"
 	  ;;
+      p)
+          OSPREFIX="$OPTARG"
+          ;;
       o)
 	  OP="$OPTARG"
 	  ;;
@@ -48,9 +55,10 @@ do
 done
 
 if [[ -z $TARGET ]]; then
-    echo "target (-t) not specified"
-    exit 1
+    TARGET="$DISTRO-$ARCH"
 fi
+
+TARGET=$OSPREFIX$TARGET
 
 #
 # $1 = local file path

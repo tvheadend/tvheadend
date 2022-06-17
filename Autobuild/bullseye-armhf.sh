@@ -1,3 +1,3 @@
 AUTOBUILD_CONFIGURE_EXTRA="${AUTOBUILD_CONFIGURE_EXTRA:-} --arch=armhf"
-DEBDIST=bullseye
+source Autobuild/bullseye.sh
 source Autobuild/debian.sh
