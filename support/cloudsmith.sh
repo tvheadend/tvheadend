@@ -48,7 +48,9 @@ case $OSPREFIX$TARGET in
     *) echo "OS $TARGET could not be recognized" && exit 1;;
 esac
 
-pip install --upgrade cloudsmith-cli
+apt install -y python-pip || apt install -y python3-pip
+
+pip install --upgrade cloudsmith-cli || pip3 install --upgrade cloudsmith-cli
 
 FILEARRAY=($FILE)
 
