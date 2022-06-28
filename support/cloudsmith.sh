@@ -59,5 +59,5 @@ pip3 install --upgrade cloudsmith-cli || pip install --upgrade cloudsmith-cli ||
 FILEARRAY=($FILE)
 
 for package in "${FILEARRAY[@]}"; do
-    cloudsmith push deb "tvheadend/tvheadend/$OS/$TARGET" $package
+    python3 /usr/local/bin/cloudsmith push deb "tvheadend/tvheadend/$OS/$TARGET" $package || python /usr/local/bin/cloudsmith push deb "tvheadend/tvheadend/$OS/$TARGET" $package || cloudsmith push deb "tvheadend/tvheadend/$OS/$TARGET" $package
 done
