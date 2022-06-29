@@ -56,6 +56,8 @@ apt install -y python3.7 || true
 
 apt install -y python3-pip || apt install -y python-pip
 
+pip3 install --upgrade pip || pip install --upgrade pip || pip2 install --upgrade pip
+
 pip3 install --upgrade cloudsmith-cli || pip install --upgrade cloudsmith-cli || pip2 install --upgrade cloudsmith-cli
 
 FILEARRAY=($FILE)
