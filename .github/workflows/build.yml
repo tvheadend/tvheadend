@@ -39,6 +39,8 @@ jobs:
         cpu_info: ${{ matrix.cpu_info }}
         image_additional_mb: 10000
         copy_artifact_path: ../tvheadend*.deb
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
         commands: |
           sudo apt-get update -y
           sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
@@ -98,6 +100,8 @@ jobs:
           # Pass some environment variables to the container
           env: | # YAML, but pipe character is necessary
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
+            CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+
 
           # The shell to run commands with in the container
           shell: /bin/sh
@@ -181,3 +185,5 @@ jobs:
           if-no-files-found: error
       - name: upload-cloudsmith
         run: support/cloudsmith.sh -f 'tvheadend*.deb'
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
