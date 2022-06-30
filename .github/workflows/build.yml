@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     name: Build on Raspberry Pi ${{ matrix.arch }}
+    env:
+      GITHUB_ENV: CLOUDSMITH_API_KEY
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
     strategy:
       matrix:
         arch: [armv6l, armv7l, aarch64]
@@ -39,8 +42,7 @@ jobs:
         cpu_info: ${{ matrix.cpu_info }}
         image_additional_mb: 10000
         copy_artifact_path: ../tvheadend*.deb
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+        import-github-env: true
         commands: |
           sudo apt-get update -y
           sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
