@@ -115,9 +115,9 @@ json_parse_string(const char *s, const char **endp,
 		  v |= a[i] - 'F' + 10;
 		  break;
 		default:
-		  free(r);
 		  *failmsg = "Incorrect escape sequence";
 		  *failp = (a - r) + start;
+		  free(r);
 		  return NULL;
 		}
 	      }
