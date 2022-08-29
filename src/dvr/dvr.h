@@ -83,6 +83,7 @@ typedef struct dvr_config {
   uint32_t dvr_removal_after_playback;
   uint32_t dvr_autorec_max_count;
   uint32_t dvr_autorec_max_sched_count;
+  uint32_t dvr_autorec_record;
   char *dvr_charset;
   char *dvr_charset_id;
   char *dvr_preproc;
@@ -346,7 +347,8 @@ typedef enum {
   DVR_AUTOREC_LRECORD_ONCE_PER_MONTH = 13,
   DVR_AUTOREC_LRECORD_ONCE_PER_WEEK = 10,
   DVR_AUTOREC_LRECORD_ONCE_PER_DAY = 11,
-  /* first free value == 15 */
+  DVR_AUTOREC_RECORD_DVR_PROFILE = 15,
+  /* first free value == 16 */
 } dvr_autorec_dedup_t;
 
 typedef enum {

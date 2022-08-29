@@ -404,6 +404,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   dae->dae_start = -1;
   dae->dae_start_window = -1;
   dae->dae_enabled = 1;
+  dae->dae_record = DVR_AUTOREC_RECORD_DVR_PROFILE;
   dae->dae_config = dvr_config_find_by_name_default(NULL);
   LIST_INSERT_HEAD(&dae->dae_config->dvr_autorec_entries, dae, dae_config_link);
 
@@ -998,6 +999,8 @@ static htsmsg_t *
 dvr_autorec_entry_class_dedup_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
+    { N_("Use DVR configuration"),
+        DVR_AUTOREC_RECORD_DVR_PROFILE },
     { N_("Record all"),
         DVR_AUTOREC_RECORD_ALL },
     { N_("All: Record if EPG/XMLTV indicates it is a unique programme"),
@@ -1353,7 +1356,7 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "record",
       .name     = N_("Duplicate handling"),
       .desc     = N_("Duplicate recording handling."),
-      .def.i    = DVR_AUTOREC_RECORD_ALL,
+      .def.i    = DVR_AUTOREC_RECORD_DVR_PROFILE,
       .doc      = prop_doc_duplicate_handling,
       .off      = offsetof(dvr_autorec_entry_t, dae_record),
       .list     = dvr_autorec_entry_class_dedup_list,
