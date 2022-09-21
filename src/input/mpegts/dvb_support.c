@@ -507,6 +507,17 @@ atsc_get_string
         if (ls == NULL)
           ls = lang_str_create();
         lang_str_append(ls, buf, langcode);
+      }	else if (compressiontype == 0 && mode == 0x3F) {
+        tvhtrace(LS_MPEGTS, "atsc-str:    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
+                 j, compressiontype, mode, bytecount, bytecount, src);
+
+        /* let the atsc_utf16_to_utf8 function do the conversion;
+         * bytecount/2: since the function is handling both utf16 bytes in one count only half the length is needed */
+      	atsc_utf16_to_utf8(src, bytecount/2, buf, bufferSize);
+
+        if (ls == NULL)
+          ls = lang_str_create();
+        lang_str_append(ls, buf, langcode);
       } else {
         /* Unsupported text segment types:
          *
@@ -515,7 +526,6 @@ atsc_get_string
          * - compression type == 0x3 .. 0xFF (reserved)
          *
          * - text mode == 0x3E (Standard Compression Scheme for Unicode)
-         * - text mode == 0x3F (Select Unicode, UTF-16 Form)
          * - text mode == 0x40, 0x41 (ATSC Standard for Taiwan)
          * - text mode == 0x48 (ATSC Standard for South Korea)
          *
