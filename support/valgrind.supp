@@ -143,3 +143,17 @@
    obj:*
    obj:*
 }
+{
+   name
+   Memcheck:Addr16
+   obj:???
+   obj:???
+   obj:???
+}
+{
+   name
+   Memcheck:Cond
+   obj:???
+   obj:???
+   obj:???
+}
