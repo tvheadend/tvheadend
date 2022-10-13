@@ -1355,7 +1355,7 @@ dvb_nit_mux
           priv == 0x3200 || priv == 0x3201) goto lcn;
       break;
     case 0x86:
-      if (priv == 0) goto lcn;
+      if (priv == 0 || priv == 0x1a0) goto lcn;
       break;
     case 0x88:
       if (priv == 0x28) {
