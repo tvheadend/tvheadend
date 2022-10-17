@@ -252,6 +252,8 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
     postfix++;
     if(!strcmp(postfix, "js"))
       content = "text/javascript; charset=UTF-8";
+    else if(!strcmp(postfix, "html"))
+      content = "text/html; charset=UTF-8";
     else if(!strcmp(postfix, "css"))
       content = "text/css; charset=UTF-8";
     else if(!strcmp(postfix, "git"))
