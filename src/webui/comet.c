@@ -347,7 +347,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 
   htsmsg_json_serialize(m, &hc->hc_reply, 0);
   htsmsg_destroy(m);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
+  http_output_content(hc, "application/json; charset=UTF-8");
   return 0;
 }
 

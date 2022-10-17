@@ -75,7 +75,7 @@ destroy_args:
     resp = htsmsg_create_map();
   if (resp) {
     htsmsg_json_serialize(resp, &hc->hc_reply, 0);
-    http_output_content(hc, "text/x-json; charset=UTF-8");
+    http_output_content(hc, "application/json; charset=UTF-8");
     htsmsg_destroy(resp);
   }
   
