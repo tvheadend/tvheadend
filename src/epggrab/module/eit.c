@@ -350,7 +350,7 @@ static int _eit_desc_component
   } else if (c == 0x2) {
 
     /* Described */
-    if (t == 0x40 || t == 0x41)
+    if (t == 0x40 || t == 0x47 || t == 0x48)
       ev->ad = 1;
 
   /* Misc */
