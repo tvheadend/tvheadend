@@ -1924,8 +1924,8 @@ epg_broadcast_t *epg_broadcast_deserialize
 // that relates more to broadcast content than what I call a "genre"
 // these will be handled elsewhere as broadcast metadata
 
-// Reference (Sept 2016):
-// http://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.11.01_60/en_300468v011101p.pdf
+// Reference (June 2026):
+// https://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.20.00_20/en_300468v012000a.pdf
 
 #define C_ (const char *[])
 static const char **_epg_genre_names[16][16] = {
