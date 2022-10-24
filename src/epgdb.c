@@ -302,7 +302,9 @@ static void epg_save_tsk_callback ( void *p, int dearmed )
   int fd, r;
 
   tvhinfo(LS_EPGDB, "save start");
-  hts_settings_buildpath(path, sizeof(path), "epgdb.v%d", EPG_DB_VERSION);
+  hts_settings_buildpath(tmppath, sizeof(path), "epgdb.v%d", EPG_DB_VERSION);
+  if (!realpath(tmppath, path))
+    strlcpy(path, tmppath, sizeof(path));
   snprintf(tmppath, sizeof(tmppath), "%s.tmp", path);
   if (hts_settings_makedirs(tmppath))
     fd = -1;
