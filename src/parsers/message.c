@@ -162,6 +162,7 @@ ts_recv_hbbtv1_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       parse_mpeg_ts(prs, pes, bin, binlen, 1, 0);
       free(bin);
     }
+    htsmsg_destroy(apps);
   }
 }
 
