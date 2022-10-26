@@ -105,7 +105,7 @@ iptv_udp_read ( iptv_input_t *mi, iptv_mux_t *im )
   }
 
   if (im->mm_iptv_rtp_seq < 0xffff && im->mm_iptv_rtp_seq > 0x3ff) {
-    tvherror(LS_IPTV, "receving non-raw UDP data for %s!", im->mm_nicename);
+    tvherror(LS_IPTV, "receiving non-raw UDP data for %s!", im->mm_nicename);
     im->mm_iptv_rtp_seq = 0x10000; /* no further logs! */
   }
 
