@@ -431,7 +431,10 @@ iptv_input_close_fds ( iptv_input_t *mi, iptv_mux_t *im )
   /* Close file */
   if (im->mm_iptv_fd > 0) {
     tvhpoll_rem1(pool->poll, im->mm_iptv_fd);
-    udp_close(im->mm_iptv_connection);
+    if(im->mm_iptv_connection == NULL)
+      close(im->mm_iptv_fd);
+    else
+      udp_close(im->mm_iptv_connection);
     im->mm_iptv_connection = NULL;
     im->mm_iptv_fd = -1;
   }
@@ -439,7 +442,10 @@ iptv_input_close_fds ( iptv_input_t *mi, iptv_mux_t *im )
   /* Close file2 */
   if (im->im_rtcp_info.connection_fd > 0) {
     tvhpoll_rem1(pool->poll, im->im_rtcp_info.connection_fd);
-    udp_close(im->im_rtcp_info.connection);
+    if(im->im_rtcp_info.connection == NULL)
+      close(im_rtcp_info.connection_fd);
+    else
+      udp_close(im->im_rtcp_info.connection);
     im->im_rtcp_info.connection = NULL;
     im->im_rtcp_info.connection_fd = -1;
   }
