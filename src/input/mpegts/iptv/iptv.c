@@ -443,7 +443,7 @@ iptv_input_close_fds ( iptv_input_t *mi, iptv_mux_t *im )
   if (im->im_rtcp_info.connection_fd > 0) {
     tvhpoll_rem1(pool->poll, im->im_rtcp_info.connection_fd);
     if(im->im_rtcp_info.connection == NULL)
-      close(im_rtcp_info.connection_fd);
+      close(im->im_rtcp_info.connection_fd);
     else
       udp_close(im->im_rtcp_info.connection);
     im->im_rtcp_info.connection = NULL;
