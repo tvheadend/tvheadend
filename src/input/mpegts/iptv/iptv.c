@@ -1265,7 +1265,6 @@ iptv_input_thread_manage(int count, int force)
         mpegts_input_stop_all((mpegts_input_t*)pool->input);
         mpegts_input_delete((mpegts_input_t *)pool->input, 0);
         tvhpoll_rem1(pool->poll, pool->pipe.rd);
-        tvh_pipe_close(&pool->pipe);
         tvhpoll_destroy(pool->poll);
         free(pool);
         iptv_tpool_count--;
