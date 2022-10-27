@@ -578,7 +578,7 @@ epggrab_ota_kick_cb ( void *p )
     mpegts_network_t *net;
     uint8_t failed;
     uint8_t fatal;
-  } networks[64], *net;	/* more than 64 networks? - you're a king */
+  } networks[64], *net;        /* more than 64 networks? - you're a king */
   int i, r, networks_count = 0, epg_flag, kick = 1;
   const char *modname;
 
@@ -610,7 +610,7 @@ next_one:
       if (net->failed) {
         TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
         om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
-        om->om_retry_time = mclk() + mono2sec(60);
+        om->om_retry_time = mclk() + sec2mono(60);
         goto done;
       }
       break;
@@ -673,13 +673,26 @@ next_one:
                                 SUBSCRIPTION_TABLES))) {
     if (r != SM_CODE_NO_ADAPTERS) {
       tvhtrace(LS_EPGGRAB, "subscription failed for %s (result %d)", mm->mm_nicename, r);
-      TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
-      om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
-      om->om_retry_time = mclk() + mono2sec(60);
-      if (r == SM_CODE_NO_FREE_ADAPTER)
+      if( om->om_retry_count < 3 ) {
+        TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
+        om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+        if (r == SM_CODE_NO_FREE_ADAPTER) {
+          /* wait for active mux to finish OTA grab */        	 
+          om->om_retry_time = mclk() + sec2mono(60);
+          om->om_retry_count = 0;
+        }
+        else {
+          /* cannot tune - increase retry count and try again later */        	 
+          om->om_retry_time = mclk() + sec2mono(30);
+          om->om_retry_count++;
+        }
         net->failed = 1;
-      if (r == SM_CODE_TUNING_FAILED)
-        net->failed = 1;
+      }
+      else {
+        tvhtrace(LS_EPGGRAB, "too many failed attempts to tune %s (subscribe)", mm->mm_nicename);
+        net->fatal = 1;
+        om->om_retry_count = 0;
+      }
     } else {
       tvhtrace(LS_EPGGRAB, "no free adapter for %s (subscribe)", mm->mm_nicename);
       net->fatal = 1;
