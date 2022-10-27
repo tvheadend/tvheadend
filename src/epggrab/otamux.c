@@ -610,7 +610,7 @@ next_one:
       if (net->failed) {
         TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
         om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
-        om->om_retry_time = mclk() + mono2sec(60);
+        om->om_retry_time = mclk() + sec2mono(60);
         goto done;
       }
       break;
@@ -675,7 +675,7 @@ next_one:
       tvhtrace(LS_EPGGRAB, "subscription failed for %s (result %d)", mm->mm_nicename, r);
       TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
       om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
-      om->om_retry_time = mclk() + mono2sec(60);
+      om->om_retry_time = mclk() + sec2mono(60);
       if (r == SM_CODE_NO_FREE_ADAPTER)
         net->failed = 1;
       if (r == SM_CODE_TUNING_FAILED)
