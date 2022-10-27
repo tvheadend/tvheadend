@@ -105,6 +105,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
 
   epgid = htsmsg_get_str(item, "tvh-chnum");
   if (!epgid) epgid = htsmsg_get_str(item, "tvg-chno");
+  if (!epgid) epgid = htsmsg_get_str(item, "channel-number");
   chnum2 = epgid ? channel_get_number_from_str(epgid) : 0;
 
   muxprio = htsmsg_get_s32_or_default(item, "tvh-prio", -1);
