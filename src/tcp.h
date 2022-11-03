@@ -68,8 +68,7 @@ static inline int ip_check_equal_v4
 
 static inline int ip_check_equal_v6
   (const struct sockaddr_storage *a, const struct sockaddr_storage *b)
-    { return ((uint64_t *)IP_AS_V6(a, addr).s6_addr)[0] == ((uint64_t *)IP_AS_V6(b, addr).s6_addr)[0] &&
-             ((uint64_t *)IP_AS_V6(a, addr).s6_addr)[1] == ((uint64_t *)IP_AS_V6(b, addr).s6_addr)[1]; }
+    { return memcmp(IP_AS_V6(a, addr).s6_addr, IP_AS_V6(b, addr).s6_addr, sizeof(IP_AS_V6(a, addr).s6_addr)) == 0; }
 
 static inline int ip_check_equal
   (const struct sockaddr_storage *a, const struct sockaddr_storage *b)
@@ -86,10 +85,12 @@ static inline int ip_check_in_network_v4(const struct sockaddr_storage *network,
 static inline int ip_check_in_network_v6(const struct sockaddr_storage *network,
                                          const struct sockaddr_storage *mask,
                                          const struct sockaddr_storage *address)
-  { return (((uint64_t *)IP_AS_V6(address, addr).s6_addr)[0] & ((uint64_t *)IP_AS_V6(mask, addr).s6_addr)[0]) == 
-              (((uint64_t *)IP_AS_V6(network, addr).s6_addr)[0] & ((uint64_t *)IP_AS_V6(mask, addr).s6_addr)[0]) &&
-           (((uint64_t *)IP_AS_V6(address, addr).s6_addr)[0] & ((uint64_t *)IP_AS_V6(mask, addr).s6_addr)[1]) ==
-              (((uint64_t *)IP_AS_V6(network, addr).s6_addr)[1] & ((uint64_t *)IP_AS_V6(mask, addr).s6_addr)[1]); }
+  {
+    for (short i = 0; i < sizeof(IP_AS_V6(address, addr).s6_addr); ++i)
+      if (((IP_AS_V6(address, addr).s6_addr)[i] & (IP_AS_V6(mask, addr).s6_addr)[i]) != ((IP_AS_V6(network, addr).s6_addr)[i] & (IP_AS_V6(mask, addr).s6_addr)[i]))
+        return 0;
+    return 1;
+  }
 
 static inline int ip_check_in_network(const struct sockaddr_storage *network,
                                       const struct sockaddr_storage *mask,
@@ -101,8 +102,7 @@ static inline int ip_check_is_any_v4(const struct sockaddr_storage *address)
   { return IP_AS_V4(address, addr).s_addr == INADDR_ANY; }
 
 static inline int ip_check_is_any_v6(const struct sockaddr_storage *address)
-  { return ((uint64_t *)IP_AS_V6(address, addr).s6_addr)[0] == ((uint64_t *)(&in6addr_any.s6_addr))[0] &&
-           ((uint64_t *)IP_AS_V6(address, addr).s6_addr)[1] == ((uint64_t *)(&in6addr_any.s6_addr))[1]; }
+  { return memcmp(IP_AS_V6(address, addr).s6_addr, in6addr_any.s6_addr, sizeof(in6addr_any.s6_addr)) == 0; }
 
 static inline int ip_check_is_any(const struct sockaddr_storage *address)
   { return address->ss_family == AF_INET ? ip_check_is_any_v4(address) :
