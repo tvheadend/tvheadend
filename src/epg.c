@@ -1061,7 +1061,6 @@ epg_broadcast_t *epg_broadcast_clone
     *save |= epg_broadcast_set_credits(ebc, src->credits, &changes);
     *save |= epg_broadcast_set_category(ebc, src->category, &changes);
     *save |= epg_broadcast_set_keyword(ebc, src->keyword, &changes);
-    *save |= epg_broadcast_set_description(ebc, src->description, &changes);
     *save |= epg_broadcast_set_serieslink_uri
                (ebc, src->serieslink ? src->serieslink->uri : NULL, &changes);
     *save |= epg_broadcast_set_episodelink_uri
