@@ -73,11 +73,8 @@ iptv_udp_stop
   im->im_data = NULL;
   tvh_mutex_unlock(&iptv_lock);
   udp_multirecv_free(&im->im_um);
-  if(&im->im_rtcp_info.um) {
-    udp_multirecv_free(&im->im_rtcp_info.um);
-  }
-  if(&im->im_temp_buffer)
-    sbuf_free(&im->im_temp_buffer);
+  udp_multirecv_free(&im->im_rtcp_info.um);
+  sbuf_free(&im->im_temp_buffer);
   tvh_mutex_lock(&iptv_lock);
 }
 
