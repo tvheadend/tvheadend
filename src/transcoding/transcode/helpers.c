@@ -363,7 +363,7 @@ tvh_aac_pack_adts_header(TVHContext *self, pktbuf_t *pb)
 static th_pkt_t *
 tvh_aac_pack(TVHContext *self, AVPacket *avpkt)
 {
-    static const size_t header_size = 9, max_size = ((1 << 14) - 1);
+    static const size_t header_size = 7, max_size = ((1 << 14) - 1);
     size_t pkt_size = 0;
     th_pkt_t *pkt = NULL;
 
