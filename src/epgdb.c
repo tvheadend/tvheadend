@@ -180,7 +180,7 @@ void epg_init ( void )
       (rp[7] == '0' || rp[7] == '1')) {
     uint32_t orig = (rp[8] << 24) | (rp[9] << 16) | (rp[10] << 8) | rp[11];
     tvhinfo(LS_EPGDB, "gzip format detected, inflating (ratio %.1f%% deflated size %zd)",
-           (float)((remain * 100.0) / orig), remain);
+            ((remain * 100.0) / orig), remain);
     rp = zlib_mem = tvh_gzip_inflate(rp + 12, remain - 12, orig);
     remain = rp ? orig : 0;
   }

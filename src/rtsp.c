@@ -316,7 +316,7 @@ rtsp_get_parameter( http_client_t *hc, const char *parameter ) {
 }
 
 int
-rtsp_set_speed( http_client_t *hc, float speed ) {
+rtsp_set_speed( http_client_t *hc, double speed ) {
   char buf[64];
   http_arg_list_t h;
   http_arg_init(&h);
