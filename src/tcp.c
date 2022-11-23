@@ -94,7 +94,7 @@ ip_check_is_local_address
     if (!ifaddr || !ifnetmask) continue;
     if (ifaddr->ss_family != local->ss_family) continue;
     if (!any_address && !ip_check_equal(ifaddr, local)) continue;
-    ret = !!ip_check_in_network_v4(ifaddr, ifnetmask, peer);
+    ret = !!ip_check_in_network(ifaddr, ifnetmask, peer);
     if (ret) {
       if (used_local)
         memcpy(used_local, ifaddr, sizeof(struct sockaddr));
@@ -1051,9 +1051,9 @@ tcp_default_ip_addr ( struct sockaddr_storage *deflt, int family )
   }
 
   if (ss.ss_family == AF_INET)
-    IP_AS_V4(ss, port) = 0;
+    IP_AS_V4(&ss, port) = 0;
   else
-    IP_AS_V6(ss, port) = 0;
+    IP_AS_V6(&ss, port) = 0;
 
   memset(deflt, 0, sizeof(*deflt));
   memcpy(deflt, &ss, ss_len);
@@ -1092,9 +1092,9 @@ tcp_server_bound ( void *server, struct sockaddr_storage *bound, int family )
   if (tcp_default_ip_addr(bound, family) < 0)
     return -1;
   if (bound->ss_family == AF_INET)
-    IP_AS_V4(*bound, port) = port;
+    IP_AS_V4(bound, port) = port;
   else
-    IP_AS_V6(*bound, port) = port;
+    IP_AS_V6(bound, port) = port;
   return 0;
 }
 
