@@ -270,7 +270,7 @@ int test ( void )
 }' -lpthread
 
 check_cc_snippet qsort_r '
-#define __USE_GNU
+#define _GNU_SOURCE
 #include <stdlib.h>
 #define TEST test
 int test(void)
