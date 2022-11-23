@@ -76,15 +76,15 @@ udp_resolve( udp_connection_t *uc,
   }
   if (use->ai_family == AF_INET6) {
     ss->ss_family        = AF_INET6;
-    IP_AS_V6(*ss, port)  = htons(port);
-    memcpy(&IP_AS_V6(*ss, addr), &((struct sockaddr_in6 *)use->ai_addr)->sin6_addr,
+    IP_AS_V6(ss, port)  = htons(port);
+    memcpy(&IP_AS_V6(ss, addr), &((struct sockaddr_in6 *)use->ai_addr)->sin6_addr,
                                                              sizeof(struct in6_addr));
-    *multicast           = !!IN6_IS_ADDR_MULTICAST(&IP_AS_V6(*ss, addr));
+    *multicast           = !!IN6_IS_ADDR_MULTICAST(&IP_AS_V6(ss, addr));
   } else if (use->ai_family == AF_INET) {
     ss->ss_family        = AF_INET;
-    IP_AS_V4(*ss, port)  = htons(port);
-    IP_AS_V4(*ss, addr)  = ((struct sockaddr_in *)use->ai_addr)->sin_addr;
-    *multicast           = !!IN_MULTICAST(ntohl(IP_AS_V4(*ss, addr.s_addr)));
+    IP_AS_V4(ss, port)  = htons(port);
+    IP_AS_V4(ss, addr)  = ((struct sockaddr_in *)use->ai_addr)->sin_addr;
+    *multicast           = !!IN_MULTICAST(ntohl(IP_AS_V4(ss, addr.s_addr)));
   }
   freeaddrinfo(ressave);
   if (ss->ss_family != AF_INET && ss->ss_family != AF_INET6) {
@@ -207,9 +207,9 @@ udp_bind ( int subsystem, const char *name,
     /* Bind useful for receiver subsystem (not for udp streamer) */
     if (subsystem != LS_UDP) {
     if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in))) {
-      inet_ntop(AF_INET, &IP_AS_V4(uc->ip, addr), buf, sizeof(buf));
+      inet_ntop(AF_INET, &IP_AS_V4(&uc->ip, addr), buf, sizeof(buf));
       tvherror(subsystem, "%s - cannot bind %s:%hu [e=%s]",
-               name, buf, ntohs(IP_AS_V4(uc->ip, port)), strerror(errno));
+               name, buf, ntohs(IP_AS_V4(&uc->ip, port)), strerror(errno));
       goto error;
     }
     }  
@@ -221,7 +221,7 @@ udp_bind ( int subsystem, const char *name,
         struct ip_mreq_source ms;
         memset(&ms, 0, sizeof(ms));
 
-        ms.imr_multiaddr = IP_AS_V4(uc->ip, addr);
+        ms.imr_multiaddr = IP_AS_V4(&uc->ip, addr);
 
         /* Note, ip_mreq_source does not support the ifindex parameter,
            so we have to resolve to the ip of the interface on all platforms. */
@@ -253,7 +253,7 @@ udp_bind ( int subsystem, const char *name,
 #endif
         memset(&m,   0, sizeof(m));
 
-        m.imr_multiaddr      = IP_AS_V4(uc->ip, addr);
+        m.imr_multiaddr      = IP_AS_V4(&uc->ip, addr);
 #if !defined(PLATFORM_DARWIN)
         m.imr_address.s_addr = 0;
         m.imr_ifindex        = ifindex;
@@ -280,15 +280,15 @@ udp_bind ( int subsystem, const char *name,
 
     /* Bind */
     if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in6))) {
-      inet_ntop(AF_INET6, &IP_AS_V6(uc->ip, addr), buf, sizeof(buf));
+      inet_ntop(AF_INET6, &IP_AS_V6(&uc->ip, addr), buf, sizeof(buf));
       tvherror(subsystem, "%s - cannot bind %s:%hu [e=%s]",
-               name, buf, ntohs(IP_AS_V6(uc->ip, port)), strerror(errno));
+               name, buf, ntohs(IP_AS_V6(&uc->ip, port)), strerror(errno));
       goto error;
     }
 
     if (uc->multicast) {
       /* Join group */
-      m.ipv6mr_multiaddr = IP_AS_V6(uc->ip, addr);
+      m.ipv6mr_multiaddr = IP_AS_V6(&uc->ip, addr);
       m.ipv6mr_interface = ifindex;
 #ifdef SOL_IPV6
       if (setsockopt(fd, SOL_IPV6, IPV6_ADD_MEMBERSHIP, &m, sizeof(m))) {

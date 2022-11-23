@@ -26,8 +26,8 @@
 #include <sys/socket.h>
 #endif
 
-#define IP_AS_V4(storage, f) ((struct sockaddr_in *)&(storage))->sin_##f
-#define IP_AS_V6(storage, f) ((struct sockaddr_in6 *)&(storage))->sin6_##f
+#define IP_AS_V4(storage, f) ((struct sockaddr_in *)(storage))->sin_##f
+#define IP_AS_V6(storage, f) ((struct sockaddr_in6 *)(storage))->sin6_##f
 #define IP_IN_ADDR(storage) \
   ((storage).ss_family == AF_INET6 ? \
       &((struct sockaddr_in6 *)&(storage))->sin6_addr : \
