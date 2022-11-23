@@ -64,10 +64,10 @@ dvr_parse_edl
   ( const char *line, dvr_cutpoint_t *cutpoint, float *frame )
 {
   int action = 0;
-  float start = 0.0f, end = 0.0f;
+  double start = 0.0, end = 0.0;
 
   /* Invalid line */
-  if (sscanf(line, "%f\t%f\t%d", &start, &end, &action) != 3)
+  if (sscanf(line, "%lf\t%lf\t%d", &start, &end, &action) != 3)
     return 1;
 
   /* Sanity Checks */
@@ -78,8 +78,8 @@ dvr_parse_edl
   }
 
   /* Set values */
-  cutpoint->dc_start_ms = (int) (start * 1000.0f);
-  cutpoint->dc_end_ms   = (int) (end * 1000.0f);
+  cutpoint->dc_start_ms = (int) (start * 1000.0);
+  cutpoint->dc_end_ms   = (int) (end * 1000.0);
   cutpoint->dc_type     = action;
 
   return 0;

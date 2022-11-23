@@ -412,7 +412,7 @@ static int _xmltv_parse_star_rating
 
   a = strtod(s1, &s1end);
   b = strtod(s2 + 1, &s2end);
-  if ( a == 0.0f || b == 0.0f) return 0;
+  if ( a == 0.0 || b == 0.0) return 0;
 
   return epg_broadcast_set_star_rating(ebc, (100 * a) / b, changes);
 }
