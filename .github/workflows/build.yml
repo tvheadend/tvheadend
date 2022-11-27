@@ -10,15 +10,49 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-
+  # Builds tvheadend with ffmpeg and hdhomerun statically linked
+  ffmpeg-hdhomerun-static:
+    strategy:
+      matrix:
+        image:
+          - ubuntu:20.04
+    name: build-ffmpeg-hdhomerun-static-${{ matrix.image }}
     runs-on: ubuntu-latest
-
+    container:
+      image: ${{ matrix.image }}
     steps:
     - uses: actions/checkout@v3
     - name: dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
+        apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y cmake git \
+          build-essential pkg-config gettext libavahi-client-dev libssl-dev \
+          zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev \
+          libdvbcsa-dev python3 python3-requests debhelper ccache
     - name: build
       run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+
+  # Builds tvheadend only
+  tvheadend-only:
+    strategy:
+      matrix:
+        image:
+          - ubuntu:20.04
+          - ubuntu:18.04
+          - debian:11
+          - debian:10
+    name: build-tvheadend-only-${{ matrix.image }}
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: dependencies
+      run: |
+        apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y cmake git \
+          build-essential pkg-config gettext libavahi-client-dev libssl-dev \
+          zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev \
+          libdvbcsa-dev python3 python3-requests debhelper ccache
+    - name: build
+      run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --disable-ffmpeg_static\ --disable-hdhomerun_static\ --python=python3 ./Autobuild.sh
