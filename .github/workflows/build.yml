@@ -1,24 +1,191 @@
-name: Build Tvheadend CI
+name: Build Tvheadend Repo
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
     branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-  build:
-
+  build-raspberry:
     runs-on: ubuntu-latest
-
+    continue-on-error: true
+    name: Build on Raspberry Pi ${{ matrix.arch }}
+    env:
+      GITHUB_ENV: CLOUDSMITH_API_KEY
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+    strategy:
+      matrix:
+        arch: [armv6l, armv7l, aarch64]
+        include:
+        - arch: armv6l
+          cpu: arm1176
+          base_image: raspios_lite:latest
+          cpu_info: cpuinfo/raspberrypi_zero_w
+        - arch: armv7l
+          cpu: cortex-a7
+          base_image: raspios_lite:latest
+          cpu_info: cpuinfo/raspberrypi_3b
+        - arch: aarch64
+          cpu: cortex-a53
+          base_image: raspios_lite_arm64:latest
+          cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
     steps:
     - uses: actions/checkout@v3
-    - name: dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
-    - name: build
-      run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+      with:
+        fetch-depth: 0
+    - uses: pguyot/arm-runner-action@v2
+      with:
+        base_image: ${{ matrix.base_image }}
+        cpu: ${{ matrix.cpu }}
+        cpu_info: ${{ matrix.cpu_info }}
+        image_additional_mb: 10000
+        copy_artifact_path: ../tvheadend*.deb
+        import_github_env: true
+        commands: |
+          sudo apt-get update -y
+          sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
+          DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
+          AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh -p raspios
+          support/cloudsmith.sh -p raspios -f '../tvheadend*.deb'
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Tvheadend-deb
+        path: tvheadend*.deb
+        if-no-files-found: error
+
+  build-crosscompile:
+    # The host should always be linux
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    name: Build on ${{ matrix.distro }} ${{ matrix.arch }}
+    # Run steps on a matrix
+    strategy:
+      matrix:
+       arch: [ armv7, aarch64]
+       distro: [ stretch, buster, bullseye, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04 ]
+       include:
+         - arch: armv6
+           distro: jessie
+         - arch: armv6
+           distro: stretch
+         - arch: armv6
+           distro: buster
+         - arch: armv6
+           distro: bullseye
+         - arch: armv7
+           distro: jessie
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: uraimo/run-on-arch-action@v2
+        name: Build artifact
+        id: build
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
+
+          # Not required, but speeds up builds
+          githubToken: ${{ github.token }}
+
+          # Create an artifacts directory
+          setup: |
+            mkdir -p "${PWD}/artifacts"
+
+          # Mount the artifacts directory as /artifacts in the container
+          dockerRunArgs: |
+            --volume "${PWD}/artifacts:/artifacts"
+
+          # Pass some environment variables to the container
+          env: | # YAML, but pipe character is necessary
+            artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
+            CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+
+
+          # The shell to run commands with in the container
+          shell: /bin/sh
+
+          # Install some dependencies in the container. This speeds up builds if
+          # you are also using githubToken. Any dependencies installed here will
+          # be part of the container image that gets cached, so subsequent
+          # builds don't have to re-install them. The image layer is cached
+          # publicly in your project's package repository, so it is vital that
+          # no secrets are present in the container state or logs.
+          install: |
+            if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list; fi
+            case "${{ matrix.distro }}" in
+              ubuntu*|jessie|stretch|buster|bullseye)
+                apt-get update -y
+                DEBIAN_FRONTEND=noninteractive apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
+                DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
+                ;;
+              fedora*)
+                dnf -y update
+                dnf -y install git which
+                ;;
+              alpine*)
+                apk update
+                apk add git
+                ;;
+            esac
+
+          # Produce a binary artifact
+          run: |
+            git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
+            AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+            cp ../tvheadend*.deb /artifacts/
+            support/cloudsmith.sh -f '../tvheadend*.deb'
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Tvheadend-deb
+          path: artifacts/tvheadend*.deb
+          if-no-files-found: error
+
+  build-deb-native:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    name: Build on native ${{ matrix.container }}
+    strategy:
+      matrix:
+        container: ["ubuntu:bionic", "ubuntu:focal", "ubuntu:impish", "ubuntu:trusty", "ubuntu:xenial", "i386/ubuntu:trusty", "i386/ubuntu:xenial", "debian:bookworm", "debian:bullseye", "debian:buster", "debian:sid", "debian:stretch", "i386/debian:bookworm", "i386/debian:bullseye", "i386/debian:buster", "i386/debian:sid", "i386/debian:stretch"]
+    container:
+      image: ${{ matrix.container }}
+    steps:
+      - name: Add git ppa
+        if: startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'i386/ubuntu')
+        run: |
+          apt-get update -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
+          add-apt-repository ppa:git-core/ppa -y
+      - name: dependencies
+        run: |
+          apt-get update -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
+      - name: pcre-dependency
+        run: |
+          DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
+      - uses: actions/checkout@v3
+        if: startsWith(matrix.container, 'i386') != true && matrix.container != 'debian:stretch'
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v1
+        if: startsWith(matrix.container, 'i386') || matrix.container == 'debian:stretch'
+      - name: Workaround safe directory
+        run: git config --global --add safe.directory /__w/tvheadend/tvheadend
+      - name: build
+        run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container, 'i386') && '-a i386') || '' }}
+      - name: copy-result
+        run: cp ../tvheadend*.deb .
+      - uses: actions/upload-artifact@v3
+        if: startsWith(matrix.container, 'i386') != true
+        with:
+          name: Tvheadend-deb
+          path: tvheadend*.deb
+          if-no-files-found: error
+      - name: upload-cloudsmith
+        run: support/cloudsmith.sh -f 'tvheadend*.deb'
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}

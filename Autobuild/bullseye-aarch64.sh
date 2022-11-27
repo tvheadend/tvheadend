@@ -1,2 +1,2 @@
-source Autobuild/i386.sh
+source Autobuild/aarch64.sh
 source Autobuild/bullseye.sh

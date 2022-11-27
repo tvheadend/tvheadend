@@ -12,12 +12,15 @@ BUILD_API_VERSION=3
 EXTRA_BUILD_NAME=""
 JARGS=""
 JOBSARGS=""
-TARGET="debian"
+TARGET=""
+ARCHOVR=""
 RELEASE="--release"
 WORKINGDIR="/var/tmp/showtime-autobuild"
 FILELIST="$PWD/filelist.txt"
 OP="build"
-while getopts "vht:e:j:w:o:c:" OPTION
+OSPREFIX=""
+
+while getopts "vht:e:j:w:o:p:a:c:" OPTION
 do
   case $OPTION in
       v)
@@ -41,6 +44,12 @@ do
       w)
 	  WORKINGDIR="$OPTARG"
 	  ;;
+      a)
+	  ARCHOVR="$OPTARG"
+	  ;;
+      p)
+          OSPREFIX="$OPTARG"
+          ;;
       o)
 	  OP="$OPTARG"
 	  ;;
@@ -48,9 +57,14 @@ do
 done
 
 if [[ -z $TARGET ]]; then
-    echo "target (-t) not specified"
-    exit 1
+    source Autobuild/identify-os.sh
+    if ! [[ -z $ARCHOVR ]]; then
+        ARCH=$ARCHOVR
+    fi
+    TARGET="$DISTRO-$ARCH"
 fi
+
+TARGET=$OSPREFIX$TARGET
 
 #
 # $1 = local file path
@@ -71,6 +85,7 @@ versioned_artifact() {
 git status
 
 if [ -f Autobuild/${TARGET}.sh ]; then
+    echo "Building for $TARGET"
     source Autobuild/${TARGET}.sh
 else
     echo "target $TARGET not supported"

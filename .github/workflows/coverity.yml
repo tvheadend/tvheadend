@@ -1,0 +1,45 @@
+name: Coverity Scan
+
+# We only want to test official release code, not every pull request.
+on:
+# Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  coverity:
+    runs-on: ubuntu-latest
+    environment: Coverity
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache
+    - name: Configure
+      run: ./configure --disable-dvbcscan --disable-tvhcsa --enable-libfdkaac --enable-nvenc --enable-vaapi --enable-mmal --enable-omx
+    - name: Download Coverity Build Tool
+      run: |
+        wget -q https://scan.coverity.com/download/linux64 --post-data "token=$TOKEN&project=tvheadend%2Ftvheadend" -O cov-analysis-linux64.tar.gz
+        mkdir cov-analysis-linux64
+        tar xzf cov-analysis-linux64.tar.gz --strip 1 -C cov-analysis-linux64
+      env:
+        TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+    - name: Build with cov-build
+      run: |
+        export PATH=`pwd`/cov-analysis-linux64/bin:$PATH
+        cov-build --dir cov-int make
+    - name: Submit the result to Coverity Scan
+      run: |
+        tar czvf tvheadend.tgz cov-int
+        curl \
+          --form token=$TOKEN \
+          --form email=$EMAIL \
+          --form file=@tvheadend.tgz \
+          --form version="`./build.linux/tvheadend -v | awk -F ' ' '{print $3}'`" \
+          --form description="`./build.linux/tvheadend -v | awk -F ' ' '{print $3}'`" \
+          https://scan.coverity.com/builds?project=tvheadend%2Ftvheadend
+      env:
+        TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+        EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}

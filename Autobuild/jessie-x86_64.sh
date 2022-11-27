@@ -1,2 +1,2 @@
-source Autobuild/i386.sh
+source Autobuild/x86_64.sh
 source Autobuild/jessie.sh

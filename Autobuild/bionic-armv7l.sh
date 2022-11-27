@@ -1,2 +1,2 @@
-source Autobuild/i386.sh
+source Autobuild/armv7l.sh
 source Autobuild/bionic.sh
