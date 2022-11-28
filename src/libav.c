@@ -116,6 +116,10 @@ streaming_component_type2codec_id(streaming_component_type_t type)
   case SCT_EAC3:
     codec_id = AV_CODEC_ID_EAC3;
     break;
+  // Enable once supported, see https://trac.ffmpeg.org/ticket/8349
+  // case SCT_AC4:
+  //   codec_id = AV_CODEC_ID_AC4;
+  //   break;
   case SCT_MP4A:
   case SCT_AAC:
     codec_id = AV_CODEC_ID_AAC;
@@ -179,6 +183,10 @@ codec_id2streaming_component_type(enum AVCodecID id)
   case AV_CODEC_ID_EAC3:
     type = SCT_EAC3;
     break;
+  // Enable once supported, see https://trac.ffmpeg.org/ticket/8349
+  // case AV_CODEC_ID_AC4:
+  //   type = SCT_AC4;
+  //   break;
   case AV_CODEC_ID_AAC:
     type = SCT_AAC;
     break;
