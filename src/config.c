@@ -2596,6 +2596,7 @@ const idclass_t config_class = {
       .desc   = N_("Parse HbbTV information from services."),
       .off    = offsetof(config_t, hbbtv),
       .group  = 7,
+      .def.i  = 1,
     },
     {
       .type   = PT_BOOL,
