@@ -647,13 +647,16 @@ _eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
   }
 
   if (eit_mod->scrape_subtitle) {
+    lang_str_t *ls = lang_str_create();
     RB_FOREACH(se, ev->summary, link) {
       if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_scrape_subtitle)) {
         tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s' from '%s' using %s",
                  buffer, se->str, eit_mod->id);
-        lang_str_set(&ev->subtitle, buffer, se->lang);
+        lang_str_set(&ls, buffer, se->lang);
       }
     }
+    lang_str_set_multi(&ev->subtitle, ls);
+    lang_str_destroy(ls);
   }
 
   if (eit_mod->scrape_summary) {
