@@ -110,6 +110,7 @@ static const struct {
   {"uk", "United Kingdom"},
   {"us", "United States"},
   {"vn", "Vietnam"},
+  {"za", "South Africa"},
 };
 
 static const char *
