@@ -1929,6 +1929,7 @@ profile_class_mc_audio_list ( void *o, const char *lang )
     { N_("AAC audio"),                    MC_AAC },
     { N_("MP4 audio"),                    MC_MP4A },
     { N_("Vorbis audio"),                 MC_VORBIS },
+    { N_("AC-4 audio"),                   MC_AC4, },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -2390,6 +2391,7 @@ static const struct strtab_str profile_class_src_acodec_tab[] = {
   { "EAC3",                  "EAC3" },
   { "VORBIS",                "VORBIS" },
   { "OPUS",                  "OPUS" },
+  { "AC-4",                  "AC-4" },
 };
 
 static int
@@ -2634,6 +2636,7 @@ profile_transcode_mc_valid(int mc)
   case MC_MPEGPS:
   case MC_MPEG2AUDIO:
   case MC_AC3:
+  case MC_AC4:
   case MC_AAC:
   case MC_VORBIS:
   case MC_AVMATROSKA:

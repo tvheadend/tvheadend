@@ -343,6 +343,11 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
       codec_id = "A_EAC3";
       break;
 
+    case SCT_AC4:
+      tracktype = 2;
+      codec_id = "A_AC4";
+      break;
+
     case SCT_MP4A:
     case SCT_AAC:
       tracktype = 2;

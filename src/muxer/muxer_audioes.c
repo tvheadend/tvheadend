@@ -61,6 +61,7 @@ audioes_muxer_type(streaming_component_type_t type)
   case SCT_AAC:         mc = MC_AAC; break;
   case SCT_MP4A:        mc = MC_MP4A; break;
   case SCT_VORBIS:      mc = MC_VORBIS; break;
+  case SCT_AC4:         mc = MC_AC4; break;
   default: break;
   }
   return mc;
@@ -302,7 +303,8 @@ audioes_muxer_create(const muxer_config_t *m_cfg,
      m_cfg->m_type != MC_AC3 &&
      m_cfg->m_type != MC_AAC &&
      m_cfg->m_type != MC_MP4A &&
-     m_cfg->m_type != MC_VORBIS)
+     m_cfg->m_type != MC_VORBIS &&
+     m_cfg->m_type != MC_AC4)
     return NULL;
 
   am = calloc(1, sizeof(audioes_muxer_t));

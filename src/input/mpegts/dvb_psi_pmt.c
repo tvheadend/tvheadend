@@ -439,6 +439,11 @@ dvb_psi_parse_pmt
           hts_stream_type = SCT_EAC3;
         break;
 
+      case DVB_DESC_AC4:
+        if(estype == 0x06 || estype == 0x81)
+          hts_stream_type = SCT_AC4;
+        break;
+
       case DVB_DESC_ANCILLARY_DATA:
         if(dlen < 1)
           break;

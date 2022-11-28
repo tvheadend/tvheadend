@@ -216,6 +216,7 @@ lav_muxer_support_stream(muxer_container_type_t mc,
     ret |= (type == SCT_AAC);
     ret |= (type == SCT_MP4A);
     ret |= (type == SCT_EAC3);
+    ret |= (type == SCT_AC4);
 
     //Some pids lack pts, disable for now
     //ret |= (type == SCT_TELETEXT);
@@ -238,6 +239,7 @@ lav_muxer_support_stream(muxer_container_type_t mc,
     ret |= (type == SCT_AAC);
     ret |= (type == SCT_MP4A);
     ret |= (type == SCT_EAC3);
+    ret |= (type == SCT_AC4);
     break;
 
   default:
