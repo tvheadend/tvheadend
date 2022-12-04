@@ -724,8 +724,7 @@ http_client_finish( http_client_t *hc )
   wcmd = TAILQ_FIRST(&hc->hc_wqueue);
   if (wcmd)
     http_client_cmd_destroy(hc, wcmd);
-  if (hc->hc_version != RTSP_VERSION_1_0 &&
-      hc->hc_handle_location &&
+  if (hc->hc_handle_location &&
       (hc->hc_code == HTTP_STATUS_MOVED ||
        hc->hc_code == HTTP_STATUS_FOUND ||
        hc->hc_code == HTTP_STATUS_SEE_OTHER ||
@@ -1339,14 +1338,17 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
 
   http_client_flush(hc, 0);
 
-  http_arg_init(&h);
-  hc->hc_hdr_create(hc, &h, u, 0);
   hc->hc_reconnected = 1;
   hc->hc_shutdown    = 0;
   hc->hc_pevents     = 0;
   hc->hc_version     = ver;
 
-  r = http_client_send(hc, hc->hc_cmd, u->path, u->query, &h, NULL, 0);
+  if (ver != RTSP_VERSION_1_0) {
+    http_arg_init(&h);
+    hc->hc_hdr_create(hc, &h, u, 0);
+    r = http_client_send(hc, hc->hc_cmd, u->path, u->query, &h, NULL, 0);
+  } else
+    r = http_client_send(hc, hc->hc_cmd, u->raw, u->query, NULL, NULL, 0);
   if (r < 0)
     return r;
 
