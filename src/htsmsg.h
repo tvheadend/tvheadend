@@ -81,7 +81,7 @@ typedef struct htsmsg_field {
 #if ENABLE_SLOW_MEMORYINFO
   size_t hmf_edata_size;
 #endif
-  const char _hmf_name[0];
+  const char _hmf_name[];
 } htsmsg_field_t;
 
 #define hmf_s64     u.s64
