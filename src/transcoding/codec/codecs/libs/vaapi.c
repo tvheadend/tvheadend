@@ -33,6 +33,7 @@ typedef struct {
     TVHVideoCodecProfile;
     int qp;
     int quality;
+    int low_power;
     double buff_factor;
     int rc_mode;
     int tier;
@@ -226,7 +227,13 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
     else {
         AV_DICT_SET_QP(opts, self->qp, 20);
     }
-    AV_DICT_SET_INT(opts, "quality", self->quality, 0);
+    if (self->low_power) {
+        AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "quality", 0, AV_DICT_DONT_OVERWRITE);
+    }
+    else {
+        AV_DICT_SET_INT(opts, "quality", self->quality, 0);
+    }
     return 0;
 }
 
@@ -237,6 +244,19 @@ static const codec_profile_class_t codec_profile_vaapi_h264_class = {
         .ic_class      = "codec_profile_vaapi_h264",
         .ic_caption    = N_("vaapi_h264"),
         .ic_properties = (const property_t[]){
+            {
+                .type     = PT_INT,
+                .id       = "low_power",
+                .name     = N_("Low Power (0=disabled)"),
+                .desc     = N_("Set low power mode (when enabled will force, "
+                               "Quality to 0=auto) [0=disabled 1=enabled]."),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
+                .intextra = INTEXTRA_RANGE(0, 1, 1),
+                .def.i    = 0,
+            },
             {
                 .type     = PT_INT,
                 .id       = "quality",
