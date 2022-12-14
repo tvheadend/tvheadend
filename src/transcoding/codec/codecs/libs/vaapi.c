@@ -245,16 +245,15 @@ static const codec_profile_class_t codec_profile_vaapi_h264_class = {
         .ic_caption    = N_("vaapi_h264"),
         .ic_properties = (const property_t[]){
             {
-                .type     = PT_INT,
+                .type     = PT_BOOL,
                 .id       = "low_power",
-                .name     = N_("Low Power (0=disabled)"),
-                .desc     = N_("Set low power mode (when enabled will force, "
-                               "Quality to 0=auto) [0=disabled 1=enabled]."),
+                .name     = N_("Low Power (disabled)"),
+                .desc     = N_("Set low power mode (when enabled "
+                               "will force Quality to 0=auto)."),
                 .group    = 5,
                 .opts     = PO_EXPERT,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
-                .intextra = INTEXTRA_RANGE(0, 1, 1),
                 .def.i    = 0,
             },
             {
