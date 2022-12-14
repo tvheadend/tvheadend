@@ -247,7 +247,7 @@ static const codec_profile_class_t codec_profile_vaapi_h264_class = {
             {
                 .type     = PT_BOOL,
                 .id       = "low_power",
-                .name     = N_("Low Power (disabled)"),
+                .name     = N_("Low Power"),
                 .desc     = N_("Set low power mode (when enabled "
                                "will force Quality to 0=auto)."),
                 .group    = 5,
