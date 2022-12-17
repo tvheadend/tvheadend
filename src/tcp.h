@@ -86,7 +86,8 @@ static inline int ip_check_in_network_v6(const struct sockaddr_storage *network,
                                          const struct sockaddr_storage *mask,
                                          const struct sockaddr_storage *address)
   {
-    for (short i = 0; i < sizeof(IP_AS_V6(address, addr).s6_addr); ++i)
+    short i;
+    for (i = 0; i < sizeof(IP_AS_V6(address, addr).s6_addr); ++i)
       if (((IP_AS_V6(address, addr).s6_addr)[i] & (IP_AS_V6(mask, addr).s6_addr)[i]) != ((IP_AS_V6(network, addr).s6_addr)[i] & (IP_AS_V6(mask, addr).s6_addr)[i]))
         return 0;
     return 1;
