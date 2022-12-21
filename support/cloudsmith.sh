@@ -52,9 +52,9 @@ export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 export DEBIAN_FRONTEND=noninteractive
 
-apt install -y python3.7 || true
+apt install --force-yes -y python3.7 || true
 
-apt install -y python3-pip || apt install -y python-pip
+apt install --force-yes -y python3-pip || apt install --force-yes -y python-pip
 
 pip3 install --upgrade pip || pip install --upgrade pip || pip2 install --upgrade pip
 
