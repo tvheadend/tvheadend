@@ -33,10 +33,16 @@ typedef struct {
     TVHVideoCodecProfile;
     int qp;
     int quality;
+    int low_power;
+    int async_depth;
+    double max_bit_rate;
+    double bit_rate_scale_factor;
+    int platform;
+    int loop_filter_level;
+    int loop_filter_sharpness;
     double buff_factor;
     int rc_mode;
     int tier;
-    int ignore_bframe;
 } tvh_codec_profile_vaapi_t;
 
 #if defined(__linux__)
@@ -121,6 +127,8 @@ tvh_codec_profile_vaapi_open(tvh_codec_profile_vaapi_t *self,
     return 0;
 }
 
+// NOTE:
+// the names below are used in codec.js (/src/webui/static/app/codec.js)
 static const codec_profile_class_t codec_profile_vaapi_class = {
     {
         .ic_super      = (idclass_t *)&codec_profile_video_class,
@@ -128,66 +136,97 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
         .ic_caption    = N_("vaapi"),
         .ic_properties = (const property_t[]){
             {
+                .type     = PT_INT,
+                .id       = "platform",     // Don't change
+                .name     = N_("Platform"),
+                .desc     = N_("Select platform (from 0 to 2).[0=Unconstrained 1=Intel 2=AMD]"),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, platform),
+                .intextra = INTEXTRA_RANGE(0, 2, 1),
+                .def.i    = 0,
+            },
+            {
                 .type     = PT_STR,
                 .id       = "device",
                 .name     = N_("Device name"),
-                .desc     = N_("Device name (e.g. /dev/dri/renderD129)."),
+                .desc     = N_("Device name (e.g. /dev/dri/renderD128)."),
                 .group    = 3,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, device),
                 .list     = tvh_codec_profile_vaapi_device_list,
             },
             {
-                .type     = PT_DBL,
-                .id       = "bit_rate",
-                .name     = N_("Bitrate (kb/s) (0=auto)"),
-                .desc     = N_("Target bitrate."),
+                .type     = PT_INT,
+                .id       = "async_depth",
+                .name     = N_("Maximum processing parallelism (async_depth)"),
+                .desc     = N_("Set maximum process in parallel (0=skip, 2=default).[driver must implement vaSyncBuffer function]"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(TVHCodecProfile, bit_rate),
-                .def.d    = 0,
-            },
-            {
-                .type     = PT_DBL,
-                .id       = "buff_factor",
-                .name     = N_("Buffer factor"),
-                .desc     = N_("Size of transcoding buffer (buffer=bitrate*1000*factor). Good factor is 3."),
-                .group    = 3,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, buff_factor),
-                .def.d    = 3,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, async_depth),
+                .intextra = INTEXTRA_RANGE(0, 64, 1),
+                .def.i    = 2,
             },
             {
                 .type     = PT_INT,
-                .id       = "rc_mode",
-                .name     = N_("Rate control mode"),
-                .desc     = N_("Set rate control mode (from 0 to 6).[0=auto 1=CQP 2=CBR 3=VBR 4=ICQ 5=QVBR 6=AVBR]"),
+                .id       = "rc_mode",     // Don't change
+                .name     = N_("Rate control mode (rc_mode)"),
+                .desc     = N_("Set rate control mode (from 0 to 6).[-1=skip 0=auto 1=CQP 2=CBR 3=VBR 4=ICQ 5=QVBR 6=AVBR]"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, rc_mode),
-                .intextra = INTEXTRA_RANGE(0, 6, 0),
-                .def.d    = 0,
+                .intextra = INTEXTRA_RANGE(-1, 6, 1),
+                .def.i    = 0,
             },
             {
                 .type     = PT_INT,
-                .id       = "qp",
-                .name     = N_("Constant QP (0=auto)"),
+                .id       = "qp",     // Don't change
+                .name     = N_("Constant QP (qp)"),
                 .group    = 3,
-                .desc     = N_("Fixed QP of P frames [0-52]."),
+                .desc     = N_("Fixed QP of P frames (from 0 to 52, 0=skip).[if disabled will not send paramter to libav]"),
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, qp),
                 .intextra = INTEXTRA_RANGE(0, 52, 1),
                 .def.i    = 0,
             },
             {
-                .type     = PT_INT,
-                .id       = "ignore_bframe",
-                .name     = N_("Ignore B-Frames"),
+                .type     = PT_DBL,
+                .id       = "bit_rate",     // Don't change
+                .name     = N_("Bitrate (kb/s) (b)"),
+                .desc     = N_("Target bitrate (0=skip).[if disabled will not send paramter to libav]"),
                 .group    = 3,
-                .desc     = N_("Some VAAPI drivers cannot handle b-frames (like AMD). [0=use b-frames (default) 1=ignore b-frames]"),
                 .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, ignore_bframe),
-                .intextra = INTEXTRA_RANGE(0, 1, 0),
-                .def.i    = 0,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, bit_rate),
+                .def.d    = 0,
+            },
+            {
+                .type     = PT_DBL,
+                .id       = "max_bit_rate",     // Don't change
+                .name     = N_("Max bitrate (kb/s) (maxrate)"),
+                .desc     = N_("Maximum bitrate (0=skip).[if disabled will not send paramter to libav]"),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, max_bit_rate),
+                .def.d    = 0,
+            },
+            {
+                .type     = PT_DBL,
+                .id       = "buff_factor",     // Don't change
+                .name     = N_("Buffer factor (bufsize)"),
+                .desc     = N_("Size of transcoding buffer (buffer=bitrate*2048*factor). Good factor is 3."),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, buff_factor),
+                .def.d    = 3,
+            },
+            {
+                .type     = PT_DBL,
+                .id       = "bit_rate_scale_factor",     // Don't change
+                .name     = N_("Bitrate scale factor"),
+                .desc     = N_("Bitrate & Max bitrate scaler with resolution (0=no scale; 1=proportional_change). Relative to 480."),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, bit_rate_scale_factor),
+                .def.d    = 0,
             },
             {}
         }
@@ -209,28 +248,153 @@ static int
 tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
                                   AVDictionary **opts)
 {
-    // bit_rate or qp
-    if (self->bit_rate) {
-        if (self->buff_factor <= 0) {
-            self->buff_factor = 3;
-        }
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
-        AV_DICT_SET_INT(opts, "maxrate", (self->bit_rate) * 1000, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * self->buff_factor, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
+    // to avoid issues we have this check:
+    if (self->buff_factor <= 0) {
+        self->buff_factor = 3;
+    }
+    int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
+    int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    //tvherror(LS_VAAPI, "bitrate = %d, max_bitrate = %d, buffer_size = %d", int_bitrate, int_max_bitrate, int_buffer_size);
+    // https://wiki.libav.org/Hardware/vaapi
+    // https://blog.wmspanel.com/2017/03/vaapi-libva-support-nimble-streamer.html
+    // to find available parameters use:
+    // ffmpeg -hide_banner -h encoder=h264_vaapi
+    //-rc_mode         <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
+    // auto            0            E..V....... Choose mode automatically based on other parameters
+    // CQP             1            E..V....... Constant-quality
+    // CBR             2            E..V....... Constant-bitrate
+    // VBR             3            E..V....... Variable-bitrate
+    // ICQ             4            E..V....... Intelligent constant-quality
+    // QVBR            5            E..V....... Quality-defined variable-bitrate
+    // AVBR            6            E..V....... Average variable-bitrate
+    if (self->rc_mode >= 0) {
         AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
-        if (self->ignore_bframe) {
+    }
+    switch (self->platform) {
+        case 0:
+            // Uncontrained --> will allow any combination of parameters (valid or invalid)
+            // this mode is usefull fur future platform and for debugging.
+            if (self->bit_rate) {
+                AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->max_bit_rate) {
+                AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qp) {
+                AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->quality >= 0) {
+                AV_DICT_SET_INT(opts, "quality", self->quality, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
+        case 1:
+            // Intel
+            switch (self->rc_mode) {
+                case 0:
+                    // for auto --> let the driver decide as requested by documentation
+                    if (self->bit_rate) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    if (self->max_bit_rate) {
+                            AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        }
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 1:
+                case 4:
+                    // for constant quality: CQP and ICQ we use qp
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 2:
+                    // for constant bitrate: CBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 3:
+                    // for variable bitrate: VBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 5:
+                    // for variable bitrate: QVBR we use bitrate + qp
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 6:
+                    // for variable bitrate: AVBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+            }
+            if (self->quality >= 0) {
+                AV_DICT_SET_INT(opts, "quality", self->quality, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
+        case 2:
+            // AMD --> will allow any combination of parameters
+            // I am unable to confirm this platform because I don't have the HW
+            // Is only going to override bf to 0 (as highlited by the previous implementation)
+            if (self->bit_rate) {
+                AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->max_bit_rate) {
+                AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qp) {
+                AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+            }
             AV_DICT_SET_INT(opts, "bf", 0, 0);
-        }
+            if (self->quality >= 0) {
+                AV_DICT_SET_INT(opts, "quality", self->quality, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
     }
-    else {
-        AV_DICT_SET_QP(opts, self->qp, 20);
-    }
-    AV_DICT_SET_INT(opts, "quality", self->quality, 0);
+    // force keyframe every 3 sec.
+    AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     return 0;
 }
 
-
+// NOTE:
+// the names below are used in codec.js (/src/webui/static/app/codec.js)
 static const codec_profile_class_t codec_profile_vaapi_h264_class = {
     {
         .ic_super      = (idclass_t *)&codec_profile_vaapi_class,
@@ -239,15 +403,26 @@ static const codec_profile_class_t codec_profile_vaapi_h264_class = {
         .ic_properties = (const property_t[]){
             {
                 .type     = PT_INT,
-                .id       = "quality",
-                .name     = N_("Quality (0=auto)"),
+                .id       = "quality",     // Don't change
+                .name     = N_("Quality (quality)"),
                 .desc     = N_("Set encode quality (trades off against speed, "
-                               "higher is faster) [0-8]."),
+                               "higher is faster) [-1=skip 0-7]."),
                 .group    = 5,
                 .opts     = PO_EXPERT,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, quality),
-                .intextra = INTEXTRA_RANGE(0, 8, 1),
+                .intextra = INTEXTRA_RANGE(-1, 7, 1),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_BOOL,
+                .id       = "low_power",     // Don't change
+                .name     = N_("Low Power (low_power)"),
+                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
                 .def.i    = 0,
             },
             {}
@@ -280,24 +455,147 @@ static int
 tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
                                   AVDictionary **opts)
 {
-    // bit_rate or qp
-    if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
-        if (self->buff_factor <= 0) {
-            self->buff_factor = 3;
-        }
-        AV_DICT_SET_INT(opts, "maxrate", (self->bit_rate) * 1000, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * self->buff_factor, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
+    // to avoid issues we have this check:
+    if (self->buff_factor <= 0) {
+        self->buff_factor = 3;
+    }
+    int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
+    int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    //tvherror(LS_VAAPI, "bitrate = %d, max_bitrate = %d, buffer_size = %d", int_bitrate, int_max_bitrate, int_buffer_size);
+    // https://wiki.libav.org/Hardware/vaapi
+    // to find available parameters use:
+    // ffmpeg -hide_banner -h encoder=hevc_vaapi
+    //-rc_mode         <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
+    // auto            0            E..V....... Choose mode automatically based on other parameters
+    // CQP             1            E..V....... Constant-quality
+    // CBR             2            E..V....... Constant-bitrate
+    // VBR             3            E..V....... Variable-bitrate
+    // ICQ             4            E..V....... Intelligent constant-quality
+    // QVBR            5            E..V....... Quality-defined variable-bitrate
+    // AVBR            6            E..V....... Average variable-bitrate
+    if (self->rc_mode >= 0) {
         AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET_INT(opts, "tier", self->tier, AV_DICT_DONT_OVERWRITE);
-        if (self->ignore_bframe) {
+    }
+    switch (self->platform) {
+        case 0:
+            // Unconstrained --> will allow any combination of parameters (valid or invalid)
+            // this mode is usefull fur future platform and for debugging.
+            if (self->bit_rate) {
+                AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->max_bit_rate) {
+                AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qp) {
+                AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->tier >= 0) {
+                AV_DICT_SET_INT(opts, "tier", self->tier, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
+        case 1:
+            // Intel
+            switch (self->rc_mode) {
+                case 0:
+                    // for auto --> let the driver decide as requested by documentation
+                    if (self->bit_rate) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    if (self->max_bit_rate) {
+                            AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        }
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 1:
+                case 4:
+                    // for constant quality: CQP and ICQ we use qp
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 2:
+                    // for constant bitrate: CBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 3:
+                    // for variable bitrate: VBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 5:
+                    // for variable bitrate: QVBR we use bitrate + qp
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 6:
+                    // for variable bitrate: AVBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+            }
+            if (self->tier >= 0) {
+                AV_DICT_SET_INT(opts, "tier", self->tier, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
+        case 2:
+            // AMD --> will allow any combination of parameters
+            // I am unable to confirm this platform because I don't have the HW
+            // Is only going to override bf to 0 (as highlited by the previous implementation)
+            if (self->bit_rate) {
+                AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->max_bit_rate) {
+                AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qp) {
+                AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+            }
             AV_DICT_SET_INT(opts, "bf", 0, 0);
-        }
+            if (self->tier >= 0) {
+                AV_DICT_SET_INT(opts, "tier", self->tier, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
     }
-    else {
-        AV_DICT_SET_QP(opts, self->qp, 25);
-    }
+    // force keyframe every 3 sec.
+    AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     return 0;
 }
 
@@ -310,14 +608,25 @@ static const codec_profile_class_t codec_profile_vaapi_hevc_class = {
         .ic_properties = (const property_t[]){
             {
                 .type     = PT_INT,
-                .id       = "tier",
-                .name     = N_("Tier"),
-                .desc     = N_("Set tier (general_tier_flag) [0=main 1=high]"),
+                .id       = "tier",     // Don't change
+                .name     = N_("Tier (tier)"),
+                .desc     = N_("Set tier (-1, 0 or 1) [-1=skip 0=main 1=high]"),
                 .group    = 5,
                 .opts     = PO_EXPERT,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, tier),
-                .intextra = INTEXTRA_RANGE(0, 1, 0),
+                .intextra = INTEXTRA_RANGE(-1, 1, 1),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_BOOL,
+                .id       = "low_power",     // Don't change
+                .name     = N_("Low Power (low_power)"),
+                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
                 .def.i    = 0,
             },
             {}
@@ -347,22 +656,165 @@ static int
 tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
                                   AVDictionary **opts)
 {
-    // bit_rate or qp
-    if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
-        if (self->buff_factor <= 0) {
-            self->buff_factor = 3;
-        }
-        AV_DICT_SET_INT(opts, "maxrate", (self->bit_rate) * 1000, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * self->buff_factor, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
+    // to avoid issues we have this check:
+    if (self->buff_factor <= 0) {
+        self->buff_factor = 3;
     }
-    else {
-        AV_DICT_SET_QP(opts, self->qp, 25);
+    int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
+    int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    //tvherror(LS_VAAPI, "bitrate = %d, max_bitrate = %d, buffer_size = %d", int_bitrate, int_max_bitrate, int_buffer_size);
+    // https://wiki.libav.org/Hardware/vaapi
+    // to find available parameters use:
+    // ffmpeg -hide_banner -h encoder=vp8_vaapi
+    //-rc_mode         <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
+    // auto            0            E..V....... Choose mode automatically based on other parameters
+    // CQP             1            E..V....... Constant-quality
+    // CBR             2            E..V....... Constant-bitrate
+    // VBR             3            E..V....... Variable-bitrate
+    // ICQ             4            E..V....... Intelligent constant-quality
+    // QVBR            5            E..V....... Quality-defined variable-bitrate
+    // AVBR            6            E..V....... Average variable-bitrate
+    if (self->rc_mode >= 0) {
+        AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
     }
-    if (self->ignore_bframe) {
-        AV_DICT_SET_INT(opts, "bf", 0, 0);
+    switch (self->platform) {
+        case 0:
+            // Unconstrained --> will allow any combination of parameters (valid or invalid)
+            // this mode is usefull fur future platform and for debugging.
+            if (self->bit_rate) {
+                AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->max_bit_rate) {
+                AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qp) {
+                AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->quality >= 0) {
+                AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_level >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_level", self->loop_filter_level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_sharpness >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_sharpness", self->loop_filter_sharpness, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
+        case 1:
+            // Intel
+            if (self->quality >= 0) {
+                AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
+            }
+            switch (self->rc_mode) {
+                case 0:
+                    // for auto --> let the driver decide as requested by documentation
+                    if (self->bit_rate) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    if (self->max_bit_rate) {
+                            AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        }
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 1:
+                case 4:
+                    // for constant quality: CQP we use qp
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 2:
+                    // for constant bitrate: CBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 3:
+                    // for variable bitrate: VBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 5:
+                    // for variable bitrate: QVBR we use bitrate + qp
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 6:
+                    // for variable bitrate: AVBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_level >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_level", self->loop_filter_level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_sharpness >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_sharpness", self->loop_filter_sharpness, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
+        case 2:
+            // AMD --> will allow any combination of parameters
+            // I am unable to confirm this platform because I don't have the HW
+            // Is only going to override bf to 0 (as highlited by the previous implementation)
+            if (self->bit_rate) {
+                AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->max_bit_rate) {
+                AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qp) {
+                AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+            }
+            AV_DICT_SET_INT(opts, "bf", 0, 0);
+            if (self->quality >= 0) {
+                AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_level >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_level", self->loop_filter_level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_sharpness >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_sharpness", self->loop_filter_sharpness, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
     }
+    // force keyframe every 3 sec.
+    AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     return 0;
 }
 
@@ -371,7 +823,57 @@ static const codec_profile_class_t codec_profile_vaapi_vp8_class = {
     {
         .ic_super      = (idclass_t *)&codec_profile_vaapi_class,
         .ic_class      = "codec_profile_vaapi_vp8",
-        .ic_caption    = N_("vaapi_vp8")
+        .ic_caption    = N_("vaapi_vp8"),
+        .ic_properties = (const property_t[]){
+            {
+                .type     = PT_INT,
+                .id       = "quality",     // Don't change
+                .name     = N_("Global Quality (global_quality)"),
+                .desc     = N_("Set encode quality [-1=skip 0-127]."),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, quality),
+                .intextra = INTEXTRA_RANGE(-1, 127, 1),
+                .def.i    = 40,
+            },
+            {
+                .type     = PT_BOOL,
+                .id       = "low_power",     // Don't change
+                .name     = N_("Low Power (low_power)"),
+                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "loop_filter_level",     // Don't change
+                .name     = N_("Loop filter level (loop_filter_level)"),
+                .desc     = N_("Set Loop filter level (-1=skip from 0 to 63) [default 16]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, loop_filter_level),
+                .intextra = INTEXTRA_RANGE(-1, 63, 1),
+                .def.i    = 16,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "loop_filter_sharpness",     // Don't change
+                .name     = N_("Loop filter sharpness (loop_filter_sharpness)"),
+                .desc     = N_("Set Loop filter sharpness (-1=skip from 0 to 15) [default 4]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, loop_filter_sharpness),
+                .intextra = INTEXTRA_RANGE(-1, 15, 1),
+                .def.i    = 4,
+            },
+            {}
+        }
     },
     .open = (codec_profile_open_meth)tvh_codec_profile_vaapi_vp8_open,
 };
@@ -396,22 +898,165 @@ static int
 tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
                                   AVDictionary **opts)
 {
-    // bit_rate or qp
-    if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
-        if (self->buff_factor <= 0) {
-            self->buff_factor = 3;
-        }
-        AV_DICT_SET_INT(opts, "maxrate", (self->bit_rate) * 1000, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET_INT(opts, "bufsize", ((self->bit_rate) * 1000) * self->buff_factor, AV_DICT_DONT_OVERWRITE);
-        AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
+    // to avoid issues we have this check:
+    if (self->buff_factor <= 0) {
+        self->buff_factor = 3;
     }
-    else {
-        AV_DICT_SET_QP(opts, self->qp, 25);
+    int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
+    int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    //tvherror(LS_VAAPI, "bitrate = %d, max_bitrate = %d, buffer_size = %d", int_bitrate, int_max_bitrate, int_buffer_size);
+    // https://wiki.libav.org/Hardware/vaapi
+    // to find available parameters use:
+    // ffmpeg -hide_banner -h encoder=vp9_vaapi
+    //-rc_mode         <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
+    // auto            0            E..V....... Choose mode automatically based on other parameters
+    // CQP             1            E..V....... Constant-quality
+    // CBR             2            E..V....... Constant-bitrate
+    // VBR             3            E..V....... Variable-bitrate
+    // ICQ             4            E..V....... Intelligent constant-quality
+    // QVBR            5            E..V....... Quality-defined variable-bitrate
+    // AVBR            6            E..V....... Average variable-bitrate
+    if (self->rc_mode >= 0) {
+        AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
     }
-    if (self->ignore_bframe) {
-        AV_DICT_SET_INT(opts, "bf", 0, 0);
+    switch (self->platform) {
+        case 0:
+            // Unconstrained --> will allow any combination of parameters (valid or invalid)
+            // this mode is usefull fur future platform and for debugging.
+            if (self->bit_rate) {
+                AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->max_bit_rate) {
+                AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qp) {
+                AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->quality >= 0) {
+                AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_level >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_level", self->loop_filter_level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_sharpness >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_sharpness", self->loop_filter_sharpness, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
+        case 1:
+            // Intel
+            if (self->quality >= 0) {
+                AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
+            }
+            switch (self->rc_mode) {
+                case 0:
+                    // for auto --> let the driver decide as requested by documentation
+                    if (self->bit_rate) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    if (self->max_bit_rate) {
+                            AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        }
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 1:
+                case 4:
+                    // for constant quality: CQP we use qp
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 2:
+                    // for constant bitrate: CBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 3:
+                    // for variable bitrate: VBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 5:
+                    // for variable bitrate: QVBR we use bitrate + qp
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+                    }
+                    if (self->qp) {
+                        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+                case 6:
+                    // for variable bitrate: AVBR we use bitrate
+                    if (self->bit_rate && self->buff_factor) {
+                        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+                    }
+                    break;
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_level >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_level", self->loop_filter_level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_sharpness >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_sharpness", self->loop_filter_sharpness, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
+        case 2:
+            // AMD --> will allow any combination of parameters
+            // I am unable to confirm this platform because I don't have the HW
+            // Is only going to override bf to 0 (as highlited by the previous implementation)
+            if (self->bit_rate) {
+                AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+                AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->max_bit_rate) {
+                AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qp) {
+                AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+            }
+            AV_DICT_SET_INT(opts, "bf", 0, 0);
+            if (self->quality >= 0) {
+                AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->low_power) {
+                AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_level >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_level", self->loop_filter_level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->loop_filter_sharpness >= 0) {
+                AV_DICT_SET_INT(opts, "loop_filter_sharpness", self->loop_filter_sharpness, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->async_depth) {
+                AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            break;
     }
+    // force keyframe every 3 sec.
+    AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     return 0;
 }
 
@@ -420,7 +1065,57 @@ static const codec_profile_class_t codec_profile_vaapi_vp9_class = {
     {
         .ic_super      = (idclass_t *)&codec_profile_vaapi_class,
         .ic_class      = "codec_profile_vaapi_vp9",
-        .ic_caption    = N_("vaapi_vp9")
+        .ic_caption    = N_("vaapi_vp9"),
+        .ic_properties = (const property_t[]){
+            {
+                .type     = PT_INT,
+                .id       = "quality",     // Don't change
+                .name     = N_("Global Quality (global_quality)"),
+                .desc     = N_("Set encode quality [-1=skip 0-127]."),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, quality),
+                .intextra = INTEXTRA_RANGE(-1, 127, 1),
+                .def.i    = 40,
+            },
+            {
+                .type     = PT_BOOL,
+                .id       = "low_power",     // Don't change
+                .name     = N_("Low Power (low_power)"),
+                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "loop_filter_level",     // Don't change
+                .name     = N_("Loop filter level (loop_filter_level)"),
+                .desc     = N_("Set Loop filter level (-1=skip from 0 to 63) [default 16]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, loop_filter_level),
+                .intextra = INTEXTRA_RANGE(-1, 63, 1),
+                .def.i    = 16,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "loop_filter_sharpness",     // Don't change
+                .name     = N_("Loop filter sharpness (loop_filter_sharpness)"),
+                .desc     = N_("Set Loop filter sharpness (-1=skip from 0 to 15) [default 4]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, loop_filter_sharpness),
+                .intextra = INTEXTRA_RANGE(-1, 15, 1),
+                .def.i    = 4,
+            },
+            {}
+        }
     },
     .open = (codec_profile_open_meth)tvh_codec_profile_vaapi_vp9_open,
 };
