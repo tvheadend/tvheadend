@@ -187,6 +187,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_autorec_max_count = 50;
   cfg->dvr_format_tvmovies_subdir = strdup("tvmovies");
   cfg->dvr_format_tvshows_subdir = strdup("tvshows");
+  cfg->dvr_autorec_dedup = 0;
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_SYSTEM;
@@ -847,6 +848,7 @@ PROP_DOC(dvrconfig_whitespace)
 PROP_DOC(dvrconfig_unsafe)
 PROP_DOC(dvrconfig_windows)
 PROP_DOC(dvrconfig_fanart)
+PROP_DOC(duplicate_handling)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
@@ -1400,6 +1402,18 @@ const idclass_t dvr_config_class = {
       .desc     = N_("The maximum number of recordings that can be scheduled."),
       .off      = offsetof(dvr_config_t, dvr_autorec_max_sched_count),
       .opts     = PO_ADVANCED,
+      .group    = 6,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "record",
+      .name     = N_("Duplicate handling"),
+      .desc     = N_("Duplicate recording handling."),
+      .def.i    = DVR_AUTOREC_RECORD_ALL,
+      .doc      = prop_doc_duplicate_handling,
+      .off      = offsetof(dvr_config_t, dvr_autorec_dedup),
+      .list     = dvr_autorec_entry_class_dedup_list,
+      .opts     = PO_ADVANCED | PO_DOC_NLIST | PO_HIDDEN,
       .group    = 6,
     },
     {

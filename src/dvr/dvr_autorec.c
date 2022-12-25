@@ -399,6 +399,8 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
     return NULL;
   }
 
+  dvr_config_t *c = dvr_config_find_by_uuid(htsmsg_get_str(conf, "config_name"));
+  if (c && c->dvr_autorec_dedup) dae->dae_record = c->dvr_autorec_dedup;
   dae->dae_weekdays = 0x7f;
   dae->dae_pri = DVR_PRIO_DEFAULT;
   dae->dae_start = -1;
@@ -994,7 +996,7 @@ dvr_autorec_entry_class_content_type_list(void *o, const char *lang)
   return m;
 }
 
-static htsmsg_t *
+htsmsg_t *
 dvr_autorec_entry_class_dedup_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
