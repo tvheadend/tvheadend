@@ -127,6 +127,8 @@ typedef struct dvr_config {
 
   idnode_list_head_t dvr_accesses;
 
+  int dvr_autorec_dedup;
+
 } dvr_config_t;
 
 typedef enum {
@@ -753,6 +755,9 @@ int dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae );
 void dvr_autorec_completed( dvr_autorec_entry_t *dae, int error_code );
 
 uint32_t dvr_autorec_get_max_sched_count(dvr_autorec_entry_t *dae);
+
+htsmsg_t *
+dvr_autorec_entry_class_dedup_list ( void *o, const char *lang );
 
 /**
  *
