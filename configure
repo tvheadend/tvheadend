@@ -642,7 +642,6 @@ else
 
     check_pkg libavfilter   ">=6.47.100"  || has_libav=false
     check_pkg libswresample ">=2.1.100"   && has_resample=true
-    check_pkg libavresample ">=3.0.0"     && has_resample=true
     check_pkg libswscale    ">=4.1.100"   || has_libav=false
     check_pkg libavformat   ">=57.41.100" || has_libav=false
     check_pkg libavcodec    ">=57.48.101" || has_libav=false

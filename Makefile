@@ -93,7 +93,6 @@ ifeq ($(CONFIG_LIBAV),yes)
 FFMPEG_LIBS := \
     libavfilter \
     libswresample \
-    libavresample \
     libswscale \
     libavformat \
     libavcodec \
