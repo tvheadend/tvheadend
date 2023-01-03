@@ -267,6 +267,16 @@ tvhva_context_check_profile(TVHVAContext *self, VAProfile profile)
                     break;
                 }
             }
+            if (res != 0) {
+                // if VAEntrypointEncSlice was not available we try again with VAEntrypointEncSliceLP
+                self->entrypoint = VAEntrypointEncSliceLP;
+                for (i = 0; i < entrypoints_len; i++) {
+                    if (entrypoints[i] == self->entrypoint) {
+                        res = 0;
+                        break;
+                    }
+                }
+            }
         }
         free(entrypoints);
     }
