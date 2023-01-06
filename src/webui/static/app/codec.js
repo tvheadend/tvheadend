@@ -231,7 +231,6 @@ var codec_profile_forms = {
 
     'codec_profile_vaapi_h264': function(form) {
         function updateFilters(form) {
-            //Ext.MessageBox.alert('updateFilters', 'updateFilters');
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
             var bit_rate_field = form.findField('bit_rate');
@@ -330,18 +329,17 @@ var codec_profile_forms = {
         updateFilters(form);
         
         // on platform change
-        platform_field.on('spin', function(spinner) {
+        platform_field.on('select', function(spinner) {
             updateFilters(form);
         });
         // on rc_mode change
-        rc_mode_field.on('spin', function(spinner) {
+        rc_mode_field.on('select', function(spinner) {
             updateFilters(form);
         });
     },
 
     'codec_profile_vaapi_hevc': function(form) {
         function updateFilters(form) {
-            //Ext.MessageBox.alert('updateFilters', 'updateFilters');
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
             var bit_rate_field = form.findField('bit_rate');
@@ -440,18 +438,17 @@ var codec_profile_forms = {
         updateFilters(form);
         
         // on platform change
-        platform_field.on('spin', function(spinner) {
+        platform_field.on('select', function(spinner) {
             updateFilters(form);
         });
         // on rc_mode change
-        rc_mode_field.on('spin', function(spinner) {
+        rc_mode_field.on('select', function(spinner) {
             updateFilters(form);
         });
     },
 
     'codec_profile_vaapi_vp8': function(form) {
         function updateFilters(form) {
-            //Ext.MessageBox.alert('updateFilters', 'updateFilters');
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
             var bit_rate_field = form.findField('bit_rate');
@@ -547,18 +544,17 @@ var codec_profile_forms = {
         updateFilters(form);
 
         // on platform change
-        platform_field.on('spin', function(spinner) {
+        platform_field.on('select', function(spinner) {
             updateFilters(form);
         });
         // on rc_mode change
-        rc_mode_field.on('spin', function(spinner) {
+        rc_mode_field.on('select', function(spinner) {
             updateFilters(form);
         });
     },
 
     'codec_profile_vaapi_vp9': function(form) {
         function updateFilters(form) {
-            //Ext.MessageBox.alert('updateFilters', 'updateFilters');
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
             var bit_rate_field = form.findField('bit_rate');
@@ -654,11 +650,11 @@ var codec_profile_forms = {
         updateFilters(form);
 
         // on platform change
-        platform_field.on('spin', function(spinner) {
+        platform_field.on('select', function(spinner) {
             updateFilters(form);
         });
         // on rc_mode change
-        rc_mode_field.on('spin', function(spinner) {
+        rc_mode_field.on('select', function(spinner) {
             updateFilters(form);
         });
     }
