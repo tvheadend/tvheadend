@@ -257,6 +257,7 @@ var codec_profile_forms = {
                     // Intel
                     var rc_mode = rc_mode_field.getValue();
                     switch (rc_mode) {
+                        case -1:
                         case 0:
                             // for auto --> let the driver decide as requested by documentation
                             bit_rate_field.setDisabled(false);
@@ -366,6 +367,7 @@ var codec_profile_forms = {
                     // Intel
                     var rc_mode = rc_mode_field.getValue();
                     switch (rc_mode) {
+                        case -1:
                         case 0:
                             // for auto --> let the driver decide as requested by documentation
                             bit_rate_field.setDisabled(false);
@@ -473,6 +475,7 @@ var codec_profile_forms = {
                     // Intel
                     var rc_mode = rc_mode_field.getValue();
                     switch (rc_mode) {
+                        case -1:
                         case 0:
                             // for auto --> let the driver decide as requested by documentation
                             bit_rate_field.setDisabled(false);
@@ -579,6 +582,7 @@ var codec_profile_forms = {
                     // Intel
                     var rc_mode = rc_mode_field.getValue();
                     switch (rc_mode) {
+                        case -1:
                         case 0:
                             // for auto --> let the driver decide as requested by documentation
                             bit_rate_field.setDisabled(false);
