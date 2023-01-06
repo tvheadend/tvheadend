@@ -22,6 +22,39 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
+#include "idnode.h"
+#include "htsmsg.h"
+
+/* hts ==================================================================== */
+
+static htsmsg_t *
+platform_get_list( void *o, const char *lang )
+{
+    // 0=Unconstrained 1=Intel 2=AMD
+    static const struct strtab tab[] = {
+        { N_("Unconstrained"),  0 },
+        { N_("Intel"),          1 },
+        { N_("AMD"),            2 },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+
+static htsmsg_t *
+rc_mode_get_list( void *o, const char *lang )
+{
+    // -1=skip 0=auto 1=CQP 2=CBR 3=VBR 4=ICQ 5=QVBR 6=AVBR
+    static const struct strtab tab[] = {
+        { N_("skip"),  -1 },
+        { N_("auto"),   0 },
+        { N_("CQP"),    1 },
+        { N_("CBR"),    2 },
+        { N_("VBR"),    3 },
+        { N_("ICQ"),    4 },
+        { N_("QVBR"),   5 },
+        { N_("AVBR"),   6 },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
 
 /* vaapi ==================================================================== */
 
@@ -32,7 +65,6 @@ typedef struct {
     int async_depth;
     double max_bit_rate;
     double bit_rate_scale_factor;
-    int low_power;
     int platform;
     int loop_filter_level;
     int loop_filter_sharpness;
@@ -135,11 +167,11 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .type     = PT_INT,
                 .id       = "platform",     // Don't change
                 .name     = N_("Platform"),
-                .desc     = N_("Select platform (from 0 to 2).[0=Unconstrained 1=Intel 2=AMD]"),
+                .desc     = N_("Select platform"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, platform),
-                .intextra = INTEXTRA_RANGE(0, 2, 1),
+                .list     = platform_get_list,
                 .def.i    = 0,
             },
             {
@@ -150,6 +182,17 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .group    = 3,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, device),
                 .list     = tvh_codec_profile_vaapi_device_list,
+            },
+            {
+                .type     = PT_BOOL,
+                .id       = "low_power",     // Don't change
+                .name     = N_("Low Power (low_power)"),
+                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
+                .group    = 3,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
+                .def.i    = 0,
             },
             {
                 .type     = PT_INT,
@@ -166,11 +209,11 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .type     = PT_INT,
                 .id       = "rc_mode",     // Don't change
                 .name     = N_("Rate control mode (rc_mode)"),
-                .desc     = N_("Set rate control mode (from 0 to 6).[-1=skip 0=auto 1=CQP 2=CBR 3=VBR 4=ICQ 5=QVBR 6=AVBR]"),
+                .desc     = N_("Set rate control mode"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, rc_mode),
-                .intextra = INTEXTRA_RANGE(-1, 6, 1),
+                .list     = rc_mode_get_list,
                 .def.i    = 0,
             },
             {
@@ -251,7 +294,6 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
-    //tvherror(LS_VAAPI, "bitrate = %d, max_bitrate = %d, buffer_size = %d", int_bitrate, int_max_bitrate, int_buffer_size);
     // https://wiki.libav.org/Hardware/vaapi
     // https://blog.wmspanel.com/2017/03/vaapi-libva-support-nimble-streamer.html
     // to find available parameters use:
@@ -294,6 +336,8 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
         case 1:
             // Intel
             switch (self->rc_mode) {
+                case -1:
+                    // same like 0 but is not sending 'rc_mode'
                 case 0:
                     // for auto --> let the driver decide as requested by documentation
                     if (self->bit_rate) {
@@ -410,17 +454,6 @@ static const codec_profile_class_t codec_profile_vaapi_h264_class = {
                 .intextra = INTEXTRA_RANGE(-1, 7, 1),
                 .def.i    = 0,
             },
-            {
-                .type     = PT_BOOL,
-                .id       = "low_power",     // Don't change
-                .name     = N_("Low Power (low_power)"),
-                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
-                .group    = 5,
-                .opts     = PO_EXPERT,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
-                .def.i    = 0,
-            },
             {}
         }
     },
@@ -458,7 +491,6 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
-    //tvherror(LS_VAAPI, "bitrate = %d, max_bitrate = %d, buffer_size = %d", int_bitrate, int_max_bitrate, int_buffer_size);
     // https://wiki.libav.org/Hardware/vaapi
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=hevc_vaapi
@@ -500,6 +532,8 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
         case 1:
             // Intel
             switch (self->rc_mode) {
+                case -1:
+                    // same like 0 but is not sending 'rc_mode'
                 case 0:
                     // for auto --> let the driver decide as requested by documentation
                     if (self->bit_rate) {
@@ -614,17 +648,6 @@ static const codec_profile_class_t codec_profile_vaapi_hevc_class = {
                 .intextra = INTEXTRA_RANGE(-1, 1, 1),
                 .def.i    = 0,
             },
-            {
-                .type     = PT_BOOL,
-                .id       = "low_power",     // Don't change
-                .name     = N_("Low Power (low_power)"),
-                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
-                .group    = 5,
-                .opts     = PO_EXPERT,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
-                .def.i    = 0,
-            },
             {}
         }
     },
@@ -659,7 +682,6 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
-    //tvherror(LS_VAAPI, "bitrate = %d, max_bitrate = %d, buffer_size = %d", int_bitrate, int_max_bitrate, int_buffer_size);
     // https://wiki.libav.org/Hardware/vaapi
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=vp8_vaapi
@@ -710,6 +732,8 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
                 AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
             }
             switch (self->rc_mode) {
+                case -1:
+                    // same like 0 but is not sending 'rc_mode'
                 case 0:
                     // for auto --> let the driver decide as requested by documentation
                     if (self->bit_rate) {
@@ -834,17 +858,6 @@ static const codec_profile_class_t codec_profile_vaapi_vp8_class = {
                 .def.i    = 40,
             },
             {
-                .type     = PT_BOOL,
-                .id       = "low_power",     // Don't change
-                .name     = N_("Low Power (low_power)"),
-                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
-                .group    = 5,
-                .opts     = PO_EXPERT,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
-                .def.i    = 0,
-            },
-            {
                 .type     = PT_INT,
                 .id       = "loop_filter_level",     // Don't change
                 .name     = N_("Loop filter level (loop_filter_level)"),
@@ -905,7 +918,6 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
-    //tvherror(LS_VAAPI, "bitrate = %d, max_bitrate = %d, buffer_size = %d", int_bitrate, int_max_bitrate, int_buffer_size);
     // https://wiki.libav.org/Hardware/vaapi
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=vp9_vaapi
@@ -956,6 +968,8 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
                 AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
             }
             switch (self->rc_mode) {
+                case -1:
+                    // same like 0 but is not sending 'rc_mode'
                 case 0:
                     // for auto --> let the driver decide as requested by documentation
                     if (self->bit_rate) {
@@ -1078,17 +1092,6 @@ static const codec_profile_class_t codec_profile_vaapi_vp9_class = {
                 .off      = offsetof(tvh_codec_profile_vaapi_t, quality),
                 .intextra = INTEXTRA_RANGE(-1, 255, 1),
                 .def.i    = 40,
-            },
-            {
-                .type     = PT_BOOL,
-                .id       = "low_power",     // Don't change
-                .name     = N_("Low Power (low_power)"),
-                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
-                .group    = 5,
-                .opts     = PO_EXPERT,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
-                .def.i    = 0,
             },
             {
                 .type     = PT_INT,

@@ -47,7 +47,7 @@ hwaccels_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len
 /* encoding ================================================================= */
 
 int
-hwaccels_encode_setup_context(AVCodecContext *avctx);
+hwaccels_encode_setup_context(AVCodecContext *avctx, int low_power);
 
 void
 hwaccels_encode_close_context(AVCodecContext *avctx);

@@ -162,7 +162,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 #if ENABLE_HWACCELS
     self->oavctx->coded_width = self->oavctx->width;
     self->oavctx->coded_height = self->oavctx->height;
-    if (hwaccels_encode_setup_context(self->oavctx)) {
+    if (hwaccels_encode_setup_context(self->oavctx, self->profile->low_power)) {
         return -1;
     }
 #endif
