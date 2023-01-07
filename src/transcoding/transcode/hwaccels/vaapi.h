@@ -45,7 +45,7 @@ vaapi_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
 /* encoding ================================================================= */
 
 int
-vaapi_encode_setup_context(AVCodecContext *avctx);
+vaapi_encode_setup_context(AVCodecContext *avctx, int low_power);
 
 void
 vaapi_encode_close_context(AVCodecContext *avctx);

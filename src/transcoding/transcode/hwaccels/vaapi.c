@@ -232,6 +232,9 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
         for (j = 0; j < profiles_max; j++) {
             profiles[j] = VAProfileNone;
         }
+        if (profiles_max == 0) {
+            tvherror(LS_VAAPI, "%s: vaMaxNumProfiles() returned %d; vaapi doesn't have any profiles available, run: $ vainfo", self->logpref, profiles_max);
+        }
         va_res = vaQueryConfigProfiles(self->display,
                                        profiles, &profiles_len);
         if (va_res == VA_STATUS_SUCCESS) {
@@ -241,6 +244,9 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
                     break;
                 }
             }
+        }
+        else {
+            tvherror(LS_VAAPI, "%s: va_res != VA_STATUS_SUCCESS; Failed to query profiles: %d (%s), run: $ vainfo", self->logpref, va_res, vaErrorStr(va_res));
         }
         free(profiles);
     }
@@ -256,10 +262,11 @@ tvhva_context_check_profile(TVHVAContext *self, VAProfile profile)
     VAEntrypoint *entrypoints = NULL;
     int res = -1, i, entrypoints_max, entrypoints_len;
 
-    if ((entrypoints_max = vaMaxNumEntrypoints(self->display)) > 0 &&
-        (entrypoints = calloc(entrypoints_max, sizeof(VAEntrypoint)))) {
-        va_res = vaQueryConfigEntrypoints(self->display, profile,
-                                          entrypoints, &entrypoints_len);
+    entrypoints_max = vaMaxNumEntrypoints(self->display);
+
+    if (entrypoints_max > 0) {
+        entrypoints = calloc(entrypoints_max, sizeof(VAEntrypoint));
+        va_res = vaQueryConfigEntrypoints(self->display, profile, entrypoints, &entrypoints_len);
         if (va_res == VA_STATUS_SUCCESS) {
             for (i = 0; i < entrypoints_len; i++) {
                 if (entrypoints[i] == self->entrypoint) {
@@ -268,7 +275,42 @@ tvhva_context_check_profile(TVHVAContext *self, VAProfile profile)
                 }
             }
         }
+        else {
+            tvherror(LS_VAAPI, "%s: va_res != VA_STATUS_SUCCESS; Failed to query entrypoints: %d (%s), run: $ vainfo", self->logpref, va_res, vaErrorStr(va_res));
+        }
+        if (res != 0) {
+            // before giving up we swap VAEntrypointEncSliceLP with VAEntrypointEncSlice or viceversa
+            if (self->entrypoint == VAEntrypointEncSlice) {
+                // we try VAEntrypointEncSliceLP
+                self->entrypoint = VAEntrypointEncSliceLP;
+                va_res = vaQueryConfigEntrypoints(self->display, profile, entrypoints, &entrypoints_len);
+                if (va_res == VA_STATUS_SUCCESS) {
+                    for (i = 0; i < entrypoints_len; i++) {
+                        if (entrypoints[i] == self->entrypoint) {
+                            res = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+            else {
+                // we try VAEntrypointEncSlice
+                self->entrypoint = VAEntrypointEncSlice;
+                va_res = vaQueryConfigEntrypoints(self->display, profile, entrypoints, &entrypoints_len);
+                if (va_res == VA_STATUS_SUCCESS) {
+                    for (i = 0; i < entrypoints_len; i++) {
+                        if (entrypoints[i] == self->entrypoint) {
+                            res = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         free(entrypoints);
+    }
+    else {
+        tvherror(LS_VAAPI, "%s: vaMaxNumEntrypoints() returned %d; vaapi doesn't have any entrypoints available, run: $ vainfo", self->logpref, entrypoints_max);
     }
     return res;
 }
@@ -409,13 +451,20 @@ tvhva_context_setup(TVHVAContext *self, AVCodecContext *avctx)
     }
 
     libav_vaapi_init_context(self->display);
+    // 
+    profile = tvhva_context_profile(self, avctx);
 
-    if ((profile = tvhva_context_profile(self, avctx)) == VAProfileNone ||
-        tvhva_context_check_profile(self, profile)) {
-        tvherror(LS_VAAPI, "%s: unsupported codec: %s and/or profile: %s",
+    if (profile == VAProfileNone) {
+        tvherror(LS_VAAPI, "%s: tvhva_context_profile() returned VAProfileNone for %s",
                  self->logpref,
-                 avctx->codec->name,
-                 av_get_profile_name(avctx->codec, avctx->profile));
+                 avctx->codec->name);
+        return -1;
+    }
+
+    if (tvhva_context_check_profile(self, profile)) {
+        tvherror(LS_VAAPI, "%s: tvhva_context_check_profile() check failed for codec: %s --> codec not available",
+                 self->logpref,
+                 avctx->codec->name);
         return -1;
     }
     if (!(format = tvhva_get_format(self->io_format))) {
@@ -578,13 +627,21 @@ vaapi_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len)
 /* encoding ================================================================= */
 
 int
-vaapi_encode_setup_context(AVCodecContext *avctx)
+vaapi_encode_setup_context(AVCodecContext *avctx, int low_power)
 {
     TVHContext *ctx = avctx->opaque;
     TVHVAContext *hwaccel_context = NULL;
+    VAEntrypoint entrypoint;
+
+    if (low_power) {
+        entrypoint = VAEntrypointEncSliceLP;
+    }
+    else {
+        entrypoint = VAEntrypointEncSlice;
+    }
 
     if (!(hwaccel_context =
-          tvhva_context_create("encode", avctx, VAEntrypointEncSlice))) {
+          tvhva_context_create("encode", avctx, entrypoint))) {
         return -1;
     }
     if (!(ctx->hw_device_octx = av_buffer_ref(hwaccel_context->hw_device_ref))) {
