@@ -177,12 +177,12 @@ hwaccels_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len
 /* encoding ================================================================= */
 
 int
-hwaccels_encode_setup_context(AVCodecContext *avctx)
+hwaccels_encode_setup_context(AVCodecContext *avctx, int low_power)
 {
     switch (avctx->pix_fmt) {
 #if ENABLE_VAAPI
         case AV_PIX_FMT_VAAPI:
-            return vaapi_encode_setup_context(avctx);
+            return vaapi_encode_setup_context(avctx, low_power);
 #endif
         default:
             break;

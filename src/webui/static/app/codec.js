@@ -229,9 +229,439 @@ var codec_profile_forms = {
         });
     },
 
-    'codec_profile_vaapi_h264': genericCBRvsVBR,
+    'codec_profile_vaapi_h264': function(form) {
+        function updateFilters(form) {
+            var platform_field = form.findField('platform');
+            var rc_mode_field = form.findField('rc_mode');
+            var bit_rate_field = form.findField('bit_rate');
+            var max_bit_rate_field = form.findField('max_bit_rate');
+            var buff_factor_field = form.findField('buff_factor');
+            var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
+            var qp_field = form.findField('qp');
+            var low_power_field = form.findField('low_power');
 
-    'codec_profile_vaapi_hevc': genericCBRvsVBR
+            var platform = platform_field.getValue();
+            switch (platform) {
+                case 0:
+                    // Unconstrained --> will allow any combination of parameters (valid or invalid)
+                    // this mode is usefull fur future platform and for debugging.
+                    // no filter applied
+                    bit_rate_field.setDisabled(false);
+                    max_bit_rate_field.setDisabled(false);
+                    buff_factor_field.setDisabled(false);
+                    bit_rate_scale_factor_field.setDisabled(false);
+                    qp_field.setDisabled(false);
+                    low_power_field.setDisabled(false);
+                    break;
+                case 1:
+                    // Intel
+                    var rc_mode = rc_mode_field.getValue();
+                    switch (rc_mode) {
+                        case -1:
+                        case 0:
+                            // for auto --> let the driver decide as requested by documentation
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 1:
+                        case 4:
+                            // for constant quality: CQP and ICQ we use qp
+                            bit_rate_field.setDisabled(true);
+                            max_bit_rate_field.setDisabled(true);
+                            buff_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(true);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 2:
+                            // for constant bitrate: CBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(true);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(true);
+                            break;
+                        case 3:
+                            // for variable bitrate: VBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(true);
+                            break;
+                        case 5:
+                            // for variable bitrate: QVBR we use bitrate + qp
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 6:
+                            // for variable bitrate: AVBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(true);
+                            break;
+                    }
+                    low_power_field.setDisabled(false);
+                    break;
+                case 2:
+                    // AMD --> will allow any combination of parameters
+                    // I am unable to confirm this platform because I don't have the HW
+                    // Is only going to override bf to 0 (as highlited by the previous implementation)
+                    bit_rate_field.setDisabled(false);
+                    max_bit_rate_field.setDisabled(false);
+                    buff_factor_field.setDisabled(false);
+                    bit_rate_scale_factor_field.setDisabled(false);
+                    qp_field.setDisabled(false);
+                    break;
+                default:
+            }
+        }
+
+        var platform_field = form.findField('platform');
+        var rc_mode_field = form.findField('rc_mode');
+        // first time we have to call this manually
+        updateFilters(form);
+        
+        // on platform change
+        platform_field.on('select', function(spinner) {
+            updateFilters(form);
+        });
+        // on rc_mode change
+        rc_mode_field.on('select', function(spinner) {
+            updateFilters(form);
+        });
+    },
+
+    'codec_profile_vaapi_hevc': function(form) {
+        function updateFilters(form) {
+            var platform_field = form.findField('platform');
+            var rc_mode_field = form.findField('rc_mode');
+            var bit_rate_field = form.findField('bit_rate');
+            var max_bit_rate_field = form.findField('max_bit_rate');
+            var buff_factor_field = form.findField('buff_factor');
+            var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
+            var qp_field = form.findField('qp');
+            var low_power_field = form.findField('low_power');
+
+            var platform = platform_field.getValue();
+            switch (platform) {
+                case 0:
+                    // Unconstrained --> will allow any combination of parameters (valid or invalid)
+                    // this mode is usefull fur future platform and for debugging.
+                    // no filter applied
+                    bit_rate_field.setDisabled(false);
+                    max_bit_rate_field.setDisabled(false);
+                    buff_factor_field.setDisabled(false);
+                    bit_rate_scale_factor_field.setDisabled(false);
+                    qp_field.setDisabled(false);
+                    low_power_field.setDisabled(false);
+                    break;
+                case 1:
+                    // Intel
+                    var rc_mode = rc_mode_field.getValue();
+                    switch (rc_mode) {
+                        case -1:
+                        case 0:
+                            // for auto --> let the driver decide as requested by documentation
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 1:
+                        case 4:
+                            // for constant quality: CQP and ICQ we use qp
+                            bit_rate_field.setDisabled(true);
+                            max_bit_rate_field.setDisabled(true);
+                            buff_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(true);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 2:
+                            // for constant bitrate: CBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(true);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(true);
+                            break;
+                        case 3:
+                            // for variable bitrate: VBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(true);
+                            break;
+                        case 5:
+                            // for variable bitrate: QVBR we use bitrate + qp
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 6:
+                            // for variable bitrate: AVBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(true);
+                            qp_field.setDisabled(true);
+                            break;
+                    }
+                    low_power_field.setDisabled(false);
+                    break;
+                case 2:
+                    // AMD --> will allow any combination of parameters
+                    // I am unable to confirm this platform because I don't have the HW
+                    // Is only going to override bf to 0 (as highlited by the previous implementation)
+                    bit_rate_field.setDisabled(false);
+                    max_bit_rate_field.setDisabled(false);
+                    buff_factor_field.setDisabled(false);
+                    bit_rate_scale_factor_field.setDisabled(false);
+                    qp_field.setDisabled(false);
+                    break;
+                default:
+            }
+        }
+
+        var platform_field = form.findField('platform');
+        var rc_mode_field = form.findField('rc_mode');
+        // first time we have to call this manually
+        updateFilters(form);
+        
+        // on platform change
+        platform_field.on('select', function(spinner) {
+            updateFilters(form);
+        });
+        // on rc_mode change
+        rc_mode_field.on('select', function(spinner) {
+            updateFilters(form);
+        });
+    },
+
+    'codec_profile_vaapi_vp8': function(form) {
+        function updateFilters(form) {
+            var platform_field = form.findField('platform');
+            var rc_mode_field = form.findField('rc_mode');
+            var bit_rate_field = form.findField('bit_rate');
+            var max_bit_rate_field = form.findField('max_bit_rate');
+            var buff_factor_field = form.findField('buff_factor');
+            var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
+            var qp_field = form.findField('qp');
+
+            var platform = platform_field.getValue();
+            switch (platform) {
+                case 0:
+                    // Unconstrained --> will allow any combination of parameters (valid or invalid)
+                    // this mode is usefull fur future platform and for debugging.
+                    // no filter applied
+                    bit_rate_field.setDisabled(false);
+                    max_bit_rate_field.setDisabled(false);
+                    buff_factor_field.setDisabled(false);
+                    bit_rate_scale_factor_field.setDisabled(false);
+                    qp_field.setDisabled(false);
+                    break;
+                case 1:
+                    // Intel
+                    var rc_mode = rc_mode_field.getValue();
+                    switch (rc_mode) {
+                        case -1:
+                        case 0:
+                            // for auto --> let the driver decide as requested by documentation
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 1:
+                        case 4:
+                            // for constant quality: CQP and ICQ we use qp
+                            bit_rate_field.setDisabled(true);
+                            max_bit_rate_field.setDisabled(true);
+                            buff_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(true);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 2:
+                            // for constant bitrate: CBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(true);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(true);
+                            break;
+                        case 3:
+                            // for variable bitrate: VBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(true);
+                            break;
+                        case 5:
+                            // for variable bitrate: QVBR we use bitrate + qp
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 6:
+                            // for variable bitrate: AVBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(true);
+                            qp_field.setDisabled(true);
+                            break;
+                    }
+                    break;
+                case 2:
+                    // AMD --> will allow any combination of parameters
+                    // I am unable to confirm this platform because I don't have the HW
+                    // Is only going to override bf to 0 (as highlited by the previous implementation)
+                    bit_rate_field.setDisabled(false);
+                    max_bit_rate_field.setDisabled(false);
+                    buff_factor_field.setDisabled(false);
+                    bit_rate_scale_factor_field.setDisabled(false);
+                    qp_field.setDisabled(false);
+                    break;
+                default:
+            }
+        }
+
+        var platform_field = form.findField('platform');
+        var rc_mode_field = form.findField('rc_mode');
+        // first time we have to call this manually
+        updateFilters(form);
+
+        // on platform change
+        platform_field.on('select', function(spinner) {
+            updateFilters(form);
+        });
+        // on rc_mode change
+        rc_mode_field.on('select', function(spinner) {
+            updateFilters(form);
+        });
+    },
+
+    'codec_profile_vaapi_vp9': function(form) {
+        function updateFilters(form) {
+            var platform_field = form.findField('platform');
+            var rc_mode_field = form.findField('rc_mode');
+            var bit_rate_field = form.findField('bit_rate');
+            var max_bit_rate_field = form.findField('max_bit_rate');
+            var buff_factor_field = form.findField('buff_factor');
+            var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
+            var qp_field = form.findField('qp');
+
+            var platform = platform_field.getValue();
+            switch (platform) {
+                case 0:
+                    // Unconstrained --> will allow any combination of parameters (valid or invalid)
+                    // this mode is usefull fur future platform and for debugging.
+                    // no filter applied
+                    bit_rate_field.setDisabled(false);
+                    max_bit_rate_field.setDisabled(false);
+                    buff_factor_field.setDisabled(false);
+                    bit_rate_scale_factor_field.setDisabled(false);
+                    qp_field.setDisabled(false);
+                    break;
+                case 1:
+                    // Intel
+                    var rc_mode = rc_mode_field.getValue();
+                    switch (rc_mode) {
+                        case -1:
+                        case 0:
+                            // for auto --> let the driver decide as requested by documentation
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 1:
+                        case 4:
+                            // for constant quality: CQP and ICQ we use qp
+                            bit_rate_field.setDisabled(true);
+                            max_bit_rate_field.setDisabled(true);
+                            buff_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(true);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 2:
+                            // for constant bitrate: CBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(true);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(true);
+                            break;
+                        case 3:
+                            // for variable bitrate: VBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(true);
+                            break;
+                        case 5:
+                            // for variable bitrate: QVBR we use bitrate + qp
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(false);
+                            bit_rate_scale_factor_field.setDisabled(false);
+                            qp_field.setDisabled(false);
+                            break;
+                        case 6:
+                            // for variable bitrate: AVBR we use bitrate
+                            bit_rate_field.setDisabled(false);
+                            max_bit_rate_field.setDisabled(false);
+                            buff_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(true);
+                            qp_field.setDisabled(true);
+                            break;
+                    }
+                    break;
+                case 2:
+                    // AMD --> will allow any combination of parameters
+                    // I am unable to confirm this platform because I don't have the HW
+                    // Is only going to override bf to 0 (as highlited by the previous implementation)
+                    bit_rate_field.setDisabled(false);
+                    max_bit_rate_field.setDisabled(false);
+                    buff_factor_field.setDisabled(false);
+                    bit_rate_scale_factor_field.setDisabled(false);
+                    qp_field.setDisabled(false);
+                    break;
+                default:
+            }
+        }
+
+        var platform_field = form.findField('platform');
+        var rc_mode_field = form.findField('rc_mode');
+        // first time we have to call this manually
+        updateFilters(form);
+
+        // on platform change
+        platform_field.on('select', function(spinner) {
+            updateFilters(form);
+        });
+        // on rc_mode change
+        rc_mode_field.on('select', function(spinner) {
+            updateFilters(form);
+        });
+    }
 };
 
 
