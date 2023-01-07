@@ -279,7 +279,7 @@ tvhva_context_check_profile(TVHVAContext *self, VAProfile profile)
             tvherror(LS_VAAPI, "%s: va_res != VA_STATUS_SUCCESS; Failed to query entrypoints: %d (%s), run: $ vainfo", self->logpref, va_res, vaErrorStr(va_res));
         }
         if (res != 0) {
-            // before gaving up we swap VAEntrypointEncSliceLP with VAEntrypointEncSlice or viceversa
+            // before giving up we swap VAEntrypointEncSliceLP with VAEntrypointEncSlice or viceversa
             if (self->entrypoint == VAEntrypointEncSlice) {
                 // we try VAEntrypointEncSliceLP
                 self->entrypoint = VAEntrypointEncSliceLP;

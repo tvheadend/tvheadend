@@ -30,7 +30,6 @@
 static htsmsg_t *
 platform_get_list( void *o, const char *lang )
 {
-    // 0=Unconstrained 1=Intel 2=AMD
     static const struct strtab tab[] = {
         { N_("Unconstrained"),  0 },
         { N_("Intel"),          1 },
@@ -42,7 +41,6 @@ platform_get_list( void *o, const char *lang )
 static htsmsg_t *
 rc_mode_get_list( void *o, const char *lang )
 {
-    // -1=skip 0=auto 1=CQP 2=CBR 3=VBR 4=ICQ 5=QVBR 6=AVBR
     static const struct strtab tab[] = {
         { N_("skip"),  -1 },
         { N_("auto"),   0 },
@@ -186,7 +184,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
             {
                 .type     = PT_BOOL,
                 .id       = "low_power",     // Don't change
-                .name     = N_("Low Power (low_power)"),
+                .name     = N_("Low Power"),
                 .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
                 .group    = 3,
                 .opts     = PO_EXPERT,
@@ -197,7 +195,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
             {
                 .type     = PT_INT,
                 .id       = "async_depth",
-                .name     = N_("Maximum processing parallelism (async_depth)"),
+                .name     = N_("Maximum processing parallelism"),
                 .desc     = N_("Set maximum process in parallel (0=skip, 2=default).[driver must implement vaSyncBuffer function]"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
@@ -208,7 +206,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
             {
                 .type     = PT_INT,
                 .id       = "rc_mode",     // Don't change
-                .name     = N_("Rate control mode (rc_mode)"),
+                .name     = N_("Rate control mode"),
                 .desc     = N_("Set rate control mode"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
@@ -219,7 +217,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
             {
                 .type     = PT_INT,
                 .id       = "qp",     // Don't change
-                .name     = N_("Constant QP (qp)"),
+                .name     = N_("Constant QP"),
                 .group    = 3,
                 .desc     = N_("Fixed QP of P frames (from 0 to 52, 0=skip).[if disabled will not send paramter to libav]"),
                 .get_opts = codec_profile_class_get_opts,
@@ -230,7 +228,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
             {
                 .type     = PT_DBL,
                 .id       = "bit_rate",     // Don't change
-                .name     = N_("Bitrate (kb/s) (b)"),
+                .name     = N_("Bitrate (kb/s)"),
                 .desc     = N_("Target bitrate (0=skip).[if disabled will not send paramter to libav]"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
@@ -240,7 +238,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
             {
                 .type     = PT_DBL,
                 .id       = "max_bit_rate",     // Don't change
-                .name     = N_("Max bitrate (kb/s) (maxrate)"),
+                .name     = N_("Max bitrate (kb/s)"),
                 .desc     = N_("Maximum bitrate (0=skip).[if disabled will not send paramter to libav]"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
@@ -250,7 +248,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
             {
                 .type     = PT_DBL,
                 .id       = "buff_factor",     // Don't change
-                .name     = N_("Buffer factor (bufsize)"),
+                .name     = N_("Buffer size factor"),
                 .desc     = N_("Size of transcoding buffer (buffer=bitrate*2048*factor). Good factor is 3."),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
@@ -444,7 +442,7 @@ static const codec_profile_class_t codec_profile_vaapi_h264_class = {
             {
                 .type     = PT_INT,
                 .id       = "quality",     // Don't change
-                .name     = N_("Quality (quality)"),
+                .name     = N_("Quality"),
                 .desc     = N_("Set encode quality (trades off against speed, "
                                "higher is faster) [-1=skip 0-7]."),
                 .group    = 5,
@@ -639,7 +637,7 @@ static const codec_profile_class_t codec_profile_vaapi_hevc_class = {
             {
                 .type     = PT_INT,
                 .id       = "tier",     // Don't change
-                .name     = N_("Tier (tier)"),
+                .name     = N_("Tier"),
                 .desc     = N_("Set tier (-1, 0 or 1) [-1=skip 0=main 1=high]"),
                 .group    = 5,
                 .opts     = PO_EXPERT,
@@ -848,7 +846,7 @@ static const codec_profile_class_t codec_profile_vaapi_vp8_class = {
             {
                 .type     = PT_INT,
                 .id       = "quality",     // Don't change
-                .name     = N_("Global Quality (global_quality)"),
+                .name     = N_("Global Quality"),
                 .desc     = N_("Set encode quality [-1=skip 0-127]."),
                 .group    = 5,
                 .opts     = PO_EXPERT,
@@ -860,7 +858,7 @@ static const codec_profile_class_t codec_profile_vaapi_vp8_class = {
             {
                 .type     = PT_INT,
                 .id       = "loop_filter_level",     // Don't change
-                .name     = N_("Loop filter level (loop_filter_level)"),
+                .name     = N_("Loop filter level"),
                 .desc     = N_("Set Loop filter level (-1=skip from 0 to 63) [default 16]"),
                 .group    = 5,
                 .opts     = PO_EXPERT,
@@ -872,7 +870,7 @@ static const codec_profile_class_t codec_profile_vaapi_vp8_class = {
             {
                 .type     = PT_INT,
                 .id       = "loop_filter_sharpness",     // Don't change
-                .name     = N_("Loop filter sharpness (loop_filter_sharpness)"),
+                .name     = N_("Loop filter sharpness"),
                 .desc     = N_("Set Loop filter sharpness (-1=skip from 0 to 15) [default 4]"),
                 .group    = 5,
                 .opts     = PO_EXPERT,
@@ -1084,7 +1082,7 @@ static const codec_profile_class_t codec_profile_vaapi_vp9_class = {
             {
                 .type     = PT_INT,
                 .id       = "quality",     // Don't change
-                .name     = N_("Global Quality (global_quality)"),
+                .name     = N_("Global Quality"),
                 .desc     = N_("Set encode quality [-1=skip 0-255]."),
                 .group    = 5,
                 .opts     = PO_EXPERT,
@@ -1096,7 +1094,7 @@ static const codec_profile_class_t codec_profile_vaapi_vp9_class = {
             {
                 .type     = PT_INT,
                 .id       = "loop_filter_level",     // Don't change
-                .name     = N_("Loop filter level (loop_filter_level)"),
+                .name     = N_("Loop filter level"),
                 .desc     = N_("Set Loop filter level (-1=skip from 0 to 63) [default 16]"),
                 .group    = 5,
                 .opts     = PO_EXPERT,
@@ -1108,7 +1106,7 @@ static const codec_profile_class_t codec_profile_vaapi_vp9_class = {
             {
                 .type     = PT_INT,
                 .id       = "loop_filter_sharpness",     // Don't change
-                .name     = N_("Loop filter sharpness (loop_filter_sharpness)"),
+                .name     = N_("Loop filter sharpness"),
                 .desc     = N_("Set Loop filter sharpness (-1=skip from 0 to 15) [default 4]"),
                 .group    = 5,
                 .opts     = PO_EXPERT,
