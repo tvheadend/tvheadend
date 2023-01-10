@@ -22,6 +22,16 @@
 
 #include <libavutil/pixdesc.h>
 
+static htsmsg_t *
+scaling_mode_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("Up & Down"),      0 },
+        { N_("Up (only)"),      1 },
+        { N_("Down (only)"),    2 },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
 
 /* TVHCodec ================================================================= */
 
@@ -63,11 +73,34 @@ tvh_codec_profile_video_setup(TVHVideoCodecProfile *self, tvh_ssc_t *ssc)
 {
     self->size.den = ssc->es_height;
     self->size.num = ssc->es_width;
-    if (self->height) {
-        self->size.den = self->height;
-        self->size.den += self->size.den & 1;
-        self->size.num = self->size.den * ((double)ssc->es_width / ssc->es_height);
-        self->size.num += self->size.num & 1;
+    switch (self->scaling_mode) {
+        case 0:
+            // scaling up and down
+            if (self->height) {
+                self->size.den = self->height;
+                self->size.den += self->size.den & 1;
+                self->size.num = (int)((double)self->size.den * ((double)ssc->es_width / (double)ssc->es_height));
+                self->size.num += self->size.num & 1;
+            }
+            break;
+        case 1:
+            // scaling up (only)
+            if ((self->height > 0) && (self->size.den < self->height)) {
+                self->size.den = self->height;
+                self->size.den += self->size.den & 1;
+                self->size.num = (int)((double)self->size.den * ((double)ssc->es_width / (double)ssc->es_height));
+                self->size.num += self->size.num & 1;
+            }
+            break;
+        case 2:
+            // scaling down (only)
+            if ((self->height > 0) && (self->size.den > self->height)) {
+                self->size.den = self->height;
+                self->size.den += self->size.den & 1;
+                self->size.num = (int)((double)self->size.den * ((double)ssc->es_width / (double)ssc->es_height));
+                self->size.num += self->size.num & 1;
+            }
+            break;
     }
     return 0;
 }
@@ -163,6 +196,16 @@ const codec_profile_class_t codec_profile_video_class = {
                                "When set to 0, the input resolution is used."),
                 .group    = 2,
                 .off      = offsetof(TVHVideoCodecProfile, height),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "scaling_mode",
+                .name     = N_("Scaling mode"),
+                .desc     = N_("Allow control for scaling Up&Down, Up or Down"),
+                .group    = 2,
+                .off      = offsetof(TVHVideoCodecProfile, scaling_mode),
+                .list     = scaling_mode_get_list,
                 .def.i    = 0,
             },
             {
