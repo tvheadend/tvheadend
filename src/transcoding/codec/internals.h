@@ -211,6 +211,7 @@ typedef struct tvh_codec_profile_video {
     TVHCodecProfile;
     int deinterlace;
     int height;
+    int scaling_mode;   // 0 --> up&down; 1 --> up; 2 --> down
     int hwaccel;
     int pix_fmt;
     int crf;
