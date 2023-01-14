@@ -61,33 +61,62 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
     memset(deint, 0, sizeof(deint));
     memset(hw_deint, 0, sizeof(hw_deint));
 #if ENABLE_HWACCELS
-    if (filter_deint &&
-        hwaccels_get_deint_filter(self->iavctx, hw_deint, sizeof(hw_deint))) {
+    if (filter_deint) {
+        // when hwaccel is enabled we have two options:
+        if (ihw) {
+            // hw deint
+            hwaccels_get_deint_filter(self->iavctx, hw_deint, sizeof(hw_deint));
+        }
+        else {
+            // sw deint
+            if (str_snprintf(deint, sizeof(deint), "yadif")) {
+                return -1;
+            }
+        }
+    }
 #else
     if (filter_deint) {
-#endif
         if (str_snprintf(deint, sizeof(deint), "yadif")) {
             return -1;
         }
     }
+#endif
 
     memset(scale, 0, sizeof(scale));
     memset(hw_scale, 0, sizeof(hw_scale));
 #if ENABLE_HWACCELS
-    if (filter_scale &&
-        hwaccels_get_scale_filter(self->iavctx, self->oavctx, hw_scale, sizeof(hw_scale))) {
+    if (filter_scale) {
+        // when hwaccel is enabled we have two options:
+        if (ihw) {
+            // hw scale
+            hwaccels_get_scale_filter(self->iavctx, self->oavctx, hw_scale, sizeof(hw_scale));
+        }
+        else {
+            // sw scale
+            if (str_snprintf(scale, sizeof(scale), "scale=w=-2:h=%d",
+                         self->oavctx->height)) {
+                return -1;
+            }
+        }
+    }
 #else
     if (filter_scale) {
-#endif
         if (str_snprintf(scale, sizeof(scale), "scale=w=-2:h=%d",
                          self->oavctx->height)) {
             return -1;
         }
     }
+#endif
 
+#if ENABLE_HWACCELS
+    if (hw_deint[0] == '\0' && deint[0] == '\0' && hw_scale[0] == '\0' && scale[0] == '\0') {
+        filter_download = filter_upload = 0;
+    }
+#else
     if (deint[0] == '\0' && scale[0] == '\0') {
         filter_download = filter_upload = 0;
     }
+#endif
 
     memset(download, 0, sizeof(download));
     if (filter_download &&
