@@ -1426,6 +1426,8 @@ linuxdvb_satconf_ele_class_en50494type_set ( void *o, const void *p )
 {
   linuxdvb_satconf_ele_t *ls  = o;
   const char             *str = p;
+  if (ls->lse_en50494 && !strcmp(str ?: "", ls->lse_en50494->ld_type))
+    return 0;
   if (ls->lse_en50494)
     linuxdvb_en50494_destroy(ls->lse_en50494);
   ls->lse_en50494 = linuxdvb_en50494_create0(str, NULL, ls, 0);
