@@ -1801,8 +1801,10 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED | DVR_FINISHED_REMOVED_FAILED))
         continue;
 
-      // if titles are not defined or do not match, don't dedup
-      if (lang_str_compare(de->de_title, de2->de_title))
+      // some channels add "New:" to the title of the first showing, so title match with repeats will fail.
+      // if we are going on to check CRIDs, ignore any title mismatch
+      // otherwise if titles are not defined or do not match, don't dedup
+      if (record != DVR_AUTOREC_RECORD_UNIQUE && lang_str_compare(de->de_title, de2->de_title))
         continue;
 
       if (match(de, de2, &aux)) {
