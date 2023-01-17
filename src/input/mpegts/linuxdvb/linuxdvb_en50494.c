@@ -145,6 +145,22 @@ const idclass_t linuxdvb_en50494_class =
   .ic_get_title   = linuxdvb_en50494_class_get_title,
   .ic_properties  = (const property_t[]) {
     {
+      .type    = PT_U32,
+      .id      = "powerup_time",
+      .name    = N_("Power up time (ms) (10-500)"),
+      .desc    = N_("Time (in milliseconds) for the Unicable device to power up."),
+      .off     = offsetof(linuxdvb_en50494_t, le_powerup_time),
+      .def.u32 = 15,
+    },
+    {
+      .type    = PT_U32,
+      .id      = "cmd_time",
+      .name    = N_("Command time (ms) (10-300)"),
+      .desc    = N_("Time (in milliseconds) for a command to complete."),
+      .off     = offsetof(linuxdvb_en50494_t, le_cmd_time),
+      .def.u32 = 50
+    },
+    {
       .type   = PT_U16,
       .id     = "id",
       .name   = N_("SCR (ID)"),
@@ -186,6 +202,22 @@ const idclass_t linuxdvb_en50607_class =
   .ic_caption     = N_("en50607"),
   .ic_get_title   = linuxdvb_en50607_class_get_title,
   .ic_properties  = (const property_t[]) {
+    {
+      .type    = PT_U32,
+      .id      = "powerup_time",
+      .name    = N_("Power up time (ms) (10-500)"),
+      .desc    = N_("Time (in milliseconds) for the Unicable device to power up."),
+      .off     = offsetof(linuxdvb_en50494_t, le_powerup_time),
+      .def.u32 = 15,
+    },
+    {
+      .type    = PT_U32,
+      .id      = "cmd_time",
+      .name    = N_("Command time (ms) (10-300)"),
+      .desc    = N_("Time (in milliseconds) for a command to complete."),
+      .off     = offsetof(linuxdvb_en50494_t, le_cmd_time),
+      .def.u32 = 50
+    },
     {
       .type   = PT_U16,
       .id     = "id",
@@ -345,7 +377,10 @@ linuxdvb_en50494_tune
       tvherror(LS_EN50494, "error setting lnb voltage to 18V");
       break;
     }
-    tvh_safe_usleep(15000); /* standard: 4ms < x < 22ms */
+
+    /* linuxdvb_diseqc_set_volt() function already sleeps for 15ms */
+    tvhtrace(LS_EN50494, "after power up: sleep %d ms", le->le_powerup_time);
+    tvh_safe_usleep(MINMAX(le->le_powerup_time, 10, 500) * 1000); /* standard: 4ms < x < 22ms */
 
     /* send tune command (with/without pin) */
     tvhdebug(LS_EN50494,
@@ -379,7 +414,9 @@ linuxdvb_en50494_tune
       tvherror(LS_EN50494, "error send tune command");
       break;
     }
-    tvh_safe_usleep(50000); /* standard: 2ms < x < 60ms */
+
+    tvhtrace(LS_EN50494, "after command: sleep %d ms", le->le_cmd_time);
+    tvh_safe_usleep(MINMAX(le->le_cmd_time, 10, 300) * 1000); /* standard: 2ms < x < 60ms */
 
     /* return to 13V */
     ret = linuxdvb_diseqc_set_volt(lsp, 0);
@@ -447,6 +484,10 @@ linuxdvb_en50494_create0
   le->le_pin       = LINUXDVB_EN50494_NOPIN;
   le->ld_freq      = linuxdvb_en50494_freq;
   le->ld_match     = linuxdvb_en50494_match;
+  if (le->le_powerup_time == 0)
+      le->le_powerup_time = 15;
+  if (le->le_cmd_time == 0)
+      le->le_cmd_time = 50;
 
   ld = linuxdvb_diseqc_create0((linuxdvb_diseqc_t *)le,
                                NULL,

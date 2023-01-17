@@ -351,6 +351,10 @@ struct linuxdvb_en50494
 {
   linuxdvb_diseqc_t;
 
+  /* wait times */
+  uint32_t  le_powerup_time;  /* time to wait for power up in milliseconds */
+  uint32_t  le_cmd_time;      /* time to wait for command to complete in milliseconds */
+
   /* en50494 configuration */
   uint16_t  le_id;            /* user band ID (0-7 for EN50494, 0-31 for EN50607) */
   uint16_t  le_frequency;     /* user band frequency in MHz */
