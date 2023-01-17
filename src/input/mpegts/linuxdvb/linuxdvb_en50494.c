@@ -146,11 +146,11 @@ const idclass_t linuxdvb_en50494_class =
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_U16,
-      .id     = "position",
-      .name   = N_("Position"),
-      .desc   = N_("Position ID."),
-      .off    = offsetof(linuxdvb_en50494_t, le_position),
-      .list   = linuxdvb_en50494_position_list,
+      .id     = "id",
+      .name   = N_("SCR (ID)"),
+      .desc   = N_("SCR (Satellite Channel Router) ID."),
+      .off    = offsetof(linuxdvb_en50494_t, le_id),
+      .list   = linuxdvb_en50494_id_list,
     },
     {
       .type   = PT_U16,
@@ -161,19 +161,19 @@ const idclass_t linuxdvb_en50494_class =
     },
     {
       .type   = PT_U16,
-      .id     = "id",
-      .name   = N_("SCR (ID)"),
-      .desc   = N_("SCR (Satellite Channel Router) ID."),
-      .off    = offsetof(linuxdvb_en50494_t, le_id),
-      .list   = linuxdvb_en50494_id_list,
-    },
-    {
-      .type   = PT_U16,
       .id     = "pin",
       .name   = N_("PIN"),
       .desc   = N_("PIN."),
       .off    = offsetof(linuxdvb_en50494_t, le_pin),
       .list   = linuxdvb_en50494_pin_list,
+    },
+    {
+      .type   = PT_U16,
+      .id     = "position",
+      .name   = N_("Position"),
+      .desc   = N_("Position ID."),
+      .off    = offsetof(linuxdvb_en50494_t, le_position),
+      .list   = linuxdvb_en50494_position_list,
     },
     {}
   }
@@ -188,11 +188,11 @@ const idclass_t linuxdvb_en50607_class =
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_U16,
-      .id     = "position",
-      .name   = N_("Position"),
-      .desc   = N_("Position ID."),
-      .off    = offsetof(linuxdvb_en50494_t, le_position),
-      .list   = linuxdvb_en50494_position_list,
+      .id     = "id",
+      .name   = N_("SCR (ID)"),
+      .desc   = N_("SCR (Satellite Channel Router) ID."),
+      .off    = offsetof(linuxdvb_en50494_t, le_id),
+      .list   = linuxdvb_en50607_id_list,
     },
     {
       .type   = PT_U16,
@@ -203,19 +203,19 @@ const idclass_t linuxdvb_en50607_class =
     },
     {
       .type   = PT_U16,
-      .id     = "id",
-      .name   = N_("SCR (ID)"),
-      .desc   = N_("SCR (Satellite Channel Router) ID."),
-      .off    = offsetof(linuxdvb_en50494_t, le_id),
-      .list   = linuxdvb_en50607_id_list,
-    },
-    {
-      .type   = PT_U16,
       .id     = "pin",
       .name   = N_("PIN"),
       .desc   = N_("PIN."),
       .off    = offsetof(linuxdvb_en50494_t, le_pin),
       .list   = linuxdvb_en50494_pin_list,
+    },
+    {
+      .type   = PT_U16,
+      .id     = "position",
+      .name   = N_("Position"),
+      .desc   = N_("Position ID."),
+      .off    = offsetof(linuxdvb_en50494_t, le_position),
+      .list   = linuxdvb_en50494_position_list,
     },
     {}
   }
