@@ -107,7 +107,7 @@ const idclass_t linuxdvb_rotor_class = {
     {
       .type    = PT_U32,
       .id      = "cmd_time",
-      .name    = N_("Command time (ms) (10-100)"),
+      .name    = N_("Command time (ms) (10-300)"),
       .desc    = N_("Time (in milliseconds) for a command to complete."),
       .off     = offsetof(linuxdvb_rotor_t, lr_cmd_time),
       .def.u32 = 25
@@ -461,7 +461,7 @@ linuxdvb_rotor_gotox_tune
       tvherror(LS_DISEQC, "failed to set GOTOX pos %d", lr->lr_position);
       return -1;
     }
-    tvh_safe_usleep(MINMAX(lr->lr_cmd_time, 10, 100) * 1000);
+    tvh_safe_usleep(MINMAX(lr->lr_cmd_time, 10, 300) * 1000);
   }
 
   tvhdebug(LS_DISEQC, "rotor GOTOX pos %d sent", lr->lr_position);
@@ -506,7 +506,7 @@ linuxdvb_rotor_usals_tune
       tvherror(LS_DISEQC, "failed to send USALS command");
       return -1;
     }
-    tvh_safe_usleep(MINMAX(lr->lr_cmd_time, 10, 100) * 1000);
+    tvh_safe_usleep(MINMAX(lr->lr_cmd_time, 10, 300) * 1000);
   }
 
   return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);
