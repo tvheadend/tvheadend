@@ -75,4 +75,7 @@ emm_provider_t *emm_find_provider(emm_reass_t *ra, uint32_t provid);
 void emm_reass_init(emm_reass_t *ra, int subsys, uint16_t caid);
 void emm_reass_done(emm_reass_t *ra);
 
+static inline int caid_is_betacrypt(uint16_t caid) { return (caid >> 8) == 0x17; }
+static inline int caid_is_irdeto(uint16_t caid) { return (caid >> 8) == 0x06; }
+
 #endif /* __TVH_EMM_REASS_H__ */

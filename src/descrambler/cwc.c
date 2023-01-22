@@ -449,21 +449,31 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 
       caid = (msg[6] << 8) | msg[7];
 
-      if (caid){
-        if(len < 3) {
+      if (caid) {
+        if (len < 3) {
           tvhinfo(cwc->cc_subsys, "%s: Invalid card data reply", cwc->cc_name);
           return -1;
         }
 
         plen = (msg[1] & 0xf) << 8 | msg[2];
 
-        if(plen < 14) {
+        if (plen < 14) {
           tvhinfo(cwc->cc_subsys, "%s: Invalid card data reply (message)", cwc->cc_name);
           return -1;
         }
 
         caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
+        
         u8 = &msg[8];
+        if (caid_is_betacrypt(caid) || caid_is_irdeto(caid)) {
+          const char *n = caid2name(caid) ?: "Unknown";
+          uint32_t provid = (u8[0] << 16) | (u8[1] << 8) | u8[0];
+          if (provid != 0) {
+            tvhdebug(cwc->cc_subsys, "%s: Bad provider for %s-card [CAID:%04X Provider:0x%06X], using zero",
+                     cwc->cc_name, n, caid, provid);
+            memset(u8, 0, 3);
+          }
+        }
         cc_new_card((cclient_t *)cwc, caid, 0, NULL, 1, &u8, NULL, 1);
       }
   }
