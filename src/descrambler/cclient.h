@@ -196,7 +196,7 @@ static inline int cc_must_break(cclient_t *cc)
 char *cc_get_card_name(cc_card_data_t *pcard, char *buf, size_t buflen);
 cc_card_data_t *cc_new_card
   (cclient_t *cc, uint16_t caid, uint32_t cardid,
-   uint8_t *ua, int pcount, uint8_t **pid, uint8_t **psa);
+   uint8_t *ua, int pcount, uint8_t **pid, uint8_t **psa, int add);
 void cc_emm_set_allowed(cclient_t *cc, int emm_allowed);
 void cc_remove_card(cclient_t *cc, cc_card_data_t *pcard);
 void cc_remove_card_by_id(cclient_t *cc, uint32_t card_id);

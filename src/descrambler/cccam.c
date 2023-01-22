@@ -348,7 +348,7 @@ cccam_decode_card_data_reply(cccam_t *cccam, uint8_t *msg)
   cccam_set_ua(ua, msg + 16);
   pcard = cc_new_card((cclient_t *)cccam, (msg[12] << 8) | msg[13],
                       (msg[4] << 24) | (msg[5] << 16) | (msg[6] << 8) | msg[7],
-                      ua, nprov, pid, psa);
+                      ua, nprov, pid, psa, 0);
   if (pcard) {
     pcard->cccam.cs_remote_id = (msg[8] << 24) | (msg[9] << 16) | (msg[10] << 8) | msg[11];
     pcard->cccam.cs_hop = msg[14];

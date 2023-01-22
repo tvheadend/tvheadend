@@ -347,7 +347,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 
   caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
   cc_new_card((cclient_t *)cwc, (msg[4] << 8) | msg[5],
-               0, msg + 6, nprov, pid, psa);
+               0, msg + 6, nprov, pid, psa, 0);
 
   return 0;
 }
@@ -464,7 +464,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 
         caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
         u8 = &msg[8];
-        cc_new_card((cclient_t *)cwc, caid, 0, NULL, 1, &u8, NULL);
+        cc_new_card((cclient_t *)cwc, caid, 0, NULL, 1, &u8, NULL, 1);
       }
   }
   return 0;

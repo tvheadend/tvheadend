@@ -121,15 +121,42 @@ cc_get_card_name(cc_card_data_t *pcard, char *buf, size_t buflen)
 /**
  *
  */
+static int
+provider_exists(cc_card_data_t *pcard, uint32_t providerid)
+{
+  int i;
+
+  for(i = 0; i < pcard->cs_ra.providers_count; i++)
+    if(providerid == pcard->cs_ra.providers[i].id)
+      return 1;
+  return 0;
+}
+
+/**
+ *
+ */
+static int
+verify_provider(cc_card_data_t *pcard, uint32_t providerid)
+{
+  if(providerid == 0)
+    return 1;
+
+  return provider_exists(pcard, providerid);
+}
+
+/**
+ *
+ */
 cc_card_data_t *
 cc_new_card(cclient_t *cc, uint16_t caid, uint32_t cardid, uint8_t *ua,
-            int pcount, uint8_t **pid, uint8_t **psa)
+            int pcount, uint8_t **pid, uint8_t **psa, int add)
 {
   cc_card_data_t *pcard = NULL;
-  emm_provider_t *ep;
+  emm_provider_t *ep, *providers;
   const char *n;
   const uint8_t *id, *sa;
-  int i, j, c, allocated = 0;
+  int i, j, c, add_pcount = 0, start_index = 0, ua_changed = 0, allocated = 0;
+  uint32_t id32;
   char buf[256];
 
   LIST_FOREACH(pcard, &cc->cc_cards, cs_card)
@@ -145,35 +172,76 @@ cc_new_card(cclient_t *cc, uint16_t caid, uint32_t cardid, uint8_t *ua,
   }
 
   if (ua) {
-    memcpy(pcard->cs_ra.ua, ua, 8);
-    if (cc_check_empty(ua, 8))
-      ua = NULL;
+    if (memcmp(pcard->cs_ra.ua, ua, 8)) {
+      memcpy(pcard->cs_ra.ua, ua, 8);
+      if (cc_check_empty(ua, 8))
+        ua = NULL;
+      ua_changed = 1;
+    }
   } else {
-    memset(pcard->cs_ra.ua, 0, 8);
+    if (allocated)
+      memset(pcard->cs_ra.ua, 0, 8);
   }
 
-  free(pcard->cs_ra.providers);
-  pcard->cs_ra.providers_count = pcount;
-  pcard->cs_ra.providers = calloc(pcount, sizeof(pcard->cs_ra.providers[0]));
+  if (add && !allocated) {
+    uint8_t **add_pid = alloca(sizeof(void *) * pcount);
+    uint8_t **add_psa = alloca(sizeof(void *) * pcount);
 
-  for (i = 0, ep = pcard->cs_ra.providers; i < pcount; i++, ep++) {
+    for (i = 0; i < pcount; i++) {
+      id = pid[i];
+      if (!id)
+        continue;
+      id32 = (id[0] << 16) | (id[1] << 8) | id[2];
+      if (provider_exists(pcard, id32)) {
+        tvhtrace(cc->cc_subsys, "%s: Provider %06X skip [ID:%08X CAID:%04X]",
+                 cc->cc_name, id32, cardid, caid);
+        continue;
+      }
+      add_pid[add_pcount] = pid[i];
+      add_psa[add_pcount] = psa ? psa[i] : NULL;
+      add_pcount++;
+    }
+    
+    start_index = pcard->cs_ra.providers_count;
+    if (add_pcount == 0) {
+      tvhdebug(cc->cc_subsys, "%s: All providers already registered [ID:%08X CAID:%04X]",
+               cc->cc_name, cardid, caid);
+      goto skip_providers;
+    }
+
+    providers = calloc(start_index + add_pcount, sizeof(pcard->cs_ra.providers[0]));
+    memcpy(providers, pcard->cs_ra.providers, start_index * sizeof(pcard->cs_ra.providers[0]));
+    pid = add_pid;
+    psa = add_psa;
+  } else {
+    providers = calloc(pcount, sizeof(pcard->cs_ra.providers[0]));
+    add_pcount = pcount;
+  }
+
+  for (i = 0, ep = providers + start_index; i < add_pcount; i++, ep++) {
     id = pid[i];
     if (id)
       ep->id = (id[0] << 16) | (id[1] << 8) | id[2];
-    if (psa)
+    if (psa && psa[i])
       memcpy(ep->sa, psa[i], 8);
   }
 
+  free(pcard->cs_ra.providers);
+  pcard->cs_ra.providers = providers;
+  pcount = start_index + add_pcount;
+  pcard->cs_ra.providers_count = pcount;
+
+skip_providers:
   n = caid2name(caid) ?: "Unknown";
 
-  if (ua) {
+  if (ua && (!add || ua_changed)) {
     tvhinfo(cc->cc_subsys, "%s: Connected as user %s "
             "to a %s-card-%08x [CAID:%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
-            "with %d provider%s",
+            "with %d provider%s%s",
             cc->cc_name, cc->cc_username, n, cardid, caid,
             ua[0], ua[1], ua[2], ua[3], ua[4], ua[5], ua[6], ua[7],
-            pcount, pcount != 1 ? "s" : "");
-  } else {
+            pcount, pcount != 1 ? "s" : "", add ? " /ADD" : "");
+  } else if (!add) {
     tvhinfo(cc->cc_subsys, "%s: Connected as user %s "
             "to a %s-card-%08x [CAID:%04x] with %d provider%s",
             cc->cc_name, cc->cc_username, n, cardid, caid,
@@ -181,12 +249,13 @@ cc_new_card(cclient_t *cc, uint16_t caid, uint32_t cardid, uint8_t *ua,
   }
 
   buf[0] = '\0';
-  for (i = j = c = 0, ep = pcard->cs_ra.providers; i < pcount; i++, ep++) {
+  i = start_index;
+  for (j = c = 0, ep = pcard->cs_ra.providers + start_index; i < pcount; i++, ep++) {
     if (psa && !cc_check_empty(ep->sa, 8)) {
       sa = ep->sa;
       if (buf[0]) {
-        tvhdebug(cc->cc_subsys, "%s: Providers: ID:%08x CAID:%04X:[%s]",
-                 cc->cc_name, cardid, caid, buf);
+        tvhdebug(cc->cc_subsys, "%s: Providers: ID:%08x CAID:%04X:[%s]%s",
+                 cc->cc_name, cardid, caid, buf, add ? " /ADD" : "");
         buf[0] = '\0';
         c = 0;
       }
@@ -196,19 +265,19 @@ cc_new_card(cclient_t *cc, uint16_t caid, uint32_t cardid, uint8_t *ua,
     } else {
       tvh_strlcatf(buf, sizeof(buf), c, "%s0x%06x", c > 0 ? "," : "", ep->id);
       if (++j > 5) {
-        tvhdebug(cc->cc_subsys, "%s: Providers: ID:%08x CAID:%04X:[%s]",
-                 cc->cc_name, cardid, caid, buf);
+        tvhdebug(cc->cc_subsys, "%s: Providers: ID:%08x CAID:%04X:[%s]%s",
+                 cc->cc_name, cardid, caid, buf, add ? " /ADD" : "");
         buf[0] = '\0';
         c = j = 0;
       }
     }
   }
   if (j > 0)
-    tvhdebug(cc->cc_subsys, "%s: Providers: ID:%08x CAID:%04X:[%s]",
-             cc->cc_name, cardid, caid, buf);
+    tvhdebug(cc->cc_subsys, "%s: Providers: ID:%08x CAID:%04X:[%s]%s",
+             cc->cc_name, cardid, caid, buf, add ? " /ADD" : "");
   if (allocated)
     LIST_INSERT_HEAD(&cc->cc_cards, pcard, cs_card);
-  if (cc->cc_emm && ua) {
+  if (cc->cc_emm && ua && ua_changed) {
     ua = pcard->cs_ra.ua;
     i = ua[0] || ua[1] || ua[2] || ua[3] ||
         ua[4] || ua[5] || ua[6] || ua[7];
@@ -744,23 +813,6 @@ cc_thread(void *aux)
   return NULL;
 }
 
-
-/**
- *
- */
-static int
-verify_provider(cc_card_data_t *pcard, uint32_t providerid)
-{
-  int i;
-
-  if(providerid == 0)
-    return 1;
-  
-  for(i = 0; i < pcard->cs_ra.providers_count; i++)
-    if(providerid == pcard->cs_ra.providers[i].id)
-      return 1;
-  return 0;
-}
 
 /**
  *
