@@ -367,16 +367,20 @@ cccam_handle_keys(cccam_t *cccam, cc_service_t *ct, cc_ecm_section_t *es,
 {
   uint8_t *dcw_even, *dcw_odd, _dcw[16];
 
-  if (!cccam->cccam_extended) {
-    cccam_decrypt_cw(cccam->cccam_nodeid, es->es_card_id, buf + 4);
-    memcpy(_dcw, buf + 4, 16);
-    cccam_decrypt(&cccam->recvblock, buf + 4, len - 4);
+  if (buf[1] == MSG_ECM_REQUEST) {
+    if (!cccam->cccam_extended) {
+      cccam_decrypt_cw(cccam->cccam_nodeid, es->es_card_id, buf + 4);
+      memcpy(_dcw, buf + 4, 16);
+      cccam_decrypt(&cccam->recvblock, buf + 4, len - 4);
+    } else {
+      memcpy(_dcw, buf + 4, 16);
+    }
+    dcw_even = _dcw;
+    dcw_odd  = _dcw + 8;
   } else {
-    memcpy(_dcw, buf + 4, 16);
+    dcw_even = NULL;
+    dcw_odd  = NULL;
   }
-
-  dcw_even = buf[1] == MSG_ECM_REQUEST ? _dcw : NULL;
-  dcw_odd  = buf[1] == MSG_ECM_REQUEST ? _dcw + 8 : NULL;
 
   cc_ecm_reply(ct, es, DESCRAMBLER_CSA_CBC, dcw_even, dcw_odd, seq);
 }
