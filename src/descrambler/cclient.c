@@ -411,7 +411,7 @@ cc_ecm_reply(cc_service_t *ct, cc_ecm_section_t *es,
   cc_ecm_pid_t *ep;
   cc_ecm_section_t *es2, es3;
   char chaninfo[128];
-  int i;
+  int i, resolved = 0;
   int64_t delay = (getfastmonoclock() - es->es_time) / 1000LL; // in ms
 
   es->es_pending = 0;
@@ -427,6 +427,8 @@ cc_ecm_reply(cc_service_t *ct, cc_ecm_section_t *es,
     if(es->es_keystate == ES_FORBIDDEN)
       return; // We already know it's bad
 
+    resolved = descrambler_resolved((service_t *)t, (th_descrambler_t *)ct);
+
     if (es->es_nok >= CC_MAX_NOKS) {
       tvhdebug(cc->cc_subsys,
                "%s: Too many NOKs[%i] for service \"%s\"%s from %s",
@@ -435,7 +437,7 @@ cc_ecm_reply(cc_service_t *ct, cc_ecm_section_t *es,
       goto forbid;
     }
 
-    if (descrambler_resolved((service_t *)t, (th_descrambler_t *)ct)) {
+    if (resolved) {
       tvhdebug(cc->cc_subsys,
               "%s: NOK[%i] from %s: Already has a key for service \"%s\"",
                cc->cc_name, es->es_section, ct->td_nicename, t->s_dvb_svcname);
@@ -463,6 +465,9 @@ forbid:
       return;
     
     es->es_keystate = ES_FORBIDDEN;
+    if (resolved) /* another reader handles those requests */
+      return;
+
     LIST_FOREACH(ep, &ct->cs_ecm_pids, ep_link) {
       LIST_FOREACH(es2, &ep->ep_sections, es_link)
         if (es2->es_keystate == ES_UNKNOWN ||
