@@ -25,6 +25,7 @@
 
 #include "input.h"
 #include "caclient.h"
+#include "caid.h"
 #include "service.h"
 #include "tcp.h"
 #include "tvhpoll.h"
@@ -1024,7 +1025,7 @@ service_found:
     f0 = pf->filter[0];
     m0 = pf->filter[1];
     if ((f0 & 0xf0) == 0x80 && (m0 & 0xf0) == 0xf0) goto cont;
-    if (caid == 0x4a30 && f0 == 0x50 && m0 == 0xff) goto cont; /* DVN */
+    if (caid_is_dvn(caid) && f0 == 0x50 && m0 == 0xff) goto cont; /* DVN */
   }
 cont:
   if (t)

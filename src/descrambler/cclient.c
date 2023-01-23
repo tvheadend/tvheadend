@@ -416,7 +416,7 @@ cc_ecm_reply(cc_service_t *ct, cc_ecm_section_t *es,
 
   es->es_pending = 0;
 
-  snprintf(chaninfo, sizeof(chaninfo), " (PID %d)", es->es_capid);
+  snprintf(chaninfo, sizeof(chaninfo), " (PID %d CAID %04X)", es->es_capid, es->es_caid);
 
   if (key_even == NULL || key_odd == NULL) {
 
@@ -900,10 +900,10 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   elementary_stream_t *st;
   mpegts_service_t *t = (mpegts_service_t*)ct->td_service;
   cclient_t *cc = ct->cs_client;
-  int capid, section, ecm;
+  int section, ecm;
   cc_ecm_pid_t *ep;
   cc_ecm_section_t *es;
-  char chaninfo[32];
+  char chaninfo[40];
   cc_card_data_t *pcard = NULL;
   caid_t *c;
   uint16_t caid;
@@ -938,7 +938,7 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if(ep == NULL) {
     if (ct->ecm_state == ECM_INIT) {
       // Validate prefered ECM PID
-      tvhdebug(cc->cc_subsys, "%s: ECM state INIT", cc->cc_name);
+      tvhdebug(cc->cc_subsys, "%s: ECM state INIT (PID %d)", cc->cc_name, pid);
 
       if(t->s_dvb_prefcapid_lock != PREFCAPID_OFF) {
         st = elementary_stream_find(&t->s_components, t->s_dvb_prefcapid);
@@ -985,13 +985,13 @@ found:
   provid = c->providerid;
 
   ecm = data[0] == 0x80 || data[0] == 0x81;
-  if (pcard->cs_ra.caid == 0x4a30) ecm |= data[0] == 0x50; /* DVN */
+  if (caid_is_dvn(caid)) ecm |= data[0] == 0x50; /* DVN */
 
   if (ecm) {
-    if ((pcard->cs_ra.caid >> 8) == 6) {
+    if (caid_is_irdeto(caid)) {
       ep->ep_last_section = data[5];
       section = data[4];
-    } else if (pcard->cs_ra.caid == 0xe00) {
+    } else if (caid_is_powervu(caid)) {
       ep->ep_last_section = 0;
       section = data[0] & 1;
     } else {
@@ -999,8 +999,7 @@ found:
       section = 0;
     }
 
-    capid = pid;
-    snprintf(chaninfo, sizeof(chaninfo), " (PID %d)", capid);
+    snprintf(chaninfo, sizeof(chaninfo), " (PID %d CAID %04X)", pid, caid);
 
     LIST_FOREACH(es, &ep->ep_sections, es_link)
       if (es->es_section == section)
@@ -1030,14 +1029,14 @@ found:
 
     es->es_caid = caid;
     es->es_provid = provid;
-    es->es_capid = capid;
+    es->es_capid = pid;
     es->es_pending = 1;
     es->es_resolved = 0;
 
     if (ct->cs_capid != 0xffff && ct->cs_capid > 0 &&
-       capid > 0 && ct->cs_capid != capid) {
-      tvhdebug(cc->cc_subsys, "%s: Filtering ECM (PID %d), using PID %d",
-               cc->cc_name, capid, ct->cs_capid);
+        pid > 0 && ct->cs_capid != pid) {
+      tvhdebug(cc->cc_subsys, "%s: Filtering ECM (PID %d CAID %04X), using PID %d",
+               cc->cc_name, pid, caid, ct->cs_capid);
       goto end;
     }
 
