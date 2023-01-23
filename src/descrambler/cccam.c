@@ -579,7 +579,7 @@ cccam_send_ka(void *cc)
   buf[2] = 0;
   buf[3] = 0;
 
-  tvhdebug(cccam->cc_subsys, "%s: send keepalive", cccam->cc_name);
+  tvhtrace(cccam->cc_subsys, "%s: send keepalive", cccam->cc_name);
   cccam_send_msg(cccam, MSG_NO_HEADER, buf, 4, 1, 0, 0);
 }
 
