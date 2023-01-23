@@ -54,6 +54,71 @@ rc_mode_get_list( void *o, const char *lang )
     return strtab2htsmsg(tab, 1, lang);
 }
 
+// h264
+
+static htsmsg_t *
+h264_level_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("skip"), -100 },
+        { N_("1"),     10 },
+        { N_("1.1"),   11 },
+        { N_("1.2"),   12 },
+        { N_("1.3"),   13 },
+        { N_("2"),     20 },
+        { N_("2.1"),   21 },
+        { N_("2.2"),   22 },
+        { N_("3"),     30 },
+        { N_("3.1"),   31 },
+        { N_("3.2"),   32 },
+        { N_("4"),     40 },
+        { N_("4.1"),   41 },
+        { N_("4.2"),   42 },
+        { N_("5"),     50 },
+        { N_("5.1"),   51 },
+        { N_("5.2"),   52 },
+        { N_("6"),     60 },
+        { N_("6.1"),   61 },
+        { N_("6.2"),   62 },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+
+// hevc 
+
+static htsmsg_t *
+hevc_tier_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("skip"),   -1 },
+        { N_("main"),   0 },
+        { N_("high"),   1 },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+
+static htsmsg_t *
+hevc_level_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("skip"), -100 },
+        { N_("1"),     30 },
+        { N_("2"),     60 },
+        { N_("2.1"),   63 },
+        { N_("3"),     90 },
+        { N_("3.1"),   93 },
+        { N_("4"),     120 },
+        { N_("4.1"),   123 },
+        { N_("5"),     150 },
+        { N_("5.1"),   153 },
+        { N_("5.2"),   156 },
+        { N_("6"),     180 },
+        { N_("6.1"),   183 },
+        { N_("6.2"),   186 },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+
 /* vaapi ==================================================================== */
 
 typedef struct {
@@ -61,6 +126,7 @@ typedef struct {
     int qp;
     int quality;
     int async_depth;
+    int desired_b_depth;
     double max_bit_rate;
     double bit_rate_scale_factor;
     int platform;
@@ -69,6 +135,9 @@ typedef struct {
     double buff_factor;
     int rc_mode;
     int tier;
+    int level;
+    int qmin;
+    int qmax;
 } tvh_codec_profile_vaapi_t;
 
 #if defined(__linux__)
@@ -174,7 +243,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
             },
             {
                 .type     = PT_STR,
-                .id       = "device",
+                .id       = "device",     // Don't change
                 .name     = N_("Device name"),
                 .desc     = N_("Device name (e.g. /dev/dri/renderD128)."),
                 .group    = 3,
@@ -194,7 +263,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
             },
             {
                 .type     = PT_INT,
-                .id       = "async_depth",
+                .id       = "async_depth",     // Don't change
                 .name     = N_("Maximum processing parallelism"),
                 .desc     = N_("Set maximum process in parallel (0=skip, 2=default).[driver must implement vaSyncBuffer function]"),
                 .group    = 3,
@@ -202,6 +271,17 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .off      = offsetof(tvh_codec_profile_vaapi_t, async_depth),
                 .intextra = INTEXTRA_RANGE(0, 64, 1),
                 .def.i    = 2,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "desired_b_depth",     // Don't change
+                .name     = N_("Maximum B-frame"),
+                .desc     = N_("Maximum B-frame reference depth (from 1 to 4) (default 1)"),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, desired_b_depth),
+                .intextra = INTEXTRA_RANGE(0, 4, 1),
+                .def.i    = 1,
             },
             {
                 .type     = PT_INT,
@@ -222,6 +302,28 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .desc     = N_("Fixed QP of P frames (from 0 to 52, 0=skip).[if disabled will not send paramter to libav]"),
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, qp),
+                .intextra = INTEXTRA_RANGE(0, 52, 1),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "qmin",     // Don't change
+                .name     = N_("Minimum QP"),
+                .group    = 5,
+                .desc     = N_("Minimum QP of P frames (from 0 to 52, 0=skip)"),
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, qmin),
+                .intextra = INTEXTRA_RANGE(0, 52, 1),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "qmax",     // Don't change
+                .name     = N_("Maximum QP"),
+                .group    = 5,
+                .desc     = N_("Maximum QP of P frames (from 0 to 52, 0=skip)"),
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, qmax),
                 .intextra = INTEXTRA_RANGE(0, 52, 1),
                 .def.i    = 0,
             },
@@ -292,18 +394,59 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    tvherror(LS_VAAPI, "Bitrate = %d bps; Buffer size = %d bps; Max bitrate = %d bps", int_bitrate, int_buffer_size, int_max_bitrate);
     // https://wiki.libav.org/Hardware/vaapi
     // https://blog.wmspanel.com/2017/03/vaapi-libva-support-nimble-streamer.html
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=h264_vaapi
-    //-rc_mode         <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
-    // auto            0            E..V....... Choose mode automatically based on other parameters
-    // CQP             1            E..V....... Constant-quality
-    // CBR             2            E..V....... Constant-bitrate
-    // VBR             3            E..V....... Variable-bitrate
-    // ICQ             4            E..V....... Intelligent constant-quality
-    // QVBR            5            E..V....... Quality-defined variable-bitrate
-    // AVBR            6            E..V....... Average variable-bitrate
+    // h264_vaapi AVOptions:
+    // -low_power         <boolean>    E..V....... Use low-power encoding mode (only available on some platforms; may not support all encoding features) (default false)
+    // -idr_interval      <int>        E..V....... Distance (in I-frames) between IDR frames (from 0 to INT_MAX) (default 0)
+    // -b_depth           <int>        E..V....... Maximum B-frame reference depth (from 1 to INT_MAX) (default 1)
+    // -rc_mode           <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
+    //    auto            0            E..V....... Choose mode automatically based on other parameters
+    //    CQP             1            E..V....... Constant-quality
+    //    CBR             2            E..V....... Constant-bitrate
+    //    VBR             3            E..V....... Variable-bitrate
+    //    ICQ             4            E..V....... Intelligent constant-quality
+    //    QVBR            5            E..V....... Quality-defined variable-bitrate
+    //    AVBR            6            E..V....... Average variable-bitrate
+    // -qp                <int>        E..V....... Constant QP (for P-frames; scaled by qfactor/qoffset for I/B) (from 0 to 52) (default 0)
+    // -quality           <int>        E..V....... Set encode quality (trades off against speed, higher is faster) (from -1 to INT_MAX) (default -1)
+    // -coder             <int>        E..V....... Entropy coder type (from 0 to 1) (default cabac)
+    //    cavlc           0            E..V.......
+    //    cabac           1            E..V.......
+    //    vlc             0            E..V.......
+    //    ac              1            E..V.......
+    // -aud               <boolean>    E..V....... Include AUD (default false)
+    // -sei               <flags>      E..V....... Set SEI to include (default identifier+timing+recovery_point)
+    //    identifier                   E..V....... Include encoder version identifier
+    //    timing                       E..V....... Include timing parameters (buffering_period and pic_timing)
+    //    recovery_point               E..V....... Include recovery points where appropriate
+    // -profile           <int>        E..V....... Set profile (profile_idc and constraint_set*_flag) (from -99 to 65535) (default -99)
+    //    constrained_baseline 578          E..V.......
+    //    main            77           E..V.......
+    //    high            100          E..V.......
+    // -level             <int>        E..V....... Set level (level_idc) (from -99 to 255) (default -99)
+    //    1               10           E..V.......
+    //    1.1             11           E..V.......
+    //    1.2             12           E..V.......
+    //    1.3             13           E..V.......
+    //    2               20           E..V.......
+    //    2.1             21           E..V.......
+    //    2.2             22           E..V.......
+    //    3               30           E..V.......
+    //    3.1             31           E..V.......
+    //    3.2             32           E..V.......
+    //    4               40           E..V.......
+    //    4.1             41           E..V.......
+    //    4.2             42           E..V.......
+    //    5               50           E..V.......
+    //    5.1             51           E..V.......
+    //    5.2             52           E..V.......
+    //    6               60           E..V.......
+    //    6.1             61           E..V.......
+    //    6.2             62           E..V.......
     if (self->rc_mode >= 0) {
         AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
     }
@@ -311,6 +454,9 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
         case 0:
             // Uncontrained --> will allow any combination of parameters (valid or invalid)
             // this mode is usefull fur future platform and for debugging.
+            if (self->desired_b_depth) {
+                AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+            }
             if (self->bit_rate) {
                 AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
                 AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
@@ -330,9 +476,21 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
             }
+            if (self->level != -100) {
+                AV_DICT_SET_INT(opts, "level", self->level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+            }
             break;
         case 1:
             // Intel
+            if (self->desired_b_depth) {
+                AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+            }
             switch (self->rc_mode) {
                 case -1:
                     // same like 0 but is not sending 'rc_mode'
@@ -399,6 +557,15 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
             }
+            if (self->level != -100) {
+                AV_DICT_SET_INT(opts, "level", self->level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+            }
             break;
         case 2:
             // AMD --> will allow any combination of parameters
@@ -423,6 +590,15 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
             }
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->level != -100) {
+                AV_DICT_SET_INT(opts, "level", self->level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
             }
             break;
     }
@@ -451,6 +627,18 @@ static const codec_profile_class_t codec_profile_vaapi_h264_class = {
                 .off      = offsetof(tvh_codec_profile_vaapi_t, quality),
                 .intextra = INTEXTRA_RANGE(-1, 7, 1),
                 .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "level",     // Don't change
+                .name     = N_("Level"),
+                .desc     = N_("Set level (level_idc) (from -99 to 255)"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, level),
+                .list     = h264_level_get_list,
+                .def.i    = -100,
             },
             {}
         }
@@ -489,17 +677,49 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    tvherror(LS_VAAPI, "Bitrate = %d bps; Buffer size = %d bps; Max bitrate = %d bps", int_bitrate, int_buffer_size, int_max_bitrate);
     // https://wiki.libav.org/Hardware/vaapi
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=hevc_vaapi
-    //-rc_mode         <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
-    // auto            0            E..V....... Choose mode automatically based on other parameters
-    // CQP             1            E..V....... Constant-quality
-    // CBR             2            E..V....... Constant-bitrate
-    // VBR             3            E..V....... Variable-bitrate
-    // ICQ             4            E..V....... Intelligent constant-quality
-    // QVBR            5            E..V....... Quality-defined variable-bitrate
-    // AVBR            6            E..V....... Average variable-bitrate
+    //   h265_vaapi AVOptions:
+    // -low_power         <boolean>    E..V....... Use low-power encoding mode (only available on some platforms; may not support all encoding features) (default false)
+    // -idr_interval      <int>        E..V....... Distance (in I-frames) between IDR frames (from 0 to INT_MAX) (default 0)
+    // -b_depth           <int>        E..V....... Maximum B-frame reference depth (from 1 to INT_MAX) (default 1)
+    // -rc_mode           <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
+    //    auto            0            E..V....... Choose mode automatically based on other parameters
+    //    CQP             1            E..V....... Constant-quality
+    //    CBR             2            E..V....... Constant-bitrate
+    //    VBR             3            E..V....... Variable-bitrate
+    //    ICQ             4            E..V....... Intelligent constant-quality
+    //    QVBR            5            E..V....... Quality-defined variable-bitrate
+    //    AVBR            6            E..V....... Average variable-bitrate
+    // -qp                <int>        E..V....... Constant QP (for P-frames; scaled by qfactor/qoffset for I/B) (from 0 to 52) (default 0)
+    // -aud               <boolean>    E..V....... Include AUD (default false)
+    // -profile           <int>        E..V....... Set profile (general_profile_idc) (from -99 to 255) (default -99)
+    //    main            1            E..V.......
+    //    main10          2            E..V.......
+    //    rext            4            E..V.......
+    // -tier              <int>        E..V....... Set tier (general_tier_flag) (from 0 to 1) (default main)
+    //    main            0            E..V.......
+    //    high            1            E..V.......
+    // -level             <int>        E..V....... Set level (general_level_idc) (from -99 to 255) (default -99)
+    //    1               30           E..V.......
+    //    2               60           E..V.......
+    //    2.1             63           E..V.......
+    //    3               90           E..V.......
+    //    3.1             93           E..V.......
+    //    4               120          E..V.......
+    //    4.1             123          E..V.......
+    //    5               150          E..V.......
+    //    5.1             153          E..V.......
+    //    5.2             156          E..V.......
+    //    6               180          E..V.......
+    //    6.1             183          E..V.......
+    //    6.2             186          E..V.......
+    // -sei               <flags>      E..V....... Set SEI to include (default hdr)
+    //    hdr                          E..V....... Include HDR metadata for mastering display colour volume and content light level information
+    // -tiles             <image_size> E..V....... Tile columns x rows
+
     if (self->rc_mode >= 0) {
         AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
     }
@@ -507,6 +727,9 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
         case 0:
             // Unconstrained --> will allow any combination of parameters (valid or invalid)
             // this mode is usefull fur future platform and for debugging.
+            if (self->desired_b_depth) {
+                AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+            }
             if (self->bit_rate) {
                 AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
                 AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
@@ -526,9 +749,21 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
             }
+            if (self->level != -100) {
+                AV_DICT_SET_INT(opts, "level", self->level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+            }
             break;
         case 1:
             // Intel
+            if (self->desired_b_depth) {
+                AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+            }
             switch (self->rc_mode) {
                 case -1:
                     // same like 0 but is not sending 'rc_mode'
@@ -595,6 +830,15 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
             }
+            if (self->level != -100) {
+                AV_DICT_SET_INT(opts, "level", self->level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+            }
             break;
         case 2:
             // AMD --> will allow any combination of parameters
@@ -620,6 +864,15 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
             }
+            if (self->level != -100) {
+                AV_DICT_SET_INT(opts, "level", self->level, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+            }
             break;
     }
     // force keyframe every 3 sec.
@@ -638,13 +891,25 @@ static const codec_profile_class_t codec_profile_vaapi_hevc_class = {
                 .type     = PT_INT,
                 .id       = "tier",     // Don't change
                 .name     = N_("Tier"),
-                .desc     = N_("Set tier (-1, 0 or 1) [-1=skip 0=main 1=high]"),
+                .desc     = N_("Set tier (general_tier_flag) (from 0 to 1) (default main)"),
                 .group    = 5,
                 .opts     = PO_EXPERT,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, tier),
-                .intextra = INTEXTRA_RANGE(-1, 1, 1),
+                .list     = hevc_tier_get_list,
                 .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "level",     // Don't change
+                .name     = N_("Level"),
+                .desc     = N_("Set level (general_level_idc) (from -99 to 255)"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, level),
+                .list     = hevc_level_get_list,
+                .def.i    = -100,
             },
             {}
         }
@@ -680,17 +945,25 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    tvherror(LS_VAAPI, "Bitrate = %d bps; Buffer size = %d bps; Max bitrate = %d bps", int_bitrate, int_buffer_size, int_max_bitrate);
     // https://wiki.libav.org/Hardware/vaapi
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=vp8_vaapi
-    //-rc_mode         <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
-    // auto            0            E..V....... Choose mode automatically based on other parameters
-    // CQP             1            E..V....... Constant-quality
-    // CBR             2            E..V....... Constant-bitrate
-    // VBR             3            E..V....... Variable-bitrate
-    // ICQ             4            E..V....... Intelligent constant-quality
-    // QVBR            5            E..V....... Quality-defined variable-bitrate
-    // AVBR            6            E..V....... Average variable-bitrate
+    //   vp8_vaapi AVOptions:
+    // -low_power         <boolean>    E..V....... Use low-power encoding mode (only available on some platforms; may not support all encoding features) (default false)
+    // -idr_interval      <int>        E..V....... Distance (in I-frames) between IDR frames (from 0 to INT_MAX) (default 0)
+    // -b_depth           <int>        E..V....... Maximum B-frame reference depth (from 1 to INT_MAX) (default 1)
+    // -rc_mode           <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
+    //    auto            0            E..V....... Choose mode automatically based on other parameters
+    //    CQP             1            E..V....... Constant-quality
+    //    CBR             2            E..V....... Constant-bitrate
+    //    VBR             3            E..V....... Variable-bitrate
+    //    ICQ             4            E..V....... Intelligent constant-quality
+    //    QVBR            5            E..V....... Quality-defined variable-bitrate
+    //    AVBR            6            E..V....... Average variable-bitrate
+    // -loop_filter_level <int>        E..V....... Loop filter level (from 0 to 63) (default 16)
+    // -loop_filter_sharpness <int>        E..V....... Loop filter sharpness (from 0 to 15) (default 4)
+
     if (self->rc_mode >= 0) {
         AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
     }
@@ -698,6 +971,9 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
         case 0:
             // Unconstrained --> will allow any combination of parameters (valid or invalid)
             // this mode is usefull fur future platform and for debugging.
+            if (self->desired_b_depth) {
+                AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+            }
             if (self->bit_rate) {
                 AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
                 AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
@@ -723,9 +999,18 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
             }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+            }
             break;
         case 1:
             // Intel
+            if (self->desired_b_depth) {
+                AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+            }
             if (self->quality >= 0) {
                 AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
             }
@@ -798,6 +1083,12 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
             }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+            }
             break;
         case 2:
             // AMD --> will allow any combination of parameters
@@ -828,6 +1119,12 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
             }
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
             }
             break;
     }
@@ -898,10 +1195,6 @@ TVHVideoCodec tvh_codec_vaapi_vp8 = {
 /* vp9_vaapi =============================================================== */
 
 static const AVProfile vaapi_vp9_profiles[] = {
-    { FF_PROFILE_VP9_0, "Profile0" },
-    { FF_PROFILE_VP9_1, "Profile1" },
-    { FF_PROFILE_VP9_2, "Profile2" },
-    { FF_PROFILE_VP9_3, "Profile3" },
     { FF_PROFILE_UNKNOWN },
 };
 
@@ -916,17 +1209,25 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    tvherror(LS_VAAPI, "Bitrate = %d bps; Buffer size = %d bps; Max bitrate = %d bps", int_bitrate, int_buffer_size, int_max_bitrate);
     // https://wiki.libav.org/Hardware/vaapi
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=vp9_vaapi
-    //-rc_mode         <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
-    // auto            0            E..V....... Choose mode automatically based on other parameters
-    // CQP             1            E..V....... Constant-quality
-    // CBR             2            E..V....... Constant-bitrate
-    // VBR             3            E..V....... Variable-bitrate
-    // ICQ             4            E..V....... Intelligent constant-quality
-    // QVBR            5            E..V....... Quality-defined variable-bitrate
-    // AVBR            6            E..V....... Average variable-bitrate
+    //   vp9_vaapi AVOptions:
+    // -low_power         <boolean>    E..V....... Use low-power encoding mode (only available on some platforms; may not support all encoding features) (default false)
+    // -idr_interval      <int>        E..V....... Distance (in I-frames) between IDR frames (from 0 to INT_MAX) (default 0)
+    // -b_depth           <int>        E..V....... Maximum B-frame reference depth (from 1 to INT_MAX) (default 1)
+    // -rc_mode           <int>        E..V....... Set rate control mode (from 0 to 6) (default auto)
+    //    auto            0            E..V....... Choose mode automatically based on other parameters
+    //    CQP             1            E..V....... Constant-quality
+    //    CBR             2            E..V....... Constant-bitrate
+    //    VBR             3            E..V....... Variable-bitrate
+    //    ICQ             4            E..V....... Intelligent constant-quality
+    //    QVBR            5            E..V....... Quality-defined variable-bitrate
+    //    AVBR            6            E..V....... Average variable-bitrate
+    // -loop_filter_level <int>        E..V....... Loop filter level (from 0 to 63) (default 16)
+    // -loop_filter_sharpness <int>        E..V....... Loop filter sharpness (from 0 to 15) (default 4)
+
     if (self->rc_mode >= 0) {
         AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
     }
@@ -934,6 +1235,12 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
         case 0:
             // Unconstrained --> will allow any combination of parameters (valid or invalid)
             // this mode is usefull fur future platform and for debugging.
+            if (self->desired_b_depth) {
+                AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // according to example from https://trac.ffmpeg.org/wiki/Hardware/VAAPI
+                // -bsf:v vp9_raw_reorder,vp9_superframe
+                AV_DICT_SET(opts, "bsf", "vp9_raw_reorder,vp9_superframe", AV_DICT_DONT_OVERWRITE);
+            }
             if (self->bit_rate) {
                 AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
                 AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
@@ -959,9 +1266,21 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
             }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+            }
             break;
         case 1:
             // Intel
+            if (self->desired_b_depth) {
+                AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // according to example from https://trac.ffmpeg.org/wiki/Hardware/VAAPI
+                // -bsf:v vp9_raw_reorder,vp9_superframe
+                AV_DICT_SET(opts, "bsf", "vp9_raw_reorder,vp9_superframe", AV_DICT_DONT_OVERWRITE);
+            }
             if (self->quality >= 0) {
                 AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
             }
@@ -1034,6 +1353,12 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
             }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+            }
             break;
         case 2:
             // AMD --> will allow any combination of parameters
@@ -1064,6 +1389,12 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
             }
             if (self->async_depth) {
                 AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmin) {
+                AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->qmax) {
+                AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
             }
             break;
     }
