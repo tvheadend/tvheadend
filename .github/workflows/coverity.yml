@@ -16,7 +16,7 @@ jobs:
     - name: dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache libomxil-bellagio-dev
+        sudo apt-get install -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libpcre2-dev libdvbcsa-dev python3 python3-requests debhelper ccache libomxil-bellagio-dev libva-dev
     - name: Configure
       run: ./configure --disable-dvbcscan --disable-tvhcsa --enable-libfdkaac --enable-nvenc --enable-vaapi --enable-mmal --enable-omx
     - name: Download Coverity Build Tool
