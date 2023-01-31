@@ -138,6 +138,7 @@ typedef struct {
     int level;
     int qmin;
     int qmax;
+    int super_frame;
 } tvh_codec_profile_vaapi_t;
 
 #if defined(__linux__)
@@ -254,7 +255,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .type     = PT_BOOL,
                 .id       = "low_power",     // Don't change
                 .name     = N_("Low Power"),
-                .desc     = N_("Set low power mode.[if disabled will not send paramter to libav]"),
+                .desc     = N_("Set low power mode.[if disabled will not send parameter to libav, if enabled codec will disable B frames]"),
                 .group    = 3,
                 .opts     = PO_EXPERT,
                 .get_opts = codec_profile_class_get_opts,
@@ -276,11 +277,11 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .type     = PT_INT,
                 .id       = "desired_b_depth",     // Don't change
                 .name     = N_("Maximum B-frame"),
-                .desc     = N_("Maximum B-frame reference depth (from 1 to 4) (default 1)"),
+                .desc     = N_("Maximum B-frame reference depth (from 1 to 3) (default 1)"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, desired_b_depth),
-                .intextra = INTEXTRA_RANGE(0, 4, 1),
+                .intextra = INTEXTRA_RANGE(0, 3, 1),
                 .def.i    = 1,
             },
             {
@@ -394,7 +395,7 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
-    tvherror(LS_VAAPI, "Bitrate = %d bps; Buffer size = %d bps; Max bitrate = %d bps", int_bitrate, int_buffer_size, int_max_bitrate);
+    tvhinfo(LS_VAAPI, "Bitrate = %d kbps; Buffer size = %d kbps; Max bitrate = %d kbps", int_bitrate / 1024, int_buffer_size / 1024, int_max_bitrate / 1024);
     // https://wiki.libav.org/Hardware/vaapi
     // https://blog.wmspanel.com/2017/03/vaapi-libva-support-nimble-streamer.html
     // to find available parameters use:
@@ -454,8 +455,10 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
         case 0:
             // Uncontrained --> will allow any combination of parameters (valid or invalid)
             // this mode is usefull fur future platform and for debugging.
-            if (self->desired_b_depth) {
+            if ((self->low_power == 0) && (self->desired_b_depth)) {
                 AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // max_b_frames
+                AV_DICT_SET_INT(opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
             }
             if (self->bit_rate) {
                 AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
@@ -488,8 +491,10 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
             break;
         case 1:
             // Intel
-            if (self->desired_b_depth) {
+            if ((self->low_power == 0) && (self->desired_b_depth)) {
                 AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // max_b_frames
+                AV_DICT_SET_INT(opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
             }
             switch (self->rc_mode) {
                 case -1:
@@ -677,7 +682,7 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
-    tvherror(LS_VAAPI, "Bitrate = %d bps; Buffer size = %d bps; Max bitrate = %d bps", int_bitrate, int_buffer_size, int_max_bitrate);
+    tvhinfo(LS_VAAPI, "Bitrate = %d kbps; Buffer size = %d kbps; Max bitrate = %d kbps", int_bitrate / 1024, int_buffer_size / 1024, int_max_bitrate / 1024);
     // https://wiki.libav.org/Hardware/vaapi
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=hevc_vaapi
@@ -727,8 +732,10 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
         case 0:
             // Unconstrained --> will allow any combination of parameters (valid or invalid)
             // this mode is usefull fur future platform and for debugging.
-            if (self->desired_b_depth) {
+            if ((self->low_power == 0) && (self->desired_b_depth)) {
                 AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // max_b_frames
+                AV_DICT_SET_INT(opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
             }
             if (self->bit_rate) {
                 AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
@@ -761,8 +768,10 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
             break;
         case 1:
             // Intel
-            if (self->desired_b_depth) {
+            if ((self->low_power == 0) && (self->desired_b_depth)) {
                 AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // max_b_frames
+                AV_DICT_SET_INT(opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
             }
             switch (self->rc_mode) {
                 case -1:
@@ -945,7 +954,7 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
-    tvherror(LS_VAAPI, "Bitrate = %d bps; Buffer size = %d bps; Max bitrate = %d bps", int_bitrate, int_buffer_size, int_max_bitrate);
+    tvhinfo(LS_VAAPI, "Bitrate = %d kbps; Buffer size = %d kbps; Max bitrate = %d kbps", int_bitrate / 1024, int_buffer_size / 1024, int_max_bitrate / 1024);
     // https://wiki.libav.org/Hardware/vaapi
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=vp8_vaapi
@@ -971,8 +980,10 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
         case 0:
             // Unconstrained --> will allow any combination of parameters (valid or invalid)
             // this mode is usefull fur future platform and for debugging.
-            if (self->desired_b_depth) {
+            if ((self->low_power == 0) && (self->desired_b_depth)) {
                 AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // max_b_frames
+                AV_DICT_SET_INT(opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
             }
             if (self->bit_rate) {
                 AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
@@ -1008,8 +1019,10 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
             break;
         case 1:
             // Intel
-            if (self->desired_b_depth) {
+            if ((self->low_power == 0) && (self->desired_b_depth)) {
                 AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // max_b_frames
+                AV_DICT_SET_INT(opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
             }
             if (self->quality >= 0) {
                 AV_DICT_SET_INT(opts, "global_quality", self->quality, AV_DICT_DONT_OVERWRITE);
@@ -1209,7 +1222,7 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
     int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
     int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
     int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
-    tvherror(LS_VAAPI, "Bitrate = %d bps; Buffer size = %d bps; Max bitrate = %d bps", int_bitrate, int_buffer_size, int_max_bitrate);
+    tvhinfo(LS_VAAPI, "Bitrate = %d kbps; Buffer size = %d kbps; Max bitrate = %d kbps", int_bitrate / 1024, int_buffer_size / 1024, int_max_bitrate / 1024);
     // https://wiki.libav.org/Hardware/vaapi
     // to find available parameters use:
     // ffmpeg -hide_banner -h encoder=vp9_vaapi
@@ -1235,8 +1248,12 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
         case 0:
             // Unconstrained --> will allow any combination of parameters (valid or invalid)
             // this mode is usefull fur future platform and for debugging.
-            if (self->desired_b_depth) {
+            if ((self->low_power == 0) && (self->desired_b_depth)) {
                 AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // max_b_frames
+                AV_DICT_SET_INT(opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->super_frame) {
                 // according to example from https://trac.ffmpeg.org/wiki/Hardware/VAAPI
                 // -bsf:v vp9_raw_reorder,vp9_superframe
                 AV_DICT_SET(opts, "bsf", "vp9_raw_reorder,vp9_superframe", AV_DICT_DONT_OVERWRITE);
@@ -1275,8 +1292,12 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
             break;
         case 1:
             // Intel
-            if (self->desired_b_depth) {
+            if ((self->low_power == 0) && (self->desired_b_depth)) {
                 AV_DICT_SET_INT(opts, "b_depth", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+                // max_b_frames
+                AV_DICT_SET_INT(opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+            }
+            if (self->super_frame) {
                 // according to example from https://trac.ffmpeg.org/wiki/Hardware/VAAPI
                 // -bsf:v vp9_raw_reorder,vp9_superframe
                 AV_DICT_SET(opts, "bsf", "vp9_raw_reorder,vp9_superframe", AV_DICT_DONT_OVERWRITE);
@@ -1445,6 +1466,17 @@ static const codec_profile_class_t codec_profile_vaapi_vp9_class = {
                 .off      = offsetof(tvh_codec_profile_vaapi_t, loop_filter_sharpness),
                 .intextra = INTEXTRA_RANGE(-1, 15, 1),
                 .def.i    = 4,
+            },
+            {
+                .type     = PT_BOOL,
+                .id       = "super_frame",              // Don't change
+                .name     = N_("Super Frame"),
+                .desc     = N_("Enable Super Frame for vp9 encoder.[default disabled]"),
+                .group    = 5,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, super_frame),
+                .def.i    = 0,
             },
             {}
         }
