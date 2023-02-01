@@ -220,12 +220,20 @@ tvhcsa_set_type( tvhcsa_t *csa, struct mpegts_service *s, int type )
 }
 
 
+#ifndef DVBCSA_ICAM
 void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
+#else
+void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even, const uint8_t ecm)
+#endif
 {
   switch (csa->csa_type) {
   case DESCRAMBLER_CSA_CBC:
 #if ENABLE_DVBCSA
+#ifndef DVBCSA_ICAM
     dvbcsa_bs_key_set(even, csa->csa_key_even);
+#else
+    dvbcsa_bs_key_set_ecm(ecm, even, csa->csa_key_even);
+#endif
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
@@ -241,13 +249,21 @@ void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
   }
 }
 
+#ifndef DVBCSA_ICAM
 void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
+#else
+void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd, const uint8_t ecm )
+#endif
 {
   assert(csa->csa_type);
   switch (csa->csa_type) {
   case DESCRAMBLER_CSA_CBC:
 #if ENABLE_DVBCSA
+#ifndef DVBCSA_ICAM
     dvbcsa_bs_key_set(odd, csa->csa_key_odd);
+#else
+    dvbcsa_bs_key_set_ecm(ecm, odd, csa->csa_key_odd);
+#endif
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
