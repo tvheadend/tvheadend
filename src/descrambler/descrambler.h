@@ -103,9 +103,7 @@ typedef struct th_descrambler_runtime {
   int64_t  dr_ecm_start[2];
   int64_t  dr_ecm_last_key_time;
   int64_t  dr_ecm_key_margin;
-#ifdef DVBCSA_ICAM
   uint8_t  dr_ecm;
-#endif
   int64_t  dr_last_err;
   int64_t  dr_force_skip;
   th_descrambler_key_t dr_keys[DESCRAMBLER_MAX_KEYS];

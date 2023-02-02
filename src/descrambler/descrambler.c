@@ -966,20 +966,12 @@ key_flush( th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, uint8_t chang
   /* update the keys */
   if (changed & 1) {
     debug2("%p: even key[%d] set for decoder", dr, tk->key_pid);
-#ifndef DVBCSA_ICAM
-    tvhcsa_set_key_even(&tk->key_csa, tk->key_data[0]);
-#else
     tvhcsa_set_key_even(&tk->key_csa, tk->key_data[0], dr->dr_ecm);
-#endif
     tk->key_valid |= 0x40;
   }
   if (changed & 2) {
     debug2("%p: odd key[%d] set for decoder", dr, tk->key_pid);
-#ifndef DVBCSA_ICAM
-    tvhcsa_set_key_odd(&tk->key_csa, tk->key_data[1]);
-#else
     tvhcsa_set_key_odd(&tk->key_csa, tk->key_data[1], dr->dr_ecm);
-#endif
     tk->key_valid |= 0x80;
   }
 }
@@ -1379,9 +1371,7 @@ descrambler_table_callback
                 }
               }
             }
-#ifdef DVBCSA_ICAM
             dr->dr_ecm = (ptr[2] - ptr[4]) == 4 ? ptr[0x15] : 0;
-#endif
             tvhtrace(LS_DESCRAMBLER, "ECM message %02x:%02x (section %d, len %d, pid %d) for service \"%s\"",
                      ptr[0], ptr[1], des->number, len, mt->mt_pid, t->s_dvb_svcname);
           }
