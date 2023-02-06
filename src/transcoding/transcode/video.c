@@ -47,14 +47,24 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
     char scale[24];
     char hw_scale[64];
     char upload[48];
+    char hw_denoise[64];
+    char hw_sharpness[64];
     int ihw = _video_filters_hw_pix_fmt(self->iavctx->pix_fmt);
     int ohw = _video_filters_hw_pix_fmt(self->oavctx->pix_fmt);
     int filter_scale = (self->iavctx->height != self->oavctx->height);
     int filter_deint = 0, filter_download = 0, filter_upload = 0;
+#if ENABLE_HWACCELS
+    int filter_denoise = 0;
+    int filter_sharpness = 0;
+#endif
 
     if (tvh_context_get_int_opt(opts, "tvh_filter_deint", &filter_deint)) {
         return -1;
     }
+#if ENABLE_VAAPI
+    filter_denoise = self->profile->filter_hw_denoise;
+    filter_sharpness = self->profile->filter_hw_sharpness;
+#endif
     //  in --> out  |  download   |   upload 
     // -------------|-------------|------------
     //  hw --> hw   |     0       |     0
@@ -114,6 +124,28 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
     }
 #endif
 
+    memset(hw_denoise, 0, sizeof(hw_denoise));
+#if ENABLE_HWACCELS
+    if (filter_denoise) {
+        // used only when hwaccel is enabled
+        if (ihw) {
+            // hw scale
+            hwaccels_get_denoise_filter(self->iavctx, filter_denoise, hw_denoise, sizeof(hw_denoise));
+        }
+    }
+#endif
+
+    memset(hw_sharpness, 0, sizeof(hw_sharpness));
+#if ENABLE_HWACCELS
+    if (filter_sharpness) {
+        // used only when hwaccel is enabled
+        if (ihw) {
+            // hw scale
+            hwaccels_get_sharpness_filter(self->iavctx, filter_sharpness, hw_sharpness, sizeof(hw_sharpness));
+        }
+    }
+#endif
+
 #if ENABLE_HWACCELS
     // no filter required.
 #else
@@ -137,7 +169,7 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
         return -1;
     }
 
-    if (!(*filters = str_join(",", hw_deint, hw_scale, download, deint, scale, upload, NULL))) {
+    if (!(*filters = str_join(",", hw_deint, hw_scale, hw_denoise, hw_sharpness, download, deint, scale, upload, NULL))) {
         return -1;
     }
 

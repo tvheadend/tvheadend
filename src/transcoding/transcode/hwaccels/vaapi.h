@@ -41,6 +41,12 @@ vaapi_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx, char *fil
 int
 vaapi_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
 
+int
+vaapi_get_denoise_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
+
+int
+vaapi_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
+
 
 /* encoding ================================================================= */
 
