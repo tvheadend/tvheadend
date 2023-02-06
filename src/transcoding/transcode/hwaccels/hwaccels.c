@@ -173,6 +173,43 @@ hwaccels_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len
     return -1;
 }
 
+int
+hwaccels_get_denoise_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len)
+{
+    TVHContext *ctx = avctx->opaque;
+
+    if (ctx->hw_accel_ictx) {
+        switch (avctx->pix_fmt) {
+#if ENABLE_VAAPI
+            case AV_PIX_FMT_VAAPI:
+                return vaapi_get_denoise_filter(avctx, value, filter, filter_len);
+#endif
+            default:
+                break;
+        }
+    }
+    
+    return -1;
+}
+
+int
+hwaccels_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len)
+{
+    TVHContext *ctx = avctx->opaque;
+
+    if (ctx->hw_accel_ictx) {
+        switch (avctx->pix_fmt) {
+#if ENABLE_VAAPI
+            case AV_PIX_FMT_VAAPI:
+                return vaapi_get_sharpness_filter(avctx, value, filter, filter_len);
+#endif
+            default:
+                break;
+        }
+    }
+    
+    return -1;
+}
 
 /* encoding ================================================================= */
 

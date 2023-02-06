@@ -368,6 +368,28 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .off      = offsetof(tvh_codec_profile_vaapi_t, bit_rate_scale_factor),
                 .def.d    = 0,
             },
+            {
+                .type     = PT_INT,
+                .id       = "hw_denoise",     // Don't change
+                .name     = N_("Denoise"),
+                .group    = 2,
+                .desc     = N_("Denoise only available with Hardware Acceleration (from 0 to 64, 0=skip, 0 default)"),
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, filter_hw_denoise),
+                .intextra = INTEXTRA_RANGE(0, 64, 1),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "hw_sharpness",     // Don't change
+                .name     = N_("Sharpness"),
+                .group    = 2,
+                .desc     = N_("Sharpness only available with Hardware Acceleration (from 0 to 64, 0=skip, 44 default)"),
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, filter_hw_sharpness),
+                .intextra = INTEXTRA_RANGE(0, 64, 1),
+                .def.i    = 44,
+            },
             {}
         }
     },

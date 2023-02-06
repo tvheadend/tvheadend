@@ -230,6 +230,12 @@ var codec_profile_forms = {
     },
 
     'codec_profile_vaapi_h264': function(form) {
+        function updateHWFilters(form) {
+            var hwaccel_field = form.findField('hwaccel');
+            form.findField('hw_denoise').setDisabled(!hwaccel_field.getValue());
+            form.findField('hw_sharpness').setDisabled(!hwaccel_field.getValue());
+        }
+
         function updateFilters(form) {
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
@@ -334,8 +340,11 @@ var codec_profile_forms = {
         var platform_field = form.findField('platform');
         var rc_mode_field = form.findField('rc_mode');
         var low_power_field = form.findField('low_power');
+        var hwaccel_field = form.findField('hwaccel');
+        
         // first time we have to call this manually
         updateFilters(form);
+        updateHWFilters(form);
         
         // on platform change
         platform_field.on('select', function(combo, record, index) {
@@ -348,10 +357,20 @@ var codec_profile_forms = {
         // on low_power change
         low_power_field.on('check', function(checkbox, value) {
             updateFilters(form);
+        });
+        // on hwaccel change
+        hwaccel_field.on('check', function(checkbox, value) {
+            updateHWFilters(form);
         });
     },
 
     'codec_profile_vaapi_hevc': function(form) {
+        function updateHWFilters(form) {
+            var hwaccel_field = form.findField('hwaccel');
+            form.findField('hw_denoise').setDisabled(!hwaccel_field.getValue());
+            form.findField('hw_sharpness').setDisabled(!hwaccel_field.getValue());
+        }
+
         function updateFilters(form) {
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
@@ -456,8 +475,11 @@ var codec_profile_forms = {
         var platform_field = form.findField('platform');
         var rc_mode_field = form.findField('rc_mode');
         var low_power_field = form.findField('low_power');
+        var hwaccel_field = form.findField('hwaccel');
+
         // first time we have to call this manually
         updateFilters(form);
+        updateHWFilters(form);
         
         // on platform change
         platform_field.on('select', function(combo, record, index) {
@@ -471,9 +493,19 @@ var codec_profile_forms = {
         low_power_field.on('check', function(checkbox, value) {
             updateFilters(form);
         });
+        // on hwaccel change
+        hwaccel_field.on('check', function(checkbox, value) {
+            updateHWFilters(form);
+        });
     },
 
     'codec_profile_vaapi_vp8': function(form) {
+        function updateHWFilters(form) {
+            var hwaccel_field = form.findField('hwaccel');
+            form.findField('hw_denoise').setDisabled(!hwaccel_field.getValue());
+            form.findField('hw_sharpness').setDisabled(!hwaccel_field.getValue());
+        }
+
         function updateFilters(form) {
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
@@ -568,8 +600,11 @@ var codec_profile_forms = {
 
         var platform_field = form.findField('platform');
         var rc_mode_field = form.findField('rc_mode');
+        var hwaccel_field = form.findField('hwaccel');
+
         // first time we have to call this manually
         updateFilters(form);
+        updateHWFilters(form);
 
         // on platform change
         platform_field.on('select', function(combo, record, index) {
@@ -578,10 +613,20 @@ var codec_profile_forms = {
         // on rc_mode change
         rc_mode_field.on('select', function(combo, record, index) {
             updateFilters(form);
+        });
+        // on hwaccel change
+        hwaccel_field.on('check', function(checkbox, value) {
+            updateHWFilters(form);
         });
     },
 
     'codec_profile_vaapi_vp9': function(form) {
+        function updateHWFilters(form) {
+            var hwaccel_field = form.findField('hwaccel');
+            form.findField('hw_denoise').setDisabled(!hwaccel_field.getValue());
+            form.findField('hw_sharpness').setDisabled(!hwaccel_field.getValue());
+        }
+
         function updateFilters(form) {
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
@@ -676,8 +721,11 @@ var codec_profile_forms = {
 
         var platform_field = form.findField('platform');
         var rc_mode_field = form.findField('rc_mode');
+        var hwaccel_field = form.findField('hwaccel');
+
         // first time we have to call this manually
         updateFilters(form);
+        updateHWFilters(form);
 
         // on platform change
         platform_field.on('select', function(combo, record, index) {
@@ -686,6 +734,10 @@ var codec_profile_forms = {
         // on rc_mode change
         rc_mode_field.on('select', function(combo, record, index) {
             updateFilters(form);
+        });
+        // on hwaccel change
+        hwaccel_field.on('check', function(checkbox, value) {
+            updateHWFilters(form);
         });
     }
 };

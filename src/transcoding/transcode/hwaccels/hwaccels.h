@@ -43,6 +43,12 @@ hwaccels_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx,
 int
 hwaccels_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
 
+int
+hwaccels_get_denoise_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
+
+int
+hwaccels_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
+
 
 /* encoding ================================================================= */
 
