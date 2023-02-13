@@ -353,6 +353,10 @@ epggrab_mux_start ( mpegts_mux_t *mm, void *p )
   epggrab_module_t  *m;
   epggrab_ota_mux_t *ota;
 
+  int epg_flag = mm->mm_is_epg(mm);
+  if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE)
+    return;
+
   /* Already started */
   TAILQ_FOREACH(ota, &epggrab_ota_active, om_q_link)
     if (!uuid_cmp(&ota->om_mux_uuid, &mm->mm_id.in_uuid))
