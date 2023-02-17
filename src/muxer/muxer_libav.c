@@ -80,14 +80,15 @@ lav_muxer_add_stream(lav_muxer_t *lm,
 {
   AVStream *st;
   AVCodecContext *c;
+  AVCodec *codec; 
 
   st = avformat_new_stream(lm->lm_oc, NULL);
   if (!st)
     return -1;
 
   st->id = ssc->es_index;
-  c = st->codec;
-  c->codec_id = streaming_component_type2codec_id(ssc->es_type);
+  codec = avcodec_find_encoder(streaming_component_type2codec_id(ssc->es_type));
+  c = avcodec_alloc_context3(codec);
 
   switch(lm->m_config.m_type) {
   case MC_MATROSKA:
@@ -147,6 +148,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->time_base     = st->time_base;
 #endif
 
+    avcodec_parameters_from_context(st->codecpar, c);
     av_dict_set(&st->metadata, "language", ssc->es_lang, 0);
 
   } else if(SCT_ISVIDEO(ssc->es_type)) {
@@ -166,16 +168,21 @@ lav_muxer_add_stream(lav_muxer_t *lm,
       c->sample_aspect_ratio = av_mul_q(c->sample_aspect_ratio, ratio);
     }
 
+    avcodec_parameters_from_context(st->codecpar, c);
     st->sample_aspect_ratio.num = c->sample_aspect_ratio.num;
     st->sample_aspect_ratio.den = c->sample_aspect_ratio.den;
 
   } else if(SCT_ISSUBTITLE(ssc->es_type)) {
     c->codec_type = AVMEDIA_TYPE_SUBTITLE;
+    avcodec_parameters_from_context(st->codecpar, c);
     av_dict_set(&st->metadata, "language", ssc->es_lang, 0);
   }
 
   if(lm->lm_oc->oformat->flags & AVFMT_GLOBALHEADER)
     c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+  avcodec_parameters_from_context(st->codecpar, c);
+  avcodec_free_context(&c);
 
   return 0;
 }
@@ -298,11 +305,40 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
   AVDictionary *opts = NULL;
   lav_muxer_t *lm = (lav_muxer_t*)m;
   char app[128];
+  AVOutputFormat *fmt;
+  const char *muxer_name;
 
   snprintf(app, sizeof(app), "Tvheadend %s", tvheadend_version);
 
   oc = lm->lm_oc;
 
+  switch(lm->m_config.m_type) {
+  case MC_MPEGPS:
+    muxer_name = "dvd";
+    break;
+  case MC_MPEGTS:
+    muxer_name = "mpegts";
+    break;
+  case MC_MATROSKA:
+  case MC_AVMATROSKA:
+    muxer_name = "matroska";
+    break;
+  case MC_WEBM:
+  case MC_AVWEBM:
+    muxer_name = "webm";
+    break;
+  case MC_AVMP4:
+    muxer_name = "mp4";
+    break;
+  default:
+    muxer_name = muxer_container_type2txt(lm->m_config.m_type);
+    break;
+  }
+  fmt = lm->lm_oc->oformat;
+  if(avformat_alloc_output_context2(&oc, fmt, muxer_name, NULL) < 0) {
+    tvherror(LS_LIBAV,  "Can't find the '%s' muxer", muxer_name);
+    return -1;
+  }
   av_dict_set(&oc->metadata, "title", name, 0);
   av_dict_set(&oc->metadata, "service_name", name, 0);
   av_dict_set(&oc->metadata, "service_provider", app, 0);
