@@ -325,9 +325,19 @@ int test(void)
 }
 '
 
-# a check for the external iconv library
+# a check for the external (gnu)iconv library
 # for build-in libc iconv routines this check should fail
 # note that iconv routines are mandatory
+check_cc_snippet gnu_libiconv '
+#include <gnu-libiconv/iconv.h>
+#define TEST test
+int test(void)
+{
+  iconv_t ic = iconv_open("ASCII", "ASCII");
+  return 0;
+}
+' -liconv
+
 check_cc_snippet libiconv '
 #include <iconv.h>
 #define TEST test
@@ -338,7 +348,9 @@ int test(void)
 }
 ' -liconv
 
-if enabled libiconv; then
+if enabled gnu_libiconv; then
+  printf "    ^ using gnu libiconv library\n"
+elif enabled libiconv; then
   printf "    ^ using external iconv library\n"
 else
   printf "    ^ using build-in glibc iconv routines\n"
