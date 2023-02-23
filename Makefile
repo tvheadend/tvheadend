@@ -67,6 +67,10 @@ LDFLAGS += -Wl,-z,now
 ifeq ($(CONFIG_LIBICONV),yes)
 LDFLAGS += -liconv
 endif
+ifeq ($(CONFIG_GNU_LIBICONV),yes)
+CFLAGS += -D_GNU_LIBICONV
+LDFLAGS += -liconv
+endif
 ifeq ($(PLATFORM), darwin)
 LDFLAGS += -framework CoreServices
 else

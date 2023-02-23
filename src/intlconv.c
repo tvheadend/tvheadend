@@ -1,4 +1,8 @@
+#ifdef _GNU_LIBICONV
+#include <gnu-libiconv/iconv.h>
+#else
 #include <iconv.h>
+#endif
 #include "tvheadend.h"
 #include "intlconv.h"
 
