@@ -1,0 +1,132 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Copyright (C) 2023 Olliver Schinagl <oliver@schinagl.nl>
+
+ARG ALPINE_VERSION="latest"
+ARG TARGET_ARCH="library"
+
+FROM docker.io/${TARGET_ARCH}/alpine:${ALPINE_VERSION} AS builder
+
+WORKDIR /src
+
+COPY . /src/
+
+RUN apk add --no-cache \
+        'avahi-dev' \
+        'bash' \
+        'bsd-compat-headers' \
+        'build-base' \
+        'cmake' \
+        'coreutils' \
+        'dbus-dev' \
+        'ffmpeg4-dev' \
+        'findutils' \
+        'gettext-dev' \
+        'git' \
+        'gnu-libiconv-dev' \
+        'libdvbcsa-dev' \
+        'libhdhomerun-dev' \
+        'libva-dev' \
+        'libvpx-dev' \
+        'linux-headers' \
+        'musl-dev' \
+        'openssl-dev>3' \
+        'opus-dev' \
+        'pngquant' \
+        'python3' \
+        'uriparser-dev' \
+        'wget' \
+        'x264-dev' \
+        'x265-dev' \
+        'zlib-dev' \
+    && \
+    git config --global --add safe.directory '/src/data/dvb-scan' && \
+    ./configure \
+                --prefix='/usr/local' \
+                --disable-doc \
+                --disable-execinfo \
+                --disable-ffmpeg_static \
+                --disable-hdhomerun_static \
+                --disable-libfdkaac_static \
+                --disable-libmfx_static \
+                --disable-libopus_static \
+                --disable-libtheora_static \
+                --disable-libvorbis_static \
+                --disable-libvpx_static \
+                --disable-libx264_static \
+                --disable-libx265_static \
+                --enable-bundle \
+                --enable-dvbcsa \
+                --enable-hdhomerun_client \
+                --enable-kqueue \
+                --enable-libav \
+                --enable-nvenc \
+                --enable-pngquant \
+                --enable-qsv \
+                --python=python3 \
+        && \
+        make DESTDIR='/tvheadend' -j$(($(nproc) - 1)) install
+
+FROM docker.io/${TARGET_ARCH}/alpine:${ALPINE_VERSION}
+
+LABEL maintainer="Olliver Schinagl <oliver@schinagl.nl>"
+
+EXPOSE 9981 \
+       9982 \
+       9983
+
+RUN apk add --no-cache \
+        'avahi' \
+        'dbus-libs' \
+        'ffmpeg4' \
+        'ffmpeg4-libavcodec' \
+        'ffmpeg4-libavdevice' \
+        'ffmpeg4-libavfilter' \
+        'ffmpeg4-libavfilter' \
+        'ffmpeg4-libavformat' \
+        'ffmpeg4-libavutil' \
+        'ffmpeg4-libpostproc' \
+        'ffmpeg4-libswresample' \
+        'ffmpeg4-libswscale' \
+        'gnu-libiconv-libs' \
+        'libcrypto3' \
+        'libdvbcsa' \
+        'libhdhomerun-libs' \
+        'libssl3' \
+        'liburiparser' \
+        'libva' \
+        'libvpx' \
+        'mesa' \
+        'opus' \
+        'perl-http-entity-parser' \
+        'pngquant' \
+        'python3' \
+        'tini' \
+        'x264-libs' \
+        'x265-libs' \
+        'xmltv' \
+        'zlib' \
+    && \
+    [ "$(uname -m)" = 'x86'* ] && apk add --no-cache \
+        'libva-intel-driver' \
+        ; \
+    [ "$(uname -m)" = 'x86_64' ] && apk add --no-cache \
+        'intel-media-driver' \
+        ; \
+    addgroup -S 'tvheadend' && \
+    adduser -D -G 'tvheadend' -h '/var/lib/tvheadend' -s '/bin/nologin' -S 'tvheadend' && \
+    adduser 'tvheadend' 'audio' && \
+    adduser 'tvheadend' 'usb' && \
+    adduser 'tvheadend' 'video' && \
+    install -d -m 775 -g 'tvheadend' -o 'tvheadend' '/var/lib/tvheadend/recordings' && \
+    install -d -m 775 -g 'tvheadend' -o 'tvheadend' '/var/log/tvheadend'
+
+COPY --from=builder "/tvheadend" "/"
+COPY "./support/container-entrypoint.sh" "/init"
+
+VOLUME /var/lib/tvheadend
+VOLUME /var/lib/tvheadend/recordings
+WORKDIR /var/lib/tvheadend/
+USER tvheadend
+
+ENTRYPOINT [ "/sbin/tini", "--", "/init" ]

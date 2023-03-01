@@ -1,0 +1,122 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Copyright (C) 2023 Olliver Schinagl <oliver@schinagl.nl>
+
+ARG DEBIAN_VERSION="stable-slim"
+ARG TARGET_ARCH="library"
+
+FROM docker.io/${TARGET_ARCH}/debian:${DEBIAN_VERSION} AS builder
+
+ENV DEBIAN_FRONTEND noninteractive
+
+WORKDIR /src
+
+COPY . /src/
+
+RUN apt-get update --yes && apt-get install --yes \
+        'build-essential' \
+        'bzip2' \
+        'cmake' \
+        'debhelper' \
+        'gettext' \
+        'git-core' \
+        'libavahi-client-dev' \
+        'libavdevice-dev' \
+        'libdbus-1-dev' \
+        'libdvbcsa-dev' \
+        'libhdhomerun-dev' \
+        'libopus-dev' \
+        'libpcre2-dev' \
+        'libssl-dev' \
+        'liburiparser-dev' \
+        'libva-dev' \
+        'libvpx-dev' \
+        'libx264-dev' \
+        'libx265-dev' \
+        'lsb-release' \
+        'pkg-config' \
+        'pngquant' \
+        'python3' \
+        'python3-distutils-extra' \
+        'python3-requests' \
+        'wget' \
+        'zlib1g-dev' \
+    && \
+    git config --global --add safe.directory '/src/data/dvb-scan' && \
+    ./configure \
+                --prefix='/usr/local' \
+                --disable-doc \
+                --disable-execinfo \
+                --disable-ffmpeg_static \
+                --disable-hdhomerun_static \
+                --disable-libfdkaac_static \
+                --disable-libmfx_static \
+                --disable-libopus_static \
+                --disable-libtheora_static \
+                --disable-libvorbis_static \
+                --disable-libvpx_static \
+                --disable-libx264_static \
+                --disable-libx265_static \
+                --enable-bundle \
+                --enable-dvbcsa \
+                --enable-hdhomerun_client \
+                --enable-kqueue \
+                --enable-libav \
+                --enable-nvenc \
+                --enable-pngquant \
+                --enable-qsv \
+                --python=python3 \
+        && \
+        make DESTDIR='/tvheadend' -j$(($(nproc) - 1)) install
+
+FROM docker.io/${TARGET_ARCH}/debian:${DEBIAN_VERSION}
+
+ENV DEBIAN_FRONTEND noninteractive
+
+LABEL maintainer="Olliver Schinagl <oliver@schinagl.nl>"
+
+EXPOSE 9981 \
+       9982 \
+       9983
+
+RUN apt-get update --yes && apt-get install --yes \
+        'libavahi-client3' \
+        'libavcodec59' \
+        'libavdevice59' \
+        'libavfilter8' \
+        'libavfilter8' \
+        'libavutil57' \
+        'libdbus-1-3' \
+        'libdvbcsa1' \
+        'libhdhomerun4' \
+        'libpostproc56' \
+        'libswscale6' \
+        'libopus0' \
+        'libpcre2-8-0' \
+        'libssl3' \
+        'liburiparser1' \
+        'libva2' \
+        'libvpx7' \
+        'libx264-164' \
+        'libx265-199' \
+        'pngquant' \
+        'python3' \
+        'mesa-va-drivers' \
+        'mesa-vdpau-drivers' \
+        'zlib1g' \
+        'xmltv' \
+        'tini' \
+    && \
+    useradd -c 'TVHeadend' -d '/var/lib/tvheadend' -G 'audio','video' -m -r -s '/bin/false' -U 'tvheadend' && \
+    install -d -m 775 -g 'tvheadend' -o 'tvheadend' '/var/lib/tvheadend/recordings' && \
+    install -d -m 775 -g 'tvheadend' -o 'tvheadend' '/var/log/tvheadend'
+
+COPY --from=builder "/tvheadend" "/"
+COPY "./support/container-entrypoint.sh" "/init"
+
+VOLUME /var/lib/tvheadend
+VOLUME /var/lib/tvheadend/recordings
+WORKDIR /var/lib/tvheadend/
+USER tvheadend
+
+ENTRYPOINT [ "/usr/bin/tini", "--", "/init" ]
