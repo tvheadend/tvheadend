@@ -283,7 +283,6 @@ int test(void)
 check_cc_snippet time_ld '
 #define _FILE_OFFSET_BITS 64
 #define _TIME_BITS 64
-#include <assert.h>
 #include <stdio.h>
 #include <time.h>
 #define TEST test
@@ -297,7 +296,6 @@ int test(void)
 check_cc_snippet time_lld '
 #define _FILE_OFFSET_BITS 64
 #define _TIME_BITS 64
-#include <assert.h>
 #include <stdio.h>
 #include <time.h>
 #define TEST test

@@ -40,6 +40,14 @@ It supports the following outputs:
   * HTSP (own protocol)
   * SAT>IP
 
+Running in docker
+-----------------
+Running in docker can be as simple as
+
+	$ docker run --rm ghcr.io/tvheadend/tvheadend:latest
+
+See [README.Docker.md](README.Docker.md) in this repository for more details.
+
 How to build for Linux
 ----------------------
 
