@@ -337,7 +337,7 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 #if __WORDSIZE == 32 && defined(PLATFORM_FREEBSD)
 #define PRItime_t       "d"
 #else
-#define PRItime_t       "ld"
+#define PRItime_t       PRId64
 #endif
 
 /* transcoding */
