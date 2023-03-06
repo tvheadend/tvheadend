@@ -13,7 +13,7 @@ jobs:
         uses: sturdy-dev/codeball-action@v2
         with:
           # For all configuration options see https://github.com/sturdy-dev/codeball-action/blob/v2/action.yml
-          approvePullRequests: "true"
+          approvePullRequests: "false"
           labelPullRequestsWhenApproved: "true"
           labelPullRequestsWhenReviewNeeded: "true"
           failJobsWhenReviewNeeded: "false"
