@@ -225,19 +225,6 @@ codec_id2streaming_component_type(enum AVCodecID id)
 /**
  *
  */
-int
-libav_is_encoder(AVCodec *codec)
-{
-#if LIBAVCODEC_VERSION_INT >= ((54<<16)+(7<<8)+0)
-  return av_codec_is_encoder(codec);
-#else
-  return codec->encode || codec->encode2;
-#endif
-}
-
-/**
- *
- */
 #if ENABLE_VAAPI
 #ifdef VA_FOURCC_I010
 static void libav_va_log(int severity, const char *msg)
@@ -325,9 +312,7 @@ libav_init(void)
   libav_vaapi_init();
   libav_set_loglevel();
   av_log_set_callback(libav_log_callback);
-  av_register_all();
   avformat_network_init();
-  avfilter_register_all();
   transcode_init();
 }
 
