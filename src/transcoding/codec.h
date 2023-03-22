@@ -59,7 +59,7 @@ struct tvh_codec {
     const char *name;
     size_t size;
     const codec_profile_class_t *idclass;
-    AVCodec *codec;
+    const AVCodec *codec;
     const AVProfile *profiles;
     int (*profile_init)(TVHCodecProfile *, htsmsg_t *conf);
     void (*profile_destroy)(TVHCodecProfile *);
@@ -114,7 +114,7 @@ tvh_codec_profile_get_name(TVHCodecProfile *self);
 const char *
 tvh_codec_profile_get_title(TVHCodecProfile *self);
 
-AVCodec *
+const AVCodec *
 tvh_codec_profile_get_avcodec(TVHCodecProfile *self);
 
 

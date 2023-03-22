@@ -191,7 +191,7 @@ tvh_context_deliver(TVHContext *self, th_pkt_t *pkt);
 
 TVHContext *
 tvh_context_create(TVHStream *stream, TVHCodecProfile *profile,
-                   AVCodec *iavcodec, AVCodec *oavcodec, pktbuf_t *input_gh);
+                   const AVCodec *iavcodec, const AVCodec *oavcodec, pktbuf_t *input_gh);
 
 void
 tvh_context_destroy(TVHContext *self);
