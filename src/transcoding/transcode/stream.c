@@ -56,7 +56,7 @@ static int
 tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
 {
     enum AVCodecID icodec_id = streaming_component_type2codec_id(ssc->es_type);
-    AVCodec *icodec = NULL, *ocodec = NULL;
+    const AVCodec *icodec = NULL, *ocodec = NULL;
 
     if (icodec_id == AV_CODEC_ID_NONE) {
         tvh_stream_log(self, LOG_ERR, "unknown decoder id for '%s'",

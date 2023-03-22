@@ -132,7 +132,7 @@ codec_profile_class_profile_get_opts(void *obj, uint32_t opts);
 /* AVCodec ================================================================== */
 
 const char *
-codec_get_title(AVCodec *self);
+codec_get_title(const AVCodec *self);
 
 
 /* TVHCodec ================================================================= */
@@ -143,7 +143,7 @@ tvh_codec_get_type(TVHCodec *self);
 const char *
 tvh_codec_get_type_string(TVHCodec *self);
 
-AVCodec *
+const AVCodec *
 tvh_codec_get_codec(TVHCodec *self);
 
 int

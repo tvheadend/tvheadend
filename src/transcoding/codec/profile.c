@@ -197,7 +197,7 @@ tvh_codec_profile_get_title(TVHCodecProfile *self)
 }
 
 
-AVCodec *
+const AVCodec *
 tvh_codec_profile_get_avcodec(TVHCodecProfile *self)
 {
     TVHCodec *codec = tvh_codec_profile_get_codec(self);
@@ -211,7 +211,7 @@ tvh_codec_profile_is_copy(TVHCodecProfile *self, tvh_ssc_t *ssc)
 {
     const idclass_t *idclass = NULL;
     const codec_profile_class_t *codec_profile_class = NULL;
-    AVCodec *avcodec = NULL;
+    const AVCodec *avcodec = NULL;
     tvh_sct_t out_type = SCT_UNKNOWN;
 
 

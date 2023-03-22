@@ -140,7 +140,7 @@ static int
 codec_profile_video_class_deinterlace_set(void *obj, const void *val)
 {
     TVHVideoCodecProfile *self = (TVHVideoCodecProfile *)obj;
-    AVCodec *avcodec = NULL;
+    const AVCodec *avcodec = NULL;
 
     if (self &&
         (avcodec = tvh_codec_profile_get_avcodec((TVHCodecProfile *)self))) {
