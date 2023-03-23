@@ -622,20 +622,22 @@ _eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
   lang_str_ele_t *se;
   char buffer[2048];
 
-  if (!ev->summary)
-    return;
-
   /* UK Freeview/Freesat have a subtitle as part of the summary in the format
    * "subtitle: desc". They may also have the title continue into the
    * summary. So if configured, run scrapers for the title, the subtitle
    * and the summary (the latter to tidy up).
    */
   if (ev->title && eit_mod->scrape_title) {
+    lang_str_t *summary = ev->summary;
+    if (!ev->summary)
+      summary = lang_str_create();
     char title_summary[2048];
     lang_str_t *ls = lang_str_create();
     RB_FOREACH(se, ev->title, link) {
-      snprintf(title_summary, sizeof(title_summary), "%s %% %s",
-               se->str, lang_str_get(ev->summary, se->lang));
+      char const * sumstr = lang_str_get(summary, se->lang);
+      if (sumstr == NULL)
+        sumstr = "";
+      snprintf(title_summary, sizeof(title_summary), "%s %% %s", se->str, sumstr);
       if (eit_pattern_apply_list(buffer, sizeof(buffer), title_summary, se->lang, &eit_mod->p_scrape_title)) {
         tvhtrace(LS_TBL_EIT, "  scrape title '%s' from '%s' using %s",
                  buffer, title_summary, eit_mod->id);
@@ -644,7 +646,12 @@ _eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
     }
     lang_str_set_multi(&ev->title, ls);
     lang_str_destroy(ls);
+    if (!ev->summary)
+      lang_str_destroy(summary);
   }
+
+  if (!ev->summary)
+    return;
 
   if (eit_mod->scrape_subtitle) {
     lang_str_t *ls = lang_str_create();
