@@ -33,7 +33,7 @@ unexport LDFLAGS
 # ##############################################################################
 
 EXTLIBS        =
-COMPONENTS     = avutil avcodec avformat swscale avresample swresample avfilter
+COMPONENTS     = avutil avcodec avformat swscale swresample avfilter
 PROTOCOLS      = file http https hls mmsh mmst rtmp rtmpe rtmps rtmpt rtmpte rtmpts \
                  ffrtmpcrypt ffrtmphttp rtp srtp tcp udp udplite unix crypto
 DECODERS       = mpeg2video mp2 aac vorbis ac3 eac3 aac_latm opus h264 hevc theora flac
