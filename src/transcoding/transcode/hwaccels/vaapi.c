@@ -21,7 +21,6 @@
 #include "../internals.h"
 #include "vaapi.h"
 
-#include <libavcodec/vaapi.h>
 #include <libavutil/hwcontext.h>
 #include <libavutil/hwcontext_vaapi.h>
 #include <libavutil/pixdesc.h>
@@ -37,7 +36,9 @@ typedef struct tvh_vaapi_device {
 
 
 typedef struct tvh_vaapi_context_t {
-    struct vaapi_context;
+    void *display;
+    uint32_t config_id;
+    uint32_t context_id;
     const char *logpref;
     VAEntrypoint entrypoint;
     enum AVPixelFormat io_format;
