@@ -52,6 +52,10 @@ except:
 import json
 import sys
 import os
+
+# for authentication to tvheadend API in request()
+import base64
+
 # In development tree, the library is in ../lib/py/tvh, but in live it's
 # in the install bin directory (since it is an executable in its own
 # right)
@@ -138,18 +142,17 @@ class TvhMeta(object):
     logging.debug("Generated arguments for module %s of %s" % (module_name, args))
     return args
 
-
   def request(self, url, data):
     """Send a request for data to Tvheadend."""
+    full_url = "http://{}:{}/{}".format(self.host,self.port,url)
+    req = urllib.request.Request(full_url, method="POST", data=bytearray(data, 'utf-8'))
     if self.user is not None and self.password is not None:
-        full_url = "http://{}:{}@{}:{}/{}".format(self.user,self.password,self.host,self.port,url)
-    else:
-        full_url = "http://{}:{}/{}".format(self.host,self.port,url)
+        base64string = base64.b64encode(bytes('{}:{}'.format(self.user, self.password), 'ascii'))
+        req.add_header('Authorization', 'Basic {}'.format(base64string.decode('utf-8')))
 
     logging.info("Sending %s to %s" % (data, full_url))
-    req = urlopen(full_url, data=bytearray(data, 'utf-8'))
-    resp = req.read();
-    ret = resp.decode('utf-8', errors='replace')
+
+    ret = urllib.request.urlopen(req).read().decode('UTF-8', errors='replace');
     logging.debug("Received: %s", ret)
     return ret
 
