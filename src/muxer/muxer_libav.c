@@ -32,20 +32,11 @@
 #include "parsers/parser_avc.h"
 #include "parsers/parser_hevc.h"
 
-#define USE_BSF
-
 typedef struct lav_muxer {
   muxer_t;
   AVFormatContext *lm_oc;
-#ifdef USE_BSF
-  AVBSFContext *ctx;
-  const AVBitStreamFilter *bsf_h264_filter;
-  const AVBitStreamFilter *bsf_hevc_filter;
-  const AVBitStreamFilter *bsf_vp9_filter;
-#else
   AVBitStreamFilterContext *lm_h264_filter;
   AVBitStreamFilterContext *lm_hevc_filter;
-#endif
   int lm_fd;
   int lm_init;
 } lav_muxer_t;
@@ -181,41 +172,6 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     st->sample_aspect_ratio.num = c->sample_aspect_ratio.num;
     st->sample_aspect_ratio.den = c->sample_aspect_ratio.den;
 
-#ifdef USE_BSF
-    if (ssc->es_type == SCT_H264) {
-      if (av_bsf_alloc(lm->bsf_h264_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for h264_mp4toannexb");
-        return -1;
-      }
-    }
-    else if (ssc->es_type == SCT_HEVC) {
-      if (av_bsf_alloc(lm->bsf_hevc_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for hevc_mp4toannexb");
-        return -1;
-      }
-    }
-    else if (ssc->es_type == SCT_VP9) {
-      if (av_bsf_alloc(lm->bsf_vp9_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for vp9_superframe ");
-        return -1;
-      }
-    }
-    else {
-      if (av_bsf_alloc(lm->bsf_h264_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for h264_mp4toannexb");
-        return -1;
-      }
-    }
-    if(avcodec_parameters_copy(lm->ctx->par_in, st->codecpar)) {
-      tvherror(LS_LIBAV,  "Failed to copy paramters to AVBSFContext");
-      return -1;
-    }
-    lm->ctx->time_base_in = st->time_base;
-    if (av_bsf_init(lm->ctx)) {
-      tvherror(LS_LIBAV,  "Failed to init AVBSFContext");
-      return -1;
-    }
-#endif
   } else if(SCT_ISSUBTITLE(ssc->es_type)) {
     c->codec_type = AVMEDIA_TYPE_SUBTITLE;
     avcodec_parameters_from_context(st->codecpar, c);
@@ -225,10 +181,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   if(lm->lm_oc->oformat->flags & AVFMT_GLOBALHEADER)
     c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-#ifdef USE_BSF
-#else
   avcodec_parameters_from_context(st->codecpar, c);
-#endif
   avcodec_free_context(&c);
 
   return 0;
@@ -390,25 +343,10 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
   av_dict_set(&oc->metadata, "service_name", name, 0);
   av_dict_set(&oc->metadata, "service_provider", app, 0);
 
-#ifdef USE_BSF
-  lm->bsf_h264_filter = av_bsf_get_by_name("h264_mp4toannexb");
-  if (lm->bsf_h264_filter == NULL) {
-    tvhwarn(LS_LIBAV,  "Failed to get BSF: h264_mp4toannexb");
-  }
-  lm->bsf_hevc_filter = av_bsf_get_by_name("hevc_mp4toannexb");
-  if (lm->bsf_h264_filter == NULL) {
-    tvhwarn(LS_LIBAV,  "Failed to get BSF: hevc_mp4toannexb");
-  }
-  lm->bsf_vp9_filter = av_bsf_get_by_name("vp9_superframe");
-  if (lm->bsf_vp9_filter == NULL) {
-    tvhwarn(LS_LIBAV,  "Failed to get BSF: vp9_superframe ");
-  }
-#else
   if(lm->m_config.m_type == MC_MPEGTS) {
     lm->lm_h264_filter = av_bitstream_filter_init("h264_mp4toannexb");
     lm->lm_hevc_filter = av_bitstream_filter_init("hevc_mp4toannexb");
   }
-#endif
 
   oc->max_delay = 0.7 * AV_TIME_BASE;
 
@@ -566,9 +504,6 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     av_init_packet(&packet);
     codec_id = st->codec->codec_id;
 
-#ifdef USE_BSF
-    if (codec_id == AV_CODEC_ID_AAC) {
-#else
     if((lm->lm_h264_filter && codec_id == AV_CODEC_ID_H264) ||
        (lm->lm_hevc_filter && codec_id == AV_CODEC_ID_HEVC)) {
       pkt = avc_convert_pkt(opkt = pkt);
@@ -590,7 +525,6 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
         tofree = packet.data;
       }
     } else if (codec_id == AV_CODEC_ID_AAC) {
-#endif
       /* remove ADTS header */
       packet.data = pktbuf_ptr(pkt->pkt_payload) + 7;
       packet.size = pktbuf_len(pkt->pkt_payload) - 7;
@@ -697,19 +631,11 @@ lav_muxer_destroy(muxer_t *m)
   int i;
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
-#ifdef USE_BSF
-  if(lm->ctx){
-    if (av_bsf_send_packet(lm->ctx, NULL))
-      tvhwarn(LS_LIBAV,  "Failed to send packet to AVBSFContext (close)");
-    av_bsf_free(&lm->ctx);
-  }
-#else
   if(lm->lm_h264_filter)
     av_bitstream_filter_close(lm->lm_h264_filter);
 
   if(lm->lm_hevc_filter)
     av_bitstream_filter_close(lm->lm_hevc_filter);
-#endif
 
   if (lm->lm_oc) {
     for(i=0; i<lm->lm_oc->nb_streams; i++)
