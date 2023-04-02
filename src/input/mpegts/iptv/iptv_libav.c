@@ -24,6 +24,10 @@
 #include <fcntl.h>
 #include <signal.h>
 
+#if LIBAVCODEC_VERSION_MAJOR > 58
+#include <libavcodec/avcodec.h>
+#endif
+
 #define WRITE_BUFFER_SIZE (188*500)
 
 typedef struct {
