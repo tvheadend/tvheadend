@@ -11,7 +11,6 @@ For further info, please see https://tvheadend.org/projects/tvheadend/wiki/Contr
 * Make sure you have a [GitHub account](https://github.com/signup/free)
 * Make sure you have a [Redmine account](https://tvheadend.org)
 * Log on to the IRC channel (#hts on freenode), this is the best place to discussion development work.
-* Sign the [Contributor License Agreement](https://www.clahub.com/agreements/tvheadend/tvheadend)
 * Fork the repository on Github
 
 ## Making Changes
@@ -35,7 +34,6 @@ This fixes #1234.
 
 * [More information on contributing](https://tvheadend.org/projects/tvheadend/wiki/Contributors)
 * [Bug tracker (Redmine)](https://tvheadend.org)
-* [Contributor License Agreement](https://tvheadend.org/projects/tvheadend/wiki/Contributors)
 * [General GitHub documentation](http://help.github.com/)
 * [GitHub pull request documentation](http://help.github.com/send-pull-requests/)
 * #hts IRC channel on freenode.org
