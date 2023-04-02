@@ -21,6 +21,10 @@
 #include <sys/stat.h>
 #include <libavformat/avformat.h>
 #include <libavutil/mathematics.h>
+#if LIBAVCODEC_VERSION_MAJOR > 58
+#include <libavcodec/bsf.h>
+#include <libavcodec/avcodec.h>
+#endif
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -343,7 +347,11 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
   AVDictionary *opts = NULL;
   lav_muxer_t *lm = (lav_muxer_t*)m;
   char app[128];
+#if LIBAVCODEC_VERSION_MAJOR > 58
+  const AVOutputFormat *fmt;
+#else
   AVOutputFormat *fmt;
+#endif
   const char *muxer_name;
   int rc = -1;
 
@@ -690,7 +698,11 @@ lav_muxer_create(const muxer_config_t *m_cfg,
 {
   const char *mux_name;
   lav_muxer_t *lm;
+#if LIBAVCODEC_VERSION_MAJOR > 58
+  const AVOutputFormat *fmt;
+#else
   AVOutputFormat *fmt;
+#endif
 
   switch(m_cfg->m_type) {
   case MC_MPEGPS:

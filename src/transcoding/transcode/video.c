@@ -17,7 +17,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "internals.h"
 
 #if ENABLE_HWACCELS
@@ -343,7 +342,12 @@ static int
 tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
 {
     uint8_t *qsdata = NULL;
+#if LIBAVCODEC_VERSION_MAJOR < 59
     int qsdata_size = 0;
+#else
+    size_t qsdata_size = 0;
+#endif
+    
     enum AVPictureType pict_type = AV_PICTURE_TYPE_NONE;
 
     if (avpkt->flags & AV_PKT_FLAG_KEY) {
