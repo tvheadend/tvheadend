@@ -135,7 +135,7 @@ Exceptions are thrown to indicate data could not be retrieved.
         with AcceptLanguage(self.session, language):
             return self._get_art(title = title, tvdbid = tvdbid, artworkType = 'fanart')
 
-    def get_poster(self, title = None, tvdbid = None, languague = "en"):
+    def get_poster(self, title = None, tvdbid = None, language = "en"):
         with AcceptLanguage(self.session, language):
             return self._get_art(title = title, tvdbid = tvdbid, artworkType = 'poster')
 
