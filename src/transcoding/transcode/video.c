@@ -348,7 +348,7 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
     size_t qsdata_size = 0;
 #endif
     
-    enum AVPictureType pict_type = AV_PICTURE_TYPE_NONE;
+    enum AVPictureType pict_type = self->oavframe->pict_type;
 
     if (avpkt->flags & AV_PKT_FLAG_KEY) {
         pict_type = AV_PICTURE_TYPE_I;
