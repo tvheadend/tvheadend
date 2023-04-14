@@ -614,7 +614,6 @@ EXTLIBS  += vaapi
 ENCODERS += h264_vaapi hevc_vaapi vp8_vaapi vp9_vaapi
 HWACCELS += mpeg2_vaapi h264_vaapi hevc_vaapi vp9_vaapi
 FILTERS  += deinterlace_vaapi scale_vaapi denoise_vaapi sharpness_vaapi
-FFMPEG_DIFFS += ffmpeg.vaapi_encode.diff
 
 endif
 
