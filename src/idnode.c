@@ -391,6 +391,7 @@ idnode_get_u32
       ptr = ((void*)self) + p->off;
     switch (p->type) {
       case PT_INT:
+      case PT_DYN_INT:
       case PT_BOOL:
         *u32 = *(int*)ptr;
         return 0;
@@ -425,6 +426,7 @@ idnode_get_s64
       ptr = ((void*)self) + p->off;
     switch (p->type) {
       case PT_INT:
+      case PT_DYN_INT:
       case PT_BOOL:
         *s64 = *(int*)ptr;
         return 0;
@@ -495,6 +497,7 @@ idnode_get_dbl
       ptr = ((void*)self) + p->off;
     switch (p->type) {
       case PT_INT:
+      case PT_DYN_INT:
       case PT_BOOL:
         *dbl = *(int*)ptr;
         return 0;
@@ -761,6 +764,7 @@ idnode_cmp_sort
       }
       break;
     case PT_INT:
+    case PT_DYN_INT:
     case PT_U16:
     case PT_BOOL:
     case PT_PERM:

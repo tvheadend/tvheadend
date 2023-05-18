@@ -53,6 +53,7 @@ struct config config;
 static char config_lock[PATH_MAX];
 static int config_lock_fd;
 static int config_scanfile_ok;
+int vainfo_probe_enabled;
 
 /* *************************************************************************
  * Config migration
@@ -1839,6 +1840,7 @@ config_init ( int backup )
     if (config_migrate(backup))
       config_check();
   }
+  vainfo_probe_enabled = config.enable_vainfo;
   tvhinfo(LS_CONFIG, "loaded");
 }
 
@@ -2630,6 +2632,17 @@ const idclass_t config_class = {
                    "DVB time is greater than this. This can help stop "
                    "excessive oscillations on the system clock."),
       .off    = offsetof(config_t, tvhtime_tolerance),
+      .opts   = PO_EXPERT,
+      .group  = 7,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "enable_vainfo",
+      .name   = N_("Enable vainfo detection"),
+      .desc   = N_("Enable vainfo detection in order to show only "
+                   "encoders that are advertized by VAAPI driver.\n"
+                   "NOTE: After save, Tvheadend restart is required!"),
+      .off    = offsetof(config_t, enable_vainfo),
       .opts   = PO_EXPERT,
       .group  = 7,
     },
