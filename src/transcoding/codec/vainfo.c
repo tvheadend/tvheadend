@@ -21,10 +21,12 @@
 #include "vainfo.h"
 #include "internals.h"
 
+#if ENABLE_VAAPI
 #include <va/va.h>
 #include <fcntl.h>
 #include <va/va_drm.h>
 #include <va/va_str.h>
+#endif
 
 #define CODEC_IS_AVAILABLE      1
 #define CODEC_IS_NOT_AVAILABLE  0
@@ -34,22 +36,12 @@
 #define MAX_QUALITY             15
 
 /* external =================================================================== */
+#if ENABLE_VAAPI
 // this variable is loaded from config: Enable vaapi detection
 extern int vainfo_probe_enabled;
+#endif
 
 /* internal =================================================================== */
-
-/**
- * VAINFO was initialized
- * @note
- * return: 
- * 0 - not initialized --> will return invalid data
- * 1 - initialized properly
- * 
- * NOTE: initialization was performed in /src/transcoding/codec/codec.c
- */
-int init_done = 0;
-
 int encoder_h264_isavailable = 0;
 int encoder_h264lp_isavailable = 0;
 int encoder_hevc_isavailable = 0;
@@ -76,6 +68,18 @@ int encoder_vp8_maxQuality = 0;
 int encoder_vp8lp_maxQuality = 0;
 int encoder_vp9_maxQuality = 0;
 int encoder_vp9lp_maxQuality = 0;
+
+#if ENABLE_VAAPI
+/**
+ * VAINFO was initialized
+ * @note
+ * return: 
+ * 0 - not initialized --> will return invalid data
+ * 1 - initialized properly
+ * 
+ * NOTE: initialization was performed in /src/transcoding/codec/codec.c
+ */
+int init_done = 0;
 
 int init(int show_log);
 
@@ -121,6 +125,7 @@ va_close_display_drm(VADisplay va_dpy)
 static int 
 get_config_attributes(VADisplay va_dpy, VAProfile profile, VAEntrypoint entrypoint, int show_log, int codec)
 {
+
     VAStatus va_status;
     int i, temp;
 
@@ -402,6 +407,7 @@ error_open_display:
 
     return ret_val;
 }
+#endif
 
 /* exposed =================================================================== */
 
@@ -417,12 +423,13 @@ error_open_display:
  */
 int vainfo_init(int show_log)
 {
+#if ENABLE_VAAPI
     int ret = init(show_log);
     if (ret) {
         tvherror(LS_VAINFO, "vainfo_init() error: %d", ret);
         return ret;
     }
-
+#endif
     return 0;
 }
 
@@ -439,6 +446,7 @@ int vainfo_init(int show_log)
  */
 int vainfo_encoder_isavailable(int codec)
 {
+#if ENABLE_VAAPI
     if (vainfo_probe_enabled) {
         if (!init_done)
             tvherror(LS_VAINFO, "vainfo_init() was not run or generated errors");
@@ -465,6 +473,7 @@ int vainfo_encoder_isavailable(int codec)
         }
     }
     else
+#endif
         return CODEC_IS_AVAILABLE;
 }
 
@@ -480,6 +489,7 @@ int vainfo_encoder_isavailable(int codec)
  */
 int vainfo_encoder_maxBfreames(int codec)
 {
+#if ENABLE_VAAPI
     if (vainfo_probe_enabled) {
         if (!init_done)
             tvherror(LS_VAINFO, "vainfo_init() was not run or generated errors");
@@ -506,6 +516,7 @@ int vainfo_encoder_maxBfreames(int codec)
         }
     }
     else
+#endif
         return MAX_B_FRAMES;
 }
 
@@ -521,6 +532,7 @@ int vainfo_encoder_maxBfreames(int codec)
  */
 int vainfo_encoder_maxQuality(int codec)
 {
+#if ENABLE_VAAPI
     if (vainfo_probe_enabled) {
         if (!init_done)
             tvherror(LS_VAINFO, "vainfo_init() was not run or generated errors");
@@ -547,6 +559,7 @@ int vainfo_encoder_maxQuality(int codec)
         }
     }
     else
+#endif
         return MAX_QUALITY;
 }
 

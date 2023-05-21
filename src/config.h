@@ -74,7 +74,9 @@ typedef struct config {
   char *hdhomerun_ip;
   char *local_ip;
   int local_port;
+#if ENABLE_VAAPI
   int enable_vainfo;
+#endif
 } config_t;
 
 extern const idclass_t config_class;
