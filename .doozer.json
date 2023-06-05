@@ -583,9 +583,9 @@
       ]
     },
     "fedora34-x86_64": {
-      "buildenv": "docker:fedora:34",
+      "buildenv": "docker:fedora:37",
       "builddeps": [
-        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-34.noarch.rpm"],
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-37.noarch.rpm"],
         "gcc-c++",
         "which",
         "rpm-build",
@@ -613,9 +613,9 @@
       ]
     },
     "fedora35-x86_64": {
-      "buildenv": "docker:fedora:35",
+      "buildenv": "docker:fedora:38",
       "builddeps": [
-        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-35.noarch.rpm"],
+        ["https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-38.noarch.rpm"],
         "gcc-c++",
         "which",
         "rpm-build",
