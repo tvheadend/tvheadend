@@ -189,3 +189,33 @@ jobs:
         run: support/cloudsmith.sh -f 'tvheadend*.deb'
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+
+  build-rpm-native:
+    runs-on: fedora-latest
+    continue-on-error: true
+    name: Build on native ${{ matrix.container }}
+    strategy:
+      matrix:
+        container: ["fedora:37", "fedora:38", "fedora:39", "fedora:rawhide"]
+    container:
+      image: ${{ matrix.container }}
+    steps:
+      - name: dependencies
+        run: |
+          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache
+      - uses: actions/checkout@v1
+      - name: Workaround safe directory
+        run: git config --global --add safe.directory /__w/tvheadend/tvheadend
+      - name: build
+        run: ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 && make -C rpm build
+      - name: copy-result
+        run: cp rpm/RPMS/*/tvheadend*.rpm .
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Tvheadend-RPM
+          path: tvheadend*.rpm
+          if-no-files-found: error
+      # - name: upload-cloudsmith
+      #   run: support/cloudsmith.sh -f 'tvheadend*.rpm'
+      #   env:
+      #     CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
