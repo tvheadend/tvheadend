@@ -35,6 +35,8 @@
 #include "tvheadend.h"
 #include "filebundle.h"
 
+#include "../vendor/xdg-user-dirs/xdg-user-dir-lookup.c"
+
 static char *settingspath = NULL;
 
 /**
@@ -441,4 +443,19 @@ hts_settings_exists ( const char *pathfmt, ... )
   va_end(ap);
 
   return (stat(path, &st) == 0);
+}
+
+/*
+ * XDG user directory support
+ */
+char *
+hts_settings_get_xdg_dir_lookup (const char *name)
+{
+  return xdg_user_dir_lookup (name);
+}
+
+char *
+hts_settings_get_xdg_dir_with_fallback (const char *name, const char *fallback)
+{
+  return xdg_user_dir_lookup_with_fallback (name, fallback);
 }
