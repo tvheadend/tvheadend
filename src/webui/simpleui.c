@@ -17,6 +17,7 @@
  */
 
 #include "tvheadend.h"
+#include "htsbuf.h"
 #include "http.h"
 #include "webui.h"
 #include "access.h"
@@ -399,6 +400,19 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ * Simple ping 'page', for healthcheck purposes
+ */
+static int page_ping(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+
+  htsbuf_qprintf(hq, "PONG\n");
+  http_output_content(hc, "text/plain");
+
+  return 0;
+}
+
+/**
  * PVR info, deliver info about the given PVR entry
  */
 static int
@@ -620,6 +634,7 @@ simpleui_start(void)
 {
   http_path_add("/simple.html", NULL, page_simple,  ACCESS_SIMPLE);
   http_path_add("/eventinfo",   NULL, page_einfo,   ACCESS_SIMPLE);
+  http_path_add("/ping",        NULL, page_ping,  ACCESS_ANONYMOUS);
   http_path_add("/pvrinfo",     NULL, page_pvrinfo, ACCESS_SIMPLE);
   http_path_add("/status.xml",  NULL, page_status,  ACCESS_SIMPLE);
   http_path_add("/epgsave",	NULL, page_epgsave,     ACCESS_SIMPLE);
