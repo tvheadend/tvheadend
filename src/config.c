@@ -1725,10 +1725,6 @@ config_boot
   config.local_ip = strdup("");
   config.local_port = 0;
 
-  idclass_register(&config_class);
-
-  satip_server_boot();
-
   /* Generate default */
   if (!path) {
     const char *homedir = getenv("HOME");
@@ -1758,6 +1754,10 @@ config_boot
             path, getuid(), getgid(), strerror(errno));
     return;
   }
+
+  idclass_register(&config_class);
+
+  satip_server_boot();
 
   /* Configure settings routines */
   hts_settings_init(path);
