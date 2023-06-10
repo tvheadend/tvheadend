@@ -1720,9 +1720,9 @@ static char *config_get_dir ( void )
       char hts_home_link[PATH_MAX];
 
       if ((readlink(hts_home, hts_home_link, sizeof(hts_home_link)) == -1) ||
-	  (stat(hts_home_link, &st) == -1)) {
-	tvherror(LS_CONFIG, ".hts/tvheadend is inaccessable: %s", strerror(errno));
-	return NULL;
+          (stat(hts_home_link, &st) == -1)) {
+        tvherror(LS_CONFIG, ".hts/tvheadend is inaccessable: %s", strerror(errno));
+        return NULL;
       }
       strncpy(hts_home, hts_home_link, sizeof(hts_home));
     }
@@ -1782,11 +1782,11 @@ config_boot
     config.confdir = strndup(path, PATH_MAX);
 
   if (config.confdir == NULL) {
-    tvherror(LS_START, "unable to determine tvheadend home\n");
+    tvherror(LS_START, "unable to determine tvheadend home");
     exit(EXIT_FAILURE);
   }
 
-  tvhinfo(LS_CONFIG, "Using configuration from '%s'\n", config.confdir);
+  tvhinfo(LS_CONFIG, "Using configuration from '%s'", config.confdir);
 
   /* Ensure directory exists */
   if (stat(config.confdir, &st)) {
