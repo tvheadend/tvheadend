@@ -17,8 +17,11 @@
  */
 
 #include <ctype.h>
+#include <linux/limits.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "tvheadend.h"
 #include "settings.h"
@@ -1690,6 +1693,45 @@ config_check ( void )
 
 static int config_newcfg = 0;
 
+static char *config_get_dir ( void )
+{
+  char hts_home[PATH_MAX + sizeof("/.hts/tvheadend")]; /* Must be largest of the 3 config strings! */
+  char config_home[PATH_MAX];
+  char home_dir[PATH_MAX];
+  struct stat st;
+
+  if (realpath(getenv("HOME"), home_dir) == NULL) {
+    tvherror(LS_CONFIG, "environment variable HOME is not set");
+    return NULL;
+  }
+
+  snprintf(hts_home, sizeof(hts_home), "%s/.hts/tvheadend", home_dir);
+  if (stat(hts_home, &st) == 0) {
+    if (S_ISLNK(st.st_mode)) {
+      char hts_home_link[PATH_MAX];
+
+      if ((readlink(hts_home, hts_home_link, sizeof(hts_home_link)) == -1) ||
+          (stat(hts_home_link, &st) == -1)) {
+        tvherror(LS_CONFIG, ".hts/tvheadend is inaccessable: %s", strerror(errno));
+        return NULL;
+      }
+      strncpy(hts_home, hts_home_link, sizeof(hts_home));
+    }
+    if (!S_ISDIR(st.st_mode)) {
+      tvherror(LS_CONFIG, ".hts/tvheadend exists, but is not a directory");
+      return NULL;
+    }
+    tvhwarn(LS_CONFIG, "Found legacy '.hts/tvheadend', consider moving this to '.config/hts' instead.");
+  } else if ((realpath(getenv("XDG_CONFIG_HOME"), config_home) != NULL) &&
+      (config_home[0] != 0)) {
+    snprintf(hts_home, sizeof(hts_home), "%s/hts", config_home);
+  } else {
+    snprintf(hts_home, sizeof(hts_home), "%s/.config/hts", home_dir);
+  }
+
+  return strndup(hts_home, sizeof(hts_home));
+}
+
 void
 config_boot
   ( const char *path, gid_t gid, uid_t uid, const char *http_user_agent )
@@ -1725,18 +1767,14 @@ config_boot
   config.local_port = 0;
 
   /* Generate default */
-  if (!path) {
-    const char *homedir = getenv("HOME");
-    char buf[PATH_MAX];
-
-    if (homedir == NULL) {
-      tvherror(LS_START, "environment variable HOME is not set");
-      exit(EXIT_FAILURE);
-    }
-    snprintf(buf, sizeof(buf), "%s/.hts/tvheadend", homedir);
-    config.confdir = strndup(buf, sizeof(buf));
-  } else {
+  if (!path)
+    config.confdir = config_get_dir();
+  else
     config.confdir = strndup(path, PATH_MAX);
+
+  if (config.confdir == NULL) {
+    tvherror(LS_START, "unable to determine tvheadend home\n");
+    exit(EXIT_FAILURE);
   }
 
   tvhinfo(LS_CONFIG, "Using configuration from '%s'\n", config.confdir);
