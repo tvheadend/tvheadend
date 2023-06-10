@@ -1695,7 +1695,6 @@ config_boot
   ( const char *path, gid_t gid, uid_t uid, const char *http_user_agent )
 {
   struct stat st;
-  char buf[1024];
   htsmsg_t *config2;
   htsmsg_field_t *f;
   const char *s;
@@ -1728,30 +1727,36 @@ config_boot
   /* Generate default */
   if (!path) {
     const char *homedir = getenv("HOME");
+    char buf[PATH_MAX];
+
     if (homedir == NULL) {
       tvherror(LS_START, "environment variable HOME is not set");
       exit(EXIT_FAILURE);
     }
     snprintf(buf, sizeof(buf), "%s/.hts/tvheadend", homedir);
-    path = buf;
+    config.confdir = strndup(buf, sizeof(buf));
+  } else {
+    config.confdir = strndup(path, PATH_MAX);
   }
 
+  tvhinfo(LS_CONFIG, "Using configuration from '%s'\n", config.confdir);
+
   /* Ensure directory exists */
-  if (stat(path, &st)) {
+  if (stat(config.confdir, &st)) {
     config_newcfg = 1;
-    if (makedirs(LS_CONFIG, path, 0700, 1, gid, uid)) {
+    if (makedirs(LS_CONFIG, config.confdir, 0700, 1, gid, uid)) {
       tvhwarn(LS_START, "failed to create settings directory %s,"
-                       " settings will not be saved", path);
+                       " settings will not be saved", config.confdir);
       return;
     }
   }
 
   /* And is usable */
-  else if (access(path, R_OK | W_OK)) {
+  else if (access(config.confdir, R_OK | W_OK)) {
     tvhwarn(LS_START, "configuration path %s is not r/w"
                      " for UID:%d GID:%d [e=%s],"
                      " settings will not be saved",
-            path, getuid(), getgid(), strerror(errno));
+            config.confdir, getuid(), getgid(), strerror(errno));
     return;
   }
 
@@ -1760,7 +1765,7 @@ config_boot
   satip_server_boot();
 
   /* Configure settings routines */
-  hts_settings_init(path);
+  hts_settings_init(config.confdir);
 
   /* Lock it */
   hts_settings_buildpath(config_lock, sizeof(config_lock), ".lock");
@@ -1805,6 +1810,8 @@ config_boot
   if ((config.http_user_agent &&
        strncmp(config.http_user_agent, "TVHeadend/", 10) == 0) ||
       tvh_str_default(config.http_user_agent, NULL) == NULL) {
+    char buf[1024];
+
     snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
     tvh_str_set(&config.http_user_agent, buf);
   }
@@ -1845,6 +1852,7 @@ config_init ( int backup )
 void config_done ( void )
 {
   /* note: tvhlog is inactive !!! */
+  free(config.confdir);
   free(config.wizard);
   free(config.full_version);
   free(config.http_server_name);
