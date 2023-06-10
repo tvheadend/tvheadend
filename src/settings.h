@@ -48,4 +48,7 @@ int hts_settings_makedirs ( const char *path );
 
 int hts_settings_exists ( const char *pathfmt, ... );
 
-#endif /* HTSSETTINGS_H__ */ 
+char *hts_settings_get_xdg_dir_lookup (const char *name);
+char *hts_settings_get_xdg_dir_with_fallback (const char *name, const char *fallback);
+
+#endif /* HTSSETTINGS_H__ */
