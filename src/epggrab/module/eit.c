@@ -1116,7 +1116,7 @@ _eit_process_data(void *m, void *data, uint32_t len)
   size_t hlen;
   eit_data_t *ed = data;
 
-  assert(len >= sizeof(ed));
+  assert(len >= sizeof(*ed));
   hlen = sizeof(*ed) + ed->cridauth_len + ed->charset_len;
   assert(len >= hlen);
   data += hlen;
