@@ -191,18 +191,21 @@ jobs:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
 
   build-rpm-native:
-    runs-on: fedora-latest
+    runs-on: ubuntu-latest
     continue-on-error: true
-    name: Build on native ${{ matrix.container }}
+    name: Build on native fedora:${{ matrix.releasever }}
     strategy:
       matrix:
-        container: ["fedora:37", "fedora:38", "fedora:39", "fedora:rawhide"]
+        releasever: ["37", "38", "39", "rawhide"]
     container:
-      image: ${{ matrix.container }}
+      image: "fedora:${{ matrix.releasever }}"
     steps:
+      - name: rpmfusion-free
+        run: |
+          dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-${{matrix.releasever}}.noarch.rpm"
       - name: dependencies
         run: |
-          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache
+          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
       - uses: actions/checkout@v1
       - name: Workaround safe directory
         run: git config --global --add safe.directory /__w/tvheadend/tvheadend
