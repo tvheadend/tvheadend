@@ -2200,6 +2200,7 @@ int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
     LIST_FOREACH(g2, list, link) {
       /* Already exists */
       if (g2->code == genre->code) return 0;
+      if ((g2->code & 0xF0) == genre->code) return 0;
     }
     while (g1) {
       /* Update a major only entry */
