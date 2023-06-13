@@ -2197,11 +2197,11 @@ int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
     g2->code = genre->code;
     LIST_INSERT_HEAD(list, g2, link);
   } else {
-    while (g1) {
-
+    LIST_FOREACH(g2, list, link) {
       /* Already exists */
-      if (g1->code == genre->code) return 0;
-
+      if (g2->code == genre->code) return 0;
+    }
+    while (g1) {
       /* Update a major only entry */
       if (g1->code == (genre->code & 0xF0)) {
         g1->code = genre->code;
