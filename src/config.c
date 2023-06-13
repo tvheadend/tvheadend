@@ -1698,7 +1698,16 @@ static char *config_get_dir ( void )
   char hts_home[PATH_MAX + sizeof("/.hts/tvheadend")]; /* Must be largest of the 3 config strings! */
   char config_home[PATH_MAX];
   char home_dir[PATH_MAX];
+  uid_t uid = getuid();
   struct stat st;
+
+  snprintf(hts_home, sizeof(hts_home), "/var/lib/tvheadend");
+  if ((stat(hts_home, &st) == 0) && (st.st_uid == uid))
+    return strndup(hts_home, sizeof(hts_home));
+
+  snprintf(hts_home, sizeof(hts_home), "/etc/tvheadend");
+  if ((stat(hts_home, &st) == 0) && (st.st_uid == uid))
+    return strndup(hts_home, sizeof(hts_home));
 
   if (realpath(getenv("HOME"), home_dir) == NULL) {
     tvherror(LS_CONFIG, "environment variable HOME is not set");
@@ -1711,9 +1720,9 @@ static char *config_get_dir ( void )
       char hts_home_link[PATH_MAX];
 
       if ((readlink(hts_home, hts_home_link, sizeof(hts_home_link)) == -1) ||
-          (stat(hts_home_link, &st) == -1)) {
-        tvherror(LS_CONFIG, ".hts/tvheadend is inaccessable: %s", strerror(errno));
-        return NULL;
+	  (stat(hts_home_link, &st) == -1)) {
+	tvherror(LS_CONFIG, ".hts/tvheadend is inaccessable: %s", strerror(errno));
+	return NULL;
       }
       strncpy(hts_home, hts_home_link, sizeof(hts_home));
     }
