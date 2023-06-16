@@ -277,8 +277,10 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
 static void
 dvr_config_storage_check(dvr_config_t *cfg)
 {
+  char recordings_dir[] = "/var/lib/tvheadend/recordings";
   char home_dir[PATH_MAX + sizeof("/Videos")];
   char dvr_dir[PATH_MAX];
+  uid_t uid = getuid();
   char *xdg_dir;
   struct stat st;
 
@@ -304,7 +306,9 @@ dvr_config_storage_check(dvr_config_t *cfg)
     free(xdg_dir);
   }
 
-  if((stat(dvr_dir, &st) == 0) && S_ISDIR(st.st_mode))
+  if ((stat(recordings_dir, &st) == 0) && (st.st_uid == uid))
+    cfg->dvr_storage = strndup(recordings_dir, sizeof(recordings_dir));
+  else if((stat(dvr_dir, &st) == 0) && S_ISDIR(st.st_mode))
       cfg->dvr_storage = strndup(dvr_dir, PATH_MAX);
   else if(stat(home_dir, &st) == 0 && S_ISDIR(st.st_mode))
       cfg->dvr_storage = strndup(home_dir, sizeof(home_dir));
