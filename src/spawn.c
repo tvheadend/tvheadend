@@ -459,7 +459,7 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
                       int *rd, pid_t *pid, int redir_stderr)
 {
   pid_t p;
-  int fd[2], f, i, maxfd;
+  int fd[2], f, i;
   char bin[256];
   const char *local_argv[2] = { NULL, NULL };
   char **e, **e0, **e2, **e3, *p1, *p2;
@@ -507,8 +507,6 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
     *e0 = NULL;
   }
 
-  maxfd = sysconf(_SC_OPEN_MAX);
-
   tvh_mutex_lock(&fork_lock);
 
   if(pipe(fd) == -1) {
@@ -528,6 +526,9 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
   }
 
   if(p == 0) {
+    struct dirent *selfd_ent;
+    DIR *selfd;
+
     f = open("/dev/null", O_RDWR);
     if(f == -1) {
       spawn_error("pid %d cannot open /dev/null for redirect %s -- %s",
@@ -549,8 +550,25 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
 
     spawn_info("Executing \"%s\"\n", prog);
 
-    for (f = 3; f < maxfd; f++)
-      close(f);
+    if ((selfd = opendir("/dev/fd")) != NULL) {
+      while ((selfd_ent = readdir(selfd)) != NULL) {
+        int open_fd = atoi(selfd_ent->d_name);
+
+        if (open_fd >= 3) {
+          if (close(open_fd) == -1)
+            spawn_error("failed to close fd '%d': %s", open_fd, strerror(errno));
+        }
+      }
+      closedir(selfd);
+    } else {
+      int maxfd = sysconf(_SC_OPEN_MAX);;
+
+      spawn_error("unable to open '/dev/fd', falling back to closing all %d"
+                  "This may take a long time!", maxfd);
+
+      for (f = 3; f < maxfd; f++)
+        close(f);
+    }
 
     execve(prog, argv, e);
     spawn_error("pid %d cannot execute %s -- %s\n",
