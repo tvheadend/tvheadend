@@ -334,10 +334,12 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 # endif /* ULONG_MAX */
 #endif /* __WORDSIZE */
 
-#if __WORDSIZE == 32 && defined(PLATFORM_FREEBSD)
-#define PRItime_t       "d"
+#if __WORDSIZE == 32
+# define PRItime_t "lld"
+#elif __WORDSIZE == 64
+# define PRItime_t "ld"
 #else
-#define PRItime_t       "ld"
+# error "__WORDSIZE not properly defined"
 #endif
 
 /* transcoding */
