@@ -10,16 +10,14 @@ configure)
 
    if ! getent passwd $HTS_USER >/dev/null; then
         echo >&2 "Creating user: $HTS_USER..."
-        adduser --quiet --system --group --shell /bin/bash $HTS_USER
+        adduser --quiet --system --group --home /var/lib/tvheadend $HTS_USER
    fi
 
    HTS_HOME=`getent passwd $HTS_USER | cut -d':' -f6`
 
-   mkdir -p "${HTS_HOME}/.hts/tvheadend"
-   chown ${HTS_USER}:${HTS_USER} "${HTS_HOME}/.hts"
-   chown ${HTS_USER}:${HTS_USER} "${HTS_HOME}/.hts/tvheadend"
+   install -d -g ${HTS_USER} -o ${HTS_USER} "${HTS_HOME}/recordings"
 
-   HTS_SUPERUSERCONF="${HTS_HOME}/.hts/tvheadend/superuser"
+   HTS_SUPERUSERCONF="${HTS_HOME}/superuser"
    rm -f "${HTS_SUPERUSERCONF}"
    touch "${HTS_SUPERUSERCONF}"
    chmod 600 "${HTS_SUPERUSERCONF}"

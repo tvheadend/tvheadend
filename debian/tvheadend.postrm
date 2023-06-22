@@ -9,7 +9,7 @@ case "$1" in
 purge)
     if getent passwd $HTS_USER >/dev/null; then
         HTS_HOME=`getent passwd $HTS_USER | cut -d':' -f6`
-        rm -rf "${HTS_HOME}/.hts/tvheadend"
+        rm -rf "${HTS_HOME}"
     fi
     db_purge
    ;;
