@@ -1113,7 +1113,7 @@ main(int argc, char **argv)
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
   signal(SIGILL, handle_sigill);   // see handler..
 
-  /* Set priviledges */
+  /* Set privileges */
   if((opt_fork && getuid() == 0) || opt_group || opt_user) {
     const char *homedir;
     struct group  *grp = getgrnam(opt_group ?: "video");
