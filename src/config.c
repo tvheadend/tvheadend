@@ -1693,13 +1693,15 @@ config_check ( void )
 
 static int config_newcfg = 0;
 
-static char *config_get_dir ( void )
+static char *config_get_dir ( uid_t uid )
 {
   char hts_home[PATH_MAX + sizeof("/.hts/tvheadend")]; /* Must be largest of the 3 config strings! */
   char config_home[PATH_MAX];
   char home_dir[PATH_MAX];
-  uid_t uid = getuid();
   struct stat st;
+
+  if (uid == -1)
+    uid = getuid();
 
   snprintf(hts_home, sizeof(hts_home), "/var/lib/tvheadend");
   if ((stat(hts_home, &st) == 0) && (st.st_uid == uid))
@@ -1777,7 +1779,7 @@ config_boot
 
   /* Generate default */
   if (!path)
-    config.confdir = config_get_dir();
+    config.confdir = config_get_dir(uid);
   else
     config.confdir = strndup(path, PATH_MAX);
 
