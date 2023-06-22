@@ -1723,7 +1723,7 @@ static char *config_get_dir ( uid_t uid )
 
       if ((readlink(hts_home, hts_home_link, sizeof(hts_home_link)) == -1) ||
           (stat(hts_home_link, &st) == -1)) {
-        tvherror(LS_CONFIG, ".hts/tvheadend is inaccessable: %s", strerror(errno));
+        tvherror(LS_CONFIG, ".hts/tvheadend is inaccessible: %s", strerror(errno));
         return NULL;
       }
       strncpy(hts_home, hts_home_link, sizeof(hts_home));
