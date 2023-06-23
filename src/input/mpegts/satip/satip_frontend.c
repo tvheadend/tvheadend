@@ -905,18 +905,10 @@ satip_frontend_update_pids
           if (!tr->sf_pids.all)
             tr->sf_pids.all = 1;
         } else {
-          mpegts_service_t *s;
-          elementary_stream_t *st;
           int w = 0;
           RB_FOREACH(mps, &mp->mp_subs, mps_link)
             w = MAX(w, mps->mps_weight);
-          LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
-            mpegts_pid_add(&tr->sf_pids, s->s_components.set_pmt_pid, w);
-            mpegts_pid_add(&tr->sf_pids, s->s_components.set_pcr_pid, w);
-            TAILQ_FOREACH(st, &s->s_components.set_all, es_link)
-              if (st->es_pid < MPEGTS_FULLMUX_PID)
-                mpegts_pid_add(&tr->sf_pids, st->es_pid, w);
-          }
+          mpegts_mux_get_all_pids(mm, w, &tr->sf_pids);
         }
       } else if (mp->mp_pid < MPEGTS_FULLMUX_PID) {
         RB_FOREACH(mps, &mp->mp_subs, mps_link)

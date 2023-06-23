@@ -984,6 +984,8 @@ mpegts_mux_find_pid(mpegts_mux_t *mm, int pid, int create)
 
 void mpegts_mux_update_pids ( mpegts_mux_t *mm );
 
+void mpegts_mux_get_all_pids(mpegts_mux_t *mm, int weight, mpegts_apids_t *pids);
+
 void mpegts_input_create_mux_instance ( mpegts_input_t *mi, mpegts_mux_t *mm );
 
 int mpegts_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b );
