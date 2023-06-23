@@ -870,6 +870,24 @@ htsmsg_xml_get_cdata_str(htsmsg_t *tags, const char *name)
   return htsmsg_get_str(sub, "cdata");
 }
 
+static void strdup_and_free(const char **target, const char *new)
+{
+  const char *old;
+
+  if (new)
+    new = strdup(new);
+
+  old = *target;
+  *target = new;
+
+  free((void *) old);
+}
+
+void htsmsg_xml_get_cdata_str_strdup(htsmsg_t *tags, const char *name, const char **target)
+{
+  strdup_and_free(target, htsmsg_xml_get_cdata_str(tags, name));
+}
+
 /*
  * Get cdata u32 field
  */
