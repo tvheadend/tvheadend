@@ -927,3 +927,29 @@ htsmsg_xml_get_attr_u32(htsmsg_t *tag, const char *name, uint32_t *ret)
   if (attr) return htsmsg_get_u32(attr, name, ret);
   return HTSMSG_ERR_FIELD_NOT_FOUND;
 }
+
+/*
+ * Get tag
+ */
+
+htsmsg_t *htsmsg_xml_get_tag(htsmsg_t *msg, const char *name)
+{
+  msg = htsmsg_get_map(msg, "tags");
+  if (msg)
+    msg = htsmsg_get_map(msg, name);
+
+  return msg;
+}
+
+htsmsg_t *htsmsg_xml_get_tag_path(htsmsg_t *msg, ...)
+{
+  const char *name;
+  va_list args;
+
+  va_start(args, msg);
+  while (msg && (name = va_arg(args, const char *)))
+    msg = htsmsg_xml_get_tag(msg, name);
+  va_end(args);
+
+  return msg;
+}

@@ -29,5 +29,7 @@ int htsmsg_xml_get_cdata_u32 (htsmsg_t *tags, const char *tag, uint32_t *u32);
 uint32_t htsmsg_xml_get_cdata_u32_or_default (htsmsg_t *tags, const char *tag, uint32_t def);
 const char *htsmsg_xml_get_attr_str(htsmsg_t *tag, const char *attr);
 int htsmsg_xml_get_attr_u32(htsmsg_t *tag, const char *attr, uint32_t *u32);
+htsmsg_t *htsmsg_xml_get_tag(htsmsg_t *msg, const char *name);
+htsmsg_t *htsmsg_xml_get_tag_path(htsmsg_t *msg, ...);
 
 #endif /* HTSMSG_XML_H_ */
