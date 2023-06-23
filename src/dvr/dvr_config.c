@@ -280,6 +280,7 @@ dvr_config_storage_check(dvr_config_t *cfg)
   char recordings_dir[] = "/var/lib/tvheadend/recordings";
   char home_dir[PATH_MAX + sizeof("/Videos")];
   char dvr_dir[PATH_MAX];
+  char buf[PATH_MAX];
   uid_t uid = getuid();
   char *xdg_dir;
   struct stat st;
@@ -313,7 +314,7 @@ dvr_config_storage_check(dvr_config_t *cfg)
   else if(stat(home_dir, &st) == 0 && S_ISDIR(st.st_mode))
       cfg->dvr_storage = strndup(home_dir, sizeof(home_dir));
   else
-      cfg->dvr_storage = get_current_dir_name();
+      cfg->dvr_storage = strdup(getcwd(buf, sizeof(buf)));
 
   tvhwarn(LS_DVR,
           "Output directory for video recording is not yet configured "
