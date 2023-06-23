@@ -181,6 +181,22 @@ htsmsg_field_find(const htsmsg_t *msg, const char *name)
   return NULL;
 }
 
+/*
+ *
+ */
+htsmsg_field_t *
+htsmsg_field_find_by_value(htsmsg_t *msg, htsmsg_field_t *f1)
+{
+  htsmsg_field_t *f2;
+
+  if (msg == NULL || f1 == NULL)
+    return NULL;
+  TAILQ_FOREACH(f2, &msg->hm_fields, hmf_link) {
+    if (!htsmsg_field_cmp(f1, f2))
+      return f2;
+  }
+  return NULL;
+}
 
 /*
  *
@@ -208,6 +224,19 @@ htsmsg_delete_field(htsmsg_t *msg, const char *name)
   return 0;
 }
 
+/**
+ *
+ */
+int
+htsmsg_delete_field_by_value(htsmsg_t *msg, htsmsg_field_t *f1)
+{
+  htsmsg_field_t *f2;
+
+  if ((f2 = htsmsg_field_find_by_value(msg, f1)) == NULL)
+    return HTSMSG_ERR_FIELD_NOT_FOUND;
+  htsmsg_field_destroy(msg, f2);
+  return 0;
+}
 
 /**
  *
@@ -1403,6 +1432,48 @@ htsmsg_field_cmp(const htsmsg_field_t *f1, const htsmsg_field_t *f2)
     if (f1->hmf_dbl != f2->hmf_dbl)
       return 1;
     break;
+  }
+
+  return 0;
+}
+
+void
+htsmsg_substract(htsmsg_t *m1, htsmsg_t *m2)
+{
+  htsmsg_field_t *f;
+
+  assert(m1 && m2);
+
+  TAILQ_FOREACH(f, &m2->hm_fields, hmf_link) {
+    htsmsg_delete_field_by_value(m1, f);
+  }
+}
+
+int
+htsmsg_diff(htsmsg_t *m1, htsmsg_t *m2, htsmsg_t **add, htsmsg_t **del)
+{
+  *add = *del = NULL;
+
+  if (!htsmsg_is_empty(m2)) {
+    *add = htsmsg_copy(m2);
+    if (!htsmsg_is_empty(m1)) {
+      htsmsg_substract(*add, m1);
+      if (htsmsg_is_empty(*add)) {
+        htsmsg_destroy(*add);
+        *add = NULL;
+      }
+    }
+  }
+
+  if (!htsmsg_is_empty(m1)) {
+    *del = htsmsg_copy(m1);
+    if (!htsmsg_is_empty(m2)) {
+      htsmsg_substract(*del, m2);
+      if (htsmsg_is_empty(*del)) {
+        htsmsg_destroy(*del);
+        *del = NULL;
+      }
+    }
   }
 
   return 0;

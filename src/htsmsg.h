@@ -448,6 +448,11 @@ int32_t htsmsg_get_s32_or_default(htsmsg_t *msg, const char *name,
 int htsmsg_delete_field(htsmsg_t *msg, const char *name);
 
 /**
+ * Remove a field maching the reference field \p f from the message \p msg.
+ */
+int htsmsg_delete_field_by_value(htsmsg_t *msg, htsmsg_field_t *f);
+
+/**
  * Is list/map empty
  */
 int htsmsg_is_empty(htsmsg_t *msg);
@@ -477,6 +482,11 @@ htsmsg_field_t *htsmsg_field_add(htsmsg_t *msg, const char *name,
 htsmsg_field_t *htsmsg_field_find(const htsmsg_t *msg, const char *name);
 
 /**
+ * Get a field by value, return NULL if it does not exist
+ */
+htsmsg_field_t *htsmsg_field_find_by_value(htsmsg_t *msg, htsmsg_field_t *f);
+
+/**
  * Get a last field, return NULL if it does not exist
  */
 htsmsg_field_t *htsmsg_field_last(htsmsg_t *msg);
@@ -497,6 +507,18 @@ void htsmsg_copy_field(htsmsg_t *dst, const char *dstname,
  */
 int htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2);
 int htsmsg_field_cmp(const htsmsg_field_t *f1, const htsmsg_field_t *f2);
+
+/**
+ * Substract two messages, i.e. remove all fields from m1 that are in m2
+ * Note: order of fields in messages don't matter
+ */
+void htsmsg_substract(htsmsg_t *m1, htsmsg_t *m2);
+
+/**
+ * Diff two messages and return two messages with added and deleted fields
+ * Note: order of fields in messages don't matter
+ */
+int htsmsg_diff(htsmsg_t *m1, htsmsg_t *m2, htsmsg_t **add, htsmsg_t **del);
 
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 
