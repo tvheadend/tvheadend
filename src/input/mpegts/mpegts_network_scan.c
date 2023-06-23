@@ -42,7 +42,7 @@ mm_cmp ( mpegts_mux_t *a, mpegts_mux_t *b )
 {
   int r = b->mm_scan_weight - a->mm_scan_weight;
   if (r == 0) {
-    int64_t l = b->mm_start_monoclock - a->mm_start_monoclock;
+    int64_t l = a->mm_start_monoclock - b->mm_start_monoclock;
     if (l == 0)
       return mpegts_mux_compare(a, b);
     r = l > 0 ? 1 : -1;
