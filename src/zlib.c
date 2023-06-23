@@ -56,6 +56,49 @@ uint8_t *tvh_gzip_inflate ( const uint8_t *data, size_t size, size_t orig )
   return bufout;
 }
 
+uint8_t *tvh_gzip_inflate_dynamic ( const uint8_t *data, size_t size, size_t *orig )
+{
+  int err;
+  z_stream zstr;
+  uint8_t *bufout;
+
+  /* Setup buffers */
+  bufout = malloc(size);
+
+  /* Setup zlib */
+  memset(&zstr, 0, sizeof(zstr));
+  inflateInit2(&zstr, MAX_WBITS + 16 /* gzip */);
+  zstr.avail_in  = size;
+  zstr.next_in   = (z_const uint8_t *)data;
+  zstr.avail_out = size;
+  zstr.next_out  = bufout;
+
+  /* Decompress */
+  while (1) {
+    err = inflate(&zstr, Z_NO_FLUSH);
+
+    /* Need more space */
+    if (err == Z_OK && zstr.avail_out == 0) {
+      bufout         = realloc(bufout, zstr.total_out * 2);
+      zstr.avail_out = zstr.total_out;
+      zstr.next_out  = bufout + zstr.total_out;
+      continue;
+    }
+
+    /* Error */
+    if ( err != Z_STREAM_END ) {
+      free(bufout);
+      bufout = NULL;
+    } else {
+      *orig = zstr.total_out;
+    }
+    break;
+  }
+  inflateEnd(&zstr);
+
+  return bufout;
+}
+
 uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size )
 {
   int err;
