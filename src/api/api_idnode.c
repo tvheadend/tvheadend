@@ -509,7 +509,8 @@ api_idnode_tree
 {
   const char *uuid;
   const char *root = NULL;
-  int      isroot;
+  int      isroot, meta;
+  htsmsg_t *flist;
   idnode_t *node = NULL;
   api_idnode_tree_callback_t rootfn = opaque;
 
@@ -535,6 +536,10 @@ api_idnode_tree
     }
   }
 
+  meta = htsmsg_get_s32_or_default(args, "meta", 0);
+
+  flist = api_idnode_flist_conf(args, "list");
+
   *resp = htsmsg_create_list();
 
   /* Root node */
@@ -544,9 +549,11 @@ api_idnode_tree
       tvh_mutex_unlock(&global_lock);
       return EINVAL;
     }
-    m = idnode_serialize(node, perm->aa_lang_ui);
+    m = idnode_serialize0(node, flist, 0, perm->aa_lang_ui);
     idnode_perm_unset(node);
     htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
+    if (meta > 0)
+      htsmsg_add_msg(m, "meta", idclass_serialize0(node->in_class, flist, 0, perm->aa_lang_ui));
     htsmsg_add_msg(*resp, NULL, m);
 
   /* Children */
@@ -560,9 +567,11 @@ api_idnode_tree
         htsmsg_t *m;
         if (idnode_perm(in, perm, NULL))
           continue;
-        m = idnode_serialize(v->is_array[i], perm->aa_lang_ui);
+        m = idnode_serialize0(v->is_array[i], flist, 0, perm->aa_lang_ui);
         idnode_perm_unset(in);
         htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
+        if (meta > 0)
+          htsmsg_add_msg(m, "meta", idclass_serialize0(v->is_array[i]->in_class, flist, 0, perm->aa_lang_ui));
         htsmsg_add_msg(*resp, NULL, m);
       }
       idnode_set_free(v);
@@ -570,6 +579,8 @@ api_idnode_tree
   }
   tvh_mutex_unlock(&global_lock);
 
+  htsmsg_destroy(flist);
+  
   return 0;
 }
 
