@@ -900,6 +900,15 @@ htsmsg_xml_get_cdata_u32(htsmsg_t *tags, const char *name, uint32_t *u32)
   return htsmsg_get_u32(sub, "cdata", u32);
 }
 
+uint32_t
+htsmsg_xml_get_cdata_u32_or_default(htsmsg_t *tags, const char *name, uint32_t def)
+{
+  htsmsg_t *sub;
+  if((sub = htsmsg_get_map(tags, name)) == NULL)
+    return def;
+  return htsmsg_get_u32_or_default(sub, "cdata", def);
+}
+
 /*
  * Get tag attribute
  */
