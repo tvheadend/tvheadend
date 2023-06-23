@@ -10,13 +10,15 @@ tvheadend.tvadapters = function(panel, index) {
         node_added: function(n) {
             var p = n.attributes.params;
             if (!p) return;
-            for (var i = 0; i < p.length; i++)
-                if (p[i].id == "active" && p[i].value) {
-                    n.ui.addClass('x-tree-node-on');
-                    break;
+            for (var i = 0; i < p.length; i++) {
+                if (p[i].id == "active") {
+                    if (p[i].value)
+                        n.ui.addClass('x-tree-node-on')
+                    else
+                        n.ui.addClass('x-tree-node-off');
+                    return;
                 }
-            if (i >= p.length)
-                    n.ui.addClass('x-tree-node-off');
+            }
         }
     });
 
