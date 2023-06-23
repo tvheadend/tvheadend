@@ -83,6 +83,11 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
   tvhdhomerun_init();
 #endif
 
+  /* NetCeiver */
+#if ENABLE_NETCEIVER
+  netceiver_init();
+#endif
+
   /* Mux schedulers */
 #if ENABLE_MPEGTS
   mpegts_mux_sched_init();

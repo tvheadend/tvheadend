@@ -199,6 +199,7 @@ enum {
   LS_DDCI,
 #endif
   LS_UDP,	
+  LS_NETCEIVER,
   LS_LAST     /* keep this last */
 };
 

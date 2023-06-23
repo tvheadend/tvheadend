@@ -185,6 +185,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_DDCI]          = { "ddci",          N_("DD-CI") },
 #endif
   [LS_UDP]           = { "udp",           N_("UDP Streamer") },  
+  [LS_NETCEIVER]     = { "netceiver",     N_("NetCeiver") },
 
 };
 

@@ -30,6 +30,7 @@ OPTIONS=(
   "hdhomerun_client:no"
   "hdhomerun_static:yes"
   "iptv:yes"
+  "netceiver:yes"
   "tsfile:yes"
   "dvbscan:yes"
   "timeshift:yes"
@@ -810,11 +811,12 @@ fi
 disable mpegts
 disable mpegts_dvb
 if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client || \
-   enabled hdhomerun_client || enabled satip_server;
+   enabled hdhomerun_client || enabled satip_server || enabled netceiver;
 then
   enable mpegts
 fi
-if enabled linuxdvb || enabled satip_client || enabled hdhomerun_client || enabled satip_server; then
+if enabled linuxdvb || enabled satip_client || enabled hdhomerun_client || \
+ enabled satip_server || enabled netceiver; then
   enable mpegts_dvb
 fi
 
