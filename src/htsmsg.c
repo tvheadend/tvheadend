@@ -1335,7 +1335,7 @@ htsmsg_copy_field(htsmsg_t *dst, const char *dstname,
 int
 htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2)
 {
-  htsmsg_field_t *f1, *f2;
+  const htsmsg_field_t *f1, *f2;
 
   if (m1 == NULL && m2 == NULL)
     return 0;
@@ -1348,52 +1348,63 @@ htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2)
     if (f2 == NULL)
       return 1;
 
-    if (f1->hmf_type != f2->hmf_type)
+    if (htsmsg_field_cmp(f1, f2))
       return 1;
-    if (strcmp(htsmsg_field_name(f1), htsmsg_field_name(f2)))
-      return 1;
-
-    switch(f1->hmf_type) {
-
-    case HMF_MAP:
-    case HMF_LIST:
-      if (htsmsg_cmp(f1->hmf_msg, f2->hmf_msg))
-        return 1;
-      break;
-      
-    case HMF_STR:
-      if (strcmp(f1->hmf_str, f2->hmf_str))
-        return 1;
-      break;
-
-    case HMF_S64:
-      if (f1->hmf_s64 != f2->hmf_s64)
-        return 1;
-      break;
-
-    case HMF_BOOL:
-      if (f1->hmf_bool != f2->hmf_bool)
-        return 1;
-      break;
-
-    case HMF_BIN:
-      if (f1->hmf_binsize != f2->hmf_binsize)
-        return 1;
-      if (memcmp(f1->hmf_bin, f2->hmf_bin, f1->hmf_binsize))
-        return 1;
-      break;
-
-    case HMF_DBL:
-      if (f1->hmf_dbl != f2->hmf_dbl)
-        return 1;
-      break;
-    }
 
     f2 = TAILQ_NEXT(f2, hmf_link);
   }
 
   if (f2)
     return 1;
+  return 0;
+}
+
+int
+htsmsg_field_cmp(const htsmsg_field_t *f1, const htsmsg_field_t *f2)
+{
+  assert(f1 && f2);
+
+  if (f1->hmf_type != f2->hmf_type)
+    return 1;
+  if (strcmp(f1->hmf_name, f2->hmf_name))
+    return 1;
+
+  switch(f1->hmf_type) {
+
+  case HMF_MAP:
+  case HMF_LIST:
+    if (htsmsg_cmp(f1->hmf_msg, f2->hmf_msg))
+      return 1;
+    break;
+
+  case HMF_STR:
+    if (strcmp(f1->hmf_str, f2->hmf_str))
+      return 1;
+    break;
+
+  case HMF_S64:
+    if (f1->hmf_s64 != f2->hmf_s64)
+      return 1;
+    break;
+
+  case HMF_BOOL:
+    if (f1->hmf_bool != f2->hmf_bool)
+      return 1;
+    break;
+
+  case HMF_BIN:
+    if (f1->hmf_binsize != f2->hmf_binsize)
+      return 1;
+    if (memcmp(f1->hmf_bin, f2->hmf_bin, f1->hmf_binsize))
+      return 1;
+    break;
+
+  case HMF_DBL:
+    if (f1->hmf_dbl != f2->hmf_dbl)
+      return 1;
+    break;
+  }
+
   return 0;
 }
 

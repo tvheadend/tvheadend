@@ -496,6 +496,7 @@ void htsmsg_copy_field(htsmsg_t *dst, const char *dstname,
  * Compare a message.
  */
 int htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2);
+int htsmsg_field_cmp(const htsmsg_field_t *f1, const htsmsg_field_t *f2);
 
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 
