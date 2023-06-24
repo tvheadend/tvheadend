@@ -506,7 +506,7 @@ void htsmsg_copy_field(htsmsg_t *dst, const char *dstname,
  * Compare a message.
  */
 int htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2);
-int htsmsg_field_cmp(const htsmsg_field_t *f1, const htsmsg_field_t *f2);
+int htsmsg_field_cmp( htsmsg_field_t *f1, htsmsg_field_t *f2);
 
 /**
  * Substract two messages, i.e. remove all fields from m1 that are in m2

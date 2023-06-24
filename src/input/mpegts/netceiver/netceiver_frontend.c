@@ -151,7 +151,7 @@ static int netceiver_frontend_start_mux(mpegts_input_t *mi, mpegts_mux_instance_
   ncf->ncf_poll = tvhpoll_create(256);
   tvh_pipe(O_NONBLOCK, &ncf->ncf_input_thread_pipe);
 
-  tvhthread_create(&ncf->ncf_input_thread, NULL, netceiver_frontend_input_thread, ncf, "ncvr-input");
+  tvh_thread_create(&ncf->ncf_input_thread, NULL, netceiver_frontend_input_thread, ncf, "ncvr-input");
 
   /* required for tables subscribing to pids, normally done in mpegts_input_started_mux() */
   dm->mm_active = mmi;

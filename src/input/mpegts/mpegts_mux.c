@@ -1207,10 +1207,10 @@ void mpegts_mux_get_all_pids(mpegts_mux_t *mm, int weight, mpegts_apids_t *pids)
   elementary_stream_t *st;
 
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
-    mpegts_pid_add(pids, s->s_pmt_pid, weight);
-    mpegts_pid_add(pids, s->s_pcr_pid, weight);
+    mpegts_pid_add(pids, s->s_components.set_pmt_pid, weight);
+    mpegts_pid_add(pids, s->s_components.set_pcr_pid, weight);
 
-    TAILQ_FOREACH(st, &s->s_components, es_link) {
+    TAILQ_FOREACH(st, &s->s_components.set_filter, es_link) {
       if (st->es_parent_pid)
         continue;
       mpegts_pid_add(pids, st->es_pid, weight);

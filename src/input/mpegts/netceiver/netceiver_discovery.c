@@ -37,8 +37,7 @@
 
 static pthread_t netceiver_discovery_thread;
 static tvhpoll_t *netceiver_discovery_poll;
-static pthread_mutex_t netceiver_discovery_mutex = PTHREAD_MUTEX_INITIALIZER;
-
+static tvh_mutex_t netceiver_discovery_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 
 /*
  * NetCeiver CAM
@@ -173,10 +172,10 @@ static idnode_set_t *netceiver_cam_group_class_get_childs(idnode_t *in)
 
   is = idnode_set_create(0);
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(ncc, &nccl->nccl_cams, ncc_link)
     idnode_set_add(is, &ncc->ncc_id, NULL, NULL);
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
 
   return is;
 }
@@ -388,10 +387,10 @@ static idnode_set_t *netceiver_satellite_class_get_childs(idnode_t *in)
 
   is = idnode_set_create(0);
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(ncsc, &ncs->ncs_components, ncsc_link)
     idnode_set_add(is, &ncsc->ncsc_id, NULL, NULL);
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
 
   return is;
 }
@@ -581,10 +580,10 @@ static idnode_set_t *netceiver_satellite_list_class_get_childs(idnode_t *in)
 
   is = idnode_set_create(0);
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(ncs, &ncsl->ncsl_satellites, ncs_link)
     idnode_set_add(is, &ncs->ncs_id, NULL, NULL);
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
 
   return is;
 }
@@ -638,10 +637,10 @@ static idnode_set_t *netceiver_satellite_list_group_class_get_childs(idnode_t *i
 
   is = idnode_set_create(0);
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(ncsl, &ncsll->ncsll_list, ncsl_link)
     idnode_set_add(is, &ncsl->ncsl_id, NULL, NULL);
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
 
   return is;
 }
@@ -915,10 +914,10 @@ static idnode_set_t *netceiver_tuner_group_class_get_childs(idnode_t *in)
 
   is = idnode_set_create(0);
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(nct, &nctl->nctl_tuners, nct_link)
     idnode_set_add(is, &nct->nct_id, NULL, NULL);
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
 
   return is;
 }
@@ -1128,9 +1127,9 @@ static netceiver_satellite_component_t *netceiver_satellite_component_create(net
 
   LIST_INSERT_HEAD(&ncs->ncs_components, ncsc, ncsc_link);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   idnode_insert(&ncsc->ncsc_id, NULL, &netceiver_satellite_component_class, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return ncsc;
 }
@@ -1139,7 +1138,7 @@ static netceiver_satellite_component_t *netceiver_satellite_component_find(netce
 {
   netceiver_satellite_component_t *ncsc;
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(ncsc, &ncs->ncs_components, ncsc_link) {
     if (ncsc->ncsc_range_min == range_min && ncsc->ncsc_range_max == range_max && ncsc->ncsc_polarisation == polarisation)
       goto out;
@@ -1151,7 +1150,7 @@ static netceiver_satellite_component_t *netceiver_satellite_component_find(netce
     *created = 1;
 
 out:
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
   return ncsc;
 }
 
@@ -1166,9 +1165,9 @@ static netceiver_satellite_t *netceiver_satellite_create(netceiver_satellite_lis
 
   LIST_INSERT_HEAD(&ncsl->ncsl_satellites, ncs, ncs_link);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   idnode_insert(&ncs->ncs_id, NULL, &netceiver_satellite_class, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return ncs;
 }
@@ -1177,7 +1176,7 @@ static netceiver_satellite_t *netceiver_satellite_find(netceiver_satellite_list_
 {
   netceiver_satellite_t *ncs;
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(ncs, &ncsl->ncsl_satellites, ncs_link) {
     if (!strcmp(ncs->ncs_name, name))
       goto out;
@@ -1189,7 +1188,7 @@ static netceiver_satellite_t *netceiver_satellite_find(netceiver_satellite_list_
     *created = 1;
 
 out:
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
   return ncs;
 }
 
@@ -1204,9 +1203,9 @@ static netceiver_satellite_list_t *netceiver_satellite_list_create(netceiver_t *
 
   LIST_INSERT_HEAD(&nc->nc_satellite_lists.ncsll_list, ncsl, ncsl_link);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   idnode_insert(&ncsl->ncsl_id, NULL, &netceiver_satellite_list_class, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return ncsl;
 }
@@ -1215,7 +1214,7 @@ static netceiver_satellite_list_t *netceiver_satellite_list_find(netceiver_t *nc
 {
   netceiver_satellite_list_t *ncsl;
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(ncsl, &nc->nc_satellite_lists.ncsll_list, ncsl_link) {
     if (!strcmp(ncsl->ncsl_name, name))
       goto out;
@@ -1227,7 +1226,7 @@ static netceiver_satellite_list_t *netceiver_satellite_list_find(netceiver_t *nc
     *created = 1;
 
 out:
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
   return ncsl;
 }
 
@@ -1240,9 +1239,9 @@ static netceiver_cam_t *netceiver_cam_create(netceiver_t *nc, int slot)
 
   LIST_INSERT_HEAD(&nc->nc_cams.nccl_cams, ncc, ncc_link);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   idnode_insert(&ncc->ncc_id, NULL, &netceiver_cam_class, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return ncc;
 }
@@ -1251,7 +1250,7 @@ static netceiver_cam_t *netceiver_cam_find(netceiver_t *nc, int slot, int *creat
 {
   netceiver_cam_t *ncc;
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(ncc, &nc->nc_cams.nccl_cams, ncc_link) {
     if (ncc->ncc_slot == slot)
       goto out;
@@ -1263,7 +1262,7 @@ static netceiver_cam_t *netceiver_cam_find(netceiver_t *nc, int slot, int *creat
     *created = 1;
 
 out:
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
   return ncc;
 }
 
@@ -1271,12 +1270,12 @@ static netceiver_tuner_t *netceiver_tuner_find_all(const char *uuid)
 {
   netceiver_tuner_t *nct;
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(nct, &netceiver_tuner_group, nct_link_all) {
     if (!strcmp(nct->nct_uuid, uuid))
       break;
   }
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
 
   return nct;
 }
@@ -1291,9 +1290,9 @@ static netceiver_tuner_t *netceiver_tuner_create(netceiver_t *nc, const char *uu
   LIST_INSERT_HEAD(&nc->nc_tuners.nctl_tuners, nct, nct_link);
   LIST_INSERT_HEAD(&netceiver_tuner_group, nct, nct_link_all);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   idnode_insert(&nct->nct_id, NULL, &netceiver_tuner_class, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return nct;
 }
@@ -1302,7 +1301,7 @@ static netceiver_tuner_t *netceiver_tuner_find(netceiver_t *nc, const char *uuid
 {
   netceiver_tuner_t *nct;
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(nct, &nc->nc_tuners.nctl_tuners, nct_link) {
     if (!strcmp(nct->nct_uuid, uuid))
       goto out;
@@ -1314,7 +1313,7 @@ static netceiver_tuner_t *netceiver_tuner_find(netceiver_t *nc, const char *uuid
     *created = 1;
 
 out:
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
   return nct;
 }
 
@@ -1331,12 +1330,12 @@ static netceiver_t * netceiver_create(const char *uuid)
 
   LIST_INSERT_HEAD(&netceiver_list, nc, nc_link);
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   tvh_hardware_create0(nc, &netceiver_class, NULL, NULL);
   idnode_insert(&nc->nc_cams.nccl_id, NULL, &netceiver_cam_group_class, 0);
   idnode_insert(&nc->nc_tuners.nctl_id, NULL, &netceiver_tuner_group_class, 0);
   idnode_insert(&nc->nc_satellite_lists.ncsll_id, NULL, &netceiver_satellite_list_group_class, 0);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 
   return nc;
 }
@@ -1345,7 +1344,7 @@ static netceiver_t *netceiver_find(const char *uuid, int create, int *created)
 {
   netceiver_t *nc;
 
-  pthread_mutex_lock(&netceiver_discovery_mutex);
+  tvh_mutex_lock(&netceiver_discovery_mutex);
   LIST_FOREACH(nc, &netceiver_list, nc_link) {
     if (!strcmp(nc->nc_uuid, uuid))
       goto out;
@@ -1360,7 +1359,7 @@ static netceiver_t *netceiver_find(const char *uuid, int create, int *created)
     *created = 1;
 
 out:
-  pthread_mutex_unlock(&netceiver_discovery_mutex);
+  tvh_mutex_unlock(&netceiver_discovery_mutex);
   return nc;
 }
 
@@ -1372,10 +1371,10 @@ static void netceiver_tuner_create_frontend(netceiver_tuner_t *nct, const char *
   sha1_calc(uuidbin, (uint8_t *) nct->nct_uuid, strlen(nct->nct_uuid), NULL, 0);
   bin2hex(uuidhex, sizeof(uuidhex), uuidbin, sizeof(uuidbin));
 
-  pthread_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
   if (!idnode_find(uuidhex, NULL, NULL))
     netceiver_frontend_create(uuidhex, interface, type);
-  pthread_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }
 
 /*
@@ -1517,7 +1516,7 @@ static netceiver_satellite_t *netceiver_parse_discovery_satellite(netceiver_sate
   ncs->ncs_type = htsmsg_xml_get_cdata_u32_or_default(msg, PRF_NS "Type", 0);
 
   HTSMSG_FOREACH(component, msg) {
-    if (strcmp(component->hmf_name, CCPP_NS "component"))
+    if (strcmp(htsmsg_field_name(component), CCPP_NS "component"))
       continue;
 
     msg = htsmsg_field_get_map(component);
@@ -1550,7 +1549,7 @@ static netceiver_satellite_list_t *netceiver_parse_discovery_satellite_list(netc
     return NULL;
 
   HTSMSG_FOREACH(component, msg) {
-    if (strcmp(component->hmf_name, CCPP_NS "component"))
+    if (strcmp(htsmsg_field_name(component), CCPP_NS "component"))
       continue;
 
     msg = htsmsg_field_get_map(component);
@@ -1838,7 +1837,7 @@ void netceiver_discovery_init(void)
   idclass_register(&netceiver_class);
 
   netceiver_discovery_poll = tvhpoll_create(256);
-  tvhthread_create(&netceiver_discovery_thread, NULL, netceiver_discovery_thread_func, NULL, "ncvr-disco");
+  tvh_thread_create(&netceiver_discovery_thread, NULL, netceiver_discovery_thread_func, NULL, "ncvr-disco");
 }
 
 /******************************************************************************

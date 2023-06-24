@@ -111,10 +111,10 @@ static void *netceiver_monitor_thread_func(void *aux)
 
     ncf = ev.ptr;
 
-    pthread_mutex_lock(&ncf->mi_output_lock);
+    tvh_mutex_lock(&ncf->mi_output_lock);
     if (ncf->ncf_monitor_udp)
       netceiver_read_monitor(ncf);
-    pthread_mutex_unlock(&ncf->mi_output_lock);
+    tvh_mutex_unlock(&ncf->mi_output_lock);
   }
 
   return NULL;
@@ -141,7 +141,7 @@ void netceiver_stop_monitor(netceiver_frontend_t *ncf)
 void netceiver_monitor_init(void)
 {
   netceiver_monitor_poll = tvhpoll_create(256);
-  tvhthread_create(&netceiver_monitor_thread, NULL, netceiver_monitor_thread_func, NULL, "ncvr-mon");
+  tvh_thread_create(&netceiver_monitor_thread, NULL, netceiver_monitor_thread_func, NULL, "ncvr-mon");
 }
 
 /******************************************************************************

@@ -1018,7 +1018,7 @@ dvb_pat_callback
                          MT_CRC | MT_QUICKREQ | MT_ONESHOT | MT_SCANSUBS,
                          pid, MPS_WEIGHT_PMT_SCAN);
         
-        dvb_service_autoenable(s, "PAT");
+        // dvb_service_autoenable(s, "PAT");
         
         if (save)
           service_request_save((service_t*)s);
