@@ -410,7 +410,7 @@ static int _eit_desc_content
 static int _eit_desc_parental
   ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
-  int cnt = 0, sum = 0, i = 0;
+  int cnt = 0, sum = 0, i = 3;
   while (len > 3) {
     if ( ptr[i] && ptr[i] < 0x10 ) {
       cnt++;
