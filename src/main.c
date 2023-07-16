@@ -71,6 +71,7 @@
 #include "transcoding/codec.h"
 #include "profile.h"
 #include "bouquet.h"
+#include "tvhjs.h"
 #include "tvhtime.h"
 #include "packet.h"
 #include "streaming.h"
@@ -1279,6 +1280,7 @@ main(int argc, char **argv)
   en50221_register_apps();
 #endif
 
+  tvhftrace(LS_MAIN, tvhjs_init);
   tvhftrace(LS_MAIN, streaming_init);
   tvhftrace(LS_MAIN, tvh_hardware_init);
   tvhftrace(LS_MAIN, dbus_server_init, opt_dbus, opt_dbus_session);
@@ -1431,6 +1433,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, idnode_done);
   tvhftrace(LS_MAIN, notify_done);
   tvhftrace(LS_MAIN, spawn_done);
+  tvhftrace(LS_MAIN, tvhjs_done);
 
   tprofile_done(&gtimer_profile);
   tprofile_done(&mtimer_profile);

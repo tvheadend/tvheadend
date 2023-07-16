@@ -320,6 +320,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
     sm_conf.type_tags = bq->bq_chtag_type_tags;
     sm_conf.provider_tags = bq->bq_chtag_provider_tags;
     sm_conf.network_tags = bq->bq_chtag_network_tags;
+    sm_conf.script = bq->bq_mapscript;
     ch = service_mapper_process(&sm_conf, t, bq);
   } else
     ch = (channel_t *)ilm->ilm_in2;
@@ -1049,6 +1050,20 @@ const idclass_t bouquet_class = {
       .set      = bouquet_class_chtag_set,
       .rend     = bouquet_class_chtag_rend,
       .opts     = PO_ADVANCED | PO_DOC_NLIST,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "script",
+      .name   = N_("Script"),
+      .desc   = N_("JavaScript for advanced channel naming. "
+                   "The script is passed a single object containing the "
+                   "channel name and service id. It should return null if the "
+                   "channel should not be mapped, or the channel "
+                   "name to use. "
+                   "An example would be '({smMapName : function(svc) { print(svc.name + '/' + svc.sid); return svc.name; }})'"
+                  ),
+      .off    = offsetof(bouquet_t, bq_mapscript),
+      .opts   = PO_ADVANCED | PO_MULTILINE
     },
     {
       .type     = PT_STR,

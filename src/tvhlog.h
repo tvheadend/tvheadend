@@ -195,6 +195,7 @@ enum {
   LS_TSDEBUG,
   LS_CODEC,
   LS_VAAPI,
+  LS_JS,
 #if ENABLE_DDCI
   LS_DDCI,
 #endif
