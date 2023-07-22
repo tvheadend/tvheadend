@@ -319,6 +319,7 @@ typedef struct epggrab_conf {
   uint32_t              epgdb_periodicsave;
   uint32_t              epgdb_saveafterimport;
   char                 *ota_cron;
+  char                 *ota_genre_translation;
   uint32_t              ota_timeout;
   uint32_t              ota_initial;
   uint32_t              int_initial;
@@ -365,10 +366,11 @@ extern int                   epggrab_ota_running;
 /*
  * Set configuration
  */
-int epggrab_activate_module       ( epggrab_module_t *mod, int activate );
-void epggrab_ota_set_cron         ( void );
-void epggrab_ota_trigger          ( int secs );
-void epggrab_rerun_internal       ( void );
+int epggrab_activate_module            ( epggrab_module_t *mod, int activate );
+void epggrab_ota_set_cron              ( void );
+void epggrab_ota_set_genre_translation ( void );
+void epggrab_ota_trigger               ( int secs );
+void epggrab_rerun_internal            ( void );
 
 /*
  * Load/Save
@@ -397,6 +399,11 @@ void epggrab_ota_queue_mux( struct mpegts_mux *mm );
 epggrab_ota_mux_t *epggrab_ota_find_mux ( struct mpegts_mux *mm );
 htsmsg_t *epggrab_ota_module_id_list( const char *lang );
 const char *epggrab_ota_check_module_id( const char *id );
+
+/*
+ * Global variable for genre translation
+ */
+extern unsigned char                epggrab_ota_genre_translation[256];
 
 #endif /* __EPGGRAB_H__ */
 
