@@ -391,12 +391,21 @@ static int _eit_desc_component
 static int _eit_desc_content
   ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
+  uint8_t tempPtr = 0;  //Temporary variable to hold a (potentially) changed *ptr value.
+  tempPtr = *ptr;
   while (len > 1) {
-    if (*ptr == 0xb1)
+    //Get the potentially new genre value.
+    tempPtr = epggrab_ota_genre_translation[*ptr];
+    //If we did get a translation, write a trace for debugging.
+    if(tempPtr != *ptr)
+    {
+      tvhtrace(LS_TBL_EIT, "Translating '%d' to '%d'", *ptr, tempPtr);
+    }
+    if (tempPtr == 0xb1)  //0xB1 is the genre code for 'Black and White'
       ev->bw = 1;
-    else if (*ptr < 0xb0) {
+    else if (tempPtr < 0xb0) {  //0xB0 is the start of the 'Special Characteristics' block.
       if (!ev->genre) ev->genre = calloc(1, sizeof(epg_genre_list_t));
-      epg_genre_list_add_by_eit(ev->genre, *ptr);
+      epg_genre_list_add_by_eit(ev->genre, (const uint8_t)tempPtr);  //Cast as a 'const'
     }
     len -= 2;
     ptr += 2;
@@ -410,7 +419,7 @@ static int _eit_desc_content
 static int _eit_desc_parental
   ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
-  int cnt = 0, sum = 0, i = 0;
+  int cnt = 0, sum = 0, i = 3;
   while (len > 3) {
     if ( ptr[i] && ptr[i] < 0x10 ) {
       cnt++;
