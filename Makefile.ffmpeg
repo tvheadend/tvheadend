@@ -193,7 +193,7 @@ $(LIB_ROOT)/$(NASM)/.tvh_build: \
 	cd $(LIB_ROOT)/$(NASM) && $(AUTOGEN) && $(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
-		$(MAKE) -C $(LIB_ROOT)/$(NASM) install
+		$(MAKE) -C $(LIB_ROOT)/$(NASM) manpages install
 	@touch $@
 
 
