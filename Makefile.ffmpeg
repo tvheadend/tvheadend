@@ -46,7 +46,7 @@ HWACCELS       =
 
 NASM_VER       = 2.16.01
 NASM           = nasm-nasm-$(NASM_VER)
-NASM_TB        = $(NASM).tar.gz
+NASM_TB        = nasm-$(NASM_VER).tar.gz
 NASM_URL       = https://github.com/netwide-assembler/nasm/archive/refs/tags/$(NASM_TB)
 NASM_SHA1      = 39bdeac92abf7341edb757b563375dffc3f6ed3a
 NASM_DIFFS     = remove-invalid-pure_func-qualifiers.diff
