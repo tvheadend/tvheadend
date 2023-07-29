@@ -45,10 +45,10 @@ FILTERS        = yadif format hwupload hwdownload scale null aresample anull
 HWACCELS       =
 
 NASM_VER       = 2.16.01
-NASM           = nasm-$(NASM_VER)
+NASM           = nasm-nasm-$(NASM_VER)
 NASM_TB        = $(NASM).tar.gz
-NASM_URL       = https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VER)/$(NASM_TB)
-NASM_SHA1      = 13bf04e35e1042dc163d14aa124c68cfa7620871
+NASM_URL       = https://github.com/netwide-assembler/nasm/archive/refs/tags/$(NASM_TB)
+NASM_SHA1      = 39bdeac92abf7341edb757b563375dffc3f6ed3a
 NASM_DIFFS     = remove-invalid-pure_func-qualifiers.diff
 
 LIBX264_VER    = d2907f67227cbf38ac957efed84c532b12ce19cc
