@@ -22,6 +22,8 @@
         "debhelper",
         "ccache",
         "libx11-xcb-dev"
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --nowerror ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -48,7 +50,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --nowerror ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -75,7 +79,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -101,7 +107,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -128,7 +136,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -155,7 +165,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -182,7 +194,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -209,7 +223,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -236,7 +252,9 @@
         "python3",
         "python3-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -266,6 +284,8 @@
         "debhelper",
         "ccache",
         "sudo",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/1.26.6/src/urllib3/contrib/pyopenssl.py",
@@ -296,6 +316,8 @@
         "debhelper",
         "ccache",
         "sudo",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "sudo wget -O /usr/lib/python2.7/dist-packages/urllib3/contrib/pyopenssl.py https://raw.githubusercontent.com/urllib3/urllib3/1.26.6/src/urllib3/contrib/pyopenssl.py",
@@ -324,7 +346,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -352,7 +376,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -380,7 +406,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -408,7 +436,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -436,7 +466,9 @@
         "python",
         "python3-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -464,7 +496,9 @@
         "python",
         "python3-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -492,7 +526,9 @@
         "python3",
         "python3-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -520,7 +556,9 @@
         "python3",
         "python3-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static\\ --python=python3 ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
@@ -549,6 +587,8 @@
         "debhelper",
         "ccache",
         "sudo",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianjessie-armhf -j ${PARALLEL} -w ${WORKDIR}",
@@ -575,7 +615,9 @@
         "python",
         "python-requests",
         "debhelper",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t raspbianstretch-armhf -j ${PARALLEL} -w ${WORKDIR}",
@@ -605,7 +647,9 @@
         "pcre2-devel",
         "python",
         "python-requests",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
@@ -635,7 +679,9 @@
         "pcre2-devel",
         "python",
         "python-requests",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
@@ -667,7 +713,9 @@
         "python3-requests",
         "python",
         "python-requests",
-        "ccache"
+        "ccache",
+        "asciidoc",
+        "xmlto"
       ],
       "buildcmd": [
         "./configure --disable-dvbscan --nowerror && make -C rpm build-doozer",
