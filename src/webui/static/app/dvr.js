@@ -73,6 +73,7 @@ tvheadend.dvrDetails = function(grid, index) {
         var genre = params[21].value;
         /* channelname is unused param 22 */
         var fanart_image = params[23].value;
+        var age_rating = params[25].value;
         var content = '<div class="dvr-details-dialog">' +
         '<div class="dvr-details-dialog-background-image"></div>' +
         '<div class="dvr-details-dialog-content">';
@@ -764,7 +765,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         del: true,
         list: 'category,enabled,duplicate,disp_title,disp_extratext,episode_disp,' +
               'channel,image,copyright_year,start_real,stop_real,duration,pri,filesize,' +
-              'sched_status,errors,data_errors,config_name,owner,creator,comment,genre,broadcast',
+              'sched_status,errors,data_errors,config_name,owner,creator,comment,genre,broadcast,age_rating',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearAndDuplicateRenderer(),
@@ -866,7 +867,7 @@ tvheadend.dvr_finished = function(panel, index) {
             buttonFcn(store, select, 'api/dvr/entry/move/failed');
         }
     };
-    
+
     var removeButton = {
         name: 'remove',
         builder: function() {
@@ -954,7 +955,7 @@ tvheadend.dvr_finished = function(panel, index) {
         del: false,
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,' +
               'start_real,stop_real,duration,filesize,copyright_year,' +
-              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,',
+              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,age_rating',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
@@ -1074,7 +1075,7 @@ tvheadend.dvr_failed = function(panel, index) {
                      _('The associated file will be removed from storage.'),
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,' +
               'image,copyright_year,start_real,stop_real,duration,filesize,status,' +
-              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
+              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,age_rating',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
@@ -1153,7 +1154,7 @@ tvheadend.dvr_removed = function(panel, index) {
         del: true,
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,image,' +
               'copyright_year,start_real,stop_real,duration,status,' +
-              'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
+              'sched_status,errors,data_errors,url,config_name,owner,creator,comment,age_rating',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),

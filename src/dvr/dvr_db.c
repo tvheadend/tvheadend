@@ -1207,6 +1207,8 @@ dvr_entry_create_from_htsmsg(htsmsg_t *conf, epg_broadcast_t *e)
     genre = LIST_FIRST(&e->genre);
     if (genre)
       htsmsg_add_u32(conf, "content_type", genre->code / 16);
+    if(e->age_rating)
+      htsmsg_add_u32(conf, "age_rating", e->age_rating);
   }
 
   de = dvr_entry_create(NULL, conf, 0);
@@ -1907,7 +1909,7 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
     if (svf == PROFILE_SVF_UHD && !old_has_svf) {
       old_has_svf = channel_has_correct_service_filter(old_channel, PROFILE_SVF_FHD);
       new_has_svf = channel_has_correct_service_filter(new_channel, PROFILE_SVF_FHD);
-      
+
       if (!old_has_svf && new_has_svf)
         return 1;
 
@@ -2366,6 +2368,7 @@ dvr_timer_remove_files(void *aux)
 #define DVR_UPDATED_CONFIG       (1<<17)
 #define DVR_UPDATED_PLAYPOS      (1<<18)
 #define DVR_UPDATED_PLAYCOUNT    (1<<19)
+#define DVR_UPDATED_AGE_RATING   (1<<20)
 
 static char *dvr_updated_str(char *buf, size_t buflen, int flags)
 {
@@ -2413,7 +2416,7 @@ static dvr_entry_t *_dvr_entry_update
     const char *lang, time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
     dvr_prio_t pri, int retention, int removal,
-    int playcount, int playposition)
+    int playcount, int playposition, int age_rating)
 {
   char buf[40];
   int save = 0, updated = 0;
@@ -2529,6 +2532,11 @@ static dvr_entry_t *_dvr_entry_update
     updated = 1;
     dvr_entry_set_timer(de);
   }
+  /* Manual Age Rating */
+  if (age_rating != de->de_age_rating) {
+    de->de_age_rating = age_rating;
+    save |= DVR_UPDATED_AGE_RATING;
+  }
 
   /* Title */
   if (e && e->title) {
@@ -2555,6 +2563,12 @@ static dvr_entry_t *_dvr_entry_update
   if (e && e->dvb_eid != de->de_dvb_eid) {
     de->de_dvb_eid = e->dvb_eid;
     save |= DVR_UPDATED_EID;
+  }
+
+  /* Age Rating from EPG*/
+  if (e && e->age_rating != de->de_age_rating) {
+    de->de_age_rating = e->age_rating;
+    save |= DVR_UPDATED_AGE_RATING;
   }
 
   /* Description */
@@ -2639,12 +2653,14 @@ dvr_entry_update
     const char *summary, const char *desc, const char *lang,
     time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
-    dvr_prio_t pri, int retention, int removal, int playcount, int playposition )
+    dvr_prio_t pri, int retention, int removal, int playcount, int playposition,
+    int age_rating )
 {
   return _dvr_entry_update(de, enabled, dvr_config_uuid,
                            NULL, ch, title, subtitle, summary, desc, lang,
                            start, stop, start_extra, stop_extra,
-                           pri, retention, removal, playcount, playposition);
+                           pri, retention, removal, playcount, playposition,
+                           age_rating);
 }
 
 /**
@@ -2698,7 +2714,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                           gmtime2local(e2->start, t1buf, sizeof(t1buf)),
                           gmtime2local(e2->stop, t2buf, sizeof(t2buf)));
           _dvr_entry_update(de, -1, NULL, e2, NULL, NULL, NULL, NULL, NULL,
-                            NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
+                            NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0);
           return;
         }
       }
@@ -2739,7 +2755,7 @@ void dvr_event_updated(epg_broadcast_t *e)
     assert(de->de_bcast == e);
     if (de->de_sched_state != DVR_SCHEDULED) continue;
     _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
-                      NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
+                      NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0);
   }
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
     if (de->de_sched_state != DVR_SCHEDULED) continue;
@@ -2751,7 +2767,7 @@ void dvr_event_updated(epg_broadcast_t *e)
                             epg_broadcast_get_title(e, NULL),
                             channel_get_name(e->channel, channel_blank_name));
       _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
-                        NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
+                        NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0);
     }
   }
 }
@@ -4508,7 +4524,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_U16,
       .id       = "copyright_year",
-      .name     = N_("The copyright year of the program."),
+      .name     = N_("Copyright year"),
       .desc     = N_("The copyright year of the program."),
       .off      = offsetof(dvr_entry_t, de_copyright_year),
       .opts     = PO_RDONLY | PO_EXPERT,
@@ -4623,6 +4639,14 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Genre of program"),
       .get      = dvr_entry_class_genre_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "age_rating",
+      .name     = N_("Age Rating"),
+      .desc     = N_("The age rating of the program."),
+      .off      = offsetof(dvr_entry_t, de_age_rating),
+      .opts     = PO_RDONLY | PO_EXPERT,
     },
     {}
   }
