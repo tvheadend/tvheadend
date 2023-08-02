@@ -749,6 +749,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   const char *lang;
   const lang_code_list_t *langs;
   epg_episode_num_t num;
+  int tmp_age;
 
   if (de || ebc) {
     localtime_r(de ? &de->de_start : &ebc->start, &tm);
@@ -778,6 +779,13 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   }
   if(eg && epg_genre_get_str(eg, 1, 0, ctype, 100, NULL))
     addtag(q, build_tag_string("CONTENT_TYPE", ctype, NULL, 0, NULL));
+
+  //TODO - MKV The spec suggests that this tag can consist of multiple value types.
+  //https://www.matroska.org/technical/tagging.html
+  //==> Depending on the COUNTRY it’s the format of the rating of a movie
+  //==> (P, R, X in the USA, an age in other countries or a URI defining a logo).
+  tmp_age = ebc->age_rating;
+  addtag(q, build_tag_int("LAW_RATING", tmp_age, 0, NULL));
 
   if(ch)
     addtag(q, build_tag_string("TVCHANNEL",

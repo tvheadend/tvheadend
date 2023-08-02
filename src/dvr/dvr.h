@@ -51,8 +51,8 @@ LIST_HEAD(dvr_vfs_list, dvr_vfs);
 #define DVR_FILESIZE_TOTAL      (1<<1)
 
 #define DVR_FINISHED_ALL             (1<<0)
-#define DVR_FINISHED_SUCCESS         (1<<1) 
-#define DVR_FINISHED_FAILED          (1<<2) 
+#define DVR_FINISHED_SUCCESS         (1<<1)
+#define DVR_FINISHED_FAILED          (1<<2)
 #define DVR_FINISHED_REMOVED_SUCCESS (1<<3) /* Removed recording, was succesful before */
 #define DVR_FINISHED_REMOVED_FAILED  (1<<4) /* Removed recording, was failed before */
 
@@ -196,7 +196,7 @@ typedef struct dvr_entry {
    */
 
   LIST_ENTRY(dvr_entry) de_global_link;
-  
+
   channel_t *de_channel;
   LIST_ENTRY(dvr_entry) de_channel_link;
 
@@ -235,7 +235,7 @@ typedef struct dvr_entry {
   char *de_image;               /* Programme Image */
   char *de_fanart_image;        /* Programme fanart image */
   htsmsg_t *de_files; /* List of all used files */
-  char *de_directory; /* Can be set for autorec entries, will override any 
+  char *de_directory; /* Can be set for autorec entries, will override any
                          directory setting from the configuration */
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
   lang_str_t *de_subtitle;   /* Subtitle in UTF-8 (from EPG) */
@@ -244,6 +244,7 @@ typedef struct dvr_entry {
   uint32_t de_content_type;  /* Content type (from EPG) (only code) */
   uint16_t de_copyright_year; /* Copyright year (from EPG) */
   uint16_t de_dvb_eid;
+  uint16_t de_age_rating; /* Age rating (from EPG) */
 
   int de_pri;
   int de_dont_reschedule;
@@ -285,7 +286,7 @@ typedef struct dvr_entry {
    * Last error, see SM_CODE_ defines
    */
   uint32_t de_last_error;
-  
+
 
   /**
    * Autorec linkage
@@ -380,7 +381,7 @@ typedef struct dvr_autorec_entry {
   char *dae_title;
   tvh_regex_t dae_title_regex;
   int dae_fulltext;
-  
+
   uint32_t dae_content_type;
   /* These categories (mainly from xmltv) such as Cooking, Dog racing, Movie.
    * This allows user to easily do filtering such as '"Movie" "Martial arts"'
@@ -423,9 +424,9 @@ typedef struct dvr_autorec_entry {
 
   time_t dae_start_extra;
   time_t dae_stop_extra;
-  
+
   int dae_record;
-  
+
 } dvr_autorec_entry_t;
 
 extern struct dvr_autorec_entry_queue autorec_entries;
@@ -591,7 +592,7 @@ dvr_entry_update( dvr_entry_t *de, int enabled,
                   time_t start, time_t stop,
                   time_t start_extra, time_t stop_extra,
                   dvr_prio_t pri, int retention, int removal,
-                  int playcount, int playposition);
+                  int playcount, int playposition, int age_rating);
 
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
