@@ -76,6 +76,7 @@ OPTIONS=(
   "cclang_threadsan:no"
   "gperftools:no"
   "execinfo:auto"
+  "year2038:no"
 )
 
 #
@@ -802,6 +803,25 @@ if enabled_or_auto libsystemd_daemon; then
   elif enabled libsystemd_daemon; then
     die "libsystemd-daemon development support not found (use --disable-systemd_daemon)"
   fi
+fi
+
+#
+# year2038
+#
+check_cc_snippet year2038 '
+#define _FILE_OFFSET_BITS 64
+#define _TIME_BITS 64
+#include <time.h>
+int test(void){
+  #define LARGE_TIME_T ((time_t) (((time_t) 1 << 30) - 1 + 3 * ((time_t) 1 << 30)))
+  int verify_time_t_range[(LARGE_TIME_T / 65537 == 65535 && LARGE_TIME_T % 65537 == 0) ? 1 : -1];
+  return 0;
+}
+' -Werror
+
+if disabled year2038; then
+  CFLAGS="-D_USE_32BIT_TIME_T ${CFLAGS}"
+  printf "    ^ WARNING: The 'time_t' type stops working after January 2038\n"
 fi
 
 # ###########################################################################
