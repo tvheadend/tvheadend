@@ -291,7 +291,7 @@ int test(void)
   printf("%ld", (time_t)1);
   return 0;
 }
-' -Werror
+' '-Wformat -Werror=format'
 
 check_cc_snippet time_lld '
 #define _FILE_OFFSET_BITS 64
@@ -305,7 +305,7 @@ int test(void)
   printf("%lld", (time_t)1);
   return 0;
 }
-' -Werror
+' '-Wformat -Werror=format'
 
 if enabled time_lld; then
   printf "    ^ using time_t format 'lld'\n"
