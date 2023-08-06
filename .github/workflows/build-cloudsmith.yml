@@ -116,8 +116,14 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list; fi
+            if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
+            if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
+            if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i '/jessie-updates/d' /etc/apt/sources.list; fi
+            if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
+            if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
+            if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i '/stretch-updates/d' /etc/apt/sources.list; fi
             case "${{ matrix.distro }}" in
-              ubuntu*|jessie|stretch|buster|bullseye)
+              ubuntu*|jessie|stretch|buster|bullseye|bookworm)
                 apt-get update -y
                 DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
                 DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
@@ -154,6 +160,12 @@ jobs:
     container:
       image: ${{ matrix.container }}
     steps:
+      - name: Fix old debian apt
+        if: matrix.container == 'debian:stretch' || matrix.container == 'i386/debian:stretch'
+        run: |
+          sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
+          sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
+          sed -i '/stretch-updates/d' /etc/apt/sources.list
       - name: Add git ppa
         if: startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'i386/ubuntu')
         run: |
