@@ -27,7 +27,7 @@ Usage: `tvheadend [OPTIONS]`
       --satip_bindaddr        Specify bind address for SAT>IP server
       --satip_rtsp            SAT>IP RTSP port number for server
                               (default: -1 = disable, 0 = webconfig, standard port is 554)
-      --nosatip               Disable SAT>IP client
+      --nosatipcli            Disable SAT>IP client
       --satip_xml             URL with the SAT>IP server XML location
 ```
 ### Server connectivity
