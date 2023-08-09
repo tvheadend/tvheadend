@@ -212,7 +212,7 @@ struct epggrab_module_int
 struct epggrab_module_ext
 {
   epggrab_module_int_t         ;          ///< Parent object
-  
+
   int                          sock;      ///< Socket descriptor
 
   pthread_t                    tid;       ///< Thread ID
@@ -239,7 +239,7 @@ struct epggrab_ota_mux
 {
   tvh_uuid_t                         om_mux_uuid;     ///< Soft-link to mux
   LIST_HEAD(,epggrab_ota_map)        om_modules;      ///< List of linked mods
-  
+
   uint8_t                            om_done;         ///< The full completion mark for this round
   uint8_t                            om_complete;     ///< Has completed a scan
   uint8_t                            om_requeue;      ///< Requeue when stolen
@@ -403,7 +403,7 @@ const char *epggrab_ota_check_module_id( const char *id );
 /*
  * Global variable for genre translation
  */
-extern unsigned char                epggrab_ota_genre_translation[256];
+extern unsigned char                *epggrab_ota_genre_translation;
 
 #endif /* __EPGGRAB_H__ */
 
