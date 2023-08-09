@@ -56,7 +56,8 @@ int                          epggrab_ota_pending_flag;
 
 tvh_mutex_t                  epggrab_ota_mutex;
 
-unsigned char                epggrab_ota_genre_translation[256];
+//If the pointer is not null, translation values have also been loaded.
+unsigned char                *epggrab_ota_genre_translation = NULL;
 
 SKEL_DECLARE(epggrab_ota_mux_skel, epggrab_ota_mux_t);
 SKEL_DECLARE(epggrab_svc_link_skel, epggrab_ota_svc_link_t);
@@ -423,7 +424,7 @@ epggrab_ota_register
       save = 1;
     }
   }
-  
+
   /* Find module map */
   map = epggrab_ota_find_map(ota, mod);
   if (!map) {
@@ -869,7 +870,7 @@ epggrab_ota_load_one
   epggrab_ota_mux_t *ota;
   epggrab_ota_map_t *map;
   const char *id;
-  
+
   mm = mpegts_mux_find(uuid);
   if (!mm) {
     hts_settings_remove("epggrab/otamux/%s", uuid);
@@ -885,14 +886,14 @@ epggrab_ota_load_one
     return;
   }
   ota->om_complete = htsmsg_get_u32_or_default(c, "complete", 0) != 0;
-  
+
   if (!(l = htsmsg_get_list(c, "modules"))) return;
   HTSMSG_FOREACH(f, l) {
     if (!(e   = htsmsg_field_get_map(f))) continue;
     if (!(id  = htsmsg_get_str(e, "id"))) continue;
     if (!(mod = (epggrab_module_ota_t*)epggrab_module_find_by_id(id)))
       continue;
-    
+
     map = calloc(1, sizeof(epggrab_ota_map_t));
     RB_INIT(&map->om_svcs);
     map->om_module   = mod;
@@ -941,12 +942,12 @@ epggrab_ota_init ( void )
       hts_settings_remove("epggrab/otamux");
 
   atomic_set(&epggrab_ota_running, 1);
-  
+
   /* Load config */
   if ((c = hts_settings_load_r(1, "epggrab/otamux"))) {
     HTSMSG_FOREACH(f, c) {
       if (!(m  = htsmsg_field_get_map(f))) continue;
-      epggrab_ota_load_one(htsmsg_field_name(f), m); 
+      epggrab_ota_load_one(htsmsg_field_name(f), m);
     }
     htsmsg_destroy(c);
   }
@@ -1052,8 +1053,24 @@ epggrab_ota_set_genre_translation ( void )
   lock_assert(&global_lock);
   tvh_mutex_lock(&epggrab_ota_mutex);
 
+  //Allocate storage for the translation table.
+  //The pointer is initialised as NULL.  If this function is not triggered
+  //(no setting in the file), the pointer will not be set and the EIT code
+  //where the actual translation ccurs can check for a null pointer before
+  //trying to translate.
+  epggrab_ota_genre_translation = calloc(sizeof(unsigned char) * 256, 1);
+
+  //Test to see if the translation table got space allocated, if not,
+  //complain and then exit the function.
+  if (!epggrab_ota_genre_translation){
+    tvherror(LS_EPGGRAB, "Unable to allocate memory, genre translations disabled.");
+    tvh_mutex_unlock(&epggrab_ota_mutex);
+    return;
+  }
+
   //Reset the translation table to 1:1 here before proceeding.
-  for(int i = 0; i < 256; i++)
+  int i = 0;  //Bugfix, some platforms don't like the variable declaration within the FOR.
+  for(i = 0; i < 256; i++)
   {
     epggrab_ota_genre_translation[i] = i;
   }
@@ -1098,7 +1115,7 @@ epggrab_ota_set_genre_translation ( void )
         //Test that the to/from values are sane before proceeding.
         if(tempFrom > -1 && tempFrom < 256 && tempTo > -1 && tempTo < 256)
         {
-          tvhtrace(LS_EPGGRAB, "Valid translation from '%d' to '%d'.", tempFrom, tempTo);
+          tvhtrace(LS_EPGGRAB, "Valid translation from '%d' (0x%02x) to '%d' (0x%02x).", tempFrom, tempFrom, tempTo, tempTo);
           epggrab_ota_genre_translation[tempFrom] = tempTo;
         }
         else
@@ -1111,7 +1128,8 @@ epggrab_ota_set_genre_translation ( void )
     }
   }
 
-  for(int x = 0; x < 256; x++)
+  int x = 0;
+  for(x = 0; x < 256; x++)
   {
     if(epggrab_ota_genre_translation[x] != x)
     {
