@@ -138,6 +138,8 @@ tvheadend.dvrDetails = function(grid, index) {
           content += tvheadend.sortAndAddArray(keyword, _('Keywords'));
         if (category)
           content += tvheadend.sortAndAddArray(category, _('Categories'));
+        if (age_rating)
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Age Rating') + ':</span><span class="x-epg-desc">' + age_rating + '</span></div>';
         if (status)
             content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Status') + ':</span><span class="x-epg-body">' + status + '</span></div>';
         if (filesize)
@@ -306,7 +308,7 @@ tvheadend.dvrDetails = function(grid, index) {
             list: 'channel_icon,disp_title,disp_subtitle,disp_summary,episode_disp,start_real,stop_real,' +
                   'duration,disp_description,status,filesize,comment,duplicate,' +
                   'autorec_caption,timerec_caption,image,copyright_year,credits,keyword,category,' +
-                  'first_aired,genre,channelname,fanart_image,broadcast',
+                  'first_aired,genre,channelname,fanart_image,broadcast,age_rating',
         },
         success: function(d) {
             d = json_decode(d);
