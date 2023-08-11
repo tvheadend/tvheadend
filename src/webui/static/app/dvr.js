@@ -73,7 +73,7 @@ tvheadend.dvrDetails = function(grid, index) {
         var genre = params[21].value;
         /* channelname is unused param 22 */
         var fanart_image = params[23].value;
-        var age_rating = params[25].value;
+        var age_rating = params[24].value;
         var content = '<div class="dvr-details-dialog">' +
         '<div class="dvr-details-dialog-background-image"></div>' +
         '<div class="dvr-details-dialog-content">';
