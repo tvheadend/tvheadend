@@ -1114,6 +1114,9 @@ main(int argc, char **argv)
   tvh_signal(SIGPIPE, handle_sigpipe); // will be redundant later
   tvh_signal(SIGILL, handle_sigill);   // see handler..
 
+  if (opt_fork && !opt_user && !opt_config)
+    tvhwarn(LS_START, "Forking without --user or --config may use unexpected configuration location");
+
   /* Set privileges */
   if((opt_fork && getuid() == 0) || opt_group || opt_user) {
     const char *homedir;
