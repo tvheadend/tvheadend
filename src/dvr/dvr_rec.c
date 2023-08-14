@@ -1088,7 +1088,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
       j--;
     s[j] = '\0';
     snprintf(path + l, sizeof(path) - l, "%s", s);
-    snprintf(path + l + j, sizeof(path) - l + j, "/%s", filename);
+    snprintf(path + l + j, sizeof(path) - (l + j), "/%s", filename);
   }
 
   /* Substitute time formatters */

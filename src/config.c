@@ -17,8 +17,11 @@
  */
 
 #include <ctype.h>
+#include <limits.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "tvheadend.h"
 #include "settings.h"
@@ -1690,12 +1693,61 @@ config_check ( void )
 
 static int config_newcfg = 0;
 
+static char *config_get_dir ( uid_t uid )
+{
+  char hts_home[PATH_MAX + sizeof("/.hts/tvheadend")]; /* Must be largest of the 3 config strings! */
+  char config_home[PATH_MAX];
+  char home_dir[PATH_MAX];
+  struct stat st;
+
+  if (uid == -1)
+    uid = getuid();
+
+  snprintf(hts_home, sizeof(hts_home), "/var/lib/tvheadend");
+  if ((stat(hts_home, &st) == 0) && (st.st_uid == uid))
+    return strndup(hts_home, sizeof(hts_home));
+
+  snprintf(hts_home, sizeof(hts_home), "/etc/tvheadend");
+  if ((stat(hts_home, &st) == 0) && (st.st_uid == uid))
+    return strndup(hts_home, sizeof(hts_home));
+
+  if (realpath(getenv("HOME"), home_dir) == NULL) {
+    tvherror(LS_CONFIG, "environment variable HOME is not set");
+    return NULL;
+  }
+
+  snprintf(hts_home, sizeof(hts_home), "%s/.hts/tvheadend", home_dir);
+  if (stat(hts_home, &st) == 0) {
+    if (S_ISLNK(st.st_mode)) {
+      char hts_home_link[PATH_MAX];
+
+      if ((readlink(hts_home, hts_home_link, sizeof(hts_home_link)) == -1) ||
+          (stat(hts_home_link, &st) == -1)) {
+        tvherror(LS_CONFIG, ".hts/tvheadend is inaccessible: %s", strerror(errno));
+        return NULL;
+      }
+      strncpy(hts_home, hts_home_link, sizeof(hts_home));
+    }
+    if (!S_ISDIR(st.st_mode)) {
+      tvherror(LS_CONFIG, ".hts/tvheadend exists, but is not a directory");
+      return NULL;
+    }
+    tvhwarn(LS_CONFIG, "Found legacy '.hts/tvheadend', consider moving this to '.config/hts' instead.");
+  } else if ((realpath(getenv("XDG_CONFIG_HOME"), config_home) != NULL) &&
+      (config_home[0] != 0)) {
+    snprintf(hts_home, sizeof(hts_home), "%s/hts", config_home);
+  } else {
+    snprintf(hts_home, sizeof(hts_home), "%s/.config/hts", home_dir);
+  }
+
+  return strndup(hts_home, sizeof(hts_home));
+}
+
 void
 config_boot
   ( const char *path, gid_t gid, uid_t uid, const char *http_user_agent )
 {
   struct stat st;
-  char buf[1024];
   htsmsg_t *config2;
   htsmsg_field_t *f;
   const char *s;
@@ -1725,42 +1777,44 @@ config_boot
   config.local_ip = strdup("");
   config.local_port = 0;
 
-  idclass_register(&config_class);
-
-  satip_server_boot();
-
   /* Generate default */
-  if (!path) {
-    const char *homedir = getenv("HOME");
-    if (homedir == NULL) {
-      tvherror(LS_START, "environment variable HOME is not set");
-      exit(EXIT_FAILURE);
-    }
-    snprintf(buf, sizeof(buf), "%s/.hts/tvheadend", homedir);
-    path = buf;
+  if (!path)
+    config.confdir = config_get_dir(uid);
+  else
+    config.confdir = strndup(path, PATH_MAX);
+
+  if (config.confdir == NULL) {
+    tvherror(LS_START, "unable to determine tvheadend home");
+    exit(EXIT_FAILURE);
   }
 
+  tvhinfo(LS_CONFIG, "Using configuration from '%s'", config.confdir);
+
   /* Ensure directory exists */
-  if (stat(path, &st)) {
+  if (stat(config.confdir, &st)) {
     config_newcfg = 1;
-    if (makedirs(LS_CONFIG, path, 0700, 1, gid, uid)) {
+    if (makedirs(LS_CONFIG, config.confdir, 0700, 1, gid, uid)) {
       tvhwarn(LS_START, "failed to create settings directory %s,"
-                       " settings will not be saved", path);
+                       " settings will not be saved", config.confdir);
       return;
     }
   }
 
   /* And is usable */
-  else if (access(path, R_OK | W_OK)) {
+  else if (access(config.confdir, R_OK | W_OK)) {
     tvhwarn(LS_START, "configuration path %s is not r/w"
                      " for UID:%d GID:%d [e=%s],"
                      " settings will not be saved",
-            path, getuid(), getgid(), strerror(errno));
+            config.confdir, getuid(), getgid(), strerror(errno));
     return;
   }
 
+  idclass_register(&config_class);
+
+  satip_server_boot();
+
   /* Configure settings routines */
-  hts_settings_init(path);
+  hts_settings_init(config.confdir);
 
   /* Lock it */
   hts_settings_buildpath(config_lock, sizeof(config_lock), ".lock");
@@ -1805,6 +1859,8 @@ config_boot
   if ((config.http_user_agent &&
        strncmp(config.http_user_agent, "TVHeadend/", 10) == 0) ||
       tvh_str_default(config.http_user_agent, NULL) == NULL) {
+    char buf[1024];
+
     snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
     tvh_str_set(&config.http_user_agent, buf);
   }
@@ -1845,6 +1901,7 @@ config_init ( int backup )
 void config_done ( void )
 {
   /* note: tvhlog is inactive !!! */
+  free(config.confdir);
   free(config.wizard);
   free(config.full_version);
   free(config.http_server_name);

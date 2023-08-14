@@ -113,7 +113,7 @@ typedef struct eit_event
 {
   char              uri[529];
   char              suri[529];
-  
+
   lang_str_t       *title;
   lang_str_t       *subtitle;
   lang_str_t       *summary;
@@ -155,7 +155,7 @@ static void _eit_done(void *mod);
 
 // Dump a descriptor tag for debug (looking for new tags etc...)
 static void
-_eit_dtag_dump 
+_eit_dtag_dump
   ( epggrab_module_t *mod, uint8_t dtag, uint8_t dlen, const uint8_t *buf )
 {
 #if APS_DEBUG
@@ -187,7 +187,7 @@ static dvb_string_conv_t _eit_freesat_conv[2] = {
  */
 static int _eit_get_string_with_len
   ( epggrab_module_t *mod,
-    char *dst, size_t dstlen, 
+    char *dst, size_t dstlen,
     const uint8_t *src, size_t srclen, const char *charset )
 {
   epggrab_module_ota_t *m = (epggrab_module_ota_t *)mod;
@@ -284,7 +284,7 @@ static int _eit_desc_ext_event
     if ( (r = _eit_get_string_with_len(mod, ikey, sizeof(ikey),
                                        iptr, ilen, ev->default_charset)) < 0 )
       break;
-    
+
     ilen -= r;
     iptr += r;
 
@@ -391,12 +391,25 @@ static int _eit_desc_component
 static int _eit_desc_content
   ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
+  uint8_t tempPtr = 0;  //Temporary variable to hold a (potentially) changed *ptr value.
+  tempPtr = *ptr;
   while (len > 1) {
-    if (*ptr == 0xb1)
+    //If the genre translation table has been loaded, it will not be a null pointer.
+    if (epggrab_ota_genre_translation){
+      //Get the potentially new genre value.
+      tempPtr = epggrab_ota_genre_translation[*ptr];
+      //If we did get a translation, write a trace for debugging.
+      if(tempPtr != *ptr)
+      {
+        tvhtrace(LS_TBL_EIT, "Translating '%d' (0x%02x) to '%d' (0x%02x)", *ptr, *ptr, tempPtr, tempPtr);
+      }
+    }//END genre translation table loaded.
+
+    if (tempPtr == 0xb1)  //0xB1 is the genre code for 'Black and White'
       ev->bw = 1;
-    else if (*ptr < 0xb0) {
+    else if (tempPtr < 0xb0) {  //0xB0 is the start of the 'Special Characteristics' block.
       if (!ev->genre) ev->genre = calloc(1, sizeof(epg_genre_list_t));
-      epg_genre_list_add_by_eit(ev->genre, *ptr);
+      epg_genre_list_add_by_eit(ev->genre, (const uint8_t)tempPtr);  //Cast as a 'const'
     }
     len -= 2;
     ptr += 2;
@@ -410,7 +423,7 @@ static int _eit_desc_content
 static int _eit_desc_parental
   ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
-  int cnt = 0, sum = 0, i = 0;
+  int cnt = 0, sum = 0, i = 3;
   while (len > 3) {
     if ( ptr[i] && ptr[i] < 0x10 ) {
       cnt++;
@@ -461,7 +474,7 @@ static int _eit_desc_crid
         crid = ev->suri;
         clen = sizeof(ev->suri);
       }
-    
+
       if (crid) {
         if (strstr(buf, "crid://") == buf) {
           strlcpy(crid, buf, clen);
@@ -995,8 +1008,8 @@ _eit_callback
     mask <<= (24 - (sa % 32));
     st->sections[sa/32] &= ~mask;
   }
-  
-  /* UK Cable Virgin: EPG data for services in other transponders is transmitted 
+
+  /* UK Cable Virgin: EPG data for services in other transponders is transmitted
   // in the 'actual' transpoder table IDs */
   if ((hacks & EIT_HACK_EXTRAMUXLOOKUP) != 0 && (tableid == 0x50 || tableid == 0x4E)) {
     mm = mpegts_network_find_mux(mm->mm_network, onid, tsid, 1);
@@ -1097,7 +1110,7 @@ done:
 complete:
   if (ota && !r && (tableid >= 0x50 && tableid < 0x60))
     epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
-  
+
   return r;
 }
 
@@ -1240,7 +1253,7 @@ static int _eit_tune
     return 1;
 
   /* Check if any services are mapped */
-  // TODO: using indirect ref's like this is inefficient, should 
+  // TODO: using indirect ref's like this is inefficient, should
   //       consider changeing it?
   for (osl = RB_FIRST(&map->om_svcs); osl != NULL; osl = nxt) {
     nxt = RB_NEXT(osl, link);

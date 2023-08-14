@@ -56,6 +56,9 @@ int                          epggrab_ota_pending_flag;
 
 tvh_mutex_t                  epggrab_ota_mutex;
 
+//If the pointer is not null, translation values have also been loaded.
+unsigned char                *epggrab_ota_genre_translation = NULL;
+
 SKEL_DECLARE(epggrab_ota_mux_skel, epggrab_ota_mux_t);
 SKEL_DECLARE(epggrab_svc_link_skel, epggrab_ota_svc_link_t);
 
@@ -421,7 +424,7 @@ epggrab_ota_register
       save = 1;
     }
   }
-  
+
   /* Find module map */
   map = epggrab_ota_find_map(ota, mod);
   if (!map) {
@@ -723,7 +726,7 @@ epggrab_ota_start_cb ( void *p );
 static void
 epggrab_ota_next_arm( time_t next )
 {
-  tvhtrace(LS_EPGGRAB, "next ota start event in %li seconds", next - time(NULL));
+  tvhtrace(LS_EPGGRAB, "next ota start event in %"PRItime_t" seconds", next - time(NULL));
   gtimer_arm_absn(&epggrab_ota_start_timer, epggrab_ota_start_cb, NULL, next);
   dbus_emit_signal_s64("/epggrab/ota", "next", next);
 }
@@ -867,7 +870,7 @@ epggrab_ota_load_one
   epggrab_ota_mux_t *ota;
   epggrab_ota_map_t *map;
   const char *id;
-  
+
   mm = mpegts_mux_find(uuid);
   if (!mm) {
     hts_settings_remove("epggrab/otamux/%s", uuid);
@@ -883,14 +886,14 @@ epggrab_ota_load_one
     return;
   }
   ota->om_complete = htsmsg_get_u32_or_default(c, "complete", 0) != 0;
-  
+
   if (!(l = htsmsg_get_list(c, "modules"))) return;
   HTSMSG_FOREACH(f, l) {
     if (!(e   = htsmsg_field_get_map(f))) continue;
     if (!(id  = htsmsg_get_str(e, "id"))) continue;
     if (!(mod = (epggrab_module_ota_t*)epggrab_module_find_by_id(id)))
       continue;
-    
+
     map = calloc(1, sizeof(epggrab_ota_map_t));
     RB_INIT(&map->om_svcs);
     map->om_module   = mod;
@@ -939,12 +942,12 @@ epggrab_ota_init ( void )
       hts_settings_remove("epggrab/otamux");
 
   atomic_set(&epggrab_ota_running, 1);
-  
+
   /* Load config */
   if ((c = hts_settings_load_r(1, "epggrab/otamux"))) {
     HTSMSG_FOREACH(f, c) {
       if (!(m  = htsmsg_field_get_map(f))) continue;
-      epggrab_ota_load_one(htsmsg_field_name(f), m); 
+      epggrab_ota_load_one(htsmsg_field_name(f), m);
     }
     htsmsg_destroy(c);
   }
@@ -1033,6 +1036,109 @@ epggrab_ota_set_cron ( void )
   epggrab_ota_cron_multi = cron_multi_set(epggrab_conf.ota_cron);
   tvh_mutex_unlock(&epggrab_ota_mutex);
   epggrab_ota_arm((time_t)-1);
+}
+
+void
+epggrab_ota_set_genre_translation ( void )
+{
+
+  tvhtrace(LS_EPGGRAB, "Processing genre code translations.");
+
+  //Take the raw setting data and parse it into the genre translation table.
+  //There is some sanity checking done, however, the data is entered as freeform
+  //text by the user and errors may still slip through.
+  //Note: Each line that comes back from the WebUI is separated by a LF (0x0A).
+  //^^^^  This has been tested with a Windows WebUI client and it only sends LF, not CR/LF.
+
+  lock_assert(&global_lock);
+  tvh_mutex_lock(&epggrab_ota_mutex);
+
+  //Allocate storage for the translation table.
+  //The pointer is initialised as NULL.  If this function is not triggered
+  //(no setting in the file), the pointer will not be set and the EIT code
+  //where the actual translation ccurs can check for a null pointer before
+  //trying to translate.
+  epggrab_ota_genre_translation = calloc(sizeof(unsigned char) * 256, 1);
+
+  //Test to see if the translation table got space allocated, if not,
+  //complain and then exit the function.
+  if (!epggrab_ota_genre_translation){
+    tvherror(LS_EPGGRAB, "Unable to allocate memory, genre translations disabled.");
+    tvh_mutex_unlock(&epggrab_ota_mutex);
+    return;
+  }
+
+  //Reset the translation table to 1:1 here before proceeding.
+  int i = 0;  //Bugfix, some platforms don't like the variable declaration within the FOR.
+  for(i = 0; i < 256; i++)
+  {
+    epggrab_ota_genre_translation[i] = i;
+  }
+
+  int               tempPos = 0;
+  int               outPos = 0;
+  int               tempLen = 0;
+  char             *tempPair = NULL;
+  int               tempFrom = -1;
+  int               tempTo = -1;
+  tempLen = strlen(epggrab_conf.ota_genre_translation);
+
+  //Make sure that this is large enough to take the whole config string in one go
+  //to allow for it being full of nonsense entered by the user.
+  tempPair = calloc(tempLen + 1, 1);
+
+  //Read through the user input byte by byte and parse out the lines
+  for(tempPos = 0; tempPos < tempLen; tempPos++)
+  {
+    //If the current character is not a new line or a comma.  (Comma is an undocumented courtesy!)
+    if(epggrab_conf.ota_genre_translation[tempPos] != 10 && epggrab_conf.ota_genre_translation[tempPos] != ',')
+    {
+      //Only allow numerals, '=' and '#' to pass through.
+      //ASCII 0-9 = 48-57, '=' = 61 (in decimal)
+      if((epggrab_conf.ota_genre_translation[tempPos] >= 48 && epggrab_conf.ota_genre_translation[tempPos] <= 57) || epggrab_conf.ota_genre_translation[tempPos] == 61 || epggrab_conf.ota_genre_translation[tempPos] == '#')
+      {
+        tempPair[outPos] = epggrab_conf.ota_genre_translation[tempPos];
+        tempPair[outPos + 1] = 0;
+        outPos++;
+      }
+    }
+
+    //If we have a new line or a comma or we are at the end of the config string
+    if(epggrab_conf.ota_genre_translation[tempPos] == 10 || epggrab_conf.ota_genre_translation[tempPos] == ',' || tempPos == (tempLen - 1))
+    {
+      //Only process non-null strings.
+      if(strlen(tempPair) != 0)
+      {
+        tempFrom = -1;
+        tempTo = -1;
+        sscanf(tempPair, "%d=%d", &tempFrom, &tempTo);
+        //Test that the to/from values are sane before proceeding.
+        if(tempFrom > -1 && tempFrom < 256 && tempTo > -1 && tempTo < 256)
+        {
+          tvhtrace(LS_EPGGRAB, "Valid translation from '%d' (0x%02x) to '%d' (0x%02x).", tempFrom, tempFrom, tempTo, tempTo);
+          epggrab_ota_genre_translation[tempFrom] = tempTo;
+        }
+        else
+        {
+          tvhtrace(LS_EPGGRAB, "Ignoring '%s'.", tempPair);
+        }
+        outPos = 0;
+        tempPair[0] = 0;
+      }
+    }
+  }
+
+  int x = 0;
+  for(x = 0; x < 256; x++)
+  {
+    if(epggrab_ota_genre_translation[x] != x)
+    {
+      tvhtrace(LS_EPGGRAB, "Genre '%d' (0x%02x) translates to genre '%d' (0x%02x).", x, x, epggrab_ota_genre_translation[x], epggrab_ota_genre_translation[x]);
+    }
+  }
+  free(tempPair);
+
+  tvh_mutex_unlock(&epggrab_ota_mutex);
 }
 
 /******************************************************************************

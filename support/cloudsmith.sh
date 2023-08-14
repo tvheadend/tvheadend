@@ -39,7 +39,7 @@ if [[ -z $TARGET ]]; then
 fi
 
 case $OSPREFIX$TARGET in
-    bookworm|bullseye|buster|sid|stretch|jessie)
+    bookworm|bullseye|buster|sid|stretch|jessie|trixie)
         OS="debian";;
     bionic|focal|jammy|kinetic|impish|trusty|xenial)
         OS="ubuntu";;

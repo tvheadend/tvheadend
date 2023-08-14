@@ -45,10 +45,10 @@ if opts.deps:
 # PNGquant
 pngquant_bin = '/usr/bin/pngquant'
 if opts.pngquant:
-  import distutils.spawn
+  from shutil import which
   import subprocess
   import time
-  distutils.spawn.find_executable('pngquant')
+  which('pngquant')
 
 # Build hierarchy
 root  = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
