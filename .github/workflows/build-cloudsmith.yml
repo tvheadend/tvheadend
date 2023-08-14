@@ -1,9 +1,8 @@
-name: Build Tvheadend CI
+name: Build Tvheadend Repo
 
 on:
-  pull_request:
-    branches:
-      - master
+  push:
+    branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -13,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     name: Build on Raspberry Pi ${{ matrix.arch }}
+    env:
+      GITHUB_ENV: CLOUDSMITH_API_KEY
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
     strategy:
       matrix:
         arch: [armv6l, armv7l, aarch64]
@@ -46,6 +48,7 @@ jobs:
           sudo apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
           AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh -p raspios
+          support/cloudsmith.sh -p raspios -f '../tvheadend*.deb'
     - uses: actions/upload-artifact@v3
       with:
         name: Tvheadend-deb
@@ -99,6 +102,7 @@ jobs:
           # Pass some environment variables to the container
           env: | # YAML, but pipe character is necessary
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
+            CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
 
 
           # The shell to run commands with in the container
@@ -139,6 +143,7 @@ jobs:
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
             cp ../tvheadend*.deb /artifacts/
+            support/cloudsmith.sh -f '../tvheadend*.deb'
       - uses: actions/upload-artifact@v3
         with:
           name: Tvheadend-deb
@@ -192,6 +197,10 @@ jobs:
           name: Tvheadend-deb
           path: tvheadend*.deb
           if-no-files-found: error
+      - name: upload-cloudsmith
+        run: support/cloudsmith.sh -f 'tvheadend*.deb'
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
 
   build-rpm-native:
     runs-on: ubuntu-latest
@@ -221,3 +230,7 @@ jobs:
           name: Tvheadend-RPM
           path: tvheadend*.rpm
           if-no-files-found: error
+      # - name: upload-cloudsmith
+      #   run: support/cloudsmith.sh -f 'tvheadend*.rpm'
+      #   env:
+      #     CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
