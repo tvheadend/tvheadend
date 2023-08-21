@@ -485,6 +485,12 @@ tvhdhomerun_frontend_stop_mux
   hfe->hf_status = 0;
   hfe->hf_ready = 0;
 
+/* To stop the tuner set the channel to none, otherwise the tuner LEDs will flash on some models (e.g. HDHR3-4DC) from firmware release 20200907 and later */
+  tvhdebug(LS_TVHDHOMERUN, "setting channel to none");
+  tvh_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
+  hdhomerun_device_set_tuner_channel(hfe->hf_hdhomerun_tuner, "none");
+  tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
+  
   mtimer_arm_rel(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, sec2mono(2));
 }
 
