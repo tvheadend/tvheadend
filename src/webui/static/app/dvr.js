@@ -48,121 +48,95 @@ tvheadend.dvrDetails = function(grid, index) {
     }
 
     function getDialogContent(d) {
-        var params = d[0].params;
-        var chicon = params[0].value;
-        var title = params[1].value;
-        var subtitle = params[2].value;
-        var summary = params[3].value;
-        var episode = params[4].value;
-        var start_real = params[5].value;
-        var stop_real = params[6].value;
-        var duration = params[7].value;
-        var desc = params[8].value;
-        var status = params[9].value;
-        var filesize = params[10].value;
-        var comment = params[11].value;
-        var duplicate = params[12].value;
-        var autorec_caption = params[13].value;
-        var timerec_caption = params[14].value;
-        var image = params[15].value;
-        var copyright_year = params[16].value;
-        var credits = params[17].value;
-        var keyword = params[18].value;
-        var category = params[19].value;
-        var first_aired = params[20].value;
-        var genre = params[21].value;
-        /* channelname is unused param 22 */
-        var fanart_image = params[23].value;
-        /* broadcast is unused param 24 */
-        var age_rating = params[25].value;
-        var rating_label = params[26].value;
-        var rating_icon = params[27].value;
-        let filename = params[28].value;
+        var event = {};
+        for (var param of d[0].params) {
+          if ('value' in param)
+            event[param.id] = param.value;
+          else if ('default' in param)
+            event[param.id] = param.default;
+        }
         var content = '<div class="dvr-details-dialog">' +
         '<div class="dvr-details-dialog-background-image"></div>' +
         '<div class="dvr-details-dialog-content">';
 
-        var but;
-
-        if (chicon != null && chicon.length > 0) {
-            content += '<img class="x-epg-chicon" src="' + chicon + '">';
+        if (event.channel_icon != null && event.channel_icon.length > 0) {
+            content += '<img class="x-epg-chicon" src="' + event.channel_icon + '">';
         } else {
-            chicon = null;
+            event.channel_icon = null;
         }
 
-        if (chicon)
+        if (event.channel_icon)
             content += '<div class="x-epg-left">';
 
-        if (duplicate)
-            content += '<div class="x-epg-meta"><font color="red"><span class="x-epg-prefix">' + _('Will be skipped') + '<br>' + _('because it is a rerun of:') + '</span>' + tvheadend.niceDate(duplicate * 1000) + '</font></div>';
+        if (event.duplicate)
+            content += '<div class="x-epg-meta"><font color="red"><span class="x-epg-prefix">' + _('Will be skipped') + '<br>' + _('because it is a rerun of:') + '</span>' + tvheadend.niceDate(event.duplicate * 1000) + '</font></div>';
 
-        var icons = tvheadend.getContentTypeIcons({"category" : category, "genre" : genre}, "x-dialog-category-large-icon");
+        var icons = tvheadend.getContentTypeIcons({"category" : event.category, "genre" : event.genre}, "x-dialog-category-large-icon");
         if (icons)
             content += '<div class="x-epg-icons">' + icons + '</div>';
-        var displayTitle = title;
-        if (copyright_year)
-            displayTitle += "&nbsp;(" + copyright_year + ")";
-        if (title)
+        var displayTitle = event.disp_title;
+        if (event.copyright_year)
+            displayTitle += "&nbsp;(" + event.copyright_year + ")";
+        if (event.disp_title)
             content += '<div class="x-epg-title">' + displayTitle + '</div>';
-        if (subtitle && (!desc || (desc && subtitle != desc)))
-            content += '<div class="x-epg-title">' + subtitle + '</div>';
-        if (episode)
-            content += '<div class="x-epg-title">' + episode + '</div>';
-        if (start_real)
-            content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Scheduled Start Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(start_real * 1000) + '</span></div>';
-        if (stop_real)
-            content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Scheduled Stop Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(stop_real * 1000) + '</span></div>';
+        if (event.disp_subtitle && (!event.disp_description || (event.disp_description && event.disp_subtitle != event.disp_description)))
+            content += '<div class="x-epg-title">' + event.disp_subtitle + '</div>';
+        if (event.episode_disp)
+            content += '<div class="x-epg-title">' + event.episode_disp + '</div>';
+        if (event.start_real)
+            content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Scheduled Start Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(event.start_real * 1000) + '</span></div>';
+        if (event.stop_real)
+            content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Scheduled Stop Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(event.stop_real * 1000) + '</span></div>';
         /* We have to *1000 here (and not in epg.js) since Date requires ms and epgStore has it already converted */
-        if (first_aired)
-            content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('First Aired') + ':</span><span class="x-epg-body">' + tvheadend.niceDateYearMonth(first_aired * 1000, start_real * 1000) + '</span></div>';
-        if (duration)
-            content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Duration') + ':</span><span class="x-epg-body">' + parseInt(duration / 60) + ' ' + _('min') + '</span></div>';
-        if (chicon) {
+        if (event.first_aired)
+            content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('First Aired') + ':</span><span class="x-epg-body">' + tvheadend.niceDateYearMonth(event.first_aired * 1000, event.start_real * 1000) + '</span></div>';
+        if (event.duration)
+            content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Duration') + ':</span><span class="x-epg-body">' + parseInt(event.duration / 60) + ' ' + _('min') + '</span></div>';
+        if (event.channel_icon) {
             content += '</div>'; /* x-epg-left */
             content += '<div class="x-epg-bottom">';
         }
         // If we have no image then use fanart image instead.
         content += '<div class="x-epg-image-container">';
-        if (image != null && image.length > 0) {
-          content += '<img class="x-epg-image" src="' + image + '">';
-        } else if (fanart_image != null && fanart_image.length > 0) {
-          content += '<img class="x-epg-image" src="' + fanart_image + '">';
+        if (event.image != null && event.image.length > 0) {
+          content += '<img class="x-epg-image" src="' + event.image + '">';
+        } else if (event.fanart_image != null && event.fanart_image.length > 0) {
+          content += '<img class="x-epg-image" src="' + event.fanart_image + '">';
         }
         content += '</div>';
 
         content += '<hr class="x-epg-hr"/>';
-        if (summary && (!subtitle || subtitle != summary))
-            content += '<div class="x-epg-summary">' + summary + '</div>';
-        if (desc) {
-            content += '<div class="x-epg-desc">' + tvheadend.labelFormattingParser(desc) + '</div>';
+        if (event.disp_summary && (!event.disp_subtitle || event.disp_subtitle != event.disp_summary))
+            content += '<div class="x-epg-summary">' + event.disp_summary + '</div>';
+        if (event.disp_description) {
+            content += '<div class="x-epg-desc">' + tvheadend.labelFormattingParser(event.disp_description) + '</div>';
             content += '<hr class="x-epg-hr"/>';
         }
-        content += tvheadend.getDisplayCredits(credits);
-        if (keyword)
-          content += tvheadend.sortAndAddArray(keyword, _('Keywords'));
-        if (category)
-          content += tvheadend.sortAndAddArray(category, _('Categories'));
 
-        if (rating_icon)
-            content += '<img class="x-epg-rlicon" src="' + rating_icon + '">';
-
-        if (age_rating)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Age Rating') + ':</span><span class="x-epg-desc">' + age_rating + '</span></div>';
-        if (rating_label)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Parental Rating') + ':</span><span class="x-epg-desc">' + rating_label + '</span></div>';
-        if (status)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Status') + ':</span><span class="x-epg-desc">' + status + '</span></div>';
-        if (filesize)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('File size') + ':</span><span class="x-epg-desc">' + parseInt(filesize / 1000000) + ' MB</span></div>';
-        if (filename && (tvheadend.uiviewlevel ? tvheadend.uiviewlevel : tvheadend.uilevel) !== 'basic')  // Only show for 'advanced' and 'expert' levels.
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('File name') + ':</span><span class="x-epg-desc">' + filename + '</span></div>';
-        if (comment)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Comment') + ':</span><span class="x-epg-desc">' + comment + '</span></div>';
-        if (autorec_caption)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Autorec') + ':</span><span class="x-epg-desc">' + autorec_caption + '</span></div>';
-        if (timerec_caption)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Time Scheduler') + ':</span><span class="x-epg-desc">' + timerec_caption + '</span></div>';
-        if (chicon)
+        content += tvheadend.getDisplayCredits(event.credits);
+        if (event.keyword)
+          content += tvheadend.sortAndAddArray(event.keyword, _('Keywords'));
+        if (event.category)
+          content += tvheadend.sortAndAddArray(event.category, _('Categories'));
+        if (event.rating_icon)
+            content += '<img class="x-epg-rlicon" src="' + event.rating_icon + '">';
+        if (event.age_rating)
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Age Rating') + ':</span><span class="x-epg-desc">' + event.age_rating + '</span></div>';
+        if (event.rating_label)
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Parental Rating') + ':</span><span class="x-epg-desc">' + event.rating_label + '</span></div>';
+        if (event.status)
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Status') + ':</span><span class="x-epg-desc">' + event.status + '</span></div>';
+        if (event.filesize)
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('File size') + ':</span><span class="x-epg-desc">' + parseInt(event.filesize / 1000000) + ' MB</span></div>';
+        if (event.filename && (tvheadend.uiviewlevel ? tvheadend.uiviewlevel : tvheadend.uilevel) !== 'basic')  // Only show for 'advanced' and 'expert' levels.
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('File name') + ':</span><span class="x-epg-desc">' + event.filename + '</span></div>';
+        if (event.comment)
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Comment') + ':</span><span class="x-epg-desc">' + event.comment + '</span></div>';
+        if (event.autorec_caption)
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Autorec') + ':</span><span class="x-epg-desc">' + event.autorec_caption + '</span></div>';
+        if (event.timerec_caption)
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Time Scheduler') + ':</span><span class="x-epg-desc">' + event.timerec_caption + '</span></div>';
+        if (event.channel_icon)
             content += '</div>'; /* x-epg-bottom */
       content += '</div>';        //dialog content
       return content
