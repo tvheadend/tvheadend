@@ -420,7 +420,7 @@ dvr_get_disk_space_tcb(void *opaque, int dearmed)
     htsmsg_add_s64(m, "freediskspace", dvr_bfree);
     htsmsg_add_s64(m, "useddiskspace", dvr_bused);
     htsmsg_add_s64(m, "totaldiskspace", dvr_btotal);
-    notify_by_msg("diskspaceUpdate", m, 0);
+    notify_by_msg("diskspaceUpdate", m, 0, 0);
 
     /* check free disk space for each dvr config and start cleanup if needed */
     dvr_disk_space_check();

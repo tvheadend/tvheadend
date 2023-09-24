@@ -552,7 +552,7 @@ comet_mailbox_rewrite_msg(int rewrite, htsmsg_t *m, const char *lang)
  *
  */
 void
-comet_mailbox_add_message(htsmsg_t *m, int isdebug, int rewrite)
+comet_mailbox_add_message(htsmsg_t *m, int isdebug, int isrestricted, int rewrite)
 {
   comet_mailbox_t *cmb;
   htsmsg_t *e;
@@ -565,7 +565,7 @@ comet_mailbox_add_message(htsmsg_t *m, int isdebug, int rewrite)
   if (atomic_get(&comet_running)) {
     LIST_FOREACH(cmb, &mailboxes, cmb_link) {
 
-      if(cmb->cmb_restricted)
+      if(isrestricted && cmb->cmb_restricted)
         continue;
 
       if(isdebug && !cmb->cmb_debug)
@@ -593,6 +593,6 @@ comet_mailbox_add_logmsg(const char *txt, int isdebug, int rewrite)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "notificationClass", "logmessage");
   htsmsg_add_str(m, "logtxt", txt);
-  comet_mailbox_add_message(m, isdebug, 0);
+  comet_mailbox_add_message(m, isdebug, 1, 0);
   htsmsg_destroy(m);
 }

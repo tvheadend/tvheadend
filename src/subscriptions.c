@@ -1124,7 +1124,7 @@ subscription_status_callback ( void *p )
 
     htsmsg_t *m = subscription_create_msg(s, NULL);
     htsmsg_add_u32(m, "updateEntry", 1);
-    notify_by_msg("subscriptions", m, NOTIFY_REWRITE_SUBSCRIPTIONS);
+    notify_by_msg("subscriptions", m, 1, NOTIFY_REWRITE_SUBSCRIPTIONS);
     count++;
   }
   if (old_count != count) {

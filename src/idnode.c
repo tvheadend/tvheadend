@@ -1922,7 +1922,7 @@ idnode_notify_title_changed (void *in)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_uuid(m, "uuid", &((idnode_t *)in)->in_uuid);
-  notify_by_msg("title", m, NOTIFY_REWRITE_TITLE);
+  notify_by_msg("title", m, 0, NOTIFY_REWRITE_TITLE);
   idnode_notify_changed(in);
 }
 
