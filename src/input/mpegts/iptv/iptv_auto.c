@@ -386,7 +386,7 @@ iptv_auto_network_process(void *aux, const char *last_url,
   mpegts_mux_t *mm, *mm2;
   int r = -1, count, n, i;
   http_arg_list_t remove_args, ignore_args;
-  char *argv[32];
+  char *argv[32], *removes, *ignores;
 
   /* note that we know that data are terminated with '\0' */
 
@@ -395,14 +395,16 @@ iptv_auto_network_process(void *aux, const char *last_url,
 
   http_arg_init(&remove_args);
   if (in->in_remove_args) {
-    n = http_tokenize(in->in_remove_args, argv, ARRAY_SIZE(argv), -1);
+    removes = tvh_strdupa(in->in_remove_args);
+    n = http_tokenize(removes, argv, ARRAY_SIZE(argv), -1);
     for (i = 0; i < n; i++)
       http_arg_set(&remove_args, argv[i], NULL);
   }
 
   http_arg_init(&ignore_args);
   if (in->in_ignore_args) {
-    n = http_tokenize(in->in_ignore_args, argv, ARRAY_SIZE(argv), -1);
+    ignores = tvh_strdupa(in->in_ignore_args);
+    n = http_tokenize(ignores, argv, ARRAY_SIZE(argv), -1);
     for (i = 0; i < n; i++)
       http_arg_set(&ignore_args, argv[i], NULL);
   }
@@ -419,6 +421,7 @@ iptv_auto_network_process(void *aux, const char *last_url,
                                       in->in_channel_number);
 
   http_arg_flush(&remove_args);
+  http_arg_flush(&ignore_args);
 
   if (r == 0) {
     count = 0;
