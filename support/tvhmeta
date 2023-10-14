@@ -242,7 +242,7 @@ class TvhMeta():
         # Our json looks like this:
         # {"entries":[{"uuid":"abc..,"image":"...","fanart_image":"...","title":{"eng":"TITLE"},"copyright_year":2014}]}
         # So go through the structure to get the record
-        okay = False
+        okay = True
         recjson = self.request("api/idnode/load", data)
         try:
             recall = json.loads(recjson)
