@@ -1,0 +1,2 @@
+DEBDIST=raspbianbookworm
+source Autobuild/debian.sh
