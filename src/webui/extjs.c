@@ -224,10 +224,10 @@ FamFamFam</a>, "\
 %s<br/>\n\
 %s\n\
 </p>\n\
-<a href='https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3Z87UEHP3WZK2'><img src='https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif' alt='' /></a>\n\
+<a href='https://opencollective.com/tvheadend/donate'><img src='static/img/opencollective.png' alt='' /></a>\n\
 </center>\n",
-   tvh_gettext_lang(lang, N_("If you'd like to support the project, please consider a donation.")),
-   tvh_gettext_lang(lang, N_("All proceeds are used to support server infrastructure and hosting, and to buy test equipment.")));
+   tvh_gettext_lang(lang, N_("To support Tvheadend development please consider making a donation")),
+   tvh_gettext_lang(lang, N_("towards project operating costs.")));
 
   http_output_html(hc);
   return 0;
