@@ -51,11 +51,11 @@ NASM_URL       = https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VER)/$(NASM_T
 NASM_SHA1      = 13bf04e35e1042dc163d14aa124c68cfa7620871
 NASM_DIFFS     = remove-invalid-pure_func-qualifiers.diff
 
-LIBX264_VER    = d2907f67227cbf38ac957efed84c532b12ce19cc
+LIBX264_VER    = c196240409e4d7c01b47448d93b1f9683aaa7cf7
 LIBX264        = x264-$(LIBX264_VER)
 LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = https://code.videolan.org/videolan/x264/-/archive/$(LIBX264_VER)/$(LIBX264_TB)
-LIBX264_SHA1   = 6b69f9af34ddfb9bc0bbfedb0b41a0b8b6c2771a
+LIBX264_SHA1   = eeca87def74d390669dbc8a98c49012305bc9b99
 
 LIBX265_VER    = 3.5
 LIBX265        = x265_$(LIBX265_VER)
