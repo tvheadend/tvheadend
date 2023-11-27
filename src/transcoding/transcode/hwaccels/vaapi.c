@@ -594,7 +594,9 @@ vaapi_decode_setup_context(AVCodecContext *avctx)
     }
 
     avctx->get_buffer2 = vaapi_get_buffer2;
+#if LIBAVCODEC_VERSION_MAJOR < 60
     avctx->thread_safe_callbacks = 0;
+#endif
 
     return 0;
 }
