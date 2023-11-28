@@ -244,7 +244,14 @@ typedef struct dvr_entry {
   uint32_t de_content_type;  /* Content type (from EPG) (only code) */
   uint16_t de_copyright_year; /* Copyright year (from EPG) */
   uint16_t de_dvb_eid;
-  uint16_t de_age_rating; /* Age rating (from EPG) */
+  uint16_t de_age_rating;     /* Age rating (from EPG) */
+  //Depending how old the recording is, the current rating label system
+  //may have changed, so keep an absolute copy of the values at
+  //the time of recording rather than pointing to a rating label
+  //object that may no longer exist many years later.
+  char *de_rating_label_saved;    /* Saved rating label for once the recording has been completed*/
+  char *de_rating_icon_saved;     /* Saved rating icon full path (not image cache) for once the recording has been completed*/
+  ratinglabel_t *de_rating_label; /* 'Live' rating label object */
 
   int de_pri;
   int de_dont_reschedule;
@@ -592,7 +599,8 @@ dvr_entry_update( dvr_entry_t *de, int enabled,
                   time_t start, time_t stop,
                   time_t start_extra, time_t stop_extra,
                   dvr_prio_t pri, int retention, int removal,
-                  int playcount, int playposition, int age_rating);
+                  int playcount, int playposition, int age_rating,
+                  ratinglabel_t *rating_label);
 
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 

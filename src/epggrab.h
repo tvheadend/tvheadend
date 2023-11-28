@@ -318,6 +318,7 @@ typedef struct epggrab_conf {
   uint32_t              channel_reicon;
   uint32_t              epgdb_periodicsave;
   uint32_t              epgdb_saveafterimport;
+  uint32_t              epgdb_processparentallabels;
   char                 *ota_cron;
   char                 *ota_genre_translation;
   uint32_t              ota_timeout;

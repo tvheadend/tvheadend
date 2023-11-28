@@ -43,6 +43,7 @@
 #endif
 
 #include "settings.h"
+#include "epggrab.h"  //Needed to be able to test for epggrab_conf.epgdb_processparentallabels
 
 /* **************************************************************************
  * Datatypes and variables
@@ -50,7 +51,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 36
+#define HTSP_PROTO_VERSION 37
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -960,6 +961,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   uint32_t u32;
   char buf[512];
   char ubuf[UUID_HEX_SIZE];
+  const char *str;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
 
@@ -1001,10 +1003,52 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
 
     //To not risk breaking older clients, only
     //provide the 'age rating' via HTSP if the requested
-    //API version if greater than 35.
-    if (htsp->htsp_version > 35)
+    //API version if greater than 36.
+    if (htsp->htsp_version > 36)
     {
+      //Having the age in the DVR entry is new, that is why
+      //it is processed inside the version test.
       htsmsg_add_u32(out, "ageRating", de->de_age_rating);
+
+      //Only go on to add the rating label stuff if
+      //rating labels are enabled.
+      if(epggrab_conf.epgdb_processparentallabels){
+        //If this is still scheduled (in the future) then send the current values,
+        //if not, send the 'saved' values.
+
+        if(de->de_sched_state == DVR_SCHEDULED){
+          if(de->de_rating_label){
+            if(de->de_rating_label->rl_display_label){
+              htsmsg_add_str(out, "ratingLabel", de->de_rating_label->rl_display_label);
+            }
+            //If the rating icon is not null.
+            if(de->de_rating_label->rl_icon){
+              str = de->de_rating_label->rl_icon;
+              if (!strempty(str)) {
+                str = imagecache_get_propstr(str, buf, sizeof(buf));
+                if (str)
+                  htsmsg_add_str(out, "ratingIcon", str);
+              }//END got an imagecache location
+            }//END icon not null
+          }
+        }
+        else
+        {
+          if(de->de_rating_label_saved){
+            if(de->de_rating_label_saved){
+              htsmsg_add_str(out, "ratingLabel", de->de_rating_label_saved);
+            }
+            if(de->de_rating_icon_saved){
+              str = de->de_rating_icon_saved;
+              if (!strempty(str)) {
+                str = imagecache_get_propstr(str, buf, sizeof(buf));
+                if (str)
+                  htsmsg_add_str(out, "ratingIcon", str);
+              }//END got an imagecache location
+            }//END icon not null
+          }
+        }
+      }//END processing rating labels is enabled
     }
 
 
@@ -1313,8 +1357,41 @@ htsp_build_event
     if (htsp->htsp_version < 6) code = (code >> 4) & 0xF;
     htsmsg_add_u32(out, "contentType", code);
   }
-  if (e->age_rating)
+  if (e->age_rating){
     htsmsg_add_u32(out, "ageRating", e->age_rating);
+  }
+  //To not risk breaking older clients, only
+  //provide the 'rating label' & 'rating icon' via HTSP if the requested
+  //version if greater than 36.
+  //Because this is the EPG, do not restrict the ageRating based on version,
+  //that field was added in a very early version.
+  if (htsp->htsp_version > 36)
+  {
+    //If we are processing parental labels
+    if(epggrab_conf.epgdb_processparentallabels)
+    {
+      //If this event had a label pointer that is not null
+      if (e->rating_label)
+        {
+          //If there is a 'display label'
+          //Do not fall-back to the 'label' because the 'display label'
+          //may be intentionally null.
+          if(e->rating_label->rl_display_label){
+            htsmsg_add_str(out, "ratingLabel", e->rating_label->rl_display_label);
+          }
+          //If the rating icon is not null.
+          if(e->rating_label->rl_icon){
+            str = e->rating_label->rl_icon;
+            if (!strempty(str)) {
+              str = imagecache_get_propstr(str, buf, sizeof(buf));
+              if (str)
+                htsmsg_add_str(out, "ratingIcon", str);
+            }//END got an imagecache location
+          }//END icon not null
+        }//END rating label not null
+    }//END parental labels enabled.
+  }//END HTSP version check
+
   if (e->star_rating)
     htsmsg_add_u32(out, "starRating", e->star_rating);
   if (e->copyright_year)
@@ -2056,6 +2133,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   channel_t *channel = NULL;
   int enabled, retention, removal, playcount = -1, playposition = -1;
   int age_rating;
+  ratinglabel_t *rating_label;
 
   de = htsp_findDvrEntry(htsp, in, &out, 0);
   if (de == NULL)
@@ -2080,6 +2158,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   removal     = htsmsg_get_u32_or_default(in, "removal",    DVR_RET_REM_DVRCONFIG);
   priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NOTSET);
   age_rating  = htsmsg_get_u32_or_default(in, "ageRating",  0);
+  rating_label = NULL;  //Rating labels not supported for manually created DVR entries
   title       = htsmsg_get_str(in, "title");
   subtitle    = htsmsg_get_str(in, "subtitle");
   summary     = htsmsg_get_str(in, "summary");
@@ -2113,7 +2192,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   de = dvr_entry_update(de, enabled, dvr_config_name, channel, title, subtitle,
                         summary, desc, lang, start, stop, start_extra, stop_extra,
                         priority, retention, removal, playcount, playposition,
-                        age_rating);
+                        age_rating, rating_label);
 
   return htsp_success();
 }

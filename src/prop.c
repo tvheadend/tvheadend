@@ -241,7 +241,7 @@ prop_write_values
         break;
       }
     }
-  
+
     /* Setter */
     if (p->set && snew)
       save = p->set(obj, snew);
@@ -298,7 +298,7 @@ prop_read_value
     assert(p->get); /* requirement */
     if (val)
       htsmsg_add_msg(m, name, (htsmsg_t*)val);
-  
+
   /* Single */
   } else {
     switch(p->type) {
@@ -380,7 +380,7 @@ prop_read_values
     const property_t *p;
     htsmsg_field_t *f;
     int b, total = 0, count = 0;
-    
+
     HTSMSG_FOREACH(f, list) {
       total++;
       if (!htsmsg_field_get_bool(f, &b)) {
