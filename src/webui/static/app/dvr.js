@@ -73,7 +73,10 @@ tvheadend.dvrDetails = function(grid, index) {
         var genre = params[21].value;
         /* channelname is unused param 22 */
         var fanart_image = params[23].value;
+        /* broadcast is unused param 24 */
         var age_rating = params[25].value;
+        var rating_label = params[26].value;
+        var rating_icon = params[27].value;
         var content = '<div class="dvr-details-dialog">' +
         '<div class="dvr-details-dialog-background-image"></div>' +
         '<div class="dvr-details-dialog-content">';
@@ -138,18 +141,24 @@ tvheadend.dvrDetails = function(grid, index) {
           content += tvheadend.sortAndAddArray(keyword, _('Keywords'));
         if (category)
           content += tvheadend.sortAndAddArray(category, _('Categories'));
+
+        if (rating_icon)
+            content += '<img class="x-epg-rlicon" src="' + rating_icon + '">';
+
         if (age_rating)
             content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Age Rating') + ':</span><span class="x-epg-desc">' + age_rating + '</span></div>';
+        if (rating_label)
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Parental Rating') + ':</span><span class="x-epg-desc">' + rating_label + '</span></div>';
         if (status)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Status') + ':</span><span class="x-epg-body">' + status + '</span></div>';
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Status') + ':</span><span class="x-epg-desc">' + status + '</span></div>';
         if (filesize)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('File size') + ':</span><span class="x-epg-body">' + parseInt(filesize / 1000000) + ' MB</span></div>';
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('File size') + ':</span><span class="x-epg-desc">' + parseInt(filesize / 1000000) + ' MB</span></div>';
         if (comment)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Comment') + ':</span><span class="x-epg-body">' + comment + '</span></div>';
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Comment') + ':</span><span class="x-epg-desc">' + comment + '</span></div>';
         if (autorec_caption)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Autorec') + ':</span><span class="x-epg-body">' + autorec_caption + '</span></div>';
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Autorec') + ':</span><span class="x-epg-desc">' + autorec_caption + '</span></div>';
         if (timerec_caption)
-            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Time Scheduler') + ':</span><span class="x-epg-body">' + timerec_caption + '</span></div>';
+            content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Time Scheduler') + ':</span><span class="x-epg-desc">' + timerec_caption + '</span></div>';
         if (chicon)
             content += '</div>'; /* x-epg-bottom */
       content += '</div>';        //dialog content
@@ -308,7 +317,7 @@ tvheadend.dvrDetails = function(grid, index) {
             list: 'channel_icon,disp_title,disp_subtitle,disp_summary,episode_disp,start_real,stop_real,' +
                   'duration,disp_description,status,filesize,comment,duplicate,' +
                   'autorec_caption,timerec_caption,image,copyright_year,credits,keyword,category,' +
-                  'first_aired,genre,channelname,fanart_image,broadcast,age_rating',
+                  'first_aired,genre,channelname,fanart_image,broadcast,age_rating,rating_label,rating_icon',
         },
         success: function(d) {
             d = json_decode(d);
@@ -615,7 +624,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         del: true,
         list: 'category,enabled,duplicate,disp_title,disp_extratext,episode_disp,' +
               'channel,image,copyright_year,start_real,stop_real,duration,pri,filesize,' +
-              'sched_status,errors,data_errors,config_name,owner,creator,comment,genre,broadcast,age_rating',
+              'sched_status,errors,data_errors,config_name,owner,creator,comment,genre,broadcast,age_rating,rating_label',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearAndDuplicateRenderer(),
@@ -805,7 +814,7 @@ tvheadend.dvr_finished = function(panel, index) {
         del: false,
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,' +
               'start_real,stop_real,duration,filesize,copyright_year,' +
-              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,age_rating',
+              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,age_rating,rating_label',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
@@ -925,7 +934,7 @@ tvheadend.dvr_failed = function(panel, index) {
                      _('The associated file will be removed from storage.'),
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,' +
               'image,copyright_year,start_real,stop_real,duration,filesize,status,' +
-              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,age_rating',
+              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,age_rating,rating_label',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
@@ -1004,7 +1013,7 @@ tvheadend.dvr_removed = function(panel, index) {
         del: true,
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,image,' +
               'copyright_year,start_real,stop_real,duration,status,' +
-              'sched_status,errors,data_errors,url,config_name,owner,creator,comment,age_rating',
+              'sched_status,errors,data_errors,url,config_name,owner,creator,comment,age_rating,rating_label',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),

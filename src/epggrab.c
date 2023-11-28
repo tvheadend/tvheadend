@@ -271,7 +271,7 @@ static void _epggrab_load ( void )
                    epggrab_conf.epgdb_periodicsave * 3600);
 
   idnode_notify_changed(&epggrab_conf.idnode);
- 
+
   /* Load module config (channels) */
   eit_load();
   opentv_load();
@@ -427,6 +427,15 @@ const idclass_t epggrab_class = {
       .group  = 1,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "epgdb_processparentallabels",
+      .name   = N_("Process Parental Rating Labels"),
+      .desc   = N_("Convert broadcast ratings codes into "
+                   "human-readable labels like 'PG' or 'FSK 16'."),
+      .off    = offsetof(epggrab_conf_t, epgdb_processparentallabels),
+      .group  = 1,
+    },
+    {
       .type   = PT_STR,
       .id     = "cron",
       .name   = N_("Cron multi-line"),
@@ -536,6 +545,7 @@ void epggrab_init ( void )
   epggrab_conf.channel_reicon     = 0;
   epggrab_conf.epgdb_periodicsave = 0;
   epggrab_conf.epgdb_saveafterimport = 0;
+  epggrab_conf.epgdb_processparentallabels = 0;
 
   epggrab_cron_multi              = NULL;
 
@@ -566,7 +576,7 @@ void epggrab_init ( void )
 
   /* Initialise the OTA subsystem */
   epggrab_ota_init();
-  
+
   /* Load config */
   _epggrab_load();
 

@@ -789,6 +789,13 @@
     margin: 5px;
     width: 20%;
     max-height: 99px;
+    max-width: 99px;
+}
+
+.x-epg-rlicon {
+    float: right;
+    margin: 5px;
+    max-height: 50px;
 }
 
 .x-epg-time {
@@ -828,7 +835,7 @@
 }
 
 .x-epg-genre {
-    margin-left: 5px;
+    margin-left: 10px;
 }
 
 .x-epg-duplicate {
