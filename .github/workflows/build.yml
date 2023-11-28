@@ -115,6 +115,7 @@ jobs:
             if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
             if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
             if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i '/jessie-updates/d' /etc/apt/sources.list; fi
+            if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list; fi
             if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
             if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
             if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i '/stretch-updates/d' /etc/apt/sources.list; fi
