@@ -43,7 +43,7 @@ case $OSPREFIX$TARGET in
         OS="debian";;
     bionic|focal|jammy|kinetic|impish|trusty|xenial)
         OS="ubuntu";;
-    raspiosbullseye|raspiosbuster|raspiosjessieraspiosstretch)
+    raspios*)
         OS="raspbian";;
     *) echo "OS $TARGET could not be recognized" && exit 1;;
 esac
