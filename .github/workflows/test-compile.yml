@@ -5,9 +5,13 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+concurrency:
+  # auto-cancel previous runs if the pull request is force-push updated
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
  build-ubuntu-latest:
