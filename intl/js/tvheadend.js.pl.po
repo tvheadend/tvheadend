@@ -590,12 +590,11 @@ msgstr "Czy na pewno chcesz usunąć wybór?"
 
 #: src/webui/static/app/dvr.js:233
 msgid "Do you really want to gracefully stop/unschedule the selection?"
-msgstr "Czy na pewno chcesz, aby bezpiecznie zatrzymać/unschedule wybór?"
+msgstr "Czy na pewno chcesz bezpiecznie zatrzymać/anulować wybrane?"
 
 #: src/webui/static/app/epg.js:324
 msgid "Do you really want to gracefully stop/unschedule this recording?"
-msgstr ""
-"Czy na pewno chcesz, aby bezpiecznie zatrzymać/unschedule to nagranie?"
+msgstr "Czy na pewno chcesz bezpiecznie zatrzymać/anulować to nagrywanie?"
 
 #: src/webui/static/app/dvr.js:434
 msgid "Do you really want to remove the selected recordings from storage?"
