@@ -554,7 +554,7 @@ msgstr "Szczegóły"
 
 #: src/webui/static/app/dvr.js:865
 msgid "Digital Video Recorder"
-msgstr "Cyfrowa nagrywarka wideo"
+msgstr "Cyfrowy rejestrator wideo"
 
 #: src/webui/static/app/dvr.js:705
 msgid "Digital Video Recorder Profile"
