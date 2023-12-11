@@ -2955,7 +2955,7 @@ msgstr "Częstotliwość (kHz)"
 
 #: src/dvr/dvr_autorec.c:776
 msgid "Fri"
-msgstr "Pt."
+msgstr "Pt"
 
 #: src/input/mpegts/satip/satip.c:375
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:193
