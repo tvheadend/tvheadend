@@ -250,11 +250,11 @@ msgstr "Automatyczne odświeżanie"
 #: src/webui/static/app/epg.js:263 src/webui/static/app/dvr.js:69
 #: src/webui/static/app/dvr.js:735
 msgid "Autorec"
-msgstr "Auto-nagrywanie"
+msgstr "Autonagrywanie"
 
 #: src/webui/static/app/dvr.js:736
 msgid "Autorecs"
-msgstr "Auto-nagrywanie"
+msgstr "Autonagrywania"
 
 #: src/webui/static/app/idnode.js:446 src/webui/static/app/idnode.js:691
 msgid "Available"
