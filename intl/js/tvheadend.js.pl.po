@@ -1007,7 +1007,7 @@ msgstr "Zamapowane"
 
 #: src/webui/static/app/i18n-post.js:37
 msgid "Mar"
-msgstr "Mar."
+msgstr "Mar"
 
 #: src/webui/static/app/i18n-post.js:22
 msgid "March"
@@ -1047,7 +1047,7 @@ msgstr "MiB"
 
 #: src/webui/static/app/i18n-post.js:94
 msgid "Mon"
-msgstr "Pon."
+msgstr "Pn"
 
 #: src/webui/static/app/i18n-post.js:84
 msgid "Monday"
