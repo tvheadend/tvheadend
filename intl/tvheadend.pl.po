@@ -8847,7 +8847,7 @@ msgstr "Sieciowy interfejs użytkownika"
 
 #: src/dvr/dvr_autorec.c:774
 msgid "Wed"
-msgstr "Śr."
+msgstr "Śr"
 
 #: src/wizard.c:243 src/wizard.c:465
 msgid "Welcome - Tvheadend - your TV streaming server and video recorder"
