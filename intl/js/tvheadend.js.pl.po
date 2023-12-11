@@ -233,7 +233,7 @@ msgstr "Audiodeskrypcja#EPG"
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
-msgstr "Sierp."
+msgstr "Sie"
 
 #: src/webui/static/app/i18n-post.js:27
 msgid "August"
