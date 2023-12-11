@@ -578,7 +578,7 @@ msgstr "Wyświetlanie {0} - {1} z {2}"
 
 #: src/webui/static/app/dvr.js:263
 msgid "Do you really want to abort/unschedule the selection?"
-msgstr "Czy na pewno chcesz przerwać/unschedule wybór?"
+msgstr "Czy na pewno chcesz przerwać/anulować wybrane?"
 
 #: src/webui/static/app/dvr.js:594
 msgid "Do you really want to delete the selected recordings?"
