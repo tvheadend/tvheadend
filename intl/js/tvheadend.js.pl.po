@@ -907,7 +907,7 @@ msgstr "Lipiec"
 
 #: src/webui/static/app/i18n-post.js:40
 msgid "Jun"
-msgstr "Czer."
+msgstr "Cze"
 
 #: src/webui/static/app/i18n-post.js:25
 msgid "June"
