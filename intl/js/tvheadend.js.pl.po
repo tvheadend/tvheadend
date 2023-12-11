@@ -1926,7 +1926,7 @@ msgstr "Oglądaj telewizję na żywo w nowym oknie przeglądarki."
 
 #: src/webui/static/app/i18n-post.js:96
 msgid "Wed"
-msgstr "Śr."
+msgstr "Śr"
 
 #: src/webui/static/app/i18n-post.js:86
 msgid "Wednesday"
