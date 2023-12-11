@@ -138,7 +138,7 @@ msgstr "2 lata"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:732
 msgid "2-Port switch (universal LNB)"
-msgstr "Przełącznik 2-portowy (universal LNB)"
+msgstr "Przełącznik 2-portowy (uniwersalny LNB)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:73
 msgid "3"
@@ -170,7 +170,7 @@ msgstr "4"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:738
 msgid "4-Port switch (universal LNB)"
-msgstr "Przełącznik 4-portowy (universal LNB)"
+msgstr "Przełącznik 4-portowy (uniwersalny LNB)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:75
 msgid "5"
