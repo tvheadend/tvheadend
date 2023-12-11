@@ -4252,7 +4252,7 @@ msgstr "Identyfikator modułu używany do pobierania danych EPG."
 
 #: src/dvr/dvr_autorec.c:772
 msgid "Mon"
-msgstr "Pon."
+msgstr "Pn"
 
 #: src/tvhlog.c:81
 msgid "Monitonic timer"
