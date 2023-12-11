@@ -991,7 +991,7 @@ msgstr "Klient CA %i"
 
 #: src/esfilter.c:1025
 msgid "CA identification"
-msgstr "identyfikacja CA"
+msgstr "Identyfikacja CA"
 
 #: src/esfilter.c:1035
 msgid "CA provider"
