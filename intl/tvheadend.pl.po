@@ -6698,7 +6698,7 @@ msgstr "Napisy programu (jeśli występują)."
 
 #: src/dvr/dvr_autorec.c:778
 msgid "Sun"
-msgstr "Nd."
+msgstr "Nd"
 
 #: src/profile.c:1695
 msgid "Surround (2 front, rear mono)"
