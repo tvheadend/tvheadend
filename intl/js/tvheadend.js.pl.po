@@ -347,7 +347,7 @@ msgstr "Anulować wybrane połączenie?"
 
 #: src/webui/static/app/status.js:556
 msgid "Cancel this connection"
-msgstr "Anuluj to połaczenie"
+msgstr "Anuluj to połączenie"
 
 #: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1511
 msgid "Cannot apply"
