@@ -683,7 +683,7 @@ msgstr "Czas zakończenia"
 
 #: src/webui/static/app/i18n-post.js:264 src/webui/static/app/i18n-post.js:270
 msgid "Enter Filter Text..."
-msgstr "Wpisz tekst filtra"
+msgstr "Wprowadź tekst filtra..."
 
 #: src/webui/static/app/epg.js:544 src/webui/static/app/epg.js:545
 msgid "Episode"
