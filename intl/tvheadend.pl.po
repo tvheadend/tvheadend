@@ -4032,7 +4032,7 @@ msgstr "Producent"
 
 #: src/input/mpegts/satip/satip.c:407
 msgid "Manufacturer URL"
-msgstr "URL producenta"
+msgstr "Adres URL producenta"
 
 #: src/input/mpegts/satip/satip.c:432
 msgid "Manufacturer's model number."
