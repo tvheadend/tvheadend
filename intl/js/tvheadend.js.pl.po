@@ -93,15 +93,15 @@ msgstr "3 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:63
 msgid "4 #monthNumber"
-msgstr "4 #monthNumber"
+msgstr "4 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:64
 msgid "5 #monthNumber"
-msgstr "5 #monthNumber"
+msgstr "5 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:65
 msgid "6 #monthNumber"
-msgstr "6 #monthNumber"
+msgstr "6 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:66
 msgid "7 #monthNumber"
