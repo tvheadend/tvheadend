@@ -1166,7 +1166,7 @@ msgstr "Nieustawiony"
 
 #: src/webui/static/app/i18n-post.js:45
 msgid "Nov"
-msgstr "List."
+msgstr "Lis"
 
 #: src/webui/static/app/i18n-post.js:30
 msgid "November"
@@ -1194,7 +1194,7 @@ msgstr "OK"
 
 #: src/webui/static/app/i18n-post.js:44
 msgid "Oct"
-msgstr "Paź."
+msgstr "Paź"
 
 #: src/webui/static/app/i18n-post.js:29
 msgid "October"
