@@ -7892,7 +7892,7 @@ msgstr "Thriller"
 
 #: src/dvr/dvr_autorec.c:775
 msgid "Thu"
-msgstr "Czw."
+msgstr "Cz"
 
 #: src/tvhlog.c:84 src/config.c:1914
 msgid "Time"
