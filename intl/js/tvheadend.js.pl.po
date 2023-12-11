@@ -105,15 +105,15 @@ msgstr "6 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:66
 msgid "7 #monthNumber"
-msgstr "7 #monthNumber"
+msgstr "7 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:67
 msgid "8 #monthNumber"
-msgstr "8 #monthNumber"
+msgstr "8 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:68
 msgid "9 #monthNumber"
-msgstr "9 #monthNumber"
+msgstr "9 #NumerMiesiąca"
 
 #: src/webui/static/app/dvr.js:245
 msgid "Abort"
