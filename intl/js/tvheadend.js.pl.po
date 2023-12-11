@@ -1452,7 +1452,7 @@ msgstr "SNR"
 
 #: src/webui/static/app/i18n-post.js:99
 msgid "Sat"
-msgstr "Sob."
+msgstr "So"
 
 #: src/webui/static/app/i18n-post.js:89
 msgid "Saturday"
