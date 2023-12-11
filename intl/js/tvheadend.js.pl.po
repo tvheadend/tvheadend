@@ -310,7 +310,7 @@ msgstr "Buforowanie. Proszę czekać..."
 
 #: src/webui/static/app/caclient.js:32
 msgid "CA"
-msgstr "CA"
+msgstr "Dostęp warunkowy (CA)"
 
 #: src/webui/static/app/esfilter.js:116
 msgid "CA Stream Filter"
