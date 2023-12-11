@@ -1202,7 +1202,7 @@ msgstr "Październik"
 
 #: src/webui/static/app/i18n-post.js:281
 msgid "On#DateFilter"
-msgstr "On#DateFilter"
+msgstr "W#FiltrDaty"
 
 #: src/webui/static/app/esfilter.js:132
 msgid "Other Stream Filter"
