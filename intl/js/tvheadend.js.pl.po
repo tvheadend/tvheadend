@@ -49,7 +49,7 @@ msgstr "0 #numerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:224
 msgid "0,000.00#NumberColumn"
-msgstr "0,000.00#NumberColumn"
+msgstr "0,000.00#NumerKolumny"
 
 #: src/webui/static/app/epg.js:69
 msgid "00:00:00 - 00:15:00"
@@ -73,23 +73,23 @@ msgstr "03:00:00 - Brak maksimum"
 
 #: src/webui/static/app/i18n-post.js:60
 msgid "1 #monthNumber"
-msgstr "1 #monthNumber"
+msgstr "1 #NumeMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:69
 msgid "10 #monthNumber"
-msgstr "10 #monthNumber"
+msgstr "10 #NumeMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:70
 msgid "11 #monthNumber"
-msgstr "11 #monthNumber"
+msgstr "11 #NumeMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:61
 msgid "2 #monthNumber"
-msgstr "2 #monthNumber"
+msgstr "2 #NumeMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:62
 msgid "3 #monthNumber"
-msgstr "3 #monthNumber"
+msgstr "3 #NumeMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:63
 msgid "4 #monthNumber"
