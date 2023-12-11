@@ -1974,7 +1974,7 @@ msgstr "fałsz"
 
 #: src/webui/static/app/i18n-post.js:237
 msgid "g:i A#TimeField"
-msgstr "g:i A#TimeField"
+msgstr "g:i A#PoleCzasu"
 
 #: src/webui/static/app/i18n-post.js:238
 msgid ""
@@ -1982,7 +1982,7 @@ msgid ""
 "A|gi|hi|gia|hia|g|H#TimeField"
 msgstr ""
 "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
-"A|gi|hi|gia|hia|g|H#TimeField"
+"A|gi|hi|gia|hia|g|H#PoleCzasu"
 
 #: src/webui/static/app/idnode.js:363 src/webui/static/app/idnode.js:364
 #: src/webui/static/app/epg.js:466 src/webui/static/app/epg.js:468
@@ -2006,27 +2006,27 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
-msgstr "m/d/Y#DateColumn"
+msgstr "m/d/Y#KolumnaDaty"
 
 #: src/webui/static/app/i18n-post.js:282
 msgid "m/d/Y#DateFilter"
-msgstr "m/d/Y#DateFilter"
+msgstr "m/d/Y#FiltrDaty"
 
 #: src/webui/static/app/i18n-post.js:120
 msgid "m/d/Y#Format.date"
-msgstr "m/d/Y#Format.date"
+msgstr "m/d/Y#FormatDaty"
 
 #: src/webui/static/app/i18n-post.js:191
 msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
-msgstr "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
+msgstr "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#PoleDaty"
 
 #: src/webui/static/app/i18n-post.js:190
 msgid "m/d/y#DateField"
-msgstr "m/d/y#DateField"
+msgstr "m/d/y#PoleDaty"
 
 #: src/webui/static/app/i18n-post.js:136
 msgid "m/d/y#DatePicker"
-msgstr "m/d/y#DatePicker"
+msgstr "m/d/y#WybórDaty"
 
 #: src/webui/static/app/idnode.js:364 src/webui/static/app/idnode.js:366
 #: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:468
