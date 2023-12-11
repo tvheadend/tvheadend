@@ -5846,7 +5846,7 @@ msgstr "STOP"
 
 #: src/dvr/dvr_autorec.c:777
 msgid "Sat"
-msgstr "Sob."
+msgstr "So"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1422
 msgid "Satconf"
