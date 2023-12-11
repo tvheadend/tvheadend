@@ -891,7 +891,7 @@ msgstr "Wejście (kb/s)"
 
 #: src/webui/static/app/i18n-post.js:35
 msgid "Jan"
-msgstr "Stycz."
+msgstr "Sty"
 
 #: src/webui/static/app/i18n-post.js:20
 msgid "January"
@@ -899,7 +899,7 @@ msgstr "Styczeń"
 
 #: src/webui/static/app/i18n-post.js:41
 msgid "Jul"
-msgstr "Lip."
+msgstr "Lip"
 
 #: src/webui/static/app/i18n-post.js:26
 msgid "July"
