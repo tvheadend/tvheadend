@@ -1367,7 +1367,7 @@ msgstr "Nagrywanie"
 
 #: src/webui/static/app/dvr.js:146
 msgid "Recording details"
-msgstr "Szczegóły nagrania"
+msgstr "Szczegóły nagrywania"
 
 #: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
 msgid "Refresh"
