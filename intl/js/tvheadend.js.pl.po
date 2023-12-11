@@ -1027,7 +1027,7 @@ msgstr "Maj"
 
 #: src/webui/static/app/i18n-post.js:39
 msgid "May#ShortNameForMay"
-msgstr "Maj#ShortNameForMay"
+msgstr "Maj#KrótkaNazwaMaja"
 
 #: src/webui/static/app/tvhlog.js:36
 msgid "Memory Information Entries"
