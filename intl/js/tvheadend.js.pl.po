@@ -390,7 +390,7 @@ msgstr "Kanały"
 
 #: src/webui/static/app/i18n-post.js:134
 msgid "Choose a month (Control+Up/Down to move years)"
-msgstr "Wybierz miesiąc (CTRL+góra/dół do zmiany roku)"
+msgstr "Wybierz miesiąc (CTRL+strzałka w górę/dół do zmiany roku)"
 
 #: src/webui/static/app/config.js:78
 msgid "Clean image (icon) cache"
