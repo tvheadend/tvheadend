@@ -1777,7 +1777,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
-msgstr "Czw."
+msgstr "Cz"
 
 #: src/webui/static/app/i18n-post.js:87
 msgid "Thursday"
@@ -1831,7 +1831,7 @@ msgstr "Wyzwól grabbera OTA EPG"
 
 #: src/webui/static/app/i18n-post.js:95
 msgid "Tue"
-msgstr "Wt."
+msgstr "Wt"
 
 #: src/webui/static/app/i18n-post.js:85
 msgid "Tuesday"
