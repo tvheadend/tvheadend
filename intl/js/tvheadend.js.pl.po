@@ -2052,7 +2052,7 @@ msgstr "prawda"
 
 #: src/webui/static/app/i18n-post.js:135
 msgid "{0} (Spacebar)"
-msgstr "{0} (Spacja)"
+msgstr "{0} (spacja)"
 
 #: src/webui/static/app/i18n-post.js:189
 msgid "{0} is not a valid date - it must be in the format {1}"
