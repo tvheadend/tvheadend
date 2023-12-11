@@ -467,7 +467,7 @@ msgstr "Utwórz"
 
 #: src/webui/static/app/epg.js:883
 msgid "Create AutoRec"
-msgstr "Utwórz auto-nagrywanie"
+msgstr "Utwórz autonagrywanie"
 
 #: src/webui/static/app/epg.js:262 src/webui/static/app/epg.js:885
 msgid ""
