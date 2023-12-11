@@ -326,7 +326,7 @@ msgstr "CAIDS:"
 
 #: src/webui/static/app/caclient.js:33
 msgid "CAs"
-msgstr "CAs"
+msgstr "Dostępy warunkowe (CA)"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
 #: src/webui/static/app/idnode.js:1110 src/webui/static/app/idnode.js:1522
