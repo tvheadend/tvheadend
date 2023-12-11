@@ -787,7 +787,7 @@ msgstr "Wolna"
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
-msgstr "Piąt."
+msgstr "Pt"
 
 #: src/webui/static/app/i18n-post.js:88
 msgid "Friday"
