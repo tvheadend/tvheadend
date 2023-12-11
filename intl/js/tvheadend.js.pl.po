@@ -241,11 +241,11 @@ msgstr "Sierpień"
 
 #: src/webui/static/app/epg.js:1063
 msgid "Auto Recorder"
-msgstr "Auto rejestrator"
+msgstr "Automatyczny rejestrator"
 
 #: src/webui/static/app/tvheadend.js:368
 msgid "Auto-refresh"
-msgstr "Auto-odświeżanie"
+msgstr "Automatyczne odświeżanie"
 
 #: src/webui/static/app/epg.js:263 src/webui/static/app/dvr.js:69
 #: src/webui/static/app/dvr.js:735
