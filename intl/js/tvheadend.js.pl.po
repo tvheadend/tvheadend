@@ -45,7 +45,7 @@ msgstr "(domyślny profil DVR)"
 
 #: src/webui/static/app/i18n-post.js:59
 msgid "0 #monthNumber"
-msgstr "0 #numerMiesiąca"
+msgstr "0 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:224
 msgid "0,000.00#NumberColumn"
