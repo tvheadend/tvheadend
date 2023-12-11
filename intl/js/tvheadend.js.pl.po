@@ -1510,7 +1510,7 @@ msgstr "Wybrane"
 
 #: src/webui/static/app/i18n-post.js:43
 msgid "Sep"
-msgstr "Wrze."
+msgstr "Wrz"
 
 #: src/webui/static/app/i18n-post.js:28
 msgid "September"
@@ -1661,7 +1661,7 @@ msgstr "Napisy#EPG"
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
-msgstr "Nie."
+msgstr "Nd"
 
 #: src/webui/static/app/i18n-post.js:83
 msgid "Sunday"
