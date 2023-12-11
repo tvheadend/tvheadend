@@ -193,7 +193,7 @@ msgstr ""
 
 #: src/webui/static/app/tvhlog.js:24
 msgid "Apply configuration (run-time only)"
-msgstr "Zastosuj zmiany (czasowo - nie zostaną zachowane po restarcie)."
+msgstr "Zastosuj konfigurację (tylko na czas wykonywania)"
 
 #: src/webui/static/app/idnode.js:1482
 msgid "Apply settings"
@@ -201,7 +201,7 @@ msgstr "Zastosuj ustawienia"
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
-msgstr "Kwie"
+msgstr "Kwie."
 
 #: src/webui/static/app/i18n-post.js:23
 msgid "April"
