@@ -73,23 +73,23 @@ msgstr "03:00:00 - Brak maksimum"
 
 #: src/webui/static/app/i18n-post.js:60
 msgid "1 #monthNumber"
-msgstr "1 #NumeMiesiąca"
+msgstr "1 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:69
 msgid "10 #monthNumber"
-msgstr "10 #NumeMiesiąca"
+msgstr "10 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:70
 msgid "11 #monthNumber"
-msgstr "11 #NumeMiesiąca"
+msgstr "11 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:61
 msgid "2 #monthNumber"
-msgstr "2 #NumeMiesiąca"
+msgstr "2 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:62
 msgid "3 #monthNumber"
-msgstr "3 #NumeMiesiąca"
+msgstr "3 #NumerMiesiąca"
 
 #: src/webui/static/app/i18n-post.js:63
 msgid "4 #monthNumber"
