@@ -727,7 +727,7 @@ msgstr "Błędne nagrania"
 
 #: src/webui/static/app/i18n-post.js:36
 msgid "Feb"
-msgstr "Luty"
+msgstr "Lut."
 
 #: src/webui/static/app/i18n-post.js:21
 msgid "February"
