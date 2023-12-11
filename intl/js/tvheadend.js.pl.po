@@ -743,15 +743,15 @@ msgstr "Filtr kanałów..."
 
 #: src/webui/static/app/epg.js:722
 msgid "Filter content type..."
-msgstr "Filtr typu zawartości"
+msgstr "Filtr typu zawartości..."
 
 #: src/webui/static/app/epg.js:743
 msgid "Filter duration..."
-msgstr "Filtr czasu trwania"
+msgstr "Filtr czasu trwania..."
 
 #: src/webui/static/app/epg.js:698
 msgid "Filter tag..."
-msgstr "Filtr tagu"
+msgstr "Filtr tagu..."
 
 #: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
