@@ -201,7 +201,7 @@ msgstr "Zastosuj ustawienia"
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
-msgstr "Kwie."
+msgstr "Kwi"
 
 #: src/webui/static/app/i18n-post.js:23
 msgid "April"
