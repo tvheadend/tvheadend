@@ -8073,7 +8073,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:773
 msgid "Tue"
-msgstr "Wt."
+msgstr "Wt"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:226
 msgid "Tune before DiseqC"
