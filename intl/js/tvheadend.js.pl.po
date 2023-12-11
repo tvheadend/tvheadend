@@ -173,7 +173,7 @@ msgstr "Wiek"
 
 #: src/webui/static/app/epg.js:134
 msgid "Age Rating"
-msgstr "Ocena Wieku"
+msgstr "Klasyfikacja wiekowa"
 
 #: src/webui/static/app/idnode.js:1940 src/webui/static/app/idnode.js:1979
 msgid "All"
