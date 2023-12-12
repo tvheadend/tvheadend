@@ -1,6 +1,6 @@
 tvh-json.py
 =================================
-(c) 2017 Tvheadend Foundation CIC
+(c) 2017-2020 Tvheadend Project (https://tvheadend.org)
 
 The json import / export tool written in the python language.
 
