@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2008-2014 Tvheadend Foundation CIC
+# Copyright (C) 2008-2014 Tvheadend Project (https://tvheadend.org)
 #
 # This file is part of Tvheadend
 #

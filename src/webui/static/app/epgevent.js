@@ -1,7 +1,7 @@
 /*
  * epgevent.js
  * EPG dialogs for broadcast events.
- * Copyright (C) 2018 Tvheadend Foundation CIC
+ * Copyright (C) 2018 Tvheadend Project (https://tvheadend.org)
  */
 
 /// Display dialog showing alternative showings for a broadcast event.
