@@ -362,12 +362,20 @@ dvb_mux_class_X(dvbs, qpsk, fec_inner, fec, fec,
                      DVB_FEC_AUTO, DVB_FEC_NONE,
                      DVB_FEC_1_2, DVB_FEC_2_3, DVB_FEC_3_4, DVB_FEC_3_5,
                      DVB_FEC_4_5, DVB_FEC_5_6, DVB_FEC_7_8, DVB_FEC_8_9,
-                     DVB_FEC_9_10);
+                     DVB_FEC_9_10, DVB_FEC_1_3, DVB_FEC_1_4, DVB_FEC_4_15,
+                     DVB_FEC_5_9, DVB_FEC_7_9, DVB_FEC_7_15, DVB_FEC_8_15,
+                     DVB_FEC_9_20, DVB_FEC_11_15, DVB_FEC_11_20, DVB_FEC_11_45,
+                     DVB_FEC_13_18, DVB_FEC_13_45, DVB_FEC_14_45, DVB_FEC_23_36,
+                     DVB_FEC_25_36, DVB_FEC_26_45, DVB_FEC_28_45, DVB_FEC_32_45,
+                     DVB_FEC_77_90);
 dvb_mux_class_R(dvbs, modulation, qam, qam,
-                     DVB_MOD_AUTO, DVB_MOD_QPSK, DVB_MOD_QAM_16,
-                     DVB_MOD_PSK_8, DVB_MOD_APSK_16, DVB_MOD_APSK_32);
+                     DVB_MOD_AUTO, DVB_MOD_QPSK, DVB_MOD_QAM_16, DVB_MOD_QAM_1024,
+                     DVB_MOD_QAM_4096, DVB_MOD_PSK_8, DVB_MOD_APSK_16, DVB_MOD_APSK_32,
+                     DVB_MOD_APSK_64, DVB_MOD_APSK_8_L, DVB_MOD_APSK_16_L,
+                     DVB_MOD_APSK_32_L, DVB_MOD_APSK_64_L);
 dvb_mux_class_R(dvbs, rolloff, rolloff, rolloff,
-                     DVB_ROLLOFF_35, DVB_ROLLOFF_20, DVB_ROLLOFF_25);
+                     DVB_HIERARCHY_AUTO, DVB_ROLLOFF_5, DVB_ROLLOFF_10, DVB_ROLLOFF_15,
+                     DVB_ROLLOFF_20, DVB_ROLLOFF_25, DVB_ROLLOFF_35);
 dvb_mux_class_R(dvbs, pilot, pilot, pilot,
                      DVB_PILOT_AUTO, DVB_PILOT_ON, DVB_PILOT_OFF);
 dvb_mux_class_X(dvbs, qpsk, polarisation, polarisation, pol,
