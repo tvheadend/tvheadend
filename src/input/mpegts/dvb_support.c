@@ -744,6 +744,9 @@ const char *dvb_rolloff2str(int p)
 int dvb_str2rolloff(const char *p)
 {
   static int rolloff_table[] = {
+    DVB_ROLLOFF_5,
+    DVB_ROLLOFF_10,
+    DVB_ROLLOFF_15,
     DVB_ROLLOFF_20,
     DVB_ROLLOFF_25,
     DVB_ROLLOFF_35,
@@ -851,6 +854,7 @@ int dvb_str2fec(const char *p)
   static int fec_table[] = {
     DVB_FEC_1_2,
     DVB_FEC_1_3,
+    DVB_FEC_1_4,
     DVB_FEC_1_5,
     DVB_FEC_2_3,
     DVB_FEC_2_5,
@@ -911,6 +915,10 @@ static const struct strtab qamtab[] = {
   { "QAM128",    DVB_MOD_QAM_128 },
   { "QAM/256",   DVB_MOD_QAM_256 },
   { "QAM256",    DVB_MOD_QAM_256 },
+  { "QAM/1024",  DVB_MOD_QAM_1024 },
+  { "QAM1024",   DVB_MOD_QAM_1024 },
+  { "QAM/4096",  DVB_MOD_QAM_4096 },
+  { "QAM4096",   DVB_MOD_QAM_4096 },
   { "VSB/8",     DVB_MOD_VSB_8 },
   { "8VSB",      DVB_MOD_VSB_8 },
   { "VSB/16",    DVB_MOD_VSB_16 },
