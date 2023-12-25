@@ -54,9 +54,23 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt install --force-yes -y python3.7 || true
 
-apt install --force-yes -y python3-pip || apt install --force-yes -y python-pip
+# Function to initialize pip using ensurepip and upgrade if necessary
+initialize_pip() {
+    # Use ensurepip to bootstrap pip
+    python3 -m ensurepip
 
-pip3 install --upgrade pip || pip install --upgrade pip || pip2 install --upgrade pip
+    PYTHON_VERSION=$(python3 -c 'import platform; print(platform.python_version())')
+    MAJOR_VERSION=$(echo $PYTHON_VERSION | cut -d. -f1)
+    MINOR_VERSION=$(echo $PYTHON_VERSION | cut -d. -f2)
+
+    if [[ $MAJOR_VERSION -eq 3 ]] && [[ $MINOR_VERSION -ge 6 ]]; then
+        # For Python 3.6 and above, upgrade pip to the latest version
+        python3 -m pip install --upgrade pip
+    fi
+}
+
+# Initialize and upgrade pip
+initialize_pip
 
 pip3 install --upgrade cloudsmith-cli || pip install --upgrade cloudsmith-cli || pip2 install --upgrade cloudsmith-cli
 
