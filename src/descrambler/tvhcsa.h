@@ -47,6 +47,7 @@ typedef struct tvhcsa
   uint8_t *csa_tsbcluster;
   int      csa_fill;
   int      csa_fill_size;
+  uint8_t  csa_ecm;
 
 #if ENABLE_DVBCSA
   struct dvbcsa_bs_batch_s *csa_tsbbatch_even;
@@ -82,6 +83,11 @@ static inline void tvhcsa_set_key_odd ( tvhcsa_t *csa, const uint8_t *odd ) { };
 static inline void tvhcsa_init ( tvhcsa_t *csa ) { };
 static inline void tvhcsa_destroy ( tvhcsa_t *csa ) { };
 
+#endif
+
+#if ENABLE_DVBCSA
+typedef void* (*dvbcsa_dl_bs_key_set_type)(const unsigned char ecm, const dvbcsa_cw_t cw, struct dvbcsa_bs_key_s *key);
+void dvbcsa_bs_key_set_wrap(const unsigned char ecm, const dvbcsa_cw_t cw, struct dvbcsa_bs_key_s *key);
 #endif
 
 #endif /* __TVH_CSA_H__ */
