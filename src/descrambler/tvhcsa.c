@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#define _GNU_SOURCE
+#define __USE_GNU
 #include <dlfcn.h>
 
 #include "tvhcsa.h"
@@ -31,7 +33,7 @@
 #include "descrambler/algo/libdesdec.h"
 
 #if ENABLE_DVBCSA
-static int dvbcsa_dl_loaded;
+static int dvbcsa_dl_scanned;
 static dvbcsa_dl_bs_key_set_type dvbcsa_dl_bs_key_set_ecm;
 #endif
 
@@ -273,28 +275,16 @@ void
 tvhcsa_init ( tvhcsa_t *csa )
 {
 #if ENABLE_DVBCSA
-  void *dvbcsa_dlh;
-
-  if (!dvbcsa_dl_loaded)
+  if (!dvbcsa_dl_scanned)
   {
-    dvbcsa_dl_loaded++;
-    dvbcsa_dlh = dlopen(NULL, RTLD_LAZY);
-    if (dvbcsa_dlh)
-    {
-      dvbcsa_dl_bs_key_set_ecm = (dvbcsa_dl_bs_key_set_type) dlsym(dvbcsa_dlh, "dvbcsa_bs_key_set_ecm");
-      if (dvbcsa_dl_bs_key_set_ecm)
-        tvhinfo(LS_DESCRAMBLER, "dvbcsa_bs_key_set_ecm() function detected in libdvbcsa");
-      else
-      {
-        dlclose(dvbcsa_dlh);
-        tvhinfo(LS_DESCRAMBLER, "dvbcsa_bs_key_set_ecm() function not detected in libdvbcsa");
-      }
-    }
-    else
-    {
-      dvbcsa_dl_bs_key_set_ecm = NULL;
-      tvhwarn(LS_DESCRAMBLER, "could not dlopen libdvbcsa");
-    }
+    dvbcsa_dl_scanned++;
+#if defined RTLD_DEFAULT
+    dvbcsa_dl_bs_key_set_ecm = (dvbcsa_dl_bs_key_set_type) dlsym(RTLD_DEFAULT, "dvbcsa_bs_key_set_ecm");
+    tvhinfo(LS_DESCRAMBLER, "dvbcsa_bs_key_set_ecm() function%s detected in libdvbcsa", dvbcsa_dl_bs_key_set_ecm ? "" : " not");
+#else
+    dvbcsa_dl_bs_key_set_ecm = (dvbcsa_dl_bs_key_set_type) NULL;
+    tvhinfo(LS_DESCRAMBLER, "can not detect dvbcsa_bs_key_set_ecm() function: RTLD_DEFAULT not defined on this system");
+#endif
   }
 #endif
   csa->csa_type          = 0;
