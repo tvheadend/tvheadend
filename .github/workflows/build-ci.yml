@@ -104,7 +104,6 @@ jobs:
           env: | # YAML, but pipe character is necessary
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
 
-
           # The shell to run commands with in the container
           shell: /bin/sh
 
@@ -128,6 +127,7 @@ jobs:
                 apt-get update -y
                 DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
                 DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
+                if [ '${{ matrix.distro }}' = 'jessie' ]; then git config --global http.sslVerify false; fi
                 ;;
               fedora*)
                 dnf -y update
