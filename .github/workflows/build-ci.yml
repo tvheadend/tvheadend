@@ -179,6 +179,14 @@ jobs:
       - name: pcre-dependency
         run: |
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
+      - name: Workaround old trusty gnutls and openssl
+        if: matrix.container == 'i386/ubuntu:trusty' || matrix.container == 'ubuntu:trusty'
+        run: |
+          add-apt-repository -y "deb http://security.ubuntu.com/ubuntu xenial-security main"
+          add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu xenial main universe"
+          apt-get update -y
+          DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y curl
+          git config --global http.sslVerify false
       - uses: actions/checkout@v3
         if: startsWith(matrix.container, 'i386') != true && matrix.container != 'debian:stretch'
         with:
