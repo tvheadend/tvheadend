@@ -56,8 +56,8 @@ apt install --force-yes -y python3.7 || true
 
 # Function to initialize pip using ensurepip and upgrade if necessary
 initialize_pip() {
-    # Use ensurepip to bootstrap pip
-    python3 -m ensurepip
+    # Use ensurepip to bootstrap pip if available
+    python3 -m ensurepip || true
 
     PYTHON_VERSION=$(python3 -c 'import platform; print(platform.python_version())')
     MAJOR_VERSION=$(echo $PYTHON_VERSION | cut -d. -f1)
