@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Feature Ideas
+    url: https://new.tvheadend.org/t/feature-ideas
+    about: Discussions on features and ideas to make Tvheadend even better take place in the forum
+  - name: Help and Support
+    url: https://new.tvheadend.org
+    about: Please post questions and ask for help and support in the forum

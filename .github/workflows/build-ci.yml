@@ -50,6 +50,7 @@ jobs:
           sudo apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
           AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh -p raspios
+          support/cloudsmith.sh -n -p raspios -f '../tvheadend*.deb'
     - uses: actions/upload-artifact@v3
       with:
         name: Tvheadend-deb
@@ -144,6 +145,7 @@ jobs:
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
             cp ../tvheadend*.deb /artifacts/
+            support/cloudsmith.sh -n -f '../tvheadend*.deb'
       - uses: actions/upload-artifact@v3
         with:
           name: Tvheadend-deb
@@ -197,6 +199,8 @@ jobs:
           name: Tvheadend-deb
           path: tvheadend*.deb
           if-no-files-found: error
+      - name: upload-cloudsmith
+        run: support/cloudsmith.sh -n -f 'tvheadend*.deb'
 
   build-rpm-native:
     runs-on: ubuntu-latest
@@ -226,3 +230,5 @@ jobs:
           name: Tvheadend-RPM
           path: tvheadend*.rpm
           if-no-files-found: error
+      # - name: upload-cloudsmith
+      #   run: support/cloudsmith.sh -n -f 'tvheadend*.rpm'
