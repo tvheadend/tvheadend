@@ -111,6 +111,13 @@ body:
     validations:
       required: true
   - type: textarea
+    id: logfile
+    attributes:
+      label: Logfile
+      description: "Provide a pastebin URL to a log or share a log file that shows the issue."
+    validations:
+      required: false
+  - type: textarea
     id: reproduce
     attributes:
       label: Reproduction
