@@ -249,6 +249,13 @@ static void _update_smt_start ( timeshift_t *ts, streaming_start_t *ss )
       ts->vididx = ss->ss_components[i].es_index;
       break;
     }
+
+  /* Update audio index */
+  for (i = 0; i < ss->ss_num_components; i++)
+    if (SCT_ISAUDIO(ss->ss_components[i].es_type)) {
+      ts->audidx = ss->ss_components[i].es_index;
+      break;
+    }
 }
 
 /*
@@ -283,9 +290,9 @@ static inline ssize_t _process_msg0
     if (err > 0) {
       th_pkt_t *pkt = sm->sm_data;
 
-      /* Index video iframes */
-      if (pkt->pkt_componentindex == ts->vididx &&
-          pkt->v.pkt_frametype    == PKT_I_FRAME) {
+      /* Index video iframes or audio frames for audio-only streams*/
+      if ((pkt->pkt_componentindex == ts->vididx && pkt->v.pkt_frametype == PKT_I_FRAME) ||
+          (ts->vididx == -1 && pkt->pkt_componentindex == ts->audidx)) {
         timeshift_index_iframe_t *ti = calloc(1, sizeof(timeshift_index_iframe_t));
         memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
         ti->pos  = tsf->size;
