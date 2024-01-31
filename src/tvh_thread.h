@@ -156,6 +156,8 @@ int tvh_cond_wait(tvh_cond_t *cond, tvh_mutex_t *mutex);
 int tvh_cond_timedwait(tvh_cond_t *cond, tvh_mutex_t *mutex, int64_t clock);
 int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec *ts);
 
+int tvh_signal(int signal, void (*handler) (int));
+
 #ifndef TVH_THREAD_C
 #define pthread_cond    __do_not_use_pthread_cond
 #define pthread_cond_t  __do_not_use_pthread_cond_t
