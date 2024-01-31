@@ -82,8 +82,8 @@ thread_wrapper(void *p)
   sigaddset(&set, SIGQUIT);
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
-  signal(SIGTERM, doexit);
-  signal(SIGQUIT, doquit);
+  tvh_signal(SIGTERM, doexit);
+  tvh_signal(SIGQUIT, doquit);
 
   /* Run */
   tvhtrace(LS_THREAD, "created thread %ld [%s / %p(%p)]",
@@ -428,6 +428,14 @@ int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec 
     tvh_mutex_add_to_list(mutex, filename, lineno);
 #endif
   return r;
+}
+
+int tvh_signal(int signal, void (*handler) (int))
+{
+  struct sigaction action;
+  memset(&action, 0, sizeof(action));
+  action.sa_handler = handler;
+  return sigaction(signal, &action, NULL);
 }
 
 void

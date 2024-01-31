@@ -217,7 +217,7 @@ handle_sigill(int x)
   /* to determine the CPU capabilities with possible */
   /* unknown instructions */
   tvhwarn(LS_CPU, "Illegal instruction handler (might be OK)");
-  signal(SIGILL, handle_sigill);
+  tvh_signal(SIGILL, handle_sigill);
 }
 
 void
@@ -228,7 +228,7 @@ doexit(int x)
   tvh_cond_signal(&gtimer_cond, 0);
   tvh_cond_signal(&mtimer_cond, 0);
   atomic_set(&tvheadend_running, 0);
-  signal(x, doexit);
+  tvh_signal(x, doexit);
 }
 
 static int
@@ -1111,8 +1111,8 @@ main(int argc, char **argv)
   tvhlog_set_trace(log_trace);
   tvhinfo(LS_MAIN, "Log started");
 
-  signal(SIGPIPE, handle_sigpipe); // will be redundant later
-  signal(SIGILL, handle_sigill);   // see handler..
+  tvh_signal(SIGPIPE, handle_sigpipe); // will be redundant later
+  tvh_signal(SIGILL, handle_sigill);   // see handler..
 
   /* Set privileges */
   if((opt_fork && getuid() == 0) || opt_group || opt_user) {
@@ -1345,8 +1345,8 @@ main(int argc, char **argv)
   sigaddset(&set, SIGTERM);
   sigaddset(&set, SIGINT);
 
-  signal(SIGTERM, doexit);
-  signal(SIGINT, doexit);
+  tvh_signal(SIGTERM, doexit);
+  tvh_signal(SIGINT, doexit);
 
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
