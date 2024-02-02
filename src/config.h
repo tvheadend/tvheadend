@@ -80,7 +80,7 @@ typedef struct config {
   int hdhomerun_server_enable;
   #if ENABLE_VAAPI
   int enable_vainfo;
-#endif
+  #endif
 } config_t;
 
 extern const idclass_t config_class;
