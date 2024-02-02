@@ -129,6 +129,7 @@ typedef struct timeshift {
 
   int                         ram_segments;  ///< Count of segments in RAM
   int                         file_segments; ///< Count of segments in files
+  int                         audio_packet_counter; ///< Counter for audio packets in audio-only streams
 
   int                         vididx;     ///< Index of (current) video stream
   int                         audidx;     ///< Index of (current) audio stream
