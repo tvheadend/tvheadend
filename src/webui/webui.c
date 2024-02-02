@@ -220,6 +220,15 @@ to reauthenticate."));
 /**
  * Static download of a file from the filesystem
  */
+static char *sanitize_filename(char *filename) {
+  if (!filename) return NULL;
+  for (char *s = filename; *s; s++) {
+    if ((*s < 32) || (*s > 122) || strchr("/:\\<>|*?\"", *s) != NULL)
+      *s = '_';
+  }
+  return filename;
+}
+
 int
 page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
 {
@@ -241,6 +250,7 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
 
   snprintf(path, sizeof(path), "%s/%s", base, _remain);
+  char *sanitized_filename = sanitize_filename(tvh_strdupa(_remain));
 
   remain = tvh_strdupa(_remain);
   postfix = strrchr(remain, '.');
