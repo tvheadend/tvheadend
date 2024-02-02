@@ -2205,6 +2205,19 @@ page_srvid2(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ * Sanitice a filename to remove illegal characters from it
+ */
+static char *sanitize_filename(char *filename) {
+  if (!filename) return NULL;
+  char *s;
+  for (s = filename; *s; s++) {
+    if ((*s < 32) || (*s > 122) || strchr("/:\\<>|*?\"", *s) != NULL)
+      *s = '_';
+  }
+  return filename;
+}
+
+/**
  * Send a file
  */
 int
@@ -2244,6 +2257,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
                  basename, intlconv_charset_id("ASCII", 1, 1));
         return HTTP_STATUS_INTERNAL;
       }
+      sanitize_filename(str0);
       htsbuf_queue_init(&q, 0);
       htsbuf_append_and_escape_rfc8187(&q, basename);
       str = htsbuf_to_string(&q);
