@@ -13,11 +13,22 @@ configure)
         adduser --quiet --system --group --home /var/lib/tvheadend $HTS_USER
    fi
 
-   HTS_HOME=`getent passwd $HTS_USER | cut -d':' -f6`
+   HTS_HOMEDIR=`getent passwd $HTS_USER | cut -d':' -f6`
 
-   install -d -g ${HTS_USER} -o ${HTS_USER} "${HTS_HOME}/recordings"
+   # Handle previous configuration directory: If the HTS_USER home directory
+   # starts with /home/, append "/.hts/tvheadend" so the superuser
+   # configuration will go in the right place.
+   if [ -z "${HTS_HOMEDIR##/home/*}" ]; then
+        HTS_CONFDIR="$HTS_HOMEDIR/.hts/tvheadend"
+        echo >&2 "Legacy configuration directory $HTS_CONFDIR is in use."
+        install -d -g ${HTS_USER} -o ${HTS_USER} "${HTS_CONFDIR}"
+   else
+        HTS_CONFDIR="$HTS_HOMEDIR"
+   fi
 
-   HTS_SUPERUSERCONF="${HTS_HOME}/superuser"
+   install -d -g ${HTS_USER} -o ${HTS_USER} "${HTS_HOMEDIR}/recordings"
+
+   HTS_SUPERUSERCONF="${HTS_CONFDIR}/superuser"
    rm -f "${HTS_SUPERUSERCONF}"
    touch "${HTS_SUPERUSERCONF}"
    chmod 600 "${HTS_SUPERUSERCONF}"
