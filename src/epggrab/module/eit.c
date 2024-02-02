@@ -28,6 +28,7 @@
 #include "input.h"
 #include "input/mpegts/dvb_charset.h"
 #include "dvr/dvr.h"
+#include "ratinglabels.h"
 
 /* ************************************************************************
  * Opaque
@@ -134,6 +135,7 @@ typedef struct eit_event
   uint8_t           bw;
 
   uint8_t           parental;
+  ratinglabel_t     *rating_label;
 
   uint8_t           is_new;
   time_t            first_aired;
@@ -424,14 +426,62 @@ static int _eit_desc_parental
   ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
   int cnt = 0, sum = 0, i = 3;
+
+  char            tmpCountry[4];
+  int             tmpAge = 0;
+  ratinglabel_t   *rl = NULL;
+
   while (len > 3) {
+
+    //If we are processing parental rating labels.
+    if(epggrab_conf.epgdb_processparentallabels)
+    {
+      //Get the recommended age for this rating.
+      //0x00 undefined
+      //0x01 to 0x0F minimum age = rating + 3 years
+      //0x10 to 0xFF defined by the broadcaster
+      if(ptr[i] == 0)
+      {
+        tmpAge = 0;
+      }
+      else
+      {
+        tmpAge = ptr[i];  //Do not add 3 here, do that with the 'display age'.
+      }
+
+      //Get the country code for this rating.
+      tmpCountry[0] = ptr[0];
+      tmpCountry[1] = ptr[1];
+      tmpCountry[2] = ptr[2];
+      tmpCountry[3] = 0;
+
+      tvhtrace(LS_TBL_EIT, "Country '%s', age '%d'", tmpCountry, tmpAge);
+
+      //Look for a matching rating label
+      rl = ratinglabel_find_from_eit(tmpCountry, tmpAge);
+
+      //If we have found a rating label, save the details and exit.
+      //ie, ony use the first parental rating found.
+      //TODO: In future, if (eg in Europe) the rating codes from multiple
+      //countries are present, select the one that user prefers.
+      //A new config option will be needed for this.
+      //HOWEVER: A sampling of EIT data from European users
+      //suggests that this will not be necessary.
+      if(rl){
+        ev->parental = rl->rl_display_age;
+        ev->rating_label = rl;
+        return 0;
+      }
+    }//END rating labels are being processed.
+    //If rating labels are not processed, do the original TVH process.
+
     if ( ptr[i] && ptr[i] < 0x10 ) {
       cnt++;
       sum += (ptr[i] + 3);
     }
     len -= 4;
     i   += 4;
-  }
+  }//END loop through descriptors
   // Note: we ignore the country code and average the lot!
   if (cnt)
     ev->parental = (uint8_t)(sum / cnt);
@@ -734,6 +784,13 @@ static int _eit_process_event_one
     *save |= epg_broadcast_set_genre(ebc, ev->genre, &changes);
   if (ev->parental)
     *save |= epg_broadcast_set_age_rating(ebc, ev->parental, &changes);
+
+  if (ev->rating_label)
+    {
+    tvhtrace(mod->subsys, "About to save rating label '%p'", ev->rating_label);
+    *save |= epg_broadcast_set_rating_label(ebc, ev->rating_label, &changes);
+    }
+
   if (ev->subtitle)
     *save |= epg_broadcast_set_subtitle(ebc, ev->subtitle, &changes);
   else if ((short_target == 0 || short_target == 2) && ev->summary)
@@ -826,6 +883,14 @@ static int _eit_process_event
         break;
       case DVB_DESC_PARENTAL_RAT:
         r = _eit_desc_parental(mod, ptr, dlen, &ev);
+        if(epggrab_conf.epgdb_processparentallabels){
+            if(ev.rating_label){
+              tvhtrace(mod->subsys, "RATINGLABEL '%d'  '%s'", ev.parental, ev.rating_label->rl_display_label);
+            } else {
+              tvhtrace(mod->subsys, "RATINGLABEL '%d'  '<NONE>'", ev.parental);
+            }
+        }
+
         break;
       case DVB_DESC_CRID:
         r = _eit_desc_crid(mod, ptr, dlen, &ev, ed);

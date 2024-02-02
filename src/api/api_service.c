@@ -66,7 +66,7 @@ api_mapper_status
 void
 api_service_mapper_notify ( void )
 {
-  notify_by_msg("servicemapper", api_mapper_status_msg(), 0);
+  notify_by_msg("servicemapper", api_mapper_status_msg(), 1, 0);
 }
 
 static htsmsg_t *

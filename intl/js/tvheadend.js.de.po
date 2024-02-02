@@ -1,26 +1,20 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # 
 # Translators:
-# Alexander Knöbel <alex@belogy.de>, 2015-2016
-# Alfred Zastrow <alfred.zastrow@t-online.de>, 2015
-# Jan Schröter, 2016
-# Michael Pesch <mr.mytril@posteo.de>, 2015
-# M. Uffin <marvin@giecom.de>, 2016
-# Nils Eickelkamp <nils.eickelkamp@gmail.com>, 2016
-# Nils Eickelkamp <nils.eickelkamp@gmail.com>, 2015-2016
-# Nilsen <nilsen.e@web.de>, 2015
-# stbenz, 2015
-# Tobias Hill <hill.tobias@gmail.com>, 2016
+# Christian Hewitt, 2023
+# 
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Tvheadend\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-16 18:36+0100\n"
-"PO-Revision-Date: 2016-12-19 07:52+0000\n"
-"Last-Translator: Nils Eickelkamp <nils.eickelkamp@gmail.com>\n"
-"Language-Team: German (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/de/)\n"
+"POT-Creation-Date: 2017-03-29 21:07+0200\n"
+"PO-Revision-Date: 2023-12-11 11:01+0000\n"
+"Last-Translator: Christian Hewitt, 2023\n"
+"Language-Team: German (https://app.transifex.com/tvheadend/teams/43381/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -475,7 +469,9 @@ msgstr "Auto-Aufnahme anlegen"
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
-msgstr "Erstelle eine automatische Aufnahme, die alle zukünftigen Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
+msgstr ""
+"Erstelle eine automatische Aufnahme, die alle zukünftigen Sendungen "
+"aufnimmt, die der aktuellen Abfrage entsprechen."
 
 #: src/webui/static/app/idnode.js:1455
 msgid "Create new entry"
@@ -1294,7 +1290,9 @@ msgstr "Bitte sicherstellen dass Tvheadend läuft und nochmals versuchen."
 msgid ""
 "Please take a look at the other Help pages (Table of Contents). If you still"
 " can't find what you're "
-msgstr "Bitte suchen Sie in den Hilfeseiten (Table of Contents). Wenn Sie das Gesuchte nicht finden..."
+msgstr ""
+"Bitte suchen Sie in den Hilfeseiten (Table of Contents). Wenn Sie das "
+"Gesuchte nicht finden..."
 
 #: src/webui/static/app/wizard.js:66
 msgid "Previous"
@@ -1335,7 +1333,8 @@ msgstr "Internen EPG-Grabber neu starten"
 
 #: src/webui/static/app/epggrab.js:7
 msgid "Re-run all internal EPG grabbers to import EPG data now"
-msgstr "Alle internen EPG-Grabber neu starten um jetzt die EPG Daten zu importieren"
+msgstr ""
+"Alle internen EPG-Grabber neu starten um jetzt die EPG Daten zu importieren"
 
 #: src/webui/static/app/idnode.js:1047
 msgid "Read-only Info"
@@ -1381,13 +1380,17 @@ msgstr "Alle nicht vorhandenen Dienste entfernen (7 Tage +)"
 msgid ""
 "Remove old services marked as missing in PAT/SDT which were not detected "
 "more than 7 days (last seen column)"
-msgstr "Entferne obsolete Dienste, die als fehlend im PAT/SDT markiert sind, wenn sie mehr als 7 Tage nicht mehr erkannt wurden (\"Zuletzt gesehen\" Spalte)."
+msgstr ""
+"Entferne obsolete Dienste, die als fehlend im PAT/SDT markiert sind, wenn "
+"sie mehr als 7 Tage nicht mehr erkannt wurden (\"Zuletzt gesehen\" Spalte)."
 
 #: src/webui/static/app/mpegts.js:298
 msgid ""
 "Remove old services which were not detected more than 7 days (last seen "
 "column)"
-msgstr "Enferne obsolete Dienste, die mehr als 7 Tage nicht mehr erkannt wurden (\"Zuletzt gesehen\" Spalte)"
+msgstr ""
+"Enferne obsolete Dienste, die mehr als 7 Tage nicht mehr erkannt wurden "
+"(\"Zuletzt gesehen\" Spalte)"
 
 #: src/webui/static/app/dvr.js:414
 msgid "Remove the selected recording from storage"
@@ -1727,13 +1730,17 @@ msgstr "Der Wert in diesem Feld ist ungültig"
 msgid ""
 "There is no documentation associated with the Help button pressed, or there was an problem loading the page.\n"
 "\n"
-msgstr "Mit dem gewählten Hilfebutton ist keine Dokumentation verknüpft oder die Seite kann nicht geladen werden\n"
+msgstr ""
+"Mit dem gewählten Hilfebutton ist keine Dokumentation verknüpft oder die "
+"Seite kann nicht geladen werden\n"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."
-msgstr "Es scheint ein Problem mit dem Datenabruf von Tvheadend zu geben. Versuche neu zu verbinden..."
+msgstr ""
+"Es scheint ein Problem mit dem Datenabruf von Tvheadend zu geben. Versuche "
+"neu zu verbinden..."
 
 #: src/webui/static/app/tvheadend.js:239
 msgid "There was a problem displaying the Help!"
@@ -1759,7 +1766,9 @@ msgstr "Dieses Feld ist erforderlich"
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
-msgstr "Erstellt eine automatische Regel die kontinuierlich das EPG nach Sendungen durchsucht um diese aufzunehmen"
+msgstr ""
+"Erstellt eine automatische Regel die kontinuierlich das EPG nach Sendungen "
+"durchsucht um diese aufzunehmen"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
@@ -1825,7 +1834,8 @@ msgstr "Dienstag"
 
 #: src/webui/static/app/epggrab.js:27
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
-msgstr "Auf over-the-air EPG Muxes einstellen, um jetzt neue Ereignisse abzurufen"
+msgstr ""
+"Auf over-the-air EPG Muxes einstellen, um jetzt neue Ereignisse abzurufen"
 
 #: src/webui/static/app/tvheadend.js:1024
 msgid "Tvheadend Web-Panel"
@@ -1940,7 +1950,9 @@ msgstr "Ja"
 
 #: src/webui/static/app/idnode.js:473 src/webui/static/app/idnode.js:856
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
-msgstr "Sie müssen einen Wert angeben - benutzen Sie chmod Oktalschreibweise, z.B. 0664"
+msgstr ""
+"Sie müssen einen Wert angeben - benutzen Sie chmod Oktalschreibweise, z.B. "
+"0664"
 
 #: src/webui/static/app/i18n-post.js:243
 msgid "You must select at least one item in this group"
@@ -1966,7 +1978,9 @@ msgstr "g:i A#TimeField"
 msgid ""
 "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
 "A|gi|hi|gia|hia|g|H#TimeField"
-msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
+msgstr ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
 
 #: src/webui/static/app/idnode.js:363 src/webui/static/app/idnode.js:364
 #: src/webui/static/app/epg.js:466 src/webui/static/app/epg.js:468
@@ -1985,7 +1999,9 @@ msgstr "Abmelden"
 msgid ""
 "looking for please see the "
 "[Wiki](http://tvheadend.org/projects/tvheadend/wiki) "
-msgstr "Hierfür bitte hier schauen: [Wiki](http://tvheadend.org/projects/tvheadend/wiki) "
+msgstr ""
+"Hierfür bitte hier schauen: "
+"[Wiki](http://tvheadend.org/projects/tvheadend/wiki) "
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
@@ -2025,7 +2041,9 @@ msgstr "von {0}"
 msgid ""
 "or join the [IRC channel on "
 "freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)."
-msgstr "oder hier [IRC channel on freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)."
+msgstr ""
+"oder hier [IRC channel on "
+"freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)."
 
 #: src/webui/static/app/i18n-post.js:217
 msgid "true"

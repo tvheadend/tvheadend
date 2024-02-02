@@ -1,0 +1,27 @@
+name: "Feature Proposal"
+description: "Propose new capabilities you are developing so the team can provide guidance on requirements and help get them merged"
+title: "[FEATURE]: "
+labels: ["NEW"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: "Provide a detailed description of your feature or improvement"
+    validations:
+      required: true
+  - type: textarea
+    id: guidance
+    attributes:
+      label: Help and Guidance
+      description: "What help or guidance do you need to develop your proposal?"
+    validations:
+      required: true
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Acceptance
+      description: "The Tvheadend project team has limited capabilities and cannot lead development efforts"
+      options:
+        - label: The proposal will be developed and maintained by me
+          required: true

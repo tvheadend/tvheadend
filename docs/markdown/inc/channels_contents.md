@@ -8,7 +8,7 @@ Contents                               | Description
 [EPG Grabber Channels](class/epggrab_channel)  | EPG data sources used by channels
 [EPG Grabber](class/epggrab)            | EPG grabber configuration
 [EPG Grabber Modules](class/epggrab_mod)  | EPG grabber module management
-
+[Rating Labels Module](class/ratinglabel)  | Rating Labels management
 
 
 

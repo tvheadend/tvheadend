@@ -20,6 +20,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#define _GNU_SOURCE
+#define __USE_GNU
+#include <dlfcn.h>
 
 #include "tvhcsa.h"
 #include "input.h"
@@ -29,6 +32,10 @@
 #include "descrambler/algo/libaes128dec.h"
 #include "descrambler/algo/libdesdec.h"
 
+#if ENABLE_DVBCSA
+static int dvbcsa_dl_scanned;
+static dvbcsa_dl_bs_key_set_type dvbcsa_dl_bs_key_set_ecm;
+#endif
 
 static void
 tvhcsa_empty_flush
@@ -225,7 +232,7 @@ void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
   switch (csa->csa_type) {
   case DESCRAMBLER_CSA_CBC:
 #if ENABLE_DVBCSA
-    dvbcsa_bs_key_set(even, csa->csa_key_even);
+    dvbcsa_bs_key_set_wrap(csa->csa_ecm, even, csa->csa_key_even);
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
@@ -247,7 +254,7 @@ void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
   switch (csa->csa_type) {
   case DESCRAMBLER_CSA_CBC:
 #if ENABLE_DVBCSA
-    dvbcsa_bs_key_set(odd, csa->csa_key_odd);
+    dvbcsa_bs_key_set_wrap(csa->csa_ecm, odd, csa->csa_key_odd);
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
@@ -267,6 +274,19 @@ void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
 void
 tvhcsa_init ( tvhcsa_t *csa )
 {
+#if ENABLE_DVBCSA
+  if (!dvbcsa_dl_scanned)
+  {
+    dvbcsa_dl_scanned++;
+#if defined RTLD_DEFAULT
+    dvbcsa_dl_bs_key_set_ecm = (dvbcsa_dl_bs_key_set_type) dlsym(RTLD_DEFAULT, "dvbcsa_bs_key_set_ecm");
+    tvhinfo(LS_DESCRAMBLER, "dvbcsa_bs_key_set_ecm() function%s detected in libdvbcsa", dvbcsa_dl_bs_key_set_ecm ? "" : " not");
+#else
+    dvbcsa_dl_bs_key_set_ecm = (dvbcsa_dl_bs_key_set_type) NULL;
+    tvhinfo(LS_DESCRAMBLER, "can not detect dvbcsa_bs_key_set_ecm() function: RTLD_DEFAULT not defined on this system");
+#endif
+  }
+#endif
   csa->csa_type          = 0;
   csa->csa_keylen        = 0;
 }
@@ -305,3 +325,14 @@ tvhcsa_destroy ( tvhcsa_t *csa )
   }
   memset(csa, 0, sizeof(*csa));
 }
+
+#if ENABLE_DVBCSA
+void
+dvbcsa_bs_key_set_wrap(const unsigned char ecm, const dvbcsa_cw_t cw, struct dvbcsa_bs_key_s *key)
+{
+  if (dvbcsa_dl_bs_key_set_ecm)
+    dvbcsa_dl_bs_key_set_ecm(ecm, cw, key);
+  else
+    dvbcsa_bs_key_set(cw, key);
+}
+#endif

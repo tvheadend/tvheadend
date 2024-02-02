@@ -24,7 +24,7 @@
 #define NOTIFY_REWRITE_TITLE         1
 #define NOTIFY_REWRITE_SUBSCRIPTIONS 2
 
-void notify_by_msg(const char *class, htsmsg_t *m, int rewrite);
+void notify_by_msg(const char *class, htsmsg_t *m, int isrestricted, int rewrite);
 
 void notify_reload(const char *class);
 

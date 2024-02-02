@@ -71,6 +71,7 @@
 #include "transcoding/codec.h"
 #include "profile.h"
 #include "bouquet.h"
+#include "ratinglabels.h"
 #include "tvhtime.h"
 #include "packet.h"
 #include "streaming.h"
@@ -216,7 +217,7 @@ handle_sigill(int x)
   /* to determine the CPU capabilities with possible */
   /* unknown instructions */
   tvhwarn(LS_CPU, "Illegal instruction handler (might be OK)");
-  signal(SIGILL, handle_sigill);
+  tvh_signal(SIGILL, handle_sigill);
 }
 
 void
@@ -227,7 +228,7 @@ doexit(int x)
   tvh_cond_signal(&gtimer_cond, 0);
   tvh_cond_signal(&mtimer_cond, 0);
   atomic_set(&tvheadend_running, 0);
-  signal(x, doexit);
+  tvh_signal(x, doexit);
 }
 
 static int
@@ -696,7 +697,7 @@ mtimer_thread(void *aux)
       cb = mti->mti_callback;
       LIST_REMOVE(mti, mti_link);
       mti->mti_callback = NULL;
-      
+
       mtimer_running = mti;
       tvh_mutex_unlock(&mtimer_lock);
 
@@ -1112,8 +1113,11 @@ main(int argc, char **argv)
   tvhlog_set_trace(log_trace);
   tvhinfo(LS_MAIN, "Log started");
 
-  signal(SIGPIPE, handle_sigpipe); // will be redundant later
-  signal(SIGILL, handle_sigill);   // see handler..
+  tvh_signal(SIGPIPE, handle_sigpipe); // will be redundant later
+  tvh_signal(SIGILL, handle_sigill);   // see handler..
+
+  if (opt_fork && !opt_user && !opt_config)
+    tvhwarn(LS_START, "Forking without --user or --config may use unexpected configuration location");
 
   /* Set privileges */
   if((opt_fork && getuid() == 0) || opt_group || opt_user) {
@@ -1299,6 +1303,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, http_client_init);
   tvhftrace(LS_MAIN, esfilter_init);
   tvhftrace(LS_MAIN, bouquet_init);
+  tvhftrace(LS_MAIN, ratinglabel_init);
   tvhftrace(LS_MAIN, service_init);
   tvhftrace(LS_MAIN, descrambler_init);
   tvhftrace(LS_MAIN, dvb_init);
@@ -1349,8 +1354,8 @@ main(int argc, char **argv)
   sigaddset(&set, SIGTERM);
   sigaddset(&set, SIGINT);
 
-  signal(SIGTERM, doexit);
-  signal(SIGINT, doexit);
+  tvh_signal(SIGTERM, doexit);
+  tvh_signal(SIGINT, doexit);
 
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
@@ -1407,6 +1412,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, service_done);
   tvhftrace(LS_MAIN, channel_done);
   tvhftrace(LS_MAIN, bouquet_done);
+  tvhftrace(LS_MAIN, ratinglabel_done);
   tvhftrace(LS_MAIN, subscription_done);
   tvhftrace(LS_MAIN, access_done);
   tvhftrace(LS_MAIN, epg_done);

@@ -131,6 +131,7 @@ typedef struct timeshift {
   int                         file_segments; ///< Count of segments in files
 
   int                         vididx;     ///< Index of (current) video stream
+  int                         audidx;     ///< Index of (current) audio stream
 
   streaming_start_t          *smt_start;  ///< Streaming start info
 

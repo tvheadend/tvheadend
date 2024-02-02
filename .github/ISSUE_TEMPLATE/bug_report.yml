@@ -1,0 +1,131 @@
+name: "Bug Report"
+description: "File a new bug report"
+title: "[BUG]: "
+labels: ["NEW"]
+body:
+  - type: dropdown
+    id: version
+    attributes:
+      label: Tvheadend Version
+      description: "What Tvheadend version are you using?"
+      options:
+        - v4.2 (unsupported)
+        - v4.3 (development)
+        - v4.4 (stable)
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build Number
+      description: "As shown on the 'about' page"
+      placeholder: 4.x.yyyy~githash
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: "What platform or distro do you run Tvheadend on?"
+      options:
+        - Android (all)
+        - Apple (all)
+        - Debian 8 (Jessie)
+        - Debian 9 (Stretch)
+        - Debian 10 (Buster)
+        - Debian 11 (Bullseye)
+        - Debian 12 (Bookworm)
+        - Fedora 37
+        - Fedora 38
+        - Fedora 39
+        - Fedora Rawhide
+        - FreeBSD (all)
+        - Raspberry Pi OS (Buster)
+        - Raspberry Pi OS (Bullseye)
+        - Raspberry Pi OS (Bookworm)
+        - Synology 6.x
+        - Synology 7.x
+        - Ubuntu 14.04 (Trusty)
+        - Ubuntu 16.04 (Xenial)
+        - Ubuntu 18.04 (Bionic)
+        - Ubuntu 20.04 (Focal)
+        - Ubuntu 22.04 (Jammy)
+        - Other..
+      multiple: false
+    validations:
+      required: true
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: Architecture
+      description: "What CPU architecture does your device have?"
+      options:
+        - ARMv6 (arm)
+        - ARMv7 (arm)
+        - ARMv8 (arm)
+        - ARMv8 (aarch64)
+        - Intel i386
+        - Intel i686
+        - Intel x86_64
+        - Other..
+      multiple: false
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: "What is the main category for your issue?"
+      options:
+        - API
+        - Configuration
+        - Crashes
+        - Demultiplexing
+        - Descrambling
+        - DVB
+        - EPG
+        - General
+        - HDHomeRun
+        - HTSP
+        - IPTV
+        - Muxes
+        - Not-a-bug
+        - Packaging
+        - Parsers
+        - PVR/DVR
+        - SAT>IP
+        - Service Mapping
+        - Streaming
+        - Timeshifting
+        - Transcoding
+        - WebGUI
+        - Other..
+      multiple: false
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: "Provide a detailed description of the issue."
+    validations:
+      required: true
+  - type: textarea
+    id: logfile
+    attributes:
+      label: Logfile
+      description: "Provide a pastebin URL to a log or share a log file that shows the issue."
+    validations:
+      required: false
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: "Provide steps to reproduce the issue."
+      placeholder: |
+
+        1. With this config...
+        2. Run '...'
+        3. See error...
+    validations:
+      required: false

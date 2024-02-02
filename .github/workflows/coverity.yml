@@ -1,8 +1,11 @@
 name: Coverity Scan
 
-# We only want to test official release code, not every pull request.
+# workflow_dispatch: allows manual runs from the Actions tab
+# schedule: runs a weekly scan at 0700 on Monday
+
 on:
-# Allows you to run this workflow manually from the Actions tab
+  schedule:
+    - cron: "0 7 * * 1"
   workflow_dispatch:
 
 jobs:

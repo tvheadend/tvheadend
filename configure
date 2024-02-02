@@ -28,6 +28,7 @@ OPTIONS=(
   "satip_server:yes"
   "satip_client:yes"
   "hdhomerun_client:no"
+  "hdhomerun_server:yes"
   "hdhomerun_static:yes"
   "iptv:yes"
   "tsfile:yes"

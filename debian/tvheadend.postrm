@@ -1,15 +1,14 @@
 #!/bin/sh -e
 
-HTS_USER=hts
+HTS_USER="hts"
 
 . /usr/share/debconf/confmodule
 db_version 2.0
 
 case "$1" in
 purge)
-    if getent passwd $HTS_USER >/dev/null; then
-        HTS_HOME=`getent passwd $HTS_USER | cut -d':' -f6`
-        rm -rf "${HTS_HOME}"
+    if getent passwd "$HTS_USER" >/dev/null; then
+        rm -rf "$(getent passwd "$HTS_USER" | cut -d':' -f6)"
     fi
     db_purge
    ;;

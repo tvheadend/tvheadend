@@ -1301,6 +1301,8 @@ descrambler_table_callback
   int64_t clk, clk2, clk3;
   uint8_t ki;
   int i, j;
+  caid_t *ca;
+  elementary_stream_t *st;
 
   if (len < 6)
     return 0;
@@ -1362,13 +1364,20 @@ descrambler_table_callback
               if (dr->dr_ecm_parity == ECM_PARITY_81EVEN_80ODD)
                 j ^= 1;
               dr->dr_ecm_start[j] = clk;
-              if (dr->dr_quick_ecm) {
-                ki = 1 << (j + 6); /* 0x40 = even, 0x80 = odd */
-                for (i = 0; i < DESCRAMBLER_MAX_KEYS; i++) {
-                  tk = &dr->dr_keys[i];
+              ki = 1 << (j + 6); /* 0x40 = even, 0x80 = odd */
+              for (i = 0; i < DESCRAMBLER_MAX_KEYS; i++) {
+                tk = &dr->dr_keys[i];
+                if (dr->dr_quick_ecm)
                   tk->key_valid &= ~ki;
-                  if (tk->key_pid == 0) break;
+                TAILQ_FOREACH(st, &mt->mt_service->s_components.set_filter, es_filter_link) {
+                  if (st->es_pid != mt->mt_pid) continue;
+                    LIST_FOREACH(ca, &st->es_caids, link) {
+                    if (ca->use == 0) continue;
+                    tk->key_csa.csa_ecm = (caid_is_videoguard(ca->caid) && (ptr[4] != 0 && (ptr[2] - ptr[4]) == 4)) ? ptr[21] : 0;
+                    tvhtrace(LS_DESCRAMBLER, "key ecm=%X (caid=%04X)", tk->key_csa.csa_ecm, ca->caid);
+                  }
                 }
+                if (tk->key_pid == 0) break;
               }
             }
             tvhtrace(LS_DESCRAMBLER, "ECM message %02x:%02x (section %d, len %d, pid %d) for service \"%s\"",

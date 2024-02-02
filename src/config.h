@@ -75,7 +75,10 @@ typedef struct config {
   char *hdhomerun_ip;
   char *local_ip;
   int local_port;
-#if ENABLE_VAAPI
+  uint32_t hdhomerun_server_tuner_count;
+  char *hdhomerun_server_model_name;
+  int hdhomerun_server_enable;
+  #if ENABLE_VAAPI
   int enable_vainfo;
 #endif
 } config_t;

@@ -488,6 +488,23 @@ tvhdhomerun_frontend_stop_mux
   mtimer_arm_rel(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, sec2mono(2));
 }
 
+static void tvhdhomerun_frontend_update_pids_appendPidRange(int a, int b, int *firstDelimiter, char **pBuffer, const char **endBuffer )
+ /* A helper function that writes a range of pids to the 'buffer'.  This function is called more than once from tvhdhomerun_frontend_update_pids. */
+{
+  if(*firstDelimiter) /* Don't bother printing a space before the first range of pids. */
+     *firstDelimiter = 0;  /* Set this to false the first time. */
+  else {
+    if(*pBuffer < *endBuffer) /* Check if 'buffer' is full. */
+      *pBuffer += snprintf(*pBuffer, *endBuffer-*pBuffer, " "); /* After the first range, separate pid ranges by a space. */
+  }
+  if(*pBuffer < *endBuffer) { /* Check if 'buffer' is full. */
+    if(a == b)
+      *pBuffer += snprintf(*pBuffer, *endBuffer-*pBuffer, "0x%04x", a); /* First and last pid in a range are the same, then that one pid is appended. */
+    else
+      *pBuffer += snprintf(*pBuffer, *endBuffer-*pBuffer, "0x%04x-0x%04x", a, b); /* Append a range of pids to 'buffer'. */
+  }
+}
+
 static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
@@ -538,22 +555,6 @@ static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *
       char *pBuffer = buffer; /* Move this pointer through the buffer as we write formatted pids. */
       int firstDelimiter = -1; /* Set this to 'true' so that we can skip writing the first delimiter/space. */
 
-      void appendPidRange(int a, int b) /* A local function that writes a range of pids to the 'buffer'.  This function is called more than once. */
-      {
-        if(firstDelimiter) /* Don't bother printing a space before the first range of pids. */
-          firstDelimiter = 0;  /* Set this to false the first time. */
-        else {
-          if(pBuffer < endBuffer) /* Check if 'buffer' is full. */
-            pBuffer += snprintf(pBuffer, endBuffer-pBuffer, " "); /* After the first range, separate pid ranges by a space. */
-        }
-        if(pBuffer < endBuffer) { /* Check if 'buffer' is full. */
-          if(a == b)
-            pBuffer += snprintf(pBuffer, endBuffer-pBuffer, "0x%04x", a); /* First and last pid in a range are the same, then that one pid is appended. */
-          else
-            pBuffer += snprintf(pBuffer, endBuffer-pBuffer, "0x%04x-0x%04x", a, b); /* Append a range of pids to 'buffer'. */
-        }
-      }
-
       /* Walk the list of pids and keep track of runs of consecutive pids. Setup the state for the first pid. */
       for (i = 1, prev = begin = wpids.pids[0].pid; i < wpids.count; i++) {
 
@@ -568,7 +569,7 @@ static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *
         if(prev + 1 != curr) {
           /* If the current pid is NOT +1 more than the previous pid, then this is the end of a range of pids.
            * Write out this range of consecutive pids. */
-          appendPidRange(begin, prev);
+          tvhdhomerun_frontend_update_pids_appendPidRange(begin, prev, &firstDelimiter, &pBuffer, &endBuffer);
 
           /* Also, this is the start of a new range of pids.  Set 'begin' to the beginning of the next range. */
           begin = curr;
@@ -578,7 +579,7 @@ static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *
           break;
       }
       /* We are at the end of the list of pids, write the final range of consecutive pids to the 'buffer'. */
-      appendPidRange(begin, prev);
+      tvhdhomerun_frontend_update_pids_appendPidRange(begin, prev, &firstDelimiter, &pBuffer, &endBuffer);
 
       if(pBuffer >= endBuffer) { /* We could not fit the list of ranges of pids into the 'buffer' and have an incomplete/mangled 'buffer'
                                 * so as a backup, we will request all pids except NULL packets (0x1fff). */

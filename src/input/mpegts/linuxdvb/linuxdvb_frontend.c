@@ -1622,6 +1622,28 @@ linuxdvb_frontend_tune0
 #if DVB_VER_ATLEAST(5,0)
     { .t = DVB_FEC_9_10,                .l = FEC_9_10  },
 #endif
+#if DVB_VER_ATLEAST(5,12)
+    { .t = DVB_FEC_1_3,                 .l = FEC_1_3   },
+    { .t = DVB_FEC_1_4,                 .l = FEC_1_4   },
+    { .t = DVB_FEC_4_15,                .l = FEC_4_15  },
+    { .t = DVB_FEC_5_9,                 .l = FEC_5_9   },
+    { .t = DVB_FEC_7_9,                 .l = FEC_7_9   },
+    { .t = DVB_FEC_7_15,                .l = FEC_7_15  },
+    { .t = DVB_FEC_8_15,                .l = FEC_8_15  },
+    { .t = DVB_FEC_9_20,                .l = FEC_9_20  },
+    { .t = DVB_FEC_11_15,               .l = FEC_11_15 },
+    { .t = DVB_FEC_11_20,               .l = FEC_11_20 },
+    { .t = DVB_FEC_11_45,               .l = FEC_11_45 },
+    { .t = DVB_FEC_13_18,               .l = FEC_13_18 },
+    { .t = DVB_FEC_13_45,               .l = FEC_13_45 },
+    { .t = DVB_FEC_14_45,               .l = FEC_14_45 },
+    { .t = DVB_FEC_23_36,               .l = FEC_23_36 },
+    { .t = DVB_FEC_25_36,               .l = FEC_25_36 },
+    { .t = DVB_FEC_26_45,               .l = FEC_26_45 },
+    { .t = DVB_FEC_28_45,               .l = FEC_28_45 },
+    { .t = DVB_FEC_32_45,               .l = FEC_32_45 },
+    { .t = DVB_FEC_77_90,               .l = FEC_77_90 },    
+#endif
     { .t = TABLE_EOD }
   };
   static linuxdvb_tbl_t mod_tbl[] = {
@@ -1645,6 +1667,15 @@ linuxdvb_frontend_tune0
 #endif
 #if DVB_VER_ATLEAST(5,7)
     { .t = DVB_MOD_QAM_4_NR,            .l = QAM_4_NR },
+#endif
+#if DVB_VER_ATLEAST(5,12)
+    { .t = DVB_MOD_QAM_1024,            .l = QAM_1024 },
+    { .t = DVB_MOD_QAM_4096,            .l = QAM_4096 },
+    { .t = DVB_MOD_APSK_8_L,            .l = APSK_8_L },
+    { .t = DVB_MOD_APSK_16_L,           .l = APSK_16_L},
+    { .t = DVB_MOD_APSK_32_L,           .l = APSK_32_L},
+    { .t = DVB_MOD_APSK_64,             .l = APSK_64  },
+    { .t = DVB_MOD_APSK_64_L,           .l = APSK_64_L},
 #endif
     { .t = TABLE_EOD }
   };
@@ -1689,7 +1720,7 @@ linuxdvb_frontend_tune0
     { .t = DVB_HIERARCHY_4,             .l = HIERARCHY_4    },
     { .t = TABLE_EOD }
   };
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   static linuxdvb_tbl_t pilot_tbl[] = {
     { .t = DVB_PILOT_AUTO,              .l = PILOT_AUTO },
     { .t = DVB_PILOT_ON,                .l = PILOT_ON   },
@@ -1698,6 +1729,11 @@ linuxdvb_frontend_tune0
   };
   static linuxdvb_tbl_t rolloff_tbl[] = {
     { .t = DVB_HIERARCHY_AUTO,          .l = ROLLOFF_AUTO },
+#if DVB_VER_ATLEAST(5,12)
+    { .t = DVB_ROLLOFF_5,               .l = ROLLOFF_5    },
+    { .t = DVB_ROLLOFF_10,              .l = ROLLOFF_10   },
+    { .t = DVB_ROLLOFF_15,              .l = ROLLOFF_15   },    
+#endif
     { .t = DVB_ROLLOFF_20,              .l = ROLLOFF_20   },
     { .t = DVB_ROLLOFF_25,              .l = ROLLOFF_25   },
     { .t = DVB_ROLLOFF_35,              .l = ROLLOFF_35   },

@@ -2045,7 +2045,7 @@ mpegts_input_status_timer ( void *p )
     mpegts_input_stream_status(mmi, &st);
     e = tvh_input_stream_create_msg(&st);
     htsmsg_add_u32(e, "update", 1);
-    notify_by_msg("input_status", e, 0);
+    notify_by_msg("input_status", e, 1, 0);
     subs += st.subs_count;
     tvh_input_stream_destroy(&st);
   }

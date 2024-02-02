@@ -1,6 +1,6 @@
 /* ****************************************************************************
  *
- * Copyright (C) 2016- Tvheadend Foundation CIC
+ * Copyright (C) 2016- Tvheadend Project (https://tvheadend.org)
  *
  * This file is part of Tvheadend
  *
