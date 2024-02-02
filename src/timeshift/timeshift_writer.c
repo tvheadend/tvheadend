@@ -243,6 +243,8 @@ static void _update_smt_start ( timeshift_t *ts, streaming_start_t *ss )
   streaming_start_ref(ss);
   ts->smt_start = ss;
 
+  ts->audio_packet_counter = 255;
+
   /* Update video index */
   for (i = 0; i < ss->ss_num_components; i++)
     if (SCT_ISVIDEO(ss->ss_components[i].es_type)) {
@@ -271,6 +273,31 @@ static void _handle_sstart ( timeshift_t *ts, timeshift_file_t *tsf, streaming_m
   TAILQ_INSERT_TAIL(&tsf->sstart, ti, link);
 }
 
+/*
+ * Index i-frames and every 100th audio frame
+ */
+static void add_frame_to_index ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
+{
+  th_pkt_t *pkt = sm->sm_data;
+
+  /* Index video iframes or audio frames for audio-only streams*/
+  if ((pkt->pkt_componentindex == ts->vididx && pkt->v.pkt_frametype == PKT_I_FRAME) ||
+      (ts->vididx == -1 && pkt->pkt_componentindex == ts->audidx)) {
+
+    if(ts->vididx != -1 || ts->audio_packet_counter > 100) {    
+      timeshift_index_iframe_t *ti = calloc(1, sizeof(timeshift_index_iframe_t));
+      memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
+      ti->pos  = tsf->size;
+      ti->time = sm->sm_time;
+      TAILQ_INSERT_TAIL(&tsf->iframes, ti, link);
+      if(ts->vididx == -1)
+        ts->audio_packet_counter = 0;
+    }
+    if(ts->vididx == -1)
+      ts->audio_packet_counter++;
+  }
+}
+
 /* **************************************************************************
  * Thread
  * *************************************************************************/
@@ -283,28 +310,19 @@ static inline ssize_t _process_msg0
   if (sm->sm_type == SMT_START) {
     err = 0;
     _handle_sstart(ts, tsf, streaming_msg_clone(sm));
-  } else if (sm->sm_type == SMT_SIGNAL_STATUS)
+  } else if (sm->sm_type == SMT_SIGNAL_STATUS) {
     err = timeshift_write_sigstat(tsf, sm->sm_time, sm->sm_data);
-  else if (sm->sm_type == SMT_PACKET) {
+  } else if (sm->sm_type == SMT_PACKET) {
     err = timeshift_write_packet(tsf, sm->sm_time, sm->sm_data);
     if (err > 0) {
-      th_pkt_t *pkt = sm->sm_data;
-
-      /* Index video iframes or audio frames for audio-only streams*/
-      if ((pkt->pkt_componentindex == ts->vididx && pkt->v.pkt_frametype == PKT_I_FRAME) ||
-          (ts->vididx == -1 && pkt->pkt_componentindex == ts->audidx)) {
-        timeshift_index_iframe_t *ti = calloc(1, sizeof(timeshift_index_iframe_t));
-        memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
-        ti->pos  = tsf->size;
-        ti->time = sm->sm_time;
-        TAILQ_INSERT_TAIL(&tsf->iframes, ti, link);
-      }
+      add_frame_to_index(ts, tsf, sm);
     }
   } else if (sm->sm_type == SMT_MPEGTS) {
     err = timeshift_write_mpegts(tsf, sm->sm_time, sm->sm_data);
   }
-  else
+  else {
     err = 0;
+  }
 
   /* OK */
   if (err > 0) {
