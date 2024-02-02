@@ -279,6 +279,7 @@ static inline ssize_t _process_msg0
   ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
 {
   ssize_t err;
+  ts->audio_packet_counter = 0; // Initialize the audio packet counter to 0
 
   if (sm->sm_type == SMT_START) {
     err = 0;
@@ -292,8 +293,16 @@ static inline ssize_t _process_msg0
 
       /* Index video iframes or audio frames for audio-only streams*/
       if ((pkt->pkt_componentindex == ts->vididx && pkt->v.pkt_frametype == PKT_I_FRAME) ||
-          (ts->vididx == -1 && pkt->pkt_componentindex == ts->audidx)) {
+          (ts->vididx == -1) {
+      if (ts->audio_packet_counter % 100 == 99) {
         timeshift_index_iframe_t *ti = calloc(1, sizeof(timeshift_index_iframe_t));
+        memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
+        ti->pos  = tsf->size;
+        ti->time = sm->sm_time;
+        TAILQ_INSERT_TAIL(&tsf->iframes, ti, link);
+      }
+      ts->audio_packet_counter++;
+    } else if (pkt->pkt_componentindex == ts->vididx && pkt->v.pkt_frametype == PKT_I_FRAME) {
         memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
         ti->pos  = tsf->size;
         ti->time = sm->sm_time;
