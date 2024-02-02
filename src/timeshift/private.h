@@ -132,6 +132,8 @@ typedef struct timeshift {
 
   int                         vididx;     ///< Index of (current) video stream
   int                         audidx;     ///< Index of (current) audio stream
+  
+  uint8_t                         audio_packet_counter; ///< Counter for audio packets in audio-only streams
 
   streaming_start_t          *smt_start;  ///< Streaming start info
 
