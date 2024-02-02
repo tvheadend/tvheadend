@@ -17,7 +17,7 @@ gha_enabled: True
 # Example:
 #
 # description: sweepai/sweep is a python project. The main api endpoints are in sweepai/api.py. Write code that adheres to PEP8.
-description: ''
+description: 'Tvheadend is a TV streaming client and server written in C. It runs a webserver, has a SAT>IP Client and SAT>IP Server and can receive DVB channels.'
 
 # This sets whether to create pull requests as drafts. If this is set to True, then all pull requests will be created as drafts and GitHub Actions will not be triggered.
 draft: False
