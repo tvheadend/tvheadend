@@ -9,4 +9,4 @@ jobs:
     steps:
       - uses: actions/stale@v9
         with:
-          any-of-labels: 'needs-more-info'
+          any-of-labels: 'needs-more-info,SQUASH'
