@@ -30,12 +30,18 @@
 #include <assert.h>
 
 /* **************************************************************************
+ * Function Declarations
+ * *************************************************************************/
+
+/* *************************************************************************
  * File Writing
  * *************************************************************************/
 
 /*
  * Write data (retry on EAGAIN)
  */
+static void add_frame_to_index ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm );
+
 static ssize_t _write_fd
   ( int fd, const void *buf, size_t count )
 {
@@ -302,7 +308,8 @@ static void add_frame_to_index ( timeshift_t *ts, timeshift_file_t *tsf, streami
  * Thread
  * *************************************************************************/
 
-static inline ssize_t _process_msg0
+static void add_frame_to_index(timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm)
+{
   ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
 {
   ssize_t err;
