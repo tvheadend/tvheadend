@@ -576,7 +576,7 @@ msgstr "Ver {0} - {1} of {2}"
 
 #: src/webui/static/app/dvr.js:263
 msgid "Do you really want to abort/unschedule the selection?"
-msgstr "Pretende realmente abortar/remover a(s) entrada(s) selecionada(s)?"
+msgstr "Pretende realmente abortar/remover as entradas selecionadas?"
 
 #: src/webui/static/app/dvr.js:594
 msgid "Do you really want to delete the selected recordings?"
@@ -584,15 +584,15 @@ msgstr "Pretende realmente apagar as gravações selecionadas?"
 
 #: src/webui/static/app/tvheadend.js:327
 msgid "Do you really want to delete the selection?"
-msgstr "Pretende realmente apagar a(s) entrada(s) selecionada(s)?"
+msgstr "Pretende realmente apagar as entradas selecionadas?"
 
 #: src/webui/static/app/dvr.js:233
 msgid "Do you really want to gracefully stop/unschedule the selection?"
-msgstr "Quer mesmo parar/remover os itens seleccionados?"
+msgstr "Pretende realmente parar/remover as entradas selecionadas?"
 
 #: src/webui/static/app/epg.js:324
 msgid "Do you really want to gracefully stop/unschedule this recording?"
-msgstr "Quer mesmo parar/remover esta gravação?"
+msgstr "Pretende realmente parar/remover esta gravação?"
 
 #: src/webui/static/app/dvr.js:434
 msgid "Do you really want to remove the selected recordings from storage?"
@@ -601,7 +601,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:337
 msgid "Do you really want to remove this recording?"
-msgstr "Quer parar esta gravação?"
+msgstr "Pretende realmente remover esta gravação?"
 
 #: src/webui/static/app/epg.js:1046 src/webui/static/app/epg.js:1052
 #: src/webui/static/app/epg.js:1055 src/webui/static/app/epg.js:1058
