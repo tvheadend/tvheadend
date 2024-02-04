@@ -1,23 +1,26 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # 
 # Translators:
-# esfomeado esfomeado <vps1992@live.com.pt>, 2016
-# Orlando Rocha <ornrocha@gmail.com>, 2015-2016
+# Christian Hewitt, 2023
+# João Rodrigues <diogo2pt@gmail.com>, 2024
+# 
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Tvheadend\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-16 18:36+0100\n"
-"PO-Revision-Date: 2016-12-16 17:37+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Portuguese (http://www.transifex.com/tvheadend/tvheadend/language/pt/)\n"
+"POT-Creation-Date: 2017-03-29 21:07+0200\n"
+"PO-Revision-Date: 2023-12-11 11:01+0000\n"
+"Last-Translator: João Rodrigues <diogo2pt@gmail.com>, 2024\n"
+"Language-Team: Portuguese (https://app.transifex.com/tvheadend/teams/43381/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #: src/webui/static/app/i18n-post.js:137
 msgid "&#160;OK&#160;"
@@ -350,7 +353,8 @@ msgstr "Não é possível aplicar"
 
 #: src/webui/static/app/idnode.js:622
 msgid "Change the user interface level (basic, advanced, expert)"
-msgstr "Altera o nível da interface do utilizador (básico, avançado, experiente)"
+msgstr ""
+"Altera o nível da interface do utilizador (básico, avançado, experiente)"
 
 #: src/webui/static/app/idnode.js:1167 src/webui/static/app/idnode.js:1502
 msgid "Changes were applied!"
@@ -467,7 +471,9 @@ msgstr "Criar Gravação Auto."
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
-msgstr "Criar uma entrada de gravação automática que irá gravar todos os programas futuros que correspondam à sua pesquisa."
+msgstr ""
+"Criar uma entrada de gravação automática que irá gravar todos os programas "
+"futuros que correspondam à sua pesquisa."
 
 #: src/webui/static/app/idnode.js:1455
 msgid "Create new entry"
@@ -528,11 +534,11 @@ msgstr "Descodificar"
 
 #: src/webui/static/app/chconf.js:151
 msgid "Detach from bouquet"
-msgstr ""
+msgstr "Separar do bouquet"
 
 #: src/webui/static/app/chconf.js:153
 msgid "Detach selected channels from bouquet"
-msgstr ""
+msgstr "Separa os canais selecionados do bouquet."
 
 #: src/webui/static/app/mpegts.js:321
 msgid "Detailed stream info"
@@ -591,6 +597,7 @@ msgstr "Quer mesmo parar/remover esta gravação?"
 #: src/webui/static/app/dvr.js:434
 msgid "Do you really want to remove the selected recordings from storage?"
 msgstr ""
+"Pretende realmente remover as gravações selecionadas do armazenamento?"
 
 #: src/webui/static/app/epg.js:337
 msgid "Do you really want to remove this recording?"
@@ -951,11 +958,11 @@ msgstr "Procurar novos servidores SAT>IP"
 
 #: src/webui/static/app/mpegts.js:305
 msgid "Maintenance"
-msgstr ""
+msgstr "Manutenção"
 
 #: src/webui/static/app/mpegts.js:303
 msgid "Maintenance operations"
-msgstr ""
+msgstr "Operações de manutenção"
 
 #: src/webui/static/app/mpegts.js:271
 msgid "Map All"
@@ -1150,7 +1157,7 @@ msgstr "Nenhum"
 
 #: src/webui/static/app/tvheadend.js:247
 msgid "Not Available"
-msgstr ""
+msgstr "Não disponível"
 
 #: src/webui/static/app/idnode.js:355
 msgid "Not set"
@@ -1280,13 +1287,15 @@ msgstr "Esperar, por favor..."
 
 #: src/webui/static/app/tvheadend.js:240
 msgid "Please check Tvheadend is running and try again."
-msgstr ""
+msgstr "Verifique se o Tvheadend está a correr e tente novamente."
 
 #: src/webui/static/app/tvheadend.js:249
 msgid ""
 "Please take a look at the other Help pages (Table of Contents). If you still"
 " can't find what you're "
 msgstr ""
+"Consulte as outras páginas de Ajuda (Índice). Se mesmo assim não conseguir "
+"encontrar o que pretende"
 
 #: src/webui/static/app/wizard.js:66
 msgid "Previous"
@@ -1363,39 +1372,43 @@ msgstr "Actualizar"
 
 #: src/webui/static/app/dvr.js:416
 msgid "Remove"
-msgstr ""
+msgstr "Remover"
 
 #: src/webui/static/app/mpegts.js:300
 msgid "Remove all unseen services (7 days+)"
-msgstr ""
+msgstr "Remove todos os serviços não vistos (com mais de 7 dias)."
 
 #: src/webui/static/app/mpegts.js:292
 msgid ""
 "Remove old services marked as missing in PAT/SDT which were not detected "
 "more than 7 days (last seen column)"
 msgstr ""
+"Remove os serviços antigos marcados como em falta no PAT/SDT que não foram "
+"detetados há mais de 7 dias (coluna da última vez visto)."
 
 #: src/webui/static/app/mpegts.js:298
 msgid ""
 "Remove old services which were not detected more than 7 days (last seen "
 "column)"
 msgstr ""
+"Remove os serviços antigos que não foram detetados há mais de 7 dias (coluna"
+" da última vez visto)."
 
 #: src/webui/static/app/dvr.js:414
 msgid "Remove the selected recording from storage"
-msgstr ""
+msgstr "Remove as gravações selecionadas do armazenamento."
 
 #: src/webui/static/app/mpegts.js:294
 msgid "Remove unseen services (PAT/SDT) (7 days+)"
-msgstr ""
+msgstr "Remove os serviços não vistos (PAT/SDT) (com mais de 7 dias)."
 
 #: src/webui/static/app/dvr.js:674
 msgid "Removed Recording"
-msgstr ""
+msgstr "Gravação removida"
 
 #: src/webui/static/app/dvr.js:675
 msgid "Removed Recordings"
-msgstr ""
+msgstr "Gravações removidas"
 
 #: src/webui/static/app/epg.js:155
 msgid "Repeat#EPG"
@@ -1403,7 +1416,7 @@ msgstr "Repetir#EPG"
 
 #: src/webui/static/app/cteditor.js:42
 msgid "Rescan the mux for changes to the bouquet."
-msgstr ""
+msgstr "Pesquisar novamente o mux para alterações no bouquet."
 
 #: src/webui/static/app/chconf.js:218
 msgid "Reset (clear) the selected icon URLs"
@@ -1720,16 +1733,20 @@ msgid ""
 "There is no documentation associated with the Help button pressed, or there was an problem loading the page.\n"
 "\n"
 msgstr ""
+"Não existe documentação associada ao botão Ajuda premido ou houve um problema ao carregar a página.\n"
+"\n"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."
-msgstr "Parece haver um problema na ligação ao site do Tvheadend.  A tentar novamente a conexão..."
+msgstr ""
+"Parece haver um problema na ligação ao site do Tvheadend.  A tentar "
+"novamente a conexão..."
 
 #: src/webui/static/app/tvheadend.js:239
 msgid "There was a problem displaying the Help!"
-msgstr ""
+msgstr "Ocorreu um problema que impede a visualização da ajuda!"
 
 #: src/webui/static/app/tvhlog.js:26
 msgid "They will be lost when the application next restarts."
@@ -1751,7 +1768,9 @@ msgstr "Campo obrigatório"
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
-msgstr "Isto vai criar uma regra que irá examinar o EPG automaticamente, de forma a gravar todos os programas que correspondam à sua procura"
+msgstr ""
+"Isto vai criar uma regra que irá examinar o EPG automaticamente, de forma a "
+"gravar todos os programas que correspondam à sua procura"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
@@ -1958,7 +1977,9 @@ msgstr "g:i A#TimeField"
 msgid ""
 "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
 "A|gi|hi|gia|hia|g|H#TimeField"
-msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
+msgstr ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
 
 #: src/webui/static/app/idnode.js:363 src/webui/static/app/idnode.js:364
 #: src/webui/static/app/epg.js:466 src/webui/static/app/epg.js:468
@@ -1978,6 +1999,8 @@ msgid ""
 "looking for please see the "
 "[Wiki](http://tvheadend.org/projects/tvheadend/wiki) "
 msgstr ""
+"que procura, consulte a [Wiki](http://tvheadend.org/projects/tvheadend/wiki)"
+" "
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
@@ -2018,6 +2041,8 @@ msgid ""
 "or join the [IRC channel on "
 "freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)."
 msgstr ""
+"ou juntar-se ao [canal IRC no "
+"freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)."
 
 #: src/webui/static/app/i18n-post.js:217
 msgid "true"
