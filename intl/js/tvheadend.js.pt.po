@@ -580,7 +580,7 @@ msgstr "Pretende realmente abortar/remover as entradas selecionadas?"
 
 #: src/webui/static/app/dvr.js:594
 msgid "Do you really want to delete the selected recordings?"
-msgstr "Quer mesmo apagar as gravações seleccionadas"
+msgstr "Pretende realmente apagar as gravações selecionadas?"
 
 #: src/webui/static/app/tvheadend.js:327
 msgid "Do you really want to delete the selection?"
