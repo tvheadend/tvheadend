@@ -49,47 +49,51 @@ case $OSPREFIX$TARGET in
         OS="ubuntu";;
     raspios*)
         OS="raspbian";;
+    37|38|39)
+        OS="fedora";;
+    40|41)
+        echo "Fedora 40 and 41 (current rawhide) are not (yet) supported by Cloudsmith" && exit;;
     *) echo "OS $TARGET could not be recognized" && exit 1;;
 esac
 
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
-export DEBIAN_FRONTEND=noninteractive
 
-# Since Python 3.11, this flag is required to install pip packages globally
-export PIP_BREAK_SYSTEM_PACKAGES=1
-    
-apt install --force-yes -y python3.7 || true
-
-# Use ensurepip to bootstrap pip if available, else install from apt
-python3 -m ensurepip || apt install --force-yes -y python3-pip || apt install --force-yes -y python-pip
-
-# Get the major and minor version of the installed Python
-python_version=$(python3 -c 'import sys; print("{}.{}".format(sys.version_info.major, sys.version_info.minor))')
-
-# Compare versions and upgrade pip accordingly
-if [[ "$python_version" == "3.3" ]]; then
-    python3 -m pip install --upgrade 'pip<10.0.2' 'colorama==0.4.1' 'urllib3==1.22'
-elif [[ "$python_version" == "3.4" ]]; then
-    python3 -m pip install --ignore-installed --upgrade 'pip<19.2' 'colorama==0.4.1' 'urllib3==1.24.3' 'requests==2.21.0' 'six==1.16.0' 'certifi==2021.10.8'
-elif [[ "$python_version" == "3.5" ]]; then
-    python3 -m pip install --upgrade 'pip<20.4'
-elif [[ "$python_version" == "3.6" ]]; then
-    python3 -m pip install --upgrade 'pip<22.0'
+if [ $OS == "fedora" ]; then
+    dnf install -y curl
 else
-    # For Python 3.7 and above, install the latest version of pip
-    python3 -m pip install --upgrade pip
+    export DEBIAN_FRONTEND=noninteractive
+    apt update
+    apt install -y curl
 fi
 
-pip3 install --upgrade cloudsmith-cli || pip install --upgrade cloudsmith-cli || pip2 install --upgrade cloudsmith-cli
-python3 /usr/local/bin/cloudsmith --version || python /usr/local/bin/cloudsmith --version || cloudsmith --version
-
 FILEARRAY=($FILE)
-
 for package in "${FILEARRAY[@]}"; do
+    EXTENSION=${package##*.}
+    PKGBASENAME=$(basename $package)
+    # dryrun exit is performed as late as possible to catch any earlier potential issues
     if [ $DRYRUN = "1" ]; then
-        echo "DRYRUN MODE: Skip pushing tvheadend/tvheadend/$OS/$TARGET $package"
-    else
-        python3 /usr/local/bin/cloudsmith push deb "tvheadend/tvheadend/$OS/$TARGET" $package || python /usr/local/bin/cloudsmith push deb "tvheadend/tvheadend/$OS/$TARGET" $package || cloudsmith push deb "tvheadend/tvheadend/$OS/$TARGET" $package
+        echo "DRYRUN MODE: Skip pushing $OS $TARGET package $package"
+        continue
     fi
+    # upload package to file upload endpoint
+    curlUpload=$(
+        curl \
+            --upload-file $package \
+            -u "$CLOUDSMITH_OWNER:$CLOUDSMITH_API_KEY" \
+            -H "Content-Sha256: $(sha256sum "$package" | cut -f1 -d' ')" \
+            https://upload.cloudsmith.io/$CLOUDSMITH_ORG/$CLOUDSMITH_REPO/$PKGBASENAME \
+    )
+    IDENTIFIER=$(echo $curlUpload | cut -f 4 -d '"')
+    # finalize by POSTing to the create package endpoint
+    curl \
+        -X POST \
+        -H "Content-Type: application/json" \
+        -u "$CLOUDSMITH_OWNER:$CLOUDSMITH_API_KEY" \
+        -d "{
+                \"package_file\": \"$IDENTIFIER\",
+                \"distribution\": \"$OS/$TARGET\"
+            }" \
+        https://api-prd.cloudsmith.io/v1/packages/$CLOUDSMITH_ORG/$CLOUDSMITH_REPO/upload/$EXTENSION/
+    echo
 done

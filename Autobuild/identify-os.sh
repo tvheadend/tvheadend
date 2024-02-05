@@ -12,6 +12,10 @@ if [ "$UNAME" == "linux" ]; then
     # Otherwise, use release info file
     elif [ -f /etc/os-release ]; then
         export DISTRO=$(awk -F= '/^VERSION_CODENAME/{print $2}' /etc/os-release)
+        # Fedora uses VERSION_ID
+        if [ "$DISTRO" == '""' ]; then
+            export DISTRO=$(awk -F= '/^VERSION_ID/{print $2}' /etc/os-release)
+        fi
         echo "OS identified using os-release file"
     else
         export DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
