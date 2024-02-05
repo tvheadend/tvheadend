@@ -1373,7 +1373,7 @@ descrambler_table_callback
                   if (st->es_pid != mt->mt_pid) continue;
                     LIST_FOREACH(ca, &st->es_caids, link) {
                     if (ca->use == 0) continue;
-                    tk->key_csa.csa_ecm = (caid_is_videoguard(ca->caid) && (ptr[4] != 0 && (ptr[2] - ptr[4]) == 4)) ? ptr[21] : 0;
+                    tk->key_csa.csa_ecm = (caid_is_videoguard(ca->caid) && (ptr[4] != 0 && (ptr[2] - ptr[4]) == 4)) ? 4 : 0;
                     tvhtrace(LS_DESCRAMBLER, "key ecm=%X (caid=%04X)", tk->key_csa.csa_ecm, ca->caid);
                   }
                 }
