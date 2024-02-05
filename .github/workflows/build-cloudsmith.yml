@@ -14,6 +14,9 @@ jobs:
     name: Build on Raspberry Pi ${{ matrix.arch }}
     env:
       GITHUB_ENV: CLOUDSMITH_API_KEY
+      CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
+      CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+      CLOUDSMITH_OWNER: ${{ vars.CLOUDSMITH_OWNER }}
       CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
     strategy:
       matrix:
@@ -102,6 +105,9 @@ jobs:
           # Pass some environment variables to the container
           env: | # YAML, but pipe character is necessary
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
+            CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
+            CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+            CLOUDSMITH_OWNER: ${{ vars.CLOUDSMITH_OWNER }}
             CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
 
 
@@ -144,6 +150,7 @@ jobs:
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
             cp ../tvheadend*.deb /artifacts/
+            if [ '${{ matrix.distro }}' = 'buster' ] && [ '${{ matrix.arch }}' = 'armv7' ]; then update-ca-certificates --fresh; fi
             support/cloudsmith.sh -f '../tvheadend*.deb'
       - uses: actions/upload-artifact@v3
         with:
@@ -201,6 +208,9 @@ jobs:
       - name: upload-cloudsmith
         run: support/cloudsmith.sh -f 'tvheadend*.deb'
         env:
+          CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
+          CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+          CLOUDSMITH_OWNER: ${{ vars.CLOUDSMITH_OWNER }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
 
   build-rpm-native:
@@ -231,7 +241,10 @@ jobs:
           name: Tvheadend-RPM
           path: tvheadend*.rpm
           if-no-files-found: error
-      # - name: upload-cloudsmith
-      #   run: support/cloudsmith.sh -f 'tvheadend*.rpm'
-      #   env:
-      #     CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+      - name: upload-cloudsmith
+        run: support/cloudsmith.sh -f 'tvheadend*.rpm'
+        env:
+          CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
+          CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+          CLOUDSMITH_OWNER: ${{ vars.CLOUDSMITH_OWNER }}
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
