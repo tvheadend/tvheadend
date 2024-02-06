@@ -4933,7 +4933,7 @@ dvr_entry_delete(dvr_entry_t *de)
       r = deferred_unlink(filename, rdir);
       if(r && r != -ENOENT)
         tvhwarn(LS_DVR, "Unable to remove file '%s' from disk -- %s",
-  	        filename, strerror(-errno));
+  	        filename, strerror(errno));
 
       cmd = de->de_config->dvr_postremove;
       if (cmd && cmd[0])
