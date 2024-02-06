@@ -1486,6 +1486,7 @@ dobackup(const char *oldver)
   const char *argv[] = {
     "/usr/bin/tar", "cjf", outfile,
     "--exclude", "backup",
+    "--exclude", "recordings",
     "--exclude", "epggrab/*.sock",
     "--exclude", "timeshift/buffer",
     "--exclude", "imagecache/meta",
