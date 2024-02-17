@@ -1146,7 +1146,7 @@ msgstr "Ładowanie..."
 #: src/webui/static/app/epg.js:1032 src/webui/static/app/epg.js:1083
 #: src/webui/static/app/epg.js:1104
 msgid "Loading…"
-msgstr "Wczytywanie..."
+msgstr "Ładowanie..."
 
 #: src/webui/static/app/tvheadend.js:1328
 msgid "Logged in as"
