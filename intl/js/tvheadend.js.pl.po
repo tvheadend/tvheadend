@@ -175,7 +175,7 @@ msgstr "Dodaj nowy wpis"
 
 #: src/webui/static/app/idnode.js:1397 src/webui/static/app/idnode.js:1598
 msgid "Add {0}"
-msgstr "Dodaj {0}"
+msgstr "Dodaj: {0}"
 
 #: src/webui/static/app/idnode.js:604 src/webui/static/app/idnode.js:620
 msgid "Advanced"
@@ -683,7 +683,7 @@ msgstr "Wyświetl okno dialogowe pokazujące alternatywne transmisje"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
-msgstr "Wyświetlanie {0} - {1} z {2}"
+msgstr "Wyświetlanie: {0} - {1} z {2}"
 
 #: src/webui/static/app/dvr.js:563
 msgid "Do you really want to abort/unschedule the selection?"
@@ -795,11 +795,11 @@ msgstr "Edytuj wybrany wpis"
 
 #: src/webui/static/app/idnode.js:1354 src/webui/static/app/idnode.js:1966
 msgid "Edit {0}"
-msgstr "Edytuj {0}"
+msgstr "Edytuj: {0}"
 
 #: src/webui/static/app/idnode.js:1351
 msgid "Edit {0} ({1} entries)"
-msgstr "Edycja {0} ({1} wpisów)"
+msgstr "Edytuj: {0} ({1} wpisów)"
 
 #: src/webui/static/app/epg.js:1341
 msgid "Electronic Program Guide"
@@ -1038,11 +1038,11 @@ msgstr "Identyfikator"
 
 #: src/webui/static/app/acleditor.js:108
 msgid "IP Blocking Record"
-msgstr "Blokowanie IP nagrania"
+msgstr "Blokowanie adresów IP"
 
 #: src/webui/static/app/acleditor.js:109
 msgid "IP Blocking Records"
-msgstr "Blokowanie IP nagrań"
+msgstr "Blokowanie adresów IP"
 
 #: src/webui/static/app/servicemapper.js:17
 msgid "Ignored"
@@ -1759,7 +1759,7 @@ msgstr "Wybierz profil strumienia..."
 
 #: src/webui/static/app/idnode.js:476 src/webui/static/app/idnode.js:724
 msgid "Select {0} ..."
-msgstr "Wybierz {0} ..."
+msgstr "Wybierz: {0} ..."
 
 #: src/webui/static/app/idnode.js:460 src/webui/static/app/idnode.js:700
 msgid "Selected"
