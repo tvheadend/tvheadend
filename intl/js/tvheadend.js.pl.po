@@ -313,7 +313,7 @@ msgstr "Monitor przepustowości"
 
 #: src/webui/static/app/config.js:29
 msgid "Base"
-msgstr "Podstawowa"
+msgstr "Podstawowe"
 
 #: src/webui/static/app/idnode.js:602 src/webui/static/app/idnode.js:614
 msgid "Basic"
@@ -321,7 +321,7 @@ msgstr "Podstawowy"
 
 #: src/webui/static/app/idnode.js:1052
 msgid "Basic Settings"
-msgstr "Podstawowe ustawienia"
+msgstr "Ustawienia podstawowe"
 
 #: src/webui/static/app/i18n-post.js:280
 msgid "Before"
@@ -581,7 +581,7 @@ msgstr "Ekipa"
 #: src/webui/static/app/epg.js:1511
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
-msgstr "Obecnie ten będzie pasował (i nagranie) %d zdarzenia."
+msgstr "Obecnie będzie to dopasowywać (i rejestrować) %d wydarzenia."
 
 #: src/webui/static/app/tvheadend.js:1105
 msgid "DVB Inputs"
@@ -838,7 +838,7 @@ msgstr "Błędy"
 
 #: src/webui/static/app/epg.js:1348 src/webui/static/app/epgevent.js:156
 msgid "Events"
-msgstr "Wydarzenia"
+msgstr "Zdarzenia:"
 
 #: src/webui/static/app/dvr.js:417
 msgid "Every day"
@@ -1238,7 +1238,7 @@ msgstr "Wpis informacji o pamięci"
 
 #: src/webui/static/app/tvheadend.js:665
 msgid "Message"
-msgstr "Wiadomość"
+msgstr "Komunikat"
 
 #: src/webui/static/app/tvheadend.js:1349
 msgid "MiB"
@@ -1915,7 +1915,7 @@ msgstr "Strumieniowanie"
 
 #: src/webui/static/app/status.js:414
 msgid "Subs No."
-msgstr "Napisy nr"
+msgstr "Numer subskrypcji"
 
 #: src/webui/static/app/status.js:258
 msgid "Subscriptions"
@@ -2075,7 +2075,7 @@ msgstr "Timery"
 
 #: src/webui/static/app/timeshift.js:16
 msgid "Timeshift"
-msgstr "Timeshift"
+msgstr "Funkcja Timeshift"
 
 #: src/webui/static/app/epg.js:777 src/webui/static/app/epg.js:778
 #: src/webui/static/app/epg.js:1504 src/webui/static/app/epgevent.js:96
