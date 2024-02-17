@@ -1421,7 +1421,7 @@ msgstr "Inny filtr strumienia"
 
 #: src/webui/static/app/esfilter.js:111
 msgid "Other Stream Filters"
-msgstr "Inne filtry strumienia"
+msgstr "Filtry innych strumieni"
 
 #: src/webui/static/app/status.js:923
 msgid "Out"
