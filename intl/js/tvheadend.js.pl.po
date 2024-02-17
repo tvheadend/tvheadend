@@ -507,7 +507,7 @@ msgstr "Nazwa profilu kodeka"
 
 #: src/webui/static/app/codec.js:772
 msgid "Codec Profiles"
-msgstr "Profile kodeka"
+msgstr "Profile kodeków"
 
 #: src/webui/static/app/i18n-post.js:205
 msgid "Columns"
