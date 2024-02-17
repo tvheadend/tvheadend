@@ -1866,7 +1866,7 @@ msgstr "Stan"
 
 #: src/webui/static/app/dvr.js:153 src/webui/static/app/status.js:826
 msgid "Status"
-msgstr "Status"
+msgstr "Stan"
 
 #: src/webui/static/app/dvr.js:541 src/webui/static/app/tvheadend.js:943
 msgid "Stop"
