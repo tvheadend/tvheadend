@@ -1150,7 +1150,7 @@ msgstr "Ładowanie..."
 
 #: src/webui/static/app/tvheadend.js:1328
 msgid "Logged in as"
-msgstr "Zalogowany jako"
+msgstr "Zalogowano jako"
 
 #: src/webui/static/app/config.js:130
 msgid "Look for new SAT>IP servers"
