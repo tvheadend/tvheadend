@@ -451,7 +451,7 @@ msgstr "Wyczyść bufor obrazów w pamięci"
 
 #: src/webui/static/app/status.js:534
 msgid "Clear all statistics"
-msgstr "Wyczyść statystyki"
+msgstr "Wyczyść wszystkie statystyki"
 
 #: src/webui/static/app/status.js:318 src/webui/static/app/status.js:321
 msgid "Clear statistics"
