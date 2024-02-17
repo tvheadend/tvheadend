@@ -10,6 +10,11 @@ on:
     branches:
       - master
 
+concurrency:
+  # auto-cancel previous runs if the pull request is force-push updated                   
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
