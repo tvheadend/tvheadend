@@ -766,7 +766,7 @@ msgid ""
 "network settings for further details."
 msgstr ""
 "Zezwól na wstępne dostrajanie skanowania na tym urządzeniu (skanuj po "
-"uruchomieniu Tvheadend lub po automatycznym dodaniu nowego multipleksu). "
+"uruchomieniu Tvheadend lub po automatycznym dodaniu nowego multipleksera). "
 "Przynajmniej jeden tuner lub wejście powinno mieć włączone to ustawienie. "
 "Zobacz również „Pomiń skanowanie przy uruchamianiu” w ustawieniach "
 "sieciowych, aby uzyskać więcej szczegółów."
@@ -8957,7 +8957,7 @@ msgstr "Nazwa grabbera EPG."
 msgid ""
 "The EPG grabber to use on the mux. Enable (auto) is the recommended value."
 msgstr ""
-"Grabber EPG do użycia na multiplekserze. Zalecaną wartością jest Włącz "
+"Grabber EPG do użycia w multiplekserze. Zalecaną wartością jest Włącz "
 "(automatycznie)."
 
 #: src/input/mpegts/mpegts_mux.c:554
@@ -8965,7 +8965,7 @@ msgid ""
 "The EPG grabber to use on the mux. The 'EPG scan' field must be set to "
 "'manual'."
 msgstr ""
-"Grabber EPG do użycia na multipleksie. Pole 'Skanowanie EPG' musi być "
+"Grabber EPG do użycia na multiplekserze. Pole 'Skanowanie EPG' musi być "
 "ustawione na 'ręczne'."
 
 #: src/epggrab/module.c:162
@@ -9728,7 +9728,7 @@ msgstr "Zestaw znaków listy odtwarzania."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:486
 msgid "The polarization used on the mux."
-msgstr "Polaryzacja zastosowana na multiplekserze."
+msgstr "Polaryzacja zastosowana w multiplekserze."
 
 #: src/channels.c:445
 msgid ""
@@ -9780,7 +9780,7 @@ msgstr "Stan nagrania/wpisu."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:499
 msgid "The rolloff used on the mux."
-msgstr "Rolloff używany na multiplekserze."
+msgstr "Rolloff używany w multiplekserze."
 
 #: src/esfilter.c:682 src/esfilter.c:778 src/esfilter.c:874 src/esfilter.c:969
 #: src/esfilter.c:1077 src/esfilter.c:1160
@@ -10874,8 +10874,8 @@ msgid ""
 "Use a pre-defined list of DTMB muxes. Note: these lists can sometimes be "
 "outdated and may cause scanning to take longer than usual."
 msgstr ""
-"Użyj predefiniowanej listy multipleksów DTMB. Uwaga: te listy czasami mogą "
-"być nieaktualne i mogą spowodować, że skanowanie potrwa dłużej niż zwykle."
+"Użyj predefiniowanej listy multiplekserów DTMB. Uwaga: te listy czasami mogą"
+" być nieaktualne i mogą spowodować, że skanowanie potrwa dłużej niż zwykle."
 
 #: src/input/mpegts/mpegts_network_dvb.c:271
 msgid ""
@@ -11326,15 +11326,15 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:704
 msgid "When the mux was created."
-msgstr "Kiedy został utworzony multipleks."
+msgstr "Kiedy multiplekser został utworzony."
 
 #: src/input/mpegts/mpegts_mux.c:712
 msgid "When the mux was successfully scanned for the first time."
-msgstr "Kiedy multipleks został pomyślnie zeskanowany po raz pierwszy."
+msgstr "Kiedy multiplekser został pomyślnie zeskanowany po raz pierwszy."
 
 #: src/input/mpegts/mpegts_mux.c:720
 msgid "When the mux was successfully scanned."
-msgstr "Kiedy multipleks został pomyślnie przeskanowany."
+msgstr "Kiedy multiplekser został pomyślnie przeskanowany."
 
 #: src/input/mpegts/mpegts_service.c:251
 msgid "When the service was first identified and recorded."
