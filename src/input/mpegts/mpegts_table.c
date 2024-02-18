@@ -115,6 +115,7 @@ mpegts_table_dispatch
 void
 mpegts_table_release_ ( mpegts_table_t *mt )
 {
+  int mt_size = sizeof(*mt);
   dvb_table_release((mpegts_psi_table_t *)mt);
   tvhtrace(LS_MPEGTS, "table: mux %p free %s %02X/%02X (%d) pid %04X (%d)",
            mt->mt_mux, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
@@ -127,7 +128,14 @@ mpegts_table_release_ ( mpegts_table_t *mt )
   tprofile_done(&mt->mt_profile);
   if (tvhtrace_enabled()) {
     /* poison */
-    memset(mt, 0xa5, sizeof(*mt));
+    #ifdef __STDC_LIB_EXT1__
+    memset_s(mt, sizeof(*mt), 0xa5, sizeof(*mt));
+    #else
+    volatile unsigned char *p = (unsigned char*)mt;
+    while (mt_size--){
+      *p++ = 0xa5;
+    }
+    #endif
   }
   free(mt);
 }
