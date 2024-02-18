@@ -18,6 +18,8 @@
 #ifndef TVHEADEND_H
 #define TVHEADEND_H
 
+#define __STDC_WANT_LIB_EXT1__ 1
+
 #include "build.h"
 
 #include <stdlib.h>
