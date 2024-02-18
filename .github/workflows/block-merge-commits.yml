@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Block Merge or Autosquash Commits
-        uses: nineinchnick/block-commits-action@v1
+        uses: nineinchnick/block-commits-action@v2.1.0
         with:
           action-merge: fail
           action-fixup: request-changes
