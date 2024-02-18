@@ -1970,6 +1970,7 @@ hdhomerun_server_discover(http_connection_t *hc, const char *remain, void *opaqu
   htsmsg_add_u32(msg, "TunerCount", config.hdhomerun_server_tuner_count ?: 6);
 
   char *json = htsmsg_json_serialize_to_str(msg, 1);
+  htsmsg_destroy(msg);
   htsbuf_append_str(hq, json);
   free(json);
   http_output_content(hc, "application/json");
