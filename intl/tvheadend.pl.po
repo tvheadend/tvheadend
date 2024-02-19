@@ -511,11 +511,11 @@ msgstr "Przerwane przez użytkownika"
 
 #: src/satip/server.c:724
 msgid "Accept remote subscription weight"
-msgstr "Zaakceptuj wagę zdalnej subskrypcji"
+msgstr "Zaakceptuj rangę zdalnej subskrypcji"
 
 #: src/satip/server.c:725
 msgid "Accept the remote subscription weight (from the SAT>IP client)."
-msgstr "Zaakceptuj wagę subskrypcji zdalnej (od klienta SAT>IP)."
+msgstr "Zaakceptuj rangę subskrypcji zdalnej (od klienta SAT>IP)."
 
 #: src/input/mpegts/iptv/iptv.c:996
 msgid "Accept transport ID if zero."
@@ -847,8 +847,8 @@ msgid ""
 " error counters). Some drivers are not mature enough to provide the correct "
 "values using the new v5 linuxdvb API."
 msgstr ""
-"Zawsze używaj starych ioctls do odczytu stanu linuxdvb (siła sygnału, SNR, "
-"liczniki błędów). Niektóre sterowniki nie są wystarczająco dojrzałe, aby "
+"Zawsze używaj starych ioctls do odczytu statusu linuxdvb (siła sygnału, SNR,"
+" liczniki błędów). Niektóre sterowniki nie są wystarczająco dojrzałe, aby "
 "zapewnić prawidłowe wartości przy użyciu nowego interfejsu API linuxdvb w "
 "wersji 5."
 
@@ -1252,13 +1252,13 @@ msgid ""
 " to make the decision of the re-tune algorithm based on the signal status "
 "faster."
 msgstr ""
-"Domyślnie okres odczytu stanu przez linuxdvb wynosi 1000 ms (jedna sekunda)."
-" Akceptowany zakres wynosi od 250 ms do 8000 ms. Należy pamiętać, że w "
-"przypadku niektórych urządzeń lub sterowników (takich jak USB) operacje "
-"dotyczące stanu zajmują zbyt dużo czasu i procesora. W takim przypadku "
+"Domyślnie okres odczytu statusu przez linuxdvb wynosi 1000 ms (jedna "
+"sekunda). Akceptowany zakres wynosi od 250 ms do 8000 ms. Należy pamiętać, "
+"że w przypadku niektórych urządzeń lub sterowników (takich jak USB) operacje"
+" dotyczące statusu zajmują zbyt dużo czasu i procesora. W takim przypadku "
 "zwiększ wartość domyślną. W przypadku szybkiego sprzętu wartość ta może "
 "zostać zmniejszona, aby przyspieszyć decyzję algorytmu ponownego dostrojenia"
-" na podstawie stanu sygnału."
+" na podstawie statusu sygnału."
 
 #: src/descrambler/capmt.c:2698
 msgid "Byte index tag order"
@@ -1627,11 +1627,11 @@ msgstr ""
 
 #: src/profile.c:412
 msgid "Check the descrambling status after this timeout."
-msgstr "Sprawdź stan deszyfrowania po tym czasie."
+msgstr "Sprawdź status deszyfrowania po tym czasie."
 
 #: src/input/mpegts/satip/satip.c:405
 msgid "Check tuner-number in signal-status messages"
-msgstr "Sprawdź numer tunera w komunikatach o stanie sygnału."
+msgstr "Sprawdź numer tunera w komunikatach o statusie sygnału."
 
 #: src/epg.c:1858 src/epg.c:1859 src/epg.c:1860 src/epg.c:1861 src/epg.c:1862
 #: src/epg.c:1863 src/epg.c:1864 src/epg.c:1865 src/epg.c:1866 src/epg.c:1867
@@ -1702,7 +1702,7 @@ msgstr "Nazwa kodeka."
 
 #: src/transcoding/codec/profile_class.c:269
 msgid "Codec status."
-msgstr "Stan kodeka."
+msgstr "Status kodeka."
 
 #: src/transcoding/codec/profile_class.c:242
 msgid "Codec title."
@@ -2342,23 +2342,23 @@ msgstr "Przechowywanie dzienników DVR"
 
 #: src/profile.c:261
 msgid "DVR override: high"
-msgstr "Nadpisywanie DVR: wysokie"
+msgstr "Zastępowanie DVR: wysokie"
 
 #: src/profile.c:260
 msgid "DVR override: important"
-msgstr "Nadpisywanie DVR: ważne"
+msgstr "Zastępowanie DVR: ważne"
 
 #: src/profile.c:263
 msgid "DVR override: low"
-msgstr "Nadpisywanie DVR: niskie"
+msgstr "Zastępowanie DVR: niskie"
 
 #: src/profile.c:262
 msgid "DVR override: normal"
-msgstr "Nadpisywanie DVR: normalne"
+msgstr "Zastępowanie DVR: normalne"
 
 #: src/profile.c:264
 msgid "DVR override: unimportant"
-msgstr "Nadpisywanie DVR: nieważne"
+msgstr "Zastępowanie DVR: nieważne"
 
 #: src/dvr/dvr_timerec.c:651
 msgid "DVR profile to use/used for the recording."
@@ -2619,7 +2619,7 @@ msgid ""
 "configuration and put all recordings done by this entry into the specified "
 "subdirectory"
 msgstr ""
-"Zastąpienie katalogu. Zastąp reguły podkatalogów określone w konfiguracji "
+"Zastępowanie katalogu. Zastąp reguły podkatalogów określone w konfiguracji "
 "DVR i umieść wszystkie nagrania wykonane przez ten wpis w określonym "
 "podkatalogu"
 
@@ -3762,7 +3762,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:239
 msgid "Force old status"
-msgstr "Wymuś stary stan"
+msgstr "Wymuś stary status"
 
 #: src/input/mpegts/satip/satip.c:352
 msgid "Force pilot for DVB-S2"
@@ -3865,7 +3865,7 @@ msgstr "Znalezione usługi"
 
 #: src/input/mpegts/mpegts_input.c:312
 msgid "Free subscription weight"
-msgstr "Wolna waga subskrypcji"
+msgstr "Ranga wolnej subskrypcji"
 
 #: src/dvr/dvr_config.c:1119
 msgid "Free-form field, enter whatever you like here."
@@ -4518,9 +4518,9 @@ msgid ""
 "the next tuner (without any subscriptions) is used. Set this value to 10, if"
 " you are willing to override scan and epggrab subscriptions."
 msgstr ""
-"Jeśli waga abonamentu dla wejścia jest poniżej określonego progu, tuner jest"
-" traktowany jako wolny (zgodnie z ustawieniami priorytetu). W przeciwnym "
-"razie używany jest następny tuner (bez żadnych abonamentów). Ustaw tę "
+"Jeśli ranga abonamentu dla wejścia jest poniżej określonego progu, tuner "
+"jest traktowany jako wolny (zgodnie z ustawieniami priorytetu). W przeciwnym"
+" razie używany jest następny tuner (bez żadnych abonamentów). Ustaw tę "
 "wartość na 10, jeśli chcesz zastąpić subskrypcje scan i epggrab."
 
 #: src/input/mpegts/mpegts_mux.c:476
@@ -6338,7 +6338,7 @@ msgid ""
 "Override the configuration using a ':' separated list of key=value "
 "parameters."
 msgstr ""
-"Nadpisz konfigurację, używając listy klucz=wartość oddzielonych znakiem ':'."
+"Zastąp konfigurację, używając listy klucz=wartość oddzielonych znakiem ':'."
 
 #: src/input/mpegts/satip/satip_frontend.c:374
 #: src/input/mpegts/satip/satip_frontend.c:579
@@ -6476,14 +6476,14 @@ msgstr "Przekazuj specinv"
 
 #: src/input/mpegts/satip/satip_frontend.c:322
 msgid "Pass subscription weight"
-msgstr "Przekazuj wagę subskrypcji"
+msgstr "Przekazuj rangę subskrypcji"
 
 #: src/input/mpegts/satip/satip_frontend.c:323
 msgid ""
 "Pass subscription weight to the SAT>IP server (Tvheadend specific "
 "extension)."
 msgstr ""
-"Przekazuj wagę subskrypcji do serwera SAT>IP (specyficzne rozszerzenie "
+"Przekazuj rangę subskrypcji do serwera SAT>IP (specyficzne rozszerzenie "
 "Tvheadend)."
 
 #: src/channels.c:550
@@ -7578,7 +7578,7 @@ msgstr "Wynik skanowania"
 
 #: src/input/mpegts/mpegts_mux.c:620
 msgid "Scan status"
-msgstr "Stan skanowania"
+msgstr "Status skanowania"
 
 #: src/tvhlog.c:179
 msgid "Scanfile"
@@ -7594,11 +7594,11 @@ msgstr "Częstotliwość harmonogramu (w formacie cron)."
 
 #: src/dvr/dvr_db.c:4702
 msgid "Schedule status"
-msgstr "Stan harmonogramu"
+msgstr "Status harmonogramu"
 
 #: src/dvr/dvr_db.c:4703
 msgid "Schedule status."
-msgstr "Stan harmonogramu."
+msgstr "Status harmonogramu."
 
 #: src/dvr/dvr_db.c:4291
 msgid "Scheduled Duration"
@@ -7846,7 +7846,7 @@ msgstr "Wyślij zapytanie CAPMT"
 
 #: src/input/mpegts/iptv/iptv_mux.c:137
 msgid "Send RTCP status reports"
-msgstr "Wysyłaj raporty stanu RTCP"
+msgstr "Wysyłaj raporty statusu RTCP"
 
 #: src/input/mpegts/satip/satip_frontend.c:290
 msgid "Send full PLAY cmd"
@@ -7989,7 +7989,7 @@ msgid ""
 "Service type override. This value will override the service type provided by"
 " the stream."
 msgstr ""
-"Zastąpienie typu usługi. Ta wartość zastąpi typ usługi zapewnianej przez "
+"Zastępowanie typu usługi. Ta wartość zastąpi typ usługi zapewnianej przez "
 "strumień."
 
 #: src/channels.c:559 src/service_mapper.c:588 src/bouquet.c:1109
@@ -8477,11 +8477,11 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:4693 src/descrambler/caclient.c:327
 msgid "Status"
-msgstr "Stan"
+msgstr "Status"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:204
 msgid "Status period (ms)"
-msgstr "Stan okresu (ms)"
+msgstr "Status okresu (ms)"
 
 #: src/dvr/dvr_timerec.c:593
 msgid "Stop"
@@ -8636,7 +8636,7 @@ msgstr "Subskrypcja nadpisana"
 
 #: src/satip/server.c:714
 msgid "Subscription weight"
-msgstr "Waga subskrypcji"
+msgstr "Ranga subskrypcji"
 
 #: src/input/mpegts/iptv/iptv_mux.c:162
 msgid "Substitute formatters"
@@ -8918,7 +8918,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:700
 msgid "The CAM slot status."
-msgstr "Stan gniazda CAM."
+msgstr "Status gniazda CAM."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:233
 #: src/input/mpegts/mpegts_mux_dvb.c:1040
@@ -9171,7 +9171,7 @@ msgstr ""
 
 #: src/satip/server.c:715
 msgid "The default subscription weight for each subscription."
-msgstr "Domyślna waga subskrypcji dla każdej subskrypcji."
+msgstr "Domyślna ranga subskrypcji dla każdej subskrypcji."
 
 #: src/config.c:2243
 msgid ""
@@ -9776,7 +9776,7 @@ msgstr "Nagrany plik został celowo usunięty"
 
 #: src/dvr/dvr_db.c:4695
 msgid "The recording/entry status."
-msgstr "Stan nagrania/wpisu."
+msgstr "Status nagrania/wpisu."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:499
 msgid "The rolloff used on the mux."
@@ -9896,7 +9896,7 @@ msgstr "Numer kanału usługi ustawiony przez dostawcę."
 
 #: src/service.c:215
 msgid "The service's encryption status."
-msgstr "Stan szyfrowania usługi."
+msgstr "Status szyfrowania usługi."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:354
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:385
@@ -10439,7 +10439,7 @@ msgstr "Typ"
 
 #: src/service.c:230
 msgid "Type override"
-msgstr "Nadpisanie typu"
+msgstr "Zastępowanie typu"
 
 #: src/input/mpegts/satip/satip_frontend.c:269
 msgid "UDP RTP port number (2 ports)"
