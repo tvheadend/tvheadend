@@ -104,7 +104,7 @@ dvr_vfs_refresh_entry(dvr_entry_t *de)
       }
       filename = htsmsg_get_str(m, "filename");
       if (filename == NULL || stat(filename, &st) < 0) {
-        tvherror(LS_DVR, "unable to stat file '%s'", filename);
+        tvherror(LS_DVR, "unable to stat file '%s': %s", filename, strerror(errno));
         goto rem;
       }
       if (tvh_vfs_fsid_build(filename, NULL, &fsid))
