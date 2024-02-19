@@ -135,7 +135,7 @@ config_migrate_v1_dvb_svcs
         htsmsg_add_str(svc, "svcname", str);
       if ((str = htsmsg_get_str(e, "provider")))
         htsmsg_add_str(svc, "provider", str);
-      if (!(htsmsg_get_u32(e, "type", &u32))) 
+      if (!(htsmsg_get_u32(e, "type", &u32)))
         htsmsg_add_u32(svc, "dvb_servicetype", u32);
       if (!htsmsg_get_u32(e, "channel", &u32))
         htsmsg_add_u32(svc, "lcn", u32);
@@ -143,9 +143,9 @@ config_migrate_v1_dvb_svcs
         htsmsg_add_u32(svc, "enabled", u32 ? 0 : 1);
       if ((str = htsmsg_get_str(e, "charset")))
         htsmsg_add_str(svc, "charset", str);
-      if ((str = htsmsg_get_str(e, "default_authority"))) 
+      if ((str = htsmsg_get_str(e, "default_authority")))
         htsmsg_add_str(svc, "cridauth", str);
-  
+
       // TODO: dvb_eit_enable
 
       hts_settings_save(svc, "input/linuxdvb/networks/%s/muxes/%s/services/%s",
@@ -185,7 +185,7 @@ config_migrate_v1_dvb_network
     "fec_lo",
     "fec"
   };
-    
+
 
   /* Load the adapter config */
   if (!(tun = hts_settings_load("dvbadapters/%s", name))) return;
@@ -293,7 +293,7 @@ config_migrate_v1_dvr ( const char *path, htsmsg_t *channels )
   htsmsg_t *c, *e, *m;
   htsmsg_field_t *f;
   const char *str;
-  
+
   if ((c = hts_settings_load_r(1, path))) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_field_get_map(f))) continue;
@@ -323,7 +323,7 @@ config_migrate_v1_epggrab ( const char *path, htsmsg_t *channels )
   htsmsg_field_t *f, *f2;
   const char *str;
   uint32_t u32;
-  
+
   if ((c = hts_settings_load_r(1, path))) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_field_get_map(f))) continue;
@@ -478,7 +478,7 @@ config_migrate_v1 ( void )
   /* Update EPG grabbers */
   hts_settings_remove("epggrab/otamux");
   config_migrate_v1_epggrab("epggrab/xmltv/channels", channels);
-  
+
   /* Save the channels */
   // Note: UUID will be stored in the file (redundant) but that's no biggy
   HTSMSG_FOREACH(f, channels) {
@@ -502,7 +502,7 @@ config_migrate_v2 ( void )
 
   /* Do we have IPTV config to migrate ? */
   if (hts_settings_exists("input/iptv/muxes")) {
-    
+
     /* Create a dummy network */
     uuid_set(&u, NULL);
     uuid_get_hex(&u, ubuf);
@@ -1564,7 +1564,7 @@ dobackup(const char *oldver)
   }
 
   if (chdir(cwd)) {
-    tvherror(LS_CONFIG, "unable to change directory to '%s'", cwd);
+    tvherror(LS_CONFIG, "unable to change directory to '%s': %s", cwd, strerror(errno));
     goto fatal;
   }
   return;
@@ -1890,7 +1890,7 @@ config_init ( int backup )
     tvh_str_set(&config.realm, "tvheadend");
     tvh_str_set(&config.http_server_name, "HTS/tvheadend");
     idnode_changed(&config.idnode);
-  
+
   /* Perform migrations */
   } else {
     if (config_migrate(backup))

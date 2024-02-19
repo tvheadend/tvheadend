@@ -82,6 +82,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   uint32_t rec_count, net_count;
   int ret = 0, pri, c1, c2;
   struct stat st;
+  int stat_ret;
 
   assert(de->de_s == NULL);
   assert(de->de_chain == NULL);
@@ -124,8 +125,18 @@ dvr_rec_subscribe(dvr_entry_t *de)
     }
   }
 
-  if(stat(de->de_config->dvr_storage, &st) || !S_ISDIR(st.st_mode)) {
-    tvherror(LS_DVR, "the directory '%s' is not accessible", de->de_config->dvr_storage);
+  stat_ret = stat(de->de_config->dvr_storage, &st);
+
+  //If the stat() failed, show the error message.
+  if(stat_ret != 0) {
+    tvherror(LS_DVR, "Directory '%s' not accessible: %s", de->de_config->dvr_storage, strerror(errno));
+    ret = -EIO;
+    goto _return;
+  }
+
+  //If the stat() worked, but the path is not a directory.
+  if(!S_ISDIR(st.st_mode) && stat_ret == 0) {
+    tvherror(LS_DVR, "'%s' is not a directory.", de->de_config->dvr_storage);
     ret = -EIO;
     goto _return;
   }
