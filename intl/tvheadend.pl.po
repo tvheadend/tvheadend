@@ -1636,11 +1636,11 @@ msgstr "Sprawdź numer tunera w komunikatach o stanie sygnału."
 #: src/epg.c:1858 src/epg.c:1859 src/epg.c:1860 src/epg.c:1861 src/epg.c:1862
 #: src/epg.c:1863 src/epg.c:1864 src/epg.c:1865 src/epg.c:1866 src/epg.c:1867
 msgid "Children's / Youth Programs"
-msgstr "Programy dla dzieci / młodzieży"
+msgstr "Programy dla dzieci i młodzieży"
 
 #: src/epg.c:1852
 msgid "Children's / Youth programs"
-msgstr "Programy dla dzieci / młodzieży"
+msgstr "Programy dla dzieci i młodzieży"
 
 #: src/epg.c:1894
 msgid "Cinema"
@@ -2217,7 +2217,7 @@ msgstr "Wejścia DVB - Multipleks"
 
 #: src/input/mpegts/mpegts_mux_sched.c:128
 msgid "DVB Inputs - Mux Schedulers"
-msgstr "Wejścia DVB - Harmonogramy multipleksera"
+msgstr "Wejścia DVB - Harmonogramy multiplekserów"
 
 #: src/input/mpegts/mpegts_network.c:181
 msgid "DVB Inputs - Networks"
@@ -2795,7 +2795,7 @@ msgstr "Dramat"
 
 #: src/satip/server.c:966
 msgid "Drop \"fe=\" parameter"
-msgstr "Usuń parametr „fe=”"
+msgstr "Usuń parametr \"fe=\""
 
 #: src/dvr/dvr_autorec.c:1356 src/dvr/dvr_config.c:1430
 msgid "Duplicate handling"
@@ -5624,7 +5624,7 @@ msgstr "Nazwa multipleksera"
 
 #: src/streaming.c:479
 msgid "Mux not enabled"
-msgstr "Multiplekser niewłączony"
+msgstr "Multiplekser nie jest włączony"
 
 #: src/tvhlog.c:133
 msgid "Muxer"
@@ -6745,7 +6745,7 @@ msgstr "Predefiniowane multipleksery"
 
 #: src/config.c:2391
 msgid "Prefer picons over channel icons"
-msgstr "Preferuj picony zamiast ikon kanałów."
+msgstr "Preferuj picony zamiast ikon kanałów"
 
 #: src/input/mpegts/mpegts_service.c:214
 msgid "Preferred CA PID"
@@ -7654,7 +7654,7 @@ msgstr "Pobierz tytuł"
 
 #: src/epggrab/module.c:257
 msgid "Scrape behaviour"
-msgstr "Pobierz zachowanie"
+msgstr "Zachowanie pobierania"
 
 #: src/epggrab/module/xmltv.c:1092
 msgid "Scrape credits and extra information"
@@ -8197,7 +8197,7 @@ msgstr "Społeczny"
 #: src/epg.c:1915 src/epg.c:1916 src/epg.c:1917 src/epg.c:1918 src/epg.c:1919
 #: src/epg.c:1920 src/epg.c:1921
 msgid "Social / Political issues / Economics"
-msgstr "Kwestie społeczne / polityczne / ekonomia"
+msgstr "Kwestie społeczne i polityczne / Ekonomia"
 
 #: src/epg.c:1908
 msgid "Social advisory"
@@ -10427,7 +10427,7 @@ msgstr "Wyłącz LNB w stanie bezczynności"
 
 #: src/config.c:2610
 msgid "Tvheadend model name for HDHomeRun Server Emulation"
-msgstr "Model nazwy Tvheadend dla emulacji serwera HDHomeRun."
+msgstr "Model nazwy Tvheadend dla emulacji serwera HDHomeRun"
 
 #: src/config.c:2204
 msgid "Tvheadend server name"
@@ -10738,7 +10738,7 @@ msgstr "Nieprzetworzona ocena \"wiek\" otrzymana za pośrednictwem OTA EPG DVB."
 
 #: src/profile.c:254
 msgid "Unset (default)"
-msgstr "Nieustawione (domyślne)"
+msgstr "Nieustawiony (domyślny)"
 
 #: src/transcoding/codec/profile_video_class.c:29
 msgid "Up & Down"
