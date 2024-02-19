@@ -179,11 +179,11 @@ msgstr "Dodaj: {0}"
 
 #: src/webui/static/app/idnode.js:604 src/webui/static/app/idnode.js:620
 msgid "Advanced"
-msgstr "Zaawansowane"
+msgstr "Zaawansowany"
 
 #: src/webui/static/app/idnode.js:1054
 msgid "Advanced Settings"
-msgstr "Zaawansowane ustawienia"
+msgstr "Ustawienia zaawansowane"
 
 #: src/webui/static/app/i18n-post.js:279
 msgid "After"
@@ -803,7 +803,7 @@ msgstr "Edytuj: {0} ({1} wpisów)"
 
 #: src/webui/static/app/epg.js:1341
 msgid "Electronic Program Guide"
-msgstr "Elektroniczny przewodnik po programach (EPG)"
+msgstr "Przewodnik (EPG)"
 
 #: src/webui/static/app/tvheadend.js:1464
 msgid "Enable debug output"
@@ -1010,7 +1010,7 @@ msgstr "HDTV"
 
 #: src/webui/static/app/mpegts.js:223
 msgid "HbbTv"
-msgstr "HbbTv"
+msgstr "HbbTV"
 
 #: src/webui/static/app/idnode.js:1241 src/webui/static/app/idnode.js:2110
 #: src/webui/static/app/idnode.js:2516 src/webui/static/app/idnode.js:2961
@@ -1170,7 +1170,7 @@ msgstr "Mapuj wszystko"
 
 #: src/webui/static/app/mpegts.js:300
 msgid "Map Selected"
-msgstr "Mapuj wybrane"
+msgstr "Mapuj zaznaczone"
 
 #: src/webui/static/app/mpegts.js:281 src/webui/static/app/chconf.js:147
 msgid "Map all services"
@@ -1302,7 +1302,7 @@ msgstr "Harmonogram multipleksera"
 
 #: src/webui/static/app/mpegts.js:422
 msgid "Mux Schedulers"
-msgstr "Harmonogramy multipleksera"
+msgstr "Harmonogramy multiplekserów"
 
 #: src/webui/static/app/mpegts.js:98
 msgid "Muxes"
@@ -1588,7 +1588,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1058
 msgid "Read-only Info"
-msgstr "Informacje do odczytu"
+msgstr "Informacje tylko do odczytu"
 
 #: src/webui/static/app/comet.js:21
 msgid "Reconnected to Tvheadend"
@@ -1697,7 +1697,7 @@ msgstr "Resetuj wszystkie filtry (pokaż wszystko)"
 #: src/webui/static/app/idnode.js:1835 src/webui/static/app/idnode.js:2345
 #: src/webui/static/app/idnode.js:2891
 msgid "Revert pending changes (marked with red border)"
-msgstr "Cofnij oczekujące zmiany (zaznaczone czerwonym narożnikiem)"
+msgstr "Cofnij oczekujące zmiany (oznaczone czerwoną ramką)"
 
 #: src/webui/static/app/config.js:145
 msgid "SAT>IP Server"
@@ -1731,7 +1731,7 @@ msgstr "Zapisz i następna"
 #: src/webui/static/app/idnode.js:1808 src/webui/static/app/idnode.js:2323
 #: src/webui/static/app/idnode.js:2870
 msgid "Save pending changes (marked with red border)"
-msgstr "Zapisz oczekujące zmiany (zaznaczone czerwonym narożnikiem)"
+msgstr "Zapisz oczekujące zmiany (oznaczone czerwoną ramką)"
 
 #: src/webui/static/app/dvr.js:111
 msgid "Scheduled Start Time"
@@ -2110,7 +2110,7 @@ msgstr "Błędy transportowe"
 
 #: src/webui/static/app/epggrab.js:26
 msgid "Trigger OTA EPG Grabber"
-msgstr "Wyzwól grabbera OTA EPG"
+msgstr "Uruchom grabber OTA EPG"
 
 #: src/webui/static/app/i18n-post.js:95
 msgid "Tue"
