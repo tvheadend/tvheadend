@@ -10,3 +10,4 @@ jobs:
       - uses: actions/stale@v9
         with:
           any-of-labels: 'needs-more-info,SQUASH'
+          days-before-stale: 21
