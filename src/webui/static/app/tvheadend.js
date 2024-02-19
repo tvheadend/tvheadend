@@ -1404,10 +1404,10 @@ tvheadend.toCustomDate = function(date, format) {
         };
 
         format = format.replace(/(%[yY]+)/, (date.getFullYear() + "").substr(5 - RegExp.$1.length))
-                       .replace(/(%MMMM)/, date.toLocaleDateString(toLocaleFormat(), { month: 'long' }))
-                       .replace(/(%MMM)/, date.toLocaleDateString(toLocaleFormat(), { month: 'short' }))
-                       .replace(/(%dddd)/, date.toLocaleDateString(toLocaleFormat(), { weekday: 'long' }))
-                       .replace(/(%ddd)/, date.toLocaleDateString(toLocaleFormat(), { weekday: 'short' }));
+                       .replace(/(%MMMM)/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { month: 'long' }))
+                       .replace(/(%MMM)/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { month: 'short' }))
+                       .replace(/(%dddd)/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { weekday: 'long' }))
+                       .replace(/(%ddd)/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { weekday: 'short' }));
 
         for (const k in o) {
             if (new RegExp("(" + k + ")").test(format)) {
@@ -1426,7 +1426,7 @@ tvheadend.toCustomDate = function(date, format) {
             second: '2-digit',
             hour12: false
         };
-        return date.toLocaleString(toLocaleFormat(), options);
+        return date.toLocaleString(tvheadend.toLocaleFormat(), options);
     }
 };
 
