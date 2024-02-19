@@ -1866,7 +1866,7 @@ msgstr "Stan"
 
 #: src/webui/static/app/dvr.js:153 src/webui/static/app/status.js:826
 msgid "Status"
-msgstr "Stan"
+msgstr "Status"
 
 #: src/webui/static/app/dvr.js:541 src/webui/static/app/tvheadend.js:943
 msgid "Stop"
@@ -2229,7 +2229,7 @@ msgstr "Środa"
 
 #: src/webui/static/app/status.js:420
 msgid "Weight"
-msgstr "Waga"
+msgstr "Ranga"
 
 #: src/webui/static/app/dvr.js:754
 msgid "When enabled, group the recordings by the selected column."
