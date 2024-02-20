@@ -1067,7 +1067,7 @@ tvheadend.autorec_editor = function(panel, index) {
 
     var list = 'name,title,fulltext,channel,start,start_window,weekdays,' +
                'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,minyear,maxyear,minseason,maxseason,' +
-               'star_rating,dedup,directory,config_name,comment,pri';
+               'star_rating,dedup,directory,config_name,comment,pri,serieslink';
     var elist = 'enabled,start_extra,stop_extra,' +
                 (tvheadend.accessUpdate.admin ?
                 list + ',owner,creator' : list) + ',pri,retention,removal,maxcount,maxsched';
@@ -1116,6 +1116,7 @@ tvheadend.autorec_editor = function(panel, index) {
             maxseason:    { width: 100 },
             owner:        { width: 100 },
             creator:      { width: 200 },
+            serieslink:   { width: 100 },
             comment:      { width: 200 }
         },
         add: {
@@ -1133,7 +1134,7 @@ tvheadend.autorec_editor = function(panel, index) {
         del: true,
         list: 'enabled,name,title,fulltext,channel,tag,start,start_window,' +
               'weekdays,minduration,maxduration,record,btype,content_type,cat1,cat2,cat3' +
-              'star_rating,pri,dedup,directory,config_name,minseason,maxseason,minyear,maxyear,owner,creator,comment',
+              'star_rating,pri,dedup,directory,config_name,minseason,maxseason,minyear,maxyear,owner,creator,comment,serieslink',
         sort: {
           field: 'name',
           direction: 'ASC'
