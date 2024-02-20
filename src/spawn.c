@@ -211,7 +211,7 @@ find_exec ( const char *name, char *out, size_t len )
         if (!S_ISREG(st.st_mode) || !(st.st_mode & S_IEXEC)) continue;
         strlcpy(out, bin, len);
         ret = 1;
-        break;
+        if(strcmp(de->d_name, name) == 0) break; // Exact match, it won't get any better
       }
       closedir(dir);
     }
