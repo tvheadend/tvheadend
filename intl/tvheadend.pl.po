@@ -1090,12 +1090,11 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:1411
 msgid "Autorec maximum count (0=unlimited)"
-msgstr "Maksymalna liczba autonagrywania (0=nieograniczona)"
+msgstr "Maksymalna liczba autonagrań (0=nieograniczona)"
 
 #: src/dvr/dvr_config.c:1421
 msgid "Autorec maximum schedules limit (0=unlimited)"
-msgstr ""
-"Maksymalne ograniczenie harmonogramów autonagrywania (0=bez ograniczeń)"
+msgstr "Maksymalne ograniczenie harmonogramów autonagrań (0=bez ograniczeń)"
 
 #: src/tvhlog.c:108
 msgid "Avahi"
@@ -2301,7 +2300,7 @@ msgstr "DVR"
 
 #: src/dvr/dvr_autorec.c:1100
 msgid "DVR - Auto-recording (Autorecs)"
-msgstr "DVR - Automatyczne nagrywanie (autonagrywania)"
+msgstr "DVR - Automatyczne nagrywanie (autonagrania)"
 
 #: src/dvr/dvr_config.c:875
 msgid "DVR - Profiles"
@@ -2891,7 +2890,7 @@ msgstr "Okno aktualizacji EPG"
 
 #: src/dvr/dvr_config.c:908
 msgid "EPG/Autorec Settings"
-msgstr "Ustawienia EPG/autonagrywania"
+msgstr "Ustawienia EPG/autonagrań"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:586
 msgid "EXTERNAL"
@@ -3701,7 +3700,7 @@ msgstr "Piłka nożna"
 
 #: src/dvr/dvr_config.c:1062
 msgid "For autorecs, attempt to find better time slots"
-msgstr "Dla autonagrywania, spróbuj znaleźć lepsze sloty czasowe"
+msgstr "W przypadku autonagrań, spróbuj znaleźć lepsze sloty czasowe"
 
 #: src/input/mpegts/iptv/iptv_mux.c:290
 msgid "For example: 12610500. This frequency is 12610.5Mhz or 12.6105Ghz."
@@ -11110,9 +11109,9 @@ msgid ""
 "etc."
 msgstr ""
 "Flagi rejestratora wideo, zezwalaj/nie zezwalaj na dostęp do funkcji "
-"rejestratora wideo (w tym autonagrywań), zezwalaj/nie zezwalaj użytkownikom "
-"na przeglądanie innych wpisów DVR, zezwalaj/nie zezwalaj użytkownikom na "
-"pracę z wpisami DVR innych użytkowników (usuwanie, edycja) itp."
+"rejestratora wideo (w tym autonagrań), zezwalaj/nie zezwalaj użytkownikom na"
+" przeglądanie innych wpisów DVR, zezwalaj/nie zezwalaj użytkownikom na pracę"
+" z wpisami DVR innych użytkowników (usuwanie, edycja) itp."
 
 #: src/access.c:1655
 msgid "View all"
@@ -11289,10 +11288,10 @@ msgid ""
 "channels instead of on primary channels. This scheduling requires extra "
 "overhead so is disabled by default."
 msgstr ""
-"Kiedy planujesz autonagrywanie, ta opcja próbuje zaplanować je jak "
+"Kiedy planujesz autonagranie, ta opcja próbuje zaplanować je jak "
 "najwcześniej i na \"najlepszym\" kanale (takim jak kanał z największą liczbą"
 " usług przełączania awaryjnego). Jest to przydatne, gdy dostępne są różne "
-"kanały funkcji Timeshift i powtórek. Bez tej opcji autonagrywania mogą być "
+"kanały funkcji Timeshift i powtórek. Bez tej opcji autonagrania mogą być "
 "planowane na kanałach funkcji Timeshift zamiast na podstawowych kanałach. To"
 " planowanie wymaga dodatkowego obciążenia, więc jest domyślnie wyłączone."
 
