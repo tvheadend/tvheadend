@@ -17,65 +17,54 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "internals.h"
-
 
 /* module level ============================================================= */
 
-TVHCodecProfile *
-codec_find_profile(const char *name)
-{
-    return name ? tvh_codec_profile_find(name) : NULL;
+TVHCodecProfile* codec_find_profile(const char* name) {
+  return name ? tvh_codec_profile_find(name) : NULL;
 }
 
+htsmsg_t* codec_get_profiles_list(enum AVMediaType media_type) {
+  htsmsg_t *       list = NULL, *map = NULL;
+  TVHCodecProfile* profile = NULL;
+  TVHCodec*        codec   = NULL;
 
-htsmsg_t *
-codec_get_profiles_list(enum AVMediaType media_type)
-{
-    htsmsg_t *list = NULL, *map = NULL;
-    TVHCodecProfile *profile = NULL;
-    TVHCodec *codec = NULL;
-
-
-    if ((list = htsmsg_create_list())) {
-        LIST_FOREACH(profile, &tvh_codec_profiles, link) {
-            if ((codec = tvh_codec_profile_get_codec(profile)) &&
-                tvh_codec_get_type(codec) == media_type) {
-                if (!(map = htsmsg_create_map())) {
-                    htsmsg_destroy(list);
-                    list = NULL;
-                    break;
-                }
-                ADD_ENTRY(list, map,
-                          str, tvh_codec_profile_get_name(profile),
-                          str, tvh_codec_profile_get_title(profile));
-            }
+  if ((list = htsmsg_create_list())) {
+    LIST_FOREACH (profile, &tvh_codec_profiles, link) {
+      if ((codec = tvh_codec_profile_get_codec(profile)) &&
+          tvh_codec_get_type(codec) == media_type) {
+        if (!(map = htsmsg_create_map())) {
+          htsmsg_destroy(list);
+          list = NULL;
+          break;
         }
+        ADD_ENTRY(list,
+            map,
+            str,
+            tvh_codec_profile_get_name(profile),
+            str,
+            tvh_codec_profile_get_title(profile));
+      }
     }
-    return list;
+  }
+  return list;
 }
 
-
-void
-codec_init(void)
-{
-    // codecs
-    tvh_codecs_register();
-    // codec profiles
-    tvh_codec_profiles_load();
+void codec_init(void) {
+  // codecs
+  tvh_codecs_register();
+  // codec profiles
+  tvh_codec_profiles_load();
 }
 
+void codec_done(void) {
+  tvh_mutex_lock(&global_lock);
 
-void
-codec_done(void)
-{
-    tvh_mutex_lock(&global_lock);
+  // codec profiles
+  tvh_codec_profiles_remove();
+  // codecs
+  tvh_codecs_forget();
 
-    // codec profiles
-    tvh_codec_profiles_remove();
-    // codecs
-    tvh_codecs_forget();
-
-    tvh_mutex_unlock(&global_lock);
+  tvh_mutex_unlock(&global_lock);
 }

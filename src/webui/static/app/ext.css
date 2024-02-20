@@ -6,685 +6,737 @@
  * http://extjs.com/license
  */
 #header {
-    font-family: tahoma,arial;
-    background-color: #507AAA;
-    color: #F8F8F8;
-    height: 5.3em;
-    margin: 0;
-    padding: 6px 8px 0 6px;
-    background: url(../img/bg-header.png) repeat-x scroll 0 0 transparent;
-    height: 45px;
+font - family: tahoma, arial;
+background - color: #507AAA;
+color: #F8F8F8;
+height : 5.3em;
+margin : 0;
+padding : 6px 8px 0 6px;
+background: url(../ img / bg - header.png) repeat - x scroll 0 0 transparent;
+height : 45px;
 }
 
-#header > h1 {
-    background: url(../img/logo.png) no-repeat scroll 10px 20% transparent;
-    color: #E0E0E0;
-    font-size: 22px;
-    padding: 2px 55px;
-    text-shadow: 0 -2px rgba(0, 0, 0, 0.2);
+#header> h1 {
+background: url(../ img / logo.png) no - repeat scroll 10px 20 % transparent;
+color: #E0E0E0;
+font - size : 22px;
+padding : 2px 55px;
+text - shadow : 0 - 2px rgba(0, 0, 0, 0.2);
 }
 
-
-.x-tab-strip li.x-tab-extra-comp {
-    margin-left: 16px;
+.x - tab - strip li.x - tab - extra - comp {
+  margin - left : 16px;
 }
 
-.x-tab-strip span.x-tab-strip-extra-comp {
-    vertical-align: middle;
-    cursor: default;
-    white-space: nowrap;
-    padding: 4px 0;
+.x - tab - strip span.x - tab - strip - extra - comp {
+  vertical - align: middle;
+cursor:
+  default;
+  white - space: nowrap;
+padding:
+  4px 0;
 }
 
-.x-tab-strip span.x-tab-strip-extra-click-comp {
-    vertical-align: middle;
-    cursor: pointer;
-    padding: 4px 0;
-    float: right;
+.x - tab - strip span.x - tab - strip - extra - click - comp {
+  vertical - align: middle;
+cursor:
+  pointer;
+padding:
+  4px 0;
+  float: right;
 }
 
-.x-tree-col {
-    float: left;
-    overflow: hidden;
-    padding: 0 1px;
-    zoom: 1;
+.x - tree - col {
+  float: left;
+overflow:
+  hidden;
+padding:
+  0 1px;
+zoom:
+  1;
 }
 
-.x-tree-col-text,.x-tree-hd-text {
-    overflow: hidden;
-    -o-text-overflow: ellipsis;
-    text-overflow: ellipsis;
-    padding: 3px 3px 3px 5px;
-    white-space: nowrap;
-    font: normal 11px arial, tahoma, helvetica, sans-serif;
+.x - tree - col - text, .x - tree - hd - text {
+overflow:
+  hidden;
+  -o - text - overflow: ellipsis;
+  text - overflow: ellipsis;
+padding:
+  3px 3px 3px 5px;
+  white - space: nowrap;
+font:
+  normal 11px arial, tahoma, helvetica, sans - serif;
 }
 
-.x-tree-headers {
-    background: #f9f9f9
-        url(../extjs/resources/images/default/grid/grid3-hrow.gif) repeat-x 0
-        bottom;
-    cursor: default;
-    zoom: 1;
+.x - tree - headers {
+background:
+#f9f9f9 url(../ extjs / resources / images / default / grid / grid3 -
+      hrow.gif) repeat -
+      x 0 bottom;
+cursor:
+  default;
+zoom:
+  1;
 }
 
-.x-tree-hd {
-    float: left;
-    overflow: hidden;
-    border-left: 1px solid #eee;
-    border-right: 1px solid #d0d0d0;
+.x - tree - hd {
+  float: left;
+overflow:
+  hidden;
+  border - left : 1px solid #eee;
+  border - right : 1px solid #d0d0d0;
 }
 
-.x-tree-node-leaf .x-tree-node-icon {
-    background-image: url(../icons/tv_cards.png);
+.x - tree - node - leaf.x - tree - node - icon {
+  background - image: url(../ icons / tv_cards.png);
 }
 
-.x-tree-node-on a::before {
-    content: " \25cf";
-    color: lightgreen;
+.x - tree - node - on a::before {
+content:
+  " \25cf";
+color:
+  lightgreen;
 }
 
-.x-tree-node-on a {
-    font-weight: bold;
+.x - tree - node - on a {
+  font - weight: bold;
 }
 
-.x-tree-node-off a::before {
-    content: " \25cf";
-    color: lightcoral;
+.x - tree - node - off a::before {
+content:
+  " \25cf";
+color:
+  lightcoral;
 }
 
-.ux-mselect {
-    overflow: auto;
-    background: white;
-    position: relative; /* for calculating scroll offsets */
-    zoom: 1;
-    overflow: auto;
+.ux - mselect {
+overflow:
+  auto;
+background:
+  white;
+position:
+  relative; /* for calculating scroll offsets */
+zoom:
+  1;
+overflow:
+  auto;
 }
 
-.ux-mselect-item {
-    font: normal 12px tahoma, arial, helvetica, sans-serif;
-    padding: 2px;
-    border: 1px solid #fff;
-    white-space: nowrap;
-    cursor: pointer;
+.ux - mselect - item {
+font:
+  normal 12px tahoma, arial, helvetica, sans - serif;
+padding:
+  2px;
+border:
+  1px solid #fff;
+  white - space: nowrap;
+cursor:
+  pointer;
 }
 
-.ux-mselect-selected {
-    border: 1px dotted #a3bae9 !important;
-    background: #DFE8F6;
-    cursor: pointer;
+.ux - mselect - selected {
+border:
+  1px dotted #a3bae9 !important;
+background:
+#DFE8F6;
+cursor:
+  pointer;
 }
 
-.ux-filtered-column {
-    font-style: italic !important;
-    font-weight: bold !important;
-    background-image: url(../icons/linked.gif) !important;
-    background-repeat: no-repeat;
+.ux - filtered - column {
+  font - style: italic !important;
+  font - weight: bold !important;
+  background - image: url(../ icons / linked.gif) !important;
+  background - repeat: no - repeat;
 }
 
-.x-view-drag-insert-above {
-    border-top: 1px dotted #3366cc;
+.x - view - drag - insert - above {
+  border - top : 1px dotted #3366cc;
 }
 
-.x-view-drag-insert-below {
-    border-bottom: 1px dotted #3366cc;
+.x - view - drag - insert - below {
+  border - bottom : 1px dotted #3366cc;
 }
 
-.x-grid3-progresscol .x-grid3-cell-inner {
-    padding: 0px 0px 0px 5px;
+.x - grid3 - progresscol.x - grid3 - cell - inner {
+padding:
+  0px 0px 0px 5px;
 }
 
-.x-grid3-progresscol .x-progress-bar {
-    height: 16px;
+.x - grid3 - progresscol.x - progress - bar {
+height:
+  16px;
 }
 
-.x-grid3-progresscol .x-progress-inner {
-    height: 16px;
+.x - grid3 - progresscol.x - progress - inner {
+height:
+  16px;
 }
 
-.x-grid3-progresscol .x-progress-text-front-ie6 {
-    padding: 2.5px 5px;
+.x - grid3 - progresscol.x - progress - text - front - ie6 {
+padding:
+  2.5px 5px;
 }
 
-.x-grid3-progresscol .x-progress-text-front {
-    padding: 2px 5px;
+.x - grid3 - progresscol.x - progress - text - front {
+padding:
+  2px 5px;
 }
 
-.x-progress-bar-red,.x-progress-bar-orange,.x-progress-bar-green {
-    border-bottom: 1px solid #7fa9e4;
-    float: left;
-    height: 16px;
+.x - progress - bar - red, .x - progress - bar - orange,
+    .x - progress - bar - green {
+  border - bottom : 1px solid #7fa9e4;
+  float: left;
+height:
+  16px;
 }
 
-.x-progress-bar-red {
-    background: #ff0000 url(../icons/progress-bg-red.gif) repeat-x scroll
-        left center;
-    border-top: 1px solid #ecb7ad;
+.x - progress - bar - red {
+background:
+#ff0000 url(../ icons / progress - bg - red.gif) repeat -
+  x scroll left center;
+  border - top : 1px solid #ecb7ad;
 }
 
-.x-progress-bar-orange {
-    background: #9cbfee url(../icons/progress-bg-orange.gif) repeat-x scroll
-        left center;
-    border-right: 1px solid #deab7e;
-    border-top: 1px solid #d7b290;
+.x - progress - bar - orange {
+background:
+# 9cbfee url(../ icons / progress - bg - orange.gif)
+  repeat - x scroll left center;
+  border - right : 1px solid #deab7e;
+  border - top : 1px solid #d7b290;
 }
 
-.x-progress-bar-green {
-    background: #00ff00 url(../icons/progress-bg-green.gif) repeat-x scroll
-        left center;
-    border-right: 1px solid #5bd976;
-    border-top: 1px solid #79e18f;
+.x - progress - bar - green {
+background:
+# 00ff00 url(../ icons / progress - bg - green.gif)
+  repeat - x scroll left center;
+  border - right : 1px solid #5bd976;
+  border - top : 1px solid #79e18f;
 }
 
-.tvh-grid-unset {
-    color: #888;
-    font-style: italic;
+.tvh - grid - unset {
+color:
+# 888;
+  font - style: italic;
 }
 
 .find {
-    background-image: url(../icons/find.png) !important;
+  background - image: url(../ icons / find.png) !important;
 }
 
 .wizard {
-    background-image: url(../icons/wand.png) !important;
+  background - image: url(../ icons / wand.png) !important;
 }
 
 .uilevel {
-    background-image: url(../icons/application_form.png) !important;
+  background - image: url(../ icons / application_form.png) !important;
 }
 
 .uilevel_basic {
-    background-image: url(../icons/award_star_bronze_3.png) !important;
+  background - image: url(../ icons / award_star_bronze_3.png) !important;
 }
 
 .uilevel_advanced {
-    background-image: url(../icons/award_star_silver_3.png) !important;
+  background - image: url(../ icons / award_star_silver_3.png) !important;
 }
 
 .uilevel_expert {
-    background-image: url(../icons/award_star_gold_3.png) !important;
+  background - image: url(../ icons / award_star_gold_3.png) !important;
 }
 
 .imdb {
-    background-image: url(../icons/imdb.png) !important;
+  background - image: url(../ icons / imdb.png) !important;
 }
 
 .thetvdb {
-    background-image: url(../icons/thetvdb.png) !important;
+  background - image: url(../ icons / thetvdb.png) !important;
 }
 
 .add {
-    background-image: url(../icons/add.png) !important;
+  background - image: url(../ icons / add.png) !important;
 }
 
 .option {
-    background-image: url(../icons/plugin.png) !important;
+  background - image: url(../ icons / plugin.png) !important;
 }
 
 .remove {
-    background-image: url(../icons/delete.png) !important;
+  background - image: url(../ icons / delete.png) !important;
 }
 
 .prevrec {
-    background-image: url(../icons/accept.png) !important;
+  background - image: url(../ icons / accept.png) !important;
 }
 
 .epgrelated {
-    background-image: url(../icons/clock.png) !important;
+  background - image: url(../ icons / clock.png) !important;
 }
 
 .duprec {
-    background-image: url(../icons/control_repeat_blue.png) !important;
+  background - image: url(../ icons / control_repeat_blue.png) !important;
 }
 
 .grouping {
-    background-image: url(../icons/control_repeat_blue.png) !important;
+  background - image: url(../ icons / control_repeat_blue.png) !important;
 }
 
 .cancel {
-    background-image: url(../icons/cancel.png) !important;
+  background - image: url(../ icons / cancel.png) !important;
 }
 
 .moveup {
-    background-image: url(../icons/arrow_up.png) !important;
+  background - image: url(../ icons / arrow_up.png) !important;
 }
 
 .movedown {
-    background-image: url(../icons/arrow_down.png) !important;
+  background - image: url(../ icons / arrow_down.png) !important;
 }
 
 .save {
-    background-image: url(../icons/save.png) !important;
+  background - image: url(../ icons / save.png) !important;
 }
 
 .apply {
-    background-image: url(../icons/accept.png) !important;
+  background - image: url(../ icons / accept.png) !important;
 }
 
 .rec {
-    background-image: url(../icons/rec.png) !important;
+  background - image: url(../ icons / rec.png) !important;
 }
 
 .stopRec {
-    background-image: url(../icons/stop_rec.png) !important;
+  background - image: url(../ icons / stop_rec.png) !important;
 }
 
 .info {
-    background-image: url(../icons/information.png) !important;
+  background - image: url(../ icons / information.png) !important;
 }
 
 .undo {
-    background-image: url(../icons/undo.png) !important;
+  background - image: url(../ icons / undo.png) !important;
 }
 
 .edit {
-    background-image: url(../icons/edit.png) !important;
+  background - image: url(../ icons / edit.png) !important;
 }
 
 .key {
-    background-image: url(../icons/key.png) !important;
+  background - image: url(../ icons / key.png) !important;
 }
 
 .pass {
-    background-image: url(../icons/pass.png) !important;
+  background - image: url(../ icons / pass.png) !important;
 }
 
 .tags {
-    background-image: url(../icons/tag_blue.png) !important;
+  background - image: url(../ icons / tag_blue.png) !important;
 }
 
 .xml {
-    background-image: url(../icons/tag.png) !important;
+  background - image: url(../ icons / tag.png) !important;
 }
 
 .drive {
-    background-image: url(../icons/drive.png) !important;
+  background - image: url(../ icons / drive.png) !important;
 }
 
 .group {
-    background-image: url(../icons/group.png) !important;
+  background - image: url(../ icons / group.png) !important;
 }
 
 .acl {
-    background-image: url(../icons/acl.png) !important;
+  background - image: url(../ icons / acl.png) !important;
 }
 
 .ip_block {
-    background-image: url(../icons/ip_block.png) !important;
+  background - image: url(../ icons / ip_block.png) !important;
 }
 
 .hardware {
-    background-image: url(../icons/pci.png) !important;
+  background - image: url(../ icons / pci.png) !important;
 }
 
 .television {
-    background-image: url(../icons/television.png) !important;
+  background - image: url(../ icons / television.png) !important;
 }
 
 .eye {
-    background-image: url(../icons/eye.png) !important;
+  background - image: url(../ icons / eye.png) !important;
 }
 
 .control_play {
-    background-image: url(../icons/control_play.png) !important;
+  background - image: url(../ icons / control_play.png) !important;
 }
 
 .control_pause {
-    background-image: url(../icons/control_pause.png) !important;
+  background - image: url(../ icons / control_pause.png) !important;
 }
 
 .control_stop {
-    background-image: url(../icons/control_stop.png) !important;
+  background - image: url(../ icons / control_stop.png) !important;
 }
 
 .control_mute {
-    background-image: url(../icons/sound_mute.png) !important;
+  background - image: url(../ icons / sound_mute.png) !important;
 }
 
 .control_volume {
-    background-image: url(../icons/sound.png) !important;
+  background - image: url(../ icons / sound.png) !important;
 }
 
 .control_fullscreen {
-    background-image: url(../icons/full_screen.png) !important;
+  background - image: url(../ icons / full_screen.png) !important;
 }
 
 .newspaper {
-    background-image: url(../icons/newspaper.png) !important;
+  background - image: url(../ icons / newspaper.png) !important;
 }
 
 .clock {
-    background-image: url(../icons/clock.png) !important;
+  background - image: url(../ icons / clock.png) !important;
 }
 
 .exclamation {
-    background-image: url(../icons/exclamation.png) !important;
+  background - image: url(../ icons / exclamation.png) !important;
 }
 
 .wrench {
-    background-image: url(../icons/wrench.png) !important;
+  background - image: url(../ icons / wrench.png) !important;
 }
 
 .wand {
-    background-image: url(../icons/wand.png) !important;
+  background - image: url(../ icons / wand.png) !important;
 }
 
 .merge {
-    background-image: url(../icons/arrow_join.png) !important;
+  background - image: url(../ icons / arrow_join.png) !important;
 }
 
 .iptv {
-    background-image: url(../icons/world.png) !important;
+  background - image: url(../ icons / world.png) !important;
 }
 
 .clone {
-    background-image: url(../icons/layers.png) !important;
+  background - image: url(../ icons / layers.png) !important;
 }
 
 .scheduled {
-    background-image: url(../icons/scheduled.png) !important;
+  background - image: url(../ icons / scheduled.png) !important;
 }
 
 .recordingError {
-    background-image: url(../icons/exclamation.png) !important;
+  background - image: url(../ icons / exclamation.png) !important;
 }
 
 .completed {
-    background-image: url(../icons/accept.png) !important;
+  background - image: url(../ icons / accept.png) !important;
 }
 
 .completedRerecord {
-    background-image: url(../icons/add.png) !important;
+  background - image: url(../ icons / add.png) !important;
 }
 
 .completedWarning {
-    background-image: url(../icons/bell.png) !important;
+  background - image: url(../ icons / bell.png) !important;
 }
 
 .completedError {
-    background-image: url(../icons/exclamation.png) !important;
+  background - image: url(../ icons / exclamation.png) !important;
 }
 
 .recording {
-    background-image: url(../icons/rec.png) !important;
+  background - image: url(../ icons / rec.png) !important;
 }
 
 .rerecord {
-    background-image: url(../icons/arrow_branch.png) !important;
+  background - image: url(../ icons / arrow_branch.png) !important;
 }
 
 .chnumops {
-    background-image: url(../icons/brick.png) !important;
+  background - image: url(../ icons / brick.png) !important;
 }
 
 .chnumops_low {
-    background-image: url(../icons/world_add.png) !important;
+  background - image: url(../ icons / world_add.png) !important;
 }
 
 .chnumops_up {
-    background-image: url(../icons/arrow_up.png) !important;
+  background - image: url(../ icons / arrow_up.png) !important;
 }
 
 .chnumops_down {
-    background-image: url(../icons/arrow_down.png) !important;
+  background - image: url(../ icons / arrow_down.png) !important;
 }
 
 .chnumops_swap {
-    background-image: url(../icons/arrow_switch.png) !important;
+  background - image: url(../ icons / arrow_switch.png) !important;
 }
 
 .film {
-    background-image: url(../icons/film.png) !important;
+  background - image: url(../ icons / film.png) !important;
 }
 
 .film_edit {
-    background-image: url(../icons/film_edit.png) !important;
+  background - image: url(../ icons / film_edit.png) !important;
 }
 
 .film_key {
-    background-image: url(../icons/film_key.png) !important;
+  background - image: url(../ icons / film_key.png) !important;
 }
 
 .caclientNone {
-    background-image: url(../icons/stop.png) !important;
+  background - image: url(../ icons / stop.png) !important;
 }
 
 .caclientReady {
-    background-image: url(../icons/accept.png) !important;
+  background - image: url(../ icons / accept.png) !important;
 }
 
 .caclientConnected {
-    background-image: url(../icons/tick.png) !important;
+  background - image: url(../ icons / tick.png) !important;
 }
 
 .caclientDisconnected {
-    background-image: url(../icons/exclamation.png) !important;
+  background - image: url(../ icons / exclamation.png) !important;
 }
 
 .epggrabmodNone {
-    background-image: url(../icons/stop.png) !important;
+  background - image: url(../ icons / stop.png) !important;
 }
 
 .epggrabmodEnabled {
-    background-image: url(../icons/accept.png) !important;
+  background - image: url(../ icons / accept.png) !important;
 }
 
 .tvCards {
-    background-image: url(../icons/tv_cards.png) !important;
+  background - image: url(../ icons / tv_cards.png) !important;
 }
 
 .networks {
-    background-image: url(../icons/networks.png) !important;
+  background - image: url(../ icons / networks.png) !important;
 }
 
 .muxes {
-    background-image: url(../icons/muxes.png) !important;
+  background - image: url(../ icons / muxes.png) !important;
 }
 
 .muxSchedulers {
-    background-image: url(../icons/mux_schedulers.png) !important;
+  background - image: url(../ icons / mux_schedulers.png) !important;
 }
 
 .services {
-    background-image: url(../icons/services.png) !important;
+  background - image: url(../ icons / services.png) !important;
 }
 
 .teletext {
-    background-image: url(../icons/teletext.png) !important;
+  background - image: url(../ icons / teletext.png) !important;
 }
 
 .subtitle {
-    background-image: url(../icons/subtitle.png) !important;
+  background - image: url(../ icons / subtitle.png) !important;
 }
 
 .serviceMapper {
-    background-image: url(../icons/service_mapper.png) !important;
+  background - image: url(../ icons / service_mapper.png) !important;
 }
 
 .otherFilters {
-    background-image: url(../icons/other_filters.png) !important;
+  background - image: url(../ icons / other_filters.png) !important;
 }
 
 .channels {
-    background-image: url(../icons/channels.png) !important;
+  background - image: url(../ icons / channels.png) !important;
 }
 
-.channelTags{
-    background-image: url(../icons/channel_tags.png) !important;
+.channelTags {
+  background - image: url(../ icons / channel_tags.png) !important;
 }
 
-.help{
-    background-image: url(../icons/help.png) !important;
+.help {
+  background - image: url(../ icons / help.png) !important;
 }
 
-.watchTv{
-    background-image: url(../icons/watch_tv.png) !important;
+.watchTv {
+  background - image: url(../ icons / watch_tv.png) !important;
 }
 
-.autoRec{
-    background-image: url(../icons/auto_rec.png) !important;
+.autoRec {
+  background - image: url(../ icons / auto_rec.png) !important;
 }
 
-.debug{
-    background-image: url(../icons/debug.png) !important;
+.debug {
+  background - image: url(../ icons / debug.png) !important;
 }
 
-.upcomingRec{
-    background-image: url(../icons/upcoming_rec.png) !important;
+.upcomingRec {
+  background - image: url(../ icons / upcoming_rec.png) !important;
 }
 
-.finishedRec{
-    background-image: url(../icons/accept.png) !important;
+.finishedRec {
+  background - image: url(../ icons / accept.png) !important;
 }
 
-.general{
-    background-image: url(../icons/general.png) !important;
+.general {
+  background - image: url(../ icons / general.png) !important;
 }
 
-.dvrprofiles{
-    background-image: url(../icons/dvrprofiles.png) !important;
+.dvrprofiles {
+  background - image: url(../ icons / dvrprofiles.png) !important;
 }
 
-.recordingtab{
-    background-image: url(../icons/recordingtab.png) !important;
+.recordingtab {
+  background - image: url(../ icons / recordingtab.png) !important;
 }
 
-.timeshift{
-    background-image: url(../icons/timeshift.png) !important;
+.timeshift {
+  background - image: url(../ icons / timeshift.png) !important;
 }
 
-.stream{
-    background-image: url(../icons/stream.png) !important;
+.stream {
+  background - image: url(../ icons / stream.png) !important;
 }
 
-.connections{
-    background-image: url(../icons/connections.png) !important;
+.connections {
+  background - image: url(../ icons / connections.png) !important;
 }
 
-.subscriptions{
-    background-image: url(../icons/subscriptions.png) !important;
+.subscriptions {
+  background - image: url(../ icons / subscriptions.png) !important;
 }
 
-.clean{
-    background-image: url(../icons/clean.png) !important;
+.clean {
+  background - image: url(../ icons / clean.png) !important;
 }
 
-.resetIcon{
-    background-image: url(../icons/reseticon.png) !important;
+.resetIcon {
+  background - image: url(../ icons / reseticon.png) !important;
 }
 
-.dvr{
-    background-image: url(../icons/dvr.png) !important;
+.dvr {
+  background - image: url(../ icons / dvr.png) !important;
 }
 
-.epg{
-    background-image: url(../icons/epg.png) !important;
+.epg {
+  background - image: url(../ icons / epg.png) !important;
 }
 
-.broadcast_details{
-    background-image: url(../icons/broadcast_details.png) !important;
+.broadcast_details {
+  background - image: url(../ icons / broadcast_details.png) !important;
 }
 
-.timers{
-    background-image: url(../icons/time_schedules.png) !important;
+.timers {
+  background - image: url(../ icons / time_schedules.png) !important;
 }
 
-.download{
-    background-image: url(../icons/download.png) !important;
+.download {
+  background - image: url(../ icons / download.png) !important;
 }
 
-.abort{
-    background-image: url(../icons/abort.png) !important;
+.abort {
+  background - image: url(../ icons / abort.png) !important;
 }
 
-.bouquets{
-    background-image: url(../icons/bouquets.png) !important;
+.bouquets {
+  background - image: url(../ icons / bouquets.png) !important;
 }
 
-.cancelButton{
-    background-image: url(../icons/cancel_button.png) !important;
+.cancelButton {
+  background - image: url(../ icons / cancel_button.png) !important;
 }
 
 .baseconf {
-    background-image: url(../icons/baseconf.png) !important;
+  background - image: url(../ icons / baseconf.png) !important;
 }
 
 .imgcacheconf {
-    background-image: url(../icons/imgcacheconf.png) !important;
+  background - image: url(../ icons / imgcacheconf.png) !important;
 }
 
 .satipsrvconf {
-    background-image: url(../icons/satipsrvconf.png) !important;
+  background - image: url(../ icons / satipsrvconf.png) !important;
 }
 
 .fetch_images {
-    background-image: url(../icons/fetch_images.png) !important;
+  background - image: url(../ icons / fetch_images.png) !important;
 }
 
 .previous {
-    background-image: url(../icons/arrow_left.png) !important;
+  background - image: url(../ icons / arrow_left.png) !important;
 }
 
 .next {
-    background-image: url(../icons/arrow_right.png) !important;
+  background - image: url(../ icons / arrow_right.png) !important;
 }
 
 .finish {
-    background-image: url(../icons/accept.png) !important;
+  background - image: url(../ icons / accept.png) !important;
 }
 
 .movetofinished {
-    background-image: url(../icons/accept.png) !important;
+  background - image: url(../ icons / accept.png) !important;
 }
 
 .movetofailed {
-    background-image: url(../icons/exclamation.png) !important;
+  background - image: url(../ icons / exclamation.png) !important;
 }
 
 .codecDisabled {
-    background-image: url(../icons/plugin_disabled.png) !important;
+  background - image: url(../ icons / plugin_disabled.png) !important;
 }
 
 .codecEnabled {
-    background-image: url(../icons/plugin.png) !important;
+  background - image: url(../ icons / plugin.png) !important;
 }
 
-.x-linked {
-    display: inline-block;
-    background-image: url(../icons/linked.gif) !important;
-    background-repeat: no-repeat;
-    width: 4px;
+.x - linked {
+display:
+  inline - block;
+  background - image: url(../ icons / linked.gif) !important;
+  background - repeat: no - repeat;
+width:
+  4px;
 }
 
-.x-smallhdr {
-    float: left;
-    width: 100px;
+.x - smallhdr {
+  float: left;
+width:
+  100px;
 }
 
-.x-nice-customformat {
-    display: inline-block;
-    width: 18em;
+.x - nice - customformat {
+display:
+  inline - block;
+width:
+  18em;
 }
 
-.x-nice-dayofweek {
-    display: inline-block;
-    width: 6em;
+.x - nice - dayofweek {
+display:
+  inline - block;
+width:
+  6em;
 }
 
-.x-nice-date {
-    display: inline-block;
-    text-align: center;
-    width: 6em;
+.x - nice - date {
+display:
+  inline - block;
+  text - align: center;
+width:
+  6em;
 }
 
-.x-nice-time {
-    display: inline-block;
-    width: 6em;
-    text-align: right;
-    white-space: nowrap;
+.x - nice - time {
+display:
+  inline - block;
+width:
+  6em;
+  text - align: right;
+  white - space: nowrap;
 }
 
-.x-epg-hr {
-    margin: 0;
+.x - epg - hr {
+margin:
+  0;
 }
 
 /* Although our other icons are 16x16, our fonts are 12px and these
@@ -694,116 +746,144 @@
    exactly 12px since 13px seems to fit without extending the lines
    visibly whereas 14px makes it quite a bit bigger.
 */
-.x-grid-category-icon {
+.x - grid - category -
+    icon{}
+
+        .x -
+    grid - category - icon img {
+width:
+  13px;
+height:
+  13px;
+  margin - right : 0.1em;
 }
 
-.x-grid-category-icon img {
-    width: 13px;
-    height: 13px;
-    margin-right: 0.1em;
-}
-
-.x-grid-category-icon img:hover{
-    transform: scale(4,4);
-    /* Our parent is overflow: hidden so we need position to break out and
-     * be visible.
-     */
-    position: absolute;
-    /* Need a higher z-index otherwise we are hidden by progress bar */
-    z-index: 10;
+.x - grid - category - icon img: hover {
+transform:
+  scale(4, 4);
+/* Our parent is overflow: hidden so we need position to break out and
+ * be visible.
+ */
+position:
+  absolute;
+  /* Need a higher z-index otherwise we are hidden by progress bar */
+  z - index : 10;
 }
 
 /* Larger icons used in dialog boxes */
-.x-dialog-category-large-icon {
+.x - dialog - category - large -
+    icon{}
+
+        .x -
+    dialog - category - large - icon img {
+width:
+  32px;
+height:
+  32px;
+  margin - right : 0.1em;
 }
 
-.x-dialog-category-large-icon img {
-    width: 32px;
-    height: 32px;
-    margin-right: 0.1em;
+.x - dialog - category - large - icon img: hover {
+transform:
+  scale(2, 2);
+  /* We need a transform-origin to avoid being clipped in a dialog box */
+  transform - origin: top left;
 }
 
-.x-dialog-category-large-icon img:hover{
-    transform: scale(2, 2);
-    /* We need a transform-origin to avoid being clipped in a dialog box */
-    transform-origin: top left;
+.x - epg - icons {
+  float: left;
+  margin - left : 0.5em;
 }
 
-.x-epg-icons {
-    float: left;
-    margin-left: 0.5em;
+.x - epg - title {
+margin:
+  5px;
+padding:
+  5px;
+font:
+  normal 16px arial, tahoma, helvetica, sans - serif;
+  font - weight: bold;
+  text - align: center;
+  border - bottom : 1px solid #000000;
+  white - space: pre - wrap;
 }
 
-.x-epg-title {
-    margin: 5px;
-    padding: 5px;
-    font: normal 16px arial, tahoma, helvetica, sans-serif;
-    font-weight: bold;
-    text-align: center;
-    border-bottom: 1px solid #000000;
-    white-space: pre-wrap;
+.x - epg - subtitle {
+margin:
+  5px;
+font:
+  normal 12px arial, tahoma, helvetica, sans - serif;
+  font - weight: bold;
+  white - space: pre - wrap;
 }
 
-.x-epg-subtitle {
-    margin: 5px;
-    font: normal 12px arial, tahoma, helvetica, sans-serif;
-    font-weight: bold;
-    white-space: pre-wrap;
+.x - epg - prefix {
+display:
+  inline - block;
+width:
+  12em;
+  font - weight: bold;
 }
 
-.x-epg-prefix {
-    display: inline-block;
-    width: 12em;
-    font-weight: bold;
+.x - epg - body {
+  margin - left : 5px;
+display:
+  inline - block;
 }
 
-.x-epg-body {
-    margin-left: 5px;
-    display: inline-block;
+.x - epg - summary {
+margin:
+  5px;
+  font - weight: bold;
+  white - space: pre - wrap;
 }
 
-.x-epg-summary {
-    margin: 5px;
-    font-weight: bold;
-    white-space: pre-wrap;
+.x - epg - desc {
+margin:
+  10px;
+  white - space: pre - wrap;
 }
 
-.x-epg-desc {
-    margin: 10px;
-    white-space: pre-wrap;
+.x - epg - left {
+  float: left;
+width:
+  78 % ;
 }
 
-.x-epg-left {
-    float: left;
-    width: 78%;
+.x - epg - bottom {
+width:
+  100 % ;
+margin:
+  5px 0 0 0;
+clear:
+  both;
 }
 
-.x-epg-bottom {
-    width: 100%;
-    margin: 5px 0 0 0;
-    clear: both;
+.x - epg - chicon {
+  float: right;
+margin:
+  5px;
+width:
+  20 % ;
+  max - height : 99px;
+  max - width : 99px;
 }
 
-.x-epg-chicon {
-    float: right;
-    margin: 5px;
-    width: 20%;
-    max-height: 99px;
-    max-width: 99px;
+.x - epg - rlicon {
+  float: right;
+margin:
+  5px;
+  max - height : 50px;
 }
 
-.x-epg-rlicon {
-    float: right;
-    margin: 5px;
-    max-height: 50px;
+.x - epg - time {
+margin:
+  5px 5px 5px 10px;
 }
 
-.x-epg-time {
-    margin: 5px 5px 5px 10px;
-}
-
-.x-epg-meta {
-    margin: 5px 5px 5px 10px;
+.x - epg - meta {
+margin:
+  5px 5px 5px 10px;
 }
 
 /* Our image has to be inside an image container
@@ -812,345 +892,409 @@
  * it is simply the size of the container to avoid text
  * flowing around it.
  */
-.x-epg-image-container {
-    float: right;
-    margin-left: 5px;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    width: 20%;
-    height: 200px;
-    position: relative;
+.x - epg - image - container {
+  float: right;
+  margin - left : 5px;
+  margin - right : 5px;
+  margin - bottom : 5px;
+width:
+  20 % ;
+height:
+  200px;
+position:
+  relative;
 }
 
-.x-epg-image{
-    width: 100%;                /*100% of the container*/
-    max-height: 100%;
-    z-index: 10;                /*Need higher z-index since we are inside a div*/
-    position: relative;         /*z-index only works with position of non-static (the default)*/
+.x - epg - image {
+width:
+  100 % ; /*100% of the container*/
+  max - height : 100 % ;
+  z - index : 10; /*Need higher z-index since we are inside a div*/
+position:
+  relative; /*z-index only works with position of non-static (the default)*/
 }
 
-.x-epg-image:hover{
-    transform: scale(1.7,1.7);
-    transform-origin: right;
+.x - epg - image: hover {
+transform:
+  scale(1.7, 1.7);
+  transform - origin: right;
 }
 
-.x-epg-genre {
-    margin-left: 10px;
+.x - epg - genre {
+  margin - left : 10px;
 }
 
-.x-epg-duplicate {
-    text-decoration: line-through;
+.x - epg - duplicate {
+  text - decoration: line - through;
 }
 
-.dvr-details-dialog {
-    position: relative;
+.dvr - details - dialog {
+position:
+  relative;
 }
-.dvr-details-dialog-background-image {
-    /* Details in here are overridden by  code */
-}
-.dvr-details-dialog-content {
-    position: relative;
-    top: 0;
-    left: 0;
-}
-
-.tv-video-player {
-    margin-right: auto;
-    margin-left : auto;
-
-    width : 100%;
-    height: 100%;
-    background: black;
-    color: white;
+.dvr - details - dialog - background -
+    image{
+        /* Details in here are overridden by  code */
+    }
+        .dvr -
+    details - dialog - content {
+position:
+  relative;
+top:
+  0;
+left:
+  0;
 }
 
-.x-wizard-icon {
-    float: right;
-    margin: 0px auto;
-    border: none;
-    padding: 5px;
-    max-width: 25%
+.tv - video - player {
+  margin - right: auto;
+  margin - left: auto;
+
+width:
+  100 % ;
+height:
+  100 % ;
+background:
+  black;
+color:
+  white;
 }
 
-.x-wizard-description {
-    margin: 5px;
-    font: normal 12px arial, tahoma, helvetica, sans-serif;
+.x - wizard - icon {
+  float: right;
+margin:
+  0px auto;
+border:
+  none;
+padding:
+  5px;
+  max - width : 25 %
 }
 
-.x-wizard-description ul {
-    list-style: disc outside;
-    padding-left: 15px;
+.x - wizard - description {
+margin:
+  5px;
+font:
+  normal 12px arial, tahoma, helvetica, sans - serif;
 }
 
-.x-wizard-description p, .x-wizard-description li {
-    margin: 5px 0 0 0;
-    list-style: disc outside;
+.x - wizard - description ul {
+  list - style: disc outside;
+  padding - left : 15px;
 }
 
-.x-wizard-description strong {
-    font-weight: bold;
+.x - wizard - description p, .x - wizard - description li {
+margin:
+  5px 0 0 0;
+  list - style: disc outside;
+}
+
+.x - wizard - description strong {
+  font - weight: bold;
 }
 
 /* Table styles for webUI help */
 
-.hts-doc-text table, .hts-doc-text th, .hts-doc-text td {
-    font-size: inherit;
-    border: 1px solid #98c0f4;
-    margin: 20px
+.hts - doc - text table, .hts - doc - text th, .hts - doc - text td {
+  font - size: inherit;
+border:
+  1px solid #98c0f4;
+margin:
+  20px
 }
 
-.hts-doc-text td,.hts-doc-text th {
-    padding: 5px
+.hts - doc - text td,
+    .hts - doc -
+    text th{padding: 5px}
+
+        .hts -
+    doc -
+    text table{border - collapse: collapse}
+
+        .hts -
+    doc - text th {
+  text - align: center;
+height:
+  2em;
+  background - color: #d9e8fb;
+color:
+  black;
+  font - weight: bold
 }
 
-.hts-doc-text table {
-    border-collapse: collapse
+.hts - doc - text tr: nth -
+                      child(even){background - color: #F2F7FE}
+
+                          /* Additional general text styles for webUI help */
+
+                          .hts
+                      -
+                      doc
+                      -
+                      text {
+font:
+  normal 11px verdana;
+padding:
+  5px;
 }
 
-.hts-doc-text th {
-    text-align: center;
-    height: 2em;
-    background-color: #d9e8fb;
-    color: black;
-    font-weight: bold
+.hts - doc - text p {
+  margin - left : 1em;
+  margin - top : 1em;
+  margin - bottom : 1em;
 }
 
-.hts-doc-text tr:nth-child(even) {
-    background-color: #F2F7FE
+.hts - doc - text h2, h3, h4 {
+  margin - top : 1em;
+  margin - bottom : 1em;
+  font - size: larger
 }
 
-/* Additional general text styles for webUI help */
-
-.hts-doc-text {
-    font: normal 11px verdana;
-    padding: 5px;
+.hts - doc - text h4 {
+  margin - top : 1em;
+  margin - bottom : 1em;
+color:
+# 2163A6;
 }
 
-.hts-doc-text p {
-    margin-left: 1em;
-    margin-top: 1em;
-    margin-bottom: 1em;
+.hts - doc - text h5 {
+  margin - top : .7em;
+  margin - bottom : .7em;
+color:
+# 2163A6;
 }
 
-.hts-doc-text h2, h3, h4 {
-    margin-top: 1em;
-    margin-bottom: 1em;
-    font-size: larger
-}
+.hts - doc -
+    text strong{font - weight: bold}
 
-.hts-doc-text h4 {
-    margin-top: 1em;
-    margin-bottom: 1em;
-    color: #2163A6;
-}
+        .hts -
+    doc -
+    text em{font - style: italic}
 
-.hts-doc-text h5 {
-    margin-top: .7em;
-    margin-bottom: .7em;
-    color: #2163A6;
-}
-
-.hts-doc-text strong {
-    font-weight: bold
-}
-
-.hts-doc-text em {
-    font-style: italic
-}
-
-.hts-doc-text td img {
-    display: inline;
-    margin: -5px auto
+        .hts -
+    doc - text td img {
+display:
+  inline;
+margin:
+  -5px auto
 }
 
 /* List styles for webUI help */
 
-.hts-doc-text dt {
-    padding-top: 10px;
-    font-weight: bold;
+.hts - doc - text dt {
+  padding - top : 10px;
+  font - weight: bold;
 }
 
-.hts-doc-text dl {
-    padding-left: 10px;
-    padding-bottom: 10px;
+.hts - doc - text dl {
+  padding - left : 10px;
+  padding - bottom : 10px;
 }
 
-.hts-doc-text ol {
-    list-style-type: arabic;
-    padding-left:3em
+.hts - doc - text ol {
+  list - style - type: arabic;
+  padding - left : 3em
 }
 
-.hts-doc-text li {
-    padding-top: 5px;
-    padding-bottom: 5px;
+.hts - doc - text li {
+  padding - top : 5px;
+  padding - bottom : 5px;
 }
 
-.hts-doc-text ul {
-    list-style-type:disc;
-    padding-left:3em
+.hts - doc - text ul {
+  list - style - type: disc;
+  padding - left : 3em
 }
 
-.hts-doc-text ul li {
-    padding-top: 0px;
-    padding-bottom: 0px
+.hts - doc - text ul li {
+  padding - top : 0px;
+  padding - bottom : 0px
 }
 
 /* Additional image and caption styles for webUI help */
 
-.hts-doc-text img {
-    margin: 0px auto;
-    /* display: block; */
-    border: none;
-    padding: 10px;
-    max-width: 97%
+.hts - doc - text img {
+margin:
+  0px auto;
+/* display: block; */
+border:
+  none;
+padding:
+  10px;
+  max - width : 97 %
 }
 
-.hts-doc-text p.caption {
-    font-weight: bold;
-    color: #2163A6;
-    font-style: italic;
-    text-align: center;
-    text-decoration: underline
+.hts - doc - text p.caption {
+  font - weight: bold;
+color:
+# 2163A6;
+  font - style: italic;
+  text - align: center;
+  text - decoration: underline
 }
 
 /* Inline/block code styles for webUI help */
 
-.hts-doc-text code {
-    background-color: white;
-    border-color: #E1E4E5;
-    border-style: solid;
-    border-width: 1px;
-    color: darkred;
-    font-family:  'Courier New', Courier, monospace;
-    margin-left: 2em;
-    padding: 3px 5px 0 5px;
-    display: inline-block;
+.hts - doc - text code {
+  background - color: white;
+  border - color: #E1E4E5;
+  border - style: solid;
+  border - width : 1px;
+color:
+  darkred;
+  font - family: 'Courier New', Courier, monospace;
+  margin - left : 2em;
+padding:
+  3px 5px 0 5px;
+display:
+  inline - block;
 }
 
-.hts-doc-text p code {
-    margin-left: 0;
-    display: initial;
+.hts - doc - text p code {
+  margin - left : 0;
+display:
+  initial;
 }
 
-.hts-doc-text li code {
-    margin-left: 0;
-    display: initial;
+.hts - doc - text li code {
+  margin - left : 0;
+display:
+  initial;
 }
 
 /* Styles for help TOC */
 
-.hts-doc-toc {
-    width: 200px;
-    padding: 0;
-    margin: 0 5px 0 5px;
-    float: right;
-    border-left: dotted 1px;
-    border-bottom: dotted 1px;
+.hts - doc - toc {
+width:
+  200px;
+padding:
+  0;
+margin:
+  0 5px 0 5px;
+  float: right;
+  border - left: dotted 1px;
+  border - bottom: dotted 1px;
 }
 
-.hts-doc-toc a {
-    cursor: pointer;
+.hts - doc - toc a {
+cursor:
+  pointer;
 }
 
-.hts-doc-toc a:hover {
-    cursor: pointer;
-    background-color: black;
-    color: white;
+.hts - doc - toc a: hover {
+cursor:
+  pointer;
+  background - color: black;
+color:
+  white;
 }
 
-.hts-doc-toc .hts-doc-anchor {
-    color: inherit;
-    text-decoration: inherit;
-    cursor: inherit;
+.hts - doc - toc.hts - doc - anchor {
+color:
+  inherit;
+  text - decoration: inherit;
+cursor:
+  inherit;
 }
 
-.hts-doc-toc p {
-    margin: 3px 0 1px 5px;
+.hts - doc - toc p {
+margin:
+  3px 0 1px 5px;
 }
 
-.hts-doc-toc li {
-    padding-top: 5px;
-    padding-bottom: 5px;
+.hts - doc - toc li {
+  padding - top : 5px;
+  padding - bottom : 5px;
 }
 
-.hts-doc-toc ol {
-    list-style-type: arabic;
-    list-style-position: outside;
-    padding-left: 2em;
+.hts - doc - toc ol {
+  list - style - type: arabic;
+  list - style - position: outside;
+  padding - left : 2em;
 }
 
-.hts-doc-toc ol li {
-    padding-top: 0px;
-    padding-bottom: 0px
+.hts - doc - toc ol li {
+  padding - top : 0px;
+  padding - bottom : 0px
 }
 
-.hts-doc-toc ul {
-    list-style-type: disc;
-    list-style-position: outside;
-    padding-left: 2em;
+.hts - doc - toc ul {
+  list - style - type: disc;
+  list - style - position: outside;
+  padding - left : 2em;
 }
 
-.hts-doc-toc ul ul {
-    list-style-type: circle;
-    list-style-position: outside;
-    padding-left: 1em;
+.hts - doc - toc ul ul {
+  list - style - type: circle;
+  list - style - position: outside;
+  padding - left : 1em;
 }
 
-.hts-doc-toc ul ul ul {
-    list-style-type: square;
-    list-style-position: outside;
-    padding-left: 1em;
+.hts - doc - toc ul ul ul {
+  list - style - type: square;
+  list - style - position: outside;
+  padding - left : 1em;
 }
 
-.hts-doc-toc ul li {
-    padding-top: 0px;
-    padding-bottom: 0px
+.hts - doc - toc ul li {
+  padding - top : 0px;
+  padding - bottom : 0px
 }
 
-.hts-doc-text a {
-    cursor: pointer;
-    text-decoration: underline;
-    color: blue;
+.hts - doc - text a {
+cursor:
+  pointer;
+  text - decoration: underline;
+color:
+  blue;
 }
 
-.hts-doc-text .hts-doc-anchor {
-    color: inherit;
-    text-decoration: inherit;
-    cursor: inherit;
+.hts - doc - text.hts - doc - anchor {
+color:
+  inherit;
+  text - decoration: inherit;
+cursor:
+  inherit;
 }
 
-.tv-video-idle {
-    background-image: url(../../static/img/logomid.png);
-    background-size: 300px;
-    background-repeat: no-repeat;
-    background-position: center;
+.tv - video - idle {
+  background - image: url(../../ static / img / logomid.png);
+  background - size : 300px;
+  background - repeat: no - repeat;
+  background - position: center;
 }
 
-.tv-video-message {
-    text-align: center;
-    font-size: 150%;
+.tv - video - message {
+  text - align: center;
+  font - size : 150 % ;
 }
 
-.about-tab {
-    margin-left: auto;
-    margin-right: auto;
+.about - tab {
+  margin - left: auto;
+  margin - right: auto;
 }
 
-.about-title {
-    font-size: 24px;
-    font-weight: bold;
+.about - title {
+  font - size : 24px;
+  font - weight: bold;
 }
 
 .playlink {
-    margin: -1px;
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
+margin:
+  -1px;
+width:
+  14px;
+height:
+  14px;
+cursor:
+  pointer;
 }
 
 .logobig {
-    width: 25%;
-    height: auto;
+width:
+  25 % ;
+height:
+  auto;
 }
 
 /** vim: ts=4:sw=4:nu:fdc=4:nospell
@@ -1165,77 +1309,99 @@
  *
  * @license Ext.ux.grid.RowActions.css is licensed under the terms of
  * the Open Source LGPL 3.0 license.  Commercial use is permitted to the extent
- * that the code/component(s) do NOT become part of another Open Source or Commercially
- * licensed development library or toolkit without explicit permission.
+ * that the code/component(s) do NOT become part of another Open Source or
+ * Commercially licensed development library or toolkit without explicit
+ * permission.
  *
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
 
 /* styles for rows */
-.ux-row-action-cell .x-grid3-cell-inner {
-    padding: 1px 0 0 0;
+.ux - row - action - cell.x - grid3 - cell - inner {
+padding:
+  1px 0 0 0;
 }
 
-.ux-row-action-item {
-    float: left;
-    min-width: 16px;
-    height: 16px;
-    background-repeat: no-repeat;
-    margin: 0 5px 0 0;
-    cursor: pointer;
-    overflow: hidden;
+.ux - row - action - item {
+  float: left;
+  min - width : 16px;
+height:
+  16px;
+  background - repeat: no - repeat;
+margin:
+  0 5px 0 0;
+cursor:
+  pointer;
+overflow:
+  hidden;
 }
 
-.ext-ie .ux-row-action-item {
-    width: 16px;
+.ext - ie.ux - row - action - item {
+width:
+  16px;
 }
 
-.ext-ie .ux-row-action-text {
-    width: auto;
+.ext - ie.ux - row - action - text {
+width:
+  auto;
 }
 
-.ux-row-action-item span {
-    vertical-align: middle;
-    padding: 0 0 0 20px;
-    line-height: 18px;
+.ux - row - action - item span {
+  vertical - align: middle;
+padding:
+  0 0 0 20px;
+  line - height : 18px;
 }
 
-.ext-ie .ux-row-action-item span {
-    width: auto;
+.ext - ie.ux - row - action - item span {
+width:
+  auto;
 }
 
 /* styles for groups */
-.x-grid-group-hd div {
-    position: relative;
-    height: 16px;
+.x - grid - group - hd div {
+position:
+  relative;
+height:
+  16px;
 }
 
-.ux-grow-action-item {
-    min-width: 16px;
-    height: 16px;
-    background-repeat: no-repeat;
-    background-position: 0 50% ! important;
-    margin: 0 0 0 4px;
-    padding: 0 ! important;
-    cursor: pointer;
-    float: left;
+.ux - grow - action - item {
+  min - width : 16px;
+height:
+  16px;
+  background - repeat: no - repeat;
+  background - position : 0 50 % !important;
+margin:
+  0 0 0 4px;
+padding:
+  0 !important;
+cursor:
+  pointer;
+  float: left;
 }
 
-.ext-ie .ux-grow-action-item {
-    width: 16px;
+.ext - ie.ux - grow - action - item {
+width:
+  16px;
 }
 
-.ux-action-right {
-    float: right;
-    margin: 0 3px 0 2px;
-    padding: 0 ! important;
+.ux - action - right {
+  float: right;
+margin:
+  0 3px 0 2px;
+padding:
+  0 !important;
 }
 
-.ux-grow-action-text {
-    padding: 0 ! important;
-    margin: 0 ! important;
-    background: transparent none ! important;
-    float: left;
+.ux - grow - action - text {
+padding:
+  0 !important;
+margin:
+  0 !important;
+background:
+  transparent none !important;
+  float: left;
 }
 
 /** vim: ts=4:sw=4:nu:fdc=4:nospell
@@ -1247,29 +1413,33 @@
  * @date      5. April 2008
  * @version   $Id: Ext.ux.form.LovCombo.css 189 2008-04-16 21:01:06Z jozo $
  *
- * @license Ext.ux.form.LovCombo.css is licensed under the terms of the Open Source
- * LGPL 3.0 license. Commercial use is permitted to the extent that the
+ * @license Ext.ux.form.LovCombo.css is licensed under the terms of the Open
+ * Source LGPL 3.0 license. Commercial use is permitted to the extent that the
  * code/component(s) do NOT become part of another Open Source or Commercially
  * licensed development library or toolkit without explicit permission.
  *
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
-.ux-lovcombo-icon {
-    width: 16px;
-    height: 16px;
-    float: left;
-    background-position: -1px -1px ! important;
-    background-repeat: no-repeat ! important;
+.ux - lovcombo - icon {
+width:
+  16px;
+height:
+  16px;
+  float: left;
+  background - position: -1px - 1px !important;
+  background - repeat: no - repeat !important;
 }
 
-.ux-lovcombo-icon-checked {
-    background: transparent
-        url(../extjs/resources/images/default/menu/checked.gif);
+.ux - lovcombo - icon - checked {
+background:
+  transparent url(../ extjs / resources / images / default / menu /
+      checked.gif);
 }
 
-.ux-lovcombo-icon-unchecked {
-    background: transparent
-        url(../extjs/resources/images/default/menu/unchecked.gif);
+.ux - lovcombo - icon - unchecked {
+background:
+  transparent url(../ extjs / resources / images / default / menu /
+      unchecked.gif);
 }
 
 /* eof */

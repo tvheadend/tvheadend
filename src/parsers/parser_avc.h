@@ -22,16 +22,16 @@
 #ifndef AVC_H__
 #define AVC_H__
 
-#include "tvheadend.h"
 #include "packet.h"
 #include "sbuf.h"
+#include "tvheadend.h"
 
-const uint8_t * avc_find_startcode(const uint8_t *p, const uint8_t *end);
+const uint8_t* avc_find_startcode(const uint8_t* p, const uint8_t* end);
 
-int avc_parse_nal_units(sbuf_t *sb, const uint8_t *buf_in, int size);
+int avc_parse_nal_units(sbuf_t* sb, const uint8_t* buf_in, int size);
 
-int isom_write_avcc(sbuf_t *sb, const uint8_t *src, int len);
+int isom_write_avcc(sbuf_t* sb, const uint8_t* src, int len);
 
-th_pkt_t *avc_convert_pkt(th_pkt_t *src);
+th_pkt_t* avc_convert_pkt(th_pkt_t* src);
 
-#endif 
+#endif

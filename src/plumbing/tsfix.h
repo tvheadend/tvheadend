@@ -21,9 +21,8 @@
 
 #include "tvheadend.h"
 
-streaming_target_t *tsfix_create(streaming_target_t *output);
+streaming_target_t* tsfix_create(streaming_target_t* output);
 
-void tsfix_destroy(streaming_target_t *gh);
-
+void tsfix_destroy(streaming_target_t* gh);
 
 #endif // TSFIX_H__

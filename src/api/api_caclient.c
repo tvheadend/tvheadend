@@ -17,29 +17,32 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tvheadend.h"
 #include "access.h"
-#include "htsmsg.h"
 #include "api.h"
 #include "descrambler/caclient.h"
+#include "htsmsg.h"
+#include "tvheadend.h"
 
 /*
  *
  */
-static int
-api_caclient_list
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  caclient_t *cac;
-  htsmsg_t *l, *e;
-  char buf[384];
+static int api_caclient_list(access_t* perm,
+    void*                              opaque,
+    const char*                        op,
+    htsmsg_t*                          args,
+    htsmsg_t**                         resp) {
+  caclient_t* cac;
+  htsmsg_t *  l, *e;
+  char        buf[384];
 
   l = htsmsg_create_list();
   tvh_mutex_lock(&global_lock);
-  TAILQ_FOREACH(cac, &caclients, cac_link) {
+  TAILQ_FOREACH (cac, &caclients, cac_link) {
     e = htsmsg_create_map();
     htsmsg_add_uuid(e, "uuid", &cac->cac_id.in_uuid);
-    htsmsg_add_str(e, "title", idnode_get_title(&cac->cac_id, perm->aa_lang_ui, buf, sizeof(buf)));
+    htsmsg_add_str(e,
+        "title",
+        idnode_get_title(&cac->cac_id, perm->aa_lang_ui, buf, sizeof(buf)));
     htsmsg_add_str(e, "status", caclient_get_status(cac));
     htsmsg_add_msg(l, NULL, e);
   }
@@ -49,12 +52,13 @@ api_caclient_list
   return 0;
 }
 
-static int
-api_caclient_builders
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  const idclass_t **r;
-  htsmsg_t *l, *e;
+static int api_caclient_builders(access_t* perm,
+    void*                                  opaque,
+    const char*                            op,
+    htsmsg_t*                              args,
+    htsmsg_t**                             resp) {
+  const idclass_t** r;
+  htsmsg_t *        l, *e;
 
   /* List of available builder classes */
   l = htsmsg_create_list();
@@ -69,18 +73,19 @@ api_caclient_builders
   return 0;
 }
 
-static int
-api_caclient_create
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int err = 0;
-  const char *clazz;
-  htsmsg_t *conf;
-  caclient_t *cac;
+static int api_caclient_create(access_t* perm,
+    void*                                opaque,
+    const char*                          op,
+    htsmsg_t*                            args,
+    htsmsg_t**                           resp) {
+  int         err = 0;
+  const char* clazz;
+  htsmsg_t*   conf;
+  caclient_t* cac;
 
   if (!(clazz = htsmsg_get_str(args, "class")))
     return EINVAL;
-  if (!(conf  = htsmsg_get_map(args, "conf")))
+  if (!(conf = htsmsg_get_map(args, "conf")))
     return EINVAL;
   htsmsg_set_str(conf, "class", clazz);
 
@@ -98,15 +103,16 @@ api_caclient_create
 /*
  * Init
  */
-void
-api_caclient_init ( void )
-{
+void api_caclient_init(void) {
   static api_hook_t ah[] = {
-    { "caclient/list",       ACCESS_ADMIN, api_caclient_list,     NULL },
-    { "caclient/class",      ACCESS_ADMIN, api_idnode_class, (void*)&caclient_class },
-    { "caclient/builders",   ACCESS_ADMIN, api_caclient_builders, NULL },
-    { "caclient/create",     ACCESS_ADMIN, api_caclient_create,   NULL },
-    { NULL },
+      {"caclient/list", ACCESS_ADMIN, api_caclient_list, NULL},
+      {"caclient/class",
+          ACCESS_ADMIN,
+          api_idnode_class,
+          (void*)&caclient_class},
+      {"caclient/builders", ACCESS_ADMIN, api_caclient_builders, NULL},
+      {"caclient/create", ACCESS_ADMIN, api_caclient_create, NULL},
+      {NULL},
   };
 
   api_register_all(ah);

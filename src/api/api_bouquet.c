@@ -20,23 +20,27 @@
 #ifndef __TVH_API_BOUQUET_H__
 #define __TVH_API_BOUQUET_H__
 
-#include "tvheadend.h"
-#include "bouquet.h"
 #include "access.h"
 #include "api.h"
+#include "bouquet.h"
+#include "tvheadend.h"
 
-static int
-api_bouquet_list
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  bouquet_t *bq;
-  htsmsg_t *l;
-  char ubuf[UUID_HEX_SIZE];
+static int api_bouquet_list(access_t* perm,
+    void*                             opaque,
+    const char*                       op,
+    htsmsg_t*                         args,
+    htsmsg_t**                        resp) {
+  bouquet_t* bq;
+  htsmsg_t*  l;
+  char       ubuf[UUID_HEX_SIZE];
 
   l = htsmsg_create_list();
   tvh_mutex_lock(&global_lock);
-  RB_FOREACH(bq, &bouquets, bq_link)
-    htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&bq->bq_id, ubuf), bq->bq_name ?: ""));
+  RB_FOREACH (bq, &bouquets, bq_link)
+    htsmsg_add_msg(l,
+        NULL,
+        htsmsg_create_key_val(idnode_uuid_as_str(&bq->bq_id, ubuf),
+            bq->bq_name ?: ""));
   tvh_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
@@ -44,23 +48,23 @@ api_bouquet_list
   return 0;
 }
 
-static void
-api_bouquet_grid
-  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf )
-{
-  bouquet_t *bq;
+static void api_bouquet_grid(access_t* perm,
+    idnode_set_t*                      ins,
+    api_idnode_grid_conf_t*            conf) {
+  bouquet_t* bq;
 
-  RB_FOREACH(bq, &bouquets, bq_link)
+  RB_FOREACH (bq, &bouquets, bq_link)
     idnode_set_add(ins, (idnode_t*)bq, &conf->filter, perm->aa_lang_ui);
 }
 
-static int
-api_bouquet_create
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  htsmsg_t *conf;
-  bouquet_t *bq;
-  const char *s;
+static int api_bouquet_create(access_t* perm,
+    void*                               opaque,
+    const char*                         op,
+    htsmsg_t*                           args,
+    htsmsg_t**                          resp) {
+  htsmsg_t*   conf;
+  bouquet_t*  bq;
+  const char* s;
 
   if (!(conf = htsmsg_get_map(args, "conf")))
     return EINVAL;
@@ -77,21 +81,23 @@ api_bouquet_create
   return 0;
 }
 
-static int
-bouquet_cb
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp,
-    int (*cb)(const char *uuid) )
-{
-  htsmsg_field_t *f;
-  htsmsg_t *uuids;
-  const char *uuid;
-  int r = 0;
+static int bouquet_cb(access_t* perm,
+    void*                       opaque,
+    const char*                 op,
+    htsmsg_t*                   args,
+    htsmsg_t**                  resp,
+    int (*cb)(const char* uuid)) {
+  htsmsg_field_t* f;
+  htsmsg_t*       uuids;
+  const char*     uuid;
+  int             r = 0;
 
   if (!(f = htsmsg_field_find(args, "uuid")))
     return EINVAL;
   if ((uuids = htsmsg_field_get_list(f))) {
     HTSMSG_FOREACH(f, uuids) {
-      if (!(uuid = htsmsg_field_get_str(f))) continue;
+      if (!(uuid = htsmsg_field_get_str(f)))
+        continue;
       tvh_mutex_lock(&global_lock);
       cb(uuid);
       tvh_mutex_unlock(&global_lock);
@@ -107,9 +113,8 @@ bouquet_cb
   return r;
 }
 
-static int bouquet_cb_scan(const char *uuid)
-{
-  bouquet_t *bq = bouquet_find_by_uuid(uuid);
+static int bouquet_cb_scan(const char* uuid) {
+  bouquet_t* bq = bouquet_find_by_uuid(uuid);
   if (bq) {
     bouquet_scan(bq);
     return 0;
@@ -117,16 +122,16 @@ static int bouquet_cb_scan(const char *uuid)
   return ENOENT;
 }
 
-static int
-api_bouquet_scan
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
+static int api_bouquet_scan(access_t* perm,
+    void*                             opaque,
+    const char*                       op,
+    htsmsg_t*                         args,
+    htsmsg_t**                        resp) {
   return bouquet_cb(perm, opaque, op, args, resp, bouquet_cb_scan);
 }
 
-static int bouquet_cb_detach(const char *uuid)
-{
-  channel_t *ch = channel_find_by_uuid(uuid);
+static int bouquet_cb_detach(const char* uuid) {
+  channel_t* ch = channel_find_by_uuid(uuid);
   if (ch) {
     bouquet_detach(ch);
     return 0;
@@ -134,24 +139,24 @@ static int bouquet_cb_detach(const char *uuid)
   return ENOENT;
 }
 
-static int
-api_bouquet_detach
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
+static int api_bouquet_detach(access_t* perm,
+    void*                               opaque,
+    const char*                         op,
+    htsmsg_t*                           args,
+    htsmsg_t**                          resp) {
   return bouquet_cb(perm, opaque, op, args, resp, bouquet_cb_detach);
 }
 
-void api_bouquet_init ( void )
-{
+void api_bouquet_init(void) {
   static api_hook_t ah[] = {
-    { "bouquet/list",    ACCESS_ADMIN, api_bouquet_list, NULL },
-    { "bouquet/class",   ACCESS_ADMIN, api_idnode_class, (void*)&bouquet_class },
-    { "bouquet/grid",    ACCESS_ADMIN, api_idnode_grid,  api_bouquet_grid },
-    { "bouquet/create",  ACCESS_ADMIN, api_bouquet_create, NULL },
-    { "bouquet/scan",    ACCESS_ADMIN, api_bouquet_scan, NULL },
-    { "bouquet/detach",  ACCESS_ADMIN, api_bouquet_detach, NULL },
+      {"bouquet/list", ACCESS_ADMIN, api_bouquet_list, NULL},
+      {"bouquet/class", ACCESS_ADMIN, api_idnode_class, (void*)&bouquet_class},
+      {"bouquet/grid", ACCESS_ADMIN, api_idnode_grid, api_bouquet_grid},
+      {"bouquet/create", ACCESS_ADMIN, api_bouquet_create, NULL},
+      {"bouquet/scan", ACCESS_ADMIN, api_bouquet_scan, NULL},
+      {"bouquet/detach", ACCESS_ADMIN, api_bouquet_detach, NULL},
 
-    { NULL },
+      {NULL},
   };
 
   api_register_all(ah);

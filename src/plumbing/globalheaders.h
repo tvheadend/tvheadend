@@ -21,9 +21,8 @@
 
 #include "tvheadend.h"
 
-streaming_target_t *globalheaders_create(streaming_target_t *output);
+streaming_target_t* globalheaders_create(streaming_target_t* output);
 
-void globalheaders_destroy(streaming_target_t *gh);
-
+void globalheaders_destroy(streaming_target_t* gh);
 
 #endif // GLOBALHEADERS_H__

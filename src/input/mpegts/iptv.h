@@ -20,10 +20,10 @@
 #ifndef __IPTV_H__
 #define __IPTV_H__
 
-void iptv_bouquet_trigger_by_uuid(const char *uuid);
+void iptv_bouquet_trigger_by_uuid(const char* uuid);
 
-void iptv_init ( void );
-void iptv_done ( void );
+void iptv_init(void);
+void iptv_done(void);
 
 #endif /* __IPTV_H__ */
 

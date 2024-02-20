@@ -17,25 +17,23 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tvheadend.h"
-#include "channels.h"
 #include "access.h"
 #include "api.h"
-#include "epg.h"
-#include "imagecache.h"
+#include "channels.h"
 #include "dvr/dvr.h"
+#include "epg.h"
+#include "epggrab.h" //Needed to be able to test for epggrab_conf.epgdb_processparentallabels
+#include "imagecache.h"
 #include "lang_codes.h"
 #include "string_list.h"
-#include "epggrab.h"  //Needed to be able to test for epggrab_conf.epgdb_processparentallabels
+#include "tvheadend.h"
 
-static htsmsg_t *
-api_epg_get_list ( const char *s )
-{
-  htsmsg_t *m = NULL;
-  char *r, *saveptr = NULL;
+static htsmsg_t* api_epg_get_list(const char* s) {
+  htsmsg_t* m = NULL;
+  char *    r, *saveptr = NULL;
   if (s && s[0] != '\0') {
     s = r = strdup(s);
-    r = strtok_r(r, ";", &saveptr);
+    r     = strtok_r(r, ";", &saveptr);
     while (r) {
       while (*r != '\0' && *r <= ' ')
         r++;
@@ -46,17 +44,15 @@ api_epg_get_list ( const char *s )
       }
       r = strtok_r(NULL, ";", &saveptr);
     }
-    free((char *)s);
+    free((char*)s);
   }
   return m;
 }
 
-static void
-api_epg_add_channel ( htsmsg_t *m, channel_t *ch, const char *blank )
-{
-  int64_t chnum;
-  char buf[128];
-  const char *s;
+static void api_epg_add_channel(htsmsg_t* m, channel_t* ch, const char* blank) {
+  int64_t     chnum;
+  char        buf[128];
+  const char* s;
   htsmsg_add_str(m, "channelName", channel_get_name(ch, blank));
   htsmsg_add_uuid(m, "channelUuid", &ch->ch_id.in_uuid);
   if ((chnum = channel_get_number(ch)) >= 0) {
@@ -76,19 +72,21 @@ api_epg_add_channel ( htsmsg_t *m, channel_t *ch, const char *blank )
   }
 }
 
-static htsmsg_t *
-api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, const char **blank )
-{
-  const char *s, *blank2 = NULL;
-  char buf[128];
-  channel_t *ch = eb->channel;
-  htsmsg_t *m, *m2;
+static htsmsg_t* api_epg_entry(epg_broadcast_t* eb,
+    const char*                                 lang,
+    const access_t*                             perm,
+    const char**                                blank) {
+  const char *      s, *blank2 = NULL;
+  char              buf[128];
+  channel_t*        ch = eb->channel;
+  htsmsg_t *        m, *m2;
   epg_episode_num_t epnum;
-  epg_genre_t *eg;
-  dvr_entry_t *de;
-  char ubuf[UUID_HEX_SIZE];
+  epg_genre_t*      eg;
+  dvr_entry_t*      de;
+  char              ubuf[UUID_HEX_SIZE];
 
-  if (!ch) return NULL;
+  if (!ch)
+    return NULL;
 
   if (blank == NULL)
     blank = &blank2;
@@ -170,8 +168,14 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
   }
   if (epnum.text)
     htsmsg_add_str(m, "episodeOnscreen", epnum.text);
-  else if (epg_broadcast_epnumber_format(eb, buf, sizeof(buf), NULL,
-                                         "s%02d", ".", "e%02d", ""))
+  else if (epg_broadcast_epnumber_format(eb,
+               buf,
+               sizeof(buf),
+               NULL,
+               "s%02d",
+               ".",
+               "e%02d",
+               ""))
     htsmsg_add_str(m, "episodeOnscreen", buf);
 
   /* Image */
@@ -188,23 +192,21 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
   if (eb->age_rating)
     htsmsg_add_u32(m, "ageRating", eb->age_rating);
 
-  if(epggrab_conf.epgdb_processparentallabels)
-  {
-    if (eb->rating_label)
-      {
-        if(eb->rating_label->rl_display_label){
-          htsmsg_add_str(m, "ratingLabel", eb->rating_label->rl_display_label);
-        }
-        if(eb->rating_label->rl_icon){
-          s = eb->rating_label->rl_icon;
-          if (!strempty(s)) {
-            s = imagecache_get_propstr(s, buf, sizeof(buf));
-            if (s)
-              htsmsg_add_str(m, "ratingLabelIcon", s);
-          }//END we got an imagecache
-        }//END rating label icon is not null
-      }//END rating label is not null
-  }//END parental labels enabled.
+  if (epggrab_conf.epgdb_processparentallabels) {
+    if (eb->rating_label) {
+      if (eb->rating_label->rl_display_label) {
+        htsmsg_add_str(m, "ratingLabel", eb->rating_label->rl_display_label);
+      }
+      if (eb->rating_label->rl_icon) {
+        s = eb->rating_label->rl_icon;
+        if (!strempty(s)) {
+          s = imagecache_get_propstr(s, buf, sizeof(buf));
+          if (s)
+            htsmsg_add_str(m, "ratingLabelIcon", s);
+        } // END we got an imagecache
+      }   // END rating label icon is not null
+    }     // END rating label is not null
+  }       // END parental labels enabled.
 
   if (eb->first_aired)
     htsmsg_add_s64(m, "first_aired", eb->first_aired);
@@ -213,7 +215,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
 
   /* Content Type */
   m2 = NULL;
-  LIST_FOREACH(eg, &eb->genre, link) {
+  LIST_FOREACH (eg, &eb->genre, link) {
     if (m2 == NULL)
       m2 = htsmsg_create_list();
     htsmsg_add_u32(m2, NULL, eg->code);
@@ -224,11 +226,11 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
   /* Recording */
   if (eb->channel && !access_verify2(perm, ACCESS_RECORDER)) {
     /* Note: only first hit is matched */
-    LIST_FOREACH(de, &eb->channel->ch_dvrs, de_channel_link) {
+    LIST_FOREACH (de, &eb->channel->ch_dvrs, de_channel_link) {
       if (de->de_bcast != eb)
         continue;
       if (access_verify_list(perm->aa_dvrcfgs,
-                             idnode_uuid_as_str(&de->de_config->dvr_id, ubuf)))
+              idnode_uuid_as_str(&de->de_config->dvr_id, ubuf)))
         continue;
       htsmsg_add_uuid(m, "dvrUuid", &de->de_id.in_uuid);
       htsmsg_add_str(m, "dvrState", dvr_entry_schedstatus(de));
@@ -244,17 +246,15 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
 }
 
 static void
-api_epg_filter_set_str
-  ( epg_filter_str_t *f, const char *str, int comp )
-{
-  f->str = strdup(str);
+api_epg_filter_set_str(epg_filter_str_t* f, const char* str, int comp) {
+  f->str  = strdup(str);
   f->comp = comp;
 }
 
-static void
-api_epg_filter_add_str
-  ( epg_query_t *eq, const char *k, const char *v, int comp )
-{
+static void api_epg_filter_add_str(epg_query_t* eq,
+    const char*                                 k,
+    const char*                                 v,
+    int                                         comp) {
   if (!strcmp(k, "channelName"))
     api_epg_filter_set_str(&eq->channel_name, v, comp);
   else if (!strcmp(k, "title"))
@@ -270,9 +270,7 @@ api_epg_filter_add_str
 }
 
 static void
-api_epg_filter_set_num
-  ( epg_filter_num_t *f, int64_t v1, int64_t v2, int comp )
-{
+api_epg_filter_set_num(epg_filter_num_t* f, int64_t v1, int64_t v2, int comp) {
   /* Range? */
   if (f->comp == EC_LT && comp == EC_GT) {
     f->val2 = f->val1;
@@ -290,10 +288,11 @@ api_epg_filter_set_num
   f->comp = comp;
 }
 
-static void
-api_epg_filter_add_num
-  ( epg_query_t *eq, const char *k, int64_t v1, int64_t v2, int comp )
-{
+static void api_epg_filter_add_num(epg_query_t* eq,
+    const char*                                 k,
+    int64_t                                     v1,
+    int64_t                                     v2,
+    int                                         comp) {
   if (!strcmp(k, "start"))
     api_epg_filter_set_num(&eq->start, v1, v2, comp);
   else if (!strcmp(k, "stop"))
@@ -308,53 +307,48 @@ api_epg_filter_add_num
     api_epg_filter_set_num(&eq->age, v1, v2, comp);
 }
 
-static struct strtab sortcmptab[] = {
-  { "start",         ESK_START },
-  { "stop",          ESK_STOP },
-  { "duration",      ESK_DURATION },
-  { "title",         ESK_TITLE },
-  { "subtitle",      ESK_SUBTITLE },
-  { "summary",       ESK_SUMMARY },
-  { "description",   ESK_DESCRIPTION },
-  { "extratext",     ESK_EXTRATEXT },
-  { "channelName",   ESK_CHANNEL },
-  { "channelNumber", ESK_CHANNEL_NUM },
-  { "starRating",    ESK_STARS },
-  { "ageRating",     ESK_AGE },
-  { "genre",         ESK_GENRE }
-};
+static struct strtab sortcmptab[] = {{"start", ESK_START},
+    {"stop", ESK_STOP},
+    {"duration", ESK_DURATION},
+    {"title", ESK_TITLE},
+    {"subtitle", ESK_SUBTITLE},
+    {"summary", ESK_SUMMARY},
+    {"description", ESK_DESCRIPTION},
+    {"extratext", ESK_EXTRATEXT},
+    {"channelName", ESK_CHANNEL},
+    {"channelNumber", ESK_CHANNEL_NUM},
+    {"starRating", ESK_STARS},
+    {"ageRating", ESK_AGE},
+    {"genre", ESK_GENRE}};
 
-static struct strtab filtcmptab[] = {
-  { "gt",    EC_GT },
-  { "lt",    EC_LT },
-  { "eq",    EC_EQ },
-  { "regex", EC_RE },
-  { "range", EC_RG }
-};
+static struct strtab filtcmptab[] = {{"gt", EC_GT},
+    {"lt", EC_LT},
+    {"eq", EC_EQ},
+    {"regex", EC_RE},
+    {"range", EC_RG}};
 
-static int64_t
-api_epg_decode_channel_num ( const char *s )
-{
-   int64_t v = atol(s);
-   const char *s1 = strchr(s, '.');
-   if (s1)
-     v += atol(s1 + 1) % CHANNEL_SPLIT;
-   return v;
+static int64_t api_epg_decode_channel_num(const char* s) {
+  int64_t     v  = atol(s);
+  const char* s1 = strchr(s, '.');
+  if (s1)
+    v += atol(s1 + 1) % CHANNEL_SPLIT;
+  return v;
 }
 
-static int
-api_epg_grid
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int i;
-  epg_query_t eq;
-  const char *str, *blank = NULL;
-  char *lang;
-  uint32_t start, limit, end, genre;
-  int64_t duration_min, duration_max;
+static int api_epg_grid(access_t* perm,
+    void*                         opaque,
+    const char*                   op,
+    htsmsg_t*                     args,
+    htsmsg_t**                    resp) {
+  int             i;
+  epg_query_t     eq;
+  const char *    str, *blank = NULL;
+  char*           lang;
+  uint32_t        start, limit, end, genre;
+  int64_t         duration_min, duration_max;
   htsmsg_field_t *f, *f2;
-  htsmsg_t *l = NULL, *e, *filter;
-  const char* mode;
+  htsmsg_t *      l = NULL, *e, *filter;
+  const char*     mode;
 
   memset(&eq, 0, sizeof(eq));
 
@@ -362,12 +356,12 @@ api_epg_grid
   if (lang)
     eq.lang = strdup(lang);
   mode = htsmsg_get_str(args, "mode");
-  str = htsmsg_get_str(args, "title");
+  str  = htsmsg_get_str(args, "title");
   if (str)
     eq.stitle = strdup(str);
   eq.fulltext = htsmsg_get_bool_or_default(args, "fulltext", 0);
   eq.new_only = htsmsg_get_bool_or_default(args, "new", 0);
-  str = htsmsg_get_str(args, "channel");
+  str         = htsmsg_get_str(args, "channel");
   if (str)
     eq.channel = strdup(str);
   str = htsmsg_get_str(args, "channelTag");
@@ -384,11 +378,11 @@ api_epg_grid
     eq.cat3 = strdup(str);
 
   if (mode != NULL) {
-      if (!strcmp(mode, "now")) {
-        eq.start.comp = EC_LT;
-        eq.stop.comp = EC_GT;
-        eq.start.val1 = eq.stop.val1 = gclk();
-      }
+    if (!strcmp(mode, "now")) {
+      eq.start.comp = EC_LT;
+      eq.stop.comp  = EC_GT;
+      eq.start.val1 = eq.stop.val1 = gclk();
+    }
   }
 
   duration_min = -1;
@@ -402,8 +396,8 @@ api_epg_grid
   }
 
   if (!htsmsg_get_u32(args, "contentType", &genre)) {
-    eq.genre = eq.genre_static;
-    eq.genre[0] = genre;
+    eq.genre       = eq.genre_static;
+    eq.genre[0]    = genre;
     eq.genre_count = 1;
   }
 
@@ -411,20 +405,24 @@ api_epg_grid
   if ((filter = htsmsg_get_list(args, "filter"))) {
     HTSMSG_FOREACH(f, filter) {
       const char *k, *t, *v;
-      int comp;
-      if (!(e = htsmsg_get_map_by_field(f))) continue;
-      if (!(k = htsmsg_get_str(e, "field"))) continue;
-      if (!(t = htsmsg_get_str(e, "type")))  continue;
+      int         comp;
+      if (!(e = htsmsg_get_map_by_field(f)))
+        continue;
+      if (!(k = htsmsg_get_str(e, "field")))
+        continue;
+      if (!(t = htsmsg_get_str(e, "type")))
+        continue;
       comp = str2val(htsmsg_get_str(e, "comparison") ?: "", filtcmptab);
-      if (comp == -1) comp = EC_EQ;
+      if (comp == -1)
+        comp = EC_EQ;
       if (!strcmp(k, "channelNumber")) {
         if (!strcmp(t, "numeric")) {
           f2 = htsmsg_field_find(e, "value");
           if (f2) {
             int64_t v1, v2 = 0;
             if (f2->hmf_type == HMF_STR) {
-              const char *s = htsmsg_field_get_str(f2);
-              const char *z = s ? strchr(s, ';') : NULL;
+              const char* s = htsmsg_field_get_str(f2);
+              const char* z = s ? strchr(s, ';') : NULL;
               if (s) {
                 v1 = api_epg_decode_channel_num(s);
                 if (z)
@@ -446,26 +444,26 @@ api_epg_grid
           if (f2) {
             int64_t v;
             if (f2->hmf_type == HMF_STR) {
-              htsmsg_t *z = api_epg_get_list(htsmsg_field_get_str(f2));
+              htsmsg_t* z = api_epg_get_list(htsmsg_field_get_str(f2));
               if (z) {
-                htsmsg_field_t *f3;
-                uint32_t count = 0;
+                htsmsg_field_t* f3;
+                uint32_t        count = 0;
                 HTSMSG_FOREACH(f3, z)
-                  count++;
+                count++;
                 if (ARRAY_SIZE(eq.genre_static) > count)
                   eq.genre = malloc(sizeof(eq.genre[0]) * count);
                 else
                   eq.genre = eq.genre_static;
                 HTSMSG_FOREACH(f3, z)
-                  if (!htsmsg_field_get_s64(f3, &v))
-                    eq.genre[eq.genre_count++] = v;
+                if (!htsmsg_field_get_s64(f3, &v))
+                  eq.genre[eq.genre_count++] = v;
                 htsmsg_destroy(z);
               }
             } else {
               if (!htsmsg_field_get_s64(f2, &v)) {
                 eq.genre_count = 1;
-                eq.genre = eq.genre_static;
-                eq.genre[0] = v;
+                eq.genre       = eq.genre_static;
+                eq.genre[0]    = v;
               }
             }
           }
@@ -478,9 +476,9 @@ api_epg_grid
         if (f2) {
           int64_t v1 = 0, v2 = 0;
           if (f2->hmf_type == HMF_STR) {
-            const char *z = htsmsg_field_get_str(f2);
+            const char* z = htsmsg_field_get_str(f2);
             if (z) {
-              const char *z2 = strchr(z, ';');
+              const char* z2 = strchr(z, ';');
               if (z2)
                 v2 = strtoll(z2 + 1, NULL, 0);
               v1 = strtoll(z, NULL, 0);
@@ -520,7 +518,8 @@ api_epg_grid
   end   = MIN(eq.entries, start + limit);
   l     = htsmsg_create_list();
   for (i = start; i < end; i++) {
-    if (!(e = api_epg_entry(eq.result[i], lang, perm, &blank))) continue;
+    if (!(e = api_epg_entry(eq.result[i], lang, perm, &blank)))
+      continue;
     htsmsg_add_msg(l, NULL, e);
   }
   tvh_mutex_unlock(&global_lock);
@@ -536,59 +535,61 @@ api_epg_grid
   return 0;
 }
 
-static int
-api_epg_sort_by_time_t(const void *a, const void *b, void *arg)
-{
-  const time_t *at= (const time_t*)a;
-  const time_t *bt= (const time_t*)b;
+static int api_epg_sort_by_time_t(const void* a, const void* b, void* arg) {
+  const time_t* at = (const time_t*)a;
+  const time_t* bt = (const time_t*)b;
   return *at - *bt;
 }
 
 /// Generate a sorted list of episodes that
 /// do NOT match ebc_skip in to message l.
 /// @return number of entries allocated.
-static uint32_t
-api_epg_episode_sorted(const struct epg_set *set,
-                       const access_t *perm,
-                       htsmsg_t *l,
-                       const char *lang,
-                       const epg_broadcast_t *ebc_skip)
-{
+static uint32_t api_epg_episode_sorted(const struct epg_set* set,
+    const access_t*                                          perm,
+    htsmsg_t*                                                l,
+    const char*                                              lang,
+    const epg_broadcast_t*                                   ebc_skip) {
   typedef struct {
-    time_t start;
-    htsmsg_t *m;
+    time_t    start;
+    htsmsg_t* m;
   } bcast_entry_t;
 
-  epg_broadcast_t *ebc;
-  htsmsg_t *m;
-  bcast_entry_t *bcast_entries = NULL;
-  const epg_set_item_t *item;
-  bcast_entry_t new_bcast_entry;
-  size_t num_allocated = 0;
-  size_t num_entries = 0;
-  size_t i;
+  epg_broadcast_t*      ebc;
+  htsmsg_t*             m;
+  bcast_entry_t*        bcast_entries = NULL;
+  const epg_set_item_t* item;
+  bcast_entry_t         new_bcast_entry;
+  size_t                num_allocated = 0;
+  size_t                num_entries   = 0;
+  size_t                i;
 
-  LIST_FOREACH(item, &set->broadcasts, item_link) {
+  LIST_FOREACH (item, &set->broadcasts, item_link) {
     ebc = item->broadcast;
     if (ebc != ebc_skip) {
       m = api_epg_entry(ebc, lang, perm, NULL);
       if (num_entries == num_allocated) {
         num_allocated = MAX(100, num_allocated + 100);
-        /* We don't expect any/many reallocs so we store physical struct instead of pointers */
-        bcast_entries = realloc(bcast_entries, num_allocated * sizeof(bcast_entry_t));
+        /* We don't expect any/many reallocs so we store physical struct instead
+         * of pointers */
+        bcast_entries =
+            realloc(bcast_entries, num_allocated * sizeof(bcast_entry_t));
       }
 
-      new_bcast_entry.start = htsmsg_get_u32_or_default(m, "start", 0);
-      new_bcast_entry.m = m;
+      new_bcast_entry.start        = htsmsg_get_u32_or_default(m, "start", 0);
+      new_bcast_entry.m            = m;
       bcast_entries[num_entries++] = new_bcast_entry;
     }
   }
 
-  if(bcast_entries != NULL)
-    tvh_qsort_r(bcast_entries, num_entries, sizeof(bcast_entry_t), api_epg_sort_by_time_t, 0);
+  if (bcast_entries != NULL)
+    tvh_qsort_r(bcast_entries,
+        num_entries,
+        sizeof(bcast_entry_t),
+        api_epg_sort_by_time_t,
+        0);
 
-  for (i=0; i<num_entries; ++i) {
-    htsmsg_t *m = bcast_entries[i].m;
+  for (i = 0; i < num_entries; ++i) {
+    htsmsg_t* m = bcast_entries[i].m;
     htsmsg_add_msg(l, NULL, m);
   }
   free(bcast_entries);
@@ -596,13 +597,13 @@ api_epg_episode_sorted(const struct epg_set *set,
   return num_entries;
 }
 
-
-static void
-api_epg_episode_broadcasts
-  ( access_t *perm, htsmsg_t *l, const char *lang, epg_broadcast_t *ep,
-    uint32_t *entries, epg_broadcast_t *ebc_skip )
-{
-  epg_set_t *episodelink = ep->episodelink;
+static void api_epg_episode_broadcasts(access_t* perm,
+    htsmsg_t*                                    l,
+    const char*                                  lang,
+    epg_broadcast_t*                             ep,
+    uint32_t*                                    entries,
+    epg_broadcast_t*                             ebc_skip) {
+  epg_set_t* episodelink = ep->episodelink;
 
   if (episodelink == NULL)
     return;
@@ -613,14 +614,15 @@ api_epg_episode_broadcasts
   *entries = api_epg_episode_sorted(episodelink, perm, l, lang, ebc_skip);
 }
 
-static int
-api_epg_alternative
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  uint32_t id, entries = 0;
-  htsmsg_t *l;
-  epg_broadcast_t *e;
-  char *lang;
+static int api_epg_alternative(access_t* perm,
+    void*                                opaque,
+    const char*                          op,
+    htsmsg_t*                            args,
+    htsmsg_t**                           resp) {
+  uint32_t         id, entries = 0;
+  htsmsg_t*        l;
+  epg_broadcast_t* e;
+  char*            lang;
 
   if (htsmsg_get_u32(args, "eventId", &id))
     return EINVAL;
@@ -644,16 +646,17 @@ api_epg_alternative
   return 0;
 }
 
-static int
-api_epg_related
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  uint32_t id, entries = 0;
-  htsmsg_t *l;
-  epg_broadcast_t *e;
-  char *lang, *title_esc, *title_anchor;
-  epg_set_t *serieslink = NULL;
-  const char *title = NULL;
+static int api_epg_related(access_t* perm,
+    void*                            opaque,
+    const char*                      op,
+    htsmsg_t*                        args,
+    htsmsg_t**                       resp) {
+  uint32_t         id, entries = 0;
+  htsmsg_t*        l;
+  epg_broadcast_t* e;
+  char *           lang, *title_esc, *title_anchor;
+  epg_set_t*       serieslink = NULL;
+  const char*      title      = NULL;
 
   if (htsmsg_get_u32(args, "eventId", &id))
     return EINVAL;
@@ -678,7 +681,7 @@ api_epg_related
       /* Need to escape/anchor the search, otherwise the film "elf"
        *  matches titles containing "self".
        */
-      title_esc = regexp_escape(title);
+      title_esc    = regexp_escape(title);
       title_anchor = alloca(strlen(title_esc) + 3);
       sprintf(title_anchor, "^%s$", title_esc);
       htsmsg_add_str(args, "title", title_anchor);
@@ -705,16 +708,17 @@ api_epg_related
   return 0;
 }
 
-static int
-api_epg_load
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  uint32_t id = 0, entries = 0;
-  htsmsg_t *l, *ids = NULL, *m;
-  htsmsg_field_t *f;
-  epg_broadcast_t *e;
-  const char *blank = NULL;
-  char *lang;
+static int api_epg_load(access_t* perm,
+    void*                         opaque,
+    const char*                   op,
+    htsmsg_t*                     args,
+    htsmsg_t**                    resp) {
+  uint32_t         id = 0, entries = 0;
+  htsmsg_t *       l, *ids         = NULL, *m;
+  htsmsg_field_t*  f;
+  epg_broadcast_t* e;
+  const char*      blank = NULL;
+  char*            lang;
 
   if (!(f = htsmsg_field_find(args, "eventId")))
     return EINVAL;
@@ -729,10 +733,13 @@ api_epg_load
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   if (ids) {
     HTSMSG_FOREACH(f, ids) {
-      if (htsmsg_field_get_u32(f, &id)) continue;
+      if (htsmsg_field_get_u32(f, &id))
+        continue;
       e = epg_broadcast_find_by_id(id);
-      if (e == NULL) continue;
-      if ((m = api_epg_entry(e, lang, perm, &blank)) == NULL) continue;
+      if (e == NULL)
+        continue;
+      if ((m = api_epg_entry(e, lang, perm, &blank)) == NULL)
+        continue;
       htsmsg_add_msg(l, NULL, m);
       entries++;
     }
@@ -754,12 +761,13 @@ api_epg_load
   return 0;
 }
 
-static int
-api_epg_content_type_list(access_t *perm, void *opaque, const char *op,
-                          htsmsg_t *args, htsmsg_t **resp)
-{
-  htsmsg_t *array;
-  int full = 0;
+static int api_epg_content_type_list(access_t* perm,
+    void*                                      opaque,
+    const char*                                op,
+    htsmsg_t*                                  args,
+    htsmsg_t**                                 resp) {
+  htsmsg_t* array;
+  int       full = 0;
 
   htsmsg_get_bool(args, "full", &full);
 
@@ -769,16 +777,18 @@ api_epg_content_type_list(access_t *perm, void *opaque, const char *op,
   return 0;
 }
 
-void api_epg_init ( void )
-{
+void api_epg_init(void) {
   static api_hook_t ah[] = {
-    { "epg/events/grid",        ACCESS_ANONYMOUS, api_epg_grid, NULL },
-    { "epg/events/alternative", ACCESS_ANONYMOUS, api_epg_alternative, NULL },
-    { "epg/events/related",     ACCESS_ANONYMOUS, api_epg_related, NULL },
-    { "epg/events/load",        ACCESS_ANONYMOUS, api_epg_load, NULL },
-    { "epg/content_type/list",  ACCESS_ANONYMOUS, api_epg_content_type_list, NULL },
+      {"epg/events/grid", ACCESS_ANONYMOUS, api_epg_grid, NULL},
+      {"epg/events/alternative", ACCESS_ANONYMOUS, api_epg_alternative, NULL},
+      {"epg/events/related", ACCESS_ANONYMOUS, api_epg_related, NULL},
+      {"epg/events/load", ACCESS_ANONYMOUS, api_epg_load, NULL},
+      {"epg/content_type/list",
+          ACCESS_ANONYMOUS,
+          api_epg_content_type_list,
+          NULL},
 
-    { NULL },
+      {NULL},
   };
 
   api_register_all(ah);

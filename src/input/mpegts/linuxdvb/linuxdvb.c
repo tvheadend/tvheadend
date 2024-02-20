@@ -17,15 +17,14 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tvheadend.h"
 #include "input.h"
-#include "settings.h"
 #include "linuxdvb_private.h"
+#include "settings.h"
+#include "tvheadend.h"
 
 int linuxdvb_adapter_mask;
 
-void linuxdvb_init ( int adapter_mask )
-{
+void linuxdvb_init(int adapter_mask) {
   linuxdvb_adapter_mask = adapter_mask;
 
   /* Initialise en50494 locks */
@@ -35,7 +34,6 @@ void linuxdvb_init ( int adapter_mask )
   linuxdvb_adapter_init();
 }
 
-void linuxdvb_done ( void )
-{
+void linuxdvb_done(void) {
   linuxdvb_adapter_done();
 }

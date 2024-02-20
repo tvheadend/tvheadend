@@ -20,33 +20,33 @@
 #define __DVB_SCANFILES_H__
 
 typedef struct scanfile_network {
-  const char                  *sfn_id;
-  const char                  *sfn_name;
-  const char                  *sfn_path;
-  const char                  *sfn_type;
-  int                          sfn_satpos;
+  const char* sfn_id;
+  const char* sfn_name;
+  const char* sfn_path;
+  const char* sfn_type;
+  int         sfn_satpos;
   LIST_ENTRY(scanfile_network) sfn_link;
-  LIST_HEAD(,dvb_mux_conf)     sfn_muxes;
+  LIST_HEAD(, dvb_mux_conf) sfn_muxes;
 } scanfile_network_t;
 
 typedef struct scanfile_region {
-  const char                  *sfr_id;
-  const char                  *sfr_name;
-  LIST_ENTRY(scanfile_region)  sfr_link;
-  LIST_HEAD(,scanfile_network) sfr_networks;
+  const char* sfr_id;
+  const char* sfr_name;
+  LIST_ENTRY(scanfile_region) sfr_link;
+  LIST_HEAD(, scanfile_network) sfr_networks;
 } scanfile_region_t;
 
 typedef struct scanfile_region_list {
-  LIST_HEAD(,scanfile_region)  srl_regions;
-  const char                  *srl_type;
-  const char                  *srl_alt_type;
+  LIST_HEAD(, scanfile_region) srl_regions;
+  const char* srl_type;
+  const char* srl_alt_type;
 } scanfile_region_list_t;
 
-void scanfile_init ( const char *muxconf_path, int lock );
-void scanfile_done ( void );
+void scanfile_init(const char* muxconf_path, int lock);
+void scanfile_done(void);
 
-scanfile_region_list_t *scanfile_find_region_list ( const char *type );
-scanfile_network_t *scanfile_find ( const char *id );
-void scanfile_clean( scanfile_network_t *sfn );
-  
+scanfile_region_list_t* scanfile_find_region_list(const char* type);
+scanfile_network_t*     scanfile_find(const char* id);
+void                    scanfile_clean(scanfile_network_t* sfn);
+
 #endif /* __DVB_SCANFILES_H__ */
