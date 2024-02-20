@@ -2606,7 +2606,7 @@ msgstr "Typ funkcji skrótu szyfrowania"
 
 #: src/tvhlog.c:152 src/dvr/dvr_db.c:4199
 msgid "Digital Video Recorder"
-msgstr "Cyfrowy rejestrator wideo"
+msgstr "Rejestrator (DVR)"
 
 #: src/dvr/dvr_db.c:4516 src/dvr/dvr_autorec.c:1127 src/dvr/dvr_timerec.c:561
 msgid "Directory"
@@ -11099,7 +11099,7 @@ msgstr "Format pikseli wideo."
 
 #: src/access.c:1843
 msgid "Video recorder"
-msgstr "Nagrywarka wideo"
+msgstr "Rejestrator wideo"
 
 #: src/access.c:1844
 msgid ""
@@ -11135,7 +11135,7 @@ msgstr "WEBM/av-lib"
 
 #: src/profile.c:2261
 msgid "WEBM/built-in"
-msgstr "WEBM/built-in"
+msgstr "WEBM/wbudowany"
 
 #: src/dvr/dvr_db.c:660
 msgid "Waiting for EPG running flag"
