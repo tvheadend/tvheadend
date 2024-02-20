@@ -143,7 +143,7 @@ msgstr "Przerwij"
 
 #: src/webui/static/app/dvr.js:555
 msgid "Abort the selected recording"
-msgstr "Przerwij wybrane nagrywanie"
+msgstr "Przerwij wybrane nagranie"
 
 #: src/webui/static/app/tvheadend.js:1205
 msgid "About"
@@ -285,11 +285,11 @@ msgstr "Automatyczne odświeżanie"
 #: src/webui/static/app/epg.js:434 src/webui/static/app/dvr.js:159
 #: src/webui/static/app/dvr.js:1077
 msgid "Autorec"
-msgstr "Autonagrywanie"
+msgstr "Autonagranie"
 
 #: src/webui/static/app/dvr.js:1078
 msgid "Autorecs"
-msgstr "Autonagrywania"
+msgstr "Autonagrania"
 
 #: src/webui/static/app/idnode.js:461 src/webui/static/app/idnode.js:701
 msgid "Available"
@@ -556,7 +556,7 @@ msgstr "Utwórz"
 
 #: src/webui/static/app/epg.js:1293
 msgid "Create AutoRec"
-msgstr "Utwórz autonagrywanie"
+msgstr "Utwórz autonagranie"
 
 #: src/webui/static/app/epg.js:433 src/webui/static/app/epg.js:1295
 msgid ""
@@ -2165,7 +2165,7 @@ msgstr "Nieznany"
 
 #: src/webui/static/app/dvr.js:606
 msgid "Upcoming / Current Recordings"
-msgstr "Nadchodzące / Obecne nagrania"
+msgstr "Nadchodzące (bieżące) nagrania"
 
 #: src/webui/static/app/dvr.js:605
 msgid "Upcoming Recording"
