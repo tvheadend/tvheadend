@@ -16,7 +16,7 @@ jobs:
       GITHUB_ENV: CLOUDSMITH_API_KEY
       CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
       CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
-      CLOUDSMITH_OWNER: ${{ vars.CLOUDSMITH_OWNER }}
+      CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
       CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
     strategy:
       matrix:
@@ -107,7 +107,7 @@ jobs:
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
             CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
             CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
-            CLOUDSMITH_OWNER: ${{ vars.CLOUDSMITH_OWNER }}
+            CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
             CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
 
 
@@ -210,7 +210,7 @@ jobs:
         env:
           CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
           CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
-          CLOUDSMITH_OWNER: ${{ vars.CLOUDSMITH_OWNER }}
+          CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
 
   build-rpm-native:
@@ -246,5 +246,5 @@ jobs:
         env:
           CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
           CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
-          CLOUDSMITH_OWNER: ${{ vars.CLOUDSMITH_OWNER }}
+          CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
