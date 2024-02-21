@@ -53,7 +53,7 @@ jobs:
           support/cloudsmith.sh -n -p raspios -f '../tvheadend*.deb'
     - uses: actions/upload-artifact@v4
       with:
-        name: Tvheadend-deb
+        name: Tvheadend-RPiOS-${{ matrix.arch }}
         path: tvheadend*.deb
         if-no-files-found: error
 
@@ -148,7 +148,7 @@ jobs:
             support/cloudsmith.sh -n -f '../tvheadend*.deb'
       - uses: actions/upload-artifact@v4
         with:
-          name: Tvheadend-deb
+          name: Tvheadend-CCX-${{ matrix.distro }}-${{ matrix.arch }}
           path: artifacts/tvheadend*.deb
           if-no-files-found: error
 
@@ -196,7 +196,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: startsWith(matrix.container, 'i386') != true
         with:
-          name: Tvheadend-deb
+          name: Tvheadend-DEB-${{ matrix.distro }}
           path: tvheadend*.deb
           if-no-files-found: error
       - name: upload-cloudsmith
@@ -227,7 +227,7 @@ jobs:
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
         with:
-          name: Tvheadend-RPM
+          name: Tvheadend-RPM-${{ matrix.releasever }}
           path: tvheadend*.rpm
           if-no-files-found: error
       # - name: upload-cloudsmith
