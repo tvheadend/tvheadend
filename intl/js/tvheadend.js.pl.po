@@ -2173,7 +2173,7 @@ msgstr "Nadchodzące nagranie"
 
 #: src/webui/static/app/tvheadend.js:1357
 msgid "Used by tvheadend"
-msgstr "Używany przez Tvheadend"
+msgstr "Używana przez Tvheadend"
 
 #: src/webui/static/app/status.js:102 src/webui/static/app/status.js:721
 msgid "Username"
