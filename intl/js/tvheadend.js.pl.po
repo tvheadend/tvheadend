@@ -1356,7 +1356,7 @@ msgstr "Nie zweryfikowany dostęp"
 #. / {0} title (lowercase), {1} title
 #: src/webui/static/app/tvheadend.js:702
 msgid "No {0} to display"
-msgstr "Brak {0} do wyświetlenia"
+msgstr "Brak: {0} do wyświetlenia"
 
 #: src/webui/static/app/idnode.js:1999 src/webui/static/app/mpegts.js:209
 #: src/webui/static/app/mpegts.js:219
