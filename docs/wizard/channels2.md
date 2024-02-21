@@ -1,10 +1,12 @@
 **You are now Finished**
 
-You may further customize your settings by editing channel numbers, etc.
+You may further customise your settings by editing channel numbers, etc.
 
 If you require further help, check out
 [Tvheadend.org](http://tvheadend.org) or chat to us on
 [IRC](https://web.libera.chat/?nick=tvhhelp|?#hts).
 
 Thank you for using Tvheadend (and don't forget to
-[donate](http://tvheadend.org/projects/tvheadend/wiki/Donate))! :)
+[donate](https://opencollective.com/tvheadend/donate))! :)
+
+[![Donate to Tvheadend](static/img/opencollective.png)](https://opencollective.com/tvheadend/donate)
