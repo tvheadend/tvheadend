@@ -3099,7 +3099,7 @@ msgid ""
 "Enable/Disable the CAs (conditional accesses) tab for the advanced view "
 "level. By default, it's visible only to the Expert level."
 msgstr ""
-"Włącz/wyłącz kartę \"Dostępy warunkowe (CA)\" dla poziomu widoku "
+"Włącz/wyłącz kartę \"Dostęp warunkowy (CA)\" dla poziomu widoku "
 "zaawansowanego. Domyślnie jest widoczna tylko dla poziomu \"Ekspercki\"."
 
 #: src/access.c:1728
