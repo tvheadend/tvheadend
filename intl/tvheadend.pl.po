@@ -5986,7 +5986,7 @@ msgstr "Za mało pamięci"
 
 #: src/input/mpegts/mpegts_input.c:203
 msgid "Not linked"
-msgstr "Niepowiązany"
+msgstr "Niepowiązane"
 
 #: src/channels.c:391 src/profile.c:2259
 msgid "Not set"
