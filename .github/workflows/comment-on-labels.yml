@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      pull-requests: write
     steps:
       - name: Add comment
         run: gh pr comment "$NUMBER" --body "$BODY"
