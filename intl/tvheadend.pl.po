@@ -2606,7 +2606,7 @@ msgstr "Typ funkcji skrótu szyfrowania"
 
 #: src/tvhlog.c:152 src/dvr/dvr_db.c:4199
 msgid "Digital Video Recorder"
-msgstr "Cyfrowy rejestrator wideo"
+msgstr "Rejestrator (DVR)"
 
 #: src/dvr/dvr_db.c:4516 src/dvr/dvr_autorec.c:1127 src/dvr/dvr_timerec.c:561
 msgid "Directory"
@@ -3099,7 +3099,7 @@ msgid ""
 "Enable/Disable the CAs (conditional accesses) tab for the advanced view "
 "level. By default, it's visible only to the Expert level."
 msgstr ""
-"Włącz/wyłącz kartę \"Dostępy warunkowe (CA)\" dla poziomu widoku "
+"Włącz/wyłącz kartę \"Dostęp warunkowy (CA)\" dla poziomu widoku "
 "zaawansowanego. Domyślnie jest widoczna tylko dla poziomu \"Ekspercki\"."
 
 #: src/access.c:1728
@@ -5986,7 +5986,7 @@ msgstr "Za mało pamięci"
 
 #: src/input/mpegts/mpegts_input.c:203
 msgid "Not linked"
-msgstr "Niepowiązany"
+msgstr "Niepowiązane"
 
 #: src/channels.c:391 src/profile.c:2259
 msgid "Not set"
@@ -11099,7 +11099,7 @@ msgstr "Format pikseli wideo."
 
 #: src/access.c:1843
 msgid "Video recorder"
-msgstr "Nagrywarka wideo"
+msgstr "Rejestrator wideo"
 
 #: src/access.c:1844
 msgid ""
@@ -11135,7 +11135,7 @@ msgstr "WEBM/av-lib"
 
 #: src/profile.c:2261
 msgid "WEBM/built-in"
-msgstr "WEBM/built-in"
+msgstr "WEBM/wbudowany"
 
 #: src/dvr/dvr_db.c:660
 msgid "Waiting for EPG running flag"
