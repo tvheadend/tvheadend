@@ -10242,7 +10242,7 @@ msgstr "Aby włączyć MCD i MTD dla tego CAM."
 
 #: src/webui/extjs.c:229
 msgid "To support Tvheadend development please consider making a donation"
-msgstr "Aby wesprzeć rozwój Tvheadend, rozważ dokonanie darowizny."
+msgstr "Aby wesprzeć rozwój Tvheadend, rozważ dokonanie darowizny"
 
 #: src/webui/extjs.c:217
 msgid "Toggle details"
