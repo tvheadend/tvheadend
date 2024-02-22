@@ -1261,7 +1261,7 @@ msgstr ""
 
 #: src/descrambler/capmt.c:2698
 msgid "Byte index tag order"
-msgstr "Indeks bajtów tagów"
+msgstr "Kolejność tagów indeksu bajtów"
 
 #: src/tvhlog.c:146
 msgid "CA (descrambling) Client"
@@ -2842,7 +2842,7 @@ msgstr "Grabber EPG"
 
 #: src/wizard.c:188
 msgid "EPG Language (priority order)"
-msgstr "Język EPG (priorytet zamówienia)"
+msgstr "Język EPG (priorytet kolejności)"
 
 #: src/ratinglabels.c:589
 msgid "EPG Parental Rating Labels"
@@ -10704,7 +10704,7 @@ msgstr "Tylko uniwersalny LNB"
 
 #: src/descrambler/capmt.c:2699
 msgid "Universal tag order"
-msgstr "Uniwersalna kolejność tagów"
+msgstr "Kolejność tagów uniwersalna"
 
 #: src/satip/server.c:679
 msgid "Universally unique identifier. Read only."
