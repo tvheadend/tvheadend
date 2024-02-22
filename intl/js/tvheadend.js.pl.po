@@ -365,7 +365,7 @@ msgstr "CAIDS:"
 
 #: src/webui/static/app/caclient.js:34
 msgid "CAs"
-msgstr "Dostępy warunkowe (CA)"
+msgstr "Dostęp warunkowy (CA)"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
 #: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1562
@@ -647,15 +647,15 @@ msgstr "Szczegóły"
 
 #: src/webui/static/app/dvr.js:1215
 msgid "Digital Video Recorder"
-msgstr "Cyfrowy rejestrator wideo"
+msgstr "Rejestrator (DVR)"
 
 #: src/webui/static/app/dvr.js:1047
 msgid "Digital Video Recorder Profile"
-msgstr "Profil cyfrowego rejestratora wideo"
+msgstr "Profil rejestratora (DVR)"
 
 #: src/webui/static/app/dvr.js:1048
 msgid "Digital Video Recorder Profiles"
-msgstr "Profile cyfrowego rejestratora wideo"
+msgstr "Profile rejestratora (DVR)"
 
 #: src/webui/static/app/tvheadend.js:368
 msgid "Director"
@@ -1356,7 +1356,7 @@ msgstr "Nie zweryfikowany dostęp"
 #. / {0} title (lowercase), {1} title
 #: src/webui/static/app/tvheadend.js:702
 msgid "No {0} to display"
-msgstr "Brak {0} do wyświetlenia"
+msgstr "Brak: {0} do wyświetlenia"
 
 #: src/webui/static/app/idnode.js:1999 src/webui/static/app/mpegts.js:209
 #: src/webui/static/app/mpegts.js:219
@@ -2173,7 +2173,7 @@ msgstr "Nadchodzące nagranie"
 
 #: src/webui/static/app/tvheadend.js:1357
 msgid "Used by tvheadend"
-msgstr "Używany przez Tvheadend"
+msgstr "Używana przez Tvheadend"
 
 #: src/webui/static/app/status.js:102 src/webui/static/app/status.js:721
 msgid "Username"
