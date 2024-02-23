@@ -1,7 +1,7 @@
 ![TVHeadend Logo](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/satip-icon120.png)
 Tvheadend
 ========================================
-(c) 2006 - 2022 Tvheadend Project (https://tvheadend.org)
+(c) 2006 - 2024 Tvheadend Project (https://tvheadend.org)
 
 Status
 ------
@@ -13,6 +13,9 @@ Status
 [![Releases](https://img.shields.io/github/tag/tvheadend/tvheadend.svg?style=flat-square)](https://github.com/tvheadend/tvheadend/releases)
 [![License](https://img.shields.io/badge/license-GPLv3-blue)](./LICENSE.md) 
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/tvheadend/tvheadend.svg?label=commits)](https://github.com/tvheadend/tvheadend/commits)
+
+[![Hosted By: Cloudsmith](https://img.shields.io/badge/Packages%20hosted%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.io/tvheadend/)
+
 
 
 What it is
@@ -83,13 +86,13 @@ Transcoding is currently not supported.
 Packages
 --------
 
-Install instructions for various distributions can be found at the [Wiki](https://tvheadend.org/projects/tvheadend/wiki/Download).
+Install instructions for various distributions can be found at our [Cloudsmith-Repository](https://cloudsmith.io/tvheadend/tvheadend).
 
 Further information
 -------------------
 
 For more information about building, including generating packages, please visit:
-* https://tvheadend.org/projects/tvheadend/wiki/Building
-* https://tvheadend.org/projects/tvheadend/wiki/Packaging
-* https://tvheadend.org/projects/tvheadend/wiki/Git
-* https://tvheadend.org/projects/tvheadend/wiki/Internationalization
+* https://old.tvheadend.org/projects/tvheadend/wiki/Building
+* https://old.tvheadend.org/projects/tvheadend/wiki/Packaging
+* https://old.tvheadend.org/projects/tvheadend/wiki/Git
+* https://old.tvheadend.org/projects/tvheadend/wiki/Internationalization
