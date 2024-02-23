@@ -4471,7 +4471,7 @@ msgstr ""
 "bez nazwy użytkownika i hasła. Używaj ostrożnie, gdyż\n"
 "pozwoli to na administracyjny dostęp do Tvheadend\n"
 "z całego świata do momentu utworzenia lub edycji\n"
-"kontroli dostępu z poziomu interfejsu webowego Tvheadend."
+"kontroli dostępu z poziomu interfejsu sieciowego Tvheadend."
 
 #: src/channels.c:1837
 msgid ""
@@ -9177,7 +9177,7 @@ msgid ""
 "The default web interface theme, if a user-specific one isn't set (in the "
 "Access Entries tab)."
 msgstr ""
-"Domyślny motyw interfejsu internetowego, jeśli nie jest ustawiony motyw "
+"Domyślny motyw interfejsu sieciowego, jeśli nie jest ustawiony motyw "
 "specyficzny dla użytkownika (na karcie „Wpisy dostępu”)."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:212
@@ -11179,7 +11179,7 @@ msgstr "Prognoza pogody"
 
 #: src/config.c:2175
 msgid "Web Interface Settings"
-msgstr "Ustawienia interfejsu WWW."
+msgstr "Ustawienia interfejsu sieciowego"
 
 #: src/tvhlog.c:177
 msgid "Web User Interface"
