@@ -2939,7 +2939,7 @@ msgstr "Włącz DBus"
 
 #: src/config.c:2630
 msgid "Enable HDHomeRun Server Emulation"
-msgstr "Włącz emulację serwera HDHomeRun."
+msgstr "Włącz emulację serwera HDHomeRun"
 
 #: src/config.c:2735
 msgid "Enable NTP driver"
@@ -10940,7 +10940,7 @@ msgstr "Użyj domyślnej konfiguracji"
 
 #: src/service_mapper.c:624 src/bouquet.c:759
 msgid "Use fuzzy mapping if merging same name"
-msgstr "Użyj rozmytego mapowania, jeśli łączysz te same nazwy."
+msgstr "Użyj rozmytego mapowania, jeśli łączysz te same nazwy"
 
 #: src/transcoding/codec/profile_video_class.c:215
 msgid "Use hardware acceleration for decoding if available."
