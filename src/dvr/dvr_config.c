@@ -190,7 +190,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_autorec_max_count = 50;
   cfg->dvr_format_tvmovies_subdir = strdup("tvmovies");
   cfg->dvr_format_tvshows_subdir = strdup("tvshows");
-  cfg->dvr_autorec_dedup = 0;
+  cfg->dvr_autorec_dedup = DVR_AUTOREC_RECORD_ALL;
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_SYSTEM;
@@ -843,6 +843,44 @@ dvr_config_entry_class_update_window_list(void *o, const char *lang)
            24*3600, 60, lang);
 }
 
+static htsmsg_t *
+dvr_autorec_entry_class_record_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Record all"),
+        DVR_AUTOREC_RECORD_ALL },
+    { N_("All: Record if EPG/XMLTV indicates it is a unique programme"),
+        DVR_AUTOREC_RECORD_UNIQUE },
+    { N_("All: Record if different episode number"),
+        DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER },
+    { N_("All: Record if different subtitle"),
+        DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE },
+    { N_("All: Record if different description"),
+        DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION },
+    { N_("All: Record once per month"),
+        DVR_AUTOREC_RECORD_ONCE_PER_MONTH },
+    { N_("All: Record once per week"),
+        DVR_AUTOREC_RECORD_ONCE_PER_WEEK },
+    { N_("All: Record once per day"),
+        DVR_AUTOREC_RECORD_ONCE_PER_DAY },
+    { N_("Local: Record if different episode number"),
+        DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER },
+    { N_("Local: Record if different title"),
+        DVR_AUTOREC_LRECORD_DIFFERENT_TITLE },
+    { N_("Local: Record if different subtitle"),
+        DVR_AUTOREC_LRECORD_DIFFERENT_SUBTITLE },
+    { N_("Local: Record if different description"),
+        DVR_AUTOREC_LRECORD_DIFFERENT_DESCRIPTION },
+    { N_("Local: Record once per month"),
+        DVR_AUTOREC_LRECORD_ONCE_PER_MONTH },
+    { N_("Local: Record once per week"),
+        DVR_AUTOREC_LRECORD_ONCE_PER_WEEK },
+    { N_("Local: Record once per day"),
+        DVR_AUTOREC_LRECORD_ONCE_PER_DAY },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 static int
 dvr_config_class_pathname_set(void *o, const void *v)
 {
@@ -1428,11 +1466,11 @@ const idclass_t dvr_config_class = {
       .type     = PT_U32,
       .id       = "record",
       .name     = N_("Duplicate handling"),
-      .desc     = N_("Duplicate recording handling."),
+      .desc     = N_("How to handle duplicate recordings."),
       .def.i    = DVR_AUTOREC_RECORD_ALL,
       .doc      = prop_doc_duplicate_handling,
       .off      = offsetof(dvr_config_t, dvr_autorec_dedup),
-      .list     = dvr_autorec_entry_class_dedup_list,
+      .list     = dvr_autorec_entry_class_record_list,
       .opts     = PO_ADVANCED | PO_DOC_NLIST | PO_HIDDEN,
       .group    = 6,
     },

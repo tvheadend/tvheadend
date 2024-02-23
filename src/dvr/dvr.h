@@ -356,7 +356,8 @@ typedef enum {
   DVR_AUTOREC_LRECORD_ONCE_PER_MONTH = 13,
   DVR_AUTOREC_LRECORD_ONCE_PER_WEEK = 10,
   DVR_AUTOREC_LRECORD_ONCE_PER_DAY = 11,
-  /* first free value == 15 */
+  DVR_AUTOREC_RECORD_DVR_PROFILE = 15,
+  /* first free value == 16 */
 } dvr_autorec_dedup_t;
 
 typedef enum {
@@ -764,9 +765,6 @@ int dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae );
 void dvr_autorec_completed( dvr_autorec_entry_t *dae, int error_code );
 
 uint32_t dvr_autorec_get_max_sched_count(dvr_autorec_entry_t *dae);
-
-htsmsg_t *
-dvr_autorec_entry_class_dedup_list ( void *o, const char *lang );
 
 /**
  *

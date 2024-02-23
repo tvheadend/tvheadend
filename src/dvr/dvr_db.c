@@ -1754,7 +1754,10 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
   if (lang_str_empty(de->de_title))
     return NULL;
 
-  record = de->de_autorec->dae_record;
+  if (de->de_autorec->dae_record == DVR_AUTOREC_RECORD_DVR_PROFILE)
+    record = de->de_config->dvr_autorec_dedup;
+  else
+    record = de->de_autorec->dae_record;
 
   switch (record) {
     case DVR_AUTOREC_RECORD_ALL:
