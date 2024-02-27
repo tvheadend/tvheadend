@@ -1858,7 +1858,7 @@ msgstr "Uruchom kreator"
 
 #: src/webui/static/app/status.js:727
 msgid "Started"
-msgstr "Rozpoczęty"
+msgstr "Rozpoczęto"
 
 #: src/webui/static/app/status.js:155
 msgid "State"
