@@ -858,7 +858,7 @@ msgstr "Dodatkowy tekst"
 
 #: src/webui/static/app/epg.js:793 src/webui/static/app/epgevent.js:104
 msgid "Extra text: subtitle or summary or description"
-msgstr "Dodatkowy tekst: napisy, streszczenie lub opis"
+msgstr "Dodatkowy tekst: podytuł, streszczenie lub opis"
 
 #: src/webui/static/app/epg.js:295
 msgid "FHDTV"
@@ -1931,7 +1931,7 @@ msgstr "Filtry strumieni napisów"
 
 #: src/webui/static/app/epg.js:311
 msgid "Subtitled#EPG"
-msgstr "Napisy#EPG"
+msgstr "Podytuł#EPG"
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
