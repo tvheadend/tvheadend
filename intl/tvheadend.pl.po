@@ -713,7 +713,7 @@ msgstr "Wszystkie: nagrywaj, jeśli inny numer odcinka"
 
 #: src/dvr/dvr_autorec.c:1009
 msgid "All: Record if different subtitle"
-msgstr "Wszystkie: nagrywaj, jeśli inne napisy"
+msgstr "Wszystkie: nagrywaj, jeśli inny podtytuł"
 
 #: src/dvr/dvr_autorec.c:1017
 msgid "All: Record once per day"
@@ -3173,10 +3173,10 @@ msgid ""
 "fields. This allows scraping of common subtitle formats from within the "
 "broadcast summary field if supported by the configuration file."
 msgstr ""
-"Włącz/wyłącz pobieranie napisów z opisu programu. Niektóre nadawcy nie "
-"wysyłają oddzielnych pól tytułu, napisów, opisu i podsumowania. To umożliwia"
-" pobieranie powszechnych formatów napisów z pola podsumowania transmisji, "
-"jeśli jest obsługiwane przez plik konfiguracyjny."
+"Włącz/wyłącz pobieranie podtytułu z opisu programu. Niektóre nadawcy nie "
+"wysyłają oddzielnych pól tytułu, podtytuł, opisu i podsumowania. To "
+"umożliwia pobieranie powszechnych formatów podtytułu z pola podsumowania "
+"transmisji, jeśli jest obsługiwane przez plik konfiguracyjny."
 
 #: src/epggrab/module.c:329
 msgid ""
@@ -3186,8 +3186,8 @@ msgid ""
 " summary field if supported by the configuration file."
 msgstr ""
 "Włącz/wyłącz podsumowanie skrobania w opisie programu. Niektórzy nadawcy nie"
-" wysyłają oddzielnych pól tytułu, napisów, opisu i podsumowania. Umożliwia "
-"to pobranie zmodyfikowanego podsumowania z pola podsumowani transmisji, "
+" wysyłają oddzielnych pól tytułu, podtytułu, opisu i podsumowania. Umożliwia"
+" to pobranie zmodyfikowanego podsumowania z pola podsumowani transmisji, "
 "jeśli jest to obsługiwane przez plik konfiguracyjny."
 
 #: src/epggrab/module.c:303
@@ -5066,7 +5066,7 @@ msgstr "Lokalne: nagrywaj, jeśli inny numer odcinka"
 
 #: src/dvr/dvr_autorec.c:1023
 msgid "Local: Record if different subtitle"
-msgstr "Lokalne: nagrywaj, jeśli inne napisy"
+msgstr "Lokalne: nagrywaj, jeśli inny podtytuł"
 
 #: src/dvr/dvr_autorec.c:1021
 msgid "Local: Record if different title"
@@ -7641,7 +7641,7 @@ msgstr "Pobierz odcinek"
 
 #: src/epggrab/module.c:315
 msgid "Scrape Subtitle"
-msgstr "Pobierz napisy"
+msgstr "Pobierz podtytuł"
 
 #: src/epggrab/module.c:328
 msgid "Scrape Summary"
@@ -8038,7 +8038,7 @@ msgstr "Ustaw priorytet tej konfiguracji."
 #: src/epggrab/module/eit.c:1576
 msgid ""
 "Set the short EIT destription to given target (subtitle, summary or both)."
-msgstr "Ustaw krótki opis EIT na podany cel (napisy, podsumowanie lub oba)."
+msgstr "Ustaw krótki opis EIT na podany cel (podtytuł, podsumowanie lub oba)."
 
 #: src/tvhlog.c:103
 msgid "Settings"
@@ -8651,7 +8651,7 @@ msgstr "Podtytuł"
 
 #: src/epggrab/module/eit.c:1562
 msgid "Subtitle and summary"
-msgstr "Napisy i podsumowanie"
+msgstr "Podtytuł i podsumowanie"
 
 #: src/profile.c:2523
 msgid "Subtitle codec profile"
@@ -8659,15 +8659,15 @@ msgstr "Profil kodeka napisów"
 
 #: src/dvr/dvr_db.c:4374
 msgid "Subtitle of the program (if any) (display only)."
-msgstr "Napisy programu (jeśli są) (tylko wyświetlanie)."
+msgstr "Podtytuł programu (jeśli jest) (tylko wyświetlanie)."
 
 #: src/dvr/dvr_db.c:4366
 msgid "Subtitle of the program (if any)."
-msgstr "Napisy programu (jeśli występują)."
+msgstr "Podtytuł programu (jeśli występuje)."
 
 #: src/dvr/dvr_db.c:4416
 msgid "Subtitle, summary or description of the program (if any)."
-msgstr "Napisy, podsumowanie lub opis programu (jeśli istnieje)."
+msgstr "Podtytuł, podsumowanie lub opis programu (jeśli istnieje)."
 
 #: src/dvr/dvr_db.c:4382 src/dvr/dvr_db.c:4390 src/epggrab/module/eit.c:1561
 msgid "Summary"
