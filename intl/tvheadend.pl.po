@@ -1825,7 +1825,7 @@ msgstr "Konfiguracja"
 
 #: src/config.c:2164
 msgid "Configuration - Base"
-msgstr "Konifugacja - Baza"
+msgstr "Konfiguracja - Podstawy"
 
 #: src/imagecache.c:81
 msgid "Configuration - Image Cache"
