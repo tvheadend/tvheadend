@@ -88,6 +88,11 @@
 #define UI_MAX_B_FRAMES_OFFSET          1
 #define UI_MAX_QUALITY_OFFSET           4
 
+#define TVH_CODEC_PROFILE_VAAPI_UI(codec) \
+    (vainfo_encoder_isavailable(VAINFO_##codec)) + \
+    (vainfo_encoder_maxBfreames(VAINFO_##codec) << UI_MAX_B_FRAMES_OFFSET) + \
+    (vainfo_encoder_maxQuality(VAINFO_##codec) << UI_MAX_QUALITY_OFFSET)
+
 /* hts ==================================================================== */
 
 static htsmsg_t *
@@ -345,61 +350,35 @@ tvh_codec_profile_vaapi_device_list(void *obj, const char *lang)
     return result;
 }
 
-static const int tvh_codec_profile_vaapi_h264_ui(void)
-{
-    return  vainfo_encoder_isavailable(VAINFO_H264) + 
-            (vainfo_encoder_maxBfreames(VAINFO_H264) << UI_MAX_B_FRAMES_OFFSET) + 
-            (vainfo_encoder_maxQuality(VAINFO_H264) << UI_MAX_QUALITY_OFFSET);
-}
+#define TVH_CODEC_PROFILE_VAAPI_CODEC_UI(codec_ui, codec_name) \
+    static const int tvh_codec_profile_vaapi_##codec_ui##_ui(void) \
+    { \
+        return TVH_CODEC_PROFILE_VAAPI_UI(codec_name); \
+    }
 
-static const int tvh_codec_profile_vaapi_hevc_ui(void)
-{
-    return  vainfo_encoder_isavailable(VAINFO_HEVC) + 
-            (vainfo_encoder_maxBfreames(VAINFO_HEVC) << UI_MAX_B_FRAMES_OFFSET) + 
-            (vainfo_encoder_maxQuality(VAINFO_HEVC) << UI_MAX_QUALITY_OFFSET);
-}
+// static const int tvh_codec_profile_vaapi_h264_ui(void)
+TVH_CODEC_PROFILE_VAAPI_CODEC_UI(h264, H264)
 
-static const int tvh_codec_profile_vaapi_vp8_ui(void)
-{
-    return  vainfo_encoder_isavailable(VAINFO_VP8) + 
-            (vainfo_encoder_maxBfreames(VAINFO_VP8) << UI_MAX_B_FRAMES_OFFSET) + 
-            (vainfo_encoder_maxQuality(VAINFO_VP8) << UI_MAX_QUALITY_OFFSET);
-}
+// static const int tvh_codec_profile_vaapi_hevc_ui(void)
+TVH_CODEC_PROFILE_VAAPI_CODEC_UI(hevc, HEVC)
 
-static const int tvh_codec_profile_vaapi_vp9_ui(void)
-{
-    return  vainfo_encoder_isavailable(VAINFO_VP9) + 
-            (vainfo_encoder_maxBfreames(VAINFO_VP9) << UI_MAX_B_FRAMES_OFFSET) + 
-            (vainfo_encoder_maxQuality(VAINFO_VP9) << UI_MAX_QUALITY_OFFSET);
-}
+// static const int tvh_codec_profile_vaapi_vp8_ui(void)
+TVH_CODEC_PROFILE_VAAPI_CODEC_UI(vp8, VP8)
 
-static const int tvh_codec_profile_vaapi_h264lp_ui(void)
-{
-    return  vainfo_encoder_isavailable(VAINFO_H264_LOW_POWER) + 
-            (vainfo_encoder_maxBfreames(VAINFO_H264_LOW_POWER) << UI_MAX_B_FRAMES_OFFSET) + 
-            (vainfo_encoder_maxQuality(VAINFO_H264_LOW_POWER) << UI_MAX_QUALITY_OFFSET);
-}
+// static const int tvh_codec_profile_vaapi_vp9_ui(void)
+TVH_CODEC_PROFILE_VAAPI_CODEC_UI(vp9, VP9)
 
-static const int tvh_codec_profile_vaapi_hevclp_ui(void)
-{
-    return  vainfo_encoder_isavailable(VAINFO_HEVC_LOW_POWER) + 
-            (vainfo_encoder_maxBfreames(VAINFO_HEVC_LOW_POWER) << UI_MAX_B_FRAMES_OFFSET) + 
-            (vainfo_encoder_maxQuality(VAINFO_HEVC_LOW_POWER) << UI_MAX_QUALITY_OFFSET);
-}
+// static const int tvh_codec_profile_vaapi_h264lp_ui(void)
+TVH_CODEC_PROFILE_VAAPI_CODEC_UI(h264lp, H264_LOW_POWER)
 
-static const int tvh_codec_profile_vaapi_vp8lp_ui(void)
-{
-    return  vainfo_encoder_isavailable(VAINFO_VP8_LOW_POWER) + 
-            (vainfo_encoder_maxBfreames(VAINFO_VP8_LOW_POWER) << UI_MAX_B_FRAMES_OFFSET) + 
-            (vainfo_encoder_maxQuality(VAINFO_VP8_LOW_POWER) << UI_MAX_QUALITY_OFFSET);
-}
+// static const int tvh_codec_profile_vaapi_hevclp_ui(void)
+TVH_CODEC_PROFILE_VAAPI_CODEC_UI(hevclp, HEVC_LOW_POWER)
 
-static const int tvh_codec_profile_vaapi_vp9lp_ui(void)
-{
-    return  vainfo_encoder_isavailable(VAINFO_VP9_LOW_POWER) + 
-            (vainfo_encoder_maxBfreames(VAINFO_VP9_LOW_POWER) << UI_MAX_B_FRAMES_OFFSET) + 
-            (vainfo_encoder_maxQuality(VAINFO_VP9_LOW_POWER) << UI_MAX_QUALITY_OFFSET);
-}
+// static const int tvh_codec_profile_vaapi_vp8lp_ui(void)
+TVH_CODEC_PROFILE_VAAPI_CODEC_UI(vp8lp, VP8_LOW_POWER)
+
+// static const int tvh_codec_profile_vaapi_vp9lp_ui(void)
+TVH_CODEC_PROFILE_VAAPI_CODEC_UI(vp9lp, VP9_LOW_POWER)
 
 static int
 tvh_codec_profile_vaapi_open(tvh_codec_profile_vaapi_t *self,
