@@ -7423,7 +7423,7 @@ msgstr "Tabele SI serwera SAT>IP"
 
 #: src/input/mpegts/mpegts_network.c:293
 msgid "SAT>IP source number"
-msgstr "Numer źródłowy SAT>IP"
+msgstr "Numer źródła SAT>IP"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:525
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:589
