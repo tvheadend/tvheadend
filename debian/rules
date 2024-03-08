@@ -15,7 +15,7 @@ override_dh_auto_build:
 	make ${JARGS}
 
 override_dh_strip:
-	dh_strip --dbg-package=tvheadend-dbg-armv6l
+	dh_strip --dbg-package=tvheadend-dbg
 
 override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
@@ -23,6 +23,6 @@ override_dh_shlibdeps:
 override_dh_auto_install:
 	dh_systemd_enable || true
 	dh_systemd_start || true
-	dh_auto_install --destdir=debian/tvheadend-armv6l
+	dh_auto_install --destdir=debian/tvheadend
 
 override_dh_auto_clean:
