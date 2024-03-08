@@ -48,8 +48,8 @@ do
 	  ARCHOVR="$OPTARG"
 	  ;;
       p)
-          OSPREFIX="$OPTARG"
-          ;;
+      OSPREFIX="$OPTARG"
+      ;;
       o)
 	  OP="$OPTARG"
 	  ;;
@@ -65,22 +65,6 @@ if [[ -z $TARGET ]]; then
 fi
 
 TARGET=$OSPREFIX$TARGET
-
-#
-# $1 = local file path
-# $2 = type
-# $3 = content-type
-# $4 = filename
-#
-artifact() {
-    echo "doozer-artifact:$PWD/$1:$2:$3:$4"
-    echo "$PWD/$1" >> "$FILELIST"
-}
-
-versioned_artifact() {
-    echo "doozer-versioned-artifact:$PWD/$1:$2:$3:$4"
-    echo "$PWD/$1" >> "$FILELIST"
-}
 
 git status
 

@@ -1,11 +1,11 @@
 Source: tvheadend
 Section: video
 Priority: extra
-Maintainer: Adam Sutton <aps@tvheadend.org>
+Maintainer: Tvheadend Project <admin@tvheadend.org>
 Build-Depends: debhelper (>= 7.0.50), pkg-config, gettext, libavahi-client-dev, libssl-dev | libssl1.0-dev, zlib1g-dev, wget, bzip2, git-core, liburiparser-dev, python | python3, python-requests | python3-requests, ca-certificates, cmake, libpcre2-dev | libpcre3-dev, libdvbcsa-dev
 Standards-Version: 3.7.3
 
-Package: tvheadend
+Package: tvheadend-armv6l
 Architecture: any
 Depends: ${shlibs:Depends}, libavahi-client3, zlib1g, liburiparser1, bzip2
 Recommends: xmltv-util, python, python-requests
@@ -17,10 +17,10 @@ Description: Tvheadend
    - supports a variety of inputs (DVB-S(2)/T(2)/C, ISDB-S/T/C, ATSC-T/C, IPTV, SAT>IP, HDHR)
    - supports a variety of clients (Movian, Smart TV, Kodi, VLC)
 
-Package: tvheadend-dbg
+Package: tvheadend-dbg-armv6l
 Architecture: any
 Section: debug
 Priority: extra
-Depends: tvheadend (= ${binary:Version}), ${misc:Depends}
+Depends: tvheadend-armv6l (= ${binary:Version}), ${misc:Depends}
 Description: Debug symbols for Tvheadend
  This package contains the debugging symbols for Tvheadend.

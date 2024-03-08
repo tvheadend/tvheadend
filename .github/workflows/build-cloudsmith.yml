@@ -18,6 +18,7 @@ jobs:
       CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
       CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
       CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+      NODIRTY: ${{ secrets.NODIRTY }}
     strategy:
       matrix:
         arch: [armv6l, armv7l, aarch64]
@@ -109,6 +110,7 @@ jobs:
             CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
             CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
             CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+            NODIRTY: ${{ secrets.NODIRTY }}
 
 
           # The shell to run commands with in the container
@@ -197,6 +199,8 @@ jobs:
         run: git config --global --add safe.directory /__w/tvheadend/tvheadend
       - name: build
         run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container, 'i386') && '-a i386') || '' }}
+        env:
+          NODIRTY: ${{ secrets.NODIRTY }}
       - name: copy-result
         run: cp ../tvheadend*.deb .
       - uses: actions/upload-artifact@v3
