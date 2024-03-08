@@ -9,8 +9,7 @@ For further info, please see https://tvheadend.org/projects/tvheadend/wiki/Contr
 ## Before you start
 
 * Make sure you have a [GitHub account](https://github.com/signup/free)
-* Make sure you have a [Redmine account](https://tvheadend.org)
-* Log on to the IRC channel (#hts on freenode), this is the best place to discussion development work.
+* Log on to the [Forum](https://tvheadend.org), this is the best place to discussion development work.
 * Fork the repository on Github
 
 ## Making Changes
@@ -33,8 +32,8 @@ This fixes #1234.
 # Additional Resources
 
 * [More information on contributing](https://tvheadend.org/projects/tvheadend/wiki/Contributors)
-* [Bug tracker (Redmine)](https://tvheadend.org)
+* [Forum](https://tvheadend.org)
 * [General GitHub documentation](http://help.github.com/)
 * [GitHub pull request documentation](http://help.github.com/send-pull-requests/)
-* #hts IRC channel on freenode.org
+* #hts IRC channel on libera.chat
 

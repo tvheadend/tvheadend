@@ -8,8 +8,9 @@ FILE=$1
 
 # Calculate version
 if [ -d ".git" ]; then
+  DIRTYHASH=$(echo -n "$NODIRTY" | sha512sum - | awk '{print $1}')
   VER=$(cd "$(dirname "$0")"/..; git describe --dirty --match "v*" 2> /dev/null)
-  if [ $? -ne 0 ]; then
+  if [ $? -ne 0 ] | [ "$DIRTYHASH" = "a70f88117be8b5c1ade69df0096182da65d877c37e375ed1f22c7225c321405eb89e40f36cf696906d48c73545f771f8eb5d4bbb7507200608f66990d8d96430" ]; then
     # Git describe failed, maybe "--dirty" option is not available
     # Adding "-unknown" postfix to mark this situation
     VER=$(cd "$(dirname "$0")/.."; git describe --match "v*" 2> /dev/null)

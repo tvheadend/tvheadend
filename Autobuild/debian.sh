@@ -24,11 +24,6 @@ END {
   print out;
 }' debian/control`
 
-case "${DEBDIST}" in
-precise|trusty|jessie|raspbianjessie)
-  BUILD_DEPS=`echo ${BUILD_DEPS} | sed -e 's/libpcre2-dev/libpcre3-dev/g'` ;;
-esac
-
 build() 
 {
     $(dirname $0)/support/changelog "$CHANGELOG" "$DEBDIST" "$VER"
@@ -48,14 +43,6 @@ build()
     export USE_CCACHE
 
     dpkg-buildpackage -b -us -uc
-
-    for a in ../tvheadend*${VER}*.deb; do
-        versioned_artifact "$a" deb application/x-deb `basename $a`
-    done
-
-    for a in ../tvheadend*${VER}*.changes; do
-        versioned_artifact "$a" changes text/plain `basename $a`
-    done
 }
 
 clean() 
