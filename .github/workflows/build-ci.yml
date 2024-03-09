@@ -17,8 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     name: Build on Raspberry Pi ${{ matrix.arch }}
-    env:
-      NODIRTY: ${{ secrets.NODIRTY }}
     strategy:
       matrix:
         arch: [armv6l, armv7l, aarch64]
@@ -106,7 +104,6 @@ jobs:
           # Pass some environment variables to the container
           env: | # YAML, but pipe character is necessary
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
-            NODIRTY: ${{ secrets.NODIRTY }}
 
 
           # The shell to run commands with in the container
@@ -194,8 +191,6 @@ jobs:
         run: git config --global --add safe.directory /__w/tvheadend/tvheadend
       - name: build
         run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container, 'i386') && '-a i386') || '' }}
-        env:
-          NODIRTY: ${{ secrets.NODIRTY }}
       - name: copy-result
         run: cp ../tvheadend*.deb .
       - uses: actions/upload-artifact@v3
