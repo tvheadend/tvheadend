@@ -8772,7 +8772,7 @@ msgstr "Bardzo długie programy, np. duże wydarzenia sportowe"
 
 #: src/docs_inc.c:358
 msgid "Very short news bulletins, children's programs, etc."
-msgstr ""
+msgstr "Bardzo krótkie biuletyny informacyjne, programy dla dzieci itp."
 
 #: src/docs_inc.c:3983
 msgid "Video Stream Filters"
@@ -8784,11 +8784,11 @@ msgstr "Rejestrator wideo"
 
 #: src/docs_inc.c:3985
 msgid "Video stream filter."
-msgstr ""
+msgstr "Filtr strumienia wideo."
 
 #: src/docs_inc.c:1524 src/docs_inc.c:1548 src/docs_inc.c:1666
 msgid "View Level"
-msgstr ""
+msgstr "Poziom widoku"
 
 #: src/docs_inc.c:1560
 msgid "View level"
@@ -8796,21 +8796,23 @@ msgstr "Poziom widoku"
 
 #: src/docs_inc.c:4023
 msgid "Visual Verification of Filtering"
-msgstr ""
+msgstr "Wizualna weryfikacja filtrowania"
 
 #: src/docs_inc.c:580
 msgid "Vorbis"
-msgstr ""
+msgstr "Vorbis"
 
 #: src/docs_inc.c:2214 src/docs_inc.c:2304 src/docs_inc.c:2364
 msgid "WHAT"
-msgstr ""
+msgstr "CO"
 
 #: src/docs_inc.c:4846
 msgid ""
 "Warning, setting an incorrect scheme can lead to crashes. If you're unsure "
 "select _System_ ."
 msgstr ""
+"Uwaga, ustawienie nieprawidłowego schematu może prowadzić do awarii. Jeśli "
+"nie jesteś pewien, wybierz _Systemowy_ ."
 
 #: src/docs_inc.c:1312
 msgid "Watch TV"
@@ -8818,15 +8820,15 @@ msgstr "Oglądaj TV"
 
 #: src/docs_inc.c:1743
 msgid "Watch this one - indentation is key."
-msgstr ""
+msgstr "Obejrzyj ten – wcięcie jest najważniejsze."
 
 #: src/docs_inc.c:512
 msgid "Watching TV"
-msgstr ""
+msgstr "Oglądanie telewizji"
 
 #: src/docs_inc.c:282
 msgid "Watching TV and Browser Codec Support"
-msgstr ""
+msgstr "Oglądanie telewizji i obsługa kodeków przeglądarki"
 
 #: src/docs_inc.c:284
 msgid "Watching TV and browser codec support"
