@@ -8832,19 +8832,23 @@ msgstr "Oglądanie telewizji i obsługa kodeków przeglądarki"
 
 #: src/docs_inc.c:284
 msgid "Watching TV and browser codec support"
-msgstr ""
+msgstr "Oglądanie telewizji i obsługa kodeków przeglądarki"
 
 #: src/docs_inc.c:2141
 msgid ""
 "We need the webUI pages documented (as they are). How much should they be "
 "the how-tos, and how much should these be separate?"
 msgstr ""
+"Potrzebujemy udokumentowania stron interfejsu sieciowego (takich, jakie są)."
+" Jak bardzo powinny to być instrukcje, a jak bardzo powinny być oddzielne?"
 
 #: src/docs_inc.c:1807
 msgid ""
 "We're using default heading/cell justification, so it's consistent "
 "throughout."
 msgstr ""
+"Używamy domyślnego justowania nagłówków/komórek, więc jest ono spójne w "
+"całym tekście."
 
 #: src/docs_inc.c:2048
 msgid "Web Interface Guide"
@@ -8860,7 +8864,7 @@ msgstr "Interfejs sieciowy"
 
 #: src/docs_inc.c:1198
 msgid "Web interface internationalization"
-msgstr ""
+msgstr "Umiędzynarodowienie interfejsu internetowego"
 
 #: src/docs_inc.c:5006 src/docs_inc.c:5008
 msgid "Web interface language"
@@ -8868,15 +8872,15 @@ msgstr "Język interfejsu sieciowego"
 
 #: src/docs_inc.c:526
 msgid "WebM"
-msgstr ""
+msgstr "WebM"
 
 #: src/docs_inc.c:748 src/docs_inc.c:1652
 msgid "What it does"
-msgstr ""
+msgstr "Co to robi"
 
 #: src/docs_inc.c:909
 msgid "What's needed to run Tvheadend"
-msgstr ""
+msgstr "Co jest potrzebne do uruchomienia Tvheadend"
 
 #: src/docs_inc.c:4526
 msgid ""
@@ -8884,12 +8888,17 @@ msgid ""
 "label similar to the DVB ones is created and you will need to add the "
 "country code and the ages."
 msgstr ""
+"Gdy zostanie napotkana nowa ocena ze źródła XMLTV EPG, tworzona jest "
+"etykieta zastępcza podobna do etykiet DVB i konieczne będzie dodanie kodu "
+"kraju i wieku."
 
 #: src/docs_inc.c:4508
 msgid ""
 "When a placeholder label is in use, the programme details in the EPG will "
 "show this placeholder entry rather than the expected value."
 msgstr ""
+"Gdy używana jest etykieta zastępcza, szczegóły programu w EPG będą pokazywać"
+" ten wpis zastępczy, a nie oczekiwaną wartość."
 
 #: src/docs_inc.c:802
 msgid ""
@@ -8898,18 +8907,26 @@ msgid ""
 "additional information related to other nearby satellites that you may not "
 "be able to receive."
 msgstr ""
+"Tworząc sieć DVB-S, pamiętaj o ustawieniu pozycji orbity satelity, na który "
+"wskazuje Twoja antena, ponieważ niektóre satelity dostarczają dodatkowych "
+"informacji związanych z innymi pobliskimi satelitami, których możesz nie być"
+" w stanie odebrać."
 
 #: src/docs_inc.c:1608
 msgid ""
 "When making changes (in the parameter panel) be sure to save __before__ "
 "clicking on another item in the list."
 msgstr ""
+"Dokonując zmian (w panelu parametrów), pamiętaj o zapisaniu __przed__ "
+"kliknięciem innej pozycji na liście."
 
 #: src/docs_inc.c:4502
 msgid ""
 "When the rating labels module encounters a new country and age combination, "
 "it will create a placeholder entry in the rating labels table as follows:"
 msgstr ""
+"Gdy moduł etykiet ocen napotka nową kombinację kraju i wieku, utworzy "
+"zastępczy wpis w tabeli etykiet ocen w następujący sposób:"
 
 #: src/docs_inc.c:1234
 msgid ""
@@ -8917,6 +8934,9 @@ msgid ""
 "map a path through all those variables to ask a particular tuner to go and "
 "get the signal for you."
 msgstr ""
+"Kiedy wybierzesz kanał, który chcesz oglądać lub nagrywać, Tvheadend może "
+"następnie wyznaczyć ścieżkę przez wszystkie te zmienne, aby poprosić "
+"konkretnego tunera o odebranie sygnału za Ciebie."
 
 #: src/docs_inc.c:4844
 msgid ""
@@ -8927,6 +8947,12 @@ msgid ""
 "application) and the actual write itself (to the disc/storage) as changes "
 "are buffered to be written in one go."
 msgstr ""
+"Za każdym razem, gdy czytasz lub zapisujesz dane w systemach plików, "
+"informacje są przez pewien czas przechowywane (buforowane) w pamięci. "
+"Oznacza to, że często używane pliki są szybko dostępne bez konieczności "
+"wracania na dysk; oznacza to również, że występuje rozłączenie podczas "
+"zapisu pomiędzy żądaniem zapisu (z aplikacji) a samym zapisem (na "
+"dysk/pamięć), ponieważ zmiany są buforowane i zapisywane za jednym razem."
 
 #: src/docs_inc.c:1023
 msgid ""
@@ -8935,36 +8961,44 @@ msgid ""
 "running a development version - either a nightly build or a self-compiled "
 "version."
 msgstr ""
+"Jeśli istnieje gotowy pakiet, zazwyczaj zapewnia on ostatnią oficjalną "
+"stabilną wersję. Jednakże bardziej zaawansowani użytkownicy mogą być "
+"zainteresowani uruchomieniem wersji rozwojowej – albo kompilacji nocnej, "
+"albo wersji samodzielnie skompilowanej."
 
 #: src/docs_inc.c:917
 msgid "Where to get Tvheadend and how-to install it"
-msgstr ""
+msgstr "Skąd pobrać Tvheadend i jak go zainstalować"
 
 #: src/docs_inc.c:94
 msgid "Where you configure adapters"
-msgstr ""
+msgstr "Gdzie konfigurujesz adaptery"
 
 #: src/docs_inc.c:102
 msgid "Where you configure multiplexes"
-msgstr ""
+msgstr "Gdzie konfigurujesz multipleksery"
 
 #: src/docs_inc.c:110
 msgid ""
 "Where you configure mux schedulers - schedule Tvheadend to tune to a "
 "specific mux to receive different types of data, EMMs, EIT etc"
 msgstr ""
+"Tam, gdzie konfigurujesz harmonogramy multiplekserów - zaplanuj Tvheadend, "
+"aby dostroił się do konkretnego multipleksera w celu odbioru różnych typów "
+"danych, EMM, EIT itp."
 
 #: src/docs_inc.c:98
 msgid "Where you configure networks"
-msgstr ""
+msgstr "Gdzie konfigurujesz sieci"
 
 #: src/docs_inc.c:2612
 msgid "Where you configure the frontend, whether or not it's enabled etc."
 msgstr ""
+"Gdzie konfigurujesz frontend, niezależnie od tego, czy jest włączony itp."
 
 #: src/docs_inc.c:2660
 msgid "Where you configure various settings related to your DVB-S tuners."
-msgstr ""
+msgstr "Gdzie konfigurujesz różne ustawienia związane z tunerami DVB-S."
 
 #: src/docs_inc.c:927
 msgid ""
@@ -8973,12 +9007,18 @@ msgid ""
 "LAN, your Tvheadend installation has to live where you can actually connect "
 "your tuners."
 msgstr ""
+"Gdzie masz połączenia antenowe/koncentryczne, może mieć wpływ na Twój wybór "
+"- chyba że używasz SAT>IP lub masz inny sposób przesyłania sygnału "
+"telewizyjnego przez sieć LAN, Twoja instalacja Tvheadend musi znajdować się "
+"tam, gdzie możesz podłączyć tunery."
 
 #: src/docs_inc.c:5598
 msgid ""
 "Whereas the number 2 variant forces the recording to be formatted as a tv "
 "series."
 msgstr ""
+"Natomiast wariant numer 2 wymusza sformatowanie nagrania w formie serialu "
+"telewizyjnego."
 
 #: src/docs_inc.c:931
 msgid ""
@@ -8988,18 +9028,24 @@ msgid ""
 "on both 32- and 64-bit x86 and ARM processors, and so also can be built for "
 "Android (which uses the Linux kernel)."
 msgstr ""
+"Gdziekolwiek go zainstalujesz, Tvheadend działa głównie w systemie __Linux__"
+" - gotowe pliki binarne są dostępne dla większości dystrybucji opartych na "
+"Debianie (sam Debian, Ubuntu, Mint...) i RPM dla Fedory, ale możesz też "
+"zbudować je samodzielnie. Działa na 32- i 64-bitowych procesorach x86 i ARM,"
+" dlatego można go również zbudować dla systemu Android (który korzysta z "
+"jądra Linuksa)."
 
 #: src/docs_inc.c:5676 src/docs_inc.c:5776 src/docs_inc.c:5868
 msgid "Who created this recording"
-msgstr ""
+msgstr "Kto stworzył to nagranie"
 
 #: src/docs_inc.c:1230
 msgid "Why the Complexity?"
-msgstr ""
+msgstr "Dlaczego złożoność?"
 
 #: src/docs_inc.c:5150
 msgid "Wikipedia for a detailed look into Cron."
-msgstr ""
+msgstr "Wikipedia zawiera szczegółowe informacje na temat Crona."
 
 #: src/docs_inc.c:3049
 msgid ""
@@ -9008,16 +9054,22 @@ msgid ""
 "accounts are matched using the network prefix _(Allowed networks)_ , acting "
 "similar to a username."
 msgstr ""
+"Konta z dziką kartą (anonimowe) (które nie wymagają nazwy użytkownika ani "
+"hasła) można utworzyć, wpisując gwiazdkę „*” w polu nazwy użytkownika/hasła."
+" Konta te są dopasowywane przy użyciu prefiksu sieci _(Dozwolone sieci)_, "
+"który działa podobnie do nazwy użytkownika."
 
 #: src/docs_inc.c:4402
 msgid ""
 "Wildcard (anonymous) accounts don't actually need a password, but it's "
 "recommended you add one anyway (enter an asterisk `*`)."
 msgstr ""
+"Konta z symbolami wieloznacznymi (anonimowe) w rzeczywistości nie wymagają "
+"hasła, ale mimo to zaleca się jego dodanie (wpisz gwiazdkę `*`)."
 
 #: src/docs_inc.c:1789
 msgid "Will generate:"
-msgstr ""
+msgstr "Wygeneruje:"
 
 #: src/docs_inc.c:664
 msgid "Wizard"
@@ -9025,7 +9077,7 @@ msgstr "Kreator"
 
 #: src/docs_inc.c:2097
 msgid "Work-in-progress notes"
-msgstr ""
+msgstr "Notatki w toku"
 
 #: src/docs_inc.c:3255
 msgid "Wrapper (capmt_ca.so)"
@@ -9033,7 +9085,7 @@ msgstr "Wrapper (capmt_ca.so)"
 
 #: src/docs_inc.c:3911 src/docs_inc.c:3919 src/docs_inc.c:4522
 msgid "XMLTV"
-msgstr ""
+msgstr "XMLTV"
 
 #: src/docs_inc.c:3757
 msgid "XMLTV EPG Import"
@@ -9045,11 +9097,11 @@ msgstr "Tak"
 
 #: src/docs_inc.c:5408
 msgid "Yes, because no components are ignored."
-msgstr ""
+msgstr "Tak, ponieważ żaden komponent nie jest ignorowany."
 
 #: src/docs_inc.c:5420
 msgid "Yes, but only if the second-from-last component"
-msgstr ""
+msgstr "Tak, ale tylko w przypadku składnika drugiego od końca"
 
 #: src/docs_inc.c:617
 msgid ""
@@ -9057,15 +9109,21 @@ msgid ""
 "usually hidden for a reason and are often used for things such as encrypted "
 "guide data for set-top boxes, interactive services, and so on."
 msgstr ""
+"Tak, nie wszystkie usługi otrzymują nazwę od dostawców. Usługi te są zwykle "
+"ukryte nie bez powodu i często są wykorzystywane do takich celów, jak "
+"zaszyfrowane dane przewodników dla dekoderów, usług interaktywnych i tak "
+"dalej."
 
 #: src/docs_inc.c:4902
 msgid "Yes, this is because the above entry \"Change parameters\" rights"
 msgstr ""
+"Tak, dzieje się tak dlatego, że powyższy zapis dotyczy uprawnień „Zmień "
+"parametry”."
 
 #: src/docs_inc.c:4890 src/docs_inc.c:4900 src/docs_inc.c:4910
 #: src/docs_inc.c:4912 src/docs_inc.c:4922
 msgid "Yes."
-msgstr ""
+msgstr "Tak"
 
 #: src/docs_inc.c:4514
 msgid ""
@@ -9076,14 +9134,19 @@ msgid ""
 "only needs to be done once for each label, all other programmes with that "
 "label will be automatically adjusted."
 msgstr ""
+"Aby wyświetlić odpowiedni tekst oceny, należy ręcznie edytować ten wpis "
+"zastępczy. Prawidłowy tekst można znaleźć, wyszukując konkretny program w "
+"innym źródle EPG lub uzyskując wytyczne dotyczące klasyfikacji w danej "
+"lokalizacji (kraju). Należy to zrobić tylko raz dla każdej etykiety, "
+"wszystkie inne programy z tą etykietą zostaną automatycznie dostosowane."
 
 #: src/docs_inc.c:963
 msgid "You basically have the choice of:"
-msgstr ""
+msgstr "Zasadniczo masz do wyboru:"
 
 #: src/docs_inc.c:844
 msgid "You can also use"
-msgstr ""
+msgstr "Możesz także użyć"
 
 #: src/docs_inc.c:506
 msgid "You can change or delete the autorec rules in the __"
