@@ -9150,7 +9150,7 @@ msgstr "Możesz także użyć"
 
 #: src/docs_inc.c:506
 msgid "You can change or delete the autorec rules in the __"
-msgstr ""
+msgstr "Możesz zmienić lub usunąć reguły autonagrań w __"
 
 #: src/docs_inc.c:380
 msgid ""
@@ -9158,22 +9158,29 @@ msgid ""
 "selecting _‘(Clear filter)’_ as appropriate on all except the title filter. "
 "If you want to clear all filters, just press the _[Reset All]_ button."
 msgstr ""
+"Możesz wyczyścić pojedynczy filtr, po prostu usuwając jego zawartość lub "
+"wybierając _‘(Wyczyść filtr)‘_ odpowiednio dla wszystkich z wyjątkiem filtra"
+" tytułu. Jeśli chcesz wyczyścić wszystkie filtry, po prostu naciśnij "
+"przycisk _[Resetuj wszystko]_."
 
 #: src/docs_inc.c:4077 src/docs_inc.c:4400
 msgid "You can enter whatever you like in the comment field."
-msgstr ""
+msgstr "W polu komentarza możesz wpisać, co chcesz."
 
 #: src/docs_inc.c:4398
 msgid ""
 "You can have multiple passwords matching a single _Access Entry_ if you "
 "wish."
 msgstr ""
+"Jeśli chcesz, możesz mieć wiele haseł pasujących do jednego _Wpisu dostępu_."
 
 #: src/docs_inc.c:1733
 msgid ""
 "You can include documentation/items in other markdown files by using the "
 "tvh_class_doc, tvh_include and tvh_class_items tags."
 msgstr ""
+"Możesz dołączyć dokumentację/elementy do innych plików markdown używając "
+"tagów tvh_class_doc, tvh_include i tvh_class_items."
 
 #: src/docs_inc.c:3279
 msgid ""
@@ -9185,16 +9192,26 @@ msgid ""
 "instead, you can do so by removing the /play/ path from the URL - see URL "
 "Syntax for more info."
 msgstr ""
+"Możesz odtworzyć transmisję, klikając ikonę odtwarzania. Spowoduje to "
+"automatyczne uruchomienie odpowiedniego odtwarzacza, w przeciwnym razie "
+"konieczne będzie ręczne otwarcie listy odtwarzania, aby rozpocząć oglądanie "
+"(zwykle jest to dwukrotne kliknięcie pobranego pliku). Uwaga: linki nie "
+"prowadzą do rzeczywistego strumienia, ale do listy odtwarzania do użytku z "
+"odtwarzaczami multimedialnymi, takimi jak VLC. Jeśli zamiast tego wolisz "
+"otrzymywać surowy strumień, możesz to zrobić, usuwając ścieżkę /play/ z URL "
+"— zobacz Składnia adresu URL, aby uzyskać więcej informacji."
 
 #: src/docs_inc.c:2852
 msgid "You can play a stream/file by clicking the play icon !"
-msgstr ""
+msgstr "Możesz odtworzyć strumień/plik, klikając ikonę odtwarzania!"
 
 #: src/docs_inc.c:4616
 msgid ""
 "You can put a custom M3U playlist (which will be advertised to clients) in "
 "your Tvheadend configuration directory - filename _satip.m3u_ ."
 msgstr ""
+"Możesz umieścić własną listę odtwarzania M3U (która będzie reklamowana "
+"klientom) w katalogu konfiguracyjnym Tvheadend - nazwa pliku _satip.m3u_ ."
 
 #: src/docs_inc.c:2779
 msgid ""
@@ -9202,16 +9219,21 @@ msgid ""
 " the menu bar in the _Upcoming / Current Recordings_ tab. You must enter a "
 "title, a start (and an end) time, and pick a channel."
 msgstr ""
+"Możesz zaplanować jednorazowe nagranie, naciskając przycisk [Dodaj] na pasku"
+" menu w karcie _Nadchodzące / Bieżące nagrania_. Musisz wprowadzić tytuł, "
+"godzinę rozpoczęcia (i zakończenia) oraz wybrać kanał."
 
 #: src/docs_inc.c:1771
 msgid "You can't have have properly indented paragraphs within list items."
-msgstr ""
+msgstr "Elementy listy nie mogą mieć odpowiednio wciętych akapitów."
 
 #: src/docs_inc.c:5146
 msgid ""
 "You cannot use non-standard predefined scheduling definitions for this "
 "field."
 msgstr ""
+"Dla tego pola nie można używać niestandardowych, predefiniowanych definicji "
+"harmonogramów."
 
 #: src/docs_inc.c:690
 msgid ""
@@ -9220,25 +9242,36 @@ msgid ""
 "recommend not using the same details for a user here as it may cause "
 "unexpected behavior, incorrect permissions etc."
 msgstr ""
+"Możesz wprowadzić listę rozdzielonych przecinkami prefiksów sieciowych "
+"(IPv4/IPv6). Jeśli podczas instalacji zostałeś poproszony o podanie nazwy "
+"użytkownika i hasła, zalecamy, aby nie podawać tutaj tych samych danych "
+"użytkownika, ponieważ może to spowodować nieoczekiwane zachowanie, "
+"nieprawidłowe uprawnienia itp."
 
 #: src/docs_inc.c:6176 src/docs_inc.c:6202
 msgid ""
 "You may further customize your settings by editing channel numbers, etc."
 msgstr ""
+"Możesz dodatkowo dostosować swoje ustawienia, edytując numery kanałów itp."
 
 #: src/docs_inc.c:3085
 msgid "You may import your own bouquet using enigma2 (.tv) formatted files."
 msgstr ""
+"Możesz zaimportować swój własny bukiet, korzystając z plików w formacie "
+"enigma2 (.tv)."
 
 #: src/docs_inc.c:764
 msgid ""
 "You may need to enable specific EPG grabbers to receive OTA EPG data, See "
 "the _EPG Grabber Modules_ Help doc for details."
 msgstr ""
+"Może być konieczne włączenie określonych grabberów EPG, aby odbierać dane "
+"EPG OTA. Aby uzyskać szczegółowe informacje, zobacz dokument pomocy _Moduły "
+"chwytaka EPG_."
 
 #: src/docs_inc.c:4634
 msgid "You must enter a _SAT>IP source number_ for all the"
-msgstr ""
+msgstr "Musisz wprowadzić numer źródłowy _SAT>IP dla wszystkich"
 
 #: src/docs_inc.c:4075
 msgid ""
@@ -9246,6 +9279,9 @@ msgid ""
 "`192.168.6.66` enter `192.168.6.66/32` or to block the all addresses in the "
 "`192.168.6` range, enter `192.168.6.0/24`."
 msgstr ""
+"Aby zablokować, musisz wprowadzić prefiks sieci. Na przykład, aby zablokować"
+" tylko `192.168.6.66`, wpisz `192.168.6.66/32` lub aby zablokować wszystkie "
+"adresy z zakresu `192.168.6`, wpisz `192.168.6.0/24`."
 
 #: src/docs_inc.c:933
 msgid ""
@@ -9256,6 +9292,13 @@ msgid ""
 " your recordings, though: as a guide, an hour of SD MPEG-2 video will take "
 "about 1GB, while high bitrate HD H.264 will easily consume 5GB+ per hour."
 msgstr ""
+"Będziesz potrzebować tylko __ok. 30 MB miejsca na dysku__ na aplikację i "
+"powiązane pliki, a może wszystko do __1 GB__ na konfigurację - w zależności "
+"od tego, ile masz tunerów, jakiego typu, ile kanałów odbierasz, jaki "
+"wybrałeś przewodnik po programach i tak dalej. Jednak do swoich nagrań "
+"będziesz potrzebować znacznie więcej: godzina wideo SD MPEG-2 zajmie około 1"
+" GB, podczas gdy HD H.264 o wysokiej przepływności z łatwością pochłonie "
+"ponad 5 GB na godzinę."
 
 #: src/docs_inc.c:768
 msgid ""
@@ -9263,40 +9306,46 @@ msgid ""
 "your channels and make further changes; If not, please take a look at the "
 "manual set-up below."
 msgstr ""
+"Zakończono pracę kreatora, w tym momencie powinieneś móc przeglądać swoje "
+"kanały i wprowadzać dalsze zmiany; Jeśli nie, zapoznaj się z ręczną "
+"konfiguracją poniżej."
 
 #: src/docs_inc.c:482
 msgid "[Autorec]"
-msgstr ""
+msgstr "[Autonagranie]"
 
 #: src/docs_inc.c:150
 msgid "[Panasonic MN88472] #0"
-msgstr ""
+msgstr "[Panasonic MN88472] #0"
 
 #: src/docs_inc.c:451
 msgid "[Play]"
-msgstr ""
+msgstr "[Odtwórz]"
 
 #: src/docs_inc.c:478
 msgid "[Record Series]"
-msgstr ""
+msgstr "[Nagrywanie seryjne]"
 
 #: src/docs_inc.c:471
 msgid "[Record]"
-msgstr ""
+msgstr "[Nagraj]"
 
 #: src/docs_inc.c:3201 src/docs_inc.c:3221 src/docs_inc.c:3251
 msgid "[dvbapi]"
-msgstr ""
+msgstr "[dvbapi]"
 
 #: src/docs_inc.c:5740 src/docs_inc.c:5820 src/docs_inc.c:5912
 msgid "_Example usage_"
-msgstr ""
+msgstr "_Przykładowe użycie_"
 
 #: src/docs_inc.c:5194
 msgid ""
 "_Local_ only checks for duplicates created by the same autorec rule, _All_ "
 "checks all the DVR logs for duplicates."
 msgstr ""
+"_Lokalne_ sprawdza tylko duplikaty utworzone przez tę samą regułę "
+"autonagrania, _Wszystkie_ sprawdza wszystkie dzienniki DVR pod kątem "
+"duplikatów."
 
 #: src/docs_inc.c:350
 msgid ""
@@ -9304,42 +9353,49 @@ msgid ""
 "configuration and on what your broadcaster sends. Options for the _Duration_"
 " are as follows:"
 msgstr ""
+"_Tytuł_, _Kanał_, _Tag_ i _Typ treści_ zależą od Twojej konfiguracji i tego,"
+" co wysyła Twój nadawca. Opcje dla _Czas trwania_ są następujące:"
 
 #: src/docs_inc.c:1922
 msgid "__ : Clear all \"Uncorrected Blocks\", \"BER\", etc stats."
 msgstr ""
+"__ : Wyczyść wszystkie statystyki „Nieskorygowanych bloków”, „BER” itp."
 
 #: src/docs_inc.c:1838
 msgid ""
 "__ : Forcefully kill the connection. Note that many applications such as "
 "Kodi will automatically reconnect when a connection is dropped."
 msgstr ""
+"__ : Wymuś zakończenie połączenia. Pamiętaj, że wiele aplikacji, takich jak "
+"Kodi, automatycznie ponownie połączy się po zerwaniu połączenia."
 
 #: src/docs_inc.c:510
 msgid ""
 "__ tab. Use that editor if you temporarily want to disable an autorecording "
 "or make adjustments to the channel, tag, or similar."
 msgstr ""
+"__ karta. Użyj tego edytora, jeśli chcesz tymczasowo wyłączyć automatyczne "
+"nagrywanie lub wprowadzić zmiany w kanale, tagu itp."
 
 #: src/docs_inc.c:1891
 msgid "__Active__ : Progress bar indicating mapping status."
-msgstr ""
+msgstr "__Aktywny__: Pasek postępu wskazujący stan mapowania."
 
 #: src/docs_inc.c:428
 msgid "__Age__ : Age rating of the program."
-msgstr ""
+msgstr "__Wiek__ : Klasyfikacja wiekowa programu."
 
 #: src/docs_inc.c:6260
 msgid "__Assign Predefined Muxes to Networks__"
-msgstr ""
+msgstr "__Przypisz predefiniowane multipleksery do sieci__"
 
 #: src/docs_inc.c:1934
 msgid "__BER__ :"
-msgstr ""
+msgstr "__BER__ :"
 
 #: src/docs_inc.c:1932
 msgid "__Bandwidth__ : Total stream input bandwidth."
-msgstr ""
+msgstr "__Przepustowość__ : Całkowita szerokość pasma wejściowego strumienia."
 
 #: src/docs_inc.c:870
 msgid ""
@@ -9348,14 +9404,19 @@ msgid ""
 "Tvheadend can use these to automatically manage and keep your channels up-"
 "to-date. If you would like to use bouquets see"
 msgstr ""
+"__Bukiety__ : Wielu dostawców usług – głównie tych korzystających z "
+"telewizji satelitarnej – używa bukietów do zarządzania kanałami i podobnie "
+"jak standardowy dekoder Tvheadend może ich używać do automatycznego "
+"zarządzania i aktualizowania kanałów. Jeśli chcesz skorzystać z bukietów "
+"zobacz"
 
 #: src/docs_inc.c:1834
 msgid "__Cancel Icon !"
-msgstr ""
+msgstr "__ Ikona anulowania!"
 
 #: src/docs_inc.c:1989
 msgid "__Channel__ : The name of the"
-msgstr ""
+msgstr "__Kanał__: Nazwa"
 
 #: src/docs_inc.c:424
 msgid ""
@@ -9364,34 +9425,39 @@ msgid ""
 "'Channel 4 HD' will automatically filter the whole grid to only show "
 "programs from that channel)._"
 msgstr ""
+"__Kanał__ : Nazwa kanału nadawczego. _Możesz automatycznie ustawić filtr na "
+"wartość tego pola, klikając na nie (np. kliknięcie „Channel 4 HD” spowoduje "
+"automatyczne przefiltrowanie całej siatki i pokazywanie tylko programów z "
+"tego kanału)._"
 
 #: src/docs_inc.c:1842
 msgid "__Client Address__ : The IP address of the client device."
-msgstr ""
+msgstr "__Adres klienta__: Adres IP urządzenia klienckiego."
 
 #: src/docs_inc.c:1846
 msgid "__Client Data Ports__ : The data port(s) used by the client device."
 msgstr ""
+"__Porty danych klienta__: Porty danych używane przez urządzenie klienckie."
 
 #: src/docs_inc.c:1844
 msgid "__Client Port__ : The port of the client device."
-msgstr ""
+msgstr "__Port klienta__: Port urządzenia klienckiego."
 
 #: src/docs_inc.c:818
 msgid "__Configuration -> DVB Inputs -> Muxes__"
-msgstr ""
+msgstr "__Konfiguracja -> Wejścia DVB -> Multipleksery__"
 
 #: src/docs_inc.c:792
 msgid "__Configuration -> DVB Inputs -> Networks__"
-msgstr ""
+msgstr "__Konfiguracja -> Wejścia DVB -> Sieci__"
 
 #: src/docs_inc.c:852 src/docs_inc.c:860
 msgid "__Configuration -> DVB Inputs -> Services__"
-msgstr ""
+msgstr "__Konfiguracja -> Wejścia DVB -> Usługi__"
 
 #: src/docs_inc.c:774 src/docs_inc.c:808
 msgid "__Configuration -> DVB Inputs -> TV Adapters__"
-msgstr ""
+msgstr "__Konfiguracja -> Wejścia DVB -> Adaptery TV__"
 
 #: src/docs_inc.c:430
 msgid ""
@@ -9400,12 +9466,18 @@ msgid ""
 "clicking on it (e.g. click on 'Movie/Drama' will automatically filter the "
 "whole grid to only show programs of the same type)._"
 msgstr ""
+"__Typ treści__ : Wszelkie informacje o treści/gatunku dostarczone przez "
+"dostawcę EPG. _Możesz automatycznie ustawić filtr na wartość tego pola, "
+"klikając na nie (np. kliknięcie „Film/dramat” spowoduje automatyczne "
+"przefiltrowanie całej siatki i pokazanie tylko programów tego samego typu)._"
 
 #: src/docs_inc.c:1946
 msgid ""
 "__Continuity Errors__ : Continuity Count Error. Number of stream errors, a "
 "high value here can indicate a signal problem."
 msgstr ""
+"__Błędy ciągłości__: Błąd zliczania ciągłości. Liczba błędów strumienia. "
+"Wysoka wartość może wskazywać na problem z sygnałem."
 
 #: src/docs_inc.c:2025
 msgid "__Descramble__ : The CAID used to descramble the stream."
