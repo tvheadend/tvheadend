@@ -14,7 +14,7 @@ Status
 [![License](https://img.shields.io/badge/license-GPLv3-blue)](./LICENSE.md) 
 [![GitHub Activity](https://img.shields.io/github/commit-activity/y/tvheadend/tvheadend.svg?label=commits)](https://github.com/tvheadend/tvheadend/commits)
 
-[![Hosted By: Cloudsmith](https://img.shields.io/badge/Packages%20hosted%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.io/tvheadend/)
+[![Hosted By: Cloudsmith](https://img.shields.io/badge/Packages%20hosted%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.io/~tvheadend/repos/tvheadend/packages/)
 
 
 
@@ -86,7 +86,7 @@ Transcoding is currently not supported.
 Packages
 --------
 
-Install instructions for various distributions can be found at our [Cloudsmith-Repository](https://cloudsmith.io/tvheadend/tvheadend).
+Install instructions for various distributions can be found at our [Cloudsmith-Repository](https://cloudsmith.io/~tvheadend/repos/tvheadend/packages/).
 
 Further information
 -------------------
