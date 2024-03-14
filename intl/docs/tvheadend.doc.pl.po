@@ -9597,94 +9597,115 @@ msgid ""
 " the number received. When creating a placeholder label, this module will "
 "automatically add 3 where appropriate."
 msgstr ""
+"__UWAGA:__ W przykładzie wiek podany przez DVB to „10”, podczas gdy "
+"wyświetlany wiek to „13”. Dzieje się tak dlatego, że standard DVB odejmuje 3"
+" od niektórych zalecanych czasów przed transmisją, co oznacza, że odbiornik "
+"musi dodać 3 do otrzymanej liczby. Podczas tworzenia etykiety zastępczej "
+"moduł ten automatycznie doda 3 w stosownych przypadkach."
 
 #: src/docs_inc.c:4492
 msgid ""
 "__NOTE:__ Rating labels are not enabled by default and must be enabled in "
 "the"
 msgstr ""
+"__UWAGA:__ Etykiety ocen nie są domyślnie włączone i muszą być włączone w"
 
 #: src/docs_inc.c:1208
 msgid "__Network tuners__ are small (usually"
-msgstr ""
+msgstr "__ Tunery sieciowe __ są małe (zwykle"
 
 #: src/docs_inc.c:824
 msgid ""
 "__Note__ : Some tuners (or drivers) require more tuning parameters than "
 "others so __be sure to enter as many tuning parameters as possible__ ."
 msgstr ""
+"__Uwaga__: Niektóre tunery (lub sterowniki) wymagają większej liczby "
+"parametrów strojenia niż inne, więc __pamiętaj o wprowadzeniu jak "
+"największej liczby parametrów strojenia__."
 
 #: src/docs_inc.c:422
 msgid ""
 "__Number__ : The channel number of the broadcasting channel, if defined."
-msgstr ""
+msgstr "__Numer__ : Numer kanału nadawczego, jeśli został zdefiniowany."
 
 #: src/docs_inc.c:2031
 msgid "__Output__ : The output data rate in kb/s."
-msgstr ""
+msgstr "__Wyjście__ : Szybkość danych wyjściowych w kb/s."
 
 #: src/docs_inc.c:1938
 msgid "__PER__ :"
-msgstr ""
+msgstr "__PER__ :"
 
 #: src/docs_inc.c:2023
 msgid ""
 "__PID list__ : Input source Program Identification (PIDs) numbers in use by "
 "the subscription."
 msgstr ""
+"__Lista PID__: Wprowadź numery identyfikacyjne programu źródłowego (PID) "
+"używane przez subskrypcję."
 
 #: src/docs_inc.c:1930
 msgid ""
 "__PID list__ : Input source Program Identification (PIDs) numbers in use."
 msgstr ""
+"__Lista PID__: Używane numery identyfikacyjne programu źródłowego (PID)."
 
 #: src/docs_inc.c:237
 msgid "__Play__ / !"
-msgstr ""
+msgstr "__Odtwórz__ / !"
 
 #: src/docs_inc.c:1997
 msgid "__Profile__ : The name of the"
-msgstr ""
+msgstr "__Profil__ : Nazwa"
 
 #: src/docs_inc.c:408
 msgid ""
 "__Progress__ : A bar graph display of how far through a program we currently"
 " are."
 msgstr ""
+"__Postęp__: Wykres słupkowy pokazujący stopień zaawansowania programu, na "
+"którym aktualnie się znajdujemy."
 
 #: src/docs_inc.c:1856
 msgid ""
 "__Proxy Address__ : The IP address of the proxy the client is connecting "
 "through (if known)."
 msgstr ""
+"__Adres proxy__: Adres IP serwera proxy, przez który łączy się klient (jeśli"
+" jest znany)."
 
 #: src/docs_inc.c:1590
 msgid "__Re-arrange__ the columns by simply dragging he header to a new spot."
 msgstr ""
+"__Zmień układ__ kolumn, po prostu przeciągając nagłówek w nowe miejsce."
 
 #: src/docs_inc.c:1592
 msgid ""
 "__Re-size__ the columns by dragging the very edges of the column header as "
 "required."
 msgstr ""
+"__Zmień rozmiar__ kolumn, przeciągając krawędzie nagłówka kolumny, zgodnie z"
+" wymaganiami."
 
 #: src/docs_inc.c:1948
 msgid "__SNR__ : Signal (To) Noise Ratio."
-msgstr ""
+msgstr "__SNR__ : Stosunek sygnału do szumu."
 
 #: src/docs_inc.c:6280
 msgid "__Scanning__"
-msgstr ""
+msgstr "__Skanowanie__"
 
 #: src/docs_inc.c:1854
 msgid ""
 "__Server Address__ : The address used to connect to the server. This is "
 "usually the IP of your device running Tvheadend."
 msgstr ""
+"__Adres serwera__: Adres używany do łączenia się z serwerem. Zwykle jest to "
+"adres IP urządzenia, na którym działa Tvheadend."
 
 #: src/docs_inc.c:1995
 msgid "__Service__ : The service used by the subscription."
-msgstr ""
+msgstr "__Usługa__ : Usługa używana w ramach subskrypcji."
 
 #: src/docs_inc.c:1954
 msgid ""
@@ -9692,34 +9713,38 @@ msgid ""
 "that not all devices supply correct signal information, the value here can "
 "sometimes be ambiguous"
 msgstr ""
+"__Siła sygnału__: Siła sygnału zgłaszana przez urządzenie. Należy pamiętać, "
+"że nie wszystkie urządzenia dostarczają prawidłowych informacji o sygnale. "
+"Wartość ta może czasami być niejednoznaczna"
 
 #: src/docs_inc.c:426
 msgid "__Stars__ : Rating (in stars) of the program."
-msgstr ""
+msgstr "__Gwiazdy__ : Ocena (w gwiazdkach) programu."
 
 #: src/docs_inc.c:416
 msgid "__Start Time__ : The scheduled start time of the program."
-msgstr ""
+msgstr "__Czas rozpoczęcia__: Planowany czas rozpoczęcia programu."
 
 #: src/docs_inc.c:2003
 msgid "__Start__ : The date (and time) the subscription was started."
-msgstr ""
+msgstr "__Rozpocznij__ : Data (i godzina) rozpoczęcia subskrypcji."
 
 #: src/docs_inc.c:1850
 msgid "__Started__ : Date the connection started - YYYY-MM-DD HH:MM:SS."
-msgstr ""
+msgstr "__Rozpoczęto__ : Data rozpoczęcia połączenia - RRRR-MM-DD HH:MM:SS."
 
 #: src/docs_inc.c:2005
 msgid "__State__ : The status of the subscription"
-msgstr ""
+msgstr "__Stan__ : Stan subskrypcji"
 
 #: src/docs_inc.c:1852
 msgid "__Streaming__ : The number of active streams."
-msgstr ""
+msgstr "__Strumieniowanie__ : Liczba aktywnych strumieni."
 
 #: src/docs_inc.c:1926
 msgid "__Sub No__ : Number of subscriptions using the stream."
 msgstr ""
+"__Numer subskrypcji__: Liczba subskrypcji korzystających ze strumienia."
 
 #: src/docs_inc.c:412
 msgid ""
@@ -9727,10 +9752,13 @@ msgid ""
 "Note that some (notably, UK) providers use this for a program synopsis "
 "instead of a true subtitle."
 msgstr ""
+"_ Podtytuł _ : Podtytuł programu, jeśli został nadany przez dostawcę EPG. "
+"Należy pamiętać, że niektórzy dostawcy (zwłaszcza w Wielkiej Brytanii) "
+"używają tego do streszczenia programu zamiast prawdziwego podtytułu."
 
 #: src/docs_inc.c:1918
 msgid "__Sweep/Clean Icon !"
-msgstr ""
+msgstr "__Ikona zamiatania/czyszczenia!"
 
 #: src/docs_inc.c:1747
 msgid "__This is definition list formatting__ : with a subsequent explanation"
