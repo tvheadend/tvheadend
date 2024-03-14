@@ -9482,48 +9482,56 @@ msgstr ""
 #: src/docs_inc.c:2025
 msgid "__Descramble__ : The CAID used to descramble the stream."
 msgstr ""
+"__Deszyfruj__ : Identyfikator CAID używany do deszyfrowania strumienia."
 
 #: src/docs_inc.c:386
 msgid ""
 "__Details__ : Displays the current status of a recording event for this "
 "program if one applies:"
 msgstr ""
+"__Szczegóły__: Wyświetla aktualny status zdarzenia nagrywania dla tego "
+"programu, jeśli ma to zastosowanie:"
 
 #: src/docs_inc.c:211
 msgid "__Details__ : Gives a quick overview as to the status of each entry:"
-msgstr ""
+msgstr "__Szczegóły__: Zapewnia szybki przegląd statusu każdego wpisu:"
 
 #: src/docs_inc.c:420
 msgid ""
 "__Duration__ : The scheduled duration (i.e. start time to end time) of the "
 "program."
 msgstr ""
+"__Czas trwania__ : Zaplanowany czas trwania (tj. czas rozpoczęcia i "
+"zakończenia) programu."
 
 #: src/docs_inc.c:418
 msgid "__End Time__ : The scheduled end time of the program."
-msgstr ""
+msgstr "__Czas zakończenia__: Planowany czas zakończenia programu."
 
 #: src/docs_inc.c:6240
 msgid "__Enter Access Control Details to Secure Your System__"
-msgstr ""
+msgstr "__Wprowadź szczegóły kontroli dostępu, aby zabezpieczyć swój system__"
 
 #: src/docs_inc.c:414
 msgid "__Episode__ : Episode number, if given by your EPG provider."
-msgstr ""
+msgstr "__Odcinek__ : Numer odcinka, jeśli został nadany przez dostawcę EPG."
 
 #: src/docs_inc.c:2027
 msgid "__Errors__ : Number of errors occurred sending the stream."
 msgstr ""
+"__Błędy__ : Liczba błędów, które wystąpiły podczas przesyłania strumienia."
 
 #: src/docs_inc.c:2176
 msgid ""
 "__Example:__ "
 "`http://127.0.0.1:9981/play/stream/channelname/Life?playlist=xspf`"
 msgstr ""
+"__Przykład:__ "
+"`http://127.0.0.1:9981/play/stream/channelname/Life?playlist=xspf`"
 
 #: src/docs_inc.c:1889
 msgid "__Failed__ : Number of services that failed to be mapped."
-msgstr ""
+msgstr "__Błędne__ : Liczba usług, których nie udało się zmapować."
 
 #: src/docs_inc.c:1216
 msgid ""
@@ -9532,48 +9540,54 @@ msgid ""
 "than you'd imagine... if you find yourself in trouble, this is the first "
 "thing to check along with kernel support for your hardware."
 msgstr ""
+"__Firmware__ to mały fragment binarnego mikrokodu, który sterownik systemowy"
+" wysyła do tunera po inicjalizacji. To jest przyczyną większej liczby "
+"problemów, niż można sobie wyobrazić... jeśli wpadniesz w kłopoty, jest to "
+"pierwsza rzecz, którą należy sprawdzić, oprócz obsługi jądra dla sprzętu."
 
 #: src/docs_inc.c:1983
 msgid "__Hostname__ : Hostname/IP address using the subscription."
-msgstr ""
+msgstr "__Nazwa hosta__: Nazwa hosta/adres IP korzystający z subskrypcji."
 
 #: src/docs_inc.c:1981
 msgid "__ID__ : Subscription ID."
-msgstr ""
+msgstr "__Identyfikator__ : Identyfikator subskrypcji."
 
 #: src/docs_inc.c:6266
 msgid ""
 "__If you don't see any options below, you need to go back and assign a "
 "network type to a tuner.__"
 msgstr ""
+"__Jeśli poniżej nie widzisz żadnych opcji, musisz wrócić i przypisać typ "
+"sieci do tunera.__"
 
 #: src/docs_inc.c:668
 msgid "__If you haven't already don't so__ , please take a look at the"
-msgstr ""
+msgstr "__Jeśli jeszcze tego nie zrobiono__, spójrz na"
 
 #: src/docs_inc.c:1887
 msgid "__Ignored__ : Number of services ignored."
-msgstr ""
+msgstr "__Zignorowane__ : Liczba usług zignorowanych."
 
 #: src/docs_inc.c:1924
 msgid "__Input__ : Device used to receive the stream."
-msgstr ""
+msgstr "__Wejście__ : Urządzenie używane do odbierania strumienia."
 
 #: src/docs_inc.c:2029
 msgid "__Input__ : The input data rate in kb/s."
-msgstr ""
+msgstr "__Wejście__ : Szybkość danych wejściowych w kb/s."
 
 #: src/docs_inc.c:4181
 msgid "__It does not have any user configurable options.__"
-msgstr ""
+msgstr "__Nie ma żadnych opcji konfigurowalnych przez użytkownika.__"
 
 #: src/docs_inc.c:6250
 msgid "__Map Services to Channels__"
-msgstr ""
+msgstr "__Mapuj usługi do kanałów__"
 
 #: src/docs_inc.c:1885
 msgid "__Mapped__ : Number of services mapped."
-msgstr ""
+msgstr "__Zamapowane__ : Liczba mapowanych usług."
 
 #: src/docs_inc.c:4520
 msgid ""
