@@ -10087,55 +10087,55 @@ msgstr "diseqc"
 
 #: src/docs_inc.c:2408
 msgid "display-name"
-msgstr ""
+msgstr "wyświetlana-nazwa"
 
 #: src/docs_inc.c:59
 msgid "documentatation repository"
-msgstr ""
+msgstr "repozytorium dokumentacji"
 
 #: src/docs_inc.c:6192 src/docs_inc.c:6216
 msgid "donate"
-msgstr ""
+msgstr "wspomóż"
 
 #: src/docs_inc.c:3683
 msgid "dvb"
-msgstr ""
+msgstr "dvb"
 
 #: src/docs_inc.c:3655
 msgid "dvbcam"
-msgstr ""
+msgstr "dvbcam"
 
 #: src/docs_inc.c:846
 msgid "dvbscan"
-msgstr ""
+msgstr "dvbscan"
 
 #: src/docs_inc.c:3659
 msgid "dvr"
-msgstr ""
+msgstr "dvr"
 
 #: src/docs_inc.c:3663
 msgid "dvr-inotify"
-msgstr ""
+msgstr "dvr-inotify"
 
 #: src/docs_inc.c:2254
 msgid "dvrid"
-msgstr ""
+msgstr "dvrid"
 
 #: src/docs_inc.c:2206
 msgid "e2"
-msgstr ""
+msgstr "e2"
 
 #: src/docs_inc.c:2352
 msgid "emm"
-msgstr ""
+msgstr "emm"
 
 #: src/docs_inc.c:2186 src/docs_inc.c:2202
 msgid "empty"
-msgstr ""
+msgstr "puste"
 
 #: src/docs_inc.c:3723
 msgid "en50221"
-msgstr ""
+msgstr "en50221"
 
 #: src/docs_inc.c:3727
 msgid "en50494"
@@ -10143,23 +10143,23 @@ msgstr "en50494"
 
 #: src/docs_inc.c:3667
 msgid "epg"
-msgstr ""
+msgstr "epg"
 
 #: src/docs_inc.c:3671
 msgid "epgdb"
-msgstr ""
+msgstr "epgdb"
 
 #: src/docs_inc.c:3675
 msgid "epggrab"
-msgstr ""
+msgstr "epggrab"
 
 #: src/docs_inc.c:3619
 msgid "esfilter"
-msgstr ""
+msgstr "esfilter"
 
 #: src/docs_inc.c:945
 msgid "example"
-msgstr ""
+msgstr "przykład"
 
 #: src/docs_inc.c:3555
 msgid "fastscan"
