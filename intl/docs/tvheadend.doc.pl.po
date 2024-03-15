@@ -9763,10 +9763,11 @@ msgstr "__Ikona zamiatania/czyszczenia!"
 #: src/docs_inc.c:1747
 msgid "__This is definition list formatting__ : with a subsequent explanation"
 msgstr ""
+"__To jest formatowanie listy definicji__: z późniejszymi wyjaśnieniami"
 
 #: src/docs_inc.c:1745
 msgid "__This is paragraph formatting__ : with a subsequent explanation"
-msgstr ""
+msgstr "__To jest formatowanie akapitu__ : z późniejszym wyjaśnieniem"
 
 #: src/docs_inc.c:410
 msgid ""
@@ -9775,6 +9776,10 @@ msgid ""
 "automatically filter the whole grid to only show programs with the same "
 "name)._"
 msgstr ""
+"__Tytuł__ : Tytuł programu. _Możesz automatycznie ustawić filtr na wartość "
+"tego pola, klikając na nie (np. kliknięcie „Daily News” spowoduje "
+"automatyczne przefiltrowanie całej siatki i pokazanie tylko programów o tej "
+"samej nazwie)._"
 
 #: src/docs_inc.c:1987
 msgid ""
@@ -9782,6 +9787,9 @@ msgid ""
 "sometimes see \"epggrab\" here, this is an internal subscription used by "
 "Tvheadend to grab EPG data."
 msgstr ""
+"__Tytuł__ : Tytuł aplikacji korzystającej z subskrypcji - czasami zobaczysz "
+"tutaj „epggrab”, jest to wewnętrzna subskrypcja używana przez Tvheadend do "
+"pobierania danych EPG."
 
 #: src/docs_inc.c:1944
 msgid ""
@@ -9791,14 +9799,19 @@ msgid ""
 "increase at a fast pace and you have no playback issues, there is nothing to"
 " worry about."
 msgstr ""
+"__Błędy transportu__ : Liczba błędów strumieni transportowych. Szybko "
+"rosnąca wartość może wskazywać na problemy z sygnałem. Sterowniki urządzeń "
+"mogą czasami wysyłać niepotrzebne dane na początku strumienia, o ile wartość"
+" nie rośnie w szybkim tempie i nie występują problemy z odtwarzaniem, nie ma"
+" się czym martwić."
 
 #: src/docs_inc.c:6272
 msgid "__Tuner and Network__"
-msgstr ""
+msgstr "__Tuner i sieć__"
 
 #: src/docs_inc.c:1840
 msgid "__Type__ : Connection type - HTSP or HTTP."
-msgstr ""
+msgstr "__Typ__ : Typ połączenia — HTSP lub HTTP."
 
 #: src/docs_inc.c:1942
 msgid ""
@@ -9806,24 +9819,33 @@ msgid ""
 " can indicate a weak signal or interference, note that some devices can send"
 " a false value."
 msgstr ""
+"__Nieskorygowane bloki__ : Liczba nieskorygowanych bloków. Wartość wyższa "
+"niż 0 może wskazywać na słaby sygnał lub zakłócenia. Należy pamiętać, że "
+"niektóre urządzenia mogą wysyłać fałszywą wartość."
 
 #: src/docs_inc.c:1848
 msgid ""
 "__Username__ : The username used to access Tvheadend (a blank cell indicates"
 " no username was supplied)."
 msgstr ""
+"__Nazwa użytkownika__ : Nazwa użytkownika używana do uzyskiwania dostępu do "
+"Tvheadend (pusta komórka oznacza, że nie podano nazwy użytkownika)."
 
 #: src/docs_inc.c:1985
 msgid ""
 "__Username__ : Username using the subscription - a blank cell indicates the "
 "subscriber didn't supply a username."
 msgstr ""
+"__Nazwa użytkownika__ : Nazwa użytkownika korzystającego z subskrypcji — "
+"pusta komórka oznacza, że subskrybent nie podał nazwy użytkownika."
 
 #: src/docs_inc.c:2515
 msgid ""
 "__View Level__ | Change the interface view level to show/hide more advanced options.\n"
 "__Help__ | Display this help page."
 msgstr ""
+"__Poziom widoku__ | Zmień poziom widoku interfejsu, aby pokazać/ukryć bardziej zaawansowane opcje.\n"
+"__Pomoc__ | Wyświetl tę stronę pomocy."
 
 #: src/docs_inc.c:1928
 msgid "__Weight__ : Stream weighting."
@@ -9837,60 +9859,68 @@ msgstr ""
 
 #: src/docs_inc.c:6174 src/docs_inc.c:6200
 msgid "__You are now Finished__"
-msgstr ""
+msgstr "__ Już skończono __"
 
 #: src/docs_inc.c:744
 msgid ""
 "__You can omit this step (do not check 'Map all services') and map services "
 "to channels manually.__"
 msgstr ""
+"__Możesz pominąć ten krok (nie zaznaczać opcji „Mapuj wszystkie usługi”) i "
+"ręcznie mapować usługi do kanałów.__"
 
 #: src/docs_inc.c:6254
 msgid ""
 "__You can skip this step (do not check 'Map all services') and map services "
 "to channels manually.__"
 msgstr ""
+"__Możesz pominąć ten krok (nie zaznaczać opcji „Mapuj wszystkie usługi”) i "
+"ręcznie mapować usługi na kanały.__"
 
 #: src/docs_inc.c:3471
 msgid "access"
-msgstr ""
+msgstr "dostęp"
 
 #: src/docs_inc.c:1003 src/docs_inc.c:1186 src/docs_inc.c:4952
 #: src/docs_inc.c:4962 src/docs_inc.c:4972 src/docs_inc.c:4994
 msgid "and"
-msgstr ""
+msgstr "i"
 
 #: src/docs_inc.c:1708
 msgid ""
 "and IRC (_#hts_ on _Libera_ ). If you don't have a client installed you can "
 "use the"
 msgstr ""
+"i IRC (_#hts_ na _Libera_). Jeśli nie masz zainstalowanego klienta, możesz "
+"użyć"
 
 #: src/docs_inc.c:3491
 msgid "api"
-msgstr ""
+msgstr "api"
 
 #: src/docs_inc.c:1210
 msgid "arm"
-msgstr ""
+msgstr "arm"
 
 #: src/docs_inc.c:3591
 msgid "audioes"
-msgstr ""
+msgstr "audio"
 
 #: src/docs_inc.c:2194
 msgid "auth"
-msgstr ""
+msgstr "autoryzacja"
 
 #: src/docs_inc.c:3483
 msgid "avahi"
-msgstr ""
+msgstr "avahi"
 
 #: src/docs_inc.c:5836
 msgid ""
 "available. Tvheadend will parse the NIT then the add newly discovered muxes "
 "automatically."
 msgstr ""
+"dostępny. Tvheadend przeanalizuje NIT, a następnie automatycznie doda nowo "
+"wykryte multipleksy."
 
 #: src/docs_inc.c:1212
 msgid ""
@@ -9899,155 +9929,161 @@ msgid ""
 "or software. Many work out-of-the-box with Tvheadend using SAT>IP or the "
 "HDHomeRun protocols."
 msgstr ""
+"oparte) komputery, które łączysz z siecią przez Ethernet lub Wi-Fi, często "
+"mają dużą liczbę tunerów i są sterowane za pomocą interfejsu internetowego "
+"lub oprogramowania. Wiele z nich współpracuje z Tvheadend przy użyciu "
+"protokołów SAT>IP lub HDHomeRun."
 
 #: src/docs_inc.c:672
 msgid "before continuing with the wizard, as it contains lots of useful info!"
 msgstr ""
+"zanim przejdziesz dalej z kreatorem, ponieważ zawiera on wiele przydatnych "
+"informacji!"
 
 #: src/docs_inc.c:2775 src/docs_inc.c:3057
 msgid "below"
-msgstr ""
+msgstr "poniżej"
 
 #: src/docs_inc.c:4329
 msgid "below for important information!"
-msgstr ""
+msgstr "poniżej ważne informacje!"
 
 #: src/docs_inc.c:3487
 msgid "bonjour"
-msgstr ""
+msgstr "bonjour"
 
 #: src/docs_inc.c:3615
 msgid "bouquet"
-msgstr ""
+msgstr "bukiet"
 
 #: src/docs_inc.c:1342
 msgid "button will be shown instead."
-msgstr ""
+msgstr "zamiast tego zostanie wyświetlony przycisk."
 
 #: src/docs_inc.c:3635
 msgid "caclient"
-msgstr ""
+msgstr "caclient"
 
 #: src/docs_inc.c:3857
 msgid "capabilities."
-msgstr ""
+msgstr "możliwości."
 
 #: src/docs_inc.c:3643
 msgid "capmt"
-msgstr ""
+msgstr "capmt"
 
 #: src/docs_inc.c:3651
 msgid "cccam"
-msgstr ""
+msgstr "cccam"
 
 #: src/docs_inc.c:5422
 msgid "changes. We're ignoring the last component"
-msgstr ""
+msgstr "zmiany. Ignorujemy ostatni element"
 
 #: src/docs_inc.c:1991 src/docs_inc.c:2278 src/docs_inc.c:2284
 #: src/docs_inc.c:2316 src/docs_inc.c:3603 src/docs_inc.c:5964
 msgid "channel"
-msgstr ""
+msgstr "kanał"
 
 #: src/docs_inc.c:2238 src/docs_inc.c:2320 src/docs_inc.c:2380
 msgid "channelid"
-msgstr ""
+msgstr "idkanału"
 
 #: src/docs_inc.c:2234 src/docs_inc.c:2312 src/docs_inc.c:2376
 msgid "channelname"
-msgstr ""
+msgstr "nazwakanału"
 
 #: src/docs_inc.c:2230 src/docs_inc.c:2308 src/docs_inc.c:2372
 msgid "channelnumber"
-msgstr ""
+msgstr "numer kanału"
 
 #: src/docs_inc.c:2218 src/docs_inc.c:2368
 msgid "channels"
-msgstr ""
+msgstr "kanały"
 
 #: src/docs_inc.c:3679
 msgid "charset"
-msgstr ""
+msgstr "zestawznaków"
 
 #: src/docs_inc.c:4906
 msgid "checked and this user has admin rights."
-msgstr ""
+msgstr "zaznaczone i ten użytkownik ma uprawnienia administratora."
 
 #: src/docs_inc.c:4918
 msgid "checked even though this user has admin rights."
-msgstr ""
+msgstr "zaznaczone, mimo że ten użytkownik ma uprawnienia administratora."
 
 #: src/docs_inc.c:4930
 msgid "checked this user has no admin rights."
-msgstr ""
+msgstr "zaznaczone, ten użytkownik nie ma uprawnień administratora."
 
 #: src/docs_inc.c:402
 msgid "click to call up more detailed information about an event"
-msgstr ""
+msgstr "kliknij, aby wyświetlić bardziej szczegółowe informacje o zdarzeniu"
 
 #: src/docs_inc.c:3779
 msgid "codec"
-msgstr ""
+msgstr "kodek"
 
 #: src/docs_inc.c:3467
 msgid "config"
-msgstr ""
+msgstr "konf"
 
 #: src/docs_inc.c:1552
 msgid "configuration"
-msgstr ""
+msgstr "konfiguracja"
 
 #: src/docs_inc.c:3475
 msgid "cron"
-msgstr ""
+msgstr "cron"
 
 #: src/docs_inc.c:3639
 msgid "csa"
-msgstr ""
+msgstr "csa"
 
 #: src/docs_inc.c:3647
 msgid "cwc"
-msgstr ""
+msgstr "cwc"
 
 #: src/docs_inc.c:3479
 msgid "dbus"
-msgstr ""
+msgstr "dbus"
 
 #: src/docs_inc.c:3787
 msgid "ddci"
-msgstr ""
+msgstr "ddci"
 
 #: src/docs_inc.c:2188
 msgid "default - HTTP authentication"
-msgstr ""
+msgstr "domyślnie - uwierzytelnianie HTTP"
 
 #: src/docs_inc.c:2348
 msgid "descramble"
-msgstr ""
+msgstr "deszyfrowanie"
 
 #: src/docs_inc.c:3627
 msgid "descrambler"
-msgstr ""
+msgstr "deszyfrator"
 
 #: src/docs_inc.c:3631
 msgid "descrambler-emm"
-msgstr ""
+msgstr "deszyfrator-emm"
 
 #: src/docs_inc.c:69
 msgid "development page"
-msgstr ""
+msgstr "strona rozwoju"
 
 #: src/docs_inc.c:1881
 msgid "dialog determines how services are mapped."
-msgstr ""
+msgstr "okno dialogowe określa sposób mapowania usług."
 
 #: src/docs_inc.c:1296 src/docs_inc.c:2544
 msgid "dialog."
-msgstr ""
+msgstr "okno dialogowe"
 
 #: src/docs_inc.c:3719
 msgid "diseqc"
-msgstr ""
+msgstr "diseqc"
 
 #: src/docs_inc.c:2408
 msgid "display-name"
