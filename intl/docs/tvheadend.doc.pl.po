@@ -10163,89 +10163,91 @@ msgstr "przykład"
 
 #: src/docs_inc.c:3555
 msgid "fastscan"
-msgstr ""
+msgstr "fastscan"
 
 #: src/docs_inc.c:61
 msgid ""
 "fetches the markdown files using the build-in web server and use them as "
 "source for mkdocs."
 msgstr ""
+"pobiera pliki markdown za pomocą wbudowanego serwera WWW i używa ich jako "
+"źródła mkdocs."
 
 #: src/docs_inc.c:3195
 msgid "field to 127.0.0.1 and"
-msgstr ""
+msgstr "pole na 127.0.0.1 i"
 
 #: src/docs_inc.c:1007
 msgid "firmware repositories on Github."
-msgstr ""
+msgstr "repozytoria oprogramowania sprzętowego na Githubie."
 
 #: src/docs_inc.c:834
 msgid "for UK DVB-T transmitters"
-msgstr ""
+msgstr "dla brytyjskich nadajników DVB-T"
 
 #: src/docs_inc.c:868
 msgid "for a detailed look into service mapping."
-msgstr ""
+msgstr "aby uzyskać szczegółowe informacje na temat mapowania usług."
 
 #: src/docs_inc.c:1068
 msgid "for a full list."
-msgstr ""
+msgstr "aby uzyskać pełną listę."
 
 #: src/docs_inc.c:2777
 msgid "for a list of possible reasons."
-msgstr ""
+msgstr "aby zapoznać się z listą możliwych powodów."
 
 #: src/docs_inc.c:830
 msgid "for all European satellite information"
-msgstr ""
+msgstr "dla wszystkich europejskich informacji satelitarnych"
 
 #: src/docs_inc.c:71
 msgid "for details."
-msgstr ""
+msgstr "aby uzyskać szczegółowe informacje."
 
 #: src/docs_inc.c:4670
 msgid "for more details on service mapping."
-msgstr ""
+msgstr "aby uzyskać więcej informacji na temat mapowania usług."
 
 #: src/docs_inc.c:247 src/docs_inc.c:2862
 msgid "for more info."
-msgstr ""
+msgstr "po więcej informacji."
 
 #: src/docs_inc.c:838
 msgid "for primarily central and northern Europe"
-msgstr ""
+msgstr "głównie dla Europy Środkowej i Północnej"
 
 #: src/docs_inc.c:842
 msgid "for worldwide satellite information."
-msgstr ""
+msgstr "do ogólnoświatowych informacji satelitarnych."
 
 #: src/docs_inc.c:5114
 msgid "force service type to 1"
-msgstr ""
+msgstr "wymuś typ usługi na 1"
 
 #: src/docs_inc.c:5282
 msgid "format."
-msgstr ""
+msgstr "format."
 
 #: src/docs_inc.c:1706
 msgid "forum"
-msgstr ""
+msgstr "forum"
 
 #: src/docs_inc.c:947
 msgid "from one of our users..."
-msgstr ""
+msgstr "od jednego z naszych użytkowników..."
 
 #: src/docs_inc.c:3431
 msgid "fsmonitor"
-msgstr ""
+msgstr "fsmonitor"
 
 #: src/docs_inc.c:1074
 msgid "github"
-msgstr ""
+msgstr "github"
 
 #: src/docs_inc.c:3571
 msgid "globalheaders"
-msgstr ""
+msgstr "globalheaders"
 
 #: src/docs_inc.c:3913
 msgid "grabber script & parses the output."
