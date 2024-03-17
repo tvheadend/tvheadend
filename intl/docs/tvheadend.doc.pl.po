@@ -10251,163 +10251,165 @@ msgstr "globalheaders"
 
 #: src/docs_inc.c:3913
 msgid "grabber script & parses the output."
-msgstr ""
+msgstr "skrypt grabbera i analizuje dane wyjściowe."
 
 #: src/docs_inc.c:3929
 msgid "grabber script & parses the output. This isn't widely used!"
 msgstr ""
+"skrypt grabbera i analizuje dane wyjściowe. To nie jest powszechnie "
+"stosowane!"
 
 #: src/docs_inc.c:3921
 msgid "grabber script."
-msgstr ""
+msgstr "skrypt grabbera."
 
 #: src/docs_inc.c:3937
 msgid "grabber script. This isn't widely used!"
-msgstr ""
+msgstr "skrypt grabbera. To nie jest powszechnie stosowane!"
 
 #: src/docs_inc.c:3855
 msgid "grabbing"
-msgstr ""
+msgstr "pobieranie"
 
 #: src/docs_inc.c:1266
 msgid "grid"
-msgstr ""
+msgstr "siatka"
 
 #: src/docs_inc.c:680 src/docs_inc.c:798 src/docs_inc.c:872
 msgid "here"
-msgstr ""
+msgstr "tutaj"
 
 #: src/docs_inc.c:3579
 msgid "hevc"
-msgstr ""
+msgstr "hevc"
 
 #: src/docs_inc.c:3503
 msgid "htsp"
-msgstr ""
+msgstr "htsp"
 
 #: src/docs_inc.c:3515
 msgid "htsp-ans"
-msgstr ""
+msgstr "htsp-ans"
 
 #: src/docs_inc.c:3511
 msgid "htsp-req"
-msgstr ""
+msgstr "htsp-req"
 
 #: src/docs_inc.c:3507
 msgid "htsp-sub"
-msgstr ""
+msgstr "htsp-sub"
 
 #: src/docs_inc.c:3495
 msgid "http"
-msgstr ""
+msgstr "http"
 
 #: src/docs_inc.c:3499
 msgid "httpc"
-msgstr ""
+msgstr "httpc"
 
 #: src/docs_inc.c:1188
 msgid "iOS"
-msgstr ""
+msgstr "iOS"
 
 #: src/docs_inc.c:3443
 msgid "idnode"
-msgstr ""
+msgstr "idnode"
 
 #: src/docs_inc.c:2288
 msgid "idxname"
-msgstr ""
+msgstr "idxname"
 
 #: src/docs_inc.c:3519
 msgid "imagecache"
-msgstr ""
+msgstr "imagecache"
 
 #: src/docs_inc.c:152
 msgid "indicates the location (or path) of the device."
-msgstr ""
+msgstr "wskazuje lokalizację (lub ścieżkę) urządzenia."
 
 #: src/docs_inc.c:182
 msgid "indicates the tuner (in this case"
-msgstr ""
+msgstr "wskazuje tuner (w tym przypadku"
 
 #: src/docs_inc.c:4376
 msgid "information icon will display service details."
-msgstr ""
+msgstr "ikona informacji wyświetli szczegóły usługi."
 
 #: src/docs_inc.c:3703
 msgid "iptv"
-msgstr ""
+msgstr "iptv"
 
 #: src/docs_inc.c:3707
 msgid "iptv-pcr"
-msgstr ""
+msgstr "iptv-pcr"
 
 #: src/docs_inc.c:3711
 msgid "iptv-sub"
-msgstr ""
+msgstr "iptv-sub"
 
 #: src/docs_inc.c:4904 src/docs_inc.c:4928
 msgid "is"
-msgstr ""
+msgstr "to"
 
 #: src/docs_inc.c:174
 msgid "is a unique ID."
-msgstr ""
+msgstr "to unikalny identyfikator."
 
 #: src/docs_inc.c:172
 msgid "is the RTSP server listening port."
-msgstr ""
+msgstr "to port nasłuchiwania serwera RTSP."
 
 #: src/docs_inc.c:170
 msgid "is the SAT>IP server name."
-msgstr ""
+msgstr "to nazwa serwera SAT>IP."
 
 #: src/docs_inc.c:156
 msgid "is the adapter number (also used in the path)."
-msgstr ""
+msgstr "to numer adaptera (używany również w ścieżce)."
 
 #: src/docs_inc.c:162
 msgid "is the adapter number."
-msgstr ""
+msgstr "to numer adaptera."
 
 #: src/docs_inc.c:160
 msgid "is the chipset name."
-msgstr ""
+msgstr "to nazwa chipsetu."
 
 #: src/docs_inc.c:164
 msgid "is the delivery system."
-msgstr ""
+msgstr "to system dostarczania."
 
 #: src/docs_inc.c:154
 msgid "is the demodulation chipset name given to it by the kernel driver."
-msgstr ""
+msgstr "to nazwa chipsetu demodulacyjnego nadana mu przez sterownik jądra."
 
 #: src/docs_inc.c:166
 msgid "is the frontend number. A tuner can have many frontends!"
-msgstr ""
+msgstr "to numer frontendu. Tuner może mieć wiele nakładek!"
 
 #: src/docs_inc.c:190
 msgid "is the listening port."
-msgstr ""
+msgstr "to port nasłuchowy."
 
 #: src/docs_inc.c:176 src/docs_inc.c:188
 msgid "is the server's IP address."
-msgstr ""
+msgstr "to adres IP serwera."
 
 #: src/docs_inc.c:4916
 msgid "isn't"
-msgstr ""
+msgstr "nie jest"
 
 #: src/docs_inc.c:4334
 msgid "items"
-msgstr ""
+msgstr "pozycje"
 
 #: src/docs_inc.c:2400 src/docs_inc.c:2404
 msgid "lcn"
-msgstr ""
+msgstr "lcn"
 
 #: src/docs_inc.c:3695
 msgid "libav"
-msgstr ""
+msgstr "libav"
 
 #: src/docs_inc.c:3697
 msgid "libav / ffmpeg"
@@ -10418,34 +10420,36 @@ msgid ""
 "like a spreadsheet, a panel, or a list of (grouped) settings/options below "
 "that."
 msgstr ""
+"jak arkusz kalkulacyjny, panel lub lista (zgrupowanych) ustawień/opcji "
+"poniżej."
 
 #: src/docs_inc.c:3715
 msgid "linuxdvb"
-msgstr ""
+msgstr "linuxdvb"
 
 #: src/docs_inc.c:1158
 msgid "linuxtv"
-msgstr ""
+msgstr "linuxtv"
 
 #: src/docs_inc.c:3435
 msgid "lock"
-msgstr ""
+msgstr "blokada"
 
 #: src/docs_inc.c:2174
 msgid "m3u"
-msgstr ""
+msgstr "m3u"
 
 #: src/docs_inc.c:3399
 msgid "main"
-msgstr ""
+msgstr "główne"
 
 #: src/docs_inc.c:1262
 msgid "menu bar"
-msgstr ""
+msgstr "pasek menu"
 
 #: src/docs_inc.c:3595 src/docs_inc.c:5558
 msgid "mkv"
-msgstr ""
+msgstr "mkv"
 
 #: src/docs_inc.c:3239
 msgid ""
@@ -10453,72 +10457,79 @@ msgid ""
 " through the named pipe(/tmp/camd.socket). The configuration for OSCam is "
 "same as the previous"
 msgstr ""
+"tryb polega na tym, że nie są wymagane żadne połączenia UDP. Cała "
+"komunikacja jest przetwarzana przez nazwany potok (/tmp/camd.socket). "
+"Konfiguracja OSCam jest taka sama jak poprzednia"
 
 #: src/docs_inc.c:3231
 msgid ""
 "mode, but a named pipe(/tmp/camd.socket) connection is used instead of the "
 "TCP connection."
 msgstr ""
+"tryb, ale zamiast połączenia TCP używane jest nazwane połączenie potokowe "
+"(/tmp/camd.socket)."
 
 #: src/docs_inc.c:3213
 msgid ""
 "mode, but a namedpipe (/tmp/camd.socket) connection is used instead of the "
 "TCP connection."
 msgstr ""
+"tryb, ale zamiast połączenia TCP używane jest połączenie nazwanego potoku "
+"(/tmp/clamd.socket)."
 
 #: src/docs_inc.c:3243
 msgid "mode."
-msgstr ""
+msgstr "tryb."
 
 #: src/docs_inc.c:4496
 msgid "module under 'General Settings'."
-msgstr ""
+msgstr "moduł w obszarze „Ustawienia ogólne”."
 
 #: src/docs_inc.c:3687
 msgid "mpegts"
-msgstr ""
+msgstr "mpegts"
 
 #: src/docs_inc.c:2328
 msgid "mux"
-msgstr ""
+msgstr "multiplekser"
 
 #: src/docs_inc.c:3583
 msgid "muxer"
-msgstr ""
+msgstr "multipleksery"
 
 #: src/docs_inc.c:3691
 msgid "muxsched"
-msgstr ""
+msgstr "muxsched"
 
 #: src/docs_inc.c:2282 src/docs_inc.c:2294
 msgid "name"
-msgstr ""
+msgstr "nazwa"
 
 #: src/docs_inc.c:4636
 msgid "networks"
-msgstr ""
+msgstr "sieci"
 
 #: src/docs_inc.c:1160
 msgid "networks or manually configured."
-msgstr ""
+msgstr "sieci lub skonfigurowane ręcznie."
 
 #: src/docs_inc.c:530 src/docs_inc.c:532 src/docs_inc.c:540 src/docs_inc.c:542
 #: src/docs_inc.c:558 src/docs_inc.c:566 src/docs_inc.c:584 src/docs_inc.c:586
 #: src/docs_inc.c:594 src/docs_inc.c:596
 msgid "no"
-msgstr ""
+msgstr "nie"
 
 #: src/docs_inc.c:2276
 msgid "numname"
-msgstr ""
+msgstr "numname"
 
 #: src/docs_inc.c:3747
 msgid "opentv"
-msgstr ""
+msgstr "opentv"
 
 #: src/docs_inc.c:2172 src/docs_inc.c:4762
 msgid "or"
-msgstr ""
+msgstr "lub"
 
 #: src/docs_inc.c:6184 src/docs_inc.c:6208
 msgid "or chat to us on"
