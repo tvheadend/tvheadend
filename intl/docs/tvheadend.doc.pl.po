@@ -10533,126 +10533,128 @@ msgstr "lub"
 
 #: src/docs_inc.c:6184 src/docs_inc.c:6208
 msgid "or chat to us on"
-msgstr ""
+msgstr "lub porozmawiaj z nami na"
 
 #: src/docs_inc.c:5966
 msgid "or per"
-msgstr ""
+msgstr "lub za"
 
 #: src/docs_inc.c:3563
 msgid "parser"
-msgstr ""
+msgstr "parser"
 
 #: src/docs_inc.c:3587
 msgid "pass"
-msgstr ""
+msgstr "pass"
 
 #: src/docs_inc.c:3559
 msgid "pcr"
-msgstr ""
+msgstr "pcr"
 
 #: src/docs_inc.c:2196
 msgid "pernament code which must be enabled in the password table"
-msgstr ""
+msgstr "stały kod, który należy włączyć w tabeli haseł"
 
 #: src/docs_inc.c:2356
 msgid "pids"
-msgstr ""
+msgstr "pid-y"
 
 #: src/docs_inc.c:2166
 msgid "playlist"
-msgstr ""
+msgstr "listaodtwarzania"
 
 #: src/docs_inc.c:1999 src/docs_inc.c:2262 src/docs_inc.c:2336
 #: src/docs_inc.c:3623
 msgid "profile"
-msgstr ""
+msgstr "profil"
 
 #: src/docs_inc.c:3743
 msgid "psip"
-msgstr ""
+msgstr "psip"
 
 #: src/docs_inc.c:3751
 msgid "pyepg"
-msgstr ""
+msgstr "pyepg"
 
 #: src/docs_inc.c:3407
 msgid "qprof"
-msgstr ""
+msgstr "qprof"
 
 #: src/docs_inc.c:2344
 msgid "qsize"
-msgstr ""
+msgstr "qsize"
 
 #: src/docs_inc.c:2226
 msgid "recordings"
-msgstr ""
+msgstr "nagrania"
 
 #: src/docs_inc.c:3455
 msgid "rtsp"
-msgstr ""
+msgstr "rtsp"
 
 #: src/docs_inc.c:2210 src/docs_inc.c:3731
 msgid "satip"
-msgstr ""
+msgstr "satip"
 
 #: src/docs_inc.c:3735
 msgid "satips"
-msgstr ""
+msgstr "satips"
 
 #: src/docs_inc.c:3767
 msgid "scanfile"
-msgstr ""
+msgstr "scanfile"
 
 #: src/docs_inc.c:3203 src/docs_inc.c:3223 src/docs_inc.c:3253
 msgid "section of oscam.conf:"
-msgstr ""
+msgstr "sekcja oscam.conf:"
 
 #: src/docs_inc.c:2324 src/docs_inc.c:3599
 msgid "service"
-msgstr ""
+msgstr "usługa"
 
 #: src/docs_inc.c:3611
 msgid "service-mapper"
-msgstr ""
+msgstr "maper-usług"
 
 #: src/docs_inc.c:3463
 msgid "settings"
-msgstr ""
+msgstr "ustawienia"
 
 #: src/docs_inc.c:2266
 msgid "sort"
-msgstr ""
+msgstr "sortuj"
 
 #: src/docs_inc.c:3427
 msgid "spawn"
-msgstr ""
+msgstr "tworzenie"
 
 #: src/docs_inc.c:5280
 msgid "strftime"
-msgstr ""
+msgstr "strftime"
 
 #: src/docs_inc.c:3607
 msgid "subscription"
-msgstr ""
+msgstr "subskrypcja"
 
 #: src/docs_inc.c:2746 src/docs_inc.c:2754
 msgid "tab - including those currently broadcasting."
-msgstr ""
+msgstr "karta – łącznie z aktualnie nadawanymi."
 
 #: src/docs_inc.c:5068 src/docs_inc.c:5104
 msgid "tab to re-generate them."
-msgstr ""
+msgstr "karta, aby je ponownie wygenerować."
 
 #: src/docs_inc.c:4660
 msgid "tab when you press the _[Map services]_ button."
-msgstr ""
+msgstr "karta po naciśnięciu przycisku _[Mapuj usługi]_."
 
 #: src/docs_inc.c:6054
 msgid ""
 "tab. Note, when streaming using the HTSP Protocol e.g. Kodi (via pvr.hts) or"
 " Movian the HTSP profile will always be used."
 msgstr ""
+"karta. Uwaga, podczas przesyłania strumieniowego przy użyciu protokołu HTSP,"
+" np. Kodi (przez pvr.hts) lub Movian, zawsze będzie używany profil HTSP."
 
 #: src/docs_inc.c:466
 msgid ""
@@ -10660,68 +10662,73 @@ msgid ""
 "channel that always runs late, or perhaps define a different post-processing"
 " command to strip adverts out on a commercial channel."
 msgstr ""
+"karta. Pozwala to na przykład ustawić więcej dopełnienia po emisji dla "
+"kanału, który zawsze się spóźnia, lub zdefiniować inne polecenie "
+"przetwarzania końcowego w celu usunięcia reklam z kanału komercyjnego."
 
 #: src/docs_inc.c:4029
 msgid ""
 "tab. This dialog shows the received PIDs and filtered PIDs in one window."
 msgstr ""
+"karta. To okno dialogowe pokazuje odebrane i przefiltrowane PID w jednym "
+"oknie."
 
 #: src/docs_inc.c:2242 src/docs_inc.c:2290 src/docs_inc.c:2296
 #: src/docs_inc.c:2384
 msgid "tag"
-msgstr ""
+msgstr "tag"
 
 #: src/docs_inc.c:2406
 msgid "tag instead"
-msgstr ""
+msgstr "tag zamiast tego"
 
 #: src/docs_inc.c:2250 src/docs_inc.c:2392
 msgid "tagid"
-msgstr ""
+msgstr "idtagu"
 
 #: src/docs_inc.c:2246 src/docs_inc.c:2388
 msgid "tagname"
-msgstr ""
+msgstr "nazwatagu"
 
 #: src/docs_inc.c:2222
 msgid "tags"
-msgstr ""
+msgstr "tagi"
 
 #: src/docs_inc.c:3523
 msgid "tbl"
-msgstr ""
+msgstr "tbl"
 
 #: src/docs_inc.c:3543
 msgid "tbl-atsc"
-msgstr ""
+msgstr "tbl-atsc"
 
 #: src/docs_inc.c:3527
 msgid "tbl-base"
-msgstr ""
+msgstr "tbl-base"
 
 #: src/docs_inc.c:3531
 msgid "tbl-csa"
-msgstr ""
+msgstr "tbl-csa"
 
 #: src/docs_inc.c:3535
 msgid "tbl-eit"
-msgstr ""
+msgstr "tbl-eit"
 
 #: src/docs_inc.c:3547
 msgid "tbl-pass"
-msgstr ""
+msgstr "tbl-pass"
 
 #: src/docs_inc.c:3551
 msgid "tbl-satip"
-msgstr ""
+msgstr "tbl-satip"
 
 #: src/docs_inc.c:3539
 msgid "tbl-time"
-msgstr ""
+msgstr "tbl-time"
 
 #: src/docs_inc.c:3451
 msgid "tcp"
-msgstr ""
+msgstr "tcp"
 
 #: src/docs_inc.c:2192
 msgid "temporary ticket valid for 5 minutes"
