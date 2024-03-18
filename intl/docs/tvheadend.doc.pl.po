@@ -10732,156 +10732,160 @@ msgstr "tcp"
 
 #: src/docs_inc.c:2192
 msgid "temporary ticket valid for 5 minutes"
-msgstr ""
+msgstr "bilet tymczasowy ważny 5 minut"
 
 #: src/docs_inc.c:1264
 msgid "that provides access to Add/Save/Edit-type functions, and a"
-msgstr ""
+msgstr "zapewniający dostęp do funkcji typu Dodaj/Zapisz/Edytuj oraz"
 
 #: src/docs_inc.c:955
 msgid "the Tvheadend forums"
-msgstr ""
+msgstr "na forach Tvheadend"
 
 #: src/docs_inc.c:406
 msgid "the program failed to record"
-msgstr ""
+msgstr "program nie zdołał się nagrać."
 
 #: src/docs_inc.c:398
 msgid "the program is currently recording"
-msgstr ""
+msgstr "program jest obecnie nagrywany"
 
 #: src/docs_inc.c:394
 msgid "the program is scheduled for recording"
-msgstr ""
+msgstr "program ma zaplanowane nagranie"
 
 #: src/docs_inc.c:1993
 msgid ""
 "the subscription is using - if the subscription is streaming a service/mux "
 "this cell will be blank."
 msgstr ""
+"subskrypcja jest używana - jeśli subskrypcja przesyła strumieniowo "
+"usługę/multiplekser, ta komórka będzie pusta."
 
 #: src/docs_inc.c:2001
 msgid "the subscription is using."
-msgstr ""
+msgstr "korzysta z subskrypcji."
 
 #: src/docs_inc.c:1554
 msgid "the view level drop-down isn't always visible."
-msgstr ""
+msgstr "menu rozwijane poziomu widoku nie zawsze jest widoczne."
 
 #: src/docs_inc.c:5314
 msgid "thetvdb.com"
-msgstr ""
+msgstr "thetvdb.com"
 
 #: src/docs_inc.c:3415
 msgid "thread"
-msgstr ""
+msgstr "wątek"
 
 #: src/docs_inc.c:2190
 msgid "ticket"
-msgstr ""
+msgstr "bilet"
 
 #: src/docs_inc.c:3423
 msgid "time"
-msgstr ""
+msgstr "czas"
 
 #: src/docs_inc.c:3763
 msgid "timeshift"
-msgstr ""
+msgstr "timeshift"
 
 #: src/docs_inc.c:5302
 msgid "tmdb"
-msgstr ""
+msgstr "tmdb"
 
 #: src/docs_inc.c:5306
 msgid "tmdb.org"
-msgstr ""
+msgstr "tmdb.org"
 
 #: src/docs_inc.c:3199
 msgid ""
 "to 9000 (or your preferred TCP port). Note that the TCP port must match "
 "OSCam's configuration. The following lines are required in"
 msgstr ""
+"na 9000 (lub preferowany port TCP). Pamiętaj, że port TCP musi odpowiadać "
+"konfiguracji OSCam. Następujące linie są wymagane w"
 
 #: src/docs_inc.c:848
 msgid "to force a scan and effectively ask your tuner what it can see."
-msgstr ""
+msgstr "aby wymusić skanowanie i skutecznie zapytać tuner, co widzi."
 
 #: src/docs_inc.c:3403
 msgid "tprof"
-msgstr ""
+msgstr "tprof"
 
 #: src/docs_inc.c:3699
 msgid "transcode"
-msgstr ""
+msgstr "transkoduj"
 
 #: src/docs_inc.c:3775
 msgid "tsdebug"
-msgstr ""
+msgstr "tsdebug"
 
 #: src/docs_inc.c:3771
 msgid "tsfile"
-msgstr ""
+msgstr "tsfile"
 
 #: src/docs_inc.c:3575
 msgid "tsfix"
-msgstr ""
+msgstr "tsfix"
 
 #: src/docs_inc.c:5310 src/docs_inc.c:5318
 msgid "tvdb"
-msgstr ""
+msgstr "tvdb"
 
 #: src/docs_inc.c:3739
 msgid "tvhdhomerun"
-msgstr ""
+msgstr "tvhdhomerun"
 
 #: src/docs_inc.c:3419
 msgid "tvhpoll"
-msgstr ""
+msgstr "tvhpoll"
 
 #: src/docs_inc.c:5550 src/docs_inc.c:5578
 msgid "tvmovies/Gladiator (2000)"
-msgstr ""
+msgstr "tvmovies/Gladiator (2000)"
 
 #: src/docs_inc.c:5606
 msgid "tvmovies/Gladiator (2000)/Gladiator (2000)"
-msgstr ""
+msgstr "tvmovies/Gladiator (2000)/Gladiator (2000)"
 
 #: src/docs_inc.c:5544
 msgid "tvshows/Bones/Bones - S02E06"
-msgstr ""
+msgstr "tvshows/Bones/Bones - S02E06"
 
 #: src/docs_inc.c:5582
 msgid "tvshows/Bones/Bones - S05E11"
-msgstr ""
+msgstr "tvshows/Bones/Bones - S05E11"
 
 #: src/docs_inc.c:5584
 msgid "tvshows/Bones/Bones - S05E11 - The X in the Files"
-msgstr ""
+msgstr "tvshows/Bones/Bones - S05E11 - The X in the Files"
 
 #: src/docs_inc.c:5608
 msgid "tvshows/Bones/Season 5/Bones - S05E11"
-msgstr ""
+msgstr "tvshows/Bones/Season 5/Bones - S05E11"
 
 #: src/docs_inc.c:5580
 msgid "tvshows/Countdown/Countdown"
-msgstr ""
+msgstr "tvshows/Countdown/Countdown"
 
 #: src/docs_inc.c:832
 msgid "ukfree.tv"
-msgstr ""
+msgstr "ukfree.tv"
 
 #: src/docs_inc.c:3459
 msgid "upnp"
-msgstr ""
+msgstr "upnp"
 
 #: src/docs_inc.c:3447
 msgid "url"
-msgstr ""
+msgstr "url"
 
 #: src/docs_inc.c:5674 src/docs_inc.c:5678 src/docs_inc.c:5774
 #: src/docs_inc.c:5778 src/docs_inc.c:5866 src/docs_inc.c:5870
 msgid "user"
-msgstr ""
+msgstr "użytkownik"
 
 #: src/docs_inc.c:3439
 msgid "uuid"
@@ -10934,6 +10938,8 @@ msgid ""
 "you want to export. If you don't export any, you will see the following "
 "error message (in the log)."
 msgstr ""
+"chcesz wyeksportować. Jeśli nie wyeksportujesz żadnego, zobaczysz "
+"następujący komunikat o błędzie (w dzienniku)."
 
 #: src/docs_inc.c:1805
 msgid ""
@@ -10941,6 +10947,8 @@ msgid ""
 "Content from cell 2 Content in the first column | Content in the second "
 "column"
 msgstr ""
+"| --------------------------- | ------------- Beznagłówkowa komórka tabeli 1"
+" | Treść z komórki 2 Treść w pierwszej kolumnie | Treść w drugiej kolumnie"
 
 #: src/docs_inc.c:5536 src/docs_inc.c:5538 src/docs_inc.c:5546
 #: src/docs_inc.c:5548
