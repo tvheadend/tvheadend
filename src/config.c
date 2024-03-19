@@ -2558,9 +2558,10 @@ const idclass_t config_class = {
       .name   = N_("Local IP Address"),
       .desc   = N_("IP of the Docker host. Each HDHomeRun tuner sends data "
                    "to TVheadend through a socket. This lets you define the "
-                   "IP address that HDHomeRun needs to send to. Leave this "
-                   "blank if you want TVheadend to automatically pick an "
-                   "address."),
+                   "IP address that HDHomeRun needs to send to. This also used "
+                   "to set the IP of the server if HDHomeRun Server Emulation " 
+                   "is enabled. Leave this blank if you want TVheadend to "
+                   "automatically pick an address."),
       .off    = offsetof(config_t, local_ip),
       .opts   = PO_HIDDEN | PO_EXPERT,
       .group  = 6
