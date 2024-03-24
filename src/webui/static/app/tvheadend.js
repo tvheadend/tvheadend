@@ -1390,10 +1390,10 @@ tvheadend.toLocaleFormat = function()
 tvheadend.toCustomDate = function(date, format) {
     if (/(%[MmsSyYdhHIpPq]+)/.test(format)) {
         const o = {
+            "%[yY]+": date.getFullYear(),
             "%M+": date.getMonth() + 1,
             "%d+": date.getDate(),
-            "%h+": date.getHours(),
-            "%H+": date.getHours(),
+            "%[hH]+": date.getHours(),
             "%I+": date.getHours() % 12 || 12,
             "%p": date.getHours() >= 12 ? "PM" : "AM",
             "%P": date.getHours() >= 12 ? "pm" : "am",
@@ -1403,31 +1403,29 @@ tvheadend.toCustomDate = function(date, format) {
             "%S": date.getMilliseconds()
         };
 
-        format = format.replace(/(%[yY]+)/, (date.getFullYear() + "").substr(5 - RegExp.$1.length))
-                       .replace(/(%MMMM)/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { month: 'long' }))
-                       .replace(/(%MMM)/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { month: 'short' }))
-                       .replace(/(%dddd)/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { weekday: 'long' }))
-                       .replace(/(%ddd)/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { weekday: 'short' }));
+        format = format.replace(/%MMMM/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { month: 'long' }))
+                       .replace(/%MMM/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { month: 'short' }))
+                       .replace(/%dddd/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { weekday: 'long' }))
+                       .replace(/%ddd/, date.toLocaleDateString(tvheadend.toLocaleFormat(), { weekday: 'short' }));
 
         for (const k in o) {
-            if (new RegExp("(" + k + ")").test(format)) {
-                format = format.replace(RegExp.$1, RegExp.$1.length == 2 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length));
-            }
+            // pad to 4 places with zero, then slice from the end 1 less than match length (to trim % char)
+            format = format.replace(new RegExp(k), (match) => match.length === 2 ? o[k] : String(o[k]).padStart(4, 0).slice(1 - match.length));
         }
 
         return format;
-    } else {
-        const options = {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        };
-        return date.toLocaleString(tvheadend.toLocaleFormat(), options);
     }
+
+    const options = {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    };
+    return date.toLocaleString(tvheadend.toLocaleFormat(), options);
 };
 
 /**
