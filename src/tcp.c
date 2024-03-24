@@ -1013,54 +1013,6 @@ tcp_server_delete(void *server)
   tvh_write(tcp_server_pipe.wr, &c, 1);
 }
 
-/**
- *
- */
-int
-tcp_default_ip_addr ( struct sockaddr_storage *deflt, int family )
-{
-
-  struct sockaddr_storage ss;
-  socklen_t ss_len;
-  int sock;
-
-  memset(&ss, 0, sizeof(ss));
-  ss.ss_family = family == PF_UNSPEC ? tcp_preferred_address_family : family;
-  if (inet_pton(ss.ss_family,
-                ss.ss_family == AF_INET ?
-                  /* Google name servers */
-                  "8.8.8.8" : "2001:4860:4860::8888",
-                IP_IN_ADDR(ss)) <= 0)
-    return -1;
-
-  IP_PORT_SET(ss, htons(53));
-
-  sock = tvh_socket(ss.ss_family, SOCK_STREAM, 0);
-  if (sock < 0)
-    return -1;
-
-  if (connect(sock, (struct sockaddr *)&ss, IP_IN_ADDRLEN(ss)) < 0) {
-    close(sock);
-    return -1;
-  }
-
-  ss_len = sizeof(ss);
-  if (getsockname(sock, (struct sockaddr *)&ss, &ss_len) < 0) {
-    close(sock);
-    return -1;
-  }
-
-  if (ss.ss_family == AF_INET)
-    IP_AS_V4(&ss, port) = 0;
-  else
-    IP_AS_V6(&ss, port) = 0;
-
-  memset(deflt, 0, sizeof(*deflt));
-  memcpy(deflt, &ss, ss_len);
-
-  close(sock);
-  return 0;
-}
 
 /**
  *

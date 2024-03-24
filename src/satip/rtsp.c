@@ -1884,7 +1884,8 @@ void satip_server_rtsp_init
     reg = 1;
   }
   s = rtsp_ip;
-  rtsp_ip = strdup(bindaddr);
+  if(bindaddr != NULL)
+    rtsp_ip = strdup(bindaddr);
   free(s);
   rtsp_port = port;
   rtsp_descramble = descramble;
