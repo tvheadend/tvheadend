@@ -189,6 +189,11 @@ jobs:
         if: startsWith(matrix.container, 'i386') || matrix.container == 'debian:stretch'
       - name: Workaround safe directory
         run: git config --global --add safe.directory /__w/tvheadend/tvheadend
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.11
+        with:
+          key: ${{ matrix.container }}
+          save: false
       - name: build
         run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container, 'i386') && '-a i386') || '' }}
       - name: copy-result
@@ -221,6 +226,11 @@ jobs:
       - uses: actions/checkout@v1
       - name: Workaround safe directory
         run: git config --global --add safe.directory /__w/tvheadend/tvheadend
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.11
+        with:
+          key: fedora:${{ matrix.releasever }}
+          save: false
       - name: build
         run: ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 && make -C rpm build
       - name: copy-result
