@@ -501,7 +501,7 @@ tvheadend.dvrButtonFcn = function(store, select, _url, q) {
 tvheadend.dvr_upcoming = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
-    var list = 'disp_title,disp_extratext,channel,start,start_extra,stop,stop_extra,pri,config_name,comment';
+    var list = 'disp_title,disp_extratext,channel,start,start_extra,stop,stop_extra,pri,uri,config_name,comment';
     var elist = 'enabled,' +
                 (tvheadend.accessUpdate.admin ?
                 list + ',episode_disp,owner,creator' : list) + ',retention,removal';
@@ -791,7 +791,7 @@ tvheadend.dvr_finished = function(panel, index) {
         del: false,
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,' +
               'start_real,stop_real,duration,filesize,copyright_year,' +
-              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,age_rating,rating_label,filename',
+              'sched_status,errors,data_errors,playcount,uri,config_name,owner,creator,comment,age_rating,rating_label,filename',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
@@ -911,7 +911,7 @@ tvheadend.dvr_failed = function(panel, index) {
                      _('The associated file will be removed from storage.'),
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,' +
               'image,copyright_year,start_real,stop_real,duration,filesize,status,' +
-              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment,age_rating,rating_label,filename',
+              'sched_status,errors,data_errors,playcount,uri,config_name,owner,creator,comment,age_rating,rating_label,filename',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
@@ -990,7 +990,7 @@ tvheadend.dvr_removed = function(panel, index) {
         del: true,
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,image,' +
               'copyright_year,start_real,stop_real,duration,status,' +
-              'sched_status,errors,data_errors,url,config_name,owner,creator,comment,age_rating,rating_label',
+              'sched_status,errors,data_errors,uri,config_name,owner,creator,comment,age_rating,rating_label',
         columns: {
             disp_title: {
                 renderer: tvheadend.displayWithYearRenderer(),
