@@ -110,6 +110,15 @@ streaming_component_type2codec_id(streaming_component_type_t type)
   case SCT_THEORA:
     codec_id = AV_CODEC_ID_THEORA;
     break;
+  case SCT_CAVS:
+    codec_id = AV_CODEC_ID_CAVS;
+    break;
+  case SCT_AVS2:
+    codec_id = AV_CODEC_ID_AVS2;
+    break;
+  case SCT_AVS3:
+    codec_id = AV_CODEC_ID_AVS3;
+    break;
   case SCT_AC3:
     codec_id = AV_CODEC_ID_AC3;
     break;
@@ -176,6 +185,15 @@ codec_id2streaming_component_type(enum AVCodecID id)
     break;
   case AV_CODEC_ID_THEORA:
     type = SCT_THEORA;
+    break;
+  case AV_CODEC_ID_CAVS:
+    type = SCT_CAVS;
+    break;
+  case AV_CODEC_ID_AVS2:
+    type = SCT_AVS2;
+    break;
+  case AV_CODEC_ID_AVS3:
+    type = SCT_AVS3;
     break;
   case AV_CODEC_ID_AC3:
     type = SCT_AC3;

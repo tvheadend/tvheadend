@@ -259,6 +259,9 @@ lav_muxer_support_stream(muxer_container_type_t mc,
     ret |= (type == SCT_MPEG2VIDEO);
     ret |= (type == SCT_H264);
     ret |= (type == SCT_HEVC);
+    ret |= (type == SCT_CAVS);
+    ret |= (type == SCT_AVS2);
+    ret |= (type == SCT_AVS3);
 
     ret |= (type == SCT_MPEG2AUDIO);
     ret |= (type == SCT_AC3);

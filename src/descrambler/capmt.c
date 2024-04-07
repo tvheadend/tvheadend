@@ -2097,6 +2097,9 @@ capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
   case SCT_AAC:        type = 0x11; break;
   case SCT_H264:       type = 0x1b; break;
   case SCT_HEVC:       type = 0x24; break;
+  case SCT_CAVS:       type = 0x42; break;
+  case SCT_AVS2:       type = 0xd2; break;
+  case SCT_AVS3:       type = 0xd4; break;
   case SCT_DVBSUB:     type = 0x06; break;
   case SCT_TELETEXT:   type = 0x06; break;
   default:

@@ -590,6 +590,9 @@ static struct strtab streamtypetab[] = {
   { "OPUS",       SCT_OPUS },
   { "FLAC",       SCT_FLAC },
   { "AC-4",       SCT_AC4 },
+  { "AVS+",       SCT_CAVS },
+  { "AVS2",       SCT_AVS2 },
+  { "AVS3",       SCT_AVS3 },
 };
 
 /**

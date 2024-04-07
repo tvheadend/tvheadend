@@ -362,6 +362,18 @@ dvb_psi_parse_pmt
       hts_stream_type = SCT_MPEG2VIDEO;
       break;
 
+    case 0x42:
+      hts_stream_type = SCT_CAVS;
+      break;
+
+    case 0xd2:
+      hts_stream_type = SCT_AVS2;
+      break;
+
+    case 0xd4:
+      hts_stream_type = SCT_AVS3;
+      break;
+
     case 0x81:
       hts_stream_type = SCT_AC3;
       break;

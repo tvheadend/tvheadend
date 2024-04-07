@@ -63,6 +63,9 @@ enum streaming_component_type {
   SCT_HEVC,
   SCT_VP9,
   SCT_THEORA,
+  SCT_CAVS,
+  SCT_AVS2,
+  SCT_AVS3,
   SCT_OPUS,
   SCT_FLAC,
   SCT_AC4,
@@ -72,8 +75,10 @@ enum streaming_component_type {
 #define SCT_MASK(t) (1 << (t))
 
 #define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264 || \
-			(t) == SCT_VP8 || (t) == SCT_HEVC || \
-			(t) == SCT_VP9 || (t) == SCT_THEORA)
+			(t) == SCT_VP8  || (t) == SCT_HEVC || \
+			(t) == SCT_VP9  || (t) == SCT_THEORA || \
+      (t) == SCT_CAVS || (t) == SCT_AVS2 || \
+      (t) == SCT_AVS3)
 
 #define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
 			(t) == SCT_AAC  || (t) == SCT_MP4A || \
