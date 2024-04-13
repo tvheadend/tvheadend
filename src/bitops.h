@@ -31,6 +31,8 @@ typedef uint32_t bitops_ulong_t;
 #define BIT_WORD(bit) ((bit) / BITS_PER_LONG)
 #define BIT_MASK(bit) (((bitops_ulong_t)1) << ((bit) % BITS_PER_LONG))
 
+#define TVHLOG_BITARRAY ((LS_LAST + (BITS_PER_LONG - 1)) / BITS_PER_LONG)  //For tvhlog.c and api/api_config.c
+
 static inline void set_bit(int bit, void *addr)
 {
   bitops_ulong_t *p = ((bitops_ulong_t *)addr) + BIT_WORD(bit);
