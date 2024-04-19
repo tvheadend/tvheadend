@@ -476,6 +476,14 @@
     background-image: url(../icons/networks.png) !important;
 }
 
+.delete {
+    background-image: url(../icons/delete.png) !important;
+}
+
+.list {
+    background-image: url(../icons/list.png) !important;
+}
+
 .muxes {
     background-image: url(../icons/muxes.png) !important;
 }
