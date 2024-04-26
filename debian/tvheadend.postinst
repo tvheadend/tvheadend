@@ -57,17 +57,17 @@ configure)
     echo >>"$HTS_SUPERUSERCONF" "{"
 
     if db_get tvheadend/admin_username; then
-        JSONUSER=`escape_json_string $RET`
-        echo "\"username\": $JSONUSER,"
+        JSONUSER="$(escape_json_string "$RET")"
+        echo >>"$HTS_SUPERUSERCONF" "\"username\": $JSONUSER,"
         JSONUSER=""
     fi
 
     if db_get tvheadend/admin_password; then
-        JSONPASS=`escape_json_string $RET`
-        echo "\"password\": $JSONPASS"
+        JSONPASS="$(escape_json_string "$RET")"
+        echo >>"$HTS_SUPERUSERCONF" "\"password\": $JSONPASS"
         JSONPASS=""
     fi
-    
+
     echo >>"$HTS_SUPERUSERCONF" "}"
     ;;
 esac
