@@ -97,13 +97,13 @@ tvheadend.dvrDetails = function(grid, index) {
             content += '<div class="x-epg-bottom">';
         }
         // If we have no image then use fanart image instead.
-        content += '<div class="x-epg-image-container">';
-        if (event.image != null && event.image.length > 0) {
-          content += '<img class="x-epg-image" src="' + event.image + '">';
-        } else if (event.fanart_image != null && event.fanart_image.length > 0) {
-          content += '<img class="x-epg-image" src="' + event.fanart_image + '">';
-        }
-        content += '</div>';
+        var eventimg = '';
+        if (event.image != null && event.image.length > 0)
+          eventimg = event.image;
+        else if (event.fanart_image != null && event.fanart_image.length > 0)
+          eventimg = event.fanart_image;
+        if (eventimg)
+          content += '<div class="x-epg-image-container"><img class="x-epg-image" src="' + eventimg + '"></div>';
 
         content += '<hr class="x-epg-hr"/>';
         if (event.disp_summary && (!event.disp_subtitle || event.disp_subtitle != event.disp_summary))
