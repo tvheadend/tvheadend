@@ -51,7 +51,7 @@ fi
 case $OSPREFIX$TARGET in
     bookworm|bullseye|buster|sid|stretch|jessie|trixie)
         OS="debian";;
-    trusty|xenial|bionic|focal|impish|jammy|kinetic|lunar|mantic)
+    trusty|xenial|bionic|focal|impish|jammy|kinetic|lunar|mantic|noble)
         OS="ubuntu";;
     raspios*)
         OS="raspbian";;

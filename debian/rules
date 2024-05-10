@@ -2,6 +2,11 @@
 export DH_VERBOSE=1
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+    NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+    EXTRAMAKEFLAGS += -j$(NUMJOBS)
+endif
+
 %:
 	dh $@ --with-systemd
 
@@ -12,7 +17,7 @@ override_dh_auto_configure:
 	dh_auto_configure -- ${AUTOBUILD_CONFIGURE_EXTRA} ${JOBSARGS}
 
 override_dh_auto_build:
-	make ${JARGS}
+	make ${JARGS} ${EXTRAMAKEFLAGS}
 
 override_dh_strip:
 	dh_strip --dbg-package=tvheadend-dbg
