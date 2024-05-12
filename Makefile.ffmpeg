@@ -57,11 +57,11 @@ LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = https://code.videolan.org/videolan/x264/-/archive/$(LIBX264_VER)/$(LIBX264_TB)
 LIBX264_SHA1   = eeca87def74d390669dbc8a98c49012305bc9b99
 
-LIBX265_VER    = 3.5
+LIBX265_VER    = 3.6
 LIBX265        = x265_$(LIBX265_VER)
 LIBX265_TB     = $(LIBX265).tar.gz
 LIBX265_URL    = https://bitbucket.org/multicoreware/x265_git/downloads/$(LIBX265_TB)
-LIBX265_SHA1   = dc8e70f441991289a9a34fd37e1649d59435bfae
+LIBX265_SHA1   = 51fc4592a9f1e340d87a51233361cc5a3ffd739d
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
 else
