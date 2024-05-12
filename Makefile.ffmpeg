@@ -44,11 +44,11 @@ BSFS           = h264_mp4toannexb hevc_mp4toannexb
 FILTERS        = yadif format hwupload hwdownload scale null aresample anull
 HWACCELS       =
 
-NASM_VER       = 2.16.01
+NASM_VER       = 2.16.03
 NASM           = nasm-$(NASM_VER)
 NASM_TB        = $(NASM).tar.gz
 NASM_URL       = https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VER)/$(NASM_TB)
-NASM_SHA1      = 13bf04e35e1042dc163d14aa124c68cfa7620871
+NASM_SHA1      = 432742c550039d202db6e34bb3efab646be74b56
 NASM_DIFFS     = remove-invalid-pure_func-qualifiers.diff
 
 LIBX264_VER    = c196240409e4d7c01b47448d93b1f9683aaa7cf7
