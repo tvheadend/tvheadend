@@ -329,6 +329,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
       type = dvb_str2type(override_type);
       if ( ! ( type == DVB_TYPE_C || type == DVB_TYPE_T ||
                type == DVB_TYPE_ATSC_T || type == DVB_TYPE_ATSC_C ||
+               type == DVB_TYPE_ISDB_T || type == DVB_TYPE_ISDB_C ||
                type == DVB_TYPE_CABLECARD ) ) {
         type = DVB_TYPE_C;
       }
