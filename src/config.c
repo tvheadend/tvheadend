@@ -2527,8 +2527,8 @@ const idclass_t config_class = {
       .name   = N_("CORS origin"),
       .desc   = N_("HTTP CORS (cross-origin resource sharing) origin. This "
                    "option is usually set when Tvheadend is behind a "
-                   "proxy. Enter a domain (or IP) to allow "
-                   "cross-domain requests."),
+                   "proxy. Enter the URL (domain or IP address, prefixed "
+                   "with http:// or https://) to allow cross-domain requests."),
       .set    = config_class_cors_origin_set,
       .off    = offsetof(config_t, cors_origin),
       .opts   = PO_EXPERT,
