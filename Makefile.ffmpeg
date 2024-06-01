@@ -62,11 +62,7 @@ LIBX265        = x265_$(LIBX265_VER)
 LIBX265_TB     = $(LIBX265).tar.gz
 LIBX265_URL    = https://bitbucket.org/multicoreware/x265_git/downloads/$(LIBX265_TB)
 LIBX265_SHA1   = 51fc4592a9f1e340d87a51233361cc5a3ffd739d
-ifeq ($(CONFIG_PIE),yes)
-LIBX265_DIFFS  = libx265.pie.diff
-else
 LIBX265_DIFFS  = libx265.pic.diff
-endif
 LIBX265_DIFFS  += libx265-silence.patch
 
 LIBVPX_VER     = 1.14.0
