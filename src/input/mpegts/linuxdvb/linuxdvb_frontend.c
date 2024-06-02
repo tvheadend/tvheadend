@@ -244,6 +244,18 @@ const idclass_t linuxdvb_frontend_class =
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_old_status),
     },
+    {
+      .type     = PT_U32,
+      .id       = "grace_period",
+      .name     = N_("Scan grace period (seconds)"),
+      .desc     = N_("The maximum amount of time to allow this adapter "
+                     "to complete a scan of a mux. If you're getting "
+                     "failed or incomplete scans (for example, missing "
+                     "services) despite a strong signal, try increasing "
+                     "this value. Ignored for DVB-S."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_grace_period),
+    },
     {}
   }
 };
@@ -593,10 +605,7 @@ static int
 linuxdvb_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  int r = 5;
-  if (lfe->lfe_satconf)
-    r = linuxdvb_satconf_get_grace(lfe->lfe_satconf, mm);
-  return r;
+  return lfe->lfe_satconf ? linuxdvb_satconf_get_grace(lfe->lfe_satconf, mm) : lfe->lfe_grace_period;
 }
 
 static int
@@ -2167,6 +2176,7 @@ linuxdvb_frontend_create
   lfe->lfe_pids_use_all = 1;
   lfe->lfe_sig_multiplier = 100;
   lfe->lfe_snr_multiplier = 100;
+  lfe->lfe_grace_period = 5;
   lfe = (linuxdvb_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
   if (!lfe) return NULL;
 
