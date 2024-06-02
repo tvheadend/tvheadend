@@ -150,6 +150,7 @@ struct linuxdvb_frontend
   int                       lfe_lna;
   uint32_t                  lfe_sig_multiplier;
   uint32_t                  lfe_snr_multiplier;
+  uint32_t                  lfe_grace_period;
 
   /*
    * Satconf (DVB-S only)
