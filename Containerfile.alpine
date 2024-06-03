@@ -116,7 +116,6 @@ RUN apk add --no-cache \
     addgroup -S 'tvheadend' && \
     adduser -D -G 'tvheadend' -h '/var/lib/tvheadend' -s '/bin/nologin' -S 'tvheadend' && \
     adduser 'tvheadend' 'audio' && \
-    adduser 'tvheadend' 'usb' && \
     adduser 'tvheadend' 'video' && \
     install -d -m 775 -g 'tvheadend' -o 'tvheadend' '/var/lib/tvheadend/recordings' && \
     install -d -m 775 -g 'tvheadend' -o 'tvheadend' '/var/log/tvheadend'
