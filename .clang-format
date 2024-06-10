@@ -1,0 +1,39 @@
+---
+AlignAfterOpenBracket: DontAlign
+AlignConsecutiveMacros: 'true'
+AlignConsecutiveAssignments: 'true'
+AlignConsecutiveDeclarations: 'true'
+AlignEscapedNewlines: Left
+AlignOperands: 'false'
+AlignTrailingComments: 'true'
+AllowAllArgumentsOnNextLine: 'false'
+AllowAllParametersOfDeclarationOnNextLine: 'false'
+AllowShortBlocksOnASingleLine: 'true'
+AllowShortCaseLabelsOnASingleLine: 'false'
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Empty
+AllowShortLoopsOnASingleLine: 'false'
+AlwaysBreakAfterReturnType: None
+BinPackArguments: 'false'
+BinPackParameters: 'false'
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
+ColumnLimit: 100
+ForEachMacros: [ 'TVH_INPUT_FOREACH', 'TVH_HARDWARE_FOREACH', 'LIST_FOREACH', 'SLIST_FOREACH', 'TAILQ_FOREACH', 'TAILQ_FOREACH_REVERSE', 'STAILQ_FOREACH', 'SIMPLEQ_FOREACH', 'CIRCLEQ_FOREACH', 'CIRCLEQ_FOREACH_REVERSE', 'RB_FOREACH', 'RB_FOREACH_REVERSE' ]
+IndentCaseLabels: 'true'
+PointerAlignment: Left
+ReflowComments: 'true'
+SortIncludes: 'Never'
+SpaceAfterCStyleCast: 'false'
+SpaceAfterLogicalNot: 'false'
+SpaceBeforeInheritanceColon: 'false'
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: 'false'
+SpacesInAngles: 'false'
+SpacesInContainerLiterals: 'false'
+SpacesInParentheses: 'false'
+UseTab: Never
+
+...
+
