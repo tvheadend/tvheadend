@@ -25,10 +25,11 @@ struct mpegts_listeners mpegts_listeners;
 extern memoryinfo_t mpegts_input_queue_memoryinfo;
 extern memoryinfo_t mpegts_input_table_memoryinfo;
 
-void
-mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
-              str_list_t *tsfiles, int tstuners )
-{
+void mpegts_init(int linuxdvb_mask,
+    int              nosatip,
+    str_list_t*      satip_client,
+    str_list_t*      tsfiles,
+    int              tstuners) {
   /* Register classes (avoid API 400 errors due to not yet defined) */
   idclass_register(&mpegts_network_class);
   idclass_register(&mpegts_mux_class);
@@ -55,7 +56,7 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
 
   /* TS files */
 #if ENABLE_TSFILE
-  if(tsfiles->num) {
+  if (tsfiles->num) {
     int i;
     tsfile_init(tstuners ?: tsfiles->num);
     for (i = 0; i < tsfiles->num; i++)
@@ -78,7 +79,7 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
   satip_init(nosatip, satip_client);
 #endif
 
- /* HDHomerun client */
+  /* HDHomerun client */
 #if ENABLE_HDHOMERUN_CLIENT
   tvhdhomerun_init();
 #endif
@@ -87,12 +88,9 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
 #if ENABLE_MPEGTS
   mpegts_mux_sched_init();
 #endif
-
 }
 
-void
-mpegts_done ( void )
-{
+void mpegts_done(void) {
   tvhftrace(LS_MAIN, mpegts_network_scan_done);
   tvhftrace(LS_MAIN, mpegts_mux_sched_done);
 #if ENABLE_MPEGTS_DVB

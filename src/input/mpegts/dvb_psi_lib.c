@@ -26,32 +26,30 @@
  * *************************************************************************/
 
 static const int dvb_servicetype_map[][2] = {
-  { 0x01, ST_SDTV  }, /* SDTV (MPEG2) */
-  { 0x02, ST_RADIO },
-  { 0x11, ST_HDTV  }, /* HDTV (MPEG2) */
-  { 0x16, ST_SDTV  }, /* Advanced codec SDTV */
-  { 0x17, ST_SDTV  }, /* Advanced codec SDTV - NVOD time-shifted */
-  { 0x18, ST_SDTV  }, /* Advanced codec SDTV - NVOD reference */
-  { 0x19, ST_HDTV  }, /* Advanced codec HDTV */
-  { 0x1A, ST_HDTV  }, /* Advanced codec HDTV - NVOD time-shifted */
-  { 0x1B, ST_HDTV  }, /* Advanced codec HDTV - NVOD reference */
-  { 0x1C, ST_HDTV  }, /* Advanced codec HDTV - plano-stereoscopic */
-  { 0x1D, ST_HDTV  }, /* Advanced codec HDTV - plano-stereoscopic - NVOD time-shifted */
-  { 0x1E, ST_HDTV  }, /* Advanced codec HDTV - plano-stereoscopic - NVOID reference */
-  { 0x1F, ST_UHDTV }, /* HEVC (assume all HEVC content is UHD?) */
-  { 0x80, ST_SDTV  }, /* NET POA - Cabo SDTV */
-  { 0x91, ST_HDTV  }, /* Bell TV HDTV */
-  { 0x96, ST_SDTV  }, /* Bell TV SDTV */
-  { 0xA0, ST_HDTV  }, /* Bell TV tiered HDTV */
-  { 0xA4, ST_HDTV  }, /* DN HDTV */
-  { 0xA6, ST_HDTV  }, /* Bell TV tiered HDTV */
-  { 0xA8, ST_SDTV  }, /* DN advanced SDTV */
-  { 0xD3, ST_SDTV  }, /* SKY TV SDTV */
+    {0x01, ST_SDTV}, /* SDTV (MPEG2) */
+    {0x02, ST_RADIO},
+    {0x11, ST_HDTV},  /* HDTV (MPEG2) */
+    {0x16, ST_SDTV},  /* Advanced codec SDTV */
+    {0x17, ST_SDTV},  /* Advanced codec SDTV - NVOD time-shifted */
+    {0x18, ST_SDTV},  /* Advanced codec SDTV - NVOD reference */
+    {0x19, ST_HDTV},  /* Advanced codec HDTV */
+    {0x1A, ST_HDTV},  /* Advanced codec HDTV - NVOD time-shifted */
+    {0x1B, ST_HDTV},  /* Advanced codec HDTV - NVOD reference */
+    {0x1C, ST_HDTV},  /* Advanced codec HDTV - plano-stereoscopic */
+    {0x1D, ST_HDTV},  /* Advanced codec HDTV - plano-stereoscopic - NVOD time-shifted */
+    {0x1E, ST_HDTV},  /* Advanced codec HDTV - plano-stereoscopic - NVOID reference */
+    {0x1F, ST_UHDTV}, /* HEVC (assume all HEVC content is UHD?) */
+    {0x80, ST_SDTV},  /* NET POA - Cabo SDTV */
+    {0x91, ST_HDTV},  /* Bell TV HDTV */
+    {0x96, ST_SDTV},  /* Bell TV SDTV */
+    {0xA0, ST_HDTV},  /* Bell TV tiered HDTV */
+    {0xA4, ST_HDTV},  /* DN HDTV */
+    {0xA6, ST_HDTV},  /* Bell TV tiered HDTV */
+    {0xA8, ST_SDTV},  /* DN advanced SDTV */
+    {0xD3, ST_SDTV},  /* SKY TV SDTV */
 };
 
-int
-dvb_servicetype_lookup ( int t )
-{
+int dvb_servicetype_lookup(int t) {
   int i;
   for (i = 0; i < ARRAY_SIZE(dvb_servicetype_map); i++) {
     if (dvb_servicetype_map[i][0] == t)
@@ -67,36 +65,37 @@ dvb_servicetype_lookup ( int t )
 /*
  * Section assembly
  */
-static int
-mpegts_psi_section_reassemble0
-  ( mpegts_psi_table_t *mt, const char *logpref,
-    const uint8_t *data,
-    int len, int start, int crc,
-    mpegts_psi_section_callback_t cb, void *opaque)
-{
-  uint8_t *p = mt->mt_sect.ps_data;
-  int excess, tsize;
+static int mpegts_psi_section_reassemble0(mpegts_psi_table_t* mt,
+    const char*                                               logpref,
+    const uint8_t*                                            data,
+    int                                                       len,
+    int                                                       start,
+    int                                                       crc,
+    mpegts_psi_section_callback_t                             cb,
+    void*                                                     opaque) {
+  uint8_t* p = mt->mt_sect.ps_data;
+  int      excess, tsize;
 
-  if(len <= 0)
+  if (len <= 0)
     return -1;
 
-  if(start) {
+  if (start) {
     /* Payload unit start indicator */
     mt->mt_sect.ps_offset = 0;
-    mt->mt_sect.ps_lock = 1;
-    if((data[0] & mt->mt_sect.ps_mask) != mt->mt_sect.ps_table) {
-      if(len >= 3) {
+    mt->mt_sect.ps_lock   = 1;
+    if ((data[0] & mt->mt_sect.ps_mask) != mt->mt_sect.ps_table) {
+      if (len >= 3) {
         tsize = 3 + (((data[1] & 0xf) << 8) | data[2]);
-        if(len >= tsize)
+        if (len >= tsize)
           return tsize;
       }
     }
   }
 
-  if(!mt->mt_sect.ps_lock)
+  if (!mt->mt_sect.ps_lock)
     return -1;
 
-  if(mt->mt_sect.ps_offset + len > MPEGTS_PSI_SECTION_SIZE) {
+  if (mt->mt_sect.ps_offset + len > MPEGTS_PSI_SECTION_SIZE) {
     tvherror(mt->mt_subsys, "PSI section overflow");
     return -1;
   }
@@ -104,27 +103,31 @@ mpegts_psi_section_reassemble0
   memcpy(p + mt->mt_sect.ps_offset, data, len);
   mt->mt_sect.ps_offset += len;
 
-  if(mt->mt_sect.ps_offset < 3) {
+  if (mt->mt_sect.ps_offset < 3) {
     /* We don't know the total length yet */
     return len;
   }
 
   tsize = 3 + (((p[1] & 0xf) << 8) | p[2]);
 
-  if(mt->mt_sect.ps_offset < tsize)
+  if (mt->mt_sect.ps_offset < tsize)
     return len; // Not there yet
 
-  if(p[0] == 0x72) { /* stuffing section */
-    cb = NULL;
+  if (p[0] == 0x72) { /* stuffing section */
+    cb  = NULL;
     crc = 0;
-  } else if((p[0] & mt->mt_sect.ps_mask) != mt->mt_sect.ps_table) {
+  } else if ((p[0] & mt->mt_sect.ps_mask) != mt->mt_sect.ps_table) {
     cb = NULL;
   }
 
-  if(crc && tvh_crc32(p, tsize, 0xffffffff)) {
+  if (crc && tvh_crc32(p, tsize, 0xffffffff)) {
     if (cb && tvhlog_limit(&mt->mt_err_log, 10)) {
-      tvhwarn(mt->mt_subsys, "%s: %s: invalid checksum (len %i, errors %zi)",
-              mt->mt_name, logpref, tsize, mt->mt_err_log.count);
+      tvhwarn(mt->mt_subsys,
+          "%s: %s: invalid checksum (len %i, errors %zi)",
+          mt->mt_name,
+          logpref,
+          tsize,
+          mt->mt_err_log.count);
     }
     return -1;
   }
@@ -140,33 +143,38 @@ mpegts_psi_section_reassemble0
 /**
  *
  */
-void
-mpegts_psi_section_reassemble
-  (mpegts_psi_table_t *mt, const char *logprefix,
-   const uint8_t *tsb, int crc,
-   mpegts_psi_section_callback_t cb, void *opaque)
-{
-  int pusi   = tsb[1] & 0x40;
-  uint8_t cc = tsb[3];
-  int off    = cc & 0x20 ? tsb[4] + 5 : 4;
-  int r;
+void mpegts_psi_section_reassemble(mpegts_psi_table_t* mt,
+    const char*                                        logprefix,
+    const uint8_t*                                     tsb,
+    int                                                crc,
+    mpegts_psi_section_callback_t                      cb,
+    void*                                              opaque) {
+  int     pusi = tsb[1] & 0x40;
+  uint8_t cc   = tsb[3];
+  int     off  = cc & 0x20 ? tsb[4] + 5 : 4;
+  int     r;
 
   if (cc & 0x10) {
     if (mt->mt_sect.ps_cc != -1 && mt->mt_sect.ps_cc != (cc & 0x0f)) {
       uint16_t pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
-      tvhdebug(mt->mt_subsys, "%s: %s: PID %04X CC error %d != %d",
-               mt->mt_name, logprefix, pid, cc & 0x0f, mt->mt_sect.ps_cc);
+      tvhdebug(mt->mt_subsys,
+          "%s: %s: PID %04X CC error %d != %d",
+          mt->mt_name,
+          logprefix,
+          pid,
+          cc & 0x0f,
+          mt->mt_sect.ps_cc);
       mt->mt_sect.ps_lock = 0;
     }
     mt->mt_sect.ps_cc = (cc + 1) & 0x0f;
   }
 
-  if(off >= 188) {
+  if (off >= 188) {
     mt->mt_sect.ps_lock = 0;
     return;
   }
 
-  if(pusi) {
+  if (pusi) {
     uint8_t len2 = tsb[off++];
     uint8_t off2 = off;
     off += len2;
@@ -181,9 +189,8 @@ mpegts_psi_section_reassemble
     }
   }
 
-  while(off < 188) {
-    r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, 188 - off, pusi, crc,
-        cb, opaque);
+  while (off < 188) {
+    r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, 188 - off, pusi, crc, cb, opaque);
     if (r < 0)
       goto wrong_state;
     off += r;
@@ -198,9 +205,7 @@ wrong_state:
  *
  */
 
-static int sect_cmp
-  ( mpegts_psi_table_state_t *a, mpegts_psi_table_state_t *b )
-{
+static int sect_cmp(mpegts_psi_table_state_t* a, mpegts_psi_table_state_t* b) {
   if (a->tableid != b->tableid)
     return a->tableid - b->tableid;
   if (a->extraid < b->extraid)
@@ -211,24 +216,22 @@ static int sect_cmp
 }
 
 static void
-mpegts_table_state_reset
-  ( mpegts_psi_table_t *mt, mpegts_psi_table_state_t *st, int last )
-{
+mpegts_table_state_reset(mpegts_psi_table_t* mt, mpegts_psi_table_state_t* st, int last) {
   int i;
   mt->mt_finished = 0;
-  st->complete = 0;
-  st->version = MPEGTS_PSI_VERSION_NONE;
-  st->last = last;
+  st->complete    = 0;
+  st->version     = MPEGTS_PSI_VERSION_NONE;
+  st->last        = last;
   memset(st->sections, 0, sizeof(st->sections));
   for (i = 0; i < last / 32; i++)
     st->sections[i] = 0xFFFFFFFF;
   st->sections[last / 32] = 0xFFFFFFFF << (31 - (last % 32));
 }
 
-static void
-mpegts_table_state_restart
-  ( mpegts_psi_table_t *mt, mpegts_psi_table_state_t *st, int last, int ver )
-{
+static void mpegts_table_state_restart(mpegts_psi_table_t* mt,
+    mpegts_psi_table_state_t*                              st,
+    int                                                    last,
+    int                                                    ver) {
   if (st->complete == 2)
     mt->mt_complete--;
   if (st->complete)
@@ -237,22 +240,20 @@ mpegts_table_state_restart
   st->version = ver;
 }
 
-static mpegts_psi_table_state_t *
-mpegts_table_state_find
-  ( mpegts_psi_table_t *mt, int tableid, uint64_t extraid, int last )
-{
+static mpegts_psi_table_state_t*
+mpegts_table_state_find(mpegts_psi_table_t* mt, int tableid, uint64_t extraid, int last) {
   mpegts_psi_table_state_t *st, *st2, st_cmp;
 
   /* Find state */
   st_cmp.tableid = tableid;
   st_cmp.extraid = extraid;
-  st = RB_FIND(&mt->mt_state, &st_cmp, link, sect_cmp);
+  st             = RB_FIND(&mt->mt_state, &st_cmp, link, sect_cmp);
   if (st)
     return st;
-  st = calloc(1, sizeof(*st));
+  st          = calloc(1, sizeof(*st));
   st->tableid = tableid;
   st->extraid = extraid;
-  st2 = RB_INSERT_SORTED(&mt->mt_state, st, link, sect_cmp);
+  st2         = RB_INSERT_SORTED(&mt->mt_state, st, link, sect_cmp);
   assert(st2 == NULL);
   mt->mt_incomplete++;
   mpegts_table_state_reset(mt, st, last);
@@ -262,31 +263,33 @@ mpegts_table_state_find
 /*
  * End table
  */
-static int
-dvb_table_complete
-  (mpegts_psi_table_t *mt)
-{
+static int dvb_table_complete(mpegts_psi_table_t* mt) {
   if (mt->mt_incomplete || !mt->mt_complete) {
-    int total = 0;
-    mpegts_psi_table_state_t *st;
-    RB_FOREACH(st, &mt->mt_state, link)
+    int                       total = 0;
+    mpegts_psi_table_state_t* st;
+    RB_FOREACH (st, &mt->mt_state, link)
       total++;
-    tvhtrace(mt->mt_subsys, "%s: incomplete %d complete %d total %d",
-             mt->mt_name, mt->mt_incomplete, mt->mt_complete, total);
+    tvhtrace(mt->mt_subsys,
+        "%s: incomplete %d complete %d total %d",
+        mt->mt_name,
+        mt->mt_incomplete,
+        mt->mt_complete,
+        total);
     return 2;
   }
   if (!mt->mt_finished)
-    tvhdebug(mt->mt_subsys, "%s: completed pid %d table %08X / %08x",
-             mt->mt_name, mt->mt_pid, mt->mt_table, mt->mt_mask);
+    tvhdebug(mt->mt_subsys,
+        "%s: completed pid %d table %08X / %08x",
+        mt->mt_name,
+        mt->mt_pid,
+        mt->mt_table,
+        mt->mt_mask);
   mt->mt_finished = 1;
   return 0;
 }
 
-int
-dvb_table_end
-  (mpegts_psi_table_t *mt, mpegts_psi_table_state_t *st, int sect)
-{
-  int sa, sb;
+int dvb_table_end(mpegts_psi_table_t* mt, mpegts_psi_table_state_t* st, int sect) {
+  int      sa, sb;
   uint32_t rem;
   if (st && !st->complete) {
     assert(sect >= 0 && sect <= 255);
@@ -297,9 +300,13 @@ dvb_table_end
       rem = 0;
       for (sa = 0; sa < 8; sa++)
         rem |= st->sections[sa];
-      if (rem) return 1;
-      tvhtrace(mt->mt_subsys, "%s:  tableid %02X extraid %016" PRIx64 " completed",
-               mt->mt_name, st->tableid, st->extraid);
+      if (rem)
+        return 1;
+      tvhtrace(mt->mt_subsys,
+          "%s:  tableid %02X extraid %016" PRIx64 " completed",
+          mt->mt_name,
+          st->tableid,
+          st->extraid);
       st->complete = 1;
       mt->mt_incomplete--;
       return dvb_table_complete(mt);
@@ -312,15 +319,19 @@ dvb_table_end
 /*
  * Begin table
  */
-int
-dvb_table_begin
-  (mpegts_psi_table_t *mt, const uint8_t *ptr, int len,
-   int tableid, uint64_t extraid, int minlen,
-   mpegts_psi_table_state_t **ret, int *sect, int *last, int *ver,
-   time_t interval)
-{
+int dvb_table_begin(mpegts_psi_table_t* mt,
+    const uint8_t*                      ptr,
+    int                                 len,
+    int                                 tableid,
+    uint64_t                            extraid,
+    int                                 minlen,
+    mpegts_psi_table_state_t**          ret,
+    int*                                sect,
+    int*                                last,
+    int*                                ver,
+    time_t                              interval) {
   mpegts_psi_table_state_t *st, *st2;
-  uint32_t sa, sb;
+  uint32_t                  sa, sb;
 
   /* Not long enough */
   if (len < minlen) {
@@ -329,11 +340,16 @@ dvb_table_begin
   }
 
   /* Ignore next */
-  if((ptr[2] & 1) == 0)
+  if ((ptr[2] & 1) == 0)
     return -1;
 
-  tvhtrace(mt->mt_subsys, "%s: pid %02X tableid %02X extraid %016" PRIx64 " len %d",
-           mt->mt_name, mt->mt_pid, tableid, extraid, len);
+  tvhtrace(mt->mt_subsys,
+      "%s: pid %02X tableid %02X extraid %016" PRIx64 " len %d",
+      mt->mt_name,
+      mt->mt_pid,
+      tableid,
+      extraid,
+      len);
 
   /* Section info */
   if (sect && ret) {
@@ -341,8 +357,16 @@ dvb_table_begin
     *last = ptr[4];
     *ver  = (ptr[2] >> 1) & 0x1F;
     *ret = st = mpegts_table_state_find(mt, tableid, extraid, *last);
-    tvhtrace(mt->mt_subsys, "%s:  section %d last %d ver %d (ver %d st %d incomp %d comp %d)",
-             mt->mt_name, *sect, *last, *ver, st->version, st->complete, mt->mt_incomplete, mt->mt_complete);
+    tvhtrace(mt->mt_subsys,
+        "%s:  section %d last %d ver %d (ver %d st %d incomp %d comp %d)",
+        mt->mt_name,
+        *sect,
+        *last,
+        *ver,
+        st->version,
+        st->complete,
+        mt->mt_incomplete,
+        mt->mt_complete);
 
 #if 0 // FIXME, cannot be enabled in this form
     /* Ignore previous version */
@@ -355,11 +379,10 @@ dvb_table_begin
 #endif
 
     /* Interval check */
-    if (interval && mt->mt_last_complete &&
-      mt->mt_last_complete + interval < gclk()) {
+    if (interval && mt->mt_last_complete && mt->mt_last_complete + interval < gclk()) {
       mt->mt_last_complete = 0;
       tvhtrace(mt->mt_subsys, "%s:  time interval exceeded, complete restart", mt->mt_name);
-      RB_FOREACH(st2, &mt->mt_state, link)
+      RB_FOREACH (st2, &mt->mt_state, link)
         if (st != st2)
           mpegts_table_state_restart(mt, st2, st2->last, MPEGTS_PSI_VERSION_NONE);
       mpegts_table_state_restart(mt, st, *last, *ver);
@@ -403,14 +426,12 @@ dvb_table_begin
   return 1;
 }
 
-void
-dvb_table_reset(mpegts_psi_table_t *mt)
-{
-  mpegts_psi_table_state_t *st;
+void dvb_table_reset(mpegts_psi_table_t* mt) {
+  mpegts_psi_table_state_t* st;
 
   tvhtrace(mt->mt_subsys, "%s: pid %02X complete reset", mt->mt_name, mt->mt_pid);
-  mt->mt_incomplete = 0;
-  mt->mt_complete   = 0;
+  mt->mt_incomplete    = 0;
+  mt->mt_complete      = 0;
   mt->mt_last_complete = 0;
   while ((st = RB_FIRST(&mt->mt_state)) != NULL) {
     RB_REMOVE(&mt->mt_state, st, link);
@@ -418,10 +439,8 @@ dvb_table_reset(mpegts_psi_table_t *mt)
   }
 }
 
-void
-dvb_table_release(mpegts_psi_table_t *mt)
-{
-  mpegts_psi_table_state_t *st;
+void dvb_table_release(mpegts_psi_table_t* mt) {
+  mpegts_psi_table_state_t* st;
 
   while ((st = RB_FIRST(&mt->mt_state))) {
     RB_REMOVE(&mt->mt_state, st, link);
@@ -433,65 +452,63 @@ dvb_table_release(mpegts_psi_table_t *mt)
  *
  */
 
-void dvb_table_parse_init
-  ( mpegts_psi_table_t *mt, const char *name, int subsys, int pid,
-    uint8_t table, uint8_t mask, void *opaque )
-{
+void dvb_table_parse_init(mpegts_psi_table_t* mt,
+    const char*                               name,
+    int                                       subsys,
+    int                                       pid,
+    uint8_t                                   table,
+    uint8_t                                   mask,
+    void*                                     opaque) {
   memset(mt, 0, sizeof(*mt));
-  mt->mt_name = strdup(name);
-  mt->mt_subsys = subsys;
-  mt->mt_opaque = opaque;
-  mt->mt_pid = pid;
-  mt->mt_sect.ps_cc = -1;
+  mt->mt_name          = strdup(name);
+  mt->mt_subsys        = subsys;
+  mt->mt_opaque        = opaque;
+  mt->mt_pid           = pid;
+  mt->mt_sect.ps_cc    = -1;
   mt->mt_sect.ps_table = table;
-  mt->mt_sect.ps_mask = mask;
+  mt->mt_sect.ps_mask  = mask;
 }
 
-void dvb_table_parse_reinit_input
-  ( mpegts_psi_table_t *mt )
-{
+void dvb_table_parse_reinit_input(mpegts_psi_table_t* mt) {
   dvb_table_release(mt);
   mt->mt_last_complete = 0;
   mt->mt_complete = mt->mt_incomplete = 0;
-  mt->mt_finished = 0;
-  mt->mt_sect.ps_cc = -1;
-  mt->mt_sect.ps_offset = 0;
-  mt->mt_sect.ps_lock = 0;
+  mt->mt_finished                     = 0;
+  mt->mt_sect.ps_cc                   = -1;
+  mt->mt_sect.ps_offset               = 0;
+  mt->mt_sect.ps_lock                 = 0;
 }
 
-void dvb_table_parse_reinit_output
-  ( mpegts_psi_table_t *mt )
-{
+void dvb_table_parse_reinit_output(mpegts_psi_table_t* mt) {
   mt->mt_sect.ps_cco = 0;
 }
 
-void dvb_table_parse_done( mpegts_psi_table_t *mt )
-{
+void dvb_table_parse_done(mpegts_psi_table_t* mt) {
   dvb_table_release(mt);
   free(mt->mt_name);
   mt->mt_name = NULL;
 }
 
 struct psi_parse {
-  mpegts_psi_table_t *mt;
+  mpegts_psi_table_t*         mt;
   mpegts_psi_parse_callback_t cb;
-  int full;
+  int                         full;
 };
 
-static void
-dvb_table_parse_cb( const uint8_t *sec, size_t len, void *opaque )
-{
-  struct psi_parse *parse = opaque;
+static void dvb_table_parse_cb(const uint8_t* sec, size_t len, void* opaque) {
+  struct psi_parse* parse = opaque;
 
   parse->cb(parse->mt, sec + parse->full, len - parse->full);
 }
 
-void dvb_table_parse
-  (mpegts_psi_table_t *mt, const char *logprefix,
-   const uint8_t *tsb, int len,
-   int crc, int full, mpegts_psi_parse_callback_t cb)
-{
-  const uint8_t *end;
+void dvb_table_parse(mpegts_psi_table_t* mt,
+    const char*                          logprefix,
+    const uint8_t*                       tsb,
+    int                                  len,
+    int                                  crc,
+    int                                  full,
+    mpegts_psi_parse_callback_t          cb) {
+  const uint8_t*   end;
   struct psi_parse parse;
 
   parse.mt   = mt;
@@ -499,28 +516,24 @@ void dvb_table_parse
   parse.full = full ? 3 : 0;
 
   for (end = tsb + len; tsb < end; tsb += 188)
-    mpegts_psi_section_reassemble(mt, logprefix, tsb, crc,
-                                  dvb_table_parse_cb, &parse);
+    mpegts_psi_section_reassemble(mt, logprefix, tsb, crc, dvb_table_parse_cb, &parse);
 }
 
-int dvb_table_append_crc32(uint8_t *dst, int off, int maxlen)
-{
+int dvb_table_append_crc32(uint8_t* dst, int off, int maxlen) {
   if (off + 4 > maxlen)
     return -1;
 
   uint32_t crc = tvh_crc32(dst, off, 0xffffffff);
-  dst[off++] = crc >> 24;
-  dst[off++] = crc >> 16;
-  dst[off++] = crc >> 8;
-  dst[off++] = crc;
+  dst[off++]   = crc >> 24;
+  dst[off++]   = crc >> 16;
+  dst[off++]   = crc >> 8;
+  dst[off++]   = crc;
   return off;
 }
 
-int dvb_table_remux
-  (mpegts_psi_table_t *mt, const uint8_t *buf, int len, uint8_t **out)
-{
+int dvb_table_remux(mpegts_psi_table_t* mt, const uint8_t* buf, int len, uint8_t** out) {
   uint8_t *obuf, pusi;
-  int ol = 0, l, m;
+  int      ol = 0, l, m;
 
   /* try to guess the output size here */
   obuf = malloc(((len + 183 + 1 /* pusi */) / 184) * 188);
@@ -533,8 +546,8 @@ int dvb_table_remux
     obuf[ol++] = 0x10 | ((mt->mt_sect.ps_cco++) & 0x0f);
     if (pusi) {
       obuf[ol++] = 0;
-      m = 183;
-      pusi = 0;
+      m          = 183;
+      pusi       = 0;
     } else {
       m = 184;
     }
@@ -542,7 +555,7 @@ int dvb_table_remux
     memcpy(obuf + ol, buf, l);
     if (l < m)
       memset(obuf + ol + l, 0xff, m - l);
-    ol  += m;
+    ol += m;
     len -= l;
     buf += l;
   }

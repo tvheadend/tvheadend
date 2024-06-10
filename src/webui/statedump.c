@@ -25,50 +25,44 @@
 
 extern char tvh_binshasum[20];
 
-int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
+int page_statedump(http_connection_t* hc, const char* remain, void* opaque);
 
-static void
-outputtitle(htsbuf_queue_t *hq, int indent, const char *fmt, ...)
-{
+static void outputtitle(htsbuf_queue_t* hq, int indent, const char* fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
   htsbuf_qprintf(hq, "\n%*.s", indent, "");
-  
+
   htsbuf_vqprintf(hq, fmt, ap);
   va_end(ap);
-  htsbuf_qprintf(hq, "\n%*.s----------------------------------------------\n",
-		 indent, "");
+  htsbuf_qprintf(hq, "\n%*.s----------------------------------------------\n", indent, "");
 }
 
-
-static void
-dumpchannels(htsbuf_queue_t *hq)
-{
-  channel_t *ch;
+static void dumpchannels(htsbuf_queue_t* hq) {
+  channel_t* ch;
   outputtitle(hq, 0, "Channels");
   int64_t chnum;
-  char chbuf[32];
+  char    chbuf[32];
 
   CHANNEL_FOREACH(ch) {
-    
-    htsbuf_qprintf(hq, "%s%s (%d)\n", !ch->ch_enabled ? "[DISABLED] " : "",
-                                      channel_get_name(ch, channel_blank_name),
-                                      channel_get_id(ch));
+
+    htsbuf_qprintf(hq,
+        "%s%s (%d)\n",
+        !ch->ch_enabled ? "[DISABLED] " : "",
+        channel_get_name(ch, channel_blank_name),
+        channel_get_id(ch));
     chnum = channel_get_number(ch);
     if (channel_get_minor(chnum))
-      snprintf(chbuf, sizeof(chbuf), "%u.%u",
-               channel_get_major(chnum),
-               channel_get_minor(chnum));
+      snprintf(chbuf, sizeof(chbuf), "%u.%u", channel_get_major(chnum), channel_get_minor(chnum));
     else
       snprintf(chbuf, sizeof(chbuf), "%u", channel_get_major(chnum));
     htsbuf_qprintf(hq,
-		   "  refcount = %d\n"
-		   "  number = %s\n"
-		   "  icon = %s\n\n",
-		   ch->ch_refcount,
-		   chbuf,
-		   channel_get_icon(ch) ?: "<none set>");
+        "  refcount = %d\n"
+        "  number = %s\n"
+        "  icon = %s\n\n",
+        ch->ch_refcount,
+        chbuf,
+        channel_get_icon(ch) ?: "<none set>");
   }
 }
 
@@ -132,35 +126,34 @@ dumpdvbadapters(htsbuf_queue_t *hq)
 }
 #endif
 
-int
-page_statedump(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
+int page_statedump(http_connection_t* hc, const char* remain, void* opaque) {
+  htsbuf_queue_t* hq = &hc->hc_reply;
 
-  htsbuf_qprintf(hq, "Tvheadend %s  Binary SHA1: "
-		 "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-		 "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-		 tvheadend_version,
-		 tvh_binshasum[0],
-		 tvh_binshasum[1],
-		 tvh_binshasum[2],
-		 tvh_binshasum[3],
-		 tvh_binshasum[4],
-		 tvh_binshasum[5],
-		 tvh_binshasum[6],
-		 tvh_binshasum[7],
-		 tvh_binshasum[8],
-		 tvh_binshasum[9],
-		 tvh_binshasum[10],
-		 tvh_binshasum[11],
-		 tvh_binshasum[12],
-		 tvh_binshasum[13],
-		 tvh_binshasum[14],
-		 tvh_binshasum[15],
-		 tvh_binshasum[16],
-		 tvh_binshasum[17],
-		 tvh_binshasum[18],
-		 tvh_binshasum[19]);
+  htsbuf_qprintf(hq,
+      "Tvheadend %s  Binary SHA1: "
+      "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+      "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+      tvheadend_version,
+      tvh_binshasum[0],
+      tvh_binshasum[1],
+      tvh_binshasum[2],
+      tvh_binshasum[3],
+      tvh_binshasum[4],
+      tvh_binshasum[5],
+      tvh_binshasum[6],
+      tvh_binshasum[7],
+      tvh_binshasum[8],
+      tvh_binshasum[9],
+      tvh_binshasum[10],
+      tvh_binshasum[11],
+      tvh_binshasum[12],
+      tvh_binshasum[13],
+      tvh_binshasum[14],
+      tvh_binshasum[15],
+      tvh_binshasum[16],
+      tvh_binshasum[17],
+      tvh_binshasum[18],
+      tvh_binshasum[19]);
 
   tvh_mutex_lock(&global_lock);
   dumpchannels(hq);
@@ -169,4 +162,3 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
   http_output_content(hc, "text/plain; charset=UTF-8");
   return 0;
 }
-

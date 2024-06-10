@@ -20,8 +20,7 @@
 #ifndef __TVH_MPEGTS_DVB_H__
 #define __TVH_MPEGTS_DVB_H__
 
-typedef struct dvb_network
-{
+typedef struct dvb_network {
   mpegts_network_t;
 
   /*
@@ -30,8 +29,7 @@ typedef struct dvb_network
   dvb_fe_type_t ln_type;
 } dvb_network_t;
 
-typedef struct dvb_mux
-{
+typedef struct dvb_mux {
   mpegts_mux_t;
 
   /*
@@ -64,29 +62,33 @@ extern const idclass_t dvb_network_isdb_s_class;
 extern const idclass_t dvb_network_dtmb_class;
 extern const idclass_t dvb_network_dab_class;
 
-void dvb_network_init ( void );
-void dvb_network_done ( void );
+void dvb_network_init(void);
+void dvb_network_done(void);
 
-static inline dvb_network_t *dvb_network_find_by_uuid(const char *uuid)
-  { return idnode_find(uuid, &dvb_network_class, NULL); }
+static inline dvb_network_t* dvb_network_find_by_uuid(const char* uuid) {
+  return idnode_find(uuid, &dvb_network_class, NULL);
+}
 
-const idclass_t *dvb_network_class_by_fe_type(dvb_fe_type_t type);
-dvb_fe_type_t dvb_fe_type_by_network_class(const idclass_t *idc);
+const idclass_t* dvb_network_class_by_fe_type(dvb_fe_type_t type);
+dvb_fe_type_t    dvb_fe_type_by_network_class(const idclass_t* idc);
 
-idnode_set_t *dvb_network_list_by_fe_type(dvb_fe_type_t type);
+idnode_set_t* dvb_network_list_by_fe_type(dvb_fe_type_t type);
 
-dvb_network_t *dvb_network_create0
-  ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
+dvb_network_t* dvb_network_create0(const char* uuid, const idclass_t* idc, htsmsg_t* conf);
 
-dvb_mux_t *dvb_network_find_mux
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint32_t onid, uint32_t tsid, int check, int approx_match );
+dvb_mux_t* dvb_network_find_mux(dvb_network_t* ln,
+    dvb_mux_conf_t*                            dmc,
+    uint32_t                                   onid,
+    uint32_t                                   tsid,
+    int                                        check,
+    int                                        approx_match);
 
-const idclass_t *dvb_network_mux_class(mpegts_network_t *mn);
-int dvb_network_get_orbital_pos(mpegts_network_t *mn);
+const idclass_t* dvb_network_mux_class(mpegts_network_t* mn);
+int              dvb_network_get_orbital_pos(mpegts_network_t* mn);
 
-void dvb_network_scanfile_set ( dvb_network_t *ln, const char *id );
+void dvb_network_scanfile_set(dvb_network_t* ln, const char* id);
 
-htsmsg_t * dvb_network_class_scanfile_list ( void *o, const char *lang );
+htsmsg_t* dvb_network_class_scanfile_list(void* o, const char* lang);
 
 /*
  *
@@ -103,11 +105,13 @@ extern const idclass_t dvb_mux_isdb_s_class;
 extern const idclass_t dvb_mux_dtmb_class;
 extern const idclass_t dvb_mux_dab_class;
 
-dvb_mux_t *dvb_mux_create0
-  (dvb_network_t *ln, uint32_t onid, uint32_t tsid,
-   const dvb_mux_conf_t *dmc, const char *uuid, htsmsg_t *conf);
+dvb_mux_t* dvb_mux_create0(dvb_network_t* ln,
+    uint32_t                              onid,
+    uint32_t                              tsid,
+    const dvb_mux_conf_t*                 dmc,
+    const char*                           uuid,
+    htsmsg_t*                             conf);
 
-#define dvb_mux_create1(n, u, c)\
-  dvb_mux_create0(n, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, NULL, u, c)
+#define dvb_mux_create1(n, u, c) dvb_mux_create0(n, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, NULL, u, c)
 
 #endif /* __TVH_MPEGTS_DVB_H__ */

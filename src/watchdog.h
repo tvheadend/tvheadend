@@ -28,10 +28,9 @@ void watchdog_done(void);
 
 #else /* #if ENABLE_LIBSYSTEMD_DAEMON */
 
-static inline void watchdog_init(void) { }
-static inline void watchdog_done(void) { }
+static inline void watchdog_init(void) {}
+static inline void watchdog_done(void) {}
 
 #endif /* #if else ENABLE_LIBSYSTEMD_DAEMON */
-
 
 #endif /* WATCHDOG_H_ */

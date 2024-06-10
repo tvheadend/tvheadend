@@ -27,7 +27,7 @@
 typedef struct dvb_fastscan_item {
   LIST_ENTRY(dvb_fastscan_item) ilink;
 
-  const char *name;
+  const char* name;
   int         pid;
 
 } dvb_fastscan_item_t;
@@ -35,51 +35,56 @@ typedef struct dvb_fastscan_item {
 typedef struct dvb_fastscan {
   RB_ENTRY(dvb_fastscan) link;
 
-  LIST_HEAD(,dvb_fastscan_item) items;
+  LIST_HEAD(, dvb_fastscan_item) items;
 
-  int                       position;
-  dvb_fe_delivery_system_t  delsys;
-  dvb_polarisation_t        polarisation;
-  uint32_t                  frequency;
-  uint32_t                  symbolRate;
+  int                      position;
+  dvb_fe_delivery_system_t delsys;
+  dvb_polarisation_t       polarisation;
+  uint32_t                 frequency;
+  uint32_t                 symbolRate;
 } dvb_fastscan_t;
 
-static RB_HEAD(,dvb_fastscan) fastscan_rb;
+static RB_HEAD(, dvb_fastscan) fastscan_rb;
 static SKEL_DECLARE(fastscan_rb_skel, dvb_fastscan_t);
 
-static int
-_fs_cmp(const void *a, const void *b)
-{
-  int r = ((dvb_fastscan_t *)a)->position - ((dvb_fastscan_t *)b)->position;
+static int _fs_cmp(const void* a, const void* b) {
+  int r = ((dvb_fastscan_t*)a)->position - ((dvb_fastscan_t*)b)->position;
   if (r == 0) {
-    r = ((dvb_fastscan_t *)a)->frequency - ((dvb_fastscan_t *)b)->frequency;
+    r = ((dvb_fastscan_t*)a)->frequency - ((dvb_fastscan_t*)b)->frequency;
     if (abs(r) < 2000)
-      return (((dvb_fastscan_t *)a)->polarisation - ((dvb_fastscan_t *)b)->polarisation);
+      return (((dvb_fastscan_t*)a)->polarisation - ((dvb_fastscan_t*)b)->polarisation);
   }
   return r;
 }
 
-void
-dvb_fastscan_each(void *aux, int position, uint32_t frequency, dvb_polarisation_t polarisation,
-                  void (*job)(void *aux, bouquet_t *bq,
-                              const char *name, int pid))
-{
-  dvb_fastscan_t *fs;
-  dvb_fastscan_item_t *fsi;
-  bouquet_t *bq;
-  char url[64], buf[16];
+void dvb_fastscan_each(void* aux,
+    int                      position,
+    uint32_t                 frequency,
+    dvb_polarisation_t       polarisation,
+    void (*job)(void* aux, bouquet_t* bq, const char* name, int pid)) {
+  dvb_fastscan_t*      fs;
+  dvb_fastscan_item_t* fsi;
+  bouquet_t*           bq;
+  char                 url[64], buf[16];
 
   SKEL_ALLOC(fastscan_rb_skel);
-  fastscan_rb_skel->position = position;
-  fastscan_rb_skel->frequency = frequency;
+  fastscan_rb_skel->position     = position;
+  fastscan_rb_skel->frequency    = frequency;
   fastscan_rb_skel->polarisation = polarisation;
-  fs = RB_FIND(&fastscan_rb, fastscan_rb_skel, link, _fs_cmp);
+  fs                             = RB_FIND(&fastscan_rb, fastscan_rb_skel, link, _fs_cmp);
   if (!fs)
     return;
-  LIST_FOREACH(fsi, &fs->items, ilink) {
+  LIST_FOREACH (fsi, &fs->items, ilink) {
     dvb_sat_position_to_str(fs->position, buf, sizeof(buf));
-    snprintf(url, sizeof(url), "dvb-fastscan://%s,%s,%u,%s,%u,%d", dvb_delsys2str(fastscan_rb_skel->delsys),
-             buf, fs->frequency, dvb_pol2str(fs->polarisation), fs->symbolRate, fsi->pid);
+    snprintf(url,
+        sizeof(url),
+        "dvb-fastscan://%s,%s,%u,%s,%u,%d",
+        dvb_delsys2str(fastscan_rb_skel->delsys),
+        buf,
+        fs->frequency,
+        dvb_pol2str(fs->polarisation),
+        fs->symbolRate,
+        fsi->pid);
     bq = bouquet_find_by_source(NULL, url, 0);
     if (bq == NULL || !bq->bq_enabled)
       continue;
@@ -88,15 +93,13 @@ dvb_fastscan_each(void *aux, int position, uint32_t frequency, dvb_polarisation_
   }
 }
 
-static void
-dvb_fastscan_create(htsmsg_t *e)
-{
-  dvb_fastscan_t *fs;
-  dvb_fastscan_item_t *fsi;
-  bouquet_t *bq;
-  const char *name, *polarisation, *delsys;
-  int pid;
-  char url[64], buf[16];
+static void dvb_fastscan_create(htsmsg_t* e) {
+  dvb_fastscan_t*      fs;
+  dvb_fastscan_item_t* fsi;
+  bouquet_t*           bq;
+  const char *         name, *polarisation, *delsys;
+  int                  pid;
+  char                 url[64], buf[16];
 
   SKEL_ALLOC(fastscan_rb_skel);
   if (htsmsg_get_s32(e, "position", &fastscan_rb_skel->position))
@@ -115,10 +118,17 @@ dvb_fastscan_create(htsmsg_t *e)
     goto fail;
 
   fastscan_rb_skel->polarisation = dvb_str2pol(polarisation);
-  fastscan_rb_skel->delsys = dvb_str2delsys(delsys);
+  fastscan_rb_skel->delsys       = dvb_str2delsys(delsys);
   dvb_sat_position_to_str(fastscan_rb_skel->position, buf, sizeof(buf));
-  snprintf(url, sizeof(url), "dvb-fastscan://%s,%s,%u,%s,%u,%d", dvb_delsys2str(fastscan_rb_skel->delsys),
-           buf, fastscan_rb_skel->frequency, dvb_pol2str(fastscan_rb_skel->polarisation), fastscan_rb_skel->symbolRate, pid);
+  snprintf(url,
+      sizeof(url),
+      "dvb-fastscan://%s,%s,%u,%s,%u,%d",
+      dvb_delsys2str(fastscan_rb_skel->delsys),
+      buf,
+      fastscan_rb_skel->frequency,
+      dvb_pol2str(fastscan_rb_skel->polarisation),
+      fastscan_rb_skel->symbolRate,
+      pid);
   bq = bouquet_find_by_source(name, url, 1);
   if (bq == NULL)
     goto fail;
@@ -135,7 +145,7 @@ dvb_fastscan_create(htsmsg_t *e)
     LIST_INIT(&fs->items);
   }
 
-  fsi = calloc(1, sizeof(*fsi));
+  fsi      = calloc(1, sizeof(*fsi));
   fsi->pid = pid;
   if ((fsi->name = htsmsg_get_str(e, "name")) == NULL)
     goto fail;
@@ -152,18 +162,18 @@ fail:
 /*
  * Initialize the fastscan list
  */
-void dvb_fastscan_init ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
+void dvb_fastscan_init(void) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
 
   if (!(c = hts_settings_load("fastscan"))) {
     tvhwarn(LS_FASTSCAN, "configuration file missing");
     return;
   }
-  
+
   HTSMSG_FOREACH(f, c) {
-    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
     dvb_fastscan_create(e);
   }
   htsmsg_destroy(c);
@@ -172,16 +182,15 @@ void dvb_fastscan_init ( void )
 /*
  *
  */
-void dvb_fastscan_done ( void )
-{
-  dvb_fastscan_t *fs;
-  dvb_fastscan_item_t *fsi;
-  
+void dvb_fastscan_done(void) {
+  dvb_fastscan_t*      fs;
+  dvb_fastscan_item_t* fsi;
+
   while ((fs = RB_FIRST(&fastscan_rb)) != NULL) {
     RB_REMOVE(&fastscan_rb, fs, link);
     while ((fsi = LIST_FIRST(&fs->items)) != NULL) {
       LIST_REMOVE(fsi, ilink);
-      free((char *)fsi->name);
+      free((char*)fsi->name);
       free(fsi);
     }
     free(fs);
@@ -191,12 +200,8 @@ void dvb_fastscan_done ( void )
 
 #else
 
-void dvb_fastscan_init ( void )
-{
-}
+void dvb_fastscan_init(void) {}
 
-void dvb_fastscan_done ( void )
-{
-}
+void dvb_fastscan_done(void) {}
 
 #endif

@@ -32,36 +32,34 @@
  * *************************************************************************/
 
 /* File bundle dir handle */
-struct filebundle_dir
-{
+struct filebundle_dir {
   fb_type   type;
   fb_dirent dirent;
   union {
     struct {
-      char *root;
-      DIR  *cur;
+      char* root;
+      DIR*  cur;
     } d;
     struct {
-      const filebundle_entry_t *root;
-      const filebundle_entry_t *cur;
+      const filebundle_entry_t* root;
+      const filebundle_entry_t* cur;
     } b;
   };
 };
 
 /* File bundle file handle */
-struct filebundle_file
-{
-  fb_type type;
-  size_t  size;
-  int     gzip;
-  uint8_t *buf;
-  size_t  pos;
+struct filebundle_file {
+  fb_type  type;
+  size_t   size;
+  int      gzip;
+  uint8_t* buf;
+  size_t   pos;
   union {
     struct {
-      FILE  *cur;
+      FILE* cur;
     } d;
     struct {
-      const  filebundle_entry_t *root;
+      const filebundle_entry_t* root;
     } b;
   };
 };
@@ -72,11 +70,10 @@ struct filebundle_file
 
 /* Get path stats */
 // TODO: this could do with being more efficient
-int fb_stat ( const char *path, struct filebundle_stat *st )
-{
-  int ret = 1;
-  fb_dir *dir;
-  fb_file *fp;
+int fb_stat(const char* path, struct filebundle_stat* st) {
+  int      ret = 1;
+  fb_dir*  dir;
+  fb_file* fp;
 
   if (*path == '/') {
     struct stat _st;
@@ -90,13 +87,13 @@ int fb_stat ( const char *path, struct filebundle_stat *st )
     st->type   = dir->type;
     st->is_dir = 1;
     st->size   = 0;
-    ret = 0;
+    ret        = 0;
     fb_closedir(dir);
   } else if ((fp = fb_open(path, 0, 0))) {
     st->type   = fp->type;
     st->is_dir = 0;
     st->size   = fp->size;
-    ret = 0;
+    ret        = 0;
     fb_close(fp);
   }
   return ret;
@@ -107,11 +104,10 @@ int fb_stat ( const char *path, struct filebundle_stat *st )
  * *************************************************************************/
 
 /* Open directory (directly) */
-static fb_dir *_fb_opendir ( const char *root, const char *path )
-{
-  DIR *dir;
-  char buf[512];
-  fb_dir *ret = NULL;
+static fb_dir* _fb_opendir(const char* root, const char* path) {
+  DIR*    dir;
+  char    buf[512];
+  fb_dir* ret = NULL;
 
   /* Pre-pend root */
   if (root) {
@@ -130,9 +126,8 @@ static fb_dir *_fb_opendir ( const char *root, const char *path )
 }
 
 /* Open directory */
-fb_dir *fb_opendir ( const char *path )
-{
-  fb_dir *ret = NULL;
+fb_dir* fb_opendir(const char* path) {
+  fb_dir* ret = NULL;
 
   /* In-direct (search) */
   if (*path != '/') {
@@ -140,13 +135,14 @@ fb_dir *fb_opendir ( const char *path )
     /* Bundle */
 #if ENABLE_BUNDLE
     char *tmp1, *tmp2, *tmp3 = NULL;
-    tmp1 = strdup(path);
-    tmp2 = strtok_r(tmp1, "/", &tmp3);
-    const filebundle_entry_t *fb = filebundle_root;
+    tmp1                         = strdup(path);
+    tmp2                         = strtok_r(tmp1, "/", &tmp3);
+    const filebundle_entry_t* fb = filebundle_root;
     while (fb && tmp2) {
       if (fb->type == FB_DIR && !strcmp(fb->name, tmp2)) {
         tmp2 = strtok_r(NULL, "/", &tmp3);
-        if (tmp2) fb = fb->d.child;
+        if (tmp2)
+          fb = fb->d.child;
       } else {
         fb = fb->next;
       }
@@ -155,7 +151,7 @@ fb_dir *fb_opendir ( const char *path )
 
     /* Found */
     if (fb) {
-      ret = calloc(1, sizeof(fb_dir));
+      ret         = calloc(1, sizeof(fb_dir));
       ret->type   = FB_BUNDLE;
       ret->b.root = fb;
       ret->b.cur  = fb->d.child;
@@ -163,12 +159,14 @@ fb_dir *fb_opendir ( const char *path )
 #endif
 
     /* Local */
-    if (!ret) ret = _fb_opendir(tvheadend_cwd, path);
+    if (!ret)
+      ret = _fb_opendir(tvheadend_cwd, path);
 
     /* System */
-    if (!ret) ret = _fb_opendir(TVHEADEND_DATADIR, path);
+    if (!ret)
+      ret = _fb_opendir(TVHEADEND_DATADIR, path);
 
-  /* Direct */
+    /* Direct */
   } else {
     ret = _fb_opendir(NULL, path);
   }
@@ -177,8 +175,7 @@ fb_dir *fb_opendir ( const char *path )
 }
 
 /* Close directory */
-void fb_closedir ( fb_dir *dir )
-{
+void fb_closedir(fb_dir* dir) {
   if (dir->type == FB_DIRECT) {
     closedir(dir->d.cur);
     free(dir->d.root);
@@ -187,9 +184,8 @@ void fb_closedir ( fb_dir *dir )
 }
 
 /* Iterate through entries */
-fb_dirent *fb_readdir ( fb_dir *dir )
-{
-  fb_dirent *ret = NULL;
+fb_dirent* fb_readdir(fb_dir* dir) {
+  fb_dirent* ret = NULL;
   if (dir->type == FB_BUNDLE) {
     if (dir->b.cur) {
       strlcpy(dir->dirent.name, dir->b.cur->name, sizeof(dir->dirent.name));
@@ -197,41 +193,41 @@ fb_dirent *fb_readdir ( fb_dir *dir )
       dir->b.cur       = dir->b.cur->next;
       ret              = &dir->dirent;
     }
-    
+
   } else {
-    struct dirent *de = readdir(dir->d.cur);
+    struct dirent* de = readdir(dir->d.cur);
     if (de) {
       struct stat st;
-      char buf[512];
+      char        buf[512];
       snprintf(buf, sizeof(buf), "%s/%s", dir->d.root, de->d_name);
       strcpy(dir->dirent.name, de->d_name);
       dir->dirent.type = FB_UNKNOWN;
       if (!lstat(buf, &st))
         dir->dirent.type = S_ISDIR(st.st_mode) ? FB_DIR : FB_FILE;
-      ret              = &dir->dirent;
+      ret = &dir->dirent;
     }
   }
   return ret;
 }
 
 /* Get entry list */
-int fb_scandir ( const char *path, fb_dirent ***list )
-{
-  int i, ret = -1;
-  struct dirent **de;
-  fb_dir *dir;
+int fb_scandir(const char* path, fb_dirent*** list) {
+  int             i, ret = -1;
+  struct dirent** de;
+  fb_dir*         dir;
 
-  if (!(dir = fb_opendir(path))) return -1;
+  if (!(dir = fb_opendir(path)))
+    return -1;
 
   /* Direct */
   if (dir->type == FB_DIRECT) {
     if ((ret = scandir(dir->d.root, &de, NULL, NULL)) > 0) {
-      *list = malloc(sizeof(fb_dirent*)*ret);
+      *list = malloc(sizeof(fb_dirent*) * ret);
       for (i = 0; i < ret; i++) {
         (*list)[i] = calloc(1, sizeof(fb_dirent));
         strcpy((*list)[i]->name, de[i]->d_name);
-        switch(de[i]->d_type) {
-          case DT_DIR: 
+        switch (de[i]->d_type) {
+          case DT_DIR:
             (*list)[i]->type = FB_DIR;
             break;
           case DT_REG:
@@ -239,7 +235,7 @@ int fb_scandir ( const char *path, fb_dirent ***list )
             break;
           default: {
             struct stat st;
-            char buf[512];
+            char        buf[512];
             snprintf(buf, sizeof(buf), "%s/%s", dir->d.root, de[i]->d_name);
             if (!lstat(buf, &st))
               (*list)[i]->type = S_ISDIR(st.st_mode) ? FB_DIR : FB_FILE;
@@ -251,13 +247,13 @@ int fb_scandir ( const char *path, fb_dirent ***list )
       free(de);
     }
 
-  /* Bundle */
+    /* Bundle */
   } else {
-    const filebundle_entry_t *fb;
-    ret = dir->b.root->d.count;
-    fb  = dir->b.root->d.child;
+    const filebundle_entry_t* fb;
+    ret   = dir->b.root->d.count;
+    fb    = dir->b.root->d.child;
     *list = malloc(ret * sizeof(fb_dirent*));
-    i = 0;
+    i     = 0;
     while (fb) {
       (*list)[i] = calloc(1, sizeof(fb_dirent));
       strlcpy((*list)[i]->name, fb->name, sizeof((*list)[i]->name));
@@ -282,25 +278,24 @@ int fb_scandir ( const char *path, fb_dirent ***list )
 //       be passed in though and will be ignored if this is not the case
 // Note: compress will work on EITHER type (but will be ignored for already
 //       compressed bundles)
-fb_file *fb_open2 
-  ( const fb_dir *dir, const char *name, int decompress, int compress )
-{
+fb_file* fb_open2(const fb_dir* dir, const char* name, int decompress, int compress) {
   assert(!decompress || !compress);
-  fb_file *ret = NULL;
+  fb_file* ret = NULL;
 
   /* Bundle file */
   if (dir->type == FB_BUNDLE) {
-    const filebundle_entry_t *fb = dir->b.root->d.child;
+    const filebundle_entry_t* fb = dir->b.root->d.child;
     while (fb) {
-      if (!strcmp(name, fb->name)) break;
+      if (!strcmp(name, fb->name))
+        break;
       fb = fb->next;
     }
     if (fb) {
-      ret               = calloc(1, sizeof(fb_file));
-      ret->type         = FB_BUNDLE;
-      ret->size         = fb->f.size;
-      ret->gzip         = fb->f.orig != -1;
-      ret->b.root       = fb;
+      ret         = calloc(1, sizeof(fb_file));
+      ret->type   = FB_BUNDLE;
+      ret->size   = fb->f.size;
+      ret->gzip   = fb->f.orig != -1;
+      ret->b.root = fb;
 
       /* Inflate the file */
       if (fb->f.orig != -1 && decompress) {
@@ -319,19 +314,19 @@ fb_file *fb_open2
       }
     }
 
-  /* Direct file */
+    /* Direct file */
   } else {
     char path[512];
     snprintf(path, sizeof(path), "%s/%s", dir->d.root, name);
-    FILE *fp = tvh_fopen(path, "rb");
+    FILE* fp = tvh_fopen(path, "rb");
     if (fp) {
       struct stat st;
       if (!stat(path, &st)) {
-        ret         = calloc(1, sizeof(fb_file));
-        ret->type   = FB_DIRECT;
-        ret->size   = st.st_size;
-        ret->gzip   = 0;
-        ret->d.cur  = fp;
+        ret        = calloc(1, sizeof(fb_file));
+        ret->type  = FB_DIRECT;
+        ret->size  = st.st_size;
+        ret->gzip  = 0;
+        ret->d.cur = fp;
       } else {
         fclose(fp);
       }
@@ -342,26 +337,26 @@ fb_file *fb_open2
 #if ENABLE_ZLIB
   if (ret && !ret->gzip && compress) {
     ret->gzip = 1;
-      
+
     /* Get data */
     if (ret->type == FB_BUNDLE) {
-      const uint8_t *data;
+      const uint8_t* data;
       data     = ret->b.root->f.data;
       ret->buf = tvh_gzip_deflate(data, ret->size, &ret->size);
     } else {
-      uint8_t *data = malloc(ret->size);
-      ssize_t c = fread(data, 1, ret->size, ret->d.cur);
+      uint8_t* data = malloc(ret->size);
+      ssize_t  c    = fread(data, 1, ret->size, ret->d.cur);
       if (c == ret->size)
         ret->buf = tvh_gzip_deflate(data, ret->size, &ret->size);
       fclose(ret->d.cur);
       ret->d.cur = NULL;
       free(data);
     }
-  
+
     /* Cleanup */
     if (!ret->buf) {
       free(ret);
-      ret = NULL; 
+      ret = NULL;
     }
   }
 #endif
@@ -370,17 +365,16 @@ fb_file *fb_open2
 }
 
 /* Open file */
-fb_file *fb_open ( const char *path, int decompress, int compress )
-{
-  fb_file *ret = NULL;
-  fb_dir *dir = NULL;
-  char *tmp = strdup(path);
-  char *pos = strrchr(tmp, '/');
+fb_file* fb_open(const char* path, int decompress, int compress) {
+  fb_file* ret = NULL;
+  fb_dir*  dir = NULL;
+  char*    tmp = strdup(path);
+  char*    pos = strrchr(tmp, '/');
   if (!pos) {
     free(tmp);
     return NULL;
   }
-    
+
   /* Find directory */
   *pos = '\0';
   dir  = fb_opendir(tmp);
@@ -390,15 +384,14 @@ fb_file *fb_open ( const char *path, int decompress, int compress )
   }
 
   /* Open */
-  ret = fb_open2(dir, pos+1, decompress, compress);
+  ret = fb_open2(dir, pos + 1, decompress, compress);
   fb_closedir(dir);
   free(tmp);
   return ret;
 }
 
 /* Close file */
-void fb_close ( fb_file *fp )
-{
+void fb_close(fb_file* fp) {
   if (fp->type == FB_DIRECT && fp->d.cur) {
     fclose(fp->d.cur);
   }
@@ -408,26 +401,22 @@ void fb_close ( fb_file *fp )
 }
 
 /* Get the files size */
-size_t fb_size ( fb_file *fp )
-{
+size_t fb_size(fb_file* fp) {
   return fp->size;
 }
 
 /* Check if compressed */
-int fb_gzipped ( fb_file *fp )
-{
+int fb_gzipped(fb_file* fp) {
   return fp->gzip;
 }
 
 /* Check for EOF */
-int fb_eof ( fb_file *fp )
-{
+int fb_eof(fb_file* fp) {
   return fp->pos >= fp->size;
 }
 
 /* Read some data */
-ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
-{
+ssize_t fb_read(fb_file* fp, void* buf, size_t count) {
   if (fb_eof(fp)) {
     return -1;
   } else if (fp->buf) {
@@ -448,15 +437,16 @@ ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
 }
 
 /* Read a line */
-char *fb_gets ( fb_file *fp, void *buf, size_t count )
-{
+char* fb_gets(fb_file* fp, void* buf, size_t count) {
   ssize_t c = 0, err;
-  while ((err = fb_read(fp, buf+c, 1)) > 0 && c < (count-1)) {
+  while ((err = fb_read(fp, buf + c, 1)) > 0 && c < (count - 1)) {
     char b = ((char*)buf)[c];
     c++;
-    if (b == '\n' || b == '\0') break;
+    if (b == '\n' || b == '\0')
+      break;
   }
-  if (err < 0) return NULL;
+  if (err < 0)
+    return NULL;
   ((char*)buf)[c] = '\0';
   return buf;
 }

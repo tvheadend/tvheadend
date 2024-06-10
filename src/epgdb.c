@@ -35,8 +35,8 @@
 #include "config.h"
 #include "memoryinfo.h"
 
-#define EPG_DB_VERSION 3
-#define EPG_DB_ALLOC_STEP (1024*1024)
+#define EPG_DB_VERSION    3
+#define EPG_DB_ALLOC_STEP (1024 * 1024)
 
 extern epg_object_tree_t epg_episodes;
 
@@ -47,29 +47,30 @@ extern epg_object_tree_t epg_episodes;
 /*
  * Process v3 data
  */
-static void
-_epgdb_v3_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
-{
-  int save = 0;
-  const char *s;
+static void _epgdb_v3_process(char** sect, htsmsg_t* m, epggrab_stats_t* stats) {
+  int         save = 0;
+  const char* s;
 
   /* New section */
-  if ( (s = htsmsg_get_str(m, "__section__")) ) {
-    if (*sect) free(*sect);
+  if ((s = htsmsg_get_str(m, "__section__"))) {
+    if (*sect)
+      free(*sect);
     *sect = strdup(s);
-  
-  /* Broadcasts */
-  } else if ( !strcmp(*sect, "broadcasts") ) {
-    if (epg_broadcast_deserialize(m, 1, &save)) stats->broadcasts.total++;
 
-  /* Global config */
-  } else if ( !strcmp(*sect, "config") ) {
-    if (epg_config_deserialize(m)) stats->config.total++;
+    /* Broadcasts */
+  } else if (!strcmp(*sect, "broadcasts")) {
+    if (epg_broadcast_deserialize(m, 1, &save))
+      stats->broadcasts.total++;
 
-  /* Unknown */
+    /* Global config */
+  } else if (!strcmp(*sect, "config")) {
+    if (epg_config_deserialize(m))
+      stats->config.total++;
+
+    /* Unknown */
   } else {
     tvhdebug(LS_EPGDB, "malformed database section [%s]", *sect);
-    //htsmsg_print(m);
+    // htsmsg_print(m);
   }
 }
 
@@ -77,15 +78,15 @@ _epgdb_v3_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
  * Memoryinfo
  */
 
-static void epg_memoryinfo_broadcasts_update(memoryinfo_t *my)
-{
-  channel_t *ch;
-  epg_broadcast_t *ebc;
-  int64_t size = 0, count = 0;
+static void epg_memoryinfo_broadcasts_update(memoryinfo_t* my) {
+  channel_t*       ch;
+  epg_broadcast_t* ebc;
+  int64_t          size = 0, count = 0;
 
   CHANNEL_FOREACH(ch) {
-    if (ch->ch_epg_parent) continue;
-    RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
+    if (ch->ch_epg_parent)
+      continue;
+    RB_FOREACH (ebc, &ch->ch_epg_schedule, sched_link) {
       size += sizeof(*ebc);
       size += tvh_strlen(ebc->image);
       size += tvh_strlen(ebc->epnum.text);
@@ -99,71 +100,68 @@ static void epg_memoryinfo_broadcasts_update(memoryinfo_t *my)
   memoryinfo_update(my, size, count);
 }
 
-static memoryinfo_t epg_memoryinfo_broadcasts = {
-  .my_name = "EPG Broadcasts",
-  .my_update = epg_memoryinfo_broadcasts_update
-};
+static memoryinfo_t epg_memoryinfo_broadcasts = {.my_name = "EPG Broadcasts",
+    .my_update                                            = epg_memoryinfo_broadcasts_update};
 
 /*
  * Recovery
  */
 static sigjmp_buf epg_mmap_env;
 
-static void epg_mmap_sigbus (int sig, siginfo_t *siginfo, void *ptr)
-{
+static void epg_mmap_sigbus(int sig, siginfo_t* siginfo, void* ptr) {
   siglongjmp(epg_mmap_env, 1);
 }
 
 /*
  * Load data
  */
-void epg_init ( void )
-{
-  int fd = -1, r;
-  struct stat st;
-  size_t remain;
-  uint8_t *mem, *rp, *zlib_mem = NULL;
-  epggrab_stats_t stats;
-  int ver = EPG_DB_VERSION;
+void epg_init(void) {
+  int              fd = -1, r;
+  struct stat      st;
+  size_t           remain;
+  uint8_t *        mem, *rp, *zlib_mem = NULL;
+  epggrab_stats_t  stats;
+  int              ver = EPG_DB_VERSION;
   struct sigaction act, oldact;
-  char *sect = NULL;
+  char*            sect = NULL;
 
   memoryinfo_register(&epg_memoryinfo_broadcasts);
 
   /* Find the right file (and version) */
   while (fd < 0 && ver > 0) {
     fd = hts_settings_open_file(0, "epgdb.v%d", ver);
-    if (fd > 0) break;
+    if (fd > 0)
+      break;
     ver--;
   }
-  if ( fd < 0 )
+  if (fd < 0)
     fd = hts_settings_open_file(0, "epgdb");
-  if ( fd < 0 ) {
+  if (fd < 0) {
     tvhdebug(LS_EPGDB, "database does not exist");
     return;
   }
 
-  memset (&act, 0, sizeof(act));
+  memset(&act, 0, sizeof(act));
   act.sa_sigaction = epg_mmap_sigbus;
-  act.sa_flags = SA_SIGINFO;
+  act.sa_flags     = SA_SIGINFO;
   if (sigaction(SIGBUS, &act, &oldact)) {
     tvherror(LS_EPGDB, "failed to install SIGBUS handler");
     close(fd);
     return;
   }
-  
+
   /* Map file to memory */
-  if ( fstat(fd, &st) != 0 ) {
+  if (fstat(fd, &st) != 0) {
     tvherror(LS_EPGDB, "failed to detect database size");
     goto end;
   }
-  if ( !st.st_size ) {
+  if (!st.st_size) {
     tvhdebug(LS_EPGDB, "database is empty");
     goto end;
   }
-  remain   = st.st_size;
+  remain = st.st_size;
   rp = mem = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-  if ( mem == MAP_FAILED ) {
+  if (mem == MAP_FAILED) {
     tvherror(LS_EPGDB, "failed to mmap database");
     goto end;
   }
@@ -176,13 +174,14 @@ void epg_init ( void )
   }
 
 #if ENABLE_ZLIB
-  if (remain > 12 && memcmp(rp, "\xff\xffGZIP01", 8) == 0 &&
-      (rp[7] == '0' || rp[7] == '1')) {
+  if (remain > 12 && memcmp(rp, "\xff\xffGZIP01", 8) == 0 && (rp[7] == '0' || rp[7] == '1')) {
     uint32_t orig = (rp[8] << 24) | (rp[9] << 16) | (rp[10] << 8) | rp[11];
-    tvhinfo(LS_EPGDB, "gzip format detected, inflating (ratio %.1f%% deflated size %zd)",
-           (float)((remain * 100.0) / orig), remain);
+    tvhinfo(LS_EPGDB,
+        "gzip format detected, inflating (ratio %.1f%% deflated size %zd)",
+        (float)((remain * 100.0) / orig),
+        remain);
     rp = zlib_mem = tvh_gzip_inflate(rp + 12, remain - 12, orig);
-    remain = rp ? orig : 0;
+    remain        = rp ? orig : 0;
   }
 #endif
 
@@ -190,11 +189,11 @@ void epg_init ( void )
 
   /* Process */
   memset(&stats, 0, sizeof(stats));
-  while ( remain > 4 ) {
+  while (remain > 4) {
 
     /* Get message length */
-    size_t msglen = remain;
-    htsmsg_t *m;
+    size_t    msglen = remain;
+    htsmsg_t* m;
     r = htsmsg_binary2_deserialize(&m, rp, &msglen, NULL);
 
     /* Safety check */
@@ -204,11 +203,12 @@ void epg_init ( void )
     }
 
     /* Next */
-    rp     += msglen;
+    rp += msglen;
     remain -= msglen;
 
     /* Skip */
-    if (!m) continue;
+    if (!m)
+      continue;
 
     /* Process */
     switch (ver) {
@@ -226,7 +226,7 @@ void epg_init ( void )
   free(sect);
 
   if (!stats.config.total) {
-    htsmsg_t *m = htsmsg_create_map();
+    htsmsg_t* m = htsmsg_create_map();
     /* it's not correct, but at least something */
     htsmsg_add_u32(m, "last_id", 64 * 1024 * 1024);
     if (!epg_config_deserialize(m))
@@ -247,13 +247,12 @@ end:
   close(fd);
 }
 
-void epg_done ( void )
-{
-  channel_t *ch;
+void epg_done(void) {
+  channel_t* ch;
 
   tvh_mutex_lock(&global_lock);
   CHANNEL_FOREACH(ch)
-    epg_channel_unlink(ch);
+  epg_channel_unlink(ch);
   epg_skel_done();
   memoryinfo_unregister(&epg_memoryinfo_broadcasts);
   tvh_mutex_unlock(&global_lock);
@@ -263,11 +262,10 @@ void epg_done ( void )
  * Save
  * *************************************************************************/
 
-static int _epg_write ( sbuf_t *sb, htsmsg_t *m )
-{
-  int ret = 1;
+static int _epg_write(sbuf_t* sb, htsmsg_t* m) {
+  int    ret = 1;
   size_t msglen;
-  void *msgdata;
+  void*  msgdata;
   if (m) {
     int r;
     r = htsmsg_binary2_serialize(m, &msgdata, &msglen, 0x10000);
@@ -286,20 +284,18 @@ static int _epg_write ( sbuf_t *sb, htsmsg_t *m )
   return ret;
 }
 
-static int _epg_write_sect ( sbuf_t *sb, const char *sect )
-{
-  htsmsg_t *m = htsmsg_create_map();
+static int _epg_write_sect(sbuf_t* sb, const char* sect) {
+  htsmsg_t* m = htsmsg_create_map();
   htsmsg_add_str(m, "__section__", sect);
   return _epg_write(sb, m);
 }
 
-static void epg_save_tsk_callback ( void *p, int dearmed )
-{
-  char tmppath[PATH_MAX+4];
-  char path[PATH_MAX];
-  sbuf_t *sb = p;
-  size_t size = sb->sb_ptr, orig;
-  int fd, r;
+static void epg_save_tsk_callback(void* p, int dearmed) {
+  char    tmppath[PATH_MAX + 4];
+  char    path[PATH_MAX];
+  sbuf_t* sb   = p;
+  size_t  size = sb->sb_ptr, orig;
+  int     fd, r;
 
   tvhinfo(LS_EPGDB, "save start");
   hts_settings_buildpath(tmppath, sizeof(path), "epgdb.v%d", EPG_DB_VERSION);
@@ -314,7 +310,7 @@ static void epg_save_tsk_callback ( void *p, int dearmed )
 #if ENABLE_ZLIB
     if (config.epg_compress) {
       r = tvh_gzip_deflate_fd_header(fd, sb->sb_data, size, &orig, 3, "01") < 0;
-   } else
+    } else
 #endif
       r = tvh_write(fd, sb->sb_data, orig = size);
     close(fd);
@@ -333,18 +329,16 @@ static void epg_save_tsk_callback ( void *p, int dearmed )
   free(sb);
 }
 
-void epg_save_callback ( void *p )
-{
+void epg_save_callback(void* p) {
   epg_save();
 }
 
-void epg_save ( void )
-{
-  sbuf_t *sb = malloc(sizeof(*sb));
-  epg_broadcast_t *ebc;
-  channel_t *ch;
-  epggrab_stats_t stats;
-  extern gtimer_t epggrab_save_timer;
+void epg_save(void) {
+  sbuf_t*          sb = malloc(sizeof(*sb));
+  epg_broadcast_t* ebc;
+  channel_t*       ch;
+  epggrab_stats_t  stats;
+  extern gtimer_t  epggrab_save_timer;
 
   if (!sb)
     return;
@@ -354,17 +348,24 @@ void epg_save ( void )
   sbuf_init_fixed(sb, EPG_DB_ALLOC_STEP);
 
   if (epggrab_conf.epgdb_periodicsave)
-    gtimer_arm_rel(&epggrab_save_timer, epg_save_callback, NULL,
-                   epggrab_conf.epgdb_periodicsave * 3600);
+    gtimer_arm_rel(&epggrab_save_timer,
+        epg_save_callback,
+        NULL,
+        epggrab_conf.epgdb_periodicsave * 3600);
 
   memset(&stats, 0, sizeof(stats));
-  if ( _epg_write_sect(sb, "config") ) goto error;
-  if (_epg_write(sb, epg_config_serialize())) goto error;
-  if ( _epg_write_sect(sb, "broadcasts") ) goto error;
+  if (_epg_write_sect(sb, "config"))
+    goto error;
+  if (_epg_write(sb, epg_config_serialize()))
+    goto error;
+  if (_epg_write_sect(sb, "broadcasts"))
+    goto error;
   CHANNEL_FOREACH(ch) {
-    if (ch->ch_epg_parent) continue;
-    RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
-      if (_epg_write(sb, epg_broadcast_serialize(ebc))) goto error;
+    if (ch->ch_epg_parent)
+      continue;
+    RB_FOREACH (ebc, &ch->ch_epg_schedule, sched_link) {
+      if (_epg_write(sb, epg_broadcast_serialize(ebc)))
+        goto error;
       stats.broadcasts.total++;
     }
   }

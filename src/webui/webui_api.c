@@ -25,30 +25,27 @@
 #include "htsmsg.h"
 #include "htsmsg_json.h"
 
-static int
-webui_api_handler
-  ( http_connection_t *hc, const char *remain, void *opaque )
-{
-  int r;
-  http_arg_t *ha;
-  htsmsg_t *args, *resp = NULL;
+static int webui_api_handler(http_connection_t* hc, const char* remain, void* opaque) {
+  int         r;
+  http_arg_t* ha;
+  htsmsg_t *  args, *resp = NULL;
 
   /* Build arguments */
   args = htsmsg_create_map();
-  TAILQ_FOREACH(ha, &hc->hc_req_args, link) {
+  TAILQ_FOREACH (ha, &hc->hc_req_args, link) {
     if (ha->val == NULL) {
       r = EINVAL;
       goto destroy_args;
     }
     htsmsg_add_str(args, ha->key, ha->val);
   }
-      
+
   /* Call */
   r = api_exec(hc->hc_access, remain, args, &resp);
 
 destroy_args:
   htsmsg_destroy(args);
-  
+
   /* Convert error */
   if (r) {
     if (r < 0) {
@@ -78,12 +75,10 @@ destroy_args:
     http_output_content(hc, "application/json; charset=UTF-8");
     htsmsg_destroy(resp);
   }
-  
+
   return r;
 }
 
-void
-webui_api_init ( void )
-{
+void webui_api_init(void) {
   http_path_add("/api", NULL, webui_api_handler, ACCESS_WEB_INTERFACE);
 }

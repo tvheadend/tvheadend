@@ -23,26 +23,21 @@
 #include "htsmsg.h"
 
 /// Sorted string list helper functions.
-void
-string_list_init(string_list_t *l)
-{
+void string_list_init(string_list_t* l) {
   RB_INIT(l);
 }
 
-string_list_t *
-string_list_create(void)
-{
-  string_list_t *ret = calloc(1, sizeof(string_list_t));
+string_list_t* string_list_create(void) {
+  string_list_t* ret = calloc(1, sizeof(string_list_t));
   string_list_init(ret);
   return ret;
 }
 
-void
-string_list_destroy(string_list_t *l)
-{
-  if (!l) return;
+void string_list_destroy(string_list_t* l) {
+  if (!l)
+    return;
 
-  string_list_item_t *item;
+  string_list_item_t* item;
   while ((item = RB_FIRST(l))) {
     RB_REMOVE(l, item, h_link);
     free(item);
@@ -50,12 +45,11 @@ string_list_destroy(string_list_t *l)
   free(l);
 }
 
-char *
-string_list_remove_first(string_list_t *l)
-{
-  char *ret = NULL;
-  if (!l) return NULL;
-  string_list_item_t *item = RB_FIRST(l);
+char* string_list_remove_first(string_list_t* l) {
+  char* ret = NULL;
+  if (!l)
+    return NULL;
+  string_list_item_t* item = RB_FIRST(l);
   if (!item)
     return NULL;
   ret = strdup(item->id);
@@ -64,18 +58,15 @@ string_list_remove_first(string_list_t *l)
   return ret;
 }
 
-static inline int
-string_list_item_cmp(const void *a, const void *b)
-{
+static inline int string_list_item_cmp(const void* a, const void* b) {
   return strcmp(((const string_list_item_t*)a)->id, ((const string_list_item_t*)b)->id);
 }
 
-void
-string_list_insert(string_list_t *l, const char *id)
-{
-  if (!id) return;
+void string_list_insert(string_list_t* l, const char* id) {
+  if (!id)
+    return;
 
-  string_list_item_t *item = calloc(1, sizeof(string_list_item_t) + strlen(id) + 1);
+  string_list_item_t* item = calloc(1, sizeof(string_list_item_t) + strlen(id) + 1);
   strcpy(item->id, id);
   if (RB_INSERT_SORTED(l, item, h_link, string_list_item_cmp)) {
     /* Duplicate, so not inserted. */
@@ -83,12 +74,11 @@ string_list_insert(string_list_t *l, const char *id)
   }
 }
 
-void
-string_list_insert_lowercase(string_list_t *l, const char *id)
-{
+void string_list_insert_lowercase(string_list_t* l, const char* id) {
   char *s, *p;
 
-  if (!id) return;
+  if (!id)
+    return;
   s = alloca(strlen(id) + 1);
   for (p = s; *id; id++, p++)
     *p = tolower(*id);
@@ -96,29 +86,26 @@ string_list_insert_lowercase(string_list_t *l, const char *id)
   string_list_insert(l, s);
 }
 
-htsmsg_t *
-string_list_to_htsmsg(const string_list_t *l)
-{
-  htsmsg_t *ret;
-  string_list_item_t *item;
+htsmsg_t* string_list_to_htsmsg(const string_list_t* l) {
+  htsmsg_t*           ret;
+  string_list_item_t* item;
   if (!RB_FIRST(l))
     return NULL;
   ret = htsmsg_create_list();
-  RB_FOREACH(item, l, h_link)
+  RB_FOREACH (item, l, h_link)
     htsmsg_add_str(ret, NULL, item->id);
   return ret;
 }
 
-string_list_t *
-htsmsg_to_string_list(const htsmsg_t *m)
-{
-  string_list_t *ret = NULL;
-  htsmsg_field_t *f;
+string_list_t* htsmsg_to_string_list(const htsmsg_t* m) {
+  string_list_t*  ret = NULL;
+  htsmsg_field_t* f;
   HTSMSG_FOREACH(f, m) {
     if (f->hmf_type == HMF_STR) {
-      const char *str = f->hmf_str;
+      const char* str = f->hmf_str;
       if (str && *str) {
-        if (!ret) ret = string_list_create();
+        if (!ret)
+          ret = string_list_create();
         string_list_insert(ret, str);
       }
     }
@@ -126,49 +113,45 @@ htsmsg_to_string_list(const htsmsg_t *m)
   return ret;
 }
 
-void
-string_list_serialize(const string_list_t *l, htsmsg_t *m, const char *f)
-{
-  if (!l) return;
+void string_list_serialize(const string_list_t* l, htsmsg_t* m, const char* f) {
+  if (!l)
+    return;
 
-  htsmsg_t *msg = string_list_to_htsmsg(l);
+  htsmsg_t* msg = string_list_to_htsmsg(l);
   if (msg)
     htsmsg_add_msg(m, f, msg);
 }
 
-string_list_t *
-string_list_deserialize(const htsmsg_t *m, const char *n)
-{
-  htsmsg_t *sub = htsmsg_get_list(m, n);
-  if (!sub) return NULL;
+string_list_t* string_list_deserialize(const htsmsg_t* m, const char* n) {
+  htsmsg_t* sub = htsmsg_get_list(m, n);
+  if (!sub)
+    return NULL;
   return htsmsg_to_string_list(sub);
 }
 
-char *
-string_list_2_csv(const string_list_t *l, char delim, int human)
-{
-  if (!l) return NULL;
+char* string_list_2_csv(const string_list_t* l, char delim, int human) {
+  if (!l)
+    return NULL;
 
-  htsmsg_t *msg = string_list_to_htsmsg(l);
-  if (!msg) return NULL;
+  htsmsg_t* msg = string_list_to_htsmsg(l);
+  if (!msg)
+    return NULL;
 
-  char *ret = htsmsg_list_2_csv(msg, delim, human);
+  char* ret = htsmsg_list_2_csv(msg, delim, human);
   htsmsg_destroy(msg);
   return ret;
 }
 
-int
-string_list_cmp(const string_list_t *m1, const string_list_t *m2)
-{
+int string_list_cmp(const string_list_t* m1, const string_list_t* m2) {
   /* Algorithm based on htsmsg_cmp */
   if (m1 == NULL && m2 == NULL)
     return 0;
   if (m1 == NULL || m2 == NULL)
     return 1;
 
-  string_list_item_t *i1;
-  string_list_item_t *i2 = RB_FIRST(m2);
-  RB_FOREACH(i1, m1, h_link) {
+  string_list_item_t* i1;
+  string_list_item_t* i2 = RB_FIRST(m2);
+  RB_FOREACH (i1, m1, h_link) {
     if (i2 == NULL)
       return 1;
     const int cmp = strcmp(i1->id, i2->id);
@@ -185,28 +168,25 @@ string_list_cmp(const string_list_t *m1, const string_list_t *m2)
   return 0;
 }
 
-string_list_t *
-string_list_copy(const string_list_t *src)
-{
-  if (!src) return NULL;
-  string_list_t *ret = string_list_create();
-  string_list_item_t *item;
-  RB_FOREACH(item, src, h_link)
+string_list_t* string_list_copy(const string_list_t* src) {
+  if (!src)
+    return NULL;
+  string_list_t*      ret = string_list_create();
+  string_list_item_t* item;
+  RB_FOREACH (item, src, h_link)
     string_list_insert(ret, item->id);
 
   return ret;
 }
 
-int
-string_list_contains_string(const string_list_t *src, const char *find)
-{
+int string_list_contains_string(const string_list_t* src, const char* find) {
   if (find == NULL)
     return 0;
 
-  string_list_item_t *skel = alloca(sizeof(*skel) + strlen(find) + 1);
+  string_list_item_t* skel = alloca(sizeof(*skel) + strlen(find) + 1);
   strcpy(skel->id, find);
 
-  string_list_item_t *item = RB_FIND(src, skel, h_link, string_list_item_cmp);
+  string_list_item_t* item = RB_FIND(src, skel, h_link, string_list_item_cmp);
   /* Can't just return item due to compiler settings preventing ptr to
    * int conversion
    */

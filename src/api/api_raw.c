@@ -24,11 +24,9 @@
 #include "api.h"
 
 static int
-api_idnode_classes
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
+api_idnode_classes(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
   idclass_t const **all, **all2;
-  const idclass_t *ic;
+  const idclass_t*  ic;
 
   *resp = htsmsg_create_map();
   tvh_mutex_lock(&global_lock);
@@ -47,17 +45,16 @@ api_idnode_classes
   return 0;
 }
 
-
-
-static int
-api_idnode_raw_export_by_class0
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int i;
-  const idclass_t *idc;
-  idnode_set_t    *is;
-  idnode_t        *in;
-  htsmsg_t        *l, *e;
+static int api_idnode_raw_export_by_class0(access_t* perm,
+    void*                                            opaque,
+    const char*                                      op,
+    htsmsg_t*                                        args,
+    htsmsg_t**                                       resp) {
+  int              i;
+  const idclass_t* idc;
+  idnode_set_t*    is;
+  idnode_t*        in;
+  htsmsg_t *       l, *e;
 
   /* Find class */
   idc = opaque;
@@ -89,19 +86,20 @@ api_idnode_raw_export_by_class0
   return 0;
 }
 
-static int
-api_idnode_raw_export
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int err = 0, count = 0;
-  idnode_t *in;
-  htsmsg_t *uuids, *l = NULL, *m;
-  htsmsg_field_t *f;
-  const char *uuid = NULL, *class;
+static int api_idnode_raw_export(access_t* perm,
+    void*                                  opaque,
+    const char*                            op,
+    htsmsg_t*                              args,
+    htsmsg_t**                             resp) {
+  int             err = 0, count = 0;
+  idnode_t*       in;
+  htsmsg_t *      uuids, *l = NULL, *m;
+  htsmsg_field_t* f;
+  const char *    uuid = NULL, *class;
 
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {
-    const idclass_t *idc;
+    const idclass_t* idc;
     tvh_mutex_lock(&global_lock);
     idc = idclass_find(class);
     if (idc)
@@ -111,7 +109,7 @@ api_idnode_raw_export
     tvh_mutex_unlock(&global_lock);
     return err;
   }
-  
+
   /* UUIDs */
   if (!(f = htsmsg_field_find(args, "uuid")))
     return EINVAL;
@@ -124,10 +122,12 @@ api_idnode_raw_export
 
   /* Multiple */
   if (uuids) {
-    const idnodes_rb_t *domain = NULL;
+    const idnodes_rb_t* domain = NULL;
     HTSMSG_FOREACH(f, uuids) {
-      if (!(uuid = htsmsg_field_get_str(f))) continue;
-      if (!(in   = idnode_find(uuid, NULL, domain))) continue;
+      if (!(uuid = htsmsg_field_get_str(f)))
+        continue;
+      if (!(in = idnode_find(uuid, NULL, domain)))
+        continue;
       domain = in->in_domain;
       if (idnode_perm(in, perm, NULL)) {
         err = EPERM;
@@ -145,7 +145,7 @@ api_idnode_raw_export
     if (count)
       err = 0;
 
-  /* Single */
+    /* Single */
   } else {
     if ((in = idnode_find(uuid, NULL, NULL)) != NULL) {
       if (idnode_perm(in, perm, NULL)) {
@@ -172,17 +172,18 @@ api_idnode_raw_export
   return err;
 }
 
-static int
-api_idnode_raw_import
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int err = EINVAL;
-  idnode_t *in;
-  htsmsg_t *msg, *conf;
-  htsmsg_field_t *f;
-  const char *uuid;
-  int count = 0;
-  const idnodes_rb_t *domain = NULL;
+static int api_idnode_raw_import(access_t* perm,
+    void*                                  opaque,
+    const char*                            op,
+    htsmsg_t*                              args,
+    htsmsg_t**                             resp) {
+  int                 err = EINVAL;
+  idnode_t*           in;
+  htsmsg_t *          msg, *conf;
+  htsmsg_field_t*     f;
+  const char*         uuid;
+  int                 count  = 0;
+  const idnodes_rb_t* domain = NULL;
 
   if (!(f = htsmsg_field_find(args, "node")))
     return EINVAL;
@@ -229,10 +230,9 @@ api_idnode_raw_import
       idnode_loadfn(in, msg);
       idnode_perm_unset(in);
       err = 0;
-
     }
 
-  /* Multiple */
+    /* Multiple */
   } else {
 
     HTSMSG_FOREACH(f, msg) {
@@ -253,7 +253,6 @@ api_idnode_raw_import
     }
     if (count)
       err = 0;
-
   }
 
   // TODO: return updated UUIDs?
@@ -264,16 +263,15 @@ exit:
   return err;
 }
 
-void api_idnode_raw_init ( void )
-{
+void api_idnode_raw_init(void) {
   /*
    * note: permissions are verified using idnode_perm() calls
    */
   static api_hook_t ah[] = {
-    { "classes",        ACCESS_ANONYMOUS, api_idnode_classes,        NULL },
-    { "raw/export",     ACCESS_ANONYMOUS, api_idnode_raw_export,     NULL },
-    { "raw/import",     ACCESS_ANONYMOUS, api_idnode_raw_import,     NULL },
-    { NULL },
+      {"classes", ACCESS_ANONYMOUS, api_idnode_classes, NULL},
+      {"raw/export", ACCESS_ANONYMOUS, api_idnode_raw_export, NULL},
+      {"raw/import", ACCESS_ANONYMOUS, api_idnode_raw_import, NULL},
+      {NULL},
   };
 
   api_register_all(ah);

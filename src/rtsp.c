@@ -26,19 +26,19 @@
 /*
  * Utils
  */
-int
-rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
-           const char *path, const char *query,
-           http_arg_list_t *hdr,
-           const char *body, size_t size )
-{
+int rtsp_send_ext(http_client_t* hc,
+    http_cmd_t                   cmd,
+    const char*                  path,
+    const char*                  query,
+    http_arg_list_t*             hdr,
+    const char*                  body,
+    size_t                       size) {
   http_arg_list_t h;
-  size_t blen = 7 + strlen(hc->hc_host) +
-                (hc->hc_port != 554 ? 7 : 0) +
-                (path ? strlen(path) : 1) + 1;
-  char *buf = alloca(blen);
-  char buf2[64];
-  char buf_body[size + 3];
+  size_t          blen =
+      7 + strlen(hc->hc_host) + (hc->hc_port != 554 ? 7 : 0) + (path ? strlen(path) : 1) + 1;
+  char* buf = alloca(blen);
+  char  buf2[64];
+  char  buf_body[size + 3];
 
   if (hc->hc_rtsp_session) {
     if (hdr == NULL) {
@@ -55,7 +55,7 @@ rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
     }
     strlcpy(buf_body, body, sizeof(buf_body));
     strlcat(buf_body, "\r\n", 2);
-    snprintf(buf2, sizeof(buf2), "%"PRIu64, (uint64_t)(size + 2));
+    snprintf(buf2, sizeof(buf2), "%" PRIu64, (uint64_t)(size + 2));
     http_arg_set(hdr, "Content-Length", buf2);
   }
 
@@ -65,15 +65,13 @@ rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
   else
     buf2[0] = '\0';
   snprintf(buf, blen, "rtsp://%s%s%s", hc->hc_host, buf2, path ? path : "/");
-  if(size > 0)
+  if (size > 0)
     return http_client_send(hc, cmd, buf, query, hdr, buf_body, size + 2);
   else
     return http_client_send(hc, cmd, buf, query, hdr, NULL, 0);
 }
 
-void
-rtsp_clear_session( http_client_t *hc )
-{
+void rtsp_clear_session(http_client_t* hc) {
   free(hc->hc_rtsp_session);
   free(hc->hc_rtp_dest);
   hc->hc_rtp_port       = 0;
@@ -89,11 +87,9 @@ rtsp_clear_session( http_client_t *hc )
  * Options
  */
 
-int
-rtsp_options_decode( http_client_t *hc )
-{
+int rtsp_options_decode(http_client_t* hc) {
   char *argv[32], *p;
-  int i, n, what = 0;
+  int   i, n, what = 0;
 
   p = http_arg_get(&hc->hc_args, "Public");
   if (p == NULL)
@@ -112,11 +108,9 @@ rtsp_options_decode( http_client_t *hc )
   return (hc->hc_code != 200 && what != 0x0f) ? -EIO : HTTP_CON_OK;
 }
 
-int
-rtsp_setup_decode( http_client_t *hc, int satip )
-{
+int rtsp_setup_decode(http_client_t* hc, int satip) {
   char *argv[32], *argv2[2], *p;
-  int i, n, j;
+  int   i, n, j;
 
   rtsp_clear_session(hc);
   if (hc->hc_code != 200)
@@ -158,9 +152,9 @@ rtsp_setup_decode( http_client_t *hc, int satip )
   n = http_tokenize(p, argv, 32, ';');
   if (n < 2)
     return -EIO;
-  hc->hc_rtp_tcp = -1;
-  hc->hc_rtcp_tcp = -1;
-  hc->hc_rtp_port = -1;
+  hc->hc_rtp_tcp   = -1;
+  hc->hc_rtcp_tcp  = -1;
+  hc->hc_rtp_port  = -1;
   hc->hc_rtcp_port = -1;
   if (!strcasecmp(argv[0], "RTP/AVP/TCP")) {
     for (i = 1; i < n; i++) {
@@ -180,9 +174,8 @@ rtsp_setup_decode( http_client_t *hc, int satip )
         }
       }
     }
-  } else if (!strcasecmp(argv[0], "RTP/AVP") ||
-             !strcasecmp(argv[0], "RTP/AVP/UDP") ||
-             !strcasecmp(argv[0], "RTP/AVPF/UDP")) {
+  } else if (!strcasecmp(argv[0], "RTP/AVP") || !strcasecmp(argv[0], "RTP/AVP/UDP") ||
+      !strcasecmp(argv[0], "RTP/AVPF/UDP")) {
     if (n < 3)
       return -EIO;
     hc->hc_rtp_multicast = strcasecmp(argv[1], "multicast") == 0;
@@ -205,8 +198,7 @@ rtsp_setup_decode( http_client_t *hc, int satip )
         } else {
           return -EIO;
         }
-      }
-      else if (strncmp(argv[i], "server_port=", 12) == 0) {
+      } else if (strncmp(argv[i], "server_port=", 12) == 0) {
         j = http_tokenize(argv[i] + 12, argv2, 2, '-');
         if (j > 1) {
           hc->hc_rtcp_server_port = atoi(argv2[1]);
@@ -223,11 +215,9 @@ rtsp_setup_decode( http_client_t *hc, int satip )
   return HTTP_CON_OK;
 }
 
-int
-rtsp_play_decode( http_client_t *hc )
-{
+int rtsp_play_decode(http_client_t* hc) {
   char *argv[32], *p;
-  int n;
+  int   n;
 
   if (hc->hc_code != 200)
     return -EIO;
@@ -238,35 +228,43 @@ rtsp_play_decode( http_client_t *hc )
   if (n < 1 || strncmp(argv[0], "npt", 3))
     return -EIO;
   hc->hc_rtsp_stream_start = strtoumax(argv[1], NULL, 10);
-  p = http_arg_get(&hc->hc_args, "Scale");
+  p                        = http_arg_get(&hc->hc_args, "Scale");
   if (p == NULL)
     return -EIO;
   hc->hc_rtsp_scale = strtof(p, NULL);
   return 0;
 }
 
-int
-rtsp_setup( http_client_t *hc,
-            const char *path, const char *query,
-            const char *multicast_addr,
-            int rtp_port, int rtcp_port )
-{
+int rtsp_setup(http_client_t* hc,
+    const char*               path,
+    const char*               query,
+    const char*               multicast_addr,
+    int                       rtp_port,
+    int                       rtcp_port) {
   http_arg_list_t h;
-  char transport[256];
+  char            transport[256];
 
   if (rtcp_port < 0) {
-    snprintf(transport, sizeof(transport),
-      "RTP/AVP/TCP;interleaved=%d-%d", rtp_port, rtp_port + 1);
+    snprintf(transport, sizeof(transport), "RTP/AVP/TCP;interleaved=%d-%d", rtp_port, rtp_port + 1);
   } else if (multicast_addr) {
-    snprintf(transport, sizeof(transport),
-      "RTP/AVP;multicast;destination=%s;ttl=1;client_port=%i-%i",
-      multicast_addr, rtp_port, rtcp_port);
-  } else if(hc->hc_rtp_avpf) {
-    snprintf(transport, sizeof(transport),
-      "RTP/AVPF/UDP;unicast;client_port=%i-%i", rtp_port, rtcp_port);
+    snprintf(transport,
+        sizeof(transport),
+        "RTP/AVP;multicast;destination=%s;ttl=1;client_port=%i-%i",
+        multicast_addr,
+        rtp_port,
+        rtcp_port);
+  } else if (hc->hc_rtp_avpf) {
+    snprintf(transport,
+        sizeof(transport),
+        "RTP/AVPF/UDP;unicast;client_port=%i-%i",
+        rtp_port,
+        rtcp_port);
   } else {
-    snprintf(transport, sizeof(transport),
-      "RTP/AVP;unicast;client_port=%i-%i", rtp_port, rtcp_port);
+    snprintf(transport,
+        sizeof(transport),
+        "RTP/AVP;unicast;client_port=%i-%i",
+        rtp_port,
+        rtcp_port);
   }
 
   http_arg_init(&h);
@@ -274,10 +272,10 @@ rtsp_setup( http_client_t *hc,
   return rtsp_send(hc, RTSP_CMD_SETUP, path, query, &h);
 }
 
-int rtsp_describe_decode(http_client_t *hc, const char *buf, size_t len) {
-  const char *p;
-  char transport[64];
-  int n, t, transport_type;
+int rtsp_describe_decode(http_client_t* hc, const char* buf, size_t len) {
+  const char* p;
+  char        transport[64];
+  int         n, t, transport_type;
 
   p = http_arg_get(&hc->hc_args, "Content-Type");
   if (p == NULL || strncmp(p, "application/sdp", 15)) {
@@ -289,15 +287,16 @@ int rtsp_describe_decode(http_client_t *hc, const char *buf, size_t len) {
     if (strncmp(p, "a=range", 7) == 0) {
       // Parse remote timeshift buffer info
       if (strncmp(p + 8, "npt=", 4) == 0) {
-        sscanf(p + 8, "npt=%" PRItime_t "-%" PRItime_t, &hc->hc_rtsp_range_start,
+        sscanf(p + 8,
+            "npt=%" PRItime_t "-%" PRItime_t,
+            &hc->hc_rtsp_range_start,
             &hc->hc_rtsp_range_end);
       }
     }
     if (strncmp(p, "m=video", 7) == 0) {
       // Parse and select RTP/AVPF stream if available for retransmission support
       if (sscanf(p, "m=video %d %s %d\n", &t, transport, &transport_type) == 3) {
-        tvhtrace(LS_RTSP, "describe: found transport: %d %s %d", t, transport,
-            transport_type);
+        tvhtrace(LS_RTSP, "describe: found transport: %d %s %d", t, transport, transport_type);
         if (strncmp(transport, "RTP/AVPF", 8) == 0) {
           hc->hc_rtp_avpf = 1;
         }
@@ -307,17 +306,15 @@ int rtsp_describe_decode(http_client_t *hc, const char *buf, size_t len) {
   return HTTP_CON_OK;
 }
 
-int
-rtsp_get_parameter( http_client_t *hc, const char *parameter ) {
+int rtsp_get_parameter(http_client_t* hc, const char* parameter) {
   http_arg_list_t hdr;
   http_arg_init(&hdr);
   http_arg_set(&hdr, "Content-Type", "text/parameters");
   return rtsp_send_ext(hc, RTSP_CMD_GET_PARAMETER, NULL, NULL, &hdr, parameter, strlen(parameter));
 }
 
-int
-rtsp_set_speed( http_client_t *hc, float speed ) {
-  char buf[64];
+int rtsp_set_speed(http_client_t* hc, float speed) {
+  char            buf[64];
   http_arg_list_t h;
   http_arg_init(&h);
   snprintf(buf, sizeof(buf), "%.2f", speed);
@@ -325,9 +322,8 @@ rtsp_set_speed( http_client_t *hc, float speed ) {
   return rtsp_send(hc, RTSP_CMD_PLAY, NULL, NULL, &h);
 }
 
-int
-rtsp_set_position( http_client_t *hc, time_t position ) {
-  char buf[64];
+int rtsp_set_position(http_client_t* hc, time_t position) {
+  char            buf[64];
   http_arg_list_t h;
   http_arg_init(&h);
   snprintf(buf, sizeof(buf), "npt=%" PRItime_t "-", position);

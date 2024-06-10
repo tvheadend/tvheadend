@@ -22,7 +22,7 @@
 
 #include "idnode.h"
 
-void tvhtime_init ( void );
-void tvhtime_update ( time_t utc, const char *srcname );
+void tvhtime_init(void);
+void tvhtime_update(time_t utc, const char* srcname);
 
 #endif /* __TVH_TIME_H__ */

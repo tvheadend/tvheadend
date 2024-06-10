@@ -23,7 +23,7 @@
 #include "htsmsg.h"
 
 #define ACCESS_DEFAULT_COMMENT "Default access entry"
-#define ACCESS_WIZARD_COMMENT "Wizard access entry"
+#define ACCESS_WIZARD_COMMENT  "Wizard access entry"
 
 struct profile;
 struct dvr_config;
@@ -40,9 +40,9 @@ typedef struct ipblock_entry {
 
   TAILQ_ENTRY(ipblock_entry) ib_link;
 
-  int   ib_enabled;
+  int                        ib_enabled;
   struct access_ipmask_queue ib_ipmasks;
-  char *ib_comment;
+  char*                      ib_comment;
 } ipblock_entry_t;
 
 extern const idclass_t ipblock_entry_class;
@@ -56,17 +56,17 @@ typedef struct passwd_entry {
 
   TAILQ_ENTRY(passwd_entry) pw_link;
 
-  char *pw_username;
-  char *pw_password;
-  char *pw_password2;
+  char* pw_username;
+  char* pw_password;
+  char* pw_password2;
 
-  char *pw_auth;
+  char* pw_auth;
 
-  int   pw_enabled;
-  int   pw_auth_enabled;
-  int   pw_wizard;
+  int pw_enabled;
+  int pw_auth_enabled;
+  int pw_wizard;
 
-  char *pw_comment;
+  char* pw_comment;
 } passwd_entry_t;
 
 extern const idclass_t passwd_entry_class;
@@ -109,14 +109,14 @@ typedef struct access_entry {
   idnode_t ae_id;
 
   TAILQ_ENTRY(access_entry) ae_link;
-  char *ae_username;
-  char *ae_comment;
-  char *ae_lang;
-  int ae_change_lang;
-  char *ae_lang_ui;
-  int ae_change_lang_ui;
-  char *ae_theme;
-  int ae_change_theme;
+  char* ae_username;
+  char* ae_comment;
+  char* ae_lang;
+  int   ae_change_lang;
+  char* ae_lang_ui;
+  int   ae_change_lang_ui;
+  char* ae_theme;
+  int   ae_change_theme;
 
   int ae_index;
   int ae_wizard;
@@ -130,11 +130,11 @@ typedef struct access_entry {
   int ae_htsp_streaming;
 
   idnode_list_head_t ae_profiles;
-  int ae_change_profiles;
+  int                ae_change_profiles;
 
-  int ae_conn_limit_type;
+  int      ae_conn_limit_type;
   uint32_t ae_conn_limit;
-  int ae_change_conn_limit;
+  int      ae_change_conn_limit;
 
   int ae_xmltv_output_format;
   int ae_change_xmltv_output_format;
@@ -151,20 +151,20 @@ typedef struct access_entry {
   int ae_htsp_anonymize;
 
   idnode_list_head_t ae_dvr_configs;
-  int ae_change_dvr_configs;
+  int                ae_change_dvr_configs;
 
   int ae_webui;
   int ae_admin;
 
   uint64_t ae_chmin;
   uint64_t ae_chmax;
-  int ae_change_chrange;
+  int      ae_change_chrange;
 
-  int ae_chtags_exclude;
+  int                ae_chtags_exclude;
   idnode_list_head_t ae_chtags;
-  int ae_change_chtags;
+  int                ae_change_chtags;
 
-  int ae_change_rights;
+  int      ae_change_rights;
   uint32_t ae_rights;
 
   struct access_ipmask_queue ae_ipmasks;
@@ -175,17 +175,17 @@ LIST_HEAD(access_entry_list, access_entry);
 extern const idclass_t access_entry_class;
 
 typedef struct access {
-  char     *aa_username;
-  char     *aa_representative;
-  char     *aa_lang;
-  char     *aa_lang_ui;
+  char*     aa_username;
+  char*     aa_representative;
+  char*     aa_lang;
+  char*     aa_lang_ui;
   uint32_t  aa_rights;
-  htsmsg_t *aa_profiles;
-  htsmsg_t *aa_dvrcfgs;
-  uint64_t *aa_chrange;
+  htsmsg_t* aa_profiles;
+  htsmsg_t* aa_dvrcfgs;
+  uint64_t* aa_chrange;
   int       aa_chrange_count;
-  htsmsg_t *aa_chtags_exclude;
-  htsmsg_t *aa_chtags;
+  htsmsg_t* aa_chtags_exclude;
+  htsmsg_t* aa_chtags;
   int       aa_match;
   uint32_t  aa_conn_limit;
   uint32_t  aa_conn_limit_streaming;
@@ -196,8 +196,8 @@ typedef struct access {
   uint32_t  aa_htsp_output_format;
   int       aa_uilevel;
   int       aa_uilevel_nochange;
-  char     *aa_theme;
-  char     *aa_auth;
+  char*     aa_theme;
+  char*     aa_auth;
 } access_t;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);
@@ -205,79 +205,74 @@ TAILQ_HEAD(access_ticket_queue, access_ticket);
 extern struct access_ticket_queue access_tickets;
 
 typedef struct access_ticket {
-  char *at_id;
+  char* at_id;
 
   TAILQ_ENTRY(access_ticket) at_link;
 
-  mtimer_t at_timer;
-  char *at_resource;
-  access_t *at_access;
+  mtimer_t  at_timer;
+  char*     at_resource;
+  access_t* at_access;
 } access_ticket_t;
 
 #define ACCESS_ANONYMOUS          0
-#define ACCESS_STREAMING          (1<<0)
-#define ACCESS_ADVANCED_STREAMING (1<<1)
-#define ACCESS_HTSP_STREAMING     (1<<2)
-#define ACCESS_WEB_INTERFACE      (1<<3)
-#define ACCESS_HTSP_INTERFACE     (1<<4)
-#define ACCESS_RECORDER           (1<<5)
-#define ACCESS_HTSP_RECORDER      (1<<6)
-#define ACCESS_ALL_RECORDER       (1<<7)
-#define ACCESS_ALL_RW_RECORDER    (1<<8)
-#define ACCESS_FAILED_RECORDER    (1<<9)
-#define ACCESS_HTSP_ANONYMIZE     (1<<10)
-#define ACCESS_ADMIN              (1<<11)
-#define ACCESS_NO_EMPTY_ARGS      (1<<29)
-#define ACCESS_OR                 (1<<30)
+#define ACCESS_STREAMING          (1 << 0)
+#define ACCESS_ADVANCED_STREAMING (1 << 1)
+#define ACCESS_HTSP_STREAMING     (1 << 2)
+#define ACCESS_WEB_INTERFACE      (1 << 3)
+#define ACCESS_HTSP_INTERFACE     (1 << 4)
+#define ACCESS_RECORDER           (1 << 5)
+#define ACCESS_HTSP_RECORDER      (1 << 6)
+#define ACCESS_ALL_RECORDER       (1 << 7)
+#define ACCESS_ALL_RW_RECORDER    (1 << 8)
+#define ACCESS_FAILED_RECORDER    (1 << 9)
+#define ACCESS_HTSP_ANONYMIZE     (1 << 10)
+#define ACCESS_ADMIN              (1 << 11)
+#define ACCESS_NO_EMPTY_ARGS      (1 << 29)
+#define ACCESS_OR                 (1 << 30)
 
-#define ACCESS_FULL \
-  (ACCESS_STREAMING | ACCESS_ADVANCED_STREAMING | \
-   ACCESS_HTSP_STREAMING | ACCESS_WEB_INTERFACE | \
-   ACCESS_RECORDER | ACCESS_HTSP_RECORDER | \
-   ACCESS_ALL_RECORDER | ACCESS_ALL_RW_RECORDER | \
-   ACCESS_FAILED_RECORDER | ACCESS_ADMIN)
+#define ACCESS_FULL                                                                              \
+  (ACCESS_STREAMING | ACCESS_ADVANCED_STREAMING | ACCESS_HTSP_STREAMING | ACCESS_WEB_INTERFACE | \
+      ACCESS_RECORDER | ACCESS_HTSP_RECORDER | ACCESS_ALL_RECORDER | ACCESS_ALL_RW_RECORDER |    \
+      ACCESS_FAILED_RECORDER | ACCESS_ADMIN)
 
-#define ACCESS_INTERNAL \
-  (ACCESS_NO_EMPTY_ARGS)
+#define ACCESS_INTERNAL (ACCESS_NO_EMPTY_ARGS)
 
 /**
  * Create a new ticket for the requested resource and generate a id for it
  */
-const char* access_ticket_create(const char *resource, access_t *a);
+const char* access_ticket_create(const char* resource, access_t* a);
 
 /**
  * Verifies that a given ticket id matches a resource
  */
-access_t *access_ticket_verify2(const char *id, const char *resource);
+access_t* access_ticket_verify2(const char* id, const char* resource);
 
-int access_ticket_delete(const char *ticket_id);
+int access_ticket_delete(const char* ticket_id);
 
 /**
  * Free the access structure
  */
-void access_destroy(access_t *a);
+void access_destroy(access_t* a);
 
 /**
  * Copy the access structure
  */
-access_t *access_copy(access_t *src);
+access_t* access_copy(access_t* src);
 
 /**
  * Compare the access structures
  */
-int access_compare(access_t *a, access_t *b);
+int access_compare(access_t* a, access_t* b);
 
 /**
  *
  */
-char *
-access_get_lang(access_t *a, const char *lang);
+char* access_get_lang(access_t* a, const char* lang);
 
 /**
  *
  */
-const char *
-access_get_theme(access_t *a);
+const char* access_get_theme(access_t* a);
 
 /**
  * Verifies that the given user in combination with the source ip
@@ -285,74 +280,64 @@ access_get_theme(access_t *a);
  *
  * Return 0 if access is granted, -1 otherwise
  */
-static inline int access_verify2(const access_t *a, uint32_t mask)
-  { return a ? ((mask & ACCESS_OR) ?
-      ((a->aa_rights & mask) ? 0 : -1) :
-      ((a->aa_rights & mask) == mask ? 0 : -1)) : -1; }
+static inline int access_verify2(const access_t* a, uint32_t mask) {
+  return a ? ((mask & ACCESS_OR) ? ((a->aa_rights & mask) ? 0 : -1)
+                                 : ((a->aa_rights & mask) == mask ? 0 : -1))
+           : -1;
+}
 
-int access_verify_list(htsmsg_t *list, const char *item);
+int access_verify_list(htsmsg_t* list, const char* item);
 
 /**
  * Get the access structure
  */
-typedef int (*verify_callback_t)(void *aux, const char *passwd);
+typedef int (*verify_callback_t)(void* aux, const char* passwd);
 
-access_t *access_get(struct sockaddr_storage *src, const char *username,
-                     verify_callback_t verify, void *aux);
-
-/**
- *
- */
-access_t *
-access_get_by_username(const char *username);
+access_t*
+access_get(struct sockaddr_storage* src, const char* username, verify_callback_t verify, void* aux);
 
 /**
  *
  */
-access_t *
-access_get_by_addr(struct sockaddr_storage *src);
+access_t* access_get_by_username(const char* username);
 
 /**
  *
  */
-access_t *
-access_get_by_auth(struct sockaddr_storage *src, const char *id);
+access_t* access_get_by_addr(struct sockaddr_storage* src);
 
 /**
  *
  */
-access_entry_t *
-access_entry_create(const char *uuid, htsmsg_t *conf);
+access_t* access_get_by_auth(struct sockaddr_storage* src, const char* id);
 
 /**
  *
  */
-void
-access_entry_destroy(access_entry_t *ae, int delconf);
+access_entry_t* access_entry_create(const char* uuid, htsmsg_t* conf);
 
 /**
  *
  */
-void
-access_destroy_by_profile(struct profile *pro, int delconf);
-void
-access_destroy_by_dvr_config(struct dvr_config *cfg, int delconf);
-void
-access_destroy_by_channel_tag(struct channel_tag *ct, int delconf);
+void access_entry_destroy(access_entry_t* ae, int delconf);
 
 /**
  *
  */
-passwd_entry_t *
-passwd_entry_create(const char *uuid, htsmsg_t *conf);
-void
-passwd_entry_destroy(passwd_entry_t *ae, int delconf);
+void access_destroy_by_profile(struct profile* pro, int delconf);
+void access_destroy_by_dvr_config(struct dvr_config* cfg, int delconf);
+void access_destroy_by_channel_tag(struct channel_tag* ct, int delconf);
 
 /**
  *
  */
-ipblock_entry_t *
-ipblock_entry_create(const char *uuid, htsmsg_t *conf);
+passwd_entry_t* passwd_entry_create(const char* uuid, htsmsg_t* conf);
+void            passwd_entry_destroy(passwd_entry_t* ae, int delconf);
+
+/**
+ *
+ */
+ipblock_entry_t* ipblock_entry_create(const char* uuid, htsmsg_t* conf);
 
 /**
  *
@@ -363,9 +348,9 @@ void access_done(void);
 /**
  *
  */
-htsmsg_t *language_get_list ( void *obj, const char *lang );
-htsmsg_t *language_get_ui_list ( void *obj, const char *lang );
-htsmsg_t *theme_get_ui_list ( void *obj, const char *lang );
-htsmsg_t *user_get_userlist ( void *obj, const char *lang );
+htsmsg_t* language_get_list(void* obj, const char* lang);
+htsmsg_t* language_get_ui_list(void* obj, const char* lang);
+htsmsg_t* theme_get_ui_list(void* obj, const char* lang);
+htsmsg_t* user_get_userlist(void* obj, const char* lang);
 
 #endif /* ACCESS_H_ */

@@ -28,11 +28,10 @@
  * Compression/Decompression
  * *************************************************************************/
 
-uint8_t *tvh_gzip_inflate ( const uint8_t *data, size_t size, size_t orig )
-{
-  int err;
+uint8_t* tvh_gzip_inflate(const uint8_t* data, size_t size, size_t orig) {
+  int      err;
   z_stream zstr;
-  uint8_t *bufout;
+  uint8_t* bufout;
 
   /* Setup buffers */
   bufout = malloc(orig);
@@ -41,13 +40,13 @@ uint8_t *tvh_gzip_inflate ( const uint8_t *data, size_t size, size_t orig )
   memset(&zstr, 0, sizeof(zstr));
   inflateInit2(&zstr, MAX_WBITS + 16 /* gzip */);
   zstr.avail_in  = size;
-  zstr.next_in   = (z_const uint8_t *)data;
+  zstr.next_in   = (z_const uint8_t*)data;
   zstr.avail_out = orig;
   zstr.next_out  = bufout;
 
   /* Decompress */
   err = inflate(&zstr, Z_NO_FLUSH);
-  if ( err != Z_STREAM_END || zstr.avail_out != 0 ) {
+  if (err != Z_STREAM_END || zstr.avail_out != 0) {
     free(bufout);
     bufout = NULL;
   }
@@ -56,20 +55,24 @@ uint8_t *tvh_gzip_inflate ( const uint8_t *data, size_t size, size_t orig )
   return bufout;
 }
 
-uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size )
-{
-  int err;
+uint8_t* tvh_gzip_deflate(const uint8_t* data, size_t orig, size_t* size) {
+  int      err;
   z_stream zstr;
-  uint8_t *bufout;
+  uint8_t* bufout;
 
   /* Setup buffers */
   bufout = malloc(orig);
 
   /* Setup zlib */
   memset(&zstr, 0, sizeof(zstr));
-  err = deflateInit2(&zstr, Z_BEST_COMPRESSION, Z_DEFLATED, MAX_WBITS + 16 /* gzip */, MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
+  err            = deflateInit2(&zstr,
+      Z_BEST_COMPRESSION,
+      Z_DEFLATED,
+      MAX_WBITS + 16 /* gzip */,
+      MAX_MEM_LEVEL,
+      Z_DEFAULT_STRATEGY);
   zstr.avail_in  = orig;
-  zstr.next_in   = (z_const uint8_t *)data;
+  zstr.next_in   = (z_const uint8_t*)data;
   zstr.avail_out = orig;
   zstr.next_out  = bufout;
 
@@ -86,11 +89,11 @@ uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size )
     }
 
     /* Error */
-    if ( (err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0 ) {
+    if ((err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0) {
       free(bufout);
       bufout = NULL;
     } else {
-      *size  = zstr.total_out;
+      *size = zstr.total_out;
     }
     break;
   }
@@ -99,25 +102,29 @@ uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size )
   return bufout;
 }
 
-int tvh_gzip_deflate_fd ( int fd, const uint8_t *data, size_t orig, size_t *size, int speed )
-{
-  int r = 0, err;
+int tvh_gzip_deflate_fd(int fd, const uint8_t* data, size_t orig, size_t* size, int speed) {
+  int      r = 0, err;
   z_stream zstr;
-  uint8_t *bufout;
-  size_t alloc;
+  uint8_t* bufout;
+  size_t   alloc;
 
   assert(speed >= Z_BEST_SPEED && speed <= Z_BEST_COMPRESSION);
 
   /* Setup buffers */
   *size  = 0;
-  alloc  = MIN(orig, 256*1024);
+  alloc  = MIN(orig, 256 * 1024);
   bufout = malloc(alloc);
 
   /* Setup zlib */
   memset(&zstr, 0, sizeof(zstr));
-  err = deflateInit2(&zstr, speed, Z_DEFLATED, MAX_WBITS + 16 /* gzip */, MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
+  err            = deflateInit2(&zstr,
+      speed,
+      Z_DEFLATED,
+      MAX_WBITS + 16 /* gzip */,
+      MAX_MEM_LEVEL,
+      Z_DEFAULT_STRATEGY);
   zstr.avail_in  = orig;
-  zstr.next_in   = (z_const uint8_t *)data;
+  zstr.next_in   = (z_const uint8_t*)data;
   zstr.avail_out = alloc;
   zstr.next_out  = bufout;
 
@@ -138,7 +145,7 @@ int tvh_gzip_deflate_fd ( int fd, const uint8_t *data, size_t orig, size_t *size
     }
 
     /* Error */
-    if ( (err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0 ) {
+    if ((err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0) {
       r = -1;
     } else {
       if (zstr.avail_out != alloc)
@@ -153,15 +160,18 @@ int tvh_gzip_deflate_fd ( int fd, const uint8_t *data, size_t orig, size_t *size
   return r;
 }
 
-int tvh_gzip_deflate_fd_header ( int fd, const uint8_t *data, size_t orig,
-                                 size_t *deflated_size, int speed,
-                                 const char *signature )
-{
+int tvh_gzip_deflate_fd_header(int fd,
+    const uint8_t*                 data,
+    size_t                         orig,
+    size_t*                        deflated_size,
+    int                            speed,
+    const char*                    signature) {
   uint8_t data2[6];
-  size_t size = 0;
-  int r;
+  size_t  size = 0;
+  int     r;
 
-  if (deflated_size) *deflated_size = 0;
+  if (deflated_size)
+    *deflated_size = 0;
   r = tvh_write(fd, "\xff\xffGZIP00\x00\x00\x00\x00", 12);
   if (r)
     return 1;
@@ -173,7 +183,8 @@ int tvh_gzip_deflate_fd_header ( int fd, const uint8_t *data, size_t orig,
   r = lseek(fd, 6, SEEK_SET) != (off_t)6;
   if (r)
     return 1;
-  if (deflated_size) *deflated_size = size + 12;
+  if (deflated_size)
+    *deflated_size = size + 12;
   data2[0] = signature ? signature[0] : '0';
   data2[1] = signature ? signature[1] : '0';
   data2[2] = (orig >> 24) & 0xff;

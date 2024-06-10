@@ -18,17 +18,16 @@
 
 #include "tvheadend.h"
 #include "file.h"
-	
+
 #define MAX_RDBUF_SIZE 8192
 
-size_t file_readall ( int fd, char **outp )
-{
+size_t file_readall(int fd, char** outp) {
   size_t outsize = 0, totalsize = 0;
-  char *outbuf = NULL, *n;
-  int r;
+  char * outbuf = NULL, *n;
+  int    r;
 
   while (1) {
-    if(totalsize == outsize) {
+    if (totalsize == outsize) {
       n = realloc(outbuf, outsize += MAX_RDBUF_SIZE);
       if (!n) {
         free(outbuf);
@@ -38,19 +37,19 @@ size_t file_readall ( int fd, char **outp )
     }
 
     r = read(fd, outbuf + totalsize, outsize - totalsize);
-    if(r < 1) {
+    if (r < 1) {
       if (ERRNO_AGAIN(errno))
         continue;
       break;
     }
     totalsize += r;
-  } 
+  }
 
   if (!totalsize) {
     free(outbuf);
     return 0;
   }
-	
+
   *outp = outbuf;
   if (totalsize == outsize) {
     n = realloc(outbuf, outsize += 1);

@@ -27,10 +27,10 @@ struct memoryinfo;
  * Packet buffer
  */
 typedef struct pktbuf {
-  int pb_refcount;
-  int pb_err;
-  uint8_t *pb_data;
-  size_t pb_size;
+  int      pb_refcount;
+  int      pb_err;
+  uint8_t* pb_data;
+  size_t   pb_size;
 } pktbuf_t;
 
 /**
@@ -39,13 +39,15 @@ typedef struct pktbuf {
 #define PKT_I_FRAME 1
 #define PKT_P_FRAME 2
 #define PKT_B_FRAME 3
-#define PKT_NTYPES  4 
+#define PKT_NTYPES  4
 
-static inline char pkt_frametype_to_char ( int frametype )
-{
-  if (frametype == PKT_I_FRAME) return 'I';
-  if (frametype == PKT_P_FRAME) return 'P';
-  if (frametype == PKT_B_FRAME) return 'B';
+static inline char pkt_frametype_to_char(int frametype) {
+  if (frametype == PKT_I_FRAME)
+    return 'I';
+  if (frametype == PKT_P_FRAME)
+    return 'P';
+  if (frametype == PKT_B_FRAME)
+    return 'B';
   return ' ';
 }
 
@@ -53,8 +55,8 @@ typedef struct th_pkt {
   int64_t pkt_dts;
   int64_t pkt_pts;
   int64_t pkt_pcr;
-  int pkt_duration;
-  int pkt_refcount;
+  int     pkt_duration;
+  int     pkt_refcount;
 
   uint8_t pkt_type;
   uint8_t pkt_err;
@@ -64,7 +66,7 @@ typedef struct th_pkt {
   union {
     struct {
       uint8_t pkt_frametype;
-      uint8_t pkt_field;  // Set if packet is only a half frame (a field)
+      uint8_t pkt_field; // Set if packet is only a half frame (a field)
 
       uint16_t pkt_aspect_num;
       uint16_t pkt_aspect_den;
@@ -77,8 +79,8 @@ typedef struct th_pkt {
     } a;
   };
 
-  pktbuf_t *pkt_meta;
-  pktbuf_t *pkt_payload;
+  pktbuf_t* pkt_meta;
+  pktbuf_t* pkt_payload;
 
 } th_pkt_t;
 
@@ -87,7 +89,7 @@ typedef struct th_pkt {
  */
 typedef struct th_pktref {
   TAILQ_ENTRY(th_pktref) pr_link;
-  th_pkt_t *pr_pkt;
+  th_pkt_t* pr_pkt;
 } th_pktref_t;
 
 TAILQ_HEAD(th_pktref_queue, th_pktref);
@@ -102,48 +104,50 @@ extern struct memoryinfo pktref_memoryinfo;
 /**
  *
  */
-void pkt_ref_dec(th_pkt_t *pkt);
+void pkt_ref_dec(th_pkt_t* pkt);
 
-void pkt_ref_inc(th_pkt_t *pkt);
+void pkt_ref_inc(th_pkt_t* pkt);
 
-void pkt_ref_inc_poly(th_pkt_t *pkt, int n);
+void pkt_ref_inc_poly(th_pkt_t* pkt, int n);
 
-void pktref_clear_queue(struct th_pktref_queue *q);
-
-// Reference count is transfered to queue
-void pktref_enqueue(struct th_pktref_queue *q, th_pkt_t *pkt);
+void pktref_clear_queue(struct th_pktref_queue* q);
 
 // Reference count is transfered to queue
-void pktref_enqueue_sorted(struct th_pktref_queue *q, th_pkt_t *pkt,
-                           int (*cmp)(const void *, const void *));
+void pktref_enqueue(struct th_pktref_queue* q, th_pkt_t* pkt);
 
-void pktref_remove(struct th_pktref_queue *q, th_pktref_t *pr);
+// Reference count is transfered to queue
+void pktref_enqueue_sorted(struct th_pktref_queue* q,
+    th_pkt_t*                                      pkt,
+    int (*cmp)(const void*, const void*));
 
-th_pkt_t *pktref_first(struct th_pktref_queue *q);
+void pktref_remove(struct th_pktref_queue* q, th_pktref_t* pr);
 
-th_pkt_t *pktref_get_first(struct th_pktref_queue *q);
+th_pkt_t* pktref_first(struct th_pktref_queue* q);
 
-void pktref_insert_head(struct th_pktref_queue *q, th_pkt_t *pkt);
+th_pkt_t* pktref_get_first(struct th_pktref_queue* q);
 
-#define PKTREF_FOREACH(item, queue) TAILQ_FOREACH((item), (queue), pr_link)
+void pktref_insert_head(struct th_pktref_queue* q, th_pkt_t* pkt);
 
-th_pkt_t *pkt_alloc(streaming_component_type_t type,
-                    const uint8_t *data, size_t datalen,
-                    int64_t pts, int64_t dts, int64_t pcr);
+#define PKTREF_FOREACH(item, queue) TAILQ_FOREACH ((item), (queue), pr_link)
 
-th_pkt_t *pkt_copy_shallow(th_pkt_t *pkt);
+th_pkt_t* pkt_alloc(streaming_component_type_t type,
+    const uint8_t*                             data,
+    size_t                                     datalen,
+    int64_t                                    pts,
+    int64_t                                    dts,
+    int64_t                                    pcr);
 
-th_pkt_t *pkt_copy_nodata(th_pkt_t *pkt);
+th_pkt_t* pkt_copy_shallow(th_pkt_t* pkt);
 
-th_pktref_t *pktref_create(th_pkt_t *pkt);
+th_pkt_t* pkt_copy_nodata(th_pkt_t* pkt);
 
-void pkt_trace_
-  (const char *file, int line, int subsys, th_pkt_t *pkt,
-   const char *fmt, ...);
+th_pktref_t* pktref_create(th_pkt_t* pkt);
 
-#define pkt_trace(subsys, pkt, fmt, ...) \
-  do { \
-    if (tvhtrace_enabled()) \
+void pkt_trace_(const char* file, int line, int subsys, th_pkt_t* pkt, const char* fmt, ...);
+
+#define pkt_trace(subsys, pkt, fmt, ...)                               \
+  do {                                                                 \
+    if (tvhtrace_enabled())                                            \
       pkt_trace_(__FILE__, __LINE__, subsys, pkt, fmt, ##__VA_ARGS__); \
   } while (0)
 
@@ -151,27 +155,30 @@ void pkt_trace_
  *
  */
 
-void pktbuf_ref_dec(pktbuf_t *pb);
+void pktbuf_ref_dec(pktbuf_t* pb);
 
-void pktbuf_destroy(pktbuf_t *pb);
+void pktbuf_destroy(pktbuf_t* pb);
 
-pktbuf_t *pktbuf_ref_inc(pktbuf_t *pb);
+pktbuf_t* pktbuf_ref_inc(pktbuf_t* pb);
 
-pktbuf_t *pktbuf_alloc(const uint8_t *data, size_t size);
+pktbuf_t* pktbuf_alloc(const uint8_t* data, size_t size);
 
-pktbuf_t *pktbuf_make(void *data, size_t size);
+pktbuf_t* pktbuf_make(void* data, size_t size);
 
-pktbuf_t *pktbuf_append(pktbuf_t *pb, const void *data, size_t size);
+pktbuf_t* pktbuf_append(pktbuf_t* pb, const void* data, size_t size);
 
-static inline size_t   pktbuf_len(pktbuf_t *pb) { return pb ? pb->pb_size : 0; }
-static inline uint8_t *pktbuf_ptr(pktbuf_t *pb) { return pb->pb_data; }
+static inline size_t pktbuf_len(pktbuf_t* pb) {
+  return pb ? pb->pb_size : 0;
+}
+static inline uint8_t* pktbuf_ptr(pktbuf_t* pb) {
+  return pb->pb_data;
+}
 
 /*
  *
  */
 
-static inline int64_t pts_diff(int64_t a, int64_t b)
-{
+static inline int64_t pts_diff(int64_t a, int64_t b) {
   if (a == PTS_UNSET || b == PTS_UNSET)
     return PTS_UNSET;
   a &= PTS_MASK;
@@ -184,8 +191,7 @@ static inline int64_t pts_diff(int64_t a, int64_t b)
     return PTS_UNSET;
 }
 
-static inline int pts_is_greater_or_equal(int64_t base, int64_t value)
-{
+static inline int pts_is_greater_or_equal(int64_t base, int64_t value) {
   if (base == PTS_UNSET || value == PTS_UNSET)
     return -1;
   if (value >= base)
@@ -195,6 +201,6 @@ static inline int pts_is_greater_or_equal(int64_t base, int64_t value)
   return 0;
 }
 
-const char *pts_to_string(int64_t pts, char *buf);
+const char* pts_to_string(int64_t pts, char* buf);
 
 #endif /* PACKET_H_ */

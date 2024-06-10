@@ -17,74 +17,57 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "transcoding/codec/internals.h"
 
 #include <opus/opus_defines.h>
 
-
 /* libopus ================================================================== */
 
 typedef struct {
-    TVHAudioCodecProfile;
-    int vbr;
-    int application;
-    int complexity;
+  TVHAudioCodecProfile;
+  int vbr;
+  int application;
+  int complexity;
 } tvh_codec_profile_libopus_t;
 
-
-static int
-tvh_codec_profile_libopus_open(tvh_codec_profile_libopus_t *self,
-                               AVDictionary **opts)
-{
-    AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
-    AV_DICT_SET_INT(opts, "vbr", self->vbr, 0);
-    AV_DICT_SET_INT(opts, "application", self->application, 0);
-    AV_DICT_SET_INT(opts, "compression_level", self->complexity, 0);
-    return 0;
+static int tvh_codec_profile_libopus_open(tvh_codec_profile_libopus_t* self, AVDictionary** opts) {
+  AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+  AV_DICT_SET_INT(opts, "vbr", self->vbr, 0);
+  AV_DICT_SET_INT(opts, "application", self->application, 0);
+  AV_DICT_SET_INT(opts, "compression_level", self->complexity, 0);
+  return 0;
 }
 
-
-static htsmsg_t *
-codec_profile_libopus_class_vbr_list(void *obj, const char *lang)
-{
-    static const struct strtab tab[] = {
-        {N_("off: Use constant bit rate"),       0},
-        {N_("on: Use variable bit rate"),        1},
-        {N_("constrained: Use constrained VBR"), 2}
-    };
-    return strtab2htsmsg(tab, 1, lang);
+static htsmsg_t* codec_profile_libopus_class_vbr_list(void* obj, const char* lang) {
+  static const struct strtab tab[] = {{N_("off: Use constant bit rate"), 0},
+      {N_("on: Use variable bit rate"), 1},
+      {N_("constrained: Use constrained VBR"), 2}};
+  return strtab2htsmsg(tab, 1, lang);
 }
 
-
-static htsmsg_t *
-codec_profile_libopus_class_application_list(void *obj, const char *lang)
-{
-    static const struct strtab tab[] = {
-        {N_("voip: Favor improved speech intelligibility"),       OPUS_APPLICATION_VOIP},
-        {N_("audio: Favor faithfulness to the input"),            OPUS_APPLICATION_AUDIO},
-        {N_("lowdelay: Restrict to only the lowest delay modes"), OPUS_APPLICATION_RESTRICTED_LOWDELAY}
-    };
-    return strtab2htsmsg(tab, 1, lang);
+static htsmsg_t* codec_profile_libopus_class_application_list(void* obj, const char* lang) {
+  static const struct strtab tab[] = {
+      {N_("voip: Favor improved speech intelligibility"), OPUS_APPLICATION_VOIP},
+      {N_("audio: Favor faithfulness to the input"), OPUS_APPLICATION_AUDIO},
+      {N_("lowdelay: Restrict to only the lowest delay modes"),
+          OPUS_APPLICATION_RESTRICTED_LOWDELAY}};
+  return strtab2htsmsg(tab, 1, lang);
 }
-
 
 static const codec_profile_class_t codec_profile_libopus_class = {
-    {
-        .ic_super      = (idclass_t *)&codec_profile_audio_class,
+    {.ic_super         = (idclass_t*)&codec_profile_audio_class,
         .ic_class      = "codec_profile_libopus",
         .ic_caption    = N_("libopus"),
-        .ic_properties = (const property_t[]){
-            {
-                .type     = PT_DBL,
-                .id       = "bit_rate",
-                .name     = N_("Bitrate (kb/s) (0=auto)"),
-                .desc     = N_("Constant bitrate (CBR) mode."),
-                .group    = 3,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(TVHCodecProfile, bit_rate),
-                .def.d    = 0,
-            },
+        .ic_properties = (const property_t[]){{
+                                                  .type     = PT_DBL,
+                                                  .id       = "bit_rate",
+                                                  .name     = N_("Bitrate (kb/s) (0=auto)"),
+                                                  .desc     = N_("Constant bitrate (CBR) mode."),
+                                                  .group    = 3,
+                                                  .get_opts = codec_profile_class_get_opts,
+                                                  .off      = offsetof(TVHCodecProfile, bit_rate),
+                                                  .def.d    = 0,
+                                              },
             {
                 .type     = PT_INT,
                 .id       = "vbr",
@@ -122,17 +105,14 @@ static const codec_profile_class_t codec_profile_libopus_class = {
                 .intextra = INTEXTRA_RANGE(0, 10, 1),
                 .def.i    = 10,
             },
-            {}
-        }
-    },
+            {}}},
     .open = (codec_profile_open_meth)tvh_codec_profile_libopus_open,
 };
 
-
 TVHAudioCodec tvh_codec_libopus = {
-    .name    = "libopus",
-    .size    = sizeof(tvh_codec_profile_libopus_t),
-    .idclass = &codec_profile_libopus_class,
-    .profile_init = tvh_codec_profile_audio_init,
+    .name            = "libopus",
+    .size            = sizeof(tvh_codec_profile_libopus_t),
+    .idclass         = &codec_profile_libopus_class,
+    .profile_init    = tvh_codec_profile_audio_init,
     .profile_destroy = tvh_codec_profile_audio_destroy,
 };

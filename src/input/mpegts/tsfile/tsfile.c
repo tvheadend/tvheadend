@@ -26,47 +26,40 @@
 /*
  * Globals
  */
-tvh_mutex_t          tsfile_lock;
-mpegts_network_t         *tsfile_network;
-tsfile_input_list_t      tsfile_inputs;
+tvh_mutex_t         tsfile_lock;
+mpegts_network_t*   tsfile_network;
+tsfile_input_list_t tsfile_inputs;
 
 extern const idclass_t mpegts_service_class;
 extern const idclass_t mpegts_network_class;
 
-static htsmsg_t *
-tsfile_service_config_save ( service_t *s, char *filename, size_t fsize )
-{
+static htsmsg_t* tsfile_service_config_save(service_t* s, char* filename, size_t fsize) {
   return NULL;
 }
 
-static void
-tsfile_service_delete ( service_t *s, int delconf )
-{
+static void tsfile_service_delete(service_t* s, int delconf) {
   mpegts_service_delete(s, 0);
 }
 
 /*
  * Network definition
  */
-static mpegts_service_t *
-tsfile_network_create_service
-  ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
-{
+static mpegts_service_t*
+tsfile_network_create_service(mpegts_mux_t* mm, uint16_t sid, uint16_t pmt_pid) {
   tvh_mutex_lock(&tsfile_lock);
-  mpegts_service_t *s = mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
+  mpegts_service_t* s = mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
 
   // TODO: HACK: REMOVE ME
   if (s) {
     s->s_config_save = tsfile_service_config_save;
-    s->s_delete = tsfile_service_delete;
+    s->s_delete      = tsfile_service_delete;
     tvh_mutex_unlock(&tsfile_lock);
-    channel_t *c = channel_create(NULL, NULL, NULL);
+    channel_t* c = channel_create(NULL, NULL, NULL);
     if (c) {
       c->ch_dont_save = 1;
       service_mapper_link((service_t*)s, c, NULL);
     }
-  }
-  else
+  } else
     tvh_mutex_unlock(&tsfile_lock);
 
   return s;
@@ -75,18 +68,16 @@ tsfile_network_create_service
 /*
  * Initialise
  */
-void tsfile_init ( int tuners )
-{
-  int i;
-  tsfile_input_t *mi;
+void tsfile_init(int tuners) {
+  int             i;
+  tsfile_input_t* mi;
 
   /* Mutex - used for minor efficiency in service processing */
   tvh_mutex_init(&tsfile_lock, NULL);
 
   /* Shared network */
   tsfile_network = calloc(1, sizeof(*tsfile_network));
-  mpegts_network_create0(tsfile_network, &mpegts_network_class, NULL,
-                         "TSfile Network", NULL);
+  mpegts_network_create0(tsfile_network, &mpegts_network_class, NULL, "TSfile Network", NULL);
   tsfile_network->mn_create_service = tsfile_network_create_service;
 
   /* IPTV like setup */
@@ -95,7 +86,7 @@ void tsfile_init ( int tuners )
     mpegts_input_add_network((mpegts_input_t*)mi, tsfile_network);
   } else {
     for (i = 0; i < tuners; i++) {
-      mi = tsfile_input_create(i+1);
+      mi = tsfile_input_create(i + 1);
       mpegts_input_add_network((mpegts_input_t*)mi, tsfile_network);
     }
   }
@@ -104,10 +95,8 @@ void tsfile_init ( int tuners )
 /*
  * Shutdown
  */
-void
-tsfile_done ( void )
-{
-  tsfile_input_t *mi;
+void tsfile_done(void) {
+  tsfile_input_t* mi;
   tvh_mutex_lock(&global_lock);
   while ((mi = LIST_FIRST(&tsfile_inputs))) {
     LIST_REMOVE(mi, tsi_link);
@@ -122,11 +111,10 @@ tsfile_done ( void )
 /*
  * Add multiplex
  */
-void tsfile_add_file ( const char *path )
-{
-  tsfile_input_t        *mi;
-  mpegts_mux_t          *mm;
-  char *uuid = NULL, *tok;
+void tsfile_add_file(const char* path) {
+  tsfile_input_t* mi;
+  mpegts_mux_t*   mm;
+  char *          uuid = NULL, *tok;
 
   char tmp[strlen(path) + 1];
   strcpy(tmp, path);
@@ -139,14 +127,14 @@ void tsfile_add_file ( const char *path )
   }
 
   tvhtrace(LS_TSFILE, "add file %s (uuid:%s)", path, uuid);
-  
+
   /* Create logical instance */
-  mm = tsfile_mux_create(uuid, tsfile_network);
+  mm                            = tsfile_mux_create(uuid, tsfile_network);
   mm->mm_tsid_accept_zero_value = 1;
   mpegts_mux_post_create(mm);
-  
+
   /* Create physical instance (for each tuner) */
-  LIST_FOREACH(mi, &tsfile_inputs, tsi_link)
+  LIST_FOREACH (mi, &tsfile_inputs, tsi_link)
     tsfile_mux_instance_create(path, (mpegts_input_t*)mi, mm);
 }
 

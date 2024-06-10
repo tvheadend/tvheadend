@@ -25,9 +25,9 @@
 #include "tvh_locale.h"
 #include "lang_str.h"
 
-char prop_sbuf[PROP_SBUF_LEN];
-const char *prop_sbuf_ptr = prop_sbuf;
-const char *prop_ptr;
+char        prop_sbuf[PROP_SBUF_LEN];
+const char* prop_sbuf_ptr = prop_sbuf;
+const char* prop_ptr;
 
 /* **************************************************************************
  * Utilities
@@ -37,25 +37,22 @@ const char *prop_ptr;
  *
  */
 static const struct strtab typetab[] = {
-  { "bool",    PT_BOOL },
-  { "int",     PT_INT },
-  { "str",     PT_STR },
-  { "u16",     PT_U16 },
-  { "u32",     PT_U32 },
-  { "s64",     PT_S64 },
-  { "s64",     PT_S64_ATOMIC },
-  { "dbl",     PT_DBL },
-  { "time",    PT_TIME },
-  { "langstr", PT_LANGSTR },
-  { "perm",    PT_PERM },
+    {"bool", PT_BOOL},
+    {"int", PT_INT},
+    {"str", PT_STR},
+    {"u16", PT_U16},
+    {"u32", PT_U32},
+    {"s64", PT_S64},
+    {"s64", PT_S64_ATOMIC},
+    {"dbl", PT_DBL},
+    {"time", PT_TIME},
+    {"langstr", PT_LANGSTR},
+    {"perm", PT_PERM},
 };
 
-
-const property_t *
-prop_find(const property_t *p, const char *id)
-{
-  for(; p->id; p++)
-    if(!strcmp(id, p->id))
+const property_t* prop_find(const property_t* p, const char* id) {
+  for (; p->id; p++)
+    if (!strcmp(id, p->id))
       return p;
   return NULL;
 }
@@ -67,42 +64,47 @@ prop_find(const property_t *p, const char *id)
 /**
  *
  */
-int
-prop_write_values
-  (void *obj, const property_t *pl, htsmsg_t *m, int optmask,
-   htsmsg_t *updated)
-{
-  int save, save2 = 0;
-  htsmsg_field_t *f;
-  const property_t *p;
-  void *cur;
-  const void *snew;
-  void *dnew;
-  double dbl;
-   int i;
-  int64_t s64;
-  uint32_t u32, opts;
-  uint16_t u16;
-  time_t tm;
-#define PROP_UPDATE(v, t)\
-  snew = &v;\
-  if (!p->set && (*((t*)cur) != *((t*)snew))) {\
-    save = 1;\
-    *((t*)cur) = *((t*)snew);\
-  } (void)0
+int prop_write_values(void* obj,
+    const property_t*       pl,
+    htsmsg_t*               m,
+    int                     optmask,
+    htsmsg_t*               updated) {
+  int               save, save2 = 0;
+  htsmsg_field_t*   f;
+  const property_t* p;
+  void*             cur;
+  const void*       snew;
+  void*             dnew;
+  double            dbl;
+  int               i;
+  int64_t           s64;
+  uint32_t          u32, opts;
+  uint16_t          u16;
+  time_t            tm;
+#define PROP_UPDATE(v, t)                       \
+  snew = &v;                                    \
+  if (!p->set && (*((t*)cur) != *((t*)snew))) { \
+    save       = 1;                             \
+    *((t*)cur) = *((t*)snew);                   \
+  }                                             \
+  (void)0
 
-  if (!pl) return 0;
+  if (!pl)
+    return 0;
 
   for (p = pl; p->id; p++) {
 
-    if (p->type == PT_NONE) continue;
+    if (p->type == PT_NONE)
+      continue;
 
     f = htsmsg_field_find(m, p->id);
-    if (!f) continue;
+    if (!f)
+      continue;
 
     /* Ignore */
     opts = p->get_opts ? p->get_opts(obj, p->opts) : p->opts;
-    if(opts & optmask) continue;
+    if (opts & optmask)
+      continue;
 
     /* Sanity check */
     assert(p->set || p->off);
@@ -114,131 +116,131 @@ prop_write_values
 
     /* List */
     if (p->islist)
-      snew = (f->hmf_type == HMF_MAP) ?
-              htsmsg_field_get_map(f) :
-              htsmsg_field_get_list(f);
+      snew = (f->hmf_type == HMF_MAP) ? htsmsg_field_get_map(f) : htsmsg_field_get_list(f);
 
     /* Singular */
     else {
       switch (p->type) {
-      case PT_BOOL: {
-        if (htsmsg_field_get_bool(f, &i))
-          continue;
-        PROP_UPDATE(i, int);
-        break;
-      }
-      case PT_INT: {
-        if (htsmsg_field_get_s64(f, &s64))
-          continue;
-        i = s64;
-        PROP_UPDATE(i, int);
-        break;
-      }
-      case PT_U16: {
-        if (htsmsg_field_get_u32(f, &u32))
-          continue;
-        u16 = (uint16_t)u32;
-        PROP_UPDATE(u16, uint16_t);
-        break;
-      }
-      case PT_U32: {
-        if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
-          char *s;
-          if (!(snew = htsmsg_field_get_str(f)))
+        case PT_BOOL: {
+          if (htsmsg_field_get_bool(f, &i))
             continue;
-          u32 = atol(snew) * p->intextra;
-          if ((s = strchr(snew, '.')) != NULL)
-            u32 += (atol(s + 1) % p->intextra);
-        } else {
-          if (htsmsg_field_get_u32(f, &u32))
-            continue;
+          PROP_UPDATE(i, int);
+          break;
         }
-        PROP_UPDATE(u32, uint32_t);
-        break;
-      }
-      case PT_S64: {
-        if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
-          if (!(snew = htsmsg_field_get_str(f)))
-            continue;
-          s64 = prop_intsplit_from_str(snew, p->intextra);
-        } else {
+        case PT_INT: {
           if (htsmsg_field_get_s64(f, &s64))
             continue;
+          i = s64;
+          PROP_UPDATE(i, int);
+          break;
         }
-        PROP_UPDATE(s64, int64_t);
-        break;
-      }
-      case PT_S64_ATOMIC:
-        break;
-      case PT_DBL: {
-        if (htsmsg_field_get_dbl(f, &dbl))
-          continue;
-        PROP_UPDATE(dbl, double);
-        break;
-      }
-      case PT_STR: {
-        char **str = cur;
-        if (!(snew = htsmsg_field_get_str(f)))
-          continue;
-        if (opts & PO_TRIM) {
-          if (*(char *)snew <= ' ' || ((char *)snew)[strlen(snew)-1] <= ' ') {
-            const char *x = snew;
-            char *y;
-            while (*x && *x <= ' ') x++;
-            snew = dnew = strdup(x);
-            if (*x) {
-              y = dnew + strlen(dnew);
-              while (y != x) {
-                y--;
-                if (*y <= ' ') break;
+        case PT_U16: {
+          if (htsmsg_field_get_u32(f, &u32))
+            continue;
+          u16 = (uint16_t)u32;
+          PROP_UPDATE(u16, uint16_t);
+          break;
+        }
+        case PT_U32: {
+          if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
+            char* s;
+            if (!(snew = htsmsg_field_get_str(f)))
+              continue;
+            u32 = atol(snew) * p->intextra;
+            if ((s = strchr(snew, '.')) != NULL)
+              u32 += (atol(s + 1) % p->intextra);
+          } else {
+            if (htsmsg_field_get_u32(f, &u32))
+              continue;
+          }
+          PROP_UPDATE(u32, uint32_t);
+          break;
+        }
+        case PT_S64: {
+          if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
+            if (!(snew = htsmsg_field_get_str(f)))
+              continue;
+            s64 = prop_intsplit_from_str(snew, p->intextra);
+          } else {
+            if (htsmsg_field_get_s64(f, &s64))
+              continue;
+          }
+          PROP_UPDATE(s64, int64_t);
+          break;
+        }
+        case PT_S64_ATOMIC:
+          break;
+        case PT_DBL: {
+          if (htsmsg_field_get_dbl(f, &dbl))
+            continue;
+          PROP_UPDATE(dbl, double);
+          break;
+        }
+        case PT_STR: {
+          char** str = cur;
+          if (!(snew = htsmsg_field_get_str(f)))
+            continue;
+          if (opts & PO_TRIM) {
+            if (*(char*)snew <= ' ' || ((char*)snew)[strlen(snew) - 1] <= ' ') {
+              const char* x = snew;
+              char*       y;
+              while (*x && *x <= ' ')
+                x++;
+              snew = dnew = strdup(x);
+              if (*x) {
+                y = dnew + strlen(dnew);
+                while (y != x) {
+                  y--;
+                  if (*y <= ' ')
+                    break;
+                }
+                *y = '\0';
               }
-              *y = '\0';
             }
           }
-        }
-        if (!p->set && strcmp((*str) ?: "", snew)) {
-          /* make sure that the string is valid all time */
-          void *old = *str;
-          *str = strdup(snew);
-          free(old);
-          save = 1;
-        }
-        break;
-      }
-      case PT_TIME: {
-        if (htsmsg_field_get_s64(f, &s64))
-          continue;
-        tm = s64;
-        PROP_UPDATE(tm, time_t);
-        break;
-      }
-      case PT_LANGSTR: {
-        lang_str_t **lstr1 = cur;
-        lang_str_t  *lstr2;
-        snew = htsmsg_field_get_map(f);
-        if (!snew)
-          continue;
-        if (!p->set) {
-          lstr2 = lang_str_deserialize_map((htsmsg_t *)snew);
-          if (lang_str_compare(*lstr1, lstr2)) {
-            lang_str_destroy(*lstr1);
-            *lstr1 = lstr2;
+          if (!p->set && strcmp((*str) ?: "", snew)) {
+            /* make sure that the string is valid all time */
+            void* old = *str;
+            *str      = strdup(snew);
+            free(old);
             save = 1;
-          } else {
-            lang_str_destroy(lstr2);
           }
+          break;
         }
-        break;
-      }
-      case PT_PERM: {
-        if (!(snew = htsmsg_field_get_str(f)))
-          continue;
-        u32 = (int)strtol(snew, NULL, 0);
-        PROP_UPDATE(u32, uint32_t);
-        break;
-      }
-      case PT_NONE:
-        break;
+        case PT_TIME: {
+          if (htsmsg_field_get_s64(f, &s64))
+            continue;
+          tm = s64;
+          PROP_UPDATE(tm, time_t);
+          break;
+        }
+        case PT_LANGSTR: {
+          lang_str_t** lstr1 = cur;
+          lang_str_t*  lstr2;
+          snew = htsmsg_field_get_map(f);
+          if (!snew)
+            continue;
+          if (!p->set) {
+            lstr2 = lang_str_deserialize_map((htsmsg_t*)snew);
+            if (lang_str_compare(*lstr1, lstr2)) {
+              lang_str_destroy(*lstr1);
+              *lstr1 = lstr2;
+              save   = 1;
+            } else {
+              lang_str_destroy(lstr2);
+            }
+          }
+          break;
+        }
+        case PT_PERM: {
+          if (!(snew = htsmsg_field_get_str(f)))
+            continue;
+          u32 = (int)strtol(snew, NULL, 0);
+          PROP_UPDATE(u32, uint32_t);
+          break;
+        }
+        case PT_NONE:
+          break;
       }
     }
 
@@ -270,20 +272,23 @@ prop_write_values
 /**
  *
  */
-static void
-prop_read_value
-  (void *obj, const property_t *p, htsmsg_t *m, const char *name,
-   int optmask, const char *lang)
-{
-  const char *s;
-  const void *val = obj + p->off;
-  uint32_t u32;
-  char buf[24];
+static void prop_read_value(void* obj,
+    const property_t*             p,
+    htsmsg_t*                     m,
+    const char*                   name,
+    int                           optmask,
+    const char*                   lang) {
+  const char* s;
+  const void* val = obj + p->off;
+  uint32_t    u32;
+  char        buf[24];
 
   /* Ignore */
   u32 = p->get_opts ? p->get_opts(obj, p->opts) : p->opts;
-  if (u32 & optmask) return;
-  if (p->type == PT_NONE) return;
+  if (u32 & optmask)
+    return;
+  if (p->type == PT_NONE)
+    return;
 
   /* Sanity check */
   assert(p->get || p->off);
@@ -299,65 +304,66 @@ prop_read_value
     if (val)
       htsmsg_add_msg(m, name, (htsmsg_t*)val);
 
-  /* Single */
+    /* Single */
   } else {
-    switch(p->type) {
-    case PT_BOOL:
-      htsmsg_add_bool(m, name, *(int *)val);
-      break;
-    case PT_INT:
-      htsmsg_add_s64(m, name, *(int *)val);
-      break;
-    case PT_U16:
-      htsmsg_add_u32(m, name, *(uint16_t *)val);
-      break;
-    case PT_U32:
-      if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
-        uint32_t maj = *(int64_t *)val / p->intextra;
-        uint32_t min = *(int64_t *)val % p->intextra;
-        if (min) {
-          snprintf(buf, sizeof(buf), "%u.%u", (unsigned int)maj, (unsigned int)min);
-          htsmsg_add_str(m, name, buf);
+    switch (p->type) {
+      case PT_BOOL:
+        htsmsg_add_bool(m, name, *(int*)val);
+        break;
+      case PT_INT:
+        htsmsg_add_s64(m, name, *(int*)val);
+        break;
+      case PT_U16:
+        htsmsg_add_u32(m, name, *(uint16_t*)val);
+        break;
+      case PT_U32:
+        if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
+          uint32_t maj = *(int64_t*)val / p->intextra;
+          uint32_t min = *(int64_t*)val % p->intextra;
+          if (min) {
+            snprintf(buf, sizeof(buf), "%u.%u", (unsigned int)maj, (unsigned int)min);
+            htsmsg_add_str(m, name, buf);
+          } else
+            htsmsg_add_s64(m, name, maj);
         } else
-          htsmsg_add_s64(m, name, maj);
-      } else
-        htsmsg_add_u32(m, name, *(uint32_t *)val);
-      break;
-    case PT_S64:
-      if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
-        int64_t maj = *(int64_t *)val / p->intextra;
-        int64_t min = *(int64_t *)val % p->intextra;
-        if (min) {
-          snprintf(buf, sizeof(buf), "%lu.%lu", (unsigned long)maj, (unsigned long)min);
-          htsmsg_add_str(m, name, buf);
+          htsmsg_add_u32(m, name, *(uint32_t*)val);
+        break;
+      case PT_S64:
+        if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
+          int64_t maj = *(int64_t*)val / p->intextra;
+          int64_t min = *(int64_t*)val % p->intextra;
+          if (min) {
+            snprintf(buf, sizeof(buf), "%lu.%lu", (unsigned long)maj, (unsigned long)min);
+            htsmsg_add_str(m, name, buf);
+          } else
+            htsmsg_add_s64(m, name, maj);
         } else
-          htsmsg_add_s64(m, name, maj);
-      } else
-        htsmsg_add_s64(m, name, *(int64_t *)val);
-      break;
-    case PT_S64_ATOMIC:
-      htsmsg_add_s64(m, name, atomic_get_s64((int64_t *)val));
-      break;
-    case PT_STR:
-      if ((s = *(const char **)val))
-        htsmsg_add_str(m, name, (optmask & PO_LOCALE) != 0 && lang ?
-                                tvh_gettext_lang(lang, s) : s);
-      break;
-    case PT_DBL:
-      htsmsg_add_dbl(m, name, *(double*)val);
-      break;
-    case PT_TIME:
-      htsmsg_add_s64(m, name, *(time_t *)val);
-      break;
-    case PT_LANGSTR:
-      lang_str_serialize(*(lang_str_t **)val, m, name);
-      break;
-    case PT_PERM:
-      snprintf(buf, sizeof(buf), "%04o", *(uint32_t *)val);
-      htsmsg_add_str(m, name, buf);
-      break;
-    case PT_NONE:
-      break;
+          htsmsg_add_s64(m, name, *(int64_t*)val);
+        break;
+      case PT_S64_ATOMIC:
+        htsmsg_add_s64(m, name, atomic_get_s64((int64_t*)val));
+        break;
+      case PT_STR:
+        if ((s = *(const char**)val))
+          htsmsg_add_str(m,
+              name,
+              (optmask & PO_LOCALE) != 0 && lang ? tvh_gettext_lang(lang, s) : s);
+        break;
+      case PT_DBL:
+        htsmsg_add_dbl(m, name, *(double*)val);
+        break;
+      case PT_TIME:
+        htsmsg_add_s64(m, name, *(time_t*)val);
+        break;
+      case PT_LANGSTR:
+        lang_str_serialize(*(lang_str_t**)val, m, name);
+        break;
+      case PT_PERM:
+        snprintf(buf, sizeof(buf), "%04o", *(uint32_t*)val);
+        htsmsg_add_str(m, name, buf);
+        break;
+      case PT_NONE:
+        break;
     }
   }
 }
@@ -365,21 +371,22 @@ prop_read_value
 /**
  *
  */
-void
-prop_read_values
-  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list,
-   int optmask, const char *lang)
-{
-  if(pl == NULL)
+void prop_read_values(void* obj,
+    const property_t*       pl,
+    htsmsg_t*               m,
+    htsmsg_t*               list,
+    int                     optmask,
+    const char*             lang) {
+  if (pl == NULL)
     return;
 
-  if(list == NULL) {
+  if (list == NULL) {
     for (; pl->id; pl++)
       prop_read_value(obj, pl, m, pl->id, optmask, lang);
   } else {
-    const property_t *p;
-    htsmsg_field_t *f;
-    int b, total = 0, count = 0;
+    const property_t* p;
+    htsmsg_field_t*   f;
+    int               b, total = 0, count = 0;
 
     HTSMSG_FOREACH(f, list) {
       total++;
@@ -395,8 +402,8 @@ prop_read_values
     if (total && !count) {
       for (; pl->id; pl++) {
         HTSMSG_FOREACH(f, list)
-          if (!strcmp(pl->id, htsmsg_field_name(f)))
-            break;
+        if (!strcmp(pl->id, htsmsg_field_name(f)))
+          break;
         if (f == NULL)
           prop_read_value(obj, pl, m, pl->id, optmask, lang);
       }
@@ -407,19 +414,20 @@ prop_read_values
 /**
  *
  */
-static void
-prop_serialize_value
-  (void *obj, const property_t *pl, htsmsg_t *msg, int optmask, const char *lang)
-{
-  htsmsg_field_t *f;
-  char buf[16];
-  uint32_t opts;
+static void prop_serialize_value(void* obj,
+    const property_t*                  pl,
+    htsmsg_t*                          msg,
+    int                                optmask,
+    const char*                        lang) {
+  htsmsg_field_t* f;
+  char            buf[16];
+  uint32_t        opts;
 
   /* Remove parent */
   // TODO: this is really horrible and inefficient!
   HTSMSG_FOREACH(f, msg) {
-    htsmsg_t *t = htsmsg_field_get_map(f);
-    const char *str;
+    htsmsg_t*   t = htsmsg_field_get_map(f);
+    const char* str;
     if (t && (str = htsmsg_get_str(t, "id"))) {
       if (!strcmp(str, pl->id)) {
         htsmsg_field_destroy(msg, f);
@@ -432,16 +440,16 @@ prop_serialize_value
   if (pl->type == PT_NONE)
     return;
 
-  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t* m = htsmsg_create_map();
 
   /* ID / type */
-  htsmsg_add_str(m, "id",       pl->id);
-  htsmsg_add_str(m, "type",     val2str(pl->type, typetab) ?: "none");
+  htsmsg_add_str(m, "id", pl->id);
+  htsmsg_add_str(m, "type", val2str(pl->type, typetab) ?: "none");
 
   /* Metadata */
-  htsmsg_add_str(m, "caption",  tvh_gettext_lang(lang, pl->name));
+  htsmsg_add_str(m, "caption", tvh_gettext_lang(lang, pl->name));
   if ((optmask & PO_DOC) && pl->doc) {
-    char *s = pl->doc(pl, lang);
+    char* s = pl->doc(pl, lang);
     if (s) {
       htsmsg_add_str(m, "doc", s);
       free(s);
@@ -530,7 +538,7 @@ prop_serialize_value
 
   /* Enum list */
   if (pl->list) {
-    htsmsg_t *list = pl->list(obj, lang);
+    htsmsg_t* list = pl->list(obj, lang);
     if (list)
       htsmsg_add_msg(m, "enum", list);
   }
@@ -565,21 +573,22 @@ prop_serialize_value
 /**
  *
  */
-void
-prop_serialize
-  (void *obj, const property_t *pl, htsmsg_t *msg, htsmsg_t *list,
-   int optmask, const char *lang)
-{
-  if(pl == NULL)
+void prop_serialize(void* obj,
+    const property_t*     pl,
+    htsmsg_t*             msg,
+    htsmsg_t*             list,
+    int                   optmask,
+    const char*           lang) {
+  if (pl == NULL)
     return;
 
-  if(list == NULL) {
+  if (list == NULL) {
     for (; pl->id; pl++)
       prop_serialize_value(obj, pl, msg, optmask, lang);
   } else {
-    const property_t *p;
-    htsmsg_field_t *f;
-    int b, total = 0, count = 0;
+    const property_t* p;
+    htsmsg_field_t*   f;
+    int               b, total = 0, count = 0;
     HTSMSG_FOREACH(f, list) {
       total++;
       if (!htsmsg_field_get_bool(f, &b) && b > 0) {
@@ -592,8 +601,8 @@ prop_serialize
     if (total && !count) {
       for (; pl->id; pl++) {
         HTSMSG_FOREACH(f, list)
-          if (!strcmp(pl->id, htsmsg_field_name(f)))
-            break;
+        if (!strcmp(pl->id, htsmsg_field_name(f)))
+          break;
         if (f == NULL)
           prop_serialize_value(obj, pl, msg, optmask, lang);
       }
@@ -604,12 +613,10 @@ prop_serialize
 /**
  *
  */
-char *
-prop_md_doc(const char **doc, const char *lang)
-{
-  const char *s;
-  char *r = NULL;
-  size_t l = 0;
+char* prop_md_doc(const char** doc, const char* lang) {
+  const char* s;
+  char*       r = NULL;
+  size_t      l = 0;
 
   for (; *doc; doc++) {
     if ((*doc)[0] == '\xff') {
@@ -631,7 +638,6 @@ prop_md_doc(const char **doc, const char *lang)
   }
   return r;
 }
-
 
 /******************************************************************************
  * Editor Configuration

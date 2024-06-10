@@ -49,14 +49,12 @@
  * DVB Adapter
  * **************************************************************************/
 
-static htsmsg_t *
-linuxdvb_adapter_class_save ( idnode_t *in, char *filename, size_t fsize )
-{
-  linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
-  htsmsg_t *m, *l;
-  linuxdvb_frontend_t *lfe;
+static htsmsg_t* linuxdvb_adapter_class_save(idnode_t* in, char* filename, size_t fsize) {
+  linuxdvb_adapter_t*  la = (linuxdvb_adapter_t*)in;
+  htsmsg_t *           m, *l;
+  linuxdvb_frontend_t* lfe;
 #if ENABLE_LINUXDVB_CA
-  linuxdvb_transport_t *lcat;
+  linuxdvb_transport_t* lcat;
 #endif
   char ubuf[UUID_HEX_SIZE];
 
@@ -66,67 +64,60 @@ linuxdvb_adapter_class_save ( idnode_t *in, char *filename, size_t fsize )
   if (filename) {
     /* Frontends */
     l = htsmsg_create_map();
-    LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
+    LIST_FOREACH (lfe, &la->la_frontends, lfe_link)
       linuxdvb_frontend_save(lfe, l);
     htsmsg_add_msg(m, "frontends", l);
 
     /* CAs */
-  #if ENABLE_LINUXDVB_CA
+#if ENABLE_LINUXDVB_CA
     l = htsmsg_create_map();
-    LIST_FOREACH(lcat, &la->la_ca_transports, lcat_link)
+    LIST_FOREACH (lcat, &la->la_ca_transports, lcat_link)
       linuxdvb_transport_save(lcat, l);
     htsmsg_add_msg(m, "ca_devices", l);
-  #endif
+#endif
 
     /* Filename */
-    snprintf(filename, fsize, "input/linuxdvb/adapters/%s",
-             idnode_uuid_as_str(&la->th_id, ubuf));
+    snprintf(filename, fsize, "input/linuxdvb/adapters/%s", idnode_uuid_as_str(&la->th_id, ubuf));
   }
   return m;
 }
 
-static idnode_set_t *
-linuxdvb_adapter_class_get_childs ( idnode_t *in )
-{
-  linuxdvb_frontend_t *lfe;
+static idnode_set_t* linuxdvb_adapter_class_get_childs(idnode_t* in) {
+  linuxdvb_frontend_t* lfe;
 #if ENABLE_LINUXDVB_CA
-  linuxdvb_transport_t *lcat;
-  linuxdvb_ca_t *lca;
+  linuxdvb_transport_t* lcat;
+  linuxdvb_ca_t*        lca;
 #endif
-  linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
-  idnode_set_t *is = idnode_set_create(0);
-  LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
+  linuxdvb_adapter_t* la = (linuxdvb_adapter_t*)in;
+  idnode_set_t*       is = idnode_set_create(0);
+  LIST_FOREACH (lfe, &la->la_frontends, lfe_link)
     idnode_set_add(is, &lfe->ti_id, NULL, NULL);
 #if ENABLE_LINUXDVB_CA
-  LIST_FOREACH(lcat, &la->la_ca_transports, lcat_link)
-    LIST_FOREACH(lca, &lcat->lcat_slots, lca_link)
+  LIST_FOREACH (lcat, &la->la_ca_transports, lcat_link)
+    LIST_FOREACH (lca, &lcat->lcat_slots, lca_link)
       idnode_set_add(is, &lca->lca_id, NULL, NULL);
 #endif
   return is;
 }
 
 static void
-linuxdvb_adapter_class_get_title
-  ( idnode_t *in, const char *lang, char *dst, size_t dstsize )
-{
-  linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
+linuxdvb_adapter_class_get_title(idnode_t* in, const char* lang, char* dst, size_t dstsize) {
+  linuxdvb_adapter_t* la = (linuxdvb_adapter_t*)in;
   snprintf(dst, dstsize, "%s", la->la_name ?: la->la_rootpath);
 }
 
-static const void *
-linuxdvb_adapter_class_active_get ( void *obj )
-{
+static const void* linuxdvb_adapter_class_active_get(void* obj) {
   static int active;
 #if ENABLE_LINUXDVB_CA
-  linuxdvb_transport_t *lcat;
-  linuxdvb_ca_t *lca;
+  linuxdvb_transport_t* lcat;
+  linuxdvb_ca_t*        lca;
 #endif
-  linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)obj;
-  active = la->la_is_enabled(la);
+  linuxdvb_adapter_t* la = (linuxdvb_adapter_t*)obj;
+  active                 = la->la_is_enabled(la);
 #if ENABLE_LINUXDVB_CA
   if (!active) {
-    LIST_FOREACH(lcat, &la->la_ca_transports, lcat_link)
-      LIST_FOREACH(lca, &lcat->lcat_slots, lca_link)
+    LIST_FOREACH (lcat, &la->la_ca_transports, lcat_link)
+      LIST_FOREACH (lca, &lcat->lcat_slots, lca_link)
         if (lca->lca_enabled) {
           active = 1;
           goto caok;
@@ -137,42 +128,35 @@ caok:
   return &active;
 }
 
-const idclass_t linuxdvb_adapter_class =
-{
-  .ic_class      = "linuxdvb_adapter",
-  .ic_caption    = N_("LinuxDVB adapter"),
-  .ic_event      = "linuxdvb_adapter",
-  .ic_save       = linuxdvb_adapter_class_save,
-  .ic_get_childs = linuxdvb_adapter_class_get_childs,
-  .ic_get_title  = linuxdvb_adapter_class_get_title,
-  .ic_properties = (const property_t[]){
-    {
-      .type     = PT_BOOL,
-      .id       = "active",
-      .name     = N_("Active"),
-      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
-      .get	= linuxdvb_adapter_class_active_get,
-    },
-    {
-      .type     = PT_STR,
-      .id       = "rootpath",
-      .name     = N_("Device path"),
-      .desc     = N_("Path used by the device."),
-      .opts     = PO_RDONLY,
-      .off      = offsetof(linuxdvb_adapter_t, la_rootpath),
-    },
-    {}
-  }
-};
+const idclass_t linuxdvb_adapter_class = {.ic_class = "linuxdvb_adapter",
+    .ic_caption                                     = N_("LinuxDVB adapter"),
+    .ic_event                                       = "linuxdvb_adapter",
+    .ic_save                                        = linuxdvb_adapter_class_save,
+    .ic_get_childs                                  = linuxdvb_adapter_class_get_childs,
+    .ic_get_title                                   = linuxdvb_adapter_class_get_title,
+    .ic_properties                                  = (const property_t[]){{
+                                                                               .type = PT_BOOL,
+                                                                               .id   = "active",
+                                                                               .name = N_("Active"),
+                                                                               .opts = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+                                                                               .get  = linuxdvb_adapter_class_active_get,
+                                          },
+                                         {
+                                             .type = PT_STR,
+                                             .id   = "rootpath",
+                                             .name = N_("Device path"),
+                                             .desc = N_("Path used by the device."),
+                                             .opts = PO_RDONLY,
+                                             .off  = offsetof(linuxdvb_adapter_t, la_rootpath),
+        },
+                                         {}}};
 
 /*
  * Check if enabled
  */
-static int
-linuxdvb_adapter_is_enabled ( linuxdvb_adapter_t *la )
-{
-  linuxdvb_frontend_t *lfe;
-  LIST_FOREACH(lfe, &la->la_frontends, lfe_link) {
+static int linuxdvb_adapter_is_enabled(linuxdvb_adapter_t* la) {
+  linuxdvb_frontend_t* lfe;
+  LIST_FOREACH (lfe, &la->la_frontends, lfe_link) {
     if (lfe->mi_is_enabled((mpegts_input_t*)lfe, NULL, 0, -1) != MI_IS_ENABLED_NEVER)
       return 1;
   }
@@ -182,18 +166,17 @@ linuxdvb_adapter_is_enabled ( linuxdvb_adapter_t *la )
 /*
  * Create
  */
-static linuxdvb_adapter_t *
-linuxdvb_adapter_create
-  ( const char *uuid, htsmsg_t *conf,
-    const char *path, int number, const char *name )
-{
-  linuxdvb_adapter_t *la;
-  char buf[1024];
+static linuxdvb_adapter_t* linuxdvb_adapter_create(const char* uuid,
+    htsmsg_t*                                                  conf,
+    const char*                                                path,
+    int                                                        number,
+    const char*                                                name) {
+  linuxdvb_adapter_t* la;
+  char                buf[1024];
 
   /* Create */
   la = calloc(1, sizeof(linuxdvb_adapter_t));
-  if (!tvh_hardware_create0((tvh_hardware_t*)la, &linuxdvb_adapter_class,
-                            uuid, conf)) {
+  if (!tvh_hardware_create0((tvh_hardware_t*)la, &linuxdvb_adapter_class, uuid, conf)) {
     /* Note: la variable is freed in tvh_hardware_create0() */
     return NULL;
   }
@@ -213,19 +196,21 @@ linuxdvb_adapter_create
 /*
  *
  */
-static linuxdvb_adapter_t *
-linuxdvb_adapter_new(const char *path, int a, const char *name,
-                     const char *display_name, htsmsg_t **conf, int *save)
-{
-  linuxdvb_adapter_t *la;
-  SHA_CTX sha1;
-  uint8_t uuidbin[20];
-  char uhex[UUID_HEX_SIZE];
+static linuxdvb_adapter_t* linuxdvb_adapter_new(const char* path,
+    int                                                     a,
+    const char*                                             name,
+    const char*                                             display_name,
+    htsmsg_t**                                              conf,
+    int*                                                    save) {
+  linuxdvb_adapter_t* la;
+  SHA_CTX             sha1;
+  uint8_t             uuidbin[20];
+  char                uhex[UUID_HEX_SIZE];
 
   /* Create hash for adapter */
   SHA1_Init(&sha1);
-  SHA1_Update(&sha1, (void*)path,     strlen(path));
-  SHA1_Update(&sha1, (void*)name,     strlen(name));
+  SHA1_Update(&sha1, (void*)path, strlen(path));
+  SHA1_Update(&sha1, (void*)name, strlen(name));
   SHA1_Final(uuidbin, &sha1);
 
   bin2hex(uhex, sizeof(uhex), uuidbin, sizeof(uuidbin));
@@ -251,57 +236,41 @@ linuxdvb_adapter_new(const char *path, int a, const char *name,
  */
 static int force_dvbs;
 
-static dvb_fe_type_t
-linuxdvb_get_type(int linux_type)
-{
+static dvb_fe_type_t linuxdvb_get_type(int linux_type) {
   /* useful for debugging with DVB-T */
   if (force_dvbs)
     return DVB_TYPE_S;
 
   switch (linux_type) {
-  case FE_QPSK:
-    return DVB_TYPE_S;
-  case FE_QAM:
-    return DVB_TYPE_C;
-  case FE_OFDM:
-    return DVB_TYPE_T;
-  case FE_ATSC:
-    return DVB_TYPE_ATSC_T;
-  default:
-    return DVB_TYPE_NONE;
+    case FE_QPSK:
+      return DVB_TYPE_S;
+    case FE_QAM:
+      return DVB_TYPE_C;
+    case FE_OFDM:
+      return DVB_TYPE_T;
+    case FE_ATSC:
+      return DVB_TYPE_ATSC_T;
+    default:
+      return DVB_TYPE_NONE;
   }
 }
 
 /*
  *
  */
-#if DVB_VER_ATLEAST(5,5)
-static void
-linuxdvb_get_systems(int fd, struct dtv_property *_cmd)
-{
-  struct dtv_property cmd = {
-    .cmd = DTV_ENUM_DELSYS
-  };
-  struct dtv_properties cmdseq = {
-    .num   = 1,
-    .props = &cmd
-  };
-  int r;
+#if DVB_VER_ATLEAST(5, 5)
+static void linuxdvb_get_systems(int fd, struct dtv_property* _cmd) {
+  struct dtv_property   cmd    = {.cmd = DTV_ENUM_DELSYS};
+  struct dtv_properties cmdseq = {.num = 1, .props = &cmd};
+  int                   r;
 
   r = ioctl(fd, FE_GET_PROPERTY, &cmdseq);
   if (!r && cmd.u.buffer.len) {
-    struct dtv_property fecmd[2] = {
-      {
-        .cmd    = DTV_DELIVERY_SYSTEM,
-        .u.data = cmd.u.buffer.data[0]
-      },
-      {
-        .cmd    = DTV_TUNE
-      }
-    };
-    cmdseq.props = fecmd;
-    cmdseq.num   = 2;
-    r = ioctl(fd, FE_SET_PROPERTY, &cmdseq);
+    struct dtv_property fecmd[2] = {{.cmd = DTV_DELIVERY_SYSTEM, .u.data = cmd.u.buffer.data[0]},
+        {.cmd = DTV_TUNE}};
+    cmdseq.props                 = fecmd;
+    cmdseq.num                   = 2;
+    r                            = ioctl(fd, FE_SET_PROPERTY, &cmdseq);
   } else {
     cmd.u.buffer.len = 0;
   }
@@ -314,9 +283,7 @@ linuxdvb_get_systems(int fd, struct dtv_property *_cmd)
  *      -1 .. DDCI found but not usable
  *      -2 .. DDCI not found
  */
-static int
-linuxdvb_check_ddci ( const char *ci_path )
-{
+static int linuxdvb_check_ddci(const char* ci_path) {
   int j, fd, ret = -2;
 
   tvhtrace(LS_DDCI, "checking for DDCI %s", ci_path);
@@ -324,15 +291,15 @@ linuxdvb_check_ddci ( const char *ci_path )
   /* check existence */
   if (!access(ci_path, R_OK | W_OK)) {
     for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
-      if ((fd = tvh_open(ci_path, O_WRONLY, 0)) >= 0) break;
+      if ((fd = tvh_open(ci_path, O_WRONLY, 0)) >= 0)
+        break;
       tvh_safe_usleep(100000);
     }
     if (fd >= 0) {
       close(fd);
       tvhinfo(LS_DDCI, "DDCI found %s", ci_path);
       ret = 0;
-    }
-    else {
+    } else {
       ret = -1;
       tvherror(LS_DDCI, "unable to open %s", ci_path);
     }
@@ -344,31 +311,29 @@ linuxdvb_check_ddci ( const char *ci_path )
 /*
  * Add adapter by path
  */
-static void
-linuxdvb_adapter_add ( const char *path )
-{
+static void linuxdvb_adapter_add(const char* path) {
   extern int linuxdvb_adapter_mask;
-  int a, i, j, r, fd;
-  char fe_path[512], dmx_path[512], dvr_path[512], name[132];
+  int        a, i, j, r, fd;
+  char       fe_path[512], dmx_path[512], dvr_path[512], name[132];
 #if ENABLE_LINUXDVB_CA
-  linuxdvb_transport_t *lcat;
-  char ca_path[512];
-  htsmsg_t *caconf = NULL;
-  const char *ci_found = NULL;
+  linuxdvb_transport_t* lcat;
+  char                  ca_path[512];
+  htsmsg_t*             caconf   = NULL;
+  const char*           ci_found = NULL;
 #if ENABLE_DDCI
-  linuxdvb_adapter_t *la_fe = NULL;
-  char ci_path[512];
+  linuxdvb_adapter_t* la_fe = NULL;
+  char                ci_path[512];
 #endif
 #endif
-  linuxdvb_adapter_t *la = NULL;
+  linuxdvb_adapter_t*      la = NULL;
   struct dvb_frontend_info dfi;
-  ca_caps_t cac;
-  htsmsg_t *conf = NULL, *feconf = NULL;
-  int save = 0;
-  dvb_fe_type_t type;
-#if DVB_VER_ATLEAST(5,5)
-  int delsys, fenum, type5;
-  dvb_fe_type_t fetypes[DVB_TYPE_LAST+1];
+  ca_caps_t                cac;
+  htsmsg_t *               conf = NULL, *feconf = NULL;
+  int                      save = 0;
+  dvb_fe_type_t            type;
+#if DVB_VER_ATLEAST(5, 5)
+  int                 delsys, fenum, type5;
+  dvb_fe_type_t       fetypes[DVB_TYPE_LAST + 1];
   struct dtv_property cmd;
 #endif
 
@@ -393,27 +358,30 @@ linuxdvb_adapter_add ( const char *path )
     /* Wait for access (first FE can take a fe ms to be setup) */
     if (!i) {
       for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
-        if (!access(fe_path, R_OK | W_OK)) break;
+        if (!access(fe_path, R_OK | W_OK))
+          break;
         tvh_safe_usleep(100000);
       }
     }
-    if (access(fe_path, R_OK | W_OK)) continue;
+    if (access(fe_path, R_OK | W_OK))
+      continue;
 
     /* Get frontend info */
     for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
-      if ((fd = tvh_open(fe_path, O_RDWR, 0)) >= 0) break;
+      if ((fd = tvh_open(fe_path, O_RDWR, 0)) >= 0)
+        break;
       tvh_safe_usleep(100000);
     }
     if (fd < 0) {
       tvherror(LS_LINUXDVB, "unable to open %s", fe_path);
       continue;
     }
-#if DVB_VER_ATLEAST(5,5)
+#if DVB_VER_ATLEAST(5, 5)
     linuxdvb_get_systems(fd, &cmd);
 #endif
     r = ioctl(fd, FE_GET_INFO, &dfi);
     close(fd);
-    if(r) {
+    if (r) {
       tvherror(LS_LINUXDVB, "unable to query %s", fe_path);
       continue;
     }
@@ -428,13 +396,15 @@ linuxdvb_adapter_add ( const char *path )
     snprintf(dmx_path, sizeof(dmx_path), DMX_PATH, path, i);
     if (access(dmx_path, R_OK | W_OK)) {
       snprintf(dmx_path, sizeof(dmx_path), DMX_PATH, path, 0);
-      if (access(dmx_path, R_OK | W_OK)) continue;
+      if (access(dmx_path, R_OK | W_OK))
+        continue;
     }
 
     snprintf(dvr_path, sizeof(dvr_path), DVR_PATH, path, i);
     if (access(dvr_path, R_OK | W_OK)) {
       snprintf(dvr_path, sizeof(dvr_path), DVR_PATH, path, 0);
-      if (access(dvr_path, R_OK | W_OK)) continue;
+      if (access(dvr_path, R_OK | W_OK))
+        continue;
     }
 
     /* Create/Find adapter */
@@ -450,7 +420,7 @@ linuxdvb_adapter_add ( const char *path )
     }
 
     /* Create frontend */
-#if DVB_VER_ATLEAST(5,5)
+#if DVB_VER_ATLEAST(5, 5)
     memset(fetypes, 0, sizeof(fetypes));
     for (j = fenum = 0; j < cmd.u.buffer.len; j++) {
       delsys = cmd.u.buffer.data[j];
@@ -470,14 +440,12 @@ linuxdvb_adapter_add ( const char *path )
         continue;
 
       /* Create */
-      linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path,
-                               type5, name);
+      linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, type5, name);
       fetypes[type5] = 1;
       fenum++;
     }
     if (fenum == 0)
-      linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path,
-                               type, name);
+      linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, type, name);
 #else
     linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, type, name);
 #endif
@@ -518,11 +486,13 @@ linuxdvb_adapter_add ( const char *path )
 
   for (i = 0; i < 32; i++) {
     snprintf(ca_path, sizeof(ca_path), CA_PATH, path, i);
-    if (access(ca_path, R_OK | W_OK)) continue;
+    if (access(ca_path, R_OK | W_OK))
+      continue;
 
     /* Get ca info */
     for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
-      if ((fd = tvh_open(ca_path, O_RDWR, 0)) >= 0) break;
+      if ((fd = tvh_open(ca_path, O_RDWR, 0)) >= 0)
+        break;
       tvh_safe_usleep(100000);
     }
     if (fd < 0) {
@@ -534,15 +504,15 @@ linuxdvb_adapter_add ( const char *path )
     if (r == 0)
       r = ioctl(fd, CA_GET_CAP, &cac);
     close(fd);
-    if(r) {
+    if (r) {
       tvherror(LS_LINUXDVB, "unable to query %s", ca_path);
       continue;
     }
-    if(cac.slot_num == 0) {
+    if (cac.slot_num == 0) {
       tvherror(LS_LINUXDVB, "CAM %s has no slots", ca_path);
       continue;
     }
-    if((cac.slot_type & (CA_CI_LINK|CA_CI)) == 0) {
+    if ((cac.slot_type & (CA_CI_LINK | CA_CI)) == 0) {
       tvherror(LS_LINUXDVB, "unsupported CAM type %08x", cac.slot_type);
       continue;
     }
@@ -554,11 +524,11 @@ linuxdvb_adapter_add ( const char *path )
 
       /* DD driver uses ciX */
       snprintf(ci_path, sizeof(ci_path), CI_PATH, path, i);
-      ddci_ret = linuxdvb_check_ddci ( ci_path );
-      if (ddci_ret == -2 ) {
+      ddci_ret = linuxdvb_check_ddci(ci_path);
+      if (ddci_ret == -2) {
         /* Mainline driver uses secX */
         snprintf(ci_path, sizeof(ci_path), SEC_PATH, path, i);
-        ddci_ret = linuxdvb_check_ddci ( ci_path );
+        ddci_ret = linuxdvb_check_ddci(ci_path);
       }
 
       /* The DD CI device have not been found, or was not usable, so we
@@ -614,34 +584,33 @@ linuxdvb_adapter_add ( const char *path )
     linuxdvb_adapter_changed(la);
 }
 
-static void
-linuxdvb_adapter_del ( const char *path )
-{
-  int a;
+static void linuxdvb_adapter_del(const char* path) {
+  int                  a;
   linuxdvb_frontend_t *lfe, *lfe_next;
 #if ENABLE_LINUXDVB_CA
   linuxdvb_transport_t *lcat, *lcat_next;
 #endif
-  linuxdvb_adapter_t *la = NULL;
-  tvh_hardware_t *th;
+  linuxdvb_adapter_t* la = NULL;
+  tvh_hardware_t*     th;
 
   if (sscanf(path, "/dev/dvb/adapter%d", &a) == 1) {
-    LIST_FOREACH(th, &tvh_hardware, th_link)
+    LIST_FOREACH (th, &tvh_hardware, th_link)
       if (idnode_is_instance(&th->th_id, &linuxdvb_adapter_class)) {
         la = (linuxdvb_adapter_t*)th;
         if (!strcmp(path, la->la_rootpath))
           break;
       }
-    if (!th) return;
+    if (!th)
+      return;
 
     idnode_save_check(&la->th_id, 0);
-  
+
     /* Delete the frontends */
     for (lfe = LIST_FIRST(&la->la_frontends); lfe != NULL; lfe = lfe_next) {
       lfe_next = LIST_NEXT(lfe, lfe_link);
       linuxdvb_frontend_destroy(lfe);
     }
-    
+
 #if ENABLE_LINUXDVB_CA
     /* Delete the CA devices */
     for (lcat = LIST_FIRST(&la->la_ca_transports); lcat != NULL; lcat = lcat_next) {
@@ -653,7 +622,7 @@ linuxdvb_adapter_del ( const char *path )
     /* Free memory */
     free(la->la_rootpath);
     free(la->la_name);
-    
+
     /* Delete */
     tvh_hardware_delete((tvh_hardware_t*)la);
 
@@ -668,16 +637,15 @@ linuxdvb_adapter_del ( const char *path )
 /*
  * Scan for adapters
  */
-static void
-linuxdvb_adapter_scan ( void )
-{
-  DIR *dir;
+static void linuxdvb_adapter_scan(void) {
+  DIR*          dir;
   struct dirent buf, *de;
-  char path[1024];
+  char          path[1024];
 
   if ((dir = opendir("/dev/dvb"))) {
     while (!readdir_r(dir, &buf, &de) && de) {
-      if (de->d_name[0] == '.') continue;
+      if (de->d_name[0] == '.')
+        continue;
       snprintf(path, sizeof(path), "/dev/dvb/%s", de->d_name);
       linuxdvb_adapter_add(path);
     }
@@ -688,56 +656,40 @@ linuxdvb_adapter_scan ( void )
 /*
  * /dev/dvb monitor
  */
-static void
-devdvb_create ( fsmonitor_t *fsm, const char *path )
-{
+static void devdvb_create(fsmonitor_t* fsm, const char* path) {
   linuxdvb_adapter_add(path);
 }
 
-static void
-devdvb_delete ( fsmonitor_t *fsm, const char *path )
-{
+static void devdvb_delete(fsmonitor_t* fsm, const char* path) {
   tvhinfo(LS_LINUXDVB, "adapter removed %s", path);
   linuxdvb_adapter_del(path);
 }
 
-static fsmonitor_t devdvbmon = {
-  .fsm_create = devdvb_create,
-  .fsm_delete = devdvb_delete
-};
+static fsmonitor_t devdvbmon = {.fsm_create = devdvb_create, .fsm_delete = devdvb_delete};
 
 /*
  * /dev monitor
  */
 
-static void
-dev_create ( fsmonitor_t *fsm, const char *path )
-{
+static void dev_create(fsmonitor_t* fsm, const char* path) {
   if (!strcmp(path, "/dev/dvb")) {
     fsmonitor_add("/dev/dvb", &devdvbmon);
     linuxdvb_adapter_scan();
   }
 }
 
-static void
-dev_delete ( fsmonitor_t *fsm, const char *path )
-{
+static void dev_delete(fsmonitor_t* fsm, const char* path) {
   if (!strcmp(path, "/dev/dvb"))
     fsmonitor_del("/dev/dvb", &devdvbmon);
 }
 
-static fsmonitor_t devmon = { 
-  .fsm_create = dev_create,
-  .fsm_delete = dev_delete
-};
+static fsmonitor_t devmon = {.fsm_create = dev_create, .fsm_delete = dev_delete};
 
 /*
  * Initialise
  */
 
-void
-linuxdvb_adapter_init ( void )
-{
+void linuxdvb_adapter_init(void) {
   force_dvbs = getenv("TVHEADEND_DEBUG_FORCE_DVBS") != NULL;
 
   idclass_register(&linuxdvb_adapter_class);
@@ -786,11 +738,9 @@ linuxdvb_adapter_init ( void )
   }
 }
 
-void
-linuxdvb_adapter_done ( void )
-{
-  linuxdvb_adapter_t *la;
-  tvh_hardware_t *th, *n;
+void linuxdvb_adapter_done(void) {
+  linuxdvb_adapter_t* la;
+  tvh_hardware_t *    th, *n;
 
   tvh_mutex_lock(&global_lock);
   fsmonitor_del("/dev/dvb", &devdvbmon);

@@ -25,46 +25,45 @@ struct mpegts_mux;
  * Generic module routines
  * *************************************************************************/
 
-epggrab_module_t *epggrab_module_create
-  ( epggrab_module_t *skel, const idclass_t *cls,
-    const char *id, int subsys, const char *saveid,
-    const char *name, int priority );
+epggrab_module_t* epggrab_module_create(epggrab_module_t* skel,
+    const idclass_t*                                      cls,
+    const char*                                           id,
+    int                                                   subsys,
+    const char*                                           saveid,
+    const char*                                           name,
+    int                                                   priority);
 
-char     *epggrab_module_grab_spawn ( void *m );
-htsmsg_t *epggrab_module_trans_xml  ( void *m, char *data );
+char*     epggrab_module_grab_spawn(void* m);
+htsmsg_t* epggrab_module_trans_xml(void* m, char* data);
 
-void      epggrab_module_ch_add  ( void *m, struct channel *ch );
-void      epggrab_module_ch_rem  ( void *m, struct channel *ch );
-void      epggrab_module_ch_mod  ( void *m, struct channel *ch );
-void      epggrab_module_ch_save ( void *m, epggrab_channel_t *ec );
+void epggrab_module_ch_add(void* m, struct channel* ch);
+void epggrab_module_ch_rem(void* m, struct channel* ch);
+void epggrab_module_ch_mod(void* m, struct channel* ch);
+void epggrab_module_ch_save(void* m, epggrab_channel_t* ec);
 
-void      epggrab_module_parse ( void *m, htsmsg_t *data );
+void epggrab_module_parse(void* m, htsmsg_t* data);
 
-void      epggrab_module_channels_load ( const char *modid );
+void epggrab_module_channels_load(const char* modid);
 
 /* **************************************************************************
  * Channel processing
  * *************************************************************************/
 
-int  epggrab_channel_match_epgid ( epggrab_channel_t *ec, struct channel *ch );
-int  epggrab_channel_match_name ( epggrab_channel_t *ec, struct channel *ch );
-int  epggrab_channel_match_number ( epggrab_channel_t *ec, struct channel *ch );
+int epggrab_channel_match_epgid(epggrab_channel_t* ec, struct channel* ch);
+int epggrab_channel_match_name(epggrab_channel_t* ec, struct channel* ch);
+int epggrab_channel_match_number(epggrab_channel_t* ec, struct channel* ch);
 
-epggrab_channel_t *epggrab_channel_create
-  ( epggrab_module_t *owner, htsmsg_t *conf, const char *uuid );
+epggrab_channel_t*
+epggrab_channel_create(epggrab_module_t* owner, htsmsg_t* conf, const char* uuid);
 
-epggrab_channel_t *epggrab_channel_find
-  ( epggrab_module_t *mod, const char *id, int create, int *save );
+epggrab_channel_t*
+epggrab_channel_find(epggrab_module_t* mod, const char* id, int create, int* save);
 
-void epggrab_channel_save ( epggrab_channel_t *ec );
-void epggrab_channel_destroy
-  ( epggrab_channel_t *ec, int delconf, int rb_remove );
-void epggrab_channel_flush
-  ( epggrab_module_t *mod, int delconf );
-void epggrab_channel_begin_scan
-  ( epggrab_module_t *mod );
-void epggrab_channel_end_scan
-  ( epggrab_module_t *mod );
+void epggrab_channel_save(epggrab_channel_t* ec);
+void epggrab_channel_destroy(epggrab_channel_t* ec, int delconf, int rb_remove);
+void epggrab_channel_flush(epggrab_module_t* mod, int delconf);
+void epggrab_channel_begin_scan(epggrab_module_t* mod);
+void epggrab_channel_end_scan(epggrab_module_t* mod);
 
 void epggrab_channel_init(void);
 void epggrab_channel_done(void);
@@ -73,49 +72,56 @@ void epggrab_channel_done(void);
  * Internal module routines
  * *************************************************************************/
 
-epggrab_module_int_t *epggrab_module_int_create
-  ( epggrab_module_int_t *skel, const idclass_t *cls,
-    const char *id, int subsys, const char *saveid,
-    const char *name, int priority,
-    const char *path,
-    char* (*grab) (void*m),
-    int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
-    htsmsg_t* (*trans) (void *mod, char *data) );
+epggrab_module_int_t* epggrab_module_int_create(epggrab_module_int_t* skel,
+    const idclass_t*                                                  cls,
+    const char*                                                       id,
+    int                                                               subsys,
+    const char*                                                       saveid,
+    const char*                                                       name,
+    int                                                               priority,
+    const char*                                                       path,
+    char* (*grab)(void* m),
+    int (*parse)(void* m, htsmsg_t* data, epggrab_stats_t* sta),
+    htsmsg_t* (*trans)(void* mod, char* data));
 
 /* **************************************************************************
  * External module routines
  * *************************************************************************/
 
-epggrab_module_ext_t *epggrab_module_ext_create
-  ( epggrab_module_ext_t *skel, const idclass_t *cls,
-    const char *id, int subsys, const char *saveid,
-    const char *name, int priority,
-    const char *sockid,
-    int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
-    htsmsg_t* (*trans) (void *mod, char *data) );
+epggrab_module_ext_t* epggrab_module_ext_create(epggrab_module_ext_t* skel,
+    const idclass_t*                                                  cls,
+    const char*                                                       id,
+    int                                                               subsys,
+    const char*                                                       saveid,
+    const char*                                                       name,
+    int                                                               priority,
+    const char*                                                       sockid,
+    int (*parse)(void* m, htsmsg_t* data, epggrab_stats_t* sta),
+    htsmsg_t* (*trans)(void* mod, char* data));
 
 /* **************************************************************************
  * OTA module routines
  * *************************************************************************/
 
 typedef struct epggrab_ota_module_ops {
-    int (*start)     (epggrab_ota_map_t *map, struct mpegts_mux *mm);
-    int (*stop)      (epggrab_ota_map_t *map, struct mpegts_mux *mm);
-    void (*handlers) (epggrab_ota_map_t *map, struct mpegts_mux *mm);
-    int  (*activate) (void *m, int e);
-    void (*done)     (void *m);
-    int  (*tune)     (epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
-                      struct mpegts_mux *mm);
-    void (*process_data) (void *m, void *data, uint32_t len);
-    void  *opaque;
+  int (*start)(epggrab_ota_map_t* map, struct mpegts_mux* mm);
+  int (*stop)(epggrab_ota_map_t* map, struct mpegts_mux* mm);
+  void (*handlers)(epggrab_ota_map_t* map, struct mpegts_mux* mm);
+  int (*activate)(void* m, int e);
+  void (*done)(void* m);
+  int (*tune)(epggrab_ota_map_t* map, epggrab_ota_mux_t* om, struct mpegts_mux* mm);
+  void (*process_data)(void* m, void* data, uint32_t len);
+  void* opaque;
 } epggrab_ota_module_ops_t;
 
-epggrab_module_ota_t *epggrab_module_ota_create
-  ( epggrab_module_ota_t *skel,
-    const char *id, int subsys, const char *saveid,
-    const char *name, int priority,
-    const idclass_t *idclass,
-    const epggrab_ota_module_ops_t *ops );
+epggrab_module_ota_t* epggrab_module_ota_create(epggrab_module_ota_t* skel,
+    const char*                                                       id,
+    int                                                               subsys,
+    const char*                                                       saveid,
+    const char*                                                       name,
+    int                                                               priority,
+    const idclass_t*                                                  idclass,
+    const epggrab_ota_module_ops_t*                                   ops);
 
 /* **************************************************************************
  * OTA mux link routines
@@ -124,7 +130,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
 /*
  * Config handling
  */
-void epggrab_ota_init ( void );
+void epggrab_ota_init(void);
 
 /*
  * Create/Find a link (unregistered)
@@ -132,23 +138,23 @@ void epggrab_ota_init ( void );
  * Note: this will return NULL for an already existing link that is currently
  *       blocked (i.e. has completed within interval period)
  */
-epggrab_ota_mux_t *epggrab_ota_find
-  ( epggrab_module_ota_t *mod, struct mpegts_mux *dm );
-epggrab_ota_mux_t *epggrab_ota_create
-  ( epggrab_module_ota_t *mod, struct mpegts_mux *dm );
-void epggrab_ota_create_and_register_by_id
-  ( epggrab_module_ota_t *mod, uint16_t onid, uint16_t tsid,
-    int period, int interval, const char *name );
-void epggrab_ota_free_eit_plist ( epggrab_ota_mux_t *ota );
+epggrab_ota_mux_t* epggrab_ota_find(epggrab_module_ota_t* mod, struct mpegts_mux* dm);
+epggrab_ota_mux_t* epggrab_ota_create(epggrab_module_ota_t* mod, struct mpegts_mux* dm);
+void               epggrab_ota_create_and_register_by_id(epggrab_module_ota_t* mod,
+                  uint16_t                                                     onid,
+                  uint16_t                                                     tsid,
+                  int                                                          period,
+                  int                                                          interval,
+                  const char*                                                  name);
+void               epggrab_ota_free_eit_plist(epggrab_ota_mux_t* ota);
 
-epggrab_ota_map_t *epggrab_ota_find_map
-  ( epggrab_ota_mux_t *om, epggrab_module_ota_t *m );
+epggrab_ota_map_t* epggrab_ota_find_map(epggrab_ota_mux_t* om, epggrab_module_ota_t* m);
 
 /*
  * Delete
  */
-void epggrab_ota_destroy           ( epggrab_ota_mux_t *ota );
-void epggrab_ota_destroy_by_module ( epggrab_module_ota_t *mod );
+void epggrab_ota_destroy(epggrab_ota_mux_t* ota);
+void epggrab_ota_destroy_by_module(epggrab_module_ota_t* mod);
 #if 0
 void epggrab_ota_destroy_by_dm     ( struct dvb_mux *dm );
 #endif
@@ -157,38 +163,34 @@ void epggrab_ota_destroy_by_dm     ( struct dvb_mux *dm );
  * In module functions
  */
 
-epggrab_ota_mux_t *epggrab_ota_register   
-  ( epggrab_module_ota_t *mod, epggrab_ota_mux_t *ota,
-    struct mpegts_mux *mux );
+epggrab_ota_mux_t*
+epggrab_ota_register(epggrab_module_ota_t* mod, epggrab_ota_mux_t* ota, struct mpegts_mux* mux);
 
 /*
  * State change
  */
-void epggrab_ota_complete 
-  ( epggrab_module_ota_t *mod, epggrab_ota_mux_t *ota );
+void epggrab_ota_complete(epggrab_module_ota_t* mod, epggrab_ota_mux_t* ota);
 
 /*
  * Service list
  */
-void
-epggrab_ota_service_add
-  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
-    tvh_uuid_t *uuid, int save );
-void
-epggrab_ota_service_del
-  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
-    epggrab_ota_svc_link_t *svcl, int save );
+void epggrab_ota_service_add(epggrab_ota_map_t* map,
+    epggrab_ota_mux_t*                          ota,
+    tvh_uuid_t*                                 uuid,
+    int                                         save);
+void epggrab_ota_service_del(epggrab_ota_map_t* map,
+    epggrab_ota_mux_t*                          ota,
+    epggrab_ota_svc_link_t*                     svcl,
+    int                                         save);
 
 /* **************************************************************************
  * Miscellaneous
  * *************************************************************************/
 
-int  xmltv_parse_accessibility
-  ( epg_broadcast_t *ebc, htsmsg_t *m, epg_changes_t *changes );
+int xmltv_parse_accessibility(epg_broadcast_t* ebc, htsmsg_t* m, epg_changes_t* changes);
 
 /* Freesat huffman decoder */
-size_t freesat_huffman_decode
-  ( char *dst, size_t* dstlen, const uint8_t *src, size_t srclen );
+size_t freesat_huffman_decode(char* dst, size_t* dstlen, const uint8_t* src, size_t srclen);
 
 /* **************************************************************************
  * Classes
@@ -207,33 +209,32 @@ extern const idclass_t epggrab_mod_ota_scraper_class;
  * *************************************************************************/
 
 /* EIT module */
-void eit_init    ( void );
-void eit_done    ( void );
-void eit_load    ( void );
+void eit_init(void);
+void eit_done(void);
+void eit_load(void);
 
-htsmsg_t *eit_module_id_list( const char *lang );
-const char *eit_check_module_id ( const char *id );
+htsmsg_t*   eit_module_id_list(const char* lang);
+const char* eit_check_module_id(const char* id);
 
 /* OpenTV module */
-void opentv_init ( void );
-void opentv_done ( void );
-void opentv_load ( void );
+void opentv_init(void);
+void opentv_done(void);
+void opentv_load(void);
 
-htsmsg_t *opentv_module_id_list( const char *lang );
-const char *opentv_check_module_id ( const char *id );
+htsmsg_t*   opentv_module_id_list(const char* lang);
+const char* opentv_check_module_id(const char* id);
 
 /* XMLTV module */
-void xmltv_init  ( void );
-void xmltv_done  ( void );
-void xmltv_load  ( void );
+void xmltv_init(void);
+void xmltv_done(void);
+void xmltv_load(void);
 
 /* PSIP module */
-void psip_init  ( void );
-void psip_done  ( void );
-void psip_load  ( void );
+void psip_init(void);
+void psip_done(void);
+void psip_load(void);
 
-htsmsg_t *psip_module_id_list( const char *lang );
-const char *psip_check_module_id ( const char *id );
-
+htsmsg_t*   psip_module_id_list(const char* lang);
+const char* psip_check_module_id(const char* id);
 
 #endif /* __EPGGRAB_PRIVATE_H__ */

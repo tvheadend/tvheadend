@@ -20,70 +20,68 @@
 #include "descrambler/caid.h"
 
 struct caid_tab {
-  const char *name;
-  uint16_t caid;
-  uint16_t mask;
+  const char* name;
+  uint16_t    caid;
+  uint16_t    mask;
 };
 
 static struct caid_tab caidnametab[] = {
-  { "Seca",             0x0100, 0xff00 },
-  { "CCETT",            0x0200, 0xff00 },
-  { "Deutsche Telekom", 0x0300, 0xff00 },
-  { "Eurodec",          0x0400, 0xff00 },
-  { "Viaccess",         0x0500, 0xff00 },
-  { "Irdeto",           0x0600, 0xff00 },
-  { "Jerroldgi",        0x0700, 0xff00 },
-  { "Matra",            0x0800, 0xff00 },
-  { "NDS",              0x0900, 0xff00 },
-  { "Nokia",            0x0A00, 0xff00 },
-  { "Conax",            0x0B00, 0xff00 },
-  { "NTL",              0x0C00, 0xff00 },
-  { "CryptoWorks",      0x0D00, 0xff80 },
-  { "CryptoWorks ICE",	0x0D80, 0xff80 },
-  { "PowerVu",          0x0E00, 0xff00 },
-  { "Sony",             0x0F00, 0xff00 },
-  { "Tandberg",         0x1000, 0xff00 },
-  { "Thompson",         0x1100, 0xff00 },
-  { "TV-Com",           0x1200, 0xff00 },
-  { "HPT",              0x1300, 0xff00 },
-  { "HRT",              0x1400, 0xff00 },
-  { "IBM",              0x1500, 0xff00 },
-  { "Nera",             0x1600, 0xff00 },
-  { "BetaCrypt",        0x1700, 0xff00 },
-  { "NagraVision",      0x1800, 0xff00 },
-  { "Titan",            0x1900, 0xff00 },
-  { "Telefonica",       0x2000, 0xff00 },
-  { "Stentor",          0x2100, 0xff00 },
-  { "Tadiran Scopus",   0x2200, 0xff00 },
-  { "BARCO AS",         0x2300, 0xff00 },
-  { "StarGuide",        0x2400, 0xff00 },
-  { "Mentor",           0x2500, 0xff00 },
-  { "EBU",              0x2600, 0xff00 },
-  { "DRECrypt ",        0x2710, 0xffff },
-  { "GI",               0x4700, 0xff00 },
-  { "Telemann",         0x4800, 0xff00 },
-  { "TongFang",         0x4a02, 0xffff },
-  { "DVN",              0x4a30, 0xffff },
-  { "DGCrypt",          0x4abf, 0xffff },
-  { "XCrypt",           0x4ad0, 0xfffe },
-  { "StreamGuard",      0x4ad2, 0xffff },
-  { "DRECrypt",         0x4ae0, 0xffff },
-  { "DRECrypt2",        0x4ae1, 0xffff },
-  { "Bulcrypt",         0x4aee, 0xffff },
-  { "TongFang",         0x4b00, 0xff00 },
-  { "Griffin",          0x5500, 0xffe0 },
-  { "Bulcrypt",         0x5581, 0xffff },
-  { "Verimatrix",       0x5601, 0xffff },
-  { "DRECrypt",         0x7be0, 0xfffe },
+    {"Seca", 0x0100, 0xff00},
+    {"CCETT", 0x0200, 0xff00},
+    {"Deutsche Telekom", 0x0300, 0xff00},
+    {"Eurodec", 0x0400, 0xff00},
+    {"Viaccess", 0x0500, 0xff00},
+    {"Irdeto", 0x0600, 0xff00},
+    {"Jerroldgi", 0x0700, 0xff00},
+    {"Matra", 0x0800, 0xff00},
+    {"NDS", 0x0900, 0xff00},
+    {"Nokia", 0x0A00, 0xff00},
+    {"Conax", 0x0B00, 0xff00},
+    {"NTL", 0x0C00, 0xff00},
+    {"CryptoWorks", 0x0D00, 0xff80},
+    {"CryptoWorks ICE", 0x0D80, 0xff80},
+    {"PowerVu", 0x0E00, 0xff00},
+    {"Sony", 0x0F00, 0xff00},
+    {"Tandberg", 0x1000, 0xff00},
+    {"Thompson", 0x1100, 0xff00},
+    {"TV-Com", 0x1200, 0xff00},
+    {"HPT", 0x1300, 0xff00},
+    {"HRT", 0x1400, 0xff00},
+    {"IBM", 0x1500, 0xff00},
+    {"Nera", 0x1600, 0xff00},
+    {"BetaCrypt", 0x1700, 0xff00},
+    {"NagraVision", 0x1800, 0xff00},
+    {"Titan", 0x1900, 0xff00},
+    {"Telefonica", 0x2000, 0xff00},
+    {"Stentor", 0x2100, 0xff00},
+    {"Tadiran Scopus", 0x2200, 0xff00},
+    {"BARCO AS", 0x2300, 0xff00},
+    {"StarGuide", 0x2400, 0xff00},
+    {"Mentor", 0x2500, 0xff00},
+    {"EBU", 0x2600, 0xff00},
+    {"DRECrypt ", 0x2710, 0xffff},
+    {"GI", 0x4700, 0xff00},
+    {"Telemann", 0x4800, 0xff00},
+    {"TongFang", 0x4a02, 0xffff},
+    {"DVN", 0x4a30, 0xffff},
+    {"DGCrypt", 0x4abf, 0xffff},
+    {"XCrypt", 0x4ad0, 0xfffe},
+    {"StreamGuard", 0x4ad2, 0xffff},
+    {"DRECrypt", 0x4ae0, 0xffff},
+    {"DRECrypt2", 0x4ae1, 0xffff},
+    {"Bulcrypt", 0x4aee, 0xffff},
+    {"TongFang", 0x4b00, 0xff00},
+    {"Griffin", 0x5500, 0xffe0},
+    {"Bulcrypt", 0x5581, 0xffff},
+    {"Verimatrix", 0x5601, 0xffff},
+    {"DRECrypt", 0x7be0, 0xfffe},
 };
 
-const char *
-caid2name(uint16_t caid)
-{
-  const char *s = NULL;
+const char* caid2name(uint16_t caid) {
+  const char*          s = NULL;
   static __thread char buf[20];
-  struct caid_tab *tab;
-  int i;
+  struct caid_tab*     tab;
+  int                  i;
 
   for (i = 0; i < ARRAY_SIZE(caidnametab); i++) {
     tab = &caidnametab[i];
@@ -92,17 +90,15 @@ caid2name(uint16_t caid)
       break;
     }
   }
-  if(s != NULL)
+  if (s != NULL)
     return s;
   snprintf(buf, sizeof(buf), "0x%x", caid);
   return buf;
 }
 
-uint16_t
-name2caid(const char *s)
-{
-  int i, r = -1;
-  struct caid_tab *tab;
+uint16_t name2caid(const char* s) {
+  int              i, r = -1;
+  struct caid_tab* tab;
 
   for (i = 0; i < ARRAY_SIZE(caidnametab); i++) {
     tab = &caidnametab[i];
@@ -122,12 +118,10 @@ name2caid(const char *s)
  *
  * based on the equivalent in sasc-ng
  */
-card_type_t
-detect_card_type(const uint16_t caid)
-{
+card_type_t detect_card_type(const uint16_t caid) {
   uint8_t c_sys = caid >> 8;
 
-  switch(caid) {
+  switch (caid) {
     case 0x2710:
       return CARD_DRE;
     case 0x4a02:
@@ -148,8 +142,8 @@ detect_card_type(const uint16_t caid)
     case 0x5581:
       return CARD_BULCRYPT;
   }
-  
-  switch(c_sys) {
+
+  switch (c_sys) {
     case 0x01:
       return CARD_SECA;
     case 0x05:

@@ -27,14 +27,13 @@
 
 struct profile_chain;
 
-typedef LIST_HEAD(,mpegts_mux_sched) mpegts_mux_sched_list_t;
+typedef LIST_HEAD(, mpegts_mux_sched) mpegts_mux_sched_list_t;
 
 extern mpegts_mux_sched_list_t mpegts_mux_sched_all;
 
 extern const idclass_t mpegts_mux_sched_class;
 
-typedef struct mpegts_mux_sched
-{
+typedef struct mpegts_mux_sched {
   idnode_t mms_id;
 
   LIST_ENTRY(mpegts_mux_sched) mms_link;
@@ -42,37 +41,36 @@ typedef struct mpegts_mux_sched
   /*
    * Configuration
    */
-  int             mms_enabled;  ///< Enabled
-  char           *mms_cronstr;  ///< Cron configuration string
-  char           *mms_mux;      ///< Mux UUID
-  char           *mms_creator;  ///< Creator of entry
-  int             mms_timeout;  ///< Timeout (in seconds)
-  int             mms_restart;  ///< Restart subscription when overriden
-  int             mms_weight;   ///< Weighting
+  int   mms_enabled; ///< Enabled
+  char* mms_cronstr; ///< Cron configuration string
+  char* mms_mux;     ///< Mux UUID
+  char* mms_creator; ///< Creator of entry
+  int   mms_timeout; ///< Timeout (in seconds)
+  int   mms_restart; ///< Restart subscription when overriden
+  int   mms_weight;  ///< Weighting
 
   /*
    * Cron handling
    */
-  int             mms_active;   ///< Subscription is active
-  time_t          mms_start;    ///< Start time
-  gtimer_t        mms_timer;    ///< Timer for start/end
-  cron_t          mms_cronjob;  ///< Cron spec
-  
+  int      mms_active;  ///< Subscription is active
+  time_t   mms_start;   ///< Start time
+  gtimer_t mms_timer;   ///< Timer for start/end
+  cron_t   mms_cronjob; ///< Cron spec
+
   /*
    * Subscription
    */
-  struct profile_chain *mms_prch;     ///< Dummy profile chain
-  th_subscription_t    *mms_sub;      ///< Subscription handler
-  streaming_target_t    mms_input;    ///< Streaming input
+  struct profile_chain* mms_prch;  ///< Dummy profile chain
+  th_subscription_t*    mms_sub;   ///< Subscription handler
+  streaming_target_t    mms_input; ///< Streaming input
 
 } mpegts_mux_sched_t;
 
-mpegts_mux_sched_t *mpegts_mux_sched_create ( const char *uuid, htsmsg_t *c );
-void mpegts_mux_sched_delete ( mpegts_mux_sched_t *mms, int delconf );
+mpegts_mux_sched_t* mpegts_mux_sched_create(const char* uuid, htsmsg_t* c);
+void                mpegts_mux_sched_delete(mpegts_mux_sched_t* mms, int delconf);
 
-void mpegts_mux_sched_init ( void );
-void mpegts_mux_sched_done ( void );
-
+void mpegts_mux_sched_init(void);
+void mpegts_mux_sched_done(void);
 
 #endif /* __TVH_MPEGTS_H__ */
 

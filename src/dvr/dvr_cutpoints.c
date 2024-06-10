@@ -59,11 +59,8 @@
  * 1426.68 2160.16 3
  *
  */
-static int
-dvr_parse_edl
-  ( const char *line, dvr_cutpoint_t *cutpoint, float *frame )
-{
-  int action = 0;
+static int dvr_parse_edl(const char* line, dvr_cutpoint_t* cutpoint, float* frame) {
+  int   action = 0;
   float start = 0.0f, end = 0.0f;
 
   /* Invalid line */
@@ -71,20 +68,19 @@ dvr_parse_edl
     return 1;
 
   /* Sanity Checks */
-  if(start < 0 || end < 0 || end < start || start == end ||
-     action < DVR_CP_CUT || action > DVR_CP_COMM) {
+  if (start < 0 || end < 0 || end < start || start == end || action < DVR_CP_CUT ||
+      action > DVR_CP_COMM) {
     tvhwarn(LS_DVR, "Insane entry: start=%f, end=%f. Skipping.", start, end);
     return 1;
   }
 
   /* Set values */
-  cutpoint->dc_start_ms = (int) (start * 1000.0f);
-  cutpoint->dc_end_ms   = (int) (end * 1000.0f);
+  cutpoint->dc_start_ms = (int)(start * 1000.0f);
+  cutpoint->dc_end_ms   = (int)(end * 1000.0f);
   cutpoint->dc_type     = action;
 
   return 0;
 }
-
 
 /**
  * Parse comskip data.
@@ -101,34 +97,30 @@ dvr_parse_edl
  * 42417   54004
  *
  */
-static int
-dvr_parse_comskip
-  ( const char *line, dvr_cutpoint_t *cutpoint, float *frame_rate )
-{
+static int dvr_parse_comskip(const char* line, dvr_cutpoint_t* cutpoint, float* frame_rate) {
   int start = 0, end = 0;
 
   /* Header */
-  if (sscanf(line, "FILE PROCESSING COMPLETE %*d FRAMES AT %f",
-             frame_rate) == 1) {
+  if (sscanf(line, "FILE PROCESSING COMPLETE %*d FRAMES AT %f", frame_rate) == 1) {
     *frame_rate /= (*frame_rate > 1000.0f ? 100.0f : 1.0f);
     return 1; // TODO: probably not nice this returns "error"
   }
 
   /* Invalid line */
-  if(*frame_rate <= 0.0f || sscanf(line, "%d\t%d", &start, &end) != 2)
+  if (*frame_rate <= 0.0f || sscanf(line, "%d\t%d", &start, &end) != 2)
     return 1;
 
   /* Sanity Checks */
-  if(start < 0 || end < 0 || end < start || start == end) {
+  if (start < 0 || end < 0 || end < start || start == end) {
     tvherror(LS_DVR, "Insane EDL entry: start=%d, end=%d. Skipping.", start, end);
     return 1;
   }
 
   /* Set values */
-  cutpoint->dc_start_ms = (int) ((start * 1000) / *frame_rate);
-  cutpoint->dc_end_ms   = (int) ((end * 1000) / *frame_rate);
+  cutpoint->dc_start_ms = (int)((start * 1000) / *frame_rate);
+  cutpoint->dc_end_ms   = (int)((end * 1000) / *frame_rate);
   // Comskip don't have different actions, so use DVR_CP_COMM (Commercial skip)
-  cutpoint->dc_type     = DVR_CP_COMM;
+  cutpoint->dc_type = DVR_CP_COMM;
 
   return 0;
 }
@@ -136,25 +128,21 @@ dvr_parse_comskip
 /**
  * Wrapper for basic file processing
  */
-static int
-dvr_parse_file
-  ( const char *path, dvr_cutpoint_list_t *cut_list, void *p )
-{
+static int dvr_parse_file(const char* path, dvr_cutpoint_list_t* cut_list, void* p) {
   int line_count = 0, valid_lines = -1;
-  int (*parse) (const char *line, dvr_cutpoint_t *cp, float *framerate) = p;
-  dvr_cutpoint_t *cp = NULL;
-  float frate = 0.0;
-  char line[DVR_MAX_CUTPOINT_LINE];
-  FILE *file = tvh_fopen(path, "r");
+  int (*parse)(const char* line, dvr_cutpoint_t* cp, float* framerate) = p;
+  dvr_cutpoint_t* cp                                                   = NULL;
+  float           frate                                                = 0.0;
+  char            line[DVR_MAX_CUTPOINT_LINE];
+  FILE*           file = tvh_fopen(path, "r");
 
   if (file == NULL)
     return -1;
 
-  while (line_count  < DVR_MAX_READ_CUTFILE_LINES &&
-         valid_lines < DVR_MAX_CUT_ENTRIES) {
+  while (line_count < DVR_MAX_READ_CUTFILE_LINES && valid_lines < DVR_MAX_CUT_ENTRIES) {
 
     /* Read line */
-    if(fgets(line, DVR_MAX_CUTPOINT_LINE, file) == NULL)
+    if (fgets(line, DVR_MAX_CUTPOINT_LINE, file) == NULL)
       break;
     line_count++;
 
@@ -171,7 +159,8 @@ dvr_parse_file
   }
 
 done:
-  if (cp) free(cp);
+  if (cp)
+    free(cp);
   fclose(file);
   return valid_lines;
 }
@@ -186,32 +175,30 @@ done:
  * // TODO: possibly could be better with some sort of auto-detect
  */
 static struct {
-  const char *ext;
-  int        (*parse) (const char *path, dvr_cutpoint_list_t *, void *);
-  void       *opaque;
+  const char* ext;
+  int (*parse)(const char* path, dvr_cutpoint_list_t*, void*);
+  void* opaque;
 } dvr_cutpoint_parsers[] = {
-  {
-    .ext    = "txt",
-    .parse  = dvr_parse_file,
-    .opaque = dvr_parse_comskip,
-  },
-  {
-    .ext    = "edl",
-    .parse  = dvr_parse_file,
-    .opaque = dvr_parse_edl,
-  },
+    {
+        .ext    = "txt",
+        .parse  = dvr_parse_file,
+        .opaque = dvr_parse_comskip,
+    },
+    {
+        .ext    = "edl",
+        .parse  = dvr_parse_file,
+        .opaque = dvr_parse_edl,
+    },
 };
 
 /*
  * Return cutpoint data for a recording (if present).
  */
-dvr_cutpoint_list_t *
-dvr_get_cutpoint_list (dvr_entry_t *de)
-{
-  int i;
-  char *path, *sptr;
-  const char *filename;
-  dvr_cutpoint_list_t *cuts;
+dvr_cutpoint_list_t* dvr_get_cutpoint_list(dvr_entry_t* de) {
+  int                  i;
+  char *               path, *sptr;
+  const char*          filename;
+  dvr_cutpoint_list_t* cuts;
 
   /* Check this is a valid recording */
   assert(de != NULL);
@@ -239,15 +226,14 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
   for (i = 0; i < ARRAY_SIZE(dvr_cutpoint_parsers); i++) {
 
     /* Add extension */
-    strcpy(sptr+1, dvr_cutpoint_parsers[i].ext);
+    strcpy(sptr + 1, dvr_cutpoint_parsers[i].ext);
 
     /* Check file exists (and readable) */
     if (access(path, R_OK))
       continue;
 
     /* Try parsing */
-    if (dvr_cutpoint_parsers[i].parse(path, cuts,
-                                      dvr_cutpoint_parsers[i].opaque) != -1)
+    if (dvr_cutpoint_parsers[i].parse(path, cuts, dvr_cutpoint_parsers[i].opaque) != -1)
       break;
   }
 
@@ -263,11 +249,10 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
 /*
  * Delete list
  */
-void
-dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list)
-{
-  dvr_cutpoint_t *cp;
-  if(!list) return;
+void dvr_cutpoint_list_destroy(dvr_cutpoint_list_t* list) {
+  dvr_cutpoint_t* cp;
+  if (!list)
+    return;
   while ((cp = TAILQ_FIRST(list))) {
     TAILQ_REMOVE(list, cp, dc_link);
     free(cp);
@@ -278,11 +263,9 @@ dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list)
 /*
  * Delete cutpoint files
  */
-void
-dvr_cutpoint_delete_files (const char *s)
-{
+void dvr_cutpoint_delete_files(const char* s) {
   char *path, *dot;
-  int i;
+  int   i;
 
   // TODO: harcoded 3 for max extension, plus 1 for . and one for termination
   path = alloca(strlen(s) + 5);
@@ -301,8 +284,8 @@ dvr_cutpoint_delete_files (const char *s)
       continue;
 
     /* Delete File */
-    tvhinfo(LS_DVR, "Erasing cutpoint file '%s'", (const char *)path);
+    tvhinfo(LS_DVR, "Erasing cutpoint file '%s'", (const char*)path);
     if (unlink(path))
-      tvherror(LS_DVR, "unable to remove cutpoint file '%s'", (const char *)path);
+      tvherror(LS_DVR, "unable to remove cutpoint file '%s'", (const char*)path);
   }
 }

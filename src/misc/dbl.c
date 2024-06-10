@@ -27,60 +27,55 @@
 
 #include "dbl.h"
 
-
-double
-my_str2double(const char *str, const char **endp)
-{
+double my_str2double(const char* str, const char** endp) {
   double ret = 0.0, t = 0.1;
-  int n = 0, e = 0;
+  int    n = 0, e = 0;
 
   /* Negative */
-  if(*str == '-') {
+  if (*str == '-') {
     n = 1;
     str++;
   }
 
   /* Integer */
-  while(*str >= '0' && *str <= '9')
+  while (*str >= '0' && *str <= '9')
     ret = ret * 10 + *str++ - '0';
 
   /* Fracton */
-  if(*str == '.') {
+  if (*str == '.') {
     str++;
-    while(*str >= '0' && *str <= '9') {
+    while (*str >= '0' && *str <= '9') {
       ret += (*str++ - '0') * t;
       t /= 10;
     }
   }
 
   /* Negate */
-  if (n) ret *= -1;
+  if (n)
+    ret *= -1;
 
   /* Exponential */
-  if(*str == 'e' || *str == 'E') {
+  if (*str == 'e' || *str == 'E') {
     int esign = 1;
     str++;
-    
-    if(*str == '+')
+
+    if (*str == '+')
       str++;
-    else if(*str == '-') {
+    else if (*str == '-') {
       str++;
       esign = -1;
     }
-    
-    while(*str >= '0' && *str <= '9')
+
+    while (*str >= '0' && *str <= '9')
       e = e * 10 + *str++ - '0';
     ret *= pow(10, e * esign);
   }
 
-  if(endp != NULL)
+  if (endp != NULL)
     *endp = str;
 
   return ret;
 }
-
-
-
 
 /*
 ** The code that follow is based on "printf" code that dates from the
@@ -134,54 +129,52 @@ my_str2double(const char *str, const char **endp)
 **
 */
 
-
-static char
-getdigit(double *val, int *cnt)
-{
-  int digit;
+static char getdigit(double* val, int* cnt) {
+  int    digit;
   double d;
-  if( (*cnt)++ >= 16 ) return '0';
+  if ((*cnt)++ >= 16)
+    return '0';
   digit = (int)*val;
-  d = digit;
+  d     = digit;
   digit += '0';
-  *val = (*val - d)*10.0;
+  *val = (*val - d) * 10.0;
   return (char)digit;
 }
 
 #define xGENERIC 0
-#define xFLOAT 1
-#define xEXP 2
+#define xFLOAT   1
+#define xEXP     2
 
-
-int
-my_double2str(char *buf, size_t bufsize, double realvalue)
-{
-  int precision = -1;
-  char *bufpt;
-  char prefix;
-  char xtype = xGENERIC;
-  int idx, exp, e2;
+int my_double2str(char* buf, size_t bufsize, double realvalue) {
+  int    precision = -1;
+  char*  bufpt;
+  char   prefix;
+  char   xtype = xGENERIC;
+  int    idx, exp, e2;
   double rounder;
-  char flag_exp;
-  char flag_rtz;
-  char flag_dp;
-  char flag_alternateform = 0;
-  char flag_altform2 = 0;
-  int nsd;
+  char   flag_exp;
+  char   flag_rtz;
+  char   flag_dp;
+  char   flag_alternateform = 0;
+  char   flag_altform2      = 0;
+  int    nsd;
 
-  if(bufsize < 8)
+  if (bufsize < 8)
     return -1;
 
-  if( precision<0 ) precision = 20;         /* Set default precision */
-  if( precision>bufsize/2-10 ) precision = bufsize/2-10;
-  if( realvalue<0.0 ){
+  if (precision < 0)
+    precision = 20; /* Set default precision */
+  if (precision > bufsize / 2 - 10)
+    precision = bufsize / 2 - 10;
+  if (realvalue < 0.0) {
     realvalue = -realvalue;
-    prefix = '-';
-  }else{
+    prefix    = '-';
+  } else {
     prefix = 0;
   }
-  if( xtype==xGENERIC && precision>0 ) precision--;
-  for(idx=precision, rounder=0.5; idx>0; idx--, rounder*=0.1){}
+  if (xtype == xGENERIC && precision > 0)
+    precision--;
+  for (idx = precision, rounder = 0.5; idx > 0; idx--, rounder *= 0.1) {}
 
 #if 0 /* coverity - dead code 'xtype == xGENERIC' here */
   if( xtype==xFLOAT ) realvalue += rounder;
@@ -189,22 +182,37 @@ my_double2str(char *buf, size_t bufsize, double realvalue)
   /* Normalize realvalue to within 10.0 > realvalue >= 1.0 */
   exp = 0;
 
-  if(isnan(realvalue)) {
+  if (isnan(realvalue)) {
     strcpy(buf, "NaN");
     return 0;
   }
 
-  if( realvalue>0.0 ){
-    while( realvalue>=1e32 && exp<=350 ){ realvalue *= 1e-32; exp+=32; }
-    while( realvalue>=1e8 && exp<=350 ){ realvalue *= 1e-8; exp+=8; }
-    while( realvalue>=10.0 && exp<=350 ){ realvalue *= 0.1; exp++; }
-    while( realvalue<1e-8 ){ realvalue *= 1e8; exp-=8; }
-    while( realvalue<1.0 ){ realvalue *= 10.0; exp--; }
-    if( exp>350 ){
-      if( prefix=='-' ){
-	strcpy(buf, "-Inf");
-      }else{
-	strcpy(buf, "Inf");
+  if (realvalue > 0.0) {
+    while (realvalue >= 1e32 && exp <= 350) {
+      realvalue *= 1e-32;
+      exp += 32;
+    }
+    while (realvalue >= 1e8 && exp <= 350) {
+      realvalue *= 1e-8;
+      exp += 8;
+    }
+    while (realvalue >= 10.0 && exp <= 350) {
+      realvalue *= 0.1;
+      exp++;
+    }
+    while (realvalue < 1e-8) {
+      realvalue *= 1e8;
+      exp -= 8;
+    }
+    while (realvalue < 1.0) {
+      realvalue *= 10.0;
+      exp--;
+    }
+    if (exp > 350) {
+      if (prefix == '-') {
+        strcpy(buf, "-Inf");
+      } else {
+        strcpy(buf, "Inf");
       }
       return 0;
     }
@@ -215,18 +223,21 @@ my_double2str(char *buf, size_t bufsize, double realvalue)
   ** If the field type is etGENERIC, then convert to either etEXP
   ** or etFLOAT, as appropriate.
   */
-  flag_exp = xtype==xEXP;
-  if( xtype != xFLOAT ){
+  flag_exp = xtype == xEXP;
+  if (xtype != xFLOAT) {
     realvalue += rounder;
-    if( realvalue>=10.0 ){ realvalue *= 0.1; exp++; }
+    if (realvalue >= 10.0) {
+      realvalue *= 0.1;
+      exp++;
+    }
   }
-  if( xtype==xGENERIC ){
+  if (xtype == xGENERIC) {
     flag_rtz = !flag_alternateform;
-    if( exp<-4 || exp>precision ){
+    if (exp < -4 || exp > precision) {
       xtype = xEXP;
-    }else{
+    } else {
       precision = precision - exp;
-      xtype = xFLOAT;
+      xtype     = xFLOAT;
     }
   }
 #if 0 /* coverity - dead code - xtype == xGENERIC here */
@@ -234,71 +245,70 @@ my_double2str(char *buf, size_t bufsize, double realvalue)
     flag_rtz = 0;
   }
 #endif
-  if( xtype==xEXP ){
+  if (xtype == xEXP) {
     e2 = 0;
-  }else{
+  } else {
     e2 = exp;
   }
-  nsd = 0;
-  flag_dp = (precision>0 ?1:0) | flag_alternateform | flag_altform2;
+  nsd     = 0;
+  flag_dp = (precision > 0 ? 1 : 0) | flag_alternateform | flag_altform2;
   /* The sign in front of the number */
-  if( prefix ){
+  if (prefix) {
     *(bufpt++) = prefix;
   }
   /* Digits prior to the decimal point */
-  if( e2<0 ){
+  if (e2 < 0) {
     *(bufpt++) = '0';
-  }else{
-    for(; e2>=0; e2--){
-      *(bufpt++) = getdigit(&realvalue,&nsd);
+  } else {
+    for (; e2 >= 0; e2--) {
+      *(bufpt++) = getdigit(&realvalue, &nsd);
     }
   }
   /* The decimal point */
-  if( flag_dp ){
+  if (flag_dp) {
     *(bufpt++) = '.';
   }
   /* "0" digits after the decimal point but before the first
   ** significant digit of the number */
-  for(e2++; e2<0; precision--, e2++){
-    assert( precision>0 );
+  for (e2++; e2 < 0; precision--, e2++) {
+    assert(precision > 0);
     *(bufpt++) = '0';
   }
   /* Significant digits after the decimal point */
-  while( (precision--)>0 ){
-    *(bufpt++) = getdigit(&realvalue,&nsd);
+  while ((precision--) > 0) {
+    *(bufpt++) = getdigit(&realvalue, &nsd);
   }
 
   /* Remove trailing zeros and the "." if no digits follow the "." */
-  if( flag_rtz && flag_dp ){
-    while( bufpt[-1]=='0' ) *(--bufpt) = 0;
-    assert( bufpt>buf );
-    if( bufpt[-1]=='.' ){
+  if (flag_rtz && flag_dp) {
+    while (bufpt[-1] == '0')
+      *(--bufpt) = 0;
+    assert(bufpt > buf);
+    if (bufpt[-1] == '.') {
 #if 0 /* coverity - dead code - flag_altform2 == 0 here */
       if( flag_altform2 ){
 	*(bufpt++) = '0';
       }else
 #endif
-      {
-	*(--bufpt) = 0;
-      }
+      { *(--bufpt) = 0; }
     }
   }
   /* Add the "eNNN" suffix */
-  if( flag_exp || xtype==xEXP ){
+  if (flag_exp || xtype == xEXP) {
     *(bufpt++) = 'e';
-    if( exp<0 ){
-      *(bufpt++) = '-'; exp = -exp;
-    }else{
+    if (exp < 0) {
+      *(bufpt++) = '-';
+      exp        = -exp;
+    } else {
       *(bufpt++) = '+';
     }
-    if( exp>=100 ){
-      *(bufpt++) = (char)((exp/100)+'0');        /* 100's digit */
+    if (exp >= 100) {
+      *(bufpt++) = (char)((exp / 100) + '0'); /* 100's digit */
       exp %= 100;
     }
-    *(bufpt++) = (char)(exp/10+'0');             /* 10's digit */
-    *(bufpt++) = (char)(exp%10+'0');             /* 1's digit */
+    *(bufpt++) = (char)(exp / 10 + '0'); /* 10's digit */
+    *(bufpt++) = (char)(exp % 10 + '0'); /* 1's digit */
   }
   *bufpt = 0;
   return 0;
 }
-

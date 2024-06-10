@@ -22,7 +22,8 @@
  *      * compare transport-stream-id from stream with id in config
  *      * check continuity of the pcr-counter
  *      * when one point is given -> retry
- *      * delay time is easily random, but in standard is special (complicated) way described (cap. 8).
+ *      * delay time is easily random, but in standard is special (complicated) way described (cap.
+ * 8).
  */
 
 #include "tvheadend.h"
@@ -38,24 +39,24 @@
  * Static definition
  * *************************************************************************/
 
-#define LINUXDVB_EN50494_NOPIN                 256
+#define LINUXDVB_EN50494_NOPIN 256
 
-#define LINUXDVB_EN50494_FRAME                 0xE0
+#define LINUXDVB_EN50494_FRAME 0xE0
 /* addresses 0x00, 0x10 and 0x11 are possible */
-#define LINUXDVB_EN50494_ADDRESS               0x10
+#define LINUXDVB_EN50494_ADDRESS 0x10
 
-#define LINUXDVB_EN50494_CMD_NORMAL            0x5A
-#define LINUXDVB_EN50494_CMD_NORMAL_MULTIHOME  0x5C
+#define LINUXDVB_EN50494_CMD_NORMAL           0x5A
+#define LINUXDVB_EN50494_CMD_NORMAL_MULTIHOME 0x5C
 /* special modes not implemented yet */
 #define LINUXDVB_EN50494_CMD_SPECIAL           0x5B
 #define LINUXDVB_EN50494_CMD_SPECIAL_MULTIHOME 0x5D
 
-#define LINUXDVB_EN50494_SAT_A                 0x00
-#define LINUXDVB_EN50494_SAT_B                 0x01
+#define LINUXDVB_EN50494_SAT_A 0x00
+#define LINUXDVB_EN50494_SAT_B 0x01
 
 /* EN50607 */
-#define LINUXDVB_EN50607_FRAME_NORMAL          0x70
-#define LINUXDVB_EN50607_FRAME_MULTIHOME       0x71
+#define LINUXDVB_EN50607_FRAME_NORMAL    0x70
+#define LINUXDVB_EN50607_FRAME_MULTIHOME 0x71
 
 /* **************************************************************************
  * Class definition
@@ -65,61 +66,49 @@
 static tvh_mutex_t linuxdvb_en50494_lock;
 
 static void
-linuxdvb_en50494_class_get_title
-  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
-{
-  const char *title = N_("Unicable I (EN50494)");
+linuxdvb_en50494_class_get_title(idnode_t* o, const char* lang, char* dst, size_t dstsize) {
+  const char* title = N_("Unicable I (EN50494)");
   snprintf(dst, dstsize, "%s", tvh_gettext_lang(lang, title));
 }
 
 static void
-linuxdvb_en50607_class_get_title
-  ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
-{
-  const char *title = N_("Unicable II (EN50607)");
+linuxdvb_en50607_class_get_title(idnode_t* o, const char* lang, char* dst, size_t dstsize) {
+  const char* title = N_("Unicable II (EN50607)");
   snprintf(dst, dstsize, "%s", tvh_gettext_lang(lang, title));
 }
 
-static htsmsg_t *
-linuxdvb_en50494_position_list ( void *o, const char *lang )
-{
-  uint32_t i;
-  htsmsg_t *m = htsmsg_create_list();
+static htsmsg_t* linuxdvb_en50494_position_list(void* o, const char* lang) {
+  uint32_t  i;
+  htsmsg_t* m = htsmsg_create_list();
   for (i = 0; i < 2; i++) {
     htsmsg_add_u32(m, NULL, i);
   }
   return m;
 }
 
-htsmsg_t *
-linuxdvb_en50494_id_list ( void *o, const char *lang )
-{
-  uint32_t i;
-  htsmsg_t *m = htsmsg_create_list();
+htsmsg_t* linuxdvb_en50494_id_list(void* o, const char* lang) {
+  uint32_t  i;
+  htsmsg_t* m = htsmsg_create_list();
   for (i = 0; i < 8; i++) {
     htsmsg_add_u32(m, NULL, i);
   }
   return m;
 }
 
-htsmsg_t *
-linuxdvb_en50607_id_list ( void *o, const char *lang )
-{
-  uint32_t i;
-  htsmsg_t *m = htsmsg_create_list();
+htsmsg_t* linuxdvb_en50607_id_list(void* o, const char* lang) {
+  uint32_t  i;
+  htsmsg_t* m = htsmsg_create_list();
   for (i = 0; i < 32; i++) {
     htsmsg_add_u32(m, NULL, i);
   }
   return m;
 }
 
-htsmsg_t *
-linuxdvb_en50494_pin_list ( void *o, const char *lang )
-{
+htsmsg_t* linuxdvb_en50494_pin_list(void* o, const char* lang) {
   int32_t i;
 
-  htsmsg_t *m = htsmsg_create_list();
-  htsmsg_t *e;
+  htsmsg_t* m = htsmsg_create_list();
+  htsmsg_t* e;
 
   e = htsmsg_create_map();
   htsmsg_add_u32(e, "key", 256);
@@ -137,134 +126,122 @@ linuxdvb_en50494_pin_list ( void *o, const char *lang )
 
 extern const idclass_t linuxdvb_diseqc_class;
 
-const idclass_t linuxdvb_en50494_class =
-{
-  .ic_super       = &linuxdvb_diseqc_class,
-  .ic_class       = "linuxdvb_en50494",
-  .ic_caption     = N_("en50494"),
-  .ic_get_title   = linuxdvb_en50494_class_get_title,
-  .ic_properties  = (const property_t[]) {
-    {
-      .type    = PT_U32,
-      .id      = "powerup_time",
-      .name    = N_("Power up time (ms) (10-500)"),
-      .desc    = N_("Time (in milliseconds) for the Unicable device to power up."),
-      .off     = offsetof(linuxdvb_en50494_t, le_powerup_time),
-      .def.u32 = 15,
-    },
-    {
-      .type    = PT_U32,
-      .id      = "cmd_time",
-      .name    = N_("Command time (ms) (10-300)"),
-      .desc    = N_("Time (in milliseconds) for a command to complete."),
-      .off     = offsetof(linuxdvb_en50494_t, le_cmd_time),
-      .def.u32 = 50
-    },
-    {
-      .type   = PT_U16,
-      .id     = "id",
-      .name   = N_("SCR (ID)"),
-      .desc   = N_("SCR (Satellite Channel Router) ID."),
-      .off    = offsetof(linuxdvb_en50494_t, le_id),
-      .list   = linuxdvb_en50494_id_list,
-    },
-    {
-      .type   = PT_U16,
-      .id     = "frequency",
-      .name   = N_("Frequency (MHz)"),
-      .desc   = N_("User Band Frequency (in MHz)."),
-      .off    = offsetof(linuxdvb_en50494_t, le_frequency),
-    },
-    {
-      .type   = PT_U16,
-      .id     = "pin",
-      .name   = N_("PIN"),
-      .desc   = N_("PIN."),
-      .off    = offsetof(linuxdvb_en50494_t, le_pin),
-      .list   = linuxdvb_en50494_pin_list,
-    },
-    {
-      .type   = PT_U16,
-      .id     = "position",
-      .name   = N_("Position"),
-      .desc   = N_("Position ID."),
-      .off    = offsetof(linuxdvb_en50494_t, le_position),
-      .list   = linuxdvb_en50494_position_list,
-    },
-    {}
-  }
-};
+const idclass_t linuxdvb_en50494_class = {.ic_super = &linuxdvb_diseqc_class,
+    .ic_class                                       = "linuxdvb_en50494",
+    .ic_caption                                     = N_("en50494"),
+    .ic_get_title                                   = linuxdvb_en50494_class_get_title,
+    .ic_properties                                  = (const property_t[]){
+        {
+                                             .type    = PT_U32,
+                                             .id      = "powerup_time",
+                                             .name    = N_("Power up time (ms) (10-500)"),
+                                             .desc    = N_("Time (in milliseconds) for the Unicable device to power up."),
+                                             .off     = offsetof(linuxdvb_en50494_t, le_powerup_time),
+                                             .def.u32 = 15,
+        },
+        {.type       = PT_U32,
+                                             .id      = "cmd_time",
+                                             .name    = N_("Command time (ms) (10-300)"),
+                                             .desc    = N_("Time (in milliseconds) for a command to complete."),
+                                             .off     = offsetof(linuxdvb_en50494_t, le_cmd_time),
+                                             .def.u32 = 50},
+        {
+                                             .type = PT_U16,
+                                             .id   = "id",
+                                             .name = N_("SCR (ID)"),
+                                             .desc = N_("SCR (Satellite Channel Router) ID."),
+                                             .off  = offsetof(linuxdvb_en50494_t, le_id),
+                                             .list = linuxdvb_en50494_id_list,
+        },
+        {
+                                             .type = PT_U16,
+                                             .id   = "frequency",
+                                             .name = N_("Frequency (MHz)"),
+                                             .desc = N_("User Band Frequency (in MHz)."),
+                                             .off  = offsetof(linuxdvb_en50494_t, le_frequency),
+        },
+        {
+                                             .type = PT_U16,
+                                             .id   = "pin",
+                                             .name = N_("PIN"),
+                                             .desc = N_("PIN."),
+                                             .off  = offsetof(linuxdvb_en50494_t, le_pin),
+                                             .list = linuxdvb_en50494_pin_list,
+        },
+        {
+                                             .type = PT_U16,
+                                             .id   = "position",
+                                             .name = N_("Position"),
+                                             .desc = N_("Position ID."),
+                                             .off  = offsetof(linuxdvb_en50494_t, le_position),
+                                             .list = linuxdvb_en50494_position_list,
+        },
+        {}}};
 
-const idclass_t linuxdvb_en50607_class =
-{
-  .ic_super       = &linuxdvb_diseqc_class,
-  .ic_class       = "linuxdvb_en50607",
-  .ic_caption     = N_("en50607"),
-  .ic_get_title   = linuxdvb_en50607_class_get_title,
-  .ic_properties  = (const property_t[]) {
-    {
-      .type    = PT_U32,
-      .id      = "powerup_time",
-      .name    = N_("Power up time (ms) (10-500)"),
-      .desc    = N_("Time (in milliseconds) for the Unicable device to power up."),
-      .off     = offsetof(linuxdvb_en50494_t, le_powerup_time),
-      .def.u32 = 15,
-    },
-    {
-      .type    = PT_U32,
-      .id      = "cmd_time",
-      .name    = N_("Command time (ms) (10-300)"),
-      .desc    = N_("Time (in milliseconds) for a command to complete."),
-      .off     = offsetof(linuxdvb_en50494_t, le_cmd_time),
-      .def.u32 = 50
-    },
-    {
-      .type   = PT_U16,
-      .id     = "id",
-      .name   = N_("SCR (ID)"),
-      .desc   = N_("SCR (Satellite Channel Router) ID."),
-      .off    = offsetof(linuxdvb_en50494_t, le_id),
-      .list   = linuxdvb_en50607_id_list,
-    },
-    {
-      .type   = PT_U16,
-      .id     = "frequency",
-      .name   = N_("Frequency (MHz)"),
-      .desc   = N_("User Band Frequency (in MHz)."),
-      .off    = offsetof(linuxdvb_en50494_t, le_frequency),
-    },
-    {
-      .type   = PT_U16,
-      .id     = "pin",
-      .name   = N_("PIN"),
-      .desc   = N_("PIN."),
-      .off    = offsetof(linuxdvb_en50494_t, le_pin),
-      .list   = linuxdvb_en50494_pin_list,
-    },
-    {
-      .type   = PT_U16,
-      .id     = "position",
-      .name   = N_("Position"),
-      .desc   = N_("Position ID."),
-      .off    = offsetof(linuxdvb_en50494_t, le_position),
-      .list   = linuxdvb_en50494_position_list,
-    },
-    {}
-  }
-};
+const idclass_t linuxdvb_en50607_class = {.ic_super = &linuxdvb_diseqc_class,
+    .ic_class                                       = "linuxdvb_en50607",
+    .ic_caption                                     = N_("en50607"),
+    .ic_get_title                                   = linuxdvb_en50607_class_get_title,
+    .ic_properties                                  = (const property_t[]){
+        {
+                                             .type    = PT_U32,
+                                             .id      = "powerup_time",
+                                             .name    = N_("Power up time (ms) (10-500)"),
+                                             .desc    = N_("Time (in milliseconds) for the Unicable device to power up."),
+                                             .off     = offsetof(linuxdvb_en50494_t, le_powerup_time),
+                                             .def.u32 = 15,
+        },
+        {.type       = PT_U32,
+                                             .id      = "cmd_time",
+                                             .name    = N_("Command time (ms) (10-300)"),
+                                             .desc    = N_("Time (in milliseconds) for a command to complete."),
+                                             .off     = offsetof(linuxdvb_en50494_t, le_cmd_time),
+                                             .def.u32 = 50},
+        {
+                                             .type = PT_U16,
+                                             .id   = "id",
+                                             .name = N_("SCR (ID)"),
+                                             .desc = N_("SCR (Satellite Channel Router) ID."),
+                                             .off  = offsetof(linuxdvb_en50494_t, le_id),
+                                             .list = linuxdvb_en50607_id_list,
+        },
+        {
+                                             .type = PT_U16,
+                                             .id   = "frequency",
+                                             .name = N_("Frequency (MHz)"),
+                                             .desc = N_("User Band Frequency (in MHz)."),
+                                             .off  = offsetof(linuxdvb_en50494_t, le_frequency),
+        },
+        {
+                                             .type = PT_U16,
+                                             .id   = "pin",
+                                             .name = N_("PIN"),
+                                             .desc = N_("PIN."),
+                                             .off  = offsetof(linuxdvb_en50494_t, le_pin),
+                                             .list = linuxdvb_en50494_pin_list,
+        },
+        {
+                                             .type = PT_U16,
+                                             .id   = "position",
+                                             .name = N_("Position"),
+                                             .desc = N_("Position ID."),
+                                             .off  = offsetof(linuxdvb_en50494_t, le_position),
+                                             .list = linuxdvb_en50494_position_list,
+        },
+        {}}};
 
 /* **************************************************************************
  * Class methods
  * *************************************************************************/
 
-static int
-linuxdvb_en50494_freq0
-  ( linuxdvb_en50494_t *le, int freq, int *rfreq, uint16_t *t )
-{
+static int linuxdvb_en50494_freq0(linuxdvb_en50494_t* le, int freq, int* rfreq, uint16_t* t) {
   /* transponder value - t */
   *t = round((((freq / 1000) + 2 + le->le_frequency) / 4) - 350);
   if (*t >= 1023) {
-    tvherror(LS_EN50494, "transponder value bigger than 1023 for freq %d (%d)", freq, le->le_frequency);
+    tvherror(LS_EN50494,
+        "transponder value bigger than 1023 for freq %d (%d)",
+        freq,
+        le->le_frequency);
     return -1;
   }
 
@@ -273,14 +250,14 @@ linuxdvb_en50494_freq0
   return 0;
 }
 
-static int
-linuxdvb_en50607_freq0
-  ( linuxdvb_en50494_t *le, int freq, int *rfreq, uint16_t *t )
-{
+static int linuxdvb_en50607_freq0(linuxdvb_en50494_t* le, int freq, int* rfreq, uint16_t* t) {
   /* transponder value - t */
   *t = round((double)freq / 1000) - 100;
   if (*t > 2047) {
-    tvherror(LS_EN50494, "transponder value bigger than 2047 for freq %d (%d)", freq, le->le_frequency);
+    tvherror(LS_EN50494,
+        "transponder value bigger than 2047 for freq %d (%d)",
+        freq,
+        le->le_frequency);
     return -1;
   }
 
@@ -289,38 +266,33 @@ linuxdvb_en50607_freq0
   return 0;
 }
 
-static int
-linuxdvb_en50494_freq
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, int freq )
-{
-  linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
-  int rfreq;
-  uint16_t t;
+static int linuxdvb_en50494_freq(linuxdvb_diseqc_t* ld, dvb_mux_t* lm, int freq) {
+  linuxdvb_en50494_t* le = (linuxdvb_en50494_t*)ld;
+  int                 rfreq;
+  uint16_t            t;
 
   if (linuxdvb_en50494_freq0(le, freq, &rfreq, &t))
     return -1;
   return rfreq;
 }
 
-static int
-linuxdvb_en50494_match
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm1, dvb_mux_t *lm2 )
-{
+static int linuxdvb_en50494_match(linuxdvb_diseqc_t* ld, dvb_mux_t* lm1, dvb_mux_t* lm2) {
   return lm1 == lm2;
 }
 
-static int
-linuxdvb_en50494_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *sc,
-    int vol, int pol, int band, int freq )
-{
-  int ret = 0, i, fd = linuxdvb_satconf_fe_fd(lsp), rfreq;
-  int ver2 = linuxdvb_unicable_is_en50607(ld->ld_type);
-  linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
-  uint8_t data1, data2, data3;
-  uint16_t t;
-
+static int linuxdvb_en50494_tune(linuxdvb_diseqc_t* ld,
+    dvb_mux_t*                                      lm,
+    linuxdvb_satconf_t*                             lsp,
+    linuxdvb_satconf_ele_t*                         sc,
+    int                                             vol,
+    int                                             pol,
+    int                                             band,
+    int                                             freq) {
+  int                 ret = 0, i, fd = linuxdvb_satconf_fe_fd(lsp), rfreq;
+  int                 ver2 = linuxdvb_unicable_is_en50607(ld->ld_type);
+  linuxdvb_en50494_t* le   = (linuxdvb_en50494_t*)ld;
+  uint8_t             data1, data2, data3;
+  uint16_t            t;
 
   if (!ver2) {
     /* tune frequency for the frontend */
@@ -328,25 +300,25 @@ linuxdvb_en50494_tune
       return -1;
     le->le_tune_freq = rfreq;
     /* 2 data fields (16bit) */
-    data1  = (le->le_id & 7) << 5;        /* 3bit user-band */
-    data1 |= (le->le_position & 1) << 4;  /* 1bit position (satellite A(0)/B(1)) */
-    data1 |= (pol & 1) << 3;              /* 1bit polarization v(0)/h(1) */
-    data1 |= (band & 1) << 2;             /* 1bit band lower(0)/upper(1) */
-    data1 |= (t >> 8) & 3;                /* 2bit transponder value bit 1-2 */
-    data2  = t & 0xff;                    /* 8bit transponder value bit 3-10 */
-    data3  = 0;
+    data1 = (le->le_id & 7) << 5;        /* 3bit user-band */
+    data1 |= (le->le_position & 1) << 4; /* 1bit position (satellite A(0)/B(1)) */
+    data1 |= (pol & 1) << 3;             /* 1bit polarization v(0)/h(1) */
+    data1 |= (band & 1) << 2;            /* 1bit band lower(0)/upper(1) */
+    data1 |= (t >> 8) & 3;               /* 2bit transponder value bit 1-2 */
+    data2 = t & 0xff;                    /* 8bit transponder value bit 3-10 */
+    data3 = 0;
   } else {
     /* tune frequency for the frontend */
     if (linuxdvb_en50607_freq0(le, freq, &rfreq, &t))
       return -1;
     le->le_tune_freq = rfreq;
     /* 3 data fields (24bit) */
-    data1  = (le->le_id & 0x1f) << 3;     /* 5bit user-band */
-    data1 |= (t >> 8) & 7;                /* 3bit transponder value bit 1-3 */
-    data2  = t & 0xff;                    /* 8bit transponder value bit 4-11 */
-    data3  = (le->le_position & 0x3f) << 2; /* 6bit position */
-    data3 |= (pol & 1) << 1;              /* 1bit polarization v(0)/h(1) */
-    data3 |= band & 1;                    /* 1bit band lower(0)/upper(1) */
+    data1 = (le->le_id & 0x1f) << 3;       /* 5bit user-band */
+    data1 |= (t >> 8) & 7;                 /* 3bit transponder value bit 1-3 */
+    data2 = t & 0xff;                      /* 8bit transponder value bit 4-11 */
+    data3 = (le->le_position & 0x3f) << 2; /* 6bit position */
+    data3 |= (pol & 1) << 1;               /* 1bit polarization v(0)/h(1) */
+    data3 |= band & 1;                     /* 1bit band lower(0)/upper(1) */
   }
 
   /* wait until no other thread is setting up switch.
@@ -354,7 +326,7 @@ linuxdvb_en50494_tune
    */
   if (tvh_mutex_trylock(&linuxdvb_en50494_lock) != 0) {
     if (tvh_mutex_lock(&linuxdvb_en50494_lock) != 0) {
-      tvherror(LS_EN50494,"failed to lock for tuning");
+      tvherror(LS_EN50494, "failed to lock for tuning");
       return -1;
     }
     tvh_safe_usleep(20000);
@@ -367,8 +339,8 @@ linuxdvb_en50494_tune
     if (i != 0) {
       uint8_t rnd;
       uuid_random(&rnd, 1);
-      int ms = ((int)rnd)%50 + 68;
-      tvh_safe_usleep(ms*1000);
+      int ms = ((int)rnd) % 50 + 68;
+      tvh_safe_usleep(ms * 1000);
     }
 
     /* use 18V */
@@ -384,31 +356,44 @@ linuxdvb_en50494_tune
 
     /* send tune command (with/without pin) */
     tvhdebug(LS_EN50494,
-             "lnb=%i id=%i freq=%i pin=%i v/h=%i l/u=%i f=%i, data=0x%02X%02X%02X",
-             le->le_position, le->le_id, le->le_frequency, le->le_pin, pol,
-             band, freq, data1, data2, data3);
+        "lnb=%i id=%i freq=%i pin=%i v/h=%i l/u=%i f=%i, data=0x%02X%02X%02X",
+        le->le_position,
+        le->le_id,
+        le->le_frequency,
+        le->le_pin,
+        pol,
+        band,
+        freq,
+        data1,
+        data2,
+        data3);
     if (!ver2 && le->le_pin != LINUXDVB_EN50494_NOPIN) {
       ret = linuxdvb_diseqc_send(fd,
-                                 LINUXDVB_EN50494_FRAME,
-                                 LINUXDVB_EN50494_ADDRESS,
-                                 LINUXDVB_EN50494_CMD_NORMAL_MULTIHOME,
-                                 3,
-                                 data1, data2, (uint8_t)le->le_pin);
+          LINUXDVB_EN50494_FRAME,
+          LINUXDVB_EN50494_ADDRESS,
+          LINUXDVB_EN50494_CMD_NORMAL_MULTIHOME,
+          3,
+          data1,
+          data2,
+          (uint8_t)le->le_pin);
     } else if (!ver2) {
       ret = linuxdvb_diseqc_send(fd,
-                                 LINUXDVB_EN50494_FRAME,
-                                 LINUXDVB_EN50494_ADDRESS,
-                                 LINUXDVB_EN50494_CMD_NORMAL,
-                                 2,
-                                 data1, data2);
+          LINUXDVB_EN50494_FRAME,
+          LINUXDVB_EN50494_ADDRESS,
+          LINUXDVB_EN50494_CMD_NORMAL,
+          2,
+          data1,
+          data2);
     } else if (ver2 && le->le_pin != LINUXDVB_EN50494_NOPIN) {
-      ret = linuxdvb_diseqc_raw_send(fd, 5,
-                                     LINUXDVB_EN50607_FRAME_MULTIHOME,
-                                     data1, data2, data3, (uint8_t)le->le_pin);
+      ret = linuxdvb_diseqc_raw_send(fd,
+          5,
+          LINUXDVB_EN50607_FRAME_MULTIHOME,
+          data1,
+          data2,
+          data3,
+          (uint8_t)le->le_pin);
     } else if (ver2) {
-      ret = linuxdvb_diseqc_raw_send(fd, 4,
-                                     LINUXDVB_EN50607_FRAME_NORMAL,
-                                     data1, data2, data3);
+      ret = linuxdvb_diseqc_raw_send(fd, 4, LINUXDVB_EN50607_FRAME_NORMAL, data1, data2, data3);
     }
     if (ret != 0) {
       tvherror(LS_EN50494, "error send tune command");
@@ -430,38 +415,34 @@ linuxdvb_en50494_tune
   return ret == 0 ? 0 : -1;
 }
 
-
 /* **************************************************************************
  * Create / Config
  * *************************************************************************/
 
-void
-linuxdvb_en50494_init (void)
-{
+void linuxdvb_en50494_init(void) {
   if (tvh_mutex_init(&linuxdvb_en50494_lock, NULL) != 0) {
     tvherror(LS_EN50494, "failed to init lock mutex");
   }
 }
 
-htsmsg_t *
-linuxdvb_en50494_list ( void *o, const char *lang )
-{
-  htsmsg_t *m = htsmsg_create_list();
+htsmsg_t* linuxdvb_en50494_list(void* o, const char* lang) {
+  htsmsg_t* m = htsmsg_create_list();
   htsmsg_add_msg(m, NULL, htsmsg_create_key_val("", tvh_gettext_lang(lang, N_("None"))));
-  htsmsg_add_msg(m, NULL, htsmsg_create_key_val(UNICABLE_I_NAME, tvh_gettext_lang(lang, N_(UNICABLE_I_NAME))));
-  htsmsg_add_msg(m, NULL, htsmsg_create_key_val(UNICABLE_II_NAME, tvh_gettext_lang(lang, N_(UNICABLE_II_NAME))));
+  htsmsg_add_msg(m,
+      NULL,
+      htsmsg_create_key_val(UNICABLE_I_NAME, tvh_gettext_lang(lang, N_(UNICABLE_I_NAME))));
+  htsmsg_add_msg(m,
+      NULL,
+      htsmsg_create_key_val(UNICABLE_II_NAME, tvh_gettext_lang(lang, N_(UNICABLE_II_NAME))));
   return m;
 }
 
-linuxdvb_diseqc_t *
-linuxdvb_en50494_create0
-  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int port )
-{
-  linuxdvb_diseqc_t *ld;
-  linuxdvb_en50494_t *le;
+linuxdvb_diseqc_t*
+linuxdvb_en50494_create0(const char* name, htsmsg_t* conf, linuxdvb_satconf_ele_t* ls, int port) {
+  linuxdvb_diseqc_t*  ld;
+  linuxdvb_en50494_t* le;
 
-  if (strcmp(name ?: "", "Generic") &&
-      strcmp(name ?: "", UNICABLE_I_NAME) &&
+  if (strcmp(name ?: "", "Generic") && strcmp(name ?: "", UNICABLE_I_NAME) &&
       strcmp(name ?: "", UNICABLE_II_NAME))
     return NULL;
 
@@ -485,16 +466,16 @@ linuxdvb_en50494_create0
   le->ld_freq      = linuxdvb_en50494_freq;
   le->ld_match     = linuxdvb_en50494_match;
   if (le->le_powerup_time == 0)
-      le->le_powerup_time = 15;
+    le->le_powerup_time = 15;
   if (le->le_cmd_time == 0)
-      le->le_cmd_time = 50;
+    le->le_cmd_time = 50;
 
-  ld = linuxdvb_diseqc_create0((linuxdvb_diseqc_t *)le,
-                               NULL,
-                               linuxdvb_unicable_is_en50607(name) ?
-                                 &linuxdvb_en50607_class :
-                                 &linuxdvb_en50494_class,
-                               conf, name, ls);
+  ld = linuxdvb_diseqc_create0((linuxdvb_diseqc_t*)le,
+      NULL,
+      linuxdvb_unicable_is_en50607(name) ? &linuxdvb_en50607_class : &linuxdvb_en50494_class,
+      conf,
+      name,
+      ls);
   if (ld) {
     ld->ld_tune = linuxdvb_en50494_tune;
     /* May not needed: ld->ld_grace = linuxdvb_en50494_grace; */
@@ -503,9 +484,7 @@ linuxdvb_en50494_create0
   return ld;
 }
 
-void
-linuxdvb_en50494_destroy ( linuxdvb_diseqc_t *le )
-{
+void linuxdvb_en50494_destroy(linuxdvb_diseqc_t* le) {
   linuxdvb_diseqc_destroy(le);
   free(le);
 }

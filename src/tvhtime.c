@@ -18,20 +18,19 @@
 /*
  * NTP processing
  */
-#define NTPD_BASE	0x4e545030	/* "NTP0" */
-#define NTPD_UNIT	2
+#define NTPD_BASE 0x4e545030 /* "NTP0" */
+#define NTPD_UNIT 2
 
 #if !ENABLE_ANDROID
-typedef struct
-{
-  int    mode; /* 0 - if valid set
-				        *       use values, 
-				        *       clear valid
-				        * 1 - if valid set 
-				        *       if count before and after read of values is equal,
-				        *         use values 
-				        *       clear valid
-				        */
+typedef struct {
+  int mode; /* 0 - if valid set
+             *       use values,
+             *       clear valid
+             * 1 - if valid set
+             *       if count before and after read of values is equal,
+             *         use values
+             *       clear valid
+             */
   int    count;
   time_t clockTimeStampSec;
   int    clockTimeStampUSec;
@@ -44,11 +43,9 @@ typedef struct
   int    pad[10];
 } ntp_shm_t;
 
-static ntp_shm_t *
-ntp_shm_init ( void )
-{
-  int shmid, unit, mode;
-  static ntp_shm_t *shmptr = NULL;
+static ntp_shm_t* ntp_shm_init(void) {
+  int               shmid, unit, mode;
+  static ntp_shm_t* shmptr = NULL;
 
   if (shmptr != NULL)
     return shmptr;
@@ -76,21 +73,24 @@ ntp_shm_init ( void )
 /*
  * Update time
  */
-void
-tvhtime_update ( time_t utc, const char *srcname )
-{
+void tvhtime_update(time_t utc, const char* srcname) {
 #if !ENABLE_ANDROID
-  struct tm tm;
+  struct tm      tm;
   struct timeval tv;
-  ntp_shm_t *ntp_shm;
-  int64_t t1, t2, diff;
+  ntp_shm_t*     ntp_shm;
+  int64_t        t1, t2, diff;
 
   localtime_r(&utc, &tm);
 
-  tvhtrace(LS_TIME, "%s - current time is %04d/%02d/%02d %02d:%02d:%02d",
-           srcname,
-           tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday,
-           tm.tm_hour, tm.tm_min, tm.tm_sec);
+  tvhtrace(LS_TIME,
+      "%s - current time is %04d/%02d/%02d %02d:%02d:%02d",
+      srcname,
+      tm.tm_year + 1900,
+      tm.tm_mon + 1,
+      tm.tm_mday,
+      tm.tm_hour,
+      tm.tm_min,
+      tm.tm_sec);
 
   gettimeofday(&tv, NULL);
 
@@ -110,7 +110,7 @@ tvhtime_update ( time_t utc, const char *srcname )
       tvhnotice(LS_TIME, "%s - stime(2) not implemented", srcname);
 #endif
     } else {
-      tvhwarn(LS_TIME, "%s - time not updated (diff %"PRId64")", srcname, diff);
+      tvhwarn(LS_TIME, "%s - time not updated (diff %" PRId64 ")", srcname, diff);
     }
   }
 
@@ -119,7 +119,7 @@ tvhtime_update ( time_t utc, const char *srcname )
     if (!(ntp_shm = ntp_shm_init()))
       return;
 
-    tvhtrace(LS_TIME, "ntp delta = %"PRId64" us\n", t2 - t1);
+    tvhtrace(LS_TIME, "ntp delta = %" PRId64 " us\n", t2 - t1);
     ntp_shm->valid = 0;
     ntp_shm->count++;
     ntp_shm->clockTimeStampSec    = utc;
@@ -133,8 +133,7 @@ tvhtime_update ( time_t utc, const char *srcname )
 }
 
 /* Initialise */
-void tvhtime_init ( void )
-{
+void tvhtime_init(void) {
   if (config.tvhtime_tolerance == 0)
     config.tvhtime_tolerance = 5000;
 }

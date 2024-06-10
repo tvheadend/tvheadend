@@ -28,90 +28,72 @@
 #if defined(PLATFORM_DARWIN) && !defined(CLOCK_MONOTONIC)
 #error "Platforms without monotonic clocks are not supported!"
 #define CLOCK_MONOTONIC 0
-#define CLOCK_REALTIME 0
+#define CLOCK_REALTIME  0
 
 static inline int clock_gettime(int clk_id, struct timespec* t) {
-    struct timeval now;
-    int rv = gettimeofday(&now, NULL);
-    if (rv) return rv;
-    t->tv_sec  = now.tv_sec;
-    t->tv_nsec = now.tv_usec * 1000;
-    return 0;
+  struct timeval now;
+  int            rv = gettimeofday(&now, NULL);
+  if (rv)
+    return rv;
+  t->tv_sec  = now.tv_sec;
+  t->tv_nsec = now.tv_usec * 1000;
+  return 0;
 }
 #endif
 
 extern int64_t __mdispatch_clock;
 extern time_t  __gdispatch_clock;
 
-static inline int64_t mclk(void)
-{
+static inline int64_t mclk(void) {
   return atomic_get_s64(&__mdispatch_clock);
 }
 
-static inline time_t gclk(void)
-{
+static inline time_t gclk(void) {
   return atomic_get_time_t(&__gdispatch_clock);
 }
 
 #define MONOCLOCK_RESOLUTION 1000000LL /* microseconds */
 #define MONOCLOCK_FASTSEC    0xfffffLL /* 1048575 */
 
-static inline int64_t
-sec2mono(int64_t sec)
-{
+static inline int64_t sec2mono(int64_t sec) {
   return sec * MONOCLOCK_RESOLUTION;
 }
 
-static inline int64_t
-mono2sec(int64_t monosec)
-{
+static inline int64_t mono2sec(int64_t monosec) {
   return monosec / MONOCLOCK_RESOLUTION;
 }
 
-static inline int64_t
-ms2mono(int64_t ms)
-{
+static inline int64_t ms2mono(int64_t ms) {
   return ms * (MONOCLOCK_RESOLUTION / 1000LL);
 }
 
-static inline int64_t
-mono2ms(int64_t monosec)
-{
+static inline int64_t mono2ms(int64_t monosec) {
   return monosec / (MONOCLOCK_RESOLUTION / 1000LL);
 }
 
-static inline int64_t
-getmonoclock(void)
-{
+static inline int64_t getmonoclock(void) {
   struct timespec tp;
 
   clock_gettime(CLOCK_MONOTONIC, &tp);
 
-  return tp.tv_sec * MONOCLOCK_RESOLUTION +
-         (tp.tv_nsec / (1000000000LL/MONOCLOCK_RESOLUTION));
+  return tp.tv_sec * MONOCLOCK_RESOLUTION + (tp.tv_nsec / (1000000000LL / MONOCLOCK_RESOLUTION));
 }
 
-static inline int64_t
-getfastmonoclock(void)
-{
+static inline int64_t getfastmonoclock(void) {
   struct timespec tp;
 
   clock_gettime(CLOCK_MONOTONIC_COARSE, &tp);
 
-  return tp.tv_sec * MONOCLOCK_RESOLUTION +
-         (tp.tv_nsec / (1000000000LL/MONOCLOCK_RESOLUTION));
+  return tp.tv_sec * MONOCLOCK_RESOLUTION + (tp.tv_nsec / (1000000000LL / MONOCLOCK_RESOLUTION));
 }
 
-static inline int
-monocmpfastsec(int64_t m1, int64_t m2)
-{
+static inline int monocmpfastsec(int64_t m1, int64_t m2) {
   return (m1 & ~MONOCLOCK_FASTSEC) == (m2 & ~MONOCLOCK_FASTSEC);
 }
 
 void time_t_out_of_range_notify(int64_t val);
 
-static inline time_t time_t_out_of_range(uint64_t val)
-{
+static inline time_t time_t_out_of_range(uint64_t val) {
   time_t r = val;
   if ((int64_t)r != val) {
     time_t_out_of_range_notify(val);

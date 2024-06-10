@@ -29,29 +29,25 @@
 #include <sys/stat.h>
 
 /* Global list of monitorer paths (and inotify FD) */
-RB_HEAD(,fsmonitor_path) fsmonitor_paths;
-int                      fsmonitor_fd;
+RB_HEAD(, fsmonitor_path) fsmonitor_paths;
+int fsmonitor_fd;
 
 /* RB tree sorting of paths */
-static int
-fmp_cmp ( fsmonitor_path_t *a, fsmonitor_path_t *b )
-{
+static int fmp_cmp(fsmonitor_path_t* a, fsmonitor_path_t* b) {
   return strcmp(a->fmp_path, b->fmp_path);
 }
 
 /*
  * Inotify thread for handling events
  */
-static void *
-fsmonitor_thread ( void* p )
-{
-  int fd, c, i;
-  uint8_t buf[sizeof(struct inotify_event) * 10];
-  char path[1024];
-  struct inotify_event *ev;
-  fsmonitor_path_t *fmp;
-  fsmonitor_link_t *fml;
-  fsmonitor_t *fsm;
+static void* fsmonitor_thread(void* p) {
+  int                   fd, c, i;
+  uint8_t               buf[sizeof(struct inotify_event) * 10];
+  char                  path[1024];
+  struct inotify_event* ev;
+  fsmonitor_path_t*     fmp;
+  fsmonitor_link_t*     fml;
+  fsmonitor_t*          fsm;
 
   while (tvheadend_is_running()) {
 
@@ -67,27 +63,31 @@ fsmonitor_thread ( void* p )
     /* Process */
     tvh_mutex_lock(&global_lock);
     i = 0;
-    while ( i < c ) {
+    while (i < c) {
       ev = (struct inotify_event*)&buf[i];
       i += sizeof(struct inotify_event) + ev->len;
       if (i > c)
         break;
-      tvhtrace(LS_FSMONITOR, "event fd %d name %s mask %08X",
-               ev->wd, ev->len ? ev->name : NULL, ev->mask);
+      tvhtrace(LS_FSMONITOR,
+          "event fd %d name %s mask %08X",
+          ev->wd,
+          ev->len ? ev->name : NULL,
+          ev->mask);
 
       /* Find */
       // TODO: make this more efficient (especially if number of
       //       watched paths gets big)
-      RB_FOREACH(fmp, &fsmonitor_paths, fmp_link)
+      RB_FOREACH (fmp, &fsmonitor_paths, fmp_link)
         if (fmp->fmp_fd == ev->wd)
           break;
-      if (!fmp) continue;
+      if (!fmp)
+        continue;
 
       /* Full path */
       snprintf(path, sizeof(path), "%s/%s", fmp->fmp_path, ev->name);
 
       /* Process listeners */
-      LIST_FOREACH(fml, &fmp->fmp_monitors, fml_plink) {
+      LIST_FOREACH (fml, &fmp->fmp_monitors, fml_plink) {
         fsm = fml->fml_monitor;
         if (ev->mask & IN_CREATE && fsm->fsm_create)
           fsm->fsm_create(fsm, path);
@@ -105,9 +105,7 @@ fsmonitor_thread ( void* p )
  */
 pthread_t fsmonitor_tid;
 
-void
-fsmonitor_init ( void )
-{
+void fsmonitor_init(void) {
   /* Intialise inotify */
   atomic_set(&fsmonitor_fd, inotify_init1(IN_CLOEXEC));
   tvh_thread_create(&fsmonitor_tid, NULL, fsmonitor_thread, NULL, "fsmonitor");
@@ -116,11 +114,10 @@ fsmonitor_init ( void )
 /*
  * Stop the fsmonitor subsystem
  */
-void
-fsmonitor_done ( void )
-{
+void fsmonitor_done(void) {
   int fd = atomic_exchange(&fsmonitor_fd, -1);
-  if (fd >= 0) blacklisted_close(fd);
+  if (fd >= 0)
+    blacklisted_close(fd);
   tvh_thread_kill(fsmonitor_tid, SIGTERM);
   pthread_join(fsmonitor_tid, NULL);
 }
@@ -128,17 +125,15 @@ fsmonitor_done ( void )
 /*
  * Add a new path
  */
-int
-fsmonitor_add ( const char *path, fsmonitor_t *fsm )
-{
-  int fd, mask;
-  fsmonitor_path_t *skel;
-  fsmonitor_path_t *fmp;
-  fsmonitor_link_t *fml;
+int fsmonitor_add(const char* path, fsmonitor_t* fsm) {
+  int               fd, mask;
+  fsmonitor_path_t* skel;
+  fsmonitor_path_t* fmp;
+  fsmonitor_link_t* fml;
 
   lock_assert(&global_lock);
 
-  skel = calloc(1, sizeof(fsmonitor_path_t));
+  skel           = calloc(1, sizeof(fsmonitor_path_t));
   skel->fmp_path = (char*)path;
 
   /* Build mask */
@@ -172,29 +167,27 @@ fsmonitor_add ( const char *path, fsmonitor_t *fsm )
 
   /* Check doesn't exist */
   // TODO: could make this more efficient
-  LIST_FOREACH(fml, &fmp->fmp_monitors, fml_plink)
+  LIST_FOREACH (fml, &fmp->fmp_monitors, fml_plink)
     if (fml->fml_monitor == fsm)
       return 0;
 
   /* Add */
-  fml = calloc(1, sizeof(fsmonitor_link_t));
+  fml              = calloc(1, sizeof(fsmonitor_link_t));
   fml->fml_path    = fmp;
   fml->fml_monitor = fsm;
   LIST_INSERT_HEAD(&fmp->fmp_monitors, fml, fml_plink);
-  LIST_INSERT_HEAD(&fsm->fsm_paths,    fml, fml_mlink);
+  LIST_INSERT_HEAD(&fsm->fsm_paths, fml, fml_mlink);
   return 0;
 }
 
 /*
  * Remove an existing path
  */
-void
-fsmonitor_del ( const char *path, fsmonitor_t *fsm )
-{
+void fsmonitor_del(const char* path, fsmonitor_t* fsm) {
   static fsmonitor_path_t skel;
-  fsmonitor_path_t *fmp;
-  fsmonitor_link_t *fml;
-  int fd;
+  fsmonitor_path_t*       fmp;
+  fsmonitor_link_t*       fml;
+  int                     fd;
 
   lock_assert(&global_lock);
 
@@ -205,7 +198,7 @@ fsmonitor_del ( const char *path, fsmonitor_t *fsm )
   if (fmp) {
 
     /* Find link */
-    LIST_FOREACH(fml, &fmp->fmp_monitors, fml_plink)
+    LIST_FOREACH (fml, &fmp->fmp_monitors, fml_plink)
       if (fml->fml_monitor == fsm)
         break;
 
@@ -231,25 +224,14 @@ fsmonitor_del ( const char *path, fsmonitor_t *fsm )
 
 #else /* ENABLE_INOTIFY */
 
-void
-fsmonitor_init ( void )
-{
-}
+void fsmonitor_init(void) {}
 
-void
-fsmonitor_done ( void )
-{
-}
+void fsmonitor_done(void) {}
 
-int
-fsmonitor_add ( const char *path, fsmonitor_t *fsm )
-{
+int fsmonitor_add(const char* path, fsmonitor_t* fsm) {
   return 0; // TODO: is this the right value?
 }
 
-void
-fsmonitor_del ( const char *path, fsmonitor_t *fsm )
-{
-}
+void fsmonitor_del(const char* path, fsmonitor_t* fsm) {}
 
 #endif

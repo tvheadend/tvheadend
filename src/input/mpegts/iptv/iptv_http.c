@@ -28,12 +28,12 @@
 #error "Wrong openssl!"
 #endif
 
-#define HLS_SI_TBL_ANALYZE (4*188)
+#define HLS_SI_TBL_ANALYZE (4 * 188)
 
 typedef struct http_priv {
-  iptv_input_t  *mi;
-  iptv_mux_t    *im;
-  http_client_t *hc;
+  iptv_input_t*  mi;
+  iptv_mux_t*    im;
+  http_client_t* hc;
   gtimer_t       kick_timer;
   uint8_t        shutdown;
   uint8_t        started;
@@ -42,15 +42,15 @@ typedef struct http_priv {
   sbuf_t         key_sbuf;
   int            m3u_header;
   uint64_t       off;
-  char          *host_url;
+  char*          host_url;
   int64_t        hls_seq;
-  char          *hls_url;
+  char*          hls_url;
   uint8_t        hls_url2;
   uint8_t        hls_encrypted;
-  char          *hls_url_after_key;
-  char          *hls_key_url;
-  htsmsg_t      *hls_m3u;
-  htsmsg_t      *hls_key;
+  char*          hls_url_after_key;
+  char*          hls_key_url;
+  htsmsg_t*      hls_m3u;
+  htsmsg_t*      hls_key;
   struct {
     char          tmp[AES_BLOCK_SIZE];
     int           tmp_len;
@@ -61,19 +61,17 @@ typedef struct http_priv {
 
 /***/
 
-static int iptv_http_complete_key ( http_client_t *hc );
+static int iptv_http_complete_key(http_client_t* hc);
 
 /*
  *
  */
-static char *
-iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
-{
-  htsmsg_t *items, *item, *inf, *sel = NULL, *key;
-  htsmsg_field_t *f;
-  int64_t seq, bandwidth, sel_bandwidth = 0;
-  int width, height, sel_width = 0, sel_height = 0;
-  const char *s;
+static char* iptv_http_get_url(http_priv_t* hp, htsmsg_t* m) {
+  htsmsg_t *      items, *item, *inf, *sel = NULL, *key;
+  htsmsg_field_t* f;
+  int64_t         seq, bandwidth, sel_bandwidth = 0;
+  int             width, height, sel_width = 0, sel_height = 0;
+  const char*     s;
 
   items = htsmsg_get_list(m, "items");
 
@@ -84,7 +82,7 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
     seq = htsmsg_get_s64_or_default(m, "media-sequence", -1);
     if (seq >= 0) {
       hp->hls_url2 = 1;
-      hp->hls_m3u = m;
+      hp->hls_m3u  = m;
       if (hp->hls_url == NULL && hp->hc->hc_url != NULL)
         hp->hls_url = strdup(hp->hc->hc_url);
     }
@@ -109,11 +107,12 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
   if (items == NULL)
     return NULL;
   HTSMSG_FOREACH(f, items) {
-    if ((item = htsmsg_field_get_map(f)) == NULL) continue;
+    if ((item = htsmsg_field_get_map(f)) == NULL)
+      continue;
     inf = htsmsg_get_map(item, "stream-inf");
     if (inf) {
       bandwidth = htsmsg_get_s64_or_default(inf, "BANDWIDTH", 0);
-      s = htsmsg_get_str(inf, "RESOLUTION");
+      s         = htsmsg_get_str(inf, "RESOLUTION");
       width = height = 0;
       if (s)
         sscanf(s, "%dx%d", &width, &height);
@@ -121,10 +120,10 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
         if ((width == 0 && sel_bandwidth < bandwidth) ||
             (bandwidth > 200000 && sel_width < width && sel_height < height) ||
             (sel == NULL && bandwidth > 1000)) {
-          sel = item;
+          sel           = item;
           sel_bandwidth = bandwidth;
-          sel_width = width;
-          sel_height = height;
+          sel_width     = width;
+          sel_height    = height;
         }
     } else {
       s = htsmsg_get_str(item, "m3u-url");
@@ -138,22 +137,23 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
         htsmsg_field_destroy(items, f);
         if (hp->hls_url) {
           hp->hls_url2 = 1;
-          hp->hls_m3u = m;
+          hp->hls_m3u  = m;
           htsmsg_destroy(hp->hls_key);
           hp->hls_key = key;
           hp->hls_seq++;
         }
-        return (char *)s;
+        return (char*)s;
       }
     }
   }
   if (sel && hp->hls_url == NULL) {
-    inf = htsmsg_get_map(sel, "stream-inf");
+    inf       = htsmsg_get_map(sel, "stream-inf");
     bandwidth = htsmsg_get_s64_or_default(inf, "BANDWIDTH", 0);
-    tvhdebug(LS_IPTV, "HLS - selected stream %s, %"PRId64"kb/s, %s",
-             htsmsg_get_str(inf, "RESOLUTION"),
-             bandwidth / 1024,
-             htsmsg_get_str(inf, "CODECS"));
+    tvhdebug(LS_IPTV,
+        "HLS - selected stream %s, %" PRId64 "kb/s, %s",
+        htsmsg_get_str(inf, "RESOLUTION"),
+        bandwidth / 1024,
+        htsmsg_get_str(inf, "CODECS"));
     s = htsmsg_get_str(sel, "m3u-url");
     if (s && s[0]) {
       free(hp->hls_url);
@@ -167,12 +167,10 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
 /*
  *
  */
-static void
-iptv_http_data_aes128 ( http_priv_t *hp, sbuf_t *sb, int off )
-{
-  unsigned char *in  = sb->sb_data + off;
-  unsigned char *out = in;
-  size_t size        = sb->sb_ptr - off;
+static void iptv_http_data_aes128(http_priv_t* hp, sbuf_t* sb, int off) {
+  unsigned char* in   = sb->sb_data + off;
+  unsigned char* out  = in;
+  size_t         size = sb->sb_ptr - off;
 
   AES_cbc_encrypt(in, out, size, &hp->hls_aes128.key, hp->hls_aes128.iv, AES_DECRYPT);
 }
@@ -180,18 +178,19 @@ iptv_http_data_aes128 ( http_priv_t *hp, sbuf_t *sb, int off )
 /*
  *
  */
-static void
-iptv_http_kick_cb( void *aux )
-{
-  http_client_t *hc = aux;
-  http_priv_t *hp;
-  iptv_mux_t *im;
+static void iptv_http_kick_cb(void* aux) {
+  http_client_t* hc = aux;
+  http_priv_t*   hp;
+  iptv_mux_t*    im;
 
-  if (hc == NULL) return;
+  if (hc == NULL)
+    return;
   hp = hc->hc_aux;
-  if (hp == NULL) return;
+  if (hp == NULL)
+    return;
   im = hp->im;
-  if (im == NULL) return;
+  if (im == NULL)
+    return;
 
   if (hp->unpause) {
     hp->unpause = 0;
@@ -203,13 +202,11 @@ iptv_http_kick_cb( void *aux )
 /*
  * Connected
  */
-static int
-iptv_http_header ( http_client_t *hc )
-{
-  http_priv_t *hp = hc->hc_aux;
-  iptv_mux_t *im;
-  char *argv[3], *s;
-  int n;
+static int iptv_http_header(http_client_t* hc) {
+  http_priv_t* hp = hc->hc_aux;
+  iptv_mux_t*  im;
+  char *       argv[3], *s;
+  int          n;
 
   if (hp == NULL)
     return 0;
@@ -225,11 +222,10 @@ iptv_http_header ( http_client_t *hc )
   if (s) {
     n = http_tokenize(s, argv, ARRAY_SIZE(argv), ';');
     if (n > 0 &&
-        (strcasecmp(s, "audio/mpegurl") == 0 ||
-         strcasecmp(s, "audio/x-mpegurl") == 0 ||
-         strcasecmp(s, "application/x-mpegurl") == 0 ||
-         strcasecmp(s, "application/apple.vnd.mpegurl") == 0 ||
-         strcasecmp(s, "application/vnd.apple.mpegurl") == 0)) {
+        (strcasecmp(s, "audio/mpegurl") == 0 || strcasecmp(s, "audio/x-mpegurl") == 0 ||
+            strcasecmp(s, "application/x-mpegurl") == 0 ||
+            strcasecmp(s, "application/apple.vnd.mpegurl") == 0 ||
+            strcasecmp(s, "application/vnd.apple.mpegurl") == 0)) {
       if (hp->m3u_header > 10) {
         hp->m3u_header = 0;
         return 0;
@@ -243,7 +239,7 @@ iptv_http_header ( http_client_t *hc )
   }
 
   hp->m3u_header = 0;
-  hp->off = 0;
+  hp->off        = 0;
   tvh_mutex_lock(&iptv_lock);
   iptv_input_recv_flush(im);
   tvh_mutex_unlock(&iptv_lock);
@@ -254,17 +250,13 @@ iptv_http_header ( http_client_t *hc )
 /*
  * Receive data
  */
-static int
-iptv_http_data
-  ( http_client_t *hc, void *buf, size_t len )
-{
-  http_priv_t *hp = hc->hc_aux;
-  iptv_mux_t *im;
-  int pause = 0, off, rem;
-  sbuf_t *sb;
+static int iptv_http_data(http_client_t* hc, void* buf, size_t len) {
+  http_priv_t* hp = hc->hc_aux;
+  iptv_mux_t*  im;
+  int          pause = 0, off, rem;
+  sbuf_t*      sb;
 
-  if (hp == NULL || hp->shutdown || hp->im == NULL ||
-      hc->hc_code != HTTP_STATUS_OK)
+  if (hp == NULL || hp->shutdown || hp->im == NULL || hc->hc_code != HTTP_STATUS_OK)
     return 0;
 
   im = hp->im;
@@ -286,7 +278,7 @@ iptv_http_data
     if (hp->hls_aes128.tmp_len + len >= AES_BLOCK_SIZE) {
       if (hp->hls_aes128.tmp_len) {
         sbuf_append(sb, hp->hls_aes128.tmp, hp->hls_aes128.tmp_len);
-        rem = AES_BLOCK_SIZE - hp->hls_aes128.tmp_len;
+        rem                    = AES_BLOCK_SIZE - hp->hls_aes128.tmp_len;
         hp->hls_aes128.tmp_len = 0;
         sbuf_append(sb, buf, rem);
         len -= rem;
@@ -316,7 +308,8 @@ iptv_http_data
     if (iptv_input_recv_packets(im, len) == 1)
       pause = hc->hc_pause = 1;
 
-  if (pause) hp->unpause = 1;
+  if (pause)
+    hp->unpause = 1;
   tvh_mutex_unlock(&iptv_lock);
 
   if (pause)
@@ -327,17 +320,15 @@ iptv_http_data
 /*
  * Complete data
  */
-static void
-iptv_http_reconnect ( http_client_t *hc, const char *url )
-{
+static void iptv_http_reconnect(http_client_t* hc, const char* url) {
   url_t u;
-  int r;
+  int   r;
 
   urlinit(&u);
   if (!urlparse(url, &u)) {
     tvh_mutex_lock(&hc->hc_mutex);
     hc->hc_keepalive = 0;
-    r = http_client_simple_reconnect(hc, &u, HTTP_VERSION_1_1);
+    r                = http_client_simple_reconnect(hc, &u, HTTP_VERSION_1_1);
     tvh_mutex_unlock(&hc->hc_mutex);
     if (r < 0)
       tvherror(LS_IPTV, "cannot reopen http client: %d'", r);
@@ -347,15 +338,12 @@ iptv_http_reconnect ( http_client_t *hc, const char *url )
   urlreset(&u);
 }
 
-static int
-iptv_http_complete
-  ( http_client_t *hc )
-{
-  http_priv_t *hp = hc->hc_aux;
-  const char *s;
-  char *url;
-  htsmsg_t *m, *m2;
-  int r;
+static int iptv_http_complete(http_client_t* hc) {
+  http_priv_t* hp = hc->hc_aux;
+  const char*  s;
+  char*        url;
+  htsmsg_t *   m, *m2;
+  int          r;
 
   if (hp == NULL || hp->shutdown || hp->im == NULL)
     return 0;
@@ -369,9 +357,9 @@ iptv_http_complete
       free(hp->host_url);
       hp->host_url = strdup(hc->hc_url);
     }
-    m = parse_m3u((char *)hp->m3u_sbuf.sb_data, NULL, hp->host_url);
+    m = parse_m3u((char*)hp->m3u_sbuf.sb_data, NULL, hp->host_url);
     sbuf_free(&hp->m3u_sbuf);
-url:
+  url:
     url = iptv_http_get_url(hp, m);
     if (hp->hls_m3u == m)
       m = NULL;
@@ -384,8 +372,7 @@ url:
       memset(&hp->hls_aes128.iv, 0, sizeof(hp->hls_aes128.iv));
       s = htsmsg_get_str(hp->hls_key, "IV");
       if (s != NULL) {
-        if (s[0] != '0' || (s[1] != 'x' && s[1] != 'X') ||
-            strlen(s) != (AES_BLOCK_SIZE * 2) + 2) {
+        if (s[0] != '0' || (s[1] != 'x' && s[1] != 'X') || strlen(s) != (AES_BLOCK_SIZE * 2) + 2) {
           tvherror(LS_IPTV, "unknown IV type or length (%s)", s);
           goto end;
         }
@@ -402,8 +389,8 @@ url:
         hp->hls_key_url = strdup(s);
         free(hp->hls_url_after_key);
         hp->hls_url_after_key = url;
-          url = strdup(s);
-        hc->hc_data_complete = iptv_http_complete_key;
+        url                   = strdup(s);
+        hc->hc_data_complete  = iptv_http_complete_key;
         sbuf_reset(&hp->key_sbuf, 32);
       }
     }
@@ -412,19 +399,19 @@ url:
       tvherror(LS_IPTV, "m3u contents parsing failed");
       goto fin;
     }
-new_m3u:
+  new_m3u:
     iptv_http_reconnect(hc, url);
-end:
+  end:
     free(url);
-fin:
+  fin:
     htsmsg_destroy(m);
   } else {
     if (hp->hls_url && hp->hls_m3u) {
-      m = hp->hls_m3u;
+      m           = hp->hls_m3u;
       hp->hls_m3u = NULL;
-      m2 = htsmsg_get_list(m, "items");
+      m2          = htsmsg_get_list(m, "items");
       if (m2 && htsmsg_is_empty(m2)) {
-        r = htsmsg_get_bool_or_default(m, "x-endlist", 0);
+        r            = htsmsg_get_bool_or_default(m, "x-endlist", 0);
         hp->hls_url2 = 0;
         if (r == 0) {
           url = strdup(hp->hls_url);
@@ -439,11 +426,8 @@ fin:
   return 0;
 }
 
-static int
-iptv_http_complete_key
-  ( http_client_t *hc )
-{
-  http_priv_t *hp = hc->hc_aux;
+static int iptv_http_complete_key(http_client_t* hc) {
+  http_priv_t* hp = hc->hc_aux;
 
   if (hp == NULL || hp->shutdown)
     return 0;
@@ -466,10 +450,8 @@ iptv_http_complete_key
  * Custom headers
  */
 static void
-iptv_http_create_header
-  ( http_client_t *hc, http_arg_list_t *h, const url_t *url, int keepalive )
-{
-  http_priv_t *hp = hc->hc_aux;
+iptv_http_create_header(http_client_t* hc, http_arg_list_t* h, const url_t* url, int keepalive) {
+  http_priv_t* hp = hc->hc_aux;
 
   if (hp == NULL || hp->shutdown || hp->im == NULL)
     return;
@@ -480,9 +462,7 @@ iptv_http_create_header
 /*
  *
  */
-static void
-iptv_http_free( http_priv_t *hp )
-{
+static void iptv_http_free(http_priv_t* hp) {
   if (hp->hc)
     http_client_close(hp->hc);
   sbuf_free(&hp->m3u_sbuf);
@@ -499,21 +479,17 @@ iptv_http_free( http_priv_t *hp )
 /*
  * Setup HTTP(S) connection
  */
-static int
-iptv_http_start
-  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *u )
-{
-  http_priv_t *hp;
-  http_client_t *hc;
-  int r;
+static int iptv_http_start(iptv_input_t* mi, iptv_mux_t* im, const char* raw, const url_t* u) {
+  http_priv_t*   hp;
+  http_client_t* hc;
+  int            r;
 
   sbuf_reset_and_alloc(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
 
-  hp = calloc(1, sizeof(*hp));
+  hp     = calloc(1, sizeof(*hp));
   hp->mi = mi;
   hp->im = im;
-  if (!(hc = http_client_connect(hp, HTTP_VERSION_1_1, u->scheme,
-                                 u->host, u->port, NULL))) {
+  if (!(hc = http_client_connect(hp, HTTP_VERSION_1_1, u->scheme, u->host, u->port, NULL))) {
     iptv_http_free(hp);
     return SM_CODE_TUNING_FAILED;
   }
@@ -521,15 +497,15 @@ iptv_http_start
   hc->hc_hdr_received    = iptv_http_header;
   hc->hc_data_received   = iptv_http_data;
   hc->hc_data_complete   = iptv_http_complete;
-  hc->hc_handle_location = 1;        /* allow redirects */
-  hc->hc_io_size         = 128*1024; /* increase buffering */
-  hp->hc = hc;
-  im->im_data = hp;
+  hc->hc_handle_location = 1;          /* allow redirects */
+  hc->hc_io_size         = 128 * 1024; /* increase buffering */
+  hp->hc                 = hc;
+  im->im_data            = hp;
   sbuf_init(&hp->m3u_sbuf);
   sbuf_init(&hp->key_sbuf);
   sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
   iptv_input_mux_started(hp->mi, im, 1);
-  http_client_register(hc);          /* register to the HTTP thread */
+  http_client_register(hc); /* register to the HTTP thread */
   r = http_client_simple(hc, u);
   if (r < 0) {
     iptv_http_free(hp);
@@ -543,31 +519,24 @@ iptv_http_start
 /*
  * Stop connection
  */
-static void
-iptv_http_stop
-  ( iptv_input_t *mi, iptv_mux_t *im )
-{
-  http_priv_t *hp = im->im_data;
+static void iptv_http_stop(iptv_input_t* mi, iptv_mux_t* im) {
+  http_priv_t* hp = im->im_data;
 
   hp->shutdown = 1;
   gtimer_disarm(&hp->kick_timer);
   tvh_mutex_unlock(&iptv_lock);
   http_client_close(hp->hc);
   tvh_mutex_lock(&iptv_lock);
-  hp->hc = NULL;
+  hp->hc      = NULL;
   im->im_data = NULL;
   iptv_http_free(hp);
 }
 
-
 /*
  * Pause/Unpause
  */
-static void
-iptv_http_pause
-  ( iptv_input_t *mi, iptv_mux_t *im, int pause )
-{
-  http_priv_t *hp = im->im_data;
+static void iptv_http_pause(iptv_input_t* mi, iptv_mux_t* im, int pause) {
+  http_priv_t* hp = im->im_data;
 
   assert(pause == 0);
   http_client_unpause(hp->hc);
@@ -577,24 +546,16 @@ iptv_http_pause
  * Initialise HTTP handler
  */
 
-void
-iptv_http_init ( void )
-{
-  static iptv_handler_t ih[] = {
-    {
-      .scheme = "http",
-      .buffer_limit = 5000,
-      .start  = iptv_http_start,
-      .stop   = iptv_http_stop,
-      .pause  = iptv_http_pause
-    },
-    {
-      .scheme  = "https",
-      .buffer_limit = 5000,
-      .start  = iptv_http_start,
-      .stop   = iptv_http_stop,
-      .pause  = iptv_http_pause
-    }
-  };
+void iptv_http_init(void) {
+  static iptv_handler_t ih[] = {{.scheme          = "http",
+                                    .buffer_limit = 5000,
+                                    .start        = iptv_http_start,
+                                    .stop         = iptv_http_stop,
+                                    .pause        = iptv_http_pause},
+      {.scheme          = "https",
+          .buffer_limit = 5000,
+          .start        = iptv_http_start,
+          .stop         = iptv_http_stop,
+          .pause        = iptv_http_pause}};
   iptv_handler_register(ih, 2);
 }

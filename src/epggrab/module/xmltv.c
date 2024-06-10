@@ -51,15 +51,14 @@
 /**
  *
  */
-static time_t _xmltv_str2time(const char *in)
-{
+static time_t _xmltv_str2time(const char* in) {
   struct tm tm;
-  int tz = 0, r;
-  int sp = 0;
-  char str[32];
+  int       tz = 0, r;
+  int       sp = 0;
+  char      str[32];
 
   memset(&tm, 0, sizeof(tm));
-  tm.tm_mday = 1;               /* Day is one-based not zero-based */
+  tm.tm_mday = 1; /* Day is one-based not zero-based */
   strlcpy(str, in, sizeof(str));
 
   /* split tz */
@@ -71,15 +70,20 @@ static time_t _xmltv_str2time(const char *in)
   /* parse tz */
   // TODO: handle string TZ?
   if (str[sp]) {
-    sscanf(str+sp, "%d", &tz);
-    tz = (tz % 100) * 60 + (tz / 100) * 3600; // Convert from HHMM to seconds
+    sscanf(str + sp, "%d", &tz);
+    tz      = (tz % 100) * 60 + (tz / 100) * 3600; // Convert from HHMM to seconds
     str[sp] = 0;
   }
 
   /* parse time */
-  r = sscanf(str, "%04d%02d%02d%02d%02d%02d",
-	     &tm.tm_year, &tm.tm_mon, &tm.tm_mday,
-	     &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
+  r = sscanf(str,
+      "%04d%02d%02d%02d%02d%02d",
+      &tm.tm_year,
+      &tm.tm_mon,
+      &tm.tm_mday,
+      &tm.tm_hour,
+      &tm.tm_min,
+      &tm.tm_sec);
 
   /* Time "can be 'YYYYMMDDhhmmss' or some initial substring...you can
    * have 'YYYYMM'" according to DTD. The imprecise dates are used
@@ -89,8 +93,10 @@ static time_t _xmltv_str2time(const char *in)
    * if they have been parsed since timegm has some fields based
    * differently to others.
    */
-  if (r > 1) tm.tm_mon  -= 1;
-  if (r > 0) tm.tm_year -= 1900;
+  if (r > 1)
+    tm.tm_mon -= 1;
+  if (r > 0)
+    tm.tm_year -= 1900;
   tm.tm_isdst = -1;
 
   if (r > 0) {
@@ -134,26 +140,24 @@ static time_t _xmltv_str2time(const char *in)
  *
  */
 
-static const char *xmltv_ns_get_parse_num
-  (const char *s, uint16_t *ap, uint16_t *bp)
-{
+static const char* xmltv_ns_get_parse_num(const char* s, uint16_t* ap, uint16_t* bp) {
   int a = -1, b = -1;
 
-  while(1) {
-    if(!*s)
+  while (1) {
+    if (!*s)
       goto out;
 
-    if(*s == '.') {
+    if (*s == '.') {
       s++;
       goto out;
     }
 
-    if(*s == '/')
+    if (*s == '/')
       break;
 
-    if(*s >= '0' && *s <= '9') {
-      if(a == -1)
-	a = 0;
+    if (*s >= '0' && *s <= '9') {
+      if (a == -1)
+        a = 0;
       a = a * 10 + *s - '0';
     }
     s++;
@@ -161,53 +165,54 @@ static const char *xmltv_ns_get_parse_num
 
   s++; // slash
 
-  while(1) {
-    if(!*s)
+  while (1) {
+    if (!*s)
       break;
 
-    if(*s == '.') {
+    if (*s == '.') {
       s++;
       break;
     }
 
-    if(*s >= '0' && *s <= '9') {
-      if(b == -1)
-	b = 0;
+    if (*s >= '0' && *s <= '9') {
+      if (b == -1)
+        b = 0;
       b = b * 10 + *s - '0';
     }
     s++;
   }
 
-
- out:
-  if(ap && a >= 0) *ap = a + 1;
-  if(bp && b >= 0) *bp = b;
+out:
+  if (ap && a >= 0)
+    *ap = a + 1;
+  if (bp && b >= 0)
+    *bp = b;
   return s;
 }
 
-static void parse_xmltv_ns_episode
-  (const char *s, epg_episode_num_t *epnum)
-{
+static void parse_xmltv_ns_episode(const char* s, epg_episode_num_t* epnum) {
   s = xmltv_ns_get_parse_num(s, &(epnum->s_num), &(epnum->s_cnt));
   s = xmltv_ns_get_parse_num(s, &(epnum->e_num), &(epnum->e_cnt));
   s = xmltv_ns_get_parse_num(s, &(epnum->p_num), &(epnum->p_cnt));
 }
 
-static void parse_xmltv_dd_progid
-  (epggrab_module_t *mod, const char *s, char **uri, char **suri,
-   epg_episode_num_t *epnum)
-{
+static void parse_xmltv_dd_progid(epggrab_module_t* mod,
+    const char*                                     s,
+    char**                                          uri,
+    char**                                          suri,
+    epg_episode_num_t*                              epnum) {
   const int s_len = strlen(s);
-  if (s_len < 2) return;
+  if (s_len < 2)
+    return;
 
   const int buf_size = s_len + strlen(mod->id) + 13;
-  char * buf = (char *) malloc( buf_size);
+  char*     buf      = (char*)malloc(buf_size);
   /* Raw URI */
-  int e = snprintf( buf, buf_size, "ddprogid://%s/%s", mod->id, s);
+  int e = snprintf(buf, buf_size, "ddprogid://%s/%s", mod->id, s);
 
   /* SH - series without episode id so ignore */
   if (strncmp("SH", s, 2))
-    *uri  = strdup(buf);
+    *uri = strdup(buf);
   else
     *suri = strdup(buf);
 
@@ -216,8 +221,9 @@ static void parse_xmltv_dd_progid
     while (--e && buf[e] != '.') {}
     if (e) {
       buf[e] = '\0';
-      *suri = strdup(buf);
-      if (buf[e+1]) sscanf(&buf[e+1], "%hu", &(epnum->e_num));
+      *suri  = strdup(buf);
+      if (buf[e + 1])
+        sscanf(&buf[e + 1], "%hu", &(epnum->e_num));
     }
   }
   free(buf);
@@ -226,28 +232,26 @@ static void parse_xmltv_dd_progid
 /**
  *
  */
-static void get_episode_info
-  ( epggrab_module_t *mod,
-    htsmsg_t *tags, char **uri, char **suri,
-    epg_episode_num_t *epnum )
-{
-  htsmsg_field_t *f;
-  htsmsg_t *c, *a;
-  const char *sys, *cdata;
+static void get_episode_info(epggrab_module_t* mod,
+    htsmsg_t*                                  tags,
+    char**                                     uri,
+    char**                                     suri,
+    epg_episode_num_t*                         epnum) {
+  htsmsg_field_t* f;
+  htsmsg_t *      c, *a;
+  const char *    sys, *cdata;
 
   HTSMSG_FOREACH(f, tags) {
-    if((c = htsmsg_get_map_by_field(f)) == NULL ||
-       strcmp(htsmsg_field_name(f), "episode-num") ||
-       (a = htsmsg_get_map(c, "attrib")) == NULL ||
-       (cdata = htsmsg_get_str(c, "cdata")) == NULL ||
-       (sys = htsmsg_get_str(a, "system")) == NULL)
+    if ((c = htsmsg_get_map_by_field(f)) == NULL || strcmp(htsmsg_field_name(f), "episode-num") ||
+        (a = htsmsg_get_map(c, "attrib")) == NULL || (cdata = htsmsg_get_str(c, "cdata")) == NULL ||
+        (sys = htsmsg_get_str(a, "system")) == NULL)
       continue;
 
-    if(!strcmp(sys, "onscreen"))
+    if (!strcmp(sys, "onscreen"))
       epnum->text = (char*)cdata;
-    else if(!strcmp(sys, "xmltv_ns"))
+    else if (!strcmp(sys, "xmltv_ns"))
       parse_xmltv_ns_episode(cdata, epnum);
-    else if(!strcmp(sys, "dd_progid"))
+    else if (!strcmp(sys, "dd_progid"))
       parse_xmltv_dd_progid(mod, cdata, uri, suri, epnum);
   }
 }
@@ -259,23 +263,22 @@ static void get_episode_info
  *       job
  */
 static int
-xmltv_parse_vid_quality
-  ( epg_broadcast_t *ebc, htsmsg_t *m, int8_t *bw, epg_changes_t *changes )
-{
-  int save = 0;
-  int hd = 0, lines = 0, aspect = 0;
-  const char *str;
-  if (!ebc || !m) return 0;
+xmltv_parse_vid_quality(epg_broadcast_t* ebc, htsmsg_t* m, int8_t* bw, epg_changes_t* changes) {
+  int         save = 0;
+  int         hd = 0, lines = 0, aspect = 0;
+  const char* str;
+  if (!ebc || !m)
+    return 0;
 
   if ((str = htsmsg_xml_get_cdata_str(m, "colour")))
     *bw = strcmp(str, "no") ? 0 : 1;
   if ((str = htsmsg_xml_get_cdata_str(m, "quality"))) {
     if (strstr(str, "HD")) {
-      hd    = 1;
+      hd = 1;
     } else if (strstr(str, "FHD")) {
-      hd    = 2;
+      hd = 2;
     } else if (strstr(str, "UHD")) {
-      hd    = 3;
+      hd = 3;
     } else if (strstr(str, "480")) {
       lines  = 480;
       aspect = 150;
@@ -320,17 +323,14 @@ xmltv_parse_vid_quality
 /*
  * Parse accessibility data
  */
-int
-xmltv_parse_accessibility
-  ( epg_broadcast_t *ebc, htsmsg_t *m, epg_changes_t *changes )
-{
-  int save = 0;
-  htsmsg_t *tag;
-  htsmsg_field_t *f;
-  const char *str;
+int xmltv_parse_accessibility(epg_broadcast_t* ebc, htsmsg_t* m, epg_changes_t* changes) {
+  int             save = 0;
+  htsmsg_t*       tag;
+  htsmsg_field_t* f;
+  const char*     str;
 
   HTSMSG_FOREACH(f, m) {
-    if(!strcmp(htsmsg_field_name(f), "subtitles")) {
+    if (!strcmp(htsmsg_field_name(f), "subtitles")) {
       if ((tag = htsmsg_get_map_by_field(f))) {
         str = htsmsg_xml_get_attr_str(tag, "type");
         if (str && !strcmp(str, "teletext"))
@@ -348,13 +348,14 @@ xmltv_parse_accessibility
 /*
  * Previously shown
  */
-static int _xmltv_parse_previously_shown
-  ( epg_broadcast_t *ebc, time_t *first_aired,
-    htsmsg_t *tag, epg_changes_t *changes )
-{
-  int ret;
-  const char *start;
-  if (!ebc || !tag) return 0;
+static int _xmltv_parse_previously_shown(epg_broadcast_t* ebc,
+    time_t*                                               first_aired,
+    htsmsg_t*                                             tag,
+    epg_changes_t*                                        changes) {
+  int         ret;
+  const char* start;
+  if (!ebc || !tag)
+    return 0;
   ret = epg_broadcast_set_is_repeat(ebc, 1, changes);
   if ((start = htsmsg_xml_get_attr_str(tag, "start")))
     *first_aired = _xmltv_str2time(start);
@@ -364,31 +365,28 @@ static int _xmltv_parse_previously_shown
 /*
  * Date finished, typically copyright date.
  */
-static int _xmltv_parse_date_finished
-  ( epg_broadcast_t *ebc,
-    htsmsg_t *tag, epg_changes_t *changes )
-{
-  if (!ebc || !tag) return 0;
-  const char *str = htsmsg_xml_get_cdata_str(tag, "date");
+static int _xmltv_parse_date_finished(epg_broadcast_t* ebc, htsmsg_t* tag, epg_changes_t* changes) {
+  if (!ebc || !tag)
+    return 0;
+  const char* str = htsmsg_xml_get_cdata_str(tag, "date");
   if (str) {
-      /* Technically the date could contain information about month
-       * and even second it was completed.  We only want the four
-       * digit year.
-       */
-      const size_t len = strlen(str);
-      if (len >= 4) {
-          char year_buf[32];
-          strlcpy(year_buf, str, 5);
-          const int64_t year = atoll(year_buf);
-          /* Sanity check the year before copying it over. */
-          if (year > 1800 && year < 2500) {
-              return epg_broadcast_set_copyright_year(ebc, year, changes);
-          }
+    /* Technically the date could contain information about month
+     * and even second it was completed.  We only want the four
+     * digit year.
+     */
+    const size_t len = strlen(str);
+    if (len >= 4) {
+      char year_buf[32];
+      strlcpy(year_buf, str, 5);
+      const int64_t year = atoll(year_buf);
+      /* Sanity check the year before copying it over. */
+      if (year > 1800 && year < 2500) {
+        return epg_broadcast_set_copyright_year(ebc, year, changes);
       }
+    }
   }
   return 0;
 }
-
 
 /*
  * Star rating
@@ -396,23 +394,27 @@ static int _xmltv_parse_date_finished
  *     <value>3.3/5</value>
  *   </star-rating>
  */
-static int _xmltv_parse_star_rating
-  ( epg_broadcast_t *ebc, htsmsg_t *body, epg_changes_t *changes )
-{
-  double a, b;
-  htsmsg_t *stars, *tags;
+static int _xmltv_parse_star_rating(epg_broadcast_t* ebc, htsmsg_t* body, epg_changes_t* changes) {
+  double      a, b;
+  htsmsg_t *  stars, *tags;
   const char *s1, *s2;
-  char *s1end, *s2end;
+  char *      s1end, *s2end;
 
-  if (!ebc || !body) return 0;
-  if (!(stars = htsmsg_get_map(body, "star-rating"))) return 0;
-  if (!(tags  = htsmsg_get_map(stars, "tags"))) return 0;
-  if (!(s1 = htsmsg_xml_get_cdata_str(tags, "value"))) return 0;
-  if (!(s2 = strstr(s1, "/"))) return 0;
+  if (!ebc || !body)
+    return 0;
+  if (!(stars = htsmsg_get_map(body, "star-rating")))
+    return 0;
+  if (!(tags = htsmsg_get_map(stars, "tags")))
+    return 0;
+  if (!(s1 = htsmsg_xml_get_cdata_str(tags, "value")))
+    return 0;
+  if (!(s2 = strstr(s1, "/")))
+    return 0;
 
   a = strtod(s1, &s1end);
   b = strtod(s2 + 1, &s2end);
-  if ( a == 0.0f || b == 0.0f) return 0;
+  if (a == 0.0f || b == 0.0f)
+    return 0;
 
   return epg_broadcast_set_star_rating(ebc, (100 * a) / b, changes);
 }
@@ -445,62 +447,66 @@ static int _xmltv_parse_star_rating
  * [rating system=MPAA] values R, PG, G, PG-13 etc
  * [rating system=advisory] values "strong sexual content","Language", etc
  */
-static int _xmltv_parse_age_rating
-  ( epg_broadcast_t *ebc, htsmsg_t *body, epg_changes_t *changes )
-{
-  uint8_t age = 0;
-  htsmsg_t *rating, *tags, *attrib;
-  const char *s1;
+static int _xmltv_parse_age_rating(epg_broadcast_t* ebc, htsmsg_t* body, epg_changes_t* changes) {
+  uint8_t     age = 0;
+  htsmsg_t *  rating, *tags, *attrib;
+  const char* s1;
 
-  if (!ebc || !body) return 0;
+  if (!ebc || !body)
+    return 0;
 
-  htsmsg_field_t *f;
+  htsmsg_field_t* f;
 
-  const char        *rating_system;   //System attribute from the 'rating' tag : <rating system="ACMA">
-  ratinglabel_t     *rl = NULL;
+  const char*    rating_system; // System attribute from the 'rating' tag : <rating system="ACMA">
+  ratinglabel_t* rl = NULL;
 
-  //Clear the rating label.
-  //If the event is already in the EPG DB with another
-  //rating label, this will clear the existing rating lable
-  //prior to setting the new one -if- the new one
-  //just happens to be null.
+  // Clear the rating label.
+  // If the event is already in the EPG DB with another
+  // rating label, this will clear the existing rating lable
+  // prior to setting the new one -if- the new one
+  // just happens to be null.
   ebc->rating_label = rl;
 
-  //Only look for rating labels if enabled.
-  if(epggrab_conf.epgdb_processparentallabels){
+  // Only look for rating labels if enabled.
+  if (epggrab_conf.epgdb_processparentallabels) {
     HTSMSG_FOREACH(f, body) {
       if (!strcmp(htsmsg_field_name(f), "rating") && (rating = htsmsg_get_map_by_field(f))) {
-        //Look for a 'system' attribute of the 'rating' tag
+        // Look for a 'system' attribute of the 'rating' tag
         rating_system = NULL;
-        if ((attrib = htsmsg_get_map(rating, "attrib"))){
+        if ((attrib = htsmsg_get_map(rating, "attrib"))) {
           rating_system = htsmsg_get_str(attrib, "system");
-        }//END get the atrtibutes for the rating tag.
-        //Look for sub-tags of the 'rating' tag
-        if ((tags  = htsmsg_get_map(rating, "tags"))) {
-          //Look the the 'value' tag containing the actual rating text
+        } // END get the atrtibutes for the rating tag.
+        // Look for sub-tags of the 'rating' tag
+        if ((tags = htsmsg_get_map(rating, "tags"))) {
+          // Look the the 'value' tag containing the actual rating text
           if ((s1 = htsmsg_xml_get_cdata_str(tags, "value"))) {
-            //tvherror(LS_RATINGLABELS, "XMLTV got system: '%s' / '%s'", rating_system, s1);
+            // tvherror(LS_RATINGLABELS, "XMLTV got system: '%s' / '%s'", rating_system, s1);
 
             rl = ratinglabel_find_from_xmltv(rating_system, s1);
 
-            if(rl){
-              tvhtrace(LS_RATINGLABELS, "Found label: '%s' / '%s' / '%s' / '%d'", rl->rl_authority, rl->rl_label, rl->rl_country, rl->rl_age);
+            if (rl) {
+              tvhtrace(LS_RATINGLABELS,
+                  "Found label: '%s' / '%s' / '%s' / '%d'",
+                  rl->rl_authority,
+                  rl->rl_label,
+                  rl->rl_country,
+                  rl->rl_age);
               ebc->rating_label = rl;
-              if (rl->rl_display_age >= 0 && rl->rl_display_age < 22){
+              if (rl->rl_display_age >= 0 && rl->rl_display_age < 22) {
                 return epg_broadcast_set_age_rating(ebc, rl->rl_display_age, changes);
-              }//END age sanity test
-            }//END we matched a rating label
-          }//END we got a value to inspect
-        }//END get sub-tags of the rating tag.
-      }//END got the 'rating' tag.
-    }//END loop through each XML tag
-  }//END rating labels enabled
+              } // END age sanity test
+            } // END we matched a rating label
+          } // END we got a value to inspect
+        } // END get sub-tags of the rating tag.
+      } // END got the 'rating' tag.
+    } // END loop through each XML tag
+  } // END rating labels enabled
   else
-  //Perform the existing XMLTV lookup
+  // Perform the existing XMLTV lookup
   {
     HTSMSG_FOREACH(f, body) {
       if (!strcmp(htsmsg_field_name(f), "rating") && (rating = htsmsg_get_map_by_field(f))) {
-        if ((tags  = htsmsg_get_map(rating, "tags"))) {
+        if ((tags = htsmsg_get_map(rating, "tags"))) {
           if ((s1 = htsmsg_xml_get_cdata_str(tags, "value"))) {
             /* We map some common ratings since some movies only
              * have one of these flags rather than an age rating.
@@ -527,22 +533,20 @@ static int _xmltv_parse_age_rating
     }
   }
 
-
   return 0;
 }
 
 /*
  * Parse category list
  */
-static epg_genre_list_t
-*_xmltv_parse_categories ( htsmsg_t *tags )
-{
-  htsmsg_t *e;
-  htsmsg_field_t *f;
-  epg_genre_list_t *egl = NULL;
+static epg_genre_list_t* _xmltv_parse_categories(htsmsg_t* tags) {
+  htsmsg_t*         e;
+  htsmsg_field_t*   f;
+  epg_genre_list_t* egl = NULL;
   HTSMSG_FOREACH(f, tags) {
     if (!strcmp(htsmsg_field_name(f), "category") && (e = htsmsg_get_map_by_field(f))) {
-      if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
+      if (!egl)
+        egl = calloc(1, sizeof(epg_genre_list_t));
       epg_genre_list_add_by_str(egl, htsmsg_get_str(e, "cdata"), NULL);
     }
   }
@@ -552,16 +556,15 @@ static epg_genre_list_t
 /*
  * Parse a series of language strings
  */
-static void
-_xmltv_parse_lang_str ( lang_str_t **ls, htsmsg_t *tags, const char *tname )
-{
-  htsmsg_t *e, *attrib;
-  htsmsg_field_t *f;
-  const char *lang;
+static void _xmltv_parse_lang_str(lang_str_t** ls, htsmsg_t* tags, const char* tname) {
+  htsmsg_t *      e, *attrib;
+  htsmsg_field_t* f;
+  const char*     lang;
 
   HTSMSG_FOREACH(f, tags) {
     if (!strcmp(htsmsg_field_name(f), tname) && (e = htsmsg_get_map_by_field(f))) {
-      if (!*ls) *ls = lang_str_create();
+      if (!*ls)
+        *ls = lang_str_create();
       lang = NULL;
       if ((attrib = htsmsg_get_map(e, "attrib")))
         lang = htsmsg_get_str(attrib, "lang");
@@ -572,19 +575,18 @@ _xmltv_parse_lang_str ( lang_str_t **ls, htsmsg_t *tags, const char *tname )
 
 /// Make a string list from the contents of all tags in the message
 /// that have tagname.
-__attribute__((warn_unused_result))
-static string_list_t *
- _xmltv_make_str_list_from_matching(htsmsg_t *tags, const char *tagname)
-{
-  htsmsg_t *e;
-  htsmsg_field_t *f;
-  string_list_t *tag_list = NULL;
+__attribute__((warn_unused_result)) static string_list_t*
+_xmltv_make_str_list_from_matching(htsmsg_t* tags, const char* tagname) {
+  htsmsg_t*       e;
+  htsmsg_field_t* f;
+  string_list_t*  tag_list = NULL;
 
   HTSMSG_FOREACH(f, tags) {
     if (!strcmp(htsmsg_field_name(f), tagname) && (e = htsmsg_get_map_by_field(f))) {
-      const char *str = htsmsg_get_str(e, "cdata");
+      const char* str = htsmsg_get_str(e, "cdata");
       if (str && *str) {
-        if (!tag_list) tag_list = string_list_create();
+        if (!tag_list)
+          tag_list = string_list_create();
         string_list_insert_lowercase(tag_list, str);
       }
     }
@@ -592,7 +594,6 @@ static string_list_t *
 
   return tag_list;
 }
-
 
 /// Parse credits from the message tags and store the name/type (such
 /// as actor, director) in to out_credits (created if necessary).
@@ -607,58 +608,58 @@ static string_list_t *
 ///
 /// Returns string list of {"Fred Foo", "Simon Scott", "Vic Vicson"} and
 /// out_credits containing the names and actor/director.
-__attribute__((warn_unused_result))
-static string_list_t *
-_xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
-{
-  htsmsg_t *credits = htsmsg_get_map(tags, "credits");
+__attribute__((warn_unused_result)) static string_list_t*
+_xmltv_parse_credits(htsmsg_t** out_credits, htsmsg_t* tags) {
+  htsmsg_t* credits = htsmsg_get_map(tags, "credits");
   if (!credits)
     return NULL;
-  htsmsg_t *credits_tags;
-  if (!(credits_tags  = htsmsg_get_map(credits, "tags")))
+  htsmsg_t* credits_tags;
+  if (!(credits_tags = htsmsg_get_map(credits, "tags")))
     return NULL;
 
-  string_list_t *credits_names = NULL;
-  htsmsg_t *e;
-  htsmsg_field_t *f;
+  string_list_t*  credits_names = NULL;
+  htsmsg_t*       e;
+  htsmsg_field_t* f;
 
   HTSMSG_FOREACH(f, credits_tags) {
-    const char *fname = htsmsg_field_name(f);
-    if ((!strcmp(fname, "actor") ||
-         !strcmp(fname, "director") ||
-         !strcmp(fname, "guest") ||
-         !strcmp(fname, "presenter") ||
-         !strcmp(fname, "writer")
-         ) &&
-        (e = htsmsg_get_map_by_field(f)))  {
+    const char* fname = htsmsg_field_name(f);
+    if ((!strcmp(fname, "actor") || !strcmp(fname, "director") || !strcmp(fname, "guest") ||
+            !strcmp(fname, "presenter") || !strcmp(fname, "writer")) &&
+        (e = htsmsg_get_map_by_field(f))) {
       const char* str = htsmsg_get_str(e, "cdata");
-      char *s, *str2 = NULL, *saveptr = NULL;
-      if (str == NULL) continue;
+      char *      s, *str2 = NULL, *saveptr = NULL;
+      if (str == NULL)
+        continue;
       if (strstr(str, "|") == 0) {
 
         if (strlen(str) > 255) {
-          str2 = strdup(str);
+          str2      = strdup(str);
           str2[255] = '\0';
-          str = str2;
+          str       = str2;
         }
 
-        if (!credits_names) credits_names = string_list_create();
+        if (!credits_names)
+          credits_names = string_list_create();
         string_list_insert(credits_names, str);
 
-        if (!*out_credits) *out_credits = htsmsg_create_map();
+        if (!*out_credits)
+          *out_credits = htsmsg_create_map();
         htsmsg_add_str(*out_credits, str, fname);
       } else {
-        for (s = str2 = strdup(str); ; s = NULL) {
+        for (s = str2 = strdup(str);; s = NULL) {
           s = strtok_r(s, "|", &saveptr);
-          if (s == NULL) break;
+          if (s == NULL)
+            break;
 
           if (strlen(s) > 255)
             s[255] = '\0';
 
-          if (!credits_names) credits_names = string_list_create();
+          if (!credits_names)
+            credits_names = string_list_create();
           string_list_insert(credits_names, s);
 
-          if (!*out_credits) *out_credits = htsmsg_create_map();
+          if (!*out_credits)
+            *out_credits = htsmsg_create_map();
           htsmsg_add_str(*out_credits, s, fname);
         }
       }
@@ -674,20 +675,21 @@ _xmltv_parse_credits(htsmsg_t **out_credits, htsmsg_t *tags)
  * it to the desc with a prefix of name.
  */
 static void
-xmltv_appendit(lang_str_t **_desc, string_list_t *list,
-               const char *name, lang_str_t *summary)
-{
-  lang_str_t *desc, *lstr;
-  lang_str_ele_t *e;
-  const char *s;
-  if (!list) return;
-  char *str = string_list_2_csv(list, ',', 1);
-  if (!str) return;
+xmltv_appendit(lang_str_t** _desc, string_list_t* list, const char* name, lang_str_t* summary) {
+  lang_str_t *    desc, *lstr;
+  lang_str_ele_t* e;
+  const char*     s;
+  if (!list)
+    return;
+  char* str = string_list_2_csv(list, ',', 1);
+  if (!str)
+    return;
   desc = NULL;
   lstr = *_desc ?: summary;
   if (lstr) {
-    RB_FOREACH(e, lstr, link) {
-      if (!desc) desc = lang_str_create();
+    RB_FOREACH (e, lstr, link) {
+      if (!desc)
+        desc = lang_str_create();
       s = *_desc ? lang_str_get_only(*_desc, e->lang) : NULL;
       if (s) {
         lang_str_append(desc, s, e->lang);
@@ -707,27 +709,29 @@ xmltv_appendit(lang_str_t **_desc, string_list_t *list,
 /**
  * Parse tags inside of a programme
  */
-static int _xmltv_parse_programme_tags
-  (epggrab_module_t *mod, channel_t *ch, htsmsg_t *tags,
-   time_t start, time_t stop, const char *icon,
-   epggrab_stats_t *stats)
-{
-  const int scrape_extra = ((epggrab_module_int_t *)mod)->xmltv_scrape_extra;
-  const int scrape_onto_desc = ((epggrab_module_int_t *)mod)->xmltv_scrape_onto_desc;
-  const int use_category_not_genre = ((epggrab_module_int_t *)mod)->xmltv_use_category_not_genre;
-  int save = 0;
-  epg_changes_t changes = 0;
-  epg_broadcast_t *ebc;
-  epg_genre_list_t *egl;
+static int _xmltv_parse_programme_tags(epggrab_module_t* mod,
+    channel_t*                                           ch,
+    htsmsg_t*                                            tags,
+    time_t                                               start,
+    time_t                                               stop,
+    const char*                                          icon,
+    epggrab_stats_t*                                     stats) {
+  const int     scrape_extra           = ((epggrab_module_int_t*)mod)->xmltv_scrape_extra;
+  const int     scrape_onto_desc       = ((epggrab_module_int_t*)mod)->xmltv_scrape_onto_desc;
+  const int     use_category_not_genre = ((epggrab_module_int_t*)mod)->xmltv_use_category_not_genre;
+  int           save                   = 0;
+  epg_changes_t changes                = 0;
+  epg_broadcast_t*  ebc;
+  epg_genre_list_t* egl;
   epg_episode_num_t epnum;
-  epg_set_t *set;
-  char *suri = NULL, *uri = NULL;
-  lang_str_t *title = NULL;
-  lang_str_t *desc = NULL;
-  lang_str_t *summary = NULL;
-  lang_str_t *subtitle = NULL;
-  time_t first_aired = 0;
-  int8_t bw = -1;
+  epg_set_t*        set;
+  char *            suri = NULL, *uri = NULL;
+  lang_str_t*       title       = NULL;
+  lang_str_t*       desc        = NULL;
+  lang_str_t*       summary     = NULL;
+  lang_str_t*       subtitle    = NULL;
+  time_t            first_aired = 0;
+  int8_t            bw          = -1;
 
   if (epg_channel_ignore_broadcast(ch, start))
     return 0;
@@ -752,10 +756,10 @@ static int _xmltv_parse_programme_tags
    * from programme such as credits and keywords.
    */
   if (scrape_extra || scrape_onto_desc) {
-    htsmsg_t      *credits        = NULL;
-    string_list_t *credits_names  = _xmltv_parse_credits(&credits, tags);
-    string_list_t *category       = _xmltv_make_str_list_from_matching(tags, "category");
-    string_list_t *keyword        = _xmltv_make_str_list_from_matching(tags, "keyword");
+    htsmsg_t*      credits       = NULL;
+    string_list_t* credits_names = _xmltv_parse_credits(&credits, tags);
+    string_list_t* category      = _xmltv_make_str_list_from_matching(tags, "category");
+    string_list_t* keyword       = _xmltv_make_str_list_from_matching(tags, "keyword");
 
     if (scrape_extra && credits)
       save |= epg_broadcast_set_credits(ebc, credits, &changes);
@@ -763,7 +767,6 @@ static int _xmltv_parse_programme_tags
       save |= epg_broadcast_set_category(ebc, category, &changes);
     if (scrape_extra && keyword)
       save |= epg_broadcast_set_keyword(ebc, keyword, &changes);
-
 
     /* Append the details on to the description, mainly for legacy
      * clients. This allow you to view the details in the description
@@ -776,10 +779,14 @@ static int _xmltv_parse_programme_tags
       xmltv_appendit(&desc, keyword, N_("Keywords: "), summary);
     }
 
-    if (credits)          htsmsg_destroy(credits);
-    if (credits_names)    string_list_destroy(credits_names);
-    if (category)         string_list_destroy(category);
-    if (keyword)          string_list_destroy(keyword);
+    if (credits)
+      htsmsg_destroy(credits);
+    if (credits_names)
+      string_list_destroy(credits_names);
+    if (category)
+      string_list_destroy(category);
+    if (keyword)
+      string_list_destroy(keyword);
 
 #undef APPENDIT
   } /* desc */
@@ -798,11 +805,11 @@ static int _xmltv_parse_programme_tags
   save |= xmltv_parse_accessibility(ebc, tags, &changes);
 
   /* Misc */
-  save |= _xmltv_parse_previously_shown(ebc, &first_aired,
-                                        htsmsg_get_map(tags, "previously-shown"),
-                                        &changes);
-  if (htsmsg_get_map(tags, "premiere") ||
-      htsmsg_get_map(tags, "new"))
+  save |= _xmltv_parse_previously_shown(ebc,
+      &first_aired,
+      htsmsg_get_map(tags, "previously-shown"),
+      &changes);
+  if (htsmsg_get_map(tags, "premiere") || htsmsg_get_map(tags, "new"))
     save |= epg_broadcast_set_is_new(ebc, 1, &changes);
 
   /*
@@ -884,55 +891,66 @@ static int _xmltv_parse_programme_tags
     stats->broadcasts.modified++;
 
   /* Cleanup */
-  if (title)    lang_str_destroy(title);
-  if (subtitle) lang_str_destroy(subtitle);
-  if (desc)     lang_str_destroy(desc);
-  if (summary)  lang_str_destroy(summary);
+  if (title)
+    lang_str_destroy(title);
+  if (subtitle)
+    lang_str_destroy(subtitle);
+  if (desc)
+    lang_str_destroy(desc);
+  if (summary)
+    lang_str_destroy(summary);
   return save;
 }
 
 /**
  * Parse a <programme> tag from xmltv
  */
-static int _xmltv_parse_programme
-  (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
-{
-  int chsave = 0, save = 0;
-  htsmsg_t *attribs, *tags, *subtag;
-  const char *s, *chid, *icon = NULL;
-  time_t start, stop;
-  channel_t *ch;
-  epggrab_channel_t *ec;
-  idnode_list_mapping_t *ilm;
+static int _xmltv_parse_programme(epggrab_module_t* mod, htsmsg_t* body, epggrab_stats_t* stats) {
+  int                    chsave = 0, save = 0;
+  htsmsg_t *             attribs, *tags, *subtag;
+  const char *           s, *chid, *icon = NULL;
+  time_t                 start, stop;
+  channel_t*             ch;
+  epggrab_channel_t*     ec;
+  idnode_list_mapping_t* ilm;
 
-  if(body == NULL) return 0;
+  if (body == NULL)
+    return 0;
 
-  if((attribs = htsmsg_get_map(body,    "attrib"))  == NULL) return 0;
-  if((tags    = htsmsg_get_map(body,    "tags"))    == NULL) return 0;
-  if((chid    = htsmsg_get_str(attribs, "channel")) == NULL) return 0;
-  if((ec      = epggrab_channel_find(mod, chid, 1, &chsave)) == NULL) return 0;
+  if ((attribs = htsmsg_get_map(body, "attrib")) == NULL)
+    return 0;
+  if ((tags = htsmsg_get_map(body, "tags")) == NULL)
+    return 0;
+  if ((chid = htsmsg_get_str(attribs, "channel")) == NULL)
+    return 0;
+  if ((ec = epggrab_channel_find(mod, chid, 1, &chsave)) == NULL)
+    return 0;
   if (chsave) {
     stats->channels.created++;
     stats->channels.modified++;
   }
-  if (!LIST_FIRST(&ec->channels)) return 0;
-  if((s       = htsmsg_get_str(attribs, "start"))   == NULL) return 0;
+  if (!LIST_FIRST(&ec->channels))
+    return 0;
+  if ((s = htsmsg_get_str(attribs, "start")) == NULL)
+    return 0;
   start = _xmltv_str2time(s);
-  if((s       = htsmsg_get_str(attribs, "stop"))    == NULL) return 0;
-  stop  = _xmltv_str2time(s);
+  if ((s = htsmsg_get_str(attribs, "stop")) == NULL)
+    return 0;
+  stop = _xmltv_str2time(s);
 
-  if((subtag  = htsmsg_get_map(tags,    "icon"))   != NULL &&
-     (attribs = htsmsg_get_map(subtag,  "attrib")) != NULL)
+  if ((subtag = htsmsg_get_map(tags, "icon")) != NULL &&
+      (attribs = htsmsg_get_map(subtag, "attrib")) != NULL)
     icon = htsmsg_get_str(attribs, "src");
 
-  if(stop <= start || stop <= gclk()) return 0;
+  if (stop <= start || stop <= gclk())
+    return 0;
 
   ec->laststamp = gclk();
-  LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
-    ch = (channel_t *)ilm->ilm_in2;
-    if (!ch->ch_enabled || ch->ch_epg_parent) continue;
-    save |= _xmltv_parse_programme_tags(mod, ch, tags,
-                                        start, stop, icon, stats);
+  LIST_FOREACH (ilm, &ec->channels, ilm_in1_link) {
+    ch = (channel_t*)ilm->ilm_in2;
+    if (!ch->ch_enabled || ch->ch_epg_parent)
+      continue;
+    save |= _xmltv_parse_programme_tags(mod, ch, tags, start, stop, icon, stats);
   }
   return save;
 }
@@ -940,32 +958,37 @@ static int _xmltv_parse_programme
 /**
  * Parse a <channel> tag from xmltv
  */
-static int _xmltv_parse_channel
-  (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
-{
-  int save = 0, chnum = ((epggrab_module_ext_t *)mod)->xmltv_chnum;
-  htsmsg_t *attribs, *tags, *subtag;
-  const char *id, *name, *icon;
-  epggrab_channel_t *ch;
-  htsmsg_field_t *f;
-  htsmsg_t *dnames;
+static int _xmltv_parse_channel(epggrab_module_t* mod, htsmsg_t* body, epggrab_stats_t* stats) {
+  int                save = 0, chnum = ((epggrab_module_ext_t*)mod)->xmltv_chnum;
+  htsmsg_t *         attribs, *tags, *subtag;
+  const char *       id, *name, *icon;
+  epggrab_channel_t* ch;
+  htsmsg_field_t*    f;
+  htsmsg_t*          dnames;
 
-  if(body == NULL) return 0;
+  if (body == NULL)
+    return 0;
 
-  if((attribs = htsmsg_get_map(body, "attrib"))  == NULL) return 0;
-  if((id      = htsmsg_get_str(attribs, "id"))   == NULL) return 0;
-  if((tags    = htsmsg_get_map(body, "tags"))    == NULL) return 0;
-  if((ch      = epggrab_channel_find(mod, id, 1, &save)) == NULL) return 0;
+  if ((attribs = htsmsg_get_map(body, "attrib")) == NULL)
+    return 0;
+  if ((id = htsmsg_get_str(attribs, "id")) == NULL)
+    return 0;
+  if ((tags = htsmsg_get_map(body, "tags")) == NULL)
+    return 0;
+  if ((ch = epggrab_channel_find(mod, id, 1, &save)) == NULL)
+    return 0;
   ch->laststamp = gclk();
   stats->channels.total++;
-  if (save) stats->channels.created++;
+  if (save)
+    stats->channels.created++;
   dnames = htsmsg_create_list();
 
   HTSMSG_FOREACH(f, tags) {
-    if (!(subtag = htsmsg_field_get_map(f))) continue;
+    if (!(subtag = htsmsg_field_get_map(f)))
+      continue;
     if (strcmp(htsmsg_field_name(f), "display-name") == 0) {
-      name = htsmsg_get_str(subtag, "cdata");
-      const char *cur = name;
+      name            = htsmsg_get_str(subtag, "cdata");
+      const char* cur = name;
 
       if (chnum && cur) {
         /* Some xmltv providers supply a display-name that is the
@@ -999,23 +1022,23 @@ static int _xmltv_parse_channel
         if (major && (!*cur || (*cur == ' ' && chnum == 1))) {
           save |= epggrab_channel_set_number(ch, major, minor);
           /* Skip extra spaces between channel number and actual name */
-          while (*cur == ' ') ++cur;
+          while (*cur == ' ')
+            ++cur;
         }
       }
 
       if (cur && *cur)
         htsmsg_add_str_exclusive(dnames, cur);
-    }
-    else if (strcmp(htsmsg_field_name(f), "icon") == 0) {
-      if ((attribs = htsmsg_get_map(subtag,  "attrib")) != NULL &&
-          (icon    = htsmsg_get_str(attribs, "src"))    != NULL) {
+    } else if (strcmp(htsmsg_field_name(f), "icon") == 0) {
+      if ((attribs = htsmsg_get_map(subtag, "attrib")) != NULL &&
+          (icon = htsmsg_get_str(attribs, "src")) != NULL) {
         save |= epggrab_channel_set_icon(ch, icon);
       }
     }
   }
 
   HTSMSG_FOREACH(f, dnames) {
-    const char *s;
+    const char* s;
 
     if ((s = htsmsg_field_get_str(f)) != NULL)
       save |= epggrab_channel_set_name(ch, s);
@@ -1030,14 +1053,12 @@ static int _xmltv_parse_channel
 /**
  *
  */
-static int _xmltv_parse_tv
-  (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
-{
-  int gsave = 0, save;
-  htsmsg_t *tags;
-  htsmsg_field_t *f;
+static int _xmltv_parse_tv(epggrab_module_t* mod, htsmsg_t* body, epggrab_stats_t* stats) {
+  int             gsave = 0, save;
+  htsmsg_t*       tags;
+  htsmsg_field_t* f;
 
-  if((tags = htsmsg_get_map(body, "tags")) == NULL)
+  if ((tags = htsmsg_get_map(body, "tags")) == NULL)
     return 0;
 
   tvh_mutex_lock(&global_lock);
@@ -1046,14 +1067,15 @@ static int _xmltv_parse_tv
 
   HTSMSG_FOREACH(f, tags) {
     save = 0;
-    if(!strcmp(htsmsg_field_name(f), "channel")) {
+    if (!strcmp(htsmsg_field_name(f), "channel")) {
       tvh_mutex_lock(&global_lock);
       save = _xmltv_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
       tvh_mutex_unlock(&global_lock);
-    } else if(!strcmp(htsmsg_field_name(f), "programme")) {
+    } else if (!strcmp(htsmsg_field_name(f), "programme")) {
       tvh_mutex_lock(&global_lock);
       save = _xmltv_parse_programme(mod, htsmsg_get_map_by_field(f), stats);
-      if (save) epg_updated();
+      if (save)
+        epg_updated();
       tvh_mutex_unlock(&global_lock);
     }
     gsave |= save;
@@ -1066,15 +1088,13 @@ static int _xmltv_parse_tv
   return gsave;
 }
 
-static int _xmltv_parse
-  ( void *mod, htsmsg_t *data, epggrab_stats_t *stats )
-{
+static int _xmltv_parse(void* mod, htsmsg_t* data, epggrab_stats_t* stats) {
   htsmsg_t *tags, *tv;
 
-  if((tags = htsmsg_get_map(data, "tags")) == NULL)
+  if ((tags = htsmsg_get_map(data, "tags")) == NULL)
     return 0;
 
-  if((tv = htsmsg_get_map(tags, "tv")) == NULL)
+  if ((tv = htsmsg_get_map(tags, "tv")) == NULL)
     return 0;
 
   return _xmltv_parse_tv(mod, tv, stats);
@@ -1085,147 +1105,122 @@ static int _xmltv_parse
  * ***********************************************************************/
 
 #define DN_CHNUM_NAME N_("Channel numbers (heuristic)")
-#define DN_CHNUM_DESC \
+#define DN_CHNUM_DESC                                                \
   N_("Try to obtain channel numbers from the display-name xml tag. " \
      "If the first word is number, it is used as the channel number.")
 
 #define SCRAPE_EXTRA_NAME N_("Scrape credits and extra information")
-#define SCRAPE_EXTRA_DESC \
-  N_("Obtain list of credits (actors, etc.), keywords and extra information from the xml tags (if available). "  \
-     "Some xmltv providers supply a list of actors and additional keywords to " \
-     "describe programmes. This option will retrieve this additional information. " \
-     "This can be very detailed (20+ actors per movie) " \
-     "and will take a lot of memory and resources on this box, and will " \
-     "pass this information to your client machines and GUI too, using " \
-     "memory and resources on those boxes too. " \
+#define SCRAPE_EXTRA_DESC                                                                       \
+  N_("Obtain list of credits (actors, etc.), keywords and extra information from the xml tags " \
+     "(if available). "                                                                         \
+     "Some xmltv providers supply a list of actors and additional keywords to "                 \
+     "describe programmes. This option will retrieve this additional information. "             \
+     "This can be very detailed (20+ actors per movie) "                                        \
+     "and will take a lot of memory and resources on this box, and will "                       \
+     "pass this information to your client machines and GUI too, using "                        \
+     "memory and resources on those boxes too. "                                                \
      "Do not enable on low-spec machines.")
 
 #define SCRAPE_ONTO_DESC_NAME N_("Alter programme description to include detailed information")
-#define SCRAPE_ONTO_DESC_DESC \
-  N_("If enabled then this will alter the programme descriptions to " \
-     "include information about actors, keywords and categories (if available from the xmltv file). " \
-     "This is useful for legacy clients that can not parse newer Tvheadend messages " \
-     "containing this information or do not display the information. "\
-     "For example the modified description might include 'Starring: Lorem Ipsum'. " \
-     "The description is altered for all clients, both legacy, modern, and GUI. "\
-     "Enabling scraping of detailed information can use significant resources (memory and CPU). "\
-     "You should not enable this if you use 'duplicate detect if different description' " \
+#define SCRAPE_ONTO_DESC_DESC                                                                     \
+  N_("If enabled then this will alter the programme descriptions to "                             \
+     "include information about actors, keywords and categories (if available from the xmltv "    \
+     "file). "                                                                                    \
+     "This is useful for legacy clients that can not parse newer Tvheadend messages "             \
+     "containing this information or do not display the information. "                            \
+     "For example the modified description might include 'Starring: Lorem Ipsum'. "               \
+     "The description is altered for all clients, both legacy, modern, and GUI. "                 \
+     "Enabling scraping of detailed information can use significant resources (memory and CPU). " \
+     "You should not enable this if you use 'duplicate detect if different description' "         \
      "since the descriptions will change due to added information.")
 
 #define USE_CATEGORY_NOT_GENRE_NAME N_("Use category instead of genre")
-#define USE_CATEGORY_NOT_GENRE_DESC \
-  N_("Some xmltv providers supply multiple category tags, however mapping "\
-     "to genres is imprecise and many categories have no genre mapping "\
-     "at all. Some frontends will only pass through categories " \
-     "unchanged if there is no genre so for these we can " \
-     "avoid the genre mappings and only use categories. " \
-     "If this option is not ticked then we continue to map " \
+#define USE_CATEGORY_NOT_GENRE_DESC                                         \
+  N_("Some xmltv providers supply multiple category tags, however mapping " \
+     "to genres is imprecise and many categories have no genre mapping "    \
+     "at all. Some frontends will only pass through categories "            \
+     "unchanged if there is no genre so for these we can "                  \
+     "avoid the genre mappings and only use categories. "                   \
+     "If this option is not ticked then we continue to map "                \
      "xmltv categories to genres and supply both to clients.")
 
-static htsmsg_t *
-xmltv_dn_chnum_list ( void *o, const char *lang )
-{
+static htsmsg_t* xmltv_dn_chnum_list(void* o, const char* lang) {
   static const struct strtab tab[] = {
-    { N_("Disabled"),          0 },
-    { N_("First word"),        1 },
-    { N_("Only digits"),       2 },
+      {N_("Disabled"), 0},
+      {N_("First word"), 1},
+      {N_("Only digits"), 2},
   };
   return strtab2htsmsg(tab, 1, lang);
 }
 
-const idclass_t epggrab_mod_int_xmltv_class = {
-  .ic_super      = &epggrab_mod_int_class,
-  .ic_class      = "epggrab_mod_int_xmltv",
-  .ic_caption    = N_("EPG - Internal XMLTV EPG Grabber"),
-  .ic_properties = (const property_t[]){
-    {
-      .type   = PT_INT,
-      .id     = "dn_chnum",
-      .name   = DN_CHNUM_NAME,
-      .desc   = DN_CHNUM_DESC,
-      .off    = offsetof(epggrab_module_int_t, xmltv_chnum),
-      .list   = xmltv_dn_chnum_list,
-      .opts   = PO_DOC_NLIST,
-      .group  = 1
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "scrape_extra",
-      .name   = SCRAPE_EXTRA_NAME,
-      .desc   = SCRAPE_EXTRA_DESC,
-      .off    = offsetof(epggrab_module_int_t, xmltv_scrape_extra),
-      .group  = 1
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "scrape_onto_desc",
-      .name   = SCRAPE_ONTO_DESC_NAME,
-      .desc   = SCRAPE_ONTO_DESC_DESC,
-      .off    = offsetof(epggrab_module_int_t, xmltv_scrape_onto_desc),
-      .group  = 1
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "use_category_not_genre",
-      .name   = USE_CATEGORY_NOT_GENRE_NAME,
-      .desc   = USE_CATEGORY_NOT_GENRE_DESC,
-      .off    = offsetof(epggrab_module_int_t, xmltv_use_category_not_genre),
-      .group  = 1
-    },
-    {}
-  }
-};
+const idclass_t epggrab_mod_int_xmltv_class = {.ic_super = &epggrab_mod_int_class,
+    .ic_class                                            = "epggrab_mod_int_xmltv",
+    .ic_caption                                          = N_("EPG - Internal XMLTV EPG Grabber"),
+    .ic_properties                                       = (const property_t[]){{.type     = PT_INT,
+                                                                                    .id    = "dn_chnum",
+                                                                                    .name  = DN_CHNUM_NAME,
+                                                                                    .desc  = DN_CHNUM_DESC,
+                                                                                    .off   = offsetof(epggrab_module_int_t, xmltv_chnum),
+                                                                                    .list  = xmltv_dn_chnum_list,
+                                                                                    .opts  = PO_DOC_NLIST,
+                                                                                    .group = 1},
+                                              {.type     = PT_BOOL,
+                                                  .id    = "scrape_extra",
+                                                  .name  = SCRAPE_EXTRA_NAME,
+                                                  .desc  = SCRAPE_EXTRA_DESC,
+                                                  .off   = offsetof(epggrab_module_int_t, xmltv_scrape_extra),
+                                                  .group = 1},
+                                              {.type     = PT_BOOL,
+                                                  .id    = "scrape_onto_desc",
+                                                  .name  = SCRAPE_ONTO_DESC_NAME,
+                                                  .desc  = SCRAPE_ONTO_DESC_DESC,
+                                                  .off   = offsetof(epggrab_module_int_t, xmltv_scrape_onto_desc),
+                                                  .group = 1},
+                                              {.type     = PT_BOOL,
+                                                  .id    = "use_category_not_genre",
+                                                  .name  = USE_CATEGORY_NOT_GENRE_NAME,
+                                                  .desc  = USE_CATEGORY_NOT_GENRE_DESC,
+                                                  .off   = offsetof(epggrab_module_int_t, xmltv_use_category_not_genre),
+                                                  .group = 1},
+                                              {}}};
 
-const idclass_t epggrab_mod_ext_xmltv_class = {
-  .ic_super      = &epggrab_mod_ext_class,
-  .ic_class      = "epggrab_mod_ext_xmltv",
-  .ic_caption    = N_("EPG - External XMLTV EPG Grabber"),
-  .ic_properties = (const property_t[]){
-    {
-      .type   = PT_BOOL,
-      .id     = "dn_chnum",
-      .name   = DN_CHNUM_NAME,
-      .desc   = DN_CHNUM_DESC,
-      .off    = offsetof(epggrab_module_ext_t, xmltv_chnum),
-      .opts   = PO_DOC_NLIST,
-      .group  = 1
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "scrape_extra",
-      .name   = SCRAPE_EXTRA_NAME,
-      .desc   = SCRAPE_EXTRA_DESC,
-      .off    = offsetof(epggrab_module_int_t, xmltv_scrape_extra),
-      .group  = 1
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "scrape_onto_desc",
-      .name   = SCRAPE_ONTO_DESC_NAME,
-      .desc   = SCRAPE_ONTO_DESC_DESC,
-      .off    = offsetof(epggrab_module_int_t, xmltv_scrape_onto_desc),
-      .group  = 1
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "use_category_not_genre",
-      .name   = USE_CATEGORY_NOT_GENRE_NAME,
-      .desc   = USE_CATEGORY_NOT_GENRE_DESC,
-      .off    = offsetof(epggrab_module_int_t, xmltv_use_category_not_genre),
-      .group  = 1
-    },
-    {}
-  }
-};
+const idclass_t epggrab_mod_ext_xmltv_class = {.ic_super = &epggrab_mod_ext_class,
+    .ic_class                                            = "epggrab_mod_ext_xmltv",
+    .ic_caption                                          = N_("EPG - External XMLTV EPG Grabber"),
+    .ic_properties                                       = (const property_t[]){{.type     = PT_BOOL,
+                                                                                    .id    = "dn_chnum",
+                                                                                    .name  = DN_CHNUM_NAME,
+                                                                                    .desc  = DN_CHNUM_DESC,
+                                                                                    .off   = offsetof(epggrab_module_ext_t, xmltv_chnum),
+                                                                                    .opts  = PO_DOC_NLIST,
+                                                                                    .group = 1},
+                                              {.type     = PT_BOOL,
+                                                  .id    = "scrape_extra",
+                                                  .name  = SCRAPE_EXTRA_NAME,
+                                                  .desc  = SCRAPE_EXTRA_DESC,
+                                                  .off   = offsetof(epggrab_module_int_t, xmltv_scrape_extra),
+                                                  .group = 1},
+                                              {.type     = PT_BOOL,
+                                                  .id    = "scrape_onto_desc",
+                                                  .name  = SCRAPE_ONTO_DESC_NAME,
+                                                  .desc  = SCRAPE_ONTO_DESC_DESC,
+                                                  .off   = offsetof(epggrab_module_int_t, xmltv_scrape_onto_desc),
+                                                  .group = 1},
+                                              {.type     = PT_BOOL,
+                                                  .id    = "use_category_not_genre",
+                                                  .name  = USE_CATEGORY_NOT_GENRE_NAME,
+                                                  .desc  = USE_CATEGORY_NOT_GENRE_DESC,
+                                                  .off   = offsetof(epggrab_module_int_t, xmltv_use_category_not_genre),
+                                                  .group = 1},
+                                              {}}};
 
-static void _xmltv_load_grabbers ( void )
-{
-  int outlen = -1, rd = -1;
-  size_t i, p, n;
-  char *outbuf;
-  char name[1000];
-  char *tmp, *tmp2 = NULL, *path;
-  epggrab_module_t *mod;
+static void _xmltv_load_grabbers(void) {
+  int               outlen = -1, rd = -1;
+  size_t            i, p, n;
+  char*             outbuf;
+  char              name[1000];
+  char *            tmp, *tmp2 = NULL, *path;
+  epggrab_module_t* mod;
 
   /* Load data */
   if (spawn_and_give_stdout(XMLTV_FIND, NULL, NULL, &rd, NULL, 1) >= 0)
@@ -1234,67 +1229,84 @@ static void _xmltv_load_grabbers ( void )
     close(rd);
 
   /* Process */
-  if ( outlen > 0 ) {
+  if (outlen > 0) {
     p = n = i = 0;
-    while ( i < outlen ) {
-      if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
+    while (i < outlen) {
+      if (outbuf[i] == '\n' || outbuf[i] == '\0') {
         outbuf[i] = '\0';
         sprintf(name, "XMLTV: %s", &outbuf[n]);
-        epggrab_module_int_create(NULL, &epggrab_mod_int_xmltv_class,
-                                  &outbuf[p], LS_XMLTV, "xmltv",
-                                  name, 3, &outbuf[p],
-                                  NULL, _xmltv_parse, NULL);
+        epggrab_module_int_create(NULL,
+            &epggrab_mod_int_xmltv_class,
+            &outbuf[p],
+            LS_XMLTV,
+            "xmltv",
+            name,
+            3,
+            &outbuf[p],
+            NULL,
+            _xmltv_parse,
+            NULL);
         p = n = i + 1;
-      } else if ( outbuf[i] == '\\') {
+      } else if (outbuf[i] == '\\') {
         memmove(outbuf, outbuf + 1, strlen(outbuf));
         if (outbuf[i])
           i++;
         continue;
-      } else if ( outbuf[i] == '|' ) {
+      } else if (outbuf[i] == '|') {
         outbuf[i] = '\0';
-        n = i + 1;
+        n         = i + 1;
       }
       i++;
     }
     free(outbuf);
 
-  /* Internal search */
+    /* Internal search */
   } else if ((tmp = getenv("PATH"))) {
     tvhdebug(LS_XMLTV, "using internal grab search");
-    char bin[PATH_MAX];
-    char *argv[] = {
-      NULL,
-      (char *)"--description",
-      NULL
-    };
-    path = strdup(tmp);
-    tmp  = strtok_r(path, ":", &tmp2);
+    char  bin[PATH_MAX];
+    char* argv[] = {NULL, (char*)"--description", NULL};
+    path         = strdup(tmp);
+    tmp          = strtok_r(path, ":", &tmp2);
     while (tmp) {
-      DIR *dir;
-      struct dirent *de;
-      struct stat st;
+      DIR*           dir;
+      struct dirent* de;
+      struct stat    st;
       if ((dir = opendir(tmp))) {
         while ((de = readdir(dir))) {
-          if (strstr(de->d_name, XMLTV_GRAB) != de->d_name) continue;
-          if (de->d_name[0] && de->d_name[strlen(de->d_name)-1] == '~') continue;
+          if (strstr(de->d_name, XMLTV_GRAB) != de->d_name)
+            continue;
+          if (de->d_name[0] && de->d_name[strlen(de->d_name) - 1] == '~')
+            continue;
           snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
-          if (stat(bin, &st)) continue;
-          if (!(st.st_mode & S_IEXEC)) continue;
-          if (!S_ISREG(st.st_mode)) continue;
+          if (stat(bin, &st))
+            continue;
+          if (!(st.st_mode & S_IEXEC))
+            continue;
+          if (!S_ISREG(st.st_mode))
+            continue;
           rd = -1;
           if (spawn_and_give_stdout(bin, argv, NULL, &rd, NULL, 1) >= 0 &&
               (outlen = file_readall(rd, &outbuf)) > 0) {
             close(rd);
-            if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';
+            if (outbuf[outlen - 1] == '\n')
+              outbuf[outlen - 1] = '\0';
             snprintf(name, sizeof(name), "XMLTV: %s", outbuf);
             mod = epggrab_module_find_by_id(bin);
             if (mod) {
-              free((void *)mod->name);
+              free((void*)mod->name);
               mod->name = strdup(outbuf);
             } else {
-              epggrab_module_int_create(NULL, &epggrab_mod_int_xmltv_class,
-                                        bin, LS_XMLTV, "xmltv", name, 3, bin,
-                                        NULL, _xmltv_parse, NULL);
+              epggrab_module_int_create(NULL,
+                  &epggrab_mod_int_xmltv_class,
+                  bin,
+                  LS_XMLTV,
+                  "xmltv",
+                  name,
+                  3,
+                  bin,
+                  NULL,
+                  _xmltv_parse,
+                  NULL);
             }
             free(outbuf);
           } else {
@@ -1310,22 +1322,25 @@ static void _xmltv_load_grabbers ( void )
   }
 }
 
-void xmltv_init ( void )
-{
+void xmltv_init(void) {
   /* External module */
-  epggrab_module_ext_create(NULL, &epggrab_mod_ext_xmltv_class,
-                            "xmltv", LS_XMLTV, "xmltv", "XMLTV", 3, "xmltv",
-                            _xmltv_parse, NULL);
+  epggrab_module_ext_create(NULL,
+      &epggrab_mod_ext_xmltv_class,
+      "xmltv",
+      LS_XMLTV,
+      "xmltv",
+      "XMLTV",
+      3,
+      "xmltv",
+      _xmltv_parse,
+      NULL);
 
   /* Standard modules */
   _xmltv_load_grabbers();
 }
 
-void xmltv_done ( void )
-{
-}
+void xmltv_done(void) {}
 
-void xmltv_load ( void )
-{
+void xmltv_load(void) {
   epggrab_module_channels_load("xmltv");
 }
