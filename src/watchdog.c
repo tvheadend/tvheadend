@@ -21,17 +21,16 @@
 
 #include <systemd/sd-daemon.h>
 
-static pthread_t watchdog_tid;
+static pthread_t   watchdog_tid;
 static tvh_mutex_t watchdog_exiting_mutex;
-static tvh_cond_t watchdog_exiting_cond;
-static int watchdog_exiting;    /* 1 if exit has been requested */
-static int watchdog_enabled;    /* 1 if watchdog was enabled for the systemd unit */
-static uint64_t watchdog_interval_usec; /* value from .service divided by 2 */
+static tvh_cond_t  watchdog_exiting_cond;
+static int         watchdog_exiting;       /* 1 if exit has been requested */
+static int         watchdog_enabled;       /* 1 if watchdog was enabled for the systemd unit */
+static uint64_t    watchdog_interval_usec; /* value from .service divided by 2 */
 
-static void* watchdog_thread(void* aux)
-{
+static void* watchdog_thread(void* aux) {
   int exiting = 0;
-  (void) aux; /* ignore */
+  (void)aux; /* ignore */
   sd_notify(0, "READY=1");
   tvh_mutex_lock(&watchdog_exiting_mutex);
   while (!exiting) {
@@ -40,7 +39,9 @@ static void* watchdog_thread(void* aux)
        * Just keep ticking regardless the return value; its intention is
        * to pace the loop down, and let us exit fast when the time comes
        */
-      tvh_cond_timedwait(&watchdog_exiting_cond, &watchdog_exiting_mutex, mclk() + watchdog_interval_usec);
+      tvh_cond_timedwait(&watchdog_exiting_cond,
+          &watchdog_exiting_mutex,
+          mclk() + watchdog_interval_usec);
       if (!watchdog_exiting) {
         tvh_mutex_lock(&global_lock);
         tvh_mutex_unlock(&global_lock);
@@ -54,8 +55,7 @@ static void* watchdog_thread(void* aux)
   return NULL;
 }
 
-void watchdog_init(void)
-{
+void watchdog_init(void) {
   /*
    * I doubt MONOCLOCK_RESOLUTION is going to change, but if it does,
    * let's break this
@@ -66,7 +66,7 @@ void watchdog_init(void)
 
   watchdog_enabled = sd_watchdog_enabled(0, &watchdog_interval_usec) > 0;
   if (watchdog_enabled) {
-     /* suggested by sd_watchdog_enabled documentation: */
+    /* suggested by sd_watchdog_enabled documentation: */
     watchdog_interval_usec /= 2;
 
     watchdog_exiting = 0;
@@ -77,8 +77,7 @@ void watchdog_init(void)
   }
 }
 
-void watchdog_done(void)
-{
+void watchdog_done(void) {
   if (watchdog_enabled) {
     tvh_mutex_lock(&watchdog_exiting_mutex);
     watchdog_exiting = 1;

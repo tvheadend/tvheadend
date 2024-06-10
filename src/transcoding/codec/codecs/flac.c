@@ -17,15 +17,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "transcoding/codec/internals.h"
-
 
 /* flac ====================================================================== */
 
 // see flac_channel_layouts ffmpeg-3.4/libavcodec/flac.c & flacenc.c
-static const uint64_t flac_channel_layouts[] = {
-    AV_CH_LAYOUT_MONO,
+static const uint64_t flac_channel_layouts[] = {AV_CH_LAYOUT_MONO,
     AV_CH_LAYOUT_STEREO,
     AV_CH_LAYOUT_SURROUND,
     AV_CH_LAYOUT_QUAD,
@@ -33,56 +30,45 @@ static const uint64_t flac_channel_layouts[] = {
     AV_CH_LAYOUT_5POINT0_BACK,
     AV_CH_LAYOUT_5POINT1,
     AV_CH_LAYOUT_5POINT1_BACK,
-    0
-};
-
+    0};
 
 typedef struct {
-    TVHAudioCodecProfile;
-    int compression_level;
+  TVHAudioCodecProfile;
+  int compression_level;
 } tvh_codec_profile_flac_t;
 
-
-static int
-tvh_codec_profile_flac_open(tvh_codec_profile_flac_t *self, AVDictionary **opts)
-{
-    AV_DICT_SET_INT(opts, "compression_level", self->compression_level, 0);
-    return 0;
+static int tvh_codec_profile_flac_open(tvh_codec_profile_flac_t* self, AVDictionary** opts) {
+  AV_DICT_SET_INT(opts, "compression_level", self->compression_level, 0);
+  return 0;
 }
 
 static const codec_profile_class_t codec_profile_flac_class = {
-    {
-        .ic_super      = (idclass_t *)&codec_profile_audio_class,
-        .ic_class      = "codec_profile_flac",
-        .ic_caption    = N_("flac"),
-        .ic_properties = (const property_t[]){
-            {
-                .type     = PT_INT,
-                .id       = "complevel",
-                .name     = N_("Compression level"),
-                .desc     = N_("Compression level (0-12), -1 means ffmpeg default"),
-                .group    = 3,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_flac_t, compression_level),
-                .intextra = INTEXTRA_RANGE(-1, 12, 1),
-                .def.i    = -1,
-            },
-            {}
-        }
-    },
+    {.ic_super      = (idclass_t*)&codec_profile_audio_class,
+        .ic_class   = "codec_profile_flac",
+        .ic_caption = N_("flac"),
+        .ic_properties =
+            (const property_t[]){
+                {
+                    .type     = PT_INT,
+                    .id       = "complevel",
+                    .name     = N_("Compression level"),
+                    .desc     = N_("Compression level (0-12), -1 means ffmpeg default"),
+                    .group    = 3,
+                    .get_opts = codec_profile_class_get_opts,
+                    .off      = offsetof(tvh_codec_profile_flac_t, compression_level),
+                    .intextra = INTEXTRA_RANGE(-1, 12, 1),
+                    .def.i    = -1,
+                },
+                {}}},
     .open = (codec_profile_open_meth)tvh_codec_profile_flac_open,
 };
 
+static int tvh_codec_profile_flac_init(TVHCodecProfile* _self, htsmsg_t* conf) {
+  tvh_codec_profile_flac_t* self = (tvh_codec_profile_flac_t*)_self;
 
-static int
-tvh_codec_profile_flac_init(TVHCodecProfile *_self, htsmsg_t *conf)
-{
-    tvh_codec_profile_flac_t *self = (tvh_codec_profile_flac_t *)_self;
-
-    self->compression_level = -1;
-    return tvh_codec_profile_audio_init(_self, conf);
+  self->compression_level = -1;
+  return tvh_codec_profile_audio_init(_self, conf);
 }
-
 
 TVHAudioCodec tvh_codec_flac = {
     .name            = "flac",

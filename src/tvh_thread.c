@@ -22,36 +22,32 @@
 #endif
 
 #if ENABLE_TRACE
-int tvh_thread_debug;
-static int tvhwatch_done;
-static pthread_t thrwatch_tid;
+int                    tvh_thread_debug;
+static int             tvhwatch_done;
+static pthread_t       thrwatch_tid;
 static pthread_mutex_t thrwatch_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, tvh_mutex) thrwatch_mutexes = TAILQ_HEAD_INITIALIZER(thrwatch_mutexes);
 static int64_t tvh_thread_crash_time;
 #endif
 
 #if ENABLE_TRACE
-static void tvh_thread_mutex_failed(tvh_mutex_t *mutex, const char *reason, const char *filename, int lineno);
+static void
+tvh_thread_mutex_failed(tvh_mutex_t* mutex, const char* reason, const char* filename, int lineno);
 #endif
 
 /*
  * thread routines
  */
 
-static void doquit(int sig)
-{
-}
+static void doquit(int sig) {}
 
-struct
-thread_state {
-  void *(*run)(void*);
-  void *arg;
-  char name[17];
+struct thread_state {
+  void* (*run)(void*);
+  void* arg;
+  char  name[17];
 };
 
-static inline int
-thread_get_tid(void)
-{
+static inline int thread_get_tid(void) {
 #ifdef SYS_gettid
   return syscall(SYS_gettid);
 #elif ENABLE_ANDROID
@@ -61,11 +57,9 @@ thread_get_tid(void)
 #endif
 }
 
-static void *
-thread_wrapper(void *p)
-{
-  struct thread_state *ts = p;
-  sigset_t set;
+static void* thread_wrapper(void* p) {
+  struct thread_state* ts = p;
+  sigset_t             set;
 
 #if defined(PLATFORM_LINUX)
   /* Set name */
@@ -86,48 +80,49 @@ thread_wrapper(void *p)
   tvh_signal(SIGQUIT, doquit);
 
   /* Run */
-  tvhtrace(LS_THREAD, "created thread %ld [%s / %p(%p)]",
-           (long)pthread_self(), ts->name, ts->run, ts->arg);
-  void *r = ts->run(ts->arg);
+  tvhtrace(LS_THREAD,
+      "created thread %ld [%s / %p(%p)]",
+      (long)pthread_self(),
+      ts->name,
+      ts->run,
+      ts->arg);
+  void* r = ts->run(ts->arg);
   free(ts);
 
   return r;
 }
 
-int
-tvh_thread_create
-  (pthread_t *thread, const pthread_attr_t *attr,
-   void *(*start_routine) (void *), void *arg, const char *name)
-{
-  int r;
-  struct thread_state *ts = calloc(1, sizeof(struct thread_state));
-  pthread_attr_t _attr;
+int tvh_thread_create(pthread_t* thread,
+    const pthread_attr_t*        attr,
+    void* (*start_routine)(void*),
+    void*       arg,
+    const char* name) {
+  int                  r;
+  struct thread_state* ts = calloc(1, sizeof(struct thread_state));
+  pthread_attr_t       _attr;
   if (attr == NULL) {
     pthread_attr_init(&_attr);
-    pthread_attr_setstacksize(&_attr, 2*1024*1024);
+    pthread_attr_setstacksize(&_attr, 2 * 1024 * 1024);
     attr = &_attr;
   }
   strlcpy(ts->name, "tvh:", 5);
-  strlcpy(ts->name+4, name, sizeof(ts->name)-4);
-  ts->run  = start_routine;
-  ts->arg  = arg;
-  r = pthread_create(thread, attr, thread_wrapper, ts);
+  strlcpy(ts->name + 4, name, sizeof(ts->name) - 4);
+  ts->run = start_routine;
+  ts->arg = arg;
+  r       = pthread_create(thread, attr, thread_wrapper, ts);
   return r;
 }
 
-int tvh_thread_kill(pthread_t thread, int sig)
-{
+int tvh_thread_kill(pthread_t thread, int sig) {
   return pthread_kill(thread, sig);
 }
 
 /* linux style: -19 .. 20 */
-int
-tvh_thread_renice(int value)
-{
+int tvh_thread_renice(int value) {
   int ret = 0;
 #if defined(SYS_gettid) || ENABLE_ANDROID
   pid_t tid = thread_get_tid();
-  ret = setpriority(PRIO_PROCESS, tid, value);
+  ret       = setpriority(PRIO_PROCESS, tid, value);
 #elif defined(PLATFORM_DARWIN)
   /* Currently not possible */
 #elif defined(PLATFORM_FREEBSD)
@@ -139,22 +134,16 @@ tvh_thread_renice(int value)
 }
 
 #if ENABLE_TRACE
-static void tvh_mutex_check_magic(tvh_mutex_t *mutex, const char *filename, int lineno)
-{
-  if (mutex &&
-      mutex->magic1 == TVH_THREAD_MUTEX_MAGIC1 &&
-      mutex->magic2 == TVH_THREAD_MUTEX_MAGIC2)
+static void tvh_mutex_check_magic(tvh_mutex_t* mutex, const char* filename, int lineno) {
+  if (mutex && mutex->magic1 == TVH_THREAD_MUTEX_MAGIC1 && mutex->magic2 == TVH_THREAD_MUTEX_MAGIC2)
     return;
   tvh_thread_mutex_failed(mutex, "magic", filename, lineno);
 }
 #else
-static inline void tvh_mutex_check_magic(tvh_mutex_t *mutex, const char *filename, int lineno)
-{
-}
+static inline void tvh_mutex_check_magic(tvh_mutex_t* mutex, const char* filename, int lineno) {}
 #endif
 
-int tvh_mutex_init(tvh_mutex_t *mutex, const pthread_mutexattr_t *attr)
-{
+int tvh_mutex_init(tvh_mutex_t* mutex, const pthread_mutexattr_t* attr) {
   memset(mutex, 0, sizeof(*mutex));
 #if ENABLE_TRACE
   mutex->magic1 = TVH_THREAD_MUTEX_MAGIC1;
@@ -163,20 +152,18 @@ int tvh_mutex_init(tvh_mutex_t *mutex, const pthread_mutexattr_t *attr)
   return pthread_mutex_init(&mutex->mutex, attr);
 }
 
-int tvh_mutex_destroy(tvh_mutex_t *mutex)
-{
+int tvh_mutex_destroy(tvh_mutex_t* mutex) {
   tvh_mutex_check_magic(mutex, NULL, 0);
   return pthread_mutex_destroy(&mutex->mutex);
 }
 
 #if ENABLE_TRACE
-static void tvh_mutex_add_to_list(tvh_mutex_t *mutex, const char *filename, int lineno)
-{
+static void tvh_mutex_add_to_list(tvh_mutex_t* mutex, const char* filename, int lineno) {
   pthread_mutex_lock(&thrwatch_mutex);
   if (filename != NULL) {
-    mutex->tid = thread_get_tid();
+    mutex->tid      = thread_get_tid();
     mutex->filename = filename;
-    mutex->lineno = lineno;
+    mutex->lineno   = lineno;
   }
   mutex->tstamp = getfastmonoclock();
   TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
@@ -186,22 +173,23 @@ static void tvh_mutex_add_to_list(tvh_mutex_t *mutex, const char *filename, int 
 #endif
 
 #if ENABLE_TRACE
-static void tvh_mutex_check_interval(tvh_mutex_t *mutex)
-{
+static void tvh_mutex_check_interval(tvh_mutex_t* mutex) {
   if (tvh_thread_debug > 10000) {
-    int64_t ms = ((int64_t)tvh_thread_debug - 10000) * 1000;
+    int64_t ms   = ((int64_t)tvh_thread_debug - 10000) * 1000;
     int64_t diff = getfastmonoclock() - mutex->tstamp;
     if (diff > ms)
-      tvhdbg(LS_THREAD, "mutex %p at %s:%d took %lldms",
-             mutex, mutex->filename, mutex->lineno,
-             diff / (MONOCLOCK_RESOLUTION / 1000));
+      tvhdbg(LS_THREAD,
+          "mutex %p at %s:%d took %lldms",
+          mutex,
+          mutex->filename,
+          mutex->lineno,
+          diff / (MONOCLOCK_RESOLUTION / 1000));
   }
 }
 #endif
 
 #if ENABLE_TRACE
-static void tvh_mutex_remove_from_list(tvh_mutex_t *mutex, const char **filename, int *lineno)
-{
+static void tvh_mutex_remove_from_list(tvh_mutex_t* mutex, const char** filename, int* lineno) {
   pthread_mutex_lock(&thrwatch_mutex);
   if (filename)
     *filename = mutex->filename;
@@ -210,22 +198,21 @@ static void tvh_mutex_remove_from_list(tvh_mutex_t *mutex, const char **filename
   TAILQ_SAFE_REMOVE(&thrwatch_mutexes, mutex, link);
   tvh_mutex_check_interval(mutex);
   mutex->filename = NULL;
-  mutex->lineno = 0;
+  mutex->lineno   = 0;
   pthread_mutex_unlock(&thrwatch_mutex);
 }
 #endif
 
 #if ENABLE_TRACE
-static tvh_mutex_waiter_t *
-tvh_mutex_add_to_waiters(tvh_mutex_t *mutex, const char *filename, int lineno)
-{
-  tvh_mutex_waiter_t *w = malloc(sizeof(*w));
+static tvh_mutex_waiter_t*
+tvh_mutex_add_to_waiters(tvh_mutex_t* mutex, const char* filename, int lineno) {
+  tvh_mutex_waiter_t* w = malloc(sizeof(*w));
 
   pthread_mutex_lock(&thrwatch_mutex);
   if (filename != NULL) {
-    w->tid = thread_get_tid();
+    w->tid      = thread_get_tid();
     w->filename = filename;
-    w->lineno = lineno;
+    w->lineno   = lineno;
   }
   w->tstamp = getfastmonoclock();
   LIST_INSERT_HEAD(&mutex->waiters, w, link);
@@ -235,9 +222,7 @@ tvh_mutex_add_to_waiters(tvh_mutex_t *mutex, const char *filename, int lineno)
 #endif
 
 #if ENABLE_TRACE
-static void
-tvh_mutex_remove_from_waiters(tvh_mutex_waiter_t *w)
-{
+static void tvh_mutex_remove_from_waiters(tvh_mutex_waiter_t* w) {
   pthread_mutex_lock(&thrwatch_mutex);
   LIST_REMOVE(w, link);
   free(w);
@@ -246,11 +231,10 @@ tvh_mutex_remove_from_waiters(tvh_mutex_waiter_t *w)
 #endif
 
 #if ENABLE_TRACE
-int tvh__mutex_lock(tvh_mutex_t *mutex, const char *filename, int lineno)
-{
-  tvh_mutex_waiter_t *w;
+int tvh__mutex_lock(tvh_mutex_t* mutex, const char* filename, int lineno) {
+  tvh_mutex_waiter_t* w;
   tvh_mutex_check_magic(mutex, filename, lineno);
-  w = tvh_mutex_add_to_waiters(mutex, filename, lineno);
+  w     = tvh_mutex_add_to_waiters(mutex, filename, lineno);
   int r = pthread_mutex_lock(&mutex->mutex);
   tvh_mutex_remove_from_waiters(w);
   if (r == 0)
@@ -260,8 +244,7 @@ int tvh__mutex_lock(tvh_mutex_t *mutex, const char *filename, int lineno)
 #endif
 
 #if ENABLE_TRACE
-int tvh__mutex_trylock(tvh_mutex_t *mutex, const char *filename, int lineno)
-{
+int tvh__mutex_trylock(tvh_mutex_t* mutex, const char* filename, int lineno) {
   tvh_mutex_check_magic(mutex, filename, lineno);
   int r = pthread_mutex_trylock(&mutex->mutex);
   if (r == 0)
@@ -271,8 +254,7 @@ int tvh__mutex_trylock(tvh_mutex_t *mutex, const char *filename, int lineno)
 #endif
 
 #if ENABLE_TRACE
-int tvh__mutex_unlock(tvh_mutex_t *mutex)
-{
+int tvh__mutex_unlock(tvh_mutex_t* mutex) {
   tvh_mutex_check_magic(mutex, NULL, 0);
   int r = pthread_mutex_unlock(&mutex->mutex);
   if (r == 0)
@@ -281,15 +263,12 @@ int tvh__mutex_unlock(tvh_mutex_t *mutex)
 }
 #endif
 
-int
-tvh_mutex_timedlock
-  ( tvh_mutex_t *mutex, int64_t usec )
-{
+int tvh_mutex_timedlock(tvh_mutex_t* mutex, int64_t usec) {
   int64_t finish = getfastmonoclock() + usec;
-  int retcode;
+  int     retcode;
 
   tvh_mutex_check_magic(mutex, NULL, 0);
-  while ((retcode = pthread_mutex_trylock (&mutex->mutex)) == EBUSY) {
+  while ((retcode = pthread_mutex_trylock(&mutex->mutex)) == EBUSY) {
     if (getfastmonoclock() >= finish)
       return ETIMEDOUT;
 
@@ -303,10 +282,7 @@ tvh_mutex_timedlock
  * thread condition variables - monotonic clocks
  */
 
-int
-tvh_cond_init
-  ( tvh_cond_t *cond, int monotonic )
-{
+int tvh_cond_init(tvh_cond_t* cond, int monotonic) {
   int r;
 
   pthread_condattr_t attr;
@@ -330,32 +306,23 @@ tvh_cond_init
   return pthread_cond_init(&cond->cond, &attr);
 }
 
-int
-tvh_cond_destroy
-  ( tvh_cond_t *cond )
-{
+int tvh_cond_destroy(tvh_cond_t* cond) {
   return pthread_cond_destroy(&cond->cond);
 }
 
-int
-tvh_cond_signal
-  ( tvh_cond_t *cond, int broadcast )
-{
+int tvh_cond_signal(tvh_cond_t* cond, int broadcast) {
   if (broadcast)
     return pthread_cond_broadcast(&cond->cond);
   else
     return pthread_cond_signal(&cond->cond);
 }
 
-int
-tvh_cond_wait
-  ( tvh_cond_t *cond, tvh_mutex_t *mutex)
-{
+int tvh_cond_wait(tvh_cond_t* cond, tvh_mutex_t* mutex) {
   int r;
-  
+
 #if ENABLE_TRACE
-  const char *filename = NULL;
-  int lineno = -1;
+  const char* filename = NULL;
+  int         lineno   = -1;
   tvh_mutex_check_magic(mutex, NULL, 0);
   if (tvh_thread_debug > 0)
     tvh_mutex_remove_from_list(mutex, &filename, &lineno);
@@ -368,40 +335,35 @@ tvh_cond_wait
   return r;
 }
 
-int
-tvh_cond_timedwait
-  ( tvh_cond_t *cond, tvh_mutex_t *mutex, int64_t monoclock )
-{
+int tvh_cond_timedwait(tvh_cond_t* cond, tvh_mutex_t* mutex, int64_t monoclock) {
   int r;
 
 #if ENABLE_TRACE
-  const char *filename = NULL;
-  int lineno = -1;
+  const char* filename = NULL;
+  int         lineno   = -1;
   tvh_mutex_check_magic(mutex, NULL, 0);
   if (tvh_thread_debug > 0)
     tvh_mutex_remove_from_list(mutex, &filename, &lineno);
 #endif
-  
+
 #if defined(PLATFORM_DARWIN)
   /* Use a relative timedwait implementation */
-  int64_t now = getmonoclock();
-  int64_t relative = monoclock - now;
+  int64_t         now      = getmonoclock();
+  int64_t         relative = monoclock - now;
   struct timespec ts;
 
   if (relative < 0)
     return 0;
 
   ts.tv_sec  = relative / MONOCLOCK_RESOLUTION;
-  ts.tv_nsec = (relative % MONOCLOCK_RESOLUTION) *
-               (1000000000ULL/MONOCLOCK_RESOLUTION);
+  ts.tv_nsec = (relative % MONOCLOCK_RESOLUTION) * (1000000000ULL / MONOCLOCK_RESOLUTION);
 
   r = pthread_cond_timedwait_relative_np(&cond->cond, &mutex->mutex, &ts);
 #else
   struct timespec ts;
-  ts.tv_sec = monoclock / MONOCLOCK_RESOLUTION;
-  ts.tv_nsec = (monoclock % MONOCLOCK_RESOLUTION) *
-               (1000000000ULL/MONOCLOCK_RESOLUTION);
-  r = pthread_cond_timedwait(&cond->cond, &mutex->mutex, &ts);
+  ts.tv_sec  = monoclock / MONOCLOCK_RESOLUTION;
+  ts.tv_nsec = (monoclock % MONOCLOCK_RESOLUTION) * (1000000000ULL / MONOCLOCK_RESOLUTION);
+  r          = pthread_cond_timedwait(&cond->cond, &mutex->mutex, &ts);
 #endif
 
 #if ENABLE_TRACE
@@ -411,13 +373,12 @@ tvh_cond_timedwait
   return r;
 }
 
-int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec *ts)
-{
+int tvh_cond_timedwait_ts(tvh_cond_t* cond, tvh_mutex_t* mutex, struct timespec* ts) {
   int r;
-  
+
 #if ENABLE_TRACE
-  const char *filename = NULL;
-  int lineno = -1;
+  const char* filename = NULL;
+  int         lineno   = -1;
   tvh_mutex_check_magic(mutex, NULL, 0);
   if (tvh_thread_debug > 0)
     tvh_mutex_remove_from_list(mutex, &filename, &lineno);
@@ -430,30 +391,28 @@ int tvh_cond_timedwait_ts(tvh_cond_t *cond, tvh_mutex_t *mutex, struct timespec 
   return r;
 }
 
-int tvh_signal(int signal, void (*handler) (int))
-{
+int tvh_signal(int signal, void (*handler)(int)) {
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   action.sa_handler = handler;
   return sigaction(signal, &action, NULL);
 }
 
-void
-tvh_mutex_not_held(const char *file, int line)
-{
+void tvh_mutex_not_held(const char* file, int line) {
   tvherror(LS_THREAD, "Mutex not held at %s:%d", file, line);
   fprintf(stderr, "Mutex not held at %s:%d\n", file, line);
   abort();
 }
 
 #if ENABLE_TRACE
-static void tvh_thread_deadlock_write(htsbuf_queue_t *q)
-{
-  size_t l;
-  char *s, *s2, *saveptr;
+static void tvh_thread_deadlock_write(htsbuf_queue_t* q) {
+  size_t    l;
+  char *    s, *s2, *saveptr;
   const int fd_stderr = fileno(stderr);
-  int fd = hts_settings_open_file(HTS_SETTINGS_OPEN_WRITE | HTS_SETTINGS_OPEN_DIRECT, "mutex-deadlock.txt");
-  if (fd < 0) fd = fd_stderr;
+  int       fd        = hts_settings_open_file(HTS_SETTINGS_OPEN_WRITE | HTS_SETTINGS_OPEN_DIRECT,
+      "mutex-deadlock.txt");
+  if (fd < 0)
+    fd = fd_stderr;
 
   s = htsbuf_to_string(q);
   l = s ? strlen(s) : 0;
@@ -464,38 +423,58 @@ static void tvh_thread_deadlock_write(htsbuf_queue_t *q)
   }
 
   saveptr = NULL;
-  for (; ; s = NULL) {
+  for (;; s = NULL) {
     s2 = strtok_r(s, "\n", &saveptr);
     if (s2 == NULL)
       break;
     tvhdbg(LS_THREAD, "%s", s2);
   }
-  if (fd != fd_stderr) close(fd);
+  if (fd != fd_stderr)
+    close(fd);
   free(s);
 }
 #endif
 
 #if ENABLE_TRACE
 static void
-tvh_thread_mutex_failed
-  (tvh_mutex_t *mutex, const char *reason, const char *filename, int lineno)
-{
-  htsbuf_queue_t q;
-  tvh_mutex_t *m;
-  tvh_mutex_waiter_t *w;
+tvh_thread_mutex_failed(tvh_mutex_t* mutex, const char* reason, const char* filename, int lineno) {
+  htsbuf_queue_t      q;
+  tvh_mutex_t*        m;
+  tvh_mutex_waiter_t* w;
 
   htsbuf_queue_init(&q, 0);
   htsbuf_qprintf(&q, "REASON: %s (%s:%d)\n", reason, filename, lineno);
   if (mutex) {
-    htsbuf_qprintf(&q, "mutex %p locked in: %s:%i (thread %ld)\n", mutex, mutex->filename, mutex->lineno, mutex->tid);
-    LIST_FOREACH(w, &mutex->waiters, link)
-      htsbuf_qprintf(&q, "mutex %p   waiting in: %s:%i (thread %ld)\n", mutex, w->filename, w->lineno, w->tid);
+    htsbuf_qprintf(&q,
+        "mutex %p locked in: %s:%i (thread %ld)\n",
+        mutex,
+        mutex->filename,
+        mutex->lineno,
+        mutex->tid);
+    LIST_FOREACH (w, &mutex->waiters, link)
+      htsbuf_qprintf(&q,
+          "mutex %p   waiting in: %s:%i (thread %ld)\n",
+          mutex,
+          w->filename,
+          w->lineno,
+          w->tid);
   }
-  TAILQ_FOREACH(m, &thrwatch_mutexes, link) {
-    if (m == mutex) continue;
-    htsbuf_qprintf(&q, "mutex %p other in: %s:%i (thread %ld)\n", m, m->filename, m->lineno, m->tid);
-    LIST_FOREACH(w, &m->waiters, link)
-      htsbuf_qprintf(&q, "mutex %p   waiting in: %s:%i (thread %ld)\n", m, w->filename, w->lineno, w->tid);
+  TAILQ_FOREACH (m, &thrwatch_mutexes, link) {
+    if (m == mutex)
+      continue;
+    htsbuf_qprintf(&q,
+        "mutex %p other in: %s:%i (thread %ld)\n",
+        m,
+        m->filename,
+        m->lineno,
+        m->tid);
+    LIST_FOREACH (w, &m->waiters, link)
+      htsbuf_qprintf(&q,
+          "mutex %p   waiting in: %s:%i (thread %ld)\n",
+          m,
+          w->filename,
+          w->lineno,
+          w->tid);
   }
   tvh_thread_deadlock_write(&q);
   tvh_safe_usleep(2000000);
@@ -504,18 +483,17 @@ tvh_thread_mutex_failed
 #endif
 
 #if ENABLE_TRACE
-static void *tvh_thread_watch_thread(void *aux)
-{
-  int64_t now, limit;
+static void* tvh_thread_watch_thread(void* aux) {
+  int64_t      now, limit;
   tvh_mutex_t *mutex, dmutex;
-  const char *s;
+  const char*  s;
 
-  s = getenv("TVHEADEND_THREAD_WATCH_LIMIT");
+  s     = getenv("TVHEADEND_THREAD_WATCH_LIMIT");
   limit = s ? atol(s) : 15;
   limit = MINMAX(limit, 5, 120);
   while (!atomic_get(&tvhwatch_done)) {
     pthread_mutex_lock(&thrwatch_mutex);
-    now = getfastmonoclock();
+    now   = getfastmonoclock();
     mutex = TAILQ_LAST(&thrwatch_mutexes, tvh_mutex_queue);
     if (mutex && mutex->tstamp + sec2mono(limit) < now) {
       pthread_mutex_unlock(&thrwatch_mutex);
@@ -533,10 +511,9 @@ static void *tvh_thread_watch_thread(void *aux)
 }
 #endif
 
-void tvh_thread_init(int debug_level)
-{
+void tvh_thread_init(int debug_level) {
 #if ENABLE_TRACE
-  tvh_thread_debug = debug_level;
+  tvh_thread_debug      = debug_level;
   tvh_thread_crash_time = getfastmonoclock() + sec2mono(15);
   if (debug_level > 0) {
     atomic_set(&tvhwatch_done, 0);
@@ -545,8 +522,7 @@ void tvh_thread_init(int debug_level)
 #endif
 }
 
-void tvh_thread_done(void)
-{
+void tvh_thread_done(void) {
 #if ENABLE_TRACE
   if (tvh_thread_debug > 0) {
     atomic_set(&tvhwatch_done, 1);

@@ -28,29 +28,25 @@
 /*
  *
  */
-static int
-download_file(download_t *dn, const char *filename)
-{
-  int fd, res;
+static int download_file(download_t* dn, const char* filename) {
+  int         fd, res;
   struct stat st;
-  char *data, *last_url;
-  ssize_t r;
-  off_t off;
+  char *      data, *last_url;
+  ssize_t     r;
+  off_t       off;
 
   fd = tvh_open(filename, O_RDONLY, 0);
   if (fd < 0) {
-    tvherror(dn->subsys, "unable to open file '%s': %s",
-             filename, strerror(errno));
+    tvherror(dn->subsys, "unable to open file '%s': %s", filename, strerror(errno));
     return -1;
   }
   if (fstat(fd, &st) || st.st_size == 0) {
-    tvherror(dn->subsys, "unable to stat file '%s': %s",
-             filename, strerror(errno));
+    tvherror(dn->subsys, "unable to stat file '%s': %s", filename, strerror(errno));
     close(fd);
     return -1;
   }
-  data = malloc(st.st_size+1);
-  off = 0;
+  data = malloc(st.st_size + 1);
+  off  = 0;
   do {
     r = read(fd, data + off, st.st_size - off);
     if (r < 0) {
@@ -64,7 +60,7 @@ download_file(download_t *dn, const char *filename)
 
   if (off == st.st_size) {
     data[off] = '\0';
-    last_url = strrchr(filename, '/');
+    last_url  = strrchr(filename, '/');
     if (last_url)
       last_url++;
     res = dn->process(dn->aux, last_url, NULL, data, off);
@@ -78,33 +74,29 @@ download_file(download_t *dn, const char *filename)
 /*
  *
  */
-static void
-download_fetch_done(void *aux)
-{
-  http_client_t *hc = aux;
-  download_t *dm = hc->hc_aux;
+static void download_fetch_done(void* aux) {
+  http_client_t* hc = aux;
+  download_t*    dm = hc->hc_aux;
   if (dm->http_client) {
     dm->http_client = NULL;
-    http_client_close((http_client_t *)aux);
+    http_client_close((http_client_t*)aux);
   }
 }
 
 /*
  *
  */
-static int
-download_fetch_complete(http_client_t *hc)
-{
-  download_t *dn = hc->hc_aux;
-  const char *last_url = NULL;
-  url_t u;
+static int download_fetch_complete(http_client_t* hc) {
+  download_t* dn       = hc->hc_aux;
+  const char* last_url = NULL;
+  url_t       u;
 
   switch (hc->hc_code) {
-  case HTTP_STATUS_MOVED:
-  case HTTP_STATUS_FOUND:
-  case HTTP_STATUS_SEE_OTHER:
-  case HTTP_STATUS_NOT_MODIFIED:
-    return 0;
+    case HTTP_STATUS_MOVED:
+    case HTTP_STATUS_FOUND:
+    case HTTP_STATUS_SEE_OTHER:
+    case HTTP_STATUS_NOT_MODIFIED:
+      return 0;
   }
 
   urlinit(&u);
@@ -122,8 +114,11 @@ download_fetch_complete(http_client_t *hc)
   if (hc->hc_code == HTTP_STATUS_OK && hc->hc_result == 0 && hc->hc_data_size > 0)
     dn->process(dn->aux, last_url, hc->hc_url, hc->hc_data, hc->hc_data_size);
   else
-    tvherror(dn->subsys, "unable to fetch data from url [%d-%d/%zd]",
-             hc->hc_code, hc->hc_result, hc->hc_data_size);
+    tvherror(dn->subsys,
+        "unable to fetch data from url [%d-%d/%zd]",
+        hc->hc_code,
+        hc->hc_result,
+        hc->hc_data_size);
 
   /* note: http_client_close must be called outside http_client callbacks */
   mtimer_arm_rel(&dn->fetch_timer, download_fetch_done, hc, 0);
@@ -138,14 +133,12 @@ out:
 /*
  *
  */
-static void
-download_pipe_close(download_t *dn)
-{
+static void download_pipe_close(download_t* dn) {
   if (dn->pipe_fd >= 0) {
     close(dn->pipe_fd);
     if (dn->pipe_pid)
       kill(-(dn->pipe_pid), SIGKILL); /* kill whole process group */
-    dn->pipe_fd = -1;
+    dn->pipe_fd  = -1;
     dn->pipe_pid = 0;
   }
   sbuf_free(&dn->pipe_sbuf);
@@ -154,18 +147,16 @@ download_pipe_close(download_t *dn)
 /*
  *
  */
-static void
-download_pipe_read(void *aux)
-{
-  download_t *dn = aux;
-  ssize_t len;
-  char *s, *p;
+static void download_pipe_read(void* aux) {
+  download_t* dn = aux;
+  ssize_t     len;
+  char *      s, *p;
 
   if (dn->pipe_fd < 0 || dn->pipe_pid == 0)
     return;
 
   while (1) {
-    if (dn->pipe_sbuf.sb_ptr > 50*1024*1024) {
+    if (dn->pipe_sbuf.sb_ptr > 50 * 1024 * 1024) {
       errno = EMSGSIZE;
       goto failed;
     }
@@ -180,13 +171,13 @@ download_pipe_read(void *aux)
       if (p)
         p++;
       sbuf_append(&dn->pipe_sbuf, "", 1);
-      dn->process(dn->aux, p, NULL, (char *)dn->pipe_sbuf.sb_data, (size_t)dn->pipe_sbuf.sb_ptr);
+      dn->process(dn->aux, p, NULL, (char*)dn->pipe_sbuf.sb_data, (size_t)dn->pipe_sbuf.sb_ptr);
       download_pipe_close(dn);
       return;
     } else if (len < 0) {
       if (ERRNO_AGAIN(errno))
         break;
-failed:
+    failed:
       tvherror(dn->subsys, "pipe: read failed: %d", errno);
       download_pipe_close(dn);
       return;
@@ -199,11 +190,9 @@ failed:
 /*
  *
  */
-static int
-download_pipe(download_t *dn, const char *args)
-{
-  char **argv = NULL;
-  int r;
+static int download_pipe(download_t* dn, const char* args) {
+  char** argv = NULL;
+  int    r;
 
   download_pipe_close(dn);
   mtimer_disarm(&dn->pipe_read_timer);
@@ -220,7 +209,7 @@ download_pipe(download_t *dn, const char *args)
   spawn_free_args(argv);
 
   if (r < 0) {
-    dn->pipe_fd = -1;
+    dn->pipe_fd  = -1;
     dn->pipe_pid = 0;
     tvherror(dn->subsys, "pipe: cannot start (%s)", args);
     return -1;
@@ -235,12 +224,10 @@ download_pipe(download_t *dn, const char *args)
 /*
  *
  */
-static void
-download_fetch(void *aux)
-{
-  download_t *dn = aux;
-  http_client_t *hc;
-  url_t u;
+static void download_fetch(void* aux) {
+  download_t*    dn = aux;
+  http_client_t* hc;
+  url_t          u;
 
   urlinit(&u);
 
@@ -248,7 +235,7 @@ download_fetch(void *aux)
     goto done;
 
   if (strncmp(dn->url, "file://", 7) == 0) {
-    char *f = tvh_strdupa(dn->url + 7);
+    char* f = tvh_strdupa(dn->url + 7);
     http_deescape(f);
     download_file(dn, f);
     goto done;
@@ -274,8 +261,8 @@ download_fetch(void *aux)
     goto stop;
   }
   hc->hc_handle_location = 1;
-  hc->hc_data_limit = 1024*1024;
-  hc->hc_data_complete = download_fetch_complete;
+  hc->hc_data_limit      = 1024 * 1024;
+  hc->hc_data_complete   = download_fetch_complete;
   http_client_register(hc);
   http_client_ssl_peer_verify(hc, dn->ssl_peer_verify);
   if (http_client_simple(hc, &u) < 0) {
@@ -297,11 +284,9 @@ done:
 /*
  *
  */
-void
-download_init( download_t *dn, int subsys )
-{
+void download_init(download_t* dn, int subsys) {
   memset(dn, 0, sizeof(*dn));
-  dn->subsys = subsys;
+  dn->subsys  = subsys;
   dn->pipe_fd = -1;
   sbuf_init(&dn->pipe_sbuf);
 }
@@ -309,9 +294,7 @@ download_init( download_t *dn, int subsys )
 /*
  *
  */
-void
-download_start( download_t *dn, const char *url, void *aux )
-{
+void download_start(download_t* dn, const char* url, void* aux) {
   if (dn->http_client) {
     http_client_close(dn->http_client);
     dn->http_client = NULL;
@@ -327,9 +310,7 @@ download_start( download_t *dn, const char *url, void *aux )
 /*
  *
  */
-void
-download_done( download_t *dn )
-{
+void download_done(download_t* dn) {
   if (dn->http_client) {
     http_client_close(dn->http_client);
     dn->http_client = NULL;
@@ -337,5 +318,6 @@ download_done( download_t *dn )
   download_pipe_close(dn);
   mtimer_disarm(&dn->fetch_timer);
   mtimer_disarm(&dn->pipe_read_timer);
-  free(dn->url); dn->url = NULL;
+  free(dn->url);
+  dn->url = NULL;
 }

@@ -30,70 +30,63 @@
 #include "subscriptions.h"
 #include "dbus.h"
 
-
 typedef struct dbus_sig {
   TAILQ_ENTRY(dbus_sig) link;
-  char     *obj_name;
-  char     *sig_name;
-  htsmsg_t *msg;
+  char*     obj_name;
+  char*     sig_name;
+  htsmsg_t* msg;
 } dbus_sig_t;
 
 typedef struct dbus_rpc {
   LIST_ENTRY(dbus_rpc) link;
-  char *call_name;
-  void *opaque;
-  int64_t (*rpc_s64)(void *opaque, const char *path, int64_t value);
-  char   *(*rpc_str)(void *opaque, const char *path, char *value);
+  char* call_name;
+  void* opaque;
+  int64_t (*rpc_s64)(void* opaque, const char* path, int64_t value);
+  char* (*rpc_str)(void* opaque, const char* path, char* value);
 } dbus_rpc_t;
 
 TAILQ_HEAD(dbus_signal_queue, dbus_sig);
 LIST_HEAD(dbus_rpc_list, dbus_rpc);
 static struct dbus_signal_queue dbus_signals;
-static struct dbus_rpc_list dbus_rpcs;
-static th_pipe_t dbus_pipe;
-static tvh_mutex_t dbus_lock;
-static int dbus_running;
-static int dbus_session;
+static struct dbus_rpc_list     dbus_rpcs;
+static th_pipe_t                dbus_pipe;
+static tvh_mutex_t              dbus_lock;
+static int                      dbus_running;
+static int                      dbus_session;
 
 /**
  *
  */
-void
-dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
-{
-  dbus_sig_t *ds;
-  int unused __attribute__((unused));
-  size_t l;
+void dbus_emit_signal(const char* obj_name, const char* sig_name, htsmsg_t* msg) {
+  dbus_sig_t* ds;
+  int         unused __attribute__((unused));
+  size_t      l;
 
   if (!atomic_get(&dbus_running)) {
     htsmsg_destroy(msg);
     return;
   }
-  ds = calloc(1, sizeof(dbus_sig_t));
-  l = strlen(obj_name);
+  ds           = calloc(1, sizeof(dbus_sig_t));
+  l            = strlen(obj_name);
   ds->obj_name = malloc(l + 15);
   strcpy(ds->obj_name, "/org/tvheadend");
   strcpy(ds->obj_name + 14, obj_name);
   ds->sig_name = strdup(sig_name);
-  ds->msg = msg;
+  ds->msg      = msg;
   tvh_mutex_lock(&dbus_lock);
   TAILQ_INSERT_TAIL(&dbus_signals, ds, link);
   tvh_mutex_unlock(&dbus_lock);
   unused = write(dbus_pipe.wr, "s", 1); /* do not wait here - no tvh_write() */
 }
 
-void
-dbus_emit_signal_str(const char *obj_name, const char *sig_name, const char *value)
-{
-  htsmsg_t *l = htsmsg_create_list();
+void dbus_emit_signal_str(const char* obj_name, const char* sig_name, const char* value) {
+  htsmsg_t* l = htsmsg_create_list();
   htsmsg_add_str(l, NULL, value);
   dbus_emit_signal(obj_name, sig_name, l);
 }
 
-void
-dbus_emit_signal_s64(const char *obj_name, const char *sig_name, int64_t value)
-{
-  htsmsg_t *l = htsmsg_create_list();
+void dbus_emit_signal_s64(const char* obj_name, const char* sig_name, int64_t value) {
+  htsmsg_t* l = htsmsg_create_list();
   htsmsg_add_s64(l, NULL, value);
   dbus_emit_signal(obj_name, sig_name, l);
 }
@@ -101,27 +94,25 @@ dbus_emit_signal_s64(const char *obj_name, const char *sig_name, int64_t value)
 /**
  *
  */
-static void
-dbus_from_htsmsg(htsmsg_t *msg, DBusMessageIter *args)
-{
-  htsmsg_field_t *f;
+static void dbus_from_htsmsg(htsmsg_t* msg, DBusMessageIter* args) {
+  htsmsg_field_t* f;
 
-  TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-    switch(f->hmf_type) {
-    case HMF_STR:
-      dbus_message_iter_append_basic(args, DBUS_TYPE_STRING, &f->hmf_str);
-      break;
-    case HMF_S64:
-      dbus_message_iter_append_basic(args, DBUS_TYPE_INT64, &f->hmf_s64);
-      break;
-    case HMF_BOOL:
-      dbus_message_iter_append_basic(args, DBUS_TYPE_BOOLEAN, &f->hmf_bool);
-      break;
-    case HMF_DBL:
-      dbus_message_iter_append_basic(args, DBUS_TYPE_DOUBLE, &f->hmf_dbl);
-      break;
-    default:
-      assert(0);
+  TAILQ_FOREACH (f, &msg->hm_fields, hmf_link) {
+    switch (f->hmf_type) {
+      case HMF_STR:
+        dbus_message_iter_append_basic(args, DBUS_TYPE_STRING, &f->hmf_str);
+        break;
+      case HMF_S64:
+        dbus_message_iter_append_basic(args, DBUS_TYPE_INT64, &f->hmf_s64);
+        break;
+      case HMF_BOOL:
+        dbus_message_iter_append_basic(args, DBUS_TYPE_BOOLEAN, &f->hmf_bool);
+        break;
+      case HMF_DBL:
+        dbus_message_iter_append_basic(args, DBUS_TYPE_DOUBLE, &f->hmf_dbl);
+        break;
+      default:
+        assert(0);
     }
   }
 }
@@ -129,10 +120,8 @@ dbus_from_htsmsg(htsmsg_t *msg, DBusMessageIter *args)
 /**
  *
  */
-static DBusConnection *
-dbus_create_session(const char *name)
-{
-  DBusConnection *conn;
+static DBusConnection* dbus_create_session(const char* name) {
+  DBusConnection* conn;
   DBusError       err;
   int             ret;
 
@@ -165,26 +154,24 @@ dbus_create_session(const char *name)
 /**
  * Send a signal
  */
-static int
-dbus_send_signal(DBusConnection *conn, const char *obj_name,
-                 const char *if_name, const char *sig_name,
-                 htsmsg_t *value)
-{
-  DBusMessage    *msg;
+static int dbus_send_signal(DBusConnection* conn,
+    const char*                             obj_name,
+    const char*                             if_name,
+    const char*                             sig_name,
+    htsmsg_t*                               value) {
+  DBusMessage*    msg;
   DBusMessageIter args;
 
   msg = dbus_message_new_signal(obj_name, if_name, sig_name);
   if (msg == NULL) {
-    tvherror(LS_DBUS, "Unable to create signal %s %s %s",
-                     obj_name, if_name, sig_name);
+    tvherror(LS_DBUS, "Unable to create signal %s %s %s", obj_name, if_name, sig_name);
     dbus_connection_unref(conn);
     return -1;
   }
   dbus_message_iter_init_append(msg, &args);
   dbus_from_htsmsg(value, &args);
   if (!dbus_connection_send(conn, msg, NULL)) {
-    tvherror(LS_DBUS, "Unable to send signal %s %s %s",
-                     obj_name, if_name, sig_name);
+    tvherror(LS_DBUS, "Unable to send signal %s %s %s", obj_name, if_name, sig_name);
     dbus_message_unref(msg);
     dbus_connection_unref(conn);
     return -1;
@@ -197,12 +184,10 @@ dbus_send_signal(DBusConnection *conn, const char *obj_name,
 /**
  * Simple ping (alive) RPC, just return the string
  */
-static void
-dbus_reply_to_ping(DBusMessage *msg, DBusConnection *conn)
-{
+static void dbus_reply_to_ping(DBusMessage* msg, DBusConnection* conn) {
   DBusMessageIter args;
-  DBusMessage    *reply;
-  char           *param;
+  DBusMessage*    reply;
+  char*           param;
 
   if (!dbus_message_iter_init(msg, &args))
     return;
@@ -220,14 +205,12 @@ dbus_reply_to_ping(DBusMessage *msg, DBusConnection *conn)
 /**
  * Set the subscription postpone delay
  */
-static void
-dbus_reply_to_rpc(dbus_rpc_t *rpc, DBusMessage *msg, DBusConnection *conn)
-{
+static void dbus_reply_to_rpc(dbus_rpc_t* rpc, DBusMessage* msg, DBusConnection* conn) {
   DBusMessageIter args;
-  DBusMessage    *reply;
-  const char     *path;
+  DBusMessage*    reply;
+  const char*     path;
   int64_t         param_s64;
-  char           *param_str;
+  char*           param_str;
 
   path = dbus_message_get_path(msg);
   if (path == NULL)
@@ -242,7 +225,7 @@ dbus_reply_to_rpc(dbus_rpc_t *rpc, DBusMessage *msg, DBusConnection *conn)
       return;
     dbus_message_iter_get_basic(&args, &param_s64);
     param_s64 = rpc->rpc_s64(rpc->opaque, path, param_s64);
-    reply = dbus_message_new_method_return(msg);
+    reply     = dbus_message_new_method_return(msg);
     dbus_message_iter_init_append(reply, &args);
     dbus_message_iter_append_basic(&args, DBUS_TYPE_INT64, &param_s64);
   } else if (rpc->rpc_str) {
@@ -250,7 +233,7 @@ dbus_reply_to_rpc(dbus_rpc_t *rpc, DBusMessage *msg, DBusConnection *conn)
       return;
     dbus_message_iter_get_basic(&args, &param_str);
     param_str = rpc->rpc_str(rpc->opaque, path, param_str);
-    reply = dbus_message_new_method_return(msg);
+    reply     = dbus_message_new_method_return(msg);
     dbus_message_iter_init_append(reply, &args);
     dbus_message_iter_append_basic(&args, DBUS_TYPE_STRING, &param_str);
     free(param_str);
@@ -265,14 +248,13 @@ dbus_reply_to_rpc(dbus_rpc_t *rpc, DBusMessage *msg, DBusConnection *conn)
 /**
  *
  */
-void
-dbus_register_rpc_s64(const char *call_name, void *opaque,
-                      int64_t (*fcn)(void *, const char *, int64_t))
-{
-  dbus_rpc_t *rpc = calloc(1, sizeof(*rpc));
-  rpc->call_name = strdup(call_name);
-  rpc->rpc_s64 = fcn;
-  rpc->opaque = opaque;
+void dbus_register_rpc_s64(const char* call_name,
+    void*                              opaque,
+    int64_t (*fcn)(void*, const char*, int64_t)) {
+  dbus_rpc_t* rpc = calloc(1, sizeof(*rpc));
+  rpc->call_name  = strdup(call_name);
+  rpc->rpc_s64    = fcn;
+  rpc->opaque     = opaque;
   tvh_mutex_lock(&dbus_lock);
   LIST_INSERT_HEAD(&dbus_rpcs, rpc, link);
   tvh_mutex_unlock(&dbus_lock);
@@ -281,14 +263,13 @@ dbus_register_rpc_s64(const char *call_name, void *opaque,
 /**
  *
  */
-void
-dbus_register_rpc_str(const char *call_name, void *opaque,
-                      char *(*fcn)(void *, const char *, char *))
-{
-  dbus_rpc_t *rpc = calloc(1, sizeof(*rpc));
-  rpc->call_name = strdup(call_name);
-  rpc->rpc_str = fcn;
-  rpc->opaque = opaque;
+void dbus_register_rpc_str(const char* call_name,
+    void*                              opaque,
+    char* (*fcn)(void*, const char*, char*)) {
+  dbus_rpc_t* rpc = calloc(1, sizeof(*rpc));
+  rpc->call_name  = strdup(call_name);
+  rpc->rpc_str    = fcn;
+  rpc->opaque     = opaque;
   tvh_mutex_lock(&dbus_lock);
   LIST_INSERT_HEAD(&dbus_rpcs, rpc, link);
   tvh_mutex_unlock(&dbus_lock);
@@ -298,9 +279,7 @@ dbus_register_rpc_str(const char *call_name, void *opaque,
  *
  */
 
-static void
-dbus_connection_safe_close(DBusConnection *conn)
-{
+static void dbus_connection_safe_close(DBusConnection* conn) {
   dbus_connection_flush(conn);
   dbus_connection_close(conn);
   dbus_connection_unref(conn);
@@ -309,10 +288,8 @@ dbus_connection_safe_close(DBusConnection *conn)
 /**
  *
  */
-static void
-dbus_flush_queue(DBusConnection *conn)
-{
-  dbus_sig_t *ds;
+static void dbus_flush_queue(DBusConnection* conn) {
+  dbus_sig_t* ds;
 
   while (1) {
     tvh_mutex_lock(&dbus_lock);
@@ -325,9 +302,7 @@ dbus_flush_queue(DBusConnection *conn)
       break;
 
     if (conn)
-      dbus_send_signal(conn,
-                       ds->obj_name, "org.tvheadend.notify",
-                       ds->sig_name, ds->msg);
+      dbus_send_signal(conn, ds->obj_name, "org.tvheadend.notify", ds->sig_name, ds->msg);
 
     htsmsg_destroy(ds->msg);
     free(ds->sig_name);
@@ -341,14 +316,12 @@ dbus_flush_queue(DBusConnection *conn)
 /**
  * Listen for remote requests
  */
-static void *
-dbus_server_thread(void *aux)
-{
-  DBusMessage    *msg;
+static void* dbus_server_thread(void* aux) {
+  DBusMessage*    msg;
   DBusConnection *conn, *notify;
-  tvhpoll_t      *poll;
+  tvhpoll_t*      poll;
   tvhpoll_event_t ev;
-  dbus_rpc_t     *rpc;
+  dbus_rpc_t*     rpc;
   int             n;
   uint8_t         c;
 
@@ -408,7 +381,7 @@ dbus_server_thread(void *aux)
       }
 
       tvh_mutex_lock(&dbus_lock);
-      LIST_FOREACH(rpc, &dbus_rpcs, link)
+      LIST_FOREACH (rpc, &dbus_rpcs, link)
         if (dbus_message_is_method_call(msg, "org.tvheadend", rpc->call_name))
           break;
       tvh_mutex_unlock(&dbus_lock);
@@ -432,9 +405,7 @@ dbus_server_thread(void *aux)
  */
 pthread_t dbus_tid;
 
-void
-dbus_server_init(int enabled, int session)
-{
+void dbus_server_init(int enabled, int session) {
   dbus_session = session;
   tvh_mutex_init(&dbus_lock, NULL);
   TAILQ_INIT(&dbus_signals);
@@ -447,17 +418,13 @@ dbus_server_init(int enabled, int session)
   }
 }
 
-void
-dbus_server_start(void)
-{
+void dbus_server_start(void) {
   if (dbus_pipe.wr > 0)
     tvh_thread_create(&dbus_tid, NULL, dbus_server_thread, NULL, "dbus");
 }
 
-void
-dbus_server_done(void)
-{
-  dbus_rpc_t *rpc;
+void dbus_server_done(void) {
+  dbus_rpc_t* rpc;
 
   dbus_emit_signal_str("/main", "stop", "bye");
   atomic_set(&dbus_running, 0);

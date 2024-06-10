@@ -29,14 +29,12 @@
 #define LANG_STR_UPDATE 1
 #define LANG_STR_APPEND 2
 
-
 /* ************************************************************************
  * Support
  * ***********************************************************************/
 
 /* Compare language codes */
-static int _lang_cmp ( void *a, void *b )
-{
+static int _lang_cmp(void* a, void* b) {
   return strcmp(((lang_str_ele_t*)a)->lang, ((lang_str_ele_t*)b)->lang);
 }
 
@@ -45,23 +43,20 @@ static int _lang_cmp ( void *a, void *b )
  * ***********************************************************************/
 
 /* Create new instance */
-lang_str_t *lang_str_create ( void )
-{
+lang_str_t* lang_str_create(void) {
   return calloc(1, sizeof(lang_str_t));
 }
 
-lang_str_t *lang_str_create2 ( const char *s, const char *lang )
-{
-  lang_str_t *ls = lang_str_create();
+lang_str_t* lang_str_create2(const char* s, const char* lang) {
+  lang_str_t* ls = lang_str_create();
   if (ls)
     lang_str_add(ls, s, lang);
   return ls;
 }
 
 /* Destroy (free memory) */
-void lang_str_destroy ( lang_str_t *ls )
-{ 
-  lang_str_ele_t *e;
+void lang_str_destroy(lang_str_t* ls) {
+  lang_str_ele_t* e;
   if (ls == NULL)
     return;
   while ((e = RB_FIRST(ls))) {
@@ -72,28 +67,26 @@ void lang_str_destroy ( lang_str_t *ls )
 }
 
 /* Copy the lang_str instance */
-lang_str_t *lang_str_copy ( const lang_str_t *ls )
-{
-  lang_str_t *ret;
-  lang_str_ele_t *e;
+lang_str_t* lang_str_copy(const lang_str_t* ls) {
+  lang_str_t*     ret;
+  lang_str_ele_t* e;
   if (ls == NULL)
     return NULL;
   ret = lang_str_create();
-  RB_FOREACH(e, ls, link)
+  RB_FOREACH (e, ls, link)
     lang_str_add(ret, e->str, e->lang);
   return ret;
 }
 
 /* Get language element, don't return first */
-lang_str_ele_t *lang_str_get2_only
-  ( const lang_str_t *ls, const char *lang )
-{
-  int i;
-  const lang_code_list_t *langs;
-  lang_str_ele_t skel, *e = NULL;
+lang_str_ele_t* lang_str_get2_only(const lang_str_t* ls, const char* lang) {
+  int                     i;
+  const lang_code_list_t* langs;
+  lang_str_ele_t          skel, *e = NULL;
 
-  if (!ls) return NULL;
-  
+  if (!ls)
+    return NULL;
+
   /* Check config/requested langs */
   if ((langs = lang_code_split(lang)) != NULL) {
     for (i = 0; i < langs->codeslen; i++) {
@@ -108,34 +101,34 @@ lang_str_ele_t *lang_str_get2_only
 }
 
 /* Get language element */
-lang_str_ele_t *lang_str_get2
-  ( const lang_str_t *ls, const char *lang )
-{
-  lang_str_ele_t *e = lang_str_get2_only(ls, lang);
+lang_str_ele_t* lang_str_get2(const lang_str_t* ls, const char* lang) {
+  lang_str_ele_t* e = lang_str_get2_only(ls, lang);
 
   /* Use first available */
-  if (!e && ls) e = RB_FIRST(ls);
+  if (!e && ls)
+    e = RB_FIRST(ls);
 
   /* Return */
   return e;
 }
 
 /* Internal insertion routine */
-static int _lang_str_add
-  ( lang_str_t *ls, const char *str, const char *lang, int cmd )
-{
-  int save = 0;
+static int _lang_str_add(lang_str_t* ls, const char* str, const char* lang, int cmd) {
+  int             save = 0;
   lang_str_ele_t *e, *ae;
 
-  if (!ls || !str) return 0;
+  if (!ls || !str)
+    return 0;
 
   /* Get proper code */
-  if (!lang) lang = lang_code_preferred();
-  if (!(lang = lang_code_get(lang))) return 0;
+  if (!lang)
+    lang = lang_code_preferred();
+  if (!(lang = lang_code_get(lang)))
+    return 0;
 
   /* Use 'dummy' ele pointer for _lang_cmp */
-  ae = (lang_str_ele_t *)(lang - offsetof(lang_str_ele_t, lang));
-  e = RB_FIND(ls, ae, link, _lang_cmp);
+  ae = (lang_str_ele_t*)(lang - offsetof(lang_str_ele_t, lang));
+  e  = RB_FIND(ls, ae, link, _lang_cmp);
 
   /* Create */
   if (!e) {
@@ -145,7 +138,7 @@ static int _lang_str_add
     RB_INSERT_SORTED(ls, e, link, _lang_cmp);
     save = 1;
 
-  /* Append */
+    /* Append */
   } else if (cmd == LANG_STR_APPEND) {
     RB_REMOVE(ls, e, link);
     ae = realloc(e, sizeof(*e) + strlen(e->str) + strlen(str) + 1);
@@ -157,7 +150,7 @@ static int _lang_str_add
     }
     RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
 
-  /* Update */
+    /* Update */
   } else if (cmd == LANG_STR_UPDATE && strcmp(str, e->str)) {
     if (strlen(e->str) >= strlen(str)) {
       strcpy(e->str, str);
@@ -174,40 +167,36 @@ static int _lang_str_add
       RB_INSERT_SORTED(ls, ae, link, _lang_cmp);
     }
   }
-  
+
   return save;
 }
 
 /* Add new string (or replace existing one) */
-int lang_str_add 
-  ( lang_str_t *ls, const char *str, const char *lang )
-{ 
+int lang_str_add(lang_str_t* ls, const char* str, const char* lang) {
   return _lang_str_add(ls, str, lang, LANG_STR_UPDATE);
 }
 
 /* Append to existing string (or add new one) */
-int lang_str_append
-  ( lang_str_t *ls, const char *str, const char *lang )
-{
+int lang_str_append(lang_str_t* ls, const char* str, const char* lang) {
   return _lang_str_add(ls, str, lang, LANG_STR_APPEND);
 }
 
 /* Set new string with update check */
-int lang_str_set
-  ( lang_str_t **dst, const char *str, const char *lang )
-{
-  lang_str_ele_t *e;
-  int found;
-  if (*dst == NULL) goto change1;
-  if (!lang) lang = lang_code_preferred();
-  if (!(lang = lang_code_get(lang))) return 0;
+int lang_str_set(lang_str_t** dst, const char* str, const char* lang) {
+  lang_str_ele_t* e;
+  int             found;
+  if (*dst == NULL)
+    goto change1;
+  if (!lang)
+    lang = lang_code_preferred();
+  if (!(lang = lang_code_get(lang)))
+    return 0;
   if (*dst) {
     found = 0;
-    RB_FOREACH(e, *dst, link) {
+    RB_FOREACH (e, *dst, link) {
       if (found)
         goto change;
-      found = strcmp(e->lang, lang) == 0 &&
-              strcmp(e->str, str) == 0;
+      found = strcmp(e->lang, lang) == 0 && strcmp(e->str, str) == 0;
       if (!found)
         goto change;
     }
@@ -223,21 +212,17 @@ change1:
 }
 
 /* Set new string with update check */
-int lang_str_set_multi
-  ( lang_str_t **dst, const lang_str_t *src )
-{
-  int changed = 0;
-  lang_str_ele_t *e;
-  RB_FOREACH(e, src, link) {
+int lang_str_set_multi(lang_str_t** dst, const lang_str_t* src) {
+  int             changed = 0;
+  lang_str_ele_t* e;
+  RB_FOREACH (e, src, link) {
     changed |= lang_str_set(dst, e->str, e->lang);
   }
   return changed;
 }
 
 /* Set new strings with update check */
-int lang_str_set2
-  ( lang_str_t **dst, const lang_str_t *src )
-{
+int lang_str_set2(lang_str_t** dst, const lang_str_t* src) {
   if (*dst) {
     if (!lang_str_compare(*dst, src))
       return 0;
@@ -248,29 +233,27 @@ int lang_str_set2
 }
 
 /* Serialize  map */
-htsmsg_t *lang_str_serialize_map ( lang_str_t *ls )
-{
-  lang_str_ele_t *e;
-  if (!ls) return NULL;
-  htsmsg_t *a = htsmsg_create_map();
-  RB_FOREACH(e, ls, link) {
+htsmsg_t* lang_str_serialize_map(lang_str_t* ls) {
+  lang_str_ele_t* e;
+  if (!ls)
+    return NULL;
+  htsmsg_t* a = htsmsg_create_map();
+  RB_FOREACH (e, ls, link) {
     htsmsg_add_str(a, e->lang, e->str);
   }
   return a;
 }
 
 /* Serialize */
-void lang_str_serialize ( lang_str_t *ls, htsmsg_t *m, const char *f )
-{
-  if (!ls) return;
+void lang_str_serialize(lang_str_t* ls, htsmsg_t* m, const char* f) {
+  if (!ls)
+    return;
   htsmsg_add_msg(m, f, lang_str_serialize_map(ls));
 }
 
 /* Serialize one string element directly */
-void lang_str_serialize_one
-  ( htsmsg_t *m, const char *f, const char *str, const char *lang )
-{
-  lang_str_t *l = lang_str_create();
+void lang_str_serialize_one(htsmsg_t* m, const char* f, const char* str, const char* lang) {
+  lang_str_t* l = lang_str_create();
   if (l) {
     lang_str_add(l, str, lang);
     lang_str_serialize(l, m, f);
@@ -279,11 +262,10 @@ void lang_str_serialize_one
 }
 
 /* De-serialize map */
-lang_str_t *lang_str_deserialize_map ( htsmsg_t *map )
-{
-  lang_str_t *ret = lang_str_create();
-  htsmsg_field_t *f;
-  const char *str;
+lang_str_t* lang_str_deserialize_map(htsmsg_t* map) {
+  lang_str_t*     ret = lang_str_create();
+  htsmsg_field_t* f;
+  const char*     str;
 
   if (ret) {
     HTSMSG_FOREACH(f, map) {
@@ -296,15 +278,14 @@ lang_str_t *lang_str_deserialize_map ( htsmsg_t *map )
 }
 
 /* De-serialize */
-lang_str_t *lang_str_deserialize ( htsmsg_t *m, const char *n )
-{
-  htsmsg_t *a;
-  const char *str;
-  
+lang_str_t* lang_str_deserialize(htsmsg_t* m, const char* n) {
+  htsmsg_t*   a;
+  const char* str;
+
   if ((a = htsmsg_get_map(m, n))) {
     return lang_str_deserialize_map(a);
   } else if ((str = htsmsg_get_str(m, n))) {
-    lang_str_t *ret = lang_str_create();
+    lang_str_t* ret = lang_str_create();
     lang_str_add(ret, str, NULL);
     return ret;
   }
@@ -312,11 +293,10 @@ lang_str_t *lang_str_deserialize ( htsmsg_t *m, const char *n )
 }
 
 /* Compare */
-int lang_str_compare( const lang_str_t *ls1, const lang_str_t *ls2 )
-{
-  lang_str_ele_t *e;
-  const char *s1, *s2;
-  int r;
+int lang_str_compare(const lang_str_t* ls1, const lang_str_t* ls2) {
+  lang_str_ele_t* e;
+  const char *    s1, *s2;
+  int             r;
 
   if (ls1 == NULL && ls2)
     return -1;
@@ -325,7 +305,7 @@ int lang_str_compare( const lang_str_t *ls1, const lang_str_t *ls2 )
   if (ls1 == ls2)
     return 0;
   /* Note: may be optimized to not check languages twice */
-  RB_FOREACH(e, ls1, link) {
+  RB_FOREACH (e, ls1, link) {
     s1 = lang_str_get(ls1, e->lang);
     s2 = lang_str_get(ls2, e->lang);
     if (s1 == NULL && s2 != NULL)
@@ -335,9 +315,10 @@ int lang_str_compare( const lang_str_t *ls1, const lang_str_t *ls2 )
     if (s1 == NULL || s2 == NULL)
       continue;
     r = strcmp(s1, s2);
-    if (r) return r;
+    if (r)
+      return r;
   }
-  RB_FOREACH(e, ls2, link) {
+  RB_FOREACH (e, ls2, link) {
     s1 = lang_str_get(ls1, e->lang);
     s2 = lang_str_get(ls2, e->lang);
     if (s1 == NULL && s2 != NULL)
@@ -347,18 +328,19 @@ int lang_str_compare( const lang_str_t *ls1, const lang_str_t *ls2 )
     if (s1 == NULL || s2 == NULL)
       continue;
     r = strcmp(s1, s2);
-    if (r) return r;
+    if (r)
+      return r;
   }
   return 0;
 }
 
-size_t lang_str_size(const lang_str_t *ls)
-{
-  lang_str_ele_t *e;
-  size_t size;
-  if (!ls) return 0;
+size_t lang_str_size(const lang_str_t* ls) {
+  lang_str_ele_t* e;
+  size_t          size;
+  if (!ls)
+    return 0;
   size = sizeof(*ls);
-  RB_FOREACH(e, ls, link) {
+  RB_FOREACH (e, ls, link) {
     size += sizeof(*e);
     size += tvh_strlen(e->str);
   }

@@ -25,14 +25,15 @@
 #include "api.h"
 #include "intlconv.h"
 
-static int
-api_intlconv_charset_enum
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  const char **chrst;
-  htsmsg_t *l;
-  
-  l = htsmsg_create_list();
+static int api_intlconv_charset_enum(access_t* perm,
+    void*                                      opaque,
+    const char*                                op,
+    htsmsg_t*                                  args,
+    htsmsg_t**                                 resp) {
+  const char** chrst;
+  htsmsg_t*    l;
+
+  l     = htsmsg_create_list();
   chrst = intlconv_charsets;
   while (*chrst) {
     htsmsg_add_msg(l, NULL, htsmsg_create_key_val(*chrst, *chrst));
@@ -43,17 +44,15 @@ api_intlconv_charset_enum
   return 0;
 }
 
-void api_intlconv_init ( void )
-{
+void api_intlconv_init(void) {
   static api_hook_t ah[] = {
 
-    { "intlconv/charsets", ACCESS_ANONYMOUS, api_intlconv_charset_enum, NULL },
+      {"intlconv/charsets", ACCESS_ANONYMOUS, api_intlconv_charset_enum, NULL},
 
-    { NULL },
+      {NULL},
   };
 
   api_register_all(ah);
 }
-
 
 #endif /* __TVH_API_INTLCONV_H__ */

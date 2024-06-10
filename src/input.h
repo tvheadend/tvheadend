@@ -35,15 +35,14 @@ typedef struct tvh_input_instance     tvh_input_instance_t;
 typedef struct tvh_input_stream       tvh_input_stream_t;
 typedef struct tvh_input_stream_stats tvh_input_stream_stats_t;
 
-typedef LIST_HEAD(,tvh_hardware)      tvh_hardware_list_t;
-typedef LIST_HEAD(,tvh_input)         tvh_input_list_t;
-typedef LIST_HEAD(,tvh_input_stream)  tvh_input_stream_list_t;
+typedef LIST_HEAD(, tvh_hardware) tvh_hardware_list_t;
+typedef LIST_HEAD(, tvh_input) tvh_input_list_t;
+typedef LIST_HEAD(, tvh_input_stream) tvh_input_stream_list_t;
 
 /*
  * Input stream structure - used for getting statistics about active streams
  */
-struct tvh_input_stream_stats
-{
+struct tvh_input_stream_stats {
   int signal; ///< signal strength, value depending on signal_scale value:
               ///<  - SCALE_RELATIVE : 0...65535 (which means 0%...100%)
               ///<  - SCALE DECIBEL  : 0.0001 dBm units. This value is generally negative.
@@ -60,25 +59,25 @@ struct tvh_input_stream_stats
   signal_status_scale_t snr_scale;
 
   /* Note: if tc_bit > 0, BER = ec_bit / tc_bit (0...1) else BER = ber (driver specific value) */
-  int ec_bit;    ///< ERROR_BIT_COUNT (same as unc?)
-  int tc_bit;    ///< TOTAL_BIT_COUNT
+  int ec_bit; ///< ERROR_BIT_COUNT (same as unc?)
+  int tc_bit; ///< TOTAL_BIT_COUNT
 
   /* Note: PER = ec_block / tc_block (0...1) */
-  int ec_block;  ///< ERROR_BLOCK_COUNT
-  int tc_block;  ///< TOTAL_BLOCK_COUNT
+  int ec_block; ///< ERROR_BLOCK_COUNT
+  int tc_block; ///< TOTAL_BLOCK_COUNT
 };
 
 struct tvh_input_stream {
 
   LIST_ENTRY(tvh_input_stream) link;
 
-  char *uuid;         ///< Unique ID of the entry (used for updates)
-  char *input_name;   ///< Name of the parent input
-  char *stream_name;  ///< Name for this stream
-  int   subs_count;   ///< Number of subcscriptions
-  int   max_weight;   ///< Current max weight
+  char* uuid;        ///< Unique ID of the entry (used for updates)
+  char* input_name;  ///< Name of the parent input
+  char* stream_name; ///< Name for this stream
+  int   subs_count;  ///< Number of subcscriptions
+  int   max_weight;  ///< Current max weight
 
-  struct mpegts_apids *pids; ///< active PID list
+  struct mpegts_apids* pids; ///< active PID list
 
   tvh_input_stream_stats_t stats;
 };
@@ -91,11 +90,11 @@ struct tvh_input {
 
   LIST_ENTRY(tvh_input) ti_link;
 
-  void (*ti_get_streams) (tvh_input_t *, tvh_input_stream_list_t*);
-  void (*ti_clear_stats) (tvh_input_t *);
+  void (*ti_get_streams)(tvh_input_t*, tvh_input_stream_list_t*);
+  void (*ti_clear_stats)(tvh_input_t*);
 
-  struct htsmsg *(*ti_wizard_get) (tvh_input_t *, const char *);
-  void (*ti_wizard_set)  (tvh_input_t *, struct htsmsg *, const char *);
+  struct htsmsg* (*ti_wizard_get)(tvh_input_t*, const char*);
+  void (*ti_wizard_set)(tvh_input_t*, struct htsmsg*, const char*);
 };
 
 /*
@@ -109,23 +108,22 @@ struct tvh_input_instance {
   tvh_mutex_t              tii_stats_mutex;
   tvh_input_stream_stats_t tii_stats;
 
-  void (*tii_delete) (tvh_input_instance_t *tii);
-  void (*tii_clear_stats) (tvh_input_instance_t *tii);
+  void (*tii_delete)(tvh_input_instance_t* tii);
+  void (*tii_clear_stats)(tvh_input_instance_t* tii);
 };
 
 /*
  * Generic hardware super-class
  */
 struct tvh_hardware {
-  idnode_t                     th_id;
-  LIST_ENTRY(tvh_hardware)     th_link;
+  idnode_t th_id;
+  LIST_ENTRY(tvh_hardware) th_link;
 };
 
 void tvh_hardware_init(void);
 
-void *tvh_hardware_create0
-  ( void *o, const idclass_t *idc, const char *uuid, htsmsg_t *conf );
-void tvh_hardware_delete ( tvh_hardware_t *th );
+void* tvh_hardware_create0(void* o, const idclass_t* idc, const char* uuid, htsmsg_t* conf);
+void  tvh_hardware_delete(tvh_hardware_t* th);
 
 /*
  * Class and Global list defs
@@ -136,26 +134,26 @@ extern const idclass_t tvh_input_instance_class;
 extern tvh_input_list_t    tvh_inputs;
 extern tvh_hardware_list_t tvh_hardware;
 
-#define TVH_INPUT_FOREACH(x) LIST_FOREACH(x, &tvh_inputs, ti_link)
-#define TVH_HARDWARE_FOREACH(x) LIST_FOREACH(x, &tvh_hardware, th_link)
+#define TVH_INPUT_FOREACH(x)    LIST_FOREACH (x, &tvh_inputs, ti_link)
+#define TVH_HARDWARE_FOREACH(x) LIST_FOREACH (x, &tvh_hardware, th_link)
 
 /*
  * Methods
  */
 
-htsmsg_t * tvh_input_stream_create_msg ( tvh_input_stream_t *st );
+htsmsg_t* tvh_input_stream_create_msg(tvh_input_stream_t* st);
 
-void tvh_input_stream_destroy ( tvh_input_stream_t *st );
+void tvh_input_stream_destroy(tvh_input_stream_t* st);
 
-static inline tvh_input_t *
-tvh_input_find_by_uuid(const char *uuid)
-  { return (tvh_input_t*)idnode_find(uuid, &tvh_input_class, NULL); }
+static inline tvh_input_t* tvh_input_find_by_uuid(const char* uuid) {
+  return (tvh_input_t*)idnode_find(uuid, &tvh_input_class, NULL);
+}
 
-static inline tvh_input_instance_t *
-tvh_input_instance_find_by_uuid(const char *uuid)
-  { return (tvh_input_instance_t*)idnode_find(uuid, &tvh_input_instance_class, NULL); }
+static inline tvh_input_instance_t* tvh_input_instance_find_by_uuid(const char* uuid) {
+  return (tvh_input_instance_t*)idnode_find(uuid, &tvh_input_instance_class, NULL);
+}
 
-void tvh_input_instance_clear_stats ( tvh_input_instance_t *tii );
+void tvh_input_instance_clear_stats(tvh_input_instance_t* tii);
 
 /*
  * Input subsystem includes

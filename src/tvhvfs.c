@@ -22,10 +22,9 @@
 #endif
 #include <sys/stat.h>
 
-int tvh_vfs_fsid_build(const char *path, struct statvfs *vfs, tvh_fsid_t *dst)
-{
+int tvh_vfs_fsid_build(const char* path, struct statvfs* vfs, tvh_fsid_t* dst) {
   struct statvfs _vfs;
-  struct stat st;
+  struct stat    st;
 
   if (vfs == NULL)
     vfs = &_vfs;
@@ -33,7 +32,7 @@ int tvh_vfs_fsid_build(const char *path, struct statvfs *vfs, tvh_fsid_t *dst)
   if (statvfs(path, vfs) == -1)
     return -1;
 
-  dst->fsid = tvh_fsid(vfs->f_fsid);
+  dst->fsid  = tvh_fsid(vfs->f_fsid);
   dst->id[0] = '\0';
   if (dst->fsid == 0) {
     if (stat(path, &st) == -1)

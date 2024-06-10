@@ -31,14 +31,11 @@
 /*
  * Spawn task and create pipes
  */
-static int
-iptv_pipe_start
-  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
-{
-  char **argv = NULL, **envp = NULL;
-  const char *replace[] = { "${service_name}", im->mm_iptv_svcname ?: "", NULL };
-  int rd;
-  pid_t pid;
+static int iptv_pipe_start(iptv_input_t* mi, iptv_mux_t* im, const char* raw, const url_t* url) {
+  char **     argv = NULL, **envp = NULL;
+  const char* replace[] = {"${service_name}", im->mm_iptv_svcname ?: "", NULL};
+  int         rd;
+  pid_t       pid;
 
   if (strncmp(raw, "pipe://", 7))
     goto err;
@@ -63,7 +60,7 @@ iptv_pipe_start
   fcntl(rd, F_SETFL, fcntl(rd, F_GETFL) | O_NONBLOCK);
 
   im->mm_iptv_fd = rd;
-  im->im_data = (void *)(intptr_t)pid;
+  im->im_data    = (void*)(intptr_t)pid;
 
   im->mm_iptv_respawn_last = mclk();
 
@@ -79,22 +76,17 @@ err:
   return -1;
 }
 
-static void
-iptv_pipe_stop
-  ( iptv_input_t *mi, iptv_mux_t *im )
-{
+static void iptv_pipe_stop(iptv_input_t* mi, iptv_mux_t* im) {
   pid_t pid = (intptr_t)im->im_data;
   spawn_kill(pid, tvh_kill_to_sig(im->mm_iptv_kill), im->mm_iptv_kill_timeout);
   iptv_input_close_fds(mi, im);
 }
 
-static ssize_t
-iptv_pipe_read ( iptv_input_t *mi, iptv_mux_t *im )
-{
-  int r, rd = im->mm_iptv_fd;
+static ssize_t iptv_pipe_read(iptv_input_t* mi, iptv_mux_t* im) {
+  int     r, rd = im->mm_iptv_fd;
   ssize_t res = 0;
-  char buf[64*1024];
-  pid_t pid;
+  char    buf[64 * 1024];
+  pid_t   pid;
 
   while (rd > 0 && res < sizeof(buf)) {
     r = read(rd, buf, sizeof(buf));
@@ -106,12 +98,14 @@ iptv_pipe_read ( iptv_input_t *mi, iptv_mux_t *im )
     }
     if (r <= 0) {
       iptv_input_close_fds(mi, im);
-      pid = (intptr_t)im->im_data;
+      pid         = (intptr_t)im->im_data;
       im->im_data = NULL;
       spawn_kill(pid, tvh_kill_to_sig(im->mm_iptv_kill), im->mm_iptv_kill_timeout);
       if (mclk() < im->mm_iptv_respawn_last + sec2mono(2)) {
-        tvherror(LS_IPTV, "stdin pipe %d unexpectedly closed: %s",
-                 rd, r < 0 ? strerror(errno) : "No data");
+        tvherror(LS_IPTV,
+            "stdin pipe %d unexpectedly closed: %s",
+            rd,
+            r < 0 ? strerror(errno) : "No data");
       } else {
         /* avoid deadlock here */
         tvh_mutex_unlock(&iptv_lock);
@@ -142,18 +136,14 @@ iptv_pipe_read ( iptv_input_t *mi, iptv_mux_t *im )
  * Initialise pipe handler
  */
 
-void
-iptv_pipe_init ( void )
-{
+void iptv_pipe_init(void) {
   static iptv_handler_t ih[] = {
-    {
-      .scheme = "pipe",
-      .buffer_limit = 5000,
-      .start  = iptv_pipe_start,
-      .stop   = iptv_pipe_stop,
-      .read   = iptv_pipe_read,
-      .pause  = iptv_input_pause_handler
-    },
+      {.scheme          = "pipe",
+          .buffer_limit = 5000,
+          .start        = iptv_pipe_start,
+          .stop         = iptv_pipe_stop,
+          .read         = iptv_pipe_read,
+          .pause        = iptv_input_pause_handler},
   };
   iptv_handler_register(ih, ARRAY_SIZE(ih));
 }

@@ -28,30 +28,29 @@
 /*
  * Timer callback (only to be used in network init)
  */
-void mpegts_network_scan_timer_cb ( void *p );
+void mpegts_network_scan_timer_cb(void* p);
 
 /*
  * Registration functions
  */
-void mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight,
-                                     int flags, int delay );
-void mpegts_network_scan_queue_del ( mpegts_mux_t *mm );
+void mpegts_network_scan_queue_add(mpegts_mux_t* mm, int weight, int flags, int delay);
+void mpegts_network_scan_queue_del(mpegts_mux_t* mm);
 
 /*
  * Events
  */
-void mpegts_network_scan_mux_fail    ( mpegts_mux_t *mm );
-void mpegts_network_scan_mux_done    ( mpegts_mux_t *mm );
-void mpegts_network_scan_mux_partial ( mpegts_mux_t *mm );
-void mpegts_network_scan_mux_cancel  ( mpegts_mux_t *mm, int reinsert );
-void mpegts_network_scan_mux_active  ( mpegts_mux_t *mm );
-void mpegts_network_scan_mux_reactivate ( mpegts_mux_t *mm );
+void mpegts_network_scan_mux_fail(mpegts_mux_t* mm);
+void mpegts_network_scan_mux_done(mpegts_mux_t* mm);
+void mpegts_network_scan_mux_partial(mpegts_mux_t* mm);
+void mpegts_network_scan_mux_cancel(mpegts_mux_t* mm, int reinsert);
+void mpegts_network_scan_mux_active(mpegts_mux_t* mm);
+void mpegts_network_scan_mux_reactivate(mpegts_mux_t* mm);
 
 /*
  * Init / Teardown
  */
-void mpegts_network_scan_init ( void );
-void mpegts_network_scan_done ( void );
+void mpegts_network_scan_init(void);
+void mpegts_network_scan_done(void);
 
 #endif /* __TVH_MPEGTS_NETWORK_SCAN_H__*/
 

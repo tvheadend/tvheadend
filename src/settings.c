@@ -37,23 +37,19 @@
 
 #include "../vendor/xdg-user-dirs/xdg-user-dir-lookup.c"
 
-static char *settingspath = NULL;
+static char* settingspath = NULL;
 
 /**
  *
  */
-const char *
-hts_settings_get_root(void)
-{
+const char* hts_settings_get_root(void) {
   return settingspath;
 }
 
 /**
  *
  */
-void
-hts_settings_init(const char *confpath)
-{
+void hts_settings_init(const char* confpath) {
   if (confpath)
     settingspath = realpath(confpath, NULL);
 }
@@ -61,22 +57,19 @@ hts_settings_init(const char *confpath)
 /**
  *
  */
-void
-hts_settings_done(void)
-{
+void hts_settings_done(void) {
   free(settingspath);
 }
 
 /**
  *
  */
-int
-hts_settings_makedirs ( const char *inpath )
-{
-  size_t x = strlen(inpath) - 1;
-  char *path = alloca(x + 2);
+int hts_settings_makedirs(const char* inpath) {
+  size_t x    = strlen(inpath) - 1;
+  char*  path = alloca(x + 2);
 
-  if (path == NULL) return -1;
+  if (path == NULL)
+    return -1;
   strcpy(path, inpath);
 
   while (x) {
@@ -92,12 +85,13 @@ hts_settings_makedirs ( const char *inpath )
 /**
  *
  */
-static void
-_hts_settings_buildpath
-  (char *dst, size_t dstsize, const char *fmt, va_list ap, const char *prefix)
-{
-  char tmp[PATH_MAX];
-  char *n = dst;
+static void _hts_settings_buildpath(char* dst,
+    size_t                                dstsize,
+    const char*                           fmt,
+    va_list                               ap,
+    const char*                           prefix) {
+  char  tmp[PATH_MAX];
+  char* n = dst;
 
   vsnprintf(tmp, sizeof(tmp), fmt, ap);
   if (*tmp != '/' && prefix)
@@ -105,17 +99,14 @@ _hts_settings_buildpath
   else
     strlcpy(dst, tmp, dstsize);
 
-  while(*n) {
-    if(*n == ':' || *n == '?' || *n == '*' || *n > 127 || *n < 32)
+  while (*n) {
+    if (*n == ':' || *n == '?' || *n == '*' || *n > 127 || *n < 32)
       *n = '_';
     n++;
   }
 }
 
-int
-hts_settings_buildpath
-  (char *dst, size_t dstsize, const char *fmt, ...)
-{
+int hts_settings_buildpath(char* dst, size_t dstsize, const char* fmt, ...) {
   va_list va;
   if (!settingspath)
     return 1;
@@ -128,18 +119,16 @@ hts_settings_buildpath
 /**
  *
  */
-void
-hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
-{
-  char path[PATH_MAX];
-  char tmppath[PATH_MAX + 4];
-  int fd;
-  va_list ap;
+void hts_settings_save(htsmsg_t* record, const char* pathfmt, ...) {
+  char           path[PATH_MAX];
+  char           tmppath[PATH_MAX + 4];
+  int            fd;
+  va_list        ap;
   htsbuf_queue_t hq;
-  htsbuf_data_t *hd;
-  int ok, r, pack;
+  htsbuf_data_t* hd;
+  int            ok, r, pack;
 
-  if(settingspath == NULL)
+  if (settingspath == NULL)
     return;
 
   /* Clean the path */
@@ -148,23 +137,22 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   va_end(ap);
 
   /* Create directories */
-  if (hts_settings_makedirs(path)) return;
+  if (hts_settings_makedirs(path))
+    return;
 
   tvhdebug(LS_SETTINGS, "saving to %s", path);
 
   /* Create tmp file */
   snprintf(tmppath, sizeof(tmppath), "%s.tmp", path);
-  if((fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR)) < 0) {
-    tvhalert(LS_SETTINGS, "Unable to create \"%s\" - %s",
-	     tmppath, strerror(errno));
+  if ((fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR)) < 0) {
+    tvhalert(LS_SETTINGS, "Unable to create \"%s\" - %s", tmppath, strerror(errno));
     return;
   }
 
   /* Store data */
 #if ENABLE_ZLIB
   pack = strstr(path, "/muxes/") != NULL && /* ugly, redesign API */
-         strstr(path, "/networks/") != NULL &&
-         strstr(path, "/input/") != NULL;
+      strstr(path, "/networks/") != NULL && strstr(path, "/input/") != NULL;
 #else
   pack = 0;
 #endif
@@ -173,19 +161,18 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   if (!pack) {
     htsbuf_queue_init(&hq, 0);
     htsmsg_json_serialize(record, &hq, 1);
-    TAILQ_FOREACH(hd, &hq.hq_q, hd_link)
-      if(tvh_write(fd, hd->hd_data + hd->hd_data_off, hd->hd_data_len)) {
-        tvhalert(LS_SETTINGS, "Failed to write file \"%s\" - %s",
-                 tmppath, strerror(errno));
+    TAILQ_FOREACH (hd, &hq.hq_q, hd_link)
+      if (tvh_write(fd, hd->hd_data + hd->hd_data_off, hd->hd_data_len)) {
+        tvhalert(LS_SETTINGS, "Failed to write file \"%s\" - %s", tmppath, strerror(errno));
         ok = 0;
         break;
       }
     htsbuf_queue_flush(&hq);
   } else {
 #if ENABLE_ZLIB
-    void *msgdata = NULL;
+    void*  msgdata = NULL;
     size_t msglen;
-    r = htsmsg_binary2_serialize0(record, &msgdata, &msglen, 2*1024*1024);
+    r = htsmsg_binary2_serialize0(record, &msgdata, &msglen, 2 * 1024 * 1024);
     if (!r && msglen >= 4) {
       r = tvh_gzip_deflate_fd_header(fd, msgdata, msglen, NULL, 3, "01");
       if (r)
@@ -199,17 +186,20 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   close(fd);
 
   /* Move */
-  if(ok) {
+  if (ok) {
     r = rename(tmppath, path);
     if (r && errno == EISDIR) {
       rmtree(path);
       r = rename(tmppath, path);
     }
     if (r)
-      tvhalert(LS_SETTINGS, "Unable to rename file \"%s\" to \"%s\" - %s",
-	       tmppath, path, strerror(errno));
-  
-  /* Delete tmp */
+      tvhalert(LS_SETTINGS,
+          "Unable to rename file \"%s\" to \"%s\" - %s",
+          tmppath,
+          path,
+          strerror(errno));
+
+    /* Delete tmp */
   } else
     unlink(tmppath);
 }
@@ -217,34 +207,33 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 /**
  *
  */
-static htsmsg_t *
-hts_settings_load_one(const char *filename)
-{
-  ssize_t n, size;
-  char *mem;
-  fb_file *fp;
-  htsmsg_t *r = NULL;
+static htsmsg_t* hts_settings_load_one(const char* filename) {
+  ssize_t   n, size;
+  char*     mem;
+  fb_file*  fp;
+  htsmsg_t* r = NULL;
 
   /* Open */
-  if (!(fp = fb_open(filename, 1, 0))) return NULL;
+  if (!(fp = fb_open(filename, 1, 0)))
+    return NULL;
   size = fb_size(fp);
 
   /* Load data */
-  mem    = malloc(size+1);
-  n      = fb_read(fp, mem, size);
-  if (n >= 0) mem[n] = 0;
+  mem = malloc(size + 1);
+  n   = fb_read(fp, mem, size);
+  if (n >= 0)
+    mem[n] = 0;
 
   /* Decode */
-  if(n == size) {
-    if (size > 12 && memcmp(mem, "\xff\xffGZIP0", 7) == 0 &&
-        (mem[7] == '0' || mem[7] == '1')) {
+  if (n == size) {
+    if (size > 12 && memcmp(mem, "\xff\xffGZIP0", 7) == 0 && (mem[7] == '0' || mem[7] == '1')) {
 #if ENABLE_ZLIB
       uint32_t orig = (mem[8] << 24) | (mem[9] << 16) | (mem[10] << 8) | mem[11];
-      if (orig > 10*1024*1024U) {
+      if (orig > 10 * 1024 * 1024U) {
         tvhalert(LS_SETTINGS, "too big gzip for %s", filename);
         r = NULL;
       } else if (orig > 0) {
-        uint8_t *unpacked = tvh_gzip_inflate((uint8_t *)mem + 12, size - 12, orig);
+        uint8_t* unpacked = tvh_gzip_inflate((uint8_t*)mem + 12, size - 12, orig);
         if (unpacked) {
           if (mem[7] == '1') {
             r = htsmsg_binary2_deserialize0(unpacked, orig, NULL);
@@ -270,48 +259,46 @@ hts_settings_load_one(const char *filename)
 /**
  *
  */
-static htsmsg_t *
-hts_settings_load_path(const char *fullpath, int depth)
-{
-  char child[PATH_MAX];
-  const char *name;
+static htsmsg_t* hts_settings_load_path(const char* fullpath, int depth) {
+  char                   child[PATH_MAX];
+  const char*            name;
   struct filebundle_stat st;
-  fb_dirent **namelist, *d;
-  htsmsg_t *r, *c;
-  int n, i;
+  fb_dirent **           namelist, *d;
+  htsmsg_t *             r, *c;
+  int                    n, i;
 
   /* Invalid */
-  if (fb_stat(fullpath, &st)) return NULL;
+  if (fb_stat(fullpath, &st))
+    return NULL;
 
   /* Directory */
   if (st.is_dir) {
 
     /* Get file list */
-    if((n = fb_scandir(fullpath, &namelist)) < 0)
+    if ((n = fb_scandir(fullpath, &namelist)) < 0)
       return NULL;
 
     /* Read files */
     r = htsmsg_create_map();
-    for(i = 0; i < n; i++) {
-      d = namelist[i];
+    for (i = 0; i < n; i++) {
+      d    = namelist[i];
       name = d->name;
-      if(name[0] != '.' && name[0] && name[strlen(name)-1] != '~') {
+      if (name[0] != '.' && name[0] && name[strlen(name) - 1] != '~') {
 
         snprintf(child, sizeof(child), "%s/%s", fullpath, d->name);
-        if(d->type == FB_DIR && depth > 0) {
+        if (d->type == FB_DIR && depth > 0) {
           c = hts_settings_load_path(child, depth - 1);
         } else {
           c = hts_settings_load_one(child);
         }
-        if(c != NULL)
+        if (c != NULL)
           htsmsg_add_msg(r, d->name, c);
-
       }
       free(d);
     }
     free(namelist);
 
-  /* File */
+    /* File */
   } else {
     r = hts_settings_load_one(fullpath);
   }
@@ -322,23 +309,19 @@ hts_settings_load_path(const char *fullpath, int depth)
 /**
  *
  */
-static htsmsg_t *
-hts_settings_vload(const char *pathfmt, va_list ap, int depth)
-{
-  htsmsg_t *ret = NULL;
-  char fullpath[PATH_MAX];
-  va_list ap2;
+static htsmsg_t* hts_settings_vload(const char* pathfmt, va_list ap, int depth) {
+  htsmsg_t* ret = NULL;
+  char      fullpath[PATH_MAX];
+  va_list   ap2;
   va_copy(ap2, ap);
 
   /* Try normal path */
-  _hts_settings_buildpath(fullpath, sizeof(fullpath), 
-                          pathfmt, ap, settingspath);
+  _hts_settings_buildpath(fullpath, sizeof(fullpath), pathfmt, ap, settingspath);
   ret = hts_settings_load_path(fullpath, depth);
 
   /* Try bundle path */
   if (!ret && *pathfmt != '/') {
-    _hts_settings_buildpath(fullpath, sizeof(fullpath),
-                            pathfmt, ap2, "data/conf");
+    _hts_settings_buildpath(fullpath, sizeof(fullpath), pathfmt, ap2, "data/conf");
     ret = hts_settings_load_path(fullpath, depth);
   }
 
@@ -347,30 +330,13 @@ hts_settings_vload(const char *pathfmt, va_list ap, int depth)
   return ret;
 }
 
-
 /**
  *
  */
-htsmsg_t *
-hts_settings_load(const char *pathfmt, ...)
-{
+htsmsg_t* hts_settings_load(const char* pathfmt, ...) {
   va_list ap;
   va_start(ap, pathfmt);
-  htsmsg_t *r = hts_settings_vload(pathfmt, ap, 0);
-  va_end(ap);
-  return r;
-}
-
-
-/**
- *
- */
-htsmsg_t *
-hts_settings_load_r(int depth, const char *pathfmt, ...)
-{
-  va_list ap;
-  va_start(ap, pathfmt);
-  htsmsg_t *r = hts_settings_vload(pathfmt, ap, depth);
+  htsmsg_t* r = hts_settings_vload(pathfmt, ap, 0);
   va_end(ap);
   return r;
 }
@@ -378,23 +344,32 @@ hts_settings_load_r(int depth, const char *pathfmt, ...)
 /**
  *
  */
-void
-hts_settings_remove(const char *pathfmt, ...)
-{
-  char fullpath[PATH_MAX];
+htsmsg_t* hts_settings_load_r(int depth, const char* pathfmt, ...) {
   va_list ap;
+  va_start(ap, pathfmt);
+  htsmsg_t* r = hts_settings_vload(pathfmt, ap, depth);
+  va_end(ap);
+  return r;
+}
+
+/**
+ *
+ */
+void hts_settings_remove(const char* pathfmt, ...) {
+  char        fullpath[PATH_MAX];
+  va_list     ap;
   struct stat st;
 
   va_start(ap, pathfmt);
-  _hts_settings_buildpath(fullpath, sizeof(fullpath),
-                          pathfmt, ap, settingspath);
+  _hts_settings_buildpath(fullpath, sizeof(fullpath), pathfmt, ap, settingspath);
   va_end(ap);
   if (stat(fullpath, &st) == 0) {
     if (S_ISDIR(st.st_mode))
       rmtree(fullpath);
     else {
       unlink(fullpath);
-      while (rmdir(dirname(fullpath)) == 0);
+      while (rmdir(dirname(fullpath)) == 0)
+        ;
     }
   }
 }
@@ -402,11 +377,9 @@ hts_settings_remove(const char *pathfmt, ...)
 /**
  *
  */
-int
-hts_settings_open_file(int flags, const char *pathfmt, ...)
-{
-  char path[PATH_MAX];
-  int _flags;
+int hts_settings_open_file(int flags, const char* pathfmt, ...) {
+  char    path[PATH_MAX];
+  int     _flags;
   va_list ap;
 
   /* Build path */
@@ -416,7 +389,8 @@ hts_settings_open_file(int flags, const char *pathfmt, ...)
 
   /* Create directories */
   if (flags & HTS_SETTINGS_OPEN_WRITE)
-    if (hts_settings_makedirs(path)) return -1;
+    if (hts_settings_makedirs(path))
+      return -1;
 
   /* Open file */
   _flags = (flags & HTS_SETTINGS_OPEN_WRITE) ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
@@ -430,11 +404,9 @@ hts_settings_open_file(int flags, const char *pathfmt, ...)
 /*
  * Check if a path exists
  */
-int
-hts_settings_exists ( const char *pathfmt, ... )
-{
-  va_list ap;
-  char path[PATH_MAX];
+int hts_settings_exists(const char* pathfmt, ...) {
+  va_list     ap;
+  char        path[PATH_MAX];
   struct stat st;
 
   /* Build path */
@@ -448,14 +420,10 @@ hts_settings_exists ( const char *pathfmt, ... )
 /*
  * XDG user directory support
  */
-char *
-hts_settings_get_xdg_dir_lookup (const char *name)
-{
-  return xdg_user_dir_lookup (name);
+char* hts_settings_get_xdg_dir_lookup(const char* name) {
+  return xdg_user_dir_lookup(name);
 }
 
-char *
-hts_settings_get_xdg_dir_with_fallback (const char *name, const char *fallback)
-{
-  return xdg_user_dir_lookup_with_fallback (name, fallback);
+char* hts_settings_get_xdg_dir_with_fallback(const char* name, const char* fallback) {
+  return xdg_user_dir_lookup_with_fallback(name, fallback);
 }

@@ -26,21 +26,20 @@
 #include "access.h"
 #include "api.h"
 
-static idnode_set_t *
-api_input_hw_tree ( void )
-{
-  tvh_hardware_t *th;
-  idnode_set_t *is = idnode_set_create(0);
-  TVH_HARDWARE_FOREACH(th)
+static idnode_set_t* api_input_hw_tree(void) {
+  tvh_hardware_t* th;
+  idnode_set_t*   is = idnode_set_create(0);
+  TVH_HARDWARE_FOREACH (th)
     idnode_set_add(is, &th->th_id, NULL, NULL);
   return is;
 }
 
 #if ENABLE_SATIP_CLIENT
-static int
-api_input_satip_discover
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
+static int api_input_satip_discover(access_t* perm,
+    void*                                     opaque,
+    const char*                               op,
+    htsmsg_t*                                 args,
+    htsmsg_t**                                resp) {
   int err = 0;
 
   if (op == NULL || strcmp(op, "all"))
@@ -56,18 +55,16 @@ api_input_satip_discover
 }
 #endif
 
-void api_input_init ( void )
-{
+void api_input_init(void) {
   static api_hook_t ah[] = {
-    { "hardware/tree", ACCESS_ADMIN,     api_idnode_tree, api_input_hw_tree }, 
+      {"hardware/tree", ACCESS_ADMIN, api_idnode_tree, api_input_hw_tree},
 #if ENABLE_SATIP_CLIENT
-    { "hardware/satip/discover", ACCESS_ADMIN, api_input_satip_discover, NULL },
+      {"hardware/satip/discover", ACCESS_ADMIN, api_input_satip_discover, NULL},
 #endif
-    { NULL },
+      {NULL},
   };
 
   api_register_all(ah);
 }
-
 
 #endif /* __TVH_API_INPUT_H__ */

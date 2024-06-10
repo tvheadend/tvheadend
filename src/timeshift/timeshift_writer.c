@@ -36,13 +36,11 @@
 /*
  * Write data (retry on EAGAIN)
  */
-static ssize_t _write_fd
-  ( int fd, const void *buf, size_t count )
-{
+static ssize_t _write_fd(int fd, const void* buf, size_t count) {
   ssize_t r;
   size_t  n = 0;
-  while ( n < count ) {
-    r = write(fd, buf+n, count-n);
+  while (n < count) {
+    r = write(fd, buf + n, count - n);
     if (r == -1) {
       if (ERRNO_AGAIN(errno))
         continue;
@@ -54,19 +52,17 @@ static ssize_t _write_fd
   return count == n ? n : -1;
 }
 
-static ssize_t _write
-  ( timeshift_file_t *tsf, const void *buf, size_t count )
-{
-  uint8_t *ram;
-  size_t alloc;
-  ssize_t ret;
+static ssize_t _write(timeshift_file_t* tsf, const void* buf, size_t count) {
+  uint8_t* ram;
+  size_t   alloc;
+  ssize_t  ret;
   if (tsf->ram) {
     tvh_mutex_lock(&tsf->ram_lock);
     if (tsf->ram_size < tsf->woff + count) {
       if (tsf->ram_size >= timeshift_conf.ram_segment_size)
-        alloc = MAX(count, 64*1024);
+        alloc = MAX(count, 64 * 1024);
       else
-        alloc = MAX(count, 4*1024*1024);
+        alloc = MAX(count, 4 * 1024 * 1024);
       ram = realloc(tsf->ram, tsf->ram_size + alloc);
       if (ram == NULL) {
         tvhwarn(LS_TIMESHIFT, "RAM timeshift memalloc failed");
@@ -91,45 +87,52 @@ static ssize_t _write
 /*
  * Write message
  */
-static ssize_t _write_msg
-  ( timeshift_file_t *tsf, streaming_message_type_t type, int64_t time,
-    const void *buf, size_t len )
-{
-  size_t len2 = len + sizeof(type) + sizeof(time);
+static ssize_t _write_msg(timeshift_file_t* tsf,
+    streaming_message_type_t                type,
+    int64_t                                 time,
+    const void*                             buf,
+    size_t                                  len) {
+  size_t  len2 = len + sizeof(type) + sizeof(time);
   ssize_t err, ret;
   ret = err = _write(tsf, &len2, sizeof(len2));
-  if (err < 0) return err;
+  if (err < 0)
+    return err;
   err = _write(tsf, &type, sizeof(type));
-  if (err < 0) return err;
+  if (err < 0)
+    return err;
   ret += err;
   err = _write(tsf, &time, sizeof(time));
-  if (err < 0) return err;
+  if (err < 0)
+    return err;
   ret += err;
   if (len) {
     err = _write(tsf, buf, len);
-    if (err < 0) return err;
+    if (err < 0)
+      return err;
     ret += err;
   }
   return ret;
 }
 
-static ssize_t _write_msg_fd
-  ( int fd, streaming_message_type_t type, int64_t time,
-    const void *buf, size_t len )
-{
-  size_t len2 = len + sizeof(type) + sizeof(time);
+static ssize_t
+_write_msg_fd(int fd, streaming_message_type_t type, int64_t time, const void* buf, size_t len) {
+  size_t  len2 = len + sizeof(type) + sizeof(time);
   ssize_t err, ret;
   ret = err = _write_fd(fd, &len2, sizeof(len2));
-  if (err < 0) return err;
+  if (err < 0)
+    return err;
   err = _write_fd(fd, &type, sizeof(type));
-  if (err < 0) return err;
+  if (err < 0)
+    return err;
   ret += err;
   err = _write_fd(fd, &time, sizeof(time));
-  if (err < 0) return err;
+  if (err < 0)
+    return err;
   ret += err;
   if (len) {
     err = _write_fd(fd, buf, len);
-    if (err < 0) return err;
+    if (err < 0)
+      return err;
     ret += err;
   }
   return ret;
@@ -138,18 +141,19 @@ static ssize_t _write_msg_fd
 /*
  * Write packet buffer
  */
-static int _write_pktbuf ( timeshift_file_t *tsf, pktbuf_t *pktbuf )
-{
+static int _write_pktbuf(timeshift_file_t* tsf, pktbuf_t* pktbuf) {
   ssize_t ret, err;
   if (pktbuf) {
     ret = err = _write(tsf, &pktbuf->pb_size, sizeof(pktbuf->pb_size));
-    if (err < 0) return err;
+    if (err < 0)
+      return err;
     err = _write(tsf, pktbuf_ptr(pktbuf), pktbuf_len(pktbuf));
-    if (err < 0) return err;
+    if (err < 0)
+      return err;
     ret += err;
   } else {
     size_t sz = 0;
-    ret = _write(tsf, &sz, sizeof(sz));
+    ret       = _write(tsf, &sz, sizeof(sz));
   }
   return ret;
 }
@@ -157,26 +161,25 @@ static int _write_pktbuf ( timeshift_file_t *tsf, pktbuf_t *pktbuf )
 /*
  * Write signal status
  */
-ssize_t timeshift_write_sigstat
-  ( timeshift_file_t *tsf, int64_t time, signal_status_t *sigstat )
-{
-  return _write_msg(tsf, SMT_SIGNAL_STATUS, time, sigstat,
-                    sizeof(signal_status_t));
+ssize_t timeshift_write_sigstat(timeshift_file_t* tsf, int64_t time, signal_status_t* sigstat) {
+  return _write_msg(tsf, SMT_SIGNAL_STATUS, time, sigstat, sizeof(signal_status_t));
 }
 
 /*
  * Write packet
  */
-ssize_t timeshift_write_packet ( timeshift_file_t *tsf, int64_t time, th_pkt_t *pkt )
-{
+ssize_t timeshift_write_packet(timeshift_file_t* tsf, int64_t time, th_pkt_t* pkt) {
   ssize_t ret = 0, err;
   ret = err = _write_msg(tsf, SMT_PACKET, time, pkt, sizeof(th_pkt_t));
-  if (err <= 0) return err;
+  if (err <= 0)
+    return err;
   err = _write_pktbuf(tsf, pkt->pkt_meta);
-  if (err <= 0) return err;
+  if (err <= 0)
+    return err;
   ret += err;
   err = _write_pktbuf(tsf, pkt->pkt_payload);
-  if (err <= 0) return err;
+  if (err <= 0)
+    return err;
   ret += err;
   return ret;
 }
@@ -184,40 +187,35 @@ ssize_t timeshift_write_packet ( timeshift_file_t *tsf, int64_t time, th_pkt_t *
 /*
  * Write MPEGTS data
  */
-ssize_t timeshift_write_mpegts ( timeshift_file_t *tsf, int64_t time, void *data )
-{
+ssize_t timeshift_write_mpegts(timeshift_file_t* tsf, int64_t time, void* data) {
   return _write_msg(tsf, SMT_MPEGTS, time, data, 188);
 }
 
 /*
  * Write skip message
  */
-ssize_t timeshift_write_skip ( int fd, streaming_skip_t *skip )
-{
+ssize_t timeshift_write_skip(int fd, streaming_skip_t* skip) {
   return _write_msg_fd(fd, SMT_SKIP, 0, skip, sizeof(streaming_skip_t));
 }
 
 /*
  * Write speed message
  */
-ssize_t timeshift_write_speed ( int fd, int speed )
-{
+ssize_t timeshift_write_speed(int fd, int speed) {
   return _write_msg_fd(fd, SMT_SPEED, 0, &speed, sizeof(speed));
 }
 
 /*
  * Stop
  */
-ssize_t timeshift_write_stop ( int fd, int code )
-{
+ssize_t timeshift_write_stop(int fd, int code) {
   return _write_msg_fd(fd, SMT_STOP, 0, &code, sizeof(code));
 }
 
 /*
  * Exit
  */
-ssize_t timeshift_write_exit ( int fd )
-{
+ssize_t timeshift_write_exit(int fd) {
   int code = 0;
   return _write_msg_fd(fd, SMT_EXIT, 0, &code, sizeof(code));
 }
@@ -225,8 +223,7 @@ ssize_t timeshift_write_exit ( int fd )
 /*
  * Write end of file (special internal message)
  */
-ssize_t timeshift_write_eof ( timeshift_file_t *tsf )
-{
+ssize_t timeshift_write_eof(timeshift_file_t* tsf) {
   size_t sz = 0;
   return _write(tsf, &sz, sizeof(sz));
 }
@@ -234,8 +231,7 @@ ssize_t timeshift_write_eof ( timeshift_file_t *tsf )
 /*
  * Update smt_start
  */
-static void _update_smt_start ( timeshift_t *ts, streaming_start_t *ss )
-{
+static void _update_smt_start(timeshift_t* ts, streaming_start_t* ss) {
   int i;
 
   if (ts->smt_start)
@@ -263,9 +259,8 @@ static void _update_smt_start ( timeshift_t *ts, streaming_start_t *ss )
 /*
  * Stream start handling
  */
-static void _handle_sstart ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
-{
-  timeshift_index_data_t *ti = calloc(1, sizeof(timeshift_index_data_t));
+static void _handle_sstart(timeshift_t* ts, timeshift_file_t* tsf, streaming_message_t* sm) {
+  timeshift_index_data_t* ti = calloc(1, sizeof(timeshift_index_data_t));
 
   memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
   ti->pos  = tsf->size;
@@ -276,24 +271,23 @@ static void _handle_sstart ( timeshift_t *ts, timeshift_file_t *tsf, streaming_m
 /*
  * Index i-frames and every 100th audio frame
  */
-static void add_frame_to_index ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
-{
-  th_pkt_t *pkt = sm->sm_data;
+static void add_frame_to_index(timeshift_t* ts, timeshift_file_t* tsf, streaming_message_t* sm) {
+  th_pkt_t* pkt = sm->sm_data;
 
   /* Index video iframes or audio frames for audio-only streams*/
   if ((pkt->pkt_componentindex == ts->vididx && pkt->v.pkt_frametype == PKT_I_FRAME) ||
       (ts->vididx == -1 && pkt->pkt_componentindex == ts->audidx)) {
 
-    if(ts->vididx != -1 || ts->audio_packet_counter > 100) {    
-      timeshift_index_iframe_t *ti = calloc(1, sizeof(timeshift_index_iframe_t));
+    if (ts->vididx != -1 || ts->audio_packet_counter > 100) {
+      timeshift_index_iframe_t* ti = calloc(1, sizeof(timeshift_index_iframe_t));
       memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
       ti->pos  = tsf->size;
       ti->time = sm->sm_time;
       TAILQ_INSERT_TAIL(&tsf->iframes, ti, link);
-      if(ts->vididx == -1)
+      if (ts->vididx == -1)
         ts->audio_packet_counter = 0;
     }
-    if(ts->vididx == -1)
+    if (ts->vididx == -1)
       ts->audio_packet_counter++;
   }
 }
@@ -302,9 +296,8 @@ static void add_frame_to_index ( timeshift_t *ts, timeshift_file_t *tsf, streami
  * Thread
  * *************************************************************************/
 
-static inline ssize_t _process_msg0
-  ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
-{
+static inline ssize_t
+_process_msg0(timeshift_t* ts, timeshift_file_t* tsf, streaming_message_t* sm) {
   ssize_t err;
 
   if (sm->sm_type == SMT_START) {
@@ -319,14 +312,13 @@ static inline ssize_t _process_msg0
     }
   } else if (sm->sm_type == SMT_MPEGTS) {
     err = timeshift_write_mpegts(tsf, sm->sm_time, sm->sm_data);
-  }
-  else {
+  } else {
     err = 0;
   }
 
   /* OK */
   if (err > 0) {
-    tsf->last  = sm->sm_time;
+    tsf->last = sm->sm_time;
     tsf->size += err;
     atomic_add_u64(&timeshift_total_size, err);
     if (tsf->ram)
@@ -335,19 +327,18 @@ static inline ssize_t _process_msg0
   return err;
 }
 
-static void _process_msg
-  ( timeshift_t *ts, streaming_message_t *sm, int *run )
-{
-  int err, teletext = 0;
-  timeshift_file_t *tsf;
-  th_pkt_t *pkt;
+static void _process_msg(timeshift_t* ts, streaming_message_t* sm, int* run) {
+  int               err, teletext = 0;
+  timeshift_file_t* tsf;
+  th_pkt_t*         pkt;
 
   /* Process */
   switch (sm->sm_type) {
 
     /* Terminate */
     case SMT_EXIT:
-      if (run) *run = 0;
+      if (run)
+        *run = 0;
       break;
     case SMT_STOP:
       if (sm->sm_code != SM_CODE_SOURCE_RECONFIGURED && run)
@@ -371,7 +362,7 @@ static void _process_msg
     /* Store */
     case SMT_PACKET:
       if (timeshift_conf.teletext && sm->sm_type == SMT_PACKET) {
-        pkt = sm->sm_data;
+        pkt      = sm->sm_data;
         teletext = pkt->pkt_type == SCT_TELETEXT;
       }
       /* fall thru */
@@ -387,7 +378,7 @@ static void _process_msg
           timeshift_packet_log("liv", ts, sm);
       }
       if (sm->sm_type == SMT_START)
-        _update_smt_start(ts, (streaming_start_t *)sm->sm_data);
+        _update_smt_start(ts, (streaming_start_t*)sm->sm_data);
       /* do buffering, but without teletext packets */
       if (ts->dobuf && !teletext) {
         if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) != NULL) {
@@ -420,12 +411,11 @@ live:
   tvh_mutex_unlock(&ts->state_mutex);
 }
 
-void *timeshift_writer ( void *aux )
-{
-  int run = 1;
-  timeshift_t *ts = aux;
-  streaming_queue_t *sq = &ts->wr_queue;
-  streaming_message_t *sm;
+void* timeshift_writer(void* aux) {
+  int                  run = 1;
+  timeshift_t*         ts  = aux;
+  streaming_queue_t*   sq  = &ts->wr_queue;
+  streaming_message_t* sm;
 
   tvh_mutex_lock(&sq->sq_mutex);
 

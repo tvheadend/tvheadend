@@ -24,26 +24,22 @@
 #include <string.h>
 
 typedef struct api_link {
-  const api_hook_t   *hook;
-  RB_ENTRY(api_link)  link;
+  const api_hook_t* hook;
+  RB_ENTRY(api_link) link;
 } api_link_t;
 
-RB_HEAD(,api_link) api_hook_tree;
+RB_HEAD(, api_link) api_hook_tree;
 SKEL_DECLARE(api_skel, api_link_t);
 
-static int ah_cmp
-  ( api_link_t *a, api_link_t *b )
-{
+static int ah_cmp(api_link_t* a, api_link_t* b) {
   return strcmp(a->hook->ah_subsystem, b->hook->ah_subsystem);
 }
 
-void
-api_register ( const api_hook_t *hook )
-{
-  api_link_t *t;
+void api_register(const api_hook_t* hook) {
+  api_link_t* t;
   SKEL_ALLOC(api_skel);
   api_skel->hook = hook;
-  t = RB_INSERT_SORTED(&api_hook_tree, api_skel, link, ah_cmp);
+  t              = RB_INSERT_SORTED(&api_hook_tree, api_skel, link, ah_cmp);
   if (t) {
     tvherror(LS_API, "trying to re-register subsystem");
   } else {
@@ -51,23 +47,18 @@ api_register ( const api_hook_t *hook )
   }
 }
 
-void
-api_register_all ( const api_hook_t *hooks )
-{
+void api_register_all(const api_hook_t* hooks) {
   while (hooks->ah_subsystem) {
     api_register(hooks);
     hooks++;
   }
 }
 
-int
-api_exec ( access_t *perm, const char *subsystem,
-           htsmsg_t *args, htsmsg_t **resp )
-{
-  api_hook_t h;
+int api_exec(access_t* perm, const char* subsystem, htsmsg_t* args, htsmsg_t** resp) {
+  api_hook_t  h;
   api_link_t *ah, skel;
-  const char *op;
-  uint32_t access;
+  const char* op;
+  uint32_t    access;
 
   /* Args and response must be set */
   if (!args || !resp || !subsystem)
@@ -78,7 +69,7 @@ api_exec ( access_t *perm, const char *subsystem,
   //       need updating)
   h.ah_subsystem = subsystem;
   skel.hook      = &h;
-  ah = RB_FIND(&api_hook_tree, &skel, link, ah_cmp);
+  ah             = RB_FIND(&api_hook_tree, &skel, link, ah_cmp);
 
   if (!ah) {
     tvhwarn(LS_API, "failed to find subsystem [%s]", subsystem);
@@ -103,38 +94,31 @@ api_exec ( access_t *perm, const char *subsystem,
 }
 
 static int
-api_serverinfo
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
+api_serverinfo(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
   *resp = htsmsg_create_map();
-  htsmsg_add_str(*resp, "sw_version",   tvheadend_version);
-  htsmsg_add_u32(*resp, "api_version",  TVH_API_VERSION);
-  htsmsg_add_str(*resp, "name",         "Tvheadend");
+  htsmsg_add_str(*resp, "sw_version", tvheadend_version);
+  htsmsg_add_u32(*resp, "api_version", TVH_API_VERSION);
+  htsmsg_add_str(*resp, "name", "Tvheadend");
   if (tvheadend_webroot)
-    htsmsg_add_str(*resp, "webroot",      tvheadend_webroot);
+    htsmsg_add_str(*resp, "webroot", tvheadend_webroot);
   htsmsg_add_msg(*resp, "capabilities", tvheadend_capabilities_list(1));
   return 0;
 }
 
 static int
-api_pathlist
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  api_link_t *t;
+api_pathlist(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
+  api_link_t* t;
   *resp = htsmsg_create_list();
-  RB_FOREACH(t, &api_hook_tree, link) {
+  RB_FOREACH (t, &api_hook_tree, link) {
     htsmsg_add_str(*resp, NULL, t->hook->ah_subsystem);
   }
   return 0;
 }
 
-void api_init ( void )
-{
-  static api_hook_t h[] = {
-    { "serverinfo", ACCESS_ANONYMOUS, api_serverinfo, NULL },
-    { "pathlist", ACCESS_ANONYMOUS, api_pathlist, NULL },
-    { NULL, 0, NULL, NULL }
-  };
+void api_init(void) {
+  static api_hook_t h[] = {{"serverinfo", ACCESS_ANONYMOUS, api_serverinfo, NULL},
+      {"pathlist", ACCESS_ANONYMOUS, api_pathlist, NULL},
+      {NULL, 0, NULL, NULL}};
   api_register_all(h);
 
   /* Subsystems */
@@ -164,9 +148,8 @@ void api_init ( void )
   api_wizard_init();
 }
 
-void api_done ( void )
-{
-  api_link_t *t;
+void api_done(void) {
+  api_link_t* t;
 
   while ((t = RB_FIRST(&api_hook_tree)) != NULL) {
     RB_REMOVE(&api_hook_tree, t, link);

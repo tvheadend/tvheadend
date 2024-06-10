@@ -32,9 +32,9 @@
 /* Newer platforms such as FreeBSD 11.1 support fdatasync so only alias on older systems */
 #ifndef CONFIG_FDATASYNC
 #if defined(PLATFORM_DARWIN)
-#define fdatasync(fd)       fcntl(fd, F_FULLFSYNC)
+#define fdatasync(fd) fcntl(fd, F_FULLFSYNC)
 #elif defined(PLATFORM_FREEBSD)
-#define fdatasync(fd)       fsync(fd)
+#define fdatasync(fd) fsync(fd)
 #endif
 #endif
 
@@ -42,141 +42,131 @@
  * Mime type for containers containing only audio
  */
 static struct strtab container_audio_mime[] = {
-  { "application/octet-stream", MC_UNKNOWN },
-  { "audio/x-matroska",         MC_MATROSKA },
-  { "audio/x-matroska",         MC_AVMATROSKA },
-  { "audio/webm",               MC_WEBM },
-  { "audio/webm",               MC_AVWEBM },
-  { "audio/mp2t",               MC_MPEGTS },
-  { "audio/mpeg",               MC_MPEGPS },
-  { "audio/mpeg",               MC_MPEG2AUDIO },
-  { "audio/ac3",                MC_AC3 },
-  { "audio/ac4",                MC_AC4 },
-  { "audio/aac",                MC_AAC },
-  { "audio/aac",                MC_MP4A },
-  { "audio/ogg",                MC_VORBIS },
-  { "audio/mp4",                MC_AVMP4 },
-  { "application/octet-stream", MC_PASS },
-  { "application/octet-stream", MC_RAW },
+    {"application/octet-stream", MC_UNKNOWN},
+    {"audio/x-matroska", MC_MATROSKA},
+    {"audio/x-matroska", MC_AVMATROSKA},
+    {"audio/webm", MC_WEBM},
+    {"audio/webm", MC_AVWEBM},
+    {"audio/mp2t", MC_MPEGTS},
+    {"audio/mpeg", MC_MPEGPS},
+    {"audio/mpeg", MC_MPEG2AUDIO},
+    {"audio/ac3", MC_AC3},
+    {"audio/ac4", MC_AC4},
+    {"audio/aac", MC_AAC},
+    {"audio/aac", MC_MP4A},
+    {"audio/ogg", MC_VORBIS},
+    {"audio/mp4", MC_AVMP4},
+    {"application/octet-stream", MC_PASS},
+    {"application/octet-stream", MC_RAW},
 };
-
 
 /**
  * Mime type for containers
  */
 static struct strtab container_video_mime[] = {
-  { "application/octet-stream", MC_UNKNOWN },
-  { "video/x-matroska",         MC_MATROSKA },
-  { "video/x-matroska",         MC_AVMATROSKA },
-  { "video/webm",               MC_WEBM },
-  { "video/webm",               MC_AVWEBM },
-  { "video/mp2t",               MC_MPEGTS },
-  { "video/mpeg",               MC_MPEGPS },
-  { "video/mp4",                MC_AVMP4 },
-  { "application/octet-stream", MC_PASS },
-  { "application/octet-stream", MC_RAW },
+    {"application/octet-stream", MC_UNKNOWN},
+    {"video/x-matroska", MC_MATROSKA},
+    {"video/x-matroska", MC_AVMATROSKA},
+    {"video/webm", MC_WEBM},
+    {"video/webm", MC_AVWEBM},
+    {"video/mp2t", MC_MPEGTS},
+    {"video/mpeg", MC_MPEGPS},
+    {"video/mp4", MC_AVMP4},
+    {"application/octet-stream", MC_PASS},
+    {"application/octet-stream", MC_RAW},
 };
-
 
 /**
  * Name of the container
  */
 static struct strtab container_name[] = {
-  { "unknown",    MC_UNKNOWN },
-  { "matroska",   MC_MATROSKA },
-  { "webm",       MC_WEBM },
-  { "mpegts",     MC_MPEGTS },
-  { "mpegps",     MC_MPEGPS },
-  { "pass",       MC_PASS },
-  { "raw",        MC_RAW },
-  { "avmatroska", MC_AVMATROSKA },
-  { "avwebm",     MC_AVWEBM },
-  { "avmp4",      MC_AVMP4 },
-  { "mp2",        MC_MPEG2AUDIO },
-  { "ac3",        MC_AC3 },
-  { "aac",        MC_AAC },
-  { "mp4a",       MC_MP4A },
-  { "oga",        MC_VORBIS },
-  { "ac4",        MC_AC4 },
+    {"unknown", MC_UNKNOWN},
+    {"matroska", MC_MATROSKA},
+    {"webm", MC_WEBM},
+    {"mpegts", MC_MPEGTS},
+    {"mpegps", MC_MPEGPS},
+    {"pass", MC_PASS},
+    {"raw", MC_RAW},
+    {"avmatroska", MC_AVMATROSKA},
+    {"avwebm", MC_AVWEBM},
+    {"avmp4", MC_AVMP4},
+    {"mp2", MC_MPEG2AUDIO},
+    {"ac3", MC_AC3},
+    {"aac", MC_AAC},
+    {"mp4a", MC_MP4A},
+    {"oga", MC_VORBIS},
+    {"ac4", MC_AC4},
 };
-
 
 /**
  * filename suffix of audio-only streams
  */
 static struct strtab container_audio_file_suffix[] = {
-  { "bin",  MC_UNKNOWN },
-  { "mka",  MC_MATROSKA },
-  { "webm", MC_WEBM },
-  { "ts",   MC_MPEGTS },
-  { "mpeg", MC_MPEGPS },
-  { "bin",  MC_PASS },
-  { "bin",  MC_RAW },
-  { "mka",  MC_AVMATROSKA },
-  { "webm", MC_AVWEBM },
-  { "mp4",  MC_AVMP4 },
-  { "mp2",  MC_MPEG2AUDIO },
-  { "ac3",  MC_AC3 },
-  { "aac",  MC_AAC },
-  { "mp4a", MC_MP4A },
-  { "oga",  MC_VORBIS },
-  { "ac4",  MC_AC4 },
+    {"bin", MC_UNKNOWN},
+    {"mka", MC_MATROSKA},
+    {"webm", MC_WEBM},
+    {"ts", MC_MPEGTS},
+    {"mpeg", MC_MPEGPS},
+    {"bin", MC_PASS},
+    {"bin", MC_RAW},
+    {"mka", MC_AVMATROSKA},
+    {"webm", MC_AVWEBM},
+    {"mp4", MC_AVMP4},
+    {"mp2", MC_MPEG2AUDIO},
+    {"ac3", MC_AC3},
+    {"aac", MC_AAC},
+    {"mp4a", MC_MP4A},
+    {"oga", MC_VORBIS},
+    {"ac4", MC_AC4},
 };
-
 
 /**
  * filename suffix of video streams
  */
 static struct strtab container_video_file_suffix[] = {
-  { "bin",  MC_UNKNOWN },
-  { "mkv",  MC_MATROSKA },
-  { "webm", MC_WEBM },
-  { "ts",   MC_MPEGTS },
-  { "mpeg", MC_MPEGPS },
-  { "bin",  MC_PASS },
-  { "bin",  MC_RAW },
-  { "mkv",  MC_AVMATROSKA },
-  { "webm", MC_AVWEBM },
-  { "mp4",  MC_AVMP4 },
+    {"bin", MC_UNKNOWN},
+    {"mkv", MC_MATROSKA},
+    {"webm", MC_WEBM},
+    {"ts", MC_MPEGTS},
+    {"mpeg", MC_MPEGPS},
+    {"bin", MC_PASS},
+    {"bin", MC_RAW},
+    {"mkv", MC_AVMATROSKA},
+    {"webm", MC_AVWEBM},
+    {"mp4", MC_AVMP4},
 };
-
 
 /**
  * Get the mime type for a container
  */
-const char*
-muxer_container_type2mime(muxer_container_type_t mc, int video)
-{
-  const char *str;
+const char* muxer_container_type2mime(muxer_container_type_t mc, int video) {
+  const char* str;
 
-  if(video)
+  if (video)
     str = val2str(mc, container_video_mime);
   else
     str = val2str(mc, container_audio_mime);
 
-  if(!str)
+  if (!str)
     str = val2str(MC_UNKNOWN, container_video_mime);
 
   return str;
 }
 
-
 /**
  * Get the mime type for a filename
  */
-const char*
-muxer_container_filename2mime(const char *filename, int video)
-{
-  int mc = MC_UNKNOWN;
-  const char *suffix;
-  
-  if(filename) {
+const char* muxer_container_filename2mime(const char* filename, int video) {
+  int         mc = MC_UNKNOWN;
+  const char* suffix;
+
+  if (filename) {
     suffix = strrchr(filename, '.');
     if (suffix == NULL)
       suffix = filename;
     else
       suffix++;
-    if(video)
+    if (video)
       mc = str2val(suffix, container_video_file_suffix);
     else
       mc = str2val(suffix, container_audio_file_suffix);
@@ -185,89 +175,74 @@ muxer_container_filename2mime(const char *filename, int video)
   return muxer_container_type2mime(mc, 1);
 }
 
-
 /**
  * Get the suffix used in file names
  */
-const char*
-muxer_container_suffix(muxer_container_type_t mc, int video)
-{
-  const char *str;
-  if(video)
+const char* muxer_container_suffix(muxer_container_type_t mc, int video) {
+  const char* str;
+  if (video)
     str = val2str(mc, container_video_file_suffix);
   else
     str = val2str(mc, container_audio_file_suffix);
 
-  if(!str)
+  if (!str)
     str = val2str(MC_UNKNOWN, container_video_file_suffix);
 
   return str;
 }
 
-
 /**
  * Convert a container type to a string
  */
-const char*
-muxer_container_type2txt(muxer_container_type_t mc)
-{
-  const char *str;
+const char* muxer_container_type2txt(muxer_container_type_t mc) {
+  const char* str;
 
   str = val2str(mc, container_name);
-  if(!str)
+  if (!str)
     return "unknown";
- 
+
   return str;
 }
-
 
 /**
  * Convert a container name to a container type
  */
-muxer_container_type_t
-muxer_container_txt2type(const char *str)
-{
+muxer_container_type_t muxer_container_txt2type(const char* str) {
   muxer_container_type_t mc;
-  
-  if(!str)
+
+  if (!str)
     return MC_UNKNOWN;
 
   mc = str2val(str, container_name);
-  if(mc == -1)
+  if (mc == -1)
     return MC_UNKNOWN;
 
   return mc;
 }
-
 
 /**
  * Convert a mime-string to a container type
  */
-muxer_container_type_t
-muxer_container_mime2type(const char *str)
-{
+muxer_container_type_t muxer_container_mime2type(const char* str) {
   muxer_container_type_t mc;
 
-  if(!str)
+  if (!str)
     return MC_UNKNOWN;
 
   mc = str2val(str, container_video_mime);
-  if(mc == -1)
+  if (mc == -1)
     mc = str2val(str, container_audio_mime);
 
-  if(mc == -1)
+  if (mc == -1)
     return MC_UNKNOWN;
 
   return mc;
 }
 
-
 /**
  * Copy muxer settings
  */
-void
-muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src)
-{
+void muxer_config_copy(muxer_config_t* dst, const muxer_config_t* src) {
   *dst = *src;
   if (src->m_type == MC_RAW || src->m_type == MC_PASS) {
     mystrset(&dst->u.pass.m_cmdline, src->u.pass.m_cmdline);
@@ -275,13 +250,10 @@ muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src)
   }
 }
 
-
 /**
  * Free muxer settings
  */
-void
-muxer_config_free(muxer_config_t *m_cfg)
-{
+void muxer_config_free(muxer_config_t* m_cfg) {
   if (m_cfg->m_type == MC_RAW || m_cfg->m_type == MC_PASS) {
     free(m_cfg->u.pass.m_cmdline);
     free(m_cfg->u.pass.m_mime);
@@ -289,61 +261,53 @@ muxer_config_free(muxer_config_t *m_cfg)
   memset(m_cfg, 0, sizeof(*m_cfg));
 }
 
-
 /**
  * Create muxer hints
  */
-muxer_hints_t *
-muxer_hints_create(const char *agent)
-{
-  muxer_hints_t *hints = calloc(1, sizeof(*hints));
+muxer_hints_t* muxer_hints_create(const char* agent) {
+  muxer_hints_t* hints = calloc(1, sizeof(*hints));
   mystrset(&hints->mh_agent, agent);
   return hints;
 }
 
-
 /**
  * Free muxer hints
  */
-void
-muxer_hints_free(muxer_hints_t *hints)
-{
+void muxer_hints_free(muxer_hints_t* hints) {
   if (hints)
     free(hints->mh_agent);
   free(hints);
 }
 
-
 /**
  * Create a new muxer
  */
-muxer_t* 
-muxer_create(muxer_config_t *m_cfg, muxer_hints_t *hints)
-{
-  muxer_t *m;
+muxer_t* muxer_create(muxer_config_t* m_cfg, muxer_hints_t* hints) {
+  muxer_t* m;
 
   assert(m_cfg);
 
   m = pass_muxer_create(m_cfg, hints);
 
-  if(!m)
+  if (!m)
     m = mkv_muxer_create(m_cfg, hints);
 
-  if(!m)
+  if (!m)
     m = audioes_muxer_create(m_cfg, hints);
 
 #if CONFIG_LIBAV
-  if(!m)
+  if (!m)
     m = lav_muxer_create(m_cfg, hints);
 #endif
 
-  if(!m) {
-    tvherror(LS_MUXER, "Can't find a muxer that supports '%s' container",
-	    muxer_container_type2txt(m_cfg->m_type));
+  if (!m) {
+    tvherror(LS_MUXER,
+        "Can't find a muxer that supports '%s' container",
+        muxer_container_type2txt(m_cfg->m_type));
     muxer_hints_free(hints);
     return NULL;
   }
-  
+
   memcpy(&m->m_config, m_cfg, sizeof(muxer_config_t));
   memset(m_cfg, 0, sizeof(*m_cfg));
   m->m_hints = hints;
@@ -354,19 +318,17 @@ muxer_create(muxer_config_t *m_cfg, muxer_hints_t *hints)
 /**
  * Figure out the file suffix by looking at the mime type
  */
-const char*
-muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
-{
-  const char *mime;
+const char* muxer_suffix(muxer_t* m, const struct streaming_start* ss) {
+  const char*            mime;
   muxer_container_type_t mc;
-  int video;
+  int                    video;
 
-  if(!m || !ss)
+  if (!m || !ss)
     return NULL;
 
   mime  = m->m_mime(m, ss);
   video = memcmp("audio", mime, 5);
-  mc = muxer_container_mime2type(mime);
+  mc    = muxer_container_mime2type(mime);
 
   return muxer_container_suffix(mc, video);
 }
@@ -374,23 +336,17 @@ muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
 /**
  * cache type conversions
  */
-static struct strtab cache_types[] = {
-  { "Unknown",            MC_CACHE_UNKNOWN },
-  { "System",             MC_CACHE_SYSTEM },
-  { "Do not keep",        MC_CACHE_DONTKEEP },
-  { "Sync",               MC_CACHE_SYNC },
-  { "Sync + Do not keep", MC_CACHE_SYNCDONTKEEP }
-};
+static struct strtab cache_types[] = {{"Unknown", MC_CACHE_UNKNOWN},
+    {"System", MC_CACHE_SYSTEM},
+    {"Do not keep", MC_CACHE_DONTKEEP},
+    {"Sync", MC_CACHE_SYNC},
+    {"Sync + Do not keep", MC_CACHE_SYNCDONTKEEP}};
 
-const char*
-muxer_cache_type2txt(muxer_cache_type_t c)
-{
+const char* muxer_cache_type2txt(muxer_cache_type_t c) {
   return val2str(c, cache_types);
 }
 
-muxer_cache_type_t
-muxer_cache_txt2type(const char *str)
-{
+muxer_cache_type_t muxer_cache_txt2type(const char* str) {
   int r = str2val(str, cache_types);
   if (r < 0)
     r = MC_CACHE_UNKNOWN;
@@ -400,45 +356,41 @@ muxer_cache_txt2type(const char *str)
 /**
  * cache scheme
  */
-void
-muxer_cache_update(muxer_t *m, int fd, off_t pos, size_t size)
-{
+void muxer_cache_update(muxer_t* m, int fd, off_t pos, size_t size) {
   switch (m->m_config.m_cache) {
-  case MC_CACHE_UNKNOWN:
-  case MC_CACHE_SYSTEM:
-    break;
-  case MC_CACHE_SYNC:
-    fdatasync(fd);
-    break;
-  case MC_CACHE_SYNCDONTKEEP:
-    fdatasync(fd);
-    /* fall through */
-  case MC_CACHE_DONTKEEP:
+    case MC_CACHE_UNKNOWN:
+    case MC_CACHE_SYSTEM:
+      break;
+    case MC_CACHE_SYNC:
+      fdatasync(fd);
+      break;
+    case MC_CACHE_SYNCDONTKEEP:
+      fdatasync(fd);
+      /* fall through */
+    case MC_CACHE_DONTKEEP:
 #if defined(PLATFORM_DARWIN)
-    fcntl(fd, F_NOCACHE, 1);
+      fcntl(fd, F_NOCACHE, 1);
 #elif !ENABLE_ANDROID
-    posix_fadvise(fd, pos, size, POSIX_FADV_DONTNEED);
+      posix_fadvise(fd, pos, size, POSIX_FADV_DONTNEED);
 #endif
-    break;
-  default:
-    abort();
+      break;
+    default:
+      abort();
   }
 }
 
 /**
  * Get a list of supported cache schemes
  */
-int
-muxer_cache_list(htsmsg_t *array)
-{
-  htsmsg_t *mc;
-  int c;
-  const char *s;
+int muxer_cache_list(htsmsg_t* array) {
+  htsmsg_t*   mc;
+  int         c;
+  const char* s;
 
   for (c = 0; c <= MC_CACHE_LAST; c++) {
     mc = htsmsg_create_map();
-    s = muxer_cache_type2txt(c);
-    htsmsg_add_u32(mc, "index",       c);
+    s  = muxer_cache_type2txt(c);
+    htsmsg_add_u32(mc, "index", c);
     htsmsg_add_str(mc, "description", s);
     htsmsg_add_msg(array, NULL, mc);
   }

@@ -24,14 +24,12 @@
 #include "string_list.h"
 #include "imagecache.h"
 
-#define XMLTV_FLAG_LCN		(1<<0)
+#define XMLTV_FLAG_LCN (1 << 0)
 
 /*
  *
  */
-static void
-http_xmltv_time(char *dst, time_t t)
-{
+static void http_xmltv_time(char* dst, time_t t) {
   struct tm tm;
   /* 20140817060000 +0200 */
   strftime(dst, 32, "%Y%m%d%H%M%S %z", localtime_r(&t, &tm));
@@ -40,9 +38,7 @@ http_xmltv_time(char *dst, time_t t)
 /*
  *
  */
-static void
-http_xmltv_begin(htsbuf_queue_t *hq)
-{
+static void http_xmltv_begin(htsbuf_queue_t* hq) {
   htsbuf_append_str(hq, "\
 <?xml version=\"1.0\" encoding=\"utf-8\" ?>\n\
 <!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n\
@@ -56,12 +52,9 @@ http_xmltv_begin(htsbuf_queue_t *hq)
 /*
  *
  */
-static void
-http_xmltv_end(htsbuf_queue_t *hq)
-{
+static void http_xmltv_end(htsbuf_queue_t* hq) {
   htsbuf_append_str(hq, "</tv>\n");
 }
-
 
 /** Determine name to use for the channel based on the
  * user's settings. This is done because some TVs have
@@ -74,12 +67,10 @@ http_xmltv_end(htsbuf_queue_t *hq)
  * be the same as the passed in temporary buffer.
  *
  */
-static const char *
-http_xmltv_channel_get_name(const http_connection_t *hc,
-                            const channel_t *ch,
-                            char *buf,
-                            size_t buf_len)
-{
+static const char* http_xmltv_channel_get_name(const http_connection_t* hc,
+    const channel_t*                                                    ch,
+    char*                                                               buf,
+    size_t                                                              buf_len) {
   const int of = hc->hc_access->aa_xmltv_output_format;
 
   if (of == ACCESS_XMLTV_OUTPUT_FORMAT_BASIC_NO_HASH)
@@ -88,17 +79,18 @@ http_xmltv_channel_get_name(const http_connection_t *hc,
     return idnode_uuid_as_str(&ch->ch_id, buf);
 }
 
-
 /*
  *
  */
-static void
-http_xmltv_channel_add(http_connection_t *hc, htsbuf_queue_t *hq, int flags, const char *hostpath, channel_t *ch)
-{
-  const char *icon = channel_get_icon(ch);
-  char ubuf[UUID_HEX_SIZE];
-  const char *tag;
-  int64_t lcn;
+static void http_xmltv_channel_add(http_connection_t* hc,
+    htsbuf_queue_t*                                   hq,
+    int                                               flags,
+    const char*                                       hostpath,
+    channel_t*                                        ch) {
+  const char* icon = channel_get_icon(ch);
+  char        ubuf[UUID_HEX_SIZE];
+  const char* tag;
+  int64_t     lcn;
   htsbuf_qprintf(hq, "<channel id=\"");
   htsbuf_append_and_escape_xml(hq, http_xmltv_channel_get_name(hc, ch, ubuf, sizeof ubuf));
   htsbuf_qprintf(hq, "\">\n  <display-name>");
@@ -108,12 +100,14 @@ http_xmltv_channel_add(http_connection_t *hc, htsbuf_queue_t *hq, int flags, con
   if (lcn > 0) {
     tag = (flags & XMLTV_FLAG_LCN) ? "lcn" : "display-name";
     if (channel_get_minor(lcn)) {
-      htsbuf_qprintf(hq, "  <%s>%u.%u</%s>\n",
-                     tag, channel_get_major(lcn),
-                     channel_get_minor(lcn), tag);
+      htsbuf_qprintf(hq,
+          "  <%s>%u.%u</%s>\n",
+          tag,
+          channel_get_major(lcn),
+          channel_get_minor(lcn),
+          tag);
     } else {
-      htsbuf_qprintf(hq, "  <%s>%u</%s>\n",
-                     tag, channel_get_major(lcn), tag);
+      htsbuf_qprintf(hq, "  <%s>%u</%s>\n", tag, channel_get_major(lcn), tag);
     }
   }
   if (icon) {
@@ -129,29 +123,27 @@ http_xmltv_channel_add(http_connection_t *hc, htsbuf_queue_t *hq, int flags, con
   htsbuf_append_str(hq, "</channel>\n");
 }
 
-
 /// Write each entry in the string list to the xml queue using the given tag_name.
-static void
-_http_xmltv_programme_write_string_list(htsbuf_queue_t *hq, const string_list_t* sl, const char* tag_name)
-{
+static void _http_xmltv_programme_write_string_list(htsbuf_queue_t* hq,
+    const string_list_t*                                            sl,
+    const char*                                                     tag_name) {
   if (!hq || !sl)
     return;
 
-  const string_list_item_t *item;
-  RB_FOREACH(item, sl, h_link) {
+  const string_list_item_t* item;
+  RB_FOREACH (item, sl, h_link) {
     htsbuf_qprintf(hq, "  <%s>", tag_name);
     htsbuf_append_and_escape_xml(hq, item->id);
     htsbuf_qprintf(hq, "</%s>\n", tag_name);
   }
 }
 
-static void
-_http_xmltv_add_episode_num(htsbuf_queue_t *hq, uint16_t num, uint16_t cnt)
-{
+static void _http_xmltv_add_episode_num(htsbuf_queue_t* hq, uint16_t num, uint16_t cnt) {
   /* xmltv numbers are zero-based not one-based, however the xmltv
    * counts are one-based.
    */
-  if (num) htsbuf_qprintf(hq, "%d", num - 1);
+  if (num)
+    htsbuf_qprintf(hq, "%d", num - 1);
   /* Some clients can not handle "X", only "X/Y" or "/Y",
    * so only output "/" if needed.
    */
@@ -165,56 +157,56 @@ _http_xmltv_add_episode_num(htsbuf_queue_t *hq, uint16_t num, uint16_t cnt)
 /// have more than one language. This avoids outputting lots of tags for
 /// the common case of only having one language, so is useful for very low
 /// memory devices.
-#define HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq,rb_tree,lang_str,tag)  \
-  do {                                                                  \
-    htsbuf_qprintf(hq, "  <%s", tag);                                   \
-    if (rb_tree->entries != 1)                                          \
-      htsbuf_qprintf(hq, " lang=\"%s\"", lang_str->lang);               \
-    htsbuf_append_str(hq,">");                                          \
-  } while(0)
+#define HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, rb_tree, lang_str, tag) \
+  do {                                                                    \
+    htsbuf_qprintf(hq, "  <%s", tag);                                     \
+    if (rb_tree->entries != 1)                                            \
+      htsbuf_qprintf(hq, " lang=\"%s\"", lang_str->lang);                 \
+    htsbuf_append_str(hq, ">");                                           \
+  } while (0)
 
 /** Output long description fields of the programme which are
  * not output for basic/limited devices.
  */
-static void
-http_xmltv_programme_one_long(const http_connection_t *hc,
-                              htsbuf_queue_t *hq, const char *hostpath,
-                              const channel_t *ch, const epg_broadcast_t *ebc)
-{
-  lang_str_ele_t *lse;
-  epg_genre_t *genre;
-  char buf[64];
+static void http_xmltv_programme_one_long(const http_connection_t* hc,
+    htsbuf_queue_t*                                                hq,
+    const char*                                                    hostpath,
+    const channel_t*                                               ch,
+    const epg_broadcast_t*                                         ebc) {
+  lang_str_ele_t* lse;
+  epg_genre_t*    genre;
+  char            buf[64];
 
   if (ebc->subtitle)
-    RB_FOREACH(lse, ebc->subtitle, link) {
+    RB_FOREACH (lse, ebc->subtitle, link) {
       /* Ignore empty sub-titles */
       if (!strempty(lse->str)) {
-          HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, ebc->subtitle, lse, "sub-title");
-          htsbuf_append_and_escape_xml(hq, lse->str);
-          htsbuf_append_str(hq, "</sub-title>\n");
-        }
+        HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, ebc->subtitle, lse, "sub-title");
+        htsbuf_append_and_escape_xml(hq, lse->str);
+        htsbuf_append_str(hq, "</sub-title>\n");
+      }
     }
 
   if (ebc->description)
-    RB_FOREACH(lse, ebc->description, link) {
+    RB_FOREACH (lse, ebc->description, link) {
       HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, ebc->description, lse, "desc");
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</desc>\n");
     }
   else if (ebc->summary)
-    RB_FOREACH(lse, ebc->summary, link) {
+    RB_FOREACH (lse, ebc->summary, link) {
       HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, ebc->summary, lse, "desc");
       htsbuf_append_and_escape_xml(hq, lse->str);
       htsbuf_append_str(hq, "</desc>\n");
     }
   if (ebc->image) {
-      htsbuf_append_str(hq, "  <icon src=\"");
-      htsbuf_append_and_escape_xml(hq, ebc->image);
-      htsbuf_append_str(hq, "\"/>\n");
+    htsbuf_append_str(hq, "  <icon src=\"");
+    htsbuf_append_and_escape_xml(hq, ebc->image);
+    htsbuf_append_str(hq, "\"/>\n");
   }
   if (ebc->credits) {
     htsbuf_append_str(hq, "  <credits>\n");
-    htsmsg_field_t *f;
+    htsmsg_field_t* f;
     HTSMSG_FOREACH(f, ebc->credits) {
       htsbuf_qprintf(hq, "    <%s>", f->u.str);
       htsbuf_append_and_escape_xml(hq, htsmsg_field_name(f));
@@ -223,7 +215,7 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
     htsbuf_append_str(hq, "  </credits>\n");
   }
   _http_xmltv_programme_write_string_list(hq, ebc->category, "category");
-  LIST_FOREACH(genre, &ebc->genre, link) {
+  LIST_FOREACH (genre, &ebc->genre, link) {
     if (genre && genre->code) {
       if (epg_genre_get_str(genre, 0, 1, buf, sizeof(buf), "en")) {
         htsbuf_qprintf(hq, "  <category lang=\"en\">");
@@ -238,24 +230,24 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
 /*
  *
  */
-static void
-http_xmltv_programme_one(const http_connection_t *hc,
-                         htsbuf_queue_t *hq, const char *hostpath,
-                         const channel_t *ch, const epg_broadcast_t *ebc)
-{
+static void http_xmltv_programme_one(const http_connection_t* hc,
+    htsbuf_queue_t*                                           hq,
+    const char*                                               hostpath,
+    const channel_t*                                          ch,
+    const epg_broadcast_t*                                    ebc) {
   epg_episode_num_t epnum;
-  char start[32], stop[32], ubuf[UUID_HEX_SIZE];
-  lang_str_ele_t *lse;
-  const int of = hc->hc_access->aa_xmltv_output_format;
+  char              start[32], stop[32], ubuf[UUID_HEX_SIZE];
+  lang_str_ele_t*   lse;
+  const int         of = hc->hc_access->aa_xmltv_output_format;
 
-  if (ebc->title == NULL) return;
+  if (ebc->title == NULL)
+    return;
   http_xmltv_time(start, ebc->start);
   http_xmltv_time(stop, ebc->stop);
-  htsbuf_qprintf(hq, "<programme start=\"%s\" stop=\"%s\" channel=\"",
-                 start, stop);
+  htsbuf_qprintf(hq, "<programme start=\"%s\" stop=\"%s\" channel=\"", start, stop);
   htsbuf_append_and_escape_xml(hq, http_xmltv_channel_get_name(hc, ch, ubuf, sizeof ubuf));
   htsbuf_qprintf(hq, "\">\n");
-  RB_FOREACH(lse, ebc->title, link) {
+  RB_FOREACH (lse, ebc->title, link) {
     HTTP_XMLTV_OUTPUT_START_TAG_WITH_LANG(hq, ebc->title, lse, "title");
     htsbuf_append_and_escape_xml(hq, lse->str);
     htsbuf_append_str(hq, "</title>\n");
@@ -264,8 +256,7 @@ http_xmltv_programme_one(const http_connection_t *hc,
   /* Basic formats are for low-memory devices that
    * only want very basic information.
    */
-  if (of != ACCESS_XMLTV_OUTPUT_FORMAT_BASIC &&
-      of != ACCESS_XMLTV_OUTPUT_FORMAT_BASIC_NO_HASH) {
+  if (of != ACCESS_XMLTV_OUTPUT_FORMAT_BASIC && of != ACCESS_XMLTV_OUTPUT_FORMAT_BASIC_NO_HASH) {
     http_xmltv_programme_one_long(hc, hq, hostpath, ch, ebc);
   }
 
@@ -276,9 +267,9 @@ http_xmltv_programme_one(const http_connection_t *hc,
   if (epnum.s_num || epnum.e_num || epnum.p_num) {
     htsbuf_append_str(hq, "  <episode-num system=\"xmltv_ns\">");
     _http_xmltv_add_episode_num(hq, epnum.s_num, epnum.s_cnt);
-    htsbuf_append_str(hq," . ");
+    htsbuf_append_str(hq, " . ");
     _http_xmltv_add_episode_num(hq, epnum.e_num, epnum.e_cnt);
-    htsbuf_append_str(hq," . ");
+    htsbuf_append_str(hq, " . ");
     _http_xmltv_add_episode_num(hq, epnum.p_num, epnum.p_cnt);
     htsbuf_append_str(hq, "  </episode-num>");
   }
@@ -288,21 +279,20 @@ http_xmltv_programme_one(const http_connection_t *hc,
 /*
  *
  */
-static void
-http_xmltv_programme_add(const http_connection_t *hc, htsbuf_queue_t *hq, const char *hostpath, channel_t *ch)
-{
-  epg_broadcast_t *ebc;
+static void http_xmltv_programme_add(const http_connection_t* hc,
+    htsbuf_queue_t*                                           hq,
+    const char*                                               hostpath,
+    channel_t*                                                ch) {
+  epg_broadcast_t* ebc;
 
-  RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link)
+  RB_FOREACH (ebc, &ch->ch_epg_schedule, sched_link)
     http_xmltv_programme_one(hc, hq, hostpath, ch, ebc);
 }
 
 /**
  * Output a XMLTV containing a single channel
  */
-static int
-http_xmltv_channel(http_connection_t *hc, int flags, channel_t *channel)
-{
+static int http_xmltv_channel(http_connection_t* hc, int flags, channel_t* channel) {
   char hostpath[512];
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
@@ -316,16 +306,13 @@ http_xmltv_channel(http_connection_t *hc, int flags, channel_t *channel)
   return 0;
 }
 
-
 /**
  * Output a playlist containing all channels with a specific tag
  */
-static int
-http_xmltv_tag(http_connection_t *hc, int flags, channel_tag_t *tag)
-{
-  idnode_list_mapping_t *ilm;
-  char hostpath[512];
-  channel_t *ch;
+static int http_xmltv_tag(http_connection_t* hc, int flags, channel_tag_t* tag) {
+  idnode_list_mapping_t* ilm;
+  char                   hostpath[512];
+  channel_t*             ch;
 
   if (access_verify2(hc->hc_access, ACCESS_STREAMING))
     return http_noaccess_code(hc);
@@ -333,14 +320,14 @@ http_xmltv_tag(http_connection_t *hc, int flags, channel_tag_t *tag)
   http_get_hostpath(hc, hostpath, sizeof(hostpath));
 
   http_xmltv_begin(&hc->hc_reply);
-  LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
-    ch = (channel_t *)ilm->ilm_in2;
+  LIST_FOREACH (ilm, &tag->ct_ctms, ilm_in1_link) {
+    ch = (channel_t*)ilm->ilm_in2;
     if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
     http_xmltv_channel_add(hc, &hc->hc_reply, flags, hostpath, ch);
   }
-  LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
-    ch = (channel_t *)ilm->ilm_in2;
+  LIST_FOREACH (ilm, &tag->ct_ctms, ilm_in1_link) {
+    ch = (channel_t*)ilm->ilm_in2;
     if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
     http_xmltv_programme_add(hc, &hc->hc_reply, hostpath, ch);
@@ -353,11 +340,9 @@ http_xmltv_tag(http_connection_t *hc, int flags, channel_tag_t *tag)
 /**
  * Output a flat playlist with all channels
  */
-static int
-http_xmltv_channel_list(http_connection_t *hc, int flags)
-{
-  channel_t *ch;
-  char hostpath[512];
+static int http_xmltv_channel_list(http_connection_t* hc, int flags) {
+  channel_t* ch;
+  char       hostpath[512];
 
   if (access_verify2(hc->hc_access, ACCESS_STREAMING))
     return http_noaccess_code(hc);
@@ -383,20 +368,18 @@ http_xmltv_channel_list(http_connection_t *hc, int flags)
 /**
  * Handle requests for XMLTV export.
  */
-int
-page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
-{
-  char *components[2], *cmd, *str;
-  int nc, r, flags = 0;
-  channel_t *ch = NULL;
-  channel_tag_t *tag = NULL;
+int page_xmltv(http_connection_t* hc, const char* remain, void* opaque) {
+  char *         components[2], *cmd, *str;
+  int            nc, r, flags = 0;
+  channel_t*     ch  = NULL;
+  channel_tag_t* tag = NULL;
 
   if (!remain || *remain == '\0') {
     http_redirect(hc, "/xmltv/channels", &hc->hc_req_args, 0);
     return HTTP_STATUS_FOUND;
   }
 
-  nc = http_tokenize((char *)remain, components, 2, '/');
+  nc = http_tokenize((char*)remain, components, 2, '/');
   if (!nc)
     return HTTP_STATUS_BAD_REQUEST;
 
@@ -406,7 +389,8 @@ page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
     http_deescape(components[1]);
 
   if ((str = http_arg_get(&hc->hc_req_args, "lcn")))
-    if (atoll(str) > 0) flags |= XMLTV_FLAG_LCN;
+    if (atoll(str) > 0)
+      flags |= XMLTV_FLAG_LCN;
 
   tvh_mutex_lock(&global_lock);
 

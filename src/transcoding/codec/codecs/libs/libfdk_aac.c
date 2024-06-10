@@ -17,69 +17,55 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "transcoding/codec/internals.h"
-
 
 /* libfdk_aac =============================================================== */
 
 typedef struct {
-    TVHAudioCodecProfile;
-    int vbr;
-    int afterburner;
-    int eld_sbr;
-    int signaling;
+  TVHAudioCodecProfile;
+  int vbr;
+  int afterburner;
+  int eld_sbr;
+  int signaling;
 } tvh_codec_profile_libfdk_aac_t;
 
-
-static int
-tvh_codec_profile_libfdk_aac_open(tvh_codec_profile_libfdk_aac_t *self,
-                                  AVDictionary **opts)
-{
-    AV_DICT_SET_FLAGS_GLOBAL_HEADER(opts);
-    // bit_rate or vbr
-    if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
-    }
-    else {
-        AV_DICT_SET_INT(opts, "vbr", self->vbr ? self->vbr : 3, 0);
-    }
-    AV_DICT_SET_INT(opts, "afterburner", self->afterburner, 0);
-    AV_DICT_SET_INT(opts, "eld_sbr", self->eld_sbr, 0);
-    AV_DICT_SET_INT(opts, "signaling", self->signaling, 0);
-    return 0;
+static int tvh_codec_profile_libfdk_aac_open(tvh_codec_profile_libfdk_aac_t* self,
+    AVDictionary**                                                           opts) {
+  AV_DICT_SET_FLAGS_GLOBAL_HEADER(opts);
+  // bit_rate or vbr
+  if (self->bit_rate) {
+    AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+  } else {
+    AV_DICT_SET_INT(opts, "vbr", self->vbr ? self->vbr : 3, 0);
+  }
+  AV_DICT_SET_INT(opts, "afterburner", self->afterburner, 0);
+  AV_DICT_SET_INT(opts, "eld_sbr", self->eld_sbr, 0);
+  AV_DICT_SET_INT(opts, "signaling", self->signaling, 0);
+  return 0;
 }
 
-
-static htsmsg_t *
-codec_profile_libfdk_aac_class_signaling_list(void *obj, const char *lang)
-{
-    static const struct strtab tab[] = {
-        {N_("default"),                                               -1},
-        {N_("implicit: Implicit backwards compatible signaling"),      0},
-        {N_("explicit_sbr: Explicit SBR, implicit PS signaling"),      1},
-        {N_("explicit_hierarchical: Explicit hierarchical signaling"), 2}
-    };
-    return strtab2htsmsg(tab, 1, lang);
+static htsmsg_t* codec_profile_libfdk_aac_class_signaling_list(void* obj, const char* lang) {
+  static const struct strtab tab[] = {{N_("default"), -1},
+      {N_("implicit: Implicit backwards compatible signaling"), 0},
+      {N_("explicit_sbr: Explicit SBR, implicit PS signaling"), 1},
+      {N_("explicit_hierarchical: Explicit hierarchical signaling"), 2}};
+  return strtab2htsmsg(tab, 1, lang);
 }
-
 
 static const codec_profile_class_t codec_profile_libfdk_aac_class = {
-    {
-        .ic_super      = (idclass_t *)&codec_profile_audio_class,
+    {.ic_super         = (idclass_t*)&codec_profile_audio_class,
         .ic_class      = "codec_profile_libfdk_aac",
         .ic_caption    = N_("libfdk_aac"),
-        .ic_properties = (const property_t[]){
-            {
-                .type     = PT_DBL,
-                .id       = "bit_rate",
-                .name     = N_("Bitrate (kb/s) (0=auto)"),
-                .desc     = N_("Constant bitrate (CBR) mode."),
-                .group    = 3,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(TVHCodecProfile, bit_rate),
-                .def.d    = 0,
-            },
+        .ic_properties = (const property_t[]){{
+                                                  .type     = PT_DBL,
+                                                  .id       = "bit_rate",
+                                                  .name     = N_("Bitrate (kb/s) (0=auto)"),
+                                                  .desc     = N_("Constant bitrate (CBR) mode."),
+                                                  .group    = 3,
+                                                  .get_opts = codec_profile_class_get_opts,
+                                                  .off      = offsetof(TVHCodecProfile, bit_rate),
+                                                  .def.d    = 0,
+                                              },
             {
                 .type     = PT_INT,
                 .id       = "vbr",
@@ -125,17 +111,14 @@ static const codec_profile_class_t codec_profile_libfdk_aac_class = {
                 .list     = codec_profile_libfdk_aac_class_signaling_list,
                 .def.i    = -1,
             },
-            {}
-        }
-    },
+            {}}},
     .open = (codec_profile_open_meth)tvh_codec_profile_libfdk_aac_open,
 };
 
-
 TVHAudioCodec tvh_codec_libfdk_aac = {
-    .name    = "libfdk_aac",
-    .size    = sizeof(tvh_codec_profile_libfdk_aac_t),
-    .idclass = &codec_profile_libfdk_aac_class,
-    .profile_init = tvh_codec_profile_audio_init,
+    .name            = "libfdk_aac",
+    .size            = sizeof(tvh_codec_profile_libfdk_aac_t),
+    .idclass         = &codec_profile_libfdk_aac_class,
+    .profile_init    = tvh_codec_profile_audio_init,
     .profile_destroy = tvh_codec_profile_audio_destroy,
 };

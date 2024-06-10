@@ -38,93 +38,102 @@
 
 struct satip_server_conf {
   idnode_t idnode;
-  int satip_deviceid;
-  char *satip_uuid;
-  int satip_rtsp;
-  int satip_weight;
-  int satip_allow_remote_weight;
-  int satip_descramble;
-  int satip_rewrite_pmt;
-  int satip_muxcnf;
-  int satip_rtptcpsize;
-  int satip_nom3u;
-  int satip_notcp_mode;
-  int satip_anonymize;
-  int satip_noupnp;
-  int satip_drop_fe;
-  int satip_restrict_pids_all;
-  int satip_iptv_sig_level;
-  int satip_force_sig_level;
-  int satip_dvbs;
-  int satip_dvbs2;
-  int satip_dvbt;
-  int satip_dvbt2;
-  int satip_dvbc;
-  int satip_dvbc2;
-  int satip_atsc_t;
-  int satip_atsc_c;
-  int satip_isdb_t;
-  int satip_max_sessions;
-  int satip_max_user_connections;
-  char *satip_nat_ip;
-  int satip_nat_rtsp;
-  int satip_nat_name_force;
-  char *satip_rtp_src_ip;
+  int      satip_deviceid;
+  char*    satip_uuid;
+  int      satip_rtsp;
+  int      satip_weight;
+  int      satip_allow_remote_weight;
+  int      satip_descramble;
+  int      satip_rewrite_pmt;
+  int      satip_muxcnf;
+  int      satip_rtptcpsize;
+  int      satip_nom3u;
+  int      satip_notcp_mode;
+  int      satip_anonymize;
+  int      satip_noupnp;
+  int      satip_drop_fe;
+  int      satip_restrict_pids_all;
+  int      satip_iptv_sig_level;
+  int      satip_force_sig_level;
+  int      satip_dvbs;
+  int      satip_dvbs2;
+  int      satip_dvbt;
+  int      satip_dvbt2;
+  int      satip_dvbc;
+  int      satip_dvbc2;
+  int      satip_atsc_t;
+  int      satip_atsc_c;
+  int      satip_isdb_t;
+  int      satip_max_sessions;
+  int      satip_max_user_connections;
+  char*    satip_nat_ip;
+  int      satip_nat_rtsp;
+  int      satip_nat_name_force;
+  char*    satip_rtp_src_ip;
 };
 
 extern struct satip_server_conf satip_server_conf;
 
 extern const idclass_t satip_server_class;
 
-void *satip_rtp_queue(th_subscription_t *subs,
-                      streaming_queue_t *sq,
-                      http_connection_t *hc,
-                      struct sockaddr_storage *peer, int port,
-                      int fd_rtp, int fd_rtcp,
-                      int frontend, int source,
-                      dvb_mux_conf_t *dmc,
-                      mpegts_apids_t *pids,
-                      int allow_data, int perm_lock,
-                      void (*no_data_cb)(void *opaque),
-                      void *no_data_opaque);
-void satip_rtp_allow_data(void *_rtp);
-void satip_rtp_update_pids(void *_rtp, mpegts_apids_t *pids);
-void satip_rtp_update_pmt_pids(void *_rtp, mpegts_apids_t *pmt_pids);
-int satip_rtp_status(void *id, char *buf, int len);
-void satip_rtp_close(void *id);
+void* satip_rtp_queue(th_subscription_t* subs,
+    streaming_queue_t*                   sq,
+    http_connection_t*                   hc,
+    struct sockaddr_storage*             peer,
+    int                                  port,
+    int                                  fd_rtp,
+    int                                  fd_rtcp,
+    int                                  frontend,
+    int                                  source,
+    dvb_mux_conf_t*                      dmc,
+    mpegts_apids_t*                      pids,
+    int                                  allow_data,
+    int                                  perm_lock,
+    void (*no_data_cb)(void* opaque),
+    void* no_data_opaque);
+void  satip_rtp_allow_data(void* _rtp);
+void  satip_rtp_update_pids(void* _rtp, mpegts_apids_t* pids);
+void  satip_rtp_update_pmt_pids(void* _rtp, mpegts_apids_t* pmt_pids);
+int   satip_rtp_status(void* id, char* buf, int len);
+void  satip_rtp_close(void* id);
 
 void satip_rtp_init(int boot);
 void satip_rtp_done(void);
 
-int satip_rtsp_delsys(int fe, int *findex, const char **ftype);
+int satip_rtsp_delsys(int fe, int* findex, const char** ftype);
 
-void satip_server_rtsp_init(const char *bindaddr, int port,
-                            int descramble, int rewrite_pmt, int muxcnf,
-                            const char *rtp_src,
-                            const char *nat_ip, int nat_port);
+void satip_server_rtsp_init(const char* bindaddr,
+    int                                 port,
+    int                                 descramble,
+    int                                 rewrite_pmt,
+    int                                 muxcnf,
+    const char*                         rtp_src,
+    const char*                         nat_ip,
+    int                                 nat_port);
 void satip_server_rtsp_register(void);
 void satip_server_rtsp_done(void);
 
-int satip_server_http_page(http_connection_t *hc,
-                           const char *remain, void *opaque);
+int satip_server_http_page(http_connection_t* hc, const char* remain, void* opaque);
 
-int satip_server_match_uuid(const char *uuid);
+int satip_server_match_uuid(const char* uuid);
 
 void satip_server_boot(void);
-void satip_server_init(const char *bindaddr, int rtsp_port);
+void satip_server_init(const char* bindaddr, int rtsp_port);
 void satip_server_register(void);
 void satip_server_done(void);
 
 #else
 
-static inline int satip_server_match_uuid(const char *uuid) { return 0; }
+static inline int satip_server_match_uuid(const char* uuid) {
+  return 0;
+}
 
-static inline void satip_server_config_changed(void) { };
+static inline void satip_server_config_changed(void) {};
 
-static inline void satip_server_boot(void) { };
-static inline void satip_server_init(const char *bindaddr, int rtsp_port) { };
-static inline void satip_server_register(void) { };
-static inline void satip_server_done(void) { };
+static inline void satip_server_boot(void) {};
+static inline void satip_server_init(const char* bindaddr, int rtsp_port) {};
+static inline void satip_server_register(void) {};
+static inline void satip_server_done(void) {};
 
 #endif
 

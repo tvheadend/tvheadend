@@ -36,13 +36,12 @@
 #define H264_NAL_SPS_EXT         13
 #define H264_NAL_AUXILIARY_SLICE 19
 
-void *h264_nal_deescape(bitstream_t *bs, const uint8_t *data, int size);
+void* h264_nal_deescape(bitstream_t* bs, const uint8_t* data, int size);
 
-int h264_decode_seq_parameter_set(parser_es_t *st, bitstream_t *bs);
+int h264_decode_seq_parameter_set(parser_es_t* st, bitstream_t* bs);
 
-int h264_decode_pic_parameter_set(parser_es_t *st, bitstream_t *bs);
+int h264_decode_pic_parameter_set(parser_es_t* st, bitstream_t* bs);
 
-int h264_decode_slice_header(parser_es_t *st, bitstream_t *bs,
-			     int *pkttype, int *isfield);
+int h264_decode_slice_header(parser_es_t* st, bitstream_t* bs, int* pkttype, int* isfield);
 
 #endif /* PARSER_H264_H_ */

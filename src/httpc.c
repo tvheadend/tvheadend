@@ -49,102 +49,86 @@
 #endif
 
 struct http_client_ssl {
-  int      connected;
-  int      shutdown;
-  int      notified;
+  int connected;
+  int shutdown;
+  int notified;
 
-  SSL_CTX *ctx;
-  SSL     *ssl;
+  SSL_CTX* ctx;
+  SSL*     ssl;
 
-  BIO     *rbio;
-  char    *rbio_buf;
-  size_t   rbio_size;
-  size_t   rbio_pos;
-  
-  BIO     *wbio;
-  char    *wbio_buf;
-  size_t   wbio_size;
-  size_t   wbio_pos;
+  BIO*   rbio;
+  char*  rbio_buf;
+  size_t rbio_size;
+  size_t rbio_pos;
+
+  BIO*   wbio;
+  char*  wbio_buf;
+  size_t wbio_size;
+  size_t wbio_pos;
 };
 
-static int
-http_client_redirected ( http_client_t *hc );
-static int
-http_client_ssl_write_update( http_client_t *hc );
-static int
-http_client_reconnect
-  ( http_client_t *hc, http_ver_t ver, const char *scheme,
-    const char *host, int port );
+static int http_client_redirected(http_client_t* hc);
+static int http_client_ssl_write_update(http_client_t* hc);
+static int http_client_reconnect(http_client_t* hc,
+    http_ver_t                                  ver,
+    const char*                                 scheme,
+    const char*                                 host,
+    int                                         port);
 #if HTTPCLIENT_TESTSUITE
-static void
-http_client_testsuite_run( void );
+static void http_client_testsuite_run(void);
 #endif
 
 /*
  * Global state
  */
-static int                      http_running;
-static tvhpoll_t               *http_poll;
-static TAILQ_HEAD(,http_client) http_clients;
-static tvh_mutex_t          http_lock;
-static tvh_cond_t               http_cond;
-static th_pipe_t                http_pipe;
+static int        http_running;
+static tvhpoll_t* http_poll;
+static TAILQ_HEAD(, http_client) http_clients;
+static tvh_mutex_t http_lock;
+static tvh_cond_t  http_cond;
+static th_pipe_t   http_pipe;
 
 /*
  *
  */
-static inline int
-shortid( http_client_t *hc )
-{
+static inline int shortid(http_client_t* hc) {
   return hc->hc_id;
 }
 
 /*
  *
  */
-static void
-http_client_get( http_client_t *hc )
-{
+static void http_client_get(http_client_t* hc) {
   hc->hc_refcnt++;
 }
 
-static void
-http_client_put( http_client_t *hc )
-{
+static void http_client_put(http_client_t* hc) {
   hc->hc_refcnt--;
 }
 
-static int
-http_client_busy( http_client_t *hc )
-{
+static int http_client_busy(http_client_t* hc) {
   return !!hc->hc_refcnt;
 }
 
-static struct strtab HTTP_statetab[] = {
-  { "WAIT_REQUEST",  HTTP_CON_WAIT_REQUEST },
-  { "READ_HEADER",   HTTP_CON_READ_HEADER },
-  { "END",           HTTP_CON_END },
-  { "POST_DATA",     HTTP_CON_POST_DATA },
-  { "SENDING",       HTTP_CON_SENDING },
-  { "SENT",          HTTP_CON_SENT },
-  { "RECEIVING",     HTTP_CON_RECEIVING },
-  { "DONE",          HTTP_CON_DONE },
-  { "IDLE",          HTTP_CON_IDLE },
-  { "OK",            HTTP_CON_OK }
-};
+static struct strtab HTTP_statetab[] = {{"WAIT_REQUEST", HTTP_CON_WAIT_REQUEST},
+    {"READ_HEADER", HTTP_CON_READ_HEADER},
+    {"END", HTTP_CON_END},
+    {"POST_DATA", HTTP_CON_POST_DATA},
+    {"SENDING", HTTP_CON_SENDING},
+    {"SENT", HTTP_CON_SENT},
+    {"RECEIVING", HTTP_CON_RECEIVING},
+    {"DONE", HTTP_CON_DONE},
+    {"IDLE", HTTP_CON_IDLE},
+    {"OK", HTTP_CON_OK}};
 
-const char *
-http_client_con2str(http_state_t val)
-{
+const char* http_client_con2str(http_state_t val) {
   return val2str(val, HTTP_statetab);
 }
 
 /*
  *
  */
-static int
-http_port( http_client_t *hc, const char *scheme, int port )
-{
+static int http_port(http_client_t* hc, const char* scheme, int port) {
   if (port <= 0 || port > 65535) {
     if (scheme && strcmp(scheme, "http") == 0)
       port = 80;
@@ -163,10 +147,8 @@ http_port( http_client_t *hc, const char *scheme, int port )
 /*
  * Disable
  */
-static void
-http_client_shutdown ( http_client_t *hc, int force, int reconnect )
-{
-  struct http_client_ssl *ssl = hc->hc_ssl;
+static void http_client_shutdown(http_client_t* hc, int force, int reconnect) {
+  struct http_client_ssl* ssl = hc->hc_ssl;
 
   tvhtrace(LS_HTTPC, "%04X: shutdown", shortid(hc));
   hc->hc_shutdown = 1;
@@ -187,7 +169,7 @@ http_client_shutdown ( http_client_t *hc, int force, int reconnect )
       hc->hc_efd = NULL;
       tvh_mutex_unlock(&http_lock);
     } else {
-      hc->hc_efd  = NULL;
+      hc->hc_efd = NULL;
     }
   }
   if (hc->hc_fd >= 0) {
@@ -207,9 +189,7 @@ http_client_shutdown ( http_client_t *hc, int force, int reconnect )
 /*
  * Poll I/O
  */
-static void
-http_client_poll_dir ( http_client_t *hc, int in, int out )
-{
+static void http_client_poll_dir(http_client_t* hc, int in, int out) {
   int events = (in ? TVHPOLL_IN : 0) | (out ? TVHPOLL_OUT : 0);
   if (hc->hc_efd) {
     if (events == 0 && hc->hc_pause) {
@@ -218,7 +198,11 @@ http_client_poll_dir ( http_client_t *hc, int in, int out )
         hc->hc_pevents_pause = hc->hc_pevents;
       tvhpoll_rem1(hc->hc_efd, hc->hc_fd);
     } else if (hc->hc_pevents != events) {
-      tvhtrace(LS_HTTPC, "%04X: add poll for input%s (%x)", shortid(hc), out ? " and output" : "", events);
+      tvhtrace(LS_HTTPC,
+          "%04X: add poll for input%s (%x)",
+          shortid(hc),
+          out ? " and output" : "",
+          events);
       tvhpoll_add1(hc->hc_efd, hc->hc_fd, events | TVHPOLL_IN, hc);
     }
   }
@@ -227,22 +211,17 @@ http_client_poll_dir ( http_client_t *hc, int in, int out )
   errno = EAGAIN;
 }
 
-void
-http_client_unpause( http_client_t *hc )
-{
+void http_client_unpause(http_client_t* hc) {
   if (hc->hc_pause) {
     int pevents_pause = hc->hc_pevents_pause;
     tvhtrace(LS_HTTPC, "%04X: resuming input", shortid(hc));
-    hc->hc_pause = 0;
+    hc->hc_pause         = 0;
     hc->hc_pevents_pause = 0;
-    http_client_poll_dir(hc, pevents_pause & TVHPOLL_IN,
-            pevents_pause & TVHPOLL_OUT);
+    http_client_poll_dir(hc, pevents_pause & TVHPOLL_IN, pevents_pause & TVHPOLL_OUT);
   }
 }
 
-static void
-http_client_direction ( http_client_t *hc, int sending )
-{
+static void http_client_direction(http_client_t* hc, int sending) {
   hc->hc_sending = sending;
   if (hc->hc_ssl == NULL)
     http_client_poll_dir(hc, 1, sending);
@@ -252,35 +231,29 @@ http_client_direction ( http_client_t *hc, int sending )
  * Main I/O routines
  */
 
-static inline void
-http_client_rbuf_cut( http_client_t *hc, size_t cut )
-{
+static inline void http_client_rbuf_cut(http_client_t* hc, size_t cut) {
   size_t len = hc->hc_rpos - cut;
   memmove(hc->hc_rbuf, hc->hc_rbuf + cut, len);
   hc->hc_rpos = len;
 }
 
-static void
-http_client_cmd_destroy( http_client_t *hc, http_client_wcmd_t *cmd )
-{
+static void http_client_cmd_destroy(http_client_t* hc, http_client_wcmd_t* cmd) {
   TAILQ_REMOVE(&hc->hc_wqueue, cmd, link);
   free(cmd->wbuf);
   free(cmd);
 }
 
-static int
-http_client_flush( http_client_t *hc, int result )
-{
-  hc->hc_result       = result;
+static int http_client_flush(http_client_t* hc, int result) {
+  hc->hc_result = result;
   tvhtrace(LS_HTTPC, "%04X: client flush %i", shortid(hc), result);
   if (result < 0)
     http_client_shutdown(hc, 0, 0);
-  hc->hc_in_data      = 0;
-  hc->hc_in_rtp_data  = 0;
-  hc->hc_hsize        = 0;
-  hc->hc_csize        = 0;
-  hc->hc_rpos         = 0;
-  hc->hc_chunked      = 0;
+  hc->hc_in_data     = 0;
+  hc->hc_in_rtp_data = 0;
+  hc->hc_hsize       = 0;
+  hc->hc_csize       = 0;
+  hc->hc_rpos        = 0;
+  hc->hc_chunked     = 0;
   free(hc->hc_chunk);
   hc->hc_chunk        = 0;
   hc->hc_chunk_pos    = 0;
@@ -292,23 +265,19 @@ http_client_flush( http_client_t *hc, int result )
   return result;
 }
 
-int
-http_client_clear_state( http_client_t *hc )
-{
+int http_client_clear_state(http_client_t* hc) {
   if (hc->hc_shutdown)
     return -EBADF;
   free(hc->hc_data);
-  hc->hc_data = NULL;
+  hc->hc_data      = NULL;
   hc->hc_data_size = 0;
   return http_client_flush(hc, 0);
 }
 
-static int
-http_client_einprogress( http_client_t *hc )
-{
+static int http_client_einprogress(http_client_t* hc) {
   struct pollfd fds;
   fds.fd      = hc->hc_fd;
-  fds.events  = POLLOUT|POLLNVAL|POLLERR;
+  fds.events  = POLLOUT | POLLNVAL | POLLERR;
   fds.revents = 0;
   if (poll(&fds, 1, 0) == 0) {
     http_client_poll_dir(hc, 0, 1);
@@ -318,13 +287,11 @@ http_client_einprogress( http_client_t *hc )
   return 0;
 }
 
-static int
-http_client_ssl_read_update( http_client_t *hc )
-{
-  struct http_client_ssl *ssl = hc->hc_ssl;
-  char *rbuf = alloca(hc->hc_io_size);
-  ssize_t r, r2;
-  size_t len;
+static int http_client_ssl_read_update(http_client_t* hc) {
+  struct http_client_ssl* ssl  = hc->hc_ssl;
+  char*                   rbuf = alloca(hc->hc_io_size);
+  ssize_t                 r, r2;
+  size_t                  len;
 
   if (ssl->rbio_pos > 0) {
     r = BIO_write(ssl->rbio, ssl->rbio_buf, ssl->rbio_pos);
@@ -349,7 +316,7 @@ http_client_ssl_read_update( http_client_t *hc )
     }
     return r;
   }
-  r2 = BIO_write(ssl->rbio, rbuf, r);
+  r2  = BIO_write(ssl->rbio, rbuf, r);
   len = r - (r2 < 0 ? 0 : r2);
   if (len) {
     if (ssl->rbio_pos + len > ssl->rbio_size) {
@@ -362,13 +329,11 @@ http_client_ssl_read_update( http_client_t *hc )
   return 0;
 }
 
-static int
-http_client_ssl_write_update( http_client_t *hc )
-{
-  struct http_client_ssl *ssl = hc->hc_ssl;
-  char *rbuf = alloca(hc->hc_io_size);
-  ssize_t r, r2;
-  size_t len;
+static int http_client_ssl_write_update(http_client_t* hc) {
+  struct http_client_ssl* ssl  = hc->hc_ssl;
+  char*                   rbuf = alloca(hc->hc_io_size);
+  ssize_t                 r, r2;
+  size_t                  len;
 
   if (ssl->wbio_pos) {
     r = send(hc->hc_fd, ssl->wbio_buf, ssl->wbio_pos, MSG_DONTWAIT);
@@ -388,7 +353,7 @@ http_client_ssl_write_update( http_client_t *hc )
   }
   r = BIO_read(ssl->wbio, rbuf, hc->hc_io_size);
   if (r > 0) {
-    r2 = send(hc->hc_fd, rbuf, r, MSG_DONTWAIT);
+    r2  = send(hc->hc_fd, rbuf, r, MSG_DONTWAIT);
     len = r - (r2 < 0 ? 0 : r2);
     if (len) {
       if (ssl->wbio_pos + len > ssl->wbio_size) {
@@ -411,11 +376,9 @@ http_client_ssl_write_update( http_client_t *hc )
   return 0;
 }
 
-static ssize_t
-http_client_ssl_recv( http_client_t *hc, void *buf, size_t len )
-{
+static ssize_t http_client_ssl_recv(http_client_t* hc, void* buf, size_t len) {
   ssize_t r;
-  int e;
+  int     e;
 
   while (1) {
     r = SSL_read(hc->hc_ssl->ssl, buf, len);
@@ -450,12 +413,10 @@ http_client_ssl_recv( http_client_t *hc, void *buf, size_t len )
   return 0;
 }
 
-static ssize_t
-http_client_ssl_send( http_client_t *hc, const void *buf, size_t len )
-{
-  struct http_client_ssl *ssl = hc->hc_ssl;
-  ssize_t r, r2;
-  int e;
+static ssize_t http_client_ssl_send(http_client_t* hc, const void* buf, size_t len) {
+  struct http_client_ssl* ssl = hc->hc_ssl;
+  ssize_t                 r, r2;
+  int                     e;
 
   if (hc->hc_verify_peer < 0)
     http_client_ssl_peer_verify(hc, 1); /* default method - verify */
@@ -467,10 +428,13 @@ http_client_ssl_send( http_client_t *hc, const void *buf, size_t len )
         if (hc->hc_verify_peer > 0) {
           if (SSL_get_peer_certificate(ssl->ssl) == NULL ||
               SSL_get_verify_result(ssl->ssl) != X509_V_OK) {
-            tvherror(LS_HTTPC, "%04X: SSL peer verification failed (%s:%i)%s %li",
-                   shortid(hc), hc->hc_host, hc->hc_port,
-                   SSL_get_peer_certificate(ssl->ssl) ? " X509" : "",
-                   SSL_get_verify_result(ssl->ssl));
+            tvherror(LS_HTTPC,
+                "%04X: SSL peer verification failed (%s:%i)%s %li",
+                shortid(hc),
+                hc->hc_host,
+                hc->hc_port,
+                SSL_get_peer_certificate(ssl->ssl) ? " X509" : "",
+                SSL_get_verify_result(ssl->ssl));
             errno = EPERM;
             return -1;
           }
@@ -478,7 +442,7 @@ http_client_ssl_send( http_client_t *hc, const void *buf, size_t len )
         goto write;
       }
     } else {
-write:
+    write:
       r = SSL_write(ssl->ssl, buf, len);
     }
     if (r > 0) {
@@ -521,11 +485,9 @@ write:
   return 0;
 }
 
-static ssize_t
-http_client_ssl_shutdown( http_client_t *hc )
-{
+static ssize_t http_client_ssl_shutdown(http_client_t* hc) {
   ssize_t r;
-  int e;
+  int     e;
 
   while (1) {
     r = SSL_shutdown(hc->hc_ssl->ssl);
@@ -560,12 +522,10 @@ http_client_ssl_shutdown( http_client_t *hc )
   return 0;
 }
 
-static int
-http_client_send_partial( http_client_t *hc )
-{
-  http_client_wcmd_t *wcmd;
-  ssize_t r;
-  int res = HTTP_CON_IDLE;
+static int http_client_send_partial(http_client_t* hc) {
+  http_client_wcmd_t* wcmd;
+  ssize_t             r;
+  int                 res = HTTP_CON_IDLE;
 
   wcmd = TAILQ_FIRST(&hc->hc_wqueue);
   while (wcmd != NULL) {
@@ -573,16 +533,14 @@ http_client_send_partial( http_client_t *hc )
     hc->hc_rcseq = wcmd->wcseq;
     if (hc->hc_einprogress && http_client_einprogress(hc)) {
       errno = EINPROGRESS;
-      r = -1;
+      r     = -1;
       goto skip;
     }
     if (hc->hc_ssl)
-      r = http_client_ssl_send(hc, wcmd->wbuf + wcmd->wpos,
-                               wcmd->wsize - wcmd->wpos);
+      r = http_client_ssl_send(hc, wcmd->wbuf + wcmd->wpos, wcmd->wsize - wcmd->wpos);
     else
-      r = send(hc->hc_fd, wcmd->wbuf + wcmd->wpos,
-               wcmd->wsize - wcmd->wpos, MSG_DONTWAIT);
-skip:
+      r = send(hc->hc_fd, wcmd->wbuf + wcmd->wpos, wcmd->wsize - wcmd->wpos, MSG_DONTWAIT);
+  skip:
     if (r < 0) {
       if (ERRNO_AGAIN(errno) || errno == EINPROGRESS) {
         http_client_direction(hc, 1);
@@ -592,7 +550,7 @@ skip:
     }
     wcmd->wpos += r;
     if (wcmd->wpos >= wcmd->wsize) {
-      res = HTTP_CON_SENT;
+      res  = HTTP_CON_SENT;
       wcmd = NULL;
     }
     break;
@@ -606,16 +564,18 @@ skip:
   }
 }
 
-int
-http_client_send( http_client_t *hc, enum http_cmd cmd,
-                  const char *path, const char *query,
-                  http_arg_list_t *header, void *body, size_t body_size )
-{
-  http_client_wcmd_t *wcmd = calloc(1, sizeof(*wcmd));
-  http_arg_t *h;
-  htsbuf_queue_t q;
-  const char *s;
-  int empty;
+int http_client_send(http_client_t* hc,
+    enum http_cmd                   cmd,
+    const char*                     path,
+    const char*                     query,
+    http_arg_list_t*                header,
+    void*                           body,
+    size_t                          body_size) {
+  http_client_wcmd_t* wcmd = calloc(1, sizeof(*wcmd));
+  http_arg_t*         h;
+  htsbuf_queue_t      q;
+  const char*         s;
+  int                 empty;
 
   if (hc->hc_shutdown) {
     if (header)
@@ -624,13 +584,13 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
     return -EIO;
   }
 
-  wcmd->wcmd = cmd;
+  wcmd->wcmd       = cmd;
   hc->hc_keepalive = 1;
 
   htsbuf_queue_init(&q, 0);
   s = http_cmd2str(cmd);
   if (s == NULL) {
-error:
+  error:
     if (header)
       http_arg_flush(header);
     free(wcmd);
@@ -655,14 +615,13 @@ error:
   htsbuf_append(&q, "\r\n", 2);
 
   if (header) {
-    TAILQ_FOREACH(h, header, link) {
+    TAILQ_FOREACH (h, header, link) {
       htsbuf_append_str(&q, h->key);
       htsbuf_append(&q, ": ", 2);
       if (h->val)
         htsbuf_append_str(&q, h->val);
       htsbuf_append(&q, "\r\n", 2);
-      if (strcasecmp(h->key, "Connection") == 0 &&
-          strcasecmp(h->val ?: "", "close") == 0)
+      if (strcasecmp(h->key, "Connection") == 0 && strcasecmp(h->val ?: "", "close") == 0)
         hc->hc_keepalive = 0;
     }
     http_arg_flush(header);
@@ -680,7 +639,7 @@ error:
     htsbuf_append(&q, body, body_size);
 
   body_size = q.hq_size;
-  body = malloc(body_size);
+  body      = malloc(body_size);
   htsbuf_read(&q, body, body_size);
 
   if (tvhtrace_enabled()) {
@@ -701,11 +660,9 @@ error:
   return HTTP_CON_SENDING;
 }
 
-static int
-http_client_finish( http_client_t *hc )
-{
-  http_client_wcmd_t *wcmd;
-  int res;
+static int http_client_finish(http_client_t* hc) {
+  http_client_wcmd_t* wcmd;
+  int                 res;
 
   tvhtrace(LS_HTTPC, "%04X: finishing", shortid(hc));
 
@@ -721,18 +678,16 @@ http_client_finish( http_client_t *hc )
       return http_client_flush(hc, res);
   }
   hc->hc_hsize = hc->hc_csize = 0;
-  wcmd = TAILQ_FIRST(&hc->hc_wqueue);
+  wcmd                        = TAILQ_FIRST(&hc->hc_wqueue);
   if (wcmd)
     http_client_cmd_destroy(hc, wcmd);
   if (hc->hc_handle_location &&
-      (hc->hc_code == HTTP_STATUS_MOVED ||
-       hc->hc_code == HTTP_STATUS_FOUND ||
-       hc->hc_code == HTTP_STATUS_SEE_OTHER ||
-       hc->hc_code == HTTP_STATUS_NOT_MODIFIED)) {
-    const char *p = http_arg_get(&hc->hc_args, "Location");
+      (hc->hc_code == HTTP_STATUS_MOVED || hc->hc_code == HTTP_STATUS_FOUND ||
+          hc->hc_code == HTTP_STATUS_SEE_OTHER || hc->hc_code == HTTP_STATUS_NOT_MODIFIED)) {
+    const char* p = http_arg_get(&hc->hc_args, "Location");
     if (p) {
       hc->hc_location = strdup(p);
-      res = http_client_redirected(hc);
+      res             = http_client_redirected(hc);
       if (res < 0)
         return http_client_flush(hc, res);
       return HTTP_CON_RECEIVING;
@@ -753,9 +708,7 @@ http_client_finish( http_client_t *hc )
   return hc->hc_reconnected ? HTTP_CON_RECEIVING : HTTP_CON_DONE;
 }
 
-static int
-http_client_parse_arg( http_arg_list_t *list, const char *p )
-{
+static int http_client_parse_arg(http_arg_list_t* list, const char* p) {
   char *d, *t;
 
   d = strchr(p, ':');
@@ -772,9 +725,7 @@ http_client_parse_arg( http_arg_list_t *list, const char *p )
   return -EINVAL;
 }
 
-static int
-http_client_data_copy( http_client_t *hc, char *buf, size_t len )
-{
+static int http_client_data_copy(http_client_t* hc, char* buf, size_t len) {
   int res;
 
   if (hc->hc_data_received) {
@@ -794,12 +745,10 @@ http_client_data_copy( http_client_t *hc, char *buf, size_t len )
   return 0;
 }
 
-static ssize_t
-http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
-{
+static ssize_t http_client_data_chunked(http_client_t* hc, char* buf, size_t len, int* end) {
   size_t old = len, l, l2;
-  char *d, *s;
-  int res;
+  char * d, *s;
+  int    res;
 
   while (len > 0) {
     if (hc->hc_chunk_size) {
@@ -812,8 +761,7 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
       buf += l;
       len -= l;
       if (hc->hc_chunk_pos >= hc->hc_chunk_size) {
-        if (s[hc->hc_chunk_size - 2] != '\r' &&
-            s[hc->hc_chunk_size - 1] != '\n')
+        if (s[hc->hc_chunk_size - 2] != '\r' && s[hc->hc_chunk_size - 1] != '\n')
           return -EIO;
         res = http_client_data_copy(hc, hc->hc_chunk, hc->hc_chunk_size - 2);
         if (res < 0)
@@ -825,7 +773,7 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
     l = 0;
     if (hc->hc_chunk_csize) {
       s = hc->hc_chunk;
-      if (buf[0] == '\n' && s[hc->hc_chunk_csize-1] == '\r')
+      if (buf[0] == '\n' && s[hc->hc_chunk_csize - 1] == '\r')
         l = 1;
       else if (len > 1 && buf[0] == '\r' && buf[1] == '\n')
         l = 2;
@@ -833,7 +781,7 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
       d = strstr(s = buf, "\r\n");
       if (d) {
         *d = '\0';
-        l = (d + 2) - s;
+        l  = (d + 2) - s;
       }
     }
     if (l) {
@@ -859,13 +807,13 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
         hc->hc_chunk_size = strtoll(s, NULL, 16);
         if (hc->hc_chunk_size == 0)
           return -EIO;
-        if (hc->hc_chunk_size > 256*1024)
+        if (hc->hc_chunk_size > 256 * 1024)
           return -EMSGSIZE;
         hc->hc_chunk_size += 2; /* CR-LF */
         if (hc->hc_chunk_alloc < hc->hc_chunk_size) {
-          hc->hc_chunk = realloc(hc->hc_chunk, hc->hc_chunk_size + 1);
+          hc->hc_chunk                    = realloc(hc->hc_chunk, hc->hc_chunk_size + 1);
           hc->hc_chunk[hc->hc_chunk_size] = '\0';
-          hc->hc_chunk_alloc = hc->hc_chunk_size;
+          hc->hc_chunk_alloc              = hc->hc_chunk_size;
         }
       }
       buf += l;
@@ -873,8 +821,8 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
     } else {
       l2 = hc->hc_chunk_csize + len;
       if (l2 > hc->hc_chunk_alloc) {
-        hc->hc_chunk = realloc(hc->hc_chunk, l2 + 1);
-        hc->hc_chunk[l2] = '\0';
+        hc->hc_chunk       = realloc(hc->hc_chunk, l2 + 1);
+        hc->hc_chunk[l2]   = '\0';
         hc->hc_chunk_alloc = l2;
       }
       memcpy(hc->hc_chunk + hc->hc_chunk_csize, buf, len);
@@ -886,11 +834,9 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
   return old;
 }
 
-static int
-http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
-{
+static int http_client_data_received(http_client_t* hc, char* buf, ssize_t len, int hdr) {
   ssize_t l, l2, csize;
-  int res, end = 0;
+  int     res, end = 0;
 
   buf[len] = '\0';
 
@@ -900,10 +846,10 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
     if (!hdr && hc->hc_rpos >= hc->hc_csize)
       return 1;
     return 0;
-  }  
+  }
 
   csize = hc->hc_csize == (size_t)-1 ? 0 : hc->hc_csize;
-  l = len;
+  l     = len;
   if (hc->hc_csize && hc->hc_csize != (size_t)-1 && hc->hc_rpos > csize) {
     l2 = hc->hc_rpos - csize;
     if (l2 < l)
@@ -922,8 +868,8 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
   }
   hc->hc_rpos += l;
   if (hc->hc_csize && hc->hc_rpos >= hc->hc_csize) {
-    end = 1;
-    hc->hc_rpos = 0;
+    end            = 1;
+    hc->hc_rpos    = 0;
     hc->hc_in_data = 0;
   } else if (end) {
     hc->hc_in_data = 0;
@@ -934,14 +880,12 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
       hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize = l2 + 1);
     memcpy(hc->hc_rbuf, buf + l, l2);
     hc->hc_rbuf[l2] = '\0';
-    hc->hc_rpos = l2;
+    hc->hc_rpos     = l2;
   }
   return end ? 1 : 0;
 }
 
-static int
-http_arg_contains(const char *arg, const char *val)
-{
+static int http_arg_contains(const char* arg, const char* val) {
   char *a, *next, *p;
   /* copy will be modified by strsep() */
   a = strdup(arg);
@@ -957,13 +901,11 @@ http_arg_contains(const char *arg, const char *val)
   return 0;
 }
 
-static int
-http_client_run0( http_client_t *hc )
-{
-  char *buf, *saveptr, *argv[3], *d, *p;
-  int ver, res, delimsize;
+static int http_client_run0(http_client_t* hc) {
+  char *  buf, *saveptr, *argv[3], *d, *p;
+  int     ver, res, delimsize;
   ssize_t r;
-  size_t len;
+  size_t  len;
 
   if (hc->hc_shutdown) {
     if (hc->hc_ssl && hc->hc_ssl->shutdown) {
@@ -1047,12 +989,17 @@ retry:
   }
 
   if (hc->hc_rsize < r + hc->hc_rpos) {
-    if (hc->hc_rpos + r > hc->hc_io_size + 20*1024) {
-      tvhtrace(LS_HTTPC, "%04X: overflow, buf %zd pos %zd read %zd io %zd",
-               shortid(hc), hc->hc_rsize, hc->hc_rpos, r, hc->hc_io_size);
+    if (hc->hc_rpos + r > hc->hc_io_size + 20 * 1024) {
+      tvhtrace(LS_HTTPC,
+          "%04X: overflow, buf %zd pos %zd read %zd io %zd",
+          shortid(hc),
+          hc->hc_rsize,
+          hc->hc_rpos,
+          r,
+          hc->hc_io_size);
       return http_client_flush(hc, -EMSGSIZE);
     }
-    hc->hc_rsize += hc->hc_rpos + r + 4*1024;
+    hc->hc_rsize += hc->hc_rpos + r + 4 * 1024;
     hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize + 1);
   }
   memcpy(hc->hc_rbuf + hc->hc_rpos, buf, r);
@@ -1064,7 +1011,7 @@ next_header:
   if (hc->hc_version == RTSP_VERSION_1_0 && hc->hc_rbuf[0] == '$')
     goto rtsp_data;
   hc->hc_rbuf[hc->hc_rpos] = '\0';
-  delimsize = 4;
+  delimsize                = 4;
   if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) == NULL) {
     delimsize = 2;
     if ((d = strstr(hc->hc_rbuf, "\n\n")) == NULL)
@@ -1072,17 +1019,21 @@ next_header:
   }
 
 header:
-  *d = '\0';
-  len = hc->hc_rpos;
+  *d                 = '\0';
+  len                = hc->hc_rpos;
   hc->hc_reconnected = 0;
   http_client_clear_state(hc);
   hc->hc_rpos  = len;
   hc->hc_hsize = d - hc->hc_rbuf + delimsize;
-  p = strtok_r(hc->hc_rbuf, "\r\n", &saveptr);
+  p            = strtok_r(hc->hc_rbuf, "\r\n", &saveptr);
   if (p == NULL)
     return http_client_flush(hc, -EINVAL);
-  tvhtrace(LS_HTTPC, "%04X: %s answer '%s' (rcseq: %d)",
-           shortid(hc), http_ver2str(hc->hc_version), p, hc->hc_rcseq);
+  tvhtrace(LS_HTTPC,
+      "%04X: %s answer '%s' (rcseq: %d)",
+      shortid(hc),
+      http_ver2str(hc->hc_version),
+      p,
+      hc->hc_rcseq);
   tvhlog_hexdump(LS_HTTPC, hc->hc_rbuf, hc->hc_hsize);
   if (http_tokenize(p, argv, 3, -1) != 3)
     return http_client_flush(hc, -EINVAL);
@@ -1138,18 +1089,17 @@ header:
     http_client_rbuf_cut(hc, hc->hc_hsize);
     goto next_header;
   }
-  if (hc->hc_version == RTSP_VERSION_1_0 &&
-     (hc->hc_csize == -1 || !hc->hc_csize)) {
-    hc->hc_csize = -1;
+  if (hc->hc_version == RTSP_VERSION_1_0 && (hc->hc_csize == -1 || !hc->hc_csize)) {
+    hc->hc_csize   = -1;
     hc->hc_in_data = 0;
     http_client_rbuf_cut(hc, hc->hc_hsize);
     return http_client_finish(hc);
   } else {
     hc->hc_in_data = 1;
   }
-  len = hc->hc_rpos - hc->hc_hsize;
+  len         = hc->hc_rpos - hc->hc_hsize;
   hc->hc_rpos = 0;
-  res = http_client_data_received(hc, hc->hc_rbuf + hc->hc_hsize, len, 1);
+  res         = http_client_data_received(hc, hc->hc_rbuf + hc->hc_hsize, len, 1);
   if (res < 0)
     return http_client_flush(hc, res);
   if (res > 0)
@@ -1158,13 +1108,13 @@ header:
 
 rtsp_data:
   /* RTSP embedded data */
-  r = 0;
-  hc->hc_in_data = 0;
+  r                  = 0;
+  hc->hc_in_data     = 0;
   hc->hc_in_rtp_data = 0;
   while (hc->hc_rpos > r + 3) {
     if (hc->hc_rbuf[r] != '$')
       break;
-    hc->hc_csize = 4 + ((hc->hc_rbuf[r+2] << 8) | hc->hc_rbuf[r+3]);
+    hc->hc_csize   = 4 + ((hc->hc_rbuf[r + 2] << 8) | hc->hc_rbuf[r + 3]);
     hc->hc_chunked = 0;
     if (r + hc->hc_csize > hc->hc_rpos) {
       http_client_rbuf_cut(hc, r);
@@ -1184,7 +1134,7 @@ rtsp_data:
     }
     r += hc->hc_csize;
     hc->hc_code = 0;
-    res = 0;
+    res         = 0;
     if (hc->hc_rtp_data_complete) {
       http_client_get(hc);
       tvh_mutex_unlock(&hc->hc_mutex);
@@ -1203,9 +1153,7 @@ rtsp_data:
   return HTTP_CON_RECEIVING;
 }
 
-int
-http_client_run( http_client_t *hc )
-{
+int http_client_run(http_client_t* hc) {
   int r;
 
   if (hc == NULL)
@@ -1219,23 +1167,22 @@ http_client_run( http_client_t *hc )
 /*
  *
  */
-void
-http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
-                        const char *user, const char *pass )
-{
+void http_client_basic_auth(http_client_t* hc,
+    http_arg_list_t*                       h,
+    const char*                            user,
+    const char*                            pass) {
   if (user && user[0] && pass && pass[0]) {
 #define BASIC "Basic "
     size_t plen = strlen(pass);
     size_t ulen = strlen(user);
-    size_t len = BASE64_SIZE(plen + ulen + 1) + 1;
-    char *buf = alloca(ulen + 1 + plen + 1);
-    char *cbuf = alloca(len + sizeof(BASIC) + 1);
+    size_t len  = BASE64_SIZE(plen + ulen + 1) + 1;
+    char*  buf  = alloca(ulen + 1 + plen + 1);
+    char*  cbuf = alloca(len + sizeof(BASIC) + 1);
     strcpy(buf, user);
     strcat(buf, ":");
     strcat(buf, pass);
     strcpy(cbuf, BASIC);
-    base64_encode(cbuf + sizeof(BASIC) - 1, len,
-                  (uint8_t *)buf, ulen + 1 + plen);
+    base64_encode(cbuf + sizeof(BASIC) - 1, len, (uint8_t*)buf, ulen + 1 + plen);
     http_arg_set(h, "Authorization", cbuf);
 #undef BASIC
   }
@@ -1244,17 +1191,17 @@ http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
 /*
  * Redirected
  */
-void
-http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url, int keepalive )
-{
+void http_client_basic_args(http_client_t* hc,
+    http_arg_list_t*                       h,
+    const url_t*                           url,
+    int                                    keepalive) {
   char buf[256];
 
   http_arg_flush(h);
   if (url->port == 0) { /* default port */
     http_arg_set(h, "Host", url->host);
   } else {
-    snprintf(buf, sizeof(buf), "%s:%u", url->host,
-                                        http_port(hc, url->scheme, url->port));
+    snprintf(buf, sizeof(buf), "%s:%u", url->host, http_port(hc, url->scheme, url->port));
     http_arg_set(h, "Host", buf);
   }
   assert(config.http_user_agent);
@@ -1264,74 +1211,74 @@ http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url
   http_client_basic_auth(hc, h, url->user, url->pass);
 }
 
-static char *
-strstrip(char *s)
-{
+static char* strstrip(char* s) {
   size_t l;
   if (s != NULL) {
-    while (*s && *s <= ' ') s++;
+    while (*s && *s <= ' ')
+      s++;
     l = *s ? 0 : strlen(s) - 1;
-    while (*s && s[l] <= ' ') s[l--] = '\0';
+    while (*s && s[l] <= ' ')
+      s[l--] = '\0';
   }
   return s;
 }
 
-void
-http_client_add_args ( http_client_t *hc, http_arg_list_t *h, const char *args )
-{
+void http_client_add_args(http_client_t* hc, http_arg_list_t* h, const char* args) {
   char *p, *k, *v;
 
   if (args == NULL)
     return;
   p = tvh_strdupa(args);
   while (*p) {
-    while (*p && *p <= ' ') p++;
-    if (*p == '\0') break;
+    while (*p && *p <= ' ')
+      p++;
+    if (*p == '\0')
+      break;
     k = p;
-    while (*p && *p != '\r' && *p != '\n' && *p != ':' && *p != '=') p++;
+    while (*p && *p != '\r' && *p != '\n' && *p != ':' && *p != '=')
+      p++;
     v = NULL;
-    if (*p == '=' || *p == ':') { *p = '\0'; p++; v = p; }
-    while (*p && *p != '\r' && *p != '\n') p++;
-    if (*p) { *p = '\0'; p++; }
+    if (*p == '=' || *p == ':') {
+      *p = '\0';
+      p++;
+      v = p;
+    }
+    while (*p && *p != '\r' && *p != '\n')
+      p++;
+    if (*p) {
+      *p = '\0';
+      p++;
+    }
     k = strstrip(k);
     v = strstrip(v);
-    if (v && *v && *k &&
-        strcasecmp(k, "Connection") != 0 &&
-        strcasecmp(k, "Host") != 0) {
+    if (v && *v && *k && strcasecmp(k, "Connection") != 0 && strcasecmp(k, "Host") != 0) {
       http_arg_get_remove(h, k);
       http_arg_set(h, k, v);
     }
   }
 }
 
-int
-http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
-                               http_ver_t ver )
-{
+int http_client_simple_reconnect(http_client_t* hc, const url_t* u, http_ver_t ver) {
   http_arg_list_t h;
-  tvhpoll_t *efd;
-  int r;
+  tvhpoll_t*      efd;
+  int             r;
 
   lock_assert(&hc->hc_mutex);
 
-  if (tvh_str_default(u->scheme, NULL) == NULL ||
-      tvh_str_default(u->host, NULL) == NULL ||
+  if (tvh_str_default(u->scheme, NULL) == NULL || tvh_str_default(u->host, NULL) == NULL ||
       u->port < 0) {
     tvherror(LS_HTTPC, "Invalid url '%s'", u->raw);
     return -EINVAL;
   }
-  if (strcmp(u->scheme, hc->hc_scheme) ||
-      strcmp(u->host, hc->hc_host) ||
-      http_port(hc, u->scheme, u->port) != hc->hc_port ||
-      !hc->hc_keepalive) {
+  if (strcmp(u->scheme, hc->hc_scheme) || strcmp(u->host, hc->hc_host) ||
+      http_port(hc, u->scheme, u->port) != hc->hc_port || !hc->hc_keepalive) {
     efd = hc->hc_efd;
     http_client_shutdown(hc, 1, 1);
-    r = http_client_reconnect(hc, hc->hc_version,
-                              u->scheme, u->host, u->port);
+    r          = http_client_reconnect(hc, hc->hc_version, u->scheme, u->host, u->port);
     hc->hc_efd = efd;
     if (r < 0)
       return r;
-    r = hc->hc_verify_peer;
+    r                  = hc->hc_verify_peer;
     hc->hc_verify_peer = -1;
     http_client_ssl_peer_verify(hc, r);
   }
@@ -1358,12 +1305,10 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
   return HTTP_CON_RECEIVING;
 }
 
-static int
-http_client_redirected ( http_client_t *hc )
-{
+static int http_client_redirected(http_client_t* hc) {
   char *location, *location2;
   url_t u;
-  int r;
+  int   r;
 
   if (++hc->hc_redirects > 10)
     return -ELOOP;
@@ -1372,17 +1317,17 @@ http_client_redirected ( http_client_t *hc )
   location2 = hc->hc_location = NULL;
 
   if (location[0] == '\0' || location[0] == '/') {
-    size_t size2 = strlen(hc->hc_scheme) + 3 + strlen(hc->hc_host) +
-                   12 + strlen(location) + 1;
-    location2 = alloca(size2);
-    snprintf(location2, size2, "%s://%s:%i%s",
-        hc->hc_scheme, hc->hc_host, hc->hc_port, location);
+    size_t size2 = strlen(hc->hc_scheme) + 3 + strlen(hc->hc_host) + 12 + strlen(location) + 1;
+    location2    = alloca(size2);
+    snprintf(location2, size2, "%s://%s:%i%s", hc->hc_scheme, hc->hc_host, hc->hc_port, location);
   }
 
   urlinit(&u);
   if (urlparse(location2 ? location2 : location, &u)) {
-    tvherror(LS_HTTPC, "%04X: redirection - cannot parse url '%s'",
-             shortid(hc), location2 ? location2 : location);
+    tvherror(LS_HTTPC,
+        "%04X: redirection - cannot parse url '%s'",
+        shortid(hc),
+        location2 ? location2 : location);
     free(location);
     return -EIO;
   }
@@ -1394,37 +1339,32 @@ http_client_redirected ( http_client_t *hc )
   return r;
 }
 
-int
-http_client_simple( http_client_t *hc, const url_t *url )
-{
+int http_client_simple(http_client_t* hc, const url_t* url) {
   http_arg_list_t h;
-  int r;
+  int             r;
 
   tvh_mutex_lock(&hc->hc_mutex);
   http_arg_init(&h);
   hc->hc_hdr_create(hc, &h, url, 0);
   free(hc->hc_url);
   hc->hc_url = url->raw ? strdup(url->raw) : NULL;
-  r = http_client_send(hc, HTTP_CMD_GET, url->path, url->query,
-                       &h, NULL, 0);
+  r          = http_client_send(hc, HTTP_CMD_GET, url->path, url->query, &h, NULL, 0);
   tvh_mutex_unlock(&hc->hc_mutex);
   return r;
 }
 
-void
-http_client_ssl_peer_verify( http_client_t *hc, int verify )
-{
-  struct http_client_ssl *ssl;
+void http_client_ssl_peer_verify(http_client_t* hc, int verify) {
+  struct http_client_ssl* ssl;
 
   if (hc->hc_verify_peer < 0) {
     hc->hc_verify_peer = verify ? 1 : 0;
     if ((ssl = hc->hc_ssl) != NULL) {
       if (!SSL_CTX_set_default_verify_paths(ssl->ctx))
-        tvherror(LS_HTTPC, "%04X: SSL - unable to load CA certificates for verification", shortid(hc));
+        tvherror(LS_HTTPC,
+            "%04X: SSL - unable to load CA certificates for verification",
+            shortid(hc));
       SSL_CTX_set_verify_depth(ssl->ctx, 1);
-      SSL_CTX_set_verify(ssl->ctx,
-                         hc->hc_verify_peer ? SSL_VERIFY_PEER : SSL_VERIFY_NONE,
-                         NULL);
+      SSL_CTX_set_verify(ssl->ctx, hc->hc_verify_peer ? SSL_VERIFY_PEER : SSL_VERIFY_NONE, NULL);
     }
   } else {
     tvherror(LS_HTTPC, "%04X: SSL peer verification method must be set only once", shortid(hc));
@@ -1434,13 +1374,11 @@ http_client_ssl_peer_verify( http_client_t *hc, int verify )
 /*
  * Data thread
  */
-static void *
-http_client_thread ( void *p )
-{
-  int n;
+static void* http_client_thread(void* p) {
+  int             n;
   tvhpoll_event_t ev;
-  http_client_t *hc;
-  char c;
+  http_client_t*  hc;
+  char            c;
 
   while (atomic_get(&http_running)) {
     n = tvhpoll_wait(http_poll, &ev, 1, -1);
@@ -1456,7 +1394,7 @@ http_client_thread ( void *p )
         continue;
       }
       tvh_mutex_lock(&http_lock);
-      TAILQ_FOREACH(hc, &http_clients, hc_link)
+      TAILQ_FOREACH (hc, &http_clients, hc_link)
         if (hc == ev.ptr)
           break;
       if (hc == NULL) {
@@ -1484,10 +1422,8 @@ http_client_thread ( void *p )
   return NULL;
 }
 
-static void
-http_client_ssl_free( http_client_t *hc )
-{
-  struct http_client_ssl *ssl;
+static void http_client_ssl_free(http_client_t* hc) {
+  struct http_client_ssl* ssl;
 
   if ((ssl = hc->hc_ssl) != NULL) {
     free(ssl->rbio_buf);
@@ -1502,44 +1438,44 @@ http_client_ssl_free( http_client_t *hc )
 /*
  * Setup a connection (async)
  */
-static int
-http_client_reconnect
-  ( http_client_t *hc, http_ver_t ver, const char *scheme,
-    const char *host, int port )
-{
-  struct http_client_ssl *ssl;
-  char errbuf[256];
+static int http_client_reconnect(http_client_t* hc,
+    http_ver_t                                  ver,
+    const char*                                 scheme,
+    const char*                                 host,
+    int                                         port) {
+  struct http_client_ssl* ssl;
+  char                    errbuf[256];
 
   free(hc->hc_scheme);
   free(hc->hc_host);
   hc->hc_scheme = NULL;
-  hc->hc_host = NULL;
+  hc->hc_host   = NULL;
 
   if (scheme == NULL || host == NULL)
     goto errnval;
 
-  port           = http_port(hc, scheme, port);
-  hc->hc_fd      = tcp_connect(host, port, hc->hc_bindaddr, errbuf, sizeof(errbuf), -1);
+  port      = http_port(hc, scheme, port);
+  hc->hc_fd = tcp_connect(host, port, hc->hc_bindaddr, errbuf, sizeof(errbuf), -1);
   if (hc->hc_fd < 0) {
     tvherror(LS_HTTPC, "%04X: Unable to connect to %s:%i - %s", shortid(hc), host, port, errbuf);
     goto errnval;
   }
-  hc->hc_pevents = 0;
-  hc->hc_version = ver;
-  hc->hc_redirv  = ver;
-  hc->hc_port    = port;
-  hc->hc_scheme  = strdup(scheme);
-  hc->hc_host    = strdup(host);
+  hc->hc_pevents     = 0;
+  hc->hc_version     = ver;
+  hc->hc_redirv      = ver;
+  hc->hc_port        = port;
+  hc->hc_scheme      = strdup(scheme);
+  hc->hc_host        = strdup(host);
   hc->hc_einprogress = 1;
   tvhtrace(LS_HTTPC, "%04X: Connected to %s:%i", shortid(hc), host, port);
   http_client_ssl_free(hc);
   if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {
-    ssl = calloc(1, sizeof(*ssl));
+    ssl        = calloc(1, sizeof(*ssl));
     hc->hc_ssl = ssl;
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-    ssl->ctx   = SSL_CTX_new(SSLv23_client_method());
+    ssl->ctx = SSL_CTX_new(SSLv23_client_method());
 #else
-    ssl->ctx   = SSL_CTX_new(TLS_client_method());
+    ssl->ctx = SSL_CTX_new(TLS_client_method());
 #endif
     if (ssl->ctx == NULL) {
       tvherror(LS_HTTPC, "%04X: Unable to get SSL_CTX", shortid(hc));
@@ -1552,9 +1488,9 @@ http_client_reconnect
       tvherror(LS_HTTPC, "%04X: Unable to adjust SSL cipher list", shortid(hc));
       goto err2;
     }
-    ssl->rbio  = BIO_new(BIO_s_mem());
-    ssl->wbio  = BIO_new(BIO_s_mem());
-    ssl->ssl   = SSL_new(ssl->ctx);
+    ssl->rbio = BIO_new(BIO_s_mem());
+    ssl->wbio = BIO_new(BIO_s_mem());
+    ssl->ssl  = SSL_new(ssl->ctx);
     if (ssl->ssl == NULL || ssl->rbio == NULL || ssl->wbio == NULL) {
       tvherror(LS_HTTPC, "%04X: Unable to get SSL handle", shortid(hc));
       goto err3;
@@ -1586,23 +1522,24 @@ errnval:
   return -EINVAL;
 }
 
-http_client_t *
-http_client_connect 
-  ( void *aux, http_ver_t ver, const char *scheme,
-    const char *host, int port, const char *bindaddr )
-{
-  http_client_t *hc;
-  static int tally;
-  int r;
+http_client_t* http_client_connect(void* aux,
+    http_ver_t                           ver,
+    const char*                          scheme,
+    const char*                          host,
+    int                                  port,
+    const char*                          bindaddr) {
+  http_client_t* hc;
+  static int     tally;
+  int            r;
 
-  hc             = calloc(1, sizeof(http_client_t));
+  hc = calloc(1, sizeof(http_client_t));
   tvh_mutex_init(&hc->hc_mutex, NULL);
-  hc->hc_id      = atomic_add(&tally, 1);
-  hc->hc_aux     = aux;
-  hc->hc_io_size = 1024;
+  hc->hc_id             = atomic_add(&tally, 1);
+  hc->hc_aux            = aux;
+  hc->hc_io_size        = 1024;
   hc->hc_rtsp_stream_id = -1;
-  hc->hc_verify_peer = -1;
-  hc->hc_bindaddr = bindaddr ? strdup(bindaddr) : NULL;
+  hc->hc_verify_peer    = -1;
+  hc->hc_bindaddr       = bindaddr ? strdup(bindaddr) : NULL;
 
   TAILQ_INIT(&hc->hc_args);
   TAILQ_INIT(&hc->hc_wqueue);
@@ -1623,17 +1560,15 @@ http_client_connect
 /*
  * Register to the another thread
  */
-void
-http_client_register( http_client_t *hc )
-{
+void http_client_register(http_client_t* hc) {
   assert(hc->hc_data_received || hc->hc_conn_closed || hc->hc_data_complete);
   assert(hc->hc_efd == NULL);
-  
+
   tvh_mutex_lock(&http_lock);
 
   TAILQ_INSERT_TAIL(&http_clients, hc, hc_link);
 
-  hc->hc_efd  = http_poll;
+  hc->hc_efd = http_poll;
 
   tvh_mutex_unlock(&http_lock);
 }
@@ -1644,10 +1579,8 @@ http_client_register( http_client_t *hc )
  * This function is not allowed to be called inside the callbacks for
  * registered clients to the http_client_thread .
  */
-void
-http_client_close ( http_client_t *hc )
-{
-  http_client_wcmd_t *wcmd;
+void http_client_close(http_client_t* hc) {
+  http_client_wcmd_t* wcmd;
 
   if (hc == NULL)
     return;
@@ -1702,9 +1635,7 @@ http_client_close ( http_client_t *hc )
  */
 pthread_t http_client_tid;
 
-void
-http_client_init ( void )
-{
+void http_client_init(void) {
   /* Setup list */
   tvh_mutex_init(&http_lock, NULL);
   tvh_cond_init(&http_cond, 1);
@@ -1714,7 +1645,7 @@ http_client_init ( void )
   tvh_pipe(O_NONBLOCK, &http_pipe);
 
   /* Setup poll */
-  http_poll   = tvhpoll_create(10);
+  http_poll = tvhpoll_create(10);
   tvhpoll_add1(http_poll, http_pipe.rd, TVHPOLL_IN, &http_pipe);
 
   /* Setup thread */
@@ -1725,17 +1656,15 @@ http_client_init ( void )
 #endif
 }
 
-void
-http_client_done ( void )
-{
-  http_client_t *hc;
+void http_client_done(void) {
+  http_client_t* hc;
 
   atomic_set(&http_running, 0);
   tvh_write(http_pipe.wr, "", 1);
   pthread_join(http_client_tid, NULL);
   tvh_pipe_close(&http_pipe);
   tvh_mutex_lock(&http_lock);
-  TAILQ_FOREACH(hc, &http_clients, hc_link)
+  TAILQ_FOREACH (hc, &http_clients, hc_link)
     if (hc->hc_efd == http_poll)
       hc->hc_efd = NULL;
   tvhpoll_destroy(http_poll);
@@ -1751,34 +1680,29 @@ http_client_done ( void )
 
 #if HTTPCLIENT_TESTSUITE
 
-static int
-http_client_testsuite_hdr_received( http_client_t *hc )
-{
-  http_arg_t *ra;
+static int http_client_testsuite_hdr_received(http_client_t* hc) {
+  http_arg_t* ra;
 
   fprintf(stderr, "HTTPCTS: Received header from %s:%i\n", hc->hc_host, hc->hc_port);
-  TAILQ_FOREACH(ra, &hc->hc_args, link)
+  TAILQ_FOREACH (ra, &hc->hc_args, link)
     fprintf(stderr, "  %s: %s\n", ra->key, ra->val);
   return 0;
 }
 
-static void
-http_client_testsuite_conn_closed( http_client_t *hc, int result )
-{
+static void http_client_testsuite_conn_closed(http_client_t* hc, int result) {
   fprintf(stderr, "HTTPCTS: Closed (result=%i - %s)\n", result, strerror(result));
 }
 
-static int
-http_client_testsuite_data_complete( http_client_t *hc )
-{
-  fprintf(stderr, "HTTPCTS: Data Complete (code=%i, data=%p, data_size=%zi)\n",
-          hc->hc_code, hc->hc_data, hc->hc_data_size);
+static int http_client_testsuite_data_complete(http_client_t* hc) {
+  fprintf(stderr,
+      "HTTPCTS: Data Complete (code=%i, data=%p, data_size=%zi)\n",
+      hc->hc_code,
+      hc->hc_data,
+      hc->hc_data_size);
   return 0;
 }
 
-static int
-http_client_testsuite_data_received( http_client_t *hc, void *data, size_t len )
-{
+static int http_client_testsuite_data_received(http_client_t* hc, void* data, size_t len) {
   fprintf(stderr, "HTTPCTS: Data received (len=%zi)\n", len);
   /* check, if the data memory area is OK */
   memset(data, 0xa5, len);
@@ -1786,166 +1710,164 @@ http_client_testsuite_data_received( http_client_t *hc, void *data, size_t len )
 }
 
 static struct strtab ERRNO_tab[] = {
-  { "EPERM",           EPERM },
-  { "ENOENT",          ENOENT },
-  { "ESRCH",           ESRCH },
-  { "EINTR",           EINTR },
-  { "EIO",             EIO },
-  { "ENXIO",           ENXIO },
-  { "E2BIG",           E2BIG },
-  { "ENOEXEC",         ENOEXEC },
-  { "EBADF",           EBADF },
-  { "ECHILD",          ECHILD },
-  { "EAGAIN",          EAGAIN },
-  { "ENOMEM",          ENOMEM },
-  { "EACCES",          EACCES },
-  { "EFAULT",          EFAULT },
-  { "ENOTBLK",         ENOTBLK },
-  { "EBUSY",           EBUSY },
-  { "EEXIST",          EEXIST },
-  { "EXDEV",           EXDEV },
-  { "ENODEV",          ENODEV },
-  { "ENOTDIR",         ENOTDIR },
-  { "EISDIR",          EISDIR },
-  { "EINVAL",          EINVAL },
-  { "ENFILE",          ENFILE },
-  { "EMFILE",          EMFILE },
-  { "ENOTTY",          ENOTTY },
-  { "ETXTBSY",         ETXTBSY },
-  { "EFBIG",           EFBIG },
-  { "ENOSPC",          ENOSPC },
-  { "ESPIPE",          ESPIPE },
-  { "EROFS",           EROFS },
-  { "EMLINK",          EMLINK },
-  { "EPIPE",           EPIPE },
-  { "EDOM",            EDOM },
-  { "ERANGE",          ERANGE },
+    {"EPERM", EPERM},
+    {"ENOENT", ENOENT},
+    {"ESRCH", ESRCH},
+    {"EINTR", EINTR},
+    {"EIO", EIO},
+    {"ENXIO", ENXIO},
+    {"E2BIG", E2BIG},
+    {"ENOEXEC", ENOEXEC},
+    {"EBADF", EBADF},
+    {"ECHILD", ECHILD},
+    {"EAGAIN", EAGAIN},
+    {"ENOMEM", ENOMEM},
+    {"EACCES", EACCES},
+    {"EFAULT", EFAULT},
+    {"ENOTBLK", ENOTBLK},
+    {"EBUSY", EBUSY},
+    {"EEXIST", EEXIST},
+    {"EXDEV", EXDEV},
+    {"ENODEV", ENODEV},
+    {"ENOTDIR", ENOTDIR},
+    {"EISDIR", EISDIR},
+    {"EINVAL", EINVAL},
+    {"ENFILE", ENFILE},
+    {"EMFILE", EMFILE},
+    {"ENOTTY", ENOTTY},
+    {"ETXTBSY", ETXTBSY},
+    {"EFBIG", EFBIG},
+    {"ENOSPC", ENOSPC},
+    {"ESPIPE", ESPIPE},
+    {"EROFS", EROFS},
+    {"EMLINK", EMLINK},
+    {"EPIPE", EPIPE},
+    {"EDOM", EDOM},
+    {"ERANGE", ERANGE},
 #ifdef __linux__
-  { "EDEADLK",         EDEADLK },
-  { "ENAMETOOLONG",    ENAMETOOLONG },
-  { "ENOLCK",          ENOLCK },
-  { "ENOSYS",          ENOSYS },
-  { "ENOTEMPTY",       ENOTEMPTY },
-  { "ELOOP",           ELOOP },
-  { "EWOULDBLOCK",     EWOULDBLOCK },
-  { "ENOMSG",          ENOMSG },
-  { "EIDRM",           EIDRM },
-  { "ECHRNG",          ECHRNG },
-  { "EL2NSYNC",        EL2NSYNC },
-  { "EL3HLT",          EL3HLT },
-  { "EL3RST",          EL3RST },
-  { "ELNRNG",          ELNRNG },
-  { "EUNATCH",         EUNATCH },
-  { "ENOCSI",          ENOCSI },
-  { "EL2HLT",          EL2HLT },
-  { "EBADE",           EBADE },
-  { "EBADR",           EBADR },
-  { "EXFULL",          EXFULL },
-  { "ENOANO",          ENOANO },
-  { "EBADRQC",         EBADRQC },
-  { "EBADSLT",         EBADSLT },
-  { "EDEADLOCK",       EDEADLOCK },
-  { "EBFONT",          EBFONT },
-  { "ENOSTR",          ENOSTR },
-  { "ENODATA",         ENODATA },
-  { "ETIME",           ETIME },
-  { "ENOSR",           ENOSR },
-  { "ENONET",          ENONET },
-  { "ENOPKG",          ENOPKG },
-  { "EREMOTE",         EREMOTE },
-  { "ENOLINK",         ENOLINK },
-  { "EADV",            EADV },
-  { "ESRMNT",          ESRMNT },
-  { "ECOMM",           ECOMM },
-  { "EPROTO",          EPROTO },
-  { "EMULTIHOP",       EMULTIHOP },
-  { "EDOTDOT",         EDOTDOT },
-  { "EBADMSG",         EBADMSG },
-  { "EOVERFLOW",       EOVERFLOW },
-  { "ENOTUNIQ",        ENOTUNIQ },
-  { "EBADFD",          EBADFD },
-  { "EREMCHG",         EREMCHG },
-  { "ELIBACC",         ELIBACC },
-  { "ELIBBAD",         ELIBBAD },
-  { "ELIBSCN",         ELIBSCN },
-  { "ELIBMAX",         ELIBMAX },
-  { "ELIBEXEC",        ELIBEXEC },
-  { "EILSEQ",          EILSEQ },
-  { "ERESTART",        ERESTART },
-  { "ESTRPIPE",        ESTRPIPE },
-  { "EUSERS",          EUSERS },
-  { "ENOTSOCK",        ENOTSOCK },
-  { "EDESTADDRREQ",    EDESTADDRREQ },
-  { "EMSGSIZE",        EMSGSIZE },
-  { "EPROTOTYPE",      EPROTOTYPE },
-  { "ENOPROTOOPT",     ENOPROTOOPT },
-  { "EPROTONOSUPPORT", EPROTONOSUPPORT },
-  { "ESOCKTNOSUPPORT", ESOCKTNOSUPPORT },
-  { "EOPNOTSUPP",      EOPNOTSUPP },
-  { "EPFNOSUPPORT",    EPFNOSUPPORT },
-  { "EAFNOSUPPORT",    EAFNOSUPPORT },
-  { "EADDRINUSE",      EADDRINUSE },
-  { "EADDRNOTAVAIL",   EADDRNOTAVAIL },
-  { "ENETDOWN",        ENETDOWN },
-  { "ENETUNREACH",     ENETUNREACH },
-  { "ENETRESET",       ENETRESET },
-  { "ECONNABORTED",    ECONNABORTED },
-  { "ECONNRESET",      ECONNRESET },
-  { "ENOBUFS",         ENOBUFS },
-  { "EISCONN",         EISCONN },
-  { "ENOTCONN",        ENOTCONN },
-  { "ESHUTDOWN",       ESHUTDOWN },
-  { "ETOOMANYREFS",    ETOOMANYREFS },
-  { "ETIMEDOUT",       ETIMEDOUT },
-  { "ECONNREFUSED",    ECONNREFUSED },
-  { "EHOSTDOWN",       EHOSTDOWN },
-  { "EHOSTUNREACH",    EHOSTUNREACH },
-  { "EALREADY",        EALREADY },
-  { "EINPROGRESS",     EINPROGRESS },
-  { "ESTALE",          ESTALE },
-  { "EUCLEAN",         EUCLEAN },
-  { "ENOTNAM",         ENOTNAM },
-  { "ENAVAIL",         ENAVAIL },
-  { "EISNAM",          EISNAM },
-  { "EREMOTEIO",       EREMOTEIO },
-  { "EDQUOT",          EDQUOT },
-  { "ENOMEDIUM",       ENOMEDIUM },
-  { "EMEDIUMTYPE",     EMEDIUMTYPE },
-  { "ECANCELED",       ECANCELED },
-  { "ENOKEY",          ENOKEY },
-  { "EKEYEXPIRED",     EKEYEXPIRED },
-  { "EKEYREVOKED",     EKEYREVOKED },
-  { "EKEYREJECTED",    EKEYREJECTED },
-  { "EOWNERDEAD",      EOWNERDEAD },
-  { "ENOTRECOVERABLE", ENOTRECOVERABLE },
+    {"EDEADLK", EDEADLK},
+    {"ENAMETOOLONG", ENAMETOOLONG},
+    {"ENOLCK", ENOLCK},
+    {"ENOSYS", ENOSYS},
+    {"ENOTEMPTY", ENOTEMPTY},
+    {"ELOOP", ELOOP},
+    {"EWOULDBLOCK", EWOULDBLOCK},
+    {"ENOMSG", ENOMSG},
+    {"EIDRM", EIDRM},
+    {"ECHRNG", ECHRNG},
+    {"EL2NSYNC", EL2NSYNC},
+    {"EL3HLT", EL3HLT},
+    {"EL3RST", EL3RST},
+    {"ELNRNG", ELNRNG},
+    {"EUNATCH", EUNATCH},
+    {"ENOCSI", ENOCSI},
+    {"EL2HLT", EL2HLT},
+    {"EBADE", EBADE},
+    {"EBADR", EBADR},
+    {"EXFULL", EXFULL},
+    {"ENOANO", ENOANO},
+    {"EBADRQC", EBADRQC},
+    {"EBADSLT", EBADSLT},
+    {"EDEADLOCK", EDEADLOCK},
+    {"EBFONT", EBFONT},
+    {"ENOSTR", ENOSTR},
+    {"ENODATA", ENODATA},
+    {"ETIME", ETIME},
+    {"ENOSR", ENOSR},
+    {"ENONET", ENONET},
+    {"ENOPKG", ENOPKG},
+    {"EREMOTE", EREMOTE},
+    {"ENOLINK", ENOLINK},
+    {"EADV", EADV},
+    {"ESRMNT", ESRMNT},
+    {"ECOMM", ECOMM},
+    {"EPROTO", EPROTO},
+    {"EMULTIHOP", EMULTIHOP},
+    {"EDOTDOT", EDOTDOT},
+    {"EBADMSG", EBADMSG},
+    {"EOVERFLOW", EOVERFLOW},
+    {"ENOTUNIQ", ENOTUNIQ},
+    {"EBADFD", EBADFD},
+    {"EREMCHG", EREMCHG},
+    {"ELIBACC", ELIBACC},
+    {"ELIBBAD", ELIBBAD},
+    {"ELIBSCN", ELIBSCN},
+    {"ELIBMAX", ELIBMAX},
+    {"ELIBEXEC", ELIBEXEC},
+    {"EILSEQ", EILSEQ},
+    {"ERESTART", ERESTART},
+    {"ESTRPIPE", ESTRPIPE},
+    {"EUSERS", EUSERS},
+    {"ENOTSOCK", ENOTSOCK},
+    {"EDESTADDRREQ", EDESTADDRREQ},
+    {"EMSGSIZE", EMSGSIZE},
+    {"EPROTOTYPE", EPROTOTYPE},
+    {"ENOPROTOOPT", ENOPROTOOPT},
+    {"EPROTONOSUPPORT", EPROTONOSUPPORT},
+    {"ESOCKTNOSUPPORT", ESOCKTNOSUPPORT},
+    {"EOPNOTSUPP", EOPNOTSUPP},
+    {"EPFNOSUPPORT", EPFNOSUPPORT},
+    {"EAFNOSUPPORT", EAFNOSUPPORT},
+    {"EADDRINUSE", EADDRINUSE},
+    {"EADDRNOTAVAIL", EADDRNOTAVAIL},
+    {"ENETDOWN", ENETDOWN},
+    {"ENETUNREACH", ENETUNREACH},
+    {"ENETRESET", ENETRESET},
+    {"ECONNABORTED", ECONNABORTED},
+    {"ECONNRESET", ECONNRESET},
+    {"ENOBUFS", ENOBUFS},
+    {"EISCONN", EISCONN},
+    {"ENOTCONN", ENOTCONN},
+    {"ESHUTDOWN", ESHUTDOWN},
+    {"ETOOMANYREFS", ETOOMANYREFS},
+    {"ETIMEDOUT", ETIMEDOUT},
+    {"ECONNREFUSED", ECONNREFUSED},
+    {"EHOSTDOWN", EHOSTDOWN},
+    {"EHOSTUNREACH", EHOSTUNREACH},
+    {"EALREADY", EALREADY},
+    {"EINPROGRESS", EINPROGRESS},
+    {"ESTALE", ESTALE},
+    {"EUCLEAN", EUCLEAN},
+    {"ENOTNAM", ENOTNAM},
+    {"ENAVAIL", ENAVAIL},
+    {"EISNAM", EISNAM},
+    {"EREMOTEIO", EREMOTEIO},
+    {"EDQUOT", EDQUOT},
+    {"ENOMEDIUM", ENOMEDIUM},
+    {"EMEDIUMTYPE", EMEDIUMTYPE},
+    {"ECANCELED", ECANCELED},
+    {"ENOKEY", ENOKEY},
+    {"EKEYEXPIRED", EKEYEXPIRED},
+    {"EKEYREVOKED", EKEYREVOKED},
+    {"EKEYREJECTED", EKEYREJECTED},
+    {"EOWNERDEAD", EOWNERDEAD},
+    {"ENOTRECOVERABLE", ENOTRECOVERABLE},
 #ifdef ERFKILL
-  { "ERFKILL",         ERFKILL },
+    {"ERFKILL", ERFKILL},
 #endif
 #ifdef EHWPOISON
-  { "EHWPOISON",       EHWPOISON },
+    {"EHWPOISON", EHWPOISON},
 #endif
 #endif /* __linux__ */
 };
 
-void
-http_client_testsuite_run( void )
-{
-  const char *path, *cs, *cs2;
-  char line[1024], *s;
+void http_client_testsuite_run(void) {
+  const char *    path, *cs, *cs2;
+  char            line[1024], *s;
   http_arg_list_t args;
-  http_client_t *hc = NULL;
-  http_cmd_t cmd;
-  http_ver_t ver = HTTP_VERSION_1_1;
-  int data_transfer = 0, port = 0;
-  size_t data_limit = 0;
+  http_client_t*  hc = NULL;
+  http_cmd_t      cmd;
+  http_ver_t      ver           = HTTP_VERSION_1_1;
+  int             data_transfer = 0, port = 0;
+  size_t          data_limit = 0;
   tvhpoll_event_t ev;
-  tvhpoll_t *efd;
-  url_t u1, u2;
-  FILE *fp;
-  int r, expected = HTTP_CON_DONE, expected_code = 200;
-  int handle_location = 0;
-  int peer_verify = 1;
-  int repeat = 0, repeat2;
+  tvhpoll_t*      efd;
+  url_t           u1, u2;
+  FILE*           fp;
+  int             r, expected = HTTP_CON_DONE, expected_code = 200;
+  int             handle_location = 0;
+  int             peer_verify     = 1;
+  int             repeat          = 0, repeat2;
 
   path = getenv("TVHEADEND_HTTPC_TEST");
   if (path == NULL)
@@ -1979,15 +1901,15 @@ http_client_testsuite_run( void )
       urlreset(&u1);
       urlreset(&u2);
       http_client_close(hc);
-      hc = NULL;
-      data_transfer = 0;
-      data_limit = 0;
-      port = 0;
-      expected = HTTP_CON_DONE;
-      expected_code = 200;
+      hc              = NULL;
+      data_transfer   = 0;
+      data_limit      = 0;
+      port            = 0;
+      expected        = HTTP_CON_DONE;
+      expected_code   = 200;
       handle_location = 0;
-      peer_verify = 1;
-      repeat = 0;
+      peer_verify     = 1;
+      repeat          = 0;
     } else if (strcmp(s, "DataTransfer=all") == 0) {
       data_transfer = 0;
     } else if (strcmp(s, "DataTransfer=cont") == 0) {
@@ -2039,18 +1961,22 @@ http_client_testsuite_run( void )
         fprintf(stderr, "HTTPCTS: Define URL\n");
         goto fatal;
       }
-      cmd = http_str2cmd(s + 8);
+      cmd     = http_str2cmd(s + 8);
       repeat2 = 0;
-rep:
+    rep:
       http_client_basic_args(hc, &args, &u1, 1);
-      if (u2.host == NULL || u1.host == NULL || strcmp(u1.host, u2.host) ||
-          u2.port != u1.port || (hc && !hc->hc_keepalive)) {
+      if (u2.host == NULL || u1.host == NULL || strcmp(u1.host, u2.host) || u2.port != u1.port ||
+          (hc && !hc->hc_keepalive)) {
         http_client_close(hc);
         if (port)
           u1.port = port;
         hc = http_client_connect(NULL, ver, u1.scheme, u1.host, u1.port, NULL);
         if (hc == NULL) {
-          fprintf(stderr, "HTTPCTS: Unable to connect to %s:%i (%s)\n", u1.host, u1.port, u1.scheme);
+          fprintf(stderr,
+              "HTTPCTS: Unable to connect to %s:%i (%s)\n",
+              u1.host,
+              u1.port,
+              u1.scheme);
           goto fatal;
         } else {
           fprintf(stderr, "HTTPCTS: Connected to %s:%i\n", hc->hc_host, hc->hc_port);
@@ -2059,14 +1985,18 @@ rep:
         urlreset(&u2);
         urlcopy(&u2, &u1);
       }
-      fprintf(stderr, "HTTPCTS Send: Cmd=%s Ver=%s Host=%s Path=%s\n",
-              http_cmd2str(cmd), http_ver2str(ver), http_arg_get(&args, "Host"), u1.path);
-      hc->hc_efd = efd;
+      fprintf(stderr,
+          "HTTPCTS Send: Cmd=%s Ver=%s Host=%s Path=%s\n",
+          http_cmd2str(cmd),
+          http_ver2str(ver),
+          http_arg_get(&args, "Host"),
+          u1.path);
+      hc->hc_efd             = efd;
       hc->hc_handle_location = handle_location;
-      hc->hc_data_limit = data_limit;
-      hc->hc_hdr_received = http_client_testsuite_hdr_received;
-      hc->hc_data_complete = http_client_testsuite_data_complete;
-      hc->hc_conn_closed = http_client_testsuite_conn_closed;
+      hc->hc_data_limit      = data_limit;
+      hc->hc_hdr_received    = http_client_testsuite_hdr_received;
+      hc->hc_data_complete   = http_client_testsuite_data_complete;
+      hc->hc_conn_closed     = http_client_testsuite_conn_closed;
       if (data_transfer) {
         hc->hc_data_received = http_client_testsuite_data_received;
       } else {
@@ -2093,17 +2023,25 @@ rep:
           fprintf(stderr, "HTTPCTS: Poll returned a wrong value\n");
           goto fatal;
         }
-        r = http_client_run(hc);
+        r  = http_client_run(hc);
         cs = val2str(r, HTTP_contab);
         if (cs == NULL)
           cs = val2str(-r, ERRNO_tab);
         cs2 = val2str(expected, HTTP_contab);
         if (cs2 == NULL)
           cs2 = val2str(-expected, ERRNO_tab);
-        fprintf(stderr, "HTTPCTS: Run Done, Result = %i (%s), Expected = %i (%s)\n", r, cs, expected, cs2);
+        fprintf(stderr,
+            "HTTPCTS: Run Done, Result = %i (%s), Expected = %i (%s)\n",
+            r,
+            cs,
+            expected,
+            cs2);
         if (r == expected) {
           if (hc->hc_code != expected_code) {
-            fprintf(stderr, "HTTPCTS: HTTP Code Fail: Expected = %i Got = %i\n", expected_code, hc->hc_code);
+            fprintf(stderr,
+                "HTTPCTS: HTTP Code Fail: Expected = %i Got = %i\n",
+                expected_code,
+                hc->hc_code);
             goto fatal;
           }
           break;

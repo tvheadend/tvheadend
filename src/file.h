@@ -21,6 +21,6 @@
 
 #include <sys/types.h>
 
-size_t file_readall ( int fd, char **outbuf ); 
+size_t file_readall(int fd, char** outbuf);
 
 #endif /* FILE_H */

@@ -25,14 +25,13 @@
 
 typedef struct download {
   int   subsys;
-  char *url;
-  void *aux;
+  char* url;
+  void* aux;
   int   ssl_peer_verify;
-  int (*process)(void *aux, const char *last_url, const char *host_url,
-                 char *data, size_t len);
-  void (*stop)(void *aux);
+  int (*process)(void* aux, const char* last_url, const char* host_url, char* data, size_t len);
+  void (*stop)(void* aux);
   /* internal members */
-  http_client_t *http_client;
+  http_client_t* http_client;
   mtimer_t       fetch_timer;
   mtimer_t       pipe_read_timer;
   sbuf_t         pipe_sbuf;
@@ -40,8 +39,8 @@ typedef struct download {
   pid_t          pipe_pid;
 } download_t;
 
-void download_init ( download_t *dn, int subsys );
-void download_start( download_t *dn, const char *url, void *aux );
-void download_done ( download_t *dn );
+void download_init(download_t* dn, int subsys);
+void download_start(download_t* dn, const char* url, void* aux);
+void download_done(download_t* dn);
 
 #endif /* __DOWNLOAD__ */

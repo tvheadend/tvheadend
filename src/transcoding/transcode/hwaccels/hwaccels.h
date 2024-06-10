@@ -17,55 +17,44 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef TVH_TRANSCODING_TRANSCODE_HWACCELS_H__
 #define TVH_TRANSCODING_TRANSCODE_HWACCELS_H__
-
 
 #include "tvheadend.h"
 
 #include <libavcodec/avcodec.h>
 
-
 /* decoding ================================================================= */
 
-enum AVPixelFormat
-hwaccels_decode_get_format(AVCodecContext *avctx,
-                           const enum AVPixelFormat *pix_fmts);
+enum AVPixelFormat hwaccels_decode_get_format(AVCodecContext* avctx,
+    const enum AVPixelFormat*                                 pix_fmts);
 
-void
-hwaccels_decode_close_context(AVCodecContext *avctx);
+void hwaccels_decode_close_context(AVCodecContext* avctx);
 
-int
-hwaccels_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx,
-                          char *filter, size_t filter_len);
+int hwaccels_get_scale_filter(AVCodecContext* iavctx,
+    AVCodecContext*                           oavctx,
+    char*                                     filter,
+    size_t                                    filter_len);
 
-int
-hwaccels_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
+int hwaccels_get_deint_filter(AVCodecContext* avctx, char* filter, size_t filter_len);
 
-int
-hwaccels_get_denoise_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
+int hwaccels_get_denoise_filter(AVCodecContext* avctx, int value, char* filter, size_t filter_len);
 
-int
-hwaccels_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
-
+int hwaccels_get_sharpness_filter(AVCodecContext* avctx,
+    int                                           value,
+    char*                                         filter,
+    size_t                                        filter_len);
 
 /* encoding ================================================================= */
 
-int
-hwaccels_encode_setup_context(AVCodecContext *avctx, int low_power);
+int hwaccels_encode_setup_context(AVCodecContext* avctx, int low_power);
 
-void
-hwaccels_encode_close_context(AVCodecContext *avctx);
-
+void hwaccels_encode_close_context(AVCodecContext* avctx);
 
 /* module =================================================================== */
 
-void
-hwaccels_init(void);
+void hwaccels_init(void);
 
-void
-hwaccels_done(void);
-
+void hwaccels_done(void);
 
 #endif // TVH_TRANSCODING_TRANSCODE_HWACCELS_H__

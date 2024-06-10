@@ -43,38 +43,38 @@
 #define COMPAT_IPTOS
 #include "compat.h"
 
-static void config_muxconfpath_notify ( void *o, const char *lang );
+static void config_muxconfpath_notify(void* o, const char* lang);
 
-void tvh_str_set(char **strp, const char *src);
-int tvh_str_update(char **strp, const char *src);
+void tvh_str_set(char** strp, const char* src);
+int  tvh_str_update(char** strp, const char* src);
 
 /* *************************************************************************
  * Global data
  * ************************************************************************/
 
 struct config config;
-static char config_lock[PATH_MAX];
-static int config_lock_fd;
-static int config_scanfile_ok;
+static char   config_lock[PATH_MAX];
+static int    config_lock_fd;
+static int    config_scanfile_ok;
 
 /* *************************************************************************
  * Config migration
  * ************************************************************************/
 
-typedef void (*config_migrate_t) (void);
+typedef void (*config_migrate_t)(void);
 
 /*
  * Get channel UUID (by number)
  */
-static const char *
-config_migrate_v1_chn_id_to_uuid ( htsmsg_t *chns, uint32_t id )
-{
-  htsmsg_field_t *f;
-  htsmsg_t *e;
-  uint32_t u32;
+static const char* config_migrate_v1_chn_id_to_uuid(htsmsg_t* chns, uint32_t id) {
+  htsmsg_field_t* f;
+  htsmsg_t*       e;
+  uint32_t        u32;
   HTSMSG_FOREACH(f, chns) {
-    if (!(e = htsmsg_field_get_map(f))) continue;
-    if (htsmsg_get_u32(e, "channelid", &u32)) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
+    if (htsmsg_get_u32(e, "channelid", &u32))
+      continue;
     if (u32 == id) {
       return htsmsg_get_str(e, "uuid");
     }
@@ -85,10 +85,8 @@ config_migrate_v1_chn_id_to_uuid ( htsmsg_t *chns, uint32_t id )
 /*
  * Get channel UUID (by name)
  */
-static const char *
-config_migrate_v1_chn_name_to_uuid ( htsmsg_t *chns, const char *name )
-{
-  htsmsg_t *chn = htsmsg_get_map(chns, name);
+static const char* config_migrate_v1_chn_name_to_uuid(htsmsg_t* chns, const char* name) {
+  htsmsg_t* chn = htsmsg_get_map(chns, name);
   if (chn)
     return htsmsg_get_str(chn, "uuid");
   return NULL;
@@ -98,12 +96,10 @@ config_migrate_v1_chn_name_to_uuid ( htsmsg_t *chns, const char *name )
  * Helper to add service to channel
  */
 static void
-config_migrate_v1_chn_add_svc
-  ( htsmsg_t *chns, const char *chnname, const char *svcuuid )
-{
-  htsmsg_t *chn = htsmsg_get_map(chns, chnname);
+config_migrate_v1_chn_add_svc(htsmsg_t* chns, const char* chnname, const char* svcuuid) {
+  htsmsg_t* chn = htsmsg_get_map(chns, chnname);
   if (chn) {
-    htsmsg_t *l = htsmsg_get_list(chn, "services");
+    htsmsg_t* l = htsmsg_get_list(chn, "services");
     if (l)
       htsmsg_add_str(l, NULL, svcuuid);
   }
@@ -112,20 +108,21 @@ config_migrate_v1_chn_add_svc
 /*
  * Helper function to migrate a muxes services
  */
-static void
-config_migrate_v1_dvb_svcs
-  ( const char *name, const char *netu, const char *muxu, htsmsg_t *channels )
-{
-  tvh_uuid_t svcu;
-  char ubuf[UUID_HEX_SIZE];
-  htsmsg_t *c, *e, *svc;
-  htsmsg_field_t *f;
-  const char *str;
-  uint32_t u32;
+static void config_migrate_v1_dvb_svcs(const char* name,
+    const char*                                    netu,
+    const char*                                    muxu,
+    htsmsg_t*                                      channels) {
+  tvh_uuid_t      svcu;
+  char            ubuf[UUID_HEX_SIZE];
+  htsmsg_t *      c, *e, *svc;
+  htsmsg_field_t* f;
+  const char*     str;
+  uint32_t        u32;
 
   if ((c = hts_settings_load_r(1, "dvbtransports/%s", name))) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
 
       svc = htsmsg_create_map();
       uuid_set(&svcu, NULL);
@@ -148,8 +145,11 @@ config_migrate_v1_dvb_svcs
 
       // TODO: dvb_eit_enable
 
-      hts_settings_save(svc, "input/linuxdvb/networks/%s/muxes/%s/services/%s",
-                        netu, muxu, uuid_get_hex(&svcu, ubuf));
+      hts_settings_save(svc,
+          "input/linuxdvb/networks/%s/muxes/%s/services/%s",
+          netu,
+          muxu,
+          uuid_get_hex(&svcu, ubuf));
 
       htsmsg_destroy(svc);
 
@@ -164,31 +164,26 @@ config_migrate_v1_dvb_svcs
 /*
  * Helper to convert a DVB network
  */
-static void
-config_migrate_v1_dvb_network
-  ( const char *name, htsmsg_t *c, htsmsg_t *channels )
-{
-  int i;
-  tvh_uuid_t netu, muxu;
-  char ubuf[UUID_HEX_SIZE], ubuf2[UUID_HEX_SIZE];
-  htsmsg_t *e, *net, *mux, *tun;
-  htsmsg_field_t *f;
-  const char *str, *type;
-  uint32_t u32;
-  const char *mux_str_props[] = {
-    "bandwidth",
-    "consellation",
-    "transmission_mode",
-    "guard_interval",
-    "hierarchy",
-    "fec_hi",
-    "fec_lo",
-    "fec"
-  };
-
+static void config_migrate_v1_dvb_network(const char* name, htsmsg_t* c, htsmsg_t* channels) {
+  int             i;
+  tvh_uuid_t      netu, muxu;
+  char            ubuf[UUID_HEX_SIZE], ubuf2[UUID_HEX_SIZE];
+  htsmsg_t *      e, *net, *mux, *tun;
+  htsmsg_field_t* f;
+  const char *    str, *type;
+  uint32_t        u32;
+  const char*     mux_str_props[] = {"bandwidth",
+          "consellation",
+          "transmission_mode",
+          "guard_interval",
+          "hierarchy",
+          "fec_hi",
+          "fec_lo",
+          "fec"};
 
   /* Load the adapter config */
-  if (!(tun = hts_settings_load("dvbadapters/%s", name))) return;
+  if (!(tun = hts_settings_load("dvbadapters/%s", name)))
+    return;
   if (!(str = htsmsg_get_str(tun, "type"))) {
     htsmsg_destroy(tun);
     return;
@@ -207,13 +202,14 @@ config_migrate_v1_dvb_network
   else
     htsmsg_add_str(net, "class", "linuxdvb_network_dvbt");
   if (!htsmsg_get_u32(tun, "autodiscovery", &u32))
-    htsmsg_add_u32(net, "autodiscovery",  u32);
+    htsmsg_add_u32(net, "autodiscovery", u32);
   if (!htsmsg_get_u32(tun, "skip_initialscan", &u32))
-    htsmsg_add_u32(net, "skipinitscan",   u32);
+    htsmsg_add_u32(net, "skipinitscan", u32);
 
   /* Each mux */
   HTSMSG_FOREACH(f, c) {
-    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
     mux = htsmsg_create_map();
 
     if (!htsmsg_get_u32(e, "transportstreamid", &u32))
@@ -240,7 +236,7 @@ config_migrate_v1_dvb_network
     }
 
     if ((str = htsmsg_get_str(e, "polarisation"))) {
-      char tmp[2] = { *str, 0 };
+      char tmp[2] = {*str, 0};
       htsmsg_add_str(mux, "polarisation", tmp);
     }
     if ((str = htsmsg_get_str(e, "modulation"))) {
@@ -251,11 +247,10 @@ config_migrate_v1_dvb_network
     }
     if ((str = htsmsg_get_str(e, "rolloff")))
       if (strlen(str) > 8)
-        htsmsg_add_str(mux, "rolloff", str+8);
+        htsmsg_add_str(mux, "rolloff", str + 8);
 
-    if ((str = htsmsg_get_str(e, "delivery_system")) &&
-        strlen(str) > 4 )
-      htsmsg_add_str(mux, "delsys", str+4);
+    if ((str = htsmsg_get_str(e, "delivery_system")) && strlen(str) > 4)
+      htsmsg_add_str(mux, "delsys", str + 4);
     else if (!strcmp(type, "ATSC"))
       htsmsg_add_str(mux, "delsys", "ATSC");
     else if (!strcmp(type, "DVB-S"))
@@ -267,9 +262,10 @@ config_migrate_v1_dvb_network
 
     /* Save */
     uuid_set(&muxu, NULL);
-    hts_settings_save(mux, "input/linuxdvb/networks/%s/muxes/%s/config",
-                      uuid_get_hex(&netu, ubuf),
-                      uuid_get_hex(&muxu, ubuf2));
+    hts_settings_save(mux,
+        "input/linuxdvb/networks/%s/muxes/%s/config",
+        uuid_get_hex(&netu, ubuf),
+        uuid_get_hex(&muxu, ubuf2));
     htsmsg_destroy(mux);
 
     /* Services */
@@ -278,8 +274,7 @@ config_migrate_v1_dvb_network
 
   /* Add properties derived from network */
   htsmsg_add_str(net, "networkname", name);
-  hts_settings_save(net, "input/linuxdvb/networks/%s/config",
-                    uuid_get_hex(&netu, ubuf));
+  hts_settings_save(net, "input/linuxdvb/networks/%s/config", uuid_get_hex(&netu, ubuf));
   htsmsg_destroy(tun);
   htsmsg_destroy(net);
 }
@@ -287,16 +282,15 @@ config_migrate_v1_dvb_network
 /*
  * Migrate DVR/autorec entries
  */
-static void
-config_migrate_v1_dvr ( const char *path, htsmsg_t *channels )
-{
-  htsmsg_t *c, *e, *m;
-  htsmsg_field_t *f;
-  const char *str;
+static void config_migrate_v1_dvr(const char* path, htsmsg_t* channels) {
+  htsmsg_t *      c, *e, *m;
+  htsmsg_field_t* f;
+  const char*     str;
 
   if ((c = hts_settings_load_r(1, path))) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       if ((str = htsmsg_get_str(e, "channel"))) {
         m = htsmsg_copy(e);
         if (!htsmsg_get_str(e, "channelname"))
@@ -316,17 +310,16 @@ config_migrate_v1_dvr ( const char *path, htsmsg_t *channels )
 /*
  * Migrate Epggrab entries
  */
-static void
-config_migrate_v1_epggrab ( const char *path, htsmsg_t *channels )
-{
-  htsmsg_t *c, *e, *m, *l, *chns;
+static void config_migrate_v1_epggrab(const char* path, htsmsg_t* channels) {
+  htsmsg_t *      c, *e, *m, *l, *chns;
   htsmsg_field_t *f, *f2;
-  const char *str;
-  uint32_t u32;
+  const char*     str;
+  uint32_t        u32;
 
   if ((c = hts_settings_load_r(1, path))) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       m    = htsmsg_copy(e);
       chns = htsmsg_create_list();
       if ((l = htsmsg_get_list(e, "channels"))) {
@@ -355,29 +348,29 @@ config_migrate_v1_epggrab ( const char *path, htsmsg_t *channels )
  * Strictly speaking there were earlier versions than this, but most people
  * using early versions of 4.0 would already have been on this version.
  */
-static void
-config_migrate_v1 ( void )
-{
-  tvh_uuid_t netu, muxu, svcu, chnu;
-  htsmsg_t *c, *e, *l, *m = NULL;
-  htsmsg_field_t *f;
-  uint32_t u32;
-  const char *str;
-  char buf[1024];
-  char ubufc[UUID_HEX_SIZE];
-  char ubufn[UUID_HEX_SIZE];
-  char ubufm[UUID_HEX_SIZE];
-  char ubufs[UUID_HEX_SIZE];
-  htsmsg_t *channels = htsmsg_create_map();
+static void config_migrate_v1(void) {
+  tvh_uuid_t      netu, muxu, svcu, chnu;
+  htsmsg_t *      c, *e, *l, *m = NULL;
+  htsmsg_field_t* f;
+  uint32_t        u32;
+  const char*     str;
+  char            buf[1024];
+  char            ubufc[UUID_HEX_SIZE];
+  char            ubufn[UUID_HEX_SIZE];
+  char            ubufm[UUID_HEX_SIZE];
+  char            ubufs[UUID_HEX_SIZE];
+  htsmsg_t*       channels = htsmsg_create_map();
 
   /* Channels */
   if ((c = hts_settings_load_r(1, "channels"))) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
 
       /* Build entry */
       uuid_set(&chnu, NULL);
-      if(m != NULL) htsmsg_destroy(m);
+      if (m != NULL)
+        htsmsg_destroy(m);
       m = htsmsg_create_map();
       htsmsg_add_u32(m, "channelid", atoi(htsmsg_field_name(f)));
       htsmsg_add_str(m, "uuid", uuid_get_hex(&chnu, ubufc));
@@ -407,22 +400,25 @@ config_migrate_v1 ( void )
 
     /* Create a network */
     uuid_set(&netu, NULL);
-    if(m != NULL) htsmsg_destroy(m);
+    if (m != NULL)
+      htsmsg_destroy(m);
     m = htsmsg_create_map();
-    htsmsg_add_str(m, "networkname",    "IPTV Network");
-    htsmsg_add_u32(m, "skipinitscan",   1);
-    htsmsg_add_u32(m, "autodiscovery",  0);
-    htsmsg_add_u32(m, "max_streams",    0);
-    htsmsg_add_u32(m, "max_bandwidth",  0);
-    hts_settings_save(m, "input/iptv/networks/%s/config",
-                      uuid_get_hex(&netu, ubufn));
+    htsmsg_add_str(m, "networkname", "IPTV Network");
+    htsmsg_add_u32(m, "skipinitscan", 1);
+    htsmsg_add_u32(m, "autodiscovery", 0);
+    htsmsg_add_u32(m, "max_streams", 0);
+    htsmsg_add_u32(m, "max_bandwidth", 0);
+    hts_settings_save(m, "input/iptv/networks/%s/config", uuid_get_hex(&netu, ubufn));
     htsmsg_destroy(m);
 
     /* Process services */
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f)))       continue;
-      if (!(str = htsmsg_get_str(e, "group")))  continue;
-      if (htsmsg_get_u32(e, "port", &u32))      continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
+      if (!(str = htsmsg_get_str(e, "group")))
+        continue;
+      if (htsmsg_get_u32(e, "port", &u32))
+        continue;
 
       /* Create mux entry */
       uuid_set(&muxu, NULL);
@@ -433,11 +429,12 @@ config_migrate_v1 ( void )
         htsmsg_add_str(m, "iptv_interface", str);
       if ((str = htsmsg_get_str(e, "channelname")))
         htsmsg_add_str(m, "iptv_svcname", str);
-      htsmsg_add_u32(m, "enabled",
-                     !!htsmsg_get_u32_or_default(e, "disabled", 0));
+      htsmsg_add_u32(m, "enabled", !!htsmsg_get_u32_or_default(e, "disabled", 0));
       htsmsg_add_u32(m, "initscan", 1);
-      hts_settings_save(m, "input/iptv/networks/%s/muxes/%s/config",
-                        ubufn, uuid_get_hex(&muxu, ubufm));
+      hts_settings_save(m,
+          "input/iptv/networks/%s/muxes/%s/config",
+          ubufn,
+          uuid_get_hex(&muxu, ubufm));
       htsmsg_destroy(m);
 
       /* Create svc entry */
@@ -454,8 +451,7 @@ config_migrate_v1 ( void )
         htsmsg_add_str(m, "svcname", str);
         config_migrate_v1_chn_add_svc(channels, str, ubufs);
       }
-      hts_settings_save(m, "input/iptv/networks/%s/muxes/%s/services/%s",
-                        ubufn, ubufm, ubufs);
+      hts_settings_save(m, "input/iptv/networks/%s/muxes/%s/services/%s", ubufn, ubufm, ubufs);
       htsmsg_destroy(m);
     }
 
@@ -465,7 +461,8 @@ config_migrate_v1 ( void )
   /* DVB Networks */
   if ((c = hts_settings_load_r(2, "dvbmuxes"))) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       config_migrate_v1_dvb_network(htsmsg_field_name(f), e, channels);
     }
     htsmsg_destroy(c);
@@ -482,8 +479,10 @@ config_migrate_v1 ( void )
   /* Save the channels */
   // Note: UUID will be stored in the file (redundant) but that's no biggy
   HTSMSG_FOREACH(f, channels) {
-    if (!(e   = htsmsg_field_get_map(f)))   continue;
-    if (!(str = htsmsg_get_str(e, "uuid"))) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
+    if (!(str = htsmsg_get_str(e, "uuid")))
+      continue;
     hts_settings_save(e, "channel/%s", str);
   }
   htsmsg_destroy(channels);
@@ -492,13 +491,11 @@ config_migrate_v1 ( void )
 /*
  * v1 -> v2 : changes to IPTV arrangements
  */
-static void
-config_migrate_v2 ( void )
-{
-  htsmsg_t *m;
+static void config_migrate_v2(void) {
+  htsmsg_t*  m;
   tvh_uuid_t u;
-  char ubuf[UUID_HEX_SIZE];
-  char src[1024], dst[1024];
+  char       ubuf[UUID_HEX_SIZE];
+  char       src[1024], dst[1024];
 
   /* Do we have IPTV config to migrate ? */
   if (hts_settings_exists("input/iptv/muxes")) {
@@ -514,10 +511,8 @@ config_migrate_v2 ( void )
     htsmsg_destroy(m);
 
     /* Move muxes */
-    hts_settings_buildpath(src, sizeof(src),
-                           "input/iptv/muxes");
-    hts_settings_buildpath(dst, sizeof(dst),
-                           "input/iptv/networks/%s/muxes", ubuf);
+    hts_settings_buildpath(src, sizeof(src), "input/iptv/muxes");
+    hts_settings_buildpath(dst, sizeof(dst), "input/iptv/networks/%s/muxes", ubuf);
     rename(src, dst);
   }
 }
@@ -525,9 +520,7 @@ config_migrate_v2 ( void )
 /*
  * v2 -> v3 : changes to DVB layout
  */
-static void
-config_migrate_v3 ( void )
-{
+static void config_migrate_v3(void) {
   char src[1024], dst[1024];
 
   /* Due to having to potentially run this twice! */
@@ -545,21 +538,22 @@ config_migrate_v3 ( void )
 /*
  * v3 -> v5 : fix broken DVB network / mux files
  */
-static void
-config_migrate_v5 ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  const char *str;
+static void config_migrate_v5(void) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
+  const char*     str;
 
   /* Remove linux prefix from class */
   if ((c = hts_settings_load_r(1, "input/dvb/networks"))) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e   = htsmsg_field_get_map(f)))    	continue;
-      if (!(e   = htsmsg_get_map(e, "config"))) continue;
-      if (!(str = htsmsg_get_str(e, "class"))) 	continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
+      if (!(e = htsmsg_get_map(e, "config")))
+        continue;
+      if (!(str = htsmsg_get_str(e, "class")))
+        continue;
       if (!strncmp(str, "linux", 5)) {
-        str = tvh_strdupa(str+5);
+        str = tvh_strdupa(str + 5);
         htsmsg_delete_field(e, "class");
         htsmsg_add_str(e, "class", str);
         hts_settings_save(e, "input/dvb/networks/%s/config", htsmsg_field_name(f));
@@ -572,16 +566,14 @@ config_migrate_v5 ( void )
 /*
  * v5 -> v6 : epggrab changes, also xmltv/config
  */
-static void
-config_migrate_v6 ( void )
-{
-  htsmsg_t *c, *m;
-  htsmsg_field_t *f;
-  const char *str;
-  uint32_t interval;
-  char buf[128];
-  const char *s;
-  int old = 0;
+static void config_migrate_v6(void) {
+  htsmsg_t *      c, *m;
+  htsmsg_field_t* f;
+  const char*     str;
+  uint32_t        interval;
+  char            buf[128];
+  const char*     s;
+  int             old = 0;
 
   c = hts_settings_load_r(1, "epggrab/config");
 
@@ -591,7 +583,8 @@ config_migrate_v6 ( void )
 
   if (c) {
     if (!htsmsg_get_u32(c, old ? "grab-interval" : "interval", &interval)) {
-      if (old) interval *= 3600;
+      if (old)
+        interval *= 3600;
       if (interval <= 600)
         strcpy(buf, "*/10 * * * *");
       else if (interval <= 900)
@@ -645,8 +638,8 @@ config_migrate_v6 ( void )
 
     /* Migrate XMLTV channels */
     htsmsg_t *xc, *ch;
-    htsmsg_t *xchs = hts_settings_load("xmltv/channels");
-    htsmsg_t *chs  = hts_settings_load_r(1, "channel");
+    htsmsg_t* xchs = hts_settings_load("xmltv/channels");
+    htsmsg_t* chs  = hts_settings_load_r(1, "channel");
     if (chs) {
       HTSMSG_FOREACH(f, chs) {
         if ((ch = htsmsg_get_map_by_field(f))) {
@@ -671,36 +664,32 @@ config_migrate_v6 ( void )
   htsmsg_destroy(c);
 }
 
-
 /*
  * v6 -> v7 : acesscontrol changes
  */
-static void
-config_migrate_simple ( const char *dir, htsmsg_t *list,
-                        void (*modify)(htsmsg_t *record,
-                                       uint32_t id,
-                                       const char *uuid,
-                                       const void *aux),
-                        const void *aux )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  tvh_uuid_t u;
-  char ubuf[UUID_HEX_SIZE];
-  uint32_t index = 1, id;
+static void config_migrate_simple(const char* dir,
+    htsmsg_t*                                 list,
+    void (*modify)(htsmsg_t* record, uint32_t id, const char* uuid, const void* aux),
+    const void* aux) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
+  tvh_uuid_t      u;
+  char            ubuf[UUID_HEX_SIZE];
+  uint32_t        index = 1, id;
 
   if (!(c = hts_settings_load(dir)))
     return;
 
   HTSMSG_FOREACH(f, c) {
-    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
     uuid_set(&u, NULL);
     uuid_get_hex(&u, ubuf);
     if (htsmsg_get_u32(e, "id", &id))
       id = 0;
     else if (list) {
-      htsmsg_t *m = htsmsg_create_map();
-      char buf[16];
+      htsmsg_t* m = htsmsg_create_map();
+      char      buf[16];
       snprintf(buf, sizeof(buf), "%d", id);
       htsmsg_add_str(m, "id", buf);
       htsmsg_add_str(m, "uuid", ubuf);
@@ -717,36 +706,30 @@ config_migrate_simple ( const char *dir, htsmsg_t *list,
   htsmsg_destroy(c);
 }
 
-static void
-config_modify_acl( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
-{
-  uint32_t a, b;
-  const char *s;
+static void config_modify_acl(htsmsg_t* c, uint32_t id, const char* uuid, const void* aux) {
+  uint32_t    a, b;
+  const char* s;
   if (htsmsg_get_u32(c, "adv_streaming", &a))
     if (!htsmsg_get_u32(c, "streaming", &b))
       htsmsg_add_u32(c, "adv_streaming", b);
   if ((s = htsmsg_get_str(c, "password")) != NULL) {
     char buf[256], result[300];
     snprintf(buf, sizeof(buf), "TVHeadend-Hide-%s", s);
-    base64_encode(result, sizeof(result), (uint8_t *)buf, strlen(buf));
+    base64_encode(result, sizeof(result), (uint8_t*)buf, strlen(buf));
     htsmsg_add_str(c, "password2", result);
     htsmsg_delete_field(c, "password");
   }
 }
 
-static void
-config_migrate_v7 ( void )
-{
+static void config_migrate_v7(void) {
   config_migrate_simple("accesscontrol", NULL, config_modify_acl, NULL);
 }
 
-static void
-config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
-{
-  htsmsg_t *ch = (htsmsg_t *)aux;
-  htsmsg_t *e, *m, *t;
+static void config_modify_tag(htsmsg_t* c, uint32_t id, const char* uuid, const void* aux) {
+  htsmsg_t*       ch = (htsmsg_t*)aux;
+  htsmsg_t *      e, *m, *t;
   htsmsg_field_t *f, *f2;
-  uint32_t u32;
+  uint32_t        u32;
 
   htsmsg_delete_field(c, "index");
 
@@ -754,7 +737,8 @@ config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
     return;
 
   HTSMSG_FOREACH(f, ch) {
-    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
     m = htsmsg_get_list(e, "tags");
     if (m == NULL)
       continue;
@@ -773,18 +757,17 @@ config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
   }
 }
 
-static void
-config_migrate_v8 ( void )
-{
-  htsmsg_t *ch, *e, *m;
-  htsmsg_field_t *f;
+static void config_migrate_v8(void) {
+  htsmsg_t *      ch, *e, *m;
+  htsmsg_field_t* f;
 
   ch = hts_settings_load_r(1, "channel");
   config_migrate_simple("channeltags", NULL, config_modify_tag, ch);
   if (ch == NULL)
     return;
   HTSMSG_FOREACH(f, ch) {
-    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
     htsmsg_delete_field(e, "tags");
     m = htsmsg_get_list(e, "tags_new");
     if (m) {
@@ -796,9 +779,7 @@ config_migrate_v8 ( void )
   htsmsg_destroy(ch);
 }
 
-static void
-config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
-{
+static void config_modify_autorec(htsmsg_t* c, uint32_t id, const char* uuid, const void* aux) {
   uint32_t u32;
   htsmsg_delete_field(c, "index");
   if (!htsmsg_get_u32(c, "approx_time", &u32)) {
@@ -814,17 +795,15 @@ config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, const void *a
   }
 }
 
-static void
-config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
-{
-  const htsmsg_t *list = aux;
-  const char *chname = htsmsg_get_str(c, "channelname");
-  const char *chuuid = htsmsg_get_str(c, "channel");
-  htsmsg_t *e;
-  htsmsg_field_t *f;
-  tvh_uuid_t uuid0;
-  const char *s1;
-  uint32_t u32;
+static void config_modify_dvr_log(htsmsg_t* c, uint32_t id, const char* uuid, const void* aux) {
+  const htsmsg_t* list   = aux;
+  const char*     chname = htsmsg_get_str(c, "channelname");
+  const char*     chuuid = htsmsg_get_str(c, "channel");
+  htsmsg_t*       e;
+  htsmsg_field_t* f;
+  tvh_uuid_t      uuid0;
+  const char*     s1;
+  uint32_t        u32;
 
   htsmsg_delete_field(c, "index");
   if (chname == NULL || (chuuid != NULL && uuid_set(&uuid0, chuuid))) {
@@ -832,7 +811,7 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *a
     htsmsg_delete_field(c, "channelname");
     htsmsg_delete_field(c, "channel");
     htsmsg_add_str(c, "channelname", chname);
-    free((char *)chname);
+    free((char*)chname);
     if (!htsmsg_get_u32(c, "contenttype", &u32)) {
       htsmsg_delete_field(c, "contenttype");
       htsmsg_add_u32(c, "content_type", u32 / 16);
@@ -843,27 +822,26 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *a
     htsmsg_delete_field(c, "autorec");
     if (s1 != NULL) {
       HTSMSG_FOREACH(f, list) {
-        if (!(e = htsmsg_field_get_map(f))) continue;
+        if (!(e = htsmsg_field_get_map(f)))
+          continue;
         if (strcmp(s1, htsmsg_get_str(e, "id") ?: "") == 0) {
-          const char *s2 = htsmsg_get_str(e, "uuid");
+          const char* s2 = htsmsg_get_str(e, "uuid");
           if (s2)
             htsmsg_add_str(c, "autorec", s2);
           break;
         }
       }
-      free((char *)s1);
+      free((char*)s1);
     }
   }
 }
 
-static void
-config_migrate_v9 ( void )
-{
-  htsmsg_t *list = htsmsg_create_list();
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  tvh_uuid_t u;
-  char ubuf[UUID_HEX_SIZE];
+static void config_migrate_v9(void) {
+  htsmsg_t*       list = htsmsg_create_list();
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
+  tvh_uuid_t      u;
+  char            ubuf[UUID_HEX_SIZE];
 
   config_migrate_simple("autorec", list, config_modify_autorec, NULL);
   config_migrate_simple("dvr/log", NULL, config_modify_dvr_log, list);
@@ -872,8 +850,10 @@ config_migrate_v9 ( void )
   if ((c = hts_settings_load("dvr")) != NULL) {
     /* step 1: only "config" */
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
-      if (strcmp(htsmsg_field_name(f), "config")) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
+      if (strcmp(htsmsg_field_name(f), "config"))
+        continue;
       htsmsg_add_str(e, "name", htsmsg_field_name(f) + 6);
       uuid_set(&u, NULL);
       hts_settings_remove("dvr/%s", htsmsg_field_name(f));
@@ -881,9 +861,12 @@ config_migrate_v9 ( void )
     }
     /* step 2: reset (without "config") */
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
-      if (strcmp(htsmsg_field_name(f), "config") == 0) continue;
-      if (strncmp(htsmsg_field_name(f), "config", 6)) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
+      if (strcmp(htsmsg_field_name(f), "config") == 0)
+        continue;
+      if (strncmp(htsmsg_field_name(f), "config", 6))
+        continue;
       htsmsg_add_str(e, "name", htsmsg_field_name(f) + 6);
       uuid_set(&u, NULL);
       hts_settings_remove("dvr/%s", htsmsg_field_name(f));
@@ -894,7 +877,8 @@ config_migrate_v9 ( void )
 
   if ((c = hts_settings_load("autorec")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       hts_settings_remove("autorec/%s", htsmsg_field_name(f));
       hts_settings_save(e, "dvr/autorec/%s", htsmsg_field_name(f));
     }
@@ -902,18 +886,16 @@ config_migrate_v9 ( void )
   }
 }
 
-static void
-config_migrate_move ( const char *dir,
-                      const char *newdir )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
+static void config_migrate_move(const char* dir, const char* newdir) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
 
   if (!(c = hts_settings_load(dir)))
     return;
 
   HTSMSG_FOREACH(f, c) {
-    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
     hts_settings_save(e, "%s/%s", newdir, htsmsg_field_name(f));
     hts_settings_remove("%s/%s", dir, htsmsg_field_name(f));
   }
@@ -921,24 +903,21 @@ config_migrate_move ( const char *dir,
   htsmsg_destroy(c);
 }
 
-static void
-config_migrate_v10 ( void )
-{
+static void config_migrate_v10(void) {
   config_migrate_move("channel", "channel/config");
   config_migrate_move("channeltags", "channel/tag");
 }
 
-static const char *
-config_find_uuid( htsmsg_t *map, const char *name, const char *value )
-{
-  htsmsg_t *e;
-  htsmsg_field_t *f;
-  const char *s;
+static const char* config_find_uuid(htsmsg_t* map, const char* name, const char* value) {
+  htsmsg_t*       e;
+  htsmsg_field_t* f;
+  const char*     s;
 
   if (!map || !name || !value)
     return NULL;
   HTSMSG_FOREACH(f, map) {
-    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
     if ((s = htsmsg_get_str(e, name)) != NULL) {
       if (!strcmp(s, value))
         return htsmsg_field_name(f);
@@ -947,10 +926,8 @@ config_find_uuid( htsmsg_t *map, const char *name, const char *value )
   return NULL;
 }
 
-static void
-config_modify_acl_dvallcfg( htsmsg_t *c, htsmsg_t *dvr_config )
-{
-  uint32_t a;
+static void config_modify_acl_dvallcfg(htsmsg_t* c, htsmsg_t* dvr_config) {
+  uint32_t    a;
   const char *username, *uuid;
 
   username = htsmsg_get_str(c, "username");
@@ -963,14 +940,12 @@ config_modify_acl_dvallcfg( htsmsg_t *c, htsmsg_t *dvr_config )
   htsmsg_delete_field(c, "dvallcfg");
 }
 
-static void
-config_modify_acl_tag_only( htsmsg_t *c, htsmsg_t *channel_tag )
-{
-  uint32_t a;
+static void config_modify_acl_tag_only(htsmsg_t* c, htsmsg_t* channel_tag) {
+  uint32_t    a;
   const char *username, *tag, *uuid;
 
   username = htsmsg_get_str(c, "username");
-  tag = htsmsg_get_str(c, "channel_tag");
+  tag      = htsmsg_get_str(c, "channel_tag");
   if (!tag || tag[0] == '\0')
     tag = NULL;
   if (tag == NULL && !htsmsg_get_u32(c, "tag_only", &a)) {
@@ -989,32 +964,28 @@ config_modify_acl_tag_only( htsmsg_t *c, htsmsg_t *channel_tag )
   htsmsg_delete_field(c, "tag_only");
 }
 
-static void
-config_modify_dvr_config_name( htsmsg_t *c, htsmsg_t *dvr_config )
-{
+static void config_modify_dvr_config_name(htsmsg_t* c, htsmsg_t* dvr_config) {
   const char *config_name, *uuid;
 
   config_name = htsmsg_get_str(c, "config_name");
-  uuid = config_name ? config_find_uuid(dvr_config, "name", config_name) : NULL;
+  uuid        = config_name ? config_find_uuid(dvr_config, "name", config_name) : NULL;
   htsmsg_delete_field(c, "config_name");
   htsmsg_add_str(c, "config_name", uuid ?: "");
 }
 
+static void config_migrate_v11(void) {
+  htsmsg_t*       dvr_config;
+  htsmsg_t*       channel_tag;
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
 
-static void
-config_migrate_v11 ( void )
-{
-  htsmsg_t *dvr_config;
-  htsmsg_t *channel_tag;
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-
-  dvr_config = hts_settings_load("dvr/config");
+  dvr_config  = hts_settings_load("dvr/config");
   channel_tag = hts_settings_load("channel/tag");
 
   if ((c = hts_settings_load("accesscontrol")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       config_modify_acl_dvallcfg(e, dvr_config);
       config_modify_acl_tag_only(e, channel_tag);
     }
@@ -1023,7 +994,8 @@ config_migrate_v11 ( void )
 
   if ((c = hts_settings_load("dvr/log")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       config_modify_dvr_config_name(e, dvr_config);
     }
     htsmsg_destroy(c);
@@ -1033,9 +1005,7 @@ config_migrate_v11 ( void )
   htsmsg_destroy(dvr_config);
 }
 
-static void
-config_modify_caclient( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
-{
+static void config_modify_caclient(htsmsg_t* c, uint32_t id, const char* uuid, const void* aux) {
   uint32_t u;
 
   htsmsg_delete_field(c, "index");
@@ -1047,18 +1017,17 @@ config_modify_caclient( htsmsg_t *c, uint32_t id, const char *uuid, const void *
   }
 }
 
-static void
-config_migrate_v12 ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
+static void config_migrate_v12(void) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
 
   config_migrate_simple("cwc", NULL, config_modify_caclient, "caclient_cwc");
   config_migrate_simple("capmt", NULL, config_modify_caclient, "caclient_capmt");
 
   if ((c = hts_settings_load("cwc")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       hts_settings_remove("cwc/%s", htsmsg_field_name(f));
       hts_settings_save(e, "caclient/%s", htsmsg_field_name(f));
     }
@@ -1066,7 +1035,8 @@ config_migrate_v12 ( void )
   }
   if ((c = hts_settings_load("capmt")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       hts_settings_remove("capmt/%s", htsmsg_field_name(f));
       hts_settings_save(e, "caclient/%s", htsmsg_field_name(f));
     }
@@ -1074,16 +1044,15 @@ config_migrate_v12 ( void )
   }
 }
 
-static void
-config_migrate_v13 ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  int i;
+static void config_migrate_v13(void) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
+  int             i;
 
   if ((c = hts_settings_load("dvr/config")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       if (!htsmsg_get_bool(e, "container", &i)) {
         htsmsg_delete_field(e, "container");
         if (i == 1)
@@ -1099,31 +1068,36 @@ config_migrate_v13 ( void )
   }
 }
 
-static const char *
-config_migrate_v14_codec(int i)
-{
+static const char* config_migrate_v14_codec(int i) {
   switch (i) {
-  case 1: return "mpeg2video";
-  case 2: return "mp2";
-  case 3: return "libx264";
-  case 4: return "ac3";
-  case 8: return "aac";
-  case 13: return "libvpx";
-  case 14: return "libvorbis";
-  default: return "";
+    case 1:
+      return "mpeg2video";
+    case 2:
+      return "mp2";
+    case 3:
+      return "libx264";
+    case 4:
+      return "ac3";
+    case 8:
+      return "aac";
+    case 13:
+      return "libvpx";
+    case 14:
+      return "libvorbis";
+    default:
+      return "";
   }
 }
 
-static void
-config_migrate_v14 ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  int i;
+static void config_migrate_v14(void) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
+  int             i;
 
   if ((c = hts_settings_load("profile")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       if (!htsmsg_get_s32(e, "vcodec", &i)) {
         htsmsg_delete_field(e, "vcodec");
         htsmsg_set_str(e, "vcodec", config_migrate_v14_codec(i));
@@ -1140,16 +1114,15 @@ config_migrate_v14 ( void )
   }
 }
 
-static void
-config_migrate_v15 ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  int i;
+static void config_migrate_v15(void) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
+  int             i;
 
   if ((c = hts_settings_load("profile")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       if (htsmsg_get_s32(e, "timeout", &i)) {
         htsmsg_set_s32(e, "timeout", 5);
         hts_settings_save(e, "profile/%s", htsmsg_field_name(f));
@@ -1159,14 +1132,12 @@ config_migrate_v15 ( void )
   }
 }
 
-static int
-config_dvr_autorec_start_set(const char *s, int *tm)
-{
+static int config_dvr_autorec_start_set(const char* s, int* tm) {
   int t;
 
-  if(s == NULL || s[0] == '\0' || !isdigit(s[0]))
+  if (s == NULL || s[0] == '\0' || !isdigit(s[0]))
     t = -1;
-  else if(strchr(s, ':') != NULL)
+  else if (strchr(s, ':') != NULL)
     // formatted time string - convert
     t = (atoi(s) * 60) + atoi(s + 3);
   else {
@@ -1181,10 +1152,8 @@ config_dvr_autorec_start_set(const char *s, int *tm)
   return 0;
 }
 
-static void
-config_modify_dvrauto( htsmsg_t *c )
-{
-  int tm = -1, tw = -1;
+static void config_modify_dvrauto(htsmsg_t* c) {
+  int  tm = -1, tw = -1;
   char buf[16];
 
   if (config_dvr_autorec_start_set(htsmsg_get_str(c, "start"), &tm) > 0 && tm >= 0) {
@@ -1203,15 +1172,14 @@ config_modify_dvrauto( htsmsg_t *c )
   }
 }
 
-static void
-config_migrate_v16 ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
+static void config_migrate_v16(void) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
 
   if ((c = hts_settings_load("dvr/autorec")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       config_modify_dvrauto(e);
       hts_settings_save(e, "dvr/autorec/%s", htsmsg_field_name(f));
     }
@@ -1219,16 +1187,15 @@ config_migrate_v16 ( void )
   }
 }
 
-static void
-config_migrate_v17 ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  int i, p;
+static void config_migrate_v17(void) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
+  int             i, p;
 
   if ((c = hts_settings_load("profile")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       if (htsmsg_get_s32(e, "priority", &i)) {
         p = PROFILE_SPRIO_NORMAL;
         if (strcmp(htsmsg_get_str(e, "name") ?: "", "htsp") == 0)
@@ -1241,16 +1208,15 @@ config_migrate_v17 ( void )
   }
 }
 
-static void
-config_migrate_v18 ( void )
-{
-  htsmsg_t *c, *e, *l, *m;
-  htsmsg_field_t *f;
-  const char *filename;
+static void config_migrate_v18(void) {
+  htsmsg_t *      c, *e, *l, *m;
+  htsmsg_field_t* f;
+  const char*     filename;
 
   if ((c = hts_settings_load("dvr/log")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       if ((filename = htsmsg_get_str(e, "filename")) == NULL)
         continue;
       if ((l = htsmsg_get_list(e, "files")) != NULL)
@@ -1267,18 +1233,17 @@ config_migrate_v18 ( void )
   }
 }
 
-static void
-config_migrate_v19 ( void )
-{
-  htsmsg_t *c, *e, *m;
-  htsmsg_field_t *f;
-  const char *username, *passwd;
-  tvh_uuid_t u;
-  char ubuf[UUID_HEX_SIZE];
+static void config_migrate_v19(void) {
+  htsmsg_t *      c, *e, *m;
+  htsmsg_field_t* f;
+  const char *    username, *passwd;
+  tvh_uuid_t      u;
+  char            ubuf[UUID_HEX_SIZE];
 
   if ((c = hts_settings_load("accesscontrol")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       if ((username = htsmsg_get_str(e, "username")) == NULL)
         continue;
       if ((passwd = htsmsg_get_str(e, "password2")) == NULL)
@@ -1296,12 +1261,10 @@ config_migrate_v19 ( void )
   htsmsg_destroy(c);
 }
 
-static void
-config_migrate_v20_helper ( htsmsg_t *e, const char *fname )
-{
-  htsmsg_t *l;
-  const char *str;
-  char *p;
+static void config_migrate_v20_helper(htsmsg_t* e, const char* fname) {
+  htsmsg_t*   l;
+  const char* str;
+  char*       p;
 
   if ((str = htsmsg_get_str(e, fname)) != NULL) {
     p = strdup(str);
@@ -1313,15 +1276,14 @@ config_migrate_v20_helper ( htsmsg_t *e, const char *fname )
   }
 }
 
-static void
-config_migrate_v20 ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
+static void config_migrate_v20(void) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
 
   if ((c = hts_settings_load("accesscontrol")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       config_migrate_v20_helper(e, "profile");
       config_migrate_v20_helper(e, "dvr_config");
       config_migrate_v20_helper(e, "channel_tag");
@@ -1334,24 +1296,21 @@ config_migrate_v20 ( void )
 /*
  * v20 -> v21 : epggrab changes
  */
-static void
-config_migrate_v21 ( void )
-{
-  htsmsg_t *c, *m, *e, *a;
-  htsmsg_field_t *f;
-  const char *str;
-  int64_t s64;
+static void config_migrate_v21(void) {
+  htsmsg_t *      c, *m, *e, *a;
+  htsmsg_field_t* f;
+  const char*     str;
+  int64_t         s64;
 
   if ((c = hts_settings_load_r(1, "epggrab/config")) != NULL) {
     str = htsmsg_get_str(c, "module");
-    m = htsmsg_get_map(c, "mod_enabled");
-    e = htsmsg_create_map();
+    m   = htsmsg_get_map(c, "mod_enabled");
+    e   = htsmsg_create_map();
     if (m) {
       HTSMSG_FOREACH(f, m) {
         s64 = 0;
         htsmsg_field_get_s64(f, &s64);
-        if ((s64 || !strcmp(str ?: "", htsmsg_field_name(f))) &&
-            htsmsg_field_name(f)[0]) {
+        if ((s64 || !strcmp(str ?: "", htsmsg_field_name(f))) && htsmsg_field_name(f)[0]) {
           a = htsmsg_create_map();
           htsmsg_add_bool(a, "enabled", 1);
           htsmsg_add_msg(e, htsmsg_field_name(f), a);
@@ -1369,11 +1328,9 @@ config_migrate_v21 ( void )
 /*
  * v21 -> v22 : epggrab missing changes
  */
-static void
-config_migrate_v22 ( void )
-{
-  htsmsg_t *c;
-  uint32_t u32;
+static void config_migrate_v22(void) {
+  htsmsg_t* c;
+  uint32_t  u32;
 
   if ((c = hts_settings_load("epggrab/config")) != NULL) {
     if (htsmsg_get_u32(c, "epgdb_periodicsave", &u32) == 0)
@@ -1392,20 +1349,19 @@ config_migrate_v22 ( void )
 /*
  * v21 -> v23 : epggrab xmltv/pyepg channels
  */
-static void
-config_migrate_v23_one ( const char *modname )
-{
-  htsmsg_t *c, *m, *n;
-  htsmsg_field_t *f;
-  uint32_t maj, min;
-  int64_t num;
-  tvh_uuid_t u;
-  char ubuf[UUID_HEX_SIZE];
+static void config_migrate_v23_one(const char* modname) {
+  htsmsg_t *      c, *m, *n;
+  htsmsg_field_t* f;
+  uint32_t        maj, min;
+  int64_t         num;
+  tvh_uuid_t      u;
+  char            ubuf[UUID_HEX_SIZE];
 
   if ((c = hts_settings_load_r(1, "epggrab/%s/channels", modname)) != NULL) {
     HTSMSG_FOREACH(f, c) {
       m = htsmsg_field_get_map(f);
-      if (m == NULL) continue;
+      if (m == NULL)
+        continue;
       n = htsmsg_copy(m);
       htsmsg_add_str(n, "id", htsmsg_field_name(f));
       maj = htsmsg_get_u32_or_default(m, "major", 0);
@@ -1424,18 +1380,14 @@ config_migrate_v23_one ( const char *modname )
   }
 }
 
-static void
-config_migrate_v23 ( void )
-{
+static void config_migrate_v23(void) {
   config_migrate_v23_one("xmltv");
   config_migrate_v23_one("pyepg");
 }
 
-static void
-config_migrate_v24_helper ( const char **list, htsmsg_t *e, const char *name )
-{
-  htsmsg_t *l = htsmsg_create_list();
-  const char **p = list;
+static void config_migrate_v24_helper(const char** list, htsmsg_t* e, const char* name) {
+  htsmsg_t*    l = htsmsg_create_list();
+  const char** p = list;
   if (!strcmp(name, "dvr") && !htsmsg_get_bool_or_default(e, "failed_dvr", 0))
     htsmsg_add_str(l, NULL, "failed");
   for (p = list; *p; p += 2)
@@ -1446,28 +1398,26 @@ config_migrate_v24_helper ( const char **list, htsmsg_t *e, const char *name )
   htsmsg_add_msg(e, name, l);
 }
 
-static void
-config_migrate_v24 ( void )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  static const char *streaming_list[] = {
-    "streaming", "basic",
-    "adv_streaming", "advanced",
-    "htsp_streaming", "htsp",
-    NULL
-  };
-  static const char *dvr_list[] = {
-    "dvr", "basic",
-    "htsp_dvr", "htsp",
-    "all_dvr", "all",
-    "all_rw_dvr", "all_rw",
-    "failed_dvr", "failed",
-    NULL
-  };
+static void config_migrate_v24(void) {
+  htsmsg_t *         c, *e;
+  htsmsg_field_t*    f;
+  static const char* streaming_list[] =
+      {"streaming", "basic", "adv_streaming", "advanced", "htsp_streaming", "htsp", NULL};
+  static const char* dvr_list[] = {"dvr",
+      "basic",
+      "htsp_dvr",
+      "htsp",
+      "all_dvr",
+      "all",
+      "all_rw_dvr",
+      "all_rw",
+      "failed_dvr",
+      "failed",
+      NULL};
   if ((c = hts_settings_load("accesscontrol")) != NULL) {
     HTSMSG_FOREACH(f, c) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
       config_migrate_v24_helper(streaming_list, e, "streaming");
       config_migrate_v24_helper(dvr_list, e, "dvr");
       hts_settings_save(e, "accesscontrol/%s", htsmsg_field_name(f));
@@ -1479,30 +1429,34 @@ config_migrate_v24 ( void )
 /*
  * Perform backup
  */
-static void
-dobackup(const char *oldver)
-{
-  char outfile[PATH_MAX], cwd[PATH_MAX];
-  const char *argv[] = {
-    "/usr/bin/tar", "cjf", outfile,
-    "--exclude", "backup",
-    "--exclude", "recordings",
-    "--exclude", "epggrab/*.sock",
-    "--exclude", "timeshift/buffer",
-    "--exclude", "imagecache/meta",
-    "--exclude", "imagecache/data",
-    ".", NULL
-  };
-  const char *root = hts_settings_get_root();
-  char errtxt[128];
-  const char **arg;
-  pid_t pid;
-  int code;
+static void dobackup(const char* oldver) {
+  char         outfile[PATH_MAX], cwd[PATH_MAX];
+  const char*  argv[] = {"/usr/bin/tar",
+       "cjf",
+       outfile,
+       "--exclude",
+       "backup",
+       "--exclude",
+       "recordings",
+       "--exclude",
+       "epggrab/*.sock",
+       "--exclude",
+       "timeshift/buffer",
+       "--exclude",
+       "imagecache/meta",
+       "--exclude",
+       "imagecache/data",
+       ".",
+       NULL};
+  const char*  root   = hts_settings_get_root();
+  char         errtxt[128];
+  const char** arg;
+  pid_t        pid;
+  int          code;
 
   assert(root);
 
-  tvhinfo(LS_CONFIG, "backup: migrating config from %s (running %s)",
-                    oldver, tvheadend_version);
+  tvhinfo(LS_CONFIG, "backup: migrating config from %s (running %s)", oldver, tvheadend_version);
 
   if (getcwd(cwd, sizeof(cwd)) == NULL) {
     tvherror(LS_CONFIG, "unable to get the current working directory");
@@ -1528,11 +1482,10 @@ dobackup(const char *oldver)
     goto fatal;
   }
 
-  snprintf(outfile, sizeof(outfile), "%s/backup/%s.tar.bz2",
-                                     root, oldver);
+  snprintf(outfile, sizeof(outfile), "%s/backup/%s.tar.bz2", root, oldver);
   tvhinfo(LS_CONFIG, "backup: running, output file %s", outfile);
 
-  if (spawnv(argv[0], (void *)argv, &pid, 1, 1)) {
+  if (spawnv(argv[0], (void*)argv, &pid, 1, 1)) {
     code = -ENOENT;
   } else {
     while ((code = spawn_reap(pid, errtxt, sizeof(errtxt))) == -EAGAIN)
@@ -1544,7 +1497,7 @@ dobackup(const char *oldver)
 
   if (code) {
     htsbuf_queue_t q;
-    char *s;
+    char*          s;
     htsbuf_queue_init(&q, 0);
     for (arg = argv; *arg; arg++) {
       htsbuf_append_str(&q, *arg);
@@ -1577,41 +1530,37 @@ fatal:
 /*
  * Migration table
  */
-static const config_migrate_t config_migrate_table[] = {
-  config_migrate_v1,
-  config_migrate_v2,
-  config_migrate_v3,
-  config_migrate_v3, // Re-run due to bug in previous version of function
-  config_migrate_v5,
-  config_migrate_v6,
-  config_migrate_v7,
-  config_migrate_v8,
-  config_migrate_v9,
-  config_migrate_v10,
-  config_migrate_v11,
-  config_migrate_v12,
-  config_migrate_v13,
-  config_migrate_v14,
-  config_migrate_v15,
-  config_migrate_v16,
-  config_migrate_v17,
-  config_migrate_v18,
-  config_migrate_v19,
-  config_migrate_v20,
-  config_migrate_v21,
-  config_migrate_v22,
-  config_migrate_v23,
-  config_migrate_v24
-};
+static const config_migrate_t config_migrate_table[] = {config_migrate_v1,
+    config_migrate_v2,
+    config_migrate_v3,
+    config_migrate_v3, // Re-run due to bug in previous version of function
+    config_migrate_v5,
+    config_migrate_v6,
+    config_migrate_v7,
+    config_migrate_v8,
+    config_migrate_v9,
+    config_migrate_v10,
+    config_migrate_v11,
+    config_migrate_v12,
+    config_migrate_v13,
+    config_migrate_v14,
+    config_migrate_v15,
+    config_migrate_v16,
+    config_migrate_v17,
+    config_migrate_v18,
+    config_migrate_v19,
+    config_migrate_v20,
+    config_migrate_v21,
+    config_migrate_v22,
+    config_migrate_v23,
+    config_migrate_v24};
 
 /*
  * Perform migrations (if required)
  */
-static int
-config_migrate ( int backup )
-{
-  uint32_t v;
-  const char *s;
+static int config_migrate(int backup) {
+  uint32_t    v;
+  const char* s;
 
   /* Get the current version */
   v = config.version;
@@ -1638,8 +1587,8 @@ config_migrate ( int backup )
   }
 
   /* Run migrations */
-  for ( ; v < ARRAY_SIZE(config_migrate_table); v++) {
-    tvhinfo(LS_CONFIG, "migrating config from v%d to v%d", v, v+1);
+  for (; v < ARRAY_SIZE(config_migrate_table); v++) {
+    tvhinfo(LS_CONFIG, "migrating config from v%d to v%d", v, v + 1);
     config_migrate_table[v]();
   }
 
@@ -1654,19 +1603,22 @@ update:
 /*
  *
  */
-static void
-config_check_one ( const char *dir )
-{
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
+static void config_check_one(const char* dir) {
+  htsmsg_t *      c, *e;
+  htsmsg_field_t* f;
 
   if (!(c = hts_settings_load(dir)))
     return;
 
   HTSMSG_FOREACH(f, c) {
-    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
     if (strlen(htsmsg_field_name(f)) != UUID_HEX_SIZE - 1) {
-      tvherror(LS_START, "filename %s/%s/%s is invalid", hts_settings_get_root(), dir, htsmsg_field_name(f));
+      tvherror(LS_START,
+          "filename %s/%s/%s is invalid",
+          hts_settings_get_root(),
+          dir,
+          htsmsg_field_name(f));
       exit(1);
     }
   }
@@ -1676,9 +1628,7 @@ config_check_one ( const char *dir )
 /*
  * Perform a simple check for UUID files
  */
-static void
-config_check ( void )
-{
+static void config_check(void) {
   config_check_one("accesscontrol");
   config_check_one("channel/config");
   config_check_one("channel/tag");
@@ -1694,11 +1644,11 @@ config_check ( void )
 
 static int config_newcfg = 0;
 
-static char *config_get_dir ( uid_t uid )
-{
-  char hts_home[PATH_MAX + sizeof("/.hts/tvheadend")]; /* Must be largest of the 3 config strings! */
-  char config_home[PATH_MAX];
-  char home_dir[PATH_MAX];
+static char* config_get_dir(uid_t uid) {
+  char
+      hts_home[PATH_MAX + sizeof("/.hts/tvheadend")]; /* Must be largest of the 3 config strings! */
+  char        config_home[PATH_MAX];
+  char        home_dir[PATH_MAX];
   struct stat st;
 
   if (uid == -1)
@@ -1733,9 +1683,9 @@ static char *config_get_dir ( uid_t uid )
       tvherror(LS_CONFIG, ".hts/tvheadend exists, but is not a directory");
       return NULL;
     }
-    tvhwarn(LS_CONFIG, "Found legacy '.hts/tvheadend', consider moving this to '.config/hts' instead.");
-  } else if ((realpath(getenv("XDG_CONFIG_HOME"), config_home) != NULL) &&
-      (config_home[0] != 0)) {
+    tvhwarn(LS_CONFIG,
+        "Found legacy '.hts/tvheadend', consider moving this to '.config/hts' instead.");
+  } else if ((realpath(getenv("XDG_CONFIG_HOME"), config_home) != NULL) && (config_home[0] != 0)) {
     snprintf(hts_home, sizeof(hts_home), "%s/hts", config_home);
   } else {
     snprintf(hts_home, sizeof(hts_home), "%s/.config/hts", home_dir);
@@ -1744,39 +1694,36 @@ static char *config_get_dir ( uid_t uid )
   return strndup(hts_home, sizeof(hts_home));
 }
 
-void
-config_boot
-  ( const char *path, gid_t gid, uid_t uid, const char *http_user_agent )
-{
-  struct stat st;
-  htsmsg_t *config2;
-  htsmsg_field_t *f;
-  const char *s;
+void config_boot(const char* path, gid_t gid, uid_t uid, const char* http_user_agent) {
+  struct stat     st;
+  htsmsg_t*       config2;
+  htsmsg_field_t* f;
+  const char*     s;
 
   memset(&config, 0, sizeof(config));
-  config.idnode.in_class = &config_class;
-  config.ui_quicktips = 1;
-  config.http_auth = HTTP_AUTH_DIGEST;
-  config.http_auth_algo = HTTP_AUTH_ALGO_MD5;
-  config.proxy = 0;
-  config.realm = strdup("tvheadend");
-  config.info_area = strdup("login,storage,time");
-  config.cookie_expires = 7;
-  config.ticket_expires = 5 * 60;
-  config.dscp = -1;
+  config.idnode.in_class    = &config_class;
+  config.ui_quicktips       = 1;
+  config.http_auth          = HTTP_AUTH_DIGEST;
+  config.http_auth_algo     = HTTP_AUTH_ALGO_MD5;
+  config.proxy              = 0;
+  config.realm              = strdup("tvheadend");
+  config.info_area          = strdup("login,storage,time");
+  config.cookie_expires     = 7;
+  config.ticket_expires     = 5 * 60;
+  config.dscp               = -1;
   config.descrambler_buffer = 9000;
-  config.epg_compress = 1;
-  config.epg_cut_window = 5*60;
-  config.epg_update_window = 24*3600;
-  config_scanfile_ok = 0;
-  config.theme_ui = strdup("blue");
-  config.chname_num = 1;
-  config.iptv_tpool_count = 2;
-  config.date_mask = strdup("");
-  config.label_formatting = 0;
-  config.hdhomerun_ip = strdup("");
-  config.local_ip = strdup("");
-  config.local_port = 0;
+  config.epg_compress       = 1;
+  config.epg_cut_window     = 5 * 60;
+  config.epg_update_window  = 24 * 3600;
+  config_scanfile_ok        = 0;
+  config.theme_ui           = strdup("blue");
+  config.chname_num         = 1;
+  config.iptv_tpool_count   = 2;
+  config.date_mask          = strdup("");
+  config.label_formatting   = 0;
+  config.hdhomerun_ip       = strdup("");
+  config.local_ip           = strdup("");
+  config.local_port         = 0;
 
   /* Generate default */
   if (!path)
@@ -1795,18 +1742,24 @@ config_boot
   if (stat(config.confdir, &st)) {
     config_newcfg = 1;
     if (makedirs(LS_CONFIG, config.confdir, 0700, 1, gid, uid)) {
-      tvhwarn(LS_START, "failed to create settings directory %s,"
-                       " settings will not be saved", config.confdir);
+      tvhwarn(LS_START,
+          "failed to create settings directory %s,"
+          " settings will not be saved",
+          config.confdir);
       return;
     }
   }
 
   /* And is usable */
   else if (access(config.confdir, R_OK | W_OK)) {
-    tvhwarn(LS_START, "configuration path %s is not r/w"
-                     " for UID:%d GID:%d [e=%s],"
-                     " settings will not be saved",
-            config.confdir, getuid(), getgid(), strerror(errno));
+    tvhwarn(LS_START,
+        "configuration path %s is not r/w"
+        " for UID:%d GID:%d [e=%s],"
+        " settings will not be saved",
+        config.confdir,
+        getuid(),
+        getgid(),
+        strerror(errno));
     return;
   }
 
@@ -1836,13 +1789,13 @@ config_boot
     if (f && f->hmf_type == HMF_STR) {
       s = htsmsg_get_str(config2, "language");
       if (s) {
-        htsmsg_t *m = htsmsg_csv_2_list(s, ',');
+        htsmsg_t* m = htsmsg_csv_2_list(s, ',');
         htsmsg_delete_field(config2, "language");
         htsmsg_add_msg(config2, "language", m);
       }
     }
     config.version = htsmsg_get_u32_or_default(config2, "config", 0);
-    s = htsmsg_get_str(config2, "full_version");
+    s              = htsmsg_get_str(config2, "full_version");
     if (s)
       config.full_version = strdup(s);
     idnode_load(&config.idnode, config2);
@@ -1857,8 +1810,7 @@ config_boot
     config.realm = strdup("tvheadend");
   if (tvh_str_default(config.http_server_name, NULL) == NULL)
     config.http_server_name = strdup("HTS/tvheadend");
-  if ((config.http_user_agent &&
-       strncmp(config.http_user_agent, "TVHeadend/", 10) == 0) ||
+  if ((config.http_user_agent && strncmp(config.http_user_agent, "TVHeadend/", 10) == 0) ||
       tvh_str_default(config.http_user_agent, NULL) == NULL) {
     char buf[1024];
 
@@ -1869,16 +1821,18 @@ config_boot
     config_muxconfpath_notify(&config.idnode, NULL);
 }
 
-void
-config_init ( int backup )
-{
-  const char *path = hts_settings_get_root();
+void config_init(int backup) {
+  const char* path = hts_settings_get_root();
 
   if (path == NULL || access(path, R_OK | W_OK)) {
-    tvhwarn(LS_START, "configuration path %s is not r/w"
-                     " for UID:%d GID:%d [e=%s],"
-                     " settings will not be saved",
-            path, getuid(), getgid(), strerror(errno));
+    tvhwarn(LS_START,
+        "configuration path %s is not r/w"
+        " for UID:%d GID:%d [e=%s],"
+        " settings will not be saved",
+        path,
+        getuid(),
+        getgid(),
+        strerror(errno));
     return;
   }
 
@@ -1891,7 +1845,7 @@ config_init ( int backup )
     tvh_str_set(&config.http_server_name, "HTS/tvheadend");
     idnode_changed(&config.idnode);
 
-  /* Perform migrations */
+    /* Perform migrations */
   } else {
     if (config_migrate(backup))
       config_check();
@@ -1899,8 +1853,7 @@ config_init ( int backup )
   tvhinfo(LS_CONFIG, "loaded");
 }
 
-void config_done ( void )
-{
+void config_done(void) {
   /* note: tvhlog is inactive !!! */
   free(config.confdir);
   free(config.wizard);
@@ -1927,10 +1880,8 @@ void config_done ( void )
  * Config Class
  * *************************************************************************/
 
-static htsmsg_t *
-config_class_save(idnode_t *self, char *filename, size_t fsize)
-{
-  htsmsg_t *c = htsmsg_create_map();
+static htsmsg_t* config_class_save(idnode_t* self, char* filename, size_t fsize) {
+  htsmsg_t* c = htsmsg_create_map();
   idnode_save(&config.idnode, c);
 #if ENABLE_SATIP_SERVER
   idnode_save(&satip_server_conf.idnode, c);
@@ -1940,11 +1891,9 @@ config_class_save(idnode_t *self, char *filename, size_t fsize)
   return c;
 }
 
-static int
-config_class_cors_origin_set ( void *o, const void *v )
-{
-  const char *s = v;
-  url_t u;
+static int config_class_cors_origin_set(void* o, const void* v) {
+  const char* s = v;
+  url_t       u;
 
   while (s && *s && *s <= ' ')
     s++;
@@ -1961,7 +1910,7 @@ config_class_cors_origin_set ( void *o, const void *v )
       else
         snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s", u.scheme, u.host);
     } else {
-wrong:
+    wrong:
       prop_sbuf[0] = '\0';
     }
     urlreset(&u);
@@ -1974,16 +1923,12 @@ wrong:
   return 0;
 }
 
-static const void *
-config_class_language_get ( void *o )
-{
+static const void* config_class_language_get(void* o) {
   return htsmsg_csv_2_list(config.language, ',');
 }
 
-static int
-config_class_language_set ( void *o, const void *v )
-{
-  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 3);
+static int config_class_language_set(void* o, const void* v) {
+  char* s = htsmsg_list_2_csv((htsmsg_t*)v, ',', 3);
   if (strcmp(s ?: "", config.language ?: "")) {
     free(config.language);
     config.language = s;
@@ -1994,25 +1939,19 @@ config_class_language_set ( void *o, const void *v )
   return 0;
 }
 
-static htsmsg_t *
-config_class_language_list ( void *o, const char *lang )
-{
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "language/list");
+static htsmsg_t* config_class_language_list(void* o, const char* lang) {
+  htsmsg_t* m = htsmsg_create_map();
+  htsmsg_add_str(m, "type", "api");
+  htsmsg_add_str(m, "uri", "language/list");
   return m;
 }
 
-static const void *
-config_class_info_area_get ( void *o )
-{
+static const void* config_class_info_area_get(void* o) {
   return htsmsg_csv_2_list(config.info_area, ',');
 }
 
-static int
-config_class_info_area_set ( void *o, const void *v )
-{
-  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 3);
+static int config_class_info_area_set(void* o, const void* v) {
+  char* s = htsmsg_list_2_csv((htsmsg_t*)v, ',', 3);
   if (strcmp(s ?: "", config.info_area ?: "")) {
     free(config.info_area);
     config.info_area = s;
@@ -2024,112 +1963,94 @@ config_class_info_area_set ( void *o, const void *v )
 }
 
 static void
-config_class_info_area_list1 ( htsmsg_t *m, const char *key,
-                               const char *val, const char *lang )
-{
-  htsmsg_t *e = htsmsg_create_key_val(key, tvh_gettext_lang(lang, val));
+config_class_info_area_list1(htsmsg_t* m, const char* key, const char* val, const char* lang) {
+  htsmsg_t* e = htsmsg_create_key_val(key, tvh_gettext_lang(lang, val));
   htsmsg_add_msg(m, NULL, e);
 }
 
-static htsmsg_t *
-config_class_info_area_list ( void *o, const char *lang )
-{
-  htsmsg_t *m = htsmsg_create_list();
+static htsmsg_t* config_class_info_area_list(void* o, const char* lang) {
+  htsmsg_t* m = htsmsg_create_list();
   config_class_info_area_list1(m, "login", N_("Login/Logout"), lang);
   config_class_info_area_list1(m, "storage", N_("Storage space"), lang);
   config_class_info_area_list1(m, "time", N_("Time"), lang);
   return m;
 }
 
-static htsmsg_t *
-config_class_dscp_list ( void *o, const char *lang )
-{
+static htsmsg_t* config_class_dscp_list(void* o, const char* lang) {
   static const struct strtab tab[] = {
-    { N_("Default"), -1 },
-    { N_("CS0"),  IPTOS_CLASS_CS0 },
-    { N_("CS1"),  IPTOS_CLASS_CS1 },
-    { N_("AF11"), IPTOS_DSCP_AF11 },
-    { N_("AF12"), IPTOS_DSCP_AF12 },
-    { N_("AF13"), IPTOS_DSCP_AF13 },
-    { N_("CS2"),  IPTOS_CLASS_CS2 },
-    { N_("AF21"), IPTOS_DSCP_AF21 },
-    { N_("AF22"), IPTOS_DSCP_AF22 },
-    { N_("AF23"), IPTOS_DSCP_AF23 },
-    { N_("CS3"),  IPTOS_CLASS_CS3 },
-    { N_("AF31"), IPTOS_DSCP_AF31 },
-    { N_("AF32"), IPTOS_DSCP_AF32 },
-    { N_("AF33"), IPTOS_DSCP_AF33 },
-    { N_("CS4"),  IPTOS_CLASS_CS4 },
-    { N_("AF41"), IPTOS_DSCP_AF41 },
-    { N_("AF42"), IPTOS_DSCP_AF42 },
-    { N_("AF43"), IPTOS_DSCP_AF43 },
-    { N_("CS5"),  IPTOS_CLASS_CS5 },
-    { N_("EF"),   IPTOS_DSCP_EF },
-    { N_("CS6"),  IPTOS_CLASS_CS6 },
-    { N_("CS7"),  IPTOS_CLASS_CS7 },
+      {N_("Default"), -1},
+      {N_("CS0"), IPTOS_CLASS_CS0},
+      {N_("CS1"), IPTOS_CLASS_CS1},
+      {N_("AF11"), IPTOS_DSCP_AF11},
+      {N_("AF12"), IPTOS_DSCP_AF12},
+      {N_("AF13"), IPTOS_DSCP_AF13},
+      {N_("CS2"), IPTOS_CLASS_CS2},
+      {N_("AF21"), IPTOS_DSCP_AF21},
+      {N_("AF22"), IPTOS_DSCP_AF22},
+      {N_("AF23"), IPTOS_DSCP_AF23},
+      {N_("CS3"), IPTOS_CLASS_CS3},
+      {N_("AF31"), IPTOS_DSCP_AF31},
+      {N_("AF32"), IPTOS_DSCP_AF32},
+      {N_("AF33"), IPTOS_DSCP_AF33},
+      {N_("CS4"), IPTOS_CLASS_CS4},
+      {N_("AF41"), IPTOS_DSCP_AF41},
+      {N_("AF42"), IPTOS_DSCP_AF42},
+      {N_("AF43"), IPTOS_DSCP_AF43},
+      {N_("CS5"), IPTOS_CLASS_CS5},
+      {N_("EF"), IPTOS_DSCP_EF},
+      {N_("CS6"), IPTOS_CLASS_CS6},
+      {N_("CS7"), IPTOS_CLASS_CS7},
   };
   return strtab2htsmsg(tab, 1, lang);
 }
 
-static htsmsg_t *
-config_class_uilevel ( void *o, const char *lang )
-{
+static htsmsg_t* config_class_uilevel(void* o, const char* lang) {
   static const struct strtab tab[] = {
-    { N_("Basic"),    UILEVEL_BASIC },
-    { N_("Advanced"), UILEVEL_ADVANCED },
-    { N_("Expert"),   UILEVEL_EXPERT },
+      {N_("Basic"), UILEVEL_BASIC},
+      {N_("Advanced"), UILEVEL_ADVANCED},
+      {N_("Expert"), UILEVEL_EXPERT},
   };
   return strtab2htsmsg(tab, 1, lang);
 }
 
-static htsmsg_t *
-config_class_chiconscheme_list ( void *o, const char *lang )
-{
+static htsmsg_t* config_class_chiconscheme_list(void* o, const char* lang) {
   static const struct strtab tab[] = {
-    { N_("No scheme"),           CHICON_NONE },
-    { N_("All lower-case"),      CHICON_LOWERCASE },
-    { N_("Service name picons"), CHICON_SVCNAME },
+      {N_("No scheme"), CHICON_NONE},
+      {N_("All lower-case"), CHICON_LOWERCASE},
+      {N_("Service name picons"), CHICON_SVCNAME},
   };
   return strtab2htsmsg(tab, 1, lang);
 }
 
-static htsmsg_t *
-config_class_piconscheme_list ( void *o, const char *lang )
-{
+static htsmsg_t* config_class_piconscheme_list(void* o, const char* lang) {
   static const struct strtab tab[] = {
-    { N_("Standard"),                PICON_STANDARD },
-    { N_("Force service type to 1"), PICON_ISVCTYPE },
+      {N_("Standard"), PICON_STANDARD},
+      {N_("Force service type to 1"), PICON_ISVCTYPE},
   };
   return strtab2htsmsg(tab, 1, lang);
 }
 
-static htsmsg_t *
-config_class_http_auth_list ( void *o, const char *lang )
-{
+static htsmsg_t* config_class_http_auth_list(void* o, const char* lang) {
   static const struct strtab tab[] = {
-    { N_("Plain (insecure)"),      HTTP_AUTH_PLAIN },
-    { N_("Digest"),                HTTP_AUTH_DIGEST },
-    { N_("Both plain and digest"), HTTP_AUTH_PLAIN_DIGEST },
+      {N_("Plain (insecure)"), HTTP_AUTH_PLAIN},
+      {N_("Digest"), HTTP_AUTH_DIGEST},
+      {N_("Both plain and digest"), HTTP_AUTH_PLAIN_DIGEST},
   };
   return strtab2htsmsg(tab, 1, lang);
 }
 
-static htsmsg_t *
-config_class_http_auth_algo_list ( void *o, const char *lang )
-{
+static htsmsg_t* config_class_http_auth_algo_list(void* o, const char* lang) {
   static const struct strtab tab[] = {
-    { N_("MD5"),                   HTTP_AUTH_ALGO_MD5 },
-    { N_("SHA-256"),               HTTP_AUTH_ALGO_SHA256 },
-    { N_("SHA-512/256"),           HTTP_AUTH_ALGO_SHA512_256 },
+      {N_("MD5"), HTTP_AUTH_ALGO_MD5},
+      {N_("SHA-256"), HTTP_AUTH_ALGO_SHA256},
+      {N_("SHA-512/256"), HTTP_AUTH_ALGO_SHA512_256},
   };
   return strtab2htsmsg(tab, 1, lang);
 }
 
 #if ENABLE_MPEGTS_DVB
-static void
-config_muxconfpath_notify_cb(void *opaque, int disarmed)
-{
-  char *muxconf_path = opaque;
+static void config_muxconfpath_notify_cb(void* opaque, int disarmed) {
+  char* muxconf_path = opaque;
   if (disarmed) {
     free(muxconf_path);
     return;
@@ -2140,16 +2061,13 @@ config_muxconfpath_notify_cb(void *opaque, int disarmed)
 }
 #endif
 
-static void
-config_muxconfpath_notify ( void *o, const char *lang )
-{
+static void config_muxconfpath_notify(void* o, const char* lang) {
 #if ENABLE_MPEGTS_DVB
   config_scanfile_ok = 1;
   tasklet_arm_alloc(config_muxconfpath_notify_cb,
-                    config.muxconf_path ? strdup(config.muxconf_path) : NULL);
+      config.muxconf_path ? strdup(config.muxconf_path) : NULL);
 #endif
 }
-
 
 CLASS_DOC(config)
 PROP_DOC(config_channelicon_path)
@@ -2159,632 +2077,563 @@ PROP_DOC(config_picon_servicetype)
 PROP_DOC(viewlevel_config)
 PROP_DOC(themes)
 
-const idclass_t config_class = {
-  .ic_snode      = &config.idnode,
-  .ic_class      = "config",
-  .ic_caption    = N_("Configuration - Base"),
-  .ic_event      = "config",
-  .ic_perm_def   = ACCESS_ADMIN,
-  .ic_doc        = tvh_doc_config_class,
-  .ic_save       = config_class_save,
-  .ic_groups     = (const property_group_t[]) {
-      {
-         .name   = N_("Server Settings"),
-         .number = 1,
-      },
-      {
-         .name   = N_("Web Interface Settings"),
-         .number = 2,
-      },
-      {
-         .name   = N_("EPG Settings"),
-         .number = 3,
-      },
-      {
-         .name   = N_("Channel icon/Picon Settings"),
-         .number = 4,
-      },
-      {
-         .name   = N_("HTTP Server Settings"),
-         .number = 5,
-      },
-      {
-         .name   = N_("HDHomeRun"),
-         .number = 6,
-      },
-      {
-         .name   = N_("Miscellaneous Settings"),
-         .number = 7,
-      },
-      {}
-  },
-  .ic_properties = (const property_t[]){
-    {
-      .type   = PT_STR,
-      .id     = "server_name",
-      .name   = N_("Tvheadend server name"),
-      .desc   = N_("Set the name of the server so you can distinguish "
-                   "multiple instances apart."),
-      .off    = offsetof(config_t, server_name),
-      .group  = 1
-    },
-    {
-      .type   = PT_U32,
-      .id     = "version",
-      .name   = N_("Configuration version"),
-      .desc   = N_("The current configuration version."),
-      .off    = offsetof(config_t, version),
-      .opts   = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
-      .group  = 1
-    },
-    {
-      .type   = PT_STR,
-      .id     = "full_version",
-      .name   = N_("Last updated from"),
-      .desc   = N_("The version of Tvheadend that last updated the "
-                   "config."),
-      .off    = offsetof(config_t, full_version),
-      .opts   = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
-      .group  = 1
-    },
-    {
-      .type   = PT_STR,
-      .id     = "language_ui",
-      .name   = N_("Default language"),
-      .desc   = N_("The default language to use if the user "
-                   " language isn't set (in the Access Entries tab)."),
-      .list   = language_get_ui_list,
-      .off    = offsetof(config_t, language_ui),
-      .group  = 2
-    },
-    {
-      .type   = PT_STR,
-      .id     = "theme_ui",
-      .name   = N_("Theme"),
-      .desc   = N_("The default web interface theme, if a user-specific "
-                   "one isn't set (in the Access Entries tab)."),
-      .doc    = prop_doc_themes,
-      .list   = theme_get_ui_list,
-      .off    = offsetof(config_t, theme_ui),
-      .opts   = PO_DOC_NLIST,
-      .group  = 2
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "ui_quicktips",
-      .name   = N_("Tooltips"),
-      .desc   = N_("Enable/Disable web interface mouse-over tooltips."),
-      .off    = offsetof(config_t, ui_quicktips),
-      .opts   = PO_ADVANCED,
-      .group  = 2
-    },
-    {
-      .type   = PT_INT,
-      .id     = "uilevel",
-      .name   = N_("Default view level"),
-      .desc   = N_("The default interface view level (next to the "
-                   "Help button)."),
-      .doc    = prop_doc_viewlevel_config,
-      .off    = offsetof(config_t, uilevel),
-      .list   = config_class_uilevel,
-      .opts   = PO_DOC_NLIST,
-      .group  = 2
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "uilevel_nochange",
-      .name   = N_("Persistent view level"),
-      .desc   = N_("Prevent users from overriding the view level "
-                   "setting. This option shows or hides the View level "
-                   "drop-down (next to the Help button)."),
-      .off    = offsetof(config_t, uilevel_nochange),
-      .opts   = PO_ADVANCED,
-      .group  = 2
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "caclient_ui",
-      .name   = N_("Conditional Access (for advanced view level)"),
-      .desc   = N_("Enable/Disable the CAs (conditional accesses) tab "
-                   "for the advanced view level. By default, it's "
-                   "visible only to the Expert level."),
-      .off    = offsetof(config_t, caclient_ui),
-      .opts   = PO_ADVANCED,
-      .group  = 2
-    },
-    {
-      .type   = PT_STR,
-      .islist = 1,
-      .id     = "info_area",
-      .name   = N_("Information area"),
-      .desc   = N_("Show, hide and sort the various details that "
-                   "appear on the interface next to the About tab."),
-      .set    = config_class_info_area_set,
-      .get    = config_class_info_area_get,
-      .list   = config_class_info_area_list,
-      .opts   = PO_LORDER | PO_ADVANCED | PO_DOC_NLIST,
-      .group  = 2
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "chname_num",
-      .name   = N_("Channel name with numbers"),
-      .desc   = N_("Add channel numbers to the channel name list"),
-      .off    = offsetof(config_t, chname_num),
-      .group  = 2,
-      .def.i  = 1
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "chname_src",
-      .name   = N_("Channel name with sources"),
-      .desc   = N_("Add sources (like DVB-T string) to the channel name list"),
-      .off    = offsetof(config_t, chname_src),
-      .group  = 2
-    },
-    {
-      .type   = PT_STR,
-      .id     = "date_mask",
-      .name   = N_("Custom date Format"),
-      .desc   = N_("Custom date mask like (%yyyy-%M-%dd %h:%m:%s)"),
-      .opts   = PO_ADVANCED,
-      .off    = offsetof(config_t, date_mask),
-      .group  = 2,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "label_formatting",
-      .name   = N_("Kodi label formatting support"),
-      .desc   = N_("Enable parser for kodi label formatting"),
-      .off    = offsetof(config_t, label_formatting),
-      .group  = 2
-    },
-    {
-      .type   = PT_STR,
-      .islist = 1,
-      .id     = "language",
-      .name   = N_("Default language(s)"),
-      .desc   = N_("Select the list of languages (in order of "
-                   "priority) to be used for supplying EPG information "
-                   "to clients that don't provide their own "
-                   "configuration."),
-      .set    = config_class_language_set,
-      .get    = config_class_language_get,
-      .list   = config_class_language_list,
-      .opts   = PO_LORDER,
-      .group  = 3
-    },
+const idclass_t config_class = {.ic_snode = &config.idnode,
+    .ic_class                             = "config",
+    .ic_caption                           = N_("Configuration - Base"),
+    .ic_event                             = "config",
+    .ic_perm_def                          = ACCESS_ADMIN,
+    .ic_doc                               = tvh_doc_config_class,
+    .ic_save                              = config_class_save,
+    .ic_groups                            = (const property_group_t[]){{
+                                                                           .name   = N_("Server Settings"),
+                                                                           .number = 1,
+                                            },
+                                   {
+                                       .name   = N_("Web Interface Settings"),
+                                       .number = 2,
+        },
+                                   {
+                                       .name   = N_("EPG Settings"),
+                                       .number = 3,
+        },
+                                   {
+                                       .name   = N_("Channel icon/Picon Settings"),
+                                       .number = 4,
+        },
+                                   {
+                                       .name   = N_("HTTP Server Settings"),
+                                       .number = 5,
+        },
+                                   {
+                                       .name   = N_("HDHomeRun"),
+                                       .number = 6,
+        },
+                                   {
+                                       .name   = N_("Miscellaneous Settings"),
+                                       .number = 7,
+        },
+                                   {}},
+    .ic_properties                        = (const property_t[]){
+        {.type     = PT_STR,
+                                   .id    = "server_name",
+                                   .name  = N_("Tvheadend server name"),
+                                   .desc  = N_("Set the name of the server so you can distinguish "
+                                               "multiple instances apart."),
+                                   .off   = offsetof(config_t, server_name),
+                                   .group = 1},
+        {.type     = PT_U32,
+                                   .id    = "version",
+                                   .name  = N_("Configuration version"),
+                                   .desc  = N_("The current configuration version."),
+                                   .off   = offsetof(config_t, version),
+                                   .opts  = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
+                                   .group = 1},
+        {.type     = PT_STR,
+                                   .id    = "full_version",
+                                   .name  = N_("Last updated from"),
+                                   .desc  = N_("The version of Tvheadend that last updated the "
+                                               "config."),
+                                   .off   = offsetof(config_t, full_version),
+                                   .opts  = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
+                                   .group = 1},
+        {.type     = PT_STR,
+                                   .id    = "language_ui",
+                                   .name  = N_("Default language"),
+                                   .desc  = N_("The default language to use if the user "
+                                               " language isn't set (in the Access Entries tab)."),
+                                   .list  = language_get_ui_list,
+                                   .off   = offsetof(config_t, language_ui),
+                                   .group = 2},
+        {.type     = PT_STR,
+                                   .id    = "theme_ui",
+                                   .name  = N_("Theme"),
+                                   .desc  = N_("The default web interface theme, if a user-specific "
+                                               "one isn't set (in the Access Entries tab)."),
+                                   .doc   = prop_doc_themes,
+                                   .list  = theme_get_ui_list,
+                                   .off   = offsetof(config_t, theme_ui),
+                                   .opts  = PO_DOC_NLIST,
+                                   .group = 2},
+        {.type     = PT_BOOL,
+                                   .id    = "ui_quicktips",
+                                   .name  = N_("Tooltips"),
+                                   .desc  = N_("Enable/Disable web interface mouse-over tooltips."),
+                                   .off   = offsetof(config_t, ui_quicktips),
+                                   .opts  = PO_ADVANCED,
+                                   .group = 2},
+        {.type     = PT_INT,
+                                   .id    = "uilevel",
+                                   .name  = N_("Default view level"),
+                                   .desc  = N_("The default interface view level (next to the "
+                                               "Help button)."),
+                                   .doc   = prop_doc_viewlevel_config,
+                                   .off   = offsetof(config_t, uilevel),
+                                   .list  = config_class_uilevel,
+                                   .opts  = PO_DOC_NLIST,
+                                   .group = 2},
+        {.type     = PT_BOOL,
+                                   .id    = "uilevel_nochange",
+                                   .name  = N_("Persistent view level"),
+                                   .desc  = N_("Prevent users from overriding the view level "
+                                               "setting. This option shows or hides the View level "
+                                               "drop-down (next to the Help button)."),
+                                   .off   = offsetof(config_t, uilevel_nochange),
+                                   .opts  = PO_ADVANCED,
+                                   .group = 2},
+        {.type     = PT_BOOL,
+                                   .id    = "caclient_ui",
+                                   .name  = N_("Conditional Access (for advanced view level)"),
+                                   .desc  = N_("Enable/Disable the CAs (conditional accesses) tab "
+                                               "for the advanced view level. By default, it's "
+                                               "visible only to the Expert level."),
+                                   .off   = offsetof(config_t, caclient_ui),
+                                   .opts  = PO_ADVANCED,
+                                   .group = 2},
+        {.type      = PT_STR,
+                                   .islist = 1,
+                                   .id     = "info_area",
+                                   .name   = N_("Information area"),
+                                   .desc   = N_("Show, hide and sort the various details that "
+                                                "appear on the interface next to the About tab."),
+                                   .set    = config_class_info_area_set,
+                                   .get    = config_class_info_area_get,
+                                   .list   = config_class_info_area_list,
+                                   .opts   = PO_LORDER | PO_ADVANCED | PO_DOC_NLIST,
+                                   .group  = 2},
+        {.type     = PT_BOOL,
+                                   .id    = "chname_num",
+                                   .name  = N_("Channel name with numbers"),
+                                   .desc  = N_("Add channel numbers to the channel name list"),
+                                   .off   = offsetof(config_t, chname_num),
+                                   .group = 2,
+                                   .def.i = 1},
+        {.type     = PT_BOOL,
+                                   .id    = "chname_src",
+                                   .name  = N_("Channel name with sources"),
+                                   .desc  = N_("Add sources (like DVB-T string) to the channel name list"),
+                                   .off   = offsetof(config_t, chname_src),
+                                   .group = 2},
+        {
+                                   .type  = PT_STR,
+                                   .id    = "date_mask",
+                                   .name  = N_("Custom date Format"),
+                                   .desc  = N_("Custom date mask like (%yyyy-%M-%dd %h:%m:%s)"),
+                                   .opts  = PO_ADVANCED,
+                                   .off   = offsetof(config_t, date_mask),
+                                   .group = 2,
+        },
+        {.type     = PT_BOOL,
+                                   .id    = "label_formatting",
+                                   .name  = N_("Kodi label formatting support"),
+                                   .desc  = N_("Enable parser for kodi label formatting"),
+                                   .off   = offsetof(config_t, label_formatting),
+                                   .group = 2},
+        {.type      = PT_STR,
+                                   .islist = 1,
+                                   .id     = "language",
+                                   .name   = N_("Default language(s)"),
+                                   .desc   = N_("Select the list of languages (in order of "
+                                                "priority) to be used for supplying EPG information "
+                                                "to clients that don't provide their own "
+                                                "configuration."),
+                                   .set    = config_class_language_set,
+                                   .get    = config_class_language_get,
+                                   .list   = config_class_language_list,
+                                   .opts   = PO_LORDER,
+                                   .group  = 3},
 #if ENABLE_ZLIB
-    {
-      .type   = PT_BOOL,
-      .id     = "epg_compress",
-      .name   = N_("Compress EPG database"),
-      .desc   = N_("Compress the EPG database to reduce disk I/O "
-                   "and space."),
-      .off    = offsetof(config_t, epg_compress),
-      .opts   = PO_EXPERT,
-      .def.i  = 1,
-      .group  = 3
-    },
+        {.type     = PT_BOOL,
+            .id    = "epg_compress",
+            .name  = N_("Compress EPG database"),
+            .desc  = N_("Compress the EPG database to reduce disk I/O "
+                        "and space."),
+            .off   = offsetof(config_t, epg_compress),
+            .opts  = PO_EXPERT,
+            .def.i = 1,
+            .group = 3},
 #endif
-    {
-      .type   = PT_U32,
-      .id     = "epg_cutwindow",
-      .name   = N_("EPG overlap cut"),
-      .desc   = N_("The time window to cut the stop time from the overlapped event in seconds."),
-      .off    = offsetof(config_t, epg_cut_window),
-      .opts   = PO_EXPERT,
-      .group  = 3
-    },
-    {
-      .type   = PT_U32,
-      .id     = "epg_window",
-      .name   = N_("EPG update window"),
-      .desc   = N_("Maximum allowed difference between event start time when "
-                   "the EPG event is changed (in seconds)."),
-      .off    = offsetof(config_t, epg_update_window),
-      .opts   = PO_EXPERT,
-      .group  = 3
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "prefer_picon",
-      .name   = N_("Prefer picons over channel icons"),
-      .desc   = N_("If both a picon and a channel-specific "
-      "(e.g. channelname.jpg) icon are defined, prefer the picon."),
-      .off    = offsetof(config_t, prefer_picon),
-      .opts   = PO_ADVANCED,
-      .group  = 4,
-    },
-    {
-      .type   = PT_STR,
-      .id     = "chiconpath",
-      .name   = N_("Channel icon path"),
-      .desc   = N_("Path to an icon for this channel. This can be "
-                   "named however you wish, as either a local "
-                   "(file://) or remote (http://) image. "
-                   "See Help for more infomation."),
-      .off    = offsetof(config_t, chicon_path),
-      .doc    = prop_doc_config_channelicon_path,
-      .opts   = PO_ADVANCED,
-      .group  = 4,
-    },
-    {
-      .type   = PT_INT,
-      .id     = "chiconscheme",
-      .name   = N_("Channel icon name scheme"),
-      .desc   = N_("Scheme to generate the channel icon names "
-                   "(all lower-case, service name picons etc.)."),
-      .list   = config_class_chiconscheme_list,
-      .doc    = prop_doc_config_channelname_scheme,
-      .off    = offsetof(config_t, chicon_scheme),
-      .opts   = PO_ADVANCED | PO_DOC_NLIST,
-      .group  = 4,
-    },
-    {
-      .type   = PT_STR,
-      .id     = "piconpath",
-      .name   = N_("Picon path"),
-      .desc   = N_("Path to a directory (folder) containing your picon "
-                   "collection. See Help for more detailed "
-                   "information."),
-      .doc    = prop_doc_config_picon_path,
-      .off    = offsetof(config_t, picon_path),
-      .opts   = PO_ADVANCED,
-      .group  = 4,
-    },
-    {
-      .type   = PT_INT,
-      .id     = "piconscheme",
-      .name   = N_("Picon name scheme"),
-      .desc   = N_("Select scheme to generate the picon names "
-                   "(standard, force service type to 1)"),
-      .list   = config_class_piconscheme_list,
-      .doc    = prop_doc_config_picon_servicetype,
-      .off    = offsetof(config_t, picon_scheme),
-      .opts   = PO_ADVANCED | PO_DOC_NLIST,
-      .group  = 4,
-    },
-    {
-      .type   = PT_STR,
-      .id     = "http_server_name",
-      .name   = N_("Server name"),
-      .desc   = N_("The server name for 'Server:' HTTP headers."),
-      .off    = offsetof(config_t, http_server_name),
-      .opts   = PO_HIDDEN | PO_EXPERT,
-      .group  = 5
-    },
-    {
-      .type   = PT_STR,
-      .id     = "http_realm_name",
-      .name   = N_("Realm name"),
-      .desc   = N_("The realm name for HTTP authorization."),
-      .off    = offsetof(config_t, realm),
-      .opts   = PO_HIDDEN | PO_EXPERT,
-      .group  = 5
-    },
-    {
-      .type   = PT_INT,
-      .id     = "digest",
-      .name   = N_("Authentication type"),
-      .desc   = N_("Digest access authentication is intended as a security trade-off. "
-                   "It is intended to replace unencrypted HTTP basic access authentication. "
-                   "This option should be enabled for standard usage."),
-      .list   = config_class_http_auth_list,
-      .off    = offsetof(config_t, http_auth),
-      .opts   = PO_EXPERT,
-      .group  = 5
-    },
-    {
-      .type   = PT_INT,
-      .id     = "digest_algo",
-      .name   = N_("Digest hash type"),
-      .desc   = N_("The hash algorithm type for the digest authentication."),
-      .list   = config_class_http_auth_algo_list,
-      .off    = offsetof(config_t, http_auth_algo),
-      .opts   = PO_EXPERT,
-      .group  = 5
-    },
-    {
-      .type   = PT_U32,
-      .intextra = INTEXTRA_RANGE(1, 0x7ff, 1),
-      .id     = "cookie_expires",
-      .name   = N_("Cookie expiration (days)"),
-      .desc   = N_("The number of days cookies set by Tvheadend should "
-                   "expire."),
-      .off    = offsetof(config_t, cookie_expires),
-      .opts   = PO_EXPERT,
-      .group  = 5
-    },
-    {
-      .type   = PT_U32,
-      .intextra = INTEXTRA_RANGE(30, 3600, 1),
-      .id     = "ticket_expires",
-      .name   = N_("Ticket expiration (seconds)"),
-      .desc   = N_("The number of seconds in which authentication tickets generated by "
-                   "Tvheadend should expire."),
-      .off    = offsetof(config_t, ticket_expires),
-      .opts   = PO_EXPERT,
-      .group  = 5
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "proxy",
-      .name   = N_("PROXY protocol & X-Forwarded-For"),
-      .desc   = N_("PROXY protocol is an extension for support incoming "
-                   "TCP connections from a remote server (like a firewall) "
-                   "sending the original IP address of the client. "
-                   "The HTTP header 'X-Forwarded-For' do the same with "
-                   "HTTP connections. Both enable tunneled connections."
-                   "This option should be disabled for standard usage."),
-      .off    = offsetof(config_t, proxy),
-      .opts   = PO_EXPERT,
-      .group  = 5
-    },
-    {
-      .type   = PT_STR,
-      .id     = "cors_origin",
-      .name   = N_("CORS origin"),
-      .desc   = N_("HTTP CORS (cross-origin resource sharing) origin. This "
-                   "option is usually set when Tvheadend is behind a "
-                   "proxy. Enter the URL (domain or IP address, prefixed "
-                   "with http:// or https://) to allow cross-domain requests."),
-      .set    = config_class_cors_origin_set,
-      .off    = offsetof(config_t, cors_origin),
-      .opts   = PO_EXPERT,
-      .group  = 5
-    },
-    {
-      .type   = PT_STR,
-      .id     = "hdhomerun_ip",
-      .name   = N_("HDHomerun IP Address"),
-      .desc   = N_("IP address of the HDHomerun device. This is needed if you "
-                   "plan to run TVheadend in a container and you want to stream "
-                   "from an HDHomerun without enabling host networking for "
-                   "the container."),
-      .off    = offsetof(config_t, hdhomerun_ip),
-      .opts   = PO_HIDDEN | PO_EXPERT,
-      .group  = 6
-    },
-    {
-      .type   = PT_STR,
-      .id     = "local_ip",
-      .name   = N_("Local IP Address"),
-      .desc   = N_("IP of the Docker host. Each HDHomeRun tuner sends data "
-                   "to TVheadend through a socket. This lets you define the "
-                   "IP address that HDHomeRun needs to send to. Leave this "
-                   "blank if you want TVheadend to automatically pick an "
-                   "address."),
-      .off    = offsetof(config_t, local_ip),
-      .opts   = PO_HIDDEN | PO_EXPERT,
-      .group  = 6
-    },
-    {
-      .type   = PT_INT,
-      .id     = "local_port",
-      .name   = N_("Local Socket Port Number"),
-      .desc   = N_("Starting port number of the UDP listeners. The listeners "
-                   "listen for traffic from the HDHomerun tuners. This is "
-                   "needed if you plan to run TVheadend in a container and "
-                   "you want to stream from an HDHomerun without enabling "
-                   "host networking for the container. Set this to 0 if you "
-                   "want the port numbers to be assigned dynamically. If you "
-                   "have multiple tuners, this will be the start of the port "
-                   "range. For example, if you have 4 tuners and you set this "
-                   "to 9983, then tuner 0 will talk to port 9983, tuner 1 "
-                   "will talk to port 9984, tuner 2 will talk to port 9985, "
-                   "and tuner 3 will talk to port 9986."),
-      .off    = offsetof(config_t, local_port),
-      .opts   = PO_HIDDEN | PO_EXPERT,
-      .group  = 6
-    },
-    {
-      .type   = PT_U32,
-      .id     = "hdhomerun_server_tuner_count",
-      .name   = N_("Number of tuners to export for HDHomeRun Server Emulation"),
-      .desc   = N_("When Tvheadend is acting as an HDHomeRun Server "
-                   "(emulating an HDHomeRun device for downstream "
-                   "media devices to stream Live TV) then "
-                   "we tell clients that we have this number of tuners. "
-                   "This is necessary since some clients artificially limit "
-                   "connections based on tuner count, even though several "
-                   "channels may share a multiplex on one tuner. "
-                   "The HDHomeRun interface can not distinguish between "
-                   "different types of tuner in a mixed system with "
-                   "satellite, aerial and cable. "
-                   "The actual number or types of tuners used by Tvheadend is "
-                   "not affected by this value.  Tvheadend will "
-                   "allocate tuners automatically.  "
-                   "Set to zero for Tvheadend to use a default value."
-                  ),
-      .off    = offsetof(config_t, hdhomerun_server_tuner_count),
-      .opts   = PO_EXPERT
+        {.type    = PT_U32,
+            .id   = "epg_cutwindow",
+            .name = N_("EPG overlap cut"),
+            .desc =
+                N_("The time window to cut the stop time from the overlapped event in seconds."),
+            .off   = offsetof(config_t, epg_cut_window),
+            .opts  = PO_EXPERT,
+            .group = 3},
+        {.type     = PT_U32,
+            .id    = "epg_window",
+            .name  = N_("EPG update window"),
+            .desc  = N_("Maximum allowed difference between event start time when "
+                        "the EPG event is changed (in seconds)."),
+            .off   = offsetof(config_t, epg_update_window),
+            .opts  = PO_EXPERT,
+            .group = 3},
+        {
+            .type  = PT_BOOL,
+            .id    = "prefer_picon",
+            .name  = N_("Prefer picons over channel icons"),
+            .desc  = N_("If both a picon and a channel-specific "
+                        "(e.g. channelname.jpg) icon are defined, prefer the picon."),
+            .off   = offsetof(config_t, prefer_picon),
+            .opts  = PO_ADVANCED,
+            .group = 4,
+        },
+        {
+            .type  = PT_STR,
+            .id    = "chiconpath",
+            .name  = N_("Channel icon path"),
+            .desc  = N_("Path to an icon for this channel. This can be "
+                        "named however you wish, as either a local "
+                        "(file://) or remote (http://) image. "
+                        "See Help for more infomation."),
+            .off   = offsetof(config_t, chicon_path),
+            .doc   = prop_doc_config_channelicon_path,
+            .opts  = PO_ADVANCED,
+            .group = 4,
+        },
+        {
+            .type  = PT_INT,
+            .id    = "chiconscheme",
+            .name  = N_("Channel icon name scheme"),
+            .desc  = N_("Scheme to generate the channel icon names "
+                        "(all lower-case, service name picons etc.)."),
+            .list  = config_class_chiconscheme_list,
+            .doc   = prop_doc_config_channelname_scheme,
+            .off   = offsetof(config_t, chicon_scheme),
+            .opts  = PO_ADVANCED | PO_DOC_NLIST,
+            .group = 4,
+        },
+        {
+            .type  = PT_STR,
+            .id    = "piconpath",
+            .name  = N_("Picon path"),
+            .desc  = N_("Path to a directory (folder) containing your picon "
+                        "collection. See Help for more detailed "
+                        "information."),
+            .doc   = prop_doc_config_picon_path,
+            .off   = offsetof(config_t, picon_path),
+            .opts  = PO_ADVANCED,
+            .group = 4,
+        },
+        {
+            .type  = PT_INT,
+            .id    = "piconscheme",
+            .name  = N_("Picon name scheme"),
+            .desc  = N_("Select scheme to generate the picon names "
+                        "(standard, force service type to 1)"),
+            .list  = config_class_piconscheme_list,
+            .doc   = prop_doc_config_picon_servicetype,
+            .off   = offsetof(config_t, picon_scheme),
+            .opts  = PO_ADVANCED | PO_DOC_NLIST,
+            .group = 4,
+        },
+        {.type     = PT_STR,
+            .id    = "http_server_name",
+            .name  = N_("Server name"),
+            .desc  = N_("The server name for 'Server:' HTTP headers."),
+            .off   = offsetof(config_t, http_server_name),
+            .opts  = PO_HIDDEN | PO_EXPERT,
+            .group = 5},
+        {.type     = PT_STR,
+            .id    = "http_realm_name",
+            .name  = N_("Realm name"),
+            .desc  = N_("The realm name for HTTP authorization."),
+            .off   = offsetof(config_t, realm),
+            .opts  = PO_HIDDEN | PO_EXPERT,
+            .group = 5},
+        {.type     = PT_INT,
+            .id    = "digest",
+            .name  = N_("Authentication type"),
+            .desc  = N_("Digest access authentication is intended as a security trade-off. "
+                        "It is intended to replace unencrypted HTTP basic access authentication. "
+                        "This option should be enabled for standard usage."),
+            .list  = config_class_http_auth_list,
+            .off   = offsetof(config_t, http_auth),
+            .opts  = PO_EXPERT,
+            .group = 5},
+        {.type     = PT_INT,
+            .id    = "digest_algo",
+            .name  = N_("Digest hash type"),
+            .desc  = N_("The hash algorithm type for the digest authentication."),
+            .list  = config_class_http_auth_algo_list,
+            .off   = offsetof(config_t, http_auth_algo),
+            .opts  = PO_EXPERT,
+            .group = 5},
+        {.type        = PT_U32,
+            .intextra = INTEXTRA_RANGE(1, 0x7ff, 1),
+            .id       = "cookie_expires",
+            .name     = N_("Cookie expiration (days)"),
+            .desc     = N_("The number of days cookies set by Tvheadend should "
+                           "expire."),
+            .off      = offsetof(config_t, cookie_expires),
+            .opts     = PO_EXPERT,
+            .group    = 5},
+        {.type        = PT_U32,
+            .intextra = INTEXTRA_RANGE(30, 3600, 1),
+            .id       = "ticket_expires",
+            .name     = N_("Ticket expiration (seconds)"),
+            .desc     = N_("The number of seconds in which authentication tickets generated by "
+                           "Tvheadend should expire."),
+            .off      = offsetof(config_t, ticket_expires),
+            .opts     = PO_EXPERT,
+            .group    = 5},
+        {.type     = PT_BOOL,
+            .id    = "proxy",
+            .name  = N_("PROXY protocol & X-Forwarded-For"),
+            .desc  = N_("PROXY protocol is an extension for support incoming "
+                        "TCP connections from a remote server (like a firewall) "
+                        "sending the original IP address of the client. "
+                        "The HTTP header 'X-Forwarded-For' do the same with "
+                        "HTTP connections. Both enable tunneled connections."
+                        "This option should be disabled for standard usage."),
+            .off   = offsetof(config_t, proxy),
+            .opts  = PO_EXPERT,
+            .group = 5},
+        {.type     = PT_STR,
+            .id    = "cors_origin",
+            .name  = N_("CORS origin"),
+            .desc  = N_("HTTP CORS (cross-origin resource sharing) origin. This "
+                        "option is usually set when Tvheadend is behind a "
+                        "proxy. Enter the URL (domain or IP address, prefixed "
+                        "with http:// or https://) to allow cross-domain requests."),
+            .set   = config_class_cors_origin_set,
+            .off   = offsetof(config_t, cors_origin),
+            .opts  = PO_EXPERT,
+            .group = 5},
+        {.type     = PT_STR,
+            .id    = "hdhomerun_ip",
+            .name  = N_("HDHomerun IP Address"),
+            .desc  = N_("IP address of the HDHomerun device. This is needed if you "
+                        "plan to run TVheadend in a container and you want to stream "
+                        "from an HDHomerun without enabling host networking for "
+                        "the container."),
+            .off   = offsetof(config_t, hdhomerun_ip),
+            .opts  = PO_HIDDEN | PO_EXPERT,
+            .group = 6},
+        {.type     = PT_STR,
+            .id    = "local_ip",
+            .name  = N_("Local IP Address"),
+            .desc  = N_("IP of the Docker host. Each HDHomeRun tuner sends data "
+                        "to TVheadend through a socket. This lets you define the "
+                        "IP address that HDHomeRun needs to send to. Leave this "
+                        "blank if you want TVheadend to automatically pick an "
+                        "address."),
+            .off   = offsetof(config_t, local_ip),
+            .opts  = PO_HIDDEN | PO_EXPERT,
+            .group = 6},
+        {.type     = PT_INT,
+            .id    = "local_port",
+            .name  = N_("Local Socket Port Number"),
+            .desc  = N_("Starting port number of the UDP listeners. The listeners "
+                        "listen for traffic from the HDHomerun tuners. This is "
+                        "needed if you plan to run TVheadend in a container and "
+                        "you want to stream from an HDHomerun without enabling "
+                        "host networking for the container. Set this to 0 if you "
+                        "want the port numbers to be assigned dynamically. If you "
+                        "have multiple tuners, this will be the start of the port "
+                        "range. For example, if you have 4 tuners and you set this "
+                        "to 9983, then tuner 0 will talk to port 9983, tuner 1 "
+                        "will talk to port 9984, tuner 2 will talk to port 9985, "
+                        "and tuner 3 will talk to port 9986."),
+            .off   = offsetof(config_t, local_port),
+            .opts  = PO_HIDDEN | PO_EXPERT,
+            .group = 6},
+        {
+            .type = PT_U32,
+            .id   = "hdhomerun_server_tuner_count",
+            .name = N_("Number of tuners to export for HDHomeRun Server Emulation"),
+            .desc = N_("When Tvheadend is acting as an HDHomeRun Server "
+                       "(emulating an HDHomeRun device for downstream "
+                       "media devices to stream Live TV) then "
+                       "we tell clients that we have this number of tuners. "
+                       "This is necessary since some clients artificially limit "
+                       "connections based on tuner count, even though several "
+                       "channels may share a multiplex on one tuner. "
+                       "The HDHomeRun interface can not distinguish between "
+                       "different types of tuner in a mixed system with "
+                       "satellite, aerial and cable. "
+                       "The actual number or types of tuners used by Tvheadend is "
+                       "not affected by this value.  Tvheadend will "
+                       "allocate tuners automatically.  "
+                       "Set to zero for Tvheadend to use a default value."),
+            .off  = offsetof(config_t, hdhomerun_server_tuner_count),
+            .opts = PO_EXPERT
 #if !ENABLE_HDHOMERUN_SERVER
-      | PO_PHIDDEN
+                | PO_PHIDDEN
 #endif
-      ,
-      .group  = 6,
-    },
-    {
-      .type   = PT_STR,
-      .id     = "hdhomerun_server_model_name",
-      .name   = N_("Tvheadend model name for HDHomeRun Server Emulation"),
-      .desc   = N_("When Tvheadend is acting as an HDHomeRun Server "
-                   "(emulating an HDHomeRun device for downstream "
-                   "media devices to stream Live TV) then "
-                   "we use this as the type of HDHomeRun model number "
-                   "that we send to clients.  Some clients may require "
-                   "a specific model number to work.  Leave blank "
-                   "for Tvheadend to use a default."
-                  ),
-      .off    = offsetof(config_t, hdhomerun_server_model_name),
-      .opts   = PO_EXPERT
+            ,
+            .group = 6,
+        },
+        {
+            .type = PT_STR,
+            .id   = "hdhomerun_server_model_name",
+            .name = N_("Tvheadend model name for HDHomeRun Server Emulation"),
+            .desc = N_("When Tvheadend is acting as an HDHomeRun Server "
+                       "(emulating an HDHomeRun device for downstream "
+                       "media devices to stream Live TV) then "
+                       "we use this as the type of HDHomeRun model number "
+                       "that we send to clients.  Some clients may require "
+                       "a specific model number to work.  Leave blank "
+                       "for Tvheadend to use a default."),
+            .off  = offsetof(config_t, hdhomerun_server_model_name),
+            .opts = PO_EXPERT
 #if !ENABLE_HDHOMERUN_SERVER
-      | PO_PHIDDEN
+                | PO_PHIDDEN
 #endif
-      ,
-      .group  = 6,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "hdhomerun_server_enable",
-      .name   = N_("Enable HDHomeRun Server Emulation"),
-      .desc   = N_("Enable the Tvheadend server to emulate "
-                   "an HDHomeRun server.  This allows LiveTV "
-                   "to be used on some media servers."
-                  ),
-      .off    = offsetof(config_t, hdhomerun_server_enable),
-      .opts   = PO_EXPERT
+            ,
+            .group = 6,
+        },
+        {.type    = PT_BOOL,
+            .id   = "hdhomerun_server_enable",
+            .name = N_("Enable HDHomeRun Server Emulation"),
+            .desc = N_("Enable the Tvheadend server to emulate "
+                       "an HDHomeRun server.  This allows LiveTV "
+                       "to be used on some media servers."),
+            .off  = offsetof(config_t, hdhomerun_server_enable),
+            .opts = PO_EXPERT
 #if !ENABLE_HDHOMERUN_SERVER
-      | PO_PHIDDEN
+                | PO_PHIDDEN
 #endif
-,
-      .group  = 6
-    },
-    {
-      .type   = PT_STR,
-      .id     = "http_user_agent",
-      .name   = N_("HTTP User Agent"),
-      .desc   = N_("The user agent string for the build-in HTTP client."),
-      .off    = offsetof(config_t, http_user_agent),
-      .opts   = PO_HIDDEN | PO_EXPERT,
-      .group  = 7,
-    },
-    {
-      .type   = PT_INT,
-      .id     = "iptv_tpool",
-      .name   = N_("IPTV threads"),
-      .desc   = N_("Set the number of threads for IPTV to split load "
-                   "across more CPUs."),
-      .off    = offsetof(config_t, iptv_tpool_count),
-      .group  = 7,
-    },
-    {
-      .type   = PT_INT,
-      .id     = "dscp",
-      .name   = N_("DSCP/TOS for streaming"),
-      .desc   = N_("Differentiated Services Code Point / Type of "
-                   "Service: Set the service class Tvheadend sends "
-                   "with each packet. Depending on the option selected "
-                   "this tells your router the prority in which to "
-                   "give packets sent from Tvheadend, this option does "
-                   "not usually need changing. See "
-                   "https://en.wikipedia.org/wiki/"
-                   "Differentiated_services for more information. "),
-      .off    = offsetof(config_t, dscp),
-      .list   = config_class_dscp_list,
-      .opts   = PO_EXPERT | PO_DOC_NLIST,
-      .group  = 7,
-    },
-    {
-      .type   = PT_U32,
-      .id     = "descrambler_buffer",
-      .name   = N_("Descrambler buffer (TS packets)"),
-      .desc   = N_("The number of MPEG-TS packets Tvheadend buffers in case "
-                   "there is a delay receiving CA keys. "),
-      .off    = offsetof(config_t, descrambler_buffer),
-      .opts   = PO_EXPERT,
-      .group  = 7,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "parser_backlog",
-      .name   = N_("Packet backlog"),
-      .desc   = N_("Send previous stream frames to upper layers "
-                   "(before frame start is signalled in the stream). "
-                   "It may cause issues with some clients / players."),
-      .off    = offsetof(config_t, parser_backlog),
-      .opts   = PO_EXPERT,
-      .group  = 7,
-    },
-    {
-      .type   = PT_STR,
-      .id     = "muxconfpath",
-      .name   = N_("DVB scan files path"),
-      .desc   = N_("Select the path to use for DVB scan configuration "
-                   "files. Typically dvb-apps stores these in "
-                   "/usr/share/dvb/. Leave blank to use the "
-                   "internal file set."),
-      .off    = offsetof(config_t, muxconf_path),
-      .notify = config_muxconfpath_notify,
-      .opts   = PO_ADVANCED,
-      .group  = 7,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "hbbtv",
-      .name   = N_("Parse HbbTV info"),
-      .desc   = N_("Parse HbbTV information from services."),
-      .off    = offsetof(config_t, hbbtv),
-      .group  = 7,
-      .def.i  = 1,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "tvhtime_update_enabled",
-      .name   = N_("Update time"),
-      .desc   = N_("Enable system time updates. This will only work if "
-                   "the user running Tvheadend has rights to update "
-                   "the system clock (normally only root)."),
-      .off    = offsetof(config_t, tvhtime_update_enabled),
-      .opts   = PO_EXPERT,
-      .group  = 7,
-    },
-    {
-      .type   = PT_BOOL,
-      .id     = "tvhtime_ntp_enabled",
-      .name   = N_("Enable NTP driver"),
-      .desc   = N_("This will create an NTP driver (using shmem "
-                   "interface) that you can feed into ntpd. This can "
-                   "be run without root privileges, but generally the "
-                   "performance is not that great."),
-      .off    = offsetof(config_t, tvhtime_ntp_enabled),
-      .opts   = PO_EXPERT,
-      .group  = 7,
-    },
-    {
-      .type   = PT_U32,
-      .id     = "tvhtime_tolerance",
-      .name   = N_("Update tolerance (ms)"),
-      .desc   = N_("Only update the system clock (doesn't affect NTP "
-                   "driver) if the delta between the system clock and "
-                   "DVB time is greater than this. This can help stop "
-                   "excessive oscillations on the system clock."),
-      .off    = offsetof(config_t, tvhtime_tolerance),
-      .opts   = PO_EXPERT,
-      .group  = 7,
-    },
-    {
-      .type   = PT_STR,
-      .id     = "wizard",
-      .name   = "Wizard level", /* untranslated */
-      .off    = offsetof(config_t, wizard),
-      .opts   = PO_NOUI,
-    },
-    {}
-  }
-};
+            ,
+            .group = 6},
+        {
+            .type  = PT_STR,
+            .id    = "http_user_agent",
+            .name  = N_("HTTP User Agent"),
+            .desc  = N_("The user agent string for the build-in HTTP client."),
+            .off   = offsetof(config_t, http_user_agent),
+            .opts  = PO_HIDDEN | PO_EXPERT,
+            .group = 7,
+        },
+        {
+            .type  = PT_INT,
+            .id    = "iptv_tpool",
+            .name  = N_("IPTV threads"),
+            .desc  = N_("Set the number of threads for IPTV to split load "
+                        "across more CPUs."),
+            .off   = offsetof(config_t, iptv_tpool_count),
+            .group = 7,
+        },
+        {
+            .type  = PT_INT,
+            .id    = "dscp",
+            .name  = N_("DSCP/TOS for streaming"),
+            .desc  = N_("Differentiated Services Code Point / Type of "
+                        "Service: Set the service class Tvheadend sends "
+                        "with each packet. Depending on the option selected "
+                        "this tells your router the prority in which to "
+                        "give packets sent from Tvheadend, this option does "
+                        "not usually need changing. See "
+                        "https://en.wikipedia.org/wiki/"
+                        "Differentiated_services for more information. "),
+            .off   = offsetof(config_t, dscp),
+            .list  = config_class_dscp_list,
+            .opts  = PO_EXPERT | PO_DOC_NLIST,
+            .group = 7,
+        },
+        {
+            .type  = PT_U32,
+            .id    = "descrambler_buffer",
+            .name  = N_("Descrambler buffer (TS packets)"),
+            .desc  = N_("The number of MPEG-TS packets Tvheadend buffers in case "
+                        "there is a delay receiving CA keys. "),
+            .off   = offsetof(config_t, descrambler_buffer),
+            .opts  = PO_EXPERT,
+            .group = 7,
+        },
+        {
+            .type  = PT_BOOL,
+            .id    = "parser_backlog",
+            .name  = N_("Packet backlog"),
+            .desc  = N_("Send previous stream frames to upper layers "
+                        "(before frame start is signalled in the stream). "
+                        "It may cause issues with some clients / players."),
+            .off   = offsetof(config_t, parser_backlog),
+            .opts  = PO_EXPERT,
+            .group = 7,
+        },
+        {
+            .type   = PT_STR,
+            .id     = "muxconfpath",
+            .name   = N_("DVB scan files path"),
+            .desc   = N_("Select the path to use for DVB scan configuration "
+                         "files. Typically dvb-apps stores these in "
+                         "/usr/share/dvb/. Leave blank to use the "
+                         "internal file set."),
+            .off    = offsetof(config_t, muxconf_path),
+            .notify = config_muxconfpath_notify,
+            .opts   = PO_ADVANCED,
+            .group  = 7,
+        },
+        {
+            .type  = PT_BOOL,
+            .id    = "hbbtv",
+            .name  = N_("Parse HbbTV info"),
+            .desc  = N_("Parse HbbTV information from services."),
+            .off   = offsetof(config_t, hbbtv),
+            .group = 7,
+            .def.i = 1,
+        },
+        {
+            .type  = PT_BOOL,
+            .id    = "tvhtime_update_enabled",
+            .name  = N_("Update time"),
+            .desc  = N_("Enable system time updates. This will only work if "
+                        "the user running Tvheadend has rights to update "
+                        "the system clock (normally only root)."),
+            .off   = offsetof(config_t, tvhtime_update_enabled),
+            .opts  = PO_EXPERT,
+            .group = 7,
+        },
+        {
+            .type  = PT_BOOL,
+            .id    = "tvhtime_ntp_enabled",
+            .name  = N_("Enable NTP driver"),
+            .desc  = N_("This will create an NTP driver (using shmem "
+                        "interface) that you can feed into ntpd. This can "
+                        "be run without root privileges, but generally the "
+                        "performance is not that great."),
+            .off   = offsetof(config_t, tvhtime_ntp_enabled),
+            .opts  = PO_EXPERT,
+            .group = 7,
+        },
+        {
+            .type  = PT_U32,
+            .id    = "tvhtime_tolerance",
+            .name  = N_("Update tolerance (ms)"),
+            .desc  = N_("Only update the system clock (doesn't affect NTP "
+                        "driver) if the delta between the system clock and "
+                        "DVB time is greater than this. This can help stop "
+                        "excessive oscillations on the system clock."),
+            .off   = offsetof(config_t, tvhtime_tolerance),
+            .opts  = PO_EXPERT,
+            .group = 7,
+        },
+        {
+            .type = PT_STR,
+            .id   = "wizard",
+            .name = "Wizard level", /* untranslated */
+            .off  = offsetof(config_t, wizard),
+            .opts = PO_NOUI,
+        },
+        {}}};
 
 /* **************************************************************************
  * Access routines
  * *************************************************************************/
 
-const char *config_get_server_name ( void )
-{
+const char* config_get_server_name(void) {
   return tvh_str_default(config.server_name, "Tvheadend");
 }
 
-const char *config_get_http_server_name ( void )
-{
+const char* config_get_http_server_name(void) {
   return tvh_str_default(config.http_server_name, "HTS/tvheadend");
 }
 
-const char *config_get_language ( void )
-{
+const char* config_get_language(void) {
   return tvh_str_default(config.language, "eng");
 }
 
-const char *config_get_language_ui ( void )
-{
+const char* config_get_language_ui(void) {
   return tvh_str_default(config.language_ui, NULL);
 }

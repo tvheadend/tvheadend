@@ -25,13 +25,11 @@
 
 #if ENABLE_TIMESHIFT
 
-void
-api_timeshift_init ( void )
-{
+void api_timeshift_init(void) {
   static api_hook_t ah[] = {
-    { "timeshift/config/load", ACCESS_ADMIN, api_idnode_load_simple, &timeshift_conf },
-    { "timeshift/config/save", ACCESS_ADMIN, api_idnode_save_simple, &timeshift_conf },
-    { NULL },
+      {"timeshift/config/load", ACCESS_ADMIN, api_idnode_load_simple, &timeshift_conf},
+      {"timeshift/config/save", ACCESS_ADMIN, api_idnode_save_simple, &timeshift_conf},
+      {NULL},
   };
 
   api_register_all(ah);
@@ -39,9 +37,6 @@ api_timeshift_init ( void )
 
 #else
 
-void
-api_timeshift_init ( void )
-{
-}
+void api_timeshift_init(void) {}
 
 #endif

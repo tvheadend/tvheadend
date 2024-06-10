@@ -28,32 +28,30 @@
 #include <libavcodec/avcodec.h>
 #endif
 
-#define WRITE_BUFFER_SIZE (188*500)
+#define WRITE_BUFFER_SIZE (188 * 500)
 
 typedef struct {
-  const char *url;
-  iptv_mux_t *mux;
-  int running;
-  int pause;
-  pthread_t thread;
-  tvh_mutex_t lock;
-  th_pipe_t pipe;
-  AVFormatContext *ictx;
-  AVFormatContext *octx;
-  sbuf_t sbuf;
+  const char*      url;
+  iptv_mux_t*      mux;
+  int              running;
+  int              pause;
+  pthread_t        thread;
+  tvh_mutex_t      lock;
+  th_pipe_t        pipe;
+  AVFormatContext* ictx;
+  AVFormatContext* octx;
+  sbuf_t           sbuf;
 } iptv_libav_priv_t;
 
 /*
  *
  */
-static int
-iptv_libav_write_packet(void *opaque, uint8_t *buf, int buf_size)
-{
-  iptv_libav_priv_t *la = opaque;
+static int iptv_libav_write_packet(void* opaque, uint8_t* buf, int buf_size) {
+  iptv_libav_priv_t* la = opaque;
 
   if (buf_size > 0) {
     tvh_mutex_lock(&la->lock);
-    if (la->sbuf.sb_ptr < 5*1024*1024) {
+    if (la->sbuf.sb_ptr < 5 * 1024 * 1024) {
       while (atomic_get(&la->pause)) {
         if (!atomic_get(&la->running))
           goto fin;
@@ -65,7 +63,7 @@ iptv_libav_write_packet(void *opaque, uint8_t *buf, int buf_size)
       /* notify iptv layer that we have new data to read */
       if (write(la->pipe.wr, "", 1)) {};
     }
-fin:
+  fin:
     tvh_mutex_unlock(&la->lock);
   }
   return 0;
@@ -74,10 +72,8 @@ fin:
 /*
  *
  */
-static int
-iptv_libav_interrupt_callback(void *opaque)
-{
-  iptv_libav_priv_t *la = opaque;
+static int iptv_libav_interrupt_callback(void* opaque) {
+  iptv_libav_priv_t* la = opaque;
 
   return atomic_get(&la->running) == 0;
 }
@@ -85,16 +81,14 @@ iptv_libav_interrupt_callback(void *opaque)
 /*
  *
  */
-static void *
-iptv_libav_thread(void *aux)
-{
-  iptv_libav_priv_t *la = aux;
-  AVStream *in_stream, *out_stream;
-  AVPacket pkt;
-  AVCodecContext *c;
-  const AVCodec *codec;
-  uint8_t *buf = NULL;
-  int ret, i;
+static void* iptv_libav_thread(void* aux) {
+  iptv_libav_priv_t* la = aux;
+  AVStream *         in_stream, *out_stream;
+  AVPacket           pkt;
+  AVCodecContext*    c;
+  const AVCodec*     codec;
+  uint8_t*           buf = NULL;
+  int                ret, i;
 
   buf = malloc(WRITE_BUFFER_SIZE);
   if (buf == NULL)
@@ -105,24 +99,32 @@ iptv_libav_thread(void *aux)
     goto fail;
   }
   la->ictx->interrupt_callback.callback = iptv_libav_interrupt_callback;
-  la->ictx->interrupt_callback.opaque = la;
+  la->ictx->interrupt_callback.opaque   = la;
   if ((ret = avformat_find_stream_info(la->ictx, 0)) < 0) {
-    tvherror(LS_IPTV, "libav: Unable to find stream info for input '%s': %s", la->url, av_err2str(ret));
+    tvherror(LS_IPTV,
+        "libav: Unable to find stream info for input '%s': %s",
+        la->url,
+        av_err2str(ret));
     goto fail;
   }
 
   avformat_alloc_output_context2(&la->octx, NULL, "mpegts", NULL);
   if (la->octx == NULL)
     goto fail;
-  la->octx->pb = avio_alloc_context(buf, WRITE_BUFFER_SIZE, AVIO_FLAG_WRITE,
-                                    la, NULL, iptv_libav_write_packet, NULL);
+  la->octx->pb                          = avio_alloc_context(buf,
+      WRITE_BUFFER_SIZE,
+      AVIO_FLAG_WRITE,
+      la,
+      NULL,
+      iptv_libav_write_packet,
+      NULL);
   la->octx->interrupt_callback.callback = iptv_libav_interrupt_callback;
-  la->octx->interrupt_callback.opaque = la;
+  la->octx->interrupt_callback.opaque   = la;
 
   for (i = 0; i < la->ictx->nb_streams; i++) {
-    in_stream = la->ictx->streams[i];
-    codec = avcodec_find_encoder(in_stream->codecpar->codec_id);
-    c = avcodec_alloc_context3(codec);
+    in_stream  = la->ictx->streams[i];
+    codec      = avcodec_find_encoder(in_stream->codecpar->codec_id);
+    c          = avcodec_alloc_context3(codec);
     out_stream = avformat_new_stream(la->octx, codec);
     if (out_stream == NULL) {
       tvherror(LS_IPTV, "libav: Failed allocating output stream");
@@ -131,7 +133,9 @@ iptv_libav_thread(void *aux)
     }
     ret = avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
     if (ret < 0) {
-      tvherror(LS_IPTV, "libav: Failed to copy context from input to output stream codec context: %s", av_err2str(ret));
+      tvherror(LS_IPTV,
+          "libav: Failed to copy context from input to output stream codec context: %s",
+          av_err2str(ret));
       avcodec_free_context(&c);
       goto fail;
     }
@@ -156,22 +160,27 @@ iptv_libav_thread(void *aux)
     }
     if (atomic_get(&la->running) == 0)
       goto unref;
-    if ((pkt.dts != AV_NOPTS_VALUE && pkt.dts < 0) ||
-        (pkt.pts != AV_NOPTS_VALUE && pkt.pts < 0))
+    if ((pkt.dts != AV_NOPTS_VALUE && pkt.dts < 0) || (pkt.pts != AV_NOPTS_VALUE && pkt.pts < 0))
       goto unref;
     in_stream  = la->ictx->streams[pkt.stream_index];
     out_stream = la->octx->streams[pkt.stream_index];
     /* copy packet */
-    pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
-    pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+    pkt.pts      = av_rescale_q_rnd(pkt.pts,
+        in_stream->time_base,
+        out_stream->time_base,
+        AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX);
+    pkt.dts      = av_rescale_q_rnd(pkt.dts,
+        in_stream->time_base,
+        out_stream->time_base,
+        AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX);
     pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
-    pkt.pos = -1;
-    ret = av_interleaved_write_frame(la->octx, &pkt);
+    pkt.pos      = -1;
+    ret          = av_interleaved_write_frame(la->octx, &pkt);
     if (ret < 0) {
       tvherror(LS_IPTV, "libav: Error muxing packet: %s", av_err2str(ret));
       break;
     }
-unref:
+  unref:
     av_packet_unref(&pkt);
   }
   av_write_trailer(la->octx);
@@ -184,11 +193,8 @@ fail:
 /*
  * Start new thread
  */
-static int
-iptv_libav_start
-  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
-{
-  iptv_libav_priv_t *la = calloc(1, sizeof(*la));
+static int iptv_libav_start(iptv_input_t* mi, iptv_mux_t* im, const char* raw, const url_t* url) {
+  iptv_libav_priv_t* la = calloc(1, sizeof(*la));
 
   assert(raw);
   tvh_mutex_init(&la->lock, NULL);
@@ -209,11 +215,8 @@ iptv_libav_start
   return 0;
 }
 
-static void
-iptv_libav_stop
-  ( iptv_input_t *mi, iptv_mux_t *im )
-{
-  iptv_libav_priv_t *la = im->im_opaque;
+static void iptv_libav_stop(iptv_input_t* mi, iptv_mux_t* im) {
+  iptv_libav_priv_t* la = im->im_opaque;
 
   atomic_set(&la->running, 0);
   im->im_opaque = NULL;
@@ -226,12 +229,10 @@ iptv_libav_stop
   free(la);
 }
 
-static ssize_t
-iptv_libav_read ( iptv_input_t *mi, iptv_mux_t *im )
-{
-  iptv_libav_priv_t *la = im->im_opaque;
-  char buf[8192];
-  ssize_t ret;
+static ssize_t iptv_libav_read(iptv_input_t* mi, iptv_mux_t* im) {
+  iptv_libav_priv_t* la = im->im_opaque;
+  char               buf[8192];
+  ssize_t            ret;
 
   if (la == NULL)
     return 0;
@@ -244,10 +245,8 @@ iptv_libav_read ( iptv_input_t *mi, iptv_mux_t *im )
   return ret;
 }
 
-static void
-iptv_libav_pause ( iptv_input_t *mi, iptv_mux_t *im, int pause )
-{
-  iptv_libav_priv_t *la = im->im_opaque;
+static void iptv_libav_pause(iptv_input_t* mi, iptv_mux_t* im, int pause) {
+  iptv_libav_priv_t* la = im->im_opaque;
 
   if (la)
     atomic_set(&la->pause, pause);
@@ -256,18 +255,16 @@ iptv_libav_pause ( iptv_input_t *mi, iptv_mux_t *im, int pause )
 /*
  * Initialise libav handler
  */
-void
-iptv_libav_init ( void )
-{
+void iptv_libav_init(void) {
   static iptv_handler_t ih[] = {
-    {
-      .scheme = "libav",
-      .buffer_limit = 5000,
-      .start  = iptv_libav_start,
-      .stop   = iptv_libav_stop,
-      .read   = iptv_libav_read,
-      .pause  = iptv_libav_pause,
-    },
+      {
+          .scheme       = "libav",
+          .buffer_limit = 5000,
+          .start        = iptv_libav_start,
+          .stop         = iptv_libav_stop,
+          .read         = iptv_libav_read,
+          .pause        = iptv_libav_pause,
+      },
   };
   iptv_handler_register(ih, ARRAY_SIZE(ih));
 }

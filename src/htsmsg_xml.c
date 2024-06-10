@@ -25,7 +25,7 @@
  * htsmsg's with UTF-8 encoded payloads
  *
  *  Supports:                             Example:
- *  
+ *
  *  Comments                              <!--  a comment               -->
  *  Processing Instructions               <?xml                          ?>
  *  CDATA                                 <![CDATA[  <litteraly copied> ]]>
@@ -41,7 +41,6 @@
  *  Entity declarations
  *
  */
-
 
 #include <assert.h>
 #include <sys/types.h>
@@ -63,10 +62,10 @@ typedef struct xmlns {
   LIST_ENTRY(xmlns) xmlns_global_link;
   LIST_ENTRY(xmlns) xmlns_scope_link;
 
-  char *xmlns_prefix;
+  char*        xmlns_prefix;
   unsigned int xmlns_prefix_len;
 
-  char *xmlns_norm;
+  char*        xmlns_norm;
   unsigned int xmlns_norm_len;
 
 } xmlns_t;
@@ -85,32 +84,27 @@ typedef struct xmlparser {
 
 } xmlparser_t;
 
-#define xmlerr(xp, fmt...) \
- snprintf((xp)->xp_errmsg, sizeof((xp)->xp_errmsg), fmt)
-
+#define xmlerr(xp, fmt...) snprintf((xp)->xp_errmsg, sizeof((xp)->xp_errmsg), fmt)
 
 typedef struct cdata_content {
   TAILQ_ENTRY(cdata_content) cc_link;
   char *cc_start, *cc_end; /* end points to byte AFTER last char */
-  int cc_encoding;
-  char cc_buf[0];
+  int   cc_encoding;
+  char  cc_buf[0];
 } cdata_content_t;
 
-static char *htsmsg_xml_parse_cd(xmlparser_t *xp, 
-				 htsmsg_t *parent, char *src);
+static char* htsmsg_xml_parse_cd(xmlparser_t* xp, htsmsg_t* parent, char* src);
 
 /**
  *
  */
-static void
-add_unicode(struct cdata_content_queue *ccq, int c)
-{
-  cdata_content_t *cc;
-  int r;
+static void add_unicode(struct cdata_content_queue* ccq, int c) {
+  cdata_content_t* cc;
+  int              r;
 
   cc = malloc(sizeof(cdata_content_t) + 6);
-  r = put_utf8(cc->cc_buf, c);
-  if(r == 0) {
+  r  = put_utf8(cc->cc_buf, c);
+  if (r == 0) {
     free(cc);
     return;
   }
@@ -124,34 +118,32 @@ add_unicode(struct cdata_content_queue *ccq, int c)
 /**
  *
  */
-static int
-decode_character_reference(char **src)
-{
-  int v = 0;
+static int decode_character_reference(char** src) {
+  int  v = 0;
   char c;
 
-  if(**src == 'x') {
+  if (**src == 'x') {
     /* hexadecimal */
     (*src)++;
 
     /* decimal */
-    while(1) {
+    while (1) {
       c = **src;
-      switch(c) {
-      case '0' ... '9':
-	v = v * 0x10 + c - '0';
-	break;
-      case 'a' ... 'f':
-	v = v * 0x10 + c - 'a' + 10;
-	break;
-      case 'A' ... 'F':
-	v = v * 0x10 + c - 'A' + 10;
-	break;
-      case ';':
-	(*src)++;
-	return v;
-      default:
-	return 0;
+      switch (c) {
+        case '0' ... '9':
+          v = v * 0x10 + c - '0';
+          break;
+        case 'a' ... 'f':
+          v = v * 0x10 + c - 'a' + 10;
+          break;
+        case 'A' ... 'F':
+          v = v * 0x10 + c - 'A' + 10;
+          break;
+        case ';':
+          (*src)++;
+          return v;
+        default:
+          return 0;
       }
       (*src)++;
     }
@@ -159,18 +151,18 @@ decode_character_reference(char **src)
   } else {
 
     /* decimal */
-    while(1) {
+    while (1) {
       c = **src;
-      switch(c) {
-      case '0' ... '9':
-	v = v * 10 + c - '0';
-	(*src)++;
-	break;
-      case ';':
-	(*src)++;
-	return v;
-      default:
-	return 0;
+      switch (c) {
+        case '0' ... '9':
+          v = v * 10 + c - '0';
+          (*src)++;
+          break;
+        case ';':
+          (*src)++;
+          return v;
+        default:
+          return 0;
       }
     }
   }
@@ -179,20 +171,15 @@ decode_character_reference(char **src)
 /**
  *
  */
-static inline int
-is_xmlws(char c)
-{
+static inline int is_xmlws(char c) {
   return c > 0 && c <= 32;
   //  return c == 32 || c == 9 || c = 10 || c = 13;
 }
 
-
 /**
  *
  */
-static void
-xmlns_destroy(xmlns_t *ns)
-{
+static void xmlns_destroy(xmlns_t* ns) {
   LIST_REMOVE(ns, xmlns_global_link);
   LIST_REMOVE(ns, xmlns_scope_link);
   free(ns->xmlns_prefix);
@@ -203,105 +190,102 @@ xmlns_destroy(xmlns_t *ns)
 /**
  *
  */
-static char *
-htsmsg_xml_parse_attrib
-  (xmlparser_t *xp, htsmsg_t *msg, char *src,
-   struct xmlns_list *xmlns_scope_list)
-{
-  char *attribname, *payload;
-  int attriblen, payloadlen;
-  char quote;
-  htsmsg_field_t *f;
-  xmlns_t *ns;
+static char* htsmsg_xml_parse_attrib(xmlparser_t* xp,
+    htsmsg_t*                                     msg,
+    char*                                         src,
+    struct xmlns_list*                            xmlns_scope_list) {
+  char *          attribname, *payload;
+  int             attriblen, payloadlen;
+  char            quote;
+  htsmsg_field_t* f;
+  xmlns_t*        ns;
 
   attribname = src;
   /* Parse attribute name */
-  while(1) {
-    if(*src == 0) {
+  while (1) {
+    if (*src == 0) {
       xmlerr(xp, "Unexpected end of file during attribute name parsing");
       return NULL;
     }
 
-    if(is_xmlws(*src) || *src == '=')
+    if (is_xmlws(*src) || *src == '=')
       break;
     src++;
   }
 
   attriblen = src - attribname;
-  if(attriblen < 1 || attriblen > 65535) {
+  if (attriblen < 1 || attriblen > 65535) {
     xmlerr(xp, "Invalid attribute name");
     return NULL;
   }
 
-  while(is_xmlws(*src))
+  while (is_xmlws(*src))
     src++;
 
-  if(*src != '=') {
+  if (*src != '=') {
     xmlerr(xp, "Expected '=' in attribute parsing");
     return NULL;
   }
   src++;
 
-  while(is_xmlws(*src))
+  while (is_xmlws(*src))
     src++;
 
-  
   /* Parse attribute payload */
   quote = *src++;
-  if(quote != '"' && quote != '\'') {
+  if (quote != '"' && quote != '\'') {
     xmlerr(xp, "Expected ' or \" before attribute value");
     return NULL;
   }
 
   payload = src;
-  while(1) {
-    if(*src == 0) {
+  while (1) {
+    if (*src == 0) {
       xmlerr(xp, "Unexpected end of file during attribute value parsing");
       return NULL;
     }
-    if(*src == quote)
+    if (*src == quote)
       break;
     src++;
   }
 
   payloadlen = src - payload;
-  if(payloadlen < 0 || payloadlen > 65535) {
+  if (payloadlen < 0 || payloadlen > 65535) {
     xmlerr(xp, "Invalid attribute value");
     return NULL;
   }
 
   src++;
-  while(is_xmlws(*src))
+  while (is_xmlws(*src))
     src++;
 
-  if(xmlns_scope_list != NULL && 
-     attriblen > 6 && !memcmp(attribname, "xmlns:", 6)) {
+  if (xmlns_scope_list != NULL && attriblen > 6 && !memcmp(attribname, "xmlns:", 6)) {
 
     attribname += 6;
-    attriblen  -= 6;
+    attriblen -= 6;
 
     ns = malloc(sizeof(xmlns_t));
 
     ns->xmlns_prefix = malloc(attriblen + 1);
     memcpy(ns->xmlns_prefix, attribname, attriblen);
     ns->xmlns_prefix[attriblen] = 0;
-    ns->xmlns_prefix_len = attriblen;
+    ns->xmlns_prefix_len        = attriblen;
 
     ns->xmlns_norm = malloc(payloadlen + 1);
     memcpy(ns->xmlns_norm, payload, payloadlen);
     ns->xmlns_norm[payloadlen] = 0;
-    ns->xmlns_norm_len = payloadlen;
+    ns->xmlns_norm_len         = payloadlen;
 
     LIST_INSERT_HEAD(&xp->xp_namespaces, ns, xmlns_global_link);
-    LIST_INSERT_HEAD(xmlns_scope_list,   ns, xmlns_scope_link);
+    LIST_INSERT_HEAD(xmlns_scope_list, ns, xmlns_scope_link);
     return src;
   }
 
-  xp->xp_srcdataused = 1;
+  xp->xp_srcdataused    = 1;
   attribname[attriblen] = 0;
-  payload[payloadlen] = 0;
+  payload[payloadlen]   = 0;
 
-  f = htsmsg_field_add(msg, attribname, HMF_STR, 0, 0);
+  f          = htsmsg_field_add(msg, attribname, HMF_STR, 0, 0);
   f->hmf_str = payload;
   return src;
 }
@@ -309,60 +293,58 @@ htsmsg_xml_parse_attrib
 /**
  *
  */
-static char *
-htsmsg_xml_parse_tag(xmlparser_t *xp, htsmsg_t *parent, char *src)
-{
-  htsmsg_t *m, *attrs;
+static char* htsmsg_xml_parse_tag(xmlparser_t* xp, htsmsg_t* parent, char* src) {
+  htsmsg_t *        m, *attrs;
   struct xmlns_list nslist;
-  char *tagname;
-  int taglen, empty = 0, i;
-  xmlns_t *ns;
+  char*             tagname;
+  int               taglen, empty = 0, i;
+  xmlns_t*          ns;
 
   tagname = src;
 
   LIST_INIT(&nslist);
 
-  while(1) {
-    if(*src == 0) {
+  while (1) {
+    if (*src == 0) {
       xmlerr(xp, "Unexpected end of file during tag name parsing");
       return NULL;
     }
-    if(is_xmlws(*src) || *src == '>' || *src == '/')
+    if (is_xmlws(*src) || *src == '>' || *src == '/')
       break;
     src++;
   }
 
   taglen = src - tagname;
-  if(taglen < 1 || taglen > 65535) {
+  if (taglen < 1 || taglen > 65535) {
     xmlerr(xp, "Invalid tag name");
     return NULL;
   }
 
   attrs = htsmsg_create_map();
 
-  while(1) {
+  while (1) {
 
-    while(is_xmlws(*src))
+    while (is_xmlws(*src))
       src++;
 
-    if(*src == 0) {
+    if (*src == 0) {
       htsmsg_destroy(attrs);
       xmlerr(xp, "Unexpected end of file in tag");
       return NULL;
     }
 
-    if(src[0] == '/' && src[1] == '>') {
+    if (src[0] == '/' && src[1] == '>') {
       empty = 1;
       src += 2;
       break;
     }
 
-    if(*src == '>') {
+    if (*src == '>') {
       src++;
       break;
     }
 
-    if((src = htsmsg_xml_parse_attrib(xp, attrs, src, &nslist)) == NULL) {
+    if ((src = htsmsg_xml_parse_attrib(xp, attrs, src, &nslist)) == NULL) {
       htsmsg_destroy(attrs);
       return NULL;
     }
@@ -370,42 +352,41 @@ htsmsg_xml_parse_tag(xmlparser_t *xp, htsmsg_t *parent, char *src)
 
   m = htsmsg_create_map();
 
-  if(TAILQ_FIRST(&attrs->hm_fields) != NULL) {
+  if (TAILQ_FIRST(&attrs->hm_fields) != NULL) {
     htsmsg_add_msg_extname(m, "attrib", attrs);
   } else {
     htsmsg_destroy(attrs);
   }
 
-  if(!empty)
+  if (!empty)
     src = htsmsg_xml_parse_cd(xp, m, src);
 
-  for(i = 0; i < taglen - 1; i++) {
-    if(tagname[i] == ':') {
+  for (i = 0; i < taglen - 1; i++) {
+    if (tagname[i] == ':') {
 
-      LIST_FOREACH(ns, &xp->xp_namespaces, xmlns_global_link) {
-	if(ns->xmlns_prefix_len == i && 
-	   !memcmp(ns->xmlns_prefix, tagname, ns->xmlns_prefix_len)) {
+      LIST_FOREACH (ns, &xp->xp_namespaces, xmlns_global_link) {
+        if (ns->xmlns_prefix_len == i && !memcmp(ns->xmlns_prefix, tagname, ns->xmlns_prefix_len)) {
 
-	  int llen = taglen - i - 1;
-	  char *n = malloc(ns->xmlns_norm_len + llen + 1);
+          int   llen = taglen - i - 1;
+          char* n    = malloc(ns->xmlns_norm_len + llen + 1);
 
-	  n[ns->xmlns_norm_len + llen] = 0;
-	  memcpy(n, ns->xmlns_norm, ns->xmlns_norm_len);
-	  memcpy(n + ns->xmlns_norm_len, tagname + i + 1, llen);
-	  htsmsg_add_msg(parent, n, m);
-	  free(n);
-	  goto done;
-	}
+          n[ns->xmlns_norm_len + llen] = 0;
+          memcpy(n, ns->xmlns_norm, ns->xmlns_norm_len);
+          memcpy(n + ns->xmlns_norm_len, tagname + i + 1, llen);
+          htsmsg_add_msg(parent, n, m);
+          free(n);
+          goto done;
+        }
       }
     }
   }
 
   xp->xp_srcdataused = 1;
-  tagname[taglen] = 0;
+  tagname[taglen]    = 0;
   htsmsg_add_msg_extname(parent, tagname, m);
 
- done:
-  while((ns = LIST_FIRST(&nslist)) != NULL)
+done:
+  while ((ns = LIST_FIRST(&nslist)) != NULL)
     xmlns_destroy(ns);
   return src;
 }
@@ -413,28 +394,27 @@ htsmsg_xml_parse_tag(xmlparser_t *xp, htsmsg_t *parent, char *src)
 /**
  *
  */
-static char *
-htsmsg_xml_parse_pi(xmlparser_t *xp, htsmsg_t *parent, char *src)
-{
-  htsmsg_t *attrs;
-  char *s = src;
-  char *piname;
-  int l;
+static char* htsmsg_xml_parse_pi(xmlparser_t* xp, htsmsg_t* parent, char* src) {
+  htsmsg_t* attrs;
+  char*     s = src;
+  char*     piname;
+  int       l;
 
-  while(1) {
-    if(*src == 0) {
-      xmlerr(xp, "Unexpected end of file during parsing of "
-	         "Processing instructions");
+  while (1) {
+    if (*src == 0) {
+      xmlerr(xp,
+          "Unexpected end of file during parsing of "
+          "Processing instructions");
       return NULL;
     }
 
-    if(is_xmlws(*src) || *src == '?')
+    if (is_xmlws(*src) || *src == '?')
       break;
     src++;
   }
 
   l = src - s;
-  if(l < 1 || l > 65536) {
+  if (l < 1 || l > 65536) {
     xmlerr(xp, "Invalid 'Processing instructions' name");
     return NULL;
   }
@@ -444,31 +424,31 @@ htsmsg_xml_parse_pi(xmlparser_t *xp, htsmsg_t *parent, char *src)
 
   attrs = htsmsg_create_map();
 
-  while(1) {
+  while (1) {
 
-    while(is_xmlws(*src))
+    while (is_xmlws(*src))
       src++;
 
-    if(*src == 0) {
+    if (*src == 0) {
       htsmsg_destroy(attrs);
-      xmlerr(xp, "Unexpected end of file during parsing of "
-	     "Processing instructions");
+      xmlerr(xp,
+          "Unexpected end of file during parsing of "
+          "Processing instructions");
       return NULL;
     }
 
-    if(src[0] == '?' && src[1] == '>') {
+    if (src[0] == '?' && src[1] == '>') {
       src += 2;
       break;
     }
 
-    if((src = htsmsg_xml_parse_attrib(xp, attrs, src, NULL)) == NULL) {
+    if ((src = htsmsg_xml_parse_attrib(xp, attrs, src, NULL)) == NULL) {
       htsmsg_destroy(attrs);
       return NULL;
     }
   }
 
-
-  if(TAILQ_FIRST(&attrs->hm_fields) != NULL && parent != NULL) {
+  if (TAILQ_FIRST(&attrs->hm_fields) != NULL && parent != NULL) {
     htsmsg_add_msg(parent, piname, attrs);
   } else {
     htsmsg_destroy(attrs);
@@ -479,17 +459,15 @@ htsmsg_xml_parse_pi(xmlparser_t *xp, htsmsg_t *parent, char *src)
 /**
  *
  */
-static char *
-xml_parse_comment(xmlparser_t *xp, char *src)
-{
+static char* xml_parse_comment(xmlparser_t* xp, char* src) {
   /* comment */
-  while(1) {
-    if(*src == 0) { /* EOF inside comment is invalid */
+  while (1) {
+    if (*src == 0) { /* EOF inside comment is invalid */
       xmlerr(xp, "Unexpected end of file inside a comment");
       return NULL;
     }
 
-    if(src[0] == '-' && src[1] == '-' && src[2] == '>')
+    if (src[0] == '-' && src[1] == '-' && src[2] == '>')
       return src + 3;
     src++;
   }
@@ -498,38 +476,35 @@ xml_parse_comment(xmlparser_t *xp, char *src)
 /**
  *
  */
-static char *
-decode_label_reference
-  (xmlparser_t *xp, struct cdata_content_queue *ccq, char *src)
-{
-  char *s = src;
-  int l;
-  char *label;
+static char* decode_label_reference(xmlparser_t* xp, struct cdata_content_queue* ccq, char* src) {
+  char* s = src;
+  int   l;
+  char* label;
 
-  while(*src != 0 && *src != ';')
+  while (*src != 0 && *src != ';')
     src++;
-  if(*src == 0) {
+  if (*src == 0) {
     xmlerr(xp, "Unexpected end of file during parsing of label reference");
     return NULL;
   }
 
   l = src - s;
-  if(l < 1 || l > 65535)
+  if (l < 1 || l > 65535)
     return NULL;
   label = alloca(l + 1);
   memcpy(label, s, l);
   label[l] = 0;
   src++;
 
-  if(!strcmp(label, "amp"))
+  if (!strcmp(label, "amp"))
     add_unicode(ccq, '&');
-  else if(!strcmp(label, "gt"))
+  else if (!strcmp(label, "gt"))
     add_unicode(ccq, '>');
-  else if(!strcmp(label, "lt"))
+  else if (!strcmp(label, "lt"))
     add_unicode(ccq, '<');
-  else if(!strcmp(label, "apos"))
+  else if (!strcmp(label, "apos"))
     add_unicode(ccq, '\'');
-  else if(!strcmp(label, "quot"))
+  else if (!strcmp(label, "quot"))
     add_unicode(ccq, '"');
   else {
     xmlerr(xp, "Unknown label referense: \"&%s;\"\n", label);
@@ -542,102 +517,103 @@ decode_label_reference
 /**
  *
  */
-static char *
-htsmsg_xml_parse_cd0
-  (xmlparser_t *xp,struct cdata_content_queue *ccq, htsmsg_t *tags,
-   htsmsg_t *pis, char *src, int raw)
-{
-  cdata_content_t *cc = NULL;
-  int c;
+static char* htsmsg_xml_parse_cd0(xmlparser_t* xp,
+    struct cdata_content_queue*                ccq,
+    htsmsg_t*                                  tags,
+    htsmsg_t*                                  pis,
+    char*                                      src,
+    int                                        raw) {
+  cdata_content_t* cc = NULL;
+  int              c;
 
-  while(src != NULL && *src != 0) {
+  while (src != NULL && *src != 0) {
 
-    if(raw && src[0] == ']' && src[1] == ']' && src[2] == '>') {
-      if(cc != NULL)
-	cc->cc_end = src;
+    if (raw && src[0] == ']' && src[1] == ']' && src[2] == '>') {
+      if (cc != NULL)
+        cc->cc_end = src;
       cc = NULL;
       src += 3;
       break;
     }
 
-    if(*src == '<' && !raw) {
+    if (*src == '<' && !raw) {
 
-      if(cc != NULL)
-	cc->cc_end = src;
+      if (cc != NULL)
+        cc->cc_end = src;
       cc = NULL;
 
       src++;
-      if(*src == '?') {
-	src++;
-	src = htsmsg_xml_parse_pi(xp, pis, src);
-	continue;
+      if (*src == '?') {
+        src++;
+        src = htsmsg_xml_parse_pi(xp, pis, src);
+        continue;
       }
 
-      if(src[0] == '!') {
+      if (src[0] == '!') {
 
-	src++;
+        src++;
 
-	if(src[0] == '-' && src[1] == '-') {
-	  src = xml_parse_comment(xp, src + 2);
-	  continue;
-	}
+        if (src[0] == '-' && src[1] == '-') {
+          src = xml_parse_comment(xp, src + 2);
+          continue;
+        }
 
-	if(!strncmp(src, "[CDATA[", 7)) {
-	  src += 7;
-	  src = htsmsg_xml_parse_cd0(xp, ccq, tags, pis, src, 1);
-	  continue;
-	}
-	xmlerr(xp, "Unknown syntatic element: <!%.10s", src);
-	return NULL;
+        if (!strncmp(src, "[CDATA[", 7)) {
+          src += 7;
+          src = htsmsg_xml_parse_cd0(xp, ccq, tags, pis, src, 1);
+          continue;
+        }
+        xmlerr(xp, "Unknown syntatic element: <!%.10s", src);
+        return NULL;
       }
 
-      if(*src == '/') {
-	/* End-tag */
-	src++;
-	while(*src != '>') {
-	  if(*src == 0) { /* EOF inside endtag */
-	    xmlerr(xp, "Unexpected end of file inside close tag");
-	    return NULL;
-	  }
-	  src++;
-	}
-	src++;
-	break;
+      if (*src == '/') {
+        /* End-tag */
+        src++;
+        while (*src != '>') {
+          if (*src == 0) { /* EOF inside endtag */
+            xmlerr(xp, "Unexpected end of file inside close tag");
+            return NULL;
+          }
+          src++;
+        }
+        src++;
+        break;
       }
 
       src = htsmsg_xml_parse_tag(xp, tags, src);
       continue;
     }
-    
-    if(*src == '&' && !raw) {
-      if(cc != NULL)
-	cc->cc_end = src;
+
+    if (*src == '&' && !raw) {
+      if (cc != NULL)
+        cc->cc_end = src;
       cc = NULL;
 
       src++;
 
-      if(*src == '#') {
-	src++;
-	/* Character reference */
-	if((c = decode_character_reference(&src)) != 0)
-	  add_unicode(ccq, c);
-	else {
-	  xmlerr(xp, "Invalid character reference");
-	  return NULL;
-	}
+      if (*src == '#') {
+        src++;
+        /* Character reference */
+        if ((c = decode_character_reference(&src)) != 0)
+          add_unicode(ccq, c);
+        else {
+          xmlerr(xp, "Invalid character reference");
+          return NULL;
+        }
       } else {
-	/* Label references */
-	src = decode_label_reference(xp, ccq, src);
+        /* Label references */
+        src = decode_label_reference(xp, ccq, src);
       }
       continue;
     }
 
-    if(cc == NULL) {
-      if(*src < 32) {
-	src++;
-	continue;
+    if (cc == NULL) {
+      if (*src < 32) {
+        src++;
+        continue;
       }
-      cc = malloc(sizeof(cdata_content_t));
+      cc              = malloc(sizeof(cdata_content_t));
       cc->cc_encoding = xp->xp_encoding;
       TAILQ_INSERT_TAIL(ccq, cc, cc_link);
       cc->cc_start = src;
@@ -645,7 +621,7 @@ htsmsg_xml_parse_cd0
     src++;
   }
 
-  if(cc != NULL) {
+  if (cc != NULL) {
     assert(src != NULL);
     cc->cc_end = src;
   }
@@ -655,41 +631,39 @@ htsmsg_xml_parse_cd0
 /**
  *
  */
-static char *
-htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
-{
+static char* htsmsg_xml_parse_cd(xmlparser_t* xp, htsmsg_t* parent, char* src) {
   struct cdata_content_queue ccq;
-  htsmsg_field_t *f;
-  cdata_content_t *cc;
-  int c = 0, l, y = 0;
-  char *x, *body;
-  htsmsg_t *tags = htsmsg_create_map();
-  
+  htsmsg_field_t*            f;
+  cdata_content_t*           cc;
+  int                        c = 0, l, y = 0;
+  char *                     x, *body;
+  htsmsg_t*                  tags = htsmsg_create_map();
+
   TAILQ_INIT(&ccq);
   src = htsmsg_xml_parse_cd0(xp, &ccq, tags, NULL, src, 0);
 
   /* Assemble body */
 
-  TAILQ_FOREACH(cc, &ccq, cc_link) {
+  TAILQ_FOREACH (cc, &ccq, cc_link) {
 
-    switch(cc->cc_encoding) {
-    case XML_ENCODING_UTF8:
-      c += cc->cc_end - cc->cc_start;
-      y++;
-      break;
+    switch (cc->cc_encoding) {
+      case XML_ENCODING_UTF8:
+        c += cc->cc_end - cc->cc_start;
+        y++;
+        break;
 
-    case XML_ENCODING_8859_1:
-      l = 0;
-      for(x = cc->cc_start; x < cc->cc_end; x++)
-	l += 1 + (*x >= 0x80);
+      case XML_ENCODING_8859_1:
+        l = 0;
+        for (x = cc->cc_start; x < cc->cc_end; x++)
+          l += 1 + (*x >= 0x80);
 
-      c += l;
-      y += 1 + (l != cc->cc_end - cc->cc_start);
-      break;
+        c += l;
+        y += 1 + (l != cc->cc_end - cc->cc_start);
+        break;
     }
   }
 
-  if(y == 1 && c > 0) {
+  if (y == 1 && c > 0) {
     /* One segment UTF-8 (or 7bit ASCII),
        use data directly from source */
 
@@ -697,54 +671,53 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
 
     assert(cc != NULL);
     assert(TAILQ_NEXT(cc, cc_link) == NULL);
-    
-    f = htsmsg_field_add(parent, "cdata", HMF_STR, 0, 0);
-    f->hmf_str = cc->cc_start;
+
+    f           = htsmsg_field_add(parent, "cdata", HMF_STR, 0, 0);
+    f->hmf_str  = cc->cc_start;
     *cc->cc_end = 0;
     free(cc);
 
-  } else if(c > 0) {
+  } else if (c > 0) {
     body = malloc(c + 1);
-    c = 0;
+    c    = 0;
 
-    while((cc = TAILQ_FIRST(&ccq)) != NULL) {
+    while ((cc = TAILQ_FIRST(&ccq)) != NULL) {
 
-      switch(cc->cc_encoding) {
-      case XML_ENCODING_UTF8:
-	l = cc->cc_end - cc->cc_start;
-	memcpy(body + c, cc->cc_start, l);
-	c += l;
-	break;
+      switch (cc->cc_encoding) {
+        case XML_ENCODING_UTF8:
+          l = cc->cc_end - cc->cc_start;
+          memcpy(body + c, cc->cc_start, l);
+          c += l;
+          break;
 
-      case XML_ENCODING_8859_1:
-	for(x = cc->cc_start; x < cc->cc_end; x++)
-	  c += put_utf8(body + c, *x);
-	break;
+        case XML_ENCODING_8859_1:
+          for (x = cc->cc_start; x < cc->cc_end; x++)
+            c += put_utf8(body + c, *x);
+          break;
       }
-      
+
       TAILQ_REMOVE(&ccq, cc, cc_link);
       free(cc);
     }
     body[c] = 0;
 
-    f = htsmsg_field_add(parent, "cdata", HMF_STR, HMF_ALLOCED, 0);
+    f          = htsmsg_field_add(parent, "cdata", HMF_STR, HMF_ALLOCED, 0);
     f->hmf_str = body;
 
   } else {
 
-    while((cc = TAILQ_FIRST(&ccq)) != NULL) {
+    while ((cc = TAILQ_FIRST(&ccq)) != NULL) {
       TAILQ_REMOVE(&ccq, cc, cc_link);
       free(cc);
     }
   }
 
-
-  if(src == NULL) {
+  if (src == NULL) {
     htsmsg_destroy(tags);
     return NULL;
   }
 
-  if(TAILQ_FIRST(&tags->hm_fields) != NULL) {
+  if (TAILQ_FIRST(&tags->hm_fields) != NULL) {
     htsmsg_add_msg_extname(parent, "tags", tags);
   } else {
     htsmsg_destroy(tags);
@@ -756,50 +729,46 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
 /**
  *
  */
-static char *
-htsmsg_parse_prolog(xmlparser_t *xp, char *src)
-{
-  htsmsg_t *pis = htsmsg_create_map();
-  htsmsg_t *xmlpi;
-  const char *encoding;
+static char* htsmsg_parse_prolog(xmlparser_t* xp, char* src) {
+  htsmsg_t*   pis = htsmsg_create_map();
+  htsmsg_t*   xmlpi;
+  const char* encoding;
 
-  while(src != NULL && *src != 0) {
+  while (src != NULL && *src != 0) {
 
-    while(is_xmlws(*src))
+    while (is_xmlws(*src))
       src++;
-    
-    if(!strncmp(src, "<?", 2)) {
+
+    if (!strncmp(src, "<?", 2)) {
       src += 2;
       src = htsmsg_xml_parse_pi(xp, pis, src);
       continue;
     }
 
-    if(!strncmp(src, "<!--", 4)) {
+    if (!strncmp(src, "<!--", 4)) {
       src = xml_parse_comment(xp, src + 4);
       continue;
     }
 
-    if(!strncmp(src, "<!DOCTYPE", 9)) {
-      while(*src != 0) {
-	if(*src == '>') {
-	  src++;
-	  break;
-	}
-	src++;
+    if (!strncmp(src, "<!DOCTYPE", 9)) {
+      while (*src != 0) {
+        if (*src == '>') {
+          src++;
+          break;
+        }
+        src++;
       }
       continue;
     }
     break;
   }
 
-  if((xmlpi = htsmsg_get_map(pis, "xml")) != NULL) {
+  if ((xmlpi = htsmsg_get_map(pis, "xml")) != NULL) {
 
-    if((encoding = htsmsg_get_str(xmlpi, "encoding")) != NULL) {
-      if(!strcasecmp(encoding, "iso-8859-1") ||
-	 !strcasecmp(encoding, "iso-8859_1") ||
-	 !strcasecmp(encoding, "iso_8859-1") ||
-	 !strcasecmp(encoding, "iso_8859_1")) {
-	xp->xp_encoding = XML_ENCODING_8859_1;
+    if ((encoding = htsmsg_get_str(xmlpi, "encoding")) != NULL) {
+      if (!strcasecmp(encoding, "iso-8859-1") || !strcasecmp(encoding, "iso-8859_1") ||
+          !strcasecmp(encoding, "iso_8859-1") || !strcasecmp(encoding, "iso_8859_1")) {
+        xp->xp_encoding = XML_ENCODING_8859_1;
       }
     }
   }
@@ -812,33 +781,31 @@ htsmsg_parse_prolog(xmlparser_t *xp, char *src)
 /**
  *
  */
-htsmsg_t *
-htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
-{
-  htsmsg_t *m;
+htsmsg_t* htsmsg_xml_deserialize(char* src, char* errbuf, size_t errbufsize) {
+  htsmsg_t*   m;
   xmlparser_t xp;
-  char *src0 = src;
+  char*       src0 = src;
 
   memset(&xp, 0, sizeof(xp));
   xp.xp_encoding = XML_ENCODING_UTF8;
   LIST_INIT(&xp.xp_namespaces);
 
   /* check for UTF-8 BOM */
-  if(src[0] == 0xef && src[1] == 0xbb && src[2] == 0xbf)
+  if (src[0] == 0xef && src[1] == 0xbb && src[2] == 0xbf)
     memmove(src, src + 3, strlen(src) - 2);
 
-  if((src = htsmsg_parse_prolog(&xp, src)) == NULL)
+  if ((src = htsmsg_parse_prolog(&xp, src)) == NULL)
     goto err;
 
   m = htsmsg_create_map();
 
-  if(htsmsg_xml_parse_cd(&xp, m, src) == NULL) {
+  if (htsmsg_xml_parse_cd(&xp, m, src) == NULL) {
     htsmsg_destroy(m);
     goto err;
   }
 
-  if(xp.xp_srcdataused) {
-    m->hm_data = src0;
+  if (xp.xp_srcdataused) {
+    m->hm_data      = src0;
     m->hm_data_size = strlen(src0) + 1;
   } else {
     free(src0);
@@ -846,12 +813,12 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
 
   return m;
 
- err:
+err:
   free(src0);
   snprintf(errbuf, errbufsize, "%s", xp.xp_errmsg);
-  
+
   /* Remove any odd chars inside of errmsg */
-  for ( ; *errbuf; errbuf++)
+  for (; *errbuf; errbuf++)
     if (*errbuf < ' ')
       *errbuf = ' ';
 
@@ -861,11 +828,9 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
 /*
  * Get cdata string field
  */
-const char *
-htsmsg_xml_get_cdata_str(htsmsg_t *tags, const char *name)
-{
-  htsmsg_t *sub;
-  if((sub = htsmsg_get_map(tags, name)) == NULL)
+const char* htsmsg_xml_get_cdata_str(htsmsg_t* tags, const char* name) {
+  htsmsg_t* sub;
+  if ((sub = htsmsg_get_map(tags, name)) == NULL)
     return NULL;
   return htsmsg_get_str(sub, "cdata");
 }
@@ -873,11 +838,9 @@ htsmsg_xml_get_cdata_str(htsmsg_t *tags, const char *name)
 /*
  * Get cdata u32 field
  */
-int
-htsmsg_xml_get_cdata_u32(htsmsg_t *tags, const char *name, uint32_t *u32)
-{
-  htsmsg_t *sub;
-  if((sub = htsmsg_get_map(tags, name)) == NULL)
+int htsmsg_xml_get_cdata_u32(htsmsg_t* tags, const char* name, uint32_t* u32) {
+  htsmsg_t* sub;
+  if ((sub = htsmsg_get_map(tags, name)) == NULL)
     return HTSMSG_ERR_FIELD_NOT_FOUND;
   return htsmsg_get_u32(sub, "cdata", u32);
 }
@@ -885,18 +848,16 @@ htsmsg_xml_get_cdata_u32(htsmsg_t *tags, const char *name, uint32_t *u32)
 /*
  * Get tag attribute
  */
-const char *
-htsmsg_xml_get_attr_str(htsmsg_t *tag, const char *name)
-{
-  htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
-  if (attr) return htsmsg_get_str(attr, name);
+const char* htsmsg_xml_get_attr_str(htsmsg_t* tag, const char* name) {
+  htsmsg_t* attr = htsmsg_get_map(tag, "attrib");
+  if (attr)
+    return htsmsg_get_str(attr, name);
   return NULL;
 }
 
-int
-htsmsg_xml_get_attr_u32(htsmsg_t *tag, const char *name, uint32_t *ret)
-{
-  htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
-  if (attr) return htsmsg_get_u32(attr, name, ret);
+int htsmsg_xml_get_attr_u32(htsmsg_t* tag, const char* name, uint32_t* ret) {
+  htsmsg_t* attr = htsmsg_get_map(tag, "attrib");
+  if (attr)
+    return htsmsg_get_u32(attr, name, ret);
   return HTSMSG_ERR_FIELD_NOT_FOUND;
 }

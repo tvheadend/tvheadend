@@ -24,24 +24,21 @@
 /**
  * Extract Hbbtv
  */
-htsmsg_t *
-dvb_psi_parse_hbbtv
-  (mpegts_psi_table_t *mt, const uint8_t *buf, int len, int *_sect)
-{
-  static const char *visibility_table[4] = {
-    "none",
-    "apps",
-    "reserved",
-    "all",
+htsmsg_t* dvb_psi_parse_hbbtv(mpegts_psi_table_t* mt, const uint8_t* buf, int len, int* _sect) {
+  static const char* visibility_table[4] = {
+      "none",
+      "apps",
+      "reserved",
+      "all",
   };
-  mpegts_psi_table_state_t *tst = NULL;
-  int r, sect, last, ver, l, l2, l3, dllen, dlen, flags;
-  uint8_t tableid = buf[0], dtag;
-  const uint8_t *p, *dlptr, *dptr;
-  uint16_t app_type, app_id, protocol_id;
-  uint32_t org_id;
-  char title[256], name[256], location[256], *str;
-  htsmsg_t *map, *apps = NULL, *titles = NULL;
+  mpegts_psi_table_state_t* tst = NULL;
+  int                       r, sect, last, ver, l, l2, l3, dllen, dlen, flags;
+  uint8_t                   tableid = buf[0], dtag;
+  const uint8_t *           p, *dlptr, *dptr;
+  uint16_t                  app_type, app_id, protocol_id;
+  uint32_t                  org_id;
+  char                      title[256], name[256], location[256], *str;
+  htsmsg_t *                map, *apps = NULL, *titles = NULL;
 
   if (tableid != 0x74 || len < 16)
     return NULL;
@@ -49,42 +46,57 @@ dvb_psi_parse_hbbtv
   if (app_type & 1) /* testing */
     return NULL;
 
-  r = dvb_table_begin(mt, buf + 3, len - 3,
-                      tableid, app_type, 5, &tst, &sect, &last, &ver, 0);
-  if (r != 1) return NULL;
+  r = dvb_table_begin(mt, buf + 3, len - 3, tableid, app_type, 5, &tst, &sect, &last, &ver, 0);
+  if (r != 1)
+    return NULL;
 
   p = buf;
   l = len;
 
   DVB_DESC_FOREACH(mt, p, l, 8, dlptr, dllen, dtag, dlen, dptr) {
     tvhtrace(mt->mt_subsys, "%s: common dtag %02X dlen %d", mt->mt_name, dtag, dlen);
-  }}
+  }
+}
 
-  l2 = ((p[0] << 8) | p[1]) & 0xfff;
-  p += 2;
-  l += 2;
-  while (l2 >= 9) {
-    org_id = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
-    app_id = (p[4] << 8) | p[5];
-    tvhtrace(mt->mt_subsys, "%s: app org %08X id %04X control %02X", mt->mt_name, org_id, app_id, p[6]);
-    l2 -= 9;
-    title[0] = name[0] = location[0] = '\0';
-    titles = NULL;
-    flags = 0;
-    DVB_DESC_FOREACH(mt, p, l, 7, dlptr, dllen, dtag, dlen, dptr) {
-      l2 -= dlen + 2;
-      tvhtrace(mt->mt_subsys, "%s:   dtag %02X dlen %d", mt->mt_name, dtag, dlen);
-      switch (dtag) {
+l2 = ((p[0] << 8) | p[1]) & 0xfff;
+p += 2;
+l += 2;
+while (l2 >= 9) {
+  org_id = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+  app_id = (p[4] << 8) | p[5];
+  tvhtrace(mt->mt_subsys,
+      "%s: app org %08X id %04X control %02X",
+      mt->mt_name,
+      org_id,
+      app_id,
+      p[6]);
+  l2 -= 9;
+  title[0] = name[0] = location[0] = '\0';
+  titles                           = NULL;
+  flags                            = 0;
+  DVB_DESC_FOREACH(mt, p, l, 7, dlptr, dllen, dtag, dlen, dptr) {
+    l2 -= dlen + 2;
+    tvhtrace(mt->mt_subsys, "%s:   dtag %02X dlen %d", mt->mt_name, dtag, dlen);
+    switch (dtag) {
       case DVB_DESC_APP:
-        l3 = *dptr++; dlen--;
-        if (l3 > dlen || (l3 % 5)) goto dvberr;
+        l3 = *dptr++;
+        dlen--;
+        if (l3 > dlen || (l3 % 5))
+          goto dvberr;
         while (dlen >= 5 && l3 >= 5) {
-          tvhtrace(mt->mt_subsys, "%s:     profile %04X %d.%d.%d", mt->mt_name, (dptr[0] << 8) | dptr[1], dptr[2], dptr[3], dptr[4]);
+          tvhtrace(mt->mt_subsys,
+              "%s:     profile %04X %d.%d.%d",
+              mt->mt_name,
+              (dptr[0] << 8) | dptr[1],
+              dptr[2],
+              dptr[3],
+              dptr[4]);
           dptr += 5;
           dlen -= 5;
           l3 -= 5;
         }
-        if (dlen < 3) goto dvberr;
+        if (dlen < 3)
+          goto dvberr;
         flags = dptr[0];
         tvhtrace(mt->mt_subsys, "%s:     flags %02X prio %02X", mt->mt_name, dptr[0], dptr[1]);
         dptr += 2;
@@ -95,12 +107,20 @@ dvb_psi_parse_hbbtv
         }
         break;
       case DVB_DESC_APP_NAME:
-        if(titles != NULL) htsmsg_destroy(titles);
+        if (titles != NULL)
+          htsmsg_destroy(titles);
         titles = htsmsg_create_list();
         while (dlen > 4) {
           r = dvb_get_string_with_len(title, sizeof(title), dptr + 3, dlen - 3, "UTF-8", NULL);
-          if (r < 0) goto dvberr;
-          tvhtrace(mt->mt_subsys, "%s:      lang '%c%c%c' name '%s'", mt->mt_name, dptr[0], dptr[1], dptr[2], title);
+          if (r < 0)
+            goto dvberr;
+          tvhtrace(mt->mt_subsys,
+              "%s:      lang '%c%c%c' name '%s'",
+              mt->mt_name,
+              dptr[0],
+              dptr[1],
+              dptr[2],
+              title);
           map = htsmsg_create_map();
           htsmsg_add_str(map, "name", title);
           memcpy(title, dptr, 3);
@@ -112,13 +132,20 @@ dvb_psi_parse_hbbtv
         }
         break;
       case DVB_DESC_APP_TRANSPORT:
-        if (dlen < 4) goto dvberr;
+        if (dlen < 4)
+          goto dvberr;
         protocol_id = (dptr[0] << 8) | dptr[1];
-        tvhtrace(mt->mt_subsys, "%s:     protocol_id %04X transport protocol label %02X", mt->mt_name, protocol_id, dptr[2]);
-        dptr += 3; dlen -= 3;
+        tvhtrace(mt->mt_subsys,
+            "%s:     protocol_id %04X transport protocol label %02X",
+            mt->mt_name,
+            protocol_id,
+            dptr[2]);
+        dptr += 3;
+        dlen -= 3;
         if (protocol_id == 0x0003) {
           r = dvb_get_string_with_len(name, sizeof(name), dptr, dlen, "UTF-8", NULL);
-          if (r < 0) goto dvberr;
+          if (r < 0)
+            goto dvberr;
           tvhtrace(mt->mt_subsys, "%s:     http '%s'", mt->mt_name, name);
         } else {
           while (dlen-- > 0) {
@@ -129,50 +156,49 @@ dvb_psi_parse_hbbtv
         break;
       case DVB_DESC_APP_SIMPLE_LOCATION:
         r = dvb_get_string(location, sizeof(location), dptr, dlen, "UTF-8", NULL);
-        if (r < 0) goto dvberr;
+        if (r < 0)
+          goto dvberr;
         tvhtrace(mt->mt_subsys, "%s:     simple location '%s'", mt->mt_name, location);
         break;
-      }
-    }}
-    if (titles && name[0] && location[0]) {
-      map = htsmsg_create_map();
-      htsmsg_add_msg(map, "title", titles);
-      titles = NULL;
-      str = malloc(strlen(name) + strlen(location) + 1);
-      strcpy(str, name);
-      strcat(str, location);
-      htsmsg_add_str(map, "url", str);
-      free(str);
-      if (apps == NULL)
-        apps = htsmsg_create_list();
-      htsmsg_add_str(map, "visibility", visibility_table[(flags >> 5) & 3]);
-      htsmsg_add_msg(apps, NULL, map);
-    } else {
-      htsmsg_destroy(titles);
-      titles = NULL;
     }
   }
-  if (l2 != 0)
-    goto dvberr;
-
-  dvb_table_end(mt, tst, sect);
-  if (_sect)
-    *_sect = sect;
-  return apps;
-
-dvberr:
-  htsmsg_destroy(apps);
+}
+if (titles && name[0] && location[0]) {
+  map = htsmsg_create_map();
+  htsmsg_add_msg(map, "title", titles);
+  titles = NULL;
+  str    = malloc(strlen(name) + strlen(location) + 1);
+  strcpy(str, name);
+  strcat(str, location);
+  htsmsg_add_str(map, "url", str);
+  free(str);
+  if (apps == NULL)
+    apps = htsmsg_create_list();
+  htsmsg_add_str(map, "visibility", visibility_table[(flags >> 5) & 3]);
+  htsmsg_add_msg(apps, NULL, map);
+} else {
   htsmsg_destroy(titles);
-  return NULL;
+  titles = NULL;
+}
+}
+if (l2 != 0)
+  goto dvberr;
+
+dvb_table_end(mt, tst, sect);
+if (_sect)
+  *_sect = sect;
+return apps;
+
+dvberr: htsmsg_destroy(apps);
+htsmsg_destroy(titles);
+return NULL;
 }
 
-void
-dvb_psi_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
-{
-  elementary_stream_t *st = (elementary_stream_t *)mt->mt_opaque;
-  service_t *t = st->es_service;
-  int sect;
-  htsmsg_t *apps = dvb_psi_parse_hbbtv(mt, buf, len, &sect);
+void dvb_psi_hbbtv_cb(mpegts_psi_table_t* mt, const uint8_t* buf, int len) {
+  elementary_stream_t* st = (elementary_stream_t*)mt->mt_opaque;
+  service_t*           t  = st->es_service;
+  int                  sect;
+  htsmsg_t*            apps = dvb_psi_parse_hbbtv(mt, buf, len, &sect);
   if (apps == NULL)
     return;
   if (t->s_hbbtv == NULL)
@@ -185,9 +211,7 @@ dvb_psi_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   }
 }
 
-int
-dvb_hbbtv_callback(mpegts_table_t *mt, const uint8_t *buf, int len, int tableid)
-{
-  dvb_psi_hbbtv_cb((mpegts_psi_table_t *)mt, buf, len);
+int dvb_hbbtv_callback(mpegts_table_t* mt, const uint8_t* buf, int len, int tableid) {
+  dvb_psi_hbbtv_cb((mpegts_psi_table_t*)mt, buf, len);
   return 0;
 }

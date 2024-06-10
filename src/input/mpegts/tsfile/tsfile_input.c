@@ -33,23 +33,20 @@
 
 extern const idclass_t mpegts_input_class;
 
-
-static void *
-tsfile_input_thread ( void *aux )
-{
-  int fd = -1, nfds;
-  size_t len, rem;
-  ssize_t c;
-  tvhpoll_t *efd;
-  tvhpoll_event_t ev;
-  struct stat st;
-  sbuf_t buf;
-  mpegts_pcr_t pcr;
-  int64_t pcr_last = PTS_UNSET;
-  int64_t pcr_last_mono = 0;
-  tsfile_input_t *mi = aux;
-  mpegts_mux_instance_t *mmi;
-  tsfile_mux_instance_t *tmi;
+static void* tsfile_input_thread(void* aux) {
+  int                    fd = -1, nfds;
+  size_t                 len, rem;
+  ssize_t                c;
+  tvhpoll_t*             efd;
+  tvhpoll_event_t        ev;
+  struct stat            st;
+  sbuf_t                 buf;
+  mpegts_pcr_t           pcr;
+  int64_t                pcr_last      = PTS_UNSET;
+  int64_t                pcr_last_mono = 0;
+  tsfile_input_t*        mi            = aux;
+  mpegts_mux_instance_t* mmi;
+  tsfile_mux_instance_t* tmi;
 
   /* Open file */
   tvh_mutex_lock(&global_lock);
@@ -58,14 +55,14 @@ tsfile_input_thread ( void *aux )
     tmi = (tsfile_mux_instance_t*)mmi;
     fd  = tvh_open(tmi->mmi_tsfile_path, O_RDONLY | O_NONBLOCK, 0);
     if (fd == -1)
-      tvherror(LS_TSFILE, "open(%s) failed %d (%s)",
-               tmi->mmi_tsfile_path, errno, strerror(errno));
+      tvherror(LS_TSFILE, "open(%s) failed %d (%s)", tmi->mmi_tsfile_path, errno, strerror(errno));
     else
       tvhtrace(LS_TSFILE, "adapter %d opened %s", mi->mi_instance, tmi->mmi_tsfile_path);
   }
   tvh_mutex_unlock(&global_lock);
-  if (fd == -1) return NULL;
-  
+  if (fd == -1)
+    return NULL;
+
   /* Polling */
   efd = tvhpoll_create(2);
   tvhpoll_add1(efd, mi->ti_thread_pipe.rd, TVHPOLL_IN, NULL);
@@ -75,44 +72,46 @@ tsfile_input_thread ( void *aux )
 
   /* Get file length */
   if (fstat(fd, &st)) {
-    tvherror(LS_TSFILE, "stat() failed %d (%s)",
-             errno, strerror(errno));
+    tvherror(LS_TSFILE, "stat() failed %d (%s)", errno, strerror(errno));
     goto exit;
   }
 
   /* Check for extra (incomplete) packet at end */
   rem = st.st_size % 188;
   len = 0;
-  tvhtrace(LS_TSFILE, "adapter %d file size %jd rem %zu",
-           mi->mi_instance, (intmax_t)st.st_size, rem);
+  tvhtrace(LS_TSFILE,
+      "adapter %d file size %jd rem %zu",
+      mi->mi_instance,
+      (intmax_t)st.st_size,
+      rem);
 
   pcr_last_mono = getfastmonoclock();
-  
+
   /* Process input */
   while (1) {
-      
+
     /* Find PCR PID */
-    if (tmi->mmi_tsfile_pcr_pid == MPEGTS_PID_NONE) { 
-      mpegts_service_t *s;
+    if (tmi->mmi_tsfile_pcr_pid == MPEGTS_PID_NONE) {
+      mpegts_service_t* s;
       tvh_mutex_lock(&tsfile_lock);
-      LIST_FOREACH(s, &tmi->mmi_mux->mm_services, s_dvb_mux_link) {
+      LIST_FOREACH (s, &tmi->mmi_mux->mm_services, s_dvb_mux_link) {
         if (s->s_components.set_pcr_pid)
           tmi->mmi_tsfile_pcr_pid = s->s_components.set_pcr_pid;
       }
       tvh_mutex_unlock(&tsfile_lock);
     }
-    
+
     /* Check for terminate */
     nfds = tvhpoll_wait(efd, &ev, 1, 0);
-    if (nfds == 1) break;
-    
+    if (nfds == 1)
+      break;
+
     /* Read */
     c = sbuf_read(&buf, fd);
     if (c < 0) {
       if (ERRNO_AGAIN(errno))
         continue;
-      tvherror(LS_TSFILE, "read() error %d (%s)",
-               errno, strerror(errno));
+      tvherror(LS_TSFILE, "read() error %d (%s)", errno, strerror(errno));
       break;
     }
     len += c;
@@ -166,11 +165,9 @@ exit:
   return NULL;
 }
 
-static void
-tsfile_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
-{
-  int err;
-  tsfile_input_t *ti = (tsfile_input_t*)mi;
+static void tsfile_input_stop_mux(mpegts_input_t* mi, mpegts_mux_instance_t* mmi) {
+  int             err;
+  tsfile_input_t* ti = (tsfile_input_t*)mi;
 
   /* Stop thread */
   if (ti->ti_thread_pipe.rd != -1) {
@@ -186,13 +183,11 @@ tsfile_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   LIST_REMOVE(mmi, mmi_active_link);
 }
 
-static int
-tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t, int weight )
-{
-  struct stat st;
-  mpegts_mux_t          *mm  = t->mmi_mux;
-  tsfile_mux_instance_t *mmi = (tsfile_mux_instance_t*)t;
-  tsfile_input_t        *ti  = (tsfile_input_t*)mi;
+static int tsfile_input_start_mux(mpegts_input_t* mi, mpegts_mux_instance_t* t, int weight) {
+  struct stat            st;
+  mpegts_mux_t*          mm  = t->mmi_mux;
+  tsfile_mux_instance_t* mmi = (tsfile_mux_instance_t*)t;
+  tsfile_input_t*        ti  = (tsfile_input_t*)mi;
   tvhtrace(LS_TSFILE, "adapter %d starting mmi %p", mi->mi_instance, mmi);
 
   /* Already tuned */
@@ -205,8 +200,7 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t, int weigh
 
   /* Check file is accessible */
   if (lstat(mmi->mmi_tsfile_path, &st)) {
-    tvherror(LS_TSFILE, "mmi %p could not stat '%s' (%i)",
-             mmi, mmi->mmi_tsfile_path, errno);
+    tvherror(LS_TSFILE, "mmi %p could not stat '%s' (%i)", mmi, mmi->mmi_tsfile_path, errno);
     mmi->mmi_tune_failed = 1;
     return SM_CODE_TUNING_FAILED;
   }
@@ -231,20 +225,16 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t, int weigh
   return 0;
 }
 
-tsfile_input_t *
-tsfile_input_create ( int idx )
-{
-  tsfile_input_t *mi;
+tsfile_input_t* tsfile_input_create(int idx) {
+  tsfile_input_t* mi;
 
   /* Create object */
   mi = (tsfile_input_t*)
-    mpegts_input_create0(calloc(1, sizeof(tsfile_input_t)),
-                         &mpegts_input_class,
-                         NULL, NULL);
-  mi->mi_instance       = idx;
-  mi->mi_enabled        = 1;
-  mi->mi_start_mux      = tsfile_input_start_mux;
-  mi->mi_stop_mux       = tsfile_input_stop_mux;
+      mpegts_input_create0(calloc(1, sizeof(tsfile_input_t)), &mpegts_input_class, NULL, NULL);
+  mi->mi_instance  = idx;
+  mi->mi_enabled   = 1;
+  mi->mi_start_mux = tsfile_input_start_mux;
+  mi->mi_stop_mux  = tsfile_input_stop_mux;
   LIST_INSERT_HEAD(&tsfile_inputs, mi, tsi_link);
   if (!mi->mi_name)
     mi->mi_name = strdup("TSFile");

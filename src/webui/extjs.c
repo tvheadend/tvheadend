@@ -29,9 +29,7 @@
 /**
  *
  */
-static void
-extjs_load(htsbuf_queue_t *hq, const char *script, ...)
-{
+static void extjs_load(htsbuf_queue_t* hq, const char* script, ...) {
   va_list ap;
   htsbuf_append_str(hq, "<script type=\"text/javascript\" src=\"");
 
@@ -45,9 +43,7 @@ extjs_load(htsbuf_queue_t *hq, const char *script, ...)
 /**
  *
  */
-static void
-extjs_lcss(htsbuf_queue_t *hq, const char *css, ...)
-{
+static void extjs_lcss(htsbuf_queue_t* hq, const char* css, ...) {
   va_list ap;
 
   htsbuf_append_str(hq, "<link rel=\"stylesheet\" type=\"text/css\" href=\"");
@@ -62,9 +58,7 @@ extjs_lcss(htsbuf_queue_t *hq, const char *css, ...)
 /**
  *
  */
-static void
-extjs_exec(htsbuf_queue_t *hq, const char *fmt, ...)
-{
+static void extjs_exec(htsbuf_queue_t* hq, const char* fmt, ...) {
   va_list ap;
 
   htsbuf_append_str(hq, "<script type=\"text/javascript\">\n");
@@ -79,26 +73,24 @@ extjs_exec(htsbuf_queue_t *hq, const char *fmt, ...)
 /**
  * EXTJS root page
  */
-static int
-extjs_root(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
+static int extjs_root(http_connection_t* hc, const char* remain, void* opaque) {
+  htsbuf_queue_t* hq = &hc->hc_reply;
 
   htsbuf_append_str(hq, "<!DOCTYPE html>\n");
   htsbuf_append_str(hq, "<html>\n");
   htsbuf_append_str(hq, "<head>\n");
 
-  htsbuf_append_str(hq, "<link rel=\"shortcut icon\" href=\"static/img/logo.png\" type=\"image/png\">\n");
+  htsbuf_append_str(hq,
+      "<link rel=\"shortcut icon\" href=\"static/img/logo.png\" type=\"image/png\">\n");
   htsbuf_append_str(hq, "<meta name=\"apple-itunes-app\" content=\"app-id=638900112\">\n");
 
   if (tvheadend_webui_debug) {
-  
+
 #include "extjs-debug.c"
 
   } else {
 
 #include "extjs-std.c"
-
   }
 
   extjs_exec(hq, "\
@@ -106,50 +98,47 @@ Ext.BLANK_IMAGE_URL = \'" EXTJSPATH "/resources/images/default/s.gif';\n\
 Ext.onReady(tvheadend.app.init, tvheadend.app);\
 ");
 
-
   htsbuf_append_str(hq,
-		 "<style type=\"text/css\">\n"
-		 "html, body {\n"
-		 "\tfont:normal 12px verdana;\n"
-		 "\tmargin:0;\n"
-		 "\tpadding:0;\n"
-		 "\tborder:0 none;\n"
-		 "\toverflow:hidden;\n"
-		 "\theight:100%;\n"
-		 "}\n"
-		 "#systemlog {\n"
-		 "\tfont:normal 12px courier; font-weight: bold;\n"
-		 "}\n"
-		 "p {\n"
-		 "\tmargin:5px;\n"
-		 "}\n"
-		 "</style>\n"
-		 "<title>");
+      "<style type=\"text/css\">\n"
+      "html, body {\n"
+      "\tfont:normal 12px verdana;\n"
+      "\tmargin:0;\n"
+      "\tpadding:0;\n"
+      "\tborder:0 none;\n"
+      "\toverflow:hidden;\n"
+      "\theight:100%;\n"
+      "}\n"
+      "#systemlog {\n"
+      "\tfont:normal 12px courier; font-weight: bold;\n"
+      "}\n"
+      "p {\n"
+      "\tmargin:5px;\n"
+      "}\n"
+      "</style>\n"
+      "<title>");
   htsbuf_append_str(hq, config_get_server_name());
   htsbuf_append_str(hq,
-		 "</title>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "<div id=\"systemlog\"></div>\n"
-		 "</body></html>\n");
+      "</title>\n"
+      "</head>\n"
+      "<body>\n"
+      "<div id=\"systemlog\"></div>\n"
+      "</body></html>\n");
 
   http_output_html(hc);
   return 0;
 }
 
-
 /**
  *
  */
-static int
-extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
+static int extjs_livetv(http_connection_t* hc, const char* remain, void* opaque) {
+  htsbuf_queue_t* hq = &hc->hc_reply;
 
   htsbuf_append_str(hq, "<!DOCTYPE html>\n");
   htsbuf_append_str(hq, "<html>\n");
   htsbuf_append_str(hq, "<head>\n");
-  htsbuf_append_str(hq, "<link rel=\"shortcut icon\" href=\"static/img/logo.png\" type=\"image/png\">\n");
+  htsbuf_append_str(hq,
+      "<link rel=\"shortcut icon\" href=\"static/img/logo.png\" type=\"image/png\">\n");
   htsbuf_append_str(hq, "<title>");
   htsbuf_append_str(hq, config_get_server_name());
   htsbuf_append_str(hq, "</title>\n");
@@ -161,7 +150,6 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
   } else {
 
 #include "extjs-tv-std.c"
-
   }
 
   extjs_exec(hq, "Ext.onReady(tv.app.init, tv.app);");
@@ -175,59 +163,69 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
 /**
- * 
+ *
  */
-static int
-page_about(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *lang = hc->hc_access->aa_lang_ui;
+static int page_about(http_connection_t* hc, const char* remain, void* opaque) {
+  htsbuf_queue_t* hq   = &hc->hc_reply;
+  const char*     lang = hc->hc_access->aa_lang_ui;
 
-  htsbuf_qprintf(hq, "<center class=\"about-tab\">\n\
+  htsbuf_qprintf(hq,
+      "<center class=\"about-tab\">\n\
 <div class=\"about-title\">HTS Tvheadend %s</div>\n\
 <p>&copy; 2006 - 2024 Andreas Smas, Jaroslav Kysela, Adam Sutton, et al.</p>\n\
 <p><img class=\"logobig\" src=\"static/img/logobig.png\"></p>\n\
 <p><a href=\"https://tvheadend.org\">https://tvheadend.org</a></p>\n",
-    tvheadend_version);
+      tvheadend_version);
 
-  htsbuf_qprintf(hq, "<p>%s \n\
+  htsbuf_qprintf(hq,
+      "<p>%s \n\
 <a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. \
 %s <a target=\"_blank\" href=\"http://www.famfamfam.com/lab/icons/silk/\">\
-FamFamFam</a>, "\
-"<a target=\"_blank\" href=\"https://www.google.com/get/noto/help/emoji/\">Google Noto Color Emoji</a> "\
-"<a target=\"_blank\" href=\"https://raw.githubusercontent.com/googlei18n/noto-emoji/master/LICENSE\">(Apache Licence v2.0)</a>.\n"\
-"<p>This product uses the TMDB API but is not endorsed or certified by <a target=\"_blank\" href=\"https://www.themoviedb.org\">TMDb</a> <img src=\"static/img/tmdb.png\" class=\"tmdb\"></p>"\
-"<p>TV information and images are provided by TheTVDB.com, but we are not endorsed or certified by TheTVDB.com or its affiliates. <a target=\"_blank\" href=\"https://thetvdb.com\">TheTVDB.com</a> <img src=\"static/img/tvdb.png\" class=\"tvdb\"></p>"\
-"</p>\n",
-    tvh_gettext_lang(lang, N_("Based on software from")),
-    tvh_gettext_lang(lang, N_("Icons from")));
+FamFamFam</a>, "
+      "<a target=\"_blank\" href=\"https://www.google.com/get/noto/help/emoji/\">Google Noto Color "
+      "Emoji</a> "
+      "<a target=\"_blank\" "
+      "href=\"https://raw.githubusercontent.com/googlei18n/noto-emoji/master/LICENSE\">(Apache "
+      "Licence v2.0)</a>.\n"
+      "<p>This product uses the TMDB API but is not endorsed or certified by <a target=\"_blank\" "
+      "href=\"https://www.themoviedb.org\">TMDb</a> <img src=\"static/img/tmdb.png\" "
+      "class=\"tmdb\"></p>"
+      "<p>TV information and images are provided by TheTVDB.com, but we are not endorsed or "
+      "certified by TheTVDB.com or its affiliates. <a target=\"_blank\" "
+      "href=\"https://thetvdb.com\">TheTVDB.com</a> <img src=\"static/img/tvdb.png\" "
+      "class=\"tvdb\"></p>"
+      "</p>\n",
+      tvh_gettext_lang(lang, N_("Based on software from")),
+      tvh_gettext_lang(lang, N_("Icons from")));
 
-  htsbuf_qprintf(hq, "<p>%s: %s (%s)",
-    tvh_gettext_lang(lang, N_("Build")),
-    tvheadend_version,
-    build_timestamp);
+  htsbuf_qprintf(hq,
+      "<p>%s: %s (%s)",
+      tvh_gettext_lang(lang, N_("Build")),
+      tvheadend_version,
+      build_timestamp);
   if (!http_access_verify(hc, ACCESS_ADMIN)) {
     htsbuf_qprintf(hq,
-" <a href=\"javascript:void(0)\"\
+        " <a href=\"javascript:void(0)\"\
  onclick=\"Ext.get('textarea_build_config').setVisibilityMode(Ext.Element.DISPLAY).toggle()\">%s</a>\
 </p>\n<textarea id=\"textarea_build_config\" rows=\"20\" cols=\"80\" readonly \
  style=\"display: none; margin: 5px auto 10px\">\n%s\n</textarea>\n",
-    tvh_gettext_lang(lang, N_("Toggle details")),
-    build_config_str);
+        tvh_gettext_lang(lang, N_("Toggle details")),
+        build_config_str);
   } else {
     htsbuf_qprintf(hq, "</p>\n");
   }
 
-  htsbuf_qprintf(hq, "<p>\n\
+  htsbuf_qprintf(hq,
+      "<p>\n\
 %s<br/>\n\
 %s\n\
 </p>\n\
 <a href='https://opencollective.com/tvheadend/donate'><img src='static/img/opencollective.png' alt='' /></a>\n\
 </center>\n",
-   tvh_gettext_lang(lang, N_("To support Tvheadend development please consider making a donation")),
-   tvh_gettext_lang(lang, N_("towards project operating costs.")));
+      tvh_gettext_lang(lang,
+          N_("To support Tvheadend development please consider making a donation")),
+      tvh_gettext_lang(lang, N_("towards project operating costs.")));
 
   http_output_html(hc);
   return 0;
@@ -236,10 +234,8 @@ FamFamFam</a>, "\
 /**
  * WEB user interface
  */
-void
-extjs_start(void)
-{
-  http_path_add("/about.html",       NULL, page_about,             ACCESS_WEB_INTERFACE);
-  http_path_add("/extjs.html",       NULL, extjs_root,             ACCESS_WEB_INTERFACE);
-  http_path_add("/tv.html",          NULL, extjs_livetv,           ACCESS_WEB_INTERFACE);
+void extjs_start(void) {
+  http_path_add("/about.html", NULL, page_about, ACCESS_WEB_INTERFACE);
+  http_path_add("/extjs.html", NULL, extjs_root, ACCESS_WEB_INTERFACE);
+  http_path_add("/tv.html", NULL, extjs_livetv, ACCESS_WEB_INTERFACE);
 }

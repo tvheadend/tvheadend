@@ -23,20 +23,18 @@
 #include "htsmsg.h"
 #include "api.h"
 
-htsmsg_t *
-api_idnode_flist_conf( htsmsg_t *args, const char *name )
-{
-  htsmsg_t *m = NULL;
-  const char *s = htsmsg_get_str(args, name);
-  char *r, *saveptr = NULL;
-  int use = 1;
+htsmsg_t* api_idnode_flist_conf(htsmsg_t* args, const char* name) {
+  htsmsg_t*   m = NULL;
+  const char* s = htsmsg_get_str(args, name);
+  char *      r, *saveptr = NULL;
+  int         use = 1;
   if (s && s[0] == '-') {
     use = 0;
     s++;
   }
   if (s && s[0] != '\0') {
     s = r = strdup(s);
-    r = strtok_r(r, ",;:", &saveptr);
+    r     = strtok_r(r, ",;:", &saveptr);
     while (r) {
       while (*r != '\0' && *r <= ' ')
         r++;
@@ -47,24 +45,17 @@ api_idnode_flist_conf( htsmsg_t *args, const char *name )
       }
       r = strtok_r(NULL, ",;:", &saveptr);
     }
-    free((char *)s);
+    free((char*)s);
   }
   return m;
 }
 
-static struct strtab filtcmptab[] = {
-  { "gt", IC_GT },
-  { "lt", IC_LT },
-  { "eq", IC_EQ }
-};
+static struct strtab filtcmptab[] = {{"gt", IC_GT}, {"lt", IC_LT}, {"eq", IC_EQ}};
 
-static void
-api_idnode_grid_conf
-  ( access_t *perm, htsmsg_t *args, api_idnode_grid_conf_t *conf )
-{
+static void api_idnode_grid_conf(access_t* perm, htsmsg_t* args, api_idnode_grid_conf_t* conf) {
   htsmsg_field_t *f, *f2;
-  htsmsg_t *filter, *e;
-  const char *str;
+  htsmsg_t *      filter, *e;
+  const char*     str;
 
   conf->start = htsmsg_get_u32_or_default(args, "start", 0);
   conf->limit = htsmsg_get_u32_or_default(args, "limit", 50);
@@ -73,9 +64,12 @@ api_idnode_grid_conf
   if ((filter = htsmsg_get_list(args, "filter"))) {
     HTSMSG_FOREACH(f, filter) {
       const char *k, *t, *v;
-      if (!(e = htsmsg_get_map_by_field(f))) continue;
-      if (!(k = htsmsg_get_str(e, "field"))) continue;
-      if (!(t = htsmsg_get_str(e, "type")))  continue;
+      if (!(e = htsmsg_get_map_by_field(f)))
+        continue;
+      if (!(k = htsmsg_get_str(e, "field")))
+        continue;
+      if (!(t = htsmsg_get_str(e, "type")))
+        continue;
       if (!strcmp(t, "string")) {
         if ((v = htsmsg_get_str(e, "value")))
           idnode_filter_add_str(&conf->filter, k, v, IC_RE);
@@ -115,17 +109,14 @@ api_idnode_grid_conf
     conf->sort.key = NULL;
 }
 
-int
-api_idnode_grid
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int i;
-  htsmsg_t *list, *e;
-  htsmsg_t *flist = api_idnode_flist_conf(args, "list");
-  api_idnode_grid_conf_t conf = { 0 };
-  idnode_t *in;
-  idnode_set_t ins = { 0 };
-  api_idnode_grid_callback_t cb = opaque;
+int api_idnode_grid(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
+  int                        i;
+  htsmsg_t *                 list, *e;
+  htsmsg_t*                  flist = api_idnode_flist_conf(args, "list");
+  api_idnode_grid_conf_t     conf  = {0};
+  idnode_t*                  in;
+  idnode_set_t               ins = {0};
+  api_idnode_grid_callback_t cb  = opaque;
 
   /* Grid configuration */
   api_idnode_grid_conf(perm, args, &conf);
@@ -139,7 +130,7 @@ api_idnode_grid
     idnode_set_sort(&ins, &conf.sort);
 
   /* Paginate */
-  list  = htsmsg_create_list();
+  list = htsmsg_create_list();
   for (i = conf.start; i < ins.is_count && conf.limit != 0; i++) {
     in = ins.is_array[i];
     if (idnode_perm(in, perm, NULL))
@@ -149,7 +140,8 @@ api_idnode_grid
     idnode_read0(in, e, flist, 0, conf.sort.lang);
     idnode_perm_unset(in);
     htsmsg_add_msg(list, NULL, e);
-    if (conf.limit > 0) conf.limit--;
+    if (conf.limit > 0)
+      conf.limit--;
   }
 
   tvh_mutex_unlock(&global_lock);
@@ -157,7 +149,7 @@ api_idnode_grid
   /* Output */
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", list);
-  htsmsg_add_u32(*resp, "total",   ins.is_count);
+  htsmsg_add_u32(*resp, "total", ins.is_count);
 
   /* Cleanup */
   free(ins.is_array);
@@ -167,16 +159,17 @@ api_idnode_grid
   return 0;
 }
 
-static int
-api_idnode_load_by_class0
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int i, _enum;
-  const idclass_t *idc;
-  idnode_set_t    *is;
-  idnode_t        *in;
-  htsmsg_t        *l, *e;
-  char ubuf[UUID_HEX_SIZE], buf[384];
+static int api_idnode_load_by_class0(access_t* perm,
+    void*                                      opaque,
+    const char*                                op,
+    htsmsg_t*                                  args,
+    htsmsg_t**                                 resp) {
+  int              i, _enum;
+  const idclass_t* idc;
+  idnode_set_t*    is;
+  idnode_t*        in;
+  htsmsg_t *       l, *e;
+  char             ubuf[UUID_HEX_SIZE], buf[384];
 
   // TODO: this only works if pass as integer
   _enum = htsmsg_get_bool_or_default(args, "enum", 0);
@@ -196,12 +189,12 @@ api_idnode_load_by_class0
       /* Name/UUID only */
       if (_enum) {
         e = htsmsg_create_key_val(idnode_uuid_as_str(in, ubuf),
-                                  idnode_get_title(in, perm->aa_lang_ui, buf, sizeof(buf)));
+            idnode_get_title(in, perm->aa_lang_ui, buf, sizeof(buf)));
 
-      /* Full record */
+        /* Full record */
       } else {
-        htsmsg_t *flist = api_idnode_flist_conf(args, "list");
-        e = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
+        htsmsg_t* flist = api_idnode_flist_conf(args, "list");
+        e               = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
         htsmsg_destroy(flist);
       }
 
@@ -220,10 +213,11 @@ api_idnode_load_by_class0
   return 0;
 }
 
-int
-api_idnode_load_by_class
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
+int api_idnode_load_by_class(access_t* perm,
+    void*                              opaque,
+    const char*                        op,
+    htsmsg_t*                          args,
+    htsmsg_t**                         resp) {
   int ret;
   tvh_mutex_lock(&global_lock);
   ret = api_idnode_load_by_class0(perm, opaque, op, args, resp);
@@ -232,18 +226,16 @@ api_idnode_load_by_class
 }
 
 static int
-api_idnode_load
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int err = 0, meta, grid, count = 0;
-  idnode_t *in;
-  htsmsg_t *uuids, *l = NULL, *m, *flist;
-  htsmsg_field_t *f;
-  const char *uuid = NULL, *class;
+api_idnode_load(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
+  int             err = 0, meta, grid, count = 0;
+  idnode_t*       in;
+  htsmsg_t *      uuids, *l = NULL, *m, *flist;
+  htsmsg_field_t* f;
+  const char *    uuid = NULL, *class;
 
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {
-    const idclass_t *idc;
+    const idclass_t* idc;
     tvh_mutex_lock(&global_lock);
     idc = idclass_find(class);
     if (idc)
@@ -253,7 +245,7 @@ api_idnode_load
     tvh_mutex_unlock(&global_lock);
     return err;
   }
-  
+
   /* UUIDs */
   if (!(f = htsmsg_field_find(args, "uuid")))
     return EINVAL;
@@ -272,11 +264,13 @@ api_idnode_load
 
   /* Multiple */
   if (uuids) {
-    const idnodes_rb_t *domain = NULL;
-    l = htsmsg_create_list();
+    const idnodes_rb_t* domain = NULL;
+    l                          = htsmsg_create_list();
     HTSMSG_FOREACH(f, uuids) {
-      if (!(uuid = htsmsg_field_get_str(f))) continue;
-      if (!(in   = idnode_find(uuid, NULL, domain))) continue;
+      if (!(uuid = htsmsg_field_get_str(f)))
+        continue;
+      if (!(in = idnode_find(uuid, NULL, domain)))
+        continue;
       domain = in->in_domain;
       if (idnode_perm(in, perm, NULL)) {
         err = EPERM;
@@ -299,7 +293,7 @@ api_idnode_load
     if (count)
       err = 0;
 
-  /* Single */
+    /* Single */
   } else {
     l = htsmsg_create_list();
     if ((in = idnode_find(uuid, NULL, NULL)) != NULL) {
@@ -335,14 +329,15 @@ api_idnode_load
   return err;
 }
 
-int
-api_idnode_load_simple
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int err = 0, meta;
-  htsmsg_t *l = NULL, *m, *flist;
-  const char *class;
-  idnode_t *in = (idnode_t *)opaque;
+int api_idnode_load_simple(access_t* perm,
+    void*                            opaque,
+    const char*                      op,
+    htsmsg_t*                        args,
+    htsmsg_t**                       resp) {
+  int       err = 0, meta;
+  htsmsg_t *l   = NULL, *m, *flist;
+  const char* class;
+  idnode_t* in = (idnode_t*)opaque;
 
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {
@@ -383,16 +378,14 @@ api_idnode_load_simple
 }
 
 static int
-api_idnode_save
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int err = EINVAL;
-  idnode_t *in;
-  htsmsg_t *msg, *conf;
-  htsmsg_field_t *f;
-  const char *uuid;
-  int count = 0;
-  const idnodes_rb_t *domain = NULL;
+api_idnode_save(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
+  int                 err = EINVAL;
+  idnode_t*           in;
+  htsmsg_t *          msg, *conf;
+  htsmsg_field_t*     f;
+  const char*         uuid;
+  int                 count  = 0;
+  const idnodes_rb_t* domain = NULL;
 
   if (!(f = htsmsg_field_find(args, "node")))
     return EINVAL;
@@ -439,10 +432,9 @@ api_idnode_save
       idnode_update(in, msg);
       idnode_perm_unset(in);
       err = 0;
-
     }
 
-  /* Multiple */
+    /* Multiple */
   } else {
 
     HTSMSG_FOREACH(f, msg) {
@@ -463,7 +455,6 @@ api_idnode_save
     }
     if (count)
       err = 0;
-
   }
 
   // TODO: return updated UUIDs?
@@ -474,19 +465,20 @@ exit:
   return err;
 }
 
-int
-api_idnode_save_simple
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int err = 0;
-  htsmsg_t *msg;
-  htsmsg_field_t *f;
-  idnode_t *in = (idnode_t *)opaque;
+int api_idnode_save_simple(access_t* perm,
+    void*                            opaque,
+    const char*                      op,
+    htsmsg_t*                        args,
+    htsmsg_t**                       resp) {
+  int             err = 0;
+  htsmsg_t*       msg;
+  htsmsg_field_t* f;
+  idnode_t*       in = (idnode_t*)opaque;
 
   if (!(f = htsmsg_field_find(args, "node")))
     return EINVAL;
   if (!(msg = htsmsg_field_get_map(f)))
-      return EINVAL;
+    return EINVAL;
 
   tvh_mutex_lock(&global_lock);
 
@@ -503,14 +495,11 @@ api_idnode_save_simple
   return err;
 }
 
-int
-api_idnode_tree
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  const char *uuid;
-  const char *root = NULL;
-  int      isroot;
-  idnode_t *node = NULL;
+int api_idnode_tree(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
+  const char*                uuid;
+  const char*                root = NULL;
+  int                        isroot;
+  idnode_t*                  node   = NULL;
   api_idnode_tree_callback_t rootfn = opaque;
 
   /* UUID */
@@ -526,7 +515,7 @@ api_idnode_tree
   if (isroot && !(root || rootfn))
     return EINVAL;
 
- tvh_mutex_lock(&global_lock);
+  tvh_mutex_lock(&global_lock);
 
   if (!isroot || root) {
     if (!(node = idnode_find(isroot ? root : uuid, NULL, NULL))) {
@@ -539,7 +528,7 @@ api_idnode_tree
 
   /* Root node */
   if (isroot && node) {
-    htsmsg_t *m;
+    htsmsg_t* m;
     if (idnode_perm(node, perm, NULL)) {
       tvh_mutex_unlock(&global_lock);
       return EINVAL;
@@ -549,15 +538,15 @@ api_idnode_tree
     htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
     htsmsg_add_msg(*resp, NULL, m);
 
-  /* Children */
+    /* Children */
   } else {
-    idnode_set_t *v = node ? idnode_get_childs(node) : rootfn(perm);
+    idnode_set_t* v = node ? idnode_get_childs(node) : rootfn(perm);
     if (v) {
       int i;
       idnode_set_sort_by_title(v, perm->aa_lang_ui);
-      for(i = 0; i < v->is_count; i++) {
-        idnode_t *in = v->is_array[i];
-        htsmsg_t *m;
+      for (i = 0; i < v->is_count; i++) {
+        idnode_t* in = v->is_array[i];
+        htsmsg_t* m;
         if (idnode_perm(in, perm, NULL))
           continue;
         m = idnode_serialize(v->is_array[i], perm->aa_lang_ui);
@@ -573,14 +562,15 @@ api_idnode_tree
   return 0;
 }
 
-int
-api_idnode_class
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int err = EINVAL;
-  const char      *name;
-  const idclass_t *idc;
-  htsmsg_t *flist = api_idnode_flist_conf(args, "list");
+int api_idnode_class(access_t* perm,
+    void*                      opaque,
+    const char*                op,
+    htsmsg_t*                  args,
+    htsmsg_t**                 resp) {
+  int              err = EINVAL;
+  const char*      name;
+  const idclass_t* idc;
+  htsmsg_t*        flist = api_idnode_flist_conf(args, "list");
 
   tvh_mutex_lock(&global_lock);
 
@@ -588,9 +578,9 @@ api_idnode_class
   if (!opaque) {
     if (!(name = htsmsg_get_str(args, "name")))
       goto exit;
-    if (!(idc  = idclass_find(name)))
+    if (!(idc = idclass_find(name)))
       goto exit;
-  
+
   } else {
     idc = opaque;
   }
@@ -606,18 +596,18 @@ exit:
   return err;
 }
 
-int
-api_idnode_handler
-  ( const idclass_t *idc,
-    access_t *perm, htsmsg_t *args, htsmsg_t **resp,
-    void (*handler)(access_t *perm, idnode_t *in),
-    const char *op, int destroyed )
-{
-  int err = 0;
-  idnode_t *in;
-  htsmsg_t *uuids, *msg;
-  htsmsg_field_t *f;
-  const char *uuid;
+int api_idnode_handler(const idclass_t* idc,
+    access_t*                           perm,
+    htsmsg_t*                           args,
+    htsmsg_t**                          resp,
+    void (*handler)(access_t* perm, idnode_t* in),
+    const char* op,
+    int         destroyed) {
+  int             err = 0;
+  idnode_t*       in;
+  htsmsg_t *      uuids, *msg;
+  htsmsg_field_t* f;
+  const char*     uuid;
 
   /* ID based */
   if (!(f = htsmsg_field_find(args, "uuid")))
@@ -628,12 +618,13 @@ api_idnode_handler
 
   /* Multiple */
   if (uuids) {
-    const idnodes_rb_t *domain = NULL;
-    int cnt = 0, pcnt = 0;
+    const idnodes_rb_t* domain = NULL;
+    int                 cnt = 0, pcnt = 0;
     msg = htsmsg_create_map();
     htsmsg_add_str(msg, "__op__", op);
     HTSMSG_FOREACH(f, uuids) {
-      if (!(uuid = htsmsg_field_get_string(f))) continue;
+      if (!(uuid = htsmsg_field_get_string(f)))
+        continue;
       tvh_mutex_lock(&global_lock);
       if ((in = idnode_find(uuid, idc, domain)) != NULL) {
         domain = in->in_domain;
@@ -655,12 +646,12 @@ api_idnode_handler
 
     if (pcnt && !cnt)
       err = EPERM;
-  
-  /* Single */
+
+    /* Single */
   } else {
     uuid = htsmsg_field_get_string(f);
     tvh_mutex_lock(&global_lock);
-    if (!(in   = idnode_find(uuid, idc, NULL))) {
+    if (!(in = idnode_find(uuid, idc, NULL))) {
       err = ENOENT;
     } else {
       msg = htsmsg_create_map();
@@ -677,61 +668,44 @@ api_idnode_handler
     tvh_mutex_unlock(&global_lock);
   }
 
-
   return err;
 }
 
-static void
-api_idnode_delete_ (access_t *perm, idnode_t *in)
-{
+static void api_idnode_delete_(access_t* perm, idnode_t* in) {
   return idnode_delete(in);
 }
 
 static int
-api_idnode_delete
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
+api_idnode_delete(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
   return api_idnode_handler(NULL, perm, args, resp, api_idnode_delete_, "delete", 1);
 }
 
-static void
-api_idnode_moveup_ (access_t *perm, idnode_t *in)
-{
+static void api_idnode_moveup_(access_t* perm, idnode_t* in) {
   return idnode_moveup(in);
 }
 
 static int
-api_idnode_moveup
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
+api_idnode_moveup(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
   return api_idnode_handler(NULL, perm, args, resp, api_idnode_moveup_, "moveup", 0);
 }
 
-static void
-api_idnode_movedown_ (access_t *perm, idnode_t *in)
-{
+static void api_idnode_movedown_(access_t* perm, idnode_t* in) {
   return idnode_movedown(in);
 }
 
 static int
-api_idnode_movedown
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
+api_idnode_movedown(access_t* perm, void* opaque, const char* op, htsmsg_t* args, htsmsg_t** resp) {
   return api_idnode_handler(NULL, perm, args, resp, api_idnode_movedown_, "movedown", 0);
 }
 
-void
-api_idnode_create( htsmsg_t **resp, idnode_t *in )
-{
+void api_idnode_create(htsmsg_t** resp, idnode_t* in) {
   idnode_changed(in);
   if (*resp == NULL)
     *resp = htsmsg_create_map();
   htsmsg_add_uuid(*resp, "uuid", &in->in_uuid);
 }
 
-void
-api_idnode_create_list( htsmsg_t **resp, htsmsg_t *list )
-{
+void api_idnode_create_list(htsmsg_t** resp, htsmsg_t* list) {
   if (list == NULL) {
     htsmsg_destroy(list);
     return;
@@ -743,20 +717,19 @@ api_idnode_create_list( htsmsg_t **resp, htsmsg_t *list )
 
 #define ACCESS_IDNODE (ACCESS_ANONYMOUS | ACCESS_NO_EMPTY_ARGS)
 
-void api_idnode_init ( void )
-{
+void api_idnode_init(void) {
   /*
    * note: permissions are verified using idnode_perm() calls
    */
   static api_hook_t ah[] = {
-    { "idnode/load",     ACCESS_IDNODE, api_idnode_load,     NULL },
-    { "idnode/save",     ACCESS_IDNODE, api_idnode_save,     NULL },
-    { "idnode/tree",     ACCESS_IDNODE, api_idnode_tree,     NULL },
-    { "idnode/class",    ACCESS_IDNODE, api_idnode_class,    NULL },
-    { "idnode/delete",   ACCESS_IDNODE, api_idnode_delete,   NULL },
-    { "idnode/moveup",   ACCESS_IDNODE, api_idnode_moveup,   NULL },
-    { "idnode/movedown", ACCESS_IDNODE, api_idnode_movedown, NULL },
-    { NULL },
+      {"idnode/load", ACCESS_IDNODE, api_idnode_load, NULL},
+      {"idnode/save", ACCESS_IDNODE, api_idnode_save, NULL},
+      {"idnode/tree", ACCESS_IDNODE, api_idnode_tree, NULL},
+      {"idnode/class", ACCESS_IDNODE, api_idnode_class, NULL},
+      {"idnode/delete", ACCESS_IDNODE, api_idnode_delete, NULL},
+      {"idnode/moveup", ACCESS_IDNODE, api_idnode_moveup, NULL},
+      {"idnode/movedown", ACCESS_IDNODE, api_idnode_movedown, NULL},
+      {NULL},
   };
 
   api_register_all(ah);

@@ -19,7 +19,7 @@
 #ifndef TVH_LOCK_H
 #define TVH_LOCK_H
 
-int file_lock(const char *lfile, int timeout);
-int file_unlock(const char *lfile, int _fd);
+int file_lock(const char* lfile, int timeout);
+int file_unlock(const char* lfile, int _fd);
 
 #endif /* TVH_LOCK_H */

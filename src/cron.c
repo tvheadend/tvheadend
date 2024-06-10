@@ -33,9 +33,7 @@
 /*
  * Parse value
  */
-static int
-cron_parse_val ( const char *str, const char **key, int *v )
-{
+static int cron_parse_val(const char* str, const char** key, int* v) {
   int i = 0;
   if (!str)
     return 0;
@@ -55,98 +53,107 @@ cron_parse_val ( const char *str, const char **key, int *v )
 /*
  * Parse individual field in cron spec
  */
-static int
-cron_parse_field 
-  ( const char **istr, uint64_t *field, uint64_t mask, int bits, int off,
-    const char **key )
-{ 
-  int sn = -1, en = -1, mn = -1;
-  const char *str = *istr;
-  const char *beg = str;
+static int cron_parse_field(const char** istr,
+    uint64_t*                            field,
+    uint64_t                             mask,
+    int                                  bits,
+    int                                  off,
+    const char**                         key) {
+  int         sn = -1, en = -1, mn = -1;
+  const char* str = *istr;
+  const char* beg = str;
   uint64_t    val = 0;
-  while ( 1 ) {
-    if ( *str == '*' ) {
-      sn     = off;
-      en     = bits + off - 1;
-      beg    = NULL;
-    } else if ( *str == ',' || *str == ' ' || *str == '\0' ) {
+  while (1) {
+    if (*str == '*') {
+      sn  = off;
+      en  = bits + off - 1;
+      beg = NULL;
+    } else if (*str == ',' || *str == ' ' || *str == '\0') {
       if (beg)
         if (cron_parse_val(beg, key, en == -1 ? (sn == -1 ? &sn : &en) : &mn))
           return 1;
       if ((sn - off) >= bits || (en - off) >= bits || mn > bits)
         return 1;
-      if (en < 0) en = sn;
-      if (mn <= 0) mn = 1;
+      if (en < 0)
+        en = sn;
+      if (mn <= 0)
+        mn = 1;
       while (sn <= en) {
-        if ( (sn % mn) == 0 )
+        if ((sn % mn) == 0)
           val |= (0x1ULL << (sn - off));
         sn++;
       }
-      if (*str != ',') break;
+      if (*str != ',')
+        break;
       sn = en = mn = -1;
-      beg = (str + 1);
-    } else if ( *str == '/' ) {
+      beg          = (str + 1);
+    } else if (*str == '/') {
       if (beg)
         if (en == -1 || cron_parse_val(beg, key, sn == -1 ? &sn : &en))
           return 1;
       beg = (str + 1);
-    } else if ( *str == '-' ) {
-      if (sn != -1 || cron_parse_val(beg, key, &sn))  
+    } else if (*str == '-') {
+      if (sn != -1 || cron_parse_val(beg, key, &sn))
         return 1;
       beg = (str + 1);
     }
     str++;
   }
-  if (*str == ' ') str++;
-  *istr   = str;
-  *field  = (val | ((val >> bits) & 0x1)) & mask;
+  if (*str == ' ')
+    str++;
+  *istr  = str;
+  *field = (val | ((val >> bits) & 0x1)) & mask;
   return 0;
 }
 
 /*
  * Set value
  */
-int
-cron_set ( cron_t *c, const char *str )
-{
-  uint64_t ho, mi, mo, dm, dw;
-  static const char *days[] = {
-    "sun", "mon", "tue", "wed", "thu", "fri", "sat", NULL
-  };
-  static const char *months[] = {
-    "ignore",
-    "jan", "feb", "mar", "apr", "may", "jun",
-    "jul", "aug", "sep", "oct", "nov", "dec",
-    NULL
-  };
+int cron_set(cron_t* c, const char* str) {
+  uint64_t           ho, mi, mo, dm, dw;
+  static const char* days[]   = {"sun", "mon", "tue", "wed", "thu", "fri", "sat", NULL};
+  static const char* months[] = {"ignore",
+      "jan",
+      "feb",
+      "mar",
+      "apr",
+      "may",
+      "jun",
+      "jul",
+      "aug",
+      "sep",
+      "oct",
+      "nov",
+      "dec",
+      NULL};
 
   /* Daily (01:01) */
-  if ( !strcmp(str, "@daily") ) {
+  if (!strcmp(str, "@daily")) {
     c->c_min  = 1;
     c->c_hour = 1;
     c->c_mday = CRON_MDAY_MASK;
     c->c_mon  = CRON_MON_MASK;
     c->c_wday = CRON_WDAY_MASK;
 
-  /* Hourly (XX:02) */
-  } else if ( !strcmp(str, "@hourly") ) {
+    /* Hourly (XX:02) */
+  } else if (!strcmp(str, "@hourly")) {
     c->c_min  = 2;
     c->c_hour = CRON_HOUR_MASK;
     c->c_mday = CRON_MDAY_MASK;
     c->c_mon  = CRON_MON_MASK;
     c->c_wday = CRON_WDAY_MASK;
-  
-  /* Standard */
+
+    /* Standard */
   } else {
-    if (cron_parse_field(&str, &mi, CRON_MIN_MASK,  60, 0, NULL)   || !mi)
+    if (cron_parse_field(&str, &mi, CRON_MIN_MASK, 60, 0, NULL) || !mi)
       return 1;
-    if (cron_parse_field(&str, &ho, CRON_HOUR_MASK, 24, 0, NULL)   || !ho)
+    if (cron_parse_field(&str, &ho, CRON_HOUR_MASK, 24, 0, NULL) || !ho)
       return 1;
-    if (cron_parse_field(&str, &dm, CRON_MDAY_MASK, 31, 1, NULL)   || !dm)
+    if (cron_parse_field(&str, &dm, CRON_MDAY_MASK, 31, 1, NULL) || !dm)
       return 1;
-    if (cron_parse_field(&str, &mo, CRON_MON_MASK,  12, 1, months) || !mo)
+    if (cron_parse_field(&str, &mo, CRON_MON_MASK, 12, 1, months) || !mo)
       return 1;
-    if (cron_parse_field(&str, &dw, CRON_WDAY_MASK, 7,  0, days)   || !dw)
+    if (cron_parse_field(&str, &dw, CRON_WDAY_MASK, 7, 0, days) || !dw)
       return 1;
     c->c_min  = mi;
     c->c_hour = ho;
@@ -161,14 +168,12 @@ cron_set ( cron_t *c, const char *str )
 /*
  * Set value
  */
-cron_multi_t *
-cron_multi_set ( const char *str )
-{
-  char *s = str ? alloca(strlen(str) + 1) : NULL;
-  char *line, *sptr = NULL;
-  cron_t cron;
-  cron_multi_t *cm = NULL, *cm2;
-  int count = 0;
+cron_multi_t* cron_multi_set(const char* str) {
+  char*         s = str ? alloca(strlen(str) + 1) : NULL;
+  char *        line, *sptr = NULL;
+  cron_t        cron;
+  cron_multi_t *cm    = NULL, *cm2;
+  int           count = 0;
 
   if (s == NULL)
     return NULL;
@@ -185,7 +190,7 @@ cron_multi_set ( const char *str )
           free(cm);
           return NULL;
         }
-        cm = cm2;
+        cm                      = cm2;
         cm->cm_crons[count - 1] = cron;
       }
     line = strtok_r(NULL, "\n", &sptr);
@@ -198,9 +203,7 @@ cron_multi_set ( const char *str )
 /*
  * Check for leap year
  */
-static int
-is_leep_year ( int year )
-{
+static int is_leep_year(int year) {
   if (!(year % 400))
     return 1;
   if (!(year % 100))
@@ -211,9 +214,7 @@ is_leep_year ( int year )
 /*
  * Check for days in month
  */
-static int
-days_in_month ( int year, int mon )
-{
+static int days_in_month(int year, int mon) {
   int d;
   if (mon == 2)
     d = 28 + is_leep_year(year);
@@ -225,11 +226,9 @@ days_in_month ( int year, int mon )
 /*
  * Find the next time (starting from now) that the cron should fire
  */
-int
-cron_next ( cron_t *c, const time_t now, time_t *ret )
-{
+int cron_next(cron_t* c, const time_t now, time_t* ret) {
   struct tm nxt, tmp;
-  int endyear, loops = 1000;
+  int       endyear, loops = 1000;
   localtime_r(&now, &nxt);
   endyear = nxt.tm_year + 10;
 
@@ -237,17 +236,16 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
   nxt.tm_sec = 0;
 
   /* Invalid day */
-  if (!(c->c_mday & (0x1LL << (nxt.tm_mday-1))) ||
-      !(c->c_wday & (0x1LL << (nxt.tm_wday)))   ||
-      !(c->c_mon & (0x1LL << (nxt.tm_mon))) ) {
+  if (!(c->c_mday & (0x1LL << (nxt.tm_mday - 1))) || !(c->c_wday & (0x1LL << (nxt.tm_wday))) ||
+      !(c->c_mon & (0x1LL << (nxt.tm_mon)))) {
     nxt.tm_min  = 0;
     nxt.tm_hour = 0;
 
-  /* Invalid hour */
+    /* Invalid hour */
   } else if (!(c->c_hour & (0x1LL << nxt.tm_hour))) {
-    nxt.tm_min  = 0;
+    nxt.tm_min = 0;
 
-  /* Increment */
+    /* Increment */
   } else {
     ++nxt.tm_min;
   }
@@ -274,7 +272,7 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
   /* Date */
   if (nxt.tm_wday == 7)
     nxt.tm_wday = 0;
-  if (nxt.tm_mday > days_in_month(nxt.tm_year+1900, nxt.tm_mon+1)) {
+  if (nxt.tm_mday > days_in_month(nxt.tm_year + 1900, nxt.tm_mon + 1)) {
     nxt.tm_mday = 1;
     nxt.tm_mon++;
     if (nxt.tm_mon == 12) {
@@ -282,9 +280,8 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
       ++nxt.tm_year;
     }
   }
-  while (!(c->c_mday & (0x1LL << (nxt.tm_mday-1))) ||
-         !(c->c_wday & (0x1LL << (nxt.tm_wday)))   ||
-         !(c->c_mon & (0x1LL << (nxt.tm_mon))) ) {
+  while (!(c->c_mday & (0x1LL << (nxt.tm_mday - 1))) || !(c->c_wday & (0x1LL << (nxt.tm_wday))) ||
+      !(c->c_mon & (0x1LL << (nxt.tm_mon)))) {
 
     /* Endless loop protection */
     if (loops-- == 0)
@@ -299,7 +296,7 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
       nxt.tm_wday = 0;
 
     /* Increment day */
-    if (++nxt.tm_mday > days_in_month(nxt.tm_year+1900, nxt.tm_mon+1)) {
+    if (++nxt.tm_mday > days_in_month(nxt.tm_year + 1900, nxt.tm_mon + 1)) {
       nxt.tm_mday = 1;
       if (++nxt.tm_mon == 12) {
         nxt.tm_mon = 0;
@@ -309,8 +306,7 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
 
     /* Shortcut the month */
     while (!(c->c_mon & (0x1LL << nxt.tm_mon))) {
-      nxt.tm_wday
-        += 1 + (days_in_month(nxt.tm_year+1900, nxt.tm_mon+1) - nxt.tm_mday);
+      nxt.tm_wday += 1 + (days_in_month(nxt.tm_year + 1900, nxt.tm_mon + 1) - nxt.tm_mday);
       nxt.tm_mday = 1;
       if (++nxt.tm_mon >= 12) {
         nxt.tm_mon = 0;
@@ -329,9 +325,9 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
     *ret = mktime(&tmp);
   if (*ret <= now) {
 #ifndef CRON_TEST
-    tvherror(LS_CRON, "invalid time, now %"PRItime_t", result %"PRItime_t, now, *ret);
+    tvherror(LS_CRON, "invalid time, now %" PRItime_t ", result %" PRItime_t, now, *ret);
 #else
-    printf("ERROR: invalid time, now %"PRItime_t", result %"PRItime_t"\n", now, *ret);
+    printf("ERROR: invalid time, now %" PRItime_t ", result %" PRItime_t "\n", now, *ret);
 #endif
     *ret = now + 600;
   }
@@ -341,11 +337,9 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
 /*
  * Find the next time (starting from now) that the cron should fire
  */
-int
-cron_multi_next ( cron_multi_t *cm, const time_t now, time_t *ret )
-{
+int cron_multi_next(cron_multi_t* cm, const time_t now, time_t* ret) {
   uint32_t i;
-  time_t r = (time_t)-1, t;
+  time_t   r = (time_t)-1, t;
 
   if (cm == NULL)
     return -1;
@@ -365,9 +359,7 @@ cron_multi_next ( cron_multi_t *cm, const time_t now, time_t *ret )
  *   gcc -g -DCRON_TEST -I./build.linux src/cron.c
  */
 #ifdef CRON_TEST
-static
-void print_bits ( uint64_t b, int n )
-{
+static void print_bits(uint64_t b, int n) {
   while (n) {
     printf("%d", (int)(b & 0x1));
     b >>= 1;
@@ -375,13 +367,11 @@ void print_bits ( uint64_t b, int n )
   }
 }
 
-int
-main ( int argc, char **argv )
-{
-  cron_t c;
-  time_t n;
+int main(int argc, char** argv) {
+  cron_t    c;
+  time_t    n;
   struct tm tm;
-  char buf[128];
+  char      buf[128];
 
   if (argc < 2) {
     printf("Specify: CRON [NOW]\n");
@@ -394,11 +384,21 @@ main ( int argc, char **argv )
   if (cron_set(&c, argv[1]))
     printf("INVALID CRON: %s\n", argv[1]);
   else {
-    printf("min  = "); print_bits(c.c_min,  60); printf("\n");
-    printf("hour = "); print_bits(c.c_hour, 24); printf("\n");
-    printf("mday = "); print_bits(c.c_mday, 31); printf("\n");
-    printf("mon  = "); print_bits(c.c_mon,  12); printf("\n");
-    printf("wday = "); print_bits(c.c_wday,  7); printf("\n");
+    printf("min  = ");
+    print_bits(c.c_min, 60);
+    printf("\n");
+    printf("hour = ");
+    print_bits(c.c_hour, 24);
+    printf("\n");
+    printf("mday = ");
+    print_bits(c.c_mday, 31);
+    printf("\n");
+    printf("mon  = ");
+    print_bits(c.c_mon, 12);
+    printf("\n");
+    printf("wday = ");
+    print_bits(c.c_wday, 7);
+    printf("\n");
 
     localtime_r(&n, &tm);
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", &tm);
@@ -411,7 +411,6 @@ main ( int argc, char **argv )
     localtime_r(&n, &tm);
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", &tm);
     printf("NXT: %ld - %s (DST %d) (ZONE %s)\n", (long)n, buf, tm.tm_isdst, tm.tm_zone);
-    
   }
   return 0;
 }

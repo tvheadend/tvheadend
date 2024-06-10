@@ -28,26 +28,24 @@
 #include <signal.h>
 
 typedef struct file_priv {
-  int fd;
-  int shutdown;
-  pthread_t tid;
+  int        fd;
+  int        shutdown;
+  pthread_t  tid;
   tvh_cond_t cond;
 } file_priv_t;
 
 /*
  * Read thread
  */
-static void *
-iptv_file_thread ( void *aux )
-{
-  iptv_mux_t *im = aux;
-  file_priv_t *fp = im->im_data;
-  ssize_t r;
-  int fd = fp->fd, pause = 0;
-  char buf[32*1024];
-  off_t off = 0;
-  int64_t mono;
-  int e;
+static void* iptv_file_thread(void* aux) {
+  iptv_mux_t*  im = aux;
+  file_priv_t* fp = im->im_data;
+  ssize_t      r;
+  int          fd = fp->fd, pause = 0;
+  char         buf[32 * 1024];
+  off_t        off = 0;
+  int64_t      mono;
+  int          e;
 
 #if defined(PLATFORM_DARWIN)
   fcntl(fd, F_NOCACHE, 1);
@@ -92,19 +90,16 @@ iptv_file_thread ( void *aux )
 /*
  * Open file
  */
-static int
-iptv_file_start
-  ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
-{
-  file_priv_t *fp;
-  int fd = tvh_open(raw + 7, O_RDONLY | O_NONBLOCK, 0);
+static int iptv_file_start(iptv_input_t* mi, iptv_mux_t* im, const char* raw, const url_t* url) {
+  file_priv_t* fp;
+  int          fd = tvh_open(raw + 7, O_RDONLY | O_NONBLOCK, 0);
 
   if (fd < 0) {
     tvherror(LS_IPTV, "unable to open file '%s'", raw + 7);
     return -1;
   }
 
-  fp = calloc(1, sizeof(*fp));
+  fp     = calloc(1, sizeof(*fp));
   fp->fd = fd;
   tvh_cond_init(&fp->cond, 1);
   im->im_data = fp;
@@ -113,12 +108,9 @@ iptv_file_start
   return 0;
 }
 
-static void
-iptv_file_stop
-  ( iptv_input_t *mi, iptv_mux_t *im )
-{
-  file_priv_t *fp = im->im_data;
-  int rd = fp->fd;
+static void iptv_file_stop(iptv_input_t* mi, iptv_mux_t* im) {
+  file_priv_t* fp = im->im_data;
+  int          rd = fp->fd;
   if (rd > 0)
     close(rd);
   fp->shutdown = 1;
@@ -135,16 +127,9 @@ iptv_file_stop
  * Initialise file handler
  */
 
-void
-iptv_file_init ( void )
-{
+void iptv_file_init(void) {
   static iptv_handler_t ih[] = {
-    {
-      .scheme = "file",
-      .buffer_limit = 5000,
-      .start  = iptv_file_start,
-      .stop   = iptv_file_stop
-    },
+      {.scheme = "file", .buffer_limit = 5000, .start = iptv_file_start, .stop = iptv_file_stop},
   };
   iptv_handler_register(ih, ARRAY_SIZE(ih));
 }

@@ -17,50 +17,36 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "transcoding/codec/internals.h"
-
 
 /* vorbis =================================================================== */
 
-static int
-tvh_codec_profile_vorbis_open(TVHCodecProfile *self, AVDictionary **opts)
-{
-    AV_DICT_SET_GLOBAL_QUALITY(opts, self->qscale, 5);
-    return 0;
+static int tvh_codec_profile_vorbis_open(TVHCodecProfile* self, AVDictionary** opts) {
+  AV_DICT_SET_GLOBAL_QUALITY(opts, self->qscale, 5);
+  return 0;
 }
 
-
 // see vorbis_encode_init() in ffmpeg-3.0.2/libavcodec/vorbisenc.c
-static const uint64_t vorbis_channel_layouts[] = {
-    AV_CH_LAYOUT_STEREO,
-    0
-};
-
+static const uint64_t vorbis_channel_layouts[] = {AV_CH_LAYOUT_STEREO, 0};
 
 static const codec_profile_class_t codec_profile_vorbis_class = {
-    {
-        .ic_super      = (idclass_t *)&codec_profile_audio_class,
+    {.ic_super         = (idclass_t*)&codec_profile_audio_class,
         .ic_class      = "codec_profile_vorbis",
         .ic_caption    = N_("vorbis"),
-        .ic_properties = (const property_t[]){
-            {
-                .type     = PT_DBL,
-                .id       = "qscale",
-                .name     = N_("Quality (0=auto)"),
-                .desc     = N_("Variable bitrate (VBR) mode [0-10]."),
-                .group    = 3,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(TVHCodecProfile, qscale),
-                .intextra = INTEXTRA_RANGE(0, 10, 1),
-                .def.d    = 0,
-            },
-            {}
-        }
-    },
+        .ic_properties = (const property_t[]){{
+                                                  .type = PT_DBL,
+                                                  .id   = "qscale",
+                                                  .name = N_("Quality (0=auto)"),
+                                                  .desc = N_("Variable bitrate (VBR) mode [0-10]."),
+                                                  .group    = 3,
+                                                  .get_opts = codec_profile_class_get_opts,
+                                                  .off      = offsetof(TVHCodecProfile, qscale),
+                                                  .intextra = INTEXTRA_RANGE(0, 10, 1),
+                                                  .def.d    = 0,
+                                              },
+            {}}},
     .open = tvh_codec_profile_vorbis_open,
 };
-
 
 TVHAudioCodec tvh_codec_vorbis = {
     .name            = "vorbis",

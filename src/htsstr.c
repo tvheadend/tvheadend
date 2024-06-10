@@ -22,50 +22,45 @@
 #include <string.h>
 #include "tvh_string.h"
 
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-char *
-hts_strndup(const char *src, size_t len)
-{
-  char *r = malloc(len + 1);
-  r[len] = 0;
+char* hts_strndup(const char* src, size_t len) {
+  char* r = malloc(len + 1);
+  r[len]  = 0;
   return memcpy(r, src, len);
 }
 
-char *
-htsstr_unescape(char *str) {
-  char *s;
+char* htsstr_unescape(char* str) {
+  char* s;
 
-  for(s = str; *s; s++) {
-    if(*s != '\\')
+  for (s = str; *s; s++) {
+    if (*s != '\\')
       continue;
 
-    if(*(s + 1) == 'b')
+    if (*(s + 1) == 'b')
       *s = '\b';
-    else if(*(s + 1) == 'f')
+    else if (*(s + 1) == 'f')
       *s = '\f';
-    else if(*(s + 1) == 'n')
+    else if (*(s + 1) == 'n')
       *s = '\n';
-    else if(*(s + 1) == 'r')
+    else if (*(s + 1) == 'r')
       *s = '\r';
-    else if(*(s + 1) == 't')
+    else if (*(s + 1) == 't')
       *s = '\t';
     else
       *s = *(s + 1);
 
-    if(*(s + 1)) {
+    if (*(s + 1)) {
       /* shift string left, copies terminator too */
       memmove(s + 1, s + 2, strlen(s + 2) + 1);
     }
-  } 
+  }
 
   return str;
 }
 
-char *
-htsstr_unescape_to(const char *src, char *dst, size_t dstlen)
-{
-  char *res = dst;
+char* htsstr_unescape_to(const char* src, char* dst, size_t dstlen) {
+  char* res = dst;
 
   while (*src && dstlen > 0) {
     if (*src == '\\') {
@@ -85,11 +80,16 @@ htsstr_unescape_to(const char *src, char *dst, size_t dstlen)
           *dst = '\t';
         else
           *dst = *src;
-        src++; dst++; dstlen--;
+        src++;
+        dst++;
+        dstlen--;
       }
       continue;
     } else {
-      *dst = *src; src++; dst++; dstlen--;
+      *dst = *src;
+      src++;
+      dst++;
+      dstlen--;
     }
   }
   if (dstlen == 0)
@@ -99,9 +99,7 @@ htsstr_unescape_to(const char *src, char *dst, size_t dstlen)
   return res;
 }
 
-const char *
-htsstr_escape_find(const char *src, size_t upto_index)
-{
+const char* htsstr_escape_find(const char* src, size_t upto_index) {
   while (upto_index && *src) {
     if (*src == '\\') {
       src++;
@@ -119,35 +117,31 @@ htsstr_escape_find(const char *src, size_t upto_index)
   return NULL;
 }
 
-static void
-htsstr_argsplit_add
-  (char ***argv, int *argc, const char *start, const char *stop)
-{
-  char *s = NULL;
+static void htsstr_argsplit_add(char*** argv, int* argc, const char* start, const char* stop) {
+  char* s = NULL;
   if (start)
     s = htsstr_unescape(hts_strndup(start, stop - start));
-  *argv = realloc(*argv, sizeof((*argv)[0]) * (*argc + 1));
+  *argv              = realloc(*argv, sizeof((*argv)[0]) * (*argc + 1));
   (*argv)[(*argc)++] = s;
 }
 
-char **
-htsstr_argsplit(const char *str) {
-  int quote = 0;
-  int quote_inbetween = 0; // when quote isn't start of argument
-  int inarg = 0;
-  const char *start = NULL;
-  const char *s;
-  char **argv = NULL;
-  int argc = 0;
+char** htsstr_argsplit(const char* str) {
+  int         quote           = 0;
+  int         quote_inbetween = 0; // when quote isn't start of argument
+  int         inarg           = 0;
+  const char* start           = NULL;
+  const char* s;
+  char**      argv = NULL;
+  int         argc = 0;
 
-  for(s = str; *s; s++) {
-    if(inarg) {
-      switch(*s) {
+  for (s = str; *s; s++) {
+    if (inarg) {
+      switch (*s) {
         case '\\':
           s++;
           break;
         case '"':
-          if(quote) {
+          if (quote) {
             quote = 0;
             if (start) {
               htsstr_argsplit_add(&argv, &argc, start, s);
@@ -160,7 +154,7 @@ htsstr_argsplit(const char *str) {
           }
           break;
         case ' ':
-          if(quote||quote_inbetween)
+          if (quote || quote_inbetween)
             break;
           inarg = 0;
           if (start) {
@@ -172,7 +166,7 @@ htsstr_argsplit(const char *str) {
           break;
       }
     } else {
-      switch(*s) {
+      switch (*s) {
         case ' ':
           break;
         case '"':
@@ -188,7 +182,7 @@ htsstr_argsplit(const char *str) {
     }
   }
 
-  if(start)
+  if (start)
     htsstr_argsplit_add(&argv, &argc, start, str + strlen(str));
 
   htsstr_argsplit_add(&argv, &argc, NULL, NULL);
@@ -196,19 +190,16 @@ htsstr_argsplit(const char *str) {
   return argv;
 }
 
-void 
-htsstr_argsplit_free(char **argv) {
+void htsstr_argsplit_free(char** argv) {
   int i;
 
-  for(i = 0; argv[i]; i++)
+  for (i = 0; argv[i]; i++)
     free(argv[i]);
-  
+
   free(argv);
 }
 
-const char *
-htsstr_substitute_find(const char *src, int first)
-{
+const char* htsstr_substitute_find(const char* src, int first) {
   while (*src) {
     if (*src == '\\') {
       src++;
@@ -221,15 +212,18 @@ htsstr_substitute_find(const char *src, int first)
   return NULL;
 }
 
-char *
-htsstr_substitute(const char *src, char *dst, size_t dstlen,
-                  int first, htsstr_substitute_t *sub, const void *aux,
-                  char *tmp, size_t tmplen)
-{
-  htsstr_substitute_t *s;
-  const char *p, *x, *v;
-  char *res = dst;
-  size_t l;
+char* htsstr_substitute(const char* src,
+    char*                           dst,
+    size_t                          dstlen,
+    int                             first,
+    htsstr_substitute_t*            sub,
+    const void*                     aux,
+    char*                           tmp,
+    size_t                          tmplen) {
+  htsstr_substitute_t* s;
+  const char *         p, *x, *v;
+  char*                res = dst;
+  size_t               l;
 
   if (!dstlen)
     return NULL;
@@ -237,15 +231,24 @@ htsstr_substitute(const char *src, char *dst, size_t dstlen,
     if (*src == '\\') {
       if (dstlen < 2)
         break;
-      *dst = '\\'; src++; dst++; dstlen--;
+      *dst = '\\';
+      src++;
+      dst++;
+      dstlen--;
       if (*src) {
-        *dst = *src; src++; dst++; dstlen--;
+        *dst = *src;
+        src++;
+        dst++;
+        dstlen--;
       }
       continue;
     }
     if (first >= 0) {
       if (*src != first) {
-        *dst = *src; src++; dst++; dstlen--;
+        *dst = *src;
+        src++;
+        dst++;
+        dstlen--;
         continue;
       }
       src++;
@@ -280,7 +283,8 @@ htsstr_substitute(const char *src, char *dst, size_t dstlen,
         *dst = *src;
         src++;
       }
-      dst++; dstlen--;
+      dst++;
+      dstlen--;
     }
   }
   if (dstlen == 0)

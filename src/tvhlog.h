@@ -34,60 +34,68 @@
 
 typedef struct {
   int64_t last;
-  size_t count;
+  size_t  count;
 } tvhlog_limit_t;
 
 typedef struct {
-  const char *name;
-  const char *desc;
+  const char* name;
+  const char* desc;
 } tvhlog_subsys_t;
 
 /* Config */
-extern int              tvhlog_level;
-extern char            *tvhlog_path;
-extern int              tvhlog_options;
-extern tvh_mutex_t      tvhlog_mutex;
-extern tvhlog_subsys_t  tvhlog_subsystems[];
+extern int             tvhlog_level;
+extern char*           tvhlog_path;
+extern int             tvhlog_options;
+extern tvh_mutex_t     tvhlog_mutex;
+extern tvhlog_subsys_t tvhlog_subsystems[];
 
 /* Initialise */
-void tvhlog_init       ( int level, int options, const char *path );
-void tvhlog_start      ( void );
-void tvhlog_end        ( void );
-void tvhlog_set_debug  ( const char *subsys );
-void tvhlog_get_debug  ( char *subsys, size_t len );
-void tvhlog_set_trace  ( const char *subsys );
-void tvhlog_get_trace  ( char *subsys, size_t len );
-void tvhlogv           ( const char *file, int line, int severity,
-                         int subsys, const char *fmt, va_list *args );
-void _tvhlog           ( const char *file, int line, int severity,
-                         int subsys, const char *fmt, ... )
-  __attribute__((format(printf,5,6)));
-void _tvhlog_hexdump   ( const char *file, int line, int severity,
-                         int subsys, const uint8_t *data, ssize_t len );
-static inline void tvhlog_limit_reset ( tvhlog_limit_t *limit )
-  { limit->last = 0; limit->count = 0; }
-static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
-  { int64_t t = mclk(); limit->count++;
-    if (limit->last + sec2mono(delay) < t) { limit->last = t; return 1; }
-    return 0; }
-
+void tvhlog_init(int level, int options, const char* path);
+void tvhlog_start(void);
+void tvhlog_end(void);
+void tvhlog_set_debug(const char* subsys);
+void tvhlog_get_debug(char* subsys, size_t len);
+void tvhlog_set_trace(const char* subsys);
+void tvhlog_get_trace(char* subsys, size_t len);
+void tvhlogv(const char* file, int line, int severity, int subsys, const char* fmt, va_list* args);
+void _tvhlog(const char* file, int line, int severity, int subsys, const char* fmt, ...)
+    __attribute__((format(printf, 5, 6)));
+void               _tvhlog_hexdump(const char* file,
+                  int                          line,
+                  int                          severity,
+                  int                          subsys,
+                  const uint8_t*               data,
+                  ssize_t                      len);
+static inline void tvhlog_limit_reset(tvhlog_limit_t* limit) {
+  limit->last  = 0;
+  limit->count = 0;
+}
+static inline int tvhlog_limit(tvhlog_limit_t* limit, uint32_t delay) {
+  int64_t t = mclk();
+  limit->count++;
+  if (limit->last + sec2mono(delay) < t) {
+    limit->last = t;
+    return 1;
+  }
+  return 0;
+}
 
 /* Options */
-#define TVHLOG_OPT_DBG_SYSLOG   0x0001
-#define TVHLOG_OPT_DBG_STDERR   0x0002
-#define TVHLOG_OPT_DBG_FILE     0x0004
-#define TVHLOG_OPT_SYSLOG       0x0010
-#define TVHLOG_OPT_STDERR       0x0020
-#define TVHLOG_OPT_MILLIS       0x0100
-#define TVHLOG_OPT_DECORATE     0x0200
-#define TVHLOG_OPT_FILELINE     0x0400
-#define TVHLOG_OPT_THREAD       0x0800
-#define TVHLOG_OPT_LIBAV        0x1000
-#define TVHLOG_OPT_ALL          0xFFFF
+#define TVHLOG_OPT_DBG_SYSLOG 0x0001
+#define TVHLOG_OPT_DBG_STDERR 0x0002
+#define TVHLOG_OPT_DBG_FILE   0x0004
+#define TVHLOG_OPT_SYSLOG     0x0010
+#define TVHLOG_OPT_STDERR     0x0020
+#define TVHLOG_OPT_MILLIS     0x0100
+#define TVHLOG_OPT_DECORATE   0x0200
+#define TVHLOG_OPT_FILELINE   0x0400
+#define TVHLOG_OPT_THREAD     0x0800
+#define TVHLOG_OPT_LIBAV      0x1000
+#define TVHLOG_OPT_ALL        0xFFFF
 
 /* Levels */
 #ifndef LOG_TRACE
-#define LOG_TRACE (LOG_DEBUG+1)
+#define LOG_TRACE (LOG_DEBUG + 1)
 #endif
 
 #define LOG_TVH_NOTIFY 0x40000000
@@ -200,57 +208,67 @@ enum {
 #endif
   LS_UDP,
   LS_RATINGLABELS,
-  LS_LAST     /* keep this last */
+  LS_LAST /* keep this last */
 };
 
 /* Macros */
-#define tvhlog(severity, subsys, fmt, ...)\
+#define tvhlog(severity, subsys, fmt, ...) \
   _tvhlog(__FILE__, __LINE__, severity | LOG_TVH_NOTIFY, subsys, fmt, ##__VA_ARGS__)
-#define tvhlog_spawn(severity, subsys, fmt, ...)\
+#define tvhlog_spawn(severity, subsys, fmt, ...) \
   _tvhlog(__FILE__, __LINE__, severity, subsys, fmt, ##__VA_ARGS__)
 #if ENABLE_TRACE
 #define tvhtrace_enabled() (LOG_TRACE <= atomic_get(&tvhlog_level))
-#define tvhtrace(subsys, fmt, ...) \
-  do { \
-    if (tvhtrace_enabled()) \
+#define tvhtrace(subsys, fmt, ...)                                        \
+  do {                                                                    \
+    if (tvhtrace_enabled())                                               \
       _tvhlog(__FILE__, __LINE__, LOG_TRACE, subsys, fmt, ##__VA_ARGS__); \
   } while (0)
-#define tvhlog_hexdump(subsys, data, len) \
-  do { \
-    if (tvhtrace_enabled()) \
+#define tvhlog_hexdump(subsys, data, len)                                          \
+  do {                                                                             \
+    if (tvhtrace_enabled())                                                        \
       _tvhlog_hexdump(__FILE__, __LINE__, LOG_TRACE, subsys, (uint8_t*)data, len); \
   } while (0)
 #else
-static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
+static inline void tvhtrace_no_warnings(const char* fmt, ...) {
+  (void)fmt;
+}
 #define tvhtrace_enabled() 0
-#define tvhtrace(subsys, fmt, ...) do { tvhtrace_no_warnings(NULL, subsys, fmt, ##__VA_ARGS__); } while (0)
-#define tvhlog_hexdump(subsys, data, len) do { tvhtrace_no_warnings(NULL, subsys, data, len); } while (0)
+#define tvhtrace(subsys, fmt, ...)                          \
+  do {                                                      \
+    tvhtrace_no_warnings(NULL, subsys, fmt, ##__VA_ARGS__); \
+  } while (0)
+#define tvhlog_hexdump(subsys, data, len)          \
+  do {                                             \
+    tvhtrace_no_warnings(NULL, subsys, data, len); \
+  } while (0)
 #endif
 
-#define tvhftrace(subsys, fcn, ...) do { \
-  tvhtrace(subsys, "%s() enter", #fcn); \
-  fcn(__VA_ARGS__); \
-  tvhtrace(subsys, "%s() leave", #fcn); \
-} while (0)
+#define tvhftrace(subsys, fcn, ...)       \
+  do {                                    \
+    tvhtrace(subsys, "%s() enter", #fcn); \
+    fcn(__VA_ARGS__);                     \
+    tvhtrace(subsys, "%s() leave", #fcn); \
+  } while (0)
 
-#define tvhdebug(...)  tvhlog(LOG_DEBUG,   ##__VA_ARGS__)
-#define tvhinfo(...)   tvhlog(LOG_INFO,    ##__VA_ARGS__)
+#define tvhdebug(...)  tvhlog(LOG_DEBUG, ##__VA_ARGS__)
+#define tvhinfo(...)   tvhlog(LOG_INFO, ##__VA_ARGS__)
 #define tvhwarn(...)   tvhlog(LOG_WARNING, ##__VA_ARGS__)
-#define tvhnotice(...) tvhlog(LOG_NOTICE,  ##__VA_ARGS__)
-#define tvherror(...)  tvhlog(LOG_ERR,     ##__VA_ARGS__)
-#define tvhalert(...)  tvhlog(LOG_ALERT,   ##__VA_ARGS__)
-#define tvhabort(...) do { \
-  tvhlog(LOG_ALERT,   ##__VA_ARGS__); \
-  tvh_safe_usleep(2000000); \
-  abort(); \
-} while (0)
+#define tvhnotice(...) tvhlog(LOG_NOTICE, ##__VA_ARGS__)
+#define tvherror(...)  tvhlog(LOG_ERR, ##__VA_ARGS__)
+#define tvhalert(...)  tvhlog(LOG_ALERT, ##__VA_ARGS__)
+#define tvhabort(...)                 \
+  do {                                \
+    tvhlog(LOG_ALERT, ##__VA_ARGS__); \
+    tvh_safe_usleep(2000000);         \
+    abort();                          \
+  } while (0)
 
-void tvhlog_backtrace_printf(const char *fmt, ...);
+void tvhlog_backtrace_printf(const char* fmt, ...);
 
 #if ENABLE_TRACE
-void tvhdbg(int subsys, const char *fmt, ...);
+void tvhdbg(int subsys, const char* fmt, ...);
 #else
-static inline void tvhdbg(int subsys, const char *fmt, ...) {};
+static inline void tvhdbg(int subsys, const char* fmt, ...) {};
 #endif
 
 #endif /* __TVH_LOGGING_H__ */
