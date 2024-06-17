@@ -1480,7 +1480,7 @@ not_so_good:
   htsmsg_add_str2(conf, "owner", de->de_owner);
   htsmsg_add_str2(conf, "creator", de->de_creator);
   htsmsg_add_str(conf, "comment", buf);
-  htsmsg_add_str(conf, "directory", de->de_directory);
+  htsmsg_add_str2(conf, "directory", de->de_directory);
   de2 = dvr_entry_create_from_htsmsg(conf, e);
   htsmsg_destroy(conf);
 
