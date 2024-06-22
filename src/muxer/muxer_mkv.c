@@ -784,8 +784,10 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   //https://www.matroska.org/technical/tagging.html
   //==> Depending on the COUNTRY it’s the format of the rating of a movie
   //==> (P, R, X in the USA, an age in other countries or a URI defining a logo).
-  tmp_age = ebc->age_rating;
-  addtag(q, build_tag_int("LAW_RATING", tmp_age, 0, NULL));
+  if(ebc) {
+    tmp_age = ebc->age_rating;
+    addtag(q, build_tag_int("LAW_RATING", tmp_age, 0, NULL));
+  }
 
   if(ch)
     addtag(q, build_tag_string("TVCHANNEL",
