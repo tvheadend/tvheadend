@@ -1072,7 +1072,6 @@ http_verify_prepare(http_connection_t *hc, struct http_verify_structure *v)
       m = http_get_digest_hash(v->algo, hc->hc_post_data ?: "");
       snprintf(all, sizeof(all), "%s:%s:%s", method, uri, m);
       free(m);
-      m = NULL;
     } else if (strcasecmp(qop, "auth") == 0) {
       snprintf(all, sizeof(all), "%s:%s", method, uri);
     } else {
