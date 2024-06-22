@@ -309,10 +309,8 @@ ratinglabel_create(const char *uuid, htsmsg_t *conf,
   }
 
   //Load the rating icon into the image cache if it is not already there.
-  if(rl){
-    if(rl->rl_icon){
-      (void)imagecache_get_id(rl->rl_icon);
-    }
+  if(rl->rl_icon){
+    (void)imagecache_get_id(rl->rl_icon);
   }
 
   rl->rl_saveflag = 1;
