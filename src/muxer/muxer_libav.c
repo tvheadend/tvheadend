@@ -557,7 +557,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
       continue;
 
     tofree = NULL;
-    av_init_packet(&packet);
+    memset(&packet, 0, sizeof(packet));
+    packet.pos = -1;
     codec_id = st->codecpar->codec_id;
 
     if (codec_id == AV_CODEC_ID_AAC) {
