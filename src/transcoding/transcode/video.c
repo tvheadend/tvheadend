@@ -316,6 +316,15 @@ tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
         return AVERROR(EAGAIN);
     }
     self->pts = avframe->pts;
+#if LIBAVUTIL_VERSION_MAJOR > 58 || (LIBAVUTIL_VERSION_MAJOR == 58 && LIBAVUTIL_VERSION_MINOR > 2)
+    if (avframe->flags & AV_FRAME_FLAG_INTERLACED) {
+        self->oavctx->field_order =
+            (avframe->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST) ? AV_FIELD_TB : AV_FIELD_BT;
+    }
+    else {
+        self->oavctx->field_order = AV_FIELD_PROGRESSIVE;
+    }
+#else
     if (avframe->interlaced_frame) {
         self->oavctx->field_order =
             avframe->top_field_first ? AV_FIELD_TB : AV_FIELD_BT;
@@ -323,6 +332,7 @@ tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
     else {
         self->oavctx->field_order = AV_FIELD_PROGRESSIVE;
     }
+#endif
     return 0;
 }
 
@@ -347,15 +357,24 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
         pict_type = AV_PICTURE_TYPE_I;
     }
     if (pict_type == AV_PICTURE_TYPE_NONE) {
-        // some codecs do not set pict_type but set key_frame, in this case,
-        // we assume that when key_frame == 1 the frame is an I-frame
+        // some codecs do not set pict_type but set AV_FRAME_FLAG_KEY, in this case,
+        // we assume that when AV_FRAME_FLAG_KEY is set the frame is an I-frame
         // (all the others are assumed to be P-frames)
+#if LIBAVUTIL_VERSION_MAJOR > 58 || (LIBAVUTIL_VERSION_MAJOR == 58 && LIBAVUTIL_VERSION_MINOR > 2)
+        if (self->oavframe->flags & AV_FRAME_FLAG_KEY) {
+            pict_type = AV_PICTURE_TYPE_I;
+        }
+        else {
+            pict_type = AV_PICTURE_TYPE_P;
+        }
+#else
         if (self->oavframe->key_frame) {
             pict_type = AV_PICTURE_TYPE_I;
         }
         else {
             pict_type = AV_PICTURE_TYPE_P;
         }
+#endif
     }
 
     switch (pict_type) {
