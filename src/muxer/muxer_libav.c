@@ -55,8 +55,13 @@ static const AVRational mpeg_tc = {1, 90000};
 /**
  * Callback function for libavformat
  */
-static int 
+#if LIBAVFORMAT_VERSION_MAJOR > 60
+static int
+lav_muxer_write(void *opaque, const uint8_t *buf, int buf_size)
+#else
+static int
 lav_muxer_write(void *opaque, uint8_t *buf, int buf_size)
+#endif
 {
   int r;
   lav_muxer_t *lm = (lav_muxer_t*)opaque;
