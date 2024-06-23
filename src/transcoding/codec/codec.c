@@ -136,7 +136,11 @@ tvh_codec_audio_init(TVHAudioCodec *self, const AVCodec *codec)
             self->sample_rates = default_sample_rates;
     }
     if (!self->channel_layouts) {
+#if LIBAVCODEC_VERSION_MAJOR > 59
+        self->channel_layouts = codec->ch_layouts;
+#else
         self->channel_layouts = codec->channel_layouts;
+#endif
     }
 }
 

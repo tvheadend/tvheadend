@@ -327,8 +327,13 @@ tvh_codec_profile_audio_get_sample_rates(TVHCodecProfile *self)
     return tvh_codec_audio_getattr(codec, sample_rates);
 }
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+const AVChannelLayout *
+tvh_codec_profile_audio_get_channel_layouts(TVHCodecProfile *self)
+#else
 const uint64_t *
 tvh_codec_profile_audio_get_channel_layouts(TVHCodecProfile *self)
+#endif
 {
     TVHCodec *codec = tvh_codec_profile_get_codec(self);
     return tvh_codec_audio_getattr(codec, channel_layouts);

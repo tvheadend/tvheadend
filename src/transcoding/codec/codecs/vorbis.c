@@ -31,11 +31,18 @@ tvh_codec_profile_vorbis_open(TVHCodecProfile *self, AVDictionary **opts)
 }
 
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+// see vorbis_encode_init() in ffmpeg-6.0/libavcodec/vorbis_data.c
+static const AVChannelLayout vorbis_channel_layouts[] = {
+    AV_CHANNEL_LAYOUT_STEREO
+};
+#else
 // see vorbis_encode_init() in ffmpeg-3.0.2/libavcodec/vorbisenc.c
 static const uint64_t vorbis_channel_layouts[] = {
     AV_CH_LAYOUT_STEREO,
     0
 };
+#endif
 
 
 static const codec_profile_class_t codec_profile_vorbis_class = {
