@@ -46,8 +46,13 @@ typedef struct {
 /*
  *
  */
+#if LIBAVFORMAT_VERSION_MAJOR > 60
+static int
+iptv_libav_write_packet(void *opaque, const uint8_t *buf, int buf_size)
+#else
 static int
 iptv_libav_write_packet(void *opaque, uint8_t *buf, int buf_size)
+#endif
 {
   iptv_libav_priv_t *la = opaque;
 
