@@ -30,6 +30,18 @@ static const AVProfile aac_profiles[] = {
     { FF_PROFILE_UNKNOWN },
 };
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+// see aac_chan_configs in ffmpeg-6.0/libavcodec/aacenctab.h
+static const AVChannelLayout aac_channel_layouts[] = {
+    AV_CHANNEL_LAYOUT_MONO,
+    AV_CHANNEL_LAYOUT_STEREO,
+    AV_CHANNEL_LAYOUT_SURROUND,
+    AV_CHANNEL_LAYOUT_4POINT0,
+    AV_CHANNEL_LAYOUT_5POINT0_BACK,
+    AV_CHANNEL_LAYOUT_5POINT1_BACK,
+    AV_CHANNEL_LAYOUT_7POINT1,
+};
+#else
 // see aac_chan_configs in ffmpeg-3.0.2/libavcodec/aacenctab.h
 static const uint64_t aac_channel_layouts[] = {
     AV_CH_LAYOUT_MONO,
@@ -41,6 +53,7 @@ static const uint64_t aac_channel_layouts[] = {
     AV_CH_LAYOUT_7POINT1_WIDE_BACK,
     0
 };
+#endif
 
 
 typedef struct {

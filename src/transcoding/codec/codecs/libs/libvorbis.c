@@ -23,6 +23,22 @@
 
 /* libvorbis ================================================================ */
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+// see libvorbis_setup() in ffmpeg-6.0/libavcodec/libvorbisenc.c
+static const AVChannelLayout libvorbis_channel_layouts[] = {
+    AV_CHANNEL_LAYOUT_MONO,
+    AV_CHANNEL_LAYOUT_STEREO,
+    AV_CHANNEL_LAYOUT_SURROUND,
+    AV_CHANNEL_LAYOUT_2_2,
+    AV_CHANNEL_LAYOUT_QUAD,
+    AV_CHANNEL_LAYOUT_5POINT0,
+    AV_CHANNEL_LAYOUT_5POINT0_BACK,
+    AV_CHANNEL_LAYOUT_5POINT1,
+    AV_CHANNEL_LAYOUT_5POINT1_BACK,
+    AV_CHANNEL_LAYOUT_6POINT1,
+    AV_CHANNEL_LAYOUT_7POINT1
+};
+#else
 // see libvorbis_setup() in ffmpeg-3.0.2/libavcodec/libvorbisenc.c
 static const uint64_t libvorbis_channel_layouts[] = {
     AV_CH_LAYOUT_MONO,
@@ -40,6 +56,7 @@ static const uint64_t libvorbis_channel_layouts[] = {
     //AV_CH_LAYOUT_STEREO_DOWNMIX,
     0
 };
+#endif
 
 
 static int
