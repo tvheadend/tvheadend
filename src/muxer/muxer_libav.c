@@ -151,7 +151,11 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->sample_fmt    = AV_SAMPLE_FMT_S16;
 
     c->sample_rate   = sri_to_rate(ssc->es_sri);
+#if LIBAVUTIL_VERSION_MAJOR > 57
+    c->ch_layout.nb_channels = ssc->es_channels;
+#else
     c->channels      = ssc->es_channels;
+#endif
 
 #if 0
     c->time_base.num = 1;

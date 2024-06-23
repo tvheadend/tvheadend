@@ -23,6 +23,19 @@
 
 /* flac ====================================================================== */
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+// see flac_channel_layouts ffmpeg-6.0/libavcodec/flac.c
+static const AVChannelLayout flac_channel_layouts[] = {
+    AV_CHANNEL_LAYOUT_MONO,
+    AV_CHANNEL_LAYOUT_STEREO,
+    AV_CHANNEL_LAYOUT_SURROUND,
+    AV_CHANNEL_LAYOUT_QUAD,
+    AV_CHANNEL_LAYOUT_5POINT0,
+    AV_CHANNEL_LAYOUT_5POINT1,
+    AV_CHANNEL_LAYOUT_6POINT1,
+    AV_CHANNEL_LAYOUT_7POINT1
+};
+#else
 // see flac_channel_layouts ffmpeg-3.4/libavcodec/flac.c & flacenc.c
 static const uint64_t flac_channel_layouts[] = {
     AV_CH_LAYOUT_MONO,
@@ -35,6 +48,7 @@ static const uint64_t flac_channel_layouts[] = {
     AV_CH_LAYOUT_5POINT1_BACK,
     0
 };
+#endif
 
 
 typedef struct {
