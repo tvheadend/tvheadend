@@ -312,7 +312,11 @@ tvh_context_receive_packet(TVHContext *self)
     AVPacket avpkt;
     int ret = -1;
 
-    av_init_packet(&avpkt);
+    memset(&avpkt, 0, sizeof(avpkt));
+    avpkt.pts = AV_NOPTS_VALUE;
+    avpkt.dts = AV_NOPTS_VALUE;
+    avpkt.pos = -1;
+
     while ((ret = avcodec_receive_packet(self->oavctx, &avpkt)) != AVERROR(EAGAIN)) {
         if (ret || (ret = tvh_context_ship(self, &avpkt))) {
             break;
@@ -657,7 +661,10 @@ tvh_context_handle(TVHContext *self, th_pkt_t *pkt)
             ret = AVERROR(ENOMEM);
         }
         else {
-            av_init_packet(&avpkt);
+            memset(&avpkt, 0, sizeof(avpkt));
+            avpkt.pts = AV_NOPTS_VALUE;
+            avpkt.dts = AV_NOPTS_VALUE;
+            avpkt.pos = -1;
             if ((ret = av_packet_from_data(&avpkt, data, size))) { // takes ownership of data
                 tvh_context_log(self, LOG_ERR,
                                 "failed to allocate AVPacket buffer");
