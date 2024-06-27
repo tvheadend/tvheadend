@@ -476,12 +476,6 @@ static int _xmltv_parse_age_rating
           rating_system = htsmsg_get_str(attrib, "system");
         }//END get the attributes for the rating tag.
         
-        //If no 'system' attribute was found, set a default one.
-        if(!rating_system)
-        {
-          rating_system = "NONE";
-        }
-
         //Look for sub-tags of the 'rating' tag
         if ((tags  = htsmsg_get_map(rating, "tags"))) {
           //Look the the 'value' tag containing the actual rating text

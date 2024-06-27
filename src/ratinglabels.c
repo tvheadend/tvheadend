@@ -96,6 +96,8 @@ ratinglabel_find_from_uuid(const char *string_uuid)
   Used by the XMLTV EPG load process when a <rating> tag
   is encountered.  Match the Authority+Label to a rating label and
   return a pointer to that object if the label in enabled, null if not.
+  If the Authority is missing, match on label only provided that
+  both authorities are also null.
 */
 ratinglabel_t *
 ratinglabel_find_from_xmltv(const char *authority, const char *label){
@@ -105,37 +107,40 @@ ratinglabel_find_from_xmltv(const char *authority, const char *label){
 
   RB_FOREACH(temp_rl, &ratinglabels, rl_link)
   {
-      //If both authorities are null OR both authorities match
-      if((!authority && !temp_rl->rl_authority) || !strcasecmp(temp_rl->rl_authority, authority)){
+      //If both authorities are null only match using the label
+      if(!authority && !temp_rl->rl_authority){
 
-        //Match 2 null labels
+        //Got 2 null labels with null authorities.
         if(!temp_rl->rl_label && !label){
-          tvherror(LS_RATINGLABELS, "  matched 2 nulls.");
+          tvherror(LS_RATINGLABELS, "  matched 2 null authorities/labels.");
           rl = temp_rl;
           break;
-        }
+        }//END got null labels too.
 
-        //if only 1 of the labels is null, then no match.
-        //This test protects strcasecmp from a null pointer
-        if(!temp_rl->rl_label || !label){
-          //No match found
-        }
-        else
-        {
+        //If both labels are not null, compare the values.
+        if(temp_rl->rl_label && label){
           if(!strcasecmp(temp_rl->rl_label, label)){
             rl = temp_rl;
             break;
           }
-        }
-      }
-  }
+        }//END got labels to compare
+      }//END got 2 null authorities.
+
+      //If both authorities and both labels are not null
+      if(authority && temp_rl->rl_authority && temp_rl->rl_label && label){
+        if((!strcasecmp(temp_rl->rl_authority, authority)) && (!strcasecmp(temp_rl->rl_label, label))){
+          rl = temp_rl;
+          break;
+        }//END authorities match and labels match
+      }//END both authorities and labels are not null.
+  }//END loop through RL objects.
 
   //Did we get a match?
   if(rl)
   {
     if(!rl->rl_enabled)
     {
-      tvhtrace(LS_RATINGLABELS, "Not enabled, returning NULL.");
+      tvhtrace(LS_RATINGLABELS, "Label not enabled, returning NULL.");
       return NULL;
     }
   }
@@ -143,11 +148,20 @@ ratinglabel_find_from_xmltv(const char *authority, const char *label){
   {
     char          tmpLabel[129];  //Authority+label
 
-    snprintf(tmpLabel, 128, "XMLTV:%s:%s", authority, label);
+    //If the authority is not null, create a full placeholder
+    //label, otherwise, create a short placeholder label.
+    if(authority)
+    {
+      snprintf(tmpLabel, 128, "XMLTV:%s:%s", authority, label);
+    }
+    else
+    {
+      snprintf(tmpLabel, 128, "XMLTV:%s", label);
+    }
 
     //The XMLTV module is holding a lock.  Unlock and then relock.
     tvh_mutex_unlock(&global_lock);
-    rl = ratinglabel_create_placeholder(1, "???", 0, 0, tmpLabel, label, authority);
+    rl = ratinglabel_create_placeholder(1, NULL, 0, 0, tmpLabel, label, authority);
     tvh_mutex_lock(&global_lock);
 
   }
@@ -174,13 +188,20 @@ ratinglabel_find_from_eit(char *country, int age)
     //so I decided to do things the hard way.
     RB_FOREACH(temp_rl, &ratinglabels, rl_link)
     {
-        if(temp_rl->rl_age == age){
-          if(!strcasecmp(temp_rl->rl_country, country)){
-            rl = temp_rl;
-            break;
-          }
-        }
-    }
+        //DVB country codes should not be null, however,
+        //it is possible that XMLTV could create an RL
+        //with a null country code, so that situation
+        //needs to be allowed for.
+        if(temp_rl->rl_country && country)
+        {
+          if(temp_rl->rl_age == age){
+            if(!strcasecmp(temp_rl->rl_country, country)){
+              rl = temp_rl;
+              break;
+            }//END country codes match
+          }//END ages match
+        }//END if both country codes are not null.
+    }//END loop through RL objects
 
     //Did we get a match?
     if(rl)
@@ -208,7 +229,7 @@ ratinglabel_find_from_eit(char *country, int age)
         tmpAge = age + 3;
       }
 
-      rl = ratinglabel_create_placeholder(1, country, age, tmpAge, tmpLabel, tmpLabel, "NONE");
+      rl = ratinglabel_create_placeholder(1, country, age, tmpAge, tmpLabel, tmpLabel, NULL);
 
     }
 
@@ -218,6 +239,10 @@ ratinglabel_find_from_eit(char *country, int age)
 /*
   Create a placeholder label for newly encountered ratings.
   The user needs to manually provide the appropriate fields.
+  Strings have been null-protected for stability.
+  The Authority can be null because not all XMLTV feeds provide this
+  and DVB does not provide this.  The label(s) should always be present.
+  Country will be null from XMLTV, but 'should' be present from DVB.
 */
 ratinglabel_t *
 ratinglabel_create_placeholder(int enabled, const char *country, int age,
@@ -230,10 +255,10 @@ ratinglabel_create_placeholder(int enabled, const char *country, int age,
   htsmsg_add_bool(msg_new, "enabled", enabled);
   htsmsg_add_s64(msg_new, "age", age);
   htsmsg_add_s64(msg_new, "display_age", display_age);
-  htsmsg_add_str(msg_new, "country", country);
-  htsmsg_add_str(msg_new, "label", label);
-  htsmsg_add_str(msg_new, "display_label", display_label);
-  htsmsg_add_str(msg_new, "authority", authority);
+  htsmsg_add_str2(msg_new, "country", country);
+  htsmsg_add_str2(msg_new, "label", label);
+  htsmsg_add_str2(msg_new, "display_label", display_label);
+  htsmsg_add_str2(msg_new, "authority", authority);
 
   tvh_mutex_lock(&global_lock);
   rl_new = ratinglabel_create(NULL, msg_new, NULL, NULL);
@@ -268,16 +293,14 @@ ratinglabel_free(ratinglabel_t *rl)
 }
 
 /**
- * Create a reating label object
+ * Create a rating label object
  */
 ratinglabel_t *
 ratinglabel_create(const char *uuid, htsmsg_t *conf,
                const char *name, const char *src)
 {
-  //Minimum fields: (country+age) or (authority+label)
-  //If the XMLTV has no 'system' then that function needs
-  //send something like 'xmltvraw' as the authority.
-  //'remapping' could see multiple country+age+label conbinations
+  //Minimum fields: DVB: (country+age) or XMLTV: (label)
+  //Not all XMLTV feeds have a 'system'.
 
   tvhtrace(LS_RATINGLABELS, "Creating rating label '%s'.", uuid);
   ratinglabel_t *rl, *rl2 = NULL;
@@ -469,7 +492,7 @@ ratinglabel_class_save(idnode_t *self, char *filename, size_t fsize)
         if(ebc->rating_label == rl)
         {
             //This could either be a change to the display_label or the display_age
-            //or perhaps event the icon, regardless, whatever the change,
+            //or perhaps even the icon, regardless, whatever the change,
             //for the EPG update to be pushed out to any attached client
             //if required we need to have made a change.
             retVal = epg_broadcast_set_age_rating(ebc, 99, changes);
