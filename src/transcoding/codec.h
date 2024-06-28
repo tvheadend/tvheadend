@@ -153,8 +153,13 @@ tvh_codec_profile_audio_get_sample_fmts(TVHCodecProfile *self);
 const int *
 tvh_codec_profile_audio_get_sample_rates(TVHCodecProfile *self);
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+const AVChannelLayout *
+tvh_codec_profile_audio_get_channel_layouts(TVHCodecProfile *self);
+#else
 const uint64_t *
 tvh_codec_profile_audio_get_channel_layouts(TVHCodecProfile *self);
+#endif
 
 
 /* module level ============================================================= */
