@@ -491,6 +491,56 @@ udp_close( udp_connection_t *uc )
 }
 
 int
+udp_write_fill_source( udp_connection_t *uc, const void *buf, size_t len,
+                       struct sockaddr_storage *storage)
+{
+    int r;
+    struct sockaddr_in local_addr;
+    socklen_t local_addr_len = sizeof(local_addr);
+
+    if (storage == NULL)
+      storage = &uc->ip;
+
+    // Connect the socket to the destination address
+    if (connect(uc->fd, (struct sockaddr *)storage, sizeof(*storage)) < 0) {
+        tvherror(uc->subsystem, "connect() failed: %s", strerror(errno));
+        return -1;
+    }
+
+    // Get the local endpoint information (source IP address)
+    if (getsockname(uc->fd, (struct sockaddr *)&local_addr, &local_addr_len) == -1) {
+        tvherror(uc->subsystem, "getsockname() failed: %s", strerror(errno));
+        return -1;
+    }
+
+    tvhdebug(uc->subsystem, "Got source IP address: %s\n", inet_ntoa(local_addr.sin_addr));
+
+    len += strlen(inet_ntoa(local_addr.sin_addr)) - 2;
+    char* data = malloc(len + 1);
+    memcpy(data, buf, len);
+    data[len] = 0;
+    snprintf(data, len + 1, inet_ntoa(local_addr.sin_addr));
+
+    // Send data over the established connection
+    while (len) {
+        r = write(uc->fd, data, len);
+        if (r < 0) {
+            if (ERRNO_AGAIN(errno)) {
+                tvh_safe_usleep(100);
+                continue;
+            }
+            break;
+        }
+        len -= r;
+        data += r;
+    }
+
+    free(data);
+
+    return len;
+}
+
+int
 udp_write( udp_connection_t *uc, const void *buf, size_t len,
            struct sockaddr_storage *storage )
 {
@@ -517,7 +567,14 @@ udp_write( udp_connection_t *uc, const void *buf, size_t len,
 
 int
 udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
-                 struct sockaddr_storage *storage )
+                 struct sockaddr_storage *storage)
+{
+  return udp_write_queue_fill_source(uc, q, storage);
+}
+
+int
+udp_write_queue_fill_source( udp_connection_t *uc, htsbuf_queue_t *q,
+                 struct sockaddr_storage *storage, int fill_source)
 {
   htsbuf_data_t *hd;
   int l, r = 0;
@@ -527,7 +584,10 @@ udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
     if (!r) {
       l = hd->hd_data_len - hd->hd_data_off;
       p = hd->hd_data + hd->hd_data_off;
-      r = udp_write(uc, p, l, storage);
+      if(fill_source)
+        r = udp_write_fill_source(uc, p, l, storage);
+      else
+        r = udp_write(uc, p, l, storage);
     }
     htsbuf_data_free(q, hd);
   }

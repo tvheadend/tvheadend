@@ -130,10 +130,6 @@ void tcp_server_register(void *server);
 
 void tcp_server_delete(void *server);
 
-int tcp_default_ip_addr(struct sockaddr_storage *deflt, int family);
-
-int tcp_server_bound(void *server, struct sockaddr_storage *bound, int family);
-
 int tcp_server_onall(void *server);
 
 int tcp_read(int fd, void *buf, size_t len);
