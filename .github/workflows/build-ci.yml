@@ -51,9 +51,9 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
           AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh -p raspios
           support/cloudsmith.sh -n -p raspios -f '../tvheadend*.deb'
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Tvheadend-deb
+        name: Tvheadend-RPiOS-${{ matrix.arch }}
         path: tvheadend*.deb
         if-no-files-found: error
 
@@ -146,9 +146,9 @@ jobs:
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
             cp ../tvheadend*.deb /artifacts/
             support/cloudsmith.sh -n -f '../tvheadend*.deb'
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: Tvheadend-deb
+          name: Tvheadend-CCX-${{ matrix.distro }}-${{ matrix.arch }}
           path: artifacts/tvheadend*.deb
           if-no-files-found: error
 
@@ -193,10 +193,10 @@ jobs:
         run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container, 'i386') && '-a i386') || '' }}
       - name: copy-result
         run: cp ../tvheadend*.deb .
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: startsWith(matrix.container, 'i386') != true
         with:
-          name: Tvheadend-deb
+          name: Tvheadend-DEB-${{ matrix.distro }}
           path: tvheadend*.deb
           if-no-files-found: error
       - name: upload-cloudsmith
@@ -225,9 +225,9 @@ jobs:
         run: ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 && make -C rpm build -j$(nproc)
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: Tvheadend-RPM
+          name: Tvheadend-RPM-${{ matrix.releasever }}
           path: tvheadend*.rpm
           if-no-files-found: error
       - name: upload-cloudsmith
