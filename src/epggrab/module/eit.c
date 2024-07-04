@@ -749,8 +749,11 @@ static int _eit_process_event_one
     if (short_target != 0 ||
         (ev->subtitle && lang_str_compare(ev->summary, ev->subtitle)))
       *save |= epg_broadcast_set_summary(ebc, ev->summary, &changes);
-  if (ev->desc)
+  if (ev->desc) {
     *save |= epg_broadcast_set_description(ebc, ev->desc, &changes);
+  } else if (ebc->description) {
+    *save |= epg_broadcast_set_description(ebc, ebc->description, &changes);
+  }
 
   /* Broadcast Metadata */
   *save |= epg_broadcast_set_is_hd(ebc, ev->hd, &changes);
