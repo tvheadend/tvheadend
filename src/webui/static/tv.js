@@ -264,16 +264,18 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
         },
 
         fullscreen: function() {
-            var dom  = this.video.dom;
+            var dom = this.video.dom;
 
-            if(typeof dom.requestFullScreen !== 'undefined')
-                dom.requestFullScreen();
+            var requestMethod = dom.requestFullScreen ||
+                dom.mozRequestFullScreen ||
+                dom.webkitEnterFullscreen ||
+                dom.webkitRequestFullscreen ||
+                dom.webkitRequestFullScreen ||
+                dom.msRequestFullscreen;
 
-            else if(typeof dom.mozRequestFullScreen !== 'undefined')
-                dom.mozRequestFullScreen();
-
-            else if(typeof dom.webkitRequestFullScreen !== 'undefined')
-                dom.webkitEnterFullscreen();
+            if(requestMethod) {
+                requestMethod.apply( dom );
+            }
         },
 
         play: function() {
