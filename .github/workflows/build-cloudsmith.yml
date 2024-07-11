@@ -169,6 +169,8 @@ jobs:
         container: ["i386/ubuntu:trusty", "ubuntu:trusty", "i386/ubuntu:xenial", "ubuntu:xenial", "ubuntu:bionic", "ubuntu:focal", "ubuntu:jammy", "ubuntu:noble", "i386/debian:stretch", "debian:stretch", "i386/debian:buster", "debian:buster", "i386/debian:bullseye", "debian:bullseye", "i386/debian:bookworm", "debian:bookworm", "i386/debian:trixie", "debian:trixie", "i386/debian:sid", "debian:sid"]
     container:
       image: ${{ matrix.container }}
+    env:
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
       - name: Fix old debian apt
         if: matrix.container == 'debian:stretch' || matrix.container == 'i386/debian:stretch'
