@@ -116,24 +116,23 @@ static void *_epggrab_internal_thread( void *aux )
     if (err == ETIMEDOUT) break;
   }
 
-  clock_gettime(CLOCK_REALTIME, &cron_next);
-  cron_next.tv_nsec = 0;
-
   while (atomic_get(&epggrab_running)) {
 
-    /* Check for config change */
     tvh_mutex_lock(&epggrab_mutex);
+
+    clock_gettime(CLOCK_REALTIME, &current_time);
+    if (!cron_multi_next(epggrab_cron_multi, current_time.tv_sec, &t))
+        cron_next.tv_sec = t;
+    else
+        cron_next.tv_sec += 60;
+
+    /* Check for config change */
     while (atomic_get(&epggrab_running) && confver == epggrab_confver) {
       err = tvh_cond_timedwait_ts(&epggrab_cond, &epggrab_mutex, &cron_next);
       if (err == ETIMEDOUT) break;
     }
     confver    = epggrab_confver;
 
-    clock_gettime(CLOCK_REALTIME, &current_time);
-    if (!cron_multi_next(epggrab_cron_multi, current_time.tv_sec, &t))
-      cron_next.tv_sec = t;
-    else
-      cron_next.tv_sec += 60;
     tvh_mutex_unlock(&epggrab_mutex);
 
     /* Run grabber(s) */
