@@ -125,6 +125,7 @@ typedef struct profile {
   int pro_prio;
   int pro_fprio;
   int pro_timeout;
+  int pro_timeout_start;
   int pro_restart;
   int pro_contaccess;
   int pro_ca_timeout;
