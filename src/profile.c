@@ -361,6 +361,17 @@ const idclass_t profile_class =
     },
     {
       .type     = PT_INT,
+      .id       = "timeout_start",
+      .name     = N_("Data start timeout (sec) (0=default)"),
+      .desc     = N_("The number of seconds to wait for data "
+                     "when stream is starting."),
+      .off      = offsetof(profile_t, pro_timeout_start),
+      .opts     = PO_EXPERT,
+      .def.i    = 0,
+      .group    = 1
+    },
+    {
+      .type     = PT_INT,
       .id       = "priority",
       .name     = N_("Default priority"),
       .desc     = N_("If no specific priority was requested. This "

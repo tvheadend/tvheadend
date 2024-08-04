@@ -340,7 +340,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   int run = 1, started = 0;
   streaming_queue_t *sq = &prch->prch_sq;
   muxer_t *mux = prch->prch_muxer;
-  int ptimeout, grace = 20, r;
+  int ptimeout = 5, ptimeout_start = 0, grace = 20, r;
   struct timeval tp;
   streaming_start_t *ss_copy;
   int64_t lastpkt, mono;
@@ -356,7 +356,23 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     socket_set_dscp(hc->hc_fd, config.dscp, NULL, 0);
 
   lastpkt = mclk();
-  ptimeout = prch->prch_pro ? prch->prch_pro->pro_timeout : 5;
+
+  if (prch->prch_pro) {
+    struct profile *pro = prch->prch_pro;
+
+    ptimeout = pro->pro_timeout;
+    ptimeout_start = pro->pro_timeout_start;
+    tvhdebug(LS_WEBUI, "Using timeouts from profile: %s", pro->pro_name);
+    tvhdebug(LS_WEBUI, "Packet timeout (from profile): %d secs", ptimeout);
+  } else {
+    tvhdebug(LS_WEBUI, "Packet timeout (default): %d secs", ptimeout);
+  }
+  if (ptimeout_start > 0) {
+    grace = ptimeout_start;
+    tvhdebug(LS_WEBUI, "Grace period (from profile): %d secs", grace);
+  } else {
+    tvhdebug(LS_WEBUI, "Grace period (default): %d secs", grace);
+  }
 
   if (hc->hc_no_output) {
     tvh_mutex_lock(&sq->sq_mutex);
@@ -376,9 +392,11 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
           if (tcp_socket_dead(hc->hc_fd)) {
             tvhdebug(LS_WEBUI,  "Stop streaming %s, client hung up", hc->hc_url_orig);
             run = 0;
-          } else if((!started && mclk() - lastpkt > sec2mono(grace)) ||
-                     (started && ptimeout > 0 && mclk() - lastpkt > sec2mono(ptimeout))) {
-            tvhwarn(LS_WEBUI,  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
+          } else if (!started && mclk() - lastpkt > sec2mono(grace)) {
+            tvhwarn(LS_WEBUI, "Stop streaming %s, timeout (%d secs) waiting for data packets to start", hc->hc_url_orig, grace);
+            run = 0;
+          } else if (started && ptimeout > 0 && mclk() - lastpkt > sec2mono(ptimeout)) {
+            tvhwarn(LS_WEBUI, "Stop streaming %s, timeout (%d secs) waiting for data packets", hc->hc_url_orig, ptimeout);
             run = 0;
           }
           break;
@@ -410,11 +428,17 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       break;
 
     case SMT_GRACE:
-      grace = sm->sm_code < 5 ? 5 : grace;
+      if (sm->sm_code > grace) {
+        grace = sm->sm_code > 5 ? sm->sm_code : 5;
+        tvhdebug(LS_WEBUI, "Increased grace period to %d secs", grace);
+      } else {
+        tvhdebug(LS_WEBUI, "Ignored grace period change to %d secs", sm->sm_code);
+      }
       break;
 
     case SMT_START:
       grace = 10;
+      tvhdebug(LS_WEBUI, "New grace period: %d secs", grace);
       if(!started) {
         tvhdebug(LS_WEBUI, "%s streaming %s",
                  hc->hc_no_output ? "Probe" : "Start", hc->hc_url_orig);
