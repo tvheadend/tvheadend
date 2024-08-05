@@ -153,7 +153,11 @@ TVHCodec *
 tvh_codec_find(const char *name);
 
 void
+#if ENABLE_VAAPI
+tvh_codecs_register(int vainfo_probe_enabled);
+#else
 tvh_codecs_register(void);
+#endif
 
 void
 tvh_codecs_forget(void);
