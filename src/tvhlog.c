@@ -180,6 +180,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_TSDEBUG]       = { "tsdebug",       N_("MPEG-TS Input Debug") },
   [LS_CODEC]         = { "codec",         N_("Codec") },
   [LS_VAAPI]         = { "vaapi",         N_("VA-API") },
+  [LS_VAINFO]        = { "vainfo",        N_("VAINFO") },
 #if ENABLE_DDCI
   [LS_DDCI]          = { "ddci",          N_("DD-CI") },
 #endif

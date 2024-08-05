@@ -38,6 +38,7 @@ typedef enum {
   PT_S64_ATOMIC,
   PT_DBL,
   PT_TIME,
+  PT_DYN_INT,
   PT_LANGSTR,
   PT_PERM,                // like PT_U32 but with the special save
 } prop_type_t;
@@ -115,6 +116,7 @@ typedef struct property {
     double      d;   // PT_DBL
     time_t      tm;  // PT_TIME
     htsmsg_t *(*list)(void); // islist != 0
+    int       (*dyn_i)(void); // dynamically load a PT_DYN_INT
   } def;
 
   /* Extended options */

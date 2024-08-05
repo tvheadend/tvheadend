@@ -236,7 +236,81 @@ var codec_profile_forms = {
             form.findField('hw_sharpness').setDisabled(!hwaccel_field.getValue());
         }
 
-        function updateFilters(form) {
+        function checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field) {
+            // enable max B frames based on ui (vainfo)
+            var uibframe = 0;
+            if (low_power_field.getValue()) {
+                // low power is enabled
+                uibframe = (uilp_value & 0xe) >> 1
+            }
+            else {
+                // low power is disabled
+                uibframe = (ui_value & 0xe) >> 1
+            }
+            // messagebox if max B grames > VAINFO.max_b_frames
+            if (uibframe) {
+                if (desired_b_depth_field.getValue() > uibframe)
+                    alert('VAINFO maximum B fames is: ' + uibframe)
+                desired_b_depth_field.setDisabled(false);
+                b_reference_field.setDisabled(false);
+            }
+            else {
+                desired_b_depth_field.setDisabled(true);
+                b_reference_field.setDisabled(true);
+            }
+            // enable Quality based on ui (vainfo)
+            var uiquality = 0;
+            if (low_power_field.getValue()) {
+                // low power is enabled
+                uiquality = (uilp_value & 0xf0) >> 4
+            }
+            else {
+                // low power is disabled
+                uiquality = (ui_value & 0xf0) >> 4
+            }
+            // messagebox if Qality > VAINFO.quality
+            if (uiquality > 1) {
+                if (quality_field.getValue() > uiquality)
+                    alert('VAINFO maximum Quality is: ' + uiquality)
+            }
+            else {
+                quality_field.setValue(-1);
+                quality_field.setDisabled(true);
+            }
+        }
+
+        function updateLowPower(form) {
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
+            
+            checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field);
+        }
+
+        function removeConstrains(form) {
+            var bit_rate_field = form.findField('bit_rate');
+            var max_bit_rate_field = form.findField('max_bit_rate');
+            var buff_factor_field = form.findField('buff_factor');
+            var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
+            var qp_field = form.findField('qp');
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
+
+            bit_rate_field.setDisabled(false);
+            max_bit_rate_field.setDisabled(false);
+            buff_factor_field.setDisabled(false);
+            bit_rate_scale_factor_field.setDisabled(false);
+            qp_field.setDisabled(false);
+            low_power_field.setDisabled(false);
+            desired_b_depth_field.setDisabled(false);
+            b_reference_field.setDisabled(false);
+            quality_field.setDisabled(false);
+        }
+
+        function updateFilters(form, ui_value, uilp_value) {
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
             var bit_rate_field = form.findField('bit_rate');
@@ -246,6 +320,8 @@ var codec_profile_forms = {
             var qp_field = form.findField('qp');
             var low_power_field = form.findField('low_power');
             var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
 
             var platform = platform_field.getValue();
             switch (platform) {
@@ -253,18 +329,24 @@ var codec_profile_forms = {
                     // Unconstrained --> will allow any combination of parameters (valid or invalid)
                     // this mode is usefull fur future platform and for debugging.
                     // no filter applied
-                    bit_rate_field.setDisabled(false);
-                    max_bit_rate_field.setDisabled(false);
-                    buff_factor_field.setDisabled(false);
-                    bit_rate_scale_factor_field.setDisabled(false);
-                    qp_field.setDisabled(false);
-                    low_power_field.setDisabled(false);
-                    desired_b_depth_field.setDisabled(false);
+                    removeConstrains(form);
                     break;
                 case 1:
                     // Intel
-                    // low_power is disabling Max B frame
-                    desired_b_depth_field.setDisabled(low_power_field.getValue());
+                    // enable low_power mode based on ui (vainfo)
+                    if ((ui_value & 0x1) && (uilp_value & 0x1))
+                        low_power_field.setDisabled(false);
+                    else {
+                        low_power_field.setDisabled(true);
+                        if (uilp_value & 0x1)
+                            // only low power is available
+                            low_power_field.setValue(true);
+                        if (ui_value & 0x1)
+                            // only normal is available
+                            low_power_field.setValue(false);
+                    }
+                    checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field);
+                    // filter based in rc_mode
                     var rc_mode = rc_mode_field.getValue();
                     switch (rc_mode) {
                         case -1:
@@ -318,20 +400,13 @@ var codec_profile_forms = {
                             qp_field.setDisabled(true);
                             break;
                     }
-                    low_power_field.setDisabled(false);
                     break;
                 case 2:
                     // AMD --> will allow any combination of parameters
                     // I am unable to confirm this platform because I don't have the HW
                     // Is only going to override bf to 0 (as highlited by the previous implementation)
                     // NOTE: filters to be added later
-                    bit_rate_field.setDisabled(false);
-                    max_bit_rate_field.setDisabled(false);
-                    buff_factor_field.setDisabled(false);
-                    bit_rate_scale_factor_field.setDisabled(false);
-                    qp_field.setDisabled(false);
-                    low_power_field.setDisabled(false);
-                    desired_b_depth_field.setDisabled(false);
+                    removeConstrains(form);
                     break;
                 default:
             }
@@ -341,26 +416,40 @@ var codec_profile_forms = {
         var rc_mode_field = form.findField('rc_mode');
         var low_power_field = form.findField('low_power');
         var hwaccel_field = form.findField('hwaccel');
+        var ui_field = form.findField('ui');
+        var uilp_field = form.findField('uilp');
+        var desired_b_depth_field = form.findField('desired_b_depth');
+        var quality_field = form.findField('quality');
+        var ui_value = ui_field.getValue();
+        var uilp_value = uilp_field.getValue();
         
         // first time we have to call this manually
-        updateFilters(form);
+        updateFilters(form, ui_value, uilp_value);
         updateHWFilters(form);
         
         // on platform change
         platform_field.on('select', function(combo, record, index) {
-            updateFilters(form);
+            updateFilters(form, ui_value, uilp_value);
         });
         // on rc_mode change
         rc_mode_field.on('select', function(combo, record, index) {
-            updateFilters(form);
+            updateFilters(form, ui_value, uilp_value);
         });
         // on low_power change
         low_power_field.on('check', function(checkbox, value) {
-            updateFilters(form);
+            updateLowPower(form);
         });
         // on hwaccel change
         hwaccel_field.on('check', function(checkbox, value) {
             updateHWFilters(form);
+        });
+        // on desired_b_depth change
+        desired_b_depth_field.on('spin', function(spinner, direction, eOpts) {
+            updateFilters(form, ui_value, uilp_value);
+        });
+        // on quality change
+        quality_field.on('spin', function(spinner, direction, eOpts) {
+            updateFilters(form, ui_value, uilp_value);
         });
     },
 
@@ -371,7 +460,81 @@ var codec_profile_forms = {
             form.findField('hw_sharpness').setDisabled(!hwaccel_field.getValue());
         }
 
-        function updateFilters(form) {
+        function checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field) {
+            // enable max B frames based on ui (vainfo)
+            var uibframe = 0;
+            if (low_power_field.getValue()) {
+                // low power is enabled
+                uibframe = (uilp_value & 0xe) >> 1
+            }
+            else {
+                // low power is disabled
+                uibframe = (ui_value & 0xe) >> 1
+            }
+            // messagebox if max B grames > VAINFO.max_b_frames
+            if (uibframe) {
+                if (desired_b_depth_field.getValue() > uibframe)
+                    alert('VAINFO maximum B fames is: ' + uibframe)
+                desired_b_depth_field.setDisabled(false);
+                b_reference_field.setDisabled(false);
+            }
+            else {
+                desired_b_depth_field.setDisabled(true);
+                b_reference_field.setDisabled(true);
+            }
+            // enable Quality based on ui (vainfo)
+            var uiquality = 0;
+            if (low_power_field.getValue()) {
+                // low power is enabled
+                uiquality = (uilp_value & 0xf0) >> 4
+            }
+            else {
+                // low power is disabled
+                uiquality = (ui_value & 0xf0) >> 4
+            }
+            // messagebox if Qality > VAINFO.quality
+            if (uiquality > 1) {
+                if (quality_field.getValue() > uiquality)
+                    alert('VAINFO maximum Quality is: ' + uiquality)
+            }
+            else {
+                quality_field.setValue(-1);
+                quality_field.setDisabled(true);
+            }
+        }
+
+        function updateLowPower(form) {
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
+            
+            checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field);
+        }
+
+        function removeConstrains(form) {
+            var bit_rate_field = form.findField('bit_rate');
+            var max_bit_rate_field = form.findField('max_bit_rate');
+            var buff_factor_field = form.findField('buff_factor');
+            var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
+            var qp_field = form.findField('qp');
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
+
+            bit_rate_field.setDisabled(false);
+            max_bit_rate_field.setDisabled(false);
+            buff_factor_field.setDisabled(false);
+            bit_rate_scale_factor_field.setDisabled(false);
+            qp_field.setDisabled(false);
+            low_power_field.setDisabled(false);
+            desired_b_depth_field.setDisabled(false);
+            b_reference_field.setDisabled(false);
+            quality_field.setDisabled(false);
+        }
+
+        function updateFilters(form, ui_value, uilp_value) {
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
             var bit_rate_field = form.findField('bit_rate');
@@ -381,6 +544,8 @@ var codec_profile_forms = {
             var qp_field = form.findField('qp');
             var low_power_field = form.findField('low_power');
             var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
 
             var platform = platform_field.getValue();
             switch (platform) {
@@ -388,18 +553,24 @@ var codec_profile_forms = {
                     // Unconstrained --> will allow any combination of parameters (valid or invalid)
                     // this mode is usefull fur future platform and for debugging.
                     // no filter applied
-                    bit_rate_field.setDisabled(false);
-                    max_bit_rate_field.setDisabled(false);
-                    buff_factor_field.setDisabled(false);
-                    bit_rate_scale_factor_field.setDisabled(false);
-                    qp_field.setDisabled(false);
-                    low_power_field.setDisabled(false);
-                    desired_b_depth_field.setDisabled(false);
+                    removeConstrains(form);
                     break;
                 case 1:
                     // Intel
-                    // low_power is disabling Max B frame
-                    desired_b_depth_field.setDisabled(low_power_field.getValue());
+                    // enable low_power mode based on ui (vainfo)
+                    if ((ui_value & 0x1) && (uilp_value & 0x1))
+                        low_power_field.setDisabled(false);
+                    else {
+                        low_power_field.setDisabled(true);
+                        if (uilp_value & 0x1)
+                            // only low power is available
+                            low_power_field.setValue(true);
+                        if (ui_value & 0x1)
+                            // only normal is available
+                            low_power_field.setValue(false);
+                    }
+                    checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field);
+                    // filter based in rc_mode
                     var rc_mode = rc_mode_field.getValue();
                     switch (rc_mode) {
                         case -1:
@@ -449,24 +620,17 @@ var codec_profile_forms = {
                             bit_rate_field.setDisabled(false);
                             max_bit_rate_field.setDisabled(false);
                             buff_factor_field.setDisabled(true);
-                            bit_rate_scale_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(false);
                             qp_field.setDisabled(true);
                             break;
                     }
-                    low_power_field.setDisabled(false);
                     break;
                 case 2:
                     // AMD --> will allow any combination of parameters
                     // I am unable to confirm this platform because I don't have the HW
                     // Is only going to override bf to 0 (as highlited by the previous implementation)
                     // NOTE: filters to be added later
-                    bit_rate_field.setDisabled(false);
-                    max_bit_rate_field.setDisabled(false);
-                    buff_factor_field.setDisabled(false);
-                    bit_rate_scale_factor_field.setDisabled(false);
-                    qp_field.setDisabled(false);
-                    low_power_field.setDisabled(false);
-                    desired_b_depth_field.setDisabled(false);
+                    removeConstrains(form);
                     break;
                 default:
             }
@@ -476,26 +640,40 @@ var codec_profile_forms = {
         var rc_mode_field = form.findField('rc_mode');
         var low_power_field = form.findField('low_power');
         var hwaccel_field = form.findField('hwaccel');
-
+        var ui_field = form.findField('ui');
+        var uilp_field = form.findField('uilp');
+        var desired_b_depth_field = form.findField('desired_b_depth');
+        var quality_field = form.findField('quality');
+        var ui_value = ui_field.getValue();
+        var uilp_value = uilp_field.getValue();
+        
         // first time we have to call this manually
-        updateFilters(form);
+        updateFilters(form, ui_value, uilp_value);
         updateHWFilters(form);
         
         // on platform change
         platform_field.on('select', function(combo, record, index) {
-            updateFilters(form);
+            updateFilters(form, ui_value, uilp_value);
         });
         // on rc_mode change
         rc_mode_field.on('select', function(combo, record, index) {
-            updateFilters(form);
+            updateFilters(form, ui_value, uilp_value);
         });
         // on low_power change
         low_power_field.on('check', function(checkbox, value) {
-            updateFilters(form);
+            updateLowPower(form);
         });
         // on hwaccel change
         hwaccel_field.on('check', function(checkbox, value) {
             updateHWFilters(form);
+        });
+        // on desired_b_depth change
+        desired_b_depth_field.on('spin', function(spinner, direction, eOpts) {
+            updateFilters(form, ui_value, uilp_value);
+        });
+        // on quality change
+        quality_field.on('spin', function(spinner, direction, eOpts) {
+            updateFilters(form, ui_value, uilp_value);
         });
     },
 
@@ -506,7 +684,81 @@ var codec_profile_forms = {
             form.findField('hw_sharpness').setDisabled(!hwaccel_field.getValue());
         }
 
-        function updateFilters(form) {
+        function checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field) {
+            // enable max B frames based on ui (vainfo)
+            var uibframe = 0;
+            if (low_power_field.getValue()) {
+                // low power is enabled
+                uibframe = (uilp_value & 0xe) >> 1
+            }
+            else {
+                // low power is disabled
+                uibframe = (ui_value & 0xe) >> 1
+            }
+            // messagebox if max B grames > VAINFO.max_b_frames
+            if (uibframe) {
+                if (desired_b_depth_field.getValue() > uibframe)
+                    alert('VAINFO maximum B fames is: ' + uibframe)
+                desired_b_depth_field.setDisabled(false);
+                b_reference_field.setDisabled(false);
+            }
+            else {
+                desired_b_depth_field.setDisabled(true);
+                b_reference_field.setDisabled(true);
+            }
+            // enable Quality based on ui (vainfo)
+            var uiquality = 0;
+            if (low_power_field.getValue()) {
+                // low power is enabled
+                uiquality = (uilp_value & 0xf0) >> 4
+            }
+            else {
+                // low power is disabled
+                uiquality = (ui_value & 0xf0) >> 4
+            }
+            // messagebox if Qality > VAINFO.quality
+            if (uiquality > 1) {
+                if (quality_field.getValue() > uiquality)
+                    alert('VAINFO maximum Quality is: ' + uiquality)
+            }
+            else {
+                quality_field.setValue(-1);
+                quality_field.setDisabled(true);
+            }
+        }
+
+        function updateLowPower(form) {
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
+            
+            checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field);
+        }
+
+        function removeConstrains(form) {
+            var bit_rate_field = form.findField('bit_rate');
+            var max_bit_rate_field = form.findField('max_bit_rate');
+            var buff_factor_field = form.findField('buff_factor');
+            var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
+            var qp_field = form.findField('qp');
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
+
+            bit_rate_field.setDisabled(false);
+            max_bit_rate_field.setDisabled(false);
+            buff_factor_field.setDisabled(false);
+            bit_rate_scale_factor_field.setDisabled(false);
+            qp_field.setDisabled(false);
+            low_power_field.setDisabled(false);
+            desired_b_depth_field.setDisabled(false);
+            b_reference_field.setDisabled(false);
+            quality_field.setDisabled(false);
+        }
+
+        function updateFilters(form, ui_value, uilp_value) {
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
             var bit_rate_field = form.findField('bit_rate');
@@ -514,6 +766,10 @@ var codec_profile_forms = {
             var buff_factor_field = form.findField('buff_factor');
             var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
             var qp_field = form.findField('qp');
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
 
             var platform = platform_field.getValue();
             switch (platform) {
@@ -521,14 +777,24 @@ var codec_profile_forms = {
                     // Unconstrained --> will allow any combination of parameters (valid or invalid)
                     // this mode is usefull fur future platform and for debugging.
                     // no filter applied
-                    bit_rate_field.setDisabled(false);
-                    max_bit_rate_field.setDisabled(false);
-                    buff_factor_field.setDisabled(false);
-                    bit_rate_scale_factor_field.setDisabled(false);
-                    qp_field.setDisabled(false);
+                    removeConstrains(form);
                     break;
                 case 1:
                     // Intel
+                    // enable low_power mode based on ui (vainfo)
+                    if ((ui_value & 0x1) && (uilp_value & 0x1))
+                        low_power_field.setDisabled(false);
+                    else {
+                        low_power_field.setDisabled(true);
+                        if (uilp_value & 0x1)
+                            // only low power is available
+                            low_power_field.setValue(true);
+                        if (ui_value & 0x1)
+                            // only normal is available
+                            low_power_field.setValue(false);
+                    }
+                    checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field);
+                    // filter based in rc_mode
                     var rc_mode = rc_mode_field.getValue();
                     switch (rc_mode) {
                         case -1:
@@ -578,7 +844,7 @@ var codec_profile_forms = {
                             bit_rate_field.setDisabled(false);
                             max_bit_rate_field.setDisabled(false);
                             buff_factor_field.setDisabled(true);
-                            bit_rate_scale_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(false);
                             qp_field.setDisabled(true);
                             break;
                     }
@@ -588,11 +854,7 @@ var codec_profile_forms = {
                     // I am unable to confirm this platform because I don't have the HW
                     // Is only going to override bf to 0 (as highlited by the previous implementation)
                     // NOTE: filters to be added later
-                    bit_rate_field.setDisabled(false);
-                    max_bit_rate_field.setDisabled(false);
-                    buff_factor_field.setDisabled(false);
-                    bit_rate_scale_factor_field.setDisabled(false);
-                    qp_field.setDisabled(false);
+                    removeConstrains(form);
                     break;
                 default:
             }
@@ -600,23 +862,42 @@ var codec_profile_forms = {
 
         var platform_field = form.findField('platform');
         var rc_mode_field = form.findField('rc_mode');
+        var low_power_field = form.findField('low_power');
         var hwaccel_field = form.findField('hwaccel');
-
+        var ui_field = form.findField('ui');
+        var uilp_field = form.findField('uilp');
+        var desired_b_depth_field = form.findField('desired_b_depth');
+        var quality_field = form.findField('quality');
+        var ui_value = ui_field.getValue();
+        var uilp_value = uilp_field.getValue();
+        
         // first time we have to call this manually
-        updateFilters(form);
+        updateFilters(form, ui_value, uilp_value);
         updateHWFilters(form);
-
+        
         // on platform change
         platform_field.on('select', function(combo, record, index) {
-            updateFilters(form);
+            updateFilters(form, ui_value, uilp_value);
         });
         // on rc_mode change
         rc_mode_field.on('select', function(combo, record, index) {
-            updateFilters(form);
+            updateFilters(form, ui_value, uilp_value);
+        });
+        // on low_power change
+        low_power_field.on('check', function(checkbox, value) {
+            updateLowPower(form);
         });
         // on hwaccel change
         hwaccel_field.on('check', function(checkbox, value) {
             updateHWFilters(form);
+        });
+        // on desired_b_depth change
+        desired_b_depth_field.on('spin', function(spinner, direction, eOpts) {
+            updateFilters(form, ui_value, uilp_value);
+        });
+        // on quality change
+        quality_field.on('spin', function(spinner, direction, eOpts) {
+            updateFilters(form, ui_value, uilp_value);
         });
     },
 
@@ -627,7 +908,81 @@ var codec_profile_forms = {
             form.findField('hw_sharpness').setDisabled(!hwaccel_field.getValue());
         }
 
-        function updateFilters(form) {
+        function checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field) {
+            // enable max B frames based on ui (vainfo)
+            var uibframe = 0;
+            if (low_power_field.getValue()) {
+                // low power is enabled
+                uibframe = (uilp_value & 0xe) >> 1
+            }
+            else {
+                // low power is disabled
+                uibframe = (ui_value & 0xe) >> 1
+            }
+            // messagebox if max B grames > VAINFO.max_b_frames
+            if (uibframe) {
+                if (desired_b_depth_field.getValue() > uibframe)
+                    alert('VAINFO maximum B fames is: ' + uibframe)
+                desired_b_depth_field.setDisabled(false);
+                b_reference_field.setDisabled(false);
+            }
+            else {
+                desired_b_depth_field.setDisabled(true);
+                b_reference_field.setDisabled(true);
+            }
+            // enable Quality based on ui (vainfo)
+            var uiquality = 0;
+            if (low_power_field.getValue()) {
+                // low power is enabled
+                uiquality = (uilp_value & 0xf0) >> 4
+            }
+            else {
+                // low power is disabled
+                uiquality = (ui_value & 0xf0) >> 4
+            }
+            // messagebox if Qality > VAINFO.quality
+            if (uiquality > 1) {
+                if (quality_field.getValue() > uiquality)
+                    alert('VAINFO maximum Quality is: ' + uiquality)
+            }
+            else {
+                quality_field.setValue(-1);
+                quality_field.setDisabled(true);
+            }
+        }
+
+        function updateLowPower(form) {
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
+            
+            checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field);
+        }
+
+        function removeConstrains(form) {
+            var bit_rate_field = form.findField('bit_rate');
+            var max_bit_rate_field = form.findField('max_bit_rate');
+            var buff_factor_field = form.findField('buff_factor');
+            var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
+            var qp_field = form.findField('qp');
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
+
+            bit_rate_field.setDisabled(false);
+            max_bit_rate_field.setDisabled(false);
+            buff_factor_field.setDisabled(false);
+            bit_rate_scale_factor_field.setDisabled(false);
+            qp_field.setDisabled(false);
+            low_power_field.setDisabled(false);
+            desired_b_depth_field.setDisabled(false);
+            b_reference_field.setDisabled(false);
+            quality_field.setDisabled(false);
+        }
+
+        function updateFilters(form, ui_value, uilp_value) {
             var platform_field = form.findField('platform');
             var rc_mode_field = form.findField('rc_mode');
             var bit_rate_field = form.findField('bit_rate');
@@ -635,6 +990,10 @@ var codec_profile_forms = {
             var buff_factor_field = form.findField('buff_factor');
             var bit_rate_scale_factor_field = form.findField('bit_rate_scale_factor');
             var qp_field = form.findField('qp');
+            var low_power_field = form.findField('low_power');
+            var desired_b_depth_field = form.findField('desired_b_depth');
+            var b_reference_field = form.findField('b_reference');
+            var quality_field = form.findField('quality');
 
             var platform = platform_field.getValue();
             switch (platform) {
@@ -642,14 +1001,24 @@ var codec_profile_forms = {
                     // Unconstrained --> will allow any combination of parameters (valid or invalid)
                     // this mode is usefull fur future platform and for debugging.
                     // no filter applied
-                    bit_rate_field.setDisabled(false);
-                    max_bit_rate_field.setDisabled(false);
-                    buff_factor_field.setDisabled(false);
-                    bit_rate_scale_factor_field.setDisabled(false);
-                    qp_field.setDisabled(false);
+                    removeConstrains(form);
                     break;
                 case 1:
                     // Intel
+                    // enable low_power mode based on ui (vainfo)
+                    if ((ui_value & 0x1) && (uilp_value & 0x1))
+                        low_power_field.setDisabled(false);
+                    else {
+                        low_power_field.setDisabled(true);
+                        if (uilp_value & 0x1)
+                            // only low power is available
+                            low_power_field.setValue(true);
+                        if (ui_value & 0x1)
+                            // only normal is available
+                            low_power_field.setValue(false);
+                    }
+                    checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field);
+                    // filter based in rc_mode
                     var rc_mode = rc_mode_field.getValue();
                     switch (rc_mode) {
                         case -1:
@@ -699,7 +1068,7 @@ var codec_profile_forms = {
                             bit_rate_field.setDisabled(false);
                             max_bit_rate_field.setDisabled(false);
                             buff_factor_field.setDisabled(true);
-                            bit_rate_scale_factor_field.setDisabled(true);
+                            bit_rate_scale_factor_field.setDisabled(false);
                             qp_field.setDisabled(true);
                             break;
                     }
@@ -709,11 +1078,7 @@ var codec_profile_forms = {
                     // I am unable to confirm this platform because I don't have the HW
                     // Is only going to override bf to 0 (as highlited by the previous implementation)
                     // NOTE: filters to be added later
-                    bit_rate_field.setDisabled(false);
-                    max_bit_rate_field.setDisabled(false);
-                    buff_factor_field.setDisabled(false);
-                    bit_rate_scale_factor_field.setDisabled(false);
-                    qp_field.setDisabled(false);
+                    removeConstrains(form);
                     break;
                 default:
             }
@@ -721,23 +1086,42 @@ var codec_profile_forms = {
 
         var platform_field = form.findField('platform');
         var rc_mode_field = form.findField('rc_mode');
+        var low_power_field = form.findField('low_power');
         var hwaccel_field = form.findField('hwaccel');
-
+        var ui_field = form.findField('ui');
+        var uilp_field = form.findField('uilp');
+        var desired_b_depth_field = form.findField('desired_b_depth');
+        var quality_field = form.findField('quality');
+        var ui_value = ui_field.getValue();
+        var uilp_value = uilp_field.getValue();
+        
         // first time we have to call this manually
-        updateFilters(form);
+        updateFilters(form, ui_value, uilp_value);
         updateHWFilters(form);
-
+        
         // on platform change
         platform_field.on('select', function(combo, record, index) {
-            updateFilters(form);
+            updateFilters(form, ui_value, uilp_value);
         });
         // on rc_mode change
         rc_mode_field.on('select', function(combo, record, index) {
-            updateFilters(form);
+            updateFilters(form, ui_value, uilp_value);
+        });
+        // on low_power change
+        low_power_field.on('check', function(checkbox, value) {
+            updateLowPower(form);
         });
         // on hwaccel change
         hwaccel_field.on('check', function(checkbox, value) {
             updateHWFilters(form);
+        });
+        // on desired_b_depth change
+        desired_b_depth_field.on('spin', function(spinner, direction, eOpts) {
+            updateFilters(form, ui_value, uilp_value);
+        });
+        // on quality change
+        quality_field.on('spin', function(spinner, direction, eOpts) {
+            updateFilters(form, ui_value, uilp_value);
         });
     }
 };
