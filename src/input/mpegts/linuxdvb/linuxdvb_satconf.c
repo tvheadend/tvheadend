@@ -302,7 +302,8 @@ const idclass_t linuxdvb_satconf_class =
       .name     = N_("Turn off LNB when idle"),
       .desc     = N_("Switch off the power to the LNB when idle. Note: "
                      "this may cause interference with other devices "
-                     "when the LNB is powered back up."),
+                     "when the LNB is powered back up. "
+                     "'Power save' setting must also be enabled."),
       .off      = offsetof(linuxdvb_satconf_t, ls_lnb_poweroff),
       .opts     = PO_ADVANCED,
       .def.i    = 1
