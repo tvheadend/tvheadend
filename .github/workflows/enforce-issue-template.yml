@@ -1,0 +1,35 @@
+name: Enforce issue template
+on:
+  issues:
+    types: [opened, edited, renamed]
+
+jobs:
+  auto_close_issues:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Autoclose issues that did not follow issue template
+      if: startsWith(github.event.issue.title, '[BUG]:')
+      uses: roots/issue-closer@v1.2
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-close-message: "@${issue.user.login} this issue was automatically closed because it did not follow the issue template"
+        issue-pattern: ".*### Description.*"
+    - name: Autoclose issues that are using an old version
+      if: startsWith(github.event.issue.title, '[BUG]:')
+      uses: roots/issue-closer@v1.2
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-close-message: "@${issue.user.login} this issue was automatically closed because you are using an unsupported version"
+        issue-pattern: ".*### Tvheadend Version[\\r\\n]+v4\\.(3 \\(development\\)|4 \\(stable\\)).*"
+    - name: Autoclose feature ideas which are not developed by the user
+      if: startsWith(github.event.issue.title, '[FEATURE]:')
+      uses: roots/issue-closer@v1.2
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-close-message: "@${issue.user.login} this issue was automatically closed because you are not willing to develop this"
+        issue-pattern: ".*### Acceptance[\\r\\n]+- \\[X\\] The proposal will be developed and maintained by me.*"
+    - name: Autoclose issues not having an accepted prefix
+      if: "!startsWith(github.event.issue.title, '[BUG]:') && !startsWith(github.event.issue.title, '[FEATURE]:')"
+      uses: peter-evans/close-issue@v3
+      with:
+        comment: "@${{ github.event.issue.user.login }} this issue was automatically closed because it did not follow the issue template"

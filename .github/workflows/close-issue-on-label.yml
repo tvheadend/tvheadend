@@ -1,0 +1,28 @@
+name: Close issue based on label
+on:
+  issues:
+    types:
+      - labeled
+jobs:
+  close-unsuported-version:
+    if: github.event.label.name == 'unsupported-version'
+    name: Autoclose issues with unsupported versions
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+    - name: Autoclose issues with unsupported versions
+      uses: peter-evans/close-issue@v3
+      with:
+        comment: "@${{ github.event.issue.user.login }} this issue was automatically closed because you are using an unsupported version"
+  close-template-ignored:
+    if: github.event.label.name == 'template-ignored'
+    name: Autoclose issues ignoring the template
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+    - name: Autoclose issues ignoring the template
+      uses: peter-evans/close-issue@v3
+      with:
+        comment: "@${{ github.event.issue.user.login }} this issue was automatically closed because you did not follow the issue template."
