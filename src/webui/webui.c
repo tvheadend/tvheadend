@@ -2001,6 +2001,7 @@ hdhomerun_server_lineup(http_connection_t *hc, const char *remain, void *opaque)
   channel_t *ch;
   const char *name;
   const char *blank;
+  profile_t * pro = NULL;
   const char *chnum_str;
   const int use_auth = perm && perm->aa_auth && !strempty(perm->aa_auth);
   char buf1[128], chnum[32], ubuf[UUID_HEX_SIZE];
@@ -2015,6 +2016,9 @@ hdhomerun_server_lineup(http_connection_t *hc, const char *remain, void *opaque)
   int is_first = 1;
 
   blank = tvh_gettext_lang(perm->aa_lang_ui, channel_blank_name);
+  if(hc->hc_access->aa_profiles) {
+    pro = profile_find_by_uuid(htsmsg_field_get_str(HTSMSG_FIRST(hc->hc_access->aa_profiles)));
+  } 
   htsbuf_append_str(hq, "[");
   tvh_mutex_lock(&global_lock);
   CHANNEL_FOREACH(ch) {
@@ -2030,10 +2034,11 @@ hdhomerun_server_lineup(http_connection_t *hc, const char *remain, void *opaque)
     chnum_str = channel_get_number_as_str(ch, chnum, sizeof(chnum));
     htsbuf_append_and_escape_jsonstr(hq, chnum_str ? chnum_str : "0");
     htsbuf_append_str(hq, ", \"URL\" : ");
-    sprintf(url, "http://%s:%u/stream/channel/%s?profile=pass%s%s",
+    sprintf(url, "http://%s:%u/stream/channel/%s?profile=%s%s%s",
             http_server_ip,
             tvheadend_webui_port,
             channel_get_uuid(ch, ubuf),
+            pro ? profile_get_name(pro) : "pass",
             use_auth? "&auth=" : "",
             use_auth ? perm->aa_auth : "");
     htsbuf_append_and_escape_jsonstr(hq, url);
