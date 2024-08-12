@@ -2225,29 +2225,26 @@ hdhr_server_upnp_discovery_received
   buf[len] = '\0';
   ptr = strtok_r(buf, "\r\n", &saveptr);
   /* Request decoder */
-  if (ptr) {
-    if (http_tokenize(ptr, argv, 3, -1) != 3)
+  if (!ptr) 
+    return;
+  if (http_tokenize(ptr, argv, 3, -1) != 3)
+    return;
+  if (conn->multicast) {
+    if (strcmp(argv[0], "M-SEARCH"))
       return;
-    if (conn->multicast) {
-      if (strcmp(argv[0], "M-SEARCH"))
-        return;
-      if (strcmp(argv[1], "*"))
-        return;
-      if (strcmp(argv[2], "HTTP/1.1"))
-        return;
-    } else {
-      if (strcmp(argv[0], "HTTP/1.1"))
-        return;
-      if (strcmp(argv[1], "200"))
-        return;
-    }
-    ptr = strtok_r(NULL, "\r\n", &saveptr);
+    if (strcmp(argv[1], "*"))
+      return;
+    if (strcmp(argv[2], "HTTP/1.1"))
+      return;
+  } else {
+    if (strcmp(argv[0], "HTTP/1.1"))
+      return;
+    if (strcmp(argv[1], "200"))
+      return;
   }
-
+  ptr = strtok_r(NULL, "\r\n", &saveptr);
   /* Header decoder */
-  while (1) {
-    if (ptr == NULL)
-      break;
+  while (ptr) {
     if (http_tokenize(ptr, argv, 2, ':') == 2) {
       if (strcmp(argv[0], "ST") == 0)
         st = argv[1];
