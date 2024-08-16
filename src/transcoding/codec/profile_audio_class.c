@@ -105,16 +105,16 @@ tvh_codec_audio_get_list_channel_layouts(TVHAudioCodec *self)
         else {
 #if LIBAVCODEC_VERSION_MAJOR > 59
             l = channel_layouts;
-            ADD_ENTRY(list, map, s64, l->u.mask, str, AUTO_STR);
-            while (l->nb_channels) {
+            ADD_ENTRY(list, map, s64, 0, str, AUTO_STR);
+            while (l->nb_channels < 32) {
                 if (!(map = htsmsg_create_map())) {
                     htsmsg_destroy(list);
                     list = NULL;
                     break;
                 }
                 l_buf[0] = '\0';
-                av_channel_layout_describe(l, l_buf, sizeof(l_buf));
-                ADD_ENTRY(list, map, s64, l->u.mask, str, l_buf);
+                if(av_channel_layout_describe(l, l_buf, sizeof(l_buf)) > 0)
+                    ADD_ENTRY(list, map, s64, l->u.mask, str, l_buf);
                 l++;
             }
 #else
