@@ -51,7 +51,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 37
+#define HTSP_PROTO_VERSION 38
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -905,6 +905,9 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
     /* HbbTv */
     if (t->s_hbbtv)
       htsmsg_add_msg(svcmsg, "hbbtv", htsmsg_copy(t->s_hbbtv));
+
+    /* Provider */
+    htsmsg_add_str2(svcmsg, "providername", t->s_provider_name(t));
 
     htsmsg_add_msg(services, NULL, svcmsg);
   }
