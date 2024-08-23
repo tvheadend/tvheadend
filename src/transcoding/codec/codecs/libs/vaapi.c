@@ -668,6 +668,7 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
     if (self->rc_mode != VAAPI_ENC_PARAMS_RC_SKIP) {
         AV_DICT_SET_INT(opts, "rc_mode", self->rc_mode, AV_DICT_DONT_OVERWRITE);
     }
+    int tempSupport = 0;
     switch (self->platform) {
         case VAAPI_ENC_PLATFORM_UNCONSTRAINED:
             // Uncontrained --> will allow any combination of parameters (valid or invalid)
@@ -711,7 +712,6 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
             break;
         case VAAPI_ENC_PLATFORM_INTEL:
             // Intel
-            int tempSupport = 0;
             if (self->low_power) {
                 tempSupport = vainfo_encoder_maxBfreames(VAINFO_H264_LOW_POWER);
             }
