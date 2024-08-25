@@ -612,7 +612,7 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
     if (!(retval = htsmsg_get_u32(in, "maxCount", &u32)) || add)
       htsmsg_add_u32(conf, "maxcount", !retval ? u32 : 0);     // 0 = unlimited
     if (!(retval = htsmsg_get_u32(in, "broadcastType", &u32)) || add)
-      htsmsg_add_u32(conf, "broadcastType", !retval ? u32 : 0); // 0 = all
+      htsmsg_add_u32(conf, "btype", !retval ? u32 : 0); // 0 = all
     if (!(retval = htsmsg_get_s64(in, "startExtra", &s64)) || add)
       htsmsg_add_s64(conf, "start_extra", !retval ? (s64 < 0 ? 0 : s64)  : 0); // 0 = dvr config
     if (!(retval = htsmsg_get_s64(in, "stopExtra", &s64)) || add)
