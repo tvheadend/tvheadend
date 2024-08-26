@@ -347,6 +347,69 @@ iptv_http_reconnect ( http_client_t *hc, const char *url )
   urlreset(&u);
 }
 
+/*
+ * Return the index of the last occurrence of character `x` in string `s`
+ */
+static
+int last_index_of(const char *s, char x) {
+  int i;
+  int len = strlen(s);
+  assert(s != NULL);
+  for (i = len - 1; i >= 0; i--) {
+    if (s[i] == x) {
+      return i;
+    }
+  }
+  return -1; // x not found
+}
+
+/*
+ * Allocates a string with the absolute URL obtained by merging the absolute base and the relative URLs
+ */
+static char * merge_absolute_and_relative_urls(const char * absolute_url, const char * relative_url) {
+  size_t absoute_key_url_len, last_slash_pos;
+  char * absolute_key_url;
+  const unsigned int max_levels = 100;
+  int i;
+
+  // allocate enough memory to contain `s` + `url` + \0
+  absoute_key_url_len = strlen(absolute_url) + strlen(relative_url) + 1;
+  absolute_key_url = (char*)malloc(absoute_key_url_len);
+  memset(absolute_key_url, 0, absoute_key_url_len);
+
+  // copy the url up to the last /
+  // http://test/ab/cd becomes http://test/ab/
+  last_slash_pos = last_index_of(absolute_url, '/');
+  assert(last_slash_pos < absoute_key_url_len);
+  assert(last_slash_pos > 0);
+  memcpy(absolute_key_url, absolute_url, last_slash_pos+1);
+
+  for (i = 0; i < max_levels && (strncmp(relative_url, "../", strlen("../")) == 0); i++) {
+    // skip `../` in relative_url
+    relative_url = relative_url + 3;
+
+    // replace the last / with \0
+    // http://test/ab/ becomes http://test/ab
+    last_slash_pos = last_index_of(absolute_key_url, '/');
+    assert(last_slash_pos < absoute_key_url_len);
+    assert(last_slash_pos > 0);
+    absolute_key_url[last_slash_pos] = 0;
+
+    // keep until the remaining /
+    // http://test/ab becomes http://test/
+    last_slash_pos = last_index_of(absolute_key_url, '/');
+    assert(last_slash_pos < absoute_key_url_len);
+    assert(last_slash_pos > 0);
+    absolute_key_url[last_slash_pos+1] = 0;
+  }
+
+  // concat `s` to the base URL
+  assert(strlen(absolute_key_url) + strlen(relative_url) < absoute_key_url_len);
+  memcpy(absolute_key_url+strlen(absolute_key_url), relative_url, strlen(relative_url)+1);
+
+  return absolute_key_url;
+}
+
 static int
 iptv_http_complete
   ( http_client_t *hc )
@@ -356,6 +419,7 @@ iptv_http_complete
   char *url;
   htsmsg_t *m, *m2;
   int r;
+  char * absolute_key_url = NULL;
 
   if (hp == NULL || hp->shutdown || hp->im == NULL)
     return 0;
@@ -396,13 +460,20 @@ url:
         tvherror(LS_IPTV, "no URI in KEY attribute");
         goto end;
       }
+      if (memcmp(s, "../", strlen("../")) == 0) {
+        tvhtrace(LS_IPTV, "KEY URI: relative URL detected (%s), rewriting it", s);
+        absolute_key_url = merge_absolute_and_relative_urls(url, s);
+        s = absolute_key_url;
+        tvhtrace(LS_IPTV, "new KEY URI: '%s'", s);
+      }
       hp->hls_encrypted = 1;
       if (strcmp(hp->hls_key_url ?: "", s)) {
         free(hp->hls_key_url);
         hp->hls_key_url = strdup(s);
         free(hp->hls_url_after_key);
         hp->hls_url_after_key = url;
-          url = strdup(s);
+        url = strdup(s);
+        free(absolute_key_url);
         hc->hc_data_complete = iptv_http_complete_key;
         sbuf_reset(&hp->key_sbuf, 32);
       }
