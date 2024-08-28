@@ -51,7 +51,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 39
+#define HTSP_PROTO_VERSION 40
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -1133,6 +1133,9 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     if(last && de->de_config)
       if ((p = tvh_strbegins(last, de->de_config->dvr_storage)))
         htsmsg_add_str(out, "path", p);
+
+    if (de->de_config)
+      htsmsg_add_str(out, "configId", idnode_uuid_as_str(&de->de_config->dvr_id, ubuf));
   }
 
   switch(de->de_sched_state) {
@@ -1239,6 +1242,9 @@ htsp_build_autorecentry(htsp_connection_t *htsp, dvr_autorec_entry_t *dae, const
     htsmsg_add_u32(out, "channel",   channel_get_id(dae->dae_channel));
   if (dae->dae_serieslink_uri)
     htsmsg_add_str(out, "serieslinkUri", dae->dae_serieslink_uri);
+  if (dae->dae_config)
+     htsmsg_add_str(out, "configId", idnode_uuid_as_str(&dae->dae_config->dvr_id, ubuf));
+
   htsmsg_add_str(out, "method", method);
 
   return out;
@@ -1278,6 +1284,8 @@ htsp_build_timerecentry(htsp_connection_t *htsp, dvr_timerec_entry_t *dte, const
   htsmsg_add_str2(out, "creator",    dte->dte_creator);
   if(dte->dte_channel)
     htsmsg_add_u32(out, "channel",   channel_get_id(dte->dte_channel));
+  if (dte->dte_config)
+    htsmsg_add_str(out, "configId", idnode_uuid_as_str(&dte->dte_config->dvr_id, ubuf));
 
   htsmsg_add_str(out, "method", method);
 
