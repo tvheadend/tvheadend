@@ -869,6 +869,11 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   htsmsg_t *services = htsmsg_create_list();
 
   htsmsg_add_u32(out, "channelId", channel_get_id(ch));
+
+  if (htsp->htsp_version > 40){
+    htsmsg_add_str(out, "channelIdStr", idnode_uuid_as_str(&ch->ch_id, buf));
+  }
+
   htsmsg_add_u32(out, "channelNumber", channel_get_major(chnum));
   if (channel_get_minor(chnum))
     htsmsg_add_u32(out, "channelNumberMinor", channel_get_minor(chnum));
@@ -934,6 +939,11 @@ htsp_build_tag(htsp_connection_t *htsp, channel_tag_t *ct, const char *method, i
   htsmsg_t *members = include_channels ? htsmsg_create_list() : NULL;
 
   htsmsg_add_u32(out, "tagId", htsp_channel_tag_get_identifier(ct));
+
+  if (htsp->htsp_version > 40){
+    htsmsg_add_str(out, "tagIdStr", idnode_uuid_as_str(&ct->ct_id, buf));
+  }
+
   htsmsg_add_u32(out, "tagIndex", ct->ct_index);
 
   htsmsg_add_str(out, "tagName", ct->ct_name);
@@ -969,6 +979,10 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   const char *str;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
+
+  if (htsp->htsp_version > 40){
+    htsmsg_add_str(out, "idStr", idnode_uuid_as_str(&de->de_id, ubuf));
+  }
 
   if (!statsonly) {
     htsmsg_add_u32(out, "enabled", de->de_enabled >= 1 ? 1 : 0);
