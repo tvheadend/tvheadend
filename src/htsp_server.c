@@ -51,7 +51,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 40
+#define HTSP_PROTO_VERSION 41
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -1049,8 +1049,22 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
                   htsmsg_add_str(out, "ratingIcon", str);
               }//END got an imagecache location
             }//END icon not null
-          }
-        }
+
+            //The authority and country are added for Kodi's parentalRatingSource field.
+            //Kodi looks for the authority first and if that is not present, then it uses the country.
+            //There could be no label, but there could be an age.  The authority &
+            //country could still be useful.
+            if (htsp->htsp_version > 40){
+                if(de->de_rating_label->rl_authority){
+                  htsmsg_add_str(out, "ratingAuthority", de->de_rating_label->rl_authority);
+                }//END authority saved not null
+
+                if(de->de_rating_label->rl_country){
+                  htsmsg_add_str(out, "ratingCountry", de->de_rating_label->rl_country);
+                }//END country saved not null
+            }//END ver > 40
+          }//END rating label not null
+        }//END this is a scheduled recording.
         else
         {
           if(de->de_rating_label_saved){
@@ -1065,8 +1079,19 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
                   htsmsg_add_str(out, "ratingIcon", str);
               }//END got an imagecache location
             }//END icon not null
+
+            if (htsp->htsp_version > 40){
+              if(de->de_rating_authority_saved){
+                htsmsg_add_str(out, "ratingAuthority", de->de_rating_authority_saved);
+              }//END authority saved not null
+
+              if(de->de_rating_country_saved){
+                htsmsg_add_str(out, "ratingCountry", de->de_rating_country_saved);
+              }//END country saved not null
+            }//END version > 40
+
           }
-        }
+        }//END this is not a scheduled recording.
       }//END processing rating labels is enabled
     }
 
@@ -1416,6 +1441,16 @@ htsp_build_event
                 htsmsg_add_str(out, "ratingIcon", str);
             }//END got an imagecache location
           }//END icon not null
+
+          if (htsp->htsp_version > 40){
+              if(e->rating_label->rl_authority){
+                htsmsg_add_str(out, "ratingAuthority", e->rating_label->rl_authority);
+              }//END authority saved not null
+
+              if(e->rating_label->rl_country){
+                htsmsg_add_str(out, "ratingCountry", e->rating_label->rl_country);
+              }//END country saved not null
+          }
         }//END rating label not null
     }//END parental labels enabled.
   }//END HTSP version check

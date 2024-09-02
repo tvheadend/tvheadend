@@ -533,6 +533,22 @@ ratinglabel_class_save(idnode_t *self, char *filename, size_t fsize)
                 de->de_rating_icon_saved = NULL;
             }
 
+            //If this RL has a country, save that, else, ensure that the recording's RL country is empty.
+            if(rl->rl_icon){
+                de->de_rating_country_saved = strdup(rl->rl_country);
+            }
+            else {
+                de->de_rating_country_saved = NULL;
+            }
+
+            //If this RL has an authority, save that, else, ensure that the recording's RL authority is empty.
+            if(rl->rl_icon){
+                de->de_rating_authority_saved = strdup(rl->rl_authority);
+            }
+            else {
+                de->de_rating_authority_saved = NULL;
+            }
+
             dvr_entry_changed(de);       //Save this recording and push it out to clients.
             foundCount++;
         }//END we matched the RL

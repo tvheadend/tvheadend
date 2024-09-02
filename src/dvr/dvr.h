@@ -249,8 +249,10 @@ typedef struct dvr_entry {
   //may have changed, so keep an absolute copy of the values at
   //the time of recording rather than pointing to a rating label
   //object that may no longer exist many years later.
-  char *de_rating_label_saved;    /* Saved rating label for once the recording has been completed*/
-  char *de_rating_icon_saved;     /* Saved rating icon full path (not image cache) for once the recording has been completed*/
+  char *de_rating_label_saved;       /* Saved rating label for after the recording has been completed*/
+  char *de_rating_icon_saved;        /* Saved rating icon full path (not image cache) for after the recording has been completed*/
+  char *de_rating_country_saved;     /* Saved rating country code for after the recording has been completed*/
+  char *de_rating_authority_saved;   /* Saved rating authority for after the recording has been completed*/
   ratinglabel_t *de_rating_label; /* 'Live' rating label object */
 
   int de_pri;
