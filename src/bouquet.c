@@ -537,16 +537,39 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag)
 static void
 bouquet_unmap_channel(bouquet_t *bq, service_t *t)
 {
-  idnode_list_mapping_t *ilm, *ilm_next;
+  idnode_list_mapping_t *ilm, *ilm_next, *ilm2;
+  int delchannel;
+  channel_t *ch;
+  service_t *chsvc;
 
   ilm = LIST_FIRST(&t->s_channels);
   while (ilm) {
     ilm_next = LIST_NEXT(ilm, ilm_in1_link);
-    if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq) {
+    ch = (channel_t *)ilm->ilm_in2;
+    if (ch->ch_bouquet == bq) {
+      delchannel = 1;
       tvhinfo(LS_BOUQUET, "%s / %s: unmapped from %s",
-              channel_get_name((channel_t *)ilm->ilm_in2, channel_blank_name),
+              channel_get_name(ch, channel_blank_name),
               t->s_nicename, bq->bq_name ?: "<unknown>");
-      channel_delete((channel_t *)ilm->ilm_in2, 1);
+
+      // are any other (maybe merged) services from the same bouquet mapped to this channel
+      LIST_FOREACH(ilm2, &ch->ch_services, ilm_in2_link) {
+        chsvc = (service_t *)ilm2->ilm_in1;
+        if (&chsvc->s_id != &t->s_id && idnode_set_exists(bq->bq_services, &chsvc->s_id)) {
+          tvhdebug(LS_BOUQUET, "Service: %s is also linked to %s and was mapped from the same bouquet: %s",
+                   chsvc->s_nicename, channel_get_name(ch, channel_blank_name),
+                   bq->bq_name ?: "<unknown>");
+          delchannel = 0;
+        }
+      }
+
+      if (delchannel)
+        channel_delete(ch, 1);
+      else {
+        tvhinfo(LS_BOUQUET, "Skipped deleting %s as other services are mapped from the same bouquet: %s",
+                channel_get_name(ch, channel_blank_name), bq->bq_name ?: "<unknown>");
+        idnode_list_unlink(ilm, ch);
+      }
     }
     ilm = ilm_next;
   }
