@@ -2397,10 +2397,11 @@ dvr_timer_remove_files(void *aux)
 #define DVR_UPDATED_PLAYPOS      (1<<18)
 #define DVR_UPDATED_PLAYCOUNT    (1<<19)
 #define DVR_UPDATED_AGE_RATING   (1<<20)
+#define DVR_UPDATED_COMMENT      (1<<21)
 
 static char *dvr_updated_str(char *buf, size_t buflen, int flags)
 {
-  static const char *x = "ecoOsStumdpgrviBEC";
+  static const char *x = "ecoOsStumdpgrviBECPaAM";
   const char *p = x;
   char *w = buf, *end = buf + buflen;
 
@@ -2445,7 +2446,7 @@ static dvr_entry_t *_dvr_entry_update
     time_t start_extra, time_t stop_extra,
     dvr_prio_t pri, int retention, int removal,
     int playcount, int playposition, int age_rating,
-    ratinglabel_t *rating_label)
+    ratinglabel_t *rating_label, const char *comment)
 {
   char buf[40];
   int save = 0, updated = 0;
@@ -2567,6 +2568,13 @@ static dvr_entry_t *_dvr_entry_update
     save |= DVR_UPDATED_AGE_RATING;
   }
 
+  /* Comment */
+  if (strcmp(de->de_comment ?: "", comment ?: "")) {
+    free(de->de_comment);
+    de->de_comment = comment ? strdup(comment) : NULL;
+    save |= DVR_UPDATED_COMMENT;
+  }
+
   /* Title */
   if (e && e->title) {
     save |= lang_str_set2(&de->de_title, e->title) ? DVR_UPDATED_TITLE : 0;
@@ -2683,13 +2691,13 @@ dvr_entry_update
     time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
     dvr_prio_t pri, int retention, int removal, int playcount, int playposition,
-    int age_rating, ratinglabel_t *rating_label )
+    int age_rating, ratinglabel_t *rating_label, const char *comment)
 {
   return _dvr_entry_update(de, enabled, dvr_config_uuid,
                            NULL, ch, title, subtitle, summary, desc, lang,
                            start, stop, start_extra, stop_extra,
                            pri, retention, removal, playcount, playposition,
-                           age_rating, rating_label);
+                           age_rating, rating_label, comment);
 }
 
 /**
@@ -2743,7 +2751,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                           gmtime2local(e2->start, t1buf, sizeof(t1buf)),
                           gmtime2local(e2->stop, t2buf, sizeof(t2buf)));
           _dvr_entry_update(de, -1, NULL, e2, NULL, NULL, NULL, NULL, NULL,
-                            NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0, NULL);
+                            NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0, NULL, NULL);
           return;
         }
       }
@@ -2784,7 +2792,7 @@ void dvr_event_updated(epg_broadcast_t *e)
     assert(de->de_bcast == e);
     if (de->de_sched_state != DVR_SCHEDULED) continue;
     _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
-                      NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0, NULL);
+                      NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0, NULL, NULL);
   }
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
     if (de->de_sched_state != DVR_SCHEDULED) continue;
@@ -2796,7 +2804,7 @@ void dvr_event_updated(epg_broadcast_t *e)
                             epg_broadcast_get_title(e, NULL),
                             channel_get_name(e->channel, channel_blank_name));
       _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
-                        NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0, NULL);
+                        NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0, NULL, NULL);
     }
   }
 }

@@ -51,7 +51,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 41
+#define HTSP_PROTO_VERSION 42
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -1267,6 +1267,7 @@ htsp_build_autorecentry(htsp_connection_t *htsp, dvr_autorec_entry_t *dae, const
   htsmsg_add_u32(out, "dupDetect",   dae->dae_record);
   htsmsg_add_u32(out, "maxCount",    dae->dae_max_count);
   htsmsg_add_u32(out, "broadcastType", dae->dae_btype);
+  htsmsg_add_str2(out, "comment",    dae->dae_comment);
 
   if(dae->dae_title) {
     htsmsg_add_str(out, "title",     dae->dae_title);
@@ -1312,6 +1313,7 @@ htsp_build_timerecentry(htsp_connection_t *htsp, dvr_timerec_entry_t *dte, const
   htsmsg_add_u32(out, "priority",    dte->dte_pri);
   htsmsg_add_s32(out, "start",       dte->dte_start);
   htsmsg_add_s32(out, "stop",        dte->dte_stop);
+  htsmsg_add_str2(out, "comment",    dte->dte_comment);
 
   if(dte->dte_title)
     htsmsg_add_str(out, "title",     dte->dte_title);
@@ -2192,7 +2194,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t u32;
   dvr_entry_t *de;
   time_t start, stop, start_extra, stop_extra, priority;
-  const char *dvr_config_name, *title, *subtitle, *summary, *desc, *lang;
+  const char *dvr_config_name, *title, *subtitle, *summary, *desc, *lang, *comment;
   channel_t *channel = NULL;
   int enabled, retention, removal, playcount = -1, playposition = -1;
   int age_rating;
@@ -2227,6 +2229,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   summary     = htsmsg_get_str(in, "summary");
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
+  comment     = htsmsg_get_str(in, "comment");
 
   if(!htsmsg_get_u32(in, "playcount", &u32)) {
     if (u32 > INT_MAX)
@@ -2255,7 +2258,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   de = dvr_entry_update(de, enabled, dvr_config_name, channel, title, subtitle,
                         summary, desc, lang, start, stop, start_extra, stop_extra,
                         priority, retention, removal, playcount, playposition,
-                        age_rating, rating_label);
+                        age_rating, rating_label, comment);
 
   return htsp_success();
 }

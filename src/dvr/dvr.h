@@ -603,7 +603,7 @@ dvr_entry_update( dvr_entry_t *de, int enabled,
                   time_t start_extra, time_t stop_extra,
                   dvr_prio_t pri, int retention, int removal,
                   int playcount, int playposition, int age_rating,
-                  ratinglabel_t *rating_label);
+                  ratinglabel_t *rating_label, const char *comment);
 
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
