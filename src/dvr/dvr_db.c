@@ -2569,9 +2569,9 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   /* Comment */
-  if (strcmp(de->de_comment ?: "", comment ?: "")) {
+  if (comment && strcmp(de->de_comment ?: "", comment)) {
     free(de->de_comment);
-    de->de_comment = comment ? strdup(comment) : NULL;
+    de->de_comment = strdup(comment);
     save |= DVR_UPDATED_COMMENT;
   }
 
