@@ -81,14 +81,15 @@ tvh_context_helper_find(struct TVHContextHelpers *list, const AVCodec *codec)
 
 /* decoders ================================================================= */
 
-/* shared by H264, AAC and VORBIS */
+/* shared by H264, THEORA, AAC, VORBIS and OPUS */
 static int
 tvh_extradata_open(TVHContext *self, AVDictionary **opts)
 {
     size_t extradata_size = 0;
 
     if (!(extradata_size = pktbuf_len(self->input_gh))) {
-        return AVERROR(EAGAIN);
+        // most audio streams don't have input_gh
+        return 0;
     }
     if (extradata_size >= TVH_INPUT_BUFFER_MAX_SIZE) {
         tvh_context_log(self, LOG_ERR, "extradata too big");
