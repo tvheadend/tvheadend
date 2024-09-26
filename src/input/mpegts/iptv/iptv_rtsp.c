@@ -18,6 +18,7 @@
  */
 
 #include "tvheadend.h"
+#include "config.h"
 #include "iptv_private.h"
 #include "iptv_rtcp.h"
 #include "http.h"
@@ -263,6 +264,8 @@ iptv_rtsp_start
   http_client_t *hc;
   udp_connection_t *rtp, *rtcp;
   int r;
+  int rtp_port;
+  int max_rtp_port;
 
   if (!(hc = http_client_connect(im, RTSP_VERSION_1_0, u->scheme,
                                  u->host, u->port, NULL)))
@@ -272,13 +275,36 @@ iptv_rtsp_start
     hc->hc_rtsp_user = strdup(u->user);
   if (u->pass)
     hc->hc_rtsp_pass = strdup(u->pass);
+  
+  rtp_port = config.rtsp_udp_min_port;
+  max_rtp_port = config.rtsp_udp_max_port;
 
-  if (udp_bind_double(&rtp, &rtcp,
-                      LS_IPTV, "rtp", "rtcp",
-                      NULL, 0, NULL,
-                      128*1024, 16384, 4*1024, 4*1024) < 0) {
+  if (!max_rtp_port) {
+    rtp_port = 0;
+  }
+
+  if (rtp_port > max_rtp_port)
+  {
+    tvherror(LS_IPTV, "UDP minimum port is set higher than the UDP maximum port");
     http_client_close(hc);
     return SM_CODE_TUNING_FAILED;
+  }
+
+  while (udp_bind_double(&rtp, &rtcp,
+                          LS_IPTV, "rtp", "rtcp",
+                          NULL, rtp_port, NULL,
+                          128 * 1024, 16384, 4 * 1024, 4 * 1024, 1) < 0)
+  {
+    if (!rtp_port) {
+      tvherror(LS_IPTV, "could not bind a random UDP port for RTP");
+      http_client_close(hc);
+      return SM_CODE_TUNING_FAILED;
+    } else if (max_rtp_port && rtp_port >= max_rtp_port - 2) {
+      tvherror(LS_IPTV, "all the UDP ports allocated are used, please reduce the number of simultaneous IPTV streams or increase the number of ports in the global settings");
+      http_client_close(hc);
+      return SM_CODE_TUNING_FAILED;
+    }
+    rtp_port += 2;
   }
 
   hc->hc_hdr_received        = iptv_rtsp_header;

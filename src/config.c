@@ -2199,8 +2199,12 @@ const idclass_t config_class = {
          .number = 6,
       },
       {
-         .name   = N_("Miscellaneous Settings"),
+         .name   = N_("Ports settings"),
          .number = 7,
+      },
+      {
+         .name   = N_("Miscellaneous Settings"),
+         .number = 8,
       },
       {}
   },
@@ -2648,13 +2652,35 @@ const idclass_t config_class = {
       .group  = 6
     },
     {
+      .type   = PT_INT,
+      .id     = "rtsp_udp_min_port",
+      .name   = N_("RTSP UDP minimum port"),
+      .desc   = N_("When using RTSP IPTV, this correspond to the "
+                   "minimum port bind on the client (this server), "
+                   "sent to the server. This is especially useful "
+                   "when using firewalls and NAT or containers."),
+      .off    = offsetof(config_t, rtsp_udp_min_port),
+      .opts   = PO_EXPERT,
+      .group  = 7,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "rtsp_udp_max_port",
+      .name   = N_("RTSP UDP maximum port"),
+      .desc   = N_("Same as above, but for the maximum allowed "
+                   "port. Note that each stream requires two ports."),
+      .off    = offsetof(config_t, rtsp_udp_max_port),
+      .opts   = PO_EXPERT,
+      .group  = 7,
+    },
+    {
       .type   = PT_STR,
       .id     = "http_user_agent",
       .name   = N_("HTTP User Agent"),
       .desc   = N_("The user agent string for the build-in HTTP client."),
       .off    = offsetof(config_t, http_user_agent),
       .opts   = PO_HIDDEN | PO_EXPERT,
-      .group  = 7,
+      .group  = 8,
     },
     {
       .type   = PT_INT,
@@ -2663,7 +2689,7 @@ const idclass_t config_class = {
       .desc   = N_("Set the number of threads for IPTV to split load "
                    "across more CPUs."),
       .off    = offsetof(config_t, iptv_tpool_count),
-      .group  = 7,
+      .group  = 8,
     },
     {
       .type   = PT_INT,
@@ -2680,7 +2706,7 @@ const idclass_t config_class = {
       .off    = offsetof(config_t, dscp),
       .list   = config_class_dscp_list,
       .opts   = PO_EXPERT | PO_DOC_NLIST,
-      .group  = 7,
+      .group  = 8,
     },
     {
       .type   = PT_U32,
@@ -2690,7 +2716,7 @@ const idclass_t config_class = {
                    "there is a delay receiving CA keys. "),
       .off    = offsetof(config_t, descrambler_buffer),
       .opts   = PO_EXPERT,
-      .group  = 7,
+      .group  = 8,
     },
     {
       .type   = PT_BOOL,
@@ -2701,7 +2727,7 @@ const idclass_t config_class = {
                    "It may cause issues with some clients / players."),
       .off    = offsetof(config_t, parser_backlog),
       .opts   = PO_EXPERT,
-      .group  = 7,
+      .group  = 8,
     },
     {
       .type   = PT_STR,
@@ -2714,7 +2740,7 @@ const idclass_t config_class = {
       .off    = offsetof(config_t, muxconf_path),
       .notify = config_muxconfpath_notify,
       .opts   = PO_ADVANCED,
-      .group  = 7,
+      .group  = 8,
     },
     {
       .type   = PT_BOOL,
@@ -2722,7 +2748,7 @@ const idclass_t config_class = {
       .name   = N_("Parse HbbTV info"),
       .desc   = N_("Parse HbbTV information from services."),
       .off    = offsetof(config_t, hbbtv),
-      .group  = 7,
+      .group  = 8,
       .def.i  = 1,
     },
     {
@@ -2734,7 +2760,7 @@ const idclass_t config_class = {
                    "the system clock (normally only root)."),
       .off    = offsetof(config_t, tvhtime_update_enabled),
       .opts   = PO_EXPERT,
-      .group  = 7,
+      .group  = 8,
     },
     {
       .type   = PT_BOOL,
@@ -2746,7 +2772,7 @@ const idclass_t config_class = {
                    "performance is not that great."),
       .off    = offsetof(config_t, tvhtime_ntp_enabled),
       .opts   = PO_EXPERT,
-      .group  = 7,
+      .group  = 8,
     },
     {
       .type   = PT_U32,
@@ -2758,7 +2784,7 @@ const idclass_t config_class = {
                    "excessive oscillations on the system clock."),
       .off    = offsetof(config_t, tvhtime_tolerance),
       .opts   = PO_EXPERT,
-      .group  = 7,
+      .group  = 8,
     },
 #if ENABLE_VAAPI
     {

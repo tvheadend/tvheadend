@@ -1245,7 +1245,7 @@ udp_stream_service(http_connection_t *hc, service_t *service, int weight)
 
   if (!(uc = udp_bind(LS_UDP, "udp_streamer",
                        address, port, NULL,
-                       NULL, 1024, 188*7))) {
+                       NULL, 1024, 188*7, 0))) {
     tvhwarn(LS_WEBUI, "Could not create and bind udp socket");
     return res; 
   }  
@@ -1498,7 +1498,7 @@ udp_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
   if (!(uc = udp_bind(LS_UDP, "udp_streamer",
                        address, port, NULL,
-                       NULL, 1024, 188*7))) {
+                       NULL, 1024, 188*7, 0))) {
     tvhwarn(LS_WEBUI, "Could not create and bind udp socket");
     return res; 
   }  

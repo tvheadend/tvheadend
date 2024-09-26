@@ -42,7 +42,7 @@ iptv_udp_start
   /* Note: url->user is used for specifying multicast source address (SSM)
      here. The URL format is rtp://<srcaddr>@<grpaddr>:<port> */
   conn = udp_bind(LS_IPTV, im->mm_nicename, url->host, url->port, url->user,
-                  im->mm_iptv_interface, IPTV_BUF_SIZE, 4*1024);
+                  im->mm_iptv_interface, IPTV_BUF_SIZE, 4*1024, 0);
   if (conn == UDP_FATAL_ERROR)
     return SM_CODE_TUNING_FAILED;
   if (conn == NULL)
