@@ -154,7 +154,7 @@ udp_get_solip( void )
 udp_connection_t *
 udp_bind ( int subsystem, const char *name,
            const char *bindaddr, int port, const char *multicast_src,
-           const char *ifname, int rxsize, int txsize )
+           const char *ifname, int rxsize, int txsize, int bind_fail_allowed )
 {
   int fd, ifindex, reuse = 1;
   udp_connection_t *uc;
@@ -186,8 +186,8 @@ udp_bind ( int subsystem, const char *name,
 
   uc->fd = fd;
 
-  /* Mark reuse address */
-  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse))) {
+  /* Mark reuse address, only wanted and required for Multicast in UDP (and TCP, but not here, then) */
+  if (uc->multicast && setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse))) {
     tvherror(subsystem, "%s - failed to reuse address for socket [%s]",
              name, strerror(errno));
     udp_close(uc);
@@ -207,9 +207,11 @@ udp_bind ( int subsystem, const char *name,
     /* Bind useful for receiver subsystem (not for udp streamer) */
     if (subsystem != LS_UDP) {
     if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in))) {
-      inet_ntop(AF_INET, &IP_AS_V4(&uc->ip, addr), buf, sizeof(buf));
-      tvherror(subsystem, "%s - cannot bind %s:%hu [e=%s]",
-               name, buf, ntohs(IP_AS_V4(&uc->ip, port)), strerror(errno));
+      if (!bind_fail_allowed) {
+        inet_ntop(AF_INET, &IP_AS_V4(&uc->ip, addr), buf, sizeof(buf));
+        tvherror(subsystem, "%s - cannot bind %s:%hu [e=%s]",
+                name, buf, ntohs(IP_AS_V4(&uc->ip, port)), strerror(errno));
+      }
       goto error;
     }
     }  
@@ -280,9 +282,11 @@ udp_bind ( int subsystem, const char *name,
 
     /* Bind */
     if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in6))) {
-      inet_ntop(AF_INET6, &IP_AS_V6(&uc->ip, addr), buf, sizeof(buf));
-      tvherror(subsystem, "%s - cannot bind %s:%hu [e=%s]",
-               name, buf, ntohs(IP_AS_V6(&uc->ip, port)), strerror(errno));
+      if (!bind_fail_allowed) {
+        inet_ntop(AF_INET6, &IP_AS_V6(&uc->ip, addr), buf, sizeof(buf));
+        tvherror(subsystem, "%s - cannot bind %s:%hu [e=%s]",
+                 name, buf, ntohs(IP_AS_V6(&uc->ip, port)), strerror(errno));
+      }
       goto error;
     }
 
@@ -334,7 +338,7 @@ udp_bind_double ( udp_connection_t **_u1, udp_connection_t **_u2,
                   int subsystem, const char *name1,
                   const char *name2, const char *host, int port,
                   const char *ifname, int rxsize1, int rxsize2,
-                  int txsize1, int txsize2 )
+                  int txsize1, int txsize2, int bind_fail_allowed )
 {
   udp_connection_t *u1 = NULL, *u2 = NULL;
   udp_connection_t *ucs[10];
@@ -342,13 +346,13 @@ udp_bind_double ( udp_connection_t **_u1, udp_connection_t **_u2,
 
   memset(&ucs, 0, sizeof(ucs));
   while (1) {
-    u1 = udp_bind(subsystem, name1, host, port, NULL, ifname, rxsize1, txsize1);
+    u1 = udp_bind(subsystem, name1, host, port, NULL, ifname, rxsize1, txsize1, bind_fail_allowed);
     if (u1 == NULL || u1 == UDP_FATAL_ERROR)
       goto fail;
     port2 = ntohs(IP_PORT(u1->ip));
     /* RTP port should be even, RTCP port should be odd */
     if ((port2 % 2) == 0) {
-      u2 = udp_bind(subsystem, name2, host, port2 + 1, NULL, ifname, rxsize2, txsize2);
+      u2 = udp_bind(subsystem, name2, host, port2 + 1, NULL, ifname, rxsize2, txsize2, bind_fail_allowed);
       if (u2 != NULL && u2 != UDP_FATAL_ERROR)
         break;
     }

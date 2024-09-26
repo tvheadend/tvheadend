@@ -1562,7 +1562,7 @@ rtsp_process_play(http_connection_t *hc, int cmd)
                         LS_SATIPS, "rtsp", "rtcp",
                         (rtp_src_ip != NULL && rtp_src_ip[0] != '\0') ? rtp_src_ip : rtsp_ip, 0, NULL,
                         4*1024, 4*1024,
-                        RTP_BUFSIZE, RTCP_BUFSIZE)) {
+                        RTP_BUFSIZE, RTCP_BUFSIZE, 0)) {
       errcode = HTTP_STATUS_INTERNAL;
       goto error;
     }

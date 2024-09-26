@@ -385,7 +385,7 @@ rtcp_connect(rtcp_t * info, char *url, char *host, int port, char *interface, ch
 
   if (info->connection == NULL) {
     rtcp_conn = udp_bind(LS_IPTV, nicename, NULL, 0, NULL, interface,
-    IPTV_BUF_SIZE, 1024);
+    IPTV_BUF_SIZE, 1024, 0);
     if (rtcp_conn == NULL || rtcp_conn == UDP_FATAL_ERROR) {
       tvhwarn(LS_IPTV, "%s - Unable to bind, RTCP won't be available",
           nicename);
