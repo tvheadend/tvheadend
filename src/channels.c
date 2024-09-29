@@ -546,7 +546,7 @@ const idclass_t channel_class = {
     {
       .type     = PT_BOOL,
       .id       = "remote_timeshift",
-      .name     = N_("Remote timeshift (RTSP sources only!"),
+      .name     = N_("Remote timeshift (RTSP sources only!)"),
       .desc     = N_("Pass timeshift commands to a remote RTSP server. Note: do not enable for sources other than RTSP!"),
       .off      = offsetof(channel_t, ch_remote_timeshift),
       .opts     = PO_ADVANCED,
