@@ -172,6 +172,69 @@ tvh_codecs_register(void);
 void
 tvh_codecs_forget(void);
 
+/* ffmpeg constants */
+#if LIBAVCODEC_VERSION_MAJOR > 59
+// **** AUDIO ****
+// aac
+#define FF_AV_PROFILE_AAC_MAIN                  AV_PROFILE_AAC_MAIN
+#define FF_AV_PROFILE_AAC_LOW                   AV_PROFILE_AAC_LOW
+#define FF_AV_PROFILE_AAC_LTP                   AV_PROFILE_AAC_LTP
+#define FF_AV_PROFILE_MPEG2_AAC_LOW             AV_PROFILE_MPEG2_AAC_LOW
+// **** VIDEO ****
+// vp9
+#define FF_AV_PROFILE_VP9_0                     AV_PROFILE_VP9_0
+#define FF_AV_PROFILE_VP9_1                     AV_PROFILE_VP9_1
+#define FF_AV_PROFILE_VP9_2                     AV_PROFILE_VP9_2
+#define FF_AV_PROFILE_VP9_3                     AV_PROFILE_VP9_3
+// h265
+#define FF_AV_PROFILE_HEVC_MAIN                 AV_PROFILE_HEVC_MAIN
+#define FF_AV_PROFILE_HEVC_MAIN_10              AV_PROFILE_HEVC_MAIN_10
+#define FF_AV_PROFILE_HEVC_REXT                 AV_PROFILE_HEVC_REXT
+// h264
+#define FF_AV_PROFILE_H264_BASELINE             AV_PROFILE_H264_BASELINE
+#define FF_AV_PROFILE_H264_CONSTRAINED_BASELINE AV_PROFILE_H264_CONSTRAINED_BASELINE
+#define FF_AV_PROFILE_H264_MAIN                 AV_PROFILE_H264_MAIN
+#define FF_AV_PROFILE_H264_HIGH                 AV_PROFILE_H264_HIGH
+#define FF_AV_PROFILE_H264_HIGH_10              AV_PROFILE_H264_HIGH_10
+#define FF_AV_PROFILE_H264_HIGH_422             AV_PROFILE_H264_HIGH_422
+#define FF_AV_PROFILE_H264_HIGH_444             AV_PROFILE_H264_HIGH_444
+// mpeg2
+#define FF_AV_PROFILE_MPEG2_MAIN                AV_PROFILE_MPEG2_MAIN
+#define FF_AV_PROFILE_MPEG2_SIMPLE              AV_PROFILE_MPEG2_SIMPLE
+// common
+#define FF_AV_PROFILE_UNKNOWN                   AV_PROFILE_UNKNOWN
+#else
+// **** AUDIO ****
+// aac
+#define FF_AV_PROFILE_AAC_MAIN                  FF_PROFILE_AAC_MAIN
+#define FF_AV_PROFILE_AAC_LOW                   FF_PROFILE_AAC_LOW
+#define FF_AV_PROFILE_AAC_LTP                   FF_PROFILE_AAC_LTP
+#define FF_AV_PROFILE_MPEG2_AAC_LOW             FF_PROFILE_MPEG2_AAC_LOW
+// **** VIDEO ****
+// vp9
+#define FF_AV_PROFILE_VP9_0                     FF_PROFILE_VP9_0
+#define FF_AV_PROFILE_VP9_1                     FF_PROFILE_VP9_1
+#define FF_AV_PROFILE_VP9_2                     FF_PROFILE_VP9_2
+#define FF_AV_PROFILE_VP9_3                     FF_PROFILE_VP9_3
+// h265
+#define FF_AV_PROFILE_HEVC_MAIN                 FF_PROFILE_HEVC_MAIN
+#define FF_AV_PROFILE_HEVC_MAIN_10              FF_PROFILE_HEVC_MAIN_10
+#define FF_AV_PROFILE_HEVC_REXT                 FF_PROFILE_HEVC_REXT
+// h264
+#define FF_AV_PROFILE_H264_BASELINE             FF_PROFILE_H264_BASELINE
+#define FF_AV_PROFILE_H264_CONSTRAINED_BASELINE FF_PROFILE_H264_CONSTRAINED_BASELINE
+#define FF_AV_PROFILE_H264_MAIN                 FF_PROFILE_H264_MAIN
+#define FF_AV_PROFILE_H264_HIGH                 FF_PROFILE_H264_HIGH
+#define FF_AV_PROFILE_H264_HIGH_10              FF_PROFILE_H264_HIGH_10
+#define FF_AV_PROFILE_H264_HIGH_422             FF_PROFILE_H264_HIGH_422
+#define FF_AV_PROFILE_H264_HIGH_444             FF_PROFILE_H264_HIGH_444
+// mpeg2
+#define FF_AV_PROFILE_MPEG2_MAIN                FF_PROFILE_MPEG2_MAIN
+#define FF_AV_PROFILE_MPEG2_SIMPLE              FF_PROFILE_MPEG2_SIMPLE
+// common
+#define FF_AV_PROFILE_UNKNOWN                   FF_PROFILE_UNKNOWN
+#endif
+
 
 /* codec_profile_class */
 
@@ -250,11 +313,8 @@ typedef struct tvh_codec_profile_audio {
     char *language3;
     int sample_fmt;
     int sample_rate;
-#if LIBAVCODEC_VERSION_MAJOR > 59
-    AVChannelLayout channel_layout;
-#else
+    // this variable will be used also as ch_layout_u_mask when LIBAVCODEC_VERSION_MAJOR > 59
     int64_t channel_layout;
-#endif
 } TVHAudioCodecProfile;
 
 
