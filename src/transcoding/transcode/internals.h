@@ -56,6 +56,14 @@ typedef enum {
     OPEN_ENCODER_POST
 } TVHOpenPhase;
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+// this is needed to separate av_opt_set-s from _context_filters_apply_sink_options
+typedef enum {
+    AV_OPT_SET_UNKNOWN,
+    AV_OPT_SET_BIN,
+    AV_OPT_SET_STRING
+} av_opt_set_type;
+#endif
 
 /* TVHTranscoder ============================================================ */
 
@@ -177,7 +185,7 @@ void
 tvh_context_close(TVHContext *self, int flush);
 
 /* __VA_ARGS__ = NULL terminated list of sink options
-   sink option = (const char *name, const uint8_t *value, int size) */
+   sink option = (const char *name, av_opt_set_type opt_set_type, int size, const uint8_t *value) */
 int
 tvh_context_open_filters(TVHContext *self,
                          const char *source_name, const char *source_args,

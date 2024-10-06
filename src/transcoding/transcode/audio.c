@@ -91,21 +91,23 @@ _audio_context_channel_layout(TVHContext *self, AVDictionary **opts, AVChannelLa
     av_channel_layout_default(&olayout, 0);
     AVChannelLayout altlayout;
     av_channel_layout_default(&altlayout, 0);
-    int tmp = 0, ichannels = 0, i;
+    int ch_layout_u_mask = 0, i = 0;
     char obuf[64], abuf[64], ibuf[64];
 
-    if (!tvh_context_get_int_opt(opts, "ch_layout", &tmp) &&
-        !(av_channel_layout_from_mask(&olayout, tmp)) && channel_layouts) {
-        ichannels = ilayout.nb_channels;
-        for (i = 0; (av_channel_layout_from_mask(&olayout, channel_layouts[i].u.mask)); i++) {
-            if (av_channel_layout_compare(&olayout, &ilayout)) {
-                break;
+    if (!tvh_context_get_int_opt(opts, "ch_layout_u_mask", &ch_layout_u_mask) &&
+        !(av_channel_layout_from_mask(&olayout, ch_layout_u_mask)) && channel_layouts) {
+        if (olayout.nb_channels > ilayout.nb_channels) {
+            olayout = ilayout;
+        }
+        while (channel_layouts[i].nb_channels != 0) {
+            if (channel_layouts[i].nb_channels <= ilayout.nb_channels) {
+                altlayout = channel_layouts[i];
             }
-            if (olayout.nb_channels <= ichannels) {
-                altlayout = olayout;
-            }
+            i++;
         }
     }
+    else
+        olayout = ilayout;
     if (tvhtrace_enabled()) {
         strcpy(obuf, "none");
         av_channel_layout_describe(&olayout, obuf, sizeof(obuf));
@@ -113,8 +115,8 @@ _audio_context_channel_layout(TVHContext *self, AVDictionary **opts, AVChannelLa
         av_channel_layout_describe(&altlayout, abuf, sizeof(abuf));
         strcpy(ibuf, "none");
         av_channel_layout_describe(&ilayout, ibuf, sizeof(ibuf));
-        tvh_context_log(self, LOG_TRACE, "audio layout selection: old %s, alt %s, in %s",
-                        obuf, abuf, ibuf);
+        tvh_context_log(self, LOG_TRACE, "audio layout selection: in %s, alt %s, out %s",
+                                                                     ibuf,   abuf,   obuf);
     }
     if (olayout.order != AV_CHANNEL_ORDER_UNSPEC)
         return av_channel_layout_copy(dst, &olayout);
@@ -242,22 +244,37 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
         return -1;
     }
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+    char ch_layout[64];
+    av_channel_layout_describe(&self->oavctx->ch_layout, ch_layout, sizeof(ch_layout));
+    
     int ret = tvh_context_open_filters(self,
         "abuffer", source_args,                           // source
         filters,                                          // filters
         "abuffersink",                                    // sink
-#if LIBAVCODEC_VERSION_MAJOR > 59
-        "channel_layouts", &self->oavctx->ch_layout.u.mask, // sink option: channel_layout
-        sizeof(self->oavctx->ch_layout.u.mask),
+        "ch_layouts",   AV_OPT_SET_STRING,                // sink option: channel_layout
+        sizeof(ch_layout),
+        ch_layout,
+        "sample_fmts",  AV_OPT_SET_BIN,                   // sink option: sample_fmt
+        sizeof(self->oavctx->sample_fmt),
+        &self->oavctx->sample_fmt,
+        "sample_rates", AV_OPT_SET_BIN,                   // sink option: sample_rate
+        sizeof(self->oavctx->sample_rate),
+        &self->oavctx->sample_rate,
+        NULL);                                            // _IMPORTANT!_
 #else
+    int ret = tvh_context_open_filters(self,
+        "abuffer", source_args,                           // source
+        filters,                                          // filters
+        "abuffersink",                                    // sink
         "channel_layouts", &self->oavctx->channel_layout, // sink option: channel_layout
         sizeof(self->oavctx->channel_layout),
-#endif
         "sample_fmts", &self->oavctx->sample_fmt,         // sink option: sample_fmt
         sizeof(self->oavctx->sample_fmt),
         "sample_rates", &self->oavctx->sample_rate,       // sink option: sample_rate
         sizeof(self->oavctx->sample_rate),
         NULL);                                            // _IMPORTANT!_
+#endif
     if (!ret) {
         av_buffersink_set_frame_size(self->oavfltctx, self->oavctx->frame_size);
     }
