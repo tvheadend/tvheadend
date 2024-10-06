@@ -242,21 +242,27 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
         return -1;
     }
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+    char ch_layout[64];
+    av_channel_layout_describe(&self->oavctx->ch_layout, ch_layout, sizeof(ch_layout));
+#endif
+
     int ret = tvh_context_open_filters(self,
         "abuffer", source_args,                           // source
         filters,                                          // filters
         "abuffersink",                                    // sink
 #if LIBAVCODEC_VERSION_MAJOR > 59
-        "channel_layouts", &self->oavctx->ch_layout.u.mask, // sink option: channel_layout
-        sizeof(self->oavctx->ch_layout.u.mask),
+        "ch_layouts",   AV_OPT_SET_STRING, sizeof(ch_layout),                 ch_layout,                   // sink option: channel_layout
+        "sample_fmts",  AV_OPT_SET_BIN,    sizeof(self->oavctx->sample_fmt),  &self->oavctx->sample_fmt,   // sink option: sample_fmt
+        "sample_rates", AV_OPT_SET_BIN,    sizeof(self->oavctx->sample_rate), &self->oavctx->sample_rate,  // sink option: sample_rate
 #else
         "channel_layouts", &self->oavctx->channel_layout, // sink option: channel_layout
         sizeof(self->oavctx->channel_layout),
-#endif
         "sample_fmts", &self->oavctx->sample_fmt,         // sink option: sample_fmt
         sizeof(self->oavctx->sample_fmt),
         "sample_rates", &self->oavctx->sample_rate,       // sink option: sample_rate
         sizeof(self->oavctx->sample_rate),
+#endif
         NULL);                                            // _IMPORTANT!_
     if (!ret) {
         av_buffersink_set_frame_size(self->oavfltctx, self->oavctx->frame_size);

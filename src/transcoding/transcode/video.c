@@ -278,8 +278,12 @@ tvh_video_context_open_filters(TVHContext *self, AVDictionary **opts)
         "buffer", source_args,              // source
         strlen(filters) ? filters : "null", // filters
         "buffersink",                       // sink
+#if LIBAVCODEC_VERSION_MAJOR > 59
+        "pix_fmts", AV_OPT_SET_BIN, sizeof(self->oavctx->pix_fmt), &self->oavctx->pix_fmt, // sink option: pix_fmt
+#else
         "pix_fmts", &self->oavctx->pix_fmt, // sink option: pix_fmt
         sizeof(self->oavctx->pix_fmt),
+#endif
         NULL);                              // _IMPORTANT!_
     str_clear(filters);
     return ret;
