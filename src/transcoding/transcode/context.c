@@ -102,6 +102,7 @@ _context_print_opts(TVHContext *self, AVDictionary *opts)
 }
 
 
+#if LIBAVCODEC_VERSION_MAJOR < 61
 static int
 _context_filters_apply_sink_options(TVHContext *self, va_list ap)
 {
@@ -122,6 +123,7 @@ _context_filters_apply_sink_options(TVHContext *self, va_list ap)
     }
     return ret;
 }
+#endif
 
 
 static int
@@ -558,6 +560,7 @@ tvh_context_open_filters(TVHContext *self,
         goto finish;
     }
 
+#if LIBAVCODEC_VERSION_MAJOR < 61
     // sink options
     va_list ap;
     va_start(ap, sink_name);
@@ -566,6 +569,7 @@ tvh_context_open_filters(TVHContext *self,
     if (ret) {
         goto finish;
     }
+#endif
 
     // Endpoints for the filter graph.
     iavfltio->name       = av_strdup("out");

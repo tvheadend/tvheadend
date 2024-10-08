@@ -246,6 +246,7 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
         "abuffer", source_args,                           // source
         filters,                                          // filters
         "abuffersink",                                    // sink
+#if LIBAVCODEC_VERSION_MAJOR < 61
 #if LIBAVCODEC_VERSION_MAJOR > 59
         "channel_layouts", &self->oavctx->ch_layout.u.mask, // sink option: channel_layout
         sizeof(self->oavctx->ch_layout.u.mask),
@@ -257,6 +258,7 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
         sizeof(self->oavctx->sample_fmt),
         "sample_rates", &self->oavctx->sample_rate,       // sink option: sample_rate
         sizeof(self->oavctx->sample_rate),
+#endif
         NULL);                                            // _IMPORTANT!_
     if (!ret) {
         av_buffersink_set_frame_size(self->oavfltctx, self->oavctx->frame_size);
