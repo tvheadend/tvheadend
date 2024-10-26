@@ -106,7 +106,7 @@ tvh_codec_audio_get_list_channel_layouts(TVHAudioCodec *self)
 #if LIBAVCODEC_VERSION_MAJOR > 59
             l = channel_layouts;
             ADD_ENTRY(list, map, s64, 0, str, AUTO_STR);
-            while (l->nb_channels < 32) {
+            while (l->nb_channels != 0) {
                 if (!(map = htsmsg_create_map())) {
                     htsmsg_destroy(list);
                     list = NULL;
@@ -149,9 +149,10 @@ tvh_codec_profile_audio_is_copy(TVHAudioCodecProfile *self, tvh_ssc_t *ssc)
     int ssc_channels = ssc->es_channels ? ssc->es_channels : 2;
     int ssc_sr = ssc->es_sri ? sri_to_rate(ssc->es_sri) : 48000;
 #if LIBAVCODEC_VERSION_MAJOR > 59
-    if ((self->channel_layout.order != AV_CHANNEL_ORDER_UNSPEC &&
-         ssc_channels != self->channel_layout.nb_channels) ||
-        (self->sample_rate && ssc_sr != self->sample_rate)) {
+    AVChannelLayout *ch_layout = NULL;
+    av_channel_layout_from_mask(ch_layout, self->ch_layout_u_mask);
+    if ((self->ch_layout_u_mask && ssc_channels != ch_layout->nb_channels) ||
+        (self->sample_rate      && ssc_sr != self->sample_rate)) {
         return 0;
     }
 #else
@@ -177,8 +178,8 @@ tvh_codec_profile_audio_open(TVHAudioCodecProfile *self, AVDictionary **opts)
                         AV_DICT_DONT_OVERWRITE);
     }
 #if LIBAVCODEC_VERSION_MAJOR > 59
-    if (self->channel_layout.order != AV_CHANNEL_ORDER_UNSPEC) {
-        AV_DICT_SET_INT(opts, "channel_layout", self->channel_layout.u.mask,
+    if (self->ch_layout_u_mask) {
+        AV_DICT_SET_INT(opts, "ch_layout_u_mask", self->ch_layout_u_mask,
                         AV_DICT_DONT_OVERWRITE);
     }
 #else
@@ -358,7 +359,7 @@ const codec_profile_class_t codec_profile_audio_class = {
                 .group    = 4,
                 .opts     = PO_ADVANCED | PO_PHIDDEN,
                 .get_opts = codec_profile_audio_class_channel_layout_get_opts,
-                .off      = offsetof(TVHAudioCodecProfile, channel_layout),
+                .off      = offsetof(TVHAudioCodecProfile, ch_layout_u_mask),
                 .list     = codec_profile_audio_class_channel_layout_list,
                 .def.s64  = 0,
             },
