@@ -93,7 +93,7 @@ var codec_profile_forms = {
             else {
                 var samplerate = samplerate_f.getValue() || 48000;
                 var layout = layout_f.getValue() || 3; // AV_CH_LAYOUT_STEREO
-                if (channels.indexOf(layout) > 0) {
+                if (channels.indexOf(layout) >= 0) {
                     var max_bitrate = (6 * samplerate * channels.indexOf(layout)) / 1000;
                     bitrate_f.setMaxValue(max_bitrate);
                     if (bitrate_f.getValue() > max_bitrate) {

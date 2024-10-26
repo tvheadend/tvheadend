@@ -150,6 +150,7 @@ tvh_codec_profile_audio_is_copy(TVHAudioCodecProfile *self, tvh_ssc_t *ssc)
     int ssc_sr = ssc->es_sri ? sri_to_rate(ssc->es_sri) : 48000;
 #if LIBAVCODEC_VERSION_MAJOR > 59
     AVChannelLayout *ch_layout = NULL;
+    av_channel_layout_default(ch_layout, 0);
     av_channel_layout_from_mask(ch_layout, self->ch_layout_u_mask);
     if ((self->ch_layout_u_mask && ssc_channels != ch_layout->nb_channels) ||
         (self->sample_rate      && ssc_sr != self->sample_rate)) {
