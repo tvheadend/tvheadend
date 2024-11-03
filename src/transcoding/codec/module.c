@@ -58,14 +58,14 @@ codec_get_profiles_list(enum AVMediaType media_type)
 
 
 void
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 codec_init(int vainfo_probe_enabled)
 #else
 codec_init(void)
 #endif
 {
     // codecs
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
     tvh_codecs_register(vainfo_probe_enabled);
 #else
     tvh_codecs_register();

@@ -1,6 +1,6 @@
 #include "transcoding/transcode.h"
 #include "libav.h"
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 #include <va/va.h>
 #endif
 
@@ -225,7 +225,7 @@ codec_id2streaming_component_type(enum AVCodecID id)
 /**
  *
  */
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 #ifdef VA_FOURCC_I010
 static void libav_va_log(int severity, const char *msg)
 {
@@ -267,7 +267,7 @@ static void libav_va_info_callback(const char *msg)
 static void
 libav_vaapi_init(void)
 {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 #ifdef VA_FOURCC_I010
 #if !VA_CHECK_VERSION(1, 0, 0)
   vaSetErrorCallback(libav_va_error_callback);
@@ -283,7 +283,7 @@ libav_vaapi_init(void)
 void
 libav_vaapi_init_context(void *context)
 {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 #ifdef VA_FOURCC_I010
 #if VA_CHECK_VERSION(1, 0, 0)
   vaSetErrorCallback(context, libav_va_error_callback, NULL);

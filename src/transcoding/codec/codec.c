@@ -20,7 +20,7 @@
 
 #include "internals.h"
 
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 #include "vainfo.h"
 #endif
 
@@ -62,7 +62,7 @@ extern TVHCodec tvh_codec_libfdk_aac;
 extern TVHCodec tvh_codec_libopus;
 #endif
 
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 extern TVHCodec tvh_codec_vaapi_h264;
 extern TVHCodec tvh_codec_vaapi_hevc;
 extern TVHCodec tvh_codec_vaapi_vp8;
@@ -257,7 +257,7 @@ tvh_codec_find(const char *name)
 
 
 void
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 tvh_codecs_register(int vainfo_probe_enabled)
 #else
 tvh_codecs_register()
@@ -297,7 +297,7 @@ tvh_codecs_register()
     tvh_codec_register(&tvh_codec_libopus);
 #endif
 
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
     if (vainfo_probe_enabled && !vainfo_init(VAINFO_SHOW_LOGS)) {
         if (vainfo_encoder_isavailable(VAINFO_H264) || 
             vainfo_encoder_isavailable(VAINFO_H264_LOW_POWER))

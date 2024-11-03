@@ -164,7 +164,11 @@ struct tvh_context {
     char *hw_accel_device;
     AVBufferRef *hw_device_ref;
     void *hw_accel_ictx;
+#if ENABLE_VAAPI
+    AVBufferRef *hw_frame_octx;
+#else
     AVBufferRef *hw_device_octx;
+#endif
 };
 
 int

@@ -605,11 +605,21 @@ endif
 # VAAPI
 #
 
-ifeq (yes,$(CONFIG_VAAPI))
+ifeq (yes,$(CONFIG_VAAPI_OLD))
 
 EXTLIBS  += vaapi
 ENCODERS += h264_vaapi hevc_vaapi vp8_vaapi vp9_vaapi
 HWACCELS += mpeg2_vaapi h264_vaapi hevc_vaapi vp9_vaapi
+FILTERS  += deinterlace_vaapi scale_vaapi denoise_vaapi sharpness_vaapi
+
+endif
+
+ifeq (yes,$(CONFIG_VAAPI))
+
+EXTLIBS  += vaapi
+ENCODERS += h264_vaapi hevc_vaapi vp8_vaapi vp9_vaapi
+DECODERS += mpeg2_vaapi h264_vaapi hevc_vaapi vp8_vaapi vp9_vaapi mjpeg_vaapi
+HWACCELS += mpeg2_vaapi h264_vaapi hevc_vaapi vp8_vaapi vp9_vaapi mjpeg_vaapi
 FILTERS  += deinterlace_vaapi scale_vaapi denoise_vaapi sharpness_vaapi
 
 endif

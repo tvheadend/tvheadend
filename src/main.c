@@ -804,7 +804,7 @@ main(int argc, char **argv)
   } randseed;
   struct rlimit rl;
   extern int dvb_bouquets_parse;
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
   extern int vainfo_probe_enabled;
 #endif
   main_tid = pthread_self();
@@ -1295,7 +1295,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, fsmonitor_init);
   tvhftrace(LS_MAIN, libav_init);
   tvhftrace(LS_MAIN, tvhtime_init);
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
   tvhftrace(LS_MAIN, codec_init, vainfo_probe_enabled);
 #else
   tvhftrace(LS_MAIN, codec_init);

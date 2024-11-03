@@ -21,7 +21,7 @@
 #include "vainfo.h"
 #include "internals.h"
 
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 #include <va/va.h>
 #include <fcntl.h>
 #include <va/va_drm.h>
@@ -36,7 +36,7 @@
 #define MAX_QUALITY             15
 
 /* external =================================================================== */
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 // this variable is loaded from config: Enable vaapi detection
 extern int vainfo_probe_enabled;
 #endif
@@ -69,7 +69,7 @@ int encoder_vp8lp_maxQuality = 0;
 int encoder_vp9_maxQuality = 0;
 int encoder_vp9lp_maxQuality = 0;
 
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 /**
  * VAINFO was initialized
  * @note
@@ -423,7 +423,7 @@ error_open_display:
  */
 int vainfo_init(int show_log)
 {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
     int ret = init(show_log);
     if (ret) {
         tvherror(LS_VAINFO, "vainfo_init() error: %d", ret);
@@ -446,7 +446,7 @@ int vainfo_init(int show_log)
  */
 int vainfo_encoder_isavailable(int codec)
 {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
     if (vainfo_probe_enabled) {
         if (!init_done)
             tvherror(LS_VAINFO, "vainfo_init() was not run or generated errors");
@@ -489,7 +489,7 @@ int vainfo_encoder_isavailable(int codec)
  */
 int vainfo_encoder_maxBfreames(int codec)
 {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
     if (vainfo_probe_enabled) {
         if (!init_done)
             tvherror(LS_VAINFO, "vainfo_init() was not run or generated errors");
@@ -532,7 +532,7 @@ int vainfo_encoder_maxBfreames(int codec)
  */
 int vainfo_encoder_maxQuality(int codec)
 {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
     if (vainfo_probe_enabled) {
         if (!init_done)
             tvherror(LS_VAINFO, "vainfo_init() was not run or generated errors");

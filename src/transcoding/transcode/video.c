@@ -60,7 +60,7 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
     if (tvh_context_get_int_opt(opts, "tvh_filter_deint", &filter_deint)) {
         return -1;
     }
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
     filter_denoise = self->profile->filter_hw_denoise;
     filter_sharpness = self->profile->filter_hw_sharpness;
 #endif
@@ -226,9 +226,36 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 #if ENABLE_HWACCELS
     self->oavctx->coded_width = self->oavctx->width;
     self->oavctx->coded_height = self->oavctx->height;
-    if (hwaccels_encode_setup_context(self->oavctx, self->profile->low_power)) {
+#if ENABLE_VAAPI
+    // TODO: can be improved by using "_video_filters_hw_pix_fmt(self->iavctx->pix_fmt)" instead of "tvh_codec_profile_video_get_hwaccel(self->profile))"
+    int hwaccel = -1;
+    if ((hwaccel = tvh_codec_profile_video_get_hwaccel(self->profile)) < 0) {
         return -1;
     }
+    if (_video_filters_hw_pix_fmt(self->oavctx->pix_fmt)){
+        // encoder is hw accelerated
+        if (hwaccel) {
+            // decoder is hw acelerated 
+            // --> we initialize encoder from decoder as recomanded in: 
+            // ffmpeg-6.1.1/doc/examples/vaapi_transcode.c line 169
+            if (hwaccels_initialize_encoder_from_decoder(self->iavctx, self->oavctx)) {
+                return -1;
+            }
+        }
+        else {
+            // decoder is sw
+            // --> we initialize as recommende in:
+            // ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 145
+            if (hwaccels_encode_setup_context(self->oavctx)) {
+#else
+            if (hwaccels_encode_setup_context(self->oavctx, self->profile->low_power)) {
+#endif
+                return -1;
+            }
+#if ENABLE_VAAPI
+        }
+    }
+#endif
 #endif
 
     // XXX: is this a safe assumption?
@@ -255,13 +282,21 @@ tvh_video_context_open_filters(TVHContext *self, AVDictionary **opts)
     char source_args[128];
     char *filters = NULL;
 
+#if ENABLE_HWACCELS
+    enum AVPixelFormat pix_fmt = hwaccels_get_pixfmt_format_for_filter(self->iavctx);
+#endif
+
     // source args
     memset(source_args, 0, sizeof(source_args));
     if (str_snprintf(source_args, sizeof(source_args),
             "video_size=%dx%d:pix_fmt=%s:time_base=%d/%d:pixel_aspect=%d/%d",
             self->iavctx->width,
             self->iavctx->height,
+#if ENABLE_HWACCELS
+            av_get_pix_fmt_name(pix_fmt),
+#else
             av_get_pix_fmt_name(self->iavctx->pix_fmt),
+#endif
             self->iavctx->time_base.num,
             self->iavctx->time_base.den,
             self->iavctx->sample_aspect_ratio.num,

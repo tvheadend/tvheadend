@@ -80,9 +80,9 @@ typedef struct config {
   uint32_t hdhomerun_server_tuner_count;
   char *hdhomerun_server_model_name;
   int hdhomerun_server_enable;
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
   int enable_vainfo;
-  #endif
+#endif
 } config_t;
 
 extern const idclass_t config_class;

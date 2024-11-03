@@ -593,10 +593,18 @@ tvh_context_open_filters(TVHContext *self,
     }
 
     // additional filtergraph params
+#if ENABLE_VAAPI
+    if (!strcmp("buffer", source_name) && self->hw_frame_octx) {
+#else
     if (!strcmp("buffer", source_name) && self->hw_device_octx) {
+#endif
         for (i = 0; i < self->avfltgraph->nb_filters; i++) {
             if (!(self->avfltgraph->filters[i]->hw_device_ctx =
+#if ENABLE_VAAPI
+                      av_buffer_ref(self->hw_frame_octx))) {
+#else
                       av_buffer_ref(self->hw_device_octx))) {
+#endif
                 ret = -1;
                 goto finish;
             }

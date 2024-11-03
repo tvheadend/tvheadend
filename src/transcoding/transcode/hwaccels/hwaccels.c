@@ -20,7 +20,7 @@
 #include "hwaccels.h"
 #include "../internals.h"
 
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 #include "vaapi.h"
 #endif
 
@@ -80,7 +80,7 @@ hwaccels_decode_setup_context(AVCodecContext *avctx,
         return AVERROR(ENOENT);
     }
     switch (pix_fmt) {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
         case AV_PIX_FMT_VAAPI:
             return vaapi_decode_setup_context(avctx);
 #endif
@@ -120,7 +120,7 @@ hwaccels_decode_close_context(AVCodecContext *avctx)
 
     if (ctx->hw_accel_ictx) {
         switch (avctx->pix_fmt) {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
             case AV_PIX_FMT_VAAPI:
                 vaapi_decode_close_context(avctx);
                 break;
@@ -141,7 +141,7 @@ hwaccels_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx,
 
     if (ctx->hw_accel_ictx) {
         switch (iavctx->pix_fmt) {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
             case AV_PIX_FMT_VAAPI:
                 return vaapi_get_scale_filter(iavctx, oavctx, filter, filter_len);
 #endif
@@ -161,7 +161,7 @@ hwaccels_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len
 
     if (ctx->hw_accel_ictx) {
         switch (avctx->pix_fmt) {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
             case AV_PIX_FMT_VAAPI:
                 return vaapi_get_deint_filter(avctx, filter, filter_len);
 #endif
@@ -180,7 +180,7 @@ hwaccels_get_denoise_filter(AVCodecContext *avctx, int value, char *filter, size
 
     if (ctx->hw_accel_ictx) {
         switch (avctx->pix_fmt) {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
             case AV_PIX_FMT_VAAPI:
                 return vaapi_get_denoise_filter(avctx, value, filter, filter_len);
 #endif
@@ -199,7 +199,7 @@ hwaccels_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, si
 
     if (ctx->hw_accel_ictx) {
         switch (avctx->pix_fmt) {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
             case AV_PIX_FMT_VAAPI:
                 return vaapi_get_sharpness_filter(avctx, value, filter, filter_len);
 #endif
@@ -213,13 +213,45 @@ hwaccels_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, si
 
 /* encoding ================================================================= */
 
+
 int
-hwaccels_encode_setup_context(AVCodecContext *avctx, int low_power)
+hwaccels_initialize_encoder_from_decoder(AVCodecContext *iavctx, AVCodecContext *oavctx)
 {
-    switch (avctx->pix_fmt) {
+    switch (iavctx->pix_fmt) {
 #if ENABLE_VAAPI
         case AV_PIX_FMT_VAAPI:
+            /* we need to ref hw_frames_ctx of decoder to initialize encoder's codec.
+            Only after we get a decoded frame, can we obtain its hw_frames_ctx */
+            oavctx->hw_frames_ctx = av_buffer_ref(iavctx->hw_frames_ctx);
+            if (!oavctx->hw_frames_ctx) {
+                return AVERROR(ENOMEM);
+            }
+            return 0;
+        case AV_PIX_FMT_YUV420P:
+            break;
+#endif
+        default:
+            break;
+    }
+    return 0;
+}
+
+
+int
+#if ENABLE_VAAPI
+hwaccels_encode_setup_context(AVCodecContext *avctx)
+#else
+hwaccels_encode_setup_context(AVCodecContext *avctx, int low_power)
+#endif
+{
+    switch (avctx->pix_fmt) {
+#if ENABLE_VAAPI_OLD
+        case AV_PIX_FMT_VAAPI:
             return vaapi_encode_setup_context(avctx, low_power);
+#endif
+#if ENABLE_VAAPI
+        case AV_PIX_FMT_VAAPI:
+            return vaapi_encode_setup_context(avctx);
 #endif
         default:
             break;
@@ -232,13 +264,27 @@ void
 hwaccels_encode_close_context(AVCodecContext *avctx)
 {
     switch (avctx->pix_fmt) {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
         case AV_PIX_FMT_VAAPI:
             vaapi_encode_close_context(avctx);
             break;
 #endif
         default:
             break;
+    }
+}
+
+
+enum AVPixelFormat
+hwaccels_get_pixfmt_format_for_filter(AVCodecContext *avctx)
+{
+    switch (avctx->pix_fmt) {
+#if ENABLE_VAAPI
+        case AV_PIX_FMT_VAAPI:
+            return avctx->pix_fmt;
+#endif
+        default:
+            return avctx->pix_fmt;
     }
 }
 
@@ -254,7 +300,7 @@ hwaccels_init(void)
 void
 hwaccels_done(void)
 {
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
     vaapi_done();
 #endif
 }

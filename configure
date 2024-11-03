@@ -54,6 +54,7 @@ OPTIONS=(
   "libopus:yes"
   "libopus_static:yes"
   "nvenc:no"
+  "vaapi_old:no"
   "vaapi:auto"
   "mmal:no"
   "omx:no"
@@ -709,18 +710,33 @@ else
 fi
 
 #
-# vaapi
+# vaapi_old will override vaapi new
 #
-if enabled_or_auto vaapi; then
+if enabled_or_auto vaapi_old; then
+  disable vaapi
   if enabled libav; then
     if check_pkg libva ">=0.38.0"; then
       check_pkg libva-drm ">=0.38.0" || die "libva-drm not found"
-      enable vaapi
+      enable vaapi_old
       enable hwaccels
-    elif enabled vaapi; then
-      die "vaapi (Video Acceleration (VA) API for Linux) not found"
+    elif enabled vaapi_old; then
+      die "vaapi_old (Video Acceleration (VA) API for Linux) not found"
     fi
   fi
+else
+
+  if enabled_or_auto vaapi; then
+    if enabled libav; then
+      if check_pkg libva ">=0.38.0"; then
+        check_pkg libva-drm ">=0.38.0" || die "libva-drm not found"
+        enable vaapi
+        enable hwaccels
+      elif enabled vaapi; then
+        die "vaapi (Video Acceleration (VA) API for Linux) not found"
+      fi
+    fi
+  fi
+
 fi
 
 #
