@@ -7,8 +7,10 @@ tvheadend.timeshift = function(panel, index) {
        var ramonly = f.findField('ram_only');
        var maxperiod = f.findField('max_period');
        var maxsize = f.findField('max_size');
-       maxperiod.setDisabled(unlperiod.getValue());
-       maxsize.setDisabled(unlsize.getValue() || ramonly.getValue());
+       if (unlperiod !== null)
+           maxperiod.setDisabled(unlperiod.getValue());
+       if (unlsize !== null && ramonly !== null)
+           maxsize.setDisabled(unlsize.getValue() || ramonly.getValue());
     }
 
     tvheadend.idnode_simple(panel, {
