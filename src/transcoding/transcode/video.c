@@ -21,6 +21,9 @@
 
 #if ENABLE_HWACCELS
 #include "hwaccels/hwaccels.h"
+#if ENABLE_QSV
+#include "../codec/internals.h"
+#endif
 #endif
 
 
@@ -29,6 +32,17 @@ _video_filters_hw_pix_fmt(enum AVPixelFormat pix_fmt)
 {
     const AVPixFmtDescriptor *desc;
 
+#if ENABLE_VAAPI
+    // VAAPI support AV_PIX_FMT_VAAPI
+    if (pix_fmt == AV_PIX_FMT_VAAPI)
+        return HWACCEL_VAAPI;
+#endif
+#if ENABLE_QSV
+    // QSV support also AV_PIX_FMT_NV12 beside AV_PIX_FMT_QSV
+    if ((pix_fmt == AV_PIX_FMT_NV12) ||
+        (pix_fmt == AV_PIX_FMT_QSV))
+        return HWACCEL_QSV;
+#endif
     if ((desc = av_pix_fmt_desc_get(pix_fmt)) &&
         (desc->flags & AV_PIX_FMT_FLAG_HWACCEL)) {
         return 1;
@@ -171,6 +185,7 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
     if (!(*filters = str_join(",", hw_deint, hw_scale, hw_denoise, hw_sharpness, download, deint, scale, upload, NULL))) {
         return -1;
     }
+    //tvherror(LS_TRANSCODE, "TO BE REMOVED - filters: %s", *filters);
 
     return 0;
 }
@@ -184,6 +199,15 @@ tvh_video_context_open_decoder(TVHContext *self, AVDictionary **opts)
     if ((hwaccel = tvh_codec_profile_video_get_hwaccel(self->profile)) < 0) {
         return -1;
     }
+#if ENABLE_QSV
+    int look_ahead_depth = -1;
+    if ((look_ahead_depth = tvh_codec_profile_video_get_look_ahead_depth(self->profile)) < 0) {
+        return -1;
+    }
+    if (look_ahead_depth > 0)
+        // 64 --> vpp_qsv requires extra 64 frames: https://trac.ffmpeg.org/ticket/8379
+        self->iavctx->extra_hw_frames = look_ahead_depth + 64;
+#endif
     if (hwaccel) {
         self->iavctx->get_format = hwaccels_decode_get_format;
     }
@@ -226,7 +250,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 #if ENABLE_HWACCELS
     self->oavctx->coded_width = self->oavctx->width;
     self->oavctx->coded_height = self->oavctx->height;
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI || ENABLE_QSV
     // TODO: can be improved by using "_video_filters_hw_pix_fmt(self->iavctx->pix_fmt)" instead of "tvh_codec_profile_video_get_hwaccel(self->profile))"
     int hwaccel = -1;
     if ((hwaccel = tvh_codec_profile_video_get_hwaccel(self->profile)) < 0) {
@@ -235,7 +259,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     if (_video_filters_hw_pix_fmt(self->oavctx->pix_fmt)){
         // encoder is hw accelerated
         if (hwaccel) {
-            // decoder is hw acelerated 
+            // decoder is hw accelerated 
             // --> we initialize encoder from decoder as recomanded in: 
             // ffmpeg-6.1.1/doc/examples/vaapi_transcode.c line 169
             if (hwaccels_initialize_encoder_from_decoder(self->iavctx, self->oavctx)) {
@@ -244,7 +268,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
         }
         else {
             // decoder is sw
-            // --> we initialize as recommende in:
+            // --> we initialize as recommended in:
             // ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 145
             if (hwaccels_encode_setup_context(self->oavctx)) {
 #else
@@ -252,7 +276,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 #endif
                 return -1;
             }
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI || ENABLE_QSV
         }
     }
 #endif

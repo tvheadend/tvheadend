@@ -626,6 +626,21 @@ endif
 
 
 # ##############################################################################
+# QSV
+#
+
+ifeq (yes,$(CONFIG_QSV))
+
+EXTLIBS  += libvpl
+ENCODERS += h264_qsv hevc_qsv vp9_qsv
+DECODERS += mpeg2_qsv h264_qsv hevc_qsv vp9_qsv vp8_qsv mjpeg_qsv
+FILTERS  += deinterlace_qsv scale_qsv vpp_qsv
+HWACCELS += mpeg2_qsv h264_qsv hevc_qsv vp9_qsv vp8_qsv mjpeg_qsv
+
+endif
+
+
+# ##############################################################################
 # MMAL
 #
 

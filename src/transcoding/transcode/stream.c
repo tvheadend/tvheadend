@@ -87,6 +87,48 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
       }
     }
 #endif
+// This IF should be replaced later on with ENABLE_HWACCELS and shoud incorporate also above code ENABLE_MMAL / ENABLE_NVENC
+#if ENABLE_VAAPI || ENABLE_QSV
+    if (idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class)) {
+        // we match hwaccel (decoder) with the encoder
+#if ENABLE_VAAPI
+        if (strstr(profile->codec_name, "vaapi")){
+            // mpeg2_vaapi h264_vaapi hevc_vaapi vp8_vaapi vp9_vaapi mjpeg_vaapi
+            if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
+                icodec = avcodec_find_decoder_by_name("mpeg2_vaapi");
+            } else if (icodec_id == AV_CODEC_ID_H264) {
+                icodec = avcodec_find_decoder_by_name("h264_vaapi");
+            } else if (icodec_id == AV_CODEC_ID_HEVC) {
+                icodec = avcodec_find_decoder_by_name("hevc_vaapi");
+            } else if (icodec_id == AV_CODEC_ID_VP9) {
+                icodec = avcodec_find_decoder_by_name("vp9_vaapi");
+            } else if (icodec_id == AV_CODEC_ID_VP8) {
+                icodec = avcodec_find_decoder_by_name("vp8_vaapi");
+            }else if (icodec_id == AV_CODEC_ID_MJPEG) {
+                icodec = avcodec_find_decoder_by_name("mjpeg_vaapi");
+            }
+        }
+#endif
+#if ENABLE_QSV
+        if (strstr(profile->codec_name, "qsv")){
+            // mpeg2_qsv h264_qsv hevc_qsv vp9_qsv vp8_qsv mjpeg_qsv
+            if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
+                icodec = avcodec_find_decoder_by_name("mpeg2_qsv");
+            } else if (icodec_id == AV_CODEC_ID_H264) {
+                icodec = avcodec_find_decoder_by_name("h264_qsv");
+            } else if (icodec_id == AV_CODEC_ID_HEVC) {
+                icodec = avcodec_find_decoder_by_name("hevc_qsv");
+            } else if (icodec_id == AV_CODEC_ID_VP9) {
+                icodec = avcodec_find_decoder_by_name("vp9_qsv");
+            } else if (icodec_id == AV_CODEC_ID_VP8) {
+                icodec = avcodec_find_decoder_by_name("vp8_qsv");
+            }else if (icodec_id == AV_CODEC_ID_MJPEG) {
+                icodec = avcodec_find_decoder_by_name("mjpeg_qsv");
+            }
+        }
+#endif
+    }
+#endif
     if (!icodec && !(icodec = avcodec_find_decoder(icodec_id))) {
         tvh_stream_log(self, LOG_ERR, "failed to find decoder for '%s'",
                        streaming_component_type2txt(ssc->es_type));

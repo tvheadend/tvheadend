@@ -57,6 +57,25 @@ typedef enum {
 } TVHOpenPhase;
 
 
+/* profile_video_class ============================================================ */
+// Note: 
+// - NO_HWACCEL must be always first (0)
+// - all the other options must be hardware accelerated
+typedef enum {
+    NO_HWACCEL,
+#if ENABLE_VAAPI
+    HWACCEL_VAAPI,
+#endif
+#if ENABLE_QSV
+    HWACCEL_QSV,
+#endif
+// TODO:
+// add other hw accelerated options:
+// nvdec
+// mmal
+// amf
+} TVH_hwaccels_list;
+
 /* TVHTranscoder ============================================================ */
 
 SLIST_HEAD(TVHStreams, tvh_stream);
@@ -164,7 +183,7 @@ struct tvh_context {
     char *hw_accel_device;
     AVBufferRef *hw_device_ref;
     void *hw_accel_ictx;
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI || ENABLE_QSV
     AVBufferRef *hw_frame_octx;
 #else
     AVBufferRef *hw_device_octx;

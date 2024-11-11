@@ -56,6 +56,7 @@ OPTIONS=(
   "nvenc:no"
   "vaapi_old:no"
   "vaapi:auto"
+  "qsv:auto"
   "mmal:no"
   "omx:no"
   "inotify:auto"
@@ -738,6 +739,21 @@ else
   fi
 
 fi
+
+
+#
+# qsv (oneVPL)
+#
+if enabled_or_auto qsv; then
+  if check_pkg libmfx ">=1.35"; then
+    #check_pkg libvpl ">=2.6" || die "libvpl >= 2.6 not found"
+    enable qsv
+    enable hwaccels
+  else
+    die "Intel OneVPL >= 2.6 (AKA Quick Sync Video) not found"
+  fi
+fi
+
 
 #
 # Inotify

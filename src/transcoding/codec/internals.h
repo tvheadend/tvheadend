@@ -219,8 +219,21 @@ typedef struct tvh_codec_profile_video {
     TVHCodecProfile;
     int deinterlace;
     int height;
-    int scaling_mode;   // 0 --> up&down; 1 --> up; 2 --> down
+    // 0 --> up&down; 1 --> up; 2 --> down
+    int scaling_mode;
+    // 0 --> software decode; 1 --> hardware decode
     int hwaccel;
+#if ENABLE_QSV
+/**
+ * QSV look_ahead_depth - Depth of look ahead in number frames. [look_ahead_depth]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int: 
+ * 0 - skip
+ * 1->100 - feature is enabled
+ */
+    int look_ahead_depth;
+#endif
     int pix_fmt;
     int crf;
     AVRational size;

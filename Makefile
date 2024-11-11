@@ -537,6 +537,9 @@ endif
 ifeq ($(CONFIG_VAAPI),yes)
 LIBS-CODECS += vaapi
 endif
+ifeq ($(CONFIG_QSV),yes)
+LIBS-CODECS += qsv
+endif
 ifeq ($(CONFIG_NVENC),yes)
 LIBS-CODECS += nvenc
 endif
@@ -553,6 +556,9 @@ SRCS-HWACCELS += src/transcoding/transcode/hwaccels/vaapi_old.c
 endif
 ifeq ($(CONFIG_VAAPI),yes)
 SRCS-HWACCELS += src/transcoding/transcode/hwaccels/vaapi.c
+endif
+ifeq ($(CONFIG_QSV),yes)
+SRCS-HWACCELS += src/transcoding/transcode/hwaccels/qsv.c
 endif
 endif
 
