@@ -954,7 +954,7 @@ scanfile_init ( const char *muxconf_path, int lock )
     tvhwarn(LS_SCANFILE, "no predefined muxes found, check path '%s%s'",
             path[0] == '/' ? path : TVHEADEND_DATADIR "/",
             path[0] == '/' ? "" : path);
-    tvhwarn(LS_SCANFILE, "expected tree structure - http://git.linuxtv.org/cgit.cgi/dtv-scan-tables.git/tree/");
+    tvhwarn(LS_SCANFILE, "expected tree structure - https://git.linuxtv.org/dtv-scan-tables.git/tree/");
     for (i = 0; i < REGIONS; i++)
       scanfile_done_region(&scanfile_regions_load[i]);
     memoryinfo_free(&scanfile_memoryinfo, REGIONS * sizeof(scanfile_region_list_t));

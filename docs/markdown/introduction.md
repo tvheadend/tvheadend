@@ -82,7 +82,7 @@ for both live and recorded streams in various formats.
 ### Easy to Configure and Administer
 * All setup and configuration is done from the built in web user interface.
 * All settings are stored in human-readable text files.
-* Initial setup can be done by choosing one of the pre-defined [linuxtv](http://git.linuxtv.org/cgit.cgi/dtv-scan-tables.git) networks
+* Initial setup can be done by choosing one of the pre-defined [linuxtv](https://git.linuxtv.org/dtv-scan-tables.git) networks
 or manually configured.
 * Idle scanning for automatic detection of muxes and services.
 * Support for broadcaster (primarily DVB-S) bouquets for easy channel mapping.

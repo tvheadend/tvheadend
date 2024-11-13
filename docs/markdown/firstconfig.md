@@ -169,7 +169,7 @@ of the same type as necessary, e.g. to have two DVB-T networks defined,
 one with HD muxes, one without.
 
 The creation process allows you to select from a series of pre-defined mux
-lists for common DVB sources. These are available [here](https://github.com/tvheadend/dtv-scan-tables) -
+lists for common DVB sources. These are available [here](https://git.linuxtv.org/dtv-scan-tables.git) -
 but they do go out of date as broadcasters move services around and national
 authorities change entire pieces of spectrum. As such, you should try the
 pre-defined values, but you may need to add muxes manually.
