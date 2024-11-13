@@ -509,6 +509,13 @@ if enabled_or_auto satip_server; then
 fi
 
 #
+# HDHomerun server
+#
+if enabled_or_auto hdhomerun_server; then
+  enable upnp
+fi
+
+#
 # SAT>IP client
 #
 if enabled_or_auto satip_client; then
