@@ -71,6 +71,7 @@ extern TVHCodec tvh_codec_vaapi_vp9;
 
 #if ENABLE_QSV
 extern TVHCodec tvh_codec_qsv_h264;
+extern TVHCodec tvh_codec_qsv_hevc;
 #endif
 
 #if ENABLE_NVENC
@@ -326,6 +327,7 @@ tvh_codecs_register()
 
 #if ENABLE_QSV
     tvh_codec_register(&tvh_codec_qsv_h264);
+    tvh_codec_register(&tvh_codec_qsv_hevc);
 #endif
 
 #if ENABLE_NVENC

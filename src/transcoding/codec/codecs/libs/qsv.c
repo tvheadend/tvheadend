@@ -27,46 +27,6 @@
 
 /* defines */
 
-#define VAAPI_ENC_LEVEL_H264_SKIP                 -100
-#define VAAPI_ENC_LEVEL_H264_1                    10
-#define VAAPI_ENC_LEVEL_H264_11                   11
-#define VAAPI_ENC_LEVEL_H264_12                   12
-#define VAAPI_ENC_LEVEL_H264_13                   13
-#define VAAPI_ENC_LEVEL_H264_2                    20
-#define VAAPI_ENC_LEVEL_H264_21                   21
-#define VAAPI_ENC_LEVEL_H264_22                   22
-#define VAAPI_ENC_LEVEL_H264_3                    30
-#define VAAPI_ENC_LEVEL_H264_31                   31
-#define VAAPI_ENC_LEVEL_H264_32                   32
-#define VAAPI_ENC_LEVEL_H264_4                    40
-#define VAAPI_ENC_LEVEL_H264_41                   41
-#define VAAPI_ENC_LEVEL_H264_42                   42
-#define VAAPI_ENC_LEVEL_H264_5                    50
-#define VAAPI_ENC_LEVEL_H264_51                   51
-#define VAAPI_ENC_LEVEL_H264_52                   52
-#define VAAPI_ENC_LEVEL_H264_6                    60
-#define VAAPI_ENC_LEVEL_H264_61                   61
-#define VAAPI_ENC_LEVEL_H264_62                   62
-
-#define VAAPI_ENC_HEVC_TIER_SKIP			      -1
-#define VAAPI_ENC_HEVC_TIER_MAIN			      0
-#define VAAPI_ENC_HEVC_TIER_HIGH 			      1
-
-#define VAAPI_ENC_LEVEL_HEVC_SKIP                 -100
-#define VAAPI_ENC_LEVEL_HEVC_1                    30
-#define VAAPI_ENC_LEVEL_HEVC_2                    60
-#define VAAPI_ENC_LEVEL_HEVC_21                   63
-#define VAAPI_ENC_LEVEL_HEVC_3                    90
-#define VAAPI_ENC_LEVEL_HEVC_31                   93
-#define VAAPI_ENC_LEVEL_HEVC_4                    120
-#define VAAPI_ENC_LEVEL_HEVC_41                   123
-#define VAAPI_ENC_LEVEL_HEVC_5                    150
-#define VAAPI_ENC_LEVEL_HEVC_51                   153
-#define VAAPI_ENC_LEVEL_HEVC_52                   156
-#define VAAPI_ENC_LEVEL_HEVC_6                    180
-#define VAAPI_ENC_LEVEL_HEVC_61                   183
-#define VAAPI_ENC_LEVEL_HEVC_62                   186
-
 // for preset
 #define QSV_ENC_PRESET_SKIP         0
 #define QSV_ENC_PRESET_VERYSLOW     1
@@ -112,74 +72,6 @@ b_strategy_get_list( void *o, const char *lang )
     };
     return strtab2htsmsg(tab, 1, lang);
 }
-
-
-// h264
-/*
-static htsmsg_t *
-h264_level_get_list( void *o, const char *lang )
-{
-    static const struct strtab tab[] = {
-        { N_("skip"), VAAPI_ENC_LEVEL_H264_SKIP },
-        { N_("1"),    VAAPI_ENC_LEVEL_H264_1 },
-        { N_("1.1"),  VAAPI_ENC_LEVEL_H264_11 },
-        { N_("1.2"),  VAAPI_ENC_LEVEL_H264_12 },
-        { N_("1.3"),  VAAPI_ENC_LEVEL_H264_13 },
-        { N_("2"),    VAAPI_ENC_LEVEL_H264_2 },
-        { N_("2.1"),  VAAPI_ENC_LEVEL_H264_21 },
-        { N_("2.2"),  VAAPI_ENC_LEVEL_H264_22 },
-        { N_("3"),    VAAPI_ENC_LEVEL_H264_3 },
-        { N_("3.1"),  VAAPI_ENC_LEVEL_H264_31 },
-        { N_("3.2"),  VAAPI_ENC_LEVEL_H264_32 },
-        { N_("4"),    VAAPI_ENC_LEVEL_H264_4 },
-        { N_("4.1"),  VAAPI_ENC_LEVEL_H264_41 },
-        { N_("4.2"),  VAAPI_ENC_LEVEL_H264_42 },
-        { N_("5"),    VAAPI_ENC_LEVEL_H264_5 },
-        { N_("5.1"),  VAAPI_ENC_LEVEL_H264_51 },
-        { N_("5.2"),  VAAPI_ENC_LEVEL_H264_52 },
-        { N_("6"),    VAAPI_ENC_LEVEL_H264_6 },
-        { N_("6.1"),  VAAPI_ENC_LEVEL_H264_61 },
-        { N_("6.2"),  VAAPI_ENC_LEVEL_H264_62 },
-    };
-    return strtab2htsmsg(tab, 1, lang);
-}
-*/
-
-// hevc 
-/*
-static htsmsg_t *
-hevc_tier_get_list( void *o, const char *lang )
-{
-    static const struct strtab tab[] = {
-        { N_("skip"),   VAAPI_ENC_HEVC_TIER_SKIP },
-        { N_("main"),   VAAPI_ENC_HEVC_TIER_MAIN },
-        { N_("high"),   VAAPI_ENC_HEVC_TIER_HIGH },
-    };
-    return strtab2htsmsg(tab, 1, lang);
-}
-
-static htsmsg_t *
-hevc_level_get_list( void *o, const char *lang )
-{
-    static const struct strtab tab[] = {
-        { N_("skip"), VAAPI_ENC_LEVEL_HEVC_SKIP },
-        { N_("1"),    VAAPI_ENC_LEVEL_HEVC_1 },
-        { N_("2"),    VAAPI_ENC_LEVEL_HEVC_2 },
-        { N_("2.1"),  VAAPI_ENC_LEVEL_HEVC_21 },
-        { N_("3"),    VAAPI_ENC_LEVEL_HEVC_3 },
-        { N_("3.1"),  VAAPI_ENC_LEVEL_HEVC_31 },
-        { N_("4"),    VAAPI_ENC_LEVEL_HEVC_4 },
-        { N_("4.1"),  VAAPI_ENC_LEVEL_HEVC_41 },
-        { N_("5"),    VAAPI_ENC_LEVEL_HEVC_5 },
-        { N_("5.1"),  VAAPI_ENC_LEVEL_HEVC_51 },
-        { N_("5.2"),  VAAPI_ENC_LEVEL_HEVC_52 },
-        { N_("6"),    VAAPI_ENC_LEVEL_HEVC_6 },
-        { N_("6.1"),  VAAPI_ENC_LEVEL_HEVC_61 },
-        { N_("6.2"),  VAAPI_ENC_LEVEL_HEVC_62 },
-    };
-    return strtab2htsmsg(tab, 1, lang);
-}
-*/
 
 /* qsv ==================================================================== */
 
@@ -229,8 +121,6 @@ typedef struct {
     int loop_filter_sharpness;
     double buff_factor;
     int global_quality;
-    int tier;
-    int level;
     int qmin;
     int qmax;
     int super_frame;
@@ -328,17 +218,6 @@ static const codec_profile_class_t codec_profile_qsv_class = {
         .ic_class      = "codec_profile_qsv",
         .ic_caption    = N_("qsv"),
         .ic_properties = (const property_t[]){
-/*
-            {
-                .type     = PT_STR,
-                .id       = "device",     // Don't change
-                .name     = N_("Device name"),
-                .desc     = N_("Device name (e.g. /dev/dri/renderD128)."),
-                .group    = 3,
-                .off      = offsetof(tvh_codec_profile_qsv_t, device),
-                .list     = tvh_codec_profile_vaapi_device_list,
-            },
-*/
             {
                 .type     = PT_BOOL,
                 .id       = "low_power",     // Don't change
@@ -504,8 +383,7 @@ static const AVProfile qsv_h264_profiles[] = {
 };
 
 static int
-tvh_codec_profile_qsv_h264_open(tvh_codec_profile_qsv_t *self,
-                                  AVDictionary **opts)
+tvh_codec_profile_qsv_h264_open(tvh_codec_profile_qsv_t *self, AVDictionary **opts)
 {
     // to avoid issues we have this check:
     if (self->buff_factor <= 0) {
@@ -636,10 +514,6 @@ h264_qsv encoder AVOptions:
             AV_DICT_SET_INT(opts, "look_ahead_depth", self->look_ahead_depth, AV_DICT_DONT_OVERWRITE);
         AV_DICT_SET_INT(opts, "look_ahead", 1, AV_DICT_DONT_OVERWRITE);
         AV_DICT_SET_INT(opts, "look_ahead_downsampling", 1, AV_DICT_DONT_OVERWRITE);
-        //AV_DICT_SET_INT(opts, "extbrc", 1, AV_DICT_DONT_OVERWRITE); --> only for hevc
-    }
-    if (self->level != -100) {
-        AV_DICT_SET_INT(opts, "level", self->level, AV_DICT_DONT_OVERWRITE);
     }
     if (self->qmin) {
         AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
@@ -683,19 +557,6 @@ static const codec_profile_class_t codec_profile_qsv_h264_class = {
                 .off      = offsetof(tvh_codec_profile_qsv_t, adaptive_b),
                 .def.i    = 0,
             },
-            /*
-            {
-                .type     = PT_INT,
-                .id       = "level",     // Don't change
-                .name     = N_("level"),
-                .desc     = N_("Set level (level_idc)"),
-                .group    = 5,
-                .opts     = PO_EXPERT,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_qsv_t, level),
-                .list     = h264_level_get_list,
-                .def.i    = VAAPI_ENC_LEVEL_H264_3,
-            },*/
             {}
         }
     },
@@ -713,6 +574,41 @@ TVHVideoCodec tvh_codec_qsv_h264 = {
 };
 
 
+/* hevc_qsv =============================================================== */
+/*
+ * QSV Profile -  [profile]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int: 
+ * -99 - unknown
+ *  1  - main
+ *  2  - main10
+ *  3  - mainsp
+ *  4  - rext
+ *  5  - scc
+*/
+static const AVProfile qsv_hevc_profiles[] = {
+    { FF_PROFILE_HEVC_MAIN,                 "Main" },
+    { FF_PROFILE_HEVC_MAIN_10,              "Main 10" },
+    { FF_PROFILE_HEVC_MAIN_STILL_PICTURE,   "Main Still Picture" },
+    { FF_PROFILE_HEVC_REXT,                 "REXT" },
+    { FF_PROFILE_HEVC_SCC,                  "SCC" },
+    { FF_PROFILE_UNKNOWN },
+};
+
+static int
+tvh_codec_profile_qsv_hevc_open(tvh_codec_profile_qsv_t *self, AVDictionary **opts)
+{
+    // to avoid issues we have this check:
+    if (self->buff_factor <= 0) {
+        self->buff_factor = 3;
+    }
+    int int_bitrate = (int)((double)(self->bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    int int_buffer_size = (int)((double)(self->bit_rate) * 2048.0 * self->buff_factor * (1.0 + self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480));
+    int int_max_bitrate = (int)((double)(self->max_bit_rate) * 1024.0 * (1.0 + (self->bit_rate_scale_factor * ((double)(self->size.den) - 480.0) / 480.0)));
+    tvhinfo(LS_QSV, "Bitrate = %d kbps; Buffer size = %d kbps; Max bitrate = %d kbps", int_bitrate / 1024, int_buffer_size / 1024, int_max_bitrate / 1024);
+    // to find available parameters use:
+    // ffmpeg -hide_banner -h encoder=hevc_qsv
 /*
 ffmpeg -hide_banner -h encoder=hevc_qsv
 Encoder hevc_qsv [HEVC (Intel Quick Sync Video acceleration)]:
@@ -781,6 +677,114 @@ hevc_qsv encoder AVOptions:
   -int_ref_qp_delta  <int>        E..V....... QP difference for the refresh MBs (from -32768 to 32767) (default -32768)
   -int_ref_cycle_dist <int>        E..V....... Distance between the beginnings of the intra-refresh cycles in frames (from -1 to 32767) (default -1)
 */
+
+    if (self->global_quality) {
+        AV_DICT_SET_INT(opts, "global_quality", self->global_quality, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->b_strategy >= 0) {
+        // b_depth
+        AV_DICT_SET_INT(opts, "b_strategy", self->b_strategy, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->desired_b_depth >= 0) {
+        // max_b_frames
+        AV_DICT_SET_INT(opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->low_power) {
+        AV_DICT_SET_INT(opts, "low_power", self->low_power, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->bit_rate) {
+        AV_DICT_SET_INT(opts, "b", int_bitrate, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "bufsize", int_buffer_size, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->max_bit_rate) {
+        AV_DICT_SET_INT(opts, "maxrate", int_max_bitrate, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->qp) {
+        AV_DICT_SET_INT(opts, "qp", self->qp, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->quality >= 0) {
+        AV_DICT_SET_INT(opts, "quality", self->quality, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->async_depth) {
+        AV_DICT_SET_INT(opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->preset) {
+        AV_DICT_SET_INT(opts, "preset", self->preset, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->look_ahead_depth) {
+        if (self->look_ahead_depth < (self->desired_b_depth + 1))
+            // we have to force look_ahead_depth to bf + 1
+            // https://forum.level1techs.com/t/ffmpeg-av1-encoding-using-intel-arc-gpu-tips/205120/2
+            AV_DICT_SET_INT(opts, "look_ahead_depth", self->desired_b_depth + 1, AV_DICT_DONT_OVERWRITE);
+        else
+            AV_DICT_SET_INT(opts, "look_ahead_depth", self->look_ahead_depth, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(opts, "extbrc", 1, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->qmin) {
+        AV_DICT_SET_INT(opts, "qmin", self->qmin, AV_DICT_DONT_OVERWRITE);
+    }
+    if (self->qmax) {
+        AV_DICT_SET_INT(opts, "qmax", self->qmax, AV_DICT_DONT_OVERWRITE);
+    }
+    // force keyframe every 3 sec.
+    AV_DICT_SET(opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
+    //AV_DICT_SET(opts, "filter_complex", "[0:v]setpts=N/FRAME_RATE/TB[v]", AV_DICT_DONT_OVERWRITE);
+    return 0;
+}
+
+// NOTE:
+// the names below are used in codec.js (/src/webui/static/app/codec.js)
+static const codec_profile_class_t codec_profile_qsv_hevc_class = {
+    {
+        .ic_super      = (idclass_t *)&codec_profile_qsv_class,
+        .ic_class      = "codec_profile_qsv_hevc",
+        .ic_caption    = N_("qsv_hevc"),
+        .ic_properties = (const property_t[]){
+            {
+                .type     = PT_INT,
+                .id       = "look_ahead_depth",     // Don't change
+                .name     = N_("Depth of look ahead"),
+                .desc     = N_("Depth of look ahead in number frames [0=skip 1-100]."),
+                .group    = 3,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_qsv_t, look_ahead_depth),
+                .intextra = INTEXTRA_RANGE(0, 100, 1),
+                .def.i    = 0,
+            },
+            /*
+            {
+                .type     = PT_BOOL,
+                .id       = "adaptive_b",     // Don't change
+                .name     = N_("AdaptiveB"),
+                .desc     = N_("This flag controls changing of frame type from B to P."),
+                .group    = 3,
+                .opts     = PO_EXPERT,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(tvh_codec_profile_qsv_t, adaptive_b),
+                .def.i    = 0,
+            },
+            */
+            {}
+        }
+    },
+    .open = (codec_profile_open_meth)tvh_codec_profile_qsv_hevc_open,
+};
+
+
+TVHVideoCodec tvh_codec_qsv_hevc = {
+    .name     = "hevc_qsv",
+    .size     = sizeof(tvh_codec_profile_qsv_t),
+    .idclass  = &codec_profile_qsv_hevc_class,
+    .profiles = qsv_hevc_profiles,
+    .profile_init = tvh_codec_profile_video_init,
+    .profile_destroy = tvh_codec_profile_video_destroy,
+};
+
+
+
+
+
 
 
 

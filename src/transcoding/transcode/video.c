@@ -251,7 +251,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     self->oavctx->coded_width = self->oavctx->width;
     self->oavctx->coded_height = self->oavctx->height;
 #if ENABLE_VAAPI || ENABLE_QSV
-    // TODO: can be improved by using "_video_filters_hw_pix_fmt(self->iavctx->pix_fmt)" instead of "tvh_codec_profile_video_get_hwaccel(self->profile))"
+    // hwaccel is the user input for Hardware acceleration from Codec parameteres
     int hwaccel = -1;
     if ((hwaccel = tvh_codec_profile_video_get_hwaccel(self->profile)) < 0) {
         return -1;
@@ -262,6 +262,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
             // decoder is hw accelerated 
             // --> we initialize encoder from decoder as recomanded in: 
             // ffmpeg-6.1.1/doc/examples/vaapi_transcode.c line 169
+            // ffmpeg-6.1.1/doc/examples/qsv_transcode.c line 276
             if (hwaccels_initialize_encoder_from_decoder(self->iavctx, self->oavctx)) {
                 return -1;
             }
@@ -270,6 +271,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
             // decoder is sw
             // --> we initialize as recommended in:
             // ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 145
+            // I don't have a qsv_encode example --> Not working for QSV
             if (hwaccels_encode_setup_context(self->oavctx)) {
 #else
             if (hwaccels_encode_setup_context(self->oavctx, self->profile->low_power)) {
@@ -280,7 +282,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
         }
     }
 #endif
-#endif
+#endif // from ENABLE_HWACCELS
 
     // XXX: is this a safe assumption?
     if (!self->iavctx->framerate.num) {

@@ -43,16 +43,7 @@ typedef struct tvh_qsv_context_t {
 static void
 tvhva_done()
 {
-    /*
-    TVHVADevice *vad;
-    
-    while ((vad = LIST_FIRST(&tvhva_devices)) != NULL) {
-        LIST_REMOVE(vad, link);
-        av_buffer_unref(&vad->hw_device_ref);
-        free(vad->hw_device_name);
-        free(vad);
-    }
-    */
+    /* nothing to do */
 }
 
 
@@ -65,6 +56,10 @@ tvhva_context_destroy(TVHVAContext *self)
         if (self->hw_device_ctx) {
             av_buffer_unref(&self->hw_device_ctx);
             self->hw_device_ctx = NULL;
+        }
+        if (self->hw_frame_ref) {
+            av_buffer_unref(&self->hw_frame_ref);
+            self->hw_frame_ref = NULL;
         }
         free(self);
         self = NULL;
@@ -96,7 +91,6 @@ qsv_decode_setup_context(AVCodecContext *avctx)
         return AVERROR(ENOMEM);
     }
 
-    //if (av_hwdevice_ctx_create(&self->hw_device_ctx, AV_HWDEVICE_TYPE_QSV, "auto", NULL, 0)) {
     ret = av_hwdevice_ctx_create(&self->hw_device_ctx, AV_HWDEVICE_TYPE_QSV, "auto", NULL, 0);
     if (ret < 0) {
         tvherror(LS_QSV, "Decode: Failed to create a context with error code: %s", av_err2str(ret));
@@ -144,7 +138,7 @@ qsv_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len)
 
 /* encoding ================================================================= */
 
-// lifted from ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 41
+// lifted from ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 41  --> has to be adapted to QSV
 static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx)
 {
     AVBufferRef *hw_frames_ref;
@@ -195,136 +189,8 @@ qsv_encode_setup_context(AVCodecContext *avctx)
         return -1;
     }
     ctx->hw_frame_octx = av_buffer_ref(self->hw_frame_ref);
-    //avctx->extra_hw_frames = 32;
 
-/*
-    TVHContext *ctx = avctx->opaque;
-    TVHVAContext *hwaccel_context = NULL;
-    enum AVPixelFormat pix_fmt;
-    TVHVAContext *self = NULL;
-
-    //AVHWFramesContext *hw_frames_ctx = NULL;
-
-    int ret = 0;
-
-    if (!(self = calloc(1, sizeof(TVHVAContext)))) {
-        tvherror(LS_QSV, "Encode: Failed to allocate qsv context (TVHVAContext)");
-        return AVERROR(ENOMEM);
-    }
-
-    pix_fmt = avctx->pix_fmt;
-    if (pix_fmt == AV_PIX_FMT_YUV420P ||
-        pix_fmt == AV_PIX_FMT_QSV) {
-        self->io_format = AV_PIX_FMT_NV12;
-    }
-    else {
-        self->io_format = pix_fmt;
-    }
-    
-    if (self->io_format == AV_PIX_FMT_NONE) {
-        tvherror(LS_QSV, "Encode: Failed to get pix_fmt for qsv context (sw_pix_fmt: %s, pix_fmt: %s)",
-                           av_get_pix_fmt_name(avctx->sw_pix_fmt), av_get_pix_fmt_name(avctx->pix_fmt));
-        free(self);
-        ctx->hw_accel_ictx = NULL;
-        return AVERROR(ENOMEM);
-    }
-
-    self->sw_format = AV_PIX_FMT_NV12; // avctx->sw_pix_fmt; //  AV_PIX_FMT_NONE;
-    self->width = avctx->coded_width;
-    self->height = avctx->coded_height;
-    self->hw_device_ref = NULL;
-    self->hw_frames_ctx = NULL;
-
-    if (!ctx->hw_device_ref &&
-        !(ctx->hw_device_ref = tvhva_init(ctx->hw_accel_device))) {
-        return AVERROR(ENOMEM);
-    }
-    if (!(self->hw_device_ref = av_buffer_ref(ctx->hw_device_ref))) {
-        return AVERROR(ENOMEM);
-    }
-
-    ret = av_hwdevice_ctx_create(&self->hw_device_ref, AV_HWDEVICE_TYPE_QSV, NULL, NULL, 0);
-    if (ret < 0) {
-        tvherror(LS_QSV, "Encode: Failed to create a QSV device. Error code: %s\n", av_err2str(ret));
-        return AVERROR(ENOMEM);
-    }
-
-    avctx->pix_fmt = AV_PIX_FMT_QSV;
-
-    if (!(self->hw_frames_ctx = av_hwframe_ctx_alloc(self->hw_device_ref))) {
-        tvherror(LS_QSV, "Encode: Failed to create QSV frame context.");
-        return AVERROR(ENOMEM);
-    }
-    pix_fmt = avctx->pix_fmt;
-    if (pix_fmt == AV_PIX_FMT_YUV420P ||
-        pix_fmt == AV_PIX_FMT_QSV) {
-        self->io_format = AV_PIX_FMT_NV12;
-    }
-    else {
-        self->io_format = pix_fmt;
-    }
-    if (self->io_format == AV_PIX_FMT_NONE) {
-        tvherror(LS_QSV, "Encode: Failed to get pix_fmt for qsv context (sw_pix_fmt: %s, pix_fmt: %s)",
-                           av_get_pix_fmt_name(avctx->sw_pix_fmt), av_get_pix_fmt_name(avctx->pix_fmt));
-        free(self);
-        return AVERROR(ENOMEM);
-    }
-
-    AVHWFramesContext *hw_frames_ctx = NULL;
-    AVQSVFramesContext *hw_frames_hwctx = NULL;
-
-    hw_frames_ctx = (AVHWFramesContext*)self->hw_frames_ctx->data;
-    hw_frames_hwctx = hw_frames_ctx->hwctx;
-
-    hw_frames_ctx->format = AV_PIX_FMT_QSV;
-    hw_frames_ctx->sw_format = self->sw_format;
-    hw_frames_ctx->width = self->width;
-    hw_frames_ctx->height = self->height;
-    hw_frames_ctx->initial_pool_size = 32;
-
-    hw_frames_hwctx->frame_type = MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
-
-    tvhinfo(LS_QSV, "before av_hwframe_ctx_init()");
-    if (av_hwframe_ctx_init(self->hw_frames_ctx) < 0) {
-        tvherror(LS_QSV, "Encode: Failed to initialise QSV frame context");
-        return -1;
-    }
-    tvhinfo(LS_QSV, "success av_hwframe_ctx_init()");
-
-    // vaCreateContext
-    //hw_frames_hwctx = hw_frames_ctx->hwctx;
-
-    if (!(avctx->hw_frames_ctx = av_buffer_ref(self->hw_frames_ctx))) {
-        return AVERROR(ENOMEM);
-    }
-    tvhinfo(LS_QSV, "success hw_frames_ctx: av_buffer_ref()");
-
-    //avctx->sw_pix_fmt = self->sw_format;
-    avctx->sw_pix_fmt = AV_PIX_FMT_NV12;
-    avctx->thread_count = 1;
-
-    hwaccel_context = self;
-
-    if (!(hwaccel_context)) {
-        return -1;
-    }
-    if (!(ctx->hw_device_octx = av_buffer_ref(hwaccel_context->hw_device_ref))) {
-        tvhva_context_destroy(hwaccel_context);
-        return AVERROR(ENOMEM);
-    }
-    tvhva_context_destroy(hwaccel_context);
-*/
-
-/*
-    // ERROR] (null): failed to get pix_fmt for qsv context (sw_pix_fmt: nv12, pix_fmt: vaapi)
-    tvhinfo(LS_QSV, "get pix_fmt for qsv context (sw_pix_fmt: %s, pix_fmt: %s)",
-                           av_get_pix_fmt_name(avctx->sw_pix_fmt),
-                           av_get_pix_fmt_name(avctx->pix_fmt));
-
-    //av_hwframe_transfer_get_formats(avctx->hw_frames_ctx,);
-*/
     return 0;
-
 }
 
 
@@ -342,19 +208,6 @@ qsv_encode_close_context(AVCodecContext *avctx)
         av_buffer_unref(&avctx->hw_frames_ctx);
         avctx->hw_frames_ctx = NULL;
     }
-    /*
-    TVHContext *ctx = avctx->opaque;
-    av_buffer_unref(&ctx->hw_device_octx);
-    ctx->hw_device_octx = NULL;
-    */
-    //if (avctx->hw_device_ctx) {
-    //    av_buffer_unref(&avctx->hw_device_ctx);
-    //    avctx->hw_device_ctx = NULL;
-    //}
-    //if (avctx->hw_frames_ctx) {
-    //    av_buffer_unref(&avctx->hw_frames_ctx);
-    //    avctx->hw_frames_ctx = NULL;
-    //}
 }
 
 
