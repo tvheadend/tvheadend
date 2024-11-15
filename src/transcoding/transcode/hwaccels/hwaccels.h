@@ -51,12 +51,23 @@ hwaccels_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, si
 
 
 /* encoding ================================================================= */
+#if ENABLE_VAAPI || ENABLE_QSV
+int
+hwaccels_initialize_encoder_from_decoder(AVCodecContext *iavctx, AVCodecContext *oavctx);
+#endif
 
 int
+#if ENABLE_VAAPI || ENABLE_QSV
+hwaccels_encode_setup_context(AVCodecContext *avctx);
+#else
 hwaccels_encode_setup_context(AVCodecContext *avctx, int low_power);
+#endif
 
 void
 hwaccels_encode_close_context(AVCodecContext *avctx);
+
+enum AVPixelFormat
+hwaccels_get_pixfmt_format_for_filter(AVCodecContext *avctx);
 
 
 /* module =================================================================== */

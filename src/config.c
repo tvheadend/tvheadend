@@ -56,7 +56,7 @@ struct config config;
 static char config_lock[PATH_MAX];
 static int config_lock_fd;
 static int config_scanfile_ok;
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 int vainfo_probe_enabled;
 #endif
 
@@ -1899,7 +1899,7 @@ config_init ( int backup )
     if (config_migrate(backup))
       config_check();
   }
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
   vainfo_probe_enabled = config.enable_vainfo;
 #endif
   tvhinfo(LS_CONFIG, "loaded");
@@ -2786,7 +2786,7 @@ const idclass_t config_class = {
       .opts   = PO_EXPERT,
       .group  = 8,
     },
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
     {
       .type   = PT_BOOL,
       .id     = "enable_vainfo",

@@ -196,6 +196,7 @@ enum {
   LS_CODEC,
   LS_VAAPI,
   LS_VAINFO,
+  LS_QSV,
 #if ENABLE_DDCI
   LS_DDCI,
 #endif

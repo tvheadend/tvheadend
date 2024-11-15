@@ -286,6 +286,19 @@ tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self)
     return -1;
 }
 
+#if ENABLE_QSV
+int
+tvh_codec_profile_video_get_look_ahead_depth(TVHCodecProfile *self)
+{
+    TVHCodec *codec = tvh_codec_profile_get_codec(self);
+    if (codec && tvh_codec_is_enabled(codec) &&
+        tvh_codec_get_type(codec) == AVMEDIA_TYPE_VIDEO) {
+        return ((TVHVideoCodecProfile *)self)->look_ahead_depth;
+    }
+    return -1;
+}
+#endif
+
 const enum AVPixelFormat *
 tvh_codec_profile_video_get_pix_fmts(TVHCodecProfile *self)
 {

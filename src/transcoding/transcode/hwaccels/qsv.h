@@ -1,7 +1,7 @@
 /*
  *  tvheadend - Transcoding
  *
- *  Copyright (C) 2016 Tvheadend
+ *  Copyright (C) 2024 Tvheadend
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 
 
-#ifndef TVH_TRANSCODING_TRANSCODE_HWACCELS_VAAPI_H__
-#define TVH_TRANSCODING_TRANSCODE_HWACCELS_VAAPI_H__
+#ifndef TVH_TRANSCODING_TRANSCODE_HWACCELS_QSV_H__
+#define TVH_TRANSCODING_TRANSCODE_HWACCELS_QSV_H__
 
 
 #include "tvheadend.h"
@@ -30,41 +30,30 @@
 /* decoding ================================================================= */
 
 int
-vaapi_decode_setup_context(AVCodecContext *avctx);
+qsv_decode_setup_context(AVCodecContext *avctx);
 
 void
-vaapi_decode_close_context(AVCodecContext *avctx);
+qsv_decode_close_context(AVCodecContext *avctx);
 
 int
-vaapi_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx, char *filter, size_t filter_len);
+qsv_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx, char *filter, size_t filter_len);
 
 int
-vaapi_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
-
-int
-vaapi_get_denoise_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
-
-int
-vaapi_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
-
+qsv_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
 
 /* encoding ================================================================= */
 
 int
-#if ENABLE_VAAPI
-vaapi_encode_setup_context(AVCodecContext *avctx);
-#else
-vaapi_encode_setup_context(AVCodecContext *avctx, int low_power);
-#endif
+qsv_encode_setup_context(AVCodecContext *avctx);
 
 void
-vaapi_encode_close_context(AVCodecContext *avctx);
+qsv_encode_close_context(AVCodecContext *avctx);
 
 
 /* module =================================================================== */
 
 void
-vaapi_done(void);
+qsv_done(void);
 
 
-#endif // TVH_TRANSCODING_TRANSCODE_HWACCELS_VAAPI_H__
+#endif // TVH_TRANSCODING_TRANSCODE_HWACCELS_QSV_H__

@@ -136,6 +136,11 @@ tvh_codec_profile_video_destroy(TVHCodecProfile *_self);
 int
 tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self);
 
+#if ENABLE_QSV
+int
+tvh_codec_profile_video_get_look_ahead_depth(TVHCodecProfile *self);
+#endif
+
 const enum AVPixelFormat *
 tvh_codec_profile_video_get_pix_fmts(TVHCodecProfile *self);
 
@@ -171,7 +176,7 @@ htsmsg_t *
 codec_get_profiles_list(enum AVMediaType media_type);
 
 void
-#if ENABLE_VAAPI
+#if ENABLE_VAAPI_OLD || ENABLE_VAAPI
 codec_init(int vainfo_probe_enabled);
 #else
 codec_init(void);
