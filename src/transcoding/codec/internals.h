@@ -240,7 +240,7 @@ typedef struct tvh_codec_profile_audio {
     int sample_fmt;
     int sample_rate;
 #if LIBAVCODEC_VERSION_MAJOR > 59
-    AVChannelLayout channel_layout;
+    int64_t ch_layout_u_mask;
 #else
     int64_t channel_layout;
 #endif
