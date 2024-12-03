@@ -1174,19 +1174,19 @@ msgstr "Mapuj zaznaczone"
 
 #: src/webui/static/app/mpegts.js:281 src/webui/static/app/chconf.js:147
 msgid "Map all services"
-msgstr "Mapuj wszystkie serwisy"
+msgstr "Mapuj wszystkie usługi"
 
 #: src/webui/static/app/mpegts.js:279 src/webui/static/app/chconf.js:145
 msgid "Map all services to channels"
-msgstr "Mapuj wszystkie serwisy do kanałów"
+msgstr "Mapuj wszystkie usługi do kanałów"
 
 #: src/webui/static/app/mpegts.js:275 src/webui/static/app/chconf.js:141
 msgid "Map selected services"
-msgstr "Mapuj zaznaczone serwisy"
+msgstr "Mapuj zaznaczone usługi"
 
 #: src/webui/static/app/mpegts.js:273 src/webui/static/app/chconf.js:139
 msgid "Map selected services to channels"
-msgstr "Mapuj zaznaczone serwisy do kanałów"
+msgstr "Mapuj zaznaczone usługi do kanałów"
 
 #: src/webui/static/app/mpegts.js:286 src/webui/static/app/chconf.js:158
 #: src/webui/static/app/servicemapper.js:120
