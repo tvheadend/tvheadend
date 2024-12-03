@@ -1044,7 +1044,7 @@ msgstr "Automatycznie mapowane źródło EPG"
 
 #: src/wizard.c:1113
 msgid "Automatically map all available services to channels."
-msgstr "Automatycznie mapuj wszystkie dostępne serwisy do kanałów."
+msgstr "Automatycznie mapuj wszystkie dostępne usługi do kanałów."
 
 #: src/bouquet.c:1019
 msgid "Automatically map channels defined within the bouquet."
@@ -5288,7 +5288,7 @@ msgstr "Nazwa produktu producenta."
 
 #: src/wizard.c:1112
 msgid "Map all services"
-msgstr "Mapuj wszystkie serwisy"
+msgstr "Mapuj wszystkie usługi"
 
 #: src/service_mapper.c:609 src/bouquet.c:749
 msgid "Map encrypted services"
@@ -7241,9 +7241,9 @@ msgid ""
 "Service ID' is set to zero."
 msgstr ""
 "Przepisuj pakiety EIT (Event Information Table), aby zawierały tylko "
-"informacje dotyczące obecnie transmitowanego serwisu. Przeformułowanie może "
-"być odznaczone tylko wtedy, gdy 'Przepisuj identyfikator usługi' jest "
-"ustawiony na zero."
+"informacje dotyczące obecnie transmitowanej usługi. Przeformułowanie można "
+"wyłączyć tylko wtedy, gdy 'Przepisuj identyfikator usługi' ustawiono na "
+"zero."
 
 #: src/profile.c:1348 src/profile.c:1598
 msgid "Rewrite MPEG-TS SI Table(s) Settings"
@@ -7259,10 +7259,10 @@ msgid ""
 "about the currently-streamed service. Rewrite can be unset only if 'Rewrite "
 "Service ID' is set to zero."
 msgstr ""
-"Przepisuj pakiety NIT (Network Information Table) należy uwzględnić tylko "
-"informacje dotyczące obecnie transmitowanego serwisu. Przepisanie można "
-"wyłączyć tylko wtedy, gdy „Przepisuj identyfikator usługi” jest ustawiony na"
-" zero."
+"Przepisuj pakiety NIT (Network Information Table), aby zawierały tylko "
+"informacje dotyczące obecnie transmitowanej usługi. Przeformułowanie można "
+"wyłączyć tylko wtedy, gdy „Przepisuj identyfikator usługi” ustawiono na "
+"zero."
 
 #: src/profile.c:1384 src/profile.c:1674
 msgid "Rewrite PAT"
@@ -7275,9 +7275,9 @@ msgid ""
 "Service ID' is set to zero."
 msgstr ""
 "Przepisuj pakiety PAT (Program Association Table), aby zawierały tylko "
-"informacje dotyczące obecnie nadawanego serwisu. Przeformułowanie może "
-"zostać wyłączone tylko wtedy, gdy „Przepisuj identyfikator usługi” jest "
-"ustawiony na zero."
+"informacje dotyczące obecnie transmitowanej usługi. Przeformułowanie można "
+"wyłączyć tylko wtedy, gdy „Przepisuj identyfikator usługi” ustawiono na "
+"zero."
 
 #: src/profile.c:1369 src/profile.c:1659 src/satip/server.c:926
 msgid "Rewrite PMT"
@@ -7290,8 +7290,8 @@ msgid ""
 "Service ID' is set to zero."
 msgstr ""
 "Przepisuj pakiety PMT (Program Map Table), aby zawierały tylko informacje "
-"dotyczące obecnie nadawanego serwisu. Przeformułowanie może być odznaczone "
-"tylko wtedy, gdy „Przepisuj identyfikator usługi” jest ustawione na zero."
+"dotyczące obecnie transmitowanej usługi. Przeformułowanie można wyłączyć "
+"tylko wtedy, gdy „Przepisuj identyfikator usługi” ustawiono na zero."
 
 #: src/satip/server.c:927
 msgid ""
@@ -7299,7 +7299,7 @@ msgid ""
 "the currently streamed service."
 msgstr ""
 "Przepisuj pakiety Program Map Table (PMT), aby zawierały tylko informacje "
-"dotyczące obecnie transmitowanego serwisu."
+"dotyczące obecnie transmitowanej usługi."
 
 #: src/profile.c:1399 src/profile.c:1689
 msgid "Rewrite SDT"
@@ -7311,9 +7311,9 @@ msgid ""
 "about the currently-streamed service. Rewrite can be unset only if 'Rewrite "
 "Service ID' is set to zero."
 msgstr ""
-"Przepisuj pakiety SDT (tabela opisów usług), aby zawierały tylko informacje "
-"o aktualnie przesyłanej strumieniowo usłudze. Przepisywanie można wyłączyć "
-"tylko wtedy, gdy opcja „Przepisuj identyfikator usługi” jest ustawiona na "
+"Przepisuj pakiety SDT (Service Description Table), aby zawierały tylko "
+"informacje dotyczące obecnie transmitowanej usługi. Przeformułowanie można "
+"wyłączyć tylko wtedy, gdy „Przepisuj identyfikator usługi” ustawiono na "
 "zero."
 
 #: src/profile.c:1357 src/profile.c:1647
@@ -7965,7 +7965,7 @@ msgstr "Nazwa usługi znaleziona w danych EPG."
 
 #: src/config.c:2090
 msgid "Service name picons"
-msgstr "Nazwa serwisu picon"
+msgstr "Nazwa usługi picon"
 
 #: src/service.c:205
 msgid ""
