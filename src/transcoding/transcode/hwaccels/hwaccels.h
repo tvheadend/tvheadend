@@ -23,7 +23,7 @@
 
 
 #include "tvheadend.h"
-
+#include "../internals.h"
 #include <libavcodec/avcodec.h>
 
 
@@ -51,9 +51,17 @@ hwaccels_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, si
 
 
 /* encoding ================================================================= */
+#if ENABLE_FFMPEG4_TRANSCODING
+int
+hwaccels_initialize_encoder_from_decoder(const AVCodecContext *iavctx, AVCodecContext *oavctx);
+#endif
 
 int
+#if ENABLE_FFMPEG4_TRANSCODING
+hwaccels_encode_setup_context(AVCodecContext *avctx);
+#else
 hwaccels_encode_setup_context(AVCodecContext *avctx, int low_power);
+#endif
 
 void
 hwaccels_encode_close_context(AVCodecContext *avctx);
