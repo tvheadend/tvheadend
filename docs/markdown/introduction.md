@@ -108,7 +108,7 @@ clients may also be available).
 ### Internationalisation
 * All text is encoded in UTF-8 to provide full international support.
 * All major character encodings in DVB are supported (e.g. for localised EPG character sets).
-* [Web interface internationalization](https://tvheadend.org/projects/tvheadend/wiki/Internationalization)
+* [Web interface internationalization](https://docs.tvheadend.org/documentation/development/translations)
 
 ---
 
@@ -448,8 +448,8 @@ check-box so that the changes are applied to all (selected) entries.
 
 This guide is intended to give you a high-level overview of how to set
 up and use Tvheadend. It does not aim to provide a complete description
-of every step or answer every question: more details are available on the
-Tvheadend [wiki](https://tvheadend.org/projects/tvheadend/wiki).
+of every step or answer every question: more details are available in the
+Tvheadend [documentation](https://docs.tvheadend.org/documentation).
 
 Tvheadend includes copies of many of these pages in the application, which
 is easier to find when you're wondering what to do next.

@@ -15,5 +15,5 @@ them as source for mkdocs.
 Change markdown files in `docs/markdown`, `docs/markdown/inc`, `docs/class`, `docs/wizard`, etc.
 Images are placed in `src/webui/static/img/doc/`.
 
-Build Tvheadend as you normally would, see the [development page](https://tvheadend.org/projects/tvheadend/wiki/Development) for details.
+Build Tvheadend as you normally would, see the [README](README.md) for details.
 
