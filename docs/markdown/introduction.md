@@ -454,5 +454,5 @@ Tvheadend [documentation](https://docs.tvheadend.org/documentation).
 Tvheadend includes copies of many of these pages in the application, which
 is easier to find when you're wondering what to do next.
 
-If you get really stuck, there's the [forum](https://tvheadend.org/projects/tvheadend/boards)
+If you get really stuck, there's the [forum](https://tvheadend.org/)
 and IRC (*#hts* on *Libera*). If you don't have a client installed you can use the [webchat](https://web.libera.chat/?nick=tvhhelp|?#hts).
