@@ -190,11 +190,15 @@ tvheadend.show_service_streams = function(data) {
         html += '<td>' + (s.language || '&nbsp;') + '</td>';
         if (s.type === 'CA' || s.type === 'CAT') {
             d = _('CAIDS: ');
-            for (j = 0; j < s.caids.length; j++) {
-                if (j > 0)
-                    d += ', ';
-                d += hexstr(s.caids[j].caid) + ':';
-                d += hexstr6(s.caids[j].provider);
+            if (s.caids === undefined) {
+                d += '<em>none</em>';
+            } else {
+                for (j = 0; j < s.caids.length; j++) {
+                    if (j > 0)
+                        d += ', ';
+                    d += hexstr(s.caids[j].caid) + ':';
+                    d += hexstr6(s.caids[j].provider);
+                }
             }
         }
         html += '<td>' + d + '</td>';
