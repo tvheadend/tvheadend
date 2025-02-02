@@ -51,9 +51,9 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
           AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh -p raspios
           support/cloudsmith.sh -n -p raspios -f '../tvheadend*.deb'
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: Tvheadend-deb
+        name: Tvheadend-RPiOS-${{ matrix.arch }}
         path: tvheadend*.deb
         if-no-files-found: error
 
@@ -146,32 +146,32 @@ jobs:
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
             cp ../tvheadend*.deb /artifacts/
             support/cloudsmith.sh -n -f '../tvheadend*.deb'
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: Tvheadend-deb
+          name: Tvheadend-${{ matrix.distro }}-${{ matrix.arch }}
           path: artifacts/tvheadend*.deb
           if-no-files-found: error
 
   build-deb-native:
     runs-on: ubuntu-latest
     continue-on-error: true
-    name: Build on native ${{ matrix.container }}
+    name: Build on native ${{ matrix.container[1] }}
     strategy:
       matrix:
-        container: ["i386/ubuntu:trusty", "ubuntu:trusty", "i386/ubuntu:xenial", "ubuntu:xenial", "ubuntu:bionic", "ubuntu:focal", "ubuntu:jammy", "ubuntu:lunar", "ubuntu:mantic", "ubuntu:noble", "i386/debian:stretch", "debian:stretch", "i386/debian:buster", "debian:buster", "i386/debian:bullseye", "debian:bullseye", "i386/debian:bookworm", "debian:bookworm", "i386/debian:trixie", "debian:trixie", "debian:sid"]
+        container: [["i386/ubuntu:trusty", "i386-ubuntu-trusty"], ["ubuntu:trusty", "ubuntu-trusty"], ["i386/ubuntu:xenial", "i386-ubuntu-xenial"], ["ubuntu:xenial", "ubuntu-xenial"], ["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["i386/debian:stretch", "i386-debian-strech"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
     container:
-      image: ${{ matrix.container }}
+      image: ${{ matrix.container[0] }}
     env:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
       - name: Fix old debian apt
-        if: matrix.container == 'debian:stretch' || matrix.container == 'i386/debian:stretch'
+        if: matrix.container[0] == 'debian:stretch' || matrix.container[0] == 'i386/debian:stretch'
         run: |
           sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
           sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
           sed -i '/stretch-updates/d' /etc/apt/sources.list
       - name: Add git ppa
-        if: startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'i386/ubuntu')
+        if: startsWith(matrix.container[0], 'ubuntu') || startsWith(matrix.container[0], 'i386/ubuntu')
         run: |
           apt-get update -y
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y software-properties-common
@@ -184,21 +184,20 @@ jobs:
         run: |
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
       - uses: actions/checkout@v3
-        if: startsWith(matrix.container, 'i386') != true && matrix.container != 'debian:stretch'
+        if: startsWith(matrix.container[0], 'i386') != true && matrix.container[0] != 'debian:stretch'
         with:
           fetch-depth: 0
       - uses: actions/checkout@v1
-        if: startsWith(matrix.container, 'i386') || matrix.container == 'debian:stretch'
+        if: startsWith(matrix.container[0], 'i386') || matrix.container[0] == 'debian:stretch'
       - name: Workaround safe directory
         run: git config --global --add safe.directory /__w/tvheadend/tvheadend
       - name: build
         run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container, 'i386') && '-a i386') || '' }}
       - name: copy-result
         run: cp ../tvheadend*.deb .
-      - uses: actions/upload-artifact@v3
-        if: startsWith(matrix.container, 'i386') != true
+      - uses: actions/upload-artifact@v4
         with:
-          name: Tvheadend-deb
+          name: Tvheadend-${{ matrix.container[1] }}
           path: tvheadend*.deb
           if-no-files-found: error
       - name: upload-cloudsmith
@@ -228,9 +227,9 @@ jobs:
         run: ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 && make -C rpm build -j$(nproc)
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: Tvheadend-RPM
+          name: Tvheadend-Fedora-${{ matrix.releasever }}
           path: tvheadend*.rpm
           if-no-files-found: error
       - name: upload-cloudsmith
