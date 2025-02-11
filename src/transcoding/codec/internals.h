@@ -119,6 +119,16 @@
     AV_DICT_SET_INT((d), "pix_fmt", ((v) != AV_PIX_FMT_NONE) ? (v) : (a), \
                     AV_DICT_DONT_OVERWRITE)
 
+#define HWACCEL_AUTO        0
+#if ENABLE_VAAPI
+#define HWACCEL_PRIORITIZE_VAAPI 1
+#endif
+#if ENABLE_NVENC
+#define HWACCEL_PRIORITIZE_NVDEC 2
+#endif
+#if ENABLE_MMAL
+#define HWACCEL_PRIORITIZE_MMAL  3
+#endif
 
 /* codec_profile_class ====================================================== */
 
@@ -221,6 +231,7 @@ typedef struct tvh_codec_profile_video {
     int height;
     int scaling_mode;   // 0 --> up&down; 1 --> up; 2 --> down
     int hwaccel;
+    int hwaccel_details;
     int pix_fmt;
     int crf;
     AVRational size;
