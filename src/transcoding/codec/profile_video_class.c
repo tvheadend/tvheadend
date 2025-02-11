@@ -33,6 +33,25 @@ scaling_mode_get_list( void *o, const char *lang )
     return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+hwaccel_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("auto (recommended)"),                 HWACCEL_AUTO},
+#if ENABLE_VAAPI
+        { N_("prioritize VAAPI"),                   HWACCEL_PRIORITIZE_VAAPI},
+#endif
+#if ENABLE_NVENC
+        { N_("prioritize NVDEC"),                   HWACCEL_PRIORITIZE_NVDEC},
+#endif
+#if ENABLE_MMAL
+        { N_("prioritize MMAL"),                    HWACCEL_PRIORITIZE_MMAL},
+#endif
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+
+
 /* TVHCodec ================================================================= */
 
 static htsmsg_t *
@@ -213,6 +232,16 @@ const codec_profile_class_t codec_profile_video_class = {
                 .desc     = N_("Use hardware acceleration for decoding if available."),
                 .group    = 2,
                 .off      = offsetof(TVHVideoCodecProfile, hwaccel),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "hwaccel_details",
+                .name     = N_("Hardware acceleration details"),
+                .desc     = N_("Force hardware acceleration."),
+                .group    = 2,
+                .off      = offsetof(TVHVideoCodecProfile, hwaccel_details),
+                .list     = hwaccel_get_list,
                 .def.i    = 0,
             },
             {
