@@ -694,7 +694,7 @@ tvheadend.loading = function(on) {
 tvheadend.PagingToolbarConf = function(conf, title, auto, count)
 {
   conf.width = 50;
-  conf.pageSize = 50;
+  conf.pageSize = tvheadend.page_size;
   conf.displayInfo = true;
                     /// {0} start, {1} end, {2} total, {3} title
   conf.displayMsg = _('{3} {0} - {1} of {2}').replace('{3}', title);
@@ -1024,6 +1024,7 @@ function accessUpdate(o) {
     tvheadend.chname_src = o.chname_src ? 1 : 0;
     tvheadend.date_mask = o.date_mask;
     tvheadend.label_formatting = o.label_formatting ? true : false;
+    tvheadend.page_size = o.page_size;
 
     if (o.uilevel_nochange)
         tvheadend.uilevel_nochange = true;

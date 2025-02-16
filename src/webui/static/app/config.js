@@ -44,7 +44,10 @@ tvheadend.baseconf = function(panel, index) {
             var n = data['theme_ui'];
             if (n !== tvheadend.theme)
               reload = 1;
-            var n = data['uilevel_nochange'] ? true : false;
+            var n = data['page_size_ui'];
+            if (n !== tvheadend.page_size)
+            reload = 1;
+              var n = data['uilevel_nochange'] ? true : false;
             if (n !== tvheadend.uilevel_nochange)
                 reload = 1;
             var n = data['ui_quicktips'] ? true : false;

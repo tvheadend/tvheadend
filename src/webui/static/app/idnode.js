@@ -1741,6 +1741,8 @@ tvheadend.idnode_grid = function(panel, conf)
         if (conf.all) params['all'] = 1;
         if (conf.extraParams) conf.extraParams(params);
 
+        if(!params['limit']) params['limit'] = tvheadend.page_size;
+
         groupReader = new Ext.data.JsonReader({
             totalProperty: 'total',
             root: 'entries',
@@ -2036,7 +2038,7 @@ tvheadend.idnode_grid = function(panel, conf)
                 data: [[25, '25'], [50, '50'], [100, '100'],
                     [200, '200'], [999999999, _('All')]]
             }),
-            value: 50,
+            value: tvheadend.page_size,
             mode: 'local',
             forceSelection: false,
             triggerAction: 'all',

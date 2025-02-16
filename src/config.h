@@ -83,6 +83,7 @@ typedef struct config {
 #if ENABLE_VAAPI
   int enable_vainfo;
   #endif
+  uint32_t page_size_ui;
 } config_t;
 
 extern const idclass_t config_class;
