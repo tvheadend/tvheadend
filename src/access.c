@@ -1507,6 +1507,19 @@ theme_get_ui_list ( void *p, const char *lang )
   return strtab2htsmsg_str(tab, 1, lang);
 }
 
+htsmsg_t *
+page_size_get_ui_list ( void *p, const char *lang )
+{
+  static struct strtab tab[] = {
+    { "25",          25  },
+    { "50",          50  },
+    { "100",         100  },
+    { "200",         200  },
+    { N_("All"),     999999999 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 static idnode_slist_t access_entry_class_change_slist[] = {
   {
     .id   = "change_rights",

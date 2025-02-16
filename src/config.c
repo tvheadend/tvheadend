@@ -1780,6 +1780,7 @@ config_boot
   config.hdhomerun_ip = strdup("");
   config.local_ip = strdup("");
   config.local_port = 0;
+  config.page_size_ui = 50;
 
   /* Generate default */
   if (!path)
@@ -2164,6 +2165,7 @@ PROP_DOC(config_picon_path)
 PROP_DOC(config_picon_servicetype)
 PROP_DOC(viewlevel_config)
 PROP_DOC(themes)
+PROP_DOC(page_size)
 
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
@@ -2256,6 +2258,17 @@ const idclass_t config_class = {
       .doc    = prop_doc_themes,
       .list   = theme_get_ui_list,
       .off    = offsetof(config_t, theme_ui),
+      .opts   = PO_DOC_NLIST,
+      .group  = 2
+    },
+    {
+      .type   = PT_U32,
+      .id     = "page_size_ui",
+      .name   = N_("Items per page"),
+      .desc   = N_("The default web interface items per page."),
+      .doc    = prop_doc_page_size,
+      .list   = page_size_get_ui_list,
+      .off    = offsetof(config_t, page_size_ui),
       .opts   = PO_DOC_NLIST,
       .group  = 2
     },

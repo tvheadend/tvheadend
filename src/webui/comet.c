@@ -180,6 +180,7 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
     }
   }
   htsmsg_add_str(m, "theme", access_get_theme(hc->hc_access));
+  htsmsg_add_u32(m, "page_size", config.page_size_ui);
   htsmsg_add_u32(m, "quicktips", config.ui_quicktips);
   htsmsg_add_u32(m, "chname_num", config.chname_num);
   htsmsg_add_u32(m, "chname_src", config.chname_src);
