@@ -1144,15 +1144,21 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   dvb_mux_t *lm = (dvb_mux_t*)mm;
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
   uint32_t freq = lm->lm_tuning.dmc_fe_freq, freq2;
-  char extra[8], buf2[5], *p;
+  char extra[32], buf2[5], *p, *pextra;
 
   if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_CABLECARD)
     snprintf(buf, len, "%u", lm->lm_tuning.u.dmc_fe_cablecard.vchannel);
   else {
     if (ln->ln_type == DVB_TYPE_S) {
       const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
-      if (s) extra[0] = *s;
-      extra[1] = '\0';
+			pextra = extra;
+      if (s)
+				*pextra++ = *s;
+			if (lm->lm_tuning.dmc_fe_stream_id>0)
+				pextra += sprintf(pextra, "-S%d", lm->lm_tuning.dmc_fe_stream_id);
+			if (lm->lm_tuning.dmc_fe_t2mi_pid>0)
+				pextra += sprintf(pextra, "-T%d", lm->lm_tuning.dmc_fe_t2mi_pid);
+			*pextra++ ='\0';
     } else {
       freq /= 1000;
       strcpy(extra, "MHz");
