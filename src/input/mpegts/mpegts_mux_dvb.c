@@ -1155,9 +1155,7 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
       if (s)
 				*pextra++ = *s;
 			if (lm->lm_tuning.dmc_fe_stream_id>0)
-				pextra += sprintf(pextra, "-S%d", lm->lm_tuning.dmc_fe_stream_id);
-			if (lm->lm_tuning.dmc_fe_t2mi_pid>0)
-				pextra += sprintf(pextra, "-T%d", lm->lm_tuning.dmc_fe_t2mi_pid);
+				pextra += snprintf(pextra, sizeof(extra) -(pextra-extra), "-S%d", lm->lm_tuning.dmc_fe_stream_id);
 			*pextra++ ='\0';
     } else {
       freq /= 1000;
