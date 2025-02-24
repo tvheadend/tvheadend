@@ -641,6 +641,8 @@ typedef struct dvb_mux_conf
   dvb_fe_rolloff_t            dmc_fe_rolloff;
   dvb_fe_pilot_t              dmc_fe_pilot;
   int32_t                     dmc_fe_stream_id;
+	int32_t                     dmc_fe_t2mi_pid;
+	int32_t                     dmc_fe_t2mi_plp;
   dvb_fe_pls_mode_t           dmc_fe_pls_mode;
   uint32_t                    dmc_fe_pls_code;
   uint32_t                    dmc_fe_data_slice;

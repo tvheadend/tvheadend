@@ -506,6 +506,24 @@ const idclass_t dvb_mux_dvbs_class =
     },
     {
       .type     = PT_INT,
+      .id       = "t2mi_pid",
+      .name     = N_("T2MI pid"),
+      .desc     = N_("The T2MI pid used for the mux."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_t2mi_pid),
+      .def.i	= DVB_NO_STREAM_ID_FILTER,
+      .opts     = PO_EXPERT
+    },
+    {
+      .type     = PT_INT,
+      .id       = "t2mi_plp",
+      .name     = N_("T2MI plp"),
+      .desc     = N_("The T2MI plp used for the mux."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_t2mi_plp),
+      .def.i	  =  0,
+      .opts     = PO_EXPERT
+    },
+    {
+      .type     = PT_INT,
       .id       = "stream_id",
       .name     = N_("ISI (Stream ID)"),
       .desc     = N_("The stream ID used for the mux."),
