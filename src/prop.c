@@ -82,6 +82,7 @@ prop_write_values
   double dbl;
    int i;
   int64_t s64;
+  int32_t s32;
   uint32_t u32, opts;
   uint16_t u16;
   time_t tm;
@@ -215,9 +216,9 @@ prop_write_values
         break;
       }
       case PT_DYN_INT: {
-        if (htsmsg_field_get_s64(f, &s64))
+        if (htsmsg_field_get_s32(f, &s32))
           continue;
-        dyn_i = s64;
+        dyn_i = s32;
         PROP_UPDATE(dyn_i, int);
         break;
       }
@@ -359,7 +360,7 @@ prop_read_value
       htsmsg_add_s64(m, name, *(time_t *)val);
       break;
     case PT_DYN_INT:
-      htsmsg_add_s64(m, name, *(int *)val);
+      htsmsg_add_s32(m, name, *(int *)val);
       break;
     case PT_LANGSTR:
       lang_str_serialize(*(lang_str_t **)val, m, name);
