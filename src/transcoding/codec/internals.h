@@ -130,6 +130,12 @@
 #define HWACCEL_PRIORITIZE_MMAL  3
 #endif
 
+#define DEINT_RATE_FRAME         0
+#define DEINT_RATE_FIELD         1
+
+#define DEINT_AUTO_OFF           0
+#define DEINT_AUTO_ON            1
+
 /* codec_profile_class ====================================================== */
 
 uint32_t
@@ -291,6 +297,25 @@ extern const codec_profile_class_t codec_profile_video_class;
 typedef struct tvh_codec_profile_video {
     TVHCodecProfile;
     int deinterlace;
+
+    /**
+     * SW or HW deinterlace enable field rate (applies to deinterlace filters)
+     * @note
+     * int:
+     * - 0 - Output at frame rate (one frame of output for each field-pair)
+     * - 1 - Output at field rate (one frame of output for each field)
+     */
+    int deinterlace_field_rate;
+
+    /**
+     * SW or HW deinterlace 'auto' mode (applies to deinterlace filters)
+     * @note
+     * int:
+     * - 0 - Disabled (deinterlace all content, including progressive frames)
+     * - 1 - Enabled (only deinterlace interlaced fields; progressive frames are passed through unchanged)
+     */
+    int deinterlace_enable_auto;
+
     int height;
     int scaling_mode;   // 0 --> up&down; 1 --> up; 2 --> down
     int hwaccel;
@@ -300,6 +325,94 @@ typedef struct tvh_codec_profile_video {
     AVRational size;
 } TVHVideoCodecProfile;
 
+typedef struct {
+    TVHVideoCodecProfile;
+    int qp;
+    int quality;
+    int global_quality;
+    int async_depth;
+/**
+ * VAAPI Encoder availablity.
+ * @note
+ * return:
+ * bit0 - will show if normal encoder is available (VAEntrypointEncSlice)
+ */
+    int ui;
+/**
+ * VAAPI Encoder Low power availablity.
+ * @note
+ * return:
+ * bit0 - will show if low power encoder is available (VAEntrypointEncSliceLP)
+ */
+    int uilp;
+/**
+ * VAAPI Frame used as reference for B-frame [b_depth]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * int:
+ * 0 - skip
+ * 1 - all B-frames will refer only to P- or I-frames
+ * 2 - multiple layers of B-frames will be present
+ */
+    int b_reference;
+/**
+ * VAAPI Maximum consecutive B-frame [bf]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * int:
+ * 0 - no B-Frames allowed
+ * >0 - number of consecutive B-frames (valid with b_reference = 1 --> "use P- or I-frames")
+ */
+    int desired_b_depth;
+/**
+ * VAAPI Maximum bitrate [maxrate]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * int:
+ * VALUE - max bitrate in bps
+ */
+    double max_bit_rate;
+/**
+ * VAAPI Maximum bitrate [maxrate]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * double:
+ * VALUE - max bitrate in bps
+ */
+    double bit_rate_scale_factor;
+/**
+ * VAAPI Platform hardware [not ffmpeg parameter]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * int:
+ * 0 - Unconstrained (usefull for debug)
+ * 1 - Intel
+ * 2 - AMD
+ */
+    int platform;
+/**
+ * VAAPI Deinterlace mode [deinterlace_vaapi mode parameter]
+ * https://ffmpeg.org/doxygen/6.1/vf__deinterlace__vaapi_8c.html
+ * @note
+ * int:
+ * 0 - Default: Use the highest-numbered (and therefore most advanced) deinterlacing algorithm
+ * 1 - Use the bob deinterlacing algorithm
+ * 2 - Use the weave deinterlacing algorithm
+ * 3 - Use the motion adaptive deinterlacing algorithm
+ * 4 - Use the motion compensated deinterlacing algorithm
+ */
+    int deinterlace_vaapi_mode;
+
+    int loop_filter_level;
+    int loop_filter_sharpness;
+    double buff_factor;
+    int rc_mode;
+    int tier;
+    int level;
+    int qmin;
+    int qmax;
+    int super_frame;
+} tvh_codec_profile_vaapi_t;
 
 /* audio */
 
