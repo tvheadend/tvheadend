@@ -80,7 +80,7 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
         // when hwaccel is enabled we have two options:
         if (ihw) {
             // hw deint
-            hwaccels_get_deint_filter(self->iavctx, hw_deint, sizeof(hw_deint));
+            hwaccels_get_deint_filter(self->iavctx, opts, hw_deint, sizeof(hw_deint));
         }
         else {
             // sw deint
@@ -216,6 +216,7 @@ static int
 tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 {
     AVRational ticks_per_frame;
+    int field_rate = 1;
 
     if (tvh_context_get_int_opt(opts, "pix_fmt", &self->oavctx->pix_fmt) ||
         tvh_context_get_int_opt(opts, "width", &self->oavctx->width) ||
@@ -224,6 +225,12 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     }
 
 #if ENABLE_HWACCELS
+#if ENABLE_VAAPI
+    if (tvh_context_get_int_opt(opts, "deinterlace_vaapi_rate", &field_rate)) {
+        return -1;
+    }
+    field_rate = (field_rate < 1) ? 1 : field_rate;
+#endif // from ENABLE_VAAPI
 #if ENABLE_FFMPEG4_TRANSCODING
     // hwaccel is the user input for Hardware acceleration from Codec parameteres
     int hwaccel = -1;
@@ -255,13 +262,14 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     }
 #endif // from ENABLE_FFMPEG4_TRANSCODING
 #endif // from ENABLE_HWACCELS
+    self->field_rate = field_rate;
 
     // XXX: is this a safe assumption?
     if (!self->iavctx->framerate.num) {
         self->iavctx->framerate = av_make_q(30, 1);
     }
-    self->oavctx->framerate = self->iavctx->framerate;
-    self->oavctx->ticks_per_frame = (90000 * self->iavctx->framerate.den) / self->iavctx->framerate.num; // We assume 90kHz as timebase which is mandatory for MPEG-TS
+    self->oavctx->framerate = av_mul_q(self->iavctx->framerate, (AVRational) { field_rate, 1 }); //take into account double rate i.e. field-based deinterlacers
+    self->oavctx->ticks_per_frame = (90000 * self->oavctx->framerate.den) / self->oavctx->framerate.num; // We assume 90kHz as timebase which is mandatory for MPEG-TS
     ticks_per_frame = av_make_q(self->oavctx->ticks_per_frame, 1);
     self->oavctx->time_base = av_inv_q(av_mul_q(
         self->oavctx->framerate, ticks_per_frame));
@@ -344,12 +352,67 @@ static int
 tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
 {
     avframe->pts = avframe->best_effort_timestamp;
+    int64_t expected_duration = self->oavctx->ticks_per_frame;
+
+#if LIBAVUTIL_VERSION_MAJOR >= 58
+#define FRAME_DURATION(f) ((f)->duration)
+#else
+#define FRAME_DURATION(f) ((f)->pkt_duration)
+#endif
+
+    tvh_context_log(self, LOG_TRACE,
+        "Incoming decoded frame : pts (%"PRId64") pkt_dts (%"PRId64") duration (%"PRId64")",
+        avframe->pts, avframe->pkt_dts, FRAME_DURATION(avframe));
+
+    // Ensure valid PTS before manipulation
+    if (avframe->pts == AV_NOPTS_VALUE) {
+        avframe->pts = avframe->best_effort_timestamp;
+        tvh_context_log(self, LOG_TRACE,
+            "Frame had invalid/unset pts, using best_effort_timestamp (%"PRId64")", avframe->pts);
+    }
+
+    if (FRAME_DURATION(avframe) <= 0) {
+#if LIBAVUTIL_VERSION_MAJOR >= 58
+        avframe->duration = expected_duration;
+#else
+        avframe->pkt_duration = expected_duration;
+#endif
+        tvh_context_log(self, LOG_TRACE,
+            "Frame had invalid duration, setting to default (%"PRId64")", expected_duration);
+    }
+
+    // Detect field-based deinterlace via doubled input frame duration and field_rate config.
+    // Ensures progressive streams with field_rate=2 are not misadjusted.
+    if (self->field_rate == 2 && avframe->pts != AV_NOPTS_VALUE &&
+        FRAME_DURATION(avframe) == (expected_duration * self->field_rate)) {
+        avframe->pts /= self->field_rate;
+#if LIBAVUTIL_VERSION_MAJOR >= 58
+        avframe->duration = expected_duration;
+#else
+        avframe->pkt_duration = expected_duration;
+#endif
+    }
+
+    if (FRAME_DURATION(avframe) != expected_duration) {
+        tvh_context_log(self, LOG_WARNING,
+            "Frame at pts %"PRId64" has unusual duration - expected %"PRId64" but got %"PRId64,
+            avframe->pts, expected_duration, FRAME_DURATION(avframe));
+    }
+
+    // Always sync DTS with PTS to maintain timeline consistency
+    avframe->pkt_dts = avframe->pts;
+
     if (avframe->pts <= self->pts) {
         tvh_context_log(self, LOG_WARNING,
-                        "Invalid pts (%"PRId64") <= last (%"PRId64"), dropping frame",
-                        avframe->pts, self->pts);
+            "Invalid pts (%"PRId64") <= last (%"PRId64"), dropping frame",
+            avframe->pts, self->pts);
         return AVERROR(EAGAIN);
     }
+
+    tvh_context_log(self, LOG_TRACE,
+        "Frame for encoder : pts (%"PRId64") pkt_dts (%"PRId64") duration (%"PRId64")",
+        avframe->pts, avframe->pkt_dts, FRAME_DURATION(avframe));
+
     self->pts = avframe->pts;
 #if LIBAVUTIL_VERSION_MAJOR > 58 || (LIBAVUTIL_VERSION_MAJOR == 58 && LIBAVUTIL_VERSION_MINOR > 2)
     if (avframe->flags & AV_FRAME_FLAG_INTERLACED) {

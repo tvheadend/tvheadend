@@ -39,7 +39,7 @@ int
 vaapi_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx, char *filter, size_t filter_len);
 
 int
-vaapi_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
+vaapi_get_deint_filter(AVCodecContext *avctx, AVDictionary **opts, char *filter, size_t filter_len);
 
 int
 vaapi_get_denoise_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
