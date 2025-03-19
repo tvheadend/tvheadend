@@ -51,6 +51,26 @@ hwaccel_get_list( void *o, const char *lang )
     return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+deinterlace_field_rate_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("Frame Rate"),                         DEINT_RATE_FRAME },
+        { N_("Field Rate"),                         DEINT_RATE_FIELD },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+
+static htsmsg_t *
+deinterlace_enable_auto_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("Disable"),                            DEINT_AUTO_OFF },
+        { N_("Enable"),                             DEINT_AUTO_ON },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+
 
 /* TVHCodec ================================================================= */
 
@@ -135,7 +155,6 @@ tvh_codec_profile_video_is_copy(TVHVideoCodecProfile *self, tvh_ssc_t *ssc)
 static int
 tvh_codec_profile_video_open(TVHVideoCodecProfile *self, AVDictionary **opts)
 {
-    AV_DICT_SET_INT(opts, "tvh_filter_deint", self->deinterlace, 0);
     // video_size
     AV_DICT_SET_INT(opts, "width", self->size.num, 0);
     AV_DICT_SET_INT(opts, "height", self->size.den, 0);
@@ -195,16 +214,6 @@ const codec_profile_class_t codec_profile_video_class = {
         .ic_caption    = N_("video"),
         .ic_properties = (const property_t[]) {
             {
-                .type     = PT_BOOL,
-                .id       = "deinterlace",
-                .name     = N_("Deinterlace"),
-                .desc     = N_("Deinterlace."),
-                .group    = 2,
-                .off      = offsetof(TVHVideoCodecProfile, deinterlace),
-                .set      = codec_profile_video_class_deinterlace_set,
-                .def.i    = 1,
-            },
-            {
                 .type     = PT_INT,
                 .id       = "height",
                 .name     = N_("Height (pixels) (0=no scaling)"),
@@ -243,6 +252,45 @@ const codec_profile_class_t codec_profile_video_class = {
                 .off      = offsetof(TVHVideoCodecProfile, hwaccel_details),
                 .list     = hwaccel_get_list,
                 .def.i    = 0,
+            },
+            {
+                .type     = PT_BOOL,
+                .id       = "deinterlace",
+                .name     = N_("Deinterlace"),
+                .desc     = N_("Deinterlace."),
+                .group    = 2,
+                .off      = offsetof(TVHVideoCodecProfile, deinterlace),
+                .set      = codec_profile_video_class_deinterlace_set,
+                .def.i    = 1,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "deinterlace_field_rate",
+                .name     = N_("Deinterlace rate type"),
+                .desc     = N_("Frame rate combines the two interlaced fields to create a single frame. "
+                               "Field rate processes each field independently, outputting as individual frames, "
+                               "which enables higher temporal resolution by producing one frame per field. "
+                               "Note: with field rate deinterlacing the resulting stream will have double "
+                               "frame-rate (for example 25i becomes 50p), which can result in smoother video "
+                               "since the original temporal properties of the interlaced video are retained."),
+                .group    = 2,
+                .opts     = PO_ADVANCED,
+                .off      = offsetof(TVHVideoCodecProfile, deinterlace_field_rate),
+                .list     = deinterlace_field_rate_get_list,
+                .def.i    = DEINT_RATE_FRAME,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "deinterlace_enable_auto",
+                .name     = N_("Deinterlace fields only"),
+                .desc     = N_("Enable this option to only deinterlace fields, passing progressive frames "
+                               "unchanged. This is useful for mixed content, allowing progressive frames "
+                               "to bypass deinterlacing for improved efficiency and quality."),
+                .group    = 2,
+                .opts     = PO_EXPERT,
+                .off      = offsetof(TVHVideoCodecProfile, deinterlace_enable_auto),
+                .list     = deinterlace_enable_auto_get_list,
+                .def.i    = DEINT_AUTO_OFF,
             },
             {
                 .type     = PT_INT,

@@ -49,6 +49,9 @@ function updateHWFilters(form) {
         form.findField('hw_denoise').setDisabled(!form.findField('hwaccel').getValue());
         form.findField('hw_sharpness').setDisabled(!form.findField('hwaccel').getValue());
         form.findField('hwaccel_details').setDisabled(!form.findField('hwaccel').getValue());
+        form.findField('deinterlace_field_rate').setDisabled(!form.findField('deinterlace').getValue());
+        form.findField('deinterlace_enable_auto').setDisabled(!form.findField('deinterlace').getValue());
+        form.findField('deinterlace_vaapi_mode').setDisabled(!form.findField('hwaccel').getValue() || !form.findField('deinterlace').getValue());
     }
 }
 
@@ -238,6 +241,12 @@ function update_vaapi_ui(form) {
             updateHWFilters(form);
         });
     
+    // on deinterlace change
+    if (form.findField('deinterlace'))
+        form.findField('deinterlace').on('check', function(checkbox, value) {
+            updateHWFilters(form);
+        });
+
     // on desired_b_depth change
     if (form.findField('desired_b_depth'))
         form.findField('desired_b_depth').on('spin', function(spinner, direction, eOpts) {
