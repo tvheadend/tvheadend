@@ -3820,7 +3820,7 @@ dvr_entry_class_disp_summary_set(void *o, const void *v)
   const char *lang = idnode_lang(o);
   const char *s = "";
   v = tvh_str_default(v, "UnknownSummary");
-  if (de->de_subtitle)
+  if (de->de_summary)
     s = lang_str_get(de->de_summary, lang);
   if (strcmp(s, v)) {
     lang_str_set(&de->de_summary, v, lang);
