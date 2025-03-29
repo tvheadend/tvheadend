@@ -31,6 +31,7 @@ build()
     export JOBSARGS
     export JARGS
     export AUTOBUILD_CONFIGURE_EXTRA
+    export EXTRA_X265_CMAKE_OPTS
 
     if ccache=$(which ccache); then
         echo "Using ccache"
