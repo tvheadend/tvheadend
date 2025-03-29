@@ -280,6 +280,7 @@ $(LIB_ROOT)/$(LIBX265)/.tvh_build: \
 	cd $(LIB_ROOT)/$(LIBX265)/build/linux && cmake -G "Unix Makefiles" \
 		-DCMAKE_INSTALL_PREFIX="/ffmpeg" \
 		-DENABLE_SHARED:BOOL=OFF \
+		$(EXTRA_X265_CMAKE_OPTS) \
 		../../source
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBX265)/build/linux install
