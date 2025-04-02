@@ -49,7 +49,7 @@ jobs:
         import_github_env: true
         commands: |
           sudo apt-get update -y
-          sudo apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
+          sudo apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
           AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh -p raspios
           support/cloudsmith.sh -p raspios -f '../tvheadend*.deb'
@@ -85,7 +85,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: uraimo/run-on-arch-action@v2
+      - uses: uraimo/run-on-arch-action@v3
         name: Build artifact
         id: build
         with:
@@ -134,7 +134,7 @@ jobs:
             case "${{ matrix.distro }}" in
               ubuntu*|jessie|stretch|buster|bullseye|bookworm|trixie)
                 apt-get update -y
-                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libstdc++
+                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross
                 DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
                 ;;
               fedora*)
@@ -163,7 +163,7 @@ jobs:
   build-deb-native:
     runs-on: ubuntu-latest
     continue-on-error: true
-    name: Build on native ${{ matrix.container }}
+    name: Build on native ${{ matrix.container[1] }}
     strategy:
       matrix:
         container: [["i386/ubuntu:trusty", "i386-ubuntu-trusty"], ["ubuntu:trusty", "ubuntu-trusty"], ["i386/ubuntu:xenial", "i386-ubuntu-xenial"], ["ubuntu:xenial", "ubuntu-xenial"], ["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["i386/debian:stretch", "i386-debian-strech"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
@@ -225,7 +225,7 @@ jobs:
     name: Build on native fedora:${{ matrix.releasever }}
     strategy:
       matrix:
-        releasever: ["37", "38", "39", "rawhide"]
+        releasever: ["37", "38", "39", "40", "41", "42", "rawhide"]
     container:
       image: "fedora:${{ matrix.releasever }}"
     steps:
