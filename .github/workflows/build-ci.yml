@@ -69,15 +69,11 @@ jobs:
        distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu_latest ]
        include:
          - arch: armv6
-           distro: jessie
-         - arch: armv6
            distro: stretch
          - arch: armv6
            distro: buster
          - arch: armv6
            distro: bullseye
-         - arch: armv7
-           distro: jessie
 
     steps:
       - uses: actions/checkout@v3
@@ -160,49 +156,68 @@ jobs:
     strategy:
       matrix:
         container: [["i386/ubuntu:trusty", "i386-ubuntu-trusty"], ["ubuntu:trusty", "ubuntu-trusty"], ["i386/ubuntu:xenial", "i386-ubuntu-xenial"], ["ubuntu:xenial", "ubuntu-xenial"], ["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["i386/debian:stretch", "i386-debian-strech"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
-    container:
-      image: ${{ matrix.container[0] }}
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
+      - name: Setup container
+        run: |
+          docker pull ${{ matrix.container[0] }}
+          docker run --name build-container -d -v ${{ github.workspace }}:/workspace ${{ matrix.container[0] }} tail -f /dev/null
       - name: Fix old debian apt
         if: matrix.container[0] == 'debian:stretch' || matrix.container[0] == 'i386/debian:stretch'
-        run: |
-          sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
-          sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
-          sed -i '/stretch-updates/d' /etc/apt/sources.list
+        env:
+          SCRIPT: |
+            sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
+            sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
+            sed -i '/stretch-updates/d' /etc/apt/sources.list
+        run: docker exec build-container bash -c "$SCRIPT"
       - name: Add git ppa
         if: startsWith(matrix.container[0], 'ubuntu') || startsWith(matrix.container[0], 'i386/ubuntu')
-        run: |
-          apt-get update -y
-          DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y software-properties-common
-          add-apt-repository ppa:git-core/ppa -y
+        env:
+          SCRIPT: |
+            apt-get update -y
+            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y software-properties-common
+            add-apt-repository ppa:git-core/ppa -y
+        run: docker exec build-container bash -c "$SCRIPT"
       - name: dependencies
-        run: |
-          apt-get update -y
-          DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
+        env:
+          SCRIPT: |
+            apt-get update -y
+            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
+        run: docker exec build-container bash -c "$SCRIPT"
       - name: pcre-dependency
-        run: |
-          DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
+        env:
+          SCRIPT: |
+            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
+        run: docker exec build-container bash -c "$SCRIPT"
       - uses: actions/checkout@v3
-        if: startsWith(matrix.container[0], 'i386') != true && matrix.container[0] != 'debian:stretch'
         with:
           fetch-depth: 0
-      - uses: actions/checkout@v1
-        if: startsWith(matrix.container[0], 'i386') || matrix.container[0] == 'debian:stretch'
       - name: Workaround safe directory
-        run: git config --global --add safe.directory /__w/tvheadend/tvheadend
+        env:
+          SCRIPT: |
+            git config --global --add safe.directory /workspace
+        run: docker exec build-container bash -c "$SCRIPT"
       - name: build
-        run: AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container, 'i386') && '-a i386') || '' }}
+        env:
+          SCRIPT: |
+            cd /workspace
+            AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || '' }}
+        run: docker exec build-container bash -c "$SCRIPT"
       - name: copy-result
-        run: cp ../tvheadend*.deb .
+        env:
+          SCRIPT: |
+            cp tvheadend*.deb workspace/
+        run: docker exec build-container bash -c "$SCRIPT"
       - uses: actions/upload-artifact@v4
         with:
           name: Tvheadend-${{ matrix.container[1] }}
           path: tvheadend*.deb
           if-no-files-found: error
       - name: upload-cloudsmith
-        run: support/cloudsmith.sh -n -f 'tvheadend*.deb'
+        env:
+          SCRIPT: |
+            cd /workspace
+            support/cloudsmith.sh -n -f 'tvheadend*.deb'
+        run: docker exec build-container bash -c "$SCRIPT"
 
   build-rpm-native:
     runs-on: ubuntu-latest
