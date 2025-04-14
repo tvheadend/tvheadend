@@ -196,6 +196,7 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
         ss->ss_pcr_pid = ss_src->ss_pcr_pid;
         ss->ss_pmt_pid = ss_src->ss_pmt_pid;
         service_source_info_copy(&ss->ss_si, &ss_src->ss_si);
+        ss->ss_service_id = ss_src->ss_service_id;
         for (j = k = 0; j < count; j++) {
             i = indexes[j];
             ssc_src = &ss_src->ss_components[i];
