@@ -83,6 +83,13 @@ typedef struct muxer_config {
       int              m_killsig;
       int              m_killtimeout;
     } pass;
+#if ENABLE_LIBAV
+    struct {
+      uint16_t         m_rewrite_sid;
+      int              m_rewrite_pmt;
+      int              m_rewrite_nit;
+    } transcode;
+#endif
     struct {
       int              m_dvbsub_reorder;
     } mkv;

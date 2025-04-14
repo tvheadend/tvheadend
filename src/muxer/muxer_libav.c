@@ -356,6 +356,7 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
   AVDictionary *opts = NULL;
   lav_muxer_t *lm = (lav_muxer_t*)m;
   char app[128];
+  char mpegts_info[8];
 #if LIBAVCODEC_VERSION_MAJOR > 58
   const AVOutputFormat *fmt;
 #else
@@ -396,15 +397,24 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
     return -1;
   }
   av_dict_set(&oc->metadata, "title", name, 0);
-  av_dict_set(&oc->metadata, "service_name", name, 0);
-  av_dict_set(&oc->metadata, "service_provider", app, 0);
+  av_dict_set(&lm->lm_oc->metadata, "title", name, 0);
+  if (ss->ss_si.si_service){
+    av_dict_set(&lm->lm_oc->metadata, "service_name", ss->ss_si.si_service, 0);
+    tvhdebug(LS_LIBAV,  "service_name = %s", ss->ss_si.si_service);
+  } else
+    av_dict_set(&oc->metadata, "service_name", name, 0);
+  if (ss->ss_si.si_provider){
+    av_dict_set(&lm->lm_oc->metadata, "service_provider", ss->ss_si.si_provider, 0);
+    tvhdebug(LS_LIBAV,  "service_provider = %s", ss->ss_si.si_provider);
+  } else
+    av_dict_set(&oc->metadata, "service_provider", app, 0);
 
   lm->bsf_h264_filter = av_bsf_get_by_name("h264_mp4toannexb");
   if (lm->bsf_h264_filter == NULL) {
     tvhwarn(LS_LIBAV,  "Failed to get BSF: h264_mp4toannexb");
   }
   lm->bsf_hevc_filter = av_bsf_get_by_name("hevc_mp4toannexb");
-  if (lm->bsf_h264_filter == NULL) {
+  if (lm->bsf_hevc_filter == NULL) {
     tvhwarn(LS_LIBAV,  "Failed to get BSF: hevc_mp4toannexb");
   }
   lm->bsf_vp9_filter = av_bsf_get_by_name("vp9_superframe");
@@ -441,6 +451,61 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
     av_dict_set(&opts, "ism_lookahead", "0", 0);
   }
 
+  if(lm->m_config.m_type == MC_MPEGTS) {
+    // parameters are required to make mpeg-ts output compliant with mpeg-ts standard
+    // implemented using documentation: https://ffmpeg.org/ffmpeg-formats.html#mpegts-1
+    if (lm->m_config.u.transcode.m_rewrite_sid > 0) {
+      // override from profile requested by teh user
+      snprintf(mpegts_info, sizeof(mpegts_info), "0x%04x", lm->m_config.u.transcode.m_rewrite_sid);
+      tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_service_id = %s", mpegts_info);
+      av_dict_set(&opts, "mpegts_service_id", mpegts_info, 0);
+      // if override requested by the user we let ffmpeg default to decide (0x1000)
+      if (!lm->m_config.u.transcode.m_rewrite_pmt) {
+        snprintf(mpegts_info, sizeof(mpegts_info), "0x%04x", ss->ss_pmt_pid);
+        tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_pmt_start_pid = %s", mpegts_info);
+        av_dict_set(&opts, "mpegts_pmt_start_pid", mpegts_info, 0);
+      }
+      if (!lm->m_config.u.transcode.m_rewrite_nit) {
+        av_dict_set(&opts, "mpegts_flags", "nit", 0);
+      }
+    }
+    else {
+      // we transfer as many parameters as possible
+      if (ss->ss_si.si_tsid) {
+        snprintf(mpegts_info, sizeof(mpegts_info), "0x%04x", ss->ss_si.si_tsid);
+        tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_transport_stream_id = %s", mpegts_info);
+        av_dict_set(&opts, "mpegts_transport_stream_id", mpegts_info, 0);
+      }
+      if (ss->ss_si.si_type) {
+        snprintf(mpegts_info, sizeof(mpegts_info), "0x%04x", ss->ss_si.si_type);
+        tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_service_type = %s", mpegts_info);
+        av_dict_set(&opts, "mpegts_service_type", mpegts_info, 0);
+      }
+      if (ss->ss_pmt_pid) {
+        snprintf(mpegts_info, sizeof(mpegts_info), "0x%04x", ss->ss_pmt_pid);
+        tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_pmt_start_pid = %s", mpegts_info);
+        av_dict_set(&opts, "mpegts_pmt_start_pid", mpegts_info, 0);
+      }
+      if (ss->ss_pcr_pid) {
+        snprintf(mpegts_info, sizeof(mpegts_info), "0x%04x", ss->ss_pcr_pid);
+        tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_start_pid = %s", mpegts_info);
+        av_dict_set(&opts, "mpegts_start_pid", mpegts_info, 0);
+      }
+      if (ss->ss_service_id) {
+        snprintf(mpegts_info, sizeof(mpegts_info), "0x%04x", ss->ss_service_id);
+        tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_service_id = %s", mpegts_info);
+        av_dict_set(&opts, "mpegts_service_id", mpegts_info, 0);
+      }
+      if (ss->ss_si.si_onid) {
+        snprintf(mpegts_info, sizeof(mpegts_info), "0x%04x", ss->ss_si.si_onid);
+        tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_original_network_id = %s", mpegts_info);
+        av_dict_set(&opts, "mpegts_original_network_id", mpegts_info, 0);
+      }
+      av_dict_set(&opts, "mpegts_flags", "nit", 0);
+      av_dict_set(&opts, "mpegts_copyts", "1", 0);
+    }
+  }
+  
   if(!lm->lm_oc->nb_streams) {
     tvherror(LS_LIBAV,  "No supported streams available");
     lm->m_errors++;
