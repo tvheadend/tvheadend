@@ -47,7 +47,7 @@ HWACCELS       =
 NASM_VER       = 2.16.03
 NASM           = nasm-$(NASM_VER)
 NASM_TB        = $(NASM).tar.gz
-NASM_URL       = https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VER)/$(NASM_TB)
+NASM_URL       = https://fossies.org/linux/misc/$(NASM_TB)
 NASM_SHA1      = 432742c550039d202db6e34bb3efab646be74b56
 NASM_DIFFS     = remove-invalid-pure_func-qualifiers.diff
 
