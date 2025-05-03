@@ -474,7 +474,8 @@ tvh_context_decode(TVHContext *self, AVPacket *avpkt)
     if (!ret && !(ret = _context_decode(self, avpkt))) {
         ret = tvh_context_decode_packet(self, avpkt);
     }
-    return (ret == AVERROR(EAGAIN) || ret == AVERROR_INVALIDDATA) ? 0 : ret;
+    return (ret == AVERROR(EAGAIN) || ret == AVERROR_INVALIDDATA ||
+            ret == AVERROR(EIO)    || ret == AVERROR(EINVAL) ) ? 0 : ret;
 }
 
 
