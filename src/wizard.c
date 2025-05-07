@@ -145,7 +145,7 @@ static void hello_changed(idnode_t *in)
 {
   wizard_page_t *p = (wizard_page_t *)in;
   wizard_hello_t *w = p->aux;
-  char buf[32];
+  char buf[64];
   size_t l = 0;
   int save = 0;
 
