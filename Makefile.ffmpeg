@@ -65,6 +65,7 @@ LIBX265_SHA1   = 11880a3aa9e4ee618f539a2d6a8ece0ea442f505
 LIBX265_DIFFS  = libx265.pic.diff
 LIBX265_DIFFS  += libx265-silence.patch
 LIBX265_DIFFS  += libx265-substring.patch
+LIBX265_DIFFS  += libx265-armv9.patch
 
 LIBVPX_VER     = 1.14.1
 LIBVPX         = libvpx-$(LIBVPX_VER)
