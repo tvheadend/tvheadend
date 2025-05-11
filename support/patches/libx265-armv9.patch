@@ -1,0 +1,16 @@
+diff -urN ../x265_4.1/source/CMakeLists.txt ./source/CMakeLists.txt
+--- ../x265_4.1/source/CMakeLists.txt       2025-05-11 13:30:50.896442393 +0200
++++ ./source/CMakeLists.txt   2025-05-11 12:55:08.021237448 +0200
+@@ -103,8 +103,10 @@
+     # Neon I8MM is mandatory from Armv8.6.
+     set(AARCH64_NEON_I8MM_FLAG "-march=armv8.2-a+dotprod+i8mm")
+     set(AARCH64_SVE_FLAG "-march=armv8.2-a+dotprod+i8mm+sve")
+-    # SVE2 is only available from Armv9.0, and armv9-a implies +dotprod and +sve.
+-    set(AARCH64_SVE2_FLAG "-march=armv9-a+i8mm+sve2")
++    if((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 12) OR (CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 12))
++        # SVE2 is only available from Armv9.0, and armv9-a implies +dotprod and +sve.
++        set(AARCH64_SVE2_FLAG "-march=armv9-a+i8mm+sve2")
++    endif()
+ else()
+     message(STATUS "CMAKE_SYSTEM_PROCESSOR value `${CMAKE_SYSTEM_PROCESSOR}` is unknown")
+     message(STATUS "Please add this value near ${CMAKE_CURRENT_LIST_FILE}:${CMAKE_CURRENT_LIST_LINE}")
