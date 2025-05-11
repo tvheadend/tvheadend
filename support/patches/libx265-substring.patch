@@ -1,0 +1,12 @@
+diff -urN ../x265_4.1/source/cmake/Version.cmake ./source/cmake/Version.cmake
+--- ../x265_4.1/source/cmake/Version.cmake      2024-11-22 13:07:34.000000000 +0100
++++ ./source/cmake/Version.cmake     2025-05-11 09:57:56.402729493 +0200
+@@ -126,7 +126,7 @@
+                 #for x265 the repository changeset has to be a tag id or commit id after the tag
+                 #hence mandating it's presence in version file always for valid tag distances.
+                 if(DEFINED git_repositorychangeset)
+-                    string(SUBSTRING "${git_repositorychangeset}" 0 9 X265_REVISION_ID)
++                    string(REGEX MATCH "^.{1,9}" X265_REVISION_ID "${git_repositorychangeset}")
+                 else()
+                     message(WARNING "X265 LATEST COMMIT TIP INFORMATION NOT AVAILABLE")
+                 endif()
