@@ -228,8 +228,7 @@ jobs:
           SCRIPT: |
             cd /workspace
             support/cloudsmith.sh -f 'tvheadend*.deb'
-        run: docker exec build-container bash -c "$SCRIPT" -e CLOUDSMITH_ORG -e CLOUDSMITH_REPO -e CLOUDSMITH_OWNER -e CLOUDSMITH_API_KEY
-
+        run: docker exec -e CLOUDSMITH_ORG -e CLOUDSMITH_REPO -e CLOUDSMITH_OWNER -e CLOUDSMITH_API_KEY build-container bash -c "$SCRIPT"
 
   build-rpm-native:
     runs-on: ubuntu-latest
