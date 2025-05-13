@@ -1599,7 +1599,7 @@ http_client_connect
   tvh_mutex_init(&hc->hc_mutex, NULL);
   hc->hc_id      = atomic_add(&tally, 1);
   hc->hc_aux     = aux;
-  hc->hc_io_size = 1024;
+  hc->hc_io_size = 2048;
   hc->hc_rtsp_stream_id = -1;
   hc->hc_verify_peer = -1;
   hc->hc_bindaddr = bindaddr ? strdup(bindaddr) : NULL;
