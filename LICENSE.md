@@ -12,10 +12,3 @@ Code not Covered
 ----------------
 
 Code in the "vendor" directory is not covered by our license, it is 3rd party provided code and as such is governed by individual licenses.
-
-Further Information
--------------------
-
-For more information regarding licensing and contributions, please see:
-
-> https://tvheadend.org/projects/tvheadend/wiki/Contributors    

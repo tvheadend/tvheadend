@@ -28,7 +28,7 @@ text; if this happens, don't panic, as you can easily change it later.
 
 If you cannot see your preferred language in the language list and would 
 like to help translate Tvheadend see 
-[here](https://tvheadend.org/projects/tvheadend/wiki/Internationalization). 
+[here](https://docs.tvheadend.org/documentation/development/translations).
 
 ### 2. Access Control
 

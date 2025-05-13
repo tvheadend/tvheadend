@@ -86,13 +86,4 @@ Transcoding is currently not supported.
 Packages
 --------
 
-Install instructions for various distributions can be found at our [Cloudsmith-Repository](https://cloudsmith.io/~tvheadend/repos/tvheadend/packages/).
-
-Further information
--------------------
-
-For more information about building, including generating packages, please visit:
-* https://old.tvheadend.org/projects/tvheadend/wiki/Building
-* https://old.tvheadend.org/projects/tvheadend/wiki/Packaging
-* https://old.tvheadend.org/projects/tvheadend/wiki/Git
-* https://old.tvheadend.org/projects/tvheadend/wiki/Internationalization
+Install instructions for various distributions can be found in our [documentation](https://docs.tvheadend.org/documentation/installation/linux).

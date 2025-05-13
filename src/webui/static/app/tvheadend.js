@@ -586,7 +586,7 @@ tvheadend.mdhelp = function(pagename) {
         msg = _('There\'s no documentation available, or there was a problem loading the page.\n\n') +
               _('**You\'ll also see this page if you try and view documentation (for a feature) not included with your version of Tvheadend.**\n\n\n\n') +
               _('Please take a look at the other Help pages (Table of Contents), if you still can\'t find what you\'re ') +
-              _('looking for please see the [Wiki](http://tvheadend.org/projects/tvheadend/wiki) ') +
+              _('looking for please see the [documentation](http://docs.tvheadend.org/documentation) ') +
               _('or join the [IRC channel on libera](https://web.libera.chat/?nick=tvhhelp|?#hts).');
 
         // Fake the result.
