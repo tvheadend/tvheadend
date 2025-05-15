@@ -28,7 +28,7 @@ jobs:
             autotag: false
             suffix: -debian
           - container: Containerfile.alpine
-            autotag: auto
+            autotag: ${{ github.ref == 'refs/heads/master' && 'true' || 'auto' }}
 
     steps:
       - name: Checkout repository
