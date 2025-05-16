@@ -1308,6 +1308,35 @@ htsp_build_timerecentry(htsp_connection_t *htsp, dvr_timerec_entry_t *dte, const
   return out;
 }
 
+/// Determine best genre to use for a broadcast for htsp.
+/// We prefer to find a "major" category since xmltv frequently
+/// has multiple genres (such as adventure, childrens), and so
+/// we want to send a major genre to clients such as Children
+/// rather than a sub-category of Adventure.
+static const epg_genre_t *
+htsp_get_best_genre(const epg_broadcast_t *e)
+{
+  epg_genre_t *g, *fallback=NULL;
+  if (!e)
+    return NULL;
+
+  LIST_FOREACH(g, &e->genre, link) {
+    /* Prefer major categories, apart from for code 0x10 (generic Movie) and 0x30 (generic Show) */
+    if (g->code != 0x10 && g->code != 0x30) {
+      if ((g->code & 0xf0) == g->code)
+        return g;
+      /* Only set fallback for non-generic */
+      fallback = g;
+    }
+  }
+
+  /* Got a reasonable sub-genre category as fallback */
+  if (fallback)
+    return fallback;
+  /* Fallback to returning first genre */
+  return LIST_FIRST(&e->genre);
+}
+
 /**
  *
  */
@@ -1319,7 +1348,7 @@ htsp_build_event
   htsmsg_t *out;
   epg_broadcast_t *n;
   dvr_entry_t *de;
-  epg_genre_t *g;
+  const epg_genre_t *g;
   epg_episode_num_t epnum;
   const char *str;
   char buf[512];
@@ -1382,7 +1411,7 @@ htsp_build_event
   if (e->episodelink && strncasecmp(e->episodelink->uri, "tvh://", 6))
     htsmsg_add_str(out, "episodeUri", e->episodelink->uri);
 
-  if((g = LIST_FIRST(&e->genre))) {
+  if((g = htsp_get_best_genre(e))) {
     uint32_t code = g->code;
     if (htsp->htsp_version < 6) code = (code >> 4) & 0xF;
     htsmsg_add_u32(out, "contentType", code);
