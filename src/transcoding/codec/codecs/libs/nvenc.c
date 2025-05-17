@@ -52,8 +52,6 @@
 #define NV_ENC_HEVC_PROFILE_MAIN_10 			    1
 #define NV_ENC_HEVC_PROFILE_REXT			        2
 
-#define NV_ENC_PROFILE_UNKNOWN                      FF_PROFILE_UNKNOWN
-
 #define NV_ENC_LEVEL_AUTOSELECT                     0
 
 #define NV_ENC_LEVEL_H264_1                         10
@@ -217,7 +215,7 @@ static const codec_profile_class_t codec_profile_nvenc_class = {
                 .get_opts = codec_profile_class_profile_get_opts,
                 .off      = offsetof(tvh_codec_profile_nvenc_t, nvenc_profile),
                 .list     = codec_profile_nvenc_class_profile_list,
-                .def.i    = NV_ENC_PROFILE_UNKNOWN,
+                .def.i    = FF_AV_PROFILE_UNKNOWN,
             },
             {
                 .type     = PT_INT,
@@ -279,7 +277,7 @@ static const AVProfile nvenc_h264_profiles[] = {
     { NV_ENC_H264_PROFILE_MAIN,                 "Main" },
     { NV_ENC_H264_PROFILE_HIGH,                 "High" },
     { NV_ENC_H264_PROFILE_HIGH_444P,            "High 444P" },
-    { NV_ENC_PROFILE_UNKNOWN },
+    { FF_AV_PROFILE_UNKNOWN },
 };
 
 static int
@@ -323,7 +321,7 @@ tvh_codec_profile_nvenc_h264_open(tvh_codec_profile_nvenc_t *self,
         AV_DICT_SET(opts, "level", s, 0);
     }
 
-    if (self->nvenc_profile != NV_ENC_PROFILE_UNKNOWN &&
+    if (self->nvenc_profile != FF_AV_PROFILE_UNKNOWN &&
         (s = val2str(self->nvenc_profile, profiletab)) != NULL) {
         AV_DICT_SET(opts, "profile", s, 0);
     }
@@ -406,7 +404,7 @@ static const AVProfile nvenc_hevc_profiles[] = {
     { NV_ENC_HEVC_PROFILE_MAIN,    "Main" },
     { NV_ENC_HEVC_PROFILE_MAIN_10, "Main 10" },
     { NV_ENC_HEVC_PROFILE_REXT, "Rext" },
-    { NV_ENC_PROFILE_UNKNOWN },
+    { FF_AV_PROFILE_UNKNOWN },
 };
 
 static int
@@ -443,7 +441,7 @@ tvh_codec_profile_nvenc_hevc_open(tvh_codec_profile_nvenc_t *self,
         AV_DICT_SET(opts, "level", s, 0);
         }
 
-    if (self->nvenc_profile != NV_ENC_PROFILE_UNKNOWN &&
+    if (self->nvenc_profile != FF_AV_PROFILE_UNKNOWN &&
         (s = val2str(self->nvenc_profile, profiletab)) != NULL) {
         AV_DICT_SET(opts, "profile", s, 0);
         }

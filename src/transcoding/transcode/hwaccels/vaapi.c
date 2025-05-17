@@ -17,7 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+#include "../../codec/internals.h"
 #include "../internals.h"
 #include "vaapi.h"
 
@@ -154,11 +154,11 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
     switch (avctx->codec->id) {
         case AV_CODEC_ID_MPEG2VIDEO:
             switch (avctx->profile) {
-                case FF_PROFILE_UNKNOWN:
-                case FF_PROFILE_MPEG2_MAIN:
+                case FF_AV_PROFILE_UNKNOWN:
+                case FF_AV_PROFILE_MPEG2_MAIN:
                     check = VAProfileMPEG2Main;
                     break;
-                case FF_PROFILE_MPEG2_SIMPLE:
+                case FF_AV_PROFILE_MPEG2_SIMPLE:
                     check = VAProfileMPEG2Simple;
                     break;
                 default:
@@ -167,14 +167,14 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
             break;
         case AV_CODEC_ID_H264:
             switch (avctx->profile) {
-                case FF_PROFILE_UNKNOWN:
-                case FF_PROFILE_H264_HIGH:
+                case FF_AV_PROFILE_UNKNOWN:
+                case FF_AV_PROFILE_H264_HIGH:
                     check = VAProfileH264High;
                     break;
-                case FF_PROFILE_H264_CONSTRAINED_BASELINE:
+                case FF_AV_PROFILE_H264_CONSTRAINED_BASELINE:
                     check = VAProfileH264ConstrainedBaseline;
                     break;
-                case FF_PROFILE_H264_MAIN:
+                case FF_AV_PROFILE_H264_MAIN:
                     check = VAProfileH264Main;
                     break;
                 default:
@@ -183,12 +183,12 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
             break;
         case AV_CODEC_ID_HEVC:
             switch (avctx->profile) {
-                case FF_PROFILE_UNKNOWN:
-                case FF_PROFILE_HEVC_MAIN:
+                case FF_AV_PROFILE_UNKNOWN:
+                case FF_AV_PROFILE_HEVC_MAIN:
                     check = VAProfileHEVCMain;
                     break;
-                case FF_PROFILE_HEVC_MAIN_10:
-                case FF_PROFILE_HEVC_REXT:
+                case FF_AV_PROFILE_HEVC_MAIN_10:
+                case FF_AV_PROFILE_HEVC_REXT:
                     check = VAProfileHEVCMain10;
                     break;
                 default:
@@ -197,7 +197,7 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
             break;
         case AV_CODEC_ID_VP8:
             switch (avctx->profile) {
-                case FF_PROFILE_UNKNOWN:
+                case FF_AV_PROFILE_UNKNOWN:
                     check = VAProfileVP8Version0_3;
                     break;
                 default:
@@ -206,17 +206,17 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
             break;
         case AV_CODEC_ID_VP9:
             switch (avctx->profile) {
-                case FF_PROFILE_UNKNOWN:
-                case FF_PROFILE_VP9_0:
+                case FF_AV_PROFILE_UNKNOWN:
+                case FF_AV_PROFILE_VP9_0:
                     check = VAProfileVP9Profile0;
                     break;
-                case FF_PROFILE_VP9_1:
+                case FF_AV_PROFILE_VP9_1:
                     check = VAProfileVP9Profile1;
                     break;
-                case FF_PROFILE_VP9_2:
+                case FF_AV_PROFILE_VP9_2:
                     check = VAProfileVP9Profile2;
                     break;
-                case FF_PROFILE_VP9_3:
+                case FF_AV_PROFILE_VP9_3:
                     check = VAProfileVP9Profile3;
                     break;
                 default:

@@ -106,7 +106,7 @@ tvh_codec_audio_get_list_channel_layouts(TVHAudioCodec *self)
 #if LIBAVCODEC_VERSION_MAJOR > 59
             l = channel_layouts;
             ADD_ENTRY(list, map, s64, 0, str, AUTO_STR);
-            while (l->nb_channels < 32) {
+            while (l->nb_channels != 0) {
                 if (!(map = htsmsg_create_map())) {
                     htsmsg_destroy(list);
                     list = NULL;
@@ -149,11 +149,14 @@ tvh_codec_profile_audio_is_copy(TVHAudioCodecProfile *self, tvh_ssc_t *ssc)
     int ssc_channels = ssc->es_channels ? ssc->es_channels : 2;
     int ssc_sr = ssc->es_sri ? sri_to_rate(ssc->es_sri) : 48000;
 #if LIBAVCODEC_VERSION_MAJOR > 59
-    if ((self->channel_layout.order != AV_CHANNEL_ORDER_UNSPEC &&
-         ssc_channels != self->channel_layout.nb_channels) ||
-        (self->sample_rate && ssc_sr != self->sample_rate)) {
+    AVChannelLayout ch_layout = {0};
+    av_channel_layout_from_mask(&ch_layout, self->channel_layout);
+    if ((self->channel_layout && ssc_channels != ch_layout.nb_channels) ||
+        (self->sample_rate      && ssc_sr != self->sample_rate)) {
+        av_channel_layout_uninit(&ch_layout);
         return 0;
     }
+    av_channel_layout_uninit(&ch_layout);
 #else
     if ((self->channel_layout &&
          ssc_channels != av_get_channel_layout_nb_channels(self->channel_layout)) ||
@@ -176,17 +179,13 @@ tvh_codec_profile_audio_open(TVHAudioCodecProfile *self, AVDictionary **opts)
         AV_DICT_SET_INT(opts, "sample_rate", self->sample_rate,
                         AV_DICT_DONT_OVERWRITE);
     }
-#if LIBAVCODEC_VERSION_MAJOR > 59
-    if (self->channel_layout.order != AV_CHANNEL_ORDER_UNSPEC) {
-        AV_DICT_SET_INT(opts, "channel_layout", self->channel_layout.u.mask,
-                        AV_DICT_DONT_OVERWRITE);
-    }
-#else
     if (self->channel_layout) {
-        AV_DICT_SET_INT(opts, "channel_layout", self->channel_layout,
-                        AV_DICT_DONT_OVERWRITE);
-    }
+#if LIBAVCODEC_VERSION_MAJOR > 59
+        AV_DICT_SET_INT(opts, "ch_layout_u_mask", self->channel_layout, AV_DICT_DONT_OVERWRITE);
+#else
+        AV_DICT_SET_INT(opts, "channel_layout", self->channel_layout, AV_DICT_DONT_OVERWRITE);
 #endif
+    }
     return 0;
 }
 

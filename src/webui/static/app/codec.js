@@ -310,9 +310,9 @@ var codec_profile_forms = {
             AV_CH_LAYOUT_4POINT0           | 263   | 4
             AV_CH_LAYOUT_5POINT0_BACK      | 55    | 5
             AV_CH_LAYOUT_5POINT1_BACK      | 63    | 6
-            AV_CH_LAYOUT_7POINT1_WIDE_BACK | 255   | 8
+            AV_CH_LAYOUT_7POINT1           | 1599  | 8
         */
-        var channels = [0, 4, 3, 7, 263, 55, 63, -1, 255]
+        var channels = [0, 4, 3, 7, 263, 55, 63, 1599]
 
         function updateBitrate(bitrate_f, quality_f, samplerate_f, layout_f) {
             if (quality_f.getValue() > 0) {
@@ -322,10 +322,12 @@ var codec_profile_forms = {
             else {
                 var samplerate = samplerate_f.getValue() || 48000;
                 var layout = layout_f.getValue() || 3; // AV_CH_LAYOUT_STEREO
-                var max_bitrate = (6 * samplerate * channels.indexOf(layout)) / 1000;
-                bitrate_f.setMaxValue(max_bitrate);
-                if (bitrate_f.getValue() > max_bitrate) {
-                    bitrate_f.setValue(max_bitrate);
+                if (channels.indexOf(layout) >= 0) {
+                    var max_bitrate = (6 * samplerate * channels.indexOf(layout)) / 1000;
+                    bitrate_f.setMaxValue(max_bitrate);
+                    if (bitrate_f.getValue() > max_bitrate) {
+                        bitrate_f.setValue(max_bitrate);
+                    }
                 }
                 bitrate_f.setReadOnly(false);
             }

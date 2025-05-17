@@ -274,6 +274,15 @@ tvh_video_context_open_filters(TVHContext *self, AVDictionary **opts)
         return -1;
     }
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+    int ret = tvh_context_open_filters(self,
+        "buffer", source_args,                                  // source
+        strlen(filters) ? filters : "null",                     // filters
+        "buffersink",                                           // sink
+        "pix_fmts", AV_OPT_SET_BIN,                             // sink option: pix_fmt
+        sizeof(self->oavctx->pix_fmt), &self->oavctx->pix_fmt,
+        NULL);                                                  // _IMPORTANT!_
+#else
     int ret = tvh_context_open_filters(self,
         "buffer", source_args,              // source
         strlen(filters) ? filters : "null", // filters
@@ -281,6 +290,7 @@ tvh_video_context_open_filters(TVHContext *self, AVDictionary **opts)
         "pix_fmts", &self->oavctx->pix_fmt, // sink option: pix_fmt
         sizeof(self->oavctx->pix_fmt),
         NULL);                              // _IMPORTANT!_
+#endif
     str_clear(filters);
     return ret;
 }

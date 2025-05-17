@@ -590,10 +590,10 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
 /* h264_vaapi =============================================================== */
 
 static const AVProfile vaapi_h264_profiles[] = {
-    { FF_PROFILE_H264_CONSTRAINED_BASELINE, "Constrained Baseline" },
-    { FF_PROFILE_H264_MAIN,                 "Main" },
-    { FF_PROFILE_H264_HIGH,                 "High" },
-    { FF_PROFILE_UNKNOWN },
+    { FF_AV_PROFILE_H264_CONSTRAINED_BASELINE, "Constrained Baseline" },
+    { FF_AV_PROFILE_H264_MAIN,                 "Main" },
+    { FF_AV_PROFILE_H264_HIGH,                 "High" },
+    { FF_AV_PROFILE_UNKNOWN },
 };
 
 static int
@@ -915,10 +915,10 @@ TVHVideoCodec tvh_codec_vaapi_h264 = {
 /* hevc_vaapi =============================================================== */
 
 static const AVProfile vaapi_hevc_profiles[] = {
-    { FF_PROFILE_HEVC_MAIN, "Main" },
-    { FF_PROFILE_HEVC_MAIN_10, "Main 10" },
-    { FF_PROFILE_HEVC_REXT, "Rext" },
-    { FF_PROFILE_UNKNOWN },
+    { FF_AV_PROFILE_HEVC_MAIN,     "Main" },
+    { FF_AV_PROFILE_HEVC_MAIN_10,  "Main 10" },
+    { FF_AV_PROFILE_HEVC_REXT,     "Rext" },
+    { FF_AV_PROFILE_UNKNOWN },
 };
 
 static int
@@ -1230,7 +1230,7 @@ TVHVideoCodec tvh_codec_vaapi_hevc = {
 /* vp8_vaapi =============================================================== */
 
 static const AVProfile vaapi_vp8_profiles[] = {
-    { FF_PROFILE_UNKNOWN },
+    { FF_AV_PROFILE_UNKNOWN },
 };
 
 static int
@@ -1538,7 +1538,7 @@ TVHVideoCodec tvh_codec_vaapi_vp8 = {
 /* vp9_vaapi =============================================================== */
 
 static const AVProfile vaapi_vp9_profiles[] = {
-    { FF_PROFILE_UNKNOWN },
+    { FF_AV_PROFILE_UNKNOWN },
 };
 
 static int
