@@ -226,7 +226,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 #if ENABLE_HWACCELS
     self->oavctx->coded_width = self->oavctx->width;
     self->oavctx->coded_height = self->oavctx->height;
-    #if ENABLE_FFMPEG4_TRANSCODING
+#if ENABLE_FFMPEG4_TRANSCODING
     // hwaccel is the user input for Hardware acceleration from Codec parameteres
     int hwaccel = -1;
     if ((hwaccel = tvh_codec_profile_video_get_hwaccel(self->profile)) < 0) {
@@ -247,15 +247,15 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
             // --> we initialize as recommended in:
             // ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 145
             if (hwaccels_encode_setup_context(self->oavctx)) {
-#else
-            if (hwaccels_encode_setup_context(self->oavctx, self->profile->low_power)) {
-#endif
                 return -1;
             }
-#if ENABLE_FFMPEG4_TRANSCODING
         }
     }
-#endif
+#else
+    if (hwaccels_encode_setup_context(self->oavctx, self->profile->low_power)) {
+        return -1;
+    }
+#endif // from ENABLE_FFMPEG4_TRANSCODING
 #endif // from ENABLE_HWACCELS
 
     // XXX: is this a safe assumption?
