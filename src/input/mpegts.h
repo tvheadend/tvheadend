@@ -545,6 +545,11 @@ struct mpegts_mux
 #define PREFCAPID_ON       1
 #define PREFCAPID_FORCE    2
 
+#define SVC_PROCESS_SUBTITLE_NONE     0
+#define SVC_PROCESS_SUBTITLE_DESC     1
+#define SVC_PROCESS_SUBTITLE_APPEND   2
+#define SVC_PROCESS_SUBTITLE_PREPEND  3
+
 /* Service */
 struct mpegts_service
 {
@@ -574,6 +579,8 @@ struct mpegts_service
   char    *s_dvb_cridauth;
   uint16_t s_dvb_servicetype;
   int      s_dvb_ignore_eit;
+  int      s_dvb_subtitle_processing;       //Various options for replacing/augmenting the desc from the sub-title
+  int      s_dvb_ignore_matching_subtitle;  //Ignore the sub-title if same as title
   char    *s_dvb_charset;
   uint16_t s_dvb_prefcapid;
   int      s_dvb_prefcapid_lock;
