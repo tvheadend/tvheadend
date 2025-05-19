@@ -226,10 +226,37 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 #if ENABLE_HWACCELS
     self->oavctx->coded_width = self->oavctx->width;
     self->oavctx->coded_height = self->oavctx->height;
+#if ENABLE_FFMPEG4_TRANSCODING
+    // hwaccel is the user input for Hardware acceleration from Codec parameteres
+    int hwaccel = -1;
+    if ((hwaccel = tvh_codec_profile_video_get_hwaccel(self->profile)) < 0) {
+        return -1;
+    }
+    if (_video_filters_hw_pix_fmt(self->oavctx->pix_fmt)){
+        // encoder is hw accelerated
+        if (hwaccel) {
+            // decoder is hw accelerated 
+            // --> we initialize encoder from decoder as recomanded in: 
+            // ffmpeg-6.1.1/doc/examples/vaapi_transcode.c line 169
+            if (hwaccels_initialize_encoder_from_decoder(self->iavctx, self->oavctx)) {
+                return -1;
+            }
+        }
+        else {
+            // decoder is sw
+            // --> we initialize as recommended in:
+            // ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 145
+            if (hwaccels_encode_setup_context(self->oavctx)) {
+                return -1;
+            }
+        }
+    }
+#else
     if (hwaccels_encode_setup_context(self->oavctx, self->profile->low_power)) {
         return -1;
     }
-#endif
+#endif // from ENABLE_FFMPEG4_TRANSCODING
+#endif // from ENABLE_HWACCELS
 
     // XXX: is this a safe assumption?
     if (!self->iavctx->framerate.num) {
