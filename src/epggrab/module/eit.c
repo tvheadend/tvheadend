@@ -693,6 +693,10 @@ static int _eit_process_event_one
   char tm1[32], tm2[32];
   int short_target = ((eit_module_t *)mod)->short_target;
 
+  lang_str_t *temp_string;        //}
+  lang_str_ele_t *temp_ele;       //} Used for appending/prepending to the desc.
+  const char *temp_s1, *temp_s2;  //}
+
   /* Core fields */
   eid   = ptr[0] << 8 | ptr[1];
   start = dvb_convert_date(&ptr[2], local);
@@ -791,8 +795,160 @@ static int _eit_process_event_one
     *save |= epg_broadcast_set_rating_label(ebc, ev->rating_label, &changes);
     }
 
+  /*
+      Notes on EPG fields. DMC, May 2025.
+
+      ev->title :   Originates from EIT tag 0x4d 'short_event_descriptor' 'event name'
+      ev->summary : Originates from EIT tag 0x4d 'short_event_descriptor' 'text describing the event'
+      ev->desc :    Originates from EIT tag 0c4e 'extended_event_descriptor'
+      ev-subtitle : Originates from scraping operations performed by previous functions.
+
+      If the grabber scraping option is enabled:
+      ev->title, ev->subtitle, ev->summary may be set/update/replaced by scraped values.
+
+      Eventually, if the sub-title is empty, the summary will be used in its place.
+
+      Summary of possible EPG Text manipulation operations.
+
+      Defined in EIT EPG Grabber
+      'Set the short EPG description to given target'
+      short_target: *0 = Subtitle* | 1 = Summary | 2 = Subtitle and summary
+
+      (New features from here..)
+      Defined in MPGTS Service
+      svc->s_dvb_subtitle_processing
+      [*None* | Save in Description | Append to Description | Prepend to Description]
+      This is only active if short_target == 0 so that the EPG grabber setting
+      takes priority over the service setting.
+      
+      svc->s_dvb_ignore_matching_subtitle [True | *False*]
+      If the Sub-title and the Title contain identical content, ignore the Sub-title and only save the Title.
+   */
+
+  //If processing is enabled AND the grabber is saving the sub-title in the sub-title then
+  //save the sub-title in the description provided that the description is also empty OR
+  //append/prepend the sub-title to the description if the description is not empty.
+  if ((svc->s_dvb_subtitle_processing != SVC_PROCESS_SUBTITLE_NONE) && (ev->summary || ev->subtitle) && short_target == 0)
+  {
+      //If there is not already a description, just use the subtitle/summary instead
+      if(!ev->desc)
+      {
+        //If there was a sub-title scraped, use that.
+        if (ev->subtitle)
+        {
+          *save |= epg_broadcast_set_description(ebc, ev->subtitle, &changes);
+          lang_str_destroy(ev->subtitle);
+          ev->subtitle = lang_str_create();
+          tvhtrace(LS_TBL_EIT, "Description set to sub-title.");
+        }
+        else
+        {
+          *save |= epg_broadcast_set_description(ebc, ev->summary, &changes);
+          lang_str_destroy(ev->summary);
+          ev->summary = lang_str_create();
+          tvhtrace(LS_TBL_EIT, "Description set to summary.");
+        }
+      }
+      else //There is a description present so append/prepend as required.
+      {
+        temp_string = lang_str_create();
+        if(svc->s_dvb_subtitle_processing == SVC_PROCESS_SUBTITLE_APPEND)
+        {
+          if(ev->subtitle)
+          {
+            RB_FOREACH(temp_ele, ev->subtitle, link) {
+              temp_s1 = lang_str_get(ev->desc, temp_ele->lang);
+              lang_str_append(temp_string, temp_s1, temp_ele->lang);
+              lang_str_append(temp_string, " ", temp_ele->lang);
+              temp_s2 = lang_str_get(ev->subtitle, temp_ele->lang);
+              lang_str_append(temp_string, temp_s2, temp_ele->lang);
+              tvhtrace(LS_TBL_EIT, "Sub-title appended to description.");
+            }
+          }
+          else if(ev->summary)
+          {
+            RB_FOREACH(temp_ele, ev->summary, link) {
+              temp_s1 = lang_str_get(ev->desc, temp_ele->lang);
+              lang_str_append(temp_string, temp_s1, temp_ele->lang);
+              lang_str_append(temp_string, " ", temp_ele->lang);
+              temp_s2 = lang_str_get(ev->summary, temp_ele->lang);
+              lang_str_append(temp_string, temp_s2, temp_ele->lang);
+              tvhtrace(LS_TBL_EIT, "Summary appended to description.");
+            }
+          }
+        }//END Append
+
+        if(svc->s_dvb_subtitle_processing == SVC_PROCESS_SUBTITLE_PREPEND)
+        {
+          if(ev->subtitle)
+          {
+            RB_FOREACH(temp_ele, ev->subtitle, link) {
+              temp_s1 = lang_str_get(ev->subtitle, temp_ele->lang);
+              lang_str_append(temp_string, temp_s1, temp_ele->lang);
+              lang_str_append(temp_string, " ", temp_ele->lang);
+              temp_s2 = lang_str_get(ev->desc, temp_ele->lang);
+              lang_str_append(temp_string, temp_s2, temp_ele->lang);
+              tvhtrace(LS_TBL_EIT, "Sub-title prepended to description.");
+            }
+          }
+          else if(ev->summary)
+          {
+            RB_FOREACH(temp_ele, ev->summary, link) {
+              temp_s1 = lang_str_get(ev->summary, temp_ele->lang);
+              lang_str_append(temp_string, temp_s1, temp_ele->lang);
+              lang_str_append(temp_string, " ", temp_ele->lang);
+              temp_s2 = lang_str_get(ev->desc, temp_ele->lang);
+              lang_str_append(temp_string, temp_s2, temp_ele->lang);
+              tvhtrace(LS_TBL_EIT, "Summary prepended to description.");
+            }
+          }
+        }//END Prepend
+
+        //Save the new desc with the appended/prepended content.
+        *save |= epg_broadcast_set_description(ebc, temp_string, &changes);
+
+        //Nuke the summary because it is now part of the desc.
+        if(ev->summary)
+        {
+          lang_str_destroy(ev->summary);
+          ev->summary = lang_str_create();
+        }
+
+        //Nuke the subtitle because it is now part of the desc.
+        if(ev->subtitle)
+        {
+          lang_str_destroy(ev->subtitle);
+          ev->subtitle = lang_str_create();
+        }
+
+        //Clean up the temp language string.
+        if (temp_string)    lang_str_destroy(temp_string);
+
+      }//END append or prepend
+  }//END DVB sub-title processing
+
+  //If processing is enabled, delete the summary/sub-title if it is the same as the title.
+  if (svc->s_dvb_ignore_matching_subtitle && (ev->summary || ev->subtitle))
+  {
+      if (lang_str_compare(ev->title, ev->summary) == 0)  //0 = no differences
+      {
+          lang_str_destroy(ev->summary);
+          ev->summary = lang_str_create();
+          tvhtrace(LS_TBL_EIT, "Deleting summary, same as title.");
+      }
+
+      if (lang_str_compare(ev->title, ev->subtitle) == 0)  //0 = no differences
+      {
+          lang_str_destroy(ev->subtitle);
+          ev->subtitle = lang_str_create();
+          tvhtrace(LS_TBL_EIT, "Deleting sub-title, same as title.");
+      }
+  }
+
+  //The sub-title is set by scraping it from the EIT short description (held in the summary).
   if (ev->subtitle)
     *save |= epg_broadcast_set_subtitle(ebc, ev->subtitle, &changes);
+    //short_target: 0 = Subtitle | 2 = Subtitle and summary
   else if ((short_target == 0 || short_target == 2) && ev->summary)
     *save |= epg_broadcast_set_subtitle(ebc, ev->summary, &changes);
 #if TODO_ADD_EXTRA

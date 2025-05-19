@@ -82,6 +82,18 @@ mpegts_service_pref_capid_lock_list ( void *o, const char *lang )
    return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+mpegts_service_subtitle_procesing ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("None"),                         SVC_PROCESS_SUBTITLE_NONE    }, //No processing.
+    { N_("Save in Description"),          SVC_PROCESS_SUBTITLE_DESC    }, //Save the sub-title in the desc if desc is empty.
+    { N_("Append to Description"),        SVC_PROCESS_SUBTITLE_APPEND  }, //Append, but if the desc is empty, just replace.
+    { N_("Prepend to Description"),       SVC_PROCESS_SUBTITLE_PREPEND }, //Prepend, but if the desc is empty, just replace.
+  };
+   return strtab2htsmsg(tab, 1, lang);
+}
+
 CLASS_DOC(mpegts_service)
 
 const idclass_t mpegts_service_class =
@@ -197,6 +209,28 @@ const idclass_t mpegts_service_class =
       .desc     = N_("Enable or disable ignoring of Event Information "
                      "Table (EIT) data for this service."),
       .off      = offsetof(mpegts_service_t, s_dvb_ignore_eit),
+      .opts     = PO_EXPERT,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "dvb_subtitle_processing",
+      .name     = N_("DVB Sub-title Processing"),
+      .desc     = N_("Select action to be taken with the Sub-title "
+                     "provided by the broadcaster: None; Save in Description; "
+                     "Append to Description; Prepend to Description. "
+                     "If the Description is empty, save, "
+                     "append and prepend will replace the Description."),
+      .off      = offsetof(mpegts_service_t, s_dvb_subtitle_processing),
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+      .list     = mpegts_service_subtitle_procesing,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "dvb_ignore_matching_subtitle",
+      .name     = N_("Skip Sub-title matches Title"),
+      .desc     = N_("If the Sub-title and the Title contain identical content, "
+                     "ignore the Sub-title and only save the Title."),
+      .off      = offsetof(mpegts_service_t, s_dvb_ignore_matching_subtitle),
       .opts     = PO_EXPERT,
     },
     {
