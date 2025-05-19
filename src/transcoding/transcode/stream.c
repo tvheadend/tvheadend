@@ -57,70 +57,66 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
 {
     enum AVCodecID icodec_id = streaming_component_type2codec_id(ssc->es_type);
     const AVCodec *icodec = NULL, *ocodec = NULL;
-    int hwaccel = -1;
-    int hwaccel_details = -1;
 
     if (icodec_id == AV_CODEC_ID_NONE) {
         tvh_stream_log(self, LOG_ERR, "unknown decoder id for '%s'",
                        streaming_component_type2txt(ssc->es_type));
         return -1;
     }
-    if ((hwaccel = tvh_codec_profile_video_get_hwaccel(profile)) < 0) {
-        return -1;
-    }
-    if ((hwaccel_details = tvh_codec_profile_video_get_hwaccel_details(profile)) < 0) {
-        return -1;
-    }
-#if ENABLE_MMAL
-    if (idnode_is_instance(&profile->idnode,
-                           (idclass_t *)&codec_profile_video_class)) {
-      if (hwaccel &&
-         ((hwaccel_details == HWACCEL_AUTO && strstr(profile->codec_name, "mmal")) ||
-         hwaccel_details == HWACCEL_PRIORITIZE_MMAL)) {
-        if (icodec_id == AV_CODEC_ID_H264) {
-            icodec = avcodec_find_decoder_by_name("h264_mmal");
-        } else if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
-            icodec = avcodec_find_decoder_by_name("mpeg2_mmal");
+#if ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
+    int hwaccel = -1;
+    int hwaccel_details = -1;
+    if (ssc->es_type == AVMEDIA_TYPE_VIDEO) {
+        if (((hwaccel         = tvh_codec_profile_video_get_hwaccel(profile)) < 0) ||
+            ((hwaccel_details = tvh_codec_profile_video_get_hwaccel_details(profile)) < 0)) {
+            return -1;
         }
-      }
-    }
+#if ENABLE_MMAL
+        if (idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
+            hwaccel &&
+            ((hwaccel_details == HWACCEL_AUTO && strstr(profile->codec_name, "mmal")) || hwaccel_details == HWACCEL_PRIORITIZE_MMAL)) {
+            if (icodec_id == AV_CODEC_ID_H264) {
+                icodec = avcodec_find_decoder_by_name("h264_mmal");
+            } else if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
+                icodec = avcodec_find_decoder_by_name("mpeg2_mmal");
+            }
+        }
 #endif
 #if ENABLE_NVENC
-    if (!icodec && idnode_is_instance(&profile->idnode,
-                           (idclass_t *)&codec_profile_video_class)) {
-      if (hwaccel &&
-         ((hwaccel_details == HWACCEL_AUTO && strstr(profile->codec_name, "nvenc")) ||
-         hwaccel_details == HWACCEL_PRIORITIZE_NVDEC)) {
-        // https://developer.nvidia.com/video-codec-sdk
-        if (icodec_id == AV_CODEC_ID_H264) {
-            icodec = avcodec_find_decoder_by_name("h264_cuvid");
-        } else if (icodec_id == AV_CODEC_ID_HEVC) {
-            icodec = avcodec_find_decoder_by_name("hevc_cuvid");
+        if (!icodec && 
+            idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
+            hwaccel &&
+            ((hwaccel_details == HWACCEL_AUTO && strstr(profile->codec_name, "nvenc")) || hwaccel_details == HWACCEL_PRIORITIZE_NVDEC)) {
+            // https://developer.nvidia.com/video-codec-sdk
+            if (icodec_id == AV_CODEC_ID_H264) {
+                icodec = avcodec_find_decoder_by_name("h264_cuvid");
+            } else if (icodec_id == AV_CODEC_ID_HEVC) {
+                icodec = avcodec_find_decoder_by_name("hevc_cuvid");
+            }
         }
-      }
-    }
 #endif
 #if ENABLE_VAAPI
-    if (!icodec && idnode_is_instance(&profile->idnode,
-                           (idclass_t *)&codec_profile_video_class)) {
-      if (hwaccel &&
-        (hwaccel_details == HWACCEL_PRIORITIZE_VAAPI)) {
-        if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
-            icodec = avcodec_find_decoder_by_name("mpeg2_vaapi");
-        } else if (icodec_id == AV_CODEC_ID_H264) {
-            icodec = avcodec_find_decoder_by_name("h264_vaapi");
-        } else if (icodec_id == AV_CODEC_ID_HEVC) {
-            icodec = avcodec_find_decoder_by_name("hevc_vaapi");
-        } else if (icodec_id == AV_CODEC_ID_VP9) {
-            icodec = avcodec_find_decoder_by_name("vp9_vaapi");
-        } else if (icodec_id == AV_CODEC_ID_VP8) {
-            icodec = avcodec_find_decoder_by_name("vp8_vaapi");
-        }else if (icodec_id == AV_CODEC_ID_MJPEG) {
-            icodec = avcodec_find_decoder_by_name("mjpeg_vaapi");
+        if (!icodec && 
+            idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
+            hwaccel &&
+            (hwaccel_details == HWACCEL_PRIORITIZE_VAAPI)) {
+            if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
+                icodec = avcodec_find_decoder_by_name("mpeg2_vaapi");
+            } else if (icodec_id == AV_CODEC_ID_H264) {
+                icodec = avcodec_find_decoder_by_name("h264_vaapi");
+            } else if (icodec_id == AV_CODEC_ID_HEVC) {
+                icodec = avcodec_find_decoder_by_name("hevc_vaapi");
+            } else if (icodec_id == AV_CODEC_ID_VP9) {
+                icodec = avcodec_find_decoder_by_name("vp9_vaapi");
+            } else if (icodec_id == AV_CODEC_ID_VP8) {
+                icodec = avcodec_find_decoder_by_name("vp8_vaapi");
+            }else if (icodec_id == AV_CODEC_ID_MJPEG) {
+                icodec = avcodec_find_decoder_by_name("mjpeg_vaapi");
+            }
         }
-      }
-    }
 #endif
+    }
+#endif // from ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
     if (!icodec && !(icodec = avcodec_find_decoder(icodec_id))) {
         tvh_stream_log(self, LOG_ERR, "failed to find decoder for '%s'",
                        streaming_component_type2txt(ssc->es_type));
