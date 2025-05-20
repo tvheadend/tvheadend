@@ -43,6 +43,7 @@
 #include "parsers/parser_hevc.h"
 #include "muxer_mkv.h"
 
+#include "epggrab.h"  //Needed to see if global processing of parental rating labels is enabled.
 
 extern int dvr_iov_max;
 
@@ -229,17 +230,17 @@ mk_build_segment_info(mk_muxer_t *mk)
   snprintf(app, sizeof(app), "Tvheadend %s", tvheadend_version);
 
   if(!mk->webm)
-    ebml_append_bin(q, 0x73a4, mk->uuid, sizeof(mk->uuid));
+    ebml_append_bin(q, 0x73a4, mk->uuid, sizeof(mk->uuid));   //0x73a4 = SegmentUUID
 
   if(!mk->webm)
-    ebml_append_string(q, 0x7ba9, mk->title);
+    ebml_append_string(q, 0x7ba9, mk->title);                 //0x7ba9 = Title
 
-  ebml_append_string(q, 0x4d80, "Tvheadend Matroska muxer");
-  ebml_append_string(q, 0x5741, app);
-  ebml_append_uint(q, 0x2ad7b1, MATROSKA_TIMESCALE);
+  ebml_append_string(q, 0x4d80, "Tvheadend Matroska muxer");  //0x4d80 = MuxingApp
+  ebml_append_string(q, 0x5741, app);                         //0x5741 = WritingApp
+  ebml_append_uint(q, 0x2ad7b1, MATROSKA_TIMESCALE);          //0x2ad7b1 = TimestampScale
 
   if(mk->totduration)
-    ebml_append_float(q, 0x4489, (float)mk->totduration);
+    ebml_append_float(q, 0x4489, (float)mk->totduration);     //0x4489 = Duration
   else
     ebml_append_pad(q, 7); // Must be equal to floatingpoint duration
   return q;
@@ -677,7 +678,7 @@ mk_write_chapters(mk_muxer_t *mk)
     return;
 
   mk->chapters_pos = mk->fdpos;
-  mk_write_master(mk, 0x1043a770, mk_build_chapters(mk));
+  mk_write_master(mk, 0x1043a770, mk_build_chapters(mk));   //0x1043a770 = Chapters
 }
 
 
@@ -692,18 +693,18 @@ build_tag_string(const char *name, const char *value, const char *lang,
   htsbuf_queue_t *st = htsbuf_queue_alloc(0);
 
   htsbuf_queue_t *t = htsbuf_queue_alloc(0);
-  ebml_append_uint(t, 0x68ca, targettype ?: 50);
+  ebml_append_uint(t, 0x68ca, targettype ?: 50);      //0x68ca = TargetTypeValue
 
   if(targettypename)
-    ebml_append_string(t, 0x63ca, targettypename);
-  ebml_append_master(q, 0x63c0, t);
+    ebml_append_string(t, 0x63ca, targettypename);    //0x63ca = TargetType
+  ebml_append_master(q, 0x63c0, t);                   //0x63c0 = Targets
 
-  ebml_append_string(st, 0x45a3, name);
-  ebml_append_string(st, 0x4487, value);
-  ebml_append_uint(st, 0x4484, 1);
-  ebml_append_string(st, 0x447a, lang ?: "und");
+  ebml_append_string(st, 0x45a3, name);               //0x45a3 = TagName
+  ebml_append_string(st, 0x4487, value);              //0x4487 = TagString
+  ebml_append_uint(st, 0x4484, 1);                    //0x4484 = TagDefault
+  ebml_append_string(st, 0x447a, lang ?: "und");      //0x447a = TagLanguage
 
-  ebml_append_master(q, 0x67c8, st);
+  ebml_append_master(q, 0x67c8, st);                  //0x67c8 = SimpleTag
   return q;
 }
 
@@ -738,19 +739,22 @@ static htsbuf_queue_t *
 _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
                    const char *comment)
 {
+
+  //Note: May 2025 DMC - If the recording is manual or from a timer
+  //then only the 'comment' will be available, 'de' and 'ebc' will be null.
+
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
-  char datestr[64], ctype[100];
+  char datestr[64], ctype[100], temp_rating[128];
   const epg_genre_t *eg = NULL;
   epg_genre_t eg0;
   struct tm tm;
   time_t t;
   channel_t *ch = ebc ? ebc->channel : NULL;
-  lang_str_t *ls = NULL, *ls2 = NULL;
+  lang_str_t *ls = NULL, *ls2 = NULL, *ls3 = NULL;
   const char *lang;
   const lang_code_list_t *langs;
   epg_episode_num_t num;
-  int tmp_age;
-
+  
   if (de || ebc) {
     localtime_r(de ? &de->de_start : &ebc->start, &tm);
   } else {
@@ -780,14 +784,32 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   if(eg && epg_genre_get_str(eg, 1, 0, ctype, 100, NULL))
     addtag(q, build_tag_string("CONTENT_TYPE", ctype, NULL, 0, NULL));
 
-  //TODO - MKV The spec suggests that this tag can consist of multiple value types.
-  //https://www.matroska.org/technical/tagging.html
-  //==> Depending on the COUNTRY it’s the format of the rating of a movie
-  //==> (P, R, X in the USA, an age in other countries or a URI defining a logo).
-  if(ebc) {
-    tmp_age = ebc->age_rating;
-    addtag(q, build_tag_int("LAW_RATING", tmp_age, 0, NULL));
-  }
+  //Only add the 'LAW_RATING' tag if 1) rating label processing is enabled globally
+  //AND 2) this EPG entry has a rating label worth adding.
+  if(epggrab_conf.epgdb_processparentallabels && ebc && ebc->rating_label)
+  {
+    //If the rating label for this event is enabled AND it has a display_label.
+    if(ebc->rating_label->rl_enabled && ebc->rating_label->rl_display_label)
+    {
+      //Build a fallback string with only the rating label.
+      snprintf(temp_rating, sizeof(temp_rating), "%s", ebc->rating_label->rl_display_label);
+
+      //If there is a country code, build a string that includes the country code
+      //eg: 'PG (AUS)'
+      if(ebc->rating_label->rl_enabled && ebc->rating_label->rl_country)
+      {
+        snprintf(temp_rating, sizeof(temp_rating), "%s (%s)", ebc->rating_label->rl_display_label, ebc->rating_label->rl_country);
+      }
+      //Otherwise, if there is a authority name, build a string that includes the authority
+      //eg: 'PG (ACMA)'
+      else if (ebc->rating_label->rl_enabled && ebc->rating_label->rl_authority)
+      {
+        snprintf(temp_rating, sizeof(temp_rating), "%s (%s)", ebc->rating_label->rl_display_label, ebc->rating_label->rl_authority);
+      }
+
+      addtag(q, build_tag_string("LAW_RATING", temp_rating, NULL, 0, NULL));
+    }
+  }//END we got a rating label from the EPG
 
   if(ch)
     addtag(q, build_tag_string("TVCHANNEL",
@@ -799,6 +821,11 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
     ls2 = de->de_desc;
   else if (ebc && ebc->description)
     ls2 = ebc->description;
+
+  if(de && de->de_subtitle)
+    ls3 = de->de_subtitle;
+  else if (ebc && ebc->subtitle)
+    ls3 = ebc->subtitle;
 
   if (!ls)
     ls = ls2;
@@ -814,7 +841,13 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
     RB_FOREACH(e, ls2, link)
       addtag(q, build_tag_string("DESCRIPTION", e->str, e->lang, 0, NULL));
   }
-
+  
+  if (ls3) {
+    lang_str_ele_t *e;
+    RB_FOREACH(e, ls3, link)
+      addtag(q, build_tag_string("SUBTITLE", e->str, e->lang, 0, NULL));
+  }
+  
   epg_broadcast_get_epnum(ebc, &num);
   if(num.e_num)
     addtag(q, build_tag_int("PART_NUMBER", num.e_num,
@@ -834,9 +867,25 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
     if ((langs = lang_code_split(NULL)) != NULL) {
       lang = tvh_strdupa(langs->codes[0]->code2b);
     }
-
     addtag(q, build_tag_string("COMMENT", comment, lang, 0, NULL));
   }
+  else if (de && de->de_comment) {  //Add the DVR recording comment if one exists and an explicit comment is omitted
+    //If the DVR entry has a Title, 'borrow' the language code(s) for the comment
+    if (de->de_title) {
+      lang_str_ele_t *e;
+      RB_FOREACH(e, de->de_title, link)
+        addtag(q, build_tag_string("COMMENT", de->de_comment, e->lang, 0, NULL));
+    }
+    else //Otherwise, just use 'eng' as the default.
+    {
+      lang = "eng";
+      if ((langs = lang_code_split(NULL)) != NULL) {
+        lang = tvh_strdupa(langs->codes[0]->code2b);
+      }
+
+      addtag(q, build_tag_string("COMMENT", de->de_comment, lang, 0, NULL));      
+    }
+  }//END extra comment
 
   return q;
 }
