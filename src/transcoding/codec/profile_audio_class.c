@@ -107,14 +107,14 @@ tvh_codec_audio_get_list_channel_layouts(TVHAudioCodec *self)
             l = channel_layouts;
             ADD_ENTRY(list, map, s64, 0, str, AUTO_STR);
             while (l->nb_channels != 0) {
-                if (!(map = htsmsg_create_map())) {
-                    htsmsg_destroy(list);
-                    list = NULL;
-                    break;
-                }
-                l_buf[0] = '\0';
-                if(av_channel_layout_describe(l, l_buf, sizeof(l_buf)) > 0)
+                if(av_channel_layout_describe(l, l_buf, sizeof(l_buf)) > 0) {
+                    if (!(map = htsmsg_create_map())) {
+                        htsmsg_destroy(list);
+                        list = NULL;
+                        break;
+                    }
                     ADD_ENTRY(list, map, s64, l->u.mask, str, l_buf);
+                }
                 l++;
             }
 #else
@@ -126,7 +126,6 @@ tvh_codec_audio_get_list_channel_layouts(TVHAudioCodec *self)
                         list = NULL;
                         break;
                     }
-                    l_buf[0] = '\0';
                     av_get_channel_layout_string(l_buf, sizeof(l_buf), 0, l);
                     ADD_ENTRY(list, map, s64, l, str, l_buf);
                 }
