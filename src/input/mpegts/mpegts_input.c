@@ -247,7 +247,7 @@ const idclass_t mpegts_input_class =
       .id       = "priority",
       .name     = N_("Priority"),
       .desc     = N_("The tuner priority value (a higher value means to "
-                     "use this tuner out of preference). See Help for details."),
+                     "use this tuner out of preference)."),
       .doc      = prop_doc_priority,
       .off      = offsetof(mpegts_input_t, mi_priority),
       .def.i    = 1,
@@ -260,7 +260,7 @@ const idclass_t mpegts_input_class =
       .desc     = N_("The tuner priority value for streamed channels "
                      "through HTTP or HTSP (a higher value means to use "
                      "this tuner out of preference). If not set (zero), "
-                     "the standard priority value is used. See Help for details."),
+                     "the standard priority value is used."),
       .doc      = prop_doc_streaming_priority,
       .off      = offsetof(mpegts_input_t, mi_streaming_priority),
       .def.i    = 1,

@@ -179,8 +179,7 @@ const idclass_t epggrab_mod_class = {
       .name   = N_("Priority"),
       .desc   = N_("Grabber priority. This option lets you pick which "
                    "EPG grabber's data get used first. Priority is "
-                   "given to the grabber with the highest value set here. "
-                   "See Help for more info."),
+                   "given to the grabber with the highest value set here."),
       .doc    = prop_doc_epggrabber_priority,
       .off    = offsetof(epggrab_module_t, priority),
       .opts   = PO_EXPERT,

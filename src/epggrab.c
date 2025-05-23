@@ -440,8 +440,7 @@ const idclass_t epggrab_class = {
       .name   = N_("Cron multi-line"),
       .desc   = N_("Multiple lines of the cron time specification. "
                    "The default cron triggers the internal grabbers "
-                   "daily at 12:04 and 00:04. See Help on how to define "
-                   "your own."),
+                   "daily at 12:04 and 00:04."),
       .doc    = prop_doc_cron,
       .off    = offsetof(epggrab_conf_t, cron),
       .notify = epggrab_class_cron_notify,
@@ -472,8 +471,7 @@ const idclass_t epggrab_class = {
       .name   = N_("Over-the-air Cron multi-line"),
       .desc   = N_("Multiple lines of the cron time specification. "
                    "The default cron triggers the over-the-air "
-                   "grabber daily at 02:04 and 14:04. See Help on how "
-                   "to define your own."),
+                   "grabber daily at 02:04 and 14:04."),
       .doc    = prop_doc_cron,
       .off    = offsetof(epggrab_conf_t, ota_cron),
       .notify = epggrab_class_ota_cron_notify,

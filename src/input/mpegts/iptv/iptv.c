@@ -842,7 +842,7 @@ const idclass_t iptv_network_class = {
       .name     = N_("Priority"),
       .desc     = N_("The network's priority. The network with the "
                      "highest priority value will be used out of "
-                     "preference if available. See Help for details."),
+                     "preference if available."),
       .off      = offsetof(iptv_network_t, in_priority),
       .doc      = prop_doc_priority,
       .def.i    = 1,
@@ -854,7 +854,7 @@ const idclass_t iptv_network_class = {
       .name     = N_("Streaming priority"),
       .desc     = N_("When streaming a service (via http or htsp) "
                      "Tvheadend will use the network with the highest "
-                     "streaming priority set here. See Help for details."),
+                     "streaming priority set here."),
       .doc      = prop_doc_streaming_priority,
       .off      = offsetof(iptv_network_t, in_streaming_priority),
       .def.i    = 1,
@@ -1023,7 +1023,7 @@ const idclass_t iptv_auto_network_class = {
       .name     = N_("Ignore path components"),
       .desc     = N_("Ignore last components in path. The defined count "
                      "of last path components separated by / are removed "
-                     "when the identical source is compared - see Help for a detailed explanation."),
+                     "when the identical source is compared."),
       .doc      = prop_doc_ignore_path,
       .off      = offsetof(iptv_network_t, in_ignore_path),
       .def.i    = 0,

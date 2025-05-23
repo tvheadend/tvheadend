@@ -742,8 +742,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_muxcnf",
       .name   = N_("Mux handling"),
-      .desc   = N_("Select how Tvheadend should handle muxes. See Help "
-                   "for details."),
+      .desc   = N_("Select how Tvheadend should handle muxes."),
       .doc    = prop_doc_satip_muxhandling,
       .off    = offsetof(struct satip_server_conf, satip_muxcnf),
       .list   = satip_server_class_muxcfg_list,

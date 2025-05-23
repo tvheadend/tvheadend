@@ -1143,8 +1143,7 @@ const idclass_t dvr_config_class = {
       .id       = "fetch-artwork-options",
       .name     = N_("Additional command line options when fetching artwork for new recordings."),
       .desc     = N_("Some artwork providers require additional arguments such as "
-                     "'--tmdb-key my_key_from_website'. These can be specified here. "
-                     "See Help for full details."),
+                     "'--tmdb-key my_key_from_website'. These can be specified here."),
       .off      = offsetof(dvr_config_t, dvr_fetch_artwork_options),
       .doc      = prop_doc_dvrconfig_fanart,
       .opts     = PO_ADVANCED,
@@ -1226,7 +1225,7 @@ const idclass_t dvr_config_class = {
       .name     = N_("Format string/Pathname specification"),
       .desc     = N_("The string allows you to manually specify the "
                      "full path generation using predefined "
-                     "modifiers. See Help for full details."),
+                     "modifiers."),
       .doc      = prop_doc_pathname,
       .set      = dvr_config_class_pathname_set,
       .off      = offsetof(dvr_config_t, dvr_pathname),
@@ -1239,7 +1238,7 @@ const idclass_t dvr_config_class = {
       .name     = N_("Cache scheme"),
       .desc     = N_("The cache scheme to use/used to store recordings. "
                      "Leave as \"system\" unless you have a special use "
-                     "case for one of the others. See Help for details."),
+                     "case for one of the others."),
       .doc      = prop_doc_cache_scheme,
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_cache),
       .def.i    = MC_CACHE_DONTKEEP,
@@ -1379,7 +1378,7 @@ const idclass_t dvr_config_class = {
       .name     = N_("Remove all unsafe characters from filename"),
       .desc     = N_("All characters that could possibly "
                      "cause problems for filenaming will be replaced "
-                     "with an underscore. See Help for details."),
+                     "with an underscore."),
       .doc      = prop_doc_dvrconfig_unsafe,
       .off      = offsetof(dvr_config_t, dvr_clean_title),
       .opts     = PO_EXPERT,
@@ -1435,8 +1434,7 @@ const idclass_t dvr_config_class = {
       .id       = "epg-running",
       .name     = N_("Use EPG running state"),
       .desc     = N_("Use EITp/f to decide event start/stop. This is "
-                     "also known as \"Accurate Recording\". See Help "
-                     "for details."),
+                     "also known as \"Accurate Recording\"."),
       .doc      = prop_doc_runningstate,
       .off      = offsetof(dvr_config_t, dvr_running),
       .opts     = PO_ADVANCED,

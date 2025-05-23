@@ -680,8 +680,7 @@ const idclass_t esfilter_class_video = {
       .id       = "action",
       .name     = N_("Action"),
       .desc     = N_("The rule action defines the operation when all "
-                     "comparisons succeed. See Help for more "
-                     "information on what the various rules do."),
+                     "comparisons succeed."),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -776,8 +775,7 @@ const idclass_t esfilter_class_audio = {
       .id       = "action",
       .name     = N_("Action"),
       .desc     = N_("The rule action defines the operation when all "
-                     "comparisons succeed. See Help for more "
-                     "information on what the various rules do."),
+                     "comparisons succeed."),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -872,8 +870,7 @@ const idclass_t esfilter_class_teletext = {
       .id       = "action",
       .name     = N_("Action"),
       .desc     = N_("The rule action defines the operation when all "
-                     "comparisons succeed. See Help for more "
-                     "information on what the various rules do."),
+                     "comparisons succeed."),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -967,8 +964,7 @@ const idclass_t esfilter_class_subtit = {
       .id       = "action",
       .name     = N_("Action"),
       .desc     = N_("The rule action defines the operation when all "
-                     "comparisons succeed. See Help for more "
-                     "information on what the various rules do."),
+                     "comparisons succeed."),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -1075,8 +1071,7 @@ const idclass_t esfilter_class_ca = {
       .id       = "action",
       .name     = N_("Action"),
       .desc     = N_("The rule action defines the operation when all "
-                     "comparisons succeed. See Help for more "
-                     "information on what the various rules do."),
+                     "comparisons succeed."),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -1158,8 +1153,7 @@ const idclass_t esfilter_class_other = {
       .id       = "action",
       .name     = N_("Action"),
       .desc     = N_("The rule action defines the operation when all "
-                     "comparisons succeed. See Help for more "
-                     "information on what the various rules do."),
+                     "comparisons succeed."),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,

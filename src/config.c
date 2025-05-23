@@ -2425,8 +2425,7 @@ const idclass_t config_class = {
       .name   = N_("Channel icon path"),
       .desc   = N_("Path to an icon for this channel. This can be "
                    "named however you wish, as either a local "
-                   "(file://) or remote (http://) image. "
-                   "See Help for more infomation."),
+                   "(file://) or remote (http://) image."),
       .off    = offsetof(config_t, chicon_path),
       .doc    = prop_doc_config_channelicon_path,
       .opts   = PO_ADVANCED,
@@ -2449,8 +2448,7 @@ const idclass_t config_class = {
       .id     = "piconpath",
       .name   = N_("Picon path"),
       .desc   = N_("Path to a directory (folder) containing your picon "
-                   "collection. See Help for more detailed "
-                   "information."),
+                   "collection."),
       .doc    = prop_doc_config_picon_path,
       .off    = offsetof(config_t, picon_path),
       .opts   = PO_ADVANCED,

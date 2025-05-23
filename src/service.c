@@ -203,8 +203,7 @@ const idclass_t service_class = {
       .id       = "priority",
       .name     = N_("Priority (-10..10)"),
       .desc     = N_("Service priority. Enter a value between -10 and "
-                     "10. A higher value indicates a higher preference. "
-                     "See Help for more info."),
+                     "10. A higher value indicates a higher preference."),
       .off      = offsetof(service_t, s_prio),
       .opts     = PO_ADVANCED
     },

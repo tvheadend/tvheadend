@@ -244,8 +244,7 @@ const idclass_t mpegts_network_class =
       .name     = N_("Skip startup scan"),
       .desc     = N_("Skip scanning known muxes when Tvheadend starts. "
                      "If \"startup scan\" is allowed and new muxes are "
-                     "found then they will still be scanned. See Help for "
-                     "more details."),
+                     "found then they will still be scanned."),
       .off      = offsetof(mpegts_network_t, mn_skipinitscan),
       .opts     = PO_EXPERT,
       .def.i    = 1
