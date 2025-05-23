@@ -85,7 +85,7 @@ _audio_context_channel_layout(TVHContext *self, AVDictionary **opts, AVChannelLa
 {
     const AVChannelLayout *channel_layouts =
         tvh_codec_profile_audio_get_channel_layouts(self->profile);
-    AVChannelLayout ilayout;
+    AVChannelLayout ilayout = {0};
     av_channel_layout_copy(&ilayout, &self->iavctx->ch_layout);
     AVChannelLayout olayout;
     av_channel_layout_default(&olayout, 0);
@@ -193,7 +193,6 @@ tvh_audio_context_open_encoder(TVHContext *self, AVDictionary **opts)
                         "audio encoder has no suitable channel layout");
         return -1;
     }
-    self->oavctx->ch_layout.nb_channels = self->oavctx->ch_layout.nb_channels;
 #else
     self->oavctx->channel_layout = _audio_context_channel_layout(self, opts);
     if (!self->oavctx->channel_layout) {
