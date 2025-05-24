@@ -1749,7 +1749,11 @@ dvr_thread(void *aux)
 
       if (muxing == 0) {
         if (!dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
+        {
+          tvherror(LS_DVR, "Recording thread failed to start. (SMT_PACKET)");
+          run = 0;
           break;
+        }
         tvhtrace(LS_DVR, "%s - muxing activated", idnode_uuid_as_str(&de->de_id, ubuf));
       }
 
@@ -1818,7 +1822,11 @@ dvr_thread(void *aux)
 
       if (muxing == 0) {
         if (!dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
+        {
+          tvherror(LS_DVR, "Recording thread failed to start. (SMT_MPEGTS)");
+          run = 0;
           break;
+        }
         tvhtrace(LS_DVR, "%s - muxing activated", idnode_uuid_as_str(&de->de_id, ubuf));
       }
 
@@ -1924,11 +1932,12 @@ fin:
     case SMT_EXIT:
       run = 0;
       break;
-    }
+    }//END of switch statement
 
     streaming_msg_free(sm);
     tvh_mutex_lock(&sq->sq_mutex);
-  }
+  }//END of while loop
+
   tvh_mutex_unlock(&sq->sq_mutex);
 
   streaming_queue_clear(&backlog);
