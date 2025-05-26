@@ -80,34 +80,76 @@ _audio_context_sample_rate(TVHContext *self, AVDictionary **opts)
 
 
 #if LIBAVCODEC_VERSION_MAJOR > 59
-static int
+static void
 _audio_context_channel_layout(TVHContext *self, AVDictionary **opts, AVChannelLayout *dst)
 {
-    const AVChannelLayout *channel_layouts =
-        tvh_codec_profile_audio_get_channel_layouts(self->profile);
+    const AVChannelLayout *channel_layouts = tvh_codec_profile_audio_get_channel_layouts(self->profile);
     AVChannelLayout ilayout = {0};
-    av_channel_layout_copy(&ilayout, &self->iavctx->ch_layout);
     AVChannelLayout olayout;
     av_channel_layout_default(&olayout, 0);
     AVChannelLayout altlayout;
     av_channel_layout_default(&altlayout, 0);
     int ch_layout_u_mask = 0, i = 0;
     char obuf[64], abuf[64], ibuf[64];
-
+    // setup ilayout
+    if (av_channel_layout_copy(&ilayout, &self->iavctx->ch_layout)){
+        tvh_context_log(self, LOG_ERR, "unable to copy ch_layout from input stream");
+        goto _audio_context_channel_layout_exit;
+    }
+    // setup olayout
     if (!tvh_context_get_int_opt(opts, "ch_layout_u_mask", &ch_layout_u_mask) &&
-        !(av_channel_layout_from_mask(&olayout, ch_layout_u_mask)) && channel_layouts) {
-        if (olayout.nb_channels > ilayout.nb_channels) {
-            olayout = ilayout;
+        // only if value selected is not auto
+        ch_layout_u_mask &&
+        av_channel_layout_from_mask(&olayout, ch_layout_u_mask)){
+        tvh_context_log(self, LOG_ERR, "unable to initialize output layout from bitmask");
+        goto _audio_context_channel_layout_exit;
+    }
+
+    if (!channel_layouts) {
+        tvh_context_log(self, LOG_ERR, "channel_layouts is not available");
+        if (av_channel_layout_copy(&olayout, &ilayout)){
+            tvh_context_log(self, LOG_ERR, "unable to copy ch_layout from input layout to output layout");
+            goto _audio_context_channel_layout_exit;
         }
-        while (channel_layouts[i].nb_channels != 0) {
+    }
+    // match input with output based on number of channels
+    if (olayout.nb_channels >= ilayout.nb_channels) {
+        // input layout will fit in output layout
+        if (av_channel_layout_copy(&olayout, &ilayout)){
+            tvh_context_log(self, LOG_ERR, "unable to copy ch_layout from input layout to output layout");
+            goto _audio_context_channel_layout_exit;
+        }
+    }
+    // order of selection: 
+    // 1. try olayout
+    if (olayout.order == AV_CHANNEL_ORDER_UNSPEC){
+        // prepare the alternative layout
+        while (channel_layouts && channel_layouts[i].nb_channels != 0) {
             if (channel_layouts[i].nb_channels <= ilayout.nb_channels) {
-                altlayout = channel_layouts[i];
+                //altlayout = channel_layouts[i];
+                if (av_channel_layout_copy(&altlayout, &channel_layouts[i])){
+                    tvh_context_log(self, LOG_ERR, "unable to copy ch_layout from channel_layouts to alternative layout");
+                    goto _audio_context_channel_layout_exit;
+                }
             }
             i++;
         }
+        // 2. try altlayout
+        if (altlayout.order == AV_CHANNEL_ORDER_UNSPEC){
+            // 3. default to stereo
+            if (av_channel_layout_copy(&olayout, &(AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO)){
+                tvh_context_log(self, LOG_ERR, "unable to setup ch_layout stereo layout");
+            }
+        }
+        else
+            // use altlayout
+            if (av_channel_layout_copy(&olayout, &altlayout)){
+                tvh_context_log(self, LOG_ERR, "unable to copy ch_layout from alternative layout to output layout");
+            }
     }
-    else
-        olayout = ilayout;
+
+_audio_context_channel_layout_exit:
+    // logging
     if (tvhtrace_enabled()) {
         strcpy(obuf, "none");
         av_channel_layout_describe(&olayout, obuf, sizeof(obuf));
@@ -118,11 +160,13 @@ _audio_context_channel_layout(TVHContext *self, AVDictionary **opts, AVChannelLa
         tvh_context_log(self, LOG_TRACE, "audio layout selection: in %s, alt %s, out %s",
                                                                      ibuf,   abuf,   obuf);
     }
-    if (olayout.order != AV_CHANNEL_ORDER_UNSPEC)
-        return av_channel_layout_copy(dst, &olayout);
-    if (altlayout.order != AV_CHANNEL_ORDER_UNSPEC)
-        return av_channel_layout_copy(dst, &altlayout);
-    return av_channel_layout_copy(dst, &(AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO);
+    if (av_channel_layout_copy(dst, &olayout)){
+        tvh_context_log(self, LOG_ERR, "unable to copy ch_layout from output layout to destination layout");
+    }
+    // clean
+    av_channel_layout_uninit(&ilayout);
+    av_channel_layout_uninit(&altlayout);
+    av_channel_layout_uninit(&olayout);
 }
 #else
 static uint64_t
