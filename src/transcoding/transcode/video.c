@@ -424,8 +424,6 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
         case AV_PICTURE_TYPE_B:
             pkt->v.pkt_frametype = PKT_B_FRAME;
             break;
-        case AV_PICTURE_TYPE_NONE:
-            break;
         default:
             tvh_context_log(self, LOG_WARNING, "unknown picture type: %d",
                             pict_type);
