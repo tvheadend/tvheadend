@@ -776,7 +776,6 @@ vaapi_encode_setup_context(AVCodecContext *avctx)
     if ((ret = av_hwdevice_ctx_create(&self->hw_frame_ref, AV_HWDEVICE_TYPE_VAAPI, NULL, NULL, 0)) < 0) {
         tvherror(LS_VAAPI, "Encode: Failed to open VAAPI device and create an AVHWDeviceContext for it."
                 "Error code: %s",av_err2str(ret));
-        // unref self
         free(self);
         self = NULL;
         return ret;
@@ -789,12 +788,13 @@ vaapi_encode_setup_context(AVCodecContext *avctx)
         // unref hw_frame_ref
         av_buffer_unref(&self->hw_frame_ref);
         self->hw_frame_ref = NULL;
-        // unref self
         free(self);
         self = NULL;
         return ret;
     }
     ctx->hw_device_octx = av_buffer_ref(self->hw_frame_ref);
+    free(self);
+    self = NULL;
 #else
 vaapi_encode_setup_context(AVCodecContext *avctx, int low_power)
 {
