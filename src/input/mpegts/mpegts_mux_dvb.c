@@ -506,6 +506,24 @@ const idclass_t dvb_mux_dvbs_class =
     },
     {
       .type     = PT_INT,
+      .id       = "t2mi_pid",
+      .name     = N_("T2MI pid"),
+      .desc     = N_("The T2MI pid used for the mux."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_t2mi_pid),
+      .def.i	= DVB_NO_STREAM_ID_FILTER,
+      .opts     = PO_EXPERT
+    },
+    {
+      .type     = PT_INT,
+      .id       = "t2mi_plp",
+      .name     = N_("T2MI plp"),
+      .desc     = N_("The T2MI plp used for the mux."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_t2mi_plp),
+      .def.i	  =  0,
+      .opts     = PO_EXPERT
+    },
+    {
+      .type     = PT_INT,
       .id       = "stream_id",
       .name     = N_("ISI (Stream ID)"),
       .desc     = N_("The stream ID used for the mux."),
@@ -1144,15 +1162,19 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   dvb_mux_t *lm = (dvb_mux_t*)mm;
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
   uint32_t freq = lm->lm_tuning.dmc_fe_freq, freq2;
-  char extra[8], buf2[5], *p;
+  char extra[32], buf2[5], *p, *pextra;
 
   if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_CABLECARD)
     snprintf(buf, len, "%u", lm->lm_tuning.u.dmc_fe_cablecard.vchannel);
   else {
     if (ln->ln_type == DVB_TYPE_S) {
       const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
-      if (s) extra[0] = *s;
-      extra[1] = '\0';
+			pextra = extra;
+      if (s)
+				*pextra++ = *s;
+			if (lm->lm_tuning.dmc_fe_stream_id>0)
+				pextra += snprintf(pextra, sizeof(extra) -(pextra-extra), "-S%d", lm->lm_tuning.dmc_fe_stream_id);
+			*pextra++ ='\0';
     } else {
       freq /= 1000;
       strcpy(extra, "MHz");
