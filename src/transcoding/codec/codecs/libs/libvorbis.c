@@ -64,10 +64,10 @@ tvh_codec_profile_libvorbis_open(TVHCodecProfile *self, AVDictionary **opts)
 {
     // bit_rate or global_quality
     if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_BIT_RATE(LST_LIBVORBIS, opts, self->bit_rate);
     }
     else {
-        AV_DICT_SET_GLOBAL_QUALITY(opts, self->qscale, 5);
+        AV_DICT_SET_GLOBAL_QUALITY(LST_LIBVORBIS, opts, self->qscale, 5);
     }
     return 0;
 }

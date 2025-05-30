@@ -78,10 +78,10 @@ tvh_codec_profile_base_is_copy(TVHCodecProfile *self, tvh_ssc_t *ssc)
 static int
 tvh_codec_profile_base_open(TVHCodecProfile *self, AVDictionary **opts)
 {
-    AV_DICT_SET_TVH_REQUIRE_META(opts, 1);
+    AV_DICT_SET_TVH_REQUIRE_META(LST_NONE, opts, 1);
     // profile
     if (self->profile != FF_AV_PROFILE_UNKNOWN) {
-        AV_DICT_SET_INT(opts, "profile", self->profile, 0);
+        AV_DICT_SET_INT(LST_CODEC, opts, "profile", self->profile, 0);
     }
     return 0;
 }
