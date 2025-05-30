@@ -79,44 +79,48 @@
     _tvh_codec_getattr(c, a, AVMEDIA_TYPE_AUDIO, TVHAudioCodec)
 
 
-#define AV_DICT_SET(d, k, v, f) \
+#define AV_DICT_SET(s, d, k, v, f) \
     do { \
-        if (av_dict_set((d), (k), (v), (f)) < 0) { \
+        int ret = av_dict_set((d), (k), (v), (f)); \
+        if (ret < 0) { \
+            tvherror((s), "Unable to write key '%s' with value %"PRId64" due to error '%s'" , (k), (int64_t)(v), av_err2str((ret)));\
             return -1; \
         } \
     } while (0)
 
-#define AV_DICT_SET_INT(d, k, v, f) \
+#define AV_DICT_SET_INT(s, d, k, v, f) \
     do { \
-        if (av_dict_set_int((d), (k), (v), (f)) < 0) { \
+        int ret = av_dict_set_int((d), (k), (v), (f));\
+        if (ret < 0) { \
+            tvherror((s), "Unable to write key '%s' with value %"PRId64" due to error '%s'" , (k), (int64_t)(v), av_err2str((ret)));\
             return -1; \
         } \
     } while (0)
 
-#define AV_DICT_SET_TVH_REQUIRE_META(d, v) \
-    AV_DICT_SET_INT((d), "tvh_require_meta", (v), AV_DICT_DONT_OVERWRITE)
+#define AV_DICT_SET_TVH_REQUIRE_META(s, d, v) \
+    AV_DICT_SET_INT((s), (d), "tvh_require_meta", (v), AV_DICT_DONT_OVERWRITE)
 
-#define AV_DICT_SET_FLAGS(d, v) \
-    AV_DICT_SET((d), "flags", (v), AV_DICT_APPEND)
+#define AV_DICT_SET_FLAGS(s, d, v) \
+    AV_DICT_SET((s), (d), "flags", (v), AV_DICT_APPEND)
 
-#define AV_DICT_SET_FLAGS_GLOBAL_HEADER(d) \
-    AV_DICT_SET_FLAGS((d), "+global_header")
+#define AV_DICT_SET_FLAGS_GLOBAL_HEADER(s, d) \
+    AV_DICT_SET_FLAGS((s), (d), "+global_header")
 
-#define AV_DICT_SET_BIT_RATE(d, v) \
-    AV_DICT_SET_INT((d), "b", (v) * 1000, AV_DICT_DONT_OVERWRITE)
+#define AV_DICT_SET_BIT_RATE(s, d, v) \
+    AV_DICT_SET_INT((s), (d), "b", (v) * 1000, AV_DICT_DONT_OVERWRITE)
 
-#define AV_DICT_SET_GLOBAL_QUALITY(d, v, a) \
+#define AV_DICT_SET_GLOBAL_QUALITY(s, d, v, a) \
     do { \
-        AV_DICT_SET_FLAGS((d), "+qscale"); \
-        AV_DICT_SET_INT((d), "global_quality", ((v) ? (v) : (a)) * FF_QP2LAMBDA, \
+        AV_DICT_SET_FLAGS((s), (d), "+qscale"); \
+        AV_DICT_SET_INT((s), (d), "global_quality", ((v) ? (v) : (a)) * FF_QP2LAMBDA, \
                         AV_DICT_DONT_OVERWRITE); \
     } while (0)
 
-#define AV_DICT_SET_CRF(d, v, a) \
-    AV_DICT_SET_INT((d), "crf", (v) ? (v) : (a), AV_DICT_DONT_OVERWRITE)
+#define AV_DICT_SET_CRF(s, d, v, a) \
+    AV_DICT_SET_INT((s), (d), "crf", (v) ? (v) : (a), AV_DICT_DONT_OVERWRITE)
 
-#define AV_DICT_SET_PIX_FMT(d, v, a) \
-    AV_DICT_SET_INT((d), "pix_fmt", ((v) != AV_PIX_FMT_NONE) ? (v) : (a), \
+#define AV_DICT_SET_PIX_FMT(s, d, v, a) \
+    AV_DICT_SET_INT((s), (d), "pix_fmt", ((v) != AV_PIX_FMT_NONE) ? (v) : (a), \
                     AV_DICT_DONT_OVERWRITE)
 
 #define HWACCEL_AUTO        0

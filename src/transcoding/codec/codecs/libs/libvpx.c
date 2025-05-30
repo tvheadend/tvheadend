@@ -37,15 +37,15 @@ static int
 tvh_codec_profile_libvpx_open(tvh_codec_profile_libvpx_t *self,
                               AVDictionary **opts)
 {
-    AV_DICT_SET_TVH_REQUIRE_META(opts, 0);
-    AV_DICT_SET_BIT_RATE(opts, self->bit_rate ? self->bit_rate : 2560);
+    AV_DICT_SET_TVH_REQUIRE_META(LS_LIBVPX, opts, 0);
+    AV_DICT_SET_BIT_RATE(LS_LIBVPX, opts, self->bit_rate ? self->bit_rate : 2560);
     if (self->crf) {
-        AV_DICT_SET_CRF(opts, self->crf, 10);
+        AV_DICT_SET_CRF(LS_LIBVPX, opts, self->crf, 10);
     }
-    AV_DICT_SET_INT(opts, "deadline", self->deadline, 0);
-    AV_DICT_SET_INT(opts, "cpu-used", self->cpu_used, 0);
-    AV_DICT_SET_INT(opts, "tune", self->tune, 0);
-    AV_DICT_SET_INT(opts, "threads", 0, 0);
+    AV_DICT_SET_INT(LS_LIBVPX, opts, "deadline", self->deadline, 0);
+    AV_DICT_SET_INT(LS_LIBVPX, opts, "cpu-used", self->cpu_used, 0);
+    AV_DICT_SET_INT(LS_LIBVPX, opts, "tune", self->tune, 0);
+    AV_DICT_SET_INT(LS_LIBVPX, opts, "threads", 0, 0);
     return 0;
 }
 
