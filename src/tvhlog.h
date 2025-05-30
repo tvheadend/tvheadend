@@ -48,6 +48,7 @@ extern char            *tvhlog_path;
 extern int              tvhlog_options;
 extern tvh_mutex_t      tvhlog_mutex;
 extern tvhlog_subsys_t  tvhlog_subsystems[];
+extern tvhlog_subsys_t  tvhlog_transcode_subsystems[];
 
 /* Initialise */
 void tvhlog_init       ( int level, int options, const char *path );
@@ -194,7 +195,6 @@ enum {
   LS_TSFILE,
   LS_TSDEBUG,
   LS_CODEC,
-  LS_VAAPI,
   LS_VAINFO,
 #if ENABLE_DDCI
   LS_DDCI,
@@ -202,6 +202,29 @@ enum {
   LS_UDP,
   LS_RATINGLABELS,
   LS_LAST     /* keep this last */
+};
+
+/* transcode Subsystems */
+enum {
+    LST_NONE,
+    LST_AUDIO,
+    LST_VIDEO,
+    LST_CODEC,
+    LST_MP2,
+    LST_AAC,
+    LST_FLAC,
+    LST_LIBFDKAAC,
+    LST_LIBOPUS,
+    LST_LIBTHEORA,
+    LST_LIBVORBIS,
+    LST_VORBIS,
+    LST_MPEG2VIDEO,
+    LST_LIBVPX,
+    LST_LIBX26X,
+    LST_NVENC,
+    LST_OMX,
+    LST_VAAPI,
+    LST_LAST     /* keep this last */
 };
 
 /* Macros */
