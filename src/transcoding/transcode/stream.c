@@ -164,7 +164,7 @@ int
 tvh_stream_handle(TVHStream *self, th_pkt_t *pkt)
 {
     if (pkt->pkt_payload && self->context) {
-        return (tvh_context_handle(self->context, pkt) < 0) ? -1 : 0;
+        return tvh_context_handle(self->context, pkt);
     }
     pkt_ref_inc(pkt);
     return tvh_transcoder_deliver(self->transcoder, pkt);

@@ -88,11 +88,23 @@ static void
 tvh_transcoder_handle(TVHTranscoder *self, th_pkt_t *pkt)
 {
     TVHStream *stream = NULL;
+    int err = 0;
+    char averr_buf[256];
 
     SLIST_FOREACH(stream, &self->streams, link) {
         if (pkt->pkt_componentindex == stream->index) {
-            if (tvh_stream_handle(stream, pkt)) {
+            err = tvh_stream_handle(stream, pkt);
+            if (err) {
                 tvh_stream_stop(stream, 0);
+                if (av_strerror(err, averr_buf, sizeof(averr_buf)) < 0) {
+                    snprintf(averr_buf, sizeof(averr_buf), "unknown error");
+                }
+                tvh_context_log(stream->context, LOG_WARNING,
+                               "failed to transcode packet at pts: %"PRId64" error %d: %s",
+                                pkt->pkt_pts, err, averr_buf);
+                if (tvhtrace_enabled()) {
+                    pkt_trace(LS_TRANSCODE, pkt, "packet details");
+                }
             }
             break;
         }
