@@ -290,13 +290,59 @@ extern const codec_profile_class_t codec_profile_video_class;
 
 typedef struct tvh_codec_profile_video {
     TVHCodecProfile;
+    /**
+     * SW or HW deinterlace  (applies for decoding)
+     * @note
+     * int: 
+     * VALUE - deinterlace enable
+     * 
+     * - 0 - disabled
+     * 
+     * - 1 - enabled
+     */
     int deinterlace;
     int height;
-    int scaling_mode;   // 0 --> up&down; 1 --> up; 2 --> down
+    /**
+     * SW or HW scaling mode  (applies for decoding)
+     * @note
+     * int: 
+     * VALUE - scaling mode
+     * 
+     * - 0 - scaling up or down
+     * 
+     * - 1 - scaling only up
+     * 
+     * - 2 - scaling only down
+     */
+    int scaling_mode;
     int hwaccel;
     int hwaccel_details;
     int pix_fmt;
     int crf;
+#if ENABLE_HWACCELS
+    /**
+     * HW accel denoise filter (applies for decoding)
+     * @note
+     * int: 
+     * VALUE - hardware denoise
+     * 
+     * - 0 - disabled (not sent to ffmpeg)
+     * 
+     * - >0 - denoise level value (max value different per platform)
+     */
+    int filter_hw_denoise;
+    /**
+     * HW accel sharpness filter (applies for decoding)
+     * @note
+     * int: 
+     * VALUE - hardware sharpness
+     * 
+     * - 0 - disabled (not sent to ffmpeg)
+     * 
+     * - >0 - sharpness level value (max value different per platform)
+     */
+    int filter_hw_sharpness;
+#endif
     AVRational size;
 } TVHVideoCodecProfile;
 
