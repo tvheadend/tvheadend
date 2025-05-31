@@ -28,10 +28,10 @@ tvh_codec_profile_libtheora_open(TVHCodecProfile *self, AVDictionary **opts)
 {
     // bit_rate or global_quality
     if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_BIT_RATE(LS_LIBTHEORA, opts, self->bit_rate);
     }
     else {
-        AV_DICT_SET_GLOBAL_QUALITY(opts, self->qscale, 6);
+        AV_DICT_SET_GLOBAL_QUALITY(LS_LIBTHEORA, opts, self->qscale, 6);
     }
     return 0;
 }
