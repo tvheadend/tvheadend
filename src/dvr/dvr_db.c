@@ -3072,6 +3072,35 @@ dvr_entry_find_by_id(int id)
   return de;
 }
 
+/**
+ * Find the earliest scheduled dvr entry
+ */
+time_t
+dvr_entry_find_earliest(void)
+{
+  time_t start;
+  time_t earliest = 0;
+  dvr_entry_t *de;
+
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+  {
+    if(dvr_entry_is_upcoming(de) && de->de_enabled)
+    {
+      start = dvr_entry_get_start_time(de, 1);
+      if(earliest == 0)
+      {
+        earliest = start;
+      }
+      else if(start < earliest)
+      {
+        earliest = start;
+      }
+    }
+  }//END FOREACH
+
+  return earliest;
+
+}
 
 /**
  * Unconditionally remove an entry

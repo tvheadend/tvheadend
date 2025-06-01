@@ -383,6 +383,33 @@ mpegts_mux_sched_done ( void )
   tvh_mutex_unlock(&global_lock);
 }
 
+/*
+ * Earliest Mux scheduler
+ */
+time_t mpegts_mux_sched_next(void)
+{
+  time_t  earliest = 0;
+  mpegts_mux_sched_t *mms;
+
+  LIST_FOREACH(mms, &mpegts_mux_sched_all, mms_link)
+    {
+      if(mms->mms_enabled)  //Only process 'enabled' items.
+      {
+        if(!earliest)
+        {
+          earliest = mms->mms_start;
+        }
+        else if(mms->mms_start < earliest)
+        {
+          earliest = mms->mms_start;
+        }
+      }
+    }//END FOREACH
+
+  return earliest;
+
+}
+
 /******************************************************************************
  * Editor Configuration
  *

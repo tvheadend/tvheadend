@@ -164,5 +164,6 @@ void tcp_connection_cancel(uint32_t id);
 void tcp_connection_cancel_all(void);
 
 htsmsg_t *tcp_server_connections ( void );
+int tcp_server_connections_count ( void );
 
 #endif /* TCP_H_ */

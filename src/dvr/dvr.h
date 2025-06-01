@@ -626,6 +626,8 @@ int dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
+time_t dvr_entry_find_earliest(void);
+
 static inline dvr_entry_t *dvr_entry_find_by_uuid(const char *uuid)
   { return (dvr_entry_t*)idnode_find(uuid, &dvr_entry_class, NULL); }
 
