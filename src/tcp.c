@@ -1156,6 +1156,23 @@ tcp_server_connections ( void )
   return m;
 }
 
+/*
+ * Connections count
+ */
+int
+tcp_server_connections_count ( void )
+{
+  tcp_server_launch_t *tsl;
+  int c = 0;
+  
+  /* Count connections */
+  LIST_FOREACH(tsl, &tcp_server_launches, link) {
+    if (!tsl->status) continue;
+    c++;
+  }
+
+  return c;
+}
 /**
  *
  */

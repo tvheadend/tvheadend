@@ -26,6 +26,8 @@
 #include "api.h"
 #include "tcp.h"
 #include "input.h"
+#include "epggrab.h"  //Needed to get the next EPG grab times
+#include "dvr/dvr.h"  //Needed to get the next schedule dvr time
 
 static int
 api_status_inputs
@@ -171,6 +173,75 @@ api_status_input_clear_stats
   return 0;
 }
 
+static int
+api_status_activity
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *cats;
+  time_t temp_earliest = 0;
+  time_t temp_dvr = 0;
+  time_t temp_ota = 0;
+  time_t temp_int = 0;
+  time_t temp_mux = 0;
+  th_subscription_t *ths;
+  uint32_t subscriptionCount = 0;
+
+  temp_dvr = dvr_entry_find_earliest();
+
+  //Only evaluate the OTA grabber cron if there are active OTA modules.
+  if(epggrab_count_type(EPGGRAB_OTA))
+  {
+    temp_ota = epggrab_get_next_ota();
+  }
+  
+  //Only evaluate the internal grabber cron if there are active internal modules.
+  if(epggrab_count_type(EPGGRAB_INT))
+  {
+    temp_int = epggrab_get_next_int();
+  }
+  
+  temp_mux = mpegts_mux_sched_next();
+
+  temp_earliest = temp_dvr;
+
+  if(temp_ota && ((temp_ota < temp_earliest) || (temp_earliest == 0)))
+  {
+    temp_earliest = temp_ota;
+  }
+
+  if(temp_int && ((temp_int < temp_earliest) || (temp_earliest == 0)))
+  {
+    temp_earliest = temp_int;
+  }
+
+  if(temp_mux && ((temp_mux < temp_earliest) || (temp_earliest == 0)))
+  {
+    temp_earliest = temp_mux;
+  }
+
+  cats = htsmsg_create_map();
+  htsmsg_add_s64(cats, "dvr", temp_dvr);
+  htsmsg_add_s64(cats, "ota_grabber", temp_ota);
+  htsmsg_add_s64(cats, "int_grabber", temp_int);
+  htsmsg_add_s64(cats, "mux_scheduler", temp_mux);
+
+  tvh_mutex_lock(&global_lock);
+  LIST_FOREACH(ths, &subscriptions, ths_global_link) {
+    subscriptionCount++;
+  }
+  tvh_mutex_unlock(&global_lock);
+
+  *resp = htsmsg_create_map();
+  htsmsg_add_s64(*resp, "current_time", gclk());
+  htsmsg_add_s64(*resp, "next_activity", temp_earliest);
+  htsmsg_add_msg(*resp, "activities", cats);
+  htsmsg_add_u32(*resp, "subscription_count", subscriptionCount);
+  htsmsg_add_u32(*resp, "connection_count", tcp_server_connections_count());
+
+  return 0;
+
+}
+
 void api_status_init ( void )
 {
   static api_hook_t ah[] = {
@@ -178,6 +249,7 @@ void api_status_init ( void )
     { "status/subscriptions", ACCESS_ADMIN, api_status_subscriptions, NULL },
     { "status/inputs",        ACCESS_ADMIN, api_status_inputs, NULL },
     { "status/inputclrstats", ACCESS_ADMIN, api_status_input_clear_stats, NULL },
+    { "status/activity",      ACCESS_ADMIN, api_status_activity, NULL },
     { "connections/cancel",   ACCESS_ADMIN, api_connections_cancel, NULL },
     { NULL },
   };

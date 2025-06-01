@@ -406,6 +406,16 @@ const char *epggrab_ota_check_module_id( const char *id );
  */
 extern unsigned char                *epggrab_ota_genre_translation;
 
+/*
+ * Get the next execution times
+ */
+time_t epggrab_get_next_int(void);
+time_t epggrab_get_next_ota(void);
+/*
+ * Count active grabbers for a given type
+ */
+int epggrab_count_type(int grabberType);
+
 #endif /* __EPGGRAB_H__ */
 
 /* **************************************************************************

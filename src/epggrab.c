@@ -510,6 +510,44 @@ const idclass_t epggrab_class = {
 };
 
 /* **************************************************************************
+ * Get the time for the next scheduled internal grabber
+ * *************************************************************************/
+time_t epggrab_get_next_int(void)
+{
+  time_t ret_time;
+  struct timespec current_time;
+  
+  clock_gettime(CLOCK_REALTIME, &current_time);
+  if(!cron_multi_next(epggrab_cron_multi, current_time.tv_sec, &ret_time))
+  {
+    return ret_time;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+/* **************************************************************************
+ * Count the number of EPG grabbers of a specified type
+ * *************************************************************************/
+int epggrab_count_type(int grabberType)
+{
+  epggrab_module_t *mod;
+  int temp_count = 0;
+
+  LIST_FOREACH(mod, &epggrab_modules, link) {
+    if(mod->enabled && mod->type == grabberType)
+    {
+      temp_count++;
+    }
+  }
+
+  return temp_count;
+
+}
+
+/* **************************************************************************
  * Initialisation
  * *************************************************************************/
 

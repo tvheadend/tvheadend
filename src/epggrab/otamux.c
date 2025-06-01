@@ -1141,6 +1141,23 @@ epggrab_ota_set_genre_translation ( void )
   tvh_mutex_unlock(&epggrab_ota_mutex);
 }
 
+/* **************************************************************************
+ * Get the time for the next scheduled ota grabber
+ * *************************************************************************/
+time_t epggrab_get_next_ota(void)
+{
+  time_t ret_time = 0;
+  
+  if(!cron_multi_next(epggrab_ota_cron_multi, gclk(), &ret_time))
+  {
+    return ret_time;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
 /******************************************************************************
  * Editor Configuration
  *

@@ -72,6 +72,7 @@ void mpegts_mux_sched_delete ( mpegts_mux_sched_t *mms, int delconf );
 
 void mpegts_mux_sched_init ( void );
 void mpegts_mux_sched_done ( void );
+time_t mpegts_mux_sched_next(void);
 
 
 #endif /* __TVH_MPEGTS_H__ */
