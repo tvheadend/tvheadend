@@ -66,7 +66,7 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
 #if ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
     int hwaccel = -1;
     int hwaccel_details = -1;
-    if (ssc->es_type == AVMEDIA_TYPE_VIDEO) {
+    if (SCT_ISVIDEO(ssc->es_type)) {
         if (((hwaccel         = tvh_codec_profile_video_get_hwaccel(profile)) < 0) ||
             ((hwaccel_details = tvh_codec_profile_video_get_hwaccel_details(profile)) < 0)) {
             return -1;
