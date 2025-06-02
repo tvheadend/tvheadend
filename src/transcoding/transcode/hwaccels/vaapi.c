@@ -32,7 +32,6 @@ typedef struct tvh_vaapi_context_t {
     int width;
     int height;
     AVBufferRef *hw_device_ref;
-    AVBufferRef *hw_frame_ref;
 } TVHVAContext;
 
 
@@ -52,10 +51,6 @@ tvhva_context_destroy(TVHVAContext *self)
         if (self->hw_device_ref) {
             av_buffer_unref(&self->hw_device_ref);
             self->hw_device_ref = NULL;
-        }
-        if (self->hw_frame_ref) {
-            av_buffer_unref(&self->hw_frame_ref);
-            self->hw_frame_ref = NULL;
         }
         free(self);
         self = NULL;
@@ -631,18 +626,17 @@ vaapi_decode_setup_context(AVCodecContext *avctx)
         tvherror(LS_VAAPI, "Decode: Failed to allocate VAAPI context (TVHVAContext)");
         return AVERROR(ENOMEM);
     }
-
+    // lifted from ffmpeg-6.1.1/doc/examples/vaapi_transcode.c line 237
     /* Open VAAPI device and create an AVHWDeviceContext for it*/
     if ((ret = av_hwdevice_ctx_create(&self->hw_device_ref, AV_HWDEVICE_TYPE_VAAPI, ctx->hw_accel_device, NULL, 0)) < 0) {
         tvherror(LS_VAAPI, "Decode: Failed to Open VAAPI device and create an AVHWDeviceContext for device: "
                             "%s with error code: %s", 
                             ctx->hw_accel_device, av_err2str(ret));
-        // unref self
         free(self);
         self = NULL;
         return ret;
     }
-
+    // lifted from ffmpeg-6.1.1/doc/examples/vaapi_transcode.c line 95
     /* set hw_frames_ctx for decoder's AVCodecContext */
     avctx->hw_device_ctx = av_buffer_ref(self->hw_device_ref);
     if (!avctx->hw_device_ctx) {
@@ -651,7 +645,6 @@ vaapi_decode_setup_context(AVCodecContext *avctx)
         // unref hw_device_ref
         av_buffer_unref(&self->hw_device_ref);
         self->hw_device_ref = NULL;
-        // unref self
         free(self);
         self = NULL;
         return AVERROR(ENOMEM);
@@ -764,37 +757,24 @@ int
 vaapi_encode_setup_context(AVCodecContext *avctx)
 {
     TVHContext *ctx = avctx->opaque;
-    TVHVAContext *self = NULL;
     int ret = 0;
 
-    if (!(self = calloc(1, sizeof(TVHVAContext)))) {
-        tvherror(LS_VAAPI, "Encode: Failed to allocate VAAPI context (TVHVAContext)");
-        return AVERROR(ENOMEM);
-    }
-
+    // lifted from ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 127
     /* Open VAAPI device and create an AVHWDeviceContext for it*/
-    if ((ret = av_hwdevice_ctx_create(&self->hw_frame_ref, AV_HWDEVICE_TYPE_VAAPI, NULL, NULL, 0)) < 0) {
+    if ((ret = av_hwdevice_ctx_create(&ctx->hw_device_octx, AV_HWDEVICE_TYPE_VAAPI, NULL, NULL, 0)) < 0) {
         tvherror(LS_VAAPI, "Encode: Failed to open VAAPI device and create an AVHWDeviceContext for it."
                 "Error code: %s",av_err2str(ret));
-        free(self);
-        self = NULL;
         return ret;
     }
-
+    // lifted from ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 152
     /* set hw_frames_ctx for encoder's AVCodecContext */
-    if ((ret = set_hwframe_ctx(avctx, self->hw_frame_ref)) < 0) {
+    if ((ret = set_hwframe_ctx(avctx, ctx->hw_device_octx)) < 0) {
         tvherror(LS_VAAPI, "Encode: Failed to set hwframe context."
                 "Error code: %s",av_err2str(ret));
-        // unref hw_frame_ref
-        av_buffer_unref(&self->hw_frame_ref);
-        self->hw_frame_ref = NULL;
-        free(self);
-        self = NULL;
-        return ret;
+        av_buffer_unref(&ctx->hw_device_octx);
     }
-    ctx->hw_device_octx = av_buffer_ref(self->hw_frame_ref);
-    free(self);
-    self = NULL;
+    return ret;
+}
 #else
 vaapi_encode_setup_context(AVCodecContext *avctx, int low_power)
 {
@@ -818,9 +798,10 @@ vaapi_encode_setup_context(AVCodecContext *avctx, int low_power)
         return AVERROR(ENOMEM);
     }
     tvhva_context_destroy(hwaccel_context);
-#endif
+
     return 0;
 }
+#endif
 
 
 void
