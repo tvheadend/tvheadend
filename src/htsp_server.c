@@ -51,7 +51,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 42
+#define HTSP_PROTO_VERSION 43
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -1430,6 +1430,8 @@ htsp_build_event
     htsmsg_add_u32(out, "copyrightYear", e->copyright_year);
   if (e->first_aired)
     htsmsg_add_s64(out, "firstAired", e->first_aired);
+  if (e->is_new)
+    htsmsg_add_u32(out, "isNew", e->is_new);
   epg_broadcast_get_epnum(e, &epnum);
   htsp_serialize_epnum(out, &epnum, NULL);
   if (!strempty(e->image))
