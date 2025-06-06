@@ -224,8 +224,6 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     }
 
 #if ENABLE_HWACCELS
-    self->oavctx->coded_width = self->oavctx->width;
-    self->oavctx->coded_height = self->oavctx->height;
 #if ENABLE_FFMPEG4_TRANSCODING
     // hwaccel is the user input for Hardware acceleration from Codec parameteres
     int hwaccel = -1;
