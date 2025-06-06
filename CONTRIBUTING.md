@@ -1,35 +1,39 @@
-# How to Contribute
+# Contributing
 
-The Tvheadend project welcomes all submissions from the community. Without them the project couldn't hope to thrive.
+Tvheadend welcomes all code contributions. To ensure the process of contributing runs smoothly please follow the guidelines below:
 
-We want to ensure that the process of submitting code is as simple as possible whilst ensuring that the project has the necessary provisions to fully utilize and handle all submissions. Therefore some short guidelines are provided here for reference.
+## Preparation
 
-## Before you start
+* Create a [GitHub account](https://github.com/signup/free)
+* Fork the project repository on Github
+* Discuss feature ideas with staff and users via the [Forum](https://tvheadend.org/feature-ideas) or [GitHub](https://github.com/tvheadend/tvheadend/issues)
 
-* Make sure you have a [GitHub account](https://github.com/signup/free)
-* Log on to the [Forum](https://tvheadend.org), this is the best place to discussion development work.
-* Fork the repository on Github
+## Make Changes
 
-## Making Changes
+* Create a topic branch for your changes with a simple name, e.g. `new-feature-name` or `fix-issue-1234`
+* Create one topic branch per feature or bugfix
+* Make changes and commit them, keep the scope of each commit simple (commits can be squashed later)
+* Commit message subject lines should use a `subsystem: description of change` format
+* Provide additional info in the commit message body if required (detail is always good)
+* GUI help changes must be made in the master `en_GB` template
 
-* If unsure, discuss any potential work on IRC channel to avoid duplicate work.
-* Create a branch to put your changes. Use a sensible name, i.e. feature/whizzbanger, or bugfix/issue-1234. It is strongly recommend you create one branch per feature/bugfix/etc.
-* Make commits, try and keep commits to sensible units.
-* Use sensible commit messages, prefix with subsystem, summary on first line, more detail on following lines and include reference to any related issue numbers in Github or forum threads.
+## Submit Changes
 
-````
-mpegts dvb: Add foo feature to the DVB system.
+* Create a pull request to our `master` development branch
+* Create a `Draft` pull request if your changes are still work in progress
+* Pull request titles should use a `subsystem: description of change` format
+* Use repo labels to classify the pull request
+* Link related forum discussion threads for information
+* Link GitHub issues using the `Fixes: #1234` format so tickets auto-close on merge
 
-Some more detail description of what has been done.
+## Documentation
 
-This fixes #1234.
-````
-* Submit a Pull Request on Github.
+If your changes require documentation updates please use GitBooks to author changes and submit a merge-request. The registration link is on our public documenation site: [https://docs.tvheadend.org](https://docs.tvheadend.org).
 
-# Additional Resources
+## Resources
 
 * [Forum](https://tvheadend.org)
-* [General GitHub documentation](http://help.github.com/)
-* [GitHub pull request documentation](http://help.github.com/send-pull-requests/)
-* #hts IRC channel on libera.chat
+* [#hts IRC Channel on Libera.Chat](https://web.libera.chat/#hts)
+* [GitHub General Documentation](http://help.github.com/)
+* [GitHub Pull Request Documentation](http://help.github.com/send-pull-requests/)
 
