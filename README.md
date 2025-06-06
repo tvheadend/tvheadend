@@ -1,10 +1,4 @@
-![TVHeadend Logo](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/satip-icon120.png)
-Tvheadend
-========================================
-(c) 2006 - 2024 Tvheadend Project (https://tvheadend.org)
-
-Status
-------
+<div align="center">
 
 [![Build Status](https://github.com/tvheadend/tvheadend/actions/workflows/build-cloudsmith.yml/badge.svg?branch=master)](https://github.com/tvheadend/tvheadend/actions/workflows/build-cloudsmith.yml)
 [![Coverity Scan](https://scan.coverity.com/projects/2114/badge.svg)](https://scan.coverity.com/projects/2114)
@@ -16,74 +10,78 @@ Status
 
 [![Hosted By: Cloudsmith](https://img.shields.io/badge/Packages%20hosted%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.io/~tvheadend/repos/tvheadend/packages/)
 
+</div>
 
+Tvheadend
+=========
 
-What it is
-----------
+Tvheadend is the leading TV streaming server and Digital Video Recorder for Linux.
 
 ![tvheadend front page](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/epg.png)
 
-Tvheadend is a TV streaming server and digital video recorder.
-
 It supports the following inputs:
 
-  * DVB-C(2)
-  * DVB-T(2)
-  * DVB-S(2)
   * ATSC
-  * SAT>IP
+  * DVB-C(2)
+  * DVB-S(2)
+  * DVB-T(2)
   * HDHomeRun
   * IPTV
     * UDP
     * HTTP
+  * SAT>IP
+  * Unix Pipe
 
 It supports the following outputs:
 
+  * HTSP (native protocol)
   * HTTP
-  * HTSP (own protocol)
   * SAT>IP
 
-Running in docker
------------------
-Running in docker can be as simple as
+Documentation
+-------------
 
-	$ docker run --rm ghcr.io/tvheadend/tvheadend:latest
+Tvheadend documentation can be found here: [https://docs.tvheadend.org](https://docs.tvheadend.org).
 
-See [README.Docker.md](README.Docker.md) in this repository for more details.
+Support
+-------
 
-How to build for Linux
-----------------------
+Please triage issues and ask questions in the forum: [https://tvheadend.org](https://tvheadend.org) or use the `#hts` IRC channel on Libera.Chat to speak with project staff: [https://web.libera.chat/#hts](https://web.libera.chat/#hts).
+
+Please report triaged bugs via GitHub Issues. 
+
+Building for Linux
+------------------
 
 First you need to configure:
 
 	$ ./configure
 
-If any dependencies are missing the configure script will complain or attempt
+If build dependencies are missing the configure script will complain or attempt
 to disable optional features.
 
-Build the binary:
+To build the binary:
 
 	$ make
 
-After build, the binary resides in `build.linux` directory.
+After compiling the Tvheadend binary is in the `build.linux` directory.
 
-Thus, to start it, just type:
+To run the Tvheadend binary:
 
 	$ ./build.linux/tvheadend
 
 Settings are stored in `$HOME/.hts/tvheadend`.
 
-How to build for OS X
----------------------
+Running on Linux
+----------------
 
-Same build procedure applies to OS X.
-After build, the binary resides in `build.darwin` directory.
+Instructions for popular distributions are in our public [documentation](https://docs.tvheadend.org/documentation/installation/linux).
 
-Only network sources (IPTV, SAT>IP) are supported on OS X.
-There is no support for DVB USB sticks and PCI cards.
-Transcoding is currently not supported.
+Running in Docker
+-----------------
 
-Packages
---------
+Running in Docker can be as simple as:
 
-Install instructions for various distributions can be found in our [documentation](https://docs.tvheadend.org/documentation/installation/linux).
+	$ docker run --rm ghcr.io/tvheadend/tvheadend:latest
+
+See [README.Docker.md](README.Docker.md) for more details.
