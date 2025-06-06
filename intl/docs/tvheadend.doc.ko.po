@@ -6947,8 +6947,8 @@ msgid "and"
 msgstr ""
 
 #: src/docs_inc.c:163
-msgid "and IRC (_#hts_ on _freenode_ ) -"
-msgstr "또는 IRC  (_#hts_ on _freenode_ )가 있습니다 -"
+msgid "and IRC (_#hts_ on _Libera.Chat_ ) -"
+msgstr "또는 IRC  (_#hts_ on _Libera.Chat_ )가 있습니다 -"
 
 #: src/docs_inc.c:3765
 msgid "api"

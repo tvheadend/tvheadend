@@ -7181,7 +7181,7 @@ msgid "and"
 msgstr ""
 
 #: src/docs_inc.c:163
-msgid "and IRC (_#hts_ on _freenode_ ) -"
+msgid "and IRC (_#hts_ on _Libera.Chat_ ) -"
 msgstr ""
 
 #: src/docs_inc.c:2900
