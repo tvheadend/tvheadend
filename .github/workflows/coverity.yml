@@ -10,6 +10,7 @@ on:
 
 jobs:
   coverity:
+    if: ${{ secrets.COVERITY_SCAN_TOKEN != '' }}
     runs-on: ubuntu-latest
     environment: Coverity
     steps:
