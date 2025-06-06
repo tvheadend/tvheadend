@@ -9726,10 +9726,10 @@ msgstr "and"
 
 #: src/docs_inc.c:1708
 msgid ""
-"and IRC (_#hts_ on _Libera_ ). If you don't have a client installed you can "
+"and IRC (_#hts_ on _Libera.Chat_ ). If you don't have a client installed you can "
 "use the"
 msgstr ""
-"and IRC (_#hts_ on _Libera_ ). If you don't have a client installed you can "
+"and IRC (_#hts_ on _Libera.Chat_ ). If you don't have a client installed you can "
 "use the"
 
 #: src/docs_inc.c:3491
