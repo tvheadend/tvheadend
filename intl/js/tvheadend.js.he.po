@@ -2017,7 +2017,7 @@ msgstr "של {0}"
 #: src/webui/static/app/tvheadend.js:251
 msgid ""
 "or join the [IRC channel on "
-"freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)."
+"Libera.Chat](https://web.libera.chat/#hts)."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:217
