@@ -2321,7 +2321,7 @@ msgstr "전체 {0}"
 #: src/webui/static/app/tvheadend.js:590
 msgid ""
 "or join the [IRC channel on "
-"libera](https://web.libera.chat/?nick=tvhhelp|?#hts)."
+"Libera.Chat](https://web.libera.chat/#hts)."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:217
