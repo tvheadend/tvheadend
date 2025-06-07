@@ -179,7 +179,6 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_TSFILE]        = { "tsfile",        N_("MPEG-TS File") },
   [LS_TSDEBUG]       = { "tsdebug",       N_("MPEG-TS Input Debug") },
   [LS_CODEC]         = { "codec",         N_("Codec") },
-  [LS_VAAPI]         = { "vaapi",         N_("VA-API") },
   [LS_VAINFO]        = { "vainfo",        N_("VAINFO") },
 #if ENABLE_DDCI
   [LS_DDCI]          = { "ddci",          N_("DD-CI") },
@@ -187,6 +186,28 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_UDP]           = { "udp",           N_("UDP Streamer") },
   [LS_RATINGLABELS]  = { "ratinglabels",  N_("Rating Labels") },
 
+};
+
+// name (2nd parameter) has max 64 chars (SUB_SYSTEM_TRANSCODE_NAME_LENGHT_MAX)
+tvhlog_subsys_t tvhlog_transcode_subsystems[] = {
+    [LST_NONE]          = { "",              N_("") },
+    [LST_AUDIO]         = { "audio",         N_("Audio") },
+    [LST_VIDEO]         = { "video",         N_("Video") },
+    [LST_CODEC]         = { "codec",         N_("Codec") },
+    [LST_MP2]           = { "mp2",           N_("MP2") },
+    [LST_AAC]           = { "aac",           N_("AAC") },
+    [LST_FLAC]          = { "flac",          N_("FLAC") },
+    [LST_LIBFDKAAC]     = { "libfdk-aac",    N_("LIB DFC_AAC") },
+    [LST_LIBOPUS]       = { "libopus",       N_("LIB OPUS") },
+    [LST_LIBTHEORA]     = { "libtheora",     N_("LIB THEORA") },
+    [LST_LIBVORBIS]     = { "libvorbis",     N_("LIB VORBIS") },
+    [LST_VORBIS]        = { "vorbis",        N_("VORBIS") },
+    [LST_MPEG2VIDEO]    = { "mpeg2video",    N_("MPEG2 VIDEO") },
+    [LST_LIBVPX]        = { "libvpx",        N_("LIB VPX") },
+    [LST_LIBX26X]       = { "libx26x",       N_("LIB x264_x265") },
+    [LST_NVENC]         = { "nvenc",         N_("NVENC") },
+    [LST_OMX]           = { "omx",           N_("OMX") },
+    [LST_VAAPI]         = { "vaapi",         N_("VA-API") },
 };
 
 static void

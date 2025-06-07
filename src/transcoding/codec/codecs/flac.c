@@ -60,7 +60,7 @@ typedef struct {
 static int
 tvh_codec_profile_flac_open(tvh_codec_profile_flac_t *self, AVDictionary **opts)
 {
-    AV_DICT_SET_INT(opts, "compression_level", self->compression_level, 0);
+    AV_DICT_SET_INT(LST_FLAC, opts, "compression_level", self->compression_level, 0);
     return 0;
 }
 

@@ -34,18 +34,18 @@ typedef struct {
 static int
 tvh_codec_profile_omx_open(tvh_codec_profile_omx_t *self, AVDictionary **opts)
 {
-    AV_DICT_SET_FLAGS_GLOBAL_HEADER(opts);
+    AV_DICT_SET_FLAGS_GLOBAL_HEADER(LST_OMX, opts);
     // bit_rate
     if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_BIT_RATE(LST_OMX, opts, self->bit_rate);
     }
     if (self->libname && strlen(self->libname)) {
-        AV_DICT_SET(opts, "omx_libname", self->libname, 0);
+        AV_DICT_SET(LST_OMX, opts, "omx_libname", self->libname, 0);
     }
     if (self->libprefix && strlen(self->libprefix)) {
-        AV_DICT_SET(opts, "omx_libprefix", self->libprefix, 0);
+        AV_DICT_SET(LST_OMX, opts, "omx_libprefix", self->libprefix, 0);
     }
-    AV_DICT_SET_INT(opts, "zerocopy", self->zerocopy, 0);
+    AV_DICT_SET_INT(LST_OMX, opts, "zerocopy", self->zerocopy, 0);
     return 0;
 }
 
