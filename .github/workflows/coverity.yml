@@ -11,6 +11,7 @@ on:
 jobs:
   check-secret:
       runs-on: ubuntu-latest
+      environment: Coverity
       outputs:
         token: ${{ steps.token.outputs.defined }}
       steps:
