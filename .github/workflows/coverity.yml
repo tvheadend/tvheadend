@@ -9,8 +9,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  check-secret:
+      runs-on: ubuntu-latest
+      outputs:
+        token: ${{ steps.token.outputs.defined }}
+      steps:
+          - id: token
+            env:
+                TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+            if: "${{ env.TOKEN != '' }}"
+            run: echo "::set-output name=defined::true"
+
   coverity:
-    if: ${{ secrets.COVERITY_SCAN_TOKEN != '' }}
+    needs: [check-secret]
+    if: needs.check-secret.outputs.token == 'true'
     runs-on: ubuntu-latest
     environment: Coverity
     steps:
