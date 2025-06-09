@@ -2044,13 +2044,12 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   conf = htsmsg_create_map();
   htsmsg_copy_field(conf, "enabled", in, NULL);
   s = htsmsg_get_str(in, "configName");
-  if (s) {
-    dvr_conf = dvr_config_find_by_uuid(s);
-    if (dvr_conf == NULL)
-      dvr_conf = dvr_config_find_by_name(s);
+  dvr_conf = dvr_config_find_by_list(htsp->htsp_granted_access->aa_dvrcfgs, s);
     if (dvr_conf)
+  {
       htsmsg_add_uuid(conf, "config_name", &dvr_conf->dvr_id.in_uuid);
   }
+  
   htsmsg_copy_field(conf, "start_extra", in, "startExtra");
   htsmsg_copy_field(conf, "stop_extra", in, "stopExtra");
   htsmsg_copy_field(conf, "pri", in, "priority");
