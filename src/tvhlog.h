@@ -49,6 +49,10 @@ extern int              tvhlog_options;
 extern tvh_mutex_t      tvhlog_mutex;
 extern tvhlog_subsys_t  tvhlog_subsystems[];
 
+/* used in logging for transoding */
+void tvh_concatenate_subsystem_with_logsv(char* buf, int subsys, const char *fmt, va_list *args);
+void tvh_concatenate_subsystem_with_logs(char* buf, int subsys, const char *fmt, ... ) __attribute__((format(printf,3,4)));
+
 /* Initialise */
 void tvhlog_init       ( int level, int options, const char *path );
 void tvhlog_start      ( void );
@@ -194,7 +198,6 @@ enum {
   LS_TSFILE,
   LS_TSDEBUG,
   LS_CODEC,
-  LS_VAAPI,
   LS_VAINFO,
 #if ENABLE_DDCI
   LS_DDCI,
@@ -202,6 +205,29 @@ enum {
   LS_UDP,
   LS_RATINGLABELS,
   LS_LAST     /* keep this last */
+};
+
+/* transcode Subsystems */
+enum {
+    LST_NONE,
+    LST_AUDIO,
+    LST_VIDEO,
+    LST_CODEC,
+    LST_MP2,
+    LST_AAC,
+    LST_FLAC,
+    LST_LIBFDKAAC,
+    LST_LIBOPUS,
+    LST_LIBTHEORA,
+    LST_LIBVORBIS,
+    LST_VORBIS,
+    LST_MPEG2VIDEO,
+    LST_LIBVPX,
+    LST_LIBX26X,
+    LST_NVENC,
+    LST_OMX,
+    LST_VAAPI,
+    LST_LAST     /* keep this last */
 };
 
 /* Macros */
@@ -253,5 +279,7 @@ void tvhdbg(int subsys, const char *fmt, ...);
 #else
 static inline void tvhdbg(int subsys, const char *fmt, ...) {};
 #endif
+// max log per line for transcoding (1024)
+#define SUB_SYSTEM_TRANSCODE_LOG_LENGHT_MAX 1024
 
 #endif /* __TVH_LOGGING_H__ */
