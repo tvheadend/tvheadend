@@ -27,7 +27,7 @@ jobs:
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         issue-close-message: "@${issue.user.login} this issue was automatically closed because you are not willing to develop this"
-        issue-pattern: ".*### Acceptance[\\r\\n]+- \\[X\\] The proposal will be developed and maintained by me.*"
+        issue-pattern: ".*### Acceptance[\\r\\n]+- \\[[Xx]\\] The proposal will be developed and maintained by me.*"
     - name: Autoclose issues not having an accepted prefix
       if: "!startsWith(github.event.issue.title, '[BUG]:') && !startsWith(github.event.issue.title, '[FEATURE]:')"
       uses: peter-evans/close-issue@v3
