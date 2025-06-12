@@ -215,8 +215,6 @@ tvh_video_context_notify_gh(TVHContext *self)
 static int
 tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 {
-    AVRational ticks_per_frame;
-
     if (tvh_context_get_int_opt(opts, "pix_fmt", &self->oavctx->pix_fmt) ||
         tvh_context_get_int_opt(opts, "width", &self->oavctx->width) ||
         tvh_context_get_int_opt(opts, "height", &self->oavctx->height)) {
@@ -261,12 +259,11 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
         self->iavctx->framerate = av_make_q(30, 1);
     }
     self->oavctx->framerate = self->iavctx->framerate;
-    self->oavctx->ticks_per_frame = (90000 * self->iavctx->framerate.den) / self->iavctx->framerate.num; // We assume 90kHz as timebase which is mandatory for MPEG-TS
-    ticks_per_frame = av_make_q(self->oavctx->ticks_per_frame, 1);
-    self->oavctx->time_base = av_inv_q(av_mul_q(
-        self->oavctx->framerate, ticks_per_frame));
-    self->oavctx->gop_size = ceil(av_q2d(av_inv_q(av_mul_q(
-        self->oavctx->time_base, ticks_per_frame))));
+    // ffmpeg-6.1.1/doc/examples/vaapi_transcode.c line 178
+    self->oavctx->time_base = av_inv_q(self->iavctx->framerate);
+    // compute integer number of frames per second
+    self->oavctx->gop_size = (int)ceil((double)(self->oavctx->framerate.num)/(double)(self->oavctx->framerate.den));
+    // gop = 3 seconds
     self->oavctx->gop_size *= 3;
 
     self->oavctx->sample_aspect_ratio = self->iavctx->sample_aspect_ratio;
