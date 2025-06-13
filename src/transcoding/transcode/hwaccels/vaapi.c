@@ -693,9 +693,19 @@ vaapi_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx,
 
 
 int
-vaapi_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len)
+vaapi_get_deint_filter(AVCodecContext *avctx, AVDictionary **opts, char *filter, size_t filter_len)
 {
-    snprintf(filter, filter_len, "deinterlace_vaapi");
+    int mode = 0;
+    int auto_enable = 0;
+    TVHContext *ctx = avctx->opaque;
+
+    if (ctx->field_rate < 1 ||
+        tvh_context_get_int_opt(opts, "deinterlace_vaapi_mode", &mode) ||
+        tvh_context_get_int_opt(opts, "deinterlace_vaapi_auto", &auto_enable)) {
+        return -1;
+    }
+    snprintf(filter, filter_len, "deinterlace_vaapi=mode=%d:rate=%d:auto=%d",
+                                 mode, ctx->field_rate, auto_enable);
     return 0;
 }
 
