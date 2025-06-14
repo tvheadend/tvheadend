@@ -18,6 +18,7 @@
  */
 
 #include "internals.h"
+#include "../codec/internals.h"
 
 #if ENABLE_HWACCELS
 #include "hwaccels/hwaccels.h"
@@ -60,9 +61,9 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
     if (tvh_context_get_int_opt(opts, "tvh_filter_deint", &filter_deint)) {
         return -1;
     }
-#if ENABLE_VAAPI
-    filter_denoise = self->profile->filter_hw_denoise;
-    filter_sharpness = self->profile->filter_hw_sharpness;
+#if ENABLE_HWACCELS
+    filter_denoise = ((TVHVideoCodecProfile *)self->profile)->filter_hw_denoise;
+    filter_sharpness = ((TVHVideoCodecProfile *)self->profile)->filter_hw_sharpness;
 #endif
     //  in --> out  |  download   |   upload 
     // -------------|-------------|------------
