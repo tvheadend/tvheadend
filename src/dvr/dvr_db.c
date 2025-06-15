@@ -2910,6 +2910,175 @@ void dvr_event_running(epg_broadcast_t *e, epg_running_t running)
   }
 }
 
+/*
+ * Create an sm file for the dvr entry provided
+ * An 'sm' file is in edl file format, but contains the
+ * TVH-generated scene markers based on the scheduled
+ * EPG start/stop times.
+ * The cutpoint parser will merge these entries with the
+ * other cutpoint files found.
+ *
+ * SM/EDL file format
+ * [start time] [end time] [action]
+ *
+ * action = 2 is a 'scene marker'
+ *
+ * Kodi only recognises the end time: https://kodi.wiki/view/Edit_decision_list
+ * However, both start and stop are saved because other applications may use them.
+ *
+ * TODO - Investigate writing the start marker when the recording passes the epg start point
+ *        This could be handy when chase-playing a recording-in-progress.
+ */
+void
+dvr_create_recording_scene_markers(dvr_entry_t *de)
+{
+  //If writing an sm is not enabled for this dvr profile, then there is nothing to do.  Sayonara!
+  if(!de->de_config->dvr_create_scene_markers)
+  {
+    return;
+  }
+
+  tvhtrace(LS_DVR, "Creating scene markers");
+
+  time_t          file_start = 0;               //Recording file start timestamp
+  time_t          file_stop = 0;                //Recording file stop timestamp
+  int             temp_len = 0;                 //Length of the recording file name
+  int             temp_pos = 0;                 //Position in the filename to append the '.sm' extension
+  const char      *filename = NULL;             //Recording file name
+  int             filecount = 0;                //Number of files in this recording
+  char            *temp_filename = NULL;        //File name for the sm file
+  FILE            *sm_file;                     //File handle for the sm file
+  time_t          segment_1_start = 0;          //Start position (seconds) for the first marker
+  time_t          segment_1_stop = 0;           //Stop position (seconds) for the first marker
+  time_t          segment_2_start = 0;          //Start position (seconds) for the second marker
+  time_t          segment_2_stop = 0;           //Stop position (seconds) for the second marker
+
+  filename = dvr_get_filename(de);
+
+  //The file start/stop timestamps are not directly available from the main dvr record
+  //structure, they need to be obtained by reading through the recording file list
+  //and saving those values.
+  dvr_get_files_details(de, &file_start, &file_stop, &filecount);
+  
+  //If recording contains more than one file, don't process it.  ('too hard' basket).
+  //TODO - A lot more research is required into multiple files per recording.
+  //       How are they created?
+  //       Is there a gap in time between the files or are they contiguous?
+  //       If there is a gap, how should this be accounted for?
+  //       A. A multiple file situation can be forced by stopping TVH
+  //          part way through a recording and then starting it again
+  //          before the recording was due to end.
+  //          ?Perhaps each file should also have its own scene marker?
+  //          A 37 minute recording with a gap in the middle
+  //          will not yield 37 minutes of playable files.
+  //          It will be 37 minutes minus Y.
+  //
+  //             |--2-min ---|------30 minutes-----|----5-min---|
+  //             |--2-min ---|-X-|----Y-----|--Z---|----5-min---|
+  // |--warm-up--|--pre-pad--|--------event--------|--post-pad--|
+  // |------------------service-subscription--------------------|
+  //             |----file-1-----|--outage--|-----file-2--------|
+  //
+  // warm-up starts at:     dvr_entry_get_start_time(de, 1)
+  // file starts at:        file_start
+  // recording starts at:   dvr_entry_get_start_time(de, 0)
+  // EPG event starts at:   de->de_start
+  // EPG event stops at:    de->de_stop
+  // recording stops at:    dvr_entry_get_stop_time(de)
+  // file stops at:         file_stop
+  //
+  // Under ideal circumstances, this is what should happen:
+  // The event and padding are fully covered by the recording.
+  // |--warm-up--|--pre-pad--|--------event--------|--post-pad--|
+  // |------------------service-subscription--------------------|
+  //             |---------------recording----------------------|
+  //                         ^                     ^
+  //                    scene marker          scene marker
+  
+  if(de->de_start && de->de_stop && filecount == 1)
+  {
+    //Build a temporary file name for the SM file.
+    temp_len = strlen(filename);
+    temp_filename = calloc(1, temp_len + 8);  //Existing file name length plus some space.
+
+    if(!temp_filename)
+    {
+      tvherror(LS_DVR, "Unable to allocate space for sm file name.");
+      return;
+    }
+
+    //Find the position of the last dot before the extension in the file name
+    char *last_dot = strrchr(filename, '.');
+
+    if (!last_dot)
+    {
+      tvherror(LS_DVR, "Unable to locate extension in '%s'.", filename);
+      free(temp_filename);
+      return;
+    }
+    temp_pos = last_dot - filename;
+
+    strncpy(temp_filename, filename, temp_pos);     //Copy just the path and the base file name.
+    strcpy(temp_filename + temp_pos, ".sm");        //Add the extension to the end.
+
+    //If the event start is fully covered by the recording
+    if((file_start < de->de_start) && (file_stop > de->de_start))
+    {
+      segment_1_start = 0;
+      segment_1_stop = de->de_start - file_start;
+      tvhtrace(LS_DVR, "Writing event start marker: %"PRItime_t"/%"PRItime_t".", segment_1_start, segment_1_stop);
+    }
+
+    //If the event stop is fully covered by the recording
+    if((file_stop > de->de_stop) && (file_start < de->de_stop))
+    {
+      if(file_start > de->de_start)
+      {
+        segment_2_start = 0;
+      }
+      else
+      {
+        segment_2_start = de->de_start - file_start;
+      }
+      segment_2_stop = de->de_stop - file_start;
+      tvhtrace(LS_DVR, "Writing event stop marker: %"PRItime_t"/%"PRItime_t".", segment_2_start, segment_2_stop);
+    }
+
+    //Do we have any markers to write?
+    if(segment_1_start || segment_1_stop || segment_2_start || segment_2_stop)
+    {
+
+      //Open the SM file.
+      if (!(sm_file = tvh_fopen(temp_filename, "w")))
+      {
+        tvherror(LS_DVR, "Unable to create sm file '%s'.", temp_filename);
+        free(temp_filename);
+        return;      
+      }      
+
+      //If we have a first segment, write that marker.
+      //Consider making this a skip marker (type 3) in the future.
+      if(segment_1_start || segment_1_stop)
+      {
+        fprintf(sm_file, "%"PRItime_t" %"PRItime_t" 2\r\n", segment_1_start, segment_1_stop);
+      }
+
+      //If we have a second segment, write that marker.
+      if(segment_2_start || segment_2_stop)
+      {
+        fprintf(sm_file, "%"PRItime_t" %"PRItime_t" 2\r\n", segment_2_start, segment_2_stop);
+      }
+
+      fclose(sm_file);
+
+    }//END we got some markers to write.
+
+    free(temp_filename);    //Clean up the mess
+
+  }//END we are creating a cutpoint file.
+
+}//END dvr_create_recording_scene_markers
+
 /**
  *
  */
@@ -2948,6 +3117,9 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
   // Trigger autorecord update in case of schedules limit
   if (dae && dvr_autorec_get_max_sched_count(dae) > 0)
     dvr_autorec_changed(de->de_autorec, 0);
+
+  //Create the sm file
+  dvr_create_recording_scene_markers(de);
 }
 
 
@@ -4999,6 +5171,54 @@ dvr_get_filesize(dvr_entry_t *de, int flags)
     }
 
   return first ? -1 : res;
+}
+
+/**
+ * Get the minimum start time, maximum end time and file count
+ */
+int
+dvr_get_files_details(dvr_entry_t *de, time_t *files_start, time_t *files_stop, int *files_count)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *m;
+
+  int64_t start = 0;
+  int64_t stop = 0;
+
+  time_t temp_start = 0;
+  time_t temp_stop = 0;
+  int temp_count = 0;
+
+  if (de->de_files == NULL)
+    return -1;
+
+  HTSMSG_FOREACH(f, de->de_files)
+  {
+    if ((m = htsmsg_field_get_map(f)) != NULL) {
+      
+      start = htsmsg_get_s64_or_default(m, "start", 0);
+      if(temp_start == 0 || ((start < temp_start) && (start != 0)))
+      {
+        temp_start = start;
+      }
+
+      stop = htsmsg_get_s64_or_default(m, "stop", 0);
+      if(temp_stop == 0 || ((stop > temp_stop) && (stop != 0)))
+      {
+        temp_stop = stop;
+      }
+
+      temp_count++;
+
+    }//END we got a map
+  }//END FOREACH
+
+  *files_start = temp_start;
+  *files_stop = temp_stop;
+  *files_count = temp_count;
+
+  return 0;
+
 }
 
 /**

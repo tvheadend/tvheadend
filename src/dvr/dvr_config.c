@@ -180,6 +180,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_removal_days = DVR_RET_REM_FOREVER;
   cfg->dvr_clone = 1;
   cfg->dvr_tag_files = 1;
+  cfg->dvr_create_scene_markers = 1;
   cfg->dvr_skip_commercials = 1;
   dvr_charset_update(cfg, intlconv_filesystem_charset());
   cfg->dvr_warm_time = 30;
@@ -1415,6 +1416,16 @@ const idclass_t dvr_config_class = {
                      "that support metadata (if possible)."),
       .off      = offsetof(dvr_config_t, dvr_tag_files),
       .opts     = PO_ADVANCED,
+      .def.i    = 1,
+      .group    = 5,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "create-scene-markers",
+      .name     = N_("Create scene markers"),
+      .desc     = N_("Create scene markers in recordings "
+                     "based on the EPG start/stop times when available."),
+      .off      = offsetof(dvr_config_t, dvr_create_scene_markers),
       .def.i    = 1,
       .group    = 5,
     },
