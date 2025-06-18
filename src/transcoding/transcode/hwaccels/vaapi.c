@@ -50,7 +50,7 @@ tvhva_context_destroy(TVHVAContext *self)
     if (self) {
         if (self->hw_device_ref) {
             av_buffer_unref(&self->hw_device_ref);
-            self->hw_device_ref = NULL;
+            //self->hw_device_ref = NULL;
         }
         free(self);
         self = NULL;
@@ -673,10 +673,12 @@ vaapi_decode_close_context(AVCodecContext *avctx)
 {
     TVHContext *ctx = avctx->opaque;
 
+    tvherror(LS_VAAPI, "vaapi.c: vaapi_decode_close_context()");
 #if ENABLE_FFMPEG4_TRANSCODING
     if (avctx->hw_device_ctx) {
+        tvherror(LS_VAAPI, "vaapi.c: avctx->hw_device_ctx != NULL");
         av_buffer_unref(&avctx->hw_device_ctx);
-        avctx->hw_device_ctx = NULL;
+        //avctx->hw_device_ctx = NULL;
     }
 #endif
     tvhva_context_destroy(ctx->hw_accel_ictx);
@@ -807,17 +809,26 @@ vaapi_encode_setup_context(AVCodecContext *avctx, int low_power)
 void
 vaapi_encode_close_context(AVCodecContext *avctx)
 {
+    tvherror(LS_VAAPI, "vaapi.c: vaapi_encode_close_context()");
     TVHContext *ctx = avctx->opaque;
-    av_buffer_unref(&ctx->hw_device_octx);
-    ctx->hw_device_octx = NULL;
-#if ENABLE_FFMPEG4_TRANSCODING
-    if (avctx->hw_device_ctx) {
-        av_buffer_unref(&avctx->hw_device_ctx);
-        avctx->hw_device_ctx = NULL;
+    // hw_device_octx is initialized for software decoding (line 764)
+    if (ctx->hw_device_octx) {
+        tvherror(LS_VAAPI, "vaapi.c: avctx->hw_device_octx != NULL");
+        av_buffer_unref(&ctx->hw_device_octx);
+        //ctx->hw_device_octx = NULL;
     }
+#if ENABLE_FFMPEG4_TRANSCODING
+    // this is always NULL in my tests --> possible to remove this if !?
+    if (avctx->hw_device_ctx) {
+        tvherror(LS_VAAPI, "vaapi.c: avctx->hw_device_ctx != NULL");
+        av_buffer_unref(&avctx->hw_device_ctx);
+        //avctx->hw_device_ctx = NULL;
+    }
+    // this is always non-NULL first time and NULL second time
     if (avctx->hw_frames_ctx) {
+        tvherror(LS_VAAPI, "vaapi.c: avctx->hw_frames_ctx != NULL");
         av_buffer_unref(&avctx->hw_frames_ctx);
-        avctx->hw_frames_ctx = NULL;
+        //avctx->hw_frames_ctx = NULL;
     }
 #endif
 }
