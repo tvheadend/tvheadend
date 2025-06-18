@@ -50,7 +50,6 @@ tvhva_context_destroy(TVHVAContext *self)
     if (self) {
         if (self->hw_device_ref) {
             av_buffer_unref(&self->hw_device_ref);
-            self->hw_device_ref = NULL;
         }
         free(self);
         self = NULL;
@@ -676,7 +675,6 @@ vaapi_decode_close_context(AVCodecContext *avctx)
 #if ENABLE_FFMPEG4_TRANSCODING
     if (avctx->hw_device_ctx) {
         av_buffer_unref(&avctx->hw_device_ctx);
-        avctx->hw_device_ctx = NULL;
     }
 #endif
     tvhva_context_destroy(ctx->hw_accel_ictx);
@@ -808,16 +806,17 @@ void
 vaapi_encode_close_context(AVCodecContext *avctx)
 {
     TVHContext *ctx = avctx->opaque;
-    av_buffer_unref(&ctx->hw_device_octx);
-    ctx->hw_device_octx = NULL;
+    // hw_device_octx is initialized for software decoding (line 764)
+    if (ctx->hw_device_octx) {
+        av_buffer_unref(&ctx->hw_device_octx);
+    }
 #if ENABLE_FFMPEG4_TRANSCODING
+    // avctx->hw_device_ctx is cleaned up only if ffmpeg exit with error and didn't perform the clean up
     if (avctx->hw_device_ctx) {
         av_buffer_unref(&avctx->hw_device_ctx);
-        avctx->hw_device_ctx = NULL;
     }
     if (avctx->hw_frames_ctx) {
         av_buffer_unref(&avctx->hw_frames_ctx);
-        avctx->hw_frames_ctx = NULL;
     }
 #endif
 }
