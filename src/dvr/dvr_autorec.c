@@ -1132,7 +1132,8 @@ const idclass_t dvr_autorec_entry_class = {
                      "subdirectory rules (except the base directory) "
                      "defined in the DVR configuration and puts all "
                      "recordings done by this entry into the "
-                     "subdirectory named here. See Help for more info."),
+                     "subdirectory named here. Note that Format Strings "
+                     "cannot be used here. See Help for more info."),
       .off      = offsetof(dvr_autorec_entry_t, dae_directory),
       .opts     = PO_EXPERT,
     },
