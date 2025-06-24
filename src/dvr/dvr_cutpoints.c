@@ -185,20 +185,40 @@ done:
  *
  * // TODO: possibly could be better with some sort of auto-detect
  */
+
+/* DMC 2025 Notes
+ *
+ * I did some testing with Kodi mixing 'sm' and 'edl' records.
+ * The combined records do NOT need to be sorted, overlapping
+ * records of different types work fine from different files.
+ * However, in Kodi, mixing types within files can have unpredictable results.
+ * Keeping type 2 (scene markers) and type 3 (skip) in different files works.
+ * Kodi does not attempt to load cutpoints for 'radio' recordings.
+ */
+
 static struct {
   const char *ext;
   int        (*parse) (const char *path, dvr_cutpoint_list_t *, void *);
   void       *opaque;
+  int        merge;  //Allow merging.  If this parser has data, do not stop there.
 } dvr_cutpoint_parsers[] = {
+  {
+    .ext    = "sm",               // This is just an 'edl' file with an 'sm' extension containing
+    .parse  = dvr_parse_file,     // scene markers.  This is done first so that the results can be
+    .opaque = dvr_parse_edl,      // merged with following edl or txt skip records.
+    .merge  = 1,
+  },
   {
     .ext    = "txt",
     .parse  = dvr_parse_file,
     .opaque = dvr_parse_comskip,
+    .merge  = 0,
   },
   {
     .ext    = "edl",
     .parse  = dvr_parse_file,
     .opaque = dvr_parse_edl,
+    .merge  = 0,
   },
 };
 
@@ -212,6 +232,7 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
   char *path, *sptr;
   const char *filename;
   dvr_cutpoint_list_t *cuts;
+  int found_count = 0;
 
   /* Check this is a valid recording */
   assert(de != NULL);
@@ -248,11 +269,18 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
     /* Try parsing */
     if (dvr_cutpoint_parsers[i].parse(path, cuts,
                                       dvr_cutpoint_parsers[i].opaque) != -1)
-      break;
-  }
+    {
+      found_count++;
+      if(!dvr_cutpoint_parsers[i].merge)
+      {
+        break;
+      }
+    }
+  }//END loop through parsers
 
   /* Cleanup */
-  if (i >= ARRAY_SIZE(dvr_cutpoint_parsers)) {
+  if (found_count == 0)
+  {
     dvr_cutpoint_list_destroy(cuts);
     return NULL;
   }
