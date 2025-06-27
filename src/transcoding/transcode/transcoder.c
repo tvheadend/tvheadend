@@ -294,6 +294,7 @@ tvh_transcoder_stream(void *opaque, tvh_sm_t *msg)
             streaming_target_deliver2(self->output, msg);
             break;
         case SMT_STOP:
+            // this will trigger vaapi_encode_close_context()
             tvh_transcoder_stop(self, 1);
             /* !!! FALLTHROUGH !!! */
         default:
