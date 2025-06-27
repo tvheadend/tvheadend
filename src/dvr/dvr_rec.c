@@ -406,6 +406,58 @@ dvr_sub_uuid(const char *id, const char *fmt, const void *aux, char *tmp, size_t
 }
 
 static const char *
+dvr_sub_episode_numeral(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
+{
+// *id contains the current field format string
+// *fmt contains the whole format string
+
+  enum return_numeral_type { 
+    RETURN_SERIES, RETURN_EPISODE
+  };
+  
+  const dvr_entry_t *de = aux;
+  size_t id_len = 0;
+  int return_type = RETURN_SERIES;
+  signed char output_len = -1;
+  epg_episode_num_t ep_num;
+  int print_val = 0;
+
+  if (de->de_bcast == NULL)
+    return "";
+
+  id_len = strlen(id);
+  if (id[id_len-1] == 'B'){
+    return_type = RETURN_EPISODE;
+  }
+
+  if (id_len != 1){
+    output_len = atoi(id);
+  }
+
+  epg_broadcast_get_epnum(de->de_bcast, &ep_num);
+
+  print_val = ep_num.s_num;
+  if(return_type == RETURN_EPISODE){
+    print_val = ep_num.e_num;
+  }
+
+  if(print_val == 0){
+    snprintf(tmp, tmplen, "%s", _("Unknown"));
+  }
+  else
+  {
+    if(output_len < 1){
+      snprintf(tmp, tmplen, "%d", print_val);
+    } else {
+      snprintf(tmp, tmplen, "%0*d", output_len, print_val);
+    }
+  }
+
+  return tmp;
+
+}
+
+static const char *
 dvr_sub_episode(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
   const dvr_entry_t *de = aux;
@@ -804,6 +856,26 @@ static htsstr_substitute_t dvr_subs_entry[] = {
   { .id = ".e",  .getval = dvr_sub_episode },
   { .id = ",e",  .getval = dvr_sub_episode },
   { .id = ";e",  .getval = dvr_sub_episode },
+  { .id = "B",   .getval = dvr_sub_episode_numeral },
+  { .id = "1B",  .getval = dvr_sub_episode_numeral },
+  { .id = "2B",  .getval = dvr_sub_episode_numeral },
+  { .id = "3B",  .getval = dvr_sub_episode_numeral },
+  { .id = "4B",  .getval = dvr_sub_episode_numeral },
+  { .id = "5B",  .getval = dvr_sub_episode_numeral },
+  { .id = "6B",  .getval = dvr_sub_episode_numeral },
+  { .id = "7B",  .getval = dvr_sub_episode_numeral },
+  { .id = "8B",  .getval = dvr_sub_episode_numeral },
+  { .id = "9B",  .getval = dvr_sub_episode_numeral },
+  { .id = "A",   .getval = dvr_sub_episode_numeral },
+  { .id = "1A",  .getval = dvr_sub_episode_numeral },
+  { .id = "2A",  .getval = dvr_sub_episode_numeral },
+  { .id = "3A",  .getval = dvr_sub_episode_numeral },
+  { .id = "4A",  .getval = dvr_sub_episode_numeral },
+  { .id = "5A",  .getval = dvr_sub_episode_numeral },
+  { .id = "6A",  .getval = dvr_sub_episode_numeral },
+  { .id = "7A",  .getval = dvr_sub_episode_numeral },
+  { .id = "8A",  .getval = dvr_sub_episode_numeral },
+  { .id = "9A",  .getval = dvr_sub_episode_numeral },
   { .id = "c",   .getval = dvr_sub_channel },
   { .id = " c",  .getval = dvr_sub_channel },
   { .id = "-c",  .getval = dvr_sub_channel },
@@ -947,6 +1019,8 @@ static htsstr_substitute_t dvr_subs_postproc_entry[] = {
   { .id = "r",  .getval = dvr_sub_errors },
   { .id = "R",  .getval = dvr_sub_data_errors },
   { .id = "Z",  .getval = dvr_sub_comment },
+  { .id = "B",  .getval = dvr_sub_episode_numeral },
+  { .id = "A",  .getval = dvr_sub_episode_numeral },
   { .id = NULL, .getval = NULL }
 };
 
