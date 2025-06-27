@@ -16,6 +16,8 @@ Format | Description                               | Example value
 `%u`   | Program subtitle                          |  Afternoon
 `%m`   | Program summary                           |  Afternoon fast news
 `%p`   | Program episode                           |  S02.E07
+`%A`   | Program season number                     |  2
+`%B`   | Program episode number                    |  7
 `%d`   | Program description                       |  News and stories…
 `%S`   | Start time stamp of recording, UNIX epoch |  1224421200
 `%E`   | Stop time stamp of recording, UNIX epoch  |  1224426600
