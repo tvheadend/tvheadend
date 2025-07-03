@@ -18,6 +18,8 @@ Format | Description                               | Example value
 `%u`   | Program subtitle                          |  Afternoon
 `%m`   | Program summary                           |  Afternoon fast news
 `%p`   | Program episode                           |  S02.E07
+`%A`   | Program season number                     |  2
+`%B`   | Program episode number                    |  7
 `%d`   | Program description                       |  News and stories…
 `%g`   | Program content type                      |  Current affairs
 `%e`   | Error message                             |  Aborted by user

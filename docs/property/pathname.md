@@ -11,6 +11,8 @@ Format    | Description                                      | Example
 `$u`      | Event subtitle name                              | Tennis
 `$m`      | Event summary text                               | Live Tennis Broadcast from Wimbledon
 `$e`      | Event episode name                               | S02-E06
+`$A`      | Event season number                              | 2
+`$B`      | Event episode number                             | 6
 `$c`      | Channel name                                     | SkySport
 `$g`      | Content type                                     | Movie : Science fiction
 `$Q`      | Scraper friendly (see below)                     | Gladiator (2000)
@@ -83,6 +85,17 @@ Examples for `$3Q` are:
 
 Typically the `$q` and `$Q` formats would be combined with other
 modifiers to generate a complete filename such as `$q$n.$x`.
+
+The `$B` and `$A` formats also have numeric modifiers to specify when
+zero padded values are required.
+
+For example, with S02-E06:
+- `$A` would insert `2` into the file name.
+- `$2A` would insert `02` into the file name.
+- `$B` would insert `6` into the file name.
+- `$3B` would insert `006` into the file name.
+
+With sufficiently accurate EPG data, the formatting string `$t/Season $A/$2B-$u$n.$x` would produce a recording named `/path/to/recordings/Bones/Season 2/06-The Girl in Suite 2103.ts`.
 
 Even with correct guide information, external scrapers can retrieve
 incorrect results. A famous example being the detective tv series
