@@ -43,7 +43,7 @@
 #define CI_PATH  "%s/ci%d"
 #define SEC_PATH "%s/sec%d"
 
-#define MAX_DEV_OPEN_ATTEMPTS 20
+#define MAX_DEV_OPEN_ATTEMPTS 50
 
 /* ***************************************************************************
  * DVB Adapter
