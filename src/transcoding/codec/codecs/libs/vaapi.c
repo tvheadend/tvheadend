@@ -84,6 +84,12 @@
 #define VAAPI_ENC_B_REFERENCE_I_P       1
 #define VAAPI_ENC_B_REFERENCE_I_P_B     2
 
+#define VAAPI_DEINT_MODE_DEFAULT        0
+#define VAAPI_DEINT_MODE_BOB            1
+#define VAAPI_DEINT_MODE_WEAVE          2
+#define VAAPI_DEINT_MODE_MADI           3
+#define VAAPI_DEINT_MODE_MCDI           4
+
 #define UI_CODEC_AVAILABLE_OFFSET       0
 #define UI_MAX_B_FRAMES_OFFSET          1
 #define UI_MAX_QUALITY_OFFSET           4
@@ -130,6 +136,19 @@ rc_mode_get_list( void *o, const char *lang )
         { N_("ICQ"),    VAAPI_ENC_PARAMS_RC_ICQ },
         { N_("QVBR"),   VAAPI_ENC_PARAMS_RC_QVBR },
         { N_("AVBR"),   VAAPI_ENC_PARAMS_RC_AVBR },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+
+static htsmsg_t *
+deinterlace_vaapi_mode_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("Default"),                                 VAAPI_DEINT_MODE_DEFAULT },
+        { N_("Bob Deinterlacing"),                       VAAPI_DEINT_MODE_BOB },
+        { N_("Weave Deinterlacing"),                     VAAPI_DEINT_MODE_WEAVE },
+        { N_("Motion Adaptive Deinterlacing (MADI)"),    VAAPI_DEINT_MODE_MADI },
+        { N_("Motion Compensated Deinterlacing (MCDI)"), VAAPI_DEINT_MODE_MCDI },
     };
     return strtab2htsmsg(tab, 1, lang);
 }
@@ -200,82 +219,6 @@ hevc_level_get_list( void *o, const char *lang )
 }
 
 /* vaapi ==================================================================== */
-
-typedef struct {
-    TVHVideoCodecProfile;
-    int qp;
-    int quality;
-    int global_quality;
-    int async_depth;
-/**
- * VAAPI Encoder availablity.
- * @note
- * return: 
- * bit0 - will show if normal encoder is available (VAEntrypointEncSlice)
- */
-    int ui;
-/**
- * VAAPI Encoder Low power availablity.
- * @note
- * return: 
- * bit0 - will show if low power encoder is available (VAEntrypointEncSliceLP)
- */
-    int uilp;
-/**
- * VAAPI Frame used as reference for B-frame [b_depth]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
- * @note
- * int: 
- * 0 - skip
- * 1 - all B-frames will refer only to P- or I-frames
- * 2 - multiple layers of B-frames will be present
- */
-    int b_reference;
-/**
- * VAAPI Maximum consecutive B-frame [bf]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
- * @note
- * int: 
- * 0 - no B-Frames allowed
- * >0 - number of consecutive B-frames (valid with b_reference = 1 --> "use P- or I-frames")
- */
-    int desired_b_depth;
-/**
- * VAAPI Maximum bitrate [maxrate]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
- * @note
- * int: 
- * VALUE - max bitrate in bps
- */
-    double max_bit_rate;
-/**
- * VAAPI Maximum bitrate [maxrate]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
- * @note
- * double: 
- * VALUE - max bitrate in bps
- */
-    double bit_rate_scale_factor;
-/**
- * VAAPI Platform hardware [not ffmpeg parameter]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
- * @note
- * int: 
- * 0 - Unconstrained (usefull for debug)
- * 1 - Intel
- * 2 - AMD
- */
-    int platform;
-    int loop_filter_level;
-    int loop_filter_sharpness;
-    double buff_factor;
-    int rc_mode;
-    int tier;
-    int level;
-    int qmin;
-    int qmax;
-    int super_frame;
-} tvh_codec_profile_vaapi_t;
 
 #if defined(__linux__)
 #include <linux/types.h>
@@ -544,6 +487,19 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, bit_rate_scale_factor),
                 .def.d    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "deinterlace_vaapi_mode",
+                .name     = N_("VAAPI Deinterlace mode"),
+                .desc     = N_("Mode to use for VAAPI Deinterlacing. "
+                               "'Default' selects the most advanced deinterlacer, i.e. the mode appearing last in this list. "
+                               "Tip: MADI and MCDI usually yield the smoothest results, especially when used with field rate output."),
+                .group    = 2,
+                .opts     = PO_ADVANCED,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, deinterlace_vaapi_mode),
+                .list     = deinterlace_vaapi_mode_get_list,
+                .def.i    = VAAPI_DEINT_MODE_DEFAULT,
             },
             {
                 .type     = PT_INT,
