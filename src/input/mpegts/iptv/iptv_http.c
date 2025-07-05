@@ -350,21 +350,40 @@ iptv_http_reconnect ( http_client_t *hc, const char *url )
 /*
  * Return the index of the last occurrence of character `x` in string `s`
  */
+/**
+ * merge_absolute_and_relative_urls
+ *
+ * @note
+ * Return the index of the last occurrence of character `x` in string `s` with range 0 to SIZE_MAX-1
+ * 
+ * parameters: s, x
+ * 
+ * Return SIZE_MAX if char not found
+ * 
+ */
 static
-int last_index_of(const char *s, char x) {
-  int i;
-  int len = strlen(s);
+size_t last_index_of(const char *s, char x) {
+  size_t i;
+  size_t len = strlen(s);
   assert(s != NULL);
-  for (i = len - 1; i >= 0; i--) {
+  i = len;
+  do {
+    i--;
     if (s[i] == x) {
       return i;
     }
-  }
-  return -1; // x not found
+  } while (i > 0);
+  return SIZE_MAX; // x not found
 }
 
-/*
+/**
+ * merge_absolute_and_relative_urls
+ *
+ * @note
  * Allocates a string with the absolute URL obtained by merging the absolute base and the relative URLs
+ * 
+ * parameters: absolute_url, relative_url
+ * 
  */
 static char * merge_absolute_and_relative_urls(const char * absolute_url, const char * relative_url) {
   size_t absoute_key_url_len, last_slash_pos;
@@ -374,6 +393,8 @@ static char * merge_absolute_and_relative_urls(const char * absolute_url, const 
 
   // allocate enough memory to contain `s` + `url` + \0
   absoute_key_url_len = strlen(absolute_url) + strlen(relative_url) + 1;
+  // limit to max number
+  assert(absoute_key_url_len < SIZE_MAX);
   absolute_key_url = (char*)malloc(absoute_key_url_len);
   memset(absolute_key_url, 0, absoute_key_url_len);
 
