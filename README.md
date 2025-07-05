@@ -72,6 +72,10 @@ To run the Tvheadend binary:
 
 Settings are stored in `$HOME/.hts/tvheadend`.
 
+To install the newly compiled Tvheadend binary and associated files onto your system:
+
+	$ sudo make install
+
 Running on Linux
 ----------------
 
