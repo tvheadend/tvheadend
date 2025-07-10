@@ -23,6 +23,7 @@
 #include "http.h"
 #include "string_list.h"
 #include "imagecache.h"
+#include "epggrab.h"
 
 #define XMLTV_FLAG_LCN		(1<<0)
 
@@ -184,6 +185,8 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
   lang_str_ele_t *lse;
   epg_genre_t *genre;
   char buf[64];
+  char prop_buf[512];
+  const char *str;
 
   if (ebc->subtitle)
     RB_FOREACH(lse, ebc->subtitle, link) {
@@ -222,6 +225,54 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
     }
     htsbuf_append_str(hq, "  </credits>\n");
   }
+
+  if (epggrab_conf.epgdb_processparentallabels && ebc->rating_label) {
+      const char *system = ebc->rating_label->rl_authority;
+      if (!system) system = ebc->rating_label->rl_country;
+      if (system && (ebc->rating_label->rl_display_label || ebc->rating_label->rl_display_age || ebc->rating_label->rl_age)) {
+          htsbuf_append_str(hq, "  <rating system=\"");
+          htsbuf_append_and_escape_xml(hq, system);
+          htsbuf_append_str(hq, "\">\n");
+          if (ebc->rating_label->rl_display_label) {
+              htsbuf_append_str(hq, "    <value>");
+              htsbuf_append_and_escape_xml(hq, ebc->rating_label->rl_display_label);
+              htsbuf_append_str(hq, "</value>\n");
+          } else if (ebc->rating_label->rl_display_age) {
+              htsbuf_append_str(hq, "    <value>");
+              htsbuf_qprintf(hq, "%d", ebc->rating_label->rl_display_age);
+              htsbuf_append_str(hq, "</value>\n");
+          } else if (ebc->rating_label->rl_age) {
+              htsbuf_append_str(hq, "    <value>");
+              htsbuf_qprintf(hq, "%d", ebc->rating_label->rl_age);
+              htsbuf_append_str(hq, "</value>\n");
+          }
+          if (ebc->rating_label->rl_icon) {
+              str = ebc->rating_label->rl_icon;
+              if (!strempty(str)) {
+                  str = imagecache_get_propstr(str, prop_buf, sizeof(prop_buf));
+                  if (str) {
+                      htsbuf_append_str(hq, "    <icon src=\"");
+                      htsbuf_append_and_escape_xml(hq, str);
+                      htsbuf_append_str(hq, "\"/>\n");
+                  }
+              }
+          }
+          htsbuf_append_str(hq, "  </rating>\n");
+      } else if (ebc->age_rating) {
+        htsbuf_append_str(hq, "  <rating system=\"AGE\">\n");
+        htsbuf_append_str(hq, "    <value>");
+        htsbuf_qprintf(hq, "%d", ebc->age_rating);
+        htsbuf_append_str(hq, "</value>\n");
+        htsbuf_append_str(hq, "  </rating>\n");
+      }
+  } else if (ebc->age_rating) {
+      htsbuf_append_str(hq, "  <rating system=\"AGE\">\n");
+      htsbuf_append_str(hq, "    <value>");
+      htsbuf_qprintf(hq, "%d", ebc->age_rating);
+      htsbuf_append_str(hq, "</value>\n");
+      htsbuf_append_str(hq, "  </rating>\n");
+  }
+
   _http_xmltv_programme_write_string_list(hq, ebc->category, "category");
   LIST_FOREACH(genre, &ebc->genre, link) {
     if (genre && genre->code) {
