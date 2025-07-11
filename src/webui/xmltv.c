@@ -249,6 +249,12 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
               htsbuf_append_str(hq, "\"/>\n");
           }
           htsbuf_append_str(hq, "  </rating>\n");
+      } else if (ebc->age_rating) {
+        htsbuf_append_str(hq, "  <rating system=\"AGE\">\n");
+        htsbuf_append_str(hq, "    <value>");
+        htsbuf_qprintf(hq, "%d", ebc->age_rating);
+        htsbuf_append_str(hq, "</value>\n");
+        htsbuf_append_str(hq, "  </rating>\n");
       }
   } else if (ebc->age_rating) {
       htsbuf_append_str(hq, "  <rating system=\"AGE\">\n");
