@@ -227,7 +227,7 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
   if (epggrab_conf.epgdb_processparentallabels && ebc->rating_label) {
       const char *system = ebc->rating_label->rl_authority;
       if (!system) system = ebc->rating_label->rl_country;
-      if (system) {
+      if (system && (ebc->rating_label->rl_display_label || ebc->rating_label->rl_display_age || ebc->rating_label->rl_age)) {
           htsbuf_append_str(hq, "  <rating system=\"");
           htsbuf_append_and_escape_xml(hq, system);
           htsbuf_append_str(hq, "\">\n");
