@@ -234,6 +234,10 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
               htsbuf_append_str(hq, "    <value>");
               htsbuf_append_and_escape_xml(hq, ebc->rating_label->rl_display_label);
               htsbuf_append_str(hq, "</value>\n");
+          } else if (ebc->rating_label->rl_display_age) {
+              htsbuf_append_str(hq, "    <value>");
+              htsbuf_qprintf(hq, "%d", ebc->rating_label->rl_display_age);
+              htsbuf_append_str(hq, "</value>\n");
           } else if (ebc->rating_label->rl_age) {
               htsbuf_append_str(hq, "    <value>");
               htsbuf_qprintf(hq, "%d", ebc->rating_label->rl_age);
