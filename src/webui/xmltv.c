@@ -23,6 +23,7 @@
 #include "http.h"
 #include "string_list.h"
 #include "imagecache.h"
+#include "epggrab.h"
 
 #define XMLTV_FLAG_LCN		(1<<0)
 
@@ -223,7 +224,7 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
     htsbuf_append_str(hq, "  </credits>\n");
   }
 
-  if (ebc->rating_label) {
+  if (epggrab_conf.epgdb_processparentallabels && ebc->rating_label) {
       const char *system = ebc->rating_label->rl_authority;
       if (!system) system = ebc->rating_label->rl_country;
       if (system) {
