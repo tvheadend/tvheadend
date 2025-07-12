@@ -185,6 +185,8 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
   lang_str_ele_t *lse;
   epg_genre_t *genre;
   char buf[64];
+  char prop_buf[512];
+  const char *str;
 
   if (ebc->subtitle)
     RB_FOREACH(lse, ebc->subtitle, link) {
@@ -245,9 +247,15 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
               htsbuf_append_str(hq, "</value>\n");
           }
           if (ebc->rating_label->rl_icon) {
-              htsbuf_append_str(hq, "    <icon src=\"");
-              htsbuf_append_and_escape_xml(hq, ebc->rating_label->rl_icon);
-              htsbuf_append_str(hq, "\"/>\n");
+              str = ebc->rating_label->rl_icon;
+              if (!strempty(str)) {
+                  str = imagecache_get_propstr(str, prop_buf, sizeof(prop_buf));
+                  if (str) {
+                      htsbuf_append_str(hq, "    <icon src=\"");
+                      htsbuf_append_and_escape_xml(hq, str);
+                      htsbuf_append_str(hq, "\"/>\n");
+                  }
+              }
           }
           htsbuf_append_str(hq, "  </rating>\n");
       } else if (ebc->age_rating) {
