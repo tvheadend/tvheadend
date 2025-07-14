@@ -119,14 +119,18 @@ jobs:
           # publicly in your project's package repository, so it is vital that
           # no secrets are present in the container state or logs.
           install: |
-            if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list; fi
-            if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
-            if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
-            if [ '${{ matrix.distro }}' = 'jessie' ]; then sed -i '/jessie-updates/d' /etc/apt/sources.list; fi
-            if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list; fi
-            if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
-            if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list; fi
-            if [ '${{ matrix.distro }}' = 'stretch' ]; then sed -i '/stretch-updates/d' /etc/apt/sources.list; fi
+            if [ "${{ matrix.distro }}" = "buster" ] && [ "${{ matrix.arch }}" = "armv6" ]; then
+              echo "Skipping source list modification for buster on armv6"
+            else
+              case "${{ matrix.distro }}" in
+                jessie|stretch|buster)
+                  sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list
+                  sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
+                  sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
+                  sed -i '/${{ matrix.distro }}-updates/d' /etc/apt/sources.list
+                  ;;
+              esac
+            fi
             case "${{ matrix.distro }}" in
               ubuntu*|jessie|stretch|buster|bullseye|bookworm|trixie)
                 apt-get update -y
@@ -169,7 +173,7 @@ jobs:
           docker pull ${{ matrix.container[0] }}
           docker run --name build-container -d -v ${{ github.workspace }}:/workspace ${{ matrix.container[0] }} tail -f /dev/null
       - name: Fix old debian apt
-        if: matrix.container[0] == 'debian:stretch' || matrix.container[0] == 'i386/debian:stretch'
+        if: matrix.container[0] == 'debian:stretch' || matrix.container[0] == 'i386/debian:stretch' || matrix.container[0] == 'debian:buster' || matrix.container[0] == 'i386/debian:buster'
         env:
           SCRIPT: |
             sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
