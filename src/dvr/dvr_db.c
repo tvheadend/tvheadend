@@ -1039,8 +1039,10 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   dvr_entry_t *de, *de2;
   int64_t start, stop, create, watched, now;
   htsmsg_t *m;
+  htsmsg_field_t *f;
   char ubuf[UUID_HEX_SIZE], ubuf2[UUID_HEX_SIZE];
   const char *s;
+  access_t *a;
 
   if (conf) {
     if (htsmsg_get_s64(conf, "start", &start))
@@ -1063,6 +1065,15 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 
   de->de_enabled = 1;
   de->de_config = dvr_config_find_by_name_default(NULL);
+  a = access_get_by_username(htsmsg_get_str(conf, "owner") ?: "");
+  if (a->aa_dvrcfgs)
+    HTSMSG_FOREACH(f, a->aa_dvrcfgs) {
+      dvr_config_t *cfg = dvr_config_find_by_uuid(htsmsg_field_get_str(f) ?: "");
+      if (cfg && cfg->dvr_enabled) {
+        de->de_config = dvr_config_find_by_name_default(cfg->dvr_config_name ?: "");
+        break;
+      }
+    }
   if (de->de_config)
     LIST_INSERT_HEAD(&de->de_config->dvr_entries, de, de_config_link);
   de->de_pri = DVR_PRIO_DEFAULT;
