@@ -49,7 +49,7 @@ _video_get_sw_deint_filter(TVHContext *self, char *deint, size_t deint_len)
 }
 
 static int
-_video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters)
+_video_filters_get_filters(TVHContext *self, char **filters)
 {
     char download[48];
     char deint[64];
@@ -63,7 +63,8 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
     int ohw = _video_filters_hw_pix_fmt(self->oavctx->pix_fmt);
     int filter_scale = (self->iavctx->height != self->oavctx->height);
     int filter_deint = ((TVHVideoCodecProfile *)self->profile)->deinterlace;
-    int filter_download = 0, filter_upload = 0;
+    int filter_download = 0;
+    int filter_upload = 0;
 #if ENABLE_HWACCELS
     int filter_denoise = ((TVHVideoCodecProfile *)self->profile)->filter_hw_denoise;
     int filter_sharpness = ((TVHVideoCodecProfile *)self->profile)->filter_hw_sharpness;
@@ -298,7 +299,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 
 
 static int
-tvh_video_context_open_filters(TVHContext *self, AVDictionary **opts)
+tvh_video_context_open_filters(TVHContext *self)
 {
     char source_args[128];
     char *filters = NULL;
@@ -318,7 +319,7 @@ tvh_video_context_open_filters(TVHContext *self, AVDictionary **opts)
     }
 
     // filters
-    if (_video_filters_get_filters(self, opts, &filters)) {
+    if (_video_filters_get_filters(self, &filters)) {
         return -1;
     }
 
@@ -355,7 +356,7 @@ tvh_video_context_open(TVHContext *self, TVHOpenPhase phase, AVDictionary **opts
         case OPEN_ENCODER:
             return tvh_video_context_open_encoder(self, opts);
         case OPEN_ENCODER_POST:
-            return tvh_video_context_open_filters(self, opts);
+            return tvh_video_context_open_filters(self);
         default:
             break;
     }
@@ -370,7 +371,7 @@ tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
         return -1;
     }
 
-    AVFilterLink *outlink = NULL;
+    const AVFilterLink *outlink = NULL;
 #if LIBAVUTIL_VERSION_MAJOR >= 58
     int64_t *frame_duration = &avframe->duration;
 #else
