@@ -948,13 +948,18 @@ void
 idnode_filter_add_str
   ( idnode_filter_t *filt, const char *key, const char *val, int comp )
 {
-  idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  idnode_filter_ele_t *ele = NULL;
+  if(!(ele = calloc(1, sizeof(idnode_filter_ele_t)))){
+    tvherror(LS_IDNODE, "Failed to allocate memory for idnode_filter_ele_t");
+    return;
+  }
   ele->key  = strdup(key);
   ele->type = IF_STR;
   ele->comp = comp;
   if (comp == IC_RE) {
     if (regcomp(&ele->u.re, val, REG_ICASE | REG_EXTENDED | REG_NOSUB)) {
       free(ele);
+      ele = NULL;
       return;
     }
   } else
@@ -966,7 +971,11 @@ void
 idnode_filter_add_num
   ( idnode_filter_t *filt, const char *key, int64_t val, int comp, int64_t intsplit )
 {
-  idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  idnode_filter_ele_t *ele = NULL;
+  if(!(ele = calloc(1, sizeof(idnode_filter_ele_t)))){
+    tvherror(LS_IDNODE, "Failed to allocate memory for idnode_filter_ele_t");
+    return;
+  }
   ele->key  = strdup(key);
   ele->type = IF_NUM;
   ele->comp = comp;
@@ -979,7 +988,11 @@ void
 idnode_filter_add_dbl
   ( idnode_filter_t *filt, const char *key, double dbl, int comp )
 {
-  idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  idnode_filter_ele_t *ele = NULL;
+  if(!(ele = calloc(1, sizeof(idnode_filter_ele_t)))){
+    tvherror(LS_IDNODE, "Failed to allocate memory for idnode_filter_ele_t");
+    return;
+  }
   ele->key   = strdup(key);
   ele->type  = IF_DBL;
   ele->comp  = comp;
@@ -991,7 +1004,11 @@ void
 idnode_filter_add_bool
   ( idnode_filter_t *filt, const char *key, int val, int comp )
 {
-  idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  idnode_filter_ele_t *ele = NULL;
+  if(!(ele = calloc(1, sizeof(idnode_filter_ele_t)))){
+    tvherror(LS_IDNODE, "Failed to allocate memory for idnode_filter_ele_t");
+    return;
+  }
   ele->key  = strdup(key);
   ele->type = IF_BOOL;
   ele->comp = comp;
