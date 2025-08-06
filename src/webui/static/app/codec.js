@@ -28,6 +28,26 @@ function genericCBRvsVBR(form) {
 
 function update_hwaccel_details(form) {
     form.findField('hwaccel_details').setDisabled(!form.findField('hwaccel').getValue());
+    update_deinterlace_vaapi_mode(form);
+}
+
+function update_deinterlace_vaapi_mode(form) {
+    if (form.findField('deinterlace_vaapi_mode')) {
+        const hwaccel = form.findField('hwaccel').getValue();
+        const deinterlace = form.findField('deinterlace').getValue();
+        const hwaccelDetails = form.findField('hwaccel_details').getValue(); // 0=AUTO, 1=VAAPI, 2=NVDEC, 3=MMAL
+
+        const disableDeintVaapiMode = !hwaccel || !deinterlace || (hwaccelDetails !== 0 && hwaccelDetails !== 1);
+        form.findField('deinterlace_vaapi_mode').setDisabled(disableDeintVaapiMode);
+    }
+}
+
+function update_deinterlace_details(form) {
+    if (form.findField('deinterlace_field_rate') && form.findField('deinterlace_enable_auto')) {
+        form.findField('deinterlace_field_rate').setDisabled(!form.findField('deinterlace').getValue());
+        form.findField('deinterlace_enable_auto').setDisabled(!form.findField('deinterlace').getValue());
+    }
+    update_deinterlace_vaapi_mode(form);
 }
 
 function enable_hwaccels_details(form) {
@@ -36,6 +56,16 @@ function enable_hwaccels_details(form) {
         // on hwaccel change
         form.findField('hwaccel').on('check', function(checkbox, value) {
             update_hwaccel_details(form);
+        });
+        // on hwaccel_details change
+        form.findField('hwaccel_details').on('select', function(combo, record, index) {
+            update_deinterlace_vaapi_mode(form);
+        });
+    }
+    if (form.findField('deinterlace')) {
+        // on deinterlace change
+        form.findField('deinterlace').on('check', function(checkbox, value) {
+            update_deinterlace_details(form);
         });
     }
 }
@@ -49,10 +79,8 @@ function updateHWFilters(form) {
         form.findField('hw_denoise').setDisabled(!form.findField('hwaccel').getValue());
         form.findField('hw_sharpness').setDisabled(!form.findField('hwaccel').getValue());
         form.findField('hwaccel_details').setDisabled(!form.findField('hwaccel').getValue());
-        form.findField('deinterlace_field_rate').setDisabled(!form.findField('deinterlace').getValue());
-        form.findField('deinterlace_enable_auto').setDisabled(!form.findField('deinterlace').getValue());
-        form.findField('deinterlace_vaapi_mode').setDisabled(!form.findField('hwaccel').getValue() || !form.findField('deinterlace').getValue());
     }
+    update_deinterlace_details(form);
 }
 
 function checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field, ui_value, uilp_value) {
@@ -234,17 +262,22 @@ function update_vaapi_ui(form) {
         form.findField('low_power').on('check', function(checkbox, value) {
             updateLowPower(form);
         });
-    
+
     // on hwaccel change
     if (form.findField('hwaccel'))
         form.findField('hwaccel').on('check', function(checkbox, value) {
             updateHWFilters(form);
         });
-    
+
+    // on hwaccel_details change
+    form.findField('hwaccel_details').on('select', function(combo, record, index) {
+        update_deinterlace_vaapi_mode(form);
+    });
+
     // on deinterlace change
     if (form.findField('deinterlace'))
         form.findField('deinterlace').on('check', function(checkbox, value) {
-            updateHWFilters(form);
+            update_deinterlace_details(form);
         });
 
     // on desired_b_depth change
