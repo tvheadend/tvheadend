@@ -136,6 +136,13 @@
 #define DEINT_AUTO_OFF           0
 #define DEINT_AUTO_ON            1
 
+#define VAAPI_DEINT_MODE_DEFAULT 0
+#define VAAPI_DEINT_MODE_BOB     1
+#define VAAPI_DEINT_MODE_WEAVE   2
+#define VAAPI_DEINT_MODE_MADI    3
+#define VAAPI_DEINT_MODE_MCDI    4
+
+
 /* codec_profile_class ====================================================== */
 
 uint32_t
@@ -326,6 +333,19 @@ typedef struct tvh_codec_profile_video {
      */
     int deinterlace_enable_auto;
 
+    /**
+     * VAAPI Deinterlace mode [deinterlace_vaapi mode parameter]
+     * https://ffmpeg.org/doxygen/6.1/vf__deinterlace__vaapi_8c.html
+     * @note
+     * int:
+     * 0 - Default: Use the highest-numbered (and therefore most advanced) deinterlacing algorithm
+     * 1 - Use the bob deinterlacing algorithm
+     * 2 - Use the weave deinterlacing algorithm
+     * 3 - Use the motion adaptive deinterlacing algorithm
+     * 4 - Use the motion compensated deinterlacing algorithm
+     */
+    int deinterlace_vaapi_mode;
+
     int height;
     /**
      * SW or HW scaling mode  (applies for decoding)
@@ -436,18 +456,6 @@ typedef struct {
  * 2 - AMD
  */
     int platform;
-/**
- * VAAPI Deinterlace mode [deinterlace_vaapi mode parameter]
- * https://ffmpeg.org/doxygen/6.1/vf__deinterlace__vaapi_8c.html
- * @note
- * int:
- * 0 - Default: Use the highest-numbered (and therefore most advanced) deinterlacing algorithm
- * 1 - Use the bob deinterlacing algorithm
- * 2 - Use the weave deinterlacing algorithm
- * 3 - Use the motion adaptive deinterlacing algorithm
- * 4 - Use the motion compensated deinterlacing algorithm
- */
-    int deinterlace_vaapi_mode;
 
     int loop_filter_level;
     int loop_filter_sharpness;

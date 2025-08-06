@@ -51,6 +51,21 @@ hwaccel_get_list( void *o, const char *lang )
     return strtab2htsmsg(tab, 1, lang);
 }
 
+#if ENABLE_VAAPI
+static htsmsg_t *
+deinterlace_vaapi_mode_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("Default"),                                 VAAPI_DEINT_MODE_DEFAULT },
+        { N_("Bob Deinterlacing"),                       VAAPI_DEINT_MODE_BOB },
+        { N_("Weave Deinterlacing"),                     VAAPI_DEINT_MODE_WEAVE },
+        { N_("Motion Adaptive Deinterlacing (MADI)"),    VAAPI_DEINT_MODE_MADI },
+        { N_("Motion Compensated Deinterlacing (MCDI)"), VAAPI_DEINT_MODE_MCDI },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+#endif
+
 static htsmsg_t *
 deinterlace_field_rate_get_list( void *o, const char *lang )
 {
@@ -263,6 +278,21 @@ const codec_profile_class_t codec_profile_video_class = {
                 .set      = codec_profile_video_class_deinterlace_set,
                 .def.i    = 1,
             },
+#if ENABLE_VAAPI
+            {
+                .type     = PT_INT,
+                .id       = "deinterlace_vaapi_mode",
+                .name     = N_("VAAPI Deinterlace mode"),
+                .desc     = N_("Mode to use for VAAPI Deinterlacing. "
+                               "'Default' selects the most advanced deinterlacer, i.e. the mode appearing last in this list. "
+                               "Tip: MADI and MCDI usually yield the smoothest results, especially when used with field rate output."),
+                .group    = 2,
+                .opts     = PO_ADVANCED,
+                .off      = offsetof(TVHVideoCodecProfile, deinterlace_vaapi_mode),
+                .list     = deinterlace_vaapi_mode_get_list,
+                .def.i    = VAAPI_DEINT_MODE_DEFAULT,
+            },
+#endif
             {
                 .type     = PT_INT,
                 .id       = "deinterlace_field_rate",
