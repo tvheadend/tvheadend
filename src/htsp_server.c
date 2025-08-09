@@ -1883,16 +1883,20 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Optional */
   if(!(htsmsg_get_u32(in, "channelId", &u32))) {
-    if (!(ch = channel_find_by_id(u32)))
+    if (!(ch = channel_find_by_id(u32))) {
+	  epg_query_free(&eq);
       return htsp_error(htsp, N_("Channel does not exist"));
-    else
+	} else {
       eq.channel = strdup(idnode_uuid_as_str(&ch->ch_id, ubuf));
+	}
   }
   if(!(htsmsg_get_u32(in, "tagId", &u32))) {
-    if (!(ct = htsp_channel_tag_find_by_id(htsp, u32)))
+    if (!(ct = htsp_channel_tag_find_by_id(htsp, u32))) {
+	  epg_query_free(&eq);
       return htsp_error(htsp, N_("Channel tag does not exist"));
-    else
+	} else {
       eq.channel_tag = strdup(idnode_uuid_as_str(&ct->ct_id, ubuf));
+	}
   }
   if (!htsmsg_get_u32(in, "contentType", &u32)) {
     if(htsp->htsp_version < 6) u32 <<= 4;
@@ -1912,8 +1916,10 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   tvhtrace(LS_HTSP, "min_duration %d and max_duration %d", min_duration, max_duration);
 
   /* Check access */
-  if (ch && !htsp_user_access_channel(htsp, ch))
+  if (ch && !htsp_user_access_channel(htsp, ch)) {
+    epg_query_free(&eq);
     return htsp_error(htsp, N_("User does not have access"));
+  }
 
   /* Query */
   epg_query(&eq, htsp->htsp_granted_access);
