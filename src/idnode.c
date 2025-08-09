@@ -954,6 +954,7 @@ idnode_filter_add_str
   ele->comp = comp;
   if (comp == IC_RE) {
     if (regcomp(&ele->u.re, val, REG_ICASE | REG_EXTENDED | REG_NOSUB)) {
+      free(ele->key);
       free(ele);
       return;
     }
