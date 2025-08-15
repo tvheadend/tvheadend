@@ -57,7 +57,7 @@ case $OSPREFIX$TARGET in
         OS="raspbian";;
     37|38|39|40|41|42)
         OS="fedora";;
-    43)
+    43|44)
         echo -e "${YELLOW}Fedora 43 (current rawhide) is not (yet) supported by Cloudsmith${NC}" && exit;;
     *) echo -e "${RED}OS $OSPREFIX$TARGET could not be recognized${NC}" && exit 1;;
 esac
