@@ -240,7 +240,7 @@ jobs:
     name: Build on native fedora:${{ matrix.releasever }}
     strategy:
       matrix:
-        releasever: ["37", "38", "39", "40", "41", "42", "rawhide"]
+        releasever: ["37", "38", "39", "40", "41", "42", "43", "rawhide"]
     container:
       image: "fedora:${{ matrix.releasever }}"
     steps:
