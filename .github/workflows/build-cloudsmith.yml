@@ -168,10 +168,16 @@ jobs:
       matrix:
         container: [["i386/ubuntu:trusty", "i386-ubuntu-trusty"], ["ubuntu:trusty", "ubuntu-trusty"], ["i386/ubuntu:xenial", "i386-ubuntu-xenial"], ["ubuntu:xenial", "ubuntu-xenial"], ["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["ubuntu:plucky", "ubuntu-plucky"], ["ubuntu:questing", "ubuntu-questing"], ["i386/debian:stretch", "i386-debian-strech"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
     steps:
+      - name: CCache
+        id: ccache
+        uses: actions/cache@v4
+        with:
+          path: /cache
+          key: ${{ matrix.container[0] }}-ccache
       - name: Setup container
         run: |
           docker pull ${{ matrix.container[0] }}
-          docker run --name build-container -d -v ${{ github.workspace }}:/workspace ${{ matrix.container[0] }} tail -f /dev/null
+          docker run --name build-container -d -v ${{ github.workspace }}:/workspace -v /cache:/home/codespace/.ccache ${{ matrix.container[0] }} tail -f /dev/null
       - name: Fix old debian apt
         if: matrix.container[0] == 'debian:stretch' || matrix.container[0] == 'i386/debian:stretch' || matrix.container[0] == 'debian:buster' || matrix.container[0] == 'i386/debian:buster'
         env:
