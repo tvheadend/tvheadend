@@ -249,6 +249,7 @@ dvb_psi_parse_pmt
   int tt_position;
   int video_stream;
   int rds_uecp;
+  int ac4;
   int pcr_shared = 0;
   const char *lang;
   uint8_t audio_type, audio_version;
@@ -311,6 +312,7 @@ dvb_psi_parse_pmt
     composition_id = -1;
     ancillary_id = -1;
     rds_uecp = 0;
+    ac4 = 0;
     position = 0;
     tt_position = 1000;
     lang = NULL;
@@ -439,8 +441,14 @@ dvb_psi_parse_pmt
           hts_stream_type = SCT_EAC3;
         break;
 
-      case DVB_DESC_AC4:
-        if(estype == 0x06 || estype == 0x81)
+      case DVB_DESC_EXTENSION:
+        if(dlen < 1)
+          break;
+
+        if(ptr[0] == 0x15) /* descriptor_tag_extension : AC-4 */
+          ac4 = 1;
+
+        if((estype == 0x06 || estype == 0x81) && ac4)
           hts_stream_type = SCT_AC4;
         break;
 
