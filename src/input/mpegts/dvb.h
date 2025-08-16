@@ -167,7 +167,7 @@ struct lang_str;
 #define DVB_DESC_CRID                 0x76
 #define DVB_DESC_EAC3                 0x7A
 #define DVB_DESC_AAC                  0x7C
-#define DVB_DESC_AC4                  0x7F
+#define DVB_DESC_EXTENSION            0x7F
 
 #define DVB_DESC_BSKYB_LCN            0xB1
 
