@@ -756,7 +756,6 @@ void
 tvh_context_destroy(TVHContext *self)
 {
     if (self) {
-        tvh_context_close(self, 0);
         TVHPKT_CLEAR(self->src_pkt);
         if (self->avfltgraph) {
             avfilter_graph_free(&self->avfltgraph); // frees filter contexts
