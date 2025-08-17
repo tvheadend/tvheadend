@@ -246,14 +246,17 @@ jobs:
     steps:
       - name: rpmfusion-free
         run: |
-          dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-${{matrix.releasever}}.noarch.rpm"
+          dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-${{ matrix.releasever }}.noarch.rpm"
       - name: dependencies
         run: |
           dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
           dnf install -y openssl-devel-engine || true
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          tags: true
       - name: Workaround safe directory
-        run: git config --global --add safe.directory /__w/tvheadend/tvheadend
+        run: git config --global --add safe.directory "$(pwd)"
       - name: build
         run: ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 && make -C rpm build -j$(nproc)
       - name: copy-result
@@ -261,6 +264,49 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Tvheadend-Fedora-${{ matrix.releasever }}
+          path: tvheadend*.rpm
+          if-no-files-found: error
+      - name: upload-cloudsmith
+        run: support/cloudsmith.sh -f 'tvheadend*.rpm'
+        env:
+          CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
+          CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+          CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+
+  build-el-rpm-native:
+    continue-on-error: true
+    name: Build on native almalinux:${{ matrix.releasever }} ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
+    strategy:
+      matrix:
+        releasever: ["9", "10"]
+        runner: ["ubuntu-latest", "ubuntu-24.04-arm"]
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: "almalinux:${{ matrix.releasever }}"
+    steps:
+      - name: rpmfusion-free
+        run: |
+          dnf install -y dnf-plugins-core
+          dnf config-manager --set-enabled crb
+          dnf install -y "https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${{ matrix.releasever }}.noarch.rpm"
+      - name: dependencies
+        run: |
+          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
+          dnf install -y openssl-devel-engine || true
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          tags: true
+      - name: Workaround safe directory
+        run: git config --global --add safe.directory "$(pwd)"
+      - name: build
+        run: ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 && make -C rpm build -j$(nproc)
+      - name: copy-result
+        run: cp rpm/RPMS/*/tvheadend*.rpm .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tvheadend-el-${{ matrix.releasever }}-${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
           path: tvheadend*.rpm
           if-no-files-found: error
       - name: upload-cloudsmith

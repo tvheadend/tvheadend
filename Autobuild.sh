@@ -61,7 +61,7 @@ if [[ -z $TARGET ]]; then
     if ! [[ -z $ARCHOVR ]]; then
         ARCH=$ARCHOVR
     fi
-    TARGET="$DISTRO-$ARCH"
+    TARGET="$CODENAME-$ARCH"
 fi
 
 TARGET=$OSPREFIX$TARGET
