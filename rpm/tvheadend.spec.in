@@ -53,7 +53,7 @@ SAT>IP and various other clients using these protocols.
 
 %build
 echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
-%ifarch %arm
+%ifarch %arm aarch64
       %configure --disable-lockowner --disable-ffmpeg_static
 %else
       %configure --disable-lockowner --enable-ffmpeg_static --enable-libx265 --nowerror
