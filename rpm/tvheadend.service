@@ -5,7 +5,7 @@ Description=Tvheadend - a TV streaming server and DVR
 # After=auditd.service syslog.target network.target local-fs.target mnt-recordings.mount
 # See "man systemd.mount" or view https://www.freedesktop.org/software/systemd/man/systemd.mount.html
 
-After=auditd.service syslog.target network.target local-fs.target
+After=auditd.service syslog.target network.target network-online.target local-fs.target
 
 [Service]
 EnvironmentFile=/etc/sysconfig/tvheadend
