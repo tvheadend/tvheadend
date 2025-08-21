@@ -59,7 +59,6 @@ typedef struct passwd_entry {
   char *pw_username;
   char *pw_password;
   char *pw_password2;
-  char *pw_password_hash;
 
   char *pw_auth;
 
