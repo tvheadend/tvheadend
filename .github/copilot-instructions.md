@@ -13,6 +13,10 @@ Always reference these instructions first and fallback to search or bash command
   ```
 - Configure the build:
   ```bash
+  # For environments with full internet access (recommended for complete features):
+  ./configure
+  
+  # For restricted internet environments (if external downloads fail):
   ./configure --disable-ffmpeg_static --disable-libav --disable-hdhomerun_static --disable-pcloud_cache
   ```
 - Build tvheadend: 
@@ -38,11 +42,23 @@ Always reference these instructions first and fallback to search or bash command
 - The configure script has 74+ options. Key ones for development:
   - `--enable-ccdebug` - Enable debug build (no optimization)  
   - `--disable-pie` - Disable position independent executable
-  - `--disable-ffmpeg_static` - Don't build static ffmpeg (requires internet)
+  - `--disable-ffmpeg_static` - Don't build static ffmpeg (disables transcoding features)
   - `--disable-libav` - Disable libav/ffmpeg support entirely
   - `--disable-hdhomerun_static` - Don't build static HDHomeRun libs
   - `--disable-pcloud_cache` - Disable pcloud caching system
 - View all options: `./configure --help`
+
+### Internet Access Requirements
+- **Full internet access** enables additional features:
+  - Static ffmpeg libraries (transcoding, recording format conversion)
+  - Static HDHomeRun libraries (enhanced HDHomeRun support)
+  - pCloud cache system (faster builds)
+  - Various codec libraries (x264, x265, libvpx, etc.)
+- **Restricted internet** builds still provide core functionality:
+  - DVB/ATSC/IPTV/SAT>IP input sources
+  - Web interface and HTSP streaming
+  - Recording and timeshift capabilities
+  - EPG grabbing and channel management
 
 ## Validation
 
@@ -117,9 +133,17 @@ Always reference these instructions first and fallback to search or bash command
 - Clean operation: < 1 second
 
 ### Critical Configuration Notes
-- Internet access is required for static library builds (ffmpeg, hdhomerun, x264, etc.)
-- In restricted environments, disable static builds: `--disable-ffmpeg_static --disable-hdhomerun_static`
-- Core functionality works without ffmpeg/libav but transcoding features are disabled
+- **Internet access has been whitelisted** for this repository's GitHub Copilot environment
+- However, some external hosts may still be blocked (e.g., `ftp.osuosl.org`, `bbuseruploads.s3.amazonaws.com`)
+- If build fails with download errors, use restricted configuration:
+  ```bash
+  ./configure --disable-ffmpeg_static --disable-libav --disable-hdhomerun_static --disable-pcloud_cache
+  ```
+- With full internet access, tvheadend downloads and builds static libraries automatically:
+  - ffmpeg with various codecs (x264, x265, libvpx, theora, vorbis, opus)
+  - HDHomeRun static libraries  
+  - pCloud cache system for faster subsequent builds
+- Core functionality works without these static builds but transcoding features are disabled
 - DVB functionality requires libdvbcsa-dev package
 - Web UI requires gzip and bzip2 for asset compression
 
