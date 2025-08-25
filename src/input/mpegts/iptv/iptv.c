@@ -384,6 +384,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
 
     if (urlparse(raw ?: "", &url)) {
       tvherror(LS_IPTV, "%s - invalid URL [%s]", im->mm_nicename, raw);
+      urlreset(&url);
       return ret;
     }
     scheme = url.scheme;
@@ -394,6 +395,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   ih = iptv_handler_find(scheme ?: "");
   if (!ih) {
     tvherror(LS_IPTV, "%s - unsupported scheme [%s]", im->mm_nicename, scheme ?: "none");
+    urlreset(&url);
     return ret;
   }
 

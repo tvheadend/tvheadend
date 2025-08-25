@@ -81,24 +81,23 @@ EXPOSE 9981 \
 
 RUN apt-get update --yes && apt-get install --yes \
         'libavahi-client3' \
-        'libavcodec59' \
-        'libavdevice59' \
-        'libavfilter8' \
-        'libavfilter8' \
-        'libavutil57' \
+        'libavcodec61' \
+        'libavdevice61' \
+        'libavfilter10' \
+        'libavutil59' \
         'libdbus-1-3' \
         'libdvbcsa1' \
-        'libhdhomerun4' \
-        'libpostproc56' \
-        'libswscale6' \
+        'libhdhomerun5' \
+        'libpostproc58' \
+        'libswscale8' \
         'libopus0' \
         'libpcre2-8-0' \
-        'libssl3' \
+        'libssl3t64' \
         'liburiparser1' \
         'libva2' \
-        'libvpx7' \
+        'libvpx9' \
         'libx264-164' \
-        'libx265-199' \
+        'libx265-215' \
         'pngquant' \
         'python3' \
         'mesa-va-drivers' \

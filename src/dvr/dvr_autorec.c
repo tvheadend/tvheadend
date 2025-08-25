@@ -1075,6 +1075,7 @@ dvr_autorec_entry_class_owner_opts(void *o, uint32_t opts)
 
 CLASS_DOC(dvrautorec)
 PROP_DOC(duplicate_handling)
+PROP_DOC(autorec_directory)
 
 /* We provide several category drop-downs to make it easy for user
  * to select several. So abstract the properties away since they
@@ -1133,6 +1134,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "defined in the DVR configuration and puts all "
                      "recordings done by this entry into the "
                      "subdirectory named here. See Help for more info."),
+      .doc      = prop_doc_autorec_directory,
       .off      = offsetof(dvr_autorec_entry_t, dae_directory),
       .opts     = PO_EXPERT,
     },

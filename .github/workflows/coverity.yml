@@ -19,7 +19,7 @@ jobs:
             env:
                 TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
             if: "${{ env.TOKEN != '' }}"
-            run: echo "::set-output name=defined::true"
+            run: echo "defined=true" >> $GITHUB_OUTPUT
 
   coverity:
     needs: [check-secret]

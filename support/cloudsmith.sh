@@ -13,6 +13,7 @@ OSPREFIX=""
 OS=""
 FILE=""
 DRYRUN="0"
+PKGMGR="apt"
 
 YELLOW='\033[1;33m'
 GREEN='\033[1;32m'
@@ -45,32 +46,72 @@ fi
 
 if [[ -z $TARGET ]]; then
     source Autobuild/identify-os.sh
-    TARGET="$DISTRO"
 fi
 
-case $OSPREFIX$TARGET in
-    bookworm|bullseye|buster|sid|stretch|jessie|trixie)
-        OS="debian";;
-    trusty|xenial|bionic|focal|impish|jammy|kinetic|lunar|mantic|noble)
-        OS="ubuntu";;
+if [ -n "$OSPREFIX" ]; then
+    DISTRO=$OSPREFIX
+fi
+
+case $DISTRO in
+    debian|raspbian*)
+        case $CODENAME in
+            bookworm|bullseye|buster|sid|stretch|jessie|trixie|forky)
+                OS="debian"
+                TARGET=$CODENAME;;
+            *)
+                echo -e "${RED}Debian release $CODENAME could not be recognized${NC}"
+                exit 1;;
+        esac;;
+    ubuntu)
+        case $CODENAME in
+            trusty|xenial|bionic|focal|impish|jammy|kinetic|lunar|mantic|noble)
+                OS="ubuntu"
+                TARGET=$CODENAME;;
+            *)
+                echo -e "${RED}Ubuntu release $CODENAME could not be recognized${NC}"
+                exit 1;;
+        esac;;
     raspios*)
-        OS="raspbian";;
-    37|38|39|40|41)
-        OS="fedora";;
-    42|43)
-        echo -e "${YELLOW}Fedora 42 and 43 (current rawhide) are not (yet) supported by Cloudsmith${NC}" && exit;;
-    *) echo -e "${RED}OS $OSPREFIX$TARGET could not be recognized${NC}" && exit 1;;
+        OS="raspbian"
+        TARGET=$CODENAME;;
+    rhel)
+        PKGMGR="dnf"
+        OS="rhel"
+        TARGET="${VERSION%%.*}";;
+    fedora)
+        case $VERSION in
+            37|38|39|40|41|42)
+                PKGMGR="dnf"
+                OS="fedora"
+                TARGET=$VERSION;;
+            43|44)
+                echo -e "${YELLOW}Fedora 43 (current rawhide) is not (yet) supported by Cloudsmith${NC}"
+                exit 0;;
+            *)
+                echo -e "${RED}Fedora release $VERSION could not be recognized${NC}" 
+                exit 1;;
+        esac;;
+    *)
+        echo -e "${RED}OS $DISTRO $TARGET could not be recognized${NC}"
+        exit 1;;
 esac
+
+echo "OS Detected as $DISTRO $TARGET"
 
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
-if [ $OS == "fedora" ]; then
-    dnf install -y curl
+if ! command -v curl &> /dev/null; then
+    echo "curl not found, installing..."
+    if [ "$PKGMGR" == "dnf" ]; then
+        dnf install -y curl
+    else
+        export DEBIAN_FRONTEND=noninteractive
+        apt update
+        apt install -y curl
+    fi
 else
-    export DEBIAN_FRONTEND=noninteractive
-    apt update
-    apt install -y curl
+    echo "curl is already installed."
 fi
 
 FILEARRAY=($FILE)
