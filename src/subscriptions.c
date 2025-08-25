@@ -28,6 +28,9 @@
 #include "atomic.h"
 #include "input.h"
 #include "intlconv.h"
+#if ENABLE_MPEGTS
+#include "input/mpegts.h"
+#endif
 #include "dbus.h"
 
 struct th_subscription_list subscriptions;
@@ -710,8 +713,18 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
 
 #if ENABLE_MPEGTS
   if (raw && t == raw) {
+    mpegts_service_t *ms = (mpegts_service_t *)raw;
+    mpegts_mux_t *mm = ms->s_dvb_mux;
     LIST_REMOVE(s, ths_mux_link);
-    service_remove_raw(raw);
+    /* Only remove raw service if no other subscriptions are using it */
+    if (LIST_EMPTY(&mm->mm_raw_subs)) {
+      tvhdebug(LS_SUBSCRIPTION, "%04X: removing raw service - no remaining subscriptions", 
+               shortid(s));
+      service_remove_raw(raw);
+    } else {
+      tvhdebug(LS_SUBSCRIPTION, "%04X: keeping raw service - other subscriptions still active", 
+               shortid(s));
+    }
   }
 #endif
 
