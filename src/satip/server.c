@@ -407,21 +407,30 @@ USN: uuid:%s::urn:ses-com:device:SatIPServer:1\r\n\
 BOOTID.UPNP.ORG: %ld\r\n\
 CONFIGID.UPNP.ORG: 0\r\n"
 
-  char buf[512];
+  char buf[512], local_ip_str[64];
   htsbuf_queue_t q;
-  struct sockaddr_storage storage;
+  struct sockaddr_storage storage, local_ip;
+  const char *server_ip_to_use;
 
   if (satips_upnp_discovery == NULL || satip_server_rtsp_port <= 0)
     return;
 
+  /* Determine the correct local IP to use for reaching this specific client */
+  server_ip_to_use = http_server_ip;
+  if (tcp_get_ip_for_target(&local_ip, dst, dst->ss_family) == 0) {
+    tcp_get_str_from_ip(&local_ip, local_ip_str, sizeof(local_ip_str));
+    server_ip_to_use = local_ip_str;
+  }
+
   if (tvhtrace_enabled()) {
     tcp_get_str_from_ip(dst, buf, sizeof(buf));
-    tvhtrace(LS_SATIPS, "sending discover reply to %s:%d%s%s",
-             buf, ntohs(IP_PORT(*dst)), deviceid ? " device: " : "", deviceid ?: "");
+    tvhtrace(LS_SATIPS, "sending discover reply to %s:%d (using local IP %s)%s%s",
+             buf, ntohs(IP_PORT(*dst)), server_ip_to_use,
+             deviceid ? " device: " : "", deviceid ?: "");
   }
 
   snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
-           http_server_ip, http_server_port, tvheadend_webroot ?: "",
+           server_ip_to_use, http_server_port, tvheadend_webroot ?: "",
            tvheadend_version,
            satip_server_conf.satip_uuid, (long)satip_server_bootid);
 

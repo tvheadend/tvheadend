@@ -1015,6 +1015,54 @@ tcp_server_delete(void *server)
 }
 
 /**
+ * Get local IP address that would be used to reach a specific target
+ */
+int
+tcp_get_ip_for_target(struct sockaddr_storage *local_ip, 
+                      const struct sockaddr_storage *target_ip, 
+                      int family)
+{
+  int sock;
+  socklen_t socklen;
+  int target_family;
+
+  if (!target_ip || !local_ip)
+    return -1;
+
+  target_family = target_ip->ss_family;
+  if (family != PF_UNSPEC && family != target_family)
+    return -1;
+
+  /* Create a socket of the same family as the target */
+  sock = tvh_socket(target_family, SOCK_DGRAM, 0);
+  if (sock < 0)
+    return -1;
+
+  /* Connect to the target (UDP connect doesn't actually send packets) */
+  if (connect(sock, (struct sockaddr *)target_ip, IP_IN_ADDRLEN(*target_ip)) < 0) {
+    close(sock);
+    return -1;
+  }
+
+  /* Get the local address that the kernel selected for this route */
+  memset(local_ip, 0, sizeof(*local_ip));
+  socklen = sizeof(*local_ip);
+  if (getsockname(sock, (struct sockaddr *)local_ip, &socklen) < 0) {
+    close(sock);
+    return -1;
+  }
+
+  /* Clear the port */
+  if (local_ip->ss_family == AF_INET)
+    IP_AS_V4(local_ip, port) = 0;
+  else if (local_ip->ss_family == AF_INET6)
+    IP_AS_V6(local_ip, port) = 0;
+
+  close(sock);
+  return 0;
+}
+
+/**
  *
  */
 int
