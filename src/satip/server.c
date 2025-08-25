@@ -991,7 +991,7 @@ static void satip_server_init_common(const char *prefix, int announce)
   if (http_server_ip == NULL) {
     if (tcp_server_onall(http_server) && satip_server_bindaddr == NULL) {
       tvherror(LS_SATIPS, "use --satip_bindaddr parameter to select the local IP for SAT>IP");
-      tvherror(LS_SATIPS, "using Google lookup (might block the task until timeout)");
+      tvherror(LS_SATIPS, "using network interface discovery to determine local IP");
     }
     if (tcp_server_bound(http_server, &http, PF_INET) < 0) {
       tvherror(LS_SATIPS, "Unable to determine the HTTP/RTSP address");
