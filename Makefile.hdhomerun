@@ -32,10 +32,10 @@ endif
 # Upstream Packages
 # ###########################################################################
 
-LIBHDHR         = libhdhomerun_20210624
+LIBHDHR         = libhdhomerun_20250815
 LIBHDHR_TB      = $(LIBHDHR).tgz
 LIBHDHR_URL     = https://download.silicondust.com/hdhomerun/$(LIBHDHR_TB)
-LIBHDHR_SHA1    = 9db6089b956de4e58084b623937f5fc3231fff0b
+LIBHDHR_SHA1    = 5de17a094030e6fcdab80bbcb2777596895fb79e
 
 # ###########################################################################
 # Library Config
