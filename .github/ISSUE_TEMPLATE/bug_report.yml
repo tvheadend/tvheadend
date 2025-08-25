@@ -10,8 +10,7 @@ body:
       description: "What Tvheadend version are you using?"
       options:
         - v4.2 (unsupported)
-        - v4.3 (development)
-        - v4.4 (stable)
+        - v4.3 (stable)
     validations:
       required: true
   - type: input
@@ -35,9 +34,15 @@ body:
         - Debian 10 (Buster)
         - Debian 11 (Bullseye)
         - Debian 12 (Bookworm)
+        - Debian 13 (Trixie)
+        - Enterprise Linux 8
+        - Enterprise Linux 9
         - Fedora 37
         - Fedora 38
         - Fedora 39
+        - Fedora 40
+        - Fedora 41
+        - Fedora 42
         - Fedora Rawhide
         - FreeBSD (all)
         - Raspberry Pi OS (Buster)
@@ -50,6 +55,7 @@ body:
         - Ubuntu 18.04 (Bionic)
         - Ubuntu 20.04 (Focal)
         - Ubuntu 22.04 (Jammy)
+        - Ubuntu 24.04 (Noble)
         - Other..
       multiple: false
     validations:

@@ -20,7 +20,7 @@ jobs:
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         issue-close-message: "@${issue.user.login} this issue was automatically closed because you are using an unsupported version"
-        issue-pattern: ".*### Tvheadend Version[\\r\\n]+v4\\.(3 \\(development\\)|4 \\(stable\\)).*"
+        issue-pattern: ".*### Tvheadend Version[\\r\\n]+v4\\.3 \\(stable\\).*"
     - name: Autoclose feature ideas which are not developed by the user
       if: startsWith(github.event.issue.title, '[FEATURE]:')
       uses: roots/issue-closer@v1.2
