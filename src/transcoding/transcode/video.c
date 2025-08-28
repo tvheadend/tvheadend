@@ -281,12 +281,10 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     self->oavctx->sample_aspect_ratio = self->iavctx->sample_aspect_ratio;
 
     tvh_context_log(self, LOG_DEBUG,
-        "Encoder configuration:\n"
-        "  framerate:              %d/%d (%.3f fps)\n"
-        "  time_base:              %.0fHz\n"
-        "  frame duration:         %" PRId64 " ticks (%.6f sec)\n"
-        "  gop_size:               %d\n"
-        "  sample_aspect_ratio:    %d/%d",
+        "Encoder configuration: "
+        "framerate: %d/%d (%.3f fps),time_base: %.0fHz,"
+        "frame duration: %" PRId64 " ticks (%.6f sec),"
+        "gop_size: %d,sample_aspect_ratio: %d/%d",
         self->oavctx->framerate.num, self->oavctx->framerate.den, av_q2d(self->oavctx->framerate),
         av_q2d(av_inv_q(self->oavctx->time_base)),
         av_rescale_q(1, av_inv_q(self->oavctx->framerate), self->oavctx->time_base),
