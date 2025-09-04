@@ -132,7 +132,7 @@ var catmap_minor = {
   "skiing" : "skier",
   "soap" : "couch_and_lamp",
   "soccer" : "soccer_ball",
-  "sports talk" : "speaking_head_in_silhouette",
+  "sports talk" : [ "sports_medal", "speaking_head_in_silhouette" ],
   "spy": "spy",
   "standup" : "microphone",
   "swimming" : "swimmer",
@@ -229,7 +229,12 @@ tvheadend.getContentTypeIcons = function(rec, style) {
       var l = catmap_major[v];
       if (l) ret_major.push(l);
       l = catmap_minor[v];
-      if (l) ret_minor.push(l)
+      if (l) {
+        if (Array.isArray(l))
+          ret_minor.push(...l);
+        else
+          ret_minor.push(l);
+      }
     }
   }
 
