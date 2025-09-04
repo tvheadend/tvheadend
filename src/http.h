@@ -523,7 +523,7 @@ rtsp_teardown( http_client_t *hc, const char *path, const char *query ) {
 
 int rtsp_get_parameter( http_client_t *hc, const char *parameter );
 
-int rtsp_set_speed( http_client_t *hc, float speed );
+int rtsp_set_speed( http_client_t *hc, double speed );
 
 int rtsp_set_position( http_client_t *hc, time_t position );
 
