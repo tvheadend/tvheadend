@@ -2022,12 +2022,60 @@ passwd_verify2
 }
 
 static int
+passwd_verify_hash(const char *password, const char *stored_hash)
+{
+  char *input_hash;
+  int result = 0;
+  
+  if (!password || !stored_hash)
+    return 0;
+    
+  input_hash = passwd_entry_generate_hash(password);
+  if (input_hash) {
+    result = (strcmp(input_hash, stored_hash) == 0);
+    free(input_hash);
+  }
+  
+  return result;
+}
+
+static int
+passwd_verify_with_hash(const char *username, const char *password)
+{
+  passwd_entry_t *pw;
+  char *input_hash;
+  int result = 0;
+
+  if (!username || !password)
+    return -1;
+
+  TAILQ_FOREACH(pw, &passwd_entries, pw_link) {
+    if (pw->pw_enabled && strcmp(username, pw->pw_username ?: "") == 0) {
+      /* If we have plaintext password, use it */
+      if (pw->pw_password) {
+        return (strcmp(password, pw->pw_password) == 0) ? 0 : -1;
+      }
+      /* Otherwise, verify against hash */
+      else if (pw->pw_password2) {
+        input_hash = passwd_entry_generate_hash(password);
+        if (input_hash) {
+          result = (strcmp(input_hash, pw->pw_password2) == 0) ? 0 : -1;
+          free(input_hash);
+          return result;
+        }
+      }
+    }
+  }
+  return -1;
+}
+
+static int
 passwd_verify
   (access_t *a, const char *username, verify_callback_t verify, void *aux)
 {
   passwd_entry_t *pw;
 
-  TAILQ_FOREACH(pw, &passwd_entries, pw_link)
+  TAILQ_FOREACH(pw, &passwd_entries, pw_link) {
     if (pw->pw_enabled &&
         !passwd_verify2(username, verify, aux,
                         pw->pw_username, pw->pw_password)) {
@@ -2035,6 +2083,7 @@ passwd_verify
         tvh_str_set(&a->aa_auth, pw->pw_auth);
       return 0;
     }
+  }
   return -1;
 }
 
@@ -2153,19 +2202,33 @@ passwd_entry_class_get_title
   }
 }
 
+static char *
+passwd_entry_generate_hash(const char *password)
+{
+  if (!password || password[0] == '\0')
+    return NULL;
+  
+  return sha256sum(password, 1);
+}
+
 static int
 passwd_entry_class_password_set(void *o, const void *v)
 {
   passwd_entry_t *pw = (passwd_entry_t *)o;
-  char buf[256], result[300];
+  char *hash;
 
   if (strcmp(v ?: "", pw->pw_password ?: "")) {
-    snprintf(buf, sizeof(buf), "TVHeadend-Hide-%s", (const char *)v ?: "");
-    base64_encode(result, sizeof(result), (uint8_t *)buf, strlen(buf));
-    free(pw->pw_password2);
-    pw->pw_password2 = strdup(result);
+    /* Store the plaintext password for runtime authentication */
     free(pw->pw_password);
     pw->pw_password = strdup((const char *)v ?: "");
+    
+    /* Store a secure hash instead of reversible base64 encoding */
+    hash = passwd_entry_generate_hash((const char *)v);
+    if (hash) {
+      free(pw->pw_password2);
+      pw->pw_password2 = hash;
+    }
+    
     return 1;
   }
   return 0;
@@ -2180,14 +2243,32 @@ passwd_entry_class_password2_set(void *o, const void *v)
 
   if (strcmp(v ?: "", pw->pw_password2 ?: "")) {
     if (v && ((const char *)v)[0] != '\0') {
-      l = base64_decode((uint8_t *)result, v, sizeof(result)-1);
-      if (l < 0)
-        l = 0;
-      result[l] = '\0';
-      free(pw->pw_password);
-      pw->pw_password = strdup(result + 15);
-      free(pw->pw_password2);
-      pw->pw_password2 = strdup((const char *)v);
+      /* Check if this is a legacy base64-encoded password */
+      if (strlen((const char *)v) > 40 && strstr((const char *)v, "=")) {
+        /* Looks like base64 - try to decode legacy format */
+        l = base64_decode((uint8_t *)result, v, sizeof(result)-1);
+        if (l > 15 && strncmp(result, "TVHeadend-Hide-", 15) == 0) {
+          /* Legacy format detected - extract password and create hash */
+          result[l] = '\0';
+          const char *password = result + 15;
+          char *hash = passwd_entry_generate_hash(password);
+          if (hash) {
+            free(pw->pw_password2);
+            pw->pw_password2 = hash;
+            /* Set plaintext for runtime use */
+            free(pw->pw_password);
+            pw->pw_password = strdup(password);
+            return 1;
+          }
+        }
+      } else {
+        /* Assume this is already a hash - store it directly */
+        free(pw->pw_password2);
+        pw->pw_password2 = strdup((const char *)v);
+        /* Clear plaintext since we only have the hash */
+        free(pw->pw_password);
+        pw->pw_password = NULL;
+      }
       return 1;
     }
   }
