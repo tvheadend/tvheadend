@@ -129,6 +129,9 @@
 #if ENABLE_MMAL
 #define HWACCEL_PRIORITIZE_MMAL  3
 #endif
+#if ENABLE_V4L2M2M
+#define HWACCEL_PRIORITIZE_V4L2M2M  4
+#endif
 
 #define DEINT_RATE_FRAME         0
 #define DEINT_RATE_FIELD         1
