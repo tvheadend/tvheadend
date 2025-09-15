@@ -43,6 +43,10 @@ static int passwd_verify2(const char *username, verify_callback_t verify, void *
 static void access_ticket_destroy(access_ticket_t *at);
 static void access_ticket_timeout(void *aux);
 
+/* Forward declarations for password handling */
+static char *passwd_entry_generate_hash(const char *password);
+static int passwd_entry_migrate_legacy_password(passwd_entry_t *pw);
+
 /**
  *
  */
@@ -2022,60 +2026,12 @@ passwd_verify2
 }
 
 static int
-passwd_verify_hash(const char *password, const char *stored_hash)
-{
-  char *input_hash;
-  int result = 0;
-  
-  if (!password || !stored_hash)
-    return 0;
-    
-  input_hash = passwd_entry_generate_hash(password);
-  if (input_hash) {
-    result = (strcmp(input_hash, stored_hash) == 0);
-    free(input_hash);
-  }
-  
-  return result;
-}
-
-static int
-passwd_verify_with_hash(const char *username, const char *password)
-{
-  passwd_entry_t *pw;
-  char *input_hash;
-  int result = 0;
-
-  if (!username || !password)
-    return -1;
-
-  TAILQ_FOREACH(pw, &passwd_entries, pw_link) {
-    if (pw->pw_enabled && strcmp(username, pw->pw_username ?: "") == 0) {
-      /* If we have plaintext password, use it */
-      if (pw->pw_password) {
-        return (strcmp(password, pw->pw_password) == 0) ? 0 : -1;
-      }
-      /* Otherwise, verify against hash */
-      else if (pw->pw_password2) {
-        input_hash = passwd_entry_generate_hash(password);
-        if (input_hash) {
-          result = (strcmp(input_hash, pw->pw_password2) == 0) ? 0 : -1;
-          free(input_hash);
-          return result;
-        }
-      }
-    }
-  }
-  return -1;
-}
-
-static int
 passwd_verify
   (access_t *a, const char *username, verify_callback_t verify, void *aux)
 {
   passwd_entry_t *pw;
 
-  TAILQ_FOREACH(pw, &passwd_entries, pw_link) {
+  TAILQ_FOREACH(pw, &passwd_entries, pw_link)
     if (pw->pw_enabled &&
         !passwd_verify2(username, verify, aux,
                         pw->pw_username, pw->pw_password)) {
@@ -2083,7 +2039,6 @@ passwd_verify
         tvh_str_set(&a->aa_auth, pw->pw_auth);
       return 0;
     }
-  }
   return -1;
 }
 
@@ -2141,6 +2096,9 @@ passwd_entry_create(const char *uuid, htsmsg_t *conf)
     /* note password has PO_NOSAVE, thus it must be set manually */
     if ((s = htsmsg_get_str(conf, "password")) != NULL)
       passwd_entry_class_password_set(pw, s);
+      
+    /* Perform migration of legacy passwords after loading */
+    passwd_entry_migrate_legacy_password(pw);
   }
 
   TAILQ_INSERT_TAIL(&passwd_entries, pw, pw_link);
@@ -2165,6 +2123,7 @@ passwd_entry_destroy(passwd_entry_t *pw, int delconf)
   free(pw->pw_username);
   free(pw->pw_password);
   free(pw->pw_password2);
+  free(pw->pw_password_hash);
   free(pw->pw_auth);
   free(pw->pw_comment);
   free(pw);
@@ -2176,7 +2135,17 @@ passwd_entry_class_save(idnode_t *self, char *filename, size_t fsize)
   passwd_entry_t *pw = (passwd_entry_t *)self;
   char ubuf[UUID_HEX_SIZE];
   htsmsg_t *c = htsmsg_create_map();
+  
+  /* Save all properties */
   idnode_save(&pw->pw_id, c);
+  
+  /* Remove password2 field if we have migrated to hash */
+  if (pw->pw_password_hash && htsmsg_get_str(c, "password2")) {
+    htsmsg_delete_field(c, "password2");
+    tvhdebug(LS_ACCESS, "Removed legacy password2 field from config for user '%s'",
+             pw->pw_username ?: "unknown");
+  }
+  
   if (filename)
     snprintf(filename, fsize, "passwd/%s", idnode_uuid_as_str(&pw->pw_id, ubuf));
   return c;
@@ -2202,13 +2171,64 @@ passwd_entry_class_get_title
   }
 }
 
+/**
+ * Generate SHA-256 hash from password
+ */
 static char *
 passwd_entry_generate_hash(const char *password)
 {
   if (!password || password[0] == '\0')
     return NULL;
-  
+    
   return sha256sum(password, 1);
+}
+
+/**
+ * Migrate legacy base64-encoded password to hash format
+ * This function detects legacy passwords and converts them during loading
+ */
+static int
+passwd_entry_migrate_legacy_password(passwd_entry_t *pw)
+{
+  char result[300];
+  int l;
+  char *hash;
+  int migrated = 0;
+  
+  /* Check if we have a legacy base64 password but no hash yet */
+  if (pw->pw_password2 && pw->pw_password2[0] != '\0' && !pw->pw_password_hash) {
+    /* Check if this looks like base64 (contains = and is reasonably long) */
+    if (strlen(pw->pw_password2) > 40 && strstr(pw->pw_password2, "=")) {
+      /* Try to decode legacy format */
+      l = base64_decode((uint8_t *)result, pw->pw_password2, sizeof(result)-1);
+      if (l > 15 && strncmp(result, "TVHeadend-Hide-", 15) == 0) {
+        /* Legacy format detected - extract password and create hash */
+        result[l] = '\0';
+        const char *password = result + 15;
+        
+        hash = passwd_entry_generate_hash(password);
+        if (hash) {
+          /* Store the hash */
+          free(pw->pw_password_hash);
+          pw->pw_password_hash = hash;
+          
+          /* Keep plaintext in memory for authentication compatibility */
+          free(pw->pw_password);
+          pw->pw_password = strdup(password);
+          
+          /* Clear the legacy password2 field */
+          free(pw->pw_password2);
+          pw->pw_password2 = NULL;
+          
+          migrated = 1;
+          tvhinfo(LS_ACCESS, "Migrated legacy password for user '%s' to secure hash",
+                  pw->pw_username ?: "unknown");
+        }
+      }
+    }
+  }
+  
+  return migrated;
 }
 
 static int
@@ -2218,18 +2238,22 @@ passwd_entry_class_password_set(void *o, const void *v)
   char *hash;
 
   if (strcmp(v ?: "", pw->pw_password ?: "")) {
-    /* Store the plaintext password for runtime authentication */
-    free(pw->pw_password);
-    pw->pw_password = strdup((const char *)v ?: "");
-    
-    /* Store a secure hash instead of reversible base64 encoding */
+    /* Generate and store hash for new password */
     hash = passwd_entry_generate_hash((const char *)v);
     if (hash) {
+      free(pw->pw_password_hash);
+      pw->pw_password_hash = hash;
+      
+      /* Keep plaintext in memory for authentication compatibility */
+      free(pw->pw_password);
+      pw->pw_password = strdup((const char *)v);
+      
+      /* Clear old password2 field */
       free(pw->pw_password2);
-      pw->pw_password2 = hash;
+      pw->pw_password2 = NULL;
+      
+      return 1;
     }
-    
-    return 1;
   }
   return 0;
 }
@@ -2238,37 +2262,15 @@ static int
 passwd_entry_class_password2_set(void *o, const void *v)
 {
   passwd_entry_t *pw = (passwd_entry_t *)o;
-  char result[300];
-  int l;
 
   if (strcmp(v ?: "", pw->pw_password2 ?: "")) {
     if (v && ((const char *)v)[0] != '\0') {
-      /* Check if this is a legacy base64-encoded password */
-      if (strlen((const char *)v) > 40 && strstr((const char *)v, "=")) {
-        /* Looks like base64 - try to decode legacy format */
-        l = base64_decode((uint8_t *)result, v, sizeof(result)-1);
-        if (l > 15 && strncmp(result, "TVHeadend-Hide-", 15) == 0) {
-          /* Legacy format detected - extract password and create hash */
-          result[l] = '\0';
-          const char *password = result + 15;
-          char *hash = passwd_entry_generate_hash(password);
-          if (hash) {
-            free(pw->pw_password2);
-            pw->pw_password2 = hash;
-            /* Set plaintext for runtime use */
-            free(pw->pw_password);
-            pw->pw_password = strdup(password);
-            return 1;
-          }
-        }
-      } else {
-        /* Assume this is already a hash - store it directly */
-        free(pw->pw_password2);
-        pw->pw_password2 = strdup((const char *)v);
-        /* Clear plaintext since we only have the hash */
-        free(pw->pw_password);
-        pw->pw_password = NULL;
-      }
+      /* Store the password2 value for migration during loading */
+      free(pw->pw_password2);
+      pw->pw_password2 = strdup((const char *)v);
+      
+      /* Attempt migration if this looks like legacy format */
+      passwd_entry_migrate_legacy_password(pw);
       return 1;
     }
   }
@@ -2385,6 +2387,13 @@ const idclass_t passwd_entry_class = {
       .off      = offsetof(passwd_entry_t, pw_password2),
       .opts     = PO_PASSWORD | PO_HIDDEN | PO_EXPERT | PO_WRONCE | PO_NOUI,
       .set      = passwd_entry_class_password2_set,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "password_hash",
+      .name     = N_("Password Hash"),
+      .off      = offsetof(passwd_entry_t, pw_password_hash),
+      .opts     = PO_HIDDEN | PO_EXPERT | PO_WRONCE | PO_NOUI,
     },
     {
       .type     = PT_INT,
