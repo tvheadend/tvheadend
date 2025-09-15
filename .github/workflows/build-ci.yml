@@ -173,14 +173,6 @@ jobs:
             sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
             sed -i '/stretch-updates/d' /etc/apt/sources.list
         run: docker exec build-container bash -c "$SCRIPT"
-      - name: Add git ppa
-        if: startsWith(matrix.container[0], 'ubuntu') || startsWith(matrix.container[0], 'i386/ubuntu')
-        env:
-          SCRIPT: |
-            apt-get update -y
-            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y software-properties-common
-            add-apt-repository ppa:git-core/ppa -y
-        run: docker exec build-container bash -c "$SCRIPT"
       - name: dependencies
         env:
           SCRIPT: |
