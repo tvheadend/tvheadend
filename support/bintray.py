@@ -9,6 +9,7 @@ import sys
 import json
 import base64
 import traceback
+import re
 try:
     # Python 3
     import urllib.request as urllib
@@ -122,7 +123,8 @@ def get_ver(version):
 def get_path(version, repo):
     major, minor, rest, git = get_ver(version)
     if int(major) >= 4 and int(minor) & 1 == 0:
-        if repo in ['fedora', 'centos', 'rhel'] and git.find('~') <= 0:
+        # Check for git hash (contains 'g' followed by hex chars)
+        if repo in ['fedora', 'centos', 'rhel'] and not (git and re.search(r'g[0-9a-f]{6,}', git)):
             return '%s.%s-release' % (major, minor)
         return '%s.%s' % (major, minor)
     return 't'
@@ -130,7 +132,8 @@ def get_path(version, repo):
 def get_component(version):
     major, minor, rest, git = get_ver(version)
     if int(major) >= 4 and int(minor) & 1 == 0:
-        if git and git.find('~') > 0:
+        # Check for git hash (contains 'g' followed by hex chars)
+        if git and re.search(r'g[0-9a-f]{6,}', git):
             return 'stable-%s.%s' % (major, minor)
         return 'release-%s.%s' % (major, minor)
     return 'unstable'
@@ -152,12 +155,40 @@ def get_repo(filename, hint=None):
 def rpmversion(name):
     ver = type('',(object,),{})()
     rpmbase, ver.arch = name.rsplit('.', 1)
-    rpmname, rpmversion = rpmbase.rsplit('-', 1)
-    rpmname, rpmversion2 = rpmname.rsplit('-', 1)
-    rpmversion = rpmversion2 + '-' + rpmversion
-    rpmver1, rpmver2 = rpmversion.split('-', 1)
-    rpmversion, ver.dist = rpmver2.split('.', 1)
-    ver.version = rpmver1 + '-' + rpmversion
+    
+    # Look for git hash pattern and split around it
+    import re
+    git_match = re.search(r'-g[0-9a-f]+', rpmbase)
+    if git_match:
+        # Split at the git hash
+        git_start = git_match.start()
+        before_git = rpmbase[:git_start]  # e.g., "tvheadend-4.3-86"
+        after_git = rpmbase[git_start+1:]  # e.g., "g7d2c4e8.el7.centos"
+        
+        # Extract distribution from after_git
+        git_and_dist = after_git.split('.', 1)
+        if len(git_and_dist) == 2:
+            git_hash, ver.dist = git_and_dist  # e.g., "g7d2c4e8", "el7.centos"
+        else:
+            git_hash = git_and_dist[0]
+            ver.dist = ''
+            
+        # Extract version from before_git (remove package name)
+        if before_git.startswith('tvheadend-'):
+            version_part = before_git[len('tvheadend-'):]  # e.g., "4.3-86"
+        else:
+            version_part = before_git
+            
+        ver.version = version_part + '-' + git_hash  # e.g., "4.3-86-g7d2c4e8"
+    else:
+        # Fallback to old parsing for non-git versions
+        rpmname, rpmversion = rpmbase.rsplit('-', 1)
+        rpmname, rpmversion2 = rpmname.rsplit('-', 1)
+        rpmversion = rpmversion2 + '-' + rpmversion
+        rpmver1, rpmver2 = rpmversion.split('-', 1)
+        rpmversion, ver.dist = rpmver2.split('.', 1)
+        ver.version = rpmver1 + '-' + rpmversion
+    
     return ver
 
 def get_bintray_params(filename, hint=None):
@@ -302,11 +333,18 @@ def do_tidy(*args):
       for f in files:
         if f['name'].startswith('tvheadend-debuginfo-'):
           continue
-        if f['name'].find('~') < 0:
+        # Look for git hash pattern (g followed by hex chars)
+        if not re.search(r'-g[0-9a-f]+', f['name']):
           continue
         name, ext = os.path.splitext(f['name'])
         rpmver = rpmversion(name)
-        f['ver1'], f['ver2'] = rpmver.version.split('~')[0].split('-')
+        # Parse version like 4.3-1-ged89266 to extract 4.3 and 1
+        version_parts = rpmver.version.split('-')
+        if len(version_parts) >= 2:
+            f['ver1'] = version_parts[0]  # e.g., "4.3"
+            f['ver2'] = version_parts[1]  # e.g., "1"
+        else:
+            continue  # Skip if we can't parse properly
         f['sortkey'] = "%s/%s/%s*%08d" % (rpmver.dist, rpmver.arch, f['ver1'], long(f['ver2']))
         sfiles.append(f)
       return files, sfiles
@@ -332,19 +370,19 @@ def do_unknown(*args):
 
 def test_filename():
     FILES=[
-        "tvheadend_4.3-86~g7d2c4e8~xenial_amd64.deb",
-        "tvheadend_4.3-86~g7d2c4e8~xenial_arm64.deb",
-        "tvheadend_4.3-666~a6b0mfyj-dirty~jessie_armhf.deb",
-        "tvheadend-4.3-86~g7d2c4e8.el7.centos.x86_64.rpm",
-        "tvheadend-4.3-86~g7d2c4e8.fc24.x86_64.rpm",
+        "tvheadend_4.3-86-g7d2c4e8~xenial_amd64.deb",
+        "tvheadend_4.3-86-g7d2c4e8~xenial_arm64.deb",
+        "tvheadend_4.3-666-a6b0mfyj-dirty~jessie_armhf.deb",
+        "tvheadend-4.3-86-g7d2c4e8.el7.centos.x86_64.rpm",
+        "tvheadend-4.3-86-g7d2c4e8.fc24.x86_64.rpm",
         "tvheadend-4.2.2~xenial_amd64.deb",
         "tvheadend_4.2.2~xenial_arm64.deb",
         "tvheadend-4.2.2-1.el7.centos.x86_64.rpm",
         "tvheadend-4.2.2-1.fc24.x86_64.rpm",
-        "tvheadend-4.2.2-1~g82c8872~xenial_amd64.deb",
-        "tvheadend_4.2.2-1~g82c8872~xenial_arm64.deb",
-        "tvheadend-4.2.2-1~g82c8872.el7.centos.x86_64.rpm",
-        "tvheadend-4.2.2-1~g82c8872.fc24.x86_64.rpm",
+        "tvheadend-4.2.2-1-g82c8872~xenial_amd64.deb",
+        "tvheadend_4.2.2-1-g82c8872~xenial_arm64.deb",
+        "tvheadend-4.2.2-1-g82c8872.el7.centos.x86_64.rpm",
+        "tvheadend-4.2.2-1-g82c8872.fc24.x86_64.rpm",
     ]
     from pprint import pprint
     for f in FILES:
