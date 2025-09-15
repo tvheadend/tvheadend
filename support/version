@@ -25,7 +25,7 @@ else
   VER=$(basename $(realpath $(dirname "$0")/..) | sed -e 's/^tvheadend-//' | sed -e 's/^tvheadend-v//')
   case $VER in
   [1-9]*\.[0-9]*) ;;
-  *) VER="0.0.0~unknown" ;;
+  *) VER="0.0.0-unknown" ;;
   esac
 fi
 
