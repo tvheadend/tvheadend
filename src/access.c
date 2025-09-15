@@ -2197,11 +2197,9 @@ passwd_entry_migrate_legacy_password(passwd_entry_t *pw)
   
   /* Check if we have a legacy base64 password but no hash yet */
   if (pw->pw_password2 && pw->pw_password2[0] != '\0' && !pw->pw_password_hash) {
-    /* Check if this looks like base64 (contains = and is reasonably long) */
-    if (strlen(pw->pw_password2) > 40 && strstr(pw->pw_password2, "=")) {
-      /* Try to decode legacy format */
-      l = base64_decode((uint8_t *)result, pw->pw_password2, sizeof(result)-1);
-      if (l > 15 && strncmp(result, "TVHeadend-Hide-", 15) == 0) {
+    /* Try to decode as base64 and check if it's legacy format */
+    l = base64_decode((uint8_t *)result, pw->pw_password2, sizeof(result)-1);
+    if (l > 15 && strncmp(result, "TVHeadend-Hide-", 15) == 0) {
         /* Legacy format detected - extract password and create hash */
         result[l] = '\0';
         const char *password = result + 15;
@@ -2225,7 +2223,6 @@ passwd_entry_migrate_legacy_password(passwd_entry_t *pw)
                   pw->pw_username ?: "unknown");
         }
       }
-    }
   }
   
   return migrated;
