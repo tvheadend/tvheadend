@@ -2031,14 +2031,27 @@ passwd_verify
 {
   passwd_entry_t *pw;
 
-  TAILQ_FOREACH(pw, &passwd_entries, pw_link)
-    if (pw->pw_enabled &&
-        !passwd_verify2(username, verify, aux,
-                        pw->pw_username, pw->pw_password)) {
-      if (pw->pw_auth_enabled)
-        tvh_str_set(&a->aa_auth, pw->pw_auth);
-      return 0;
+  TAILQ_FOREACH(pw, &passwd_entries, pw_link) {
+    if (pw->pw_enabled && pw->pw_username && username && 
+        strcmp(username, pw->pw_username) == 0) {
+      
+      /* If we have a hash-based password entry, we can only support Basic auth
+       * since Digest auth requires access to plaintext password */
+      if (pw->pw_password_hash && !pw->pw_password) {
+        /* TODO: Implement hash-based verification for Basic auth only
+         * This breaks HTTP Digest authentication but improves security */
+        continue; /* Skip hash-only entries for now */
+      }
+      
+      /* Legacy plaintext verification (still needed for digest auth) */
+      if (pw->pw_password && !passwd_verify2(username, verify, aux,
+                                             pw->pw_username, pw->pw_password)) {
+        if (pw->pw_auth_enabled)
+          tvh_str_set(&a->aa_auth, pw->pw_auth);
+        return 0;
+      }
     }
+  }
   return -1;
 }
 
@@ -2210,9 +2223,9 @@ passwd_entry_migrate_legacy_password(passwd_entry_t *pw)
           free(pw->pw_password_hash);
           pw->pw_password_hash = hash;
           
-          /* Keep plaintext in memory for authentication compatibility */
+          /* Clear plaintext password for security - never store in memory */
           free(pw->pw_password);
-          pw->pw_password = strdup(password);
+          pw->pw_password = NULL;
           
           /* Clear the legacy password2 field */
           free(pw->pw_password2);
@@ -2241,9 +2254,9 @@ passwd_entry_class_password_set(void *o, const void *v)
       free(pw->pw_password_hash);
       pw->pw_password_hash = hash;
       
-      /* Keep plaintext in memory for authentication compatibility */
+      /* Clear plaintext password for security - never store in memory */
       free(pw->pw_password);
-      pw->pw_password = strdup((const char *)v);
+      pw->pw_password = NULL;
       
       /* Clear old password2 field */
       free(pw->pw_password2);

@@ -62,3 +62,7 @@ Thumbs.db
 Desktop.ini
 #macOS files
 .DS_Store
+
+# Additional build artifacts and temp files
+configure_script.sh
+*.o
