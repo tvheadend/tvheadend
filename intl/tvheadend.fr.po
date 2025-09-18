@@ -5531,7 +5531,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:777
 msgid "Sat"
-msgstr "Satellite"
+msgstr "Sam"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1422
 msgid "Satconf"
