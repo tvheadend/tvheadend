@@ -1,0 +1,30 @@
+#! /usr/bin/env python
+#
+# Given a csv file of genre, cat1, cat2, cat3...
+# we generate an array suitable for using
+# in structure for lookups in xmltv.
+import os, sys, re
+
+fp = open(sys.argv[1])
+m={}
+while 1:
+      line = fp.readline()
+      if not line:
+        break
+      if line[0] == '#':
+        continue;
+      csv = line.split(', ')
+      genre = csv[0].strip()
+      if genre == "":
+         continue
+      csv.pop(0)
+      for cat in csv:
+         cat = cat.strip()
+         m[cat] = genre
+
+comma = " "
+# Output has to be sorted for search in xmltv
+# to work.
+for cat,genre in sorted(m.items()):
+      print "%s{ \"%s\", \"%s\"}" % (comma, cat, genre)
+      comma = ","
