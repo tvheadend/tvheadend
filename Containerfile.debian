@@ -80,6 +80,7 @@ EXPOSE 9981 \
        9983
 
 RUN apt-get update --yes && apt-get install --yes \
+        'bzip2' \
         'libavahi-client3' \
         'libavcodec61' \
         'libavdevice61' \
