@@ -171,14 +171,14 @@ static int
 tvh_codec_profile_video_open(TVHVideoCodecProfile *self, AVDictionary **opts)
 {
     // video_size
-    AV_DICT_SET_INT(opts, "width", self->size.num, 0);
-    AV_DICT_SET_INT(opts, "height", self->size.den, 0);
+    AV_DICT_SET_INT(LST_VIDEO, opts, "width", self->size.num, 0);
+    AV_DICT_SET_INT(LST_VIDEO, opts, "height", self->size.den, 0);
     // crf
     if (self->crf) {
-        AV_DICT_SET_INT(opts, "crf", self->crf, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(LST_VIDEO, opts, "crf", self->crf, AV_DICT_DONT_OVERWRITE);
     }
     // pix_fmt
-    AV_DICT_SET_PIX_FMT(opts, self->pix_fmt, AV_PIX_FMT_YUV420P);
+    AV_DICT_SET_PIX_FMT(LST_VIDEO, opts, self->pix_fmt, AV_PIX_FMT_YUV420P);
     return 0;
 }
 

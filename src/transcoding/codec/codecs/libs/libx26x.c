@@ -58,8 +58,8 @@ static int
 tvh_codec_profile_libx26x_open(tvh_codec_profile_libx26x_t *self,
                                AVDictionary **opts)
 {
-    AV_DICT_SET(opts, "preset", self->preset, 0);
-    AV_DICT_SET(opts, "tune", self->tune, 0);
+    AV_DICT_SET(LST_LIBX26X, opts, "preset", self->preset, 0);
+    AV_DICT_SET(LST_LIBX26X, opts, "tune", self->tune, 0);
     return 0;
 }
 
@@ -132,14 +132,14 @@ tvh_codec_profile_libx264_open(tvh_codec_profile_libx26x_t *self,
 {
     // bit_rate or crf
     if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_BIT_RATE(LST_LIBX26X, opts, self->bit_rate);
     }
     else {
-        AV_DICT_SET_CRF(opts, self->crf, 15);
+        AV_DICT_SET_CRF(LST_LIBX26X, opts, self->crf, 15);
     }
     // params
     if (self->params && strlen(self->params)) {
-        AV_DICT_SET(opts, "x264-params", self->params, 0);
+        AV_DICT_SET(LST_LIBX26X, opts, "x264-params", self->params, 0);
     }
     return 0;
 }
@@ -231,14 +231,14 @@ tvh_codec_profile_libx265_open(tvh_codec_profile_libx26x_t *self,
 {
     // bit_rate or crf
     if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_BIT_RATE(LST_LIBX26X, opts, self->bit_rate);
     }
     else {
-        AV_DICT_SET_CRF(opts, self->crf, 18);
+        AV_DICT_SET_CRF(LST_LIBX26X, opts, self->crf, 18);
     }
     // params
     if (self->params && strlen(self->params)) {
-        AV_DICT_SET(opts, "x265-params", self->params, 0);
+        AV_DICT_SET(LST_LIBX26X, opts, "x265-params", self->params, 0);
     }
     return 0;
 }

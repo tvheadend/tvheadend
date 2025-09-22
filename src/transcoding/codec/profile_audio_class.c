@@ -171,18 +171,18 @@ static int
 tvh_codec_profile_audio_open(TVHAudioCodecProfile *self, AVDictionary **opts)
 {
     if (self->sample_fmt != AV_SAMPLE_FMT_NONE) {
-        AV_DICT_SET_INT(opts, "sample_fmt", self->sample_fmt,
+        AV_DICT_SET_INT(LST_AUDIO, opts, "sample_fmt", self->sample_fmt,
                         AV_DICT_DONT_OVERWRITE);
     }
     if (self->sample_rate) {
-        AV_DICT_SET_INT(opts, "sample_rate", self->sample_rate,
+        AV_DICT_SET_INT(LST_AUDIO, opts, "sample_rate", self->sample_rate,
                         AV_DICT_DONT_OVERWRITE);
     }
     if (self->channel_layout) {
 #if LIBAVCODEC_VERSION_MAJOR > 59
-        AV_DICT_SET_INT(opts, "ch_layout_u_mask", self->channel_layout, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(LST_AUDIO, opts, "ch_layout_u_mask", self->channel_layout, AV_DICT_DONT_OVERWRITE);
 #else
-        AV_DICT_SET_INT(opts, "channel_layout", self->channel_layout, AV_DICT_DONT_OVERWRITE);
+        AV_DICT_SET_INT(LST_AUDIO, opts, "channel_layout", self->channel_layout, AV_DICT_DONT_OVERWRITE);
 #endif
     }
     return 0;

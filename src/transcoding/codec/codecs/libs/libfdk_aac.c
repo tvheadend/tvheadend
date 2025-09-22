@@ -36,17 +36,17 @@ static int
 tvh_codec_profile_libfdk_aac_open(tvh_codec_profile_libfdk_aac_t *self,
                                   AVDictionary **opts)
 {
-    AV_DICT_SET_FLAGS_GLOBAL_HEADER(opts);
+    AV_DICT_SET_FLAGS_GLOBAL_HEADER(LST_LIBFDKAAC, opts);
     // bit_rate or vbr
     if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_BIT_RATE(LST_LIBFDKAAC, opts, self->bit_rate);
     }
     else {
-        AV_DICT_SET_INT(opts, "vbr", self->vbr ? self->vbr : 3, 0);
+        AV_DICT_SET_INT(LST_LIBFDKAAC, opts, "vbr", self->vbr ? self->vbr : 3, 0);
     }
-    AV_DICT_SET_INT(opts, "afterburner", self->afterburner, 0);
-    AV_DICT_SET_INT(opts, "eld_sbr", self->eld_sbr, 0);
-    AV_DICT_SET_INT(opts, "signaling", self->signaling, 0);
+    AV_DICT_SET_INT(LST_LIBFDKAAC, opts, "afterburner", self->afterburner, 0);
+    AV_DICT_SET_INT(LST_LIBFDKAAC, opts, "eld_sbr", self->eld_sbr, 0);
+    AV_DICT_SET_INT(LST_LIBFDKAAC, opts, "signaling", self->signaling, 0);
     return 0;
 }
 

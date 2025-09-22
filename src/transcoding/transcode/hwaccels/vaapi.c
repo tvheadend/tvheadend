@@ -99,14 +99,14 @@ tvhva_init(const char *device)
     }
     if (vad->hw_device_ref)
         return vad->hw_device_ref;
-    tvhtrace(LS_VAAPI, "trying device: %s", device);
+    tvhtrace_transcode(LST_VAAPI, "trying device: %s", device);
     if (av_hwdevice_ctx_create(&vad->hw_device_ref, AV_HWDEVICE_TYPE_VAAPI,
                                device, NULL, 0)) {
-        tvherror(LS_VAAPI,
+        tvherror_transcode(LST_VAAPI,
                  "failed to create a context for device: %s", device);
         return NULL;
     }
-    tvhtrace(LS_VAAPI, "successful context creation for device: %s", device);
+    tvhtrace_transcode(LST_VAAPI, "successful context creation for device: %s", device);
     return vad->hw_device_ref;
 }
 
@@ -262,7 +262,7 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
             profiles[j] = VAProfileNone;
         }
         if (profiles_max == 0) {
-            tvherror(LS_VAAPI, "%s: vaMaxNumProfiles() returned %d; vaapi doesn't have any profiles available, run: $ vainfo", self->logpref, profiles_max);
+            tvherror_transcode(LST_VAAPI, "%s: vaMaxNumProfiles() returned %d; vaapi doesn't have any profiles available, run: $ vainfo", self->logpref, profiles_max);
         }
         va_res = vaQueryConfigProfiles(self->display,
                                        profiles, &profiles_len);
@@ -275,7 +275,7 @@ tvhva_context_profile(TVHVAContext *self, AVCodecContext *avctx)
             }
         }
         else {
-            tvherror(LS_VAAPI, "%s: va_res != VA_STATUS_SUCCESS; Failed to query profiles: %d (%s), run: $ vainfo", self->logpref, va_res, vaErrorStr(va_res));
+            tvherror_transcode(LST_VAAPI, "%s: va_res != VA_STATUS_SUCCESS; Failed to query profiles: %d (%s), run: $ vainfo", self->logpref, va_res, vaErrorStr(va_res));
         }
         free(profiles);
     }
@@ -305,7 +305,7 @@ tvhva_context_check_profile(TVHVAContext *self, VAProfile profile)
             }
         }
         else {
-            tvherror(LS_VAAPI, "%s: va_res != VA_STATUS_SUCCESS; Failed to query entrypoints: %d (%s), run: $ vainfo", self->logpref, va_res, vaErrorStr(va_res));
+            tvherror_transcode(LST_VAAPI, "%s: va_res != VA_STATUS_SUCCESS; Failed to query entrypoints: %d (%s), run: $ vainfo", self->logpref, va_res, vaErrorStr(va_res));
         }
         if (res != 0) {
             // before giving up we swap VAEntrypointEncSliceLP with VAEntrypointEncSlice or viceversa
@@ -339,7 +339,7 @@ tvhva_context_check_profile(TVHVAContext *self, VAProfile profile)
         free(entrypoints);
     }
     else {
-        tvherror(LS_VAAPI, "%s: vaMaxNumEntrypoints() returned %d; vaapi doesn't have any entrypoints available, run: $ vainfo", self->logpref, entrypoints_max);
+        tvherror_transcode(LST_VAAPI, "%s: vaMaxNumEntrypoints() returned %d; vaapi doesn't have any entrypoints available, run: $ vainfo", self->logpref, entrypoints_max);
     }
     return res;
 }
@@ -374,19 +374,19 @@ tvhva_context_config(TVHVAContext *self, VAProfile profile, unsigned int format)
     va_res = vaGetConfigAttributes(self->display, profile, self->entrypoint,
                                    &attrib, 1);
     if (va_res != VA_STATUS_SUCCESS) {
-        tvherror(LS_VAAPI, "%s: vaGetConfigAttributes: %s",
+        tvherror_transcode(LST_VAAPI, "%s: vaGetConfigAttributes: %s",
                  self->logpref, vaErrorStr(va_res));
         return -1;
     }
     if (attrib.value == VA_ATTRIB_NOT_SUPPORTED || !(attrib.value & format)) {
-        tvherror(LS_VAAPI, "%s: unsupported VA_RT_FORMAT", self->logpref);
+        tvherror_transcode(LST_VAAPI, "%s: unsupported VA_RT_FORMAT", self->logpref);
         return -1;
     }
     attrib.value = format;
     va_res = vaCreateConfig(self->display, profile, self->entrypoint,
                             &attrib, 1, &self->config_id);
     if (va_res != VA_STATUS_SUCCESS) {
-        tvherror(LS_VAAPI, "%s: vaCreateConfig: %s",
+        tvherror_transcode(LST_VAAPI, "%s: vaCreateConfig: %s",
                  self->logpref, vaErrorStr(va_res));
         return -1;
     }
@@ -404,7 +404,7 @@ tvhva_context_check_constraints(TVHVAContext *self)
     int i, ret = 0;
 
     if (!(va_config = av_hwdevice_hwconfig_alloc(self->hw_device_ref))) {
-        tvherror(LS_VAAPI, "%s: failed to allocate hwconfig", self->logpref);
+        tvherror_transcode(LST_VAAPI, "%s: failed to allocate hwconfig", self->logpref);
         return AVERROR(ENOMEM);
     }
     va_config->config_id = self->config_id;
@@ -412,7 +412,7 @@ tvhva_context_check_constraints(TVHVAContext *self)
     hw_constraints =
         av_hwdevice_get_hwframe_constraints(self->hw_device_ref, va_config);
     if (!hw_constraints) {
-        tvherror(LS_VAAPI, "%s: failed to get constraints", self->logpref);
+        tvherror_transcode(LST_VAAPI, "%s: failed to get constraints", self->logpref);
         av_freep(&va_config);
         return -1;
     }
@@ -440,7 +440,7 @@ tvhva_context_check_constraints(TVHVAContext *self)
         }
     }
     if (self->sw_format == AV_PIX_FMT_NONE) {
-        tvherror(LS_VAAPI, "%s: VAAPI hardware does not support pixel format: %s",
+        tvherror_transcode(LST_VAAPI, "%s: VAAPI hardware does not support pixel format: %s",
                  self->logpref, av_get_pix_fmt_name(self->io_format));
         ret = AVERROR(EINVAL);
         goto end;
@@ -451,7 +451,7 @@ tvhva_context_check_constraints(TVHVAContext *self)
         self->height < hw_constraints->min_height ||
         self->width > hw_constraints->max_width ||
         self->height > hw_constraints->max_height) {
-        tvherror(LS_VAAPI, "%s: VAAPI hardware does not support image "
+        tvherror_transcode(LST_VAAPI, "%s: VAAPI hardware does not support image "
                  "size %dx%d (constraints: width %d-%d height %d-%d).",
                  self->logpref, self->width, self->height,
                  hw_constraints->min_width, hw_constraints->max_width,
@@ -484,20 +484,20 @@ tvhva_context_setup(TVHVAContext *self, AVCodecContext *avctx)
     profile = tvhva_context_profile(self, avctx);
 
     if (profile == VAProfileNone) {
-        tvherror(LS_VAAPI, "%s: tvhva_context_profile() returned VAProfileNone for %s",
+        tvherror_transcode(LST_VAAPI, "%s: tvhva_context_profile() returned VAProfileNone for %s",
                  self->logpref,
                  avctx->codec->name);
         return -1;
     }
 
     if (tvhva_context_check_profile(self, profile)) {
-        tvherror(LS_VAAPI, "%s: tvhva_context_check_profile() check failed for codec: %s --> codec not available",
+        tvherror_transcode(LST_VAAPI, "%s: tvhva_context_check_profile() check failed for codec: %s --> codec not available",
                  self->logpref,
                  avctx->codec->name);
         return -1;
     }
     if (!(format = tvhva_get_format(self->io_format))) {
-        tvherror(LS_VAAPI, "%s: unsupported pixel format: %s",
+        tvherror_transcode(LST_VAAPI, "%s: unsupported pixel format: %s",
                  self->logpref,
                  av_get_pix_fmt_name(self->io_format));
         return -1;
@@ -509,7 +509,7 @@ tvhva_context_setup(TVHVAContext *self, AVCodecContext *avctx)
     }
 
     if (!(self->hw_frames_ref = av_hwframe_ctx_alloc(self->hw_device_ref))) {
-        tvherror(LS_VAAPI, "%s: failed to create VAAPI frame context.",
+        tvherror_transcode(LST_VAAPI, "%s: failed to create VAAPI frame context.",
                  self->logpref);
         return AVERROR(ENOMEM);
     }
@@ -521,7 +521,7 @@ tvhva_context_setup(TVHVAContext *self, AVCodecContext *avctx)
     hw_frames_ctx->initial_pool_size = 32;
 
     if (av_hwframe_ctx_init(self->hw_frames_ref) < 0) {
-        tvherror(LS_VAAPI, "%s: failed to initialise VAAPI frame context",
+        tvherror_transcode(LST_VAAPI, "%s: failed to initialise VAAPI frame context",
                  self->logpref);
         return -1;
     }
@@ -535,7 +535,7 @@ tvhva_context_setup(TVHVAContext *self, AVCodecContext *avctx)
                                  va_frames->surface_ids, va_frames->nb_surfaces,
                                  &self->context_id);
         if (va_res != VA_STATUS_SUCCESS) {
-            tvherror(LS_VAAPI, "%s: vaCreateContext: %s",
+            tvherror_transcode(LST_VAAPI, "%s: vaCreateContext: %s",
                      self->logpref, vaErrorStr(va_res));
             return -1;
         }
@@ -560,7 +560,7 @@ tvhva_context_create(const char *logpref,
     enum AVPixelFormat pix_fmt;
 
     if (!(self = calloc(1, sizeof(TVHVAContext)))) {
-        tvherror(LS_VAAPI, "%s: failed to allocate vaapi context", logpref);
+        tvherror_transcode(LST_VAAPI, "%s: failed to allocate vaapi context", logpref);
         return NULL;
     }
     self->logpref = logpref;
@@ -578,7 +578,7 @@ tvhva_context_create(const char *logpref,
         self->io_format = pix_fmt;
     }
     if (self->io_format == AV_PIX_FMT_NONE) {
-        tvherror(LS_VAAPI, "%s: failed to get pix_fmt for vaapi context "
+        tvherror_transcode(LST_VAAPI, "%s: failed to get pix_fmt for vaapi context "
                            "(sw_pix_fmt: %s, pix_fmt: %s)",
                            logpref,
                            av_get_pix_fmt_name(avctx->sw_pix_fmt),
@@ -622,13 +622,13 @@ vaapi_decode_setup_context(AVCodecContext *avctx)
     int ret = -1;
 
     if (!(self = calloc(1, sizeof(TVHVAContext)))) {
-        tvherror(LS_VAAPI, "Decode: Failed to allocate VAAPI context (TVHVAContext)");
+        tvherror_transcode(LST_VAAPI, "Decode: Failed to allocate VAAPI context (TVHVAContext)");
         return AVERROR(ENOMEM);
     }
     // lifted from ffmpeg-6.1.1/doc/examples/vaapi_transcode.c line 237
     /* Open VAAPI device and create an AVHWDeviceContext for it*/
     if ((ret = av_hwdevice_ctx_create(&self->hw_device_ref, AV_HWDEVICE_TYPE_VAAPI, ctx->hw_accel_device, NULL, 0)) < 0) {
-        tvherror(LS_VAAPI, "Decode: Failed to Open VAAPI device and create an AVHWDeviceContext for device: "
+        tvherror_transcode(LST_VAAPI, "Decode: Failed to Open VAAPI device and create an AVHWDeviceContext for device: "
                             "%s with error code: %s", 
                             ctx->hw_accel_device, av_err2str(ret));
         free(self);
@@ -639,7 +639,7 @@ vaapi_decode_setup_context(AVCodecContext *avctx)
     /* set hw_frames_ctx for decoder's AVCodecContext */
     avctx->hw_device_ctx = av_buffer_ref(self->hw_device_ref);
     if (!avctx->hw_device_ctx) {
-        tvherror(LS_VAAPI, "Decode: Failed to create a hardware device reference for device: %s.", 
+        tvherror_transcode(LST_VAAPI, "Decode: Failed to create a hardware device reference for device: %s.", 
                         ctx->hw_accel_device);
         // unref hw_device_ref
         av_buffer_unref(&self->hw_device_ref);
@@ -736,7 +736,7 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx)
     int err = 0;
 
     if (!(hw_frames_ref = av_hwframe_ctx_alloc(hw_device_ctx))) {
-        tvherror(LS_VAAPI, "Encode: Failed to create VAAPI frame context.");
+        tvherror_transcode(LST_VAAPI, "Encode: Failed to create VAAPI frame context.");
         return AVERROR(ENOMEM);
     }
     frames_ctx = (AVHWFramesContext *)(hw_frames_ref->data);
@@ -746,7 +746,7 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx)
     frames_ctx->height    = ctx->height;
     frames_ctx->initial_pool_size = 20;
     if ((err = av_hwframe_ctx_init(hw_frames_ref)) < 0) {
-        tvherror(LS_VAAPI, "Encode: Failed to initialize VAAPI frame context."
+        tvherror_transcode(LST_VAAPI, "Encode: Failed to initialize VAAPI frame context."
                 "Error code: %s",av_err2str(err));
         av_buffer_unref(&hw_frames_ref);
         return err;
@@ -754,7 +754,7 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx)
     ctx->hw_frames_ctx = av_buffer_ref(hw_frames_ref);
     if (!ctx->hw_frames_ctx) {
         err = AVERROR(ENOMEM);
-        tvherror(LS_VAAPI, "Encode: Failed to create a hardware device reference."
+        tvherror_transcode(LST_VAAPI, "Encode: Failed to create a hardware device reference."
                 "Error code: %s",av_err2str(err));
     }
     av_buffer_unref(&hw_frames_ref);
@@ -772,14 +772,14 @@ vaapi_encode_setup_context(AVCodecContext *avctx)
     // lifted from ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 127
     /* Open VAAPI device and create an AVHWDeviceContext for it*/
     if ((ret = av_hwdevice_ctx_create(&ctx->hw_device_octx, AV_HWDEVICE_TYPE_VAAPI, NULL, NULL, 0)) < 0) {
-        tvherror(LS_VAAPI, "Encode: Failed to open VAAPI device and create an AVHWDeviceContext for it."
+        tvherror_transcode(LST_VAAPI, "Encode: Failed to open VAAPI device and create an AVHWDeviceContext for it."
                 "Error code: %s",av_err2str(ret));
         return ret;
     }
     // lifted from ffmpeg-6.1.1/doc/examples/vaapi_encode.c line 152
     /* set hw_frames_ctx for encoder's AVCodecContext */
     if ((ret = set_hwframe_ctx(avctx, ctx->hw_device_octx)) < 0) {
-        tvherror(LS_VAAPI, "Encode: Failed to set hwframe context."
+        tvherror_transcode(LST_VAAPI, "Encode: Failed to set hwframe context."
                 "Error code: %s",av_err2str(ret));
         av_buffer_unref(&ctx->hw_device_octx);
     }
