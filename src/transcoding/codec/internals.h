@@ -79,44 +79,108 @@
     _tvh_codec_getattr(c, a, AVMEDIA_TYPE_AUDIO, TVHAudioCodec)
 
 
-#define AV_DICT_SET(d, k, v, f) \
+#define tvhdebug_transcode(s, ...) \
     do { \
-        if (av_dict_set((d), (k), (v), (f)) < 0) { \
+        char log_out[SUB_SYSTEM_TRANSCODE_LOG_LENGTH_MAX]; \
+        tvh_concatenate_subsystem_with_logs(log_out, (s), ##__VA_ARGS__); \
+        tvhdebug( LS_TRANSCODE, "%s", log_out); \
+    } while (0)
+
+#define tvhinfo_transcode(s, ...) \
+    do { \
+        char log_out[SUB_SYSTEM_TRANSCODE_LOG_LENGTH_MAX]; \
+        tvh_concatenate_subsystem_with_logs(log_out, (s), ##__VA_ARGS__); \
+        tvhinfo( LS_TRANSCODE, "%s", log_out); \
+    } while (0)
+
+#define tvhwarn_transcode(s, ...) \
+    do { \
+        char log_out[SUB_SYSTEM_TRANSCODE_LOG_LENGTH_MAX]; \
+        tvh_concatenate_subsystem_with_logs(log_out, (s), ##__VA_ARGS__); \
+        tvhwarn( LS_TRANSCODE, "%s", log_out); \
+    } while (0)
+
+#define tvhnotice_transcode(s, ...) \
+    do { \
+        char log_out[SUB_SYSTEM_TRANSCODE_LOG_LENGTH_MAX]; \
+        tvh_concatenate_subsystem_with_logs(log_out, (s), ##__VA_ARGS__); \
+        tvhnotice( LS_TRANSCODE, "%s", log_out); \
+    } while (0)
+
+#define tvherror_transcode(s, ...) \
+    do { \
+        char log_out[SUB_SYSTEM_TRANSCODE_LOG_LENGTH_MAX]; \
+        tvh_concatenate_subsystem_with_logs(log_out, (s), ##__VA_ARGS__); \
+        tvherror( LS_TRANSCODE, "%s", log_out); \
+    } while (0)
+
+#define tvhalert_transcode(s, ...) \
+    do { \
+        char log_out[SUB_SYSTEM_TRANSCODE_LOG_LENGTH_MAX]; \
+        tvh_concatenate_subsystem_with_logs(log_out, (s), ##__VA_ARGS__); \
+        tvhalert( LS_TRANSCODE, "%s", log_out); \
+    } while (0)
+
+#define tvhtrace_transcode(s, ...) \
+    do { \
+        char log_out[SUB_SYSTEM_TRANSCODE_LOG_LENGTH_MAX]; \
+        tvh_concatenate_subsystem_with_logs(log_out, (s), ##__VA_ARGS__); \
+        tvhtrace( LS_TRANSCODE, "%s", log_out); \
+    } while (0)
+
+#define AV_DICT_SET(s, d, k, v, f) \
+    do { \
+        int ret = av_dict_set((d), (k), (v), (f)); \
+        if (ret < 0) { \
+            tvherror_transcode((s), "Unable to write key '%s' with value '%s' due to error '%s'" , (k), (v), av_err2str((ret)));\
             return -1; \
         } \
     } while (0)
 
-#define AV_DICT_SET_INT(d, k, v, f) \
+#define AV_DICT_SET_INT(s, d, k, v, f) \
     do { \
-        if (av_dict_set_int((d), (k), (v), (f)) < 0) { \
+        int ret = av_dict_set_int((d), (k), (int64_t)(v), (f)); \
+        if (ret < 0) { \
+            tvherror_transcode((s), "Unable to write key '%s' with value %"PRId64" due to error '%s'" , (k), (int64_t)(v), av_err2str((ret)));\
             return -1; \
         } \
     } while (0)
 
-#define AV_DICT_SET_TVH_REQUIRE_META(d, v) \
-    AV_DICT_SET_INT((d), "tvh_require_meta", (v), AV_DICT_DONT_OVERWRITE)
+#define AV_DICT_SET_TVH_REQUIRE_META(s, d, v) \
+    AV_DICT_SET_INT((s), (d), "tvh_require_meta", (v), AV_DICT_DONT_OVERWRITE)
 
-#define AV_DICT_SET_FLAGS(d, v) \
-    AV_DICT_SET((d), "flags", (v), AV_DICT_APPEND)
+#define AV_DICT_SET_FLAGS(s, d, v) \
+    AV_DICT_SET((s), (d), "flags", (v), AV_DICT_APPEND)
 
-#define AV_DICT_SET_FLAGS_GLOBAL_HEADER(d) \
-    AV_DICT_SET_FLAGS((d), "+global_header")
+#define AV_DICT_SET_FLAGS_GLOBAL_HEADER(s, d) \
+    AV_DICT_SET_FLAGS((s), (d), "+global_header")
 
-#define AV_DICT_SET_BIT_RATE(d, v) \
-    AV_DICT_SET_INT((d), "b", (v) * 1000, AV_DICT_DONT_OVERWRITE)
-
-#define AV_DICT_SET_GLOBAL_QUALITY(d, v, a) \
+#define AV_DICT_SET_BIT_RATE(s, d, v) \
     do { \
-        AV_DICT_SET_FLAGS((d), "+qscale"); \
-        AV_DICT_SET_INT((d), "global_quality", ((v) ? (v) : (a)) * FF_QP2LAMBDA, \
-                        AV_DICT_DONT_OVERWRITE); \
+        int64_t bitrate = 0; \
+        if ((v) <= (INT64_MAX / 1000) && (v) >= 0) \
+            bitrate = (int64_t)((v) * 1000); \
+        else \
+            tvherror_transcode((s), "bitrate value too large to fit in int64_t: %g or negative", (v) * 1000); \
+        AV_DICT_SET_INT((s), (d), "b", bitrate, AV_DICT_DONT_OVERWRITE); \
     } while (0)
 
-#define AV_DICT_SET_CRF(d, v, a) \
-    AV_DICT_SET_INT((d), "crf", (v) ? (v) : (a), AV_DICT_DONT_OVERWRITE)
+#define AV_DICT_SET_GLOBAL_QUALITY(s, d, v, a) \
+    do { \
+        AV_DICT_SET_FLAGS((s), (d), "+qscale"); \
+        int64_t global_quality = 0; \
+        if (((v) <= (INT64_MAX / FF_QP2LAMBDA) && (v) > 0) || ((v) == 0 && (a) <= (INT64_MAX / FF_QP2LAMBDA))) \
+            global_quality = (int64_t)(((v) ? (v) : (a)) * FF_QP2LAMBDA); \
+        else \
+            tvherror_transcode((s), "global_quality value too large to fit in int64_t: %g", ((v) ? (v) : (a)) * FF_QP2LAMBDA); \
+        AV_DICT_SET_INT((s), (d), "global_quality", global_quality, AV_DICT_DONT_OVERWRITE); \
+    } while (0)
 
-#define AV_DICT_SET_PIX_FMT(d, v, a) \
-    AV_DICT_SET_INT((d), "pix_fmt", ((v) != AV_PIX_FMT_NONE) ? (v) : (a), \
+#define AV_DICT_SET_CRF(s, d, v, a) \
+    AV_DICT_SET_INT((s), (d), "crf", (v) ? (v) : (a), AV_DICT_DONT_OVERWRITE)
+
+#define AV_DICT_SET_PIX_FMT(s, d, v, a) \
+    AV_DICT_SET_INT((s), (d), "pix_fmt", ((v) != AV_PIX_FMT_NONE) ? (v) : (a), \
                     AV_DICT_DONT_OVERWRITE)
 
 #define HWACCEL_AUTO        0

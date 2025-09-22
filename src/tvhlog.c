@@ -179,7 +179,6 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_TSFILE]        = { "tsfile",        N_("MPEG-TS File") },
   [LS_TSDEBUG]       = { "tsdebug",       N_("MPEG-TS Input Debug") },
   [LS_CODEC]         = { "codec",         N_("Codec") },
-  [LS_VAAPI]         = { "vaapi",         N_("VA-API") },
   [LS_VAINFO]        = { "vainfo",        N_("VAINFO") },
 #if ENABLE_DDCI
   [LS_DDCI]          = { "ddci",          N_("DD-CI") },
@@ -188,6 +187,60 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_RATINGLABELS]  = { "ratinglabels",  N_("Rating Labels") },
 
 };
+
+/*
+ * logging transcoding
+ */
+#define SUB_SYSTEM_TRANSCODE_NAME_LENGHT_MAX 64
+// name (2nd parameter) has max 64 chars
+tvhlog_subsys_t tvhlog_transcode_subsystems[] = {
+    [LST_NONE]          = { "",              N_("") },
+    [LST_AUDIO]         = { "audio",         N_("Audio") },
+    [LST_VIDEO]         = { "video",         N_("Video") },
+    [LST_CODEC]         = { "codec",         N_("Codec") },
+    [LST_MP2]           = { "mp2",           N_("MP2") },
+    [LST_AAC]           = { "aac",           N_("AAC") },
+    [LST_FLAC]          = { "flac",          N_("FLAC") },
+    [LST_LIBFDKAAC]     = { "libfdk-aac",    N_("LIB FDK_AAC") },
+    [LST_LIBOPUS]       = { "libopus",       N_("LIB OPUS") },
+    [LST_LIBTHEORA]     = { "libtheora",     N_("LIB THEORA") },
+    [LST_LIBVORBIS]     = { "libvorbis",     N_("LIB VORBIS") },
+    [LST_VORBIS]        = { "vorbis",        N_("VORBIS") },
+    [LST_MPEG2VIDEO]    = { "mpeg2video",    N_("MPEG2 VIDEO") },
+    [LST_LIBVPX]        = { "libvpx",        N_("LIB VPX") },
+    [LST_LIBX26X]       = { "libx26x",       N_("LIB x264_x265") },
+    [LST_NVENC]         = { "nvenc",         N_("NVENC") },
+    [LST_OMX]           = { "omx",           N_("OMX") },
+    [LST_VAAPI]         = { "vaapi",         N_("VA-API") },
+};
+
+// delimiter ': ' has 2 chars
+#define SUB_SYSTEM_TRANSCODE_DELIMITER_LENGTH 2
+
+void
+tvh_concatenate_subsystem_with_logsv(char* buf, int subsys, const char *fmt, va_list *args)
+{
+  // to store the subsystem codec name
+  char subsystem[SUB_SYSTEM_TRANSCODE_NAME_LENGHT_MAX];
+  // to store (temporary buffer)
+  char log[SUB_SYSTEM_TRANSCODE_LOG_LENGTH_MAX - SUB_SYSTEM_TRANSCODE_NAME_LENGHT_MAX - SUB_SYSTEM_TRANSCODE_DELIMITER_LENGTH];
+  if (args)
+    vsnprintf(log, sizeof(log), fmt, *args);
+  else
+    snprintf(log, sizeof(log), "%s", fmt);
+  snprintf(subsystem, sizeof(subsystem), "%s", tvhlog_transcode_subsystems[subsys].name);
+  // concatenate strings with delimited ': '
+  snprintf(buf, SUB_SYSTEM_TRANSCODE_LOG_LENGTH_MAX, "%s: %s", subsystem, log);
+}
+
+void 
+tvh_concatenate_subsystem_with_logs(char* buf, int subsys, const char *fmt, ... )
+{
+  va_list args;
+  va_start(args, fmt);
+  tvh_concatenate_subsystem_with_logsv(buf, subsys, fmt, &args);
+  va_end(args);
+}
 
 static void
 tvhlog_get_subsys ( bitops_ulong_t *ss, char *subsys, size_t len )
