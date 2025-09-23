@@ -240,6 +240,12 @@ tvh_context_setup(TVHContext *self, const AVCodec *iavcodec, const AVCodec *oavc
     enum AVMediaType media_type = iavcodec->type;
     const char *media_type_name = av_get_media_type_string(media_type);
 
+    if (!iavcodec || !oavcodec) {
+        tvh_stream_log(self->stream, LOG_ERR,
+                       "invalid codec parameters: input=%p output=%p",
+                       iavcodec, oavcodec);
+        return -1;
+    }
     if (!(self->type = tvh_context_type_find(media_type))) {
         tvh_stream_log(self->stream, LOG_ERR,
                        "failed to find context type for '%s' media type",
