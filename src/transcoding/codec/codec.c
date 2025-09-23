@@ -231,7 +231,7 @@ tvh_codec_get_type_string(TVHCodec *self)
 const AVCodec *
 tvh_codec_get_codec(TVHCodec *self)
 {
-    return self ? self->codec : NULL;
+    return self->codec;
 }
 
 
