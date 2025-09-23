@@ -137,6 +137,11 @@ tvh_codec_profile_libx264_open(tvh_codec_profile_libx26x_t *self,
     else {
         AV_DICT_SET_CRF(opts, self->crf, 15);
     }
+    // Set default profile if not specified (to avoid profile 0 error)
+    TVHCodecProfile *base_profile = (TVHCodecProfile *)self;
+    if (base_profile->profile == FF_AV_PROFILE_UNKNOWN) {
+        AV_DICT_SET(opts, "profile", "baseline", AV_DICT_DONT_OVERWRITE);
+    }
     // params
     if (self->params && strlen(self->params)) {
         AV_DICT_SET(opts, "x264-params", self->params, 0);
@@ -212,6 +217,7 @@ TVHVideoCodec tvh_codec_libx264 = {
     .size     = sizeof(tvh_codec_profile_libx26x_t),
     .idclass  = &codec_profile_libx264_class,
     .profiles = libx264_profiles,
+    .profile_init = tvh_codec_profile_video_init,
     .profile_destroy = tvh_codec_profile_libx265_destroy,
 };
 
