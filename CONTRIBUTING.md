@@ -17,6 +17,16 @@ Tvheadend welcomes all code contributions. To ensure the process of contributing
 * Provide additional info in the commit message body if required (detail is always good)
 * GUI help changes must be made in the master `en_GB` template
 
+## Internationalization (Translations)
+
+String translations for Tvheadend are managed through [Transifex](https://www.transifex.com/tvheadend/tvheadend/). The process is automated:
+
+1. Template files (`.pot` files) are automatically updated weekly via GitHub Actions
+2. Changes are synced to Transifex where translators update translations  
+3. Completed translations are synced back to the repository via pull requests
+
+If you're adding new translatable strings to the code, they will be automatically picked up in the next template update. Use the standard gettext format with `N_()` for strings that need translation.
+
 ## Submit Changes
 
 * Create a pull request to our `master` development branch
