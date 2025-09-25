@@ -37,10 +37,10 @@ static int
 tvh_codec_profile_libopus_open(tvh_codec_profile_libopus_t *self,
                                AVDictionary **opts)
 {
-    AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
-    AV_DICT_SET_INT(opts, "vbr", self->vbr, 0);
-    AV_DICT_SET_INT(opts, "application", self->application, 0);
-    AV_DICT_SET_INT(opts, "compression_level", self->complexity, 0);
+    AV_DICT_SET_BIT_RATE(LST_LIBOPUS, opts, self->bit_rate);
+    AV_DICT_SET_INT(LST_LIBOPUS, opts, "vbr", self->vbr, 0);
+    AV_DICT_SET_INT(LST_LIBOPUS, opts, "application", self->application, 0);
+    AV_DICT_SET_INT(LST_LIBOPUS, opts, "compression_level", self->complexity, 0);
     return 0;
 }
 

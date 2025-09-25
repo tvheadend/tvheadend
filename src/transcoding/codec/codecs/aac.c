@@ -69,12 +69,12 @@ tvh_codec_profile_aac_open(tvh_codec_profile_aac_t *self, AVDictionary **opts)
 {
     // bit_rate or global_quality
     if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_BIT_RATE(LST_AAC, opts, self->bit_rate);
     }
     else {
-        AV_DICT_SET_GLOBAL_QUALITY(opts, self->qscale, 1);
+        AV_DICT_SET_GLOBAL_QUALITY(LST_AAC, opts, self->qscale, 1);
     }
-    AV_DICT_SET(opts, "aac_coder", self->coder, 0);
+    AV_DICT_SET(LST_AAC, opts, "aac_coder", self->coder, 0);
     return 0;
 }
 
