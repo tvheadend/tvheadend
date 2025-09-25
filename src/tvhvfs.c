@@ -3,8 +3,6 @@
  *
  * Copyright (c) 2017 Jaroslav Kysela <perex@perex.cz>
  */
-
-
 #include "tvheadend.h"
 #include "tvhvfs.h"
 #if !defined(PLATFORM_DARWIN) && !defined(PLATFORM_FREEBSD)

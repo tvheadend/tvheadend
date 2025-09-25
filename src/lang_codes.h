@@ -1,10 +1,10 @@
 /*
+ * Multi-language Support - language codes
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #ifndef __TVH_LANG_CODES_H__
 #define __TVH_LANG_CODES_H__
 

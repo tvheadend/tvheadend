@@ -1,19 +1,8 @@
+#!/usr/bin/env bash
+#
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Copyright (C) 2008-2014 Tvheadend Project (https://tvheadend.org)
-# ############################################################################
-# 3rd Party library processing support
-#
-# Provides support routine for the management of 3rd party libraries for
-# which we include our own static build to simplify integration.
-# ############################################################################
-
-#set -x
-
-# ############################################################################
-# Config
-# ############################################################################
-
 [ -z "$PCLOUD_BASEDIR" ] && PCLOUD_BASEDIR=misc
 [ -z "$PCLOUD_HASHDIR" ] && PCLOUD_HASHDIR=kZ54ee7ZUvsSYmb9VGSpnmoVzcAUhpBXLq8k
 [ -z "$ARCH" ] && ARCH=$(uname -m)

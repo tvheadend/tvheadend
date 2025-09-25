@@ -1,10 +1,10 @@
 /*
+ * tvheadend
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef STRTAB_H_
 #define STRTAB_H_
 

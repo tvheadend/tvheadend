@@ -1,10 +1,10 @@
 /*
+ * EPG Grabber - common functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #ifndef __EPGGRAB_H__
 #define __EPGGRAB_H__
 

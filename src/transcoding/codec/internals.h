@@ -1,11 +1,10 @@
 /*
+ * tvheadend - Codec Profiles
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2016 Tvheadend
  */
-
-
-
 #ifndef TVH_TRANSCODING_CODEC_INTERNALS_H__
 #define TVH_TRANSCODING_CODEC_INTERNALS_H__
 

@@ -1,11 +1,11 @@
 /*
+ * API - ratinglabel calls
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela (Original Bouquets)
  * Copyright (C) 2023 DeltaMikeCharlie (Updated for Rating Labels)
  */
-
-
 #ifndef __TVH_API_RATINGLABEL_H__
 #define __TVH_API_RATINGLABEL_H__
 

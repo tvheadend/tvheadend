@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - SAT>IP DVB frontend
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #include <fcntl.h>
 #include "tvheadend.h"
 #include "tvhpoll.h"

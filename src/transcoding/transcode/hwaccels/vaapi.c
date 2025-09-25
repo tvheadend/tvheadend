@@ -1,10 +1,10 @@
 /*
+ * tvheadend - Transcoding
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2016 Tvheadend
  */
-
-
 #include "../../codec/internals.h"
 #include "../internals.h"
 #include "vaapi.h"

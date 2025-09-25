@@ -1,10 +1,10 @@
 /*
+ * Electronic Program Guide - EPG grabber OTA functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include "tvheadend.h"
 #include "queue.h"
 #include "settings.h"

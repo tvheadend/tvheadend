@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - cron routines
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Adam Sutton
  */
-
-
 #ifndef __TVH_CRON_H__
 #define __TVH_CRON_H__
 

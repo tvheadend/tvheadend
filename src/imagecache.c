@@ -1,10 +1,10 @@
 /*
+ * Icon file server operations
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Andy Brown
  */
-
-
 #include <fcntl.h>
 
 #include "settings.h"

@@ -1,10 +1,10 @@
 /*
+ * TV Input - DVB - Support/Conversion functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>

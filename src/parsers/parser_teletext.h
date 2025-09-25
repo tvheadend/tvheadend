@@ -1,10 +1,10 @@
 /*
+ * Teletext parsing functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef TELETEXT_H
 #define TELETEXT_H
 

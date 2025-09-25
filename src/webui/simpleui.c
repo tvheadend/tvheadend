@@ -1,10 +1,10 @@
 /*
+ * tvheadend, WEBUI / HTML user interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #include "tvheadend.h"
 #include "htsbuf.h"
 #include "http.h"

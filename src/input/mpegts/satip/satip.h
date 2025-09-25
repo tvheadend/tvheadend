@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - SAT-IP DVB private data
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #ifndef __TVH_SATIP_H__
 #define __TVH_SATIP_H__
 

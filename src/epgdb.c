@@ -1,10 +1,10 @@
 /*
+ * Electronic Program Guide - Database File functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>

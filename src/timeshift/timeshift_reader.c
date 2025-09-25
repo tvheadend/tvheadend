@@ -3,8 +3,6 @@
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include "tvheadend.h"
 #include "streaming.h"
 #include "timeshift.h"

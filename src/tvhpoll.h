@@ -1,11 +1,10 @@
 /*
+ * TVheadend - poll/select wrapper
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
-
 #ifndef __TVHPOLL_H__
 #define __TVHPOLL_H__
 

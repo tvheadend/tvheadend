@@ -3,8 +3,6 @@
  *
  * Copyright (C) 2009 Andreas Öman
  */
-
-
 #ifndef TRAP_H__
 #define TRAP_H__
 

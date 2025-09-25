@@ -1,10 +1,10 @@
 /*
+ * Tvheadend
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adrien CLERC
  */
-
-
 #ifndef RTCP_H
 #define	RTCP_H
 

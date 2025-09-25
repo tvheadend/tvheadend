@@ -1,10 +1,10 @@
 /*
+ * Digital Video Recorder - inotify processing
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include <sys/inotify.h>
 #include <sys/stat.h>
 #include <signal.h>

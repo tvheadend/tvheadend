@@ -1,10 +1,10 @@
 /*
+ * "muxer" to write mpeg audio elementary streams
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Dave Chapman
  */
-
-
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>

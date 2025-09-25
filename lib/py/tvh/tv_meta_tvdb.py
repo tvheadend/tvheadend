@@ -1,3 +1,14 @@
+#! /usr/bin/env python3
+# Retrieve details for a series from tvdb.
+#
+# Required options:
+# --tvdb-key XX
+# Option important options:
+# --tvdb-languages - a csv of 2-character languages to use such as en,nl
+#
+# TV information and images are provided by TheTVDB.com, but we are
+# not endorsed or certified by TheTVDB.com or its affiliates
+#
 # SPDX-License-Identifier: GPL-3.0-or-later
 import os,sys
 import json

@@ -1,10 +1,10 @@
 /*
+ * TV headend - File bundles
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman, Adam Sutton
  */
-
-
 #ifndef __TVH_FILE_BUNDLE_H__
 #define __TVH_FILE_BUNDLE_H__
 

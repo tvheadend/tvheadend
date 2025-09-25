@@ -1,10 +1,10 @@
 /*
+ * EPG Grabber - private routines
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #ifndef __EPGGRAB_PRIVATE_H__
 #define __EPGGRAB_PRIVATE_H__
 

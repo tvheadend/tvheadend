@@ -1,10 +1,10 @@
 /*
+ * Electronic Program Guide - Regular Expression Pattern Functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012-2017 Adam Sutton
  */
-
-
 #include <assert.h>
 #include <ctype.h>
 #include "tvheadend.h"

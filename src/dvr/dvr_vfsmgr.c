@@ -1,11 +1,11 @@
 /*
+ * Digital Video Recorder - file system management
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015 Jaroslav Kysela
  * Copyright (C) 2015 Glenn Christiaensen
  */
-
-
 #include <sys/stat.h>
 
 #include "tvheadend.h"

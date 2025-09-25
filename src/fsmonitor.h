@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - File/Directory monitoring
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Adam Sutton
  */
-
-
 #ifndef __FS_MONITOR_H__
 #define __FS_MONITOR_H__
 

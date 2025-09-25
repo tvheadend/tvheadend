@@ -1,11 +1,11 @@
 /*
+ * Tvheadend - Linux DVB CA
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015 Damjan Marion
  * Copyright (C) 2017 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
 #include "notify.h"

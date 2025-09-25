@@ -1,10 +1,10 @@
 /*
+ * tvheadend, internationalization (locale)
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015 Jaroslav Kysela
  */
-
-
 #include <stdio.h>
 #include "tvh_thread.h"
 #include "tvh_locale.h"

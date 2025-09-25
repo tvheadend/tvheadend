@@ -1,10 +1,10 @@
 /*
+ * tvheadend, Automatic time-based recording
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela <perex@perex.cz>
  */
-
-
 #include <ctype.h>
 
 #include "tvheadend.h"

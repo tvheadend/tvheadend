@@ -1,10 +1,10 @@
 /*
+ * Functions for transport probing
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef __TVH_SERVICE_MAPPER_H__
 #define __TVH_SERVICE_MAPPER_H__
 

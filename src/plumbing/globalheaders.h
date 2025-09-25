@@ -3,8 +3,6 @@
  *
  * Copyright (C) 2010 Andreas Öman
  */
-
-
 #ifndef GLOBALHEADERS_H__
 #define GLOBALHEADERS_H__
 

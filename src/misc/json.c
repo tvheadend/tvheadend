@@ -1,10 +1,10 @@
 /*
+ * JSON helpers
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2011 Andreas Öman
  */
-
-
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>

@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - conditional access key client superclass
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela <perex@perex.cz>
  */
-
-
 #include "tvheadend.h"
 #include "settings.h"
 #include "caclient.h"

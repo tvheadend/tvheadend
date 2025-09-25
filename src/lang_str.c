@@ -1,10 +1,10 @@
 /*
+ * Multi-language String support
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>

@@ -1,10 +1,10 @@
 /*
+ * Download a file from storage or network
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015 Jaroslav Kysela
  */
-
-
 #ifndef __DOWNLOAD__
 #define __DOWNLOAD__
 

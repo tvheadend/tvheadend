@@ -1,11 +1,11 @@
 /*
+ * Tvheadend - MPEGTS DVB support routines and defines
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #ifndef __TVH_MPEGTS_DVB_H__
 #define __TVH_MPEGTS_DVB_H__
 

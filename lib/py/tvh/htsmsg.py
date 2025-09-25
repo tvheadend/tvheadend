@@ -1,6 +1,5 @@
+#!/usr/bin/env python
 # SPDX-License-Identifier: GPL-3.0-or-later
-#
-# Copyright (C) 2012 Adam Sutton <dev@adamsutton.me.uk>
 """
 Support for processing HTSMSG binary format
 """

@@ -3,8 +3,6 @@
  *
  * Copyright (c) 2015 Jaroslav Kysela <perex@perex.cz>
  */
-
-
 #ifndef __TVH_ENDIAN_H
 #define __TVH_ENDIAN_H
 

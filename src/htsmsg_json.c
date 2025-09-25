@@ -1,10 +1,10 @@
 /*
+ * Functions converting HTSMSGs to/from JSON
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #include <assert.h>
 #include <sys/types.h>
 #include <stdio.h>

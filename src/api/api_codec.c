@@ -1,11 +1,10 @@
 /*
+ * tvheadend - API access to Codec Profiles
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2016 Tvheadend
  */
-
-
-
 #include "tvheadend.h"
 #include "access.h"
 #include "api.h"

@@ -1,10 +1,10 @@
 /*
+ * tvheadend, muxing of packets with builtin dvr muxer
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 John Törnblom
  */
-
-
 #ifndef MUXER_MKV_H_
 #define MUXER_MKV_H_
 

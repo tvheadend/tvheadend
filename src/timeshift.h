@@ -1,10 +1,10 @@
 /*
+ * TV headend - Timeshift
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #ifndef __TVH_TIMESHIFT_H__
 #define __TVH_TIMESHIFT_H__
 

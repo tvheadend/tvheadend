@@ -3,8 +3,6 @@
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #include <string.h>
 #include <assert.h>
 

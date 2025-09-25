@@ -1,10 +1,10 @@
 /*
+ * tvheadend, network card client
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #include "tvheadend.h"
 #include "caclient.h"
 #include "descrambler.h"

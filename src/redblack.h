@@ -4,8 +4,6 @@
  * Copyright (C) 2001 Mark Edel
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #ifndef REDBLACK_H_
 #define REDBLACK_H_
 

@@ -1,10 +1,10 @@
 /*
+ * TVHeadend - UDP stream common routines
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2019 Stephane Duperron
  */
-
-
 #define _GNU_SOURCE
 #include "tvheadend.h"
 #include "config.h"

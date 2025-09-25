@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - MPEGTS multiplex
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
 #include "idnode.h"
 #include "queue.h"
 #include "input.h"

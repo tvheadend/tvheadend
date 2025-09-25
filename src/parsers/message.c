@@ -1,10 +1,10 @@
 /*
+ * Packet parsing functions - streaming message handler
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2017 Jaroslav Kysela
  */
-
-
 #include "parsers.h"
 #include "../input/mpegts/dvb_psi_hbbtv.h"
 #include "packet.h"

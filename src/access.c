@@ -1,10 +1,10 @@
 /*
+ * tvheadend, access control
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #include "tvheadend.h"
 #include <ctype.h>
 #include <arpa/inet.h>

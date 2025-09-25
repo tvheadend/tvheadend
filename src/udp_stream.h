@@ -1,10 +1,10 @@
 /*
+ * tvheadend, UDP stream interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2019 Stephane Duperron
  */
-
-
 #ifndef UDP_STREAM_H_
 #define UDP_STREAM_H_
 

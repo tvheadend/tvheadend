@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - CI CAM (EN50221) generic interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2017 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "en50221_capmt.h"
 #include "esstream.h"

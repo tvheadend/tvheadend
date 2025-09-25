@@ -1,10 +1,10 @@
 /*
+ * TV headend - zlib integration
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include "tvheadend.h"
 
 #define ZLIB_CONST 1

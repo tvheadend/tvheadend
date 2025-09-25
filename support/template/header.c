@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2016- Tvheadend Project (https://tvheadend.org)
  */
-
 /* ****************************************************************************
  * Editor Configuration
  *

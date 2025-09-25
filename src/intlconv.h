@@ -1,10 +1,10 @@
 /*
+ * tvheadend, iconv interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #ifndef INTLCONV_H_
 #define INTLCONV_H_
 

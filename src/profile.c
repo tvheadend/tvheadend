@@ -1,10 +1,10 @@
 /*
+ * tvheadend, Stream Profile
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "settings.h"
 #include "profile.h"

@@ -1,10 +1,10 @@
 /*
+ * tvheadend, MPEG transport stream functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef TSDEMUX_H
 #define TSDEMUX_H
 

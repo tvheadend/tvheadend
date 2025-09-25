@@ -1,10 +1,10 @@
 /*
+ * tvheadend, channel functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #include <ctype.h>
 
 #include "settings.h"

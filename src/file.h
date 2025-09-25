@@ -1,10 +1,10 @@
 /*
+ * Process file operations
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #ifndef FILE_H
 #define FILE_H
 

@@ -1,11 +1,11 @@
 /*
+ * tvheadend, UDP interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #ifndef UDP_H_
 #define UDP_H_
 

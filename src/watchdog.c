@@ -1,10 +1,10 @@
 /*
+ * tvheadend, systemd watchdog support
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2017-2018 Erkki Seppälä
  */
-
-
 #include "watchdog.h"
 #include "tvheadend.h"
 

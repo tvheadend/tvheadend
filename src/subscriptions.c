@@ -1,10 +1,10 @@
 /*
+ * tvheadend, transport and subscription functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #include "tvheadend.h"
 #include "subscriptions.h"
 #include "streaming.h"

@@ -1,10 +1,10 @@
 /*
+ * tvheadend, subscription functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef SUBSCRIPTIONS_H
 #define SUBSCRIPTIONS_H
 

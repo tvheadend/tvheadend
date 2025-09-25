@@ -1,10 +1,10 @@
 /*
+ * TVheadend
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
 #include "input.h"
 #include "mpegts/fastscan.h"
 #include "memoryinfo.h"

@@ -1,10 +1,10 @@
 /*
+ * tvheadend, tsdebug code word interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #include <ctype.h>
 #include "tvheadend.h"
 #include "caclient.h"

@@ -1,11 +1,11 @@
 /*
+ * EPG Grabber - channel functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  * Copyright (C) 2015 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "settings.h"
 #include "htsmsg.h"

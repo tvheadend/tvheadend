@@ -1,10 +1,10 @@
 /*
+ * Floating point conversion functions.
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2011 Andreas Öman
  */
-
-
 #define _ISOC99_SOURCE
 
 #include <math.h>

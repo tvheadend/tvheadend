@@ -1,6 +1,5 @@
+#!/usr/bin/env python
 # SPDX-License-Identifier: GPL-3.0-or-later
-#
-# Copyright (C) 2012 Adam Sutton <dev@adamsutton.me.uk>
 """
 This is a very simple HTSP client library written in python mainly just
 for demonstration purposes.

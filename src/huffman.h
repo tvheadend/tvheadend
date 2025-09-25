@@ -1,10 +1,10 @@
 /*
+ * TV headend - Huffman decoder
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #ifndef __TVH_HUFFMAN_H__
 #define __TVH_HUFFMAN_H__
 

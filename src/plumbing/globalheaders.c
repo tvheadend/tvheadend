@@ -3,8 +3,6 @@
  *
  * Copyright (C) 2010 Andreas Öman
  */
-
-
 #include <assert.h>
 #include "tvheadend.h"
 #include "streaming.h"

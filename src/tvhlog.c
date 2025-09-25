@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - logging
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include <stdio.h>
 #include "tvhlog.h"
 #include <string.h>

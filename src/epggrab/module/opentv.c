@@ -1,10 +1,10 @@
 /*
+ * Electronic Program Guide - opentv epg grabber
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>

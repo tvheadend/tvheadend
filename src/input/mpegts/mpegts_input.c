@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - MPEGTS input source
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
 #include "input.h"
 #include "tsdemux.h"
 #include "streaming.h"

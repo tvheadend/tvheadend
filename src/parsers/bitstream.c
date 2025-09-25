@@ -1,10 +1,10 @@
 /*
+ * Bit stream reader
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #include <stdio.h>
 #include <inttypes.h>
 #include "bitstream.h"

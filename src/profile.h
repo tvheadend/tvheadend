@@ -1,10 +1,10 @@
 /*
+ * tvheadend, Stream Profile
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #ifndef __TVH_PROFILE_H__
 #define __TVH_PROFILE_H__
 

@@ -1,10 +1,10 @@
 /*
+ * Bonjour service publisher
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Damjan Marion
  */
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

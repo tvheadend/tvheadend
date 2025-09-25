@@ -1,11 +1,11 @@
 /*
+ * Tvheadend
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Andreas Öman
  * Copyright (C) 2014,2015,2016,2017 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "config.h"
 #include "settings.h"

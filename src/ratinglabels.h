@@ -1,11 +1,11 @@
 /*
+ * TV headend - Rating Labels
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela (Original Bouquets)
  * Copyright (C) 2023 DeltaMikeCharlie (Updated for Rating Labels)
  */
-
-
 #ifndef RATINGLABEL_H_
 #define RATINGLABEL_H_
 

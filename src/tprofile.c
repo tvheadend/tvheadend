@@ -1,10 +1,10 @@
 /*
+ * tvheadend, Gather timing statistics - profiling
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2018 Jaroslav Kysela
  */
-
-
 #include <assert.h>
 #include <stdio.h>
 #include "tvhlog.h"

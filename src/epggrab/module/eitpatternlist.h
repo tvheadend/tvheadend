@@ -1,10 +1,10 @@
 /*
+ * Electronic Program Guide - Regular Expression Pattern Functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012-2017 Adam Sutton
  */
-
-
 #ifndef __EITPATTERN_LIST__
 #define __EITPATTERN_LIST__
 

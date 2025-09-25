@@ -1,10 +1,10 @@
 /*
+ * TVheadend - regex wrapper
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2017 Jaroslav Kysela
  */
-
-
 #ifndef __TVHREGEX_H__
 #define __TVHREGEX_H__
 

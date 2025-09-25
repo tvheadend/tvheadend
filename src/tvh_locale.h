@@ -1,9 +1,10 @@
 /*
+ * Tvheadend - internationalization (locale)
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015 Jaroslav Kysela
  */
-
 #ifndef __TVH_LOCALE_H__
 #define __TVH_LOCALE_H__
 

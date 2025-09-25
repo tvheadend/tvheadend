@@ -1,9 +1,10 @@
 /*
+ * Tvheadend - structures
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
 #ifndef TVH_COMPAT_H
 #define TVH_COMPAT_H
 

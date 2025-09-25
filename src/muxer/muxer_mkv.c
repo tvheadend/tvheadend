@@ -1,4 +1,6 @@
 /*
+ * Matroska muxer
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2005 Mike Matsnev
@@ -6,8 +8,6 @@
  * Copyright (C) 2012 John Törnblom
  * Copyright (C) 2014,2015,2016,2017 Jaroslav Kysela
  */
-
-
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/stat.h>

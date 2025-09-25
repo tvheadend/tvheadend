@@ -1,10 +1,10 @@
 /*
+ * tvheadend, Gather timing statistics - profiling
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2018 Jaroslav Kysela
  */
-
-
 #ifndef __TVH_TPROFILE_H__
 #define __TVH_TPROFILE_H__
 

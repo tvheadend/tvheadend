@@ -1,10 +1,10 @@
 /*
+ * tvheadend, generic muxing utils
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 John Törnblom
  */
-
-
 #ifndef MUXER_H_
 #define MUXER_H_
 

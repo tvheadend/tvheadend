@@ -1,10 +1,10 @@
 /*
+ * Elementary stream functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef PARSERS_H
 #define PARSERS_H
 

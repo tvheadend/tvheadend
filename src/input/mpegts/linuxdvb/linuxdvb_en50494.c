@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - Linux DVB EN50494
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Sascha "InuSasha" Kuehndel
  */
-
-
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
 #include "settings.h"

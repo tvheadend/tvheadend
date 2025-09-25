@@ -1,10 +1,10 @@
 /*
+ * Functions for manipulating HTS messages
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #pragma once
 #include <stdlib.h>
 #include <inttypes.h>

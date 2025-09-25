@@ -1,10 +1,10 @@
 /*
+ * Stream plumbing, connects individual streaming components to each other
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #ifndef STREAMING_H_
 #define STREAMING_H_
 

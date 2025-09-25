@@ -1,10 +1,10 @@
 /*
+ * IPTV Input
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Andreas Öman
  */
-
-
 #include <signal.h>
 #include <fcntl.h>
 

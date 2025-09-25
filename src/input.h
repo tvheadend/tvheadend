@@ -1,10 +1,10 @@
 /*
+ * TVheadend
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 - 2010 Andreas Öman
  */
-
-
 #ifndef __TVH_INPUT_H__
 #define __TVH_INPUT_H__
 

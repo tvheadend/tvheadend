@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - SAT-IP server - RTSP part
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "htsbuf.h"
 #include "config.h"

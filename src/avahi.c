@@ -1,10 +1,10 @@
 /*
+ * AVAHI service publisher
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2009 Andreas Öman
  */
-
-
 /***
   This file is part of avahi.
 

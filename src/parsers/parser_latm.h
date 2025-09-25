@@ -1,10 +1,10 @@
 /*
+ * Packet parsing functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef PARSER_LATM_H_
 #define PARSER_LATM_H_
 

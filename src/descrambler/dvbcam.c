@@ -1,11 +1,11 @@
 /*
+ * tvheadend, DVB CAM interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Damjan Marion
  * Copyright (C) 2017 Jaroslav Kysela
  */
-
-
 #include <ctype.h>
 #include "tvheadend.h"
 #include "caclient.h"

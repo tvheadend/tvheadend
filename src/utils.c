@@ -5,8 +5,6 @@
  * Copyright (c) 2006 Ryan Martell. (rdm4@martellventures.com)
  * Copyright (c) 2010 Andreas Öman
  */
-
-
 #include <limits.h>
 #include <string.h>
 #include <assert.h>

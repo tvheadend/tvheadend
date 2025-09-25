@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2009 Andreas Öman
  */
-
 #include "build.h"
 #include "trap.h"
 

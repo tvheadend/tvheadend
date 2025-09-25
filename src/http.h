@@ -1,10 +1,10 @@
 /*
+ * tvheadend, HTTP interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef HTTP_H_
 #define HTTP_H_
 

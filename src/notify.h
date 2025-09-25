@@ -1,10 +1,10 @@
 /*
+ * tvheadend, Notification framework
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #ifndef NOTIFY_H_
 #define NOTIFY_H_
 

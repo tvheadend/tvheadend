@@ -1,10 +1,10 @@
 /*
+ * TV headend - Timeshift File Manager
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include <fcntl.h>
 
 #include "tvheadend.h"

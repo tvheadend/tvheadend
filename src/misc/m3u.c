@@ -1,10 +1,10 @@
 /*
+ * M3U parser
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "htsmsg.h"
 #include "intlconv.h"

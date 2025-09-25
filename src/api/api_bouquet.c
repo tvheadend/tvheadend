@@ -1,10 +1,10 @@
 /*
+ * API - bouquet calls
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #ifndef __TVH_API_BOUQUET_H__
 #define __TVH_API_BOUQUET_H__
 

@@ -1,10 +1,10 @@
 /*
+ * Functions for storing program settings
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

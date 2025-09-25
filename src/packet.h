@@ -1,10 +1,10 @@
 /*
+ * Packet management
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #ifndef PACKET_H_
 #define PACKET_H_
 

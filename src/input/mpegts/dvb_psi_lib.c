@@ -1,11 +1,11 @@
 /*
+ * MPEG TS Program Specific Information Library code
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 - 2010 Andreas Öman
  * Copyright (C) 2015 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "input.h"
 #include "dvb.h"

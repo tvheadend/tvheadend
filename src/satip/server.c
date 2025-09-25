@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - SAT-IP server
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "upnp.h"
 #include "settings.h"

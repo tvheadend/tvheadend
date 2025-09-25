@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - TS file input system
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
 #include "tsfile_private.h"
 
 extern const idclass_t mpegts_mux_class;

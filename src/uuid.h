@@ -1,10 +1,10 @@
 /*
+ * TV headend - UUID generation routines
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Adam Sutton
  */
-
-
 #ifndef __TVH_UUID_H__
 #define __TVH_UUID_H__
 

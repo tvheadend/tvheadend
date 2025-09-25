@@ -1,10 +1,10 @@
 /*
+ * Multicasted IPTV Input
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adrien CLERC
  */
-
-
 #include "iptv_rtcp.h"
 
 #include <string.h>

@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - property system library (part of idnode)
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2017 Jaroslav Kysela
  */
-
-
 #include <stdio.h>
 #include <string.h>
 

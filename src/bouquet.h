@@ -1,10 +1,10 @@
 /*
+ * TV headend - Bouquets
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #ifndef BOUQUET_H_
 #define BOUQUET_H_
 

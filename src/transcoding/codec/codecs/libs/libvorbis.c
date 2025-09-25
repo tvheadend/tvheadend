@@ -1,11 +1,10 @@
 /*
+ * tvheadend - Codec Profiles
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2016 Tvheadend
  */
-
-
-
 #include "transcoding/codec/internals.h"
 
 

@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - CI CAM (EN50221) generic interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2017 Jaroslav Kysela
  */
-
-
 #ifndef __EN50221_H__
 #define __EN50221_H__
 

@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - clock support
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2016 Jaroslav Kysela
  */
-
-
 #ifndef TVHEADEND_CLOCK_H
 #define TVHEADEND_CLOCK_H
 

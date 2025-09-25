@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - memory info support
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2016 Jaroslav Kysela
  */
-
-
 #ifndef TVHEADEND_MEMORYINFO_H
 #define TVHEADEND_MEMORYINFO_H
 

@@ -1,10 +1,10 @@
 /*
+ * Functions converting HTSMSGs to/from XML
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #ifndef HTSMSG_XML_H_
 #define HTSMSG_XML_H_
 

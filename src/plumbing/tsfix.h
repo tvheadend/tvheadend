@@ -3,8 +3,6 @@
  *
  * Copyright (C) 2010 Andreas Öman
  */
-
-
 #ifndef TSFIX_H__
 #define TSFIX_H__
 

@@ -1,11 +1,11 @@
 /*
+ * tvheadend, WEBUI / HTML user interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  * Copyright (C) 2014,2015 Jaroslav Kysela
  */
-
-
 #include <sys/stat.h>
 #include <fcntl.h>
 

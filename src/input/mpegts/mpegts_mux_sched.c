@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - TS file input system
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Adam Sutton
  */
-
-
 #include "tvheadend.h"
 #include "input.h"
 #include "input/mpegts/mpegts_mux_sched.h"

@@ -1,10 +1,10 @@
 /*
+ * API - idnode related API calls
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
 #include "tvheadend.h"
 #include "access.h"
 #include "idnode.h"

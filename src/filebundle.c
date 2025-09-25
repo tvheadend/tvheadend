@@ -1,10 +1,10 @@
 /*
+ * TV headend - File bundles
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include "tvheadend.h"
 #include "filebundle.h"
 

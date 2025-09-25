@@ -1,10 +1,10 @@
 /*
+ * API - Common functions for control/query API
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
 #include "tvheadend.h"
 #include "api.h"
 #include "access.h"

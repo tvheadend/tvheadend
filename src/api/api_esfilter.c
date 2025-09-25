@@ -1,10 +1,10 @@
 /*
+ * API - elementary stream filter related calls
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "esfilter.h"
 #include "access.h"

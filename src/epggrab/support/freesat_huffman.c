@@ -1,9 +1,8 @@
 /*
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * freesat_huffman.c
  *
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
-
-
 #include "tvheadend.h"
 #include "epg.h"
 #include "epggrab.h"

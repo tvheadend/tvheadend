@@ -1,10 +1,10 @@
 /*
+ * tvheadend, COMET
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #include <openssl/sha.h>
 
 #include "htsmsg.h"

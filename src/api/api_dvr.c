@@ -1,10 +1,10 @@
 /*
+ * API - DVR
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "dvr/dvr.h"
 #include "lang_codes.h"

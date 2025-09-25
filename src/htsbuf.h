@@ -1,10 +1,10 @@
 /*
+ * Buffer management functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #ifndef HTSBUF_H__
 #define HTSBUF_H__
 

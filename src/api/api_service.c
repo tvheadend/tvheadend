@@ -1,10 +1,10 @@
 /*
+ * API - service related calls
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
 #ifndef __TVH_API_SERVICE_H__
 #define __TVH_API_SERVICE_H__
 

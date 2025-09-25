@@ -1,10 +1,10 @@
 /*
+ * Tvheadend, Statedump
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2010 Andreas Öman
  */
-
-
 #include "tvheadend.h"
 #include "http.h"
 #include "webui.h"

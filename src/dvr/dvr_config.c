@@ -1,11 +1,11 @@
 /*
+ * Digital Video Recorder
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  * Copyright (C) 2014,2015 Jaroslav Kysela
  */
-
-
 #define _GNU_SOURCE
 #include <sys/stat.h>
 #include <strings.h>

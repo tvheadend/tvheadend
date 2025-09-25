@@ -1,11 +1,11 @@
 /*
+ * IPTV - HTTP/HTTPS handler
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  * Copyright (C) 2014,2015 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "iptv_private.h"
 #include "http.h"

@@ -3,8 +3,6 @@
  *
  * Copyright (C) 2010 Andreas Öman
  */
-
-
 #include "tvheadend.h"
 #include "streaming.h"
 #include "tsfix.h"

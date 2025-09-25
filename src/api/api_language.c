@@ -1,10 +1,10 @@
 /*
+ * API - international character conversions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #ifndef __TVH_API_LANGUAGE_H__
 #define __TVH_API_LANGUAGE_H__
 

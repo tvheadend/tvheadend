@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - idnode (class) system
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Andreas Öman
  */
-
-
 #ifndef __TVH_IDNODE_H__
 #define __TVH_IDNODE_H__
 

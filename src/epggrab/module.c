@@ -1,10 +1,10 @@
 /*
+ * EPG Grabber - module functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include <signal.h>
 #include <sys/socket.h>
 #include <sys/un.h>

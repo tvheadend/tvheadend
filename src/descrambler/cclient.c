@@ -1,10 +1,10 @@
 /*
+ * tvheadend, card client interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #include <fcntl.h>
 #include <signal.h>
 

@@ -1,10 +1,10 @@
 /*
+ * Digital Video Recorder
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #ifndef DVR_H
 #define DVR_H
 

@@ -1,10 +1,10 @@
 /*
+ * tvheadend, intial mux list
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include "tvheadend.h"
 #include "dvb.h"
 #include "filebundle.h"

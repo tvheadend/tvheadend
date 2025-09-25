@@ -1,10 +1,10 @@
 /*
+ * Bit ops
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #pragma once
 
 #include <stdint.h>

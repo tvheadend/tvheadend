@@ -1,10 +1,10 @@
 /*
+ * IPTV Input
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Andreas Öman
  */
-
-
 #ifndef __IPTV_PRIVATE_H__
 #define __IPTV_PRIVATE_H__
 

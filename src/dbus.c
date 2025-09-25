@@ -1,10 +1,10 @@
 /*
+ * DBUS interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>

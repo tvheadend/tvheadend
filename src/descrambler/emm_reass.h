@@ -1,10 +1,10 @@
 /*
+ * tvheadend, EMM reassemble functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015 Jaroslav Kysela
  */
-
-
 #ifndef __TVH_EMM_REASS_H__
 #define __TVH_EMM_REASS_H__
 

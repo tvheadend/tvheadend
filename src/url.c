@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - URL Processing
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
 #include "tvheadend.h"
 #include "url.h"
 

@@ -1,10 +1,10 @@
 /*
+ * tvheadend, TCP common functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef TCP_H_
 #define TCP_H_
 

@@ -1,10 +1,10 @@
 /*
+ * Functions for storing program settings
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #ifndef HTSSETTINGS_H__
 #define HTSSETTINGS_H__
 

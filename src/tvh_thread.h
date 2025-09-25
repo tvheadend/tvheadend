@@ -1,9 +1,10 @@
 /*
+ * Tvheadend - mutex functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2018 Jaroslav Kysela
  */
-
 #ifndef TVHEADEND_THREAD_H
 #define TVHEADEND_THREAD_H
 

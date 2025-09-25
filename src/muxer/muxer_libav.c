@@ -1,10 +1,10 @@
 /*
+ * tvheadend, libavformat based muxer
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 John Törnblom
  */
-
-
 #include <assert.h>
 #include <unistd.h>
 #include <sys/stat.h>

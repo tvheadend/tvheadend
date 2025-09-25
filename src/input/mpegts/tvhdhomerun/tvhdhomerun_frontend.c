@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - HDHomeRun DVB frontend
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Patric Karlström
  */
-
-
 #include "libhdhomerun/hdhomerun.h"
 
 #include <fcntl.h>

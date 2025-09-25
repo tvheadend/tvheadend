@@ -1,10 +1,10 @@
 /*
+ * tvheadend, muxing of packets with libavformat
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 John Törnblom
  */
-
-
 #ifndef LAV_MUXER_H_
 #define LAV_MUXER_H_
 

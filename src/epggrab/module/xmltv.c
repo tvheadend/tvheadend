@@ -1,10 +1,10 @@
 /*
+ * Electronic Program Guide - xmltv grabber
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #include <assert.h>
 #include <sys/stat.h>
 #include <errno.h>

@@ -1,11 +1,11 @@
 /*
+ * tvheadend, CCCAM interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  * Copyright (C) 2017 Luis Alves
  */
-
-
 #include <ctype.h>
 #include <openssl/sha.h>
 #include "tvheadend.h"

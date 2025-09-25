@@ -1,10 +1,10 @@
 /*
+ * tvheadend, documenation markdown generator
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2016 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "config.h"
 #include "webui.h"

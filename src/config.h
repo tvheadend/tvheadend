@@ -1,10 +1,10 @@
 /*
+ * TV headend - General configuration settings
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 // TODO: expand this, possibly integrate command line
 
 #ifndef __TVH_CONFIG__H__

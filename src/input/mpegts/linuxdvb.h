@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - Linux DVB input system
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Adam Sutton
  */
-
-
 #ifndef __TVH_LINUX_DVB_H__
 #define __TVH_LINUX_DVB_H__
 

@@ -1,10 +1,10 @@
 /*
+ * Functions converting HTSMSGs to/from JSON
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 #ifndef HTSMSG_JSON_H_
 #define HTSMSG_JSON_H_
 

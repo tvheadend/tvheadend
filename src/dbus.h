@@ -1,10 +1,10 @@
 /*
+ * tvheadend, UPnP interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #ifndef DBUS_H_
 #define DBUS_H_
 

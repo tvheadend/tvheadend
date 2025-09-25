@@ -1,10 +1,10 @@
 /*
+ * tvheadend, libav utils
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 John Törnblom
  */
-
-
 #ifndef LIBAV_H_
 #define LIBAV_H_
 

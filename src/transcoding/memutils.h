@@ -1,11 +1,10 @@
 /*
+ * tvheadend - Transcoding
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2016 Tvheadend
  */
-
-
-
 #ifndef TVH_TRANSCODING_MEMUTILS_H__
 #define TVH_TRANSCODING_MEMUTILS_H__
 

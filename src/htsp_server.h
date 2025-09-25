@@ -1,10 +1,10 @@
 /*
+ * tvheadend, HTSP interface
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  */
-
-
 #ifndef HTSP_H_
 #define HTSP_H_
 

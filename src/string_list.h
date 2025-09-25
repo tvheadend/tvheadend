@@ -1,9 +1,10 @@
 /*
+ * Sorted String List Functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2017 Tvheadend Project (https://tvheadend.org)
  */
-
 #ifndef STRING_LIST_H
 #define STRING_LIST_H
 

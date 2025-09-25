@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - idnode (class) system
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2013 Andreas Öman
  */
-
-
 #define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>

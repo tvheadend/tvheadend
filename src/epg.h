@@ -1,10 +1,10 @@
 /*
+ * Electronic Program Guide - Common functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Adam Sutton
  */
-
-
 #ifndef EPG_H
 #define EPG_H
 

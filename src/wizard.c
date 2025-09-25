@@ -1,10 +1,10 @@
 /*
+ * tvheadend, Wizard
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2015,2016 Jaroslav Kysela
  */
-
-
 /*
  * Use http://spec.commonmark.org/ as reference for description formatting.
  */

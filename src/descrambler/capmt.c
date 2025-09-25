@@ -1,10 +1,10 @@
 /*
+ * tvheadend, CAPMT Server
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2009
  */
-
-
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/un.h>

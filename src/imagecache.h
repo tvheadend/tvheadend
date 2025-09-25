@@ -1,10 +1,10 @@
 /*
+ * Icon file serve operations
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Andy Brown
  */
-
-
 #ifndef __IMAGE_CACHE_H__
 #define __IMAGE_CACHE_H__
 

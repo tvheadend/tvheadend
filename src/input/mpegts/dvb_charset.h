@@ -1,10 +1,10 @@
 /*
+ * tvheadend, dvb charset config
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Mariusz Białończyk
  */
-
-
 #ifndef __TVH_DVB_CHARSET_H__
 #define __TVH_DVB_CHARSET_H__
 

@@ -1,10 +1,10 @@
 /*
+ * Functions converting HTSMSGs to/from XML
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
 /**
  * XML parser, written according to this spec:
  *

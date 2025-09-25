@@ -1,10 +1,10 @@
 /*
+ * Tvheadend
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2010 Andreas Öman
  */
-
-
 #ifndef ESSTREAM_H__
 #define ESSTREAM_H__
 

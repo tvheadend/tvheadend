@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - Linux DVB DDCI
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2017 Jasmin Jessich
  */
-
-
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
 #include "tvhpoll.h"

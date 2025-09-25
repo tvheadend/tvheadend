@@ -1,10 +1,11 @@
 /*
+ * Tvheadend - advanced string functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  * Copyright (C) 2014-2018 Jaroslav Kysela
  */
-
 #ifndef TVHEADEND_STRING_H
 #define TVHEADEND_STRING_H
 

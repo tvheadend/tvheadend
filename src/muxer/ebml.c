@@ -4,8 +4,6 @@
  * Copyright (C) 2005 Mike Matsnev
  * Copyright (C) 2010 Andreas Öman
  */
-
-
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>

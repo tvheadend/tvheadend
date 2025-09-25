@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - HTTP client functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Jaroslav Kysela
  */
-
-
 #include "tvheadend.h"
 #include "http.h"
 #include "tcp.h"

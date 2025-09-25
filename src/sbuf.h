@@ -1,11 +1,11 @@
 /*
+ * Tvheadend - sbuf routines
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  * Copyright (C) 2014-2017 Jaroslav Kysela
  */
-
-
 #ifndef __TVH_SBUF_H
 #define __TVH_SBUF_H
 

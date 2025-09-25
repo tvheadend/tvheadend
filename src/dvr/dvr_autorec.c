@@ -1,10 +1,10 @@
 /*
+ * tvheadend, Automatic recordings
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2010 Andreas Öman
  */
-
-
 #include <ctype.h>
 
 #include "tvheadend.h"

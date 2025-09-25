@@ -1,10 +1,10 @@
 /*
+ * tvheadend, simple muxer that just passes the input along
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 John Törnblom
  */
-
-
 #ifndef PASS_MUXER_H_
 #define PASS_MUXER_H_
 

@@ -1,11 +1,11 @@
 /*
+ * Packet parsing functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 Andreas Öman
  * Copyright (C) 2014-2017 Jaroslav Kysela
  */
-
-
 #include "parsers.h"
 #include "parser_h264.h"
 #include "parser_avc.h"

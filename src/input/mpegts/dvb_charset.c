@@ -1,10 +1,10 @@
 /*
+ * tvheadend, charset list
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Mariusz Białończyk
  */
-
-
 #include <string.h>
 #include "tvheadend.h"
 #include "settings.h"

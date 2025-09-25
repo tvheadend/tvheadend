@@ -3,9 +3,6 @@
  *
  * Copyright (C) 2008 Andreas Öman
  */
-
-
-
 #include "tvheadend.h"
 #include "streaming.h"
 #include "packet.h"

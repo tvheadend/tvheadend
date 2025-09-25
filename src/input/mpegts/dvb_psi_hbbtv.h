@@ -1,10 +1,10 @@
 /*
+ * MPEG TS Program Specific Information code
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2007 - 2010 Andreas Öman
  */
-
-
 #ifndef __DVB_PSI_HBBTV_H
 #define __DVB_PSI_HBBTV_H 1
 

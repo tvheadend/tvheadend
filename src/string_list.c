@@ -1,10 +1,10 @@
 /*
+ * Sorted String List Functions
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2017 Tvheadend Project (https://tvheadend.org)
  */
-
-
 #include "string_list.h"
 
 #include <ctype.h>

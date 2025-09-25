@@ -1,10 +1,10 @@
 /*
+ * Tvheadend - HDHomeRun DVB private data
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2014 Patric Karlstrom
  */
-
-
 #ifndef __TVH_tvhdhomerun_PRIVATE_H__
 #define __TVH_tvhdhomerun_PRIVATE_H__
 
