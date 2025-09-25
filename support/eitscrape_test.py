@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Copyright (C) 2017, 2018 Tvheadend Project (https://tvheadend.org)
 """
 Test regular expressions used in OTA EIT scraper.
 
