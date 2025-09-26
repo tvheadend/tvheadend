@@ -1,0 +1,142 @@
+# CSV for mapping xmltv categories to epg genres.
+# Format:
+# genre, cat1, cat2, cat3...
+#
+# First column is genre from epg.c.
+#
+# Remaining columns (which can be multiple) are categories that map
+# on to that category.
+#
+# You only need to include mappings which are not already
+# one-to-one. For example, SD uses "Documentary" which exactly
+# matches epg genre of "Documentary", so there is no need to
+# include it here.
+
+Adventure / Western / War, Adventure, Western
+Advertisement / Shopping, Shopping
+Cartoons / Puppets, Animated
+Children's / Youth programs, Children
+Comedy, Dark comedy, Sitcom
+Detective / Thriller, Crime, Crime drama, Thriller, Mystery
+Education / Science / Factual topics, Educational, Science
+Equestrian, Horse
+Football / Soccer, Soccer
+Game show / Quiz / Contest, Game show
+Gardening, House/garden
+Handicraft, Home improvement
+Movie / Drama, Drama, Entertainment, Feature Film, Film, Movie, Short film, Miniseries
+Music / Ballet / Dance, Dance, Music
+Musical / Opera, Musical, Musical comedy, Opera
+Nature / Animals / Environment, Nature
+News / Current affairs, News
+Romance, Romantic comedy
+Science fiction / Fantasy / Horror, Fantasy, Horror, Science fiction
+Serious / Classical / Religious / Historical movie / Drama, Religious, Historical drama
+Soap / Melodrama / Folkloric, Soap
+Social / Political issues / Economics, Politics
+Sports, Boxing
+Talk show, Interview, Talk
+Technology / Natural sciences, Technology
+Tourism / Travel, Travel
+Variety show, Variety
+Water sport, Swimming
+
+# These are French categories from Kazer thread on Tvheadend forum.
+News / Weather report, Météo
+Performing Arts, Théâtre
+Musical / Opera, Ballet, Opéra
+Music / Ballet / Dance, Clips, Concert
+Experimental film / Video, Court métrage
+Social / Political issues / Economics, Débat
+Cartoons / Puppets, Dessin animé
+Variety show, Divertissement
+Documentary, Documentaire
+Soap / Melodrama / Folkloric, Drame, Feuilleton
+Discussion / Interview / Debate, Interview
+Game show / Quiz / Contest, Jeu
+Children's / Youth programs, Jeunesse
+News / Current affairs, Journal
+Magazines / Reports / Documentary, Magazine
+Movie / Drama, Série
+Performing arts, Spectacle
+Sports, Sport, Tiercé
+Variety Show, Télé-réalité, Téléréalité, Variétés
+
+
+# These are Spanish categories from Kazer thread on Tvheadend forum.
+Variety show, Concursos
+Leisure hobbies, Ocio y Aficiones
+News / Current affairs, Noticias
+Documentary, Biográficos
+Soap / Melodrama / Folkloric, Serie
+Music / Ballet / Dance, Música
+Variety show, Entretenimiento
+Serious music / Classical music, Clásica
+Nature / Animals / Environment, Naturaleza y animales
+Music / Ballet / Dance, Videoclips
+News / Current affairs, Actualidad
+Variety show, Otros
+Sports, Deporte
+Variety show, Cultural/Educativo
+News / Current affairs, Información
+Film / Cinema, Cine
+Cartoons / Puppets, Animación
+Fitness and health, Fitness
+Football / Soccer, Champions League
+Adult movie / Drama, Película para adultos
+Documentary, Documentales
+Discussion / Interview / Debate, Entrevistas
+Social / Political issues / Economics, Política
+Motor sport, Automovilismo
+Comedy, Humor
+Football / Soccer, Fútbol
+Show / Game show, Programas
+Documentary, Viajes
+Discussion / Interview / Debate, Debates
+Special events (Olympic Games; World Cup; etc.), Deportes de invierno
+Sports, Ciclismo
+Movie / Drama, Telefilme
+Serious / Classical / Religious / Historical movie / Drama, Religion
+Musical / Opera, Musicales
+News / Current affairs, Informativo
+Children's / Youth programmes, Infantil
+News / Current affairs, Informativos
+Performing arts, Espectáculo
+Variety show, Concurso
+Movie / Drama, Cortometraje
+Technology / Natural sciences, Ciencia y tecnología
+Variety show, Reality Show
+Discussion / Interview / Debate, Debate
+Popular culture / Traditional arts, Toros
+Science fiction / Fantasy / Horror, Fantásticas
+Sports, Deportes
+Sports, Otros deportes
+Movie / Drama, Drama
+Magazines / Reports / Documentary, Magazines
+
+# Polish, Bug #4424 from guide.xml
+Education / Science / Factual topics, Edukacyjny
+Cartoons / Puppers, Animowany
+Show / Game show, Teleturniej, Serial
+Children's / Youth programs, Dzieci
+
+# These are German categories from bug #5359 from tv_grab_eu_epgdata
+Sports, Boxen
+Football / Soccer, Fußball
+Sports, Gymnastik
+Advertisement / Shopping, Homeshopping
+Comedy, Humor
+Children's / Youth Programmes, Jugend
+Serious / Classical / Religious / Historical movie / Drama, Klassik
+Detective / Thriller, Krimi
+Motor sport, Motor + Verkehr, Motorsport
+Music / Ballet / Dance, Musik
+Detective / Thriller, Mystery + Horror
+News / Current affairs, Nachrichten
+Nature / Animals / Environment, Natur
+Social / Political issues / Economics, Politik
+Tourism / Travel, Reise
+Game show / Quiz / Contest, Spielshows
+Talk show, Talkshows
+Sports, Wassersport
+Cartoons / Puppets, Zeichentrick
