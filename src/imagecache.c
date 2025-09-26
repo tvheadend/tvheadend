@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Copyright (C) 2012 Andy Brown
+ * Copyright (C) 2015-2018 Jaroslav Kysela
  */
 #include <fcntl.h>
 
