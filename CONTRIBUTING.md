@@ -26,6 +26,15 @@ Tvheadend welcomes all code contributions. To ensure the process of contributing
 * Link related forum discussion threads for information
 * Link GitHub issues using the `Fixes: #1234` format so tickets auto-close on merge
 
+## Translations
+
+Translations are managed through [Transifex](https://www.transifex.com/tvheadend/tvheadend/)
+
+* New translatable strings are added in code
+* Template `.pot` files in this repo are automatically updated via GitHub Actions
+* Template file changes are synced to Transifex where translators update translations
+* Completed translations are synced back to this repo via pull requests
+
 ## Documentation
 
 If your changes require documentation updates please use GitBooks to author changes and submit a merge-request. The registration link is on our public documenation site: [https://docs.tvheadend.org](https://docs.tvheadend.org).
