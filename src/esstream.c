@@ -1,21 +1,8 @@
 /*
- *  Elementary streams
- *  Copyright (C) 2010 Andreas Öman
- *                2018 Jaroslav Kysela
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2010 Andreas Öman
  *
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Elementary streams
  */
 
 #include "tvheadend.h"
@@ -27,6 +14,7 @@
 /**
  *
  */
+
 static void
 elementary_stream_make_nicename(elementary_stream_t *st, const char *nicename)
 {
@@ -47,6 +35,7 @@ elementary_stream_make_nicename(elementary_stream_t *st, const char *nicename)
 /**
  *
  */
+
 void elementary_set_init
   (elementary_set_t *set, int subsys, const char *nicename, service_t *t)
 {
@@ -62,6 +51,7 @@ void elementary_set_init
 /**
  *
  */
+
 void elementary_set_clean(elementary_set_t *set, service_t *t, int keep_nicename)
 {
   elementary_stream_t *st;
@@ -79,6 +69,7 @@ void elementary_set_clean(elementary_set_t *set, service_t *t, int keep_nicename
 /**
  *
  */
+
 void elementary_set_update_nicename(elementary_set_t *set, const char *nicename)
 {
   elementary_stream_t *st;
@@ -92,6 +83,7 @@ void elementary_set_update_nicename(elementary_set_t *set, const char *nicename)
 /**
  *
  */
+
 static void
 elementary_stream_init(elementary_stream_t *es)
 {
@@ -101,6 +93,7 @@ elementary_stream_init(elementary_stream_t *es)
 /**
  *
  */
+
 static void
 elementary_stream_clean(elementary_stream_t *es)
 {
@@ -110,6 +103,7 @@ elementary_stream_clean(elementary_stream_t *es)
 /**
  *
  */
+
 void
 elementary_set_clean_streams(elementary_set_t *set)
 {
@@ -122,6 +116,7 @@ elementary_set_clean_streams(elementary_set_t *set)
 /**
  *
  */
+
 void
 elementary_set_init_filter_streams(elementary_set_t *set)
 {
@@ -134,6 +129,7 @@ elementary_set_init_filter_streams(elementary_set_t *set)
 /**
  *
  */
+
 int
 elementary_set_has_streams(elementary_set_t *set, int filtered)
 {
@@ -144,6 +140,7 @@ elementary_set_has_streams(elementary_set_t *set, int filtered)
 /**
  *
  */
+
 void
 elementary_set_stream_destroy(elementary_set_t *set, elementary_stream_t *es)
 {
@@ -174,6 +171,7 @@ elementary_set_stream_destroy(elementary_set_t *set, elementary_stream_t *es)
 /**
  *
  */
+
 #define ESFM_USED   (1<<0)
 #define ESFM_IGNORE (1<<1)
 
@@ -194,6 +192,7 @@ elementary_set_filter_build_add
 /**
  *
  */
+
 static void
 elementary_set_filter_print
   (elementary_set_t *set)
@@ -223,6 +222,7 @@ elementary_set_filter_print
 /**
  *
  */
+
 void
 elementary_set_filter_build(elementary_set_t *set)
 {
@@ -448,6 +448,7 @@ ignore:
 /**
  * Add a new stream to a service
  */
+
 elementary_stream_t *
 elementary_stream_create_parent
   (elementary_set_t *set, int pid, int parent_pid, streaming_component_type_t type)
@@ -486,6 +487,7 @@ create:
 /**
  * Find an elementary stream in a service
  */
+
 elementary_stream_t *
 elementary_stream_find_(elementary_set_t *set, int pid)
 {
@@ -504,6 +506,7 @@ elementary_stream_find_(elementary_set_t *set, int pid)
 /**
  * Find an elementary stream in a service with specific parent pid
  */
+
 elementary_stream_t *
 elementary_stream_find_parent(elementary_set_t *set, int pid, int parent_pid)
 {
@@ -519,6 +522,7 @@ elementary_stream_find_parent(elementary_set_t *set, int pid, int parent_pid)
 /**
  * Find a first elementary stream in a service (by type)
  */
+
 elementary_stream_t *
 elementary_stream_type_find
   (elementary_set_t *set, streaming_component_type_t type)
@@ -534,6 +538,7 @@ elementary_stream_type_find
 /**
  *
  */
+
 elementary_stream_t *
 elementary_stream_type_modify(elementary_set_t *set, int pid,
                               streaming_component_type_t type)
@@ -549,6 +554,7 @@ elementary_stream_type_modify(elementary_set_t *set, int pid,
 /**
  *
  */
+
 void
 elementary_stream_type_destroy
   (elementary_set_t *set, streaming_component_type_t type)
@@ -561,6 +567,7 @@ elementary_stream_type_destroy
 /**
  *
  */
+
 int
 elementary_stream_has_audio_or_video(elementary_set_t *set)
 {
@@ -590,6 +597,7 @@ elementary_stream_has_no_audio(elementary_set_t *set, int filtered)
 /**
  *
  */
+
 static int
 escmp(const void *A, const void *B)
 {
@@ -601,6 +609,7 @@ escmp(const void *A, const void *B)
 /**
  *
  */
+
 void
 elementary_set_sort_streams(elementary_set_t *set)
 {
@@ -624,6 +633,7 @@ elementary_set_sort_streams(elementary_set_t *set)
 /**
  * Generate a message containing info about all components
  */
+
 streaming_start_t *
 elementary_stream_build_start(elementary_set_t *set)
 {
@@ -656,6 +666,7 @@ elementary_stream_build_start(elementary_set_t *set)
 /**
  * Create back elementary streams from the start message.
  */
+
 elementary_set_t *
 elementary_stream_create_from_start
   (elementary_set_t *set, streaming_start_t *ss, size_t es_size)

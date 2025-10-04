@@ -121,6 +121,7 @@ int tvh_thread_kill(pthread_t thread, int sig)
 }
 
 /* linux style: -19 .. 20 */
+
 int
 tvh_thread_renice(int value)
 {

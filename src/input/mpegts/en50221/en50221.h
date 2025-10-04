@@ -1,19 +1,8 @@
 /*
- *  Tvheadend - CI CAM (EN50221) generic interface
- *  Copyright (C) 2017 Jaroslav Kysela
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2017 Jaroslav Kysela
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Tvheadend - CI CAM (EN50221) generic interface
  */
 
 #ifndef __EN50221_H__
@@ -24,6 +13,7 @@
 #include "sbuf.h"
 
 /* Session resource IDs */
+
 #define CICAM_RI_RESOURCE_MANAGER            0x00010041
 #define CICAM_RI_APPLICATION_INFORMATION     0x00020041
 #define CICAM_RI_CONDITIONAL_ACCESS_SUPPORT  0x00030041
@@ -34,6 +24,7 @@
 #define CICAM_RI_DUMMY_CAPMT                 0x00ffffff
 
 /* Application tags */
+
 #define CICAM_AOT_NONE                       0x000000
 #define CICAM_AOT_PROFILE_ENQ                0x9F8010
 #define CICAM_AOT_PROFILE                    0x9F8011
@@ -171,6 +162,7 @@ struct en50221_ops {
 /*
  *
  */
+
 int en50221_create_transport(en50221_ops_t *ops, void *ops_aux, int slots,
                              const char *name, en50221_transport_t **cit);
 void en50221_transport_destroy(en50221_transport_t *cit);
@@ -184,6 +176,7 @@ int en50221_transport_read(en50221_transport_t *cit,
 /*
  *
  */
+
 en50221_app_t *
 en50221_slot_find_application(en50221_slot_t *cil,
                               uint32_t resource_id, uint32_t mask);
@@ -193,6 +186,7 @@ int en50221_slot_disable(en50221_slot_t *cil);
 /*
  *
  */
+
 void en50221_register_app(en50221_app_prop_t *prop);
 int en50221_app_pdu_send(en50221_app_t *app, uint32_t atag,
                          const uint8_t *data, size_t datalen,
@@ -210,6 +204,7 @@ void en50221_register_apps(void);
 /*
  *
  */
+
 int en50221_extract_len
   (const uint8_t *data, size_t datalen, const uint8_t **ptr, size_t *len,
    const char *prefix, const char *pdu_name);
@@ -217,6 +212,7 @@ int en50221_extract_len
 /*
  * random public functions
  */
+
 int en50221_send_capmt
   (en50221_slot_t *slot, const uint8_t *capmt, size_t capmtlen);
 int en50221_pcmcia_data_rate(en50221_slot_t *slot, uint8_t rate);

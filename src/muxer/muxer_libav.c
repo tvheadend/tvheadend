@@ -1,19 +1,8 @@
 /*
- *  tvheadend, libavformat based muxer
- *  Copyright (C) 2012 John Törnblom
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2012 John Törnblom
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
+ * tvheadend, libavformat based muxer
  */
 
 #include <assert.h>
@@ -55,6 +44,7 @@ static const AVRational mpeg_tc = {1, 90000};
 /**
  * Callback function for libavformat
  */
+
 #if LIBAVFORMAT_VERSION_MAJOR > 60
 static int
 lav_muxer_write(void *opaque, const uint8_t *buf, int buf_size)
@@ -85,6 +75,7 @@ lav_muxer_write(void *opaque, uint8_t *buf, int buf_size)
 /**
  * Add a stream to the muxer
  */
+
 static int
 lav_muxer_add_stream(lav_muxer_t *lm, 
 		     const streaming_start_component_t *ssc)
@@ -242,6 +233,7 @@ fail:
 /**
  * Check if a container supports a given streaming component
  */
+
 static int
 lav_muxer_support_stream(muxer_container_type_t mc, 
 			 streaming_component_type_t type)
@@ -311,6 +303,7 @@ lav_muxer_support_stream(muxer_container_type_t mc,
 /**
  * Figure out the mime-type for the muxed data stream
  */
+
 static const char*
 lav_muxer_mime(muxer_t* m, const struct streaming_start *ss)
 {
@@ -347,6 +340,7 @@ lav_muxer_mime(muxer_t* m, const struct streaming_start *ss)
 /**
  * Init the muxer with streams
  */
+
 static int
 lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
 {
@@ -531,6 +525,7 @@ fail:
 /**
  * Handle changes to the streams (usually PMT updates)
  */
+
 static int
 lav_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 {
@@ -545,6 +540,7 @@ lav_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 /**
  * Open the muxer and write the header
  */
+
 static int
 lav_muxer_open_stream(muxer_t *m, int fd)
 {
@@ -593,6 +589,7 @@ lav_muxer_open_file(muxer_t *m, const char *filename)
 /**
  * Write a packet to the muxer
  */
+
 static int
 lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
@@ -682,6 +679,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 /**
  * NOP
  */
+
 static int
 lav_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb, const char *comment)
 {
@@ -692,6 +690,7 @@ lav_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb, const char *comment)
 /**
  * NOP
  */
+
 static int
 lav_muxer_add_marker(muxer_t* m)
 {
@@ -702,6 +701,7 @@ lav_muxer_add_marker(muxer_t* m)
 /**
  * Close the muxer and append trailer to output
  */
+
 static int
 lav_muxer_close(muxer_t *m)
 {
@@ -736,6 +736,7 @@ lav_muxer_close(muxer_t *m)
 /**
  * Free all memory associated with the muxer
  */
+
 static void
 lav_muxer_destroy(muxer_t *m)
 {
@@ -767,6 +768,7 @@ lav_muxer_destroy(muxer_t *m)
 /**
  * Create a new libavformat based muxer
  */
+
 muxer_t*
 lav_muxer_create(const muxer_config_t *m_cfg,
                  const muxer_hints_t *hints)

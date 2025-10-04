@@ -1,20 +1,8 @@
 /*
- *  Tvheadend - SAT-IP server - RTP part
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2015 Jaroslav Kysela
  *
- *  Copyright (C) 2015 Jaroslav Kysela
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Tvheadend - SAT-IP server - RTP part
  */
 
 #include <signal.h>
@@ -34,7 +22,9 @@
 #define RTP_PACKETS 128
 #define RTP_PAYLOAD (7*188+12)
 #define RTP_TCP_MIN_PAYLOAD (7*188+12+4)   /* fit ethernet packet */
+
 #define RTP_TCP_MAX_PAYLOAD (348*188+12+4) /* cca 64kB */
+
 #define RTCP_PAYLOAD (1420)
 
 #define RTP_TCP_BUFFER_SIZE (64*1024*1024)
@@ -464,6 +454,7 @@ satip_rtp_thread(void *aux)
 /*
  *
  */
+
 void *satip_rtp_queue(th_subscription_t *subs,
                       streaming_queue_t *sq,
                       http_connection_t *hc,
@@ -646,6 +637,7 @@ void satip_rtp_close(void *_rtp)
 /*
  *
  */
+
 static const char *
 satip_rtcp_pol(int pol)
 {
@@ -668,6 +660,7 @@ satip_rtcp_pol(int pol)
 /*
  *
  */
+
 static const char *
 satip_rtcp_fec(int fec)
 {
@@ -692,6 +685,7 @@ satip_rtcp_fec(int fec)
 /*
  *
  */
+
 static int
 satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
 {
@@ -854,6 +848,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
 /*
  *
  */
+
 int satip_rtp_status(void *_rtp, char *buf, int len)
 {
   satip_rtp_session_t *rtp = _rtp;
@@ -873,6 +868,7 @@ int satip_rtp_status(void *_rtp, char *buf, int len)
 /*
  *
  */
+
 static int
 satip_rtcp_build(satip_rtp_session_t *rtp, uint8_t *msg)
 {
@@ -914,6 +910,7 @@ satip_rtcp_build(satip_rtp_session_t *rtp, uint8_t *msg)
 /*
  *
  */
+
 static void *
 satip_rtcp_thread(void *aux)
 {
@@ -979,6 +976,7 @@ end:
 /*
  *
  */
+
 void satip_rtp_init(int boot)
 {
   TAILQ_INIT(&satip_rtp_sessions);
@@ -996,6 +994,7 @@ void satip_rtp_init(int boot)
 /*
  *
  */
+
 void satip_rtp_done(void)
 {
   assert(TAILQ_EMPTY(&satip_rtp_sessions));

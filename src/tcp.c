@@ -1,19 +1,8 @@
 /*
- *  tvheadend, TCP common functions
- *  Copyright (C) 2007 Andreas Öman
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2007 Andreas Öman
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, TCP common functions
  */
 
 #include <fcntl.h>
@@ -48,6 +37,7 @@ th_pipe_t tcp_server_pipe;
 /**
  *
  */
+
 int
 socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize)
 {
@@ -66,6 +56,7 @@ socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize)
 /**
  *
  */
+
 int
 ip_check_is_local_address
   (const struct sockaddr_storage *peer, const struct sockaddr_storage *local,
@@ -108,6 +99,7 @@ ip_check_is_local_address
 /**
  *
  */
+
 int
 tcp_connect(const char *hostname, int port, const char *bindaddr,
             char *errbuf, size_t errbufsize, int timeout)
@@ -254,6 +246,7 @@ error:
 /**
  *
  */
+
 int
 tcp_write_queue(int fd, htsbuf_queue_t *q)
 {
@@ -277,6 +270,7 @@ tcp_write_queue(int fd, htsbuf_queue_t *q)
 /**
  *
  */
+
 static int
 tcp_fill_htsbuf_from_fd(int fd, htsbuf_queue_t *hq)
 {
@@ -325,6 +319,7 @@ tcp_fill_htsbuf_from_fd(int fd, htsbuf_queue_t *hq)
 /**
  *
  */
+
 char *
 tcp_read_line(int fd, htsbuf_queue_t *spill)
 {
@@ -355,6 +350,7 @@ tcp_read_line(int fd, htsbuf_queue_t *spill)
 /**
  *
  */
+
 int
 tcp_read_data(int fd, char *buf, const size_t bufsize, htsbuf_queue_t *spill)
 {
@@ -373,6 +369,7 @@ tcp_read_data(int fd, char *buf, const size_t bufsize, htsbuf_queue_t *spill)
 /**
  *
  */
+
 int
 tcp_read(int fd, void *buf, size_t len)
 {
@@ -389,6 +386,7 @@ tcp_read(int fd, void *buf, size_t len)
 /**
  *
  */
+
 int
 tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
 {
@@ -434,6 +432,7 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
 /**
  *
  */
+
 int
 tcp_socket_dead(int fd)
 {
@@ -457,6 +456,7 @@ tcp_socket_dead(int fd)
 /**
  *
  */
+
 char *
 tcp_get_str_from_ip(const struct sockaddr_storage *sa, char *dst, size_t maxlen)
 {
@@ -482,6 +482,7 @@ tcp_get_str_from_ip(const struct sockaddr_storage *sa, char *dst, size_t maxlen)
 /**
  *
  */
+
 struct sockaddr_storage *
 tcp_get_ip_from_str(const char *src, struct sockaddr_storage *sa)
 {
@@ -506,6 +507,7 @@ tcp_get_ip_from_str(const char *src, struct sockaddr_storage *sa)
 /**
  *
  */
+
 static tvhpoll_t *tcp_server_poll;
 static uint32_t tcp_server_launch_id;
 
@@ -542,6 +544,7 @@ static LIST_HEAD(, tcp_server_launch) tcp_server_join = { 0 };
 /**
  *
  */
+
 uint32_t
 tcp_connection_count(access_t *aa)
 {
@@ -562,6 +565,7 @@ tcp_connection_count(access_t *aa)
 /**
  *
  */
+
 void *
 tcp_connection_launch
   (int fd, int streaming, void (*status) (void *opaque, htsmsg_t *m), access_t *aa)
@@ -630,6 +634,7 @@ try_again:
 /**
  *
  */
+
 void
 tcp_connection_land(void *tcp_id)
 {
@@ -650,6 +655,7 @@ tcp_connection_land(void *tcp_id)
 /**
  *
  */
+
 void
 tcp_connection_cancel(uint32_t id)
 {
@@ -668,6 +674,7 @@ tcp_connection_cancel(uint32_t id)
 /**
  *
  */
+
 void
 tcp_connection_cancel_all(void)
 {
@@ -683,6 +690,7 @@ tcp_connection_cancel_all(void)
 /*
  *
  */
+
 static void *
 tcp_server_start(void *aux)
 {
@@ -737,6 +745,7 @@ tcp_server_start(void *aux)
 /**
  *
  */
+
 static void *
 tcp_server_loop(void *aux)
 {
@@ -826,6 +835,7 @@ next:
 /**
  *
  */
+
 #if ENABLE_LIBSYSTEMD_DAEMON
 static void *tcp_server_create_new
 #else
@@ -913,6 +923,7 @@ void *tcp_server_create
 /**
  *
  */
+
 void *
 tcp_server_create
   (int subsystem, const char *name, const char *bindaddr,
@@ -984,6 +995,7 @@ tcp_server_create
 /**
  *
  */
+
 void tcp_server_register(void *server)
 {
   tcp_server_t *ts = server;
@@ -997,6 +1009,7 @@ void tcp_server_register(void *server)
 /**
  *
  */
+
 void
 tcp_server_delete(void *server)
 {
@@ -1016,6 +1029,7 @@ tcp_server_delete(void *server)
 /**
  *
  */
+
 int
 tcp_default_ip_addr ( struct sockaddr_storage *deflt, int family )
 {
@@ -1065,6 +1079,7 @@ tcp_default_ip_addr ( struct sockaddr_storage *deflt, int family )
 /**
  *
  */
+
 int
 tcp_server_bound ( void *server, struct sockaddr_storage *bound, int family )
 {
@@ -1101,6 +1116,7 @@ tcp_server_bound ( void *server, struct sockaddr_storage *bound, int family )
 /**
  *
  */
+
 int
 tcp_server_onall ( void *server )
 {
@@ -1121,6 +1137,7 @@ tcp_server_onall ( void *server )
 /*
  * Connections status
  */
+
 htsmsg_t *
 tcp_server_connections ( void )
 {
@@ -1159,6 +1176,7 @@ tcp_server_connections ( void )
 /*
  * Connections count
  */
+
 int
 tcp_server_connections_count ( void )
 {
@@ -1176,6 +1194,7 @@ tcp_server_connections_count ( void )
 /**
  *
  */
+
 pthread_t tcp_server_tid;
 
 void

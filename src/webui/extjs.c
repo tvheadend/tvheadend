@@ -1,19 +1,8 @@
 /*
- *  tvheadend, EXTJS based interface
- *  Copyright (C) 2008 Andreas Öman
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2008 Andreas Öman
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, EXTJS based interface
  */
 
 #include "htsmsg.h"
@@ -29,6 +18,7 @@
 /**
  *
  */
+
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script, ...)
 {
@@ -45,6 +35,7 @@ extjs_load(htsbuf_queue_t *hq, const char *script, ...)
 /**
  *
  */
+
 static void
 extjs_lcss(htsbuf_queue_t *hq, const char *css, ...)
 {
@@ -62,6 +53,7 @@ extjs_lcss(htsbuf_queue_t *hq, const char *css, ...)
 /**
  *
  */
+
 static void
 extjs_exec(htsbuf_queue_t *hq, const char *fmt, ...)
 {
@@ -79,6 +71,7 @@ extjs_exec(htsbuf_queue_t *hq, const char *fmt, ...)
 /**
  * EXTJS root page
  */
+
 static int
 extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 {
@@ -141,6 +134,7 @@ Ext.onReady(tvheadend.app.init, tvheadend.app);\
 /**
  *
  */
+
 static int
 extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
 {
@@ -179,6 +173,7 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
 /**
  * 
  */
+
 static int
 page_about(http_connection_t *hc, const char *remain, void *opaque)
 {
@@ -236,6 +231,7 @@ FamFamFam</a>, "\
 /**
  * WEB user interface
  */
+
 void
 extjs_start(void)
 {

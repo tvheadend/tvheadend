@@ -1,19 +1,6 @@
-/**
- *  Streaming helpers
- *  Copyright (C) 2008 Andreas Öman
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+/*
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2008 Andreas Öman
  */
 
 #include <string.h>
@@ -39,6 +26,7 @@ streaming_pad_init(streaming_pad_t *sp)
 /**
  *
  */
+
 void
 streaming_target_init(streaming_target_t *st, streaming_ops_t *ops,
                       void *opaque, int reject_filter)
@@ -51,6 +39,7 @@ streaming_target_init(streaming_target_t *st, streaming_ops_t *ops,
 /**
  *
  */
+
 static size_t
 streaming_message_data_size(streaming_message_t *sm)
 {
@@ -69,6 +58,7 @@ streaming_message_data_size(streaming_message_t *sm)
 /**
  *
  */
+
 static void
 streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
 {
@@ -91,6 +81,7 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
 /**
  *
  */
+
 static htsmsg_t *
 streaming_queue_info(void *opaque, htsmsg_t *list)
 {
@@ -108,6 +99,7 @@ streaming_queue_info(void *opaque, htsmsg_t *list)
 /**
  *
  */
+
 void
 streaming_queue_remove(streaming_queue_t *sq, streaming_message_t *sm)
 {
@@ -118,6 +110,7 @@ streaming_queue_remove(streaming_queue_t *sq, streaming_message_t *sm)
 /**
  *
  */
+
 void
 streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
 {
@@ -139,6 +132,7 @@ streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
 /**
  *
  */
+
 void
 streaming_queue_deinit(streaming_queue_t *sq)
 {
@@ -151,6 +145,7 @@ streaming_queue_deinit(streaming_queue_t *sq)
 /**
  *
  */
+
 void
 streaming_queue_clear(struct streaming_message_queue *q)
 {
@@ -165,6 +160,7 @@ streaming_queue_clear(struct streaming_message_queue *q)
 /**
  *
  */
+
 void
 streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st)
 {
@@ -178,6 +174,7 @@ streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st)
 /**
  *
  */
+
 void
 streaming_target_disconnect(streaming_pad_t *sp, streaming_target_t *st)
 {
@@ -198,6 +195,7 @@ streaming_target_disconnect(streaming_pad_t *sp, streaming_target_t *st)
 /**
  *
  */
+
 streaming_message_t *
 streaming_msg_create(streaming_message_type_t type)
 {
@@ -215,6 +213,7 @@ streaming_msg_create(streaming_message_type_t type)
 /**
  *
  */
+
 streaming_message_t *
 streaming_msg_create_pkt(th_pkt_t *pkt)
 {
@@ -228,6 +227,7 @@ streaming_msg_create_pkt(th_pkt_t *pkt)
 /**
  *
  */
+
 streaming_message_t *
 streaming_msg_create_data(streaming_message_type_t type, void *data)
 {
@@ -240,6 +240,7 @@ streaming_msg_create_data(streaming_message_type_t type, void *data)
 /**
  *
  */
+
 streaming_message_t *
 streaming_msg_create_code(streaming_message_type_t type, int code)
 {
@@ -253,6 +254,7 @@ streaming_msg_create_code(streaming_message_type_t type, int code)
 /**
  *
  */
+
 streaming_message_t *
 streaming_msg_clone(streaming_message_t *src)
 {
@@ -326,6 +328,7 @@ streaming_msg_clone(streaming_message_t *src)
 /**
  *
  */
+
 void
 streaming_start_unref(streaming_start_t *ss)
 {
@@ -344,6 +347,7 @@ streaming_start_unref(streaming_start_t *ss)
 /**
  *
  */
+
 void
 streaming_msg_free(streaming_message_t *sm)
 {
@@ -394,6 +398,7 @@ streaming_msg_free(streaming_message_t *sm)
 /**
  *
  */
+
 void
 streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm)
 {
@@ -406,6 +411,7 @@ streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm)
 /**
  *
  */
+
 void
 streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
 {
@@ -429,6 +435,7 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
 /**
  *
  */
+
 void
 streaming_service_deliver(service_t *t, streaming_message_t *sm)
 {
@@ -441,6 +448,7 @@ streaming_service_deliver(service_t *t, streaming_message_t *sm)
 /**
  *
  */
+
 const char *
 streaming_code2txt(int code)
 {
@@ -522,6 +530,7 @@ streaming_code2txt(int code)
 /**
  *
  */
+
 streaming_start_t *
 streaming_start_copy(const streaming_start_t *src)
 {
@@ -548,6 +557,7 @@ streaming_start_copy(const streaming_start_t *src)
 /**
  *
  */
+
 streaming_start_component_t *
 streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
 {
@@ -562,6 +572,7 @@ streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
 /**
  *
  */
+
 static struct strtab streamtypetab[] = {
   { "NONE",       SCT_NONE },
   { "UNKNOWN",    SCT_UNKNOWN },
@@ -595,6 +606,7 @@ static struct strtab streamtypetab[] = {
 /**
  *
  */
+
 const char *
 streaming_component_type2txt(streaming_component_type_t s)
 {
@@ -638,6 +650,7 @@ const char *signal2str(signal_state_t st)
 /*
  *
  */
+
 void streaming_init(void)
 {
   memoryinfo_register(&streaming_msg_memoryinfo);

@@ -1,19 +1,8 @@
 /*
- *  Functions converting HTSMSGs to/from JSON
- *  Copyright (C) 2008 Andreas Öman
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2008 Andreas Öman
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Functions converting HTSMSGs to/from JSON
  */
 
 #include <assert.h>
@@ -33,6 +22,7 @@
 /**
  *
  */
+
 static void
 htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 		  int indent, int pretty)
@@ -107,6 +97,7 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 /**
  *
  */
+
 void
 htsmsg_json_serialize(htsmsg_t *msg, htsbuf_queue_t *hq, int pretty)
 {
@@ -119,6 +110,7 @@ htsmsg_json_serialize(htsmsg_t *msg, htsbuf_queue_t *hq, int pretty)
 /**
  *
  */
+
 char *
 htsmsg_json_serialize_to_str(htsmsg_t *msg, int pretty)
 {
@@ -135,6 +127,7 @@ htsmsg_json_serialize_to_str(htsmsg_t *msg, int pretty)
 /**
  *
  */
+
 static void *
 create_map(void *opaque)
 {
@@ -192,6 +185,7 @@ add_null(void *opaque, void *parent, const char *name)
 /**
  *
  */
+
 static const json_deserializer_t json_to_htsmsg = {
   .jd_create_map      = create_map,
   .jd_create_list     = create_list,
@@ -208,6 +202,7 @@ static const json_deserializer_t json_to_htsmsg = {
 /**
  *
  */
+
 htsmsg_t *
 htsmsg_json_deserialize(const char *src)
 {

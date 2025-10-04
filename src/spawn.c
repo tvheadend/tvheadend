@@ -1,19 +1,8 @@
 /*
- *  Process spawn functions
- *  Copyright (C) 2008 Andreas Öman
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2008 Andreas Öman
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Process spawn functions
  */
 
 #include <sys/types.h>
@@ -67,6 +56,7 @@ static void spawn_reaper(void);
 /*
  *
  */
+
 #define SPAWN_PIPE_READ_SIZE 4096
 
 static void
@@ -184,6 +174,7 @@ spawn_error( const char *fmt, ... )
 /*
  * Search PATH for executable
  */
+
 int
 find_exec ( const char *name, char *out, size_t len )
 {
@@ -224,6 +215,7 @@ find_exec ( const char *name, char *out, size_t len )
 /**
  * Reap one child
  */
+
 int
 spawn_reap(pid_t wpid, char *stxt, size_t stxtlen)
 {
@@ -278,6 +270,7 @@ spawn_reap(pid_t wpid, char *stxt, size_t stxtlen)
 /**
  * The reaper is called once a second to finish of any pending spawns
  */
+
 static void
 spawn_reaper(void)
 {
@@ -307,6 +300,7 @@ spawn_reaper(void)
 /**
  * Kill the pid (only if waiting)
  */
+
 int
 spawn_kill(pid_t pid, int sig, int timeout)
 {
@@ -339,6 +333,7 @@ spawn_kill(pid_t pid, int sig, int timeout)
 /**
  * Enqueue a spawn on the pending spawn list
  */
+
 static spawn_t *
 spawn_enq(const char *name, int pid)
 {
@@ -355,6 +350,7 @@ spawn_enq(const char *name, int pid)
 /**
  *
  */
+
 int
 spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
 {
@@ -442,6 +438,7 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
 /**
  *
  */
+
 void
 spawn_free_args(char **argv)
 {
@@ -454,6 +451,7 @@ spawn_free_args(char **argv)
 /**
  * Execute the given program and return its standard output as file-descriptor (pipe).
  */
+
 int
 spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
                       int *rd, pid_t *pid, int redir_stderr)
@@ -598,6 +596,7 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
  * Execute the given program and return its standard input as file-descriptor (pipe).
  * The standard output file-decriptor (od) must be valid, too.
  */
+
 int
 spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
                        int od, int *wd, pid_t *pid, int redir_stderr)
@@ -738,6 +737,7 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
  * 
  * *outp will point to the allocated buffer
  */
+
 int
 spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_stderr)
 {
@@ -821,6 +821,7 @@ spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_s
 /*
  *
  */
+
 void spawn_init(void)
 {
   tvh_pipe(O_NONBLOCK, &spawn_pipe_info);

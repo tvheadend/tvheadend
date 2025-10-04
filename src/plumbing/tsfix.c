@@ -1,19 +1,6 @@
-/**
- *  Timestamp fixup
- *  Copyright (C) 2010 Andreas Öman
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+/*
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2010 Andreas Öman
  */
 
 #include "tvheadend.h"
@@ -29,6 +16,7 @@ LIST_HEAD(tfstream_list, tfstream);
 /**
  *
  */
+
 typedef struct tfstream {
 
   LIST_ENTRY(tfstream) tfs_link;
@@ -57,6 +45,7 @@ typedef struct tfstream {
 /**
  *
  */
+
 typedef struct tsfix {
   streaming_target_t tf_input;
 
@@ -79,6 +68,7 @@ typedef struct tsfix {
 /**
  * Compute the timestamp deltas
  */
+
 static int64_t
 tsfix_ts_diff(int64_t ts1, int64_t ts2)
 {
@@ -101,6 +91,7 @@ tsfix_ts_diff(int64_t ts1, int64_t ts2)
 /**
  *
  */
+
 static void
 tsfix_destroy_streams(tsfix_t *tf)
 {
@@ -127,6 +118,7 @@ tfs_find(tsfix_t *tf, th_pkt_t *pkt)
 /**
  *
  */
+
 static tfstream_t *
 tsfix_add_stream(tsfix_t *tf, int index, streaming_component_type_t type)
 {
@@ -155,6 +147,7 @@ tsfix_add_stream(tsfix_t *tf, int index, streaming_component_type_t type)
 /**
  *
  */
+
 static void
 tsfix_start(tsfix_t *tf, streaming_start_t *ss)
 {
@@ -184,6 +177,7 @@ tsfix_start(tsfix_t *tf, streaming_start_t *ss)
 /**
  *
  */
+
 static void
 tsfix_stop(tsfix_t *tf)
 {
@@ -194,6 +188,7 @@ tsfix_stop(tsfix_t *tf)
 /**
  *
  */
+
 static void
 tsfix_packet_drop(tfstream_t *tfs, th_pkt_t *pkt, const char *reason)
 {
@@ -208,6 +203,7 @@ tsfix_packet_drop(tfstream_t *tfs, th_pkt_t *pkt, const char *reason)
 /**
  *
  */
+
 static void
 normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 {
@@ -327,6 +323,7 @@ deliver:
 /**
  *
  */
+
 static inline int
 txfix_need_to_update_ref(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
@@ -338,6 +335,7 @@ txfix_need_to_update_ref(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 /**
  *
  */
+
 static int
 tsfix_update_ref(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
@@ -388,6 +386,7 @@ tsfix_update_ref(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 /**
  *
  */
+
 static void
 tsfix_backlog(tsfix_t *tf)
 {
@@ -412,6 +411,7 @@ tsfix_backlog(tsfix_t *tf)
 /**
  *
  */
+
 static int64_t
 tsfix_backlog_diff(tsfix_t *tf)
 {
@@ -453,6 +453,7 @@ tsfix_backlog_diff(tsfix_t *tf)
  * 12: B dts 4922741536 pts <unset>    rpts 4922741536
  * 13: I dts 4922745136 pts 4922755936 rpts 4922755936
  */
+
 static void
 recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
@@ -523,6 +524,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 /**
  * Compute PTS (if not known)
  */
+
 static void
 compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
@@ -545,6 +547,7 @@ compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 /**
  *
  */
+
 static void
 tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 {
@@ -628,6 +631,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 /**
  *
  */
+
 static void
 tsfix_input(void *opaque, streaming_message_t *sm)
 {
@@ -698,6 +702,7 @@ static streaming_ops_t tsfix_input_ops = {
 /**
  *
  */
+
 streaming_target_t *
 tsfix_create(streaming_target_t *output)
 {
@@ -715,6 +720,7 @@ tsfix_create(streaming_target_t *output)
 /**
  *
  */
+
 void
 tsfix_destroy(streaming_target_t *pad)
 {

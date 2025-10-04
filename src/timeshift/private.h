@@ -1,19 +1,8 @@
 /*
- *  TV headend - Timeshift
- *  Copyright (C) 2012 Adam Sutton
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2012 Adam Sutton
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * TV headend - Timeshift
  */
 
 #ifndef __TVH_TIMESHIFT_PRIVATE_H__
@@ -26,6 +15,7 @@
 /**
  * Indexes of import data in the stream
  */
+
 typedef struct timeshift_index_iframe
 {
   off_t                               pos;    ///< Position in the file
@@ -38,6 +28,7 @@ typedef TAILQ_HEAD(timeshift_index_iframe_list,timeshift_index_iframe) timeshift
 /**
  * Indexes of import data in the stream
  */
+
 typedef struct timeshift_index_data
 {
   off_t                             pos;    ///< Position in the file
@@ -50,6 +41,7 @@ typedef TAILQ_HEAD(timeshift_index_data_list,timeshift_index_data) timeshift_ind
 /**
  * Timeshift file
  */
+
 typedef struct timeshift_file
 {
   int                           wfd;      ///< Write descriptor
@@ -82,6 +74,7 @@ typedef TAILQ_HEAD(timeshift_file_list,timeshift_file) timeshift_file_list_t;
 /**
  *
  */
+
 typedef struct timeshift_seek {
   timeshift_file_t           *file;
   timeshift_index_iframe_t   *frame;
@@ -90,6 +83,7 @@ typedef struct timeshift_seek {
 /**
  *
  */
+
 typedef struct timeshift {
   // Note: input MUST BE FIRST in struct
   streaming_target_t          input;      ///< Input source
@@ -142,6 +136,7 @@ typedef struct timeshift {
 /*
  *
  */
+
 extern uint64_t timeshift_total_size;
 extern uint64_t timeshift_total_ram_size;
 
@@ -158,6 +153,7 @@ static inline void timeshift_packet_log
 /*
  * Write functions
  */
+
 ssize_t timeshift_write_start   ( timeshift_file_t *tsf, int64_t time, streaming_start_t *ss );
 ssize_t timeshift_write_sigstat ( timeshift_file_t *tsf, int64_t time, signal_status_t *ss );
 ssize_t timeshift_write_packet  ( timeshift_file_t *tsf, int64_t time, th_pkt_t *pkt );
@@ -171,12 +167,14 @@ ssize_t timeshift_write_eof     ( timeshift_file_t *tsf );
 /*
  * Threads
  */
+
 void *timeshift_reader ( void *p );
 void *timeshift_writer ( void *p );
 
 /*
  * File management
  */
+
 void timeshift_filemgr_init     ( void );
 void timeshift_filemgr_term     ( void );
 int  timeshift_filemgr_makedirs ( int ts_index, char *buf, size_t len );

@@ -274,6 +274,7 @@ tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void *, c
 /*
  * Regex stuff
  */
+
 void regex_free(tvh_regex_t *regex)
 {
 #if ENABLE_PCRE || ENABLE_PCRE2
