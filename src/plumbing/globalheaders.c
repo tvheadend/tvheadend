@@ -1,19 +1,6 @@
-/**
- *  Global header modification
- *  Copyright (C) 2010 Andreas Öman
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+/*
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2010 Andreas Öman
  */
 
 #include <assert.h>
@@ -35,12 +22,14 @@ typedef struct globalheaders {
 } globalheaders_t;
 
 /* note: there up to 2.5 sec diffs in some sources! */
+
 #define MAX_SCAN_TIME   5000  // in ms
 #define MAX_NOPKT_TIME  2500  // in ms
 
 /**
  *
  */
+
 static inline int
 gh_require_meta(int type)
 {
@@ -56,6 +45,7 @@ gh_require_meta(int type)
 /**
  *
  */
+
 static inline int
 gh_is_audiovideo(int type)
 {
@@ -65,6 +55,7 @@ gh_is_audiovideo(int type)
 /**
  *
  */
+
 static void
 gh_flush(globalheaders_t *gh)
 {
@@ -80,6 +71,7 @@ gh_flush(globalheaders_t *gh)
 /**
  *
  */
+
 static void
 apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 {
@@ -127,6 +119,7 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 /**
  *
  */
+
 static int
 header_complete(streaming_start_component_t *ssc, int not_so_picky)
 {
@@ -155,6 +148,7 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
 /**
  *
  */
+
 static int64_t
 gh_queue_delay(globalheaders_t *gh, int index)
 {
@@ -204,6 +198,7 @@ gh_queue_delay(globalheaders_t *gh, int index)
 /**
  *
  */
+
 static int
 headers_complete(globalheaders_t *gh)
 {
@@ -269,6 +264,7 @@ headers_complete(globalheaders_t *gh)
 /**
  *
  */
+
 static void
 gh_start(globalheaders_t *gh, streaming_message_t *sm)
 {
@@ -280,6 +276,7 @@ gh_start(globalheaders_t *gh, streaming_message_t *sm)
 /**
  *
  */
+
 static void
 gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 {
@@ -361,6 +358,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 /**
  *
  */
+
 static void
 gh_pass(globalheaders_t *gh, streaming_message_t *sm)
 {
@@ -405,6 +403,7 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
 /**
  *
  */
+
 static void
 globalheaders_input(void *opaque, streaming_message_t *sm)
 {
@@ -434,6 +433,7 @@ static streaming_ops_t globalheaders_input_ops = {
 /**
  *
  */
+
 streaming_target_t *
 globalheaders_create(streaming_target_t *output)
 {
@@ -450,6 +450,7 @@ globalheaders_create(streaming_target_t *output)
 /**
  *
  */
+
 void
 globalheaders_destroy(streaming_target_t *pad)
 {

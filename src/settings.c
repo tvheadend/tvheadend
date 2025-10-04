@@ -1,19 +1,8 @@
 /*
- *  Functions for storing program settings
- *  Copyright (C) 2008 Andreas Öman
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2008 Andreas Öman
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Functions for storing program settings
  */
 
 #include <sys/types.h>
@@ -42,6 +31,7 @@ static char *settingspath = NULL;
 /**
  *
  */
+
 const char *
 hts_settings_get_root(void)
 {
@@ -51,6 +41,7 @@ hts_settings_get_root(void)
 /**
  *
  */
+
 void
 hts_settings_init(const char *confpath)
 {
@@ -61,6 +52,7 @@ hts_settings_init(const char *confpath)
 /**
  *
  */
+
 void
 hts_settings_done(void)
 {
@@ -70,6 +62,7 @@ hts_settings_done(void)
 /**
  *
  */
+
 int
 hts_settings_makedirs ( const char *inpath )
 {
@@ -92,6 +85,7 @@ hts_settings_makedirs ( const char *inpath )
 /**
  *
  */
+
 static void
 _hts_settings_buildpath
   (char *dst, size_t dstsize, const char *fmt, va_list ap, const char *prefix)
@@ -128,6 +122,7 @@ hts_settings_buildpath
 /**
  *
  */
+
 void
 hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 {
@@ -161,6 +156,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   }
 
   /* Store data */
+
 #if ENABLE_ZLIB
   pack = strstr(path, "/muxes/") != NULL && /* ugly, redesign API */
          strstr(path, "/networks/") != NULL &&
@@ -217,6 +213,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 /**
  *
  */
+
 static htsmsg_t *
 hts_settings_load_one(const char *filename)
 {
@@ -270,6 +267,7 @@ hts_settings_load_one(const char *filename)
 /**
  *
  */
+
 static htsmsg_t *
 hts_settings_load_path(const char *fullpath, int depth)
 {
@@ -322,6 +320,7 @@ hts_settings_load_path(const char *fullpath, int depth)
 /**
  *
  */
+
 static htsmsg_t *
 hts_settings_vload(const char *pathfmt, va_list ap, int depth)
 {
@@ -351,6 +350,7 @@ hts_settings_vload(const char *pathfmt, va_list ap, int depth)
 /**
  *
  */
+
 htsmsg_t *
 hts_settings_load(const char *pathfmt, ...)
 {
@@ -365,6 +365,7 @@ hts_settings_load(const char *pathfmt, ...)
 /**
  *
  */
+
 htsmsg_t *
 hts_settings_load_r(int depth, const char *pathfmt, ...)
 {
@@ -378,6 +379,7 @@ hts_settings_load_r(int depth, const char *pathfmt, ...)
 /**
  *
  */
+
 void
 hts_settings_remove(const char *pathfmt, ...)
 {
@@ -402,6 +404,7 @@ hts_settings_remove(const char *pathfmt, ...)
 /**
  *
  */
+
 int
 hts_settings_open_file(int flags, const char *pathfmt, ...)
 {
@@ -430,6 +433,7 @@ hts_settings_open_file(int flags, const char *pathfmt, ...)
 /*
  * Check if a path exists
  */
+
 int
 hts_settings_exists ( const char *pathfmt, ... )
 {
@@ -448,6 +452,7 @@ hts_settings_exists ( const char *pathfmt, ... )
 /*
  * XDG user directory support
  */
+
 char *
 hts_settings_get_xdg_dir_lookup (const char *name)
 {

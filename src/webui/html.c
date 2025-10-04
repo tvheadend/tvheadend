@@ -1,19 +1,8 @@
 /*
- *  tvheadend, HTML/XML helper routines
- *  Copyright (C) 2012 Adam Sutton
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2012 Adam Sutton
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, HTML/XML helper routines
  */
 
 #include <string.h>
@@ -22,6 +11,7 @@
 #include "hts_strtab.h"
 
 /* Escape chars */
+
 static struct {
   char        chr;
   const char *esc;
@@ -46,6 +36,7 @@ static const char *html_escape_char ( const char chr )
  * Escape characters that will interfere with xml.
  * Count how many bytes str would contain if it would be rss escapped
  */
+
 size_t
 html_escaped_len(const char *src)
 {
@@ -65,6 +56,7 @@ html_escaped_len(const char *src)
 /*
  * http (xml) escape a string
  */
+
 const char*
 html_escape(char *dst, const char *src, size_t len)
 {

@@ -223,6 +223,7 @@ read_stream_mux_config(parser_es_t *st, latm_private_t *latm, bitstream_t *bs)
 /**
  * Parse AAC LATM
  */
+
 th_pkt_t *
 parse_latm_audio_mux_element(parser_t *t, parser_es_t *st,
 			     const uint8_t *data, int len)

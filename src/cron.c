@@ -1,20 +1,8 @@
 /*
- *  Tvheadend - cron routines
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2014 Adam Sutton
  *
- *  Copyright (C) 2014 Adam Sutton
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Tvheadend - cron routines
  */
 
 #include "build.h"
@@ -33,6 +21,7 @@
 /*
  * Parse value
  */
+
 static int
 cron_parse_val ( const char *str, const char **key, int *v )
 {
@@ -55,6 +44,7 @@ cron_parse_val ( const char *str, const char **key, int *v )
 /*
  * Parse individual field in cron spec
  */
+
 static int
 cron_parse_field 
   ( const char **istr, uint64_t *field, uint64_t mask, int bits, int off,
@@ -106,6 +96,7 @@ cron_parse_field
 /*
  * Set value
  */
+
 int
 cron_set ( cron_t *c, const char *str )
 {
@@ -161,6 +152,7 @@ cron_set ( cron_t *c, const char *str )
 /*
  * Set value
  */
+
 cron_multi_t *
 cron_multi_set ( const char *str )
 {
@@ -198,6 +190,7 @@ cron_multi_set ( const char *str )
 /*
  * Check for leap year
  */
+
 static int
 is_leep_year ( int year )
 {
@@ -211,6 +204,7 @@ is_leep_year ( int year )
 /*
  * Check for days in month
  */
+
 static int
 days_in_month ( int year, int mon )
 {
@@ -225,6 +219,7 @@ days_in_month ( int year, int mon )
 /*
  * Find the next time (starting from now) that the cron should fire
  */
+
 int
 cron_next ( cron_t *c, const time_t now, time_t *ret )
 {
@@ -341,6 +336,7 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
 /*
  * Find the next time (starting from now) that the cron should fire
  */
+
 int
 cron_multi_next ( cron_multi_t *cm, const time_t now, time_t *ret )
 {
@@ -364,6 +360,7 @@ cron_multi_next ( cron_multi_t *cm, const time_t now, time_t *ret )
  *
  *   gcc -g -DCRON_TEST -I./build.linux src/cron.c
  */
+
 #ifdef CRON_TEST
 static
 void print_bits ( uint64_t b, int n )

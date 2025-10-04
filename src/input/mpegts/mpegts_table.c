@@ -1,19 +1,8 @@
 /*
- *  MPEGTS table support
- *  Copyright (C) 2013 Andreas Öman
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2013 Andreas Öman
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * MPEGTS table support
  */
 
 #include "tvheadend.h"
@@ -171,6 +160,7 @@ mpegts_table_destroy ( mpegts_table_t *mt )
 /**
  * Determine table type
  */
+
 int
 mpegts_table_type ( mpegts_table_t *mt )
 {
@@ -185,6 +175,7 @@ mpegts_table_type ( mpegts_table_t *mt )
 /**
  * Find a table
  */
+
 mpegts_table_t *mpegts_table_find
   ( mpegts_mux_t *mm, const char *name, void *opaque )
 {
@@ -208,6 +199,7 @@ mpegts_table_t *mpegts_table_find
 /**
  * Add a new DVB table
  */
+
 mpegts_table_t *
 mpegts_table_add
   ( mpegts_mux_t *mm, int tableid, int mask,
@@ -289,6 +281,7 @@ mpegts_table_add
 /**
  *
  */
+
 void
 mpegts_table_flush_all ( mpegts_mux_t *mm )
 {

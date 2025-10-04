@@ -1,19 +1,8 @@
 /*
- *  tvheadend, UPnP interface
- *  Copyright (C) 2014 Jaroslav Kysela
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2014 Jaroslav Kysela
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, UPnP interface
  */
 
 #include "tvheadend.h"
@@ -53,6 +42,7 @@ static struct sockaddr_storage upnp_ipv4_multicast;
 /*
  *
  */
+
 upnp_service_t *upnp_service_create0( upnp_service_t *us )
 {
   tvh_mutex_lock(&upnp_lock);
@@ -73,6 +63,7 @@ void upnp_service_destroy( upnp_service_t *us )
 /*
  *
  */
+
 void
 upnp_send( htsbuf_queue_t *q, struct sockaddr_storage *storage,
            int delay_ms, int from_multicast )
@@ -98,6 +89,7 @@ upnp_send( htsbuf_queue_t *q, struct sockaddr_storage *storage,
 /*
  *
  */
+
 static void
 upnp_dump_data( upnp_data_t *data )
 {
@@ -112,6 +104,7 @@ upnp_dump_data( upnp_data_t *data )
 /*
  *  Discovery thread
  */
+
 static void *
 upnp_thread( void *aux )
 {
@@ -220,6 +213,7 @@ error:
 /*
  *  Fire up UPnP server
  */
+
 void
 upnp_server_init(const char *bindaddr)
 {

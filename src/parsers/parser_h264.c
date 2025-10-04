@@ -40,6 +40,7 @@
 /**
  * H.264 parser, nal escaper
  */
+
 void *
 h264_nal_deescape(bitstream_t *bs, const uint8_t *data, int size)
 {

@@ -1,26 +1,6 @@
 #!/usr/bin/env bash
-#
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2008-2014 Tvheadend Project (https://tvheadend.org)
-#
-# This file is part of Tvheadend
-#
-# Tvheadend is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Tvheadend is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Tvheadend.  If not, see <http://www.gnu.org/licenses/>.
-#
-# For more details, including opportunities for alternative licensing,
-# please read the LICENSE file.
-#
-# ############################################################################
 
 # ############################################################################
 # 3rd Party library processing support
@@ -56,11 +36,6 @@ CODENAME=$(echo "$CODENAME" | tr '\n' ' ' | sed -e 's/[[:blank:]]*$//g')
 
 # Convert amd64 to x86_64 (ensure uniformity)
 [ "${ARCH}" = "amd64" ] && ARCH=x86_64
-
-# ############################################################################
-# Config
-# ############################################################################
-
 
 # ############################################################################
 # Functions
@@ -138,7 +113,7 @@ function unpack
   # Cleanup
   rm -rf "${BUILDDIR}/${LIB_NAME}" || return 1
   mkdir -p "${BUILDDIR}/${LIB_NAME}" || return 1
-  
+
   # Unpack
   echo "UNPACK          ${P}"
   tar -C "${BUILDDIR}/${LIB_NAME}" -xf "${P}" || return 1
@@ -159,7 +134,7 @@ function upload
 
   # Can't upload
   [ -z "${PCLOUD_USER}" -o -z "${PCLOUD_PASS}" ] && return 0
-  
+
   # Don't need to upload
   [ -f "${P}" ] && return 0
 
@@ -174,7 +149,7 @@ function upload
   N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
   echo "UPLOAD          ${N}"
   ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || python3 ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || return 1
-  
+
   # Done
   mv "${P}.tmp" "${P}" || return 1
 }

@@ -1,20 +1,8 @@
 /*
- *  Tvheadend - TS file input system
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2013 Adam Sutton
  *
- *  Copyright (C) 2013 Adam Sutton
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Tvheadend - TS file input system
  */
 
 #include "tvheadend.h"
@@ -26,6 +14,7 @@
 /*
  * Globals
  */
+
 tvh_mutex_t          tsfile_lock;
 mpegts_network_t         *tsfile_network;
 tsfile_input_list_t      tsfile_inputs;
@@ -48,6 +37,7 @@ tsfile_service_delete ( service_t *s, int delconf )
 /*
  * Network definition
  */
+
 static mpegts_service_t *
 tsfile_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
@@ -75,6 +65,7 @@ tsfile_network_create_service
 /*
  * Initialise
  */
+
 void tsfile_init ( int tuners )
 {
   int i;
@@ -104,6 +95,7 @@ void tsfile_init ( int tuners )
 /*
  * Shutdown
  */
+
 void
 tsfile_done ( void )
 {
@@ -122,6 +114,7 @@ tsfile_done ( void )
 /*
  * Add multiplex
  */
+
 void tsfile_add_file ( const char *path )
 {
   tsfile_input_t        *mi;

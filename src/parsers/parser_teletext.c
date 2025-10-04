@@ -1,20 +1,7 @@
 /*
- *  Teletext parsing functions
- *  Copyright (C) 2007 Andreas Öman
- *  Copyright (C) 2014 Jaroslav Kysela
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2007 Andreas Ã–man
+ * Copyright (C) 2014 Jaroslav Kysela
  */
 
 #include <ctype.h>
@@ -124,16 +111,16 @@ static const uint8_t hamtable[] = {
 #define SUBSET_CZECH_SLOVAK    1  /* Cesky / Slovencina */
 #define SUBSET_ENGLISH         2  /* English */
 #define SUBSET_ESTONIAN        3  /* Eesti */
-#define SUBSET_FRENCH          4  /* Français */
+#define SUBSET_FRENCH          4  /* Franï¿½ais */
 #define SUBSET_GERMAN          5  /* German / Deutch */
 #define SUBSET_ITALIAN         6  /* Italiano */
 #define SUBSET_LETT_LITH       7  /* Lettish / Lietuviskai */
 #define SUBSET_POLISH          8  /* Polski */
-#define SUBSET_PORTUG_SPANISH  9  /* Português / Español */
-#define SUBSET_RUMANIAN        10 /* Româna */
+#define SUBSET_PORTUG_SPANISH  9  /* Portuguï¿½s / Espaï¿½ol */
+#define SUBSET_RUMANIAN        10 /* Romï¿½na */
 #define SUBSET_SERB_CRO_SLO    11 /* Srpski / Hrvatski / Slovenscina */
 #define SUBSET_SWE_FIN_HUN     12 /* Svenska / Suomi / Magyar */
-#define SUBSET_TURKISH         13 /* Türkçe */
+#define SUBSET_TURKISH         13 /* Tï¿½rkï¿½e */
 #define SUBSET_LAST            SUBSET_TURKISH
 
 #define SUBSET_CHARMAP_COUNT   13

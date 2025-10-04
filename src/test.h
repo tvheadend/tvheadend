@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 /* Parent */
+
 typedef struct obj_a
 {
   idnode_t a_id;
@@ -18,6 +19,7 @@ typedef struct obj_a
 extern const idclass_t obj_a_class;
 
 /* Child */
+
 typedef struct obj_b
 {
   obj_a_t;

@@ -1,19 +1,8 @@
 /*
- *  Functions for manipulating HTS messages
- *  Copyright (C) 2007 Andreas Öman
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2007 Andreas Öman
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Functions for manipulating HTS messages
  */
 
 #include <assert.h>
@@ -40,6 +29,7 @@ static htsmsg_t *htsmsg_field_get_msg ( htsmsg_field_t *f, int islist );
 /**
  *
  */
+
 static void
 htsmsg_field_data_destroy(htsmsg_field_t *f)
 {
@@ -81,6 +71,7 @@ htsmsg_field_data_destroy(htsmsg_field_t *f)
 /**
  *
  */
+
 void
 htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
 {
@@ -98,6 +89,7 @@ htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
 /*
  *
  */
+
 static void
 htsmsg_clear(htsmsg_t *msg)
 {
@@ -111,6 +103,7 @@ htsmsg_clear(htsmsg_t *msg)
 /*
  *
  */
+
 htsmsg_field_t *
 htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t esize)
 {
@@ -167,6 +160,7 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags, size_t es
 /*
  *
  */
+
 htsmsg_field_t *
 htsmsg_field_find(const htsmsg_t *msg, const char *name)
 {
@@ -185,6 +179,7 @@ htsmsg_field_find(const htsmsg_t *msg, const char *name)
 /*
  *
  */
+
 htsmsg_field_t *
 htsmsg_field_last(htsmsg_t *msg)
 {
@@ -197,6 +192,7 @@ htsmsg_field_last(htsmsg_t *msg)
 /**
  *
  */
+
 int
 htsmsg_delete_field(htsmsg_t *msg, const char *name)
 {
@@ -212,6 +208,7 @@ htsmsg_delete_field(htsmsg_t *msg, const char *name)
 /**
  *
  */
+
 int
 htsmsg_is_empty(htsmsg_t *msg)
 {
@@ -226,6 +223,7 @@ htsmsg_is_empty(htsmsg_t *msg)
 /*
  *
  */
+
 htsmsg_t *
 htsmsg_create_map(void)
 {
@@ -247,6 +245,7 @@ htsmsg_create_map(void)
 /*
  *
  */
+
 htsmsg_t *
 htsmsg_create_list(void)
 {
@@ -270,6 +269,7 @@ htsmsg_create_list(void)
 /*
  *
  */
+
 void
 htsmsg_concat(htsmsg_t *msg, htsmsg_t *sub)
 {
@@ -286,6 +286,7 @@ htsmsg_concat(htsmsg_t *msg, htsmsg_t *sub)
 /*
  *
  */
+
 void
 htsmsg_destroy(htsmsg_t *msg)
 {
@@ -308,6 +309,7 @@ htsmsg_destroy(htsmsg_t *msg)
 /*
  *
  */
+
 void
 htsmsg_add_bool(htsmsg_t *msg, const char *name, int b)
 {
@@ -318,6 +320,7 @@ htsmsg_add_bool(htsmsg_t *msg, const char *name, int b)
 /*
  *
  */
+
 void
 htsmsg_set_bool(htsmsg_t *msg, const char *name, int b)
 {
@@ -330,6 +333,7 @@ htsmsg_set_bool(htsmsg_t *msg, const char *name, int b)
 /*
  *
  */
+
 void
 htsmsg_add_s64(htsmsg_t *msg, const char *name, int64_t s64)
 {
@@ -340,6 +344,7 @@ htsmsg_add_s64(htsmsg_t *msg, const char *name, int64_t s64)
 /*
  *
  */
+
 int
 htsmsg_set_s64(htsmsg_t *msg, const char *name, int64_t s64)
 {
@@ -356,6 +361,7 @@ htsmsg_set_s64(htsmsg_t *msg, const char *name, int64_t s64)
 /*
  *
  */
+
 void
 htsmsg_add_dbl(htsmsg_t *msg, const char *name, double dbl)
 {
@@ -367,6 +373,7 @@ htsmsg_add_dbl(htsmsg_t *msg, const char *name, double dbl)
 /*
  *
  */
+
 void
 htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str)
 {
@@ -378,6 +385,7 @@ htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str)
 /*
  *
  */
+
 void
 htsmsg_add_str_alloc(htsmsg_t *msg, const char *name, char *str)
 {
@@ -389,6 +397,7 @@ htsmsg_add_str_alloc(htsmsg_t *msg, const char *name, char *str)
 /*
  *
  */
+
 void
 htsmsg_add_str2(htsmsg_t *msg, const char *name, const char *str)
 {
@@ -399,6 +408,7 @@ htsmsg_add_str2(htsmsg_t *msg, const char *name, const char *str)
 /*
  *
  */
+
 void
 htsmsg_add_str_exclusive(htsmsg_t *msg, const char *str)
 {
@@ -418,6 +428,7 @@ htsmsg_add_str_exclusive(htsmsg_t *msg, const char *str)
 /*
  *
  */
+
 int
 htsmsg_field_set_str(htsmsg_field_t *f, const char *str)
 {
@@ -450,6 +461,7 @@ htsmsg_field_set_str(htsmsg_field_t *f, const char *str)
 /*
  *
  */
+
 int
 htsmsg_field_set_str_force(htsmsg_field_t *f, const char *str)
 {
@@ -464,6 +476,7 @@ htsmsg_field_set_str_force(htsmsg_field_t *f, const char *str)
 /*
  *
  */
+
 int
 htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str)
 {
@@ -478,6 +491,7 @@ htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str)
 /*
  *
  */
+
 int
 htsmsg_set_str2(htsmsg_t *msg, const char *name, const char *str)
 {
@@ -489,6 +503,7 @@ htsmsg_set_str2(htsmsg_t *msg, const char *name, const char *str)
 /*
  *
  */
+
 int
 htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len)
 {
@@ -524,6 +539,7 @@ htsmsg_field_set_bin(htsmsg_field_t *f, const void *bin, size_t len)
 /*
  *
  */
+
 int
 htsmsg_field_set_bin_force(htsmsg_field_t *f, const void *bin, size_t len)
 {
@@ -539,6 +555,7 @@ htsmsg_field_set_bin_force(htsmsg_field_t *f, const void *bin, size_t len)
 /*
  *
  */
+
 void
 htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 {
@@ -550,6 +567,7 @@ htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 /*
  *
  */
+
 void
 htsmsg_add_bin_alloc(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 {
@@ -562,6 +580,7 @@ htsmsg_add_bin_alloc(htsmsg_t *msg, const char *name, const void *bin, size_t le
 /*
  *
  */
+
 void
 htsmsg_add_bin_ptr(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 {
@@ -573,6 +592,7 @@ htsmsg_add_bin_ptr(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 /*
  *
  */
+
 static int
 htsmsg_field_set_uuid(htsmsg_field_t *f, tvh_uuid_t *u)
 {
@@ -591,6 +611,7 @@ htsmsg_field_set_uuid(htsmsg_field_t *f, tvh_uuid_t *u)
 /*
  *
  */
+
 int
 htsmsg_set_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u)
 {
@@ -605,6 +626,7 @@ htsmsg_set_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u)
 /*
  *
  */
+
 void
 htsmsg_add_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u)
 {
@@ -616,6 +638,7 @@ htsmsg_add_uuid(htsmsg_t *msg, const char *name, tvh_uuid_t *u)
 /*
  *
  */
+
 static htsmsg_t *
 htsmsg_field_set_msg(htsmsg_field_t *f, htsmsg_t *sub)
 {
@@ -637,6 +660,7 @@ htsmsg_field_set_msg(htsmsg_field_t *f, htsmsg_t *sub)
 /*
  *
  */
+
 htsmsg_t *
 htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 {
@@ -650,6 +674,7 @@ htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 /*
  *
  */
+
 htsmsg_t *
 htsmsg_set_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 {
@@ -663,6 +688,7 @@ htsmsg_set_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 /*
  *
  */
+
 void
 htsmsg_add_msg_extname(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 {
@@ -684,6 +710,7 @@ htsmsg_add_msg_extname(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 /**
  *
  */
+
 int
 htsmsg_get_s64(htsmsg_t *msg, const char *name, int64_t *s64p)
 {
@@ -721,6 +748,7 @@ htsmsg_field_get_s64
 /**
  *
  */
+
 int
 bool_check(const char *str)
 {
@@ -775,6 +803,7 @@ htsmsg_get_bool_or_default(htsmsg_t *msg, const char *name, int def)
 /**
  *
  */
+
 int64_t
 htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def)
 {
@@ -785,6 +814,7 @@ htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def)
 /*
  *
  */
+
 int
 htsmsg_get_u32(htsmsg_t *msg, const char *name, uint32_t *u32p)
 {
@@ -820,6 +850,7 @@ htsmsg_field_get_u32(htsmsg_field_t *f, uint32_t *u32p)
 /**
  *
  */
+
 int
 htsmsg_get_u32_or_default(htsmsg_t *msg, const char *name, uint32_t def)
 {
@@ -830,6 +861,7 @@ htsmsg_get_u32_or_default(htsmsg_t *msg, const char *name, uint32_t def)
 /**
  *
  */
+
 int32_t
 htsmsg_get_s32_or_default(htsmsg_t *msg, const char *name, int32_t def)
 {
@@ -840,6 +872,7 @@ htsmsg_get_s32_or_default(htsmsg_t *msg, const char *name, int32_t def)
 /*
  *
  */
+
 int
 htsmsg_get_s32(htsmsg_t *msg, const char *name, int32_t *s32p)
 {
@@ -859,6 +892,7 @@ htsmsg_get_s32(htsmsg_t *msg, const char *name, int32_t *s32p)
 /*
  *
  */
+
 int
 htsmsg_field_get_s32(htsmsg_field_t *f, int32_t *s32p)
 {
@@ -878,6 +912,7 @@ htsmsg_field_get_s32(htsmsg_field_t *f, int32_t *s32p)
 /*
  *
  */
+
 int
 htsmsg_get_dbl(htsmsg_t *msg, const char *name, double *dblp)
 {
@@ -913,6 +948,7 @@ htsmsg_field_get_dbl
 /**
  *
  */
+
 const char *
 htsmsg_field_get_string(htsmsg_field_t *f)
 {
@@ -945,6 +981,7 @@ htsmsg_field_get_string(htsmsg_field_t *f)
 /*
  *
  */
+
 const char *
 htsmsg_get_str(htsmsg_t *msg, const char *name)
 {
@@ -958,6 +995,7 @@ htsmsg_get_str(htsmsg_t *msg, const char *name)
 /**
  *
  */
+
 int
 htsmsg_field_get_bin(htsmsg_field_t *f, const void **binp, size_t *lenp)
 {
@@ -996,6 +1034,7 @@ htsmsg_field_get_bin(htsmsg_field_t *f, const void **binp, size_t *lenp)
 /*
  *
  */
+
 int
 htsmsg_get_bin
   (htsmsg_t *msg, const char *name, const void **binp, size_t *lenp)
@@ -1011,6 +1050,7 @@ htsmsg_get_bin
 /**
  *
  */
+
 int
 htsmsg_field_get_uuid(htsmsg_field_t *f, tvh_uuid_t *u)
 {
@@ -1041,6 +1081,7 @@ htsmsg_field_get_uuid(htsmsg_field_t *f, tvh_uuid_t *u)
 /*
  *
  */
+
 int
 htsmsg_get_uuid
   (htsmsg_t *msg, const char *name, tvh_uuid_t *u)
@@ -1056,6 +1097,7 @@ htsmsg_get_uuid
 /*
  *
  */
+
 htsmsg_t *
 htsmsg_get_map(htsmsg_t *msg, const char *name)
 {
@@ -1076,6 +1118,7 @@ htsmsg_field_get_map(htsmsg_field_t *f)
 /**
  *
  */
+
 htsmsg_t *
 htsmsg_get_map_multi(htsmsg_t *msg, ...)
 {
@@ -1093,6 +1136,7 @@ htsmsg_get_map_multi(htsmsg_t *msg, ...)
 /**
  *
  */
+
 const char *
 htsmsg_get_str_multi(htsmsg_t *msg, ...)
 {
@@ -1122,6 +1166,7 @@ htsmsg_get_str_multi(htsmsg_t *msg, ...)
 /*
  *
  */
+
 htsmsg_t *
 htsmsg_get_list(const htsmsg_t *msg, const char *name)
 {
@@ -1175,6 +1220,7 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
 /**
  *
  */
+
 htsmsg_t *
 htsmsg_detach_submsg(htsmsg_field_t *f)
 {
@@ -1190,6 +1236,7 @@ htsmsg_detach_submsg(htsmsg_field_t *f)
 /*
  *
  */
+
 static void
 htsmsg_print0(htsmsg_t *msg, int indent)
 {
@@ -1247,6 +1294,7 @@ htsmsg_print0(htsmsg_t *msg, int indent)
 /*
  *
  */
+
 void
 htsmsg_print(htsmsg_t *msg)
 {
@@ -1256,6 +1304,7 @@ htsmsg_print(htsmsg_t *msg)
 /**
  *
  */
+
 static void htsmsg_copy_i(htsmsg_t *dst, const htsmsg_t *src);
 
 static void
@@ -1332,6 +1381,7 @@ htsmsg_copy_field(htsmsg_t *dst, const char *dstname,
 /**
  *
  */
+
 int
 htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2)
 {
@@ -1400,6 +1450,7 @@ htsmsg_cmp(const htsmsg_t *m1, const htsmsg_t *m2)
 /**
  *
  */
+
 htsmsg_t *
 htsmsg_get_map_in_list(htsmsg_t *m, int num)
 {
@@ -1416,6 +1467,7 @@ htsmsg_get_map_in_list(htsmsg_t *m, int num)
 /**
  *
  */
+
 htsmsg_t *
 htsmsg_get_map_by_field_if_name(htsmsg_field_t *f, const char *name)
 {
@@ -1430,6 +1482,7 @@ htsmsg_get_map_by_field_if_name(htsmsg_field_t *f, const char *name)
 /**
  *
  */
+
 const char *
 htsmsg_get_cdata(htsmsg_t *m, const char *field)
 {
@@ -1441,6 +1494,7 @@ htsmsg_get_cdata(htsmsg_t *m, const char *field)
  *
  * Note: this will NOT work for lists of complex types
  */
+
 char *
 htsmsg_list_2_csv(htsmsg_t *m, char delim, int human)
 {
@@ -1535,6 +1589,7 @@ htsmsg_csv_2_list(const char *str, char delim)
 /*
  *
  */
+
 htsmsg_t *
 htsmsg_create_key_val(const char *key, const char *val)
 {
@@ -1549,6 +1604,7 @@ htsmsg_create_key_val(const char *key, const char *val)
 /*
  *
  */
+
 int
 htsmsg_is_string_in_list(htsmsg_t *list, const char *str)
 {
@@ -1570,6 +1626,7 @@ htsmsg_is_string_in_list(htsmsg_t *list, const char *str)
 /*
  *
  */
+
 int
 htsmsg_remove_string_from_list(htsmsg_t *list, const char *str)
 {
@@ -1595,6 +1652,7 @@ htsmsg_remove_string_from_list(htsmsg_t *list, const char *str)
  * Based on htsbuf_vqprintf, but can't easily share code since we rely
  * on stack allocations.
 */
+
 static void
 htsmsg_add_str_ap(htsmsg_t *msg, const char *name, const char *fmt, va_list ap0)
 {
