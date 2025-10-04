@@ -26,10 +26,10 @@
 static int
 tvh_codec_profile_mp2_open(TVHCodecProfile *self, AVDictionary **opts)
 {
-    AV_DICT_SET_TVH_REQUIRE_META(opts, 0);
+    AV_DICT_SET_TVH_REQUIRE_META(LST_MP2, opts, 0);
     // bit_rate
     if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+        AV_DICT_SET_BIT_RATE(LST_MP2, opts, self->bit_rate);
     }
     return 0;
 }
