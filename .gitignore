@@ -62,3 +62,6 @@ Thumbs.db
 Desktop.ini
 #macOS files
 .DS_Store
+
+# Generated dependency update files
+dependency_updates.json
