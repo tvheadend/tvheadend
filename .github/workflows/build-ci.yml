@@ -47,9 +47,11 @@ jobs:
         import_github_env: true
         commands: |
           sudo apt-get update -y
-          sudo apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross
+          sudo apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross curl
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
           AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh -p raspios
+          echo "Running basic functionality tests..."
+          support/test_basic_functionality.sh || echo "Tests failed but continuing..."
           support/cloudsmith.sh -n -p raspios -f '../tvheadend*.deb'
     - uses: actions/upload-artifact@v4
       with:
@@ -127,7 +129,7 @@ jobs:
             case "${{ matrix.distro }}" in
               ubuntu*|jessie|stretch|buster|bullseye|bookworm|trixie)
                 apt-get update -y
-                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross
+                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross curl
                 DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
                 ;;
               fedora*)
@@ -144,6 +146,8 @@ jobs:
           run: |
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+            echo "Running basic functionality tests..."
+            support/test_basic_functionality.sh || echo "Tests failed but continuing..."
             cp ../tvheadend*.deb /artifacts/
             if [ '${{ matrix.distro }}' = 'buster' ] && [ '${{ matrix.arch }}' = 'armv7' ]; then update-ca-certificates --fresh; fi
             support/cloudsmith.sh -n -f '../tvheadend*.deb'
@@ -177,7 +181,7 @@ jobs:
         env:
           SCRIPT: |
             apt-get update -y
-            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
+            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release curl
         run: docker exec build-container bash -c "$SCRIPT"
       - name: pcre-dependency
         env:
@@ -197,6 +201,13 @@ jobs:
           SCRIPT: |
             cd /workspace
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || '' }}
+        run: docker exec build-container bash -c "$SCRIPT"
+      - name: test
+        env:
+          SCRIPT: |
+            cd /workspace
+            echo "Running basic functionality tests..."
+            support/test_basic_functionality.sh || echo "Tests failed but continuing..."
         run: docker exec build-container bash -c "$SCRIPT"
       - name: copy-result
         env:
@@ -230,7 +241,7 @@ jobs:
           dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-${{ matrix.releasever }}.noarch.rpm"
       - name: dependencies
         run: |
-          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
+          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel curl
           dnf install -y openssl-devel-engine || true
       - uses: actions/checkout@v3
         with:
@@ -240,6 +251,10 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
       - name: build
         run: ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 && make -C rpm build -j$(nproc) || (echo "PARALLEL BUILD FAILED, DOING SINGLE THREADED BUILD" && make -C rpm build)
+      - name: test
+        run: |
+          echo "Running basic functionality tests..."
+          support/test_basic_functionality.sh || echo "Tests failed but continuing..."
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
@@ -268,7 +283,7 @@ jobs:
           dnf install -y "https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${{ matrix.releasever }}.noarch.rpm"
       - name: dependencies
         run: |
-          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
+          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel curl
           dnf install -y openssl-devel-engine || true
       - uses: actions/checkout@v3
         with:
@@ -278,6 +293,10 @@ jobs:
         run: git config --global --add safe.directory "$(pwd)"
       - name: build
         run: ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 && make -C rpm build -j$(nproc)
+      - name: test
+        run: |
+          echo "Running basic functionality tests..."
+          support/test_basic_functionality.sh || echo "Tests failed but continuing..."
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
