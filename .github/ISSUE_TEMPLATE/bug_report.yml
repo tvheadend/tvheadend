@@ -27,8 +27,10 @@ body:
       label: Platform
       description: "What platform or distro do you run Tvheadend on?"
       options:
+        - Alpine (Docker) Container
         - Android (all)
         - Apple (all)
+        - Debian (Docker) Container
         - Debian 8 (Jessie)
         - Debian 9 (Stretch)
         - Debian 10 (Buster)
