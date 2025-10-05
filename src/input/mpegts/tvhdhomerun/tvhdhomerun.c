@@ -29,6 +29,8 @@
 
 #include <arpa/inet.h>
 #include <openssl/sha.h>
+#include <signal.h>
+#include <setjmp.h>
 
 #include "config.h"
 
@@ -473,9 +475,50 @@ tvhdhomerun_device_discovery_thread( void *aux )
   return NULL;
 }
 
+/* Signal handler and jump buffer for safe HDHomeRun initialization */
+static volatile sig_atomic_t hdhomerun_sigill_caught = 0;
+static sigjmp_buf hdhomerun_init_jmpbuf;
+
+static void
+hdhomerun_sigill_handler(int sig)
+{
+  hdhomerun_sigill_caught = 1;
+  siglongjmp(hdhomerun_init_jmpbuf, 1);
+}
+
 void tvhdhomerun_init ( void )
 {
+  struct sigaction sa, old_sa;
+  
+  /* Set up a temporary SIGILL handler to catch illegal instructions */
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = hdhomerun_sigill_handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  
+  if (sigaction(SIGILL, &sa, &old_sa) < 0) {
+    tvherror(LS_TVHDHOMERUN, "Failed to set SIGILL handler, skipping HDHomeRun initialization");
+    return;
+  }
+  
+  /* Try to initialize HDHomeRun with SIGILL protection */
+  if (sigsetjmp(hdhomerun_init_jmpbuf, 1) != 0) {
+    /* We caught a SIGILL - libhdhomerun is incompatible with this system */
+    sigaction(SIGILL, &old_sa, NULL);
+    tvhwarn(LS_TVHDHOMERUN, 
+            "HDHomeRun library is incompatible with this system (illegal CPU instruction). "
+            "This is common in containerized environments (especially Alpine Linux with musl). "
+            "HDHomeRun support has been automatically disabled.");
+    return;
+  }
+  
+  /* Initialize HDHomeRun - this may trigger SIGILL on incompatible systems */
   hdhomerun_debug_obj = hdhomerun_debug_create();
+  
+  /* Restore original SIGILL handler */
+  sigaction(SIGILL, &old_sa, NULL);
+  
+  /* If we get here without SIGILL, continue with normal initialization */
   const char *s = getenv("TVHEADEND_HDHOMERUN_DEBUG");
 
   if (s != NULL && *s) {
@@ -495,6 +538,8 @@ void tvhdhomerun_init ( void )
   tvh_thread_create(&tvhdhomerun_discovery_tid, NULL,
                     tvhdhomerun_device_discovery_thread,
                     NULL, "hdhm-disc");
+  
+  tvhinfo(LS_TVHDHOMERUN, "HDHomeRun client initialized successfully");
 }
 
 void tvhdhomerun_done ( void )
