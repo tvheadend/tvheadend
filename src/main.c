@@ -846,6 +846,7 @@ main(int argc, char **argv)
               opt_libav        = 0,
               opt_ipv6         = 0,
               opt_nosatipcli   = 0,
+              opt_nohdhomerun  = 0,
               opt_satip_rtsp   = 0,
 #if ENABLE_TSFILE
               opt_tsfile_tuner = 0,
@@ -919,6 +920,10 @@ main(int argc, char **argv)
       OPT_BOOL, &opt_nosatipcli },
     {   0, "satip_xml",  N_("URL with the SAT>IP server XML location"),
       OPT_STR_LIST, &opt_satip_xml },
+#endif
+#if ENABLE_HDHOMERUN_CLIENT
+    {   0, "nohdhomerun",    N_("Disable HDHomeRun client"),
+      OPT_BOOL, &opt_nohdhomerun },
 #endif
     {   0, NULL,         N_("Server connectivity"),    OPT_BOOL, NULL         },
     { '6', "ipv6",       N_("Listen on IPv6"),         OPT_BOOL, &opt_ipv6    },
@@ -1310,8 +1315,8 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, descrambler_init);
   tvhftrace(LS_MAIN, dvb_init);
 #if ENABLE_MPEGTS
-  tvhftrace(LS_MAIN, mpegts_init, adapter_mask, opt_nosatipcli, &opt_satip_xml,
-            &opt_tsfile, opt_tsfile_tuner);
+  tvhftrace(LS_MAIN, mpegts_init, adapter_mask, opt_nosatipcli, opt_nohdhomerun,
+            &opt_satip_xml, &opt_tsfile, opt_tsfile_tuner);
 #endif
   tvhftrace(LS_MAIN, channel_init);
   tvhftrace(LS_MAIN, bouquet_service_resolve);

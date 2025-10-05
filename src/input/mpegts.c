@@ -26,8 +26,8 @@ extern memoryinfo_t mpegts_input_queue_memoryinfo;
 extern memoryinfo_t mpegts_input_table_memoryinfo;
 
 void
-mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
-              str_list_t *tsfiles, int tstuners )
+mpegts_init ( int linuxdvb_mask, int nosatip, int nohdhomerun,
+              str_list_t *satip_client, str_list_t *tsfiles, int tstuners )
 {
   /* Register classes (avoid API 400 errors due to not yet defined) */
   idclass_register(&mpegts_network_class);
@@ -80,7 +80,8 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
 
  /* HDHomerun client */
 #if ENABLE_HDHOMERUN_CLIENT
-  tvhdhomerun_init();
+  if (!nohdhomerun)
+    tvhdhomerun_init();
 #endif
 
   /* Mux schedulers */
