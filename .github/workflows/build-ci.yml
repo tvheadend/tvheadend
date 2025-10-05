@@ -51,7 +51,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
           AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh -p raspios
           echo "Running basic functionality tests..."
-          support/test_basic_functionality.sh || echo "Tests failed but continuing..."
+          support/test_basic_functionality.sh
           support/cloudsmith.sh -n -p raspios -f '../tvheadend*.deb'
     - uses: actions/upload-artifact@v4
       with:
@@ -147,7 +147,7 @@ jobs:
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
             echo "Running basic functionality tests..."
-            support/test_basic_functionality.sh || echo "Tests failed but continuing..."
+            support/test_basic_functionality.sh
             cp ../tvheadend*.deb /artifacts/
             if [ '${{ matrix.distro }}' = 'buster' ] && [ '${{ matrix.arch }}' = 'armv7' ]; then update-ca-certificates --fresh; fi
             support/cloudsmith.sh -n -f '../tvheadend*.deb'
@@ -207,7 +207,7 @@ jobs:
           SCRIPT: |
             cd /workspace
             echo "Running basic functionality tests..."
-            support/test_basic_functionality.sh || echo "Tests failed but continuing..."
+            support/test_basic_functionality.sh
         run: docker exec build-container bash -c "$SCRIPT"
       - name: copy-result
         env:
@@ -254,7 +254,7 @@ jobs:
       - name: test
         run: |
           echo "Running basic functionality tests..."
-          support/test_basic_functionality.sh || echo "Tests failed but continuing..."
+          support/test_basic_functionality.sh
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
@@ -296,7 +296,7 @@ jobs:
       - name: test
         run: |
           echo "Running basic functionality tests..."
-          support/test_basic_functionality.sh || echo "Tests failed but continuing..."
+          support/test_basic_functionality.sh
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
