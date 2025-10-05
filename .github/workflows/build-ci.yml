@@ -241,7 +241,7 @@ jobs:
           dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-${{ matrix.releasever }}.noarch.rpm"
       - name: dependencies
         run: |
-          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel curl
+          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
           dnf install -y openssl-devel-engine || true
       - uses: actions/checkout@v3
         with:
@@ -283,7 +283,7 @@ jobs:
           dnf install -y "https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${{ matrix.releasever }}.noarch.rpm"
       - name: dependencies
         run: |
-          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel curl
+          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
           dnf install -y openssl-devel-engine || true
       - uses: actions/checkout@v3
         with:
