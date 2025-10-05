@@ -22,6 +22,9 @@ include $(DIR)/.config.mk
 unexport CFLAGS
 unexport LDFLAGS
 
+# Use generic CPU tuning to avoid illegal instructions in containers
+CFLAGS += -O2 -mtune=generic
+
 ifeq ($(CONFIG_PIE),yes)
 CFLAGS += -fPIE
 else
