@@ -254,13 +254,27 @@ jobs:
       - name: test
         run: |
           echo "Running basic functionality tests..."
+          echo "DEBUG: Checking rpm/BUILD structure:"
+          ls -la rpm/BUILD/ 2>/dev/null || echo "rpm/BUILD does not exist"
           # For RPM builds, the binary is in the BUILD directory
-          BUILD_BIN=$(find rpm/BUILD -name tvheadend -type f -executable 2>/dev/null | head -1)
+          # Search more broadly - rpmbuild creates subdirs and may not preserve executable bit during build
+          BUILD_BIN=$(find rpm/BUILD -name tvheadend -type f 2>/dev/null | grep -E '(build\.linux|/usr/local/bin)' | head -1)
+          if [ -z "$BUILD_BIN" ]; then
+            # Try without path restriction
+            BUILD_BIN=$(find rpm/BUILD -path '*/build.linux/tvheadend' -type f 2>/dev/null | head -1)
+          fi
+          if [ -z "$BUILD_BIN" ]; then
+            # Last resort - any file named tvheadend in BUILD
+            BUILD_BIN=$(find rpm/BUILD -name tvheadend -type f 2>/dev/null | head -1)
+          fi
           if [ -n "$BUILD_BIN" ]; then
             echo "Found RPM build binary at: $BUILD_BIN"
+            chmod +x "$BUILD_BIN" 2>/dev/null || true
             TVHEADEND_BIN="$BUILD_BIN" support/test_basic_functionality.sh
           else
             echo "Binary not found in RPM BUILD directory, trying default location"
+            echo "DEBUG: All files named tvheadend in rpm/:"
+            find rpm/ -name tvheadend 2>/dev/null || echo "No files found"
             support/test_basic_functionality.sh
           fi
       - name: copy-result
@@ -304,13 +318,27 @@ jobs:
       - name: test
         run: |
           echo "Running basic functionality tests..."
+          echo "DEBUG: Checking rpm/BUILD structure:"
+          ls -la rpm/BUILD/ 2>/dev/null || echo "rpm/BUILD does not exist"
           # For RPM builds, the binary is in the BUILD directory
-          BUILD_BIN=$(find rpm/BUILD -name tvheadend -type f -executable 2>/dev/null | head -1)
+          # Search more broadly - rpmbuild creates subdirs and may not preserve executable bit during build
+          BUILD_BIN=$(find rpm/BUILD -name tvheadend -type f 2>/dev/null | grep -E '(build\.linux|/usr/local/bin)' | head -1)
+          if [ -z "$BUILD_BIN" ]; then
+            # Try without path restriction
+            BUILD_BIN=$(find rpm/BUILD -path '*/build.linux/tvheadend' -type f 2>/dev/null | head -1)
+          fi
+          if [ -z "$BUILD_BIN" ]; then
+            # Last resort - any file named tvheadend in BUILD
+            BUILD_BIN=$(find rpm/BUILD -name tvheadend -type f 2>/dev/null | head -1)
+          fi
           if [ -n "$BUILD_BIN" ]; then
             echo "Found RPM build binary at: $BUILD_BIN"
+            chmod +x "$BUILD_BIN" 2>/dev/null || true
             TVHEADEND_BIN="$BUILD_BIN" support/test_basic_functionality.sh
           else
             echo "Binary not found in RPM BUILD directory, trying default location"
+            echo "DEBUG: All files named tvheadend in rpm/:"
+            find rpm/ -name tvheadend 2>/dev/null || echo "No files found"
             support/test_basic_functionality.sh
           fi
       - name: copy-result
