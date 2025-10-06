@@ -254,7 +254,15 @@ jobs:
       - name: test
         run: |
           echo "Running basic functionality tests..."
-          support/test_basic_functionality.sh
+          # For RPM builds, the binary is in the BUILD directory
+          BUILD_BIN=$(find rpm/BUILD -name tvheadend -type f -executable 2>/dev/null | head -1)
+          if [ -n "$BUILD_BIN" ]; then
+            echo "Found RPM build binary at: $BUILD_BIN"
+            TVHEADEND_BIN="$BUILD_BIN" support/test_basic_functionality.sh
+          else
+            echo "Binary not found in RPM BUILD directory, trying default location"
+            support/test_basic_functionality.sh
+          fi
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
@@ -296,7 +304,15 @@ jobs:
       - name: test
         run: |
           echo "Running basic functionality tests..."
-          support/test_basic_functionality.sh
+          # For RPM builds, the binary is in the BUILD directory
+          BUILD_BIN=$(find rpm/BUILD -name tvheadend -type f -executable 2>/dev/null | head -1)
+          if [ -n "$BUILD_BIN" ]; then
+            echo "Found RPM build binary at: $BUILD_BIN"
+            TVHEADEND_BIN="$BUILD_BIN" support/test_basic_functionality.sh
+          else
+            echo "Binary not found in RPM BUILD directory, trying default location"
+            support/test_basic_functionality.sh
+          fi
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
