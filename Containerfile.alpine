@@ -25,7 +25,6 @@ RUN apk add --no-cache \
         'git' \
         'gnu-libiconv-dev' \
         'libdvbcsa-dev' \
-        'libhdhomerun-dev' \
         'libva-dev' \
         'libvpx-dev' \
         'linux-headers' \
@@ -46,7 +45,6 @@ RUN apk add --no-cache \
                 --disable-doc \
                 --disable-execinfo \
                 --disable-ffmpeg_static \
-                --disable-hdhomerun_static \
                 --disable-libfdkaac_static \
                 --disable-libmfx_static \
                 --disable-libopus_static \
@@ -92,7 +90,6 @@ RUN apk add --no-cache \
         'gnu-libiconv-libs' \
         'libcrypto3' \
         'libdvbcsa' \
-        'libhdhomerun-libs' \
         'libssl3' \
         'liburiparser' \
         'libva' \
