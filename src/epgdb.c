@@ -302,33 +302,44 @@ static void epg_save_tsk_callback ( void *p, int dearmed )
   int fd, r;
 
   tvhinfo(LS_EPGDB, "save start");
-  hts_settings_buildpath(tmppath, sizeof(path), "epgdb.v%d", EPG_DB_VERSION);
+  if(hts_settings_buildpath(tmppath, sizeof(tmppath), "epgdb.v%d", EPG_DB_VERSION)) {
+    tvhinfo(LS_EPGDB, "No config dir, not saving EPG");
+    goto done;
+  }
+  
   if (!realpath(tmppath, path))
     strlcpy(path, tmppath, sizeof(path));
   snprintf(tmppath, sizeof(tmppath), "%s.tmp", path);
-  if (hts_settings_makedirs(tmppath))
-    fd = -1;
-  else
-    fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
-  if (fd >= 0) {
-#if ENABLE_ZLIB
-    if (config.epg_compress) {
-      r = tvh_gzip_deflate_fd_header(fd, sb->sb_data, size, &orig, 3, "01") < 0;
-   } else
-#endif
-      r = tvh_write(fd, sb->sb_data, orig = size);
-    close(fd);
-    if (r) {
-      tvherror(LS_EPGDB, "write error (size %zd)", orig);
-      if (remove(tmppath))
-        tvherror(LS_EPGDB, "unable to remove file %s", tmppath);
-    } else {
-      tvhinfo(LS_EPGDB, "stored (size %zd)", orig);
-      if (rename(tmppath, path))
-        tvherror(LS_EPGDB, "unable to rename file %s to %s", tmppath, path);
-    }
-  } else
+  if (hts_settings_makedirs(tmppath)) {
+    tvherror(LS_EPGDB, "Failed to create tmp directories for %s", tmppath);
+    goto done;
+  }
+
+  fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+  if (fd < 0) {
     tvherror(LS_EPGDB, "unable to open epgdb file");
+    goto done;
+  }
+  
+#if ENABLE_ZLIB
+  if (config.epg_compress) {
+    r = tvh_gzip_deflate_fd_header(fd, sb->sb_data, size, &orig, 3, "01") < 0;
+  } else
+#endif
+    r = tvh_write(fd, sb->sb_data, orig = size);
+  
+  close(fd);
+  if (r) {
+    tvherror(LS_EPGDB, "write error (size %zd)", orig);
+    if (remove(tmppath))
+      tvherror(LS_EPGDB, "unable to remove file %s", tmppath);
+  } else {
+    tvhinfo(LS_EPGDB, "stored (size %zd)", orig);
+    if (rename(tmppath, path))
+      tvherror(LS_EPGDB, "unable to rename file %s to %s", tmppath, path);
+  }
+
+done:
   sbuf_free(sb);
   free(sb);
 }
