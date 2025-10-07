@@ -4,8 +4,8 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # 
 # Translators:
-# Marek Adamski, 2025
 # Christian Hewitt, 2025
+# Marek Adamski, 2025
 # 
 #, fuzzy
 msgid ""
@@ -14,7 +14,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-06 02:33+0000\n"
 "PO-Revision-Date: 2023-12-11 11:01+0000\n"
-"Last-Translator: Christian Hewitt, 2025\n"
+"Last-Translator: Marek Adamski, 2025\n"
 "Language-Team: Polish (https://app.transifex.com/tvheadend/teams/43381/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -208,7 +208,7 @@ msgstr "Wszystko"
 
 #: src/webui/static/app/tvhlog.js:78
 msgid "All subsystems"
-msgstr ""
+msgstr "Wszystkie podsystemy"
 
 #: src/webui/static/app/epgevent.js:146
 msgid "Alternative Showings"
@@ -455,15 +455,15 @@ msgstr "Wyczyść bufor obrazów w pamięci"
 
 #: src/webui/static/app/tvhlog.js:101
 msgid "Clear Debug"
-msgstr ""
+msgstr "Wyczyść debugowanie"
 
 #: src/webui/static/app/tvhlog.js:109
 msgid "Clear Trace"
-msgstr ""
+msgstr "Wyczyść śledzenie"
 
 #: src/webui/static/app/tvhlog.js:102
 msgid "Clear all debug subsystems."
-msgstr ""
+msgstr "Wyczyść wszystkie podsystemy debugowania."
 
 #: src/webui/static/app/status.js:534
 msgid "Clear all statistics"
@@ -471,7 +471,7 @@ msgstr "Wyczyść wszystkie statystyki"
 
 #: src/webui/static/app/tvhlog.js:110
 msgid "Clear all trace subsystems."
-msgstr ""
+msgstr "Wyczyść wszystkie podsystemy śledzenia."
 
 #: src/webui/static/app/status.js:318 src/webui/static/app/status.js:321
 msgid "Clear statistics"
@@ -601,7 +601,7 @@ msgstr "Pusty podpis#EPG"
 
 #: src/webui/static/app/tvhlog.js:158
 msgid "Debug"
-msgstr ""
+msgstr "Debugowanie"
 
 #: src/webui/static/app/tvheadend.js:1185
 msgid "Debugging"
@@ -898,7 +898,7 @@ msgstr "Luty"
 
 #: src/webui/static/app/dvr.js:132
 msgid "File name"
-msgstr ""
+msgstr "Nazwa pliku"
 
 #: src/webui/static/app/dvr.js:130
 msgid "File size"
@@ -1146,7 +1146,7 @@ msgstr "Łącze"
 
 #: src/webui/static/app/tvhlog.js:349
 msgid "Listing Subsystems"
-msgstr ""
+msgstr "Wykaz podsystemów"
 
 #: src/webui/static/app/tvheadend.js:912
 msgid "Live TV Player"
@@ -1716,19 +1716,19 @@ msgstr "Resetuj wszystkie filtry (pokaż wszystko)"
 
 #: src/webui/static/app/tvhlog.js:117
 msgid "Restore Debug"
-msgstr ""
+msgstr "Przywróć debugowanie"
 
 #: src/webui/static/app/tvhlog.js:125
 msgid "Restore Trace"
-msgstr ""
+msgstr "Przywróć śledzenie"
 
 #: src/webui/static/app/tvhlog.js:118
 msgid "Restore the debug subsystems to their initial state."
-msgstr ""
+msgstr "Przywróć podsystemy debugowania do ich stanu początkowego."
 
 #: src/webui/static/app/tvhlog.js:126
 msgid "Restore the trace subsystems to their initial state."
-msgstr ""
+msgstr "Przywróć podsystemy śledzenia do ich stanu początkowego."
 
 #: src/webui/static/app/idnode.js:1839 src/webui/static/app/idnode.js:2350
 #: src/webui/static/app/idnode.js:2897
@@ -1787,7 +1787,7 @@ msgstr "Sekcja"
 
 #: src/webui/static/app/tvhlog.js:34 src/webui/static/app/tvhlog.js:332
 msgid "Select Subsystems"
-msgstr ""
+msgstr "Wybierz podsystemy"
 
 #: src/webui/static/app/tvheadend.js:856
 msgid "Select channel..."
@@ -1799,7 +1799,7 @@ msgstr "Wybierz profil strumienia..."
 
 #: src/webui/static/app/tvhlog.js:32
 msgid "Select trace/debug options from a list of subsystems."
-msgstr ""
+msgstr "Wybierz opcje śledzenia/debugowania z listy podsystemów."
 
 #: src/webui/static/app/idnode.js:476 src/webui/static/app/idnode.js:724
 msgid "Select {0} ..."
@@ -2154,7 +2154,7 @@ msgstr "Całkowita"
 
 #: src/webui/static/app/tvhlog.js:164
 msgid "Trace"
-msgstr ""
+msgstr "Śledzenie"
 
 #: src/webui/static/app/status.js:471
 msgid "Transport Errors"
@@ -2361,6 +2361,8 @@ msgid ""
 "looking for please see the "
 "[documentation](http://docs.tvheadend.org/documentation) "
 msgstr ""
+"jeśli szukasz, zobacz "
+"[dokumentację](http://docs.tvheadend.org/documentation)"
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
