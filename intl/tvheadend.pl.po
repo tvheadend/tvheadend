@@ -5,7 +5,7 @@
 # 
 # Translators:
 # Christian Hewitt, 2024
-# Marek Adamski, 2024
+# Marek Adamski, 2025
 # 
 #, fuzzy
 msgid ""
@@ -14,7 +14,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-06 02:33+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: Marek Adamski, 2024\n"
+"Last-Translator: Marek Adamski, 2025\n"
 "Language-Team: Polish (https://app.transifex.com/tvheadend/teams/43381/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -882,7 +882,7 @@ msgstr "Dowolny"
 
 #: src/input/mpegts/mpegts_service.c:91
 msgid "Append to Description"
-msgstr ""
+msgstr "Dodaj do opisu"
 
 #: src/transcoding/codec/codecs/libs/libopus.c:102
 msgid "Application"
@@ -1200,7 +1200,7 @@ msgstr "Niebieski"
 
 #: src/transcoding/codec/profile_video_class.c:60
 msgid "Bob Deinterlacing"
-msgstr ""
+msgstr "Usuwanie przeplotu Bob"
 
 #: src/tvhlog.c:108
 msgid "Bonjour"
@@ -2069,13 +2069,15 @@ msgstr "Utwórz tagi dostawców"
 
 #: src/dvr/dvr_config.c:1425
 msgid "Create scene markers"
-msgstr ""
+msgstr "Utwórz znaczniki scen"
 
 #: src/dvr/dvr_config.c:1426
 msgid ""
 "Create scene markers in recordings based on the EPG start/stop times when "
 "available."
 msgstr ""
+"Twórz znaczniki scen w nagraniach na podstawie czasu rozpoczęcia/zakończenia"
+" EPG, jeśli jest dostępny."
 
 #: src/bouquet.c:1245
 msgid "Create tags"
@@ -2251,7 +2253,7 @@ msgstr "Tabele SI DVB"
 
 #: src/input/mpegts/mpegts_service.c:217
 msgid "DVB Sub-title Processing"
-msgstr ""
+msgstr "Przetwarzanie napisów DVB"
 
 #: src/tvhlog.c:121
 msgid "DVB Time Tables"
@@ -2421,6 +2423,7 @@ msgstr "Kod wycinka danych."
 #: src/profile.c:365
 msgid "Data start timeout (sec) (0=default)"
 msgstr ""
+"Limit czasu rozpoczęcia przesyłania danych (sek.) (0 = wartość domyślna)"
 
 #: src/profile.c:353
 msgid "Data timeout (sec) (0=infinite)"
@@ -2533,11 +2536,11 @@ msgstr "Usuwanie przeplotu"
 
 #: src/transcoding/codec/profile_video_class.c:315
 msgid "Deinterlace fields only"
-msgstr ""
+msgstr "Tylko pola usuwania przeplotu"
 
 #: src/transcoding/codec/profile_video_class.c:299
 msgid "Deinterlace rate type"
-msgstr ""
+msgstr "Typ współczynnika usuwania przeplotu"
 
 #: src/transcoding/codec/profile_video_class.c:275
 msgid "Deinterlace."
@@ -2685,7 +2688,7 @@ msgstr "Wyłącz klienta SAT>IP"
 
 #: src/main.c:916
 msgid "Disable SAT>IP client (deprecated flag, use nosatipcli)"
-msgstr ""
+msgstr "Wyłącz klienta SAT>IP (flaga przestarzała, użyj nosatipcli)"
 
 #: src/satip/server.c:706
 msgid "Disable UPnP"
@@ -3109,6 +3112,10 @@ msgid ""
 "unchanged. This is useful for mixed content, allowing progressive frames to "
 "bypass deinterlacing for improved efficiency and quality."
 msgstr ""
+"Włącz tę opcję, aby usuwać przeplot tylko pól, przekazując klatki "
+"progresywne bez zmian. Jest to przydatne w przypadku zawartości mieszanej, "
+"umożliwiając klatkam progresywnym ominięcie usuwania przeplotu, co poprawia "
+"wydajność i jakość."
 
 #: src/main.c:947
 msgid "Enable trace subsystems"
@@ -3116,13 +3123,15 @@ msgstr "Włącz śledzenie podsystemów"
 
 #: src/config.c:2806
 msgid "Enable vainfo detection"
-msgstr ""
+msgstr "Włącz wykrywanie vainfo"
 
 #: src/config.c:2807
 msgid ""
 "Enable vainfo detection in order to show only encoders that are advertised by VAAPI driver.\n"
 "NOTE: After save, Tvheadend restart is required!"
 msgstr ""
+"Włącz wykrywanie vainfo, aby wyświetlać tylko kodery reklamowane przez sterownik VAAPI.\n"
+"UWAGA: po zapisaniu wymagane jest ponowne uruchomienie Tvheadend!"
 
 #: src/main.c:955
 msgid "Enable web UI debug (non-minified JS)"
@@ -3654,7 +3663,7 @@ msgstr "Pobierz grafikę dla niezidentyfikowanych transmisji."
 
 #: src/transcoding/codec/profile_video_class.c:74
 msgid "Field Rate"
-msgstr ""
+msgstr "Szybkość pola"
 
 #: src/dvr/dvr_db.c:680
 msgid "File missing"
@@ -3809,7 +3818,7 @@ msgstr "Wymuś początkowe przechwycenie EPG podczas uruchamiania."
 
 #: src/transcoding/codec/profile_video_class.c:265
 msgid "Force hardware acceleration."
-msgstr ""
+msgstr "Wymuś przyspieszenie sprzętowe."
 
 #: src/epggrab.c:463
 msgid "Force initial EPG grab at start-up"
@@ -3926,7 +3935,7 @@ msgstr "Znalezione usługi"
 
 #: src/transcoding/codec/profile_video_class.c:73
 msgid "Frame Rate"
-msgstr ""
+msgstr "Szybkość klatek"
 
 #: src/transcoding/codec/profile_video_class.c:300
 msgid ""
@@ -3938,6 +3947,13 @@ msgid ""
 "smoother video since the original temporal properties of the interlaced "
 "video are retained."
 msgstr ""
+"Szybkość klatek łączy dwa przeplatane pola, tworząc jedną klatkę. Szybkość "
+"klatek przetwarza każde pole niezależnie, generując pojedyncze klatki, co "
+"umożliwia wyższą rozdzielczość czasową dzięki generowaniu jednej klatki na "
+"pole. Uwaga: po odplotu szybkości klatek strumień wynikowy będzie miał "
+"podwójną szybkość klatek (na przykład 25i staje się 50p), co może skutkować "
+"płynniejszym obrazem, ponieważ zachowane zostają oryginalne właściwości "
+"czasowe przeplatanego obrazu."
 
 #: src/input/mpegts/mpegts_input.c:312
 msgid "Free subscription weight"
@@ -4185,6 +4201,10 @@ msgid ""
 " when Tvheadend is behind a proxy. Enter the URL (domain or IP address, "
 "prefixed with http:// or https://) to allow cross-domain requests."
 msgstr ""
+"Pochodzenie HTTP CORS (współdzielenie zasobów między domenami). Ta opcja "
+"jest zazwyczaj ustawiana, gdy Tvheadend znajduje się za serwerem proxy. "
+"Wprowadź adres URL (domena lub adres IP z prefiksem http:// lub https://), "
+"aby zezwolić na żądania międzydomenowe."
 
 #: src/tvhlog.c:111
 msgid "HTTP Client"
@@ -4220,7 +4240,7 @@ msgstr "Przyspieszenie sprzętowe"
 
 #: src/transcoding/codec/profile_video_class.c:264
 msgid "Hardware acceleration details"
-msgstr ""
+msgstr "Szczegóły przyspieszenia sprzętowego"
 
 #: src/streaming.c:617
 msgid "Hearing impaired"
@@ -4303,13 +4323,15 @@ msgstr "Jak często dostawca nadrzędny jest sprawdzany pod kątem zmian."
 
 #: src/dvr/dvr_config.c:1480
 msgid "How to handle duplicate recordings."
-msgstr ""
+msgstr "Jak radzić sobie z duplikatami nagrań."
 
 #: src/dvr/dvr_autorec.c:1362
 msgid ""
 "How to handle duplicate recordings. The 'Use DVR Configuration' value (the "
 "default) inherits the settings from the assigned DVR configuration"
 msgstr ""
+"Jak radzić sobie z duplikatami nagrań. Wartość „Użyj konfiguracji DVR” "
+"(domyślna) dziedziczy ustawienia z przypisanej konfiguracji DVR."
 
 #: src/epggrab/channel.c:808
 msgid "ID"
@@ -4603,6 +4625,8 @@ msgid ""
 "If the Sub-title and the Title contain identical content, ignore the Sub-"
 "title and only save the Title."
 msgstr ""
+"Jeżeli podtytuł i tytuł zawierają tę samą treść, zignoruj ​​podtytuł i "
+"zapisz tylko tytuł."
 
 #: src/input/mpegts/mpegts_input.c:313
 msgid ""
@@ -4855,7 +4879,7 @@ msgstr "Pozycje"
 
 #: src/config.c:2267
 msgid "Items per page"
-msgstr ""
+msgstr "Elementy na stronę"
 
 #: src/epg.c:1874
 msgid "Jazz"
@@ -5612,6 +5636,10 @@ msgid ""
 "usually yield the smoothest results, especially when used with field rate "
 "output."
 msgstr ""
+"Tryb używany do usuwania przeplotu VAAPI. „Domyślny” wybiera najbardziej "
+"zaawansowany usuwacz przeplotu, tj. tryb pojawiający się jako ostatni na "
+"liście. Wskazówka: MADI i MCDI zazwyczaj dają najpłynniejsze rezultaty, "
+"szczególnie w przypadku użycia z wyjściem szybkości pola."
 
 #: src/input/mpegts/satip/satip.c:482
 msgid "Model description"
@@ -5651,11 +5679,11 @@ msgstr "Pełniejszy dziennik libav"
 
 #: src/transcoding/codec/profile_video_class.c:62
 msgid "Motion Adaptive Deinterlacing (MADI)"
-msgstr ""
+msgstr "Motion Adaptive Deinterlacing (MADI)"
 
 #: src/transcoding/codec/profile_video_class.c:63
 msgid "Motion Compensated Deinterlacing (MCDI)"
-msgstr ""
+msgstr "Motion Compensated Deinterlacing (MCDI)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:773
 msgid "Motor rate (in milliseconds/deg)."
@@ -6788,7 +6816,7 @@ msgstr "Port, na którym nasłuchuje lub do którego się łączyć."
 
 #: src/config.c:2204
 msgid "Ports settings"
-msgstr ""
+msgstr "Ustawienia portów"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:189
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:247
@@ -6881,7 +6909,7 @@ msgstr "Preferowany rodzaj usługi wideo"
 
 #: src/input/mpegts/mpegts_service.c:92
 msgid "Prepend to Description"
-msgstr ""
+msgstr "Dodaj do opisu"
 
 #: src/input/mpegts/satip/satip.c:530
 msgid "Presentation"
@@ -7098,11 +7126,11 @@ msgstr "Protokół RTSP"
 
 #: src/config.c:2682
 msgid "RTSP UDP maximum port"
-msgstr ""
+msgstr "Maksymalny port UDP RTSP"
 
 #: src/config.c:2670
 msgid "RTSP UDP minimum port"
-msgstr ""
+msgstr "Minimalny port UDP RTSP"
 
 #: src/input/mpegts/satip/satip.c:426
 msgid "RTSP port"
@@ -7118,19 +7146,19 @@ msgstr "Radio"
 
 #: src/dvr/dvr_db.c:5115
 msgid "Rating Authority"
-msgstr ""
+msgstr "Urząd klasyfikacji"
 
 #: src/dvr/dvr_db.c:5116
 msgid "Rating Authority."
-msgstr ""
+msgstr "Urząd klasyfikacji."
 
 #: src/dvr/dvr_db.c:5123
 msgid "Rating Country"
-msgstr ""
+msgstr "Kraj klasyfikacji"
 
 #: src/dvr/dvr_db.c:5124
 msgid "Rating Country."
-msgstr ""
+msgstr "Kraj klasyfikacji."
 
 #: src/dvr/dvr_db.c:5107
 msgid "Rating Icon"
@@ -7482,6 +7510,9 @@ msgid ""
 " means no rewrite; preserving MPEG-TS original network and transport stream "
 "IDs"
 msgstr ""
+"Przepisz identyfikator usługi (SID) przy użyciu określonej wartości (zwykle "
+"1). Zero oznacza brak przepisania; z zachowaniem oryginalnych "
+"identyfikatorów sieci i strumienia transportowego MPEG-TS."
 
 #: src/access.c:1526
 msgid "Rights"
@@ -7655,6 +7686,8 @@ msgid ""
 "Same as above, but for the maximum allowed port. Note that each stream "
 "requires two ports."
 msgstr ""
+"Tak samo jak powyżej, ale dla maksymalnego dozwolonego portu. Pamiętaj, że "
+"każdy strumień wymaga dwóch portów."
 
 #: src/transcoding/codec/profile_audio_class.c:330
 msgid "Sample format"
@@ -7706,15 +7739,15 @@ msgstr "Zapisz EPG na dysku po imporcie xmltv"
 
 #: src/input/mpegts/mpegts_service.c:90
 msgid "Save in Description"
-msgstr ""
+msgstr "Zapisz w opisie"
 
 #: src/dvr/dvr_db.c:5078
 msgid "Saved Rating Authority"
-msgstr ""
+msgstr "Zapisano urząd klasyfikacji"
 
 #: src/dvr/dvr_db.c:5086
 msgid "Saved Rating Country"
-msgstr ""
+msgstr "Zapisano kraj klasyfikacji"
 
 #: src/dvr/dvr_db.c:5070
 msgid "Saved Rating Icon Path"
@@ -7727,10 +7760,14 @@ msgstr "Zapisana etykieta oceny"
 #: src/dvr/dvr_db.c:5079
 msgid "Saved parental rating authority for once recording is complete."
 msgstr ""
+"Zapisano urząd klasyfikacji rodzicielskiej do oceny po zakończeniu "
+"nagrywania."
 
 #: src/dvr/dvr_db.c:5087
 msgid "Saved parental rating country for once recording is complete."
 msgstr ""
+"Zapisano urząd klasyfikacji rodzicielskiej do oceny po zakończeniu "
+"nagrywania."
 
 #: src/dvr/dvr_db.c:5063
 msgid "Saved parental rating for once recording is complete."
@@ -7750,7 +7787,7 @@ msgstr "Skanuj po utworzeniu"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:250
 msgid "Scan grace period (seconds)"
-msgstr ""
+msgstr "Okres karencji skanowania (sekundy)"
 
 #: src/input/mpegts/mpegts_network.c:345
 msgid "Scan queue length"
@@ -7884,6 +7921,10 @@ msgid ""
 " the Description is empty, save, append and prepend will replace the "
 "Description."
 msgstr ""
+"Wybierz czynność, która ma zostać wykonana z podtytułem dostarczonym przez "
+"nadawcę: Brak; Zapisz w opisie; Dodaj do opisu; Dodaj na początku opisu. "
+"Jeśli opis jest pusty, opcje „Zapisz”, „Dołącz” i „Dodaj na początku” "
+"zastąpią opis."
 
 #: src/wizard.c:585
 msgid "Select an available network type for this tuner."
@@ -8321,7 +8362,7 @@ msgstr "Rozmiar"
 
 #: src/input/mpegts/mpegts_service.c:230
 msgid "Skip Sub-title matches Title"
-msgstr ""
+msgstr "Pomiń podtytuł, który pasuje do tytułu"
 
 #: src/input/mpegts/satip/satip.c:390
 msgid "Skip TS packets (0-200)"
@@ -8896,6 +8937,9 @@ msgid ""
 " with other devices when the LNB is powered back up. 'Power save' setting "
 "must also be enabled."
 msgstr ""
+"Wyłącz zasilanie konwertera LNB w stanie bezczynności. Uwaga: może to "
+"powodować zakłócenia w pracy innych urządzeń po ponownym włączeniu zasilania"
+" konwertera. Należy również włączyć opcję „Oszczędzanie energii”."
 
 #: src/profile.c:432
 msgid "Switch to another service"
@@ -9370,7 +9414,7 @@ msgstr "Domyślna ranga subskrypcji dla każdej subskrypcji."
 
 #: src/config.c:2268
 msgid "The default web interface items per page."
-msgstr ""
+msgstr "Domyślna liczba elementów interfejsu internetowego na stronę."
 
 #: src/config.c:2256
 msgid ""
@@ -9664,6 +9708,10 @@ msgid ""
 "services) despite a strong signal, try increasing this value. Ignored for "
 "DVB-S."
 msgstr ""
+"Maksymalny czas potrzebny adapterowi na ukończenie skanowania multipleksera."
+" Jeśli skanowanie kończy się niepowodzeniem lub jest niekompletne (na "
+"przykład z powodu braku usług) pomimo silnego sygnału, spróbuj zwiększyć tę "
+"wartość. Ignorowana w przypadku DVB-S."
 
 #: src/timeshift.c:242
 msgid ""
@@ -9897,7 +9945,7 @@ msgstr ""
 
 #: src/profile.c:366
 msgid "The number of seconds to wait for data when stream is starting."
-msgstr ""
+msgstr "Liczba sekund oczekiwania na dane podczas uruchamiania strumienia."
 
 #: src/profile.c:354
 msgid ""
@@ -11031,7 +11079,7 @@ msgstr "Użyj wykrywania AC-3."
 
 #: src/dvr/dvr_autorec.c:1004
 msgid "Use DVR configuration"
-msgstr ""
+msgstr "Użyj konfiguracji DVR"
 
 #: src/channels.c:537 src/dvr/dvr_config.c:1448
 msgid ""
@@ -11274,11 +11322,11 @@ msgstr "VA-API"
 
 #: src/transcoding/codec/profile_video_class.c:285
 msgid "VAAPI Deinterlace mode"
-msgstr ""
+msgstr "Tryb usuwania przeplotu VAAPI"
 
 #: src/tvhlog.c:183
 msgid "VAINFO"
-msgstr ""
+msgstr "VAINFO"
 
 #: src/transcoding/codec/codecs/vorbis.c:58
 #: src/transcoding/codec/codecs/libs/libtheora.c:60
@@ -11404,7 +11452,7 @@ msgstr "Prognoza pogody"
 
 #: src/transcoding/codec/profile_video_class.c:61
 msgid "Weave Deinterlacing"
-msgstr ""
+msgstr "Usuwanie przeplotu Weave"
 
 #: src/config.c:2184
 msgid "Web Interface Settings"
@@ -11579,6 +11627,9 @@ msgid ""
 " (this server), sent to the server. This is especially useful when using "
 "firewalls and NAT or containers."
 msgstr ""
+"W przypadku korzystania z IPTV RTSP odpowiada to minimalnemu powiązaniu "
+"portu klienta (tego serwera), wysyłanemu do serwera. Jest to szczególnie "
+"przydatne w przypadku korzystania z zapór sieciowych, NAT lub kontenerów."
 
 #: src/epg.c:1843
 msgid "Winter sports"
@@ -11677,7 +11728,7 @@ msgstr "audio: preferuj wierność wprowadzanym treściom"
 
 #: src/transcoding/codec/profile_video_class.c:40
 msgid "auto (recommended)"
-msgstr ""
+msgstr "automatyczne (zalecane)"
 
 #: src/transcoding/codec/codecs/libs/libvpx.c:57
 msgid "best"
@@ -11807,15 +11858,15 @@ msgstr "opcja %s wymaga wartości"
 
 #: src/transcoding/codec/profile_video_class.c:48
 msgid "prioritize MMAL"
-msgstr ""
+msgstr "nadaj priorytet MMAL"
 
 #: src/transcoding/codec/profile_video_class.c:45
 msgid "prioritize NVDEC"
-msgstr ""
+msgstr "nadaj priorytet NVDEC"
 
 #: src/transcoding/codec/profile_video_class.c:42
 msgid "prioritize VAAPI"
-msgstr ""
+msgstr "nadaj priorytet VAAPI"
 
 #: src/transcoding/codec/codecs/libs/libvpx.c:69
 msgid "psnr"
