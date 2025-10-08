@@ -1,19 +1,8 @@
 /*
- *  tvheadend, documenation markdown generator
- *  Copyright (C) 2016 Jaroslav Kysela
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2016 Jaroslav Kysela
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, documenation markdown generator
  */
 
 #include "tvheadend.h"
@@ -27,6 +16,7 @@ static int md_class(htsbuf_queue_t *hq, const char *clazz, const char *lang,
                     int hdr, int docs, int props);
 
 /* */
+
 static int
 md_nl(htsbuf_queue_t *hq, int nl)
 {
@@ -36,6 +26,7 @@ md_nl(htsbuf_queue_t *hq, int nl)
 }
 
 /* */
+
 static void
 md_header(htsbuf_queue_t *hq, const char *prefix, const char *s)
 {
@@ -45,6 +36,7 @@ md_header(htsbuf_queue_t *hq, const char *prefix, const char *s)
 }
 
 /* */
+
 static void
 md_style(htsbuf_queue_t *hq, const char *style, const char *s)
 {
@@ -55,6 +47,7 @@ md_style(htsbuf_queue_t *hq, const char *style, const char *s)
 }
 
 /* */
+
 static void
 md_text(htsbuf_queue_t *hq, const char *first, const char *next, const char *text)
 {
@@ -95,6 +88,7 @@ md_text(htsbuf_queue_t *hq, const char *first, const char *next, const char *tex
 }
 
 /* */
+
 static int
 md_props(htsbuf_queue_t *hq, htsmsg_t *m, const char *lang, int nl)
 {
@@ -164,6 +158,7 @@ md_props(htsbuf_queue_t *hq, htsmsg_t *m, const char *lang, int nl)
 }
 
 /* */
+
 static void
 md_render(htsbuf_queue_t *hq, const char *doc, const char *lang)
 {
@@ -194,6 +189,7 @@ md_render(htsbuf_queue_t *hq, const char *doc, const char *lang)
 }
 
 /* */
+
 static int
 md_doc(htsbuf_queue_t *hq, const char **doc, const char *lang, int nl)
 {
@@ -207,6 +203,7 @@ md_doc(htsbuf_queue_t *hq, const char **doc, const char *lang, int nl)
 }
 
 /* */
+
 static int
 md_class(htsbuf_queue_t *hq, const char *clazz, const char *lang,
          int hdr, int docs, int props)
@@ -243,6 +240,7 @@ md_class(htsbuf_queue_t *hq, const char *clazz, const char *lang,
 /**
  * List of all classes with documentation
  */
+
 static int
 http_markdown_classes(http_connection_t *hc)
 {
@@ -272,6 +270,7 @@ http_markdown_classes(http_connection_t *hc)
 /**
  *
  */
+
 static int
 http_markdown_class(http_connection_t *hc, const char *clazz)
 {
@@ -284,6 +283,7 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
 /**
  *
  */
+
 static int
 http_markdown_page(http_connection_t *hc, const struct tvh_doc_page *page)
 {
@@ -300,6 +300,7 @@ http_markdown_page(http_connection_t *hc, const struct tvh_doc_page *page)
 /**
  * Handle requests for markdown export.
  */
+
 int
 page_markdown(http_connection_t *hc, const char *remain, void *opaque)
 {

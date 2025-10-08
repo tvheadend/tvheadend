@@ -18,7 +18,9 @@
 /*
  * NTP processing
  */
+
 #define NTPD_BASE	0x4e545030	/* "NTP0" */
+
 #define NTPD_UNIT	2
 
 #if !ENABLE_ANDROID
@@ -76,6 +78,7 @@ ntp_shm_init ( void )
 /*
  * Update time
  */
+
 void
 tvhtime_update ( time_t utc, const char *srcname )
 {
@@ -133,6 +136,7 @@ tvhtime_update ( time_t utc, const char *srcname )
 }
 
 /* Initialise */
+
 void tvhtime_init ( void )
 {
   if (config.tvhtime_tolerance == 0)

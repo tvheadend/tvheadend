@@ -1,19 +1,8 @@
 /*
- *  tvheadend, XMLTV exporter
- *  Copyright (C) 2015 Jaroslav Kysela
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2015 Jaroslav Kysela
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, XMLTV exporter
  */
 
 #include "tvheadend.h"
@@ -30,6 +19,7 @@
 /*
  *
  */
+
 static void
 http_xmltv_time(char *dst, time_t t)
 {
@@ -41,6 +31,7 @@ http_xmltv_time(char *dst, time_t t)
 /*
  *
  */
+
 static void
 http_xmltv_begin(htsbuf_queue_t *hq)
 {
@@ -57,6 +48,7 @@ http_xmltv_begin(htsbuf_queue_t *hq)
 /*
  *
  */
+
 static void
 http_xmltv_end(htsbuf_queue_t *hq)
 {
@@ -75,6 +67,7 @@ http_xmltv_end(htsbuf_queue_t *hq)
  * be the same as the passed in temporary buffer.
  *
  */
+
 static const char *
 http_xmltv_channel_get_name(const http_connection_t *hc,
                             const channel_t *ch,
@@ -93,6 +86,7 @@ http_xmltv_channel_get_name(const http_connection_t *hc,
 /*
  *
  */
+
 static void
 http_xmltv_channel_add(http_connection_t *hc, htsbuf_queue_t *hq, int flags, const char *hostpath, channel_t *ch)
 {
@@ -177,6 +171,7 @@ _http_xmltv_add_episode_num(htsbuf_queue_t *hq, uint16_t num, uint16_t cnt)
 /** Output long description fields of the programme which are
  * not output for basic/limited devices.
  */
+
 static void
 http_xmltv_programme_one_long(const http_connection_t *hc,
                               htsbuf_queue_t *hq, const char *hostpath,
@@ -289,6 +284,7 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
 /*
  *
  */
+
 static void
 http_xmltv_programme_one(const http_connection_t *hc,
                          htsbuf_queue_t *hq, const char *hostpath,
@@ -339,6 +335,7 @@ http_xmltv_programme_one(const http_connection_t *hc,
 /*
  *
  */
+
 static void
 http_xmltv_programme_add(const http_connection_t *hc, htsbuf_queue_t *hq, const char *hostpath, channel_t *ch)
 {
@@ -351,6 +348,7 @@ http_xmltv_programme_add(const http_connection_t *hc, htsbuf_queue_t *hq, const 
 /**
  * Output a XMLTV containing a single channel
  */
+
 static int
 http_xmltv_channel(http_connection_t *hc, int flags, channel_t *channel)
 {
@@ -371,6 +369,7 @@ http_xmltv_channel(http_connection_t *hc, int flags, channel_t *channel)
 /**
  * Output a playlist containing all channels with a specific tag
  */
+
 static int
 http_xmltv_tag(http_connection_t *hc, int flags, channel_tag_t *tag)
 {
@@ -404,6 +403,7 @@ http_xmltv_tag(http_connection_t *hc, int flags, channel_tag_t *tag)
 /**
  * Output a flat playlist with all channels
  */
+
 static int
 http_xmltv_channel_list(http_connection_t *hc, int flags)
 {
@@ -434,6 +434,7 @@ http_xmltv_channel_list(http_connection_t *hc, int flags)
 /**
  * Handle requests for XMLTV export.
  */
+
 int
 page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
 {

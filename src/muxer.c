@@ -1,19 +1,8 @@
 /*
- *  tvheadend, generic muxing utils
- *  Copyright (C) 2012 John Törnblom
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2012 John Törnblom
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
+ * tvheadend, generic muxing utils
  */
 
 #include <string.h>
@@ -30,6 +19,7 @@
 #endif
 
 /* Newer platforms such as FreeBSD 11.1 support fdatasync so only alias on older systems */
+
 #ifndef CONFIG_FDATASYNC
 #if defined(PLATFORM_DARWIN)
 #define fdatasync(fd)       fcntl(fd, F_FULLFSYNC)
@@ -41,6 +31,7 @@
 /**
  * Mime type for containers containing only audio
  */
+
 static struct strtab container_audio_mime[] = {
   { "application/octet-stream", MC_UNKNOWN },
   { "audio/x-matroska",         MC_MATROSKA },
@@ -64,6 +55,7 @@ static struct strtab container_audio_mime[] = {
 /**
  * Mime type for containers
  */
+
 static struct strtab container_video_mime[] = {
   { "application/octet-stream", MC_UNKNOWN },
   { "video/x-matroska",         MC_MATROSKA },
@@ -81,6 +73,7 @@ static struct strtab container_video_mime[] = {
 /**
  * Name of the container
  */
+
 static struct strtab container_name[] = {
   { "unknown",    MC_UNKNOWN },
   { "matroska",   MC_MATROSKA },
@@ -104,6 +97,7 @@ static struct strtab container_name[] = {
 /**
  * filename suffix of audio-only streams
  */
+
 static struct strtab container_audio_file_suffix[] = {
   { "bin",  MC_UNKNOWN },
   { "mka",  MC_MATROSKA },
@@ -127,6 +121,7 @@ static struct strtab container_audio_file_suffix[] = {
 /**
  * filename suffix of video streams
  */
+
 static struct strtab container_video_file_suffix[] = {
   { "bin",  MC_UNKNOWN },
   { "mkv",  MC_MATROSKA },
@@ -144,6 +139,7 @@ static struct strtab container_video_file_suffix[] = {
 /**
  * Get the mime type for a container
  */
+
 const char*
 muxer_container_type2mime(muxer_container_type_t mc, int video)
 {
@@ -164,6 +160,7 @@ muxer_container_type2mime(muxer_container_type_t mc, int video)
 /**
  * Get the mime type for a filename
  */
+
 const char*
 muxer_container_filename2mime(const char *filename, int video)
 {
@@ -189,6 +186,7 @@ muxer_container_filename2mime(const char *filename, int video)
 /**
  * Get the suffix used in file names
  */
+
 const char*
 muxer_container_suffix(muxer_container_type_t mc, int video)
 {
@@ -208,6 +206,7 @@ muxer_container_suffix(muxer_container_type_t mc, int video)
 /**
  * Convert a container type to a string
  */
+
 const char*
 muxer_container_type2txt(muxer_container_type_t mc)
 {
@@ -224,6 +223,7 @@ muxer_container_type2txt(muxer_container_type_t mc)
 /**
  * Convert a container name to a container type
  */
+
 muxer_container_type_t
 muxer_container_txt2type(const char *str)
 {
@@ -243,6 +243,7 @@ muxer_container_txt2type(const char *str)
 /**
  * Convert a mime-string to a container type
  */
+
 muxer_container_type_t
 muxer_container_mime2type(const char *str)
 {
@@ -265,6 +266,7 @@ muxer_container_mime2type(const char *str)
 /**
  * Copy muxer settings
  */
+
 void
 muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src)
 {
@@ -279,6 +281,7 @@ muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src)
 /**
  * Free muxer settings
  */
+
 void
 muxer_config_free(muxer_config_t *m_cfg)
 {
@@ -293,6 +296,7 @@ muxer_config_free(muxer_config_t *m_cfg)
 /**
  * Create muxer hints
  */
+
 muxer_hints_t *
 muxer_hints_create(const char *agent)
 {
@@ -305,6 +309,7 @@ muxer_hints_create(const char *agent)
 /**
  * Free muxer hints
  */
+
 void
 muxer_hints_free(muxer_hints_t *hints)
 {
@@ -317,6 +322,7 @@ muxer_hints_free(muxer_hints_t *hints)
 /**
  * Create a new muxer
  */
+
 muxer_t* 
 muxer_create(muxer_config_t *m_cfg, muxer_hints_t *hints)
 {
@@ -354,6 +360,7 @@ muxer_create(muxer_config_t *m_cfg, muxer_hints_t *hints)
 /**
  * Figure out the file suffix by looking at the mime type
  */
+
 const char*
 muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
 {
@@ -374,6 +381,7 @@ muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
 /**
  * cache type conversions
  */
+
 static struct strtab cache_types[] = {
   { "Unknown",            MC_CACHE_UNKNOWN },
   { "System",             MC_CACHE_SYSTEM },
@@ -400,6 +408,7 @@ muxer_cache_txt2type(const char *str)
 /**
  * cache scheme
  */
+
 void
 muxer_cache_update(muxer_t *m, int fd, off_t pos, size_t size)
 {
@@ -428,6 +437,7 @@ muxer_cache_update(muxer_t *m, int fd, off_t pos, size_t size)
 /**
  * Get a list of supported cache schemes
  */
+
 int
 muxer_cache_list(htsmsg_t *array)
 {

@@ -1,28 +1,8 @@
 /*
- *  Tvheadend - Linux DVB EN50494
- *              (known under trademark "UniCable")
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2013 Sascha "InuSasha" Kuehndel
  *
- *  Copyright (C) 2013 Sascha "InuSasha" Kuehndel
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *  Open things:
- *    - TODO: collision detection
- *      * compare transport-stream-id from stream with id in config
- *      * check continuity of the pcr-counter
- *      * when one point is given -> retry
- *      * delay time is easily random, but in standard is special (complicated) way described (cap. 8).
+ * Tvheadend - Linux DVB EN50494
  */
 
 #include "tvheadend.h"

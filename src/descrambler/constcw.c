@@ -1,19 +1,8 @@
 /*
- *  tvheadend, constant code word interface
- *  Copyright (C) 2014 Jaroslav Kysela
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2014 Jaroslav Kysela
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, constant code word interface
  */
 
 #include <ctype.h>
@@ -25,6 +14,7 @@
 /**
  *
  */
+
 typedef struct constcw_service {
   th_descrambler_t;  
   LIST_ENTRY(constcw_service) cs_link;
@@ -33,6 +23,7 @@ typedef struct constcw_service {
 /**
  *
  */
+
 typedef struct constcw {
   caclient_t;
 
@@ -46,11 +37,13 @@ typedef struct constcw {
   uint8_t  ccw_key_even[16];   /* DES or AES key */
   uint8_t  ccw_key_odd [16];   /* DES or AES key */
   LIST_HEAD(, constcw_service) ccw_services; /* active services */
+
 } constcw_t;
 
 /*
  *
  */
+
 static const char *
 constcw_name(constcw_t *ccw)
 {
@@ -61,6 +54,7 @@ constcw_name(constcw_t *ccw)
 /**
  *
  */
+
 static int
 constcw_algo(caclient_t *cac)
 {
@@ -78,6 +72,7 @@ constcw_algo(caclient_t *cac)
 /**
  *
  */
+
 static int
 constcw_key_size(caclient_t *cac)
 {
@@ -91,6 +86,7 @@ constcw_key_size(caclient_t *cac)
 /*
  *
  */
+
 static int
 constcw_ecm_reset(th_descrambler_t *th)
 {
@@ -100,6 +96,7 @@ constcw_ecm_reset(th_descrambler_t *th)
 /**
  * s_stream_mutex is held
  */
+
 static void 
 constcw_service_destroy(th_descrambler_t *td)
 {
@@ -114,6 +111,7 @@ constcw_service_destroy(th_descrambler_t *td)
 /**
  * global_lock is held. Not that we care about that, but either way, it is.
  */
+
 static void
 constcw_service_start(caclient_t *cac, service_t *t)
 {
@@ -179,6 +177,7 @@ constcw_service_start(caclient_t *cac, service_t *t)
 /**
  *
  */
+
 static void
 constcw_free(caclient_t *cac)
 {
@@ -196,6 +195,7 @@ constcw_free(caclient_t *cac)
 /**
  *
  */
+
 static int
 nibble(char c)
 {
@@ -214,6 +214,7 @@ nibble(char c)
 /**
  *
  */
+
 static void
 constcw_conf_changed(caclient_t *cac)
 {
@@ -227,6 +228,7 @@ constcw_conf_changed(caclient_t *cac)
 /**
  *
  */
+
 static int
 constcw_class_key_set(void *o, const void *v, uint8_t *dkey)
 {
@@ -606,6 +608,7 @@ const idclass_t caclient_ccw_aes128_ecb_class =
 /*
  *
  */
+
 caclient_t *constcw_create(void)
 {
   constcw_t *ccw = calloc(1, sizeof(*ccw));

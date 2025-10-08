@@ -1,19 +1,8 @@
 /*
- *  tvheadend, charset list
- *  Copyright (C) 2012 Mariusz Białończyk
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2012 Mariusz Białończyk
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, charset list
  */
 
 #include <string.h>
@@ -27,6 +16,7 @@ static LIST_HEAD(,dvb_charset) dvb_charset_list;
 /*
  * Process a file
  */
+
 static void _charset_load_file()
 {
   htsmsg_t *l, *e;
@@ -73,6 +63,7 @@ static void _charset_load_file()
 /*
  * Initialise the charset list
  */
+
 void dvb_charset_init ( void )
 {
   _charset_load_file();
@@ -81,6 +72,7 @@ void dvb_charset_init ( void )
 /*
  *
  */
+
 void dvb_charset_done ( void )
 {
   dvb_charset_t *enc;
@@ -95,6 +87,7 @@ void dvb_charset_done ( void )
 /*
  * Find default charset
  */
+
 const char *dvb_charset_find
   ( mpegts_network_t *mn, mpegts_mux_t *mm, mpegts_service_t *s )
 {
@@ -130,6 +123,7 @@ const char *dvb_charset_find
 /*
  * List of available charsets
  */
+
 htsmsg_t *
 dvb_charset_enum ( void *p, const char *lang )
 {

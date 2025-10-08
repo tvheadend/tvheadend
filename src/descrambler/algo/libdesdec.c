@@ -12,6 +12,7 @@
 #include "libdesdec.h"
 
 /* key structure */
+
 typedef struct des_priv {
   DES_key_schedule sched[2]; /* 0 = even, 1 = odd */
 } des_priv_t;

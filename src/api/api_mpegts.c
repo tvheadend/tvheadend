@@ -1,20 +1,8 @@
 /*
- *  tvheadend - API access to MPEGTS system
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2013 Adam Sutton
  *
- *  Copyright (C) 2013 Adam Sutton
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend - API access to MPEGTS system
  */
 
 #include "tvheadend.h"
@@ -29,6 +17,7 @@
 /*
  * Inputs
  */
+
 static int
 api_mpegts_input_network_list
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
@@ -73,6 +62,7 @@ exit:
 /*
  * Networks
  */
+
 static void
 api_mpegts_network_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
@@ -228,6 +218,7 @@ exit:
 /*
  * Muxes
  */
+
 static void
 api_mpegts_mux_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
@@ -255,6 +246,7 @@ api_mpegts_mux_grid
 /*
  * Services
  */
+
 static void
 api_mpegts_service_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
@@ -287,6 +279,7 @@ api_mpegts_service_grid
 /*
  * Mux scheduler
  */
+
 static void
 api_mpegts_mux_sched_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
@@ -405,6 +398,7 @@ api_dvb_scanfile_list
 /*
  * Init
  */
+
 void
 api_mpegts_init ( void )
 {

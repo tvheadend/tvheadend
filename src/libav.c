@@ -7,6 +7,7 @@
 /**
  *
  */
+
 static void
 libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 {
@@ -86,6 +87,7 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 /**
  * Translate a component type to a libavcodec id
  */
+
 enum AVCodecID
 streaming_component_type2codec_id(streaming_component_type_t type)
 {
@@ -153,6 +155,7 @@ streaming_component_type2codec_id(streaming_component_type_t type)
 /**
  * Translate a libavcodec id to a component type
  */
+
 streaming_component_type_t
 codec_id2streaming_component_type(enum AVCodecID id)
 {
@@ -225,6 +228,7 @@ codec_id2streaming_component_type(enum AVCodecID id)
 /**
  *
  */
+
 #if ENABLE_VAAPI
 #ifdef VA_FOURCC_I010
 static void libav_va_log(int severity, const char *msg)
@@ -264,6 +268,7 @@ static void libav_va_info_callback(const char *msg)
 /**
  *
  */
+
 static void
 libav_vaapi_init(void)
 {
@@ -280,6 +285,7 @@ libav_vaapi_init(void)
 /**
  *
  */
+
 void
 libav_vaapi_init_context(void *context)
 {
@@ -296,6 +302,7 @@ libav_vaapi_init_context(void *context)
 /**
  *
  */
+
 void
 libav_set_loglevel(void)
 {
@@ -306,6 +313,7 @@ libav_set_loglevel(void)
 /**
  *
  */
+
 void
 libav_init(void)
 {
@@ -319,6 +327,7 @@ libav_init(void)
 /**
  *
  */
+
 void
 libav_done(void)
 {
