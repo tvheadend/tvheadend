@@ -57,7 +57,7 @@ srpm: clean SOURCES tvheadend.spec
 .PHONY: build
 build: clean SOURCES tvheadend.spec
 	spectool --get-files -C SOURCES tvheadend.spec
-	rpmbuild $(DEFINES) -ba tvheadend.spec
+	rpmbuild $(DEFINES) --noclean -ba tvheadend.spec
 
 .PHONY: build-doozer
 build-doozer: build
