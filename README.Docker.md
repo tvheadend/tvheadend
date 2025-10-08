@@ -16,7 +16,7 @@ $ git clone https://github.com/tvheadend/tvheadend
 Then, from within the repository
 
 ```sh
-docker image build
+docker image build \
     --rm \
     --tag 'tvheadend:issue-123' \
     './'
@@ -47,7 +47,7 @@ docker container run \
     --name 'TVHeadend_container_01' \
     --rm \
     --tty \
-    'ghcr.io/tvheadend/tvheadend:issue-123' \
+    'tvheadend:issue-123' \
     --firstrun
 ```
 
@@ -447,7 +447,7 @@ Instead, the `builder` container, an intermediate step, can be used instead
 and the source directory volume mounted herein.
 
 ```sh
-docker image build
+docker image build \
     --rm \
     --tag 'tvheadend:builder' \
     --target 'builder' \
