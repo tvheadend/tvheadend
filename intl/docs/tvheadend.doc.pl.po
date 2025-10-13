@@ -2572,11 +2572,11 @@ msgstr "Nie używaj wykrywania stanu działania (EITp/f)."
 
 #: src/docs_inc.c:6108
 msgid "Donate to TVHeadEnd"
-msgstr "Przekaż darowiznę TVHeadEnd"
+msgstr "Przekaż darowiznę na TVHeadEnd"
 
 #: src/docs_inc.c:6136
 msgid "Donate to Tvheadend"
-msgstr "Przekaż darowiznę Tvheadend"
+msgstr "Przekaż darowiznę na Tvheadend"
 
 #: src/docs_inc.c:1322
 msgid "Download"
@@ -2614,8 +2614,8 @@ msgid ""
 "device(s).."
 msgstr ""
 "Podczas skanowania liczba multiplekserów i usług pokazanych poniżej powinna "
-"się zwiększać. Jeśli tak się nie dzieje, sprawdź połączenie(y) do swojego "
-"urządzenia(u)."
+"wzrosnąć. Jeśli tak się nie stanie, sprawdź połączenia z urządzeniem lub "
+"urządzeniami."
 
 #: src/docs_inc.c:5870
 msgid ""
@@ -4510,7 +4510,7 @@ msgstr "Przenieś w górę"
 
 #: src/docs_inc.c:1294
 msgid "Move the selected entry down in the list."
-msgstr "Przesuń wybrany wpis w dół na liście."
+msgstr "Przenieś wybrany wpis w dół na liście."
 
 #: src/docs_inc.c:1288
 msgid "Move the selected entry up in the list."
