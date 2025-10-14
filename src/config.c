@@ -517,11 +517,11 @@ config_migrate_v2 ( void )
     htsmsg_destroy(m);
 
     /* Move muxes */
-    hts_settings_buildpath(src, sizeof(src),
-                           "input/iptv/muxes");
-    hts_settings_buildpath(dst, sizeof(dst),
-                           "input/iptv/networks/%s/muxes", ubuf);
-    rename(src, dst);
+    if (!hts_settings_buildpath(src, sizeof(src),
+                                "input/iptv/muxes") &&
+        !hts_settings_buildpath(dst, sizeof(dst),
+                                "input/iptv/networks/%s/muxes", ubuf))
+      rename(src, dst);
   }
 }
 
@@ -534,14 +534,16 @@ config_migrate_v3 ( void )
   char src[1024], dst[1024];
 
   /* Due to having to potentially run this twice! */
-  hts_settings_buildpath(dst, sizeof(dst), "input/dvb/networks");
+  if (hts_settings_buildpath(dst, sizeof(dst), "input/dvb/networks"))
+    return;
   if (!access(dst, R_OK | W_OK))
     return;
 
   if (hts_settings_makedirs(dst))
     return;
 
-  hts_settings_buildpath(src, sizeof(src), "input/linuxdvb/networks");
+  if (hts_settings_buildpath(src, sizeof(src), "input/linuxdvb/networks"))
+    return;
   rename(src, dst);
 }
 
@@ -1822,7 +1824,8 @@ config_boot
   hts_settings_init(config.confdir);
 
   /* Lock it */
-  hts_settings_buildpath(config_lock, sizeof(config_lock), ".lock");
+  if (hts_settings_buildpath(config_lock, sizeof(config_lock), ".lock"))
+    exit(78); /* config error */
   if ((config_lock_fd = file_lock(config_lock, 3)) < 0)
     exit(78); /* config error */
 
