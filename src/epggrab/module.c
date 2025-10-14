@@ -708,7 +708,8 @@ epggrab_module_ext_t *epggrab_module_ext_create
   atomic_set(&skel->sock, -1);
 
   /* Pass through */
-  hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid);
+  if (hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid))
+    path[0] = '\0';
   epggrab_module_int_create((epggrab_module_int_t*)skel,
                             cls ?: &epggrab_mod_ext_class,
                             id, subsys, saveid, name, priority, path,
