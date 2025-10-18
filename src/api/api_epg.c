@@ -99,6 +99,12 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
 
   /* EPG IDs */
   htsmsg_add_u32(m, "eventId", eb->id);
+
+  if(eb->xmltv_eid)  //This is the optional external reference provided by XMLTV.
+  {
+    htsmsg_add_str(m, "eventId_xmltv", eb->xmltv_eid);
+  }
+
   if (eb->episodelink && strncasecmp(eb->episodelink->uri, "tvh://", 6))
     htsmsg_add_str(m, "episodeUri", eb->episodelink->uri);
   if (eb->serieslink)

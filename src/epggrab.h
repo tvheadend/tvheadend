@@ -200,6 +200,13 @@ struct epggrab_module_int
     ///< and extra details on to programme description for viewing by legacy clients.
   int                           xmltv_use_category_not_genre; ///< Use category tags and don't map to DVB genres.
 
+  const char                   *xmltv_xpath_category_code; ///< XPath string for extracting a category ETSI code.
+  const char                   *xmltv_xpath_unique_id;     ///< XPath string for extracting a unique event ID.
+  const char                   *xmltv_xpath_series_link;   ///< XPath string for extracting a series link.
+  const char                   *xmltv_xpath_episode_link;  ///< XPath string for extracting an episode link.
+  int                           xmltv_xpath_series_use_standard; ///< If the XPath node is not found, use the standard TVH routine.
+  int                           xmltv_xpath_episode_use_standard; ///< If the XPath node is not found, use the standard TVH routine.
+
   /* Handle data */
   char*     (*grab)   ( void *mod );
   htsmsg_t* (*trans)  ( void *mod, char *data );

@@ -27,5 +27,7 @@ const char *htsmsg_xml_get_cdata_str (htsmsg_t *tags, const char *tag);
 int htsmsg_xml_get_cdata_u32 (htsmsg_t *tags, const char *tag, uint32_t *u32);
 const char *htsmsg_xml_get_attr_str(htsmsg_t *tag, const char *attr);
 int htsmsg_xml_get_attr_u32(htsmsg_t *tag, const char *attr, uint32_t *u32);
+htsmsg_t *htsmsg_xml_parse_xpath(const char *xpath);
+const char *htsmsg_xml_xpath_search(htsmsg_t *tag, htsmsg_t *xpath);
 
 #endif /* HTSMSG_XML_H_ */
