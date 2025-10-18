@@ -64,3 +64,97 @@ means broadcast information such as summary information will still be
 retrieved.
 
 ---
+
+### XMLTV XPath Examples and Notes
+
+Although XMLTV is a standard, some providers of XMLTV data include additional information.
+XPath-like expressions can be used to extract some of this additional information
+for EPG grabbers that use XMLTV as a data source.
+
+!['EPG Grabber XPath'](static/img/doc/channel/grabber_xpath_fields.png)
+
+##Category Code
+
+Some information providers include free form category descriptions
+that are not compliant with the DVB EIT standard.
+
+In the following example, 'Cricket' is not a standard DVB EIT category.
+However, '0x40' is the standard code for 'Sport' and the provider has
+added this code to allow the standard code to be used when needed.
+
+```
+<programme start="yyyymmddHHMMSS +0000" stop="yyyymmddHHMMSS +0000" channel="2">
+    <category lang="en" eit="0x40">Cricket</category>
+</programme>
+```
+
+To extract this attribute for use in TVH, we should add `@eit` to the
+'Category Code XPath' field.  This will extract the hexadecimal code
+'0x40' and convert that to the standard category code 'Sport'.
+
+For the purposes of the category code, the root node is considered to be the
+standard `category` node within `programme`.
+
+##Unique Event Identifier
+
+By default, XMLTV does not provide a mechanism for uniquely identifying each event.
+
+In the following example, an XMLTV provider has added the non-standard `uniqueID`
+attribute to the `programme` node.
+```
+<programme uniqueID="1234" start="yyyymmddHHMMSS +0000" stop="yyyymmddHHMMSS +0000" channel="2">
+</programme>
+```
+To extract this attribute for use in TVH, we should add `@uniqueID` to the
+'Unique Event ID XPath' field.  This will assign '1234' as the unique
+identifier for this EPG event and will allow future updates matching
+this ID to be applied.
+
+For the purposes of the unique ID, the root node is considered to be `programme`.
+
+##SeriesLink and EpisodeLink
+
+A CRID (Content Reference IDentifier) is a mechanism used by broadcasters
+to identify events from the same series and multiple occurrences
+of the same episode in a series.  TVH refers to these as 'SeriesLink'
+and 'EpisodeLink'.  These fields can be used for recording a whole series
+or detecting a repeated episode.
+
+In the following example, the provider has added the non-standard `crid` node to the XMLTV data.
+This has been further broken down to include a `series` node and an `episode` node.
+
+```
+<programme uniqueID="1234" start="yyyymmddHHMMSS +0000" stop="yyyymmddHHMMSS +0000" channel="2">
+      <crid>
+            <series>crid://provider/abcde</series>
+            <episode>crid://provider/abcde_98765</episode>
+      </crid>
+</programme>
+```
+To extract these values, we should add `//crid/series/text()` and `//crid/episode/text()`
+to the 'SeriesLink XPath' and 'EpisodeLink XPath' fields respectively.
+
+For the purposes of the SeriesLink and EpisodeLink, the root node is
+considered to be `programme`.
+
+##SeriesLink and EpisodeLink Fallbacks
+
+If the XPath expression does not match any data and these options are enabled,
+TVH will perform its standard process for creating 'SeriesLink' and
+'EpisodeLink' values, otherwise, the fields will be left empty.
+
+##Notes
+
+TVH can only interpret the following subset of XPath identifier syntax:
+
+/ = Node
+
+@ = Attribute
+
+[] = Condition
+
+text() = Node text
+
+**Example:** //node1/node2[attrX=value]/@attrY
+
+---

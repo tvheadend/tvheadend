@@ -25,7 +25,7 @@
  * htsmsg's with UTF-8 encoded payloads
  *
  *  Supports:                             Example:
- *  
+ *
  *  Comments                              <!--  a comment               -->
  *  Processing Instructions               <?xml                          ?>
  *  CDATA                                 <![CDATA[  <litteraly copied> ]]>
@@ -96,7 +96,7 @@ typedef struct cdata_content {
   char cc_buf[0];
 } cdata_content_t;
 
-static char *htsmsg_xml_parse_cd(xmlparser_t *xp, 
+static char *htsmsg_xml_parse_cd(xmlparser_t *xp,
 				 htsmsg_t *parent, char *src);
 
 /**
@@ -245,7 +245,7 @@ htsmsg_xml_parse_attrib
   while(is_xmlws(*src))
     src++;
 
-  
+
   /* Parse attribute payload */
   quote = *src++;
   if(quote != '"' && quote != '\'') {
@@ -274,7 +274,7 @@ htsmsg_xml_parse_attrib
   while(is_xmlws(*src))
     src++;
 
-  if(xmlns_scope_list != NULL && 
+  if(xmlns_scope_list != NULL &&
      attriblen > 6 && !memcmp(attribname, "xmlns:", 6)) {
 
     attribname += 6;
@@ -383,7 +383,7 @@ htsmsg_xml_parse_tag(xmlparser_t *xp, htsmsg_t *parent, char *src)
     if(tagname[i] == ':') {
 
       LIST_FOREACH(ns, &xp->xp_namespaces, xmlns_global_link) {
-	if(ns->xmlns_prefix_len == i && 
+	if(ns->xmlns_prefix_len == i &&
 	   !memcmp(ns->xmlns_prefix, tagname, ns->xmlns_prefix_len)) {
 
 	  int llen = taglen - i - 1;
@@ -608,7 +608,7 @@ htsmsg_xml_parse_cd0
       src = htsmsg_xml_parse_tag(xp, tags, src);
       continue;
     }
-    
+
     if(*src == '&' && !raw) {
       if(cc != NULL)
 	cc->cc_end = src;
@@ -664,7 +664,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
   int c = 0, l, y = 0;
   char *x, *body;
   htsmsg_t *tags = htsmsg_create_map();
-  
+
   TAILQ_INIT(&ccq);
   src = htsmsg_xml_parse_cd0(xp, &ccq, tags, NULL, src, 0);
 
@@ -697,7 +697,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
 
     assert(cc != NULL);
     assert(TAILQ_NEXT(cc, cc_link) == NULL);
-    
+
     f = htsmsg_field_add(parent, "cdata", HMF_STR, 0, 0);
     f->hmf_str = cc->cc_start;
     *cc->cc_end = 0;
@@ -721,7 +721,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
 	  c += put_utf8(body + c, *x);
 	break;
       }
-      
+
       TAILQ_REMOVE(&ccq, cc, cc_link);
       free(cc);
     }
@@ -767,7 +767,7 @@ htsmsg_parse_prolog(xmlparser_t *xp, char *src)
 
     while(is_xmlws(*src))
       src++;
-    
+
     if(!strncmp(src, "<?", 2)) {
       src += 2;
       src = htsmsg_xml_parse_pi(xp, pis, src);
@@ -849,7 +849,7 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
  err:
   free(src0);
   snprintf(errbuf, errbufsize, "%s", xp.xp_errmsg);
-  
+
   /* Remove any odd chars inside of errmsg */
   for ( ; *errbuf; errbuf++)
     if (*errbuf < ' ')
@@ -899,4 +899,236 @@ htsmsg_xml_get_attr_u32(htsmsg_t *tag, const char *name, uint32_t *ret)
   htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
   if (attr) return htsmsg_get_u32(attr, name, ret);
   return HTSMSG_ERR_FIELD_NOT_FOUND;
+}
+
+/**
+ * Take an XPath-like string and return a htsmsg object
+ * containing the node path and attributes.
+ * Currently only supports:
+ *    / = node
+ *    @ = attribute
+ *    [] = condition
+ *
+ *    //node1/node2[attrX=value]/@attrY
+ */
+htsmsg_t *
+htsmsg_xml_parse_xpath(const char *xpath)
+{
+  htsmsg_t *m = NULL;    //The whole message
+  htsmsg_t *f = NULL;    //Individual fields within the message
+
+  m = htsmsg_create_map();
+  f = htsmsg_create_map();
+
+  tvhdebug(LS_XMLTV, "Parsing '%s'", xpath);
+
+  int     xpLen = 0;          //Length of the xpath string
+  int     xpType = 0;         //Type of the current xpath character
+  int     xpTypeSaved = 0;    //Type of the current xpath item
+
+  int     inPos = 0;          //Current xpath character position
+
+  int     outPos = 0;         //Current output character position
+  char    outStr[128];        //Output string holding the current item
+  int64_t outType = 0;        //The current item type
+
+  char    condAtt[128];       //The attribute part of the condition item
+  char    condVal[128];       //The value part of the condition item
+
+  char    inPosStr[11];       //Input position as a string for a unique key to the returned htsmsg
+
+  xpLen = strlen(xpath);
+
+  //If the XPath string is too long, abort
+  if (xpLen > sizeof(outStr) - 1)
+  {
+    //Formatting note:
+    //In 64 bit Ubuntu, sizeof() returns a 'long unsigned int'
+    //In 32 bit i386-debian-strech, sizeof() returns an 'unsigned int'
+    //This causes cross compile issues.
+    //'%zu' is supposed to work for 'size_t' variables in C99.
+    
+    tvhtrace(LS_XMLTV, "XPath = '%s' too long, max len = %zu.", xpath, (sizeof(outStr) - 1));
+    return NULL;
+  }
+
+  memset(outStr, 0, sizeof(outStr));
+
+  for(inPos = 0; inPos < xpLen; inPos++)  //Loop through the xpath string
+  {
+    xpType = 0; //Keep byte
+    if(xpath[inPos] == '/')
+    {
+      xpType = 1; //Node
+    }
+    else if (xpath[inPos] == '@' && xpTypeSaved != 3)
+    {
+      xpType = 2; //Attribute
+    }
+    else if (xpath[inPos] == '[')
+    {
+      xpType = 3; //Condition
+    }
+
+    //Add this byte to the existing item
+    if (xpType == 0 && xpath[inPos] != ']')
+    {
+      outStr[outPos] = xpath[inPos];
+      outPos++;
+      outStr[outPos] = 0;
+      outType = xpTypeSaved;
+    }
+    else
+    {
+        xpTypeSaved = xpType;
+    }
+
+    if(inPos == (xpLen - 1) || (xpType != 0 && outPos != 0 ))
+    {
+
+      if(outType != 0)
+      {
+
+        if(outType == 1 && !strcmp(outStr, "text()"))
+        {
+          outType = 4;
+        }
+
+        condAtt[0] = 0;
+        condVal[0] = 0;
+        if(outType == 3)
+        {
+          sscanf(outStr, "@%[^'=']=%s", condAtt, condVal);
+        }
+
+        f = htsmsg_create_map();
+
+        if(outType == 3)
+        {
+          htsmsg_add_str(f, "n", condAtt);  //Condition attribute
+        }
+        else
+        {
+          htsmsg_add_str(f, "n", outStr);   //Name
+        }
+
+        htsmsg_add_s64(f, "t", outType);    //Type
+        htsmsg_add_str(f, "v", condVal);    //Condition value
+
+        snprintf(inPosStr, sizeof(inPosStr), "%d", inPos);
+        htsmsg_add_msg(m, inPosStr, f);
+
+      }
+
+      outPos = 0;
+      outStr[0] = 0;
+      outType = 0;
+    }
+
+  }//END for loop through string
+
+  return m;
+
+}
+
+/**
+ * Take a htsmsg holding an XML object model
+ * and a htsmsg holding an XPath model and
+ * try to match the XPath to a node or
+ * attribute.
+ */
+const char *htsmsg_xml_xpath_search(htsmsg_t *message, htsmsg_t *xpath)
+{
+  htsmsg_t        *temp_msg;
+  htsmsg_t        *temp_path;
+  int64_t         temp_type;
+  htsmsg_field_t  *f;
+  htsmsg_t        *attribs;
+  htsmsg_t        *tags;
+  htsmsg_t        *pass_tags = NULL;
+  const char      *value;
+  const char      *criteria;
+  const char      *str_saved;
+
+  temp_msg = message;
+  str_saved = NULL;
+
+  HTSMSG_FOREACH(f, xpath) {
+
+      temp_path = htsmsg_get_map(xpath, htsmsg_field_name(f));
+      htsmsg_get_s64(temp_path, "t", &temp_type);
+      tvhdebug(LS_XMLTV, "htsmsg_xml_xpath_search '%s' = '%s', '%"PRIu64"', '%s'", htsmsg_field_name(f), htsmsg_get_str(temp_path, "n"), temp_type, htsmsg_get_str(temp_path, "v"));
+
+      if(temp_type == 4)  //This item returns the text of the previous matched XML node
+      {
+        return str_saved;
+      }
+
+      if(temp_type == 1)  //This item deals with an XML node
+      {
+        str_saved = NULL;
+
+        if((tags = htsmsg_get_map(temp_msg, "tags")) == NULL)
+        {
+          tvherror(LS_XMLTV, "Failed to find tags");
+          return NULL;
+        }
+
+        if((pass_tags = htsmsg_get_map(tags, htsmsg_get_str(temp_path, "n"))) == NULL)
+        {
+          tvherror(LS_XMLTV, "Failed to match '%s'", htsmsg_get_str(temp_path, "n"));
+          return NULL;
+        }
+        else
+        {
+          tvhdebug(LS_XMLTV, "Matched node '%s'", htsmsg_get_str(temp_path, "n"));
+          str_saved = htsmsg_get_str(pass_tags, "cdata");
+          temp_msg = pass_tags;
+        }
+      }//END of node type
+
+      if(temp_type == 2 || temp_type == 3)  //This items deal with an XML attribute.
+      {
+        if((attribs = htsmsg_get_map(temp_msg, "attrib")) == NULL) return NULL;
+        if((value = htsmsg_get_str(attribs, htsmsg_get_str(temp_path, "n"))) == NULL)
+        {
+          return NULL;
+        }
+        else
+        {
+          if(temp_type == 2)  //If this is a simple attribute, return the value.
+          {
+            tvhdebug(LS_XMLTV, "Returning attribute value '%s'", value);
+            return value;
+          }//END just return attribute value
+
+          if(temp_type == 3)  //If this is an attribute comparison, compare it.
+          {
+            if((criteria = htsmsg_get_str(temp_path, "v")) == NULL)
+            {
+              tvherror(LS_XMLTV, "NO CRITERIA '%s'", htsmsg_get_str(temp_path, "v"));
+              return NULL;
+            }
+            else
+            {
+              tvhdebug(LS_XMLTV, "COMPARING: '%s' to '%s'", value, criteria);
+              if(!strcmp(value, criteria))
+              {
+                //Continue the search to the next XPath item, but not the next node
+                tvhdebug(LS_XMLTV, "MATCHED: '%s' to '%s'", value, criteria);
+              }
+              else
+              {
+                //Return an abject failure in disgrace.
+                return NULL;
+              }
+            }
+          }//END attribute value comparison
+        }//END found the attribute being searched for
+      }//END of attribute type
+
+  }//END loop through each XPath item.
+
+  return NULL;
+
 }
