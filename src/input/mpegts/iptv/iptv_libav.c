@@ -1,20 +1,8 @@
 /*
- *  IPTV - libav handler
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2017 Jaroslav Kysela
  *
- *  Copyright (C) 2017 Jaroslav Kysela
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * IPTV - libav handler
  */
 
 #include "tvheadend.h"
@@ -46,6 +34,7 @@ typedef struct {
 /*
  *
  */
+
 #if LIBAVFORMAT_VERSION_MAJOR > 60
 static int
 iptv_libav_write_packet(void *opaque, const uint8_t *buf, int buf_size)
@@ -79,6 +68,7 @@ fin:
 /*
  *
  */
+
 static int
 iptv_libav_interrupt_callback(void *opaque)
 {
@@ -90,6 +80,7 @@ iptv_libav_interrupt_callback(void *opaque)
 /*
  *
  */
+
 static void *
 iptv_libav_thread(void *aux)
 {
@@ -189,6 +180,7 @@ fail:
 /*
  * Start new thread
  */
+
 static int
 iptv_libav_start
   ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *url )
@@ -261,6 +253,7 @@ iptv_libav_pause ( iptv_input_t *mi, iptv_mux_t *im, int pause )
 /*
  * Initialise libav handler
  */
+
 void
 iptv_libav_init ( void )
 {

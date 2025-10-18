@@ -1,19 +1,8 @@
 /*
- *  TV headend - File bundles
- *  Copyright (C) 2008 Andreas Öman, Adam Sutton
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2008 Andreas Öman, Adam Sutton
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * TV headend - File bundles
  */
 
 #ifndef __TVH_FILE_BUNDLE_H__
@@ -25,6 +14,7 @@
 #include <stdio.h>
 
 /* Bundle or Direct */
+
 typedef enum filebundle_handle_type
 {
   FB_BUNDLE,
@@ -32,6 +22,7 @@ typedef enum filebundle_handle_type
 } fb_type;
 
 /* File bundle entry type */
+
 enum filebundle_type
 {
   FB_UNKNOWN,
@@ -40,6 +31,7 @@ enum filebundle_type
 };
 
 /* File bundle entry */
+
 typedef struct filebundle_entry
 {
   enum filebundle_type     type;
@@ -59,6 +51,7 @@ typedef struct filebundle_entry
 } filebundle_entry_t;
 
 /* File bundle directory entry */
+
 typedef struct filebundle_dirent
 {
   char                 name[256];
@@ -66,6 +59,7 @@ typedef struct filebundle_dirent
 } fb_dirent;
 
 /* File bundle stat */
+
 struct filebundle_stat
 {
   fb_type  type;
@@ -74,22 +68,27 @@ struct filebundle_stat
 };
 
 /* Opaque types */
+
 typedef struct filebundle_dir  fb_dir;
 typedef struct filebundle_file fb_file;
 
 /* Root of bundle */
+
 extern const filebundle_entry_t * const filebundle_root;
 
 /* Miscellaneous */
+
 int fb_stat ( const char *path, struct filebundle_stat *st );
 
 /* Directory processing wrappers */
+
 fb_dir    *fb_opendir  ( const char *path );
 fb_dirent *fb_readdir  ( fb_dir *fb );
 void       fb_closedir ( fb_dir *fb );
 int        fb_scandir  ( const char *path, fb_dirent ***list );
 
 /* File processing wrappers */
+
 // Note: all access is read-only
 // Note: decompress is only for compressed filebundles,
 //       not direct disk access

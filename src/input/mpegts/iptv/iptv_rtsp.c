@@ -1,20 +1,8 @@
 /*
- *  IPTV - RTSP/RTSPS handler
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2015 Jaroslav Kysela
  *
- *  Copyright (C) 2015 Jaroslav Kysela
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * IPTV - RTSP/RTSPS handler
  */
 
 #include "tvheadend.h"
@@ -41,6 +29,7 @@ typedef struct {
 /*
  *
  */
+
 static void
 iptv_rtsp_close_cb ( void *aux )
 {
@@ -50,6 +39,7 @@ iptv_rtsp_close_cb ( void *aux )
 /*
  * Alive timeout
  */
+
 static void
 iptv_rtsp_alive_cb ( void *aux )
 {
@@ -71,6 +61,7 @@ iptv_rtsp_alive_cb ( void *aux )
 /*
  * Connected
  */
+
 static int
 iptv_rtsp_header ( http_client_t *hc )
 {
@@ -191,6 +182,7 @@ iptv_rtsp_header ( http_client_t *hc )
 /*
  * Receive data
  */
+
 static int
 iptv_rtsp_data
   ( http_client_t *hc, void *buf, size_t len )
@@ -256,6 +248,7 @@ iptv_rtsp_data
 /*
  * Setup RTSP(S) connection
  */
+
 static int
 iptv_rtsp_start
   ( iptv_input_t *mi, iptv_mux_t *im, const char *raw, const url_t *u )
@@ -335,6 +328,7 @@ iptv_rtsp_start
 /*
  * Stop connection
  */
+
 static void
 iptv_rtsp_stop
   ( iptv_input_t *mi, iptv_mux_t *im )
@@ -393,6 +387,7 @@ iptv_rtp_header_callback ( iptv_mux_t *im, uint8_t *rtp, int len )
 /*
  * Read data
  */
+
 static ssize_t
 iptv_rtsp_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
@@ -414,6 +409,7 @@ iptv_rtsp_read ( iptv_input_t *mi, iptv_mux_t *im )
 /*
  * Send the status message
  */
+
 #if ENABLE_TIMESHIFT
 static void rtsp_timeshift_fill_status(rtsp_st_t *ts, rtsp_priv_t *rp,
     timeshift_status_t *status) {
@@ -562,6 +558,7 @@ void rtsp_st_destroy(streaming_target_t *st) {
 /*
  * Initialise RTSP handler
  */
+
 void
 iptv_rtsp_init ( void )
 {

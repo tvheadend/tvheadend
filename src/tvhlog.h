@@ -1,20 +1,10 @@
 /*
- *  Tvheadend - logging
- *  Copyright (C) 2012 Adam Sutton
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2012 Adam Sutton
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Tvheadend - logging
  */
+
 #ifndef __TVH_LOGGING_H__
 #define __TVH_LOGGING_H__
 
@@ -43,6 +33,7 @@ typedef struct {
 } tvhlog_subsys_t;
 
 /* Config */
+
 extern int              tvhlog_level;
 extern char            *tvhlog_path;
 extern int              tvhlog_options;
@@ -54,6 +45,7 @@ void tvh_concatenate_subsystem_with_logsv(char* buf, int subsys, const char *fmt
 void tvh_concatenate_subsystem_with_logs(char* buf, int subsys, const char *fmt, ... ) __attribute__((format(printf,3,4)));
 
 /* Initialise */
+
 void tvhlog_init       ( int level, int options, const char *path );
 void tvhlog_start      ( void );
 void tvhlog_end        ( void );
@@ -77,6 +69,7 @@ static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
 
 
 /* Options */
+
 #define TVHLOG_OPT_DBG_SYSLOG   0x0001
 #define TVHLOG_OPT_DBG_STDERR   0x0002
 #define TVHLOG_OPT_DBG_FILE     0x0004
@@ -90,6 +83,7 @@ static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
 #define TVHLOG_OPT_ALL          0xFFFF
 
 /* Levels */
+
 #ifndef LOG_TRACE
 #define LOG_TRACE (LOG_DEBUG+1)
 #endif
@@ -97,6 +91,7 @@ static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
 #define LOG_TVH_NOTIFY 0x40000000
 
 /* Subsystems */
+
 enum {
   LS_NONE,
   LS_START,
@@ -205,6 +200,7 @@ enum {
   LS_UDP,
   LS_RATINGLABELS,
   LS_LAST     /* keep this last */
+
 };
 
 /* transcode Subsystems */
@@ -231,6 +227,7 @@ enum {
 };
 
 /* Macros */
+
 #define tvhlog(severity, subsys, fmt, ...)\
   _tvhlog(__FILE__, __LINE__, severity | LOG_TVH_NOTIFY, subsys, fmt, ##__VA_ARGS__)
 #define tvhlog_spawn(severity, subsys, fmt, ...)\

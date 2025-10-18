@@ -1,26 +1,8 @@
-/*****************************************************************************
- *
-* Copyright (C) 2001 Mark Edel
-* Copyright (C) 2008 Andreas Öman
-
-* This is free software; you can redistribute it and/or modify it under the
-* terms of the GNU General Public License as published by the Free Software
-* Foundation; either version 2 of the License, or (at your option) any later
-* version.
-*
-* This software is distributed in the hope that it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-* for more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* software; if not, write to the Free Software Foundation, Inc., 51 Franklin
-* Street, Fifth Floor, Boston, MA 02110-1301 USA
-*
-* Written by Mark Edel
-* Macroified + additional support functions by Andreas Öman
-*
-*****************************************************************************/
+/*
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2001 Mark Edel
+ * Copyright (C) 2008 Andreas Öman
+ */
 
 #ifndef REDBLACK_H_
 #define REDBLACK_H_
@@ -145,6 +127,7 @@ do {									  \
 /**
  * Insert a new node, if a collision occures the colliding node is returned
  */
+
 #define RB_INSERT_SORTED(head, skel, field, cmpfunc)			 \
 ({									 \
   int res, fromleft = 0;						 \
@@ -199,6 +182,7 @@ do {									  \
 /**
  * Returns next node
  */
+
 #define RB_NEXT(e, field)			\
 ({						\
   typeof(e) xx = e, f;				\
@@ -221,6 +205,7 @@ do {									  \
 /**
  * Returns previous node
  */
+
 #define RB_PREV(e, field)			\
 ({						\
   typeof(e) xx = e, f;				\
@@ -243,16 +228,19 @@ do {									  \
 /**
  * Returns first node
  */
+
 #define RB_FIRST(head) ((head)->first)
 
 /**
  * Returns last node
  */
+
 #define RB_LAST(head)  ((head)->last)
 
 /**
  * Iterate thru all nodes
  */
+
 #define RB_FOREACH(e, head, field)		\
  for(e = (head)->first; e != NULL; 		\
        ({					\
@@ -274,6 +262,7 @@ do {									  \
 /**
  * Iterate thru all nodes in reverse order
  */
+
 #define RB_FOREACH_REVERSE(e, head, field)	\
  for(e = (head)->last; e != NULL; 		\
        ({					\
@@ -294,6 +283,7 @@ do {									  \
 /**
  * Remove the given node
  */
+
 #define RB_REMOVE(head, e, field)					 \
 do {									 \
   int swapColor;							 \
@@ -461,6 +451,7 @@ do {									 \
 /**
  * Finds a node
  */
+
 #define RB_FIND(head, skel, field, cmpfunc)	\
 ({						\
   int res;                                        \
@@ -483,6 +474,7 @@ do {									 \
 /**
  * Finds first node greater than 'skel'
  */
+
 #define RB_FIND_GT(head, skel, field, cmpfunc)	  \
 ({						  \
   int res;                                        \
@@ -505,6 +497,7 @@ do {									 \
 /**
  * Finds a node greater or equal to 'skel'
  */
+
 #define RB_FIND_GE(head, skel, field, cmpfunc)	  \
 ({						  \
   int res;                                        \
@@ -528,6 +521,7 @@ do {									 \
 /**
  * Finds first node lesser than 'skel'
  */
+
 #define RB_FIND_LT(head, skel, field, cmpfunc)	  \
 ({						  \
   int res;                                        \
@@ -550,6 +544,7 @@ do {									 \
 /**
  * Finds a node lesser or equal to 'skel'
  */
+
 #define RB_FIND_LE(head, skel, field, cmpfunc)	  \
 ({						  \
   int res;                                        \

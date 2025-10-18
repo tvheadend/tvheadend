@@ -1,21 +1,9 @@
 /*
- *  Tvheadend
- *  Copyright (C) 2013 Andreas Öman
- *  Copyright (C) 2014,2015,2016,2017 Jaroslav Kysela
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2013 Andreas Öman
+ * Copyright (C) 2014,2015,2016,2017 Jaroslav Kysela
  *
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Tvheadend
  */
 
 #include "tvheadend.h"
@@ -70,6 +58,7 @@ static int ca_hints_quickecm;
 /*
  *
  */
+
 static inline int extractpid(const uint8_t *tsb)
 {
   return (tsb[1] & 0x1f) << 8 | tsb[2];
@@ -88,6 +77,7 @@ static inline const char *keystr(const uint8_t *tsb)
 /*
  *
  */
+
 static void
 descrambler_data_destroy(th_descrambler_runtime_t *dr, th_descrambler_data_t *dd, int skip)
 {
@@ -232,6 +222,7 @@ descrambler_data_analyze(th_descrambler_runtime_t *dr,
 /*
  *
  */
+
 static void
 descrambler_destroy_ecmsec(descrambler_ecmsec_t *des)
 {
@@ -278,6 +269,7 @@ descrambler_destroy_table( descrambler_table_t *dt, int emm )
 /*
  *
  */
+
 static struct strtab ecmparitytab[] = {
   { "default",  ECM_PARITY_DEFAULT },
   { "standard", ECM_PARITY_80EVEN_81ODD },
@@ -287,6 +279,7 @@ static struct strtab ecmparitytab[] = {
 /*
  *
  */
+
 static void
 descrambler_load_hints(htsmsg_t *m)
 {
@@ -328,6 +321,7 @@ descrambler_load_hints(htsmsg_t *m)
 /*
  *
  */
+
 void
 descrambler_init ( void )
 {
@@ -361,6 +355,7 @@ descrambler_done ( void )
 /*
  * Decide, if we should work in "quick ECM" mode
  */
+
 static int
 descrambler_quick_ecm ( mpegts_service_t *t, int pid )
 {
@@ -389,6 +384,7 @@ descrambler_quick_ecm ( mpegts_service_t *t, int pid )
  * a) start a new service
  * b) restart a running service with possible caid changes
  */
+
 void
 descrambler_service_start ( service_t *t )
 {
@@ -538,6 +534,7 @@ descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di )
 }
 
 /* it's called inside s_stream_mutex lock! */
+
 static void
 descrambler_notify_nokey( th_descrambler_runtime_t *dr )
 {

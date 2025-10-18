@@ -15,6 +15,7 @@
 #include "libaes128dec.h"
 
 /* key structure */
+
 typedef struct aes128_priv {
   AES_KEY keys[2]; /* 0 = even, 1 = odd */
 } aes128_priv_t;

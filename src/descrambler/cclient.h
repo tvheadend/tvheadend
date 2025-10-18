@@ -1,20 +1,9 @@
 /*
- *  tvheadend, network card client
- *  Copyright (C) 2007 Andreas Öman
- *            (C) 2017 Jaroslav Kysela
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2007 Andreas Öman
+ * Copyright (C) 2017 Jaroslav Kysela
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, network card client
  */
 
 #include "tvheadend.h"
@@ -26,12 +15,14 @@
 /**
  *
  */
+
 #define CC_KEEPALIVE_INTERVAL 30
 #define CC_MAX_NOKS           3
 
 /**
  *
  */
+
 typedef struct cc_ecm_section {
   LIST_ENTRY(cc_ecm_section) es_link;
 
@@ -62,6 +53,7 @@ typedef struct cc_ecm_section {
 /**
  *
  */
+
 typedef struct cc_ecm_pid {
   LIST_ENTRY(cc_ecm_pid) ep_link;
 
@@ -74,6 +66,7 @@ typedef struct cc_ecm_pid {
 /**
  *
  */
+
 typedef struct cc_service {
   th_descrambler_t;
 
@@ -102,6 +95,7 @@ typedef struct cc_service {
 /**
  *
  */
+
 typedef struct cc_message {
   TAILQ_ENTRY(cc_message) cm_link;
   uint32_t cm_len;
@@ -111,6 +105,7 @@ typedef struct cc_message {
 /**
  *
  */
+
 typedef struct cc_card_data {
   LIST_ENTRY(cc_card_data) cs_card;
   uint32_t      cs_id;
@@ -130,6 +125,7 @@ typedef struct cc_card_data {
 /**
  *
  */
+
 typedef struct cclient {
   caclient_t;
 
@@ -190,6 +186,7 @@ typedef struct cclient {
 /*
  *
  */
+
 static inline int cc_must_break(cclient_t *cc)
  { return !cc->cc_running || !cc->cac_enabled || cc->cc_reconfigure; }
 

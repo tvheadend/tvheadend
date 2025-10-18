@@ -1,19 +1,8 @@
 /*
- *  M3U parser
- *  Copyright (C) 2015 Jaroslav Kysela
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2015 Jaroslav Kysela
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * M3U parser
  */
 
 #include "tvheadend.h"
@@ -24,6 +13,7 @@
 /*
  *
  */
+
 static char *get_m3u_str(char *data, char **res, int *last)
 {
   char *p = data, first = *data;
@@ -52,6 +42,7 @@ static char *get_m3u_str(char *data, char **res, int *last)
 /*
  *
  */
+
 static void get_m3u_str_post(char **data, int delim)
 {
   if (delim == '\n' || delim == '\r') {
@@ -63,6 +54,7 @@ static void get_m3u_str_post(char **data, int delim)
 /*
  *
  */
+
 static char *until_eol(char *d)
 {
   while (*d && *d != '\r' && *d != '\n') d++;
@@ -74,6 +66,7 @@ static char *until_eol(char *d)
 /*
  *
  */
+
 static int is_full_url(const char *url)
 {
   if (strncmp(url, "file://", 7) == 0) return 7;
@@ -90,6 +83,7 @@ static int is_full_url(const char *url)
 /*
  *
  */
+
 static const char *get_url
   (char *buf, size_t buflen, const char *rel, const char *url)
 {
@@ -120,6 +114,7 @@ static const char *get_url
 /*
  * Note: text in data pointer is not preserved (must be read/write)
  */
+
 htsmsg_t *parse_m3u
   (char *data, const char *charset, const char *url)
 {

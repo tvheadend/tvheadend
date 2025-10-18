@@ -1,20 +1,9 @@
 /*
- *  tvheadend, CCCAM interface
- *  Copyright (C) 2007 Andreas Öman
- *  Copyright (C) 2017 Luis Alves
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2007 Andreas Öman
+ * Copyright (C) 2017 Luis Alves
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * tvheadend, CCCAM interface
  */
 
 #include <ctype.h>
@@ -26,6 +15,7 @@
 /**
  *
  */
+
 #define CCCAM_KEEPALIVE_INTERVAL  0
 #define CCCAM_NETMSGSIZE          1024
 
@@ -81,6 +71,7 @@ static const char *cccam_build_str[CCCAM_VERSION_COUNT] = {
 /**
  *
  */
+
 struct cccam_crypt_block {
   uint8_t keytable[256];
   uint8_t state;
@@ -91,6 +82,7 @@ struct cccam_crypt_block {
 /**
  *
  */
+
 typedef struct cccam {
   cclient_t;
 
@@ -119,6 +111,7 @@ static void cccam_send_oscam_extended(cccam_t *cccam);
 /**
  *
  */
+
 static inline const char *cccam_get_version_str(cccam_t *cccam)
 {
   int ver = MINMAX(cccam->cccam_version, 0, ARRAY_SIZE(cccam_version_str) - 1);
@@ -128,6 +121,7 @@ static inline const char *cccam_get_version_str(cccam_t *cccam)
 /**
  *
  */
+
 static inline const char *cccam_get_build_str(cccam_t *cccam)
 {
   int ver = MINMAX(cccam->cccam_version, 0, ARRAY_SIZE(cccam_version_str) - 1);
@@ -137,6 +131,7 @@ static inline const char *cccam_get_build_str(cccam_t *cccam)
 /**
  *
  */
+
 static inline int cccam_set_busy(cccam_t *cccam)
 {
   if (cccam->cccam_extended)
@@ -150,6 +145,7 @@ static inline int cccam_set_busy(cccam_t *cccam)
 /**
  *
  */
+
 static inline void cccam_unset_busy(cccam_t *cccam)
 {
   cccam->cccam_busy = 0;
@@ -158,6 +154,7 @@ static inline void cccam_unset_busy(cccam_t *cccam)
 /**
  *
  */
+
 static inline void
 uint8_swap(uint8_t *p1, uint8_t *p2)
 {
@@ -167,6 +164,7 @@ uint8_swap(uint8_t *p1, uint8_t *p2)
 /**
  *
  */
+
 static void
 cccam_crypt_xor(uint8_t *buf)
 {
@@ -182,6 +180,7 @@ cccam_crypt_xor(uint8_t *buf)
 /**
  *
  */
+
 static void
 cccam_crypt_init(struct cccam_crypt_block *block, uint8_t *key, int32_t len)
 {
@@ -203,6 +202,7 @@ cccam_crypt_init(struct cccam_crypt_block *block, uint8_t *key, int32_t len)
 /**
  *
  */
+
 static void
 cccam_decrypt(struct cccam_crypt_block *block, uint8_t *data, int32_t len)
 {
@@ -224,6 +224,7 @@ cccam_decrypt(struct cccam_crypt_block *block, uint8_t *data, int32_t len)
 /**
  *
  */
+
 static void
 cccam_encrypt(struct cccam_crypt_block *block, uint8_t *data, int32_t len)
 {
@@ -257,6 +258,7 @@ cccam_decrypt_cw(uint8_t *nodeid, uint32_t card_id, uint8_t *cws)
 /**
  *
  */
+
 static int
 cccam_oscam_check(cccam_t *cccam, uint8_t *buf)
 {
@@ -278,6 +280,7 @@ cccam_oscam_check(cccam_t *cccam, uint8_t *buf)
 /**
  *
  */
+
 static int
 cccam_oscam_nodeid_check(cccam_t *cccam, uint8_t *buf)
 {
@@ -299,6 +302,7 @@ cccam_oscam_nodeid_check(cccam_t *cccam, uint8_t *buf)
 /**
  *
  */
+
 static inline uint8_t *
 cccam_set_ua(uint8_t *dst, uint8_t *src)
 {
@@ -309,6 +313,7 @@ cccam_set_ua(uint8_t *dst, uint8_t *src)
 /**
  *
  */
+
 static inline uint8_t *
 cccam_set_sa(uint8_t *dst, uint8_t *src)
 {
@@ -318,6 +323,7 @@ cccam_set_sa(uint8_t *dst, uint8_t *src)
 /**
  * Handle reply to card data request
  */
+
 static int
 cccam_decode_card_data_reply(cccam_t *cccam, uint8_t *msg)
 {
@@ -361,6 +367,7 @@ cccam_decode_card_data_reply(cccam_t *cccam, uint8_t *msg)
 /**
  *
  */
+
 static void
 cccam_handle_keys(cccam_t *cccam, cc_service_t *ct, cc_ecm_section_t *es,
                   uint8_t *buf, int len, int seq)
@@ -388,6 +395,7 @@ cccam_handle_keys(cccam_t *cccam, cc_service_t *ct, cc_ecm_section_t *es,
 /**
  *
  */
+
 static void
 cccam_handle_partner(cccam_t *cccam, uint8_t *msg)
 {
@@ -415,6 +423,7 @@ cccam_handle_partner(cccam_t *cccam, uint8_t *msg)
  * Handle running reply
  * cc_mutex is held
  */
+
 static int
 cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
 {
@@ -468,6 +477,7 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
       break;
     //case MSG_CMD_05:      /* ? */
     case MSG_ECM_REQUEST: { /* request reply */
+
 req:
       seq = cccam->cccam_extended ? buf[0] : 1;
       es = cc_find_pending_section((cclient_t *)cccam, seq, &ct);
@@ -504,6 +514,7 @@ req:
 /**
  *
  */
+
 static int
 cccam_read_message0(cccam_t *cccam, const char *state, sbuf_t *rbuf, int timeout)
 {
@@ -530,6 +541,7 @@ cccam_read_message0(cccam_t *cccam, const char *state, sbuf_t *rbuf, int timeout
 /**
  *
  */
+
 static int
 cccam_send_msg(cccam_t *cccam, cccam_msg_type_t cmd,
                uint8_t *buf, size_t len, int enq,
@@ -568,6 +580,7 @@ cccam_send_msg(cccam_t *cccam, cccam_msg_type_t cmd,
 /**
  * Send keep alive
  */
+
 static void
 cccam_send_ka(void *cc)
 {
@@ -586,6 +599,7 @@ cccam_send_ka(void *cc)
 /**
  * Send keep alive
  */
+
 static void
 cccam_send_oscam_extended(cccam_t *cccam)
 {
@@ -600,6 +614,7 @@ cccam_send_oscam_extended(cccam_t *cccam)
 /**
  *
  */
+
 static void
 sha1_make_login_key(cccam_t *cccam, uint8_t *buf)
 {
@@ -628,6 +643,7 @@ sha1_make_login_key(cccam_t *cccam, uint8_t *buf)
 /**
  * Login command
  */
+
 static int
 cccam_send_login(cccam_t *cccam)
 {
@@ -675,6 +691,7 @@ cccam_send_login(cccam_t *cccam)
 /**
  *
  */
+
 static void
 cccam_send_cli_data(cccam_t *cccam)
 {
@@ -693,6 +710,7 @@ cccam_send_cli_data(cccam_t *cccam)
 /**
  *
  */
+
 static void
 cccam_oscam_update_idnode(cccam_t *cccam)
 {
@@ -715,6 +733,7 @@ cccam_oscam_update_idnode(cccam_t *cccam)
 /**
  *
  */
+
 static int
 cccam_init_session(void *cc)
 {
@@ -755,6 +774,7 @@ cccam_init_session(void *cc)
 /**
  *
  */
+
 static int
 cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
                cc_card_data_t *pcard, const uint8_t *msg, int len)
@@ -807,6 +827,7 @@ cccam_send_ecm(void *cc, cc_service_t *ct, cc_ecm_section_t *es,
 /**
  *
  */
+
 static void
 cccam_send_emm(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
                uint32_t provid, const uint8_t *msg, int len)
@@ -856,6 +877,7 @@ cccam_send_emm(void *cc, cc_service_t *ct, cc_card_data_t *pcard,
 /**
  *
  */
+
 static int
 cccam_read(void *cc, sbuf_t *rbuf)
 {
@@ -882,6 +904,7 @@ cccam_read(void *cc, sbuf_t *rbuf)
 /**
  *
  */
+
 static void
 cccam_no_services(void *cc)
 {
@@ -891,6 +914,7 @@ cccam_no_services(void *cc)
 /**
  *
  */
+
 static void
 cccam_conf_changed(caclient_t *cac)
 {
@@ -907,6 +931,7 @@ cccam_conf_changed(caclient_t *cac)
 /**
  *
  */
+
 static int
 nibble(char c)
 {
@@ -925,6 +950,7 @@ nibble(char c)
 /**
  *
  */
+
 static int
 caclient_cccam_nodeid_set(void *o, const void *v)
 {
@@ -1047,6 +1073,7 @@ const idclass_t caclient_cccam_class =
 /*
  *
  */
+
 caclient_t *cccam_create(void)
 {
   cccam_t *cccam = calloc(1, sizeof(*cccam));

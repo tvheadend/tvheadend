@@ -1,19 +1,8 @@
 /*
- *  tvheadend, libav utils
- *  Copyright (C) 2012 John Törnblom
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2012 John Törnblom
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
+ * tvheadend, libav utils
  */
 
 #ifndef LIBAV_H_
@@ -37,6 +26,7 @@ http://git.videolan.org/?p=ffmpeg.git;a=commitdiff;h=104e10fb426f903ba9157fdbfe3
 
 This list must be updated every time we use a new AV_CODEC_ID
 */
+
 #if LIBAVCODEC_VERSION_MAJOR < 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR < 25)
 #define AVCodecID CodecID
 #define AV_CODEC_ID_AAC          CODEC_ID_AAC

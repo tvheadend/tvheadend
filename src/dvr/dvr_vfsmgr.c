@@ -1,20 +1,9 @@
 /*
- *  Digital Video Recorder - file system management
- *  Copyright (C) 2015 Jaroslav Kysela
- *  Copyright (C) 2015 Glenn Christiaensen
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2015 Jaroslav Kysela
+ * Copyright (C) 2015 Glenn Christiaensen
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Digital Video Recorder - file system management
  */
 
 #include <sys/stat.h>
@@ -43,6 +32,7 @@ static tasklet_t dvr_disk_space_tasklet;
 /*
  *
  */
+
 static dvr_vfs_t *
 dvr_vfs_find(dvr_vfs_t *old, tvh_fsid_t *id)
 {
@@ -81,6 +71,7 @@ dvr_vfs_find1(dvr_vfs_t *old, htsmsg_t *m)
 /*
  *
  */
+
 void
 dvr_vfs_refresh_entry(dvr_entry_t *de)
 {
@@ -128,6 +119,7 @@ rem:
 /*
  *
  */
+
 void
 dvr_vfs_remove_entry(dvr_entry_t *de)
 {
@@ -152,6 +144,7 @@ dvr_vfs_remove_entry(dvr_entry_t *de)
 /*
  *
  */
+
 int64_t
 dvr_vfs_update_filename(const char *filename, htsmsg_t *fdata)
 {
@@ -181,6 +174,7 @@ dvr_vfs_update_filename(const char *filename, htsmsg_t *fdata)
  * Only "Keep until space needed" recordings are deleted, starting with the oldest one
  * Return -1 on failure, -2 if disk stats unstable (no action taken), otherwise number of bytes cleaned
  */
+
 static int64_t
 dvr_disk_space_cleanup(dvr_config_t *cfg, int include_active)
 {
@@ -304,6 +298,7 @@ finish:
  * Check for each dvr config if the free disk size is below the dvr_cleanup_threshold
  * If so and we are using the dvr config ATM (active recording), we start the cleanup procedure
  */
+
 static void
 dvr_disk_space_check()
 {
@@ -383,6 +378,7 @@ checking:
 /**
  *
  */
+
 static void
 dvr_get_disk_space_update(const char *path, int locked)
 {
@@ -409,6 +405,7 @@ dvr_get_disk_space_update(const char *path, int locked)
 /**
  *
  */
+
 static void
 dvr_get_disk_space_tcb(void *opaque, int dearmed)
 {
@@ -449,6 +446,7 @@ dvr_get_disk_space_cb(void *aux)
  * Check the available disk space for a new recording.
  * If '0' (= error or below configured minimum), a new recording should not be started.
  */
+
 int
 dvr_vfs_rec_start_check(dvr_config_t *cfg)
 {
@@ -487,6 +485,7 @@ dvr_vfs_rec_start_check(dvr_config_t *cfg)
 /**
  *
  */
+
 void
 dvr_disk_space_boot(void)
 {
@@ -496,6 +495,7 @@ dvr_disk_space_boot(void)
 /**
  *
  */
+
 void
 dvr_disk_space_init(void)
 {
@@ -508,6 +508,7 @@ dvr_disk_space_init(void)
 /**
  *
  */
+
 void
 dvr_disk_space_done(void)
 {
@@ -526,6 +527,7 @@ dvr_disk_space_done(void)
 /**
  *
  */
+
 int
 dvr_get_disk_space(int64_t *bfree, int64_t *bused, int64_t *btotal)
 {

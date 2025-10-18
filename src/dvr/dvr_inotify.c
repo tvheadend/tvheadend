@@ -1,19 +1,8 @@
 /*
- *  Digital Video Recorder - inotify processing
- *  Copyright (C) 2012 Adam Sutton
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2012 Adam Sutton
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Digital Video Recorder - inotify processing
  */
 
 #include <sys/inotify.h>
@@ -26,6 +15,7 @@
 #include "htsp_server.h"
 
 /* inotify limits */
+
 #define EVENT_SIZE    (sizeof(struct inotify_event))
 #define EVENT_BUF_LEN (5 * EVENT_SIZE + NAME_MAX)
 #define EVENT_MASK    IN_DELETE    | IN_DELETE_SELF | \
@@ -61,6 +51,7 @@ static int _str_cmp ( void *a, void *b )
 /**
  * Initialise threads
  */
+
 pthread_t dvr_inotify_tid;
 
 void dvr_inotify_init ( void )
@@ -77,6 +68,7 @@ void dvr_inotify_init ( void )
 /**
  *
  */
+
 void dvr_inotify_done ( void )
 {
   int fd = atomic_exchange(&_inot_fd, -1);
@@ -89,6 +81,7 @@ void dvr_inotify_done ( void )
 /**
  *
  */
+
 static int dvr_inotify_exists ( dvr_inotify_entry_t *die, dvr_entry_t *de )
 {
   dvr_inotify_filename_t *dif;
@@ -102,6 +95,7 @@ static int dvr_inotify_exists ( dvr_inotify_entry_t *die, dvr_entry_t *de )
 /**
  * Add an entry for monitoring
  */
+
 static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
 {
   dvr_inotify_filename_t *dif;
@@ -168,6 +162,7 @@ void dvr_inotify_add ( dvr_entry_t *de )
 /*
  * Delete an entry from the monitor
  */
+
 void dvr_inotify_del ( dvr_entry_t *de )
 {
   dvr_inotify_filename_t *f = NULL, *f_next;
@@ -199,6 +194,7 @@ void dvr_inotify_del ( dvr_entry_t *de )
 /*
  * return count of registered entries (for debugging)
  */
+
 int dvr_inotify_count ( void )
 {
   dvr_inotify_filename_t *f;
@@ -214,6 +210,7 @@ int dvr_inotify_count ( void )
 /*
  * Find inotify entry
  */
+
 static dvr_inotify_entry_t *
 _dvr_inotify_find
   ( int fd )
@@ -228,6 +225,7 @@ _dvr_inotify_find
 /*
  * File moved
  */
+
 static void
 _dvr_inotify_moved
   ( int from_fd, const char *from, const char *to, int to_fd )
@@ -324,6 +322,7 @@ _dvr_inotify_moved
 /*
  * File deleted
  */
+
 static void
 _dvr_inotify_delete
   ( int fd, const char *path )
@@ -334,6 +333,7 @@ _dvr_inotify_delete
 /*
  * Directory moved
  */
+
 static void
 _dvr_inotify_moved_all
   ( int fd, const char *to )
@@ -356,6 +356,7 @@ _dvr_inotify_moved_all
 /*
  * Directory deleted
  */
+
 static void
 _dvr_inotify_delete_all
   ( int fd )
@@ -366,6 +367,7 @@ _dvr_inotify_delete_all
 /*
  * Process events
  */
+
 void* _dvr_inotify_thread ( void *p )
 {
   int fd, i, len;
@@ -452,4 +454,3 @@ void* _dvr_inotify_thread ( void *p )
 
   return NULL;
 }
-

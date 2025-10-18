@@ -1,19 +1,8 @@
 /*
- *  TV headend - Access control
- *  Copyright (C) 2008 Andreas Öman
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2008 Andreas Öman
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * TV headend - Access control
  */
 
 #ifndef ACCESS_H_
@@ -243,11 +232,13 @@ typedef struct access_ticket {
 /**
  * Create a new ticket for the requested resource and generate a id for it
  */
+
 const char* access_ticket_create(const char *resource, access_t *a);
 
 /**
  * Verifies that a given ticket id matches a resource
  */
+
 access_t *access_ticket_verify2(const char *id, const char *resource);
 
 int access_ticket_delete(const char *ticket_id);
@@ -255,27 +246,32 @@ int access_ticket_delete(const char *ticket_id);
 /**
  * Free the access structure
  */
+
 void access_destroy(access_t *a);
 
 /**
  * Copy the access structure
  */
+
 access_t *access_copy(access_t *src);
 
 /**
  * Compare the access structures
  */
+
 int access_compare(access_t *a, access_t *b);
 
 /**
  *
  */
+
 char *
 access_get_lang(access_t *a, const char *lang);
 
 /**
  *
  */
+
 const char *
 access_get_theme(access_t *a);
 
@@ -285,6 +281,7 @@ access_get_theme(access_t *a);
  *
  * Return 0 if access is granted, -1 otherwise
  */
+
 static inline int access_verify2(const access_t *a, uint32_t mask)
   { return a ? ((mask & ACCESS_OR) ?
       ((a->aa_rights & mask) ? 0 : -1) :
@@ -295,6 +292,7 @@ int access_verify_list(htsmsg_t *list, const char *item);
 /**
  * Get the access structure
  */
+
 typedef int (*verify_callback_t)(void *aux, const char *passwd);
 
 access_t *access_get(struct sockaddr_storage *src, const char *username,
@@ -303,36 +301,42 @@ access_t *access_get(struct sockaddr_storage *src, const char *username,
 /**
  *
  */
+
 access_t *
 access_get_by_username(const char *username);
 
 /**
  *
  */
+
 access_t *
 access_get_by_addr(struct sockaddr_storage *src);
 
 /**
  *
  */
+
 access_t *
 access_get_by_auth(struct sockaddr_storage *src, const char *id);
 
 /**
  *
  */
+
 access_entry_t *
 access_entry_create(const char *uuid, htsmsg_t *conf);
 
 /**
  *
  */
+
 void
 access_entry_destroy(access_entry_t *ae, int delconf);
 
 /**
  *
  */
+
 void
 access_destroy_by_profile(struct profile *pro, int delconf);
 void
@@ -343,6 +347,7 @@ access_destroy_by_channel_tag(struct channel_tag *ct, int delconf);
 /**
  *
  */
+
 passwd_entry_t *
 passwd_entry_create(const char *uuid, htsmsg_t *conf);
 void
@@ -351,18 +356,21 @@ passwd_entry_destroy(passwd_entry_t *ae, int delconf);
 /**
  *
  */
+
 ipblock_entry_t *
 ipblock_entry_create(const char *uuid, htsmsg_t *conf);
 
 /**
  *
  */
+
 void access_init(int createdefault, int noacl);
 void access_done(void);
 
 /**
  *
  */
+
 htsmsg_t *language_get_list ( void *obj, const char *lang );
 htsmsg_t *language_get_ui_list ( void *obj, const char *lang );
 htsmsg_t *theme_get_ui_list ( void *obj, const char *lang );

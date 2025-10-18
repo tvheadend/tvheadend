@@ -1,19 +1,8 @@
 /*
- *  Multi-language Support - language codes
- *  Copyright (C) 2012 Adam Sutton
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2012 Adam Sutton
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Multi-language Support - language codes
  */
 
 #ifndef __TVH_LANG_CODES_H__
@@ -41,6 +30,7 @@ typedef struct lang_code_list
 } lang_code_list_t;
 
 /* Convert code to preferred internal code */
+
 const char *lang_code_get ( const char *code );
 const char *lang_code_get2 ( const char *code, size_t len );
 const lang_code_t *lang_code_get3 ( const char *code );
@@ -49,9 +39,11 @@ const char *lang_code_preferred( void );
 char *lang_code_user( const char *ucode );
 
 /* Split list of codes as per HTTP Language-Accept spec */
+
 const lang_code_list_t *lang_code_split ( const char *codes );
 
 /* Efficient code lookup */
+
 typedef struct lang_code_lookup_element {
   RB_ENTRY(lang_code_lookup_element) link;
   const lang_code_t *lang_code;
