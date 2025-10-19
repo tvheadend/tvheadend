@@ -4,8 +4,8 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # 
 # Translators:
-# Andi Chandler <andi@gowling.com>, 2025
 # Christian Hewitt, 2025
+# Andi Chandler <andi@gowling.com>, 2025
 # 
 #, fuzzy
 msgid ""
@@ -14,7 +14,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-06 02:33+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: Christian Hewitt, 2025\n"
+"Last-Translator: Andi Chandler <andi@gowling.com>, 2025\n"
 "Language-Team: English (United States) (https://app.transifex.com/tvheadend/teams/43381/en_US/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -358,7 +358,7 @@ msgstr "(_Using the Interface_ )."
 
 #: src/docs_inc.c:26
 msgid "(c) 2006 - date Tvheadend contributors"
-msgstr ""
+msgstr "(c) 2006 - date Tvheadend contributors"
 
 #: src/docs_inc.c:445
 msgid "(default DVR Profile) drop-down"
@@ -591,7 +591,7 @@ msgstr "2. Set up Relevant Network(s)"
 
 #: src/docs_inc.c:5342
 msgid "200"
-msgstr ""
+msgstr "200"
 
 #: src/docs_inc.c:5434
 msgid "2011-03-19"
@@ -607,7 +607,7 @@ msgstr "224=35"
 
 #: src/docs_inc.c:5330
 msgid "25"
-msgstr ""
+msgstr "25"
 
 #: src/docs_inc.c:796
 msgid "3. Associate the Network with the Respective Tuner(s)"
@@ -2537,11 +2537,11 @@ msgstr "Don't use running state (EITp/f) detection."
 
 #: src/docs_inc.c:6108
 msgid "Donate to TVHeadEnd"
-msgstr ""
+msgstr "Donate to TVHeadEnd"
 
 #: src/docs_inc.c:6136
 msgid "Donate to Tvheadend"
-msgstr ""
+msgstr "Donate to Tvheadend"
 
 #: src/docs_inc.c:1322
 msgid "Download"
@@ -2756,11 +2756,11 @@ msgstr "Event episode name"
 
 #: src/docs_inc.c:5392
 msgid "Event episode number"
-msgstr ""
+msgstr "Event episode number"
 
 #: src/docs_inc.c:5388
 msgid "Event season number"
-msgstr ""
+msgstr "Event season number"
 
 #: src/docs_inc.c:5376
 msgid "Event subtitle name"
@@ -3038,7 +3038,7 @@ msgstr ""
 
 #: src/docs_inc.c:5492
 msgid "For example, with S02-E06:"
-msgstr ""
+msgstr "For example, with S02-E06:"
 
 #: src/docs_inc.c:3137
 msgid "For example.."
@@ -3049,10 +3049,12 @@ msgid ""
 "For information on the requirements for Tvheadend and installation "
 "instructions for various platforms, please see"
 msgstr ""
+"For information on the requirements for Tvheadend and installation "
+"instructions for various platforms, please see"
 
 #: src/docs_inc.c:38
 msgid "For more information regarding the project, please see:"
-msgstr ""
+msgstr "For more information regarding the project, please see:"
 
 #: src/docs_inc.c:2580
 msgid "For more information, click on a type."
@@ -3584,6 +3586,8 @@ msgid ""
 "If you confirm this dialog, the default administrator account will be "
 "removed. Please then the use credentials you defined through this wizard."
 msgstr ""
+"If you confirm this dialogue, the default administrator account will be "
+"removed. Please then use the credentials you defined through this wizard."
 
 #: src/docs_inc.c:812
 msgid ""
@@ -4028,23 +4032,23 @@ msgstr "LinuxDVB Input"
 
 #: src/docs_inc.c:5340
 msgid "List 100 items per page."
-msgstr ""
+msgstr "List 100 items per page."
 
 #: src/docs_inc.c:5344
 msgid "List 200 items per page."
-msgstr ""
+msgstr "List 200 items per page."
 
 #: src/docs_inc.c:5332
 msgid "List 25 items per page."
-msgstr ""
+msgstr "List 25 items per page."
 
 #: src/docs_inc.c:5336
 msgid "List 50 items per page."
-msgstr ""
+msgstr "List 50 items per page."
 
 #: src/docs_inc.c:5348
 msgid "List all items on a single page."
-msgstr ""
+msgstr "List all items on a single page."
 
 #: src/docs_inc.c:916
 msgid "List of features"
@@ -5252,7 +5256,7 @@ msgstr "Program episode"
 
 #: src/docs_inc.c:5590 src/docs_inc.c:5690 src/docs_inc.c:5798
 msgid "Program episode number"
-msgstr ""
+msgstr "Program episode number"
 
 #: src/docs_inc.c:266
 msgid "Program event details and recording"
@@ -5260,7 +5264,7 @@ msgstr "Program event details and recording"
 
 #: src/docs_inc.c:5586 src/docs_inc.c:5686 src/docs_inc.c:5794
 msgid "Program season number"
-msgstr ""
+msgstr "Program season number"
 
 #: src/docs_inc.c:5574 src/docs_inc.c:5678 src/docs_inc.c:5782
 msgid "Program subtitle"
@@ -5280,7 +5284,7 @@ msgstr "Program title"
 
 #: src/docs_inc.c:42
 msgid "Project docmentation"
-msgstr ""
+msgstr "Project docmentation"
 
 #: src/docs_inc.c:40
 msgid "Project website"
@@ -5344,7 +5348,7 @@ msgstr "Queue profiling"
 
 #: src/docs_inc.c:59
 msgid "README"
-msgstr ""
+msgstr "README"
 
 #: src/docs_inc.c:3331
 msgid "RTSP Protocol"
@@ -6615,6 +6619,14 @@ msgid ""
 "for all matching users having the change parameter flag set are added "
 "together."
 msgstr ""
+"The _Change parameters_ flag allows you to control which parameters "
+"(permission flags, all types of profiles, channel tags and ranges) are "
+"combined when multiple entries match a username/login. When the change "
+"parameter flag is enabled (checked) for a parameter, the setting for this "
+"user overrides any previous entry (though it can in turn be overridden by a "
+"later entry). The exception is the __rights__ option where the permissions "
+"for all matching users having the change parameter flag set are added "
+"together."
 
 #: src/docs_inc.c:4896
 msgid ""
@@ -6687,6 +6699,8 @@ msgid ""
 "The `$B` and `$A` formats also have numeric modifiers to specify when zero "
 "padded values are required."
 msgstr ""
+"The `$B` and `$A` formats also have numeric modifiers to specify when zero "
+"padded values are required."
 
 #: src/docs_inc.c:5466
 msgid ""
@@ -7419,6 +7433,10 @@ msgid ""
 "every step or answer every question: more details are available in the "
 "Tvheadend"
 msgstr ""
+"This guide is intended to give you a high-level overview of how to set up "
+"and use Tvheadend. It does not aim to provide a complete description of "
+"every step or answer every question: more details are available in the "
+"Tvheadend"
 
 #: src/docs_inc.c:1696 src/docs_inc.c:1745 src/docs_inc.c:1780
 #: src/docs_inc.c:1843
@@ -7556,6 +7574,8 @@ msgid ""
 "This setting can be overridden on a page-by-page basis using the drop-down "
 "box."
 msgstr ""
+"This setting can be overridden on a page-by-page basis using the drop-down "
+"box."
 
 #: src/docs_inc.c:5214 src/docs_inc.c:5988 src/docs_inc.c:6046
 #: src/docs_inc.c:6074
@@ -8569,6 +8589,9 @@ msgid ""
 "$A/$2B-$u$n.$x` would produce a recording named "
 "`/path/to/recordings/Bones/Season 2/06-The Girl in Suite 2103.ts`."
 msgstr ""
+"With sufficiently accurate EPG data, the formatting string `$t/Season "
+"$A/$2B-$u$n.$x` would produce a recording named "
+"`/path/to/recordings/Bones/Season 2/06-The Girl in Suite 2103.ts`."
 
 #: src/docs_inc.c:654
 msgid "Wizard"
@@ -8734,6 +8757,7 @@ msgstr ""
 msgid ""
 "You may further customise your settings by editing channel numbers, etc."
 msgstr ""
+"You may further customise your settings by editing channel numbers, etc."
 
 #: src/docs_inc.c:2959
 msgid "You may import your own bouquet using enigma2 (.tv) formatted files."
@@ -9076,6 +9100,8 @@ msgid ""
 "__Note:__ If the directory name starts with $$, then format string "
 "substitution from the"
 msgstr ""
+"__Note:__ If the directory name starts with $$, then format string "
+"substitution from the"
 
 #: src/docs_inc.c:814
 msgid ""
@@ -9339,19 +9365,19 @@ msgstr ""
 
 #: src/docs_inc.c:5496
 msgid "`$2A` would insert `02` into the file name."
-msgstr ""
+msgstr "`$2A` would insert `02` into the file name."
 
 #: src/docs_inc.c:5500
 msgid "`$3B` would insert `006` into the file name."
-msgstr ""
+msgstr "`$3B` would insert `006` into the file name."
 
 #: src/docs_inc.c:5494
 msgid "`$A` would insert `2` into the file name."
-msgstr ""
+msgstr "`$A` would insert `2` into the file name."
 
 #: src/docs_inc.c:5498
 msgid "`$B` would insert `6` into the file name."
-msgstr ""
+msgstr "`$B` would insert `6` into the file name."
 
 #: src/docs_inc.c:3345
 msgid "access"
@@ -9550,7 +9576,7 @@ msgstr "display-name"
 
 #: src/docs_inc.c:1572
 msgid "documentation"
-msgstr ""
+msgstr "documentation"
 
 #: src/docs_inc.c:6102 src/docs_inc.c:6130
 msgid "donate"
@@ -9790,7 +9816,7 @@ msgstr "is a unique ID."
 
 #: src/docs_inc.c:4650
 msgid "is also performed here."
-msgstr ""
+msgstr "is also performed here."
 
 #: src/docs_inc.c:162
 msgid "is the RTSP server listening port."
