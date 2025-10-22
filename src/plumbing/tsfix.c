@@ -481,7 +481,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       case PKT_I_FRAME:
       case PKT_P_FRAME:
         if (pkt->pkt_pts == PTS_UNSET) {
-	  /* Presentation occures at DTS of next I or P frame,
+	  /* Presentation occurs at DTS of next I or P frame,
 	     try to find it */
           total = 0;
           PKTREF_FOREACH(srch, &tf->tf_ptsq) {

@@ -455,7 +455,7 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
     // parameters are required to make mpeg-ts output compliant with mpeg-ts standard
     // implemented using documentation: https://ffmpeg.org/ffmpeg-formats.html#mpegts-1
     if (lm->m_config.u.transcode.m_rewrite_sid > 0) {
-      // override from profile requested by teh user
+      // override from profile requested by the user
       snprintf(mpegts_info, sizeof(mpegts_info), "0x%04x", lm->m_config.u.transcode.m_rewrite_sid);
       tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_service_id = %s", mpegts_info);
       av_dict_set(&opts, "mpegts_service_id", mpegts_info, 0);

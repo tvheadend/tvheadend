@@ -644,7 +644,7 @@ const idclass_t ratinglabel_class = {
       .type     = PT_STR,
       .id       = "country",
       .name     = N_("Country"),
-      .desc     = N_("Country recieved via OTA EPG."),
+      .desc     = N_("Country received via OTA EPG."),
       .off      = offsetof(ratinglabel_t, rl_country),
     },
     {

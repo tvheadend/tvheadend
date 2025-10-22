@@ -110,10 +110,10 @@ void pkt_ref_inc_poly(th_pkt_t *pkt, int n);
 
 void pktref_clear_queue(struct th_pktref_queue *q);
 
-// Reference count is transfered to queue
+// Reference count is transferred to queue
 void pktref_enqueue(struct th_pktref_queue *q, th_pkt_t *pkt);
 
-// Reference count is transfered to queue
+// Reference count is transferred to queue
 void pktref_enqueue_sorted(struct th_pktref_queue *q, th_pkt_t *pkt,
                            int (*cmp)(const void *, const void *));
 

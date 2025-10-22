@@ -518,7 +518,7 @@ typedef struct {
  * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
  * @note
  * int:
- * 0 - Unconstrained (usefull for debug)
+ * 0 - Unconstrained (useful for debug)
  * 1 - Intel
  * 2 - AMD
  */
