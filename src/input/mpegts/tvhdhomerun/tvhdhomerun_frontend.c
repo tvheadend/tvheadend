@@ -126,7 +126,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
     return NULL;
   }
 
-  /* important: we need large rx buffers to accomodate the large amount of traffic */
+  /* important: we need large rx buffers to accommodate the large amount of traffic */
   if(setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, (char *) &rx_size, sizeof(rx_size)) < 0) {
     tvhwarn(LS_TVHDHOMERUN, "failed set socket rx buffer size, expect CC errors (%d)", errno);
   }

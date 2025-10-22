@@ -143,7 +143,7 @@ do {									  \
 
 
 /**
- * Insert a new node, if a collision occures the colliding node is returned
+ * Insert a new node, if a collision occurs the colliding node is returned
  */
 #define RB_INSERT_SORTED(head, skel, field, cmpfunc)			 \
 ({									 \

@@ -596,7 +596,7 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
     switch (self->platform) {
         case VAAPI_ENC_PLATFORM_UNCONSTRAINED:
             // Uncontrained --> will allow any combination of parameters (valid or invalid)
-            // this mode is usefull fur future platform and for debugging.
+            // this mode is useful for future platform and for debugging.
             if (self->b_reference) {
                 // b_depth
                 AV_DICT_SET_INT(LST_VAAPI, opts, "b_depth", self->b_reference, AV_DICT_DONT_OVERWRITE);
@@ -910,7 +910,7 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
     switch (self->platform) {
         case VAAPI_ENC_PLATFORM_UNCONSTRAINED:
             // Unconstrained --> will allow any combination of parameters (valid or invalid)
-            // this mode is usefull fur future platform and for debugging.
+            // this mode is useful for future platform and for debugging.
             if (self->b_reference) {
                 // b_depth
                 AV_DICT_SET_INT(LST_VAAPI, opts, "b_depth", self->b_reference, AV_DICT_DONT_OVERWRITE);
@@ -1198,7 +1198,7 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
     switch (self->platform) {
         case VAAPI_ENC_PLATFORM_UNCONSTRAINED:
             // Unconstrained --> will allow any combination of parameters (valid or invalid)
-            // this mode is usefull fur future platform and for debugging.
+            // this mode is useful for future platform and for debugging.
             if (self->b_reference) {
                 // b_depth
                 AV_DICT_SET_INT(LST_VAAPI, opts, "b_depth", self->b_reference, AV_DICT_DONT_OVERWRITE);
@@ -1506,7 +1506,7 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
     switch (self->platform) {
         case VAAPI_ENC_PLATFORM_UNCONSTRAINED:
             // Unconstrained --> will allow any combination of parameters (valid or invalid)
-            // this mode is usefull fur future platform and for debugging.
+            // this mode is useful for future platform and for debugging.
             if (self->b_reference) {
                 // b_depth
                 AV_DICT_SET_INT(LST_VAAPI, opts, "b_depth", self->b_reference, AV_DICT_DONT_OVERWRITE);
