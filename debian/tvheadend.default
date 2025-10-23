@@ -35,7 +35,7 @@ TVH_ADAPTERS=""
 
 # TVH_IPV6
 #   if set to 1 will enable IPv6 support
-TVH_IPV6=0
+TVH_IPV6=1
 
 # TVH_HTTP_PORT
 #   if set to "" will use binary default
