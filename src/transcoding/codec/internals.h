@@ -155,13 +155,16 @@
 #define AV_DICT_SET_FLAGS_GLOBAL_HEADER(s, d) \
     AV_DICT_SET_FLAGS((s), (d), "+global_header")
 
+// Defines the maximum bitrate value to avoid exceeding int64_t limits after multiplication
+#define BITRATE_MAX ((double)((1ULL) << 53))
+
 #define AV_DICT_SET_BIT_RATE(s, d, v) \
     do { \
         int64_t bitrate = 0; \
-        if ((v) <= (INT64_MAX / 1000) && (v) >= 0) \
-            bitrate = (int64_t)((v) * 1000); \
+        if ((v) <= BITRATE_MAX && (v) >= 0.0) \
+            bitrate = (int64_t)((v) * 1000.0); \
         else \
-            tvherror_transcode((s), "bitrate value too large to fit in int64_t: %g or negative", (v) * 1000); \
+            tvherror_transcode((s), "bitrate value too large to fit in int64_t: %g or negative", (v) * 1000.0); \
         AV_DICT_SET_INT((s), (d), "b", bitrate, AV_DICT_DONT_OVERWRITE); \
     } while (0)
 
