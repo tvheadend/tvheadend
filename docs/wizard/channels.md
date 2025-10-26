@@ -12,4 +12,4 @@ If you require further help, check out
 Thank you for using Tvheadend (and don't forget to
 [donate](https://opencollective.com/tvheadend/donate))! :)
 
-[![Donate to TVHeadEnd](static/img/opencollective.png)](https://opencollective.com/tvheadend/donate)
+[![Donate to Tvheadend](static/img/opencollective.png)](https://opencollective.com/tvheadend/donate)

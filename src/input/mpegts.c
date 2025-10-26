@@ -1,5 +1,5 @@
 /*
- *  TVheadend
+ *  Tvheadend
  *  Copyright (C) 2013 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
