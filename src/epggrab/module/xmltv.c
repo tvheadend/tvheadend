@@ -101,7 +101,7 @@ static time_t _xmltv_str2time(const char *in)
 }
 
 /**
- * This is probably the most obscure formating there is. From xmltv.dtd:
+ * This is probably the most obscure formatting there is. From xmltv.dtd:
  *
  *
  * xmltv_ns: This is intended to be a general way to number episodes and
@@ -112,7 +112,7 @@ static time_t _xmltv_str2time(const char *in)
  * they can be given in the form 'X/Y' to show series X out of Y series
  * made, or episode X out of Y episodes in this series, or part X of a
  * Y-part episode.  If any of these aren't known they can be omitted.
- * You can put spaces whereever you like to make things easier to read.
+ * You can put spaces wherever you like to make things easier to read.
  *
  * (NB 'part number' is not used when a whole programme is split in two
  * for purely scheduling reasons; it's intended for cases where there
@@ -461,7 +461,7 @@ static int _xmltv_parse_age_rating
 
   //Clear the rating label.
   //If the event is already in the EPG DB with another
-  //rating label, this will clear the existing rating lable
+  //rating label, this will clear the existing rating label
   //prior to setting the new one -if- the new one
   //just happens to be null.
   ebc->rating_label = rl;

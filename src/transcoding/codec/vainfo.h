@@ -104,7 +104,7 @@ int vainfo_init(int show_log);
 
 
 /**
- * VAINFO Encoder availablity.
+ * VAINFO Encoder availability.
  *
  * @note
  * param: CODEC_ID

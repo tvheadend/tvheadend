@@ -382,7 +382,7 @@ linuxdvb_adapter_add ( const char *path )
     return;
 
   /* Note: some of the below can take a while, so we relinquish the lock
-   *       to stop us blocking everyhing else
+   *       to stop us blocking everything else
    */
   tvh_mutex_unlock(&global_lock);
 
@@ -505,7 +505,7 @@ linuxdvb_adapter_add ( const char *path )
    * In both modes also a secX or ciX device is create additionally. In the
    * first mode (adapter_alloc=3 and redirect) this shall be ignored. In the
    * second mode it needs to be associated with the caX device and later on
-   * used to send/receive the crypted/decrypted TS stream to/from the CAM.
+   * used to send/receive the encrypted/decrypted TS stream to/from the CAM.
    *
    */
 

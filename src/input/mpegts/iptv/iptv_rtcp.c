@@ -261,7 +261,7 @@ rtcp_send(rtcp_t *info, sbuf_t *buffer)
 
 /*
  Send a complete receiver report (RR).
- It uses the actual informations stored in rtcp_info.
+ It uses the actual information stored in rtcp_info.
  */
 static void
 rtcp_send_rr(rtcp_t *info)

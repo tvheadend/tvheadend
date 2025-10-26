@@ -1234,7 +1234,7 @@ capmt_send_key(capmt_t *capmt)
     if (cai->cipher_mode == CA_MODE_ECB) {
       type = DESCRAMBLER_AES_ECB;
     } else {
-      tvherror(LS_CAPMT, "uknown cipher mode %d", cai->cipher_mode);
+      tvherror(LS_CAPMT, "unknown cipher mode %d", cai->cipher_mode);
       return;
     }
     break;

@@ -276,7 +276,7 @@ const idclass_t satip_device_class =
       .type     = PT_BOOL,
       .id       = "tcp_mode",
       .name     = N_("RTP/AVP/TCP transport supported"),
-      .desc     = N_("The server suports the Interlaved TCP transfer mode "
+      .desc     = N_("The server supports the Interlaved TCP transfer mode "
                      "(embedded data in the RTSP session). Selecting this "
                      "option enables this mode in all tuners by default."),
       .opts     = PO_ADVANCED,
@@ -312,7 +312,7 @@ const idclass_t satip_device_class =
       .type     = PT_INT,
       .id       = "pids_max",
       .name     = N_("Maximum PIDs"),
-      .desc     = N_("Set the maxiumum packet identifiers your SAT>IP "
+      .desc     = N_("Set the maximum packet identifiers your SAT>IP "
                      "server supports."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_pids_max),
