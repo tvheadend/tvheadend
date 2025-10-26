@@ -119,7 +119,7 @@ def load_muxes ( path, adps ):
   # Done
   return muxs
 
-# Servies
+# Services
 def load_services ( path, muxs ):
   svcs = {}
   maps = {

@@ -143,9 +143,9 @@ if enabled_or_auto ccache; then
   fi
 fi
 
-# Valiate compiler
+# Validate compiler
 check_cc || die 'No C compiler found'
-# We only want libunwind on non-linux plaforms where we have had bad
+# We only want libunwind on non-linux platforms where we have had bad
 # stack traces from existing implementation.
 if [ ${PLATFORM} = "freebsd" ]; then
     check_cc_header libunwind
@@ -361,7 +361,7 @@ int test(void)
 '
 
 # a check for the external (gnu)iconv library
-# for build-in libc iconv routines this check should fail
+# for built-in libc iconv routines this check should fail
 # note that iconv routines are mandatory
 check_cc_snippet gnu_libiconv '
 #include <gnu-libiconv/iconv.h>
@@ -388,7 +388,7 @@ if enabled gnu_libiconv; then
 elif enabled libiconv; then
   printf "    ^ using external iconv library\n"
 else
-  printf "    ^ using build-in glibc iconv routines\n"
+  printf "    ^ using built-in glibc iconv routines\n"
 fi
 
 check_cc_snippet ifnames '
