@@ -168,11 +168,14 @@
         AV_DICT_SET_INT((s), (d), "b", bitrate, AV_DICT_DONT_OVERWRITE); \
     } while (0)
 
+// Defines the maximum global quality value to avoid exceeding int64_t limits after multiplication
+#define GLOBAL_QUALITY_MAX ((double)((1ULL) << 56))
+
 #define AV_DICT_SET_GLOBAL_QUALITY(s, d, v, a) \
     do { \
         AV_DICT_SET_FLAGS((s), (d), "+qscale"); \
         int64_t global_quality = 0; \
-        if (((v) <= (INT64_MAX / FF_QP2LAMBDA) && (v) > 0) || ((v) == 0 && (a) <= (INT64_MAX / FF_QP2LAMBDA))) \
+        if (((v) <= GLOBAL_QUALITY_MAX && (v) > 0.0) || ((v) == 0.0 && (a) <= GLOBAL_QUALITY_MAX)) \
             global_quality = (int64_t)(((v) ? (v) : (a)) * FF_QP2LAMBDA); \
         else \
             tvherror_transcode((s), "global_quality value too large to fit in int64_t: %g", ((v) ? (v) : (a)) * FF_QP2LAMBDA); \
