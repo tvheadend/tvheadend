@@ -355,9 +355,9 @@ Ext.DomHelper = function(){
         ts = '<table>',
         te = '</table>',
         tbs = ts+'<tbody>',
-        the = '</tbody>'+te,
+        tbe = '</tbody>'+te,
         trs = tbs + '<tr>',
-        tree = '</tr>'+the;
+        tre = '</tr>'+tbe;
 
     
     function doInsert(el, o, returnElement, pos, sibling, append){
@@ -454,10 +454,10 @@ Ext.DomHelper = function(){
         }
 
         if (tag == 'td' || (tag == 'tr' && (where == beforeend || where == afterbegin))) {
-            node = ieTable(4, trs, html, tree);
+            node = ieTable(4, trs, html, tre);
         } else if ((tag == 'tbody' && (where == beforeend || where == afterbegin)) ||
                    (tag == 'tr' && (where == beforebegin || where == afterend))) {
-            node = ieTable(3, tbs, html, the);
+            node = ieTable(3, tbs, html, tbe);
         } else {
             node = ieTable(2, ts, html, te);
         }
@@ -12682,14 +12682,14 @@ Ext.Shadow.prototype = {
             sw = (w + a.w),
             sh = (h + a.h),
             sws = sw + "px",
-            ssh = sh + "px",
+            shs = sh + "px",
             cn,
             sww;
         s.left = (l + a.l) + "px";
         s.top = (t + a.t) + "px";
-        if (s.width != sws || s.height != ssh) {
+        if (s.width != sws || s.height != shs) {
             s.width = sws;
-            s.height = ssh;
+            s.height = shs;
             if (!Ext.isIE9m) {
                 cn = d.childNodes;
                 sww = Math.max(0, (sw - 12)) + "px";
@@ -22129,7 +22129,7 @@ Ext.extend(Ext.dd.DD, Ext.dd.DragDrop, {
             
             
             
-            var robot = (clientH + st - y - this.deltaY);
+            var toBot = (clientH + st - y - this.deltaY);
 
             
             var toRight = (clientW + sl - x - this.deltaX);
@@ -22146,7 +22146,7 @@ Ext.extend(Ext.dd.DD, Ext.dd.DragDrop, {
 
             
             
-            if ( bot > clientH && robot < thresh ) {
+            if ( bot > clientH && toBot < thresh ) {
                 window.scrollTo(sl, st + scrAmt);
             }
 

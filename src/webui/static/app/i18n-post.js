@@ -278,6 +278,6 @@ if(Ext.ux.grid.filter.DateFilter)
   Ext.apply(Ext.ux.grid.filter.DateFilter.prototype, {
     afterText: _('After'),
     beforeText: _('Before'),
-    context: _('On#DateFilter').split('#')[0],
+    onText: _('On#DateFilter').split('#')[0],
     dateFormat: _('m/d/Y#DateFilter').split('#')[0]
   });
