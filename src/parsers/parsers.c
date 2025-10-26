@@ -169,7 +169,7 @@ parser_backlog(parser_t *t, parser_es_t *st, th_pkt_t *pkt)
 {
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
   TAILQ_INSERT_TAIL(&st->es_backlog, sm, sm_link);
-  pkt_ref_dec(pkt); /* streaming_msg_create_pkt increses ref counter */
+  pkt_ref_dec(pkt); /* streaming_msg_create_pkt increases ref counter */
 
 #if ENABLE_TRACE
   if (tvhtrace_enabled()) {

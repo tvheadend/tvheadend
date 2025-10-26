@@ -109,7 +109,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   }
 
   if (aa->aa_conn_limit || aa->aa_conn_limit_dvr) {
-    rec_count = dvr_usage_count(aa) - 1; /* substract self */
+    rec_count = dvr_usage_count(aa) - 1; /* subtract self */
     net_count = aa->aa_conn_limit ? tcp_connection_count(aa) : 0;
     assert(rec_count >= 0);
     /* the rule is: allow if one condition is OK */
@@ -162,7 +162,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 					      buf, prch->prch_flags,
 					      NULL, aa->aa_username ?: "", NULL, NULL);
   if (de->de_s == NULL) {
-    tvherror(LS_DVR, "unable to create new channel subcription for '%s' profile '%s'",
+    tvherror(LS_DVR, "unable to create new channel subscription for '%s' profile '%s'",
              channel_get_name(de->de_channel, channel_blank_name), profile_get_name(pro));
     ret = -EINVAL;
     goto _return;

@@ -217,7 +217,7 @@ function updateFilters(form) {
         switch (form.findField('platform').getValue()) {
             case 0:
                 // Unconstrained --> will allow any combination of parameters (valid or invalid)
-                // this mode is usefull fur future platform and for debugging.
+                // this mode is useful fur future platform and for debugging.
                 // no filter applied
                 removeConstrains(form);
                 break;
