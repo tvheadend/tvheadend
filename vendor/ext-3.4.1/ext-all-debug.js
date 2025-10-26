@@ -355,9 +355,9 @@ Ext.DomHelper = function(){
         ts = '<table>',
         te = '</table>',
         tbs = ts+'<tbody>',
-        tbe = '</tbody>'+te,
+        the = '</tbody>'+te,
         trs = tbs + '<tr>',
-        tre = '</tr>'+tbe;
+        tree = '</tr>'+the;
 
     
     function doInsert(el, o, returnElement, pos, sibling, append){
@@ -454,10 +454,10 @@ Ext.DomHelper = function(){
         }
 
         if (tag == 'td' || (tag == 'tr' && (where == beforeend || where == afterbegin))) {
-            node = ieTable(4, trs, html, tre);
+            node = ieTable(4, trs, html, tree);
         } else if ((tag == 'tbody' && (where == beforeend || where == afterbegin)) ||
                    (tag == 'tr' && (where == beforebegin || where == afterend))) {
-            node = ieTable(3, tbs, html, tbe);
+            node = ieTable(3, tbs, html, the);
         } else {
             node = ieTable(2, ts, html, te);
         }
@@ -1318,7 +1318,7 @@ Ext.DomQuery = function(){
          * </ul></div>
          * <p>A filter function returns an Array of DOM elements which conform to the pseudo class.</p>
          * <p>In addition to the provided pseudo classes listed above such as <code>first-child</code> and <code>nth-child</code>,
-         * developers may add additional, custom psuedo class filters to select elements according to application-specific requirements.</p>
+         * developers may add additional, custom pseudo class filters to select elements according to application-specific requirements.</p>
          * <p>For example, to filter <code>&lt;a></code> elements to only return links to <i>external</i> resources:</p>
          * <code><pre>
 Ext.DomQuery.pseudos.external = function(c, v){
@@ -2199,7 +2199,7 @@ el.un('click', this.handlerFn);
      * <p>Updates the <a href="http:
      * from a specified URL. Note that this is subject to the <a href="http://en.wikipedia.org/wiki/Same_origin_policy">Same Origin Policy</a></p>
      * <p>Updating innerHTML of an element will <b>not</b> execute embedded <tt>&lt;script></tt> elements. This is a browser restriction.</p>
-     * @param {Mixed} options. Either a sring containing the URL from which to load the HTML, or an {@link Ext.Ajax#request} options object specifying
+     * @param {Mixed} options. Either a string containing the URL from which to load the HTML, or an {@link Ext.Ajax#request} options object specifying
      * exactly how to request the HTML.
      * @return {Ext.Element} this
      */
@@ -6593,7 +6593,7 @@ btn.on('click', Ext.createDelegate(sayHi, btn, ['Fred']));
     },
 
     /**
-     * Calls this function after the number of millseconds specified, optionally in a specific scope. Example usage:
+     * Calls this function after the number of milliseconds specified, optionally in a specific scope. Example usage:
      * <pre><code>
 var sayHi = function(name){
     alert('Hi, ' + name);
@@ -12682,14 +12682,14 @@ Ext.Shadow.prototype = {
             sw = (w + a.w),
             sh = (h + a.h),
             sws = sw + "px",
-            shs = sh + "px",
+            ssh = sh + "px",
             cn,
             sww;
         s.left = (l + a.l) + "px";
         s.top = (t + a.t) + "px";
-        if (s.width != sws || s.height != shs) {
+        if (s.width != sws || s.height != ssh) {
             s.width = sws;
-            s.height = shs;
+            s.height = ssh;
             if (!Ext.isIE9m) {
                 cn = d.childNodes;
                 sww = Math.max(0, (sw - 12)) + "px";
@@ -22129,7 +22129,7 @@ Ext.extend(Ext.dd.DD, Ext.dd.DragDrop, {
             
             
             
-            var toBot = (clientH + st - y - this.deltaY);
+            var robot = (clientH + st - y - this.deltaY);
 
             
             var toRight = (clientW + sl - x - this.deltaX);
@@ -22146,7 +22146,7 @@ Ext.extend(Ext.dd.DD, Ext.dd.DragDrop, {
 
             
             
-            if ( bot > clientH && toBot < thresh ) {
+            if ( bot > clientH && robot < thresh ) {
                 window.scrollTo(sl, st + scrAmt);
             }
 
@@ -39491,7 +39491,7 @@ Ext.form.TriggerField = Ext.extend(Ext.form.TextField,  {
     
     deferHeight : true,
     
-    mimicing : false,
+    mimicking : false,
 
     actionMode: 'wrap',
 
@@ -39603,7 +39603,7 @@ Ext.form.TriggerField = Ext.extend(Ext.form.TextField,  {
     
     onDestroy : function(){
         Ext.destroy(this.trigger, this.wrap);
-        if (this.mimicing){
+        if (this.mimicking){
             this.doc.un('mousedown', this.mimicBlur, this);
         }
         delete this.doc;
@@ -39613,9 +39613,9 @@ Ext.form.TriggerField = Ext.extend(Ext.form.TextField,  {
     
     onFocus : function(){
         Ext.form.TriggerField.superclass.onFocus.call(this);
-        if(!this.mimicing){
+        if(!this.mimicking){
             this.wrap.addClass(this.wrapFocusClass);
-            this.mimicing = true;
+            this.mimicking = true;
             this.doc.on('mousedown', this.mimicBlur, this, {delay: 10});
             if(this.monitorTab){
                 this.on('specialkey', this.checkTab, this);
@@ -39642,7 +39642,7 @@ Ext.form.TriggerField = Ext.extend(Ext.form.TextField,  {
 
     
     triggerBlur : function(){
-        this.mimicing = false;
+        this.mimicking = false;
         this.doc.un('mousedown', this.mimicBlur, this);
         if(this.monitorTab && this.el){
             this.un('specialkey', this.checkTab, this);
