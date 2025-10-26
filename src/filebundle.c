@@ -67,7 +67,7 @@ struct filebundle_file
 };
 
 /* **************************************************************************
- * Miscellanous
+ * Miscellaneous
  * *************************************************************************/
 
 /* Get path stats */
@@ -113,7 +113,7 @@ static fb_dir *_fb_opendir ( const char *root, const char *path )
   char buf[512];
   fb_dir *ret = NULL;
 
-  /* Pre-pend root */
+  /* Prepend root */
   if (root) {
     snprintf(buf, sizeof(buf), "%s/%s", root, path);
     path = buf;

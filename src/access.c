@@ -2551,7 +2551,7 @@ access_init(int createdefault, int noacl)
 
     idnode_changed(&ae->ae_id);
 
-    tvhwarn(LS_ACCESS, "Created default wide open access controle entry");
+    tvhwarn(LS_ACCESS, "Created default wide open access control entry");
   }
 
   if(!TAILQ_FIRST(&access_entries) && !noacl)

@@ -437,7 +437,7 @@ ratinglabel_delete(ratinglabel_t *rl)
 
       tvhtrace(LS_RATINGLABELS, "Found '%d' EPG entries when deleting rating label.", foundCount);
 
-      //Now check for any upcomming recordings that use this RL and remove their RL UUID.
+      //Now check for any upcoming recordings that use this RL and remove their RL UUID.
       foundCount = 0;
 
       LIST_FOREACH(de, &dvrentries, de_global_link){
@@ -451,7 +451,7 @@ ratinglabel_delete(ratinglabel_t *rl)
           }
       }
 
-      tvhtrace(LS_RATINGLABELS, "Found '%d' upcomming recordings when deleting rating label.", foundCount);
+      tvhtrace(LS_RATINGLABELS, "Found '%d' upcoming recordings when deleting rating label.", foundCount);
 
       ratinglabel_destroy(rl);
   } else {
@@ -515,7 +515,7 @@ ratinglabel_class_save(idnode_t *self, char *filename, size_t fsize)
 
   foundCount = 0;
 
-  //Check for upcomming recordings that need their saved RL details to be updated.
+  //Check for upcoming recordings that need their saved RL details to be updated.
   LIST_FOREACH(de, &dvrentries, de_global_link){
       if (dvr_entry_is_upcoming(de)){
         if(de->de_rating_label == rl){
@@ -555,7 +555,7 @@ ratinglabel_class_save(idnode_t *self, char *filename, size_t fsize)
       }//END we got an upcomminf
   }//END loop through recordings
 
-  tvhtrace(LS_RATINGLABELS, "Found '%d' upcomming recordings when updating rating label.", foundCount);
+  tvhtrace(LS_RATINGLABELS, "Found '%d' upcoming recordings when updating rating label.", foundCount);
 
   return c;
 }
@@ -566,7 +566,7 @@ ratinglabel_class_delete(idnode_t *self)
   ratinglabel_delete((ratinglabel_t *)self);
 }
 
-//For compatability, return the 'display label' if the 'title' is requested
+//For compatibility, return the 'display label' if the 'title' is requested
 //because RLs don't have a title.
 static void
 ratinglabel_class_get_title
