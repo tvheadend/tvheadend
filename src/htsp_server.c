@@ -4628,7 +4628,7 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
       tvhdebug(LS_HTSP, "%s - first packet", hs->hs_htsp->htsp_logname);
     hs->hs_first = 1;
     htsp_stream_deliver(hs, sm->sm_data);
-    // reference is transfered
+    // reference is transferred
     sm->sm_data = NULL;
     break;
 

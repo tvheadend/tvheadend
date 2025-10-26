@@ -936,10 +936,10 @@ epggrab_ota_init ( void )
   mpegts_add_listener(&ml);
 
   /* Delete old config */
-  hts_settings_buildpath(path, sizeof(path), "epggrab/otamux");
-  if (!lstat(path, &st))
-    if (!S_ISDIR(st.st_mode))
-      hts_settings_remove("epggrab/otamux");
+  if (!hts_settings_buildpath(path, sizeof(path), "epggrab/otamux"))
+    if (!lstat(path, &st))
+      if (!S_ISDIR(st.st_mode))
+        hts_settings_remove("epggrab/otamux");
 
   atomic_set(&epggrab_ota_running, 1);
 
