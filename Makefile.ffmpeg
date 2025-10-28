@@ -106,10 +106,10 @@ FFNVCODEC_TB   = $(FFNVCODEC).tar.gz
 FFNVCODEC_URL  = https://github.com/FFmpeg/nv-codec-headers/releases/download/n$(FFNVCODEC_VER)/nv-codec-headers-$(FFNVCODEC_VER).tar.gz
 FFNVCODEC_SHA1 = 74231bb5572ebde98652a26ce98ede7895b4c730
 
-FFMPEG         = ffmpeg-6.1.1
+FFMPEG         = ffmpeg-5.1
 FFMPEG_TB      = $(FFMPEG).tar.gz
 FFMPEG_URL     = https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n6.1.1.tar.gz
-FFMPEG_SHA1    = skip
+FFMPEG_SHA1    = 39d273f453a6d1ffd5b9db8523fb65488d311b32
 
 
 # ##############################################################################
