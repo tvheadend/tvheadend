@@ -96,12 +96,14 @@ define DOWNLOAD
 		file=$$(basename $(2)); \
 		cp "$$TVHEADEND_FILE_CACHE/$${file}" $(2); \
 	fi
-	@{ \
+	@if [ "$(3)" != "skip" ]; then \
 		sum=$$(sha1sum $(2) | cut -d ' ' -f 1); \
 		printf "SHA1SUM test '$${sum}' == '$(3)': "; \
 		test "y$${sum}" = "y$(3)"; \
-	}
-	@echo "OK"
+		echo "OK"; \
+	else \
+		echo "SHA1SUM check skipped"; \
+	fi
 endef
 
 define UNTAR

@@ -97,8 +97,8 @@ LIBFDKAAC_SHA1 = a7f42c67c0b82cdb2cd773d3ec31042fb5647c0d
 
 LIBOPUS        = opus-1.3.1
 LIBOPUS_TB     = $(LIBOPUS).tar.gz
-LIBOPUS_URL    = https://archive.mozilla.org/pub/opus/$(LIBOPUS_TB)
-LIBOPUS_SHA1   = ed226536537861c9f0f1ef7ca79dffc225bc181b
+LIBOPUS_URL    = https://github.com/xiph/opus/archive/refs/tags/v1.3.1.tar.gz
+LIBOPUS_SHA1   = skip
 
 FFNVCODEC_VER  = 12.1.14.0
 FFNVCODEC      = nv-codec-headers-$(FFNVCODEC_VER)
@@ -107,9 +107,9 @@ FFNVCODEC_URL  = https://github.com/FFmpeg/nv-codec-headers/releases/download/n$
 FFNVCODEC_SHA1 = 74231bb5572ebde98652a26ce98ede7895b4c730
 
 FFMPEG         = ffmpeg-6.1.1
-FFMPEG_TB      = $(FFMPEG).tar.bz2
-FFMPEG_URL     = https://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = 157e7b0f6521142e1ebd786175e363e9f1b59312
+FFMPEG_TB      = $(FFMPEG).tar.gz
+FFMPEG_URL     = https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n6.1.1.tar.gz
+FFMPEG_SHA1    = skip
 
 
 # ##############################################################################
@@ -535,6 +535,7 @@ ifeq (yes,$(CONFIG_LIBOPUS_STATIC))
 $(LIB_ROOT)/$(LIBOPUS)/.tvh_download:
 	$(call DOWNLOAD,$(LIBOPUS_URL),$(LIB_ROOT)/$(LIBOPUS_TB),$(LIBOPUS_SHA1))
 	$(call UNTAR,$(LIBOPUS_TB),z)
+	@if [ -d "$(LIB_ROOT)/opus-1.3.1" ]; then :; elif [ -d "$(LIB_ROOT)/opus-v1.3.1" ]; then mv "$(LIB_ROOT)/opus-v1.3.1" "$(LIB_ROOT)/$(LIBOPUS)"; fi
 	@touch $@
 
 $(LIB_ROOT)/$(LIBOPUS)/.tvh_build: \
@@ -674,7 +675,8 @@ endif
 $(LIB_ROOT)/$(FFMPEG)/.tvh_download:
 	@mkdir -p $(EBUILDIR)
 	$(call DOWNLOAD,$(FFMPEG_URL),$(LIB_ROOT)/$(FFMPEG_TB),$(FFMPEG_SHA1))
-	$(call UNTAR,$(FFMPEG_TB),j)
+	$(call UNTAR,$(FFMPEG_TB),z)
+	@if [ -d "$(LIB_ROOT)/FFmpeg-n6.1.1" ]; then mv "$(LIB_ROOT)/FFmpeg-n6.1.1" "$(LIB_ROOT)/$(FFMPEG)"; fi
 	$(call PATCH,$(FFMPEG),$(FFMPEG_DIFFS))
 	@touch $@
 
