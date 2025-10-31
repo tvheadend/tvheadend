@@ -198,7 +198,6 @@ enum {
   LS_TSFILE,
   LS_TSDEBUG,
   LS_CODEC,
-  LS_VAINFO,
 #if ENABLE_DDCI
   LS_DDCI,
 #endif
@@ -227,6 +226,7 @@ enum {
     LST_NVENC,
     LST_OMX,
     LST_VAAPI,
+    LST_VAINFO,
     LST_LAST     /* keep this last */
 };
 
