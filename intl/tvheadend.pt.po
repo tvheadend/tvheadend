@@ -3165,7 +3165,7 @@ msgid ""
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
 "the access control from within the Tvheadend web interface."
-msgstr "Se não existir uma conta de utilizador, criar então\numa sem username e password. Utilizar com cuidado\npois pode permitir acessos indevidos de administrador \nà sua conta do Tvheadend, até editar ou criar um controlo de acesso\natravés da interface Web do TVheadend"
+msgstr "Se não existir uma conta de utilizador, criar então\numa sem username e password. Utilizar com cuidado\npois pode permitir acessos indevidos de administrador \nà sua conta do Tvheadend, até editar ou criar um controlo de acesso\natravés da interface Web do Tvheadend"
 
 #: src/timeshift.c:285
 msgid ""
