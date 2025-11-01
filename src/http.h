@@ -164,7 +164,7 @@ typedef struct http_connection {
 
   http_arg_list_t hc_args;
 
-  http_arg_list_t hc_req_args; /* Argumets from GET or POST request */
+  http_arg_list_t hc_req_args; /* Arguments from GET or POST request */
 
   http_state_t    hc_state;
   http_cmd_t      hc_cmd;

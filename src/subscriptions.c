@@ -758,7 +758,7 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
  * *************************************************************************/
 
 /*
- * Generic handler for all susbcription creation
+ * Generic handler for all subscription creation
  */
 th_subscription_t *
 subscription_create

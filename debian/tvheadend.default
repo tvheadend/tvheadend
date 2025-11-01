@@ -28,7 +28,7 @@ TVH_CONF_DIR=""
 
 # TVH_ADAPTERS
 #   if set to "" will use all available adapters
-#   for select adapters use comma seperated list of adapter
+#   for select adapters use comma separated list of adapter
 #   numbers, i.e. to use /dev/dvb/adapter0 and /dev/dvb/adapter1 only
 #   set as "0,1"
 TVH_ADAPTERS=""

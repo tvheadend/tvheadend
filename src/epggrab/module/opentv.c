@@ -1112,7 +1112,7 @@ void opentv_init ( void )
   /* Load dictionaries */
   if ((m = hts_settings_load("epggrab/opentv/dict")))
     _opentv_dict_load(m);
-  tvhdebug(LS_OPENTV, "dictonaries loaded");
+  tvhdebug(LS_OPENTV, "dictionaries loaded");
 
   /* Load genres */
   if ((m = hts_settings_load("epggrab/opentv/genre")))

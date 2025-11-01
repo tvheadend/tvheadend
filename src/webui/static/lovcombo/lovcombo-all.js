@@ -163,7 +163,7 @@ Ext.ux.form.LovCombo = Ext.extend(Ext.ux.form.ComboAny, {
     // }}}
 	// {{{
 	/**
-	 * Disables default tab key bahavior
+	 * Disables default tab key behaviour
 	 * @private
 	 */
 	,initEvents:function() {

@@ -181,7 +181,7 @@ go and get the signal for you.
 
 The following diagram explains the relationship between these components:
 
-![Relationship Between Tuners, Neworks, Muxes, Services and Channels](static/img/doc/introduction/schematic.png)
+![Relationship Between Tuners, Networks, Muxes, Services and Channels](static/img/doc/introduction/schematic.png)
 
 ---
 

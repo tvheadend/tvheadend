@@ -32,7 +32,7 @@
 
 typedef enum rtp_transport_mode
 {
-  RTP_SERVER_DEFAULT,     // Use server configuretion
+  RTP_SERVER_DEFAULT,     // Use server configuration
   RTP_UDP,                // Use regular RTP/AVP_UDP
   RTP_INTERLEAVED,        // Use Interleaved RTP/AVP/TCP
 } rtp_transport_mode_t;

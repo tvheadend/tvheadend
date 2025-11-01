@@ -53,7 +53,7 @@ If you have multiple EPG sources for different groups of channels, it is possibl
 
 The same rating label can be used for both DVB OTA and XMLTV EPG sources.  Because DVB OTA is matched on Country+Age and XMLTV is matched on Authority+Label, a rating label that contains all 4 of these values will be selected and the 'display age' and 'display label' will be used for both EPG sources.
 
-Sources can also be kept seperated by ensuring that a DVB OTA rating does not have an 'authority' that matches any XMLTV sources and that an XMLTV rating does not have an 'age' or 'country' that matches a DVB OTA source, only a 'display age'.
+Sources can also be kept separated by ensuring that a DVB OTA rating does not have an 'authority' that matches any XMLTV sources and that an XMLTV rating does not have an 'age' or 'country' that matches a DVB OTA source, only a 'display age'.
 
 
 ---

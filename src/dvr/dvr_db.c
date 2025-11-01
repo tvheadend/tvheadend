@@ -1951,7 +1951,7 @@ dvr_is_better_recording_timeslot(const epg_broadcast_t *new_bcast, const dvr_ent
     }
   }
 
-  /* Ealier start time is better; prefers non-timeshift channel X to X+1.
+  /* Earlier start time is better; prefers non-timeshift channel X to X+1.
    * This gives us time to reschedule to X+1 if the recording on X fails.
    *
    * However, when creating an autorec, it can match a programme that has
@@ -2872,7 +2872,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_running_t running)
       /*
        * make checking more robust
        * sometimes, the running bits are parsed randomly for a few moments
-       * so don't expect that the broacasting has only 5 seconds
+       * so don't expect that the broadcasting has only 5 seconds
        */
       if (de->de_running_start + 5 > gclk())
         continue;

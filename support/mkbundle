@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Replacement for old mkbundle script that creates a full file heirarchy
+# Replacement for old mkbundle script that creates a full file hierarchy
 #
 
 import os, sys, re

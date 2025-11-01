@@ -1941,7 +1941,7 @@ static access_t *hdhomerun_verify_user_permission(const http_connection_t *hc,
   access_t *perm = hc->hc_access;
 
   if (access_verify2(perm, ACCESS_STREAMING)) {
-    // Acces verification Failed 
+    // Access verification Failed 
     tvhwarn(LS_WEBUI, "hdhomerun server received request but no streaming permission for user [%s] [%d] [%s]",
             hdhr_user ?: "<none>",
             perm? perm->aa_rights : 0,

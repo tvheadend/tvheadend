@@ -37,7 +37,7 @@ Ext.ux.Spinner = Ext.extend(Ext.util.Observable, {
     constructor: function(config){
         Ext.ux.Spinner.superclass.constructor.call(this, config);
         Ext.apply(this, config);
-        this.mimicing = false;
+        this.mimicking = false;
     },
 
     init: function(field){
@@ -127,9 +127,9 @@ Ext.ux.Spinner = Ext.extend(Ext.util.Observable, {
     },
 
     doFocus: function(){
-        if (!this.mimicing) {
+        if (!this.mimicking) {
             this.wrap.addClass('x-trigger-wrap-focus');
-            this.mimicing = true;
+            this.mimicking = true;
             Ext.get(Ext.isIE ? document.body : document).on("mousedown", this.mimicBlur, this, {
                 delay: 10
             });
@@ -153,7 +153,7 @@ Ext.ux.Spinner = Ext.extend(Ext.util.Observable, {
 
     // private
     triggerBlur: function(){
-        this.mimicing = false;
+        this.mimicking = false;
         Ext.get(Ext.isIE ? document.body : document).un("mousedown", this.mimicBlur, this);
         this.el.un("keydown", this.checkTab, this);
         this.field.beforeBlur();
@@ -470,7 +470,7 @@ Ext.ux.Spinner = Ext.extend(Ext.util.Observable, {
         if (this.repeater) {
             this.repeater.purgeListeners();
         }
-        if (this.mimicing){
+        if (this.mimicking){
             Ext.get(Ext.isIE ? document.body : document).un("mousedown", this.mimicBlur, this);
         }
     }

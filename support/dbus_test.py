@@ -38,7 +38,7 @@ def cmd_ping(args):
     print 'TVHeadend is live!!!'
 
 def cmd_postpone(args):
-  """Postpone subcriptions (argument = value in seconds)"""
+  """Postpone subscriptions (argument = value in seconds)"""
   postpone = rpc(bus, '/org/tvheadend/set', 'postpone', 'x', long(args))
   print 'Subscription postpone set to', postpone
 
@@ -53,7 +53,7 @@ def cmd_satip_addr_disable(args):
   print 'SAT>IP address %s blocked: %s' % (args, result)
   
 def cmd_satip_addr_stop(args):
-  """Stop to use this SAT>IP address immediatelly (argument = IP address)"""
+  """Stop to use this SAT>IP address immediately (argument = IP address)"""
   result = rpc(bus, '/org/tvheadend/stop', 'satip_addr', 's', args)
   print 'SAT>IP address %s blocked: %s' % (args, result)
 

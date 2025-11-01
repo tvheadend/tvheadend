@@ -47,7 +47,7 @@ typedef struct mpegts_mux_sched
   char           *mms_mux;      ///< Mux UUID
   char           *mms_creator;  ///< Creator of entry
   int             mms_timeout;  ///< Timeout (in seconds)
-  int             mms_restart;  ///< Restart subscription when overriden
+  int             mms_restart;  ///< Restart subscription when overridden
   int             mms_weight;   ///< Weighting
 
   /*

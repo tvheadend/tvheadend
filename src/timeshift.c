@@ -72,7 +72,7 @@ static void timeshift_fixup ( void )
 }
 
 /*
- * Intialise global file manager
+ * Initialise global file manager
  */
 void timeshift_init ( void )
 {

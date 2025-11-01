@@ -142,7 +142,7 @@ typedef struct service {
      * a transport without having the global lock.
      *
      * Note: No fields in the transport may be accessed without the
-     * global lock held. Thus, the global_lock must be reaquired and
+     * global lock held. Thus, the global_lock must be required and
      * then s_status must be checked. If it is ZOMBIE the code must
      * just drop the refcount and pretend that the transport never
      * was there in the first place.

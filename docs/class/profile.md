@@ -14,7 +14,7 @@ Type                                               | Description
 -------------------------------------------------------------------|-------------
 **Built-in**                                                       | **These profiles are always available.**
 [HTSP Profile](class/profile-htsp)                                 | The HTSP profile, generally used with HTSP clients such as Kodi and Movian.
-[MPEG-TS Pass-thru Profile](class/profile-mpegts)                  | MPEG-TS pass-thru, this is a simple profile that just passes on the data received, can be configured to remove unneeded data packets.
+[MPEG-TS Pass-through Profile](class/profile-mpegts)                  | MPEG-TS pass-through, this is a simple profile that just passes on the data received, can be configured to remove unneeded data packets.
 [MPEG-TS Spawn](class/profile-mpegts-spawn)                        | Pipe stream out to script/binary for transcoding. Spawned script/binary must pipe the output back in as MPEG-TS.
 [Matroska Profile](class/profile-matroska)                         | A general Matroska container profile.
 [Audio Profile](class/profile-audio)                               | An audio-only profile.

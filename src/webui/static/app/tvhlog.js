@@ -304,7 +304,7 @@ tvheadend.tvhlog = function(panel, index) {
                     } //End window button handlers.
 
 
-                    //Creeate the grid to be shown on the subsystem selection window.
+                    //Create the grid to be shown on the subsystem selection window.
                     let grid = new Ext.grid.GridPanel({
                         flex: 1,
                         autoWidth: true,

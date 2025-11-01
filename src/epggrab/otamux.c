@@ -199,7 +199,7 @@ epggrab_ota_requeue ( void )
   epggrab_ota_mux_t *om;
 
   /*
-   * enqueue all muxes, but ommit the delayed ones (active+pending)
+   * enqueue all muxes, but omit the delayed ones (active+pending)
    */
   RB_FOREACH(om, &epggrab_ota_all, om_global_link)
     epggrab_ota_queue_one(om);

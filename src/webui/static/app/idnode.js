@@ -239,7 +239,7 @@ tvheadend.IdNodeField = function(conf)
     this.type = conf.type;
     this.list = conf.list;
     this.rdonly = conf.rdonly;
-    this.wronly = conf.wronly;
+    this.wrongly = conf.wrongly;
     this.wronce = conf.wronce;
     this.noui = conf.noui;
     this.hidden = conf.hidden || conf.phidden;
@@ -430,7 +430,7 @@ tvheadend.IdNodeField = function(conf)
 
         /* Editable? */
         var d = this.rdonly;
-        if (this.wronly && !conf.create)
+        if (this.wrongly && !conf.create)
             d = false;
 
         /* Basic */
@@ -648,7 +648,7 @@ tvheadend.idnode_editor_field = function(f, conf)
 {
     var r = null;
     var d = f.rdonly || false;
-    if (f.wronly && !conf.create)
+    if (f.wrongly && !conf.create)
         d = false;
     var value = f.value;
     if (value == null)

@@ -401,7 +401,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .id       = "qp",     // Don't change
                 .name     = N_("Constant QP"),
                 .group    = 3,
-                .desc     = N_("Fixed QP of P frames (from 0 to 52, 0=skip).[if disabled will not send paramter to libav]"),
+                .desc     = N_("Fixed QP of P frames (from 0 to 52, 0=skip).[if disabled will not send parameter to libav]"),
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, qp),
                 .intextra = INTEXTRA_RANGE(0, 52, 1),
@@ -433,7 +433,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .type     = PT_DBL,
                 .id       = "bit_rate",     // Don't change
                 .name     = N_("Bitrate (kb/s)"),
-                .desc     = N_("Target bitrate (0=skip).[if disabled will not send paramter to libav]"),
+                .desc     = N_("Target bitrate (0=skip).[if disabled will not send parameter to libav]"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, bit_rate),
@@ -443,7 +443,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .type     = PT_DBL,
                 .id       = "max_bit_rate",     // Don't change
                 .name     = N_("Max bitrate (kb/s)"),
-                .desc     = N_("Maximum bitrate (0=skip).[if disabled will not send paramter to libav]"),
+                .desc     = N_("Maximum bitrate (0=skip).[if disabled will not send parameter to libav]"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, max_bit_rate),
@@ -595,7 +595,7 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
     int tempSupport = 0;
     switch (self->platform) {
         case VAAPI_ENC_PLATFORM_UNCONSTRAINED:
-            // Uncontrained --> will allow any combination of parameters (valid or invalid)
+            // Unconstrained --> will allow any combination of parameters (valid or invalid)
             // this mode is useful for future platform and for debugging.
             if (self->b_reference) {
                 // b_depth

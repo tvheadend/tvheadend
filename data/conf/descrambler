@@ -4,7 +4,7 @@
     "The CAID list contains configuration for separate CA systems.",
     "",
     "TVHeadend uses some techniques to decode the previous queued data to offer",
-    "faster client input and data queing when the keys are late.",
+    "faster client input and data queueing when the keys are late.",
     "Here is the descrambling layer configuration to do this properly.",
     "",
     "name - CA nice name",

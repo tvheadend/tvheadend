@@ -501,7 +501,7 @@ forbid:
        (t->s_dvb_prefcapid != ct->cs_capid &&
         t->s_dvb_prefcapid_lock == PREFCAPID_OFF)) {
       t->s_dvb_prefcapid = ct->cs_capid;
-      tvhdebug(cc->cc_subsys, "%s: Saving prefered PID %d for %s",
+      tvhdebug(cc->cc_subsys, "%s: Saving preferred PID %d for %s",
                cc->cc_name, t->s_dvb_prefcapid, ct->td_nicename);
       service_request_save((service_t*)t);
     }
@@ -757,7 +757,7 @@ cc_thread(void *aux)
     snprintf(hostname, sizeof(hostname), "%s", cc->cc_hostname);
     port = cc->cc_port;
 
-    tvhinfo(cc->cc_subsys, "%s: Attemping to connect to server", cc->cc_name);
+    tvhinfo(cc->cc_subsys, "%s: Attempting to connect to server", cc->cc_name);
 
     tvh_mutex_unlock(&cc->cc_mutex);
 
@@ -942,7 +942,7 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
 
   if(ep == NULL) {
     if (ct->ecm_state == ECM_INIT) {
-      // Validate prefered ECM PID
+      // Validate preferred ECM PID
       tvhdebug(cc->cc_subsys, "%s: ECM state INIT (PID %d)", cc->cc_name, pid);
 
       if(t->s_dvb_prefcapid_lock != PREFCAPID_OFF) {
@@ -954,7 +954,7 @@ cc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
                  pcard->cs_ra.caid == c->caid &&
                  verify_provider(pcard, c->providerid))
                 goto prefcapid_ok;
-        tvhdebug(cc->cc_subsys, "%s: Invalid prefered ECM (PID %d) found for service \"%s\"",
+        tvhdebug(cc->cc_subsys, "%s: Invalid preferred ECM (PID %d) found for service \"%s\"",
                  cc->cc_name, cc->cc_port, t->s_dvb_svcname);
         t->s_dvb_prefcapid = 0;
       }

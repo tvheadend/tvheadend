@@ -5,7 +5,7 @@ These are not part of the final product, obviously!
 
 They're just some of the areas I'm aware of that we need to close off before release
 
-1. Complete the content for 4.0 (4.2 can wait) - strip out what isn't stricly necessary now (we can come back)
+1. Complete the content for 4.0 (4.2 can wait) - strip out what isn't strictly necessary now (we can come back)
 
 2. Check non-univeral (i.e. item-specific) configuration items (e.g. the IPTV mux parameters) and make sure they're documented
 

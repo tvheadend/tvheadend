@@ -37,7 +37,7 @@ Translations are managed through [Transifex](https://www.transifex.com/tvheadend
 
 ## Documentation
 
-If your changes require documentation updates please use GitBooks to author changes and submit a merge-request. The registration link is on our public documenation site: [https://docs.tvheadend.org](https://docs.tvheadend.org).
+If your changes require documentation updates please use GitBooks to author changes and submit a merge-request. The registration link is on our public documentation site: [https://docs.tvheadend.org](https://docs.tvheadend.org).
 
 ## Resources
 

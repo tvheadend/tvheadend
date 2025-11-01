@@ -50,7 +50,7 @@ pkt_destroy(th_pkt_t *pkt)
 
 /**
  * Allocate a new packet and give it a refcount of one (which caller is
- * suppoed to take care of)
+ * supposed to take care of)
  */
 th_pkt_t *
 pkt_alloc(streaming_component_type_t type, const uint8_t *data, size_t datalen,

@@ -235,7 +235,7 @@ mpegts_network_scan_mux_fail ( mpegts_mux_t *mm )
   mpegts_network_scan_mux_done0(mm, MM_SCAN_FAIL, 0);
 }
 
-/* Completed succesfully */
+/* Completed successfully */
 void
 mpegts_network_scan_mux_done ( mpegts_mux_t *mm )
 {

@@ -397,7 +397,7 @@ static void _process_msg
               tsf->bad = 1;
               ts->full = 1; ///< Stop any more writing
             } else {
-              timeshift_packet_log("sav", ts, sm);
+              timeshift_packet_log("save", ts, sm);
             }
           }
           timeshift_file_put(tsf);

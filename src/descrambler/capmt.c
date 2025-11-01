@@ -1234,7 +1234,7 @@ capmt_send_key(capmt_t *capmt)
     if (cai->cipher_mode == CA_MODE_ECB) {
       type = DESCRAMBLER_AES_ECB;
     } else {
-      tvherror(LS_CAPMT, "uknown cipher mode %d", cai->cipher_mode);
+      tvherror(LS_CAPMT, "unknown cipher mode %d", cai->cipher_mode);
       return;
     }
     break;
@@ -1312,7 +1312,7 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
     return 4 + 12 + adapter_byte;
   else if (oscam_new && cmd == DMX_SET_FILTER)
     /* when using network protocol the dmx_sct_filter_params fields are added */
-    /* separately to avoid padding problems, so we substract 2 bytes: */
+    /* separately to avoid padding problems, so we subtract 2 bytes: */
     return 4 + 2 + 60 + adapter_byte + (capmt_oscam_netproto(capmt) ? -2 : 0);
   else if (oscam_new && cmd == DMX_STOP)
     return 4 + 4 + adapter_byte;

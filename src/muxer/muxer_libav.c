@@ -213,7 +213,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
       }
     }
     if(avcodec_parameters_copy(lm->ctx->par_in, st->codecpar)) {
-      tvherror(LS_LIBAV,  "Failed to copy paramters to AVBSFContext");
+      tvherror(LS_LIBAV,  "Failed to copy parameters to AVBSFContext");
       goto fail;
     }
     lm->ctx->time_base_in = st->time_base;

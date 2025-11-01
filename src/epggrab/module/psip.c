@@ -558,7 +558,7 @@ static int _psip_tune
   /* Check if any services are mapped */
   // FIXME: copied from the eit module - is this a good idea here?
   // TODO: using indirect ref's like this is inefficient, should 
-  //       consider changeing it?
+  //       consider changing it?
   for (osl = RB_FIRST(&map->om_svcs); osl != NULL; osl = nxt) {
     nxt = RB_NEXT(osl, link);
     /* rule: if 5 mux scans fail for this service, remove it */

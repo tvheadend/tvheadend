@@ -650,7 +650,7 @@ dvb_freesat_local_channels
     len -= 5;
     if (len2 > len)
       break;
-    tvhtrace(mt->mt_subsys, "%s:      sid %04X (%d) uknown %04X (%d)", mt->mt_name, sid, sid, unk, unk);
+    tvhtrace(mt->mt_subsys, "%s:      sid %04X (%d) unknown %04X (%d)", mt->mt_name, sid, sid, unk, unk);
     while (len2 > 3) {
       lcn = extract_2byte(ptr) & 0xfff;
       regionid = extract_2byte(ptr + 2);
@@ -1266,7 +1266,7 @@ dvb_nit_mux
     tvhtrace(mt->mt_subsys, "%s:    dtag %02X dlen %d", mt->mt_name, dtag, dlen);
 
 #if ENABLE_MPEGTS_DVB
-    /* Limit delivery descriptiors only in the discovery phase */
+    /* Limit delivery descriptors only in the discovery phase */
     if (discovery > 0 &&
         dtag != DVB_DESC_SAT_DEL &&
         dtag != DVB_DESC_CABLE_DEL &&

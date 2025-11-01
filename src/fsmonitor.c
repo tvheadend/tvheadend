@@ -108,7 +108,7 @@ pthread_t fsmonitor_tid;
 void
 fsmonitor_init ( void )
 {
-  /* Intialise inotify */
+  /* Initialise inotify */
   atomic_set(&fsmonitor_fd, inotify_init1(IN_CLOEXEC));
   tvh_thread_create(&fsmonitor_tid, NULL, fsmonitor_thread, NULL, "fsmonitor");
 }

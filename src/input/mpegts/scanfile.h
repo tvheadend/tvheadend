@@ -1,5 +1,5 @@
 /*
- *  tvheadend, intial mux list
+ *  tvheadend, initial mux list
  *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify

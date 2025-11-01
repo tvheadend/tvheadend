@@ -461,7 +461,7 @@ static int _eit_desc_parental
       rl = ratinglabel_find_from_eit(tmpCountry, tmpAge);
 
       //If we have found a rating label, save the details and exit.
-      //ie, ony use the first parental rating found.
+      //ie, only use the first parental rating found.
       //TODO: In future, if (eg in Europe) the rating codes from multiple
       //countries are present, select the one that user prefers.
       //A new config option will be needed for this.
@@ -1065,7 +1065,7 @@ static int _eit_process_event
   /* Do all scraping here, outside the global lock.
    *
    * We search across all the main fields using the same regex and
-   * merge the results with the last match taking precendence.  So if
+   * merge the results with the last match taking precedence.  So if
    * EIT has episode in title and a different one in the description
    * then we use the one from the description.
    */
@@ -1475,7 +1475,7 @@ static int _eit_tune
 
   /* Check if any services are mapped */
   // TODO: using indirect ref's like this is inefficient, should
-  //       consider changeing it?
+  //       consider changing it?
   for (osl = RB_FIRST(&map->om_svcs); osl != NULL; osl = nxt) {
     nxt = RB_NEXT(osl, link);
     /* rule: if 5 mux scans fail for this service, remove it */

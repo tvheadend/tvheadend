@@ -197,7 +197,7 @@ typedef struct epg_episode_num
   uint16_t e_cnt; ///< Episode count
   uint16_t p_num; ///< Part number
   uint16_t p_cnt; ///< Part count
-  char     *text; ///< Arbitary text description of episode num
+  char     *text; ///< Arbitrary text description of episode num
 } epg_episode_num_t;
 
 htsmsg_t *epg_episode_epnum_serialize( epg_episode_num_t *num );
@@ -449,7 +449,7 @@ const char *epg_broadcast_get_keyword_cached
 const ratinglabel_t *epg_broadcast_get_rating_label
   ( epg_broadcast_t *b );
 
-/* Episode number heplers */
+/* Episode number helpers */
 // Note: this does NOT strdup the text field
 void epg_broadcast_get_epnum
   ( const epg_broadcast_t *b, epg_episode_num_t *epnum );

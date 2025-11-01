@@ -621,7 +621,7 @@ sha1_make_login_key(cccam_t *cccam, uint8_t *buf)
   cccam_crypt_init(&cccam->sendblock, buf, 16);
   cccam_decrypt(&cccam->sendblock, hash, sizeof(hash));
 
-  // send crypted hash to server
+  // send encrypted hash to server
   cccam_send_msg(cccam, MSG_NO_HEADER, hash, sizeof(hash), 0, 0, 0);
 }
 

@@ -169,7 +169,7 @@ const idclass_t mpegts_mux_sched_class =
       .type     = PT_BOOL,
       .id       = "restart",
       .name     = N_("Restart"),
-      .desc     = N_("Restart when the subscription is overriden (in then timeout time window)."),
+      .desc     = N_("Restart when the subscription is overridden (in then timeout time window)."),
       .off      = offsetof(mpegts_mux_sched_t, mms_restart),
     },
     {

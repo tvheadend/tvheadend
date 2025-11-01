@@ -106,7 +106,7 @@ Icon                                                                  | Descript
   name).*
 
 **Subtitle**
-: The subtitle of the program, if gien by your EPG provider. Note that some
+: The subtitle of the program, if given by your EPG provider. Note that some
   (notably, UK) providers use this for a program synopsis instead of a true
   subtitle.
 

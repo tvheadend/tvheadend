@@ -1349,7 +1349,7 @@ const idclass_t profile_mpegts_pass_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
-  .ic_caption    = N_("MPEG-TS Pass-thru/built-in"),
+  .ic_caption    = N_("MPEG-TS Pass-through/built-in"),
   .ic_groups     = (const property_group_t[]) {
     {
       .name   = N_("General Settings"),

@@ -135,7 +135,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   } while (c != NULL && --retries > 0);
 
   if(c != NULL) {
-    tvherror(LS_IDNODE, "Id node collission (%s) %s",
+    tvherror(LS_IDNODE, "Id node collision (%s) %s",
              uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
     fprintf(stderr, "Id node collision (%s) %s\n",
             uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
@@ -1283,7 +1283,7 @@ add_params
   if(ic->ic_super != NULL)
     add_params(self, ic->ic_super, p, list, optmask, lang);
 
-  /* Seperator (if not empty) */
+  /* Separator (if not empty) */
 #if 0
   if(TAILQ_FIRST(&p->hm_fields) != NULL) {
     htsmsg_t *m = htsmsg_create_map();

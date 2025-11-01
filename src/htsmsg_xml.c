@@ -532,7 +532,7 @@ decode_label_reference
   else if(!strcmp(label, "quot"))
     add_unicode(ccq, '"');
   else {
-    xmlerr(xp, "Unknown label referense: \"&%s;\"\n", label);
+    xmlerr(xp, "Unknown label reference: \"&%s;\"\n", label);
     return NULL;
   }
 
@@ -587,7 +587,7 @@ htsmsg_xml_parse_cd0
 	  src = htsmsg_xml_parse_cd0(xp, ccq, tags, pis, src, 1);
 	  continue;
 	}
-	xmlerr(xp, "Unknown syntatic element: <!%.10s", src);
+	xmlerr(xp, "Unknown syntactic element: <!%.10s", src);
 	return NULL;
       }
 

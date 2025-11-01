@@ -234,7 +234,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 
 #if ENABLE_HWACCELS
 #if ENABLE_FFMPEG4_TRANSCODING
-    // hwaccel is the user input for Hardware acceleration from Codec parameteres
+    // hwaccel is the user input for Hardware acceleration from Codec parameters
     int hwaccel = -1;
     if ((hwaccel = tvh_codec_profile_video_get_hwaccel(self->profile)) < 0) {
         return -1;

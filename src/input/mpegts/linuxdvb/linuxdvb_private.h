@@ -360,7 +360,7 @@ struct linuxdvb_en50494
   uint16_t  le_id;            /* user band ID (0-7 for EN50494, 0-31 for EN50607) */
   uint16_t  le_frequency;     /* user band frequency in MHz */
   uint16_t  le_pin;           /* 0-255 or LINUXDVB_EN50494_NOPIN */
-  uint16_t  le_position;      /* satelitte position (0-1 for EN50494, 0-63 for EN50607) */
+  uint16_t  le_position;      /* satellite position (0-1 for EN50494, 0-63 for EN50607) */
 
   /* runtime */
   uint32_t  le_tune_freq; /* the real frequency to tune to */
