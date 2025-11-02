@@ -64,7 +64,7 @@ case $DISTRO in
         esac;;
     ubuntu)
         case $CODENAME in
-            trusty|xenial|bionic|focal|impish|jammy|kinetic|lunar|mantic|noble)
+            trusty|xenial|bionic|focal|impish|jammy|kinetic|lunar|mantic|noble|plucky|questing)
                 OS="ubuntu"
                 TARGET=$CODENAME;;
             *)
