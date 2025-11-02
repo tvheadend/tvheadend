@@ -65,15 +65,8 @@ jobs:
     # Run steps on a matrix
     strategy:
       matrix:
-       arch: [ armv7, aarch64]
-       distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu_latest ]
-       include:
-         - arch: armv6
-           distro: stretch
-         - arch: armv6
-           distro: buster
-         - arch: armv6
-           distro: bullseye
+       arch: [ armv6 ]
+       distro: [ stretch, buster, bullseye ]
 
     steps:
       - uses: actions/checkout@v3
@@ -152,6 +145,69 @@ jobs:
           name: Tvheadend-${{ matrix.distro }}-${{ matrix.arch }}
           path: artifacts/tvheadend*.deb
           if-no-files-found: error
+
+  build-deb-arm-native:
+    runs-on: ubuntu-24.04-arm
+    continue-on-error: true
+    name: Build on native ARM ${{ matrix.container[1] }}
+    strategy:
+      matrix:
+        container: [["arm64v8/debian:stretch", "arm64-debian-stretch"], ["arm64v8/debian:buster", "arm64-debian-buster"], ["arm64v8/debian:bullseye", "arm64-debian-bullseye"], ["arm64v8/debian:bookworm", "arm64-debian-bookworm"], ["arm64v8/ubuntu:xenial", "arm64-ubuntu-xenial"], ["arm64v8/ubuntu:bionic", "arm64-ubuntu-bionic"], ["arm64v8/ubuntu:focal", "arm64-ubuntu-focal"], ["arm64v8/ubuntu:jammy", "arm64-ubuntu-jammy"], ["arm64v8/ubuntu:latest", "arm64-ubuntu-latest"], ["arm32v7/debian:stretch", "armv7-debian-stretch"], ["arm32v7/debian:buster", "armv7-debian-buster"], ["arm32v7/debian:bullseye", "armv7-debian-bullseye"], ["arm32v7/debian:bookworm", "armv7-debian-bookworm"], ["arm32v7/ubuntu:xenial", "armv7-ubuntu-xenial"], ["arm32v7/ubuntu:bionic", "armv7-ubuntu-bionic"], ["arm32v7/ubuntu:focal", "armv7-ubuntu-focal"], ["arm32v7/ubuntu:jammy", "armv7-ubuntu-jammy"], ["arm32v7/ubuntu:latest", "armv7-ubuntu-latest"]]
+    steps:
+      - name: Setup container
+        run: |
+          docker pull ${{ matrix.container[0] }}
+          docker run --name build-container -d -v ${{ github.workspace }}:/workspace ${{ matrix.container[0] }} tail -f /dev/null
+      - name: Fix old debian apt
+        if: contains(matrix.container[0], 'stretch') || contains(matrix.container[0], 'buster')
+        env:
+          SCRIPT: |
+            sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
+            sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
+            sed -i '/stretch-updates/d' /etc/apt/sources.list
+            sed -i '/buster-updates/d' /etc/apt/sources.list
+        run: docker exec build-container bash -c "$SCRIPT"
+      - name: dependencies
+        env:
+          SCRIPT: |
+            apt-get update -y
+            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
+        run: docker exec build-container bash -c "$SCRIPT"
+      - name: pcre-dependency
+        env:
+          SCRIPT: |
+            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
+        run: docker exec build-container bash -c "$SCRIPT"
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Workaround safe directory
+        env:
+          SCRIPT: |
+            git config --global --add safe.directory /workspace
+        run: docker exec build-container bash -c "$SCRIPT"
+      - name: build
+        env:
+          SCRIPT: |
+            cd /workspace
+            AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+        run: docker exec build-container bash -c "$SCRIPT"
+      - name: copy-result
+        env:
+          SCRIPT: |
+            cp tvheadend*.deb workspace/
+        run: docker exec build-container bash -c "$SCRIPT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tvheadend-${{ matrix.container[1] }}
+          path: tvheadend*.deb
+          if-no-files-found: error
+      - name: upload-cloudsmith
+        env:
+          SCRIPT: |
+            cd /workspace
+            support/cloudsmith.sh -n -f 'tvheadend*.deb'
+        run: docker exec build-container bash -c "$SCRIPT"
 
   build-deb-native:
     runs-on: ubuntu-latest
