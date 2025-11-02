@@ -141,7 +141,7 @@ get_config_attributes(VADisplay va_dpy, VAProfile profile, VAEntrypoint entrypoi
                                       attrib_list, max_num_attributes);
     if (VA_STATUS_ERROR_UNSUPPORTED_PROFILE == va_status ||
         VA_STATUS_ERROR_UNSUPPORTED_ENTRYPOINT == va_status)
-        return 0;
+        return -1;
 
     if (attrib_list[VAConfigAttribEncMaxRefFrames].value & (~VA_ATTRIB_NOT_SUPPORTED)) {
         if (show_log) {
