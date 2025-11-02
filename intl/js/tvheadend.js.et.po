@@ -5,6 +5,7 @@
 # 
 # Translators:
 # Christian Hewitt, 2025
+# Anti <anti.siidiratsep@gmail.com>, 2025
 # 
 #, fuzzy
 msgid ""
@@ -13,7 +14,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-06 02:33+0000\n"
 "PO-Revision-Date: 2023-12-11 11:01+0000\n"
-"Last-Translator: Christian Hewitt, 2025\n"
+"Last-Translator: Anti <anti.siidiratsep@gmail.com>, 2025\n"
 "Language-Team: Estonian (https://app.transifex.com/tvheadend/teams/43381/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -38,7 +39,7 @@ msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 #: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:93
 #: src/webui/static/app/epg.js:147
 msgid "(Clear filter)"
-msgstr "(Puhasta filter)"
+msgstr "(Eemalda filter)"
 
 #: src/webui/static/app/i18n-post.js:210
 msgid "(None)"
@@ -74,11 +75,11 @@ msgstr "00:15:00 - 00:30:00"
 
 #: src/webui/static/app/epg.js:150
 msgid "00:30:00 - 01:00:00"
-msgstr ""
+msgstr "00:30:00 - 01:00:00"
 
 #: src/webui/static/app/epg.js:151
 msgid "01:00:00 - 01:30:00"
-msgstr ""
+msgstr "01:00:00 - 01:30:00"
 
 #: src/webui/static/app/epg.js:152
 msgid "01:30:00 - 03:00:00"
@@ -154,7 +155,7 @@ msgstr "Kasutamise kirje"
 
 #: src/webui/static/app/epg.js:605 src/webui/static/app/epg.js:606
 msgid "Actions"
-msgstr ""
+msgstr "Toimingud"
 
 #: src/webui/static/app/servicemapper.js:22
 msgid "Active"
@@ -203,7 +204,7 @@ msgstr "Kõik"
 
 #: src/webui/static/app/tvhlog.js:78
 msgid "All subsystems"
-msgstr ""
+msgstr "Kõik alamsüsteemid"
 
 #: src/webui/static/app/epgevent.js:146
 msgid "Alternative Showings"
@@ -342,7 +343,7 @@ msgstr "Saate detailid"
 
 #: src/webui/static/app/epg.js:1288 src/webui/static/app/epgevent.js:79
 msgid "Buffering. Please wait…"
-msgstr ""
+msgstr "Puhverdamas. Palun oota ..."
 
 #: src/webui/static/app/caclient.js:33
 msgid "CA"
@@ -391,12 +392,12 @@ msgstr "Ei saa rakendada"
 
 #: src/webui/static/app/epg.js:267 src/webui/static/app/dvr.js:120
 msgid "Categories"
-msgstr ""
+msgstr "Kategooriad"
 
 #: src/webui/static/app/epg.js:1503 src/webui/static/app/epg.js:1505
 #: src/webui/static/app/epg.js:1507
 msgid "Category"
-msgstr ""
+msgstr "Kategooria"
 
 #: src/webui/static/app/idnode.js:632
 msgid "Change the user interface level (basic, advanced, expert)"
@@ -856,7 +857,7 @@ msgstr "Eksperdi seaded"
 
 #: src/webui/static/app/epg.js:800 src/webui/static/app/epgevent.js:103
 msgid "Extra text"
-msgstr ""
+msgstr "Lisatekst"
 
 #: src/webui/static/app/epg.js:801 src/webui/static/app/epgevent.js:104
 msgid "Extra text: subtitle or summary or description"
@@ -888,7 +889,7 @@ msgstr "Veebruar"
 
 #: src/webui/static/app/dvr.js:132
 msgid "File name"
-msgstr ""
+msgstr "Faili nimi"
 
 #: src/webui/static/app/dvr.js:130
 msgid "File size"
@@ -896,23 +897,23 @@ msgstr "Faili suurus"
 
 #: src/webui/static/app/epg.js:1049
 msgid "Filter category…"
-msgstr ""
+msgstr "Kataloogi filter ..."
 
 #: src/webui/static/app/epg.js:974
 msgid "Filter channel…"
-msgstr ""
+msgstr "Kanali filter ..."
 
 #: src/webui/static/app/epg.js:1100
 msgid "Filter content type…"
-msgstr ""
+msgstr "Sisu tüübi filter ..."
 
 #: src/webui/static/app/epg.js:1121
 msgid "Filter duration…"
-msgstr ""
+msgstr "Kestvuse filter ..."
 
 #: src/webui/static/app/epg.js:1009
 msgid "Filter tag…"
-msgstr ""
+msgstr "Märke filter ..."
 
 #: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
@@ -1686,7 +1687,7 @@ msgstr "Puhasta (võta ära) valitud ikooni URL"
 
 #: src/webui/static/app/epg.js:1315
 msgid "Reset All"
-msgstr "Puhasta kõik"
+msgstr "Eemalda kõik"
 
 #: src/webui/static/app/chconf.js:220
 msgid "Reset Icon"
@@ -1694,7 +1695,7 @@ msgstr "Puhasta ikoon"
 
 #: src/webui/static/app/epg.js:1317
 msgid "Reset all filters (show all)"
-msgstr "Puhasta kõik filtrid (näita kõike)"
+msgstr "Eemalda kõik filtrid (näita kõike)"
 
 #: src/webui/static/app/tvhlog.js:117
 msgid "Restore Debug"
