@@ -88,10 +88,16 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
             hwaccel &&
             ((hwaccel_details == HWACCEL_AUTO && strstr(profile->codec_name, "nvenc")) || hwaccel_details == HWACCEL_PRIORITIZE_NVDEC)) {
             // https://developer.nvidia.com/video-codec-sdk
-            if (icodec_id == AV_CODEC_ID_H264) {
+            if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
+                icodec = avcodec_find_decoder_by_name("mpeg2_cuvid");
+            } else if (icodec_id == AV_CODEC_ID_H264) {
                 icodec = avcodec_find_decoder_by_name("h264_cuvid");
             } else if (icodec_id == AV_CODEC_ID_HEVC) {
                 icodec = avcodec_find_decoder_by_name("hevc_cuvid");
+            } else if (icodec_id == AV_CODEC_ID_VP9) {
+                icodec = avcodec_find_decoder_by_name("vp9_cuvid");
+            } else if (icodec_id == AV_CODEC_ID_VP8) {
+                icodec = avcodec_find_decoder_by_name("vp8_cuvid");
             }
         }
 #endif
@@ -110,8 +116,6 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
                 icodec = avcodec_find_decoder_by_name("vp9_vaapi");
             } else if (icodec_id == AV_CODEC_ID_VP8) {
                 icodec = avcodec_find_decoder_by_name("vp8_vaapi");
-            }else if (icodec_id == AV_CODEC_ID_MJPEG) {
-                icodec = avcodec_find_decoder_by_name("mjpeg_vaapi");
             }
         }
 #endif

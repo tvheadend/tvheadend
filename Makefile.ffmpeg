@@ -569,7 +569,7 @@ ifeq (yes,$(CONFIG_NVENC))
 ## YOU MUST INSTALL CUDA from NVIDIA for "libnpp" 
 EXTLIBS   += nvenc cuvid libnpp
 ENCODERS  += h264_nvenc hevc_nvenc
-DECODERS  += h264_cuvid hevc_cuvid
+DECODERS  += h264_cuvid hevc_cuvid vp8_cuvid vp9_cuvid mpeg2_cuvid
 HWACCELS  += h264_nvdec hevc_nvdec vp8_nvdec vp9_nvdec mjpeg_nvdec mpeg1_nvdec mpeg2_nvdec mpeg4_nvdec
 ECFLAGS   += -I/usr/local/cuda/include
 
