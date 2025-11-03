@@ -138,7 +138,6 @@ jobs:
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
             cp ../tvheadend*.deb /artifacts/
-            if [ '${{ matrix.distro }}' = 'buster' ] && [ '${{ matrix.arch }}' = 'armv7' ]; then update-ca-certificates --fresh; fi
             support/cloudsmith.sh -n -f '../tvheadend*.deb'
       - uses: actions/upload-artifact@v4
         with:
@@ -191,6 +190,12 @@ jobs:
           SCRIPT: |
             cd /workspace
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+        run: docker exec build-container bash -c "$SCRIPT"
+      - name: Update certificates for buster armv7
+        if: matrix.container[1] == 'armv7-debian-buster'
+        env:
+          SCRIPT: |
+            update-ca-certificates --fresh
         run: docker exec build-container bash -c "$SCRIPT"
       - name: copy-result
         env:
