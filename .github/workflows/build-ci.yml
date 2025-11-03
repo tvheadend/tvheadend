@@ -189,7 +189,7 @@ jobs:
         env:
           SCRIPT: |
             cd /workspace
-            AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh
+            AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'arm32v7/') && '-a armv7l') || '' }}
         run: docker exec build-container bash -c "$SCRIPT"
       - name: Update certificates for buster armv7
         if: matrix.container[1] == 'armv7-debian-buster'
