@@ -841,7 +841,7 @@ msgstr "Vigu"
 
 #: src/webui/static/app/epg.js:1356 src/webui/static/app/epgevent.js:156
 msgid "Events"
-msgstr "Juhtumid"
+msgstr "Logiread"
 
 #: src/webui/static/app/dvr.js:394
 msgid "Every day"
