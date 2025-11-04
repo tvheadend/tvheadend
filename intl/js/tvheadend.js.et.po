@@ -1392,7 +1392,7 @@ msgstr "November"
 
 #: src/webui/static/app/epg.js:936
 msgid "Now"
-msgstr ""
+msgstr "Hetkel eetris"
 
 #: src/webui/static/app/epg.js:841 src/webui/static/app/epg.js:842
 msgid "Number"
@@ -2229,7 +2229,7 @@ msgstr "Video voogedastuse filtrid"
 #: src/webui/static/app/status.js:221 src/webui/static/app/status.js:556
 #: src/webui/static/app/status.js:779 src/webui/static/app/servicemapper.js:54
 msgid "View help docs."
-msgstr ""
+msgstr "Sirvi dokumentatsiooni"
 
 #: src/webui/static/app/idnode.js:634
 msgid "View level"
