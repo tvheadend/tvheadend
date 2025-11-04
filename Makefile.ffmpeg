@@ -24,13 +24,15 @@ FFMPEG_HOST   := $(ARCH)-linux-gnu
 FFMPEG_TARGET := x86-linux-gcc
 endif
 
-ifeq ($(ARCH),armhf)
+# Match various ARM 32-bit architecture names
+ifneq (,$(filter armhf armv7 armv7l arm,$(ARCH)))
 FFMPEG_HOST   := arm-linux-gnueabihf
 FFMPEG_ARCH   := armv7
 FFMPEG_CPU    := armv7-a
 endif
 
-ifeq ($(ARCH),arm64)
+# Match various ARM 64-bit architecture names
+ifneq (,$(filter arm64 aarch64,$(ARCH)))
 FFMPEG_HOST   := aarch64-linux-gnu
 FFMPEG_ARCH   := aarch64
 FFMPEG_CPU    := armv8-a
