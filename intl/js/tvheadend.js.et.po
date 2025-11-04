@@ -460,7 +460,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:534
 msgid "Clear all statistics"
-msgstr ""
+msgstr "Kogu statistika nullimine"
 
 #: src/webui/static/app/tvhlog.js:110
 msgid "Clear all trace subsystems."
@@ -468,7 +468,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:318 src/webui/static/app/status.js:321
 msgid "Clear statistics"
-msgstr "Nullida statistika"
+msgstr "Statistika nullimine"
 
 #: src/webui/static/app/status.js:322
 msgid "Clear statistics for selected input?"
