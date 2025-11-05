@@ -1,5 +1,5 @@
 /*
- *  TVheadend - poll/select wrapper
+ *  Tvheadend - poll/select wrapper
  *
  *  Copyright (C) 2013 Adam Sutton
  *

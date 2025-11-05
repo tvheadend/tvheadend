@@ -2565,7 +2565,7 @@ const idclass_t config_class = {
       .id     = "hdhomerun_ip",
       .name   = N_("HDHomerun IP Address"),
       .desc   = N_("IP address of the HDHomerun device. This is needed if you "
-                   "plan to run TVheadend in a container and you want to stream "
+                   "plan to run Tvheadend in a container and you want to stream "
                    "from an HDHomerun without enabling host networking for "
                    "the container."),
       .off    = offsetof(config_t, hdhomerun_ip),
@@ -2577,9 +2577,9 @@ const idclass_t config_class = {
       .id     = "local_ip",
       .name   = N_("Local IP Address"),
       .desc   = N_("IP of the Docker host. Each HDHomeRun tuner sends data "
-                   "to TVheadend through a socket. This lets you define the "
+                   "to Tvheadend through a socket. This lets you define the "
                    "IP address that HDHomeRun needs to send to. Leave this "
-                   "blank if you want TVheadend to automatically pick an "
+                   "blank if you want Tvheadend to automatically pick an "
                    "address."),
       .off    = offsetof(config_t, local_ip),
       .opts   = PO_HIDDEN | PO_EXPERT,
@@ -2591,7 +2591,7 @@ const idclass_t config_class = {
       .name   = N_("Local Socket Port Number"),
       .desc   = N_("Starting port number of the UDP listeners. The listeners "
                    "listen for traffic from the HDHomerun tuners. This is "
-                   "needed if you plan to run TVheadend in a container and "
+                   "needed if you plan to run Tvheadend in a container and "
                    "you want to stream from an HDHomerun without enabling "
                    "host networking for the container. Set this to 0 if you "
                    "want the port numbers to be assigned dynamically. If you "
