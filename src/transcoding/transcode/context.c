@@ -414,6 +414,11 @@ tvh_context_encode(TVHContext *self, AVFrame *avframe)
     int ret = 0;
 
     if (!avcodec_is_open(self->oavctx)) {
+        // Check if we have a valid codec before attempting to open
+        if (!self->oavctx->codec) {
+            tvh_context_log(self, LOG_ERR, "cannot open encoder: no codec available");
+            return -1;
+        }
         ret = tvh_context_open(self, OPEN_ENCODER);
     }
     if (!ret && !(ret = tvh_context_push_frame(self, avframe))) {
