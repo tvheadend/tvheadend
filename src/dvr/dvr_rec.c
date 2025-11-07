@@ -206,12 +206,17 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
 
   atomic_add(&de->de_thread_shutdown, 1);
 
-  pthread_join(de->de_thread, (void **)&postproc);
+  /* Prevent self-join deadlock when called from worker thread */
+  if (pthread_self() != de->de_thread) {
+    pthread_join(de->de_thread, (void **)&postproc);
 
-  if (prch->prch_muxer)
-    dvr_thread_epilog(de, postproc);
+    if (prch->prch_muxer)
+      dvr_thread_epilog(de, postproc);
 
-  free(postproc);
+    free(postproc);
+  } else {
+    tvherror(LS_DVR, "Skipping postprocessing to prevent deadlock. Note: dvr_thread postproc memory leak.");
+  }
 
   subscription_unsubscribe(de->de_s, UNSUBSCRIBE_FINAL);
   de->de_s = NULL;
@@ -1616,7 +1621,7 @@ dvr_thread_mpegts_stats(dvr_entry_t *de, void *sm_data)
 static int
 dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
                      int *run, int *started, int64_t *dts_offset,
-                     const char *postproc)
+                     char *postproc)
 {
   dvr_entry_t *de = *_de;
   profile_chain_t *prch = de->de_chain;
@@ -1658,8 +1663,18 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
     if(code == 0) {
       ret = 1;
       *started = 1;
-    } else
+    } else {
+      /* Reproduce the skipped processing of deadlock prevention from:
+       *   dvr_stop_recording() -> dvr_rec_unsubscribe()
+       */
+      if (prch->prch_muxer)
+        dvr_thread_epilog(de, postproc);
+
+      free(postproc);
+
       dvr_stop_recording(de, code == SM_CODE_NO_SPACE ? SM_CODE_NO_SPACE : SM_CODE_INVALID_TARGET, 1, 0);
+    }
+    
     dvr_thread_global_unlock(de);
   }
   return ret;
