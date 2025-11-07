@@ -296,6 +296,78 @@ tvhdhomerun_device_find( uint32_t device_id )
   return NULL;
 }
 
+/**
+ * Clear any orphaned locks held by the current host on a tuner device.
+ * This handles locks from previous Tvheadend sessions/crashes that persist
+ * on the HDHomeRun device itself.
+ */
+static void tvhdhomerun_clear_orphaned_locks(struct hdhomerun_discover_device_t *dInfo)
+{
+  struct hdhomerun_device_t *hd;
+  char *lockkey_owner = NULL;
+  char local_ip_str[64];
+  uint32_t local_ip = 0;
+  int res, j;
+
+  for (j = 0; j < dInfo->tuner_count; j++) {
+    hd = hdhomerun_device_create(dInfo->device_id, dInfo->ip_addr, j, NULL);
+        
+    if (hd == NULL)
+      continue;
+
+    if (local_ip == 0) {
+      // Get the local IP address as seen by the device
+      local_ip = hdhomerun_device_get_local_machine_addr(hd);
+      if (local_ip == 0) {
+          tvhwarn(LS_TVHDHOMERUN, "failed to query local_ip");
+          goto destroy;
+      }
+
+      // Convert IP to dotted-quad string format
+      snprintf(local_ip_str, sizeof(local_ip_str), "%u.%u.%u.%u",
+               (local_ip >> 24) & 0xFF,
+               (local_ip >> 16) & 0xFF,
+               (local_ip >> 8) & 0xFF,
+               local_ip & 0xFF);
+
+      tvhtrace(LS_TVHDHOMERUN, "local_ip=%s", local_ip_str);
+    }
+
+    // Query current lock holder
+    res = hdhomerun_device_get_tuner_lockkey_owner(hd, &lockkey_owner);
+    if (res < 0) {
+        tvhwarn(LS_TVHDHOMERUN, "failed to query lockkey (res=%d)", res);
+        goto destroy;
+    }
+
+    if (lockkey_owner == NULL || strcmp(lockkey_owner, "none") == 0) {
+        tvhtrace(LS_TVHDHOMERUN, "no lockkey set");
+        goto destroy;
+    }
+
+    // Check if the lock is held by ourselves
+    if (strcmp(lockkey_owner, local_ip_str) != 0) {
+        tvhinfo(LS_TVHDHOMERUN, 
+                "tuner locked by different host: %s (not clearing)",
+                lockkey_owner);
+        goto destroy;
+    }
+
+    // Lock is held by OUR IP - this is an orphaned lock from a previous session
+    tvhinfo(LS_TVHDHOMERUN, 
+            "detected orphaned self-lock (%s), force-releasing", 
+            lockkey_owner);
+
+    // Force-release the orphaned lock
+    hdhomerun_device_tuner_lockkey_force(hd);
+    
+    // Small delay to allow device to process the force command
+    // usleep(100000);  // 100 milliseconds
+
+destroy:
+    hdhomerun_device_destroy(hd);
+  }
+}
 
 #define MAX_HDHOMERUN_DEVICES 8
 
@@ -318,6 +390,9 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
     }
     hdhomerun_device_destroy(hdhomerun_tuner);
   }
+
+  // Force-clear orphaned locks on all tuners
+  tvhdhomerun_clear_orphaned_locks(dInfo);
 
   conf = hts_settings_load("input/tvhdhomerun/adapters/%s", uhex);
 
