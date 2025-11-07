@@ -137,4 +137,6 @@ static inline void tvhdhomerun_device_changed ( tvhdhomerun_device_t *sd )
 
 void tvhdhomerun_frontend_save ( tvhdhomerun_frontend_t *lfe, htsmsg_t *m );
 
+bool tvhdhomerun_clear_stale_lock(struct hdhomerun_device_t *hd);
+
 #endif
