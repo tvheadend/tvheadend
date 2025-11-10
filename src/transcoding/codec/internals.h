@@ -427,6 +427,17 @@ typedef struct tvh_codec_profile_video {
      * - 2 - scaling only down
      */
     int scaling_mode;
+    /**
+     * SW or HW gop size  (applies for encoding)
+     * @note
+     * int: 
+     * VALUE - gop size
+     * 
+     * - 0 - default gop size (3 sec)
+     * 
+     * - 1 --> 1000 - gop size in frames
+     */
+    int gop_size;
     int hwaccel;
     int hwaccel_details;
     int pix_fmt;

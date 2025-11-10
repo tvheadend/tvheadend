@@ -338,7 +338,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .name     = N_("Device name"),
                 .desc     = N_("Device name (e.g. /dev/dri/renderD128)."),
                 .group    = 3,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, device),
+                .off      = offsetof(TVHCodecProfile, device),
                 .list     = tvh_codec_profile_vaapi_device_list,
             },
             {
@@ -349,7 +349,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .group    = 3,
                 .opts     = PO_EXPERT,
                 .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
+                .off      = offsetof(TVHCodecProfile, low_power),
                 .def.i    = 0,
             },
             {
@@ -383,6 +383,17 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .get_opts = codec_profile_class_get_opts,
                 .off      = offsetof(tvh_codec_profile_vaapi_t, b_reference),
                 .list     = b_reference_get_list,
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "gop_size",     // Don't change
+                .name     = N_("GOP size"),
+                .desc     = N_("Sets the Group of Pictures (GOP) size in frame (default 0 is 3 sec.)"),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(TVHVideoCodecProfile, gop_size),
+                .intextra = INTEXTRA_RANGE(0, 1000, 1),
                 .def.i    = 0,
             },
             {
@@ -436,7 +447,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .desc     = N_("Target bitrate (0=skip).[if disabled will not send paramter to libav]"),
                 .group    = 3,
                 .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, bit_rate),
+                .off      = offsetof(TVHCodecProfile, bit_rate),
                 .def.d    = 0,
             },
             {
@@ -476,7 +487,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .group    = 2,
                 .desc     = N_("Denoise only available with Hardware Acceleration (from 0 to 64, 0=skip, 0 default)"),
                 .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, filter_hw_denoise),
+                .off      = offsetof(TVHVideoCodecProfile, filter_hw_denoise),
                 .intextra = INTEXTRA_RANGE(0, 64, 1),
                 .def.i    = 0,
             },
@@ -487,7 +498,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .group    = 2,
                 .desc     = N_("Sharpness only available with Hardware Acceleration (from 0 to 64, 0=skip, 44 default)"),
                 .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(tvh_codec_profile_vaapi_t, filter_hw_sharpness),
+                .off      = offsetof(TVHVideoCodecProfile, filter_hw_sharpness),
                 .intextra = INTEXTRA_RANGE(0, 64, 1),
                 .def.i    = 44,
             },
@@ -774,8 +785,6 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
             }
             break;
     }
-    // force keyframe every 3 sec.
-    AV_DICT_SET(LST_VAAPI, opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     return 0;
 }
 
@@ -1078,8 +1087,6 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
             }
             break;
     }
-    // force keyframe every 3 sec.
-    AV_DICT_SET(LST_VAAPI, opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     return 0;
 }
 
@@ -1375,8 +1382,6 @@ tvh_codec_profile_vaapi_vp8_open(tvh_codec_profile_vaapi_t *self,
             }
             break;
     }
-    // force keyframe every 3 sec.
-    AV_DICT_SET(LST_VAAPI, opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     return 0;
 }
 
@@ -1693,8 +1698,6 @@ tvh_codec_profile_vaapi_vp9_open(tvh_codec_profile_vaapi_t *self,
             }
             break;
     }
-    // force keyframe every 3 sec.
-    AV_DICT_SET(LST_VAAPI, opts, "force_key_frames", "expr:gte(t,n_forced*3)", AV_DICT_DONT_OVERWRITE);
     return 0;
 }
 

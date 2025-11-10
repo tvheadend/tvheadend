@@ -225,6 +225,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     AVRational ticks_per_frame;
     int deinterlace  = ((TVHVideoCodecProfile *)self->profile)->deinterlace;
     int field_rate = (deinterlace && ((TVHVideoCodecProfile *)self->profile)->deinterlace_field_rate) ? 2 : 1;
+    int gop_size = ((TVHVideoCodecProfile *)self->profile)->gop_size;
 
     if (tvh_context_get_int_opt(opts, "pix_fmt", &self->oavctx->pix_fmt) ||
         tvh_context_get_int_opt(opts, "width", &self->oavctx->width) ||
@@ -266,11 +267,16 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     self->oavctx->framerate = av_mul_q(self->iavctx->framerate, (AVRational) { field_rate, 1 }); //take into account double rate i.e. field-based deinterlacers
     int ticks_per_frame_tmp = (90000 * self->oavctx->framerate.den) / self->oavctx->framerate.num; // We assume 90kHz as timebase which is mandatory for MPEG-TS
     ticks_per_frame = av_make_q(ticks_per_frame_tmp, 1);
-    self->oavctx->time_base = av_inv_q(av_mul_q(
-        self->oavctx->framerate, ticks_per_frame));
-    self->oavctx->gop_size = ceil(av_q2d(av_inv_q(av_mul_q(
-        self->oavctx->time_base, ticks_per_frame))));
-    self->oavctx->gop_size *= 3;
+    self->oavctx->time_base = av_inv_q(av_mul_q(self->oavctx->framerate, ticks_per_frame));
+    if (gop_size) {
+        // gop was set by the user
+        self->oavctx->gop_size = gop_size;
+    }
+    else {
+        // gop = 0 --> we use default of 3 sec.
+        self->oavctx->gop_size = ceil(av_q2d(av_inv_q(av_mul_q(self->oavctx->time_base, ticks_per_frame))));
+        self->oavctx->gop_size *= 3;
+    }
 
     self->oavctx->sample_aspect_ratio = self->iavctx->sample_aspect_ratio;
 
