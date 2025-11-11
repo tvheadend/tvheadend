@@ -213,7 +213,6 @@ hwaccels_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, si
 
 /* encoding ================================================================= */
 
-#if ENABLE_FFMPEG4_TRANSCODING
 int
 hwaccels_initialize_encoder_from_decoder(const AVCodecContext *iavctx, AVCodecContext *oavctx)
 {
@@ -233,23 +232,15 @@ hwaccels_initialize_encoder_from_decoder(const AVCodecContext *iavctx, AVCodecCo
     }
     return 0;
 }
-#endif
+
 
 int
-#if ENABLE_FFMPEG4_TRANSCODING
 hwaccels_encode_setup_context(AVCodecContext *avctx)
-#else
-hwaccels_encode_setup_context(AVCodecContext *avctx, int low_power)
-#endif
 {
     switch (avctx->pix_fmt) {
 #if ENABLE_VAAPI
         case AV_PIX_FMT_VAAPI:
-#if ENABLE_FFMPEG4_TRANSCODING
             return vaapi_encode_setup_context(avctx);
-#else
-            return vaapi_encode_setup_context(avctx, low_power);
-#endif
 #endif
         default:
             break;

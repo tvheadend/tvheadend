@@ -233,7 +233,6 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     }
 
 #if ENABLE_HWACCELS
-#if ENABLE_FFMPEG4_TRANSCODING
     // hwaccel is the user input for Hardware acceleration from Codec parameteres
     int hwaccel = -1;
     if ((hwaccel = tvh_codec_profile_video_get_hwaccel(self->profile)) < 0) {
@@ -258,11 +257,6 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
             }
         }
     }
-#else
-    if (hwaccels_encode_setup_context(self->oavctx, self->profile->low_power)) {
-        return -1;
-    }
-#endif // from ENABLE_FFMPEG4_TRANSCODING
 #endif // from ENABLE_HWACCELS
 
     // XXX: is this a safe assumption?
