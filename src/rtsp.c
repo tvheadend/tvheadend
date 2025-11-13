@@ -281,7 +281,7 @@ int rtsp_describe_decode(http_client_t *hc, const char *buf, size_t len) {
 
   p = http_arg_get(&hc->hc_args, "Content-Type");
   if (p == NULL || strncmp(p, "application/sdp", 15)) {
-    tvhwarn(LS_RTSP, "describe: unkwown response content");
+    tvhwarn(LS_RTSP, "describe: unknown response content");
     return -EIO;
   }
   for (n = 0; n < len; n++) {

@@ -44,7 +44,7 @@ typedef struct api_hook
 } api_hook_t;
 
 /*
- * Regsiter handler
+ * Register handler
  */
 void api_register     ( const api_hook_t *hook );
 void api_register_all ( const api_hook_t *hooks );

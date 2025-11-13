@@ -314,7 +314,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
     goto error;
   snprintf(tpath, sizeof(tpath), "%s.tmp", path);
 
-  /* Fetch (release lock, incase of delays) */
+  /* Fetch (release lock, in case of delays) */
   tvh_mutex_unlock(&imagecache_lock);
 
   /* Build command */

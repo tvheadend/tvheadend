@@ -205,7 +205,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
     //if(r != (7*188))
       //continue; /* dude; this is not a valid packet */
 
-    //tvhdebug(LS_TVHDHOMERUN, "got r=%d (thats %d)", r, (r == 7*188));
+    //tvhdebug(LS_TVHDHOMERUN, "got r=%d (that's %d)", r, (r == 7*188));
 
     mpegts_input_recv_packets(mmi, &sb, 0, NULL);
   }
@@ -301,7 +301,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   tvh_mutex_lock(&mmi->tii_stats_mutex);
 
   if(tuner_status.signal_present) {
-    /* TODO: totaly stupid conversion from 0-100 scale to 0-655.35 */
+    /* TODO: totally stupid conversion from 0-100 scale to 0-655.35 */
     mmi->tii_stats.snr = tuner_status.signal_to_noise_quality * 655.35;
     mmi->tii_stats.signal = tuner_status.signal_strength * 655.35;
   } else {

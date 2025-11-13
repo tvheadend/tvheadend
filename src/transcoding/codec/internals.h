@@ -465,14 +465,14 @@ typedef struct {
     int global_quality;
     int async_depth;
 /**
- * VAAPI Encoder availablity.
+ * VAAPI Encoder availability.
  * @note
  * return:
  * bit0 - will show if normal encoder is available (VAEntrypointEncSlice)
  */
     int ui;
 /**
- * VAAPI Encoder Low power availablity.
+ * VAAPI Encoder Low power availability.
  * @note
  * return:
  * bit0 - will show if low power encoder is available (VAEntrypointEncSliceLP)

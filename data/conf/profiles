@@ -1,6 +1,6 @@
 [
     {
-	"comment": "MPEG-TS Pass-thru",
+	"comment": "MPEG-TS Pass-through",
 	"class": "profile-mpegts",
 	"name": "pass",
 	"default": 1

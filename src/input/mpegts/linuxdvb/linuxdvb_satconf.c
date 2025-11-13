@@ -1152,7 +1152,7 @@ linuxdvb_satconf_reset
 }
 
 /*
- * return 0 if passed mux cannot be used simultanously with given
+ * return 0 if passed mux cannot be used simultaneously with given
  * diseqc config
  */
 int

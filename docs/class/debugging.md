@@ -125,7 +125,7 @@ libav          | libav / ffmpeg
 transcode      | Transcode
 iptv           | IPTV
 iptv-pcr       | IPTV PCR
-iptv-sub       | IPTV Subcription
+iptv-sub       | IPTV Subscription
 linuxdvb       | LinuxDVB Input
 diseqc         | DiseqC
 en50221        | CI Module

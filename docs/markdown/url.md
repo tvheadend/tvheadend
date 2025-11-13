@@ -18,7 +18,7 @@ playlist | Playlist type, can be *xspf* or *m3u*
 ### /playlist[/AUTH][/TYPE][/WHAT][/IDENTIFIER]
 
 Return the m3u playlist in Enigma2 format. By default (if the rest of path
-is ommitted), an redirection answer will be sent where /channels remainder
+is omitted), an redirection answer will be sent where /channels remainder
 is used.
 
 TYPE          | Playlist type
@@ -85,7 +85,7 @@ pids       | (/mux only) list of subscribed PIDs (comma separated)
 ### /xmltv[/WHAT][/IDENTIFIER]
 
 Return the XMLTV EPG export. By default (if the rest of path
-is ommitted), an redirection answer will be sent where /channels remainder
+is omitted), an redirection answer will be sent where /channels remainder
 is used.
 
 WHAT          | Playlist contents

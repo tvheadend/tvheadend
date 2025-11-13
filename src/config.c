@@ -2429,7 +2429,7 @@ const idclass_t config_class = {
       .desc   = N_("Path to an icon for this channel. This can be "
                    "named however you wish, as either a local "
                    "(file://) or remote (http://) image. "
-                   "See Help for more infomation."),
+                   "See Help for more information."),
       .off    = offsetof(config_t, chicon_path),
       .doc    = prop_doc_config_channelicon_path,
       .opts   = PO_ADVANCED,
@@ -2693,7 +2693,7 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "http_user_agent",
       .name   = N_("HTTP User Agent"),
-      .desc   = N_("The user agent string for the build-in HTTP client."),
+      .desc   = N_("The user agent string for the built-in HTTP client."),
       .off    = offsetof(config_t, http_user_agent),
       .opts   = PO_HIDDEN | PO_EXPERT,
       .group  = 8,
@@ -2714,7 +2714,7 @@ const idclass_t config_class = {
       .desc   = N_("Differentiated Services Code Point / Type of "
                    "Service: Set the service class Tvheadend sends "
                    "with each packet. Depending on the option selected "
-                   "this tells your router the prority in which to "
+                   "this tells your router the priority in which to "
                    "give packets sent from Tvheadend, this option does "
                    "not usually need changing. See "
                    "https://en.wikipedia.org/wiki/"

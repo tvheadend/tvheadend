@@ -356,7 +356,7 @@ def do_publink_download(*args):
     path = pcloud_normpath(args[1])
     resp = session.get('https://my.pcloud.com/publink/show?code=%s' % args[0], timeout=30, verify=PCLOUD_CA_CERTS)
     if resp.status_code != 200:
-        error(10, 'Unable to retreive publink %s', args[0])
+        error(10, 'Unable to retrieve publink %s', args[0])
     pdata = pcloud_extract_publink_data(resp.content)
     meta = pdata['metadata']
     if not meta:
@@ -395,7 +395,7 @@ def do_publink_download(*args):
         if resp.status_code == 200:
             break
     if resp.status_code != 200:
-        error(10, 'Unable to retreive file content for "%s"!' % path)
+        error(10, 'Unable to retrieve file content for "%s"!' % path)
     if len(resp.content) == 0:
         error(10, 'Empty')
     fp = open(args[2], sys.version_info[0] < 3 and "w+" or "bw+")

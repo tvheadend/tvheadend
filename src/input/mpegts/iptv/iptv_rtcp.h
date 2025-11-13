@@ -138,7 +138,7 @@ int rtcp_init(rtcp_t *info);
 int rtcp_destroy(rtcp_t *info);
 
 /*
- Update RTCP informations.
+ Update RTCP information.
  It can also send a RTCP RR packet if the timer has expired.
  */
 int rtcp_receiver_update(rtcp_t *info, uint8_t *rtp_packet);

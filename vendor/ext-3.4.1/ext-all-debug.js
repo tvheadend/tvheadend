@@ -1318,7 +1318,7 @@ Ext.DomQuery = function(){
          * </ul></div>
          * <p>A filter function returns an Array of DOM elements which conform to the pseudo class.</p>
          * <p>In addition to the provided pseudo classes listed above such as <code>first-child</code> and <code>nth-child</code>,
-         * developers may add additional, custom psuedo class filters to select elements according to application-specific requirements.</p>
+         * developers may add additional, custom pseudo class filters to select elements according to application-specific requirements.</p>
          * <p>For example, to filter <code>&lt;a></code> elements to only return links to <i>external</i> resources:</p>
          * <code><pre>
 Ext.DomQuery.pseudos.external = function(c, v){
@@ -2199,7 +2199,7 @@ el.un('click', this.handlerFn);
      * <p>Updates the <a href="http:
      * from a specified URL. Note that this is subject to the <a href="http://en.wikipedia.org/wiki/Same_origin_policy">Same Origin Policy</a></p>
      * <p>Updating innerHTML of an element will <b>not</b> execute embedded <tt>&lt;script></tt> elements. This is a browser restriction.</p>
-     * @param {Mixed} options. Either a sring containing the URL from which to load the HTML, or an {@link Ext.Ajax#request} options object specifying
+     * @param {Mixed} options. Either a string containing the URL from which to load the HTML, or an {@link Ext.Ajax#request} options object specifying
      * exactly how to request the HTML.
      * @return {Ext.Element} this
      */
@@ -6593,7 +6593,7 @@ btn.on('click', Ext.createDelegate(sayHi, btn, ['Fred']));
     },
 
     /**
-     * Calls this function after the number of millseconds specified, optionally in a specific scope. Example usage:
+     * Calls this function after the number of milliseconds specified, optionally in a specific scope. Example usage:
      * <pre><code>
 var sayHi = function(name){
     alert('Hi, ' + name);
@@ -39491,7 +39491,7 @@ Ext.form.TriggerField = Ext.extend(Ext.form.TextField,  {
     
     deferHeight : true,
     
-    mimicing : false,
+    mimicking : false,
 
     actionMode: 'wrap',
 
@@ -39603,7 +39603,7 @@ Ext.form.TriggerField = Ext.extend(Ext.form.TextField,  {
     
     onDestroy : function(){
         Ext.destroy(this.trigger, this.wrap);
-        if (this.mimicing){
+        if (this.mimicking){
             this.doc.un('mousedown', this.mimicBlur, this);
         }
         delete this.doc;
@@ -39613,9 +39613,9 @@ Ext.form.TriggerField = Ext.extend(Ext.form.TextField,  {
     
     onFocus : function(){
         Ext.form.TriggerField.superclass.onFocus.call(this);
-        if(!this.mimicing){
+        if(!this.mimicking){
             this.wrap.addClass(this.wrapFocusClass);
-            this.mimicing = true;
+            this.mimicking = true;
             this.doc.on('mousedown', this.mimicBlur, this, {delay: 10});
             if(this.monitorTab){
                 this.on('specialkey', this.checkTab, this);
@@ -39642,7 +39642,7 @@ Ext.form.TriggerField = Ext.extend(Ext.form.TextField,  {
 
     
     triggerBlur : function(){
-        this.mimicing = false;
+        this.mimicking = false;
         this.doc.un('mousedown', this.mimicBlur, this);
         if(this.monitorTab && this.el){
             this.un('specialkey', this.checkTab, this);

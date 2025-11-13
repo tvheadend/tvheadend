@@ -53,7 +53,7 @@ LIST_HEAD(dvr_vfs_list, dvr_vfs);
 #define DVR_FINISHED_ALL             (1<<0)
 #define DVR_FINISHED_SUCCESS         (1<<1)
 #define DVR_FINISHED_FAILED          (1<<2)
-#define DVR_FINISHED_REMOVED_SUCCESS (1<<3) /* Removed recording, was succesful before */
+#define DVR_FINISHED_REMOVED_SUCCESS (1<<3) /* Removed recording, was successful before */
 #define DVR_FINISHED_REMOVED_FAILED  (1<<4) /* Removed recording, was failed before */
 
 typedef struct dvr_vfs {
@@ -278,7 +278,7 @@ typedef struct dvr_entry {
   dvr_entry_sched_state_t de_sched_state;
 
   /**
-   * Recording state (onyl valid if de_sched_state == DVR_RECORDING)
+   * Recording state (only valid if de_sched_state == DVR_RECORDING)
    */
   dvr_rs_state_t de_rec_state;
 

@@ -25,7 +25,7 @@
 """
 Module Title
 
-Module Decsription
+Module Description
 """
 
 # ############################################################################

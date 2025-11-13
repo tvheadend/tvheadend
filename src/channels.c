@@ -743,7 +743,7 @@ channel_access(channel_t *ch, access_t *a, int disabled)
     return 0;
 
   if (!ch) {
-    /* If user has full rights, allow access to removed chanels */
+    /* If user has full rights, allow access to removed channels */
     if (a->aa_chrange == NULL && a->aa_chtags == NULL &&
         a->aa_chtags_exclude == NULL)
       return 1;

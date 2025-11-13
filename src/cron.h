@@ -68,7 +68,7 @@ int cron_next ( cron_t *c, const time_t cur, time_t *nxt );
 /**
  * Initialise from a string
  *
- * @param str String representation of the mutiple cron entries ('\n' delimiter)
+ * @param str String representation of the multiple cron entries ('\n' delimiter)
  *
  * @return cron_multi_t pointer if OK, NULL if failed to parse
  */
