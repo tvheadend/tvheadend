@@ -196,6 +196,7 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
 {
   profile_chain_t *prch = de->de_chain;
   char *postproc = NULL;
+  int is_self;
 
   assert(de->de_s != NULL);
   assert(prch != NULL);
@@ -206,21 +207,37 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
 
   atomic_add(&de->de_thread_shutdown, 1);
 
-  pthread_join(de->de_thread, (void **)&postproc);
+  /* Check if we're being called from the worker thread itself to avoid self-join deadlock */
+  is_self = pthread_equal(pthread_self(), de->de_thread);
 
-  if (prch->prch_muxer)
-    dvr_thread_epilog(de, postproc);
+  if (!is_self) {
+    /* Normal case: called from outside the worker thread */
+    pthread_join(de->de_thread, (void **)&postproc);
 
-  free(postproc);
+    if (prch->prch_muxer)
+      dvr_thread_epilog(de, postproc);
 
-  subscription_unsubscribe(de->de_s, UNSUBSCRIBE_FINAL);
-  de->de_s = NULL;
+    free(postproc);
 
-  de->de_chain = NULL;
-  profile_chain_close(prch);
-  free(prch);
+    subscription_unsubscribe(de->de_s, UNSUBSCRIBE_FINAL);
+    de->de_s = NULL;
 
-  dvr_vfs_refresh_entry(de);
+    de->de_chain = NULL;
+    profile_chain_close(prch);
+    free(prch);
+
+    dvr_vfs_refresh_entry(de);
+  } else {
+    /* Called from worker thread itself - do minimal cleanup to avoid deadlock.
+     * The worker thread will handle its own cleanup when it exits.
+     */
+    de->de_thread = 0; /* Mark that thread should not be joined */
+    
+    subscription_unsubscribe(de->de_s, UNSUBSCRIBE_FINAL);
+    de->de_s = NULL;
+    
+    /* Leave de_chain alone - the worker thread will clean it up before exiting */
+  }
 
   de->de_in_unsubscribe = 0;
 }
@@ -2018,6 +2035,23 @@ fin:
 
   if (ss)
     streaming_start_unref(ss);
+
+  /* If de_chain is still set, we need to clean it up. This happens when
+   * dvr_rec_unsubscribe was called from this worker thread itself to avoid
+   * the self-join deadlock.
+   */
+  prch = de->de_chain;
+  if (prch) {
+    if (dvr_thread_global_lock(de, &run)) {
+      if (prch->prch_muxer)
+        dvr_thread_epilog(de, postproc);
+      de->de_chain = NULL;
+      profile_chain_close(prch);
+      free(prch);
+      dvr_vfs_refresh_entry(de);
+      dvr_thread_global_unlock(de);
+    }
+  }
 
   return postproc;
 }
