@@ -210,12 +210,12 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
   if (pthread_self() != de->de_thread) {
     pthread_join(de->de_thread, (void **)&postproc);
 
-    if (prch->prch_muxer)
+    if (postproc && prch->prch_muxer)
       dvr_thread_epilog(de, postproc);
 
     free(postproc);
   } else {
-    tvherror(LS_DVR, "Skipping postprocessing to prevent deadlock. Note: dvr_thread postproc memory leak.");
+    tvhwarn(LS_DVR, "Preventing self-join deadlock");
   }
 
   subscription_unsubscribe(de->de_s, UNSUBSCRIBE_FINAL);
@@ -416,10 +416,10 @@ dvr_sub_episode_numeral(const char *id, const char *fmt, const void *aux, char *
 // *id contains the current field format string
 // *fmt contains the whole format string
 
-  enum return_numeral_type { 
+  enum return_numeral_type {
     RETURN_SERIES, RETURN_EPISODE
   };
-  
+
   const dvr_entry_t *de = aux;
   size_t id_len = 0;
   int return_type = RETURN_SERIES;
@@ -1621,7 +1621,7 @@ dvr_thread_mpegts_stats(dvr_entry_t *de, void *sm_data)
 static int
 dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
                      int *run, int *started, int64_t *dts_offset,
-                     char *postproc)
+                     char **postproc)
 {
   dvr_entry_t *de = *_de;
   profile_chain_t *prch = de->de_chain;
@@ -1640,7 +1640,7 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
       *started = 0;
       return 0;
     }
-    dvr_thread_epilog(de, postproc);
+    dvr_thread_epilog(de, *postproc);
     *dts_offset = PTS_UNSET;
     *started = 0;
     if (de->de_config->dvr_clone)
@@ -1668,13 +1668,14 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
        *   dvr_stop_recording() -> dvr_rec_unsubscribe()
        */
       if (prch->prch_muxer)
-        dvr_thread_epilog(de, postproc);
+        dvr_thread_epilog(de, *postproc);
 
-      free(postproc);
+      free(*postproc);
+      *postproc = NULL;
 
       dvr_stop_recording(de, code == SM_CODE_NO_SPACE ? SM_CODE_NO_SPACE : SM_CODE_INVALID_TARGET, 1, 0);
     }
-    
+
     dvr_thread_global_unlock(de);
   }
   return ret;
@@ -1837,7 +1838,7 @@ dvr_thread(void *aux)
         break;
 
       if (muxing == 0) {
-        if (!dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
+        if (!dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, &postproc))
         {
           tvherror(LS_DVR, "Recording thread failed to start. (SMT_PACKET)");
           run = 0;
@@ -1910,7 +1911,7 @@ dvr_thread(void *aux)
       }
 
       if (muxing == 0) {
-        if (!dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
+        if (!dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, &postproc))
         {
           tvherror(LS_DVR, "Recording thread failed to start. (SMT_MPEGTS)");
           run = 0;
