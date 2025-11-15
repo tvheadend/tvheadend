@@ -1210,6 +1210,42 @@ _eit_callback
   tvhtrace(LS_TBL_EIT, "%s: sid %i tsid %04x onid %04x seg %02x",
            mt->mt_name, sid, tsid, onid, seg);
 
+ /*
+ Notes for eroyee NZ DVB-T hack for full regional EPG in New Zealand.
+ 
+ [Data] stream TSID for TVNZ and TVWorks is 0x19 and 0x1D respectively.
+ This is NOT the  same as the network TSID for regional transmissions, 
+ (see https://freeviewnz.tv/Media/o4pp5qwe/freeview-specification-2022-v15.pdf)
+ which means that, without this hack, those outside of the Auckland region
+ will only get now/next (p/f) EPG for TVNZ, TV3, Duke, Bravo, Eden etc.
+ 
+ Therefore to fully populate the EPG we translate the two Auckland-based 
+ stream TSIDs to the locally determined NIT TSID. This means we don't need
+ to specify the region and it should 'just work'. At this point the code
+ has not been tested outside of the southern region so YMMV!
+ 
+ May ultimately require a new Grabber module but for now use "NZ Freeview Local"
+ which should provide the requisite scraping script and also sets the SVCNETLOOKUP
+ flag which we're using here to ensure the TSID translation only occurs when this
+ module is selected.
+ 
+ Note that, for some reason, 'svc-net-lookup' (from the 'Local' module "nz_freeview2") 
+ was defined here as EXTRAMUXLOOKUP, which presumable means EIT_HACK_SVCNETLOOKUP, 
+ called in the 'get service' code section and referred to as 'NZ Freesat', was 
+ not working and could then be redundant? 
+ */
+
+  if ((hacks & EIT_HACK_SVCNETLOOKUP) != 0) {
+    mpegts_mux_t *dm = mt->mt_mux;
+    if (tsid == 0x19) {
+     tsid = dm->mm_tsid;
+    }
+    if (tsid == 0x1D) {
+     tsid = dm->mm_tsid;
+    }
+  }
+
+
   /* Register interest */
   if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60) ||
       (hacks & EIT_HACK_INTEREST4E) != 0 /* uk_freesat hack */)
@@ -1851,7 +1887,7 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
       else if (strcmp(htsmsg_field_name(f), "extra-mux-lookup") == 0)
         priv->hacks |= EIT_HACK_EXTRAMUXLOOKUP;
       else if (strcmp(htsmsg_field_name(f), "svc-net-lookup") == 0)
-        priv->hacks |= EIT_HACK_EXTRAMUXLOOKUP;
+        priv->hacks |= EIT_HACK_SVCNETLOOKUP;
       else if (strcmp(htsmsg_field_name(f), "bat") == 0) {
         if (!(e = htsmsg_field_get_map(f))) continue;
         priv->bat_pid = htsmsg_get_s32_or_default(e, "pid", 0);
