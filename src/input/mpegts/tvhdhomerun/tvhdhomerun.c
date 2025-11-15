@@ -303,7 +303,7 @@ static void tvhdhomerun_clear_orphaned_locks(struct hdhomerun_discover_device_t 
 
   for (j = 0; j < dInfo->tuner_count; j++) {
     hd = hdhomerun_device_create(dInfo->device_id, dInfo->ip_addr, j, NULL);
-        
+
     if (hd == NULL)
       continue;
 
