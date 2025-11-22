@@ -1322,10 +1322,10 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, timeshift_init);
 #endif
   tvhftrace(LS_MAIN, tcp_server_init);
-  tvhftrace(LS_MAIN, webui_init, opt_xspf);
 #if ENABLE_UPNP
   tvhftrace(LS_MAIN, upnp_server_init, opt_bindaddr);
 #endif
+  tvhftrace(LS_MAIN, webui_init, opt_xspf);
   tvhftrace(LS_MAIN, service_mapper_init);
   tvhftrace(LS_MAIN, epggrab_init);
   tvhftrace(LS_MAIN, epg_init);
