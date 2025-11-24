@@ -4,9 +4,9 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # 
 # Translators:
-# PY RENAUT <pyrenaut@gmail.com>, 2024
 # euca01, 2025
 # Christian Hewitt, 2025
+# PY RENAUT <pyrenaut@gmail.com>, 2025
 # 
 #, fuzzy
 msgid ""
@@ -15,7 +15,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-11-24 02:38+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: Christian Hewitt, 2025\n"
+"Last-Translator: PY RENAUT <pyrenaut@gmail.com>, 2025\n"
 "Language-Team: French (https://app.transifex.com/tvheadend/teams/43381/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2577,11 +2577,11 @@ msgstr "Don't use running state (EITp/f) detection."
 
 #: src/docs_inc.c:6164
 msgid "Donate to TVHeadEnd"
-msgstr ""
+msgstr "Faire un don à TVHeadEnd"
 
 #: src/docs_inc.c:6192
 msgid "Donate to Tvheadend"
-msgstr ""
+msgstr "Faire un don à Tvheadend"
 
 #: src/docs_inc.c:1322
 msgid "Download"
@@ -9692,7 +9692,7 @@ msgstr "display-name"
 
 #: src/docs_inc.c:1572
 msgid "documentation"
-msgstr ""
+msgstr "documentation"
 
 #: src/docs_inc.c:6158 src/docs_inc.c:6186
 msgid "donate"
