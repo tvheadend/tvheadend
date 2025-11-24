@@ -3,12 +3,13 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+#: src/tvhlog.c:196
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-06 02:33+0000\n"
+"POT-Creation-Date: 2025-11-24 02:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -339,6 +340,10 @@ msgstr ""
 msgid "AA"
 msgstr ""
 
+#: src/tvhlog.c:201
+msgid "AAC"
+msgstr ""
+
 #: src/profile.c:1940
 msgid "AAC audio"
 msgstr ""
@@ -376,51 +381,51 @@ msgstr ""
 msgid "AES128 ECB Constant Code Word"
 msgstr ""
 
-#: src/config.c:2058
+#: src/config.c:2061
 msgid "AF11"
 msgstr ""
 
-#: src/config.c:2059
+#: src/config.c:2062
 msgid "AF12"
 msgstr ""
 
-#: src/config.c:2060
+#: src/config.c:2063
 msgid "AF13"
 msgstr ""
 
-#: src/config.c:2062
+#: src/config.c:2065
 msgid "AF21"
 msgstr ""
 
-#: src/config.c:2063
+#: src/config.c:2066
 msgid "AF22"
 msgstr ""
 
-#: src/config.c:2064
+#: src/config.c:2067
 msgid "AF23"
 msgstr ""
 
-#: src/config.c:2066
+#: src/config.c:2069
 msgid "AF31"
 msgstr ""
 
-#: src/config.c:2067
+#: src/config.c:2070
 msgid "AF32"
 msgstr ""
 
-#: src/config.c:2068
+#: src/config.c:2071
 msgid "AF33"
 msgstr ""
 
-#: src/config.c:2070
+#: src/config.c:2073
 msgid "AF41"
 msgstr ""
 
-#: src/config.c:2071
+#: src/config.c:2074
 msgid "AF42"
 msgstr ""
 
-#: src/config.c:2072
+#: src/config.c:2075
 msgid "AF43"
 msgstr ""
 
@@ -546,7 +551,7 @@ msgstr ""
 msgid "Adapter in use by another subscription"
 msgstr ""
 
-#: src/config.c:2335
+#: src/config.c:2338
 msgid "Add channel numbers to the channel name list"
 msgstr ""
 
@@ -554,7 +559,7 @@ msgstr ""
 msgid "Add file and line numbers to debug"
 msgstr ""
 
-#: src/config.c:2344
+#: src/config.c:2347
 msgid "Add sources (like DVB-T string) to the channel name list"
 msgstr ""
 
@@ -604,11 +609,11 @@ msgstr ""
 msgid "Administrator login"
 msgstr ""
 
-#: src/epg.c:1788
+#: src/epg.c:1872
 msgid "Adult movie"
 msgstr ""
 
-#: src/access.c:1482 src/access.c:1620 src/config.c:2086
+#: src/access.c:1482 src/access.c:1620 src/config.c:2089
 msgid "Advanced"
 msgstr ""
 
@@ -620,7 +625,7 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
-#: src/epg.c:1782
+#: src/epg.c:1866
 msgid "Adventure"
 msgstr ""
 
@@ -630,7 +635,7 @@ msgid ""
 "connections."
 msgstr ""
 
-#: src/epg.c:1948
+#: src/epg.c:2032
 msgid "Advertisement / Shopping"
 msgstr ""
 
@@ -671,7 +676,7 @@ msgid ""
 "replaced with an underscore. See Help for details."
 msgstr ""
 
-#: src/config.c:2097
+#: src/config.c:2100
 msgid "All lower-case"
 msgstr ""
 
@@ -764,7 +769,7 @@ msgstr ""
 msgid "Allowed networks"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1103
+#: src/epggrab/module/xmltv.c:1422
 msgid "Alter programme description to include detailed information"
 msgstr ""
 
@@ -809,7 +814,7 @@ msgid ""
 "be matched (including boundary values)."
 msgstr ""
 
-#: src/epg.c:1925
+#: src/epg.c:2009
 msgid "Animals"
 msgstr ""
 
@@ -847,15 +852,15 @@ msgstr ""
 msgid "Argument names to remove from the query string in the URL."
 msgstr ""
 
-#: src/epg.c:1888
+#: src/epg.c:1972
 msgid "Arts"
 msgstr ""
 
-#: src/epg.c:1900 src/epg.c:1901 src/epg.c:1902 src/epg.c:1903
+#: src/epg.c:1984 src/epg.c:1985 src/epg.c:1986 src/epg.c:1987
 msgid "Arts / Culture (without music)"
 msgstr ""
 
-#: src/epg.c:1898
+#: src/epg.c:1982
 msgid "Arts magazines"
 msgstr ""
 
@@ -876,8 +881,12 @@ msgstr ""
 msgid "Associate this device with one or more networks."
 msgstr ""
 
-#: src/epg.c:1840
+#: src/epg.c:1924
 msgid "Athletics"
+msgstr ""
+
+#: src/tvhlog.c:197
+msgid "Audio"
 msgstr ""
 
 #: src/transcoding/codec/profile_audio_class.c:355
@@ -908,7 +917,7 @@ msgstr ""
 msgid "Authenticated user"
 msgstr ""
 
-#: src/config.c:2492
+#: src/config.c:2495
 msgid "Authentication type"
 msgstr ""
 
@@ -1062,7 +1071,7 @@ msgstr ""
 msgid "Bad request"
 msgstr ""
 
-#: src/epg.c:1870 src/epg.c:1876
+#: src/epg.c:1954 src/epg.c:1960
 msgid "Ballet"
 msgstr ""
 
@@ -1080,7 +1089,7 @@ msgid "Based on software from"
 msgstr ""
 
 #: src/access.c:1431 src/access.c:1443 src/access.c:1481 src/access.c:1615
-#: src/access.c:1658 src/config.c:2085
+#: src/access.c:1658 src/config.c:2088
 msgid "Basic"
 msgstr ""
 
@@ -1137,7 +1146,7 @@ msgstr ""
 msgid "Boot ID"
 msgstr ""
 
-#: src/config.c:2119
+#: src/config.c:2122
 msgid "Both plain and digest"
 msgstr ""
 
@@ -1165,7 +1174,7 @@ msgstr ""
 msgid "Broadcast."
 msgstr ""
 
-#: src/epg.c:1896
+#: src/epg.c:1980
 msgid "Broadcasting"
 msgstr ""
 
@@ -1257,7 +1266,7 @@ msgstr ""
 msgid "CI Module"
 msgstr ""
 
-#: src/config.c:2550
+#: src/config.c:2553
 msgid "CORS origin"
 msgstr ""
 
@@ -1273,35 +1282,35 @@ msgstr ""
 msgid "CRID authority"
 msgstr ""
 
-#: src/config.c:2056
+#: src/config.c:2059
 msgid "CS0"
 msgstr ""
 
-#: src/config.c:2057
+#: src/config.c:2060
 msgid "CS1"
 msgstr ""
 
-#: src/config.c:2061
+#: src/config.c:2064
 msgid "CS2"
 msgstr ""
 
-#: src/config.c:2065
+#: src/config.c:2068
 msgid "CS3"
 msgstr ""
 
-#: src/config.c:2069
+#: src/config.c:2072
 msgid "CS4"
 msgstr ""
 
-#: src/config.c:2073
+#: src/config.c:2076
 msgid "CS5"
 msgstr ""
 
-#: src/config.c:2075
+#: src/config.c:2078
 msgid "CS6"
 msgstr ""
 
-#: src/config.c:2076
+#: src/config.c:2079
 msgid "CS7"
 msgstr ""
 
@@ -1349,11 +1358,11 @@ msgstr ""
 msgid "Card client"
 msgstr ""
 
-#: src/epg.c:1857
+#: src/epg.c:1941
 msgid "Cartoons"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:775
+#: src/epggrab/module/xmltv.c:899
 msgid "Categories: "
 msgstr ""
 
@@ -1363,6 +1372,10 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1087
 msgid "Category "
+msgstr ""
+
+#: src/epggrab/module/xmltv.c:1444
+msgid "Category Code XPath"
 msgstr ""
 
 #: src/access.c:1765
@@ -1392,15 +1405,15 @@ msgstr ""
 msgid "Channel icon as defined in EPG data."
 msgstr ""
 
-#: src/config.c:2438
+#: src/config.c:2441
 msgid "Channel icon name scheme"
 msgstr ""
 
-#: src/config.c:2425
+#: src/config.c:2428
 msgid "Channel icon path"
 msgstr ""
 
-#: src/config.c:2192
+#: src/config.c:2195
 msgid "Channel icon/Picon Settings"
 msgstr ""
 
@@ -1416,11 +1429,11 @@ msgstr ""
 msgid "Channel name"
 msgstr ""
 
-#: src/config.c:2334
+#: src/config.c:2337
 msgid "Channel name with numbers"
 msgstr ""
 
-#: src/config.c:2343
+#: src/config.c:2346
 msgid "Channel name with sources"
 msgstr ""
 
@@ -1444,7 +1457,7 @@ msgstr ""
 msgid "Channel number range"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1087
+#: src/epggrab/module/xmltv.c:1406
 msgid "Channel numbers (heuristic)"
 msgstr ""
 
@@ -1552,16 +1565,16 @@ msgstr ""
 msgid "Check tuner-number in signal-status messages"
 msgstr ""
 
-#: src/epg.c:1858 src/epg.c:1859 src/epg.c:1860 src/epg.c:1861 src/epg.c:1862
-#: src/epg.c:1863 src/epg.c:1864 src/epg.c:1865 src/epg.c:1866 src/epg.c:1867
+#: src/epg.c:1942 src/epg.c:1943 src/epg.c:1944 src/epg.c:1945 src/epg.c:1946
+#: src/epg.c:1947 src/epg.c:1948 src/epg.c:1949 src/epg.c:1950 src/epg.c:1951
 msgid "Children's / Youth Programs"
 msgstr ""
 
-#: src/epg.c:1852
+#: src/epg.c:1936
 msgid "Children's / Youth programs"
 msgstr ""
 
-#: src/epg.c:1894
+#: src/epg.c:1978
 msgid "Cinema"
 msgstr ""
 
@@ -1569,11 +1582,11 @@ msgstr ""
 msgid "Class"
 msgstr ""
 
-#: src/epg.c:1787
+#: src/epg.c:1871
 msgid "Classical"
 msgstr ""
 
-#: src/epg.c:1872
+#: src/epg.c:1956
 msgid "Classical music"
 msgstr ""
 
@@ -1601,7 +1614,7 @@ msgstr ""
 msgid "Code Word Client (newcamd)"
 msgstr ""
 
-#: src/tvhlog.c:181 src/transcoding/codec/profile_class.c:241
+#: src/tvhlog.c:181 src/tvhlog.c:199 src/transcoding/codec/profile_class.c:241
 msgid "Codec"
 msgstr ""
 
@@ -1637,7 +1650,7 @@ msgstr ""
 msgid "Coding algorithm."
 msgstr ""
 
-#: src/epg.c:1784
+#: src/epg.c:1868
 msgid "Comedy"
 msgstr ""
 
@@ -1694,11 +1707,11 @@ msgstr ""
 msgid "Completed OK"
 msgstr ""
 
-#: src/config.c:2384
+#: src/config.c:2387
 msgid "Compress EPG database"
 msgstr ""
 
-#: src/config.c:2385
+#: src/config.c:2388
 msgid "Compress the EPG database to reduce disk I/O and space."
 msgstr ""
 
@@ -1714,7 +1727,7 @@ msgstr ""
 msgid "Concurrent input limit per network group for satellite SAT>IP tuners."
 msgstr ""
 
-#: src/config.c:2310
+#: src/config.c:2313
 msgid "Conditional Access (for advanced view level)"
 msgstr ""
 
@@ -1731,7 +1744,7 @@ msgstr ""
 msgid "Configuration"
 msgstr ""
 
-#: src/config.c:2173
+#: src/config.c:2176
 msgid "Configuration - Base"
 msgstr ""
 
@@ -1760,7 +1773,7 @@ msgstr ""
 msgid "Configuration name"
 msgstr ""
 
-#: src/config.c:2226
+#: src/config.c:2229
 msgid "Configuration version"
 msgstr ""
 
@@ -1819,7 +1832,7 @@ msgstr ""
 msgid "Content type."
 msgstr ""
 
-#: src/epg.c:1817
+#: src/epg.c:1901
 msgid "Contest"
 msgstr ""
 
@@ -1841,11 +1854,11 @@ msgid ""
 "16'."
 msgstr ""
 
-#: src/config.c:2515
+#: src/config.c:2518
 msgid "Cookie expiration (days)"
 msgstr ""
 
-#: src/epg.c:1947
+#: src/epg.c:2031
 msgid "Cooking"
 msgstr ""
 
@@ -1866,7 +1879,7 @@ msgid "Country"
 msgstr ""
 
 #: src/ratinglabels.c:647
-msgid "Country recieved via OTA EPG."
+msgid "Country received via OTA EPG."
 msgstr ""
 
 #: src/service_mapper.c:649
@@ -1990,7 +2003,7 @@ msgstr ""
 msgid "Credits such as cast members"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:774
+#: src/epggrab/module/xmltv.c:898
 msgid "Credits: "
 msgstr ""
 
@@ -2006,11 +2019,11 @@ msgstr ""
 msgid "CryptoWord mode."
 msgstr ""
 
-#: src/epg.c:1888
+#: src/epg.c:1972
 msgid "Culture (without music)"
 msgstr ""
 
-#: src/epg.c:1898
+#: src/epg.c:1982
 msgid "Culture magazines"
 msgstr ""
 
@@ -2018,7 +2031,7 @@ msgstr ""
 msgid "Current RTSP port."
 msgstr ""
 
-#: src/epg.c:1798
+#: src/epg.c:1882
 msgid "Current affairs"
 msgstr ""
 
@@ -2038,11 +2051,11 @@ msgstr ""
 msgid "Custom HTTP headers"
 msgstr ""
 
-#: src/config.c:2351
+#: src/config.c:2354
 msgid "Custom date Format"
 msgstr ""
 
-#: src/config.c:2352
+#: src/config.c:2355
 msgid "Custom date mask like (%yyyy-%M-%dd %h:%m:%s)"
 msgstr ""
 
@@ -2062,7 +2075,7 @@ msgstr ""
 msgid "DBus - use the session message bus instead of the system one"
 msgstr ""
 
-#: src/tvhlog.c:185
+#: src/tvhlog.c:183
 msgid "DD-CI"
 msgstr ""
 
@@ -2078,7 +2091,7 @@ msgstr ""
 msgid "DES key"
 msgstr ""
 
-#: src/config.c:2710
+#: src/config.c:2713
 msgid "DSCP/TOS for streaming"
 msgstr ""
 
@@ -2142,7 +2155,7 @@ msgstr ""
 msgid "DVB multiplex"
 msgstr ""
 
-#: src/config.c:2748
+#: src/config.c:2751
 msgid "DVB scan files path"
 msgstr ""
 
@@ -2279,7 +2292,7 @@ msgstr ""
 msgid "DVR schedule not found"
 msgstr ""
 
-#: src/epg.c:1870
+#: src/epg.c:1954
 msgid "Dance"
 msgstr ""
 
@@ -2329,11 +2342,11 @@ msgid ""
 "duplicate detection will not be possible."
 msgstr ""
 
-#: src/epg.c:1802
+#: src/epg.c:1886
 msgid "Debate"
 msgstr ""
 
-#: src/tvhlog.c:866
+#: src/tvhlog.c:919
 msgid "Debug libav log"
 msgstr ""
 
@@ -2341,32 +2354,32 @@ msgstr ""
 msgid "Debug options"
 msgstr ""
 
-#: src/tvhlog.c:839
+#: src/tvhlog.c:892
 msgid "Debug subsystems"
 msgstr ""
 
-#: src/tvhlog.c:818
+#: src/tvhlog.c:871
 msgid "Debug to syslog"
 msgstr ""
 
-#: src/tvhlog.c:827
+#: src/tvhlog.c:880
 msgid "Debug trace (low-level)"
 msgstr ""
 
-#: src/tvhlog.c:776
+#: src/tvhlog.c:829
 msgid "Debugging"
 msgstr ""
 
-#: src/access.c:1480 src/access.c:1492 src/config.c:2055 src/profile.c:334
+#: src/access.c:1480 src/access.c:1492 src/config.c:2058 src/profile.c:334
 #: src/dvr/dvr_db.c:3736 src/transcoding/codec/profile_video_class.c:59
 msgid "Default"
 msgstr ""
 
-#: src/config.c:2245
+#: src/config.c:2248
 msgid "Default language"
 msgstr ""
 
-#: src/config.c:2369
+#: src/config.c:2372
 msgid "Default language(s)"
 msgstr ""
 
@@ -2390,7 +2403,7 @@ msgstr ""
 msgid "Default user interface level."
 msgstr ""
 
-#: src/config.c:2287
+#: src/config.c:2290
 msgid "Default view level"
 msgstr ""
 
@@ -2445,7 +2458,7 @@ msgstr ""
 msgid "Descrambler EMM"
 msgstr ""
 
-#: src/config.c:2727
+#: src/config.c:2730
 msgid "Descrambler buffer (TS packets)"
 msgstr ""
 
@@ -2458,7 +2471,7 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#: src/epg.c:1781
+#: src/epg.c:1865
 msgid "Detective"
 msgstr ""
 
@@ -2479,7 +2492,7 @@ msgstr ""
 msgid "Device path in sysfs"
 msgstr ""
 
-#: src/config.c:2711
+#: src/config.c:2714
 msgid ""
 "Differentiated Services Code Point / Type of Service: Set the service class "
 "Tvheadend sends with each packet. Depending on the option selected this "
@@ -2488,18 +2501,18 @@ msgid ""
 "wiki/Differentiated_services for more information. "
 msgstr ""
 
-#: src/config.c:2118
+#: src/config.c:2121
 msgid "Digest"
 msgstr ""
 
-#: src/config.c:2493
+#: src/config.c:2496
 msgid ""
 "Digest access authentication is intended as a security trade-off. It is "
 "intended to replace unencrypted HTTP basic access authentication. This "
 "option should be enabled for standard usage."
 msgstr ""
 
-#: src/config.c:2504
+#: src/config.c:2507
 msgid "Digest hash type"
 msgstr ""
 
@@ -2576,7 +2589,7 @@ msgstr ""
 msgid "Disable syslog (all messages)"
 msgstr ""
 
-#: src/channels.c:392 src/profile.c:2350 src/epggrab/module/xmltv.c:1129
+#: src/channels.c:392 src/profile.c:2350 src/epggrab/module/xmltv.c:1484
 msgid "Disabled"
 msgstr ""
 
@@ -2590,7 +2603,7 @@ msgstr ""
 msgid "Discover more muxes using the Network Information Table (if available)."
 msgstr ""
 
-#: src/epg.c:1802
+#: src/epg.c:1886
 msgid "Discussion"
 msgstr ""
 
@@ -2629,7 +2642,7 @@ msgstr ""
 msgid "Do not use"
 msgstr ""
 
-#: src/epg.c:1801 src/epg.c:1907
+#: src/epg.c:1885 src/epg.c:1991
 msgid "Documentary"
 msgstr ""
 
@@ -2679,7 +2692,7 @@ msgstr ""
 msgid "Down (only)"
 msgstr ""
 
-#: src/epg.c:1780 src/epg.c:1787 src/epg.c:1788
+#: src/epg.c:1864 src/epg.c:1871 src/epg.c:1872
 msgid "Drama"
 msgstr ""
 
@@ -2691,7 +2704,7 @@ msgstr ""
 msgid "Duplicate handling"
 msgstr ""
 
-#: src/config.c:2074
+#: src/config.c:2077
 msgid "EF"
 msgstr ""
 
@@ -2707,11 +2720,11 @@ msgstr ""
 msgid "EMM Settings"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1182
+#: src/epggrab/module/xmltv.c:1596
 msgid "EPG - External XMLTV EPG Grabber"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1139
+#: src/epggrab/module/xmltv.c:1494
 msgid "EPG - Internal XMLTV EPG Grabber"
 msgstr ""
 
@@ -2735,7 +2748,7 @@ msgstr ""
 msgid "EPG Parental Rating Labels"
 msgstr ""
 
-#: src/config.c:2188
+#: src/config.c:2191
 msgid "EPG Settings"
 msgstr ""
 
@@ -2755,7 +2768,7 @@ msgstr ""
 msgid "EPG name"
 msgstr ""
 
-#: src/config.c:2396
+#: src/config.c:2399
 msgid "EPG overlap cut"
 msgstr ""
 
@@ -2771,7 +2784,7 @@ msgstr ""
 msgid "EPG source"
 msgstr ""
 
-#: src/config.c:2405 src/dvr/dvr_config.c:1435
+#: src/config.c:2408 src/dvr/dvr_config.c:1435
 msgid "EPG update window"
 msgstr ""
 
@@ -2783,20 +2796,20 @@ msgstr ""
 msgid "EXTERNAL"
 msgstr ""
 
-#: src/epg.c:1906 src/epg.c:1908
+#: src/epg.c:1990 src/epg.c:1992
 msgid "Economics"
 msgstr ""
 
-#: src/epg.c:1924
+#: src/epg.c:2008
 msgid "Education"
 msgstr ""
 
-#: src/epg.c:1932 src/epg.c:1933 src/epg.c:1934 src/epg.c:1935 src/epg.c:1936
-#: src/epg.c:1937 src/epg.c:1938 src/epg.c:1939
+#: src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019 src/epg.c:2020
+#: src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
 msgid "Education / Science / Factual topics"
 msgstr ""
 
-#: src/epg.c:1856
+#: src/epg.c:1940
 msgid "Educational"
 msgstr ""
 
@@ -2825,11 +2838,11 @@ msgstr ""
 msgid "Enable DBus"
 msgstr ""
 
-#: src/config.c:2654
+#: src/config.c:2657
 msgid "Enable HDHomeRun Server Emulation"
 msgstr ""
 
-#: src/config.c:2781
+#: src/config.c:2784
 msgid "Enable NTP driver"
 msgstr ""
 
@@ -2909,21 +2922,21 @@ msgstr ""
 msgid "Enable over-the-air program guide (EPG) scanning on this input device."
 msgstr ""
 
-#: src/config.c:2361
+#: src/config.c:2364
 msgid "Enable parser for kodi label formatting"
 msgstr ""
 
-#: src/tvhlog.c:809
+#: src/tvhlog.c:862
 msgid "Enable syslog"
 msgstr ""
 
-#: src/config.c:2771
+#: src/config.c:2774
 msgid ""
 "Enable system time updates. This will only work if the user running "
 "Tvheadend has rights to update the system clock (normally only root)."
 msgstr ""
 
-#: src/config.c:2655
+#: src/config.c:2658
 msgid ""
 "Enable the Tvheadend server to emulate an HDHomeRun server.  This allows "
 "LiveTV to be used on some media servers."
@@ -2944,11 +2957,11 @@ msgstr ""
 msgid "Enable trace subsystems"
 msgstr ""
 
-#: src/config.c:2806
+#: src/config.c:2809
 msgid "Enable vainfo detection"
 msgstr ""
 
-#: src/config.c:2807
+#: src/config.c:2810
 msgid ""
 "Enable vainfo detection in order to show only encoders that are advertised "
 "by VAAPI driver.\n"
@@ -2977,7 +2990,7 @@ msgstr ""
 msgid "Enable/Disable service."
 msgstr ""
 
-#: src/config.c:2311
+#: src/config.c:2314
 msgid ""
 "Enable/Disable the CAs (conditional accesses) tab for the advanced view "
 "level. By default, it's visible only to the Expert level."
@@ -2991,7 +3004,7 @@ msgstr ""
 msgid "Enable/Disable timeshift."
 msgstr ""
 
-#: src/config.c:2279
+#: src/config.c:2282
 msgid "Enable/Disable web interface mouse-over tooltips."
 msgstr ""
 
@@ -3007,19 +3020,19 @@ msgstr ""
 msgid "Enable/disable auto-rec rule."
 msgstr ""
 
-#: src/tvhlog.c:819
+#: src/tvhlog.c:872
 msgid "Enable/disable debugging output to syslog."
 msgstr ""
 
-#: src/tvhlog.c:828
+#: src/tvhlog.c:881
 msgid "Enable/disable inclusion of low-level debug traces."
 msgstr ""
 
-#: src/tvhlog.c:867
+#: src/tvhlog.c:920
 msgid "Enable/disable libav log output."
 msgstr ""
 
-#: src/tvhlog.c:810
+#: src/tvhlog.c:863
 msgid "Enable/disable logging to syslog."
 msgstr ""
 
@@ -3137,7 +3150,7 @@ msgstr ""
 
 #: src/wizard.c:415
 msgid ""
-"Enter allowed network prefix(es). You can enter a comma-seperated list of "
+"Enter allowed network prefix(es). You can enter a comma-separated list of "
 "prefixes here."
 msgstr ""
 
@@ -3151,13 +3164,13 @@ msgid ""
 "superuser backdoor account."
 msgstr ""
 
-#: src/tvhlog.c:840
+#: src/tvhlog.c:893
 msgid ""
 "Enter comma-separated list of subsystems you want debugging output for (e.g. "
 "linuxdvb,subscription,mpegts)."
 msgstr ""
 
-#: src/tvhlog.c:852
+#: src/tvhlog.c:905
 msgid ""
 "Enter comma-separated list of subsystems you want to get traces for (e.g "
 "linuxdvb,subscription,mpegts)."
@@ -3175,20 +3188,20 @@ msgid ""
 "port)."
 msgstr ""
 
-#: src/tvhlog.c:800
+#: src/tvhlog.c:853
 msgid ""
 "Enter the filename (including path) where Tvheadend should write the log."
 msgstr ""
 
-#: src/epg.c:1855
+#: src/epg.c:1939
 msgid "Entertainment programs for 10 to 16"
 msgstr ""
 
-#: src/epg.c:1854
+#: src/epg.c:1938
 msgid "Entertainment programs for 6 to 14"
 msgstr ""
 
-#: src/epg.c:1925
+#: src/epg.c:2009
 msgid "Environment"
 msgstr ""
 
@@ -3217,7 +3230,15 @@ msgstr ""
 msgid "Episode number/ID."
 msgstr ""
 
-#: src/epg.c:1844
+#: src/epggrab/module/xmltv.c:1463
+msgid "EpisodeLink XPath"
+msgstr ""
+
+#: src/epggrab/module/xmltv.c:1475
+msgid "EpisodeLink XPath fallback"
+msgstr ""
+
+#: src/epg.c:1928
 msgid "Equestrian"
 msgstr ""
 
@@ -3255,15 +3276,15 @@ msgstr ""
 msgid "Exclude channel tags"
 msgstr ""
 
-#: src/epg.c:1928
+#: src/epg.c:2012
 msgid "Expeditions"
 msgstr ""
 
-#: src/epg.c:1895
+#: src/epg.c:1979
 msgid "Experimental film"
 msgstr ""
 
-#: src/access.c:1483 src/config.c:2087
+#: src/access.c:1483 src/config.c:2090
 msgid "Expert"
 msgstr ""
 
@@ -3388,7 +3409,11 @@ msgstr ""
 msgid "FHD: full high definition"
 msgstr ""
 
-#: src/epg.c:1924
+#: src/tvhlog.c:202
+msgid "FLAC"
+msgstr ""
+
+#: src/epg.c:2008
 msgid "Factual topics"
 msgstr ""
 
@@ -3413,11 +3438,11 @@ msgstr ""
 msgid "Fanart image."
 msgstr ""
 
-#: src/epg.c:1783
+#: src/epg.c:1867
 msgid "Fantasy"
 msgstr ""
 
-#: src/epg.c:1899
+#: src/epg.c:1983
 msgid "Fashion"
 msgstr ""
 
@@ -3476,7 +3501,7 @@ msgstr ""
 msgid "Filename"
 msgstr ""
 
-#: src/tvhlog.c:799
+#: src/tvhlog.c:852
 msgid "Filename (including path)"
 msgstr ""
 
@@ -3496,7 +3521,7 @@ msgstr ""
 msgid "Filesystem monitor"
 msgstr ""
 
-#: src/epg.c:1894
+#: src/epg.c:1978
 msgid "Film"
 msgstr ""
 
@@ -3504,7 +3529,7 @@ msgstr ""
 msgid "Filter"
 msgstr ""
 
-#: src/epg.c:1890
+#: src/epg.c:1974
 msgid "Fine arts"
 msgstr ""
 
@@ -3524,7 +3549,7 @@ msgstr ""
 msgid "First scan"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1130
+#: src/epggrab/module/xmltv.c:1485
 msgid "First word"
 msgstr ""
 
@@ -3532,19 +3557,19 @@ msgstr ""
 msgid "Fit to RAM (cut rewind)"
 msgstr ""
 
-#: src/epg.c:1946
+#: src/epg.c:2030
 msgid "Fitness and health"
 msgstr ""
 
-#: src/epg.c:1873
+#: src/epg.c:1957
 msgid "Folk"
 msgstr ""
 
-#: src/epg.c:1785
+#: src/epg.c:1869
 msgid "Folkloric"
 msgstr ""
 
-#: src/epg.c:1837
+#: src/epg.c:1921
 msgid "Football"
 msgstr ""
 
@@ -3621,7 +3646,7 @@ msgstr ""
 msgid "Force profile to use this priority."
 msgstr ""
 
-#: src/config.c:2108
+#: src/config.c:2111
 msgid "Force service type to 1"
 msgstr ""
 
@@ -3665,7 +3690,7 @@ msgstr ""
 msgid "Forced OK"
 msgstr ""
 
-#: src/epg.c:1928
+#: src/epg.c:2012
 msgid "Foreign countries"
 msgstr ""
 
@@ -3795,8 +3820,13 @@ msgstr ""
 msgid "Full-text"
 msgstr ""
 
-#: src/epg.c:1930
+#: src/epg.c:2014
 msgid "Further education"
+msgstr ""
+
+#: src/transcoding/codec/codecs/libs/libx26x.c:97
+#: src/transcoding/codec/codecs/libs/libvpx.c:142
+msgid "GOP size"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:582
@@ -3807,11 +3837,11 @@ msgstr ""
 msgid "GOTOX position"
 msgstr ""
 
-#: src/epg.c:1816 src/epg.c:1817
+#: src/epg.c:1900 src/epg.c:1901
 msgid "Game show"
 msgstr ""
 
-#: src/epg.c:1949
+#: src/epg.c:2033
 msgid "Gardening"
 msgstr ""
 
@@ -3819,9 +3849,10 @@ msgstr ""
 msgid "Gather timing statistics for the code"
 msgstr ""
 
-#: src/tvhlog.c:782 src/epggrab.c:351 src/profile.c:296 src/profile.c:1355
+#: src/tvhlog.c:835 src/epggrab.c:351 src/profile.c:296 src/profile.c:1355
 #: src/profile.c:1601 src/profile.c:1836 src/profile.c:2513
-#: src/satip/server.c:653 src/dvr/dvr_config.c:924
+#: src/satip/server.c:653 src/epggrab/module/xmltv.c:1497
+#: src/epggrab/module/xmltv.c:1599 src/dvr/dvr_config.c:924
 #: src/descrambler/caclient.c:276 src/transcoding/codec/profile_class.c:199
 #: src/descrambler/cclient.c:1357 src/descrambler/dvbcam.c:848
 msgid "General Settings"
@@ -3879,7 +3910,7 @@ msgstr ""
 msgid "HD: high definition"
 msgstr ""
 
-#: src/config.c:2200
+#: src/config.c:2203
 msgid "HDHomeRun"
 msgstr ""
 
@@ -3911,7 +3942,7 @@ msgstr ""
 msgid "HDHomeRun ISDB-T frontend"
 msgstr ""
 
-#: src/config.c:2563
+#: src/config.c:2566
 msgid "HDHomerun IP Address"
 msgstr ""
 
@@ -3947,7 +3978,7 @@ msgstr ""
 msgid "HTSP output format"
 msgstr ""
 
-#: src/config.c:2551
+#: src/config.c:2554
 msgid ""
 "HTTP CORS (cross-origin resource sharing) origin. This option is usually set "
 "when Tvheadend is behind a proxy. Enter the URL (domain or IP address, "
@@ -3962,15 +3993,15 @@ msgstr ""
 msgid "HTTP Server"
 msgstr ""
 
-#: src/config.c:2196
+#: src/config.c:2199
 msgid "HTTP Server Settings"
 msgstr ""
 
-#: src/config.c:2692
+#: src/config.c:2695
 msgid "HTTP User Agent"
 msgstr ""
 
-#: src/epg.c:1944
+#: src/epg.c:2028
 msgid "Handicraft"
 msgstr ""
 
@@ -4035,11 +4066,11 @@ msgstr ""
 msgid "Highest count of objects."
 msgstr ""
 
-#: src/epg.c:1787
+#: src/epg.c:1871
 msgid "Historical movie"
 msgstr ""
 
-#: src/epg.c:1783
+#: src/epg.c:1867
 msgid "Horror"
 msgstr ""
 
@@ -4096,7 +4127,7 @@ msgstr ""
 msgid "IP address"
 msgstr ""
 
-#: src/config.c:2564
+#: src/config.c:2567
 msgid ""
 "IP address of the HDHomerun device. This is needed if you plan to run "
 "TVheadend in a container and you want to stream from an HDHomerun without "
@@ -4107,7 +4138,7 @@ msgstr ""
 msgid "IP blocking"
 msgstr ""
 
-#: src/config.c:2576
+#: src/config.c:2579
 msgid ""
 "IP of the Docker host. Each HDHomeRun tuner sends data to TVheadend through "
 "a socket. This lets you define the IP address that HDHomeRun needs to send "
@@ -4150,7 +4181,7 @@ msgstr ""
 msgid "IPTV thread #"
 msgstr ""
 
-#: src/config.c:2701
+#: src/config.c:2704
 msgid "IPTV threads"
 msgstr ""
 
@@ -4227,19 +4258,31 @@ msgstr ""
 msgid "Idle scan muxes"
 msgstr ""
 
+#: src/epggrab/module/xmltv.c:1472
+msgid ""
+"If a SeriesLink XPath is not found, use the standard TVH method for creating "
+"a SeriesLink."
+msgstr ""
+
+#: src/epggrab/module/xmltv.c:1477
+msgid ""
+"If an EpisodeLink XPath is not found, use the standard TVH method for "
+"creating an EpisodeLink."
+msgstr ""
+
 #: src/dvr/dvr_config.c:1081
 msgid ""
 "If an error occurs clone the scheduled entry and try to record again (if "
 "possible)."
 msgstr ""
 
-#: src/config.c:2416
+#: src/config.c:2419
 msgid ""
 "If both a picon and a channel-specific (e.g. channelname.jpg) icon are "
 "defined, prefer the picon."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1105
+#: src/epggrab/module/xmltv.c:1424
 msgid ""
 "If enabled then this will alter the programme descriptions to include "
 "information about actors, keywords and categories (if available from the "
@@ -4443,11 +4486,11 @@ msgstr ""
 msgid "Index"
 msgstr ""
 
-#: src/config.c:2322
+#: src/config.c:2325
 msgid "Information area"
 msgstr ""
 
-#: src/epg.c:1856
+#: src/epg.c:1940
 msgid "Informational"
 msgstr ""
 
@@ -4495,7 +4538,7 @@ msgstr ""
 msgid "Internal error"
 msgstr ""
 
-#: src/epg.c:1802
+#: src/epg.c:1886
 msgid "Interview"
 msgstr ""
 
@@ -4546,11 +4589,11 @@ msgstr ""
 msgid "Items"
 msgstr ""
 
-#: src/config.c:2267
+#: src/config.c:2270
 msgid "Items per page"
 msgstr ""
 
-#: src/epg.c:1874
+#: src/epg.c:1958
 msgid "Jazz"
 msgstr ""
 
@@ -4588,7 +4631,7 @@ msgstr ""
 msgid "Keyword"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:776
+#: src/epggrab/module/xmltv.c:900
 msgid "Keywords: "
 msgstr ""
 
@@ -4604,8 +4647,32 @@ msgstr ""
 msgid "Kill timeout (pipe/secs)"
 msgstr ""
 
-#: src/config.c:2360
+#: src/config.c:2363
 msgid "Kodi label formatting support"
+msgstr ""
+
+#: src/tvhlog.c:203
+msgid "LIB FDK_AAC"
+msgstr ""
+
+#: src/tvhlog.c:204
+msgid "LIB OPUS"
+msgstr ""
+
+#: src/tvhlog.c:205
+msgid "LIB THEORA"
+msgstr ""
+
+#: src/tvhlog.c:206
+msgid "LIB VORBIS"
+msgstr ""
+
+#: src/tvhlog.c:209
+msgid "LIB VPX"
+msgstr ""
+
+#: src/tvhlog.c:210
+msgid "LIB x264_x265"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:273
@@ -4646,7 +4713,7 @@ msgstr ""
 msgid "Language 3"
 msgstr ""
 
-#: src/epg.c:1931
+#: src/epg.c:2015
 msgid "Languages"
 msgstr ""
 
@@ -4674,7 +4741,7 @@ msgstr ""
 msgid "Last seen"
 msgstr ""
 
-#: src/config.c:2235
+#: src/config.c:2238
 msgid "Last updated from"
 msgstr ""
 
@@ -4726,8 +4793,8 @@ msgstr ""
 msgid "Layer C: Time interleaving"
 msgstr ""
 
-#: src/epg.c:1942 src/epg.c:1950 src/epg.c:1951 src/epg.c:1952 src/epg.c:1953
-#: src/epg.c:1954 src/epg.c:1955 src/epg.c:1956 src/epg.c:1957
+#: src/epg.c:2026 src/epg.c:2034 src/epg.c:2035 src/epg.c:2036 src/epg.c:2037
+#: src/epg.c:2038 src/epg.c:2039 src/epg.c:2040 src/epg.c:2041
 msgid "Leisure hobbies"
 msgstr ""
 
@@ -4807,7 +4874,7 @@ msgstr ""
 msgid "Listen on IPv6"
 msgstr ""
 
-#: src/epg.c:1893
+#: src/epg.c:1977
 msgid "Literature"
 msgstr ""
 
@@ -4815,11 +4882,11 @@ msgstr ""
 msgid "Local (server) time"
 msgstr ""
 
-#: src/config.c:2575
+#: src/config.c:2578
 msgid "Local IP Address"
 msgstr ""
 
-#: src/config.c:2588
+#: src/config.c:2591
 msgid "Local Socket Port Number"
 msgstr ""
 
@@ -4900,7 +4967,7 @@ msgstr ""
 msgid "Login username."
 msgstr ""
 
-#: src/config.c:2045
+#: src/config.c:2048
 msgid "Login/Logout"
 msgstr ""
 
@@ -4932,8 +4999,12 @@ msgstr ""
 msgid "Lowest starting channel number (when mapping). "
 msgstr ""
 
-#: src/config.c:2128
+#: src/config.c:2131
 msgid "MD5"
+msgstr ""
+
+#: src/tvhlog.c:200
+msgid "MP2"
 msgstr ""
 
 #: src/profile.c:1941
@@ -4992,7 +5063,11 @@ msgstr ""
 msgid "MPEG-TS/av-lib"
 msgstr ""
 
-#: src/epg.c:1907
+#: src/tvhlog.c:208
+msgid "MPEG2 VIDEO"
+msgstr ""
+
+#: src/epg.c:1991
 msgid "Magazines"
 msgstr ""
 
@@ -5090,7 +5165,7 @@ msgstr ""
 msgid "Mapped"
 msgstr ""
 
-#: src/epg.c:1845
+#: src/epg.c:1929
 msgid "Martial sports"
 msgstr ""
 
@@ -5150,7 +5225,7 @@ msgstr ""
 msgid "Maximum RAM size (MB)"
 msgstr ""
 
-#: src/config.c:2406
+#: src/config.c:2409
 msgid ""
 "Maximum allowed difference between event start time when the EPG event is "
 "changed (in seconds)."
@@ -5215,11 +5290,11 @@ msgstr ""
 msgid "Maximum year"
 msgstr ""
 
-#: src/epg.c:1927
+#: src/epg.c:2011
 msgid "Medicine"
 msgstr ""
 
-#: src/epg.c:1785
+#: src/epg.c:1869
 msgid "Melodrama"
 msgstr ""
 
@@ -5267,7 +5342,7 @@ msgstr ""
 msgid "Minimum year"
 msgstr ""
 
-#: src/tvhlog.c:790 src/config.c:2208 src/satip/server.c:669
+#: src/tvhlog.c:843 src/config.c:2211 src/satip/server.c:669
 #: src/dvr/dvr_config.c:951
 msgid "Miscellaneous Settings"
 msgstr ""
@@ -5340,20 +5415,20 @@ msgstr ""
 msgid "Motor rate (milliseconds/deg)"
 msgstr ""
 
-#: src/epg.c:1841
+#: src/epg.c:1925
 msgid "Motor sport"
 msgstr ""
 
-#: src/epg.c:1945
+#: src/epg.c:2029
 msgid "Motoring"
 msgstr ""
 
-#: src/epg.c:1780
+#: src/epg.c:1864
 msgid "Movie"
 msgstr ""
 
-#: src/epg.c:1789 src/epg.c:1790 src/epg.c:1791 src/epg.c:1792 src/epg.c:1793
-#: src/epg.c:1794 src/epg.c:1795
+#: src/epg.c:1873 src/epg.c:1874 src/epg.c:1875 src/epg.c:1876 src/epg.c:1877
+#: src/epg.c:1878 src/epg.c:1879
 msgid "Movie / drama"
 msgstr ""
 
@@ -5371,16 +5446,16 @@ msgid ""
 "your own."
 msgstr ""
 
-#: src/epg.c:1870
+#: src/epg.c:1954
 msgid "Music"
 msgstr ""
 
-#: src/epg.c:1877 src/epg.c:1878 src/epg.c:1879 src/epg.c:1880 src/epg.c:1881
-#: src/epg.c:1882 src/epg.c:1883 src/epg.c:1884 src/epg.c:1885
+#: src/epg.c:1961 src/epg.c:1962 src/epg.c:1963 src/epg.c:1964 src/epg.c:1965
+#: src/epg.c:1966 src/epg.c:1967 src/epg.c:1968 src/epg.c:1969
 msgid "Music / Ballet / Dance"
 msgstr ""
 
-#: src/epg.c:1875
+#: src/epg.c:1959
 msgid "Musical"
 msgstr ""
 
@@ -5422,6 +5497,10 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:94
 msgid "NONE"
+msgstr ""
+
+#: src/tvhlog.c:211
+msgid "NVENC"
 msgstr ""
 
 #: src/channels.c:432 src/channels.c:1793 src/bouquet.c:1268
@@ -5497,11 +5576,11 @@ msgstr ""
 msgid "Names"
 msgstr ""
 
-#: src/epg.c:1926
+#: src/epg.c:2010
 msgid "Natural sciences"
 msgstr ""
 
-#: src/epg.c:1925
+#: src/epg.c:2009
 msgid "Nature"
 msgstr ""
 
@@ -5634,7 +5713,7 @@ msgstr ""
 msgid "New login"
 msgstr ""
 
-#: src/epg.c:1897
+#: src/epg.c:1981
 msgid "New media"
 msgstr ""
 
@@ -5646,17 +5725,17 @@ msgstr ""
 msgid "New muxes only"
 msgstr ""
 
-#: src/epg.c:1798 src/epg.c:1799
+#: src/epg.c:1882 src/epg.c:1883
 msgid "News"
 msgstr ""
 
-#: src/epg.c:1803 src/epg.c:1804 src/epg.c:1805 src/epg.c:1806 src/epg.c:1807
-#: src/epg.c:1808 src/epg.c:1809 src/epg.c:1810 src/epg.c:1811 src/epg.c:1812
-#: src/epg.c:1813
+#: src/epg.c:1887 src/epg.c:1888 src/epg.c:1889 src/epg.c:1890 src/epg.c:1891
+#: src/epg.c:1892 src/epg.c:1893 src/epg.c:1894 src/epg.c:1895 src/epg.c:1896
+#: src/epg.c:1897
 msgid "News / Current Affairs"
 msgstr ""
 
-#: src/epg.c:1800
+#: src/epg.c:1884
 msgid "News magazine"
 msgstr ""
 
@@ -5712,7 +5791,7 @@ msgstr ""
 msgid "No rating needed"
 msgstr ""
 
-#: src/config.c:2096
+#: src/config.c:2099
 msgid "No scheme"
 msgstr ""
 
@@ -5860,7 +5939,7 @@ msgstr ""
 msgid "Number of tsfile tuners"
 msgstr ""
 
-#: src/config.c:2607
+#: src/config.c:2610
 msgid "Number of tuners to export for HDHomeRun Server Emulation"
 msgstr ""
 
@@ -5870,6 +5949,10 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:406
 msgid "OK (partial)"
+msgstr ""
+
+#: src/tvhlog.c:212
+msgid "OMX"
 msgstr ""
 
 #: src/descrambler/capmt.c:2618
@@ -5896,7 +5979,7 @@ msgstr ""
 msgid "OTA (Over-the-air) Grabber Settings"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1094
+#: src/epggrab/module/xmltv.c:1413
 msgid ""
 "Obtain list of credits (actors, etc.), keywords and extra information from "
 "the xml tags (if available). Some xmltv providers supply a list of actors "
@@ -5970,7 +6053,7 @@ msgid ""
 "configuration to use the tag."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1131
+#: src/epggrab/module/xmltv.c:1486
 msgid "Only digits"
 msgstr ""
 
@@ -5978,7 +6061,7 @@ msgstr ""
 msgid "Only preferred CA PID"
 msgstr ""
 
-#: src/config.c:2794
+#: src/config.c:2797
 msgid ""
 "Only update the system clock (doesn't affect NTP driver) if the delta "
 "between the system clock and DVB time is greater than this. This can help "
@@ -6003,7 +6086,7 @@ msgstr ""
 msgid "OpenTV channel number"
 msgstr ""
 
-#: src/epg.c:1875
+#: src/epg.c:1959
 msgid "Opera"
 msgstr ""
 
@@ -6072,8 +6155,8 @@ msgstr ""
 msgid "Override disabled"
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:196
-#: src/transcoding/codec/codecs/libs/libx26x.c:295
+#: src/transcoding/codec/codecs/libs/libx26x.c:207
+#: src/transcoding/codec/codecs/libs/libx26x.c:306
 msgid ""
 "Override the configuration using a ':' separated list of key=value "
 "parameters."
@@ -6157,11 +6240,11 @@ msgstr ""
 msgid "PMT mode."
 msgstr ""
 
-#: src/config.c:2536
+#: src/config.c:2539
 msgid "PROXY protocol & X-Forwarded-For"
 msgstr ""
 
-#: src/config.c:2537
+#: src/config.c:2540
 msgid ""
 "PROXY protocol is an extension for support incoming TCP connections from a "
 "remote server (like a firewall) sending the original IP address of the "
@@ -6170,12 +6253,12 @@ msgid ""
 "usage."
 msgstr ""
 
-#: src/config.c:2737
+#: src/config.c:2740
 msgid "Packet backlog"
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:195
-#: src/transcoding/codec/codecs/libs/libx26x.c:294
+#: src/transcoding/codec/codecs/libs/libx26x.c:206
+#: src/transcoding/codec/codecs/libs/libx26x.c:305
 msgid "Parameters"
 msgstr ""
 
@@ -6191,11 +6274,11 @@ msgstr ""
 msgid "Parental rating label UUID."
 msgstr ""
 
-#: src/config.c:2761
+#: src/config.c:2764
 msgid "Parse HbbTV info"
 msgstr ""
 
-#: src/config.c:2762
+#: src/config.c:2765
 msgid "Parse HbbTV information from services."
 msgstr ""
 
@@ -6244,13 +6327,13 @@ msgstr ""
 msgid "Path"
 msgstr ""
 
-#: src/config.c:2451
+#: src/config.c:2454
 msgid ""
 "Path to a directory (folder) containing your picon collection. See Help for "
 "more detailed information."
 msgstr ""
 
-#: src/config.c:2426
+#: src/config.c:2429
 msgid ""
 "Path to an icon for this channel. This can be named however you wish, as "
 "either a local (file://) or remote (http://) image. See Help for more "
@@ -6294,7 +6377,7 @@ msgstr ""
 msgid "Peak size"
 msgstr ""
 
-#: src/epg.c:1889
+#: src/epg.c:1973
 msgid "Performing arts"
 msgstr ""
 
@@ -6314,11 +6397,11 @@ msgstr ""
 msgid "Persistent user interface level"
 msgstr ""
 
-#: src/config.c:2299
+#: src/config.c:2302
 msgid "Persistent view level"
 msgstr ""
 
-#: src/epg.c:1927
+#: src/epg.c:2011
 msgid "Physiology"
 msgstr ""
 
@@ -6326,11 +6409,11 @@ msgstr ""
 msgid "Pick the stream with given audio type only."
 msgstr ""
 
-#: src/config.c:2462
+#: src/config.c:2465
 msgid "Picon name scheme"
 msgstr ""
 
-#: src/config.c:2450
+#: src/config.c:2453
 msgid "Picon path"
 msgstr ""
 
@@ -6342,7 +6425,7 @@ msgstr ""
 msgid "Pixel format"
 msgstr ""
 
-#: src/config.c:2117
+#: src/config.c:2120
 msgid "Plain (insecure)"
 msgstr ""
 
@@ -6359,7 +6442,7 @@ msgstr ""
 msgid "Polarization"
 msgstr ""
 
-#: src/epg.c:1906
+#: src/epg.c:1990
 msgid "Political issues"
 msgstr ""
 
@@ -6367,11 +6450,11 @@ msgstr ""
 msgid "Poll multiplexer"
 msgstr ""
 
-#: src/epg.c:1871
+#: src/epg.c:1955
 msgid "Pop"
 msgstr ""
 
-#: src/epg.c:1892
+#: src/epg.c:1976
 msgid "Popular culture"
 msgstr ""
 
@@ -6387,7 +6470,7 @@ msgstr ""
 msgid "Port to listen on or to connect to."
 msgstr ""
 
-#: src/config.c:2204
+#: src/config.c:2207
 msgid "Ports settings"
 msgstr ""
 
@@ -6454,7 +6537,7 @@ msgstr ""
 msgid "Pre-recording padding"
 msgstr ""
 
-#: src/epg.c:1853
+#: src/epg.c:1937
 msgid "Pre-school children's programs"
 msgstr ""
 
@@ -6462,7 +6545,7 @@ msgstr ""
 msgid "Predefined Muxes"
 msgstr ""
 
-#: src/config.c:2415
+#: src/config.c:2418
 msgid "Prefer picons over channel icons"
 msgstr ""
 
@@ -6492,12 +6575,12 @@ msgstr ""
 msgid "Presentation details."
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:171
-#: src/transcoding/codec/codecs/libs/libx26x.c:270
+#: src/transcoding/codec/codecs/libs/libx26x.c:182
+#: src/transcoding/codec/codecs/libs/libx26x.c:281
 msgid "Preset"
 msgstr ""
 
-#: src/epg.c:1896
+#: src/epg.c:1980
 msgid "Press"
 msgstr ""
 
@@ -6507,7 +6590,7 @@ msgid ""
 "and removes the view level drop-dowm from the interface."
 msgstr ""
 
-#: src/config.c:2300
+#: src/config.c:2303
 msgid ""
 "Prevent users from overriding the view level setting. This option shows or "
 "hides the View level drop-down (next to the Help button)."
@@ -6624,11 +6707,11 @@ msgstr ""
 msgid "Provider's network name."
 msgstr ""
 
-#: src/epg.c:1927
+#: src/epg.c:2011
 msgid "Psychology"
 msgstr ""
 
-#: src/epg.c:1857
+#: src/epg.c:1941
 msgid "Puppets"
 msgstr ""
 
@@ -6656,7 +6739,7 @@ msgstr ""
 msgid "Queue profiling"
 msgstr ""
 
-#: src/epg.c:1817
+#: src/epg.c:1901
 msgid "Quiz"
 msgstr ""
 
@@ -6684,11 +6767,11 @@ msgstr ""
 msgid "RTSP Protocol"
 msgstr ""
 
-#: src/config.c:2682
+#: src/config.c:2685
 msgid "RTSP UDP maximum port"
 msgstr ""
 
-#: src/config.c:2670
+#: src/config.c:2673
 msgid "RTSP UDP minimum port"
 msgstr ""
 
@@ -6740,7 +6823,7 @@ msgstr ""
 msgid "Rating Label."
 msgstr ""
 
-#: src/tvhlog.c:188
+#: src/tvhlog.c:186
 msgid "Rating Labels"
 msgstr ""
 
@@ -6783,7 +6866,7 @@ msgid ""
 "9983, 0 = disable)."
 msgstr ""
 
-#: src/config.c:2483
+#: src/config.c:2486
 msgid "Realm name"
 msgstr ""
 
@@ -6823,15 +6906,15 @@ msgstr ""
 msgid "Relative path to the imagecache copy of the icon."
 msgstr ""
 
-#: src/epg.c:1891
+#: src/epg.c:1975
 msgid "Religion"
 msgstr ""
 
-#: src/epg.c:1787
+#: src/epg.c:1871
 msgid "Religious"
 msgstr ""
 
-#: src/epg.c:1909
+#: src/epg.c:1993
 msgid "Remarkable people"
 msgstr ""
 
@@ -6891,7 +6974,7 @@ msgstr ""
 msgid "Reply to PIN inquiries."
 msgstr ""
 
-#: src/epg.c:1907
+#: src/epg.c:1991
 msgid "Reports"
 msgstr ""
 
@@ -7041,7 +7124,7 @@ msgstr ""
 msgid "Rights"
 msgstr ""
 
-#: src/epg.c:1871
+#: src/epg.c:1955
 msgid "Rock"
 msgstr ""
 
@@ -7049,7 +7132,7 @@ msgstr ""
 msgid "Rolloff"
 msgstr ""
 
-#: src/epg.c:1786
+#: src/epg.c:1870
 msgid "Romance"
 msgstr ""
 
@@ -7154,11 +7237,11 @@ msgstr ""
 msgid "SD: standard definition"
 msgstr ""
 
-#: src/config.c:2129
+#: src/config.c:2132
 msgid "SHA-256"
 msgstr ""
 
-#: src/config.c:2130
+#: src/config.c:2133
 msgid "SHA-512/256"
 msgstr ""
 
@@ -7202,7 +7285,7 @@ msgstr ""
 msgid "STOP"
 msgstr ""
 
-#: src/config.c:2683
+#: src/config.c:2686
 msgid ""
 "Same as above, but for the maximum allowed port. Note that each stream "
 "requires two ports."
@@ -7352,21 +7435,21 @@ msgstr ""
 msgid "Scheduled stop time"
 msgstr ""
 
-#: src/config.c:2439
+#: src/config.c:2442
 msgid ""
 "Scheme to generate the channel icon names (all lower-case, service name "
 "picons etc.)."
 msgstr ""
 
-#: src/epg.c:1856
+#: src/epg.c:1940
 msgid "School programs"
 msgstr ""
 
-#: src/epg.c:1924
+#: src/epg.c:2008
 msgid "Science"
 msgstr ""
 
-#: src/epg.c:1783
+#: src/epg.c:1867
 msgid "Science fiction"
 msgstr ""
 
@@ -7390,7 +7473,7 @@ msgstr ""
 msgid "Scrape behaviour"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1092
+#: src/epggrab/module/xmltv.c:1411
 msgid "Scrape credits and extra information"
 msgstr ""
 
@@ -7457,7 +7540,7 @@ msgstr ""
 msgid "Select medium priority EPG language."
 msgstr ""
 
-#: src/config.c:2463
+#: src/config.c:2466
 msgid ""
 "Select scheme to generate the picon names (standard, force service type to 1)"
 msgstr ""
@@ -7472,7 +7555,7 @@ msgid ""
 "\"Access Entries\" on a per-user basis."
 msgstr ""
 
-#: src/config.c:2370
+#: src/config.c:2373
 msgid ""
 "Select the list of languages (in order of priority) to be used for supplying "
 "EPG information to clients that don't provide their own configuration."
@@ -7495,7 +7578,7 @@ msgid ""
 "and your coaxial cable wiring."
 msgstr ""
 
-#: src/config.c:2749
+#: src/config.c:2752
 msgid ""
 "Select the path to use for DVB scan configuration files. Typically dvb-apps "
 "stores these in /usr/share/dvb/. Leave blank to use the internal file set."
@@ -7563,7 +7646,7 @@ msgstr ""
 msgid "Send full PLAY cmd"
 msgstr ""
 
-#: src/config.c:2738
+#: src/config.c:2741
 msgid ""
 "Send previous stream frames to upper layers (before frame start is signalled "
 "in the stream). It may cause issues with some clients / players."
@@ -7591,11 +7674,19 @@ msgstr ""
 msgid "Series link ID."
 msgstr ""
 
-#: src/epg.c:1787
+#: src/epggrab/module/xmltv.c:1456
+msgid "SeriesLink XPath"
+msgstr ""
+
+#: src/epggrab/module/xmltv.c:1470
+msgid "SeriesLink XPath fallback"
+msgstr ""
+
+#: src/epg.c:1871
 msgid "Serious"
 msgstr ""
 
-#: src/epg.c:1872
+#: src/epg.c:1956
 msgid "Serious music"
 msgstr ""
 
@@ -7603,7 +7694,7 @@ msgstr ""
 msgid "Server"
 msgstr ""
 
-#: src/config.c:2180
+#: src/config.c:2183
 msgid "Server Settings"
 msgstr ""
 
@@ -7619,7 +7710,7 @@ msgstr ""
 msgid "Server details."
 msgstr ""
 
-#: src/config.c:2474
+#: src/config.c:2477
 msgid "Server name"
 msgstr ""
 
@@ -7669,7 +7760,7 @@ msgstr ""
 msgid "Service name found in EPG data."
 msgstr ""
 
-#: src/config.c:2098
+#: src/config.c:2101
 msgid "Service name picons"
 msgstr ""
 
@@ -7714,7 +7805,7 @@ msgstr ""
 msgid "Set the display name."
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:172
+#: src/transcoding/codec/codecs/libs/libx26x.c:183
 msgid "Set the encoding preset (cf. x264 --fullhelp)."
 msgstr ""
 
@@ -7722,12 +7813,12 @@ msgstr ""
 msgid "Set the maxiumum packet identifiers your SAT>IP server supports."
 msgstr ""
 
-#: src/config.c:2218
+#: src/config.c:2221
 msgid ""
 "Set the name of the server so you can distinguish multiple instances apart."
 msgstr ""
 
-#: src/config.c:2702
+#: src/config.c:2705
 msgid "Set the number of threads for IPTV to split load across more CPUs."
 msgstr ""
 
@@ -7738,6 +7829,11 @@ msgstr ""
 #: src/epggrab/module/eit.c:1732
 msgid ""
 "Set the short EIT destription to given target (subtitle, summary or both)."
+msgstr ""
+
+#: src/transcoding/codec/codecs/libs/libx26x.c:98
+#: src/transcoding/codec/codecs/libs/libvpx.c:143
+msgid "Sets the Group of Pictures (GOP) size in frame (default 0 is 3 sec.)"
 msgstr ""
 
 #: src/tvhlog.c:102
@@ -7752,13 +7848,13 @@ msgstr ""
 msgid "Short EIT description"
 msgstr ""
 
-#: src/epg.c:1816
+#: src/epg.c:1900
 msgid "Show"
 msgstr ""
 
-#: src/epg.c:1820 src/epg.c:1821 src/epg.c:1822 src/epg.c:1823 src/epg.c:1824
-#: src/epg.c:1825 src/epg.c:1826 src/epg.c:1827 src/epg.c:1828 src/epg.c:1829
-#: src/epg.c:1830 src/epg.c:1831
+#: src/epg.c:1904 src/epg.c:1905 src/epg.c:1906 src/epg.c:1907 src/epg.c:1908
+#: src/epg.c:1909 src/epg.c:1910 src/epg.c:1911 src/epg.c:1912 src/epg.c:1913
+#: src/epg.c:1914 src/epg.c:1915
 msgid "Show / Game show"
 msgstr ""
 
@@ -7776,7 +7872,7 @@ msgstr ""
 msgid "Show version information"
 msgstr ""
 
-#: src/config.c:2323
+#: src/config.c:2326
 msgid ""
 "Show, hide and sort the various details that appear on the interface next to "
 "the About tab."
@@ -7874,25 +7970,25 @@ msgstr ""
 msgid "Slot state"
 msgstr ""
 
-#: src/epg.c:1785
+#: src/epg.c:1869
 msgid "Soap"
 msgstr ""
 
-#: src/epg.c:1837
+#: src/epg.c:1921
 msgid "Soccer"
 msgstr ""
 
-#: src/epg.c:1906 src/epg.c:1929
+#: src/epg.c:1990 src/epg.c:2013
 msgid "Social"
 msgstr ""
 
-#: src/epg.c:1910 src/epg.c:1911 src/epg.c:1912 src/epg.c:1913 src/epg.c:1914
-#: src/epg.c:1915 src/epg.c:1916 src/epg.c:1917 src/epg.c:1918 src/epg.c:1919
-#: src/epg.c:1920 src/epg.c:1921
+#: src/epg.c:1994 src/epg.c:1995 src/epg.c:1996 src/epg.c:1997 src/epg.c:1998
+#: src/epg.c:1999 src/epg.c:2000 src/epg.c:2001 src/epg.c:2002 src/epg.c:2003
+#: src/epg.c:2004 src/epg.c:2005
 msgid "Social / Political issues / Economics"
 msgstr ""
 
-#: src/epg.c:1908
+#: src/epg.c:1992
 msgid "Social advisory"
 msgstr ""
 
@@ -7922,7 +8018,7 @@ msgid ""
 "channel name may require manual xmltv mapping."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1117
+#: src/epggrab/module/xmltv.c:1436
 msgid ""
 "Some xmltv providers supply multiple category tags, however mapping to "
 "genres is imprecise and many categories have no genre mapping at all. Some "
@@ -7984,7 +8080,7 @@ msgstr ""
 msgid "Spawn Settings"
 msgstr ""
 
-#: src/epg.c:1835
+#: src/epg.c:1919
 msgid "Special events (Olympic Games, World Cup, etc.)"
 msgstr ""
 
@@ -8039,23 +8135,23 @@ msgstr ""
 msgid "Speed"
 msgstr ""
 
-#: src/epg.c:1929
+#: src/epg.c:2013
 msgid "Spiritual sciences"
 msgstr ""
 
-#: src/epg.c:1834 src/epg.c:1846 src/epg.c:1847 src/epg.c:1848 src/epg.c:1849
+#: src/epg.c:1918 src/epg.c:1930 src/epg.c:1931 src/epg.c:1932 src/epg.c:1933
 msgid "Sports"
 msgstr ""
 
-#: src/epg.c:1836
+#: src/epg.c:1920
 msgid "Sports magazines"
 msgstr ""
 
-#: src/epg.c:1838
+#: src/epg.c:1922
 msgid "Squash"
 msgstr ""
 
-#: src/config.c:2107 src/input/mpegts/mpegts_mux.c:506
+#: src/config.c:2110 src/input/mpegts/mpegts_mux.c:506
 msgid "Standard"
 msgstr ""
 
@@ -8110,7 +8206,7 @@ msgstr ""
 msgid "Start time"
 msgstr ""
 
-#: src/config.c:2589
+#: src/config.c:2592
 msgid ""
 "Starting port number of the UDP listeners. The listeners listen for traffic "
 "from the HDHomerun tuners. This is needed if you plan to run TVheadend in a "
@@ -8142,7 +8238,7 @@ msgstr ""
 msgid "Storage path"
 msgstr ""
 
-#: src/config.c:2046
+#: src/config.c:2049
 msgid "Storage space"
 msgstr ""
 
@@ -8279,7 +8375,7 @@ msgstr ""
 msgid "Substitute formatters"
 msgstr ""
 
-#: src/tvhlog.c:786
+#: src/tvhlog.c:839
 msgid "Subsystem Output Settings"
 msgstr ""
 
@@ -8504,15 +8600,15 @@ msgstr ""
 msgid "Tags linked/to link to the channel."
 msgstr ""
 
-#: src/epg.c:1819
+#: src/epg.c:1903
 msgid "Talk show"
 msgstr ""
 
-#: src/epg.c:1839
+#: src/epg.c:1923
 msgid "Team sports (excluding football)"
 msgstr ""
 
-#: src/epg.c:1926
+#: src/epg.c:2010
 msgid "Technology"
 msgstr ""
 
@@ -8520,7 +8616,7 @@ msgstr ""
 msgid "Teletext stream type is only available for this filter."
 msgstr ""
 
-#: src/epg.c:1838
+#: src/epg.c:1922
 msgid "Tennis"
 msgstr ""
 
@@ -8655,6 +8751,33 @@ msgstr ""
 msgid "The URL to the playlist."
 msgstr ""
 
+#: src/epggrab/module/xmltv.c:1458
+msgid ""
+"The XPath-like expression used to extract a SeriesLink identifier from the "
+"XMLTV data.  This ID is used to identify multiple occurrences of the same "
+"series.  Root node = 'programme'."
+msgstr ""
+
+#: src/epggrab/module/xmltv.c:1451
+msgid ""
+"The XPath-like expression used to extract a unique event identifier from the "
+"XMLTV data.  This ID is used to match existing EPG events so that they can "
+"be updated rather than replaced. Root node = 'programme'."
+msgstr ""
+
+#: src/epggrab/module/xmltv.c:1465
+msgid ""
+"The XPath-like expression used to extract an EpisodeLink identifier from the "
+"XMLTV data.  This ID is used to identify multiple occurrences of the same "
+"episode.  Root node = 'programme'."
+msgstr ""
+
+#: src/epggrab/module/xmltv.c:1446
+msgid ""
+"The XPath-like expression used to extract the category ETSI code from the "
+"XMLTV data. Root node = 'category'."
+msgstr ""
+
 #: src/dvr/dvr_db.c:5055
 msgid "The age rating of the program."
 msgstr ""
@@ -8753,15 +8876,15 @@ msgstr ""
 msgid "The current configuration ID."
 msgstr ""
 
-#: src/config.c:2227
+#: src/config.c:2230
 msgid "The current configuration version."
 msgstr ""
 
-#: src/config.c:2288
+#: src/config.c:2291
 msgid "The default interface view level (next to the Help button)."
 msgstr ""
 
-#: src/config.c:2246
+#: src/config.c:2249
 msgid ""
 "The default language to use if the user  language isn't set (in the Access "
 "Entries tab)."
@@ -8771,11 +8894,11 @@ msgstr ""
 msgid "The default subscription weight for each subscription."
 msgstr ""
 
-#: src/config.c:2268
+#: src/config.c:2271
 msgid "The default web interface items per page."
 msgstr ""
 
-#: src/config.c:2256
+#: src/config.c:2259
 msgid ""
 "The default web interface theme, if a user-specific one isn't set (in the "
 "Access Entries tab)."
@@ -8876,7 +8999,7 @@ msgid ""
 "AUTO."
 msgstr ""
 
-#: src/config.c:2505
+#: src/config.c:2508
 msgid "The hash algorithm type for the digest authentication."
 msgstr ""
 
@@ -9196,7 +9319,7 @@ msgstr ""
 msgid "The number of ISDB-T (Terresterial) tuners to export."
 msgstr ""
 
-#: src/config.c:2728
+#: src/config.c:2731
 msgid ""
 "The number of MPEG-TS packets Tvheadend buffers in case there is a delay "
 "receiving CA keys. "
@@ -9212,7 +9335,7 @@ msgid ""
 "bytes long. The accepted range is 18800-1880000 bytes."
 msgstr ""
 
-#: src/config.c:2516
+#: src/config.c:2519
 msgid "The number of days cookies set by Tvheadend should expire."
 msgstr ""
 
@@ -9220,7 +9343,7 @@ msgstr ""
 msgid "The number of muxes left to scan on this network."
 msgstr ""
 
-#: src/config.c:2527
+#: src/config.c:2530
 msgid ""
 "The number of seconds in which authentication tickets generated by Tvheadend "
 "should expire."
@@ -9297,7 +9420,7 @@ msgid ""
 "sure of the value leave as AUTO."
 msgstr ""
 
-#: src/config.c:2484
+#: src/config.c:2487
 msgid "The realm name for HTTP authorization."
 msgstr ""
 
@@ -9351,7 +9474,7 @@ msgid ""
 "available for a channel."
 msgstr ""
 
-#: src/config.c:2475
+#: src/config.c:2478
 msgid "The server name for 'Server:' HTTP headers."
 msgstr ""
 
@@ -9476,7 +9599,7 @@ msgstr ""
 msgid "The time the entry stops/stopped being recorded."
 msgstr ""
 
-#: src/config.c:2397
+#: src/config.c:2400
 msgid ""
 "The time window to cut the stop time from the overlapped event in seconds."
 msgstr ""
@@ -9524,7 +9647,7 @@ msgid ""
 "the standard priority value is used. See Help for details."
 msgstr ""
 
-#: src/config.c:2693
+#: src/config.c:2696
 msgid "The user agent string for the build-in HTTP client."
 msgstr ""
 
@@ -9534,7 +9657,7 @@ msgid ""
 "address if scheduled by a matching rule."
 msgstr ""
 
-#: src/config.c:2236
+#: src/config.c:2239
 msgid "The version of Tvheadend that last updated the config."
 msgstr ""
 
@@ -9542,7 +9665,7 @@ msgstr ""
 msgid "The video stream types the filter should apply to."
 msgstr ""
 
-#: src/access.c:1566 src/config.c:2255
+#: src/access.c:1566 src/config.c:2258
 msgid "Theme"
 msgstr ""
 
@@ -9558,7 +9681,7 @@ msgstr ""
 msgid "This tuner"
 msgstr ""
 
-#: src/config.c:2782
+#: src/config.c:2785
 msgid ""
 "This will create an NTP driver (using shmem interface) that you can feed "
 "into ntpd. This can be run without root privileges, but generally the "
@@ -9573,7 +9696,7 @@ msgstr ""
 msgid "Thread debugging"
 msgstr ""
 
-#: src/epg.c:1781
+#: src/epg.c:1865
 msgid "Thriller"
 msgstr ""
 
@@ -9581,7 +9704,7 @@ msgstr ""
 msgid "Thu"
 msgstr ""
 
-#: src/config.c:2526
+#: src/config.c:2529
 msgid "Ticket expiration (seconds)"
 msgstr ""
 
@@ -9593,7 +9716,7 @@ msgstr ""
 msgid "Tidy the channel name such as removing trailing HD text"
 msgstr ""
 
-#: src/tvhlog.c:92 src/config.c:2047
+#: src/tvhlog.c:92 src/config.c:2050
 msgid "Time"
 msgstr ""
 
@@ -9730,7 +9853,7 @@ msgstr ""
 msgid "Too many data errors"
 msgstr ""
 
-#: src/config.c:2278
+#: src/config.c:2281
 msgid "Tooltips"
 msgstr ""
 
@@ -9758,19 +9881,19 @@ msgstr ""
 msgid "Total number of services."
 msgstr ""
 
-#: src/epg.c:1943
+#: src/epg.c:2027
 msgid "Tourism / Travel"
 msgstr ""
 
-#: src/tvhlog.c:851
+#: src/tvhlog.c:904
 msgid "Trace subsystems"
 msgstr ""
 
-#: src/epg.c:1892
+#: src/epg.c:1976
 msgid "Traditional arts"
 msgstr ""
 
-#: src/epg.c:1873
+#: src/epg.c:1957
 msgid "Traditional music"
 msgstr ""
 
@@ -9832,7 +9955,7 @@ msgstr ""
 msgid "Try re-scheduling recording if more errors than (0=off)"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1089
+#: src/epggrab/module/xmltv.c:1408
 msgid ""
 "Try to obtain channel numbers from the display-name xml tag. If the first "
 "word is number, it is used as the channel number."
@@ -9842,8 +9965,8 @@ msgstr ""
 msgid "Tue"
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:183
-#: src/transcoding/codec/codecs/libs/libx26x.c:282
+#: src/transcoding/codec/codecs/libs/libx26x.c:194
+#: src/transcoding/codec/codecs/libs/libx26x.c:293
 #: src/transcoding/codec/codecs/libs/libvpx.c:130
 msgid "Tune"
 msgstr ""
@@ -9852,7 +9975,7 @@ msgstr ""
 msgid "Tune before DiseqC"
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:184
+#: src/transcoding/codec/codecs/libs/libx26x.c:195
 msgid "Tune the encoding params (cf. x264 --fullhelp)."
 msgstr ""
 
@@ -9888,11 +10011,11 @@ msgstr ""
 msgid "Turn off LNB when idle"
 msgstr ""
 
-#: src/config.c:2634
+#: src/config.c:2637
 msgid "Tvheadend model name for HDHomeRun Server Emulation"
 msgstr ""
 
-#: src/config.c:2217
+#: src/config.c:2220
 msgid "Tvheadend server name"
 msgstr ""
 
@@ -9908,7 +10031,7 @@ msgstr ""
 msgid "UDP RTP port number (2 ports)"
 msgstr ""
 
-#: src/tvhlog.c:187
+#: src/tvhlog.c:185
 msgid "UDP Streamer"
 msgstr ""
 
@@ -10162,6 +10285,10 @@ msgstr ""
 msgid "Unimportant"
 msgstr ""
 
+#: src/epggrab/module/xmltv.c:1449
+msgid "Unique Event ID XPath"
+msgstr ""
+
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:789
 msgid "Universal LNB only"
 msgstr ""
@@ -10236,11 +10363,11 @@ msgstr ""
 msgid "Update disabled"
 msgstr ""
 
-#: src/config.c:2770
+#: src/config.c:2773
 msgid "Update time"
 msgstr ""
 
-#: src/config.c:2793
+#: src/config.c:2796
 msgid "Update tolerance (ms)"
 msgstr ""
 
@@ -10362,7 +10489,7 @@ msgid ""
 "outdated and may cause scanning to take longer than usual."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1115
+#: src/epggrab/module/xmltv.c:1434
 msgid "Use category instead of genre"
 msgstr ""
 
@@ -10481,7 +10608,7 @@ msgstr ""
 msgid "Users - Passwords"
 msgstr ""
 
-#: src/tvhlog.c:182
+#: src/tvhlog.c:213
 msgid "VA-API"
 msgstr ""
 
@@ -10489,8 +10616,12 @@ msgstr ""
 msgid "VAAPI Deinterlace mode"
 msgstr ""
 
-#: src/tvhlog.c:183
+#: src/tvhlog.c:214
 msgid "VAINFO"
+msgstr ""
+
+#: src/tvhlog.c:207
+msgid "VORBIS"
 msgstr ""
 
 #: src/transcoding/codec/codecs/vorbis.c:58
@@ -10507,7 +10638,7 @@ msgstr ""
 msgid "Variable bitrate (VBR) mode [0-31]."
 msgstr ""
 
-#: src/epg.c:1818
+#: src/epg.c:1902
 msgid "Variety show"
 msgstr ""
 
@@ -10523,7 +10654,7 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
-#: src/epg.c:1895
+#: src/tvhlog.c:198 src/epg.c:1979
 msgid "Video"
 msgstr ""
 
@@ -10590,11 +10721,11 @@ msgid ""
 "otherwise lock the second tuner."
 msgstr ""
 
-#: src/epg.c:1782
+#: src/epg.c:1866
 msgid "War"
 msgstr ""
 
-#: src/epg.c:1842
+#: src/epg.c:1926
 msgid "Water sport"
 msgstr ""
 
@@ -10602,7 +10733,7 @@ msgstr ""
 msgid "Weak stream"
 msgstr ""
 
-#: src/epg.c:1799
+#: src/epg.c:1883
 msgid "Weather report"
 msgstr ""
 
@@ -10610,7 +10741,7 @@ msgstr ""
 msgid "Weave Deinterlacing"
 msgstr ""
 
-#: src/config.c:2184
+#: src/config.c:2187
 msgid "Web Interface Settings"
 msgstr ""
 
@@ -10646,7 +10777,7 @@ msgstr ""
 msgid "Welcome"
 msgstr ""
 
-#: src/epg.c:1782
+#: src/epg.c:1866
 msgid "Western"
 msgstr ""
 
@@ -10658,7 +10789,7 @@ msgstr ""
 msgid "Western hemisphere (latitude direction)."
 msgstr ""
 
-#: src/config.c:2608
+#: src/config.c:2611
 msgid ""
 "When Tvheadend is acting as an HDHomeRun Server (emulating an HDHomeRun "
 "device for downstream media devices to stream Live TV) then we tell clients "
@@ -10671,7 +10802,7 @@ msgid ""
 "automatically.  Set to zero for Tvheadend to use a default value."
 msgstr ""
 
-#: src/config.c:2635
+#: src/config.c:2638
 msgid ""
 "When Tvheadend is acting as an HDHomeRun Server (emulating an HDHomeRun "
 "device for downstream media devices to stream Live TV) then we use this as "
@@ -10739,14 +10870,14 @@ msgstr ""
 msgid "When the service was last seen during a mux scan."
 msgstr ""
 
-#: src/config.c:2671
+#: src/config.c:2674
 msgid ""
 "When using RTSP IPTV, this correspond to the minimum port bind on the client "
 "(this server), sent to the server. This is especially useful when using "
 "firewalls and NAT or containers."
 msgstr ""
 
-#: src/epg.c:1843
+#: src/epg.c:1927
 msgid "Winter sports"
 msgstr ""
 
@@ -10800,6 +10931,10 @@ msgstr ""
 
 #: src/access.c:1576
 msgid "XMLTV output format"
+msgstr ""
+
+#: src/epggrab/module/xmltv.c:1501 src/epggrab/module/xmltv.c:1603
+msgid "XPath Settings"
 msgstr ""
 
 #: src/access.c:1494
@@ -10891,11 +11026,11 @@ msgstr ""
 msgid "libvpx"
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:166
+#: src/transcoding/codec/codecs/libs/libx26x.c:177
 msgid "libx264"
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:265
+#: src/transcoding/codec/codecs/libs/libx26x.c:276
 msgid "libx265"
 msgstr ""
 
@@ -10980,11 +11115,11 @@ msgstr ""
 msgid "return"
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:271
+#: src/transcoding/codec/codecs/libs/libx26x.c:282
 msgid "set the x265 preset."
 msgstr ""
 
-#: src/transcoding/codec/codecs/libs/libx26x.c:283
+#: src/transcoding/codec/codecs/libs/libx26x.c:294
 msgid "set the x265 tune parameter."
 msgstr ""
 
