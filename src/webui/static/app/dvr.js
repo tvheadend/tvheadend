@@ -1042,7 +1042,7 @@ tvheadend.dvr_settings = function(panel, index) {
  */
 tvheadend.autorec_editor = function(panel, index) {
 
-    var list = 'name,title,fulltext,channel,start,start_window,weekdays,' +
+    var list = 'name,title,fulltext,mergetext,channel,start,start_window,weekdays,' +
                'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,minyear,maxyear,minseason,maxseason,' +
                'star_rating,dedup,directory,config_name,comment,pri,serieslink';
     var elist = 'enabled,start_extra,stop_extra,' +
@@ -1061,6 +1061,7 @@ tvheadend.autorec_editor = function(panel, index) {
             directory:    { width: 200 },
             title:        { width: 300 },
             fulltext:     { width: 70 },
+            mergetext:    { width: 70 },
             channel:      { width: 200 },
             tag:          { width: 200 },
             btype:        { width: 50 },
@@ -1109,7 +1110,7 @@ tvheadend.autorec_editor = function(panel, index) {
             },
         },
         del: true,
-        list: 'enabled,name,title,fulltext,channel,tag,start,start_window,' +
+        list: 'enabled,name,title,fulltext,mergetext,channel,tag,start,start_window,' +
               'weekdays,minduration,maxduration,record,btype,content_type,cat1,cat2,cat3' +
               'star_rating,pri,dedup,directory,config_name,minseason,maxseason,minyear,maxyear,owner,creator,comment,serieslink',
         sort: {

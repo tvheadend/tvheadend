@@ -372,6 +372,7 @@ api_epg_grid
   if (str)
     eq.stitle = strdup(str);
   eq.fulltext = htsmsg_get_bool_or_default(args, "fulltext", 0);
+  eq.mergetext = htsmsg_get_bool_or_default(args, "mergetext", 0);
   eq.new_only = htsmsg_get_bool_or_default(args, "new", 0);
   str = htsmsg_get_str(args, "channel");
   if (str)
