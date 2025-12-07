@@ -1049,11 +1049,11 @@ profile_chain_init(profile_chain_t *prch, profile_t *pro, void *id, int queue)
  */
 int
 profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
-                   uint32_t timeshift_period, profile_work_flags_t flags)
+                   uint32_t timeshift_period)
 {
   profile_t *pro = prch->prch_pro;
   if (pro && pro->pro_work)
-    return pro->pro_work(prch, dst, timeshift_period, flags);
+    return pro->pro_work(prch, dst, timeshift_period);
   return -1;
 }
 
@@ -1213,7 +1213,7 @@ const idclass_t profile_htsp_class =
 static int
 profile_htsp_work(profile_chain_t *prch,
                   streaming_target_t *dst,
-                  uint32_t timeshift_period, profile_work_flags_t flags)
+                  uint32_t timeshift_period)
 {
   profile_sharer_t *prsh;
 
@@ -1995,7 +1995,7 @@ profile_audio_open(profile_chain_t *prch,
   prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
 
-  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0, 0);
+  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0);
   if (r) {
     profile_chain_close(prch);
     return r;
@@ -2063,7 +2063,7 @@ profile_libav_mpegts_open(profile_chain_t *prch,
   prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
 
-  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0, 0);
+  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0);
   if (r) {
     profile_chain_close(prch);
     return r;
@@ -2154,7 +2154,7 @@ profile_libav_matroska_open(profile_chain_t *prch,
   prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
 
-  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0, 0);
+  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0);
   if (r) {
     profile_chain_close(prch);
     return r;
@@ -2217,7 +2217,7 @@ profile_libav_mp4_open(profile_chain_t *prch,
   prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
 
-  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0, 0);
+  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0);
   if (r) {
     profile_chain_close(prch);
     return r;
@@ -2673,7 +2673,7 @@ profile_transcode_can_share(profile_chain_t *prch,
 static int
 profile_transcode_work(profile_chain_t *prch,
                        streaming_target_t *dst,
-                       uint32_t timeshift_period, profile_work_flags_t flags)
+                       uint32_t timeshift_period)
 {
   profile_sharer_t *prsh;
   profile_transcode_t *pro = (profile_transcode_t *)prch->prch_pro;
@@ -2786,7 +2786,7 @@ profile_transcode_open(profile_chain_t *prch,
   prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
 
-  r = profile_transcode_work(prch, &prch->prch_sq.sq_st, 0, 0);
+  r = profile_transcode_work(prch, &prch->prch_sq.sq_st, 0);
   if (r) {
     profile_chain_close(prch);
     return r;
