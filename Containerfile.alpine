@@ -19,7 +19,7 @@ RUN apk add --no-cache \
         'cmake' \
         'coreutils' \
         'dbus-dev' \
-        'ffmpeg4-dev' \
+        'ffmpeg-dev' \
         'findutils' \
         'gettext-dev' \
         'git' \
@@ -79,16 +79,15 @@ RUN apk add --no-cache \
         'avahi' \
         'bzip2' \
         'dbus-libs' \
-        'ffmpeg4' \
-        'ffmpeg4-libavcodec' \
-        'ffmpeg4-libavdevice' \
-        'ffmpeg4-libavfilter' \
-        'ffmpeg4-libavfilter' \
-        'ffmpeg4-libavformat' \
-        'ffmpeg4-libavutil' \
-        'ffmpeg4-libpostproc' \
-        'ffmpeg4-libswresample' \
-        'ffmpeg4-libswscale' \
+        'ffmpeg' \
+        'ffmpeg-libavcodec' \
+        'ffmpeg-libavdevice' \
+        'ffmpeg-libavfilter' \
+        'ffmpeg-libavformat' \
+        'ffmpeg-libavutil' \
+        'ffmpeg-libpostproc' \
+        'ffmpeg-libswresample' \
+        'ffmpeg-libswscale' \
         'gnu-libiconv-libs' \
         'libcrypto3' \
         'libdvbcsa' \
@@ -112,7 +111,7 @@ RUN apk add --no-cache \
         'libva-intel-driver' \
         ; \
     [ "$(uname -m)" = 'x86_64' ] && apk add --no-cache \
-        'intel-media-driver' \
+        'libva-intel-driver' \
         ; \
     addgroup -S 'tvheadend' && \
     adduser -D -G 'tvheadend' -h '/var/lib/tvheadend' -s '/bin/nologin' -S 'tvheadend' && \
