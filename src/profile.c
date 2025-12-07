@@ -1162,12 +1162,6 @@ profile_chain_close(profile_chain_t *prch)
     timeshift_destroy(prch->prch_timeshift);
     prch->prch_timeshift = NULL;
   }
-#if ENABLE_IPTV
-  if(prch->prch_rtsp) {
-    rtsp_st_destroy(prch->prch_rtsp);
-    prch->prch_rtsp = NULL;
-  }
-#endif
 #endif
   if (prch->prch_gh) {
     globalheaders_destroy(prch->prch_gh);
@@ -1232,13 +1226,8 @@ profile_htsp_work(profile_chain_t *prch,
   prch->prch_share = prsh->prsh_tsfix;
 
 #if ENABLE_TIMESHIFT
-#if ENABLE_IPTV
-  if (flags & PROFILE_WORK_REMOTE_TS)
-    dst = prch->prch_rtsp = rtsp_st_create(dst, prch);
-  else
-#endif
-    if (timeshift_period > 0)
-      dst = prch->prch_timeshift = timeshift_create(dst, timeshift_period);
+  if (timeshift_period > 0)
+    dst = prch->prch_timeshift = timeshift_create(dst, timeshift_period);
 #endif
 
   dst = prch->prch_gh = globalheaders_create(dst);

@@ -46,8 +46,7 @@ typedef enum {
 } profile_svfilter_t;
 
 typedef enum {
-  PROFILE_WORK_NONE = 0,
-  PROFILE_WORK_REMOTE_TS
+  PROFILE_WORK_NONE = 0
 } profile_work_flags_t;
 
 struct profile;
@@ -99,7 +98,6 @@ typedef struct profile_chain {
   struct streaming_target  *prch_tsfix;
 #if ENABLE_TIMESHIFT
   struct streaming_target  *prch_timeshift;
-  struct streaming_target  *prch_rtsp;
 #endif
   struct streaming_target   prch_input;
   struct streaming_target  *prch_share;
