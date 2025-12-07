@@ -574,7 +574,6 @@ EOF
   cat >> "${CONFIG_H}" <<EOF
 extern const char* build_config_str;
 extern const char* build_timestamp;
-extern const char* build_year;
 EOF
 
   # Create C source
