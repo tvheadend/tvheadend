@@ -761,15 +761,19 @@ include ${ROOTDIR}/support/${OSENV}.mk
 
 # Build files
 DATE_FMT = %Y-%m-%dT%H:%M:%S%z
+YEAR_FMT = %Y
 ifdef SOURCE_DATE_EPOCH
 	BUILD_DATE ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" "+$(DATE_FMT)"  2>/dev/null || date -u -r "$(SOURCE_DATE_EPOCH)" "+$(DATE_FMT)" 2>/dev/null || date -u "+$(DATE_FMT)")
+	BUILD_YEAR ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" "+$(YEAR_FMT)"  2>/dev/null || date -u -r "$(SOURCE_DATE_EPOCH)" "+$(YEAR_FMT)" 2>/dev/null || date -u "+$(YEAR_FMT)")
 else
 	BUILD_DATE ?= $(shell date "+$(DATE_FMT)")
+	BUILD_YEAR ?= $(shell date "+$(YEAR_FMT)")
 endif
 $(BUILDDIR)/timestamp.c: FORCE
 	@mkdir -p $(dir $@)
 	@echo '#include "build.h"' > $@
 	@echo 'const char* build_timestamp = "'$(BUILD_DATE)'";' >> $@
+	@echo 'const char* build_year = "'$(BUILD_YEAR)'";' >> $@
 
 $(BUILDDIR)/timestamp.o: $(BUILDDIR)/timestamp.c
 	$(pCC) $(CFLAGS) -c -o $@ $<
