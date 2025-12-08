@@ -52,7 +52,8 @@ jobs:
           echo "No changes detected in internationalisation templates"
         else
           # Check if changes are only in POT-Creation-Date lines
-          # Filter out lines that only change the date
+          # Extract diff lines that start with + or - (actual changes)
+          # Exclude file markers (--- and +++) and POT-Creation-Date lines
           SUBSTANTIVE_CHANGES=$(git diff --cached | grep -E '^[-+]' | grep -v '^---' | grep -v '^+++' | grep -v 'POT-Creation-Date:' || true)
           
           if [ -z "$SUBSTANTIVE_CHANGES" ]; then
