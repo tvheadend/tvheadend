@@ -82,7 +82,6 @@ typedef struct channel
   int                   ch_dvr_extra_time_pre;
   int                   ch_dvr_extra_time_post;
   int                   ch_epg_running;
-  int                   ch_remote_timeshift;
   LIST_HEAD(, dvr_entry)         ch_dvrs;
   LIST_HEAD(, dvr_autorec_entry) ch_autorecs;
   LIST_HEAD(, dvr_timerec_entry) ch_timerecs;

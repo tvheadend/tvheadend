@@ -287,7 +287,7 @@ int rtsp_describe_decode(http_client_t *hc, const char *buf, size_t len) {
   for (n = 0; n < len; n++) {
     p = buf + n;
     if (strncmp(p, "a=range", 7) == 0) {
-      // Parse remote timeshift buffer info
+      // Parse RTSP range info
       if (strncmp(p + 8, "npt=", 4) == 0) {
         sscanf(p + 8, "npt=%" PRItime_t "-%" PRItime_t, &hc->hc_rtsp_range_start,
             &hc->hc_rtsp_range_end);

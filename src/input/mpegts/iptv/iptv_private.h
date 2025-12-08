@@ -239,23 +239,6 @@ ssize_t iptv_rtp_read(iptv_mux_t *im, void (*pkt_cb)(iptv_mux_t *im, uint8_t *bu
 
 void iptv_input_unpause ( void *aux );
 
-struct rtsp_st {
-  // Note: input MUST BE FIRST in struct
-  streaming_target_t          input;      ///< Input source
-  streaming_target_t          *output;    ///< Output dest
-  streaming_target_t          *tsfix;
-  pthread_t                   st_thread;
-  volatile int                run;
-  volatile int                rtsp_input_start;
-  iptv_mux_t *im;
-};
-
-typedef struct rtsp_st rtsp_st_t;
-#if ENABLE_TIMESHIFT
-void *rtsp_status_thread(void *p) ;
-streaming_target_t* rtsp_st_create(streaming_target_t *out, profile_chain_t *prch);
-void rtsp_st_destroy(streaming_target_t *st);
-#endif
 #endif /* __IPTV_PRIVATE_H__ */
 
 /******************************************************************************
