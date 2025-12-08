@@ -392,6 +392,7 @@ typedef struct dvr_autorec_entry {
   char *dae_title;
   tvh_regex_t dae_title_regex;
   int dae_fulltext;
+  int dae_mergetext;
 
   uint32_t dae_content_type;
   /* These categories (mainly from xmltv) such as Cooking, Dog racing, Movie.
