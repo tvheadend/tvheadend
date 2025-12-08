@@ -187,10 +187,10 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 
   htsbuf_qprintf(hq, "<center class=\"about-tab\">\n\
 <div class=\"about-title\">HTS Tvheadend %s</div>\n\
-<p>&copy; 2006 - 2024 Andreas Smas, Jaroslav Kysela, Adam Sutton, et al.</p>\n\
+<p>&copy; 2006 - %.4s Andreas Smas, Jaroslav Kysela, Adam Sutton, et al.</p>\n\
 <p><img class=\"logobig\" src=\"static/img/logobig.png\"></p>\n\
 <p><a href=\"https://tvheadend.org\">https://tvheadend.org</a></p>\n",
-    tvheadend_version);
+    tvheadend_version, build_timestamp);
 
   htsbuf_qprintf(hq, "<p>%s \n\
 <a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. \
