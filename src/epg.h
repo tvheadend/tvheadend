@@ -448,6 +448,8 @@ const char *epg_broadcast_get_keyword_cached
   ( epg_broadcast_t *b, const char *lang );
 const ratinglabel_t *epg_broadcast_get_rating_label
   ( epg_broadcast_t *b );
+char* epg_broadcast_get_merged_text
+  ( epg_broadcast_t *b );
 
 /* Episode number heplers */
 // Note: this does NOT strdup the text field
@@ -534,6 +536,7 @@ typedef struct epg_query {
   char             *stitle;
   tvh_regex_t       stitle_re;
   int               fulltext;
+  int               mergetext;
   int               new_only;
   char             *channel;
   char             *channel_tag;

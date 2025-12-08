@@ -607,6 +607,8 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
       htsmsg_add_u32(conf, "maxduration", !retval ? u32 : 0);  // 0 = any
     if (!(retval = htsmsg_get_u32(in, "fulltext", &u32)) || add)
       htsmsg_add_u32(conf, "fulltext", !retval ? u32 : 0);     // 0 = off
+    if (!(retval = htsmsg_get_u32(in, "mergetext", &u32)) || add)
+      htsmsg_add_u32(conf, "mergetext", !retval ? u32 : 0);     // 0 = off
     if (!(retval = htsmsg_get_u32(in, "dupDetect", &u32)) || add)
       htsmsg_add_u32(conf, "record", !retval ? u32 : DVR_AUTOREC_RECORD_ALL);
     if (!(retval = htsmsg_get_u32(in, "maxCount", &u32)) || add)
@@ -1247,6 +1249,7 @@ htsp_build_autorecentry(htsp_connection_t *htsp, dvr_autorec_entry_t *dae, const
   if(dae->dae_title) {
     htsmsg_add_str(out, "title",     dae->dae_title);
     htsmsg_add_u32(out, "fulltext",  dae->dae_fulltext >= 1 ? 1 : 0);
+    htsmsg_add_u32(out, "mergetext", dae->dae_mergetext >= 1 ? 1 : 0);
   }
   htsmsg_add_str2(out, "name",       dae->dae_name);
   if(dae->dae_directory)
@@ -1879,6 +1882,9 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(htsmsg_get_bool_or_default(in, "fulltext", 0))
     eq.fulltext = 1;
+  if(htsmsg_get_bool_or_default(in, "mergetext", 0))
+    eq.mergetext = 1;
+
   eq.stitle = strdup(query);
 
   /* Optional */

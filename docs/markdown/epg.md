@@ -43,7 +43,7 @@ Filter                     | Function
 ---------------------------| --------
 **All/Now**                | Filter between showing all events (*All*), or those that are currently broadcasting (*Now*). Can be used with the other filters.
 **Search title...**        | Only display events that match the given title.
-                           | The filter uses case-insensitive regular expressions. If you don’t know what a regular expression is, this simply means that you can type just parts of the title and filter on that - there’s no need for full, exact matching. If the fulltext checkbox is checked, the title text is matched against title, subtitle, summary and description.
+                           | The filter uses case-insensitive regular expressions. If you don’t know what a regular expression is, this simply means that you can type just parts of the title and filter on that - there’s no need for full, exact matching. If the fulltext checkbox is checked, the title text is matched against title, subtitle, summary and description.  If the mergetext checkbox is checked, the title text is matched against a merger of the title + subtitle + summary + description + credits + keywords.  See AutoRec help for more details on using mergetext.
 **Filter channel...**      | Only display events from the selected channel.
                            | Channels in the drop down are ordered by name and can be filtered (by name) by typing in the box.
 **Filter tag...**          | Only display events from channels which are included in the selected tag.
