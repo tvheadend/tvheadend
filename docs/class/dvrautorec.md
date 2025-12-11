@@ -12,3 +12,9 @@
 
 ---
 
+## Merge-Text Search
+
+<tvh_include>inc/dvr_mergetext</tvh_include>
+
+---
+

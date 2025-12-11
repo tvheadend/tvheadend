@@ -193,6 +193,8 @@ dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   idnode_list_mapping_t *ilm;
   dvr_config_t *cfg;
   double duration;
+  char    *mergedtext = NULL;
+  int     mergedtextResult = 0;
 
   if (!e) return 0;
   if (!e->channel) return 0;
@@ -350,32 +352,58 @@ dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   /* Do not check title if the event is from the serieslink group */
   if((dae->dae_serieslink_uri == NULL || dae->dae_serieslink_uri[0] == '\0') &&
      dae->dae_title != NULL && dae->dae_title[0] != '\0') {
-    lang_str_ele_t *ls;
-    if (!dae->dae_fulltext) {
-      if(!e->title) return 0;
-      RB_FOREACH(ls, e->title, link)
-        if (!regex_match(&dae->dae_title_regex, ls->str)) break;
-    } else {
-      ls = NULL;
-      if (e->title)
+    lang_str_ele_t *ls = NULL;
+
+    //Because a mergetext search is more comprehensive than a full text
+    //search, if mergetext is enabled, it takes priority over fulltext.
+    if (!dae->dae_mergetext)
+    {
+      //Only consider doing a fulltext if we are NOT doing a mergetext search.
+      if (!dae->dae_fulltext) {
+        if(!e->title) return 0;
         RB_FOREACH(ls, e->title, link)
           if (!regex_match(&dae->dae_title_regex, ls->str)) break;
-      if (!ls && e->subtitle)
-        RB_FOREACH(ls, e->subtitle, link)
-          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
-      if (!ls && e->summary)
-        RB_FOREACH(ls, e->summary, link)
-          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
-      if (!ls && e->description)
-        RB_FOREACH(ls, e->description, link)
-          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
-      if (!ls && e->credits_cached)
-        RB_FOREACH(ls, e->credits_cached, link)
-          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
-      if (!ls && e->keyword_cached)
-        RB_FOREACH(ls, e->keyword_cached, link)
-          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+      } else {
+        ls = NULL;
+        if (e->title)
+          RB_FOREACH(ls, e->title, link)
+            if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+        if (!ls && e->subtitle)
+          RB_FOREACH(ls, e->subtitle, link)
+            if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+        if (!ls && e->summary)
+          RB_FOREACH(ls, e->summary, link)
+            if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+        if (!ls && e->description)
+          RB_FOREACH(ls, e->description, link)
+            if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+        if (!ls && e->credits_cached)
+          RB_FOREACH(ls, e->credits_cached, link)
+            if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+        if (!ls && e->keyword_cached)
+          RB_FOREACH(ls, e->keyword_cached, link)
+            if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+      }//END fulltext block
     }
+    else
+    {
+      mergedtextResult = 0;
+      mergedtext = epg_broadcast_get_merged_text(e);  //'e' is the EPG record being merged.
+      if(mergedtext)
+      {
+        mergedtextResult = regex_match(&dae->dae_title_regex, mergedtext);
+        free(mergedtext);
+        if(!mergedtextResult)
+        {
+          return 1;
+        }
+      }
+      else
+      {
+          return 0;  //To get here, epg_broadcast_get_merged_text() returned NULL.
+      }
+    }//END mergetext block
+
     if (!ls) return 0;
   }
 
@@ -1169,6 +1197,16 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("When the fulltext is checked, the title pattern is "
                      "matched against title, subtitle, summary and description."),
       .off      = offsetof(dvr_autorec_entry_t, dae_fulltext),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "mergetext",
+      .name     = N_("Merge-text"),
+      .desc     = N_("When 'Merge-Text' is selected, the title pattern is "
+                     "matched against a merged single string consisting of the "
+                     "title + subtitle + summary + description + credits + keywords "
+                     "for all languages contained in the EPG entry being searched."),
+      .off      = offsetof(dvr_autorec_entry_t, dae_mergetext),
     },
     {
       .type     = PT_STR,
