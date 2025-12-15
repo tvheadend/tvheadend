@@ -5662,7 +5662,7 @@ msgstr "Scal usługi o tej samej nazwie w jeden kanał."
 
 #: src/dvr/dvr_autorec.c:1204
 msgid "Merge-text"
-msgstr ""
+msgstr "Scal tekst"
 
 #: src/htsp_server.c:3463
 msgid "Method not found"
@@ -11650,6 +11650,10 @@ msgid ""
 "credits + keywords for all languages contained in the EPG entry being "
 "searched."
 msgstr ""
+"Po wybraniu opcji „Scal tekst” wzorzec tytułu jest porównywany ze scalonym "
+"pojedynczym ciągiem składającym się z tytułu + napisów + streszczenia + "
+"opisu + napisów końcowych + słów kluczowych dla wszystkich języków zawartych"
+" we wpisie EPG podlegającym przeszukiwaniu."
 
 #: src/config.c:2611
 msgid ""
