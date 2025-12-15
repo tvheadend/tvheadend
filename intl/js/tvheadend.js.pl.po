@@ -1258,7 +1258,7 @@ msgstr "Wpis informacji o pamięci"
 
 #: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1505
 msgid "Mergetext"
-msgstr ""
+msgstr "Scal tekst"
 
 #: src/webui/static/app/tvheadend.js:670
 msgid "Message"
