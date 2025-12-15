@@ -70,6 +70,9 @@ msgid ""
 " is mentioned in the sub-title or summary or description, but 'sheldon' is "
 "not.\""
 msgstr ""
+"Znajdź wszystkie wydarzenia EPG, których tytuł zawiera słowo „Teoria "
+"wielkiego podrywu”, gdzie w podtytule, streszczeniu lub opisie występuje "
+"słowo „Leonard”, ale nie o „Sheldon”."
 
 #: src/docs_inc.c:1414
 msgid "\"Left Arrow\""
@@ -542,35 +545,35 @@ msgstr "03:00:00 do brak maksimum"
 
 #: src/docs_inc.c:2651
 msgid "0x01"
-msgstr ""
+msgstr "0x01"
 
 #: src/docs_inc.c:2655
 msgid "0x02"
-msgstr ""
+msgstr "0x02"
 
 #: src/docs_inc.c:2659
 msgid "0x03"
-msgstr ""
+msgstr "0x03"
 
 #: src/docs_inc.c:2663
 msgid "0x04"
-msgstr ""
+msgstr "0x04"
 
 #: src/docs_inc.c:2667
 msgid "0x05"
-msgstr ""
+msgstr "0x05"
 
 #: src/docs_inc.c:2671
 msgid "0x06"
-msgstr ""
+msgstr "0x06"
 
 #: src/docs_inc.c:2675
 msgid "0x07"
-msgstr ""
+msgstr "0x07"
 
 #: src/docs_inc.c:2679
 msgid "0x09"
-msgstr ""
+msgstr "0x09"
 
 #: src/docs_inc.c:5375 src/docs_inc.c:5383
 msgid "1"
@@ -1790,6 +1793,9 @@ msgid ""
 "be used with caution due to the extra system load and overheads required to "
 "perform the search."
 msgstr ""
+"Uwaga: w systemach o ograniczonych zasobach wyszukiwanie metodą scalania "
+"tekstu należy stosować ostrożnie ze względu na dodatkowe obciążenie systemu "
+"i narzut wymagany do przeprowadzenia wyszukiwania."
 
 #: src/docs_inc.c:55
 msgid ""
@@ -2172,6 +2178,11 @@ msgid ""
 "second criteria to be in between a `\\x02` and a `\\x05` restricts matches "
 "to text in the merged 'Sub-title', 'Summary' or 'Description' fields."
 msgstr ""
+"Ograniczenie pierwszego kryterium „Teoria wielkiego podrywu” do wartości "
+"między `\\x01` a `\\x02` ogranicza dopasowania do tekstu w polu „Tytuł”. "
+"Ograniczenie drugiego kryterium do wartości między `\\x02` a `\\x05` "
+"ogranicza dopasowania do tekstu w scalonych polach „Podtytuł”, "
+"„Podsumowanie” lub „Opis”."
 
 #: src/docs_inc.c:2329 src/docs_inc.c:3108
 msgid "Connection Status"
@@ -2869,7 +2880,7 @@ msgstr "Włączony"
 
 #: src/docs_inc.c:2677
 msgid "End"
-msgstr ""
+msgstr "Koniec"
 
 #: src/docs_inc.c:2082
 msgid "Enigma2"
@@ -3043,17 +3054,19 @@ msgstr "Funkcje"
 
 #: src/docs_inc.c:2649
 msgid "Field"
-msgstr ""
+msgstr "Pole"
 
 #: src/docs_inc.c:2685
 msgid ""
 "Field prefixes are always provided in the same sequence and will be present "
 "even if the field is empty."
 msgstr ""
+"Prefiksy pól są zawsze podawane w tej samej kolejności i będą obecne nawet "
+"wtedy, gdy pole jest puste."
 
 #: src/docs_inc.c:2681
 msgid "Field separator (Tab)"
-msgstr ""
+msgstr "Separator pól (Tabulator)"
 
 #: src/docs_inc.c:5189
 msgid "File missing"
@@ -3326,7 +3339,7 @@ msgstr "Pełna ścieżka do nagrania"
 
 #: src/docs_inc.c:2635
 msgid "Full-Text vs Merge-Text Searching Options"
-msgstr ""
+msgstr "Opcje wyszukiwania pełnotekstowego i wyszukiwania tekstu scalonego"
 
 #: src/docs_inc.c:1048
 msgid "Fully-Integrated with Mainstream Media Players"
@@ -4643,11 +4656,11 @@ msgstr "Scal te same nazwy"
 
 #: src/docs_inc.c:3750
 msgid "Merge-Text Search"
-msgstr ""
+msgstr "Wyszukiwanie tekstu scalonego"
 
 #: src/docs_inc.c:2643
 msgid "Merge-text Field Prefixes"
-msgstr ""
+msgstr "Prefiksy pól tekstu scalonego"
 
 #: src/docs_inc.c:4763
 msgid "Method"
@@ -5035,12 +5048,16 @@ msgid ""
 "Note: In addition to the field prefixes, a special field separator is "
 "provided between individual language elements within a field."
 msgstr ""
+"Uwaga: oprócz prefiksów pól, pomiędzy poszczególnymi elementami języka w "
+"polu znajduje się specjalny separator pól."
 
 #: src/docs_inc.c:2693
 msgid ""
 "Note: The '[' and ']' characters are only used for illustrative purposes, "
 "they are not present in the actual data."
 msgstr ""
+"Uwaga: znaki „[” i „]” służą wyłącznie celom ilustracyjnym i nie występują w"
+" rzeczywistych danych."
 
 #: src/docs_inc.c:5019
 msgid ""
@@ -5510,7 +5527,7 @@ msgstr ""
 
 #: src/docs_inc.c:2647
 msgid "Prefix"
-msgstr ""
+msgstr "Prefiks"
 
 #: src/docs_inc.c:5659
 msgid ""
@@ -6068,7 +6085,7 @@ msgstr ""
 
 #: src/docs_inc.c:2687
 msgid "Sample Data:"
-msgstr ""
+msgstr "Przykładowe dane:"
 
 #: src/docs_inc.c:2532
 msgid "Satellite Configuration"
@@ -6647,7 +6664,7 @@ msgstr "Podsystemy"
 
 #: src/docs_inc.c:2657
 msgid "Subtitle (Short Description)"
-msgstr ""
+msgstr "Podtytuł (krótki opis)"
 
 #: src/docs_inc.c:4002
 msgid "Subtitle Stream Filters"
@@ -6908,6 +6925,10 @@ msgid ""
 " of the fields in all of the available languages for the EPG entry in "
 "question."
 msgstr ""
+"Opcja „Pełny tekst” przetestuje każde z powyższych pól osobno. "
+"Alternatywnie, opcja „Scal tekst” przetestuje wszystkie powyższe pola jako "
+"pojedyncze, scalone pole, składające się z wartości dla wszystkich pól we "
+"wszystkich dostępnych językach dla danego wpisu EPG."
 
 #: src/docs_inc.c:2637
 msgid ""
@@ -6917,6 +6938,11 @@ msgid ""
 "Description, Credits and Keywords. If both options are selected, only the "
 "'Merge-text' search will be performed."
 msgstr ""
+"Opcja wyszukiwania „Scal tekst” wprowadza ulepszenia do istniejącej opcji "
+"wyszukiwania „Pełny tekst”. Obie opcje testują podane wyrażenie regularne "
+"pod kątem tytułu, podtytułu (krótkiego opisu), podsumowania, opisu, napisów "
+"końcowych i słów kluczowych wydarzenia EPG. Po wybraniu obu opcji, zostanie "
+"wykonane tylko wyszukiwanie „Scal tekst”."
 
 #: src/docs_inc.c:280
 msgid ""
@@ -7226,6 +7252,16 @@ msgid ""
 "description + credits + keywords. See AutoRec help for more details on using"
 " mergetext."
 msgstr ""
+"Filtr używa wyrażeń regularnych bez uwzględniania wielkości liter. Jeśli nie"
+" wiesz, czym jest wyrażenie regularne, oznacza to po prostu, że możesz "
+"wpisać tylko fragmenty tytułu i filtrować je na ich podstawie – nie ma "
+"potrzeby pełnego, dokładnego dopasowania. Jeśli zaznaczone jest pole wyboru "
+"„pełny tekst”, tekst tytułu jest dopasowywany do tytułu, podtytułu, "
+"streszczenia i opisu. Jeśli zaznaczone jest pole wyboru „scal tekst”, tekst "
+"tytułu jest dopasowywany do połączenia tytułu, podtytułu, streszczenia, "
+"opisu, napisów końcowych i słów kluczowych. Więcej informacji na temat "
+"korzystania z funkcji „scal tekst” można znaleźć w pomocy funkcji "
+"autonagrywania."
 
 #: src/docs_inc.c:666
 msgid ""
@@ -7274,7 +7310,7 @@ msgstr "Następujący diagram wyjaśnia zależność między tymi komponentami:"
 
 #: src/docs_inc.c:2645
 msgid "The following field prefixes are used:"
-msgstr ""
+msgstr "Stosowane są następujące prefiksy pól:"
 
 #: src/docs_inc.c:2398
 msgid "The following functions are available:"
@@ -7950,6 +7986,10 @@ msgid ""
 " 'Event Sub-Title' and a French sub-title of 'Sous-titre de l'événement'. No"
 " other fields contain any data."
 msgstr ""
+"Ten przykład pokazuje rekord EPG z angielskim tytułem „Event Title” i "
+"francuskim tytułem „Titre de l'événement” oraz angielskim podtytułem „Event "
+"Sub-Title” i francuskim podtytułem „Sous-titre de l'événement”. Żadne inne "
+"pola nie zawierają żadnych danych."
 
 #: src/docs_inc.c:3908
 msgid ""
@@ -8657,7 +8697,7 @@ msgstr "Aktualizacja dokumentacji"
 
 #: src/docs_inc.c:2697
 msgid "Usage Example:"
-msgstr ""
+msgstr "Przykład użycia:"
 
 #: src/docs_inc.c:5
 msgid "Usage: `tvheadend [OPTIONS]`"
@@ -8937,6 +8977,8 @@ msgid ""
 "When merging fields, each field is prefixed with a specific code so that "
 "search terms can be applied to a specific field."
 msgstr ""
+"Podczas scalania pól każde pole jest poprzedzane określonym kodem, dzięki "
+"czemu wyszukiwane terminy można stosować do konkretnego pola."
 
 #: src/docs_inc.c:4509
 msgid ""
@@ -9273,6 +9315,9 @@ msgid ""
 "l'événement[0x02][0x09]en[0x09]Event Sub-Title[0x09]fr[0x09]Sous-titre de "
 "l'événement[0x03][0x04][0x05][0x06][0x07]"
 msgstr ""
+"[0x01][0x09]en[0x09]Event Title[0x09]fr[0x09]Titre de "
+"l'événement[0x02][0x09]en[0x09]Event Sub-Title[0x09]fr[0x09]Sous-titre de "
+"l'événement[0x03][0x04][0x05][0x06][0x07]"
 
 #: src/docs_inc.c:472
 msgid "[Autorec]"
