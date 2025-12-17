@@ -1954,6 +1954,13 @@ linuxdvb_frontend_tune0
 #endif /* 5.0+ */
   }
 
+  /* Neumo DVB: Include DTV_SET_SEC_CONFIGURED in same ioctl as DTV_TUNE
+   * Only sent when FE_SET_RF_INPUT was successfully called */
+  if (lfe->lfe_sec_configured) {
+    S2CMD(DTV_SET_SEC_CONFIGURED, 1);
+    lfe->lfe_sec_configured = 0;  /* Clear after use */
+  }
+
   /* Tune */
   S2CMD(DTV_TUNE, 0);
 #undef S2CMD
@@ -2205,6 +2212,32 @@ linuxdvb_frontend_create
   lfe->lfe_fe_path  = strdup(fe_path);
   lfe->lfe_dmx_path = strdup(dmx_path);
   lfe->lfe_dvr_path = strdup(dvr_path);
+
+  /* Neumo capability detection via FE_GET_EXTENDED_INFO */
+  lfe->lfe_neumo_detected = 0;
+  lfe->lfe_neumo_supported = 0;
+  lfe->lfe_num_rf_inputs = 0;
+  lfe->lfe_default_rf_input = -1;
+  fd = tvh_open(fe_path, O_RDONLY | O_NONBLOCK, 0);
+  if (fd >= 0) {
+    struct dvb_frontend_extended_info ext_info;
+    memset(&ext_info, 0, sizeof(ext_info));
+    if (ioctl(fd, FE_GET_EXTENDED_INFO, &ext_info) >= 0) {
+      lfe->lfe_neumo_detected = 1;
+      if (ext_info.supports_neumo) {
+        lfe->lfe_neumo_supported = 1;
+        lfe->lfe_num_rf_inputs = ext_info.num_rf_inputs;
+        lfe->lfe_default_rf_input = ext_info.default_rf_input;
+        tvhinfo(LS_LINUXDVB, "%s Neumo driver detected: %d RF inputs, default=%d",
+                fe_path, ext_info.num_rf_inputs, ext_info.default_rf_input);
+      } else {
+        tvhtrace(LS_LINUXDVB, "%s - FE_GET_EXTENDED_INFO: supports_neumo=0", fe_path);
+      }
+    } else {
+      tvhtrace(LS_LINUXDVB, "%s - FE_GET_EXTENDED_INFO not supported", fe_path);
+    }
+    close(fd);
+  }
 
   /* Input callbacks */
   lfe->ti_wizard_get          = linuxdvb_frontend_wizard_get;
