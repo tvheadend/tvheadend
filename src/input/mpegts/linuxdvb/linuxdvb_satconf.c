@@ -515,6 +515,44 @@ linuxdvb_satconf_class_en50494_freq_set
   return 1;
 }
 
+static const void *
+linuxdvb_satconf_class_en50494_group_get ( void *p )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
+  return &(((linuxdvb_en50494_t*)lse->lse_en50494)->le_group_id);
+}
+
+static int
+linuxdvb_satconf_class_en50494_group_set
+  ( void *p, const void *v )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse;
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
+    (((linuxdvb_en50494_t*)lse->lse_en50494)->le_group_id) = *(uint16_t*)v;
+  return 1;
+}
+
+static const void *
+linuxdvb_satconf_class_en50494_master_get ( void *p )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
+  return &(((linuxdvb_en50494_t*)lse->lse_en50494)->le_is_master);
+}
+
+static int
+linuxdvb_satconf_class_en50494_master_set
+  ( void *p, const void *v )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse;
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
+    (((linuxdvb_en50494_t*)lse->lse_en50494)->le_is_master) = *(int*)v;
+  return 1;
+}
+
 const idclass_t linuxdvb_satconf_en50494_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
@@ -550,6 +588,29 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .set      = linuxdvb_satconf_class_en50494_pin_set,
       .list     = linuxdvb_en50494_pin_list,
       .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "unicable_group",
+      .name     = N_("Unicable group"),
+      .desc     = N_("Group ID for master/slave coordination (0=standalone). "
+                     "All unicable elements in the same group share DiSEqC "
+                     "command serialization through the designated master."),
+      .get      = linuxdvb_satconf_class_en50494_group_get,
+      .set      = linuxdvb_satconf_class_en50494_group_set,
+      .list     = linuxdvb_en50494_group_list,
+      .opts     = PO_NOSAVE | PO_ADVANCED,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "is_master",
+      .name     = N_("Unicable master"),
+      .desc     = N_("If enabled, this unicable element acts as the master for its "
+                     "group. The master's frontend sends DiSEqC commands for all "
+                     "group members. Only one master per group is allowed."),
+      .get      = linuxdvb_satconf_class_en50494_master_get,
+      .set      = linuxdvb_satconf_class_en50494_master_set,
+      .opts     = PO_NOSAVE | PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -614,6 +675,29 @@ const idclass_t linuxdvb_satconf_en50607_class =
       .set      = linuxdvb_satconf_class_en50494_pin_set,
       .list     = linuxdvb_en50494_pin_list,
       .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "unicable_group",
+      .name     = N_("Unicable group"),
+      .desc     = N_("Group ID for master/slave coordination (0=standalone). "
+                     "All unicable elements in the same group share DiSEqC "
+                     "command serialization through the designated master."),
+      .get      = linuxdvb_satconf_class_en50494_group_get,
+      .set      = linuxdvb_satconf_class_en50494_group_set,
+      .list     = linuxdvb_en50494_group_list,
+      .opts     = PO_NOSAVE | PO_ADVANCED,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "is_master",
+      .name     = N_("Unicable master"),
+      .desc     = N_("If enabled, this unicable element acts as the master for its "
+                     "group. The master's frontend sends DiSEqC commands for all "
+                     "group members. Only one master per group is allowed."),
+      .get      = linuxdvb_satconf_class_en50494_master_get,
+      .set      = linuxdvb_satconf_class_en50494_master_set,
+      .opts     = PO_NOSAVE | PO_ADVANCED,
     },
     {
       .type     = PT_STR,

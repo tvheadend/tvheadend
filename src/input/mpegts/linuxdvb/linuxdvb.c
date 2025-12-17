@@ -38,4 +38,5 @@ void linuxdvb_init ( int adapter_mask )
 void linuxdvb_done ( void )
 {
   linuxdvb_adapter_done();
+  linuxdvb_en50494_done();
 }
