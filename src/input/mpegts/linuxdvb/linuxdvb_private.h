@@ -153,6 +153,20 @@ struct linuxdvb_frontend
   uint32_t                  lfe_grace_period;
 
   /*
+   * Neumo DVB driver support
+   * Set when RF input is configured, to include DTV_SET_SEC_CONFIGURED in tune
+   */
+  int                       lfe_sec_configured;
+
+  /*
+   * Neumo DVB driver detection (from FE_GET_EXTENDED_INFO)
+   */
+  int                       lfe_neumo_detected;     /* 1 if detection was done */
+  int                       lfe_neumo_supported;    /* 1 if driver supports Neumo extensions */
+  uint8_t                   lfe_num_rf_inputs;      /* Number of RF inputs available */
+  int8_t                    lfe_default_rf_input;   /* Default RF input */
+
+  /*
    * Satconf (DVB-S only)
    */
   linuxdvb_satconf_t       *lfe_satconf;
@@ -309,6 +323,12 @@ struct linuxdvb_satconf_ele
    * Assigned networks to this SAT configuration
    */
   idnode_set_t          *lse_networks;
+
+  /*
+   * RF Input selection (Neumo DVB driver)
+   * -1 = use driver default, 0+ = specific RF input number
+   */
+  int8_t                 lse_rf_input;
 
   /*
    * Diseqc kit

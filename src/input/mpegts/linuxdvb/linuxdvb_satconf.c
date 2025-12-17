@@ -977,6 +977,77 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
     (linuxdvb_diseqc_t*)lse->lse_lnb
   };
 
+  /*
+   * RF Input selection (Neumo DVB driver)
+   * Detection is done at startup via FE_GET_EXTENDED_INFO in linuxdvb_frontend_create()
+   */
+  tvhtrace(LS_DISEQC, "tune: lse_rf_input=%d, lfe_fe_fd=%d, neumo_detected=%d, neumo_supported=%d",
+           lse->lse_rf_input, lfe->lfe_fe_fd, lfe->lfe_neumo_detected, lfe->lfe_neumo_supported);
+
+  /* Only attempt RF input selection if Neumo driver is supported */
+  if (lse->lse_rf_input >= 0 && lfe->lfe_fe_fd > 0 && lfe->lfe_neumo_supported) {
+    struct dtv_property prop;
+    struct dtv_properties props;
+    struct dvb_frontend_event ev;
+    struct fe_rf_input_control ic;
+    int drained;
+
+    /* Clear frontend and drain events - repeat until fully drained */
+    prop.cmd = DTV_CLEAR;
+    props.num = 1;
+    props.props = &prop;
+
+    do {
+      ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &props);
+      drained = 0;
+      while (ioctl(lfe->lfe_fe_fd, FE_GET_EVENT, &ev) >= 0)
+        drained++;
+    } while (drained > 0);
+
+    /* Set RF input */
+    memset(&ic, 0, sizeof(ic));
+    ic.owner = 0xffffffff;                /* Legacy owner */
+    /*
+     * config_id must be the same for all adapters sharing an RF input
+     * to allow proper master/slave sharing. Use config_id=1 to match
+     * the driver's legacy path which always uses config_id=1.
+     */
+    ic.config_id = 1;
+    ic.rf_in = lse->lse_rf_input;
+    ic.mode = FE_RESERVATION_MODE_MASTER_OR_SLAVE;
+
+    /* Unicable: set unicable_mode=1 to allow DiSEqC from slaves */
+    ic.unicable_mode = lse->lse_en50494 ? 1 : 0;
+
+    int rf_result = ioctl(lfe->lfe_fe_fd, FE_SET_RF_INPUT, &ic);
+    /*
+     * FE_SET_RF_INPUT returns enum fe_ioctl_result:
+     *   0 = FE_RESERVATION_MASTER (success as master)
+     *   1 = FE_RESERVATION_SLAVE (success as slave)
+     *   3 = FE_RESERVATION_UNCHANGED (already set to this RF input)
+     *  <0 = error
+     */
+    if (rf_result >= 0 && rf_result != 2) {  /* 2 = FE_RESERVATION_RETRY */
+      tvhtrace(LS_DISEQC, "set RF input %d (unicable=%d, config_id=%d, result=%d)",
+               lse->lse_rf_input, ic.unicable_mode, ic.config_id, rf_result);
+      /* Signal frontend to include DTV_SET_SEC_CONFIGURED in tune */
+      lfe->lfe_sec_configured = 1;
+      /*
+       * Reset voltage/tone cache when RF input changes (result=0 MASTER)
+       * The driver turns off voltage/tone on the old RF input, so we must
+       * re-apply them on the new RF input even if they appear unchanged.
+       */
+      if (rf_result == 0) {  /* FE_RESERVATION_MASTER - RF input changed */
+        ls->ls_last_vol = 0;
+        ls->ls_last_tone_off = 0;
+      }
+    } else {
+      tvhwarn(LS_DISEQC, "FE_SET_RF_INPUT failed: result=%d errno=%s",
+              rf_result, rf_result < 0 ? strerror(errno) : "RETRY");
+      /* Don't fail tune - graceful degradation */
+    }
+  }
+
   if (lse->lse_lnb) {
     pol  = lse->lse_lnb->lnb_pol (lse->lse_lnb, lm) & 0x1;
     band = lse->lse_lnb->lnb_band(lse->lse_lnb, lm) & 0x1;
@@ -1293,9 +1364,12 @@ linuxdvb_satconf_save ( linuxdvb_satconf_t *ls, htsmsg_t *m )
   htsmsg_add_str(m, "type", ls->ls_type);
   idnode_save(&ls->ls_id, m);
   l = htsmsg_create_list();
-  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link){ 
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link){
     e = htsmsg_create_map();
     idnode_save(&lse->lse_id, e);
+    /* Don't serialize rf_input if it's the default (-1) */
+    if (lse->lse_rf_input < 0)
+      htsmsg_delete_field(e, "rf_input");
     htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&lse->lse_id, ubuf));
     if (lse->lse_lnb) {
       c = htsmsg_create_map();
@@ -1483,6 +1557,58 @@ linuxdvb_satconf_ele_class_rotortype_get ( void *o )
   return &prop_ptr;
 }
 
+/*
+ * RF Input selection (Neumo DVB driver)
+ */
+static htsmsg_t *
+linuxdvb_satconf_ele_class_rf_input_list ( void *o, const char *lang )
+{
+  linuxdvb_satconf_ele_t *lse = o;
+  linuxdvb_satconf_t *ls = lse->lse_parent;
+  linuxdvb_frontend_t *lfe = ls ? (linuxdvb_frontend_t *)ls->ls_frontend : NULL;
+  htsmsg_t *m = htsmsg_create_list();
+  char buf[32];
+  int i, num_inputs;
+
+  /* None/Auto option - don't send RF input ioctl */
+  htsmsg_add_msg(m, NULL, htsmsg_create_key_val("-1", tvh_gettext_lang(lang, N_("None"))));
+
+  /* Use detected RF input count, fallback to 8 if not detected */
+  num_inputs = (lfe && lfe->lfe_neumo_supported && lfe->lfe_num_rf_inputs > 0)
+               ? lfe->lfe_num_rf_inputs : 8;
+
+  for (i = 0; i < num_inputs; i++) {
+    snprintf(buf, sizeof(buf), "%d", i);
+    htsmsg_t *e = htsmsg_create_map();
+    htsmsg_add_str(e, "key", buf);
+    snprintf(buf, sizeof(buf), "RF Input %d", i);
+    htsmsg_add_str(e, "val", buf);
+    htsmsg_add_msg(m, NULL, e);
+  }
+  return m;
+}
+
+static int
+linuxdvb_satconf_ele_class_rf_input_set ( void *o, const void *v )
+{
+  linuxdvb_satconf_ele_t *lse = o;
+  int8_t val = *(int *)v;
+  if (lse->lse_rf_input != val) {
+    lse->lse_rf_input = val;
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+linuxdvb_satconf_ele_class_rf_input_get ( void *o )
+{
+  static int rf;
+  linuxdvb_satconf_ele_t *lse = o;
+  rf = lse->lse_rf_input;
+  return &rf;
+}
+
 static void
 linuxdvb_satconf_ele_class_get_title
   ( idnode_t *o, const char *lang, char *dst, size_t dstsize )
@@ -1591,6 +1717,19 @@ const idclass_t linuxdvb_satconf_ele_class =
       .def.s    = "None",
     },
     {
+      .type     = PT_INT,
+      .id       = "rf_input",
+      .name     = N_("RF Input"),
+      .desc     = N_("RF input selection for Neumo DVB driver. "
+                     "Cards with multiple RF inputs (like TBS 6909x) "
+                     "can select which physical input to use."),
+      .set      = linuxdvb_satconf_ele_class_rf_input_set,
+      .get      = linuxdvb_satconf_ele_class_rf_input_get,
+      .list     = linuxdvb_satconf_ele_class_rf_input_list,
+      .def.i    = -1,
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_STR,
       .id       = "rotor_type",
       .name     = N_("Rotor type"),
@@ -1643,6 +1782,7 @@ linuxdvb_satconf_ele_create0
   }
   lse->lse_networks = idnode_set_create(0);
   lse->lse_parent = ls;
+  lse->lse_rf_input = -1;  /* Default: no RF input selection */
   TAILQ_INSERT_TAIL(&ls->ls_elements, lse, lse_link);
   if (conf)
     idnode_load(&lse->lse_id, conf);
