@@ -53,6 +53,7 @@ typedef struct linuxdvb_diseqc      linuxdvb_diseqc_t;
 typedef struct linuxdvb_lnb         linuxdvb_lnb_t;
 typedef struct linuxdvb_network     linuxdvb_network_t;
 typedef struct linuxdvb_en50494     linuxdvb_en50494_t;
+typedef struct linuxdvb_unicable_group linuxdvb_unicable_group_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 typedef TAILQ_HEAD(linuxdvb_satconf_ele_list,linuxdvb_satconf_ele) linuxdvb_satconf_ele_list_t;
@@ -391,7 +392,30 @@ struct linuxdvb_en50494
 
   /* runtime */
   uint32_t  le_tune_freq; /* the real frequency to tune to */
+
+  /*
+   * Unicable master/slave support
+   * For multi-frontend setups where DiSEqC commands must be sent via a
+   * designated "master" frontend (e.g., when some adapters lack DiSEqC output)
+   */
+  uint16_t  le_group_id;    /* unicable group ID (0=standalone, 1-15=group number) */
+  int       le_is_master;   /* 1 if this element is the master for its group */
 };
+
+/*
+ * Unicable group - runtime tracking for master/slave coordination
+ */
+struct linuxdvb_unicable_group
+{
+  TAILQ_ENTRY(linuxdvb_unicable_group) lug_link;
+  uint16_t                             lug_group_id;
+  tvh_mutex_t                          lug_lock;       /* per-group lock for command serialization */
+  linuxdvb_satconf_ele_t              *lug_master_ele; /* cached master element reference */
+  int                                  lug_master_fd;  /* master frontend FD (-1 if closed) */
+  int                                  lug_fd_owned;   /* 1 if we opened the FD ourselves */
+};
+
+typedef TAILQ_HEAD(,linuxdvb_unicable_group) linuxdvb_unicable_group_list_t;
 
 /*
  * Classes
@@ -544,9 +568,10 @@ htsmsg_t *linuxdvb_switch_list  ( void *o, const char *lang );
 htsmsg_t *linuxdvb_rotor_list   ( void *o, const char *lang );
 htsmsg_t *linuxdvb_en50494_list ( void *o, const char *lang );
 
-htsmsg_t *linuxdvb_en50494_id_list  ( void *o, const char *lang );
-htsmsg_t *linuxdvb_en50607_id_list  ( void *o, const char *lang );
-htsmsg_t *linuxdvb_en50494_pin_list ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50494_id_list    ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50607_id_list    ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50494_pin_list   ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50494_group_list ( void *o, const char *lang );
 
 static inline int linuxdvb_unicable_is_en50607( const char *str )
   { return str && strcmp(str, UNICABLE_II_NAME) == 0; }
@@ -554,6 +579,8 @@ static inline int linuxdvb_unicable_is_en50494( const char *str )
   { return !linuxdvb_unicable_is_en50607(str); }
 
 void linuxdvb_en50494_init (void);
+void linuxdvb_en50494_done (void);
+void linuxdvb_unicable_invalidate_master ( linuxdvb_satconf_ele_t *lse );
 
 int linuxdvb_diseqc_raw_send (int fd, int len, ...);
 int
