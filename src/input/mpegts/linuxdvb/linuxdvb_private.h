@@ -167,6 +167,13 @@ struct linuxdvb_frontend
   int8_t                    lfe_default_rf_input;   /* Default RF input */
 
   /*
+   * Virtual frontend RF input binding (for multi-RF-input adapters)
+   * -1 = not bound (legacy/standard frontend)
+   * 0+ = bound to specific RF input
+   */
+  int8_t                    lfe_rf_input;
+
+  /*
    * Satconf (DVB-S only)
    */
   linuxdvb_satconf_t       *lfe_satconf;
@@ -442,7 +449,7 @@ linuxdvb_frontend_t *
 linuxdvb_frontend_create
   ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number,
     const char *fe_path, const char *dmx_path, const char *dvr_path,
-    dvb_fe_type_t type, const char *name );
+    dvb_fe_type_t type, const char *name, int8_t rf_input );
 
 void linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m );
 

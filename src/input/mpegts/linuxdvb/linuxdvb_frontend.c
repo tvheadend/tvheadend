@@ -2105,18 +2105,21 @@ linuxdvb_frontend_t *
 linuxdvb_frontend_create
   ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number,
     const char *fe_path, const char *dmx_path, const char *dvr_path,
-    dvb_fe_type_t type, const char *name )
+    dvb_fe_type_t type, const char *name, int8_t rf_input )
 {
   const idclass_t *idc;
   const char *str, *uuid = NULL, *muuid = NULL;
-  char id[16], lname[256], buf[256];
+  char id[32], lname[256], buf[256];
   linuxdvb_frontend_t *lfe;
   htsmsg_t *oconf = conf, *scconf;
   ssize_t r;
   int fd;
 
-  /* Internal config ID */
-  snprintf(id, sizeof(id), "%s #%d", dvb_type2str(type), number);
+  /* Internal config ID - include RF input for virtual frontends */
+  if (rf_input >= 0)
+    snprintf(id, sizeof(id), "%s #%d RF%d", dvb_type2str(type), number, rf_input);
+  else
+    snprintf(id, sizeof(id), "%s #%d", dvb_type2str(type), number);
   if (conf)
     conf = htsmsg_get_map(conf, id);
   if (conf)
@@ -2175,6 +2178,7 @@ linuxdvb_frontend_create
   lfe = calloc(1, sizeof(linuxdvb_frontend_t));
   lfe->lfe_number = number;
   lfe->lfe_type   = type;
+  lfe->lfe_rf_input = rf_input;
   lfe->lfe_master = muuid ? strdup(muuid) : NULL;
   lfe->lfe_name   = strdup(name);
   lfe->lfe_ibuf_size = 188000;
@@ -2202,9 +2206,12 @@ linuxdvb_frontend_create
   lfe->mi_get_priority = linuxdvb_frontend_get_priority;
   lfe->mi_get_grace    = linuxdvb_frontend_get_grace;
 
-  /* Default name */
+  /* Default name - include RF input for virtual frontends */
   if (!lfe->mi_name) {
-    snprintf(lname, sizeof(lname), "%s : %s", name, id);
+    if (rf_input >= 0)
+      snprintf(lname, sizeof(lname), "%s : %s : RF-In #%d", name, dvb_type2str(type), rf_input);
+    else
+      snprintf(lname, sizeof(lname), "%s : %s", name, id);
     lfe->mi_name = strdup(lname);
   }
 
@@ -2283,7 +2290,7 @@ linuxdvb_frontend_create
 void
 linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *fe )
 {
-  char id[16];
+  char id[32];
   htsmsg_t *m = htsmsg_create_map();
 
   /* Save frontend */
@@ -2298,8 +2305,11 @@ linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *fe )
   }
   htsmsg_delete_field(m, "fe_master");
 
-  /* Add to list */
-  snprintf(id, sizeof(id), "%s #%d", dvb_type2str(lfe->lfe_type), lfe->lfe_number);
+  /* Add to list - include RF input for virtual frontends */
+  if (lfe->lfe_rf_input >= 0)
+    snprintf(id, sizeof(id), "%s #%d RF%d", dvb_type2str(lfe->lfe_type), lfe->lfe_number, lfe->lfe_rf_input);
+  else
+    snprintf(id, sizeof(id), "%s #%d", dvb_type2str(lfe->lfe_type), lfe->lfe_number);
   htsmsg_add_msg(fe, id, m);
 
   if (lfe->lfe_master) {
