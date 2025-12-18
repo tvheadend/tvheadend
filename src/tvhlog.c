@@ -162,6 +162,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_IPTV]          = { "iptv",          N_("IPTV") },
   [LS_IPTV_PCR]      = { "iptv-pcr",      N_("IPTV PCR") },
   [LS_IPTV_SUB]      = { "iptv-sub",      N_("IPTV Subcription") },
+  [LS_T2MI]          = { "t2mi",          N_("T2MI Decapsulation") },
   [LS_LINUXDVB]      = { "linuxdvb",      N_("LinuxDVB Input") },
   [LS_DISEQC]        = { "diseqc",        N_("DiseqC") },
   [LS_EN50221]       = { "en50221",       N_("CI Module") },

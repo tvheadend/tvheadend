@@ -21,6 +21,7 @@
 #define __TVH_LINUXDVB_PRIVATE_H__
 
 #include "input.h"
+#include "../t2mi/t2mi_decap.h"
 
 #if ENABLE_LINUXDVB
 #include <linux/dvb/version.h>
@@ -178,6 +179,13 @@ struct linuxdvb_frontend
    * Satconf (DVB-S only)
    */
   linuxdvb_satconf_t       *lfe_satconf;
+
+  /*
+   * T2MI decapsulation (for T2MI type muxes)
+   */
+  t2mi_ctx_t               *lfe_t2mi_ctx;    /* Decapsulation context */
+  sbuf_t                    lfe_t2mi_buffer; /* Output buffer for inner TS */
+  uint16_t                  lfe_t2mi_pid;    /* T2MI PID being filtered */
 };
 
 #if ENABLE_LINUXDVB_CA

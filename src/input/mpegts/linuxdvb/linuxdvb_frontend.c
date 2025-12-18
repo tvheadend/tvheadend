@@ -23,6 +23,7 @@
 #include "atomic.h"
 #include "tvhpoll.h"
 #include "streaming.h"
+#include "../mpegts_dvb.h"
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -39,6 +40,8 @@ static void
 linuxdvb_frontend_monitor ( void *aux );
 static void *
 linuxdvb_frontend_input_thread ( void *aux );
+static void
+linuxdvb_t2mi_done ( linuxdvb_frontend_t *lfe );
 
 /*
  *
@@ -686,6 +689,9 @@ linuxdvb_frontend_stop_mux
   mi->mi_display_name(mi, buf1, sizeof(buf1));
   tvhdebug(LS_LINUXDVB, "%s - stopping %s", buf1, mmi->mmi_mux->mm_nicename);
 
+  /* Cleanup T2MI if active */
+  linuxdvb_t2mi_done(lfe);
+
   /* Stop thread */
   if (lfe->lfe_dvr_pipe.wr > 0) {
     tvh_write(lfe->lfe_dvr_pipe.wr, "", 1);
@@ -761,14 +767,119 @@ linuxdvb_frontend_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   return 0;
 }
 
+/* **************************************************************************
+ * T2MI decapsulation support
+ * *************************************************************************/
+
+/*
+ * T2MI output callback - called by decapsulator for each inner TS packet
+ */
+static void
+linuxdvb_t2mi_output_cb ( void *opaque, const uint8_t *pkt, uint8_t plp_id )
+{
+  linuxdvb_frontend_t *lfe = opaque;
+  (void)plp_id;
+
+  /* Append to output buffer */
+  sbuf_append(&lfe->lfe_t2mi_buffer, pkt, 188);
+}
+
+/*
+ * Initialize T2MI decapsulation for T2MI type mux
+ */
+static int
+linuxdvb_t2mi_init ( linuxdvb_frontend_t *lfe, dvb_mux_t *dm )
+{
+  uint16_t t2mi_pid = dm->lm_tuning.dmc_fe_pid;
+
+  if (t2mi_pid == 0) {
+    tvherror(LS_LINUXDVB, "T2MI mux has no T2MI PID configured");
+    return -1;
+  }
+
+  /* Create decapsulation context */
+  lfe->lfe_t2mi_ctx = t2mi_decap_create(t2mi_pid, T2MI_PLP_ALL,
+                                         linuxdvb_t2mi_output_cb, lfe);
+  if (!lfe->lfe_t2mi_ctx) {
+    tvherror(LS_LINUXDVB, "Failed to create T2MI decapsulation context");
+    return -1;
+  }
+
+  /* Initialize output buffer */
+  sbuf_init(&lfe->lfe_t2mi_buffer);
+  lfe->lfe_t2mi_pid = t2mi_pid;
+
+  tvhinfo(LS_LINUXDVB, "T2MI decapsulation initialized for PID 0x%04X", t2mi_pid);
+  return 0;
+}
+
+/*
+ * Cleanup T2MI decapsulation
+ */
+static void
+linuxdvb_t2mi_done ( linuxdvb_frontend_t *lfe )
+{
+  if (lfe->lfe_t2mi_ctx) {
+    t2mi_decap_destroy(lfe->lfe_t2mi_ctx);
+    lfe->lfe_t2mi_ctx = NULL;
+  }
+  sbuf_free(&lfe->lfe_t2mi_buffer);
+  lfe->lfe_t2mi_pid = 0;
+}
+
+/*
+ * Process T2MI packets from raw TS buffer
+ * Filters T2MI PID, feeds to decapsulator, outputs inner TS
+ */
+static void
+linuxdvb_t2mi_process ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi,
+                        sbuf_t *sb )
+{
+  uint8_t *data = sb->sb_data;
+  size_t len = sb->sb_ptr;
+  size_t i;
+
+  /* Process each TS packet */
+  for (i = 0; i + 188 <= len; i += 188) {
+    uint8_t *pkt = &data[i];
+
+    /* Check sync byte */
+    if (pkt[0] != 0x47)
+      continue;
+
+    /* Feed to T2MI decapsulator (filters T2MI PID internally) */
+    t2mi_decap_feed(lfe->lfe_t2mi_ctx, pkt);
+  }
+
+  /* Clear input buffer */
+  sbuf_cut(sb, len);
+
+  /* If we have inner TS packets, send them */
+  if (lfe->lfe_t2mi_buffer.sb_ptr > 0) {
+    mpegts_input_recv_packets(mmi, &lfe->lfe_t2mi_buffer, 0, NULL);
+  }
+}
+
+/* **************************************************************************
+ * Mux start/stop
+ * *************************************************************************/
+
 static int
 linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2;
+  mpegts_mux_t *mm = mmi->mmi_mux;
   int res, f;
 
   assert(lfe->lfe_in_setup == 0);
+
+  /* Check for T2MI mux */
+  if (mm->mm_type == MM_TYPE_T2MI) {
+    dvb_mux_t *dm = (dvb_mux_t *)mm;
+    if (linuxdvb_t2mi_init(lfe, dm) < 0)
+      return SM_CODE_TUNING_FAILED;
+  }
 
   lfe->lfe_refcount++;
   lfe->lfe_in_setup = 1;
@@ -819,6 +930,12 @@ linuxdvb_frontend_update_pids
 
   tvh_mutex_lock(&lfe->lfe_dvr_lock);
   mpegts_pid_done(&lfe->lfe_pids);
+
+  /* For T2MI mux, always include the T2MI PID */
+  if (lfe->lfe_t2mi_ctx && lfe->lfe_t2mi_pid > 0) {
+    mpegts_pid_add(&lfe->lfe_pids, lfe->lfe_t2mi_pid, 10);
+  }
+
   RB_FOREACH(mp, &mm->mm_pids, mp_link) {
     if (mp->mp_pid == MPEGTS_FULLMUX_PID)
       lfe->lfe_pids.all = 1;
@@ -1438,9 +1555,13 @@ linuxdvb_frontend_input_thread ( void *aux )
         sbuf_cut(&sb, skip - (counter - n));
       }
     }
-    
-    /* Process */
-    mpegts_input_recv_packets(mmi, &sb, 0, NULL);
+
+    /* Process - T2MI decapsulation or normal */
+    if (lfe->lfe_t2mi_ctx) {
+      linuxdvb_t2mi_process(lfe, mmi, &sb);
+    } else {
+      mpegts_input_recv_packets(mmi, &sb, 0, NULL);
+    }
   }
 
   sbuf_free(&sb);
