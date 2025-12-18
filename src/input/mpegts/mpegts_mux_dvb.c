@@ -530,6 +530,14 @@ const idclass_t dvb_mux_dvbs_class =
       .opts     = PO_EXPERT
     },
     {
+      .type     = PT_U16,
+      .id       = "pid",
+      .name     = N_("T2MI PID"),
+      .desc     = N_("PID containing T2MI encapsulated stream. "
+                     "Required when Type is T2MI."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pid),
+    },
+    {
       .type     = PT_STR,
       .id       = "orbital",
       .name     = N_("Orbital position"),

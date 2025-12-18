@@ -409,6 +409,12 @@ enum mpegts_mux_enable
   MM_ENABLE  =  1,
 };
 
+enum mpegts_mux_type
+{
+  MM_TYPE_TS   = 0,  /* Standard transport stream (default) */
+  MM_TYPE_T2MI = 1,  /* T2MI encapsulated stream */
+};
+
 enum mpegts_mux_epg_flag
 {
   MM_EPG_DISABLE,
@@ -533,6 +539,7 @@ struct mpegts_mux
    */
   char    *mm_crid_authority;
   int      mm_enabled;
+  int      mm_type;       /* mpegts_mux_type: TS, T2MI, DAB */
   int      mm_epg;
   char    *mm_epg_module_id;
   char    *mm_charset;

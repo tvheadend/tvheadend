@@ -613,6 +613,28 @@ dvb_network_find_mux
   return (dvb_mux_t *)mm;
 }
 
+dvb_mux_t *
+dvb_network_find_mux_t2mi
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc )
+{
+  mpegts_mux_t *mm;
+
+  LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
+    if (mm->mm_type != MM_TYPE_T2MI) continue;
+
+    dvb_mux_t *lm = (dvb_mux_t*)mm;
+
+    /* Must match: FE type, frequency (with tolerance), polarisation, T2MI PID */
+    if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
+    if (deltaU32(lm->lm_tuning.dmc_fe_freq, dmc->dmc_fe_freq) > 2000) continue;
+    if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
+    if (lm->lm_tuning.dmc_fe_pid != dmc->dmc_fe_pid) continue;
+
+    return lm;
+  }
+  return NULL;
+}
+
 static htsmsg_t *
 dvb_network_config_save ( mpegts_network_t *mn, char *filename, size_t fsize )
 {
