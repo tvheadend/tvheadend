@@ -24,6 +24,8 @@
 #include "descrambler/dvbcam.h"
 #include "dvb_psi_pmt.h"
 #include "dvb_psi_hbbtv.h"
+#include "mpegts_dvb.h"
+#include "mpegts_network_scan.h"
 
 /*
  * PMT processing
@@ -255,6 +257,7 @@ dvb_psi_parse_pmt
   uint8_t audio_type, audio_version;
   mpegts_mux_t *mux = mt->mt_mux;
   caid_t *c, *cn;
+  uint16_t t2mi_pid = 0;
 
   version = (ptr[2] >> 1) & 0x1f;
   pcr_pid = extract_pid(ptr + 5);
@@ -448,8 +451,23 @@ dvb_psi_parse_pmt
         if(ptr[0] == 0x15) /* descriptor_tag_extension : AC-4 */
           ac4 = 1;
 
+        if(ptr[0] == 0x11 && estype == 0x06) { /* T2-MI descriptor (EN 300 468) */
+          t2mi_pid = pid;
+          tvhdebug(mt->mt_subsys, "%s:  T2MI descriptor found: PID 0x%04X", mt->mt_name, pid);
+        }
+
         if((estype == 0x06 || estype == 0x81) && ac4)
           hts_stream_type = SCT_AC4;
+        break;
+
+      case DVB_DESC_DATA_BROADCAST_ID:
+        if(dlen >= 2) {
+          uint16_t dbid = (ptr[0] << 8) | ptr[1];
+          if(dbid == 0x0123 && estype == 0x06) { /* Legacy T2-MI indicator */
+            t2mi_pid = pid;
+            tvhdebug(mt->mt_subsys, "%s:  T2MI data_broadcast_id found: PID 0x%04X", mt->mt_name, pid);
+          }
+        }
         break;
 
       case DVB_DESC_ANCILLARY_DATA:
@@ -537,6 +555,39 @@ dvb_psi_parse_pmt
         pcr_shared = 1;
     }
     position++;
+  }
+
+  /* T2MI detection - create T2MI mux in same network */
+  if (t2mi_pid > 0) {
+    dvb_network_t *ln = (dvb_network_t *)mux->mm_network;
+    dvb_mux_t *outer_dm = (dvb_mux_t *)mux;
+    dvb_mux_conf_t dmc;
+    dvb_mux_t *t2mi_mux;
+
+    /* Copy outer mux tuning parameters */
+    dmc = outer_dm->lm_tuning;
+    dmc.dmc_fe_pid = t2mi_pid;
+
+    /* Check if T2MI mux already exists */
+    t2mi_mux = dvb_network_find_mux_t2mi(ln, &dmc);
+    if (!t2mi_mux) {
+      /* Create new T2MI mux */
+      t2mi_mux = dvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
+                                  &dmc, NULL, NULL);
+      if (t2mi_mux) {
+        t2mi_mux->mm_type = MM_TYPE_T2MI;
+        tvhinfo(mt->mt_subsys, "%s: created T2MI mux for PID 0x%04X",
+                mt->mt_name, t2mi_pid);
+        idnode_changed(&t2mi_mux->mm_id);
+        /* Queue for scanning */
+        mpegts_network_scan_queue_add((mpegts_mux_t *)t2mi_mux,
+                                       SUBSCRIPTION_PRIO_SCAN_INIT,
+                                       SUBSCRIPTION_INITSCAN, 10);
+      }
+    } else {
+      tvhdebug(mt->mt_subsys, "%s: T2MI mux already exists for PID 0x%04X",
+               mt->mt_name, t2mi_pid);
+    }
   }
 
   /* Handle PCR 'elementary stream' */
