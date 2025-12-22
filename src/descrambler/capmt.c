@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #include "tvheadend.h"
 
@@ -1519,7 +1520,7 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
     } else if (strncmp(info, "OSCam ", 6) == 0) {
       /* New format: "OSCam 2.25.11-11905" - revision after last hyphen */
       char *last_hyphen = strrchr(info, '-');
-      if (last_hyphen) {
+      if (last_hyphen && isdigit(last_hyphen[1])) {
         capmt->capmt_oscam_rev = strtol(last_hyphen + 1, NULL, 10);
       }
     }
