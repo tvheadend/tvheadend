@@ -1516,7 +1516,7 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
     if (rev) {
       /* Old format: "OSCam v1.30, build r11772@631abab8" */
       capmt->capmt_oscam_rev = strtol(rev + 7, NULL, 10);
-    } else if (strstr(info, "OSCam") != NULL) {
+    } else if (strncmp(info, "OSCam ", 6) == 0) {
       /* New format: "OSCam 2.25.11-11905" - revision after last hyphen */
       char *last_hyphen = strrchr(info, '-');
       if (last_hyphen) {
