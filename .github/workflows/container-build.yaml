@@ -68,10 +68,57 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v4
+        id: build
         with:
-          platforms: linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6' }}
           context: .
           file: ${{ matrix.container }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          load: ${{ github.event_name == 'pull_request' }}
+
+      - name: Test container (amd64 only on PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Testing Docker container..."
+          # Get the first tag
+          IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          echo "Testing image: $IMAGE_TAG"
+          
+          # Create a temporary directory for config
+          TEMP_CONFIG=$(mktemp -d)
+          
+          # Start the container
+          docker run -d --name tvh-test \
+            -v "$TEMP_CONFIG:/config" \
+            -p 9981:9981 \
+            "$IMAGE_TAG"
+          
+          # Wait for container to initialize
+          echo "Waiting 15 seconds for container to initialize..."
+          sleep 15
+          
+          # Check if container is still running
+          if ! docker ps | grep -q tvh-test; then
+            echo "ERROR: Container died during startup"
+            docker logs tvh-test
+            exit 1
+          fi
+          
+          # Test if HTTP port is reachable
+          echo "Testing HTTP port..."
+          if curl -f -s "http://localhost:9981/" | grep -qi "tvheadend\|html"; then
+            echo "✓ Container HTTP port is reachable and responding"
+          else
+            echo "ERROR: Container HTTP port is not responding correctly"
+            docker logs tvh-test
+            exit 1
+          fi
+          
+          # Cleanup
+          docker stop tvh-test
+          docker rm tvh-test
+          rm -rf "$TEMP_CONFIG"
+          
+          echo "✓ All container tests passed!"
