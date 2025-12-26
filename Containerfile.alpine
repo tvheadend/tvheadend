@@ -44,6 +44,7 @@ RUN apk add --no-cache \
     ./configure \
                 --prefix='/usr/local' \
                 --disable-doc \
+                --disable-dvbscan \
                 --disable-execinfo \
                 --disable-ffmpeg_static \
                 --disable-hdhomerun_static \
