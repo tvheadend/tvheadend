@@ -644,7 +644,17 @@ typedef struct dvb_mux_conf
   dvb_fe_pls_mode_t           dmc_fe_pls_mode;
   uint32_t                    dmc_fe_pls_code;
   uint32_t                    dmc_fe_data_slice;
-  uint16_t                    dmc_fe_pid;       /* PID for T2MI encapsulated stream */
+  uint16_t                    dmc_fe_pid;       /* PID for T2MI/DAB encapsulated stream */
+
+  /* DAB-MPE/GSE specific (IP multicast) */
+  uint32_t                    dmc_dab_ip;       /* Multicast IP (host byte order) */
+  uint16_t                    dmc_dab_port;     /* UDP port */
+
+  /* DAB-ETI-NA specific */
+  int                         dmc_dab_eti_padding;    /* Leading 0xFF bytes */
+  int                         dmc_dab_eti_bit_offset; /* Bit position of E1 sync */
+  int                         dmc_dab_eti_inverted;   /* Signal is inverted */
+
   union {
     dvb_qpsk_config_t         dmc_fe_qpsk;
     dvb_qam_config_t          dmc_fe_qam;
@@ -655,7 +665,7 @@ typedef struct dvb_mux_conf
 
   // For scan file configurations
   LIST_ENTRY(dvb_mux_conf)    dmc_link;
-  
+
 } dvb_mux_conf_t;
 
 /* conversion routines */

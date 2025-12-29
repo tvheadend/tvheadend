@@ -1487,6 +1487,10 @@ mpegts_input_process
       goto done;
     }
 
+    /* Secondary scan callback (DAB probe) */
+    if (mm->mm_secondary_cb)
+      mm->mm_secondary_cb(mm->mm_secondary_ctx, tsb, llen);
+
     /* Find PID */
     if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
 
