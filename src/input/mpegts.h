@@ -411,8 +411,11 @@ enum mpegts_mux_enable
 
 enum mpegts_mux_type
 {
-  MM_TYPE_TS   = 0,  /* Standard transport stream (default) */
-  MM_TYPE_T2MI = 1,  /* T2MI encapsulated stream */
+  MM_TYPE_TS       = 0,  /* Standard transport stream (default) */
+  MM_TYPE_T2MI     = 1,  /* T2MI encapsulated stream */
+  MM_TYPE_DAB_MPE  = 2,  /* DAB via MPE (IP multicast in MPE sections) */
+  MM_TYPE_DAB_ETI  = 3,  /* DAB via ETI-NA (direct ETI encapsulation) */
+  MM_TYPE_DAB_GSE  = 4,  /* DAB via GSE (IP multicast in GSE) */
 };
 
 enum mpegts_mux_epg_flag
@@ -517,6 +520,12 @@ struct mpegts_mux
   TAILQ_HEAD(, descrambler_emm) mm_descrambler_emms;
   tvh_mutex_t                 mm_descrambler_lock;
   int                         mm_descrambler_flush;
+
+  /*
+   * Secondary scanning (DAB probe)
+   */
+  void                       *mm_secondary_ctx;
+  void (*mm_secondary_cb)(void *ctx, const uint8_t *pkt, int len);
 
   /*
    * Functions
@@ -1190,6 +1199,13 @@ extern LIST_HEAD(mpegts_listeners, mpegts_listener) mpegts_listeners;
  */
 void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint32_t priv);
 void eit_sdt_callback(mpegts_table_t *mt, uint32_t priv);
+
+/*
+ * DAB probe
+ */
+void mpegts_dab_probe_start(mpegts_mux_t *mm);
+int  mpegts_dab_probe_complete(mpegts_mux_t *mm);
+int  mpegts_dab_probe_is_done(mpegts_mux_t *mm);
 
 #endif /* __TVH_MPEGTS_H__ */
 

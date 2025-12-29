@@ -469,6 +469,13 @@ mpegts_mux_class_enabled_notify ( void *p, const char *lang )
   }
 }
 
+static void
+mpegts_mux_class_type_notify ( void *p, const char *lang )
+{
+  mpegts_mux_t *mm = p;
+  idnode_changed(&mm->mm_id);
+}
+
 static htsmsg_t *
 mpegts_mux_enable_list ( void *o, const char *lang )
 {
@@ -486,6 +493,9 @@ mpegts_mux_type_list ( void *o, const char *lang )
   static const struct strtab tab[] = {
     { N_("TS"),                       MM_TYPE_TS },
     { N_("T2MI"),                     MM_TYPE_T2MI },
+    { N_("DAB-MPE"),                  MM_TYPE_DAB_MPE },
+    { N_("DAB-ETI"),                  MM_TYPE_DAB_ETI },
+    { N_("DAB-GSE"),                  MM_TYPE_DAB_GSE },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -550,11 +560,12 @@ const idclass_t mpegts_mux_class =
       .type     = PT_INT,
       .id       = "tstype",
       .name     = N_("Type"),
-      .desc     = N_("Transport stream type: TS (standard) or "
-                     "T2MI (DVB-T2 encapsulated)."),
+      .desc     = N_("Transport stream type: TS (standard), "
+                     "T2MI (DVB-T2 encapsulated), or DAB."),
       .off      = offsetof(mpegts_mux_t, mm_type),
       .def.i    = MM_TYPE_TS,
       .list     = mpegts_mux_type_list,
+      .notify   = mpegts_mux_class_type_notify,
       .opts     = PO_DOC_NLIST
     },
     {

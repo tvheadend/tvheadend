@@ -188,6 +188,9 @@ mpegts_network_scan_mux_done0
   mpegts_network_t *mn = mm->mm_network;
   mpegts_mux_scan_state_t state = mm->mm_scan_state;
 
+  /* Complete DAB probe before finishing scan */
+  mpegts_dab_probe_complete(mm);
+
   if (result == MM_SCAN_OK || result == MM_SCAN_PARTIAL) {
     mm->mm_scan_last_seen = gclk();
     if (mm->mm_scan_first == 0)
@@ -279,6 +282,9 @@ mpegts_network_scan_mux_active ( mpegts_mux_t *mm )
   mm->mm_scan_state = MM_SCAN_STATE_ACTIVE;
   mm->mm_scan_init  = 0;
   TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
+
+  /* Start DAB probe in parallel with SI scanning */
+  mpegts_dab_probe_start(mm);
 }
 
 /* Mux has been reactivated */

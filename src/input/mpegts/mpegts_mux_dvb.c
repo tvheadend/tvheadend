@@ -455,6 +455,88 @@ dvb_mux_dvbs_class_orbital_set ( void *o, const void *s )
   return 0;
 }
 
+/*
+ * Stream PID and DAB conditional visibility callbacks
+ * Note: When o is NULL (class-level serialization), we return 0 so fields
+ * appear in the form. At instance level, we control visibility based on mm_type.
+ * PO_NOSAVE prevents serialization for non-matching types.
+ */
+static uint32_t
+dvb_mux_class_stream_pid_opts(void *o, uint32_t opts)
+{
+  if (o == NULL)
+    return 0;  /* Show in class schema so field appears in form */
+  dvb_mux_t *lm = o;
+  mpegts_mux_t *mm = (mpegts_mux_t *)lm;
+  if (mm->mm_type == MM_TYPE_T2MI ||
+      mm->mm_type == MM_TYPE_DAB_MPE ||
+      mm->mm_type == MM_TYPE_DAB_ETI ||
+      mm->mm_type == MM_TYPE_DAB_GSE)
+    return 0;
+  return PO_HIDDEN | PO_NOSAVE;
+}
+
+static uint32_t
+dvb_mux_class_dab_ip_opts(void *o, uint32_t opts)
+{
+  if (o == NULL)
+    return 0;  /* Show in class schema so field appears in form */
+  dvb_mux_t *lm = o;
+  mpegts_mux_t *mm = (mpegts_mux_t *)lm;
+  if (mm->mm_type == MM_TYPE_DAB_MPE || mm->mm_type == MM_TYPE_DAB_GSE)
+    return 0;
+  return PO_HIDDEN | PO_NOSAVE;
+}
+
+static uint32_t
+dvb_mux_class_dab_eti_opts(void *o, uint32_t opts)
+{
+  if (o == NULL)
+    return 0;  /* Show in class schema so field appears in form */
+  dvb_mux_t *lm = o;
+  mpegts_mux_t *mm = (mpegts_mux_t *)lm;
+  if (mm->mm_type == MM_TYPE_DAB_ETI)
+    return 0;
+  return PO_HIDDEN | PO_NOSAVE;
+}
+
+/*
+ * DAB IP address get/set helpers (string <-> uint32)
+ */
+static const void *
+dvb_mux_class_dab_ip_get(void *o)
+{
+  static char buf[32], *s = buf;
+  dvb_mux_t *lm = o;
+  uint32_t ip = lm->lm_tuning.dmc_dab_ip;
+  if (ip == 0)
+    buf[0] = '\0';
+  else
+    snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
+             (ip >> 24) & 0xFF, (ip >> 16) & 0xFF,
+             (ip >> 8) & 0xFF, ip & 0xFF);
+  return &s;
+}
+
+static int
+dvb_mux_class_dab_ip_set(void *o, const void *v)
+{
+  dvb_mux_t *lm = o;
+  const char *s = v;
+  uint32_t ip = 0;
+  unsigned int a, b, c, d;
+
+  if (s && *s && sscanf(s, "%u.%u.%u.%u", &a, &b, &c, &d) == 4) {
+    ip = (a << 24) | (b << 16) | (c << 8) | d;
+  }
+
+  if (ip != lm->lm_tuning.dmc_dab_ip) {
+    lm->lm_tuning.dmc_dab_ip = ip;
+    return 1;
+  }
+  return 0;
+}
+
 const idclass_t dvb_mux_dvbs_class =
 {
   .ic_super      = &dvb_mux_class,
@@ -532,10 +614,51 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_U16,
       .id       = "pid",
-      .name     = N_("T2MI PID"),
-      .desc     = N_("PID containing T2MI encapsulated stream. "
-                     "Required when Type is T2MI."),
+      .name     = N_("Stream PID"),
+      .desc     = N_("PID containing encapsulated stream (T2MI or DAB)."),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pid),
+      .get_opts = dvb_mux_class_stream_pid_opts,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "dab_ip",
+      .name     = N_("DAB IP"),
+      .desc     = N_("Multicast IP address for DAB-MPE/GSE."),
+      .get      = dvb_mux_class_dab_ip_get,
+      .set      = dvb_mux_class_dab_ip_set,
+      .get_opts = dvb_mux_class_dab_ip_opts,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "dab_port",
+      .name     = N_("DAB Port"),
+      .desc     = N_("UDP port for DAB-MPE/GSE."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_dab_port),
+      .get_opts = dvb_mux_class_dab_ip_opts,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "dab_eti_padding",
+      .name     = N_("ETI Padding"),
+      .desc     = N_("Leading 0xFF bytes in ETI-NA."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_dab_eti_padding),
+      .get_opts = dvb_mux_class_dab_eti_opts,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "dab_eti_offset",
+      .name     = N_("ETI Bit Offset"),
+      .desc     = N_("Bit position of E1 sync in ETI-NA."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_dab_eti_bit_offset),
+      .get_opts = dvb_mux_class_dab_eti_opts,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "dab_eti_inverted",
+      .name     = N_("ETI Inverted"),
+      .desc     = N_("Signal is bit-inverted in ETI-NA."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_dab_eti_inverted),
+      .get_opts = dvb_mux_class_dab_eti_opts,
     },
     {
       .type     = PT_STR,

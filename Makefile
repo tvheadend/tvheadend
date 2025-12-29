@@ -475,6 +475,14 @@ SRCS-T2MI = \
 	src/input/mpegts/t2mi/t2mi_decap.c
 SRCS-yes += $(SRCS-T2MI)
 
+# DAB (Digital Audio Broadcasting) probe and streaming
+SRCS-DAB = \
+	src/input/mpegts/dab/dab_probe.c \
+	src/input/mpegts/dab/dab_stream.c
+SRCS-yes += $(SRCS-DAB)
+CFLAGS  += -I/usr/src/libdvbdab/include
+LDFLAGS += -L/usr/src/libdvbdab/build -ldvbdab -ldvbdab_parsers
+
 # TSfile
 SRCS-TSFILE = \
 	src/input/mpegts/tsfile/tsfile.c \
