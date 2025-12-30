@@ -479,7 +479,8 @@ SRCS-yes += $(SRCS-T2MI)
 SRCS-DAB = \
 	src/input/mpegts/dab/dab_probe.c \
 	src/input/mpegts/dab/dab_stream.c \
-	src/input/mpegts/dab/isi_probe.c
+	src/input/mpegts/dab/isi_probe.c \
+	src/input/mpegts/dab/gse_dab_probe.c
 SRCS-yes += $(SRCS-DAB)
 CFLAGS  += -I/usr/src/libdvbdab/include
 LDFLAGS += -L/usr/src/libdvbdab/build -ldvbdab -ldvbdab_parsers

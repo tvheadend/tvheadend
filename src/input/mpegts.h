@@ -539,6 +539,11 @@ struct mpegts_mux
   void                       *mm_isi_probe_ctx;
 
   /*
+   * GSE-DAB probe context (for DAB detection in GSE streams)
+   */
+  void                       *mm_gse_dab_probe_ctx;
+
+  /*
    * Functions
    */
 
@@ -1224,6 +1229,13 @@ int  mpegts_dab_probe_is_done(mpegts_mux_t *mm);
 void mpegts_isi_probe_start(mpegts_mux_t *mm);
 int  mpegts_isi_probe_complete(mpegts_mux_t *mm);
 int  mpegts_isi_probe_is_done(mpegts_mux_t *mm);
+
+/*
+ * GSE-DAB probe (DAB detection in GSE streams)
+ */
+void mpegts_gse_dab_probe_start(mpegts_mux_t *mm);
+int  mpegts_gse_dab_probe_complete(mpegts_mux_t *mm);
+int  mpegts_gse_dab_probe_is_done(mpegts_mux_t *mm);
 
 #endif /* __TVH_MPEGTS_H__ */
 
