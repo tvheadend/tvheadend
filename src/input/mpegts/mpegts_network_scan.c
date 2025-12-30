@@ -191,6 +191,9 @@ mpegts_network_scan_mux_done0
   /* Complete DAB probe before finishing scan */
   mpegts_dab_probe_complete(mm);
 
+  /* Complete ISI probe */
+  mpegts_isi_probe_complete(mm);
+
   if (result == MM_SCAN_OK || result == MM_SCAN_PARTIAL) {
     mm->mm_scan_last_seen = gclk();
     if (mm->mm_scan_first == 0)
@@ -285,6 +288,9 @@ mpegts_network_scan_mux_active ( mpegts_mux_t *mm )
 
   /* Start DAB probe in parallel with SI scanning */
   mpegts_dab_probe_start(mm);
+
+  /* Start ISI probe (no-op if not DVB-S2 with Neumo driver) */
+  mpegts_isi_probe_start(mm);
 }
 
 /* Mux has been reactivated */

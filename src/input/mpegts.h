@@ -416,6 +416,7 @@ enum mpegts_mux_type
   MM_TYPE_DAB_MPE  = 2,  /* DAB via MPE (IP multicast in MPE sections) */
   MM_TYPE_DAB_ETI  = 3,  /* DAB via ETI-NA (direct ETI encapsulation) */
   MM_TYPE_DAB_GSE  = 4,  /* DAB via GSE (IP multicast in GSE) */
+  MM_TYPE_GSE      = 5,  /* GSE stream (may upgrade to DAB-GSE if DAB detected) */
 };
 
 enum mpegts_mux_epg_flag
@@ -522,10 +523,20 @@ struct mpegts_mux
   int                         mm_descrambler_flush;
 
   /*
-   * Secondary scanning (DAB probe)
+   * Secondary scanning (DAB/ISI probes)
    */
   void                       *mm_secondary_ctx;
   void (*mm_secondary_cb)(void *ctx, const uint8_t *pkt, int len);
+
+  /*
+   * DAB probe context (for DAB-MPE/ETI detection)
+   */
+  void                       *mm_dab_probe_ctx;
+
+  /*
+   * ISI probe context (for Neumo driver ISI scanning on DVB-S2)
+   */
+  void                       *mm_isi_probe_ctx;
 
   /*
    * Functions
@@ -1206,6 +1217,13 @@ void eit_sdt_callback(mpegts_table_t *mt, uint32_t priv);
 void mpegts_dab_probe_start(mpegts_mux_t *mm);
 int  mpegts_dab_probe_complete(mpegts_mux_t *mm);
 int  mpegts_dab_probe_is_done(mpegts_mux_t *mm);
+
+/*
+ * ISI probe (Neumo driver only)
+ */
+void mpegts_isi_probe_start(mpegts_mux_t *mm);
+int  mpegts_isi_probe_complete(mpegts_mux_t *mm);
+int  mpegts_isi_probe_is_done(mpegts_mux_t *mm);
 
 #endif /* __TVH_MPEGTS_H__ */
 

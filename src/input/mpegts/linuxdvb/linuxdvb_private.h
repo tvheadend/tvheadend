@@ -189,10 +189,21 @@ struct linuxdvb_frontend
   uint16_t                  lfe_t2mi_pid;    /* T2MI PID being filtered */
 
   /*
-   * DAB streaming (for DAB-MPE/ETI/GSE type muxes)
+   * DAB streaming (for DAB-MPE/ETI type muxes)
    */
   dab_stream_ctx_t         *lfe_dab_ctx;     /* DAB stream context */
   sbuf_t                    lfe_dab_buffer;  /* Output buffer for DAB TS */
+
+  /*
+   * GSE/BBFrame streaming (for DAB-GSE type muxes)
+   * Separate from DAB because GSE uses DMX_SET_FE_STREAM mode
+   * which is incompatible with normal PID filtering.
+   */
+  void                     *lfe_gse_ctx;     /* libdvbdab streamer for GSE */
+  int                       lfe_gse_dmx_fd;  /* Demux FD (DMX_SET_FE_STREAM) */
+  pthread_t                 lfe_gse_thread;  /* GSE input thread */
+  th_pipe_t                 lfe_gse_pipe;    /* Thread control */
+  int                       lfe_gse_running; /* 1 if GSE thread is active */
 };
 
 #if ENABLE_LINUXDVB_CA

@@ -478,7 +478,8 @@ SRCS-yes += $(SRCS-T2MI)
 # DAB (Digital Audio Broadcasting) probe and streaming
 SRCS-DAB = \
 	src/input/mpegts/dab/dab_probe.c \
-	src/input/mpegts/dab/dab_stream.c
+	src/input/mpegts/dab/dab_stream.c \
+	src/input/mpegts/dab/isi_probe.c
 SRCS-yes += $(SRCS-DAB)
 CFLAGS  += -I/usr/src/libdvbdab/include
 LDFLAGS += -L/usr/src/libdvbdab/build -ldvbdab -ldvbdab_parsers

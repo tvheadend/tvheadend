@@ -685,6 +685,32 @@ dvb_network_find_mux_dab_eti
   return NULL;
 }
 
+dvb_mux_t *
+dvb_network_find_mux_dab_gse
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc )
+{
+  mpegts_mux_t *mm;
+
+  LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
+    if (mm->mm_type != MM_TYPE_DAB_GSE) continue;
+
+    dvb_mux_t *lm = (dvb_mux_t*)mm;
+
+    /* Must match: FE type, frequency, polarisation, stream ID (ISI), IP/port */
+    if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
+    if (deltaU32(lm->lm_tuning.dmc_fe_freq, dmc->dmc_fe_freq) > 2000) continue;
+    if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
+    if (lm->lm_tuning.dmc_fe_stream_id != dmc->dmc_fe_stream_id) continue;
+    if (lm->lm_tuning.dmc_dab_ip != dmc->dmc_dab_ip) continue;
+    if (lm->lm_tuning.dmc_dab_port != dmc->dmc_dab_port) continue;
+
+    tvhdebug(LS_MPEGTS, "find_mux_dab_gse: found existing mux isi=%d ip=%08X port=%d",
+             lm->lm_tuning.dmc_fe_stream_id, lm->lm_tuning.dmc_dab_ip, lm->lm_tuning.dmc_dab_port);
+    return lm;
+  }
+  return NULL;
+}
+
 static htsmsg_t *
 dvb_network_config_save ( mpegts_network_t *mn, char *filename, size_t fsize )
 {

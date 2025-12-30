@@ -185,7 +185,7 @@ mpegts_dab_probe_start(mpegts_mux_t *mm)
   dab_probe_ctx_t *ctx;
 
   /* Already probing? */
-  if (mm->mm_secondary_ctx)
+  if (mm->mm_dab_probe_ctx)
     return;
 
   /* Allocate context */
@@ -203,7 +203,10 @@ mpegts_dab_probe_start(mpegts_mux_t *mm)
 
   ctx->mm = mm;
 
-  /* Install callback */
+  /* Store in dedicated field */
+  mm->mm_dab_probe_ctx = ctx;
+
+  /* Install secondary callback */
   mm->mm_secondary_ctx = ctx;
   mm->mm_secondary_cb = dab_probe_packet_cb;
 
@@ -216,16 +219,19 @@ mpegts_dab_probe_start(mpegts_mux_t *mm)
 int
 mpegts_dab_probe_complete(mpegts_mux_t *mm)
 {
-  dab_probe_ctx_t *ctx = mm->mm_secondary_ctx;
+  dab_probe_ctx_t *ctx = mm->mm_dab_probe_ctx;
   dvbdab_results_t *results;
   int found = 0;
 
   if (!ctx)
     return 0;
 
-  /* Remove callback first */
-  mm->mm_secondary_cb = NULL;
-  mm->mm_secondary_ctx = NULL;
+  /* Remove callback only if still ours */
+  if (mm->mm_secondary_ctx == ctx) {
+    mm->mm_secondary_cb = NULL;
+    mm->mm_secondary_ctx = NULL;
+  }
+  mm->mm_dab_probe_ctx = NULL;
 
   /* Get and process results */
   if (ctx->scanner) {
@@ -249,7 +255,7 @@ mpegts_dab_probe_complete(mpegts_mux_t *mm)
 int
 mpegts_dab_probe_is_done(mpegts_mux_t *mm)
 {
-  dab_probe_ctx_t *ctx = mm->mm_secondary_ctx;
+  dab_probe_ctx_t *ctx = mm->mm_dab_probe_ctx;
   if (!ctx || !ctx->scanner)
     return 1;
   return dvbdab_scanner_is_done(ctx->scanner);
