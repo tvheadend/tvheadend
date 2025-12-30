@@ -2613,14 +2613,14 @@ static int _epg_sort_channel_num_ascending ( const void *a, const void *b, void 
 {
   int64_t v1 = channel_get_number((*(epg_broadcast_t**)a)->channel);
   int64_t v2 = channel_get_number((*(epg_broadcast_t**)b)->channel);
-  return v1 - v2;
+  return (v1 > v2) - (v1 < v2);
 }
 
 static int _epg_sort_channel_num_descending ( const void *a, const void *b, void *eq )
 {
   const int64_t v1 = channel_get_number((*(epg_broadcast_t**)a)->channel);
   const int64_t v2 = channel_get_number((*(epg_broadcast_t**)b)->channel);
-  return v2 - v1;
+  return (v2 > v1) - (v2 < v1);
 }
 
 static int _epg_sort_stars_ascending ( const void *a, const void *b, void *eq )
