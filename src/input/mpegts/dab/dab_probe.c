@@ -184,6 +184,10 @@ mpegts_dab_probe_start(mpegts_mux_t *mm)
 {
   dab_probe_ctx_t *ctx;
 
+  /* Skip for GSE muxes - they use GSE-DAB probe instead */
+  if (mm->mm_type == MM_TYPE_GSE)
+    return;
+
   /* Already probing? */
   if (mm->mm_dab_probe_ctx)
     return;
