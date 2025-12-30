@@ -482,8 +482,8 @@ SRCS-DAB = \
 	src/input/mpegts/dab/isi_probe.c \
 	src/input/mpegts/dab/gse_dab_probe.c
 SRCS-yes += $(SRCS-DAB)
-CFLAGS  += -I/usr/src/libdvbdab/include
-LDFLAGS += -L/usr/src/libdvbdab/build -ldvbdab -ldvbdab_parsers
+CFLAGS  += -I/usr/local/include
+LDFLAGS += -L/usr/local/lib -ldvbdab
 
 # TSfile
 SRCS-TSFILE = \
