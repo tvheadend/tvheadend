@@ -296,6 +296,21 @@ tvhdhomerun_device_find( uint32_t device_id )
   return NULL;
 }
 
+static void tvhdhomerun_clear_orphaned_locks(struct hdhomerun_discover_device_t *dInfo)
+{
+  struct hdhomerun_device_t *hd;
+  int j;
+
+  for (j = 0; j < dInfo->tuner_count; j++) {
+    hd = hdhomerun_device_create(dInfo->device_id, dInfo->ip_addr, j, NULL);
+
+    if (hd == NULL)
+      continue;
+
+    tvhdhomerun_clear_stale_lock(hd);
+    hdhomerun_device_destroy(hd);
+  }
+}
 
 #define MAX_HDHOMERUN_DEVICES 8
 
@@ -318,6 +333,9 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
     }
     hdhomerun_device_destroy(hdhomerun_tuner);
   }
+
+  // Force-clear orphaned locks on all tuners
+  tvhdhomerun_clear_orphaned_locks(dInfo);
 
   conf = hts_settings_load("input/tvhdhomerun/adapters/%s", uhex);
 

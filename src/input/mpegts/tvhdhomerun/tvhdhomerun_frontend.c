@@ -328,6 +328,67 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   }
 }
 
+/**
+ * Clear any orphaned locks held by the current host on a tuner device.
+ * This handles locks from previous Tvheadend sessions/crashes that persist
+ * on the HDHomeRun device itself.
+ */
+bool tvhdhomerun_clear_stale_lock(struct hdhomerun_device_t *hd)
+{
+  char *lockkey_owner = NULL;
+  char local_ip_str[64];
+  uint32_t local_ip = 0;
+  int res;
+
+  assert(hd != NULL);
+
+  // Get the local IP address as seen by the device
+  local_ip = hdhomerun_device_get_local_machine_addr(hd);
+  if (local_ip == 0) {
+      tvhwarn(LS_TVHDHOMERUN, "failed to query local_ip");
+      return false;
+  }
+
+  // Convert IP to dotted-quad string format
+  snprintf(local_ip_str, sizeof(local_ip_str), "%u.%u.%u.%u",
+           (local_ip >> 24) & 0xFF,
+           (local_ip >> 16) & 0xFF,
+           (local_ip >> 8) & 0xFF,
+           local_ip & 0xFF);
+
+  tvhtrace(LS_TVHDHOMERUN, "local_ip=%s", local_ip_str);
+
+  // Query current lock holder
+  res = hdhomerun_device_get_tuner_lockkey_owner(hd, &lockkey_owner);
+  if (res < 0) {
+      tvhwarn(LS_TVHDHOMERUN, "failed to query lockkey (res=%d)", res);
+      return false;
+  }
+
+  if (lockkey_owner == NULL || strcmp(lockkey_owner, "none") == 0) {
+      tvhtrace(LS_TVHDHOMERUN, "no lockkey set");
+      return false;
+  }
+
+  // Check if the lock is held by ourselves
+  if (strcmp(lockkey_owner, local_ip_str) != 0) {
+      tvhinfo(LS_TVHDHOMERUN, 
+              "tuner locked by different host: %s (not clearing)",
+              lockkey_owner);
+      return false;
+  }
+
+  // Lock is held by OUR IP - this is an orphaned lock from a previous session
+  tvhinfo(LS_TVHDHOMERUN, 
+          "detected orphaned self-lock (%s), force-releasing", 
+          lockkey_owner);
+
+  // Force-release the orphaned lock
+  hdhomerun_device_tuner_lockkey_force(hd);
+
+  return true;
+}
+
 static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_instance_t *mmi)
 {
   hfe->hf_status          = SIGNAL_NONE;
@@ -407,21 +468,30 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
   tvhinfo(LS_TVHDHOMERUN, "tuning to %s", channel_buf);
 
   tvh_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
+
   res = hdhomerun_device_tuner_lockkey_request(hfe->hf_hdhomerun_tuner, &perror);
-  if(res < 1) {
-    tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
+  if(res == 0 && tvhdhomerun_clear_stale_lock(hfe->hf_hdhomerun_tuner))
+    res = hdhomerun_device_tuner_lockkey_request(hfe->hf_hdhomerun_tuner, &perror);
+
+  if (res < 1) {
     tvherror(LS_TVHDHOMERUN, "failed to acquire lockkey: %s", perror);
+    tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
     return SM_CODE_TUNING_FAILED;
   }
+
   if (hfe->hf_type == DVB_TYPE_CABLECARD)
     res = hdhomerun_device_set_tuner_vchannel(hfe->hf_hdhomerun_tuner, channel_buf);
   else
     res = hdhomerun_device_set_tuner_channel(hfe->hf_hdhomerun_tuner, channel_buf);
-  tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
   if(res < 1) {
+    /* Release lock on channel set failure */
+    hdhomerun_device_tuner_lockkey_release(hfe->hf_hdhomerun_tuner);
+    tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
     tvherror(LS_TVHDHOMERUN, "failed to tune to %s", channel_buf);
     return SM_CODE_TUNING_FAILED;
   }
+
+  tvh_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
 
   hfe->hf_status = SIGNAL_NONE;
 
