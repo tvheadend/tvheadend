@@ -4220,10 +4220,10 @@ dvr_entry_class_channel_icon_url_get(void *o)
 const char *
 dvr_entry_get_image(const dvr_entry_t *de)
 {
-  if (de && de->de_bcast && de->de_bcast->image)
-    return de->de_bcast->image;
   if (de && de->de_image)
     return de->de_image;
+  if (de && de->de_bcast && de->de_bcast->image)
+    return de->de_bcast->image;
   return NULL;
 }
 

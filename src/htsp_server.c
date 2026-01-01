@@ -607,6 +607,8 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
       htsmsg_add_u32(conf, "maxduration", !retval ? u32 : 0);  // 0 = any
     if (!(retval = htsmsg_get_u32(in, "fulltext", &u32)) || add)
       htsmsg_add_u32(conf, "fulltext", !retval ? u32 : 0);     // 0 = off
+    if (!(retval = htsmsg_get_u32(in, "mergetext", &u32)) || add)
+      htsmsg_add_u32(conf, "mergetext", !retval ? u32 : 0);     // 0 = off
     if (!(retval = htsmsg_get_u32(in, "dupDetect", &u32)) || add)
       htsmsg_add_u32(conf, "record", !retval ? u32 : DVR_AUTOREC_RECORD_ALL);
     if (!(retval = htsmsg_get_u32(in, "maxCount", &u32)) || add)
@@ -1247,6 +1249,7 @@ htsp_build_autorecentry(htsp_connection_t *htsp, dvr_autorec_entry_t *dae, const
   if(dae->dae_title) {
     htsmsg_add_str(out, "title",     dae->dae_title);
     htsmsg_add_u32(out, "fulltext",  dae->dae_fulltext >= 1 ? 1 : 0);
+    htsmsg_add_u32(out, "mergetext", dae->dae_mergetext >= 1 ? 1 : 0);
   }
   htsmsg_add_str2(out, "name",       dae->dae_name);
   if(dae->dae_directory)
@@ -1879,6 +1882,9 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(htsmsg_get_bool_or_default(in, "fulltext", 0))
     eq.fulltext = 1;
+  if(htsmsg_get_bool_or_default(in, "mergetext", 0))
+    eq.mergetext = 1;
+
   eq.stitle = strdup(query);
 
   /* Optional */
@@ -2654,14 +2660,10 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   profile_id = htsmsg_get_str(in, "profile");
 
 #if ENABLE_TIMESHIFT
-  if(ch->ch_remote_timeshift) {
-    timeshiftPeriod = ~0;
-  } else {
-    if (timeshift_conf.enabled) {
-      timeshiftPeriod = htsmsg_get_u32_or_default(in, "timeshiftPeriod", 0);
-      if (!timeshift_conf.unlimited_period)
-        timeshiftPeriod = MIN(timeshiftPeriod, timeshift_conf.max_period * 60);
-    }
+  if (timeshift_conf.enabled) {
+    timeshiftPeriod = htsmsg_get_u32_or_default(in, "timeshiftPeriod", 0);
+    if (!timeshift_conf.unlimited_period)
+      timeshiftPeriod = MIN(timeshiftPeriod, timeshift_conf.max_period * 60);
   }
 #endif
 
@@ -2679,24 +2681,19 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   streaming_target_init(&hs->hs_input, &htsp_streaming_input_ops, hs, 0);
 
 #if ENABLE_TIMESHIFT
-  if (ch->ch_remote_timeshift) {
-    tvhdebug(LS_HTSP, "using remote timeshift (RTSP)");
-  } else {
-    if (timeshiftPeriod != 0) {
-      if (timeshiftPeriod == ~0)
-        tvhdebug(LS_HTSP, "using timeshift buffer (unlimited)");
-      else
-        tvhdebug(LS_HTSP, "using timeshift buffer (%u mins)",
-            timeshiftPeriod / 60);
-    }
+  if (timeshiftPeriod != 0) {
+    if (timeshiftPeriod == ~0)
+      tvhdebug(LS_HTSP, "using timeshift buffer (unlimited)");
+    else
+      tvhdebug(LS_HTSP, "using timeshift buffer (%u mins)",
+          timeshiftPeriod / 60);
   }
 #endif
 
   pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id,
                              "htsp", SUBSCRIPTION_PACKET | SUBSCRIPTION_HTSP);
   profile_chain_init(&hs->hs_prch, pro, ch, 1);
-  if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, ch->ch_remote_timeshift ?
-      PROFILE_WORK_REMOTE_TS : PROFILE_WORK_NONE)) {
+  if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod)) {
     tvherror(LS_HTSP, "unable to create profile chain '%s'", profile_get_name(pro));
     profile_chain_close(&hs->hs_prch);
     free(hs);
@@ -2720,12 +2717,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     htsmsg_add_u32(rep, "weight", hs->hs_s->ths_weight >= 0 ? hs->hs_s->ths_weight : 0);
 
 #if ENABLE_TIMESHIFT
-  if (ch->ch_remote_timeshift) {
+  if (timeshiftPeriod)
     htsmsg_add_u32(rep, "timeshiftPeriod", timeshiftPeriod);
-  } else {
-    if (timeshiftPeriod)
-      htsmsg_add_u32(rep, "timeshiftPeriod", timeshiftPeriod);
-  }
 #endif
 
   htsp_reply(htsp, in, rep);

@@ -253,6 +253,17 @@ static const codec_profile_class_t codec_profile_nvenc_class = {
             },
             {
                 .type     = PT_INT,
+                .id       = "gop_size",     // Don't change
+                .name     = N_("GOP size"),
+                .desc     = N_("Sets the Group of Pictures (GOP) size in frame (default 0 is 3 sec.)"),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(TVHVideoCodecProfile, gop_size),
+                .intextra = INTEXTRA_RANGE(0, 1000, 1),
+                .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
                 .id       = "rc",
                 .name     = N_("Rate control"),
                 .group    = 3,
@@ -332,7 +343,6 @@ tvh_codec_profile_nvenc_h264_open(tvh_codec_profile_nvenc_t *self,
     AV_DICT_SET_INT(LST_NVENC, opts, "qdiff", -1, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "qblur", -1, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "qcomp", -1, 0);
-    AV_DICT_SET_INT(LST_NVENC, opts, "g", 250, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "bf", 0, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "refs", 0, 0);
     return 0;
@@ -452,7 +462,6 @@ tvh_codec_profile_nvenc_hevc_open(tvh_codec_profile_nvenc_t *self,
     AV_DICT_SET_INT(LST_NVENC, opts, "qdiff", -1, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "qblur", -1, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "qcomp", -1, 0);
-    AV_DICT_SET_INT(LST_NVENC, opts, "g", 250, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "bf", 0, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "refs", 0, 0);
     return 0;

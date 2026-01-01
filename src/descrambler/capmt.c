@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #include "tvheadend.h"
 
@@ -1513,8 +1514,16 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
     char *rev         = strstr(info, "build r");
 
     tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (protocol version %d)", capmt_name(capmt), info, protover);
-    if (rev)
+    if (rev) {
+      /* Old format: "OSCam v1.30, build r11772@631abab8" */
       capmt->capmt_oscam_rev = strtol(rev + 7, NULL, 10);
+    } else if (strncmp(info, "OSCam ", 6) == 0) {
+      /* New format: "OSCam 2.25.11-11905" - revision after last hyphen */
+      char *last_hyphen = strrchr(info, '-');
+      if (last_hyphen && isdigit(last_hyphen[1])) {
+        capmt->capmt_oscam_rev = strtol(last_hyphen + 1, NULL, 10);
+      }
+    }
 
     free(info);
 

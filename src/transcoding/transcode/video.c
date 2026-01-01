@@ -225,6 +225,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     AVRational ticks_per_frame;
     int deinterlace  = ((TVHVideoCodecProfile *)self->profile)->deinterlace;
     int field_rate = (deinterlace && ((TVHVideoCodecProfile *)self->profile)->deinterlace_field_rate) ? 2 : 1;
+    int gop_size = ((TVHVideoCodecProfile *)self->profile)->gop_size;
 
     if (tvh_context_get_int_opt(opts, "pix_fmt", &self->oavctx->pix_fmt) ||
         tvh_context_get_int_opt(opts, "width", &self->oavctx->width) ||
@@ -233,7 +234,6 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     }
 
 #if ENABLE_HWACCELS
-#if ENABLE_FFMPEG4_TRANSCODING
     // hwaccel is the user input for Hardware acceleration from Codec parameteres
     int hwaccel = -1;
     if ((hwaccel = tvh_codec_profile_video_get_hwaccel(self->profile)) < 0) {
@@ -258,11 +258,6 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
             }
         }
     }
-#else
-    if (hwaccels_encode_setup_context(self->oavctx, self->profile->low_power)) {
-        return -1;
-    }
-#endif // from ENABLE_FFMPEG4_TRANSCODING
 #endif // from ENABLE_HWACCELS
 
     // XXX: is this a safe assumption?
@@ -272,11 +267,16 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     self->oavctx->framerate = av_mul_q(self->iavctx->framerate, (AVRational) { field_rate, 1 }); //take into account double rate i.e. field-based deinterlacers
     int ticks_per_frame_tmp = (90000 * self->oavctx->framerate.den) / self->oavctx->framerate.num; // We assume 90kHz as timebase which is mandatory for MPEG-TS
     ticks_per_frame = av_make_q(ticks_per_frame_tmp, 1);
-    self->oavctx->time_base = av_inv_q(av_mul_q(
-        self->oavctx->framerate, ticks_per_frame));
-    self->oavctx->gop_size = ceil(av_q2d(av_inv_q(av_mul_q(
-        self->oavctx->time_base, ticks_per_frame))));
-    self->oavctx->gop_size *= 3;
+    self->oavctx->time_base = av_inv_q(av_mul_q(self->oavctx->framerate, ticks_per_frame));
+    if (gop_size) {
+        // gop was set by the user
+        self->oavctx->gop_size = gop_size;
+    }
+    else {
+        // gop = 0 --> we use default of 3 sec.
+        self->oavctx->gop_size = ceil(av_q2d(av_inv_q(av_mul_q(self->oavctx->time_base, ticks_per_frame))));
+        self->oavctx->gop_size *= 3;
+    }
 
     self->oavctx->sample_aspect_ratio = self->iavctx->sample_aspect_ratio;
 
@@ -369,29 +369,40 @@ tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
         return -1;
     }
 
-    const AVFilterLink *outlink = NULL;
+    AVRational src_time_base;
 #if LIBAVUTIL_VERSION_MAJOR >= 58
+    // FFmpeg 6.x+ — proper duration field and reliable time_base attached to deint filter
     int64_t *frame_duration = &avframe->duration;
+    if (self->oavfltctx && self->oavfltctx->nb_inputs > 0) {
+        src_time_base = self->oavfltctx->inputs[0]->time_base;
+    } else {
+        // Fallback if filter graph input not available (e.g. early pipeline)
+        int rate_factor = ((TVHVideoCodecProfile *)self->profile)->deinterlace_field_rate == 1 ? 2 : 1;
+        src_time_base = av_mul_q(self->oavctx->time_base, (AVRational){1, rate_factor});
+        tvh_context_log(self, LOG_TRACE,
+            "No valid input link found, falling back to scaled encoder time_base {%d/%d}",
+            src_time_base.num, src_time_base.den);
+    }
 #else
+    // FFmpeg 4.x–5.x — older API, VAAPI filter time_base not API exposed
     int64_t *frame_duration = &avframe->pkt_duration;
+
+    // Compute correct source time_base based on deinterlacing mode
+    int field_rate = ((TVHVideoCodecProfile *)self->profile)->deinterlace_field_rate == 1 ? 2 : 1;
+    src_time_base = av_mul_q(self->oavctx->time_base, (AVRational) { 1, field_rate });
 #endif
 
     tvh_context_log(self, LOG_TRACE,
         "Decoded frame: pts=%" PRId64 ", dts=%" PRId64 ", duration=%" PRId64,
         avframe->pts, avframe->pkt_dts, *frame_duration);
 
-    if (self->oavfltctx && self->oavfltctx->nb_inputs > 0) {
-        outlink = self->oavfltctx->inputs[0];
-    }
-
-    // filters exist and their time base differs from the encoder (e.g field-rate deinterlacer)
-    if (outlink && outlink->time_base.num > 0 && outlink->time_base.den > 0 &&
-        av_cmp_q(outlink->time_base, self->oavctx->time_base) != 0) {
+    // source time base differs from the encoder (e.g field-rate deinterlacer)
+    if (av_cmp_q(src_time_base, self->oavctx->time_base) != 0) {
 
         // Rescale PTS from filter graph time_base to encoder time_base
         if (avframe->pts != AV_NOPTS_VALUE) {
             avframe->pts = av_rescale_q(avframe->pts,
-                                        outlink->time_base,
+                                        src_time_base,
                                         self->oavctx->time_base);
             // Deinterlace filters don't update DTS, so align DTS with PTS
             // This prevents duplicate or incorrect DTS values reaching the encoder
@@ -401,7 +412,7 @@ tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
         if (*frame_duration > 0) {
             // Rescale current frame duration from filter output time base -> encoder time base
             *frame_duration = av_rescale_q(*frame_duration,
-                                           outlink->time_base,
+                                           src_time_base,
                                            self->oavctx->time_base);
         } else if (self->oavctx->framerate.num > 0 && self->oavctx->framerate.den > 0) {
             // If duration is blank then fallback to expected duration based on encoder frame rate
@@ -411,7 +422,7 @@ tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
 
         tvh_context_log(self, LOG_TRACE,
             "Rescaled frame {%d/%d}->{%d/%d}: pts=%" PRId64 ", dts=%" PRId64 ", duration=%" PRId64,
-            outlink->time_base.num, outlink->time_base.den,
+            src_time_base.num, src_time_base.den,
             self->oavctx->time_base.num, self->oavctx->time_base.den,
             avframe->pts, avframe->pkt_dts, *frame_duration);
     }

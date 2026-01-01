@@ -45,10 +45,7 @@ typedef enum {
   PROFILE_SVF_UHD
 } profile_svfilter_t;
 
-typedef enum {
-  PROFILE_WORK_NONE = 0,
-  PROFILE_WORK_REMOTE_TS
-} profile_work_flags_t;
+
 
 struct profile;
 struct muxer;
@@ -99,7 +96,6 @@ typedef struct profile_chain {
   struct streaming_target  *prch_tsfix;
 #if ENABLE_TIMESHIFT
   struct streaming_target  *prch_timeshift;
-  struct streaming_target  *prch_rtsp;
 #endif
   struct streaming_target   prch_input;
   struct streaming_target  *prch_share;
@@ -136,7 +132,7 @@ typedef struct profile {
   void (*pro_conf_changed)(struct profile *pro);
 
   int (*pro_work)(profile_chain_t *prch, struct streaming_target *dst,
-                  uint32_t timeshift_period, profile_work_flags_t flags);
+                  uint32_t timeshift_period);
   int (*pro_reopen)(profile_chain_t *prch, muxer_config_t *m_cfg,
                     muxer_hints_t *hints, int flags);
   int (*pro_open)(profile_chain_t *prch, muxer_config_t *m_cfg,
@@ -182,7 +178,7 @@ static inline void profile_release( profile_t *pro )
   }
 
 int profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
-                       uint32_t timeshift_period, profile_work_flags_t flags);
+                       uint32_t timeshift_period);
 int profile_chain_reopen(profile_chain_t *prch,
                          muxer_config_t *m_cfg,
                          muxer_hints_t *hints, int flags);

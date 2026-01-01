@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-06 02:33+0000\n"
+"POT-Creation-Date: 2025-12-29 02:46+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. /finished recordings to autorecs.
-#: src/webui/static/app/epg.js:1538
+#: src/webui/static/app/epg.js:1558
 msgid " - "
 msgstr ""
 
@@ -268,7 +268,7 @@ msgstr ""
 msgid "August"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1509
+#: src/webui/static/app/epg.js:1529
 msgid "Auto Recorder"
 msgstr ""
 
@@ -337,7 +337,7 @@ msgstr ""
 msgid "Broadcast details"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1288 src/webui/static/app/epgevent.js:79
+#: src/webui/static/app/epg.js:1305 src/webui/static/app/epgevent.js:79
 msgid "Buffering. Please wait…"
 msgstr ""
 
@@ -390,8 +390,8 @@ msgstr ""
 msgid "Categories"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1503 src/webui/static/app/epg.js:1505
-#: src/webui/static/app/epg.js:1507
+#: src/webui/static/app/epg.js:1523 src/webui/static/app/epg.js:1525
+#: src/webui/static/app/epg.js:1527
 msgid "Category"
 msgstr ""
 
@@ -404,7 +404,7 @@ msgid "Changes were applied!"
 msgstr ""
 
 #: src/webui/static/app/chconf.js:232 src/webui/static/app/epg.js:850
-#: src/webui/static/app/epg.js:851 src/webui/static/app/epg.js:1513
+#: src/webui/static/app/epg.js:851 src/webui/static/app/epg.js:1533
 #: src/webui/static/app/epgevent.js:134 src/webui/static/app/epgevent.js:135
 #: src/webui/static/app/status.js:123
 msgid "Channel"
@@ -547,11 +547,11 @@ msgstr ""
 msgid "Create"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1301
+#: src/webui/static/app/epg.js:1318
 msgid "Create AutoRec"
 msgstr ""
 
-#: src/webui/static/app/epg.js:433 src/webui/static/app/epg.js:1303
+#: src/webui/static/app/epg.js:433 src/webui/static/app/epg.js:1320
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
@@ -561,7 +561,7 @@ msgstr ""
 msgid "Create new entry"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1532
+#: src/webui/static/app/epg.js:1552
 msgid "Created from EPG query"
 msgstr ""
 
@@ -569,7 +569,7 @@ msgstr ""
 msgid "Crew"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1519
+#: src/webui/static/app/epg.js:1539
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
 msgstr ""
@@ -644,7 +644,7 @@ msgstr ""
 msgid "Details"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:1193
+#: src/webui/static/app/dvr.js:1194
 msgid "Digital Video Recorder"
 msgstr ""
 
@@ -718,9 +718,9 @@ msgid ""
 "recordings?"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1483 src/webui/static/app/epg.js:1492
-#: src/webui/static/app/epg.js:1495 src/webui/static/app/epg.js:1498
-#: src/webui/static/app/epg.js:1501
+#: src/webui/static/app/epg.js:1500 src/webui/static/app/epg.js:1512
+#: src/webui/static/app/epg.js:1515 src/webui/static/app/epg.js:1518
+#: src/webui/static/app/epg.js:1521
 msgid "Don't care"
 msgstr ""
 
@@ -749,7 +749,7 @@ msgid "Drop all current connections?"
 msgstr ""
 
 #: src/webui/static/app/epg.js:246 src/webui/static/app/epg.js:833
-#: src/webui/static/app/epg.js:834 src/webui/static/app/epg.js:1516
+#: src/webui/static/app/epg.js:834 src/webui/static/app/epg.js:1536
 #: src/webui/static/app/dvr.js:94
 msgid "Duration"
 msgstr ""
@@ -798,7 +798,7 @@ msgstr ""
 msgid "Edit {0} ({1} entries)"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1349
+#: src/webui/static/app/epg.js:1366
 msgid "Electronic Program Guide"
 msgstr ""
 
@@ -833,7 +833,7 @@ msgstr ""
 msgid "Errors"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1356 src/webui/static/app/epgevent.js:156
+#: src/webui/static/app/epg.js:1373 src/webui/static/app/epgevent.js:156
 msgid "Events"
 msgstr ""
 
@@ -889,23 +889,23 @@ msgstr ""
 msgid "File size"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1049
+#: src/webui/static/app/epg.js:1053
 msgid "Filter category…"
 msgstr ""
 
-#: src/webui/static/app/epg.js:974
+#: src/webui/static/app/epg.js:978
 msgid "Filter channel…"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1100
+#: src/webui/static/app/epg.js:1104
 msgid "Filter content type…"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1121
+#: src/webui/static/app/epg.js:1125
 msgid "Filter duration…"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1009
+#: src/webui/static/app/epg.js:1013
 msgid "Filter tag…"
 msgstr ""
 
@@ -965,7 +965,7 @@ msgstr ""
 msgid "Fullscreen"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1309 src/webui/static/app/epg.js:1485
+#: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1502
 msgid "Fulltext"
 msgstr ""
 
@@ -973,7 +973,7 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1515
+#: src/webui/static/app/epg.js:1535
 msgid "Genre"
 msgstr ""
 
@@ -981,7 +981,7 @@ msgstr ""
 msgid "GiB"
 msgstr ""
 
-#: src/webui/static/app/epg.js:994
+#: src/webui/static/app/epg.js:998
 msgid "Go to next channel"
 msgstr ""
 
@@ -989,7 +989,7 @@ msgstr ""
 msgid "Go to next event"
 msgstr ""
 
-#: src/webui/static/app/epg.js:988
+#: src/webui/static/app/epg.js:992
 msgid "Go to previous channel"
 msgstr ""
 
@@ -1015,7 +1015,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1242 src/webui/static/app/idnode.js:2115
 #: src/webui/static/app/idnode.js:2522 src/webui/static/app/idnode.js:2968
-#: src/webui/static/app/epg.js:1333 src/webui/static/app/status.js:220
+#: src/webui/static/app/epg.js:1350 src/webui/static/app/status.js:220
 #: src/webui/static/app/status.js:555 src/webui/static/app/status.js:778
 #: src/webui/static/app/servicemapper.js:53
 msgid "Help"
@@ -1147,9 +1147,9 @@ msgstr ""
 msgid "Loading..."
 msgstr ""
 
-#: src/webui/static/app/epg.js:965 src/webui/static/app/epg.js:1000
-#: src/webui/static/app/epg.js:1040 src/webui/static/app/epg.js:1091
-#: src/webui/static/app/epg.js:1112
+#: src/webui/static/app/epg.js:969 src/webui/static/app/epg.js:1004
+#: src/webui/static/app/epg.js:1044 src/webui/static/app/epg.js:1095
+#: src/webui/static/app/epg.js:1116
 msgid "Loading…"
 msgstr ""
 
@@ -1241,6 +1241,10 @@ msgstr ""
 msgid "Memory Information Entry"
 msgstr ""
 
+#: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1505
+msgid "Mergetext"
+msgstr ""
+
 #: src/webui/static/app/tvheadend.js:670
 msgid "Message"
 msgstr ""
@@ -1326,7 +1330,7 @@ msgstr ""
 msgid "Networks"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1309 src/webui/static/app/epg.js:1488
+#: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1508
 msgid "New only"
 msgstr ""
 
@@ -1679,7 +1683,7 @@ msgstr ""
 msgid "Reset (clear) the selected icon URLs"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1315
+#: src/webui/static/app/epg.js:1332
 msgid "Reset All"
 msgstr ""
 
@@ -1687,7 +1691,7 @@ msgstr ""
 msgid "Reset Icon"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1317
+#: src/webui/static/app/epg.js:1334
 msgid "Reset all filters (show all)"
 msgstr ""
 
@@ -1982,7 +1986,7 @@ msgstr ""
 msgid "TV adapters"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1514
+#: src/webui/static/app/epg.js:1534
 msgid "Tag"
 msgstr ""
 
@@ -2067,7 +2071,7 @@ msgstr ""
 msgid "This field is required"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1509
+#: src/webui/static/app/epg.js:1529
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
@@ -2085,11 +2089,11 @@ msgstr ""
 msgid "Time Scheduler"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:1138
+#: src/webui/static/app/dvr.js:1139
 msgid "Timer"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:1139
+#: src/webui/static/app/dvr.js:1140
 msgid "Timers"
 msgstr ""
 
@@ -2098,7 +2102,7 @@ msgid "Timeshift"
 msgstr ""
 
 #: src/webui/static/app/epg.js:785 src/webui/static/app/epg.js:786
-#: src/webui/static/app/epg.js:1512 src/webui/static/app/epgevent.js:96
+#: src/webui/static/app/epg.js:1532 src/webui/static/app/epgevent.js:96
 #: src/webui/static/app/epgevent.js:97 src/webui/static/app/status.js:109
 msgid "Title"
 msgstr ""
@@ -2217,7 +2221,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1243 src/webui/static/app/idnode.js:2116
 #: src/webui/static/app/idnode.js:2523 src/webui/static/app/idnode.js:2969
-#: src/webui/static/app/epg.js:1334 src/webui/static/app/epg.js:1336
+#: src/webui/static/app/epg.js:1351 src/webui/static/app/epg.js:1353
 #: src/webui/static/app/status.js:221 src/webui/static/app/status.js:556
 #: src/webui/static/app/status.js:779 src/webui/static/app/servicemapper.js:54
 msgid "View help docs."
@@ -2235,11 +2239,11 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
-#: src/webui/static/app/epg.js:612 src/webui/static/app/epg.js:1322
+#: src/webui/static/app/epg.js:612 src/webui/static/app/epg.js:1339
 msgid "Watch TV"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1324
+#: src/webui/static/app/epg.js:1341
 msgid "Watch live TV in a new browser window."
 msgstr ""
 

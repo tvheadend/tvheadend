@@ -1603,6 +1603,78 @@ const char *epg_broadcast_get_description ( epg_broadcast_t *b, const char *lang
   return lang_str_get(b->description, lang);
 }
 
+/**
+ * Take all of the string fields from an EPG record and concatenate
+ * them into a monolithic merged string.
+ *
+ * Used for Autorec creation and interactive EPG search.
+ *
+ * [0x01]<TITLE_LANG1>[0x09]<TITLE_TEXT1>[0x09]<TITLE_LANG2><TITLE_TEXT2>[0x02]<SHORT_DESC_LANG1>[0x09]<SHORT_DESC_TEXT1>[0x09]<SHORT_DESC_LANG2>[0x09]<SHORT_DESCT_EXT2>[0x03][0x04][0x05][0x06][0x07]
+ *
+ * 0x01 = Title
+ * 0x02 = Subtitle (Short Description)
+ * 0x03 = Summary
+ * 0x04 = Description
+ * 0x05 = Credits
+ * 0x06 = Keywords
+ * 0x07 = Terminator
+ *
+ * 0x09 = Field separator (Tab)
+ * 
+ */
+char* epg_broadcast_get_merged_text ( epg_broadcast_t *b )
+{
+
+  if (!b) return NULL;
+
+  size_t            string_size = 8;  //Allow for a field mark for each field, even if null.
+  lang_str_ele_t    *ls;
+  char              *mergedtext = NULL;
+  size_t            output_pos = 0;
+
+  lang_str_t *fields[] = {
+    b->title, b->subtitle, b->summary, b->description, b->credits_cached, b->keyword_cached
+  };
+
+  //First work out the concatenated string length
+  int i = 0;  //Some older compiler versions don't like the variable declaration at the start of the for loop.
+  for (i = 0; i < 6; i++) {
+    if (fields[i]) {
+      RB_FOREACH(ls, fields[i], link) {
+        string_size += strlen(ls->str) + strlen(ls->lang) + 2; // 2 separators
+      }
+    }
+  }
+
+  //Now allocate a string big enough to hold the merged EPG fields.
+  mergedtext = calloc(string_size, 1);
+  if (!mergedtext) {
+    tvhinfo(LS_EPG, "Unable to allocate string size '%zu' for merged text search.  Skipping search.", string_size);
+    return NULL;
+  }
+
+  //Concatenate all of the EPG strings.
+  for (i = 0; i < 6; i++) {
+    mergedtext[output_pos++] = i + 1; // Field codes 0x01 to 0x06
+    if (fields[i]) {
+      RB_FOREACH(ls, fields[i], link) {
+        mergedtext[output_pos++] = 0x09;
+        size_t lang_len = strlen(ls->lang);
+        memcpy(mergedtext + output_pos, ls->lang, lang_len);
+        output_pos += lang_len;
+        mergedtext[output_pos++] = 0x09;
+        size_t str_len = strlen(ls->str);
+        memcpy(mergedtext + output_pos, ls->str, str_len);
+        output_pos += str_len;
+      }
+    }
+  }
+
+  mergedtext[output_pos++] = 0x07; //Add a terminator
+
+  return mergedtext;
+}//END epg_broadcast_get_merged_text
+
 void epg_broadcast_get_epnum ( const epg_broadcast_t *b, epg_episode_num_t *num )
 {
   if (!b || !num) {
@@ -2254,6 +2326,9 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
 {
   const char *s, *lang = eq->lang;
   int fulltext = eq->stitle && eq->fulltext;
+  int mergetext = eq->stitle && eq->mergetext;
+  char    *mergedtext = NULL;
+  int     mergedtextResult = 0;
 
   /* Filtering */
   if (e == NULL) return;
@@ -2308,7 +2383,25 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
     if (!e->is_new)
       return;
   }
-  if (fulltext) {
+  
+  //Search EPG text fields concatenated into one huge string.
+  if(mergetext)
+  {
+    mergedtextResult = 0;
+    mergedtext = epg_broadcast_get_merged_text(e);
+    if(mergedtext)
+    {
+      mergedtextResult = regex_match(&eq->stitle_re, mergedtext);
+      free(mergedtext);
+      if(mergedtextResult)
+      {
+        return;
+      }
+    }
+  }//END mergetext
+
+  //A mergetext search takes priority over a fulltext search.
+  if (fulltext && !mergetext) {
     if ((s = epg_broadcast_get_title(e, lang)) == NULL ||
         regex_match(&eq->stitle_re, s)) {
       if ((s = epg_broadcast_get_subtitle(e, lang)) == NULL ||
@@ -2328,10 +2421,11 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
         }
       }
     }
-  }
-  if (eq->title.comp != EC_NO || (eq->stitle && !fulltext)) {
+  }//END fulltext    
+
+  if (eq->title.comp != EC_NO || (eq->stitle && !(fulltext || mergetext))) {
     if ((s = epg_broadcast_get_title(e, lang)) == NULL) return;
-    if (eq->stitle && !fulltext && regex_match(&eq->stitle_re, s)) return;
+    if (eq->stitle && !(fulltext || mergetext) && regex_match(&eq->stitle_re, s)) return;
     if (eq->title.comp != EC_NO && _eq_comp_str(&eq->title, s)) return;
   }
   if (eq->subtitle.comp != EC_NO) {
@@ -2519,14 +2613,14 @@ static int _epg_sort_channel_num_ascending ( const void *a, const void *b, void 
 {
   int64_t v1 = channel_get_number((*(epg_broadcast_t**)a)->channel);
   int64_t v2 = channel_get_number((*(epg_broadcast_t**)b)->channel);
-  return v1 - v2;
+  return (v1 > v2) - (v1 < v2);
 }
 
 static int _epg_sort_channel_num_descending ( const void *a, const void *b, void *eq )
 {
   const int64_t v1 = channel_get_number((*(epg_broadcast_t**)a)->channel);
   const int64_t v2 = channel_get_number((*(epg_broadcast_t**)b)->channel);
-  return v2 - v1;
+  return (v2 > v1) - (v2 < v1);
 }
 
 static int _epg_sort_stars_ascending ( const void *a, const void *b, void *eq )

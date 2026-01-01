@@ -91,6 +91,17 @@ static const codec_profile_class_t codec_profile_libx26x_class = {
                 .intextra = INTEXTRA_RANGE(0, 51, 1),
                 .def.i    = 0,
             },
+            {
+                .type     = PT_INT,
+                .id       = "gop_size",     // Don't change
+                .name     = N_("GOP size"),
+                .desc     = N_("Sets the Group of Pictures (GOP) size in frame (default 0 is 3 sec.)"),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(TVHVideoCodecProfile, gop_size),
+                .intextra = INTEXTRA_RANGE(0, 1000, 1),
+                .def.i    = 0,
+            },
             {}
         }
     },

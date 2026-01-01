@@ -136,6 +136,17 @@ static const codec_profile_class_t codec_profile_libvpx_class = {
                 .list     = codec_profile_libvpx_class_tune_list,
                 .def.i    = VP8_TUNE_PSNR,
             },
+            {
+                .type     = PT_INT,
+                .id       = "gop_size",     // Don't change
+                .name     = N_("GOP size"),
+                .desc     = N_("Sets the Group of Pictures (GOP) size in frame (default 0 is 3 sec.)"),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(TVHVideoCodecProfile, gop_size),
+                .intextra = INTEXTRA_RANGE(0, 1000, 1),
+                .def.i    = 0,
+            },
             {}
         }
     },

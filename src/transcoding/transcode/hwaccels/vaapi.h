@@ -51,11 +51,7 @@ vaapi_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, size_
 /* encoding ================================================================= */
 
 int
-#if ENABLE_FFMPEG4_TRANSCODING
 vaapi_encode_setup_context(AVCodecContext *avctx);
-#else
-vaapi_encode_setup_context(AVCodecContext *avctx, int low_power);
-#endif
 
 void
 vaapi_encode_close_context(AVCodecContext *avctx);

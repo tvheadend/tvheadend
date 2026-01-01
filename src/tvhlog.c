@@ -179,7 +179,6 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_TSFILE]        = { "tsfile",        N_("MPEG-TS File") },
   [LS_TSDEBUG]       = { "tsdebug",       N_("MPEG-TS Input Debug") },
   [LS_CODEC]         = { "codec",         N_("Codec") },
-  [LS_VAINFO]        = { "vainfo",        N_("VAINFO") },
 #if ENABLE_DDCI
   [LS_DDCI]          = { "ddci",          N_("DD-CI") },
 #endif
@@ -212,6 +211,7 @@ tvhlog_subsys_t tvhlog_transcode_subsystems[] = {
     [LST_NVENC]         = { "nvenc",         N_("NVENC") },
     [LST_OMX]           = { "omx",           N_("OMX") },
     [LST_VAAPI]         = { "vaapi",         N_("VA-API") },
+    [LST_VAINFO]        = { "vainfo",        N_("VAINFO") },
 };
 
 // delimiter ': ' has 2 chars

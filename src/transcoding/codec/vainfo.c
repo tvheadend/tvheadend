@@ -141,11 +141,11 @@ get_config_attributes(VADisplay va_dpy, VAProfile profile, VAEntrypoint entrypoi
                                       attrib_list, max_num_attributes);
     if (VA_STATUS_ERROR_UNSUPPORTED_PROFILE == va_status ||
         VA_STATUS_ERROR_UNSUPPORTED_ENTRYPOINT == va_status)
-        return 0;
+        return -1;
 
     if (attrib_list[VAConfigAttribEncMaxRefFrames].value & (~VA_ATTRIB_NOT_SUPPORTED)) {
         if (show_log) {
-            tvhinfo(LS_VAINFO, "            %-35s: l0=%d, l1=%d", vaConfigAttribTypeStr(attrib_list[VAConfigAttribEncMaxRefFrames].type),
+            tvhinfo_transcode(LST_VAINFO, "            %-35s: l0=%d, l1=%d", vaConfigAttribTypeStr(attrib_list[VAConfigAttribEncMaxRefFrames].type),
                 attrib_list[VAConfigAttribEncMaxRefFrames].value & 0xffff, 
                 (attrib_list[VAConfigAttribEncMaxRefFrames].value >> 16) & 0xffff);
         }
@@ -155,7 +155,7 @@ get_config_attributes(VADisplay va_dpy, VAProfile profile, VAEntrypoint entrypoi
             temp++;
         // limit to max space available in ui
         if (temp > MAX_B_FRAMES) {
-            tvherror(LS_VAINFO, "show_config_attributes() failed to set max B frames (vainfo:%d --> max=%d)", temp, MAX_B_FRAMES);
+            tvherror_transcode(LST_VAINFO, "show_config_attributes() failed to set max B frames (vainfo:%d --> max=%d)", temp, MAX_B_FRAMES);
             temp = MAX_B_FRAMES;
         }
         switch (codec) {
@@ -184,20 +184,20 @@ get_config_attributes(VADisplay va_dpy, VAProfile profile, VAEntrypoint entrypoi
                 encoder_vp9lp_maxBfreames = temp;
                 break;
             default:
-                tvherror(LS_VAINFO, "codec not available: codec=%d", codec);
+                tvherror_transcode(LST_VAINFO, "codec not available: codec=%d", codec);
                 break;
         }
     }
 
     if (attrib_list[VAConfigAttribEncQualityRange].value != VA_ATTRIB_NOT_SUPPORTED) {
         if (show_log) {
-            tvhinfo(LS_VAINFO, "            %-35s: number of supported quality levels is %d", vaConfigAttribTypeStr(attrib_list[VAConfigAttribEncQualityRange].type),
+            tvhinfo_transcode(LST_VAINFO, "            %-35s: number of supported quality levels is %d", vaConfigAttribTypeStr(attrib_list[VAConfigAttribEncQualityRange].type),
                 attrib_list[VAConfigAttribEncQualityRange].value <= 1 ? 1 : attrib_list[VAConfigAttribEncQualityRange].value);
         }
         temp = attrib_list[VAConfigAttribEncQualityRange].value <= 1 ? 1 : attrib_list[VAConfigAttribEncQualityRange].value;
         // limit to max space available in ui
         if (temp > MAX_QUALITY) {
-            tvherror(LS_VAINFO, "show_config_attributes() failed to set max quality (vainfo:%d --> max=%d)", temp, MAX_QUALITY);
+            tvherror_transcode(LST_VAINFO, "show_config_attributes() failed to set max quality (vainfo:%d --> max=%d)", temp, MAX_QUALITY);
             temp = MAX_QUALITY;
         }
         switch (codec) {
@@ -226,7 +226,7 @@ get_config_attributes(VADisplay va_dpy, VAProfile profile, VAEntrypoint entrypoi
                 encoder_vp9lp_maxQuality = temp;
                 break;
             default:
-                tvherror(LS_VAINFO, "codec not available: codec=%d", codec);
+                tvherror_transcode(LST_VAINFO, "codec not available: codec=%d", codec);
                 break;
         }
     }
@@ -247,28 +247,28 @@ int init(int show_log)
 
     va_dpy = va_open_display_drm();
     if (NULL == va_dpy) {
-        tvherror(LS_VAINFO, "vaGetDisplay() failed");
+        tvherror_transcode(LST_VAINFO, "vaGetDisplay() failed");
         ret_val = 2;                                                      \
         goto error_open_display;
     }
 
     va_status = vaInitialize(va_dpy, &major_version, &minor_version);
     if (va_status != VA_STATUS_SUCCESS) { 
-        tvherror(LS_VAINFO, "vaInitialize failed with error code %d (%s)", va_status, vaErrorStr(va_status));
+        tvherror_transcode(LST_VAINFO, "vaInitialize failed with error code %d (%s)", va_status, vaErrorStr(va_status));
         ret_val = 3;
         goto error_Initialize;
     }
     if (show_log)
-        tvhinfo(LS_VAINFO, "VA-API version: %d.%d", major_version, minor_version);
+        tvhinfo_transcode(LST_VAINFO, "VA-API version: %d.%d", major_version, minor_version);
 
     driver = vaQueryVendorString(va_dpy);
     if (show_log)
-        tvhinfo(LS_VAINFO, "Driver version: %s", driver ? driver : "<unknown>");
+        tvhinfo_transcode(LST_VAINFO, "Driver version: %s", driver ? driver : "<unknown>");
 
     num_entrypoint = vaMaxNumEntrypoints(va_dpy);
     entrypoints = malloc(num_entrypoint * sizeof(VAEntrypoint));
     if (!entrypoints) {
-        tvherror(LS_VAINFO, "Failed to allocate memory for entrypoint list");
+        tvherror_transcode(LST_VAINFO, "Failed to allocate memory for entrypoint list");
         ret_val = -1;
         goto error_entrypoints;
     }
@@ -277,14 +277,14 @@ int init(int show_log)
     profile_list = malloc(max_num_profiles * sizeof(VAProfile));
 
     if (!profile_list) {
-        tvherror(LS_VAINFO, "Failed to allocate memory for profile list");
+        tvherror_transcode(LST_VAINFO, "Failed to allocate memory for profile list");
         ret_val = 5;
         goto error_profile_list;
     }
 
     va_status = vaQueryConfigProfiles(va_dpy, profile_list, &num_profiles);
     if (va_status != VA_STATUS_SUCCESS) { 
-        tvherror(LS_VAINFO, "vaQueryConfigProfiles failed with error code %d (%s)", va_status, vaErrorStr(va_status));
+        tvherror_transcode(LST_VAINFO, "vaQueryConfigProfiles failed with error code %d (%s)", va_status, vaErrorStr(va_status));
         ret_val = 6;
         goto error_QueryConfigProfiles;
     }
@@ -297,14 +297,14 @@ int init(int show_log)
             continue;
 
         if (va_status != VA_STATUS_SUCCESS) { 
-            tvherror(LS_VAINFO, "vaQueryConfigEntrypoints failed with error code %d (%s)", va_status, vaErrorStr(va_status));
+            tvherror_transcode(LST_VAINFO, "vaQueryConfigEntrypoints failed with error code %d (%s)", va_status, vaErrorStr(va_status));
             ret_val = 4;
             goto error_QueryConfigProfiles;
         }
 
         for (entrypoint = 0; entrypoint < num_entrypoint; entrypoint++) {
             if (show_log)
-                tvhinfo(LS_VAINFO, "       %-32s:	%s", vaProfileStr(profile), vaEntrypointStr(entrypoints[entrypoint]));
+                tvhinfo_transcode(LST_VAINFO, "       %-32s:	%s", vaProfileStr(profile), vaEntrypointStr(entrypoints[entrypoint]));
             // h264
             if (profile == VAProfileH264High || profile == VAProfileH264ConstrainedBaseline || profile == VAProfileH264Main) {
                 if (entrypoints[entrypoint] == VAEntrypointEncSlice) {
@@ -312,7 +312,7 @@ int init(int show_log)
                     // extract attributes
                     ret_val = get_config_attributes(va_dpy, profile_list[i], entrypoints[entrypoint], show_log, VAINFO_H264);
                     if (ret_val) {
-                        tvherror(LS_VAINFO, "Failed to get config attributes (error %d)", ret_val);
+                        tvherror_transcode(LST_VAINFO, "Failed to get config attributes (error %d)", ret_val);
                     }
                 }
                 if (entrypoints[entrypoint] == VAEntrypointEncSliceLP) {
@@ -320,7 +320,7 @@ int init(int show_log)
                     // extract attributes
                     ret_val = get_config_attributes(va_dpy, profile_list[i], entrypoints[entrypoint], show_log, VAINFO_H264_LOW_POWER);
                     if (ret_val) {
-                        tvherror(LS_VAINFO, "Failed to get config attributes (error %d)", ret_val);
+                        tvherror_transcode(LST_VAINFO, "Failed to get config attributes (error %d)", ret_val);
                     }
                 }
             }
@@ -331,7 +331,7 @@ int init(int show_log)
                     // extract attributes
                     ret_val = get_config_attributes(va_dpy, profile_list[i], entrypoints[entrypoint], show_log, VAINFO_HEVC);
                     if (ret_val) {
-                        tvherror(LS_VAINFO, "Failed to get config attributes (error %d)", ret_val);
+                        tvherror_transcode(LST_VAINFO, "Failed to get config attributes (error %d)", ret_val);
                     }
                 }
                 if (entrypoints[entrypoint] == VAEntrypointEncSliceLP) {
@@ -339,7 +339,7 @@ int init(int show_log)
                     // extract attributes
                     ret_val = get_config_attributes(va_dpy, profile_list[i], entrypoints[entrypoint], show_log, VAINFO_HEVC_LOW_POWER);
                     if (ret_val) {
-                        tvherror(LS_VAINFO, "Failed to get config attributes (error %d)", ret_val);
+                        tvherror_transcode(LST_VAINFO, "Failed to get config attributes (error %d)", ret_val);
                     }
                 }
             }
@@ -350,7 +350,7 @@ int init(int show_log)
                     // extract attributes
                     ret_val = get_config_attributes(va_dpy, profile_list[i], entrypoints[entrypoint], show_log, VAINFO_VP8);
                     if (ret_val) {
-                        tvherror(LS_VAINFO, "Failed to get config attributes (error %d)", ret_val);
+                        tvherror_transcode(LST_VAINFO, "Failed to get config attributes (error %d)", ret_val);
                     }
                 }
                 if (entrypoints[entrypoint] == VAEntrypointEncSliceLP) {
@@ -358,7 +358,7 @@ int init(int show_log)
                     // extract attributes
                     ret_val = get_config_attributes(va_dpy, profile_list[i], entrypoints[entrypoint], show_log, VAINFO_VP8_LOW_POWER);
                     if (ret_val) {
-                        tvherror(LS_VAINFO, "Failed to get config attributes (error %d)", ret_val);
+                        tvherror_transcode(LST_VAINFO, "Failed to get config attributes (error %d)", ret_val);
                     }
                 }
             }
@@ -368,14 +368,14 @@ int init(int show_log)
                     encoder_vp9_isavailable = 1;
                     ret_val = get_config_attributes(va_dpy, profile_list[i], entrypoints[entrypoint], show_log, VAINFO_VP9);
                     if (ret_val) {
-                        tvherror(LS_VAINFO, "Failed to get config attributes (error %d)", ret_val);
+                        tvherror_transcode(LST_VAINFO, "Failed to get config attributes (error %d)", ret_val);
                     }
                 }
                 if (entrypoints[entrypoint] == VAEntrypointEncSliceLP) {
                     encoder_vp9lp_isavailable = 1;
                     ret_val = get_config_attributes(va_dpy, profile_list[i], entrypoints[entrypoint], show_log, VAINFO_VP9_LOW_POWER);
                     if (ret_val) {
-                        tvherror(LS_VAINFO, "Failed to get config attributes (error %d)", ret_val);
+                        tvherror_transcode(LST_VAINFO, "Failed to get config attributes (error %d)", ret_val);
                     }
                 }
             }
@@ -426,7 +426,7 @@ int vainfo_init(int show_log)
 #if ENABLE_VAAPI
     int ret = init(show_log);
     if (ret) {
-        tvherror(LS_VAINFO, "vainfo_init() error: %d", ret);
+        tvherror_transcode(LST_VAINFO, "vainfo_init() error: %d", ret);
         return ret;
     }
 #endif
@@ -449,7 +449,7 @@ int vainfo_encoder_isavailable(int codec)
 #if ENABLE_VAAPI
     if (vainfo_probe_enabled) {
         if (!init_done)
-            tvherror(LS_VAINFO, "vainfo_init() was not run or generated errors");
+            tvherror_transcode(LST_VAINFO, "vainfo_init() was not run or generated errors");
         switch (codec) {
             case VAINFO_H264:
                 return encoder_h264_isavailable;
@@ -468,7 +468,7 @@ int vainfo_encoder_isavailable(int codec)
             case VAINFO_VP9_LOW_POWER:
                 return encoder_vp9lp_isavailable;
             default:
-                tvherror(LS_VAINFO, "codec not available: codec=%d", codec);
+                tvherror_transcode(LST_VAINFO, "codec not available: codec=%d", codec);
                 return CODEC_IS_NOT_AVAILABLE;
         }
     }
@@ -492,7 +492,7 @@ int vainfo_encoder_maxBfreames(int codec)
 #if ENABLE_VAAPI
     if (vainfo_probe_enabled) {
         if (!init_done)
-            tvherror(LS_VAINFO, "vainfo_init() was not run or generated errors");
+            tvherror_transcode(LST_VAINFO, "vainfo_init() was not run or generated errors");
         switch (codec) {
             case VAINFO_H264:
                 return encoder_h264_maxBfreames;
@@ -511,7 +511,7 @@ int vainfo_encoder_maxBfreames(int codec)
             case VAINFO_VP9_LOW_POWER:
                 return encoder_vp9lp_maxBfreames;
             default:
-                tvherror(LS_VAINFO, "codec not available: codec=%d", codec);
+                tvherror_transcode(LST_VAINFO, "codec not available: codec=%d", codec);
                 return MIN_B_FRAMES;
         }
     }
@@ -535,7 +535,7 @@ int vainfo_encoder_maxQuality(int codec)
 #if ENABLE_VAAPI
     if (vainfo_probe_enabled) {
         if (!init_done)
-            tvherror(LS_VAINFO, "vainfo_init() was not run or generated errors");
+            tvherror_transcode(LST_VAINFO, "vainfo_init() was not run or generated errors");
         switch (codec) {
             case VAINFO_H264:
                 return encoder_h264_maxQuality;
@@ -554,7 +554,7 @@ int vainfo_encoder_maxQuality(int codec)
             case VAINFO_VP9_LOW_POWER:
                 return encoder_vp9lp_maxQuality;
             default:
-                tvherror(LS_VAINFO, "codec not available: codec=%d", codec);
+                tvherror_transcode(LST_VAINFO, "codec not available: codec=%d", codec);
                 return MIN_QUALITY;
         }
     }
