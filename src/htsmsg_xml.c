@@ -99,12 +99,16 @@ htsmsg_xml_parse_node(xmlNodePtr node)
             p++;
           }
           if (has_content) {
-            char *new_text = realloc(text_content, text_len + content_len + 1);
+            size_t new_size = text_len + content_len + 1;
+            char *new_text = realloc(text_content, new_size);
             if (new_text) {
               text_content = new_text;
               memcpy(text_content + text_len, content, content_len + 1);
               text_len += content_len;
             }
+            /* If realloc fails, we keep the existing text_content and
+             * skip this chunk of content. This is acceptable behavior
+             * for memory pressure situations. */
           }
         }
         xmlFree(content);
