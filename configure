@@ -440,6 +440,15 @@ else
 fi
 
 #
+# libxml2
+#
+if check_pkg libxml-2.0; then
+  enable libxml2
+else
+  die "libxml2 development support not found"
+fi
+
+#
 # OS X
 #
 if [ ${PLATFORM} = "darwin" ]; then
