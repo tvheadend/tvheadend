@@ -2691,8 +2691,8 @@ msgid "Don't use running state (EITp/f) detection."
 msgstr "Nie używaj wykrywania stanu działania (EITp/f)."
 
 #: src/docs_inc.c:6241
-msgid "Donate to TVHeadEnd"
-msgstr "Przekaż darowiznę na TVHeadEnd"
+msgid "Donate to Tvheadend"
+msgstr "Przekaż darowiznę na Tvheadend"
 
 #: src/docs_inc.c:6269
 msgid "Donate to Tvheadend"
