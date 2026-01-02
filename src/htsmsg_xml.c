@@ -164,7 +164,8 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
   
   /* Parse the XML document */
   doc = xmlReadMemory(src, strlen(src), NULL, NULL, 
-                      XML_PARSE_NONET | XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+                      XML_PARSE_NONET | XML_PARSE_NOERROR | XML_PARSE_NOWARNING | 
+                      XML_PARSE_NOBLANKS);
   
   if (!doc) {
     xmlErrorPtr err = xmlGetLastError();
