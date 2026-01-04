@@ -158,11 +158,12 @@ http_client_curl_write_cb(char *ptr, size_t size, size_t nmemb, void *userdata)
     }
   } else {
     /* Store data in buffer */
-    hc->hc_data = realloc(hc->hc_data, hc->hc_data_size + realsize + 1);
-    if (hc->hc_data == NULL) {
+    char *new_data = realloc(hc->hc_data, hc->hc_data_size + realsize + 1);
+    if (new_data == NULL) {
       hc->hc_result = -ENOMEM;
       return 0;
     }
+    hc->hc_data = new_data;
     memcpy(hc->hc_data + hc->hc_data_size, ptr, realsize);
     hc->hc_data_size += realsize;
     hc->hc_data[hc->hc_data_size] = '\0';
@@ -405,7 +406,8 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
                   http_arg_list_t *header, void *body, size_t body_size )
 {
   http_arg_t *h;
-  char url[HTTPC_URL_BUFSIZE];
+  char *url = NULL;
+  size_t url_len;
   int r;
   struct curl_slist *headers = NULL;
 
@@ -422,22 +424,35 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   if (tvh_str_default(path, NULL) == NULL)
     path = "/";
 
+  /* Calculate required URL buffer size */
+  url_len = (hc->hc_scheme ? strlen(hc->hc_scheme) : 0) + 3 /* :// */ +
+            (hc->hc_host ? strlen(hc->hc_host) : 0) + 6 /* :65535 */ +
+            (path ? strlen(path) : 0) + 1 /* ? */ +
+            (query ? strlen(query) : 0) + 1 /* \0 */;
+
+  if (url_len <= HTTPC_URL_BUFSIZE) {
+    url = alloca(HTTPC_URL_BUFSIZE);
+    url_len = HTTPC_URL_BUFSIZE;
+  } else {
+    url = alloca(url_len);
+  }
+
   if (hc->hc_version == RTSP_VERSION_1_0) {
     /* RTSP URLs need the full URL */
     if (path[0] == '/') {
-      snprintf(url, sizeof(url), "%s://%s:%d%s%s%s",
+      snprintf(url, url_len, "%s://%s:%d%s%s%s",
                hc->hc_scheme, hc->hc_host, hc->hc_port,
                path,
                query && query[0] ? "?" : "",
                query ? query : "");
     } else {
-      snprintf(url, sizeof(url), "%s%s%s",
+      snprintf(url, url_len, "%s%s%s",
                path,
                query && query[0] ? "?" : "",
                query ? query : "");
     }
   } else {
-    snprintf(url, sizeof(url), "%s://%s:%d%s%s%s",
+    snprintf(url, url_len, "%s://%s:%d%s%s%s",
              hc->hc_scheme, hc->hc_host, hc->hc_port,
              path,
              query && query[0] ? "?" : "",
@@ -455,11 +470,21 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   /* Add headers */
   if (header) {
     TAILQ_FOREACH(h, header, link) {
-      char hdr[HTTPC_HDR_BUFSIZE];
-      snprintf(hdr, sizeof(hdr), "%s: %s", h->key, h->val ? h->val : "");
+      const char *val = h->val ? h->val : "";
+      size_t key_len = h->key ? strlen(h->key) : 0;
+      size_t val_len = strlen(val);
+      size_t hdr_len = key_len + 2 + val_len + 1; /* "key: val\0" */
+      char *hdr;
+      
+      if (hdr_len <= HTTPC_HDR_BUFSIZE) {
+        hdr = alloca(HTTPC_HDR_BUFSIZE);
+      } else {
+        hdr = alloca(hdr_len);
+      }
+      snprintf(hdr, hdr_len, "%s: %s", h->key, val);
       headers = curl_slist_append(headers, hdr);
       if (strcasecmp(h->key, "Connection") == 0 &&
-          strcasecmp(h->val ? h->val : "", "close") == 0)
+          strcasecmp(val, "close") == 0)
         hc->hc_keepalive = 0;
     }
     http_arg_flush(header);
