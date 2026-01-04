@@ -63,15 +63,22 @@ dab_probe_process_results(mpegts_mux_t *mm, dvbdab_results_t *results)
   tvhdebug(LS_MPEGTS, "mux %s: DAB probe found %d ensemble(s), %d ETI-NA stream(s)",
            mm->mm_nicename, results->ensemble_count, results->etina_count);
 
-  /* Process MPE-based DAB ensembles */
+  /* Process DAB ensembles (MPE, ETI-NA, or TSNI) */
   for (i = 0; i < results->ensemble_count; i++) {
     dvbdab_ensemble_t *ens = &results->ensembles[i];
     int is_etina = ens->is_etina;
+    int is_tsni = ens->is_tsni;
+    const char *type_str;
     char location[64];
 
     if (is_etina) {
+      type_str = "ETI-NA";
       snprintf(location, sizeof(location), "ETI-NA PID %d", ens->source_pid);
+    } else if (is_tsni) {
+      type_str = "DAB-TSNI";
+      snprintf(location, sizeof(location), "TSNI PID %d", ens->source_pid);
     } else {
+      type_str = "DAB-MPE";
       snprintf(ip_str, sizeof(ip_str), "%d.%d.%d.%d",
                (ens->source_ip >> 24) & 0xFF,
                (ens->source_ip >> 16) & 0xFF,
@@ -81,7 +88,7 @@ dab_probe_process_results(mpegts_mux_t *mm, dvbdab_results_t *results)
     }
 
     tvhinfo(LS_MPEGTS, "mux %s: %s ensemble EID=0x%04X \"%s\" at %s with %d service(s)",
-            mm->mm_nicename, is_etina ? "ETI-NA" : "DAB-MPE",
+            mm->mm_nicename, type_str,
             ens->eid, ens->label, location, ens->service_count);
 
     /* Copy outer mux tuning parameters */
@@ -95,6 +102,13 @@ dab_probe_process_results(mpegts_mux_t *mm, dvbdab_results_t *results)
       dmc.dmc_dab_ip = 0;
       dmc.dmc_dab_port = 0;
       dab_mux = dvb_network_find_mux_dab_eti(ln, &dmc);
+    } else if (is_tsni) {
+      dmc.dmc_dab_ip = 0;
+      dmc.dmc_dab_port = 0;
+      dmc.dmc_dab_eti_padding = 0;
+      dmc.dmc_dab_eti_bit_offset = 0;
+      dmc.dmc_dab_eti_inverted = 0;
+      dab_mux = dvb_network_find_mux_dab_tsni(ln, &dmc);
     } else {
       dmc.dmc_dab_ip = ens->source_ip;
       dmc.dmc_dab_port = ens->source_port;
@@ -107,7 +121,12 @@ dab_probe_process_results(mpegts_mux_t *mm, dvbdab_results_t *results)
     if (!dab_mux) {
       dab_mux = dvb_mux_create0(ln, MPEGTS_ONID_NONE, ens->eid, &dmc, NULL, NULL);
       if (dab_mux) {
-        dab_mux->mm_type = is_etina ? MM_TYPE_DAB_ETI : MM_TYPE_DAB_MPE;
+        if (is_etina)
+          dab_mux->mm_type = MM_TYPE_DAB_ETI;
+        else if (is_tsni)
+          dab_mux->mm_type = MM_TYPE_DAB_TSNI;
+        else
+          dab_mux->mm_type = MM_TYPE_DAB_MPE;
 
         if (ens->label[0]) {
           free(dab_mux->mm_provider_network_name);
@@ -115,7 +134,7 @@ dab_probe_process_results(mpegts_mux_t *mm, dvbdab_results_t *results)
         }
 
         tvhinfo(LS_MPEGTS, "mux %s: created %s child mux \"%s\" (EID=0x%04X, PID=0x%04X)",
-                mm->mm_nicename, is_etina ? "ETI-NA" : "DAB-MPE",
+                mm->mm_nicename, type_str,
                 ens->label, ens->eid, dmc.dmc_fe_pid);
 
         /* Services will be created during DAB mux scanning */

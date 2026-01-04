@@ -69,6 +69,10 @@ dab_stream_create(const dab_stream_config_t *config,
     scfg.filter_ip = config->filter_ip;
     scfg.filter_port = config->filter_port;
     break;
+  case 4: /* TSNI - TS NI V.11 */
+    scfg.format = DVBDAB_FORMAT_TSNI;
+    /* TSNI only needs PID, no IP/port filtering */
+    break;
   default:
     free(ctx);
     return NULL;

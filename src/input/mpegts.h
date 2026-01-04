@@ -417,6 +417,7 @@ enum mpegts_mux_type
   MM_TYPE_DAB_ETI  = 3,  /* DAB via ETI-NA (direct ETI encapsulation) */
   MM_TYPE_DAB_GSE  = 4,  /* DAB via GSE (IP multicast in GSE) */
   MM_TYPE_GSE      = 5,  /* GSE stream (may upgrade to DAB-GSE if DAB detected) */
+  MM_TYPE_DAB_TSNI = 6,  /* DAB via TS NI V.11 (incrementing table_id 0x69-0x9A) */
 };
 
 enum mpegts_mux_epg_flag

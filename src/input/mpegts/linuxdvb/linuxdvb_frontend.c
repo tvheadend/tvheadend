@@ -921,6 +921,10 @@ linuxdvb_dab_init ( linuxdvb_frontend_t *lfe, dvb_mux_t *dm, int format )
              (cfg.filter_ip >> 8) & 0xFF, cfg.filter_ip & 0xFF);
     tvhinfo(LS_LINUXDVB, "DAB-MPE streaming initialized for PID 0x%04X, IP %s:%d",
             cfg.pid, ip_str, cfg.filter_port);
+  } else if (format == 4) {  /* TSNI - TS NI V.11 */
+    /* TSNI only needs PID, no IP/port filtering */
+    tvhinfo(LS_LINUXDVB, "DAB-TSNI streaming initialized for PID 0x%04X",
+            cfg.pid);
   } else {  /* GSE - no PID needed, scans all incoming packets */
     cfg.filter_ip = dm->lm_tuning.dmc_dab_ip;
     cfg.filter_port = dm->lm_tuning.dmc_dab_port;
@@ -1265,9 +1269,16 @@ linuxdvb_frontend_start_mux
 
   /* Check for DAB mux types */
   if (mm->mm_type == MM_TYPE_DAB_ETI ||
-      mm->mm_type == MM_TYPE_DAB_MPE) {
+      mm->mm_type == MM_TYPE_DAB_MPE ||
+      mm->mm_type == MM_TYPE_DAB_TSNI) {
     dvb_mux_t *dm = (dvb_mux_t *)mm;
-    int format = (mm->mm_type == MM_TYPE_DAB_ETI) ? 0 : 1;
+    int format;
+    if (mm->mm_type == MM_TYPE_DAB_ETI)
+      format = 0;  /* DVBDAB_FORMAT_ETI_NA */
+    else if (mm->mm_type == MM_TYPE_DAB_MPE)
+      format = 1;  /* DVBDAB_FORMAT_MPE */
+    else
+      format = 4;  /* DVBDAB_FORMAT_TSNI */
     if (linuxdvb_dab_init(lfe, dm, format) < 0)
       return SM_CODE_TUNING_FAILED;
   }
