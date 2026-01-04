@@ -540,6 +540,9 @@ endif
 ifeq ($(CONFIG_OMX),yes)
 LIBS-CODECS += omx
 endif
+ifeq ($(CONFIG_V4L2M2M),yes)
+LIBS-CODECS += v4l2-m2m
+endif
 SRCS-CODECS += $(foreach lib,$(LIBS-CODECS),src/transcoding/codec/codecs/libs/$(lib).c)
 
 #hwaccels
