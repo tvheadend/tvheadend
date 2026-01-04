@@ -1,5 +1,5 @@
 /*
- *  TVheadend - time processing
+ *  Tvheadend - time processing
  *
  *  Copyright (C) 2013 Adam Sutton
  *

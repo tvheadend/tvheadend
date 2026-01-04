@@ -1,5 +1,5 @@
 /*
- *  TVheadend
+ *  Tvheadend
  *  Copyright (C) 2007 - 2010 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -847,7 +847,7 @@ main(int argc, char **argv)
               opt_ipv6         = 0,
               opt_nosatipcli   = 0,
               opt_satip_rtsp   = 0,
-#if ENABLE_TSFILE
+#if ENABLE_TSFILE || ENABLE_TSDEBUG
               opt_tsfile_tuner = 0,
 #endif
               opt_dump         = 0,
@@ -875,8 +875,10 @@ main(int argc, char **argv)
              *opt_satip_bindaddr = NULL;
   static char *__opt_satip_xml[10];
   str_list_t  opt_satip_xml    = { .max = 10, .num = 0, .str = __opt_satip_xml };
-  static char *__opt_satip_tsfile[10];
-  str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = __opt_satip_tsfile };
+#if ENABLE_TSFILE || ENABLE_TSDEBUG
+  static char *__opt_tsfile[10];
+  str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = __opt_tsfile };
+#endif
   cmdline_opt_t cmdline_opts[] = {
     {   0, NULL,        N_("Generic options"),         OPT_BOOL, NULL         },
     { 'h', "help",      N_("Show this page"),          OPT_BOOL, &opt_help    },
@@ -1310,8 +1312,13 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, descrambler_init);
   tvhftrace(LS_MAIN, dvb_init);
 #if ENABLE_MPEGTS
+#if ENABLE_TSFILE || ENABLE_TSDEBUG
   tvhftrace(LS_MAIN, mpegts_init, adapter_mask, opt_nosatipcli, &opt_satip_xml,
             &opt_tsfile, opt_tsfile_tuner);
+#else
+  tvhftrace(LS_MAIN, mpegts_init, adapter_mask, opt_nosatipcli, &opt_satip_xml,
+            NULL, 0);
+#endif
 #endif
   tvhftrace(LS_MAIN, channel_init);
   tvhftrace(LS_MAIN, bouquet_service_resolve);

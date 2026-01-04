@@ -1,5 +1,5 @@
 /*
- *  TVheadend - regex wrapper
+ *  Tvheadend - regex wrapper
  *
  *  Copyright (C) 2017 Jaroslav Kysela
  *
