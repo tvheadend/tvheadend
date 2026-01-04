@@ -598,7 +598,6 @@ iptv_http_start
   im->im_data = hp;
   sbuf_init(&hp->m3u_sbuf);
   sbuf_init(&hp->key_sbuf);
-  sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
   iptv_input_mux_started(hp->mi, im, 1);
   http_client_register(hc);          /* register to the HTTP thread */
   r = http_client_simple(hc, u);
