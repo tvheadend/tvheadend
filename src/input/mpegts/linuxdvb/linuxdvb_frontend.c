@@ -925,15 +925,8 @@ linuxdvb_dab_init ( linuxdvb_frontend_t *lfe, dvb_mux_t *dm, int format )
     /* TSNI only needs PID, no IP/port filtering */
     tvhinfo(LS_LINUXDVB, "DAB-TSNI streaming initialized for PID 0x%04X",
             cfg.pid);
-  } else {  /* GSE - no PID needed, scans all incoming packets */
-    cfg.filter_ip = dm->lm_tuning.dmc_dab_ip;
-    cfg.filter_port = dm->lm_tuning.dmc_dab_port;
-    snprintf(ip_str, sizeof(ip_str), "%d.%d.%d.%d",
-             (cfg.filter_ip >> 24) & 0xFF, (cfg.filter_ip >> 16) & 0xFF,
-             (cfg.filter_ip >> 8) & 0xFF, cfg.filter_ip & 0xFF);
-    tvhinfo(LS_LINUXDVB, "DAB-GSE streaming initialized for IP %s:%d (all PIDs)",
-            ip_str, cfg.filter_port);
   }
+  /* Note: GSE (format=2) uses separate linuxdvb_gse_init() function */
 
   /* Create DAB stream context */
   lfe->lfe_dab_ctx = dab_stream_create(&cfg, linuxdvb_dab_output_cb, lfe);
@@ -1028,16 +1021,20 @@ linuxdvb_gse_input_thread ( void *aux )
   /* Read loop */
   while (tvheadend_is_running() && lfe->lfe_gse_running) {
     nfds = poll(pfd, 2, 150);
+
+    /* Handle poll timeout */
     if (nfds == 0) {
-      if (nodata == 0) {
+      if (nodata > 0)
+        nodata--;
+      else {
         tvhwarn(LS_LINUXDVB, "%s - GSE poll TIMEOUT", name);
         nodata = 50;
         lfe->lfe_nodata = 1;
-      } else {
-        nodata--;
       }
       continue;
     }
+
+    /* Handle poll error */
     if (nfds < 0) {
       if (ERRNO_AGAIN(errno))
         continue;
@@ -1045,58 +1042,57 @@ linuxdvb_gse_input_thread ( void *aux )
       break;
     }
 
-    /* Check control pipe */
+    /* Check control pipe for quit signal */
     if (pfd[1].revents & POLLIN) {
-      if (read(lfe->lfe_gse_pipe.rd, &b, 1) > 0) {
-        if (b == 'q')
-          break;
-      }
+      if (read(lfe->lfe_gse_pipe.rd, &b, 1) > 0 && b == 'q')
+        break;
       continue;
     }
 
+    /* No data on demux? */
+    if (!(pfd[0].revents & POLLIN))
+      continue;
+
     /* Read from demux */
-    if (pfd[0].revents & POLLIN) {
-      nodata = 50;
-      lfe->lfe_nodata = 0;
+    nodata = 50;
+    lfe->lfe_nodata = 0;
 
-      n = read(lfe->lfe_gse_dmx_fd, sb.sb_data + sb.sb_ptr, sb.sb_size - sb.sb_ptr);
-      if (n < 0) {
-        if (ERRNO_AGAIN(errno))
-          continue;
-        if (errno == EOVERFLOW) {
-          tvhwarn(LS_LINUXDVB, "%s - GSE read() EOVERFLOW", name);
-          continue;
-        }
-        tvherror(LS_LINUXDVB, "%s - GSE read() error: %s", name, strerror(errno));
-        break;
-      }
-      if (n == 0)
+    n = read(lfe->lfe_gse_dmx_fd, sb.sb_data + sb.sb_ptr, sb.sb_size - sb.sb_ptr);
+    if (n < 0) {
+      if (ERRNO_AGAIN(errno))
         continue;
-
-      sb.sb_ptr += n;
-
-      /* Feed to libdvbdab streamer */
-      if (lfe->lfe_gse_ctx) {
-        dvbdab_streamer_feed(lfe->lfe_gse_ctx, sb.sb_data, sb.sb_ptr);
-
-        /* Start all services once streamer is ready */
-        if (!services_started && dvbdab_streamer_is_basic_ready(lfe->lfe_gse_ctx)) {
-          int started = dvbdab_streamer_start_all(lfe->lfe_gse_ctx);
-          if (started > 0) {
-            tvhinfo(LS_LINUXDVB, "%s - GSE: started %d DAB services", name, started);
-            services_started = 1;
-          }
-        }
+      if (errno == EOVERFLOW) {
+        tvhwarn(LS_LINUXDVB, "%s - GSE read() EOVERFLOW", name);
+        continue;
       }
+      tvherror(LS_LINUXDVB, "%s - GSE read() error: %s", name, strerror(errno));
+      break;
+    }
+    if (n == 0)
+      continue;
 
-      /* Clear input buffer */
-      sb.sb_ptr = 0;
+    sb.sb_ptr += n;
 
-      /* If we have output TS packets, send them */
-      if (lfe->lfe_dab_buffer.sb_ptr > 0) {
-        mpegts_input_recv_packets(mmi, &lfe->lfe_dab_buffer, 0, NULL);
+    /* Feed to libdvbdab streamer and start services when ready */
+    if (lfe->lfe_gse_ctx) {
+      int started;
+      dvbdab_streamer_feed(lfe->lfe_gse_ctx, sb.sb_data, sb.sb_ptr);
+
+      if (!services_started && dvbdab_streamer_is_basic_ready(lfe->lfe_gse_ctx)) {
+        started = dvbdab_streamer_start_all(lfe->lfe_gse_ctx);
+        if (started > 0) {
+          tvhinfo(LS_LINUXDVB, "%s - GSE: started %d DAB services", name, started);
+          services_started = 1;
+        }
       }
     }
+
+    /* Clear input buffer */
+    sb.sb_ptr = 0;
+
+    /* Send output TS packets */
+    if (lfe->lfe_dab_buffer.sb_ptr > 0)
+      mpegts_input_recv_packets(mmi, &lfe->lfe_dab_buffer, 0, NULL);
   }
 
   sbuf_free(&sb);

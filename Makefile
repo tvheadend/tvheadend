@@ -482,8 +482,11 @@ SRCS-DAB = \
 	src/input/mpegts/dab/isi_probe.c \
 	src/input/mpegts/dab/gse_dab_probe.c
 SRCS-yes += $(SRCS-DAB)
-CFLAGS  += -I/usr/local/include
-LDFLAGS += -L/usr/local/lib -ldvbdab
+# Try pkg-config first, fall back to standard paths
+DVBDAB_CFLAGS := $(shell $(PKG_CONFIG) --cflags dvbdab 2>/dev/null || echo "-I/usr/local/include")
+DVBDAB_LIBS := $(shell $(PKG_CONFIG) --libs dvbdab 2>/dev/null || echo "-L/usr/local/lib -ldvbdab")
+CFLAGS  += $(DVBDAB_CFLAGS)
+LDFLAGS += $(DVBDAB_LIBS)
 
 # TSfile
 SRCS-TSFILE = \

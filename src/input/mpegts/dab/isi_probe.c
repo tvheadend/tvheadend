@@ -174,13 +174,15 @@ isi_find_mux_exact(dvb_network_t *ln, uint32_t freq, int pol, int stream_id)
  * Create child muxes for discovered ISIs
  */
 static int
-isi_probe_create_muxes(mpegts_mux_t *mm, uint8_t *isi_list, int isi_count,
-                       uint8_t *matype_list)
+isi_probe_create_muxes(mpegts_mux_t *mm, const uint8_t *isi_list, int isi_count,
+                       const uint8_t *matype_list)
 {
   dvb_network_t *ln;
-  dvb_mux_t *outer_dm, *child_mux;
+  const dvb_mux_t *outer_dm;
+  dvb_mux_t *child_mux;
   dvb_mux_conf_t dmc;
-  int i, created = 0;
+  int i;
+  int created = 0;
   uint32_t freq;
   int pol;
 
@@ -253,8 +255,8 @@ void
 mpegts_isi_probe_start(mpegts_mux_t *mm)
 {
   isi_probe_ctx_t *ctx;
-  dvb_mux_t *dm;
-  linuxdvb_frontend_t *lfe;
+  const dvb_mux_t *dm;
+  const linuxdvb_frontend_t *lfe;
   mpegts_mux_instance_t *mmi;
   const idclass_t *ic;
 
@@ -340,7 +342,7 @@ mpegts_isi_probe_complete(mpegts_mux_t *mm)
  * Check if ISI probe is done
  */
 int
-mpegts_isi_probe_is_done(mpegts_mux_t *mm)
+mpegts_isi_probe_is_done(mpegts_mux_t *mm __attribute__((unused)))
 {
   /* ISI probe is instant (ioctl-based), always done */
   return 1;

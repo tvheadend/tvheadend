@@ -687,7 +687,7 @@ dvb_network_find_mux_dab_eti
 
 dvb_mux_t *
 dvb_network_find_mux_dab_gse
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc )
+  ( dvb_network_t *ln, const dvb_mux_conf_t *dmc )
 {
   mpegts_mux_t *mm;
 
@@ -713,7 +713,7 @@ dvb_network_find_mux_dab_gse
 
 dvb_mux_t *
 dvb_network_find_mux_dab_tsni
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc )
+  ( dvb_network_t *ln, const dvb_mux_conf_t *dmc )
 {
   mpegts_mux_t *mm;
 

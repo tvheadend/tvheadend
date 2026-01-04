@@ -168,6 +168,7 @@ gse_dab_probe_thread(void *aux)
   ssize_t n;
   int nfds;
   int64_t elapsed;
+  int done = 0;
 
   tvhdebug(LS_MPEGTS, "mux %s: GSE-DAB probe thread started", ctx->mm->mm_nicename);
 
@@ -177,32 +178,36 @@ gse_dab_probe_thread(void *aux)
   pfd[1].fd = ctx->pipe.rd;
   pfd[1].events = POLLIN;
 
-  while (ctx->running && tvheadend_is_running()) {
+  while (!done && ctx->running && tvheadend_is_running()) {
     /* Check timeout */
     elapsed = gclk() - ctx->start_time;
     if (elapsed >= sec2mono(GSE_DAB_PROBE_TIMEOUT_MS / 1000)) {
       tvhdebug(LS_MPEGTS, "mux %s: GSE-DAB probe timeout", ctx->mm->mm_nicename);
-      break;
+      done = 1;
+      continue;
     }
 
     /* Check if we have enough results */
     if (ctx->streamer && dvbdab_streamer_is_basic_ready(ctx->streamer)) {
       tvhdebug(LS_MPEGTS, "mux %s: GSE-DAB probe got basic results", ctx->mm->mm_nicename);
-      break;
+      done = 1;
+      continue;
     }
 
     nfds = poll(pfd, 2, 200);
     if (nfds < 0) {
-      if (ERRNO_AGAIN(errno))
-        continue;
-      break;
+      if (!ERRNO_AGAIN(errno))
+        done = 1;
+      continue;
     }
     if (nfds == 0)
       continue;
 
     /* Check control pipe */
-    if (pfd[1].revents & POLLIN)
-      break;
+    if (pfd[1].revents & POLLIN) {
+      done = 1;
+      continue;
+    }
 
     /* Read BBFrame data from demux */
     if (pfd[0].revents & POLLIN) {

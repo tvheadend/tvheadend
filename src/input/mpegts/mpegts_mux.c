@@ -411,7 +411,7 @@ mpegts_mux_class_get_stream_id ( void *ptr )
         ic == &dvb_mux_atsc_t_class || ic == &dvb_mux_atsc_c_class ||
         ic == &dvb_mux_dtmb_class || ic == &dvb_mux_dab_class ||
         ic == &dvb_mux_cablecard_class) {
-      dvb_mux_t *dm = (dvb_mux_t *)mm;
+      const dvb_mux_t *dm = (const dvb_mux_t *)mm;
       return &dm->lm_tuning.dmc_fe_stream_id;
     }
     ic = ic->ic_super;
