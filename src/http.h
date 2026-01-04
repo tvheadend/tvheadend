@@ -439,6 +439,11 @@ struct http_client {
 
   struct http_client_ssl *hc_ssl; /* ssl internals */
 
+#if ENABLE_CURL
+  void        *hc_curl;           /* CURL handle (CURL*) */
+  void        *hc_curl_headers;   /* curl headers list (struct curl_slist*) */
+#endif
+
   mtimer_t     hc_close_timer;
 
   /* callbacks */

@@ -84,6 +84,11 @@ CFLAGS += -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-buil
 LDFLAGS += -lprofiler -ltcmalloc
 endif
 
+ifeq ($(CONFIG_CURL),yes)
+CFLAGS  += `$(PKG_CONFIG) --cflags libcurl`
+LDFLAGS += `$(PKG_CONFIG) --libs libcurl`
+endif
+
 ifeq ($(COMPILER), clang)
 CFLAGS  += -Wno-microsoft -Qunused-arguments -Wno-unused-function
 CFLAGS  += -Wno-unused-value -Wno-tautological-constant-out-of-range-compare
@@ -266,7 +271,6 @@ SRCS-1 = \
 	src/tvhtime.c \
 	src/service_mapper.c \
 	src/input.c \
-	src/httpc.c \
 	src/rtsp.c \
 	src/download.c \
 	src/fsmonitor.c \
@@ -281,8 +285,15 @@ SRCS-1 = \
 	src/wizard.c \
 	src/memoryinfo.c
 
-SRCS = $(SRCS-1)
-I18N-C = $(SRCS-1)
+# HTTP client - use libcurl if available, otherwise use custom implementation
+ifeq ($(CONFIG_CURL),yes)
+SRCS-HTTPC = src/httpc_curl.c
+else
+SRCS-HTTPC = src/httpc.c
+endif
+
+SRCS = $(SRCS-1) $(SRCS-HTTPC)
+I18N-C = $(SRCS-1) $(SRCS-HTTPC)
 
 SRCS-ZLIB = \
 	src/zlib.c
