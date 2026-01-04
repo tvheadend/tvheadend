@@ -471,7 +471,8 @@ dvb_mux_class_stream_pid_opts(void *o, uint32_t opts)
   if (mm->mm_type == MM_TYPE_T2MI ||
       mm->mm_type == MM_TYPE_DAB_MPE ||
       mm->mm_type == MM_TYPE_DAB_ETI ||
-      mm->mm_type == MM_TYPE_DAB_GSE)
+      mm->mm_type == MM_TYPE_DAB_GSE ||
+      mm->mm_type == MM_TYPE_DAB_TSNI)
     return 0;
   return PO_HIDDEN | PO_NOSAVE;
 }

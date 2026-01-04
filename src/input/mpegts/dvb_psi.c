@@ -168,7 +168,8 @@ mpegts_mux_tsid_check(mpegts_mux_t *mm, mpegts_table_t *mt, uint16_t tsid)
   /* Skip TSID updates for DAB muxes - they use ensemble ID as TSID */
   if (mm->mm_type == MM_TYPE_DAB_MPE ||
       mm->mm_type == MM_TYPE_DAB_ETI ||
-      mm->mm_type == MM_TYPE_DAB_GSE) {
+      mm->mm_type == MM_TYPE_DAB_GSE ||
+      mm->mm_type == MM_TYPE_DAB_TSNI) {
     return 0;
   }
   if (tsid == 0 && !mm->mm_tsid_accept_zero_value) {

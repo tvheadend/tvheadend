@@ -711,6 +711,30 @@ dvb_network_find_mux_dab_gse
   return NULL;
 }
 
+dvb_mux_t *
+dvb_network_find_mux_dab_tsni
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc )
+{
+  mpegts_mux_t *mm;
+
+  LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
+    if (mm->mm_type != MM_TYPE_DAB_TSNI) continue;
+
+    dvb_mux_t *lm = (dvb_mux_t*)mm;
+
+    /* Must match: FE type, frequency, polarisation, TSNI PID */
+    if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
+    if (deltaU32(lm->lm_tuning.dmc_fe_freq, dmc->dmc_fe_freq) > 2000) continue;
+    if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
+    if (lm->lm_tuning.dmc_fe_pid != dmc->dmc_fe_pid) continue;
+
+    tvhdebug(LS_MPEGTS, "find_mux_dab_tsni: found existing mux pid=%d",
+             lm->lm_tuning.dmc_fe_pid);
+    return lm;
+  }
+  return NULL;
+}
+
 static htsmsg_t *
 dvb_network_config_save ( mpegts_network_t *mn, char *filename, size_t fsize )
 {
