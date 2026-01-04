@@ -84,10 +84,9 @@ CFLAGS += -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-buil
 LDFLAGS += -lprofiler -ltcmalloc
 endif
 
-ifeq ($(CONFIG_CURL),yes)
+# libcurl is required for HTTP client
 CFLAGS  += `$(PKG_CONFIG) --cflags libcurl`
 LDFLAGS += `$(PKG_CONFIG) --libs libcurl`
-endif
 
 ifeq ($(COMPILER), clang)
 CFLAGS  += -Wno-microsoft -Qunused-arguments -Wno-unused-function
@@ -283,17 +282,11 @@ SRCS-1 = \
 	src/lock.c \
 	src/string_list.c \
 	src/wizard.c \
-	src/memoryinfo.c
+	src/memoryinfo.c \
+	src/httpc.c
 
-# HTTP client - use libcurl if available, otherwise use custom implementation
-ifeq ($(CONFIG_CURL),yes)
-SRCS-HTTPC = src/httpc_curl.c
-else
-SRCS-HTTPC = src/httpc.c
-endif
-
-SRCS = $(SRCS-1) $(SRCS-HTTPC)
-I18N-C = $(SRCS-1) $(SRCS-HTTPC)
+SRCS = $(SRCS-1)
+I18N-C = $(SRCS-1)
 
 SRCS-ZLIB = \
 	src/zlib.c

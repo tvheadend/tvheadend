@@ -77,7 +77,6 @@ OPTIONS=(
   "cclang_threadsan:no"
   "gperftools:no"
   "execinfo:auto"
-  "curl:auto"
 )
 
 #
@@ -554,14 +553,12 @@ if enabled_or_auto uriparser; then
 fi
 
 #
-# libcurl
+# libcurl (required for HTTP client)
 #
-if enabled_or_auto curl; then
-  if check_pkg libcurl; then
-    enable curl
-  elif enabled curl; then
-    die "libcurl development support not found (use --disable-curl)"
-  fi
+if check_pkg libcurl; then
+  enable curl
+else
+  die "libcurl development support not found (required for HTTP client)"
 fi
 
 #
