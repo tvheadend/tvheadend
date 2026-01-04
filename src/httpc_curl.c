@@ -40,6 +40,14 @@
 #endif
 
 /*
+ * Configuration constants
+ */
+#define HTTPC_CONNECT_TIMEOUT   30      /* Connection timeout in seconds */
+#define HTTPC_MAX_REDIRECTS     10      /* Maximum number of redirects to follow */
+#define HTTPC_URL_BUFSIZE       2048    /* Buffer size for URL construction */
+#define HTTPC_HDR_BUFSIZE       1024    /* Buffer size for header construction */
+
+/*
  * Global state
  */
 static int                      http_running;
@@ -362,7 +370,7 @@ http_client_curl_setup( http_client_t *hc, const char *url, http_cmd_t cmd )
   /* Follow redirects */
   if (hc->hc_handle_location) {
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 10L);
+    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, (long)HTTPC_MAX_REDIRECTS);
   }
 
   /* Keep-alive */
@@ -377,7 +385,7 @@ http_client_curl_setup( http_client_t *hc, const char *url, http_cmd_t cmd )
     curl_easy_setopt(curl, CURLOPT_USERAGENT, config.http_user_agent);
 
   /* Timeout */
-  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 30L);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, (long)HTTPC_CONNECT_TIMEOUT);
 
   /* HTTP version */
   if (hc->hc_version == HTTP_VERSION_1_0)
@@ -397,7 +405,7 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
                   http_arg_list_t *header, void *body, size_t body_size )
 {
   http_arg_t *h;
-  char url[2048];
+  char url[HTTPC_URL_BUFSIZE];
   int r;
   struct curl_slist *headers = NULL;
 
@@ -447,7 +455,7 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   /* Add headers */
   if (header) {
     TAILQ_FOREACH(h, header, link) {
-      char hdr[1024];
+      char hdr[HTTPC_HDR_BUFSIZE];
       snprintf(hdr, sizeof(hdr), "%s: %s", h->key, h->val ? h->val : "");
       headers = curl_slist_append(headers, hdr);
       if (strcasecmp(h->key, "Connection") == 0 &&
