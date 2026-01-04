@@ -46,6 +46,123 @@ typedef struct gse_dab_probe_ctx {
 #define GSE_DAB_PROBE_TIMEOUT_MS  8000
 
 /*
+ * Format IP address to string
+ */
+static void
+gse_format_ip_str(char *buf, size_t len, uint32_t ip)
+{
+  snprintf(buf, len, "%d.%d.%d.%d",
+           (ip >> 24) & 0xFF, (ip >> 16) & 0xFF,
+           (ip >> 8) & 0xFF, ip & 0xFF);
+}
+
+/*
+ * Upgrade outer mux to DAB-GSE type
+ */
+static void
+gse_upgrade_outer_mux(mpegts_mux_t *mm, dvb_mux_t *outer_dm,
+                      const dvbdab_ensemble_t *ens, const char *ip_str)
+{
+  outer_dm->lm_tuning.dmc_dab_ip = ens->source_ip;
+  outer_dm->lm_tuning.dmc_dab_port = ens->source_port;
+  mm->mm_type = MM_TYPE_DAB_GSE;
+  mm->mm_tsid = ens->eid;
+
+  if (ens->label[0]) {
+    free(mm->mm_provider_network_name);
+    mm->mm_provider_network_name = strdup(ens->label);
+  }
+
+  tvhinfo(LS_MPEGTS, "mux %s: upgraded to DAB-GSE (EID=0x%04X, %s:%d)",
+          mm->mm_nicename, ens->eid, ip_str, ens->source_port);
+
+  mm->mm_scan_last_seen = gclk();
+  idnode_changed(&mm->mm_id);
+}
+
+/*
+ * Create DAB-GSE child mux
+ */
+static dvb_mux_t *
+gse_create_child_mux(mpegts_mux_t *mm, dvb_network_t *ln,
+                     const dvb_mux_conf_t *dmc, const dvbdab_ensemble_t *ens,
+                     const char *ip_str)
+{
+  dvb_mux_t *dab_mux;
+
+  dab_mux = dvb_mux_create0(ln, MPEGTS_ONID_NONE, ens->eid, dmc, NULL, NULL);
+  if (!dab_mux)
+    return NULL;
+
+  dab_mux->mm_type = MM_TYPE_DAB_GSE;
+
+  if (ens->label[0]) {
+    free(dab_mux->mm_provider_network_name);
+    dab_mux->mm_provider_network_name = strdup(ens->label);
+  }
+
+  tvhinfo(LS_MPEGTS, "mux %s: created DAB-GSE child mux \"%s\" (EID=0x%04X, %s:%d)",
+          mm->mm_nicename, ens->label, ens->eid, ip_str, ens->source_port);
+
+  dab_mux->mm_scan_first = gclk();
+  dab_mux->mm_scan_last_seen = dab_mux->mm_scan_first;
+  idnode_changed(&dab_mux->mm_id);
+
+  mpegts_network_scan_queue_add((mpegts_mux_t *)dab_mux,
+                                 SUBSCRIPTION_PRIO_SCAN_INIT,
+                                 SUBSCRIPTION_INITSCAN, 10);
+  return dab_mux;
+}
+
+/*
+ * Process a single GSE ensemble
+ * Returns 1 if ensemble was processed, 0 otherwise
+ */
+static int
+gse_process_ensemble(mpegts_mux_t *mm, dvb_network_t *ln, dvb_mux_t *outer_dm,
+                     const dvbdab_ensemble_t *ens, int is_already_dab_gse,
+                     int *created_count)
+{
+  dvb_mux_conf_t dmc;
+  dvb_mux_t *dab_mux;
+  char ip_str[20];
+
+  gse_format_ip_str(ip_str, sizeof(ip_str), ens->source_ip);
+
+  tvhinfo(LS_MPEGTS, "mux %s: GSE-DAB ensemble EID=0x%04X \"%s\" at %s:%d with %d service(s)",
+          mm->mm_nicename, ens->eid, ens->label, ip_str, ens->source_port, ens->service_count);
+
+  dmc = outer_dm->lm_tuning;
+  dmc.dmc_dab_ip = ens->source_ip;
+  dmc.dmc_dab_port = ens->source_port;
+
+  /* Check for existing mux */
+  dab_mux = dvb_network_find_mux_dab_gse(ln, &dmc);
+  if (dab_mux) {
+    tvhdebug(LS_MPEGTS, "mux %s: DAB-GSE mux already exists for %s:%d",
+             mm->mm_nicename, ip_str, ens->source_port);
+    dab_mux->mm_scan_last_seen = gclk();
+    idnode_changed(&dab_mux->mm_id);
+    return 1;
+  }
+
+  /* First ensemble on GSE mux: upgrade current mux */
+  if (!is_already_dab_gse && *created_count == 0) {
+    gse_upgrade_outer_mux(mm, outer_dm, ens, ip_str);
+    (*created_count)++;
+    return 1;
+  }
+
+  /* Create new child mux */
+  if (gse_create_child_mux(mm, ln, &dmc, ens, ip_str)) {
+    (*created_count)++;
+    return 1;
+  }
+
+  return 0;
+}
+
+/*
  * Process streamer results - upgrade mux type and create child muxes
  */
 static int
@@ -56,9 +173,6 @@ gse_dab_probe_process_results(mpegts_mux_t *mm, dvbdab_streamer_t *streamer)
   int i;
   dvb_network_t *ln;
   dvb_mux_t *outer_dm;
-  dvb_mux_conf_t dmc;
-  dvb_mux_t *dab_mux;
-  char ip_str[20];
   int found = 0;
   int created = 0;
   int is_already_dab_gse = (mm->mm_type == MM_TYPE_DAB_GSE);
@@ -75,80 +189,9 @@ gse_dab_probe_process_results(mpegts_mux_t *mm, dvbdab_streamer_t *streamer)
   tvhinfo(LS_MPEGTS, "mux %s: GSE-DAB probe found %d ensemble(s)", mm->mm_nicename, count);
 
   for (i = 0; i < count; i++) {
-    dvbdab_ensemble_t *ens = &ensembles[i];
-
-    snprintf(ip_str, sizeof(ip_str), "%d.%d.%d.%d",
-             (ens->source_ip >> 24) & 0xFF,
-             (ens->source_ip >> 16) & 0xFF,
-             (ens->source_ip >> 8) & 0xFF,
-             ens->source_ip & 0xFF);
-
-    tvhinfo(LS_MPEGTS, "mux %s: GSE-DAB ensemble EID=0x%04X \"%s\" at %s:%d with %d service(s)",
-            mm->mm_nicename, ens->eid, ens->label, ip_str, ens->source_port, ens->service_count);
-
-    /* Copy outer mux tuning parameters */
-    dmc = outer_dm->lm_tuning;
-    dmc.dmc_dab_ip = ens->source_ip;
-    dmc.dmc_dab_port = ens->source_port;
-
-    /* Check for existing DAB-GSE mux with same parameters */
-    dab_mux = dvb_network_find_mux_dab_gse(ln, &dmc);
-    if (dab_mux) {
-      tvhdebug(LS_MPEGTS, "mux %s: DAB-GSE mux already exists for %s:%d",
-               mm->mm_nicename, ip_str, ens->source_port);
-      dab_mux->mm_scan_last_seen = gclk();
-      idnode_changed(&dab_mux->mm_id);
+    if (gse_process_ensemble(mm, ln, outer_dm, &ensembles[i],
+                             is_already_dab_gse, &created))
       found++;
-      continue;
-    }
-
-    /* If this is already a DAB-GSE mux, don't upgrade - just create new muxes */
-    if (!is_already_dab_gse && created == 0) {
-      /* First ensemble on GSE mux: upgrade current mux */
-      outer_dm->lm_tuning.dmc_dab_ip = ens->source_ip;
-      outer_dm->lm_tuning.dmc_dab_port = ens->source_port;
-      mm->mm_type = MM_TYPE_DAB_GSE;
-      mm->mm_tsid = ens->eid;  /* Set TSID to ensemble ID */
-
-      if (ens->label[0]) {
-        free(mm->mm_provider_network_name);
-        mm->mm_provider_network_name = strdup(ens->label);
-      }
-
-      tvhinfo(LS_MPEGTS, "mux %s: upgraded to DAB-GSE (EID=0x%04X, %s:%d)",
-              mm->mm_nicename, ens->eid, ip_str, ens->source_port);
-
-      mm->mm_scan_last_seen = gclk();
-      idnode_changed(&mm->mm_id);
-      found++;
-      created++;
-    } else {
-      /* Create new child mux */
-      dab_mux = dvb_mux_create0(ln, MPEGTS_ONID_NONE, ens->eid, &dmc, NULL, NULL);
-      if (!dab_mux)
-        continue;
-
-      dab_mux->mm_type = MM_TYPE_DAB_GSE;
-
-      if (ens->label[0]) {
-        free(dab_mux->mm_provider_network_name);
-        dab_mux->mm_provider_network_name = strdup(ens->label);
-      }
-
-      tvhinfo(LS_MPEGTS, "mux %s: created DAB-GSE child mux \"%s\" (EID=0x%04X, %s:%d)",
-              mm->mm_nicename, ens->label, ens->eid, ip_str, ens->source_port);
-
-      dab_mux->mm_scan_first = gclk();
-      dab_mux->mm_scan_last_seen = dab_mux->mm_scan_first;
-      idnode_changed(&dab_mux->mm_id);
-
-      /* Queue for scanning */
-      mpegts_network_scan_queue_add((mpegts_mux_t *)dab_mux,
-                                     SUBSCRIPTION_PRIO_SCAN_INIT,
-                                     SUBSCRIPTION_INITSCAN, 10);
-      found++;
-      created++;
-    }
   }
 
   dvbdab_streamer_free_all_ensembles(ensembles, count);

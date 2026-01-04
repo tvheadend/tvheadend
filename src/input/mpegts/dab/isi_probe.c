@@ -43,6 +43,90 @@ typedef struct isi_probe_ctx {
 } isi_probe_ctx_t;
 
 /*
+ * Parse ISI bitfield from driver buffer
+ * Returns count of ISIs found
+ */
+static int
+isi_parse_bitfield(const uint8_t *bitset, size_t bitset_len, uint8_t *isi_list)
+{
+  int count = 0;
+  size_t byte_idx;
+  int bit;
+
+  for (byte_idx = 0; byte_idx < bitset_len && byte_idx < 32; byte_idx++) {
+    uint8_t byte_val = bitset[byte_idx];
+    for (bit = 0; bit < 8; bit++) {
+      if (byte_val & (1 << bit)) {
+        isi_list[count++] = byte_idx * 8 + bit;
+      }
+    }
+  }
+  return count;
+}
+
+/*
+ * Log found ISI list
+ */
+static void
+isi_log_list(const uint8_t *isi_list, int count)
+{
+  char isi_str[512] = "";
+  int pos = 0;
+  int j;
+
+  if (count == 0) {
+    tvhdebug(LS_MPEGTS, "ISI probe: found 0 ISI(s) from driver");
+    return;
+  }
+
+  for (j = 0; j < count && pos < 500; j++) {
+    pos += snprintf(isi_str + pos, sizeof(isi_str) - pos, "%d ", isi_list[j]);
+  }
+  tvhdebug(LS_MPEGTS, "ISI probe: found %d ISI(s) from driver: %s", count, isi_str);
+}
+
+/*
+ * Read MATYPE list from driver
+ */
+static void
+isi_read_matype_list(int fe_fd, uint8_t *matype_list)
+{
+  struct dtv_property prop_matype;
+  struct dtv_properties cmdseq;
+  uint16_t matype_buffer[256];
+  int i;
+
+  /* Neumo uses dtv_matype_list struct */
+  struct {
+    uint32_t num_entries;
+    uint16_t *matypes;
+  } matype_req;
+
+  memset(&prop_matype, 0, sizeof(prop_matype));
+  memset(matype_buffer, 0, sizeof(matype_buffer));
+  prop_matype.cmd = DTV_MATYPE_LIST;
+
+  matype_req.num_entries = 256;
+  matype_req.matypes = matype_buffer;
+  memcpy(&prop_matype.u, &matype_req, sizeof(matype_req));
+
+  cmdseq.num = 1;
+  cmdseq.props = &prop_matype;
+
+  if (ioctl(fe_fd, FE_GET_PROPERTY, &cmdseq) != 0)
+    return;
+
+  /* Parse MATYPE entries: format is (matype << 8) | isi */
+  for (i = 0; i < 256 && matype_buffer[i] != 0; i++) {
+    uint16_t entry = matype_buffer[i];
+    uint8_t isi = entry & 0xFF;
+    uint8_t matype = (entry >> 8) & 0xFF;
+    matype_list[isi] = matype;
+    tvhtrace(LS_MPEGTS, "ISI probe: ISI %d MATYPE 0x%02X", isi, matype);
+  }
+}
+
+/*
  * Read ISI list from Neumo driver using DTV_ISI_LIST ioctl
  * Returns number of ISIs found, populates isi_list array
  * isi_list must be able to hold 256 entries
@@ -52,7 +136,9 @@ isi_read_driver_list(int fe_fd, uint8_t *isi_list, uint8_t *matype_list)
 {
   struct dtv_property prop_isi;
   struct dtv_properties cmdseq;
-  int count = 0;
+  const uint8_t *bitset;
+  size_t bitset_len;
+  int count;
 
   if (fe_fd < 0)
     return 0;
@@ -69,10 +155,8 @@ isi_read_driver_list(int fe_fd, uint8_t *isi_list, uint8_t *matype_list)
     return 0;
   }
 
-  /* Parse ISI bitfield - each bit indicates if that ISI is present
-   * Buffer contains up to 32 bytes (256 bits) for ISI 0-255 */
-  const uint8_t *bitset = prop_isi.u.buffer.data;
-  size_t bitset_len = prop_isi.u.buffer.len;
+  bitset = prop_isi.u.buffer.data;
+  bitset_len = prop_isi.u.buffer.len;
 
   if (bitset_len == 0) {
     tvhtrace(LS_MPEGTS, "ISI probe: empty ISI bitset");
@@ -81,59 +165,12 @@ isi_read_driver_list(int fe_fd, uint8_t *isi_list, uint8_t *matype_list)
 
   tvhtrace(LS_MPEGTS, "ISI probe: ISI bitset len=%zu", bitset_len);
 
-  for (size_t byte_idx = 0; byte_idx < bitset_len && byte_idx < 32; byte_idx++) {
-    uint8_t byte_val = bitset[byte_idx];
-    for (int bit = 0; bit < 8; bit++) {
-      if (byte_val & (1 << bit)) {
-        uint8_t isi = byte_idx * 8 + bit;
-        isi_list[count++] = isi;
-      }
-    }
-  }
+  count = isi_parse_bitfield(bitset, bitset_len, isi_list);
+  isi_log_list(isi_list, count);
 
-  if (count > 0) {
-    char isi_str[512] = "";
-    int pos = 0;
-    for (int j = 0; j < count && pos < 500; j++) {
-      pos += snprintf(isi_str + pos, sizeof(isi_str) - pos, "%d ", isi_list[j]);
-    }
-    tvhdebug(LS_MPEGTS, "ISI probe: found %d ISI(s) from driver: %s", count, isi_str);
-  } else {
-    tvhdebug(LS_MPEGTS, "ISI probe: found 0 ISI(s) from driver");
-  }
-
-  /* Now read MATYPE list if we found ISIs */
-  if (count > 0 && matype_list) {
-    struct dtv_property prop_matype;
-    uint16_t matype_buffer[256];
-
-    memset(&prop_matype, 0, sizeof(prop_matype));
-    memset(matype_buffer, 0, sizeof(matype_buffer));
-    prop_matype.cmd = DTV_MATYPE_LIST;
-
-    /* Neumo uses dtv_matype_list struct */
-    struct {
-      uint32_t num_entries;
-      uint16_t *matypes;
-    } matype_req;
-    matype_req.num_entries = 256;
-    matype_req.matypes = matype_buffer;
-
-    memcpy(&prop_matype.u, &matype_req, sizeof(matype_req));
-
-    cmdseq.props = &prop_matype;
-
-    if (ioctl(fe_fd, FE_GET_PROPERTY, &cmdseq) == 0) {
-      /* Parse MATYPE entries: format is (matype << 8) | isi */
-      for (int i = 0; i < 256 && matype_buffer[i] != 0; i++) {
-        uint16_t entry = matype_buffer[i];
-        uint8_t isi = entry & 0xFF;
-        uint8_t matype = (entry >> 8) & 0xFF;
-        matype_list[isi] = matype;
-        tvhtrace(LS_MPEGTS, "ISI probe: ISI %d MATYPE 0x%02X", isi, matype);
-      }
-    }
-  }
+  /* Read MATYPE list if we found ISIs */
+  if (count > 0 && matype_list)
+    isi_read_matype_list(fe_fd, matype_list);
 
   return count;
 }
