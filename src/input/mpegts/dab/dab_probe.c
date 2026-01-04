@@ -41,6 +41,173 @@ dab_probe_packet_cb(void *ctx, const uint8_t *pkt, int len)
 }
 
 /*
+ * Format IP address to string
+ */
+static void
+format_ip_str(char *buf, size_t len, uint32_t ip)
+{
+  snprintf(buf, len, "%d.%d.%d.%d",
+           (ip >> 24) & 0xFF, (ip >> 16) & 0xFF,
+           (ip >> 8) & 0xFF, ip & 0xFF);
+}
+
+/*
+ * Initialize new DAB mux common fields and queue for scanning
+ */
+static void
+init_new_dab_mux(dvb_mux_t *dab_mux, const char *label)
+{
+  if (label && label[0]) {
+    free(dab_mux->mm_provider_network_name);
+    dab_mux->mm_provider_network_name = strdup(label);
+  }
+
+  dab_mux->mm_scan_first = gclk();
+  dab_mux->mm_scan_last_seen = dab_mux->mm_scan_first;
+  idnode_changed(&dab_mux->mm_id);
+
+  mpegts_network_scan_queue_add((mpegts_mux_t *)dab_mux,
+                                 SUBSCRIPTION_PRIO_SCAN_INIT,
+                                 SUBSCRIPTION_INITSCAN, 10);
+}
+
+/*
+ * Update existing mux timestamp
+ */
+static void
+update_existing_mux(dvb_mux_t *dab_mux)
+{
+  dab_mux->mm_scan_last_seen = gclk();
+  idnode_changed(&dab_mux->mm_id);
+}
+
+/*
+ * Process a single DAB ensemble from scanner results
+ */
+static int
+process_ensemble(mpegts_mux_t *mm, dvb_network_t *ln,
+                 const dvb_mux_t *outer_dm, const dvbdab_ensemble_t *ens)
+{
+  dvb_mux_conf_t dmc;
+  dvb_mux_t *dab_mux;
+  const char *type_str;
+  char location[64];
+  char ip_str[20];
+  int is_etina = ens->is_etina;
+  int is_tsni = ens->is_tsni;
+
+  /* Determine type and location string */
+  if (is_etina) {
+    type_str = "ETI-NA";
+    snprintf(location, sizeof(location), "ETI-NA PID %d", ens->source_pid);
+  } else if (is_tsni) {
+    type_str = "DAB-TSNI";
+    snprintf(location, sizeof(location), "TSNI PID %d", ens->source_pid);
+  } else {
+    type_str = "DAB-MPE";
+    format_ip_str(ip_str, sizeof(ip_str), ens->source_ip);
+    snprintf(location, sizeof(location), "%s:%d", ip_str, ens->source_port);
+  }
+
+  tvhinfo(LS_MPEGTS, "mux %s: %s ensemble EID=0x%04X \"%s\" at %s with %d service(s)",
+          mm->mm_nicename, type_str, ens->eid, ens->label, location, ens->service_count);
+
+  /* Copy outer mux tuning parameters and set type-specific fields */
+  dmc = outer_dm->lm_tuning;
+  dmc.dmc_fe_pid = ens->source_pid;
+  dmc.dmc_dab_eti_padding = 0;
+  dmc.dmc_dab_eti_bit_offset = 0;
+  dmc.dmc_dab_eti_inverted = 0;
+  dmc.dmc_dab_ip = 0;
+  dmc.dmc_dab_port = 0;
+
+  if (is_etina) {
+    dmc.dmc_dab_eti_padding = ens->etina_padding;
+    dmc.dmc_dab_eti_bit_offset = ens->etina_bit_offset;
+    dmc.dmc_dab_eti_inverted = ens->etina_inverted;
+    dab_mux = dvb_network_find_mux_dab_eti(ln, &dmc);
+  } else if (is_tsni) {
+    dab_mux = dvb_network_find_mux_dab_tsni(ln, &dmc);
+  } else {
+    dmc.dmc_dab_ip = ens->source_ip;
+    dmc.dmc_dab_port = ens->source_port;
+    dab_mux = dvb_network_find_mux_dab_mpe(ln, &dmc);
+  }
+
+  /* Existing mux found - just update timestamp */
+  if (dab_mux) {
+    update_existing_mux(dab_mux);
+    return 1;
+  }
+
+  /* Create new mux */
+  dab_mux = dvb_mux_create0(ln, MPEGTS_ONID_NONE, ens->eid, &dmc, NULL, NULL);
+  if (!dab_mux)
+    return 0;
+
+  if (is_etina)
+    dab_mux->mm_type = MM_TYPE_DAB_ETI;
+  else if (is_tsni)
+    dab_mux->mm_type = MM_TYPE_DAB_TSNI;
+  else
+    dab_mux->mm_type = MM_TYPE_DAB_MPE;
+
+  tvhinfo(LS_MPEGTS, "mux %s: created %s child mux \"%s\" (EID=0x%04X, PID=0x%04X)",
+          mm->mm_nicename, type_str, ens->label, ens->eid, dmc.dmc_fe_pid);
+
+  init_new_dab_mux(dab_mux, ens->label);
+  return 1;
+}
+
+/*
+ * Process a single ETI-NA stream from scanner results
+ */
+static int
+process_etina_stream(mpegts_mux_t *mm, dvb_network_t *ln,
+                     const dvb_mux_t *outer_dm, const dvbdab_etina_info_t *etina)
+{
+  dvb_mux_conf_t dmc;
+  dvb_mux_t *dab_mux;
+
+  /* Setup DMC for ETI-NA */
+  dmc = outer_dm->lm_tuning;
+  dmc.dmc_fe_pid = etina->pid;
+  dmc.dmc_dab_eti_padding = etina->padding_bytes;
+  dmc.dmc_dab_eti_bit_offset = etina->sync_bit_offset;
+  dmc.dmc_dab_eti_inverted = etina->inverted ? 1 : 0;
+  dmc.dmc_dab_ip = 0;
+  dmc.dmc_dab_port = 0;
+
+  dab_mux = dvb_network_find_mux_dab_eti(ln, &dmc);
+
+  /* Existing mux found - just update timestamp */
+  if (dab_mux) {
+    update_existing_mux(dab_mux);
+    return 1;
+  }
+
+  /* Create new mux */
+  dab_mux = dvb_mux_create0(ln, MPEGTS_ONID_NONE, etina->pid, &dmc, NULL, NULL);
+  if (!dab_mux)
+    return 0;
+
+  dab_mux->mm_type = MM_TYPE_DAB_ETI;
+  free(dab_mux->mm_provider_network_name);
+  dab_mux->mm_provider_network_name = strdup("ETI-NA");
+
+  tvhinfo(LS_MPEGTS, "mux %s: created ETI-NA child mux on PID %d",
+          mm->mm_nicename, etina->pid);
+
+  dab_mux->mm_scan_first = gclk();
+  dab_mux->mm_scan_last_seen = dab_mux->mm_scan_first;
+  idnode_changed(&dab_mux->mm_id);
+  dab_mux->mm_scan_result = MM_SCAN_OK;
+  dab_mux->mm_scan_state = MM_SCAN_STATE_IDLE;
+
+  return 1;
+}
+
+/*
  * Process scanner results - create child muxes for discovered ensembles
  */
 static int
@@ -48,10 +215,7 @@ dab_probe_process_results(mpegts_mux_t *mm, dvbdab_results_t *results)
 {
   int i;
   dvb_network_t *ln;
-  dvb_mux_t *outer_dm;
-  dvb_mux_conf_t dmc;
-  dvb_mux_t *dab_mux;
-  char ip_str[20];
+  const dvb_mux_t *outer_dm;
   int found_dab = 0;
 
   if (!results)
@@ -65,131 +229,14 @@ dab_probe_process_results(mpegts_mux_t *mm, dvbdab_results_t *results)
 
   /* Process DAB ensembles (MPE, ETI-NA, or TSNI) */
   for (i = 0; i < results->ensemble_count; i++) {
-    dvbdab_ensemble_t *ens = &results->ensembles[i];
-    int is_etina = ens->is_etina;
-    int is_tsni = ens->is_tsni;
-    const char *type_str;
-    char location[64];
-
-    if (is_etina) {
-      type_str = "ETI-NA";
-      snprintf(location, sizeof(location), "ETI-NA PID %d", ens->source_pid);
-    } else if (is_tsni) {
-      type_str = "DAB-TSNI";
-      snprintf(location, sizeof(location), "TSNI PID %d", ens->source_pid);
-    } else {
-      type_str = "DAB-MPE";
-      snprintf(ip_str, sizeof(ip_str), "%d.%d.%d.%d",
-               (ens->source_ip >> 24) & 0xFF,
-               (ens->source_ip >> 16) & 0xFF,
-               (ens->source_ip >> 8) & 0xFF,
-               ens->source_ip & 0xFF);
-      snprintf(location, sizeof(location), "%s:%d", ip_str, ens->source_port);
-    }
-
-    tvhinfo(LS_MPEGTS, "mux %s: %s ensemble EID=0x%04X \"%s\" at %s with %d service(s)",
-            mm->mm_nicename, type_str,
-            ens->eid, ens->label, location, ens->service_count);
-
-    /* Copy outer mux tuning parameters */
-    dmc = outer_dm->lm_tuning;
-    dmc.dmc_fe_pid = ens->source_pid;
-
-    if (is_etina) {
-      dmc.dmc_dab_eti_padding = ens->etina_padding;
-      dmc.dmc_dab_eti_bit_offset = ens->etina_bit_offset;
-      dmc.dmc_dab_eti_inverted = ens->etina_inverted;
-      dmc.dmc_dab_ip = 0;
-      dmc.dmc_dab_port = 0;
-      dab_mux = dvb_network_find_mux_dab_eti(ln, &dmc);
-    } else if (is_tsni) {
-      dmc.dmc_dab_ip = 0;
-      dmc.dmc_dab_port = 0;
-      dmc.dmc_dab_eti_padding = 0;
-      dmc.dmc_dab_eti_bit_offset = 0;
-      dmc.dmc_dab_eti_inverted = 0;
-      dab_mux = dvb_network_find_mux_dab_tsni(ln, &dmc);
-    } else {
-      dmc.dmc_dab_ip = ens->source_ip;
-      dmc.dmc_dab_port = ens->source_port;
-      dmc.dmc_dab_eti_padding = 0;
-      dmc.dmc_dab_eti_bit_offset = 0;
-      dmc.dmc_dab_eti_inverted = 0;
-      dab_mux = dvb_network_find_mux_dab_mpe(ln, &dmc);
-    }
-
-    if (!dab_mux) {
-      dab_mux = dvb_mux_create0(ln, MPEGTS_ONID_NONE, ens->eid, &dmc, NULL, NULL);
-      if (dab_mux) {
-        if (is_etina)
-          dab_mux->mm_type = MM_TYPE_DAB_ETI;
-        else if (is_tsni)
-          dab_mux->mm_type = MM_TYPE_DAB_TSNI;
-        else
-          dab_mux->mm_type = MM_TYPE_DAB_MPE;
-
-        if (ens->label[0]) {
-          free(dab_mux->mm_provider_network_name);
-          dab_mux->mm_provider_network_name = strdup(ens->label);
-        }
-
-        tvhinfo(LS_MPEGTS, "mux %s: created %s child mux \"%s\" (EID=0x%04X, PID=0x%04X)",
-                mm->mm_nicename, type_str,
-                ens->label, ens->eid, dmc.dmc_fe_pid);
-
-        /* Services will be created during DAB mux scanning */
-        dab_mux->mm_scan_first = gclk();
-        dab_mux->mm_scan_last_seen = dab_mux->mm_scan_first;
-        idnode_changed(&dab_mux->mm_id);
-
-        /* Queue for scanning */
-        mpegts_network_scan_queue_add((mpegts_mux_t *)dab_mux,
-                                       SUBSCRIPTION_PRIO_SCAN_INIT,
-                                       SUBSCRIPTION_INITSCAN, 10);
-        found_dab = 1;
-      }
-    } else {
-      dab_mux->mm_scan_last_seen = gclk();
-      idnode_changed(&dab_mux->mm_id);
+    if (process_ensemble(mm, ln, outer_dm, &results->ensembles[i]))
       found_dab = 1;
-    }
   }
 
   /* Process ETI-NA streams */
   for (i = 0; i < results->etina_count; i++) {
-    dvbdab_etina_info_t *etina = &results->etina_streams[i];
-
-    dmc = outer_dm->lm_tuning;
-    dmc.dmc_fe_pid = etina->pid;
-    dmc.dmc_dab_eti_padding = etina->padding_bytes;
-    dmc.dmc_dab_eti_bit_offset = etina->sync_bit_offset;
-    dmc.dmc_dab_eti_inverted = etina->inverted ? 1 : 0;
-    dmc.dmc_dab_ip = 0;
-    dmc.dmc_dab_port = 0;
-
-    dab_mux = dvb_network_find_mux_dab_eti(ln, &dmc);
-    if (!dab_mux) {
-      dab_mux = dvb_mux_create0(ln, MPEGTS_ONID_NONE, etina->pid, &dmc, NULL, NULL);
-      if (dab_mux) {
-        dab_mux->mm_type = MM_TYPE_DAB_ETI;
-        free(dab_mux->mm_provider_network_name);
-        dab_mux->mm_provider_network_name = strdup("ETI-NA");
-
-        tvhinfo(LS_MPEGTS, "mux %s: created ETI-NA child mux on PID %d",
-                mm->mm_nicename, etina->pid);
-
-        dab_mux->mm_scan_first = gclk();
-        dab_mux->mm_scan_last_seen = dab_mux->mm_scan_first;
-        idnode_changed(&dab_mux->mm_id);
-        dab_mux->mm_scan_result = MM_SCAN_OK;
-        dab_mux->mm_scan_state = MM_SCAN_STATE_IDLE;
-        found_dab = 1;
-      }
-    } else {
-      dab_mux->mm_scan_last_seen = gclk();
-      idnode_changed(&dab_mux->mm_id);
+    if (process_etina_stream(mm, ln, outer_dm, &results->etina_streams[i]))
       found_dab = 1;
-    }
   }
 
   return found_dab;
