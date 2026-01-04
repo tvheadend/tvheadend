@@ -1154,8 +1154,10 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
         free((void*)f->hmf_str);
       }
       l = f->hmf_msg  = malloc(sizeof(htsmsg_t));
-      if (l == NULL)
+      if (l == NULL) {
+        htsmsg_destroy(m);
         return NULL;
+      }
       f->hmf_type     = m->hm_islist ? HMF_LIST : HMF_MAP;
       f->hmf_flags   |= HMF_ALLOCED;
       l->hm_islist    = m->hm_islist;
