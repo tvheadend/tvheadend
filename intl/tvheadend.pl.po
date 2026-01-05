@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-15 08:42+0000\n"
+"POT-Creation-Date: 2026-01-05 02:49+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
 "Last-Translator: Marek Adamski, 2025\n"
 "Language-Team: Polish (https://app.transifex.com/tvheadend/teams/43381/pl/)\n"
@@ -566,7 +566,7 @@ msgstr "Adapter w użyciu przez inną subskrypcję"
 msgid "Add channel numbers to the channel name list"
 msgstr "Dodaj numery kanałów do listy nazw kanałów."
 
-#: src/main.c:950
+#: src/main.c:952
 msgid "Add file and line numbers to debug"
 msgstr "Dodaj plik i numery linii do debugowania"
 
@@ -574,7 +574,7 @@ msgstr "Dodaj plik i numery linii do debugowania"
 msgid "Add sources (like DVB-T string) to the channel name list"
 msgstr "Dodaj źródła (takie jak ciąg DVB-T) do listy nazw kanałów"
 
-#: src/main.c:951
+#: src/main.c:953
 msgid "Add the thread ID to debug"
 msgstr "Dodaj identyfikator wątku do debugowania"
 
@@ -812,11 +812,11 @@ msgstr "Dozwolone sieci"
 msgid "Alter programme description to include detailed information"
 msgstr "Zmień opis programu, aby zawierał szczegółowe informacje."
 
-#: src/main.c:891
+#: src/main.c:893
 msgid "Alternate PID path"
 msgstr "Alternatywna ścieżka PID"
 
-#: src/main.c:886
+#: src/main.c:888
 msgid "Alternate configuration path"
 msgstr "Alternatywna ścieżka konfiguracji"
 
@@ -982,7 +982,7 @@ msgid "Authority"
 msgstr "Organ"
 
 #: src/satip/server.c:618 src/input/mpegts/satip/satip.c:237
-#: src/descrambler/capmt.c:2697
+#: src/descrambler/capmt.c:2706
 msgid "Auto"
 msgstr "Automatycznie"
 
@@ -1274,7 +1274,7 @@ msgstr ""
 "zostać zmniejszona, aby przyspieszyć decyzję algorytmu ponownego dostrojenia"
 " na podstawie statusu sygnału."
 
-#: src/descrambler/capmt.c:2698
+#: src/descrambler/capmt.c:2707
 msgid "Byte index tag order"
 msgstr "Kolejność tagów indeksu bajtów"
 
@@ -1320,7 +1320,7 @@ msgstr "CAM może dekodować wiele kanałów"
 msgid "CAM slot number."
 msgstr "Numer gniazda CAM."
 
-#: src/descrambler/capmt.c:2710
+#: src/descrambler/capmt.c:2719
 msgid "CAPMT (Linux Network DVBAPI)"
 msgstr "CAPMT (sieciowe DVBAPI Linuksa)"
 
@@ -1400,7 +1400,7 @@ msgstr "CSA (deszyfrowanie)"
 msgid "CSA CBC Constant Code Word"
 msgstr "CSA CBC Constant Code Word"
 
-#: src/descrambler/capmt.c:2742
+#: src/descrambler/capmt.c:2751
 msgid "CW Mode"
 msgstr "Tryb CW"
 
@@ -1428,7 +1428,7 @@ msgstr "Schemat buforowania"
 msgid "Callsign"
 msgstr "Znak wywoławczy"
 
-#: src/descrambler/capmt.c:2726
+#: src/descrambler/capmt.c:2735
 msgid "Camd.socket filename / IP Address (TCP mode)"
 msgstr "Nazwa pliku / adres IP (tryb TCP) camd.socket"
 
@@ -2134,7 +2134,7 @@ msgstr "Cron"
 msgid "Cron multi-line"
 msgstr "Wieloliniowy cron"
 
-#: src/descrambler/capmt.c:2743
+#: src/descrambler/capmt.c:2752
 msgid "CryptoWord mode."
 msgstr "Tryb CryptoWord."
 
@@ -2190,7 +2190,7 @@ msgstr "Multipleks DAB"
 msgid "DBUS"
 msgstr "DBUS"
 
-#: src/main.c:901
+#: src/main.c:903
 msgid "DBus - use the session message bus instead of the system one"
 msgstr "DBus - użyj magistrali komunikatów sesji zamiast systemowej"
 
@@ -2473,7 +2473,7 @@ msgstr "Debata"
 msgid "Debug libav log"
 msgstr "Debuguj dziennik libav"
 
-#: src/main.c:939
+#: src/main.c:941
 msgid "Debug options"
 msgstr "Opcje debugowania"
 
@@ -2685,7 +2685,7 @@ msgstr "Katalog używany przez wpis."
 msgid "Disable"
 msgstr "Wyłącz"
 
-#: src/main.c:960
+#: src/main.c:962
 msgid "Disable DVB bouquets"
 msgstr "Wyłącz bukiety DVB"
 
@@ -2693,11 +2693,11 @@ msgstr "Wyłącz bukiety DVB"
 msgid "Disable RTP/AVP/TCP support"
 msgstr "Wyłącz obsługę RTP/AVP/TCP"
 
-#: src/main.c:918
+#: src/main.c:920
 msgid "Disable SAT>IP client"
 msgstr "Wyłącz klienta SAT>IP"
 
-#: src/main.c:916
+#: src/main.c:918
 msgid "Disable SAT>IP client (deprecated flag, use nosatipcli)"
 msgstr "Wyłącz klienta SAT>IP (flaga przestarzała, użyj nosatipcli)"
 
@@ -2713,11 +2713,11 @@ msgstr "Wyłącz wykrywanie UPnP."
 msgid "Disable X_SATIPM3U tag"
 msgstr "Wyłącz tag X_SATIPM3U"
 
-#: src/main.c:958
+#: src/main.c:960
 msgid "Disable all access control checks"
 msgstr "Wyłącz wszystkie sprawdzania kontroli dostępu"
 
-#: src/main.c:941
+#: src/main.c:943
 msgid "Disable debug on stderr"
 msgstr "Wyłącz debugowanie na stderr"
 
@@ -2725,7 +2725,7 @@ msgstr "Wyłącz debugowanie na stderr"
 msgid "Disable device/firmware-specific workarounds"
 msgstr "Wyłącz obejścia dla urządzenia/firmware"
 
-#: src/main.c:943
+#: src/main.c:945
 msgid "Disable syslog (all messages)"
 msgstr "Wyłącz syslog (wszystkie wiadomości)"
 
@@ -2802,7 +2802,7 @@ msgstr ""
 "może zostać odszyfrowany przez klienta urzędu certyfikacji, który normalnie "
 "powinien mieć możliwość odszyfrowania strumienia."
 
-#: src/main.c:887
+#: src/main.c:889
 msgid "Don't backup configuration tree at upgrade"
 msgstr "Nie wykonuj kopii zapasowej konfiguracji przy aktualizacji"
 
@@ -2984,7 +2984,7 @@ msgstr "Włącz"
 msgid "Enable (auto)"
 msgstr "Włącz (automatycznie)"
 
-#: src/main.c:899
+#: src/main.c:901
 msgid "Enable DBus"
 msgstr "Włącz DBus"
 
@@ -2996,23 +2996,23 @@ msgstr "Włącz emulację serwera HDHomeRun"
 msgid "Enable NTP driver"
 msgstr "Włącz sterownik NTP"
 
-#: src/main.c:957
+#: src/main.c:959
 msgid "Enable coredumps for daemon"
 msgstr "Włącz zrzuty pamięci dla demona"
 
-#: src/main.c:940
+#: src/main.c:942
 msgid "Enable debug on stderr"
 msgstr "Włącz debugowanie na stderr"
 
-#: src/main.c:945
+#: src/main.c:947
 msgid "Enable debug subsystems"
 msgstr "Włącz debugowanie podsystemów"
 
-#: src/main.c:944
+#: src/main.c:946
 msgid "Enable debug to file"
 msgstr "Włącz debugowanie do pliku"
 
-#: src/main.c:942
+#: src/main.c:944
 msgid "Enable debug to syslog"
 msgstr "Włącz debugowanie do syslog"
 
@@ -3128,7 +3128,7 @@ msgstr ""
 "umożliwiając klatkam progresywnym ominięcie usuwania przeplotu, co poprawia "
 "wydajność i jakość."
 
-#: src/main.c:947
+#: src/main.c:949
 msgid "Enable trace subsystems"
 msgstr "Włącz śledzenie podsystemów"
 
@@ -3144,7 +3144,7 @@ msgstr ""
 "Włącz wykrywanie vainfo, aby wyświetlać tylko kodery reklamowane przez sterownik VAAPI.\n"
 "UWAGA: po zapisaniu wymagane jest ponowne uruchomienie Tvheadend!"
 
-#: src/main.c:955
+#: src/main.c:957
 msgid "Enable web UI debug (non-minified JS)"
 msgstr "Włącz debugowanie interfejsu WWW (nieminifikowany JS)"
 
@@ -3510,15 +3510,15 @@ msgstr "Czas wygaśnięcia"
 msgid "Exported Tuner(s) Settings"
 msgstr "Eksportowane ustawienia tunera(-ów)"
 
-#: src/descrambler/capmt.c:2686
+#: src/descrambler/capmt.c:2695
 msgid "Extended (OE 2.2)"
 msgstr "Rozszerzony (OE 2.2)"
 
-#: src/descrambler/capmt.c:2687
+#: src/descrambler/capmt.c:2696
 msgid "Extended (OE 2.2), mode follows key"
 msgstr "Rozszerzony (OE 2.2), tryb podąża za kluczem"
 
-#: src/descrambler/capmt.c:2688
+#: src/descrambler/capmt.c:2697
 msgid "Extended DES (OE 2.0)"
 msgstr "Rozszerzony DES (OE 2.0)"
 
@@ -3931,7 +3931,7 @@ msgstr "Zagraniczne kraje"
 msgid "Forever"
 msgstr "Na zawsze"
 
-#: src/main.c:888
+#: src/main.c:890
 msgid "Fork and run as daemon"
 msgstr "Forkuj i uruchom jako demon"
 
@@ -4034,7 +4034,7 @@ msgstr "Łatwa nazwa"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:128
 #: src/input/mpegts/satip/satip_frontend.c:252
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:646
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:656
 msgid "Frontend number"
 msgstr "Numer nakładki"
 
@@ -4087,7 +4087,7 @@ msgstr "Teleturniej"
 msgid "Gardening"
 msgstr "Ogrodnictwo"
 
-#: src/main.c:972
+#: src/main.c:974
 msgid "Gather timing statistics for the code"
 msgstr "Zbierz statystyki czasowe dla kodu"
 
@@ -4104,7 +4104,7 @@ msgstr "Ustawienia ogólne"
 msgid "Generic"
 msgstr "Ogólne"
 
-#: src/main.c:881
+#: src/main.c:883
 msgid "Generic options"
 msgstr "Opcje ogólne"
 
@@ -4159,31 +4159,31 @@ msgstr "HD: wysoka rozdzielczość"
 msgid "HDHomeRun"
 msgstr "HDHomeRun"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:688
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:698
 msgid "HDHomeRun ATSC-C frontend"
 msgstr "Nakładka ATSC-C HDHomeRun"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:678
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:688
 msgid "HDHomeRun ATSC-T frontend"
 msgstr "Nakładka ATSC-T HDHomeRun"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:698
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:708
 msgid "HDHomeRun CableCARD frontend"
 msgstr "Nakładka CableCARD HDHomeRun"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:640
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:650
 msgid "HDHomeRun DVB frontend"
 msgstr "Nakładka DVB HDHomeRun"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:668
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:678
 msgid "HDHomeRun DVB-C frontend"
 msgstr "Nakładka DVB-C HDHomeRun"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:658
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:668
 msgid "HDHomeRun DVB-T frontend"
 msgstr "Nakładka DVB-T HDHomeRun"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:708
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:718
 msgid "HDHomeRun ISDB-T frontend"
 msgstr "Nakładka ISDB-T HDHomeRun"
 
@@ -4392,9 +4392,6 @@ msgid ""
 "Tvheadend in a container and you want to stream from an HDHomerun without "
 "enabling host networking for the container."
 msgstr ""
-"Adres IP urządzenia HDHomerun. Jest to potrzebne, jeśli planujesz uruchomić "
-"Tvheadend w kontenerze i chcesz przesyłać strumieniowo z HDHomerun bez "
-"włączania sieci hosta dla kontenera."
 
 #: src/access.c:2413
 msgid "IP blocking"
@@ -4406,10 +4403,6 @@ msgid ""
 "a socket. This lets you define the IP address that HDHomeRun needs to send "
 "to. Leave this blank if you want Tvheadend to automatically pick an address."
 msgstr ""
-"Adres IP hosta Docker. Każdy tuner HDHomeRun wysyła dane do Tvheadend przez "
-"gniazdo. Pozwala to zdefiniować adres IP, na który HDHomeRun ma wysyłać. "
-"Jeśli chcesz, aby Tvheadend automatycznie wybrał adres, pozostaw to pole "
-"puste."
 
 #: src/tvhlog.c:162
 msgid "IPTV"
@@ -4613,7 +4606,7 @@ msgstr ""
 "wyższy priorytet poprzez przypisanie profilu przesyłania strumieniowego o "
 "wyższym priorytecie."
 
-#: src/main.c:892
+#: src/main.c:894
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
@@ -4741,7 +4734,7 @@ msgstr "Pamięć podręczna obrazu"
 msgid "Immediately"
 msgstr "Natychmiast"
 
-#: src/main.c:956
+#: src/main.c:958
 msgid "Immediately abort"
 msgstr "Przerwij natychmiast"
 
@@ -4882,7 +4875,7 @@ msgstr "Nieprawidłowy"
 msgid "Invalid EPG object request"
 msgstr "Nieprawidłowe żądanie obiektu EPG"
 
-#: src/main.c:1044
+#: src/main.c:1046
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr "Błędny numer adaptera '%s'\n"
@@ -5202,15 +5195,15 @@ msgid "List of allowed IPv4 or IPv6 hosts or networks (comma-separated)."
 msgstr ""
 "Lista dozwolonych hostów lub sieci IPv4 lub IPv6 (oddzielona przecinkami)."
 
-#: src/main.c:949
+#: src/main.c:951
 msgid "List subsystems"
 msgstr "Wyświetl podsystemy"
 
-#: src/descrambler/capmt.c:2734
+#: src/descrambler/capmt.c:2743
 msgid "Listen / Connect port"
 msgstr "Słuchaj / połącz port"
 
-#: src/main.c:924
+#: src/main.c:926
 msgid "Listen on IPv6"
 msgstr "Nasłuchuj na IPv6"
 
@@ -5705,7 +5698,7 @@ msgstr "Ustawienia różne"
 msgid "Missing In PAT/SDT"
 msgstr "Brakujące w PAT/SDT"
 
-#: src/descrambler/capmt.c:2716
+#: src/descrambler/capmt.c:2725
 msgid "Mode"
 msgstr "Tryb"
 
@@ -5753,7 +5746,7 @@ msgstr "Identyfikator modułu używany do pobierania danych EPG."
 msgid "Mon"
 msgstr "Pn"
 
-#: src/main.c:953
+#: src/main.c:955
 msgid "More verbose libav log"
 msgstr "Pełniejszy dziennik libav"
 
@@ -6124,7 +6117,7 @@ msgstr "Brak PIN-u"
 msgid "No access"
 msgstr "Brak dostępu"
 
-#: src/main.c:1057
+#: src/main.c:1059
 msgid "No adapters specified!\n"
 msgstr "Brak sprecyzowanych adapterów!\n"
 
@@ -6317,7 +6310,7 @@ msgstr "Liczba usług."
 msgid "Number of times this recording was played."
 msgstr "Liczba odtworzeń tego nagrania."
 
-#: src/main.c:968
+#: src/main.c:970
 msgid "Number of tsfile tuners"
 msgstr "Liczba tunerów tsfile"
 
@@ -6337,19 +6330,19 @@ msgstr "OK (częściowe)"
 msgid "OMX"
 msgstr "OMX"
 
-#: src/descrambler/capmt.c:2618
+#: src/descrambler/capmt.c:2627
 msgid "OSCam (rev >= 9095)"
 msgstr "OSCam (rev >= 9095)"
 
-#: src/descrambler/capmt.c:2612
+#: src/descrambler/capmt.c:2621
 msgid "OSCam TCP (rev >= 9574)"
 msgstr "TCP OSCam (rev >= 9574)"
 
-#: src/descrambler/capmt.c:2606
+#: src/descrambler/capmt.c:2615
 msgid "OSCam net protocol (rev >= 10389)"
 msgstr "Protokół sieciowy OSCam (rev >= 10389)"
 
-#: src/descrambler/capmt.c:2615
+#: src/descrambler/capmt.c:2624
 msgid "OSCam pc-nodmx (rev >= 9756)"
 msgstr "Pc-nodmx OSCam (rev >= 9756)"
 
@@ -6399,7 +6392,7 @@ msgstr "Wył."
 msgid "Offset the mapped channel numbers by x (value here + channel number)."
 msgstr "Przesuń zmapowane numery kanałów o x (wartość tutaj + numer kanału)."
 
-#: src/descrambler/capmt.c:2621
+#: src/descrambler/capmt.c:2630
 msgid "Older OSCam"
 msgstr "Starszy OSCam"
 
@@ -6470,7 +6463,7 @@ msgstr ""
 "gdy różnica między zegarem systemowym a czasem DVB jest większa. Może to "
 "pomóc zatrzymać nadmierne oscylacje zegara systemowego."
 
-#: src/main.c:905
+#: src/main.c:907
 msgid "Only use specified DVB adapters (comma-separated, -1 = none)"
 msgstr ""
 "Używaj tylko określonych adapterów DVB (rozdzielone przecinkami, -1 = brak)"
@@ -6522,7 +6515,7 @@ msgstr "Pozycje orbitalne."
 msgid "Original network ID"
 msgstr "Oryginalny identyfikator sieci"
 
-#: src/descrambler/capmt.c:2717
+#: src/descrambler/capmt.c:2726
 msgid "Oscam mode."
 msgstr "Tryb Oscam."
 
@@ -6641,11 +6634,11 @@ msgstr "Kod PLS"
 msgid "PLS mode"
 msgstr "Tryb PLS"
 
-#: src/descrambler/capmt.c:2752
+#: src/descrambler/capmt.c:2761
 msgid "PMT Mode"
 msgstr "Tryb PMT"
 
-#: src/descrambler/capmt.c:2753
+#: src/descrambler/capmt.c:2762
 msgid "PMT mode."
 msgstr "Tryb PMT."
 
@@ -6894,7 +6887,7 @@ msgstr "Port"
 msgid "Port to connect to."
 msgstr "Port do połączenia."
 
-#: src/descrambler/capmt.c:2735
+#: src/descrambler/capmt.c:2744
 msgid "Port to listen on or to connect to."
 msgstr "Port, na którym nasłuchuje lub do którego się łączyć."
 
@@ -7067,7 +7060,7 @@ msgstr ""
 msgid "Private"
 msgstr "Prywatny"
 
-#: src/descrambler/capmt.c:2609
+#: src/descrambler/capmt.c:2618
 msgid "Problematic: OSCam new pc-nodmx (rev >= 10389)"
 msgstr "Problematyczne: nowy pc-nodmx OSCam (rev >= 10389)"
 
@@ -7623,11 +7616,11 @@ msgstr "Typ rotora"
 msgid "Rotor: %s"
 msgstr "Rotor: %s"
 
-#: src/main.c:890
+#: src/main.c:892
 msgid "Run as group"
 msgstr "Uruchom jako grupa"
 
-#: src/main.c:889
+#: src/main.c:891
 msgid "Run as user"
 msgstr "Uruchom jako użytkownik"
 
@@ -7667,7 +7660,7 @@ msgstr "Częstotliwość (Hz) DVB-T SAT>IP "
 msgid "SAT>IP ISDB-T Frontend"
 msgstr "Nakładka ISDB-T SAT>IP"
 
-#: src/main.c:911
+#: src/main.c:913
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
@@ -8227,7 +8220,7 @@ msgstr "Ustawienia serwera"
 msgid "Server UUID"
 msgstr "UUID serwera"
 
-#: src/main.c:923
+#: src/main.c:925
 msgid "Server connectivity"
 msgstr "Łączność serwera"
 
@@ -8264,7 +8257,7 @@ msgstr "Mapowanie usług"
 msgid "Service Mapping (Map services to channels)"
 msgstr "Mapowanie usług (mapowanie usług na kanały)"
 
-#: src/main.c:885
+#: src/main.c:887
 msgid "Service configuration"
 msgstr "Konfiguracja usługi"
 
@@ -8398,11 +8391,11 @@ msgstr ""
 "Pokaż tylko informacje dotyczące sesji, które są inicjowane z adresu IP "
 "żądającego."
 
-#: src/main.c:882
+#: src/main.c:884
 msgid "Show this page"
 msgstr "Pokaż tę stronę"
 
-#: src/main.c:883
+#: src/main.c:885
 msgid "Show version information"
 msgstr "Pokaż informacje o wersji"
 
@@ -8534,7 +8527,7 @@ msgstr "Kwestie społeczne i polityczne / Ekonomia"
 msgid "Social advisory"
 msgstr "Doradztwo społeczne"
 
-#: src/descrambler/capmt.c:2727
+#: src/descrambler/capmt.c:2736
 msgid "Socket or IP Address (when in TCP mode)."
 msgstr "Gniazdo lub adres IP (w trybie TCP)."
 
@@ -8655,31 +8648,31 @@ msgstr ""
 "Jeśli różnica czasu reakcji PCR w stosunku do zegara systemowego jest "
 "większa niż ta, przychodzący strumień jest wstrzymywany."
 
-#: src/main.c:934
+#: src/main.c:936
 msgid "Specify User-Agent header for the http client"
 msgstr "Określ nagłówek User-Agent dla klienta HTTP"
 
-#: src/main.c:930
+#: src/main.c:932
 msgid "Specify alternative htsp port"
 msgstr "Określ alternatywny port HTSP"
 
-#: src/main.c:926
+#: src/main.c:928
 msgid "Specify alternative http port"
 msgstr "Określ alternatywny port HTTP"
 
-#: src/main.c:928
+#: src/main.c:930
 msgid "Specify alternative http webroot"
 msgstr "Określ alternatywny webroot HTTP"
 
-#: src/main.c:925
+#: src/main.c:927
 msgid "Specify bind address"
 msgstr "Określ powiązania adresu"
 
-#: src/main.c:909
+#: src/main.c:911
 msgid "Specify bind address for SAT>IP server"
 msgstr "Określ adres powiązania dla serwera SAT>IP"
 
-#: src/main.c:932
+#: src/main.c:934
 msgid "Specify extra htsp port"
 msgstr "Podaj dodatkowy port HTSP"
 
@@ -8721,7 +8714,7 @@ msgstr "Squash"
 msgid "Standard"
 msgstr "Standardowe"
 
-#: src/descrambler/capmt.c:2685
+#: src/descrambler/capmt.c:2694
 msgid "Standard / auto"
 msgstr "Standardowe / automatyczne"
 
@@ -8796,15 +8789,6 @@ msgid ""
 "9983, then tuner 0 will talk to port 9983, tuner 1 will talk to port 9984, "
 "tuner 2 will talk to port 9985, and tuner 3 will talk to port 9986."
 msgstr ""
-"Rozpoczynający numer portu dla nasłuchiwaczy UDP. Nasłuchiwacze nasłuchują "
-"ruchu z tunelami HDHomerun. Jest to potrzebne, jeśli planujesz uruchomić "
-"Tvheadend w kontenerze i chcesz przesyłać strumieniowo z HDHomerun bez "
-"włączania hostowania sieciowego dla kontenera. Ustaw to na 0, jeśli chcesz, "
-"aby numery portów były przypisywane dynamicznie. Jeśli masz wiele tunerów, "
-"będzie to początek zakresu portów. Na przykład, jeśli masz 4 tunery i "
-"ustawisz to na 9983, to tuner 0 będzie komunikować się z portem 9983, tuner "
-"1 będzie komunikować się z portem 9984, tuner 2 będzie komunikować się z "
-"portem 9985, a tuner 3 będzie komunikować się z portem 9986."
 
 #: src/dvr/dvr_db.c:4978 src/descrambler/caclient.c:327
 msgid "Status"
@@ -8948,7 +8932,7 @@ msgstr ""
 "$q. Może zawierać dowolne znaki alfanumeryczne (A-Za-z0-9). Inne znaki mogą "
 "być obsługiwane w zależności od systemu operacyjnego i systemu plików."
 
-#: src/main.c:962
+#: src/main.c:964
 msgid "Subscribe to a service permanently"
 msgstr "Zapisz się do usługi na stałe"
 
@@ -9225,7 +9209,7 @@ msgstr "Tenis"
 msgid "Testing"
 msgstr "Testowanie"
 
-#: src/main.c:967
+#: src/main.c:969
 msgid "Testing options"
 msgstr "Opcje testowania"
 
@@ -10488,7 +10472,7 @@ msgstr ""
 msgid "Thread"
 msgstr "Wątek"
 
-#: src/main.c:974
+#: src/main.c:976
 msgid "Thread debugging"
 msgstr "Debugowanie wątków"
 
@@ -10866,7 +10850,7 @@ msgstr "Adres URL dla porównania"
 msgid "URL of the M3U playlist."
 msgstr "Adres URL listy odtwarzania M3U."
 
-#: src/main.c:920
+#: src/main.c:922
 msgid "URL with the SAT>IP server XML location"
 msgstr "URL z lokalizacją XML serwera SAT>IP"
 
@@ -11099,7 +11083,7 @@ msgstr "XPath unikalnego identyfikatora zdarzenia"
 msgid "Universal LNB only"
 msgstr "Tylko uniwersalny LNB"
 
-#: src/descrambler/capmt.c:2699
+#: src/descrambler/capmt.c:2708
 msgid "Universal tag order"
 msgstr "Kolejność tagów uniwersalna"
 
@@ -11239,7 +11223,7 @@ msgstr "Użyj formatu WEBM."
 msgid "Use Windows-compatible filenames"
 msgstr "Użyj nazw plików zgodnych z Windows"
 
-#: src/main.c:936
+#: src/main.c:938
 msgid "Use XSPF playlist instead of M3U"
 msgstr "Użyj listy odtwarzania XSPF zamiast M3U"
 
@@ -11802,7 +11786,7 @@ msgstr ""
 msgid "Wizard"
 msgstr "Kreator"
 
-#: src/descrambler/capmt.c:2624
+#: src/descrambler/capmt.c:2633
 msgid "Wrapper (capmt_ca.so)"
 msgstr "Wrapper (capmt_ca.so)"
 
@@ -11923,7 +11907,7 @@ msgstr "dobre"
 msgid "hrs"
 msgstr "godz."
 
-#: src/main.c:999
+#: src/main.c:1001
 #, c-format
 msgid "invalid option specified [%s]"
 msgstr "określono niepoprawną opcję [%s]"
@@ -12008,7 +11992,7 @@ msgstr "wyłącz: użyj stałej szybkości przesyłania"
 msgid "on: Use variable bit rate"
 msgstr "włącz: użyj zmiennej szybkości bitowej"
 
-#: src/main.c:1008
+#: src/main.c:1010
 #, c-format
 msgid "option %s requires a value"
 msgstr "opcja %s wymaga wartości"
@@ -12062,7 +12046,7 @@ msgstr "ssim"
 msgid "towards project operating costs."
 msgstr "na koszty operacyjne projektu."
 
-#: src/main.c:969
+#: src/main.c:971
 msgid "tsfile input (mux file)"
 msgstr "wejście tsfile (plik multipleksera)"
 
