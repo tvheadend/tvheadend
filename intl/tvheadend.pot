@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-29 02:46+0000\n"
+"POT-Creation-Date: 2026-01-05 02:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -555,7 +555,7 @@ msgstr ""
 msgid "Add channel numbers to the channel name list"
 msgstr ""
 
-#: src/main.c:950
+#: src/main.c:952
 msgid "Add file and line numbers to debug"
 msgstr ""
 
@@ -563,7 +563,7 @@ msgstr ""
 msgid "Add sources (like DVB-T string) to the channel name list"
 msgstr ""
 
-#: src/main.c:951
+#: src/main.c:953
 msgid "Add the thread ID to debug"
 msgstr ""
 
@@ -773,11 +773,11 @@ msgstr ""
 msgid "Alter programme description to include detailed information"
 msgstr ""
 
-#: src/main.c:891
+#: src/main.c:893
 msgid "Alternate PID path"
 msgstr ""
 
-#: src/main.c:886
+#: src/main.c:888
 msgid "Alternate configuration path"
 msgstr ""
 
@@ -2071,7 +2071,7 @@ msgstr ""
 msgid "DBUS"
 msgstr ""
 
-#: src/main.c:901
+#: src/main.c:903
 msgid "DBus - use the session message bus instead of the system one"
 msgstr ""
 
@@ -2350,7 +2350,7 @@ msgstr ""
 msgid "Debug libav log"
 msgstr ""
 
-#: src/main.c:939
+#: src/main.c:941
 msgid "Debug options"
 msgstr ""
 
@@ -2545,7 +2545,7 @@ msgstr ""
 msgid "Disable"
 msgstr ""
 
-#: src/main.c:960
+#: src/main.c:962
 msgid "Disable DVB bouquets"
 msgstr ""
 
@@ -2553,11 +2553,11 @@ msgstr ""
 msgid "Disable RTP/AVP/TCP support"
 msgstr ""
 
-#: src/main.c:918
+#: src/main.c:920
 msgid "Disable SAT>IP client"
 msgstr ""
 
-#: src/main.c:916
+#: src/main.c:918
 msgid "Disable SAT>IP client (deprecated flag, use nosatipcli)"
 msgstr ""
 
@@ -2573,11 +2573,11 @@ msgstr ""
 msgid "Disable X_SATIPM3U tag"
 msgstr ""
 
-#: src/main.c:958
+#: src/main.c:960
 msgid "Disable all access control checks"
 msgstr ""
 
-#: src/main.c:941
+#: src/main.c:943
 msgid "Disable debug on stderr"
 msgstr ""
 
@@ -2585,7 +2585,7 @@ msgstr ""
 msgid "Disable device/firmware-specific workarounds"
 msgstr ""
 
-#: src/main.c:943
+#: src/main.c:945
 msgid "Disable syslog (all messages)"
 msgstr ""
 
@@ -2652,7 +2652,7 @@ msgid ""
 "client that normally should be able to decrypt the stream."
 msgstr ""
 
-#: src/main.c:887
+#: src/main.c:889
 msgid "Don't backup configuration tree at upgrade"
 msgstr ""
 
@@ -2834,7 +2834,7 @@ msgstr ""
 msgid "Enable (auto)"
 msgstr ""
 
-#: src/main.c:899
+#: src/main.c:901
 msgid "Enable DBus"
 msgstr ""
 
@@ -2846,23 +2846,23 @@ msgstr ""
 msgid "Enable NTP driver"
 msgstr ""
 
-#: src/main.c:957
+#: src/main.c:959
 msgid "Enable coredumps for daemon"
 msgstr ""
 
-#: src/main.c:940
+#: src/main.c:942
 msgid "Enable debug on stderr"
 msgstr ""
 
-#: src/main.c:945
+#: src/main.c:947
 msgid "Enable debug subsystems"
 msgstr ""
 
-#: src/main.c:944
+#: src/main.c:946
 msgid "Enable debug to file"
 msgstr ""
 
-#: src/main.c:942
+#: src/main.c:944
 msgid "Enable debug to syslog"
 msgstr ""
 
@@ -2953,7 +2953,7 @@ msgid ""
 "bypass deinterlacing for improved efficiency and quality."
 msgstr ""
 
-#: src/main.c:947
+#: src/main.c:949
 msgid "Enable trace subsystems"
 msgstr ""
 
@@ -2968,7 +2968,7 @@ msgid ""
 "NOTE: After save, Tvheadend restart is required!"
 msgstr ""
 
-#: src/main.c:955
+#: src/main.c:957
 msgid "Enable web UI debug (non-minified JS)"
 msgstr ""
 
@@ -3699,7 +3699,7 @@ msgstr ""
 msgid "Forever"
 msgstr ""
 
-#: src/main.c:888
+#: src/main.c:890
 msgid "Fork and run as daemon"
 msgstr ""
 
@@ -3794,7 +3794,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:128
 #: src/input/mpegts/satip/satip_frontend.c:252
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:646
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:656
 msgid "Frontend number"
 msgstr ""
 
@@ -3845,7 +3845,7 @@ msgstr ""
 msgid "Gardening"
 msgstr ""
 
-#: src/main.c:972
+#: src/main.c:974
 msgid "Gather timing statistics for the code"
 msgstr ""
 
@@ -3862,7 +3862,7 @@ msgstr ""
 msgid "Generic"
 msgstr ""
 
-#: src/main.c:881
+#: src/main.c:883
 msgid "Generic options"
 msgstr ""
 
@@ -3914,31 +3914,31 @@ msgstr ""
 msgid "HDHomeRun"
 msgstr ""
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:688
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:698
 msgid "HDHomeRun ATSC-C frontend"
 msgstr ""
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:678
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:688
 msgid "HDHomeRun ATSC-T frontend"
 msgstr ""
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:698
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:708
 msgid "HDHomeRun CableCARD frontend"
 msgstr ""
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:640
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:650
 msgid "HDHomeRun DVB frontend"
 msgstr ""
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:668
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:678
 msgid "HDHomeRun DVB-C frontend"
 msgstr ""
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:658
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:668
 msgid "HDHomeRun DVB-T frontend"
 msgstr ""
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:708
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:718
 msgid "HDHomeRun ISDB-T frontend"
 msgstr ""
 
@@ -4130,7 +4130,7 @@ msgstr ""
 #: src/config.c:2567
 msgid ""
 "IP address of the HDHomerun device. This is needed if you plan to run "
-"TVheadend in a container and you want to stream from an HDHomerun without "
+"Tvheadend in a container and you want to stream from an HDHomerun without "
 "enabling host networking for the container."
 msgstr ""
 
@@ -4140,9 +4140,9 @@ msgstr ""
 
 #: src/config.c:2579
 msgid ""
-"IP of the Docker host. Each HDHomeRun tuner sends data to TVheadend through "
+"IP of the Docker host. Each HDHomeRun tuner sends data to Tvheadend through "
 "a socket. This lets you define the IP address that HDHomeRun needs to send "
-"to. Leave this blank if you want TVheadend to automatically pick an address."
+"to. Leave this blank if you want Tvheadend to automatically pick an address."
 msgstr ""
 
 #: src/tvhlog.c:162
@@ -4317,7 +4317,7 @@ msgid ""
 "priority by assigning a streaming profile with a higher priority."
 msgstr ""
 
-#: src/main.c:892
+#: src/main.c:894
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
@@ -4418,7 +4418,7 @@ msgstr ""
 msgid "Immediately"
 msgstr ""
 
-#: src/main.c:956
+#: src/main.c:958
 msgid "Immediately abort"
 msgstr ""
 
@@ -4550,7 +4550,7 @@ msgstr ""
 msgid "Invalid EPG object request"
 msgstr ""
 
-#: src/main.c:1044
+#: src/main.c:1046
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr ""
@@ -4862,7 +4862,7 @@ msgstr ""
 msgid "List of allowed IPv4 or IPv6 hosts or networks (comma-separated)."
 msgstr ""
 
-#: src/main.c:949
+#: src/main.c:951
 msgid "List subsystems"
 msgstr ""
 
@@ -4870,7 +4870,7 @@ msgstr ""
 msgid "Listen / Connect port"
 msgstr ""
 
-#: src/main.c:924
+#: src/main.c:926
 msgid "Listen on IPv6"
 msgstr ""
 
@@ -5399,7 +5399,7 @@ msgstr ""
 msgid "Mon"
 msgstr ""
 
-#: src/main.c:953
+#: src/main.c:955
 msgid "More verbose libav log"
 msgstr ""
 
@@ -5763,7 +5763,7 @@ msgstr ""
 msgid "No access"
 msgstr ""
 
-#: src/main.c:1057
+#: src/main.c:1059
 msgid "No adapters specified!\n"
 msgstr ""
 
@@ -5939,7 +5939,7 @@ msgstr ""
 msgid "Number of times this recording was played."
 msgstr ""
 
-#: src/main.c:968
+#: src/main.c:970
 msgid "Number of tsfile tuners"
 msgstr ""
 
@@ -6072,7 +6072,7 @@ msgid ""
 "stop excessive oscillations on the system clock."
 msgstr ""
 
-#: src/main.c:905
+#: src/main.c:907
 msgid "Only use specified DVB adapters (comma-separated, -1 = none)"
 msgstr ""
 
@@ -7145,11 +7145,11 @@ msgstr ""
 msgid "Rotor: %s"
 msgstr ""
 
-#: src/main.c:890
+#: src/main.c:892
 msgid "Run as group"
 msgstr ""
 
-#: src/main.c:889
+#: src/main.c:891
 msgid "Run as user"
 msgstr ""
 
@@ -7189,7 +7189,7 @@ msgstr ""
 msgid "SAT>IP ISDB-T Frontend"
 msgstr ""
 
-#: src/main.c:911
+#: src/main.c:913
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
@@ -7698,7 +7698,7 @@ msgstr ""
 msgid "Server UUID"
 msgstr ""
 
-#: src/main.c:923
+#: src/main.c:925
 msgid "Server connectivity"
 msgstr ""
 
@@ -7735,7 +7735,7 @@ msgstr ""
 msgid "Service Mapping (Map services to channels)"
 msgstr ""
 
-#: src/main.c:885
+#: src/main.c:887
 msgid "Service configuration"
 msgstr ""
 
@@ -7860,11 +7860,11 @@ msgid ""
 "the requester."
 msgstr ""
 
-#: src/main.c:882
+#: src/main.c:884
 msgid "Show this page"
 msgstr ""
 
-#: src/main.c:883
+#: src/main.c:885
 msgid "Show version information"
 msgstr ""
 
@@ -8087,31 +8087,31 @@ msgid ""
 "stream is paused."
 msgstr ""
 
-#: src/main.c:934
+#: src/main.c:936
 msgid "Specify User-Agent header for the http client"
 msgstr ""
 
-#: src/main.c:930
+#: src/main.c:932
 msgid "Specify alternative htsp port"
 msgstr ""
 
-#: src/main.c:926
+#: src/main.c:928
 msgid "Specify alternative http port"
 msgstr ""
 
-#: src/main.c:928
+#: src/main.c:930
 msgid "Specify alternative http webroot"
 msgstr ""
 
-#: src/main.c:925
+#: src/main.c:927
 msgid "Specify bind address"
 msgstr ""
 
-#: src/main.c:909
+#: src/main.c:911
 msgid "Specify bind address for SAT>IP server"
 msgstr ""
 
-#: src/main.c:932
+#: src/main.c:934
 msgid "Specify extra htsp port"
 msgstr ""
 
@@ -8205,7 +8205,7 @@ msgstr ""
 #: src/config.c:2592
 msgid ""
 "Starting port number of the UDP listeners. The listeners listen for traffic "
-"from the HDHomerun tuners. This is needed if you plan to run TVheadend in a "
+"from the HDHomerun tuners. This is needed if you plan to run Tvheadend in a "
 "container and you want to stream from an HDHomerun without enabling host "
 "networking for the container. Set this to 0 if you want the port numbers to "
 "be assigned dynamically. If you have multiple tuners, this will be the start "
@@ -8346,7 +8346,7 @@ msgid ""
 "supported depending on your OS and filesystem."
 msgstr ""
 
-#: src/main.c:962
+#: src/main.c:964
 msgid "Subscribe to a service permanently"
 msgstr ""
 
@@ -8620,7 +8620,7 @@ msgstr ""
 msgid "Testing"
 msgstr ""
 
-#: src/main.c:967
+#: src/main.c:969
 msgid "Testing options"
 msgstr ""
 
@@ -9688,7 +9688,7 @@ msgstr ""
 msgid "Thread"
 msgstr ""
 
-#: src/main.c:974
+#: src/main.c:976
 msgid "Thread debugging"
 msgstr ""
 
@@ -10056,7 +10056,7 @@ msgstr ""
 msgid "URL of the M3U playlist."
 msgstr ""
 
-#: src/main.c:920
+#: src/main.c:922
 msgid "URL with the SAT>IP server XML location"
 msgstr ""
 
@@ -10421,7 +10421,7 @@ msgstr ""
 msgid "Use Windows-compatible filenames"
 msgstr ""
 
-#: src/main.c:936
+#: src/main.c:938
 msgid "Use XSPF playlist instead of M3U"
 msgstr ""
 
@@ -11005,7 +11005,7 @@ msgstr ""
 msgid "hrs"
 msgstr ""
 
-#: src/main.c:999
+#: src/main.c:1001
 #, c-format
 msgid "invalid option specified [%s]"
 msgstr ""
@@ -11090,7 +11090,7 @@ msgstr ""
 msgid "on: Use variable bit rate"
 msgstr ""
 
-#: src/main.c:1008
+#: src/main.c:1010
 #, c-format
 msgid "option %s requires a value"
 msgstr ""
@@ -11144,7 +11144,7 @@ msgstr ""
 msgid "towards project operating costs."
 msgstr ""
 
-#: src/main.c:969
+#: src/main.c:971
 msgid "tsfile input (mux file)"
 msgstr ""
 
