@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-15 08:42+0000\n"
+"POT-Creation-Date: 2026-01-05 02:49+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
 "Last-Translator: Marek Adamski, 2025\n"
 "Language-Team: Polish (https://app.transifex.com/tvheadend/teams/43381/pl/)\n"
@@ -2690,11 +2690,7 @@ msgstr "Nie zachowuj"
 msgid "Don't use running state (EITp/f) detection."
 msgstr "Nie używaj wykrywania stanu działania (EITp/f)."
 
-#: src/docs_inc.c:6241
-msgid "Donate to Tvheadend"
-msgstr "Przekaż darowiznę na Tvheadend"
-
-#: src/docs_inc.c:6269
+#: src/docs_inc.c:6241 src/docs_inc.c:6269
 msgid "Donate to Tvheadend"
 msgstr "Przekaż darowiznę na Tvheadend"
 
