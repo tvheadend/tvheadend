@@ -37,6 +37,7 @@ BuildRequires:  libxml2-devel
 %{?systemd_requires}
 Requires:       bzip2
 Requires:       tar
+Requires:       libxml2
 
 
 %description
