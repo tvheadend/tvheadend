@@ -2,12 +2,12 @@ Source: tvheadend
 Section: video
 Priority: extra
 Maintainer: Tvheadend Project <admin@tvheadend.org>
-Build-Depends: debhelper (>= 7.0.50), pkg-config, gettext, libavahi-client-dev, libssl-dev | libssl1.0-dev, zlib1g-dev, wget, bzip2, git-core, liburiparser-dev, python | python3, python-requests | python3-requests, ca-certificates, cmake, libpcre2-dev | libpcre3-dev, libdvbcsa-dev
+Build-Depends: debhelper (>= 7.0.50), pkg-config, gettext, libavahi-client-dev, libssl-dev | libssl1.0-dev, zlib1g-dev, wget, bzip2, git-core, liburiparser-dev, python | python3, python-requests | python3-requests, ca-certificates, cmake, libpcre2-dev | libpcre3-dev, libdvbcsa-dev, libxml2-dev
 Standards-Version: 3.7.3
 
 Package: tvheadend
 Architecture: any
-Depends: ${shlibs:Depends}, libavahi-client3, zlib1g, liburiparser1, bzip2
+Depends: ${shlibs:Depends}, libavahi-client3, zlib1g, liburiparser1, bzip2, libxml2
 Recommends: xmltv-util, python, python-requests
 Enhances: showtime
 Replaces: hts-tvheadend

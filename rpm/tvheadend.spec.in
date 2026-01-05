@@ -32,6 +32,7 @@ BuildRequires:  openssl-devel
 BuildRequires:  wget python git
 BuildRequires:  cmake
 BuildRequires:  python3
+BuildRequires:  libxml2-devel
 
 %{?systemd_requires}
 Requires:       bzip2
