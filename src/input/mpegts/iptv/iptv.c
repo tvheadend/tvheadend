@@ -576,6 +576,7 @@ iptv_input_thread ( void *aux )
       if ((n = im->im_handler->read(mi, im)) < 0) {
         tvherror(LS_IPTV, "read() error %s", strerror(errno));
         im->im_handler->stop(mi, im);
+        tvh_mutex_unlock(&iptv_lock);
         break;
       }
       r = iptv_input_recv_packets(im, n);

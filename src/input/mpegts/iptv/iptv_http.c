@@ -473,7 +473,6 @@ url:
         free(hp->hls_url_after_key);
         hp->hls_url_after_key = url;
         url = strdup(s);
-        free(absolute_key_url);
         hc->hc_data_complete = iptv_http_complete_key;
         sbuf_reset(&hp->key_sbuf, 32);
       }
@@ -487,6 +486,7 @@ new_m3u:
     iptv_http_reconnect(hc, url);
 end:
     free(url);
+    free(absolute_key_url);
 fin:
     htsmsg_destroy(m);
   } else {
