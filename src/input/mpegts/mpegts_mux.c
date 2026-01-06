@@ -1295,12 +1295,16 @@ void
 mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c, int refs )
 {
   mpegts_service_t *ms;
+  mpegts_mux_instance_t *mmi;
   htsmsg_t *root = !refs ? htsmsg_create_map() : c;
   htsmsg_t *services = !refs ? htsmsg_create_map() : htsmsg_create_list();
   htsmsg_t *e;
   char ubuf[UUID_HEX_SIZE];
 
   idnode_save(&mm->mm_id, root);
+  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
+    mmi->mmi_tune_failed = 0;
+  }
   LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
     if (refs) {
       htsmsg_add_uuid(services, NULL, &ms->s_id.in_uuid);
