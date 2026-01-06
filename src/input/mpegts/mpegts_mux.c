@@ -27,6 +27,7 @@
 #include "profile.h"
 #include "dvb_charset.h"
 #include "epggrab.h"
+#include "config.h"
 
 #include <assert.h>
 
@@ -268,6 +269,11 @@ mpegts_mux_instance_start
   tvhdebug(LS_MPEGTS, "%s - started", mm->mm_nicename);
   mm->mm_start_monoclock = mclk();
   mi->mi_started_mux(mi, mmi);
+
+  /* Reset Error Counters */
+  if (config.auto_clear_input_counters && mmi->tii_clear_stats) {
+    mmi->tii_clear_stats((tvh_input_instance_t *)mmi);
+  }
 
   /* Event handler */
   mpegts_fire_event(mm, ml_mux_start);
