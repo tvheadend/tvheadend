@@ -2746,6 +2746,17 @@ const idclass_t config_class = {
       .group  = 8,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "auto_clear_input_counters",
+      .name   = N_("Automatically clear input error counters"),
+      .desc   = N_("Periodically resets input error counters "
+                   "(when a new mux starts for the target tuner). "
+                   "Note that previous counters will be lost."),
+      .off    = offsetof(config_t, auto_clear_input_counters),
+      .opts   = PO_EXPERT,
+      .group  = 8,
+    },
+    {
       .type   = PT_STR,
       .id     = "muxconfpath",
       .name   = N_("DVB scan files path"),

@@ -65,6 +65,7 @@ typedef struct config {
   uint32_t descrambler_buffer;
   int caclient_ui;
   int parser_backlog;
+  int auto_clear_input_counters;
   int epg_compress;
   uint32_t epg_cut_window;
   uint32_t epg_update_window;

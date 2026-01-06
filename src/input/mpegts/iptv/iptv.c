@@ -336,18 +336,10 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   const char *scheme;
   url_t url;
 
-  /* Already active */
-  if (im->mm_active)
+  /* Active? */
+  if (im->mm_active) {
     return 0;
-
-  /* Reset Error Counters */
-  atomic_set(&mmi->tii_stats.unc, 0);
-  atomic_set(&mmi->tii_stats.cc, 0);
-  tvh_mutex_lock(&mmi->tii_stats_mutex);
-  mmi->tii_stats.te = 0;
-  mmi->tii_stats.ec_block = 0;
-  mmi->tii_stats.tc_block = 0;
-  tvh_mutex_unlock(&mmi->tii_stats_mutex);
+  }
   
   /* Substitute things */
   if (im->mm_iptv_substitute && raw) {
@@ -366,7 +358,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
 
   } else
 #endif
-         if (raw && !strncmp(raw, "pipe://", 7)) {
+  if (raw && !strncmp(raw, "pipe://", 7)) {
 
     scheme = "pipe";
 
@@ -399,8 +391,15 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
     return ret;
   }
 
-  /* Start */
   tvh_mutex_lock(&iptv_lock);
+  /* Already active */
+  if (im->mm_active) {
+    tvh_mutex_unlock(&iptv_lock);
+    urlreset(&url);
+    return 0;
+  }
+
+  /* Start */
   s = im->mm_iptv_url_raw;
   im->mm_iptv_url_raw = raw ? strdup(raw) : NULL;
   if (im->mm_iptv_url_raw) {
