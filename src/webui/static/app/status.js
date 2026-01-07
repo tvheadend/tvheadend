@@ -850,7 +850,7 @@ tvheadend.subscription_bw_monitor = function(id) {
         },
         labels: {
             disabled: false,
-            fillStyle: '#000000',
+            fillStyle: (tvheadend.theme == 'access') ? '#ffffff' : '#000000',
             fontSize: 12
         }
     });
@@ -874,7 +874,7 @@ tvheadend.subscription_bw_monitor = function(id) {
     var win = new Ext.Window({
         title: _('Bandwidth monitor'),
         layout: 'fit',
-        resizable: false,
+        resizable: true,
         width: 450 + 30,
         height: 150 + 50,
         constrainHeader: true,
@@ -882,22 +882,20 @@ tvheadend.subscription_bw_monitor = function(id) {
         items: {
             xtype: 'box',
             autoEl: {
-                tag: 'canvas',
-                width: 450,
-                height: 150
+                tag: 'canvas'
             },
             listeners: {
-                render: {
-                    scope: this,
-                    fn: function(item) {
-                        chart.streamTo(item.el.dom, 1000);
-                    }
+                render: function(item) {
+                    var dom = item.el.dom;
+                    dom.width = item.el.getWidth();
+                    dom.height = item.el.getHeight();
+                    chart.streamTo(dom, 1000);
                 },
-                resize: {
-                    scope: this,
-                    fn: function(item) {
-                        chart.render(item.el.dom, 1000);
-                    }
+                resize: function(item, width, height) {
+                    var dom = item.el.dom;
+                    dom.width = width;
+                    dom.height = height;
+                    chart.render(dom, 1000);
                 }
             }
         }
@@ -951,7 +949,7 @@ tvheadend.stream_bw_monitor = function(id) {
         },
         labels: {
             disabled: false,
-            fillStyle: '#000000',
+            fillStyle: (tvheadend.theme == 'access') ? '#ffffff' : '#000000',
             fontSize: 12
         }
     });
@@ -967,7 +965,7 @@ tvheadend.stream_bw_monitor = function(id) {
     var win = new Ext.Window({
         title: _('Bandwidth monitor'),
         layout: 'fit',
-        resizable: false,
+        resizable: true,
         width: 450 + 30,
         height: 150 + 50,
         constrainHeader: true,
@@ -975,22 +973,20 @@ tvheadend.stream_bw_monitor = function(id) {
         items: {
             xtype: 'box',
             autoEl: {
-                tag: 'canvas',
-                width: 450,
-                height: 150
+                tag: 'canvas'
             },
             listeners: {
-                render: {
-                    scope: this,
-                    fn: function(item) {
-                        chart.streamTo(item.el.dom, 1000);
-                    }
+                render: function(item) {
+                    var dom = item.el.dom;
+                    dom.width = item.el.getWidth();
+                    dom.height = item.el.getHeight();
+                    chart.streamTo(dom, 1000);
                 },
-                resize: {
-                    scope: this,
-                    fn: function(item) {
-                        chart.render(item.el.dom, 1000);
-                    }
+                resize: function(item, width, height) {
+                    var dom = item.el.dom;
+                    dom.width = width;
+                    dom.height = height;
+                    chart.render(dom, 1000);
                 }
             }
         }
