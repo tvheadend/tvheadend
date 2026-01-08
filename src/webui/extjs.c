@@ -198,9 +198,8 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 FamFamFam</a>, "\
 "<a target=\"_blank\" href=\"https://www.google.com/get/noto/help/emoji/\">Google Noto Color Emoji</a> "\
 "<a target=\"_blank\" href=\"https://raw.githubusercontent.com/googlei18n/noto-emoji/master/LICENSE\">(Apache Licence v2.0)</a>.\n"\
-"<p>This product uses the TMDB API but is not endorsed or certified by <a target=\"_blank\" href=\"https://www.themoviedb.org\">TMDb</a> <img src=\"static/img/tmdb.png\" class=\"tmdb\"></p>"\
-"<p>TV information and images are provided by TheTVDB.com, but we are not endorsed or certified by TheTVDB.com or its affiliates. <a target=\"_blank\" href=\"https://thetvdb.com\">TheTVDB.com</a> <img src=\"static/img/tvdb.png\" class=\"tvdb\"></p>"\
-"</p>\n",
+"<p>This product uses the TMDB and TheTVDB.com API to provide TV information and images.</p>"\
+"<p>It is not endorsed or certified by <a target=\"_blank\" href=\"https://www.themoviedb.org\">TMDb</a> <img src=\"static/img/tmdb.png\" class=\"tmdb\"> or by <a target=\"_blank\" href=\"https://thetvdb.com\">TheTVDB.com</a> <img src=\"static/img/tvdb.png\" class=\"tvdb\">.</p>\n",
     tvh_gettext_lang(lang, N_("Based on software from")),
     tvh_gettext_lang(lang, N_("Icons from")));
 
@@ -224,7 +223,7 @@ FamFamFam</a>, "\
 %s<br/>\n\
 %s\n\
 </p>\n\
-<a href='https://opencollective.com/tvheadend/donate'><img src='static/img/opencollective.png' alt='' /></a>\n\
+<a target=\"_blank\" href='https://opencollective.com/tvheadend/donate'><img src='static/img/opencollective.png' alt='' /></a>\n\
 </center>\n",
    tvh_gettext_lang(lang, N_("To support Tvheadend development please consider making a donation")),
    tvh_gettext_lang(lang, N_("towards project operating costs.")));
