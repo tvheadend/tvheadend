@@ -1,0 +1,264 @@
+name: Check Dependency Updates
+
+on:
+  schedule:
+    # Run every Monday at 03:00 UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check for dependency updates
+      id: check_deps
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -e
+        
+        UPDATES_FOUND=false
+        UPDATES_SUMMARY=""
+        
+        # Function to get SHA1 of a file from URL
+        get_sha1() {
+          local url="$1"
+          local sha1
+          sha1=$(curl -fsSL "$url" 2>/dev/null | sha1sum | cut -d ' ' -f 1) || return 1
+          echo "$sha1"
+        }
+        
+        # Function to update Makefile variable
+        update_makefile_var() {
+          local file="$1"
+          local var="$2"
+          local old_val="$3"
+          local new_val="$4"
+          
+          if [ "$old_val" != "$new_val" ]; then
+            sed -i "s|^${var}[[:space:]]*=[[:space:]]*${old_val}|${var} = ${new_val}|" "$file"
+            return 0
+          fi
+          return 1
+        }
+        
+        echo "Checking for dependency updates..."
+        
+        # ============================================
+        # Check GitHub-hosted dependencies
+        # ============================================
+        
+        # libvpx (GitHub releases)
+        echo "Checking libvpx..."
+        CURRENT_VPX=$(grep "^LIBVPX_VER" Makefile.ffmpeg | sed 's/.*=[[:space:]]*//')
+        LATEST_VPX=$(gh api repos/webmproject/libvpx/releases/latest --jq '.tag_name' 2>/dev/null | sed 's/^v//' || echo "")
+        if [ -n "$LATEST_VPX" ] && [ "$CURRENT_VPX" != "$LATEST_VPX" ]; then
+          echo "libvpx: $CURRENT_VPX -> $LATEST_VPX"
+          NEW_SHA1=$(get_sha1 "https://github.com/webmproject/libvpx/archive/v${LATEST_VPX}/libvpx-${LATEST_VPX}.tar.gz") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^LIBVPX_VER[[:space:]]*=.*/LIBVPX_VER     = $LATEST_VPX/" Makefile.ffmpeg
+            sed -i "s/^LIBVPX_SHA1[[:space:]]*=.*/LIBVPX_SHA1    = $NEW_SHA1/" Makefile.ffmpeg
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- libvpx: ${CURRENT_VPX} → ${LATEST_VPX}\n"
+          fi
+        fi
+        
+        # fdk-aac (GitHub releases)
+        echo "Checking fdk-aac..."
+        CURRENT_FDK=$(grep "^LIBFDKAAC_VER" Makefile.ffmpeg | sed 's/.*=[[:space:]]*//')
+        LATEST_FDK=$(gh api repos/mstorsjo/fdk-aac/releases/latest --jq '.tag_name' 2>/dev/null | sed 's/^v//' || echo "")
+        if [ -n "$LATEST_FDK" ] && [ "$CURRENT_FDK" != "$LATEST_FDK" ]; then
+          echo "fdk-aac: $CURRENT_FDK -> $LATEST_FDK"
+          NEW_SHA1=$(get_sha1 "https://github.com/mstorsjo/fdk-aac/archive/refs/tags/v${LATEST_FDK}.tar.gz") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^LIBFDKAAC_VER[[:space:]]*=.*/LIBFDKAAC_VER  = $LATEST_FDK/" Makefile.ffmpeg
+            sed -i "s/^LIBFDKAAC_SHA1[[:space:]]*=.*/LIBFDKAAC_SHA1 = $NEW_SHA1/" Makefile.ffmpeg
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- fdk-aac: ${CURRENT_FDK} → ${LATEST_FDK}\n"
+          fi
+        fi
+        
+        # nv-codec-headers (GitHub releases)
+        echo "Checking nv-codec-headers..."
+        CURRENT_NV=$(grep "^FFNVCODEC_VER" Makefile.ffmpeg | sed 's/.*=[[:space:]]*//')
+        LATEST_NV=$(gh api repos/FFmpeg/nv-codec-headers/releases/latest --jq '.tag_name' 2>/dev/null | sed 's/^n//' || echo "")
+        if [ -n "$LATEST_NV" ] && [ "$CURRENT_NV" != "$LATEST_NV" ]; then
+          echo "nv-codec-headers: $CURRENT_NV -> $LATEST_NV"
+          NEW_SHA1=$(get_sha1 "https://github.com/FFmpeg/nv-codec-headers/releases/download/n${LATEST_NV}/nv-codec-headers-${LATEST_NV}.tar.gz") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^FFNVCODEC_VER[[:space:]]*=.*/FFNVCODEC_VER  = $LATEST_NV/" Makefile.ffmpeg
+            sed -i "s/^FFNVCODEC_SHA1[[:space:]]*=.*/FFNVCODEC_SHA1 = $NEW_SHA1/" Makefile.ffmpeg
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- nv-codec-headers: ${CURRENT_NV} → ${LATEST_NV}\n"
+          fi
+        fi
+        
+        # x265 (Bitbucket tags via API)
+        echo "Checking x265..."
+        CURRENT_X265=$(grep "^LIBX265_VER" Makefile.ffmpeg | sed 's/.*=[[:space:]]*//')
+        LATEST_X265=$(curl -fsSL "https://api.bitbucket.org/2.0/repositories/multicoreware/x265_git/refs/tags?sort=-target.date" 2>/dev/null | \
+          python3 -c "import sys,json; tags=json.load(sys.stdin).get('values',[]); print(next((t['name'] for t in tags if not any(x in t['name'].lower() for x in ['rc','alpha','beta'])), ''))" || echo "")
+        if [ -n "$LATEST_X265" ] && [ "$CURRENT_X265" != "$LATEST_X265" ]; then
+          echo "x265: $CURRENT_X265 -> $LATEST_X265"
+          NEW_SHA1=$(get_sha1 "https://bitbucket.org/multicoreware/x265_git/downloads/x265_${LATEST_X265}.tar.gz") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^LIBX265_VER[[:space:]]*=.*/LIBX265_VER    = $LATEST_X265/" Makefile.ffmpeg
+            sed -i "s/^LIBX265_SHA1[[:space:]]*=.*/LIBX265_SHA1   = $NEW_SHA1/" Makefile.ffmpeg
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- x265: ${CURRENT_X265} → ${LATEST_X265}\n"
+          fi
+        fi
+        
+        # ============================================
+        # Check FFmpeg
+        # ============================================
+        echo "Checking ffmpeg..."
+        CURRENT_FFMPEG=$(grep "^FFMPEG[[:space:]]*=" Makefile.ffmpeg | head -1 | sed 's/.*=[[:space:]]*//' | sed 's/ffmpeg-//')
+        # Get latest stable release from FFmpeg releases page
+        LATEST_FFMPEG=$(curl -fsSL "https://ffmpeg.org/releases/" 2>/dev/null | \
+          grep -oP 'ffmpeg-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -1 || echo "")
+        if [ -n "$LATEST_FFMPEG" ] && [ "$CURRENT_FFMPEG" != "$LATEST_FFMPEG" ]; then
+          echo "ffmpeg: $CURRENT_FFMPEG -> $LATEST_FFMPEG"
+          NEW_SHA1=$(get_sha1 "https://ffmpeg.org/releases/ffmpeg-${LATEST_FFMPEG}.tar.bz2") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^FFMPEG[[:space:]]*=.*/FFMPEG         = ffmpeg-$LATEST_FFMPEG/" Makefile.ffmpeg
+            sed -i "s/^FFMPEG_SHA1[[:space:]]*=.*/FFMPEG_SHA1    = $NEW_SHA1/" Makefile.ffmpeg
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- ffmpeg: ${CURRENT_FFMPEG} → ${LATEST_FFMPEG}\n"
+          fi
+        fi
+        
+        # ============================================
+        # Check NASM
+        # ============================================
+        echo "Checking nasm..."
+        CURRENT_NASM=$(grep "^NASM_VER" Makefile.ffmpeg | sed 's/.*=[[:space:]]*//')
+        # Get latest from NASM releases page
+        LATEST_NASM=$(curl -fsSL "https://www.nasm.us/pub/nasm/releasebuilds/" 2>/dev/null | \
+          grep -oP 'href="\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -1 || echo "")
+        if [ -n "$LATEST_NASM" ] && [ "$CURRENT_NASM" != "$LATEST_NASM" ]; then
+          echo "nasm: $CURRENT_NASM -> $LATEST_NASM"
+          NEW_SHA1=$(get_sha1 "https://www.nasm.us/pub/nasm/releasebuilds/${LATEST_NASM}/nasm-${LATEST_NASM}.tar.gz") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^NASM_VER[[:space:]]*=.*/NASM_VER       = $LATEST_NASM/" Makefile.ffmpeg
+            sed -i "s/^NASM_SHA1[[:space:]]*=.*/NASM_SHA1      = $NEW_SHA1/" Makefile.ffmpeg
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- nasm: ${CURRENT_NASM} → ${LATEST_NASM}\n"
+          fi
+        fi
+        
+        # ============================================
+        # Check Xiph.org dependencies (libogg, libvorbis, opus)
+        # ============================================
+        echo "Checking libogg..."
+        CURRENT_OGG=$(grep "^LIBOGG[[:space:]]*=" Makefile.ffmpeg | sed 's/.*=[[:space:]]*//' | sed 's/libogg-//')
+        LATEST_OGG=$(curl -fsSL "https://ftp.osuosl.org/pub/xiph/releases/ogg/" 2>/dev/null | \
+          grep -oP 'libogg-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -1 || echo "")
+        if [ -n "$LATEST_OGG" ] && [ "$CURRENT_OGG" != "$LATEST_OGG" ]; then
+          echo "libogg: $CURRENT_OGG -> $LATEST_OGG"
+          NEW_SHA1=$(get_sha1 "https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-${LATEST_OGG}.tar.gz") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^LIBOGG[[:space:]]*=.*/LIBOGG         = libogg-$LATEST_OGG/" Makefile.ffmpeg
+            sed -i "s/^LIBOGG_SHA1[[:space:]]*=.*/LIBOGG_SHA1    = $NEW_SHA1/" Makefile.ffmpeg
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- libogg: ${CURRENT_OGG} → ${LATEST_OGG}\n"
+          fi
+        fi
+        
+        echo "Checking libvorbis..."
+        CURRENT_VORBIS=$(grep "^LIBVORBIS[[:space:]]*=" Makefile.ffmpeg | sed 's/.*=[[:space:]]*//' | sed 's/libvorbis-//')
+        LATEST_VORBIS=$(curl -fsSL "https://ftp.osuosl.org/pub/xiph/releases/vorbis/" 2>/dev/null | \
+          grep -oP 'libvorbis-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -1 || echo "")
+        if [ -n "$LATEST_VORBIS" ] && [ "$CURRENT_VORBIS" != "$LATEST_VORBIS" ]; then
+          echo "libvorbis: $CURRENT_VORBIS -> $LATEST_VORBIS"
+          NEW_SHA1=$(get_sha1 "https://ftp.osuosl.org/pub/xiph/releases/vorbis/libvorbis-${LATEST_VORBIS}.tar.gz") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^LIBVORBIS[[:space:]]*=.*/LIBVORBIS      = libvorbis-$LATEST_VORBIS/" Makefile.ffmpeg
+            sed -i "s/^LIBVORBIS_SHA1[[:space:]]*=.*/LIBVORBIS_SHA1 = $NEW_SHA1/" Makefile.ffmpeg
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- libvorbis: ${CURRENT_VORBIS} → ${LATEST_VORBIS}\n"
+          fi
+        fi
+        
+        echo "Checking opus..."
+        CURRENT_OPUS=$(grep "^LIBOPUS[[:space:]]*=" Makefile.ffmpeg | sed 's/.*=[[:space:]]*//' | sed 's/opus-//')
+        LATEST_OPUS=$(curl -fsSL "https://archive.mozilla.org/pub/opus/" 2>/dev/null | \
+          grep -oP 'opus-\K[0-9]+\.[0-9]+(\.[0-9]+)?' | grep -v "tools" | sort -V | tail -1 || echo "")
+        if [ -n "$LATEST_OPUS" ] && [ "$CURRENT_OPUS" != "$LATEST_OPUS" ]; then
+          echo "opus: $CURRENT_OPUS -> $LATEST_OPUS"
+          NEW_SHA1=$(get_sha1 "https://archive.mozilla.org/pub/opus/opus-${LATEST_OPUS}.tar.gz") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^LIBOPUS[[:space:]]*=.*/LIBOPUS        = opus-$LATEST_OPUS/" Makefile.ffmpeg
+            sed -i "s/^LIBOPUS_SHA1[[:space:]]*=.*/LIBOPUS_SHA1   = $NEW_SHA1/" Makefile.ffmpeg
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- opus: ${CURRENT_OPUS} → ${LATEST_OPUS}\n"
+          fi
+        fi
+        
+        # ============================================
+        # Check HDHomeRun library
+        # ============================================
+        echo "Checking libhdhomerun..."
+        CURRENT_HDHR=$(grep "^LIBHDHR[[:space:]]*=" Makefile.hdhomerun | sed 's/.*=[[:space:]]*//' | sed 's/libhdhomerun_//')
+        # Check SiliconDust download page for latest version
+        LATEST_HDHR=$(curl -fsSL "https://download.silicondust.com/hdhomerun/" 2>/dev/null | \
+          grep -oP 'libhdhomerun_\K[0-9]+' | sort -V | tail -1 || echo "")
+        if [ -n "$LATEST_HDHR" ] && [ "$CURRENT_HDHR" != "$LATEST_HDHR" ]; then
+          echo "libhdhomerun: $CURRENT_HDHR -> $LATEST_HDHR"
+          NEW_SHA1=$(get_sha1 "https://download.silicondust.com/hdhomerun/libhdhomerun_${LATEST_HDHR}.tgz") || true
+          if [ -n "$NEW_SHA1" ]; then
+            sed -i "s/^LIBHDHR[[:space:]]*=.*/LIBHDHR         = libhdhomerun_$LATEST_HDHR/" Makefile.hdhomerun
+            sed -i "s/^LIBHDHR_SHA1[[:space:]]*=.*/LIBHDHR_SHA1    = $NEW_SHA1/" Makefile.hdhomerun
+            UPDATES_FOUND=true
+            UPDATES_SUMMARY="${UPDATES_SUMMARY}- libhdhomerun: ${CURRENT_HDHR} → ${LATEST_HDHR}\n"
+          fi
+        fi
+        
+        # ============================================
+        # Output results
+        # ============================================
+        echo "updates_found=$UPDATES_FOUND" >> $GITHUB_OUTPUT
+        
+        # Store summary for PR body (escape newlines for GitHub output)
+        {
+          echo "updates_summary<<EOF"
+          echo -e "$UPDATES_SUMMARY"
+          echo "EOF"
+        } >> $GITHUB_OUTPUT
+        
+        if [ "$UPDATES_FOUND" = "true" ]; then
+          echo "Updates found!"
+          echo -e "$UPDATES_SUMMARY"
+        else
+          echo "No updates found."
+        fi
+
+    - name: Create Pull Request
+      if: steps.check_deps.outputs.updates_found == 'true'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "Update dependency versions"
+        title: "Update dependency versions"
+        body: |
+          This PR updates the following dependencies to their latest versions:
+
+          ${{ steps.check_deps.outputs.updates_summary }}
+
+          **Note:** These updates were detected automatically. Please review and test before merging.
+
+          Generated by the `check-dependency-updates` workflow.
+        branch: automated/update-dependencies
+        delete-branch: false
+        labels: |
+          AUTOMATED
+          dependencies
