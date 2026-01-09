@@ -29,7 +29,11 @@ jobs:
         UPDATES_FOUND=false
         UPDATES_SUMMARY=""
         
+        # Version pattern for matching semver-style versions
+        VERSION_PATTERN='[0-9]+\.[0-9]+(\.[0-9]+)?'
+        
         # Function to get SHA1 of a file from URL
+        # Note: SHA1 is computed from trusted upstream sources (official project releases)
         get_sha1() {
           local url="$1"
           local sha1
@@ -37,18 +41,10 @@ jobs:
           echo "$sha1"
         }
         
-        # Function to update Makefile variable
-        update_makefile_var() {
-          local file="$1"
-          local var="$2"
-          local old_val="$3"
-          local new_val="$4"
-          
-          if [ "$old_val" != "$new_val" ]; then
-            sed -i "s|^${var}[[:space:]]*=[[:space:]]*${old_val}|${var} = ${new_val}|" "$file"
-            return 0
-          fi
-          return 1
+        # Function to get latest stable x265 tag (filters out RC/alpha/beta)
+        get_latest_x265_tag() {
+          curl -fsSL "https://api.bitbucket.org/2.0/repositories/multicoreware/x265_git/refs/tags?sort=-target.date" 2>/dev/null | \
+            python3 -c 'import sys,json; data=json.load(sys.stdin); tags=data.get("values",[]); [print(t["name"]) or exit(0) for t in tags if not any(x in t["name"].lower() for x in ["rc","alpha","beta"])]'
         }
         
         echo "Checking for dependency updates..."
@@ -105,8 +101,7 @@ jobs:
         # x265 (Bitbucket tags via API)
         echo "Checking x265..."
         CURRENT_X265=$(grep "^LIBX265_VER" Makefile.ffmpeg | sed 's/.*=[[:space:]]*//')
-        LATEST_X265=$(curl -fsSL "https://api.bitbucket.org/2.0/repositories/multicoreware/x265_git/refs/tags?sort=-target.date" 2>/dev/null | \
-          python3 -c "import sys,json; tags=json.load(sys.stdin).get('values',[]); print(next((t['name'] for t in tags if not any(x in t['name'].lower() for x in ['rc','alpha','beta'])), ''))" || echo "")
+        LATEST_X265=$(get_latest_x265_tag || echo "")
         if [ -n "$LATEST_X265" ] && [ "$CURRENT_X265" != "$LATEST_X265" ]; then
           echo "x265: $CURRENT_X265 -> $LATEST_X265"
           NEW_SHA1=$(get_sha1 "https://bitbucket.org/multicoreware/x265_git/downloads/x265_${LATEST_X265}.tar.gz") || true
@@ -246,7 +241,7 @@ jobs:
       if: steps.check_deps.outputs.updates_found == 'true'
       uses: peter-evans/create-pull-request@v5
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ github.token }}
         commit-message: "Update dependency versions"
         title: "Update dependency versions"
         body: |
