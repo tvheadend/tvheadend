@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-15 08:42+0000\n"
+"POT-Creation-Date: 2026-01-12 02:53+0000\n"
 "PO-Revision-Date: 2023-12-11 11:01+0000\n"
 "Last-Translator: PY RENAUT <pyrenaut@gmail.com>, 2025\n"
 "Language-Team: French (https://app.transifex.com/tvheadend/teams/43381/fr/)\n"
@@ -311,7 +311,7 @@ msgstr "Retour en haut"
 msgid "Bandwidth (kb/s)"
 msgstr "Bande passante (kb/s)"
 
-#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:968
+#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:966
 msgid "Bandwidth monitor"
 msgstr "Moniteur de bande passante"
 
@@ -516,7 +516,7 @@ msgstr "Fermer"
 msgid "Columns"
 msgstr "Colonnes"
 
-#: src/webui/static/app/comet.js:38
+#: src/webui/static/app/comet.js:43
 msgid "Comet failure"
 msgstr "Erreur Comet"
 
@@ -524,7 +524,7 @@ msgstr "Erreur Comet"
 msgid "Comment"
 msgstr "Commentaire"
 
-#: src/webui/static/app/status.js:924
+#: src/webui/static/app/status.js:922
 msgid "Compression ratio"
 msgstr "Taux de compression"
 
@@ -1074,7 +1074,7 @@ msgstr "Ignoré"
 msgid "Image Cache"
 msgstr "Cache d'images"
 
-#: src/webui/static/app/status.js:922
+#: src/webui/static/app/status.js:920
 msgid "In"
 msgstr "ln"
 
@@ -1082,13 +1082,17 @@ msgstr "ln"
 msgid "Index"
 msgstr "Index"
 
-#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1012
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1008
 msgid "Input"
 msgstr "Entrée"
 
 #: src/webui/static/app/status.js:193
 msgid "Input (kb/s)"
 msgstr "Entrée (kb/s)"
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
+msgstr ""
 
 #: src/webui/static/app/idnode.js:2137
 msgid "Item"
@@ -1453,7 +1457,7 @@ msgstr "Autre filtre de flux"
 msgid "Other Stream Filters"
 msgstr "Autres filtres de flux"
 
-#: src/webui/static/app/status.js:923
+#: src/webui/static/app/status.js:921
 msgid "Out"
 msgstr "Sortie"
 
@@ -1620,9 +1624,13 @@ msgstr ""
 msgid "Read-only Info"
 msgstr "Info en lecture seule"
 
-#: src/webui/static/app/comet.js:21
+#: src/webui/static/app/comet.js:24
 msgid "Reconnected to Tvheadend"
 msgstr "Reconnecté à Tvheadend"
+
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
+msgstr ""
 
 #: src/webui/static/app/epg.js:427
 msgid "Record"
@@ -2067,7 +2075,7 @@ msgstr "L'heure dans ce champ ne peut pas dépasser {0}"
 msgid "The value in this field is invalid"
 msgstr "La valeur de ce champ est invalide"
 
-#: src/webui/static/app/comet.js:14
+#: src/webui/static/app/comet.js:12
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."
