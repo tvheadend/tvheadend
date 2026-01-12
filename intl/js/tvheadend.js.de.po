@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-15 08:42+0000\n"
+"POT-Creation-Date: 2026-01-12 02:53+0000\n"
 "PO-Revision-Date: 2023-12-11 11:01+0000\n"
 "Last-Translator: Christian Hewitt, 2025\n"
 "Language-Team: German (https://app.transifex.com/tvheadend/teams/43381/de/)\n"
@@ -304,7 +304,7 @@ msgstr ""
 msgid "Bandwidth (kb/s)"
 msgstr "Bandbreite (kb/s)"
 
-#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:968
+#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:966
 msgid "Bandwidth monitor"
 msgstr "Bandbreitenmonitor"
 
@@ -509,7 +509,7 @@ msgstr "Schließen"
 msgid "Columns"
 msgstr "Spalten"
 
-#: src/webui/static/app/comet.js:38
+#: src/webui/static/app/comet.js:43
 msgid "Comet failure"
 msgstr "comet-Fehler"
 
@@ -517,7 +517,7 @@ msgstr "comet-Fehler"
 msgid "Comment"
 msgstr "Kommentar"
 
-#: src/webui/static/app/status.js:924
+#: src/webui/static/app/status.js:922
 msgid "Compression ratio"
 msgstr "Kompressionsrate"
 
@@ -1058,7 +1058,7 @@ msgstr "Ignoriert"
 msgid "Image Cache"
 msgstr "Bild-Cache"
 
-#: src/webui/static/app/status.js:922
+#: src/webui/static/app/status.js:920
 msgid "In"
 msgstr "Eingang"
 
@@ -1066,13 +1066,17 @@ msgstr "Eingang"
 msgid "Index"
 msgstr "Index"
 
-#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1012
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1008
 msgid "Input"
 msgstr "Eingang"
 
 #: src/webui/static/app/status.js:193
 msgid "Input (kb/s)"
 msgstr "Eingang (kb/s)"
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
+msgstr ""
 
 #: src/webui/static/app/idnode.js:2137
 msgid "Item"
@@ -1437,7 +1441,7 @@ msgstr "Sonstiger Streamfilter"
 msgid "Other Stream Filters"
 msgstr "Sonstige Streamfilter"
 
-#: src/webui/static/app/status.js:923
+#: src/webui/static/app/status.js:921
 msgid "Out"
 msgstr "Ausgang"
 
@@ -1601,9 +1605,13 @@ msgstr ""
 msgid "Read-only Info"
 msgstr "Schreibgeschützte Informationen"
 
-#: src/webui/static/app/comet.js:21
+#: src/webui/static/app/comet.js:24
 msgid "Reconnected to Tvheadend"
 msgstr "Wiederverbunden mit Tvheadend"
+
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
+msgstr ""
 
 #: src/webui/static/app/epg.js:427
 msgid "Record"
@@ -2048,7 +2056,7 @@ msgstr "Die Zeit in diesem Feld muss {0} oder früher sein"
 msgid "The value in this field is invalid"
 msgstr "Der Wert in diesem Feld ist ungültig"
 
-#: src/webui/static/app/comet.js:14
+#: src/webui/static/app/comet.js:12
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."
