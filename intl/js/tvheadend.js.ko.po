@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-15 08:42+0000\n"
+"POT-Creation-Date: 2026-01-12 02:53+0000\n"
 "PO-Revision-Date: 2023-12-11 11:01+0000\n"
 "Last-Translator: Christian Hewitt, 2025\n"
 "Language-Team: Korean (https://app.transifex.com/tvheadend/teams/43381/ko/)\n"
@@ -304,7 +304,7 @@ msgstr ""
 msgid "Bandwidth (kb/s)"
 msgstr "대역폭 (kb/s)"
 
-#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:968
+#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:966
 msgid "Bandwidth monitor"
 msgstr "대역폭 모니터"
 
@@ -509,7 +509,7 @@ msgstr "닫기"
 msgid "Columns"
 msgstr "칼럼"
 
-#: src/webui/static/app/comet.js:38
+#: src/webui/static/app/comet.js:43
 msgid "Comet failure"
 msgstr "Comet 실패"
 
@@ -517,7 +517,7 @@ msgstr "Comet 실패"
 msgid "Comment"
 msgstr "코멘트"
 
-#: src/webui/static/app/status.js:924
+#: src/webui/static/app/status.js:922
 msgid "Compression ratio"
 msgstr "압축률"
 
@@ -1056,7 +1056,7 @@ msgstr "무시됨"
 msgid "Image Cache"
 msgstr "이미지 캐시"
 
-#: src/webui/static/app/status.js:922
+#: src/webui/static/app/status.js:920
 msgid "In"
 msgstr "In"
 
@@ -1064,13 +1064,17 @@ msgstr "In"
 msgid "Index"
 msgstr "인덱스"
 
-#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1012
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1008
 msgid "Input"
 msgstr "입력"
 
 #: src/webui/static/app/status.js:193
 msgid "Input (kb/s)"
 msgstr "입력 (kb/s)"
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
+msgstr ""
 
 #: src/webui/static/app/idnode.js:2137
 msgid "Item"
@@ -1435,7 +1439,7 @@ msgstr "다른 스트림 필터"
 msgid "Other Stream Filters"
 msgstr "다른 스트림 필터"
 
-#: src/webui/static/app/status.js:923
+#: src/webui/static/app/status.js:921
 msgid "Out"
 msgstr "출력"
 
@@ -1598,9 +1602,13 @@ msgstr "EPG 데이터를 가져오도록 모든 내부 EPG 그래버 재시작"
 msgid "Read-only Info"
 msgstr "읽기 전용 정보"
 
-#: src/webui/static/app/comet.js:21
+#: src/webui/static/app/comet.js:24
 msgid "Reconnected to Tvheadend"
 msgstr "Tvheadend에 다시 연결됨"
+
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
+msgstr ""
 
 #: src/webui/static/app/epg.js:427
 msgid "Record"
@@ -2041,7 +2049,7 @@ msgstr "이 필드의 시각은 {0} 이전이어야 함"
 msgid "The value in this field is invalid"
 msgstr "값이 올바르지 않음"
 
-#: src/webui/static/app/comet.js:14
+#: src/webui/static/app/comet.js:12
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."
