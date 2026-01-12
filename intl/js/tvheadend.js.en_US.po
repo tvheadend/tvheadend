@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-15 08:42+0000\n"
+"POT-Creation-Date: 2026-01-12 02:53+0000\n"
 "PO-Revision-Date: 2023-12-11 11:01+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>, 2025\n"
 "Language-Team: English (United States) (https://app.transifex.com/tvheadend/teams/43381/en_US/)\n"
@@ -309,7 +309,7 @@ msgstr "Back to top"
 msgid "Bandwidth (kb/s)"
 msgstr "Bandwidth (kb/s)"
 
-#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:968
+#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:966
 msgid "Bandwidth monitor"
 msgstr "Bandwidth monitor"
 
@@ -514,7 +514,7 @@ msgstr "Close"
 msgid "Columns"
 msgstr "Columns"
 
-#: src/webui/static/app/comet.js:38
+#: src/webui/static/app/comet.js:43
 msgid "Comet failure"
 msgstr "Comet failure"
 
@@ -522,7 +522,7 @@ msgstr "Comet failure"
 msgid "Comment"
 msgstr "Comment"
 
-#: src/webui/static/app/status.js:924
+#: src/webui/static/app/status.js:922
 msgid "Compression ratio"
 msgstr "Compression ratio"
 
@@ -1065,7 +1065,7 @@ msgstr "Ignored"
 msgid "Image Cache"
 msgstr "Image Cache"
 
-#: src/webui/static/app/status.js:922
+#: src/webui/static/app/status.js:920
 msgid "In"
 msgstr "In"
 
@@ -1073,13 +1073,17 @@ msgstr "In"
 msgid "Index"
 msgstr "Index"
 
-#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1012
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1008
 msgid "Input"
 msgstr "Input"
 
 #: src/webui/static/app/status.js:193
 msgid "Input (kb/s)"
 msgstr "Input (kb/s)"
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
+msgstr ""
 
 #: src/webui/static/app/idnode.js:2137
 msgid "Item"
@@ -1444,7 +1448,7 @@ msgstr "Other Stream Filter"
 msgid "Other Stream Filters"
 msgstr "Other Stream Filters"
 
-#: src/webui/static/app/status.js:923
+#: src/webui/static/app/status.js:921
 msgid "Out"
 msgstr "Out"
 
@@ -1609,9 +1613,13 @@ msgstr "Re-run all internal EPG grabbers to import EPG data now"
 msgid "Read-only Info"
 msgstr "Read-only Info"
 
-#: src/webui/static/app/comet.js:21
+#: src/webui/static/app/comet.js:24
 msgid "Reconnected to Tvheadend"
 msgstr "Reconnected to Tvheadend"
+
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
+msgstr ""
 
 #: src/webui/static/app/epg.js:427
 msgid "Record"
@@ -2056,7 +2064,7 @@ msgstr "The time in this field must be equal to or before {0}"
 msgid "The value in this field is invalid"
 msgstr "The value in this field is invalid"
 
-#: src/webui/static/app/comet.js:14
+#: src/webui/static/app/comet.js:12
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."
