@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 02:49+0000\n"
+"POT-Creation-Date: 2026-01-12 02:53+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -301,7 +301,7 @@ msgstr ""
 msgid "Bandwidth (kb/s)"
 msgstr ""
 
-#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:968
+#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:966
 msgid "Bandwidth monitor"
 msgstr ""
 
@@ -506,7 +506,7 @@ msgstr ""
 msgid "Columns"
 msgstr ""
 
-#: src/webui/static/app/comet.js:38
+#: src/webui/static/app/comet.js:43
 msgid "Comet failure"
 msgstr ""
 
@@ -514,7 +514,7 @@ msgstr ""
 msgid "Comment"
 msgstr ""
 
-#: src/webui/static/app/status.js:924
+#: src/webui/static/app/status.js:922
 msgid "Compression ratio"
 msgstr ""
 
@@ -1053,7 +1053,7 @@ msgstr ""
 msgid "Image Cache"
 msgstr ""
 
-#: src/webui/static/app/status.js:922
+#: src/webui/static/app/status.js:920
 msgid "In"
 msgstr ""
 
@@ -1061,12 +1061,16 @@ msgstr ""
 msgid "Index"
 msgstr ""
 
-#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1012
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1008
 msgid "Input"
 msgstr ""
 
 #: src/webui/static/app/status.js:193
 msgid "Input (kb/s)"
+msgstr ""
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:2137
@@ -1432,7 +1436,7 @@ msgstr ""
 msgid "Other Stream Filters"
 msgstr ""
 
-#: src/webui/static/app/status.js:923
+#: src/webui/static/app/status.js:921
 msgid "Out"
 msgstr ""
 
@@ -1595,8 +1599,12 @@ msgstr ""
 msgid "Read-only Info"
 msgstr ""
 
-#: src/webui/static/app/comet.js:21
+#: src/webui/static/app/comet.js:24
 msgid "Reconnected to Tvheadend"
+msgstr ""
+
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
 msgstr ""
 
 #: src/webui/static/app/epg.js:427
@@ -2038,7 +2046,7 @@ msgstr ""
 msgid "The value in this field is invalid"
 msgstr ""
 
-#: src/webui/static/app/comet.js:14
+#: src/webui/static/app/comet.js:12
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying "
 "to reconnect..."
