@@ -242,12 +242,6 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   else
     dts = pts_diff(ref, pkt->pkt_dts);
 
-  /* Check for invalid DTS calculation result */
-  if (dts == PTS_UNSET) {
-    tsfix_packet_drop(tfs, pkt, "invalid dts calculation");
-    return;
-  }
-
   if (tfs->tfs_last_dts_norm == PTS_UNSET) {
     if (dts < 0 || pkt->pkt_err) {
       /* Early packet with negative time stamp, drop those */
