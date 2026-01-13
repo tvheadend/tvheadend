@@ -242,32 +242,10 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   else
     dts = pts_diff(ref, pkt->pkt_dts);
 
-  /* Handle case where pts_diff returns PTS_UNSET due to inconsistent timestamps */
+  /* Check for invalid DTS calculation result */
   if (dts == PTS_UNSET) {
-    tvhtrace(LS_TSFIX, "%s: DTS calculation failed, attempting recovery (ref=%"PRId64" pkt_dts=%"PRId64")",
-             streaming_component_type2txt(tfs->tfs_type), ref, pkt->pkt_dts);
-    
-    /* Try to re-establish reference using current packet DTS */
-    if (tfs->tfs_local_ref == PTS_UNSET) {
-      tfs->tfs_local_ref = pkt->pkt_dts & PTS_MASK;
-      tvhtrace(LS_TSFIX, "%s: Re-established local reference to %"PRId64,
-               streaming_component_type2txt(tfs->tfs_type), tfs->tfs_local_ref);
-      /* Recalculate with new reference */
-      if (tf->dts_offset_apply)
-        dts = pts_diff(tfs->tfs_local_ref, pkt->pkt_dts + tf->dts_offset);
-      else
-        dts = pts_diff(tfs->tfs_local_ref, pkt->pkt_dts);
-    }
-    
-    /* If still failing, this might be a timestamp rollover case */
-    if (dts == PTS_UNSET) {
-      /* Reset normalization state to handle potential rollover */
-      tfs->tfs_last_dts_norm = PTS_UNSET;
-      tfs->tfs_dts_epoch = 0;
-      dts = 0; /* Start from zero for this stream */
-      tvhtrace(LS_TSFIX, "%s: Reset normalization state due to timestamp inconsistency",
-               streaming_component_type2txt(tfs->tfs_type));
-    }
+    tsfix_packet_drop(tfs, pkt, "invalid dts calculation");
+    return;
   }
 
   if (tfs->tfs_last_dts_norm == PTS_UNSET) {
