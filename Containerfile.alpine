@@ -128,4 +128,4 @@ VOLUME /var/lib/tvheadend/recordings
 WORKDIR /var/lib/tvheadend/
 USER tvheadend
 
-ENTRYPOINT [ "/sbin/tini-static", "--", "/init" ]
+ENTRYPOINT [ "/sbin/tini", "--", "/init" ]
