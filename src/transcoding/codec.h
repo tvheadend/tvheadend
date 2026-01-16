@@ -92,8 +92,6 @@ struct tvh_codec_profile {
     double bit_rate;
     double qscale;
     int profile;
-    // to be moved when we remove ENABLE_FFMPEG4_TRANSCODING
-    int low_power;
     char *device; // for hardware acceleration
     LIST_ENTRY(tvh_codec_profile) link;
 };
