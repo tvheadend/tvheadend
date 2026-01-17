@@ -22,6 +22,38 @@
 
 #include "access.h"
 
+/* internal ================================================================= */
+
+static int
+_is_profile_available(TVHCodec *self, int profile)
+{
+    if (!self) {
+        tvhwarn(LS_CODEC, "tvh_codec is not available");
+        return 0;
+    }
+    if (!self->name) {
+        tvhwarn(LS_CODEC, "codec name is not available");
+        return 0;
+    }
+    if (!self->profiles) {
+        tvhwarn(LS_CODEC, "no profiles available for codec '%s'", self->name);
+        return 0;
+    }
+    const AVProfile *p;
+    for (p = self->profiles; p->profile != FF_AV_PROFILE_UNKNOWN; p++) {
+        if (p->profile == profile) {
+            return 1;
+        }
+    }
+    const char *profile_name = self->codec ? av_get_profile_name(self->codec, profile) : NULL;
+    if (profile_name) {
+        tvhwarn(LS_CODEC, "profile '%s' is not available for codec '%s'", profile_name, self->name);
+    } else {
+        tvhwarn(LS_CODEC, "profile '%d' is not available for codec '%s'", profile, self->name);
+    }
+    return 0;
+}
+
 
 /* TVHCodec ================================================================= */
 
@@ -79,8 +111,9 @@ static int
 tvh_codec_profile_base_open(TVHCodecProfile *self, AVDictionary **opts)
 {
     AV_DICT_SET_TVH_REQUIRE_META(LST_NONE, opts, 1);
-    // profile
-    if (self->profile != FF_AV_PROFILE_UNKNOWN) {
+    // profile is set and is available
+    if (self->profile != FF_AV_PROFILE_UNKNOWN &&
+        _is_profile_available(self->codec, self->profile)) {
         AV_DICT_SET_INT(LST_CODEC, opts, "profile", self->profile, 0);
     }
     return 0;
