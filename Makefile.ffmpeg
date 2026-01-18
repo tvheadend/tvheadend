@@ -95,10 +95,11 @@ LIBFDKAAC_TB   = v$(LIBFDKAAC_VER).tar.gz
 LIBFDKAAC_URL  = https://github.com/mstorsjo/fdk-aac/archive/refs/tags/$(LIBFDKAAC_TB)
 LIBFDKAAC_SHA1 = a7f42c67c0b82cdb2cd773d3ec31042fb5647c0d
 
-LIBOPUS        = opus-1.3.1
-LIBOPUS_TB     = $(LIBOPUS).tar.gz
-LIBOPUS_URL    = https://archive.mozilla.org/pub/opus/$(LIBOPUS_TB)
-LIBOPUS_SHA1   = ed226536537861c9f0f1ef7ca79dffc225bc181b
+LIBOPUS_VER    = 1.5.2
+LIBOPUS        = opus-$(LIBOPUS_VER)
+LIBOPUS_TB     = v$(LIBOPUS_VER).tar.gz
+LIBOPUS_URL    = https://github.com/xiph/opus/archive/refs/tags/$(LIBOPUS_TB)
+LIBOPUS_SHA1   = 68b4f431b013c4157e2e2688c09a2ae2cab64b89
 
 FFNVCODEC_VER  = 12.1.14.0
 FFNVCODEC      = nv-codec-headers-$(FFNVCODEC_VER)
@@ -540,7 +541,7 @@ $(LIB_ROOT)/$(LIBOPUS)/.tvh_download:
 $(LIB_ROOT)/$(LIBOPUS)/.tvh_build: \
 		$(LIB_ROOT)/$(NASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOPUS)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBOPUS) && $(CONFIGURE_PI) \
+	cd $(LIB_ROOT)/$(LIBOPUS) && $(AUTOGEN) && $(CONFIGURE_PI) \
 		--disable-doc \
 		--disable-extra-programs
 	DESTDIR=$(EBUILDIR) \
