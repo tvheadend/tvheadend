@@ -28,6 +28,7 @@ RUN apk add --no-cache \
         'libhdhomerun-dev' \
         'libva-dev' \
         'libvpx-dev' \
+        'libxml2-dev' \
         'linux-headers' \
         'musl-dev' \
         'openssl-dev>3' \
@@ -96,6 +97,7 @@ RUN apk add --no-cache \
         'liburiparser' \
         'libva' \
         'libvpx' \
+        'libxml2' \
         'mesa' \
         'opus' \
         'perl-http-entity-parser' \

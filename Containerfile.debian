@@ -33,6 +33,7 @@ RUN apt-get update --yes && apt-get install --yes \
         'libvpx-dev' \
         'libx264-dev' \
         'libx265-dev' \
+        'libxml2-dev' \
         'lsb-release' \
         'pkg-config' \
         'pngquant' \
@@ -99,6 +100,7 @@ RUN apt-get update --yes && apt-get install --yes \
         'libvpx9' \
         'libx264-164' \
         'libx265-215' \
+        'libxml2' \
         'pngquant' \
         'python3' \
         'mesa-va-drivers' \
