@@ -5,16 +5,16 @@
 # 
 # Translators:
 # Christian Hewitt, 2025
-# Marek Adamski, 2025
+# Marek Adamski, 2026
 # 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-15 08:42+0000\n"
+"POT-Creation-Date: 2026-01-12 02:53+0000\n"
 "PO-Revision-Date: 2023-12-11 11:01+0000\n"
-"Last-Translator: Marek Adamski, 2025\n"
+"Last-Translator: Marek Adamski, 2026\n"
 "Language-Team: Polish (https://app.transifex.com/tvheadend/teams/43381/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -311,7 +311,7 @@ msgstr "Do góry"
 msgid "Bandwidth (kb/s)"
 msgstr "Przepustowość (kb/s)"
 
-#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:968
+#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:966
 msgid "Bandwidth monitor"
 msgstr "Monitor przepustowości"
 
@@ -517,7 +517,7 @@ msgstr "Zamknij"
 msgid "Columns"
 msgstr "Kolumny"
 
-#: src/webui/static/app/comet.js:38
+#: src/webui/static/app/comet.js:43
 msgid "Comet failure"
 msgstr "Awaria komety"
 
@@ -525,7 +525,7 @@ msgstr "Awaria komety"
 msgid "Comment"
 msgstr "Komentarz"
 
-#: src/webui/static/app/status.js:924
+#: src/webui/static/app/status.js:922
 msgid "Compression ratio"
 msgstr "Stopień kompresji"
 
@@ -1068,7 +1068,7 @@ msgstr "Zignorowane"
 msgid "Image Cache"
 msgstr "Pamięć podręczna obrazu"
 
-#: src/webui/static/app/status.js:922
+#: src/webui/static/app/status.js:920
 msgid "In"
 msgstr "Wej"
 
@@ -1076,13 +1076,17 @@ msgstr "Wej"
 msgid "Index"
 msgstr "Indeks"
 
-#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1012
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1008
 msgid "Input"
 msgstr "Wejście"
 
 #: src/webui/static/app/status.js:193
 msgid "Input (kb/s)"
 msgstr "Wejście (kb/s)"
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
+msgstr "Nieprawidłowy JSON z Comet"
 
 #: src/webui/static/app/idnode.js:2137
 msgid "Item"
@@ -1447,7 +1451,7 @@ msgstr "Inny filtr strumienia"
 msgid "Other Stream Filters"
 msgstr "Filtry innych strumieni"
 
-#: src/webui/static/app/status.js:923
+#: src/webui/static/app/status.js:921
 msgid "Out"
 msgstr "Wyj"
 
@@ -1614,9 +1618,13 @@ msgstr ""
 msgid "Read-only Info"
 msgstr "Informacje tylko do odczytu"
 
-#: src/webui/static/app/comet.js:21
+#: src/webui/static/app/comet.js:24
 msgid "Reconnected to Tvheadend"
 msgstr "Ponownie podłączony do Tvheadend"
+
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
+msgstr "Ponowne łączenie z Tvheadend..."
 
 #: src/webui/static/app/epg.js:427
 msgid "Record"
@@ -2061,7 +2069,7 @@ msgstr "Czas w tym polu musi być równy lub przed {0}"
 msgid "The value in this field is invalid"
 msgstr "Wartość w polu jest nieprawidłowa"
 
-#: src/webui/static/app/comet.js:14
+#: src/webui/static/app/comet.js:12
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."
