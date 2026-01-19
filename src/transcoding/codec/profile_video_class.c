@@ -337,7 +337,7 @@ const codec_profile_class_t codec_profile_video_class = {
             {}
         }
     },
-    .setup       = (codec_profile_is_copy_meth)tvh_codec_profile_video_setup,
+    .setup       = (codec_profile_setup_meth)tvh_codec_profile_video_setup,
     .is_copy     = (codec_profile_is_copy_meth)tvh_codec_profile_video_is_copy,
     .open        = (codec_profile_open_meth)tvh_codec_profile_video_open,
 };
