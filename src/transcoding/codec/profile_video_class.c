@@ -47,6 +47,9 @@ hwaccel_get_list( void *o, const char *lang )
 #if ENABLE_MMAL
         { N_("prioritize MMAL"),                    HWACCEL_PRIORITIZE_MMAL},
 #endif
+#if ENABLE_V4L2M2M
+        { N_("prioritize V4L2"),                    HWACCEL_PRIORITIZE_V4L2M2M},
+#endif
     };
     return strtab2htsmsg(tab, 1, lang);
 }
