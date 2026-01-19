@@ -42,6 +42,7 @@ typedef struct upnp_data {
   htsbuf_queue_t queue;
   int delay_ms;
   int from_multicast;
+  int fill_source;
 } upnp_data_t;
 
 TAILQ_HEAD(upnp_data_queue_write, upnp_data);
@@ -75,7 +76,7 @@ void upnp_service_destroy( upnp_service_t *us )
  */
 void
 upnp_send( htsbuf_queue_t *q, struct sockaddr_storage *storage,
-           int delay_ms, int from_multicast )
+           int delay_ms, int from_multicast, int fill_source )
 {
   upnp_data_t *data;
 
@@ -90,6 +91,7 @@ upnp_send( htsbuf_queue_t *q, struct sockaddr_storage *storage,
     data->storage = *storage;
   data->delay_ms = delay_ms;
   data->from_multicast = from_multicast;
+  data->fill_source = fill_source;
   tvh_mutex_lock(&upnp_lock);
   TAILQ_INSERT_TAIL(&upnp_data_write, data, data_link);
   tvh_mutex_unlock(&upnp_lock);
@@ -185,8 +187,8 @@ upnp_thread( void *aux )
       if (data == NULL)
         break;
       upnp_dump_data(data);
-      udp_write_queue(data->from_multicast ? multicast : unicast,
-                      &data->queue, &data->storage);
+      udp_write_queue_fill_source(data->from_multicast ? multicast : unicast,
+                      &data->queue, &data->storage, data->fill_source);
       htsbuf_queue_flush(&data->queue);
       free(data);
       delay_ms = 0;
@@ -204,7 +206,7 @@ upnp_thread( void *aux )
       break;
     tvh_safe_usleep((long)data->delay_ms * 1000);
     upnp_dump_data(data);
-    udp_write_queue(unicast, &data->queue, &data->storage);
+    udp_write_queue_fill_source(unicast, &data->queue, &data->storage, data->fill_source);
     htsbuf_queue_flush(&data->queue);
     free(data);
   }

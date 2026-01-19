@@ -40,7 +40,7 @@ upnp_service_t *upnp_service_create0(upnp_service_t *us);
 void upnp_service_destroy(upnp_service_t *service);
 
 void upnp_send(htsbuf_queue_t *q, struct sockaddr_storage *storage,
-               int delay_ms, int from_multicast);
+               int delay_ms, int from_multicast, int fill_source);
 
 void upnp_server_init(const char *bindaddr);
 void upnp_server_done(void);
