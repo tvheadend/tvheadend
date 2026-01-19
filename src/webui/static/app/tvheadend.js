@@ -145,6 +145,35 @@ var catmap_minor = {
   "weather" : "sun_behind_cloud",
   "weightlifting" : "person_lifting_weights",
   "western" : "cactus",
+
+  // Taken from eu_epgdata for entries not already
+  // matched in English
+  "boxen" : "boxing_glove",
+  "erotik" : "no_one_under_eighteen_symbol",
+  "familie" : "family",
+  "familien-show" : "family",
+  "fußball" : "soccer_ball",
+  "gymnastik" : "person_doing_cartwheel",
+  "homeshopping" : "shopping_trolley",
+  "humor" : "face_with_tears_of_joy",
+  "jugend" : "baby",
+  "klassik" : "musical_note",
+  "krankenhaus" : "ambulance",
+  "krimi" : "police_officer",
+  "motor + verkehr" : "racing_car",
+  "motorsport" : "racing_car",
+  "musik" : "musical_note",
+  "mystery + horror" : "skull",
+  "nachrichten" : "newspaper",
+  "natur" : "elephant",
+  "politik" : "ballot_box_with_ballot",
+  "reise" : "airplane",
+  "science fiction" : "extraterrestrial_alien",
+  "spielshows" : "game_die",
+  "talkshows" : "speaking_head_in_silhouette",
+  "volksmusik" : "musical_note",
+  "wassersport" : "swimmer",
+  "zeichentrick" : "pencil"
 };
 
 //  These are mappings for OTA genres
