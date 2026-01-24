@@ -1091,8 +1091,8 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
     htsmsg_add_str(m, "service", s->ths_dvrfile ?: "");
   }
 
-  htsmsg_add_u32(m, "in", atomic_get(&s->ths_bytes_in_avg));
-  htsmsg_add_u32(m, "out", atomic_get(&s->ths_bytes_out_avg));
+  htsmsg_add_u32(m, "in", atomic_get(&s->ths_bytes_in_avg) * 8);
+  htsmsg_add_u32(m, "out", atomic_get(&s->ths_bytes_out_avg) * 8);
   htsmsg_add_s64(m, "total_in", atomic_get_u64(&s->ths_total_bytes_in));
   htsmsg_add_s64(m, "total_out", atomic_get_u64(&s->ths_total_bytes_out));
 

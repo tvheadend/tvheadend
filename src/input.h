@@ -52,7 +52,9 @@ struct tvh_input_stream_stats
               ///<  - SCALE DECIBEL  : 0.0001 dB units.
   int ber;    ///< bit error rate (driver/vendor specific value!)
   int unc;    ///< number of uncorrected blocks
-  int bps;    ///< bandwidth (bps)
+  int bytes_avg; ///< average bytes per second
+  uint64_t total_bytes; ///< total bytes since the input started
+  uint64_t total_bytes_prev; ///< total bytes since the input started, minus 1 second
   int cc;     ///< number of continuity errors
   int te;     ///< number of transport errors
 

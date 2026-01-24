@@ -72,7 +72,7 @@ tvheadend.status_subs = function(panel, index)
         tvheadend.comet.on('subscriptions', update);
 
         function renderBw(value, meta, record) {
-            var txt = parseInt(value / 125);
+            var txt = Math.round(value / 1000);
             meta.attr = 'style="cursor:alias;"';
             return '<span class="x-linked">&nbsp;</span>' + txt;
         }
@@ -190,7 +190,7 @@ tvheadend.status_subs = function(panel, index)
             {
                 width: 50,
                 id: 'in',
-                header: _("Input (kb/s)"),
+                header: _("Input (kbps)"),
                 dataIndex: 'in',
                 sortable: true,
                 listeners: { click: { fn: clicked } },
@@ -199,7 +199,7 @@ tvheadend.status_subs = function(panel, index)
             {
                 width: 50,
                 id: 'out',
-                header: _("Output (kb/s)"),
+                header: _("Output (kbps)"),
                 dataIndex: 'out',
                 sortable: true,
                 listeners: { click: { fn: clicked } },
@@ -372,7 +372,7 @@ tvheadend.status_streams = function(panel, index)
         tvheadend.comet.on('input_status', update);
 
         function renderBw(value, meta, record) {
-            var txt = parseInt(value / 1024);
+            var txt = Math.round(value / 1000);
             meta.attr = 'style="cursor:alias;"';
             return '<span class="x-linked">&nbsp;</span>' + txt;
         }
@@ -440,7 +440,7 @@ tvheadend.status_streams = function(panel, index)
             },
             {
                 width: 50,
-                header: _("Bandwidth (kb/s)"),
+                header: _("Bandwidth (kbps)"),
                 dataIndex: 'bps',
                 sortable: true,
                 renderer: renderBw,
@@ -912,13 +912,13 @@ tvheadend.subscription_bw_monitor = function(id) {
                 return;
             }
 
-            var input = Math.round(r.data['in'] / 125);
-            var output = Math.round(r.data.out / 125);
+            var input = Math.round(r.data['in'] / 1000);
+            var output = Math.round(r.data.out / 1000);
             var ratio = new Number(r.data['in'] / r.data.out).toPrecision(3);
 
-            win.setTitle(r.data.channel);
-            inputLbl.setText(_('In') + ': ' + input + ' kb/s');
-            outputLbl.setText(_('Out') + ': ' + output + ' kb/s');
+            win.setTitle(r.data.channel ?? r.data.service);
+            inputLbl.setText(_('In') + ': ' + input + ' kbps');
+            outputLbl.setText(_('Out') + ': ' + output + ' kbps');
             comprLbl.setText(_('Compression ratio') + ': ' + ratio);
 
             inputSeries.append(new Date().getTime(), input);
@@ -1004,8 +1004,8 @@ tvheadend.stream_bw_monitor = function(id) {
             }
 
             win.setTitle(r.data.input + ' (' + r.data.stream + ')');
-            var input = Math.round(r.data.bps / 1024);
-            inputLbl.setText(_('Input') + ': ' + input + ' kb/s');
+            var input = Math.round(r.data.bps / 1000);
+            inputLbl.setText(_('Input') + ': ' + input + ' kbps');
             inputSeries.append(new Date().getTime(), input);
         }
     };
