@@ -1609,7 +1609,7 @@ done:
 
   /* Bandwidth monitoring */
   llen = tsb - mpkt->mp_data;
-  atomic_add(&mmi->tii_stats.bps, llen);
+  input_add_bytes(&mmi->tii_stats, llen);
   mm->mm_input_pos += llen;
   return llen;
 }
@@ -1919,7 +1919,8 @@ mpegts_input_stream_status
   st->stats.unc   = atomic_get(&mmi->tii_stats.unc);
   st->stats.cc    = atomic_get(&mmi->tii_stats.cc);
   st->stats.te    = atomic_get(&mmi->tii_stats.te);
-  st->stats.bps   = atomic_exchange(&mmi->tii_stats.bps, 0) * 8;
+  st->stats.bytes_avg = atomic_get(&mmi->tii_stats.bytes_avg);
+  st->stats.total_bytes = atomic_get_u64(&mmi->tii_stats.total_bytes);
 }
 
 void
@@ -2039,9 +2040,17 @@ mpegts_input_status_timer ( void *p )
   htsmsg_t *e;
   int64_t subs = 0;
 
+  mtimer_arm_rel(&mi->mi_status_timer, mpegts_input_status_timer, mi, sec2mono(1));
+
   tvh_mutex_lock(&mi->mi_output_lock);
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
     memset(&st, 0, sizeof(st));
+    /* Store the difference between total bytes from the last round */
+    uint64_t bytes_curr = atomic_get_u64(&mmi->tii_stats.total_bytes);
+    uint64_t bytes_prev = atomic_exchange_u64(&mmi->tii_stats.total_bytes_prev, bytes_curr);
+
+    atomic_set(&mmi->tii_stats.bytes_avg, (int)(bytes_curr - bytes_prev));
+
     mpegts_input_stream_status(mmi, &st);
     e = tvh_input_stream_create_msg(&st);
     htsmsg_add_u32(e, "update", 1);
@@ -2050,8 +2059,19 @@ mpegts_input_status_timer ( void *p )
     tvh_input_stream_destroy(&st);
   }
   tvh_mutex_unlock(&mi->mi_output_lock);
-  mtimer_arm_rel(&mi->mi_status_timer, mpegts_input_status_timer, mi, sec2mono(1));
   mpegts_input_dbus_notify(mi, subs);
+}
+
+/* **************************************************************************
+ * Input control
+ * *************************************************************************/
+
+/**
+ * Update byte count
+ */
+void input_add_bytes(tvh_input_stream_stats_t *ss, size_t bytes)
+{
+  atomic_add_u64(&ss->total_bytes, bytes);
 }
 
 /* **************************************************************************
