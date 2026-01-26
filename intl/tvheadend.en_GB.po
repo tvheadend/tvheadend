@@ -4,8 +4,8 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # 
 # Translators:
-# Andi Chandler <andi@gowling.com>, 2025
 # Christian Hewitt, 2025
+# Andi Chandler <andi@gowling.com>, 2026
 # 
 #, fuzzy
 msgid ""
@@ -14,7 +14,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-01-12 02:53+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: Christian Hewitt, 2025\n"
+"Last-Translator: Andi Chandler <andi@gowling.com>, 2026\n"
 "Language-Team: English (United Kingdom) (https://app.transifex.com/tvheadend/teams/43381/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -936,7 +936,7 @@ msgstr "Athletics"
 
 #: src/tvhlog.c:197
 msgid "Audio"
-msgstr ""
+msgstr "Audio"
 
 #: src/transcoding/codec/profile_audio_class.c:355
 msgid "Audio channel layout."
@@ -1030,7 +1030,7 @@ msgstr "Automatic time scheduler entry not found"
 
 #: src/config.c:2751
 msgid "Automatically clear input error counters"
-msgstr ""
+msgstr "Automatically clear input error counters"
 
 #: src/dvr/dvr_config.c:1034
 msgid "Automatically delete played recordings"
@@ -1450,7 +1450,7 @@ msgstr "Category "
 
 #: src/epggrab/module/xmltv.c:1444
 msgid "Category Code XPath"
-msgstr ""
+msgstr "Category Code XPath"
 
 #: src/access.c:1765
 msgid "Change parameters"
@@ -1974,7 +1974,7 @@ msgstr "Country"
 
 #: src/ratinglabels.c:647
 msgid "Country received via OTA EPG."
-msgstr ""
+msgstr "Country received via OTA EPG."
 
 #: src/service_mapper.c:649
 msgid "Create SDTV/HDTV/Radio tags."
@@ -3323,6 +3323,8 @@ msgid ""
 "Enter allowed network prefix(es). You can enter a comma-separated list of "
 "prefixes here."
 msgstr ""
+"Enter allowed network prefix(es). You can enter a comma-separated list of "
+"prefixes here."
 
 #: src/wizard.c:436
 msgid "Enter an administrator password."
@@ -3413,11 +3415,11 @@ msgstr "Episode number/ID."
 
 #: src/epggrab/module/xmltv.c:1463
 msgid "EpisodeLink XPath"
-msgstr ""
+msgstr "EpisodeLink XPath"
 
 #: src/epggrab/module/xmltv.c:1475
 msgid "EpisodeLink XPath fallback"
-msgstr ""
+msgstr "EpisodeLink XPath fallback"
 
 #: src/epg.c:2000
 msgid "Equestrian"
@@ -3594,7 +3596,7 @@ msgstr "FHD: full high definition"
 
 #: src/tvhlog.c:202
 msgid "FLAC"
-msgstr ""
+msgstr "FLAC"
 
 #: src/epg.c:2080
 msgid "Factual topics"
@@ -4034,7 +4036,7 @@ msgstr "Further education"
 #: src/transcoding/codec/codecs/libs/libx26x.c:97
 #: src/transcoding/codec/codecs/libs/libvpx.c:142
 msgid "GOP size"
-msgstr ""
+msgstr "GOP size"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:582
 msgid "GOTOX"
@@ -4354,6 +4356,9 @@ msgid ""
 "Tvheadend in a container and you want to stream from an HDHomerun without "
 "enabling host networking for the container."
 msgstr ""
+"IP address of the HDHomerun device. This is needed if you plan to run "
+"Tvheadend in a container and you want to stream from an HDHomerun without "
+"enabling host networking for the container."
 
 #: src/access.c:2413
 msgid "IP blocking"
@@ -4365,6 +4370,9 @@ msgid ""
 "a socket. This lets you define the IP address that HDHomeRun needs to send "
 "to. Leave this blank if you want Tvheadend to automatically pick an address."
 msgstr ""
+"IP of the Docker host. Each HDHomeRun tuner sends data to Tvheadend through "
+"a socket. This lets you define the IP address that HDHomeRun needs to send "
+"to. Leave this blank if you want Tvheadend to automatically pick an address."
 
 #: src/tvhlog.c:162
 msgid "IPTV"
@@ -4484,12 +4492,16 @@ msgid ""
 "If a SeriesLink XPath is not found, use the standard TVH method for creating"
 " a SeriesLink."
 msgstr ""
+"If a SeriesLink XPath is not found, use the standard TVH method for creating"
+" a SeriesLink."
 
 #: src/epggrab/module/xmltv.c:1477
 msgid ""
 "If an EpisodeLink XPath is not found, use the standard TVH method for "
 "creating an EpisodeLink."
 msgstr ""
+"If an EpisodeLink XPath is not found, use the standard TVH method for "
+"creating an EpisodeLink."
 
 #: src/dvr/dvr_config.c:1081
 msgid ""
@@ -4932,27 +4944,27 @@ msgstr "Kodi label formatting support"
 
 #: src/tvhlog.c:203
 msgid "LIB FDK_AAC"
-msgstr ""
+msgstr "LIB FDK_AAC"
 
 #: src/tvhlog.c:204
 msgid "LIB OPUS"
-msgstr ""
+msgstr "LIB OPUS"
 
 #: src/tvhlog.c:205
 msgid "LIB THEORA"
-msgstr ""
+msgstr "LIB THEORA"
 
 #: src/tvhlog.c:206
 msgid "LIB VORBIS"
-msgstr ""
+msgstr "LIB VORBIS"
 
 #: src/tvhlog.c:209
 msgid "LIB VPX"
-msgstr ""
+msgstr "LIB VPX"
 
 #: src/tvhlog.c:210
 msgid "LIB x264_x265"
-msgstr ""
+msgstr "LIB x264_x265"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:273
 msgid "LNA (low noise amplifier)"
@@ -5286,7 +5298,7 @@ msgstr "MD5"
 
 #: src/tvhlog.c:200
 msgid "MP2"
-msgstr ""
+msgstr "MP2"
 
 #: src/profile.c:1930
 msgid "MP4 audio"
@@ -5346,7 +5358,7 @@ msgstr "MPEG-TS/av-lib"
 
 #: src/tvhlog.c:208
 msgid "MPEG2 VIDEO"
-msgstr ""
+msgstr "MPEG2 VIDEO"
 
 #: src/epg.c:2063
 msgid "Magazines"
@@ -5600,7 +5612,7 @@ msgstr "Merge services with the same name into one channel."
 
 #: src/dvr/dvr_autorec.c:1204
 msgid "Merge-text"
-msgstr ""
+msgstr "Merge-text"
 
 #: src/htsp_server.c:3463
 msgid "Method not found"
@@ -5803,7 +5815,7 @@ msgstr "NONE"
 
 #: src/tvhlog.c:211
 msgid "NVENC"
-msgstr ""
+msgstr "NVENC"
 
 #: src/channels.c:434 src/channels.c:1785 src/bouquet.c:1268
 #: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:674
@@ -6273,7 +6285,7 @@ msgstr "OK (partial)"
 
 #: src/tvhlog.c:212
 msgid "OMX"
-msgstr ""
+msgstr "OMX"
 
 #: src/descrambler/capmt.c:2627
 msgid "OSCam (rev >= 9095)"
@@ -6741,6 +6753,8 @@ msgid ""
 "Periodically resets input error counters (when a new mux starts for the "
 "target tuner). Note that previous counters will be lost."
 msgstr ""
+"Periodically resets input error counters (when a new mux starts for the "
+"target tuner). Note that previous counters will be lost."
 
 #: src/epggrab.c:408
 msgid "Periodically save EPG to disk (hours)"
@@ -8120,11 +8134,11 @@ msgstr "Series link ID."
 
 #: src/epggrab/module/xmltv.c:1456
 msgid "SeriesLink XPath"
-msgstr ""
+msgstr "SeriesLink XPath"
 
 #: src/epggrab/module/xmltv.c:1470
 msgid "SeriesLink XPath fallback"
-msgstr ""
+msgstr "SeriesLink XPath fallback"
 
 #: src/epg.c:1943
 msgid "Serious"
@@ -8285,7 +8299,7 @@ msgstr ""
 #: src/transcoding/codec/codecs/libs/libx26x.c:98
 #: src/transcoding/codec/codecs/libs/libvpx.c:143
 msgid "Sets the Group of Pictures (GOP) size in frame (default 0 is 3 sec.)"
-msgstr ""
+msgstr "Sets the Group of Pictures (GOP) size in frame (default 0 is 3 sec.)"
 
 #: src/tvhlog.c:102
 msgid "Settings"
@@ -8708,6 +8722,14 @@ msgid ""
 "9983, then tuner 0 will talk to port 9983, tuner 1 will talk to port 9984, "
 "tuner 2 will talk to port 9985, and tuner 3 will talk to port 9986."
 msgstr ""
+"Starting port number of the UDP listeners. The listeners listen for traffic "
+"from the HDHomerun tuners. This is needed if you plan to run Tvheadend in a "
+"container and you want to stream from an HDHomerun without enabling host "
+"networking for the container. Set this to 0 if you want the port numbers to "
+"be assigned dynamically. If you have multiple tuners, this will be the start"
+" of the port range. For example, if you have 4 tuners and you set this to "
+"9983, then tuner 0 will talk to port 9983, tuner 1 will talk to port 9984, "
+"tuner 2 will talk to port 9985, and tuner 3 will talk to port 9986."
 
 #: src/dvr/dvr_db.c:4978 src/descrambler/caclient.c:327
 msgid "Status"
@@ -9272,6 +9294,9 @@ msgid ""
 "XMLTV data.  This ID is used to identify multiple occurrences of the same "
 "series.  Root node = 'programme'."
 msgstr ""
+"The XPath-like expression used to extract a SeriesLink identifier from the "
+"XMLTV data.  This ID is used to identify multiple occurrences of the same "
+"series.  Root node = 'programme'."
 
 #: src/epggrab/module/xmltv.c:1451
 msgid ""
@@ -9279,6 +9304,9 @@ msgid ""
 " XMLTV data.  This ID is used to match existing EPG events so that they can "
 "be updated rather than replaced. Root node = 'programme'."
 msgstr ""
+"The XPath-like expression used to extract a unique event identifier from the"
+" XMLTV data.  This ID is used to match existing EPG events so that they can "
+"be updated rather than replaced. Root node = 'programme'."
 
 #: src/epggrab/module/xmltv.c:1465
 msgid ""
@@ -9286,12 +9314,17 @@ msgid ""
 " XMLTV data.  This ID is used to identify multiple occurrences of the same "
 "episode.  Root node = 'programme'."
 msgstr ""
+"The XPath-like expression used to extract an EpisodeLink identifier from the"
+" XMLTV data.  This ID is used to identify multiple occurrences of the same "
+"episode.  Root node = 'programme'."
 
 #: src/epggrab/module/xmltv.c:1446
 msgid ""
 "The XPath-like expression used to extract the category ETSI code from the "
 "XMLTV data. Root node = 'category'."
 msgstr ""
+"The XPath-like expression used to extract the category ETSI code from the "
+"XMLTV data. Root node = 'category'."
 
 #: src/dvr/dvr_db.c:5055
 msgid "The age rating of the program."
@@ -10960,7 +10993,7 @@ msgstr "Unimportant"
 
 #: src/epggrab/module/xmltv.c:1449
 msgid "Unique Event ID XPath"
-msgstr ""
+msgstr "Unique Event ID XPath"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:789
 msgid "Universal LNB only"
@@ -11322,7 +11355,7 @@ msgstr "VAINFO"
 
 #: src/tvhlog.c:207
 msgid "VORBIS"
-msgstr ""
+msgstr "VORBIS"
 
 #: src/transcoding/codec/codecs/vorbis.c:58
 #: src/transcoding/codec/codecs/libs/libtheora.c:60
@@ -11505,6 +11538,10 @@ msgid ""
 "credits + keywords for all languages contained in the EPG entry being "
 "searched."
 msgstr ""
+"When 'Merge-Text' is selected, the title pattern is matched against a merged"
+" single string consisting of the title + subtitle + summary + description + "
+"credits + keywords for all languages contained in the EPG entry being "
+"searched."
 
 #: src/config.c:2611
 msgid ""
@@ -11699,7 +11736,7 @@ msgstr "XMLTV output format"
 
 #: src/epggrab/module/xmltv.c:1501 src/epggrab/module/xmltv.c:1603
 msgid "XPath Settings"
-msgstr ""
+msgstr "XPath Settings"
 
 #: src/access.c:1494
 msgid "Yes"
