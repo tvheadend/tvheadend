@@ -16,7 +16,7 @@ $ git clone https://github.com/tvheadend/tvheadend
 Then, from within the repository
 
 ```sh
-docker image build
+docker buildx build
     --rm \
     --tag 'tvheadend:issue-123' \
     './'
