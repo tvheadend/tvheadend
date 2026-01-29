@@ -28,6 +28,7 @@ RUN apk add --no-cache \
         'linux-headers' \
         'musl-dev' \
         'openssl-dev>3' \
+        'pcre2' \
         'pngquant' \
         'python3' \
         'uriparser-dev' \
@@ -49,11 +50,6 @@ RUN apk add --no-cache \
                 --disable-libvpx_static \
                 --disable-libx264_static \
                 --disable-libx265_static \
-                --disable-libvpx_static \
-                --disable-libtheora_static \
-                --disable-libvorbis_static \
-                --disable-libfdkaac_static \
-                --disable-libopus_static \
                 --enable-bundle \
                 --enable-dvbcsa \
                 --enable-hdhomerun_client \
@@ -93,12 +89,6 @@ RUN apk add --no-cache \
         'xmltv' \
         'zlib' \
     && \
-    [ "$(uname -m)" = 'x86'* ] && apk add --no-cache \
-        'libva-intel-driver' \
-        ; \
-    [ "$(uname -m)" = 'x86_64' ] && apk add --no-cache \
-        'libva-intel-driver' \
-        ; \
     addgroup -S 'tvheadend' && \
     adduser -D -G 'tvheadend' -h '/var/lib/tvheadend' -s '/bin/nologin' -S 'tvheadend' && \
     adduser 'tvheadend' 'audio' && \
