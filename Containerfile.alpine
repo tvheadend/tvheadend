@@ -60,7 +60,7 @@ RUN apk add --no-cache \
         && \
         make DESTDIR='/tvheadend' -j$(($(nproc) - 1)) install
 
-FROM docker.io/${TARGET_ARCH}/alpine:${ALPINE_VERSION}
+FROM docker.io/${TARGET_ARCH}/alpine:${ALPINE_VERSION} AS runner
 
 LABEL maintainer="Olliver Schinagl <oliver@schinagl.nl>"
 
