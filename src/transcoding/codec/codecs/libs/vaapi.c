@@ -522,6 +522,18 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
 };
 
 
+static void
+tvh_codec_profile_vaapi_destroy(TVHCodecProfile *_self)
+{
+    tvh_codec_profile_vaapi_t *self = (tvh_codec_profile_vaapi_t *)_self;
+    if (self->device){
+        free(self->device);
+        self->device = NULL;
+    }
+    tvh_codec_profile_video_destroy(_self);
+}
+
+
 /* h264_vaapi =============================================================== */
 
 static const AVProfile vaapi_h264_profiles[] = {
@@ -841,7 +853,7 @@ TVHVideoCodec tvh_codec_vaapi_h264 = {
     .idclass  = &codec_profile_vaapi_h264_class,
     .profiles = vaapi_h264_profiles,
     .profile_init = tvh_codec_profile_video_init,
-    .profile_destroy = tvh_codec_profile_video_destroy,
+    .profile_destroy = tvh_codec_profile_vaapi_destroy,
 };
 
 
@@ -1154,7 +1166,7 @@ TVHVideoCodec tvh_codec_vaapi_hevc = {
     .idclass  = &codec_profile_vaapi_hevc_class,
     .profiles = vaapi_hevc_profiles,
     .profile_init = tvh_codec_profile_video_init,
-    .profile_destroy = tvh_codec_profile_video_destroy,
+    .profile_destroy = tvh_codec_profile_vaapi_destroy,
 };
 
 
@@ -1461,7 +1473,7 @@ TVHVideoCodec tvh_codec_vaapi_vp8 = {
     .idclass  = &codec_profile_vaapi_vp8_class,
     .profiles = vaapi_vp8_profiles,
     .profile_init = tvh_codec_profile_video_init,
-    .profile_destroy = tvh_codec_profile_video_destroy,
+    .profile_destroy = tvh_codec_profile_vaapi_destroy,
 };
 
 /* vp9_vaapi =============================================================== */
@@ -1788,5 +1800,5 @@ TVHVideoCodec tvh_codec_vaapi_vp9 = {
     .idclass  = &codec_profile_vaapi_vp9_class,
     .profiles = vaapi_vp9_profiles,
     .profile_init = tvh_codec_profile_video_init,
-    .profile_destroy = tvh_codec_profile_video_destroy,
+    .profile_destroy = tvh_codec_profile_vaapi_destroy,
 };

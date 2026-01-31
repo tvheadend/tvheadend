@@ -273,6 +273,11 @@ tvh_codec_profile_video_init(TVHCodecProfile *_self, htsmsg_t *conf)
 void
 tvh_codec_profile_video_destroy(TVHCodecProfile *_self)
 {
+    TVHVideoCodecProfile *self = (TVHVideoCodecProfile *)_self;
+    if (self){
+        free(self);
+        self = NULL;
+    }
 }
 
 int
