@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-15 08:42+0000\n"
+"POT-Creation-Date: 2026-01-12 02:53+0000\n"
 "PO-Revision-Date: 2023-12-11 11:01+0000\n"
 "Last-Translator: Anti <anti.siidiratsep@gmail.com>, 2025\n"
 "Language-Team: Estonian (https://app.transifex.com/tvheadend/teams/43381/et/)\n"
@@ -305,7 +305,7 @@ msgstr ""
 msgid "Bandwidth (kb/s)"
 msgstr "Võrguühendus (kb/s)"
 
-#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:968
+#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:966
 msgid "Bandwidth monitor"
 msgstr "Võrguühenduse jälgija"
 
@@ -510,7 +510,7 @@ msgstr "Sulge"
 msgid "Columns"
 msgstr "Veerud"
 
-#: src/webui/static/app/comet.js:38
+#: src/webui/static/app/comet.js:43
 msgid "Comet failure"
 msgstr "Comet'i viga"
 
@@ -518,7 +518,7 @@ msgstr "Comet'i viga"
 msgid "Comment"
 msgstr "Kommentaar"
 
-#: src/webui/static/app/status.js:924
+#: src/webui/static/app/status.js:922
 msgid "Compression ratio"
 msgstr "Kompressioon"
 
@@ -1059,7 +1059,7 @@ msgstr "Ignoreeritud"
 msgid "Image Cache"
 msgstr "Pildi vahemälu"
 
-#: src/webui/static/app/status.js:922
+#: src/webui/static/app/status.js:920
 msgid "In"
 msgstr "In"
 
@@ -1067,13 +1067,17 @@ msgstr "In"
 msgid "Index"
 msgstr "Indeks"
 
-#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1012
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1008
 msgid "Input"
 msgstr "Sisend"
 
 #: src/webui/static/app/status.js:193
 msgid "Input (kb/s)"
 msgstr "Sissetulev (kb/s)"
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
+msgstr ""
 
 #: src/webui/static/app/idnode.js:2137
 msgid "Item"
@@ -1438,7 +1442,7 @@ msgstr "Muu voogedastuse filter"
 msgid "Other Stream Filters"
 msgstr "Muud voogedastuse filtrid"
 
-#: src/webui/static/app/status.js:923
+#: src/webui/static/app/status.js:921
 msgid "Out"
 msgstr "Välja"
 
@@ -1601,9 +1605,13 @@ msgstr "Taaskäivita sisemised EPG hankijad importimaks EPG infot kohe"
 msgid "Read-only Info"
 msgstr "Mittemuudetav info"
 
-#: src/webui/static/app/comet.js:21
+#: src/webui/static/app/comet.js:24
 msgid "Reconnected to Tvheadend"
 msgstr "Taasühendatud Tvheadend'iga"
+
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
+msgstr ""
 
 #: src/webui/static/app/epg.js:427
 msgid "Record"
@@ -2044,7 +2052,7 @@ msgstr "Kellaaeg sellel väljal peab kas võrduma või olema ennem {0}"
 msgid "The value in this field is invalid"
 msgstr "Selle välja väärtus pole korrektne"
 
-#: src/webui/static/app/comet.js:14
+#: src/webui/static/app/comet.js:12
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."

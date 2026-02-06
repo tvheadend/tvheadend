@@ -5,16 +5,16 @@
 # 
 # Translators:
 # Christian Hewitt, 2025
-# Andi Chandler <andi@gowling.com>, 2025
+# Andi Chandler <andi@gowling.com>, 2026
 # 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 02:49+0000\n"
+"POT-Creation-Date: 2026-01-12 02:53+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: Andi Chandler <andi@gowling.com>, 2025\n"
+"Last-Translator: Andi Chandler <andi@gowling.com>, 2026\n"
 "Language-Team: English (United States) (https://app.transifex.com/tvheadend/teams/43381/en_US/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -70,6 +70,9 @@ msgid ""
 " is mentioned in the sub-title or summary or description, but 'sheldon' is "
 "not.\""
 msgstr ""
+"\"Find all EPG events whose title contains 'big bang theory' where 'leonard'"
+" is mentioned in the sub-title or summary or description, but 'sheldon' is "
+"not.\""
 
 #: src/docs_inc.c:1414
 msgid "\"Left Arrow\""
@@ -201,7 +204,7 @@ msgstr "'EPG Grabber Configuration'"
 
 #: src/docs_inc.c:3922
 msgid "'EPG Grabber XPath'"
-msgstr ""
+msgstr "'EPG Grabber XPath'"
 
 #: src/docs_inc.c:4519
 msgid "'EPG with placeholder rating'"
@@ -481,7 +484,7 @@ msgstr "/"
 
 #: src/docs_inc.c:3962
 msgid "/ = Node"
-msgstr ""
+msgstr "/ = Node"
 
 #: src/docs_inc.c:2009
 msgid "/etc/default/tvheadend options"
@@ -537,35 +540,35 @@ msgstr "03:00:00 to no maximum"
 
 #: src/docs_inc.c:2651
 msgid "0x01"
-msgstr ""
+msgstr "0x01"
 
 #: src/docs_inc.c:2655
 msgid "0x02"
-msgstr ""
+msgstr "0x02"
 
 #: src/docs_inc.c:2659
 msgid "0x03"
-msgstr ""
+msgstr "0x03"
 
 #: src/docs_inc.c:2663
 msgid "0x04"
-msgstr ""
+msgstr "0x04"
 
 #: src/docs_inc.c:2667
 msgid "0x05"
-msgstr ""
+msgstr "0x05"
 
 #: src/docs_inc.c:2671
 msgid "0x06"
-msgstr ""
+msgstr "0x06"
 
 #: src/docs_inc.c:2675
 msgid "0x07"
-msgstr ""
+msgstr "0x07"
 
 #: src/docs_inc.c:2679
 msgid "0x09"
-msgstr ""
+msgstr "0x09"
 
 #: src/docs_inc.c:5375 src/docs_inc.c:5383
 msgid "1"
@@ -841,7 +844,7 @@ msgstr ""
 
 #: src/docs_inc.c:3964
 msgid "@ = Attribute"
-msgstr ""
+msgstr "@ = Attribute"
 
 #: src/docs_inc.c:4495
 msgid ""
@@ -859,6 +862,11 @@ msgid ""
 "These fields can be used for recording a whole series or detecting a "
 "repeated episode."
 msgstr ""
+"A CRID (Content Reference IDentifier) is a mechanism used by broadcasters to"
+" identify events from the same series and multiple occurrences of the same "
+"episode in a series. TVH refers to these as 'SeriesLink' and 'EpisodeLink'. "
+"These fields can be used for recording a whole series or detecting a "
+"repeated episode."
 
 #: src/docs_inc.c:3136 src/docs_inc.c:3164
 msgid ""
@@ -1211,6 +1219,10 @@ msgid ""
 "of this additional information for EPG grabbers that use XMLTV as a data "
 "source."
 msgstr ""
+"Although XMLTV is a standard, some providers of XMLTV data include "
+"additional information. XPath-like expressions can be used to extract some "
+"of this additional information for EPG grabbers that use XMLTV as a data "
+"source."
 
 #: src/docs_inc.c:6047
 msgid "Always keep the mux regardless of whether it exists or not."
@@ -1664,6 +1676,8 @@ msgid ""
 "By default, XMLTV does not provide a mechanism for uniquely identifying each"
 " event."
 msgstr ""
+"By default, XMLTV does not provide a mechanism for uniquely identifying each"
+" event."
 
 #: src/docs_inc.c:4276
 msgid "C (Cable)"
@@ -1749,7 +1763,7 @@ msgstr "Cancel"
 
 #: src/docs_inc.c:3924
 msgid "Category Code"
-msgstr ""
+msgstr "Category Code"
 
 #: src/docs_inc.c:2695
 msgid ""
@@ -1757,6 +1771,9 @@ msgid ""
 "be used with caution due to the extra system load and overheads required to "
 "perform the search."
 msgstr ""
+"Caution: On systems with constrained resources, Merge-text searches should "
+"be used with caution due to the extra system load and overheads required to "
+"perform the search."
 
 #: src/docs_inc.c:55
 msgid ""
@@ -2129,6 +2146,10 @@ msgid ""
 "second criteria to be in between a `\\x02` and a `\\x05` restricts matches "
 "to text in the merged 'Sub-title', 'Summary' or 'Description' fields."
 msgstr ""
+"Confining the first criteria 'big bang theory' to be between a `\\x01` and a"
+" `\\x02` restricts matches to text within the 'Title' field. Confining the "
+"second criteria to be in between a `\\x02` and a `\\x05` restricts matches "
+"to text in the merged 'Sub-title', 'Summary' or 'Description' fields."
 
 #: src/docs_inc.c:2329 src/docs_inc.c:3108
 msgid "Connection Status"
@@ -2816,7 +2837,7 @@ msgstr "Enabled"
 
 #: src/docs_inc.c:2677
 msgid "End"
-msgstr ""
+msgstr "End"
 
 #: src/docs_inc.c:2082
 msgid "Enigma2"
@@ -2988,17 +3009,19 @@ msgstr "Features"
 
 #: src/docs_inc.c:2649
 msgid "Field"
-msgstr ""
+msgstr "Field"
 
 #: src/docs_inc.c:2685
 msgid ""
 "Field prefixes are always provided in the same sequence and will be present "
 "even if the field is empty."
 msgstr ""
+"Field prefixes are always provided in the same sequence and will be present "
+"even if the field is empty."
 
 #: src/docs_inc.c:2681
 msgid "Field separator (Tab)"
-msgstr ""
+msgstr "Field separator (Tab)"
 
 #: src/docs_inc.c:5189
 msgid "File missing"
@@ -3181,18 +3204,24 @@ msgid ""
 "For the purposes of the SeriesLink and EpisodeLink, the root node is "
 "considered to be `programme`."
 msgstr ""
+"For the purposes of the SeriesLink and EpisodeLink, the root node is "
+"considered to be `programme`."
 
 #: src/docs_inc.c:3932
 msgid ""
 "For the purposes of the category code, the root node is considered to be the"
 " standard `category` node within `programme`."
 msgstr ""
+"For the purposes of the category code, the root node is considered to be the"
+" standard `category` node within `programme`."
 
 #: src/docs_inc.c:3942
 msgid ""
 "For the purposes of the unique ID, the root node is considered to be "
 "`programme`."
 msgstr ""
+"For the purposes of the unique ID, the root node is considered to be "
+"`programme`."
 
 #: src/docs_inc.c:3076
 msgid "For use with devices that have a CAM module."
@@ -3264,7 +3293,7 @@ msgstr "Full path to recording"
 
 #: src/docs_inc.c:2635
 msgid "Full-Text vs Merge-Text Searching Options"
-msgstr ""
+msgstr "Full-Text vs Merge-Text Searching Options"
 
 #: src/docs_inc.c:1048
 msgid "Fully-Integrated with Mainstream Media Players"
@@ -3679,6 +3708,9 @@ msgid ""
 "enabled, TVH will perform its standard process for creating 'SeriesLink' and"
 " 'EpisodeLink' values, otherwise, the fields will be left empty."
 msgstr ""
+"If the XPath expression does not match any data and these options are "
+"enabled, TVH will perform its standard process for creating 'SeriesLink' and"
+" 'EpisodeLink' values, otherwise, the fields will be left empty."
 
 #: src/docs_inc.c:3914
 msgid ""
@@ -3974,12 +4006,17 @@ msgid ""
 "However, '0x40' is the standard code for 'Sport' and the provider has added "
 "this code to allow the standard code to be used when needed."
 msgstr ""
+"In the following example, 'Cricket' is not a standard DVB EIT category. "
+"However, '0x40' is the standard code for 'Sport' and the provider has added "
+"this code to allow the standard code to be used when needed."
 
 #: src/docs_inc.c:3938
 msgid ""
 "In the following example, an XMLTV provider has added the non-standard "
 "`uniqueID` attribute to the `programme` node."
 msgstr ""
+"In the following example, an XMLTV provider has added the non-standard "
+"`uniqueID` attribute to the `programme` node."
 
 #: src/docs_inc.c:3948
 msgid ""
@@ -3987,6 +4024,9 @@ msgid ""
 "node to the XMLTV data. This has been further broken down to include a "
 "`series` node and an `episode` node."
 msgstr ""
+"In the following example, the provider has added the non-standard `crid` "
+"node to the XMLTV data. This has been further broken down to include a "
+"`series` node and an `episode` node."
 
 #: src/docs_inc.c:5341 src/docs_inc.c:6197
 msgid "Include all information."
@@ -4549,11 +4589,11 @@ msgstr "Merge same name"
 
 #: src/docs_inc.c:3750
 msgid "Merge-Text Search"
-msgstr ""
+msgstr "Merge-Text Search"
 
 #: src/docs_inc.c:2643
 msgid "Merge-text Field Prefixes"
-msgstr ""
+msgstr "Merge-text Field Prefixes"
 
 #: src/docs_inc.c:4763
 msgid "Method"
@@ -4934,12 +4974,16 @@ msgid ""
 "Note: In addition to the field prefixes, a special field separator is "
 "provided between individual language elements within a field."
 msgstr ""
+"Note: In addition to the field prefixes, a special field separator is "
+"provided between individual language elements within a field."
 
 #: src/docs_inc.c:2693
 msgid ""
 "Note: The '[' and ']' characters are only used for illustrative purposes, "
 "they are not present in the actual data."
 msgstr ""
+"Note: The '[' and ']' characters are only used for illustrative purposes, "
+"they are not present in the actual data."
 
 #: src/docs_inc.c:5019
 msgid ""
@@ -5407,7 +5451,7 @@ msgstr ""
 
 #: src/docs_inc.c:2647
 msgid "Prefix"
-msgstr ""
+msgstr "Prefix"
 
 #: src/docs_inc.c:5659
 msgid ""
@@ -5958,7 +6002,7 @@ msgstr ""
 
 #: src/docs_inc.c:2687
 msgid "Sample Data:"
-msgstr ""
+msgstr "Sample Data:"
 
 #: src/docs_inc.c:2532
 msgid "Satellite Configuration"
@@ -6085,11 +6129,11 @@ msgstr "Series link, Record all EPG-defined episodes in the series/season."
 
 #: src/docs_inc.c:3944
 msgid "SeriesLink and EpisodeLink"
-msgstr ""
+msgstr "SeriesLink and EpisodeLink"
 
 #: src/docs_inc.c:3954
 msgid "SeriesLink and EpisodeLink Fallbacks"
-msgstr ""
+msgstr "SeriesLink and EpisodeLink Fallbacks"
 
 #: src/docs_inc.c:11
 msgid "Server connectivity"
@@ -6330,6 +6374,8 @@ msgid ""
 "Some information providers include free form category descriptions that are "
 "not compliant with the DVB EIT standard."
 msgstr ""
+"Some information providers include free form category descriptions that are "
+"not compliant with the DVB EIT standard."
 
 #: src/docs_inc.c:1595
 msgid ""
@@ -6523,7 +6569,7 @@ msgstr "Subsystems"
 
 #: src/docs_inc.c:2657
 msgid "Subtitle (Short Description)"
-msgstr ""
+msgstr "Subtitle (Short Description)"
 
 #: src/docs_inc.c:4002
 msgid "Subtitle Stream Filters"
@@ -6625,6 +6671,7 @@ msgstr "TV over the Internet via your broadband connection."
 msgid ""
 "TVH can only interpret the following subset of XPath identifier syntax:"
 msgstr ""
+"TVH can only interpret the following subset of XPath identifier syntax:"
 
 #: src/docs_inc.c:3688
 msgid "TVHDHomeRun Client"
@@ -6778,6 +6825,11 @@ msgid ""
 " of the fields in all of the available languages for the EPG entry in "
 "question."
 msgstr ""
+"The 'Full-text' option will test each of the above-mentioned fields one-by-"
+"one in isolation. Alternately, the 'Merge-text' option will test all of the "
+"above-mentioned fields as a single merged field consisting of values for all"
+" of the fields in all of the available languages for the EPG entry in "
+"question."
 
 #: src/docs_inc.c:2637
 msgid ""
@@ -6787,6 +6839,11 @@ msgid ""
 "Description, Credits and Keywords. If both options are selected, only the "
 "'Merge-text' search will be performed."
 msgstr ""
+"The 'Merge-text' search option provides enhancements to the existing 'Full-"
+"text' search option. Both options test the regular expression provided "
+"against an EPG event's Title, Sub-title (short description), Summary, "
+"Description, Credits and Keywords. If both options are selected, only the "
+"'Merge-text' search will be performed."
 
 #: src/docs_inc.c:280
 msgid ""
@@ -7093,6 +7150,14 @@ msgid ""
 "description + credits + keywords. See AutoRec help for more details on using"
 " mergetext."
 msgstr ""
+"The filter uses case-insensitive regular expressions. If you don’t know what"
+" a regular expression is, this simply means that you can type just parts of "
+"the title and filter on that - there’s no need for full, exact matching. If "
+"the fulltext checkbox is checked, the title text is matched against title, "
+"subtitle, summary and description. If the mergetext checkbox is checked, the"
+" title text is matched against a merger of the title + subtitle + summary + "
+"description + credits + keywords. See AutoRec help for more details on using"
+" mergetext."
 
 #: src/docs_inc.c:666
 msgid ""
@@ -7140,7 +7205,7 @@ msgstr ""
 
 #: src/docs_inc.c:2645
 msgid "The following field prefixes are used:"
-msgstr ""
+msgstr "The following field prefixes are used:"
 
 #: src/docs_inc.c:2398
 msgid "The following functions are available:"
@@ -7810,6 +7875,10 @@ msgid ""
 " 'Event Sub-Title' and a French sub-title of 'Sous-titre de l'événement'. No"
 " other fields contain any data."
 msgstr ""
+"This sample shows an EPG record having an English title of 'Event Title' and"
+" a French title of 'Titre de l'événement' as well as an English sub-title of"
+" 'Event Sub-Title' and a French sub-title of 'Sous-titre de l'événement'. No"
+" other fields contain any data."
 
 #: src/docs_inc.c:3908
 msgid ""
@@ -8110,6 +8179,9 @@ msgid ""
 "`//crid/episode/text()` to the 'SeriesLink XPath' and 'EpisodeLink XPath' "
 "fields respectively."
 msgstr ""
+"To extract these values, we should add `//crid/series/text()` and "
+"`//crid/episode/text()` to the 'SeriesLink XPath' and 'EpisodeLink XPath' "
+"fields respectively."
 
 #: src/docs_inc.c:3930
 msgid ""
@@ -8117,6 +8189,9 @@ msgid ""
 "'Category Code XPath' field. This will extract the hexadecimal code '0x40' "
 "and convert that to the standard category code 'Sport'."
 msgstr ""
+"To extract this attribute for use in TVH, we should add `@eit` to the "
+"'Category Code XPath' field. This will extract the hexadecimal code '0x40' "
+"and convert that to the standard category code 'Sport'."
 
 #: src/docs_inc.c:3940
 msgid ""
@@ -8125,6 +8200,10 @@ msgid ""
 "identifier for this EPG event and will allow future updates matching this ID"
 " to be applied."
 msgstr ""
+"To extract this attribute for use in TVH, we should add `@uniqueID` to the "
+"'Unique Event ID XPath' field. This will assign '1234' as the unique "
+"identifier for this EPG event and will allow future updates matching this ID"
+" to be applied."
 
 #: src/docs_inc.c:1611
 msgid "To include class documentation you'd use:"
@@ -8445,7 +8524,7 @@ msgstr "Unicable LNB configuration."
 
 #: src/docs_inc.c:3934
 msgid "Unique Event Identifier"
-msgstr ""
+msgstr "Unique Event Identifier"
 
 #: src/docs_inc.c:5759 src/docs_inc.c:5947
 msgid "Unique ID of recording"
@@ -8485,7 +8564,7 @@ msgstr "Updating the Documentation"
 
 #: src/docs_inc.c:2697
 msgid "Usage Example:"
-msgstr ""
+msgstr "Usage Example:"
 
 #: src/docs_inc.c:5
 msgid "Usage: `tvheadend [OPTIONS]`"
@@ -8764,6 +8843,8 @@ msgid ""
 "When merging fields, each field is prefixed with a specific code so that "
 "search terms can be applied to a specific field."
 msgstr ""
+"When merging fields, each field is prefixed with a specific code so that "
+"search terms can be applied to a specific field."
 
 #: src/docs_inc.c:4509
 msgid ""
@@ -8903,7 +8984,7 @@ msgstr "XMLTV EPG Import"
 
 #: src/docs_inc.c:3916
 msgid "XMLTV XPath Examples and Notes"
-msgstr ""
+msgstr "XMLTV XPath Examples and Notes"
 
 #: src/docs_inc.c:5661
 msgid "Yes"
@@ -9093,6 +9174,9 @@ msgid ""
 "l'événement[0x02][0x09]en[0x09]Event Sub-Title[0x09]fr[0x09]Sous-titre de "
 "l'événement[0x03][0x04][0x05][0x06][0x07]"
 msgstr ""
+"[0x01][0x09]en[0x09]Event Title[0x09]fr[0x09]Titre de "
+"l'événement[0x02][0x09]en[0x09]Event Sub-Title[0x09]fr[0x09]Sous-titre de "
+"l'événement[0x03][0x04][0x05][0x06][0x07]"
 
 #: src/docs_inc.c:472
 msgid "[Autorec]"
@@ -9116,7 +9200,7 @@ msgstr "[Record]"
 
 #: src/docs_inc.c:3966
 msgid "[] = Condition"
-msgstr ""
+msgstr "[] = Condition"
 
 #: src/docs_inc.c:3148 src/docs_inc.c:3168 src/docs_inc.c:3198
 msgid "[dvbapi]"
@@ -9306,7 +9390,7 @@ msgstr "__Errors__ : Number of errors occurred sending the stream."
 
 #: src/docs_inc.c:3970
 msgid "__Example:__ //node1/node2[attrX=value]/@attrY"
-msgstr ""
+msgstr "__Example:__ //node1/node2[attrX=value]/@attrY"
 
 #: src/docs_inc.c:2050
 msgid ""
@@ -10501,7 +10585,7 @@ msgstr "temporary ticket valid for 5 minutes"
 
 #: src/docs_inc.c:3968
 msgid "text() = Node text"
-msgstr ""
+msgstr "text() = Node text"
 
 #: src/docs_inc.c:1138
 msgid "that provides access to Add/Save/Edit-type functions, and a"
