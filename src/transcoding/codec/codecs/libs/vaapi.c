@@ -349,7 +349,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .group    = 3,
                 .opts     = PO_EXPERT,
                 .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(TVHCodecProfile, low_power),
+                .off      = offsetof(tvh_codec_profile_vaapi_t, low_power),
                 .def.i    = 0,
             },
             {

@@ -477,6 +477,13 @@ typedef struct {
     int qp;
     int quality;
     int global_quality;
+/**
+ * VAAPI async_depth - Maximum processing parallelism. Increase this to improve single channel performance. [async_depth]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * int:
+ * VALUE - number of async_depth is used by VAAPI encoder
+ */
     int async_depth;
 /**
  * VAAPI Encoder availablity.
@@ -515,21 +522,19 @@ typedef struct {
  * VAAPI Maximum bitrate [maxrate]
  * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
  * @note
- * int:
+ * double:
  * VALUE - max bitrate in bps
  */
     double max_bit_rate;
 /**
- * VAAPI Maximum bitrate [maxrate]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * VAAPI Bitrate scale factor [not ffmpeg parameter]
  * @note
  * double:
- * VALUE - max bitrate in bps
+ * VALUE - bitrate scale factor relative to 480p resolution
  */
     double bit_rate_scale_factor;
 /**
  * VAAPI Platform hardware [not ffmpeg parameter]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
  * @note
  * int:
  * 0 - Unconstrained (useful for debug)
@@ -537,12 +542,49 @@ typedef struct {
  * 2 - AMD
  */
     int platform;
+/**
+ * VAAPI Low power - Some drivers/platforms offer a second encoder for some codecs intended to use less power than the default encoder [low_power]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * int:
+ * 0 - disabled
+ * 1 - enabled
+ */
+    int low_power;
 
     int loop_filter_level;
     int loop_filter_sharpness;
     double buff_factor;
+/**
+ * VAAPI Rate Control Mode - Set the rate control mode to use. A given driver may only support a subset of modes [rc_mode]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * int:
+ * 0 - auto
+ * 1 - CQP
+ * 2 - CBR
+ * 3 - VBR
+ * 4 - ICQ
+ * 5 - QVBR
+ * 6 - AVBR
+ */
     int rc_mode;
+/**
+ * VAAPI hevc_vaapi Tier - Set general_tier_flag. This may affect the level chosen for the stream if it is not explicitly specified [tier]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * int:
+ * 0 - Main
+ * 1 - High
+ */
     int tier;
+/**
+ * VAAPI Level - Set level (level_idc)  [level]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * @note
+ * int:
+ * VALUE - from -99 to 255 (default -99: auto)
+ */
     int level;
     int qmin;
     int qmax;
