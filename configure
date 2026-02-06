@@ -553,6 +553,15 @@ if enabled_or_auto uriparser; then
 fi
 
 #
+# libcurl (required for HTTP client)
+#
+if check_pkg libcurl; then
+  enable curl
+else
+  die "libcurl development support not found (required for HTTP client)"
+fi
+
+#
 # Bundling
 #
 if enabled bundle; then
