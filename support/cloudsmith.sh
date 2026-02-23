@@ -80,12 +80,12 @@ case $DISTRO in
         TARGET="${VERSION%%.*}";;
     fedora)
         case $VERSION in
-            37|38|39|40|41|42)
+            37|38|39|40|41|42|43|44)
                 PKGMGR="dnf"
                 OS="fedora"
                 TARGET=$VERSION;;
-            43|44)
-                echo -e "${YELLOW}Fedora 43 (current rawhide) is not (yet) supported by Cloudsmith${NC}"
+            45)
+                echo -e "${YELLOW}Fedora 45 (current rawhide) is not (yet) supported by Cloudsmith${NC}"
                 exit 0;;
             *)
                 echo -e "${RED}Fedora release $VERSION could not be recognized${NC}" 
