@@ -52,6 +52,7 @@
 static void *htsp_server, *htsp_server_2;
 
 #define HTSP_PROTO_VERSION 43
+#define PROXY_V1_MAX_LINE 108
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -3554,7 +3555,7 @@ htsp_write_scheduler(void *aux)
 static int
 htsp_process_proxy_line(int fd, struct sockaddr_storage *source)
 {
-  char cmdline[108];
+  char cmdline[PROXY_V1_MAX_LINE];
   char *c, *s;
   ssize_t n;
   int delim;
@@ -3594,8 +3595,9 @@ htsp_process_proxy_line(int fd, struct sockaddr_storage *source)
   }
   s += 5;
 
-  for (c = s; *c != ' '; c++) {
-    if (*c == '\0') goto error;
+  for (c = s; *c; c++) {
+    if (*c == ' ')
+      break;
     if (*c != delim && (*c < '0' || *c > '9')) {
       if (delim == ':') {
         if (*c >= 'a' && *c <= 'f') continue;
@@ -3605,8 +3607,8 @@ htsp_process_proxy_line(int fd, struct sockaddr_storage *source)
     }
   }
   if (*c != ' ') goto error;
-  if ((c-s) < 7) goto error;
-  if ((c-s) > (delim == ':' ? 45 : 15)) goto error;
+  if ((c-s) < 7) goto error; /* min length for IPv4 source (1.2.3.4) */
+  if ((c-s) > (delim == ':' ? 45 : 15)) goto error; /* max IPv6 / IPv4 source lengths */
   *c = '\0';
   if (tcp_get_ip_from_str(s, source) == NULL)
     goto error;
