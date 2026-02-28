@@ -37,7 +37,8 @@ typedef struct config {
   int ui_quicktips;
   int http_auth;
   int http_auth_algo;
-  int proxy;
+  int trust_tcp_proxy;
+  int trust_http_x_forwarded_for;
   char *realm;
   char *wizard;
   char *full_version;

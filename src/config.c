@@ -1481,6 +1481,24 @@ config_migrate_v24 ( void )
   }
 }
 
+static void
+config_migrate_v25 ( void )
+{
+  htsmsg_t *c;
+
+  if ((c = hts_settings_load("config")) != NULL) {
+    if (htsmsg_get_bool_or_default(c, "proxy", 0)) {
+      htsmsg_set_u32(c, "trust_tcp_proxy", 1);
+      htsmsg_set_u32(c, "trust_http_x_forwarded_for", 1);
+      config.trust_tcp_proxy = 1;
+      config.trust_http_x_forwarded_for = 1;
+    }
+    htsmsg_delete_field(c, "proxy");
+    hts_settings_save(c, "config");
+    htsmsg_destroy(c);
+  }
+}
+
 /*
  * Perform backup
  */
@@ -1606,7 +1624,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v21,
   config_migrate_v22,
   config_migrate_v23,
-  config_migrate_v24
+  config_migrate_v24,
+  config_migrate_v25
 };
 
 /*
@@ -1763,7 +1782,8 @@ config_boot
   config.ui_quicktips = 1;
   config.http_auth = HTTP_AUTH_DIGEST;
   config.http_auth_algo = HTTP_AUTH_ALGO_MD5;
-  config.proxy = 0;
+  config.trust_tcp_proxy = 0;
+  config.trust_http_x_forwarded_for = 0;
   config.realm = strdup("tvheadend");
   config.info_area = strdup("login,storage,time");
   config.cookie_expires = 7;
@@ -2535,15 +2555,24 @@ const idclass_t config_class = {
     },
     {
       .type   = PT_BOOL,
-      .id     = "proxy",
-      .name   = N_("PROXY protocol & X-Forwarded-For"),
-      .desc   = N_("PROXY protocol is an extension for support incoming "
+      .id     = "trust_tcp_proxy",
+      .name   = N_("Trust PROXY protocol"),
+      .desc   = N_("PROXY protocol is an extension for supporting incoming "
                    "TCP connections from a remote server (like a firewall) "
                    "sending the original IP address of the client. "
-                   "The HTTP header 'X-Forwarded-For' do the same with "
-                   "HTTP connections. Both enable tunneled connections."
                    "This option should be disabled for standard usage."),
-      .off    = offsetof(config_t, proxy),
+      .off    = offsetof(config_t, trust_tcp_proxy),
+      .opts   = PO_EXPERT,
+      .group  = 5
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "trust_http_x_forwarded_for",
+      .name   = N_("Trust HTTP X-Forwarded-For"),
+      .desc   = N_("The HTTP header 'X-Forwarded-For' carries the original "
+                   "IP address of the client when Tvheadend is behind a "
+                   "proxy. This option should be disabled for standard usage."),
+      .off    = offsetof(config_t, trust_http_x_forwarded_for),
       .opts   = PO_EXPERT,
       .group  = 5
     },
