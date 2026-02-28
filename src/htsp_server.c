@@ -3551,6 +3551,74 @@ htsp_write_scheduler(void *aux)
 /**
  *
  */
+static int
+htsp_process_proxy_line(int fd, struct sockaddr_storage *source)
+{
+  char cmdline[108];
+  char *c, *s;
+  ssize_t n;
+  int delim;
+
+  if (!config.trust_tcp_proxy)
+    return 0;
+
+  n = recv(fd, cmdline, sizeof(cmdline) - 1, MSG_PEEK);
+  if (n <= 0)
+    return 0;
+  cmdline[n] = '\0';
+
+  c = memchr(cmdline, '\n', n);
+  if (c == NULL)
+    return 0;
+  n = c - cmdline + 1;
+  if (n < 8 || strncmp(cmdline, "PROXY ", 6) != 0)
+    return 0;
+
+  if (tcp_read(fd, cmdline, n))
+    goto error;
+  cmdline[n] = '\0';
+  c = cmdline + n - 1;
+  if (*c == '\n')
+    *c-- = '\0';
+  if (*c == '\r')
+    *c = '\0';
+
+  tvhtrace(LS_HTSP, "[PROXY] PROXY protocol detected! cmdline='%s'", cmdline);
+
+  delim = '.';
+  s = cmdline + 6;
+  if (strncmp(s, "TCP6 ", 5) == 0) {
+    delim = ':';
+  } else if (strncmp(s, "TCP4 ", 5) != 0) {
+    goto error;
+  }
+  s += 5;
+
+  for (c = s; *c != ' '; c++) {
+    if (*c == '\0') goto error;
+    if (*c != delim && (*c < '0' || *c > '9')) {
+      if (delim == ':') {
+        if (*c >= 'a' && *c <= 'f') continue;
+        if (*c >= 'A' && *c <= 'F') continue;
+      }
+      goto error;
+    }
+  }
+  if (*c != ' ') goto error;
+  if ((c-s) < 7) goto error;
+  if ((c-s) > (delim == ':' ? 45 : 15)) goto error;
+  *c = '\0';
+  if (tcp_get_ip_from_str(s, source) == NULL)
+    goto error;
+
+  tvhtrace(LS_HTSP, "[PROXY] Original source='%s'", s);
+  return 1;
+
+error:
+  tvhwarn(LS_HTSP, "invalid PROXY protocol header");
+  return -1;
+}
+
 static void
 htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 	   struct sockaddr_storage *self)
@@ -3564,6 +3632,10 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   if (config.dscp >= 0)
     socket_set_dscp(fd, config.dscp, NULL, 0);
 
+  if (htsp_process_proxy_line(fd, source) < 0) {
+    close(fd);
+    return;
+  }
   tcp_get_str_from_ip(source, buf, 50);
 
   memset(&htsp, 0, sizeof(htsp_connection_t));
