@@ -2557,7 +2557,7 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "trust_tcp_proxy",
       .name   = N_("Trust PROXY protocol"),
-      .desc   = N_("PROXY protocol is an extension for support incoming "
+      .desc   = N_("PROXY protocol is an extension for supporting incoming "
                    "TCP connections from a remote server (like a firewall) "
                    "sending the original IP address of the client. "
                    "This option should be disabled for standard usage."),
