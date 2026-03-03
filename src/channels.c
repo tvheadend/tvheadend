@@ -253,9 +253,14 @@ channel_class_get_list(void *o, const char *lang)
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "channel/list");
   htsmsg_add_str(m, "event", "channel");
+  htsmsg_add_str(m, "stype", "none");
   htsmsg_add_u32(p, "all",  1);
-  if (config.chname_num)
+  if (config.chname_num) {
     htsmsg_add_u32(p, "numbers", 1);
+    htsmsg_add_str(p, "sort", "numname");
+  } else {
+    htsmsg_add_str(p, "sort", "name");
+  }
   if (config.chname_src)
     htsmsg_add_u32(p, "sources", 1);
   htsmsg_add_msg(m, "params", p);
