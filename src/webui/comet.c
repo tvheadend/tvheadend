@@ -186,6 +186,7 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   htsmsg_add_u32(m, "chname_src", config.chname_src);
   htsmsg_add_str(m, "date_mask", config.date_mask);
   htsmsg_add_u32(m, "label_formatting", config.label_formatting);
+  htsmsg_add_u32(m, "dvr_show_seconds", config.dvr_show_seconds);
   if (!access_noacl)
     htsmsg_add_str(m, "username", username);
   if (hc->hc_peer_ipstr)
