@@ -13,6 +13,7 @@ tvheadend.docs_toc = null;
 tvheadend.doc_history = [];
 tvheadend.doc_win = null;
 tvheadend.date_mask = '';
+tvheadend.dvr_show_seconds = true;
 tvheadend.label_formatting = false;
 tvheadend.language = window.navigator.userLanguage || window.navigator.language;
 
@@ -1028,6 +1029,7 @@ function accessUpdate(o) {
     tvheadend.chname_num = o.chname_num ? 1 : 0;
     tvheadend.chname_src = o.chname_src ? 1 : 0;
     tvheadend.date_mask = o.date_mask;
+    tvheadend.dvr_show_seconds = o.dvr_show_seconds ? true : false;
     tvheadend.label_formatting = o.label_formatting ? true : false;
     tvheadend.page_size = o.page_size;
 
