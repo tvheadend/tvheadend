@@ -319,9 +319,16 @@ dvr_cutpoint_delete_files (const char *s)
   for (i = 0; i < ARRAY_SIZE(dvr_cutpoint_parsers); i++) {
 
     strcpy(path, s);
-    if ((dot = (strrchr(path, '.') + 1)))
-      *dot = 0;
-
+    
+    dot = strrchr(path, '.');
+    if (dot && strchr(dot, '/')) dot = NULL; // Dot is in a directory, that doesn't count
+    if (dot) {
+      /* keep the dot, truncate after it */
+      *(dot + 1) = '\0';
+    } else {
+      /* add a dot so we get "base.ext" */
+      strcat(path, ".");
+    }
     strcat(path, dvr_cutpoint_parsers[i].ext);
 
     /* Check file exists */
