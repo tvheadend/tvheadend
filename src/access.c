@@ -294,6 +294,7 @@ access_copy(access_t *src)
     dst->aa_auth = strdup(src->aa_auth);
   dst->aa_xmltv_output_format = src->aa_xmltv_output_format;
   dst->aa_htsp_output_format = src->aa_htsp_output_format;
+  dst->aa_default_tab = src->aa_default_tab;
   return dst;
 }
 
@@ -695,6 +696,11 @@ access_update(access_t *a, access_entry_t *ae)
     a->aa_xmltv_output_format = ae->ae_xmltv_output_format;
   if (ae->ae_change_htsp_output_format)
     a->aa_htsp_output_format = ae->ae_htsp_output_format;
+
+  if (ae->ae_change_default_tab) {
+    a->aa_default_tab = ae->ae_default_tab;
+  }
+
 }
 
 /**
@@ -1126,6 +1132,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
     ae->ae_change_rights  = 1;
     ae->ae_change_xmltv_output_format = 1;
     ae->ae_change_htsp_output_format = 1;
+    ae->ae_change_default_tab = CONFIG_DEFAULT_TAB_SYSTEM;
     ae->ae_htsp_streaming = 1;
     ae->ae_htsp_dvr       = 1;
     ae->ae_all_dvr        = 1;
@@ -1581,6 +1588,11 @@ static idnode_slist_t access_entry_class_change_slist[] = {
     .name = N_("HTSP output format"),
     .off  = offsetof(access_entry_t, ae_change_htsp_output_format),
   },
+  {
+    .id   = "change_default_tab",
+    .name = N_("Default tab"),
+    .off  = offsetof(access_entry_t, ae_change_default_tab),
+  },
   {}
 };
 
@@ -1810,6 +1822,15 @@ const idclass_t access_entry_class = {
       .list     = language_get_ui_list,
       .off      = offsetof(access_entry_t, ae_lang_ui),
       .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "default_tab",
+      .name     = N_("Default tab"),
+      .desc     = N_("Set the default start-up tab.  'EPG' is the default tab."),
+      .list     = config_class_default_tab_list,
+      .off      = offsetof(access_entry_t, ae_default_tab),
+      .opts     = PO_DOC_NLIST | PO_ADVANCED,
     },
     {
       .type     = PT_STR,

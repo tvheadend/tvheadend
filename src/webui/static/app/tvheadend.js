@@ -1,3 +1,31 @@
+const CONFIG_DEFAULT_TAB_SYSTEM        = 0;
+const CONFIG_DEFAULT_TAB_EPG           = 1;
+const CONFIG_DEFAULT_TAB_DVR_FIRST     = 10;
+const CONFIG_DEFAULT_TAB_DVR_UPCOMING  = 10;
+const CONFIG_DEFAULT_TAB_DVR_FINISHED  = 11;
+const CONFIG_DEFAULT_TAB_DVR_FAILED    = 12;
+const CONFIG_DEFAULT_TAB_DVR_REMOVED   = 13;
+const CONFIG_DEFAULT_TAB_DVR_AUTORECS  = 14;
+const CONFIG_DEFAULT_TAB_DVR_TIMERS    = 15;
+const CONFIG_DEFAULT_TAB_DVR_LAST      = 19;
+const CONFIG_DEFAULT_TAB_CFG_FIRST     = 20;
+const CONFIG_DEFAULT_TAB_CFG_GENERAL   = 20;
+const CONFIG_DEFAULT_TAB_CFG_USERS     = 21;
+const CONFIG_DEFAULT_TAB_CFG_DVB       = 22;
+const CONFIG_DEFAULT_TAB_CFG_CHANNEL   = 23;
+const CONFIG_DEFAULT_TAB_CFG_STREAM    = 24;
+const CONFIG_DEFAULT_TAB_CFG_REC       = 25;
+const CONFIG_DEFAULT_TAB_CFG_CA        = 26;
+const CONFIG_DEFAULT_TAB_CFG_DEBUG     = 27;
+const CONFIG_DEFAULT_TAB_CFG_LAST      = 29;
+const CONFIG_DEFAULT_TAB_STATUS_FIRST  = 30;
+const CONFIG_DEFAULT_TAB_STATUS_STREAM = 30;
+const CONFIG_DEFAULT_TAB_STATUS_SUBS   = 31;
+const CONFIG_DEFAULT_TAB_STATUS_CONN   = 32;
+const CONFIG_DEFAULT_TAB_STATUS_SVC    = 33;
+const CONFIG_DEFAULT_TAB_STATUS_LAST   = 39;
+const CONFIG_DEFAULT_TAB_ABOUT         = 40;
+
 tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilities = null;
@@ -15,6 +43,7 @@ tvheadend.doc_win = null;
 tvheadend.date_mask = '';
 tvheadend.label_formatting = false;
 tvheadend.language = window.navigator.userLanguage || window.navigator.language;
+tvheadend.default_tab = CONFIG_DEFAULT_TAB_EPG;
 
 // Use en-US if browser language detection fails.
 if (!tvheadend.language || !/\S/.test(tvheadend.language)) {
@@ -1030,6 +1059,7 @@ function accessUpdate(o) {
     tvheadend.date_mask = o.date_mask;
     tvheadend.label_formatting = o.label_formatting ? true : false;
     tvheadend.page_size = o.page_size;
+    tvheadend.default_tab = o.default_tab ? o.default_tab : CONFIG_DEFAULT_TAB_EPG;
 
     if (o.uilevel_nochange)
         tvheadend.uilevel_nochange = true;
@@ -1059,6 +1089,12 @@ function accessUpdate(o) {
     if (o.dvr == true && tvheadend.dvrpanel == null) {
         tvheadend.dvrpanel = tvheadend.dvr();
         panel.add(tvheadend.dvrpanel);
+
+        if (tvheadend.default_tab >= CONFIG_DEFAULT_TAB_DVR_FIRST &&
+            tvheadend.default_tab <= CONFIG_DEFAULT_TAB_DVR_LAST)
+            {
+                panel.setActiveTab(1);
+            }
     }
 
     if (o.admin == true && tvheadend.confpanel == null) {
@@ -1192,8 +1228,23 @@ function accessUpdate(o) {
             cp.add(dbg);
         }
 
+        //Set the default config sub-panel
+        if (tvheadend.default_tab >= CONFIG_DEFAULT_TAB_CFG_FIRST &&
+            tvheadend.default_tab <= CONFIG_DEFAULT_TAB_CFG_LAST)
+            {
+                cp.setActiveTab(tvheadend.default_tab - CONFIG_DEFAULT_TAB_CFG_FIRST);
+            }
+
         /* Finish */
         panel.add(cp);
+
+        //Also set the main config tab to default on level 1
+        //if one of the child tabs is the system default.
+        if (tvheadend.default_tab >= CONFIG_DEFAULT_TAB_CFG_FIRST &&
+            tvheadend.default_tab <= CONFIG_DEFAULT_TAB_CFG_LAST) {
+            panel.setActiveTab(panel.items.indexOf(cp));
+        }
+
         tvheadend.confpanel = cp;
         cp.doLayout();
     }
@@ -1201,6 +1252,11 @@ function accessUpdate(o) {
     if (o.admin == true && tvheadend.statuspanel == null) {
         tvheadend.statuspanel = new tvheadend.status;
         panel.add(tvheadend.statuspanel);
+
+        if (tvheadend.default_tab >= CONFIG_DEFAULT_TAB_STATUS_FIRST &&
+            tvheadend.default_tab <= CONFIG_DEFAULT_TAB_STATUS_LAST) {
+            panel.setActiveTab(panel.items.indexOf(tvheadend.statuspanel));
+        }
     }
 
     if (tvheadend.aboutPanel == null) {
@@ -1213,6 +1269,10 @@ function accessUpdate(o) {
             autoLoad: 'about.html'
         });
         panel.add(tvheadend.aboutPanel);
+
+        if (tvheadend.default_tab === CONFIG_DEFAULT_TAB_ABOUT) {
+            panel.setActiveTab(panel.items.indexOf(tvheadend.aboutPanel));
+        }
     }
 
     panel.doLayout();

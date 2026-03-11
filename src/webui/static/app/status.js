@@ -833,7 +833,13 @@ tvheadend.status = function() {
     tvheadend.status_subs(panel);
     tvheadend.status_conns(panel);
     tvheadend.service_mapper_status(panel);
-    return panel;
+
+    if (tvheadend.default_tab >= CONFIG_DEFAULT_TAB_STATUS_FIRST &&
+        tvheadend.default_tab <= CONFIG_DEFAULT_TAB_STATUS_LAST) {
+        panel.setActiveTab(tvheadend.default_tab - CONFIG_DEFAULT_TAB_STATUS_FIRST);
+    }
+
+        return panel;
 };
 
 

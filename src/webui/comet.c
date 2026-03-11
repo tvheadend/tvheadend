@@ -161,6 +161,7 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   int dvr = !http_access_verify(hc, ACCESS_RECORDER);
   int admin = !http_access_verify(hc, ACCESS_ADMIN);
   const char *s;
+  uint32_t default_tab = config.default_tab;
 
   htsmsg_add_str(m, "notificationClass", "accessUpdate");
 
@@ -178,6 +179,12 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
       if (config.uilevel_nochange)
         htsmsg_add_u32(m, "uilevel_nochange", config.uilevel_nochange);
     }
+    
+    if(hc->hc_access->aa_default_tab != CONFIG_DEFAULT_TAB_SYSTEM)
+    {
+      default_tab = hc->hc_access->aa_default_tab;
+    }
+
   }
   htsmsg_add_str(m, "theme", access_get_theme(hc->hc_access));
   htsmsg_add_u32(m, "page_size", config.page_size_ui);
@@ -186,6 +193,9 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   htsmsg_add_u32(m, "chname_src", config.chname_src);
   htsmsg_add_str(m, "date_mask", config.date_mask);
   htsmsg_add_u32(m, "label_formatting", config.label_formatting);
+  
+  htsmsg_add_u32(m, "default_tab", default_tab);
+  
   if (!access_noacl)
     htsmsg_add_str(m, "username", username);
   if (hc->hc_peer_ipstr)
