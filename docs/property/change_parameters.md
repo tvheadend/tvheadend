@@ -21,6 +21,9 @@ Option                     | Description/Properties
 **Web interface language** | *Web interface language*.
 **Theme**                  | *Theme*.
 **User interface level**   | *User interface level*.
+**XMLTV output format**    | *Output format for XMLTV*.
+**HTSP output format**     | *Output format for HTSP*.
+**Default tab**            | *Default tab on the Web interface*.
 
 The above table displays the *Change parameters* option name and the fields that it 
 applies to, as shown in add/edit dialog(s).

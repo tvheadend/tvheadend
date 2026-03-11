@@ -1201,5 +1201,17 @@ tvheadend.dvr = function(panel, index) {
     tvheadend.dvr_removed(p, 3);
     tvheadend.autorec_editor(p, 4);
     tvheadend.timerec_editor(p, 5);
+
+    if (tvheadend.default_tab >= CONFIG_DEFAULT_TAB_DVR_FIRST &&
+        tvheadend.default_tab <= CONFIG_DEFAULT_TAB_DVR_LAST) {
+        if ((tvheadend.uilevel !== 'expert') && (tvheadend.default_tab > CONFIG_DEFAULT_TAB_DVR_FAILED)) {
+            // The 'removed' tab is only shown for expert users,
+            // so shuffle the remaining tabs along one.
+            p.setActiveTab(tvheadend.default_tab - CONFIG_DEFAULT_TAB_DVR_FIRST - 1);
+        } else {
+            p.setActiveTab(tvheadend.default_tab - CONFIG_DEFAULT_TAB_DVR_FIRST);
+        }
+    }
+
     return p;
 }
