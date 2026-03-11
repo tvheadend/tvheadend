@@ -2135,6 +2135,35 @@ config_class_http_auth_algo_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+htsmsg_t *
+config_class_default_tab_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("System Default"),        CONFIG_DEFAULT_TAB_SYSTEM },
+    { N_("EPG"),                   CONFIG_DEFAULT_TAB_EPG },
+    { N_("DVR-Upcoming/Current"),  CONFIG_DEFAULT_TAB_DVR_UPCOMING },
+    { N_("DVR-Finished"),          CONFIG_DEFAULT_TAB_DVR_FINISHED },
+    { N_("DVR-Failed"),            CONFIG_DEFAULT_TAB_DVR_FAILED },
+    { N_("DVR-Removed"),           CONFIG_DEFAULT_TAB_DVR_REMOVED },
+    { N_("DVR-Autorecs"),          CONFIG_DEFAULT_TAB_DVR_AUTORECS },
+    { N_("DVR-Timers"),            CONFIG_DEFAULT_TAB_DVR_TIMERS },
+    { N_("Config-General"),        CONFIG_DEFAULT_TAB_CFG_GENERAL },
+    { N_("Config-Users"),          CONFIG_DEFAULT_TAB_CFG_USERS },
+    { N_("Config-DVB Inputs"),     CONFIG_DEFAULT_TAB_CFG_DVB },
+    { N_("Config-Channel/EPG"),    CONFIG_DEFAULT_TAB_CFG_CHANNEL },
+    { N_("Config-Stream"),         CONFIG_DEFAULT_TAB_CFG_STREAM },
+    { N_("Config-Recording"),      CONFIG_DEFAULT_TAB_CFG_REC },
+    { N_("Config-CAs"),            CONFIG_DEFAULT_TAB_CFG_CA },
+    { N_("Config-Debugging"),      CONFIG_DEFAULT_TAB_CFG_DEBUG },
+    { N_("Status-Stream"),         CONFIG_DEFAULT_TAB_STATUS_STREAM },
+    { N_("Status-Subscriptions"),  CONFIG_DEFAULT_TAB_STATUS_SUBS },
+    { N_("Status-Connections"),    CONFIG_DEFAULT_TAB_STATUS_CONN },
+    { N_("Status-Service Mapper"), CONFIG_DEFAULT_TAB_STATUS_SVC },
+    { N_("About"),                 CONFIG_DEFAULT_TAB_ABOUT },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 #if ENABLE_MPEGTS_DVB
 static void
 config_muxconfpath_notify_cb(void *opaque, int disarmed)
@@ -2356,6 +2385,16 @@ const idclass_t config_class = {
       .opts   = PO_ADVANCED,
       .off    = offsetof(config_t, date_mask),
       .group  = 2,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "default_tab",
+      .name   = N_("Default tab"),
+      .desc   = N_("Set the default start-up tab.  'EPG' is the system default tab."),
+      .list   = config_class_default_tab_list,
+      .off    = offsetof(config_t, default_tab),
+      .opts   = PO_DOC_NLIST,
+      .group  = 2
     },
     {
       .type   = PT_BOOL,
