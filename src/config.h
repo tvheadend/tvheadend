@@ -72,6 +72,7 @@ typedef struct config {
   int iptv_tpool_count;
   char *date_mask;
   int label_formatting;
+  int dvr_show_seconds;
   uint32_t ticket_expires;
   char *hdhomerun_ip;
   char *local_ip;
