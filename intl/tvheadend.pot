@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-12 02:53+0000\n"
+"POT-Creation-Date: 2026-03-09 03:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -621,7 +621,7 @@ msgstr ""
 msgid "Advanced (non-universal LNBs, rotors, etc.)"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:211
+#: src/transcoding/codec/profile_class.c:244
 msgid "Advanced Settings"
 msgstr ""
 
@@ -716,7 +716,7 @@ msgstr ""
 msgid "Allow all PIDs (no filter) when the 'Maximum PIDs' limit is reached."
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:246
+#: src/transcoding/codec/profile_video_class.c:282
 msgid "Allow control for scaling Up&Down, Up or Down"
 msgstr ""
 
@@ -797,7 +797,7 @@ msgid ""
 "option."
 msgstr ""
 
-#: src/channels.c:426
+#: src/channels.c:431
 msgid "Always use the name defined by the network."
 msgstr ""
 
@@ -979,7 +979,7 @@ msgstr ""
 msgid "Automatic time scheduler entry not found"
 msgstr ""
 
-#: src/config.c:2751
+#: src/config.c:2744
 msgid "Automatically clear input error counters"
 msgstr ""
 
@@ -987,14 +987,14 @@ msgstr ""
 msgid "Automatically delete played recordings"
 msgstr ""
 
-#: src/channels.c:478
+#: src/channels.c:483
 msgid ""
 "Automatically link EPG data to the channel (using the channel name for "
 "matching). If you turn this option off, only the OTA EPG grabber will be "
 "used for this channel unless you've specifically set a different EPG Source."
 msgstr ""
 
-#: src/channels.c:477
+#: src/channels.c:482
 msgid "Automatically map EPG source"
 msgstr ""
 
@@ -1006,7 +1006,7 @@ msgstr ""
 msgid "Automatically map channels defined within the bouquet."
 msgstr ""
 
-#: src/channels.c:425
+#: src/channels.c:430
 msgid "Automatically name from network"
 msgstr ""
 
@@ -1158,7 +1158,7 @@ msgstr ""
 msgid "Bouquet"
 msgstr ""
 
-#: src/channels.c:572
+#: src/channels.c:577
 msgid "Bouquet (auto)"
 msgstr ""
 
@@ -1505,11 +1505,11 @@ msgstr ""
 msgid "Channels / EPG - Bouquets"
 msgstr ""
 
-#: src/channels.c:1758
+#: src/channels.c:1763
 msgid "Channels / EPG - Channel Tags"
 msgstr ""
 
-#: src/channels.c:405
+#: src/channels.c:410
 msgid "Channels / EPG - Channels"
 msgstr ""
 
@@ -1618,31 +1618,31 @@ msgstr ""
 msgid "Code Word Client (newcamd)"
 msgstr ""
 
-#: src/tvhlog.c:181 src/tvhlog.c:199 src/transcoding/codec/profile_class.c:241
+#: src/tvhlog.c:181 src/tvhlog.c:199 src/transcoding/codec/profile_class.c:274
 msgid "Codec"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:207
+#: src/transcoding/codec/profile_class.c:240
 msgid "Codec Settings"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:250
+#: src/transcoding/codec/profile_class.c:283
 msgid "Codec name"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:251
+#: src/transcoding/codec/profile_class.c:284
 msgid "Codec name."
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:269
+#: src/transcoding/codec/profile_class.c:302
 msgid "Codec status."
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:242
+#: src/transcoding/codec/profile_class.c:275
 msgid "Codec title."
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:260
+#: src/transcoding/codec/profile_class.c:293
 msgid "Codec type."
 msgstr ""
 
@@ -1679,7 +1679,7 @@ msgstr ""
 msgid "Command to move the dish with an external command."
 msgstr ""
 
-#: src/access.c:1987 src/access.c:2333 src/access.c:2472 src/channels.c:1837
+#: src/access.c:1987 src/access.c:2333 src/access.c:2472 src/channels.c:1842
 #: src/esfilter.c:703 src/esfilter.c:799 src/esfilter.c:895 src/esfilter.c:990
 #: src/esfilter.c:1098 src/esfilter.c:1181 src/profile.c:344 src/bouquet.c:1338
 #: src/epggrab/channel.c:885 src/dvr/dvr_db.c:5011 src/dvr/dvr_autorec.c:1487
@@ -1848,7 +1848,7 @@ msgstr ""
 msgid "Continue recording for x minutes after scheduled stop time"
 msgstr ""
 
-#: src/channels.c:530 src/dvr/dvr_db.c:4558 src/dvr/dvr_config.c:1070
+#: src/channels.c:535 src/dvr/dvr_db.c:4558 src/dvr/dvr_config.c:1070
 msgid "Continue recording for x minutes after scheduled stop time."
 msgstr ""
 
@@ -2095,7 +2095,7 @@ msgstr ""
 msgid "DES key"
 msgstr ""
 
-#: src/config.c:2713
+#: src/config.c:2706
 msgid "DSCP/TOS for streaming"
 msgstr ""
 
@@ -2159,7 +2159,7 @@ msgstr ""
 msgid "DVB multiplex"
 msgstr ""
 
-#: src/config.c:2762
+#: src/config.c:2755
 msgid "DVB scan files path"
 msgstr ""
 
@@ -2418,19 +2418,19 @@ msgid ""
 "limiting will not work correctly."
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:274
+#: src/transcoding/codec/profile_video_class.c:310
 msgid "Deinterlace"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:315
+#: src/transcoding/codec/profile_video_class.c:351
 msgid "Deinterlace fields only"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:299
+#: src/transcoding/codec/profile_video_class.c:335
 msgid "Deinterlace rate type"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:275
+#: src/transcoding/codec/profile_video_class.c:311
 msgid "Deinterlace."
 msgstr ""
 
@@ -2462,7 +2462,7 @@ msgstr ""
 msgid "Descrambler EMM"
 msgstr ""
 
-#: src/config.c:2730
+#: src/config.c:2723
 msgid "Descrambler buffer (TS packets)"
 msgstr ""
 
@@ -2471,7 +2471,7 @@ msgid "Descrambling timeout (ms)"
 msgstr ""
 
 #: src/dvr/dvr_db.c:4684 src/dvr/dvr_db.c:4692
-#: src/transcoding/codec/profile_class.c:233
+#: src/transcoding/codec/profile_class.c:266
 msgid "Description"
 msgstr ""
 
@@ -2496,7 +2496,7 @@ msgstr ""
 msgid "Device path in sysfs"
 msgstr ""
 
-#: src/config.c:2714
+#: src/config.c:2707
 msgid ""
 "Differentiated Services Code Point / Type of Service: Set the service class "
 "Tvheadend sends with each packet. Depending on the option selected this "
@@ -2593,7 +2593,7 @@ msgstr ""
 msgid "Disable syslog (all messages)"
 msgstr ""
 
-#: src/channels.c:394 src/profile.c:2339 src/epggrab/module/xmltv.c:1484
+#: src/channels.c:399 src/profile.c:2339 src/epggrab/module/xmltv.c:1484
 msgid "Disabled"
 msgstr ""
 
@@ -2784,7 +2784,7 @@ msgstr ""
 msgid "EPG scan time-out in seconds (30-7200)"
 msgstr ""
 
-#: src/channels.c:502
+#: src/channels.c:507
 msgid "EPG source"
 msgstr ""
 
@@ -2842,11 +2842,11 @@ msgstr ""
 msgid "Enable DBus"
 msgstr ""
 
-#: src/config.c:2657
+#: src/config.c:2652
 msgid "Enable HDHomeRun Server Emulation"
 msgstr ""
 
-#: src/config.c:2795
+#: src/config.c:2788
 msgid "Enable NTP driver"
 msgstr ""
 
@@ -2934,13 +2934,13 @@ msgstr ""
 msgid "Enable syslog"
 msgstr ""
 
-#: src/config.c:2785
+#: src/config.c:2778
 msgid ""
 "Enable system time updates. This will only work if the user running "
 "Tvheadend has rights to update the system clock (normally only root)."
 msgstr ""
 
-#: src/config.c:2658
+#: src/config.c:2653
 msgid ""
 "Enable the Tvheadend server to emulate an HDHomeRun server.  This allows "
 "LiveTV to be used on some media servers."
@@ -2950,7 +2950,7 @@ msgstr ""
 msgid "Enable this filter."
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:316
+#: src/transcoding/codec/profile_video_class.c:352
 msgid ""
 "Enable this option to only deinterlace fields, passing progressive frames "
 "unchanged. This is useful for mixed content, allowing progressive frames to "
@@ -2961,11 +2961,11 @@ msgstr ""
 msgid "Enable trace subsystems"
 msgstr ""
 
-#: src/config.c:2820
+#: src/config.c:2813
 msgid "Enable vainfo detection"
 msgstr ""
 
-#: src/config.c:2821
+#: src/config.c:2814
 msgid ""
 "Enable vainfo detection in order to show only encoders that are advertised "
 "by VAAPI driver.\n"
@@ -3088,7 +3088,7 @@ msgstr ""
 msgid "Enable/disable the bouquet."
 msgstr ""
 
-#: src/channels.c:417
+#: src/channels.c:422
 msgid "Enable/disable the channel."
 msgstr ""
 
@@ -3109,7 +3109,7 @@ msgstr ""
 msgid "Enable/disable the rating label."
 msgstr ""
 
-#: src/channels.c:1770
+#: src/channels.c:1775
 msgid "Enable/disable the tag."
 msgstr ""
 
@@ -3117,8 +3117,8 @@ msgstr ""
 msgid "Enable/disable tuner/adapter."
 msgstr ""
 
-#: src/access.c:1740 src/access.c:2278 src/access.c:2455 src/channels.c:395
-#: src/channels.c:416 src/channels.c:1769 src/service.c:172 src/imagecache.c:90
+#: src/access.c:1740 src/access.c:2278 src/access.c:2455 src/channels.c:400
+#: src/channels.c:421 src/channels.c:1774 src/service.c:172 src/imagecache.c:90
 #: src/esfilter.c:609 src/profile.c:324 src/bouquet.c:1212
 #: src/ratinglabels.c:637 src/epggrab/module.c:171 src/epggrab/channel.c:761
 #: src/dvr/dvr_db.c:4496 src/dvr/dvr_autorec.c:1144 src/dvr/dvr_timerec.c:536
@@ -3127,7 +3127,7 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux.c:535 src/input/mpegts/mpegts_mux_sched.c:138
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1547
 #: src/input/mpegts/satip/satip_satconf.c:354 src/timeshift.c:194
-#: src/transcoding/codec/profile_class.c:268
+#: src/transcoding/codec/profile_class.c:301
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:615
 msgid "Enabled"
 msgstr ""
@@ -3292,7 +3292,7 @@ msgstr ""
 msgid "Expert"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:215
+#: src/transcoding/codec/profile_class.c:248
 msgid "Expert Settings"
 msgstr ""
 
@@ -3622,7 +3622,7 @@ msgstr ""
 msgid "Force an initial EPG grab at start-up."
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:265
+#: src/transcoding/codec/profile_video_class.c:301
 msgid "Force hardware acceleration."
 msgstr ""
 
@@ -3731,7 +3731,7 @@ msgstr ""
 msgid "Frame Rate"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:300
+#: src/transcoding/codec/profile_video_class.c:336
 msgid ""
 "Frame rate combines the two interlaced fields to create a single frame. "
 "Field rate processes each field independently, outputting as individual "
@@ -3750,7 +3750,7 @@ msgstr ""
 msgid "Free-form field, enter whatever you like here."
 msgstr ""
 
-#: src/access.c:1988 src/access.c:2334 src/access.c:2471 src/channels.c:1838
+#: src/access.c:1988 src/access.c:2334 src/access.c:2471 src/channels.c:1843
 #: src/dvr/dvr_db.c:5012 src/dvr/dvr_autorec.c:1488 src/dvr/dvr_timerec.c:680
 msgid "Free-form text field, enter whatever you like here."
 msgstr ""
@@ -3814,7 +3814,7 @@ msgstr ""
 msgid "Full mux RX mode supported"
 msgstr ""
 
-#: src/channels.c:1811
+#: src/channels.c:1816
 msgid ""
 "Full path to an icon used to depict the tag. This can be a TV network "
 "logotype, etc."
@@ -3857,7 +3857,7 @@ msgstr ""
 #: src/profile.c:1590 src/profile.c:1825 src/profile.c:2502
 #: src/satip/server.c:653 src/epggrab/module/xmltv.c:1497
 #: src/epggrab/module/xmltv.c:1599 src/dvr/dvr_config.c:924
-#: src/descrambler/caclient.c:276 src/transcoding/codec/profile_class.c:199
+#: src/descrambler/caclient.c:276 src/transcoding/codec/profile_class.c:232
 #: src/descrambler/cclient.c:1357 src/descrambler/dvbcam.c:848
 msgid "General Settings"
 msgstr ""
@@ -3946,7 +3946,7 @@ msgstr ""
 msgid "HDHomeRun ISDB-T frontend"
 msgstr ""
 
-#: src/config.c:2566
+#: src/config.c:2567
 msgid "HDHomerun IP Address"
 msgstr ""
 
@@ -4001,7 +4001,7 @@ msgstr ""
 msgid "HTTP Server Settings"
 msgstr ""
 
-#: src/config.c:2695
+#: src/config.c:2687
 msgid "HTTP User Agent"
 msgstr ""
 
@@ -4015,11 +4015,11 @@ msgid ""
 "might increase the recordings accuracy on very slow systems."
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:255
+#: src/transcoding/codec/profile_video_class.c:291
 msgid "Hardware acceleration"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:264
+#: src/transcoding/codec/profile_video_class.c:300
 msgid "Hardware acceleration details"
 msgstr ""
 
@@ -4027,11 +4027,11 @@ msgstr ""
 msgid "Hearing impaired"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:234
+#: src/transcoding/codec/profile_video_class.c:270
 msgid "Height (pixels) (0=no scaling)"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:235
+#: src/transcoding/codec/profile_video_class.c:271
 msgid ""
 "Height of the output video stream. Horizontal resolution is adjusted "
 "automatically to preserve aspect ratio. When set to 0, the input resolution "
@@ -4131,7 +4131,7 @@ msgstr ""
 msgid "IP address"
 msgstr ""
 
-#: src/config.c:2567
+#: src/config.c:2568
 msgid ""
 "IP address of the HDHomerun device. This is needed if you plan to run "
 "Tvheadend in a container and you want to stream from an HDHomerun without "
@@ -4142,7 +4142,7 @@ msgstr ""
 msgid "IP blocking"
 msgstr ""
 
-#: src/config.c:2579
+#: src/config.c:2580
 msgid ""
 "IP of the Docker host. Each HDHomeRun tuner sends data to Tvheadend through "
 "a socket. This lets you define the IP address that HDHomeRun needs to send "
@@ -4185,7 +4185,7 @@ msgstr ""
 msgid "IPTV thread #"
 msgstr ""
 
-#: src/config.c:2704
+#: src/config.c:2697
 msgid "IPTV threads"
 msgstr ""
 
@@ -4225,11 +4225,11 @@ msgstr ""
 msgid "Icon"
 msgstr ""
 
-#: src/channels.c:1810
+#: src/channels.c:1815
 msgid "Icon (full URL)"
 msgstr ""
 
-#: src/channels.c:468 src/channels.c:1820 src/ratinglabels.c:697
+#: src/channels.c:473 src/channels.c:1825 src/ratinglabels.c:697
 #: src/input/mpegts/iptv/iptv_mux.c:222
 msgid "Icon URL"
 msgstr ""
@@ -4242,7 +4242,7 @@ msgstr ""
 msgid "Icon base URL."
 msgstr ""
 
-#: src/channels.c:1828
+#: src/channels.c:1833
 msgid "Icon has title"
 msgstr ""
 
@@ -4330,7 +4330,7 @@ msgid ""
 "the access control from within the Tvheadend web interface."
 msgstr ""
 
-#: src/channels.c:1829
+#: src/channels.c:1834
 msgid ""
 "If set, presentation of the tag icon will not superimpose the tag name on "
 "top of the icon."
@@ -4526,7 +4526,7 @@ msgstr ""
 msgid "Interface"
 msgstr ""
 
-#: src/channels.c:1792 src/epggrab/module.c:55
+#: src/channels.c:1797 src/epggrab/module.c:55
 msgid "Internal"
 msgstr ""
 
@@ -4802,11 +4802,11 @@ msgstr ""
 msgid "Leisure hobbies"
 msgstr ""
 
-#: src/channels.c:490
+#: src/channels.c:495
 msgid "Limit EPG (days)"
 msgstr ""
 
-#: src/channels.c:491
+#: src/channels.c:496
 msgid ""
 "Limit EPG data to specified days to reduce the memory consumption. The zero "
 "value means unlimited EPG."
@@ -4886,11 +4886,11 @@ msgstr ""
 msgid "Local (server) time"
 msgstr ""
 
-#: src/config.c:2578
+#: src/config.c:2579
 msgid "Local IP Address"
 msgstr ""
 
-#: src/config.c:2591
+#: src/config.c:2592
 msgid "Local Socket Port Number"
 msgstr ""
 
@@ -5363,7 +5363,7 @@ msgstr ""
 msgid "Mode"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:286
+#: src/transcoding/codec/profile_video_class.c:322
 msgid ""
 "Mode to use for VAAPI Deinterlacing. 'Default' selects the most advanced "
 "deinterlacer, i.e. the mode appearing last in this list. Tip: MADI and MCDI "
@@ -5511,14 +5511,14 @@ msgstr ""
 msgid "NVENC"
 msgstr ""
 
-#: src/channels.c:434 src/channels.c:1785 src/bouquet.c:1268
+#: src/channels.c:439 src/channels.c:1790 src/bouquet.c:1268
 #: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:674
 #: src/epggrab/channel.c:816 src/dvr/dvr_autorec.c:1152
 #: src/dvr/dvr_timerec.c:544 src/input/mpegts/mpegts_input.c:272
 #: src/input/mpegts/mpegts_mux.c:585
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1553
 #: src/input/mpegts/satip/satip_satconf.c:361
-#: src/transcoding/codec/profile_class.c:224
+#: src/transcoding/codec/profile_class.c:257
 msgid "Name"
 msgstr ""
 
@@ -5550,7 +5550,7 @@ msgstr ""
 msgid "Name of the module used to grab EPG data."
 msgstr ""
 
-#: src/channels.c:503
+#: src/channels.c:508
 msgid ""
 "Name of the module, grabber or channel that should be used to update this "
 "channels EPG info."
@@ -5564,7 +5564,7 @@ msgstr ""
 msgid "Name of the profile."
 msgstr ""
 
-#: src/channels.c:1786
+#: src/channels.c:1791
 msgid "Name of the tag."
 msgstr ""
 
@@ -5576,7 +5576,7 @@ msgstr ""
 msgid "Name of the tuner/adapter."
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:225
+#: src/transcoding/codec/profile_class.c:258
 msgid "Name."
 msgstr ""
 
@@ -5854,7 +5854,7 @@ msgstr ""
 msgid "Not linked"
 msgstr ""
 
-#: src/channels.c:393 src/profile.c:2306
+#: src/channels.c:398 src/profile.c:2306
 msgid "Not set"
 msgstr ""
 
@@ -5866,7 +5866,7 @@ msgstr ""
 msgid "Not set (use channel or DVR configuration)"
 msgstr ""
 
-#: src/channels.c:446 src/epggrab/channel.c:669 src/epggrab/channel.c:834
+#: src/channels.c:451 src/epggrab/channel.c:669 src/epggrab/channel.c:834
 msgid "Number"
 msgstr ""
 
@@ -5947,7 +5947,7 @@ msgstr ""
 msgid "Number of tsfile tuners"
 msgstr ""
 
-#: src/config.c:2610
+#: src/config.c:2613
 msgid "Number of tuners to export for HDHomeRun Server Emulation"
 msgstr ""
 
@@ -6055,7 +6055,7 @@ msgstr ""
 msgid "Only admin can watch the realtime log."
 msgstr ""
 
-#: src/channels.c:1801
+#: src/channels.c:1806
 msgid ""
 "Only allow users with this tag (or those with no tags at all) set in access "
 "configuration to use the tag."
@@ -6069,7 +6069,7 @@ msgstr ""
 msgid "Only preferred CA PID"
 msgstr ""
 
-#: src/config.c:2808
+#: src/config.c:2801
 msgid ""
 "Only update the system clock (doesn't affect NTP driver) if the delta "
 "between the system clock and DVB time is greater than this. This can help "
@@ -6261,7 +6261,7 @@ msgid ""
 "usage."
 msgstr ""
 
-#: src/config.c:2740
+#: src/config.c:2733
 msgid "Packet backlog"
 msgstr ""
 
@@ -6282,11 +6282,11 @@ msgstr ""
 msgid "Parental rating label UUID."
 msgstr ""
 
-#: src/config.c:2775
+#: src/config.c:2768
 msgid "Parse HbbTV info"
 msgstr ""
 
-#: src/config.c:2776
+#: src/config.c:2769
 msgid "Parse HbbTV information from services."
 msgstr ""
 
@@ -6385,7 +6385,7 @@ msgstr ""
 msgid "Performing arts"
 msgstr ""
 
-#: src/config.c:2752
+#: src/config.c:2745
 msgid ""
 "Periodically resets input error counters (when a new mux starts for the "
 "target tuner). Note that previous counters will be lost."
@@ -6431,7 +6431,7 @@ msgstr ""
 msgid "Pilot"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:328
+#: src/transcoding/codec/profile_video_class.c:364
 msgid "Pixel format"
 msgstr ""
 
@@ -6507,7 +6507,7 @@ msgstr ""
 msgid "Post-processor command"
 msgstr ""
 
-#: src/channels.c:529 src/dvr/dvr_db.c:4557 src/dvr/dvr_config.c:1069
+#: src/channels.c:534 src/dvr/dvr_db.c:4557 src/dvr/dvr_config.c:1069
 msgid "Post-recording padding"
 msgstr ""
 
@@ -6543,7 +6543,7 @@ msgstr ""
 msgid "Pre-processor command"
 msgstr ""
 
-#: src/channels.c:514 src/dvr/dvr_db.c:4529 src/dvr/dvr_config.c:1053
+#: src/channels.c:519 src/dvr/dvr_db.c:4529 src/dvr/dvr_config.c:1053
 msgid "Pre-recording padding"
 msgstr ""
 
@@ -6636,7 +6636,7 @@ msgid ""
 "the assigned DVR configuration."
 msgstr ""
 
-#: src/channels.c:1800
+#: src/channels.c:1805
 msgid "Private"
 msgstr ""
 
@@ -6648,15 +6648,15 @@ msgstr ""
 msgid "Process Parental Rating Labels"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:277
+#: src/transcoding/codec/profile_class.c:310
 msgid "Profile"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:203
+#: src/transcoding/codec/profile_class.c:236
 msgid "Profile Settings"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:234
+#: src/transcoding/codec/profile_class.c:267
 msgid "Profile description."
 msgstr ""
 
@@ -6664,7 +6664,7 @@ msgstr ""
 msgid "Profile name"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:278
+#: src/transcoding/codec/profile_class.c:311
 msgid "Profile."
 msgstr ""
 
@@ -6777,11 +6777,11 @@ msgstr ""
 msgid "RTSP Protocol"
 msgstr ""
 
-#: src/config.c:2685
+#: src/config.c:2677
 msgid "RTSP UDP maximum port"
 msgstr ""
 
-#: src/config.c:2673
+#: src/config.c:2665
 msgid "RTSP UDP minimum port"
 msgstr ""
 
@@ -6912,7 +6912,7 @@ msgstr ""
 msgid "Reject exact match"
 msgstr ""
 
-#: src/channels.c:1821
+#: src/channels.c:1826
 msgid "Relative path to the imagecache copy of the icon."
 msgstr ""
 
@@ -7035,11 +7035,11 @@ msgstr ""
 msgid "Retransmission URL"
 msgstr ""
 
-#: src/channels.c:583
+#: src/channels.c:588
 msgid "Reuse EPG from"
 msgstr ""
 
-#: src/channels.c:584
+#: src/channels.c:589
 msgid "Reuse the EPG from another channel."
 msgstr ""
 
@@ -7291,7 +7291,7 @@ msgstr ""
 msgid "STOP"
 msgstr ""
 
-#: src/config.c:2686
+#: src/config.c:2678
 msgid ""
 "Same as above, but for the maximum allowed port. Note that each stream "
 "requires two ports."
@@ -7381,7 +7381,7 @@ msgstr ""
 msgid "Saved parental rating icon for once recording is complete."
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:245
+#: src/transcoding/codec/profile_video_class.c:281
 msgid "Scaling mode"
 msgstr ""
 
@@ -7584,7 +7584,7 @@ msgid ""
 "and your coaxial cable wiring."
 msgstr ""
 
-#: src/config.c:2763
+#: src/config.c:2756
 msgid ""
 "Select the path to use for DVB scan configuration files. Typically dvb-apps "
 "stores these in /usr/share/dvb/. Leave blank to use the internal file set."
@@ -7652,7 +7652,7 @@ msgstr ""
 msgid "Send full PLAY cmd"
 msgstr ""
 
-#: src/config.c:2741
+#: src/config.c:2734
 msgid ""
 "Send previous stream frames to upper layers (before frame start is signalled "
 "in the stream). It may cause issues with some clients / players."
@@ -7790,12 +7790,12 @@ msgid ""
 "the stream."
 msgstr ""
 
-#: src/channels.c:551 src/service_mapper.c:588 src/bouquet.c:1312
+#: src/channels.c:556 src/service_mapper.c:588 src/bouquet.c:1312
 #: src/bouquet.c:1330 src/input/mpegts/mpegts_mux.c:658
 msgid "Services"
 msgstr ""
 
-#: src/channels.c:552
+#: src/channels.c:557
 msgid "Services associated with the channel."
 msgstr ""
 
@@ -7824,7 +7824,7 @@ msgid ""
 "Set the name of the server so you can distinguish multiple instances apart."
 msgstr ""
 
-#: src/config.c:2705
+#: src/config.c:2698
 msgid "Set the number of threads for IPTV to split load across more CPUs."
 msgstr ""
 
@@ -8034,11 +8034,11 @@ msgid ""
 "and supply both to clients."
 msgstr ""
 
-#: src/channels.c:1777
+#: src/channels.c:1782
 msgid "Sort index"
 msgstr ""
 
-#: src/channels.c:1778
+#: src/channels.c:1783
 msgid "Sort index."
 msgstr ""
 
@@ -8181,7 +8181,7 @@ msgstr ""
 msgid "Start before"
 msgstr ""
 
-#: src/channels.c:515
+#: src/channels.c:520
 msgid ""
 "Start recording earlier than the EPG/timer defined start time by x minutes, "
 "for example if a program is to start at 13:00 and you set a padding of 5 "
@@ -8212,7 +8212,7 @@ msgstr ""
 msgid "Start time"
 msgstr ""
 
-#: src/config.c:2592
+#: src/config.c:2593
 msgid ""
 "Starting port number of the UDP listeners. The listeners listen for traffic "
 "from the HDHomerun tuners. This is needed if you plan to run Tvheadend in a "
@@ -8248,7 +8248,7 @@ msgstr ""
 msgid "Storage space"
 msgstr ""
 
-#: src/transcoding/codec/profile_class.c:191
+#: src/transcoding/codec/profile_class.c:224
 msgid "Stream - Codec Profiles"
 msgstr ""
 
@@ -8598,11 +8598,11 @@ msgstr ""
 msgid "Tag files with metadata"
 msgstr ""
 
-#: src/channels.c:562
+#: src/channels.c:567
 msgid "Tags"
 msgstr ""
 
-#: src/channels.c:563
+#: src/channels.c:568
 msgid "Tags linked/to link to the channel."
 msgstr ""
 
@@ -8747,7 +8747,7 @@ msgid ""
 "divided by 100."
 msgstr ""
 
-#: src/channels.c:459
+#: src/channels.c:464
 msgid ""
 "The URL to the icon to use/used for the channel. The local files are "
 "referred using file:/// URLs."
@@ -8800,7 +8800,7 @@ msgid ""
 "setting."
 msgstr ""
 
-#: src/channels.c:573
+#: src/channels.c:578
 msgid "The bouquet the channel is associated with."
 msgstr ""
 
@@ -9015,7 +9015,7 @@ msgid ""
 "change this setting."
 msgstr ""
 
-#: src/channels.c:469
+#: src/channels.c:474
 msgid "The imagecache path to the icon to use/used for the channel."
 msgstr ""
 
@@ -9241,7 +9241,7 @@ msgstr ""
 msgid "The name (or frequency) the mux is on."
 msgstr ""
 
-#: src/channels.c:435
+#: src/channels.c:440
 msgid ""
 "The name given to/of the channel (This is how it'll appear in your EPG.)"
 msgstr ""
@@ -9325,7 +9325,7 @@ msgstr ""
 msgid "The number of ISDB-T (Terresterial) tuners to export."
 msgstr ""
 
-#: src/config.c:2731
+#: src/config.c:2724
 msgid ""
 "The number of MPEG-TS packets Tvheadend buffers in case there is a delay "
 "receiving CA keys. "
@@ -9395,7 +9395,7 @@ msgstr ""
 msgid "The polarization used on the mux."
 msgstr ""
 
-#: src/channels.c:447
+#: src/channels.c:452
 msgid ""
 "The position the channel will appear on your EPG. This is not used by "
 "Tvheadend internally, but rather intended to be used by HTSP clients for "
@@ -9653,7 +9653,7 @@ msgid ""
 "the standard priority value is used. See Help for details."
 msgstr ""
 
-#: src/config.c:2696
+#: src/config.c:2688
 msgid "The user agent string for the build-in HTTP client."
 msgstr ""
 
@@ -9687,7 +9687,7 @@ msgstr ""
 msgid "This tuner"
 msgstr ""
 
-#: src/config.c:2796
+#: src/config.c:2789
 msgid ""
 "This will create an NTP driver (using shmem interface) that you can feed "
 "into ntpd. This can be run without root privileges, but generally the "
@@ -10017,7 +10017,7 @@ msgstr ""
 msgid "Turn off LNB when idle"
 msgstr ""
 
-#: src/config.c:2637
+#: src/config.c:2636
 msgid "Tvheadend model name for HDHomeRun Server Emulation"
 msgstr ""
 
@@ -10025,7 +10025,7 @@ msgstr ""
 msgid "Tvheadend server name"
 msgstr ""
 
-#: src/epggrab/module.c:161 src/transcoding/codec/profile_class.c:259
+#: src/epggrab/module.c:161 src/transcoding/codec/profile_class.c:292
 msgid "Type"
 msgstr ""
 
@@ -10369,11 +10369,11 @@ msgstr ""
 msgid "Update disabled"
 msgstr ""
 
-#: src/config.c:2784
+#: src/config.c:2777
 msgid "Update time"
 msgstr ""
 
-#: src/config.c:2807
+#: src/config.c:2800
 msgid "Update tolerance (ms)"
 msgstr ""
 
@@ -10413,13 +10413,13 @@ msgstr ""
 msgid "Use DVR configuration"
 msgstr ""
 
-#: src/channels.c:539 src/dvr/dvr_config.c:1448
+#: src/channels.c:544 src/dvr/dvr_config.c:1448
 msgid ""
 "Use EITp/f to decide event start/stop. This is also known as \"Accurate "
 "Recording\". See Help for details."
 msgstr ""
 
-#: src/channels.c:538 src/dvr/dvr_config.c:1447
+#: src/channels.c:543 src/dvr/dvr_config.c:1447
 msgid "Use EPG running state"
 msgstr ""
 
@@ -10507,7 +10507,7 @@ msgstr ""
 msgid "Use fuzzy mapping if merging same name"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:256
+#: src/transcoding/codec/profile_video_class.c:292
 msgid "Use hardware acceleration for decoding if available."
 msgstr ""
 
@@ -10527,7 +10527,7 @@ msgstr ""
 msgid "Use service IDs as channel numbers"
 msgstr ""
 
-#: src/channels.c:1793
+#: src/channels.c:1798
 msgid "Use tag internally (don't expose to clients)."
 msgstr ""
 
@@ -10567,7 +10567,7 @@ msgstr ""
 msgid "User does not have access to channel"
 msgstr ""
 
-#: src/channels.c:458
+#: src/channels.c:463
 msgid "User icon"
 msgstr ""
 
@@ -10618,7 +10618,7 @@ msgstr ""
 msgid "VA-API"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:285
+#: src/transcoding/codec/profile_video_class.c:321
 msgid "VAAPI Deinterlace mode"
 msgstr ""
 
@@ -10668,7 +10668,7 @@ msgstr ""
 msgid "Video codec profile"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:329
+#: src/transcoding/codec/profile_video_class.c:365
 msgid "Video pixel format."
 msgstr ""
 
@@ -10803,7 +10803,7 @@ msgid ""
 "searched."
 msgstr ""
 
-#: src/config.c:2611
+#: src/config.c:2614
 msgid ""
 "When Tvheadend is acting as an HDHomeRun Server (emulating an HDHomeRun "
 "device for downstream media devices to stream Live TV) then we tell clients "
@@ -10816,7 +10816,7 @@ msgid ""
 "automatically.  Set to zero for Tvheadend to use a default value."
 msgstr ""
 
-#: src/config.c:2638
+#: src/config.c:2637
 msgid ""
 "When Tvheadend is acting as an HDHomeRun Server (emulating an HDHomeRun "
 "device for downstream media devices to stream Live TV) then we use this as "
@@ -10884,7 +10884,7 @@ msgstr ""
 msgid "When the service was last seen during a mux scan."
 msgstr ""
 
-#: src/config.c:2674
+#: src/config.c:2666
 msgid ""
 "When using RTSP IPTV, this correspond to the minimum port bind on the client "
 "(this server), sent to the server. This is especially useful when using "
@@ -11166,7 +11166,7 @@ msgstr ""
 msgid "twoloop: Two loop searching method"
 msgstr ""
 
-#: src/transcoding/codec/profile_video_class.c:229
+#: src/transcoding/codec/profile_video_class.c:265
 msgid "video"
 msgstr ""
 
