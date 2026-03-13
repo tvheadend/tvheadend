@@ -1422,7 +1422,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
 
-  v = (config.proxy) ? http_arg_get(&hc->hc_args, "X-Forwarded-For") : NULL;
+  v = (config.trust_http_x_forwarded_for) ? http_arg_get(&hc->hc_args, "X-Forwarded-For") : NULL;
   if (v) {
     if (hc->hc_proxy_ip == NULL)
       hc->hc_proxy_ip = malloc(sizeof(*hc->hc_proxy_ip));
@@ -1944,7 +1944,7 @@ http_serve_requests(http_connection_t *hc)
     /* PROXY Protocol v1 support
      * Format: 'PROXY TCP4 192.168.0.1 192.168.0.11 56324 9981\r\n'
      *                     SRC-ADDRESS DST-ADDRESS  SPORT DPORT */
-    if (config.proxy && strncmp(cmdline, "PROXY ", 6) == 0) {
+    if (config.trust_tcp_proxy && strncmp(cmdline, "PROXY ", 6) == 0) {
       tvhtrace(hc->hc_subsys, "[PROXY] PROXY protocol detected! cmdline='%s'", cmdline);
 
       argv[0] = cmdline;
