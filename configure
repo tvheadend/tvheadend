@@ -54,9 +54,10 @@ OPTIONS=(
   "libopus:yes"
   "libopus_static:yes"
   "nvenc:no"
-  "vaapi:auto"
+  "vaapi:no"
   "mmal:no"
   "omx:no"
+  "v4l2m2m:yes"
   "inotify:auto"
   "epoll:auto"
   "pcre:auto"
@@ -270,7 +271,7 @@ int test ( void )
 }' -lpthread
 
 check_cc_snippet qsort_r '
-#define _GNU_SOURCE
+#define __USE_GNU
 #include <stdlib.h>
 #define TEST test
 int test(void)
@@ -679,6 +680,11 @@ if enabled ffmpeg_static; then
       CFLAGS=$OLDCFLAGS
     fi
     check_cc_header OMX_Core omx || die "OpenMAX IL not found"
+  fi
+
+  # v4l2
+  if enabled v4l2m2m; then
+    check_pkg libv4l2 ">=1.22" || die "libv4l2 1.22 package not found"
   fi
 
 else
