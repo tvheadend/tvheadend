@@ -553,6 +553,15 @@ if enabled_or_auto uriparser; then
 fi
 
 #
+# cJSON
+#
+if check_pkg libcjson; then
+  enable cjson
+else
+  die "cJSON development support not found (install libcjson-dev)"
+fi
+
+#
 # Bundling
 #
 if enabled bundle; then
