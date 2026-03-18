@@ -554,6 +554,19 @@ const idclass_t dvb_mux_dvbs_class =
       .desc     = N_("For example: 312000000. This frequency is 312Mhz."),
       .opts     = PO_ADVANCED
     },
+    {
+      .type     = PT_U32,
+      .id       = "dvb_satip_dvbs_freq",
+      .name     = N_("SAT>IP DVB-S frequency (kHz)"),
+      .off      = offsetof(dvb_mux_t, mm_dvb_satip_dvbs_freq),
+      .desc     = N_("Virtual DVB-S frequency in kHz for SAT>IP clients. "
+                     "When set, SAT>IP clients tune to this mux using "
+                     "this frequency instead of the real transponder frequency. "
+                     "Required for DVB-S2X MIS muxes sharing the same "
+                     "physical frequency with different ISI values. "
+                     "Example: 10701000 (= 10701 MHz)."),
+      .opts     = PO_ADVANCED
+    },
     {}
   }
 };
