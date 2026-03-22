@@ -1524,9 +1524,9 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
       }
     }
 
-    tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (Protocol: %d, Rev: %ld)", capmt_name(capmt), info, protover, capmt->capmt_oscam_rev);
+    tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (Protocol: %d, Rev: %d)", capmt_name(capmt), info, protover, capmt->capmt_oscam_rev);
     if (capmt->capmt_oscam_rev < 10389) {
-        tvherror(LS_CAPMT, "%s: OSCam rev %ld is below the minimum (10389) or could not be parsed!", capmt_name(capmt), capmt->capmt_oscam_rev);
+        tvherror(LS_CAPMT, "%s: OSCam rev %d is below the minimum (10389) or could not be parsed!", capmt_name(capmt), capmt->capmt_oscam_rev);
     }
 
     free(info);
