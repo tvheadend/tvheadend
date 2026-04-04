@@ -679,22 +679,21 @@ void *timeshift_reader ( void *p )
 
                 /* Re-send the latest stream start so client has codec info */
                 {
-                  timeshift_file_t *newest = timeshift_filemgr_newest(ts);
-                  timeshift_file_t *f = newest;
+                  timeshift_file_t *f = timeshift_filemgr_newest(ts);
                   streaming_message_t *sstart_sm = NULL;
                   int tmpend = 0;
-                  while (f && !sstart_sm) {
+                  while (f) {
                     timeshift_index_data_t *ti = TAILQ_LAST(&f->sstart, timeshift_index_data_list);
-                    if (ti)
+                    if (ti) {
                       sstart_sm = ti->data;
-                    else
-                      f = timeshift_filemgr_prev(f, &tmpend, 0);
+                      break;
+                    }
+                    f = timeshift_filemgr_prev(f, &tmpend, 0);
                   }
                   if (sstart_sm)
                     streaming_target_deliver2(ts->output, streaming_msg_clone(sstart_sm));
-                  if (f != newest)
+                  if (f)
                     timeshift_file_put(f);
-                  timeshift_file_put(newest);
                 }
 
                 /* Transition to live */
@@ -722,6 +721,11 @@ void *timeshift_reader ( void *p )
 
                 /* Send updated timeshift status (shift=0) */
                 timeshift_status(ts, ts->buf_time);
+              } else {
+                /* Already live — discard the skip control message */
+                streaming_msg_free(ctrl);
+                ctrl = NULL;
+                skip = NULL;
               }
               break;
 
