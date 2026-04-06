@@ -5,6 +5,7 @@
 
 # Path to version file
 FILE=$1
+ROLLING_RELEASE_DESCRIBE_PATTERN='^[0-9][0-9]\.[0-9][0-9]-[0-9]+-g[0-9a-f]+$'
 
 # Calculate version
 if [ -d ".git" ]; then
@@ -17,7 +18,7 @@ if [ -d ".git" ]; then
     [ -z "$VER" ] && VER="0.0.0-unknown"
   fi
   VER=$(echo "$VER" | sed "s/^v//")
-  if echo "$VER" | grep -Eq '^[0-9][0-9]\.[0-9][0-9]-[0-9]+-g[0-9a-f]+$'; then
+  if echo "$VER" | grep -Eq "$ROLLING_RELEASE_DESCRIBE_PATTERN"; then
     VER=$(echo "$VER" | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/.\1~\2/")
   else
     VER=$(echo "$VER" | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/-\1~\2/")

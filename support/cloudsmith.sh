@@ -15,6 +15,7 @@ FILE=""
 DRYRUN="0"
 PKGMGR="apt"
 RELEASE_REPO="${CLOUDSMITH_RELEASES_REPO:-tvheadend-releases}"
+ROLLING_RELEASE_PATTERN='^[0-9][0-9]\.[0-9][0-9]$'
 
 YELLOW='\033[1;33m'
 GREEN='\033[1;32m'
@@ -135,7 +136,7 @@ for package in "${FILEARRAY[@]}"; do
     esac
 
     REPOS="$CLOUDSMITH_REPO"
-    if echo "$PACKAGE_VERSION" | grep -Eq '^[0-9][0-9]\.[0-9][0-9]$'; then
+    if echo "$PACKAGE_VERSION" | grep -Eq "$ROLLING_RELEASE_PATTERN"; then
         REPOS="$REPOS $RELEASE_REPO"
     fi
 
@@ -161,7 +162,15 @@ for package in "${FILEARRAY[@]}"; do
             echo "$uploadResponse"
             exit 1
         fi
-        IDENTIFIER=$(echo "$curlUpload" | cut -f 4 -d '"')
+        if command -v jq >/dev/null 2>&1; then
+            IDENTIFIER=$(echo "$uploadResponse" | jq -r '.identifier // empty')
+        else
+            IDENTIFIER=$(echo "$curlUpload" | cut -f 4 -d '"')
+        fi
+        if [ -z "$IDENTIFIER" ]; then
+            echo -e "${RED}Error: could not parse uploaded package identifier${NC}"
+            exit 1
+        fi
         # finalize by POSTing to the create package endpoint
         echo -e "\n${CYAN}Creating package${NC}"
         curlPkgCreate=$(
