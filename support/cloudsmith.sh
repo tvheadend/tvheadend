@@ -135,7 +135,7 @@ for package in "${FILEARRAY[@]}"; do
     esac
 
     REPOS="$CLOUDSMITH_REPO"
-    if echo "$PACKAGE_VERSION" | grep -Eq '^[0-9]{2}\.[0-9]{2}$'; then
+    if echo "$PACKAGE_VERSION" | grep -Eq '^[0-9][0-9]\.[0-9][0-9]$'; then
         REPOS="$REPOS $RELEASE_REPO"
     fi
 
@@ -161,7 +161,7 @@ for package in "${FILEARRAY[@]}"; do
             echo "$uploadResponse"
             exit 1
         fi
-        IDENTIFIER=$(echo $curlUpload | cut -f 4 -d '"')
+        IDENTIFIER=$(echo "$curlUpload" | cut -f 4 -d '"')
         # finalize by POSTing to the create package endpoint
         echo -e "\n${CYAN}Creating package${NC}"
         curlPkgCreate=$(
