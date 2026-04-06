@@ -162,13 +162,15 @@ for package in "${FILEARRAY[@]}"; do
             echo "$uploadResponse"
             exit 1
         fi
+        PARSE_METHOD="fallback"
         if command -v jq >/dev/null 2>&1; then
+            PARSE_METHOD="jq"
             IDENTIFIER=$(echo "$uploadResponse" | jq -r '.identifier // empty')
         else
-            IDENTIFIER=$(echo "$curlUpload" | cut -f 4 -d '"')
+            IDENTIFIER=$(echo "$uploadResponse" | cut -f 4 -d '"')
         fi
         if [ -z "$IDENTIFIER" ]; then
-            echo -e "${RED}Error: could not parse uploaded package identifier${NC}"
+            echo -e "${RED}Error: could not parse uploaded package identifier using $PARSE_METHOD${NC}"
             exit 1
         fi
         # finalize by POSTing to the create package endpoint
