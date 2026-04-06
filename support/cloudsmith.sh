@@ -15,7 +15,7 @@ FILE=""
 DRYRUN="0"
 PKGMGR="apt"
 RELEASE_REPO="${CLOUDSMITH_RELEASES_REPO:-tvheadend-releases}"
-ROLLING_RELEASE_PATTERN='^[0-9][0-9]\.[0-9][0-9]$'
+ROLLING_RELEASE_PATTERN='^([0-9]+:)?[0-9][0-9]\.[0-9][0-9](~[A-Za-z].*)?$'
 
 YELLOW='\033[1;33m'
 GREEN='\033[1;32m'
@@ -170,8 +170,8 @@ for package in "${FILEARRAY[@]}"; do
             PARSE_METHOD="jq"
             IDENTIFIER=$(echo "$uploadResponse" | jq -r '.identifier // empty')
         else
-            # Fallback for environments without jq; expects JSON response containing "identifier".
-            IDENTIFIER=$(echo "$uploadResponse" | cut -f 4 -d '"')
+            # Fallback for environments without jq; expects JSON containing "identifier":"<value>".
+            IDENTIFIER=$(echo "$uploadResponse" | grep -o '"identifier":"[^"]*"' | cut -d '"' -f 4)
         fi
         if [ -z "$IDENTIFIER" ]; then
             echo -e "${RED}Error: could not parse uploaded package identifier using $PARSE_METHOD${NC}"
