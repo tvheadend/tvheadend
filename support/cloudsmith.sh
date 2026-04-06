@@ -133,6 +133,9 @@ for package in "${FILEARRAY[@]}"; do
         rpm)
             PACKAGE_VERSION=$(rpm -qp --qf '%{VERSION}\n' "$package" 2> /dev/null || true)
             ;;
+        *)
+            echo -e "${YELLOW}Skipping release-repo detection for unsupported package extension .$EXTENSION${NC}"
+            ;;
     esac
 
     REPOS="$CLOUDSMITH_REPO"
@@ -167,6 +170,7 @@ for package in "${FILEARRAY[@]}"; do
             PARSE_METHOD="jq"
             IDENTIFIER=$(echo "$uploadResponse" | jq -r '.identifier // empty')
         else
+            # Fallback for environments without jq; expects JSON response containing "identifier".
             IDENTIFIER=$(echo "$uploadResponse" | cut -f 4 -d '"')
         fi
         if [ -z "$IDENTIFIER" ]; then
