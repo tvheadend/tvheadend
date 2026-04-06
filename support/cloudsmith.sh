@@ -174,7 +174,7 @@ for package in "${FILEARRAY[@]}"; do
             IDENTIFIER=$(echo "$uploadResponse" | grep -o '"identifier":"[^"]*"' | cut -d '"' -f 4)
         fi
         if [ -z "$IDENTIFIER" ]; then
-            echo -e "${RED}Error: could not parse uploaded package identifier using $PARSE_METHOD${NC}"
+            echo -e "${RED}Error: could not parse uploaded package identifier using $PARSE_METHOD; check Cloudsmith upload response format${NC}"
             exit 1
         fi
         # finalize by POSTing to the create package endpoint
