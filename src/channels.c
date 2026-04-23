@@ -92,7 +92,7 @@ channel_class_changed ( idnode_t *self )
   htsp_channel_update(ch);
 
 end:
-  atomic_dec(&ch->ch_changed_ref, 0);
+  atomic_dec(&ch->ch_changed_ref, 1);
 }
 
 static htsmsg_t *
