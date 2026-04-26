@@ -1779,6 +1779,7 @@ config_boot
   config.iptv_tpool_count = 2;
   config.date_mask = strdup("");
   config.label_formatting = 0;
+  config.dvr_show_seconds = 1;
   config.hdhomerun_ip = strdup("");
   config.local_ip = strdup("");
   config.local_port = 0;
@@ -2395,6 +2396,17 @@ const idclass_t config_class = {
       .off    = offsetof(config_t, default_tab),
       .opts   = PO_DOC_NLIST,
       .group  = 2
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "dvr_show_seconds",
+      .name   = N_("Show DVR seconds"),
+      .desc   = N_("Show seconds in the DVR entry add/edit dialogue window. "
+                   "If disabled, existing seconds can not be edited and "
+                   "new entries will have seconds set to zero."),
+      .opts   = PO_ADVANCED,
+      .off    = offsetof(config_t, dvr_show_seconds),
+      .group  = 2,
     },
     {
       .type   = PT_BOOL,
