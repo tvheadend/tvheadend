@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# Create rolling release tag in yy.mm format (example: 26.04)
+#
+
+set -eu
+
+ROOT="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
+ROLLING_RELEASE_PATTERN='^[0-9][0-9]\.[0-9][0-9]$'
+cd "$ROOT"
+
+if [ ! -d .git ]; then
+  echo "Error: this script must be run from a git checkout." >&2
+  exit 1
+fi
+
+if [ $# -gt 1 ]; then
+  echo "Usage: $0 [yy.mm]" >&2
+  exit 1
+fi
+
+if [ $# -eq 1 ]; then
+  REL="$1"
+else
+  REL="$(date -u +%y.%m)"
+fi
+
+if ! echo "$REL" | grep -Eq "$ROLLING_RELEASE_PATTERN"; then
+  echo "Error: release must match yy.mm (for example 26.04)." >&2
+  exit 1
+fi
+
+TAG="v$REL"
+
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+  echo "Error: tag $TAG already exists." >&2
+  exit 1
+fi
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "Error: working tree is not clean." >&2
+  exit 1
+fi
+
+git tag -a "$TAG" -m "Tvheadend $REL"
+echo "Created tag $TAG"
+echo "Push with: git push origin $TAG"

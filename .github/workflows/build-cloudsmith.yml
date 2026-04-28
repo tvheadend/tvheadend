@@ -16,6 +16,7 @@ jobs:
       GITHUB_ENV: CLOUDSMITH_API_KEY
       CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
       CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+      CLOUDSMITH_RELEASES_REPO: ${{ vars.CLOUDSMITH_RELEASES_REPO || 'tvheadend-releases' }}
       CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
       CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
       NODIRTY: ${{ secrets.NODIRTY }}
@@ -104,6 +105,7 @@ jobs:
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
             CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
             CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+            CLOUDSMITH_RELEASES_REPO: ${{ vars.CLOUDSMITH_RELEASES_REPO || 'tvheadend-releases' }}
             CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
             CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
             NODIRTY: ${{ secrets.NODIRTY }}
@@ -224,7 +226,7 @@ jobs:
           SCRIPT: |
             cd /workspace
             support/cloudsmith.sh -f 'tvheadend*.deb'
-        run: docker exec -e CLOUDSMITH_ORG -e CLOUDSMITH_REPO -e CLOUDSMITH_OWNER -e CLOUDSMITH_API_KEY build-container bash -c "$SCRIPT"
+        run: docker exec -e CLOUDSMITH_ORG -e CLOUDSMITH_REPO -e CLOUDSMITH_RELEASES_REPO -e CLOUDSMITH_OWNER -e CLOUDSMITH_API_KEY build-container bash -c "$SCRIPT"
 
   build-rpm-native:
     runs-on: ubuntu-latest
@@ -263,6 +265,7 @@ jobs:
         env:
           CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
           CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+          CLOUDSMITH_RELEASES_REPO: ${{ vars.CLOUDSMITH_RELEASES_REPO || 'tvheadend-releases' }}
           CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
 
@@ -306,5 +309,6 @@ jobs:
         env:
           CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
           CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+          CLOUDSMITH_RELEASES_REPO: ${{ vars.CLOUDSMITH_RELEASES_REPO || 'tvheadend-releases' }}
           CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
