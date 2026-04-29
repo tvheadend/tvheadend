@@ -2477,11 +2477,11 @@ msgstr "Domyślny format (tytuł, unikalny numer, rozszerzenie)"
 
 #: src/docs_inc.c:5001
 msgid "Default tab"
-msgstr ""
+msgstr "Domyślna karta"
 
 #: src/docs_inc.c:5003
 msgid "Default tab on the Web interface"
-msgstr ""
+msgstr "Domyślna karta w interfejsie sieciowym"
 
 #: src/docs_inc.c:2420
 msgid "Delete"
@@ -5325,11 +5325,11 @@ msgstr "Wyjściowe cele"
 
 #: src/docs_inc.c:4997
 msgid "Output format for HTSP"
-msgstr ""
+msgstr "Format wyjściowy dla HTSP"
 
 #: src/docs_inc.c:4991
 msgid "Output format for XMLTV"
-msgstr ""
+msgstr "Format wyjściowy dla XMLTV"
 
 #: src/docs_inc.c:3854
 msgid "Over-the-air (OTA)"
