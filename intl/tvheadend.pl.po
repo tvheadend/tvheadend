@@ -1848,35 +1848,35 @@ msgstr "Identyfikator dostępu warunkowego."
 
 #: src/config.c:2157
 msgid "Config-CAs"
-msgstr ""
+msgstr "Konfiguracja-Dostęp warunkowy (CA)"
 
 #: src/config.c:2154
 msgid "Config-Channel/EPG"
-msgstr ""
+msgstr "Konfiguracja-Kanał / EPG"
 
 #: src/config.c:2153
 msgid "Config-DVB Inputs"
-msgstr ""
+msgstr "Konfiguracja-Wejścia DVB"
 
 #: src/config.c:2158
 msgid "Config-Debugging"
-msgstr ""
+msgstr "Konfiguracja-Debugowanie"
 
 #: src/config.c:2151
 msgid "Config-General"
-msgstr ""
+msgstr "Konfiguracja-Ogólne"
 
 #: src/config.c:2156
 msgid "Config-Recording"
-msgstr ""
+msgstr "Konfiguracja-Nagrywanie"
 
 #: src/config.c:2155
 msgid "Config-Stream"
-msgstr ""
+msgstr "Konfiguracja-Strumień"
 
 #: src/config.c:2152
 msgid "Config-Users"
-msgstr ""
+msgstr "Konfiguracja-Użytkownicy"
 
 #: src/tvhlog.c:103 src/profile.c:2100 src/epggrab/channel.c:752
 msgid "Configuration"
@@ -2453,27 +2453,27 @@ msgstr "Brak harmonogramu DVR"
 
 #: src/config.c:2149
 msgid "DVR-Autorecs"
-msgstr ""
+msgstr "Konfiguracja-Autonagrania"
 
 #: src/config.c:2147
 msgid "DVR-Failed"
-msgstr ""
+msgstr "Konfiguracja-Błędne"
 
 #: src/config.c:2146
 msgid "DVR-Finished"
-msgstr ""
+msgstr "Konfiguracja-Zakończone"
 
 #: src/config.c:2148
 msgid "DVR-Removed"
-msgstr ""
+msgstr "Konfiguracja-Usunięte"
 
 #: src/config.c:2150
 msgid "DVR-Timers"
-msgstr ""
+msgstr "Konfiguracja-Timery"
 
 #: src/config.c:2145
 msgid "DVR-Upcoming/Current"
-msgstr ""
+msgstr "DVR-Nadchodzące/Obecne"
 
 #: src/epg.c:2026
 msgid "Dance"
@@ -2588,7 +2588,7 @@ msgstr "Domyślna konfiguracja serwera"
 
 #: src/access.c:1593 src/access.c:1829 src/config.c:2393
 msgid "Default tab"
-msgstr ""
+msgstr "Domyślna karta"
 
 #: src/access.c:1790
 msgid "Default user interface level."
@@ -2940,7 +2940,7 @@ msgstr "Ustawienia EMM"
 
 #: src/config.c:2144
 msgid "EPG"
-msgstr ""
+msgstr "EPG"
 
 #: src/epggrab/module/xmltv.c:1596
 msgid "EPG - External XMLTV EPG Grabber"
@@ -8413,11 +8413,11 @@ msgstr "Ustaw jako domyślny profil."
 
 #: src/access.c:1830
 msgid "Set the default start-up tab.  'EPG' is the default tab."
-msgstr ""
+msgstr "Ustaw domyślną kartę startową. „EPG” jest domyślną kartą."
 
 #: src/config.c:2394
 msgid "Set the default start-up tab.  'EPG' is the system default tab."
-msgstr ""
+msgstr "Ustaw domyślną kartę startową. „EPG” jest kartą domyślną systemu."
 
 #: src/input/mpegts/satip/satip_satconf.c:362
 msgid "Set the display name."
@@ -8481,7 +8481,7 @@ msgstr "Show / teleturniej"
 
 #: src/config.c:2403
 msgid "Show DVR seconds"
-msgstr ""
+msgstr "Pokaż sekundy DVR"
 
 #: src/satip/server.c:698
 msgid ""
@@ -8497,6 +8497,9 @@ msgid ""
 "existing seconds can not be edited and new entries will have seconds set to "
 "zero."
 msgstr ""
+"Pokaż sekundy w oknie dialogowym dodawania/edycji wpisu DVR. Jeśli "
+"wyłączone, istniejących sekund nie można edytować, a nowe wpisy będą miały "
+"ustawione sekundy na zero."
 
 #: src/main.c:884
 msgid "Show this page"
@@ -8916,19 +8919,19 @@ msgstr "Status okresu (ms)"
 
 #: src/config.c:2161
 msgid "Status-Connections"
-msgstr ""
+msgstr "Status-Połączenia"
 
 #: src/config.c:2162
 msgid "Status-Service Mapper"
-msgstr ""
+msgstr "Status-Usługa mapowania"
 
 #: src/config.c:2159
 msgid "Status-Stream"
-msgstr ""
+msgstr "Status-Strumień"
 
 #: src/config.c:2160
 msgid "Status-Subscriptions"
-msgstr ""
+msgstr "Status-Subskrypcje"
 
 #: src/dvr/dvr_timerec.c:593
 msgid "Stop"
@@ -9183,7 +9186,7 @@ msgstr "System"
 
 #: src/config.c:2143
 msgid "System Default"
-msgstr ""
+msgstr "Domyślna systemu"
 
 #: src/input/mpegts/satip/satip_frontend.c:223
 msgid "TCP Interleaved"
