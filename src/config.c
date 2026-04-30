@@ -1779,6 +1779,7 @@ config_boot
   config.iptv_tpool_count = 2;
   config.date_mask = strdup("");
   config.label_formatting = 0;
+  config.dvr_show_seconds = 1;
   config.hdhomerun_ip = strdup("");
   config.local_ip = strdup("");
   config.local_port = 0;
@@ -2135,6 +2136,35 @@ config_class_http_auth_algo_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+htsmsg_t *
+config_class_default_tab_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("System Default"),        CONFIG_DEFAULT_TAB_SYSTEM },
+    { N_("EPG"),                   CONFIG_DEFAULT_TAB_EPG },
+    { N_("DVR-Upcoming/Current"),  CONFIG_DEFAULT_TAB_DVR_UPCOMING },
+    { N_("DVR-Finished"),          CONFIG_DEFAULT_TAB_DVR_FINISHED },
+    { N_("DVR-Failed"),            CONFIG_DEFAULT_TAB_DVR_FAILED },
+    { N_("DVR-Removed"),           CONFIG_DEFAULT_TAB_DVR_REMOVED },
+    { N_("DVR-Autorecs"),          CONFIG_DEFAULT_TAB_DVR_AUTORECS },
+    { N_("DVR-Timers"),            CONFIG_DEFAULT_TAB_DVR_TIMERS },
+    { N_("Config-General"),        CONFIG_DEFAULT_TAB_CFG_GENERAL },
+    { N_("Config-Users"),          CONFIG_DEFAULT_TAB_CFG_USERS },
+    { N_("Config-DVB Inputs"),     CONFIG_DEFAULT_TAB_CFG_DVB },
+    { N_("Config-Channel/EPG"),    CONFIG_DEFAULT_TAB_CFG_CHANNEL },
+    { N_("Config-Stream"),         CONFIG_DEFAULT_TAB_CFG_STREAM },
+    { N_("Config-Recording"),      CONFIG_DEFAULT_TAB_CFG_REC },
+    { N_("Config-CAs"),            CONFIG_DEFAULT_TAB_CFG_CA },
+    { N_("Config-Debugging"),      CONFIG_DEFAULT_TAB_CFG_DEBUG },
+    { N_("Status-Stream"),         CONFIG_DEFAULT_TAB_STATUS_STREAM },
+    { N_("Status-Subscriptions"),  CONFIG_DEFAULT_TAB_STATUS_SUBS },
+    { N_("Status-Connections"),    CONFIG_DEFAULT_TAB_STATUS_CONN },
+    { N_("Status-Service Mapper"), CONFIG_DEFAULT_TAB_STATUS_SVC },
+    { N_("About"),                 CONFIG_DEFAULT_TAB_ABOUT },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 #if ENABLE_MPEGTS_DVB
 static void
 config_muxconfpath_notify_cb(void *opaque, int disarmed)
@@ -2358,6 +2388,27 @@ const idclass_t config_class = {
       .group  = 2,
     },
     {
+      .type   = PT_U32,
+      .id     = "default_tab",
+      .name   = N_("Default tab"),
+      .desc   = N_("Set the default start-up tab.  'EPG' is the system default tab."),
+      .list   = config_class_default_tab_list,
+      .off    = offsetof(config_t, default_tab),
+      .opts   = PO_DOC_NLIST,
+      .group  = 2
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "dvr_show_seconds",
+      .name   = N_("Show DVR seconds"),
+      .desc   = N_("Show seconds in the DVR entry add/edit dialogue window. "
+                   "If disabled, existing seconds can not be edited and "
+                   "new entries will have seconds set to zero."),
+      .opts   = PO_ADVANCED,
+      .off    = offsetof(config_t, dvr_show_seconds),
+      .group  = 2,
+    },
+    {
       .type   = PT_BOOL,
       .id     = "label_formatting",
       .name   = N_("Kodi label formatting support"),
@@ -2560,6 +2611,7 @@ const idclass_t config_class = {
       .opts   = PO_EXPERT,
       .group  = 5
     },
+#if ENABLE_HDHOMERUN_CLIENT
     {
       .type   = PT_STR,
       .id     = "hdhomerun_ip",
@@ -2604,6 +2656,8 @@ const idclass_t config_class = {
       .opts   = PO_HIDDEN | PO_EXPERT,
       .group  = 6
     },
+#endif
+#if ENABLE_HDHOMERUN_SERVER
     {
       .type   = PT_U32,
       .id     = "hdhomerun_server_tuner_count",
@@ -2624,11 +2678,7 @@ const idclass_t config_class = {
                    "Set to zero for Tvheadend to use a default value."
                   ),
       .off    = offsetof(config_t, hdhomerun_server_tuner_count),
-      .opts   = PO_EXPERT
-#if !ENABLE_HDHOMERUN_SERVER
-      | PO_PHIDDEN
-#endif
-      ,
+      .opts   = PO_EXPERT,
       .group  = 6,
     },
     {
@@ -2644,11 +2694,7 @@ const idclass_t config_class = {
                    "for Tvheadend to use a default."
                   ),
       .off    = offsetof(config_t, hdhomerun_server_model_name),
-      .opts   = PO_EXPERT
-#if !ENABLE_HDHOMERUN_SERVER
-      | PO_PHIDDEN
-#endif
-      ,
+      .opts   = PO_EXPERT,
       .group  = 6,
     },
     {
@@ -2660,13 +2706,10 @@ const idclass_t config_class = {
                    "to be used on some media servers."
                   ),
       .off    = offsetof(config_t, hdhomerun_server_enable),
-      .opts   = PO_EXPERT
-#if !ENABLE_HDHOMERUN_SERVER
-      | PO_PHIDDEN
-#endif
-,
+      .opts   = PO_EXPERT,
       .group  = 6
     },
+#endif
     {
       .type   = PT_INT,
       .id     = "rtsp_udp_min_port",
@@ -2700,6 +2743,7 @@ const idclass_t config_class = {
     },
     {
       .type   = PT_INT,
+      .intextra = INTEXTRA_RANGE(1, 128, 1),
       .id     = "iptv_tpool",
       .name   = N_("IPTV threads"),
       .desc   = N_("Set the number of threads for IPTV to split load "
@@ -2742,6 +2786,17 @@ const idclass_t config_class = {
                    "(before frame start is signalled in the stream). "
                    "It may cause issues with some clients / players."),
       .off    = offsetof(config_t, parser_backlog),
+      .opts   = PO_EXPERT,
+      .group  = 8,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "auto_clear_input_counters",
+      .name   = N_("Automatically clear input error counters"),
+      .desc   = N_("Periodically resets input error counters "
+                   "(when a new mux starts for the target tuner). "
+                   "Note that previous counters will be lost."),
+      .off    = offsetof(config_t, auto_clear_input_counters),
       .opts   = PO_EXPERT,
       .group  = 8,
     },

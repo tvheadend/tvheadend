@@ -86,6 +86,38 @@ deinterlace_enable_auto_get_list( void *o, const char *lang )
     return strtab2htsmsg(tab, 1, lang);
 }
 
+/* Internal =================================================================  */
+
+static int
+_is_pix_fmt_available(TVHVideoCodec *self, int pix_fmt)
+{
+    const enum AVPixelFormat *p;
+
+    if (!self) {
+        tvhwarn(LS_CODEC, "tvh_codec_video is not available");
+        return 0;
+    }
+    // if 'auto' is selected we exit with 1
+    if (pix_fmt == AV_PIX_FMT_NONE) {
+        return 1;
+    }
+    // check if pix_fmt is in the supported list
+    if (self->pix_fmts) {
+        for (p = self->pix_fmts; *p != AV_PIX_FMT_NONE; p++) {
+            if (*p == pix_fmt) {
+                return 1;
+            }
+        }
+    }
+    // not found: we report and exit with 0
+    const char *pix_fmt_name = av_get_pix_fmt_name(pix_fmt);
+    if (pix_fmt_name) {
+        tvhwarn(LS_CODEC, "pixel format '%s' is not available", pix_fmt_name);
+    } else {
+        tvhwarn(LS_CODEC, "pixel format '%d' is not available", pix_fmt);
+    }
+    return 0;
+}
 
 /* TVHCodec ================================================================= */
 
@@ -178,6 +210,10 @@ tvh_codec_profile_video_open(TVHVideoCodecProfile *self, AVDictionary **opts)
         AV_DICT_SET_INT(LST_VIDEO, opts, "crf", self->crf, AV_DICT_DONT_OVERWRITE);
     }
     // pix_fmt
+    TVHVideoCodec *codec = (TVHVideoCodec *)tvh_codec_profile_get_codec((TVHCodecProfile *)self);
+    if (!codec || !_is_pix_fmt_available(codec, self->pix_fmt)) {
+        return -1;
+    }
     AV_DICT_SET_PIX_FMT(LST_VIDEO, opts, self->pix_fmt, AV_PIX_FMT_YUV420P);
     return 0;
 }
@@ -337,7 +373,7 @@ const codec_profile_class_t codec_profile_video_class = {
             {}
         }
     },
-    .setup       = (codec_profile_is_copy_meth)tvh_codec_profile_video_setup,
+    .setup       = (codec_profile_setup_meth)tvh_codec_profile_video_setup,
     .is_copy     = (codec_profile_is_copy_meth)tvh_codec_profile_video_is_copy,
     .open        = (codec_profile_open_meth)tvh_codec_profile_video_open,
 };

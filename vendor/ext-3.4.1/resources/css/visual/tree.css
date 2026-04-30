@@ -104,6 +104,7 @@ Build date: 2013-04-03 15:07:25
 }
 
 .x-tree-node{
+	padding-right: 10px;
 	color:#000;
 	font: normal 11px arial, tahoma, helvetica, sans-serif;
 }

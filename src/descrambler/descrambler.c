@@ -232,13 +232,22 @@ descrambler_data_analyze(th_descrambler_runtime_t *dr,
 /*
  *
  */
+static inline void
+descrambler_ecmsec_unref(descrambler_ecmsec_t *des)
+{
+  int v = atomic_dec(&des->refcnt, 1);
+  assert(v > 0);
+  if (v == 1) {
+    free(des->last_data);
+    free(des);
+  }
+}
+
 static void
 descrambler_destroy_ecmsec(descrambler_ecmsec_t *des)
 {
   LIST_REMOVE(des, link);
-  free(des->last_data);
-  if (atomic_dec(&des->refcnt, 1) == 0)
-    free(des);
+  descrambler_ecmsec_unref(des);
 }
 
 static void
@@ -1320,6 +1329,7 @@ descrambler_table_callback
     if (des == NULL) {
       des = calloc(1, sizeof(*des));
       des->number = emm ? 0 : ptr[4];
+      atomic_add(&des->refcnt, 1);
       LIST_INSERT_HEAD(&ds->ecmsecs, des, link);
     }
     if (des->last_data == NULL || len != des->last_data_len ||
@@ -1336,9 +1346,9 @@ descrambler_table_callback
     } else {
       des->changed = des->last_data != NULL ? 1 : 0;
     }
-    atomic_add(&des->refcnt, 1);
     des->callback = ds->callback;
     des->opaque = ds->opaque;
+    atomic_add(&des->refcnt, 1);
     LIST_INSERT_HEAD(&sections, des, active_link);
   }
   tvh_mutex_unlock(&mt->mt_mux->mm_descrambler_lock);
@@ -1429,8 +1439,7 @@ descrambler_table_callback
 
   while ((des = LIST_FIRST(&sections)) != NULL) {
     LIST_REMOVE(des, active_link);
-    if (atomic_dec(&des->refcnt, 1) == 0)
-      free(des);
+    descrambler_ecmsec_unref(des);
   }
   return 0;
 }

@@ -19,26 +19,21 @@ RUN apk add --no-cache \
         'cmake' \
         'coreutils' \
         'dbus-dev' \
-        'ffmpeg-dev' \
         'findutils' \
         'gettext-dev' \
         'git' \
         'gnu-libiconv-dev' \
         'libdvbcsa-dev' \
         'libhdhomerun-dev' \
-        'libva-dev' \
-        'libvpx-dev' \
         'libxml2-dev' \
         'linux-headers' \
         'musl-dev' \
         'openssl-dev>3' \
-        'opus-dev' \
+        'pcre2' \
         'pngquant' \
         'python3' \
         'uriparser-dev' \
         'wget' \
-        'x264-dev' \
-        'x265-dev' \
         'zlib-dev' \
     && \
     git config --global --add safe.directory '/src/data/dvb-scan' && \
@@ -60,15 +55,13 @@ RUN apk add --no-cache \
                 --enable-dvbcsa \
                 --enable-hdhomerun_client \
                 --enable-kqueue \
-                --enable-libav \
-                --enable-nvenc \
+                --disable-libav \
                 --enable-pngquant \
-                --enable-qsv \
                 --python=python3 \
         && \
         make DESTDIR='/tvheadend' -j$(($(nproc) - 1)) install
 
-FROM docker.io/${TARGET_ARCH}/alpine:${ALPINE_VERSION}
+FROM docker.io/${TARGET_ARCH}/alpine:${ALPINE_VERSION} AS runner
 
 LABEL maintainer="Olliver Schinagl <oliver@schinagl.nl>"
 
@@ -80,15 +73,6 @@ RUN apk add --no-cache \
         'avahi' \
         'bzip2' \
         'dbus-libs' \
-        'ffmpeg' \
-        'ffmpeg-libavcodec' \
-        'ffmpeg-libavdevice' \
-        'ffmpeg-libavfilter' \
-        'ffmpeg-libavformat' \
-        'ffmpeg-libavutil' \
-        'ffmpeg-libpostproc' \
-        'ffmpeg-libswresample' \
-        'ffmpeg-libswscale' \
         'gnu-libiconv-libs' \
         'libcrypto3' \
         'libdvbcsa' \
@@ -99,22 +83,14 @@ RUN apk add --no-cache \
         'libvpx' \
         'libxml2' \
         'mesa' \
-        'opus' \
         'perl-http-entity-parser' \
         'pngquant' \
+        'pcre2' \
         'python3' \
         'tini' \
-        'x264-libs' \
-        'x265-libs' \
         'xmltv' \
         'zlib' \
     && \
-    [ "$(uname -m)" = 'x86'* ] && apk add --no-cache \
-        'libva-intel-driver' \
-        ; \
-    [ "$(uname -m)" = 'x86_64' ] && apk add --no-cache \
-        'libva-intel-driver' \
-        ; \
     addgroup -S 'tvheadend' && \
     adduser -D -G 'tvheadend' -h '/var/lib/tvheadend' -s '/bin/nologin' -S 'tvheadend' && \
     adduser 'tvheadend' 'audio' && \
@@ -130,4 +106,4 @@ VOLUME /var/lib/tvheadend/recordings
 WORKDIR /var/lib/tvheadend/
 USER tvheadend
 
-ENTRYPOINT [ "/sbin/tini-static", "--", "/init" ]
+ENTRYPOINT [ "/sbin/tini", "--", "/init" ]

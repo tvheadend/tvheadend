@@ -786,9 +786,9 @@ tvheadend.idnode_editor_field = function(f, conf)
                     value: value,
                     disabled: false,
                     width: 300,
-                    timeFormat: 'H:i:s',
+                    timeFormat: tvheadend.dvr_show_seconds ? 'H:i:s' : 'H:i',
                     timeConfig: {
-                        altFormats: 'H:i:s',
+                        altFormats: 'H:i:s|H:i',
                         allowBlank: true,
                         increment: 10
                     },

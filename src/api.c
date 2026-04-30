@@ -46,6 +46,7 @@ api_register ( const api_hook_t *hook )
   t = RB_INSERT_SORTED(&api_hook_tree, api_skel, link, ah_cmp);
   if (t) {
     tvherror(LS_API, "trying to re-register subsystem");
+    free(api_skel);
   } else {
     SKEL_USED(api_skel);
   }

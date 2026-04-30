@@ -92,7 +92,7 @@ channel_class_changed ( idnode_t *self )
   htsp_channel_update(ch);
 
 end:
-  atomic_dec(&ch->ch_changed_ref, 0);
+  atomic_dec(&ch->ch_changed_ref, 1);
 }
 
 static htsmsg_t *
@@ -131,13 +131,15 @@ channel_class_autoname_set ( void *obj, const void *p )
 {
   channel_t *ch = (channel_t *)obj;
   const char *s;
+  char *chan_name;
   int b = *(int *)p;
   if (ch->ch_autoname != b) {
     if (b == 0 && tvh_str_default(ch->ch_name, NULL) == NULL) {
       s = channel_get_name(ch, NULL);
       if (s) {
+        chan_name = strdup(s);
         free(ch->ch_name);
-        ch->ch_name = strdup(s);
+        ch->ch_name = chan_name;
       } else {
         return 0;
       }
@@ -251,9 +253,14 @@ channel_class_get_list(void *o, const char *lang)
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "channel/list");
   htsmsg_add_str(m, "event", "channel");
+  htsmsg_add_str(m, "stype", "none");
   htsmsg_add_u32(p, "all",  1);
-  if (config.chname_num)
+  if (config.chname_num) {
     htsmsg_add_u32(p, "numbers", 1);
+    htsmsg_add_str(p, "sort", "numname");
+  } else {
+    htsmsg_add_str(p, "sort", "name");
+  }
   if (config.chname_src)
     htsmsg_add_u32(p, "sources", 1);
   htsmsg_add_msg(m, "params", p);

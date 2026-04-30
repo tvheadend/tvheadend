@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-29 02:46+0000\n"
+"POT-Creation-Date: 2026-04-27 03:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -44,7 +44,7 @@ msgstr ""
 msgid "(default DVR Profile)"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:592
+#: src/webui/static/app/tvheadend.js:622
 msgid ""
 "**You'll also see this page if you try and view documentation (for a "
 "feature) not included with your version of Tvheadend.**\n"
@@ -137,7 +137,7 @@ msgstr ""
 msgid "Abort the selected recording"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1211
+#: src/webui/static/app/tvheadend.js:1269
 msgid "About"
 msgstr ""
 
@@ -272,7 +272,7 @@ msgstr ""
 msgid "Auto Recorder"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:712
+#: src/webui/static/app/tvheadend.js:742
 msgid "Auto-refresh"
 msgstr ""
 
@@ -293,7 +293,7 @@ msgstr ""
 msgid "BER"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:525 src/webui/static/app/tvheadend.js:526
+#: src/webui/static/app/tvheadend.js:555 src/webui/static/app/tvheadend.js:556
 msgid "Back to top"
 msgstr ""
 
@@ -301,7 +301,7 @@ msgstr ""
 msgid "Bandwidth (kb/s)"
 msgstr ""
 
-#: src/webui/static/app/status.js:875 src/webui/static/app/status.js:968
+#: src/webui/static/app/status.js:881 src/webui/static/app/status.js:972
 msgid "Bandwidth monitor"
 msgstr ""
 
@@ -410,7 +410,7 @@ msgstr ""
 msgid "Channel"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1130
+#: src/webui/static/app/tvheadend.js:1168
 msgid "Channel / EPG"
 msgstr ""
 
@@ -506,7 +506,7 @@ msgstr ""
 msgid "Columns"
 msgstr ""
 
-#: src/webui/static/app/comet.js:38
+#: src/webui/static/app/comet.js:43
 msgid "Comet failure"
 msgstr ""
 
@@ -514,7 +514,7 @@ msgstr ""
 msgid "Comment"
 msgstr ""
 
-#: src/webui/static/app/status.js:924
+#: src/webui/static/app/status.js:928
 msgid "Compression ratio"
 msgstr ""
 
@@ -522,7 +522,7 @@ msgstr ""
 msgid "Conditional Access Client"
 msgstr ""
 
-#: src/webui/static/app/tvhlog.js:361 src/webui/static/app/tvheadend.js:1069
+#: src/webui/static/app/tvhlog.js:361 src/webui/static/app/tvheadend.js:1107
 msgid "Configuration"
 msgstr ""
 
@@ -530,7 +530,7 @@ msgstr ""
 msgid "Connections"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:314 src/webui/static/app/tvheadend.js:315
+#: src/webui/static/app/tvheadend.js:344 src/webui/static/app/tvheadend.js:345
 msgid "Content Icons"
 msgstr ""
 
@@ -565,7 +565,7 @@ msgstr ""
 msgid "Created from EPG query"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:375
+#: src/webui/static/app/tvheadend.js:405
 msgid "Crew"
 msgstr ""
 
@@ -574,7 +574,7 @@ msgstr ""
 msgid "Currently this will match (and record) %d events."
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1111
+#: src/webui/static/app/tvheadend.js:1149
 msgid "DVB Inputs"
 msgstr ""
 
@@ -590,7 +590,7 @@ msgstr ""
 msgid "Debug"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1185
+#: src/webui/static/app/tvheadend.js:1223
 msgid "Debugging"
 msgstr ""
 
@@ -656,7 +656,7 @@ msgstr ""
 msgid "Digital Video Recorder Profiles"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:373
+#: src/webui/static/app/tvheadend.js:403
 msgid "Director"
 msgstr ""
 
@@ -692,7 +692,7 @@ msgstr ""
 msgid "Do you really want to delete the selected recordings?"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:671
+#: src/webui/static/app/tvheadend.js:701
 msgid "Do you really want to delete the selection?"
 msgstr ""
 
@@ -802,7 +802,7 @@ msgstr ""
 msgid "Electronic Program Guide"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1478
+#: src/webui/static/app/tvheadend.js:1540
 msgid "Enable debug output"
 msgstr ""
 
@@ -825,7 +825,7 @@ msgstr ""
 msgid "Episode"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:581
+#: src/webui/static/app/tvheadend.js:611
 msgid "Error"
 msgstr ""
 
@@ -949,7 +949,7 @@ msgstr ""
 msgid "Force new scan (all muxes) for selected networks"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1363
+#: src/webui/static/app/tvheadend.js:1425
 msgid "Free"
 msgstr ""
 
@@ -961,7 +961,7 @@ msgstr ""
 msgid "Friday"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:956
+#: src/webui/static/app/tvheadend.js:986
 msgid "Fullscreen"
 msgstr ""
 
@@ -969,7 +969,7 @@ msgstr ""
 msgid "Fulltext"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1079
+#: src/webui/static/app/tvheadend.js:1117
 msgid "General"
 msgstr ""
 
@@ -977,7 +977,7 @@ msgstr ""
 msgid "Genre"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1353
+#: src/webui/static/app/tvheadend.js:1415
 msgid "GiB"
 msgstr ""
 
@@ -1053,7 +1053,7 @@ msgstr ""
 msgid "Image Cache"
 msgstr ""
 
-#: src/webui/static/app/status.js:922
+#: src/webui/static/app/status.js:926
 msgid "In"
 msgstr ""
 
@@ -1061,12 +1061,16 @@ msgstr ""
 msgid "Index"
 msgstr ""
 
-#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1012
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1014
 msgid "Input"
 msgstr ""
 
 #: src/webui/static/app/status.js:193
 msgid "Input (kb/s)"
+msgstr ""
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:2137
@@ -1105,7 +1109,7 @@ msgstr ""
 msgid "Keywords"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1357
+#: src/webui/static/app/tvheadend.js:1419
 msgid "KiB"
 msgstr ""
 
@@ -1113,7 +1117,7 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:461
+#: src/webui/static/app/tvheadend.js:491
 msgid "Last Help Pages"
 msgstr ""
 
@@ -1133,17 +1137,17 @@ msgstr ""
 msgid "Listing Subsystems"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:912
+#: src/webui/static/app/tvheadend.js:942
 msgid "Live TV Player"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:694
+#: src/webui/static/app/tvheadend.js:724
 msgid "Loading, please wait..."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
-#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/tvheadend.js:849
-#: src/webui/static/app/tvheadend.js:888
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/tvheadend.js:879
+#: src/webui/static/app/tvheadend.js:918
 msgid "Loading..."
 msgstr ""
 
@@ -1153,7 +1157,7 @@ msgstr ""
 msgid "Loading…"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1334
+#: src/webui/static/app/tvheadend.js:1396
 msgid "Logged in as"
 msgstr ""
 
@@ -1245,11 +1249,11 @@ msgstr ""
 msgid "Mergetext"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:670
+#: src/webui/static/app/tvheadend.js:700
 msgid "Message"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1355
+#: src/webui/static/app/tvheadend.js:1417
 msgid "MiB"
 msgstr ""
 
@@ -1358,12 +1362,12 @@ msgstr ""
 msgid "No days"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1337
+#: src/webui/static/app/tvheadend.js:1399
 msgid "No verified access"
 msgstr ""
 
 #. / {0} title (lowercase), {1} title
-#: src/webui/static/app/tvheadend.js:707
+#: src/webui/static/app/tvheadend.js:737
 msgid "No {0} to display"
 msgstr ""
 
@@ -1372,7 +1376,7 @@ msgstr ""
 msgid "None"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:590
+#: src/webui/static/app/tvheadend.js:620
 msgid "Not Available"
 msgstr ""
 
@@ -1432,7 +1436,7 @@ msgstr ""
 msgid "Other Stream Filters"
 msgstr ""
 
-#: src/webui/static/app/status.js:923
+#: src/webui/static/app/status.js:927
 msgid "Out"
 msgstr ""
 
@@ -1478,11 +1482,11 @@ msgstr ""
 msgid "Passwords"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:941
+#: src/webui/static/app/tvheadend.js:971
 msgid "Pause"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:718
+#: src/webui/static/app/tvheadend.js:748
 msgid "Per page"
 msgstr ""
 
@@ -1491,8 +1495,8 @@ msgstr ""
 #: src/webui/static/app/chconf.js:245 src/webui/static/app/chconf.js:246
 #: src/webui/static/app/epg.js:367 src/webui/static/app/dvr.js:816
 #: src/webui/static/app/dvr.js:817 src/webui/static/app/dvr.js:936
-#: src/webui/static/app/dvr.js:937 src/webui/static/app/tvheadend.js:830
-#: src/webui/static/app/tvheadend.js:924
+#: src/webui/static/app/dvr.js:937 src/webui/static/app/tvheadend.js:860
+#: src/webui/static/app/tvheadend.js:954
 msgid "Play"
 msgstr ""
 
@@ -1504,7 +1508,7 @@ msgstr ""
 msgid "Play this program"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:830
+#: src/webui/static/app/tvheadend.js:860
 msgid "Play this stream"
 msgstr ""
 
@@ -1512,17 +1516,17 @@ msgstr ""
 msgid "Please Wait..."
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:583
+#: src/webui/static/app/tvheadend.js:613
 msgid "Please check Tvheadend is running and try again."
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:593
+#: src/webui/static/app/tvheadend.js:623
 msgid ""
 "Please take a look at the other Help pages (Table of Contents), if you still "
 "can't find what you're "
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:797
+#: src/webui/static/app/tvheadend.js:827
 msgid "Premiere"
 msgstr ""
 
@@ -1538,7 +1542,7 @@ msgstr ""
 msgid "Previous Page"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:815
+#: src/webui/static/app/tvheadend.js:845
 msgid "Previous day"
 msgstr ""
 
@@ -1595,8 +1599,12 @@ msgstr ""
 msgid "Read-only Info"
 msgstr ""
 
-#: src/webui/static/app/comet.js:21
+#: src/webui/static/app/comet.js:24
 msgid "Reconnected to Tvheadend"
+msgstr ""
+
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
 msgstr ""
 
 #: src/webui/static/app/epg.js:427
@@ -1611,7 +1619,7 @@ msgstr ""
 msgid "Record this program now"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:829 src/webui/static/app/tvheadend.js:1165
+#: src/webui/static/app/dvr.js:829 src/webui/static/app/tvheadend.js:1203
 msgid "Recording"
 msgstr ""
 
@@ -1724,7 +1732,7 @@ msgstr ""
 msgid "SNR"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:799
+#: src/webui/static/app/tvheadend.js:829
 msgid "Same day"
 msgstr ""
 
@@ -1770,11 +1778,11 @@ msgstr ""
 msgid "Select Subsystems"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:856
+#: src/webui/static/app/tvheadend.js:886
 msgid "Select channel..."
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:894
+#: src/webui/static/app/tvheadend.js:924
 msgid "Select stream profile..."
 msgstr ""
 
@@ -1855,7 +1863,7 @@ msgstr ""
 msgid "Star Rating"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:372
+#: src/webui/static/app/tvheadend.js:402
 msgid "Starring"
 msgstr ""
 
@@ -1893,7 +1901,7 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:518 src/webui/static/app/tvheadend.js:948
+#: src/webui/static/app/dvr.js:518 src/webui/static/app/tvheadend.js:978
 msgid "Stop"
 msgstr ""
 
@@ -1909,12 +1917,12 @@ msgstr ""
 msgid "Stop the selected recording"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1360
+#: src/webui/static/app/tvheadend.js:1422
 msgid "Storage space"
 msgstr ""
 
 #: src/webui/static/app/status.js:408 src/webui/static/app/status.js:595
-#: src/webui/static/app/tvheadend.js:1149
+#: src/webui/static/app/tvheadend.js:1187
 msgid "Stream"
 msgstr ""
 
@@ -2038,17 +2046,17 @@ msgstr ""
 msgid "The value in this field is invalid"
 msgstr ""
 
-#: src/webui/static/app/comet.js:14
+#: src/webui/static/app/comet.js:12
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying "
 "to reconnect..."
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:582
+#: src/webui/static/app/tvheadend.js:612
 msgid "There was a problem displaying the Help!"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:591
+#: src/webui/static/app/tvheadend.js:621
 msgid ""
 "There's no documentation available, or there was a problem loading the "
 "page.\n"
@@ -2111,7 +2119,7 @@ msgstr ""
 msgid "Today"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:966
+#: src/webui/static/app/tvheadend.js:996
 msgid "Toggle mute"
 msgstr ""
 
@@ -2124,7 +2132,7 @@ msgstr ""
 msgid "Toggle the previously recorded state."
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1363
+#: src/webui/static/app/tvheadend.js:1425
 msgid "Total"
 msgstr ""
 
@@ -2152,11 +2160,11 @@ msgstr ""
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1455
+#: src/webui/static/app/tvheadend.js:1517
 msgid "Tvheadend Web-Panel"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1474
+#: src/webui/static/app/tvheadend.js:1536
 msgid "Tvheadend log"
 msgstr ""
 
@@ -2199,7 +2207,7 @@ msgstr ""
 msgid "Upcoming Recording"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1363
+#: src/webui/static/app/tvheadend.js:1425
 msgid "Used by tvheadend"
 msgstr ""
 
@@ -2207,7 +2215,7 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1095
+#: src/webui/static/app/tvheadend.js:1133
 msgid "Users"
 msgstr ""
 
@@ -2235,7 +2243,7 @@ msgstr ""
 msgid "View level: "
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:975
+#: src/webui/static/app/tvheadend.js:1005
 msgid "Volume"
 msgstr ""
 
@@ -2275,7 +2283,7 @@ msgstr ""
 msgid "Wizard - page \"{0}\" not found"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:374
+#: src/webui/static/app/tvheadend.js:404
 msgid "Writer"
 msgstr ""
 
@@ -2322,15 +2330,15 @@ msgstr ""
 msgid "hrs"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1338
+#: src/webui/static/app/tvheadend.js:1400
 msgid "login"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1335
+#: src/webui/static/app/tvheadend.js:1397
 msgid "logout"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:594
+#: src/webui/static/app/tvheadend.js:624
 msgid ""
 "looking for please see the [documentation](http://docs.tvheadend.org/"
 "documentation) "
@@ -2370,7 +2378,7 @@ msgstr ""
 msgid "of {0}"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:595
+#: src/webui/static/app/tvheadend.js:625
 msgid ""
 "or join the [IRC channel on libera](https://web.libera.chat/?nick=tvhhelp|?"
 "#hts)."
@@ -2401,6 +2409,6 @@ msgid "{0} selected row{1}"
 msgstr ""
 
 #. / {0} start, {1} end, {2} total, {3} title
-#: src/webui/static/app/tvheadend.js:705
+#: src/webui/static/app/tvheadend.js:735
 msgid "{3} {0} - {1} of {2}"
 msgstr ""

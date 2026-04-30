@@ -1150,7 +1150,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
     font: bold 14px "sans serif", tahoma, verdana, helvetica;
 }
 
-.x-date-middle .x-btn .x-btn-text {
+.x-date-middle .x-btn .x-btn-text, #textarea_build_config {
     color: #fff;
 }
 
@@ -1572,7 +1572,7 @@ a.x-menu-item {
     background-image: url(../images/access/panel/tool-sprites.gif);
 }
 
-.x-panel-ghost {
+.x-panel-ghost, #textarea_build_config {
     background-color: #3f4757;
 }
 

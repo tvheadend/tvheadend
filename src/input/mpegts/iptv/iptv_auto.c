@@ -162,7 +162,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   }
 
   if (urlparse(url, &u))
-    return;
+    goto end;
   if (u.host == NULL || u.host[0] == '\0')
     goto end;
 

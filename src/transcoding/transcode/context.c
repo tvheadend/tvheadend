@@ -271,10 +271,18 @@ tvh_context_open(TVHContext *self, TVHOpenPhase phase)
     switch (phase) {
         case OPEN_DECODER:
             avctx = self->iavctx;
+            if (!avctx->codec) {
+                tvh_context_log(self, LOG_ERR, "no decoder available");
+                return AVERROR(EINVAL);
+            }
             helper = tvh_decoder_helper_find(avctx->codec);
             break;
         case OPEN_ENCODER:
             avctx = self->oavctx;
+            if (!avctx->codec) {
+                tvh_context_log(self, LOG_ERR, "no encoder available");
+                return AVERROR(EINVAL);
+            }
             helper = self->helper = tvh_encoder_helper_find(avctx->codec);
             ret = tvh_codec_profile_open(self->profile, &opts);
             break;

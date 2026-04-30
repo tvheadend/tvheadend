@@ -8,10 +8,10 @@ tvheadend.acleditor = function(panel, index)
                'lang,webui,uilevel,uilevel_nochange,admin,' +
                'streaming,profile,conn_limit_type,conn_limit,' +
                'dvr,dvr_config,channel_min,channel_max,' +
-	       'channel_tag_exclude,channel_tag,comment';
+	       'channel_tag_exclude,channel_tag,default_tab,comment';
 
     var list2 = 'enabled,username,password,prefix,change,' +
-                'lang,webui,themeui,langui,uilevel,uilevel_nochange,admin,' +
+                'lang,webui,themeui,langui,default_tab,uilevel,uilevel_nochange,admin,' +
                 'streaming,profile,conn_limit_type,conn_limit,' +
                 'dvr,htsp_anonymize,dvr_config,' +
                 'channel_min,channel_max,channel_tag_exclude,' +

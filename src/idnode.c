@@ -113,6 +113,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
 
     if (uuid_set(&u, uuid)) {
       in->in_class = NULL;
+      idnode_unlock();
       return -1;
     }
     uuid_duplicate(&in->in_uuid, &u);
