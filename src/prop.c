@@ -541,6 +541,8 @@ prop_serialize_value
     htsmsg_add_bool(m, "multiline", 1);
   if (opts & PO_PERSIST)
     htsmsg_add_bool(m, "persistent", 1);
+  if (opts & PO_LISTONLY)
+    htsmsg_add_bool(m, "listonly", 1);
   if ((optmask & PO_DOC) && (opts & PO_DOC_NLIST))
     htsmsg_add_bool(m, "doc_nlist", 1);
 
