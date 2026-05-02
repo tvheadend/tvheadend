@@ -545,23 +545,33 @@ void
 htsbuf_append_and_escape_jsonstr(htsbuf_queue_t *hq, const char *str)
 {
   const char *s = str;
+  /* `\uXXXX` is 6 chars; +1 for the null terminator snprintf
+   * writes. Sized exactly so a future format-string change
+   * trips a compiler warning rather than silently fitting. */
+  char esc[7];
 
   htsbuf_append(hq, "\"", 1);
 
-  while(*s != 0) {
-    if(*s == '"' || *s == '\\' || *s == '\n' || *s == '\r' || *s == '\t') {
+  while (*s != 0) {
+    unsigned char c = (unsigned char)*s;
+    if (c == '"' || c == '\\' || c < 0x20) {
       htsbuf_append(hq, str, s - str);
 
-      if(*s == '"')
-	htsbuf_append(hq, "\\\"", 2);
-      else if(*s == '\n') 
-	htsbuf_append(hq, "\\n", 2);
-      else if(*s == '\r') 
-	htsbuf_append(hq, "\\r", 2);
-      else if(*s == '\t') 
-	htsbuf_append(hq, "\\t", 2);
-      else
-	htsbuf_append(hq, "\\\\", 2);
+      switch (c) {
+      case '"':  htsbuf_append(hq, "\\\"", 2); break;
+      case '\\': htsbuf_append(hq, "\\\\", 2); break;
+      case '\b': htsbuf_append(hq, "\\b",  2); break;
+      case '\f': htsbuf_append(hq, "\\f",  2); break;
+      case '\n': htsbuf_append(hq, "\\n",  2); break;
+      case '\r': htsbuf_append(hq, "\\r",  2); break;
+      case '\t': htsbuf_append(hq, "\\t",  2); break;
+      default:
+        /* Any remaining 0x00-0x1F control byte. RFC 8259 §7
+         * mandates \uXXXX for these. */
+        snprintf(esc, sizeof(esc), "\\u%04x", c);
+        htsbuf_append(hq, esc, 6);
+        break;
+      }
       s++;
       str = s;
     } else {
