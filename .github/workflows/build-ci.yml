@@ -66,7 +66,7 @@ jobs:
     strategy:
       matrix:
        arch: [ armv7, aarch64]
-       distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04, ubuntu_latest ]
+       distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04 ]
        include:
          - arch: armv6
            distro: stretch
@@ -74,6 +74,8 @@ jobs:
            distro: buster
          - arch: armv6
            distro: bullseye
+         - arch: aarch64
+           distro: ubuntu_latest
 
     steps:
       - uses: actions/checkout@v3
@@ -159,7 +161,7 @@ jobs:
     name: Build on native ${{ matrix.container[1] }}
     strategy:
       matrix:
-        container: [["i386/ubuntu:trusty", "i386-ubuntu-trusty"], ["ubuntu:trusty", "ubuntu-trusty"], ["i386/ubuntu:xenial", "i386-ubuntu-xenial"], ["ubuntu:xenial", "ubuntu-xenial"], ["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["ubuntu:plucky", "ubuntu-plucky"], ["ubuntu:questing", "ubuntu-questing"], ["i386/debian:stretch", "i386-debian-strech"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
+        container: [["i386/ubuntu:trusty", "i386-ubuntu-trusty"], ["ubuntu:trusty", "ubuntu-trusty"], ["i386/ubuntu:xenial", "i386-ubuntu-xenial"], ["ubuntu:xenial", "ubuntu-xenial"], ["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["ubuntu:plucky", "ubuntu-plucky"], ["ubuntu:questing", "ubuntu-questing"], ["ubuntu:resolute", "ubuntu-resolute"], ["i386/debian:stretch", "i386-debian-stretch"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
     steps:
       - name: Setup container
         run: |
