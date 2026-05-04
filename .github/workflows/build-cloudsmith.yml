@@ -68,7 +68,7 @@ jobs:
     strategy:
       matrix:
        arch: [ armv7, aarch64]
-       distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu_latest ]
+       distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04, ubuntu_latest ]
        include:
          - arch: armv6
            distro: stretch
