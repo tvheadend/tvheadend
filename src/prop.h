@@ -68,6 +68,7 @@ typedef enum {
 #define PO_DOC       (1<<19) // Use doc callback instead description if exists
 #define PO_DOC_NLIST (1<<20) // Do not show list in doc
 #define PO_TRIM      (1<<21) // Trim whitespaces (left & right) on load
+#define PO_LISTONLY  (1<<22) // Only values from the enum list are valid (no free-text entry)
 
 /*
  * min/max/step helpers

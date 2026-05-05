@@ -586,6 +586,7 @@ static void network_changed(idnode_t *in)
   .get  = network_get_value##num, \
   .set  = network_set_value##num, \
   .list = network_get_list##num, \
+  .opts = PO_LISTONLY, \
   .group = num, \
 }
 

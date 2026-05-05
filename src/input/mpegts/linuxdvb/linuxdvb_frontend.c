@@ -2066,7 +2066,7 @@ linuxdvb_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang 
     return;
   mpegts_network_wizard_create(ntype, &nlist, lang);
   mn = linuxdvb_frontend_wizard_network(lfe);
-  if (ntype && (mn == NULL || mn->mn_wizard)) {
+  if (nlist && ntype && (mn == NULL || mn->mn_wizard)) {
     if (lfe->lfe_satconf) {
       htsmsg_t *conf = htsmsg_create_map();
       htsmsg_t *elems = htsmsg_create_list();
