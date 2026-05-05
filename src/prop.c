@@ -146,7 +146,7 @@ prop_write_values
       }
       case PT_U32: {
         if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
-          char *s;
+          const char *s;
           if (!(snew = htsmsg_field_get_str(f)))
             continue;
           u32 = atol(snew) * p->intextra;
