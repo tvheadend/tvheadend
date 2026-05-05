@@ -58,6 +58,7 @@ body:
         - Ubuntu 20.04 (Focal)
         - Ubuntu 22.04 (Jammy)
         - Ubuntu 24.04 (Noble)
+        - Ubuntu 26.04 (Resolute)
         - Other..
       multiple: false
     validations:
