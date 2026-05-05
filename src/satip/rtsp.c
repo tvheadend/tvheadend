@@ -613,6 +613,31 @@ rtsp_start
   if (newmux) {
     mux = NULL;
     mn2 = NULL;
+    /* SAT>IP frequency override matching (highest priority) */
+    LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+      if (idnode_is_instance(&mn->mn_id, &dvb_network_class)) {
+        LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link) {
+          const dvb_mux_t *dm = (const dvb_mux_t *)mux;
+          uint32_t override_freq = 0;
+          switch (rs->dmc.dmc_fe_type) {
+            case DVB_TYPE_T: override_freq = dm->mm_dvb_satip_dvbt_freq; break;
+            case DVB_TYPE_C: override_freq = dm->mm_dvb_satip_dvbc_freq; break;
+            case DVB_TYPE_S: override_freq = dm->mm_dvb_satip_dvbs_freq; break;
+            default: break;
+          }
+          if (override_freq != 0 &&
+              deltaU32(rs->dmc.dmc_fe_freq, override_freq) < 2000)
+            break;
+        }
+        if (mux) {
+          dmc = rs->dmc;
+          rs->perm_lock = 1;
+          break;
+        }
+      }
+    }
+    /* Normal mux matching */
+    if (mux == NULL)
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
       if (idnode_is_instance(&mn->mn_id, &dvb_network_class)) {
         ln = (dvb_network_t *)mn;
@@ -649,24 +674,6 @@ rtsp_start
         }
       }
 #endif
-      if (idnode_is_instance(&mn->mn_id, &dvb_network_class)) {
-        LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link) {
-          if (rs->dmc.dmc_fe_type == DVB_TYPE_T &&
-              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbt_freq) < 2000)
-            break;
-          if (rs->dmc.dmc_fe_type == DVB_TYPE_C &&
-              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbc_freq) < 2000)
-            break;
-          if (rs->dmc.dmc_fe_type == DVB_TYPE_S &&
-              deltaU32(rs->dmc.dmc_fe_freq, ((dvb_mux_t *)mux)->mm_dvb_satip_dvbs_freq) < 2000)
-            break;
-          }
-        if (mux) {
-          dmc = rs->dmc;
-          rs->perm_lock = 1;
-          break;
-        }
-      }
     }
     if (mux == NULL && mn2 &&
         (rtsp_muxcnf == MUXCNF_AUTO || rtsp_muxcnf == MUXCNF_KEEP)) {
