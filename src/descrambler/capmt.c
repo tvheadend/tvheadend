@@ -1513,16 +1513,20 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
     char *info        = capmt_peek_str(sb, &offset2);
     char *rev         = strstr(info, "build r");
 
-    tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (protocol version %d)", capmt_name(capmt), info, protover);
     if (rev) {
       /* Old format: "OSCam v1.30, build r11772@631abab8" */
       capmt->capmt_oscam_rev = strtol(rev + 7, NULL, 10);
     } else if (strncmp(info, "OSCam ", 6) == 0) {
-      /* New format: "OSCam 2.25.11-11905" - revision after last hyphen */
-      char *last_hyphen = strrchr(info, '-');
-      if (last_hyphen && isdigit(last_hyphen[1])) {
-        capmt->capmt_oscam_rev = strtol(last_hyphen + 1, NULL, 10);
+      /* New format: "OSCam 2.25.11-11905" or "OSCam 2.26.02-11945-802 (x86_64-linux-gnu)" */
+      char *first_hyphen = strchr(info, '-');
+      if (first_hyphen && isdigit(first_hyphen[1])) {
+        capmt->capmt_oscam_rev = strtol(first_hyphen + 1, NULL, 10);
       }
+    }
+
+    tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (Protocol: %d, Rev: %d)", capmt_name(capmt), info, protover, capmt->capmt_oscam_rev);
+    if (capmt->capmt_oscam_rev < 10389) {
+        tvherror(LS_CAPMT, "%s: OSCam rev %d is below the minimum (10389) or could not be parsed!", capmt_name(capmt), capmt->capmt_oscam_rev);
     }
 
     free(info);
