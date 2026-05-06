@@ -545,6 +545,9 @@ SRCS-CODECS += $(foreach lib,$(LIBS-CODECS),src/transcoding/codec/codecs/libs/$(
 #hwaccels
 ifeq ($(CONFIG_HWACCELS),yes)
 SRCS-HWACCELS += src/transcoding/transcode/hwaccels/hwaccels.c
+ifeq ($(CONFIG_NVENC),yes)
+SRCS-HWACCELS += src/transcoding/transcode/hwaccels/nv.c
+endif
 ifeq ($(CONFIG_VAAPI),yes)
 SRCS-HWACCELS += src/transcoding/transcode/hwaccels/vaapi.c
 endif

@@ -80,6 +80,96 @@ _audio_context_sample_rate(TVHContext *self, AVDictionary **opts)
 
 
 #if LIBAVCODEC_VERSION_MAJOR > 59
+/**
+ * Build the libavfilter chain string used between @c abuffer and @c abuffersink
+ * for FFmpeg/libavcodec major version &gt; 59.
+ *
+ * The result is a comma-separated list of filter descriptions allocated into
+ * @p *filters (caller must free via whatever owns the graph string lifecycle).
+ *
+ * Pieces (in join order):
+ * - @c asetpts=N/SR/TB — normalizes PTS on the audio link (sample rate / time base).
+ * - Optional @c aresample=@<output_sample_rate@> when input and output sample rates
+ *   differ (in this source the condition is written as never taken; adjust if you
+ *   re-enable rate mismatch handling here).
+ * - Optional @c aformat=… when input and output differ in @c sample_fmt and/or
+ *   channel count: adds @c sample_fmts=… and/or @c channel_layouts=… as required
+ *   by the @c aformat filter.
+ *
+ * @param self    Transcode context; uses @c iavctx / @c oavctx sample format, rate,
+ *                and channel layout to decide which segments are needed.
+ * @param filters Receives a newly built filter string (e.g. from @c str_join), or
+ *                is left untouched on failure.
+ * @return        0 on success; -1 if a buffer would overflow or allocation/join fails.
+ */
+static int
+_audio_filters_get_filters(TVHContext *self, char **filters)
+{
+    char sample_rate[32];
+    char sample_fmt[32];
+    char obuf[64];
+    char channel_layouts[64];
+    char aformat[128];
+    char asetpts[24];
+    int aformat_tokens = 0;
+
+    // sample_rate
+    memset(sample_rate, 0, sizeof(sample_rate));
+    if ((self->iavctx->sample_rate != self->oavctx->sample_rate) &&
+        str_snprintf(sample_rate, sizeof(sample_rate), "aresample=%d",
+
+                    self->oavctx->sample_rate))
+        return -1;    
+
+    // https://ayosec.github.io/ffmpeg-filters-docs/8.1/Filters/Audio/aformat.html
+    // sample_fmt
+    memset(sample_fmt, 0, sizeof(sample_fmt));
+    if (self->iavctx->sample_fmt != self->oavctx->sample_fmt) {
+        if(str_snprintf(sample_fmt, sizeof(sample_fmt), "sample_fmts=%s",
+                     av_get_sample_fmt_name(self->oavctx->sample_fmt)))
+            return -1;
+        else 
+            aformat_tokens++; 
+    }
+
+    // channel_layouts
+    memset(channel_layouts, 0, sizeof(channel_layouts));
+    if (self->iavctx->ch_layout.nb_channels != self->oavctx->ch_layout.nb_channels) {
+        av_channel_layout_describe(&self->oavctx->ch_layout, obuf, sizeof(obuf));
+        if(str_snprintf(channel_layouts, sizeof(channel_layouts), "channel_layouts=%s", obuf)) 
+            return -1;
+        else 
+            aformat_tokens++; 
+    }
+
+    memset(aformat, 0, sizeof(aformat));
+    switch (aformat_tokens) {
+        case 2:
+            // we have to update both settings
+            if(str_snprintf(aformat, sizeof(aformat), "aformat=%s:%s", sample_fmt, channel_layouts))
+                return -1;
+            break;
+        case 1:
+            // we have to update only one setting
+            if(str_snprintf(aformat, sizeof(aformat), "aformat=%s%s", sample_fmt, channel_layouts)) 
+                return -1;
+            break;
+        default:
+            break;
+    }
+
+    memset(asetpts, 0, sizeof(asetpts));
+    // we have to timestamp
+    if(str_snprintf(asetpts, sizeof(asetpts), "asetpts=N/SR/TB"))
+        return -1;
+
+    // context filters
+    if (!(*filters = str_join(",", asetpts, sample_rate, aformat, NULL)))
+        return -1;
+    
+    return 0;
+}
+
 static void
 _audio_context_channel_layout(TVHContext *self, AVDictionary **opts, AVChannelLayout *dst)
 {
@@ -254,6 +344,18 @@ tvh_audio_context_open_encoder(TVHContext *self, AVDictionary **opts)
 static int
 tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
 {
+#if LIBAVCODEC_VERSION_MAJOR > 59
+    char *filters2 = NULL;
+
+    // filters
+    if (_audio_filters_get_filters(self, &filters2)) {
+        tvherror(LS_TRANSCODE, "filters: audio: function _audio_filters_get_filters() returned with error.");
+        str_clear(filters2);
+        return -1;
+    }
+    
+    tvhinfo(LS_TRANSCODE, "filters: audio: '%s'", filters2);
+#endif
     char source_args[128];
     char filters[16];
     char layout[32];
@@ -273,6 +375,9 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
             self->iavctx->sample_rate,
             av_get_sample_fmt_name(self->iavctx->sample_fmt),
             layout)) {
+#if LIBAVCODEC_VERSION_MAJOR > 59
+        str_clear(filters2);
+#endif
         return -1;
     }
 
@@ -284,27 +389,38 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
     memset(filters, 0, sizeof(filters));
     if (str_snprintf(filters, sizeof(filters), "%s",
                      (resample) ? "aresample" : "anull")) {
+#if LIBAVCODEC_VERSION_MAJOR > 59
+        str_clear(filters2);
+#endif
         return -1;
     }
 
 #if LIBAVCODEC_VERSION_MAJOR > 59
     char ch_layout[64];
     av_channel_layout_describe(&self->oavctx->ch_layout, ch_layout, sizeof(ch_layout));
-    
-    int ret = tvh_context_open_filters(self,
-        "abuffer", source_args,                           // source
-        filters,                                          // filters
-        "abuffersink",                                    // sink
-        "ch_layouts",   AV_OPT_SET_STRING,                // sink option: channel_layout
-        sizeof(ch_layout),
-        ch_layout,
-        "sample_fmts",  AV_OPT_SET_BIN,                   // sink option: sample_fmt
-        sizeof(self->oavctx->sample_fmt),
-        &self->oavctx->sample_fmt,
-        "sample_rates", AV_OPT_SET_BIN,                   // sink option: sample_rate
-        sizeof(self->oavctx->sample_rate),
-        &self->oavctx->sample_rate,
-        NULL);                                            // _IMPORTANT!_
+    int ret = -1;
+    if (self->profile->has_support_for_filter2)
+        ret = tvh_context_open_filters2(self,
+            "abuffer",                                             // source
+            (filters2 && filters2[0] != '\0') ? filters2 : "anull",// filters
+            "abuffersink"                                          // sink
+        );
+    else 
+        ret = tvh_context_open_filters(self,
+            "abuffer", source_args,                           // source
+            filters,                                          // filters
+            "abuffersink",                                    // sink
+            "ch_layouts",   AV_OPT_SET_STRING,                // sink option: channel_layout
+            sizeof(ch_layout),
+            ch_layout,
+            "sample_fmts",  AV_OPT_SET_BIN,                   // sink option: sample_fmt
+            sizeof(self->oavctx->sample_fmt),
+            &self->oavctx->sample_fmt,
+            "sample_rates", AV_OPT_SET_BIN,                   // sink option: sample_rate
+            sizeof(self->oavctx->sample_rate),
+            &self->oavctx->sample_rate,
+            NULL);                                            // _IMPORTANT!_
+    str_clear(filters2);
 #else
     int ret = tvh_context_open_filters(self,
         "abuffer", source_args,                           // source
@@ -317,26 +433,54 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
         "sample_rates", &self->oavctx->sample_rate,       // sink option: sample_rate
         sizeof(self->oavctx->sample_rate),
         NULL);                                            // _IMPORTANT!_
-#endif
     if (!ret) {
         av_buffersink_set_frame_size(self->oavfltctx, self->oavctx->frame_size);
     }
+#endif
     return ret;
 }
 
-
+/**
+ * Audio half of the transcoder open state machine: dispatches @p phase to the
+ * right setup step for the audio path.
+ *
+ * Handled phases:
+ * - PREPARE_ENCODER — set output sample format/rate/time base, channel layout,
+ *   and other @c AVCodecContext fields before filters/encoder open
+ *   (@c tvh_audio_context_open_encoder).
+ * - OPEN_FILTERS — build the libavfilter graph (@c abuffer → filters → @c abuffersink),
+ *   including resample/aformat when needed (@c tvh_audio_context_open_filters).
+ * - OPEN_ENCODER — runs after @c avcodec_open2 on the encoder in @c tvh_context_open:
+ *   refuses @c frame_size == 0, then fills @c self->delta (PTS step per encoded
+ *   frame in @c iavctx time base) and sets @c abuffersink frame size to match
+ *   the encoder frame size.
+ *
+ * Phases such as PREPARE_DECODER, OPEN_DECODER, and NOTIFY_GLOBALHEADER are not
+ * handled here; @c tvh_context_open invokes this callback only for encoder-side
+ * steps that the audio context owns. Unhandled @p phase is a no-op (returns 0).
+ *
+ * @param self  Transcode context (shared with generic open in @c context.c).
+ * @param phase Which open step is being executed (@c TVHOpenPhase).
+ * @param opts  Codec/profile options (used by @c PREPARE_ENCODER).
+ * @return      0 on success or no-op; negative @c AVERROR (e.g. @c EINVAL) if
+ *              the encoder reports @c frame_size == 0 in @c OPEN_ENCODER, or
+ *              any error returned by the encoder/filter helpers.
+ */
 static int
 tvh_audio_context_open(TVHContext *self, TVHOpenPhase phase, AVDictionary **opts)
 {
     switch (phase) {
-        case OPEN_ENCODER:
+        case PREPARE_ENCODER:
             return tvh_audio_context_open_encoder(self, opts);
-        case OPEN_ENCODER_POST:
+        case OPEN_FILTERS:
+            return tvh_audio_context_open_filters(self, opts);
+        case OPEN_ENCODER:
             self->delta = av_rescale_q_rnd(self->oavctx->frame_size,
                                            self->oavctx->time_base,
                                            self->iavctx->time_base,
                                            AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
-            return tvh_audio_context_open_filters(self, opts);
+            av_buffersink_set_frame_size(self->oavfltctx, self->oavctx->frame_size);
+            break;
         default:
             break;
     }
@@ -384,7 +528,9 @@ tvh_audio_context_ship(TVHContext *self, AVPacket *avpkt)
 static int
 tvh_audio_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
 {
-    pkt->pkt_duration   = avpkt->duration;
+    // only if packet duration is valid we passed on
+    if (avpkt->duration > 0)
+        pkt->pkt_duration = avpkt->duration;
 #if LIBAVCODEC_VERSION_MAJOR > 59
     pkt->a.pkt_channels = self->oavctx->ch_layout.nb_channels;
 #else

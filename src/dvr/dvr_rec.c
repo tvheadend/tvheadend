@@ -1490,7 +1490,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 
       htsmsg_add_u32(e, "width",      ssc->es_width);
       htsmsg_add_u32(e, "height",     ssc->es_height);
-      htsmsg_add_u32(e, "duration",   ssc->es_frame_duration);
+      htsmsg_add_u32(e, "duration",   ((ssc->es_frame_duration > INT_MAX) ? INT_MAX : (int)ssc->es_frame_duration));
       htsmsg_add_u32(e, "aspect_num", ssc->es_aspect_num);
       htsmsg_add_u32(e, "aspect_den", ssc->es_aspect_den);
     } else {

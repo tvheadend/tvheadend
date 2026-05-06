@@ -1664,7 +1664,7 @@ void service_save ( service_t *t, htsmsg_t *m )
       if(st->es_height)
 	      htsmsg_add_u32(sub, "height", st->es_height);
       if(st->es_frame_duration)
-        htsmsg_add_u32(sub, "duration", st->es_frame_duration);
+        htsmsg_add_u32(sub, "duration", ((st->es_frame_duration > INT_MAX) ? INT_MAX : (int)st->es_frame_duration));
     }
 
     htsmsg_add_msg(list, NULL, sub);
