@@ -710,15 +710,16 @@ channel_find_by_number ( const char *no )
   channel_t *ch;
   uint32_t maj, min = 0;
   uint64_t cno;
-  char *s;
+  char *buf, *s;
 
   if (no == NULL)
     return NULL;
-  if ((s = strchr(no, '.')) != NULL) {
+  buf = tvh_strdupa(no);
+  if ((s = strchr(buf, '.')) != NULL) {
     *s = '\0';
     min = atoi(s + 1);
   }
-  maj = atoi(no);
+  maj = atoi(buf);
   cno = (uint64_t)maj * CHANNEL_SPLIT + (uint64_t)min;
   CHANNEL_FOREACH(ch)
     if(channel_get_number(ch) == cno)
