@@ -756,9 +756,10 @@ http_client_finish( http_client_t *hc )
 static int
 http_client_parse_arg( http_arg_list_t *list, const char *p )
 {
+  char *buf = tvh_strdupa(p);
   char *d, *t;
 
-  d = strchr(p, ':');
+  d = strchr(buf, ':');
   if (d) {
     *d++ = '\0';
     while (*d && *d <= ' ')
@@ -766,7 +767,7 @@ http_client_parse_arg( http_arg_list_t *list, const char *p )
     t = d + strlen(d);
     while (--t != d && *t <= ' ')
       *t = '\0';
-    http_arg_set(list, p, d);
+    http_arg_set(list, buf, d);
     return 0;
   }
   return -EINVAL;
