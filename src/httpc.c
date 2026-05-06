@@ -756,17 +756,22 @@ http_client_finish( http_client_t *hc )
 static int
 http_client_parse_arg( http_arg_list_t *list, const char *p )
 {
-  char *d, *t;
+  const char *colon, *d, *t;
+  char *key, *val;
 
-  d = strchr(p, ':');
-  if (d) {
-    *d++ = '\0';
-    while (*d && *d <= ' ')
+  colon = strchr(p, ':');
+  if (colon) {
+    d = colon + 1;
+    while (*d && (unsigned char)*d <= ' ')
       d++;
     t = d + strlen(d);
-    while (--t != d && *t <= ' ')
-      *t = '\0';
-    http_arg_set(list, p, d);
+    while (t > d && (unsigned char)*(t - 1) <= ' ')
+      t--;
+    key = strndup(p, colon - p);
+    val = strndup(d, t - d);
+    http_arg_set(list, key, val);
+    free(key);
+    free(val);
     return 0;
   }
   return -EINVAL;
