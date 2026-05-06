@@ -2258,7 +2258,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
   int fd, ret, close_ret;
   struct stat st;
   const char *range;
-  char *basename;
+  const char *basename;
   char *str, *str0;
   char range_buf[255];
   char *disposition = NULL;
