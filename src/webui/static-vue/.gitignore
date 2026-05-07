@@ -1,0 +1,7 @@
+node_modules/
+dist/
+
+# Local-only dev/test views — see router/index.ts dev-route mechanism.
+# Anything under views/_dev/ is auto-routed at /_dev/<filename> in dev
+# mode but never committed and never bundled in production builds.
+src/views/_dev/

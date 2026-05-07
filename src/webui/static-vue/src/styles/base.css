@@ -1,0 +1,112 @@
+/*
+ * Tvheadend Vue UI — base styles
+ * Resets, typography, focus ring, scrollbar.
+ *
+ * Wrapped in `@layer tvh-base` so the cascade is well-ordered against
+ * PrimeVue's component styles. The PrimeVue plugin in main.ts declares
+ * `cssLayer: { name: 'primevue', order: 'tvh-base, primevue' }`, so
+ * PrimeVue's `.p-button-danger`-style class rules sit in a later layer
+ * and win over the generic `button { background: none }` reset below —
+ * even though the reset has no class selector. Without the layer
+ * wrapper, the rules in this file would be unlayered, and the cascade
+ * rule "unlayered always wins over layered" would zero out the
+ * severity-tinted backgrounds on every PrimeVue Button (e.g. the red
+ * Yes button on the themed ConfirmDialog).
+ *
+ * Per-component scoped styles (`<style scoped>` in Vue SFCs) stay
+ * unlayered and continue to win over both this layer AND PrimeVue —
+ * Vue's scoped attribute (`[data-v-xxxxx]`) carries higher specificity
+ * AND lives outside the layer system.
+ */
+@layer tvh-base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: var(--tvh-font);
+    font-size: var(--tvh-font-size);
+    line-height: var(--tvh-line-height);
+    color: var(--tvh-text);
+    background: var(--tvh-bg-page);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /*
+     * Defensive clamp against horizontal overflow. iOS Safari is the
+     * usual culprit: native form-control padding, sub-pixel borders,
+     * box-shadow extents, or `100vw` (which exceeds the visual viewport
+     * by the system-UI inset width) can each push content a few pixels
+     * past the right edge, producing a horizontal scroll the user can
+     * accidentally trigger. Clamping at the document root means no
+     * single component has to defend against this on its own.
+     */
+    overflow-x: hidden;
+  }
+
+  #app {
+    height: 100%;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  a {
+    color: var(--tvh-primary);
+    text-decoration: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    margin: 0;
+    font-weight: 500;
+    color: var(--tvh-text);
+  }
+
+  p {
+    margin: 0 0 var(--tvh-space-3) 0;
+  }
+
+  /* Visible focus ring for keyboard navigation (WCAG 2.4.7) */
+  :focus-visible {
+    outline: 2px solid var(--tvh-primary);
+    outline-offset: 2px;
+    border-radius: var(--tvh-radius-sm);
+  }
+
+  /* Skip link for screen-reader / keyboard users */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    padding: var(--tvh-space-2) var(--tvh-space-3);
+    background: var(--tvh-primary);
+    color: #fff;
+    border-radius: var(--tvh-radius-sm);
+  }
+
+  .skip-link:focus {
+    left: var(--tvh-space-2);
+    top: var(--tvh-space-2);
+  }
+}

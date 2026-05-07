@@ -2747,6 +2747,7 @@ webui_init(int xspf)
   extjs_start();
   comet_init();
   webui_api_init();
+  vue_init();
 }
 
 void

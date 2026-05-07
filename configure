@@ -38,6 +38,7 @@ OPTIONS=(
   "avahi:auto"
   "zlib:auto"
   "libav:auto"
+  "vue_build:auto"
   "ffmpeg_static:yes"
   "libx264:yes"
   "libx264_static:yes"
@@ -706,6 +707,26 @@ else
 
   fi
 
+fi
+
+#
+# Vue UI build (Vite/npm)
+#
+if enabled_or_auto vue_build; then
+  has_node=true
+  command -v node >/dev/null 2>&1 || has_node=false
+  command -v npm  >/dev/null 2>&1 || has_node=false
+
+  if $has_node; then
+    enable vue_build
+  else
+    echo "WARNING: node and/or npm not found"
+    echo "         * install node + npm to build the Vue UI"
+    echo "         * use --disable-vue_build to skip and serve a fallback page"
+    if enabled vue_build; then
+      die "node + npm not found (required for --enable-vue_build)"
+    fi
+  fi
 fi
 
 #
