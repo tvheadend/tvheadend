@@ -1,0 +1,108 @@
+/*
+ * Tvheadend Vue UI — design tokens
+ *
+ * Three themes via [data-theme] selectors per brief §6.4.
+ * Per-theme hover/active intensities account for the high-contrast Access
+ * theme needing stronger tints than the subtle Blue/Grey defaults.
+ */
+
+:root {
+  /*
+   * Force native widgets (checkboxes, radios, scrollbars, date
+   * pickers, etc.) to render in light-mode style regardless of the
+   * OS-level `prefers-color-scheme`. All three of our themes today
+   * are light variants; without this, iOS Safari (and other browsers)
+   * draw native form controls in dark style at night even though our
+   * own background and text are still light, producing the
+   * "checkbox painted as a dark filled rectangle" effect.
+   *
+   * If a dark theme is added later, `[data-theme='dark']` would
+   * override this with `color-scheme: dark` so the native chrome
+   * matches.
+   */
+  color-scheme: light;
+
+  /* Blue — default theme */
+  --tvh-primary: #2563eb;
+  --tvh-bg-page: #f8fafc;
+  --tvh-bg-surface: #ffffff;
+  --tvh-border: #e2e8f0;
+  --tvh-border-strong: #cbd5e1;
+  --tvh-text: #0f172a;
+  --tvh-text-muted: #64748b;
+  --tvh-success: #16a34a;
+  --tvh-warning: #d97706;
+  --tvh-error: #dc2626;
+
+  /* Per-theme interaction intensities */
+  --tvh-hover-strength: 8%;
+  --tvh-active-strength: 14%;
+
+  /* Layout */
+  --tvh-topbar-height: 48px;
+  --tvh-rail-width: 272px;
+  --tvh-nav-item-height: 36px;
+
+  /* Radii */
+  --tvh-radius-sm: 4px;
+  --tvh-radius-md: 6px;
+  --tvh-radius-lg: 8px;
+
+  /* Spacing scale */
+  --tvh-space-1: 4px;
+  --tvh-space-2: 8px;
+  --tvh-space-3: 12px;
+  --tvh-space-4: 16px;
+  --tvh-space-6: 24px;
+  --tvh-space-8: 32px;
+  --tvh-space-12: 48px;
+
+  /* Typography */
+  --tvh-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  --tvh-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --tvh-font-size: 14px;
+  --tvh-line-height: 1.45;
+
+  /* Animation */
+  --tvh-transition: 150ms ease-out;
+
+  /* DVR overlay bar (EPG Timeline + Magazine) — translucent
+   * recording-window indicator. The neutral hue derives from the
+   * theme's primary color for visual coherence; the warning hue
+   * uses the existing --tvh-warning token. */
+  --tvh-dvr-overlay-bg: color-mix(in srgb, var(--tvh-primary) 55%, transparent);
+  --tvh-dvr-overlay-warning-bg: color-mix(in srgb, var(--tvh-warning) 70%, transparent);
+}
+
+[data-theme='gray'] {
+  --tvh-primary: #475569;
+  --tvh-bg-page: #f6f7f8;
+  --tvh-bg-surface: #ffffff;
+  --tvh-border: #e4e6e9;
+  --tvh-border-strong: #c8ccd1;
+  --tvh-text: #1f2937;
+  --tvh-text-muted: #6b7280;
+
+  --tvh-hover-strength: 10%;
+  --tvh-active-strength: 18%;
+}
+
+[data-theme='access'] {
+  /*
+   * High-contrast WCAG AAA target.
+   * Stronger interaction tints because subtle ones wash out on this palette.
+   */
+  --tvh-primary: #0033cc;
+  --tvh-bg-page: #ffffff;
+  --tvh-bg-surface: #ffffff;
+  --tvh-border: #000000;
+  --tvh-border-strong: #000000;
+  --tvh-text: #000000;
+  --tvh-text-muted: #1a1a1a;
+  --tvh-success: #006600;
+  --tvh-warning: #6b3500;
+  --tvh-error: #b80000;
+
+  --tvh-hover-strength: 30%;
+  --tvh-active-strength: 50%;
+}

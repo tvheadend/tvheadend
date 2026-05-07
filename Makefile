@@ -359,6 +359,7 @@ SRCS-2 += \
 	src/webui/webui.c \
 	src/webui/comet.c \
 	src/webui/extjs.c \
+	src/webui/vue.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
 	src/webui/html.c \
@@ -635,9 +636,13 @@ SRCS-${CONFIG_LIBSYSTEMD_DAEMON} += src/watchdog.c
 DVBSCAN-$(CONFIG_DVBSCAN) += check_dvb_scan
 ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 
+# Vue UI build (rules defined later, near make_webui)
+ALL-$(CONFIG_VUE_BUILD)   += vue_build
+
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
 BUNDLES-yes               += src/webui/static
+BUNDLES-$(CONFIG_VUE_BUILD) += src/webui/static-vue/dist
 BUNDLES-yes               += data/conf
 BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
 BUNDLES                    = $(BUNDLES-yes)
@@ -842,6 +847,26 @@ $(BUILDDIR)/bundle.c: $(DVBSCAN-yes) make_webui
 .PHONY: make_webui
 make_webui:
 	$(MAKE) -f Makefile.webui LANGUAGES="$(LANGUAGES)" all
+
+# Vue UI build (Vite/npm) — ALL-yes hookup is at the top of the file
+# (near the DVBSCAN one) because GNU Make expands $(ALL-yes) in rule
+# prerequisites at parse time, not build time.
+ifeq ($(CONFIG_VUE_BUILD),yes)
+VUE_DIR    = $(ROOTDIR)/src/webui/static-vue
+VUE_STAMP  = $(VUE_DIR)/node_modules/.installed
+
+$(VUE_STAMP): $(VUE_DIR)/package.json $(VUE_DIR)/package-lock.json
+	cd $(VUE_DIR) && npm install
+	@touch $@
+
+.PHONY: vue_build
+vue_build: $(VUE_STAMP)
+	cd $(VUE_DIR) && npm run build
+
+# Bundled builds (--enable-bundle) need Vite output to exist before
+# MKBUNDLE generates bundle.c.
+$(BUILDDIR)/bundle.c: vue_build
+endif
 
 # Static FFMPEG
 

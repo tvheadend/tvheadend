@@ -101,7 +101,7 @@ exit 0
 
 %files
 %doc CONTRIBUTING.md README.md
-%license LICENSE.md licenses/gpl-3.0.txt
+%license LICENSE.md
 %{_bindir}/*
 %{_datadir}/%{name}/
 %{_unitdir}/*

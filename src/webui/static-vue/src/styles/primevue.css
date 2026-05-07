@@ -1,0 +1,303 @@
+/*
+ * Tvheadend Vue UI — PrimeVue Aura overrides
+ *
+ * Map Aura's CSS variables to our --tvh-* tokens so PrimeVue components
+ * automatically pick up the active theme.
+ *
+ * The base block applies to all themes via the cascade. Per-theme blocks
+ * (gray, access) inherit and only override what differs. PrimeVue's
+ * variable surface for DataTable et al. is large; here we map the ones
+ * that visibly affect the grid + the small set of common controls
+ * (buttons, paginator, headers). Theme name spelling matches the
+ * server's enum exactly (access.c:1499-1508 — "blue", "gray", "access").
+ */
+
+:root,
+[data-theme='gray'],
+[data-theme='access'] {
+  /* Core content tokens */
+  --p-primary-color: var(--tvh-primary);
+  --p-content-background: var(--tvh-bg-surface);
+  --p-content-border-color: var(--tvh-border);
+  --p-text-color: var(--tvh-text);
+  --p-text-muted-color: var(--tvh-text-muted);
+  --p-content-color: var(--tvh-text);
+  --p-content-hover-background: color-mix(
+    in srgb,
+    var(--tvh-primary) var(--tvh-hover-strength),
+    transparent
+  );
+  --p-border-radius: var(--tvh-radius-sm);
+
+  /*
+   * DataTable specifics. These map onto Aura's DataTable preset tokens
+   * (--p-datatable-*). Naming follows PrimeVue's convention; if a token
+   * doesn't exist Aura falls back to the core ones above.
+   */
+  --p-datatable-background: var(--tvh-bg-surface);
+  --p-datatable-color: var(--tvh-text);
+  --p-datatable-border-color: var(--tvh-border);
+  --p-datatable-header-background: var(--tvh-bg-page);
+  --p-datatable-header-color: var(--tvh-text);
+  --p-datatable-header-border-color: var(--tvh-border);
+  --p-datatable-header-cell-background: var(--tvh-bg-page);
+  --p-datatable-header-cell-color: var(--tvh-text);
+  --p-datatable-header-cell-border-color: var(--tvh-border);
+  --p-datatable-header-cell-hover-background: color-mix(
+    in srgb,
+    var(--tvh-primary) var(--tvh-hover-strength),
+    transparent
+  );
+  --p-datatable-row-background: var(--tvh-bg-surface);
+  --p-datatable-row-color: var(--tvh-text);
+  --p-datatable-row-hover-background: color-mix(
+    in srgb,
+    var(--tvh-primary) var(--tvh-hover-strength),
+    transparent
+  );
+  --p-datatable-row-selected-background: color-mix(
+    in srgb,
+    var(--tvh-primary) var(--tvh-active-strength),
+    transparent
+  );
+  /*
+   * Selected-row text color: keep the regular text color, NOT the
+   * primary color (which is what Aura's default `selectedColor:
+   * '{highlight.color}'` falls through to). On a primary-tinted
+   * background, primary-colored text has near-zero contrast — a
+   * highlighted row becomes unreadable in the Blue and Grey themes.
+   * ExtJS's xtheme-blue solves this the same way: light tint +
+   * explicit black text (xtheme-blue.css:676 — `color: #000`).
+   *
+   * Setting `--p-highlight-color` globally (not just the datatable
+   * row) covers other PrimeVue components that key off the same
+   * highlight semantic token — listbox options, tree nodes,
+   * selected paginator pages, etc. Same readability problem, same
+   * fix.
+   */
+  --p-datatable-row-selected-color: var(--tvh-text);
+  --p-highlight-color: var(--tvh-text);
+  --p-highlight-background: color-mix(
+    in srgb,
+    var(--tvh-primary) var(--tvh-active-strength),
+    transparent
+  );
+  --p-datatable-body-cell-padding: var(--tvh-space-2) var(--tvh-space-3);
+  --p-datatable-header-cell-padding: var(--tvh-space-2) var(--tvh-space-3);
+
+  /* Paginator (lives at the bottom of the DataTable in lazy mode) */
+  --p-paginator-background: var(--tvh-bg-surface);
+  --p-paginator-color: var(--tvh-text);
+  --p-paginator-border-color: var(--tvh-border);
+  --p-paginator-nav-button-hover-background: color-mix(
+    in srgb,
+    var(--tvh-primary) var(--tvh-hover-strength),
+    transparent
+  );
+
+  /* Form-field defaults — used by filter inputs in column headers */
+  --p-form-field-background: var(--tvh-bg-surface);
+  --p-form-field-color: var(--tvh-text);
+  --p-form-field-border-color: var(--tvh-border);
+  --p-form-field-hover-border-color: var(--tvh-border-strong);
+  --p-form-field-focus-border-color: var(--tvh-primary);
+  --p-form-field-padding-y: 6px;
+  --p-form-field-padding-x: var(--tvh-space-3);
+  --p-form-field-border-radius: var(--tvh-radius-sm);
+
+  /* Tooltip (v-tooltip directive) — high-contrast against any surface. */
+  --p-tooltip-background: var(--tvh-text);
+  --p-tooltip-color: var(--tvh-bg-page);
+  --p-tooltip-border-radius: var(--tvh-radius-sm);
+  --p-tooltip-padding: 4px var(--tvh-space-2);
+
+  /*
+   * Hover-state text colors. Aura's Tree node uses `text.hover.color`
+   * for the label and `text.hover.muted.color` for the icon (see
+   * @primeuix/themes/dist/aura/tree/index.mjs). Without overrides,
+   * these resolve to Aura's default palette — which clashes with our
+   * primary-tinted hover background, same readability problem the
+   * DataTable hit pre-Commit 6. Pin both to our regular text color
+   * for high contrast on the tinted hover surface. Affects every
+   * PrimeVue component that keys off these tokens (Tree, future
+   * Listbox, MultiSelect dropdown items, etc.) — single-source fix.
+   */
+  --p-text-hover-color: var(--tvh-text);
+  --p-text-hover-muted-color: var(--tvh-text);
+}
+
+/*
+ * Direct selected-row override — bypasses the variable cascade.
+ *
+ * Why this is needed in addition to the `--p-highlight-*` /
+ * `--p-datatable-row-selected-*` token overrides above:
+ *
+ * Aura's base preset defines `highlight.background` / `highlight.color`
+ * as references to `{primary.50}` / `{primary.700}` (the per-shade
+ * primary palette tokens, NOT `{primary.color}`). The shade tokens
+ * `--p-primary-50` … `--p-primary-950` are kept at Aura's default
+ * (emerald green) because we only override `--p-primary-color` — we
+ * don't redefine the full palette. Without this rule, a "selected"
+ * row gets emerald green background with dark green text regardless
+ * of the user's Blue or Grey theme; PrimeVue's CSS lives in
+ * `@layer primevue`, and while unlayered overrides should win, in
+ * practice a direct rule with the same selector is the most reliable
+ * way to guarantee the visual matches the surrounding theme.
+ *
+ * The `td > background: inherit` is needed because PrimeVue draws
+ * row backgrounds via the `<tr>` but cell-level backgrounds are
+ * separately styled in some scrollable / striped configurations.
+ */
+.p-datatable-tbody > tr.p-datatable-row-selected,
+.p-datatable.p-datatable-striped .p-datatable-tbody > tr.p-row-odd.p-datatable-row-selected {
+  background: color-mix(in srgb, var(--tvh-primary) var(--tvh-active-strength), transparent);
+  color: var(--tvh-text);
+}
+
+.p-datatable-tbody > tr.p-datatable-row-selected > td {
+  background: inherit;
+  color: inherit;
+}
+
+/*
+ * Direct hover override — same reasoning as the selected-row rule
+ * above. PrimeVue's hover style applies when the user's mouse is
+ * over a row; Aura's defaults give it a primary-tinted background
+ * AND a primary-tinted text color via `{content.hover.color}`. The
+ * combo is "almost impossible to read" in the Blue and Grey themes
+ * (verified — the contrast is real). We override the background
+ * via `--p-datatable-row-hover-background` above, but the text
+ * color falls through to Aura's default unless we pin it directly.
+ *
+ * The `:not(.p-datatable-row-selected)` matches PrimeVue's own rule
+ * (DataTable.vue style/index template), so a selected+hovered row
+ * keeps the stronger selected style instead of mixing the two.
+ */
+.p-datatable-hoverable .p-datatable-tbody > tr:not(.p-datatable-row-selected):hover,
+.p-datatable-hoverable .p-datatable-tbody > tr:not(.p-datatable-row-selected):hover > td {
+  background: color-mix(in srgb, var(--tvh-primary) var(--tvh-hover-strength), transparent);
+  color: var(--tvh-text);
+}
+
+/*
+ * Tree — same belt-and-suspenders pattern as DataTable above. Aura's
+ * tree node tokens reference `{highlight.background}` / `{highlight.color}`
+ * for selected state and `{content.hover.background}` /
+ * `{text.hover.color}` for hover — but Aura's preset layer ultimately
+ * resolves the highlight tokens to `{primary.50}` / `{primary.700}`
+ * shade aliases that we don't override (we set `--p-primary-color`,
+ * not the per-shade palette). Without these direct rules, a selected
+ * tree node renders Aura's emerald-on-emerald-dark in our Blue and
+ * Grey themes, and a hovered node renders dark-emerald text on our
+ * primary-tinted hover background — both unreadable.
+ *
+ * Same selectors PrimeVue uses internally (see
+ * primevue/tree/style/index.mjs); applying our tokens directly with
+ * the same specificity guarantees the visual matches the active theme.
+ *
+ * The `:not(.p-tree-node-selected)` on the hover rule mirrors
+ * PrimeVue's internal precedence — selected+hovered keeps the
+ * stronger selected background instead of mixing.
+ */
+.p-tree-node-content.p-tree-node-selected {
+  background: color-mix(in srgb, var(--tvh-primary) var(--tvh-active-strength), transparent);
+  color: var(--tvh-text);
+}
+
+.p-tree-node-content.p-tree-node-selectable:not(.p-tree-node-selected):hover {
+  background: color-mix(in srgb, var(--tvh-primary) var(--tvh-hover-strength), transparent);
+  color: var(--tvh-text);
+}
+
+/*
+ * Column-title shrink + ellipsis. Without this, a flex-item
+ * `<span>` containing a single nowrap text run resolves
+ * `min-width: auto` to the text's natural width — flex-shrink
+ * can't reduce it below that. The `<th>`'s `overflow: hidden`
+ * (set by `.p-datatable-resizable-table > thead > tr > th`)
+ * then clips whatever sits past the cell's right edge — the
+ * filter funnel (positioned there via
+ * `.p-datatable-popover-filter { margin-inline-start: auto }`)
+ * is the first casualty when the title nearly fills the width.
+ *
+ * `min-width: 0` lets the title shrink below content size;
+ * `overflow: hidden + text-overflow: ellipsis` then renders the
+ * shrunk title with a `…` tail so the filter stays visible.
+ * The hover tooltip injected via DataGrid's `headerCell.title`
+ * passthrough lets the user read the full label when ellipsised.
+ */
+.p-datatable-column-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+ * Hide PrimeVue's native column-header chrome — sort indicator
+ * + filter funnel button. Replaced by `<ColumnHeaderMenu>`
+ * (kebab + popover) wired via DataGrid.vue. Sort still works
+ * (clicking the column title still cycles asc → desc → none —
+ * PrimeVue's th click handler is unchanged); the visible
+ * indicators come from our menu component which reads sort +
+ * filter state from the same model PrimeVue uses.
+ *
+ * Two distinct hiding rules:
+ *
+ *   - The sort indicator wrapper is display:none. We don't need
+ *     it in the DOM; clicking the title triggers PrimeVue's
+ *     th-level click handler regardless. `:has()` is used so the
+ *     wrapping span collapses too — without it, an empty span
+ *     would still occupy a flex slot and add a phantom gap.
+ *
+ *   - The filter button wrapper stays IN the DOM, positioned
+ *     absolute to the right edge of the th and visibility:hidden.
+ *     ColumnHeaderMenu's "Filter…" entry programmatically calls
+ *     `.click()` on the button to open PrimeVue's filter
+ *     popover; the popover anchors to the button's bounding rect,
+ *     so the button needs an actual position (visibility:hidden +
+ *     position:absolute keeps it in layout while invisible —
+ *     display:none would zero its rect and the popover would
+ *     anchor to the page origin). Pointer-events:none stops user
+ *     mouse clicks from reaching the hidden button.
+ *
+ *   - `position: relative` on the th is needed so the filter
+ *     wrapper's absolute positioning anchors to the th, not the
+ *     page. Resizable-table columns already have it from
+ *     PrimeVue's own CSS, but we set it unconditionally so
+ *     non-resizable grids (Status views, EPG Table) work too.
+ */
+.p-datatable-thead > tr > th {
+  position: relative;
+  /* Tighter right padding pushes the kebab (sitting at the right
+   * edge of the column-header content area via
+   * `margin-inline-start: auto`) closer to the th's right border.
+   * Default padding-inline (`--tvh-space-3` = 12 px) leaves a
+   * visible gap between the kebab and the column-resizer drag
+   * handle (which is `position: absolute; inset-inline-end: 0;
+   * width: 8 px`). Shrinking just the right side to 4 px keeps a
+   * usable kebab click area while bringing it close to the cell's
+   * right edge. The resizer's 8 px hit zone still fully covers the
+   * th's right edge for drag — kebab clicks land on the icon
+   * (centred ~12 px in from the kebab's right edge) which is
+   * outside the resizer overlap. */
+  padding-inline-end: var(--tvh-space-1);
+}
+
+.p-datatable-thead > tr > th
+  > .p-datatable-column-header-content > span:has(> .p-datatable-sort-icon) {
+  display: none;
+}
+
+.p-datatable-thead > tr > th
+  > .p-datatable-column-header-content > .p-datatable-popover-filter {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+

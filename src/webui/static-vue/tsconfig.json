@@ -1,0 +1,15 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["src/**/*", "src/**/*.vue"],
+  "exclude": ["src/views/_dev/**"],
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "lib": ["ES2021.String", "ES2020", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}
