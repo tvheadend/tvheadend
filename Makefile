@@ -665,7 +665,7 @@ MD-WIZARD   = $(patsubst docs/wizard/%.md,%,$(sort $(wildcard docs/wizard/*.md))
 # Internationalization
 #
 PO-FILES  = $(wildcard $(foreach f,$(LANGUAGES),intl/tvheadend.$(f).po))
-PO-FILES += $(wildcard $(foreach f,$(LANGUAGES-DOC),intl/docs/tvheadend.doc.$(f).po))
+PO-FILES += $(wildcard $(foreach f,$(LANGUAGES),intl/docs/tvheadend.doc.$(f).po))
 SRCS += src/tvh_locale.c
 
 POC_PY=PYTHONIOENCODING=utf-8 $(PYTHON) support/poc.py
