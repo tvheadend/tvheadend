@@ -114,9 +114,38 @@ def load(po_files, fn):
     po_files[lang] = po.strings
 
 def cstr(s):
-  return s.replace('\t', '\\t').\
-           replace('\n', '\\n').\
-           replace('"', '\\"');
+  # Emit a C string literal body from a Python string. Output is
+  # ASCII-only: control characters and non-ASCII bytes are emitted
+  # as octal \NNN escapes so the generated source carries no
+  # bidirectional control characters (avoids -Wbidi-chars) and is
+  # portable across editors and tools. The compiled binary holds
+  # the same UTF-8 byte sequence as the .po source (octal escapes
+  # resolve to single bytes at translation phase 5). Octal escapes
+  # are bounded to exactly 3 digits by the C standard, so the next
+  # character is always safely literal — unlike \xHH, which is
+  # greedy.
+  #
+  # Trigraph sequences (??=, ??/, ...) are deliberately not
+  # escaped: the project doesn't pass -trigraphs to the compiler,
+  # GCC and Clang both default to off, and C23 removed trigraphs
+  # entirely.
+  #
+  # bytearray() makes the byte iteration yield int in both Python 2
+  # and Python 3. In Python 3 `s` is unicode and we encode to UTF-8;
+  # in Python 2 `s` is already a UTF-8 byte string (utf8open returns
+  # a standard file object whose read() yields str/bytes), so we
+  # feed `s` through directly — calling .encode() on it would
+  # trigger an implicit ASCII decode and fail on non-ASCII content.
+  out = []
+  for b in bytearray(s.encode('utf-8') if sys.version_info[0] >= 3 else s):
+    if b == 0x09: out.append('\\t')
+    elif b == 0x0a: out.append('\\n')
+    elif b == 0x0d: out.append('\\r')
+    elif b == 0x22: out.append('\\"')
+    elif b == 0x5c: out.append('\\\\')
+    elif 0x20 <= b <= 0x7e: out.append(chr(b))
+    else: out.append('\\%03o' % b)
+  return ''.join(out)
 
 def to_c(po_files):
 
