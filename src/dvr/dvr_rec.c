@@ -1192,7 +1192,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
       break;
     *(dirsep - 1) = '\0';
     if (*x) {
-      s = cleanup_filename(cfg, x, dir_dosubs);
+      s = cleanup_filename(cfg, x, 1);
       tvh_strlcatf(filename, sizeof(filename), j, "%s/", s);
       free(s);
     }
