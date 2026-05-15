@@ -437,7 +437,8 @@ struct http_client {
   time_t       hc_rtsp_range_end;
   float        hc_rtsp_scale;
 
-  struct http_client_ssl *hc_ssl; /* ssl internals */
+  void        *hc_curl;           /* CURL handle (CURL*) */
+  void        *hc_curl_headers;   /* curl headers list (struct curl_slist*) */
 
   mtimer_t     hc_close_timer;
 
