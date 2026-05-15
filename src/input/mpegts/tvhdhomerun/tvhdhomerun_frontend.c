@@ -750,7 +750,7 @@ tvhdhomerun_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *la
 
   mn = tvhdhomerun_frontend_wizard_network(hfe);
   mpegts_network_wizard_create(ntype, &nlist, lang);
-  if (ntype && (mn == NULL || mn->mn_wizard)) {
+  if (nlist && ntype && (mn == NULL || mn->mn_wizard)) {
     htsmsg_add_str(nlist, NULL, ntype);
     mpegts_input_set_networks((mpegts_input_t *)hfe, nlist);
     htsmsg_destroy(nlist);

@@ -257,6 +257,7 @@ tvheadend.IdNodeField = function(conf)
     this.lorder = conf.lorder;
     this.multiline = conf.multiline;
     this.persistent = conf.persistent;
+    this.listonly = conf.listonly;
     this['enum'] = conf['enum'];
     this.store = null;
     if (this['enum'])
@@ -471,7 +472,8 @@ tvheadend.IdNodeField = function(conf)
                 c['mode'] = 'local';
                 c['store'] = this.store;
                 c['typeAhead'] = true;
-                c['forceSelection'] = false;
+                c['forceSelection'] = this.listonly ? true : false;
+                c['editable'] = this.listonly ? false : !this.rdonly;
                 c['triggerAction'] = 'all';
                 c['emptyText'] = _('Select {0} ...').replace('{0}', this.text);
             }
@@ -719,7 +721,8 @@ tvheadend.idnode_editor_field = function(f, conf)
             checkField: 'checked_' + f.id,
             store: st,
             typeAhead: true, // TODO: this does strange things in multi
-            forceSelection: false,
+            forceSelection: f.listonly ? true : false,
+            editable: f.listonly ? false : !d,
             triggerAction: 'all',
             emptyText:  _('Select {0} ...').replace('{0}', f.caption),
             listeners: {
