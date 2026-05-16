@@ -2606,7 +2606,7 @@ static int _epg_sort_channel_ascending ( const void *a, const void *b, void *eq 
 
 static int _epg_sort_channel_descending ( const void *a, const void *b, void *eq )
 {
-  return _epg_sort_description_ascending(a, b, eq) * -1;
+  return _epg_sort_channel_ascending(a, b, eq) * -1;
 }
 
 static int _epg_sort_channel_num_ascending ( const void *a, const void *b, void *eq )
