@@ -3008,7 +3008,7 @@ dvr_create_recording_scene_markers(dvr_entry_t *de)
     }
 
     //Find the position of the last dot before the extension in the file name
-    char *last_dot = strrchr(filename, '.');
+    const char *last_dot = strrchr(filename, '.');
 
     if (!last_dot)
     {
