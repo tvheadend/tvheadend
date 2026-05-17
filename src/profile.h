@@ -22,6 +22,7 @@
 #include "tvheadend.h"
 #include "idnode.h"
 #include "muxer.h"
+#include "atomic.h"
 
 typedef enum {
   PROFILE_SPRIO_NOTSET = 0,
@@ -168,13 +169,14 @@ profile_t *profile_create
   (const char *uuid, htsmsg_t *conf, int save);
 
 static inline void profile_grab( profile_t *pro )
-  { pro->pro_refcount++; }
+  { atomic_add(&pro->pro_refcount, 1); }
 
 void profile_release_( profile_t *pro );
 static inline void profile_release( profile_t *pro )
   {
-    assert(pro->pro_refcount > 0);
-    if (--pro->pro_refcount == 0) profile_release_(pro);
+    int v = atomic_add(&pro->pro_refcount, -1);
+    assert(v > 0);
+    if (v == 1) profile_release_(pro);
   }
 
 int profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
