@@ -33,7 +33,8 @@ download_file(download_t *dn, const char *filename)
 {
   int fd, res;
   struct stat st;
-  char *data, *last_url;
+  char *data;
+  const char *last_url;
   ssize_t r;
   off_t off;
 

@@ -1018,6 +1018,7 @@ scanfile_network_t *
 scanfile_find ( const char *id )
 {
   char *tok, *s = NULL, *tmp;
+  const char *basename;
   scanfile_region_t *r = NULL;
   scanfile_network_t *n = NULL;
   scanfile_region_list_t *l;
@@ -1050,8 +1051,8 @@ scanfile_find ( const char *id )
 
   if (n) {
     fp = fb_open(n->sfn_path, 1, 0);
-    tmp = strrchr(n->sfn_path, '/');
-    scanfile_load_file(n, n->sfn_type, n->sfn_path, fp, tmp ?: n->sfn_path, 0);
+    basename = strrchr(n->sfn_path, '/');
+    scanfile_load_file(n, n->sfn_type, n->sfn_path, fp, basename ? basename : n->sfn_path, 0);
   }
 
   return n;
