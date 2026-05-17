@@ -174,9 +174,9 @@ static inline void profile_grab( profile_t *pro )
 void profile_release_( profile_t *pro );
 static inline void profile_release( profile_t *pro )
   {
-    int v = atomic_add(&pro->pro_refcount, -1);
-    assert(v > 0);
-    if (v == 1) profile_release_(pro);
+    int prev = atomic_add(&pro->pro_refcount, -1);
+    assert(prev > 0);
+    if (prev == 1) profile_release_(pro);
   }
 
 int profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
