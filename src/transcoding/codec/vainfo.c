@@ -256,7 +256,10 @@ int init(int show_log)
     if (va_status != VA_STATUS_SUCCESS) { 
         tvherror_transcode(LST_VAINFO, "vaInitialize failed with error code %d (%s)", va_status, vaErrorStr(va_status));
         ret_val = 3;
-        goto error_Initialize;
+        /* vaInitialize() failed, so the display was never initialised: jump
+           past vaTerminate(), which is only valid on an initialised display
+           and dereferences driver context that does not exist here. */
+        goto error_open_display;
     }
     if (show_log)
         tvhinfo_transcode(LST_VAINFO, "VA-API version: %d.%d", major_version, minor_version);
@@ -389,7 +392,6 @@ error_profile_list:
     free(profile_list);
 error_entrypoints:
     free(entrypoints);
-error_Initialize:
     vaTerminate(va_dpy);
 error_open_display:
     va_close_display_drm(va_dpy);
