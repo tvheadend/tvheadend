@@ -37,10 +37,13 @@ static int
 tvh_codec_profile_libvpx_open(tvh_codec_profile_libvpx_t *self,
                               AVDictionary **opts)
 {
+    TVHCodecProfile *p = (TVHCodecProfile *)self;
+    TVHVideoCodecProfile *vp = (TVHVideoCodecProfile *)self;
+
     AV_DICT_SET_TVH_REQUIRE_META(LST_LIBVPX, opts, 0);
-    AV_DICT_SET_BIT_RATE(LST_LIBVPX, opts, self->bit_rate ? self->bit_rate : 2560);
-    if (self->crf) {
-        AV_DICT_SET_CRF(LST_LIBVPX, opts, self->crf, 10);
+    AV_DICT_SET_BIT_RATE(LST_LIBVPX, opts, p->bit_rate ? p->bit_rate : 2560);
+    if (vp->crf) {
+        AV_DICT_SET_CRF(LST_LIBVPX, opts, vp->crf, 10);
     }
     AV_DICT_SET_INT(LST_LIBVPX, opts, "deadline", self->deadline, 0);
     AV_DICT_SET_INT(LST_LIBVPX, opts, "cpu-used", self->cpu_used, 0);
@@ -146,6 +149,16 @@ static const codec_profile_class_t codec_profile_libvpx_class = {
                 .off      = offsetof(TVHVideoCodecProfile, gop_size),
                 .intextra = INTEXTRA_RANGE(0, 1000, 1),
                 .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "encoder_hwaccel_type",
+                .name     = N_("Encoder hardware acceleration type"),
+                .desc     = N_("Encoder hardware acceleration type"),
+                .group    = 2,
+                .opts     = PO_PHIDDEN,
+                .off      = offsetof(TVHVideoCodecProfile, encoder_hwaccel_type),
+                .def.i    = AV_HWDEVICE_TYPE_NONE,
             },
             {}
         }
