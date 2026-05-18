@@ -2312,6 +2312,10 @@ profile_class_mc_list ( void *o, const char *lang )
     { N_("Matroska (mkv)/av-lib"),        MC_AVMATROSKA },
     { N_("WEBM/av-lib"),                  MC_AVWEBM },
     { N_("MP4/av-lib"),                   MC_AVMP4 },
+    { N_("OGA/av-lib"),                   MC_OGA },
+    { N_("OGV/av-lib"),                   MC_OGV },
+    { N_("OGG/av-lib"),                   MC_OGG },
+    { N_("OPUS/av-lib"),                  MC_OPUS }
   };
   return strtab2htsmsg(tab, 1, lang);
 }

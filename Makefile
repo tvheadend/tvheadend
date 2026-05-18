@@ -534,19 +534,34 @@ endif
 ifeq ($(CONFIG_VAAPI),yes)
 LIBS-CODECS += vaapi
 endif
+ifeq ($(CONFIG_QSV),yes)
+LIBS-CODECS += qsv
+endif
 ifeq ($(CONFIG_NVENC),yes)
 LIBS-CODECS += nvenc
 endif
 ifeq ($(CONFIG_OMX),yes)
 LIBS-CODECS += omx
 endif
+ifeq ($(CONFIG_V4L2M2M),yes)
+LIBS-CODECS += v4l2-m2m
+endif
 SRCS-CODECS += $(foreach lib,$(LIBS-CODECS),src/transcoding/codec/codecs/libs/$(lib).c)
 
 #hwaccels
 ifeq ($(CONFIG_HWACCELS),yes)
 SRCS-HWACCELS += src/transcoding/transcode/hwaccels/hwaccels.c
+ifeq ($(CONFIG_NVENC),yes)
+SRCS-HWACCELS += src/transcoding/transcode/hwaccels/nv.c
+endif
 ifeq ($(CONFIG_VAAPI),yes)
 SRCS-HWACCELS += src/transcoding/transcode/hwaccels/vaapi.c
+endif
+ifeq ($(CONFIG_QSV),yes)
+SRCS-HWACCELS += src/transcoding/transcode/hwaccels/qsv.c
+endif
+ifeq ($(CONFIG_V4L2M2M),yes)
+SRCS-HWACCELS += src/transcoding/transcode/hwaccels/v4l2-m2m.c
 endif
 endif
 
