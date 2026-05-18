@@ -134,7 +134,7 @@ void parse_mpeg_ts(parser_t *t, parser_es_t *st, const uint8_t *data,
 
 void parser_enqueue_packet(struct service *t, parser_es_t *st, th_pkt_t *pkt);
 
-void parser_set_stream_vparam(parser_es_t *st, int width, int height, int duration);
+void parser_set_stream_vparam(parser_es_t *st, int width, int height, int64_t duration);
 
 extern const unsigned int mpeg2video_framedurations[16];
 

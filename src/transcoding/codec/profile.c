@@ -123,6 +123,7 @@ int
 tvh_codec_profile_create(htsmsg_t *conf, const char *uuid, int save)
 {
     const char *profile_name = NULL, *codec_name = NULL;
+    int32_t rc = 0;
     TVHCodec *codec = NULL;
     TVHCodecProfile *profile = NULL;
 
@@ -153,6 +154,21 @@ tvh_codec_profile_create(htsmsg_t *conf, const char *uuid, int save)
         tvherror(LS_CODEC, "failed to insert idnode");
         return EINVAL;
     }
+    /* migrate the pre-"decoder_hwaccel_type" config: "hwaccel" was a bool
+       enabling hardware-accelerated decoding */
+    if (!htsmsg_field_find(conf, "decoder_hwaccel_type") &&
+        htsmsg_get_bool_or_default(conf, "hwaccel", 0)) {
+        htsmsg_set_s32(conf, "decoder_hwaccel_type", AV_AUTO_DEVICE_TYPE);
+    }
+    /* migrate rc to rc_mode for NVENC*/
+    if (!htsmsg_field_find(conf, "rc_mode")) {
+        rc = htsmsg_get_s32_or_default(conf, "rc", -1);
+        // update only when rc was saved
+        if (rc >= 0)
+            htsmsg_set_s32(conf, "rc_mode", rc);
+    }
+    // default value is -99 (0 is a valid profile for some codecs)
+    if (profile) profile->profile = FF_AV_PROFILE_UNKNOWN;
     idnode_load(&profile->idnode, conf);
     LIST_INSERT_HEAD(&tvh_codec_profiles, profile, link);
     if (save) {
@@ -276,24 +292,12 @@ tvh_codec_profile_video_destroy(TVHCodecProfile *_self)
 }
 
 int
-tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self)
+tvh_codec_profile_video_get_decoder_hwaccel_type(TVHCodecProfile *self)
 {
     TVHCodec *codec = tvh_codec_profile_get_codec(self);
     if (codec && tvh_codec_is_enabled(codec) &&
         tvh_codec_get_type(codec) == AVMEDIA_TYPE_VIDEO) {
-        return ((TVHVideoCodecProfile *)self)->hwaccel;
-    }
-    return -1;
-}
-
-
-int
-tvh_codec_profile_video_get_hwaccel_details(TVHCodecProfile *self)
-{
-    TVHCodec *codec = tvh_codec_profile_get_codec(self);
-    if (codec && tvh_codec_is_enabled(codec) &&
-        tvh_codec_get_type(codec) == AVMEDIA_TYPE_VIDEO) {
-        return ((TVHVideoCodecProfile *)self)->hwaccel_details;
+        return ((TVHVideoCodecProfile *)self)->decoder_hwaccel_type;
     }
     return -1;
 }
