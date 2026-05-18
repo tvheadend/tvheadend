@@ -93,6 +93,26 @@ tvh_transcoder_handle(TVHTranscoder *self, th_pkt_t *pkt)
 
     SLIST_FOREACH(stream, &self->streams, link) {
         if (pkt->pkt_componentindex == stream->index) {
+#if ENABLE_LIBAV
+            // update SAR when is changing midstream
+            if (SCT_ISVIDEO(pkt->pkt_type) && stream->context) {
+                AVRational sar = { pkt->v.pkt_sample_aspect_ratio.num, pkt->v.pkt_sample_aspect_ratio.den };
+                if (sar.num > 0 && sar.den > 0) {
+                    stream->context->sample_aspect_ratio = sar;
+                    if (stream->context->iavctx &&
+                        avcodec_is_open(stream->context->iavctx))
+                        stream->context->iavctx->sample_aspect_ratio = sar;
+                }
+                if ((!stream->context->iavctx->framerate.num || !stream->context->iavctx->framerate.den) && (pkt->pkt_duration > 1)) {
+                    int fdur = (pkt->pkt_duration > INT_MAX) ? INT_MAX : (int)pkt->pkt_duration;
+                    if (fdur > 0) {
+                        AVRational fr = av_make_q(90000, fdur);
+                        av_reduce(&fr.num, &fr.den, fr.num, fr.den, INT_MAX);
+                        stream->context->iavctx->framerate = fr;
+                    }
+                }
+            }
+#endif
             err = tvh_stream_handle(stream, pkt);
             if (err) {
                 tvh_stream_stop(stream, 0);

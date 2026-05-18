@@ -21,10 +21,10 @@
 	"container": 1
     },
     {
-	"comment": "WEBTV profile H264/Vorbis/MP4",
-	"name": "webtv-h264-vorbis-mp4",
+	"comment": "WEBTV profile H264/AAC/MP4",
+	"name": "webtv-h264-aac-mp4",
 	"pro_vcodec": "webtv-h264",
-	"pro_acodec": "webtv-vorbis",
+	"pro_acodec": "webtv-aac",
 	"container": 9
     }
 ]
