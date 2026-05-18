@@ -9,12 +9,14 @@
 # Usage: support/ci-rpm-build.sh <releasever>
 #   <releasever>  release as used in the container tag and the RPM Fusion
 #                 package name: "44", "rawhide", "9", ...
+#   [extra_configure]  optional extra flags passed to ./configure (e.g. "--ffmpeg=7")
 
 set -e
 
 releasever="$1"
+extra_configure="$2"
 if [ -z "$releasever" ]; then
-    echo "Usage: $0 <releasever>" >&2
+    echo "Usage: $0 <releasever> [extra_configure]" >&2
     exit 2
 fi
 
@@ -50,7 +52,7 @@ export VUE_FILE_CACHE="$PWD/.vuecache"
 # also forwarded by rpm/Makefile into the %configure run inside rpmbuild
 export TVH_EXTRA_CONFIGURE="--enable-vue_cache --disable-vue_build"
 
-./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 $TVH_EXTRA_CONFIGURE
+./configure $extra_configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 $TVH_EXTRA_CONFIGURE
 
 make -C rpm build -j"$(nproc)" || {
     echo "PARALLEL BUILD FAILED, DOING SINGLE THREADED BUILD"

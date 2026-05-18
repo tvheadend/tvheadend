@@ -779,13 +779,18 @@ profile_sharer_deliver(profile_chain_t *prch, streaming_message_t *sm)
      * time correction here
      */
     if (pkt->pkt_pts >= prch->prch_ts_delta &&
-        pkt->pkt_dts >= prch->prch_ts_delta &&
-        pkt->pkt_pcr >= prch->prch_ts_delta) {
+        pkt->pkt_dts >= prch->prch_ts_delta) {
       th_pkt_t *n = pkt_copy_shallow(pkt);
       pkt_ref_dec(pkt);
       n->pkt_pts -= prch->prch_ts_delta;
       n->pkt_dts -= prch->prch_ts_delta;
-      n->pkt_pcr -= prch->prch_ts_delta;
+      // pkt_pcr can legitimately lag pts/dts (notably for transcoded audio, whose
+      // pcr trails its dts by several seconds). Gating the drop on pcr discarded
+      // the whole audio track on a late sharer join (rapid same-channel profile
+      // switch), so globalheaders timed out and disabled audio -> MP4 video-only.
+      // Gate only on pts/dts; clamp the rebased pcr so it never underflows.
+      n->pkt_pcr = (pkt->pkt_pcr >= prch->prch_ts_delta) ?
+                     pkt->pkt_pcr - prch->prch_ts_delta : 0;
       sm->sm_data = n;
     } else {
       pkt_trace(LS_PROFILE, pkt, "packet drop (delta %"PRId64")", prch->prch_ts_delta);
@@ -993,6 +998,12 @@ profile_sharer_destroy(profile_chain_t *prch)
 #endif
     if (prsh->prsh_start_msg)
       streaming_start_unref(prsh->prsh_start_msg);
+    /* prsh is about to be freed, so no chain may keep a pointer to it.  Only
+       the prsh_queue_run path above cleared these, which leaves prch_sharer
+       dangling for a chain torn down before the queue thread ever started --
+       and profile_chain_close() is called twice on exactly that path. */
+    prch->prch_sharer = NULL;
+    prch->prch_post_share = NULL;
     free(prsh);
   } else {
     if (prsh->prsh_queue_run) {
@@ -2312,6 +2323,10 @@ profile_class_mc_list ( void *o, const char *lang )
     { N_("Matroska (mkv)/av-lib"),        MC_AVMATROSKA },
     { N_("WEBM/av-lib"),                  MC_AVWEBM },
     { N_("MP4/av-lib"),                   MC_AVMP4 },
+    { N_("OGA/av-lib"),                   MC_OGA },
+    { N_("OGV/av-lib"),                   MC_OGV },
+    { N_("OGG/av-lib"),                   MC_OGG },
+    { N_("OPUS/av-lib"),                  MC_OPUS }
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -2739,6 +2754,11 @@ profile_transcode_mc_valid(int mc)
   case MC_VORBIS:
   case MC_AVMATROSKA:
   case MC_AVMP4:
+  case MC_AVWEBM:
+  case MC_OGA:
+  case MC_OGV:
+  case MC_OGG:
+  case MC_OPUS:
     return 1;
   default:
     return 0;

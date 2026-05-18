@@ -1,0 +1,34 @@
+# Patch is fixing: https://github.com/tvheadend/tvheadend/issues/1869
+# is combining two commits:
+#
+# Commit 1:
+# From: David Rosca <nowrep@gmail.com>
+# Date: Tue, 15 Oct 2024 16:49:41 +0200
+# Subject: hw_base_encode: Free pictures on close
+#
+# Fixes leaking recon surfaces with VAAPI.
+#
+# Commit 2:
+# From: Marvin Scholz <epirat07@gmail.com>
+# Date: Thu, 17 Oct 2024 20:23:40 +0200
+# Subject: avcodec/hw_base_encode: fix use after free on close
+#
+# The way the linked list of images was freed caused a
+# use after free, by accessing pic->next after pic was
+# already freed.
+#
+diff --urN ../ffmpeg-7.1.1/libavcodec/hw_base_encode.c ./libavcodec/hw_base_encode.c
+--- ../ffmpeg-7.1.1/libavcodec/hw_base_encode.c
++++ ./libavcodec/hw_base_encode.c
+@@ -804,6 +804,11 @@ int ff_hw_base_encode_init(AVCodecContext *avctx, FFHWBaseEncodeContext *ctx)
+
+ int ff_hw_base_encode_close(FFHWBaseEncodeContext *ctx)
+ {
++    for (FFHWBaseEncodePicture *pic = ctx->pic_start, *next_pic = pic; pic; pic = next_pic) {
++        next_pic = pic->next;
++        base_encode_pic_free(pic);
++    }
++
+     av_fifo_freep2(&ctx->encode_fifo);
+
+     av_frame_free(&ctx->frame);
