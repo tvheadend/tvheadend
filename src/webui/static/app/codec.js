@@ -26,61 +26,85 @@ function genericCBRvsVBR(form) {
 
 // functions used for Video Codec profiles
 
-function update_hwaccel_details(form) {
-    form.findField('hwaccel_details').setDisabled(!form.findField('hwaccel').getValue());
-    update_deinterlace_vaapi_mode(form);
-}
-
-function update_deinterlace_vaapi_mode(form) {
-    if (form.findField('deinterlace_vaapi_mode')) {
-        const hwaccel = form.findField('hwaccel').getValue();
+function update_deinterlace_mode(form) {
+    if (form.findField('decoder_hwaccel_type') && form.findField('encoder_hwaccel_type') && form.findField('deinterlace')){
         const deinterlace = form.findField('deinterlace').getValue();
-        const hwaccelDetails = form.findField('hwaccel_details').getValue(); // 0=AUTO, 1=VAAPI, 2=NVDEC, 3=MMAL
-
-        const disableDeintVaapiMode = !hwaccel || !deinterlace || (hwaccelDetails !== 0 && hwaccelDetails !== 1);
-        form.findField('deinterlace_vaapi_mode').setDisabled(disableDeintVaapiMode);
+        const decoder_hwaccel_type = Number(form.findField('decoder_hwaccel_type').getValue()); // -1=AUTO, 0=SW, 3=VAAPI, 5=QSV, 2=NVDEC, 100=MMAL, 8=V4L2
+        const encoder_hwaccel_type = Number(form.findField('encoder_hwaccel_type').getValue()); // 0=SW, 3=VAAPI, 5=QSV, 2=NVDEC, 100=MMAL, 8=V4L2
+        // for VAAPI
+        if (form.findField('deinterlace_vaapi_mode')) {
+            const vaapi_or_auto = ((decoder_hwaccel_type === -1) && (encoder_hwaccel_type === 3)) || decoder_hwaccel_type === 3;
+            const disable_deint_vaapi_mode = !deinterlace || !vaapi_or_auto;
+            form.findField('deinterlace_vaapi_mode').setDisabled(disable_deint_vaapi_mode);
+        }
+        // for QSV
+        if (form.findField('deinterlace_qsv_mode')) {
+            const qsv_or_auto = ((decoder_hwaccel_type === -1) && (encoder_hwaccel_type === 5)) || decoder_hwaccel_type === 5;
+            const disable_deint_qsv_mode = !deinterlace || !qsv_or_auto;
+            form.findField('deinterlace_qsv_mode').setDisabled(disable_deint_qsv_mode);
+        }
+        // for NVDEC
+        if (form.findField('deinterlace_nvdec_mode')) {
+            const nvdec_or_auto = ((decoder_hwaccel_type === -1) && (encoder_hwaccel_type === 2)) || decoder_hwaccel_type === 2;
+            const disable_deint_nvdec_mode = !deinterlace || !nvdec_or_auto;
+            form.findField('deinterlace_nvdec_mode').setDisabled(disable_deint_nvdec_mode);
+        }
     }
-}
-
-function update_deinterlace_details(form) {
-    if (form.findField('deinterlace_field_rate') && form.findField('deinterlace_enable_auto')) {
-        form.findField('deinterlace_field_rate').setDisabled(!form.findField('deinterlace').getValue());
-        form.findField('deinterlace_enable_auto').setDisabled(!form.findField('deinterlace').getValue());
-    }
-    update_deinterlace_vaapi_mode(form);
+    
 }
 
 function enable_hwaccels_details(form) {
-    if (form.findField('hwaccel_details') && form.findField('hwaccel')) {
-        update_hwaccel_details(form);
-        // on hwaccel change
-        form.findField('hwaccel').on('check', function(checkbox, value) {
-            update_hwaccel_details(form);
-        });
-        // on hwaccel_details change
-        form.findField('hwaccel_details').on('select', function(combo, record, index) {
-            update_deinterlace_vaapi_mode(form);
-        });
-    }
-    if (form.findField('deinterlace')) {
-        // on deinterlace change
-        form.findField('deinterlace').on('check', function(checkbox, value) {
-            update_deinterlace_details(form);
-        });
+
+    if (form.findField('decoder_hwaccel_type') && form.findField('encoder_hwaccel_type') && form.findField('deinterlace')){
+        const deinterlace = Number(form.findField('deinterlace').getValue());
+        const decoder_hwaccel_type = Number(form.findField('decoder_hwaccel_type').getValue()); // -1=AUTO, 0=SW, 3=VAAPI, 5=QSV, 2=NVDEC, 100=MMAL, 8=V4L2
+        const encoder_hwaccel_type = Number(form.findField('encoder_hwaccel_type').getValue()); // 0=SW, 3=VAAPI, 5=QSV, 2=NVDEC, 100=MMAL, 8=V4L2
+        // for VAAPI
+        const vaapi_or_auto = ((decoder_hwaccel_type === -1) && (encoder_hwaccel_type === 3)) || decoder_hwaccel_type === 3;
+        const disable_deint_vaapi_mode = !deinterlace || !vaapi_or_auto;
+        if (form.findField('deinterlace_vaapi_mode')) {
+            form.findField('deinterlace_vaapi_mode').setDisabled(disable_deint_vaapi_mode);
+        }
+        // for QSV
+        if (form.findField('deinterlace_qsv_mode')) {
+            const qsv_or_auto = ((decoder_hwaccel_type === -1) && (encoder_hwaccel_type === 5)) || decoder_hwaccel_type === 5;
+            const disable_deint_qsv_mode = !deinterlace || !qsv_or_auto;
+            form.findField('deinterlace_qsv_mode').setDisabled(disable_deint_qsv_mode);
+        }
+        // for NVDEC
+        const nvdec_or_auto = ((decoder_hwaccel_type === -1) && (encoder_hwaccel_type === 2)) || decoder_hwaccel_type === 2;
+        const disable_deint_nvdec_mode = !deinterlace || !nvdec_or_auto;
+        if (form.findField('deinterlace_nvdec_mode')) {
+            form.findField('deinterlace_nvdec_mode').setDisabled(disable_deint_nvdec_mode);
+        }
+        // Field Rate and Enable are only enabled for SW, VAAPI and NVDEC
+        const sw_vaapi_or_nvdec = (decoder_hwaccel_type === 0) || vaapi_or_auto || nvdec_or_auto
+        const disable_field_rate = !deinterlace || !sw_vaapi_or_nvdec;
+        if (form.findField('deinterlace_field_rate')) {
+            form.findField('deinterlace_field_rate').setDisabled(disable_field_rate);
+        }
+        if (form.findField('deinterlace_enable_auto')) {
+            form.findField('deinterlace_enable_auto').setDisabled(disable_field_rate);
+        }
     }
 }
 
 // functions used for VAAPI Video Codec profiles
 
 function updateHWFilters(form) {
-    if (form.findField('hw_denoise') && form.findField('hw_sharpness') && 
-        form.findField('hwaccel_details') && form.findField('hwaccel')) 
-    {
-        form.findField('hw_denoise').setDisabled(!form.findField('hwaccel').getValue());
-        form.findField('hw_sharpness').setDisabled(!form.findField('hwaccel').getValue());
-        form.findField('hwaccel_details').setDisabled(!form.findField('hwaccel').getValue());
+    if (form.findField('decoder_hwaccel_type') && form.findField('encoder_hwaccel_type')) {
+        const decoder_hwaccel_type = Number(form.findField('decoder_hwaccel_type').getValue()); // -1=AUTO, 0=SW, 3=VAAPI, 5=QSV, 2=NVDEC, 100=MMAL, 8=V4L2
+        const encoder_hwaccel_type = Number(form.findField('encoder_hwaccel_type').getValue()); // 0=SW, 3=VAAPI, 5=QSV, 2=NVDEC, 100=MMAL, 8=V4L2
+        // for VAAPI and QSV we show hw filters
+        if (form.findField('hw_denoise') && form.findField('hw_sharpness')) {
+            const vaapi_or_auto = ((decoder_hwaccel_type === -1) && (encoder_hwaccel_type === 3)) || decoder_hwaccel_type === 3;
+            const qsv_or_auto = ((decoder_hwaccel_type === -1) && (encoder_hwaccel_type === 5)) || decoder_hwaccel_type === 5;
+            const vaapi_or_qsv = vaapi_or_auto || qsv_or_auto;
+            form.findField('hw_denoise').setDisabled(!vaapi_or_qsv);
+            form.findField('hw_sharpness').setDisabled(!vaapi_or_qsv);
+        }
     }
-    update_deinterlace_details(form);
+    enable_hwaccels_details(form);
 }
 
 function checkBFrameQuality(low_power_field, desired_b_depth_field, b_reference_field, quality_field, ui_value, uilp_value) {
@@ -239,6 +263,71 @@ function updateFilters(form) {
     }
 }
 
+function update_rc_settings_nvenc(form, bit_rate_value, max_bit_rate_value, cq_value, bit_rate_scale_factor_value, qp_value) {
+    if (form.findField('bit_rate') && form.findField('max_bit_rate') && form.findField('cq') && 
+        form.findField('bit_rate_scale_factor') && form.findField('qp')) {
+        form.findField('bit_rate').setDisabled(bit_rate_value);
+        form.findField('max_bit_rate').setDisabled(max_bit_rate_value);
+        form.findField('cq').setDisabled(cq_value);
+        form.findField('bit_rate_scale_factor').setDisabled(bit_rate_scale_factor_value);
+        form.findField('qp').setDisabled(qp_value);
+    }
+}
+
+function filter_based_on_rc_nvenc(form) {
+    if (form.findField('rc_mode')) {
+        switch (form.findField('rc_mode').getValue()) {
+            case 0:
+                // for auto --> let the driver decide as requested by documentation
+                update_rc_settings_nvenc(form, false, false, false, false, false);
+                break;
+            case 1:
+                // for constant quality: CQP we use qp
+                update_rc_settings_nvenc(form, true, true, true, true, false);
+                break;
+            case 2:
+            case 4:
+            case 32:
+                // for variable bitrate: VBR we use bitrate
+                update_rc_settings_nvenc(form, false, false, false, false, true);
+                break;
+            case 3:
+            case 8:
+            case 16:
+                // for constant bitrate: CBR we use bitrate
+                update_rc_settings_nvenc(form, false, true, true, false, true);
+                break;
+        }
+    }
+}
+
+function update_nvenc_ui(form) {
+    // first time we have to call this manually
+    filter_based_on_rc_nvenc(form);
+
+    // on rc_mode change
+    if (form.findField('rc_mode'))
+        form.findField('rc_mode').on('select', function(combo, record, index) {
+            // filter based in rc_mode
+            filter_based_on_rc_nvenc(form);
+        });
+
+    // on hwaccel_details change
+    if (form.findField('decoder_hwaccel_type')) {
+        enable_hwaccels_details(form);
+        form.findField('decoder_hwaccel_type').on('select', function(combo, record, index) {
+            enable_hwaccels_details(form);
+        });
+    }
+
+    // on deinterlace change
+    if (form.findField('deinterlace')) {
+        enable_hwaccels_details(form);
+        form.findField('deinterlace').on('check', function(checkbox, value) {
+            enable_hwaccels_details(form);
+        });
+    }
+}
 
 function update_vaapi_ui(form) {
     // first time we have to call this manually
@@ -263,22 +352,22 @@ function update_vaapi_ui(form) {
             updateLowPower(form);
         });
 
-    // on hwaccel change
-    if (form.findField('hwaccel'))
-        form.findField('hwaccel').on('check', function(checkbox, value) {
+    // on hwaccel_details change
+    if (form.findField('decoder_hwaccel_type')) {
+        enable_hwaccels_details(form);
+        form.findField('decoder_hwaccel_type').on('select', function(combo, record, index) {
+            enable_hwaccels_details(form);
             updateHWFilters(form);
         });
-
-    // on hwaccel_details change
-    form.findField('hwaccel_details').on('select', function(combo, record, index) {
-        update_deinterlace_vaapi_mode(form);
-    });
+    }
 
     // on deinterlace change
-    if (form.findField('deinterlace'))
+    if (form.findField('deinterlace')) {
+        enable_hwaccels_details(form);
         form.findField('deinterlace').on('check', function(checkbox, value) {
-            update_deinterlace_details(form);
+            enable_hwaccels_details(form);
         });
+    }
 
     // on desired_b_depth change
     if (form.findField('desired_b_depth'))
@@ -293,6 +382,69 @@ function update_vaapi_ui(form) {
         });
 }
 
+// this function is used for all software encoders
+function update_sw_ui(form) {
+
+    // on hwaccel_details change
+    if (form.findField('decoder_hwaccel_type')) {
+        enable_hwaccels_details(form);
+        form.findField('decoder_hwaccel_type').on('select', function(combo, record, index) {
+            enable_hwaccels_details(form);
+        });
+    }
+
+    // on deinterlace change
+    if (form.findField('deinterlace')) {
+        enable_hwaccels_details(form);
+        form.findField('deinterlace').on('check', function(checkbox, value) {
+            enable_hwaccels_details(form);
+        });
+    }
+}
+
+// 
+function update_qsv_ui(form) {
+    // first time we have to call this manually
+    updateHWFilters(form);
+
+    // on hwaccel_details change
+    if (form.findField('decoder_hwaccel_type')) {
+        enable_hwaccels_details(form);
+        form.findField('decoder_hwaccel_type').on('select', function(combo, record, index) {
+            enable_hwaccels_details(form);
+            updateHWFilters(form);
+        });
+    }
+
+    // on deinterlace change
+    if (form.findField('deinterlace')) {
+        enable_hwaccels_details(form);
+        form.findField('deinterlace').on('check', function(checkbox, value) {
+            enable_hwaccels_details(form);
+        });
+    }
+}
+
+// 
+function update_v4l2_ui(form) {
+
+    // TODO update
+    // on hwaccel_details change
+    if (form.findField('decoder_hwaccel_type')) {
+        enable_hwaccels_details(form);
+        form.findField('decoder_hwaccel_type').on('select', function(combo, record, index) {
+            enable_hwaccels_details(form);
+        });
+    }
+
+    // we disable deinterlace (because is not available)
+    if (form.findField('deinterlace')) {
+        form.findField('deinterlace').setValue(false);
+        form.findField('deinterlace').setDisabled(true);
+    }
+    
+}
+
 var codec_profile_forms = {
     'default': function(form) {
         var name_field = form.findField('name');
@@ -301,7 +453,7 @@ var codec_profile_forms = {
 
     'codec_profile_mpeg2video': function(form) {
         genericCBRvsVBR(form);
-        enable_hwaccels_details(form);
+        update_sw_ui(form);
     },
 
     'codec_profile_mp2': function(form) {
@@ -410,12 +562,12 @@ var codec_profile_forms = {
 
     'codec_profile_libx264': function(form) {
         genericCBRvsVBR(form);
-        enable_hwaccels_details(form);
+        update_sw_ui(form);
     },
 
     'codec_profile_libx265': function(form) {
         genericCBRvsVBR(form);
-        enable_hwaccels_details(form);
+        update_sw_ui(form);
     },
 
     'codec_profile_libvpx': function(form) {
@@ -429,7 +581,7 @@ var codec_profile_forms = {
         }
 
         genericCBRvsVBR(form);
-        enable_hwaccels_details(form);
+        update_sw_ui(form);
         var quality_field = form.findField('deadline');
         var speed_field = form.findField('cpu-used');
         updateSpeed(quality_field, speed_field);
@@ -442,7 +594,10 @@ var codec_profile_forms = {
         });
     },
 
-    'codec_profile_libtheora': genericCBRvsVBR,
+    'codec_profile_libtheora':  function(form) {
+        genericCBRvsVBR(form);
+        update_sw_ui(form);
+    },
 
     'codec_profile_libvorbis': genericCBRvsVBR,
 
@@ -538,12 +693,24 @@ var codec_profile_forms = {
     },
 
     'codec_profile_nvenc_h264': function(form) { 
-        enable_hwaccels_details(form);
+        update_nvenc_ui(form);
     },
 
     'codec_profile_nvenc_hevc': function(form) { 
-        enable_hwaccels_details(form);
-    }
+        update_nvenc_ui(form);
+    },
+
+    'codec_profile_qsv_h264': function(form) { 
+        update_qsv_ui(form);
+    },
+
+    'codec_profile_qsv_hevc': function(form) { 
+        update_qsv_ui(form);
+    },
+
+    'codec_profile_v4l2m2m': function(form) { 
+        update_v4l2_ui(form);
+    },
 };
 
 

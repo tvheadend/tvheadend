@@ -182,7 +182,7 @@ pkt_trace_(const char *file, int line, int subsys, th_pkt_t *pkt,
   snprintf(buf, sizeof(buf),
            "%s%spkt stream %d %s%s%s"
            " pcr %s dts %s pts %s"
-           " dur %d len %zu err %i%s%s",
+           " dur %"PRId64" len %zu err %i%s%s",
            fmt ? fmt : "",
            fmt ? " (" : "",
            pkt->pkt_componentindex,

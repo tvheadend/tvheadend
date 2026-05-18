@@ -23,10 +23,18 @@
 
 /* aac ====================================================================== */
 // see aacenc_profiles[] ffmpeg-7.0/libavcodec/aacenctab.h + AV_PROFILE_UNKNOWN
+// ffmpeg 8 has removed two profiles (The Main and LTP coders were complex, largely 
+//      superseded by modern AAC-LC/HE-AAC profiles, and offered minimal real-world advantage.)
+// patch 1/2 https://lists.ffmpeg.org/lore/ffmpeg-devel/20250208041258.217102-1-dev@lynne.ee/T/#t
+// patch 2/2 https://lists.ffmpeg.org/lore/ffmpeg-devel/20250208041258.217102-2-dev@lynne.ee/T/#u
 static const AVProfile aac_profiles[] = {
+#if LIBAVCODEC_VERSION_MAJOR < 62
     { FF_AV_PROFILE_AAC_MAIN,      "Main" },
+#endif
     { FF_AV_PROFILE_AAC_LOW,       "LC" },
+#if LIBAVCODEC_VERSION_MAJOR < 62
     { FF_AV_PROFILE_AAC_LTP,       "LTP" },
+#endif
     { FF_AV_PROFILE_MPEG2_AAC_LOW, "MPEG2_LC" },
     { FF_AV_PROFILE_UNKNOWN },
 };
@@ -40,7 +48,8 @@ static const AVChannelLayout aac_channel_layouts[] = {
     AV_CHANNEL_LAYOUT_4POINT0,
     AV_CHANNEL_LAYOUT_5POINT0_BACK,
     AV_CHANNEL_LAYOUT_5POINT1_BACK,
-    AV_CHANNEL_LAYOUT_7POINT1,
+    AV_CHANNEL_LAYOUT_6POINT1_BACK,
+    AV_CHANNEL_LAYOUT_5POINT1POINT2_BACK,
     { 0 },
 };
 #else
@@ -67,12 +76,14 @@ typedef struct {
 static int
 tvh_codec_profile_aac_open(tvh_codec_profile_aac_t *self, AVDictionary **opts)
 {
+    TVHCodecProfile *p = (TVHCodecProfile *)self;
+
     // bit_rate or global_quality
-    if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(LST_AAC, opts, self->bit_rate);
+    if (p->bit_rate) {
+        AV_DICT_SET_BIT_RATE(LST_AAC, opts, p->bit_rate);
     }
     else {
-        AV_DICT_SET_GLOBAL_QUALITY(LST_AAC, opts, self->qscale, 1);
+        AV_DICT_SET_GLOBAL_QUALITY(LST_AAC, opts, p->qscale, 1);
     }
     AV_DICT_SET(LST_AAC, opts, "aac_coder", self->coder, 0);
     return 0;

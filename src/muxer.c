@@ -58,6 +58,9 @@ static struct strtab container_audio_mime[] = {
   { "audio/mp4",                MC_AVMP4 },
   { "application/octet-stream", MC_PASS },
   { "application/octet-stream", MC_RAW },
+  { "audio/ogg",                MC_OGA },
+  { "audio/ogg",                MC_OGG },
+  { "audio/ogg",                MC_OPUS },
 };
 
 
@@ -98,6 +101,10 @@ static struct strtab container_name[] = {
   { "mp4a",       MC_MP4A },
   { "oga",        MC_VORBIS },
   { "ac4",        MC_AC4 },
+  { "oga",        MC_OGA },
+  { "ogv",        MC_OGV },
+  { "ogg",        MC_OGG },
+  { "opus",       MC_OPUS },
 };
 
 
@@ -121,6 +128,10 @@ static struct strtab container_audio_file_suffix[] = {
   { "mp4a", MC_MP4A },
   { "oga",  MC_VORBIS },
   { "ac4",  MC_AC4 },
+  { "oga",  MC_OGA },
+  { "ogv",  MC_OGV },
+  { "ogg",  MC_OGG },
+  { "opus", MC_OPUS },
 };
 
 
@@ -138,6 +149,7 @@ static struct strtab container_video_file_suffix[] = {
   { "mkv",  MC_AVMATROSKA },
   { "webm", MC_AVWEBM },
   { "mp4",  MC_AVMP4 },
+  { "ogv",  MC_OGV },
 };
 
 
