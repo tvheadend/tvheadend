@@ -283,7 +283,7 @@ jobs:
             mkdir -p .staticlib
             export STATICLIB_CACHE=/workspace/.staticlib
             export VUE_FILE_CACHE=/workspace/.vuecache
-            AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || '' }}
+            AUTOBUILD_CONFIGURE_EXTRA="${{ contains(matrix.container[1], 'trusty') && '--ffmpeg=6 ' || '' }} --enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || '' }}
         run: docker exec -e PCLOUD_TOKEN build-container bash -c "$SCRIPT"
       - name: copy-result
         env:
@@ -350,7 +350,7 @@ jobs:
           export STATICLIB_CACHE="$PWD/.staticlib"
           export VUE_FILE_CACHE="$PWD/.vuecache"
           export TVH_EXTRA_CONFIGURE="--enable-vue_cache --disable-vue_build"
-          ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 $TVH_EXTRA_CONFIGURE && make -C rpm build -j$(nproc) || (echo "PARALLEL BUILD FAILED, DOING SINGLE THREADED BUILD" && make -C rpm build)
+          ./configure ${{ contains(fromJson('["37", "38", "39", "40", "41", "42", "43"]'), matrix.releasever) && '--ffmpeg=7 ' || '' }} --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 $TVH_EXTRA_CONFIGURE && make -C rpm build -j$(nproc) || (echo "PARALLEL BUILD FAILED, DOING SINGLE THREADED BUILD" && make -C rpm build)
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4

@@ -57,8 +57,10 @@ OPTIONS=(
   "libopus_static:yes"
   "nvenc:no"
   "vaapi:auto"
+  "qsv:no"
   "mmal:no"
   "omx:no"
+  "v4l2m2m:no"
   "inotify:auto"
   "epoll:auto"
   "pcre:auto"
@@ -96,6 +98,8 @@ esac
 # ###########################################################################
 opt=
 val=
+CONFIG_FFMPEG_VER=8  # Default to 8 if the flag is never sent
+
 for opt do
   val=${opt#*=}
   opt=${opt%%=*}
@@ -106,6 +110,17 @@ for opt do
       ;;
     *dir|prefix)
       eval "$opt=$val"
+      ;;
+    ffmpeg)
+      # Validate the input
+      case "$val" in
+        5|6|7|8)
+          eval "CONFIG_FFMPEG_VER=\"$val\""
+          ;;
+        *)
+          die "Invalid ffmpeg version: '$val'. Supported versions are 5, 6, 7, or 8."
+          ;;
+      esac
       ;;
     gzip)
       eval "$(toupper ${opt}CMD)=\"$val\""
@@ -779,6 +794,29 @@ if enabled_or_auto vaapi; then
 fi
 
 #
+# qsv
+#
+if enabled_or_auto qsv; then
+  if check_pkg libmfx ">=1.28"; then
+    enable qsv
+    enable hwaccels
+  elif check_pkg vpl ">=2.0"; then
+    enable qsv
+    enable hwaccels
+  elif enable qsv; then
+    die "Intel MediaSDK (AKA Quick Sync Video) - libmfx or oneVPL - not found"
+  fi
+fi
+
+#
+# v4l2
+#
+if enabled v4l2m2m; then
+  check_pkg libv4l2 ">=1.22" || die "libv4l2 1.22 package not found"
+  enable hwaccels
+fi
+
+#
 # Inotify
 #
 if enabled_or_auto inotify; then
@@ -900,6 +938,7 @@ fi
 
 # Write config
 write_config
+echo "CONFIG_FFMPEG_VER=${CONFIG_FFMPEG_VER:-8}" >> "${ROOTDIR}/.config.mk"
 cat >> "${CONFIG_H}" <<EOF
 #define TVHEADEND_DATADIR "$(eval echo ${datadir})/tvheadend"
 EOF

@@ -2247,6 +2247,10 @@ const idclass_t config_class = {
          .name   = N_("Miscellaneous Settings"),
          .number = 8,
       },
+      {
+         .name   = N_("Transcoding"),
+         .number = 9,
+      },
       {}
   },
   .ic_properties = (const property_t[]){
@@ -2873,7 +2877,7 @@ const idclass_t config_class = {
                    "NOTE: After save, Tvheadend restart is required!"),
       .off    = offsetof(config_t, enable_vainfo),
       .opts   = PO_EXPERT,
-      .group  = 7,
+      .group  = 9,
     },
 #endif
     {

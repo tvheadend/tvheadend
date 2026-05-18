@@ -133,6 +133,9 @@ streaming_component_type2codec_id(streaming_component_type_t type)
   case SCT_OPUS:
     codec_id = AV_CODEC_ID_OPUS;
     break;
+  case SCT_FLAC:
+    codec_id = AV_CODEC_ID_FLAC;
+    break;
   case SCT_DVBSUB:
     codec_id = AV_CODEC_ID_DVB_SUBTITLE;
     break;
