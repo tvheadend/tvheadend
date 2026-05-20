@@ -16,17 +16,11 @@
  * Apply commits the model to filterCallback → IdnodeGrid's
  * onFilter translates it to 1-or-2 wire entries.
  *
- * Operators: =, ≤, ≥, Between. The ≤ / ≥ labels match how the
- * server actually behaves today: `idnode_filter`'s IC_GT keeps
- * rows where a >= b (and IC_LT keeps a <= b) — a long-standing
- * inclusive-when-strict-was-intended bug at `src/idnode.c:911-918`
- * (and the parallel cases for IF_DBL / strings). Both Classic
- * and v2 inherit the behaviour, so we label the operators by
- * what they actually do. A separate upstream C PR will tighten
- * IC_GT/IC_LT to strict `>` / `<` and add IC_GE/IC_LE/IC_NE for
- * the missing operators. Once that lands, the labels here
- * switch to `<` / `>` and we add `≥` / `≤` / `!=` as additional
- * entries.
+ * Operators: =, ≠, <, ≤, >, ≥, Between — mapping 1:1 onto the
+ * server comparators eq/ne/lt/le/gt/ge (API v20; `idnode_filter`
+ * treats gt/lt strictly and ge/le/ne complete the set). Between
+ * translates to a ge+le pair so the displayed range is inclusive
+ * at both bounds.
  *
  * Between renders a Min + Max input pair; the other three
  * render a single Value input. Switching to Between seeds
@@ -38,7 +32,7 @@ import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()
 
-export type NumericFilterOp = 'eq' | 'lt' | 'gt' | 'between'
+export type NumericFilterOp = 'eq' | 'ne' | 'lt' | 'le' | 'gt' | 'ge' | 'between'
 
 export interface NumericFilterModel {
   op: NumericFilterOp
@@ -100,8 +94,11 @@ function onValue2Change(raw: string) {
         @change="onOpChange(($event.target as HTMLSelectElement).value as NumericFilterOp)"
       >
         <option value="eq">=</option>
-        <option value="lt">≤</option>
-        <option value="gt">≥</option>
+        <option value="ne">≠</option>
+        <option value="lt">&lt;</option>
+        <option value="le">≤</option>
+        <option value="gt">&gt;</option>
+        <option value="ge">≥</option>
         <option value="between">{{ t('Between') }}</option>
       </select>
     </label>

@@ -94,25 +94,37 @@ describe('summarizeFilterEntries', () => {
     ).toBe('= 5')
   })
 
-  it('numeric gt → "≥ value" (server\'s `gt` is inclusive — bug tracked upstream)', () => {
-    expect(
-      summarizeFilterEntries(
-        [{ field: 'size', type: 'numeric', value: 100, comparison: 'gt' }],
-        LABELS,
-      ),
-    ).toBe('≥ 100')
+  it('numeric comparators render their strict/inclusive glyphs (API v20)', () => {
+    const cases: Array<[string, string]> = [
+      ['ne', '≠ 100'],
+      ['lt', '< 100'],
+      ['le', '≤ 100'],
+      ['gt', '> 100'],
+      ['ge', '≥ 100'],
+    ]
+    for (const [cmp, expected] of cases) {
+      expect(
+        summarizeFilterEntries(
+          [{ field: 'size', type: 'numeric', value: 100, comparison: cmp }],
+          LABELS,
+        ),
+      ).toBe(expected)
+    }
   })
 
-  it('numeric lt → "≤ value"', () => {
+  it('numeric ge+le pair (Between) → "min – max" with en-dash', () => {
     expect(
       summarizeFilterEntries(
-        [{ field: 'size', type: 'numeric', value: 50, comparison: 'lt' }],
+        [
+          { field: 'size', type: 'numeric', value: 5, comparison: 'ge' },
+          { field: 'size', type: 'numeric', value: 10, comparison: 'le' },
+        ],
         LABELS,
       ),
-    ).toBe('≤ 50')
+    ).toBe('5 – 10')
   })
 
-  it('numeric gt+lt pair (Between) → "min – max" with en-dash', () => {
+  it('legacy gt+lt pair still reads as a Between range', () => {
     expect(
       summarizeFilterEntries(
         [
@@ -128,8 +140,8 @@ describe('summarizeFilterEntries', () => {
     expect(
       summarizeFilterEntries(
         [
-          { field: 'size', type: 'numeric', value: 10, comparison: 'lt' },
-          { field: 'size', type: 'numeric', value: 5, comparison: 'gt' },
+          { field: 'size', type: 'numeric', value: 10, comparison: 'le' },
+          { field: 'size', type: 'numeric', value: 5, comparison: 'ge' },
         ],
         LABELS,
       ),
@@ -331,9 +343,9 @@ describe('summarizeFilterEntries — enum-label resolver', () => {
   })
 
   it('resolver does NOT apply to non-eq comparisons', () => {
-    /* `≥ 100` / `≤ 50` / between are unambiguously numeric.
+    /* `> 100` / `≤ 50` / between are unambiguously numeric.
      * Even if a resolver IS supplied, the operator-glyph
-     * format stays — resolving "≥ Important" reads as
+     * format stays — resolving "> Important" reads as
      * nonsense. */
     const labels = {
       ...LABELS,
@@ -344,7 +356,7 @@ describe('summarizeFilterEntries — enum-label resolver', () => {
         [{ field: 'pri', type: 'numeric', value: 2, comparison: 'gt' }],
         labels,
       ),
-    ).toBe('≥ 2')
+    ).toBe('> 2')
   })
 
   it('handles string-keyed enums (resolver value param is string|number)', () => {

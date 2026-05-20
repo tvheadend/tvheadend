@@ -55,7 +55,10 @@ api_idnode_flist_conf( htsmsg_t *args, const char *name )
 static struct strtab filtcmptab[] = {
   { "gt", IC_GT },
   { "lt", IC_LT },
-  { "eq", IC_EQ }
+  { "eq", IC_EQ },
+  { "ge", IC_GE },
+  { "le", IC_LE },
+  { "ne", IC_NE }
 };
 
 static void

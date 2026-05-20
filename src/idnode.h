@@ -161,6 +161,20 @@ typedef struct idnode_sort {
 } idnode_sort_t;
 
 /*
+ * Filter comparison operators. IC_IN / IC_RE apply to strings only.
+ */
+typedef enum idnode_filter_comp {
+  IC_EQ, ///< Equals
+  IC_LT, ///< Less than (strict)
+  IC_GT, ///< Greater than (strict)
+  IC_GE, ///< Greater than or equal
+  IC_LE, ///< Less than or equal
+  IC_NE, ///< Not equal
+  IC_IN, ///< contains (STR only)
+  IC_RE, ///< regexp (STR only)
+} idnode_filter_comp_t;
+
+/*
  * Filter definition
  */
 typedef struct idnode_filter_ele
@@ -185,13 +199,7 @@ typedef struct idnode_filter_ele
     double   dbl;
     regex_t  re;
   } u;                                ///< Filter data
-  enum {
-    IC_EQ, ///< Equals
-    IC_LT, ///< LT
-    IC_GT, ///< GT
-    IC_IN, ///< contains (STR only)
-    IC_RE, ///< regexp (STR only)
-  } comp;                             ///< Filter comparison
+  idnode_filter_comp_t comp;          ///< Filter comparison
 } idnode_filter_ele_t;
 
 typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;

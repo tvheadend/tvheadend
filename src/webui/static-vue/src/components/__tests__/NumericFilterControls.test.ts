@@ -60,6 +60,32 @@ describe('NumericFilterControls', () => {
       const sel = wrapper.find('.num-filter__select').element as HTMLSelectElement
       expect(sel.value).toBe('gt')
     })
+
+    it('offers the full API-v20 operator set with truthful symbols', () => {
+      const wrapper = mountControls(null)
+      const options = wrapper
+        .findAll('.num-filter__select option')
+        .map((o) => [(o.element as HTMLOptionElement).value, o.text()])
+      expect(options).toEqual([
+        ['eq', '='],
+        ['ne', '≠'],
+        ['lt', '<'],
+        ['le', '≤'],
+        ['gt', '>'],
+        ['ge', '≥'],
+        ['between', 'Between'],
+      ])
+    })
+
+    it('single-value ops ne/le/ge render one Value input and emit 1:1', async () => {
+      for (const op of ['ne', 'le', 'ge'] as const) {
+        const wrapper = mountControls({ op: 'eq', value: 9, value2: null })
+        await wrapper.find('.num-filter__select').setValue(op)
+        const emits = wrapper.emitted('update:modelValue')
+        expect(emits![0][0]).toEqual({ op, value: 9, value2: null })
+        wrapper.unmount()
+      }
+    })
   })
 
   describe('emits on change', () => {

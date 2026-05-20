@@ -101,6 +101,13 @@ export interface BuildFiltersOutput {
  * composes the two halves of `now` / `today` into a range
  * automatically when it sees a gt+lt pair on the same field.
  *
+ * Comparator vocabulary: `epg/events/grid` has its OWN filter
+ * engine with only `eq`/`gt`/`lt` (`api_epg.c filtcmptab`), where
+ * gt/lt match INCLUSIVELY (`epg.c` EC_GT/EC_LT). The idnode grids'
+ * API-v20 set (`ne`/`ge`/`le`, strict gt/lt) does NOT apply here —
+ * sending `ge`/`le` to this endpoint would be silently dropped, so
+ * these entries must stay on gt/lt.
+ *
  * 'today' includes the currently-airing show (`start <
  * end-of-today AND stop > now`) — matches the user's mental
  * model of "today's remaining schedule, including what I'm

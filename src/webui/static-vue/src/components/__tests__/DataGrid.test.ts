@@ -36,6 +36,7 @@ vi.mock('@/composables/useIsPhone', async () => {
 })
 
 import DataGrid from '../DataGrid.vue'
+import ColumnHeaderMenu from '../ColumnHeaderMenu.vue'
 import type { ColumnDef } from '@/types/column'
 import { channelNumberCompare } from '@/utils/channelNumberSort'
 
@@ -104,6 +105,34 @@ describe('DataGrid', () => {
 
   afterEach(() => {
     /* clear any localStorage residue from selection tests */
+  })
+
+  describe('numeric funnel tooltip (filterTitle)', () => {
+    /* The numeric filter meta value is a NumericFilterModel object;
+     * the funnel hover must render its glyph + value(s), never the
+     * stringified object. */
+    const numCols: ColumnDef[] = [
+      { field: 'bytes', label: 'Bytes', sortable: true, minVisible: 'phone', filterType: 'numeric' },
+    ]
+
+    function titleFor(model: unknown): string | undefined {
+      const wrapper = mountGrid({
+        columns: numCols,
+        entries: [{ uuid: 'a', title: 'A', bytes: 1 }],
+        filters: { bytes: { value: model, matchMode: 'equals' } },
+      })
+      return wrapper.findComponent(ColumnHeaderMenu).props('filterTitle') as string | undefined
+    }
+
+    it('renders operator glyph + value, not "[object Object]"', () => {
+      expect(titleFor({ op: 'gt', value: 5, value2: null })).toBe('Filter: > 5')
+      expect(titleFor({ op: 'ge', value: 5, value2: null })).toBe('Filter: ≥ 5')
+      expect(titleFor({ op: 'ne', value: 5, value2: null })).toBe('Filter: ≠ 5')
+    })
+
+    it('renders a between model as "min – max"', () => {
+      expect(titleFor({ op: 'between', value: 5, value2: 10 })).toBe('Filter: 5 – 10')
+    })
   })
 
   it('renders error banner when error prop is set', () => {
