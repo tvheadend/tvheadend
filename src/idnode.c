@@ -887,8 +887,11 @@ idnode_filter
       switch(f->comp) {
         case IC_IN: r = strstr(str, f->u.s) == NULL; break;
         case IC_EQ: r = strcmp(str, f->u.s) != 0; break;
-        case IC_LT: r = strcmp(str, f->u.s) > 0; break;
-        case IC_GT: r = strcmp(str, f->u.s) < 0; break;
+        case IC_LT: r = strcmp(str, f->u.s) >= 0; break;
+        case IC_GT: r = strcmp(str, f->u.s) <= 0; break;
+        case IC_GE: r = strcmp(str, f->u.s) < 0; break;
+        case IC_LE: r = strcmp(str, f->u.s) > 0; break;
+        case IC_NE: r = strcmp(str, f->u.s) == 0; break;
         case IC_RE: r = !!regexec(&f->u.re, str, 0, NULL, 0); break;
       }
       if (strdisp)
@@ -909,11 +912,23 @@ idnode_filter
             return 1;
           break;
         case IC_LT:
-          if (a > b)
+          if (a >= b)
             return 1;
           break;
         case IC_GT:
+          if (a <= b)
+            return 1;
+          break;
+        case IC_GE:
           if (a < b)
+            return 1;
+          break;
+        case IC_LE:
+          if (a > b)
+            return 1;
+          break;
+        case IC_NE:
+          if (a == b)
             return 1;
           break;
       }
@@ -931,11 +946,23 @@ idnode_filter
             return 1;
           break;
         case IC_LT:
-          if (a > b)
+          if (a >= b)
             return 1;
           break;
         case IC_GT:
+          if (a <= b)
+            return 1;
+          break;
+        case IC_GE:
           if (a < b)
+            return 1;
+          break;
+        case IC_LE:
+          if (a > b)
+            return 1;
+          break;
+        case IC_NE:
+          if (a == b)
             return 1;
           break;
       }
