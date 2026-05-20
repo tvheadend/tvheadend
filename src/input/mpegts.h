@@ -814,6 +814,8 @@ void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
 
 void mpegts_input_status_timer ( void *p );
 
+void input_add_bytes(tvh_input_stream_stats_t *ss, size_t bytes);
+
 int mpegts_input_grace ( mpegts_input_t * mi, mpegts_mux_t * mm );
 
 int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, int flags, int weight );
