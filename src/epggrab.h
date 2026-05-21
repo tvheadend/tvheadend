@@ -317,6 +317,22 @@ struct epggrab_module_ota_scraper
 /*
  *
  */
+/*
+ * EIT processing policy. Per-service value selects which EIT sub-tables
+ * are accepted for that service; the per-service Default value defers
+ * to the global default (which therefore omits Default from its choice
+ * list). Adaptive accepts both actual- and other-TS but, once the
+ * service's own actual-TS schedule has been received, drops further
+ * other-TS for it so a neighbouring multiplex's coarse description
+ * cannot overwrite the service's detailed schedule.
+ */
+#define EIT_PROCESSING_DEFAULT       0   /* per-service only: use global */
+#define EIT_PROCESSING_NONE          1
+#define EIT_PROCESSING_ACTUAL_ONLY   2
+#define EIT_PROCESSING_OTHER_ONLY    3
+#define EIT_PROCESSING_EITHER        4
+#define EIT_PROCESSING_ADAPTIVE      5
+
 typedef struct epggrab_conf {
   idnode_t              idnode;
   char                 *cron;
@@ -330,6 +346,7 @@ typedef struct epggrab_conf {
   char                 *ota_genre_translation;
   uint32_t              ota_timeout;
   uint32_t              ota_initial;
+  uint32_t              eit_processing_default;
   uint32_t              int_initial;
 } epggrab_conf_t;
 

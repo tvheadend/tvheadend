@@ -1285,8 +1285,54 @@ svc_ok:
   if (!LIST_FIRST(&svc->s_channels))
     goto done;
 
-  if (svc->s_dvb_ignore_eit)
+  /* Apply the effective EIT processing policy for this service:
+   * the per-service value, falling back to the global default when
+   * the service is set to Default. Tableid ranges in this callback
+   * (see the bounds check earlier in this function) are
+   *   0x4e               actual-TS present/following
+   *   0x50-0x5f          actual-TS schedule
+   *   0x4f, 0x60-0x6f    other-TS present/following + schedule. */
+  int processing = svc->s_dvb_eit_processing;
+  if (processing == EIT_PROCESSING_DEFAULT)
+    processing = epggrab_conf.eit_processing_default;
+
+  switch (processing) {
+  case EIT_PROCESSING_NONE:
     goto done;
+  case EIT_PROCESSING_ACTUAL_ONLY:
+    if (tableid == 0x4f || tableid >= 0x60)
+      goto done;
+    break;
+  case EIT_PROCESSING_OTHER_ONLY:
+    if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60))
+      goto done;
+    break;
+  case EIT_PROCESSING_ADAPTIVE:
+    /* Track actual-TS schedule arrival per service. Once seen,
+     * drop further other-TS for it so a neighbouring multiplex's
+     * coarse description cannot overwrite the service's own
+     * detailed schedule. Services whose actual-TS is never
+     * received keep using other-TS, so a dedicated EPG multiplex
+     * still works. P/F (0x4e / 0x4f) is only two events per
+     * service and is not used as the "actual-TS seen" trigger. */
+    if (tableid >= 0x50 && tableid < 0x60) {
+      if (!svc->s_dvb_eit_actual_seen) {
+        svc->s_dvb_eit_actual_seen = 1;
+        tvhtrace(LS_TBL_EIT, "%s: %s actual-TS schedule seen",
+                 mt->mt_name, svc->s_nicename);
+      }
+    } else if ((tableid == 0x4f || tableid >= 0x60) &&
+               svc->s_dvb_eit_actual_seen) {
+      tvhtrace(LS_TBL_EIT,
+               "%s: skip other-TS tid 0x%02X for %s, actual-TS seen",
+               mt->mt_name, tableid, svc->s_nicename);
+      goto done;
+    }
+    break;
+  case EIT_PROCESSING_EITHER:
+  default:
+    break;
+  }
 
   /* Queue events */
   len -= 11;

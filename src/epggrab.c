@@ -333,9 +333,25 @@ epggrab_class_ota_genre_translation_notify(void *self, const char *lang)
   epggrab_ota_set_genre_translation();
 }
 
+static htsmsg_t *
+epggrab_class_eit_processing_default_list(void *o, const char *lang)
+{
+  /* Per-service EIT_PROCESSING_DEFAULT defers here, so the global
+   * choice list omits Default itself. */
+  static const struct strtab tab[] = {
+    { N_("None"),                         EIT_PROCESSING_NONE        },
+    { N_("Actual transport stream only"), EIT_PROCESSING_ACTUAL_ONLY },
+    { N_("Other transport stream only"),  EIT_PROCESSING_OTHER_ONLY  },
+    { N_("Either"),                       EIT_PROCESSING_EITHER      },
+    { N_("Adaptive"),                     EIT_PROCESSING_ADAPTIVE    },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 CLASS_DOC(epgconf)
 PROP_DOC(cron)
 PROP_DOC(ota_genre_translation)
+PROP_DOC(eit_processing_default)
 
 const idclass_t epggrab_class = {
   .ic_snode      = &epggrab_conf.idnode,
@@ -467,6 +483,20 @@ const idclass_t epggrab_class = {
       .group  = 3,
     },
     {
+      .type   = PT_INT,
+      .id     = "eit_processing_default",
+      .name   = N_("EIT processing (default)"),
+      .desc   = N_("Default EIT processing policy applied to "
+                   "services whose own \"EIT processing\" is set "
+                   "to Default. See Help for the full policy "
+                   "descriptions."),
+      .doc    = prop_doc_eit_processing_default,
+      .off    = offsetof(epggrab_conf_t, eit_processing_default),
+      .opts   = PO_ADVANCED | PO_DOC_NLIST,
+      .list   = epggrab_class_eit_processing_default_list,
+      .group  = 3,
+    },
+    {
       .type   = PT_STR,
       .id     = "ota_cron",
       .name   = N_("Over-the-air Cron multi-line"),
@@ -587,6 +617,7 @@ void epggrab_init ( void )
   epggrab_conf.epgdb_periodicsave = 0;
   epggrab_conf.epgdb_saveafterimport = 0;
   epggrab_conf.epgdb_processparentallabels = 0;
+  epggrab_conf.eit_processing_default = EIT_PROCESSING_EITHER;
 
   epggrab_cron_multi              = NULL;
 
