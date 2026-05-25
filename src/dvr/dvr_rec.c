@@ -73,7 +73,9 @@ dvr_spawn_fetch_artwork(dvr_entry_t *de)
 int
 dvr_rec_subscribe(dvr_entry_t *de)
 {
-  char buf[100];
+  const char *title;
+  char *buf;
+  size_t buflen;
   int weight;
   profile_t *pro;
   profile_chain_t *prch = NULL;
@@ -94,7 +96,14 @@ dvr_rec_subscribe(dvr_entry_t *de)
     pri = DVR_PRIO_NORMAL;
   weight = prio2weight[pri];
 
-  snprintf(buf, sizeof(buf), "DVR: %s", lang_str_get(de->de_title, NULL));
+  /* Size the buffer to the actual title so long multibyte titles
+   * (CJK, emoji) aren't truncated mid-UTF-8 — a partial codepoint
+   * would otherwise break the comet/ws JSON feed. */
+  title = lang_str_get(de->de_title, NULL);
+  if (title == NULL) title = "";
+  buflen = strlen(title) + sizeof("DVR: ");
+  buf = alloca(buflen);
+  snprintf(buf, buflen, "DVR: %s", title);
 
   if (de->de_owner && de->de_owner[0] != '\0') {
     aa = access_get_by_username(de->de_owner);
