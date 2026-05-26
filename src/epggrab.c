@@ -51,6 +51,19 @@ static TAILQ_HEAD(, epggrab_module) epggrab_data_modules;
 
 static memoryinfo_t epggrab_data_memoryinfo = { .my_name = "EPG grabber data queue" };
 
+#define EPGGRAB_DATA_QUEUE_LIMIT (8 * 1024 * 1024)
+
+static void
+epggrab_queue_size_sub ( epggrab_module_t *mod, const epggrab_queued_data_t *eq )
+{
+  size_t len = sizeof(*eq) + eq->eq_len;
+
+  if (mod->data_queue_size >= len)
+    mod->data_queue_size -= len;
+  else
+    mod->data_queue_size = 0;
+}
+
 /* Config */
 epggrab_module_list_t  epggrab_modules;
 
@@ -172,6 +185,7 @@ static void *_epggrab_data_thread( void *aux )
         eq = TAILQ_FIRST(&mod->data_queue);
         if (eq) {
           TAILQ_REMOVE(&mod->data_queue, eq, eq_link);
+          epggrab_queue_size_sub(mod, eq);
           if (TAILQ_EMPTY(&mod->data_queue))
             TAILQ_REMOVE(&epggrab_data_modules, mod, qlink);
         }
@@ -190,6 +204,7 @@ static void *_epggrab_data_thread( void *aux )
   while ((mod = TAILQ_FIRST(&epggrab_data_modules)) != NULL) {
     while ((eq = TAILQ_FIRST(&mod->data_queue)) != NULL) {
       TAILQ_REMOVE(&mod->data_queue, eq, eq_link);
+      epggrab_queue_size_sub(mod, eq);
       memoryinfo_free(&epggrab_data_memoryinfo, sizeof(*eq) + eq->eq_len);
       free(eq);
     }
@@ -205,6 +220,7 @@ void epggrab_queue_data(epggrab_module_t *mod,
 {
   epggrab_queued_data_t *eq;
   size_t len;
+  int log_warn = 0;
 
   if (!atomic_get(&epggrab_running))
     return;
@@ -217,13 +233,25 @@ void epggrab_queue_data(epggrab_module_t *mod,
     memcpy(eq->eq_data, data1, len1);
   if (len2)
     memcpy(eq->eq_data + len1, data2, len2);
-  memoryinfo_alloc(&epggrab_data_memoryinfo, len);
   tvh_mutex_lock(&epggrab_data_mutex);
+  if (mod->data_queue_size + len > EPGGRAB_DATA_QUEUE_LIMIT) {
+    if (tvhlog_limit(&mod->data_queue_loglimit, 10))
+      log_warn = 1;
+    tvh_mutex_unlock(&epggrab_data_mutex);
+    if (log_warn)
+      tvhwarn(mod->subsys,
+              "%s: too much queued EPG input data (over %dMB), discarding new",
+              mod->id, EPGGRAB_DATA_QUEUE_LIMIT / (1024 * 1024));
+    free(eq);
+    return;
+  }
   if (TAILQ_EMPTY(&mod->data_queue)) {
     tvh_cond_signal(&epggrab_data_cond, 0);
     TAILQ_INSERT_TAIL(&epggrab_data_modules, mod, qlink);
   }
+  memoryinfo_alloc(&epggrab_data_memoryinfo, len);
   TAILQ_INSERT_TAIL(&mod->data_queue, eq, eq_link);
+  mod->data_queue_size += len;
   tvh_mutex_unlock(&epggrab_data_mutex);
 }
 

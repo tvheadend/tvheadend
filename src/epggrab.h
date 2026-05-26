@@ -173,6 +173,8 @@ struct epggrab_module
   epggrab_channel_tree_t       channels;  ///< Channel list
 
   TAILQ_HEAD(, epggrab_queued_data) data_queue;
+  size_t                       data_queue_size;
+  tvhlog_limit_t               data_queue_loglimit;
 
   /* Activate */
   int       (*activate)( void *m, int activate );

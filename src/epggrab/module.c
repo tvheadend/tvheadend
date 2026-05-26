@@ -358,6 +358,8 @@ epggrab_module_t *epggrab_module_create
   skel->priority = priority;
   RB_INIT(&skel->channels);
   TAILQ_INIT(&skel->data_queue);
+  skel->data_queue_size = 0;
+  tvhlog_limit_reset(&skel->data_queue_loglimit);
 
   /* Insert */
   assert(!epggrab_module_find_by_id(id));
