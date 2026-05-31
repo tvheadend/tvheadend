@@ -178,6 +178,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = DVR_RET_ONREMOVE;
   cfg->dvr_removal_days = DVR_RET_REM_FOREVER;
+  cfg->dvr_max_data_errors = DVR_MAX_DATA_ERRORS;
   cfg->dvr_clone = 1;
   cfg->dvr_tag_files = 1;
   cfg->dvr_create_scene_markers = 1;
@@ -1093,6 +1094,18 @@ const idclass_t dvr_config_class = {
                      "schedule a re-record (if possible)."),
       .off      = offsetof(dvr_config_t, dvr_rerecord_errors),
       .opts     = PO_ADVANCED,
+      .group    = 1,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "data-error-threshold",
+      .name     = N_("Data error threshold for failed recordings (0=off)"),
+      .desc     = N_("If a completed recording has this many or more data "
+                     "errors, mark it as failed. Set to 0 to disable this "
+                     "check."),
+      .off      = offsetof(dvr_config_t, dvr_max_data_errors),
+      .opts     = PO_ADVANCED,
+      .def.u32  = DVR_MAX_DATA_ERRORS,
       .group    = 1,
     },
     {

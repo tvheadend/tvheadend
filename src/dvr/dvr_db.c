@@ -161,7 +161,7 @@ int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
 
   if (success) {
     if (entry->de_last_error == SM_CODE_OK)
-      success = entry->de_data_errors < DVR_MAX_DATA_ERRORS;
+      success = !dvr_entry_data_error_limit_reached(entry);
     else
       success = dvr_entry_is_completed_ok(entry);
   }
@@ -679,7 +679,7 @@ dvr_entry_status(dvr_entry_t *de)
     if (dvr_get_filesize(de, 0) < 0 && !de->de_file_removed)
       return N_("File missing");
     if(de->de_last_error != SM_CODE_FORCE_OK &&
-       de->de_data_errors >= DVR_MAX_DATA_ERRORS) /* user configurable threshold? */
+       dvr_entry_data_error_limit_reached(de))
       return N_("Too many data errors");
     if(de->de_last_error)
       return streaming_code2txt(de->de_last_error);
