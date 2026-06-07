@@ -324,6 +324,10 @@ imagecache_image_fetch ( imagecache_image_t *img )
     tvherror(LS_IMAGECACHE, "Unable to parse url '%s'", img->url);
     goto error_lock;
   }
+  if (strcmp(url.scheme, "http") && strcmp(url.scheme, "https")) {
+    tvherror(LS_IMAGECACHE, "Disallowed URL scheme '%s' for '%s'", url.scheme, img->url);
+    goto error_lock;
+  }
 
   hc = http_client_connect(NULL, HTTP_VERSION_1_1, url.scheme,
                            url.host, url.port, NULL);
