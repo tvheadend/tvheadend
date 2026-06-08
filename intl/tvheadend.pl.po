@@ -559,7 +559,7 @@ msgstr "Aktywne"
 
 #: src/epggrab.c:343 src/input/mpegts/mpegts_service.c:103
 msgid "Actual transport stream only"
-msgstr ""
+msgstr "Tylko rzeczywisty strumień transportu"
 
 #: src/streaming.c:481
 msgid "Adapter in use by another subscription"
@@ -567,7 +567,7 @@ msgstr "Adapter w użyciu przez inną subskrypcję"
 
 #: src/epggrab.c:346 src/input/mpegts/mpegts_service.c:106
 msgid "Adaptive"
-msgstr ""
+msgstr "Adaptacyjne"
 
 #: src/config.c:2368
 msgid "Add channel numbers to the channel name list"
@@ -2484,7 +2484,7 @@ msgstr "Taniec"
 
 #: src/dvr/dvr_config.c:1102
 msgid "Data error threshold for failed recordings (0=off)"
-msgstr ""
+msgstr "Próg błędu danych dla nieudanych nagrań (0 = wyłączone)"
 
 #: src/dvr/dvr_db.c:4825
 msgid "Data errors"
@@ -2571,13 +2571,16 @@ msgstr "Domyślny"
 
 #: src/input/mpegts/mpegts_service.c:101
 msgid "Default (use global setting)"
-msgstr ""
+msgstr "Domyślne (użyj ustawienia globalnego)"
 
 #: src/epggrab.c:489
 msgid ""
 "Default EIT processing policy applied to services whose own \"EIT "
 "processing\" is set to Default. See Help for the full policy descriptions."
 msgstr ""
+"Domyślne zasady przetwarzania EIT stosowane do usług, których własne "
+"„Przetwarzanie EIT” jest ustawione na „Domyślne”. Pełny opis polityki "
+"znajduje się w pomocy."
 
 #: src/config.c:2278
 msgid "Default language"
@@ -2949,11 +2952,11 @@ msgstr "EIT - pomiń sprawdzanie TSID"
 
 #: src/input/mpegts/mpegts_service.c:244
 msgid "EIT processing"
-msgstr ""
+msgstr "Przetwarzanie EIT"
 
 #: src/epggrab.c:488
 msgid "EIT processing (default)"
-msgstr ""
+msgstr "Przetwarzanie EIT (domyślne)"
 
 #: src/input/mpegts/mpegts_network.c:312
 msgid "EIT time offset"
@@ -3041,7 +3044,7 @@ msgstr "Ustawienia EPG/autonagrań"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:586
 msgid "EXTERNAL"
-msgstr "ZEWNETRZNY"
+msgstr "ZEWNĘTRZNY"
 
 #: src/epg.c:2062 src/epg.c:2064
 msgid "Economics"
@@ -3062,7 +3065,7 @@ msgstr "Edukacyjny"
 
 #: src/epggrab.c:345 src/input/mpegts/mpegts_service.c:105
 msgid "Either"
-msgstr ""
+msgstr "Oba"
 
 #: src/tvhlog.c:153
 msgid "Electronic Program Guide"
@@ -4630,6 +4633,8 @@ msgid ""
 "If a completed recording has this many or more data errors, mark it as "
 "failed. Set to 0 to disable this check."
 msgstr ""
+"Jeśli ukończone nagranie zawiera taką liczbę lub więcej błędów danych, "
+"oznacz je jako nieudane. Ustaw na 0, aby wyłączyć to sprawdzanie."
 
 #: src/epggrab/module/xmltv.c:1477
 msgid ""
@@ -6631,7 +6636,7 @@ msgstr "Inne usługi bez strumieni A/V"
 
 #: src/epggrab.c:344 src/input/mpegts/mpegts_service.c:104
 msgid "Other transport stream only"
-msgstr ""
+msgstr "Tylko inny strumień transportu"
 
 #: src/epggrab/module.c:54
 msgid "Over-the-air"
@@ -7274,7 +7279,7 @@ msgstr "Import PyEPG"
 #: src/input/mpegts/mpegts_mux_dvb.c:824 src/input/mpegts/mpegts_mux_dvb.c:875
 #: src/input/mpegts/mpegts_mux_dvb.c:1039
 msgid "QAM/AUTO"
-msgstr ""
+msgstr "QAM/AUTOMATYCZNIE"
 
 #: src/transcoding/codec/codecs/libs/libvpx.c:106
 msgid "Quality"
@@ -11947,6 +11952,8 @@ msgid ""
 "Which EIT sub-tables are accepted for this service. Default defers to the "
 "global setting. See Help for the full policy descriptions."
 msgstr ""
+"Które podtabele EIT są akceptowane dla tej usługi. Domyślnie odpowiada "
+"ustawieniu globalnemu. Pełny opis zasad znajduje się w pomocy."
 
 #: src/epg.c:1999
 msgid "Winter sports"
