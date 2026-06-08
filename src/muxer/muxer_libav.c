@@ -111,6 +111,9 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     break;
 
   case MC_MPEGPS:
+    // Set the maximum bitrate permitted by the VBV (9.8 Mbps for DVD)
+    c->rc_max_rate = 9800000;
+    // Set the VBV buffer size (1.835 Mbps for DVD)
     c->rc_buffer_size = 224*1024*8;
     //Fall-through
   case MC_MPEGTS:
@@ -157,12 +160,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->channels      = ssc->es_channels;
 #endif
 
-#if 0
-    c->time_base.num = 1;
-    c->time_base.den = c->sample_rate;
-#else
     c->time_base     = st->time_base;
-#endif
 
     avcodec_parameters_from_context(st->codecpar, c);
     av_dict_set(&st->metadata, "language", ssc->es_lang, 0);
@@ -172,9 +170,14 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->width      = ssc->es_width;
     c->height     = ssc->es_height;
 
-    c->time_base.num = 1;
-    c->time_base.den = 25;
-
+    if (st->time_base.num == 0 || st->time_base.den == 0) {
+      // Fallback to default timebase
+      st->time_base = mpeg_tc;
+    }
+    // The function reduces the fraction num/den to dst_num/dst_den
+    // Note the inversion here! Timebase is 1/FPS
+    av_reduce(&c->time_base.den, &c->time_base.num, st->time_base.num, ssc->es_frame_duration, INT_MAX);
+    
     c->sample_aspect_ratio.num = ssc->es_aspect_num;
     c->sample_aspect_ratio.den = ssc->es_aspect_den;
 
@@ -188,38 +191,40 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     st->sample_aspect_ratio.num = c->sample_aspect_ratio.num;
     st->sample_aspect_ratio.den = c->sample_aspect_ratio.den;
 
-    if (ssc->es_type == SCT_H264) {
-      if (av_bsf_alloc(lm->bsf_h264_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for h264_mp4toannexb");
+    if (ssc->es_type != SCT_MPEG2VIDEO && lm->m_config.m_type != MC_MPEGPS) {
+      if (ssc->es_type == SCT_H264) {
+        if (av_bsf_alloc(lm->bsf_h264_filter, &lm->ctx)) {
+          tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for h264_mp4toannexb");
+          goto fail;
+        }
+      }
+      else if (ssc->es_type == SCT_HEVC) {
+        if (av_bsf_alloc(lm->bsf_hevc_filter, &lm->ctx)) {
+          tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for hevc_mp4toannexb");
+          goto fail;
+        }
+      }
+      else if (ssc->es_type == SCT_VP9) {
+        if (av_bsf_alloc(lm->bsf_vp9_filter, &lm->ctx)) {
+          tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for vp9_superframe ");
+          goto fail;
+        }
+      }
+      else {
+        if (av_bsf_alloc(lm->bsf_h264_filter, &lm->ctx)) {
+          tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for h264_mp4toannexb");
+          goto fail;
+        }
+      }
+      if(avcodec_parameters_copy(lm->ctx->par_in, st->codecpar)) {
+        tvherror(LS_LIBAV,  "Failed to copy paramters to AVBSFContext");
         goto fail;
       }
-    }
-    else if (ssc->es_type == SCT_HEVC) {
-      if (av_bsf_alloc(lm->bsf_hevc_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for hevc_mp4toannexb");
+      lm->ctx->time_base_in = st->time_base;
+      if (av_bsf_init(lm->ctx)) {
+        tvherror(LS_LIBAV,  "Failed to init AVBSFContext");
         goto fail;
       }
-    }
-    else if (ssc->es_type == SCT_VP9) {
-      if (av_bsf_alloc(lm->bsf_vp9_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for vp9_superframe ");
-        goto fail;
-      }
-    }
-    else {
-      if (av_bsf_alloc(lm->bsf_h264_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for h264_mp4toannexb");
-        goto fail;
-      }
-    }
-    if(avcodec_parameters_copy(lm->ctx->par_in, st->codecpar)) {
-      tvherror(LS_LIBAV,  "Failed to copy paramters to AVBSFContext");
-      goto fail;
-    }
-    lm->ctx->time_base_in = st->time_base;
-    if (av_bsf_init(lm->ctx)) {
-      tvherror(LS_LIBAV,  "Failed to init AVBSFContext");
-      goto fail;
     }
   } else if(SCT_ISSUBTITLE(ssc->es_type)) {
     c->codec_type = AVMEDIA_TYPE_SUBTITLE;
