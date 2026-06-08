@@ -4,8 +4,8 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # 
 # Translators:
-# Marek Adamski, 2026
 # Christian Hewitt, 2026
+# Marek Adamski, 2026
 # 
 #, fuzzy
 msgid ""
@@ -14,7 +14,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-08 03:10+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: Christian Hewitt, 2026\n"
+"Last-Translator: Marek Adamski, 2026\n"
 "Language-Team: Polish (https://app.transifex.com/tvheadend/teams/43381/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -407,7 +407,7 @@ msgstr "), lub tych, które obecnie są transmitowane ("
 #: src/docs_inc.c:5379 src/docs_inc.c:5387 src/docs_inc.c:5431
 #: src/docs_inc.c:5439
 msgid ")."
-msgstr ""
+msgstr ")."
 
 #: src/docs_inc.c:308
 msgid "). Can be used with the other filters."
@@ -1044,6 +1044,11 @@ msgid ""
 " actual-TS is never received keep using other-TS, so a dedicated EPG "
 "multiplex still works."
 msgstr ""
+"Zaakceptuj oba, ale gdy w tej sesji zostanie wyświetlony harmonogram usługi "
+"w rzeczywistym TS, usuń dla niego dalsze inne TS. Zgrubny opis sąsiedniego "
+"multipleksu nie może nadpisać szczegółowego harmonogramu usługi. Usługi, "
+"których rzeczywisty TS nigdy nie zostanie odebrany, nadal korzystają z "
+"innych TS, więc dedykowany multipleks EPG nadal działa."
 
 #: src/docs_inc.c:5395
 msgid ""
@@ -1053,12 +1058,19 @@ msgid ""
 "actual-TS is never received keep using other-TS (so a dedicated EPG "
 "multiplex still works)."
 msgstr ""
+"Zaakceptuj oba, ale gdy harmonogram rzeczywistego TS tej usługi zostanie "
+"wyświetlony w tej sesji, usuń dla niego dalsze inne TS. Zgrubny opis sąsiada"
+" nie może nadpisać szczegółowego harmonogramu usługi, podczas gdy usługi, "
+"których rzeczywisty TS nigdy nie zostanie odebrany, nadal korzystają z "
+"innych TS (więc dedykowany multipleks EPG nadal działa)."
 
 #: src/docs_inc.c:5391 src/docs_inc.c:5443
 msgid ""
 "Accept both, no precedence. Today's default behaviour — what tvheadend has "
 "always done."
 msgstr ""
+"Zaakceptuj oba, bez precedensu. Dzisiejsze domyślne zachowanie — to, co "
+"tvheadend zawsze robił."
 
 #: src/docs_inc.c:223
 msgid "Accept icon"
@@ -1066,11 +1078,11 @@ msgstr "Ikona akceptacji"
 
 #: src/docs_inc.c:5375 src/docs_inc.c:5427
 msgid "Accept only actual-TS sub-tables ("
-msgstr ""
+msgstr "Akceptuj tylko rzeczywiste podtabele TS ("
 
 #: src/docs_inc.c:5383 src/docs_inc.c:5435
 msgid "Accept only other-TS sub-tables ("
-msgstr ""
+msgstr "Akceptuj tylko inne podtabele TS ("
 
 #: src/docs_inc.c:6251
 msgid "Access"
@@ -1107,7 +1119,7 @@ msgstr "Rzeczywiste liczby nie mają znaczenia, ważne, że jest to liczba."
 
 #: src/docs_inc.c:5373 src/docs_inc.c:5425
 msgid "Actual transport stream only"
-msgstr ""
+msgstr "Tylko rzeczywisty strumień transportu"
 
 #: src/docs_inc.c:772
 msgid "Adapter example"
@@ -1115,7 +1127,7 @@ msgstr "Przykład adaptera"
 
 #: src/docs_inc.c:5393 src/docs_inc.c:5445
 msgid "Adaptive"
-msgstr ""
+msgstr "Adaptacyjne"
 
 #: src/docs_inc.c:1164 src/docs_inc.c:2412
 msgid "Add"
@@ -1390,6 +1402,8 @@ msgid ""
 "Any service can override this global default via its own _EIT processing_ "
 "setting."
 msgstr ""
+"Każda usługa może zastąpić tę globalną wartość domyślną za pomocą własnego "
+"ustawienia _Przetwarzanie EIT_."
 
 #: src/docs_inc.c:1950
 msgid "Appendices"
@@ -1632,7 +1646,7 @@ msgstr "Zanim zaczniesz"
 
 #: src/docs_inc.c:5355 src/docs_inc.c:5419
 msgid "Behaviour"
-msgstr ""
+msgstr "Zachowanie"
 
 #: src/docs_inc.c:1150
 msgid ""
@@ -2446,6 +2460,7 @@ msgstr "Tabele CSA DVB (deszyfrowanie)"
 #: src/docs_inc.c:5345 src/docs_inc.c:5409
 msgid "DVB EIT is broadcast in two forms, distinguished by `table_id`:"
 msgstr ""
+"EIT DVB jest nadawany w dwóch formach, rozróżnianych za pomocą `table_id`:"
 
 #: src/docs_inc.c:3484
 msgid "DVB EPG Tables"
@@ -2545,7 +2560,7 @@ msgstr "Domyślna karta w interfejsie sieciowym"
 
 #: src/docs_inc.c:5359
 msgid "Defer to the global"
-msgstr ""
+msgstr "Odwołaj się do globalnego"
 
 #: src/docs_inc.c:2420
 msgid "Delete"
@@ -2808,7 +2823,7 @@ msgstr ""
 
 #: src/docs_inc.c:5361
 msgid "EIT processing (default)"
-msgstr ""
+msgstr "Przetwarzanie EIT (domyślne)"
 
 #: src/docs_inc.c:6137
 msgid ""
@@ -2901,7 +2916,7 @@ msgstr "Edycja (w siatce)"
 
 #: src/docs_inc.c:5389 src/docs_inc.c:5441
 msgid "Either"
-msgstr ""
+msgstr "Oba"
 
 #: src/docs_inc.c:246 src/docs_inc.c:1008 src/docs_inc.c:1924
 msgid "Electronic Program Guide"
@@ -3412,6 +3427,10 @@ msgid ""
 "behaviour. Switch to __Adaptive__ to opt into the actual-TS-precedence "
 "heuristic without configuring services individually."
 msgstr ""
+"Nowe instalacje domyślnie wybierają opcję __Oba__, co zachowuje historyczne "
+"zachowanie. Przełącz się na __Adaptacyjne__, aby włączyć heurystykę "
+"priorytetu rzeczywistego TS bez konieczności indywidualnej konfiguracji "
+"usług."
 
 #: src/docs_inc.c:2484
 msgid "Frontends"
@@ -4059,11 +4078,11 @@ msgstr "Ignoruj EPG (EIT)"
 
 #: src/docs_inc.c:5423
 msgid "Ignore all EIT for services set to Default."
-msgstr ""
+msgstr "Ignoruj ​​wszystkie EIT dla usług ustawionych jako domyślne."
 
 #: src/docs_inc.c:5367
 msgid "Ignore all EIT for this service. Equivalent to the legacy"
-msgstr ""
+msgstr "Ignoruj ​​wszystkie EIT dla tej usługi. Odpowiednik starszej wersji."
 
 #: src/docs_inc.c:4737
 msgid ""
@@ -4824,6 +4843,11 @@ msgid ""
 "intermittent, or one where you trust the neighbour's other-TS more than the "
 "service's own."
 msgstr ""
+"Większość instalacji powinna pozostawić ustawienie _Domyślne_ i wybrać "
+"politykę globalnie. Nadpisania dla poszczególnych usług są przydatne do "
+"diagnozowania lub obchodzenia specyficznych dla nadawcy problemów — usługi, "
+"której własny rzeczywisty EIT TS jest przerywany lub takiej, w której ufasz "
+"innemu TS sąsiada bardziej niż własnemu."
 
 #: src/docs_inc.c:1292
 msgid "Move Down"
@@ -5425,7 +5449,7 @@ msgstr "Filtr innego strumienia."
 
 #: src/docs_inc.c:5381 src/docs_inc.c:5433
 msgid "Other transport stream only"
-msgstr ""
+msgstr "Tylko inny strumień transportu"
 
 #: src/docs_inc.c:980
 msgid "Output Targets"
@@ -7075,6 +7099,9 @@ msgid ""
 "only once detailed actual-TS data has actually been received. Inspired by "
 "VDR's adaptive EIT handling."
 msgstr ""
+"Zasady adaptacyjne korygują się automatycznie dla każdej usługi: blokują "
+"inne TS tylko po otrzymaniu szczegółowych danych o rzeczywistym TS. "
+"Zainspirowane adaptacyjnym przetwarzaniem EIT w VDR."
 
 #: src/docs_inc.c:280
 msgid ""
@@ -8148,6 +8175,8 @@ msgid ""
 "This setting controls which Event Information Table (EIT) sub-tables are "
 "accepted when building the EPG for this service."
 msgstr ""
+"To ustawienie kontroluje, które podtabele tabeli informacji o zdarzeniach "
+"(EIT) są akceptowane podczas tworzenia EPG dla tej usługi."
 
 #: src/docs_inc.c:5407
 msgid ""
@@ -8155,6 +8184,9 @@ msgid ""
 "applied to every DVB service whose own _EIT processing_ is left at _Default_"
 " ."
 msgstr ""
+"To ustawienie stanowi domyślną zasadę przetwarzania EIT (tabela informacji o"
+" zdarzeniach) stosowaną do każdej usługi DVB, której własne _przetwarzanie "
+"EIT_ jest pozostawione na poziomie _Domyślne_."
 
 #: src/docs_inc.c:3980
 msgid ""
@@ -8969,7 +9001,7 @@ msgstr "VP8"
 
 #: src/docs_inc.c:5353 src/docs_inc.c:5417
 msgid "Value"
-msgstr ""
+msgstr "Wartość"
 
 #: src/docs_inc.c:364
 msgid "Very long programs, e.g. major sporting events"
@@ -9253,6 +9285,10 @@ msgid ""
 " grab cycle, making the EPG flip between a detailed schedule (from actual-"
 "TS) and a coarser placeholder (from other-TS)."
 msgstr ""
+"Bez reguły pierwszeństwa dwa źródła mogą nadpisywać się wzajemnie w każdym "
+"cyklu pobierania, co powoduje, że EPG przełącza się między szczegółowym "
+"harmonogramem (z rzeczywistego TS) a mniej szczegółowym harmonogramem "
+"zastępczym (z innego TS)."
 
 #: src/docs_inc.c:654
 msgid "Wizard"
@@ -9559,6 +9595,8 @@ msgid ""
 "__Actual transport stream EIT__ (`0x4e` / `0x50–0x5f`) — broadcast by the "
 "service's _own_ multiplex. Describes the service itself."
 msgstr ""
+"__Rzeczywisty strumień transportowy EIT__ (`0x4e` / `0x50–0x5f`) — nadawany "
+"przez _własny_ multipleks usługi. Opisuje samą usługę."
 
 #: src/docs_inc.c:418
 msgid "__Age__ : Age rating of the program."
@@ -9834,6 +9872,21 @@ msgid ""
 " Across normal operation (no restart), Adaptive self-heals after the first "
 "actual-TS arrival."
 msgstr ""
+"__Jedno zastrzeżenie operacyjne dla ustawienia adaptacyjnego.__ Stan "
+"„zaobserwowany rzeczywisty TS” jest obserwowany dla każdej sesji i "
+"resetowany po ponownym uruchomieniu tvheadend. Przez krótki okres czasu "
+"podczas uruchamiania inne TS mogą na krótko nadpisać szczegółowy EPG, dopóki"
+" harmonogram rzeczywisty TS każdej usługi nie zostanie ponownie "
+"zaobserwowany w nowej sesji. Wpisy DVR, których połączenie ze zdarzeniem EPG"
+" zostało utworzone przed ponownym uruchomieniem, są ponownie łączone przez "
+"istniejącą funkcję dopasowania rozmytego w `dvr_entry_fuzzy_match` po "
+"zwróceniu danych rzeczywistego TS. Jedyną pozostałą krawędzią jest "
+"nagrywanie już trwające w momencie ponownego uruchomienia, które przypadkowo"
+" otrzymuje aktualizację rozszerzenia czasu zatrzymania w tym oknie wymiany —"
+" rozszerzenie trafia na obiekt zastępczy, a nie na wznowiony wpis, więc "
+"nagrywanie zatrzymuje się w pierwotnie zaplanowanym czasie. Podczas "
+"normalnego działania (bez ponownego uruchomienia) ustawienie adaptacyjne "
+"samoczynnie naprawia się po pierwszym pojawieniu się rzeczywistego TS."
 
 #: src/docs_inc.c:5399
 msgid ""
@@ -9850,12 +9903,30 @@ msgid ""
 "normal operation (no restart), Adaptive self-heals after the first actual-TS"
 " arrival and the placeholder is then permanently filtered for that service."
 msgstr ""
+"__Jedno zastrzeżenie operacyjne dla ustawienia adaptacyjnego.__ Stan "
+"„zaobserwowany rzeczywisty TS” jest obserwowany dla każdej sesji i "
+"resetowany po ponownym uruchomieniu tvheadend. Przez krótki okres czasu "
+"podczas uruchamiania inne TS mogą na krótko nadpisać szczegółowy EPG, dopóki"
+" harmonogram rzeczywistych TS danej usługi nie zostanie ponownie "
+"zaobserwowany w nowej sesji. Wpisy DVR, których połączenie ze zdarzeniem EPG"
+" zostało utworzone przed ponownym uruchomieniem, są ponownie łączone przez "
+"istniejącą funkcję dopasowania rozmytego w `dvr_entry_fuzzy_match` po "
+"zwróceniu danych rzeczywistych TS. Jedyną pozostałą krawędzią jest "
+"nagrywanie już trwające w momencie ponownego uruchomienia, które przypadkowo"
+" otrzymuje aktualizację rozszerzenia czasu zatrzymania w tym oknie wymiany —"
+" rozszerzenie trafia na element zastępczy, a nie na wznowiony wpis, więc "
+"nagrywanie zatrzymuje się w pierwotnie zaplanowanym czasie. Podczas "
+"normalnego działania (bez ponownego uruchomienia) ustawienie adaptacyjne "
+"samoczynnie naprawia się po pierwszym pojawieniu się rzeczywistego TS, a "
+"element zastępczy jest następnie trwale filtrowany dla tej usługi."
 
 #: src/docs_inc.c:5413
 msgid ""
 "__Other transport stream EIT__ (`0x4f` / `0x60–0x6f`) — broadcast by "
 "_another_ multiplex describing this one. Often coarser."
 msgstr ""
+"__Inny strumień transportowy EIT__ (`0x4f` / `0x60–0x6f`) — nadawany przez "
+"_inny_ multipleks opisujący ten. Często bardziej zgrubny."
 
 #: src/docs_inc.c:5349
 msgid ""
@@ -9864,6 +9935,10 @@ msgid ""
 "receiver tuned to one multiplex can still show some EPG for services on "
 "neighbouring multiplexes."
 msgstr ""
+"__Inny strumień transportowy EIT__ (`0x4f` / `0x60–0x6f`) — nadawany przez "
+"_inny_ multipleks opisujący ten. Często o mniejszej gęstości; używany "
+"głównie po to, aby odbiornik dostrojony do jednego multipleksu mógł nadal "
+"wyświetlać EPG dla usług z sąsiednich multipleksów."
 
 #: src/docs_inc.c:1905
 msgid "__Output__ : The output data rate in kb/s."
@@ -10831,7 +10906,7 @@ msgstr "maper-usług"
 
 #: src/docs_inc.c:5363
 msgid "setting under EPG Grabber → OTA. Use this for most services."
-msgstr ""
+msgstr "ustawienie w Grabber EPG → OTA. Użyj tego dla większości usług."
 
 #: src/docs_inc.c:3410
 msgid "settings"
@@ -11029,7 +11104,7 @@ msgstr "aby wymusić skanowanie i skutecznie zapytać tuner, co widzi."
 
 #: src/docs_inc.c:5371
 msgid "toggle."
-msgstr ""
+msgstr "przełącz."
 
 #: src/docs_inc.c:3350
 msgid "tprof"
