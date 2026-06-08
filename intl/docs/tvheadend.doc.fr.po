@@ -4,9 +4,9 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # 
 # Translators:
-# PY RENAUT <pyrenaut@gmail.com>, 2025
 # euca01, 2026
 # Christian Hewitt, 2026
+# PY RENAUT <pyrenaut@gmail.com>, 2026
 # 
 #, fuzzy
 msgid ""
@@ -15,7 +15,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-08 03:10+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: Christian Hewitt, 2026\n"
+"Last-Translator: PY RENAUT <pyrenaut@gmail.com>, 2026\n"
 "Language-Team: French (https://app.transifex.com/tvheadend/teams/43381/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -74,7 +74,7 @@ msgstr ""
 
 #: src/docs_inc.c:1414
 msgid "\"Left Arrow\""
-msgstr "\"Left Arrow\""
+msgstr "\"Flèche gauche\""
 
 #: src/docs_inc.c:1510
 msgid "\"Log closed\""
@@ -90,7 +90,7 @@ msgstr "\"Menubar\""
 
 #: src/docs_inc.c:1566
 msgid "\"Multi-select\""
-msgstr "\"Multi-select\""
+msgstr "\"Sélection multiple\""
 
 #: src/docs_inc.c:1490
 msgid "\"Paging options\""
@@ -98,7 +98,7 @@ msgstr "\"Paging options\""
 
 #: src/docs_inc.c:1408
 msgid "\"Right Arrow\""
-msgstr "\"Right Arrow\""
+msgstr "\"Flèche droite\""
 
 #: src/docs_inc.c:1480
 msgid "\"Split panel example\""
@@ -142,7 +142,7 @@ msgstr "%x"
 
 #: src/docs_inc.c:3116
 msgid "'Accept/OK Icon'"
-msgstr "'Accepter/OK Icône'"
+msgstr "'Accepter/Icône OK '"
 
 #: src/docs_inc.c:2992
 msgid "'Access Entries' Tab"
@@ -7652,8 +7652,8 @@ msgid ""
 "The wizard will restart and reload the interface in your chosen language, "
 "unfortunately not all translations are available/complete."
 msgstr ""
-"The wizard will restart and reload the interface in your chosen language, "
-"unfortunately not all translations are available/complete."
+"L'assistant va redémarrer et relancer l'interface dans la langue choisie "
+"malheureusement, toutes les traductions ne sont pas disponibles/complètes."
 
 #: src/docs_inc.c:4977 src/docs_inc.c:4979
 msgid "Theme"
@@ -7677,7 +7677,7 @@ msgstr ""
 
 #: src/docs_inc.c:3122
 msgid "There was an error."
-msgstr "There was an error."
+msgstr "Il y a eu une erreur."
 
 #: src/docs_inc.c:1973
 msgid "These are not part of the final product, obviously!"
@@ -7685,7 +7685,7 @@ msgstr "These are not part of the final product, obviously!"
 
 #: src/docs_inc.c:4435
 msgid "These profiles are always available."
-msgstr "These profiles are always available."
+msgstr "Ces profils sont toujours disponibles."
 
 #: src/docs_inc.c:5739
 msgid ""
@@ -7800,7 +7800,7 @@ msgstr ""
 #: src/docs_inc.c:1696 src/docs_inc.c:1745 src/docs_inc.c:1780
 #: src/docs_inc.c:1843
 msgid "This is a read-only tab; nothing is configurable."
-msgstr "This is a read-only tab; nothing is configurable."
+msgstr "C'est un onglet en lecture seul, rien n'est configurable."
 
 #: src/docs_inc.c:5233
 msgid ""
@@ -8026,7 +8026,8 @@ msgstr "This tab is used to configure timeshift properties."
 
 #: src/docs_inc.c:3308
 msgid "This tab is used to configure various debugging options in Tvheadend."
-msgstr "This tab is used to configure various debugging options in Tvheadend."
+msgstr ""
+"Cet onglet sert à configurer diverses options de débogage dans Tvheadend."
 
 #: src/docs_inc.c:2474
 msgid ""
@@ -8378,7 +8379,7 @@ msgstr "Tuner C"
 
 #: src/docs_inc.c:700
 msgid "Tuners already in use will not appear."
-msgstr "Tuners already in use will not appear."
+msgstr "Les tuners en cours d'utilisation n'apparaitront pas."
 
 #: src/docs_inc.c:599
 msgid ""
@@ -8623,7 +8624,7 @@ msgstr "Usage: `tvheadend [OPTIONS]`"
 
 #: src/docs_inc.c:2276
 msgid "Use"
-msgstr "Use"
+msgstr "Utiliser"
 
 #: src/docs_inc.c:625
 msgid ""
