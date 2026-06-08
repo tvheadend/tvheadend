@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-27 03:07+0000\n"
+"POT-Creation-Date: 2026-06-08 03:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -41,7 +41,7 @@ msgstr ""
 msgid "# tune repeats"
 msgstr ""
 
-#: src/dvr/dvr_config.c:711
+#: src/dvr/dvr_config.c:712
 msgid "(Default profile)"
 msgstr ""
 
@@ -75,31 +75,31 @@ msgstr ""
 msgid "1"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3751 src/dvr/dvr_db.c:3775 src/dvr/dvr_config.c:748
-#: src/dvr/dvr_config.c:793 src/dvr/dvr_config.c:812
+#: src/dvr/dvr_db.c:3751 src/dvr/dvr_db.c:3775 src/dvr/dvr_config.c:749
+#: src/dvr/dvr_config.c:794 src/dvr/dvr_config.c:813
 msgid "1 day"
 msgstr ""
 
-#: src/dvr/dvr_config.c:788
+#: src/dvr/dvr_config.c:789
 msgid "1 hour"
 msgstr ""
 
-#: src/dvr/dvr_config.c:785
+#: src/dvr/dvr_config.c:786
 msgid "1 minute"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3757 src/dvr/dvr_db.c:3781 src/dvr/dvr_config.c:754
-#: src/dvr/dvr_config.c:800 src/dvr/dvr_config.c:818
+#: src/dvr/dvr_db.c:3757 src/dvr/dvr_db.c:3781 src/dvr/dvr_config.c:755
+#: src/dvr/dvr_config.c:801 src/dvr/dvr_config.c:819
 msgid "1 month"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3754 src/dvr/dvr_db.c:3778 src/dvr/dvr_config.c:751
-#: src/dvr/dvr_config.c:797 src/dvr/dvr_config.c:815
+#: src/dvr/dvr_db.c:3754 src/dvr/dvr_db.c:3778 src/dvr/dvr_config.c:752
+#: src/dvr/dvr_config.c:798 src/dvr/dvr_config.c:816
 msgid "1 week"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3761 src/dvr/dvr_db.c:3785 src/dvr/dvr_config.c:758
-#: src/dvr/dvr_config.c:822
+#: src/dvr/dvr_db.c:3761 src/dvr/dvr_db.c:3785 src/dvr/dvr_config.c:759
+#: src/dvr/dvr_config.c:823
 msgid "1 year"
 msgstr ""
 
@@ -111,7 +111,7 @@ msgstr ""
 msgid "10"
 msgstr ""
 
-#: src/dvr/dvr_config.c:786
+#: src/dvr/dvr_config.c:787
 msgid "10 minutes"
 msgstr ""
 
@@ -123,7 +123,7 @@ msgstr ""
 msgid "12"
 msgstr ""
 
-#: src/dvr/dvr_config.c:792
+#: src/dvr/dvr_config.c:793
 msgid "12 hours"
 msgstr ""
 
@@ -151,26 +151,26 @@ msgstr ""
 msgid "2"
 msgstr ""
 
-#: src/dvr/dvr_config.c:794
+#: src/dvr/dvr_config.c:795
 msgid "2 days"
 msgstr ""
 
-#: src/dvr/dvr_config.c:789
+#: src/dvr/dvr_config.c:790
 msgid "2 hours"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3758 src/dvr/dvr_db.c:3782 src/dvr/dvr_config.c:755
-#: src/dvr/dvr_config.c:801 src/dvr/dvr_config.c:819
+#: src/dvr/dvr_db.c:3758 src/dvr/dvr_db.c:3782 src/dvr/dvr_config.c:756
+#: src/dvr/dvr_config.c:802 src/dvr/dvr_config.c:820
 msgid "2 months"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3755 src/dvr/dvr_db.c:3779 src/dvr/dvr_config.c:752
-#: src/dvr/dvr_config.c:798 src/dvr/dvr_config.c:816
+#: src/dvr/dvr_db.c:3755 src/dvr/dvr_db.c:3779 src/dvr/dvr_config.c:753
+#: src/dvr/dvr_config.c:799 src/dvr/dvr_config.c:817
 msgid "2 weeks"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3762 src/dvr/dvr_db.c:3786 src/dvr/dvr_config.c:759
-#: src/dvr/dvr_config.c:823
+#: src/dvr/dvr_db.c:3762 src/dvr/dvr_db.c:3786 src/dvr/dvr_config.c:760
+#: src/dvr/dvr_config.c:824
 msgid "2 years"
 msgstr ""
 
@@ -222,23 +222,23 @@ msgstr ""
 msgid "3"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3752 src/dvr/dvr_db.c:3776 src/dvr/dvr_config.c:749
-#: src/dvr/dvr_config.c:795 src/dvr/dvr_config.c:813
+#: src/dvr/dvr_db.c:3752 src/dvr/dvr_db.c:3776 src/dvr/dvr_config.c:750
+#: src/dvr/dvr_config.c:796 src/dvr/dvr_config.c:814
 msgid "3 days"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3759 src/dvr/dvr_db.c:3783 src/dvr/dvr_config.c:756
-#: src/dvr/dvr_config.c:802 src/dvr/dvr_config.c:820
+#: src/dvr/dvr_db.c:3759 src/dvr/dvr_db.c:3783 src/dvr/dvr_config.c:757
+#: src/dvr/dvr_config.c:803 src/dvr/dvr_config.c:821
 msgid "3 months"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3756 src/dvr/dvr_db.c:3780 src/dvr/dvr_config.c:753
-#: src/dvr/dvr_config.c:799 src/dvr/dvr_config.c:817
+#: src/dvr/dvr_db.c:3756 src/dvr/dvr_db.c:3780 src/dvr/dvr_config.c:754
+#: src/dvr/dvr_config.c:800 src/dvr/dvr_config.c:818
 msgid "3 weeks"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3763 src/dvr/dvr_db.c:3787 src/dvr/dvr_config.c:760
-#: src/dvr/dvr_config.c:824
+#: src/dvr/dvr_db.c:3763 src/dvr/dvr_db.c:3787 src/dvr/dvr_config.c:761
+#: src/dvr/dvr_config.c:825
 msgid "3 years"
 msgstr ""
 
@@ -246,7 +246,7 @@ msgstr ""
 msgid "3. Language"
 msgstr ""
 
-#: src/dvr/dvr_config.c:787
+#: src/dvr/dvr_config.c:788
 msgid "30 minutes"
 msgstr ""
 
@@ -258,7 +258,7 @@ msgstr ""
 msgid "4"
 msgstr ""
 
-#: src/dvr/dvr_config.c:790
+#: src/dvr/dvr_config.c:791
 msgid "4 hour"
 msgstr ""
 
@@ -270,8 +270,8 @@ msgstr ""
 msgid "5"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3753 src/dvr/dvr_db.c:3777 src/dvr/dvr_config.c:750
-#: src/dvr/dvr_config.c:796 src/dvr/dvr_config.c:814
+#: src/dvr/dvr_db.c:3753 src/dvr/dvr_db.c:3777 src/dvr/dvr_config.c:751
+#: src/dvr/dvr_config.c:797 src/dvr/dvr_config.c:815
 msgid "5 days"
 msgstr ""
 
@@ -283,8 +283,8 @@ msgstr ""
 msgid "6"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3760 src/dvr/dvr_db.c:3784 src/dvr/dvr_config.c:757
-#: src/dvr/dvr_config.c:821
+#: src/dvr/dvr_db.c:3760 src/dvr/dvr_db.c:3784 src/dvr/dvr_config.c:758
+#: src/dvr/dvr_config.c:822
 msgid "6 months"
 msgstr ""
 
@@ -304,7 +304,7 @@ msgstr ""
 msgid "8"
 msgstr ""
 
-#: src/dvr/dvr_config.c:791
+#: src/dvr/dvr_config.c:792
 msgid "8 hour"
 msgstr ""
 
@@ -449,7 +449,7 @@ msgstr ""
 msgid "ATSC SI Tables"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:166
+#: src/input/mpegts/mpegts_service.c:202
 msgid "ATSC source ID"
 msgstr ""
 
@@ -477,19 +477,14 @@ msgstr ""
 msgid "ATSC-T multiplex"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:225 src/input/mpegts/mpegts_mux_dvb.c:232
-#: src/input/mpegts/mpegts_mux_dvb.c:237 src/input/mpegts/mpegts_mux_dvb.c:244
-#: src/input/mpegts/mpegts_mux_dvb.c:249 src/input/mpegts/mpegts_mux_dvb.c:254
-#: src/input/mpegts/mpegts_mux_dvb.c:259 src/input/mpegts/mpegts_mux_dvb.c:327
-#: src/input/mpegts/mpegts_mux_dvb.c:332 src/input/mpegts/mpegts_mux_dvb.c:599
-#: src/input/mpegts/mpegts_mux_dvb.c:647 src/input/mpegts/mpegts_mux_dvb.c:652
+#: src/input/mpegts/mpegts_mux_dvb.c:225 src/input/mpegts/mpegts_mux_dvb.c:237
+#: src/input/mpegts/mpegts_mux_dvb.c:244 src/input/mpegts/mpegts_mux_dvb.c:249
+#: src/input/mpegts/mpegts_mux_dvb.c:254 src/input/mpegts/mpegts_mux_dvb.c:259
+#: src/input/mpegts/mpegts_mux_dvb.c:332 src/input/mpegts/mpegts_mux_dvb.c:652
 #: src/input/mpegts/mpegts_mux_dvb.c:761 src/input/mpegts/mpegts_mux_dvb.c:768
-#: src/input/mpegts/mpegts_mux_dvb.c:774 src/input/mpegts/mpegts_mux_dvb.c:778
-#: src/input/mpegts/mpegts_mux_dvb.c:797 src/input/mpegts/mpegts_mux_dvb.c:801
-#: src/input/mpegts/mpegts_mux_dvb.c:820 src/input/mpegts/mpegts_mux_dvb.c:824
-#: src/input/mpegts/mpegts_mux_dvb.c:875 src/input/mpegts/mpegts_mux_dvb.c:880
+#: src/input/mpegts/mpegts_mux_dvb.c:774 src/input/mpegts/mpegts_mux_dvb.c:797
+#: src/input/mpegts/mpegts_mux_dvb.c:820 src/input/mpegts/mpegts_mux_dvb.c:880
 #: src/input/mpegts/mpegts_mux_dvb.c:1032
-#: src/input/mpegts/mpegts_mux_dvb.c:1039
 #: src/input/mpegts/mpegts_mux_dvb.c:1044
 #: src/input/mpegts/mpegts_mux_dvb.c:1051
 #: src/input/mpegts/mpegts_mux_dvb.c:1056
@@ -551,8 +546,16 @@ msgstr ""
 msgid "Active"
 msgstr ""
 
+#: src/epggrab.c:343 src/input/mpegts/mpegts_service.c:103
+msgid "Actual transport stream only"
+msgstr ""
+
 #: src/streaming.c:481
 msgid "Adapter in use by another subscription"
+msgstr ""
+
+#: src/epggrab.c:346 src/input/mpegts/mpegts_service.c:106
+msgid "Adaptive"
 msgstr ""
 
 #: src/config.c:2368
@@ -571,7 +574,7 @@ msgstr ""
 msgid "Add the thread ID to debug"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:277
+#: src/input/mpegts/mpegts_service.c:316
 msgid ""
 "Add this value to PTS for the teletext subtitles. The time value is in "
 "milliseconds and may be negative."
@@ -581,7 +584,7 @@ msgstr ""
 msgid "Additional arguments to pass to the grabber."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1145
+#: src/dvr/dvr_config.c:1158
 msgid ""
 "Additional command line options when fetching artwork for new recordings."
 msgstr ""
@@ -590,7 +593,7 @@ msgstr ""
 msgid "Additional service names found in EPG data."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1536
+#: src/dvr/dvr_config.c:1549
 msgid ""
 "Additional time (in seconds) in which to get the tuner ready for recording. "
 "This is useful for those with tuners that take some time to tune and/or send "
@@ -674,7 +677,7 @@ msgstr ""
 msgid "All CAIDs"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1381
+#: src/dvr/dvr_config.c:1394
 msgid ""
 "All characters that could possibly cause problems for filenaming will be "
 "replaced with an underscore. See Help for details."
@@ -684,31 +687,31 @@ msgstr ""
 msgid "All lower-case"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1036 src/dvr/dvr_config.c:853
+#: src/dvr/dvr_autorec.c:1036 src/dvr/dvr_config.c:854
 msgid "All: Record if EPG/XMLTV indicates it is a unique programme"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1042 src/dvr/dvr_config.c:859
+#: src/dvr/dvr_autorec.c:1042 src/dvr/dvr_config.c:860
 msgid "All: Record if different description"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1038 src/dvr/dvr_config.c:855
+#: src/dvr/dvr_autorec.c:1038 src/dvr/dvr_config.c:856
 msgid "All: Record if different episode number"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1040 src/dvr/dvr_config.c:857
+#: src/dvr/dvr_autorec.c:1040 src/dvr/dvr_config.c:858
 msgid "All: Record if different subtitle"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1048 src/dvr/dvr_config.c:865
+#: src/dvr/dvr_autorec.c:1048 src/dvr/dvr_config.c:866
 msgid "All: Record once per day"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1044 src/dvr/dvr_config.c:861
+#: src/dvr/dvr_autorec.c:1044 src/dvr/dvr_config.c:862
 msgid "All: Record once per month"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1046 src/dvr/dvr_config.c:863
+#: src/dvr/dvr_autorec.c:1046 src/dvr/dvr_config.c:864
 msgid "All: Record once per week"
 msgstr ""
 
@@ -868,11 +871,11 @@ msgstr ""
 msgid "Arts magazines"
 msgstr ""
 
-#: src/dvr/dvr_config.c:955
+#: src/dvr/dvr_config.c:956
 msgid "Artwork Settings"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1130
+#: src/dvr/dvr_config.c:1143
 msgid ""
 "Artwork fetching requires broadcasts to have good quality information that "
 "uniquely identifies them, such as year, season and episode. Without this "
@@ -987,7 +990,7 @@ msgstr ""
 msgid "Automatically clear input error counters"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1034
+#: src/dvr/dvr_config.c:1035
 msgid "Automatically delete played recordings"
 msgstr ""
 
@@ -1002,7 +1005,7 @@ msgstr ""
 msgid "Automatically map EPG source"
 msgstr ""
 
-#: src/wizard.c:1113
+#: src/wizard.c:1114
 msgid "Automatically map all available services to channels."
 msgstr ""
 
@@ -1018,32 +1021,32 @@ msgstr ""
 msgid "Automatically record."
 msgstr ""
 
-#: src/epggrab.c:397
+#: src/epggrab.c:413
 msgid ""
 "Automatically update channel icons using information provided by the enabled "
 "EPG providers. Note, this may cause unwanted changes to already defined "
 "channel icons."
 msgstr ""
 
-#: src/epggrab.c:373
+#: src/epggrab.c:389
 msgid ""
 "Automatically update channel names using information provided by the enabled "
 "EPG providers. Note, this may cause unwanted changes to already defined "
 "channel names."
 msgstr ""
 
-#: src/epggrab.c:385
+#: src/epggrab.c:401
 msgid ""
 "Automatically update channel numbers using information provided by the "
 "enabled EPG providers. Note, this may cause unwanted changes to already "
 "defined channel numbers."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1460
+#: src/dvr/dvr_config.c:1473
 msgid "Autorec maximum count (0=unlimited)"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1470
+#: src/dvr/dvr_config.c:1483
 msgid "Autorec maximum schedules limit (0=unlimited)"
 msgstr ""
 
@@ -1286,7 +1289,7 @@ msgstr ""
 msgid "CRASH"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:618 src/input/mpegts/mpegts_service.c:190
+#: src/input/mpegts/mpegts_mux.c:618 src/input/mpegts/mpegts_service.c:226
 msgid "CRID authority"
 msgstr ""
 
@@ -1350,7 +1353,7 @@ msgstr ""
 msgid "CableCARD multiplex"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1240
+#: src/dvr/dvr_config.c:1253
 msgid "Cache scheme"
 msgstr ""
 
@@ -1509,7 +1512,7 @@ msgstr ""
 msgid "Channels / EPG - Bouquets"
 msgstr ""
 
-#: src/channels.c:1763
+#: src/channels.c:1764
 msgid "Channels / EPG - Channel Tags"
 msgstr ""
 
@@ -1521,7 +1524,7 @@ msgstr ""
 msgid "Channels / EPG - EPG Grabber Channels"
 msgstr ""
 
-#: src/epggrab.c:343
+#: src/epggrab.c:359
 msgid "Channels / EPG - EPG Grabber Configuration"
 msgstr ""
 
@@ -1533,12 +1536,12 @@ msgstr ""
 msgid "Channels EPG data is used by."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1215 src/input/mpegts/mpegts_network.c:302
-#: src/input/mpegts/mpegts_mux.c:647 src/input/mpegts/mpegts_service.c:239
+#: src/dvr/dvr_config.c:1228 src/input/mpegts/mpegts_network.c:302
+#: src/input/mpegts/mpegts_mux.c:647 src/input/mpegts/mpegts_service.c:278
 msgid "Character set"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1403
+#: src/dvr/dvr_config.c:1416
 msgid ""
 "Characters not supported in Windows filenames (e.g. for an SMB/CIFS share) "
 "will be stripped out or converted."
@@ -1614,7 +1617,7 @@ msgstr ""
 msgid "Client node ID. Leave field empty to generate a random ID."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1080
+#: src/dvr/dvr_config.c:1081
 msgid "Clone scheduled entry on error"
 msgstr ""
 
@@ -1683,11 +1686,11 @@ msgstr ""
 msgid "Command to move the dish with an external command."
 msgstr ""
 
-#: src/access.c:2008 src/access.c:2354 src/access.c:2493 src/channels.c:1842
+#: src/access.c:2008 src/access.c:2354 src/access.c:2493 src/channels.c:1843
 #: src/esfilter.c:703 src/esfilter.c:799 src/esfilter.c:895 src/esfilter.c:990
 #: src/esfilter.c:1098 src/esfilter.c:1181 src/profile.c:344 src/bouquet.c:1338
 #: src/epggrab/channel.c:885 src/dvr/dvr_db.c:5011 src/dvr/dvr_autorec.c:1487
-#: src/dvr/dvr_timerec.c:679 src/dvr/dvr_config.c:1157
+#: src/dvr/dvr_timerec.c:679 src/dvr/dvr_config.c:1170
 #: src/descrambler/caclient.c:319
 msgid "Comment"
 msgstr ""
@@ -1696,7 +1699,7 @@ msgstr ""
 msgid "Commercial break"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1492
+#: src/dvr/dvr_config.c:1505
 msgid ""
 "Commercials will be dropped from the recordings. Commercial detection works "
 "using EITp/f (EPG running state) and for the Swedish channel TV4 (using "
@@ -1809,7 +1812,7 @@ msgid ""
 "such as \"uk\" (without the quotes)."
 msgstr ""
 
-#: src/dvr/dvr_config.c:976
+#: src/dvr/dvr_config.c:977
 msgid "Configuration name"
 msgstr ""
 
@@ -1860,7 +1863,7 @@ msgstr ""
 msgid "Content character set"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:191
+#: src/input/mpegts/mpegts_service.c:227
 msgid "Content reference identifier authority."
 msgstr ""
 
@@ -1884,11 +1887,11 @@ msgstr ""
 msgid "Continue recording for x minutes after scheduled stop time"
 msgstr ""
 
-#: src/channels.c:535 src/dvr/dvr_db.c:4558 src/dvr/dvr_config.c:1070
+#: src/channels.c:535 src/dvr/dvr_db.c:4558 src/dvr/dvr_config.c:1071
 msgid "Continue recording for x minutes after scheduled stop time."
 msgstr ""
 
-#: src/epggrab.c:432
+#: src/epggrab.c:448
 msgid ""
 "Convert broadcast ratings codes into human-readable labels like 'PG' or 'FSK "
 "16'."
@@ -1930,21 +1933,21 @@ msgstr ""
 msgid "Create a bouquet with all services in the network."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1267
+#: src/dvr/dvr_config.c:1280
 msgid ""
 "Create a directory per channel when storing recordings. If both this and the "
 "'directory per day' checkbox is enabled, the date-directory will be the "
 "parent of the per-channel directory."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1279
+#: src/dvr/dvr_config.c:1292
 msgid ""
 "Create a directory per title when storing recordings. If the day/channel "
 "directory checkboxes are also enabled, those directories will be parents of "
 "this directory."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1255
+#: src/dvr/dvr_config.c:1268
 msgid ""
 "Create a new directory per day in the recording system path. Folders will "
 "only be created when something is recorded. The format of the directory will "
@@ -1955,11 +1958,11 @@ msgstr ""
 msgid "Create a provider name tag."
 msgstr ""
 
-#: src/wizard.c:1131
+#: src/wizard.c:1132
 msgid "Create and associate a network tag to created channels."
 msgstr ""
 
-#: src/wizard.c:1122
+#: src/wizard.c:1123
 msgid "Create and associate a provider tag to created channels."
 msgstr ""
 
@@ -1975,11 +1978,11 @@ msgstr ""
 msgid "Create bouquet tag"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1196
+#: src/dvr/dvr_config.c:1209
 msgid "Create directories using these permissions."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1206
+#: src/dvr/dvr_config.c:1219
 msgid "Create files using these permissions."
 msgstr ""
 
@@ -1991,7 +1994,7 @@ msgstr ""
 msgid "Create network name tags (set by provider)."
 msgstr ""
 
-#: src/wizard.c:1130
+#: src/wizard.c:1131
 msgid "Create network tags"
 msgstr ""
 
@@ -1999,15 +2002,15 @@ msgstr ""
 msgid "Create provider name tags"
 msgstr ""
 
-#: src/wizard.c:1121
+#: src/wizard.c:1122
 msgid "Create provider tags"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1425
+#: src/dvr/dvr_config.c:1438
 msgid "Create scene markers"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1426
+#: src/dvr/dvr_config.c:1439
 msgid ""
 "Create scene markers in recordings based on the EPG start/stop times when "
 "available."
@@ -2017,7 +2020,7 @@ msgstr ""
 msgid "Create tags"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1415
+#: src/dvr/dvr_config.c:1428
 msgid ""
 "Create tags in recordings using media containers that support metadata (if "
 "possible)."
@@ -2027,7 +2030,7 @@ msgstr ""
 msgid "Create type-based tags"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:709 src/input/mpegts/mpegts_service.c:284
+#: src/input/mpegts/mpegts_mux.c:709 src/input/mpegts/mpegts_service.c:323
 msgid "Created"
 msgstr ""
 
@@ -2051,7 +2054,7 @@ msgstr ""
 msgid "Cron"
 msgstr ""
 
-#: src/epggrab.c:440
+#: src/epggrab.c:456
 msgid "Cron multi-line"
 msgstr ""
 
@@ -2175,7 +2178,7 @@ msgstr ""
 msgid "DVB Inputs - Networks"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:103
+#: src/input/mpegts/mpegts_service.c:138
 msgid "DVB Inputs - Services"
 msgstr ""
 
@@ -2183,7 +2186,7 @@ msgstr ""
 msgid "DVB SI Tables"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:217
+#: src/input/mpegts/mpegts_service.c:256
 msgid "DVB Sub-title Processing"
 msgstr ""
 
@@ -2259,7 +2262,7 @@ msgstr ""
 msgid "DVR - Auto-recording (Autorecs)"
 msgstr ""
 
-#: src/dvr/dvr_config.c:914
+#: src/dvr/dvr_config.c:915
 msgid "DVR - Profiles"
 msgstr ""
 
@@ -2360,6 +2363,10 @@ msgstr ""
 msgid "Dance"
 msgstr ""
 
+#: src/dvr/dvr_config.c:1102
+msgid "Data error threshold for failed recordings (0=off)"
+msgstr ""
+
 #: src/dvr/dvr_db.c:4825
 msgid "Data errors"
 msgstr ""
@@ -2400,7 +2407,7 @@ msgstr ""
 msgid "Days of week"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1013
+#: src/dvr/dvr_config.c:1014
 msgid ""
 "Days to retain information about recordings. Once this period is exceeded, "
 "duplicate detection will not be possible."
@@ -2437,6 +2444,16 @@ msgstr ""
 #: src/access.c:1487 src/access.c:1499 src/config.c:2059 src/profile.c:334
 #: src/dvr/dvr_db.c:3736 src/transcoding/codec/profile_video_class.c:59
 msgid "Default"
+msgstr ""
+
+#: src/input/mpegts/mpegts_service.c:101
+msgid "Default (use global setting)"
+msgstr ""
+
+#: src/epggrab.c:489
+msgid ""
+"Default EIT processing policy applied to services whose own \"EIT "
+"processing\" is set to Default. See Help for the full policy descriptions."
 msgstr ""
 
 #: src/config.c:2278
@@ -2599,7 +2616,7 @@ msgid ""
 "subdirectory"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1195
+#: src/dvr/dvr_config.c:1208
 msgid "Directory permissions (octal, e.g. 0775)"
 msgstr ""
 
@@ -2724,15 +2741,15 @@ msgstr ""
 msgid "Don't backup configuration tree at upgrade"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1372
+#: src/dvr/dvr_config.c:1385
 msgid "Don't include the title in the filename."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1371
+#: src/dvr/dvr_config.c:1384
 msgid "Don't include title in filename"
 msgstr ""
 
-#: src/dvr/dvr_config.c:737
+#: src/dvr/dvr_config.c:738
 msgid "Don't keep"
 msgstr ""
 
@@ -2768,7 +2785,7 @@ msgstr ""
 msgid "Drop \"fe=\" parameter"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1399 src/dvr/dvr_config.c:1479
+#: src/dvr/dvr_autorec.c:1399 src/dvr/dvr_config.c:1492
 msgid "Duplicate handling"
 msgstr ""
 
@@ -2778,6 +2795,14 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:692
 msgid "EIT - skip TSID check"
+msgstr ""
+
+#: src/input/mpegts/mpegts_service.c:244
+msgid "EIT processing"
+msgstr ""
+
+#: src/epggrab.c:488
+msgid "EIT processing (default)"
 msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:312
@@ -2848,7 +2873,7 @@ msgstr ""
 msgid "EPG scan"
 msgstr ""
 
-#: src/epggrab.c:486
+#: src/epggrab.c:516
 msgid "EPG scan time-out in seconds (30-7200)"
 msgstr ""
 
@@ -2856,11 +2881,11 @@ msgstr ""
 msgid "EPG source"
 msgstr ""
 
-#: src/config.c:2459 src/dvr/dvr_config.c:1435
+#: src/config.c:2459 src/dvr/dvr_config.c:1448
 msgid "EPG update window"
 msgstr ""
 
-#: src/dvr/dvr_config.c:947
+#: src/dvr/dvr_config.c:948
 msgid "EPG/Autorec Settings"
 msgstr ""
 
@@ -2883,6 +2908,10 @@ msgstr ""
 
 #: src/epg.c:2012
 msgid "Educational"
+msgstr ""
+
+#: src/epggrab.c:345 src/input/mpegts/mpegts_service.c:105
+msgid "Either"
 msgstr ""
 
 #: src/tvhlog.c:153
@@ -2978,12 +3007,6 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:297
 msgid "Enable or disable full mux mode."
-msgstr ""
-
-#: src/input/mpegts/mpegts_service.c:209
-msgid ""
-"Enable or disable ignoring of Event Information Table (EIT) data for this "
-"service."
 msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:355
@@ -3120,7 +3143,7 @@ msgstr ""
 msgid "Enable/disable power save mode (if supported by the device)."
 msgstr ""
 
-#: src/profile.c:325 src/dvr/dvr_config.c:966
+#: src/profile.c:325 src/dvr/dvr_config.c:967
 msgid "Enable/disable profile."
 msgstr ""
 
@@ -3177,7 +3200,7 @@ msgstr ""
 msgid "Enable/disable the rating label."
 msgstr ""
 
-#: src/channels.c:1775
+#: src/channels.c:1776
 msgid "Enable/disable the tag."
 msgstr ""
 
@@ -3186,11 +3209,11 @@ msgid "Enable/disable tuner/adapter."
 msgstr ""
 
 #: src/access.c:1752 src/access.c:2299 src/access.c:2476 src/channels.c:400
-#: src/channels.c:421 src/channels.c:1774 src/service.c:172 src/imagecache.c:90
+#: src/channels.c:421 src/channels.c:1775 src/service.c:172 src/imagecache.c:90
 #: src/esfilter.c:609 src/profile.c:324 src/bouquet.c:1212
 #: src/ratinglabels.c:637 src/epggrab/module.c:171 src/epggrab/channel.c:761
 #: src/dvr/dvr_db.c:4496 src/dvr/dvr_autorec.c:1144 src/dvr/dvr_timerec.c:536
-#: src/dvr/dvr_config.c:965 src/descrambler/caclient.c:302
+#: src/dvr/dvr_config.c:966 src/descrambler/caclient.c:302
 #: src/input/mpegts/mpegts_input.c:239 src/input/mpegts/mpegts_network.c:191
 #: src/input/mpegts/mpegts_mux.c:535 src/input/mpegts/mpegts_mux_sched.c:138
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1547
@@ -3448,7 +3471,7 @@ msgstr ""
 msgid "Extra text"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1535
+#: src/dvr/dvr_config.c:1548
 msgid "Extra warming up time (seconds)"
 msgstr ""
 
@@ -3526,18 +3549,18 @@ msgstr ""
 msgid "Fastscan DVB"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1119
+#: src/dvr/dvr_config.c:1132
 msgid ""
 "Fetch additional artwork from installed providers. Tvheadend has a 'tmdb' "
 "and `tvdb' provider which require you to specify your authorized key in the "
 "options below."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1118
+#: src/dvr/dvr_config.c:1131
 msgid "Fetch artwork for new recordings."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1129
+#: src/dvr/dvr_config.c:1142
 msgid "Fetch artwork for unidentifiable broadcasts."
 msgstr ""
 
@@ -3557,7 +3580,7 @@ msgstr ""
 msgid "File not created"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1205
+#: src/dvr/dvr_config.c:1218
 msgid "File permissions (octal, e.g. 0664)"
 msgstr ""
 
@@ -3581,11 +3604,11 @@ msgstr ""
 msgid "Filename used by the entry."
 msgstr ""
 
-#: src/dvr/dvr_config.c:936
+#: src/dvr/dvr_config.c:937
 msgid "Filename/Tagging Settings"
 msgstr ""
 
-#: src/dvr/dvr_config.c:928
+#: src/dvr/dvr_config.c:929
 msgid "Filesystem Settings"
 msgstr ""
 
@@ -3605,7 +3628,7 @@ msgstr ""
 msgid "Fine arts"
 msgstr ""
 
-#: src/wizard.c:1195 src/dvr/dvr_db.c:662
+#: src/wizard.c:1196 src/dvr/dvr_db.c:662
 msgid "Finished"
 msgstr ""
 
@@ -3645,7 +3668,7 @@ msgstr ""
 msgid "Football"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1101
+#: src/dvr/dvr_config.c:1114
 msgid "For autorecs, attempt to find better time slots"
 msgstr ""
 
@@ -3666,7 +3689,7 @@ msgstr ""
 msgid "Force (auto)"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:268
+#: src/input/mpegts/mpegts_service.c:307
 msgid "Force CA ID (e.g. 0x2600)"
 msgstr ""
 
@@ -3682,11 +3705,11 @@ msgid ""
 "overrides the device-specific setting."
 msgstr ""
 
-#: src/epggrab.c:455
+#: src/epggrab.c:471
 msgid "Force an initial EPG grab at start-up (internal grabbers)."
 msgstr ""
 
-#: src/epggrab.c:464
+#: src/epggrab.c:480
 msgid "Force an initial EPG grab at start-up."
 msgstr ""
 
@@ -3694,11 +3717,11 @@ msgstr ""
 msgid "Force hardware acceleration."
 msgstr ""
 
-#: src/epggrab.c:463
+#: src/epggrab.c:479
 msgid "Force initial EPG grab at start-up"
 msgstr ""
 
-#: src/epggrab.c:454
+#: src/epggrab.c:470
 msgid "Force initial EPG grab at start-up (internal grabbers)"
 msgstr ""
 
@@ -3754,7 +3777,7 @@ msgid ""
 "The next odd number (+1) will be used as the RTCP port."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:269
+#: src/input/mpegts/mpegts_service.c:308
 msgid "Force usage of entered CA ID on this service."
 msgstr ""
 
@@ -3766,8 +3789,8 @@ msgstr ""
 msgid "Foreign countries"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3765 src/dvr/dvr_db.c:3789 src/dvr/dvr_config.c:762
-#: src/dvr/dvr_config.c:826
+#: src/dvr/dvr_db.c:3765 src/dvr/dvr_db.c:3789 src/dvr/dvr_config.c:763
+#: src/dvr/dvr_config.c:827
 msgid "Forever"
 msgstr ""
 
@@ -3783,15 +3806,15 @@ msgstr ""
 msgid "Format for xmltv output"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1227
+#: src/dvr/dvr_config.c:1240
 msgid "Format string/Pathname specification"
 msgstr ""
 
-#: src/wizard.c:1028
+#: src/wizard.c:1029
 msgid "Found muxes"
 msgstr ""
 
-#: src/wizard.c:1037
+#: src/wizard.c:1038
 msgid "Found services"
 msgstr ""
 
@@ -3814,11 +3837,11 @@ msgstr ""
 msgid "Free subscription weight"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1158
+#: src/dvr/dvr_config.c:1171
 msgid "Free-form field, enter whatever you like here."
 msgstr ""
 
-#: src/access.c:2009 src/access.c:2355 src/access.c:2492 src/channels.c:1843
+#: src/access.c:2009 src/access.c:2355 src/access.c:2492 src/channels.c:1844
 #: src/dvr/dvr_db.c:5012 src/dvr/dvr_autorec.c:1488 src/dvr/dvr_timerec.c:680
 msgid "Free-form text field, enter whatever you like here."
 msgstr ""
@@ -3882,7 +3905,7 @@ msgstr ""
 msgid "Full mux RX mode supported"
 msgstr ""
 
-#: src/channels.c:1816
+#: src/channels.c:1817
 msgid ""
 "Full path to an icon used to depict the tag. This can be a TV network "
 "logotype, etc."
@@ -3921,10 +3944,10 @@ msgstr ""
 msgid "Gather timing statistics for the code"
 msgstr ""
 
-#: src/tvhlog.c:835 src/epggrab.c:351 src/profile.c:296 src/profile.c:1344
+#: src/tvhlog.c:835 src/epggrab.c:367 src/profile.c:296 src/profile.c:1344
 #: src/profile.c:1590 src/profile.c:1825 src/profile.c:2502
 #: src/satip/server.c:653 src/epggrab/module/xmltv.c:1497
-#: src/epggrab/module/xmltv.c:1599 src/dvr/dvr_config.c:924
+#: src/epggrab/module/xmltv.c:1599 src/dvr/dvr_config.c:925
 #: src/descrambler/caclient.c:276 src/transcoding/codec/profile_class.c:232
 #: src/descrambler/cclient.c:1357 src/descrambler/dvbcam.c:848
 msgid "General Settings"
@@ -4077,7 +4100,7 @@ msgstr ""
 msgid "Handicraft"
 msgstr ""
 
-#: src/epggrab/module/eit.c:1742
+#: src/epggrab/module/eit.c:1788
 msgid ""
 "Handle the running state (EITp/f) immediately. Usually, keep this off. It "
 "might increase the recordings accuracy on very slow systems."
@@ -4164,7 +4187,7 @@ msgstr ""
 msgid "How frequently the upstream provider is checked for changes."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1480
+#: src/dvr/dvr_config.c:1493
 msgid "How to handle duplicate recordings."
 msgstr ""
 
@@ -4178,7 +4201,7 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: src/wizard.c:819
+#: src/wizard.c:820
 msgid "ID of the network."
 msgstr ""
 
@@ -4293,11 +4316,11 @@ msgstr ""
 msgid "Icon"
 msgstr ""
 
-#: src/channels.c:1815
+#: src/channels.c:1816
 msgid "Icon (full URL)"
 msgstr ""
 
-#: src/channels.c:473 src/channels.c:1825 src/ratinglabels.c:697
+#: src/channels.c:473 src/channels.c:1826 src/ratinglabels.c:697
 #: src/input/mpegts/iptv/iptv_mux.c:222
 msgid "Icon URL"
 msgstr ""
@@ -4310,7 +4333,7 @@ msgstr ""
 msgid "Icon base URL."
 msgstr ""
 
-#: src/channels.c:1833
+#: src/channels.c:1834
 msgid "Icon has title"
 msgstr ""
 
@@ -4336,13 +4359,19 @@ msgid ""
 "a SeriesLink."
 msgstr ""
 
+#: src/dvr/dvr_config.c:1103
+msgid ""
+"If a completed recording has this many or more data errors, mark it as "
+"failed. Set to 0 to disable this check."
+msgstr ""
+
 #: src/epggrab/module/xmltv.c:1477
 msgid ""
 "If an EpisodeLink XPath is not found, use the standard TVH method for "
 "creating an EpisodeLink."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1081
+#: src/dvr/dvr_config.c:1082
 msgid ""
 "If an error occurs clone the scheduled entry and try to record again (if "
 "possible)."
@@ -4377,7 +4406,7 @@ msgid ""
 "exact name chosen depends on the order the channels are mapped."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1092
+#: src/dvr/dvr_config.c:1093
 msgid ""
 "If more than x errors occur during a recording schedule a re-record (if "
 "possible)."
@@ -4398,7 +4427,7 @@ msgid ""
 "the access control from within the Tvheadend web interface."
 msgstr ""
 
-#: src/channels.c:1834
+#: src/channels.c:1835
 msgid ""
 "If set, presentation of the tag icon will not superimpose the tag name on "
 "top of the icon."
@@ -4424,7 +4453,7 @@ msgid ""
 "rotor), enable this."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:231
+#: src/input/mpegts/mpegts_service.c:270
 msgid ""
 "If the Sub-title and the Title contain identical content, ignore the Sub-"
 "title and only save the Title."
@@ -4440,10 +4469,6 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:482
 msgid "Ignore"
-msgstr ""
-
-#: src/input/mpegts/mpegts_service.c:208
-msgid "Ignore EPG (EIT)"
 msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:1014
@@ -4486,7 +4511,7 @@ msgstr ""
 msgid "Image Cache"
 msgstr ""
 
-#: src/dvr/dvr_config.c:784
+#: src/dvr/dvr_config.c:785
 msgid "Immediately"
 msgstr ""
 
@@ -4498,19 +4523,19 @@ msgstr ""
 msgid "Important"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1318
+#: src/dvr/dvr_config.c:1331
 msgid "Include channel name in filename"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1329
+#: src/dvr/dvr_config.c:1342
 msgid "Include date in filename"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1351
+#: src/dvr/dvr_config.c:1364
 msgid "Include episode in filename"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1361
+#: src/dvr/dvr_config.c:1374
 msgid "Include subtitle in filename"
 msgstr ""
 
@@ -4524,33 +4549,33 @@ msgid ""
 "with some services where the teletext DTS is invalid."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1330
+#: src/dvr/dvr_config.c:1343
 msgid ""
 "Include the date for the recording in the event title. This applies to both "
 "the title stored in the file and to the filename itself."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1362
+#: src/dvr/dvr_config.c:1375
 msgid "Include the episode subtitle in the title (if available)."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1319
+#: src/dvr/dvr_config.c:1332
 msgid ""
 "Include the name of the channel in the event title. This applies to both the "
 "title stored in the file and to the filename itself."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1352
+#: src/dvr/dvr_config.c:1365
 msgid "Include the season and episode in the title (if available)."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1341
+#: src/dvr/dvr_config.c:1354
 msgid ""
 "Include the time for the recording in the event title. This applies to both "
 "the title stored in the file and to the filename itself."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1340
+#: src/dvr/dvr_config.c:1353
 msgid "Include time in filename"
 msgstr ""
 
@@ -4594,7 +4619,7 @@ msgstr ""
 msgid "Interface"
 msgstr ""
 
-#: src/channels.c:1797 src/epggrab/module.c:55
+#: src/channels.c:1798 src/epggrab/module.c:55
 msgid "Internal"
 msgstr ""
 
@@ -4602,7 +4627,7 @@ msgstr ""
 msgid "Internal EPG grabber"
 msgstr ""
 
-#: src/epggrab.c:355
+#: src/epggrab.c:371
 msgid "Internal Grabber Settings"
 msgstr ""
 
@@ -4679,7 +4704,7 @@ msgid ""
 "rewind time is limited by how much RAM TVHeadend is allowed."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1176
+#: src/dvr/dvr_config.c:1189
 msgid "Keep x amount of storage space free."
 msgstr ""
 
@@ -4809,7 +4834,7 @@ msgstr ""
 msgid "Last scan"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:292
+#: src/input/mpegts/mpegts_service.c:331
 msgid "Last seen"
 msgstr ""
 
@@ -4966,11 +4991,11 @@ msgstr ""
 msgid "Local bind IP address"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:150
+#: src/input/mpegts/mpegts_service.c:186
 msgid "Local channel minor"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:142
+#: src/input/mpegts/mpegts_service.c:178
 msgid "Local channel number"
 msgstr ""
 
@@ -4978,31 +5003,31 @@ msgstr ""
 msgid "Local discovery IP address"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1056 src/dvr/dvr_config.c:873
+#: src/dvr/dvr_autorec.c:1056 src/dvr/dvr_config.c:874
 msgid "Local: Record if different description"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1050 src/dvr/dvr_config.c:867
+#: src/dvr/dvr_autorec.c:1050 src/dvr/dvr_config.c:868
 msgid "Local: Record if different episode number"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1054 src/dvr/dvr_config.c:871
+#: src/dvr/dvr_autorec.c:1054 src/dvr/dvr_config.c:872
 msgid "Local: Record if different subtitle"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1052 src/dvr/dvr_config.c:869
+#: src/dvr/dvr_autorec.c:1052 src/dvr/dvr_config.c:870
 msgid "Local: Record if different title"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1062 src/dvr/dvr_config.c:879
+#: src/dvr/dvr_autorec.c:1062 src/dvr/dvr_config.c:880
 msgid "Local: Record once per day"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1058 src/dvr/dvr_config.c:875
+#: src/dvr/dvr_autorec.c:1058 src/dvr/dvr_config.c:876
 msgid "Local: Record once per month"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1060 src/dvr/dvr_config.c:877
+#: src/dvr/dvr_autorec.c:1060 src/dvr/dvr_config.c:878
 msgid "Local: Record once per week"
 msgstr ""
 
@@ -5014,7 +5039,7 @@ msgstr ""
 msgid "Location details of the SAT>IP Server."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:257
+#: src/input/mpegts/mpegts_service.c:296
 msgid "Lock preferred CA PID"
 msgstr ""
 
@@ -5127,7 +5152,7 @@ msgstr ""
 msgid "MPEG-TS multiplex PHY"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:1044
+#: src/input/mpegts/mpegts_service.c:1083
 msgid "MPEG-TS raw service"
 msgstr ""
 
@@ -5147,27 +5172,27 @@ msgstr ""
 msgid "Main"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1175
+#: src/dvr/dvr_config.c:1188
 msgid "Maintain free storage space in MiB"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1185
+#: src/dvr/dvr_config.c:1198
 msgid "Maintain used storage space in MiB (0=disabled)"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3788 src/dvr/dvr_config.c:761
+#: src/dvr/dvr_db.c:3788 src/dvr/dvr_config.c:762
 msgid "Maintained space"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1266
+#: src/dvr/dvr_config.c:1279
 msgid "Make subdirectories per channel"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1254
+#: src/dvr/dvr_config.c:1267
 msgid "Make subdirectories per day"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1278
+#: src/dvr/dvr_config.c:1291
 msgid "Make subdirectories per title"
 msgstr ""
 
@@ -5213,7 +5238,7 @@ msgstr ""
 msgid "Manufacturer's product name."
 msgstr ""
 
-#: src/wizard.c:1112
+#: src/wizard.c:1113
 msgid "Map all services"
 msgstr ""
 
@@ -5303,7 +5328,7 @@ msgid ""
 "changed (in seconds)."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1436
+#: src/dvr/dvr_config.c:1449
 msgid ""
 "Maximum allowed difference between event start time when the EPG event is "
 "changed in seconds."
@@ -5419,7 +5444,7 @@ msgid "Minimum year"
 msgstr ""
 
 #: src/tvhlog.c:843 src/config.c:2241 src/satip/server.c:669
-#: src/dvr/dvr_config.c:951
+#: src/dvr/dvr_config.c:952
 msgid "Miscellaneous Settings"
 msgstr ""
 
@@ -5508,14 +5533,14 @@ msgstr ""
 msgid "Movie / drama"
 msgstr ""
 
-#: src/epggrab.c:441
+#: src/epggrab.c:457
 msgid ""
 "Multiple lines of the cron time specification. The default cron triggers the "
 "internal grabbers daily at 12:04 and 00:04. See Help on how to define your "
 "own."
 msgstr ""
 
-#: src/epggrab.c:473
+#: src/epggrab.c:503
 msgid ""
 "Multiple lines of the cron time specification. The default cron triggers the "
 "over-the-air grabber daily at 02:04 and 14:04. See Help on how to define "
@@ -5535,7 +5560,7 @@ msgstr ""
 msgid "Musical"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:118
+#: src/input/mpegts/mpegts_service.c:154
 #: src/input/mpegts/mpegts_mux_sched.c:146
 msgid "Mux"
 msgstr ""
@@ -5544,7 +5569,7 @@ msgstr ""
 msgid "Mux Scheduler"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:126
+#: src/input/mpegts/mpegts_service.c:162
 msgid "Mux UUID"
 msgstr ""
 
@@ -5579,7 +5604,7 @@ msgstr ""
 msgid "NVENC"
 msgstr ""
 
-#: src/channels.c:439 src/channels.c:1790 src/bouquet.c:1268
+#: src/channels.c:439 src/channels.c:1791 src/bouquet.c:1268
 #: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:674
 #: src/epggrab/channel.c:816 src/dvr/dvr_autorec.c:1152
 #: src/dvr/dvr_timerec.c:544 src/input/mpegts/mpegts_input.c:272
@@ -5624,15 +5649,15 @@ msgid ""
 "channels EPG info."
 msgstr ""
 
-#: src/wizard.c:811 src/input/mpegts/mpegts_network.c:200
+#: src/wizard.c:812 src/input/mpegts/mpegts_network.c:200
 msgid "Name of the network."
 msgstr ""
 
-#: src/dvr/dvr_config.c:977
+#: src/dvr/dvr_config.c:978
 msgid "Name of the profile."
 msgstr ""
 
-#: src/channels.c:1791
+#: src/channels.c:1792
 msgid "Name of the tag."
 msgstr ""
 
@@ -5660,8 +5685,8 @@ msgstr ""
 msgid "Nature"
 msgstr ""
 
-#: src/wizard.c:786 src/wizard.c:810 src/input/mpegts/mpegts_mux.c:569
-#: src/input/mpegts/mpegts_service.c:110
+#: src/wizard.c:787 src/wizard.c:811 src/input/mpegts/mpegts_mux.c:569
+#: src/input/mpegts/mpegts_service.c:146
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:206
 msgid "Network"
 msgstr ""
@@ -5773,7 +5798,7 @@ msgstr ""
 msgid "Networks"
 msgstr ""
 
-#: src/dvr/dvr_config.c:783
+#: src/dvr/dvr_config.c:784
 msgid "Never"
 msgstr ""
 
@@ -5891,8 +5916,8 @@ msgstr ""
 msgid "Node subsystem"
 msgstr ""
 
-#: src/tvhlog.c:82 src/service.c:147 src/profile.c:273
-#: src/input/mpegts/mpegts_service.c:89
+#: src/tvhlog.c:82 src/epggrab.c:342 src/service.c:147 src/profile.c:273
+#: src/input/mpegts/mpegts_service.c:89 src/input/mpegts/mpegts_service.c:102
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:263
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:600
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:450 src/descrambler/cccam.c:975
@@ -5926,7 +5951,7 @@ msgstr ""
 msgid "Not set"
 msgstr ""
 
-#: src/dvr/dvr_config.c:835
+#: src/dvr/dvr_config.c:836
 msgid "Not set (none or channel configuration)"
 msgstr ""
 
@@ -5938,7 +5963,7 @@ msgstr ""
 msgid "Number"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1024
+#: src/dvr/dvr_config.c:1025
 msgid "Number of days to keep recorded files."
 msgstr ""
 
@@ -5966,7 +5991,7 @@ msgstr ""
 msgid "Number of errors that occurred during recording."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1035
+#: src/dvr/dvr_config.c:1036
 msgid ""
 "Number of minutes after playback has finished before file should be "
 "automatically removed (unless its retention is 'forever'). Note that some "
@@ -5975,7 +6000,7 @@ msgid ""
 "the programme is actually watched."
 msgstr ""
 
-#: src/wizard.c:1029
+#: src/wizard.c:1030
 msgid "Number of muxes found."
 msgstr ""
 
@@ -6047,11 +6072,11 @@ msgstr ""
 msgid "OSCam pc-nodmx (rev >= 9756)"
 msgstr ""
 
-#: src/epggrab.c:363
+#: src/epggrab.c:379
 msgid "OTA (Over-the-air) Genre Translation"
 msgstr ""
 
-#: src/epggrab.c:359
+#: src/epggrab.c:375
 msgid "OTA (Over-the-air) Grabber Settings"
 msgstr ""
 
@@ -6094,7 +6119,7 @@ msgstr ""
 msgid "On"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3764 src/dvr/dvr_config.c:825
+#: src/dvr/dvr_db.c:3764 src/dvr/dvr_config.c:826
 msgid "On file removal"
 msgstr ""
 
@@ -6123,7 +6148,7 @@ msgstr ""
 msgid "Only admin can watch the realtime log."
 msgstr ""
 
-#: src/channels.c:1806
+#: src/channels.c:1807
 msgid ""
 "Only allow users with this tag (or those with no tags at all) set in access "
 "configuration to use the tag."
@@ -6158,7 +6183,7 @@ msgstr ""
 msgid "OpenTV EPG"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:158
+#: src/input/mpegts/mpegts_service.c:194
 msgid "OpenTV channel number"
 msgstr ""
 
@@ -6203,15 +6228,19 @@ msgstr ""
 msgid "Other service without A/V streams"
 msgstr ""
 
+#: src/epggrab.c:344 src/input/mpegts/mpegts_service.c:104
+msgid "Other transport stream only"
+msgstr ""
+
 #: src/epggrab/module.c:54
 msgid "Over-the-air"
 msgstr ""
 
-#: src/epggrab.c:472
+#: src/epggrab.c:502
 msgid "Over-the-air Cron multi-line"
 msgstr ""
 
-#: src/epggrab/module/eit.c:1726
+#: src/epggrab/module/eit.c:1772
 msgid "Over-the-air EIT EPG grabber"
 msgstr ""
 
@@ -6223,7 +6252,7 @@ msgstr ""
 msgid "Over-the-air EPG grabber with scraping"
 msgstr ""
 
-#: src/epggrab.c:496
+#: src/epggrab.c:526
 msgid "Over-the-air Genre Translation"
 msgstr ""
 
@@ -6435,7 +6464,7 @@ msgstr ""
 msgid "Path used by the device."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1166
+#: src/dvr/dvr_config.c:1179
 msgid ""
 "Path where the recordings are stored. If components of the path do not "
 "exist, Tvheadend will try to create them."
@@ -6459,7 +6488,7 @@ msgid ""
 "target tuner). Note that previous counters will be lost."
 msgstr ""
 
-#: src/epggrab.c:408
+#: src/epggrab.c:424
 msgid "Periodically save EPG to disk (hours)"
 msgstr ""
 
@@ -6571,15 +6600,15 @@ msgstr ""
 msgid "Position to send to the external command"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1515
+#: src/dvr/dvr_config.c:1528
 msgid "Post-processor command"
 msgstr ""
 
-#: src/channels.c:534 src/dvr/dvr_db.c:4557 src/dvr/dvr_config.c:1069
+#: src/channels.c:534 src/dvr/dvr_db.c:4557 src/dvr/dvr_config.c:1070
 msgid "Post-recording padding"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1525
+#: src/dvr/dvr_config.c:1538
 msgid "Post-remove command"
 msgstr ""
 
@@ -6594,7 +6623,7 @@ msgstr ""
 msgid "Power up time (ms) (10-500)"
 msgstr ""
 
-#: src/wizard.c:800 src/input/mpegts/mpegts_network_dvb.c:247
+#: src/wizard.c:801 src/input/mpegts/mpegts_network_dvb.c:247
 #: src/input/mpegts/mpegts_network_dvb.c:270
 #: src/input/mpegts/mpegts_network_dvb.c:293
 #: src/input/mpegts/mpegts_network_dvb.c:326
@@ -6607,11 +6636,11 @@ msgstr ""
 msgid "Pre-defined muxes"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1504
+#: src/dvr/dvr_config.c:1517
 msgid "Pre-processor command"
 msgstr ""
 
-#: src/channels.c:519 src/dvr/dvr_db.c:4529 src/dvr/dvr_config.c:1053
+#: src/channels.c:519 src/dvr/dvr_db.c:4529 src/dvr/dvr_config.c:1054
 msgid "Pre-recording padding"
 msgstr ""
 
@@ -6619,7 +6648,7 @@ msgstr ""
 msgid "Pre-school children's programs"
 msgstr ""
 
-#: src/wizard.c:965
+#: src/wizard.c:966
 msgid "Predefined Muxes"
 msgstr ""
 
@@ -6627,7 +6656,7 @@ msgstr ""
 msgid "Prefer picons over channel icons"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:248
+#: src/input/mpegts/mpegts_service.c:287
 msgid "Preferred CA PID"
 msgstr ""
 
@@ -6679,7 +6708,7 @@ msgid "Previously recorded"
 msgstr ""
 
 #: src/epggrab/module.c:179 src/dvr/dvr_db.c:4709 src/dvr/dvr_autorec.c:1386
-#: src/dvr/dvr_timerec.c:617 src/dvr/dvr_config.c:1000
+#: src/dvr/dvr_timerec.c:617 src/dvr/dvr_config.c:1001
 #: src/input/mpegts/mpegts_input.c:248
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1560
 #: src/input/mpegts/satip/satip_satconf.c:369 src/input/mpegts/iptv/iptv.c:844
@@ -6691,7 +6720,7 @@ msgstr ""
 msgid "Priority (-10..10)"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1001
+#: src/dvr/dvr_config.c:1002
 msgid ""
 "Priority of the entry, higher-priority entries will take precedence and "
 "cancel lower-priority events."
@@ -6704,7 +6733,7 @@ msgid ""
 "the assigned DVR configuration."
 msgstr ""
 
-#: src/channels.c:1805
+#: src/channels.c:1806
 msgid "Private"
 msgstr ""
 
@@ -6712,7 +6741,7 @@ msgstr ""
 msgid "Problematic: OSCam new pc-nodmx (rev >= 10389)"
 msgstr ""
 
-#: src/epggrab.c:431
+#: src/epggrab.c:447
 msgid "Process Parental Rating Labels"
 msgstr ""
 
@@ -6760,7 +6789,7 @@ msgstr ""
 msgid "Program unique ID (from grabber), such as MV101010101.0000"
 msgstr ""
 
-#: src/wizard.c:779
+#: src/wizard.c:780
 msgid "Progress"
 msgstr ""
 
@@ -6768,7 +6797,7 @@ msgstr ""
 msgid "Protocol version."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:182
+#: src/input/mpegts/mpegts_service.c:218
 msgid "Provider"
 msgstr ""
 
@@ -6795,6 +6824,14 @@ msgstr ""
 
 #: src/tvhlog.c:174
 msgid "PyEPG Import"
+msgstr ""
+
+#: src/input/mpegts/mpegts_mux_dvb.c:232 src/input/mpegts/mpegts_mux_dvb.c:327
+#: src/input/mpegts/mpegts_mux_dvb.c:599 src/input/mpegts/mpegts_mux_dvb.c:647
+#: src/input/mpegts/mpegts_mux_dvb.c:778 src/input/mpegts/mpegts_mux_dvb.c:801
+#: src/input/mpegts/mpegts_mux_dvb.c:824 src/input/mpegts/mpegts_mux_dvb.c:875
+#: src/input/mpegts/mpegts_mux_dvb.c:1039
+msgid "QAM/AUTO"
 msgstr ""
 
 #: src/transcoding/codec/codecs/libs/libvpx.c:106
@@ -6948,7 +6985,7 @@ msgstr ""
 msgid "Realm name"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1034 src/dvr/dvr_config.c:851
+#: src/dvr/dvr_autorec.c:1034 src/dvr/dvr_config.c:852
 msgid "Record all"
 msgstr ""
 
@@ -6956,7 +6993,7 @@ msgstr ""
 msgid "Record on these days only."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1023
+#: src/dvr/dvr_config.c:1024
 msgid "Recorded file(s) retention period"
 msgstr ""
 
@@ -6964,7 +7001,7 @@ msgstr ""
 msgid "Recording file size."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1012
+#: src/dvr/dvr_config.c:1013
 msgid "Recording info retention period"
 msgstr ""
 
@@ -6980,7 +7017,7 @@ msgstr ""
 msgid "Reject exact match"
 msgstr ""
 
-#: src/channels.c:1826
+#: src/channels.c:1827
 msgid "Relative path to the imagecache copy of the icon."
 msgstr ""
 
@@ -7000,7 +7037,7 @@ msgstr ""
 msgid "Remove HTTP arguments"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1380
+#: src/dvr/dvr_config.c:1393
 msgid "Remove all unsafe characters from filename"
 msgstr ""
 
@@ -7032,11 +7069,11 @@ msgid ""
 "pids only."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1392
+#: src/dvr/dvr_config.c:1405
 msgid "Replace whitespace in title with '-'"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1393
+#: src/dvr/dvr_config.c:1406
 msgid "Replaces all whitespace in the title with '-'."
 msgstr ""
 
@@ -7235,7 +7272,7 @@ msgstr ""
 msgid "Running"
 msgstr ""
 
-#: src/epggrab/module/eit.c:1741
+#: src/epggrab/module/eit.c:1787
 msgid "Running state immediately"
 msgstr ""
 
@@ -7409,7 +7446,7 @@ msgstr ""
 msgid "Satellite positions"
 msgstr ""
 
-#: src/epggrab.c:420
+#: src/epggrab.c:436
 msgid "Save EPG to disk after xmltv import"
 msgstr ""
 
@@ -7477,7 +7514,7 @@ msgstr ""
 msgid "Scanfile"
 msgstr ""
 
-#: src/wizard.c:1050
+#: src/wizard.c:1051
 msgid "Scanning"
 msgstr ""
 
@@ -7555,15 +7592,15 @@ msgstr ""
 msgid "Scraper configuration to use"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1516
+#: src/dvr/dvr_config.c:1529
 msgid "Script/program to run when a recording completes."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1526
+#: src/dvr/dvr_config.c:1539
 msgid "Script/program to run when a recording gets removed."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1505
+#: src/dvr/dvr_config.c:1518
 msgid ""
 "Script/program to run when a recording starts (service is subscribed but no "
 "filename available)."
@@ -7582,7 +7619,7 @@ msgstr ""
 msgid "Seek error"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:218
+#: src/input/mpegts/mpegts_service.c:257
 msgid ""
 "Select action to be taken with the Sub-title provided by the broadcaster: "
 "None; Save in Description; Append to Description; Prepend to Description. If "
@@ -7794,7 +7831,7 @@ msgstr ""
 msgid "Service"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:701 src/input/mpegts/mpegts_service.c:134
+#: src/input/mpegts/mpegts_mux.c:701 src/input/mpegts/mpegts_service.c:170
 #: src/input/mpegts/iptv/iptv.c:835 src/descrambler/constcw.c:354
 #: src/descrambler/constcw.c:427 src/descrambler/constcw.c:500
 #: src/descrambler/constcw.c:573
@@ -7805,7 +7842,7 @@ msgstr ""
 msgid "Service Mapper"
 msgstr ""
 
-#: src/wizard.c:1142
+#: src/wizard.c:1143
 msgid "Service Mapping"
 msgstr ""
 
@@ -7826,7 +7863,7 @@ msgstr ""
 msgid "Service limit"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:174 src/input/mpegts/iptv/iptv_mux.c:209
+#: src/input/mpegts/mpegts_service.c:210 src/input/mpegts/iptv/iptv_mux.c:209
 msgid "Service name"
 msgstr ""
 
@@ -7848,7 +7885,7 @@ msgstr ""
 msgid "Service raw"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:198
+#: src/input/mpegts/mpegts_service.c:234
 msgid "Service type"
 msgstr ""
 
@@ -7908,7 +7945,7 @@ msgstr ""
 msgid "Set the priority of this configuration."
 msgstr ""
 
-#: src/epggrab/module/eit.c:1732
+#: src/epggrab/module/eit.c:1778
 msgid ""
 "Set the short EIT destription to given target (subtitle, summary or both)."
 msgstr ""
@@ -7922,11 +7959,11 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:276
+#: src/input/mpegts/mpegts_service.c:315
 msgid "Shift PTS (ms)"
 msgstr ""
 
-#: src/epggrab/module/eit.c:1731
+#: src/epggrab/module/eit.c:1777
 msgid "Short EIT description"
 msgstr ""
 
@@ -8011,7 +8048,7 @@ msgstr ""
 msgid "Size"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:230
+#: src/input/mpegts/mpegts_service.c:269
 msgid "Skip Sub-title matches Title"
 msgstr ""
 
@@ -8024,7 +8061,7 @@ msgid ""
 "Skip TSID checking. For when providers use invalid Transport Stream IDs."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1491
+#: src/dvr/dvr_config.c:1504
 msgid "Skip commercials"
 msgstr ""
 
@@ -8097,7 +8134,7 @@ msgid ""
 "possible to properly switch the polarization."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1146
+#: src/dvr/dvr_config.c:1159
 msgid ""
 "Some artwork providers require additional arguments such as '--tmdb-key "
 "my_key_from_website'. These can be specified here. See Help for full details."
@@ -8121,11 +8158,11 @@ msgid ""
 "and supply both to clients."
 msgstr ""
 
-#: src/channels.c:1782
+#: src/channels.c:1783
 msgid "Sort index"
 msgstr ""
 
-#: src/channels.c:1783
+#: src/channels.c:1784
 msgid "Sort index."
 msgstr ""
 
@@ -8286,7 +8323,7 @@ msgstr ""
 msgid "Start recording earlier than the defined start time by x minutes."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1054
+#: src/dvr/dvr_config.c:1055
 msgid ""
 "Start recording earlier than the defined start time by x minutes: for "
 "example, if a program is to start at 13:00 and you set a padding of 5 "
@@ -8343,7 +8380,7 @@ msgstr ""
 msgid "Stop time"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1165 src/timeshift.c:212
+#: src/dvr/dvr_config.c:1178 src/timeshift.c:212
 msgid "Storage path"
 msgstr ""
 
@@ -8396,7 +8433,7 @@ msgstr ""
 msgid "Stream index (starts with zero)."
 msgstr ""
 
-#: src/dvr/dvr_config.c:987
+#: src/dvr/dvr_config.c:988
 msgid "Stream profile"
 msgstr ""
 
@@ -8433,26 +8470,26 @@ msgstr ""
 msgid "Streaming profiles"
 msgstr ""
 
-#: src/dvr/dvr_config.c:932
+#: src/dvr/dvr_config.c:933
 msgid "Subdirectory Settings"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1290
+#: src/dvr/dvr_config.c:1303
 msgid "Subdirectory for tvmovies for $q format specifier"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1304
+#: src/dvr/dvr_config.c:1317
 msgid "Subdirectory for tvshows for $q format specifier"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1291
+#: src/dvr/dvr_config.c:1304
 msgid ""
 "Subdirectory to use for tvmovies when using the $q specifier. This can "
 "contain any alphanumeric characters (A-Za-z0-9). Other characters may be "
 "supported depending on your OS and filesystem."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1305
+#: src/dvr/dvr_config.c:1318
 msgid ""
 "Subdirectory to use for tvshows when using the $q specifier. This can "
 "contain any alphanumeric characters (A-Za-z0-9). Other characters may be "
@@ -8488,11 +8525,11 @@ msgstr ""
 msgid "Subsystem Output Settings"
 msgstr ""
 
-#: src/dvr/dvr_db.c:4650 src/dvr/dvr_db.c:4658 src/epggrab/module/eit.c:1716
+#: src/dvr/dvr_db.c:4650 src/dvr/dvr_db.c:4658 src/epggrab/module/eit.c:1762
 msgid "Subtitle"
 msgstr ""
 
-#: src/epggrab/module/eit.c:1718
+#: src/epggrab/module/eit.c:1764
 msgid "Subtitle and summary"
 msgstr ""
 
@@ -8512,7 +8549,7 @@ msgstr ""
 msgid "Subtitle, summary or description of the program (if any)."
 msgstr ""
 
-#: src/dvr/dvr_db.c:4667 src/dvr/dvr_db.c:4675 src/epggrab/module/eit.c:1717
+#: src/dvr/dvr_db.c:4667 src/dvr/dvr_db.c:4675 src/epggrab/module/eit.c:1763
 msgid "Summary"
 msgstr ""
 
@@ -8561,15 +8598,15 @@ msgstr ""
 msgid "Symbol rate (Sym/s)"
 msgstr ""
 
-#: src/dvr/dvr_config.c:738
+#: src/dvr/dvr_config.c:739
 msgid "Sync"
 msgstr ""
 
-#: src/dvr/dvr_config.c:739
+#: src/dvr/dvr_config.c:740
 msgid "Sync + Don't keep"
 msgstr ""
 
-#: src/dvr/dvr_config.c:736
+#: src/dvr/dvr_config.c:737
 msgid "System"
 msgstr ""
 
@@ -8701,7 +8738,7 @@ msgstr ""
 msgid "TVHDHomeRun Client"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1414
+#: src/dvr/dvr_config.c:1427
 msgid "Tag files with metadata"
 msgstr ""
 
@@ -8741,7 +8778,7 @@ msgstr ""
 msgid "Testing options"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:167
+#: src/input/mpegts/mpegts_service.c:203
 msgid "The ATSC source ID as set by the provider."
 msgstr ""
 
@@ -8810,7 +8847,7 @@ msgstr ""
 msgid "The MPEGTS stream type is only available for this filter."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:159
+#: src/input/mpegts/mpegts_service.c:195
 msgid "The OpenTV channel number as set by the provider."
 msgstr ""
 
@@ -8826,7 +8863,7 @@ msgstr ""
 msgid "The Physical Layer Scrambling (PLS) mode used on the mux."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:249
+#: src/input/mpegts/mpegts_service.c:288
 msgid ""
 "The Preferred Conditional Access Packet Identifier. Used for decrypting "
 "scrambled streams."
@@ -8911,7 +8948,7 @@ msgstr ""
 msgid "The bouquet the channel is associated with."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1241
+#: src/dvr/dvr_config.c:1254
 msgid ""
 "The cache scheme to use/used to store recordings. Leave as \"system\" unless "
 "you have a special use case for one of the others. See Help for details."
@@ -8953,7 +8990,7 @@ msgstr ""
 msgid "The character encoding for this network (e.g. UTF-8)."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:240
+#: src/input/mpegts/mpegts_service.c:279
 msgid "The character encoding for this service (e.g. UTF-8)."
 msgstr ""
 
@@ -9213,7 +9250,7 @@ msgstr ""
 msgid "The limit for the PID filter (driver or hardware)."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:258
+#: src/input/mpegts/mpegts_service.c:297
 msgid ""
 "The locking mechanism selection for The Preferred Conditional Access Packet "
 "Identifier. See Help for more information."
@@ -9245,7 +9282,7 @@ msgid ""
 "using storage."
 msgstr ""
 
-#: src/epggrab.c:487
+#: src/epggrab.c:517
 msgid ""
 "The maximum amount of time a grabber is allowed scan a mux for data (in "
 "seconds)."
@@ -9275,7 +9312,7 @@ msgstr ""
 msgid "The maximum number of active RTSP sessions (if 0 no limit)."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1461
+#: src/dvr/dvr_config.c:1474
 msgid "The maximum number of entries that can be matched."
 msgstr ""
 
@@ -9287,7 +9324,7 @@ msgstr ""
 msgid "The maximum number of recording entries this rule can create."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1471
+#: src/dvr/dvr_config.c:1484
 msgid "The maximum number of recordings that can be scheduled."
 msgstr ""
 
@@ -9332,7 +9369,7 @@ msgstr ""
 msgid "The modulation used on the mux."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:119
+#: src/input/mpegts/mpegts_service.c:155
 msgid "The mux the service is on."
 msgstr ""
 
@@ -9340,7 +9377,7 @@ msgstr ""
 msgid "The mux to play when the entry is triggered."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:127
+#: src/input/mpegts/mpegts_service.c:163
 msgid "The mux's universally unique identifier."
 msgstr ""
 
@@ -9370,7 +9407,7 @@ msgstr ""
 msgid "The network the mux is on."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:111
+#: src/input/mpegts/mpegts_service.c:147
 msgid "The network the service is on."
 msgstr ""
 
@@ -9514,7 +9551,7 @@ msgstr ""
 msgid "The provider's ID."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:183
+#: src/input/mpegts/mpegts_service.c:219
 msgid "The provider's name."
 msgstr ""
 
@@ -9602,7 +9639,7 @@ msgstr ""
 msgid "The service ID"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:135
+#: src/input/mpegts/mpegts_service.c:171
 msgid "The service ID as set by the provider."
 msgstr ""
 
@@ -9611,7 +9648,7 @@ msgstr ""
 msgid "The service ID."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:175
+#: src/input/mpegts/mpegts_service.c:211
 msgid "The service name as set by the provider."
 msgstr ""
 
@@ -9628,17 +9665,17 @@ msgid ""
 "filter to all services."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:199
+#: src/input/mpegts/mpegts_service.c:235
 msgid ""
 "The service type flag as defined by the DVB specifications (e.g. 0x02 = "
 "radio, 0x11 = MPEG2 HD TV, 0x19 = H.264 HD TV)"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:151
+#: src/input/mpegts/mpegts_service.c:187
 msgid "The service's channel minor as set by the provider."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:143
+#: src/input/mpegts/mpegts_service.c:179
 msgid "The service's channel number as set by the provider."
 msgstr ""
 
@@ -9671,7 +9708,7 @@ msgstr ""
 msgid "The stream ID used for the mux."
 msgstr ""
 
-#: src/dvr/dvr_config.c:988
+#: src/dvr/dvr_config.c:989
 msgid "The stream profile the DVR profile will use for recordings."
 msgstr ""
 
@@ -9680,7 +9717,7 @@ msgid ""
 "The streaming profile to use/used. If not set, the default will be used."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1228
+#: src/dvr/dvr_config.c:1241
 msgid ""
 "The string allows you to manually specify the full path generation using "
 "predefined modifiers. See Help for full details."
@@ -9982,7 +10019,7 @@ msgstr ""
 msgid "Total number of services found on this network."
 msgstr ""
 
-#: src/wizard.c:1038
+#: src/wizard.c:1039
 msgid "Total number of services found."
 msgstr ""
 
@@ -10034,7 +10071,7 @@ msgstr ""
 msgid "Transcoding Settings"
 msgstr ""
 
-#: src/epggrab.c:497
+#: src/epggrab.c:527
 msgid ""
 "Translate the genre codes received from the broadcaster to another genre "
 "code.<br>Use the form xxx=yyy, where xxx and yyy are 'ETSI EN 300 468' "
@@ -10064,7 +10101,7 @@ msgstr ""
 msgid "Transport stream ID"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1091
+#: src/dvr/dvr_config.c:1092
 msgid "Try re-scheduling recording if more errors than (0=off)"
 msgstr ""
 
@@ -10100,7 +10137,7 @@ msgstr ""
 msgid "Tuner"
 msgstr ""
 
-#: src/wizard.c:670
+#: src/wizard.c:671
 msgid "Tuner and Network"
 msgstr ""
 
@@ -10160,7 +10197,7 @@ msgstr ""
 msgid "UPnP Protocol"
 msgstr ""
 
-#: src/tvhlog.c:98 src/wizard.c:826 src/dvr/dvr_db.c:4962
+#: src/tvhlog.c:98 src/wizard.c:827 src/dvr/dvr_db.c:4962
 #: src/input/mpegts/iptv/iptv.c:952 src/input/mpegts/iptv/iptv_mux.c:130
 msgid "URL"
 msgstr ""
@@ -10169,7 +10206,7 @@ msgstr ""
 msgid "URL for comparison"
 msgstr ""
 
-#: src/wizard.c:827
+#: src/wizard.c:828
 msgid "URL of the M3U playlist."
 msgstr ""
 
@@ -10414,8 +10451,8 @@ msgstr ""
 msgid "Universally unique identifier. Read only."
 msgstr ""
 
-#: src/epggrab/module.c:57 src/dvr/dvr_rec.c:445 src/dvr/dvr_timerec.c:84
-#: src/dvr/dvr_config.c:735
+#: src/epggrab/module.c:57 src/dvr/dvr_rec.c:454 src/dvr/dvr_timerec.c:84
+#: src/dvr/dvr_config.c:736
 msgid "Unknown"
 msgstr ""
 
@@ -10460,19 +10497,19 @@ msgstr ""
 msgid "Update card (EMM)"
 msgstr ""
 
-#: src/epggrab.c:396
+#: src/epggrab.c:412
 msgid "Update channel icon"
 msgstr ""
 
-#: src/epggrab.c:372
+#: src/epggrab.c:388
 msgid "Update channel name"
 msgstr ""
 
-#: src/epggrab.c:384
+#: src/epggrab.c:400
 msgid "Update channel number"
 msgstr ""
 
-#: src/dvr/dvr_config.c:843
+#: src/dvr/dvr_config.c:844
 msgid "Update disabled"
 msgstr ""
 
@@ -10520,13 +10557,13 @@ msgstr ""
 msgid "Use DVR configuration"
 msgstr ""
 
-#: src/channels.c:544 src/dvr/dvr_config.c:1448
+#: src/channels.c:544 src/dvr/dvr_config.c:1461
 msgid ""
 "Use EITp/f to decide event start/stop. This is also known as \"Accurate "
 "Recording\". See Help for details."
 msgstr ""
 
-#: src/channels.c:543 src/dvr/dvr_config.c:1447
+#: src/channels.c:543 src/dvr/dvr_config.c:1460
 msgid "Use EPG running state"
 msgstr ""
 
@@ -10534,7 +10571,7 @@ msgstr ""
 msgid "Use WEBM format."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1402
+#: src/dvr/dvr_config.c:1415
 msgid "Use Windows-compatible filenames"
 msgstr ""
 
@@ -10634,7 +10671,7 @@ msgstr ""
 msgid "Use service IDs as channel numbers"
 msgstr ""
 
-#: src/channels.c:1798
+#: src/channels.c:1799
 msgid "Use tag internally (don't expose to clients)."
 msgstr ""
 
@@ -10642,11 +10679,11 @@ msgstr ""
 msgid "Use the provider's service IDs as channel numbers."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1216
+#: src/dvr/dvr_config.c:1229
 msgid "Use this character set when setting filenames."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1186
+#: src/dvr/dvr_config.c:1199
 msgid "Use x amount of storage space."
 msgstr ""
 
@@ -10942,7 +10979,7 @@ msgid ""
 "issues for SAT>IP (limited number of PID filters)."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1102
+#: src/dvr/dvr_config.c:1115
 msgid ""
 "When scheduling an autorec, this option attempts to schedule at the earliest "
 "time and on the 'best' channel (such as channel with the most failover "
@@ -10983,11 +11020,11 @@ msgstr ""
 msgid "When the mux was successfully scanned."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:285
+#: src/input/mpegts/mpegts_service.c:324
 msgid "When the service was first identified and recorded."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:293
+#: src/input/mpegts/mpegts_service.c:332
 msgid "When the service was last seen during a mux scan."
 msgstr ""
 
@@ -10996,6 +11033,12 @@ msgid ""
 "When using RTSP IPTV, this correspond to the minimum port bind on the client "
 "(this server), sent to the server. This is especially useful when using "
 "firewalls and NAT or containers."
+msgstr ""
+
+#: src/input/mpegts/mpegts_service.c:245
+msgid ""
+"Which EIT sub-tables are accepted for this service. Default defers to the "
+"global setting. See Help for the full policy descriptions."
 msgstr ""
 
 #: src/epg.c:1999
@@ -11024,14 +11067,14 @@ msgid ""
 "useful for debugging your setup or structure of incoming streams."
 msgstr ""
 
-#: src/epggrab.c:409
+#: src/epggrab.c:425
 msgid ""
 "Writes the current in-memory EPG database to disk every x hours, so should a "
 "crash/unexpected shutdown occur EPG data is saved periodically to the "
 "database (re-read on next startup). Set to 0 to disable."
 msgstr ""
 
-#: src/epggrab.c:421
+#: src/epggrab.c:437
 msgid ""
 "Writes the current in-memory EPG database to disk shortly after an xmltv "
 "import has completed, so should a crash/unexpected shutdown occur EPG data "
