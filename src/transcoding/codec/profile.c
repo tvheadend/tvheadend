@@ -276,24 +276,12 @@ tvh_codec_profile_video_destroy(TVHCodecProfile *_self)
 }
 
 int
-tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self)
+tvh_codec_profile_video_get_decoder_hwaccel_type(TVHCodecProfile *self)
 {
     TVHCodec *codec = tvh_codec_profile_get_codec(self);
     if (codec && tvh_codec_is_enabled(codec) &&
         tvh_codec_get_type(codec) == AVMEDIA_TYPE_VIDEO) {
-        return ((TVHVideoCodecProfile *)self)->hwaccel;
-    }
-    return -1;
-}
-
-
-int
-tvh_codec_profile_video_get_hwaccel_details(TVHCodecProfile *self)
-{
-    TVHCodec *codec = tvh_codec_profile_get_codec(self);
-    if (codec && tvh_codec_is_enabled(codec) &&
-        tvh_codec_get_type(codec) == AVMEDIA_TYPE_VIDEO) {
-        return ((TVHVideoCodecProfile *)self)->hwaccel_details;
+        return ((TVHVideoCodecProfile *)self)->decoder_hwaccel_type;
     }
     return -1;
 }

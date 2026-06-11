@@ -34,18 +34,25 @@ scaling_mode_get_list( void *o, const char *lang )
 }
 
 static htsmsg_t *
-hwaccel_get_list( void *o, const char *lang )
+decoder_hwaccel_type_get_list( void *o, const char *lang )
 {
     static const struct strtab tab[] = {
-        { N_("auto (recommended)"),                 HWACCEL_AUTO},
+        { N_("auto (recommended)"),                 AV_AUTO_DEVICE_TYPE},
+        { N_("software (forced)"),                  AV_HWDEVICE_TYPE_NONE},
 #if ENABLE_VAAPI
-        { N_("prioritize VAAPI"),                   HWACCEL_PRIORITIZE_VAAPI},
+        { N_("prioritize VAAPI"),                   AV_HWDEVICE_TYPE_VAAPI},
+#endif
+#if ENABLE_QSV
+        { N_("prioritize QSV"),                     AV_HWDEVICE_TYPE_QSV},
 #endif
 #if ENABLE_NVENC
-        { N_("prioritize NVDEC"),                   HWACCEL_PRIORITIZE_NVDEC},
+        { N_("prioritize NVDEC"),                   AV_HWDEVICE_TYPE_CUDA},
 #endif
 #if ENABLE_MMAL
-        { N_("prioritize MMAL"),                    HWACCEL_PRIORITIZE_MMAL},
+        { N_("prioritize MMAL"),                    AV_HWDEVICE_TYPE_MMAL},
+#endif
+#if ENABLE_V4L2M2M
+        { N_("prioritize V4L2"),                    AV_HWDEVICE_TYPE_DRM},
 #endif
     };
     return strtab2htsmsg(tab, 1, lang);
@@ -61,6 +68,33 @@ deinterlace_vaapi_mode_get_list( void *o, const char *lang )
         { N_("Weave Deinterlacing"),                     VAAPI_DEINT_MODE_WEAVE },
         { N_("Motion Adaptive Deinterlacing (MADI)"),    VAAPI_DEINT_MODE_MADI },
         { N_("Motion Compensated Deinterlacing (MCDI)"), VAAPI_DEINT_MODE_MCDI },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+#endif
+
+#if ENABLE_QSV
+static htsmsg_t *
+deinterlace_qsv_mode_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("Disabled"),                                QSV_DEINTERLACING_OFF },
+        { N_("Bob Deinterlacing"),                       QSV_DEINTERLACING_BOB },
+        { N_("Motion Adaptive Deinterlacing"),           QSV_DEINTERLACING_ADVANCED },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+#endif
+
+#if ENABLE_NVENC
+static htsmsg_t *
+deinterlace_nvdec_mode_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("Send Frame Deinterlacing"),              NVDEC_DEINT_MODE_SEND_FRAME },
+        { N_("Send Field Deinterlacing"),              NVDEC_DEINT_MODE_SEND_FIELD },
+        { N_("Send Frame Nonspatia Deinterlacing"),    NVDEC_DEINT_MODE_SEND_FRAME_NONSPATIAL },
+        { N_("Send Field Nonspatia Deinterlacing"),    NVDEC_DEINT_MODE_SEND_FIELD_NONSPATIAL },
     };
     return strtab2htsmsg(tab, 1, lang);
 }
@@ -202,9 +236,6 @@ tvh_codec_profile_video_is_copy(TVHVideoCodecProfile *self, tvh_ssc_t *ssc)
 static int
 tvh_codec_profile_video_open(TVHVideoCodecProfile *self, AVDictionary **opts)
 {
-    // video_size
-    AV_DICT_SET_INT(LST_VIDEO, opts, "width", self->size.num, 0);
-    AV_DICT_SET_INT(LST_VIDEO, opts, "height", self->size.den, 0);
     // crf
     if (self->crf) {
         AV_DICT_SET_INT(LST_VIDEO, opts, "crf", self->crf, AV_DICT_DONT_OVERWRITE);
@@ -286,22 +317,13 @@ const codec_profile_class_t codec_profile_video_class = {
                 .def.i    = 0,
             },
             {
-                .type     = PT_BOOL,
-                .id       = "hwaccel",
-                .name     = N_("Hardware acceleration"),
-                .desc     = N_("Use hardware acceleration for decoding if available."),
-                .group    = 2,
-                .off      = offsetof(TVHVideoCodecProfile, hwaccel),
-                .def.i    = 0,
-            },
-            {
                 .type     = PT_INT,
-                .id       = "hwaccel_details",
-                .name     = N_("Hardware acceleration details"),
-                .desc     = N_("Force hardware acceleration."),
+                .id       = "decoder_hwaccel_type",
+                .name     = N_("Decoder hardware acceleration type"),
+                .desc     = N_("Prioritize selected hardware acceleration type (fallback on software decoding)."),
                 .group    = 2,
-                .off      = offsetof(TVHVideoCodecProfile, hwaccel_details),
-                .list     = hwaccel_get_list,
+                .off      = offsetof(TVHVideoCodecProfile, decoder_hwaccel_type),
+                .list     = decoder_hwaccel_type_get_list,
                 .def.i    = 0,
             },
             {
@@ -326,6 +348,34 @@ const codec_profile_class_t codec_profile_video_class = {
                 .opts     = PO_ADVANCED,
                 .off      = offsetof(TVHVideoCodecProfile, deinterlace_vaapi_mode),
                 .list     = deinterlace_vaapi_mode_get_list,
+                .def.i    = VAAPI_DEINT_MODE_DEFAULT,
+            },
+#endif
+#if ENABLE_QSV
+            {
+                .type     = PT_INT,
+                .id       = "deinterlace_qsv_mode",
+                .name     = N_("QSV Deinterlace mode"),
+                .desc     = N_("Mode to use for QSV Deinterlacing. "
+                               "'Disabled' disable deinterlace feature. "
+                               "Tip: Motion Adaptive usually yield the best results."),
+                .group    = 2,
+                .opts     = PO_ADVANCED,
+                .off      = offsetof(TVHVideoCodecProfile, deinterlace_qsv_mode),
+                .list     = deinterlace_qsv_mode_get_list,
+                .def.i    = VAAPI_DEINT_MODE_DEFAULT,
+            },
+#endif
+#if ENABLE_NVENC
+            {
+                .type     = PT_INT,
+                .id       = "deinterlace_nvdec_mode",
+                .name     = N_("NVDEC Deinterlace mode"),
+                .desc     = N_("Mode to use for NVDEC Deinterlacing."),
+                .group    = 2,
+                .opts     = PO_ADVANCED,
+                .off      = offsetof(TVHVideoCodecProfile, deinterlace_nvdec_mode),
+                .list     = deinterlace_nvdec_mode_get_list,
                 .def.i    = VAAPI_DEINT_MODE_DEFAULT,
             },
 #endif

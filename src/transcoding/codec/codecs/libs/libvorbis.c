@@ -24,7 +24,7 @@
 /* libvorbis ================================================================ */
 
 #if LIBAVCODEC_VERSION_MAJOR > 59
-// see libvorbis_setup() in ffmpeg-6.0/libavcodec/libvorbisenc.c
+// see libvorbis_setup() in ffmpeg-6.1.1/libavcodec/libvorbisenc.c
 static const AVChannelLayout libvorbis_channel_layouts[] = {
     AV_CHANNEL_LAYOUT_MONO,
     AV_CHANNEL_LAYOUT_STEREO,
@@ -36,7 +36,8 @@ static const AVChannelLayout libvorbis_channel_layouts[] = {
     AV_CHANNEL_LAYOUT_5POINT1,
     AV_CHANNEL_LAYOUT_5POINT1_BACK,
     AV_CHANNEL_LAYOUT_6POINT1,
-    AV_CHANNEL_LAYOUT_7POINT1
+    AV_CHANNEL_LAYOUT_7POINT1,
+    { 0 }
 };
 #else
 // see libvorbis_setup() in ffmpeg-3.0.2/libavcodec/libvorbisenc.c
@@ -69,6 +70,7 @@ tvh_codec_profile_libvorbis_open(TVHCodecProfile *self, AVDictionary **opts)
     else {
         AV_DICT_SET_GLOBAL_QUALITY(LST_LIBVORBIS, opts, self->qscale, 5);
     }
+    ((TVHCodecProfile *)self)->has_support_for_filter2 = 1;
     return 0;
 }
 
@@ -111,7 +113,8 @@ TVHAudioCodec tvh_codec_libvorbis = {
     .name            = "libvorbis",
     .size            = sizeof(TVHAudioCodecProfile),
     .idclass         = &codec_profile_libvorbis_class,
-    .channel_layouts = libvorbis_channel_layouts,
+    .profiles        = NULL,
     .profile_init    = tvh_codec_profile_audio_init,
     .profile_destroy = tvh_codec_profile_audio_destroy,
+    .channel_layouts = libvorbis_channel_layouts,
 };

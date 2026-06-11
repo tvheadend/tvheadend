@@ -33,6 +33,9 @@ tvh_codec_profile_mpeg2video_open(TVHCodecProfile *self, AVDictionary **opts)
     else {
         AV_DICT_SET_GLOBAL_QUALITY(LST_MPEG2VIDEO, opts, self->qscale, 5);
     }
+    // MPEG2 only knows max b frames of 2
+    AV_DICT_SET_INT(LST_VAAPI, opts, "bf", 2, AV_DICT_DONT_OVERWRITE);
+    ((TVHCodecProfile *)self)->has_support_for_filter2 = 1;
     return 0;
 }
 
@@ -63,6 +66,16 @@ static const codec_profile_class_t codec_profile_mpeg2video_class = {
                 .off      = offsetof(TVHCodecProfile, qscale),
                 .intextra = INTEXTRA_RANGE(0, 31, 1),
                 .def.d    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "encoder_hwaccel_type",
+                .name     = N_("Encoder hardware acceleration type"),
+                .desc     = N_("Encoder hardware acceleration type"),
+                .group    = 2,
+                .opts     = PO_PHIDDEN,
+                .off      = offsetof(TVHVideoCodecProfile, encoder_hwaccel_type),
+                .def.i    = AV_HWDEVICE_TYPE_NONE,
             },
             {}
         }
