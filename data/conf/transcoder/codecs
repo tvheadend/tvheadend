@@ -1,27 +1,125 @@
 [
     {
-	"description": "WEBTV codec VP8",
-	"name": "webtv-vp8",
-	"codec_name": "libvpx",
-	"height": 384,
+        "description": "WEBTV codec VP8",
+        "name": "webtv-vp8",
+        "codec_name": "libvpx",
+        "height": 384,
         "deadline": 1,
         "crf": 28,
         "cpu-used": 8
     },
     {
-	"description": "WEBTV codec H264",
-	"name": "webtv-h264",
-	"codec_name": "libx264",
-	"height": 384
+        "description": "WEBTV codec VP8 VAAPI",
+        "name": "webtv-vp8-vaapi",
+        "codec_name": "vp8_vaapi",
+        "height": 384,
+        "bit_rate": 1500,
+        "max_bit_rate": 2000,
+        "hwaccel": true,
+        "decoder_hwaccel_type": 3
     },
     {
-	"description": "WEBTV codec Vorbis",
-	"name": "webtv-vorbis",
-	"codec_name": "vorbis"
+        "description": "WEBTV codec VP9",
+        "name": "webtv-vp9",
+        "codec_name": "libvpx-vp9",
+        "height": 384,
+        "deadline": 1,
+        "crf": 28,
+        "cpu-used": 8
     },
     {
-	"description": "WEBTV codec AAC",
-	"name": "webtv-aac",
-	"codec_name": "aac"
+        "description": "WEBTV codec VP9 VAAPI",
+        "name": "webtv-vp9-vaapi",
+        "codec_name": "vp9_vaapi",
+        "height": 384,
+        "bit_rate": 1500,
+        "max_bit_rate": 2000,
+        "hwaccel": true,
+        "decoder_hwaccel_type": 3
+    },
+    {
+        "description": "WEBTV codec H264",
+        "name": "webtv-h264",
+        "codec_name": "libx264",
+        "height": 384,
+        "preset": "faster",
+        "tune": "zerolatency"
+    },
+    {
+        "description": "WEBTV codec H264 QSV",
+        "name": "webtv-h264-qsv",
+        "codec_name": "h264_qsv",
+        "height": 384,
+        "bit_rate": 1500,
+        "max_bit_rate": 2000,
+        "hwaccel": true,
+        "decoder_hwaccel_type": 5
+    },
+    {
+        "description": "WEBTV codec H264 VAAPI",
+        "name": "webtv-h264-vaapi",
+        "codec_name": "h264_vaapi",
+        "height": 384,
+        "bit_rate": 1500,
+        "max_bit_rate": 2000,
+        "hwaccel": true,
+        "decoder_hwaccel_type": 3
+    },
+    {
+        "description": "WEBTV codec HEVC",
+        "name": "webtv-hevc",
+        "codec_name": "libx265",
+        "height": 384,
+        "preset": "faster",
+        "tune": "zerolatency"
+    },
+    {
+        "description": "WEBTV codec HEVC QSV",
+        "name": "webtv-hevc-qsv",
+        "codec_name": "hevc_qsv",
+        "height": 384,
+        "bit_rate": 1500,
+        "max_bit_rate": 2000,
+        "hwaccel": true,
+        "decoder_hwaccel_type": 5
+    },
+    {
+        "description": "WEBTV codec HEVC VAAPI",
+        "name": "webtv-hevc-vaapi",
+        "codec_name": "hevc_vaapi",
+        "height": 384,
+        "bit_rate": 1500,
+        "max_bit_rate": 2000,
+        "hwaccel": true,
+        "decoder_hwaccel_type": 3
+    },
+    {
+        "description": "WEBTV codec Vorbis",
+        "name": "webtv-vorbis",
+        "codec_name": "vorbis",
+        "channel_layout": 3
+    },
+    {
+        "description": "WEBTV codec libVorbis",
+        "name": "webtv-libvorbis",
+        "codec_name": "libvorbis",
+        "channel_layout": 3
+    },
+    {
+        "description": "WEBTV codec AAC",
+        "name": "webtv-aac",
+        "codec_name": "aac",
+        "coder": "twoloop",
+        "sample_rate": 48000,
+        "channel_layout": 3
+    },
+    {
+        "description": "WEBTV codec libOpus",
+        "name": "webtv-libopus",
+        "codec_name": "libopus",
+        "bit_rate": 128,
+        "vbr": 2,
+        "complexity": 10,
+        "channel_layout": 3
     }
 ]
