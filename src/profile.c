@@ -779,13 +779,18 @@ profile_sharer_deliver(profile_chain_t *prch, streaming_message_t *sm)
      * time correction here
      */
     if (pkt->pkt_pts >= prch->prch_ts_delta &&
-        pkt->pkt_dts >= prch->prch_ts_delta &&
-        pkt->pkt_pcr >= prch->prch_ts_delta) {
+        pkt->pkt_dts >= prch->prch_ts_delta) {
       th_pkt_t *n = pkt_copy_shallow(pkt);
       pkt_ref_dec(pkt);
       n->pkt_pts -= prch->prch_ts_delta;
       n->pkt_dts -= prch->prch_ts_delta;
-      n->pkt_pcr -= prch->prch_ts_delta;
+      // pkt_pcr can legitimately lag pts/dts (notably for transcoded audio, whose
+      // pcr trails its dts by several seconds). Gating the drop on pcr discarded
+      // the whole audio track on a late sharer join (rapid same-channel profile
+      // switch), so globalheaders timed out and disabled audio -> MP4 video-only.
+      // Gate only on pts/dts; clamp the rebased pcr so it never underflows.
+      n->pkt_pcr = (pkt->pkt_pcr >= prch->prch_ts_delta) ?
+                     pkt->pkt_pcr - prch->prch_ts_delta : 0;
       sm->sm_data = n;
     } else {
       pkt_trace(LS_PROFILE, pkt, "packet drop (delta %"PRId64")", prch->prch_ts_delta);
