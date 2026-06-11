@@ -188,10 +188,17 @@ compute_bitrates(tvh_codec_profile_qsv_t *self, int *bitrate, int *buffer_size, 
  */
 static int
 setup_baseline_opts(const tvh_codec_profile_qsv_t *self, AVDictionary **opts, enum CODEC codec){
-    if ((self->low_power == 0) && (self->desired_b_depth)) {
-        // max_b_frames
-        AV_DICT_SET_INT(LST_QSV, opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
-    }
+    // Always pin the max B-frame count for QSV so the encoder never falls back to
+    // its aggressive default (hevc_qsv: GopRefDist=5, BRefType=pyramid), whose
+    // reorder delay makes frames arrive late ("picture is too late to be displayed")
+    // and degrades live quality (pixellation).
+    //  - low-power (VDEnc): B-frames are frequently unsupported, so force bf=0
+    //    regardless of desired_b_depth.
+    //  - normal path: use desired_b_depth (default 0 -> no B-frames, matching the
+    //    VAAPI encoders; set it >0 in the profile to re-enable B-frames).
+    AV_DICT_SET_INT(LST_QSV, opts, "bf",
+                    self->low_power ? 0 : self->desired_b_depth,
+                    AV_DICT_DONT_OVERWRITE);
     if (self->b_strategy) {
         AV_DICT_SET_INT(LST_QSV, opts, "b_strategy", self->b_strategy, AV_DICT_DONT_OVERWRITE);
     }
