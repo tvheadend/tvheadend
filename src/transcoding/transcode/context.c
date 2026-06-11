@@ -727,6 +727,9 @@ tvh_context_receive_packet(TVHContext *self)
 }
 
 
+// Number of consecutive encode failures tolerated before the stream is stopped.
+#define TVH_MAX_ENCODE_ERRORS 3
+
 static int
 tvh_context_encode_frame(TVHContext *self, AVFrame *avframe)
 {
@@ -744,6 +747,29 @@ tvh_context_encode_frame(TVHContext *self, AVFrame *avframe)
     }
     if ((ret = (ret == AVERROR_EOF) ? 0 : ret)) {
         av_frame_unref(avframe);
+        // Track consecutive encode failures. A hardware encoder (e.g. h264_vaapi)
+        // can enter a persistent error state and return -EIO on every frame; without
+        // a recovery path tvheadend would loop forever calling this on each input
+        // packet. avframe is NULL only during flush, which must not count as an error.
+        if (avframe) {
+            self->encode_errors++;
+            tvh_context_log(self, LOG_WARNING,
+                "encode error %d/%d", self->encode_errors, TVH_MAX_ENCODE_ERRORS);
+            if (self->encode_errors >= TVH_MAX_ENCODE_ERRORS) {
+                tvh_context_log(self, LOG_ERR,
+                    "too many consecutive encode errors, stopping stream");
+                self->encode_errors = 0;
+                // Return a fatal error that tvh_context_decode() does NOT remap to 0
+                // (unlike EAGAIN/EINVAL/EIO/INVALIDDATA). It then propagates up to
+                // tvh_transcoder_handle(), which calls tvh_stream_stop() to tear the
+                // stream down cleanly via tvh_context_close(). Do not free oavctx here:
+                // teardown is the stop path's responsibility, and freeing it would let
+                // a later packet re-enter tvh_context_encode() with oavctx == NULL.
+                ret = AVERROR(ENODEV);
+            }
+        }
+    } else {
+        self->encode_errors = 0;
     }
     return ret;
 }
@@ -775,7 +801,9 @@ tvh_context_encode(TVHContext *self, AVFrame *avframe)
 {
     int ret = 0;
 
-    if (!avcodec_is_open(self->oavctx)) {
+    // Guard against a NULL encoder context: avcodec_is_open() dereferences its
+    // argument, so a missing oavctx would otherwise segfault here.
+    if (!self->oavctx || !avcodec_is_open(self->oavctx)) {
         ret = tvh_context_open_encoder(self);
     }
     if (!ret && !(ret = tvh_context_push_frame(self, avframe))) {

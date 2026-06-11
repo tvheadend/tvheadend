@@ -190,6 +190,9 @@ struct tvh_context {
     // V4L2 is using AV_PKT_DATA_NEW_EXTRADATA so we need to change the conditions used for extradata
     // to signal that we set this variable to 1
     uint8_t use_pkt_data_new_extradata;
+    // consecutive encode-failure counter; once it reaches TVH_MAX_ENCODE_ERRORS
+    // the stream is torn down cleanly instead of looping forever (or crashing).
+    int encode_errors;
 };
 
 int
