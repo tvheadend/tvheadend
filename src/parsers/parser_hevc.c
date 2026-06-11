@@ -1164,11 +1164,19 @@ int isom_write_hvcc(sbuf_t *pb, const uint8_t *data, int size)
         case HEVC_NAL_VPS:
         case HEVC_NAL_SPS:
         case HEVC_NAL_PPS:
-        case HEVC_NAL_SEI_PREFIX:
-        case HEVC_NAL_SEI_SUFFIX:
+            /* VPS/SPS/PPS are mandatory: a parse failure means we cannot build a
+             * valid hvcC, so bail out. */
             ret = hvcc_add_nal_unit(buf, len, &hvcc);
             if (ret < 0)
                 goto end;
+            break;
+        case HEVC_NAL_SEI_PREFIX:
+        case HEVC_NAL_SEI_SUFFIX:
+            /* SEI is optional in the hvcC. Some encoders (notably hevc_qsv) emit a
+             * tiny SEI NAL that hvcc_add_nal_unit() rejects; that must NOT discard
+             * the whole configuration record (which left an empty hvcC/CodecPrivate
+             * and an undecodable HEVC track). Add it best-effort and ignore errors. */
+            hvcc_add_nal_unit(buf, len, &hvcc);
             break;
         default:
             break;
