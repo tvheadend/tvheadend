@@ -72,9 +72,19 @@ lav_muxer_write(void *opaque, uint8_t *buf, int buf_size)
   }
 
   r = write(lm->lm_fd, buf, buf_size);
-  if (r != buf_size)
+  if (r != buf_size) {
+    /* A failed write to the client socket on a normal disconnect (EPIPE/
+     * ECONNRESET) is an end-of-streaming notification, not a muxer fault.
+     * Flag it as EOS like the pass/mkv muxers do, so the webui stops quietly
+     * instead of logging a misleading "muxer reported errors". Real write
+     * failures (e.g. ENOSPC while recording) still count without m_eos.
+     * errno is only meaningful when write() actually failed (r < 0); on a
+     * short write it may hold a stale value, so guard on r < 0. */
+    if (r < 0 && MC_IS_EOS_ERROR(errno))
+      lm->m_eos = 1;
     lm->m_errors++;
-  
+  }
+
   /* No room to notify about errors here. */
   /* We need to complete av_write_trailer() to free */
   /* all associated structures. */
