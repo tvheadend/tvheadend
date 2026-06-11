@@ -329,8 +329,13 @@ setup_baseline_opts_unconstrained(const tvh_codec_profile_vaapi_t *self, AVDicti
     if (self->async_depth) {
         AV_DICT_SET_INT(LST_VAAPI, opts, "async_depth", self->async_depth, AV_DICT_DONT_OVERWRITE);
     }
+    // Only send an explicit level when it is a real H264/HEVC level value.
+    // Valid levels are > 0 (h264: 10..62, hevc: 30..186); the "skip" sentinel is
+    // -100 and an unset level field defaults to 0. Both mean "let the encoder pick
+    // the level from resolution/bitrate". Sending level=0 makes the VAAPI driver
+    // fail every frame with VA_STATUS_ERROR_ENCODING_ERROR (24).
     if ((codec == H264 || codec == HEVC) &&
-        self->level != -100) {
+        self->level > 0) {
             AV_DICT_SET_INT(LST_VAAPI, opts, "level", self->level, AV_DICT_DONT_OVERWRITE);
     }
     if (self->qmin) {
