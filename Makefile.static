@@ -34,8 +34,7 @@
 # Optional inputs
 #
 #   PCLOUD_CACHE    - Use cached builds from pcloud
-#   PCLOUD_USER     - The pcloud user account for uploads
-#   PCLOUD_PASS     - The pcloud password
+#   PCLOUD_TOKEN    - The pcloud access token
 #   PCLOUD_BASEDIR  - The base directory for uploads
 #   PCLOUD_HASHDIR  - The public hash for the base directory for downloads
 #
@@ -54,8 +53,7 @@ export ROOTDIR
 export BUILDDIR
 export LIBDIR
 export PCLOUD_CACHE
-export PCLOUD_USER
-export PCLOUD_PASS
+export PCLOUD_TOKEN
 export PCLOUD_BASEDIR
 export PCLOUD_HASHDIR
 
@@ -79,7 +77,7 @@ endif
 # Download and Upload on demand
 .PHONY: libcacheput
 libcacheput: build
-ifneq ($(PCLOUD_USER),)
+ifneq ($(PCLOUD_TOKEN),)
 	@$(ROOTDIR)/support/lib.sh upload $(LIB_NAME) $(LIB_FILES)
 endif
 

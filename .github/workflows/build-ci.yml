@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     name: Build on Raspberry Pi ${{ matrix.arch }}
+    env:
+      PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
     strategy:
       matrix:
         arch: [armv6l, armv7l, aarch64]
@@ -102,6 +104,7 @@ jobs:
           # Pass some environment variables to the container
           env: | # YAML, but pipe character is necessary
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
+            PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
 
 
           # The shell to run commands with in the container
@@ -159,6 +162,8 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     name: Build on native ${{ matrix.container[1] }}
+    env:
+      PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
     strategy:
       matrix:
         container: [["i386/ubuntu:trusty", "i386-ubuntu-trusty"], ["ubuntu:trusty", "ubuntu-trusty"], ["i386/ubuntu:xenial", "i386-ubuntu-xenial"], ["ubuntu:xenial", "ubuntu-xenial"], ["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["ubuntu:plucky", "ubuntu-plucky"], ["ubuntu:questing", "ubuntu-questing"], ["ubuntu:resolute", "ubuntu-resolute"], ["i386/debian:stretch", "i386-debian-stretch"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
@@ -199,7 +204,7 @@ jobs:
           SCRIPT: |
             cd /workspace
             AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\ --enable-ffmpeg_static\ --enable-hdhomerun_static\ --python=python3 ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || '' }}
-        run: docker exec build-container bash -c "$SCRIPT"
+        run: docker exec -e PCLOUD_TOKEN build-container bash -c "$SCRIPT"
       - name: copy-result
         env:
           SCRIPT: |
@@ -221,6 +226,8 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     name: Build on native fedora:${{ matrix.releasever }}
+    env:
+      PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
     strategy:
       matrix:
         releasever: ["37", "38", "39", "40", "41", "42", "43", "44", "rawhide"]
@@ -260,6 +267,8 @@ jobs:
         releasever: ["9", "10"]
         runner: ["ubuntu-latest", "ubuntu-24.04-arm"]
     runs-on: ${{ matrix.runner }}
+    env:
+      PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
     container:
       image: "almalinux:${{ matrix.releasever }}"
     steps:
