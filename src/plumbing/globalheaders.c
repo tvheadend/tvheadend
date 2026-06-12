@@ -207,16 +207,12 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
     return 0;
 
   if(is_video) {
-// TO BE REMOVED LATER
-#if LOGGING
-#if ENABLE_LIBAV
-tvherror(LS_GLOBALHEADERS, "not_so_picky = %d, ssc->es_sample_aspect_ratio = %d/%d", not_so_picky, ssc->es_sample_aspect_ratio.num, ssc->es_sample_aspect_ratio.den);
-#endif
-#endif
+    /* note: es_sample_aspect_ratio is deliberately NOT required here: only
+       the H264/HEVC/MPEG-2 parsers ever provide it (and H264 without VUI
+       aspect info leaves it 0), so gating on it would stall every other
+       video stream for the full MAX_SCAN_TIME; consumers treat 0 as
+       "unknown" and default to 1:1. */
     if(!not_so_picky && (ssc->es_aspect_num == 0 || ssc->es_aspect_den == 0 ||
-#if ENABLE_LIBAV
-                         ssc->es_sample_aspect_ratio.num == 0 || ssc->es_sample_aspect_ratio.den == 0 || 
-#endif
                          ssc->es_width == 0 || ssc->es_height == 0))
       return 0;
   }
