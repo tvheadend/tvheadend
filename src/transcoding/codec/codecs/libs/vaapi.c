@@ -441,7 +441,7 @@ setup_common_opts_unconstrained(const tvh_codec_profile_vaapi_t *self, AVDiction
  * Does the following in order:
  * - If @c b_reference is non-zero, set @c b_depth.
  * - If @c desired_b_depth >= 0, set @c bf (max B-frames).
- * - For @c VP8 or @c VP9, if @c super_frame is enabled, set @c bsf to
+ * - For @c VP9, if @c super_frame is enabled, set @c bsf to
  *   @c "vp9_raw_reorder,vp9_superframe" (per FFmpeg VAAPI VP9 notes).
  * - Calls @ref setup_common_opts_unconstrained with the outer @p codec, so the
  *   common / baseline branches follow each codec's own rules.
@@ -469,7 +469,7 @@ setup_opts_unconstrained(const tvh_codec_profile_vaapi_t *self, AVDictionary **o
         // max_b_frames
         AV_DICT_SET_INT(LST_VAAPI, opts, "bf", self->desired_b_depth, AV_DICT_DONT_OVERWRITE);
     }
-    if ((codec == VP8 || codec == VP9) &&
+    if (codec == VP9 &&
         self->super_frame) {
             // according to example from https://trac.ffmpeg.org/wiki/Hardware/VAAPI
             // -bsf:v vp9_raw_reorder,vp9_superframe
