@@ -29,6 +29,9 @@ struct imagecache_config {
   uint32_t  expire;
   uint32_t  ok_period;
   uint32_t  fail_period;
+  int       throttle;      ///< Automatic throttling: adapt pace+pause and lock onto what works
+  uint32_t  fetch_delay;   ///< Min delay between downloads (ms). Auto: live value (read-only); manual: user-set
+  uint32_t  backoff_min;   ///< Pause after a provider block (minutes). Auto: locked value (read-only); manual: user-set
 };
 
 extern struct imagecache_config imagecache_conf;
@@ -41,9 +44,14 @@ void imagecache_done     ( void );
 
 void imagecache_clean    ( void );
 void imagecache_trigger  ( void );
+void imagecache_throttle_reset ( void );
 
 // Note: will return 0 if invalid (must serve original URL)
 int imagecache_get_id  ( const char *url );
+
+// As above, with a fetch-ordering priority (lower = fetched sooner; EPG passes the
+// programme start time so the "now" guide gets its images before far-future days).
+int imagecache_get_id_prio ( const char *url, int64_t prio );
 
 const char *imagecache_get_propstr ( const char *image, char *buf, size_t buflen );
 

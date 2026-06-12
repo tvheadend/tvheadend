@@ -103,6 +103,23 @@ tvheadend.imgcacheconf = function(panel, index) {
         }
     };
 
+    const resetThrottleButton = {
+        name: 'resetthrottle',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Reset the automatic download throttle and re-learn the provider limit'),
+                iconCls: 'resetIcon',
+                text: _('Reset auto-throttle')
+            });
+        },
+        callback: function(conf) {
+            tvheadend.Ajax({
+               url: 'api/imagecache/config/resetthrottle',
+               params: { reset: 1 },
+            });
+        }
+    };
+
     tvheadend.idnode_simple(panel, {
         url: 'api/imagecache/config',
         title: _('Image Cache'),
@@ -112,7 +129,7 @@ tvheadend.imgcacheconf = function(panel, index) {
         comet: 'imagecache',
         width: 550,
         labelWidth: 200,
-        tbar: [cleanButton, triggerButton]
+        tbar: [cleanButton, triggerButton, resetThrottleButton]
     });
 
 };
