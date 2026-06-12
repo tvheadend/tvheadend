@@ -208,8 +208,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     // Note the inversion here! Timebase is 1/FPS
     av_reduce(&c->time_base.den, &c->time_base.num, st->time_base.num, ssc->es_frame_duration, INT_MAX);
 
-    // to be removed when we remove has_support_for_filter2
-    tvhinfo(LS_LIBAV,  "Muxer: sample aspect ratio = %d/%d", ssc->es_sample_aspect_ratio.num, ssc->es_sample_aspect_ratio.den);
+    tvhtrace(LS_LIBAV,  "Muxer: sample aspect ratio = %d/%d", ssc->es_sample_aspect_ratio.num, ssc->es_sample_aspect_ratio.den);
     c->sample_aspect_ratio.num = ssc->es_sample_aspect_ratio.num;
     c->sample_aspect_ratio.den = ssc->es_sample_aspect_ratio.den;
 
