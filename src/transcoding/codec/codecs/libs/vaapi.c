@@ -394,9 +394,8 @@ setup_bitrate_qp_opts_unconstrained(const tvh_codec_profile_vaapi_t *self, AVDic
  * 3. If @c quality >= 0, sets @c quality.
  * 4. @c VP8 / @c VP9 only — if @c global_quality >= 0, sets @c global_quality.
  * 5. If @c low_power is non-zero, sets @c low_power.
- * 6. @ref setup_baseline_opts_unconstrained — note: this is invoked with a hard-coded
- *    @c H264 @p codec argument, not the outer @p codec, so VP9/HEVC baseline fields
- *    (e.g. @c level / @c qmin) follow the H264 branch rules inside that helper.
+ * 6. @ref setup_baseline_opts_unconstrained — invoked with the outer @p codec, so
+ *    the baseline fields (e.g. @c level / @c qmin) follow each codec's own rules.
  *
  * @param self         VAAPI profile.
  * @param opts         Encoder option dictionary.
@@ -444,15 +443,12 @@ setup_common_opts_unconstrained(const tvh_codec_profile_vaapi_t *self, AVDiction
  * - If @c desired_b_depth >= 0, set @c bf (max B-frames).
  * - For @c VP8 or @c VP9, if @c super_frame is enabled, set @c bsf to
  *   @c "vp9_raw_reorder,vp9_superframe" (per FFmpeg VAAPI VP9 notes).
- * - Calls @ref setup_common_opts_unconstrained with a hard-coded @c H264 @c codec
- *   argument for the inner layer—not the outer @p codec—so the common / baseline
- *   branch behaves like the H264 path regardless of whether you are configuring
- *   VP9, HEVC, etc. (worth revisiting if that is unintentional).
+ * - Calls @ref setup_common_opts_unconstrained with the outer @p codec, so the
+ *   common / baseline branches follow each codec's own rules.
  *
  * @param self         VAAPI profile.
  * @param opts         Encoder option dictionary.
- * @param codec        Which codec is being set up (@c H264, @c HEVC, @c VP8, @c VP9, …);
- *                     only affects the VP super-frame @c bsf branch today.
+ * @param codec        Which codec is being set up (@c H264, @c HEVC, @c VP8, @c VP9, …).
  * @param bitrate      Passed through to @ref setup_common_opts_unconstrained.
  * @param buffer_size  Passed through to @ref setup_common_opts_unconstrained.
  * @param max_bitrate  Passed through to @ref setup_common_opts_unconstrained.
