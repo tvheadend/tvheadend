@@ -299,7 +299,18 @@ gh_queue_delay(globalheaders_t *gh, int index)
     /* Move to the previous packet in the queue */
     l = TAILQ_PREV(l, th_pktref_queue, pr_link);
   }
-  /* * 3. Calculate Delay Difference:
+  /*
+   * 3. Edge Case - Empty Transcoder Packet:
+   * special noop packet from transcoder, increase decision limit.
+   * If the queue resolved to a single packet (first == last) and it has no actual
+   * media payload, artificially return a delay of 1. This prevents the system from
+   * treating it as a standard zero-delay scenario. Checked before the found_f/found_l
+   * gate below, which would otherwise return 0 when only one packet is queued.
+   */
+  if (l == f && l->pr_pkt->pkt_payload == NULL)
+    return 1;
+
+  /* * 4. Calculate Delay Difference:
    * If both a first and last packet with valid timestamps were found, compute the delay.
    */
   if (l->pr_pkt->pkt_dts != PTS_UNSET && f->pr_pkt->pkt_dts != PTS_UNSET) {
@@ -329,16 +340,6 @@ gh_queue_delay(globalheaders_t *gh, int index)
     /* If no valid matching packets were found, there is no determinable delay. */
     diff = 0;
   }
-
-  /* special noop packet from transcoder, increase decision limit */
-  /* * 4. Edge Case - Empty Transcoder Packet:
-   * special noop packet from transcoder, increase decision limit.
-   * If the queue resolved to a single packet (first == last) and it has no actual 
-   * media payload, artificially return a delay of 1. This prevents the system from 
-   * treating it as a standard zero-delay scenario.
-   */
-  if (l == f && l->pr_pkt->pkt_payload == NULL)
-    return 1;
 
   return diff;
 }
