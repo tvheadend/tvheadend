@@ -324,7 +324,7 @@ const codec_profile_class_t codec_profile_video_class = {
                 .group    = 2,
                 .off      = offsetof(TVHVideoCodecProfile, decoder_hwaccel_type),
                 .list     = decoder_hwaccel_type_get_list,
-                .def.i    = 0,
+                .def.i    = AV_AUTO_DEVICE_TYPE,
             },
             {
                 .type     = PT_BOOL,

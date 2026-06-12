@@ -153,6 +153,12 @@ tvh_codec_profile_create(htsmsg_t *conf, const char *uuid, int save)
         tvherror(LS_CODEC, "failed to insert idnode");
         return EINVAL;
     }
+    /* migrate the pre-"decoder_hwaccel_type" config: "hwaccel" was a bool
+       enabling hardware-accelerated decoding */
+    if (!htsmsg_field_find(conf, "decoder_hwaccel_type") &&
+        htsmsg_get_bool_or_default(conf, "hwaccel", 0)) {
+        htsmsg_set_s32(conf, "decoder_hwaccel_type", AV_AUTO_DEVICE_TYPE);
+    }
     idnode_load(&profile->idnode, conf);
     LIST_INSERT_HEAD(&tvh_codec_profiles, profile, link);
     if (save) {
