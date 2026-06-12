@@ -70,7 +70,7 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx)
     frames_ctx->initial_pool_size = 20;
     if ((err = av_hwframe_ctx_init(hw_frames_ref)) < 0) {
         tvherror_transcode(LST_VAAPI, "Decode: Failed to initialize VAAPI frame context."
-                "Error code: %s",av_err2str(err));
+                " Error code: %s",av_err2str(err));
         av_buffer_unref(&hw_frames_ref);
         return err;
     }
@@ -78,7 +78,7 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx)
     if (!ctx->hw_frames_ctx) {
         err = AVERROR(ENOMEM);
         tvherror_transcode(LST_VAAPI, "Decode: Failed to create a hardware frame context."
-                "Error code: %s",av_err2str(err));
+                " Error code: %s",av_err2str(err));
     }
     av_buffer_unref(&hw_frames_ref);
     return err;
@@ -216,7 +216,7 @@ vaapi_decode_setup_context(AVCodecContext *avctx)
     /* set hw_frames_ctx for decoder's AVCodecContext */
     if ((ret = set_hwframe_ctx(avctx, avctx->hw_device_ctx)) < 0) {
         tvherror_transcode(LST_VAAPI, "Decode: Failed to set hwframe context."
-                                      "Error code: %s", av_err2str(ret));
+                                      " Error code: %s", av_err2str(ret));
         av_buffer_unref(&avctx->hw_device_ctx);
         tvh_va_context_destroy(self);
         return ret;
@@ -331,7 +331,7 @@ vaapi_encode_setup_context(AVCodecContext *avctx)
     // Open VAAPI device and create an AVHWDeviceContext for it
     if ((ret = av_hwdevice_ctx_create(&ctx->hw_device_octx, AV_HWDEVICE_TYPE_VAAPI, NULL, NULL, 0)) < 0) {
         tvherror_transcode(LST_VAAPI, "Encode: Failed to open VAAPI device and create an AVHWDeviceContext for it."
-                "Error code: %s",av_err2str(ret));
+                " Error code: %s",av_err2str(ret));
         return ret;
     }
     avctx->hw_device_ctx = av_buffer_ref(ctx->hw_device_octx);
@@ -340,7 +340,7 @@ vaapi_encode_setup_context(AVCodecContext *avctx)
         ctx->hw_device_octx = NULL;
         ret = AVERROR(ENOMEM);
         tvherror_transcode(LST_VAAPI, "Encode: Failed to create a hardware device context."
-                "Error code: %s",av_err2str(ret));
+                " Error code: %s",av_err2str(ret));
         return ret;
     }
     

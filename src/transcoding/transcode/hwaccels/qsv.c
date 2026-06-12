@@ -113,7 +113,7 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx)
     frames_ctx->initial_pool_size = 32; // Pre-allocate 32 surfaces
     if ((err = av_hwframe_ctx_init(hw_frames_ref)) < 0) {
         tvherror_transcode(LST_QSV, "Decode: Failed to initialize QSV frame context."
-                "Error code: %s",av_err2str(err));
+                " Error code: %s",av_err2str(err));
         av_buffer_unref(&hw_frames_ref);
         return err;
     }
@@ -121,7 +121,7 @@ static int set_hwframe_ctx(AVCodecContext *ctx, AVBufferRef *hw_device_ctx)
     if (!ctx->hw_frames_ctx) {
         err = AVERROR(ENOMEM);
         tvherror_transcode(LST_QSV, "Decode: Failed to create a hardware frame context."
-                "Error code: %s",av_err2str(err));
+                " Error code: %s",av_err2str(err));
     }
     av_buffer_unref(&hw_frames_ref);
     return err;
@@ -251,7 +251,7 @@ int qsv_decode_setup_context(AVCodecContext *avctx)
     /* set hw_frames_ctx for decoder's AVCodecContext */
     if ((ret = set_hwframe_ctx(avctx, avctx->hw_device_ctx)) < 0) {
         tvherror_transcode(LST_QSV, "Decode: Failed to set hwframe context."
-                                      "Error code: %s", av_err2str(ret));
+                                      " Error code: %s", av_err2str(ret));
         av_buffer_unref(&avctx->hw_device_ctx);
         tvh_qsv_context_destroy(self);
         return ret;
@@ -366,7 +366,7 @@ qsv_encode_setup_context(AVCodecContext *avctx)
         ctx->hw_device_octx = NULL;
         ret = AVERROR(ENOMEM);
         tvherror_transcode(LST_QSV, "Encode: Failed to create a hardware device context."
-                "Error code: %s",av_err2str(ret));
+                " Error code: %s",av_err2str(ret));
         return ret;
     }
     
