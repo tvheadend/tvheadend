@@ -647,8 +647,18 @@ tvh_audio_context_encode(TVHContext *self, AVFrame *avframe)
     }
     //check for duplicate PTS from the filter
     if (flt_pts != AV_NOPTS_VALUE && self->last_flt_pts &&
-        flt_pts <= self->last_flt_pts)
-        return AVERROR(EAGAIN);
+        flt_pts <= self->last_flt_pts) {
+        // a backward jump beyond 2 seconds is a source PTS discontinuity:
+        // resync the timeline instead of dropping audio until it catches up
+        if (self->last_flt_pts - flt_pts >
+            av_rescale_q(2, av_make_q(1, 1), src_time_base)) {
+            tvh_context_log(self, LOG_WARNING,
+                "audio PTS discontinuity (%"PRId64" -> %"PRId64"), resyncing",
+                self->last_flt_pts, flt_pts);
+        } else {
+            return AVERROR(EAGAIN);
+        }
+    }
     // Track last PTS in filter/input time_base
     self->last_flt_pts = flt_pts;
     // Rescale PTS: filter time_base -> encoder time_base (1/sample_rate)

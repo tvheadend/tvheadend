@@ -745,6 +745,14 @@ tvh_context_encode_frame(TVHContext *self, AVFrame *avframe)
     if (!ret) {
         ret = tvh_context_receive_packet(self);
     }
+    if (ret == AVERROR(EAGAIN)) {
+        // _context_encode dropped the frame on purpose (e.g. duplicate PTS
+        // from the filter): not an encoder failure, don't count it towards
+        // TVH_MAX_ENCODE_ERRORS.
+        if (avframe)
+            av_frame_unref(avframe);
+        return 0;
+    }
     if ((ret = (ret == AVERROR_EOF) ? 0 : ret)) {
         av_frame_unref(avframe);
         // Track consecutive encode failures. A hardware encoder (e.g. h264_vaapi)
