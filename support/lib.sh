@@ -158,7 +158,7 @@ function upload
   P="${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
 
   # Can't upload
-  [ -z "${PCLOUD_USER}" -o -z "${PCLOUD_PASS}" ] && return 0
+  [ -z "${PCLOUD_TOKEN}" ] && return 0
   
   # Don't need to upload
   [ -f "${P}" ] && return 0
