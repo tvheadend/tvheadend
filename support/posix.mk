@@ -10,6 +10,8 @@ install: ${PROG} ${MAN}
 	install support/tvhmeta ${DESTDIR}${bindir}/tvhmeta
 	install lib/py/tvh/tv_meta_tmdb.py ${DESTDIR}${bindir}/tv_meta_tmdb.py
 	install lib/py/tvh/tv_meta_tvdb.py ${DESTDIR}${bindir}/tv_meta_tvdb.py
+	sed 's|@TVHEADEND_LOCALSTATEDIR@|${localstatedir}|' lib/py/tvh/tv_imagecache_audit.py > ${DESTDIR}${bindir}/tv_imagecache_audit.py
+	chmod 0755 ${DESTDIR}${bindir}/tv_imagecache_audit.py
 	install -d ${DESTDIR}${mandir}/man1
 	install ${MAN} ${DESTDIR}${mandir}/man1/tvheadend.1
 

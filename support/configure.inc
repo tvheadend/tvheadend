@@ -34,6 +34,7 @@ CONFIGURE_ARGS="$*"
 [ -z "$libdir"   ] && libdir=\${prefix}/lib
 [ -z "$datadir"  ] && datadir=\${prefix}/share
 [ -z "$mandir"   ] && mandir=\${datadir}/man
+[ -z "$localstatedir" ] && localstatedir=\${prefix}/var
 
 # Environment
 [ -z "$ROOTDIR"  ] && ROOTDIR=$(cd "$(dirname "$0")"; pwd)
@@ -516,6 +517,7 @@ bindir    = ${bindir}
 mandir    = ${mandir}
 datadir   = ${datadir}
 libdir    = ${libdir}
+localstatedir = ${localstatedir}
 EOF
 
   # no -Werror
