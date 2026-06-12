@@ -1365,17 +1365,13 @@ parse_mpeg2video_display_ext(parser_t *t, parser_es_t *st, bitstream_t *bs)
   skip_bits(bs, 1); // Marker bit; TODO: maybe we sould check if is '1'
   int display_height = read_bits(bs, 14);
 
-  if (display_width > 0 && display_height > 0) {
-    // update raw fields of es_width and st->es_height
-    st->es_width_12b  = display_width  & 0xFFFu;
-    st->es_height_12b = display_height & 0xFFFu;
-    st->es_width_2b   = (display_width  & 0x3000u) >> 12;
-    st->es_height_2b  = (display_height & 0x3000u) >> 12;
-
-    /* 6. Commit Parameters:
-    Update the stream context with the newly parsed width, height, and duration. */
-    parser_combine_stream_vparam(st, st->es_frame_duration);
-  }
+  /* display_horizontal/vertical_size describe the intended display
+     rectangle (pan&scan), NOT the coded frame size: they must not be
+     written into the es_width/es_height raw fields, which the sequence
+     header resets every GOP (the values would oscillate and corrupt the
+     SAR derived from them in parser_combine_stream_vparam()). */
+  tvhtrace(LS_PARSER, "mpeg2 display extension: display=%dx%d (coded=%dx%d)",
+           display_width, display_height, st->es_width, st->es_height);
 
   /* Return APPEND to signal that parsing of this header is complete. */
   return PARSER_APPEND;
