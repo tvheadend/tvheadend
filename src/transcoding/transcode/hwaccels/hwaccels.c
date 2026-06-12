@@ -213,6 +213,17 @@ hwaccels_decode_get_format(AVCodecContext *avctx,
             }
         }
     }
+    // The hardware setup failed at runtime (e.g. unusable /dev/dri) and a
+    // software format was selected: forget the hardware intent so the filter
+    // chain is built for software frames instead of failing graph config.
+    if (ctx->iavhwdevtype != AV_HWDEVICE_TYPE_NONE &&
+        (pix_fmt == AV_PIX_FMT_NONE ||
+         !((desc = av_pix_fmt_desc_get(pix_fmt)) &&
+           (desc->flags & AV_PIX_FMT_FLAG_HWACCEL)))) {
+        tvhwarn(LS_TRANSCODE, "hwaccels: [%s] hardware decoding unavailable, "
+                "falling back to software decoding", avctx->codec->name);
+        ctx->iavhwdevtype = AV_HWDEVICE_TYPE_NONE;
+    }
     return pix_fmt;
 }
 
