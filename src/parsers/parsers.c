@@ -1144,13 +1144,20 @@ parser_combine_stream_vparam(parser_es_t *st, int64_t duration) {
      Now that we have the intended display area, we can refine the SAR 
      calculation if we already have the DAR from the 0xB3 header. */
   if (st->es_aspect_num && st->es_aspect_den && width > 0 && height > 0) {
-    // SAR = (DAR_num * display_height) / (DAR_den * display_width)
-    uint32_t sample_aspect_ratio_num = st->es_aspect_num * height;
-    uint32_t sample_aspect_ratio_den = st->es_aspect_den * width;
-    // Note: You should simplify this fraction via GCD.
-    uint32_t v = gcdU32(sample_aspect_ratio_num, sample_aspect_ratio_den);
-    st->es_sample_aspect_ratio.num = sample_aspect_ratio_num / v;
-    st->es_sample_aspect_ratio.den = sample_aspect_ratio_den / v;
+    if (st->es_aspect_num == 1 && st->es_aspect_den == 1) {
+      /* aspect_ratio_information = 1 signals square samples (ISO/IEC 13818-2
+         table 6-3): the SAR is 1:1 directly, not a DAR to derive it from. */
+      st->es_sample_aspect_ratio.num = 1;
+      st->es_sample_aspect_ratio.den = 1;
+    } else {
+      // SAR = (DAR_num * display_height) / (DAR_den * display_width)
+      uint32_t sample_aspect_ratio_num = st->es_aspect_num * height;
+      uint32_t sample_aspect_ratio_den = st->es_aspect_den * width;
+      // Note: You should simplify this fraction via GCD.
+      uint32_t v = gcdU32(sample_aspect_ratio_num, sample_aspect_ratio_den);
+      st->es_sample_aspect_ratio.num = sample_aspect_ratio_num / v;
+      st->es_sample_aspect_ratio.den = sample_aspect_ratio_den / v;
+    }
   }
 #endif
   parser_set_stream_vparam(st, width, height, duration);
