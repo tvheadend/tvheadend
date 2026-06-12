@@ -138,7 +138,7 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
                 // Instead, VAAPI uses the standard software decoder (e.g., mpeg2video) and "accelerates" it by attaching a hardware device context to it.
             icodec = avcodec_find_decoder(icodec_id);
 
-            for (int i = 0;; i++) {
+            for (int i = 0; icodec; i++) {
                 const AVCodecHWConfig *config = avcodec_get_hw_config(icodec, i);
                 if (!config) break;
                 if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
