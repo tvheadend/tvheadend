@@ -645,9 +645,6 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
                             pict_type);
             break;
     }
-    // only if packet duration is valid we passed on
-    if (avpkt->duration > 0)
-        pkt->pkt_duration = avpkt->duration;
     pkt->pkt_commercial = self->src_pkt->pkt_commercial;
     pkt->v.pkt_field      = (self->oavctx->field_order > AV_FIELD_PROGRESSIVE);
 #if ENABLE_LIBAV
