@@ -214,18 +214,21 @@ _video_filters_get_filters(TVHContext *self, char **filters)
         // setup the hardware filter on each hwaccel
         hwaccels_decode_get_filters(self, hw_filters, sizeof(hw_filters))){
             tvherror(LS_TRANSCODE, "filters: video: function hwaccels_get_filter() returned with error.");
+            return -1;
     }
     memset(download, 0, sizeof(download));
     if (filter_download &&
         // setup the download filter
         hwaccels_download(self, download, sizeof(download), skip_download_format)){
             tvherror(LS_TRANSCODE, "filters: video: function hwaccels_download() returned with error.");
+            return -1;
     }
     memset(upload, 0, sizeof(upload));
     if (filter_upload &&
         // setup the upload filter
         hwaccels_upload(self, upload, sizeof(upload))){
             tvherror(LS_TRANSCODE, "filters: video: function hwaccels_upload() returned with error.");
+            return -1;
     }
 #else
     if (deint[0] == '\0' && scale[0] == '\0') {
