@@ -541,8 +541,7 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
 static int
 tvh_audio_context_open(TVHContext *self, TVHOpenPhase phase, AVDictionary **opts)
 {
-    // TODO : remove later on
-    tvh_context_log(self, LOG_ERR, "tvh_audio_context_open() TVHOpenPhase = %d ", phase);
+    tvh_context_log(self, LOG_TRACE, "tvh_audio_context_open() TVHOpenPhase = %d ", phase);
     switch (phase) {
         case PREPARE_ENCODER:
             return tvh_audio_context_open_encoder(self, opts);
@@ -552,8 +551,7 @@ tvh_audio_context_open(TVHContext *self, TVHOpenPhase phase, AVDictionary **opts
             if (!(self->oavctx->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) &&
                 (self->oavctx->frame_size > 0)){
                 av_buffersink_set_frame_size(self->oavfltctx, self->oavctx->frame_size);
-                // TODO : remove later on
-                tvh_context_log(self, LOG_ERR, "av_buffersink_set_frame_size(%d)", self->oavctx->frame_size);
+                tvh_context_log(self, LOG_TRACE, "av_buffersink_set_frame_size(%d)", self->oavctx->frame_size);
             }
             break;
         default:

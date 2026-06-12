@@ -478,8 +478,7 @@ tvh_video_context_open_filters(TVHContext *self)
 static int
 tvh_video_context_open(TVHContext *self, TVHOpenPhase phase, AVDictionary **opts)
 {
-    // TODO : remove later on
-    tvh_context_log(self, LOG_ERR, "tvh_video_context_open() TVHOpenPhase = %d ", phase);
+    tvh_context_log(self, LOG_TRACE, "tvh_video_context_open() TVHOpenPhase = %d ", phase);
     switch (phase) {
         case PREPARE_DECODER:
             return tvh_video_context_open_decoder(self, opts);
