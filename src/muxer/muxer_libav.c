@@ -511,7 +511,12 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
   }
 
   if(lm->m_config.m_type == MC_AVMP4) {
-    av_dict_set(&opts, "frag_duration", "1", 0);
+    /* frag_duration is in microseconds: "1" fragments after every frame
+       (a moof+mdat per picture), whose per-frame overhead back-pressures
+       the streaming chain and makes playback stutter over time. Fragment
+       once per second instead -- far less overhead, latency still well
+       under the player buffer. */
+    av_dict_set(&opts, "frag_duration", "1000000", 0);
     av_dict_set(&opts, "ism_lookahead", "0", 0);
   }
 
