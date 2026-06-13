@@ -382,6 +382,43 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
         }
     }
 
+#if LIBAVCODEC_VERSION_MAJOR <= 59
+    /* Legacy path: tvh_context_open_filters2() does not exist, so the encoder
+       geometry and timing cannot be taken from the negotiated buffersink and
+       must be configured here, as before the filter2 rework. */
+    {
+        TVHVideoCodecProfile *vprofile = (TVHVideoCodecProfile *)self->profile;
+        int field_rate = (vprofile->deinterlace &&
+                          vprofile->deinterlace_field_rate) ? 2 : 1;
+        AVRational ticks_per_frame;
+        int ticks_per_frame_tmp;
+
+        if (!self->oavctx->width) {
+            if (vprofile->size.num > 0 && vprofile->size.den > 0) {
+                self->oavctx->width  = vprofile->size.num;
+                self->oavctx->height = vprofile->size.den;
+            } else {
+                self->oavctx->width  = self->iavctx->width;
+                self->oavctx->height = self->iavctx->height;
+            }
+        }
+        // XXX: is this a safe assumption?
+        if (!self->iavctx->framerate.num) {
+            self->iavctx->framerate = av_make_q(30, 1);
+        }
+        // take into account double rate i.e. field-based deinterlacers
+        self->oavctx->framerate =
+            av_mul_q(self->iavctx->framerate, (AVRational) { field_rate, 1 });
+        // We assume 90kHz as timebase which is mandatory for MPEG-TS
+        ticks_per_frame_tmp =
+            (90000 * self->oavctx->framerate.den) / self->oavctx->framerate.num;
+        ticks_per_frame = av_make_q(ticks_per_frame_tmp, 1);
+        self->oavctx->time_base =
+            av_inv_q(av_mul_q(self->oavctx->framerate, ticks_per_frame));
+        self->oavctx->sample_aspect_ratio = self->iavctx->sample_aspect_ratio;
+    }
+#endif
+
     if (gop_size) {
         // gop was set by the user
         self->oavctx->gop_size = gop_size;
