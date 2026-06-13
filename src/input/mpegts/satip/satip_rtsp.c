@@ -340,11 +340,12 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
                  int max_pids_len, int weight )
 {
   char *stream = NULL;
-  char _stream[32], _w[16];
+  char _stream[32], _w[24];
   const char *p[8], *add[8], *del[8];
   int pcnt, addcnt, delcnt;
   int i, r = 0, index = 0;
-  char buf[max_pids_len + 32];
+  /* room for "delpids=%s&addpids=%s%s": del+add up to max_pids_len, plus _w */
+  char buf[(max_pids_len < 32 ? 32 : max_pids_len) + 64];
 
   if (max_pids_len < 32)
     max_pids_len = 32;

@@ -612,11 +612,6 @@ ratinglabel_class_get_icon ( void *obj )
 static void
 ratinglabel_class_enabled_notify ( void *obj, const char *lang )
 {
-  int a=1;
-  ratinglabel_t *rl = obj;
-
-  if (rl->rl_enabled)
-    a++;
 }
 
 CLASS_DOC(ratinglabel)
