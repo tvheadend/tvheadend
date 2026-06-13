@@ -2583,8 +2583,23 @@ access_init(int createdefault, int noacl)
   if((m = hts_settings_load("superuser")) != NULL) {
     s = htsmsg_get_str(m, "username");
     superuser_username = s ? strdup(s) : NULL;
-    s = htsmsg_get_str(m, "password");
-    superuser_password = s ? strdup(s) : NULL;
+    /* Prefer the obfuscated form (password2, the same reversible "TVHeadend-
+     * Hide-" base64 scheme used for normal user accounts); fall back to a
+     * plaintext password so existing superuser files keep working. */
+    s = htsmsg_get_str(m, "password2");
+    if (s && s[0]) {
+      char buf[300];
+      int l = base64_decode((uint8_t *)buf, s, sizeof(buf) - 1);
+      if (l >= 15) {
+        buf[l] = '\0';
+        if (!strncmp(buf, "TVHeadend-Hide-", 15))
+          superuser_password = strdup(buf + 15);
+      }
+    }
+    if (superuser_password == NULL) {
+      s = htsmsg_get_str(m, "password");
+      superuser_password = s ? strdup(s) : NULL;
+    }
     htsmsg_destroy(m);
   }
 }

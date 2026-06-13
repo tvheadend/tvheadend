@@ -93,9 +93,24 @@ configure)
     fi
 
     if db_get tvheadend/admin_password; then
-        JSONPASS="$(escape_json_string "$RET")"
-        echo >>"$HTS_SUPERUSERCONF" "\"password\": $JSONPASS"
-        JSONPASS=""
+        # Store the password using the same reversible obfuscation Tvheadend
+        # uses for normal user accounts: base64 of "TVHeadend-Hide-<password>".
+        # NOTE: this is obfuscation, not encryption (HTTP Digest auth needs a
+        # recoverable password, so a one-way hash is not possible) - the file
+        # is still created mode 0600 above.
+        #
+        # If base64/tr are unavailable (e.g. a stripped-down busybox system),
+        # fall back to the cleartext "password" field that Tvheadend also
+        # accepts, so the superuser file is always valid and login works.
+        if command -v base64 >/dev/null 2>&1 && command -v tr >/dev/null 2>&1; then
+            PASS2="$(printf 'TVHeadend-Hide-%s' "$RET" | base64 | tr -d '\n')"
+            echo >>"$HTS_SUPERUSERCONF" "\"password2\": \"$PASS2\""
+            PASS2=""
+        else
+            JSONPASS="$(escape_json_string "$RET")"
+            echo >>"$HTS_SUPERUSERCONF" "\"password\": $JSONPASS"
+            JSONPASS=""
+        fi
     fi
 
     echo >>"$HTS_SUPERUSERCONF" "}"
