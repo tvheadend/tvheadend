@@ -245,10 +245,10 @@ tvh_codec_profile_nvenc_open(tvh_codec_profile_nvenc_t *self,
     };
 #if NVENCAPI_MAJOR_VERSION >= 10
     static const struct strtab tunetab[] = {
-        {"hq",	            NV_ENC_PARAMS_RC_CONSTQP},
-        {"ll",              NV_ENC_PARAMS_RC_VBR},
-        {"ull",             NV_ENC_PARAMS_RC_CBR},
-        {"lossless",        NV_ENC_PARAMS_RC_VBR_MINQP},
+        {"hq",	            NV_ENC_TUNING_INFO_HIGH_QUALITY},
+        {"ll",              NV_ENC_TUNING_INFO_LOW_LATENCY},
+        {"ull",             NV_ENC_TUNING_INFO_ULTRA_LOW_LATENCY},
+        {"lossless",        NV_ENC_TUNING_INFO_LOSSLESS},
     };
 #endif
     const char *s;

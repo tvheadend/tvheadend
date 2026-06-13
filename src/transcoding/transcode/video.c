@@ -283,8 +283,10 @@ tvh_video_apply_stream_params(TVHContext *self)
     }
 #endif
     if ((!self->iavctx->framerate.num || !self->iavctx->framerate.den) &&
-        es->es_frame_duration > 1)
-        self->iavctx->framerate = av_make_q(90000, (int)es->es_frame_duration);
+        es->es_frame_duration > 1) {
+        int fdur = (es->es_frame_duration > INT_MAX) ? INT_MAX : (int)es->es_frame_duration;
+        self->iavctx->framerate = av_make_q(90000, fdur);
+    }
 }
 
 

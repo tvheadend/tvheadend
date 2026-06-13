@@ -204,9 +204,10 @@ lav_muxer_add_stream(lav_muxer_t *lm,
       // Fallback to default timebase
       st->time_base = mpeg_tc;
     }
-    // The function reduces the fraction num/den to dst_num/dst_den
-    // Note the inversion here! Timebase is 1/FPS
-    av_reduce(&c->time_base.den, &c->time_base.num, st->time_base.num, ssc->es_frame_duration, INT_MAX);
+    // Encoder time_base = 1/FPS = frame duration in seconds =
+    // (st->time_base.num * es_frame_duration) / st->time_base.den, reduced.
+    av_reduce(&c->time_base.num, &c->time_base.den,
+              (int64_t)st->time_base.num * ssc->es_frame_duration, st->time_base.den, INT_MAX);
 
     tvhtrace(LS_LIBAV,  "Muxer: sample aspect ratio = %d/%d", ssc->es_sample_aspect_ratio.num, ssc->es_sample_aspect_ratio.den);
     c->sample_aspect_ratio.num = ssc->es_sample_aspect_ratio.num;
