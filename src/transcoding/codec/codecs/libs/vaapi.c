@@ -19,8 +19,7 @@
 
 
 #include "transcoding/codec/internals.h"
-#include <fcntl.h>
-#include <sys/ioctl.h>
+#include "transcoding/codec/codecs/libs/drmdev.h"
 
 #include "idnode.h"
 #include "htsmsg.h"
@@ -207,80 +206,6 @@ hevc_level_get_list( void *o, const char *lang )
 
 /* vaapi ==================================================================== */
 
-#if defined(__linux__)
-#include <linux/types.h>
-#include <asm/ioctl.h>
-#else
-#include <sys/ioccom.h>
-#include <sys/types.h>
-typedef size_t   __kernel_size_t;
-#endif
-
-typedef struct drm_version {
-   int version_major;        /**< Major version */
-   int version_minor;        /**< Minor version */
-   int version_patchlevel;   /**< Patch level */
-   __kernel_size_t name_len; /**< Length of name buffer */
-   char *name;               /**< Name of driver */
-   __kernel_size_t date_len; /**< Length of date buffer */
-   char *date;               /**< User-space buffer to hold date */
-   __kernel_size_t desc_len; /**< Length of desc buffer */
-   char *desc;               /**< User-space buffer to hold desc */
-} drm_version_t;
-
-#define DRM_IOCTL_VERSION _IOWR('d', 0x00, struct drm_version)
-
-/* internal ==================================================================== */
-
-static int
-probe_vaapi_device(const char *device, char *name, size_t namelen)
-{
-    drm_version_t dv;
-    char dname[128];
-    int fd;
-
-    if ((fd = open(device, O_RDWR)) < 0)
-        return -1;
-    memset(&dv, 0, sizeof(dv));
-    memset(dname, 0, sizeof(dname));
-    dv.name = dname;
-    dv.name_len = sizeof(dname)-1;
-    if (ioctl(fd, DRM_IOCTL_VERSION, &dv) < 0) {
-        close(fd);
-        return -1;
-    }
-    snprintf(name, namelen, "%s v%d.%d.%d (%s)",
-             dv.name, dv.version_major, dv.version_minor,
-             dv.version_patchlevel, device);
-    close(fd);
-    return 0;
-}
-
-static htsmsg_t *
-tvh_codec_profile_vaapi_device_list(void *obj, const char *lang)
-{
-    static const char *renderD_fmt = "/dev/dri/renderD%d";
-    static const char *card_fmt = "/dev/dri/card%d";
-    htsmsg_t *result = htsmsg_create_list();
-    char device[PATH_MAX];
-    char name[128];
-    int i, dev_num;
-
-    for (i = 0; i < 32; i++) {
-        dev_num = i + 128;
-        snprintf(device, sizeof(device), renderD_fmt, dev_num);
-        if (probe_vaapi_device(device, name, sizeof(name)) == 0)
-            htsmsg_add_msg(result, NULL, htsmsg_create_key_val(device, name));
-    }
-    for (i = 0; i < 32; i++) {
-        // card nodes are numbered from 0 (render nodes from 128)
-        dev_num = i;
-        snprintf(device, sizeof(device), card_fmt, dev_num);
-        if (probe_vaapi_device(device, name, sizeof(name)) == 0)
-            htsmsg_add_msg(result, NULL, htsmsg_create_key_val(device, name));
-    }
-    return result;
-}
 
 #define TVH_CODEC_PROFILE_VAAPI_CODEC_UI(codec_ui, codec_name) \
     static const int tvh_codec_profile_vaapi_##codec_ui##_ui(void) \
@@ -583,7 +508,7 @@ static const codec_profile_class_t codec_profile_vaapi_class = {
                 .desc     = N_("Device name (e.g. /dev/dri/renderD128)."),
                 .group    = 3,
                 .off      = offsetof(TVHCodecProfile, device),
-                .list     = tvh_codec_profile_vaapi_device_list,
+                .list     = tvh_drm_device_list,
             },
             {
                 .type     = PT_BOOL,

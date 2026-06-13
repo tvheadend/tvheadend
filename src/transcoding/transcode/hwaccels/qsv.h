@@ -35,9 +35,6 @@ qsv_decode_setup_context(AVCodecContext *avctx);
 int
 qsv_get_filters(TVHContext *self, char *filter, size_t filter_len);
 
-int
-qsv_get_download(TVHContext *self, int skip_format, char *filter, size_t filter_len);
-
 /* encoding ================================================================= */
 
 int

@@ -547,6 +547,12 @@ ifeq ($(CONFIG_V4L2M2M),yes)
 LIBS-CODECS += v4l2-m2m
 endif
 SRCS-CODECS += $(foreach lib,$(LIBS-CODECS),src/transcoding/codec/codecs/libs/$(lib).c)
+# shared DRM device enumeration, used by the VAAPI and QSV profile classes
+ifeq ($(CONFIG_VAAPI),yes)
+SRCS-CODECS += src/transcoding/codec/codecs/libs/drmdev.c
+else ifeq ($(CONFIG_QSV),yes)
+SRCS-CODECS += src/transcoding/codec/codecs/libs/drmdev.c
+endif
 
 #hwaccels
 ifeq ($(CONFIG_HWACCELS),yes)

@@ -316,23 +316,6 @@ vaapi_get_filters(TVHContext *self, char *filter, size_t filter_len)
     return 0;
 }
 
-int
-vaapi_get_download(TVHContext *self, int skip_format, char *filter, size_t filter_len)
-{
-    if (skip_format) {
-        if (str_snprintf(filter, filter_len, "hwdownload")) {
-            return -1;
-        }
-    }
-    else {
-        if (str_snprintf(filter, filter_len, "hwdownload,format=pix_fmts=%s",
-                        av_get_pix_fmt_name(self->oavctx->sw_pix_fmt))) {
-            return -1;
-        }
-    }
-    return 0;
-}
-
 /* encoding ================================================================= */
 
 int

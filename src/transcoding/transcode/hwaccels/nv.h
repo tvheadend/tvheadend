@@ -35,9 +35,6 @@ nv_decode_setup_context(AVCodecContext *avctx);
 int
 nv_get_filters(TVHContext *self, char *filter, size_t filter_len);
 
-int
-nv_get_download(TVHContext *self, int skip_format, char *filter, size_t filter_len);
-
 /* encoding ================================================================= */
 
 int

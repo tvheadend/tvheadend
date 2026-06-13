@@ -253,19 +253,28 @@ hwaccels_download(TVHContext *self, char *filter, size_t filter_len, int skip_fo
     switch (self->oavhwdevtype) {
 #if ENABLE_NVENC
         case AV_HWDEVICE_TYPE_CUDA:
-            return nv_get_download(self, skip_format, filter, filter_len);
 #endif
 #if ENABLE_VAAPI
         case AV_HWDEVICE_TYPE_VAAPI:
-            return vaapi_get_download(self, skip_format, filter, filter_len);
+#endif
+#if ENABLE_QSV
+        case AV_HWDEVICE_TYPE_QSV:
+#endif
+#if ENABLE_NVENC || ENABLE_VAAPI || ENABLE_QSV
+            // CUDA/VAAPI/QSV: download hw frames to the encoder's sw pixel format
+            if (skip_format) {
+                if (str_snprintf(filter, filter_len, "hwdownload"))
+                    return -1;
+            }
+            else if (str_snprintf(filter, filter_len, "hwdownload,format=pix_fmts=%s",
+                                  av_get_pix_fmt_name(self->oavctx->sw_pix_fmt))) {
+                return -1;
+            }
+            break;
 #endif
 #if ENABLE_V4L2M2M
         case AV_HWDEVICE_TYPE_DRM:
             return v4l2m2m_get_download(self, filter, filter_len);
-#endif
-#if ENABLE_QSV
-        case AV_HWDEVICE_TYPE_QSV:
-            return qsv_get_download(self, skip_format, filter, filter_len);
 #endif
         default:
         // for now we use default for software encoder
