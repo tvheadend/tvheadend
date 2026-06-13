@@ -1709,6 +1709,12 @@ static char *config_get_dir ( uid_t uid )
   if (uid == -1)
     uid = getuid();
 
+  /* Prefer the well-known system locations, but only when they are owned by
+   * the user we run as. If the ownership does not match (e.g. a packaged
+   * /var/lib/tvheadend left owned by root), fall through to the HOME-based
+   * locations below. Distribution packaging must keep this directory owned
+   * by the service user, otherwise the config silently moves to ~/.config/hts
+   * and any file pre-seeded here (e.g. debian's superuser) is never read. */
   snprintf(hts_home, sizeof(hts_home), "/var/lib/tvheadend");
   if ((stat(hts_home, &st) == 0) && (st.st_uid == uid))
     return strndup(hts_home, sizeof(hts_home));

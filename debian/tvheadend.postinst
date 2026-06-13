@@ -34,18 +34,48 @@ configure)
     fi
 
     HTS_HOMEDIR="$(getent passwd "$HTS_USER" | cut -d':' -f6)"
+    HTS_UID="$(getent passwd "$HTS_USER" | cut -d':' -f3)"
 
-    # Handle previous configuration directory: If the HTS_USER home directory
-    # starts with /home/, append "/.hts/tvheadend" so the superuser
-    # configuration will go in the right place.
-    if [ -z "${HTS_HOMEDIR##/home/*}" ]; then
-        HTS_CONFDIR="$HTS_HOMEDIR/.hts/tvheadend"
-        echo >&2 "Legacy configuration directory $HTS_CONFDIR is in use."
-        install -d -g "$HTS_USER" -o "$HTS_USER" "$HTS_CONFDIR"
-    else
-        HTS_CONFDIR="$HTS_HOMEDIR"
+    # Write the superuser file to the SAME directory the daemon loads its
+    # configuration from. This must mirror config_get_dir() in src/config.c,
+    # otherwise the file is silently ignored and the initial login returns
+    # "403 Forbidden".
+    #
+    # config_get_dir() uses /var/lib/tvheadend (then /etc/tvheadend) only when
+    # that directory is owned by the user Tvheadend runs as; otherwise it falls
+    # back to a pre-existing legacy ~/.hts/tvheadend and finally to the XDG
+    # default ~/.config/hts.
+    #
+    # Use "stat -L" so symlinked locations are dereferenced like the daemon's
+    # stat() call does.
+    owned_by_hts() {
+        [ -d "$1" ] && [ "$(stat -L -c '%u' "$1" 2>/dev/null)" = "$HTS_UID" ]
+    }
+
+    # adduser does not change ownership of a pre-existing home directory, so
+    # /var/lib/tvheadend can be left owned by root - which makes config_get_dir()
+    # skip it and fall back to ~/.config/hts. Take ownership so it is used as the
+    # canonical configuration directory, but not if an earlier install already
+    # has configuration under a fallback location (we must not strand it).
+    if [ -d /var/lib/tvheadend ] && ! owned_by_hts /var/lib/tvheadend; then
+        if [ ! -e "$HTS_HOMEDIR/.config/hts/config" ] && \
+           [ ! -e "$HTS_HOMEDIR/.hts/tvheadend/config" ]; then
+            chown "$HTS_USER":"$HTS_USER" /var/lib/tvheadend
+        fi
     fi
 
+    if owned_by_hts /var/lib/tvheadend; then
+        HTS_CONFDIR="/var/lib/tvheadend"
+    elif owned_by_hts /etc/tvheadend; then
+        HTS_CONFDIR="/etc/tvheadend"
+    elif [ -d "$HTS_HOMEDIR/.hts/tvheadend" ]; then
+        HTS_CONFDIR="$HTS_HOMEDIR/.hts/tvheadend"
+        echo >&2 "Legacy configuration directory $HTS_CONFDIR is in use."
+    else
+        HTS_CONFDIR="$HTS_HOMEDIR/.config/hts"
+    fi
+
+    install -d -g "$HTS_USER" -o "$HTS_USER" "$HTS_CONFDIR"
     install -d -g "$HTS_USER" -o "$HTS_USER" "$HTS_HOMEDIR/recordings"
 
     HTS_SUPERUSERCONF="${HTS_CONFDIR}/superuser"
