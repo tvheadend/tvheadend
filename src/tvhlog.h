@@ -224,7 +224,6 @@ enum {
     LST_LIBVPX,
     LST_LIBX26X,
     LST_NVENC,
-    LST_OMX,
     LST_V4l2M2M,
     LST_VAAPI,
     LST_QSV,

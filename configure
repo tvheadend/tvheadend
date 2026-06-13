@@ -57,7 +57,6 @@ OPTIONS=(
   "vaapi:auto"
   "qsv:no"
   "mmal:no"
-  "omx:no"
   "v4l2m2m:no"
   "inotify:auto"
   "epoll:auto"
@@ -665,22 +664,6 @@ if enabled ffmpeg_static; then
     enable hwaccels
   else
     disable nvenc
-  fi
-
-  # omx
-  if enabled omx; then
-    OLDCFLAGS=$CFLAGS
-    if [ -d "/opt/vc/include" ]; then
-      CFLAGS="-I/opt/vc/include $CFLAGS"
-    fi
-    check_cc_header "bcm_host" omx_rpi
-    if enabled omx_rpi; then
-      CFLAGS="-I/opt/vc/include/IL $OLDCFLAGS"
-      enable mmal
-    else
-      CFLAGS=$OLDCFLAGS
-    fi
-    check_cc_header OMX_Core omx || die "OpenMAX IL not found"
   fi
 
 else

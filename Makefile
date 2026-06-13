@@ -540,9 +540,6 @@ endif
 ifeq ($(CONFIG_NVENC),yes)
 LIBS-CODECS += nvenc
 endif
-ifeq ($(CONFIG_OMX),yes)
-LIBS-CODECS += omx
-endif
 ifeq ($(CONFIG_V4L2M2M),yes)
 LIBS-CODECS += v4l2-m2m
 endif
