@@ -668,13 +668,64 @@ void *timeshift_reader ( void *p )
                   ts->full = 0;
                 }
 
-                /* Release */
-                if (sm)
+                /* Release current read packet */
+                if (sm) {
                   streaming_msg_free(sm);
+                  sm = NULL;
+                }
 
-                /* Find end */
-                skip_time = 0x7fffffffffffffffLL;
-                // TODO: change this sometime!
+                /* Close read file and reset seek position */
+                _read_close(seek);
+
+                /* Re-send the latest stream start so client has codec info */
+                {
+                  timeshift_file_t *f = timeshift_filemgr_newest(ts);
+                  streaming_message_t *sstart_sm = NULL;
+                  int tmpend = 0;
+                  while (f) {
+                    timeshift_index_data_t *ti = TAILQ_LAST(&f->sstart, timeshift_index_data_list);
+                    if (ti) {
+                      sstart_sm = ti->data;
+                      break;
+                    }
+                    f = timeshift_filemgr_prev(f, &tmpend, 0);
+                  }
+                  if (sstart_sm)
+                    streaming_target_deliver2(ts->output, streaming_msg_clone(sstart_sm));
+                  if (f)
+                    timeshift_file_put(f);
+                }
+
+                /* Transition to live */
+                tvhdebug(LS_TIMESHIFT, "ts %d skip to live", ts->id);
+                cur_speed = 100;
+                ts->state = TS_LIVE;
+                tvhtrace(LS_TIMESHIFT, "reader - set TS_LIVE (skip live)");
+
+                /* Send speed change to output */
+                {
+                  streaming_message_t *spd = streaming_msg_create_code(SMT_SPEED, cur_speed);
+                  streaming_target_deliver2(ts->output, spd);
+                }
+
+                /* Build skip response for the client */
+                skip->type = SMT_SKIP_ABS_TIME;
+                skip->time = 0;
+                timeshift_fill_status(ts, &skip->timeshift, ts->buf_time);
+                mono_last_status = mono_now;
+
+                /* Deliver the skip response and clear ctrl */
+                streaming_target_deliver2(ts->output, ctrl);
+                ctrl = NULL;
+                skip = NULL;
+
+                /* Send updated timeshift status (shift=0) */
+                timeshift_status(ts, ts->buf_time);
+              } else {
+                /* Already live — discard the skip control message */
+                streaming_msg_free(ctrl);
+                ctrl = NULL;
+                skip = NULL;
               }
               break;
 
@@ -751,7 +802,7 @@ void *timeshift_reader ( void *p )
           }
 
           /* Error */
-          if (!skip) {
+          if (!skip && ctrl) {
             ((streaming_skip_t*)ctrl->sm_data)->type = SMT_SKIP_ERROR;
             streaming_target_deliver2(ts->output, ctrl);
             ctrl = NULL;
