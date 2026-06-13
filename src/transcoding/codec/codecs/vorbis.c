@@ -27,7 +27,7 @@ static int
 tvh_codec_profile_vorbis_open(TVHCodecProfile *self, AVDictionary **opts)
 {
     AV_DICT_SET_GLOBAL_QUALITY(LST_VORBIS, opts, self->qscale, 5);
-    ((TVHCodecProfile *)self)->has_support_for_filter2 = 1;
+    self->has_support_for_filter2 = 1;
     return 0;
 }
 

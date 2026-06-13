@@ -243,12 +243,12 @@ tvh_h264_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
     int condition = 0;
     if (self->use_pkt_data_new_extradata) {
         // when we use AV_PKT_DATA_NEW_EXTRADATA we need to bypass the AV_PKT_FLAG_KEY condition
-        condition = ((avpkt->size > 6));
+        condition = (avpkt->size > 6);
     }
     else {
         condition = ((avpkt->flags & AV_PKT_FLAG_KEY) && (avpkt->size > 6));
     }
-    if ((condition) &&
+    if (condition &&
         (RB32(avpkt->data) == 0x00000001 || RB24(avpkt->data) == 0x000001))
 #else
     if ((avpkt->flags & AV_PKT_FLAG_KEY) && (avpkt->size > 6) &&

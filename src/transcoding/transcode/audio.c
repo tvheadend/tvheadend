@@ -564,7 +564,6 @@ tvh_audio_context_open(TVHContext *self, TVHOpenPhase phase, AVDictionary **opts
 static int
 tvh_audio_context_decode(TVHContext *self, AVPacket *avpkt)
 {
-    //tvh_context_log(self, LOG_WARNING, "AVPacket->pts = %"PRId64" ", avpkt->pts);
     int64_t prev_pts = self->pts;
     int64_t new_pts = avpkt->pts - self->duration;
 

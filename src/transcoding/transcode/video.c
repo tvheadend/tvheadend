@@ -52,8 +52,6 @@
 static enum AVHWDeviceType
 get_encoder_hw_device_type(AVCodecContext *avctx)
 {
-    //const AVPixFmtDescriptor *desc;
-
     // first we try to detect the hadrware pix_fmt using codec name
 #if ENABLE_NVENC
     // check NVDEC/NVENC encoder
@@ -83,17 +81,6 @@ get_encoder_hw_device_type(AVCodecContext *avctx)
             return AV_HWDEVICE_TYPE_DRM;
     }
 #endif
-// TODO: to be removed later on
-// START to be removed when we remove has_support_for_filter2
-#if 0
-    // backup we return to old method
-    enum AVPixelFormat pix_fmt = avctx->pix_fmt;
-    if ((desc = av_pix_fmt_desc_get(pix_fmt)) &&
-        (desc->flags & AV_PIX_FMT_FLAG_HWACCEL)) {
-        return 1;
-    }
-#endif
-// END to be removed when we remove has_support_for_filter2
     return AV_HWDEVICE_TYPE_NONE;
 }
 #endif
@@ -699,7 +686,7 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
 static void
 tvh_video_context_close(TVHContext *self)
 {
-
+    /* nothing to do */
 }
 
 

@@ -254,7 +254,8 @@ gh_queue_delay(globalheaders_t *gh, int index)
   th_pktref_t *l = TAILQ_LAST(&gh->gh_holdq, th_pktref_queue);
   streaming_start_component_t *ssc;
   int64_t diff;
-  int8_t found_f = 0, found_l = 0;
+  int8_t found_f = 0;
+  int8_t found_l = 0;
 
   /*
    * Find only packets which require the meta data. Ignore others.

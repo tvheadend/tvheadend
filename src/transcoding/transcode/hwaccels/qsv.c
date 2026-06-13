@@ -46,7 +46,8 @@ static tvh_mutex_t tvh_qsv_device_lock = TVH_THREAD_MUTEX_INITIALIZER;
 static AVBufferRef *
 tvh_qsv_device_get(const char *vaapi_device)
 {
-    AVBufferRef *ref = NULL, *vaapi_ref = NULL;
+    AVBufferRef *ref = NULL;
+    AVBufferRef *vaapi_ref = NULL;
     int err = 0;
 
     tvh_mutex_lock(&tvh_qsv_device_lock);

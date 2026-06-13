@@ -70,7 +70,7 @@ tvh_codec_profile_libvorbis_open(TVHCodecProfile *self, AVDictionary **opts)
     else {
         AV_DICT_SET_GLOBAL_QUALITY(LST_LIBVORBIS, opts, self->qscale, 5);
     }
-    ((TVHCodecProfile *)self)->has_support_for_filter2 = 1;
+    self->has_support_for_filter2 = 1;
     return 0;
 }
 

@@ -197,30 +197,6 @@ _context_encode(TVHContext *self, AVFrame *avframe)
     return ret;*/
 }
 
-/* ORIGINAL implementation*/
-/*
-static int
-_context_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
-{
-    if ((avpkt->flags & AV_PKT_FLAG_KEY) == 0)
-        return 0;
-    if (self->require_meta) {
-        if (self->helper && self->helper->meta) {
-            self->require_meta = self->helper->meta(self, avpkt, pkt);
-            if (self->require_meta == 0)
-                self->require_meta = 1;
-        }
-        else if (self->oavctx->extradata_size) {
-            pkt->pkt_meta = pktbuf_alloc(self->oavctx->extradata,
-                                         self->oavctx->extradata_size);
-            self->require_meta = (pkt->pkt_meta) ? 1 : -1;
-        }
-    }
-    return (self->require_meta < 0) ? -1 : 0;
-}
-*/
-
-
 static int
 _context_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
 {
@@ -596,10 +572,10 @@ tvh_context_open_encoder(TVHContext *self){
     if ((ret = tvh_context_open(self, PREPARE_ENCODER))){
         tvh_context_log(self, LOG_ERR, "PREPARE_ENCODER returned error: %d", ret);
     }
-    if (!(ret) && (ret = tvh_context_open(self, OPEN_FILTERS))){
+    if (!ret && (ret = tvh_context_open(self, OPEN_FILTERS))){
         tvh_context_log(self, LOG_ERR, "OPEN_FILTERS returned error: %d", ret);
     }
-    if (!(ret) && (ret = tvh_context_open(self, OPEN_ENCODER))){
+    if (!ret && (ret = tvh_context_open(self, OPEN_ENCODER))){
         tvh_context_log(self, LOG_ERR, "OPEN_ENCODER returned error: %d", ret);
     }
     return ret;
@@ -630,10 +606,10 @@ tvh_context_open_decoder(TVHContext *self){
     if ((ret = tvh_context_open(self, PREPARE_DECODER))){
         tvh_context_log(self, LOG_ERR, "PREPARE_DECODER returned error: %d", ret);
     }
-    if (!(ret) && (ret = tvh_context_open(self, OPEN_DECODER))){
+    if (!ret && (ret = tvh_context_open(self, OPEN_DECODER))){
         tvh_context_log(self, LOG_ERR, "OPEN_DECODER returned error: %d", ret);
     }
-    if (!(ret) && (ret = tvh_context_open(self, NOTIFY_GLOBALHEADER))){
+    if (!ret && (ret = tvh_context_open(self, NOTIFY_GLOBALHEADER))){
         tvh_context_log(self, LOG_ERR, "NOTIFY_GLOBALHEADER returned error: %d", ret);
     }
     return ret;
@@ -1057,9 +1033,7 @@ tvh_context_open_filters2(TVHContext *self,
 #endif
         );
         // to be removed when we remove has_support_for_filter2
-        tvhinfo(LS_TRANSCODE, 
-        //tvh_context_log(self, LOG_DEBUG,
-                          "%s", logs);
+        tvhinfo(LS_TRANSCODE, "%s", logs);
 
     } else if (stream_type == AVMEDIA_TYPE_AUDIO) {
         // for Audio:
@@ -1092,9 +1066,7 @@ tvh_context_open_filters2(TVHContext *self,
             ,par->time_base.num, par->time_base.den
         );
         // to be removed when we remove has_support_for_filter2
-        tvhinfo(LS_TRANSCODE, 
-        //tvh_context_log(self, LOG_DEBUG,
-                          "%s", logs);
+        tvhinfo(LS_TRANSCODE, "%s", logs);
     } else tvherror(LS_TRANSCODE, "filter can process only 'buffer' and 'abuffer', most likely will fail.");
 
     // Push the parameters into the uninitialized filter context
@@ -1234,9 +1206,7 @@ tvh_context_open_filters2(TVHContext *self,
 #endif
         );
         // to be removed when we remove has_support_for_filter2
-        tvhinfo(LS_TRANSCODE, 
-        //tvh_context_log(self, LOG_DEBUG,
-                          "%s", logs);
+        tvhinfo(LS_TRANSCODE, "%s", logs);
 
     } else if (stream_type == AVMEDIA_TYPE_AUDIO) {
         // for Audio:
@@ -1269,15 +1239,15 @@ tvh_context_open_filters2(TVHContext *self,
             ,self->oavctx->time_base.num, self->oavctx->time_base.den
         );
         // to be removed when we remove has_support_for_filter2
-        tvhinfo(LS_TRANSCODE, 
-        //tvh_context_log(self, LOG_DEBUG,
-                          "%s", logs);
+        tvhinfo(LS_TRANSCODE, "%s", logs);
 
     } else tvherror(LS_TRANSCODE, "filter can process only 'buffersink' and 'abuffersink', most likely will fail.");
 
     if (ret >= 0 && tvhtrace_enabled()) {
         char *graph = avfilter_graph_dump(self->avfltgraph, NULL);
-        char *str, *token, *saveptr = NULL;
+        char *str;
+        char *token;
+        char *saveptr = NULL;
         for (str = graph; ; str = NULL) {
           token = strtok_r(str, "\n", &saveptr);
           if (token == NULL)
@@ -1420,7 +1390,9 @@ tvh_context_open_filters(TVHContext *self,
 
     if (ret >= 0 && tvhtrace_enabled()) {
         char *graph = avfilter_graph_dump(self->avfltgraph, NULL);
-        char *str, *token, *saveptr = NULL;
+        char *str;
+        char *token;
+        char *saveptr = NULL;
         for (str = graph; ; str = NULL) {
           token = strtok_r(str, "\n", &saveptr);
           if (token == NULL)

@@ -56,8 +56,6 @@ tvh_codec_profile_v4l2m2m_open(tvh_codec_profile_v4l2m2m_t *self, AVDictionary *
     // Encoder does not support b-frames yet, setting to 0
     AV_DICT_SET_INT(LST_V4l2M2M, opts, "bf", 0, 0);
 
-    //AV_DICT_SET_INT(LST_V4l2M2M, opts, "qmin", 23, 0);
-    //AV_DICT_SET_INT(LST_V4l2M2M, opts, "qmax", 32, 0);
 
     if (self->num_output_buffers > -1){
         AV_DICT_SET_INT(LST_V4l2M2M, opts, "num_output_buffers", self->num_output_buffers, 0);

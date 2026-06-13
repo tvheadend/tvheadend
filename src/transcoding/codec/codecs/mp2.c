@@ -31,7 +31,7 @@ tvh_codec_profile_mp2_open(TVHCodecProfile *self, AVDictionary **opts)
     if (self->bit_rate) {
         AV_DICT_SET_BIT_RATE(LST_MP2, opts, self->bit_rate);
     }
-    ((TVHCodecProfile *)self)->has_support_for_filter2 = 1;
+    self->has_support_for_filter2 = 1;
     return 0;
 }
 

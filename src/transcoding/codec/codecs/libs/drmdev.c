@@ -76,8 +76,6 @@ tvh_probe_drm_device(const char *device, char *name, size_t namelen)
 htsmsg_t *
 tvh_drm_device_list(void *obj, const char *lang)
 {
-    static const char *renderD_fmt = "/dev/dri/renderD%d";
-    static const char *card_fmt = "/dev/dri/card%d";
     htsmsg_t *result = htsmsg_create_list();
     char device[PATH_MAX];
     char name[128];
@@ -85,14 +83,14 @@ tvh_drm_device_list(void *obj, const char *lang)
 
     for (i = 0; i < 32; i++) {
         dev_num = i + 128;
-        snprintf(device, sizeof(device), renderD_fmt, dev_num);
+        snprintf(device, sizeof(device), "/dev/dri/renderD%d", dev_num);
         if (tvh_probe_drm_device(device, name, sizeof(name)) == 0)
             htsmsg_add_msg(result, NULL, htsmsg_create_key_val(device, name));
     }
     for (i = 0; i < 32; i++) {
         // card nodes are numbered from 0 (render nodes from 128)
         dev_num = i;
-        snprintf(device, sizeof(device), card_fmt, dev_num);
+        snprintf(device, sizeof(device), "/dev/dri/card%d", dev_num);
         if (tvh_probe_drm_device(device, name, sizeof(name)) == 0)
             htsmsg_add_msg(result, NULL, htsmsg_create_key_val(device, name));
     }

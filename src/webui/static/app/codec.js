@@ -365,7 +365,6 @@ function update_vaapi_ui(form) {
     if (form.findField('deinterlace')) {
         enable_hwaccels_details(form);
         form.findField('deinterlace').on('check', function(checkbox, value) {
-            //update_deinterlace_details(form);
             enable_hwaccels_details(form);
         });
     }

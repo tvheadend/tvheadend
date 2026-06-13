@@ -35,7 +35,7 @@ tvh_codec_profile_mpeg2video_open(TVHCodecProfile *self, AVDictionary **opts)
     }
     // MPEG2 only knows max b frames of 2
     AV_DICT_SET_INT(LST_VAAPI, opts, "bf", 2, AV_DICT_DONT_OVERWRITE);
-    ((TVHCodecProfile *)self)->has_support_for_filter2 = 1;
+    self->has_support_for_filter2 = 1;
     return 0;
 }
 

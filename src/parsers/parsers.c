@@ -1200,7 +1200,8 @@ static int
 parse_mpeg2video_seq_start(parser_t *t, parser_es_t *st,
                            bitstream_t *bs)
 {
-  int aspect, duration;
+  int aspect;
+  int duration;
   /* 1. Check for minimum required bits. 
      The Sequence Header core (up to VBV size) is 61 bits long.
      If we have less, we return RESET to wait for more data. */
