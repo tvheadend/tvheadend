@@ -66,6 +66,13 @@ udp_write( udp_connection_t *uc, const void *buf, size_t len,
 int
 udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
                  struct sockaddr_storage *storage );
+int
+udp_write_queue_fill_source( udp_connection_t *uc, htsbuf_queue_t *q,
+                 struct sockaddr_storage *storage, int fill_source );
+
+int
+udp_write_fill_source( udp_connection_t *uc, const void *buf, size_t len,
+                       struct sockaddr_storage *storage);
 
 typedef struct udp_multirecv {
   int             um_psize;

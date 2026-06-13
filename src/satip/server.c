@@ -114,6 +114,7 @@ satip_server_http_xml(http_connection_t *hc)
 
   char buf[sizeof(MSG) + 1024], buf2[64], purl[128];
   const char *cs;
+  char addrbuf[50];
   char *devicelist = NULL;
   htsbuf_queue_t q;
   mpegts_network_t *mn;
@@ -135,7 +136,7 @@ satip_server_http_xml(http_connection_t *hc)
     {}
   };
 
-  if (http_server_ip == NULL)
+  if (http_server_port == 0)
     return HTTP_STATUS_NOT_FOUND;
 
   htsbuf_queue_init(&q, 0);
@@ -222,15 +223,22 @@ satip_server_http_xml(http_connection_t *hc)
              tvheadend_webroot ?: "", cs);
   }
 
+  char* own_server_ip = http_server_ip;
+
+  if(own_server_ip == NULL) {
+    tcp_get_str_from_ip(hc->hc_self, addrbuf, sizeof(addrbuf));
+    own_server_ip = addrbuf;
+  } 
+
   snprintf(buf, sizeof(buf), MSG,
            config_get_server_name(),
            buf2, tvheadend_version,
            satip_server_conf.satip_uuid,
-           http_server_ip, http_server_port,
-           http_server_ip, http_server_port,
-           http_server_ip, http_server_port,
-           http_server_ip, http_server_port,
-           http_server_ip, http_server_port,
+           own_server_ip, http_server_port,
+           own_server_ip, http_server_port,
+           own_server_ip, http_server_port,
+           own_server_ip, http_server_port,
+           own_server_ip, http_server_port,
            devicelist ?: "", purl);
 
   free(devicelist);
@@ -327,7 +335,7 @@ CONFIGID.UPNP.ORG: 0\r\n\
 
     htsbuf_queue_init(&q, 0);
     htsbuf_append_str(&q, buf);
-    upnp_send(&q, NULL, attempt * 11, 1);
+    upnp_send(&q, NULL, attempt * 11, 1, 0);
     htsbuf_queue_flush(&q);
   }
 #undef MSG
@@ -378,15 +386,17 @@ DEVICEID.SES.COM: %d\r\n\r\n"
       abort();
     }
 
+    char* own_server_ip = http_server_ip;
+
     snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
-             http_server_ip, http_server_port, tvheadend_webroot ?: "",
+             own_server_ip ?: "%s", http_server_port, tvheadend_webroot ?: "",
              nt, tvheadend_version,
              satip_server_conf.satip_uuid, usn2, (long)satip_server_bootid,
              satip_server_deviceid);
 
     htsbuf_queue_init(&q, 0);
     htsbuf_append_str(&q, buf);
-    upnp_send(&q, NULL, attempt * 11, 1);
+    upnp_send(&q, NULL, attempt * 11, 1, own_server_ip == NULL);
     htsbuf_queue_flush(&q);
   }
 #undef MSG
@@ -420,8 +430,10 @@ CONFIGID.UPNP.ORG: 0\r\n"
              buf, ntohs(IP_PORT(*dst)), deviceid ? " device: " : "", deviceid ?: "");
   }
 
+  char* own_server_ip = http_server_ip;
+
   snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
-           http_server_ip, http_server_port, tvheadend_webroot ?: "",
+           own_server_ip ?: "%s", http_server_port, tvheadend_webroot ?: "",
            tvheadend_version,
            satip_server_conf.satip_uuid, (long)satip_server_bootid);
 
@@ -431,7 +443,7 @@ CONFIGID.UPNP.ORG: 0\r\n"
     htsbuf_qprintf(&q, "DEVICEID.SES.COM: %s", deviceid);
   htsbuf_append(&q, "\r\n", 2);
   storage = *dst;
-  upnp_send(&q, &storage, 0, from_multicast);
+  upnp_send(&q, &storage, 0, from_multicast, own_server_ip == NULL);
   htsbuf_queue_flush(&q);
 #undef MSG
 }
@@ -517,7 +529,7 @@ satips_upnp_discovery_received
     return;
   if (conn->multicast && strcmp(argv[0], "239.255.255.250"))
     return;
-  if (!conn->multicast && strcmp(argv[0], http_server_ip))
+  if (!conn->multicast && http_server_ip != NULL && strcmp(argv[0], http_server_ip))
     return;
 
   if (tvhtrace_enabled()) {
@@ -584,8 +596,8 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
   }
   tvhinfo(LS_SATIPS, "SAT>IP Server %sinitialized", prefix);
   tvhinfo(LS_SATIPS, "  HTTP %s:%d, RTSP %s:%d",
-              http_server_ip, http_server_port,
-              http_server_ip, satip_server_rtsp_port);
+              http_server_ip ?: "0.0.0.0", http_server_port,
+              http_server_ip ?: "0.0.0.0", satip_server_rtsp_port);
   tvhinfo(LS_SATIPS, "  descramble %d, muxcnf %d",
               descramble, muxcnf);
   for (fe = 1; fe <= 128; fe++) {
@@ -979,8 +991,6 @@ const idclass_t satip_server_class = {
  */
 static void satip_server_init_common(const char *prefix, int announce)
 {
-  struct sockaddr_storage http;
-  char http_ip[128];
   int descramble, rewrite_pmt, muxcnf;
   char *nat_ip, *rtp_src_ip;
   int nat_port;
@@ -988,18 +998,10 @@ static void satip_server_init_common(const char *prefix, int announce)
   if (satip_server_rtsp_port <= 0)
     return;
 
-  if (http_server_ip == NULL) {
-    if (tcp_server_onall(http_server) && satip_server_bindaddr == NULL) {
-      tvherror(LS_SATIPS, "use --satip_bindaddr parameter to select the local IP for SAT>IP");
-      tvherror(LS_SATIPS, "using Google lookup (might block the task until timeout)");
-    }
-    if (tcp_server_bound(http_server, &http, PF_INET) < 0) {
-      tvherror(LS_SATIPS, "Unable to determine the HTTP/RTSP address");
-      return;
-    }
-    tcp_get_str_from_ip(&http, http_ip, sizeof(http_ip));
-    http_server_ip = strdup(satip_server_bindaddr ?: http_ip);
-    http_server_port = ntohs(IP_PORT(http));
+  if (http_server_port == 0) {
+    http_server_ip = satip_server_bindaddr ? strdup(satip_server_bindaddr) : NULL;
+    tcp_server_t* srv = http_server;
+    http_server_port = ntohs(IP_PORT(srv->bound));
   }
 
   descramble = satip_server_conf.satip_descramble;
@@ -1082,7 +1084,7 @@ void satip_server_register(void)
   tvh_uuid_t u;
   int save = 0;
 
-  if (http_server_ip == NULL)
+  if (http_server_port == 0)
     return;
 
   if (satip_server_conf.satip_rtsp != satip_server_rtsp_port) {
@@ -1142,6 +1144,7 @@ void satip_server_done(void)
   satip_server_rtsp_port = 0;
   free(http_server_ip);
   http_server_ip = NULL;
+  http_server_port = 0;
   free(satip_server_conf.satip_uuid);
   satip_server_conf.satip_uuid = NULL;
   free(satip_server_bindaddr);
