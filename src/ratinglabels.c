@@ -612,6 +612,8 @@ ratinglabel_class_get_icon ( void *obj )
 static void
 ratinglabel_class_enabled_notify ( void *obj, const char *lang )
 {
+  /* Intentionally empty: toggling "enabled" needs no side effect; the
+     property write is sufficient. Kept as a registered no-op hook point. */
 }
 
 CLASS_DOC(ratinglabel)
