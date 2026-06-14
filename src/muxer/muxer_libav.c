@@ -175,14 +175,10 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->time_base.num = 1;
     c->time_base.den = 25;
 
-    c->sample_aspect_ratio.num = ssc->es_aspect_num;
-    c->sample_aspect_ratio.den = ssc->es_aspect_den;
-
-    if (lm->m_config.m_type == MC_AVMP4) {
-      /* this is a whole hell */
-      AVRational ratio = { c->height, c->width };
-      c->sample_aspect_ratio = av_mul_q(c->sample_aspect_ratio, ratio);
-    }
+    // to be removed when we remove has_support_for_filter2
+    tvhinfo(LS_LIBAV,  "Muxer: sample aspect ratio = %d/%d", ssc->es_sample_aspect_ratio.num, ssc->es_sample_aspect_ratio.den);
+    c->sample_aspect_ratio.num = ssc->es_sample_aspect_ratio.num;
+    c->sample_aspect_ratio.den = ssc->es_sample_aspect_ratio.den;
 
     avcodec_parameters_from_context(st->codecpar, c);
     st->sample_aspect_ratio.num = c->sample_aspect_ratio.num;

@@ -93,6 +93,12 @@ tvh_transcoder_handle(TVHTranscoder *self, th_pkt_t *pkt)
 
     SLIST_FOREACH(stream, &self->streams, link) {
         if (pkt->pkt_componentindex == stream->index) {
+#if ENABLE_LIBAV
+            // add DAR when stream->context is available
+            if (SCT_ISVIDEO(pkt->pkt_type) && (stream->context)) {
+                stream->context->sample_aspect_ratio = (AVRational){pkt->v.pkt_sample_aspect_ratio.num, pkt->v.pkt_sample_aspect_ratio.den};
+            }
+#endif
             err = tvh_stream_handle(stream, pkt);
             if (err) {
                 tvh_stream_stop(stream, 0);

@@ -51,7 +51,7 @@ timeshift_packet_log0
   th_pkt_t *pkt = sm->sm_data;
   tvhtrace(LS_TIMESHIFT,
            "ts %d pkt %s - stream %d type %c pts %10"PRId64
-           " dts %10"PRId64" dur %10d len %6zu time %14"PRId64,
+           " dts %10"PRId64" dur %10"PRId64" len %6zu time %14"PRId64,
            ts->id, source,
            pkt->pkt_componentindex,
            SCT_ISVIDEO(pkt->pkt_type) ? pkt_frametype_to_char(pkt->v.pkt_frametype) : '-',
