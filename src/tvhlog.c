@@ -207,6 +207,7 @@ tvhlog_subsys_t tvhlog_transcode_subsystems[] = {
     [LST_VORBIS]        = { "vorbis",        N_("VORBIS") },
     [LST_MPEG2VIDEO]    = { "mpeg2video",    N_("MPEG2 VIDEO") },
     [LST_LIBVPX]        = { "libvpx",        N_("LIB VPX") },
+    [LST_LIBSVTAV1]     = { "libsvtav1",     N_("LIB SVTAV1") },
     [LST_LIBX26X]       = { "libx26x",       N_("LIB x264_x265") },
     [LST_NVENC]         = { "nvenc",         N_("NVENC") },
     [LST_OMX]           = { "omx",           N_("OMX") },

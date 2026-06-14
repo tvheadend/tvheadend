@@ -43,6 +43,8 @@ OPTIONS=(
   "libx264_static:yes"
   "libx265:yes"
   "libx265_static:yes"
+  "libsvtav1:no"
+  "libsvtav1_static:no"
   "libvpx:yes"
   "libvpx_static:yes"
   "libtheora:yes"
@@ -599,6 +601,16 @@ if enabled ffmpeg_static; then
     fi
   else
     disable libx265_static
+  fi
+
+  # libsvtav1
+  if enabled libsvtav1; then
+  if disabled libsvtav1_static; then
+      check_pkg SvtAv1Enc ">=1.0" || die "SvtAv1Enc package not found"
+    else
+      check_bin cmake || die "cmake not found"
+      check_cc_lib stdc++ stdcpp || die "libstdc++ not found"
+    fi
   fi
 
   # libvpx
