@@ -93,6 +93,15 @@ struct tvh_codec_profile {
     double qscale;
     int profile;
     char *device; // for hardware acceleration
+    /**
+     * Support for tvh_context_open_filters2()
+     * @note
+     * int: 
+     * VALUE - support
+     * - 0 - no support (use tvh_context_open_filters())
+     * - 1 - has support for tvh_context_open_filters2()
+     */
+    int has_support_for_filter2;
     LIST_ENTRY(tvh_codec_profile) link;
 };
 
@@ -131,10 +140,7 @@ void
 tvh_codec_profile_video_destroy(TVHCodecProfile *_self);
 
 int
-tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self);
-
-int
-tvh_codec_profile_video_get_hwaccel_details(TVHCodecProfile *self);
+tvh_codec_profile_video_get_decoder_hwaccel_type(TVHCodecProfile *self);
 
 const enum AVPixelFormat *
 tvh_codec_profile_video_get_pix_fmts(TVHCodecProfile *self);

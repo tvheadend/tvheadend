@@ -27,14 +27,17 @@ static int
 tvh_codec_profile_vorbis_open(TVHCodecProfile *self, AVDictionary **opts)
 {
     AV_DICT_SET_GLOBAL_QUALITY(LST_VORBIS, opts, self->qscale, 5);
+    self->has_support_for_filter2 = 1;
     return 0;
 }
 
 
 #if LIBAVCODEC_VERSION_MAJOR > 59
-// see vorbis_encode_init() in ffmpeg-6.0/libavcodec/vorbis_data.c
+// see vorbis_encode_init() in ffmpeg-6.1.1/libavcodec/vorbisenc.c
+// av_log(avctx, AV_LOG_ERROR, "Current FFmpeg Vorbis encoder only supports 2 channels.\n");
 static const AVChannelLayout vorbis_channel_layouts[] = {
-    AV_CHANNEL_LAYOUT_STEREO
+    AV_CHANNEL_LAYOUT_STEREO,
+    { 0 }
 };
 #else
 // see vorbis_encode_init() in ffmpeg-3.0.2/libavcodec/vorbisenc.c
@@ -73,6 +76,7 @@ TVHAudioCodec tvh_codec_vorbis = {
     .name            = "vorbis",
     .size            = sizeof(TVHAudioCodecProfile),
     .idclass         = &codec_profile_vorbis_class,
+    .profiles        = NULL,
     .profile_init    = tvh_codec_profile_audio_init,
     .profile_destroy = tvh_codec_profile_audio_destroy,
     .channel_layouts = vorbis_channel_layouts,

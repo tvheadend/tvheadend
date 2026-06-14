@@ -102,6 +102,16 @@ static const codec_profile_class_t codec_profile_libx26x_class = {
                 .intextra = INTEXTRA_RANGE(0, 1000, 1),
                 .def.i    = 0,
             },
+            {
+                .type     = PT_INT,
+                .id       = "encoder_hwaccel_type",
+                .name     = N_("Encoder hardware acceleration type"),
+                .desc     = N_("Encoder hardware acceleration type"),
+                .group    = 2,
+                .opts     = PO_PHIDDEN,
+                .off      = offsetof(TVHVideoCodecProfile, encoder_hwaccel_type),
+                .def.i    = AV_HWDEVICE_TYPE_NONE,
+            },
             {}
         }
     },
@@ -141,17 +151,21 @@ static int
 tvh_codec_profile_libx264_open(tvh_codec_profile_libx26x_t *self,
                                AVDictionary **opts)
 {
+    TVHCodecProfile *p = (TVHCodecProfile *)self;
+    const TVHVideoCodecProfile *vp = (TVHVideoCodecProfile *)self;
+
     // bit_rate or crf
-    if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(LST_LIBX26X, opts, self->bit_rate);
+    if (p->bit_rate) {
+        AV_DICT_SET_BIT_RATE(LST_LIBX26X, opts, p->bit_rate);
     }
     else {
-        AV_DICT_SET_CRF(LST_LIBX26X, opts, self->crf, 15);
+        AV_DICT_SET_CRF(LST_LIBX26X, opts, vp->crf, 15);
     }
     // params
     if (self->params && strlen(self->params)) {
         AV_DICT_SET(LST_LIBX26X, opts, "x264-params", self->params, 0);
     }
+    p->has_support_for_filter2 = 1;
     return 0;
 }
 
@@ -240,17 +254,21 @@ static int
 tvh_codec_profile_libx265_open(tvh_codec_profile_libx26x_t *self,
                                AVDictionary **opts)
 {
+    TVHCodecProfile *p = (TVHCodecProfile *)self;
+    TVHVideoCodecProfile *vp = (TVHVideoCodecProfile *)self;
+
     // bit_rate or crf
-    if (self->bit_rate) {
-        AV_DICT_SET_BIT_RATE(LST_LIBX26X, opts, self->bit_rate);
+    if (p->bit_rate) {
+        AV_DICT_SET_BIT_RATE(LST_LIBX26X, opts, p->bit_rate);
     }
     else {
-        AV_DICT_SET_CRF(LST_LIBX26X, opts, self->crf, 18);
+        AV_DICT_SET_CRF(LST_LIBX26X, opts, vp->crf, 18);
     }
     // params
     if (self->params && strlen(self->params)) {
         AV_DICT_SET(LST_LIBX26X, opts, "x265-params", self->params, 0);
     }
+    p->has_support_for_filter2 = 1;
     return 0;
 }
 

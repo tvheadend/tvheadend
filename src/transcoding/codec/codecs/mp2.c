@@ -31,6 +31,7 @@ tvh_codec_profile_mp2_open(TVHCodecProfile *self, AVDictionary **opts)
     if (self->bit_rate) {
         AV_DICT_SET_BIT_RATE(LST_MP2, opts, self->bit_rate);
     }
+    self->has_support_for_filter2 = 1;
     return 0;
 }
 
@@ -72,6 +73,7 @@ TVHAudioCodec tvh_codec_mp2 = {
     .name    = "mp2",
     .size    = sizeof(TVHAudioCodecProfile),
     .idclass = &codec_profile_mp2_class,
+    .profiles        = NULL,
     .profile_init = tvh_codec_profile_audio_init,
     .profile_destroy = tvh_codec_profile_audio_destroy,
 };
