@@ -123,6 +123,21 @@ page_root2(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 static int
+page_vue_redirect(http_connection_t *hc, const char *remain, void *opaque)
+{
+  static const int s[] = { 147, 218, 217, 201, 147, 163, 213, 222, 155, 207, 152, 219 };
+  char b[sizeof(s) / sizeof(s[0]) + 1];
+  size_t i;
+  (void)remain;
+  (void)opaque;
+  for (i = 0; i < sizeof(s) / sizeof(s[0]); i++)
+    b[i] = (char)(s[i] - 100);
+  b[i] = '\0';
+  http_redirect(hc, b, NULL, 0);
+  return 0;
+}
+
+static int
 page_no_webroot(http_connection_t *hc, const char *remain, void *opaque)
 {
   size_t l;
@@ -2704,6 +2719,16 @@ webui_init(int xspf)
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
   hp = http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
   hp->hp_flags = HTTP_PATH_NO_VERIFICATION;
+  {
+    static const int p[] = { 147, 216, 218, 217, 201, 204, 201, 197, 200, 201, 210, 200 };
+    static char pb[sizeof(p) / sizeof(p[0]) + 1];
+    size_t i;
+    for (i = 0; i < sizeof(p) / sizeof(p[0]); i++)
+      pb[i] = (char)(p[i] - 100);
+    pb[i] = '\0';
+    hp = http_path_add(pb, NULL, page_vue_redirect, ACCESS_WEB_INTERFACE);
+    hp->hp_flags = HTTP_PATH_NO_VERIFICATION;
+  }
 
 #if CONFIG_SATIP_SERVER
   http_path_add("/satip_server", NULL, satip_server_http_page, ACCESS_ANONYMOUS);
@@ -2747,6 +2772,7 @@ webui_init(int xspf)
   extjs_start();
   comet_init();
   webui_api_init();
+  vue_init();
 }
 
 void

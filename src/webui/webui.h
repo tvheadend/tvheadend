@@ -34,6 +34,8 @@ void simpleui_start(void);
 
 void extjs_start(void);
 
+void vue_init(void);
+
 size_t html_escaped_len(const char *src);
 const char* html_escape(char *dst, const char *src, size_t len);
 
