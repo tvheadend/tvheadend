@@ -97,6 +97,16 @@ static const codec_profile_class_t codec_profile_omx_class = {
                 .off      = offsetof(tvh_codec_profile_omx_t, zerocopy),
                 .def.i    = 0,
             },
+            {
+                .type     = PT_INT,
+                .id       = "encoder_hwaccel_type",
+                .name     = N_("Encoder hardware acceleration type"),
+                .desc     = N_("Encoder hardware acceleration type"),
+                .group    = 2,
+                .opts     = PO_PHIDDEN,
+                .off      = offsetof(TVHVideoCodecProfile, encoder_hwaccel_type),
+                .def.i    = 100, //AV_HWDEVICE_TYPE_OMX
+            },
             {}
         }
     },

@@ -1713,6 +1713,11 @@ hevc_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype)
     parser_set_stream_vparam(st, width, height, d);
 
   if (sps->vui.sar.num && sps->vui.sar.den) {
+#if ENABLE_LIBAV
+    // save SAR
+    st->es_sample_aspect_ratio.num = sps->vui.sar.num;
+    st->es_sample_aspect_ratio.den = sps->vui.sar.den;
+#endif
     width  *= sps->vui.sar.num;
     height *= sps->vui.sar.den;
     if (width && height) {
@@ -1721,6 +1726,11 @@ hevc_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype)
       st->es_aspect_den = height / v;
     }
   } else {
+#if ENABLE_LIBAV
+    // save SAR
+    st->es_sample_aspect_ratio.num = 0;
+    st->es_sample_aspect_ratio.den = 1;
+#endif
     st->es_aspect_num = 0;
     st->es_aspect_den = 1;
   }

@@ -1,7 +1,7 @@
 /*
  *  tvheadend - Transcoding
  *
- *  Copyright (C) 2016 Tvheadend
+ *  Copyright (C) 2026 Tvheadend
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 
 
-#ifndef TVH_TRANSCODING_TRANSCODE_HWACCELS_VAAPI_H__
-#define TVH_TRANSCODING_TRANSCODE_HWACCELS_VAAPI_H__
+#ifndef TVH_TRANSCODING_TRANSCODE_HWACCELS_NV_H__
+#define TVH_TRANSCODING_TRANSCODE_HWACCELS_NV_H__
 
 
 #include "tvheadend.h"
@@ -30,26 +30,26 @@
 /* decoding ================================================================= */
 
 int
-vaapi_decode_setup_context(AVCodecContext *avctx);
+nv_decode_setup_context(AVCodecContext *avctx);
 
 int
-vaapi_get_filters(TVHContext *self, char *filter, size_t filter_len);
+nv_get_filters(TVHContext *self, char *filter, size_t filter_len);
 
 int
-vaapi_get_download(TVHContext *self, int skip_format, char *filter, size_t filter_len);
+nv_get_download(TVHContext *self, int skip_format, char *filter, size_t filter_len);
 
 /* encoding ================================================================= */
 
 int
-vaapi_encode_setup_context(AVCodecContext *avctx);
+nv_encode_setup_context(AVCodecContext *avctx);
 
 /* module =================================================================== */
 
 void
-vaapi_decode_destroy(TVHContext *ctx);
+nv_decode_destroy(TVHContext *ctx);
 
 void
-vaapi_done(void);
+nv_done(void);
 
 
-#endif // TVH_TRANSCODING_TRANSCODE_HWACCELS_VAAPI_H__
+#endif // TVH_TRANSCODING_TRANSCODE_HWACCELS_NV_H__
