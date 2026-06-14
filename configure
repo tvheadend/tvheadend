@@ -123,6 +123,20 @@ for opt do
 done
 
 # ###########################################################################
+# Invalidate previous output
+# ###########################################################################
+#
+# Remove any .config.mk left by an earlier run *before* starting the checks.
+# write_config() (the sole writer) only runs once all checks have passed, so
+# if this run dies on a missing dependency - or is killed by a signal - it
+# must not leave a stale .config.mk behind for make to silently reuse (which
+# previously could e.g. link the wrong ffmpeg). The invariant is: .config.mk
+# exists only if a configure run completed. Done after argument parsing so
+# --help (which exits earlier) never removes a valid config.
+#
+rm -f "${ROOTDIR}/.config.mk" "${ROOTDIR}/.config.mk.tmp"
+
+# ###########################################################################
 # Checks
 # ###########################################################################
 
