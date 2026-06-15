@@ -11701,6 +11701,11 @@ msgid ""
 "frequency. Required for DVB-S2X MIS muxes sharing the same physical "
 "frequency with different ISI values. Example: 10701000 (= 10701 MHz)."
 msgstr ""
+"Wirtualna częstotliwość DVB-S w kHz dla klientów SAT>IP. Po ustawieniu "
+"klienty SAT>IP dostrajają się do tego multipleksera, używając tej "
+"częstotliwości zamiast rzeczywistej częstotliwości transpondera. Wymagane "
+"dla multiplekserów MIS DVB-S2X współdzielących tę samą częstotliwość "
+"fizyczną z różnymi wartościami ISI. Przykład: 10701000 (= 10701 MHz)."
 
 #: src/streaming.c:618
 msgid "Visually impaired commentary/audio description"
