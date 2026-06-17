@@ -51,13 +51,13 @@ SOURCES:
 
 .PHONY: srpm
 srpm: clean SOURCES tvheadend.spec
-	spectool --get-files -C SOURCES tvheadend.spec
-	rpmbuild $(DEFINES) -bs tvheadend.spec
+	@echo "Source RPMs cannot be built from the local tree without tar-ing a"
+	@echo "release tarball first. Run 'make build' for binary RPMs."
+	@false
 
 .PHONY: build
 build: clean SOURCES tvheadend.spec
-	spectool --get-files -C SOURCES tvheadend.spec
-	rpmbuild $(DEFINES) -ba tvheadend.spec
+	rpmbuild $(DEFINES) -bb tvheadend.spec
 
 .PHONY: build-doozer
 build-doozer: build
