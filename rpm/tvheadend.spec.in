@@ -15,7 +15,8 @@ License:        GPLv3
 Group:          Applications/Multimedia
 URL:            http://tvheadend.org
 
-Source:         https://github.com/tvheadend/tvheadend/archive/%{ref}/tvheadend-%{commit}.tar.gz
+# Source tarball intentionally omitted — the build uses the local
+# checked-out tree directly (see %prep), so nothing is downloaded.
 #Patch999:      test.patch
 
 BuildRequires:  bzip2
@@ -47,7 +48,13 @@ SAT>IP and various other clients using these protocols.
 
 
 %prep
-%setup -q -n tvheadend-%{commit}
+# Build from the local checked-out tree instead of a downloaded tarball:
+# symlink the build subdir at the repo root (%{_topdir} is rpm/, so
+# %{_topdir}/.. is the worktree), then %setup -T -D enters it without
+# fetching or unpacking anything.
+rm -rf tvheadend-%{commit}
+ln -s %{_topdir}/.. tvheadend-%{commit}
+%setup -T -D -n tvheadend-%{commit}
 #%patch999 -p1 -b .test
 
 
