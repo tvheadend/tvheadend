@@ -1464,8 +1464,8 @@ msgid "Parameters"
 msgstr "Parameters"
 
 #: src/webui/static/app/idnode.js:2001
-msgid "Parent disabled"
-msgstr "Hoofditem uitgeschakeld"
+msgid "Inactive services"
+msgstr "Inactieve diensten"
 
 #: src/webui/static/app/epg.js:277 src/webui/static/app/epg.js:873
 #: src/webui/static/app/dvr.js:126

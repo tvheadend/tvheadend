@@ -1230,8 +1230,8 @@ msgid "Parameters"
 msgstr "Parametri"
 
 #: src/webui/static/app/idnode.js:1939
-msgid "Parent disabled"
-msgstr "Nadređene onemogućene"
+msgid "Inactive services"
+msgstr "Neaktivne usluge"
 
 #: src/webui/static/app/acleditor.js:70
 msgid "Password"
