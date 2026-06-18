@@ -18,6 +18,7 @@
  */
 
 #include "tvheadend.h"
+#include "udp.h"
 #include "upnp.h"
 #include "settings.h"
 #include "config.h"
@@ -335,7 +336,7 @@ CONFIGID.UPNP.ORG: 0\r\n\
 
     htsbuf_queue_init(&q, 0);
     htsbuf_append_str(&q, buf);
-    upnp_send(&q, NULL, attempt * 11, 1, 0);
+    upnp_send(&q, NULL, attempt * 11, 1);
     htsbuf_queue_flush(&q);
   }
 #undef MSG
@@ -386,17 +387,34 @@ DEVICEID.SES.COM: %d\r\n\r\n"
       abort();
     }
 
+    char addrbuf[100];
     char* own_server_ip = http_server_ip;
 
+    if (!own_server_ip) {
+      struct sockaddr_storage dst;
+      struct sockaddr_storage local;
+      memset(&dst, 0, sizeof(dst));
+      dst.ss_family = AF_INET;
+      IP_AS_V4(&dst, port) = htons(1900);
+      inet_pton(AF_INET, "239.255.255.250", &IP_AS_V4(&dst, addr));
+
+      if (udp_get_local_ip_for_dest(&dst, &local) == 0) {
+        tcp_get_str_from_ip(&local, addrbuf, sizeof(addrbuf));
+        own_server_ip = addrbuf;
+      } else {
+        own_server_ip = "0.0.0.0";
+      }
+    }
+
     snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
-             own_server_ip ?: "%s", http_server_port, tvheadend_webroot ?: "",
+             own_server_ip, http_server_port, tvheadend_webroot ?: "",
              nt, tvheadend_version,
              satip_server_conf.satip_uuid, usn2, (long)satip_server_bootid,
              satip_server_deviceid);
 
     htsbuf_queue_init(&q, 0);
     htsbuf_append_str(&q, buf);
-    upnp_send(&q, NULL, attempt * 11, 1, own_server_ip == NULL);
+    upnp_send(&q, NULL, attempt * 11, 1);
     htsbuf_queue_flush(&q);
   }
 #undef MSG
@@ -430,10 +448,21 @@ CONFIGID.UPNP.ORG: 0\r\n"
              buf, ntohs(IP_PORT(*dst)), deviceid ? " device: " : "", deviceid ?: "");
   }
 
+  char addrbuf[100];
   char* own_server_ip = http_server_ip;
 
+  if (!own_server_ip) {
+    struct sockaddr_storage local;
+    if (udp_get_local_ip_for_dest(dst, &local) == 0) {
+      tcp_get_str_from_ip(&local, addrbuf, sizeof(addrbuf));
+      own_server_ip = addrbuf;
+    } else {
+      own_server_ip = "0.0.0.0";
+    }
+  }
+
   snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
-           own_server_ip ?: "%s", http_server_port, tvheadend_webroot ?: "",
+           own_server_ip, http_server_port, tvheadend_webroot ?: "",
            tvheadend_version,
            satip_server_conf.satip_uuid, (long)satip_server_bootid);
 
@@ -443,7 +472,7 @@ CONFIGID.UPNP.ORG: 0\r\n"
     htsbuf_qprintf(&q, "DEVICEID.SES.COM: %s", deviceid);
   htsbuf_append(&q, "\r\n", 2);
   storage = *dst;
-  upnp_send(&q, &storage, 0, from_multicast, own_server_ip == NULL);
+  upnp_send(&q, &storage, 0, from_multicast);
   htsbuf_queue_flush(&q);
 #undef MSG
 }

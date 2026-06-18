@@ -66,13 +66,10 @@ udp_write( udp_connection_t *uc, const void *buf, size_t len,
 int
 udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
                  struct sockaddr_storage *storage );
-int
-udp_write_queue_fill_source( udp_connection_t *uc, htsbuf_queue_t *q,
-                 struct sockaddr_storage *storage, int fill_source );
 
 int
-udp_write_fill_source( udp_connection_t *uc, const void *buf, size_t len,
-                       struct sockaddr_storage *storage);
+udp_get_local_ip_for_dest( const struct sockaddr_storage *dst,
+                           struct sockaddr_storage *local );
 
 typedef struct udp_multirecv {
   int             um_psize;

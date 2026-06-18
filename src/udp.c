@@ -495,98 +495,6 @@ udp_close( udp_connection_t *uc )
 }
 
 int
-udp_write_fill_source( udp_connection_t *uc, const void *buf, size_t len,
-                       struct sockaddr_storage *storage)
-{
-    int r;
-    struct sockaddr_in local_addr;
-    socklen_t local_addr_len = sizeof(local_addr);
-    struct sockaddr_in parent_addr;
-    socklen_t parent_addrlen = sizeof(parent_addr);
-    int reuse = 1;
-
-
-    if (storage == NULL)
-      storage = &uc->ip;
-
-    tvhdebug(uc->subsystem, "Got dst IP address: %s", inet_ntoa(((struct sockaddr_in*)storage)->sin_addr));
-
-    // Get the current socket configuration
-    if (getsockname(uc->fd, (struct sockaddr *)&parent_addr, &parent_addrlen) < 0) {
-        perror("getsockname");
-        return -1;
-    }
-    tvhdebug(uc->subsystem, "Got parent IP address: %s", inet_ntoa(parent_addr.sin_addr));
-
-    // Create a new socket
-    int cloned_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (cloned_sockfd < 0) {
-        perror("socket");
-        return -1;
-    }
-
-
-    /* Mark reuse address */
-    if (setsockopt(cloned_sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse))) {
-      tvherror(uc->subsystem, "failed to reuse address for socket [%s]", strerror(errno));
-      close(cloned_sockfd);
-      return -1;
-    }
-
-    // Set the address to INADDR_ANY to let the routing table choose the source IP
-    parent_addr.sin_addr.s_addr = INADDR_ANY;
-
-    // Bind the new socket to the same port
-    if (bind(cloned_sockfd, (struct sockaddr *)&parent_addr, parent_addrlen) < 0) {
-        tvherror(uc->subsystem, "failed to bind address for socket [%s]", strerror(errno));
-        close(cloned_sockfd);
-        return -1;
-    }
-
-    // Connect the socket to the destination address
-    if (connect(cloned_sockfd, (struct sockaddr *)storage, sizeof(*storage)) < 0) {
-        tvherror(uc->subsystem, "connect() failed: %s", strerror(errno));
-        return -1;
-    }
-
-    // Get the local endpoint information (source IP address)
-    if (getsockname(cloned_sockfd, (struct sockaddr *)&local_addr, &local_addr_len) == -1) {
-        tvherror(uc->subsystem, "getsockname() failed: %s", strerror(errno));
-        return -1;
-    }
-
-    tvhdebug(uc->subsystem, "Got source IP address: %s", inet_ntoa(local_addr.sin_addr));
-
-    len += strlen(inet_ntoa(local_addr.sin_addr)) - 2;
-    char* data = malloc(len + 1);
-
-    len = snprintf(data, len + 1, buf, inet_ntoa(local_addr.sin_addr));
-
-    tvhdebug(uc->subsystem, "Assembled msg [len: %ld]", len);
-    tvhlog_hexdump(uc->subsystem, data, len);
-
-    // Send data over the established connection
-    char* sdata = data;
-    while (len) {
-        r = write(cloned_sockfd, sdata, len);
-        if (r < 0) {
-            if (ERRNO_AGAIN(errno)) {
-                tvh_safe_usleep(100);
-                continue;
-            }
-            break;
-        }
-        len -= r;
-        sdata += r;
-    }
-
-    free(data);
-    close(cloned_sockfd);
-
-    return len;
-}
-
-int
 udp_write( udp_connection_t *uc, const void *buf, size_t len,
            struct sockaddr_storage *storage )
 {
@@ -613,14 +521,7 @@ udp_write( udp_connection_t *uc, const void *buf, size_t len,
 
 int
 udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
-                 struct sockaddr_storage *storage)
-{
-  return udp_write_queue_fill_source(uc, q, storage, 0);
-}
-
-int
-udp_write_queue_fill_source( udp_connection_t *uc, htsbuf_queue_t *q,
-                 struct sockaddr_storage *storage, int fill_source)
+                 struct sockaddr_storage *storage )
 {
   htsbuf_data_t *hd;
   int l, r = 0;
@@ -630,15 +531,37 @@ udp_write_queue_fill_source( udp_connection_t *uc, htsbuf_queue_t *q,
     if (!r) {
       l = hd->hd_data_len - hd->hd_data_off;
       p = hd->hd_data + hd->hd_data_off;
-      if(fill_source)
-        r = udp_write_fill_source(uc, p, l, storage);
-      else
-        r = udp_write(uc, p, l, storage);
+      r = udp_write(uc, p, l, storage);
     }
     htsbuf_data_free(q, hd);
   }
   q->hq_size = 0;
   return r;
+}
+
+int
+udp_get_local_ip_for_dest(const struct sockaddr_storage *dst, struct sockaddr_storage *local)
+{
+  int fd;
+  socklen_t len = sizeof(*local);
+
+  fd = socket(dst->ss_family, SOCK_DGRAM, 0);
+  if (fd < 0)
+    return -1;
+
+  if (connect(fd, (const struct sockaddr *)dst,
+              dst->ss_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)) < 0) {
+    close(fd);
+    return -1;
+  }
+
+  if (getsockname(fd, (struct sockaddr *)local, &len) < 0) {
+    close(fd);
+    return -1;
+  }
+
+  close(fd);
+  return 0;
 }
 
 /*
