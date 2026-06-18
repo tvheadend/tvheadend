@@ -51,12 +51,12 @@ SOURCES:
 
 .PHONY: srpm
 srpm: clean SOURCES tvheadend.spec
-	spectool --get-files -C SOURCES tvheadend.spec
+	cd $(TOPDIR)/.. && git archive --format=tar.gz --prefix=tvheadend-$(COMMITR)/ HEAD -o $(TOPDIR)/SOURCES/tvheadend-$(COMMITR).tar.gz
 	rpmbuild $(DEFINES) -bs tvheadend.spec
 
 .PHONY: build
 build: clean SOURCES tvheadend.spec
-	spectool --get-files -C SOURCES tvheadend.spec
+	cd $(TOPDIR)/.. && git archive --format=tar.gz --prefix=tvheadend-$(COMMITR)/ HEAD -o $(TOPDIR)/SOURCES/tvheadend-$(COMMITR).tar.gz
 	rpmbuild $(DEFINES) -ba tvheadend.spec
 
 .PHONY: build-doozer
