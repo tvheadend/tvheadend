@@ -17,6 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <arpa/inet.h>
 #include "tvheadend.h"
 #include "udp.h"
 #include "upnp.h"
