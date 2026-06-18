@@ -402,7 +402,8 @@ DEVICEID.SES.COM: %d\r\n\r\n"
         tcp_get_str_from_ip(&local, addrbuf, sizeof(addrbuf));
         own_server_ip = addrbuf;
       } else {
-        own_server_ip = "0.0.0.0";
+        tvherror(LS_SATIPS, "Unable to determine local IP for SAT>IP announce");
+        return;
       }
     }
 
@@ -457,7 +458,8 @@ CONFIGID.UPNP.ORG: 0\r\n"
       tcp_get_str_from_ip(&local, addrbuf, sizeof(addrbuf));
       own_server_ip = addrbuf;
     } else {
-      own_server_ip = "0.0.0.0";
+      tvherror(LS_SATIPS, "Unable to determine local IP for SAT>IP discover reply");
+      return;
     }
   }
 
