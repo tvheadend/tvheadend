@@ -1444,8 +1444,8 @@ msgid "Parameters"
 msgstr "Parametry"
 
 #: src/webui/static/app/idnode.js:1997
-msgid "Parent disabled"
-msgstr "Rodič zakázán"
+msgid "Inactive services"
+msgstr "Neaktivní služby"
 
 #: src/webui/static/app/epg.js:277 src/webui/static/app/epg.js:865
 #: src/webui/static/app/dvr.js:151

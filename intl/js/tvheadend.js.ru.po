@@ -1230,8 +1230,8 @@ msgid "Parameters"
 msgstr "Параметры"
 
 #: src/webui/static/app/idnode.js:1939
-msgid "Parent disabled"
-msgstr "Родитель заблокирован"
+msgid "Inactive services"
+msgstr "Неактивные службы"
 
 #: src/webui/static/app/acleditor.js:70
 msgid "Password"

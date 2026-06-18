@@ -1232,8 +1232,8 @@ msgid "Parameters"
 msgstr "Параметри"
 
 #: src/webui/static/app/idnode.js:1939
-msgid "Parent disabled"
-msgstr "Изключен предшестващ"
+msgid "Inactive services"
+msgstr "Неактивни услуги"
 
 #: src/webui/static/app/acleditor.js:70
 msgid "Password"

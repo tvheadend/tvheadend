@@ -2001,7 +2001,7 @@ tvheadend.idnode_grid = function(panel, conf)
                 store: new Ext.data.ArrayStore({
                     id: 0,
                     fields: ['key', 'val'],
-                    data: [['default', _('Parent disabled')],
+                    data: [['default', _('Inactive services')],
                         ['all', _('All')],
                         ['none', _('None')]]
                 }),

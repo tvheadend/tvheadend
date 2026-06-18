@@ -1466,7 +1466,7 @@ msgid "Parameters"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:2004
-msgid "Parent disabled"
+msgid "Inactive services"
 msgstr ""
 
 #: src/webui/static/app/epg.js:277 src/webui/static/app/epg.js:873

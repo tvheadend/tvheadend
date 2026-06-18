@@ -1481,8 +1481,8 @@ msgid "Parameters"
 msgstr "Parametry"
 
 #: src/webui/static/app/idnode.js:2001
-msgid "Parent disabled"
-msgstr "Nadrzędny wyłączony"
+msgid "Inactive services"
+msgstr "Nieaktywne usługi"
 
 #: src/webui/static/app/epg.js:277 src/webui/static/app/epg.js:873
 #: src/webui/static/app/dvr.js:126

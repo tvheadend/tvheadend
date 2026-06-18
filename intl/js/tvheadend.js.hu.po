@@ -1444,8 +1444,8 @@ msgid "Parameters"
 msgstr "Paraméterek"
 
 #: src/webui/static/app/idnode.js:1997
-msgid "Parent disabled"
-msgstr "Szülő letiltva"
+msgid "Inactive services"
+msgstr "Inaktív szolgáltatások"
 
 #: src/webui/static/app/epg.js:277 src/webui/static/app/epg.js:865
 #: src/webui/static/app/dvr.js:151

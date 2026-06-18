@@ -1469,8 +1469,8 @@ msgid "Parameters"
 msgstr "매개변수"
 
 #: src/webui/static/app/idnode.js:2001
-msgid "Parent disabled"
-msgstr "부모 비활성"
+msgid "Inactive services"
+msgstr "비활성 서비스"
 
 #: src/webui/static/app/epg.js:277 src/webui/static/app/epg.js:873
 #: src/webui/static/app/dvr.js:126
