@@ -1482,7 +1482,7 @@ msgstr "Parametry"
 
 #: src/webui/static/app/idnode.js:2004
 msgid "Inactive services"
-msgstr ""
+msgstr "Usługi nieaktywne"
 
 #: src/webui/static/app/epg.js:277 src/webui/static/app/epg.js:873
 #: src/webui/static/app/dvr.js:126
