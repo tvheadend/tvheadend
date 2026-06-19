@@ -40,8 +40,8 @@ jobs:
       source_hash:   ${{ steps.hash.outputs.hash }}
       artifact_name: webui-vue-${{ steps.hash.outputs.hash }}
     env:
-      # publink_download (cache hit) needs no token; listfolder + upload
-      # (miss) do. secrets: inherit from the caller forwards this.
+      # Cache hit via GitHub Actions needs no token; upload to pcloud
+      # (miss) does. secrets: inherit from the caller forwards this.
       PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
 
     steps:
@@ -64,39 +64,16 @@ jobs:
           echo "hash=${h}" >> "$GITHUB_OUTPUT"
           echo "Source hash: ${h}"
 
-      - name: Look up artifact in pcloud
-        id: lookup
-        # Cheap listing of the cache folder. If the tarball already
-        # exists we skip the Node build + upload entirely. Exits 0
-        # either way; the outcome is read via the `cache_hit` output.
-        run: |
-          set +e
-          python3 support/pcloud.py listfolder /misc/webui 2>/dev/null \
-            | grep -q "webui-vue-${{ steps.hash.outputs.hash }}.tgz"
-          rc=$?
-          set -e
-          if [ "$rc" = "0" ]; then
-            echo "cache_hit=true" >> "$GITHUB_OUTPUT"
-            echo "Cache hit — skipping build, fetching cached tarball."
-          else
-            echo "cache_hit=false" >> "$GITHUB_OUTPUT"
-            echo "Cache miss — will build + upload."
-          fi
-
-      # ---- Cache hit: pull the cached tarball (public publink, no
-      #      Node, no token) so the artifact step has it. ----
-      - name: Fetch cached tarball
-        if: steps.lookup.outputs.cache_hit == 'true'
-        run: |
-          mkdir -p build.linux
-          python3 support/pcloud.py publink_download \
-            kZ54ee7ZUvsSYmb9VGSpnmoVzcAUhpBXLq8k \
-            "misc/webui/webui-vue-${{ steps.hash.outputs.hash }}.tgz" \
-            "build.linux/webui-vue-${{ steps.hash.outputs.hash }}.tgz"
+      - name: Look up artifact in GitHub Actions cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: build.linux/webui-vue-${{ steps.hash.outputs.hash }}.tgz
+          key: webui-vue-${{ steps.hash.outputs.hash }}
 
       # ---- Cache miss: build once + upload to pcloud once. ----
       - name: Setup Node
-        if: steps.lookup.outputs.cache_hit != 'true'
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-node@v5
         with:
           node-version: '20'
@@ -104,7 +81,7 @@ jobs:
           cache-dependency-path: src/webui/static-vue/package-lock.json
 
       - name: Build + upload to pcloud
-        if: steps.lookup.outputs.cache_hit != 'true'
+        if: steps.cache.outputs.cache-hit != 'true'
         # libcacheput → pack → build: always builds dist/ and tars it to
         # build.linux/webui-vue-<hash>.tgz (so the artifact step below
         # has it), then uploads to pcloud only when PCLOUD_TOKEN is set
