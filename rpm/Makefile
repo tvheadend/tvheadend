@@ -59,16 +59,6 @@ build: clean SOURCES tvheadend.spec
 	cd $(TOPDIR)/.. && git archive --format=tar.gz --prefix=tvheadend-$(COMMITR)/ HEAD -o $(TOPDIR)/SOURCES/tvheadend-$(COMMITR).tar.gz
 	rpmbuild $(DEFINES) -ba tvheadend.spec
 
-.PHONY: build-doozer
-build-doozer: build
-	@rm -f ../filelist.txt
-	@for a in RPMS/$$(uname -m)/tvheadend-$(VERSION)-$(RELEASE)*.rpm \
-	          RPMS/$$(uname -m)/tvheadend-debuginfo-$(VERSION)-$(RELEASE)*.rpm; do \
-		name=$$(basename $$a); \
-		echo "doozer-versioned-artifact:rpm/$$a:rpm:application/x-rpm:$$name"; \
-		echo "rpm/$$a" >> ../filelist.txt; \
-	 done
-	
 
 .PHONY: clean.
 clean:
