@@ -42,7 +42,8 @@ jobs:
     env:
       # Cache hit via GitHub Actions needs no token; upload to pcloud
       # (miss) does. secrets: inherit from the caller forwards this.
-      PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
+      # Only upload to pcloud when building the master branch.
+      PCLOUD_TOKEN: ${{ github.ref == 'refs/heads/master' && secrets.PCLOUD_TOKEN || '' }}
 
     steps:
       - name: Checkout
