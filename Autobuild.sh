@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Entry point for the Doozer autobuild system
+# Entry point for the autobuild system
 #
 # (c) Andreas Öman 2011. All rights reserved.
 #
@@ -16,7 +16,7 @@ TARGET=""
 ARCHOVR=""
 RELEASE="--release"
 WORKINGDIR="/var/tmp/showtime-autobuild"
-FILELIST="$PWD/filelist.txt"
+
 OP="build"
 OSPREFIX=""
 
