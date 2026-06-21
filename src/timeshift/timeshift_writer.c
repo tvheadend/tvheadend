@@ -350,8 +350,8 @@ static void _process_msg
       if (run) *run = 0;
       break;
     case SMT_STOP:
-      if (sm->sm_code != SM_CODE_SOURCE_RECONFIGURED && run)
-        *run = 0;
+      // Don't exit timeshift on SMT_STOP as the subscription might restart later on.
+      // i.e. SM_CODE_SOURCE_RECONFIGURED, SM_CODE_SUBSCRIPTION_OVERRIDDEN, ...
       goto live;
 
     /* Timeshifting */
