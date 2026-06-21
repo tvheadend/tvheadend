@@ -63,7 +63,7 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
                        streaming_component_type2txt(ssc->es_type));
         return -1;
     }
-#if ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
+#if ENABLE_V4L2M2M | ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
     int hwaccel = -1;
     int hwaccel_details = -1;
     if (SCT_ISVIDEO(ssc->es_type)) {
@@ -71,6 +71,15 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
             ((hwaccel_details = tvh_codec_profile_video_get_hwaccel_details(profile)) < 0)) {
             return -1;
         }
+#if ENABLE_V4L2M2M
+        if (idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
+            hwaccel &&
+            ((hwaccel_details == HWACCEL_AUTO && strstr(profile->codec_name, "v4l2")) || hwaccel_details == HWACCEL_PRIORITIZE_V4L2M2M)) {
+            if (icodec_id == AV_CODEC_ID_H264) {
+                icodec = avcodec_find_decoder_by_name("h264_v4l2m2m");
+            }
+        }
+#endif
 #if ENABLE_MMAL
         if (idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
             hwaccel &&
@@ -120,7 +129,7 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
         }
 #endif
     }
-#endif // from ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
+#endif // from ENABLE_V4L2M2M | ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
     if (!icodec && !(icodec = avcodec_find_decoder(icodec_id))) {
         tvh_stream_log(self, LOG_ERR, "failed to find decoder for '%s'",
                        streaming_component_type2txt(ssc->es_type));
