@@ -1001,6 +1001,52 @@ http_dvr_playlist(http_connection_t *hc, int pltype, int urlauth, dvr_entry_t *d
 }
 
 
+static char *sanitize_filename(char *filename);
+
+/**
+ * Build a "Content-Disposition: attachment" header value for a playlist
+ * download. Produces an RFC 6266 ASCII fallback in filename="..." together
+ * with an RFC 8187 percent-encoded UTF-8 filename*=..., so non-ASCII channel
+ * and recording names survive HTTP transport (header values must be US-ASCII)
+ * and browsers download the playlist instead of rendering it inline.
+ * Returns a malloc'd string the caller must free (NULL on allocation failure).
+ */
+static char *
+http_playlist_disposition(const char *name, const char *ext)
+{
+  char base[256], *ascii, *enc, *result;
+  htsbuf_queue_t q;
+  size_t len;
+
+  if (name == NULL || *name == '\0')
+    name = "playlist";
+  snprintf(base, sizeof(base), "%s.%s", name, ext);
+
+  /* ASCII fallback for the legacy filename="..." parameter */
+  ascii = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                               base, strlen(base) * 3);
+  if (ascii == NULL)
+    ascii = strdup("playlist");
+  sanitize_filename(ascii);
+
+  /* RFC 8187 percent-encoded UTF-8 for the filename*=... parameter */
+  htsbuf_queue_init(&q, 0);
+  htsbuf_append_and_escape_rfc8187(&q, base);
+  enc = htsbuf_to_string(&q);
+  htsbuf_queue_flush(&q);
+
+  len = strlen(ascii) + strlen(enc) + 50;
+  result = malloc(len);
+  if (result)
+    snprintf(result, len,
+             "attachment; filename=\"%s\"; filename*=UTF-8''%s", ascii, enc);
+
+  free(enc);
+  free(ascii);
+  return result;
+}
+
+
 /**
  * Handle requests for playlists.
  */
@@ -1008,12 +1054,14 @@ static int
 page_http_playlist_
   (http_connection_t *hc, const char *remain, void *opaque, int urlauth)
 {
-  char *components[2], *cmd, *s, buf[40];
+  char *components[2], *cmd, *s, buf[40], dispname[256];
   const char *cs;
   int nc, r, pltype = PLAYLIST_M3U;
   channel_t *ch = NULL;
   dvr_entry_t *de = NULL;
   channel_tag_t *tag = NULL;
+
+  dispname[0] = '\0';
 
   if (remain && !strcmp(remain, "e2")) {
     pltype = PLAYLIST_E2;
@@ -1078,15 +1126,19 @@ page_http_playlist_
       tag = channel_tag_find_by_name(components[1], 0);
   }
 
-  if(ch)
+  if(ch) {
     r = http_channel_playlist(hc, pltype, urlauth, ch);
-  else if(tag)
+    strlcpy(dispname, channel_get_name(ch, ""), sizeof(dispname));
+  } else if(tag) {
     r = http_tag_playlist(hc, pltype, urlauth, tag);
-  else if(de) {
+    strlcpy(dispname, tag->ct_name ?: "", sizeof(dispname));
+  } else if(de) {
     if (pltype == PLAYLIST_SATIP_M3U)
       r = HTTP_STATUS_BAD_REQUEST;
-    else
+    else {
       r = http_dvr_playlist(hc, pltype, urlauth, de);
+      strlcpy(dispname, lang_str_get(de->de_title, NULL) ?: "", sizeof(dispname));
+    }
   } else {
     cmd = s = tvh_strdupa(components[0]);
     while (*s && *s != '.') s++;
@@ -1106,12 +1158,20 @@ page_http_playlist_
     else {
       r = HTTP_STATUS_BAD_REQUEST;
     }
+    if (r == 0)
+      strlcpy(dispname, cmd, sizeof(dispname));
   }
 
   tvh_mutex_unlock(&global_lock);
 
-  if (r == 0)
-    http_output_content(hc, pltype == PLAYLIST_E2 ? MIME_E2 : MIME_M3U);
+  if (r == 0) {
+    char *disposition = http_playlist_disposition(dispname,
+                          pltype == PLAYLIST_E2 ? "tv" : "m3u");
+    http_output_content_disposition(hc,
+                                    pltype == PLAYLIST_E2 ? MIME_E2 : MIME_M3U,
+                                    disposition);
+    free(disposition);
+  }
 
   return r;
 }
@@ -1739,7 +1799,11 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque, int urlauth)
      </track>\r\n\
   </trackList>\r\n\
 </playlist>\r\n");
-  http_output_content(hc, MIME_XSPF_XML);
+  {
+    char *disposition = http_playlist_disposition(title, "xspf");
+    http_output_content_disposition(hc, MIME_XSPF_XML, disposition);
+    free(disposition);
+  }
   return 0;
 }
 
@@ -1789,7 +1853,11 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque, int urlauth)
     break;
   }
   htsbuf_append_str(hq, "\n");
-  http_output_content(hc, MIME_M3U);
+  {
+    char *disposition = http_playlist_disposition(title, "m3u");
+    http_output_content_disposition(hc, MIME_M3U, disposition);
+    free(disposition);
+  }
   return 0;
 }
 
