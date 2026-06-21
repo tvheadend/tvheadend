@@ -282,6 +282,31 @@ noname(const char *s)
 }
 
 /*
+ * Check if service is unnamed, including when name matches service ID
+ */
+static int
+service_is_unnamed(service_t *t)
+{
+  const char *name;
+  uint16_t sid;
+  char sid_str[16];
+  
+  name = service_get_channel_name(t);
+  
+  /* Check if name is empty or whitespace-only */
+  if (noname(name))
+    return 1;
+  
+  /* Check if name matches service ID */
+  sid = service_id16(t);
+  snprintf(sid_str, sizeof(sid_str), "%u", sid);
+  if (name && strcmp(name, sid_str) == 0)
+    return 1;
+  
+  return 0;
+}
+
+/*
  *
  */
 static void
@@ -307,7 +332,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
   if (!bq->bq_mapnolcn &&
       bouquet_get_channel_number(bq, t) <= 0)
     return;
-  if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
+  if (!bq->bq_mapnoname && service_is_unnamed(t))
     return;
   if (!bq->bq_mapencrypted && service_is_encrypted(t))
     return;
@@ -1008,7 +1033,7 @@ bouquet_class_mapopt_notify ( void *obj, const char *lang )
       t = (service_t *)bq->bq_services->is_array[z];
       if (!bq->bq_mapradio && service_is_radio(t))
         bouquet_unmap_channel(bq, t);
-      else if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
+      else if (!bq->bq_mapnoname && service_is_unnamed(t))
         bouquet_unmap_channel(bq, t);
       else if (!bq->bq_mapradio && service_is_radio(t))
         bouquet_unmap_channel(bq, t);
