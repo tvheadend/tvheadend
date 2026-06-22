@@ -1,2047 +1,2436 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # 
 # Translators:
+# Wurenji Wu, 2025
+# herosam gong <herosam.gong@gmail.com>, 2026
+# jiezhao li, 2026
+# 
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Tvheadend\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-16 18:36+0100\n"
-"PO-Revision-Date: 2016-12-16 17:37+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Chinese (http://www.transifex.com/tvheadend/tvheadend/language/zh/)\n"
+"POT-Creation-Date: 2026-06-15 03:11+0000\n"
+"PO-Revision-Date: 2023-12-11 11:01+0000\n"
+"Last-Translator: jiezhao li, 2026\n"
+"Language-Team: Chinese (https://app.transifex.com/tvheadend/teams/43381/zh/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: zh\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#. /finished recordings to autorecs.
+#: src/webui/static/app/epg.js:1558
+msgid " - "
+msgstr " - "
+
 #: src/webui/static/app/i18n-post.js:137
 msgid "&#160;OK&#160;"
-msgstr ""
+msgstr "&#160;确定&#160;"
 
 #: src/webui/static/app/i18n-post.js:106
 msgid "(?:st|nd|rd|th)#parseCodes.S.s"
-msgstr ""
+msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 
-#: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:27
-#: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
+#: src/webui/static/app/chconf.js:10 src/webui/static/app/chconf.js:31
+#: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:93
+#: src/webui/static/app/epg.js:147
 msgid "(Clear filter)"
-msgstr ""
+msgstr "（清除过滤）"
 
 #: src/webui/static/app/i18n-post.js:210
 msgid "(None)"
-msgstr ""
+msgstr "（无）"
 
-#: src/webui/static/app/epg.js:247
+#: src/webui/static/app/epg.js:415
 msgid "(default DVR Profile)"
+msgstr "（默认录像配置）"
+
+#: src/webui/static/app/tvheadend.js:622
+msgid ""
+"**You'll also see this page if you try and view documentation (for a feature) not included with your version of Tvheadend.**\n"
+"\n"
+"\n"
+"\n"
 msgstr ""
+"**You'll also see this 页面 if you try and 查看 文档 (for a feature) not included with your version of Tvheadend.**\n"
+"\n"
+"\n"
+"\n"
 
 #: src/webui/static/app/i18n-post.js:59
 msgid "0 #monthNumber"
-msgstr ""
+msgstr "0 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:224
 msgid "0,000.00#NumberColumn"
-msgstr ""
+msgstr "0,000.00#NumberColumn"
 
-#: src/webui/static/app/epg.js:69
+#: src/webui/static/app/epg.js:148
 msgid "00:00:00 - 00:15:00"
-msgstr ""
+msgstr "00:00:00 - 00:15:00"
 
-#: src/webui/static/app/epg.js:70
+#: src/webui/static/app/epg.js:149
 msgid "00:15:00 - 00:30:00"
-msgstr ""
+msgstr "00:15:00 - 00:30:00"
 
-#: src/webui/static/app/epg.js:71
-msgid "00:30:00 - 01:30:00"
-msgstr ""
+#: src/webui/static/app/epg.js:150
+msgid "00:30:00 - 01:00:00"
+msgstr "00:30:00 - 01:00:00"
 
-#: src/webui/static/app/epg.js:72
+#: src/webui/static/app/epg.js:151
+msgid "01:00:00 - 01:30:00"
+msgstr "01:00:00 - 01:30:00"
+
+#: src/webui/static/app/epg.js:152
 msgid "01:30:00 - 03:00:00"
-msgstr ""
+msgstr "01:30:00 - 03:00:00"
 
-#: src/webui/static/app/epg.js:73
+#: src/webui/static/app/epg.js:153
 msgid "03:00:00 - No maximum"
-msgstr ""
+msgstr "03:00:00 - 无上限"
 
 #: src/webui/static/app/i18n-post.js:60
 msgid "1 #monthNumber"
-msgstr ""
+msgstr "1 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:69
 msgid "10 #monthNumber"
-msgstr ""
+msgstr "10 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:70
 msgid "11 #monthNumber"
-msgstr ""
+msgstr "11 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:61
 msgid "2 #monthNumber"
-msgstr ""
+msgstr "2 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:62
 msgid "3 #monthNumber"
-msgstr ""
+msgstr "3 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:63
 msgid "4 #monthNumber"
-msgstr ""
+msgstr "4 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:64
 msgid "5 #monthNumber"
-msgstr ""
+msgstr "5 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:65
 msgid "6 #monthNumber"
-msgstr ""
+msgstr "6 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:66
 msgid "7 #monthNumber"
-msgstr ""
+msgstr "7 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:67
 msgid "8 #monthNumber"
-msgstr ""
+msgstr "8 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:68
 msgid "9 #monthNumber"
-msgstr ""
+msgstr "9 #monthNumber"
 
-#: src/webui/static/app/dvr.js:245
+#: src/webui/static/app/dvr.js:534
 msgid "Abort"
-msgstr ""
+msgstr "中止"
 
-#: src/webui/static/app/dvr.js:243
+#: src/webui/static/app/dvr.js:532
 msgid "Abort the selected recording"
-msgstr ""
+msgstr "中止所选录像"
 
-#: src/webui/static/app/tvheadend.js:836
+#: src/webui/static/app/tvheadend.js:1269
 msgid "About"
-msgstr ""
+msgstr "关于"
 
 #: src/webui/static/app/acleditor.js:24
 msgid "Access Entries"
-msgstr ""
+msgstr "访问条目"
 
 #: src/webui/static/app/acleditor.js:23
 msgid "Access Entry"
-msgstr ""
+msgstr "访问条目"
+
+#: src/webui/static/app/epg.js:605 src/webui/static/app/epg.js:606
+msgid "Actions"
+msgstr "操作"
 
 #: src/webui/static/app/servicemapper.js:22
 msgid "Active"
-msgstr ""
+msgstr "活动"
 
-#: src/webui/static/app/idnode.js:1793 src/webui/static/app/idnode.js:2289
+#: src/webui/static/app/idnode.js:1858 src/webui/static/app/idnode.js:2368
 msgid "Add"
-msgstr ""
+msgstr "添加"
 
-#: src/webui/static/app/idnode.js:1791 src/webui/static/app/idnode.js:2287
+#: src/webui/static/app/idnode.js:1856 src/webui/static/app/idnode.js:2366
 msgid "Add a new entry"
-msgstr ""
+msgstr "添加新条目"
 
-#: src/webui/static/app/idnode.js:1363 src/webui/static/app/idnode.js:1558
+#: src/webui/static/app/idnode.js:1401 src/webui/static/app/idnode.js:1603
 msgid "Add {0}"
-msgstr ""
+msgstr "添加 {0}"
 
-#: src/webui/static/app/idnode.js:594 src/webui/static/app/idnode.js:610
+#: src/webui/static/app/idnode.js:606 src/webui/static/app/idnode.js:622
 msgid "Advanced"
-msgstr ""
+msgstr "高级"
 
-#: src/webui/static/app/idnode.js:1043
+#: src/webui/static/app/idnode.js:1057
 msgid "Advanced Settings"
-msgstr ""
+msgstr "高级设置"
 
 #: src/webui/static/app/i18n-post.js:279
 msgid "After"
-msgstr ""
+msgstr "之后"
 
-#: src/webui/static/app/mpegts.js:209
+#: src/webui/static/app/mpegts.js:216
 msgid "After filtering and reordering (without PCR and PMT)"
-msgstr ""
+msgstr "过滤并重排序后（不含 PCR 和 PMT）"
 
-#: src/webui/static/app/epg.js:607 src/webui/static/app/epg.js:608
+#: src/webui/static/app/epg.js:880 src/webui/static/app/epg.js:881
 msgid "Age"
-msgstr ""
+msgstr "年龄"
 
-#: src/webui/static/app/epg.js:134
+#: src/webui/static/app/epg.js:275 src/webui/static/app/dvr.js:124
 msgid "Age Rating"
-msgstr ""
+msgstr "年龄分级"
 
-#: src/webui/static/app/idnode.js:1940 src/webui/static/app/idnode.js:1979
+#: src/webui/static/app/idnode.js:2005 src/webui/static/app/idnode.js:2044
+#: src/webui/static/app/epg.js:935
 msgid "All"
-msgstr ""
+msgstr "全部"
 
-#: src/webui/static/app/idnode.js:1153 src/webui/static/app/idnode.js:1166
-#: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1483
-#: src/webui/static/app/idnode.js:1501 src/webui/static/app/idnode.js:1511
+#: src/webui/static/app/tvhlog.js:78
+msgid "All subsystems"
+msgstr "所有子系统"
+
+#: src/webui/static/app/epgevent.js:146
+msgid "Alternative Showings"
+msgstr "备选场次"
+
+#: src/webui/static/app/epgevent.js:207
+msgid "Alternative showings"
+msgstr "备选场次"
+
+#: src/webui/static/app/idnode.js:1188 src/webui/static/app/idnode.js:1201
+#: src/webui/static/app/idnode.js:1210 src/webui/static/app/idnode.js:1527
+#: src/webui/static/app/idnode.js:1545 src/webui/static/app/idnode.js:1555
 msgid "Apply"
-msgstr ""
+msgstr "应用"
 
-#: src/webui/static/app/tvhlog.js:25
+#: src/webui/static/app/tvhlog.js:370
 msgid "Apply any changes made below to the run-time configuration."
-msgstr ""
+msgstr "应用 any 更改 made below to the run-时间 配置."
 
-#: src/webui/static/app/tvhlog.js:24
+#: src/webui/static/app/tvhlog.js:369
 msgid "Apply configuration (run-time only)"
-msgstr ""
+msgstr "应用配置 (run-时间 only)"
 
-#: src/webui/static/app/idnode.js:1482
+#: src/webui/static/app/idnode.js:1526
 msgid "Apply settings"
-msgstr ""
+msgstr "应用设置"
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
-msgstr ""
+msgstr "4月"
 
 #: src/webui/static/app/i18n-post.js:23
 msgid "April"
-msgstr ""
+msgstr "四月"
 
-#: src/webui/static/app/epg.js:159
+#: src/webui/static/app/epg.js:305
 msgid "Aspect"
-msgstr ""
+msgstr "宽高比"
 
 #: src/webui/static/app/chconf.js:178
 msgid "Assign Number"
-msgstr ""
+msgstr "分配编号"
 
 #: src/webui/static/app/chconf.js:176
 msgid "Assign lowest free channel number"
-msgstr ""
+msgstr "Assign lowest free 频道 编号"
 
-#: src/webui/static/app/esfilter.js:65
+#: src/webui/static/app/esfilter.js:43
 msgid "Audio Stream Filter"
-msgstr ""
+msgstr "音频流过滤器"
 
-#: src/webui/static/app/esfilter.js:66
+#: src/webui/static/app/esfilter.js:44
 msgid "Audio Stream Filters"
-msgstr ""
+msgstr "音频流过滤器"
 
-#: src/webui/static/app/epg.js:167
+#: src/webui/static/app/epg.js:313
 msgid "Audio description#EPG"
-msgstr ""
+msgstr "音频描述#EPG"
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
-msgstr ""
+msgstr "8月"
 
 #: src/webui/static/app/i18n-post.js:27
 msgid "August"
-msgstr ""
+msgstr "八月"
 
-#: src/webui/static/app/epg.js:1063
+#: src/webui/static/app/epg.js:1529
 msgid "Auto Recorder"
-msgstr ""
+msgstr "自动录制器"
 
-#: src/webui/static/app/tvheadend.js:368
+#: src/webui/static/app/tvheadend.js:742
 msgid "Auto-refresh"
-msgstr ""
+msgstr "自动刷新"
 
-#: src/webui/static/app/epg.js:263 src/webui/static/app/dvr.js:69
-#: src/webui/static/app/dvr.js:735
+#: src/webui/static/app/epg.js:434 src/webui/static/app/dvr.js:136
+#: src/webui/static/app/dvr.js:1054
 msgid "Autorec"
-msgstr ""
+msgstr "自动录制"
 
-#: src/webui/static/app/dvr.js:736
+#: src/webui/static/app/dvr.js:1055
 msgid "Autorecs"
-msgstr ""
+msgstr "自动录制规则"
 
-#: src/webui/static/app/idnode.js:446 src/webui/static/app/idnode.js:691
+#: src/webui/static/app/idnode.js:462 src/webui/static/app/idnode.js:703
 msgid "Available"
-msgstr ""
+msgstr "可用"
 
-#: src/webui/static/app/status.js:404
+#: src/webui/static/app/status.js:451
 msgid "BER"
-msgstr ""
+msgstr "BER"
 
-#: src/webui/static/app/status.js:396
+#: src/webui/static/app/tvheadend.js:555 src/webui/static/app/tvheadend.js:556
+msgid "Back to top"
+msgstr "回到顶部"
+
+#: src/webui/static/app/status.js:443
 msgid "Bandwidth (kb/s)"
-msgstr ""
+msgstr "带宽 (kb/s)"
 
-#: src/webui/static/app/status.js:732 src/webui/static/app/status.js:825
+#: src/webui/static/app/status.js:881 src/webui/static/app/status.js:972
 msgid "Bandwidth monitor"
-msgstr ""
+msgstr "带宽监视器"
 
 #: src/webui/static/app/config.js:29
 msgid "Base"
-msgstr ""
+msgstr "基础"
 
-#: src/webui/static/app/idnode.js:592 src/webui/static/app/idnode.js:604
+#: src/webui/static/app/idnode.js:604 src/webui/static/app/idnode.js:616
 msgid "Basic"
-msgstr ""
+msgstr "基本"
 
-#: src/webui/static/app/idnode.js:1041
+#: src/webui/static/app/idnode.js:1055
 msgid "Basic Settings"
-msgstr ""
+msgstr "基础设置"
 
 #: src/webui/static/app/i18n-post.js:280
 msgid "Before"
-msgstr ""
+msgstr "之前"
 
 #: src/webui/static/app/cteditor.js:73
 msgid "Bouquet"
-msgstr ""
+msgstr "频道组"
 
 #: src/webui/static/app/cteditor.js:74
 msgid "Bouquets"
-msgstr ""
+msgstr "频道包"
 
-#: src/webui/static/app/epg.js:276
+#: src/webui/static/app/epg.js:201
 msgid "Broadcast Details"
-msgstr ""
+msgstr "广播详情"
 
-#: src/webui/static/app/epg.js:381
+#: src/webui/static/app/epg.js:29
 msgid "Broadcast details"
-msgstr ""
+msgstr "广播详情"
 
-#: src/webui/static/app/epg.js:870
-msgid "Buffering. Please wait..."
-msgstr ""
-
-#: src/webui/static/app/caclient.js:32
-msgid "CA"
-msgstr ""
-
-#: src/webui/static/app/esfilter.js:116
-msgid "CA Stream Filter"
-msgstr ""
-
-#: src/webui/static/app/esfilter.js:117
-msgid "CA Stream Filters"
-msgstr ""
-
-#: src/webui/static/app/mpegts.js:188
-msgid "CAIDS: "
-msgstr ""
+#: src/webui/static/app/epg.js:1305 src/webui/static/app/epgevent.js:79
+msgid "Buffering. Please wait…"
+msgstr "缓冲中，请稍候…"
 
 #: src/webui/static/app/caclient.js:33
+msgid "CA"
+msgstr "条件接收"
+
+#: src/webui/static/app/esfilter.js:94
+msgid "CA Stream Filter"
+msgstr "条件接收流过滤器"
+
+#: src/webui/static/app/esfilter.js:95
+msgid "CA Stream Filters"
+msgstr "条件接收流过滤器"
+
+#: src/webui/static/app/mpegts.js:192
+msgid "CAIDS: "
+msgstr "CAIDS："
+
+#: src/webui/static/app/caclient.js:34
 msgid "CAs"
-msgstr ""
+msgstr "条件接收系统"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
-#: src/webui/static/app/idnode.js:1110 src/webui/static/app/idnode.js:1522
+#: src/webui/static/app/idnode.js:1143 src/webui/static/app/idnode.js:1566
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
-#: src/webui/static/app/status.js:559
+#: src/webui/static/app/status.js:629
 msgid "Cancel Connection"
-msgstr ""
+msgstr "取消连接"
 
-#: src/webui/static/app/idnode.js:1521
+#: src/webui/static/app/idnode.js:1565
 msgid "Cancel operation"
-msgstr ""
+msgstr "取消操作"
 
-#: src/webui/static/app/status.js:560
+#: src/webui/static/app/status.js:630
 msgid "Cancel the selected connection?"
-msgstr ""
+msgstr "Cancel the 已选中 连接?"
 
-#: src/webui/static/app/status.js:556
+#: src/webui/static/app/status.js:626
 msgid "Cancel this connection"
-msgstr ""
+msgstr "取消此连接"
 
-#: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1511
+#: src/webui/static/app/idnode.js:1210 src/webui/static/app/idnode.js:1555
 msgid "Cannot apply"
-msgstr ""
+msgstr "无法应用"
 
-#: src/webui/static/app/idnode.js:622
+#: src/webui/static/app/epg.js:267 src/webui/static/app/dvr.js:120
+msgid "Categories"
+msgstr "分类"
+
+#: src/webui/static/app/epg.js:1523 src/webui/static/app/epg.js:1525
+#: src/webui/static/app/epg.js:1527
+msgid "Category"
+msgstr "分类："
+
+#: src/webui/static/app/idnode.js:634
 msgid "Change the user interface level (basic, advanced, expert)"
-msgstr ""
+msgstr "更改 the 用户 界面 级别 (basic, advanced, expert)"
 
-#: src/webui/static/app/idnode.js:1167 src/webui/static/app/idnode.js:1502
+#: src/webui/static/app/idnode.js:1202 src/webui/static/app/idnode.js:1546
 msgid "Changes were applied!"
-msgstr ""
+msgstr "更改已应用！"
 
-#: src/webui/static/app/chconf.js:232 src/webui/static/app/epg.js:585
-#: src/webui/static/app/epg.js:586 src/webui/static/app/epg.js:1067
-#: src/webui/static/app/status.js:113
+#: src/webui/static/app/chconf.js:232 src/webui/static/app/epg.js:850
+#: src/webui/static/app/epg.js:851 src/webui/static/app/epg.js:1533
+#: src/webui/static/app/epgevent.js:134 src/webui/static/app/epgevent.js:135
+#: src/webui/static/app/status.js:123
 msgid "Channel"
-msgstr ""
+msgstr "频道"
 
-#: src/webui/static/app/tvheadend.js:759
+#: src/webui/static/app/tvheadend.js:1168
 msgid "Channel / EPG"
-msgstr ""
+msgstr "频道 / EPG"
 
 #: src/webui/static/app/cteditor.js:10
 msgid "Channel Tag"
-msgstr ""
+msgstr "频道标签"
 
 #: src/webui/static/app/cteditor.js:11
 msgid "Channel Tags"
-msgstr ""
+msgstr "频道标签"
 
 #: src/webui/static/app/chconf.js:199
 msgid "Channel number operations"
-msgstr ""
+msgstr "频道编号操作"
 
 #: src/webui/static/app/chconf.js:233
 msgid "Channels"
-msgstr ""
+msgstr "频道"
 
 #: src/webui/static/app/i18n-post.js:134
 msgid "Choose a month (Control+Up/Down to move years)"
-msgstr ""
+msgstr "选择月份（Ctrl+上/下 可切换年份）"
 
 #: src/webui/static/app/config.js:78
 msgid "Clean image (icon) cache"
-msgstr ""
+msgstr "清理图像（图标）缓存"
 
 #: src/webui/static/app/config.js:76
 msgid "Clean image cache on storage"
-msgstr ""
+msgstr "清理存储上的图像缓存"
 
-#: src/webui/static/app/status.js:289 src/webui/static/app/status.js:292
+#: src/webui/static/app/tvhlog.js:101
+msgid "Clear Debug"
+msgstr "清除调试"
+
+#: src/webui/static/app/tvhlog.js:109
+msgid "Clear Trace"
+msgstr "清除追踪"
+
+#: src/webui/static/app/tvhlog.js:102
+msgid "Clear all debug subsystems."
+msgstr "清除所有调试子系统。"
+
+#: src/webui/static/app/status.js:534
+msgid "Clear all statistics"
+msgstr "清除所有统计"
+
+#: src/webui/static/app/tvhlog.js:110
+msgid "Clear all trace subsystems."
+msgstr "清除所有追踪子系统。"
+
+#: src/webui/static/app/status.js:318 src/webui/static/app/status.js:321
 msgid "Clear statistics"
-msgstr ""
+msgstr "清除统计"
 
-#: src/webui/static/app/status.js:293
+#: src/webui/static/app/status.js:322
 msgid "Clear statistics for selected input?"
-msgstr ""
+msgstr "Clear statistics for 已选中 输入?"
 
-#: src/webui/static/app/caclient.js:34
+#: src/webui/static/app/status.js:116
+msgid "Client / User agent"
+msgstr "客户端/用户代理"
+
+#: src/webui/static/app/status.js:692
+msgid "Client Address"
+msgstr "客户端地址"
+
+#: src/webui/static/app/status.js:704
+msgid "Client Data Ports"
+msgstr "客户端数据端口"
+
+#: src/webui/static/app/caclient.js:35
 msgid "Client Name"
-msgstr ""
+msgstr "客户端名称"
 
-#: src/webui/static/app/idnode.js:1430 src/webui/static/app/idnode.js:2299
+#: src/webui/static/app/status.js:698
+msgid "Client Port"
+msgstr "客户端端口"
+
+#: src/webui/static/app/idnode.js:1474 src/webui/static/app/idnode.js:2381
 msgid "Clone"
-msgstr ""
+msgstr "克隆"
 
-#: src/webui/static/app/idnode.js:2297
+#: src/webui/static/app/idnode.js:2379
 msgid "Clone a new entry"
-msgstr ""
+msgstr "克隆新条目"
 
-#: src/webui/static/app/epg.js:270
+#: src/webui/static/app/epg.js:466
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: src/webui/static/app/i18n-post.js:205
 msgid "Columns"
-msgstr ""
+msgstr "列"
 
-#: src/webui/static/app/comet.js:55
+#: src/webui/static/app/comet.js:43
 msgid "Comet failure"
-msgstr ""
+msgstr "Comet 失败"
 
-#: src/webui/static/app/dvr.js:67
+#: src/webui/static/app/dvr.js:134
 msgid "Comment"
-msgstr ""
+msgstr "注释"
 
-#: src/webui/static/app/status.js:781
+#: src/webui/static/app/status.js:928
 msgid "Compression ratio"
-msgstr ""
+msgstr "压缩比"
 
-#: src/webui/static/app/caclient.js:46
+#: src/webui/static/app/caclient.js:47
 msgid "Conditional Access Client"
-msgstr ""
+msgstr "CA 客户端"
 
-#: src/webui/static/app/tvhlog.js:17 src/webui/static/app/tvheadend.js:698
+#: src/webui/static/app/tvhlog.js:361 src/webui/static/app/tvheadend.js:1107
 msgid "Configuration"
-msgstr ""
+msgstr "设置"
 
-#: src/webui/static/app/status.js:673
+#: src/webui/static/app/status.js:816
 msgid "Connections"
-msgstr ""
+msgstr "连接"
 
-#: src/webui/static/app/epg.js:145 src/webui/static/app/epg.js:614
-#: src/webui/static/app/epg.js:615
+#: src/webui/static/app/tvheadend.js:344 src/webui/static/app/tvheadend.js:345
+msgid "Content Icons"
+msgstr "内容图标"
+
+#: src/webui/static/app/epg.js:289 src/webui/static/app/epg.js:887
+#: src/webui/static/app/epg.js:888
 msgid "Content Type"
-msgstr ""
+msgstr "内容类型"
 
-#: src/webui/static/app/status.js:430
+#: src/webui/static/app/status.js:477
 msgid "Continuity Errors"
-msgstr ""
+msgstr "连续性错误"
 
-#: src/webui/static/app/idnode.js:1456
+#: src/webui/static/app/idnode.js:1500
 msgid "Create"
-msgstr ""
+msgstr "创建"
 
-#: src/webui/static/app/epg.js:883
+#: src/webui/static/app/epg.js:1318
 msgid "Create AutoRec"
-msgstr ""
+msgstr "创建自动录制"
 
-#: src/webui/static/app/epg.js:262 src/webui/static/app/epg.js:885
+#: src/webui/static/app/epg.js:433 src/webui/static/app/epg.js:1320
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
-msgstr ""
+msgstr "创建 an 自动 录像 规则 to 录制 all future programs that match the 当前 query."
 
-#: src/webui/static/app/idnode.js:1455
+#: src/webui/static/app/idnode.js:1499
 msgid "Create new entry"
-msgstr ""
+msgstr "创建新条目"
 
-#: src/webui/static/app/epg.js:1085
+#: src/webui/static/app/epg.js:1552
 msgid "Created from EPG query"
-msgstr ""
+msgstr "通过 EPG 查询创建"
 
-#: src/webui/static/app/epg.js:1072
+#: src/webui/static/app/tvheadend.js:405
+msgid "Crew"
+msgstr "制作团队"
+
+#: src/webui/static/app/epg.js:1539
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
-msgstr ""
+msgstr "Currently this will match (and 录制) %d 事件."
 
-#: src/webui/static/app/tvheadend.js:740
+#: src/webui/static/app/tvheadend.js:1149
 msgid "DVB Inputs"
-msgstr ""
+msgstr "DVB 输入"
 
-#: src/webui/static/app/epg.js:352
+#: src/webui/static/app/epg.js:587
 msgid "DVR"
-msgstr ""
+msgstr "DVR"
 
-#: src/webui/static/app/epg.js:163
+#: src/webui/static/app/epg.js:309
 msgid "Deaf signed#EPG"
-msgstr ""
+msgstr "手语#EPG"
 
-#: src/webui/static/app/tvheadend.js:810
+#: src/webui/static/app/tvhlog.js:158
+msgid "Debug"
+msgstr "调试"
+
+#: src/webui/static/app/tvheadend.js:1223
 msgid "Debugging"
-msgstr ""
+msgstr "调试"
 
 #: src/webui/static/app/i18n-post.js:46
 msgid "Dec"
-msgstr ""
+msgstr "12月"
 
 #: src/webui/static/app/i18n-post.js:31
 msgid "December"
-msgstr ""
+msgstr "十二月"
 
-#: src/webui/static/app/idnode.js:1807 src/webui/static/app/idnode.js:2312
+#: src/webui/static/app/idnode.js:1872 src/webui/static/app/idnode.js:2394
 msgid "Delete"
-msgstr ""
+msgstr "删除"
 
-#: src/webui/static/app/epg.js:236
+#: src/webui/static/app/epg.js:403
 msgid "Delete recording"
-msgstr ""
+msgstr "删除录像"
 
-#: src/webui/static/app/epg.js:235
+#: src/webui/static/app/epg.js:402
 msgid "Delete scheduled recording of this program"
-msgstr ""
+msgstr "删除 已计划 录像 of this 节目"
 
-#: src/webui/static/app/idnode.js:1805 src/webui/static/app/idnode.js:2310
+#: src/webui/static/app/idnode.js:1870 src/webui/static/app/idnode.js:2392
 msgid "Delete selected entries"
-msgstr ""
+msgstr "删除所选条目"
 
-#: src/webui/static/app/status.js:152
+#: src/webui/static/app/status.js:179
 msgid "Descramble"
-msgstr ""
+msgstr "解扰"
+
+#: src/webui/static/app/tvhlog.js:175
+msgid "Description"
+msgstr "描述"
 
 #: src/webui/static/app/chconf.js:151
 msgid "Detach from bouquet"
-msgstr ""
+msgstr "从频道包分离"
 
 #: src/webui/static/app/chconf.js:153
 msgid "Detach selected channels from bouquet"
-msgstr ""
+msgstr "Detach 已选中 频道 from 频道包"
 
-#: src/webui/static/app/mpegts.js:321
+#: src/webui/static/app/mpegts.js:356
 msgid "Detailed stream info"
-msgstr ""
+msgstr "详细流信息"
 
-#: src/webui/static/app/mpegts.js:169 src/webui/static/app/mpegts.js:317
-#: src/webui/static/app/epg.js:367 src/webui/static/app/epg.js:368
-#: src/webui/static/app/dvr.js:137 src/webui/static/app/dvr.js:138
+#: src/webui/static/app/mpegts.js:169 src/webui/static/app/mpegts.js:352
+#: src/webui/static/app/epg.js:15 src/webui/static/app/epg.js:16
+#: src/webui/static/app/dvr.js:355 src/webui/static/app/dvr.js:356
 msgid "Details"
-msgstr ""
+msgstr "详情"
 
-#: src/webui/static/app/dvr.js:865
+#: src/webui/static/app/dvr.js:1194
 msgid "Digital Video Recorder"
-msgstr ""
+msgstr "节目录制"
 
-#: src/webui/static/app/dvr.js:705
+#: src/webui/static/app/dvr.js:1024
 msgid "Digital Video Recorder Profile"
-msgstr ""
+msgstr "Digital 视频 Recorder 配置方案"
 
-#: src/webui/static/app/dvr.js:706
+#: src/webui/static/app/dvr.js:1025
 msgid "Digital Video Recorder Profiles"
-msgstr ""
+msgstr "Digital 视频 Recorder 配置方案"
+
+#: src/webui/static/app/tvheadend.js:403
+msgid "Director"
+msgstr "导演"
+
+#: src/webui/static/app/dvr.js:724
+msgid "Disable grouping"
+msgstr "禁用分组"
 
 #: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
 msgid "Disabled"
-msgstr ""
+msgstr "禁用"
 
 #: src/webui/static/app/config.js:135
 msgid "Discover SAT>IP servers"
-msgstr ""
+msgstr "发现 SAT>IP 服务器"
+
+#: src/webui/static/app/epgevent.js:190
+msgid "Display dialog of related broadcasts"
+msgstr "显示 对话框 of related broadcasts"
+
+#: src/webui/static/app/epgevent.js:205
+msgid "Display dialog showing alternative broadcasts"
+msgstr "显示 对话框 showing alternative broadcasts"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
-msgstr ""
+msgstr "显示第 {0} - {1} 条，共 {2} 条"
 
-#: src/webui/static/app/dvr.js:263
+#: src/webui/static/app/dvr.js:540
 msgid "Do you really want to abort/unschedule the selection?"
-msgstr ""
+msgstr "Do you really want to 中止/unschedule the 选择?"
 
-#: src/webui/static/app/dvr.js:594
+#: src/webui/static/app/dvr.js:910
 msgid "Do you really want to delete the selected recordings?"
-msgstr ""
+msgstr "Do you really want to 删除 the 已选中 录像?"
 
-#: src/webui/static/app/tvheadend.js:327
+#: src/webui/static/app/tvheadend.js:701
 msgid "Do you really want to delete the selection?"
-msgstr ""
+msgstr "Do you really want to 删除 the 选择?"
 
-#: src/webui/static/app/dvr.js:233
+#: src/webui/static/app/dvr.js:524
 msgid "Do you really want to gracefully stop/unschedule the selection?"
-msgstr ""
+msgstr "Do you really want to gracefully 停止/unschedule the 选择?"
 
-#: src/webui/static/app/epg.js:324
+#: src/webui/static/app/epg.js:559
 msgid "Do you really want to gracefully stop/unschedule this recording?"
-msgstr ""
+msgstr "Do you really want to gracefully 停止/unschedule this 录像?"
 
-#: src/webui/static/app/dvr.js:434
+#: src/webui/static/app/dvr.js:719
 msgid "Do you really want to remove the selected recordings from storage?"
-msgstr ""
+msgstr "Do you really want to 移除 the 已选中 录像 from storage?"
 
-#: src/webui/static/app/epg.js:337
+#: src/webui/static/app/epg.js:572
 msgid "Do you really want to remove this recording?"
-msgstr ""
+msgstr "Do you really want to 移除 this 录像?"
 
-#: src/webui/static/app/epg.js:1046 src/webui/static/app/epg.js:1052
-#: src/webui/static/app/epg.js:1055 src/webui/static/app/epg.js:1058
-#: src/webui/static/app/epg.js:1061
+#: src/webui/static/app/dvr.js:556
+msgid ""
+"Do you really want to toggle the previously recorded state for the selected "
+"recordings?"
+msgstr ""
+"Do you really want to toggle the previously recorded state for the 已选中 录像?"
+
+#: src/webui/static/app/epg.js:1500 src/webui/static/app/epg.js:1512
+#: src/webui/static/app/epg.js:1515 src/webui/static/app/epg.js:1518
+#: src/webui/static/app/epg.js:1521
 msgid "Don't care"
-msgstr ""
+msgstr "不关心"
 
-#: src/webui/static/app/dvr.js:339 src/webui/static/app/dvr.js:505
+#: src/webui/static/app/dvr.js:664 src/webui/static/app/dvr.js:849
 msgid "Download"
-msgstr ""
+msgstr "下载"
 
-#: src/webui/static/app/dvr.js:337 src/webui/static/app/dvr.js:503
+#: src/webui/static/app/dvr.js:662 src/webui/static/app/dvr.js:847
 msgid "Download the selected recording"
-msgstr ""
+msgstr "下载 the 已选中 录像"
 
-#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:569
-#: src/webui/static/app/epg.js:570 src/webui/static/app/epg.js:1070
-#: src/webui/static/app/dvr.js:52
+#: src/webui/static/app/status.js:761
+msgid "Drop (current) connections to Tvheadend."
+msgstr "放置 (当前) 连接 to Tvheadend."
+
+#: src/webui/static/app/status.js:764
+msgid "Drop Connections"
+msgstr "断开连接"
+
+#: src/webui/static/app/status.js:760
+msgid "Drop all connections"
+msgstr "断开所有连接"
+
+#: src/webui/static/app/status.js:765
+msgid "Drop all current connections?"
+msgstr "断开所有当前连接？"
+
+#: src/webui/static/app/epg.js:246 src/webui/static/app/epg.js:833
+#: src/webui/static/app/epg.js:834 src/webui/static/app/epg.js:1536
+#: src/webui/static/app/dvr.js:94
 msgid "Duration"
-msgstr ""
+msgstr "时长"
 
 #: src/webui/static/app/epggrab.js:41
 msgid "EPG Grabber"
-msgstr ""
+msgstr "EPG 采集器"
 
 #: src/webui/static/app/epggrab.js:57
 msgid "EPG Grabber Channel"
-msgstr ""
+msgstr "EPG 抓取器频道"
 
 #: src/webui/static/app/epggrab.js:58
 msgid "EPG Grabber Channels"
-msgstr ""
+msgstr "EPG 抓取器频道"
 
 #: src/webui/static/app/epggrab.js:88
 msgid "EPG Grabber Module"
-msgstr ""
+msgstr "EPG 抓取器模块"
 
 #: src/webui/static/app/epggrab.js:89
 msgid "EPG Grabber Modules"
-msgstr ""
+msgstr "EPG 抓取器模块"
 
 #: src/webui/static/app/epggrab.js:90
 msgid "EPG Grabber Name"
-msgstr ""
+msgstr "EPG 抓取器名称"
 
-#: src/webui/static/app/epg.js:993
+#: src/webui/static/app/epg.js:76
 msgid "EPG Update"
-msgstr ""
+msgstr "EPG 更新"
 
-#: src/webui/static/app/idnode.js:1284 src/webui/static/app/idnode.js:1894
+#: src/webui/static/app/idnode.js:1321 src/webui/static/app/idnode.js:1959
 msgid "Edit"
-msgstr ""
+msgstr "编辑"
 
-#: src/webui/static/app/idnode.js:1892
+#: src/webui/static/app/idnode.js:1957
 msgid "Edit selected entry"
-msgstr ""
+msgstr "编辑所选条目"
 
-#: src/webui/static/app/idnode.js:1321 src/webui/static/app/idnode.js:1908
+#: src/webui/static/app/idnode.js:1358 src/webui/static/app/idnode.js:1973
 msgid "Edit {0}"
-msgstr ""
+msgstr "编辑 {0}"
 
-#: src/webui/static/app/idnode.js:1318
+#: src/webui/static/app/idnode.js:1355
 msgid "Edit {0} ({1} entries)"
-msgstr ""
+msgstr "编辑 {0}（{1} 个条目）"
 
-#: src/webui/static/app/epg.js:928
+#: src/webui/static/app/epg.js:1366
 msgid "Electronic Program Guide"
-msgstr ""
+msgstr "电子节目指南"
 
-#: src/webui/static/app/tvheadend.js:1049
+#: src/webui/static/app/tvheadend.js:1540
 msgid "Enable debug output"
-msgstr ""
+msgstr "启用调试输出"
 
-#: src/webui/static/app/epg.js:114 src/webui/static/app/epg.js:561
-#: src/webui/static/app/epg.js:562
+#: src/webui/static/app/dvr.js:724 src/webui/static/app/dvr.js:733
+msgid "Enable grouping"
+msgstr "启用分组"
+
+#: src/webui/static/app/epg.js:242 src/webui/static/app/epg.js:825
+#: src/webui/static/app/epg.js:826 src/webui/static/app/epgevent.js:126
+#: src/webui/static/app/epgevent.js:127
 msgid "End Time"
-msgstr ""
+msgstr "结束时间"
 
 #: src/webui/static/app/i18n-post.js:264 src/webui/static/app/i18n-post.js:270
 msgid "Enter Filter Text..."
-msgstr ""
+msgstr "输入过滤文本..."
 
-#: src/webui/static/app/epg.js:544 src/webui/static/app/epg.js:545
+#: src/webui/static/app/epg.js:808 src/webui/static/app/epg.js:809
+#: src/webui/static/app/epgevent.js:111 src/webui/static/app/epgevent.js:112
 msgid "Episode"
-msgstr ""
+msgstr "剧集"
 
-#: src/webui/static/app/tvheadend.js:238
+#: src/webui/static/app/tvheadend.js:611
 msgid "Error"
-msgstr ""
+msgstr "错误"
 
-#: src/webui/static/app/status.js:159
+#: src/webui/static/app/status.js:186
 msgid "Errors"
-msgstr ""
+msgstr "错误"
 
-#: src/webui/static/app/epg.js:935
+#: src/webui/static/app/epg.js:1373 src/webui/static/app/epgevent.js:156
 msgid "Events"
-msgstr ""
+msgstr "事件列表"
 
-#: src/webui/static/app/dvr.js:162
+#: src/webui/static/app/dvr.js:394
 msgid "Every day"
-msgstr ""
+msgstr "每天"
 
-#: src/webui/static/app/idnode.js:595 src/webui/static/app/idnode.js:616
+#: src/webui/static/app/idnode.js:607 src/webui/static/app/idnode.js:628
 msgid "Expert"
-msgstr ""
+msgstr "专家"
 
-#: src/webui/static/app/idnode.js:1045
+#: src/webui/static/app/idnode.js:1059
 msgid "Expert Settings"
-msgstr ""
+msgstr "专家 设置"
+
+#: src/webui/static/app/epg.js:800 src/webui/static/app/epgevent.js:103
+msgid "Extra text"
+msgstr "Extra 文本"
+
+#: src/webui/static/app/epg.js:801 src/webui/static/app/epgevent.js:104
+msgid "Extra text: subtitle or summary or description"
+msgstr "Extra 文本: 副标题 or 摘要 or 描述"
+
+#: src/webui/static/app/epg.js:295
+msgid "FHDTV"
+msgstr "FHDTV"
 
 #: src/webui/static/app/servicemapper.js:13
 msgid "Failed"
-msgstr ""
+msgstr "失败"
 
-#: src/webui/static/app/dvr.js:588
+#: src/webui/static/app/dvr.js:904
 msgid "Failed Recording"
-msgstr ""
+msgstr "Failed 录像"
 
-#: src/webui/static/app/dvr.js:589
+#: src/webui/static/app/dvr.js:905
 msgid "Failed Recordings"
-msgstr ""
+msgstr "失败的录像"
 
 #: src/webui/static/app/i18n-post.js:36
 msgid "Feb"
-msgstr ""
+msgstr "2月"
 
 #: src/webui/static/app/i18n-post.js:21
 msgid "February"
-msgstr ""
+msgstr "二月"
 
-#: src/webui/static/app/dvr.js:65
+#: src/webui/static/app/dvr.js:132
+msgid "File name"
+msgstr "文件 名称"
+
+#: src/webui/static/app/dvr.js:130
 msgid "File size"
-msgstr ""
+msgstr "文件 size"
 
-#: src/webui/static/app/epg.js:675
-msgid "Filter channel..."
-msgstr ""
+#: src/webui/static/app/epg.js:1053
+msgid "Filter category…"
+msgstr "过滤 category…"
 
-#: src/webui/static/app/epg.js:722
-msgid "Filter content type..."
-msgstr ""
+#: src/webui/static/app/epg.js:978
+msgid "Filter channel…"
+msgstr "过滤 频道…"
 
-#: src/webui/static/app/epg.js:743
-msgid "Filter duration..."
-msgstr ""
+#: src/webui/static/app/epg.js:1104
+msgid "Filter content type…"
+msgstr "过滤 content 类型…"
 
-#: src/webui/static/app/epg.js:698
-msgid "Filter tag..."
-msgstr ""
+#: src/webui/static/app/epg.js:1125
+msgid "Filter duration…"
+msgstr "过滤 duration…"
+
+#: src/webui/static/app/epg.js:1013
+msgid "Filter tag…"
+msgstr "过滤 标签…"
 
 #: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
-msgstr ""
+msgstr "过滤器"
+
+#: src/webui/static/app/epg.js:441 src/webui/static/app/dvr.js:185
+msgid "Find alternative showings for the DVR entry."
+msgstr "查找 alternative showings for the 录像 条目."
+
+#: src/webui/static/app/epg.js:446 src/webui/static/app/dvr.js:190
+msgid "Find related showings for the DVR entry."
+msgstr "查找 related showings for the 录像 条目."
 
 #: src/webui/static/app/wizard.js:160
 msgid "Finish"
-msgstr ""
+msgstr "完成"
 
-#: src/webui/static/app/dvr.js:453
+#: src/webui/static/app/dvr.js:781
 msgid "Finished Recording"
-msgstr ""
+msgstr "Finished 录像"
 
-#: src/webui/static/app/dvr.js:454
+#: src/webui/static/app/dvr.js:782
 msgid "Finished Recordings"
-msgstr ""
+msgstr "已完成的录像"
+
+#: src/webui/static/app/epg.js:244 src/webui/static/app/dvr.js:92
+msgid "First Aired"
+msgstr "第一个 Aired"
 
 #: src/webui/static/app/i18n-post.js:146
 msgid "First Page"
-msgstr ""
+msgstr "第一个 页面"
 
 #: src/webui/static/app/cteditor.js:44 src/webui/static/app/mpegts.js:36
 msgid "Force Scan"
-msgstr ""
+msgstr "强制扫描"
 
 #: src/webui/static/app/mpegts.js:34
 msgid "Force new scan (all muxes) for selected networks"
-msgstr ""
+msgstr "Force 新建 扫描 (all 复用器) for 已选中 网络"
 
-#: src/webui/static/app/tvheadend.js:988
+#: src/webui/static/app/tvheadend.js:1425
 msgid "Free"
-msgstr ""
+msgstr "可用"
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
-msgstr ""
+msgstr "周五"
 
 #: src/webui/static/app/i18n-post.js:88
 msgid "Friday"
-msgstr ""
+msgstr "周五"
 
-#: src/webui/static/app/tvheadend.js:603
+#: src/webui/static/app/tvheadend.js:986
 msgid "Fullscreen"
-msgstr ""
+msgstr "全屏"
 
-#: src/webui/static/app/epg.js:890 src/webui/static/app/epg.js:1048
+#: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1502
 msgid "Fulltext"
-msgstr ""
+msgstr "全文"
 
-#: src/webui/static/app/tvheadend.js:708
+#: src/webui/static/app/tvheadend.js:1117
 msgid "General"
-msgstr ""
+msgstr "通用"
 
-#: src/webui/static/app/epg.js:1069
+#: src/webui/static/app/epg.js:1535
 msgid "Genre"
-msgstr ""
+msgstr "类别"
 
-#: src/webui/static/app/tvheadend.js:978
+#: src/webui/static/app/tvheadend.js:1415
 msgid "GiB"
-msgstr ""
+msgstr "GiB"
 
-#: src/webui/static/app/idnode.js:1633
+#: src/webui/static/app/epg.js:998
+msgid "Go to next channel"
+msgstr "Go to 下一个 频道"
+
+#: src/webui/static/app/epg.js:459 src/webui/static/app/dvr.js:203
+msgid "Go to next event"
+msgstr "Go to 下一个 事件"
+
+#: src/webui/static/app/epg.js:992
+msgid "Go to previous channel"
+msgstr "Go to 上一个 频道"
+
+#: src/webui/static/app/epg.js:453 src/webui/static/app/dvr.js:197
+msgid "Go to previous event"
+msgstr "Go to 上一个 事件"
+
+#: src/webui/static/app/idnode.js:1679
 msgid "Grid Update"
-msgstr ""
+msgstr "网格 更新"
 
 #: src/webui/static/app/i18n-post.js:211
 msgid "Group By This Field"
-msgstr ""
+msgstr "Group By This 字段"
 
-#: src/webui/static/app/epg.js:151
+#: src/webui/static/app/epg.js:297
 msgid "HDTV"
-msgstr ""
+msgstr "HDTV"
 
-#: src/webui/static/app/idnode.js:1209 src/webui/static/app/idnode.js:2052
-#: src/webui/static/app/idnode.js:2439 src/webui/static/app/idnode.js:2877
-#: src/webui/static/app/epg.js:914 src/webui/static/app/status.js:193
-#: src/webui/static/app/status.js:486 src/webui/static/app/status.js:636
+#: src/webui/static/app/mpegts.js:227
+msgid "HbbTv"
+msgstr "HbbTv"
+
+#: src/webui/static/app/idnode.js:1245 src/webui/static/app/idnode.js:2118
+#: src/webui/static/app/idnode.js:2525 src/webui/static/app/idnode.js:2971
+#: src/webui/static/app/epg.js:1350 src/webui/static/app/status.js:220
+#: src/webui/static/app/status.js:555 src/webui/static/app/status.js:778
 #: src/webui/static/app/servicemapper.js:53
 msgid "Help"
-msgstr ""
+msgstr "帮助"
 
-#: src/webui/static/app/tvheadend.js:182
-msgid "Help for"
-msgstr ""
-
-#: src/webui/static/app/idnode.js:1956
+#: src/webui/static/app/idnode.js:2021
 msgid "Hide"
-msgstr ""
+msgstr "隐藏"
 
-#: src/webui/static/app/idnode.js:2387
+#: src/webui/static/app/idnode.js:2469
 msgid "Hide passwords"
-msgstr ""
+msgstr "隐藏 密码"
 
-#: src/webui/static/app/status.js:92
+#: src/webui/static/app/status.js:95
 msgid "Hostname"
-msgstr ""
+msgstr "主机名"
 
-#: src/webui/static/app/status.js:81
+#: src/webui/static/app/status.js:84
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
-#: src/webui/static/app/status.js:616
-msgid "IP Address"
-msgstr ""
-
-#: src/webui/static/app/acleditor.js:106
+#: src/webui/static/app/acleditor.js:108
 msgid "IP Blocking Record"
-msgstr ""
+msgstr "IP Blocking 录制"
 
-#: src/webui/static/app/acleditor.js:107
+#: src/webui/static/app/acleditor.js:109
 msgid "IP Blocking Records"
-msgstr ""
+msgstr "IP 封锁记录"
 
 #: src/webui/static/app/servicemapper.js:17
 msgid "Ignored"
-msgstr ""
+msgstr "已忽略"
 
 #: src/webui/static/app/config.js:108
 msgid "Image Cache"
-msgstr ""
+msgstr "图像缓存"
 
-#: src/webui/static/app/status.js:779
+#: src/webui/static/app/status.js:926
 msgid "In"
-msgstr ""
+msgstr "输入"
 
 #: src/webui/static/app/mpegts.js:165
 msgid "Index"
-msgstr ""
+msgstr "索引"
 
-#: src/webui/static/app/status.js:372 src/webui/static/app/status.js:869
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1014
 msgid "Input"
-msgstr ""
+msgstr "输入"
 
-#: src/webui/static/app/status.js:166
+#: src/webui/static/app/status.js:193
 msgid "Input (kb/s)"
-msgstr ""
+msgstr "输入 (kb/s)"
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
+msgstr "来自 comet 的无效 JSON"
+
+#: src/webui/static/app/idnode.js:2140
+msgid "Item"
+msgstr "项目"
+
+#: src/webui/static/app/idnode.js:2140
+msgid "Items"
+msgstr "项目"
 
 #: src/webui/static/app/i18n-post.js:35
 msgid "Jan"
-msgstr ""
+msgstr "1月"
 
 #: src/webui/static/app/i18n-post.js:20
 msgid "January"
-msgstr ""
+msgstr "一月"
 
 #: src/webui/static/app/i18n-post.js:41
 msgid "Jul"
-msgstr ""
+msgstr "7月"
 
 #: src/webui/static/app/i18n-post.js:26
 msgid "July"
-msgstr ""
+msgstr "七月"
 
 #: src/webui/static/app/i18n-post.js:40
 msgid "Jun"
-msgstr ""
+msgstr "6月"
 
 #: src/webui/static/app/i18n-post.js:25
 msgid "June"
-msgstr ""
+msgstr "六月"
 
-#: src/webui/static/app/tvheadend.js:982
+#: src/webui/static/app/epg.js:265 src/webui/static/app/dvr.js:118
+msgid "Keywords"
+msgstr "关键词"
+
+#: src/webui/static/app/tvheadend.js:1419
 msgid "KiB"
-msgstr ""
+msgstr "KiB"
 
-#: src/webui/static/app/mpegts.js:168
+#: src/webui/static/app/mpegts.js:168 src/webui/static/app/mpegts.js:231
 msgid "Language"
-msgstr ""
+msgstr "语言"
 
-#: src/webui/static/app/tvheadend.js:127
+#: src/webui/static/app/tvheadend.js:491
 msgid "Last Help Pages"
-msgstr ""
+msgstr "最后 帮助 页面"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
-msgstr ""
+msgstr "最后 页面"
 
-#: src/webui/static/app/epg.js:161
+#: src/webui/static/app/epg.js:307
 msgid "Lines"
-msgstr ""
+msgstr "行数"
 
-#: src/webui/static/app/tvheadend.js:559
+#: src/webui/static/app/mpegts.js:233
+msgid "Link"
+msgstr "链接"
+
+#: src/webui/static/app/tvhlog.js:349
+msgid "Listing Subsystems"
+msgstr "列出于系统"
+
+#: src/webui/static/app/tvheadend.js:942
 msgid "Live TV Player"
-msgstr ""
+msgstr "直播 电视 Player"
 
-#: src/webui/static/app/tvheadend.js:350
+#: src/webui/static/app/tvheadend.js:724
 msgid "Loading, please wait..."
-msgstr ""
+msgstr "加载中，请稍候..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
-#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:666
-#: src/webui/static/app/epg.js:689 src/webui/static/app/epg.js:713
-#: src/webui/static/app/epg.js:734 src/webui/static/app/tvheadend.js:497
-#: src/webui/static/app/tvheadend.js:535
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/tvheadend.js:879
+#: src/webui/static/app/tvheadend.js:918
 msgid "Loading..."
-msgstr ""
+msgstr "加载中..."
 
-#: src/webui/static/app/tvheadend.js:959
+#: src/webui/static/app/epg.js:969 src/webui/static/app/epg.js:1004
+#: src/webui/static/app/epg.js:1044 src/webui/static/app/epg.js:1095
+#: src/webui/static/app/epg.js:1116
+msgid "Loading…"
+msgstr "加载中…"
+
+#: src/webui/static/app/tvheadend.js:1396
 msgid "Logged in as"
-msgstr ""
+msgstr "已登录为"
 
 #: src/webui/static/app/config.js:133
 msgid "Look for new SAT>IP servers"
-msgstr ""
+msgstr "Look for 新建 SAT>IP servers"
 
-#: src/webui/static/app/mpegts.js:305
+#: src/webui/static/app/mpegts.js:340
 msgid "Maintenance"
-msgstr ""
+msgstr "维护"
 
-#: src/webui/static/app/mpegts.js:303
+#: src/webui/static/app/mpegts.js:338
 msgid "Maintenance operations"
-msgstr ""
+msgstr "维护操作"
 
-#: src/webui/static/app/mpegts.js:271
+#: src/webui/static/app/mpegts.js:306
 msgid "Map All"
-msgstr ""
+msgstr "映射全部"
 
-#: src/webui/static/app/mpegts.js:269
+#: src/webui/static/app/mpegts.js:304
 msgid "Map Selected"
-msgstr ""
+msgstr "Map 已选中"
 
-#: src/webui/static/app/mpegts.js:250 src/webui/static/app/chconf.js:147
+#: src/webui/static/app/mpegts.js:285 src/webui/static/app/chconf.js:147
 msgid "Map all services"
-msgstr ""
+msgstr "映射所有服务"
 
-#: src/webui/static/app/mpegts.js:248 src/webui/static/app/chconf.js:145
+#: src/webui/static/app/mpegts.js:283 src/webui/static/app/chconf.js:145
 msgid "Map all services to channels"
-msgstr ""
+msgstr "Map all 服务 to 频道"
 
-#: src/webui/static/app/mpegts.js:244 src/webui/static/app/chconf.js:141
+#: src/webui/static/app/mpegts.js:279 src/webui/static/app/chconf.js:141
 msgid "Map selected services"
-msgstr ""
+msgstr "Map 已选中 服务"
 
-#: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:139
+#: src/webui/static/app/mpegts.js:277 src/webui/static/app/chconf.js:139
 msgid "Map selected services to channels"
-msgstr ""
+msgstr "Map 已选中 服务 to 频道"
 
-#: src/webui/static/app/mpegts.js:255 src/webui/static/app/chconf.js:158
-#: src/webui/static/app/servicemapper.js:119
-#: src/webui/static/app/servicemapper.js:135
+#: src/webui/static/app/mpegts.js:290 src/webui/static/app/chconf.js:158
+#: src/webui/static/app/servicemapper.js:120
+#: src/webui/static/app/servicemapper.js:136
 msgid "Map services"
-msgstr ""
+msgstr "映射服务"
 
-#: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:156
-#: src/webui/static/app/servicemapper.js:116
-#: src/webui/static/app/servicemapper.js:132
+#: src/webui/static/app/mpegts.js:288 src/webui/static/app/chconf.js:156
+#: src/webui/static/app/servicemapper.js:117
+#: src/webui/static/app/servicemapper.js:133
 msgid "Map services to channels"
-msgstr ""
+msgstr "将服务映射到频道"
 
 #: src/webui/static/app/servicemapper.js:9
 msgid "Mapped"
-msgstr ""
+msgstr "已映射"
 
 #: src/webui/static/app/i18n-post.js:37
 msgid "Mar"
-msgstr ""
+msgstr "3月"
 
 #: src/webui/static/app/i18n-post.js:22
 msgid "March"
-msgstr ""
+msgstr "三月"
 
-#: src/webui/static/app/dvr.js:385
+#: src/webui/static/app/dvr.js:696
 msgid "Mark the selected recording as failed"
-msgstr ""
+msgstr "Mark the 已选中 录像 as failed"
 
-#: src/webui/static/app/dvr.js:551
+#: src/webui/static/app/dvr.js:881
 msgid "Mark the selected recording as finished"
-msgstr ""
+msgstr "Mark the 已选中 录像 as finished"
 
 #: src/webui/static/app/i18n-post.js:24
 msgid "May"
-msgstr ""
+msgstr "五月"
 
 #: src/webui/static/app/i18n-post.js:39
 msgid "May#ShortNameForMay"
-msgstr ""
+msgstr "5月#ShortNameForMay"
 
-#: src/webui/static/app/tvhlog.js:36
+#: src/webui/static/app/tvhlog.js:381
 msgid "Memory Information Entries"
-msgstr ""
+msgstr "Memory 信息 条目"
 
-#: src/webui/static/app/tvhlog.js:35
+#: src/webui/static/app/tvhlog.js:380
 msgid "Memory Information Entry"
-msgstr ""
+msgstr "Memory 信息 条目"
 
-#: src/webui/static/app/tvheadend.js:326
+#: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1505
+msgid "Mergetext"
+msgstr "合并文本"
+
+#: src/webui/static/app/tvheadend.js:700
 msgid "Message"
-msgstr ""
+msgstr "消息"
 
-#: src/webui/static/app/tvheadend.js:980
+#: src/webui/static/app/tvheadend.js:1417
 msgid "MiB"
-msgstr ""
+msgstr "MiB"
 
 #: src/webui/static/app/i18n-post.js:94
 msgid "Mon"
-msgstr ""
+msgstr "周一"
 
 #: src/webui/static/app/i18n-post.js:84
 msgid "Monday"
-msgstr ""
+msgstr "周一"
 
-#: src/webui/static/app/idnode.js:1863 src/webui/static/app/idnode.js:2359
+#: src/webui/static/app/idnode.js:1928 src/webui/static/app/idnode.js:2441
 msgid "Move Down"
-msgstr ""
+msgstr "下移"
 
-#: src/webui/static/app/idnode.js:1838 src/webui/static/app/idnode.js:2338
+#: src/webui/static/app/idnode.js:1903 src/webui/static/app/idnode.js:2420
 msgid "Move Up"
-msgstr ""
+msgstr "上移"
 
 #: src/webui/static/app/chconf.js:188
 msgid "Move channel one number down"
-msgstr ""
+msgstr "Move 频道 one 编号 down"
 
 #: src/webui/static/app/chconf.js:182
 msgid "Move channel one number up"
-msgstr ""
+msgstr "Move 频道 one 编号 up"
 
-#: src/webui/static/app/idnode.js:1861
+#: src/webui/static/app/idnode.js:1926
 msgid "Move selected entries down"
-msgstr ""
+msgstr "Move 已选中 条目 down"
 
-#: src/webui/static/app/idnode.js:1836
+#: src/webui/static/app/idnode.js:1901
 msgid "Move selected entries up"
-msgstr ""
+msgstr "Move 已选中 条目 up"
 
-#: src/webui/static/app/idnode.js:2357
+#: src/webui/static/app/idnode.js:2439
 msgid "Move selected entry down"
-msgstr ""
+msgstr "Move 已选中 条目 down"
 
-#: src/webui/static/app/idnode.js:2336
+#: src/webui/static/app/idnode.js:2418
 msgid "Move selected entry up"
-msgstr ""
+msgstr "Move 已选中 条目 up"
 
-#: src/webui/static/app/dvr.js:387
+#: src/webui/static/app/dvr.js:698
 msgid "Move to failed"
-msgstr ""
+msgstr "移至失败"
 
-#: src/webui/static/app/dvr.js:553
+#: src/webui/static/app/dvr.js:883
 msgid "Move to finished"
-msgstr ""
+msgstr "移至已完成"
 
 #: src/webui/static/app/mpegts.js:97 src/webui/static/app/mpegts.js:103
 msgid "Mux"
-msgstr ""
+msgstr "复用器"
 
-#: src/webui/static/app/mpegts.js:390 src/webui/static/app/mpegts.js:398
+#: src/webui/static/app/mpegts.js:425 src/webui/static/app/mpegts.js:433
 msgid "Mux Scheduler"
-msgstr ""
+msgstr "复用器调度器"
 
-#: src/webui/static/app/mpegts.js:391
+#: src/webui/static/app/mpegts.js:426
 msgid "Mux Schedulers"
-msgstr ""
+msgstr "复用器调度器"
 
 #: src/webui/static/app/mpegts.js:98
 msgid "Muxes"
-msgstr ""
+msgstr "复用器列表"
+
+#: src/webui/static/app/mpegts.js:232
+msgid "Name"
+msgstr "名称"
 
 #: src/webui/static/app/mpegts.js:66 src/webui/static/app/mpegts.js:72
 #: src/webui/static/app/mpegts.js:105
 msgid "Network"
-msgstr ""
+msgstr "网络"
 
 #: src/webui/static/app/mpegts.js:67
 msgid "Networks"
-msgstr ""
+msgstr "网络"
 
-#: src/webui/static/app/epg.js:153
+#: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1508
+msgid "New only"
+msgstr "新建 only"
+
+#: src/webui/static/app/epg.js:299
 msgid "New#EPG"
-msgstr ""
+msgstr "新建#EPG"
 
 #: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
-msgstr ""
+msgstr "下一个 Month (Control+Right)"
 
 #: src/webui/static/app/i18n-post.js:148
 msgid "Next Page"
-msgstr ""
+msgstr "下一个 页面"
 
 #: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:259
 msgid "No"
-msgstr ""
+msgstr "否"
 
 #: src/webui/static/app/i18n-post.js:152
 msgid "No data to display"
-msgstr ""
+msgstr "无数据 to 显示"
 
-#: src/webui/static/app/dvr.js:164
+#: src/webui/static/app/dvr.js:396
 msgid "No days"
-msgstr ""
+msgstr "无天数"
 
-#: src/webui/static/app/tvheadend.js:962
+#: src/webui/static/app/tvheadend.js:1399
 msgid "No verified access"
-msgstr ""
+msgstr "No verified 访问"
 
 #. / {0} title (lowercase), {1} title
-#: src/webui/static/app/tvheadend.js:363
+#: src/webui/static/app/tvheadend.js:737
 msgid "No {0} to display"
-msgstr ""
+msgstr "No {0} to 显示"
 
-#: src/webui/static/app/idnode.js:1941 src/webui/static/app/mpegts.js:206
-#: src/webui/static/app/mpegts.js:216
+#: src/webui/static/app/idnode.js:2006 src/webui/static/app/mpegts.js:213
+#: src/webui/static/app/mpegts.js:223
 msgid "None"
-msgstr ""
+msgstr "无"
 
-#: src/webui/static/app/tvheadend.js:247
+#: src/webui/static/app/tvheadend.js:620
 msgid "Not Available"
-msgstr ""
+msgstr "Not 可用"
 
-#: src/webui/static/app/idnode.js:355
+#: src/webui/static/app/idnode.js:373
 msgid "Not set"
-msgstr ""
+msgstr "未设置"
 
 #: src/webui/static/app/i18n-post.js:45
 msgid "Nov"
-msgstr ""
+msgstr "11月"
 
 #: src/webui/static/app/i18n-post.js:30
 msgid "November"
-msgstr ""
+msgstr "十一月"
 
-#: src/webui/static/app/epg.js:576 src/webui/static/app/epg.js:577
+#: src/webui/static/app/epg.js:936
+msgid "Now"
+msgstr "当前"
+
+#: src/webui/static/app/epg.js:841 src/webui/static/app/epg.js:842
 msgid "Number"
-msgstr ""
+msgstr "编号"
 
 #: src/webui/static/app/chconf.js:190
 msgid "Number Down"
-msgstr ""
+msgstr "编号减"
 
 #: src/webui/static/app/chconf.js:184
 msgid "Number Up"
-msgstr ""
+msgstr "编号增"
 
 #: src/webui/static/app/chconf.js:201
 msgid "Number operations"
-msgstr ""
+msgstr "编号 operations"
 
 #: src/webui/static/app/i18n-post.js:110
 msgid "OK"
-msgstr ""
+msgstr "确定"
 
 #: src/webui/static/app/i18n-post.js:44
 msgid "Oct"
-msgstr ""
+msgstr "10月"
 
 #: src/webui/static/app/i18n-post.js:29
 msgid "October"
-msgstr ""
+msgstr "十月"
 
 #: src/webui/static/app/i18n-post.js:281
 msgid "On#DateFilter"
-msgstr ""
+msgstr "开启#DateFilter"
 
-#: src/webui/static/app/esfilter.js:132
+#: src/webui/static/app/esfilter.js:110
 msgid "Other Stream Filter"
-msgstr ""
+msgstr "Other 流 过滤"
 
-#: src/webui/static/app/esfilter.js:133
+#: src/webui/static/app/esfilter.js:111
 msgid "Other Stream Filters"
-msgstr ""
+msgstr "其他流过滤器"
 
-#: src/webui/static/app/status.js:780
+#: src/webui/static/app/status.js:927
 msgid "Out"
-msgstr ""
+msgstr "输出"
 
-#: src/webui/static/app/status.js:175
+#: src/webui/static/app/status.js:202
 msgid "Output (kb/s)"
-msgstr ""
+msgstr "输出 (kb/s)"
 
-#: src/webui/static/app/status.js:411
+#: src/webui/static/app/status.js:458
 msgid "PER"
-msgstr ""
+msgstr "PER"
 
 #: src/webui/static/app/mpegts.js:166
 msgid "PID"
-msgstr ""
+msgstr "PID"
+
+#: src/webui/static/app/status.js:162 src/webui/static/app/status.js:427
+msgid "PID list"
+msgstr "PID 列表"
 
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
-msgstr ""
+msgstr "页面"
 
-#: src/webui/static/app/idnode.js:2469 src/webui/static/app/idnode.js:2652
-#: src/webui/static/app/epg.js:169
+#: src/webui/static/app/idnode.js:2556 src/webui/static/app/idnode.js:2742
+#: src/webui/static/app/epg.js:315
 msgid "Parameters"
-msgstr ""
+msgstr "参数"
 
-#: src/webui/static/app/idnode.js:1939
+#: src/webui/static/app/idnode.js:2004
 msgid "Inactive services"
-msgstr "非活动服务"
+msgstr "不活跃 服务"
+
+#: src/webui/static/app/epg.js:277 src/webui/static/app/epg.js:873
+#: src/webui/static/app/dvr.js:126
+msgid "Parental Rating"
+msgstr "家长控制评分"
 
 #: src/webui/static/app/acleditor.js:70
 msgid "Password"
-msgstr ""
+msgstr "密码"
 
 #: src/webui/static/app/acleditor.js:71
 msgid "Passwords"
-msgstr ""
+msgstr "密码"
 
-#: src/webui/static/app/tvheadend.js:588
+#: src/webui/static/app/tvheadend.js:971
 msgid "Pause"
-msgstr ""
+msgstr "暂停"
 
-#: src/webui/static/app/tvheadend.js:374
+#: src/webui/static/app/tvheadend.js:748
 msgid "Per page"
-msgstr ""
+msgstr "Per 页面"
 
 #: src/webui/static/app/mpegts.js:121 src/webui/static/app/mpegts.js:122
-#: src/webui/static/app/mpegts.js:362 src/webui/static/app/mpegts.js:363
+#: src/webui/static/app/mpegts.js:397 src/webui/static/app/mpegts.js:398
 #: src/webui/static/app/chconf.js:245 src/webui/static/app/chconf.js:246
-#: src/webui/static/app/dvr.js:476 src/webui/static/app/dvr.js:477
-#: src/webui/static/app/dvr.js:613 src/webui/static/app/dvr.js:614
-#: src/webui/static/app/tvheadend.js:484 src/webui/static/app/tvheadend.js:571
+#: src/webui/static/app/epg.js:367 src/webui/static/app/dvr.js:816
+#: src/webui/static/app/dvr.js:817 src/webui/static/app/dvr.js:936
+#: src/webui/static/app/dvr.js:937 src/webui/static/app/tvheadend.js:860
+#: src/webui/static/app/tvheadend.js:954
 msgid "Play"
-msgstr ""
+msgstr "播放"
 
-#: src/webui/static/tv.js:466
+#: src/webui/static/tv.js:468
 msgid "Play Selected Channel"
-msgstr ""
+msgstr "播放选择的频道"
 
-#: src/webui/static/app/epg.js:200
-msgid "Play program"
-msgstr ""
-
-#: src/webui/static/app/epg.js:199
+#: src/webui/static/app/epg.js:366
 msgid "Play this program"
-msgstr ""
+msgstr "播放此节目"
 
-#: src/webui/static/app/tvheadend.js:484
+#: src/webui/static/app/tvheadend.js:860
 msgid "Play this stream"
-msgstr ""
+msgstr "播放串流"
 
 #: src/webui/static/app/i18n-post.js:161
 msgid "Please Wait..."
-msgstr ""
+msgstr "请等待..."
 
-#: src/webui/static/app/tvheadend.js:240
+#: src/webui/static/app/tvheadend.js:613
 msgid "Please check Tvheadend is running and try again."
-msgstr ""
+msgstr "请检查Tvheadend是否在运行."
 
-#: src/webui/static/app/tvheadend.js:249
+#: src/webui/static/app/tvheadend.js:623
 msgid ""
-"Please take a look at the other Help pages (Table of Contents). If you still"
+"Please take a look at the other Help pages (Table of Contents), if you still"
 " can't find what you're "
 msgstr ""
+"Please take a look at the other 帮助 页面 (表格 of Contents), if you still can't "
+"查找 what you're "
+
+#: src/webui/static/app/tvheadend.js:827
+msgid "Premiere"
+msgstr "首映"
 
 #: src/webui/static/app/wizard.js:66
 msgid "Previous"
-msgstr ""
+msgstr "上一页"
 
 #: src/webui/static/app/i18n-post.js:133
 msgid "Previous Month (Control+Left)"
-msgstr ""
+msgstr "上一个 Month (Control+Left)"
 
 #: src/webui/static/app/i18n-post.js:147
 msgid "Previous Page"
-msgstr ""
+msgstr "上一个 页面"
 
-#: src/webui/static/app/status.js:127
+#: src/webui/static/app/tvheadend.js:845
+msgid "Previous day"
+msgstr "上一个 day"
+
+#: src/webui/static/app/dvr.js:550
+msgid "Previously recorded"
+msgstr "曾录制过"
+
+#: src/webui/static/app/status.js:137
 msgid "Profile"
-msgstr ""
+msgstr "配置"
 
-#: src/webui/static/app/dvr.js:707
+#: src/webui/static/app/dvr.js:1026
 msgid "Profile Name"
-msgstr ""
+msgstr "配置方案 名称"
 
-#: src/webui/static/app/epg.js:499 src/webui/static/app/epg.js:500
+#: src/webui/static/app/epg.js:761 src/webui/static/app/epg.js:762
 msgid "Progress"
-msgstr ""
+msgstr "进度"
+
+#: src/webui/static/app/status.js:752
+msgid "Proxy Address"
+msgstr "Proxy 地址"
+
+#: src/webui/static/app/epg.js:872
+msgid "Rating"
+msgstr "评分"
+
+#: src/webui/static/app/ratinglabels.js:6
+msgid "Rating Label"
+msgstr "评分标签"
+
+#: src/webui/static/app/ratinglabels.js:7
+msgid "Rating Labels"
+msgstr "评分标签"
 
 #: src/webui/static/app/config.js:93 src/webui/static/app/config.js:95
 msgid "Re-fetch images"
-msgstr ""
+msgstr "重新抓取图像"
 
-#: src/webui/static/app/dvr.js:358 src/webui/static/app/dvr.js:524
-#: src/webui/static/app/dvr.js:642
+#: src/webui/static/app/dvr.js:683 src/webui/static/app/dvr.js:868
+#: src/webui/static/app/dvr.js:966
 msgid "Re-record"
-msgstr ""
+msgstr "重新录制"
 
 #: src/webui/static/app/epggrab.js:6
 msgid "Re-run Internal EPG Grabbers"
-msgstr ""
+msgstr "重新运行内部 EPG 抓取器"
 
 #: src/webui/static/app/epggrab.js:7
 msgid "Re-run all internal EPG grabbers to import EPG data now"
-msgstr ""
+msgstr "Re-run all internal EPG 抓取器 to import EPG 数据 now"
 
-#: src/webui/static/app/idnode.js:1047
+#: src/webui/static/app/idnode.js:1061
 msgid "Read-only Info"
-msgstr ""
+msgstr "Read-only 信息"
 
-#: src/webui/static/app/comet.js:28
+#: src/webui/static/app/comet.js:24
 msgid "Reconnected to Tvheadend"
-msgstr ""
+msgstr "已重新连接到 Tvheadend"
 
-#: src/webui/static/app/epg.js:257
-msgid "Record program"
-msgstr ""
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
+msgstr "正在重新连接 Tvheadend..."
 
-#: src/webui/static/app/epg.js:263
+#: src/webui/static/app/epg.js:427
+msgid "Record"
+msgstr "录制"
+
+#: src/webui/static/app/epg.js:434
 msgid "Record series"
-msgstr ""
+msgstr "录制 系列"
 
-#: src/webui/static/app/epg.js:256
+#: src/webui/static/app/epg.js:426
 msgid "Record this program now"
-msgstr ""
+msgstr "录制 this 节目 now"
 
-#: src/webui/static/app/tvheadend.js:790
+#: src/webui/static/app/dvr.js:829 src/webui/static/app/tvheadend.js:1203
 msgid "Recording"
-msgstr ""
+msgstr "录像"
 
-#: src/webui/static/app/dvr.js:146
+#: src/webui/static/app/dvr.js:364
 msgid "Recording details"
-msgstr ""
+msgstr "录像 详情"
+
+#: src/webui/static/app/dvr.js:829
+msgid "Recordings"
+msgstr "录像"
 
 #: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
 msgid "Refresh"
-msgstr ""
+msgstr "刷新"
 
-#: src/webui/static/app/dvr.js:416
+#: src/webui/static/app/epgevent.js:146
+msgid "Related Showings"
+msgstr "相关场次"
+
+#: src/webui/static/app/epgevent.js:192
+msgid "Related broadcasts"
+msgstr "相关广播"
+
+#: src/webui/static/app/dvr.js:713
 msgid "Remove"
-msgstr ""
+msgstr "移除"
 
-#: src/webui/static/app/mpegts.js:300
+#: src/webui/static/app/mpegts.js:335
 msgid "Remove all unseen services (7 days+)"
-msgstr ""
+msgstr "移除 all unseen 服务 (7 days+)"
 
-#: src/webui/static/app/mpegts.js:292
+#: src/webui/static/app/mpegts.js:327
 msgid ""
 "Remove old services marked as missing in PAT/SDT which were not detected "
 "more than 7 days (last seen column)"
 msgstr ""
+"移除 旧 服务 marked as missing in PAT/SDT which were not detected more than 7 "
+"days (最后 seen 列)"
 
-#: src/webui/static/app/mpegts.js:298
+#: src/webui/static/app/mpegts.js:333
 msgid ""
 "Remove old services which were not detected more than 7 days (last seen "
 "column)"
-msgstr ""
+msgstr "移除 旧 服务 which were not detected more than 7 days (最后 seen 列)"
 
-#: src/webui/static/app/dvr.js:414
+#: src/webui/static/app/dvr.js:711
 msgid "Remove the selected recording from storage"
-msgstr ""
+msgstr "移除 the 已选中 录像 from storage"
 
-#: src/webui/static/app/mpegts.js:294
+#: src/webui/static/app/mpegts.js:329
 msgid "Remove unseen services (PAT/SDT) (7 days+)"
-msgstr ""
+msgstr "移除 unseen 服务 (PAT/SDT) (7 days+)"
 
-#: src/webui/static/app/dvr.js:674
+#: src/webui/static/app/dvr.js:984
 msgid "Removed Recording"
-msgstr ""
+msgstr "已移除 录像"
 
-#: src/webui/static/app/dvr.js:675
+#: src/webui/static/app/dvr.js:985
 msgid "Removed Recordings"
-msgstr ""
+msgstr "已移除的录像"
 
-#: src/webui/static/app/epg.js:155
+#: src/webui/static/app/epg.js:301
 msgid "Repeat#EPG"
-msgstr ""
+msgstr "重复#EPG"
 
 #: src/webui/static/app/cteditor.js:42
 msgid "Rescan the mux for changes to the bouquet."
-msgstr ""
+msgstr "Rescan the 复用器 for 更改 to the 频道包."
 
 #: src/webui/static/app/chconf.js:218
 msgid "Reset (clear) the selected icon URLs"
-msgstr ""
+msgstr "重置 (clear) the 已选中 图标 URLs"
 
-#: src/webui/static/app/epg.js:896
+#: src/webui/static/app/epg.js:1332
 msgid "Reset All"
-msgstr ""
+msgstr "重置全部"
 
 #: src/webui/static/app/chconf.js:220
 msgid "Reset Icon"
-msgstr ""
+msgstr "重置 图标"
 
-#: src/webui/static/app/epg.js:898
+#: src/webui/static/app/epg.js:1334
 msgid "Reset all filters (show all)"
-msgstr ""
+msgstr "重置全部 过滤器 (显示 all)"
 
-#: src/webui/static/app/idnode.js:1777 src/webui/static/app/idnode.js:2274
-#: src/webui/static/app/idnode.js:2810
+#: src/webui/static/app/tvhlog.js:117
+msgid "Restore Debug"
+msgstr "Restore 调试"
+
+#: src/webui/static/app/tvhlog.js:125
+msgid "Restore Trace"
+msgstr "恢复追踪"
+
+#: src/webui/static/app/tvhlog.js:118
+msgid "Restore the debug subsystems to their initial state."
+msgstr "Restore the 调试 subsystems to their initial state."
+
+#: src/webui/static/app/tvhlog.js:126
+msgid "Restore the trace subsystems to their initial state."
+msgstr "将追踪子系统恢复到初始状态。"
+
+#: src/webui/static/app/idnode.js:1842 src/webui/static/app/idnode.js:2353
+#: src/webui/static/app/idnode.js:2900
 msgid "Revert pending changes (marked with red border)"
-msgstr ""
+msgstr "Revert pending 更改 (marked with red border)"
 
 #: src/webui/static/app/config.js:148
 msgid "SAT>IP Server"
-msgstr ""
+msgstr "SAT>IP 服务端"
 
-#: src/webui/static/app/status.js:445
+#: src/webui/static/app/status.js:492
 msgid "SNR"
-msgstr ""
+msgstr "信噪比"
+
+#: src/webui/static/app/tvheadend.js:829
+msgid "Same day"
+msgstr "同一天"
 
 #: src/webui/static/app/i18n-post.js:99
 msgid "Sat"
-msgstr ""
+msgstr "周六"
 
 #: src/webui/static/app/i18n-post.js:89
 msgid "Saturday"
-msgstr ""
+msgstr "周六"
 
-#: src/webui/static/app/idnode.js:1120 src/webui/static/app/idnode.js:1752
-#: src/webui/static/app/idnode.js:2254 src/webui/static/app/idnode.js:2791
+#: src/webui/static/app/idnode.js:1153 src/webui/static/app/idnode.js:1817
+#: src/webui/static/app/idnode.js:2333 src/webui/static/app/idnode.js:2881
 msgid "Save"
-msgstr ""
+msgstr "保存"
 
 #: src/webui/static/app/wizard.js:160
 msgid "Save & Next"
-msgstr ""
+msgstr "保存 & 下一个"
 
-#: src/webui/static/app/idnode.js:1750 src/webui/static/app/idnode.js:2252
-#: src/webui/static/app/idnode.js:2789
+#: src/webui/static/app/idnode.js:1815 src/webui/static/app/idnode.js:2331
+#: src/webui/static/app/idnode.js:2879
 msgid "Save pending changes (marked with red border)"
-msgstr ""
+msgstr "保存 pending 更改 (marked with red border)"
 
-#: src/webui/static/app/dvr.js:48
+#: src/webui/static/app/dvr.js:87
 msgid "Scheduled Start Time"
-msgstr ""
+msgstr "已计划 开始 时间"
 
-#: src/webui/static/app/dvr.js:50
+#: src/webui/static/app/dvr.js:89
 msgid "Scheduled Stop Time"
-msgstr ""
+msgstr "已计划 停止 时间"
 
-#: src/webui/static/app/epg.js:185 src/webui/static/app/dvr.js:80
-msgid "Search IMDB (for title)"
-msgstr ""
+#: src/webui/static/app/epg.js:950
+msgid "Search title…"
+msgstr "搜索 标题…"
 
-#: src/webui/static/app/epg.js:192 src/webui/static/app/dvr.js:86
-msgid "Search TheTVDB (for title)"
-msgstr ""
+#: src/webui/static/app/mpegts.js:230
+msgid "Section"
+msgstr "章节"
 
-#: src/webui/static/app/epg.js:655
-msgid "Search title..."
-msgstr ""
+#: src/webui/static/app/tvhlog.js:34 src/webui/static/app/tvhlog.js:332
+msgid "Select Subsystems"
+msgstr "选择 Subsystems"
 
-#: src/webui/static/app/tvheadend.js:504
+#: src/webui/static/app/tvheadend.js:886
 msgid "Select channel..."
-msgstr ""
+msgstr "选择 频道..."
 
-#: src/webui/static/app/tvheadend.js:541
+#: src/webui/static/app/tvheadend.js:924
 msgid "Select stream profile..."
-msgstr ""
+msgstr "选择 流 配置方案..."
 
-#: src/webui/static/app/idnode.js:461 src/webui/static/app/idnode.js:714
+#: src/webui/static/app/tvhlog.js:32
+msgid "Select trace/debug options from a list of subsystems."
+msgstr "选择 trace/调试 选项 from a 列表 of subsystems."
+
+#: src/webui/static/app/idnode.js:478 src/webui/static/app/idnode.js:727
 msgid "Select {0} ..."
-msgstr ""
+msgstr "选择 {0} ..."
 
-#: src/webui/static/app/idnode.js:445 src/webui/static/app/idnode.js:690
+#: src/webui/static/app/idnode.js:461 src/webui/static/app/idnode.js:702
 msgid "Selected"
-msgstr ""
+msgstr "已选中"
 
 #: src/webui/static/app/i18n-post.js:43
 msgid "Sep"
-msgstr ""
+msgstr "9月"
 
 #: src/webui/static/app/i18n-post.js:28
 msgid "September"
-msgstr ""
+msgstr "九月"
 
-#: src/webui/static/app/mpegts.js:352 src/webui/static/app/status.js:120
+#: src/webui/static/app/status.js:740
+msgid "Server Address"
+msgstr "服务器 地址"
+
+#: src/webui/static/app/status.js:746
+msgid "Server Port"
+msgstr "服务器 端口"
+
+#: src/webui/static/app/mpegts.js:387 src/webui/static/app/status.js:130
 msgid "Service"
-msgstr ""
+msgstr "服务"
 
 #: src/webui/static/app/servicemapper.js:33
 #: src/webui/static/app/servicemapper.js:49
 msgid "Service Mapper"
-msgstr ""
+msgstr "服务映射器"
 
-#: src/webui/static/app/mpegts.js:219
+#: src/webui/static/app/mpegts.js:254
 msgid "Service details for"
-msgstr ""
+msgstr "服务 详情 for"
 
-#: src/webui/static/app/mpegts.js:353
+#: src/webui/static/app/mpegts.js:388
 msgid "Services"
-msgstr ""
+msgstr "服务列表"
 
-#: src/webui/static/app/idnode.js:991
+#: src/webui/static/app/idnode.js:1005
 msgid "Settings"
-msgstr ""
+msgstr "设置"
 
 #: src/webui/static/app/i18n-post.js:212
 msgid "Show in Groups"
-msgstr ""
+msgstr "显示 in Groups"
 
-#: src/webui/static/app/idnode.js:2381
+#: src/webui/static/app/idnode.js:2463
 msgid "Show or hide passwords"
-msgstr ""
+msgstr "显示 or 隐藏 密码"
 
-#: src/webui/static/app/idnode.js:2383 src/webui/static/app/idnode.js:2387
+#: src/webui/static/app/idnode.js:2465 src/webui/static/app/idnode.js:2469
 msgid "Show passwords"
-msgstr ""
+msgstr "显示 密码"
 
-#: src/webui/static/app/status.js:465
+#: src/webui/static/app/status.js:512
 msgid "Signal Strength"
-msgstr ""
+msgstr "信号 强度"
 
 #: src/webui/static/app/i18n-post.js:203
 msgid "Sort Ascending"
-msgstr ""
+msgstr "升序排列"
 
 #: src/webui/static/app/i18n-post.js:204
 msgid "Sort Descending"
-msgstr ""
+msgstr "降序排列"
 
-#: src/webui/static/app/epg.js:132
+#: src/webui/static/app/epg.js:269
 msgid "Star Rating"
-msgstr ""
+msgstr "星级评分"
 
-#: src/webui/static/app/epg.js:599 src/webui/static/app/epg.js:600
+#: src/webui/static/app/tvheadend.js:402
+msgid "Starring"
+msgstr "主演"
+
+#: src/webui/static/app/epg.js:864 src/webui/static/app/epg.js:865
 msgid "Stars"
-msgstr ""
+msgstr "星级"
 
-#: src/webui/static/app/status.js:134
+#: src/webui/static/app/status.js:144
 msgid "Start"
-msgstr ""
+msgstr "开始"
 
-#: src/webui/static/app/epg.js:112 src/webui/static/app/epg.js:552
-#: src/webui/static/app/epg.js:553
+#: src/webui/static/app/epg.js:240 src/webui/static/app/epg.js:816
+#: src/webui/static/app/epg.js:817 src/webui/static/app/epgevent.js:118
+#: src/webui/static/app/epgevent.js:119
 msgid "Start Time"
-msgstr ""
+msgstr "开始时间"
 
 #: src/webui/static/app/config.js:11
 msgid "Start initial configuration wizard"
-msgstr ""
+msgstr "开始 initial 配置 向导"
 
 #: src/webui/static/app/config.js:13
 msgid "Start wizard"
-msgstr ""
+msgstr "启动向导"
 
-#: src/webui/static/app/status.js:628
+#: src/webui/static/app/status.js:727
 msgid "Started"
-msgstr ""
+msgstr "已启动"
 
-#: src/webui/static/app/status.js:145
+#: src/webui/static/app/status.js:155
 msgid "State"
-msgstr ""
+msgstr "状态"
 
-#: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:683
+#: src/webui/static/app/dvr.js:128 src/webui/static/app/status.js:826
 msgid "Status"
-msgstr ""
+msgstr "状态"
 
-#: src/webui/static/app/dvr.js:215 src/webui/static/app/tvheadend.js:595
+#: src/webui/static/app/dvr.js:518 src/webui/static/app/tvheadend.js:978
 msgid "Stop"
-msgstr ""
+msgstr "停止"
 
-#: src/webui/static/app/epg.js:227
+#: src/webui/static/app/epg.js:394
 msgid "Stop recording"
-msgstr ""
+msgstr "停止录制"
 
-#: src/webui/static/app/epg.js:226
+#: src/webui/static/app/epg.js:393
 msgid "Stop recording of this program"
-msgstr ""
+msgstr "停止 录像 of this 节目"
 
-#: src/webui/static/app/dvr.js:213
+#: src/webui/static/app/dvr.js:516
 msgid "Stop the selected recording"
-msgstr ""
+msgstr "停止 the 已选中 录像"
 
-#: src/webui/static/app/tvheadend.js:985
+#: src/webui/static/app/tvheadend.js:1422
 msgid "Storage space"
-msgstr ""
+msgstr "存储空间"
 
-#: src/webui/static/app/status.js:378 src/webui/static/app/status.js:525
-#: src/webui/static/app/tvheadend.js:777
+#: src/webui/static/app/status.js:408 src/webui/static/app/status.js:595
+#: src/webui/static/app/tvheadend.js:1187
 msgid "Stream"
-msgstr ""
+msgstr "流"
 
-#: src/webui/static/app/esfilter.js:23 src/webui/static/app/esfilter.js:30
+#: src/webui/static/app/esfilter.js:11
+msgid "Stream Filters"
+msgstr "流过滤器"
+
+#: src/webui/static/app/profile.js:55 src/webui/static/app/profile.js:62
 msgid "Stream Profile"
-msgstr ""
+msgstr "流 配置方案"
 
-#: src/webui/static/app/esfilter.js:25
+#: src/webui/static/app/profile.js:57
 msgid "Stream Profile Name"
-msgstr ""
+msgstr "流 配置方案 名称"
 
-#: src/webui/static/app/esfilter.js:24
+#: src/webui/static/app/profile.js:56
 msgid "Stream Profiles"
-msgstr ""
+msgstr "流配置"
 
-#: src/webui/static/app/status.js:384
+#: src/webui/static/app/status.js:734
+msgid "Streaming"
+msgstr "流媒体"
+
+#: src/webui/static/app/status.js:414
 msgid "Subs No."
-msgstr ""
+msgstr "订阅编号"
 
-#: src/webui/static/app/status.js:230
+#: src/webui/static/app/status.js:258
 msgid "Subscriptions"
-msgstr ""
+msgstr "订阅"
 
-#: src/webui/static/app/epg.js:536 src/webui/static/app/epg.js:537
-msgid "Subtitle"
-msgstr ""
+#: src/webui/static/app/tvhlog.js:170
+msgid "Subsystem"
+msgstr "子系统"
 
-#: src/webui/static/app/esfilter.js:99
+#: src/webui/static/app/esfilter.js:77
 msgid "Subtitle Stream Filter"
-msgstr ""
+msgstr "副标题 流 过滤"
 
-#: src/webui/static/app/esfilter.js:100
+#: src/webui/static/app/esfilter.js:78
 msgid "Subtitle Stream Filters"
-msgstr ""
+msgstr "字幕流过滤器"
 
-#: src/webui/static/app/epg.js:165
+#: src/webui/static/app/epg.js:311
 msgid "Subtitled#EPG"
-msgstr ""
+msgstr "字幕#EPG"
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
-msgstr ""
+msgstr "周日"
 
 #: src/webui/static/app/i18n-post.js:83
 msgid "Sunday"
-msgstr ""
+msgstr "周日"
 
 #: src/webui/static/app/chconf.js:196
 msgid "Swap Numbers"
-msgstr ""
+msgstr "交换编号"
 
 #: src/webui/static/app/chconf.js:194
 msgid "Swap the numbers for the two selected channels"
-msgstr ""
+msgstr "Swap the 编号 for the two 已选中 频道"
+
+#: src/webui/static/app/status.js:711
+msgid "TCP"
+msgstr "TCP"
 
 #: src/webui/static/app/tvadapters.js:6
 msgid "TV adapters"
-msgstr ""
+msgstr "电视 适配器"
 
-#: src/webui/static/app/epg.js:1068
+#: src/webui/static/app/epg.js:1534
 msgid "Tag"
-msgstr ""
+msgstr "标签"
 
-#: src/webui/static/app/esfilter.js:82
+#: src/webui/static/app/esfilter.js:60
 msgid "Teletext Stream Filter"
-msgstr ""
+msgstr "Teletext 流 过滤"
 
-#: src/webui/static/app/esfilter.js:83
+#: src/webui/static/app/esfilter.js:61
 msgid "Teletext Stream Filters"
-msgstr ""
+msgstr "图文电视流过滤器"
 
-#: src/webui/static/app/dvr.js:595
+#: src/webui/static/app/dvr.js:911
 msgid "The associated file will be removed from storage."
-msgstr ""
+msgstr "The associated 文件 will be 已移除 from storage."
 
 #: src/webui/static/app/i18n-post.js:187
 msgid "The date in this field must be after {0}"
-msgstr ""
+msgstr "The 日期 in this 字段 must be after {0}"
 
 #: src/webui/static/app/i18n-post.js:188
 msgid "The date in this field must be before {0}"
-msgstr ""
+msgstr "The 日期 in this 字段 must be before {0}"
 
 #: src/webui/static/app/i18n-post.js:169
 msgid "The maximum length for this field is {0}"
-msgstr ""
+msgstr "The maximum length for this 字段 is {0}"
 
 #: src/webui/static/app/i18n-post.js:179
 msgid "The maximum value for this field is {0}"
-msgstr ""
+msgstr "The maximum 值 for this 字段 is {0}"
 
 #: src/webui/static/app/i18n-post.js:168
 msgid "The minimum length for this field is {0}"
-msgstr ""
+msgstr "The minimum length for this 字段 is {0}"
 
-#: src/webui/static/app/idnode.js:1430
+#: src/webui/static/app/idnode.js:1474
 msgid "The selected entry is the original!"
-msgstr ""
+msgstr "The 已选中 条目 is the original!"
 
 #: src/webui/static/app/i18n-post.js:234
 msgid "The time in this field must be equal to or after {0}"
-msgstr ""
+msgstr "The 时间 in this 字段 must be equal to or after {0}"
 
 #: src/webui/static/app/i18n-post.js:235
 msgid "The time in this field must be equal to or before {0}"
-msgstr ""
+msgstr "The 时间 in this 字段 must be equal to or before {0}"
 
 #: src/webui/static/app/i18n-post.js:164
 msgid "The value in this field is invalid"
-msgstr ""
+msgstr "The 值 in this 字段 is invalid"
 
-#: src/webui/static/app/tvheadend.js:248
-msgid ""
-"There is no documentation associated with the Help button pressed, or there was an problem loading the page.\n"
-"\n"
-msgstr ""
-
-#: src/webui/static/app/comet.js:36
+#: src/webui/static/app/comet.js:12
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."
 msgstr ""
+"There seems to be a problem with the 直播 更新 feed from Tvheadend. Trying to "
+"reconnect..."
 
-#: src/webui/static/app/tvheadend.js:239
+#: src/webui/static/app/tvheadend.js:612
 msgid "There was a problem displaying the Help!"
-msgstr ""
+msgstr "There was a problem displaying the 帮助!"
 
-#: src/webui/static/app/tvhlog.js:26
-msgid "They will be lost when the application next restarts."
+#: src/webui/static/app/tvheadend.js:621
+msgid ""
+"There's no documentation available, or there was a problem loading the page.\n"
+"\n"
 msgstr ""
+"There's no 文档 可用, or there was a problem loading the 页面.\n"
+"\n"
+
+#: src/webui/static/app/tvhlog.js:371
+msgid "They will be lost when the application next restarts."
+msgstr "They will be lost when the application 下一个 restarts."
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
-msgstr ""
+msgstr "This 日期 is after the maximum 日期"
 
 #: src/webui/static/app/i18n-post.js:126
 msgid "This date is before the minimum date"
-msgstr ""
+msgstr "This 日期 is before the minimum 日期"
 
 #: src/webui/static/app/i18n-post.js:170
 msgid "This field is required"
-msgstr ""
+msgstr "This 字段 is 必需"
 
-#: src/webui/static/app/epg.js:1063
+#: src/webui/static/app/epg.js:1529
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
 msgstr ""
+"This will 创建 an 自动 规则 that continuously scans the EPG for programs to 录制 "
+"that match this query"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
-msgstr ""
+msgstr "周四"
 
 #: src/webui/static/app/i18n-post.js:87
 msgid "Thursday"
-msgstr ""
+msgstr "周四"
 
-#: src/webui/static/app/dvr.js:71
+#: src/webui/static/app/dvr.js:138
 msgid "Time Scheduler"
-msgstr ""
+msgstr "时间 Scheduler"
 
-#: src/webui/static/app/dvr.js:810
+#: src/webui/static/app/dvr.js:1139
 msgid "Timer"
-msgstr ""
+msgstr "定时器"
 
-#: src/webui/static/app/dvr.js:811
+#: src/webui/static/app/dvr.js:1140
 msgid "Timers"
-msgstr ""
+msgstr "定时器"
 
-#: src/webui/static/app/timeshift.js:16
+#: src/webui/static/app/timeshift.js:18
 msgid "Timeshift"
-msgstr ""
+msgstr "时移"
 
-#: src/webui/static/app/epg.js:522 src/webui/static/app/epg.js:523
-#: src/webui/static/app/epg.js:1066 src/webui/static/app/status.js:106
+#: src/webui/static/app/epg.js:785 src/webui/static/app/epg.js:786
+#: src/webui/static/app/epg.js:1532 src/webui/static/app/epgevent.js:96
+#: src/webui/static/app/epgevent.js:97 src/webui/static/app/status.js:109
 msgid "Title"
-msgstr ""
+msgstr "标题"
 
 #: src/webui/static/app/i18n-post.js:125
 msgid "Today"
-msgstr ""
+msgstr "今天"
 
-#: src/webui/static/app/tvheadend.js:613
+#: src/webui/static/app/tvheadend.js:996
 msgid "Toggle mute"
-msgstr ""
+msgstr "切换静音"
 
-#: src/webui/static/app/dvr.js:356 src/webui/static/app/dvr.js:522
-#: src/webui/static/app/dvr.js:640
+#: src/webui/static/app/dvr.js:681 src/webui/static/app/dvr.js:866
+#: src/webui/static/app/dvr.js:964
 msgid "Toggle re-record functionality"
-msgstr ""
+msgstr "Toggle re-录制 functionality"
 
-#: src/webui/static/app/tvheadend.js:988
+#: src/webui/static/app/dvr.js:548
+msgid "Toggle the previously recorded state."
+msgstr "切换「曾录制过」状态。"
+
+#: src/webui/static/app/tvheadend.js:1425
 msgid "Total"
-msgstr ""
+msgstr "总计"
 
-#: src/webui/static/app/status.js:424
+#: src/webui/static/app/tvhlog.js:164
+msgid "Trace"
+msgstr "追踪"
+
+#: src/webui/static/app/status.js:471
 msgid "Transport Errors"
-msgstr ""
+msgstr "传输 Errors"
 
 #: src/webui/static/app/epggrab.js:26
 msgid "Trigger OTA EPG Grabber"
-msgstr ""
+msgstr "触发空中 EPG 抓取器"
 
 #: src/webui/static/app/i18n-post.js:95
 msgid "Tue"
-msgstr ""
+msgstr "周二"
 
 #: src/webui/static/app/i18n-post.js:85
 msgid "Tuesday"
-msgstr ""
+msgstr "周二"
 
 #: src/webui/static/app/epggrab.js:27
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
-msgstr ""
+msgstr "Tune to the over-the-air EPG 复用器 to grab 新建 事件 now"
 
-#: src/webui/static/app/tvheadend.js:1024
+#: src/webui/static/app/tvheadend.js:1517
 msgid "Tvheadend Web-Panel"
-msgstr ""
+msgstr "Tvheadend Web-面板"
 
-#: src/webui/static/app/tvheadend.js:1045
+#: src/webui/static/app/tvheadend.js:1536
 msgid "Tvheadend log"
-msgstr ""
+msgstr "Tvheadend 日志"
 
-#: src/webui/static/app/caclient.js:48 src/webui/static/app/esfilter.js:32
+#: src/webui/static/app/caclient.js:49 src/webui/static/app/profile.js:64
 #: src/webui/static/app/mpegts.js:74 src/webui/static/app/mpegts.js:167
-#: src/webui/static/app/status.js:610
+#: src/webui/static/app/status.js:686
 msgid "Type"
-msgstr ""
+msgstr "类型"
 
-#: src/webui/static/app/epg.js:149
+#: src/webui/static/app/status.js:714
+msgid "UDP"
+msgstr "UDP"
+
+#: src/webui/static/app/epg.js:293
 msgid "UHDTV"
-msgstr ""
+msgstr "UHDTV"
 
 #: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
-msgstr ""
+msgstr "Unable to obtain 向导 页面!"
 
-#: src/webui/static/app/status.js:418
+#: src/webui/static/app/status.js:465
 msgid "Uncorrected Blocks"
-msgstr ""
+msgstr "未纠正块"
 
-#: src/webui/static/app/idnode.js:1779 src/webui/static/app/idnode.js:2276
-#: src/webui/static/app/idnode.js:2812
+#: src/webui/static/app/idnode.js:1844 src/webui/static/app/idnode.js:2355
+#: src/webui/static/app/idnode.js:2902
 msgid "Undo"
-msgstr ""
+msgstr "撤销"
 
-#: src/webui/static/app/status.js:458 src/webui/static/app/status.js:478
+#: src/webui/static/app/status.js:505 src/webui/static/app/status.js:525
 msgid "Unknown"
-msgstr ""
+msgstr "未知"
 
-#: src/webui/static/app/dvr.js:288
+#: src/webui/static/app/dvr.js:583
 msgid "Upcoming / Current Recordings"
-msgstr ""
+msgstr "即将到来/当前的录像"
 
-#: src/webui/static/app/dvr.js:287
+#: src/webui/static/app/dvr.js:582
 msgid "Upcoming Recording"
-msgstr ""
+msgstr "Upcoming 录像"
 
-#: src/webui/static/app/tvheadend.js:988
+#: src/webui/static/app/tvheadend.js:1425
 msgid "Used by tvheadend"
-msgstr ""
+msgstr "被 tvheadend 使用"
 
-#: src/webui/static/app/status.js:99 src/webui/static/app/status.js:622
+#: src/webui/static/app/status.js:102 src/webui/static/app/status.js:721
 msgid "Username"
-msgstr ""
+msgstr "用户名"
 
-#: src/webui/static/app/tvheadend.js:724
+#: src/webui/static/app/tvheadend.js:1133
 msgid "Users"
-msgstr ""
+msgstr "用户列表"
 
-#: src/webui/static/app/esfilter.js:48
+#: src/webui/static/app/esfilter.js:26
 msgid "Video Stream Filter"
-msgstr ""
+msgstr "视频 流 过滤"
 
-#: src/webui/static/app/esfilter.js:49
+#: src/webui/static/app/esfilter.js:27
 msgid "Video Stream Filters"
-msgstr ""
+msgstr "视频流过滤器"
 
-#: src/webui/static/app/idnode.js:624
+#: src/webui/static/app/idnode.js:1246 src/webui/static/app/idnode.js:2119
+#: src/webui/static/app/idnode.js:2526 src/webui/static/app/idnode.js:2972
+#: src/webui/static/app/epg.js:1351 src/webui/static/app/epg.js:1353
+#: src/webui/static/app/status.js:221 src/webui/static/app/status.js:556
+#: src/webui/static/app/status.js:779 src/webui/static/app/servicemapper.js:54
+msgid "View help docs."
+msgstr "查看 帮助 docs."
+
+#: src/webui/static/app/idnode.js:636
 msgid "View level"
-msgstr ""
+msgstr "视图级别"
 
-#: src/webui/static/app/idnode.js:627
+#: src/webui/static/app/idnode.js:639
 msgid "View level: "
-msgstr ""
+msgstr "视图级别: "
 
-#: src/webui/static/app/tvheadend.js:622
+#: src/webui/static/app/tvheadend.js:1005
 msgid "Volume"
-msgstr ""
+msgstr "音量"
 
-#: src/webui/static/app/epg.js:903
+#: src/webui/static/app/epg.js:612 src/webui/static/app/epg.js:1339
 msgid "Watch TV"
-msgstr ""
+msgstr "观看电视"
 
-#: src/webui/static/app/epg.js:905
+#: src/webui/static/app/epg.js:1341
 msgid "Watch live TV in a new browser window."
-msgstr ""
+msgstr "Watch 直播 电视 in a 新建 browser 窗口."
 
 #: src/webui/static/app/i18n-post.js:96
 msgid "Wed"
-msgstr ""
+msgstr "周三"
 
 #: src/webui/static/app/i18n-post.js:86
 msgid "Wednesday"
-msgstr ""
+msgstr "周三"
 
-#: src/webui/static/app/status.js:390
+#: src/webui/static/app/status.js:420
 msgid "Weight"
-msgstr ""
+msgstr "权重"
 
-#: src/webui/static/app/epg.js:157
+#: src/webui/static/app/dvr.js:731
+msgid "When enabled, group the recordings by the selected column."
+msgstr "When 已启用, group the 录像 by the 已选中 列."
+
+#: src/webui/static/app/epg.js:303
 msgid "Widescreen"
-msgstr ""
+msgstr "宽屏"
 
-#: src/webui/static/app/dvr.js:39
+#: src/webui/static/app/dvr.js:72
 msgid "Will be skipped"
-msgstr ""
+msgstr "将被跳过"
 
 #: src/webui/static/app/wizard.js:59
 msgid "Wizard - page \"{0}\" not found"
-msgstr ""
+msgstr "向导 - 页面 \"{0}\" not found"
+
+#: src/webui/static/app/tvheadend.js:404
+msgid "Writer"
+msgstr "作家"
 
 #: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
 msgid "Yes"
-msgstr ""
+msgstr "是"
 
-#: src/webui/static/app/idnode.js:473 src/webui/static/app/idnode.js:856
+#: src/webui/static/app/idnode.js:488 src/webui/static/app/idnode.js:867
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
-msgstr ""
+msgstr "You must provide a 值 - use octal chmod notation, e.g. 0664"
 
 #: src/webui/static/app/i18n-post.js:243
 msgid "You must select at least one item in this group"
-msgstr ""
+msgstr "You must 选择 at least one 项目 in this group"
 
 #: src/webui/static/app/i18n-post.js:248
 msgid "You must select one item in this group"
-msgstr ""
+msgstr "You must 选择 one 项目 in this group"
 
-#: src/webui/static/app/dvr.js:39
+#: src/webui/static/app/status.js:172 src/webui/static/app/status.js:437
+msgid "all"
+msgstr "全部"
+
+#: src/webui/static/app/dvr.js:72
 msgid "because it is a rerun of:"
-msgstr ""
+msgstr "因为它是以下内容的重播："
 
 #: src/webui/static/app/i18n-post.js:218
 msgid "false"
-msgstr ""
+msgstr "假"
 
 #: src/webui/static/app/i18n-post.js:237
 msgid "g:i A#TimeField"
-msgstr ""
+msgstr "g:i A#TimeField"
 
 #: src/webui/static/app/i18n-post.js:238
 msgid ""
 "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
 "A|gi|hi|gia|hia|g|H#TimeField"
 msgstr ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
 
-#: src/webui/static/app/idnode.js:363 src/webui/static/app/idnode.js:364
-#: src/webui/static/app/epg.js:466 src/webui/static/app/epg.js:468
+#: src/webui/static/app/idnode.js:381 src/webui/static/app/idnode.js:382
+#: src/webui/static/app/epg.js:715 src/webui/static/app/epg.js:717
 msgid "hrs"
-msgstr ""
+msgstr "小时"
 
-#: src/webui/static/app/tvheadend.js:963
+#: src/webui/static/app/tvheadend.js:1400
 msgid "login"
-msgstr ""
+msgstr "登录"
 
-#: src/webui/static/app/tvheadend.js:960
+#: src/webui/static/app/tvheadend.js:1397
 msgid "logout"
-msgstr ""
+msgstr "退出登录"
 
-#: src/webui/static/app/tvheadend.js:250
+#: src/webui/static/app/tvheadend.js:624
 msgid ""
 "looking for please see the "
-"[Wiki](http://tvheadend.org/projects/tvheadend/wiki) "
-msgstr ""
+"[documentation](http://docs.tvheadend.org/documentation) "
+msgstr "looking for please see the [文档](HTTP://docs.tvheadend.org/文档) "
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
-msgstr ""
+msgstr "m/d/Y#DateColumn"
 
 #: src/webui/static/app/i18n-post.js:282
 msgid "m/d/Y#DateFilter"
-msgstr ""
+msgstr "m/d/Y#DateFilter"
 
 #: src/webui/static/app/i18n-post.js:120
 msgid "m/d/Y#Format.date"
-msgstr ""
+msgstr "m/d/Y#格式.日期"
 
 #: src/webui/static/app/i18n-post.js:191
 msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
-msgstr ""
+msgstr "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
 
 #: src/webui/static/app/i18n-post.js:190
 msgid "m/d/y#DateField"
-msgstr ""
+msgstr "m/d/y#DateField"
 
 #: src/webui/static/app/i18n-post.js:136
 msgid "m/d/y#DatePicker"
-msgstr ""
+msgstr "m/d/y#DatePicker"
 
-#: src/webui/static/app/idnode.js:364 src/webui/static/app/idnode.js:366
-#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:468
-#: src/webui/static/app/epg.js:471 src/webui/static/app/dvr.js:52
+#: src/webui/static/app/idnode.js:382 src/webui/static/app/idnode.js:384
+#: src/webui/static/app/epg.js:246 src/webui/static/app/epg.js:717
+#: src/webui/static/app/epg.js:720 src/webui/static/app/dvr.js:94
 msgid "min"
-msgstr ""
+msgstr "分钟"
 
 #: src/webui/static/app/i18n-post.js:145
 msgid "of {0}"
-msgstr ""
+msgstr "共 {0}"
 
-#: src/webui/static/app/tvheadend.js:251
+#: src/webui/static/app/tvheadend.js:625
 msgid ""
 "or join the [IRC channel on "
-"Libera.Chat](https://web.libera.chat/#hts)."
+"libera](https://web.libera.chat/?nick=tvhhelp|?#hts)."
 msgstr ""
+"or join the [IRC 频道 on libera](https://Web.libera.chat/?nick=tvhhelp|?#hts)."
 
 #: src/webui/static/app/i18n-post.js:217
 msgid "true"
-msgstr ""
+msgstr "真"
 
 #: src/webui/static/app/i18n-post.js:135
 msgid "{0} (Spacebar)"
-msgstr ""
+msgstr "{0}（空格键）"
 
 #: src/webui/static/app/i18n-post.js:189
 msgid "{0} is not a valid date - it must be in the format {1}"
-msgstr ""
+msgstr "{0} is not a valid 日期 - it must be in the 格式 {1}"
 
 #: src/webui/static/app/i18n-post.js:180
 msgid "{0} is not a valid number"
-msgstr ""
+msgstr "{0} is not a valid 编号"
 
 #: src/webui/static/app/i18n-post.js:236
 msgid "{0} is not a valid time"
-msgstr ""
+msgstr "{0} is not a valid 时间"
 
 #: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
-msgstr ""
+msgstr "{0} 已选中 行{1}"
 
 #. / {0} start, {1} end, {2} total, {3} title
-#: src/webui/static/app/tvheadend.js:361
+#: src/webui/static/app/tvheadend.js:735
 msgid "{3} {0} - {1} of {2}"
-msgstr ""
+msgstr "{3} {0} - 第 {1} 条 / 共 {2} 条"
