@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-15 03:11+0000\n"
+"POT-Creation-Date: 2026-06-22 03:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -650,7 +650,7 @@ msgstr ""
 msgid "After creating the network scan it for services."
 msgstr ""
 
-#: src/ratinglabels.c:653
+#: src/ratinglabels.c:650
 msgid "Age"
 msgstr ""
 
@@ -658,7 +658,7 @@ msgstr ""
 msgid "Age Rating"
 msgstr ""
 
-#: src/ratinglabels.c:662
+#: src/ratinglabels.c:659
 msgid "Age to use in the EPG parental rating field."
 msgstr ""
 
@@ -928,7 +928,7 @@ msgstr ""
 msgid "Authentication type"
 msgstr ""
 
-#: src/ratinglabels.c:683
+#: src/ratinglabels.c:680
 msgid "Authority"
 msgstr ""
 
@@ -1917,11 +1917,11 @@ msgstr ""
 msgid "Count of objects"
 msgstr ""
 
-#: src/ratinglabels.c:646
+#: src/ratinglabels.c:643
 msgid "Country"
 msgstr ""
 
-#: src/ratinglabels.c:647
+#: src/ratinglabels.c:644
 msgid "Country received via OTA EPG."
 msgstr ""
 
@@ -2700,11 +2700,11 @@ msgstr ""
 msgid "DiseqC repeats"
 msgstr ""
 
-#: src/ratinglabels.c:661
+#: src/ratinglabels.c:658
 msgid "Display Age"
 msgstr ""
 
-#: src/ratinglabels.c:669
+#: src/ratinglabels.c:666
 msgid "Display Label"
 msgstr ""
 
@@ -2841,7 +2841,7 @@ msgstr ""
 msgid "EPG Language (priority order)"
 msgstr ""
 
-#: src/ratinglabels.c:626
+#: src/ratinglabels.c:623
 msgid "EPG Parental Rating Labels"
 msgstr ""
 
@@ -3196,7 +3196,7 @@ msgstr ""
 msgid "Enable/disable the grabber."
 msgstr ""
 
-#: src/ratinglabels.c:638
+#: src/ratinglabels.c:635
 msgid "Enable/disable the rating label."
 msgstr ""
 
@@ -3211,7 +3211,7 @@ msgstr ""
 #: src/access.c:1752 src/access.c:2299 src/access.c:2476 src/channels.c:400
 #: src/channels.c:421 src/channels.c:1775 src/service.c:172 src/imagecache.c:90
 #: src/esfilter.c:609 src/profile.c:324 src/bouquet.c:1212
-#: src/ratinglabels.c:637 src/epggrab/module.c:171 src/epggrab/channel.c:761
+#: src/ratinglabels.c:634 src/epggrab/module.c:171 src/epggrab/channel.c:761
 #: src/dvr/dvr_db.c:4496 src/dvr/dvr_autorec.c:1144 src/dvr/dvr_timerec.c:536
 #: src/dvr/dvr_config.c:966 src/descrambler/caclient.c:302
 #: src/input/mpegts/mpegts_input.c:239 src/input/mpegts/mpegts_network.c:191
@@ -3572,7 +3572,7 @@ msgstr ""
 msgid "File missing"
 msgstr ""
 
-#: src/ratinglabels.c:691
+#: src/ratinglabels.c:688
 msgid "File name for this rating's icon."
 msgstr ""
 
@@ -4312,7 +4312,7 @@ msgstr ""
 msgid "ISI (Stream ID)"
 msgstr ""
 
-#: src/ratinglabels.c:690 src/epggrab/channel.c:664 src/epggrab/channel.c:842
+#: src/ratinglabels.c:687 src/epggrab/channel.c:664 src/epggrab/channel.c:842
 msgid "Icon"
 msgstr ""
 
@@ -4320,7 +4320,7 @@ msgstr ""
 msgid "Icon (full URL)"
 msgstr ""
 
-#: src/channels.c:473 src/channels.c:1826 src/ratinglabels.c:697
+#: src/channels.c:473 src/channels.c:1826 src/ratinglabels.c:694
 #: src/input/mpegts/iptv/iptv_mux.c:222
 msgid "Icon URL"
 msgstr ""
@@ -4789,7 +4789,7 @@ msgstr ""
 msgid "LNB: %s"
 msgstr ""
 
-#: src/ratinglabels.c:676
+#: src/ratinglabels.c:673
 msgid "Label"
 msgstr ""
 
@@ -6942,7 +6942,7 @@ msgstr ""
 msgid "Rating Labels"
 msgstr ""
 
-#: src/ratinglabels.c:670
+#: src/ratinglabels.c:667
 msgid "Rating label to be displayed."
 msgstr ""
 
@@ -9163,7 +9163,7 @@ msgstr ""
 msgid "The imagecache path to the icon to use/used for the channel."
 msgstr ""
 
-#: src/ratinglabels.c:698
+#: src/ratinglabels.c:695
 msgid "The imagecache path to the icon to use/used for the rating label."
 msgstr ""
 
@@ -10473,7 +10473,7 @@ msgstr ""
 msgid "Unlimited time"
 msgstr ""
 
-#: src/ratinglabels.c:654
+#: src/ratinglabels.c:651
 msgid "Unprocessed rating 'age' received via DVB OTA EPG."
 msgstr ""
 
@@ -11089,11 +11089,11 @@ msgid ""
 "is saved (re-read on next startup)."
 msgstr ""
 
-#: src/ratinglabels.c:677
+#: src/ratinglabels.c:674
 msgid "XML 'rating' tag value to match events received via XMLTV."
 msgstr ""
 
-#: src/ratinglabels.c:684
+#: src/ratinglabels.c:681
 msgid "XMLTV 'system' attribute to match events received via XMLTV."
 msgstr ""
 

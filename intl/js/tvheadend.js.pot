@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-15 03:11+0000\n"
+"POT-Creation-Date: 2026-06-22 03:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1057,6 +1057,10 @@ msgstr ""
 msgid "In"
 msgstr ""
 
+#: src/webui/static/app/idnode.js:2004
+msgid "Inactive services"
+msgstr ""
+
 #: src/webui/static/app/mpegts.js:165
 msgid "Index"
 msgstr ""
@@ -1463,10 +1467,6 @@ msgstr ""
 #: src/webui/static/app/idnode.js:2556 src/webui/static/app/idnode.js:2742
 #: src/webui/static/app/epg.js:315
 msgid "Parameters"
-msgstr ""
-
-#: src/webui/static/app/idnode.js:2004
-msgid "Inactive services"
 msgstr ""
 
 #: src/webui/static/app/epg.js:277 src/webui/static/app/epg.js:873
