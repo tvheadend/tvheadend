@@ -129,6 +129,10 @@ ifeq ($(CONFIG_LIBX265_STATIC),yes)
 FFMPEG_DEPS += libx265
 endif
 
+ifeq ($(CONFIG_LIBSVTAV1_STATIC),yes)
+FFMPEG_DEPS += libsvtav1
+endif
+
 ifeq ($(CONFIG_LIBVPX_STATIC),yes)
 FFMPEG_DEPS += libvpx
 endif
@@ -515,6 +519,9 @@ SRCS-CODECS = $(wildcard src/transcoding/codec/*.c)
 SRCS-CODECS += $(wildcard src/transcoding/codec/codecs/*.c)
 ifneq (,$(filter yes,$(CONFIG_LIBX264) $(CONFIG_LIBX265)))
 LIBS-CODECS += libx26x
+endif
+ifeq ($(CONFIG_LIBSVTAV1),yes)
+LIBS-CODECS += libsvtav1
 endif
 ifeq ($(CONFIG_LIBVPX),yes)
 LIBS-CODECS += libvpx
