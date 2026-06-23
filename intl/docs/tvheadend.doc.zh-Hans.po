@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-15 03:11+0000\n"
+"POT-Creation-Date: 2026-06-22 03:11+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
 "Last-Translator: jiezhao li, 2026\n"
 "Language-Team: Chinese Simplified (https://app.transifex.com/tvheadend/teams/43381/zh-Hans/)\n"
@@ -30,7 +30,7 @@ msgid ""
 " By default all URLs (in a playlist) with path component changes are treated as new services. This causes channels linked to them to be marked `{name-not-set}` due to the previously-used URL \"no longer existing\" in the playlist, they in fact do exist but have changed slightly."
 msgstr ""
 "\n"
-" By 默认 all URLs (in a playlist) with 路径 component 更改 are treated as 新建 服务. This causes 频道 linked to them to be marked `{名称-not-set}` due to the previously-used URL \"no longer 现有\" in the playlist, they in fact do exist but have changed slightly."
+"默认情况下，播放列表中路径组件发生变化的所有 URL 都将被视为新的服务。这会导致与之关联的频道被标记为 `{name-not-set}`，因为播放列表中之前使用的 URL \"不再存在\"，但实际上它们确实存在，只是略有变化。"
 
 #: src/docs_inc.c:2790
 msgid ""
@@ -38,7 +38,7 @@ msgid ""
 "__Tip__ : By default Tvheadend will only show a small selection of entries - you can increase the number of entries displayed by using the paging selector at the bottom right of the page."
 msgstr ""
 "\n"
-"__Tip__ : By 默认 Tvheadend will only 显示 a small 选择 of 条目 - you can increase the 编号 of 条目 displayed by using the paging selector at the bottom right of the 页面."
+"提示：默认情况下 Tvheadend 只显示少量条目，你可以通过页面右下角的分页选择器来增加显示的条目数量。"
 
 #: src/docs_inc.c:106 src/docs_inc.c:130 src/docs_inc.c:282 src/docs_inc.c:426
 #: src/docs_inc.c:652 src/docs_inc.c:770 src/docs_inc.c:934
@@ -72,7 +72,8 @@ msgid ""
 " is mentioned in the sub-title or summary or description, but 'sheldon' is "
 "not.\""
 msgstr ""
-"\"查找所有 EPG 事件，标题包含 'big bang theory'，副标题、摘要或描述提到 'leonard'，但不包含 'sheldon'。\""
+"\"查找所有标题包含 'big bang theory'、副标题、摘要或描述中提到 'leonard' 但不含 'sheldon' 的 EPG "
+"事件。\""
 
 #: src/docs_inc.c:1414
 msgid "\"Left Arrow\""
@@ -156,7 +157,7 @@ msgstr "'频道包' 标签页"
 
 #: src/docs_inc.c:3062
 msgid "'CA Client Configuration Example'"
-msgstr "'条件接收 客户端 配置 Example'"
+msgstr "'条件接收客户端配置示例'"
 
 #: src/docs_inc.c:1710
 msgid "'Cancel'"
@@ -176,7 +177,7 @@ msgstr "'完整评分标签列表'"
 
 #: src/docs_inc.c:132
 msgid "'DVB Input tree explained' Tab"
-msgstr "'DVB 输入 tree explained' 标签页"
+msgstr "'DVB 输入树说明' 标签页"
 
 #: src/docs_inc.c:108
 msgid "'DVB Inputs' Tab"
@@ -188,7 +189,7 @@ msgstr "'调试' 标签页"
 
 #: src/docs_inc.c:3766
 msgid "'Digital Video Recorder Profiles' Tab 1"
-msgstr "'Digital 视频 Recorder 配置方案' 标签页 1"
+msgstr "'数字录像机配置' 标签页 1"
 
 #: src/docs_inc.c:2714
 msgid "'Digital Video Recorder' Tabs"
@@ -252,7 +253,7 @@ msgstr "'网络' 标签页截图"
 
 #: src/docs_inc.c:4513
 msgid "'Newly learned rating labels list'"
-msgstr "'Newly learned rating labels 列表'"
+msgstr "'新学到的评分标签列表'"
 
 #: src/docs_inc.c:4399
 msgid "'Passwords' Tab"
@@ -320,19 +321,19 @@ msgstr "'时移' 标签页"
 
 #: src/docs_inc.c:4525
 msgid "'Updated rating label details'"
-msgstr "'Updated rating label 详情'"
+msgstr "'更新后的评分标签详情'"
 
 #: src/docs_inc.c:2232
 msgid "(/mux only) list of subscribed PIDs (comma separated)"
-msgstr "(/复用器 only) 列表 of subscribed PID (comma separated)"
+msgstr "（仅复用器）已订阅的 PID 列表（用逗号分隔）"
 
 #: src/docs_inc.c:2224
 msgid "(/service only) do not descramble (if set to 0)"
-msgstr "(/服务 only) do not descramble (if set to 0)"
+msgstr "（仅服务）不解扰（设为 0 时）"
 
 #: src/docs_inc.c:2228
 msgid "(/service only) pass EMM to the stream (if set to 1)"
-msgstr "(/服务 only) pass EMM to the 流 (if set to 1)"
+msgstr "（仅服务）传递 EMM 到流（设为 1 时）"
 
 #: src/docs_inc.c:4913
 msgid "(DVR),"
@@ -342,9 +343,7 @@ msgstr "（录像），"
 msgid ""
 "(For the technically-minded, these unique identifiers - the elementary "
 "streams - are referred to as 'packet identifiers' or 'PIDs')."
-msgstr ""
-"(For the technically-minded, these unique identifiers - the elementary 流 - "
-"are referred to as 'packet identifiers' or 'PID')."
+msgstr "（向技术爱好者解释：这些唯一标识符——即基本流——被称为\"包标识符\"或 PID）。"
 
 #: src/docs_inc.c:5291
 msgid "(Movies)"
@@ -364,7 +363,7 @@ msgstr "（电视剧）"
 
 #: src/docs_inc.c:124
 msgid "(Using the Interface) for details on how to use the tree/split panel."
-msgstr "(Using the 界面) for 详情 on how to use the tree/split 面板."
+msgstr "（使用界面）了解如何使用树形/分割面板的详细信息。"
 
 #: src/docs_inc.c:2309
 msgid "(_Using the Interface_ )."
@@ -372,23 +371,23 @@ msgstr "（_使用界面_）。"
 
 #: src/docs_inc.c:26
 msgid "(c) 2006 - date Tvheadend contributors"
-msgstr "(c) 2006 - 日期 Tvheadend contributors"
+msgstr "版权所有 (c) 2006 至今 Tvheadend 贡献者"
 
 #: src/docs_inc.c:445
 msgid "(default DVR Profile) drop-down"
-msgstr "(默认 录像 配置方案) 放置-down"
+msgstr "（默认录像配置）下拉菜单"
 
 #: src/docs_inc.c:2212
 msgid "(except /mux) Override streaming profile"
-msgstr "(except /复用器) Override streaming 配置方案"
+msgstr "（除复用器外）覆盖流媒体配置"
 
 #: src/docs_inc.c:1064
 msgid "(other clients may also be available)."
-msgstr "(other clients may also be 可用)."
+msgstr "（也可能有其他客户端可用）。"
 
 #: src/docs_inc.c:2284
 msgid "(standard) for the channel number"
-msgstr "(standard) for the 频道 编号"
+msgstr "（标准）用于频道编号"
 
 #: src/docs_inc.c:174
 msgid ") is using position 1 (or AA)."
@@ -409,7 +408,7 @@ msgstr ")."
 
 #: src/docs_inc.c:308
 msgid "). Can be used with the other filters."
-msgstr "). Can be used with the other 过滤器."
+msgstr "）。可与其他过滤器一起使用。"
 
 #: src/docs_inc.c:4905 src/docs_inc.c:4909 src/docs_inc.c:5377
 #: src/docs_inc.c:5385 src/docs_inc.c:5429 src/docs_inc.c:5437
@@ -418,29 +417,24 @@ msgstr ","
 
 #: src/docs_inc.c:6147
 msgid ", enabling/disabling per channel overrides the DVR profile setting."
-msgstr ", enabling/disabling per 频道 overrides the 录像 配置方案 设置."
+msgstr "，针对单个频道启用/禁用将覆盖录像配置设置。"
 
 #: src/docs_inc.c:1826
 msgid ""
 ", note that not all devices supply correct signal information, the value "
 "here can sometimes be ambiguous."
-msgstr ""
-", 注意 that not all 设备 supply correct 信号 信息, the 值 here can sometimes be "
-"ambiguous."
+msgstr "，请注意并非所有设备都提供正确的信号信息，此处的值有时可能不明确。"
 
 #: src/docs_inc.c:5523
 msgid ", so if that changes it won't make any difference."
-msgstr ", so if that 更改 it won't make any difference."
+msgstr "，因此即使它发生改变也不会产生任何影响。"
 
 #: src/docs_inc.c:790
 msgid ""
 "- but they do go out of date as broadcasters move services around and "
 "national authorities change entire pieces of spectrum. As such, you should "
 "try the pre-defined values, but you may need to add muxes manually."
-msgstr ""
-"- but they do go out of 日期 as broadcasters move 服务 around and national "
-"authorities 更改 entire pieces of spectrum. As such, you should try the pre-"
-"defined 值, but you may need to 添加 复用器 manually."
+msgstr "但它们确实会过时，因为广播商迁移服务，国家当局调整整个频谱范围。因此，你应该尝试预定义的值，但可能需要手动添加复用器。"
 
 #: src/docs_inc.c:5693
 msgid "-1"
@@ -466,19 +460,14 @@ msgstr "."
 msgid ""
 ". Please use github's features if you want to provide patches. Contributions"
 " and improvements are always welcome."
-msgstr ""
-". Please use GitHub's features if you want to provide patches. Contributions"
-" and improvements are always welcome."
+msgstr "。如果你想提供补丁，请使用 GitHub 的功能。始终欢迎贡献和改进。"
 
 #: src/docs_inc.c:2803
 msgid ""
 ". This will automatically launch an appropriate player, otherwise you will "
 "need to manually open the playlist to start watching (normally a double-"
 "click on the downloaded file)."
-msgstr ""
-". This will automatically launch an appropriate player, otherwise you will "
-"need to manually open the playlist to 开始 watching (normally a double-点击 on "
-"the downloaded 文件)."
+msgstr "。这将自动启动合适的播放器，否则你需要手动打开播放列表才能开始观看（通常是双击下载的文件）。"
 
 #: src/docs_inc.c:1631
 msgid "... produces:"
@@ -495,7 +484,7 @@ msgstr "/ = 节点"
 
 #: src/docs_inc.c:2009
 msgid "/etc/default/tvheadend options"
-msgstr "/etc/默认/tvheadend 选项"
+msgstr "/etc/default/tvheadend 选项"
 
 #: src/docs_inc.c:5815 src/docs_inc.c:5923 src/docs_inc.c:6023
 msgid "/home/user/Videos/News.mkv"
@@ -507,7 +496,7 @@ msgstr "/play/REMAIN"
 
 #: src/docs_inc.c:2052
 msgid "/playlist[/AUTH][/TYPE][/WHAT][/IDENTIFIER]"
-msgstr "/playlist[/AUTH][/类型][/WHAT][/IDENTIFIER]"
+msgstr "/playlist[/AUTH][/TYPE][/WHAT][/IDENTIFIER]"
 
 #: src/docs_inc.c:2286
 msgid "/special/srvid2"
@@ -591,7 +580,7 @@ msgstr "1. 定义 RTSP 端口"
 
 #: src/docs_inc.c:762
 msgid "1. Ensure Tuners are Available for Use"
-msgstr "1. Ensure 调谐器 are 可用 for Use"
+msgstr "1. 确保调谐器可供使用"
 
 #: src/docs_inc.c:664
 msgid "1. Welcome"
@@ -668,7 +657,7 @@ msgstr "25"
 
 #: src/docs_inc.c:796
 msgid "3. Associate the Network with the Respective Tuner(s)"
-msgstr "3. Associate the 网络 with the Respective 调谐器(s)"
+msgstr "3. 将网络与相应的调谐器关联"
 
 #: src/docs_inc.c:4639
 msgid "3. Export Your Networks"
@@ -700,7 +689,7 @@ msgstr "4. 配置你的客户端"
 
 #: src/docs_inc.c:806
 msgid "4. If Necessary, Manually Add Muxes"
-msgstr "4. If Necessary, Manually 添加 复用器"
+msgstr "4. 如有必要，手动添加复用器"
 
 #: src/docs_inc.c:168
 msgid "4. Position #1 (AA)"
@@ -767,7 +756,7 @@ msgstr ":"
 #: src/docs_inc.c:1258
 msgid ""
 ": Assign the lowest available channel number(s) to the selected channel(s)."
-msgstr ": Assign the lowest 可用 频道 编号(s) to the 已选中 频道(s)."
+msgstr "：将最低可用频道号分配给所选频道。"
 
 #: src/docs_inc.c:5803 src/docs_inc.c:5911
 #, c-format
@@ -786,53 +775,50 @@ msgstr ""
 msgid ""
 ": Command to run when a recording starts. The command will be run in "
 "background."
-msgstr ""
-": Command to run when a 录像 starts. The command will be run in background."
+msgstr "：录像开始时要运行的命令。该命令将在后台运行。"
 
 #: src/docs_inc.c:1266
 msgid ": Decrement the selected channel numbers by 1."
-msgstr ": Decrement the 已选中 频道 编号 by 1."
+msgstr "：将所选频道号减 1。"
 
 #: src/docs_inc.c:1238
 msgid ""
 ": Detach the (selected) services from it's bouquet (to prevent changes)."
-msgstr ": Detach the (已选中) 服务 from it's 频道包 (to prevent 更改)."
+msgstr "：将（所选）服务从其频道包中分离（以防止更改）。"
 
 #: src/docs_inc.c:5127
 msgid ": Example : every day at 2am is : `0 2 * * *`"
-msgstr "：示例：每天凌晨2点是：`0 2 * * *`"
+msgstr "：示例：每天凌晨 2 点的时间为：`0 2 * * *`"
 
 #: src/docs_inc.c:1262
 msgid ": Increment the selected channel number(s) by 1."
-msgstr ": Increment the 已选中 频道 编号(s) by 1."
+msgstr "：将所选频道号加 1。"
 
 #: src/docs_inc.c:1234
 msgid ": Map all services to channels."
-msgstr ": Map all 服务 to 频道."
+msgstr "：将所有服务映射到频道。"
 
 #: src/docs_inc.c:1230
 msgid ": Map the selected services to channels."
-msgstr ": Map the 已选中 服务 to 频道."
+msgstr "：将所选服务映射到频道。"
 
 #: src/docs_inc.c:231
 msgid ""
 ": Play the selected entry. Downloads an m3u, or opens the m3u in your "
 "default media player. __Finished/Failed Recordings tabs only.__"
-msgstr ""
-": 播放 the 已选中 条目. Downloads an M3U, or opens the M3U in your 默认 media player."
-" __Finished/Failed 录像 标签页 only.__"
+msgstr "：播放所选条目。下载 m3u，或在默认媒体播放器中打开 m3u。__仅限已完成/失败的录像标签页。__"
 
 #: src/docs_inc.c:1250
 msgid ": Remove all services not seen for 7+ days."
-msgstr ": 移除 all 服务 not seen for 7+ days."
+msgstr "：移除所有 7 天以上未出现的服务。"
 
 #: src/docs_inc.c:1246
 msgid ": Remove services marked as Missing in PAT/SDT for 7+ days."
-msgstr ": 移除 服务 marked as Missing in PAT/SDT for 7+ days."
+msgstr "：移除标记为在 PAT/SDT 中缺失且持续 7 天以上的服务。"
 
 #: src/docs_inc.c:1270
 msgid ": Swap the numbers of the two selected channels."
-msgstr ": Swap the 编号 of the two 已选中 频道."
+msgstr "：交换所选两个频道的编号。"
 
 #: src/docs_inc.c:5623
 msgid ""
@@ -841,10 +827,8 @@ msgid ""
 "`%t`) and Tvheadend specific. Note that you may modify some of this format "
 "string setting using the GUI fields below."
 msgstr ""
-": The 字符串 allows you to manually specify the full 路径 generation using the "
-"predefined modifiers for strftime (see `man strftime`, except `%n` and `%t`)"
-" and Tvheadend specific. 注意 that you may 修改 some of this 格式 字符串 设置 using the"
-" GUI 字段 below."
+"：该字符串允许你使用 strftime 的预定义修饰符（参见 `man strftime`，除 `%n` 和 `%t` 外）和 Tvheadend "
+"专用修饰符手动指定完整路径生成。请注意，你可以使用下方的 GUI 字段修改此格式字符串的部分设置。"
 
 #: src/docs_inc.c:3964
 msgid "@ = Attribute"
@@ -854,9 +838,7 @@ msgstr "@ = 属性"
 msgid ""
 "A 'rating label' is a text code like 'PG', 'PG-13' or 'FSK 12' used to "
 "identify the parental rating classification of a TV programme."
-msgstr ""
-"A 'rating label' is a 文本 code like 'PG', 'PG-13' or 'FSK 12' used to "
-"identify the parental rating classification of a 电视 节目."
+msgstr "「评分标签」是如\"PG\"、\"PG-13\"或\"FSK 12\"等文本代码，用于标识电视节目的家长控制分级。"
 
 #: src/docs_inc.c:3946
 msgid ""
@@ -866,10 +848,8 @@ msgid ""
 "These fields can be used for recording a whole series or detecting a "
 "repeated episode."
 msgstr ""
-"A CRID (Content 参考 IDentifier) is a mechanism used by broadcasters to "
-"identify 事件 from the same 系列 and multiple occurrences of the same 剧集 in a "
-"系列. TVH refers to these as 'SeriesLink' and 'EpisodeLink'. These 字段 can be "
-"used for 录像 a whole 系列 or detecting a repeated 剧集."
+"CRID（内容参考标识符）是广播商用来标识同一系列中的事件以及某系列中同一剧集多次出现的一种机制。TVH "
+"将其称为\"SeriesLink\"和\"EpisodeLink\"。这些字段可用于录制完整系列或检测重复剧集。"
 
 #: src/docs_inc.c:3136 src/docs_inc.c:3164
 msgid ""
@@ -878,9 +858,8 @@ msgid ""
 "present in the system. This mode is suitable for all DVB devices including "
 "SAT"
 msgstr ""
-"A TCP 连接 to the 服务器 is created. All EMM/ECM 数据 is sent to OSCam using this "
-"连接 without the need for real linuxdvb 设备 to be present in the 系统. This 模式 is"
-" suitable for all DVB 设备 including SAT"
+"创建一个到服务器的 TCP 连接。所有 EMM/ECM 数据都通过此连接发送到 OSCam，无需系统中有真实的 linuxdvb 设备。此模式适用于所有"
+" DVB 设备，包括 SAT"
 
 #: src/docs_inc.c:1088
 msgid ""
@@ -889,10 +868,7 @@ msgid ""
 "kernel X') or might be a separate piece of software that you need install, "
 "and maybe even compile, separately."
 msgstr ""
-"A __driver__ is the piece of 软件 that your operating 系统 uses to talk to the "
-"调谐器. This can be built into the OS (e.g. '支持的 since kernel X') or might be a"
-" separate piece of 软件 that you need install, and maybe even compile, "
-"separately."
+"驱动程序是操作系统用来与调谐器通信的软件模块。它可以内置于操作系统中（例如\"自内核版本 X 起支持\"），也可能是你需要单独安装甚至编译的独立软件。"
 
 #: src/docs_inc.c:1080
 msgid ""
@@ -900,38 +876,29 @@ msgid ""
 "television signal and extract from it the programme stream. The tuner "
 "hardware is also responsible for communicating with your satellite dish via "
 "the LNB in the case of DVB-S."
-msgstr ""
-"A __tuner__ is the 硬件 (chipset) needed to interpret a digital television 信号 "
-"and extract from it the 节目 流. The 调谐器 硬件 is also responsible for "
-"communicating with your 卫星 碟形天线 via the 高频头 in the case of DVB-S."
+msgstr "调谐器是解读数字电视信号并从中提取节目流所需的硬件（芯片组）。对于 DVB-S，调谐器硬件还负责通过高频头与卫星天线通信。"
 
 #: src/docs_inc.c:4887
 msgid ""
 "A combination of last two variants above - data is written immediately and "
 "then discarded from cache."
-msgstr ""
-"A combination of 最后 two variants above - 数据 is written immediately and then "
-"discarded from cache."
+msgstr "上述最后两种变体的组合 - 数据立即写入，然后从缓存中丢弃。"
 
 #: src/docs_inc.c:4451
 msgid "A general Matroska container profile."
-msgstr "A general Matroska 容器 配置方案."
+msgstr "通用 Matroska 容器配置方案。"
 
 #: src/docs_inc.c:974
 msgid ""
 "A general-purpose MPEG-TS `pipe://` (or `file://`) for analogue and non-"
 "broadcast sources."
-msgstr ""
-"A general-purpose MPEG-TS `pipe://` (or `文件://`) for analogue and non-广播 "
-"sources."
+msgstr "用于模拟和非广播源的通用 MPEG-TS `pipe://`（或 `file://`）配置。"
 
 #: src/docs_inc.c:4258
 msgid ""
 "A network is the type of carrier for your television signals. Tvheadend "
 "supports several different types of network."
-msgstr ""
-"A 网络 is the 类型 of carrier for your television signals. Tvheadend supports "
-"several different 类型 of 网络."
+msgstr "网络是电视信号的载波类型。Tvheadend 支持多种不同类型的网络。"
 
 #: src/docs_inc.c:4871
 msgid ""
@@ -945,17 +912,13 @@ msgid ""
 "to set certain configuration options, such as where the dish should move to "
 "in order to receive a multiplex."
 msgstr ""
-"A position is very similar to a 网络 in that it groups multiplexes (or 转发器) "
-"for each 卫星 you're able to receive. It also allows you to set certain 配置 选项,"
-" such as where the 碟形天线 should move to in order to receive a multiplex."
+"位置与网络非常相似，它针对你能接收的每个卫星（不同的轨道位置上的一组转发器）进行分组同时允许你对接收的每个卫星设置特定配置选项例如天线需要移动到哪个位置才能接收到特定的复用信号。"
 
 #: src/docs_inc.c:2498 src/docs_inc.c:2530
 msgid ""
 "A slave frontend (can be used to link with a master, mainly used for buggy "
 "drivers or frontends that share an input)."
-msgstr ""
-"A slave frontend (can be used to 链接 with a master, mainly used for buggy "
-"drivers or frontends that share an 输入)."
+msgstr "从属前端（可用于与主前端链接，主要用于有问题的驱动或共享一个输入的前端）。"
 
 #: src/docs_inc.c:5899 src/docs_inc.c:6087
 msgid "A string"
@@ -963,7 +926,7 @@ msgstr "字符串"
 
 #: src/docs_inc.c:170
 msgid "A tuner can have multiple positional inputs,"
-msgstr "A 调谐器 can have multiple positional 输入,"
+msgstr "一个调谐器可以有多个位置输入，"
 
 #: src/docs_inc.c:568
 msgid "AAC"
@@ -971,7 +934,7 @@ msgstr "AAC"
 
 #: src/docs_inc.c:958
 msgid "AC-3, AAC and MP2 audio supported."
-msgstr "AC-3, AAC and MP2 音频 支持的."
+msgstr "支持 AC-3、AAC 和 MP2 音频。"
 
 #: src/docs_inc.c:3098 src/docs_inc.c:3102
 msgid "AES ECB Constant Code Word"
@@ -1016,11 +979,11 @@ msgstr "关于本指南"
 
 #: src/docs_inc.c:928
 msgid "About this guide and where to get help if you're stuck"
-msgstr "About this 指南 and where to get 帮助 if you're stuck"
+msgstr "关于本指南以及遇到困难时如何获取帮助"
 
 #: src/docs_inc.c:1318
 msgid "Abruptly stop the selected in-progress recording entry/entries."
-msgstr "Abruptly 停止 the 已选中 in-progress 录像 条目/条目."
+msgstr "立即停止所选进行中的录像条目。"
 
 #: src/docs_inc.c:5447
 msgid ""
@@ -1030,10 +993,8 @@ msgid ""
 " actual-TS is never received keep using other-TS, so a dedicated EPG "
 "multiplex still works."
 msgstr ""
-"Accept both, but once a 服务's own actual-TS 计划 has been seen this session, 放置"
-" further other-TS for it. A neighbouring multiplex's coarse 描述 cannot "
-"overwrite the 服务's detailed 计划. 服务 whose actual-TS is never received 保留 "
-"using other-TS, so a dedicated EPG multiplex still works."
+"两者都接受，但在本次会话中一旦看到某个服务自己的实际传输流节目表后，就不再接受该服务的其他传输流数据。相邻复用器的粗略描述不能覆盖该服务的详细节目表。从未收到实际传输流的服务将继续使用其他传输流，因此专用"
+" EPG 复用器仍然有效。"
 
 #: src/docs_inc.c:5395
 msgid ""
@@ -1043,18 +1004,14 @@ msgid ""
 "actual-TS is never received keep using other-TS (so a dedicated EPG "
 "multiplex still works)."
 msgstr ""
-"Accept both, but once this 服务's own actual-TS 计划 has been seen this session,"
-" 放置 further other-TS for it. A neighbour's coarse 描述 cannot overwrite the "
-"服务's detailed 计划, while 服务 whose actual-TS is never received 保留 using other-"
-"TS (so a dedicated EPG multiplex still works)."
+"两者都接受，但在本次会话中一旦看到此服务自己的实际传输流节目表后，就不再接受其他传输流数据。相邻复用器的粗略描述不能覆盖该服务的详细节目表，而从未收到实际传输流的服务将继续使用其他传输流（因此专用"
+" EPG 复用器仍然有效）。"
 
 #: src/docs_inc.c:5391 src/docs_inc.c:5443
 msgid ""
 "Accept both, no precedence. Today's default behaviour — what tvheadend has "
 "always done."
-msgstr ""
-"Accept both, no precedence. Today's 默认 behaviour — what tvheadend has always"
-" done."
+msgstr "两者都接受，无优先级。当前的默认行为 — Tvheadend 一直以来的做法。"
 
 #: src/docs_inc.c:223
 msgid "Accept icon"
@@ -1085,9 +1042,7 @@ msgstr "访问条目"
 msgid ""
 "Access to system features (streaming, administration, configurations) can be"
 " configured based on username/password and/or IP address."
-msgstr ""
-"访问 to 系统 features (streaming, administration, configurations) can be "
-"configured based on username/密码 and/or IP 地址."
+msgstr "可以基于用户名/密码和/或 IP 地址配置对系统功能（流媒体、管理、配置）的访问权限。"
 
 #: src/docs_inc.c:4707
 msgid "Action"
@@ -1099,7 +1054,7 @@ msgstr "活动订阅"
 
 #: src/docs_inc.c:1639
 msgid "Actual numbers don't matter, just that it's a number"
-msgstr "Actual 编号 don't matter, just that it's a 编号"
+msgstr "实际数字不重要，只要是一个数字即可"
 
 #: src/docs_inc.c:5373 src/docs_inc.c:5425
 msgid "Actual transport stream only"
@@ -1126,9 +1081,7 @@ msgid ""
 "Add this elementary stream only when no elementary streams are used from "
 "previous rules. It does not match the implicit USE rules which are added "
 "after the user rules."
-msgstr ""
-"添加 this elementary 流 only when no elementary 流 are used from 上一个 规则. It does"
-" not match the implicit USE 规则 which are added after the 用户 规则."
+msgstr "仅当前面规则没有使用任何基本流时才添加此基本流。它不匹配用户规则之后添加的隐式 USE 规则。"
 
 #: src/docs_inc.c:1520
 msgid "Adding, Editing and More"
@@ -1156,11 +1109,11 @@ msgstr "高级高频头配置。"
 
 #: src/docs_inc.c:5319
 msgid "Advanced option specifying a csv of movie modules to use."
-msgstr "高级 选项 specifying a csv of movie modules to use."
+msgstr "高级选项，指定要使用的电影模块的 CSV 列表。"
 
 #: src/docs_inc.c:5317
 msgid "Advanced option specifying a csv of tv modules to use."
-msgstr "高级 选项 specifying a csv of 电视 modules to use."
+msgstr "高级选项，指定要使用的电视模块的 CSV 列表。"
 
 #: src/docs_inc.c:5843 src/docs_inc.c:5947 src/docs_inc.c:6051
 msgid "Afternoon"
@@ -1184,16 +1137,13 @@ msgstr "全部（流媒体与录像）"
 msgid ""
 "All available tuners failed to tune (this can indicate a signal, driver or "
 "hardware problem)."
-msgstr ""
-"All 可用 调谐器 failed to tune (this can indicate a 信号, 驱动程序 or 硬件 problem)."
+msgstr "所有可用调谐器调谐失败（这可能表明存在信号、驱动或硬件问题）。"
 
 #: src/docs_inc.c:1052
 msgid ""
 "All channel data, channel groups/tags, EPG and TV streaming is carried over "
 "a single TCP connection."
-msgstr ""
-"All 频道 数据, 频道 groups/标签, EPG and 电视 streaming is carried over a single TCP "
-"连接."
+msgstr "所有频道数据、频道组/标签、EPG 和电视流媒体都通过单个 TCP 连接传输。"
 
 #: src/docs_inc.c:2094 src/docs_inc.c:2244
 msgid "All channels"
@@ -1207,13 +1157,11 @@ msgstr "全部小写"
 msgid ""
 "All major character encodings in DVB are supported (e.g. for localised EPG "
 "character sets)."
-msgstr ""
-"All major character encodings in DVB are 支持的 (e.g. for localised EPG "
-"character sets)."
+msgstr "支持 DVB 中的所有主要字符编码（例如本地化的 EPG 字符集）。"
 
 #: src/docs_inc.c:1000
 msgid "All original streams (multiple audio tracks, etc) are recorded."
-msgstr "All original 流 (multiple 音频 tracks, etc) are recorded."
+msgstr "所有原始流（多个音轨等）均被录制。"
 
 #: src/docs_inc.c:2102
 msgid "All recordings"
@@ -1221,25 +1169,25 @@ msgstr "所有录像"
 
 #: src/docs_inc.c:1028
 msgid "All settings are stored in human-readable text files."
-msgstr "All 设置 are stored in human-readable 文本 文件."
+msgstr "所有设置都存储在人类可读的文本文件中。"
 
 #: src/docs_inc.c:1026
 msgid ""
 "All setup and configuration is done from the built in web user interface."
-msgstr "All setup and 配置 is done from the built in Web 用户 界面."
+msgstr "所有设置和配置均通过内置的 Web 用户界面完成。"
 
 #: src/docs_inc.c:1022
 msgid ""
 "All sorting/filtering is then done in C by the main application for speed."
-msgstr "所有排序/过滤由主应用程序以 C 语言执行以保证速度。"
+msgstr "所有排序/过滤均由主应用程序以 C 语言执行，以保证速度。"
 
 #: src/docs_inc.c:2098
 msgid "All tags, for Enigma2 - tags are converted to labels"
-msgstr "All 标签, for Enigma2 - 标签 are converted to labels"
+msgstr "所有标签，对于 Enigma2 - 标签将转换为标签文本"
 
 #: src/docs_inc.c:1068
 msgid "All text is encoded in UTF-8 to provide full international support."
-msgstr "All 文本 is encoded in UTF-8 to provide full international 支持."
+msgstr "所有文本均以 UTF-8 编码，以提供全面的国际化支持。"
 
 #: src/docs_inc.c:298
 msgid "All/Now"
@@ -1247,11 +1195,11 @@ msgstr "全部/当前"
 
 #: src/docs_inc.c:5113
 msgid "Allow access to all streaming options (including DVR functionality)."
-msgstr "允许 访问 to all streaming 选项 (including 录像 functionality)."
+msgstr "允许访问所有流媒体选项（包括录像功能）。"
 
 #: src/docs_inc.c:5797
 msgid "Allow the user to change the interface view level."
-msgstr "允许 the 用户 to 更改 the 界面 查看 级别."
+msgstr "允许用户更改界面视图级别。"
 
 #: src/docs_inc.c:482
 msgid "Alternative showings"
@@ -1264,17 +1212,16 @@ msgid ""
 "of this additional information for EPG grabbers that use XMLTV as a data "
 "source."
 msgstr ""
-"Although xmltv is a standard, some providers of xmltv 数据 包含 additional 信息. "
-"XPath-like expressions can be used to extract some of this additional 信息 for"
-" EPG 抓取器 that use xmltv as a 数据 source."
+"虽然 XMLTV 是一个标准，但一些 XMLTV 数据提供商包含额外的信息。对于使用 XMLTV 作为数据源的 EPG 抓取器，可以使用类 XPath "
+"表达式来提取这些额外信息。"
 
 #: src/docs_inc.c:6181
 msgid "Always keep the mux regardless of whether it exists or not."
-msgstr "Always 保留 the 复用器 regardless of whether it exists or not."
+msgstr "始终保留复用器，无论其是否存在。"
 
 #: src/docs_inc.c:6189
 msgid "Always reject but allow partial match."
-msgstr "Always 拒绝 but 允许 partial match."
+msgstr "始终拒绝但允许部分匹配。"
 
 #: src/docs_inc.c:6185
 msgid "Always reject."
@@ -1289,10 +1236,7 @@ msgid ""
 "An access entry is said to match if the username and the IP source address "
 "of the requesting peer is within the prefix _(Allowed networks)_ , wildcard "
 "(anonymous) accounts will match __ANY__ username."
-msgstr ""
-"An 访问 条目 is said to match if the username and the IP source 地址 of the "
-"requesting peer is within the prefix _(Allowed 网络)_ , wildcard (anonymous) "
-"accounts will match __ANY__ username."
+msgstr "如果请求方的用户名和 IP 源地址在允许网络的地址前缀范围内，则称为访问条目匹配；通配符（匿名）账户将匹配任意用户名。"
 
 #: src/docs_inc.c:4455
 msgid "An audio-only profile."
@@ -1315,15 +1259,13 @@ msgid ""
 "And finally, services are mapped to __channels__ . These are what you and "
 "your client software think in terms of: _\"I'd like to watch BBC One now, "
 "please\"_ ."
-msgstr ""
-"And finally, 服务 are mapped to __channels__ . These are what you and your 客户端"
-" 软件 think in terms of: _\"I'd like to watch BBC One now, please\"_ ."
+msgstr "最后，服务被映射到频道。这些就是你和你客户端软件所关心的概念：\"我想现在看 BBC One\"。"
 
 #: src/docs_inc.c:1677
 msgid ""
 "And if you don't want a header, you can leave it out - but the cells remain "
 "in this theme, so I'd suggest you don't do this as it's ugly:"
-msgstr "如果你不想要标题，可以省略 - 但单元格在此主题中仍然存在，建议不要这样做，因为会很丑："
+msgstr "如果你不想要表头，可以省略——但单元格在此主题中仍然存在，建议不要这样做，因为看起来不好看："
 
 #: src/docs_inc.c:1462
 msgid ""
@@ -1332,10 +1274,7 @@ msgid ""
 "provide. A small blue flag or triangle will appear in the top-left corner to"
 " indicate that a filter is active. Filters persist until cleared."
 msgstr ""
-"And the same 放置-down 菜单 also gives you 访问 to a __filter__ function if "
-"defined. The 过滤 does simple pattern-matching on any 字符串 you provide. A small"
-" blue 标志 or triangle will appear in the top-left corner to indicate that a "
-"过滤 is 活动. 过滤器 persist until cleared."
+"如果定义了过滤功能，同一个下拉菜单还可以让你使用过滤功能。过滤器可以对你提供的任何字符串进行简单的模式匹配。左上角会出现一个蓝色小旗或三角形，表示过滤器已激活。过滤器在清除之前会一直有效。"
 
 #: src/docs_inc.c:1058
 msgid "Android"
@@ -1351,21 +1290,19 @@ msgstr "另一个项目"
 
 #: src/docs_inc.c:692
 msgid "Antenna (also known as an aerial)"
-msgstr "天线 (also known as an aerial)"
+msgstr "天线"
 
 #: src/docs_inc.c:3046
 msgid ""
 "Any changes (mapped services, number changes etc) to the channels can be "
 "lost if new changes in the bouquet override them."
-msgstr ""
-"Any 更改 (mapped 服务, 编号 更改 etc) to the 频道 can be lost if 新建 更改 in the 频道包 "
-"override them."
+msgstr "如果频道包中的新更改覆盖了频道，则对频道的任何更改（映射服务、编号更改等）都可能丢失。"
 
 #: src/docs_inc.c:5453
 msgid ""
 "Any service can override this global default via its own _EIT processing_ "
 "setting."
-msgstr "Any 服务 can override this global 默认 via its own _EIT processing_ 设置."
+msgstr "任何服务都可以通过其自身的 EIT 处理设置覆盖此全局默认值。"
 
 #: src/docs_inc.c:1950
 msgid "Appendices"
@@ -1381,11 +1318,11 @@ msgstr "附录 2 - 常见问题"
 
 #: src/docs_inc.c:1956
 msgid "Appendix 3 - Command-line Options"
-msgstr "Appendix 3 - Command-line 选项"
+msgstr "附录 3 - 命令行选项"
 
 #: src/docs_inc.c:1958
 msgid "Appendix 4 - Updating this documentation"
-msgstr "Appendix 4 - Updating this 文档"
+msgstr "附录 4 - 更新本文档"
 
 #: src/docs_inc.c:1960
 msgid "Appendix 5 - Markdown Cribsheet"
@@ -1393,7 +1330,7 @@ msgstr "附录 5 - Markdown 速查表"
 
 #: src/docs_inc.c:1092
 msgid "Application/Tvheadend Fundamentals"
-msgstr "应用程序/Tvheadend 基础"
+msgstr "应用程序 / Tvheadend 基础"
 
 #: src/docs_inc.c:1536
 msgid "Apply"
@@ -1401,11 +1338,11 @@ msgstr "应用"
 
 #: src/docs_inc.c:1380
 msgid "Apply configuration (run time only)"
-msgstr "应用配置 (run 时间 only)"
+msgstr "应用配置（仅运行时）"
 
 #: src/docs_inc.c:1382
 msgid "Apply the entered debugging settings."
-msgstr "应用 the entered debugging 设置."
+msgstr "应用输入的调试设置。"
 
 #: src/docs_inc.c:5311
 msgid "Argument"
@@ -1413,11 +1350,11 @@ msgstr "参数"
 
 #: src/docs_inc.c:880
 msgid "Arranging your channels into groups (channel tags)"
-msgstr "Arranging your 频道 into groups (频道 标签)"
+msgstr "将频道排列成组（频道标签）"
 
 #: src/docs_inc.c:870
 msgid "As required, you may now wish to look into:"
-msgstr "As 必需, you may now wish to look into:"
+msgstr "根据需要，你现在可能需要了解："
 
 #: src/docs_inc.c:944
 msgid ""
@@ -1425,17 +1362,14 @@ msgid ""
 "client applications via HTTP (VLC, MPlayer), HTSP (Kodi, Movian) and SAT>IP "
 "streaming."
 msgstr ""
-"As well as being able to 录制 the 输入, Tvheadend also offers it up to 客户端 "
-"applications via HTTP (VLC, MPlayer), HTSP (Kodi, Movian) and SAT>IP "
-"streaming."
+"除了能够录制输入外，Tvheadend 还通过 HTTP（VLC、MPlayer）、HTSP（Kodi、Movian）和 SAT>IP "
+"流媒体将内容提供给客户端应用程序。"
 
 #: src/docs_inc.c:1056
 msgid ""
 "As well as the web interface, which is accessible through VPN if required, "
 "third-party clients are available for both"
-msgstr ""
-"As well as the Web 界面, which is accessible through VPN if 必需, third-party "
-"clients are 可用 for both"
+msgstr "除了可通过 VPN 访问的 Web 界面（如需要）外，以下两种平台也有第三方客户端可用："
 
 #: src/docs_inc.c:1256
 msgid "Assign Number"
@@ -1446,30 +1380,24 @@ msgid ""
 "Assign predefined muxes to networks. To save you from manually entering "
 "muxes, Tvheadend includes predefined mux lists. Please select an option from"
 " the list for each network."
-msgstr ""
-"Assign predefined 复用器 to 网络. To 保存 you from manually entering 复用器, Tvheadend"
-" includes predefined 复用器 lists. Please 选择 an 选项 from the 列表 for each 网络."
+msgstr "为网络分配预定义的复用器。Tvheadend 包含预定义的复用器列表，避免你手动输入。请从列表中为每个网络选择一个选项。"
 
 #: src/docs_inc.c:800
 msgid ""
 "Associate each of your tuners with the correct network through _Parameters "
 "-> Basic Settings_ ."
-msgstr ""
-"Associate each of your 调谐器 with the correct 网络 through _Parameters -> 基础 "
-"Settings_ ."
+msgstr "通过\"参数 -> 基础设置\"将每个调谐器与正确的网络关联。"
 
 #: src/docs_inc.c:804
 msgid ""
 "At this point, your tuners now know what networks to use: one network can "
 "appear on multiple tuners (many-to-one), and one tuner can have multiple "
 "networks."
-msgstr ""
-"At this point, your 调谐器 now know what 网络 to use: one 网络 can appear on "
-"multiple 调谐器 (many-to-one), and one 调谐器 can have multiple 网络."
+msgstr "此时，你的调谐器现在知道要使用哪些网络了：一个网络可以出现在多个调谐器上（多对一），一个调谐器也可以有多个网络。"
 
 #: src/docs_inc.c:1376
 msgid "Attempt to discover more SAT>IP servers on the network."
-msgstr "Attempt to discover more SAT>IP servers on the 网络."
+msgstr "尝试在网络上发现更多 SAT>IP 服务器。"
 
 #: src/docs_inc.c:4453
 msgid "Audio Profile"
@@ -1509,7 +1437,7 @@ msgstr "自动录制"
 
 #: src/docs_inc.c:2614
 msgid "Auto-recording (Autorecs)"
-msgstr "自动录制 (Autorecs)"
+msgstr "自动录制（自动录制规则）"
 
 #: src/docs_inc.c:268 src/docs_inc.c:492
 msgid "Auto-recordings"
@@ -1537,19 +1465,17 @@ msgstr "可用的条件接收客户端类型"
 
 #: src/docs_inc.c:3300
 msgid "Available debugging subsystems"
-msgstr "可用 debugging subsystems"
+msgstr "可用的调试子系统"
 
 #: src/docs_inc.c:2770
 msgid "Available network types (with links to their Help page)"
-msgstr "可用 网络 类型 (with 链接 to their 帮助 页面)"
+msgstr "可用的网络类型（含帮助页面链接）"
 
 #: src/docs_inc.c:4302
 msgid ""
 "Available worldwide but common in Brazil and various other countries "
 "throughout south America."
-msgstr ""
-"可用 worldwide but common in Brazil and various other countries throughout "
-"south America."
+msgstr "全球可用，但在巴西和南美各国尤为常见。"
 
 #: src/docs_inc.c:4298
 msgid "Available worldwide."
@@ -1573,11 +1499,11 @@ msgstr "基础配置"
 
 #: src/docs_inc.c:3476
 msgid "Base DVB SI Tables (PAT,CAT,PMT,SDT etc.)"
-msgstr "基本 DVB SI 表（PAT,CAT,PMT,SDT等）"
+msgstr "基础 DVB SI 表（PAT、CAT、PMT、SDT 等）"
 
 #: src/docs_inc.c:1020
 msgid "Based on extJS, all pages are dynamic and self-refreshing."
-msgstr "Based on extJS, all 页面 are dynamic and self-refreshing."
+msgstr "基于 extJS，所有页面都是动态且可自动刷新的。"
 
 #: src/docs_inc.c:5817 src/docs_inc.c:5925 src/docs_inc.c:6025
 msgid "Basename of recording"
@@ -1596,8 +1522,7 @@ msgstr "基本替代方案（无哈希）"
 msgid ""
 "Be sure to check you have enough free tuners available to record all "
 "scheduled recordings if they overlap."
-msgstr ""
-"Be sure to 检查 you have enough free 调谐器 可用 to 录制 all 已计划 录像 if they overlap."
+msgstr "务必确保有足够的空闲调谐器可用，以便在计划录像重叠时录制所有内容。"
 
 #: src/docs_inc.c:918 src/docs_inc.c:1074
 msgid "Before you Begin"
@@ -1612,10 +1537,7 @@ msgid ""
 "Below is a (VERY) long list of the buttons you'll find in Tvheadend, They're"
 " listed here so you can quickly refer back to them at a later date (and know"
 " where to find them!)."
-msgstr ""
-"Below is a (VERY) long 列表 of the 按钮 you'll 查找 in Tvheadend, They're listed "
-"here so you can quickly refer back to them at a later 日期 (and know where to "
-"查找 them!)."
+msgstr "以下是你在 Tvheadend 中会找到的按钮（非常）长的列表。列出它们是为了方便你日后快速查阅（并知道在哪里找到它们！）。"
 
 #: src/docs_inc.c:1810
 msgid "Bit Error Ratio"
@@ -1631,7 +1553,7 @@ msgstr "Bones - S02E06"
 
 #: src/docs_inc.c:5729
 msgid "Bones/Bones - S05 E11 (episode with guide season/episode information)"
-msgstr "Bones/Bones - S05 E11 (剧集 with 指南 季/剧集 信息)"
+msgstr "Bones/Bones - S05 E11（带有节目指南季/集信息的剧集）"
 
 #: src/docs_inc.c:5753
 msgid "Bones/Season 5/Bones - S05E11"
@@ -1651,7 +1573,7 @@ msgstr "频道包"
 
 #: src/docs_inc.c:3020
 msgid "Bouquets are broadcaster-defined groupings and orders of channels."
-msgstr "频道包 are broadcaster-defined groupings and orders of 频道."
+msgstr "频道包是广播商定义的频道分组和排序方式。"
 
 #: src/docs_inc.c:3028
 msgid ""
@@ -1660,10 +1582,8 @@ msgid ""
 "from scanned muxes are added. The mux with bouquets might require another "
 "scan when all muxes are discovered (manually using the rescan checkbox)."
 msgstr ""
-"频道包 are usually obtained automatically from the DVB source during the 复用器 扫描"
-" period. 注意 that 频道包 may use more 复用器 and only 服务 from scanned 复用器 are "
-"added. The 复用器 with 频道包 might require another 扫描 when all 复用器 are discovered"
-" (manually using the rescan checkbox)."
+"频道包通常在复用器扫描期间从 DVB "
+"源自动获取。注意，频道包可能使用更多的复用器，只会添加已扫描复用器中的服务。包含频道包的复用器可能需要在发现所有复用器后再次扫描（手动使用重新扫描复选框）。"
 
 #: src/docs_inc.c:390
 msgid "Broadcast details icon"
@@ -1681,9 +1601,7 @@ msgstr "按平常方式编译 Tvheadend，参见"
 msgid ""
 "Built in video recorder stores recorded programs as Transport Stream (.ts) "
 "or Matroska (.mkv) files."
-msgstr ""
-"Built in 视频 recorder stores recorded programs as 传输 流 (.TS) or Matroska "
-"(.MKV) 文件."
+msgstr "内置录像机将录制的节目存储为传输流文件（.ts）或 Matroska 文件（.mkv）。"
 
 #: src/docs_inc.c:4433
 msgid "Built-in"
@@ -1715,16 +1633,14 @@ msgid ""
 "accept them (e.g. Media Player Classic Home Cinema). You can bypass this by "
 "removing the `/play/` path from the url."
 msgstr ""
-"By 默认 Tvheadend's _Play_ 链接 are playlists, although not all players accept "
-"them (e.g. Media Player Classic Home Cinema). You can bypass this by "
-"removing the `/播放/` 路径 from the URL."
+"默认情况下，Tvheadend 的\"播放\"链接是播放列表，但并非所有播放器都接受（例如 Media Player Classic Home "
+"Cinema）。你可以通过从 URL 中移除 `/play/` 路径来跳过此限制。"
 
 #: src/docs_inc.c:3936
 msgid ""
 "By default, XMLTV does not provide a mechanism for uniquely identifying each"
 " event."
-msgstr ""
-"By 默认, xmltv does not provide a mechanism for uniquely identifying each 事件."
+msgstr "默认情况下，XMLTV 不提供唯一标识每个事件的机制。"
 
 #: src/docs_inc.c:4276
 msgid "C (Cable)"
@@ -1784,7 +1700,7 @@ msgstr "有线"
 
 #: src/docs_inc.c:4278
 msgid "Cable TV, delivered via a cable to your house."
-msgstr "有线 电视, delivered via a 有线 to your house."
+msgstr "有线电视，通过电缆传送到你家。"
 
 #: src/docs_inc.c:970
 msgid "Cable signals via DVB-C."
@@ -1796,9 +1712,7 @@ msgid ""
 " from the local webserver. This can be useful for multi-client systems and, "
 "generally, to reduce hits on upstream providers"
 msgstr ""
-"Caching of 频道 图标 or other 图像 (such as EPG metadata) to be served from the "
-"local webserver. This can be useful for multi-客户端 systems and, generally, to"
-" reduce hits on upstream providers"
+"缓存频道图标或其他图像（如 EPG 元数据），以便由本地 Web 服务器提供服务。这对多客户端系统很有用，通常可减少对上游提供商的访问次数。"
 
 #: src/docs_inc.c:3140
 msgid "Camd.socket filename / IP Address (TCP mode)"
@@ -1817,38 +1731,31 @@ msgid ""
 "Caution: On systems with constrained resources, Merge-text searches should "
 "be used with caution due to the extra system load and overheads required to "
 "perform the search."
-msgstr ""
-"Caution: On systems with constrained resources, Merge-文本 searches should be "
-"used with caution due to the extra 系统 load and overheads 必需 to perform the "
-"搜索."
+msgstr "注意：在资源受限的系统上，应谨慎使用合并文本搜索，因为执行搜索会产生额外的系统负载和开销。"
 
 #: src/docs_inc.c:55
 msgid ""
 "Change markdown files in `docs/markdown`, `docs/markdown/inc`, `docs/class`,"
 " `docs/wizard`, etc. Images are placed in `src/webui/static/img/doc/`."
 msgstr ""
-"更改 markdown 文件 in `docs/markdown`, `docs/markdown/inc`, `docs/class`, "
-"`docs/向导`, etc. 图像 are placed in `src/webui/static/img/doc/`."
+"修改 `docs/markdown`、`docs/markdown/inc`、`docs/class`、`docs/wizard` 等目录中的 "
+"Markdown 文件。图片放置在 `src/webui/static/img/doc/` 中。"
 
 #: src/docs_inc.c:4875
 msgid ""
 "Change nothing and rely on standard (default) system caching to behave as it"
 " normally would."
-msgstr ""
-"更改 nothing and rely on standard (默认) 系统 caching to behave as it normally "
-"would."
+msgstr "不做任何更改，依赖标准（默认）系统缓存按正常方式运行。"
 
 #: src/docs_inc.c:1542
 msgid "Change the dialog view level to show/hide more advanced options."
-msgstr "更改 the 对话框 查看 级别 to 显示/隐藏 more advanced 选项."
+msgstr "更改对话框视图级别以显示/隐藏更多高级选项。"
 
 #: src/docs_inc.c:3316
 msgid ""
 "Changes to any of these settings must be confirmed by pressing the _[Apply "
 "configuration]_ button before taking effect."
-msgstr ""
-"更改 to any of these 设置 must be confirmed by pressing the _[应用配置]_ 按钮 before "
-"taking effect."
+msgstr "对这些设置所做的任何更改都必须通过按\"应用配置\"按钮确认后才能生效。"
 
 #: src/docs_inc.c:2465
 msgid ""
@@ -1881,7 +1788,7 @@ msgstr "频道管理"
 #: src/docs_inc.c:5663 src/docs_inc.c:5821 src/docs_inc.c:5929
 #: src/docs_inc.c:6029
 msgid "Channel name"
-msgstr "频道名"
+msgstr "频道名称"
 
 #: src/docs_inc.c:2160
 msgid "Channel name only"
@@ -1889,7 +1796,7 @@ msgstr "仅频道名称"
 
 #: src/docs_inc.c:2154
 msgid "Channel number as first key, channel name as second key"
-msgstr "频道 编号 as 第一个 key, 频道 名称 as second key"
+msgstr "频道号作为第一键，频道名称作为第二键"
 
 #: src/docs_inc.c:4923
 msgid "Channel number range"
@@ -1897,19 +1804,19 @@ msgstr "频道号范围"
 
 #: src/docs_inc.c:2192
 msgid "Channel specified by channel UUID"
-msgstr "频道 specified by 频道 UUID"
+msgstr "通过频道 UUID 指定的频道"
 
 #: src/docs_inc.c:2188
 msgid "Channel specified by channel name"
-msgstr "频道 specified by 频道 名称"
+msgstr "通过频道名称指定的频道"
 
 #: src/docs_inc.c:2184
 msgid "Channel specified by channel number"
-msgstr "频道 specified by 频道 编号"
+msgstr "通过频道号指定的频道"
 
 #: src/docs_inc.c:2196
 msgid "Channel specified by short channel ID"
-msgstr "频道 specified by short 频道 ID"
+msgstr "通过短频道 ID 指定的频道"
 
 #: src/docs_inc.c:2363
 msgid "Channel tagging management"
@@ -1927,9 +1834,7 @@ msgstr "频道"
 msgid ""
 "Channels in the drop down are ordered by name and can be filtered (by name) "
 "by typing in the box."
-msgstr ""
-"频道 in the 放置 down are ordered by 名称 and can be 已过滤 (by 名称) by typing in the "
-"box."
+msgstr "下拉菜单中的频道按名称排序，可以通过在输入框中输入（按名称）进行过滤。"
 
 #: src/docs_inc.c:3628
 msgid "Charset"
@@ -1939,33 +1844,29 @@ msgstr "字符集"
 msgid ""
 "Check all link from tvh (e.g. there are no help buttons on the 'Stream' "
 "tabs)"
-msgstr "检查 all 链接 from tvh (e.g. there are no 帮助 按钮 on the '流' 标签页)"
+msgstr "检查所有来自 tvh 的链接（例如\"流\"标签页上没有帮助按钮）"
 
 #: src/docs_inc.c:1979
 msgid ""
 "Check non-univeral (i.e. item-specific) configuration items (e.g. the IPTV "
 "mux parameters) and make sure they're documented"
-msgstr ""
-"检查 non-univeral (i.e. 项目-specific) 配置 项目 (e.g. the IPTV 复用器 parameters) and "
-"make sure they're documented"
+msgstr "检查非通用（即特定于项目）的配置项（例如 IPTV 复用器参数）并确保它们有文档说明"
 
 #: src/docs_inc.c:447
 msgid ""
 "Choose a specific DVR profile that will apply to the recording or autorec "
 "rule. You can define different profiles in the"
-msgstr ""
-"Choose a specific 录像 配置方案 that will 应用 to the 录像 or 自动录制 规则. You can define "
-"different 配置方案 in the"
+msgstr "选择一个特定的录像配置方案，该方案将应用于录像或自动录制规则。你可以在以下位置定义不同的配置方案："
 
 #: src/docs_inc.c:5099
 msgid "Choose this if your picon pack has icons that start with \"1_0_1_xxxx\"."
-msgstr "Choose this if your picon pack has 图标 that 开始 with \"1_0_1_xxxx\"."
+msgstr "如果频道图标包中的图标以\"1_0_1_xxxx\"开头，请选择此项。"
 
 #: src/docs_inc.c:5095
 msgid ""
 "Choose this if your picon pack uses the standard naming scheme, e.g "
 "\"1_0_19_xxxx\"."
-msgstr "如果频道图标包使用标准命名方案如 \"1_0_19_xxxx\"，请选择此项。"
+msgstr "如果频道图标包使用标准命名方案，例如\"1_0_19_xxxx\"，请选择此项。"
 
 #: src/docs_inc.c:1360
 msgid "Clean image (icon) cache"
@@ -1973,7 +1874,7 @@ msgstr "清理图像（图标）缓存"
 
 #: src/docs_inc.c:1362
 msgid "Clean-up the stored image files (empty cache and re-fetch icons)."
-msgstr "Clean-up the stored 图像 文件 (empty cache and re-fetch 图标)."
+msgstr "清理存储的图像文件（清空缓存并重新获取图标）。"
 
 #: src/docs_inc.c:1386
 msgid "Clear all statistics"
@@ -1981,27 +1882,25 @@ msgstr "清除所有统计"
 
 #: src/docs_inc.c:3106
 msgid "Click a type to see its properties (below)."
-msgstr "点击 a 类型 to see its properties (below)."
+msgstr "点击一个类型以查看其属性（见下方）。"
 
 #: src/docs_inc.c:774
 msgid ""
 "Click on each tuner that you want Tvheadend to use, and ensure \"Enabled\" "
 "is checked in the 'Parameters' list"
-msgstr ""
-"点击 on each 调谐器 that you want Tvheadend to use, and ensure \"已启用\" is checked"
-" in the 'Parameters' 列表"
+msgstr "点击你希望 Tvheadend 使用的调谐器，并确保\"参数\"列表中\"已启用\"已勾选"
 
 #: src/docs_inc.c:4339
 msgid "Click the desired network type (to see all available"
-msgstr "点击 the desired 网络 类型 (to see all 可用"
+msgstr "点击所需的网络类型（以查看所有可用的"
 
 #: src/docs_inc.c:217
 msgid "Click to display detailed information about the selected recording."
-msgstr "点击以 显示 detailed 信息 about the 已选中 录像."
+msgstr "点击以显示所选录像的详细信息。"
 
 #: src/docs_inc.c:2592
 msgid "Click to return the DVR help index"
-msgstr "点击以 return the 录像 帮助 索引"
+msgstr "点击返回录像帮助索引"
 
 #: src/docs_inc.c:4379
 msgid "Clicking the !"
@@ -2021,15 +1920,15 @@ msgstr "克隆"
 
 #: src/docs_inc.c:1300
 msgid "Clone the currently selected entry."
-msgstr "Clone the currently 已选中 条目."
+msgstr "克隆当前选中的条目。"
 
 #: src/docs_inc.c:1530
 msgid "Closes the dialog, discarding all unsaved changes."
-msgstr "Closes the 对话框, discarding all unsaved 更改."
+msgstr "关闭对话框，丢弃所有未保存的更改。"
 
 #: src/docs_inc.c:3078
 msgid "Code Word Client (CWC) / newcamd"
-msgstr "Code Word 客户端 (CWC) / newcamd"
+msgstr "码字客户端 (CWC) / newcamd"
 
 #: src/docs_inc.c:3728
 msgid "Codec"
@@ -2041,11 +1940,11 @@ msgstr "编解码器配置"
 
 #: src/docs_inc.c:2939
 msgid "Codec profiles and settings (for use with stream profiles)"
-msgstr "编解码器 配置方案 and 设置 (for use with 流 配置方案)"
+msgstr "编解码器配置和设置（供流配置使用）"
 
 #: src/docs_inc.c:4815
 msgid "Combine channels with the same name into a single channel."
-msgstr "Combine 频道 with the same 名称 into a single 频道."
+msgstr "将同名频道合并为单个频道。"
 
 #: src/docs_inc.c:4539
 msgid "Combined DVB OTA and XMLTV"
@@ -2079,7 +1978,7 @@ msgstr "在北美和中美通用。"
 msgid ""
 "Complete the content for 4.0 (4.2 can wait) - strip out what isn't stricly "
 "necessary now (we can come back)"
-msgstr "完成 4.0 版内容（4.2 可稍后）- 删除暂时不必要的内容（后续补充）"
+msgstr "完成 4.0 版的内容（4.2 可稍后）—— 删除当前不完全必要的内容（后续可以再补充）"
 
 #: src/docs_inc.c:1942
 msgid "Conditional Access (CA)"
@@ -2087,11 +1986,11 @@ msgstr "条件接收 (CA)"
 
 #: src/docs_inc.c:4008
 msgid "Conditional Access (CA) stream filter."
-msgstr "Conditional 访问 (条件接收) 流 过滤."
+msgstr "条件接收（CA）流过滤器。"
 
 #: src/docs_inc.c:2446
 msgid "Config parameters that affect the core Tvheadend functionality"
-msgstr "配置 parameters that affect the core Tvheadend functionality"
+msgstr "影响 Tvheadend 核心功能的配置参数"
 
 #: src/docs_inc.c:1928 src/docs_inc.c:3416
 msgid "Configuration"
@@ -2103,72 +2002,72 @@ msgstr "配置 -"
 
 #: src/docs_inc.c:1272
 msgid "Configuration -> Channel / EPG -> Channels only."
-msgstr "配置 -> 频道 / EPG -> 频道 only."
+msgstr "配置 -> 频道 / EPG -> 仅频道。"
 
 #: src/docs_inc.c:1240
 msgid ""
 "Configuration -> Channel / EPG -> Channels/Configuration -> DVB Inputs -> "
 "Services only."
-msgstr "配置 -> 频道 / EPG -> 频道/配置 -> DVB 输入 -> 服务 only."
+msgstr "配置 -> 频道 / EPG -> 频道 / 配置 -> DVB 输入 -> 仅服务。"
 
 #: src/docs_inc.c:1278
 msgid "Configuration -> Channel / EPG -> EPG Grabber only."
-msgstr "配置 -> 频道 / EPG -> EPG 抓取器 only."
+msgstr "配置 -> 频道 / EPG -> 仅 EPG 抓取器。"
 
 #: src/docs_inc.c:1284
 msgid ""
 "Configuration -> Channel / EPG -> EPG Grabber/EPG Grabber Modules only."
-msgstr "配置 -> 频道 / EPG -> EPG 抓取器/EPG 抓取器 Modules only."
+msgstr "配置 -> 频道 / EPG -> EPG 抓取器 / 仅 EPG 抓取器模块。"
 
 #: src/docs_inc.c:1308
 msgid "Configuration -> Conditional Access (CAs) only."
-msgstr "配置 -> Conditional 访问 (CAs) only."
+msgstr "配置 -> 仅条件接收 (CA)。"
 
 #: src/docs_inc.c:1302
 msgid ""
 "Configuration -> Conditional Access (CAs)/Configuration -> Stream -> "
 "Stream/Codec Profiles only."
-msgstr "配置 -> Conditional 访问 (CAs)/配置 -> 流 -> 流/编解码器 配置方案 only."
+msgstr "配置 -> 条件接收 (CA) / 配置 -> 流 -> 仅流/编解码器配置。"
 
 #: src/docs_inc.c:1224
 msgid ""
 "Configuration -> DVB Inputs -> Networks/Configuration -> Channel / EPG -> "
 "Bouquets only."
-msgstr "配置 -> DVB 输入 -> 网络/配置 -> 频道 / EPG -> 频道包 only."
+msgstr "配置 -> DVB 输入 -> 网络 / 配置 -> 频道 / EPG -> 仅频道包。"
 
 #: src/docs_inc.c:1252
 msgid "Configuration -> DVB Inputs -> Services only."
-msgstr "配置 -> DVB 输入 -> 服务 only."
+msgstr "配置 -> DVB 输入 -> 仅服务。"
 
 #: src/docs_inc.c:1384
 msgid "Configuration -> Debugging -> Configuration only."
-msgstr "配置 -> Debugging -> 配置 only."
+msgstr "配置 -> 调试 -> 仅配置。"
 
 #: src/docs_inc.c:1358
 msgid "Configuration -> General -> Base only."
-msgstr "配置 -> General -> Base only."
+msgstr "配置 -> 通用 -> 仅基础。"
 
 #: src/docs_inc.c:1364 src/docs_inc.c:1370
 msgid "Configuration -> General -> Image cache only."
-msgstr "配置 -> General -> 图像 cache only."
+msgstr "配置 -> 通用 -> 仅图像缓存。"
 
 #: src/docs_inc.c:1378
 msgid "Configuration -> General -> SAT>IP Server only."
-msgstr "配置 -> General -> SAT>IP 服务器 only."
+msgstr "配置 -> 通用 -> 仅 SAT>IP 服务器。"
 
 #: src/docs_inc.c:1290 src/docs_inc.c:1296
 msgid ""
 "Configuration -> Users -> Access entries/Configuration -> Stream -> Stream "
 "filters only."
-msgstr "配置 -> 用户 -> 访问 条目/配置 -> 流 -> 流 过滤器 only."
+msgstr "配置 -> 用户 -> 访问条目 / 配置 -> 流 -> 仅流过滤器。"
 
 #: src/docs_inc.c:4629
 msgid "Configure Tvheadend as a SAT>IP Server (Basic Guide)"
-msgstr "配置 Tvheadend as a SAT>IP 服务器 (基础 指南)"
+msgstr "将 Tvheadend 配置为 SAT>IP 服务器（基础指南）"
 
 #: src/docs_inc.c:636 src/docs_inc.c:1920
 msgid "Configuring for the First Time"
-msgstr "Configuring for the 第一个 时间"
+msgstr "首次配置"
 
 #: src/docs_inc.c:2701
 msgid ""
@@ -2177,10 +2076,9 @@ msgid ""
 "second criteria to be in between a `\\x02` and a `\\x05` restricts matches "
 "to text in the merged 'Sub-title', 'Summary' or 'Description' fields."
 msgstr ""
-"Confining the 第一个 criteria 'big bang theory' to be between a `\\x01` and a "
-"`\\x02` restricts matches to 文本 within the '标题' 字段. Confining the second "
-"criteria to be in between a `\\x02` and a `\\x05` restricts matches to 文本 in"
-" the merged 'Sub-标题', '摘要' or '描述' 字段."
+"将第一个条件\"big bang theory\"限定在 `\\x01` 和 `\\x02` "
+"之间，可将其匹配限制在\"标题\"字段的文本。将第二个条件限定在 `\\x02` 和 `\\x05` "
+"之间，可将其匹配限制在合并的\"副标题\"、\"摘要\"或\"描述\"字段的文本。"
 
 #: src/docs_inc.c:2329 src/docs_inc.c:3108
 msgid "Connection Status"
@@ -2237,11 +2135,11 @@ msgstr "目录"
 
 #: src/docs_inc.c:2288
 msgid "Copy this contents to your oscam.srvid2 and start/restart the server."
-msgstr "Copy this contents to your OSCam.srvid2 and 开始/restart the 服务器."
+msgstr "将此内容复制到你的 oscam.srvid2 中并启动/重启服务器。"
 
 #: src/docs_inc.c:5731
 msgid "Countdown/Countdown (episode without guide season/episode information)"
-msgstr "Countdown/Countdown (剧集 without 指南 季/剧集 信息)"
+msgstr "Countdown/Countdown（没有节目指南季/集信息的剧集）"
 
 #: src/docs_inc.c:1192
 msgid "Create Autorec"
@@ -2252,50 +2150,46 @@ msgid ""
 "Create a network of the appropriate type here. You can have multiple "
 "networks of the same type as necessary, e.g. to have two DVB-T networks "
 "defined, one with HD muxes, one without."
-msgstr ""
-"创建 a 网络 of the appropriate 类型 here. You can have multiple 网络 of the same 类型 "
-"as necessary, e.g. to have two DVB-T 网络 defined, one with HD 复用器, one "
-"without."
+msgstr "在此处创建适当类型的网络。你可以根据需要创建多个相同类型的网络，例如定义两个 DVB-T 网络：一个有 HD 复用器的，一个没有。"
 
 #: src/docs_inc.c:480
 msgid "Create a pseudo-series link using the autorec feature."
-msgstr "创建 a pseudo-系列 链接 using the 自动录制 feature."
+msgstr "使用自动录制功能创建伪系列链接。"
 
 #: src/docs_inc.c:4845
 msgid "Create a tag based on the channel type and link it to the channel."
-msgstr "创建 a 标签 based on the 频道 类型 and 链接 it to the 频道."
+msgstr "基于频道类型创建标签并将其链接到频道。"
 
 #: src/docs_inc.c:4841
 msgid ""
 "Create a tag with the bouquets name and link it to all channels created by "
 "the bouquet."
-msgstr "创建 a 标签 with the 频道包 名称 and 链接 it to all 频道 created by the 频道包."
+msgstr "使用频道包名称创建标签并将其链接到该频道包创建的所有频道。"
 
 #: src/docs_inc.c:4849
 msgid ""
 "Create a tag with the channel provider's name and link it to the channel."
-msgstr "创建 a 标签 with the 频道 provider's 名称 and 链接 it to the 频道."
+msgstr "使用频道提供商的名称创建标签并将其链接到频道。"
 
 #: src/docs_inc.c:4853
 msgid ""
 "Create a tag with the network name and link it to all channels created by "
 "the bouquet."
-msgstr "创建 a 标签 with the 网络 名称 and 链接 it to all 频道 created by the 频道包."
+msgstr "使用网络名称创建标签并将其链接到频道包创建的所有频道。"
 
 #: src/docs_inc.c:1212
 msgid ""
 "Create an Auto-record entry matching the current program query. For events "
 "that have series-link information available the"
-msgstr ""
-"创建 an Auto-录制 条目 matching the 当前 节目 query. For 事件 that have 系列-链接 信息 可用 the"
+msgstr "创建与当前节目查询匹配的自动录制条目。对于有系列链接信息可用的事件，"
 
 #: src/docs_inc.c:750
 msgid "Create and link a network tag to the mapped channels."
-msgstr "创建 and 链接 a 网络 标签 to the mapped 频道."
+msgstr "创建网络标签并将其链接到已映射的频道。"
 
 #: src/docs_inc.c:746
 msgid "Create and link a provider tag to the mapped channels."
-msgstr "创建 and 链接 a provider 标签 to the mapped 频道."
+msgstr "创建提供商标签并将其链接到已映射的频道。"
 
 #: src/docs_inc.c:4839
 msgid "Create bouquet tag"
@@ -2319,7 +2213,7 @@ msgstr "创建供应商标签"
 
 #: src/docs_inc.c:1004
 msgid "Create rule sets manually or based on EPG queries."
-msgstr "创建 规则 sets manually or based on EPG queries."
+msgstr "手动创建规则集或基于 EPG 查询创建。"
 
 #: src/docs_inc.c:4843
 msgid "Create type-based tags"
@@ -2327,7 +2221,7 @@ msgstr "创建基于类型的标签"
 
 #: src/docs_inc.c:1194
 msgid "Creates an auto-recording rule based on the current filter criteria."
-msgstr "Creates an 自动录制 规则 based on the 当前 过滤 criteria."
+msgstr "根据当前过滤条件创建自动录制规则。"
 
 #: src/docs_inc.c:2669
 msgid "Credits"
@@ -2335,7 +2229,7 @@ msgstr "制作人员"
 
 #: src/docs_inc.c:3424
 msgid "Cron"
-msgstr "计划任务"
+msgstr "Cron"
 
 #: src/docs_inc.c:5867
 msgid "Current affairs"
@@ -2345,9 +2239,7 @@ msgstr "时事"
 msgid ""
 "Currently only a limited number of configuration files are shipped and these"
 " are located in the epggrab/eit/scrape directory."
-msgstr ""
-"Currently only a limited 编号 of 配置 文件 are shipped and these are located in "
-"the epggrab/EIT/scrape directory."
+msgstr "目前仅随附了有限数量的配置文件，这些文件位于 epggrab/eit/scrape 目录中。"
 
 #: src/docs_inc.c:2895
 msgid "Currently-active streams"
@@ -2379,7 +2271,7 @@ msgstr "DVB CSA（解扰）表"
 
 #: src/docs_inc.c:5345 src/docs_inc.c:5409
 msgid "DVB EIT is broadcast in two forms, distinguished by `table_id`:"
-msgstr "DVB EIT is 广播 in two forms, distinguished by `table_id`:"
+msgstr "DVB EIT 以两种形式广播，通过 `table_id` 区分："
 
 #: src/docs_inc.c:3484
 msgid "DVB EPG Tables"
@@ -2439,11 +2331,11 @@ msgstr "录像配置"
 
 #: src/docs_inc.c:4945
 msgid "DVR configuration profiles"
-msgstr "DVR "
+msgstr "录像配置方案"
 
 #: src/docs_inc.c:4943
 msgid "DVR configurations"
-msgstr "DVR 设置"
+msgstr "录像配置"
 
 #: src/docs_inc.c:4781 src/docs_inc.c:6145
 msgid "DVR profile"
@@ -2451,7 +2343,7 @@ msgstr "录像配置"
 
 #: src/docs_inc.c:2845
 msgid "DVR profiles and related settings"
-msgstr "录像 配置方案 and related 设置"
+msgstr "录像配置和相关设置"
 
 #: src/docs_inc.c:13
 msgid "Debug options"
@@ -2467,7 +2359,7 @@ msgstr "默认"
 
 #: src/docs_inc.c:5631
 msgid "Default format (title, unique number, extension)"
-msgstr "默认 格式 (标题, unique 编号, extension)"
+msgstr "默认格式（标题、唯一编号、扩展名）"
 
 #: src/docs_inc.c:5001
 msgid "Default tab"
@@ -2475,7 +2367,7 @@ msgstr "默认标签页"
 
 #: src/docs_inc.c:5003
 msgid "Default tab on the Web interface"
-msgstr "默认 标签页 on the Web 界面"
+msgstr "Web 界面的默认标签页"
 
 #: src/docs_inc.c:5359
 msgid "Defer to the global"
@@ -2487,7 +2379,7 @@ msgstr "删除"
 
 #: src/docs_inc.c:1174 src/docs_inc.c:2422
 msgid "Delete the selected entry/entries."
-msgstr "删除 the 已选中 条目/条目."
+msgstr "删除选中的条目。"
 
 #: src/docs_inc.c:1172
 msgid "Delete/Remove"
@@ -2500,9 +2392,8 @@ msgid ""
 "be able to change `/etc/default/tvheadend` to add additional command-line "
 "parameters."
 msgstr ""
-"Depending on your distribution, the 默认 command-line 配置 is usually stored in "
-"the `/etc/sysconfig` tree or an init script. You may also be able to 更改 "
-"`/etc/默认/tvheadend` to 添加 additional command-line parameters."
+"根据你的发行版，默认命令行配置通常存储在 `/etc/sysconfig` 树或 init 脚本中。你也可以修改 "
+"`/etc/default/tvheadend` 来添加额外的命令行参数。"
 
 #: src/docs_inc.c:3576
 msgid "Descrambler"
@@ -2552,17 +2443,14 @@ msgid ""
 "Detaching channels from a bouquet will prevent any further updates provided "
 "by the bouquet, which unfortunately means you will have to manually re-map "
 "when changes to services occur (e.g, mux moves, ceased broadcasting etc)."
-msgstr ""
-"Detaching 频道 from a 频道包 will prevent any further updates provided by the "
-"频道包, which unfortunately means you will have to manually re-map when 更改 to "
-"服务 occur (e.g, 复用器 moves, ceased broadcasting etc)."
+msgstr "从频道包中分离频道将阻止频道包提供的任何后续更新，但不幸的是，这意味着当服务发生更改（例如复用器迁移、停止广播等）时，你需要手动重新映射。"
 
 #: src/docs_inc.c:78 src/docs_inc.c:114 src/docs_inc.c:2746
 #: src/docs_inc.c:4118 src/docs_inc.c:4138 src/docs_inc.c:4158
 #: src/docs_inc.c:4178 src/docs_inc.c:4563 src/docs_inc.c:4583
 #: src/docs_inc.c:4603
 msgid "Device Types and Configuration"
-msgstr "设备 类型 and 配置"
+msgstr "设备类型和配置"
 
 #: src/docs_inc.c:2560
 msgid "DiSEqC Switch"
@@ -2583,23 +2471,23 @@ msgstr "节目录制"
 
 #: src/docs_inc.c:1352
 msgid "Digital Video Recorder -> Failed Recordings only."
-msgstr "Digital 视频 Recorder -> Failed 录像 only."
+msgstr "数字录像机 -> 仅失败录像。"
 
 #: src/docs_inc.c:1342
 msgid "Digital Video Recorder -> Finished Recordings only."
-msgstr "Digital 视频 Recorder -> Finished 录像 only."
+msgstr "数字录像机 -> 仅已完成录像。"
 
 #: src/docs_inc.c:1326 src/docs_inc.c:1332
 msgid "Digital Video Recorder -> Finished/Failed/Removed Recordings only."
-msgstr "Digital 视频 Recorder -> Finished/Failed/已移除 录像 only."
+msgstr "数字录像机 -> 仅已完成/失败/已移除的录像。"
 
 #: src/docs_inc.c:1314 src/docs_inc.c:1320
 msgid "Digital Video Recorder -> Upcoming / Current Recordings only."
-msgstr "Digital 视频 Recorder -> Upcoming / 当前 录像 only."
+msgstr "数字录像机 -> 仅即将到来/当前的录像。"
 
 #: src/docs_inc.c:454 src/docs_inc.c:2843
 msgid "Digital Video Recorder Profiles"
-msgstr "Digital 视频 Recorder 配置方案"
+msgstr "数字录像机配置方案"
 
 #: src/docs_inc.c:5545
 msgid "Disable"
@@ -2607,7 +2495,7 @@ msgstr "禁用"
 
 #: src/docs_inc.c:6207
 msgid "Disable automatic service checking."
-msgstr "禁用 自动 服务 checking."
+msgstr "禁用自动服务检查。"
 
 #: src/docs_inc.c:5547
 msgid "Disable mux discovery."
@@ -2623,7 +2511,7 @@ msgstr "发现卫星"
 
 #: src/docs_inc.c:5555
 msgid "Discover new muxes and changes to existing muxes."
-msgstr "Discover 新建 复用器 and 更改 to 现有 复用器."
+msgstr "发现新复用器和现有复用器的变更。"
 
 #: src/docs_inc.c:5551
 msgid "Discover new muxes only."
@@ -2631,7 +2519,7 @@ msgstr "仅发现新复用器。"
 
 #: src/docs_inc.c:96
 msgid "Discovered service(s) management"
-msgstr "Discovered 服务(s) management"
+msgstr "发现的服务管理"
 
 #: src/docs_inc.c:3668
 msgid "DiseqC"
@@ -2659,23 +2547,23 @@ msgstr "显示帮助页面。"
 
 #: src/docs_inc.c:1444 src/docs_inc.c:6285
 msgid "Display the more advanced tabs/items."
-msgstr "显示 the more advanced 标签页/项目."
+msgstr "显示更高级的标签页/项目。"
 
 #: src/docs_inc.c:1440 src/docs_inc.c:6281
 msgid "Display the most commonly used tabs/items."
-msgstr "显示 the most commonly used 标签页/项目."
+msgstr "显示最常用的标签页/项目。"
 
 #: src/docs_inc.c:1412
 msgid "Display/Jump to the next associated item, channel or EPG event."
-msgstr "显示/Jump to the 下一个 associated 项目, 频道 or EPG 事件."
+msgstr "显示/跳转到下一个关联的项目、频道或 EPG 事件。"
 
 #: src/docs_inc.c:1418
 msgid "Display/Jump to the previous associated item, channel or EPG event."
-msgstr "显示/Jump to the 上一个 associated 项目, 频道 or EPG 事件."
+msgstr "显示/跳转到上一个关联的项目、频道或 EPG 事件。"
 
 #: src/docs_inc.c:1456
 msgid "Displaying and Manipulating Columns"
-msgstr "显示与操作列"
+msgstr "显示和操作列"
 
 #: src/docs_inc.c:566
 msgid "Dolby Digital (AC3)"
@@ -2683,7 +2571,7 @@ msgstr "Dolby Digital (AC3)"
 
 #: src/docs_inc.c:3898
 msgid "Don't forget to set the _EIT time offset_ for your network(s)!"
-msgstr "Don't forget to set the _EIT 时间 offset_ for your 网络(s)!"
+msgstr "别忘了为你的网络设置 EIT 时间偏移！"
 
 #: src/docs_inc.c:4877
 msgid "Don't keep"
@@ -2691,7 +2579,7 @@ msgstr "不保持"
 
 #: src/docs_inc.c:6163
 msgid "Don't use running state (EITp/f) detection."
-msgstr "不使用运行状态 (EITp/f) 检测。"
+msgstr "不使用运行状态（EITp/f）检测。"
 
 #: src/docs_inc.c:6375 src/docs_inc.c:6403
 msgid "Donate to Tvheadend"
@@ -2708,14 +2596,12 @@ msgid ""
 "appropriate player, otherwise you will need to manually open the playlist to"
 " start watching (normally a double-click on the downloaded file)."
 msgstr ""
-"下载 a playlist 文件 (XSPF or M3U depending on your startup 选项); if your 系统 is "
-"configured for it, this will automatically launch an appropriate player, "
-"otherwise you will need to manually open the playlist to 开始 watching "
-"(normally a double-点击 on the downloaded 文件)."
+"下载播放列表文件（根据启动选项为 XSPF 或 "
+"M3U）；如果系统已配置，这将自动启动适当的播放器，否则你需要手动打开播放列表进行观看（通常是双击下载的文件）。"
 
 #: src/docs_inc.c:1324
 msgid "Download the selected recording."
-msgstr "下载 the 已选中 录像."
+msgstr "下载所选录像。"
 
 #: src/docs_inc.c:1392
 msgid "Drop (displayed) connections"
@@ -2723,16 +2609,14 @@ msgstr "断开（已显示）连接"
 
 #: src/docs_inc.c:1394
 msgid "Drop the currently-shown active connections."
-msgstr "放置 the currently-shown 活动 连接."
+msgstr "断开当前显示的活动连接。"
 
 #: src/docs_inc.c:722
 msgid ""
 "During scanning, the number of muxes and services shown below should "
 "increase. If this doesn't happen, check the connection(s) to your "
 "device(s).."
-msgstr ""
-"During 扫描, the 编号 of 复用器 and 服务 shown below should increase. If this doesn't"
-" happen, 检查 the 连接(s) to your 设备(s).."
+msgstr "在扫描过程中，下方显示的复用器和服务数量应该会增加。如果没有增加，请检查与设备的连接。"
 
 #: src/docs_inc.c:5361
 msgid "EIT processing (default)"
@@ -2743,9 +2627,7 @@ msgid ""
 "EITp/f (Event Information Table present/following) is broadcast alongside "
 "EPG data, it allows broadcasters to tell DVRs/STBs when a program starts, "
 "pauses or finishes."
-msgstr ""
-"EITp/f (事件 信息 表格 present/following) is 广播 alongside EPG 数据, it allows "
-"broadcasters to tell DVRs/STBs when a 节目 starts, pauses or finishes."
+msgstr "EITp/f（当前/跟随事件信息表）与 EPG 数据一起广播，它允许广播商告知录像机/机顶盒节目何时开始、暂停或结束。"
 
 #: src/docs_inc.c:4731
 msgid "EMPTY"
@@ -2762,7 +2644,7 @@ msgstr "EPG 详情 2"
 #: src/docs_inc.c:2373 src/docs_inc.c:2827 src/docs_inc.c:3624
 #: src/docs_inc.c:4501
 msgid "EPG Grabber"
-msgstr "EPG 采集器"
+msgstr "EPG 抓取器"
 
 #: src/docs_inc.c:2369
 msgid "EPG Grabber Channels"
@@ -2774,7 +2656,7 @@ msgstr "EPG 抓取器模块"
 
 #: src/docs_inc.c:2371
 msgid "EPG data sources used by channels"
-msgstr "EPG 数据 sources used by 频道"
+msgstr "频道使用的 EPG 数据源"
 
 #: src/docs_inc.c:2375 src/docs_inc.c:2829
 msgid "EPG grabber configuration"
@@ -2798,19 +2680,19 @@ msgstr "EXCLUSIVE"
 
 #: src/docs_inc.c:1655
 msgid "Each numbered (ordered) list will restart from 1."
-msgstr "Each numbered (ordered) 列表 will restart from 1."
+msgstr "每个编号（有序）列表将从 1 重新开始。"
 
 #: src/docs_inc.c:4020
 msgid "Each rule is executed in sequence (as displayed in the grid)."
-msgstr "Each 规则 is executed in sequence (as displayed in the 网格)."
+msgstr "每条规则按顺序执行（如网格中所示）。"
 
 #: src/docs_inc.c:1134
 msgid "Each tab is then laid out with a"
-msgstr "Each 标签页 is then laid out with a"
+msgstr "每个标签页随后以如下方式布局："
 
 #: src/docs_inc.c:1024
 msgid "Easy to Configure and Administer"
-msgstr "Easy to 配置 and Administer"
+msgstr "易于配置和管理"
 
 #: src/docs_inc.c:1176 src/docs_inc.c:2424
 msgid "Edit"
@@ -2834,11 +2716,11 @@ msgstr "电子节目指南"
 
 #: src/docs_inc.c:1184 src/docs_inc.c:1190 src/docs_inc.c:1196
 msgid "Electronic Program Guide only."
-msgstr "Electronic 节目 指南 only."
+msgstr "仅电子节目指南。"
 
 #: src/docs_inc.c:1202 src/docs_inc.c:1208 src/docs_inc.c:1218
 msgid "Electronic Program Guide/Broadcast details only."
-msgstr "Electronic 节目 指南/广播 详情 only."
+msgstr "电子节目指南 / 仅广播详情。"
 
 #: src/docs_inc.c:3616
 msgid "Electronic Programme Guide"
@@ -2856,7 +2738,7 @@ msgstr "基本流过滤"
 msgid ""
 "Elementary streams not marked IGNORE, USE or EXCLUSIVE will not be filtered "
 "out."
-msgstr "Elementary 流 not marked 忽略, USE or EXCLUSIVE will not be 已过滤 out."
+msgstr "未标记为 IGNORE、USE 或 EXCLUSIVE 的基本流不会被过滤掉。"
 
 #: src/docs_inc.c:4749
 msgid "Enable"
@@ -2864,15 +2746,15 @@ msgstr "启用"
 
 #: src/docs_inc.c:6203
 msgid "Enable automatic service checking."
-msgstr "启用 自动 服务 checking."
+msgstr "启用自动服务检查。"
 
 #: src/docs_inc.c:4751
 msgid "Enable persistent authentication."
-msgstr "启用 persistent authentication."
+msgstr "启用持久认证。"
 
 #: src/docs_inc.c:6159
 msgid "Enable running state (EITp/f) detection."
-msgstr "启用 running state (EITp/f) detection."
+msgstr "启用运行状态（EITp/f）检测。"
 
 #: src/docs_inc.c:6157
 msgid "Enabled"
@@ -2896,16 +2778,14 @@ msgid ""
 "incorrect results. A famous example being the detective tv series \"Castle\""
 " is often incorrectly retrieved as a much earlier tv show about castles."
 msgstr ""
-"Even with correct 指南 信息, external scrapers can retrieve incorrect results. A"
-" famous example being the detective 电视 系列 \"Castle\" is often incorrectly "
-"retrieved as a much earlier 电视 显示 about castles."
+"即使有正确的节目指南信息，外部抓取器也可能获取到错误的结果。一个著名的例子是侦探电视剧《灵书妙探》(Castle) "
+"经常被错误地抓取为一部更早的关于城堡的电视节目。"
 
 #: src/docs_inc.c:5307
 msgid ""
 "Even with these details, fanart grabbers can sometimes return incorrect "
 "results."
-msgstr ""
-"Even with these 详情, fanart 抓取器 can sometimes return incorrect results."
+msgstr "即使有了这些详细信息，粉丝艺术抓取器有时仍可能返回错误的结果。"
 
 #: src/docs_inc.c:264 src/docs_inc.c:422
 msgid "Event Details and Recording"
@@ -2949,11 +2829,11 @@ msgstr "示例用途"
 
 #: src/docs_inc.c:629
 msgid "Example for apache (--http_root=/my/tvh/server):"
-msgstr "Example for apache (--http_root=/my/tvh/服务器):"
+msgstr "Apache 示例 (--http_root=/my/tvh/server)："
 
 #: src/docs_inc.c:627
 msgid "Example for nginx (--http_root /my/tvh/server):"
-msgstr "Example for nginx (--http_root /my/tvh/服务器):"
+msgstr "Nginx 示例 (--http_root /my/tvh/server)："
 
 #: src/docs_inc.c:5811 src/docs_inc.c:5919 src/docs_inc.c:6019
 msgid "Example value"
@@ -2965,12 +2845,12 @@ msgstr "示例："
 
 #: src/docs_inc.c:5075
 msgid "Example: `file:///home/hts/picons`"
-msgstr "示例： `文件:///home/hts/picons`"
+msgstr "示例：`file:///home/hts/picons`"
 
 #: src/docs_inc.c:5035
 #, c-format
 msgid "Example: `file:///tmp/icons/%C.png` or `http://example.com/%c.png`"
-msgstr "示例： `文件:///tmp/图标/%C.png` or `HTTP://example.com/%c.png`"
+msgstr "示例：`file:///tmp/icons/%C.png` 或 `http://example.com/%c.png`"
 
 #: src/docs_inc.c:5715
 msgid "Examples are:"
@@ -2995,8 +2875,7 @@ msgstr "排除频道标签"
 #: src/docs_inc.c:2011
 msgid ""
 "Expand a bit on command-line options and give some examples of common usage"
-msgstr ""
-"Expand a bit on command-line 选项 and give some examples of common usage"
+msgstr "展开命令行选项的描述，并给出一些常见用法示例"
 
 #: src/docs_inc.c:1446 src/docs_inc.c:6287 src/docs_inc.c:6309
 msgid "Expert"
@@ -3021,7 +2900,7 @@ msgstr "额外参数"
 
 #: src/docs_inc.c:595
 msgid "FAQ: Frequently-asked Questions"
-msgstr "FAQ：常见问题"
+msgstr "FAQ：常见问题解答"
 
 #: src/docs_inc.c:4457
 msgid "FFMPEG"
@@ -3036,9 +2915,7 @@ msgid ""
 "Fanart grabbers only work correctly if your scrapper provides high quality "
 "information. In particular, they require season and episode details for "
 "series, and year details for movies."
-msgstr ""
-"Fanart 抓取器 only work correctly if your scrapper provides high 质量 信息. In "
-"particular, they require 季 and 剧集 详情 for 系列, and year 详情 for movies."
+msgstr "粉丝艺术抓取器只有在抓取器提供高质量信息时才能正常工作。特别是，电视剧需要季和剧集详细信息，电影需要年份详细信息。"
 
 #: src/docs_inc.c:3504
 msgid "Fastscan DVB"
@@ -3056,9 +2933,7 @@ msgstr "字段"
 msgid ""
 "Field prefixes are always provided in the same sequence and will be present "
 "even if the field is empty."
-msgstr ""
-"字段 prefixes are always provided in the same sequence and will be present "
-"even if the 字段 is empty."
+msgstr "字段前缀始终以相同顺序提供，即使字段为空也会出现。"
 
 #: src/docs_inc.c:2681
 msgid "Field separator (Tab)"
@@ -3070,7 +2945,7 @@ msgstr "文件缺失"
 
 #: src/docs_inc.c:5695
 msgid "Filename extension (from the active stream muxer"
-msgstr "Filename extension (from the 活动 流 复用器"
+msgstr "文件扩展名（来自当前活动的流复用器"
 
 #: src/docs_inc.c:3380
 msgid "Filesystem monitor"
@@ -3090,7 +2965,7 @@ msgstr "过滤范围"
 
 #: src/docs_inc.c:300
 msgid "Filter between showing all events ("
-msgstr "过滤 between showing all 事件 ("
+msgstr "在显示所有事件之间过滤（"
 
 #: src/docs_inc.c:316
 msgid "Filter channel..."
@@ -3145,10 +3020,7 @@ msgid ""
 "For $t and $s format strings, you may also limit the number of output "
 "characters using $99-t format string where 99 means the limit. As you can "
 "see, the delimiter can be also applied."
-msgstr ""
-"For $t and $s 格式 strings, you may also limit the 编号 of 输出 characters using "
-"$99-t 格式 字符串 where 99 means the limit. As you can see, the delimiter can be "
-"also applied."
+msgstr "对于 $t 和 $s 格式字符串，你还可以使用 $99-t 格式字符串（其中 99 表示限制）限制输出字符数。如你所见，分隔符同样适用。"
 
 #: src/docs_inc.c:3084
 msgid "For CCCam connections."
@@ -3156,19 +3028,19 @@ msgstr "用于 CCCam 连接。"
 
 #: src/docs_inc.c:3100
 msgid "For Constant Code Word connections (AES/ECB variant)"
-msgstr "For Constant Code Word 连接 (AES/ECB variant)"
+msgstr "用于固定码字连接（AES/ECB 变体）"
 
 #: src/docs_inc.c:3104
 msgid "For Constant Code Word connections (AES128/ECB variant)"
-msgstr "For Constant Code Word 连接 (AES128/ECB variant)"
+msgstr "用于固定码字连接（AES128/ECB 变体）"
 
 #: src/docs_inc.c:3092
 msgid "For Constant Code Word connections (CSA/CBC variant)"
-msgstr "For Constant Code Word 连接 (CSA/CBC variant)"
+msgstr "用于固定码字连接（CSA/CBC 变体）"
 
 #: src/docs_inc.c:3096
 msgid "For Constant Code Word connections (DES/NCB variant)"
-msgstr "For Constant Code Word 连接 (DES/NCB variant)"
+msgstr "用于固定码字连接（DES/NCB 变体）"
 
 #: src/docs_inc.c:3088
 msgid "For DVBAPI connections"
@@ -3179,24 +3051,19 @@ msgid ""
 "For a password to apply to an account, the username entered must match a "
 "username in the _Access Entries_ tab and only password entries that are "
 "enabled will apply."
-msgstr ""
-"For a 密码 to 应用 to an account, the username entered must match a username in "
-"the _Access Entries_ 标签页 and only 密码 条目 that are 已启用 will 应用."
+msgstr "要使密码对账户生效，输入的用户名必须与 _访问条目_ 标签页中的用户名匹配，且只有已启用的密码条目才会生效。"
 
 #: src/docs_inc.c:704
 msgid ""
 "For devices with multiple tuners (e.g. either cable or terrestrial), be "
 "aware that many only allow you to use one tuner at a time. Selecting more "
 "than one tuner per device can thus result in unexpected behavior."
-msgstr ""
-"For 设备 with multiple 调谐器 (e.g. either 有线 or 地面), be aware that many only 允许 "
-"you to use one 调谐器 at a 时间. Selecting more than one 调谐器 per 设备 can thus "
-"result in unexpected behavior."
+msgstr "对于具有多个调谐器的设备（例如同时支持有线和地面），请注意许多设备每次只允许使用一个调谐器。因此，每个设备选择多个调谐器可能导致意外行为。"
 
 #: src/docs_inc.c:1609
 msgid ""
 "For example to include the passwd items you'd enter something like this:"
-msgstr "For example to 包含 the passwd 项目 you'd enter something like this:"
+msgstr "例如，要包含密码项目，你需要输入类似如下内容："
 
 #: src/docs_inc.c:5185
 msgid ""
@@ -3205,9 +3072,8 @@ msgid ""
 " seconds (user configurable)). Setting the padding per channel will override"
 " the padding set in the"
 msgstr ""
-"For example, if a 节目 is to 开始 at 13:00 and you set a padding of 5 minutes, "
-"it will 开始 录像 at 12:54:30 (including a warm-up 时间 of 30 seconds (用户 "
-"configurable)). 设置 the padding per 频道 will override the padding set in the"
+"例如，如果节目在 13:00 开始，你设置了 5 分钟的填充时间，则将在 12:54:30 开始录制（包含 30 "
+"秒预热时间，可由用户配置）。按频道设置填充将覆盖以下位置中设置的填充："
 
 #: src/docs_inc.c:5759
 msgid "For example, with S02-E06:"
@@ -3221,17 +3087,15 @@ msgstr "例如.."
 msgid ""
 "For information on the requirements for Tvheadend and installation "
 "instructions for various platforms, please see"
-msgstr ""
-"For 信息 on the requirements for Tvheadend and installation instructions for "
-"various platforms, please see"
+msgstr "有关 Tvheadend 系统要求和各平台安装说明，请参阅"
 
 #: src/docs_inc.c:38
 msgid "For more information regarding the project, please see:"
-msgstr "更多信息rmation regarding the project, please see:"
+msgstr "有关此项目的更多信息，请参阅："
 
 #: src/docs_inc.c:2580
 msgid "For more information, click on a type."
-msgstr "更多信息rmation, 点击 on a 类型."
+msgstr "如需更多信息，请点击某个类型。"
 
 #: src/docs_inc.c:3080
 msgid "For newcamd or CWC."
@@ -3241,34 +3105,29 @@ msgstr "用于 newcamd 或 CWC。"
 msgid ""
 "For the purposes of the SeriesLink and EpisodeLink, the root node is "
 "considered to be `programme`."
-msgstr ""
-"For the purposes of the SeriesLink and EpisodeLink, the root node is "
-"considered to be `节目`."
+msgstr "对于 SeriesLink 和 EpisodeLink，根节点为 `programme`。"
 
 #: src/docs_inc.c:3932
 msgid ""
 "For the purposes of the category code, the root node is considered to be the"
 " standard `category` node within `programme`."
-msgstr ""
-"For the purposes of the category code, the root node is considered to be the"
-" standard `category` node within `节目`."
+msgstr "对于分类代码，根节点为 `programme` 内的标准 `category` 节点。"
 
 #: src/docs_inc.c:3942
 msgid ""
 "For the purposes of the unique ID, the root node is considered to be "
 "`programme`."
-msgstr ""
-"For the purposes of the unique ID, the root node is considered to be `节目`."
+msgstr "对于唯一 ID，根节点为 `programme`。"
 
 #: src/docs_inc.c:3076
 msgid "For use with devices that have a CAM module."
-msgstr "For use with 设备 that have a CAM module."
+msgstr "用于具有 CAM 模块的设备。"
 
 #: src/docs_inc.c:4032
 msgid ""
 "For visual verification of filtering, there is the service info dialog in "
 "the"
-msgstr "For visual verification of filtering, there is the 服务 信息 对话框 in the"
+msgstr "要对过滤进行可视化验证，可以使用以下位置的服务信息对话框："
 
 #: src/docs_inc.c:1220
 msgid "Force Scan"
@@ -3280,8 +3139,7 @@ msgstr "强制扫描"
 
 #: src/docs_inc.c:1276
 msgid "Force an immediate tune to the OTA EPG mux(es) to request EPG updates."
-msgstr ""
-"Force an immediate tune to the OTA EPG 复用器(es) to request EPG updates."
+msgstr "强制立即调谐到空中 EPG 复用器以请求 EPG 更新。"
 
 #: src/docs_inc.c:2774
 msgid "Force scanning a network"
@@ -3295,14 +3153,12 @@ msgid ""
 "factors, such as how many tuners you have available and the number of muxes "
 "on each."
 msgstr ""
-"Force 扫描 can take some 时间. You may continue to use Tvheadend while a 扫描 is "
-"in progress, but doing so will increase the 时间 needed for it to complete. 注意"
-" that the 时间 必需 can vary depending on a 编号 of factors, such as how many 调谐器 "
-"you have 可用 and the 编号 of 复用器 on each."
+"强制扫描可能需要一些时间。扫描进行期间你可以继续使用 "
+"Tvheadend，但这样做会增加完成扫描所需的时间。请注意，所需时间取决于多种因素，例如你有多少可用的调谐器以及每个调谐器上的复用器数量。"
 
 #: src/docs_inc.c:1222
 msgid "Forces a scan on the selected network(s) or bouquet(s)."
-msgstr "Forces a 扫描 on the 已选中 网络(s) or 频道包(s)."
+msgstr "对所选网络或频道包强制执行扫描。"
 
 #: src/docs_inc.c:5625 src/docs_inc.c:5807 src/docs_inc.c:5915
 #: src/docs_inc.c:6015
@@ -3315,17 +3171,14 @@ msgstr "格式化结果"
 
 #: src/docs_inc.c:5499
 msgid "Frequently changing path component(s) in URL"
-msgstr "Frequently changing 路径 component(s) in URL"
+msgstr "URL 中频繁变化的路径组件"
 
 #: src/docs_inc.c:5449
 msgid ""
 "Fresh installations default to __Either__ , which preserves the historical "
 "behaviour. Switch to __Adaptive__ to opt into the actual-TS-precedence "
 "heuristic without configuring services individually."
-msgstr ""
-"Fresh installations 默认 to __Either__ , which preserves the historical "
-"behaviour. Switch to __Adaptive__ to opt into the actual-TS-precedence "
-"heuristic without configuring 服务 individually."
+msgstr "全新安装默认使用__任选__，它保留了历史行为。切换到__自适应__可启用实际传输流优先的启发式策略，无需逐个配置服务。"
 
 #: src/docs_inc.c:2484
 msgid "Frontends"
@@ -7070,11 +6923,11 @@ msgstr ""
 
 #: src/docs_inc.c:3118
 msgid "The client is connected."
-msgstr "The 客户端 is connected."
+msgstr "客户端已连接。"
 
 #: src/docs_inc.c:3126
 msgid "The client is disabled."
-msgstr "The 客户端 is 已禁用."
+msgstr "客户端已禁用。"
 
 #: src/docs_inc.c:946
 msgid "The code is hosted at"
@@ -7141,9 +6994,7 @@ msgid ""
 "The fastscan bouquets are pre-defined in the configuration tree. These "
 "bouquets must be manually enabled to let Tvheadend to subscribe and listen "
 "to the specific MPEG-TS PIDs."
-msgstr ""
-"The fastscan 频道包 are pre-defined in the 配置 tree. These 频道包 must be manually "
-"已启用 to let Tvheadend to subscribe and listen to the specific MPEG-TS PID."
+msgstr "快速扫描频道包在配置树中预定义。必须手动启用这些频道包，Tvheadend 才能订阅并监听特定的 MPEG-TS PID。"
 
 #: src/docs_inc.c:314
 msgid ""
@@ -7450,7 +7301,7 @@ msgstr ""
 
 #: src/docs_inc.c:221
 msgid "The program failed to record."
-msgstr "The 节目 failed to 录制."
+msgstr "节目录制失败。"
 
 #: src/docs_inc.c:209
 msgid "The program is scheduled (upcoming)."
@@ -7533,7 +7384,7 @@ msgstr "The 订阅 is idling, waiting for the subscriber."
 
 #: src/docs_inc.c:5703
 msgid "The time in 24-hour notation"
-msgstr "The 时间 in 24-hour notation"
+msgstr "24 小时制时间"
 
 #: src/docs_inc.c:5255
 msgid "The time in 24h HH:MM format (e.g. 19:45)."
@@ -7610,7 +7461,7 @@ msgstr ""
 
 #: src/docs_inc.c:3122
 msgid "There was an error."
-msgstr "发生了一个错误。"
+msgstr "发生错误。"
 
 #: src/docs_inc.c:1973
 msgid "These are not part of the final product, obviously!"
@@ -10544,7 +10395,7 @@ msgstr ""
 #: src/docs_inc.c:4036
 msgid ""
 "tab. This dialog shows the received PIDs and filtered PIDs in one window."
-msgstr "标签页. This 对话框 shows the received PID and 已过滤 PID in one 窗口."
+msgstr "标签页。此对话框在一个窗口中显示已接收的 PID 和已过滤的 PID。"
 
 #: src/docs_inc.c:2116 src/docs_inc.c:2164 src/docs_inc.c:2170
 #: src/docs_inc.c:2258
