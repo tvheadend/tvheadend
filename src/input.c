@@ -140,7 +140,8 @@ tvh_input_stream_create_msg
   htsmsg_add_s32(m, "snr", st->stats.snr);
   htsmsg_add_u32(m, "snr_scale", st->stats.snr_scale);
   htsmsg_add_u32(m, "unc", st->stats.unc);
-  htsmsg_add_u32(m, "bps", st->stats.bps);
+  htsmsg_add_u32(m, "bps", atomic_get(&st->stats.bytes_avg) * 8);
+  htsmsg_add_s64(m, "total", atomic_get_u64(&st->stats.total_bytes));
   htsmsg_add_u32(m, "te", st->stats.te);
   htsmsg_add_u32(m, "cc", st->stats.cc);
   htsmsg_add_u32(m, "ec_bit", st->stats.ec_bit);
