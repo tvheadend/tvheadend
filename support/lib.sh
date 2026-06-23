@@ -78,6 +78,21 @@ $(grep ^CONFIG_ ${ROOTDIR}/.config.mk)
 }
 
 #
+# Raw public-link download (token-free): fetch a single file from the
+# pcloud public link (PCLOUD_HASHDIR) by its path into a local file.
+# Used directly by CI to probe-and-fetch a cached artifact (a failed
+# fetch simply means "not cached"), and by download() below so the
+# publink call lives in one place.
+#
+function raw_download
+{
+  REMOTE="$1"
+  OUT="$2"
+  ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${REMOTE}" "${OUT}" || \
+    python3 ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${REMOTE}" "${OUT}"
+}
+
+#
 # Attempt to download
 #
 function download
@@ -99,7 +114,7 @@ function download
   N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
 
   echo "DOWNLOAD        ${N} / ${PCLOUD_HASHDIR}"
-  ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp" || python3 ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp"
+  raw_download "${N}" "${P}.tmp"
 
   R=$?
 
@@ -187,6 +202,9 @@ case "${C}" in
     ;;
   download)
     download $*
+    ;;
+  raw_download)
+    raw_download $*
     ;;
   unpack)
     unpack $*
