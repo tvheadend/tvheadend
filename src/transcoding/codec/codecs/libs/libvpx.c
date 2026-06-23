@@ -46,6 +46,7 @@ tvh_codec_profile_libvpx_open(tvh_codec_profile_libvpx_t *self,
     AV_DICT_SET_INT(LST_LIBVPX, opts, "cpu-used", self->cpu_used, 0);
     AV_DICT_SET_INT(LST_LIBVPX, opts, "tune", self->tune, 0);
     AV_DICT_SET_INT(LST_LIBVPX, opts, "threads", 0, 0);
+    ((TVHCodecProfile *)self)->has_support_for_filter2 = 1;
     return 0;
 }
 
@@ -146,6 +147,16 @@ static const codec_profile_class_t codec_profile_libvpx_class = {
                 .off      = offsetof(TVHVideoCodecProfile, gop_size),
                 .intextra = INTEXTRA_RANGE(0, 1000, 1),
                 .def.i    = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "encoder_hwaccel_type",
+                .name     = N_("Encoder hardware acceleration type"),
+                .desc     = N_("Encoder hardware acceleration type"),
+                .group    = 2,
+                .opts     = PO_PHIDDEN,
+                .off      = offsetof(TVHVideoCodecProfile, encoder_hwaccel_type),
+                .def.i    = AV_HWDEVICE_TYPE_NONE,
             },
             {}
         }

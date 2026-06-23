@@ -63,18 +63,19 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
                        streaming_component_type2txt(ssc->es_type));
         return -1;
     }
-#if ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
-    int hwaccel = -1;
-    int hwaccel_details = -1;
+#if ENABLE_MMAL | ENABLE_V4L2M2M | ENABLE_NVENC | ENABLE_VAAPI | ENABLE_QSV
+    int decoder_hwaccel_type = -1;
+    enum AVHWDeviceType avhwdevtype = AV_HWDEVICE_TYPE_NONE;
     if (SCT_ISVIDEO(ssc->es_type)) {
-        if (((hwaccel         = tvh_codec_profile_video_get_hwaccel(profile)) < 0) ||
-            ((hwaccel_details = tvh_codec_profile_video_get_hwaccel_details(profile)) < 0)) {
+        // -1 is when user will force software decoding so is a valid value
+        // -2 will be ERROR
+        if ((decoder_hwaccel_type = tvh_codec_profile_video_get_decoder_hwaccel_type(profile)) < -1){
             return -1;
         }
 #if ENABLE_MMAL
         if (idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
-            hwaccel &&
-            ((hwaccel_details == HWACCEL_AUTO && strstr(profile->codec_name, "mmal")) || hwaccel_details == HWACCEL_PRIORITIZE_MMAL)) {
+            // AV_HWDEVICE_TYPE_MMAL does not really exist as a type, but we use it to select the MMAL hardware
+            ((decoder_hwaccel_type == AV_AUTO_DEVICE_TYPE && strstr(profile->codec_name, "mmal")) || decoder_hwaccel_type == AV_HWDEVICE_TYPE_MMAL)) {
             if (icodec_id == AV_CODEC_ID_H264) {
                 icodec = avcodec_find_decoder_by_name("h264_mmal");
             } else if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
@@ -82,11 +83,21 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
             }
         }
 #endif
+#if ENABLE_V4L2M2M
+        if (!icodec && 
+            idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
+            // v4l2 is using AV_HWDEVICE_TYPE_DRM
+            ((decoder_hwaccel_type == AV_AUTO_DEVICE_TYPE && strstr(profile->codec_name, "v4l2")) || decoder_hwaccel_type == AV_HWDEVICE_TYPE_DRM)) {
+            if (icodec_id == AV_CODEC_ID_H264) {
+                icodec = avcodec_find_decoder_by_name("h264_v4l2m2m");
+            }
+            if (icodec) avhwdevtype = AV_HWDEVICE_TYPE_DRM;
+        }
+#endif
 #if ENABLE_NVENC
         if (!icodec && 
             idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
-            hwaccel &&
-            ((hwaccel_details == HWACCEL_AUTO && strstr(profile->codec_name, "nvenc")) || hwaccel_details == HWACCEL_PRIORITIZE_NVDEC)) {
+            ((decoder_hwaccel_type == AV_AUTO_DEVICE_TYPE && strstr(profile->codec_name, "nvenc")) || decoder_hwaccel_type == AV_HWDEVICE_TYPE_CUDA)) {
             // https://developer.nvidia.com/video-codec-sdk
             if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
                 icodec = avcodec_find_decoder_by_name("mpeg2_cuvid");
@@ -99,28 +110,46 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
             } else if (icodec_id == AV_CODEC_ID_VP8) {
                 icodec = avcodec_find_decoder_by_name("vp8_cuvid");
             }
+            if (icodec) avhwdevtype = AV_HWDEVICE_TYPE_CUDA;
         }
 #endif
+#if ENABLE_QSV
+        if (!icodec && 
+            idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
+            ((decoder_hwaccel_type == AV_AUTO_DEVICE_TYPE && strstr(profile->codec_name, "qsv")) || decoder_hwaccel_type == AV_HWDEVICE_TYPE_QSV)) {
+            // 
+            if (icodec_id == AV_CODEC_ID_H264) {
+                icodec = avcodec_find_decoder_by_name("h264_qsv");
+            } else if (icodec_id == AV_CODEC_ID_HEVC) {
+                icodec = avcodec_find_decoder_by_name("hevc_qsv");
+            } else if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
+                icodec = avcodec_find_decoder_by_name("mpeg2_qsv");
+            }
+            if (icodec) avhwdevtype = AV_HWDEVICE_TYPE_QSV;
+        }
+#endif
+// NOTE: VAAPI should always be left the last
 #if ENABLE_VAAPI
         if (!icodec && 
             idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
-            hwaccel &&
-            (hwaccel_details == HWACCEL_PRIORITIZE_VAAPI)) {
-            if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
-                icodec = avcodec_find_decoder_by_name("mpeg2_vaapi");
-            } else if (icodec_id == AV_CODEC_ID_H264) {
-                icodec = avcodec_find_decoder_by_name("h264_vaapi");
-            } else if (icodec_id == AV_CODEC_ID_HEVC) {
-                icodec = avcodec_find_decoder_by_name("hevc_vaapi");
-            } else if (icodec_id == AV_CODEC_ID_VP9) {
-                icodec = avcodec_find_decoder_by_name("vp9_vaapi");
-            } else if (icodec_id == AV_CODEC_ID_VP8) {
-                icodec = avcodec_find_decoder_by_name("vp8_vaapi");
+            // VAAPI is used also for software encoders
+            (decoder_hwaccel_type == AV_AUTO_DEVICE_TYPE || decoder_hwaccel_type == AV_HWDEVICE_TYPE_VAAPI)) {
+                // VAAPI does not have a standalone decoder named mpeg2_vaapi h264_vaapi hevc_vaapi vp9_vaapi
+                // Instead, VAAPI uses the standard software decoder (e.g., mpeg2video) and "accelerates" it by attaching a hardware device context to it.
+            icodec = avcodec_find_decoder(icodec_id);
+
+            for (int i = 0;; i++) {
+                const AVCodecHWConfig *config = avcodec_get_hw_config(icodec, i);
+                if (!config) break;
+                if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
+                    config->device_type == AV_HWDEVICE_TYPE_VAAPI) {
+                    avhwdevtype =  AV_HWDEVICE_TYPE_VAAPI;
+                }
             }
         }
 #endif
     }
-#endif // from ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
+#endif // from ENABLE_MMAL | ENABLE_V4L2M2M | ENABLE_NVENC | ENABLE_VAAPI | ENABLE_QSV
     if (!icodec && !(icodec = avcodec_find_decoder(icodec_id))) {
         tvh_stream_log(self, LOG_ERR, "failed to find decoder for '%s'",
                        streaming_component_type2txt(ssc->es_type));
@@ -141,9 +170,31 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
                                              icodec, ocodec, ssc->ssc_gh))) {
         return -1;
     }
+    // copy elementary_info_t
+    if (SCT_ISVIDEO(ssc->es_type)) {
+        memcpy(&self->context->es_info, ssc, sizeof(elementary_info_t));
+#if ENABLE_MMAL | ENABLE_V4L2M2M | ENABLE_NVENC | ENABLE_VAAPI | ENABLE_QSV
+        // record decoder hw accel (to be used later on, for filter selection)
+        self->context->iavhwdevtype = avhwdevtype;
+        //
+        if( ssc->es_sample_aspect_ratio.num > 0 &&
+            ssc->es_sample_aspect_ratio.den > 0) {
+            self->context->sample_aspect_ratio = ssc->es_sample_aspect_ratio;
+            self->context->iavctx->sample_aspect_ratio = ssc->es_sample_aspect_ratio;
+        }
+#endif
+    }
+
     self->type = ssc->es_type = codec_id2streaming_component_type(ocodec->id);
     if (ssc->es_type == SCT_UNKNOWN) {
         tvh_stream_log(self, LOG_ERR, "unable to translate AV type %s [%d] to SCT!", ocodec->name, ocodec->id);
+    }
+    // compute frame rate from es_frame_duration
+    int fdur = (ssc->es_frame_duration > INT_MAX) ? INT_MAX : (int)ssc->es_frame_duration;
+    if (fdur > 0) {
+        AVRational fr = av_make_q(90000, fdur);
+        av_reduce(&fr.num, &fr.den, fr.num, fr.den, INT_MAX);
+        self->context->iavctx->framerate = fr;
     }
     ssc->ssc_gh = NULL;
     return 0;
