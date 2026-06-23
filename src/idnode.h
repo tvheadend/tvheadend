@@ -187,8 +187,11 @@ typedef struct idnode_filter_ele
   } u;                                ///< Filter data
   enum {
     IC_EQ, ///< Equals
-    IC_LT, ///< LT
-    IC_GT, ///< GT
+    IC_LT, ///< Less than (strict)
+    IC_GT, ///< Greater than (strict)
+    IC_GE, ///< Greater than or equal
+    IC_LE, ///< Less than or equal
+    IC_NE, ///< Not equal
     IC_IN, ///< contains (STR only)
     IC_RE, ///< regexp (STR only)
   } comp;                             ///< Filter comparison
