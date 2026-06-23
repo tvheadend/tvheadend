@@ -15,3 +15,7 @@
 <tvh_include>inc/buttons</tvh_include>
 
 ---
+
+## See also
+
+The [Image cache audit tool](tv_imagecache_audit) (`tv_imagecache_audit.py`, installed in the binary directory) cross-checks the cache against the EPG, by airing day, to see how the artwork is filling in.
