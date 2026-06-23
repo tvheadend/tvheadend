@@ -47,6 +47,19 @@ api_imagecache_trigger
   return 0;
 }
 
+static int
+api_imagecache_resetthrottle
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int b;
+  (void)perm; (void)opaque; (void)op; (void)resp;
+  if (htsmsg_get_bool(args, "reset", &b))
+    return EINVAL;
+  if (b)
+    imagecache_throttle_reset();
+  return 0;
+}
+
 void
 api_imagecache_init ( void )
 {
@@ -55,6 +68,7 @@ api_imagecache_init ( void )
     { "imagecache/config/save",    ACCESS_ADMIN, api_idnode_save_simple, &imagecache_conf },
     { "imagecache/config/clean"  , ACCESS_ADMIN, api_imagecache_clean, NULL },
     { "imagecache/config/trigger", ACCESS_ADMIN, api_imagecache_trigger, NULL },
+    { "imagecache/config/resetthrottle", ACCESS_ADMIN, api_imagecache_resetthrottle, NULL },
     { NULL },
   };
 
