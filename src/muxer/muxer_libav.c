@@ -72,13 +72,37 @@ lav_muxer_write(void *opaque, uint8_t *buf, int buf_size)
   }
 
   r = write(lm->lm_fd, buf, buf_size);
-  if (r != buf_size)
+  if (r != buf_size) {
+    /* A failed write to the client socket on a normal disconnect (EPIPE/
+     * ECONNRESET) is an end-of-streaming notification, not a muxer fault.
+     * Flag it as EOS like the pass/mkv muxers do, so the webui stops quietly
+     * instead of logging a misleading "muxer reported errors". Real write
+     * failures (e.g. ENOSPC while recording) still count without m_eos.
+     * errno is only meaningful when write() actually failed (r < 0); on a
+     * short write it may hold a stale value, so guard on r < 0. */
+    if (r < 0 && MC_IS_EOS_ERROR(errno))
+      lm->m_eos = 1;
     lm->m_errors++;
-  
+  }
+
   /* No room to notify about errors here. */
   /* We need to complete av_write_trailer() to free */
   /* all associated structures. */
   return buf_size;
+}
+
+// Separate the containers between AVCC/HVCC and Annex B
+// NOTE: MPEG-PS is only mpeg2 (so is not using either)
+// only MP4, MOV, WEBM, FLV, RTPM, M4V, 3GP and F4V is using isom_write_avcc() and isom_write_hvcc()
+static int
+has_avcc_hvcc(int type) {
+  return ((type == MC_AVMP4) || (type == MC_AVWEBM) || (type == MC_WEBM));
+}
+
+// only MPEG-TS and MKV
+static int
+is_annex_B(int type) {
+  return ((type == MC_MPEGTS) || (type == MC_AVMATROSKA) || (type == MC_MATROSKA));
 }
 
 
@@ -111,6 +135,9 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     break;
 
   case MC_MPEGPS:
+    // Set the maximum bitrate permitted by the VBV (9.8 Mbps for DVD)
+    c->rc_max_rate = 9800000;
+    // Set the VBV buffer size (1.835 Mbps for DVD)
     c->rc_buffer_size = 224*1024*8;
     //Fall-through
   case MC_MPEGTS:
@@ -124,7 +151,8 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   }
 
   if(ssc->ssc_gh) {
-    if (ssc->es_type == SCT_H264 || ssc->es_type == SCT_HEVC) {
+    if ((has_avcc_hvcc(lm->m_config.m_type)) &&
+      (ssc->es_type == SCT_H264 || ssc->es_type == SCT_HEVC)) {
       sbuf_t hdr;
       sbuf_init(&hdr);
       if (ssc->es_type == SCT_H264) {
@@ -172,54 +200,55 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->width      = ssc->es_width;
     c->height     = ssc->es_height;
 
-    c->time_base.num = 1;
-    c->time_base.den = 25;
-
-    c->sample_aspect_ratio.num = ssc->es_aspect_num;
-    c->sample_aspect_ratio.den = ssc->es_aspect_den;
-
-    if (lm->m_config.m_type == MC_AVMP4) {
-      /* this is a whole hell */
-      AVRational ratio = { c->height, c->width };
-      c->sample_aspect_ratio = av_mul_q(c->sample_aspect_ratio, ratio);
+    if (st->time_base.num == 0 || st->time_base.den == 0) {
+      // Fallback to default timebase
+      st->time_base = mpeg_tc;
     }
+    // Encoder time_base = 1/FPS = frame duration in seconds =
+    // (st->time_base.num * es_frame_duration) / st->time_base.den, reduced.
+    av_reduce(&c->time_base.num, &c->time_base.den,
+              (int64_t)st->time_base.num * ssc->es_frame_duration, st->time_base.den, INT_MAX);
+
+    tvhtrace(LS_LIBAV,  "Muxer: sample aspect ratio = %d/%d", ssc->es_sample_aspect_ratio.num, ssc->es_sample_aspect_ratio.den);
+    c->sample_aspect_ratio.num = ssc->es_sample_aspect_ratio.num;
+    c->sample_aspect_ratio.den = ssc->es_sample_aspect_ratio.den;
 
     avcodec_parameters_from_context(st->codecpar, c);
     st->sample_aspect_ratio.num = c->sample_aspect_ratio.num;
     st->sample_aspect_ratio.den = c->sample_aspect_ratio.den;
 
-    if (ssc->es_type == SCT_H264) {
-      if (av_bsf_alloc(lm->bsf_h264_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for h264_mp4toannexb");
-        goto fail;
+    // skip BSF for MPEG-2 video, regardless of container.
+    if (ssc->es_type != SCT_MPEG2VIDEO && is_annex_B(lm->m_config.m_type)) {
+      if (ssc->es_type == SCT_H264) {
+        if (av_bsf_alloc(lm->bsf_h264_filter, &lm->ctx)) {
+          tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for h264_mp4toannexb");
+          goto fail;
+        }
       }
-    }
-    else if (ssc->es_type == SCT_HEVC) {
-      if (av_bsf_alloc(lm->bsf_hevc_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for hevc_mp4toannexb");
-        goto fail;
+      else if (ssc->es_type == SCT_HEVC) {
+        if (av_bsf_alloc(lm->bsf_hevc_filter, &lm->ctx)) {
+          tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for hevc_mp4toannexb");
+          goto fail;
+        }
       }
-    }
-    else if (ssc->es_type == SCT_VP9) {
-      if (av_bsf_alloc(lm->bsf_vp9_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for vp9_superframe ");
-        goto fail;
+      else if (ssc->es_type == SCT_VP9) {
+        if (av_bsf_alloc(lm->bsf_vp9_filter, &lm->ctx)) {
+          tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for vp9_superframe ");
+          goto fail;
+        }
       }
-    }
-    else {
-      if (av_bsf_alloc(lm->bsf_h264_filter, &lm->ctx)) {
-        tvherror(LS_LIBAV,  "Failed to alloc AVBitStreamFilter for h264_mp4toannexb");
-        goto fail;
+      // only use lm->ctx if BSF was allocated
+      if (lm->ctx) {
+        if(avcodec_parameters_copy(lm->ctx->par_in, st->codecpar)) {
+          tvherror(LS_LIBAV,  "Failed to copy paramters to AVBSFContext");
+          goto fail;
+        }
+        lm->ctx->time_base_in = st->time_base;
+        if (av_bsf_init(lm->ctx)) {
+          tvherror(LS_LIBAV,  "Failed to init AVBSFContext");
+          goto fail;
+        }
       }
-    }
-    if(avcodec_parameters_copy(lm->ctx->par_in, st->codecpar)) {
-      tvherror(LS_LIBAV,  "Failed to copy paramters to AVBSFContext");
-      goto fail;
-    }
-    lm->ctx->time_base_in = st->time_base;
-    if (av_bsf_init(lm->ctx)) {
-      tvherror(LS_LIBAV,  "Failed to init AVBSFContext");
-      goto fail;
     }
   } else if(SCT_ISSUBTITLE(ssc->es_type)) {
     c->codec_type = AVMEDIA_TYPE_SUBTITLE;
@@ -300,6 +329,24 @@ lav_muxer_support_stream(muxer_container_type_t mc,
     ret |= (type == SCT_AC4);
     break;
 
+  case MC_OGA:
+    ret |= (type == SCT_FLAC);
+    break;
+
+  case MC_OGV:
+    ret |= (type == SCT_THEORA);
+    ret |= (type == SCT_VORBIS);
+    ret |= (type == SCT_OPUS);
+    break;
+  
+  case MC_OGG:
+    ret |= (type == SCT_VORBIS);
+    break;
+  
+  case MC_OPUS:
+    ret |= (type == SCT_OPUS);
+    break;
+
   default:
     break;
   }
@@ -343,6 +390,44 @@ lav_muxer_mime(muxer_t* m, const struct streaming_start *ss)
     return muxer_container_type2mime(MC_UNKNOWN, 0);
 }
 
+static const char *get_muxer_name(int type){
+  const char *muxer_name;
+  switch(type) {
+    case MC_MPEGPS:
+      muxer_name = "dvd";
+      break;
+    case MC_MPEGTS:
+      muxer_name = "mpegts";
+      break;
+    case MC_MATROSKA:
+    case MC_AVMATROSKA:
+      muxer_name = "matroska";
+      break;
+    case MC_WEBM:
+    case MC_AVWEBM:
+      muxer_name = "webm";
+      break;
+    case MC_AVMP4:
+      muxer_name = "mp4";
+      break;
+    case MC_OGA:
+      muxer_name = "oga";
+      break;
+    case MC_OGV:
+      muxer_name = "ogv";
+      break;
+    case MC_OGG:
+      muxer_name = "ogg";
+      break;
+    case MC_OPUS:
+      muxer_name = "opus";
+      break;
+    default:
+      muxer_name = muxer_container_type2txt(type);
+      break;
+  }
+  return muxer_name;
+}
 
 /**
  * Init the muxer with streams
@@ -369,28 +454,7 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
 
   oc = lm->lm_oc;
 
-  switch(lm->m_config.m_type) {
-  case MC_MPEGPS:
-    muxer_name = "dvd";
-    break;
-  case MC_MPEGTS:
-    muxer_name = "mpegts";
-    break;
-  case MC_MATROSKA:
-  case MC_AVMATROSKA:
-    muxer_name = "matroska";
-    break;
-  case MC_WEBM:
-  case MC_AVWEBM:
-    muxer_name = "webm";
-    break;
-  case MC_AVMP4:
-    muxer_name = "mp4";
-    break;
-  default:
-    muxer_name = muxer_container_type2txt(lm->m_config.m_type);
-    break;
-  }
+  muxer_name = get_muxer_name(lm->m_config.m_type);
   fmt = lm->lm_oc->oformat;
   if(avformat_alloc_output_context2(&oc, fmt, muxer_name, NULL) < 0) {
     tvherror(LS_LIBAV,  "Can't find the '%s' muxer", muxer_name);
@@ -447,7 +511,12 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
   }
 
   if(lm->m_config.m_type == MC_AVMP4) {
-    av_dict_set(&opts, "frag_duration", "1", 0);
+    /* frag_duration is in microseconds: "1" fragments after every frame
+       (a moof+mdat per picture), whose per-frame overhead back-pressures
+       the streaming chain and makes playback stutter over time. Fragment
+       once per second instead -- far less overhead, latency still well
+       under the player buffer. */
+    av_dict_set(&opts, "frag_duration", "1000000", 0);
     av_dict_set(&opts, "ism_lookahead", "0", 0);
   }
 
@@ -465,9 +534,11 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
         tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_pmt_start_pid = %s", mpegts_info);
         av_dict_set(&opts, "mpegts_pmt_start_pid", mpegts_info, 0);
       }
+#if LIBAVUTIL_VERSION_MAJOR >= 57
       if (!lm->m_config.u.transcode.m_rewrite_nit) {
         av_dict_set(&opts, "mpegts_flags", "nit", 0);
       }
+#endif
     }
     else {
       // we transfer as many parameters as possible
@@ -501,7 +572,9 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
         tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_original_network_id = %s", mpegts_info);
         av_dict_set(&opts, "mpegts_original_network_id", mpegts_info, 0);
       }
+#if LIBAVUTIL_VERSION_MAJOR >= 57
       av_dict_set(&opts, "mpegts_flags", "nit", 0);
+#endif
       av_dict_set(&opts, "mpegts_copyts", "1", 0);
     }
   }
@@ -771,7 +844,7 @@ muxer_t*
 lav_muxer_create(const muxer_config_t *m_cfg,
                  const muxer_hints_t *hints)
 {
-  const char *mux_name;
+  const char *muxer_name;
   lav_muxer_t *lm;
 #if LIBAVCODEC_VERSION_MAJOR > 58
   const AVOutputFormat *fmt;
@@ -779,29 +852,10 @@ lav_muxer_create(const muxer_config_t *m_cfg,
   AVOutputFormat *fmt;
 #endif
 
-  switch(m_cfg->m_type) {
-  case MC_MPEGPS:
-    mux_name = "dvd";
-    break;
-  case MC_MATROSKA:
-  case MC_AVMATROSKA:
-    mux_name = "matroska";
-    break;
-  case MC_WEBM:
-  case MC_AVWEBM:
-    mux_name = "webm";
-    break;
-  case MC_AVMP4:
-    mux_name = "mp4";
-    break;
-  default:
-    mux_name = muxer_container_type2txt(m_cfg->m_type);
-    break;
-  }
-
-  fmt = av_guess_format(mux_name, NULL, NULL);
+  muxer_name = get_muxer_name(m_cfg->m_type);
+  fmt = av_guess_format(muxer_name, NULL, NULL);
   if(!fmt) {
-    tvherror(LS_LIBAV,  "Can't find the '%s' muxer", mux_name);
+    tvherror(LS_LIBAV,  "Can't find the '%s' muxer", muxer_name);
     return NULL;
   }
 

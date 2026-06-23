@@ -1,7 +1,7 @@
 /*
  *  tvheadend - Transcoding
  *
- *  Copyright (C) 2016 Tvheadend
+ *  Copyright (C) 2026 Tvheadend
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,49 +18,37 @@
  */
 
 
-#ifndef TVH_TRANSCODING_TRANSCODE_HWACCELS_H__
-#define TVH_TRANSCODING_TRANSCODE_HWACCELS_H__
+#ifndef TVH_TRANSCODING_TRANSCODE_HWACCELS_V4L2M2M_H__
+#define TVH_TRANSCODING_TRANSCODE_HWACCELS_V4L2M2M_H__
 
 
 #include "tvheadend.h"
-#include "../internals.h"
+
 #include <libavcodec/avcodec.h>
 
 
 /* decoding ================================================================= */
 
-enum AVPixelFormat
-hwaccels_decode_get_format(AVCodecContext *avctx,
-                           const enum AVPixelFormat *pix_fmts);
+int
+v4l2m2m_get_filters(TVHContext *self, char *filter, size_t filter_len);
 
 int
-hwaccels_decode_get_filters(TVHContext *self, char *filter, size_t filter_len);
-
-int
-hwaccels_download(TVHContext *self, char *filter, size_t filter_len, int skip_format);
-
-int
-hwaccels_upload(TVHContext *self, char *filter, size_t filter_len);
-
+v4l2m2m_get_download(TVHContext *self, char *filter, size_t filter_len);
 
 /* encoding ================================================================= */
 
 int
-hwaccels_encode_setup_context(TVHContext *self);
+v4l2m2m_encode_setup_context(AVCodecContext *avctx);
+
+int
+v4l2m2m_get_upload(TVHContext *self, char *filter, size_t filter_len);
 
 /* module =================================================================== */
 
 void
-hwaccels_init(void);
+v4l2m2m_decode_destroy(TVHContext *ctx);
 
 void
-hwaccels_done(void);
+v4l2m2m_done(void);
 
-/**
- * Release TVH-owned hardware resources after @c avcodec_free_context has been
- * called on both decoder and encoder contexts (see @c tvh_context_destroy).
- */
-void
-hwaccels_context_destroy(TVHContext *self);
-
-#endif // TVH_TRANSCODING_TRANSCODE_HWACCELS_H__
+#endif // TVH_TRANSCODING_TRANSCODE_HWACCELS_V4L2M2M_H__

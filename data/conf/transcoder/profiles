@@ -1,30 +1,124 @@
 [
     {
-	"comment": "WEBTV profile VP8/Vorbis/WEBM",
-	"name": "webtv-vp8-vorbis-webm",
-	"pro_vcodec": "webtv-vp8",
-	"pro_acodec": "webtv-vorbis",
-	"container": 6
+        "comment": "WEBTV profile VP8 VAAPI/Vorbis/WEBM",
+        "container": 6,
+        "pro_vcodec": "webtv-vp8-vaapi",
+        "pro_acodec": "webtv-vorbis",
+        "name": "webtv-vp8-vaapi-vorbis-webm",
+        "enabled": false
     },
     {
-	"comment": "WEBTV profile H264/AAC/MPEG-TS",
-	"name": "webtv-h264-aac-mpegts",
-	"pro_vcodec": "webtv-h264",
-	"pro_acodec": "webtv-aac",
-	"container": 2
+        "comment": "WEBTV profile VP8 Software/Vorbis/WEBM",
+        "container": 6,
+        "pro_vcodec": "webtv-vp8",
+        "pro_acodec": "webtv-vorbis",
+        "name": "webtv-vp8-software-vorbis-webm"
     },
     {
-	"comment": "WEBTV profile H264/AAC/Matroska",
-	"name": "webtv-h264-aac-matroska",
-	"pro_vcodec": "webtv-h264",
-	"pro_acodec": "webtv-aac",
-	"container": 1
+        "comment": "WEBTV profile VP9 VAAPI/Vorbis/WEBM",
+        "container": 6,
+        "pro_vcodec": "webtv-vp9-vaapi",
+        "pro_acodec": "webtv-vorbis",
+        "name": "webtv-vp9-vaapi-vorbis-webm",
+        "enabled": false
     },
     {
-	"comment": "WEBTV profile H264/Vorbis/MP4",
-	"name": "webtv-h264-vorbis-mp4",
-	"pro_vcodec": "webtv-h264",
-	"pro_acodec": "webtv-vorbis",
-	"container": 9
+        "comment": "WEBTV profile VP9 Software/Vorbis/WEBM",
+        "container": 6,
+        "pro_vcodec": "webtv-vp9",
+        "pro_acodec": "webtv-vorbis",
+        "name": "webtv-vp9-software-vorbis-webm"
+    },
+    {
+        "comment": "WEBTV profile H264 QSV/AAC/Matroska",
+        "container": 1,
+        "pro_vcodec": "webtv-h264-qsv",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-h264-qsv-aac-matroska",
+        "enabled": false
+    },
+    {
+        "comment": "WEBTV profile H264 VAAPI/AAC/Matroska",
+        "container": 1,
+        "pro_vcodec": "webtv-h264-vaapi",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-h264-vaapi-aac-matroska",
+        "enabled": false
+    },
+    {
+        "comment": "WEBTV profile H264 Software/AAC/Matroska",
+        "container": 1,
+        "pro_vcodec": "webtv-h264",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-h264-software-aac-matroska"
+    },
+    {
+        "comment": "WEBTV profile H264 QSV/AAC/MP4",
+        "container": 9,
+        "pro_vcodec": "webtv-h264-qsv",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-h264-qsv-aac-mp4",
+        "enabled": false
+    },
+    {
+        "comment": "WEBTV profile H264 VAAPI/AAC/MP4",
+        "container": 9,
+        "pro_vcodec": "webtv-h264-vaapi",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-h264-vaapi-aac-mp4",
+        "enabled": false
+    },
+    {
+        "comment": "WEBTV profile H264 Software/AAC/MP4",
+        "container": 9,
+        "pro_vcodec": "webtv-h264",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-h264-software-aac-mp4"
+    },
+    {
+        "comment": "WEBTV profile HEVC QSV/AAC/Matroska",
+        "container": 1,
+        "pro_vcodec": "webtv-hevc-qsv",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-hevc-qsv-aac-matroska",
+        "enabled": false
+    },
+    {
+        "comment": "WEBTV profile HEVC VAAPI/AAC/Matroska",
+        "container": 1,
+        "pro_vcodec": "webtv-hevc-vaapi",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-hevc-vaapi-aac-matroska",
+        "enabled": false
+    },
+    {
+        "comment": "WEBTV profile HEVC Software/AAC/Matroska",
+        "container": 1,
+        "pro_vcodec": "webtv-hevc",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-hevc-software-aac-matroska"
+    },
+    {
+        "comment": "WEBTV profile HEVC QSV/AAC/MP4",
+        "container": 9,
+        "pro_vcodec": "webtv-hevc-qsv",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-hevc-qsv-aac-mp4",
+        "enabled": false
+    },
+    {
+        "comment": "WEBTV profile HEVC VAAPI/AAC/MP4",
+        "container": 9,
+        "pro_vcodec": "webtv-hevc-vaapi",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-hevc-vaapi-aac-mp4",
+        "enabled": false
+    },
+    {
+        "comment": "WEBTV profile HEVC Software/AAC/MP4",
+        "container": 9,
+        "pro_vcodec": "webtv-hevc",
+        "pro_acodec": "webtv-aac",
+        "name": "webtv-hevc-software-aac-mp4"
     }
 ]
