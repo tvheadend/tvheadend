@@ -465,9 +465,11 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
         tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_pmt_start_pid = %s", mpegts_info);
         av_dict_set(&opts, "mpegts_pmt_start_pid", mpegts_info, 0);
       }
+#if LIBAVUTIL_VERSION_MAJOR >= 57
       if (!lm->m_config.u.transcode.m_rewrite_nit) {
         av_dict_set(&opts, "mpegts_flags", "nit", 0);
       }
+#endif
     }
     else {
       // we transfer as many parameters as possible
@@ -501,7 +503,9 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
         tvhdebug(LS_LIBAV,  "MPEGTS: mpegts_original_network_id = %s", mpegts_info);
         av_dict_set(&opts, "mpegts_original_network_id", mpegts_info, 0);
       }
+#if LIBAVUTIL_VERSION_MAJOR >= 57
       av_dict_set(&opts, "mpegts_flags", "nit", 0);
+#endif
       av_dict_set(&opts, "mpegts_copyts", "1", 0);
     }
   }
