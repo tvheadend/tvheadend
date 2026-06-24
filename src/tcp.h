@@ -56,6 +56,31 @@ typedef struct tcp_server_ops
   void (*cancel) (void *opaque);
 } tcp_server_ops_t;
 
+typedef struct tcp_server {
+  int serverfd;
+  struct sockaddr_storage bound;
+  tcp_server_ops_t ops;
+  void *opaque;
+  LIST_ENTRY(tcp_server) link;
+} tcp_server_t;
+
+typedef struct tcp_server_launch {
+  pthread_t tid;
+  uint32_t id;
+  int fd;
+  int streaming;
+  tcp_server_ops_t ops;
+  void *opaque;
+  char *representative;
+  void (*status) (void *opaque, htsmsg_t *m);
+  struct sockaddr_storage peer;
+  struct sockaddr_storage self;
+  time_t started;
+  LIST_ENTRY(tcp_server_launch) link;
+  LIST_ENTRY(tcp_server_launch) alink;
+  LIST_ENTRY(tcp_server_launch) jlink;
+} tcp_server_launch_t;
+
 extern int tcp_preferred_address_family;
 
 void tcp_server_preinit(int opt_ipv6);
