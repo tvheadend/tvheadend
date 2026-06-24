@@ -636,8 +636,9 @@ http_check_local_ip( http_connection_t *hc )
  * Transmit a HTTP reply
  */
 static void
-http_send_reply(http_connection_t *hc, int rc, const char *content, 
-		const char *encoding, const char *location, int maxage)
+http_send_reply(http_connection_t *hc, int rc, const char *content,
+		const char *encoding, const char *location, int maxage,
+		const char *disposition)
 {
   size_t size = hc->hc_reply.hq_size;
   uint8_t *data = NULL;
@@ -653,7 +654,7 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
 
   http_send_begin(hc);
   http_send_header(hc, rc, content, size,
-		   encoding, location, maxage, 0, NULL, NULL);
+		   encoding, location, maxage, 0, disposition, NULL);
   
   if(!hc->hc_no_output) {
     if (data == NULL)
@@ -713,9 +714,9 @@ http_error(http_connection_t *hc, int error)
 
     htsbuf_append_str(&hc->hc_reply, "</BODY></HTML>\r\n");
 
-    http_send_reply(hc, error, "text/html", NULL, NULL, 0);
+    http_send_reply(hc, error, "text/html", NULL, NULL, 0, NULL);
   } else {
-    http_send_reply(hc, error, NULL, NULL, NULL, 0);
+    http_send_reply(hc, error, NULL, NULL, NULL, 0, NULL);
   }
 }
 
@@ -727,16 +728,27 @@ void
 http_output_html(http_connection_t *hc)
 {
   return http_send_reply(hc, HTTP_STATUS_OK, "text/html; charset=UTF-8",
-			 NULL, NULL, 0);
+			 NULL, NULL, 0, NULL);
 }
 
 /**
- * Send an HTTP OK, simple version for text/html
+ * Send an HTTP OK, simple version for arbitrary content type
  */
 void
 http_output_content(http_connection_t *hc, const char *content)
 {
-  return http_send_reply(hc, HTTP_STATUS_OK, content, NULL, NULL, 0);
+  return http_send_reply(hc, HTTP_STATUS_OK, content, NULL, NULL, 0, NULL);
+}
+
+/**
+ * Send an HTTP OK with a Content-Disposition header, so browsers download
+ * the body instead of rendering it inline (used for playlist downloads).
+ */
+void
+http_output_content_disposition(http_connection_t *hc, const char *content,
+                                const char *disposition)
+{
+  http_send_reply(hc, HTTP_STATUS_OK, content, NULL, NULL, 0, disposition);
 }
 
 
@@ -788,7 +800,7 @@ http_redirect(http_connection_t *hc, const char *location,
 		 "</BODY></HTML>\r\n",
 		 loc, loc);
 
-  http_send_reply(hc, HTTP_STATUS_FOUND, "text/html", NULL, loc, 0);
+  http_send_reply(hc, HTTP_STATUS_FOUND, "text/html", NULL, loc, 0, NULL);
 
   if (loc != location)
     free((char *)loc);
@@ -813,7 +825,7 @@ http_css_import(http_connection_t *hc, const char *location)
 
   htsbuf_qprintf(&hc->hc_reply, "@import url('%s');\r\n", loc);
 
-  http_send_reply(hc, HTTP_STATUS_OK, "text/css", NULL, loc, 0);
+  http_send_reply(hc, HTTP_STATUS_OK, "text/css", NULL, loc, 0, NULL);
 }
 
 /**
