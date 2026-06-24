@@ -1,0 +1,192 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Copyright (C) 2026 Tvheadend contributors */
+
+/*
+ * Tvheadend Vue UI — design tokens
+ *
+ * Three themes via [data-theme] selectors per brief §6.4: Blue (the
+ * default in :root), Gray, and Access. Access is the high-contrast
+ * white-on-dark variant and needs stronger interaction tints than
+ * the subtle Blue/Grey defaults.
+ */
+
+:root {
+  /*
+   * Force native widgets (checkboxes, radios, scrollbars, date
+   * pickers, etc.) to render in light-mode style regardless of the
+   * OS-level `prefers-color-scheme` — Blue and Gray are both light
+   * variants and iOS Safari (and other browsers) would otherwise
+   * draw native form controls in dark style at night while our own
+   * surfaces stay light, producing the "checkbox painted as a dark
+   * filled rectangle" effect. The Access theme below opts back in
+   * to `color-scheme: dark` so its native chrome matches the dark
+   * surface.
+   */
+  color-scheme: light;
+
+  /* Blue — default theme */
+  --tvh-primary: #2563eb;
+  --tvh-bg-page: #f8fafc;
+  --tvh-bg-surface: #ffffff;
+  --tvh-border: #e2e8f0;
+  --tvh-border-strong: #cbd5e1;
+  --tvh-text: #0f172a;
+  --tvh-text-muted: #64748b;
+  --tvh-success: #16a34a;
+  --tvh-warning: #d97706;
+  --tvh-error: #dc2626;
+
+  /* Per-theme interaction intensities */
+  --tvh-hover-strength: 8%;
+  --tvh-active-strength: 14%;
+
+  /* Layout */
+  --tvh-topbar-height: 48px;
+  --tvh-rail-width: 272px;
+  --tvh-nav-item-height: 36px;
+
+  /* Radii */
+  --tvh-radius-sm: 4px;
+  --tvh-radius-md: 6px;
+  --tvh-radius-lg: 8px;
+
+  /* Spacing scale */
+  --tvh-space-1: 4px;
+  --tvh-space-2: 8px;
+  --tvh-space-3: 12px;
+  --tvh-space-4: 16px;
+  --tvh-space-6: 24px;
+  --tvh-space-8: 32px;
+  --tvh-space-12: 48px;
+
+  /* Typography */
+  --tvh-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  --tvh-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --tvh-line-height: 1.45;
+
+  /*
+   * Text-size scale — 8 semantic steps + a single per-theme /
+   * per-breakpoint multiplier. Components reference the named
+   * --tvh-text-* tokens; themes change --tvh-text-scale to grow or
+   * shrink everything together.
+   *
+   * To retune Access (or any future theme) on phone vs desktop,
+   * edit the single --tvh-text-scale value in that theme's
+   * @media block at the bottom of this file. The named --tvh-text-*
+   * tokens never change — they always reference the active scale.
+   */
+  --tvh-text-scale: 1;
+
+  --tvh-text-xs:      calc(11px * var(--tvh-text-scale));
+  --tvh-text-sm:      calc(12px * var(--tvh-text-scale));
+  --tvh-text-md:      calc(13px * var(--tvh-text-scale)); /* body default */
+  --tvh-text-lg:      calc(14px * var(--tvh-text-scale));
+  --tvh-text-xl:      calc(16px * var(--tvh-text-scale));
+  --tvh-text-2xl:     calc(18px * var(--tvh-text-scale));
+  --tvh-text-3xl:     calc(22px * var(--tvh-text-scale));
+  --tvh-text-display: calc(28px * var(--tvh-text-scale));
+
+  /* Legacy alias — base.css sets html/body font-size from this. */
+  --tvh-font-size: var(--tvh-text-md);
+
+  /* Animation */
+  --tvh-transition: 150ms ease-out;
+
+  /* DVR overlay bar (EPG Timeline + Magazine) — translucent
+   * recording-window indicator. The neutral hue derives from the
+   * theme's primary color for visual coherence; the warning hue
+   * uses the existing --tvh-warning token. */
+  --tvh-dvr-overlay-bg: color-mix(in srgb, var(--tvh-primary) 55%, transparent);
+  --tvh-dvr-overlay-warning-bg: color-mix(in srgb, var(--tvh-warning) 70%, transparent);
+
+  /* Scroll-overflow fade tint. The 6 scroll-fade pseudo elements
+   * (IdnodeGrid table edges, PageTabs tab-row edges, EpgTimeline +
+   * EpgMagazine sticky-title overlays) all gradient FROM this
+   * colour TO transparent. Light-theme value is a soft dark tint
+   * (subtle shadow on near-white surfaces); Access overrides to a
+   * soft light tint (subtle glow on its #000 / #1a1a1a surfaces,
+   * where a dark tint would be invisible). */
+  --tvh-scroll-fade: rgba(0, 0, 0, 0.18);
+}
+
+[data-theme='gray'] {
+  --tvh-primary: #475569;
+  --tvh-bg-page: #f6f7f8;
+  --tvh-bg-surface: #ffffff;
+  --tvh-border: #e4e6e9;
+  --tvh-border-strong: #c8ccd1;
+  --tvh-text: #1f2937;
+  --tvh-text-muted: #6b7280;
+
+  --tvh-hover-strength: 10%;
+  --tvh-active-strength: 18%;
+}
+
+[data-theme='access'] {
+  /*
+   * High-contrast white-on-dark theme. True black palette per
+   * management-team request: #000 page, #1a1a1a surface, white text
+   * + borders. Accent colours are brightened so
+   * primary/success/warning/error stay legible against the dark
+   * background. Stronger interaction tints because subtle ones
+   * wash out on this palette.
+   *
+   * The earlier high-contrast LIGHT variant (#fff page, #000 text,
+   * #0033cc primary) was retired when this dark variant became the
+   * default Access theme. Recover from git history if needed.
+   */
+  color-scheme: dark;
+
+  /* Scales text 1.5× on desktop (see phone override at the bottom
+   * of this file). One knob covers every text token. */
+  --tvh-text-scale: 1.5;
+
+  --tvh-primary: #4d9aff;
+  --tvh-bg-page: #000000;
+  --tvh-bg-surface: #1a1a1a;
+  --tvh-border: #ffffff;
+  --tvh-border-strong: #ffffff;
+  --tvh-text: #ffffff;
+  --tvh-text-muted: #d0d0d0;
+  --tvh-success: #4ade80;
+  --tvh-warning: #fbbf24;
+  --tvh-error: #f87171;
+
+  --tvh-hover-strength: 30%;
+  --tvh-active-strength: 50%;
+
+  /* Inverted scroll-fade tint — see comment on the default in :root. */
+  --tvh-scroll-fade: rgba(255, 255, 255, 0.18);
+}
+
+/*
+ * No brand-logo invert under the Access theme — both visible
+ * brand surfaces use the natural-colour PNG:
+ *   - Desktop: NavRail brand mark on its own surface (TopBar is
+ *     display:none above 767px).
+ *   - Phone: TopBar logo (NavRail brand row is display:none below
+ *     768px).
+ * In both cases the logo reads as an intentional brand element
+ * rather than an inverted ghost. Channel icons, programme art and
+ * wizard step icons are content imagery and similarly untouched.
+ */
+
+/*
+ * Phone-mode text-scale overrides.
+ *
+ * Blue and Gray keep their desktop scale of 1 on phone — same
+ * text size as desktop, deliberate. Access scales smaller on phone
+ * than on desktop (1.15 vs 1.5) because desktop's 1.5× would push
+ * grid headers and toolbar action labels past the visual viewport.
+ * To add a phone override for a future theme, add that theme's
+ * selector inside this @media block with its own multiplier.
+ *
+ * Breakpoint mirrors the existing `@media (max-width: 767px)` phone
+ * convention used elsewhere in the Vue UI (action-menu collapse,
+ * sort-popover swap, drawer dock behaviour).
+ */
+@media (max-width: 767px) {
+  [data-theme='access'] {
+    --tvh-text-scale: 1.15;
+  }
+}

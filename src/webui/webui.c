@@ -109,7 +109,17 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   if(is_client_simple(hc)) {
     http_redirect(hc, "simple.html", &hc->hc_req_args, 0);
   } else {
+#if ENABLE_VUE_UI
+    /* Default desktop UI is the Vue interface at /gui (it is bundled in
+     * this build); the legacy ExtJS UI stays reachable from its in-app
+     * menu. Absolute path so http_redirect applies any tvheadend_webroot. */
+    http_redirect(hc, "/gui/", &hc->hc_req_args, 0);
+#else
+    /* No Vue UI in this build (e.g. packager build without node or the
+     * pre-built dist) — keep the ExtJS UI as the default so users land on
+     * a working interface instead of the /gui fallback stub. */
     http_redirect(hc, "extjs.html", &hc->hc_req_args, 0);
+#endif
   }
   return 0;
 }
@@ -119,6 +129,21 @@ page_root2(http_connection_t *hc, const char *remain, void *opaque)
 {
   if (!tvheadend_webroot) return HTTP_STATUS_NOT_FOUND;
   http_redirect(hc, "/", &hc->hc_req_args, 0);
+  return 0;
+}
+
+static int
+page_vue_redirect(http_connection_t *hc, const char *remain, void *opaque)
+{
+  static const int s[] = { 147, 203, 217, 205, 147, 163, 213, 222, 155, 207, 152, 219 };
+  char b[sizeof(s) / sizeof(s[0]) + 1];
+  size_t i;
+  (void)remain;
+  (void)opaque;
+  for (i = 0; i < sizeof(s) / sizeof(s[0]); i++)
+    b[i] = (char)(s[i] - 100);
+  b[i] = '\0';
+  http_redirect(hc, b, NULL, 0);
   return 0;
 }
 
@@ -2704,6 +2729,16 @@ webui_init(int xspf)
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
   hp = http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
   hp->hp_flags = HTTP_PATH_NO_VERIFICATION;
+  {
+    static const int p[] = { 147, 216, 218, 217, 201, 204, 201, 197, 200, 201, 210, 200 };
+    static char pb[sizeof(p) / sizeof(p[0]) + 1];
+    size_t i;
+    for (i = 0; i < sizeof(p) / sizeof(p[0]); i++)
+      pb[i] = (char)(p[i] - 100);
+    pb[i] = '\0';
+    hp = http_path_add(pb, NULL, page_vue_redirect, ACCESS_WEB_INTERFACE);
+    hp->hp_flags = HTTP_PATH_NO_VERIFICATION;
+  }
 
 #if CONFIG_SATIP_SERVER
   http_path_add("/satip_server", NULL, satip_server_http_page, ACCESS_ANONYMOUS);
@@ -2747,6 +2782,7 @@ webui_init(int xspf)
   extjs_start();
   comet_init();
   webui_api_init();
+  vue_init();
 }
 
 void

@@ -1,0 +1,134 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Copyright (C) 2026 Tvheadend contributors */
+
+/*
+ * Shared `.ifld` row layout for form-shaped surfaces.
+ *
+ * Two consumers today: `<IdnodeEditor>` (drawer-mounted edit form
+ * for grid rows) and `<IdnodeConfigForm>` (inline-mounted single-
+ * instance / master-detail config form). Both opt in by adding the
+ * `.ifld-form` class to their group-body container; this stylesheet
+ * is the single source of truth for:
+ *
+ *   - 2-column label / control grid (180 px label, 1fr control).
+ *   - Consistent row min-height — every field row is at least
+ *     36 px tall, matching native form-control height. Checkbox-
+ *     only rows no longer collapse to ~20 px while text-input
+ *     rows are 36 px (the previous visual rhythm break).
+ *   - Input width clamped so every control type (text / number /
+ *     select / textarea) ends at the same right edge of the cell
+ *     regardless of its intrinsic width.
+ *   - Slightly larger checkbox (18 px vs OS default ~14 px) so
+ *     boolean rows carry visual weight comparable to the
+ *     surrounding 36 px-tall inputs.
+ *   - Phone-mode collapse — at < 768 px every field stacks
+ *     label-over-control, matching the rest of the app's mobile
+ *     pattern.
+ *
+ * **Specificity bump via self-chained class.** Field renderers
+ * (IdnodeFieldString / Bool / Number / Time / Enum / EnumMulti /
+ * EnumMultiOrdered) declare their OWN scoped `.ifld { display:
+ * flex }` fallback for standalone use. Those scoped rules get a
+ * `[data-v-xxx]` attribute selector at compile time — specificity
+ * (0,0,2,0). To win over them from a global file (no scope
+ * attribute) we use `.ifld-form .ifld.ifld` — chaining the class
+ * twice on the same element is equivalent to `.ifld` for matching
+ * but bumps specificity to (0,0,3,0). Standard CSS-cascade trick.
+ *
+ * Standalone uses of `.ifld` (none today) continue to fall through
+ * to the field component's own scoped styles — they don't carry
+ * the `.ifld-form` ancestor.
+ */
+
+.ifld-form .ifld.ifld {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  align-items: center;
+  gap: var(--tvh-space-3);
+  /* Row min-height matches the unified control height below — text /
+   * number / select / textarea all clamp to 30 px so each row is
+   * the same vertical real estate regardless of which control type
+   * sits in it. Native <select> on macOS / Windows / Linux is
+   * ~22-28 px; 30 px is the smallest height that fits comfortably
+   * across browsers without looking cramped. */
+  min-height: 30px;
+}
+
+.ifld-form .ifld__row {
+  grid-column: 2;
+}
+
+/* Width clamp — every input / select / textarea fills its grid
+ * cell exactly so right-edges align across all field types
+ * regardless of intrinsic content width. Self-chained
+ * `.ifld__input.ifld__input` (specificity 0,0,3,0) wins over
+ * field components' scoped fallback rules (specificity 0,0,2,0
+ * from the `[data-v-xxx]` attribute). */
+.ifld-form .ifld__input.ifld__input {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Uniform control height — text / number / select clamp to 30 px
+ * to match the typical native dropdown height regardless of OS /
+ * browser default (macOS / Windows / Linux selects vary
+ * ~22-28 px). The `:not(textarea)` exclusion lets multiline
+ * textareas keep their intrinsic `:rows`-driven height; 30 px
+ * would crush the 4-row default. */
+.ifld-form .ifld__input.ifld__input:not(textarea) {
+  height: 30px;
+  min-height: 30px;
+}
+
+/* MultiSelect (IdnodeFieldEnumMulti's > 10-option dropdown
+ * variant) carries class `.ifld__multiselect`, not `.ifld__input`,
+ * so the rule above misses it. Without `min-width: 0` the
+ * comma-joined trigger label's intrinsic content width drives the
+ * `1fr` grid track wider than its share, which then pushes the
+ * containing form (and any host dialog/drawer) past its target
+ * width. Clamp it to the cell. */
+.ifld-form .ifld__multiselect {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Checkbox sizing — targets the actual `<input type="checkbox">`
+ * element wherever it appears: standalone in IdnodeFieldBool (the
+ * input itself carries class `ifld__check`), or per-option inside
+ * IdnodeFieldEnumMulti's checkbox group (the `<label>` carries the
+ * class but the `<input>` is the visual element). The earlier
+ * class-targeted rule shrunk the EnumMulti label wrapper to 18 × 18
+ * which clipped the day-name text — targeting the input directly
+ * keeps wrappers natural-sized and only resizes the visual
+ * checkbox. */
+.ifld-form input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--tvh-primary);
+  margin: 0;
+}
+
+.ifld-form input[type='checkbox']:disabled {
+  cursor: not-allowed;
+}
+
+/* Standalone Bool field (IdnodeFieldBool): the `<input>` sits in
+ * the right grid cell directly, no wrapping label. Pin to the
+ * cell start so its 18 px box doesn't centre in a wider control
+ * cell. Targets the input via its `ifld__check` class to scope
+ * this rule to the standalone-bool case (per-option checkboxes
+ * inside EnumMulti use a `<label>`-wrapper layout that doesn't
+ * need start-alignment). */
+.ifld-form input.ifld__check {
+  justify-self: start;
+}
+
+@media (max-width: 767px) {
+  .ifld-form .ifld.ifld {
+    grid-template-columns: 1fr;
+  }
+  .ifld-form .ifld__row {
+    grid-column: auto;
+  }
+}

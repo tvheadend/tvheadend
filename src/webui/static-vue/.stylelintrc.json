@@ -1,0 +1,15 @@
+{
+  "_comment": "Tvheadend Vue UI — stylelint config. Intentionally minimal: this isn't a full code-style sweep, it's a targeted regression guard against literal font-size px values reappearing after the --tvh-text-* migration (commits 3e51c5f74 / e5ab3cddc / 18ceacd71). New CSS that hardcodes font-size: Npx fails the lint; permitted values include var(--tvh-text-*), inherit, 0, and CSS keywords. To opt into a wider stylelint ruleset later, extend stylelint-config-standard here.",
+  "overrides": [
+    {
+      "files": ["**/*.vue"],
+      "customSyntax": "postcss-html"
+    }
+  ],
+  "ignoreFiles": ["dist/**", "node_modules/**", "src/views/_dev/**"],
+  "rules": {
+    "declaration-property-value-disallowed-list": {
+      "font-size": ["/^[0-9.]+px$/"]
+    }
+  }
+}

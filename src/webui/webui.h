@@ -34,6 +34,15 @@ void simpleui_start(void);
 
 void extjs_start(void);
 
+/* The Vue UI is embedded whenever it was built locally (vue_build) or
+ * fetched prebuilt (vue_cache) — both bundle src/webui/static-vue/dist
+ * (Makefile BUNDLES-$(CONFIG_VUE_BUILD)/$(CONFIG_VUE_CACHE)). Serving and
+ * the root redirect gate on this, not ENABLE_VUE_BUILD alone, or a cache
+ * build bundles the UI but serves the fallback stub. */
+#define ENABLE_VUE_UI (ENABLE_VUE_BUILD || ENABLE_VUE_CACHE)
+
+void vue_init(void);
+
 size_t html_escaped_len(const char *src);
 const char* html_escape(char *dst, const char *src, size_t len);
 
