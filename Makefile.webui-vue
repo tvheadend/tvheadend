@@ -1,0 +1,151 @@
+# ############################################################################
+# Tvheadend Vue UI — pre-built dist cache via pcloud
+#
+# Mirrors the static-library cache pattern (Makefile.ffmpeg /
+# Makefile.hdhomerun on top of support/lib.sh + support/pcloud.py),
+# but for the Vue admin UI under src/webui/static-vue/.
+#
+# Targets
+#   libcacheget   Download webui-vue-<source-hash>.tgz from pcloud and
+#                 unpack into src/webui/static-vue/dist/. Fatal on miss
+#                 (intentional — downstream packagers picked the cache
+#                 path explicitly; a silent skip would ship a binary
+#                 without the UI).
+#   libcacheput   Tar src/webui/static-vue/dist/ and upload to pcloud as
+#                 webui-vue-<source-hash>.tgz. No-op when PCLOUD_TOKEN is
+#                 unset (matches support/lib.sh).
+#   build         Run npm ci + npm run build inside src/webui/static-vue/.
+#                 Requires node + npm on PATH.
+#   source-hash   Print the canonical source hash to stdout. Same recipe
+#                 the CI workflow uses for the cache-skip check, so both
+#                 sides agree on what counts as "same source."
+#
+# Required inputs (set by the toplevel Makefile or ./configure)
+#   ROOTDIR              Repository root
+#   BUILDDIR             Out-of-tree build dir (used for the tarball)
+#
+# Optional inputs (for libcacheput; mirror Makefile.static's contract)
+#   PCLOUD_TOKEN         pcloud OAuth token for uploads
+#   PCLOUD_BASEDIR       Upload base directory (defaults to "misc" via
+#                        support/lib.sh)
+#   PCLOUD_HASHDIR       Public hash for downloads (defaults via
+#                        support/lib.sh)
+# ############################################################################
+
+# Pull ROOTDIR / BUILDDIR / CONFIG_* via .config.mk so standalone
+# invocations (`make -f Makefile.webui-vue libcacheget`) work the
+# same way `Makefile.ffmpeg` does. `-include` (not `include`) so
+# callers can pass ROOTDIR / BUILDDIR on the command line in
+# contexts where ./configure hasn't been run (e.g. the cache-builder
+# GitHub Action, which doesn't need the full C-side toolchain).
+DIR :=  $(dir $(lastword $(MAKEFILE_LIST)))
+-include $(DIR)/.config.mk
+
+VUE_DIR    := $(ROOTDIR)/src/webui/static-vue
+DIST_DIR   := $(VUE_DIR)/dist
+
+# Canonical source-hash recipe. Inputs are exactly the files that
+# affect the built dist; lint / format configs and tests are excluded
+# because they don't change the output. cd into VUE_DIR first so
+# sha256sum sees relative paths only — otherwise the absolute path
+# of the checkout would leak into the hash and produce different
+# values on CI vs developer machines. LC_ALL=C sort gives a stable
+# ordering across hosts.
+SOURCE_HASH := $(shell cd $(VUE_DIR) && \
+                       ( find src -type f; \
+                         echo package.json; \
+                         echo package-lock.json; \
+                         echo vite.config.ts; \
+                         echo tsconfig.json; \
+                         echo index.html ) | \
+                       LC_ALL=C sort | xargs sha256sum | \
+                       sha256sum | cut -d' ' -f1)
+
+# pcloud paths. PCLOUD_BASEDIR defaults to "misc" inside support/lib.sh;
+# the "webui" subdirectory keeps the namespace separate from the
+# static-lib tarballs under PCLOUD_BASEDIR/staticlib/<codename>/<arch>/.
+PCLOUD_BASEDIR ?= misc
+PCLOUD_HASHDIR ?= kZ54ee7ZUvsSYmb9VGSpnmoVzcAUhpBXLq8k
+PCLOUD_PATH    := $(PCLOUD_BASEDIR)/webui/webui-vue-$(SOURCE_HASH).tgz
+TARBALL        := $(BUILDDIR)/webui-vue-$(SOURCE_HASH).tgz
+
+.PHONY: default libcacheget libcacheput pack build source-hash
+default: libcacheget
+
+# ---- source-hash ----
+source-hash:
+	@echo $(SOURCE_HASH)
+
+# ---- libcacheget ----
+# Download the pre-built tarball and unpack into DIST_DIR. Fatal on
+# download failure: if the user picked --enable-vue_cache they need the
+# UI shipped; falling through silently would produce a binary with the
+# old ExtJS UI but no /gui/ route, which is worse than failing the
+# build outright.
+#
+# File-cache shortcut: when `VUE_FILE_CACHE` (or, as a fallback for
+# "one cache dir for everything" setups, the shared
+# `TVHEADEND_FILE_CACHE`) points at a dir holding
+# webui-vue-<hash>.tgz, use it directly instead of pcloud. The Vue
+# var is checked first and is its OWN name on purpose: Makefile.static
+# does an unconditional `cp` from TVHEADEND_FILE_CACHE for every
+# static lib, so pointing that shared var at a Vue-only dir would
+# break the ffmpeg / hdhomerun builds. CI sets VUE_FILE_CACHE only.
+libcacheget:
+	@mkdir -p $(BUILDDIR)
+	@CACHE="$${VUE_FILE_CACHE:-$$TVHEADEND_FILE_CACHE}"; \
+	if [ -n "$$CACHE" ] && \
+	    [ -f "$$CACHE/webui-vue-$(SOURCE_HASH).tgz" ]; then \
+	  echo "FILECACHE       webui-vue-$(SOURCE_HASH).tgz"; \
+	  cp "$$CACHE/webui-vue-$(SOURCE_HASH).tgz" "$(TARBALL)"; \
+	else \
+	  echo "DOWNLOAD        $(PCLOUD_PATH)"; \
+	  python3 $(ROOTDIR)/support/pcloud.py publink_download \
+	     $(PCLOUD_HASHDIR) "$(PCLOUD_PATH)" "$(TARBALL)" || \
+	  { echo "FAILED to download $(PCLOUD_PATH)"; \
+	    echo "  (source hash: $(SOURCE_HASH))"; \
+	    echo "  Either the artifact for this source hash hasn't been"; \
+	    echo "  built yet (push to webui/v2-vue triggers the CI build),"; \
+	    echo "  or pcloud is unavailable. Re-run with --enable-vue_build"; \
+	    echo "  if you have node+npm available locally."; \
+	    exit 1; }; \
+	fi
+	@rm -rf $(DIST_DIR)
+	@mkdir -p $(DIST_DIR)
+	@tar -C $(DIST_DIR) -xzf $(TARBALL)
+	@echo "UNPACK          $(DIST_DIR)"
+
+# ---- pack ----
+# Build the dist and tar it to $(TARBALL). Always runs (no token
+# needed): the tarball is what BOTH the pcloud upload and the CI
+# GitHub artifact consume, so it must exist even on forks without
+# upload credentials.
+pack: build
+	@test -d $(DIST_DIR) || { echo "$(DIST_DIR) missing — build must run first"; exit 1; }
+	@mkdir -p $(BUILDDIR)
+	@echo "PACK            $(TARBALL)"
+	@tar -C $(DIST_DIR) -czf $(TARBALL).tmp .
+	@mv $(TARBALL).tmp $(TARBALL)
+
+# ---- libcacheput ----
+# Upload the packed tarball to pcloud. The PCLOUD_TOKEN guard mirrors
+# support/lib.sh:upload — no token, no-op (the tarball is still
+# produced by `pack` for the CI artifact path).
+libcacheput: pack
+ifneq ($(PCLOUD_TOKEN),)
+	@echo "UPLOAD          $(PCLOUD_PATH)"
+	@PCLOUD_TOKEN='$(PCLOUD_TOKEN)' \
+	   python3 $(ROOTDIR)/support/pcloud.py upload "$(PCLOUD_PATH)" "$(TARBALL)"
+endif
+
+# ---- build ----
+# Local Vite build. The toplevel Makefile already runs this directly
+# under CONFIG_VUE_BUILD; the indirection here exists so the
+# libcacheput target can depend on it cleanly + so an end-to-end
+# `make -f Makefile.webui-vue build` reproduces what CI runs.
+build:
+	@command -v npm >/dev/null 2>&1 || { \
+	   echo "npm not found — install node + npm or --enable-vue_cache"; \
+	   exit 1; }
+	cd $(VUE_DIR) && npm ci --no-audit --no-fund
+	cd $(VUE_DIR) && npm run build
