@@ -47,6 +47,10 @@ ifdef VUE_FILE_CACHE
 DEFINES  += --define "vue_file_cache $(VUE_FILE_CACHE)"
 endif
 
+ifdef STATICLIB_CACHE
+DEFINES  += --define "staticlib_cache $(STATICLIB_CACHE)"
+endif
+
 tvheadend.spec: $(SPEC)
 	@sed -e 's/@VERSION@/$(VERSION)/g' \
 	     -e 's/@RELEASE@/$(RELEASE)/g' \

@@ -58,6 +58,10 @@ echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
 export VUE_FILE_CACHE="%{vue_file_cache}"
 %endif
 
+%if %{defined staticlib_cache}
+export STATICLIB_CACHE="%{staticlib_cache}"
+%endif
+
 %ifarch %arm aarch64
       %configure --disable-lockowner --disable-ffmpeg_static %{?tvh_extra_configure}
 %else

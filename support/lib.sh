@@ -84,16 +84,17 @@ function download
 {
   LIB_NAME="$1"
   LIB_HASH=$(hash ${LIB_NAME})
-  P="${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
+  CACHE_DIR="${STATICLIB_CACHE:-$BUILDDIR}"
+  P="${CACHE_DIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
 
   # Cleanup
-  rm -f "${BUILDDIR}/.${LIB_NAME}"*.tmp
+  rm -f "${CACHE_DIR}/.${LIB_NAME}"*.tmp
 
   # Already downloaded
   [ -f "${P}" ] && return 0
 
   # Create directory
-  [ ! -d "${BUILDDIR}" ] && mkdir -p "${BUILDDIR}"
+  [ ! -d "${CACHE_DIR}" ] && mkdir -p "${CACHE_DIR}"
 
   # Attempt to fetch
   N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
@@ -123,7 +124,8 @@ function unpack
 {
   LIB_NAME="$1"
   LIB_HASH=$(hash ${LIB_NAME})
-  P="${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
+  CACHE_DIR="${STATICLIB_CACHE:-$BUILDDIR}"
+  P="${CACHE_DIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
   U="${BUILDDIR}/.${LIB_NAME}.unpack"
 
   # Not downloaded
@@ -155,28 +157,38 @@ function upload
   LIB_NAME=$1; shift
   LIB_FILES=$*
   LIB_HASH=$(hash ${LIB_NAME})
-  P="${BUILDDIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
+  CACHE_DIR="${STATICLIB_CACHE:-$BUILDDIR}"
+  P="${CACHE_DIR}/.${LIB_NAME}-${LIB_HASH}.tgz"
 
   # Can't upload
   [ -z "${PCLOUD_TOKEN}" ] && return 0
   
-  # Don't need to upload
-  [ -f "${P}" ] && return 0
+  N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
 
-  # Make relative paths
-  LIB_FILES=$(echo "${LIB_FILES}" | sed "s#${BUILDDIR}/${LIB_NAME}/##g")
+  # Check if already on pcloud
+  if ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" /dev/null 2>/dev/null || python3 ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" /dev/null 2>/dev/null; then
+    echo "ALREADY ON PCLOUD ${N}"
+    return 0
+  fi
 
-  # Build temporary file
-  echo "PACK            ${P} [${LIB_FILES}]"
-  tar -C ${BUILDDIR}/${LIB_NAME} -zcf ${P}.tmp ${LIB_FILES} || return 1
+  # Don't need to pack if it already exists, but we DO need to upload!
+  if [ ! -f "${P}" ]; then
+    # Make relative paths
+    LIB_FILES=$(echo "${LIB_FILES}" | sed "s#${BUILDDIR}/${LIB_NAME}/##g")
+
+    # Build temporary file
+    echo "PACK            ${P} [${LIB_FILES}]"
+    [ ! -d "${CACHE_DIR}" ] && mkdir -p "${CACHE_DIR}"
+    tar -C ${BUILDDIR}/${LIB_NAME} -zcf ${P}.tmp ${LIB_FILES} || return 1
+    mv "${P}.tmp" "${P}" || return 1
+  fi
 
   # Upload
-  N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
   echo "UPLOAD          ${N}"
-  ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || python3 ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}.tmp" || return 1
+  ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}" || python3 ${ROOTDIR}/support/pcloud.py upload "${N}" "${P}" || return 1
   
   # Done
-  mv "${P}.tmp" "${P}" || return 1
+  return 0
 }
 
 # Run command

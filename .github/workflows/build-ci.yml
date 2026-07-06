@@ -226,10 +226,19 @@ jobs:
           SCRIPT: |
             git config --global --add safe.directory /workspace
         run: docker exec build-container bash -c "$SCRIPT"
+      - name: Cache static dependencies
+        uses: actions/cache@v4
+        with:
+          path: .staticlib
+          key: staticlib-${{ matrix.container[1] }}-${{ github.sha }}
+          restore-keys: |
+            staticlib-${{ matrix.container[1] }}-
       - name: build
         env:
           SCRIPT: |
             cd /workspace
+            mkdir -p .staticlib
+            export STATICLIB_CACHE=/workspace/.staticlib
             export VUE_FILE_CACHE=/workspace/.vuecache
             AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || '' }}
         run: docker exec build-container bash -c "$SCRIPT"
@@ -280,8 +289,17 @@ jobs:
           path: .vuecache
       - name: Workaround safe directory
         run: git config --global --add safe.directory "$(pwd)"
+      - name: Cache static dependencies
+        uses: actions/cache@v4
+        with:
+          path: .staticlib
+          key: staticlib-fedora-${{ matrix.releasever }}-${{ github.sha }}
+          restore-keys: |
+            staticlib-fedora-${{ matrix.releasever }}-
       - name: build
         run: |
+          mkdir -p .staticlib
+          export STATICLIB_CACHE="$PWD/.staticlib"
           export VUE_FILE_CACHE="$PWD/.vuecache"
           export TVH_EXTRA_CONFIGURE="--enable-vue_cache --disable-vue_build"
           ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 $TVH_EXTRA_CONFIGURE && make -C rpm build -j$(nproc) || (echo "PARALLEL BUILD FAILED, DOING SINGLE THREADED BUILD" && make -C rpm build)
@@ -328,8 +346,17 @@ jobs:
           path: .vuecache
       - name: Workaround safe directory
         run: git config --global --add safe.directory "$(pwd)"
+      - name: Cache static dependencies
+        uses: actions/cache@v4
+        with:
+          path: .staticlib
+          key: staticlib-el-${{ matrix.releasever }}-${{ matrix.runner }}-${{ github.sha }}
+          restore-keys: |
+            staticlib-el-${{ matrix.releasever }}-${{ matrix.runner }}-
       - name: build
         run: |
+          mkdir -p .staticlib
+          export STATICLIB_CACHE="$PWD/.staticlib"
           export VUE_FILE_CACHE="$PWD/.vuecache"
           export TVH_EXTRA_CONFIGURE="--enable-vue_cache --disable-vue_build"
           ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 $TVH_EXTRA_CONFIGURE && make -C rpm build -j$(nproc)
