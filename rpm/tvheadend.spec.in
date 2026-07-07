@@ -53,10 +53,15 @@ SAT>IP and various other clients using these protocols.
 
 %build
 echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
+
+%if %{defined vue_file_cache}
+export VUE_FILE_CACHE="%{vue_file_cache}"
+%endif
+
 %ifarch %arm aarch64
-      %configure --disable-lockowner --disable-ffmpeg_static
+      %configure --disable-lockowner --disable-ffmpeg_static %{?tvh_extra_configure}
 %else
-      %configure --disable-lockowner --enable-ffmpeg_static --enable-libx265 --nowerror
+      %configure --disable-lockowner --enable-ffmpeg_static --enable-libx265 --nowerror %{?tvh_extra_configure}
 %endif
 %make_build PYTHON=python3
 

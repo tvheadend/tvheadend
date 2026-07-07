@@ -39,6 +39,14 @@ COMMITR   = $(COMMIT1)
 endif
 DEFINES   = --define '_topdir $(TOPDIR)'
 
+ifdef TVH_EXTRA_CONFIGURE
+DEFINES  += --define "tvh_extra_configure $(TVH_EXTRA_CONFIGURE)"
+endif
+
+ifdef VUE_FILE_CACHE
+DEFINES  += --define "vue_file_cache $(VUE_FILE_CACHE)"
+endif
+
 tvheadend.spec: $(SPEC)
 	@sed -e 's/@VERSION@/$(VERSION)/g' \
 	     -e 's/@RELEASE@/$(RELEASE)/g' \
