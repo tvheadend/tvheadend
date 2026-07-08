@@ -39,7 +39,12 @@ jobs:
     outputs:
       source_hash:   ${{ steps.hash.outputs.hash }}
       artifact_name: webui-vue-${{ steps.hash.outputs.hash }}
-    # PCLOUD_TOKEN is injected at the step level for uploads only.
+    # PCLOUD_TOKEN is mapped into env at the job level so the pcloud
+    # steps can test its presence in their `if` (the secrets context
+    # itself is not allowed in step-level `if`). It is empty on forks
+    # and in token-less callers (build-ci); the pcloud steps then skip.
+    env:
+      PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
     steps:
       - name: Checkout
         # v5 (not v6) — actions/checkout v6 ships a new credential model
@@ -80,10 +85,12 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: make -f Makefile.webui-vue pack ROOTDIR="$PWD" BUILDDIR="$PWD/build.linux"
 
-      # ---- pCloud Upload (only on master) ----
+      # ---- pCloud Upload (only on master, and only when the repo has
+      # the PCLOUD_TOKEN secret — forks don't, and pcloud.py needs it
+      # even for listfolder) ----
       - name: Check pcloud
         id: check_pcloud
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && env.PCLOUD_TOKEN != ''
         run: |
           set +e
           python3 support/pcloud.py listfolder /misc/webui 2>/dev/null \
@@ -99,9 +106,7 @@ jobs:
           fi
 
       - name: Upload to pcloud
-        if: github.ref == 'refs/heads/master' && steps.check_pcloud.outputs.pcloud_hit != 'true'
-        env:
-          PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
+        if: github.ref == 'refs/heads/master' && env.PCLOUD_TOKEN != '' && steps.check_pcloud.outputs.pcloud_hit != 'true'
         run: |
           python3 support/pcloud.py upload \
             "/misc/webui/webui-vue-${{ steps.hash.outputs.hash }}.tgz" \
