@@ -9,11 +9,15 @@ import vue from '@vitejs/plugin-vue'
 /*
  * `base` differs between build and dev:
  *
- *   build: '/gui/static/'   — production assets are served by
- *                              tvheadend's C `/gui/static` route
- *                              (page_static_file handler) so the
- *                              hashed URLs in index.html must carry
- *                              that prefix.
+ *   build: './'             — relative base, so the bundle works at
+ *                              ANY mount point (tvheadend_webroot).
+ *                              index.html's asset refs resolve via its
+ *                              `<base href>` tag (rewritten to
+ *                              {webroot}/gui/static/ by vue.c at serve
+ *                              time) and lazy chunks resolve via
+ *                              import.meta.url. Vue Router's base +
+ *                              server-root URLs derive from the same
+ *                              tag — see src/utils/base.ts.
  *
  *   dev:   '/gui/'          — the Vite dev server has no `/static`
  *                              split; the SPA mounts at /gui/ to
@@ -23,7 +27,7 @@ import vue from '@vitejs/plugin-vue'
  *                              be serving at /gui/static/.
  */
 export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/gui/static/' : '/gui/',
+  base: command === 'build' ? './' : '/gui/',
   plugins: [vue()],
   resolve: {
     alias: {

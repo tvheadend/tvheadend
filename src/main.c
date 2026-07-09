@@ -1072,10 +1072,14 @@ main(int argc, char **argv)
     }
     if (tmp[strlen(tmp)-1] == '/')
       tmp[strlen(tmp)-1] = '\0';
-    if (tmp[0])
+    if (tmp[0]) {
       tvheadend_webroot = tmp;
-    else
+    } else {
+      /* "/" or "" normalise to no webroot at all — leaving the raw
+       * value would prefix every registered route with it. */
       free(tmp);
+      tvheadend_webroot = NULL;
+    }
   }
   tvheadend_webui_debug = opt_uidebug;
 

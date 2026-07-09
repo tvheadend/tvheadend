@@ -8,6 +8,7 @@ import {
   type RouteRecordRaw,
 } from 'vue-router'
 import { watch } from 'vue'
+import { appBase } from '@/utils/base'
 import type { PermissionKey } from '@/types/access'
 import { useAccessStore } from '@/stores/access'
 import { useCapabilitiesStore } from '@/stores/capabilities'
@@ -728,7 +729,9 @@ if (import.meta.env.DEV) {
 }
 
 const router = createRouter({
-  history: createWebHistory('/gui/'),
+  /* Base derived at runtime from the served <base> tag so the app
+   * works behind a webroot (`--http_root`) — see utils/base.ts. */
+  history: createWebHistory(appBase),
   routes,
 })
 

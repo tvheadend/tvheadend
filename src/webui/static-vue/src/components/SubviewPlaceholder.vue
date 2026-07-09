@@ -13,11 +13,9 @@
  * Lives as a component (not duplicated copy in each placeholder view)
  * so consistency stays automatic; each view's body can be swapped
  * for a real implementation without touching this scaffolding.
- *
- * Note: `href="/"` doesn't honour `tvheadend_webroot` prefixes — the
- * v2 UI as a whole doesn't yet (Vite `base` is hardcoded). Will be
- * addressed when `base` becomes runtime-configurable.
  */
+import { serverBase } from '@/utils/base'
+
 defineProps<{
   /* User-facing label of the absent view, e.g. "Users", "Networks". */
   label: string
@@ -32,7 +30,7 @@ defineProps<{
     <p class="subview-placeholder__action">
       <a
         class="subview-placeholder__link"
-        href="/"
+        :href="serverBase"
         target="_blank"
         rel="noopener noreferrer"
       >

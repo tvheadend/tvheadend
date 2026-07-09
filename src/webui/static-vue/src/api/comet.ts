@@ -23,6 +23,7 @@
  */
 
 import type { CometEnvelope, ConnectionState, NotificationMessage } from '@/types/comet'
+import { serverUrl } from '@/utils/base'
 
 type Listener = (msg: NotificationMessage) => void
 type StateListener = (state: ConnectionState) => void
@@ -142,7 +143,7 @@ class CometClient {
         if (this.boxid) body.append('boxid', this.boxid)
         body.append('immediate', '0')
 
-        const res = await fetch('/comet/poll', {
+        const res = await fetch(serverUrl('comet/poll'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body,

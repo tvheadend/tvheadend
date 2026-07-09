@@ -6,6 +6,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
+    <!--
+      Webroot anchor: vue.c rewrites this href to {webroot}/gui/static/
+      at serve time. The production build uses a relative Vite base, so
+      the hashed assets resolve through this tag, and utils/base.ts
+      derives the router base + server root from document.baseURI.
+    -->
+    <base href="/gui/static/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tvheadend</title>
   </head>

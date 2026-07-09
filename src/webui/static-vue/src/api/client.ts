@@ -11,6 +11,7 @@
  */
 
 import { ApiError } from './errors'
+import { serverUrl } from '@/utils/base'
 
 export async function apiCall<T = unknown>(
   endpoint: string,
@@ -37,7 +38,7 @@ export async function apiCall<T = unknown>(
     body.append(k, typeof v === 'string' ? v : JSON.stringify(v))
   }
 
-  const res = await fetch(`/api/${endpoint}`, {
+  const res = await fetch(serverUrl(`api/${endpoint}`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,

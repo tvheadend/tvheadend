@@ -10,6 +10,8 @@
  * the negotiation that applies it is in the `streamProfiles` store.
  */
 
+import { serverUrl } from '@/utils/base'
+
 /*
  * External-player handoff.
  *
@@ -42,7 +44,7 @@
  * `stream/mux/<uuid>`, or `dvrfile/<uuid>` — and may carry a query
  * string (`?profile=…`, `?title=…`). */
 export function openPlay(path: string): void {
-  globalThis.open(`/play/ticket/${path}`, '_blank', 'noopener,noreferrer')
+  globalThis.open(serverUrl(`play/ticket/${path}`), '_blank', 'noopener,noreferrer')
 }
 
 /*
@@ -58,5 +60,5 @@ export function openPlay(path: string): void {
  * is live-channel only; recordings keep the external-player path.
  */
 export function channelStreamUrl(channelUuid: string, profile: string): string {
-  return `/stream/channel/${channelUuid}?profile=${encodeURIComponent(profile)}`
+  return serverUrl(`stream/channel/${channelUuid}?profile=${encodeURIComponent(profile)}`)
 }

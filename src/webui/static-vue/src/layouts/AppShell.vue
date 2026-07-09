@@ -187,10 +187,25 @@ onBeforeUnmount(() => {
   unregisterCmdK = null
   unregisterSlash = null
 })
+
+/* Skip-link target jump in JS: the document carries a <base> tag
+ * (webroot support), so a bare href="#main-content" would resolve
+ * against the base URL and navigate away instead of jumping
+ * in-page. Focus the landmark directly (tabindex=-1 makes <main>
+ * focusable), which is also the more robust skip-link behaviour. */
+function skipToMain(): void {
+  const el = document.getElementById('main-content')
+  if (!el) return
+  el.setAttribute('tabindex', '-1')
+  el.focus()
+  el.scrollIntoView()
+}
 </script>
 
 <template>
-  <a class="skip-link" href="#main-content">{{ t('Skip to main content') }}</a>
+  <a class="skip-link" href="#main-content" @click.prevent="skipToMain">{{
+    t('Skip to main content')
+  }}</a>
   <div class="app-shell">
     <TopBar @toggle-rail="toggleRail" />
     <div class="app-shell__body">

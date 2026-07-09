@@ -22,6 +22,7 @@ import { useHomeState } from '@/composables/useHomeState'
 import { consumeSetupGreeting } from '@/utils/setupGreeting'
 import { useAccessStore } from '@/stores/access'
 import { cometClient } from '@/api/comet'
+import { serverUrl } from '@/utils/base'
 import { useWizardStore } from '@/stores/wizard'
 import {
   refreshEpg as refreshEpgAction,
@@ -171,7 +172,7 @@ async function onCardAction(actionId: string): Promise<void> {
      * server has one pending. See `NavRail.vue` for the long
      * rationale. */
     try {
-      const res = await fetch('/login', {
+      const res = await fetch(serverUrl('login'), {
         method: 'GET',
         credentials: 'include',
         cache: 'no-store',

@@ -30,6 +30,7 @@
 import { onMounted, ref } from 'vue'
 import { apiCall } from '@/api/client'
 import { useI18n } from '@/composables/useI18n'
+import { serverUrl } from '@/utils/base'
 
 const { t } = useI18n()
 
@@ -68,7 +69,7 @@ const currentYear = new Date().getFullYear()
     </header>
 
     <section class="about__hero">
-      <img class="about__logo" :src="'/static/img/logobig.png'" alt="" />
+      <img class="about__logo" :src="serverUrl('static/img/logobig.png')" alt="" />
       <h2 class="about__title">
         HTS Tvheadend
         <span v-if="info?.sw_version" class="about__version">{{ info.sw_version }}</span>
@@ -172,10 +173,10 @@ const currentYear = new Date().getFullYear()
       <p>
         {{ t('It is not endorsed or certified by') }}
         <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer">TMDb</a>
-        <img class="about__inline-logo" :src="'/static/img/tmdb.png'" alt="" />
+        <img class="about__inline-logo" :src="serverUrl('static/img/tmdb.png')" alt="" />
         {{ t('or by') }}
         <a href="https://thetvdb.com" target="_blank" rel="noopener noreferrer">TheTVDB.com</a>
-        <img class="about__inline-logo" :src="'/static/img/tvdb.png'" alt="" />.
+        <img class="about__inline-logo" :src="serverUrl('static/img/tvdb.png')" alt="" />.
       </p>
     </section>
 
@@ -189,7 +190,7 @@ const currentYear = new Date().getFullYear()
         target="_blank"
         rel="noopener noreferrer"
       >
-        <img :src="'/static/img/opencollective.png'" :alt="t('Donate via OpenCollective')" />
+        <img :src="serverUrl('static/img/opencollective.png')" :alt="t('Donate via OpenCollective')" />
       </a>
     </section>
   </article>

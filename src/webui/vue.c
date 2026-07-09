@@ -20,10 +20,61 @@
 #include "tvheadend.h"
 #include "http.h"
 #include "webui.h"
+#include "filebundle.h"
 
 #if ENABLE_VUE_UI
 
 #define VUE_DIST "src/webui/static-vue/dist"
+
+/* The <base href> token in dist/index.html; the webroot is injected
+ * right after `href="` so the SPA discovers its mount point. */
+#define VUE_BASE_TOKEN  "href=\"/gui/static/\""
+#define VUE_BASE_SKIP   6 /* strlen("href=\"") */
+
+/* Serve index.html with tvheadend_webroot injected into its
+ * <base href> so the app derives all URLs from the real mount. */
+static int
+page_vue_index_webroot(http_connection_t *hc)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  fb_file *fp;
+  char *buf, *pos;
+  size_t size, off = 0;
+
+  fp = fb_open(VUE_DIST "/index.html", 1, 0);
+  if (!fp)
+    return HTTP_STATUS_INTERNAL;
+  size = fb_size(fp);
+  buf = malloc(size + 1);
+  if (!buf) {
+    fb_close(fp);
+    return HTTP_STATUS_INTERNAL;
+  }
+  while (off < size && !fb_eof(fp)) {
+    ssize_t c = fb_read(fp, buf + off, size - off);
+    if (c <= 0)
+      break;
+    off += c;
+  }
+  fb_close(fp);
+  if (off != size) {
+    free(buf);
+    return HTTP_STATUS_INTERNAL;
+  }
+  buf[size] = '\0';
+
+  pos = strstr(buf, VUE_BASE_TOKEN);
+  if (pos) {
+    htsbuf_append(hq, buf, (pos - buf) + VUE_BASE_SKIP);
+    htsbuf_append_str(hq, tvheadend_webroot);
+    htsbuf_append_str(hq, pos + VUE_BASE_SKIP);
+  } else {
+    htsbuf_append(hq, buf, size);
+  }
+  free(buf);
+  http_output_html(hc);
+  return 0;
+}
 
 static int
 page_vue_index(http_connection_t *hc, const char *remain, void *opaque)
@@ -37,7 +88,9 @@ page_vue_index(http_connection_t *hc, const char *remain, void *opaque)
    * + a fixed filename. */
   (void)remain;
   (void)opaque;
-  return page_static_file(hc, "index.html", (void *)VUE_DIST);
+  if (tvheadend_webroot == NULL)
+    return page_static_file(hc, "index.html", (void *)VUE_DIST);
+  return page_vue_index_webroot(hc);
 }
 
 #else /* !ENABLE_VUE_UI */
@@ -58,9 +111,11 @@ page_vue_index(http_connection_t *hc, const char *remain, void *opaque)
     "</head><body>"
     "<h1>Vue UI not available in this build</h1>"
     "<p>This binary was built without the Vue UI "
-    "(neither <code>vue_build</code> nor <code>vue_cache</code> enabled). "
-    "<a href=\"/extjs.html\">Use the ExtJS UI instead.</a></p>"
-    "</body></html>\n");
+    "(neither <code>vue_build</code> nor <code>vue_cache</code> enabled). ");
+  /* Honour the webroot in the escape link. */
+  htsbuf_qprintf(hq,
+    "<a href=\"%s/extjs.html\">Use the ExtJS UI instead.</a></p>"
+    "</body></html>\n", tvheadend_webroot ?: "");
   http_output_html(hc);
   return 0;
 }

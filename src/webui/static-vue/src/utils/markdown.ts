@@ -22,6 +22,8 @@
  * legibly (without `**` artifacts becoming HTML).
  */
 
+import { serverUrl } from '@/utils/base'
+
 interface MarkedGlobal {
   marked?: (src: string, opts?: Record<string, unknown>) => string
 }
@@ -34,9 +36,9 @@ export function loadMarkedScript(): Promise<void> {
     }
     const s = document.createElement('script')
     s.id = 'tvh-marked-script'
-    s.src = '/static/app/marked.js'
+    s.src = serverUrl('static/app/marked.js')
     s.onload = () => resolve()
-    s.onerror = () => reject(new Error('Failed to load /static/app/marked.js'))
+    s.onerror = () => reject(new Error('Failed to load static/app/marked.js'))
     document.head.appendChild(s)
   })
 }
@@ -152,14 +154,14 @@ export function extractFirstHeading(html: string, fallback: string): string {
 
 /*
  * Rewrite root-relative `static/…` attribute values to absolute
- * `/static/…`. The compiled-in markdown (wizard step
+ * webroot-aware `/static/…`. The compiled-in markdown (wizard step
  * descriptions + `/markdown/firstconfig` help page) uses paths
  * like `static/img/doc/firstconfig/wizard.png` that work
  * verbatim under ExtJS's `/` root but resolve against the
  * current route under Vue (`/gui/wizard/login` →
- * `/gui/wizard/static/...` → 404). Prepending `/` anchors them
- * at the server root so the existing /static handler serves
- * the asset.
+ * `/gui/wizard/static/...` → 404). Anchoring them at the
+ * webroot-aware server root lets the existing /static handler
+ * serve the asset.
  *
  * Only touches `src=` and `href=` whose value starts with
  * exactly `static/` (no leading slash, no scheme) — external
@@ -169,6 +171,6 @@ export function extractFirstHeading(html: string, fallback: string): string {
 export function rewriteStaticUrls(html: string): string {
   return html.replace(
     /(\s(?:src|href))="(static\/[^"]*)"/g,
-    (_match, attr: string, path: string) => `${attr}="/${path}"`,
+    (_match, attr: string, path: string) => `${attr}="${serverUrl(path)}"`,
   )
 }

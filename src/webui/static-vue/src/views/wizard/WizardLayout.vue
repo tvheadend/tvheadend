@@ -32,6 +32,7 @@ import { useRoute } from 'vue-router'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { HelpCircle } from 'lucide-vue-next'
 import { useI18n } from '@/composables/useI18n'
+import { serverUrl } from '@/utils/base'
 import WizardProgress from './WizardProgress.vue'
 import WizardHelpDock from './WizardHelpDock.vue'
 
@@ -56,7 +57,7 @@ const routeKey = computed(() => route.fullPath ?? '')
  * the URL is served at runtime by tvheadend's existing /static
  * handler from the ExtJS bundle.
  */
-const logoUrl = '/static/img/logo.png'
+const logoUrl = serverUrl('static/img/logo.png')
 </script>
 
 <template>

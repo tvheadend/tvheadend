@@ -44,6 +44,7 @@ import {
   renderMarkdown,
   rewriteStaticUrls,
 } from '@/utils/markdown'
+import { serverUrl } from '@/utils/base'
 
 export interface HelpHistoryEntry {
   /* Page id, e.g. `firstconfig` or `class/mpegts_service`. The
@@ -93,7 +94,7 @@ function encodePagePath(page: string): string {
 }
 
 async function fetchAndRender(page: string): Promise<HelpHistoryEntry> {
-  const res = await fetch(`/markdown/${encodePagePath(page)}`)
+  const res = await fetch(serverUrl(`markdown/${encodePagePath(page)}`))
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`)
   }

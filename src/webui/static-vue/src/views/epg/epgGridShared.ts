@@ -17,6 +17,7 @@
 
 import type { TooltipMode } from './epgViewOptions'
 import { flattenKodiText } from './kodiText'
+import { serverUrl } from '@/utils/base'
 
 const ONE_HOUR = 3600
 
@@ -118,7 +119,7 @@ function fmtTimeRange(start: number | undefined, stop: number | undefined): stri
 export function iconUrl(icon: string | undefined): string | null {
   if (!icon) return null
   if (icon.startsWith('http://') || icon.startsWith('https://')) return icon
-  return '/' + icon.replace(/^\/+/, '')
+  return serverUrl(icon)
 }
 
 export function channelNumber(ch: GridChannel): string {

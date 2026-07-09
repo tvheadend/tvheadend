@@ -34,6 +34,7 @@ import { ref, type Ref } from 'vue'
 import { Video } from 'lucide-vue-next'
 import type { Router } from 'vue-router'
 import { apiCall } from '@/api/client'
+import { serverUrl } from '@/utils/base'
 import { t } from '@/composables/useI18n'
 import type { useAccessStore } from '@/stores/access'
 import type { useConfirmDialog } from '@/composables/useConfirmDialog'
@@ -166,7 +167,7 @@ function formatEntryContext(channelName?: string, startEpoch?: number): string {
 }
 
 function openExternalPlayer(uuid: string, title: string): void {
-  const url = `/play/ticket/dvrfile/${encodeURIComponent(uuid)}?title=${encodeURIComponent(title)}`
+  const url = serverUrl(`play/ticket/dvrfile/${encodeURIComponent(uuid)}?title=${encodeURIComponent(title)}`)
   globalThis.window.open(url, '_blank', 'noopener')
 }
 

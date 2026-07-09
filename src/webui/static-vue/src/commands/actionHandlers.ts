@@ -25,6 +25,7 @@
  */
 import type { Router } from 'vue-router'
 import { apiCall } from '@/api/client'
+import { serverUrl } from '@/utils/base'
 import { t } from '@/composables/useI18n'
 import type { useConfirmDialog } from '@/composables/useConfirmDialog'
 import type { useToastNotify } from '@/composables/useToastNotify'
@@ -132,7 +133,7 @@ export async function startSetupWizard(
  * to duplicate the URL or the cross-UI rationale.
  */
 export function openLogout(): void {
-  globalThis.window.location.href = '/logout'
+  globalThis.window.location.href = serverUrl('logout')
 }
 
 /*

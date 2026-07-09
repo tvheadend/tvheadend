@@ -47,6 +47,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { cometClient } from '@/api/comet'
+import { serverUrl } from '@/utils/base'
 
 /* Ring buffer cap. 5000 lines × ~200 bytes per LogLine ≈ 1 MB
  * resident; comfortable for any session length. Drop-oldest on
@@ -234,7 +235,7 @@ export const useLogStore = defineStore('log', () => {
     try {
       const body = new URLSearchParams()
       body.append('boxid', boxid)
-      const res = await fetch('/comet/debug', {
+      const res = await fetch(serverUrl('comet/debug'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,

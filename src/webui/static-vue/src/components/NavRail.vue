@@ -25,6 +25,7 @@ import { useRailPreference } from '@/composables/useRailPreference'
 import { useI18n } from '@/composables/useI18n'
 import { useIsPhone } from '@/composables/useIsPhone'
 import { useStickyBottom } from '@/composables/useStickyBottom'
+import { serverUrl } from '@/utils/base'
 import RailInfoArea from './RailInfoArea.vue'
 import CommandPaletteTrigger from './CommandPaletteTrigger.vue'
 
@@ -39,7 +40,7 @@ const { t } = useI18n()
  * ExtJS UI retires, copy the asset into `static-vue/src/assets/`
  * and replace this with a Vite-imported reference.
  */
-const logoUrl = '/static/img/logo.png'
+const logoUrl = serverUrl('static/img/logo.png')
 
 const props = defineProps<{
   open: boolean
@@ -135,7 +136,7 @@ const NAV_SECTIONS: NavSection[] = [
  * interface, available while both UIs ship side by side. */
 const NAV_UNGROUPED: Blueprint[] = [
   { routeName: 'about', label: t('About'), icon: Info },
-  { href: '/extjs.html', label: t('Classic UI'), icon: ExternalLink },
+  { href: serverUrl('extjs.html'), label: t('Classic UI'), icon: ExternalLink },
 ]
 
 /*
@@ -313,11 +314,11 @@ const showLogin = computed(
     !access.data?.admin,
 )
 function onLogoutClick() {
-  globalThis.window.location.href = '/logout'
+  globalThis.window.location.href = serverUrl('logout')
 }
 async function onLoginClick() {
   try {
-    const res = await fetch('/login', {
+    const res = await fetch(serverUrl('login'), {
       method: 'GET',
       credentials: 'include',
       cache: 'no-store',

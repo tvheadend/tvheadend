@@ -37,6 +37,7 @@
  * `/* i18n: new string *\/` so a future audit finds them.
  */
 import { ref } from 'vue'
+import { serverUrl } from '@/utils/base'
 
 /*
  * Reactivity hook. Bumped every time `loadLocale()` swaps the
@@ -162,7 +163,7 @@ export function loadLocale(): Promise<void> {
     /* Cache bust by timestamp — the server may reasonably set
      * caching headers and we must always pick up the current
      * user's language file. */
-    s.src = `/redir/locale.js?_=${Date.now()}`
+    s.src = serverUrl(`redir/locale.js?_=${Date.now()}`)
     s.onload = () => {
       /* Bump the reactive ref so any reactive consumer of `t()`
        * re-evaluates against the new dict. */

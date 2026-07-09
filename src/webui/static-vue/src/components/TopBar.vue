@@ -37,12 +37,13 @@ import { Menu } from 'lucide-vue-next'
 import RailInfoArea from './RailInfoArea.vue'
 import CommandPaletteTrigger from './CommandPaletteTrigger.vue'
 import { useI18n } from '@/composables/useI18n'
+import { serverUrl } from '@/utils/base'
 
 const { t } = useI18n()
 
 defineEmits<{ toggleRail: [] }>()
 
-const logoUrl = '/static/img/logo.png'
+const logoUrl = serverUrl('static/img/logo.png')
 
 const barRef = ref<HTMLElement | null>(null)
 const infoRef = ref<HTMLElement | null>(null)

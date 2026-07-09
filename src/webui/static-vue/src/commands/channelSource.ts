@@ -49,6 +49,7 @@ import { ref, type Ref } from 'vue'
 import { Tv } from 'lucide-vue-next'
 import type { Router } from 'vue-router'
 import { apiCall } from '@/api/client'
+import { serverUrl } from '@/utils/base'
 import type { useAccessStore } from '@/stores/access'
 import type { useEntityEditor } from '@/composables/useEntityEditor'
 import type { Command } from './commandRegistry'
@@ -174,7 +175,7 @@ function buildChannelCommand(entry: ChannelListEntry, deps: ChannelSourceDeps): 
  * readable channel name; some players read it as the playlist
  * title. */
 function openExternalPlayer(uuid: string, name: string): void {
-  const url = `/play/ticket/stream/channel/${encodeURIComponent(uuid)}?title=${encodeURIComponent(name)}`
+  const url = serverUrl(`play/ticket/stream/channel/${encodeURIComponent(uuid)}?title=${encodeURIComponent(name)}`)
   /* `_blank` so the user keeps the Vue UI open in the original
    * tab. `noopener` denies the new context access to
    * `window.opener` — defensive against any future hostile

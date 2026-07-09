@@ -36,6 +36,7 @@ import IdnodeGrid from '@/components/IdnodeGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
 import IdnodeEditor from '@/components/IdnodeEditor.vue'
 import type { BaseRow } from '@/types/grid'
+import { serverUrl } from '@/utils/base'
 import { useAccessStore } from '@/stores/access'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useDvrListView } from '@/composables/useDvrListView'
@@ -115,7 +116,7 @@ function downloadSelection(selected: BaseRow[]) {
   if (selected.length === 0) return
   const uuid = selected[0].uuid
   if (typeof uuid !== 'string' || !uuid) return
-  globalThis.open(`/dvrfile/${uuid}`, '_blank')
+  globalThis.open(serverUrl(`dvrfile/${uuid}`), '_blank')
 }
 </script>
 

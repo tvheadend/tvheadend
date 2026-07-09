@@ -31,6 +31,7 @@ import WizardFooter from './WizardFooter.vue'
 import { useWizardStore } from '@/stores/wizard'
 import { apiCall } from '@/api/client'
 import { markSetupComplete } from '@/utils/setupGreeting'
+import { appBase } from '@/utils/base'
 import { addExternalLinkAttrs, renderMarkdown, rewriteStaticUrls } from '@/utils/markdown'
 import type { IdnodeProp } from '@/types/idnode'
 
@@ -108,7 +109,7 @@ async function handleFinish(): Promise<void> {
    * the reload — sessionStorage survives the full reload, in-memory
    * state does not. The Home reads + clears it once. */
   markSetupComplete()
-  globalThis.location.assign('/gui/')
+  globalThis.location.assign(appBase)
 }
 
 async function handlePrevious(): Promise<void> {
