@@ -285,6 +285,11 @@ export interface UseEpgViewState {
   dayStart: Ref<number>
   dayEnd: ComputedRef<number>
   isToday: ComputedRef<boolean>
+  /* Wall-clock minute ticker (epoch seconds). Ticks every 60s and
+   * pauses while the tab is hidden; also drives `isToday`. Exposed so
+   * the scroll-sync's follow-now watch has a visibility-aware tick to
+   * re-pin the viewport on. */
+  nowEpoch: Ref<number>
   goToToday: () => void
   goToTomorrow: () => void
   setDayStart: (epoch: number, opts?: { silent?: boolean }) => void
@@ -2003,6 +2008,7 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
     dayStart,
     dayEnd,
     isToday,
+    nowEpoch,
     goToToday,
     goToTomorrow,
     setDayStart,

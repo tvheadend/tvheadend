@@ -82,14 +82,20 @@ function makeScrollEl(state: ScrollState): {
 /* Minimal useEpgViewState surface — only the slice
  * useEpgScrollDaySync touches. dayStart is a real ref so the
  * composable's watch fires on writes. */
-function makeState(initialDayStart: number, trackStart: number) {
+function makeState(initialDayStart: number, trackStart: number, now: number = initialDayStart) {
   const dayStart = ref(initialDayStart)
+  /* Wall-clock minute ticker the follow-now watch keys off; a real ref
+   * so tests can advance it to fire the watch. isToday mirrors the real
+   * composable (dayStart === start-of-day of now). */
+  const nowEpoch = ref(now)
   /* Mirror the real useEpgViewState: setDayStart honours a `silent`
    * opt that marks a highlight-only change, and the scroll-sync
    * watch consumes it to decide whether to scroll. One-shot. */
   let dayStartScrollSuppressed = false
   return {
     dayStart,
+    nowEpoch,
+    isToday: computed(() => dayStart.value === startOfLocalDay(nowEpoch.value)),
     trackStart: ref(trackStart),
     trackEnd: ref(trackStart + 14 * ONE_DAY),
     setDayStart: (epoch: number, opts?: { silent?: boolean }) => {
@@ -168,6 +174,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
     /* Simulate the Today button: state.setDayStart(today) →
      * dayStart watch fires. */
@@ -199,6 +206,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
     state.setDayStart(TOMORROW)
     await flushPromises()
@@ -234,6 +242,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
 
     /* Dropdown pick of the day whose preroll is currently visible. */
@@ -265,6 +274,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
 
     jumpToNow()
@@ -297,6 +307,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
 
     jumpToNow()
@@ -346,6 +357,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
 
     state.setDayStart(DAY_PLUS_4)
@@ -396,6 +408,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
 
     state.setDayStart(DAY_PLUS_2)
@@ -445,6 +458,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
     state.setDayStart(TOMORROW)
     await flushPromises()
@@ -473,6 +487,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
     onViewportRangeChanged({ start: TODAY + 22 * 3600, end: TOMORROW + 2 * 3600 })
     const stateAny = state as unknown as { ensureDaysLoaded: ReturnType<typeof vi.fn> }
@@ -505,6 +520,7 @@ describe('useEpgScrollDaySync', () => {
       scrollEl,
       pxPerMinute: computed(() => 4),
       state,
+      scrollToNow: vi.fn(),
     })
     onViewportRangeChanged({
       start: Math.floor(new Date(2026, 9, 24, 12).getTime() / 1000),
@@ -516,5 +532,127 @@ describe('useEpgScrollDaySync', () => {
       expect(new Date(d * 1000).getHours()).toBe(0)
     }
     expect(days).toContain(Math.floor(new Date(2026, 9, 26).getTime() / 1000))
+  })
+
+  /* ---- follow-now: keep the viewport pinned to the live edge ---- */
+
+  function makeFollowSetup(axis: 'horizontal' | 'vertical' = 'horizontal') {
+    const state = makeState(TODAY, TODAY, NOW_SEC)
+    const made = makeScrollEl({
+      scrollLeft: axis === 'horizontal' ? NOW_SNAP_PX : 0,
+      scrollTop: axis === 'vertical' ? NOW_SNAP_PX : 0,
+      clientWidth: 1200,
+      clientHeight: 800,
+    })
+    const scrollEl = computed(() => made.el as HTMLElement | null)
+    const scrollToNow = vi.fn()
+    const sync = useEpgScrollDaySync({
+      axis,
+      scrollEl,
+      pxPerMinute: computed(() => 4),
+      state,
+      scrollToNow,
+    })
+    return { state, made, scrollToNow, sync }
+  }
+
+  /* Advance the wall clock AND the state's nowEpoch to `sec` together
+   * (they represent the same instant) and flush the follow watch. */
+  async function tickTo(
+    state: ReturnType<typeof makeFollowSetup>['state'],
+    sec: number,
+  ): Promise<void> {
+    vi.setSystemTime(new Date(sec * 1000))
+    state.nowEpoch.value = sec
+    await flushPromises()
+  }
+
+  it('re-pins to now when the :30 snap boundary advances while following', async () => {
+    const { state, scrollToNow, sync } = makeFollowSetup()
+    sync.followNow('instant') // simulate the initial scroll-to-now
+    scrollToNow.mockClear()
+
+    /* Same half-hour window (22:45 → 22:50) — snapped-now target is
+     * unchanged, so the drift check makes it a no-op. */
+    await tickTo(state, TODAY + 22 * 3600 + 50 * 60)
+    expect(scrollToNow).not.toHaveBeenCalled()
+
+    /* Cross the 23:00 boundary — snapped-now advances 30 min, so the
+     * viewport offset drifts from the target and we re-pin. */
+    await tickTo(state, TODAY + 23 * 3600)
+    expect(scrollToNow).toHaveBeenCalledTimes(1)
+    expect(scrollToNow).toHaveBeenCalledWith({ behavior: 'smooth' })
+  })
+
+  it('does not follow when following is disabled', async () => {
+    const { state, scrollToNow } = makeFollowSetup()
+    await tickTo(state, TODAY + 23 * 3600)
+    expect(scrollToNow).not.toHaveBeenCalled()
+  })
+
+  it('does not follow when the active day is not today', async () => {
+    const { state, scrollToNow, sync } = makeFollowSetup()
+    sync.followNow('instant')
+    scrollToNow.mockClear()
+    state.setDayStart(TOMORROW) // viewing a future day → isToday false
+    await flushPromises()
+    await tickTo(state, TODAY + 23 * 3600)
+    expect(scrollToNow).not.toHaveBeenCalled()
+  })
+
+  it('stops following after a genuine user scroll', async () => {
+    const { state, made, scrollToNow, sync } = makeFollowSetup()
+    sync.followNow('instant')
+    /* Lift the intent latch the followNow armed (scrollend + deferred
+     * rAF) so the next onActiveDayChanged reads as a user scroll. */
+    made.fireScrollend()
+    drainRAF()
+    expect(sync.following.value).toBe(true)
+
+    sync.onActiveDayChanged(TODAY) // user free-scroll, unlatched
+    expect(sync.following.value).toBe(false)
+
+    scrollToNow.mockClear()
+    await tickTo(state, TODAY + 23 * 3600)
+    expect(scrollToNow).not.toHaveBeenCalled()
+  })
+
+  it('jumpToNow re-enables following', async () => {
+    const { state, made, scrollToNow, sync } = makeFollowSetup()
+    sync.followNow('instant')
+    made.fireScrollend()
+    drainRAF()
+    sync.onActiveDayChanged(TODAY) // user scroll disables follow
+    expect(sync.following.value).toBe(false)
+
+    sync.jumpToNow()
+    expect(sync.following.value).toBe(true)
+
+    scrollToNow.mockClear()
+    await tickTo(state, TODAY + 23 * 3600)
+    expect(scrollToNow).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps following across a midnight rollover', async () => {
+    const { state, scrollToNow, sync } = makeFollowSetup()
+    sync.followNow('instant')
+    scrollToNow.mockClear()
+
+    /* Simulate the real midnight handler: nowEpoch crosses into the
+     * next day and dayStart is silently advanced to match, so isToday
+     * stays true and following continues. */
+    const afterMidnight = TOMORROW + 15 * 60 // 00:15 next day
+    state.setDayStart(TOMORROW, { silent: true })
+    await flushPromises()
+    await tickTo(state, afterMidnight)
+    expect(scrollToNow).toHaveBeenCalledTimes(1)
+  })
+
+  it('follows on the vertical axis too (Magazine)', async () => {
+    const { state, scrollToNow, sync } = makeFollowSetup('vertical')
+    sync.followNow('instant')
+    scrollToNow.mockClear()
+    await tickTo(state, TODAY + 23 * 3600)
+    expect(scrollToNow).toHaveBeenCalledTimes(1)
   })
 })

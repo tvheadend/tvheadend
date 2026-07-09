@@ -123,12 +123,13 @@ function restoreMagazineTopChannel(uuid: string) {
  * the latter can take this composable's `restoreToPosition` as an
  * opt — the restore path needs the day-sync latch in place before
  * its scroll fires. */
-const { onActiveDayChanged, onViewportRangeChanged, jumpToNow, restoreToPosition } =
+const { onActiveDayChanged, onViewportRangeChanged, jumpToNow, restoreToPosition, followNow } =
   useEpgScrollDaySync({
     axis: 'vertical',
     scrollEl,
     pxPerMinute,
     state,
+    scrollToNow,
   })
 
 useEpgInitialScrollToNow({
@@ -139,6 +140,7 @@ useEpgInitialScrollToNow({
   restoreToPosition,
   restoreTopChannel: restoreMagazineTopChannel,
   align: 'topThird',
+  onFollowNow: followNow,
 })
 
 /* ---- B2 — debounced position save on scroll -----------------

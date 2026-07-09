@@ -65,6 +65,7 @@ function makeFakeState(): ReturnType<typeof useEpgViewState> {
     dayStart,
     dayEnd: computed(() => dayStart.value + ONE_DAY),
     isToday: computed(() => true),
+    nowEpoch: ref(Math.floor(Date.now() / 1000)),
     goToToday: vi.fn(),
     goToTomorrow: vi.fn(),
     setDayStart: (epoch: number) => {

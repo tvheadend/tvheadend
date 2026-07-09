@@ -61,12 +61,24 @@ const NOW_SNAP_SECONDS = 30 * 60
  * highlights the clicked day because the intent latch overrides
  * the leading-edge writeback for the duration of the scroll. */
 const PREROLL_SECONDS = 30 * 60
+/* Follow-now re-pin threshold. While following, the viewport is pinned
+ * to the half-hour-snapped now position, so its scroll offset equals
+ * that target between snaps; only when the :30 boundary advances (or the
+ * tab regains focus after being hidden) does the target move, at which
+ * point the offset differs by far more than this epsilon and the follow
+ * watch re-pins. Small enough that any real user scroll exceeds it. */
+const FOLLOW_EPSILON_PX = 4
 
 export function useEpgScrollDaySync(opts: {
   axis: 'horizontal' | 'vertical'
   scrollEl: ComputedRef<HTMLElement | null>
   pxPerMinute: ComputedRef<number>
   state: ReturnType<typeof useEpgViewState>
+  /* The view's own scrollToNow primitive (useTimelineScroll /
+   * useMagazineScroll): snaps to the last :30 and pins it to the leading
+   * edge (left for Timeline, top for Magazine). The follow-now path
+   * routes through it so every "scroll to now" goes through one place. */
+  scrollToNow: (o?: { behavior?: ScrollBehavior }) => void
 }) {
   const { axis, scrollEl, pxPerMinute, state } = opts
   const isHorizontal = axis === 'horizontal'
@@ -87,8 +99,20 @@ export function useEpgScrollDaySync(opts: {
   let activeSettleHandler: (() => void) | null = null
   let activeSettleEl: HTMLElement | null = null
 
+  /* Follow-now: while true, each wall-clock tick re-pins the viewport to
+   * "now" (see the nowEpoch watch below). Enabled by the initial
+   * scroll-to-now, the Now button, and each re-pin; disabled the moment
+   * the user free-scrolls away. Every programmatic now-scroll arms the
+   * intent latch, so onActiveDayChanged only turns it off for genuine
+   * user scrolls. */
+  const following = ref(false)
+
   function onActiveDayChanged(epoch: number) {
     if (expectingButtonScroll.value) return
+    /* Past the intent latch → a genuine user free-scroll. Stop
+     * following so we don't yank the user back to now while they browse;
+     * only the Now button / followNow re-enable it. */
+    following.value = false
     /* Highlight-only writeback from the scroll listener — mark it
      * silent so the dayStart watch doesn't bounce it back into a
      * counter-scroll against the user's own free scroll. */
@@ -232,16 +256,32 @@ export function useEpgScrollDaySync(opts: {
     el.scrollTo(scrollOpts)
   }
 
+  /* Scroll to now-snap and (re-)enable following. Routed through the
+   * intent latch so the resulting scroll emit isn't mistaken for a user
+   * free-scroll (which onActiveDayChanged would read as "stop
+   * following"). Shared by the initial scroll-to-now and the periodic
+   * re-pin; the view's own `scrollToNow` does the snap + edge-align. */
+  function followNow(behavior: ScrollBehavior = 'smooth'): void {
+    const el = scrollEl.value
+    if (!el) return
+    armIntentScroll(el, startOfLocalDay(Math.floor(Date.now() / 1000)))
+    opts.scrollToNow({ behavior })
+    following.value = true
+  }
+
   /* Now button entry point. Always sets dayStart=today so the
    * picker highlight matches what the user just asked for, then
    * force-scrolls regardless of whether dayStart changed (a
    * Now-click while already on today would otherwise short-
    * circuit and leave the user looking at the morning or
-   * wherever they'd previously panned). */
+   * wherever they'd previously panned). Re-enables following: the
+   * scrollToDay(today) already arms the intent latch, so the flag is
+   * set after it without the scroll emit clearing it. */
   function jumpToNow(): void {
     const today = startOfLocalDay(Math.floor(Date.now() / 1000))
     if (state.dayStart.value !== today) state.setDayStart(today)
     scrollToDay(today, true)
+    following.value = true
   }
 
   /* Restore from a sticky position (B2 path). Called from
@@ -316,10 +356,36 @@ export function useEpgScrollDaySync(opts: {
     },
   )
 
+  /* Follow-now: on each wall-clock tick (visibility-aware ~60s
+   * `nowEpoch`), if the user is parked at the live edge and viewing
+   * today, re-pin the viewport to now. The drift check makes it a no-op
+   * between :30 snap boundaries (the snapped-now target only moves every
+   * 30 min) — it issues a real scroll only when the boundary advances or
+   * the tab regains focus after being hidden (nowEpoch jumps forward),
+   * which is the reported "left it open for hours" case. */
+  watch(
+    () => state.nowEpoch.value,
+    () => {
+      if (!following.value || !state.isToday.value) return
+      const el = scrollEl.value
+      if (!el) return
+      /* The isToday gate guarantees dayStart is start-of-today, so use it
+       * directly rather than recomputing startOfLocalDay(now) each tick. */
+      const current = isHorizontal ? el.scrollLeft : el.scrollTop
+      if (Math.abs(current - targetPxForDay(state.dayStart.value)) <= FOLLOW_EPSILON_PX) return
+      followNow('smooth')
+    },
+  )
+
   return {
     onActiveDayChanged,
     onViewportRangeChanged,
     jumpToNow,
     restoreToPosition,
+    /* Enable following + scroll to now; the views wire this into
+     * useEpgInitialScrollToNow's scroll-to-now path. */
+    followNow,
+    /* Read-only for tests / potential UI affordance ("following" badge). */
+    following,
   }
 }

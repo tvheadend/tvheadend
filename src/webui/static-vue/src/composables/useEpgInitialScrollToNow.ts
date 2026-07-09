@@ -44,6 +44,12 @@ export function useEpgInitialScrollToNow<Align extends string>(opts: {
   state: ReturnType<typeof useEpgViewState>
   scrollEl: ComputedRef<HTMLElement | null>
   scrollToNow: (o?: { behavior?: ScrollBehavior; align?: Align }) => void
+  /* When provided, the scroll-to-now paths (default + wasClamped) route
+   * through this instead of `scrollToNow`, so the viewport starts
+   * "following" now (see useEpgScrollDaySync.followNow). The normal
+   * restore path deliberately does NOT call it — a user with a saved
+   * scroll position isn't following the live edge. */
+  onFollowNow?: (behavior: ScrollBehavior) => void
   /* B2 — sticky position. Optional so callers without restore
    * support (e.g. a future flat-list view) still work. When both
    * `restoreToPosition` AND `scrollToTime` are absent the restore
@@ -126,7 +132,9 @@ export function useEpgInitialScrollToNow<Align extends string>(opts: {
          *   LEADING-edge target, putting the user exactly where the
          *   save snapshot was taken. */
         if (restored.wasClamped) {
-          opts.scrollToNow({ behavior: 'instant' as ScrollBehavior, align: opts.align })
+          /* "Show me now" intent → start following (see onFollowNow). */
+          if (opts.onFollowNow) opts.onFollowNow('instant')
+          else opts.scrollToNow({ behavior: 'instant' as ScrollBehavior, align: opts.align })
         } else if (opts.restoreToPosition) {
           opts.restoreToPosition(restored)
         } else if (opts.scrollToTime) {
@@ -139,10 +147,11 @@ export function useEpgInitialScrollToNow<Align extends string>(opts: {
         return
       }
 
-      /* Default path: scroll to now. `instant` keeps the initial
-       * position from feeling like an animation; later user-triggered
-       * "Now" clicks animate. */
-      opts.scrollToNow({ behavior: 'instant' as ScrollBehavior, align: opts.align })
+      /* Default path: scroll to now AND start following the live edge.
+       * `instant` keeps the initial position from feeling like an
+       * animation; later user-triggered "Now" clicks animate. */
+      if (opts.onFollowNow) opts.onFollowNow('instant')
+      else opts.scrollToNow({ behavior: 'instant' as ScrollBehavior, align: opts.align })
     },
     { flush: 'post' },
   )

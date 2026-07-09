@@ -174,12 +174,13 @@ function restoreTimelineTopChannel(uuid: string) {
  * `restoreToPosition` as an opt; the restore path needs the day-
  * sync latch in place before its scroll fires, otherwise the
  * dayStart watch races a competing scrollToDay. */
-const { onActiveDayChanged, onViewportRangeChanged, jumpToNow, restoreToPosition } =
+const { onActiveDayChanged, onViewportRangeChanged, jumpToNow, restoreToPosition, followNow } =
   useEpgScrollDaySync({
     axis: 'horizontal',
     scrollEl,
     pxPerMinute,
     state,
+    scrollToNow,
   })
 
 useEpgInitialScrollToNow({
@@ -190,6 +191,7 @@ useEpgInitialScrollToNow({
   restoreToPosition,
   restoreTopChannel: restoreTimelineTopChannel,
   align: 'leftThird',
+  onFollowNow: followNow,
 })
 
 /* ---- B2 — debounced position save on scroll -----------------
