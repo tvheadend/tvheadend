@@ -1373,11 +1373,11 @@ const flags = computed(() => {
 .epg-event-drawer__root.p-drawer {
   width: 480px;
   max-width: 100%;
-  /* Paint the drawer surface with theme tokens. PrimeVue's dark
-   * mode is keyed to `[data-theme="dark"]` (main.ts), not the
-   * Access theme, so without this the teleported drawer keeps
-   * PrimeVue's light default background under Access. Mirrors
-   * IdnodeEditor's `.idnode-editor__root.p-drawer`. */
+  /* Pin the teleported drawer surface to the exact theme tokens.
+   * Aura's dark palette now activates under Access (main.ts
+   * darkModeSelector), but pinning here keeps the drawer surface
+   * identical to the app's --tvh-bg-surface rather than Aura's own
+   * dark shade. Mirrors IdnodeEditor's `.idnode-editor__root.p-drawer`. */
   background: var(--tvh-bg-surface);
   color: var(--tvh-text);
 }

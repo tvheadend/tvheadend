@@ -41,23 +41,26 @@ async function bootstrap() {
       options: {
         cssLayer: { name: 'primevue', order: 'tvh-base, primevue' },
         /*
-         * Lock PrimeVue overlays (Select dropdown, paginator rows-
-         * per-page popup, MultiSelect, Datepicker, …) to Aura's light
-         * colorScheme regardless of the OS dark-mode setting. PrimeVue's
-         * default `darkModeSelector` is `'system'`, which evaluates
-         * `@media (prefers-color-scheme: dark)` and picks Aura's dark
-         * variant — emerging as a near-black `surface.900` overlay
-         * background that clashes with our light-only theme set.
+         * Activate Aura's dark palette exactly when the Access theme is
+         * on. PrimeVue's default `darkModeSelector` is `'system'`, which
+         * follows the OS `prefers-color-scheme`; we bind it to our own
+         * `data-theme` attribute instead, so PrimeVue's light/dark tracks
+         * the app's theme rather than the OS. Access is our only dark
+         * variant (tokens.css sets `[data-theme="access"]` to a
+         * #000/#1a1a1a white-on-dark palette + `color-scheme: dark`); the
+         * Blue and Gray themes are light and don't match, so Aura stays
+         * light for them.
          *
-         * Same convention as `tokens.css:23` (`color-scheme: light`
-         * forces native widget chrome to light): assume light today;
-         * a future dark theme would set `[data-theme="dark"]` on
-         * `<html>`, simultaneously flipping native widgets (via the
-         * tokens.css commented future override) and PrimeVue
-         * overlays (via this selector) — single source of truth for
-         * "is the UI dark right now?".
+         * This is what makes teleported overlays (Select dropdown,
+         * MultiSelect, Datepicker, menus, the paginator rows-per-page
+         * popup) go dark under Access. They render into <body>, outside
+         * any component's scoped CSS, and use Aura's own component tokens
+         * (e.g. `select.overlay.background`) rather than the `--tvh-*`
+         * tokens mapped in primevue.css — so without a matching
+         * `darkModeSelector` they keep Aura's light surface (white) on a
+         * dark page.
          */
-        darkModeSelector: '[data-theme="dark"]',
+        darkModeSelector: '[data-theme="access"]',
       },
     },
   })
