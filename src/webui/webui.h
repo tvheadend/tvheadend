@@ -57,6 +57,8 @@ http_serve_file(http_connection_t *hc, const char *fname,
                 void *opaque);
 
 int page_static_file(http_connection_t *hc, const char *remain, void *opaque);
+int page_static_file_maxage(http_connection_t *hc, const char *remain,
+                            const char *base, int maxage);
 int page_xmltv(http_connection_t *hc, const char *remain, void *opaque);
 int page_markdown(http_connection_t *hc, const char *remain, void *opaque);
 

@@ -40,6 +40,52 @@ page_vue_index(http_connection_t *hc, const char *remain, void *opaque)
   return page_static_file(hc, "index.html", (void *)VUE_DIST);
 }
 
+/* Vite fingerprints everything it emits under dist/assets/ as
+ * <name>-<hash>.<ext>, where <hash> is 8+ base64url characters
+ * ([A-Za-z0-9_-]). Match against the segment after the LAST dash in
+ * the basename: a hash that itself contains a dash then fails the
+ * length check and merely falls back to the short cache (harmless),
+ * whereas a laxer first-dash match could hand a year-long lifetime to
+ * an unhashed file that happens to contain a dash (not harmless). */
+static int
+vue_asset_is_hashed(const char *remain)
+{
+  const char *base, *dot, *dash, *p;
+
+  if(remain == NULL)
+    return 0;
+  base = strrchr(remain, '/');
+  base = base ? base + 1 : remain;
+  dot = strrchr(base, '.');
+  if(dot == NULL)
+    return 0;
+  dash = NULL;
+  for (p = base; p < dot; p++)
+    if(*p == '-')
+      dash = p;
+  if(dash == NULL || dot - (dash + 1) < 8)
+    return 0;
+  for (p = dash + 1; p < dot; p++)
+    if(!((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z') ||
+         (*p >= '0' && *p <= '9') || *p == '_'))
+      return 0;
+  return 1;
+}
+
+static int
+page_vue_asset(http_connection_t *hc, const char *remain, void *opaque)
+{
+  /* Content-hashed assets are immutable — their URL changes whenever
+   * their content does — so let clients cache them for a year.
+   * Anything unhashed reachable through this route (dist/index.html,
+   * favicons, ...) keeps page_static_file's short default so it stays
+   * revalidatable. The hash check lives here rather than in
+   * page_static_file_maxage because the fingerprint convention belongs
+   * to the Vue build pipeline, not to static file serving in general. */
+  int maxage = vue_asset_is_hashed(remain) ? 365 * 24 * 3600 : 10;
+  return page_static_file_maxage(hc, remain, opaque, maxage);
+}
+
 #else /* !ENABLE_VUE_UI */
 
 static int
@@ -84,6 +130,6 @@ vue_init(void)
                 page_vue_index, ACCESS_WEB_INTERFACE);
 #if ENABLE_VUE_UI
   http_path_add("/gui/static", (void *)VUE_DIST,
-                page_static_file, ACCESS_WEB_INTERFACE);
+                page_vue_asset, ACCESS_WEB_INTERFACE);
 #endif
 }

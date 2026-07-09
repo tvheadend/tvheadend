@@ -244,12 +244,17 @@ to reauthenticate."));
 
 /**
  * Static download of a file from the filesystem
+ *
+ * maxage is the default Cache-Control max-age; the per-extension rules
+ * below may raise it but never lower it, so a caller that knows its
+ * content is immutable (see page_vue_asset in vue.c) keeps the longer
+ * lifetime it asked for.
  */
 int
-page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
+page_static_file_maxage(http_connection_t *hc, const char *_remain,
+                        const char *base, int maxage)
 {
   int ret = 0;
-  const char *base = opaque;
   char *remain, *postfix;
   char path[500];
   ssize_t size;
@@ -257,7 +262,6 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
   char buf[4096];
   const char *gzip = NULL;
   int nogzip = 0;
-  int maxage = 10;              /* Default age */
 
   if(_remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -290,7 +294,8 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
        * images since they rarely change. This avoids clients
        * requesting category icons frequently.
        */
-      maxage = 60 * 60;
+      if(maxage < 60 * 60)
+        maxage = 60 * 60;
     }
   }
 
@@ -320,6 +325,12 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
   fb_close(fp);
 
   return ret;
+}
+
+int
+page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
+{
+  return page_static_file_maxage(hc, _remain, opaque, 10 /* Default age */);
 }
 
 /**
