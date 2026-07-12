@@ -572,13 +572,18 @@ tvh_context_open_filters(TVHContext *self,
     AVDictionary *opts = NULL;
     if (self->oavctx) {
         char ch_layout_str[64];
-        av_channel_layout_describe(&self->oavctx->ch_layout, ch_layout_str, sizeof(ch_layout_str));
+        if (av_channel_layout_describe(&self->oavctx->ch_layout, ch_layout_str, sizeof(ch_layout_str)) >= 0) {
+            av_dict_set(&opts, "channel_layouts", ch_layout_str, 0);
+        } else {
+            tvh_context_log(self, LOG_ERR, "filters: failed to describe channel layout");
+        }
 
-        av_dict_set(&opts, "channel_layouts", ch_layout_str, 0);
-
-        char sample_fmt_str[16];
-        snprintf(sample_fmt_str, sizeof(sample_fmt_str), "%s", av_get_sample_fmt_name(self->oavctx->sample_fmt));
-        av_dict_set(&opts, "sample_formats", sample_fmt_str, 0);
+        const char *fmt_name = av_get_sample_fmt_name(self->oavctx->sample_fmt);
+        if (fmt_name) {
+            av_dict_set(&opts, "sample_formats", fmt_name, 0);
+        } else {
+            tvh_context_log(self, LOG_ERR, "filters: invalid sample format");
+        }
 
         char sample_rate_str[16];
         snprintf(sample_rate_str, sizeof(sample_rate_str), "%d", self->oavctx->sample_rate);
