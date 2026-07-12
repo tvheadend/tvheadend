@@ -102,53 +102,16 @@ _context_print_opts(TVHContext *self, AVDictionary *opts)
 }
 
 
+#if LIBAVCODEC_VERSION_MAJOR <= 59
 static int
 _context_filters_apply_sink_options(TVHContext *self, va_list ap)
 {
     const char *opt_name = NULL;
     const uint8_t *opt_val = NULL;
-#if LIBAVCODEC_VERSION_MAJOR > 59
-    const char *opt_val_char = NULL;
-    av_opt_set_type opt_type = AV_OPT_SET_UNKNOWN;
-    char err_desciption[32];
-#endif
     int opt_size = 0;
     int ret = -1;
 
     while ((opt_name = va_arg(ap, const char *))) {
-#if LIBAVCODEC_VERSION_MAJOR > 59
-        opt_type = (av_opt_set_type) va_arg(ap, int);
-        opt_size = va_arg(ap, int);
-        if (opt_type == AV_OPT_SET_BIN) {
-            opt_val = va_arg(ap, const uint8_t *);
-            ret = av_opt_set_bin(self->oavfltctx, opt_name, opt_val, opt_size, AV_OPT_SEARCH_CHILDREN);}
-        else {
-            if (opt_type == AV_OPT_SET_STRING) {
-                opt_val_char = va_arg(ap, const char *);
-                ret = av_opt_set(self->oavfltctx, opt_name, opt_val_char, AV_OPT_SEARCH_CHILDREN);} 
-            else {
-                tvh_context_log(self, LOG_ERR, "filters: failed to set option: '%s' with error: 'AV_OPT_SET_UNKNOWN'", opt_name);
-                return ret;
-            }
-        }
-        if (ret) {
-            switch (ret) {
-                case AVERROR_OPTION_NOT_FOUND:
-                    str_snprintf(err_desciption, sizeof(err_desciption), "AVERROR_OPTION_NOT_FOUND");
-                    break;
-                case AVERROR(EINVAL):
-                    str_snprintf(err_desciption, sizeof(err_desciption), "AVERROR(EINVAL)");
-                    break;
-                case AVERROR(ENOMEM):
-                    str_snprintf(err_desciption, sizeof(err_desciption), "AVERROR(ENOMEM)");
-                    break;
-                default:
-                    str_snprintf(err_desciption, sizeof(err_desciption), "UNKNOWN ERROR");
-                    break;
-            }
-            tvh_context_log(self, LOG_ERR, "filters: failed to set option: '%s' with error: '%s'", opt_name, err_desciption);
-        }
-#else
         opt_val = va_arg(ap, const uint8_t *);
         opt_size = va_arg(ap, int);
         if ((ret = av_opt_set_bin(self->oavfltctx, opt_name, opt_val, opt_size,
@@ -157,10 +120,10 @@ _context_filters_apply_sink_options(TVHContext *self, va_list ap)
                             opt_name);
             break;
         }
-#endif
     }
     return ret;
 }
+#endif
 
 
 static int
@@ -599,6 +562,37 @@ tvh_context_open_filters(TVHContext *self,
         ret = AVERROR_FILTER_NOT_FOUND;
         goto finish;
     }
+#if LIBAVCODEC_VERSION_MAJOR > 59
+    self->oavfltctx = avfilter_graph_alloc_filter(self->avfltgraph, oavflt, "out");
+    if (!self->oavfltctx) {
+        ret = AVERROR(ENOMEM);
+        goto finish;
+    }
+
+    AVDictionary *opts = NULL;
+    if (self->oavctx) {
+        char ch_layout_str[64];
+        av_channel_layout_describe(&self->oavctx->ch_layout, ch_layout_str, sizeof(ch_layout_str));
+
+        av_dict_set(&opts, "channel_layouts", ch_layout_str, 0);
+
+        char sample_fmt_str[16];
+        snprintf(sample_fmt_str, sizeof(sample_fmt_str), "%s", av_get_sample_fmt_name(self->oavctx->sample_fmt));
+        av_dict_set(&opts, "sample_formats", sample_fmt_str, 0);
+
+        char sample_rate_str[16];
+        snprintf(sample_rate_str, sizeof(sample_rate_str), "%d", self->oavctx->sample_rate);
+        av_dict_set(&opts, "samplerates", sample_rate_str, 0);
+    }
+
+    ret = avfilter_init_dict(self->oavfltctx, &opts);
+    av_dict_free(&opts);
+
+    if (ret < 0) {
+        tvh_context_log(self, LOG_ERR, "filters: failed to initialize sink filter '%s' (Error: %d)", sink_name, ret);
+        goto finish;
+    }
+#else
     ret = avfilter_graph_create_filter(&self->oavfltctx, oavflt, "out",
                                        NULL, NULL, self->avfltgraph);
     if (ret < 0) {
@@ -614,6 +608,7 @@ tvh_context_open_filters(TVHContext *self,
     if (ret) {
         goto finish;
     }
+#endif
 
     // Endpoints for the filter graph.
     iavfltio->name       = av_strdup("out");
