@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-22 03:11+0000\n"
+"POT-Creation-Date: 2026-07-13 03:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -920,7 +920,7 @@ msgstr ""
 msgid "Audioes muxer"
 msgstr ""
 
-#: src/webui/webui.c:190
+#: src/webui/webui.c:215
 msgid "Authenticated user"
 msgstr ""
 
@@ -5076,7 +5076,7 @@ msgstr ""
 msgid "Loglevel debug: enabled"
 msgstr ""
 
-#: src/webui/webui.c:180
+#: src/webui/webui.c:205
 msgid "Logout"
 msgstr ""
 
@@ -6536,7 +6536,7 @@ msgstr ""
 msgid "Plain (insecure)"
 msgstr ""
 
-#: src/webui/webui.c:193
+#: src/webui/webui.c:218
 #, c-format
 msgid ""
 "Please, follow %s link and cancel the next authorization to correctly clear "
@@ -11210,7 +11210,7 @@ msgstr ""
 msgid "libx26x"
 msgstr ""
 
-#: src/webui/webui.c:198
+#: src/webui/webui.c:223
 msgid "logout"
 msgstr ""
 
@@ -11283,7 +11283,7 @@ msgstr ""
 msgid "realtime"
 msgstr ""
 
-#: src/webui/webui.c:209
+#: src/webui/webui.c:234
 msgid "return"
 msgstr ""
 
