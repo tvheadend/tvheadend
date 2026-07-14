@@ -99,6 +99,8 @@ import {
   type EpgGroupField,
   serverParamsFromFilters as serverParamsFromFiltersPure,
 } from './epgTableFilters'
+import { applyInMemorySort } from './epgTableSort'
+import { channelNumberCompare } from '@/utils/channelNumberSort'
 import {
   applyError,
   applyResponse,
@@ -246,6 +248,8 @@ const baseCols: ColumnDef[] = [
     field: 'channelNumber',
     label: '#',
     sortable: true,
+    /* "major.minor" string wire shape — sort numerically. */
+    sortComparator: channelNumberCompare,
     minVisible: 'desktop',
     width: 60,
   },
@@ -1589,38 +1593,6 @@ function applyPerColumnFilters(
   return { rows: out, mutated }
 }
 
-/* Three-way comparator for the in-memory sort. Splits the
- * value-shape branching out of the comparator hot path so the
- * outer pipeline stays simple. Stable: callers `sort` on a
- * fresh array spread; equal-key rows preserve the composable's
- * start-ASC order. */
-function compareSortValues(av: unknown, bv: unknown, dir: number): number {
-  if (av == null && bv == null) return 0
-  if (av == null) return -dir
-  if (bv == null) return dir
-  if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir
-  return String(av).localeCompare(String(bv)) * dir
-}
-
-/* Apply the user's current in-memory sort. Skip the
- * spread+sort when the data is already start-ASC (the
- * composable's own ordering) — saves an N-element copy +
- * sort during the initial-load reactive cascade. */
-function applyInMemorySort(
-  rows: readonly EpgRow[],
-  key: string | null,
-  order: number,
-): { rows: readonly EpgRow[]; mutated: boolean } {
-  if (!key) return { rows, mutated: false }
-  if (key === 'start' && order === 1) return { rows, mutated: false }
-  const sorted = [...rows].sort((a, b) => {
-    const av = (a as unknown as Record<string, unknown>)[key]
-    const bv = (b as unknown as Record<string, unknown>)[key]
-    return compareSortValues(av, bv, order)
-  })
-  return { rows: sorted, mutated: true }
-}
-
 const visibleEvents = computed<EpgRow[]>(() => {
   const inQueryMode = queryResults.value !== null
   const grouped = state.viewOptions.value.groupField !== null
@@ -1640,7 +1612,13 @@ const visibleEvents = computed<EpgRow[]>(() => {
   const source = pickVisibleSource(realEvents, inQueryMode, grouped)
 
   const filtered = applyPerColumnFilters(source, filters.value.perColumn, inQueryMode)
-  const sorted = applyInMemorySort(filtered.rows, sortField.value, sortOrder.value)
+  const sortComparator = baseCols.find((c) => c.field === sortField.value)?.sortComparator
+  const sorted = applyInMemorySort(
+    filtered.rows,
+    sortField.value,
+    sortOrder.value,
+    sortComparator,
+  )
 
   /* Return the original source reference when nothing
    * narrowed or re-ordered — lets downstream computeds skip

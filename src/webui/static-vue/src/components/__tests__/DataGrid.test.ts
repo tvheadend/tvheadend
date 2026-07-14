@@ -37,6 +37,7 @@ vi.mock('@/composables/useIsPhone', async () => {
 
 import DataGrid from '../DataGrid.vue'
 import type { ColumnDef } from '@/types/column'
+import { channelNumberCompare } from '@/utils/channelNumberSort'
 
 interface Row extends Record<string, unknown> {
   uuid: string
@@ -570,6 +571,75 @@ describe('DataGrid', () => {
         .props('value') as Array<{ uuid: string }>
       /* Within-cluster ties stay in arrival order (stable sort). */
       expect(value.map((r) => r.uuid)).toEqual(['e2', 'e4', 'e1', 'e3'])
+    })
+
+    it('lazy mode renders entries in the given order without re-sorting', () => {
+      /* The EPG Table owns its sort and hands DataGrid pre-sorted
+       * rows in :lazy mode. Prove the grid renders them as-is — so
+       * applyInMemorySort's output is exactly what reaches the DOM,
+       * and nothing here clobbers the numeric channel order. */
+      const wrapper = mountGrid({
+        lazy: true,
+        sortField: 'bytes',
+        sortOrder: 1,
+        entries: [
+          { uuid: 'a', title: 'A', bytes: 30 },
+          { uuid: 'b', title: 'B', bytes: 10 },
+          { uuid: 'c', title: 'C', bytes: 20 },
+        ],
+      })
+      const value = wrapper
+        .findComponent({ name: 'DataTable' })
+        .props('value') as Array<{ uuid: string }>
+      /* bytes ASC would reorder to b,c,a if the grid re-sorted —
+       * lazy must not: arrival order preserved. */
+      expect(value.map((r) => r.uuid)).toEqual(['a', 'b', 'c'])
+    })
+
+    it('forwards the DataTable sort event so the owner can re-sort', async () => {
+      /* Header click -> PrimeVue emits sort -> DataGrid forwards it
+       * -> the Table view's onSort sets sortField. Prove the relay. */
+      const wrapper = mountGrid({
+        lazy: true,
+        entries: [{ uuid: 'a', title: 'A', bytes: 1 }],
+      })
+      await wrapper
+        .findComponent({ name: 'DataTable' })
+        .vm.$emit('sort', { sortField: 'channelNumber', sortOrder: 1 })
+      expect(wrapper.emitted('sort')).toEqual([
+        [{ sortField: 'channelNumber', sortOrder: 1 }],
+      ])
+    })
+
+    it('uses a column sortComparator for the within-cluster secondary sort', () => {
+      /* channelNumber's "major.minor" string must order numerically
+       * within each cluster, not lexically (10 before 2). */
+      const wrapper = mountGrid({
+        columns: [
+          { field: 'title', label: 'Title', sortable: true },
+          {
+            field: 'channelNumber',
+            label: '#',
+            sortable: true,
+            sortComparator: channelNumberCompare,
+          },
+        ],
+        entries: [
+          { uuid: 'e1', channelNumber: '10', channel: 'ch-uuid-1', channelname: 'Alpha' },
+          { uuid: 'e2', channelNumber: '2', channel: 'ch-uuid-1', channelname: 'Alpha' },
+          { uuid: 'e3', channelNumber: '10.9', channel: 'ch-uuid-1', channelname: 'Alpha' },
+          { uuid: 'e4', channelNumber: '10.10', channel: 'ch-uuid-1', channelname: 'Alpha' },
+        ],
+        groupField: 'channel',
+        groupableFields,
+        sortField: 'channelNumber',
+        sortOrder: 1,
+      })
+      const value = wrapper
+        .findComponent({ name: 'DataTable' })
+        .props('value') as Array<{ uuid: string }>
+      /* 2 < 10 < 10.9 < 10.10 — numeric, not lexical. */
+      expect(value.map((r) => r.uuid)).toEqual(['e2', 'e1', 'e3', 'e4'])
     })
   })
 

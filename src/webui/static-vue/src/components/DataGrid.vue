@@ -966,11 +966,20 @@ const entriesForTable = computed(() => {
   const userField = props.sortField
   const userOrderMul = props.sortOrder === -1 ? -1 : 1
   const useSecondary = !!userField && userField !== def.field
+  /* Honour the sorted column's custom comparator (e.g.
+   * channelNumber's numeric "major.minor" ordering) for the
+   * within-cluster secondary sort; fall back to the generic
+   * value comparison otherwise. */
+  const userComparator = userField
+    ? props.columns.find((c) => c.field === userField)?.sortComparator
+    : undefined
   projected.sort((a, b) => {
     const primary = compareValues(clusterKeys.get(a), clusterKeys.get(b))
     if (primary !== 0) return primary * groupOrderMul
     if (!useSecondary) return 0
-    return compareValues(a[userField!], b[userField!]) * userOrderMul
+    const av = a[userField!]
+    const bv = b[userField!]
+    return (userComparator ? userComparator(av, bv) : compareValues(av, bv)) * userOrderMul
   })
   return projected
 })

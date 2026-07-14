@@ -111,6 +111,18 @@ export interface ColumnDef {
    * caller).
    */
   computeValue?: (row: BaseRow) => unknown
+  /*
+   * Optional custom comparator for client-side sorting of this
+   * column. Direction-agnostic ascending: return <0 when a sorts
+   * before b; the grid applies the sort direction. Set it when the
+   * column's wire value doesn't sort correctly by default — e.g.
+   * channelNumber's "major.minor" string, which neither
+   * String.localeCompare nor a decimal parse orders right.
+   * Consumed by DataGrid's grouped within-cluster secondary sort
+   * and by callers that own a client-side sort (the EPG Table
+   * view). Ignored in server-side (lazy) sort — the server owns it.
+   */
+  sortComparator?: (a: unknown, b: unknown) => number
   /* Whether the column starts hidden (user can re-enable from the column-toggle menu). */
   hiddenByDefault?: boolean
   /* Initial width in pixels; user can resize and the value is persisted. */
