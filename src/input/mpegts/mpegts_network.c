@@ -237,6 +237,18 @@ const idclass_t mpegts_network_class =
       .off      = offsetof(mpegts_network_t, mn_bouquet),
       .notify   = mpegts_network_class_notify_bouquet,
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "epgauto_default",
+      .name     = N_("Auto-map EPG source on new channels"),
+      .desc     = N_("Initial value of the channel option \"Automatically "
+                     "map EPG source\" for channels created from this "
+                     "network. Changing this setting does not affect "
+                     "existing channels."),
+      .off      = offsetof(mpegts_network_t, mn_epgauto_default),
+      .opts     = PO_ADVANCED,
+      .def.i    = 1,
+    },
 
     {
       .type     = PT_BOOL,
@@ -567,6 +579,7 @@ mpegts_network_create0
   mn->mn_satpos = INT_MAX;
   mn->mn_skipinitscan = 1;
   mn->mn_autodiscovery = MN_DISCOVERY_NEW;
+  mn->mn_epgauto_default = 1;
 
   /* Load config */
   if (conf)

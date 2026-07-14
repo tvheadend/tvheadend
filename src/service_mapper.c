@@ -27,6 +27,7 @@
 #include "profile.h"
 #include "bouquet.h"
 #include "api.h"
+#include "input.h"
 
 typedef struct service_mapper_item {
   TAILQ_ENTRY(service_mapper_item) link;
@@ -272,6 +273,16 @@ service_mapper_process
   if (!chn || (bq && chn->ch_bouquet != bq)) {
     chn = channel_create(NULL, NULL, NULL);
     chn->ch_bouquet = bq;
+
+#if ENABLE_MPEGTS
+    /* Take the initial "Automatically map EPG source" value from the
+     * network of the service the channel is created for */
+    if (idnode_is_instance(&s->s_id, &mpegts_service_class)) {
+      mpegts_service_t *ms = (mpegts_service_t *)s;
+      if (ms->s_dvb_mux && ms->s_dvb_mux->mm_network)
+        chn->ch_epgauto = ms->s_dvb_mux->mm_network->mn_epgauto_default;
+    }
+#endif
   }
     
   /* Map */

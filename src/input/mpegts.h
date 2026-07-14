@@ -374,6 +374,7 @@ struct mpegts_network
   int      mn_autodiscovery;
   int      mn_skipinitscan;
   int      mn_bouquet;
+  int      mn_epgauto_default;
   char    *mn_charset;
   int      mn_idlescan;
   int      mn_ignore_chnum;
