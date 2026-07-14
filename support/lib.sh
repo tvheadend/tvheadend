@@ -99,6 +99,9 @@ function download
   # Attempt to fetch
   N="${PCLOUD_BASEDIR}/staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz"
 
+  # GitHub Actions skips downloading from pcloud and relies on actions/cache
+  [ "$GITHUB_ACTIONS" = "true" ] && return 1
+
   echo "DOWNLOAD        ${N} / ${PCLOUD_HASHDIR}"
   ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp" || python3 ${ROOTDIR}/support/pcloud.py publink_download "${PCLOUD_HASHDIR}" "${N}" "${P}.tmp"
 

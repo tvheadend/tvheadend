@@ -193,7 +193,7 @@ jobs:
       - name: Setup container
         run: |
           docker pull ${{ matrix.container[0] }}
-          docker run --name build-container -d -v ${{ github.workspace }}:/workspace ${{ matrix.container[0] }} tail -f /dev/null
+          docker run --name build-container -d -e GITHUB_ACTIONS=true -v ${{ github.workspace }}:/workspace ${{ matrix.container[0] }} tail -f /dev/null
       - name: Fix old debian apt
         if: matrix.container[0] == 'debian:stretch' || matrix.container[0] == 'i386/debian:stretch' || matrix.container[0] == 'debian:buster' || matrix.container[0] == 'i386/debian:buster'
         env:
