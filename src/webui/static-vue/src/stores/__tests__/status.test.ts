@@ -30,11 +30,18 @@ vi.mock('@/api/client', () => ({
   apiCall: (...args: unknown[]) => apiMock(...args),
 }))
 
-/* Comet's `on` is invoked at store creation; stub so it doesn't try
- * to register against the real client. We don't drive Comet events
- * in these tests — store-level fetch / merge is what we're after. */
+/* Capture the handler each store registers so tests can drive Comet
+ * events. Keyed by notification class; last registration wins (each
+ * test uses a unique endpoint, so its store's handler is the latest). */
+const cometMock = vi.hoisted(() => {
+  const handlers = new Map<string, (msg: unknown) => void>()
+  return {
+    handlers,
+    on: (cls: string, fn: (msg: unknown) => void) => handlers.set(cls, fn),
+  }
+})
 vi.mock('@/api/comet', () => ({
-  cometClient: { on: vi.fn() },
+  cometClient: { on: cometMock.on },
 }))
 
 interface Row extends Record<string, unknown> {
@@ -168,5 +175,70 @@ describe('useStatusStore', () => {
     resolveFn({ entries: [] })
     await inflight
     expect(store.loading).toBe(false)
+  })
+
+  /*
+   * input_status regression: the bps counter is reset on every read
+   * (api/status/inputs resets it), so a refetch triggered by the
+   * notification would return a fraction of a second's data. The
+   * store must apply the pushed payload in place and NOT re-poll.
+   */
+  describe('input_status applies the notification in place (no refetch)', () => {
+    beforeEach(() => vi.useFakeTimers())
+    afterEach(() => vi.useRealTimers())
+
+    it('updates the row from the payload without calling apiCall again', async () => {
+      apiMock.mockResolvedValueOnce({
+        entries: [{ uuid: 'i1', name: 'Tuner', bps: 8_000_000 }],
+      })
+      const store = useStatusStore<Row>('status/inputs-a', 'input_status', 'uuid')
+      const handler = cometMock.handlers.get('input_status')!
+      await store.fetch()
+      expect(apiMock).toHaveBeenCalledTimes(1) /* the initial load */
+
+      /* Server's 1-second tick pushes the full-second value — the
+       * real message carries the `notificationClass` envelope
+       * discriminator alongside the data fields. */
+      handler({
+        notificationClass: 'input_status',
+        uuid: 'i1',
+        bps: 6_000_000,
+        signal: 900,
+        update: 1,
+      })
+      vi.advanceTimersByTime(500) /* well past the refetch debounce */
+
+      const row = store.entries.find((r) => r.uuid === 'i1')!
+      expect(row.bps).toBe(6_000_000) /* applied from the payload */
+      expect(row.signal).toBe(900)
+      expect(row.update).toBeUndefined() /* control flag stripped */
+      expect(row.notificationClass).toBeUndefined() /* envelope stripped */
+      expect(apiMock).toHaveBeenCalledTimes(1) /* NO counter-resetting refetch */
+    })
+
+    it('falls back to a refetch on a reload notification', async () => {
+      apiMock.mockResolvedValueOnce({ entries: [{ uuid: 'i1', name: 'Tuner' }] })
+      const store = useStatusStore<Row>('status/inputs-b', 'input_status', 'uuid')
+      const handler = cometMock.handlers.get('input_status')!
+      await store.fetch()
+      expect(apiMock).toHaveBeenCalledTimes(1)
+
+      apiMock.mockResolvedValueOnce({ entries: [{ uuid: 'i2', name: 'Tuner 2' }] })
+      handler({ reload: 1 })
+      await vi.advanceTimersByTimeAsync(200) /* debounce elapses */
+      expect(apiMock).toHaveBeenCalledTimes(2) /* structural change refetches */
+    })
+
+    it('falls back to a refetch when the pushed row is unknown', async () => {
+      apiMock.mockResolvedValueOnce({ entries: [{ uuid: 'i1', name: 'Tuner' }] })
+      const store = useStatusStore<Row>('status/inputs-c', 'input_status', 'uuid')
+      const handler = cometMock.handlers.get('input_status')!
+      await store.fetch()
+
+      apiMock.mockResolvedValueOnce({ entries: [{ uuid: 'i1' }, { uuid: 'i9' }] })
+      handler({ uuid: 'i9', bps: 1000, update: 1 }) /* i9 not loaded yet */
+      await vi.advanceTimersByTimeAsync(200)
+      expect(apiMock).toHaveBeenCalledTimes(2)
+    })
   })
 })
