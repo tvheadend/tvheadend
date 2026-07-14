@@ -238,9 +238,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .staticlib
-          key: staticlib-${{ matrix.distro }}-${{ matrix.arch }}-${{ github.sha }}
+          key: staticlib-${{ matrix.container[1] }}-${{ github.sha }}
           restore-keys: |
-            staticlib-${{ matrix.distro }}-${{ matrix.arch }}-
+            staticlib-${{ matrix.container[1] }}-
       - name: build
         env:
           SCRIPT: |
