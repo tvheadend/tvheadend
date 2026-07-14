@@ -41,23 +41,26 @@ onMounted(() => {
   inputs.fetch().catch(() => { /* fetch errors surface via inputs.error */ })
 })
 
-/* "Active streams" = total subscriptions across all tuner inputs
- * (each tuner's `subs` count summed — one tuner serving several
- * channels off the same transponder counts each). status/inputs
- * also emits an idle "empty status" placeholder row per
- * enabled-but-idle tuner (mpegts_input_get_streams); those carry
- * subs:0, so summing `subs` excludes them naturally. */
-const activeStreams = computed(() =>
+/* Active subscriptions = total subscriptions across all tuner
+ * inputs (each tuner's `subs` count summed — one tuner serving
+ * several channels off the same transponder counts each).
+ * status/inputs also emits an idle "empty status" placeholder row
+ * per enabled-but-idle tuner (mpegts_input_get_streams); those
+ * carry subs:0, so summing `subs` excludes them naturally. The
+ * label counts subscriptions and links to Status → Subscriptions,
+ * so it reads "subscriptions" (not "streams") to match where it
+ * lands. */
+const activeSubscriptions = computed(() =>
   inputs.entries.reduce((sum, row) => {
     const subs = row.subs
     return sum + (typeof subs === 'number' ? subs : 0)
   }, 0),
 )
-const streamsLabel = computed(() => {
-  const n = activeStreams.value
+const subscriptionsLabel = computed(() => {
+  const n = activeSubscriptions.value
   if (n === 0) return t('Idle')
-  if (n === 1) return t('1 active stream')
-  return t('{0} active streams', n)
+  if (n === 1) return t('1 active subscription')
+  return t('{0} active subscriptions', n)
 })
 
 /* The label is a router-link to Status → Subscriptions for
@@ -68,8 +71,8 @@ const streamsLabel = computed(() => {
  * text instead of a link they'd land on a permission denial
  * from. Idle ("0 streams") also stays plain text — there's
  * nothing to drill into. */
-const streamsLinkable = computed(
-  () => activeStreams.value > 0 && access.has('admin'),
+const subscriptionsLinkable = computed(
+  () => activeSubscriptions.value > 0 && access.has('admin'),
 )
 
 /* Free space below this fraction of total → the low-disk warning. */
@@ -131,14 +134,14 @@ const totalText = computed(() => (total.value === null ? '—' : formatBytes(tot
         aria-hidden="true"
       />
       <router-link
-        v-if="streamsLinkable"
+        v-if="subscriptionsLinkable"
         :to="{ name: 'status-subscriptions' }"
         class="health-line__streams-link"
         :title="t('Open Subscriptions')"
       >
-        {{ streamsLabel }}
+        {{ subscriptionsLabel }}
       </router-link>
-      <span v-else>{{ streamsLabel }}</span>
+      <span v-else>{{ subscriptionsLabel }}</span>
     </p>
   </section>
 </template>

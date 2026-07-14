@@ -106,15 +106,15 @@ describe('HealthLine', () => {
       { uuid: 'tuner-idle', subs: 0 } /* idle "empty status" placeholder */,
     )
     const w = mount(HealthLine, globalMountOpts)
-    expect(w.find('.health-line__streams').text()).toBe('3 active streams')
+    expect(w.find('.health-line__streams').text()).toBe('3 active subscriptions')
   })
 
-  it('uses the singular for a single active stream', () => {
+  it('uses the singular for a single active subscription', () => {
     accessData.totaldiskspace = 2 * TIB
     accessData.freediskspace = TIB
     statusEntries.push({ uuid: 'tuner-a', subs: 1 })
     const w = mount(HealthLine, globalMountOpts)
-    expect(w.find('.health-line__streams').text()).toBe('1 active stream')
+    expect(w.find('.health-line__streams').text()).toBe('1 active subscription')
   })
 
   it('reads "Idle" when only idle tuners are present', () => {
@@ -125,8 +125,8 @@ describe('HealthLine', () => {
     expect(w.find('.health-line__streams').text()).toBe('Idle')
   })
 
-  describe('active-streams link to status/subscriptions', () => {
-    it('wraps the streams count in a router-link to status-subscriptions for admins with active streams', () => {
+  describe('active-subscriptions link to status/subscriptions', () => {
+    it('wraps the subscriptions count in a router-link to status-subscriptions for admins with active subscriptions', () => {
       accessData.totaldiskspace = 2 * TIB
       accessData.freediskspace = TIB
       mockIsAdmin = true
@@ -135,17 +135,17 @@ describe('HealthLine', () => {
       const link = w.find('.health-line__streams-link')
       expect(link.exists()).toBe(true)
       expect(link.attributes('data-to')).toContain('status-subscriptions')
-      expect(link.text()).toBe('3 active streams')
+      expect(link.text()).toBe('3 active subscriptions')
     })
 
-    it('renders the streams count as plain text (no link) for non-admin users', () => {
+    it('renders the subscriptions count as plain text (no link) for non-admin users', () => {
       accessData.totaldiskspace = 2 * TIB
       accessData.freediskspace = TIB
       mockIsAdmin = false
       statusEntries.push({ uuid: 'tuner-a', subs: 3 })
       const w = mount(HealthLine, globalMountOpts)
       expect(w.find('.health-line__streams-link').exists()).toBe(false)
-      expect(w.find('.health-line__streams').text()).toBe('3 active streams')
+      expect(w.find('.health-line__streams').text()).toBe('3 active subscriptions')
     })
 
     it('renders Idle as plain text (no link) even for admins — nothing to drill into', () => {
