@@ -34,6 +34,8 @@ RUN apk add --no-cache \
         'uriparser-dev' \
         'wget' \
         'zlib-dev' \
+        'nodejs' \
+        'npm' \
     && \
     git config --global --add safe.directory '/src/data/dvb-scan' && \
     ./configure \

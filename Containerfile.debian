@@ -41,6 +41,8 @@ RUN apt-get update --yes && apt-get install --yes \
         'python3-requests' \
         'wget' \
         'zlib1g-dev' \
+        'nodejs' \
+        'npm' \
     && \
     git config --global --add safe.directory '/src/data/dvb-scan' && \
     ./configure \
