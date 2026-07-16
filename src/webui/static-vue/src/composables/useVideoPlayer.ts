@@ -11,6 +11,10 @@
  * so the EPG drawer offers "Play in browser" for live events only;
  * `current` therefore carries just a channel UUID + a display title.
  *
+ * `current` may be null: the Live TV launcher opens the player with no
+ * channel selected, letting the user pick one from the dialog's own
+ * Channel dropdown. Every other entry point passes a channel.
+ *
  * `profile` is the active stream profile and is mutable while the
  * dialog is open — changing it live-switches the stream. The dialog
  * owns the selection logic (it picks the initial value from the
@@ -34,8 +38,10 @@ const current = ref<PlayTarget | null>(null)
  * the `<video>` element's stream URL. */
 const profile = ref<string>('')
 
-function open(target: PlayTarget): void {
-  current.value = target
+/* Open the player. With no target the player opens channel-less — the
+ * dialog's Channel dropdown is the way to choose what to watch. */
+function open(target?: PlayTarget): void {
+  current.value = target ?? null
   isOpen.value = true
 }
 

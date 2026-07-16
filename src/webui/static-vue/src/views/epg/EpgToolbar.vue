@@ -23,6 +23,7 @@
  */
 import Select from 'primevue/select'
 import EpgViewOptions from './EpgViewOptions.vue'
+import LiveTvButton from './LiveTvButton.vue'
 import type { UseEpgViewState } from '@/composables/useEpgViewState'
 import { useI18n } from '@/composables/useI18n'
 
@@ -112,6 +113,7 @@ const emit = defineEmits<{
       @update:model-value="(v) => { if (typeof v === 'number') state.setDayStart(v) }"
     />
     <span class="epg-toolbar__spacer" />
+    <LiveTvButton />
     <EpgViewOptions
       :options="state.viewOptions.value"
       :defaults="state.currentDefaults.value"

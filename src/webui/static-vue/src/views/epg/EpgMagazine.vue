@@ -48,6 +48,7 @@ import { useEpgViewportEmitter } from '@/composables/useEpgViewportEmitter'
 import { useMagazineEventAllocator } from '@/composables/useMagazineEventAllocator'
 import { useAccessStore } from '@/stores/access'
 import ChannelLogo from '@/components/ChannelLogo.vue'
+import { CirclePlay } from 'lucide-vue-next'
 import DvrOverlayBar from './DvrOverlayBar.vue'
 import type { DvrEntry } from '@/stores/dvrEntries'
 import { extraText } from './epgEventHelpers'
@@ -603,6 +604,8 @@ defineExpose({
         :key="ch.uuid"
         type="button"
         class="epg-magazine__channel-header"
+        :title="t('Play {0}', channelName(ch))"
+        :aria-label="t('Play {0}', channelName(ch))"
         @click="emit('channelClick', ch)"
       >
         <ChannelLogo
@@ -619,6 +622,7 @@ defineExpose({
         <span v-if="channelDisplay.name" class="epg-magazine__channel-name">{{
           channelName(ch)
         }}</span>
+        <CirclePlay :size="18" class="epg-magazine__play" aria-hidden="true" />
       </button>
       <div
         v-if="rightSpacerPx > 0"
@@ -794,6 +798,7 @@ defineExpose({
 }
 
 .epg-magazine__channel-header {
+  position: relative;
   flex: 0 0 var(--epg-channel-w);
   width: var(--epg-channel-w);
   max-width: var(--epg-channel-w);
@@ -826,6 +831,25 @@ defineExpose({
 
 .epg-magazine__channel-header:focus-visible {
   outline: 2px solid var(--tvh-primary);
+}
+
+/* Play affordance — a ▶ that fades in at the top-right of the channel
+ * header on hover/focus, signalling the header plays the channel.
+ * Absolutely positioned + pointer-events:none so it doesn't disturb
+ * the column layout or intercept the header's click. */
+.epg-magazine__play {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  color: var(--tvh-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--tvh-transition);
+}
+
+.epg-magazine__channel-header:hover .epg-magazine__play,
+.epg-magazine__channel-header:focus-visible .epg-magazine__play {
+  opacity: 1;
 }
 
 .epg-magazine__channel-icon {

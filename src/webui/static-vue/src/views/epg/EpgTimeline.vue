@@ -45,6 +45,7 @@ import { useEpgViewportEmitter } from '@/composables/useEpgViewportEmitter'
 import { useTimelineEventBoxPin } from '@/composables/useTimelineEventBoxPin'
 import { useAccessStore } from '@/stores/access'
 import ChannelLogo from '@/components/ChannelLogo.vue'
+import { CirclePlay } from 'lucide-vue-next'
 import DvrOverlayBar from './DvrOverlayBar.vue'
 import type { DvrEntry } from '@/stores/dvrEntries'
 import { extraText } from './epgEventHelpers'
@@ -617,7 +618,13 @@ defineExpose({
         aria-hidden="true"
       />
       <div v-for="ch in visibleChannels" :key="ch.uuid" class="epg-timeline__row">
-        <button type="button" class="epg-timeline__channel-cell" @click="emit('channelClick', ch)">
+        <button
+          type="button"
+          class="epg-timeline__channel-cell"
+          :title="t('Play {0}', channelName(ch))"
+          :aria-label="t('Play {0}', channelName(ch))"
+          @click="emit('channelClick', ch)"
+        >
           <ChannelLogo
             v-if="channelDisplay.logo"
             :src="iconUrl(ch.icon)"
@@ -632,6 +639,7 @@ defineExpose({
           <span v-if="channelDisplay.name" class="epg-timeline__channel-name">{{
             channelName(ch)
           }}</span>
+          <CirclePlay :size="18" class="epg-timeline__play" aria-hidden="true" />
         </button>
         <div class="epg-timeline__row-body">
           <template v-for="ev in visibleEventsByChannel.get(ch.uuid) ?? []" :key="ev.eventId">
@@ -892,6 +900,26 @@ defineExpose({
 
 .epg-timeline__channel-cell:focus-visible {
   outline: 2px solid var(--tvh-primary);
+}
+
+/* Play affordance — a ▶ that fades in over the right edge of the
+ * channel cell on hover/focus, signalling the cell plays the channel.
+ * Absolutely positioned + pointer-events:none so it doesn't disturb
+ * the logo/number/name flex layout or intercept the cell's click. */
+.epg-timeline__play {
+  position: absolute;
+  right: var(--tvh-space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--tvh-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--tvh-transition);
+}
+
+.epg-timeline__channel-cell:hover .epg-timeline__play,
+.epg-timeline__channel-cell:focus-visible .epg-timeline__play {
+  opacity: 1;
 }
 
 .epg-timeline__channel-icon {

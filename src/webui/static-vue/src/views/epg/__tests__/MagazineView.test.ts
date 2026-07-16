@@ -145,6 +145,13 @@ vi.mock('@/composables/useEpgInitialScrollToNow', () => ({
   useEpgInitialScrollToNow: () => undefined,
 }))
 
+/* MagazineView now wires channel-cell clicks to useChannelPlay, which
+ * reaches the streamProfiles Pinia store; stub it — playback isn't
+ * exercised by these position-save tests. */
+vi.mock('@/composables/useChannelPlay', () => ({
+  useChannelPlay: () => ({ play: () => Promise.resolve() }),
+}))
+
 vi.mock('@/composables/useTextScale', async () => {
   const { ref: vueRef } = await import('vue')
   return { useTextScale: () => vueRef(1) }

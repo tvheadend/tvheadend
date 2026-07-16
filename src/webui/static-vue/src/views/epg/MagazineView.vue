@@ -35,6 +35,7 @@ import EpgEventDrawer from './EpgEventDrawer.vue'
 import EpgToolbar from './EpgToolbar.vue'
 import { useEpgViewState } from '@/composables/useEpgViewState'
 import { useEpgViewWrapper } from '@/composables/useEpgViewWrapper'
+import { useChannelPlay } from '@/composables/useChannelPlay'
 import { useEpgScrollDaySync } from '@/composables/useEpgScrollDaySync'
 import { useEpgInitialScrollToNow } from '@/composables/useEpgInitialScrollToNow'
 import { useMagazineScroll } from '@/composables/useMagazineScroll'
@@ -94,6 +95,12 @@ const effectiveStart = computed(() => magazineRef.value?.effectiveStart ?? state
  * useMagazineScroll, since it consumes scrollToNow). */
 const { now, pxPerMinute, titleOnly, onDvrClick, loadingDaysArray, channels, events } =
   useEpgViewWrapper(state, 'magazine')
+
+/* Clicking a channel header plays that channel — works with no EPG. */
+const channelPlay = useChannelPlay()
+function playChannel(ch: { uuid: string; name?: string }): void {
+  void channelPlay.play(ch.uuid, ch.name ?? '')
+}
 
 const { scrollToNow, scrollToTime } = useMagazineScroll({
   scrollEl,
@@ -226,6 +233,7 @@ onBeforeUnmount(() => {
       :dark-channel-background="state.viewOptions.value.darkChannelBackground"
       class="magazine-view__grid"
       @event-click="state.toggleDrawer"
+      @channel-click="playChannel"
       @dvr-click="onDvrClick"
       @update:active-day="onActiveDayChanged"
       @update:viewport-range="onViewportRangeChanged"

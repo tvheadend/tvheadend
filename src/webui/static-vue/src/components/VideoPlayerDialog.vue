@@ -31,6 +31,8 @@ import { useI18n } from '@/composables/useI18n'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
 import { useStreamProfilesStore } from '@/stores/streamProfiles'
 import { channelStreamUrl } from '@/utils/playUrl'
+import { apiCall } from '@/api/client'
+import type { GridResponse, FilterDef } from '@/types/grid'
 
 const { t } = useI18n()
 const player = useVideoPlayer()
@@ -39,14 +41,66 @@ const streamProfiles = useStreamProfilesStore()
 /* localStorage key for the last in-browser profile the user chose. */
 const LAST_PROFILE_KEY = 'tvh:browser-play-profile'
 
+/* Enabled channels for the Channel dropdown. Fetched once (the dialog
+ * is a mounted singleton, so this survives across opens) and shared by
+ * every entry point into the player. */
+interface PlayerChannel {
+  uuid: string
+  name?: string
+  number?: number
+  /* Precomputed "number · name" so the Select's filter matches both. */
+  label: string
+}
+const channels = ref<PlayerChannel[]>([])
+let channelsLoaded = false
+
+async function loadChannels(): Promise<void> {
+  if (channelsLoaded) return
+  try {
+    const resp = await apiCall<GridResponse<PlayerChannel>>('channel/grid', {
+      start: 0,
+      filter: JSON.stringify([
+        { field: 'enabled', type: 'boolean', value: true } satisfies FilterDef,
+      ]),
+      limit: 999_999_999,
+      sort: 'number',
+      dir: 'ASC',
+    })
+    channels.value = (resp.entries ?? []).map((c) => ({
+      ...c,
+      label:
+        typeof c.number === 'number' ? `${c.number} · ${c.name ?? c.uuid}` : (c.name ?? c.uuid),
+    }))
+    channelsLoaded = true
+  } catch (e) {
+    /* Non-fatal — the dropdown just stays empty; a channel passed in
+     * via open() still plays. Logged for visibility. */
+    console.error('VideoPlayerDialog: channel load failed:', e)
+  }
+}
+
+/* The selected channel, bound to the Channel dropdown. Reading/writing
+ * goes through the composable's `current` so switching channels here
+ * re-points the <video> the same way the profile switch does. */
+const selectedChannel = computed<string>({
+  get: () => player.current.value?.channelUuid ?? '',
+  set: (uuid: string) => {
+    const ch = channels.value.find((c) => c.uuid === uuid)
+    player.current.value = ch ? { channelUuid: ch.uuid, title: ch.name ?? ch.uuid } : null
+  },
+})
+
+const hasChannel = computed(() => player.current.value !== null)
+
 const videoEl = ref<HTMLVideoElement | null>(null)
 const playbackError = ref(false)
 /* Human-readable detail from the <video> MediaError. */
 const playbackErrorDetail = ref('')
-/* True while a profile switch tears down + reloads the stream, so
- * the UI shows a hint instead of a frozen frame. Only set once the
- * stream has played at least once — the initial load uses the
- * <video> element's own loading UI. */
+/* True while a profile or channel switch tears down + reloads the
+ * stream, so the UI shows a hint instead of a frozen frame. Both go
+ * through the same src-change reload, so one neutral message covers
+ * them. Only set once the stream has played at least once — the
+ * initial load uses the <video> element's own loading UI. */
 const switching = ref(false)
 const hasPlayed = ref(false)
 
@@ -126,6 +180,7 @@ watch(
       switching.value = false
       hasPlayed.value = false
       void pickInitialProfile()
+      void loadChannels()
       return
     }
     teardownVideo()
@@ -191,35 +246,53 @@ function onPlaying(): void {
     :style="{ width: '800px', maxWidth: 'calc(100vw - 32px)' }"
     :breakpoints="{ '768px': '100vw' }"
   >
-    <!-- Profile switcher — only when there is more than one
-         profile to choose between. A profile that failed to play
-         earlier this session is flagged with a warning icon. -->
-    <div v-if="profiles.length > 1" class="video-player-dialog__toolbar">
-      <label class="video-player-dialog__profile-label" for="video-player-profile">
-        {{ t('Stream profile') }}
+    <!-- Channel + profile switchers. The Channel dropdown is how you
+         pick what to watch (and switch live); the profile switcher
+         appears only when there is more than one profile. A profile
+         that failed to play earlier this session is flagged. -->
+    <div class="video-player-dialog__toolbar">
+      <label class="video-player-dialog__field-label" for="video-player-channel">
+        {{ t('Channel') }}
       </label>
       <Select
-        v-model="selectedProfile"
-        input-id="video-player-profile"
-        :aria-label="t('Stream profile')"
-        :options="profiles"
+        v-model="selectedChannel"
+        input-id="video-player-channel"
+        :aria-label="t('Channel')"
+        :options="channels"
         option-label="label"
-        option-value="name"
-        class="video-player-dialog__profile-select"
-      >
-        <template #option="{ option }">
-          <span class="video-player-dialog__profile-option">
-            <TriangleAlert
-              v-if="streamProfiles.failedProfiles.has(option.name)"
-              :size="14"
-              :stroke-width="2"
-              class="video-player-dialog__profile-warn"
-              :aria-label="t('Failed to play earlier this session')"
-            />
-            <span>{{ option.label }}</span>
-          </span>
-        </template>
-      </Select>
+        option-value="uuid"
+        filter
+        :filter-placeholder="t('Search channels…')"
+        :placeholder="t('Select a channel')"
+        class="video-player-dialog__channel-select"
+      />
+      <template v-if="profiles.length > 1">
+        <label class="video-player-dialog__field-label" for="video-player-profile">
+          {{ t('Stream profile') }}
+        </label>
+        <Select
+          v-model="selectedProfile"
+          input-id="video-player-profile"
+          :aria-label="t('Stream profile')"
+          :options="profiles"
+          option-label="label"
+          option-value="name"
+          class="video-player-dialog__profile-select"
+        >
+          <template #option="{ option }">
+            <span class="video-player-dialog__profile-option">
+              <TriangleAlert
+                v-if="streamProfiles.failedProfiles.has(option.name)"
+                :size="14"
+                :stroke-width="2"
+                class="video-player-dialog__profile-warn"
+                :aria-label="t('Failed to play earlier this session')"
+              />
+              <span>{{ option.label }}</span>
+            </span>
+          </template>
+        </Select>
+      </template>
     </div>
     <div class="video-player-dialog__body">
       <!-- The <video> stays mounted across errors and switches so
@@ -235,7 +308,10 @@ function onPlaying(): void {
         @error="onError"
         @playing="onPlaying"
       />
-      <div v-if="playbackError" class="video-player-dialog__overlay">
+      <div v-if="!hasChannel" class="video-player-dialog__overlay">
+        <p>{{ t('Select a channel to watch.') }}</p>
+      </div>
+      <div v-else-if="playbackError" class="video-player-dialog__overlay">
         <p>
           {{ t('Playback failed. The stream could not be played in the browser using profile "{0}" — try another profile, or use the external player instead.', selectedProfile) }}
         </p>
@@ -244,7 +320,7 @@ function onPlaying(): void {
         </p>
       </div>
       <div v-else-if="switching" class="video-player-dialog__overlay">
-        <p>{{ t('Switching profile…') }}</p>
+        <p>{{ t('Switching…') }}</p>
       </div>
     </div>
   </Dialog>
@@ -258,9 +334,16 @@ function onPlaying(): void {
   padding-bottom: var(--tvh-space-2);
 }
 
-.video-player-dialog__profile-label {
+.video-player-dialog__field-label {
   color: var(--tvh-text-muted);
   font-size: var(--tvh-text-sm);
+}
+
+/* PrimeVue Select for the channel switcher — a touch wider than the
+ * profile one since channel names run longer. Same inline-flex caveat
+ * as the profile select below (don't force display:block). */
+.video-player-dialog__channel-select {
+  min-width: 240px;
 }
 
 /* PrimeVue Select for the profile switcher. `.p-select` is

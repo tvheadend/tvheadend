@@ -83,6 +83,7 @@ import Select from 'primevue/select'
 import Popover from 'primevue/popover'
 import EpgEventDrawer, { type EpgEventDetail } from './EpgEventDrawer.vue'
 import EpgTableOptions from './EpgTableOptions.vue'
+import LiveTvButton from './LiveTvButton.vue'
 import ProgressCell, { type ProgressOptions } from '@/components/ProgressCell.vue'
 import { useNowCursor } from '@/composables/useNowCursor'
 import { useAccessStore } from '@/stores/access'
@@ -2265,6 +2266,12 @@ async function onCreateAutoRecClick() {
            two-way bound with the title column funnel via
            `filters.perColumn.title`. See the `titleSearch` block in
            the script for the debounce + sync mechanics. -->
+      <template #toolbarActions>
+        <!-- Primary play path for the Table view: it has no per-channel
+             row to click, so the Live TV launcher is the way to start
+             playback (incl. channels with no EPG). -->
+        <LiveTvButton />
+      </template>
       <template #toolbarRight>
         <!-- Desktop-inline Search input + title-scope dropdown.
              Hidden on phone widths by the media query in scoped

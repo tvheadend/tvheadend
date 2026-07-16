@@ -30,6 +30,7 @@ import EpgEventDrawer from './EpgEventDrawer.vue'
 import EpgToolbar from './EpgToolbar.vue'
 import { useEpgViewState } from '@/composables/useEpgViewState'
 import { useEpgViewWrapper } from '@/composables/useEpgViewWrapper'
+import { useChannelPlay } from '@/composables/useChannelPlay'
 import { useEpgScrollDaySync } from '@/composables/useEpgScrollDaySync'
 import { useEpgInitialScrollToNow } from '@/composables/useEpgInitialScrollToNow'
 import { useTimelineScroll } from '@/composables/useTimelineScroll'
@@ -141,6 +142,12 @@ const effectiveStart = computed(() => timelineRef.value?.effectiveStart ?? state
  * useTimelineScroll, since it consumes scrollToNow). */
 const { now, pxPerMinute, titleOnly, onDvrClick, loadingDaysArray, channels, events } =
   useEpgViewWrapper(state, 'timeline')
+
+/* Clicking a channel cell plays that channel — works with no EPG. */
+const channelPlay = useChannelPlay()
+function playChannel(ch: { uuid: string; name?: string }): void {
+  void channelPlay.play(ch.uuid, ch.name ?? '')
+}
 
 const { scrollToNow, scrollToTime } = useTimelineScroll({
   scrollEl,
@@ -288,6 +295,7 @@ onBeforeUnmount(() => {
       :dark-channel-background="state.viewOptions.value.darkChannelBackground"
       class="timeline-view__grid"
       @event-click="state.toggleDrawer"
+      @channel-click="playChannel"
       @dvr-click="onDvrClick"
       @update:active-day="onActiveDayChanged"
       @update:viewport-range="onViewportRangeChanged"
