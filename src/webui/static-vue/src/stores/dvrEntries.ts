@@ -32,6 +32,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiCall } from '@/api/client'
+import { GRID_LIMIT_ALL } from '@/api/gridConstants'
 import { cometClient } from '@/api/comet'
 import { createDebounce } from '@/utils/debounce'
 import type { IdnodeNotification } from '@/types/comet'
@@ -71,7 +72,7 @@ export const useDvrEntriesStore = defineStore('dvrEntries', () => {
     try {
       const resp = await apiCall<GridResponse>('dvr/entry/grid_upcoming', {
         start: 0,
-        limit: 999_999_999,
+        limit: GRID_LIMIT_ALL,
       })
       entries.value = Array.isArray(resp?.entries) ? resp.entries : []
       loaded.value = true

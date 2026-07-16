@@ -41,6 +41,7 @@ import { levelMatches, propLevel } from '@/types/idnode'
 import type { UiLevel } from '@/types/access'
 import { useAccessStore } from '@/stores/access'
 import { inferEntityClass, useGridStore } from '@/stores/grid'
+import { GRID_LIMIT_ALL } from '@/api/gridConstants'
 import { useIdnodeClassStore } from '@/stores/idnodeClass'
 import { createDebounce } from '@/utils/debounce'
 import { fmtDate } from '@/utils/formatTime'
@@ -85,15 +86,6 @@ type Row = BaseRow
  * `disp_*` mirrors.
  */
 const LANG_FALLBACKS = ['eng', 'en', 'en_US', 'en_GB']
-
-/*
- * Server's "All" sentinel for `page_size_ui` (`access.c:1518`):
- * `999999999` means "no practical pagination". The virtual-
- * scrolled grids use it as the per-fetch limit so the store
- * loads the full dataset on first paint — virtualScroller then
- * materialises only the on-screen rows.
- */
-const ROWS_PER_PAGE_ALL = 999999999
 
 function resolveLangStr(value: Record<string, unknown>): string {
   const navLang = (typeof navigator === 'undefined' ? '' : navigator.language).toLowerCase()
@@ -649,7 +641,7 @@ onMounted(() => {
    * grid loads the first 50 rows then stalls with PrimeVue's
    * loading spinner because virtualScroller sees `total: N`
    * but only N=50 entries in the array. */
-  store.setPage(0, ROWS_PER_PAGE_ALL)
+  store.setPage(0, GRID_LIMIT_ALL)
 })
 
 onBeforeUnmount(() => {

@@ -19,6 +19,7 @@ import IdnodeGrid from '../IdnodeGrid.vue'
 import type { ColumnDef } from '@/types/column'
 import type { BaseRow } from '@/types/grid'
 import type { UiLevel } from '@/types/access'
+import { GRID_LIMIT_ALL } from '@/api/gridConstants'
 
 /* Mock the shared phone-breakpoint singleton with a test-driven
  * ref — happy-dom's matchMedia wiring can't be flipped reliably
@@ -420,11 +421,11 @@ describe('IdnodeGrid', () => {
   it('calls store.setPage with the "all" sentinel on mount', () => {
     /* The grid is virtual-scrolled — it needs the full dataset on
      * the client because there's no page-forward affordance. Mount
-     * calls `store.setPage(0, ROWS_PER_PAGE_ALL)` to override the
+     * calls `store.setPage(0, GRID_LIMIT_ALL)` to override the
      * store's default page-size limit before the initial fetch. */
     mountGrid()
     expect(mockStore.setPage).toHaveBeenCalledOnce()
-    expect(mockStore.setPage).toHaveBeenCalledWith(0, 999999999)
+    expect(mockStore.setPage).toHaveBeenCalledWith(0, GRID_LIMIT_ALL)
   })
 
   it('renders the default error message when store has an error', () => {
@@ -1456,7 +1457,7 @@ describe('IdnodeGrid', () => {
       })
       const wrapper = mountGrid({}, { clientSideFilter: true })
       /* IdnodeGrid's onMounted unconditionally calls setPage(0,
-       * ROWS_PER_PAGE_ALL) — see the comment in IdnodeGrid.vue.
+       * GRID_LIMIT_ALL) — see the comment in IdnodeGrid.vue.
        * Reset the mock so the assertion targets the PrimeVue
        * `@page` event path specifically. */
       mockStore.setPage.mockClear()

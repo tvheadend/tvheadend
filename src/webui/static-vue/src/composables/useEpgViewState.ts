@@ -47,6 +47,7 @@ import { readStoredJson, writeStoredJson } from '@/utils/storage'
 import { addLocalDaysEpoch, startOfLocalDayEpoch as startOfLocalDay } from '@/utils/localDay'
 import { useIsPhone } from './useIsPhone'
 import { apiCall } from '@/api/client'
+import { GRID_LIMIT_ALL } from '@/api/gridConstants'
 import { cometClient } from '@/api/comet'
 import { dropDeletedEvents, mergeFreshEvents } from './epgEventMerge'
 import { decideCometTier } from './epgCometTiering'
@@ -846,7 +847,7 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
         filter: JSON.stringify([
           { field: 'enabled', type: 'boolean', value: true } satisfies FilterDef,
         ]),
-        limit: 999_999_999,
+        limit: GRID_LIMIT_ALL,
         sort: 'number',
         dir: 'ASC',
       })
@@ -941,7 +942,7 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
     loadingDays.value = new Set(loadingDays.value).add(epoch)
     const params: Record<string, unknown> = {
       start: 0,
-      limit: 999_999_999,
+      limit: GRID_LIMIT_ALL,
       sort: 'start',
       dir: 'ASC',
       filter: JSON.stringify([
@@ -1037,7 +1038,7 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
     try {
       const params: Record<string, unknown> = {
         start: 0,
-        limit: 999_999_999,
+        limit: GRID_LIMIT_ALL,
         sort: 'start',
         dir: 'ASC',
       }
@@ -1265,7 +1266,7 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
     try {
       const resp = await apiCall<GridResponse<ChannelTag>>('channeltag/grid', {
         start: 0,
-        limit: 999_999_999,
+        limit: GRID_LIMIT_ALL,
         sort: 'index',
         dir: 'ASC',
       })
