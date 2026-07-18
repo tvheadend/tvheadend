@@ -32,6 +32,7 @@ import { useVideoPlayer } from '@/composables/useVideoPlayer'
 import { useStreamProfilesStore } from '@/stores/streamProfiles'
 import { channelStreamUrl } from '@/utils/playUrl'
 import { apiCall } from '@/api/client'
+import { GRID_LIMIT_ALL } from '@/api/gridConstants'
 import type { GridResponse, FilterDef } from '@/types/grid'
 
 const { t } = useI18n()
@@ -62,7 +63,7 @@ async function loadChannels(): Promise<void> {
       filter: JSON.stringify([
         { field: 'enabled', type: 'boolean', value: true } satisfies FilterDef,
       ]),
-      limit: 999_999_999,
+      limit: GRID_LIMIT_ALL,
       sort: 'number',
       dir: 'ASC',
     })
