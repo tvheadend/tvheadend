@@ -1218,6 +1218,13 @@ static int _xmltv_parse_channel
           /* Skip extra spaces between channel number and actual name */
           while (*cur == ' ') ++cur;
         }
+        else
+        {
+          //If the 'space separator' test fails, reset the name position.
+          //Without this, the '4Music' example above will be recognised as 'Music'
+          //because *cur no longer points to the beginning of the name.
+          cur = name;
+        }
       }
 
       if (cur && *cur)

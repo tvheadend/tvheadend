@@ -74,9 +74,20 @@ int epggrab_channel_match_name ( epggrab_channel_t *ec, channel_t *ch )
 {
   const char *name, *s;
   htsmsg_field_t *f;
+  char ubuf[UUID_HEX_SIZE];
 
   if (!epggrab_channel_check(ec, ch))
     return 0;
+
+  //Check for a match to a channel UUID.
+  channel_get_uuid(ch, ubuf);
+  if (ec->names)
+    HTSMSG_FOREACH(f, ec->names)
+      if ((s = htsmsg_field_get_str(f)) != NULL)
+      {
+        if (!strcasecmp(s, ubuf))
+          return 1;        
+      }
 
   name = channel_get_name(ch, NULL);
   if (name == NULL)
@@ -288,19 +299,31 @@ static int
 epggrab_channel_autolink( epggrab_channel_t *ec )
 {
   channel_t *ch;
+  int chnum = 0;  //Default to not searching channel numbers.
+  if (ec->mod->type == EPGGRAB_INT || ec->mod->type == EPGGRAB_EXT)
+  {
+    chnum = ((epggrab_module_ext_t *)ec->mod)->xmltv_chnum;  //This is the grabber 'Channel numbers (heuristic)' flag.
+  }
 
   CHANNEL_FOREACH(ch)
     if (epggrab_channel_match_epgid(ec, ch))
       if (epggrab_channel_link(ec, ch, NULL))
         return 1;
+
+  //Only test channel number if the module flag is set.
+  if(chnum)
+  {
+    CHANNEL_FOREACH(ch)
+      if (epggrab_channel_match_number(ec, ch))
+        if (epggrab_channel_link(ec, ch, NULL))
+          return 1;              
+  }
+
   CHANNEL_FOREACH(ch)
     if (epggrab_channel_match_name(ec, ch))
       if (epggrab_channel_link(ec, ch, NULL))
         return 1;
-  CHANNEL_FOREACH(ch)
-    if (epggrab_channel_match_number(ec, ch))
-      if (epggrab_channel_link(ec, ch, NULL))
-        return 1;
+
   return 0;
 }
 
