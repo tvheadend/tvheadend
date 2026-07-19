@@ -2,7 +2,28 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 import { describe, expect, it } from 'vitest'
-import { computeVisibleIndexRange, eventOverlapsTimeRange } from '@/views/epg/epgGridShared'
+import {
+  channelNumber,
+  computeVisibleIndexRange,
+  eventOverlapsTimeRange,
+} from '@/views/epg/epgGridShared'
+
+describe('channelNumber', () => {
+  it('renders an integer LCN', () => {
+    expect(channelNumber({ uuid: 'a', number: 10 })).toBe('10')
+  })
+
+  it('renders an ATSC fractional LCN the server sends as a string', () => {
+    /* Regression: fractional numbers arrive as a string, not a number,
+     * and were previously dropped in the EPG channel column (#2190). */
+    expect(channelNumber({ uuid: 'a', number: '10.1' })).toBe('10.1')
+  })
+
+  it('renders nothing for an absent or empty number', () => {
+    expect(channelNumber({ uuid: 'a' })).toBe('')
+    expect(channelNumber({ uuid: 'a', number: '' })).toBe('')
+  })
+})
 
 describe('computeVisibleIndexRange', () => {
   it('returns first N items (plus overscan) at scrollPos 0', () => {

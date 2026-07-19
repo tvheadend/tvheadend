@@ -42,7 +42,9 @@ export interface GridEvent {
 export interface GridChannel {
   uuid: string
   name?: string
-  number?: number
+  /* Integer LCN for most channels; the server sends a string for
+   * ATSC fractional numbers (e.g. "10.1"), so both shapes arrive. */
+  number?: number | string
 }
 
 /* Bucket events by channelUuid for O(channels) row rendering instead
@@ -123,7 +125,9 @@ export function iconUrl(icon: string | undefined): string | null {
 }
 
 export function channelNumber(ch: GridChannel): string {
-  return typeof ch.number === 'number' ? String(ch.number) : ''
+  /* Integer LCN, or an ATSC fractional string ("10.1"); ?? '' guards
+   * absent/empty so we never render "undefined". */
+  return String(ch.number ?? '')
 }
 
 export function channelName(ch: GridChannel): string {

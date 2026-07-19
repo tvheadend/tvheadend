@@ -47,7 +47,8 @@ const LAST_PROFILE_KEY = 'tvh:browser-play-profile'
 interface PlayerChannel {
   uuid: string
   name?: string
-  number?: number
+  /* Integer LCN, or a string for ATSC fractional numbers ("10.1"). */
+  number?: number | string
   /* Precomputed "number · name" so the Select's filter matches both. */
   label: string
 }
@@ -66,11 +67,15 @@ async function loadChannels(): Promise<void> {
       sort: 'number',
       dir: 'ASC',
     })
-    channels.value = (resp.entries ?? []).map((c) => ({
-      ...c,
-      label:
-        typeof c.number === 'number' ? `${c.number} · ${c.name ?? c.uuid}` : (c.name ?? c.uuid),
-    }))
+    channels.value = (resp.entries ?? []).map((c) => {
+      /* number is an int, or an ATSC fractional string ("10.1"); ?? ''
+       * guards absent/empty so the label never shows "undefined". */
+      const numStr = String(c.number ?? '')
+      return {
+        ...c,
+        label: numStr ? `${numStr} · ${c.name ?? c.uuid}` : (c.name ?? c.uuid),
+      }
+    })
     channelsLoaded = true
   } catch (e) {
     /* Non-fatal — the dropdown just stays empty; a channel passed in

@@ -69,7 +69,9 @@ const { t } = useI18n()
 export interface TimelineChannel {
   uuid: string
   name?: string
-  number?: number
+  /* number | string — the server sends a string for ATSC fractional
+   * LCNs (e.g. "10.1"). See channelNumber() in epgGridShared. */
+  number?: number | string
   icon?: string
 }
 
