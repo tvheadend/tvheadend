@@ -1652,6 +1652,9 @@ function onFilter(event: { filters: Record<string, unknown> }) {
       })
       continue
     }
+    /* 'genre' is an EPG-Table-only content-type filter — idnode grids
+     * never carry such a column, so it's not part of this wire shape. */
+    if (col.filterType === 'genre') continue
     if (value === null || value === undefined || value === '') continue
     filters.push({
       field: col.field,

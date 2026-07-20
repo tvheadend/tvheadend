@@ -1231,6 +1231,12 @@ function filterTitleFor(col: ColumnDef): string {
   if (col.filterType === 'string') {
     return t('Filter: contains "{0}"', String(v))
   }
+  if (col.filterType === 'genre') {
+    /* Value is an array of content-type codes; the consumer owns the
+     * code→label map, so keep the tooltip generic. */
+    const n = Array.isArray(v) ? v.length : 0
+    return t('Filter: {0} content type(s)', n)
+  }
   if (col.filterType === 'enum' && col.enumSource) {
     const opts = Array.isArray(col.enumSource)
       ? col.enumSource

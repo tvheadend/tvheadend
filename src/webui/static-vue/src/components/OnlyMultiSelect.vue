@@ -48,6 +48,7 @@ const {
   filter = false,
   showToggleAll = true,
   onlyLabel,
+  appendTo,
 } = defineProps<{
   modelValue: T[]
   options: ReadonlyArray<Option<T>>
@@ -55,6 +56,12 @@ const {
   ariaLabel: string
   filter?: boolean
   showToggleAll?: boolean
+  /* Where PrimeVue teleports the dropdown panel. Defaults to
+   * MultiSelect's own 'body'. Pass 'self' when this sits inside
+   * another dismissable overlay (e.g. a column-filter popover), so
+   * clicking an option isn't treated as an outside-click that
+   * dismisses the parent overlay. */
+  appendTo?: 'body' | 'self'
   /* Label for the per-row "Only" link. Defaults to the
    * translated 'Only' string. Caller can override (e.g. for
    * disambiguation when multiple OnlyMultiSelects sit in the
@@ -118,6 +125,7 @@ function isAllSelected(values: readonly T[]): boolean {
     :aria-label="ariaLabel"
     :filter="filter"
     :show-toggle-all="showToggleAll"
+    :append-to="appendTo"
     @update:model-value="emit('update:modelValue', $event as T[])"
   >
     <template #value="slotProps">

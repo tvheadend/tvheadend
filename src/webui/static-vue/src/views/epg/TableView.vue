@@ -79,6 +79,7 @@ import { useI18n } from '@/composables/useI18n'
 import DataGrid from '@/components/DataGrid.vue'
 import DrillDownCell from '@/components/DrillDownCell.vue'
 import SearchInput from '@/components/SearchInput.vue'
+import OnlyMultiSelect from '@/components/OnlyMultiSelect.vue'
 import Select from 'primevue/select'
 import Popover from 'primevue/popover'
 import EpgEventDrawer, { type EpgEventDetail } from './EpgEventDrawer.vue'
@@ -88,6 +89,7 @@ import ProgressCell, { type ProgressOptions } from '@/components/ProgressCell.vu
 import { useNowCursor } from '@/composables/useNowCursor'
 import { useAccessStore } from '@/stores/access'
 import { useEpgContentTypeStore } from '@/stores/epgContentTypes'
+import { useEpgGenreOptions } from '@/composables/useEpgGenreOptions'
 import { useEpgViewState, type EpgRow } from '@/composables/useEpgViewState'
 import type { TitleSearchMode } from './epgViewOptions'
 import {
@@ -184,6 +186,24 @@ const fmtGenre = (v: unknown) => {
       typeof c === 'number' ? (contentTypes.labels.get(c) ?? `0x${c.toString(16)}`) : String(c)
     )
     .join(', ')
+}
+
+/* Content-type filter options for the "Content Type" column filter —
+ * the same major-group list the view-options popover uses. */
+const genreOptions = useEpgGenreOptions()
+
+/* Commit a content-type selection from the column filter to the
+ * shared view-options state (drives the server `genre` filter via
+ * epgTableFilters). Stored in canonical ascending order — the
+ * MultiSelect emits values in click order, and a stable shape keeps
+ * order-insensitive comparisons cheap. (The view-options popover
+ * writes viewOptions.genre directly via update:options, so its
+ * arrays may be click-ordered — comparisons must sort both sides.) */
+function setGenre(genre: number[]) {
+  state.setViewOptions({
+    ...state.viewOptions.value,
+    genre: [...genre].sort((a, b) => a - b),
+  })
 }
 
 
@@ -301,6 +321,10 @@ const baseCols: ColumnDef[] = [
     field: 'genre',
     label: t('Content type'),
     sortable: false,
+    /* Content-type multiselect filter — the column-header funnel /
+     * kebab "Filter…" opens it; state lives in viewOptions.genre and
+     * the popover content is rendered by the `#columnFilter` slot. */
+    filterType: 'genre',
     minVisible: 'desktop',
     width: 140,
     format: fmtGenre,
@@ -1157,6 +1181,14 @@ const dtFilters = computed(() => ({
   channelName: { value: filters.value.perColumn.channelName ?? null, matchMode: 'contains' },
   title: { value: filters.value.perColumn.title ?? null, matchMode: 'contains' },
   episodeOnscreen: { value: filters.value.perColumn.episodeOnscreen ?? null, matchMode: 'contains' },
+  /* Content-type filter lives in viewOptions.genre, not perColumn.
+   * Surfaced here so PrimeVue renders the column funnel and
+   * `filterActiveFor` lights it only when a content type is picked
+   * (null → inactive). */
+  genre: {
+    value: state.viewOptions.value.genre.length ? state.viewOptions.value.genre : null,
+    matchMode: 'in',
+  },
 }))
 
 function onFilter(event: { filters: Record<string, unknown> }) {
@@ -1169,6 +1201,22 @@ function onFilter(event: { filters: Record<string, unknown> }) {
     }
   }
   filters.value = { ...filters.value, perColumn: next }
+
+  /* Content-type isn't a perColumn field — it lives in
+   * viewOptions.genre. Apply / Clear in its column funnel arrive
+   * here as an array (or null when cleared); mirror it into the
+   * shared view-options state. Compare as sorted sets: MultiSelect
+   * emits values in click order (both here and in the view-options
+   * popover), so an order-sensitive comparison would treat the same
+   * set as a change and trigger a redundant refetch. */
+  const genreMeta = event.filters.genre as { value?: unknown } | undefined
+  const genreVal = genreMeta?.value
+  const nextGenre = Array.isArray(genreVal) ? (genreVal as number[]) : []
+  const sortedNext = [...nextGenre].sort((a, b) => a - b)
+  const sortedCur = [...state.viewOptions.value.genre].sort((a, b) => a - b)
+  if (sortedNext.join(',') !== sortedCur.join(',')) {
+    setGenre(sortedNext)
+  }
 }
 
 /* Display labels for the per-column filter fields, surfaced in
@@ -2257,6 +2305,26 @@ async function onCreateAutoRecClick() {
           :aria-label="t('Filter {0}', col.label ?? col.field)"
           @input="filterProps.filterModel.value = ($event.target as HTMLInputElement).value"
           @keydown.enter="filterProps.filterCallback()"
+        />
+        <!-- Content-type filter: the same multiselect the view-options
+             popover uses. Selections only update the local filter model
+             so the popover stays open for picking several; committing to
+             viewOptions.genre happens on Apply / Clear via onFilter (same
+             as the string columns). Empty maps to null so the funnel goes
+             inactive. `append-to="self"` keeps the dropdown panel inside
+             this overlay so option clicks aren't treated as outside-
+             clicks that dismiss it. -->
+        <OnlyMultiSelect
+          v-else-if="col.filterType === 'genre'"
+          class="epg-table-grid__col-filter-genre"
+          :model-value="(filterProps.filterModel.value as number[] | null) ?? []"
+          :options="genreOptions"
+          :placeholder="t('Any')"
+          :aria-label="t('Content type')"
+          :filter="true"
+          append-to="self"
+          @update:model-value="(v) => { filterProps.filterModel.value = (v as number[]).length ? v : null }"
+          @only="(code) => { filterProps.filterModel.value = [code as number] }"
         />
       </template>
 

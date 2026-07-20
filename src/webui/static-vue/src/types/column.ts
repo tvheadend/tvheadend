@@ -82,8 +82,12 @@ export interface ColumnDef {
    *     the server bypasses label-resolution entirely (clean,
    *     locale-stable). Multi-select awaits an upstream PR that
    *     grows the generic idnode filter machinery into OR-compose
-   *     semantics on the same field. */
-  filterType?: 'string' | 'numeric' | 'boolean' | 'enum'
+   *     semantics on the same field.
+   *   - 'genre'   — EPG Table content-type multiselect. The control
+   *     and its state are view-specific (the consumer renders the
+   *     `#columnFilter` slot and owns the value); this type just
+   *     enables the column-header filter menu + funnel for it. */
+  filterType?: 'string' | 'numeric' | 'boolean' | 'enum' | 'genre'
   /* Optional formatter for the cell value (e.g. timestamps -> dates). */
   format?: (value: unknown, row: BaseRow) => string
   /*

@@ -36,7 +36,7 @@ import { ArrowDown, ArrowUp, X } from 'lucide-vue-next'
 import type { GroupableFieldDef } from '@/types/grid'
 import { useI18n } from '@/composables/useI18n'
 import { useIsPhone } from '@/composables/useIsPhone'
-import { useEpgContentTypeStore } from '@/stores/epgContentTypes'
+import { useEpgGenreOptions } from '@/composables/useEpgGenreOptions'
 import type { ChannelTag } from '@/composables/useEpgViewState'
 import type {
   EpgViewOptions,
@@ -154,38 +154,10 @@ function setTimeWindow(timeWindow: TimeWindow) {
   emit('update:options', { ...props.options, timeWindow })
 }
 
-/* Genre / content-type filter — sources options from the shared
- * EPG content-types store (same store the event drawer's
- * Classification block uses). `ensure()` is idempotent; calling
- * here triggers the first fetch lazily when the popover first
- * mounts. Empty-store fallback shows just "Any" so the dropdown
- * still works before the labels arrive. */
-const contentTypes = useEpgContentTypeStore()
-contentTypes.ensure()
-
-interface GenreOption { value: number; label: string }
-const genreOptions = computed<GenreOption[]>(() => {
-  const out: GenreOption[] = []
-  for (const [code, name] of contentTypes.labels.entries()) {
-    /* Restrict the filter dropdown to MAJOR-group codes (low
-     * nibble zero — 0x10 / 0x20 / ... / 0xF0). The server's
-     * `epg_genre_list_contains` (`src/epg.c:2256`) widens the
-     * match mask to `0xF0` only when the selected code has a
-     * zero low nibble (`partial && !(code & 0x0F)`), so picking
-     * a major group catches every event tagged with any subtype
-     * underneath it. Picking a subtype (e.g. "Detective" =
-     * 0x11) requires an exact match — most broadcasters only
-     * tag the major group, so subtype picks return empty
-     * results in practice. Cell + drawer rendering keep using
-     * the full label map for lookup.
-     *
-     * No explicit "Any" entry — MultiSelect represents the
-     * empty-filter state via an empty model-value array. */
-    if (code & 0x0f) continue
-    out.push({ value: code, label: name })
-  }
-  return out
-})
+/* Genre / content-type filter options — shared with the "Content
+ * Type" column filter via useEpgGenreOptions (major-group codes only;
+ * see the composable for the server-match rationale). */
+const genreOptions = useEpgGenreOptions()
 
 function setGenre(genre: number[]) {
   emit('update:options', { ...props.options, genre })
