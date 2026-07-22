@@ -82,6 +82,7 @@ import SearchInput from '@/components/SearchInput.vue'
 import Select from 'primevue/select'
 import Popover from 'primevue/popover'
 import EpgEventDrawer, { type EpgEventDetail } from './EpgEventDrawer.vue'
+import DvrStateCell from './DvrStateCell.vue'
 import EpgTableOptions from './EpgTableOptions.vue'
 import LiveTvButton from './LiveTvButton.vue'
 import ProgressCell, { type ProgressOptions } from '@/components/ProgressCell.vue'
@@ -229,6 +230,22 @@ provide('epg-progress-options', progressOptions)
  * funnel UI is rendered by PrimeVue's filter-display="menu" mode
  * driven by `initialFilters` below. */
 const baseCols: ColumnDef[] = [
+  {
+    /* Per-row recording-status icon (red dot = recording, clock =
+     * scheduled) — the Table view's counterpart of the Timeline /
+     * Magazine DVR overlay, and of the classic UI's per-row
+     * `dvrState` icon. Leading position so recording state scans
+     * down the left edge. Icon-only: the header label is
+     * suppressed but still names the column in the column picker
+     * and on hover. */
+    field: 'dvrState',
+    label: t('Recording'),
+    hideHeaderLabel: true,
+    sortable: false,
+    minVisible: 'desktop',
+    width: 44,
+    cellComponent: DvrStateCell,
+  },
   {
     field: 'channelName',
     label: t('Channel'),
@@ -385,6 +402,7 @@ const LOCKED_COLUMNS = new Set(['title', 'channelName'])
  * would create two contradictory controls. Locked columns are also
  * excluded — they always render. */
 const TOGGLEABLE_COLUMN_FIELDS = new Set([
+  'dvrState',
   'channelNumber',
   'start',
   'stop',

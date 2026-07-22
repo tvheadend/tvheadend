@@ -1199,20 +1199,28 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
     }
   }
 
-  watch(dayStart, () => {
-    /* `dayStart` is now scroll-derived — it tracks the centre-day
-     * of the viewport and drives the day-button highlight. Fetches
-     * are NOT triggered here any more; the renderer's scroll
-     * listener calls `ensureDaysLoaded` directly. We still kick
-     * the DVR-entries cache fetch on first navigation (idempotent).
-     * Gated on DVR access — `dvr/entry/grid_upcoming` requires
-     * ACCESS_RECORDER and would pop a Digest dialog on anonymous
-     * users navigating to EPG. They see the EPG fine (the events
-     * grid is ACCESS_ANONYMOUS); they just don't get the
-     * scheduled / recording overlay markers, which there's
-     * nothing for them to act on anyway. */
-    if (useAccessStore().has('dvr')) dvrEntriesStore.ensure()
-  })
+  /* Prime the DVR-entries cache as soon as DVR access is known.
+   * Gated on DVR access — `dvr/entry/grid_upcoming` requires
+   * ACCESS_RECORDER and would pop a Digest dialog on anonymous
+   * users navigating to EPG. They see the EPG fine (the events
+   * grid is ACCESS_ANONYMOUS); they just don't get the
+   * scheduled / recording markers, which there's nothing for
+   * them to act on anyway.
+   *
+   * Reactive on the access flag (not a one-shot check) because the
+   * access response may not have landed yet when the view mounts.
+   * Must NOT be keyed on day navigation (`dayStart`): the Table
+   * view never changes `dayStart`, and an unloaded store discards
+   * every `dvrentry` Comet notification (`dvrEntries.ts` gates its
+   * handler on `loaded`), which froze the Table's dvrState column
+   * and drawer buttons until a manual page reload. */
+  watch(
+    () => useAccessStore().has('dvr'),
+    (hasDvr) => {
+      if (hasDvr) dvrEntriesStore.ensure()
+    },
+    { immediate: true }
+  )
 
   /* Auto-advance `dayStart` when the calendar day rolls over while
    * the tab is open. The minute-ticker (`nowEpoch`) ticks live so
