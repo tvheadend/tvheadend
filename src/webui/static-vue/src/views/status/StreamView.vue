@@ -26,6 +26,7 @@
  * a few rarely-useful raw-counter columns.
  */
 import StatusGrid from '@/components/StatusGrid.vue'
+import SignalBarCell from './SignalBarCell.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
 import BandwidthChartView from '@/components/BandwidthChartView.vue'
 import { ChartLine } from 'lucide-vue-next'
@@ -54,22 +55,6 @@ const fmtPids = (v: unknown) => {
    * wide enough to dominate the row.
    */
   return sorted.join(', ')
-}
-
-const fmtSignal = (v: unknown, row: StatusEntry) => {
-  const scale = row.signal_scale
-  const n = typeof v === 'number' ? v : 0
-  if (scale === 1) return String(n)
-  if (scale === 2) return `${(n * 0.001).toFixed(1)} dBm`
-  return ''
-}
-
-const fmtSnr = (v: unknown, row: StatusEntry) => {
-  const scale = row.snr_scale
-  const n = typeof v === 'number' ? v : 0
-  if (scale === 1) return String(n)
-  if (scale === 2 && n > 0) return `${(n * 0.001).toFixed(1)} dB`
-  return ''
 }
 
 /*
@@ -113,12 +98,15 @@ const cols: ColumnDef[] = [
     format: fmtKbps,
   },
   {
+    /* Coloured bar for relative-scale readings, dB(m) text for
+     * decibel tuners — see SignalBarCell. */
     field: 'signal',
     label: t('Signal Strength'),
     sortable: true,
     minVisible: 'phone',
     phoneOrder: 1,
-    format: fmtSignal,
+    width: 170,
+    cellComponent: SignalBarCell,
   },
   {
     field: 'snr',
@@ -126,7 +114,8 @@ const cols: ColumnDef[] = [
     sortable: true,
     minVisible: 'phone',
     phoneOrder: 2,
-    format: fmtSnr,
+    width: 170,
+    cellComponent: SignalBarCell,
   },
   { field: 'unc', label: t('Uncorrected Blocks'), sortable: true, minVisible: 'desktop' },
   { field: 'te', label: t('Transport Errors'), sortable: true, minVisible: 'desktop' },
