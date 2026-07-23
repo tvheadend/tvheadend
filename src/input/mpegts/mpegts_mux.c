@@ -703,6 +703,23 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_sid_filter),
       .opts     = PO_HIDDEN | PO_EXPERT
     },
+#if ENABLE_T2MI
+    {
+      .type     = PT_BOOL,
+      .id       = "t2mi_carriers",
+      .name     = N_("Map private streams as T2-MI carriers"),
+      .desc     = N_("Treat private data streams of this mux without "
+                     "recognized signalling as T2-MI / TS piping carrier "
+                     "components. Enable on muxes that transport whole "
+                     "DTT multiplexes inside services (e.g. the "
+                     "Abertis/Cellnex feeds on Hispasat 30W), then use "
+                     "the services as sources for a T2-MI network. "
+                     "Streams signalled with a proper T2MI descriptor "
+                     "are always recognized."),
+      .off      = offsetof(mpegts_mux_t, mm_t2mi_carriers),
+      .opts     = PO_ADVANCED
+    },
+#endif
     {
       .type     = PT_TIME,
       .id       = "created",
@@ -788,6 +805,11 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
 
   /* Stop */
   mm->mm_stop(mm, 1, SM_CODE_ABORTED);
+
+#if ENABLE_T2MI
+  /* Unlink from T2-MI automatic networks selecting this mux as a source */
+  t2mi_source_mux_deleting(mm, delconf);
+#endif
 
   /* Remove from network */
   LIST_REMOVE(mm, mm_network_link);
