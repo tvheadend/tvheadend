@@ -80,12 +80,19 @@ const props = withDefaults(
      * exclusive with `loadEndpoint` / `saveEndpoint`. */
     uuid?: string | null
     /* Field ids whose change forces `globalThis.location.reload()`
-     * after a successful save — for fields whose value rides the
-     * Comet `accessUpdate` notification only at WS-connect time
-     * (e.g., the global config UI prefs). Default empty: page-
-     * specific configs (Image Cache, SAT>IP) don't ride
-     * accessUpdate. */
+     * after a successful save — reserved for fields whose effect
+     * cannot be applied in-place (e.g. `language_ui`, which re-bakes
+     * every translated string from /locale.js). Default empty:
+     * page-specific configs (Image Cache, SAT>IP) don't need it. */
     reloadFields?: readonly string[]
+    /* Field ids whose change triggers an `access/whoami` refetch
+     * after a successful save — for access-store-backed UI prefs
+     * (theme, uilevel, quicktips, …). The store's reactive
+     * consumers apply the new values live, replacing the
+     * pre-whoami full-page reload (Comet re-sends accessUpdate
+     * only on reconnect, so a refetch is the push we don't get).
+     * Checked only when no reloadFields entry matched. */
+    accessRefetchFields?: readonly string[]
     /* Pin the displayed view level for this page and hide the
      * `<LevelMenu>` chooser entirely. Use when every field on the
      * page is gated at a single server-side `PO_*` level and there
@@ -218,6 +225,7 @@ const props = withDefaults(
     saveEndpoint: undefined,
     uuid: undefined,
     reloadFields: () => [],
+    accessRefetchFields: () => [],
     lockLevel: undefined,
     disabledFor: undefined,
     saveLabel: undefined,
@@ -690,9 +698,13 @@ async function save() {
   saving.value = true
   error.value = null
   try {
-    /* Snapshot the reload-trigger decision against the PRE-save
-     * baseline before the api call mutates anything we're tracking. */
+    /* Snapshot the reload / access-refetch decisions against the
+     * PRE-save baseline before the api call mutates anything we're
+     * tracking. */
     const needsReload = props.reloadFields.some(
+      (k) => currentValues.value[k] !== baseline.value[k]
+    )
+    const needsAccessRefetch = props.accessRefetchFields.some(
       (k) => currentValues.value[k] !== baseline.value[k]
     )
 
@@ -724,11 +736,19 @@ async function save() {
     emit('saved')
 
     if (needsReload) {
-      /* Forced reload mirrors ExtJS's postsave behaviour. The
+      /* Forced reload — reserved for changes the SPA can't apply
+       * in place (language_ui re-bakes /locale.js strings). The
        * reconnect's first accessUpdate carries fresh values for
        * the affected user-pref fields. */
       globalThis.location.reload()
       return
+    }
+
+    if (needsAccessRefetch) {
+      /* Access-store-backed UI prefs (theme, uilevel, quicktips,
+       * …): re-pull `access/whoami` so the store's reactive
+       * consumers apply the change live — no page reload. */
+      await access.preloadFromHttp()
     }
 
     /* Refresh from server so baseline + currentValues snap to the

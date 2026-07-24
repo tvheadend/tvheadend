@@ -150,12 +150,13 @@ async function bootstrap() {
    */
 
   /*
-   * No-op stub today (see stores/access.ts). When the upstream PR for
-   * `/api/access/whoami` lands, this awaits the synchronous fetch and
-   * the SPA mounts with access already populated — eliminating the
-   * router-guard wait on direct-URL navigation to gated routes. We call
-   * it BEFORE comet.connect() so the HTTP path wins the race in the
-   * common case; Comet still connects and runs the live-update channel.
+   * Hydrate access via `api/access/whoami` (API v20) so the SPA
+   * mounts with permissions, theme, uilevel and page-size already
+   * populated — no router-guard wait on direct-URL navigation, no
+   * pre-Comet theme flash. Called BEFORE comet.connect() so the HTTP
+   * path wins the race; Comet still connects and runs the live-update
+   * channel. On a pre-v20 server this 404s silently and Comet's first
+   * accessUpdate populates the store as before (see stores/access.ts).
    */
   await access.preloadFromHttp()
 

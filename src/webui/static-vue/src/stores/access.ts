@@ -3,55 +3,52 @@
 
 /*
  * Access store — the user's permissions and UI preferences as pushed
- * by the server. Populated and updated entirely via Comet (no separate
- * HTTP fetch); the first `accessUpdate` message arrives within ~500ms
- * of WebSocket connect (see comet_find_mailbox in src/webui/comet.c —
- * the server sends accessUpdate as part of mailbox creation).
+ * by the server. Two fill paths, one source of truth:
+ *   - `preloadFromHttp()` fetches `api/access/whoami` (API v20) during
+ *     bootstrap, BEFORE the SPA mounts — so the theme, uilevel,
+ *     permissions and page-size are correct on first paint.
+ *   - Comet's `accessUpdate` (the same message shape) arrives with the
+ *     mailbox handshake and on every reconnect, wholesale-replacing
+ *     the store — the live-update channel.
+ * On a pre-v20 server the whoami fetch 404s and is ignored; Comet then
+ * populates the store exactly as before.
  */
 
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import type { Access, AuthMode, PermissionKey, UiLevel } from '@/types/access'
 import type { NotificationMessage } from '@/types/comet'
+import { apiCall } from '@/api/client'
 import { cometClient } from '@/api/comet'
-
-/*
- * Forward-looking stub for instant boot once the server exposes a
- * synchronous "who am I?" HTTP endpoint.
- *
- * PROBLEM TODAY: the access object is only delivered via Comet's first
- * `accessUpdate` message, which arrives 100-500ms after the WebSocket
- * handshake (or worse if the network is hostile). Direct-URL navigation
- * to a permission-gated route therefore needs to wait for that message
- * before the router guard can decide; see router/index.ts beforeEach.
- *
- * PLANNED UPSTREAM PR — adds `/api/access/whoami`:
- *   - src/api/api_access.c: register endpoint with ACCESS_WEB_INTERFACE,
- *     handler reuses the same field-by-field population logic that
- *     comet_access_update() in src/webui/comet.c uses (refactor that
- *     into a shared helper that takes an htsmsg_t * to populate).
- *   - Returns the same JSON shape as the Comet `accessUpdate` notification
- *     (minus `notificationClass`).
- *   - Roughly 30 lines of C plus a property-table row, no idnode work.
- *   - General-purpose: also useful for test scripts and non-web clients.
- *
- * WHEN THE PR LANDS: take the store handle as an argument (so this can
- * write `data`/`loaded`), import apiCall from '@/api/client', call
- * `apiCall<Access>('access/whoami')`, populate on success, and ignore
- * errors (fall through to Comet). main.ts already invokes
- * preloadFromHttp() during bootstrap; it's currently a no-op. Once the
- * endpoint exists, access is hydrated before the SPA mounts and the
- * router guard's await never fires for typical navigation. Comet still
- * runs and overwrites the store with live updates — single source of
- * truth, just two paths to fill it.
- */
-async function preloadFromHttp() {
-  /* No-op until /api/access/whoami exists upstream. */
-}
 
 export const useAccessStore = defineStore('access', () => {
   const data = ref<Access | null>(null)
   const loaded = ref(false)
+
+  /*
+   * Synchronous-boot hydration via `api/access/whoami` — the same
+   * payload the comet `accessUpdate` carries (built by the shared
+   * `comet_access_info_build()` server-side), minus the comet-only
+   * `address` field, which the first accessUpdate supplies moments
+   * later. main.ts awaits this BEFORE `comet.connect()` and before
+   * `app.mount()`, so on a v20+ server the router guards, the theme
+   * watcher and the first grid fetch all see real access data
+   * instead of waiting ~100-500 ms for the WebSocket round-trip.
+   *
+   * Errors are swallowed by design: a pre-v20 server 404s here and
+   * the store simply stays empty until Comet's first accessUpdate —
+   * the exact pre-whoami behaviour. Also reusable later as a
+   * "refresh now" primitive (e.g. after saving General settings)
+   * since Comet only re-sends accessUpdate on reconnect.
+   */
+  async function preloadFromHttp(): Promise<void> {
+    try {
+      data.value = await apiCall<Access>('access/whoami')
+      loaded.value = true
+    } catch {
+      /* Pre-v20 server or transient failure — fall through to Comet. */
+    }
+  }
 
   /*
    * View-level surface — surfaces the two server-side fields that drive

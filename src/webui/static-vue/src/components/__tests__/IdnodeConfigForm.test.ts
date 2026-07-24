@@ -1121,3 +1121,55 @@ describe('IdnodeConfigForm — hash-driven field focus', () => {
     expect(wrapper.find('#field-expert_only').exists()).toBe(false)
   })
 })
+
+describe('IdnodeConfigForm — access refetch on save', () => {
+  /*
+   * Access-store-backed UI prefs (theme, uilevel, quicktips, …) no
+   * longer force a page reload on save: a changed accessRefetchFields
+   * entry re-pulls `access/whoami` so the store's reactive consumers
+   * apply the new value live. (The reloadFields path remains for
+   * language_ui.)
+   */
+  it('re-pulls access/whoami after saving a changed access-backed pref', async () => {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'expert' }
+
+    const wrapper = await mountWithParams(
+      [{ id: 'theme_ui', type: 'str', caption: 'Theme', value: 'blue' }],
+      { accessRefetchFields: ['theme_ui'] } as never
+    )
+    /* Subsequent calls: config/save, access/whoami, config/load. */
+    apiMock.mockResolvedValue({ entries: [{ params: [] }] })
+
+    await wrapper.find('input[type="text"]').setValue('access')
+    await wrapper.find('.idnode-config-form__btn--save').trigger('click')
+    await flushPromises()
+
+    const endpoints = apiMock.mock.calls.map((c) => c[0])
+    expect(endpoints).toContain('imagecache/config/save')
+    expect(endpoints).toContain('access/whoami')
+  })
+
+  it('does not refetch when no access-backed pref changed', async () => {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'expert' }
+
+    const wrapper = await mountWithParams(
+      [
+        { id: 'theme_ui', type: 'str', caption: 'Theme', value: 'blue' },
+        { id: 'name', type: 'str', caption: 'Name', value: '' },
+      ],
+      { accessRefetchFields: ['theme_ui'] } as never
+    )
+    apiMock.mockResolvedValue({ entries: [{ params: [] }] })
+
+    /* Change only the non-access field (the second text input). */
+    await wrapper.findAll('input[type="text"]')[1].setValue('x')
+    await wrapper.find('.idnode-config-form__btn--save').trigger('click')
+    await flushPromises()
+
+    const endpoints = apiMock.mock.calls.map((c) => c[0])
+    expect(endpoints).toContain('imagecache/config/save')
+    expect(endpoints).not.toContain('access/whoami')
+  })
+})

@@ -20,6 +20,7 @@
 #include "tvheadend.h"
 #include "access.h"
 #include "api.h"
+#include "webui/webui.h"
 
 /*
  *
@@ -157,6 +158,19 @@ api_access_entry_create
   return 0;
 }
 
+/* The session's resolved access rights and UI preferences — the same
+ * shape the comet "accessUpdate" notification carries, available as a
+ * plain synchronous request so clients don't have to wait for the
+ * first comet message. The "address" field is comet-only (no
+ * connection handle here). API version 20. */
+static int
+api_access_whoami
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  *resp = comet_access_info_build(perm, NULL);
+  return 0;
+}
+
 void api_access_init ( void )
 {
   static api_hook_t ah[] = {
@@ -172,6 +186,8 @@ void api_access_init ( void )
     { "access/entry/userlist", ACCESS_ANONYMOUS, api_access_entry_userlist, NULL },
     { "access/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_access_entry_grid },
     { "access/entry/create", ACCESS_ADMIN, api_access_entry_create, NULL },
+
+    { "access/whoami",       ACCESS_WEB_INTERFACE, api_access_whoami, NULL },
 
     { NULL },
   };

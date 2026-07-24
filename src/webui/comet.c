@@ -148,27 +148,29 @@ comet_mailbox_create(const char *lang)
 }
 
 /**
- *
+ * Build the session's access / UI-preference info message. Shared by
+ * the comet "accessUpdate" notification and the api/access/whoami
+ * endpoint so both emit the same shape. `peer_ipstr` may be NULL
+ * (the API path has no connection handle); the "address" field is
+ * omitted then.
  */
-static void
-comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
+htsmsg_t *
+comet_access_info_build(struct access *aa, const char *peer_ipstr)
 {
   extern int access_noacl;
 
   htsmsg_t *m = htsmsg_create_map();
   const char *username = "";
   int64_t bfree, bused, btotal;
-  int dvr = !http_access_verify(hc, ACCESS_RECORDER);
-  int admin = !http_access_verify(hc, ACCESS_ADMIN);
+  int dvr = aa ? !access_verify2(aa, ACCESS_RECORDER) : 0;
+  int admin = aa ? !access_verify2(aa, ACCESS_ADMIN) : 0;
   const char *s;
   uint32_t default_tab = config.default_tab;
 
-  htsmsg_add_str(m, "notificationClass", "accessUpdate");
+  if (aa) {
+    username = aa->aa_username ?: "";
 
-  if (hc->hc_access) {
-    username = hc->hc_access->aa_username ?: "";
-
-    switch (hc->hc_access->aa_uilevel) {
+    switch (aa->aa_uilevel) {
     case UILEVEL_BASIC:    s = "basic";    break;
     case UILEVEL_ADVANCED: s = "advanced"; break;
     case UILEVEL_EXPERT:   s = "expert";   break;
@@ -179,14 +181,14 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
       if (config.uilevel_nochange)
         htsmsg_add_u32(m, "uilevel_nochange", config.uilevel_nochange);
     }
-    
-    if(hc->hc_access->aa_default_tab != CONFIG_DEFAULT_TAB_SYSTEM)
+
+    if(aa->aa_default_tab != CONFIG_DEFAULT_TAB_SYSTEM)
     {
-      default_tab = hc->hc_access->aa_default_tab;
+      default_tab = aa->aa_default_tab;
     }
 
   }
-  htsmsg_add_str(m, "theme", access_get_theme(hc->hc_access));
+  htsmsg_add_str(m, "theme", access_get_theme(aa));
   htsmsg_add_u32(m, "page_size", config.page_size_ui);
   htsmsg_add_u32(m, "quicktips", config.ui_quicktips);
   htsmsg_add_u32(m, "chname_num", config.chname_num);
@@ -197,8 +199,8 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   htsmsg_add_u32(m, "dvr_show_seconds", config.dvr_show_seconds);
   if (!access_noacl)
     htsmsg_add_str(m, "username", username);
-  if (hc->hc_peer_ipstr)
-    htsmsg_add_str(m, "address", hc->hc_peer_ipstr);
+  if (peer_ipstr)
+    htsmsg_add_str(m, "address", peer_ipstr);
   htsmsg_add_u32(m, "dvr",      dvr);
   htsmsg_add_u32(m, "admin",    admin);
 
@@ -221,6 +223,19 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 
   if (admin && config.wizard)
     htsmsg_add_str(m, "wizard", config.wizard);
+
+  return m;
+}
+
+/**
+ *
+ */
+static void
+comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
+{
+  htsmsg_t *m = comet_access_info_build(hc->hc_access, hc->hc_peer_ipstr);
+
+  htsmsg_add_str(m, "notificationClass", "accessUpdate");
 
   if(cmb->cmb_messages == NULL)
     cmb->cmb_messages = htsmsg_create_list();

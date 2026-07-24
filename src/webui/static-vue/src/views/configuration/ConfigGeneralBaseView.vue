@@ -13,14 +13,13 @@
  *
  *   - Endpoints `config/load` + `config/save` (the global config
  *     idnode).
- *   - `RELOAD_FIELDS` lists the field ids whose change forces
- *     `globalThis.location.reload()` after Save. They ride the
- *     Comet `accessUpdate` notification, which is emitted only at
- *     WS-connect time (comet.c:154-200), so an existing session's
- *     cached value would otherwise be stale until manual refresh.
- *     ExtJS handles this identically — config.js:35-61. The proper
- *     fix is server-side (push fresh `accessUpdate` when these
- *     change, or split the notification class).
+ *   - `ACCESS_REFETCH_FIELDS` lists the access-store-backed UI
+ *     prefs: a save that changes one re-pulls `api/access/whoami`
+ *     and the store's reactive consumers apply the change live.
+ *     `RELOAD_FIELDS` keeps the full-reload path for the one field
+ *     the SPA can't apply in place (`language_ui` — /locale.js is
+ *     loaded once at bootstrap). ExtJS still hard-reloads for all
+ *     of them — config.js:35-61.
  *   - Start wizard button — admin-only toolbar action mirroring
  *     legacy ExtJS at `static/app/config.js:7-24`. POSTs
  *     `api/wizard/start` (ACCESS_ADMIN per
@@ -56,39 +55,31 @@ async function startWizard() {
   }
 }
 
-const RELOAD_FIELDS: readonly string[] = [
+/* Fields whose change genuinely needs a full page reload: a UI
+ * language switch re-bakes every translated string from /locale.js,
+ * which the SPA loads once at bootstrap. */
+const RELOAD_FIELDS: readonly string[] = ['language_ui']
+
+/* Access-store-backed UI prefs — a save that changes any of these
+ * re-pulls `api/access/whoami` and the store's reactive consumers
+ * apply the new values live (theme watcher, uilevel filtering,
+ * quicktips gating, NavRail footer items, PT_TIME seconds, date
+ * mask, …). Pre-whoami these forced a full reload because their
+ * values ride the Comet `accessUpdate`, which the server emits
+ * only at WS-connect time. `default_tab` only matters on the next
+ * cold load anyway; `page_size_ui` is read at store init. Both are
+ * refreshed along for consistency. */
+const ACCESS_REFETCH_FIELDS: readonly string[] = [
   'uilevel',
   'theme_ui',
   'page_size_ui',
   'uilevel_nochange',
   'ui_quicktips',
-  'language_ui',
-  /* Drives the NavRail's footer item set + ordering. Same
-   * WS-connect-only `accessUpdate` propagation issue as the
-   * others above, so a save needs to force a fresh connect via
-   * reload. */
   'info_area',
-  /* Drives the EPG view-options Number-checkbox default + the
-   * EPG Table view's Channel column rendering. Same WS-connect-
-   * only propagation gap. */
   'chname_num',
-  /* Drives the source-prefix on channel display strings (e.g.
-   * "DVB-T: Channel One" instead of "Channel One") for both editor
-   * dropdowns and EnumNameCell-rendered grid cells. Same
-   * WS-connect-only propagation gap. */
   'chname_src',
-  /* Drives whether idnode PT_TIME edit fields expose seconds.
-   * Read by IdnodeFieldTime via useAccessStore. Same
-   * WS-connect-only propagation gap. */
   'dvr_show_seconds',
-  /* Drives `fmtDate`'s custom-format branch on desktop (grid
-   * cells, qtips, etc.). Read from the access store at call
-   * time; same accessUpdate-on-connect propagation issue. */
   'date_mask',
-  /* Drives the cold-load default_tab redirect in the router.
-   * Same accessUpdate-on-connect propagation issue; also the
-   * value is sessionStorage-deduped, so changing it without a
-   * reload would have no effect until the next tab open. */
   'default_tab',
 ]
 
@@ -122,6 +113,7 @@ const MANDATORY_FIELDS: readonly string[] = [
     help-page="class/config"
     save-endpoint="config/save"
     :reload-fields="RELOAD_FIELDS"
+    :access-refetch-fields="ACCESS_REFETCH_FIELDS"
     :mandatory-fields="MANDATORY_FIELDS"
   >
     <template #actions="{ loading, saving }">

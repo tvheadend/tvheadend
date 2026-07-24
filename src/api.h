@@ -25,7 +25,7 @@
 #include "redblack.h"
 #include "access.h"
 
-#define TVH_API_VERSION 19
+#define TVH_API_VERSION 20
 
 /*
  * Command hook

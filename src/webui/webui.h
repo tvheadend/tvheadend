@@ -82,4 +82,9 @@ void comet_mailbox_add_logmsg(const char *txt, int isdebug, int rewrite);
 
 void comet_flush(void);
 
+/* Session access/UI-preference info message — shared by the comet
+ * "accessUpdate" notification and api/access/whoami. */
+struct access;
+htsmsg_t *comet_access_info_build(struct access *aa, const char *peer_ipstr);
+
 #endif /* WEBUI_H_ */
