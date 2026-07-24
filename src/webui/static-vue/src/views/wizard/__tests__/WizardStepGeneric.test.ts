@@ -99,28 +99,6 @@ vi.mock('@/components/IdnodeConfigForm.vue', () => ({
           ),
           h(
             'button',
-            {
-              /* Fire a wizard-login-shaped payload that
-               * deliberately omits PO_PASSWORD on the password
-               * fields — the WizardStepGeneric workaround
-               * should patch them on the way through. */
-              class: 'fire-loaded-login',
-              onClick: () =>
-                emit('loaded', [
-                  { id: 'admin_password', type: 'str', value: '' },
-                  { id: 'password', type: 'str', value: '' },
-                  /* A non-password str field with id "username"
-                   * to verify the workaround doesn't over-match. */
-                  { id: 'username', type: 'str', value: '' },
-                  /* A numeric "password" field would be weird
-                   * but defensive: verify type guard skips it. */
-                  { id: 'password', type: 'int', value: 0 },
-                ] as IdnodeProp[]),
-            },
-            'fire-loaded-login',
-          ),
-          h(
-            'button',
             { class: 'fire-saved', onClick: () => save() },
             'fire-saved',
           ),
@@ -196,39 +174,6 @@ describe('WizardStepGeneric — chrome rendering', () => {
     expect(wrapper.emitted('loaded')).toHaveLength(1)
     const payload = wrapper.emitted('loaded')![0][0] as IdnodeProp[]
     expect(payload.find((p) => p.id === 'icon')?.value).toBe('/img/wizard-network.png')
-  })
-})
-
-describe('WizardStepGeneric — wizard password-field workaround', () => {
-  /*
-   * The wizard's `admin_password` + `password` PT_STR props in
-   * src/wizard.c don't set PO_PASSWORD, so the server returns
-   * them tagged as regular strings. WizardStepGeneric.handleLoaded
-   * patches `password: true` in place on those two ids so
-   * IdnodeFieldString masks them. This block pins:
-   *   - the two known ids get patched
-   *   - non-password ids (username) are left alone
-   *   - non-str types with id="password" (defensive) are skipped
-   *   - the patch happens before re-emitting upward
-   */
-  it('patches password:true on admin_password and password (str type only)', async () => {
-    const wrapper = mountStep({ step: 'login' })
-    await wrapper.find('.fire-loaded-login').trigger('click')
-    const payload = wrapper.emitted('loaded')![0][0] as IdnodeProp[]
-    const adminPwd = payload.find(
-      (p) => p.id === 'admin_password' && p.type === 'str',
-    )
-    const userPwd = payload.find((p) => p.id === 'password' && p.type === 'str')
-    const username = payload.find((p) => p.id === 'username')
-    const intPassword = payload.find((p) => p.id === 'password' && p.type === 'int')
-    expect(adminPwd?.password).toBe(true)
-    expect(userPwd?.password).toBe(true)
-    /* Non-password fields stay untouched. */
-    expect(username?.password).toBeUndefined()
-    /* Defensive: non-str fields whose id happens to be "password"
-     * (none exist today, but the workaround's type guard pins
-     * this contract) are skipped. */
-    expect(intPassword?.password).toBeUndefined()
   })
 })
 

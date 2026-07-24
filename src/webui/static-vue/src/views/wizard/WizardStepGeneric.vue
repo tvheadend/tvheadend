@@ -56,14 +56,6 @@ import { useWizardStore, type WizardStepName } from '@/stores/wizard'
 import { addExternalLinkAttrs, renderMarkdown, rewriteStaticUrls } from '@/utils/markdown'
 import type { IdnodeProp } from '@/types/idnode'
 
-/*
- * Wizard password-field workaround scope — see handleLoaded
- * below. Module-scope Set for O(1) lookup; matched in the
- * loaded-emit patch loop. Deletable once
- * src/wizard.c:434, 452 add `.opts = PO_PASSWORD,`.
- */
-const WIZARD_PASSWORD_IDS = new Set(['admin_password', 'password'])
-
 interface Props {
   /* Canonical step name. Drives the load/save endpoints and the
    * prev/next route resolution. Route components pass this as a
@@ -144,26 +136,6 @@ function handleLoaded(params: IdnodeProp[]): void {
    * resolve under `/gui/wizard/channels/...`. Same root cause
    * as the wizard icon URL fix. */
   descriptionHtml.value = addExternalLinkAttrs(rewriteStaticUrls(renderMarkdown(rawDesc)))
-  /* Client-side overlay: flip `password: true` on the wizard's
-   * admin_password + password fields so IdnodeFieldString masks
-   * them and renders the show/hide toggle. The C-side wizard
-   * (src/wizard.c:434, 452) declares both as plain PT_STR
-   * without `.opts = PO_PASSWORD`, so the server returns them
-   * tagged as regular strings. Other consumers (access.c:2314,
-   * cclient.c:1386) already declare PO_PASSWORD correctly, so
-   * this scoped patch in the wizard wrapper is safe; it doesn't
-   * affect any non-wizard surface. `params` is the same reactive
-   * array IdnodeConfigForm stored in its `fieldProps` ref a
-   * moment ago — mutating the prop objects in place propagates
-   * through Vue's deep reactivity and the field renderer
-   * re-evaluates `isPassword`. The overlay is redundant once
-   * `src/wizard.c` adds `.opts = PO_PASSWORD,` to both prop
-   * declarations (pending). */
-  for (const p of params) {
-    if (WIZARD_PASSWORD_IDS.has(p.id) && p.type === 'str') {
-      p.password = true
-    }
-  }
   /* Re-emit upward so wrappers can capture baseline values. */
   emit('loaded', params)
 }
