@@ -41,8 +41,20 @@
 #define T2MI_BUF_SIZE (300 * 188)
 
 static void t2mi_mux_unsubscribe(t2mi_mux_t *tm);
+static void t2mi_reparse_source_pmts(mpegts_mux_t *mm);
 
 static t2mi_input_t *t2mi_input;
+
+/* does this service expose a T2-MI carrier component? */
+static int
+t2mi_service_has_carrier ( mpegts_service_t *s )
+{
+  int r;
+  tvh_mutex_lock(&s->s_stream_mutex);
+  r = elementary_stream_type_find(&s->s_components, SCT_T2MI) != NULL;
+  tvh_mutex_unlock(&s->s_stream_mutex);
+  return r;
+}
 
 /* **************************************************************************
  * Input class
@@ -294,6 +306,20 @@ t2mi_mux_subscribe ( t2mi_mux_t *tm, mpegts_input_t *mi, int weight )
                tm->mm_nicename, tm->mm_t2mi_src_sid,
                src->mm_nicename ?: "source mux");
       return SM_CODE_TUNING_FAILED;
+    }
+    /* The carrier PID is delivered because the carrier service lists it
+     * as a T2-MI component.  If the PMT was parsed without the carrier
+     * mapping (e.g. a hand-created mux on a source that was never
+     * scanned as a carrier), the service has no such component and only
+     * its PMT would be opened, so enable the mapping and reparse. */
+    if (!t2mi_service_has_carrier(svc) && !src->mm_t2mi_carriers) {
+      tvhinfo(LS_T2MI, "%s - carrier service %d has no T2-MI component, "
+              "enabling carrier mapping on %s",
+              tm->mm_nicename, tm->mm_t2mi_src_sid, src->mm_nicename ?: "");
+      src->mm_t2mi_carriers = 1;
+      idnode_changed(&src->mm_id);
+      if (src->mm_active)
+        t2mi_reparse_source_pmts(src);
     }
     profile_chain_init(&tm->tm_prch, NULL, svc, 0);
     tm->tm_prch.prch_st = &tm->tm_st;
