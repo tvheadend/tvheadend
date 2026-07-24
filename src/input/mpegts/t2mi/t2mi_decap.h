@@ -54,7 +54,8 @@ typedef struct t2mi_decap t2mi_decap_t;
 typedef void (*t2mi_decap_output_cb)(void *aux, const uint8_t *tsb, int len);
 
 /* Diagnostics: printf-style, severity 0=debug 1=info 2=warning 3=error */
-typedef void (*t2mi_decap_log_cb)(void *aux, int severity, const char *fmt, ...);
+typedef void (*t2mi_decap_log_cb)(void *aux, int severity, const char *fmt, ...)
+  __attribute__((format(printf, 3, 4)));
 
 typedef struct t2mi_decap_stats {
   uint64_t in_packets;        /* outer carrier TS packets consumed */
@@ -80,6 +81,6 @@ void t2mi_decap_reset(t2mi_decap_t *td);
 /* Feed one aligned 188-byte packet of the carrier PID */
 void t2mi_decap_input(t2mi_decap_t *td, const uint8_t *tsb);
 
-const t2mi_decap_stats_t *t2mi_decap_get_stats(t2mi_decap_t *td);
+const t2mi_decap_stats_t *t2mi_decap_get_stats(const t2mi_decap_t *td);
 
 #endif /* __TVH_T2MI_DECAP_H__ */

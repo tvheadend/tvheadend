@@ -174,10 +174,8 @@ t2mi_mux_stream_start ( t2mi_mux_t *tm, const streaming_start_t *ss )
       break;
     }
     if (ssc->es_type != SCT_CA && ssc->es_type != SCT_CAT &&
-        ssc->es_type != SCT_PCR) {
-      if (data_cnt++ == 0)
-        data_pid = ssc->es_pid;
-    }
+        ssc->es_type != SCT_PCR && data_cnt++ == 0)
+      data_pid = ssc->es_pid;
   }
   if (t2mi_pid == 0 && data_cnt == 1)
     t2mi_pid = data_pid;
@@ -473,6 +471,19 @@ t2mi_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
             tm->mm_nicename, st->in_packets, st->out_packets,
             st->t2mi_packets, st->bb_frames,
             st->crc32_errors + st->crc8_errors);
+    /* A discovered carrier that never yielded a single inner packet and
+     * has no services is not really a carrier - typically an SI or
+     * network pseudo-service whose lone private stream looks like one.
+     * Disable it so it stops being scanned and is hidden by default;
+     * the user can re-enable it if the feed says otherwise. */
+    if (tm->mm_t2mi_auto && st->out_packets == 0 &&
+        LIST_FIRST(&tm->mm_services) == NULL &&
+        tm->mm_enabled == MM_ENABLE) {
+      tvhinfo(LS_T2MI, "%s - no inner stream decapsulated, disabling",
+              tm->mm_nicename);
+      tm->mm_enabled = MM_DISABLE;
+      idnode_changed(&tm->mm_id);
+    }
     t2mi_decap_destroy(tm->tm_decap);
     tm->tm_decap = NULL;
   }
@@ -698,10 +709,12 @@ t2mi_mux_create0 ( t2mi_network_t *tn, const char *uuid, htsmsg_t *conf )
   /* services */
   c2 = NULL;
   c = htsmsg_get_map(conf, "services");
-  if (c == NULL)
-    c = c2 = hts_settings_load_r(1, "input/t2mi/networks/%s/muxes/%s/services",
-                                 idnode_uuid_as_str(&tn->mn_id, ubuf1),
-                                 idnode_uuid_as_str(&tm->mm_id, ubuf2));
+  if (c == NULL) {
+    c2 = hts_settings_load_r(1, "input/t2mi/networks/%s/muxes/%s/services",
+                             idnode_uuid_as_str(&tn->mn_id, ubuf1),
+                             idnode_uuid_as_str(&tm->mm_id, ubuf2));
+    c = c2;
+  }
   if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_field_get_map(f))) continue;
@@ -857,7 +870,7 @@ t2mi_reparse_source_pmts ( mpegts_mux_t *mm )
 
   tvh_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link)
-    if (mt->mt_callback == dvb_pmt_callback && mt->mt_opaque == NULL &&
+    if (mt->mt_callback == &dvb_pmt_callback && mt->mt_opaque == NULL &&
         !mt->mt_destroyed && n < ARRAY_SIZE(stale)) {
       mpegts_table_grab(mt);
       stale[n++] = mt;
@@ -1166,8 +1179,10 @@ t2mi_network_migrate ( t2mi_network_t *tn, htsmsg_t *conf )
   if (conf == NULL || LIST_FIRST(&tn->tn_src_muxes) != NULL)
     return;
   legacy = htsmsg_get_str(conf, "src_network");
-  if (legacy == NULL || (src = mpegts_network_find(legacy)) == NULL ||
-      src == (mpegts_network_t *)tn)
+  if (legacy == NULL)
+    return;
+  src = mpegts_network_find(legacy);
+  if (src == NULL || src == (mpegts_network_t *)tn)
     return;
   LIST_FOREACH(mm, &src->mn_muxes, mm_network_link)
     t2mi_network_src_mux_link(&tn->mn_id, &mm->mm_id, NULL);

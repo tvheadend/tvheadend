@@ -454,47 +454,46 @@ t2mi_decap_pipe_input(t2mi_decap_t *td, const uint8_t *pay, int paylen)
   memcpy(td->pipebuf + td->pipelen, pay, paylen);
   td->pipelen += paylen;
 
-again:
-  if (!td->pipesync) {
-    for (i = 0; i + TS_PKT < td->pipelen; i++) {
-      if (td->pipebuf[i] == 0x47 && td->pipebuf[i + TS_PKT] == 0x47) {
-        td->pipesync = 1;
-        td->stats.resyncs++;
-        if (i > 0) {
-          td->pipelen -= i;
-          memmove(td->pipebuf, td->pipebuf + i, td->pipelen);
-        }
-        break;
-      }
-    }
+  for (;;) {
     if (!td->pipesync) {
-      /* keep only the last (unverifiable) packet's worth of bytes */
-      keep = TS_PKT + 1;
-      if (td->pipelen > keep) {
-        memmove(td->pipebuf, td->pipebuf + td->pipelen - keep, keep);
-        td->pipelen = keep;
+      for (i = 0; i + TS_PKT < td->pipelen; i++) {
+        if (td->pipebuf[i] == 0x47 && td->pipebuf[i + TS_PKT] == 0x47) {
+          td->pipesync = 1;
+          td->stats.resyncs++;
+          if (i > 0) {
+            td->pipelen -= i;
+            memmove(td->pipebuf, td->pipebuf + i, td->pipelen);
+          }
+          break;
+        }
       }
-      return;
+      if (!td->pipesync) {
+        /* keep only the last (unverifiable) packet's worth of bytes */
+        keep = TS_PKT + 1;
+        if (td->pipelen > keep) {
+          memmove(td->pipebuf, td->pipebuf + td->pipelen - keep, keep);
+          td->pipelen = keep;
+        }
+        return;
+      }
     }
-  }
 
-  i = 0;
-  while (i + TS_PKT <= td->pipelen) {
-    if (td->pipebuf[i] != 0x47) {
-      /* lost the byte alignment */
-      td->pipesync = 0;
-      td->pipe_run = 0;
+    i = 0;
+    while (i + TS_PKT <= td->pipelen && td->pipebuf[i] == 0x47) {
+      t2mi_decap_out_packet(td, NULL, 0, td->pipebuf + i, TS_PKT);
+      td->pipe_run++;
+      i += TS_PKT;
+    }
+    if (i > 0) {
       td->pipelen -= i;
       memmove(td->pipebuf, td->pipebuf + i, td->pipelen);
-      goto again;
     }
-    t2mi_decap_out_packet(td, NULL, 0, td->pipebuf + i, TS_PKT);
-    td->pipe_run++;
-    i += TS_PKT;
-  }
-  if (i > 0) {
-    td->pipelen -= i;
-    memmove(td->pipebuf, td->pipebuf + i, td->pipelen);
+    /* a whole packet is still buffered: the loop stopped on a byte that
+     * is not a sync byte, so re-acquire the alignment */
+    if (td->pipelen < TS_PKT)
+      return;
+    td->pipesync = 0;
+    td->pipe_run = 0;
   }
 }
 
@@ -696,7 +695,7 @@ t2mi_decap_destroy(t2mi_decap_t *td)
 }
 
 const t2mi_decap_stats_t *
-t2mi_decap_get_stats(t2mi_decap_t *td)
+t2mi_decap_get_stats(const t2mi_decap_t *td)
 {
   return &td->stats;
 }
