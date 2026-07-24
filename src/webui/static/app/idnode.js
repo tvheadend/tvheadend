@@ -482,7 +482,9 @@ tvheadend.IdNodeField = function(conf)
         } else {
 
             if (this.type == 'perm') {
-                c['regex'] = /^[0][0-7]{3}$/;
+                /* 0 + 3 digits, or 0 + 4 when a special bit
+                 * (setuid/setgid/sticky) is set, e.g. 02775. */
+                c['regex'] = /^0[0-7]{3,4}$/;
                 c['maskRe'] = /[0-7]/;
                 c['allowBlank'] = false;
                 c['blankText'] = _('You must provide a value - use octal chmod notation, e.g. 0664');
@@ -861,7 +863,8 @@ tvheadend.idnode_editor_field = function(f, conf)
                 value: value,
                 disabled: d,
                 width: 125,
-                regex: /^[0][0-7]{3}$/,
+                /* 0 + 3 digits, or 0 + 4 with a special bit set. */
+                regex: /^0[0-7]{3,4}$/,
                 maskRe: /[0-7]/,
                 allowBlank: false,
                 blankText: _('You must provide a value - use octal chmod notation, e.g. 0664')
