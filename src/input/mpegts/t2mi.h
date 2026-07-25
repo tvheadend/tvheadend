@@ -25,6 +25,9 @@ struct mpegts_mux;
 void t2mi_init ( void );
 void t2mi_done ( void );
 
+/* number of T2-MI / TS-piping carrier services currently present on a mux */
+int t2mi_mux_count_carriers ( struct mpegts_mux *mm );
+
 /* a PMT on this mux produced a T2-MI carrier component - reconcile the
  * automatic networks that selected the mux as a source */
 void t2mi_carrier_seen ( struct mpegts_mux *mm );
