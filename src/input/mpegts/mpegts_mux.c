@@ -361,6 +361,18 @@ mpegts_mux_class_get_num_chn ( void *ptr )
   return &n;
 }
 
+#if ENABLE_T2MI
+static const void *
+mpegts_mux_class_get_num_t2mi ( void *ptr )
+{
+  static int n;
+  mpegts_mux_t *mm = ptr;
+
+  n = mm ? t2mi_mux_count_carriers(mm) : 0;
+  return &n;
+}
+#endif
+
 static const void *
 mpegts_mux_class_get_network ( void *ptr )
 {
@@ -669,6 +681,17 @@ const idclass_t mpegts_mux_class =
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_chn,
     },
+#if ENABLE_T2MI
+    {
+      .type     = PT_INT,
+      .id       = "t2mi_count",
+      .name     = N_("T2-MI count"),
+      .desc     = N_("The number of T2-MI / TS-piping carriers currently "
+                     "detected in this mux."),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = mpegts_mux_class_get_num_t2mi,
+    },
+#endif
     {
        .type     = PT_BOOL,
        .id       = "tsid_zero",
