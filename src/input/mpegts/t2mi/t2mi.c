@@ -697,8 +697,6 @@ t2mi_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   t2mi_mux_t *tm = (t2mi_mux_t *)mm;
   mpegts_mux_t *src;
-  mpegts_service_t *svc;
-  const char *svcname = NULL;
   char sbuf[128];
 
   src = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
@@ -707,16 +705,13 @@ t2mi_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   } else {
     strlcpy(sbuf, "?", sizeof(sbuf));
   }
-  /* append the carrier service name from the source SDT when present
-   * (e.g. "HSA190.1"), so the mux is recognisable from the feed labels */
-  if (src && tm->mm_t2mi_src_sid &&
-      (svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL)) != NULL &&
-      svc->s_dvb_svcname && svc->s_dvb_svcname[0])
-    svcname = svc->s_dvb_svcname;
-
+  /* Identify the carrier by source mux + SID (or PID), both taken straight
+   * from the source PAT/PMT scan. We deliberately do NOT append the carrier
+   * service's SDT name: that field (s_dvb_svcname) is not unique across
+   * transponders, so when two muxes reuse the same SID it can carry a name
+   * that leaked from an unrelated transponder, which is misleading. */
   if (tm->mm_t2mi_src_sid)
-    snprintf(buf, len, "%s/T2MI-SID-%u%s%s%s", sbuf, tm->mm_t2mi_src_sid,
-             svcname ? " (" : "", svcname ?: "", svcname ? ")" : "");
+    snprintf(buf, len, "%s/T2MI-SID-%u", sbuf, tm->mm_t2mi_src_sid);
   else
     snprintf(buf, len, "%s/T2MI-PID-%u", sbuf, tm->mm_t2mi_src_pid);
 }
