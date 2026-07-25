@@ -195,6 +195,7 @@ const cols: ColumnDef[] = [
   { field: 'scan_result', sortable: true, width: 130, editable: true },
   { field: 'num_svc', sortable: true, filterType: 'numeric', width: 100, editable: true },
   { field: 'num_chn', sortable: true, filterType: 'numeric', width: 100, editable: true },
+  { field: 't2mi_count', sortable: true, filterType: 'numeric', width: 110, editable: true },
   { field: 'charset', sortable: true, filterType: 'string', width: 130, editable: true },
 ]
 
