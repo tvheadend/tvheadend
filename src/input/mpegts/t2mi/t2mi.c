@@ -522,26 +522,61 @@ t2mi_input_create ( void )
  * *************************************************************************/
 
 /* enumerate all muxes that can act as a T2-MI / piping source
- * (any mux of this instance except muxes of a T2-MI network) */
+ * (any mux of this instance except muxes of a T2-MI network), sorted so
+ * the list is grouped by network and alphabetically ordered */
+typedef struct {
+  char key[UUID_HEX_SIZE];
+  char val[384];
+  char sort[384 + 256];
+} t2mi_srcmux_ent_t;
+
+static int
+t2mi_srcmux_cmp ( const void *a, const void *b )
+{
+  return strcasecmp(((const t2mi_srcmux_ent_t *)a)->sort,
+                    ((const t2mi_srcmux_ent_t *)b)->sort);
+}
+
 static htsmsg_t *
 t2mi_src_mux_enum ( void *o, const char *lang )
 {
   mpegts_network_t *mn;
   mpegts_mux_t *mm;
-  htsmsg_t *l = htsmsg_create_list(), *e;
-  char ubuf[UUID_HEX_SIZE], buf[384];
+  htsmsg_t *l, *e;
+  t2mi_srcmux_ent_t *ents = NULL;
+  int n = 0, alloc = 0, i;
+  char nbuf[256];
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
     if (idnode_is_instance(&mn->mn_id, &t2mi_network_class))
       continue;
+    nbuf[0] = '\0';
+    if (mn->mn_display_name)
+      mn->mn_display_name(mn, nbuf, sizeof(nbuf));
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
-      e = htsmsg_create_map();
-      htsmsg_add_str(e, "key", idnode_uuid_as_str(&mm->mm_id, ubuf));
-      htsmsg_add_str(e, "val", idnode_get_title(&mm->mm_id, lang,
-                                                buf, sizeof(buf)));
-      htsmsg_add_msg(l, NULL, e);
+      if (n >= alloc) {
+        alloc = alloc ? alloc * 2 : 32;
+        ents = realloc(ents, alloc * sizeof(*ents));
+      }
+      idnode_uuid_as_str(&mm->mm_id, ents[n].key);
+      idnode_get_title(&mm->mm_id, lang, ents[n].val, sizeof(ents[n].val));
+      /* sort by network then mux title, so muxes group by network */
+      snprintf(ents[n].sort, sizeof(ents[n].sort), "%s\x1f%s",
+               nbuf, ents[n].val);
+      n++;
     }
   }
+  if (n > 1)
+    qsort(ents, n, sizeof(*ents), t2mi_srcmux_cmp);
+
+  l = htsmsg_create_list();
+  for (i = 0; i < n; i++) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "key", ents[i].key);
+    htsmsg_add_str(e, "val", ents[i].val);
+    htsmsg_add_msg(l, NULL, e);
+  }
+  free(ents);
   return l;
 }
 
@@ -632,6 +667,8 @@ t2mi_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   t2mi_mux_t *tm = (t2mi_mux_t *)mm;
   mpegts_mux_t *src;
+  mpegts_service_t *svc;
+  const char *svcname = NULL;
   char sbuf[128];
 
   src = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
@@ -640,8 +677,16 @@ t2mi_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   } else {
     strlcpy(sbuf, "?", sizeof(sbuf));
   }
+  /* append the carrier service name from the source SDT when present
+   * (e.g. "HSA190.1"), so the mux is recognisable from the feed labels */
+  if (src && tm->mm_t2mi_src_sid &&
+      (svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL)) != NULL &&
+      svc->s_dvb_svcname && svc->s_dvb_svcname[0])
+    svcname = svc->s_dvb_svcname;
+
   if (tm->mm_t2mi_src_sid)
-    snprintf(buf, len, "%s/T2MI-SID-%u", sbuf, tm->mm_t2mi_src_sid);
+    snprintf(buf, len, "%s/T2MI-SID-%u%s%s%s", sbuf, tm->mm_t2mi_src_sid,
+             svcname ? " (" : "", svcname ?: "", svcname ? ")" : "");
   else
     snprintf(buf, len, "%s/T2MI-PID-%u", sbuf, tm->mm_t2mi_src_pid);
 }
@@ -835,8 +880,22 @@ t2mi_source_mux_deleting ( struct mpegts_mux *mm, int delconf )
 static int
 t2mi_service_is_carrier ( mpegts_service_t *s )
 {
+  mpegts_mux_t *mm = s->s_dvb_mux;
   elementary_stream_t *es;
   int t2mi = 0, av = 0;
+
+  /* Only a service that is enabled and currently on air is a live
+   * carrier.  A source mux keeps services that used to be broadcast but
+   * are now gone (a feed re-provisioned with different SIDs); those keep
+   * their old T2-MI components and would otherwise show up as phantom
+   * carriers.  Skip a service that the user disabled, or that was not
+   * seen in the last successful scan of the mux (its last-seen time is
+   * well before that scan). */
+  if (!s->s_enabled)
+    return 0;
+  if (mm && mm->mm_scan_last_seen &&
+      s->s_dvb_last_seen + 60 < mm->mm_scan_last_seen)
+    return 0;
 
   tvh_mutex_lock(&s->s_stream_mutex);
   TAILQ_FOREACH(es, &s->s_components.set_all, es_link) {
@@ -854,6 +913,18 @@ t2mi_service_is_carrier ( mpegts_service_t *s )
     return 0;
   }
   return t2mi == 1;
+}
+
+int
+t2mi_mux_count_carriers ( mpegts_mux_t *mm )
+{
+  mpegts_service_t *s;
+  int count = 0;
+
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    if (t2mi_service_is_carrier(s))
+      count++;
+  return count;
 }
 
 /* Re-parse the PMTs of an already-tuned source mux so the just-enabled

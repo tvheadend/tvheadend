@@ -40,11 +40,21 @@
  *
  * The engine has no tvheadend dependencies and only requires aligned
  * 188-byte packets of the (descrambled) carrier PID as input.
+ *
+ * Adding another carrier encapsulation (for example BTS for ISDB-T or
+ * STL-TP for ATSC 3.0) is meant to be self-contained: define a new
+ * T2MI_DECAP_FORMAT_* value below, add its per-packet handler alongside
+ * t2mi_decap_bbframe()/t2mi_decap_pipe_input() in t2mi_decap.c, give it
+ * a branch in the format dispatch and a signature in the auto-detect
+ * probe, and expose it in t2mi_mux_class_format_list().  The outer
+ * carrier framing, PID handling, descrambling and inner-TS re-injection
+ * are format-independent and need no change.
  */
 
 #define T2MI_DECAP_FORMAT_AUTO   0
 #define T2MI_DECAP_FORMAT_T2MI   1
 #define T2MI_DECAP_FORMAT_PIPE   2
+/* next carrier formats (ISDB-T BTS, ATSC 3.0 STL-TP, ...) continue here */
 
 #define T2MI_DECAP_PLP_AUTO      (-1)
 
