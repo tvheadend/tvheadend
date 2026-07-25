@@ -594,6 +594,23 @@ t2mi_mux_class_format_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+/* is the source carrier of this T2-MI mux scrambled? */
+static const void *
+t2mi_mux_class_get_scrambled ( void *o )
+{
+  static int b;
+  t2mi_mux_t *tm = o;
+  mpegts_mux_t *src;
+  mpegts_service_t *svc;
+
+  b = 0;
+  if (tm->mm_t2mi_src_sid && tm->mm_t2mi_src_mux &&
+      (src = mpegts_mux_find(tm->mm_t2mi_src_mux)) != NULL &&
+      (svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL)) != NULL)
+    b = service_is_encrypted((service_t *)svc);
+  return &b;
+}
+
 const idclass_t t2mi_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
@@ -620,6 +637,16 @@ const idclass_t t2mi_mux_class =
                      "only)."),
       .off      = offsetof(t2mi_mux_t, mm_t2mi_src_sid),
       .def.u32  = 0,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "carrier_scrambled",
+      .name     = N_("Encrypted carrier"),
+      .desc     = N_("The carrier is scrambled: a CA client and the correct "
+                     "key are needed to decapsulate it. A clear carrier "
+                     "needs no key."),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = t2mi_mux_class_get_scrambled,
     },
     {
       .type     = PT_U32,
