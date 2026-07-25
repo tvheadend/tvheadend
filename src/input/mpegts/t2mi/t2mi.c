@@ -880,21 +880,17 @@ t2mi_source_mux_deleting ( struct mpegts_mux *mm, int delconf )
 static int
 t2mi_service_is_carrier ( mpegts_service_t *s )
 {
-  mpegts_mux_t *mm = s->s_dvb_mux;
   elementary_stream_t *es;
   int t2mi = 0, av = 0;
 
-  /* Only a service that is enabled and currently on air is a live
-   * carrier.  A source mux keeps services that used to be broadcast but
-   * are now gone (a feed re-provisioned with different SIDs); those keep
-   * their old T2-MI components and would otherwise show up as phantom
-   * carriers.  Skip a service that the user disabled, or that was not
-   * seen in the last successful scan of the mux (its last-seen time is
-   * well before that scan). */
+  /* Only a live service is a carrier.  A source mux keeps services that
+   * used to be broadcast but are gone after the feed was re-provisioned
+   * with different service IDs; those keep their old T2-MI components and
+   * would otherwise show up as phantom carriers.  tvheadend disables a
+   * service that falls behind in the PAT/SDT (mpegts_mux_scan_service_
+   * check), so skipping disabled services keeps stale carriers out of
+   * both discovery and the carrier count. */
   if (!s->s_enabled)
-    return 0;
-  if (mm && mm->mm_scan_last_seen &&
-      s->s_dvb_last_seen + 60 < mm->mm_scan_last_seen)
     return 0;
 
   tvh_mutex_lock(&s->s_stream_mutex);
