@@ -1018,15 +1018,28 @@ t2mi_network_discover ( t2mi_network_t *tn )
   LIST_FOREACH(ilm, &tn->tn_src_muxes, ilm_in1_link) {
     mm = (mpegts_mux_t *)ilm->ilm_in2;
 
-    /* for feeds without a T2MI descriptor, flag the private streams as
-     * carriers and reparse; the carriers then re-trigger discovery */
-    if (tn->tn_src_private && !mm->mm_t2mi_carriers) {
-      mm->mm_t2mi_carriers = 1;
-      idnode_changed(&mm->mm_id);
-      if (mm->mm_active)
-        t2mi_reparse_source_pmts(mm);
-      else
-        mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+    /* Mark the mux as a T2-MI source and apply the network's private
+     * stream policy.  Private data streams without a T2MI descriptor are
+     * scanned as carriers by default (needed for feeds like Abertis);
+     * the network's "ignore private" setting turns that off.  Reparse
+     * the PMTs when the effective policy changes so it takes effect. */
+    {
+      int changed = 0;
+      if (!mm->mm_t2mi_carriers) {
+        mm->mm_t2mi_carriers = 1;
+        changed = 1;
+      }
+      if (mm->mm_t2mi_ignore_private != tn->tn_ignore_private) {
+        mm->mm_t2mi_ignore_private = tn->tn_ignore_private;
+        changed = 1;
+      }
+      if (changed) {
+        idnode_changed(&mm->mm_id);
+        if (mm->mm_active)
+          t2mi_reparse_source_pmts(mm);
+        else
+          mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+      }
     }
 
     idnode_uuid_as_str(&mm->mm_id, src_ubuf);
@@ -1148,14 +1161,15 @@ const idclass_t t2mi_network_class = {
     },
     {
       .type     = PT_BOOL,
-      .id       = "src_private",
-      .name     = N_("Detect private-stream carriers"),
-      .desc     = N_("Treat private data streams on the source muxes as "
-                     "T2-MI / piping carriers (enables 'Map private streams "
-                     "as T2-MI carriers' on them). Needed for feeds without "
-                     "a T2MI descriptor, such as Abertis/Cellnex."),
-      .off      = offsetof(t2mi_network_t, tn_src_private),
-      .def.i    = 1,
+      .id       = "ignore_private",
+      .name     = N_("Ignore private-stream carriers"),
+      .desc     = N_("By default, private data streams on the source muxes "
+                     "are also scanned as possible T2-MI / piping carriers, "
+                     "which is needed for feeds without a T2MI descriptor "
+                     "(such as Abertis/Cellnex). Enable this to consider "
+                     "only streams with proper T2-MI signalling."),
+      .off      = offsetof(t2mi_network_t, tn_ignore_private),
+      .def.i    = 0,
     },
     {
       .type     = PT_U32,
@@ -1274,7 +1288,7 @@ t2mi_network_create0 ( const char *uuid, htsmsg_t *conf )
   tn->tn_priority           = 1;
   tn->tn_streaming_priority = 1;
   tn->tn_max_timeout        = 30;
-  tn->tn_src_private        = 1;
+  tn->tn_ignore_private     = 0;
   tn->tn_scan_period        = 60;
   tn->mn_autodiscovery      = MN_DISCOVERY_NEW;
   if (!mpegts_network_create0((mpegts_network_t *)tn, &t2mi_network_class,

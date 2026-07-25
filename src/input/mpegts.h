@@ -540,8 +540,9 @@ struct mpegts_mux
   int      mm_eit_tsid_nocheck;
   uint16_t mm_sid_filter;
 #if ENABLE_T2MI
-  int      mm_t2mi_carriers;
-  idnode_list_head_t mm_t2mi_networks; /* T2-MI auto networks watching this mux */
+  int      mm_t2mi_carriers;      /* this mux is used as a T2-MI carrier source */
+  int      mm_t2mi_ignore_private;/* do not treat private streams as carriers */
+  idnode_list_head_t mm_t2mi_networks; /* T2-MI networks selecting this mux */
 #endif
 };
 

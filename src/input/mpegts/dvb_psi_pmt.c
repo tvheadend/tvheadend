@@ -481,6 +481,7 @@ dvb_psi_parse_pmt
      * component makes the carrier service startable and lets the
      * descrambler cover the carrier PID. */
     if (hts_stream_type == SCT_UNKNOWN && mux->mm_t2mi_carriers &&
+        !mux->mm_t2mi_ignore_private &&
         (estype == 0x06 || estype >= 0x80)) {
       hts_stream_type = SCT_T2MI;
       tvhdebug(mt->mt_subsys, "%s:    pid %04X mapped as T2-MI carrier",
