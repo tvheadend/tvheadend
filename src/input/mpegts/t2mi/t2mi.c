@@ -692,12 +692,37 @@ const idclass_t t2mi_mux_class =
   }
 };
 
+/* carrier PID for display: the running value if resolved, else the
+ * explicit config PID, else the T2-MI component PID from the source
+ * carrier service's PMT (so idle SID-mode muxes still show the PID) */
+static int
+t2mi_mux_carrier_pid ( t2mi_mux_t *tm, mpegts_mux_t *src )
+{
+  mpegts_service_t *svc;
+  elementary_stream_t *es;
+  int pid = 0;
+
+  if (tm->tm_carrier_pid > 0)
+    return tm->tm_carrier_pid;
+  if (tm->mm_t2mi_src_pid)
+    return tm->mm_t2mi_src_pid;
+  if (src && tm->mm_t2mi_src_sid &&
+      (svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL)) != NULL) {
+    tvh_mutex_lock(&svc->s_stream_mutex);
+    if ((es = elementary_stream_type_find(&svc->s_components, SCT_T2MI)) != NULL)
+      pid = es->es_pid;
+    tvh_mutex_unlock(&svc->s_stream_mutex);
+  }
+  return pid;
+}
+
 static void
 t2mi_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   t2mi_mux_t *tm = (t2mi_mux_t *)mm;
   mpegts_mux_t *src;
   char sbuf[128];
+  int pid;
 
   src = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
   if (src && src->mm_display_name) {
@@ -705,15 +730,19 @@ t2mi_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   } else {
     strlcpy(sbuf, "?", sizeof(sbuf));
   }
-  /* Identify the carrier by source mux + SID (or PID), both taken straight
-   * from the source PAT/PMT scan. We deliberately do NOT append the carrier
-   * service's SDT name: that field (s_dvb_svcname) is not unique across
-   * transponders, so when two muxes reuse the same SID it can carry a name
-   * that leaked from an unrelated transponder, which is misleading. */
-  if (tm->mm_t2mi_src_sid)
-    snprintf(buf, len, "%s/T2MI-SID-%u", sbuf, tm->mm_t2mi_src_sid);
+  /* Identify the carrier by its source mux, carrier PID and SID, all taken
+   * straight from the source PAT/PMT scan (e.g. "T2MI-p8001-s1001"). We
+   * deliberately do NOT append the carrier service's SDT name: that field
+   * (s_dvb_svcname) is not unique across transponders, so when two muxes
+   * reuse the same SID it can carry a name that leaked from an unrelated
+   * transponder, which is misleading. */
+  pid = t2mi_mux_carrier_pid(tm, src);
+  if (pid > 0 && tm->mm_t2mi_src_sid)
+    snprintf(buf, len, "%s/T2MI-p%d-s%u", sbuf, pid, tm->mm_t2mi_src_sid);
+  else if (tm->mm_t2mi_src_sid)
+    snprintf(buf, len, "%s/T2MI-s%u", sbuf, tm->mm_t2mi_src_sid);
   else
-    snprintf(buf, len, "%s/T2MI-PID-%u", sbuf, tm->mm_t2mi_src_pid);
+    snprintf(buf, len, "%s/T2MI-p%d", sbuf, pid);
 }
 
 static htsmsg_t *
