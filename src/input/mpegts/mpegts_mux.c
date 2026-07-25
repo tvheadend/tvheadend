@@ -684,10 +684,11 @@ const idclass_t mpegts_mux_class =
 #if ENABLE_T2MI
     {
       .type     = PT_INT,
-      .id       = "t2mi_count",
-      .name     = N_("T2-MI count"),
-      .desc     = N_("The number of T2-MI / TS-piping carriers currently "
-                     "detected in this mux."),
+      .id       = "carrier_count",
+      .name     = N_("Carriers"),
+      .desc     = N_("The number of encapsulated multiplexes (T2-MI, "
+                     "TS piping, ...) currently carried by services on "
+                     "this mux."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_t2mi,
     },
@@ -728,18 +729,30 @@ const idclass_t mpegts_mux_class =
     },
 #if ENABLE_T2MI
     {
+      /* internal marker: this mux is used as a T2-MI carrier source.
+       * Set automatically when the mux is selected as a source of a
+       * T2-MI network; controls whether its private streams are examined
+       * as carriers (together with 't2mi_ignore_private' below). */
       .type     = PT_BOOL,
       .id       = "t2mi_carriers",
-      .name     = N_("Map private streams as T2-MI carriers"),
-      .desc     = N_("Treat private data streams of this mux without "
-                     "recognized signalling as T2-MI / TS piping carrier "
-                     "components. Enable on muxes that transport whole "
-                     "DTT multiplexes inside services (e.g. the "
-                     "Abertis/Cellnex feeds on Hispasat 30W), then use "
-                     "the services as sources for a T2-MI network. "
-                     "Streams signalled with a proper T2MI descriptor "
-                     "are always recognized."),
+      .name     = N_("T2-MI carrier source"),
+      .desc     = N_("Set automatically when this mux is used as a source "
+                     "for a T2-MI network."),
       .off      = offsetof(mpegts_mux_t, mm_t2mi_carriers),
+      .opts     = PO_HIDDEN | PO_EXPERT | PO_RDONLY
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "t2mi_ignore_private",
+      .name     = N_("Ignore private streams as carriers"),
+      .desc     = N_("By default the private data streams of a T2-MI "
+                     "source mux without recognized signalling are also "
+                     "examined as T2-MI / TS piping carriers, which is "
+                     "needed for feeds like Abertis/Cellnex. Enable this "
+                     "to consider only streams with a proper T2MI "
+                     "descriptor. Normally set from the T2-MI network's "
+                     "'Ignore private-stream carriers' option."),
+      .off      = offsetof(mpegts_mux_t, mm_t2mi_ignore_private),
       .opts     = PO_ADVANCED
     },
 #endif

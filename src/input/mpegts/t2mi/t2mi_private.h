@@ -45,7 +45,7 @@ struct t2mi_network
 
   /* carrier discovery in the selected source muxes */
   idnode_list_head_t tn_src_muxes; /* selected source muxes (in1 side) */
-  int      tn_src_private;      /* map private streams as carriers */
+  int      tn_ignore_private;   /* do NOT scan private streams as carriers */
   uint32_t tn_scan_period;      /* rediscovery period (minutes) */
   mtimer_t tn_disc_timer;
 };
