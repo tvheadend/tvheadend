@@ -471,12 +471,15 @@ t2mi_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
             tm->mm_nicename, st->in_packets, st->out_packets,
             st->t2mi_packets, st->bb_frames,
             st->crc32_errors + st->crc8_errors);
-    /* A discovered carrier that never yielded a single inner packet and
-     * has no services is not really a carrier - typically an SI or
-     * network pseudo-service whose lone private stream looks like one.
-     * Disable it so it stops being scanned and is hidden by default;
-     * the user can re-enable it if the feed says otherwise. */
-    if (tm->mm_t2mi_auto && st->out_packets == 0 &&
+    /* A discovered carrier that received carrier data but never yielded a
+     * single inner packet, and has no services, is not really a carrier -
+     * typically an SI or network pseudo-service whose lone private stream
+     * looks like one.  Disable it so it stops being scanned and is hidden
+     * by default; the user can re-enable it.  Do NOT disable when nothing
+     * was received at all (in_packets == 0): that is a tuning failure (no
+     * free tuner, source not locked), not an empty carrier, and the mux
+     * must stay enabled to be retried. */
+    if (tm->mm_t2mi_auto && st->in_packets > 0 && st->out_packets == 0 &&
         LIST_FIRST(&tm->mm_services) == NULL &&
         tm->mm_enabled == MM_ENABLE) {
       tvhinfo(LS_T2MI, "%s - no inner stream decapsulated, disabling",
