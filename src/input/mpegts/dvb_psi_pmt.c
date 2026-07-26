@@ -572,15 +572,26 @@ dvb_psi_parse_pmt
 #if ENABLE_T2MI
   /* A service exposing exactly one private data stream and no audio or
    * video is a T2-MI / TS-piping carrier.  Type that stream as the
-   * carrier component (unless the PMT already signalled one) so the
-   * carrier is detected, counted and startable regardless of any T2-MI
-   * network membership. */
-  if (t2mi_cand_cnt == 1 && !elementary_stream_has_audio_or_video(set) &&
-      elementary_stream_type_find(set, SCT_T2MI) == NULL) {
-    st = elementary_stream_type_modify(set, t2mi_cand_pid, SCT_T2MI);
-    st->es_delete_me = 0;
-    tvhdebug(mt->mt_subsys, "%s:    pid %04X mapped as T2-MI carrier",
-             mt->mt_name, t2mi_cand_pid);
+   * carrier component so the carrier is detected, counted and startable
+   * regardless of any T2-MI network membership.
+   *
+   * This must run on every PMT parse: the carrier stream stays
+   * SCT_UNKNOWN in the loop above (estype 0x06 or >= 0x80 with no
+   * recognising descriptor), so the loop never matches the existing
+   * carrier component and never clears its es_delete_me flag.  If we did
+   * not re-confirm it here the delete pass below would drop it, and the
+   * component would flicker in and out on alternate parses.  Skip only
+   * when a different PID already carries a signalled T2-MI component. */
+  if (t2mi_cand_cnt == 1 && !elementary_stream_has_audio_or_video(set)) {
+    st = elementary_stream_type_find(set, SCT_T2MI);
+    if (st == NULL || st->es_pid == t2mi_cand_pid) {
+      if (elementary_stream_find(set, t2mi_cand_pid) == NULL)
+        update |= PMT_UPDATE_NEW_STREAM;
+      st = elementary_stream_type_modify(set, t2mi_cand_pid, SCT_T2MI);
+      st->es_delete_me = 0;
+      tvhdebug(mt->mt_subsys, "%s:    pid %04X mapped as T2-MI carrier",
+               mt->mt_name, t2mi_cand_pid);
+    }
   }
 #endif
 
