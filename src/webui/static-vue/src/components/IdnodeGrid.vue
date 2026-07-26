@@ -576,12 +576,36 @@ if (!props.persistColumns) {
 /* Per-column filter persistence — separate localStorage key
  * since the composable's scope is sort + cols + order only.
  * Same restore-on-mount + drop-on-empty semantics the old
- * GridPrefs.filter slot had. */
+ * GridPrefs.filter slot had.
+ *
+ * Format v2: `{ v: 2, filters: FilterDef[] }`. Version 1 was the
+ * bare array, written while the server treated gt/lt inclusively
+ * (as >=/<=) and the picker labelled them ≥/≤ — so a v1 numeric
+ * gt/lt carries inclusive INTENT and migrates to ge/le on load,
+ * preserving what the user saved. */
+interface PersistedFilterV2 {
+  v: 2
+  filters: FilterDef[]
+}
+
+function migrateV1Filter(filters: FilterDef[]): FilterDef[] {
+  return filters.map((f) => {
+    if (f.type !== 'numeric') return f
+    if (f.comparison === 'gt') return { ...f, comparison: 'ge' }
+    if (f.comparison === 'lt') return { ...f, comparison: 'le' }
+    return f
+  })
+}
+
 function loadFilter(): FilterDef[] | undefined {
   if (!props.persistColumns) return undefined
   try {
     const raw = localStorage.getItem(FILTER_KEY)
-    return raw ? (JSON.parse(raw) as FilterDef[]) : undefined
+    if (!raw) return undefined
+    const parsed = JSON.parse(raw) as PersistedFilterV2 | FilterDef[]
+    if (Array.isArray(parsed)) return migrateV1Filter(parsed)
+    if (parsed && parsed.v === 2 && Array.isArray(parsed.filters)) return parsed.filters
+    return undefined
   } catch {
     return undefined
   }
@@ -593,7 +617,8 @@ function saveFilter(filters: FilterDef[] | null): void {
     if (filters === null || filters.length === 0) {
       localStorage.removeItem(FILTER_KEY)
     } else {
-      localStorage.setItem(FILTER_KEY, JSON.stringify(filters))
+      const blob: PersistedFilterV2 = { v: 2, filters }
+      localStorage.setItem(FILTER_KEY, JSON.stringify(blob))
     }
   } catch {
     /* localStorage full or unavailable — silent fail. */
@@ -1523,26 +1548,28 @@ type DTFilterMeta = Record<string, DTFilterEntry>
 
 /* Reverse mapping for numeric columns: the wire format is 1 or 2
  * `FilterDef` entries on the same field, the model is a single
- * `NumericFilterModel`. Between is detected by the gt+lt pair —
- * since gt/lt are server-side inclusive today, the bounds round-
- * trip verbatim. */
+ * `NumericFilterModel`. Between is detected by the ge+le pair the
+ * forward mapping emits (a legacy gt+lt pair — pre-v2 in-memory
+ * state — is accepted too and reads as the same inclusive range). */
+const SINGLE_NUMERIC_OPS: ReadonlySet<string> = new Set(['eq', 'ne', 'lt', 'le', 'gt', 'ge'])
+
 function entriesToNumericModel(entries: FilterDef[]): NumericFilterModel | null {
   if (entries.length === 0) return null
   if (entries.length === 1) {
     const e = entries[0]
-    const op = (e.comparison ?? 'eq') as NumericFilterModel['op']
-    if (op === 'eq' || op === 'lt' || op === 'gt') {
-      return { op, value: Number(e.value), value2: null }
+    const op = e.comparison ?? 'eq'
+    if (SINGLE_NUMERIC_OPS.has(op)) {
+      return { op: op as NumericFilterModel['op'], value: Number(e.value), value2: null }
     }
     return { op: 'eq', value: Number(e.value), value2: null }
   }
-  const gt = entries.find((e) => e.comparison === 'gt')
-  const lt = entries.find((e) => e.comparison === 'lt')
-  if (gt && lt) {
+  const lower = entries.find((e) => e.comparison === 'ge' || e.comparison === 'gt')
+  const upper = entries.find((e) => e.comparison === 'le' || e.comparison === 'lt')
+  if (lower && upper) {
     return {
       op: 'between',
-      value: Number(gt.value),
-      value2: Number(lt.value),
+      value: Number(lower.value),
+      value2: Number(upper.value),
     }
   }
   /* Unexpected multi-entry combination; render the first entry. */
@@ -1596,26 +1623,18 @@ function persistFilter(filters: FilterDef[]) {
   saveFilter(filters)
 }
 
-/* Forward mapping for numeric columns: 1 entry for eq/lt/gt, 2
- * entries for Between (synthesised as `gt:min` AND `lt:max`).
- *
- * Server vocabulary today is `eq`, `gt`, `lt`. The `gt` matcher
- * at `src/idnode.c:911-918` keeps rows where a >= b (it rejects
- * only a < b), and `lt` keeps a <= b — long-standing inclusive-
- * when-strict-was-intended bug. NumericFilterControls labels the
- * operators by what they actually do (`≥` / `≤`), so Between
- * sends the bounds as-is and the server's inclusive interpretation
- * lands an inclusive range. A separate upstream C PR will tighten
- * IC_GT/IC_LT to strict `>` / `<` and add IC_GE/IC_LE; once that
- * lands the Vue UI gains both strict and inclusive operators and
- * Between switches to use IC_GE/IC_LE explicitly. */
+/* Forward mapping for numeric columns: 1 entry for the single
+ * operators (eq/ne/lt/le/gt/ge, passed to the server verbatim —
+ * API v20 comparators, `idnode_filter`), 2 entries for Between,
+ * synthesised as `ge:min` AND `le:max` so the displayed range is
+ * inclusive at both bounds. */
 function numericModelToEntries(field: string, m: NumericFilterModel | null): FilterDef[] {
   if (m === null || m.value === null) return []
   if (m.op === 'between') {
     if (m.value2 === null || m.value2 === undefined) return []
     return [
-      { field, type: 'numeric', value: m.value, comparison: 'gt' },
-      { field, type: 'numeric', value: m.value2, comparison: 'lt' },
+      { field, type: 'numeric', value: m.value, comparison: 'ge' },
+      { field, type: 'numeric', value: m.value2, comparison: 'le' },
     ]
   }
   return [{ field, type: 'numeric', value: m.value, comparison: m.op }]

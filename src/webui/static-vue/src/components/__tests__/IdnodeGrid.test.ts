@@ -401,6 +401,16 @@ function mountForGuard() {
   })
 }
 
+/* Seed a persisted-filter blob, mount, and return what the grid
+ * pushed into the store — shared by the load/migration cases so
+ * the setItem/mount/expect skeleton isn't cloned per test. */
+function mountWithPersistedFilter(blob: unknown): unknown {
+  localStorage.setItem('tvh-grid:test-key:filter', JSON.stringify(blob))
+  mountGrid()
+  const calls = mockStore.update.mock.calls
+  return calls[calls.length - 1]?.[0]
+}
+
 describe('IdnodeGrid', () => {
   beforeEach(() => {
     mockStore = makeStore()
@@ -581,19 +591,44 @@ describe('IdnodeGrid', () => {
     const stored = localStorage.getItem('tvh-grid:test-key:filter')
     expect(stored).not.toBeNull()
     const parsed = JSON.parse(stored!) as unknown
-    expect(parsed).toEqual([
-      { field: 'title', type: 'string', value: 'abc' },
-    ])
+    expect(parsed).toEqual({
+      v: 2,
+      filters: [{ field: 'title', type: 'string', value: 'abc' }],
+    })
   })
 
-  it('seeds the store filter from persisted prefs at mount (lazy mode)', () => {
-    localStorage.setItem(
-      'tvh-grid:test-key:filter',
-      JSON.stringify([{ field: 'title', type: 'string', value: 'persisted' }]),
-    )
-    mountGrid()
-    expect(mockStore.update).toHaveBeenCalledWith({
+  it('seeds the store filter from a legacy v1 blob (bare array) at mount', () => {
+    const pushed = mountWithPersistedFilter([
+      { field: 'title', type: 'string', value: 'persisted' },
+    ])
+    expect(pushed).toEqual({
       filter: [{ field: 'title', type: 'string', value: 'persisted' }],
+    })
+  })
+
+  it('migrates legacy v1 numeric gt/lt (inclusive intent) to ge/le on load', () => {
+    /* v1 blobs were written while the picker labelled gt/lt as ≥/≤
+     * (matching the then-inclusive server); the saved intent is
+     * inclusive, so the load path rewrites them to ge/le. */
+    const pushed = mountWithPersistedFilter([
+      { field: 'size', type: 'numeric', value: 5, comparison: 'gt' },
+      { field: 'size', type: 'numeric', value: 10, comparison: 'lt' },
+    ])
+    expect(pushed).toEqual({
+      filter: [
+        { field: 'size', type: 'numeric', value: 5, comparison: 'ge' },
+        { field: 'size', type: 'numeric', value: 10, comparison: 'le' },
+      ],
+    })
+  })
+
+  it('loads a v2 blob verbatim (strict gt survives)', () => {
+    const pushed = mountWithPersistedFilter({
+      v: 2,
+      filters: [{ field: 'size', type: 'numeric', value: 5, comparison: 'gt' }],
+    })
+    expect(pushed).toEqual({
+      filter: [{ field: 'size', type: 'numeric', value: 5, comparison: 'gt' }],
     })
   })
 
@@ -625,13 +660,10 @@ describe('IdnodeGrid', () => {
   /*
    * Numeric column filter — model → wire-entries translation.
    * The per-column filter model is a NumericFilterModel object
-   * (op + value [+ value2]); the wire is 1 entry for eq/lt/gt,
-   * 2 entries for Between. Server's gt/lt are inclusive today
-   * (idnode.c:911-918), so the UI labels them as ≥/≤ and
-   * Between sends bounds verbatim — no off-by-one shift. Once
-   * the server gains strict gt/lt + new ge/le operators, the
-   * UI flips labels back to </> and adds ≥/≤/!= as separate
-   * entries.
+   * (op + value [+ value2]); the wire is 1 entry for the single
+   * operators (eq/ne/lt/le/gt/ge — the API-v20 idnode comparators,
+   * passed through verbatim), 2 entries for Between, synthesised
+   * as ge:min + le:max so the displayed range is inclusive.
    */
   describe('numeric filter operators', () => {
     it('eq model emits a single wire entry with comparison:eq', async () => {
@@ -673,7 +705,24 @@ describe('IdnodeGrid', () => {
       })
     })
 
-    it('between model emits TWO wire entries with the raw bounds (no shift)', async () => {
+    it('ne/le/ge models pass through 1:1', async () => {
+      for (const op of ['ne', 'le', 'ge'] as const) {
+        mockStore = makeStore({})
+        const wrapper = mountGrid()
+        const dataGrid = wrapper.findComponent({ name: 'DataGrid' })
+        dataGrid.vm.$emit('filter', {
+          filters: { size: { value: { op, value: 7, value2: null } } },
+        })
+        await wrapper.vm.$nextTick()
+        expect(mockStore.update).toHaveBeenCalledWith({
+          filter: [{ field: 'size', type: 'numeric', value: 7, comparison: op }],
+          start: 0,
+        })
+        wrapper.unmount()
+      }
+    })
+
+    it('between model emits TWO wire entries as inclusive ge+le', async () => {
       const wrapper = mountGrid()
       const dataGrid = wrapper.findComponent({ name: 'DataGrid' })
       dataGrid.vm.$emit('filter', {
@@ -682,8 +731,8 @@ describe('IdnodeGrid', () => {
       await wrapper.vm.$nextTick()
       expect(mockStore.update).toHaveBeenCalledWith({
         filter: [
-          { field: 'size', type: 'numeric', value: 5, comparison: 'gt' },
-          { field: 'size', type: 'numeric', value: 10, comparison: 'lt' },
+          { field: 'size', type: 'numeric', value: 5, comparison: 'ge' },
+          { field: 'size', type: 'numeric', value: 10, comparison: 'le' },
         ],
         start: 0,
       })
@@ -728,17 +777,37 @@ describe('IdnodeGrid', () => {
       expect(filters.size?.value).toEqual({ op: 'eq', value: 5, value2: null })
     })
 
-    it('seeds a between model from a gt+lt pair (bounds round-trip verbatim)', () => {
-      mockStore = makeStore({
-        filter: [
-          { field: 'size', type: 'numeric', value: 5, comparison: 'gt' },
-          { field: 'size', type: 'numeric', value: 10, comparison: 'lt' },
-        ],
-      })
-      const wrapper = mountGrid()
-      const dataGrid = wrapper.findComponent({ name: 'DataGrid' })
-      const filters = dataGrid.props('filters') as Record<string, { value: unknown }>
-      expect(filters.size?.value).toEqual({ op: 'between', value: 5, value2: 10 })
+    it('seeds a between model from a lower+upper pair (ge+le, and legacy gt+lt)', () => {
+      const pairs = [
+        ['ge', 'le'],
+        ['gt', 'lt'],
+      ] as const
+      for (const [lo, hi] of pairs) {
+        mockStore = makeStore({
+          filter: [
+            { field: 'size', type: 'numeric', value: 5, comparison: lo },
+            { field: 'size', type: 'numeric', value: 10, comparison: hi },
+          ],
+        })
+        const wrapper = mountGrid()
+        const dataGrid = wrapper.findComponent({ name: 'DataGrid' })
+        const filters = dataGrid.props('filters') as Record<string, { value: unknown }>
+        expect(filters.size?.value).toEqual({ op: 'between', value: 5, value2: 10 })
+        wrapper.unmount()
+      }
+    })
+
+    it('seeds single ne/le/ge models from their wire entries', () => {
+      for (const op of ['ne', 'le', 'ge'] as const) {
+        mockStore = makeStore({
+          filter: [{ field: 'size', type: 'numeric', value: 7, comparison: op }],
+        })
+        const wrapper = mountGrid()
+        const dataGrid = wrapper.findComponent({ name: 'DataGrid' })
+        const filters = dataGrid.props('filters') as Record<string, { value: unknown }>
+        expect(filters.size?.value).toEqual({ op, value: 7, value2: null })
+        wrapper.unmount()
+      }
     })
 
   })

@@ -17,12 +17,23 @@
  * + the field key (used by the ✕ clear emit).
  *
  * String values get quoted; numeric operators get a glyph
- * (`= 5`, `≥ 100`, `≤ 50`, `5 – 10` for a min+max pair); boolean
+ * (`= 5`, `> 100`, `≤ 50`, `5 – 10` for a min+max pair); boolean
  * resolves to a localised Yes/No via a caller-supplied formatter
  * so this file stays locale-agnostic.
  */
 
 import type { FilterDef } from '@/types/grid'
+
+/* Comparator → display glyph for the API-v20 idnode operators.
+ * Shared with DataGrid's funnel-icon hover tooltip. */
+export const NUMERIC_OP_GLYPHS: Readonly<Record<string, string>> = {
+  eq: '=',
+  ne: '≠',
+  lt: '<',
+  le: '≤',
+  gt: '>',
+  ge: '≥',
+}
 
 export interface ColumnFilterRow {
   /** Field key — passed back in the clear-filter / edit-filter emit. */
@@ -107,18 +118,18 @@ export function summarizeFilterEntries(
 }
 
 /*
- * Numeric Between: two entries on the same field, one `gt`
- * (lower bound) + one `lt` (upper bound). Returns null when the
- * pair doesn't fit that shape (e.g. two `gt` entries) so the
- * caller can fall through to "empty" rather than rendering
- * something misleading.
+ * Numeric Between: two entries on the same field — a lower bound
+ * (`ge`, or `gt` from legacy state) + an upper bound (`le`/`lt`).
+ * Returns null when the pair doesn't fit that shape (e.g. two
+ * lower bounds) so the caller can fall through to "empty" rather
+ * than rendering something misleading.
  */
 function formatBetween(entries: readonly FilterDef[]): string | null {
   if (!entries.every((e) => e.type === 'numeric')) return null
-  const gt = entries.find((e) => e.comparison === 'gt')
-  const lt = entries.find((e) => e.comparison === 'lt')
-  if (!gt || !lt) return null
-  return `${formatNumeric(gt.value)} – ${formatNumeric(lt.value)}`
+  const lower = entries.find((e) => e.comparison === 'ge' || e.comparison === 'gt')
+  const upper = entries.find((e) => e.comparison === 'le' || e.comparison === 'lt')
+  if (!lower || !upper) return null
+  return `${formatNumeric(lower.value)} – ${formatNumeric(upper.value)}`
 }
 
 /*
@@ -147,8 +158,8 @@ function formatNumericEntry(e: FilterDef, labels: ColumnFilterLabels): string {
     }
     return `= ${formatNumeric(e.value)}`
   }
-  if (cmp === 'gt') return `≥ ${formatNumeric(e.value)}`
-  if (cmp === 'lt') return `≤ ${formatNumeric(e.value)}`
+  const glyph = NUMERIC_OP_GLYPHS[cmp]
+  if (glyph) return `${glyph} ${formatNumeric(e.value)}`
   return ''
 }
 

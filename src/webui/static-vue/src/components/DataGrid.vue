@@ -42,6 +42,8 @@ import VirtualScroller from 'primevue/virtualscroller'
 import ColumnHeaderMenu from '@/components/ColumnHeaderMenu.vue'
 import type { ColumnDef } from '@/types/column'
 import type { BaseRow, GroupableFieldDef } from '@/types/grid'
+import type { NumericFilterModel } from '@/components/NumericFilterControls.vue'
+import { NUMERIC_OP_GLYPHS } from '@/components/columnFilterSummary'
 import {
   ArrowDown as ArrowDownIcon,
   ArrowUp as ArrowUpIcon,
@@ -1213,7 +1215,7 @@ function filterActiveFor(col: ColumnDef): boolean {
  * actually typed into the filter popover, so the preview is
  * recognisably theirs:
  *   string  → `Filter: contains "abc"`
- *   number  → `Filter: = 12345`
+ *   number  → `Filter: > 12345` / `Filter: 5 – 10`
  *   boolean → `Filter: Yes` / `Filter: No`
  * Returns '' when no filter is active; the caller passes that
  * through to the menu which then suppresses the `title`. Enum
@@ -1238,8 +1240,23 @@ function filterTitleFor(col: ColumnDef): string {
     const opt = opts?.find((o) => o.key === v || String(o.key) === String(v))
     return t('Filter: = {0}', opt?.val ?? String(v))
   }
-  /* numeric and any future filterType — value renders verbatim. */
+  if (col.filterType === 'numeric' && v !== null && typeof v === 'object') {
+    return numericFilterTitle(v as NumericFilterModel)
+  }
+  /* any future filterType — value renders verbatim. */
   return t('Filter: = {0}', String(v))
+}
+
+/* The numeric filter value is a NumericFilterModel, not a scalar —
+ * render its operator glyph + value(s) rather than String(v)'s
+ * "[object Object]". */
+function numericFilterTitle(m: NumericFilterModel): string {
+  if (m.value === null) return ''
+  if (m.op === 'between') {
+    if (m.value2 === null || m.value2 === undefined) return ''
+    return t('Filter: {0} – {1}', String(m.value), String(m.value2))
+  }
+  return t('Filter: {0} {1}', NUMERIC_OP_GLYPHS[m.op] ?? '=', String(m.value))
 }
 
 /* Ref onto PrimeVue's DataTable instance. We use it to call

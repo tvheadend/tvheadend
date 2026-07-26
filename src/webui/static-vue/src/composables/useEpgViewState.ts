@@ -945,6 +945,9 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
       limit: GRID_LIMIT_ALL,
       sort: 'start',
       dir: 'ASC',
+      /* gt/lt are the EPG endpoint's own (inclusive) comparators —
+       * see the vocabulary note in epgTableFilters.ts; the idnode
+       * grids' API-v20 ge/le are not understood here. */
       filter: JSON.stringify([
         { field: 'start', type: 'numeric', value: dEnd, comparison: 'lt' } satisfies FilterDef,
         { field: 'stop', type: 'numeric', value: epoch, comparison: 'gt' } satisfies FilterDef,

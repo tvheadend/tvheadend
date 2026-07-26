@@ -27,8 +27,13 @@ export interface FilterDef {
   field: string
   type: 'string' | 'numeric' | 'boolean'
   value: string | number | boolean
-  /* numeric only — comparison from str2val(filtcmptab) — `eq`/`gt`/`lt`/etc.
-   * Defaults to `eq` if omitted. */
+  /* numeric only — comparison operator; defaults to `eq` if omitted.
+   * Two vocabularies exist server-side:
+   *   - idnode grids (src/idnode.c, API v20): `eq`/`ne` and STRICT
+   *     `lt`/`gt` plus inclusive `le`/`ge`.
+   *   - epg/events/grid (src/api/api_epg.c filtcmptab): only
+   *     `eq`/`gt`/`lt`, matched INCLUSIVELY — ge/le are not accepted
+   *     there. */
   comparison?: string
   /* numeric only — for split-int fields (rare). */
   intsplit?: number
