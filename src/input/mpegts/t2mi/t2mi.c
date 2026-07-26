@@ -276,7 +276,15 @@ t2mi_mux_subscribe ( t2mi_mux_t *tm, mpegts_input_t *mi, int weight )
   mpegts_service_t *svc;
   mpegts_apids_t pids;
   char buf[256];
-  int flags = SUBSCRIPTION_MPEGTS | SUBSCRIPTION_STREAMING;
+  /* CONTACCESS: keep the source subscription up even when the carrier
+   * cannot be descrambled (scrambled carrier, no key).  Without it the
+   * subscription is marked bad on "No access" and the scheduler retries
+   * it every couple of seconds, flooding the log during a scan.  The
+   * carrier simply yields no decapsulated output and the mux is left
+   * empty instead.  Tuner contention (no free adapter) still retries
+   * normally - that path is independent of this flag. */
+  int flags = SUBSCRIPTION_MPEGTS | SUBSCRIPTION_STREAMING |
+              SUBSCRIPTION_CONTACCESS;
 
   lock_assert(&global_lock);
 
