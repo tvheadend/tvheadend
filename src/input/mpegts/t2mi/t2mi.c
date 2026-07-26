@@ -1052,11 +1052,11 @@ static void
 t2mi_network_discover ( t2mi_network_t *tn )
 {
   idnode_list_mapping_t *ilm;
-  mpegts_mux_t *mm;
+  mpegts_mux_t *mm, *mm_next, *src;
   mpegts_service_t *s;
   t2mi_mux_t *tm;
   char src_ubuf[UUID_HEX_SIZE];
-  int created = 0;
+  int created = 0, retired = 0;
   uint16_t sid;
 
   lock_assert(&global_lock);
@@ -1112,15 +1112,35 @@ t2mi_network_discover ( t2mi_network_t *tn )
     }
   }
 
-  /* Discovered muxes whose carrier is not currently present are KEPT
-   * (their scan simply fails, as for a dark DVB transponder) so that mux
-   * and service UUIDs - and any channel mappings - survive feed changes.
-   * They are removed only with their source mux (t2mi_source_mux_deleting)
-   * or when the whole network is deleted. */
+  /* Retire auto-discovered muxes whose carrier is confirmed gone.  A
+   * carrier is confirmed gone when its source service was deleted, or
+   * disabled by tvheadend's stale-service check because it vanished from
+   * the source PAT/SDT (24h without being seen).  This clears phantom
+   * carriers that a transponder no longer emits - or never did, when a
+   * stale service lingered from an earlier feed layout.  A mux whose
+   * source mux has simply not been (re)scanned keeps an enabled service
+   * and is left untouched, so mux/service UUIDs and channel mappings
+   * survive a short carrier outage or feed rotation. */
+  for (mm = LIST_FIRST(&tn->mn_muxes); mm; mm = mm_next) {
+    mm_next = LIST_NEXT(mm, mm_network_link);
+    tm = (t2mi_mux_t *)mm;
+    if (!tm->mm_t2mi_auto || tm->tm_seen)
+      continue;
+    src = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
+    if (src == NULL)
+      continue;
+    s = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL);
+    if (s == NULL || !s->s_enabled) {
+      tvhinfo(LS_T2MI, "retiring carrier %s (source service gone or disabled)",
+              mm->mm_nicename);
+      mm->mm_delete(mm, 1);
+      retired++;
+    }
+  }
 
-  if (created)
-    tvhinfo(LS_T2MI, "%s: %d carrier(s) added",
-            tn->mn_network_name ?: "", created);
+  if (created || retired)
+    tvhinfo(LS_T2MI, "%s: %d carrier(s) added, %d retired",
+            tn->mn_network_name ?: "", created, retired);
 }
 
 /*
