@@ -255,6 +255,9 @@ dvb_psi_parse_pmt
   uint8_t audio_type, audio_version;
   mpegts_mux_t *mux = mt->mt_mux;
   caid_t *c, *cn;
+#if ENABLE_T2MI
+  int t2mi_cand_pid = -1, t2mi_cand_cnt = 0;
+#endif
 
   version = (ptr[2] >> 1) & 0x1f;
   pcr_pid = extract_pid(ptr + 5);
@@ -477,15 +480,16 @@ dvb_psi_parse_pmt
 #if ENABLE_T2MI
     /* Private data streams may carry T2-MI or plain TS data piping
      * without proper signalling (e.g. the Abertis/Cellnex DTT
-     * distribution uses private stream types).  Mapping them to a
-     * component makes the carrier service startable and lets the
-     * descrambler cover the carrier PID. */
-    if (hts_stream_type == SCT_UNKNOWN && mux->mm_t2mi_carriers &&
-        !mux->mm_t2mi_ignore_private &&
+     * distribution uses private stream types).  Remember them as
+     * carrier candidates; they are typed after the whole PMT is parsed
+     * so that only a data-only service (one such stream and no audio or
+     * video) is treated as a carrier.  Detecting them here, rather than
+     * only on muxes already flagged by a T2-MI network, lets a plain
+     * scan report the carrier count for any transponder. */
+    if (hts_stream_type == SCT_UNKNOWN && !mux->mm_t2mi_ignore_private &&
         (estype == 0x06 || estype >= 0x80)) {
-      hts_stream_type = SCT_T2MI;
-      tvhdebug(mt->mt_subsys, "%s:    pid %04X mapped as T2-MI carrier",
-               mt->mt_name, pid);
+      t2mi_cand_pid = pid;
+      t2mi_cand_cnt++;
     }
 #endif
 
@@ -564,6 +568,21 @@ dvb_psi_parse_pmt
     st = elementary_stream_type_modify(set, set->set_pcr_pid, SCT_PCR);
     st->es_delete_me = 0;
   }
+
+#if ENABLE_T2MI
+  /* A service exposing exactly one private data stream and no audio or
+   * video is a T2-MI / TS-piping carrier.  Type that stream as the
+   * carrier component (unless the PMT already signalled one) so the
+   * carrier is detected, counted and startable regardless of any T2-MI
+   * network membership. */
+  if (t2mi_cand_cnt == 1 && !elementary_stream_has_audio_or_video(set) &&
+      elementary_stream_type_find(set, SCT_T2MI) == NULL) {
+    st = elementary_stream_type_modify(set, t2mi_cand_pid, SCT_T2MI);
+    st->es_delete_me = 0;
+    tvhdebug(mt->mt_subsys, "%s:    pid %04X mapped as T2-MI carrier",
+             mt->mt_name, t2mi_cand_pid);
+  }
+#endif
 
   /* Scan again to see if any streams should be deleted */
   for(st = TAILQ_FIRST(&set->set_all); st != NULL; st = next) {
