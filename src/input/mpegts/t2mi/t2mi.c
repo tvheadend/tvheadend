@@ -75,13 +75,45 @@ t2mi_input_is_enabled
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
   t2mi_mux_t *tm = (t2mi_mux_t *)mm;
+  mpegts_mux_t *src;
+  mpegts_mux_instance_t *mmi;
+  mpegts_input_t *si;
 
   int r = mpegts_input_is_enabled(mi, mm, flags, weight);
   if (r != MI_IS_ENABLED_OK)
     return r;
   if (tm->mm_t2mi_src_mux == NULL || tm->mm_t2mi_src_mux[0] == '\0')
     return MI_IS_ENABLED_NEVER;
-  return MI_IS_ENABLED_OK;
+  src = mpegts_mux_find(tm->mm_t2mi_src_mux);
+  if (src == NULL)
+    return MI_IS_ENABLED_NEVER;
+
+  /* Serialize on the real tuner underneath.  If the source transponder
+   * is already tuned, share it - any number of carriers of the same
+   * transponder can run at once.  A capability probe (weight <= 0) is
+   * always allowed.  Otherwise the source needs a real tuner: start only
+   * if a real input can serve it now (enabled for the source mux and not
+   * already busier than this request), else ask the scheduler to retry
+   * later.  That way a carrier on a not-yet-tuned transponder waits its
+   * turn instead of spinning up a source subscription that fights a tuner
+   * busy with another transponder - while a higher-weight request (e.g.
+   * live viewing over a scan) still preempts as usual. */
+  if (src->mm_active || weight <= 0)
+    return MI_IS_ENABLED_OK;
+  int any = 0;
+  LIST_FOREACH(mmi, &src->mm_instances, mmi_mux_link) {
+    si = mmi->mmi_input;
+    r = si->mi_is_enabled(si, src, flags, weight);
+    if (r == MI_IS_ENABLED_NEVER)
+      continue;
+    any = 1;
+    if (r == MI_IS_ENABLED_OK &&
+        si->mi_get_weight(si, src, flags, weight) < weight)
+      return MI_IS_ENABLED_OK;
+  }
+  /* some tuner could serve the source but all are busy -> wait; none can
+   * ever serve it -> do not block, let the normal path report it */
+  return any ? MI_IS_ENABLED_RETRY : MI_IS_ENABLED_OK;
 }
 
 static int
