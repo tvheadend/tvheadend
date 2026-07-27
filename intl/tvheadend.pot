@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-13 03:05+0000\n"
+"POT-Creation-Date: 2026-07-27 03:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -589,7 +589,7 @@ msgid ""
 "Additional command line options when fetching artwork for new recordings."
 msgstr ""
 
-#: src/epggrab/channel.c:825
+#: src/epggrab/channel.c:848
 msgid "Additional service names found in EPG data."
 msgstr ""
 
@@ -776,7 +776,7 @@ msgstr ""
 msgid "Allowed networks"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1422
+#: src/epggrab/module/xmltv.c:1429
 msgid "Alter programme description to include detailed information"
 msgstr ""
 
@@ -1385,7 +1385,7 @@ msgstr ""
 msgid "Category "
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1444
+#: src/epggrab/module/xmltv.c:1451
 msgid "Category Code XPath"
 msgstr ""
 
@@ -1412,7 +1412,7 @@ msgstr ""
 msgid "Channel icon URL."
 msgstr ""
 
-#: src/epggrab/channel.c:843
+#: src/epggrab/channel.c:866
 msgid "Channel icon as defined in EPG data."
 msgstr ""
 
@@ -1456,7 +1456,7 @@ msgstr ""
 msgid "Channel number"
 msgstr ""
 
-#: src/epggrab/channel.c:835
+#: src/epggrab/channel.c:858
 msgid "Channel number as defined in EPG data."
 msgstr ""
 
@@ -1468,7 +1468,7 @@ msgstr ""
 msgid "Channel number range"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1406
+#: src/epggrab/module/xmltv.c:1413
 msgid "Channel numbers (heuristic)"
 msgstr ""
 
@@ -1500,11 +1500,11 @@ msgstr ""
 msgid "Channel to use/used for the recording."
 msgstr ""
 
-#: src/epggrab/channel.c:873
+#: src/epggrab/channel.c:896
 msgid "Channel update options"
 msgstr ""
 
-#: src/epggrab/channel.c:851
+#: src/epggrab/channel.c:874
 msgid "Channels"
 msgstr ""
 
@@ -1520,7 +1520,7 @@ msgstr ""
 msgid "Channels / EPG - Channels"
 msgstr ""
 
-#: src/epggrab/channel.c:743
+#: src/epggrab/channel.c:766
 msgid "Channels / EPG - EPG Grabber Channels"
 msgstr ""
 
@@ -1532,7 +1532,7 @@ msgstr ""
 msgid "Channels / EPG - EPG Grabber Modules"
 msgstr ""
 
-#: src/epggrab/channel.c:852
+#: src/epggrab/channel.c:875
 msgid "Channels EPG data is used by."
 msgstr ""
 
@@ -1689,7 +1689,7 @@ msgstr ""
 #: src/access.c:2008 src/access.c:2354 src/access.c:2493 src/channels.c:1843
 #: src/esfilter.c:703 src/esfilter.c:799 src/esfilter.c:895 src/esfilter.c:990
 #: src/esfilter.c:1098 src/esfilter.c:1181 src/profile.c:344 src/bouquet.c:1338
-#: src/epggrab/channel.c:885 src/dvr/dvr_db.c:5011 src/dvr/dvr_autorec.c:1487
+#: src/epggrab/channel.c:908 src/dvr/dvr_db.c:5011 src/dvr/dvr_autorec.c:1487
 #: src/dvr/dvr_timerec.c:679 src/dvr/dvr_config.c:1170
 #: src/descrambler/caclient.c:319
 msgid "Comment"
@@ -1783,7 +1783,7 @@ msgstr ""
 msgid "Config-Users"
 msgstr ""
 
-#: src/tvhlog.c:103 src/profile.c:2100 src/epggrab/channel.c:752
+#: src/tvhlog.c:103 src/profile.c:2100 src/epggrab/channel.c:775
 msgid "Configuration"
 msgstr ""
 
@@ -2371,7 +2371,7 @@ msgstr ""
 msgid "Data errors"
 msgstr ""
 
-#: src/epggrab/channel.c:790
+#: src/epggrab/channel.c:813
 msgid "Data path (if applicable)."
 msgstr ""
 
@@ -2391,7 +2391,7 @@ msgstr ""
 msgid "Data timeout (sec) (0=infinite)"
 msgstr ""
 
-#: src/epggrab/channel.c:799
+#: src/epggrab/channel.c:822
 msgid "Date the EPG data was last updated (not set for OTA grabbers)."
 msgstr ""
 
@@ -2468,7 +2468,7 @@ msgstr ""
 msgid "Default language."
 msgstr ""
 
-#: src/http.c:708
+#: src/http.c:709
 msgid "Default login"
 msgstr ""
 
@@ -2674,7 +2674,7 @@ msgstr ""
 msgid "Disable syslog (all messages)"
 msgstr ""
 
-#: src/channels.c:399 src/profile.c:2339 src/epggrab/module/xmltv.c:1484
+#: src/channels.c:399 src/profile.c:2339 src/epggrab/module/xmltv.c:1491
 msgid "Disabled"
 msgstr ""
 
@@ -2817,11 +2817,11 @@ msgstr ""
 msgid "EPG"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1596
+#: src/epggrab/module/xmltv.c:1603
 msgid "EPG - External XMLTV EPG Grabber"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1494
+#: src/epggrab/module/xmltv.c:1501
 msgid "EPG - Internal XMLTV EPG Grabber"
 msgstr ""
 
@@ -2853,7 +2853,7 @@ msgstr ""
 msgid "EPG behaviour"
 msgstr ""
 
-#: src/epggrab/channel.c:809
+#: src/epggrab/channel.c:832
 msgid "EPG data ID."
 msgstr ""
 
@@ -3103,7 +3103,7 @@ msgstr ""
 msgid "Enable/Disable web interface mouse-over tooltips."
 msgstr ""
 
-#: src/epggrab/channel.c:762
+#: src/epggrab/channel.c:785
 msgid "Enable/disable EPG data for the entry."
 msgstr ""
 
@@ -3211,7 +3211,7 @@ msgstr ""
 #: src/access.c:1752 src/access.c:2299 src/access.c:2476 src/channels.c:400
 #: src/channels.c:421 src/channels.c:1775 src/service.c:172 src/imagecache.c:90
 #: src/esfilter.c:609 src/profile.c:324 src/bouquet.c:1212
-#: src/ratinglabels.c:634 src/epggrab/module.c:171 src/epggrab/channel.c:761
+#: src/ratinglabels.c:634 src/epggrab/module.c:171 src/epggrab/channel.c:784
 #: src/dvr/dvr_db.c:4496 src/dvr/dvr_autorec.c:1144 src/dvr/dvr_timerec.c:536
 #: src/dvr/dvr_config.c:966 src/descrambler/caclient.c:302
 #: src/input/mpegts/mpegts_input.c:239 src/input/mpegts/mpegts_network.c:191
@@ -3325,11 +3325,11 @@ msgstr ""
 msgid "Episode number/ID."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1463
+#: src/epggrab/module/xmltv.c:1470
 msgid "EpisodeLink XPath"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1475
+#: src/epggrab/module/xmltv.c:1482
 msgid "EpisodeLink XPath fallback"
 msgstr ""
 
@@ -3644,7 +3644,7 @@ msgstr ""
 msgid "First scan"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1485
+#: src/epggrab/module/xmltv.c:1492
 msgid "First word"
 msgstr ""
 
@@ -3846,7 +3846,7 @@ msgstr ""
 msgid "Free-form text field, enter whatever you like here."
 msgstr ""
 
-#: src/bouquet.c:1339 src/epggrab/channel.c:886 src/descrambler/caclient.c:320
+#: src/bouquet.c:1339 src/epggrab/channel.c:909 src/descrambler/caclient.c:320
 msgid "Free-form text field, enter whatever you like."
 msgstr ""
 
@@ -3946,8 +3946,8 @@ msgstr ""
 
 #: src/tvhlog.c:835 src/epggrab.c:367 src/profile.c:296 src/profile.c:1344
 #: src/profile.c:1590 src/profile.c:1825 src/profile.c:2502
-#: src/satip/server.c:653 src/epggrab/module/xmltv.c:1497
-#: src/epggrab/module/xmltv.c:1599 src/dvr/dvr_config.c:925
+#: src/satip/server.c:653 src/epggrab/module/xmltv.c:1504
+#: src/epggrab/module/xmltv.c:1606 src/dvr/dvr_config.c:925
 #: src/descrambler/caclient.c:276 src/transcoding/codec/profile_class.c:232
 #: src/descrambler/cclient.c:1357 src/descrambler/dvbcam.c:848
 msgid "General Settings"
@@ -4197,7 +4197,7 @@ msgid ""
 "default) inherits the settings from the assigned DVR configuration"
 msgstr ""
 
-#: src/epggrab/channel.c:808
+#: src/epggrab/channel.c:831
 msgid "ID"
 msgstr ""
 
@@ -4312,7 +4312,7 @@ msgstr ""
 msgid "ISI (Stream ID)"
 msgstr ""
 
-#: src/ratinglabels.c:687 src/epggrab/channel.c:664 src/epggrab/channel.c:842
+#: src/ratinglabels.c:687 src/epggrab/channel.c:687 src/epggrab/channel.c:865
 msgid "Icon"
 msgstr ""
 
@@ -4353,7 +4353,7 @@ msgstr ""
 msgid "Idle scan muxes"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1472
+#: src/epggrab/module/xmltv.c:1479
 msgid ""
 "If a SeriesLink XPath is not found, use the standard TVH method for creating "
 "a SeriesLink."
@@ -4365,7 +4365,7 @@ msgid ""
 "failed. Set to 0 to disable this check."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1477
+#: src/epggrab/module/xmltv.c:1484
 msgid ""
 "If an EpisodeLink XPath is not found, use the standard TVH method for "
 "creating an EpisodeLink."
@@ -4383,7 +4383,7 @@ msgid ""
 "defined, prefer the picon."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1424
+#: src/epggrab/module/xmltv.c:1431
 msgid ""
 "If enabled then this will alter the programme descriptions to include "
 "information about actors, keywords and categories (if available from the "
@@ -5068,11 +5068,11 @@ msgstr ""
 msgid "Login/Logout"
 msgstr ""
 
-#: src/webui/comet.c:392
+#: src/webui/comet.c:407
 msgid "Loglevel debug: disabled"
 msgstr ""
 
-#: src/webui/comet.c:390
+#: src/webui/comet.c:405
 msgid "Loglevel debug: enabled"
 msgstr ""
 
@@ -5480,15 +5480,15 @@ msgstr ""
 msgid "Modulation"
 msgstr ""
 
-#: src/epggrab/channel.c:780
+#: src/epggrab/channel.c:803
 msgid "Module"
 msgstr ""
 
-#: src/epggrab/channel.c:770
+#: src/epggrab/channel.c:793
 msgid "Module ID"
 msgstr ""
 
-#: src/epggrab/channel.c:771
+#: src/epggrab/channel.c:794
 msgid "Module ID used to grab EPG data."
 msgstr ""
 
@@ -5605,8 +5605,8 @@ msgid "NVENC"
 msgstr ""
 
 #: src/channels.c:439 src/channels.c:1791 src/bouquet.c:1268
-#: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:674
-#: src/epggrab/channel.c:816 src/dvr/dvr_autorec.c:1152
+#: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:697
+#: src/epggrab/channel.c:839 src/dvr/dvr_autorec.c:1152
 #: src/dvr/dvr_timerec.c:544 src/input/mpegts/mpegts_input.c:272
 #: src/input/mpegts/mpegts_mux.c:585
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1553
@@ -5639,7 +5639,7 @@ msgstr ""
 msgid "Name of the entry."
 msgstr ""
 
-#: src/epggrab/channel.c:781
+#: src/epggrab/channel.c:804
 msgid "Name of the module used to grab EPG data."
 msgstr ""
 
@@ -5673,7 +5673,7 @@ msgstr ""
 msgid "Name."
 msgstr ""
 
-#: src/epggrab/channel.c:824
+#: src/epggrab/channel.c:847
 msgid "Names"
 msgstr ""
 
@@ -5810,7 +5810,7 @@ msgstr ""
 msgid "New / premiere / unknown"
 msgstr ""
 
-#: src/http.c:711
+#: src/http.c:712
 msgid "New login"
 msgstr ""
 
@@ -5959,7 +5959,7 @@ msgstr ""
 msgid "Not set (use channel or DVR configuration)"
 msgstr ""
 
-#: src/channels.c:451 src/epggrab/channel.c:669 src/epggrab/channel.c:834
+#: src/channels.c:451 src/epggrab/channel.c:692 src/epggrab/channel.c:857
 msgid "Number"
 msgstr ""
 
@@ -6080,7 +6080,7 @@ msgstr ""
 msgid "OTA (Over-the-air) Grabber Settings"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1413
+#: src/epggrab/module/xmltv.c:1420
 msgid ""
 "Obtain list of credits (actors, etc.), keywords and extra information from "
 "the xml tags (if available). Some xmltv providers supply a list of actors "
@@ -6127,7 +6127,7 @@ msgstr ""
 msgid "On-demand (no first rewind)"
 msgstr ""
 
-#: src/epggrab/channel.c:862
+#: src/epggrab/channel.c:885
 msgid "Once per auto channel"
 msgstr ""
 
@@ -6144,7 +6144,7 @@ msgid ""
 "rewinding is not possible at that point."
 msgstr ""
 
-#: src/webui/comet.c:388
+#: src/webui/comet.c:403
 msgid "Only admin can watch the realtime log."
 msgstr ""
 
@@ -6154,7 +6154,7 @@ msgid ""
 "configuration to use the tag."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1486
+#: src/epggrab/module/xmltv.c:1493
 msgid "Only digits"
 msgstr ""
 
@@ -6173,7 +6173,7 @@ msgstr ""
 msgid "Only use specified DVB adapters (comma-separated, -1 = none)"
 msgstr ""
 
-#: src/epggrab/channel.c:863
+#: src/epggrab/channel.c:886
 msgid ""
 "Only use this EPG data once when automatically determining what EPG data to "
 "set for a channel."
@@ -6195,7 +6195,7 @@ msgstr ""
 msgid "Options to use/used when mapping - see Help for details."
 msgstr ""
 
-#: src/epggrab/channel.c:874
+#: src/epggrab/channel.c:897
 msgid "Options used when updating channels."
 msgstr ""
 
@@ -6424,7 +6424,7 @@ msgstr ""
 msgid "Password2"
 msgstr ""
 
-#: src/epggrab/module.c:201 src/epggrab/module.c:228 src/epggrab/channel.c:789
+#: src/epggrab/module.c:201 src/epggrab/module.c:228 src/epggrab/channel.c:812
 msgid "Path"
 msgstr ""
 
@@ -7132,7 +7132,7 @@ msgstr ""
 msgid "Restrict connections to this type."
 msgstr ""
 
-#: src/webui/comet.c:308
+#: src/webui/comet.c:323
 msgid "Restricted log mode (no administrator)"
 msgstr ""
 
@@ -7584,7 +7584,7 @@ msgstr ""
 msgid "Scrape behaviour"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1411
+#: src/epggrab/module/xmltv.c:1418
 msgid "Scrape credits and extra information"
 msgstr ""
 
@@ -7785,11 +7785,11 @@ msgstr ""
 msgid "Series link ID."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1456
+#: src/epggrab/module/xmltv.c:1463
 msgid "SeriesLink XPath"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1470
+#: src/epggrab/module/xmltv.c:1477
 msgid "SeriesLink XPath fallback"
 msgstr ""
 
@@ -7867,7 +7867,7 @@ msgstr ""
 msgid "Service name"
 msgstr ""
 
-#: src/epggrab/channel.c:817
+#: src/epggrab/channel.c:840
 msgid "Service name found in EPG data."
 msgstr ""
 
@@ -8148,7 +8148,7 @@ msgid ""
 "channel name may require manual xmltv mapping."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1436
+#: src/epggrab/module/xmltv.c:1443
 msgid ""
 "Some xmltv providers supply multiple category tags, however mapping to "
 "genres is imprecise and many categories have no genre mapping at all. Some "
@@ -8901,28 +8901,28 @@ msgstr ""
 msgid "The URL to the playlist."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1458
+#: src/epggrab/module/xmltv.c:1465
 msgid ""
 "The XPath-like expression used to extract a SeriesLink identifier from the "
 "XMLTV data.  This ID is used to identify multiple occurrences of the same "
 "series.  Root node = 'programme'."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1451
+#: src/epggrab/module/xmltv.c:1458
 msgid ""
 "The XPath-like expression used to extract a unique event identifier from the "
 "XMLTV data.  This ID is used to match existing EPG events so that they can "
 "be updated rather than replaced. Root node = 'programme'."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1465
+#: src/epggrab/module/xmltv.c:1472
 msgid ""
 "The XPath-like expression used to extract an EpisodeLink identifier from the "
 "XMLTV data.  This ID is used to identify multiple occurrences of the same "
 "episode.  Root node = 'programme'."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1446
+#: src/epggrab/module/xmltv.c:1453
 msgid ""
 "The XPath-like expression used to extract the category ETSI code from the "
 "XMLTV data. Root node = 'category'."
@@ -10105,7 +10105,7 @@ msgstr ""
 msgid "Try re-scheduling recording if more errors than (0=off)"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1408
+#: src/epggrab/module/xmltv.c:1415
 msgid ""
 "Try to obtain channel numbers from the display-name xml tag. If the first "
 "word is number, it is used as the channel number."
@@ -10435,7 +10435,7 @@ msgstr ""
 msgid "Unimportant"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1449
+#: src/epggrab/module/xmltv.c:1456
 msgid "Unique Event ID XPath"
 msgstr ""
 
@@ -10521,7 +10521,7 @@ msgstr ""
 msgid "Update tolerance (ms)"
 msgstr ""
 
-#: src/epggrab/channel.c:798
+#: src/epggrab/channel.c:821
 msgid "Updated"
 msgstr ""
 
@@ -10639,7 +10639,7 @@ msgid ""
 "outdated and may cause scanning to take longer than usual."
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1434
+#: src/epggrab/module/xmltv.c:1441
 msgid "Use category instead of genre"
 msgstr ""
 
@@ -11105,7 +11105,7 @@ msgstr ""
 msgid "XMLTV output format"
 msgstr ""
 
-#: src/epggrab/module/xmltv.c:1501 src/epggrab/module/xmltv.c:1603
+#: src/epggrab/module/xmltv.c:1508 src/epggrab/module/xmltv.c:1610
 msgid "XPath Settings"
 msgstr ""
 
