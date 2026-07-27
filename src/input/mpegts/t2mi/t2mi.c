@@ -275,6 +275,16 @@ t2mi_mux_stream_cb ( void *opaque, streaming_message_t *sm )
     tvhwarn(LS_T2MI, "%s - source subscription cannot start (%s)",
             tm->mm_nicename,
             streaming_code2txt(sm->sm_code));
+    /* The source cannot deliver (parent mux did not lock, carrier service
+     * gone, ...).  Fail our own mux instance now instead of letting a scan
+     * sit idle until its grace timeout.  mpegts_mux_tuning_error takes the
+     * global lock itself and only flags the status, so it is safe from the
+     * streaming thread; it is a no-op once the mux is no longer active. */
+    {
+      char ubuf[UUID_HEX_SIZE];
+      mpegts_mux_tuning_error(idnode_uuid_as_str(&tm->mm_id, ubuf),
+                              tm->mm_active);
+    }
     break;
   case SMT_STOP:
     tvhdebug(LS_T2MI, "%s - source subscription stopped", tm->mm_nicename);
