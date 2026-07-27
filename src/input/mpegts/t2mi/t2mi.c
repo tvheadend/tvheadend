@@ -1202,11 +1202,18 @@ t2mi_network_scan ( mpegts_network_t *mn )
 {
   t2mi_network_t *tn = (t2mi_network_t *)mn;
   idnode_list_mapping_t *ilm;
+  mpegts_mux_t *mm;
 
-  /* rescan the source muxes so carriers are (re)discovered, then reconcile */
+  /* rescan the source muxes so new carriers are (re)discovered ... */
   LIST_FOREACH(ilm, &tn->tn_src_muxes, ilm_in1_link)
     mpegts_mux_scan_state_set((mpegts_mux_t *)ilm->ilm_in2,
                               MM_SCAN_STATE_PEND);
+  /* ... and rescan the carrier muxes themselves so their inner services are
+   * (re)discovered, the way a normal network scan scans its own muxes.  The
+   * source-mux serialization keeps this from tuning every transponder at
+   * once. */
+  LIST_FOREACH(mm, &tn->mn_muxes, mm_network_link)
+    mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
   t2mi_network_trigger(tn);
 }
 
