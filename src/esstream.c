@@ -459,13 +459,11 @@ elementary_stream_create_parent
     if(st->es_index > idx)
       idx = st->es_index;
     if(pid != -1 && st->es_pid == pid) {
-      if (parent_pid >= 0 && st->es_parent_pid != parent_pid)
-        goto create;
-      return st;
+      if (parent_pid < 0 || st->es_parent_pid == parent_pid)
+        return st;
     }
   }
 
-create:
   st = calloc(1, sizeof(elementary_stream_t));
   st->es_index = idx + 1;
 
