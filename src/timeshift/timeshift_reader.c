@@ -270,7 +270,10 @@ _timeshift_apply_sstart(timeshift_t *ts, timeshift_file_t *tsf, off_t pos)
   streaming_message_t *sm = _timeshift_find_sstart(tsf, pos);
   streaming_start_t *ss;
 
-  if (sm == NULL || (ss = sm->sm_data) == ts->smt_play)
+  if (sm == NULL)
+    return;
+  ss = sm->sm_data;
+  if (ss == ts->smt_play)
     return;
 
   tvhdebug(LS_TIMESHIFT, "ts %d replay stream start at buffer position %" PRId64,

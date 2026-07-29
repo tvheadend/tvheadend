@@ -81,7 +81,7 @@ static void
 pass_muxer_write(muxer_t *m, const void *data, size_t size);
 
 static uint16_t
-pass_muxer_map_pid(pass_muxer_t *pm, uint16_t pid)
+pass_muxer_map_pid(const pass_muxer_t *pm, uint16_t pid)
 {
   if (pm->pm_pid_map == NULL || pid >= PASS_PID_COUNT)
     return pid;
@@ -133,86 +133,134 @@ pass_muxer_pid_conflict(const streaming_start_t *ss,
   return 0;
 }
 
+static uint16_t *
+pass_muxer_pid_map_create(void)
+{
+  uint16_t *map;
+  int i;
+
+  map = malloc(sizeof(*map) * PASS_PID_COUNT);
+  if (map == NULL)
+    return NULL;
+  for (i = 0; i < PASS_PID_COUNT; i++)
+    map[i] = i;
+  return map;
+}
+
+static int
+pass_muxer_pid_state_init(pass_muxer_t *pm, uint16_t *map)
+{
+  int8_t *cc;
+  uint8_t *rewrite_cc;
+
+  cc = malloc(PASS_PID_COUNT);
+  rewrite_cc = calloc(PASS_PID_COUNT, sizeof(*rewrite_cc));
+  if (cc == NULL || rewrite_cc == NULL) {
+    free(cc);
+    free(rewrite_cc);
+    return -1;
+  }
+  memset(cc, -1, PASS_PID_COUNT);
+  pm->pm_pid_map = map;
+  pm->pm_pid_cc = cc;
+  pm->pm_pid_rewrite_cc = rewrite_cc;
+  return 0;
+}
+
+static int
+pass_muxer_best_component(const pass_muxer_t *pm,
+                          const streaming_start_component_t *new,
+                          const uint8_t *used)
+{
+  const streaming_start_component_t *old;
+  int best;
+  int best_score;
+  int i;
+  int score;
+
+  best = -1;
+  best_score = -1;
+  for (i = 0; i < pm->pm_ss->ss_num_components; i++) {
+    old = &pm->pm_ss->ss_components[i];
+    if (used[i] || !pass_muxer_stable_component(old))
+      continue;
+    score = pass_muxer_component_match(old, new);
+    if (score > best_score) {
+      best = i;
+      best_score = score;
+    }
+  }
+  return best;
+}
+
+static void
+pass_muxer_map_component(pass_muxer_t *pm, const streaming_start_t *ss,
+                         const streaming_start_component_t *new,
+                         uint16_t *map, uint8_t *used, uint8_t *claimed)
+{
+  const streaming_start_component_t *old;
+  int best;
+  uint16_t output_pid;
+
+  if (!pass_muxer_stable_component(new))
+    return;
+  best = pass_muxer_best_component(pm, new, used);
+  if (best < 0)
+    return;
+
+  old = &pm->pm_ss->ss_components[best];
+  output_pid = pass_muxer_map_pid(pm, old->es_pid);
+  if (output_pid >= PASS_PID_COUNT || claimed[output_pid] ||
+      pass_muxer_pid_conflict(ss, new, output_pid))
+    return;
+
+  used[best] = 1;
+  claimed[output_pid] = 1;
+  map[new->es_pid] = output_pid;
+  if (new->es_pid == output_pid)
+    return;
+
+  pm->pm_pid_active = 1;
+  pm->pm_pid_rewrite_cc[output_pid] = 1;
+  tvhdebug(LS_PASS, "%s: remap input PID %d (%s) to stable PID %d",
+           pm->pm_filename ?: "Pass muxer", new->es_pid,
+           streaming_component_type2txt(new->es_type), output_pid);
+}
+
 static void
 pass_muxer_update_pid_map(pass_muxer_t *pm, const streaming_start_t *ss)
 {
   uint16_t *map;
-  int8_t *cc;
-  uint8_t *rewrite_cc, *used, claimed[PASS_PID_COUNT] = { 0 };
-  const streaming_start_component_t *old, *new;
-  int best, best_score, i, j, score;
-  uint16_t output_pid;
+  uint8_t *used;
+  uint8_t claimed[PASS_PID_COUNT] = { 0 };
+  int i;
 
   if (!pm->pm_seekable || !pm->m_config.u.pass.m_rewrite_pmt)
     return;
 
-  map = malloc(sizeof(*map) * PASS_PID_COUNT);
+  map = pass_muxer_pid_map_create();
   if (map == NULL)
     return;
-  for (i = 0; i < PASS_PID_COUNT; i++)
-    map[i] = i;
 
   if (pm->pm_pid_map == NULL) {
-    cc = malloc(PASS_PID_COUNT);
-    rewrite_cc = calloc(PASS_PID_COUNT, sizeof(*rewrite_cc));
-    if (cc == NULL || rewrite_cc == NULL) {
+    if (pass_muxer_pid_state_init(pm, map))
       free(map);
-      free(cc);
-      free(rewrite_cc);
-      return;
-    }
-    memset(cc, -1, PASS_PID_COUNT);
-    pm->pm_pid_map = map;
-    pm->pm_pid_cc = cc;
-    pm->pm_pid_rewrite_cc = rewrite_cc;
     return;
   }
 
-  used = calloc(pm->pm_ss ? pm->pm_ss->ss_num_components : 0, sizeof(*used));
-  if (pm->pm_ss && used == NULL) {
+  if (pm->pm_ss == NULL) {
+    free(pm->pm_pid_map);
+    pm->pm_pid_map = map;
+    return;
+  }
+
+  used = calloc(pm->pm_ss->ss_num_components, sizeof(*used));
+  if (used == NULL) {
     free(map);
     return;
   }
-  if (pm->pm_ss) {
-    for (i = 0; i < ss->ss_num_components; i++) {
-      new = &ss->ss_components[i];
-      if (!pass_muxer_stable_component(new))
-        continue;
-
-      best = -1;
-      best_score = -1;
-      for (j = 0; j < pm->pm_ss->ss_num_components; j++) {
-        old = &pm->pm_ss->ss_components[j];
-        if (used[j] || !pass_muxer_stable_component(old))
-          continue;
-        score = pass_muxer_component_match(old, new);
-        if (score > best_score) {
-          best = j;
-          best_score = score;
-        }
-      }
-      if (best < 0)
-        continue;
-
-      old = &pm->pm_ss->ss_components[best];
-      output_pid = pass_muxer_map_pid(pm, old->es_pid);
-      if (output_pid >= PASS_PID_COUNT)
-        continue;
-      if (claimed[output_pid] || pass_muxer_pid_conflict(ss, new, output_pid))
-        continue;
-
-      used[best] = 1;
-      claimed[output_pid] = 1;
-      map[new->es_pid] = output_pid;
-      if (new->es_pid != output_pid) {
-        pm->pm_pid_active = 1;
-        pm->pm_pid_rewrite_cc[output_pid] = 1;
-        tvhdebug(LS_PASS, "%s: remap input PID %d (%s) to stable PID %d",
-                 pm->pm_filename ?: "Pass muxer", new->es_pid,
-                 streaming_component_type2txt(new->es_type), output_pid);
-      }
-    }
-  }
+  for (i = 0; i < ss->ss_num_components; i++)
+    pass_muxer_map_component(pm, ss, &ss->ss_components[i], map, used, claimed);
 
   free(used);
   free(pm->pm_pid_map);
@@ -235,7 +283,9 @@ static void
 pass_muxer_remap_ts(pass_muxer_t *pm, uint8_t *pkt, int len,
                     uint16_t output_pid)
 {
-  int adaptation_control, cc, left;
+  int adaptation_control;
+  int cc;
+  int left;
 
   for (left = len; left >= 188; pkt += 188, left -= 188) {
     adaptation_control = (pkt[3] >> 4) & 0x03;
@@ -810,99 +860,119 @@ pass_muxer_write(muxer_t *m, const void *data, size_t size)
 /**
  * Write TS packets to the file descriptor
  */
+static int
+pass_muxer_rewrite_enabled(const pass_muxer_t *pm)
+{
+  return pm->m_config.u.pass.m_rewrite_pat ||
+         pm->m_config.u.pass.m_rewrite_pmt ||
+         pm->pm_rewrite_sdt || pm->pm_rewrite_nit || pm->pm_rewrite_eit;
+}
+
+static uint8_t *
+pass_muxer_output_buffer(pass_muxer_t *pm, const uint8_t *src, size_t len)
+{
+  uint8_t *buf;
+
+  if (!pm->pm_pid_active)
+    return (uint8_t *)src;
+  if (pm->pm_pid_buf_size < len) {
+    buf = realloc(pm->pm_pid_buf, len);
+    if (buf == NULL) {
+      pm->pm_error = ENOMEM;
+      pm->m_errors++;
+      return NULL;
+    }
+    pm->pm_pid_buf = buf;
+    pm->pm_pid_buf_size = len;
+  }
+  memcpy(pm->pm_pid_buf, src, len);
+  return pm->pm_pid_buf;
+}
+
+static int
+pass_muxer_rewrite_pid(const pass_muxer_t *pm, int pid)
+{
+  return (pm->m_config.u.pass.m_rewrite_pat && pid == DVB_PAT_PID) ||
+         (pm->m_config.u.pass.m_rewrite_pmt && pid == pm->pm_pmt_pid) ||
+         (pm->pm_rewrite_sdt && pid == DVB_SDT_PID) ||
+         (pm->pm_rewrite_nit && pid == DVB_NIT_PID) ||
+         (pm->pm_rewrite_eit && pid == DVB_EIT_PID);
+}
+
+static void
+pass_muxer_parse_tables(pass_muxer_t *pm, const uint8_t *src, int len, int pid)
+{
+  if (pid == DVB_PAT_PID)
+    dvb_table_parse(&pm->pm_pat, "-", src, len, 1, 0, pass_muxer_pat_cb);
+  else if (pid == DVB_SDT_PID)
+    dvb_table_parse(&pm->pm_sdt, "-", src, len, 1, 0, pass_muxer_sdt_cb);
+  else if (pid == DVB_NIT_PID)
+    dvb_table_parse(&pm->pm_nit, "-", src, len, 1, 0, pass_muxer_nit_cb);
+  else if (pid == DVB_EIT_PID)
+    dvb_table_parse(&pm->pm_eit, "-", src, len, 1, 0, pass_muxer_eit_cb);
+
+  if (pid == pm->pm_pmt_pid)
+    dvb_table_parse(&pm->pm_pmt, "-", src, len, 1, 0, pass_muxer_pmt_cb);
+}
+
+static void
+pass_muxer_process_payload(pass_muxer_t *pm, const uint8_t *src,
+                           uint8_t *out, int len, int pid)
+{
+  uint16_t output_pid;
+
+  output_pid = pass_muxer_map_pid(pm, pid);
+  if (output_pid != pid ||
+      (pm->pm_pid_rewrite_cc && pm->pm_pid_rewrite_cc[output_pid]))
+    pass_muxer_remap_ts(pm, out, len, output_pid);
+  else
+    pass_muxer_track_cc(pm, src, len, output_pid);
+}
+
 static void
 pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-  int l, pid;
-  uint8_t *buf, *outb, *src = pktbuf_ptr(pb), *pkt = src;
-  size_t  len = pktbuf_len(pb), len2;
-  
-  /* Rewrite PAT/PMT in operation */
-  if (pm->m_config.u.pass.m_rewrite_pat || pm->m_config.u.pass.m_rewrite_pmt ||
-      pm->pm_rewrite_sdt || pm->pm_rewrite_nit || pm->pm_rewrite_eit) {
+  int len;
+  int pid;
+  uint8_t *out;
+  uint8_t *pkt;
+  const uint8_t *src;
+  size_t left;
+  size_t write_len;
 
-    if (pm->pm_pid_active) {
-      if (pm->pm_pid_buf_size < len) {
-        buf = realloc(pm->pm_pid_buf, len);
-        if (buf == NULL) {
-          pm->pm_error = ENOMEM;
-          pm->m_errors++;
-          return;
-        }
-        pm->pm_pid_buf = buf;
-        pm->pm_pid_buf_size = len;
-      }
-      memcpy(pm->pm_pid_buf, src, len);
-      pkt = pm->pm_pid_buf;
-    }
+  src = pktbuf_ptr(pb);
+  pkt = (uint8_t *)src;
+  write_len = pktbuf_len(pb);
+  if (pass_muxer_rewrite_enabled(pm)) {
+    pkt = pass_muxer_output_buffer(pm, src, write_len);
+    if (pkt == NULL)
+      return;
 
-    for (outb = pkt, len2 = pktbuf_len(pb), len = 0;
-         len2 > 0; src += l, outb += l, len2 -= l) {
-
+    out = pkt;
+    left = write_len;
+    write_len = 0;
+    while (left > 0) {
       pid = (src[1] & 0x1f) << 8 | src[2];
-      l = mpegts_word_count(src, len2, 0x001FFF00);
-
-      /* Process */
-      if ( (pm->m_config.u.pass.m_rewrite_pat && pid == DVB_PAT_PID) ||
-           (pm->m_config.u.pass.m_rewrite_pmt && pid == pm->pm_pmt_pid) ||
-           (pm->pm_rewrite_sdt && pid == DVB_SDT_PID) ||
-           (pm->pm_rewrite_nit && pid == DVB_NIT_PID) ||
-           (pm->pm_rewrite_eit && pid == DVB_EIT_PID) ) {
-
-        /* Flush */
-        if (len)
-          pass_muxer_write(m, pkt, len);
-
-        /* Store new start point (after these packets) */
-        pkt = outb + l;
-        len = 0;
-
-        /* PAT */
-        if (pid == DVB_PAT_PID) {
-
-          dvb_table_parse(&pm->pm_pat, "-", src, l, 1, 0, pass_muxer_pat_cb);
-
-        /* SDT */
-        } else if (pid == DVB_SDT_PID) {
-        
-          dvb_table_parse(&pm->pm_sdt, "-", src, l, 1, 0, pass_muxer_sdt_cb);
-
-        /* NIT */
-        } else if (pid == DVB_NIT_PID) {
-        
-          dvb_table_parse(&pm->pm_nit, "-", src, l, 1, 0, pass_muxer_nit_cb);
-
-        /* EIT */
-        } else if (pid == DVB_EIT_PID) {
-        
-          dvb_table_parse(&pm->pm_eit, "-", src, l, 1, 0, pass_muxer_eit_cb);
-        }
-		
-        /* PMT */
-        if (pid == pm->pm_pmt_pid) {
-
-          dvb_table_parse(&pm->pm_pmt, "-", src, l, 1, 0, pass_muxer_pmt_cb);
-
-        }
-
-      /* Record */
+      len = mpegts_word_count(src, left, 0x001FFF00);
+      if (pass_muxer_rewrite_pid(pm, pid)) {
+        if (write_len)
+          pass_muxer_write(m, pkt, write_len);
+        pkt = out + len;
+        write_len = 0;
+        pass_muxer_parse_tables(pm, src, len, pid);
       } else {
-        uint16_t output_pid = pass_muxer_map_pid(pm, pid);
-        if (output_pid != pid ||
-            (pm->pm_pid_rewrite_cc && pm->pm_pid_rewrite_cc[output_pid])) {
-          pass_muxer_remap_ts(pm, outb, l, output_pid);
-          len += l;
-        } else {
-          pass_muxer_track_cc(pm, src, l, output_pid);
-          len += l;
-        }
+        pass_muxer_process_payload(pm, src, out, len, pid);
+        write_len += len;
       }
+      src += len;
+      out += len;
+      left -= len;
     }
   }
 
-  if (len)
-    pass_muxer_write(m, pkt, len);
+  if (write_len)
+    pass_muxer_write(m, pkt, write_len);
 }
 
 
