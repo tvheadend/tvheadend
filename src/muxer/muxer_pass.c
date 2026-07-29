@@ -868,25 +868,25 @@ pass_muxer_rewrite_enabled(const pass_muxer_t *pm)
          pm->pm_rewrite_sdt || pm->pm_rewrite_nit || pm->pm_rewrite_eit;
 }
 
-static uint8_t *
+static int
 pass_muxer_output_buffer(pass_muxer_t *pm, const uint8_t *src, size_t len)
 {
   uint8_t *buf;
 
   if (!pm->pm_pid_active)
-    return (uint8_t *)src;
+    return 0;
   if (pm->pm_pid_buf_size < len) {
     buf = realloc(pm->pm_pid_buf, len);
     if (buf == NULL) {
       pm->pm_error = ENOMEM;
       pm->m_errors++;
-      return NULL;
+      return -1;
     }
     pm->pm_pid_buf = buf;
     pm->pm_pid_buf_size = len;
   }
   memcpy(pm->pm_pid_buf, src, len);
-  return pm->pm_pid_buf;
+  return 0;
 }
 
 static int
@@ -916,15 +916,24 @@ pass_muxer_parse_tables(pass_muxer_t *pm, const uint8_t *src, int len, int pid)
 }
 
 static void
-pass_muxer_process_payload(pass_muxer_t *pm, const uint8_t *src,
-                           uint8_t *out, int len, int pid)
+pass_muxer_flush_table(muxer_t *m, pass_muxer_t *pm, const uint8_t *pkt,
+                       size_t write_len, const uint8_t *src, int len, int pid)
+{
+  if (write_len)
+    pass_muxer_write(m, pkt, write_len);
+  pass_muxer_parse_tables(pm, src, len, pid);
+}
+
+static void
+pass_muxer_process_payload(pass_muxer_t *pm, const uint8_t *src, size_t offset,
+                           int len, int pid)
 {
   uint16_t output_pid;
 
   output_pid = pass_muxer_map_pid(pm, pid);
   if (output_pid != pid ||
       (pm->pm_pid_rewrite_cc && pm->pm_pid_rewrite_cc[output_pid]))
-    pass_muxer_remap_ts(pm, out, len, output_pid);
+    pass_muxer_remap_ts(pm, pm->pm_pid_buf + offset, len, output_pid);
   else
     pass_muxer_track_cc(pm, src, len, output_pid);
 }
@@ -935,38 +944,39 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int len;
   int pid;
-  uint8_t *out;
-  uint8_t *pkt;
+  const uint8_t *out;
+  const uint8_t *pkt;
   const uint8_t *src;
   size_t left;
+  size_t offset;
   size_t write_len;
 
   src = pktbuf_ptr(pb);
-  pkt = (uint8_t *)src;
+  pkt = src;
   write_len = pktbuf_len(pb);
   if (pass_muxer_rewrite_enabled(pm)) {
-    pkt = pass_muxer_output_buffer(pm, src, write_len);
-    if (pkt == NULL)
+    if (pass_muxer_output_buffer(pm, src, write_len))
       return;
 
-    out = pkt;
+    out = pm->pm_pid_active ? pm->pm_pid_buf : src;
+    pkt = out;
     left = write_len;
+    offset = 0;
     write_len = 0;
     while (left > 0) {
       pid = (src[1] & 0x1f) << 8 | src[2];
       len = mpegts_word_count(src, left, 0x001FFF00);
       if (pass_muxer_rewrite_pid(pm, pid)) {
-        if (write_len)
-          pass_muxer_write(m, pkt, write_len);
+        pass_muxer_flush_table(m, pm, pkt, write_len, src, len, pid);
         pkt = out + len;
         write_len = 0;
-        pass_muxer_parse_tables(pm, src, len, pid);
       } else {
-        pass_muxer_process_payload(pm, src, out, len, pid);
+        pass_muxer_process_payload(pm, src, offset, len, pid);
         write_len += len;
       }
       src += len;
       out += len;
+      offset += len;
       left -= len;
     }
   }
