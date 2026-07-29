@@ -30,6 +30,8 @@
 #include "muxer_pass.h"
 #include "spawn.h"
 
+#define PASS_PID_COUNT 8192
+
 typedef struct pass_muxer {
   muxer_t;
 
@@ -46,6 +48,12 @@ typedef struct pass_muxer {
 
   /* Streaming components */
   streaming_start_t *pm_ss;
+  uint16_t          *pm_pid_map;
+  int8_t            *pm_pid_cc;
+  uint8_t           *pm_pid_rewrite_cc;
+  uint8_t           *pm_pid_buf;
+  size_t             pm_pid_buf_size;
+  uint8_t            pm_pid_active;
 
   /* TS muxing */
   uint8_t  pm_rewrite_sdt;
@@ -71,6 +79,179 @@ typedef struct pass_muxer {
 
 static void
 pass_muxer_write(muxer_t *m, const void *data, size_t size);
+
+static uint16_t
+pass_muxer_map_pid(pass_muxer_t *pm, uint16_t pid)
+{
+  if (pm->pm_pid_map == NULL || pid >= PASS_PID_COUNT)
+    return pid;
+  return pm->pm_pid_map[pid];
+}
+
+static int
+pass_muxer_component_match(const streaming_start_component_t *old,
+                           const streaming_start_component_t *new)
+{
+  int score;
+
+  if (old->es_type != new->es_type)
+    return -1;
+
+  score = old->es_index == new->es_index ? 8 : 0;
+  if (!memcmp(old->es_lang, new->es_lang, sizeof(old->es_lang)))
+    score += 4;
+  if (old->es_audio_type == new->es_audio_type)
+    score += 2;
+  if (old->es_parent_pid == new->es_parent_pid)
+    score++;
+  return score;
+}
+
+static int
+pass_muxer_stable_component(const streaming_start_component_t *ssc)
+{
+  return ssc->es_pid >= 0 && ssc->es_pid < PASS_PID_COUNT &&
+         (SCT_ISAV(ssc->es_type) || ssc->es_type == SCT_TELETEXT ||
+          ssc->es_type == SCT_DVBSUB);
+}
+
+static int
+pass_muxer_pid_conflict(const streaming_start_t *ss,
+                        const streaming_start_component_t *ssc,
+                        uint16_t output_pid)
+{
+  int i;
+
+  if (output_pid == ssc->es_pid)
+    return 0;
+  if (output_pid == DVB_PAT_PID || output_pid == ss->ss_pmt_pid)
+    return 1;
+  for (i = 0; i < ss->ss_num_components; i++)
+    if (&ss->ss_components[i] != ssc &&
+        ss->ss_components[i].es_pid == output_pid)
+      return 1;
+  return 0;
+}
+
+static void
+pass_muxer_update_pid_map(pass_muxer_t *pm, const streaming_start_t *ss)
+{
+  uint16_t *map;
+  int8_t *cc;
+  uint8_t *rewrite_cc, *used, claimed[PASS_PID_COUNT] = { 0 };
+  const streaming_start_component_t *old, *new;
+  int best, best_score, i, j, score;
+  uint16_t output_pid;
+
+  if (!pm->pm_seekable || !pm->m_config.u.pass.m_rewrite_pmt)
+    return;
+
+  map = malloc(sizeof(*map) * PASS_PID_COUNT);
+  if (map == NULL)
+    return;
+  for (i = 0; i < PASS_PID_COUNT; i++)
+    map[i] = i;
+
+  if (pm->pm_pid_map == NULL) {
+    cc = malloc(PASS_PID_COUNT);
+    rewrite_cc = calloc(PASS_PID_COUNT, sizeof(*rewrite_cc));
+    if (cc == NULL || rewrite_cc == NULL) {
+      free(map);
+      free(cc);
+      free(rewrite_cc);
+      return;
+    }
+    memset(cc, -1, PASS_PID_COUNT);
+    pm->pm_pid_map = map;
+    pm->pm_pid_cc = cc;
+    pm->pm_pid_rewrite_cc = rewrite_cc;
+    return;
+  }
+
+  used = calloc(pm->pm_ss ? pm->pm_ss->ss_num_components : 0, sizeof(*used));
+  if (pm->pm_ss && used == NULL) {
+    free(map);
+    return;
+  }
+  if (pm->pm_ss) {
+    for (i = 0; i < ss->ss_num_components; i++) {
+      new = &ss->ss_components[i];
+      if (!pass_muxer_stable_component(new))
+        continue;
+
+      best = -1;
+      best_score = -1;
+      for (j = 0; j < pm->pm_ss->ss_num_components; j++) {
+        old = &pm->pm_ss->ss_components[j];
+        if (used[j] || !pass_muxer_stable_component(old))
+          continue;
+        score = pass_muxer_component_match(old, new);
+        if (score > best_score) {
+          best = j;
+          best_score = score;
+        }
+      }
+      if (best < 0)
+        continue;
+
+      old = &pm->pm_ss->ss_components[best];
+      output_pid = pass_muxer_map_pid(pm, old->es_pid);
+      if (output_pid >= PASS_PID_COUNT)
+        continue;
+      if (claimed[output_pid] || pass_muxer_pid_conflict(ss, new, output_pid))
+        continue;
+
+      used[best] = 1;
+      claimed[output_pid] = 1;
+      map[new->es_pid] = output_pid;
+      if (new->es_pid != output_pid) {
+        pm->pm_pid_active = 1;
+        pm->pm_pid_rewrite_cc[output_pid] = 1;
+        tvhdebug(LS_PASS, "%s: remap input PID %d (%s) to stable PID %d",
+                 pm->pm_filename ?: "Pass muxer", new->es_pid,
+                 streaming_component_type2txt(new->es_type), output_pid);
+      }
+    }
+  }
+
+  free(used);
+  free(pm->pm_pid_map);
+  pm->pm_pid_map = map;
+}
+
+static void
+pass_muxer_track_cc(pass_muxer_t *pm, const uint8_t *tsb, int len, uint16_t pid)
+{
+  if (pm->pm_pid_cc == NULL || pid >= PASS_PID_COUNT)
+    return;
+  while (len >= 188) {
+    pm->pm_pid_cc[pid] = tsb[3] & 0x0f;
+    tsb += 188;
+    len -= 188;
+  }
+}
+
+static void
+pass_muxer_remap_ts(pass_muxer_t *pm, uint8_t *pkt, int len,
+                    uint16_t output_pid)
+{
+  int adaptation_control, cc, left;
+
+  for (left = len; left >= 188; pkt += 188, left -= 188) {
+    adaptation_control = (pkt[3] >> 4) & 0x03;
+    cc = pkt[3] & 0x0f;
+    if (pm->pm_pid_cc && pm->pm_pid_cc[output_pid] >= 0) {
+      cc = pm->pm_pid_cc[output_pid];
+      if (adaptation_control == 1 || adaptation_control == 3)
+        cc = (cc + 1) & 0x0f;
+      pkt[3] = (pkt[3] & 0xf0) | cc;
+    }
+    pkt[1] = (pkt[1] & 0xe0) | (output_pid >> 8);
+    pkt[2] = output_pid & 0xff;
+    if (pm->pm_pid_cc)
+      pm->pm_pid_cc[output_pid] = cc;
+  }
+}
 
 /*
  * Rewrite a PAT packet to only include the service included in the transport stream.
@@ -137,6 +318,10 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   out[ol + 0] = pm->pm_dst_sid >> 8;
   out[ol + 1] = pm->pm_dst_sid & 0xff;
   memcpy(out + ol + 2, buf + 2, 7);
+  pid = (buf[5] & 0x1f) << 8 | buf[6];
+  pid = pass_muxer_map_pid(pm, pid);
+  out[ol + 5] = (out[ol + 5] & 0xe0) | (pid >> 8);
+  out[ol + 6] = pid & 0xff;
 
   ol  += 9;     /* skip common descriptors */
   buf += 9 + l;
@@ -165,6 +350,9 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     }
     if (i < pm->pm_ss->ss_num_components) {
       memcpy(out + ol, buf, 5 + l);
+      pid = pass_muxer_map_pid(pm, pid);
+      out[ol + 1] = (out[ol + 1] & 0xe0) | (pid >> 8);
+      out[ol + 2] = pid & 0xff;
       ol += 5 + l;
     }
 
@@ -450,6 +638,8 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_rewrite_nit = !!pm->m_config.u.pass.m_rewrite_nit;
   pm->pm_rewrite_eit = !!pm->m_config.u.pass.m_rewrite_eit;
 
+  pass_muxer_update_pid_map(pm, ss);
+
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
     if (!SCT_ISVIDEO(ssc->es_type) && !SCT_ISAUDIO(ssc->es_type))
@@ -625,18 +815,33 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int l, pid;
-  uint8_t *tsb, *pkt = pktbuf_ptr(pb);
+  uint8_t *buf, *outb, *src = pktbuf_ptr(pb), *pkt = src;
   size_t  len = pktbuf_len(pb), len2;
   
   /* Rewrite PAT/PMT in operation */
   if (pm->m_config.u.pass.m_rewrite_pat || pm->m_config.u.pass.m_rewrite_pmt ||
       pm->pm_rewrite_sdt || pm->pm_rewrite_nit || pm->pm_rewrite_eit) {
 
-    for (tsb = pktbuf_ptr(pb), len2 = pktbuf_len(pb), len = 0;
-         len2 > 0; tsb += l, len2 -= l) {
+    if (pm->pm_pid_active) {
+      if (pm->pm_pid_buf_size < len) {
+        buf = realloc(pm->pm_pid_buf, len);
+        if (buf == NULL) {
+          pm->pm_error = ENOMEM;
+          pm->m_errors++;
+          return;
+        }
+        pm->pm_pid_buf = buf;
+        pm->pm_pid_buf_size = len;
+      }
+      memcpy(pm->pm_pid_buf, src, len);
+      pkt = pm->pm_pid_buf;
+    }
 
-      pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-      l = mpegts_word_count(tsb, len2, 0x001FFF00);
+    for (outb = pkt, len2 = pktbuf_len(pb), len = 0;
+         len2 > 0; src += l, outb += l, len2 -= l) {
+
+      pid = (src[1] & 0x1f) << 8 | src[2];
+      l = mpegts_word_count(src, len2, 0x001FFF00);
 
       /* Process */
       if ( (pm->m_config.u.pass.m_rewrite_pat && pid == DVB_PAT_PID) ||
@@ -650,40 +855,48 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
           pass_muxer_write(m, pkt, len);
 
         /* Store new start point (after these packets) */
-        pkt = tsb + l;
+        pkt = outb + l;
         len = 0;
 
         /* PAT */
         if (pid == DVB_PAT_PID) {
 
-          dvb_table_parse(&pm->pm_pat, "-", tsb, l, 1, 0, pass_muxer_pat_cb);
+          dvb_table_parse(&pm->pm_pat, "-", src, l, 1, 0, pass_muxer_pat_cb);
 
         /* SDT */
         } else if (pid == DVB_SDT_PID) {
         
-          dvb_table_parse(&pm->pm_sdt, "-", tsb, l, 1, 0, pass_muxer_sdt_cb);
+          dvb_table_parse(&pm->pm_sdt, "-", src, l, 1, 0, pass_muxer_sdt_cb);
 
         /* NIT */
         } else if (pid == DVB_NIT_PID) {
         
-          dvb_table_parse(&pm->pm_nit, "-", tsb, l, 1, 0, pass_muxer_nit_cb);
+          dvb_table_parse(&pm->pm_nit, "-", src, l, 1, 0, pass_muxer_nit_cb);
 
         /* EIT */
         } else if (pid == DVB_EIT_PID) {
         
-          dvb_table_parse(&pm->pm_eit, "-", tsb, l, 1, 0, pass_muxer_eit_cb);
+          dvb_table_parse(&pm->pm_eit, "-", src, l, 1, 0, pass_muxer_eit_cb);
         }
 		
         /* PMT */
         if (pid == pm->pm_pmt_pid) {
 
-          dvb_table_parse(&pm->pm_pmt, "-", tsb, l, 1, 0, pass_muxer_pmt_cb);
+          dvb_table_parse(&pm->pm_pmt, "-", src, l, 1, 0, pass_muxer_pmt_cb);
 
         }
 
       /* Record */
       } else {
-        len += l;
+        uint16_t output_pid = pass_muxer_map_pid(pm, pid);
+        if (output_pid != pid ||
+            (pm->pm_pid_rewrite_cc && pm->pm_pid_rewrite_cc[output_pid])) {
+          pass_muxer_remap_ts(pm, outb, l, output_pid);
+          len += l;
+        } else {
+          pass_muxer_track_cc(pm, src, l, output_pid);
+          len += l;
+        }
       }
     }
   }
@@ -765,6 +978,11 @@ pass_muxer_destroy(muxer_t *m)
 
   if (pm->pm_ss)
     streaming_start_unref(pm->pm_ss);
+
+  free(pm->pm_pid_map);
+  free(pm->pm_pid_cc);
+  free(pm->pm_pid_rewrite_cc);
+  free(pm->pm_pid_buf);
 
   dvb_table_parse_done(&pm->pm_pat);
   dvb_table_parse_done(&pm->pm_pmt);
