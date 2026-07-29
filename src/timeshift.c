@@ -41,6 +41,18 @@ struct timeshift_conf timeshift_conf;
 memoryinfo_t timeshift_memoryinfo = { .my_name = "Timeshift" };
 memoryinfo_t timeshift_memoryinfo_ram = { .my_name = "Timeshift RAM buffer" };
 
+void
+timeshift_play_start_set(timeshift_t *ts, streaming_start_t *ss)
+{
+  if (ss == ts->smt_play)
+    return;
+  if (ss)
+    streaming_start_ref(ss);
+  if (ts->smt_play)
+    streaming_start_unref(ts->smt_play);
+  ts->smt_play = ss;
+}
+
 /*
  * Packet log
  */
@@ -439,6 +451,8 @@ timeshift_destroy(streaming_target_t *pad)
 
   if (ts->smt_start)
     streaming_start_unref(ts->smt_start);
+  if (ts->smt_play)
+    streaming_start_unref(ts->smt_play);
 
   if (ts->path)
     free(ts->path);

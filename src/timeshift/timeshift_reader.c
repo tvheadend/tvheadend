@@ -252,6 +252,33 @@ static ssize_t _read_msg ( timeshift_file_t *tsf, int fd, streaming_message_t **
   return cnt;
 }
 
+static streaming_message_t *
+_timeshift_find_sstart(timeshift_file_t *tsf, off_t pos)
+{
+  timeshift_index_data_t *ti;
+
+  ti = TAILQ_LAST(&tsf->sstart, timeshift_index_data_list);
+  while (ti && ti->pos > pos)
+    ti = TAILQ_PREV(ti, timeshift_index_data_list, link);
+
+  return ti ? ti->data : NULL;
+}
+
+static void
+_timeshift_apply_sstart(timeshift_t *ts, timeshift_file_t *tsf, off_t pos)
+{
+  streaming_message_t *sm = _timeshift_find_sstart(tsf, pos);
+  streaming_start_t *ss;
+
+  if (sm == NULL || (ss = sm->sm_data) == ts->smt_play)
+    return;
+
+  tvhdebug(LS_TIMESHIFT, "ts %d replay stream start at buffer position %" PRId64,
+           ts->id, (int64_t)pos);
+  streaming_target_deliver2(ts->output, streaming_msg_clone(sm));
+  timeshift_play_start_set(ts, ss);
+}
+
 /* **************************************************************************
  * Utilities
  * *************************************************************************/
@@ -411,11 +438,12 @@ static int _timeshift_read
 {
   timeshift_file_t *tsf = seek->file;
   ssize_t r;
-  off_t off = 0;
+  off_t off;
 
   *sm = NULL;
 
   if (tsf) {
+    off = tsf->roff;
 
     /* Open file */
     if (tsf->rfd < 0 && !tsf->ram) {
@@ -440,6 +468,9 @@ static int _timeshift_read
     }
     tvhtrace(LS_TIMESHIFT, "ts %d seek to %jd (fd %i) read msg %p/%"PRId64" (%"PRId64")",
              ts->id, (intmax_t)off, tsf->rfd, *sm, *sm ? (*sm)->sm_time : -1, (int64_t)r);
+
+    if (*sm)
+      _timeshift_apply_sstart(ts, tsf, off);
 
     /* Special case - EOF */
     if (r <= sizeof(size_t) || tsf->roff > tsf->size || *sm == NULL) {

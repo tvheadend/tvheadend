@@ -136,6 +136,7 @@ typedef struct timeshift {
   uint8_t                         audio_packet_counter; ///< Counter for audio packets in audio-only streams
 
   streaming_start_t          *smt_start;  ///< Streaming start info
+  streaming_start_t          *smt_play;   ///< Stream info currently sent to the client
 
 } timeshift_t;
 
@@ -173,6 +174,7 @@ ssize_t timeshift_write_eof     ( timeshift_file_t *tsf );
  */
 void *timeshift_reader ( void *p );
 void *timeshift_writer ( void *p );
+void timeshift_play_start_set ( timeshift_t *ts, streaming_start_t *ss );
 
 /*
  * File management
