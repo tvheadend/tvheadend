@@ -21,6 +21,12 @@
  *                    start time is close enough for sorting purposes
  *                    and is what the grid endpoint returns directly.)
  *   - `sched_status` "scheduled" / "recording" / etc. Plain string.
+ *
+ * `duplicates: 0` mirrors the ExtJS grid (`dvr.js:508`): the server
+ * includes dedup-skipped reruns by default (`api_dvr.c`), and without
+ * the param they'd show as ordinary "Scheduled" rows although they
+ * will not record. The EPG event drawer explains the skip for such
+ * entries (its "rerun of" note), matching the classic details dialog.
  *   - `pri`          priority enum (server renders to a localized
  *                    string in the `pri` field for the grid view).
  *
@@ -449,6 +455,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     help-page="class/dvrentry"
     :columns="cols"
     store-key="dvr-upcoming"
+    :extra-params="{ duplicates: 0 }"
     :default-sort="{ key: 'start_real', dir: 'ASC' }"
     :virtual-scroller-options="{ itemSize: 36, lazy: false }"
     count-label="recordings"

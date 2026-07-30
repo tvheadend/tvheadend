@@ -224,16 +224,47 @@ const selectedConfigUuid = ref<string>('')
 const relatedVisible = ref(false)
 const relatedMode = ref<EpgRelatedMode>('related')
 
+/* Epoch of the broadcast this event's DVR entry is a rerun of, when
+ * the dedup logic will skip it — null otherwise. The grid row's
+ * `dvrState` cannot carry this (a skipped rerun is still plain
+ * "scheduled", `dvr_db.c:704`), so it's read from the DVR entry's
+ * read-only `duplicate` property ("Rerun of", `dvr_db.c`) via a
+ * targeted `idnode/load` when the drawer opens on a scheduled entry.
+ * Drives the "Will be skipped" note — the Vue counterpart of the
+ * classic DVR details dialog's red rerun warning (`dvr.js:71`). */
+const duplicateOf = ref<number | null>(null)
+
+async function loadDuplicateOf(dvrUuid: string): Promise<void> {
+  try {
+    /* idnode/load nests property values in `params: [{id, value}]`. */
+    const resp = await apiCall<{
+      entries?: { params?: { id: string; value?: unknown }[] }[]
+    }>('idnode/load', { uuid: dvrUuid })
+    /* Ignore a stale response if the drawer moved on meanwhile. */
+    if (props.event?.dvrUuid !== dvrUuid) return
+    const v = resp.entries?.[0]?.params?.find((p) => p.id === 'duplicate')?.value
+    duplicateOf.value = typeof v === 'number' && v > 0 ? v : null
+  } catch {
+    /* Non-fatal — the note just doesn't render. */
+  }
+}
+
 watch(
   () => props.event,
   (ev) => {
     selectedConfigUuid.value = ''
     /* A re-targeted drawer closes any open showings dialog. */
     relatedVisible.value = false
+    duplicateOf.value = null
     if (!ev) return
     /* Genre code → localised label resolution; idempotent fetch. */
     contentTypes.ensure()
     if (!access.data?.dvr) return
+    /* Skipped-rerun check — only meaningful while merely scheduled
+     * (a recording/completed entry evidently wasn't skipped). */
+    if (ev.dvrUuid && ev.dvrState?.startsWith('scheduled')) {
+      void loadDuplicateOf(ev.dvrUuid)
+    }
     dvrConfig.ensure().then(() => {
       /* Land on the first entry — the auto-created default config
        * (title "(Default profile)" sorts first via the leading paren).
@@ -867,6 +898,17 @@ const flags = computed(() => {
         class="epg-event-drawer__actions"
       />
       <!--
+        Dedup-skip warning — this entry is scheduled but the
+        duplicate-detection will skip it as a rerun. Mirrors the
+        classic details dialog's red note; msgids reused from it so
+        existing translations apply.
+      -->
+      <p v-if="duplicateOf !== null" class="epg-event-drawer__skip-note">
+        {{ t('Will be skipped') }}
+        {{ t('because it is a rerun of:') }}
+        {{ fmtDate(duplicateOf) }}
+      </p>
+      <!--
         Channel identity strip — sits above the field groups,
         outside the .ifld grid because the 40 px logo wouldn't align
         cleanly with the 1-line text rows.
@@ -1176,6 +1218,20 @@ const flags = computed(() => {
  */
 .epg-event-drawer__actions {
   flex: 0 0 auto !important;
+}
+
+/* Dedup-skip warning — scheduled entry the duplicate detection will
+ * skip. Warning tint (not error red): nothing failed, the entry just
+ * won't fire. */
+.epg-event-drawer__skip-note {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: var(--tvh-space-2) var(--tvh-space-3);
+  border: 1px solid var(--tvh-warning);
+  border-radius: var(--tvh-radius-sm);
+  background: color-mix(in srgb, var(--tvh-warning) 12%, transparent);
+  color: var(--tvh-text);
+  font-size: var(--tvh-text-md);
 }
 
 /* Channel identity strip. */
