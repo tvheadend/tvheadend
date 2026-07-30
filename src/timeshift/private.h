@@ -102,7 +102,8 @@ typedef struct timeshift {
   int                         packet_mode;///< Packet mode (otherwise MPEG-TS data mode)
   int                         dobuf;      ///< Buffer packets (store)
   int64_t                     last_wr_time;///< Last write time in us (PTS conversion)
-  int64_t                     start_pts;  ///< Start time for packets (PTS)
+  int64_t                     start_pts;  ///< PTS offset after source reconfiguration
+  uint8_t                     pts_rebase_pending; ///< Check next packet for PTS reset
   int64_t                     ref_time;   ///< Start time in us (monoclock)
   int64_t                     buf_time;   ///< Last buffered time in us (PTS conversion)
   int                         backlog_max;///< Maximum component index in backlog
@@ -136,6 +137,7 @@ typedef struct timeshift {
   uint8_t                         audio_packet_counter; ///< Counter for audio packets in audio-only streams
 
   streaming_start_t          *smt_start;  ///< Streaming start info
+  streaming_start_t          *smt_play;   ///< Stream info currently sent to the client
 
 } timeshift_t;
 
@@ -173,6 +175,7 @@ ssize_t timeshift_write_eof     ( timeshift_file_t *tsf );
  */
 void *timeshift_reader ( void *p );
 void *timeshift_writer ( void *p );
+void timeshift_play_start_set ( timeshift_t *ts, streaming_start_t *ss );
 
 /*
  * File management
