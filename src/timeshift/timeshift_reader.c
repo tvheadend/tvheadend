@@ -252,6 +252,70 @@ static ssize_t _read_msg ( timeshift_file_t *tsf, int fd, streaming_message_t **
   return cnt;
 }
 
+static streaming_message_t *
+_timeshift_find_sstart(timeshift_file_t *tsf, off_t pos)
+{
+  timeshift_index_data_t *ti;
+
+  ti = TAILQ_LAST(&tsf->sstart, timeshift_index_data_list);
+  while (ti && ti->pos > pos)
+    ti = TAILQ_PREV(ti, timeshift_index_data_list, link);
+
+  return ti ? ti->data : NULL;
+}
+
+static int
+_timeshift_sstart_layout_differs(const streaming_start_t *a,
+                                 const streaming_start_t *b)
+{
+  int i;
+
+  if (a == b)
+    return 0;
+  if (a == NULL || b == NULL)
+    return 1;
+  if (a->ss_service_id != b->ss_service_id ||
+      a->ss_pmt_pid != b->ss_pmt_pid ||
+      a->ss_pcr_pid != b->ss_pcr_pid ||
+      a->ss_num_components != b->ss_num_components)
+    return 1;
+
+  for (i = 0; i < a->ss_num_components; i++)
+    if (a->ss_components[i].es_index != b->ss_components[i].es_index ||
+        a->ss_components[i].es_type != b->ss_components[i].es_type)
+      return 1;
+
+  return 0;
+}
+
+static void
+_timeshift_apply_sstart(timeshift_t *ts, timeshift_file_t *tsf, off_t pos)
+{
+  streaming_message_t *sm = _timeshift_find_sstart(tsf, pos);
+  streaming_start_t *ss;
+  int reconfigured;
+
+  if (sm == NULL || sm->sm_data == NULL)
+    return;
+
+  ss = sm->sm_data;
+  if (ss == ts->smt_play)
+    return;
+
+  reconfigured =
+    ts->smt_play && _timeshift_sstart_layout_differs(ts->smt_play, ss);
+  tvhdebug(LS_TIMESHIFT,
+           "ts %d replay stream start at buffer position %"PRId64
+           " (source reconfigured: %d)",
+           ts->id, (int64_t)pos, reconfigured);
+
+  if (reconfigured)
+    streaming_target_deliver2(ts->output, streaming_msg_create_code(
+      SMT_STOP, SM_CODE_SOURCE_RECONFIGURED));
+  streaming_target_deliver2(ts->output, streaming_msg_clone(sm));
+  timeshift_play_start_set(ts, ss);
+}
+
 /* **************************************************************************
  * Utilities
  * *************************************************************************/
@@ -407,15 +471,16 @@ static int _timeshift_do_skip
  */
 static int _timeshift_read
   ( timeshift_t *ts, timeshift_seek_t *seek,
-    streaming_message_t **sm, int *wait )
+    streaming_message_t **sm, int *wait, int apply_sstart )
 {
   timeshift_file_t *tsf = seek->file;
   ssize_t r;
-  off_t off = 0;
+  off_t off;
 
   *sm = NULL;
 
   if (tsf) {
+    off = tsf->roff;
 
     /* Open file */
     if (tsf->rfd < 0 && !tsf->ram) {
@@ -441,6 +506,9 @@ static int _timeshift_read
     tvhtrace(LS_TIMESHIFT, "ts %d seek to %jd (fd %i) read msg %p/%"PRId64" (%"PRId64")",
              ts->id, (intmax_t)off, tsf->rfd, *sm, *sm ? (*sm)->sm_time : -1, (int64_t)r);
 
+    if (*sm && apply_sstart)
+      _timeshift_apply_sstart(ts, tsf, off);
+
     /* Special case - EOF */
     if (r <= sizeof(size_t) || tsf->roff > tsf->size || *sm == NULL) {
       timeshift_file_get(seek->file); /* _read_close decreases file reference */
@@ -463,7 +531,7 @@ static int _timeshift_flush_to_live
   streaming_message_t *sm;
 
   while (seek->file) {
-    if (_timeshift_read(ts, seek, &sm, wait) == -1)
+    if (_timeshift_read(ts, seek, &sm, wait, 1) == -1)
       return -1;
     if (!sm) break;
     timeshift_packet_log("ouf", ts, sm);
@@ -535,6 +603,7 @@ void *timeshift_reader ( void *p )
   int64_t mono_now, mono_play_time = 0, mono_last_status = 0;
   int64_t deliver, deliver0, pause_time = 0, last_time = 0, skip_time = 0;
   int64_t i64;
+  off_t read_pos = 0;
   streaming_message_t *sm = NULL, *ctrl = NULL;
   streaming_skip_t *skip = NULL;
   tvhpoll_t *pd;
@@ -806,7 +875,8 @@ void *timeshift_reader ( void *p )
       }
 
       /* Find packet */
-      if (_timeshift_read(ts, seek, &sm, &wait) == -1) {
+      read_pos = seek->file ? seek->file->roff : 0;
+      if (_timeshift_read(ts, seek, &sm, &wait, !skip) == -1) {
         tvh_mutex_unlock(&ts->state_mutex);
         break;
       }
@@ -829,6 +899,10 @@ void *timeshift_reader ( void *p )
         tvhdebug(LS_TIMESHIFT, "ts %d skip failed (%d)", ts->id, sm ? sm->sm_type : -1);
       }
       streaming_target_deliver2(ts->output, ctrl);
+
+      /* The skip handler flushes queued output before acknowledging a seek. */
+      if (skip && sm && seek->file)
+        _timeshift_apply_sstart(ts, seek->file, read_pos);
     } else {
       streaming_msg_free(ctrl);
     }

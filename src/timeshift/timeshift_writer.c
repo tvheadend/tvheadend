@@ -381,13 +381,15 @@ static void _process_msg
       tvh_mutex_lock(&ts->state_mutex);
       if (!teletext) /* do not use time from teletext packets */
         ts->buf_time = sm->sm_time;
+      if (sm->sm_type == SMT_START)
+        _update_smt_start(ts, (streaming_start_t *)sm->sm_data);
       if (ts->state == TS_LIVE) {
+        if (sm->sm_type == SMT_START)
+          timeshift_play_start_set(ts, (streaming_start_t *)sm->sm_data);
         streaming_target_deliver2(ts->output, streaming_msg_clone(sm));
         if (sm->sm_type == SMT_PACKET)
           timeshift_packet_log("liv", ts, sm);
       }
-      if (sm->sm_type == SMT_START)
-        _update_smt_start(ts, (streaming_start_t *)sm->sm_data);
       /* do buffering, but without teletext packets */
       if (ts->dobuf && !teletext) {
         if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) != NULL) {
