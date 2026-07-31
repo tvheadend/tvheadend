@@ -452,6 +452,16 @@ export const AUTOREC_FIELDS = {
     phoneOrder: 99,
     width: 220,
   },
+  /* Raw JSONC of a smart rule — hidden by default (it's a code
+   * blob, edited in the drawer's expression editor); surfacing it
+   * as a toggleable column lets users spot which rules are smart. */
+  expression: {
+    sortable: false,
+    filterType: 'string',
+    minVisible: 'desktop',
+    hiddenByDefault: true,
+    width: 240,
+  },
   fulltext: {
     sortable: true,
     filterType: 'boolean',

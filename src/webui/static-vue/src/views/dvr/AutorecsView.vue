@@ -12,6 +12,12 @@
  * idnode class — `dvrautorec` (`src/dvr/dvr_autorec.c`). Endpoint is
  * `dvr/autorec/grid`; create endpoint `dvr/autorec`.
  *
+ * This is the FLAT half of the split navigation: the
+ * server-side grid returns only rules without an expression, and the
+ * editor carries only the classic flat fields. Expression-bearing
+ * rules live in the sibling SmartAutorecsView (`grid_smart`); the
+ * Convert action is the one-way door between the two.
+ *
  * Toolbar is the framework default — Add / Edit / Delete with no
  * custom buttons. ExtJS `dvr.js:1100-1112` doesn't define a `tbar:`
  * or `selected:` callback for autorec, so the framework's standard
@@ -29,12 +35,20 @@ import ActionMenu from '@/components/ActionMenu.vue'
 import IdnodeEditor from '@/components/IdnodeEditor.vue'
 import StartWindowRangePicker from '@/components/idnode-fields/StartWindowRangePicker.vue'
 import type { ColumnDef } from '@/types/column'
+import type { BaseRow } from '@/types/grid'
+import type { ActionDef } from '@/types/action'
+import { apiCall } from '@/api/client'
+import { apiErrorMessage } from '@/utils/apiErrorMessage'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { useErrorDialog } from '@/composables/useErrorDialog'
 import { useDvrRulesView } from '@/composables/useDvrRulesView'
 import { AUTOREC_FIELDS } from './dvrFieldDefs'
 import { adminAwareEditList } from './dvrToolbarHelpers'
 import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()
+const confirmDialog = useConfirmDialog()
+const errorDialog = useErrorDialog()
 
 /* Combined time-window picker for the (start, start_window) field
  * pair — see StartWindowRangePicker.vue. Listed once in the editor's
@@ -104,10 +118,10 @@ const cols: ColumnDef[] = [
  * in both <base> and the trailing extras in ExtJS, but the server
  * treats duplicates as one. */
 const EDITOR_LIST_BASE =
-  'name,title,fulltext,mergetext,channel,start,start_window,weekdays,' +
-  'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,' +
-  'minyear,maxyear,minseason,maxseason,star_rating,directory,config_name,' +
-  'pri,serieslink,comment'
+  'name,title,fulltext,mergetext,channel,start,start_window,' +
+  'weekdays,record,tag,btype,content_type,cat1,cat2,cat3,minduration,' +
+  'maxduration,minyear,maxyear,minseason,maxseason,star_rating,directory,' +
+  'config_name,pri,serieslink,comment'
 
 /* Edit list — admin-aware via shared helper. */
 const editList = adminAwareEditList({
@@ -139,6 +153,69 @@ const {
   entityNoun: t('autorec entries'),
   addTooltip: t('Add a new autorec entry'),
 })
+
+/*
+ * Flat-to-smart conversion. The converter lives in
+ * the server (`dvr/autorec/convert`): dry-run first for the warnings,
+ * confirm — the dialog names the backup copy and the revert path —
+ * then apply and refetch. The apply is atomic server-side and leaves
+ * a disabled backup copy of the rule in this grid; converting is a
+ * complete action, not the first half of an edit, so no editor opens
+ * and no view switch happens. The converted rule leaves this grid
+ * for the Smart autorecs view, where the ordinary Edit action awaits.
+ *
+ * The refetch is explicit because the Comet change notification only
+ * patches loaded rows in place — it can neither remove a row whose
+ * grid membership changed (this endpoint filters smart entries out)
+ * nor add the backup row.
+ */
+async function convertToSmart(row: BaseRow, clearSelection: () => void) {
+  /* i18n: new strings throughout the convert flow */
+  try {
+    const dry = await apiCall<{ expression?: string; error?: string; warnings?: string[] }>(
+      'dvr/autorec/convert', { uuid: row.uuid, dry_run: 1 })
+    if (dry.error) {
+      errorDialog.show({ title: t('Convert failed'), message: dry.error })
+      return
+    }
+    const warnings = (dry.warnings ?? []).join(' ')
+    const ok = await confirmDialog.ask(
+      t('Replace the matching fields of this rule with an equivalent smart expression? ' +
+        'The rule moves to the Smart autorecs view. A disabled backup copy of the ' +
+        'original rule stays behind in this view; to revert later, delete the smart ' +
+        'rule and re-enable the backup.') +
+        (warnings ? ' ' + warnings : ''),
+      {
+        header: t('Convert to smart autorec'),
+        acceptLabel: t('Convert'),
+        rejectLabel: t('Cancel'),
+      })
+    if (!ok) return
+    await apiCall('dvr/autorec/convert', { uuid: row.uuid })
+    clearSelection()
+    await gridRef.value?.store?.fetch()
+  } catch (e) {
+    errorDialog.show({ title: t('Convert failed'), message: apiErrorMessage(e) })
+  }
+}
+
+/* Toolbar = the framework Add/Edit/Delete plus Convert, enabled on a
+ * single selected rule. Every rule here is flat (the grid endpoint
+ * filters smart entries out, so the old per-row expression check is
+ * structural now), and single-selection is the whole gate. */
+function autorecActions(selection: BaseRow[], clearSelection: () => void): ActionDef[] {
+  const row = selection.length === 1 ? selection[0] : null
+  const convert: ActionDef = {
+    id: 'convert',
+    label: t('Convert to smart'),
+    tooltip: t('Replace the matching fields with an equivalent smart expression; a disabled backup copy stays behind'),
+    disabled: row == null,
+    onClick: () => {
+      if (row) void convertToSmart(row, clearSelection)
+    },
+  }
+  return [...buildActions(selection, clearSelection), convert]
+}
 </script>
 
 <template>
@@ -161,7 +238,7 @@ const {
       </p>
     </template>
     <template #toolbarActions="{ selection, clearSelection }">
-      <ActionMenu :actions="buildActions(selection, clearSelection)" />
+      <ActionMenu :actions="autorecActions(selection, clearSelection)" />
     </template>
   </IdnodeGrid>
   <IdnodeEditor
