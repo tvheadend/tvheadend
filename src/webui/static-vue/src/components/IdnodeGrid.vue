@@ -205,6 +205,9 @@ interface Props {
    * → "748 services"). Falls back to "rows" when unsupplied.
    */
   countLabel?: string
+  /* Per-row class resolver, threaded to DataGrid (desktop <tr> and
+   * phone card root alike). See DataGrid's `rowClass` prop. */
+  rowClass?: (row: BaseRow) => string | undefined
   /*
    * Override DataGrid's default phone-mode card height (px)
    * when the phone path also virtualises (i.e.
@@ -430,6 +433,7 @@ const props = withDefaults(defineProps<Props>(), {
   notificationClass: undefined,
   filters: undefined,
   extraParams: undefined,
+  rowClass: undefined,
   virtualScrollerOptions: undefined,
   countLabel: undefined,
   phoneItemSize: undefined,
@@ -2695,6 +2699,7 @@ defineExpose({
     :edit-mode="effectiveEditMode"
     :phone-item-size="phoneItemSize"
     :count-label="countLabel"
+    :row-class="rowClass"
     :sort-field="sortField"
     :sort-order="sortOrder"
     :group-field="groupField"

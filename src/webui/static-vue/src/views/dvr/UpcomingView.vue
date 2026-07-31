@@ -22,11 +22,14 @@
  *                    and is what the grid endpoint returns directly.)
  *   - `sched_status` "scheduled" / "recording" / etc. Plain string.
  *
- * `duplicates: 0` mirrors the ExtJS grid (`dvr.js:508`): the server
- * includes dedup-skipped reruns by default (`api_dvr.c`), and without
- * the param they'd show as ordinary "Scheduled" rows although they
- * will not record. The EPG event drawer explains the skip for such
- * entries (its "rerun of" note), matching the classic details dialog.
+ * Dedup-skipped reruns: hidden by default (`duplicates=0`, mirroring
+ * the ExtJS grid at `dvr.js:508` — the server includes them unless
+ * asked not to, `api_dvr.c`, and they'd show as ordinary "Scheduled"
+ * rows although they will not record). A "Skipped reruns" setting in
+ * the grid-settings popover's Filters section reveals them dimmed
+ * with a "Will be skipped" status — see the showSkipped block below.
+ * The EPG event drawer explains the skip per-entry (its "rerun of"
+ * note).
  *   - `pri`          priority enum (server renders to a localized
  *                    string in the `pri` field for the grid view).
  *
@@ -48,7 +51,7 @@
  * we follow ExtJS in showing "Abort" to the user.
  *
  */
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
 import IdnodeEditor from '@/components/IdnodeEditor.vue'
@@ -56,7 +59,7 @@ import EpgRelatedDialog from '@/components/EpgRelatedDialog.vue'
 import EpgEventDrawer, { type EpgEventDetail } from '@/views/epg/EpgEventDrawer.vue'
 import type { EpgRelatedMode } from '@/composables/useEpgRelatedFetch'
 import type { ColumnDef } from '@/types/column'
-import type { BaseRow } from '@/types/grid'
+import type { BaseRow, GlobalFilterSpec } from '@/types/grid'
 import type { ActionDef } from '@/types/action'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useEditorMode } from '@/composables/useEditorMode'
@@ -73,6 +76,68 @@ import { useAccessStore } from '@/stores/access'
 
 const access = useAccessStore()
 const kodiFmt = makeKodiPlainFmt(() => !!access.data?.label_formatting)
+
+/*
+ * "Skipped reruns" view setting, surfaced in the grid-settings
+ * popover's Filters section (the GlobalFilterSpec machinery — same
+ * idiom as DvbServices' "Hide" select). Hidden (default): the grid
+ * fetches with `duplicates=0` — dedup-skipped rerun entries are
+ * hidden, matching the classic grid. Shown: `duplicates=1` brings
+ * them back, dimmed with a "Will be skipped" status, so the one list
+ * people consult for "what will actually record" can also explain
+ * what will NOT — something neither UI offered before (the classic
+ * grid hides them with no way back). Persisted per-browser.
+ * IdnodeGrid seeds each spec's `current` into the fetch params and
+ * refetches on change; the non-default pick lights the Filters
+ * section's accent chip for free.
+ */
+const SHOW_SKIPPED_KEY = 'tvh-dvr-upcoming:show-skipped'
+const showSkipped = ref(loadShowSkipped())
+function loadShowSkipped(): boolean {
+  try {
+    return localStorage.getItem(SHOW_SKIPPED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+watch(showSkipped, (v) => {
+  try {
+    if (v) localStorage.setItem(SHOW_SKIPPED_KEY, '1')
+    else localStorage.removeItem(SHOW_SKIPPED_KEY)
+  } catch {
+    /* Private mode / storage disabled — remembering is best-effort. */
+  }
+})
+
+const gridFilters = computed<GlobalFilterSpec[]>(() => [
+  {
+    kind: 'select',
+    key: 'duplicates',
+    label: t('Skipped reruns'),
+    options: [
+      { value: '0', label: t('Hidden') },
+      { value: '1', label: t('Shown (dimmed)') },
+    ],
+    current: showSkipped.value ? '1' : '0',
+  },
+])
+
+function onFilterChange(key: string, value: string) {
+  if (key === 'duplicates') showSkipped.value = value === '1'
+}
+
+/* A dedup-skipped entry carries the original broadcast's start time
+ * in the read-only `duplicate` field ("Rerun of", `dvr_db.c`) — the
+ * grid rows include it, and it's the only marker: `sched_status`
+ * still reads plain "scheduled" for a skipped rerun. */
+function isSkipped(row: BaseRow): boolean {
+  const d = (row as Record<string, unknown>).duplicate
+  return typeof d === 'number' && d > 0
+}
+
+function rowClassFor(row: BaseRow): string | undefined {
+  return isSkipped(row) ? 'upcoming__row--skipped' : undefined
+}
 
 /*
  * Column set roughly matches the ExtJS Upcoming view's `list` (see
@@ -115,7 +180,14 @@ const cols: ColumnDef[] = [
    * phone-promotion would silently drop via the level filter
    * anyway. Phone cards intentionally surface basic-level
    * fields only. */
-  { field: 'sched_status', ...DVR_FIELDS.sched_status },
+  {
+    field: 'sched_status',
+    ...DVR_FIELDS.sched_status,
+    /* A skipped rerun's server status still says "Scheduled for
+     * recording" — override with the honest label (classic msgid,
+     * translations ride along) when the toggle reveals such rows. */
+    format: (v, row) => (isSkipped(row) ? t('Will be skipped') : String(v ?? '')),
+  },
   { field: 'comment', ...DVR_FIELDS.comment, editable: true },
 
   /* Advanced — server's PO_ADVANCED flag will gate visibility on basic users */
@@ -455,7 +527,8 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     help-page="class/dvrentry"
     :columns="cols"
     store-key="dvr-upcoming"
-    :extra-params="{ duplicates: 0 }"
+    :filters="gridFilters"
+    :row-class="rowClassFor"
     :default-sort="{ key: 'start_real', dir: 'ASC' }"
     :virtual-scroller-options="{ itemSize: 36, lazy: false }"
     count-label="recordings"
@@ -463,6 +536,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     edit-mode="cell"
     :before-edit="(row) => row.sched_status?.toString().startsWith('recording') ? 'cannot edit a row currently recording' : true"
     class="upcoming__grid"
+    @filter-change="onFilterChange"
     @row-dblclick="(row) => openEditor([row])"
   >
     <template #empty>
@@ -506,5 +580,29 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
 
 .upcoming__empty {
   color: var(--tvh-text-muted);
+}
+
+</style>
+
+<!-- Unscoped: the skipped-row class lands on PrimeVue's <tr> (and the
+     phone card root) two component levels below this view, so scoped
+     [data-v] anchoring can't reach it. No ancestor anchor either:
+     IdnodeGrid is a multi-root template, so a fallthrough class on it
+     never reaches the DOM — the row class itself is the namespace
+     (only this view's rowClass resolver emits it). Same unscoped-
+     rules pattern as the EPG views. -->
+<style>
+/* Dedup-skipped rows — struck through (the classic UI's duplicate
+ * treatment, ext.css .x-epg-duplicate) and dimmed, on the desktop
+ * table and the phone card alike. The status column carries the
+ * "Will be skipped" wording. */
+tr.upcoming__row--skipped > td {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.data-grid__card.upcoming__row--skipped {
+  opacity: 0.55;
+  text-decoration: line-through;
 }
 </style>

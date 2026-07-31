@@ -238,6 +238,12 @@ interface Props {
    * prop. */
   countLabel?: string
 
+  /* Optional per-row class resolver, applied to the desktop table's
+   * <tr> (PrimeVue's `rowClass`) AND the phone card root, so a
+   * consumer's row-state styling (e.g. DVR Upcoming's dedup-skipped
+   * dimming) covers both layouts from one function. */
+  rowClass?: (row: Row) => string | undefined
+
   /*
    * Active group-by field. When set, the table renders with
    * PrimeVue's subheader row-grouping mode — rows cluster by this
@@ -369,6 +375,7 @@ const props = withDefaults(defineProps<Props>(), {
   phoneItemSize: 88,
   sortLockedByGroup: false,
   countLabel: undefined,
+  rowClass: undefined,
   groupField: null,
   groupOrder: 'ASC',
   groupableFields: () => [],
@@ -1759,6 +1766,7 @@ defineExpose({
               `${bemPrefix}__card`,
               isRowSelected(row as Row) ? 'data-grid__card--selected' : null,
               isRowSelected(row as Row) ? `${bemPrefix}__card--selected` : null,
+              rowClass?.(row as Row) ?? null,
             ]"
             :style="{ height: `${phoneItemSize}px` }"
           >
@@ -1913,6 +1921,7 @@ defineExpose({
               `${bemPrefix}__card`,
               isRowSelected(item.row) ? 'data-grid__card--selected' : null,
               isRowSelected(item.row) ? `${bemPrefix}__card--selected` : null,
+              rowClass?.(item.row as Row) ?? null,
             ]"
           >
           <label
@@ -2018,6 +2027,7 @@ defineExpose({
         :value="entriesForTable"
         :loading="loading"
         :data-key="keyField"
+        :row-class="rowClass"
         :selection-mode="
           selectable === true ? 'multiple' : selectable === 'single' ? 'single' : undefined
         "
