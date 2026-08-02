@@ -929,6 +929,18 @@ t2mi_mux_free ( mpegts_mux_t *mm )
   mpegts_mux_free(mm);
 }
 
+/* OTA EPG on carrier muxes tunes and decapsulates each one, which is
+ * heavy on feeds with many carriers; let the network opt out.  Inner EPG
+ * is still gathered while a channel is watched. */
+static int
+t2mi_mux_is_epg ( mpegts_mux_t *mm )
+{
+  t2mi_network_t *tn = (t2mi_network_t *)mm->mm_network;
+  if (tn && tn->tn_epg_exclude)
+    return MM_EPG_DISABLE;
+  return mm->mm_epg;
+}
+
 static t2mi_mux_t *
 t2mi_mux_create0 ( t2mi_network_t *tn, const char *uuid, htsmsg_t *conf )
 {
@@ -947,6 +959,7 @@ t2mi_mux_create0 ( t2mi_network_t *tn, const char *uuid, htsmsg_t *conf )
   tm->mm_config_save   = t2mi_mux_config_save;
   tm->mm_delete        = t2mi_mux_delete;
   tm->mm_free          = t2mi_mux_free;
+  tm->mm_is_epg        = t2mi_mux_is_epg;
 
   sbuf_init(&tm->tm_buffer);
 
@@ -1392,6 +1405,19 @@ const idclass_t t2mi_network_class = {
                      "only streams with proper T2-MI signalling."),
       .off      = offsetof(t2mi_network_t, tn_ignore_private),
       .def.i    = 0,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "epg_exclude",
+      .name     = N_("Exclude carriers from OTA EPG"),
+      .desc     = N_("Do not grab over-the-air EPG from the T2-MI carrier "
+                     "muxes. Grabbing EPG from every carrier tunes and "
+                     "decapsulates each one in turn, which can tie up the "
+                     "tuner for a long time on feeds with many carriers. "
+                     "Inner-service EPG is still collected while a channel "
+                     "is being watched."),
+      .off      = offsetof(t2mi_network_t, tn_epg_exclude),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_U32,
