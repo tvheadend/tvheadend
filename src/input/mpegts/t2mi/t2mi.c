@@ -237,10 +237,13 @@ t2mi_mux_stream_start ( t2mi_mux_t *tm, const streaming_start_t *ss )
   }
 }
 
+/* Process one message from the source subscription.  Runs on the mux's
+ * own decap thread (t2mi_mux_thread), not on the source tuner's input
+ * thread, so decapping a busy carrier cannot stall the tuner and overflow
+ * its queue. */
 static void
-t2mi_mux_stream_cb ( void *opaque, streaming_message_t *sm )
+t2mi_mux_process ( t2mi_mux_t *tm, streaming_message_t *sm )
 {
-  t2mi_mux_t *tm = opaque;
   mpegts_mux_instance_t *mmi;
   pktbuf_t *pb;
   const uint8_t *data;
@@ -309,20 +312,34 @@ t2mi_mux_stream_cb ( void *opaque, streaming_message_t *sm )
   default:
     break;
   }
-  streaming_msg_free(sm);
 }
 
-static htsmsg_t *
-t2mi_mux_stream_info ( void *opaque, htsmsg_t *list )
+/* Drain the source subscription queue and decap on this dedicated thread,
+ * decoupled from the source tuner's input thread.  The tuner thread only
+ * enqueues (fast); the queue absorbs bursts and, if this thread ever falls
+ * behind, drops here - per mux - instead of backing up the shared tuner. */
+static void *
+t2mi_mux_thread ( void *aux )
 {
-  htsmsg_add_str(list, NULL, "t2mi input");
-  return list;
-}
+  t2mi_mux_t *tm = aux;
+  streaming_queue_t *sq = &tm->tm_sq;
+  streaming_message_t *sm;
 
-static streaming_ops_t t2mi_mux_stream_ops = {
-  .st_cb   = t2mi_mux_stream_cb,
-  .st_info = t2mi_mux_stream_info
-};
+  while (atomic_get(&tm->tm_thread_run)) {
+    tvh_mutex_lock(&sq->sq_mutex);
+    sm = TAILQ_FIRST(&sq->sq_queue);
+    if (sm == NULL) {
+      tvh_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, mclk() + sec2mono(1));
+      tvh_mutex_unlock(&sq->sq_mutex);
+      continue;
+    }
+    streaming_queue_remove(sq, sm);
+    tvh_mutex_unlock(&sq->sq_mutex);
+    t2mi_mux_process(tm, sm);
+    streaming_msg_free(sm);
+  }
+  return NULL;
+}
 
 /*
  * Source subscription management
@@ -361,8 +378,6 @@ t2mi_mux_subscribe ( t2mi_mux_t *tm, mpegts_input_t *mi, int weight )
 
   tm->tm_carrier_pid = tm->mm_t2mi_src_pid ?: 0;
 
-  streaming_target_init(&tm->tm_st, &t2mi_mux_stream_ops, tm, 0);
-
   if (tm->mm_t2mi_src_sid > 0) {
     /* carrier service mode - the service layer descrambles for us */
     svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL);
@@ -387,7 +402,7 @@ t2mi_mux_subscribe ( t2mi_mux_t *tm, mpegts_input_t *mi, int weight )
         t2mi_reparse_source_pmts(src);
     }
     profile_chain_init(&tm->tm_prch, NULL, svc, 0);
-    tm->tm_prch.prch_st = &tm->tm_st;
+    tm->tm_prch.prch_st = &tm->tm_sq.sq_st;
     tm->tm_prch.prch_flags = SUBSCRIPTION_MPEGTS;
     tm->tm_sub = subscription_create_from_service
       (&tm->tm_prch, NULL, weight ?: 10, "t2mi", flags,
@@ -400,7 +415,7 @@ t2mi_mux_subscribe ( t2mi_mux_t *tm, mpegts_input_t *mi, int weight )
       return SM_CODE_TUNING_FAILED;
     }
     profile_chain_init(&tm->tm_prch, NULL, src, 0);
-    tm->tm_prch.prch_st = &tm->tm_st;
+    tm->tm_prch.prch_st = &tm->tm_sq.sq_st;
     tm->tm_prch.prch_flags = SUBSCRIPTION_MPEGTS;
     tm->tm_sub = subscription_create_from_mux
       (&tm->tm_prch, NULL, weight ?: 10, "t2mi", flags,
@@ -536,8 +551,30 @@ t2mi_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   /* accept pid open calls before the subscription starts delivering */
   tm->mm_active = mmi;
 
+  /* Decouple decapping from the source tuner's input thread: the source
+   * subscription delivers into tm_sq and a dedicated thread drains it and
+   * runs the decap.  The queue is bounded so, if this thread ever falls
+   * behind, packets drop here (per mux) rather than backing up the shared
+   * tuner queue. */
+  streaming_queue_init(&tm->tm_sq, 0, 4 * 1024 * 1024);
+  atomic_set(&tm->tm_thread_run, 1);
+  if (tvh_thread_create(&tm->tm_thread, NULL, t2mi_mux_thread, tm,
+                        "t2mi-decap")) {
+    atomic_set(&tm->tm_thread_run, 0);
+    streaming_queue_deinit(&tm->tm_sq);
+    tm->mm_active = NULL;
+    t2mi_decap_destroy(tm->tm_decap);
+    tm->tm_decap = NULL;
+    sbuf_free(&tm->tm_buffer);
+    return SM_CODE_TUNING_FAILED;
+  }
+
   ret = t2mi_mux_subscribe(tm, mi, weight);
   if (ret) {
+    atomic_set(&tm->tm_thread_run, 0);
+    tvh_cond_signal(&tm->tm_sq.sq_cond, 0);
+    pthread_join(tm->tm_thread, NULL);
+    streaming_queue_deinit(&tm->tm_sq);
     tm->mm_active = NULL;
     t2mi_decap_destroy(tm->tm_decap);
     tm->tm_decap = NULL;
@@ -559,6 +596,16 @@ t2mi_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   const t2mi_decap_stats_t *st;
 
   t2mi_mux_unsubscribe(tm);
+
+  /* Stop the decap thread (and drop its queue) before touching the decap
+   * and buffer it uses.  Guarded so a mux that never fully started does
+   * not try to join a thread that was never created. */
+  if (atomic_get(&tm->tm_thread_run)) {
+    atomic_set(&tm->tm_thread_run, 0);
+    tvh_cond_signal(&tm->tm_sq.sq_cond, 0);
+    pthread_join(tm->tm_thread, NULL);
+    streaming_queue_deinit(&tm->tm_sq);
+  }
 
   if (tm->tm_decap) {
     st = t2mi_decap_get_stats(tm->tm_decap);
