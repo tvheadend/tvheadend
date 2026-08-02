@@ -46,6 +46,7 @@ struct t2mi_network
   /* carrier discovery in the selected source muxes */
   idnode_list_head_t tn_src_muxes; /* selected source muxes (in1 side) */
   int      tn_ignore_private;   /* do NOT scan private streams as carriers */
+  int      tn_epg_exclude;      /* exclude carrier muxes from OTA EPG grab */
   uint32_t tn_scan_period;      /* rediscovery period (minutes) */
   mtimer_t tn_disc_timer;
 };
