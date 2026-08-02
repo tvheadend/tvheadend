@@ -66,7 +66,9 @@ struct t2mi_mux
   /* runtime */
   profile_chain_t     tm_prch;
   th_subscription_t  *tm_sub;
-  streaming_target_t  tm_st;
+  streaming_queue_t   tm_sq;      /* carrier packets from the source sub */
+  pthread_t           tm_thread;  /* decap thread draining tm_sq */
+  int                 tm_thread_run; /* atomic: decap thread running */
   t2mi_decap_t       *tm_decap;
   sbuf_t              tm_buffer;
   int                 tm_carrier_pid; /* resolved carrier PID */
