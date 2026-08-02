@@ -163,7 +163,24 @@ static void
 t2mi_mux_decap_output ( void *aux, const uint8_t *tsb, int len )
 {
   t2mi_mux_t *tm = aux;
-  sbuf_append(&tm->tm_buffer, tsb, len);
+  const uint8_t *map;
+  int pid;
+
+  /* Deliver only the PIDs a subscriber or the scan has opened.  The inner
+   * multiplex carries several channels; queueing all of them when only one
+   * service (or, during a scan, just the SI tables) is needed overruns the
+   * shared input queue.  Full-mux subscriptions (e.g. a raw mux stream) ask
+   * for everything, so pass the whole buffer through unchanged. */
+  if (atomic_get(&tm->tm_fullmux)) {
+    sbuf_append(&tm->tm_buffer, tsb, len);
+    return;
+  }
+  map = tm->tm_pidmap[atomic_get(&tm->tm_pidmap_idx)];
+  for ( ; len >= 188; tsb += 188, len -= 188) {
+    pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
+    if (map[pid >> 3] & (1 << (pid & 7)))
+      sbuf_append(&tm->tm_buffer, tsb, 188);
+  }
 }
 
 static void
@@ -468,6 +485,32 @@ t2mi_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   t2mi_mux_reweight_source(tm, 0);
 }
 
+/* Rebuild the delivery PID bitmap from the currently opened PIDs.  Called
+ * (via a zero-delay timer) whenever a PID is opened or closed, so the
+ * decap thread only queues what is actually wanted.  Written into the
+ * inactive bitmap and published with an atomic index flip so the decap
+ * thread never sees a half-updated map. */
+static void
+t2mi_input_update_pids ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  t2mi_mux_t *tm = (t2mi_mux_t *)mm;
+  mpegts_pid_t *mp;
+  int idx = atomic_get(&tm->tm_pidmap_idx) ^ 1;
+  uint8_t *map = tm->tm_pidmap[idx];
+  int fullmux = 0;
+
+  lock_assert(&global_lock);
+  memset(map, 0, sizeof(tm->tm_pidmap[0]));
+  RB_FOREACH(mp, &mm->mm_pids, mp_link) {
+    if (mp->mp_pid == MPEGTS_FULLMUX_PID)
+      fullmux = 1;
+    else if (mp->mp_pid >= 0 && mp->mp_pid < 8192)
+      map[mp->mp_pid >> 3] |= 1 << (mp->mp_pid & 7);
+  }
+  atomic_set(&tm->tm_pidmap_idx, idx);
+  atomic_set(&tm->tm_fullmux, fullmux);
+}
+
 static int
 t2mi_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
@@ -485,6 +528,10 @@ t2mi_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
                                    t2mi_mux_decap_log, tm);
   if (tm->tm_decap == NULL)
     return SM_CODE_TUNING_FAILED;
+
+  /* deliver everything until the first PID update narrows the filter, so
+   * the initial SI tables are never dropped */
+  atomic_set(&tm->tm_fullmux, 1);
 
   /* accept pid open calls before the subscription starts delivering */
   tm->mm_active = mmi;
@@ -559,6 +606,7 @@ t2mi_input_create ( void )
   mi->mi_warm_mux       = t2mi_input_warm_mux;
   mi->mi_open_service   = t2mi_input_open_service;
   mi->mi_close_service  = t2mi_input_close_service;
+  mi->mi_update_pids    = t2mi_input_update_pids;
   mi->mi_get_grace      = t2mi_input_get_grace;
   mi->mi_display_name   = t2mi_input_display_name;
   mi->mi_enabled        = 1;

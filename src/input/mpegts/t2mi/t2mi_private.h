@@ -71,6 +71,15 @@ struct t2mi_mux
   sbuf_t              tm_buffer;
   int                 tm_carrier_pid; /* resolved carrier PID */
   uint8_t             tm_running;
+
+  /* Delivery PID filter: the inner multiplex carries several channels, so
+   * only the PIDs a subscriber or the scan has actually opened are queued
+   * to the (shared) input thread - queueing the whole inner mux otherwise
+   * swamps it and drops with "too much queued input data".  Double
+   * buffered so the decap thread always reads a complete bitmap. */
+  uint8_t             tm_pidmap[2][1024]; /* 8192-pid bitmaps */
+  int                 tm_pidmap_idx;      /* atomic: active bitmap */
+  int                 tm_fullmux;         /* atomic: deliver every PID */
 };
 
 extern const idclass_t t2mi_network_class;
