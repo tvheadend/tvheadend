@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-27 03:05+0000\n"
+"POT-Creation-Date: 2026-08-03 03:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,15 +25,15 @@ msgid ""
 "https://tvheadend.org\n"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:337
+#: src/input/mpegts/mpegts_network.c:349
 msgid "# Mapped channels"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:321
+#: src/input/mpegts/mpegts_network.c:333
 msgid "# Muxes"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:329
+#: src/input/mpegts/mpegts_network.c:341
 msgid "# Services"
 msgstr ""
 
@@ -525,7 +525,7 @@ msgstr ""
 msgid "Access (ACL)"
 msgstr ""
 
-#: src/wizard.c:467
+#: src/wizard.c:469
 msgid "Access Control"
 msgstr ""
 
@@ -970,6 +970,10 @@ msgstr ""
 msgid "Auto-Map to channels"
 msgstr ""
 
+#: src/input/mpegts/mpegts_network.c:243
+msgid "Auto-map EPG source on new channels"
+msgstr ""
+
 #: src/service.c:180
 msgid "Automatic checking"
 msgstr ""
@@ -1005,7 +1009,7 @@ msgstr ""
 msgid "Automatically map EPG source"
 msgstr ""
 
-#: src/wizard.c:1114
+#: src/wizard.c:1116
 msgid "Automatically map all available services to channels."
 msgstr ""
 
@@ -1536,7 +1540,7 @@ msgstr ""
 msgid "Channels EPG data is used by."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1228 src/input/mpegts/mpegts_network.c:302
+#: src/dvr/dvr_config.c:1228 src/input/mpegts/mpegts_network.c:314
 #: src/input/mpegts/mpegts_mux.c:647 src/input/mpegts/mpegts_service.c:278
 msgid "Character set"
 msgstr ""
@@ -1551,7 +1555,7 @@ msgstr ""
 msgid "Charset"
 msgstr ""
 
-#: src/service_mapper.c:598
+#: src/service_mapper.c:609
 msgid "Check availability"
 msgstr ""
 
@@ -1561,7 +1565,7 @@ msgid ""
 "field will change to Missing In PAT/SDT."
 msgstr ""
 
-#: src/service_mapper.c:599
+#: src/service_mapper.c:610
 msgid ""
 "Check services for availability. If enabled, services that are not currently "
 "broadcasting (or can't be decrypted) will be ignored. Leave disabled if you "
@@ -1925,7 +1929,7 @@ msgstr ""
 msgid "Country received via OTA EPG."
 msgstr ""
 
-#: src/service_mapper.c:649
+#: src/service_mapper.c:660
 msgid "Create SDTV/HDTV/Radio tags."
 msgstr ""
 
@@ -1954,15 +1958,15 @@ msgid ""
 "be ISO standard YYYY-MM-DD."
 msgstr ""
 
-#: src/service_mapper.c:657
+#: src/service_mapper.c:668
 msgid "Create a provider name tag."
 msgstr ""
 
-#: src/wizard.c:1132
+#: src/wizard.c:1134
 msgid "Create and associate a network tag to created channels."
 msgstr ""
 
-#: src/wizard.c:1123
+#: src/wizard.c:1125
 msgid "Create and associate a provider tag to created channels."
 msgstr ""
 
@@ -1986,23 +1990,23 @@ msgstr ""
 msgid "Create files using these permissions."
 msgstr ""
 
-#: src/service_mapper.c:664 src/bouquet.c:1040
+#: src/service_mapper.c:675 src/bouquet.c:1040
 msgid "Create network name tags"
 msgstr ""
 
-#: src/service_mapper.c:665
+#: src/service_mapper.c:676
 msgid "Create network name tags (set by provider)."
 msgstr ""
 
-#: src/wizard.c:1131
+#: src/wizard.c:1133
 msgid "Create network tags"
 msgstr ""
 
-#: src/service_mapper.c:656 src/bouquet.c:1035
+#: src/service_mapper.c:667 src/bouquet.c:1035
 msgid "Create provider name tags"
 msgstr ""
 
-#: src/wizard.c:1122
+#: src/wizard.c:1124
 msgid "Create provider tags"
 msgstr ""
 
@@ -2026,7 +2030,7 @@ msgid ""
 "possible)."
 msgstr ""
 
-#: src/service_mapper.c:648 src/bouquet.c:1030
+#: src/service_mapper.c:659 src/bouquet.c:1030
 msgid "Create type-based tags"
 msgstr ""
 
@@ -2769,7 +2773,7 @@ msgstr ""
 msgid "Don't reschedule"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:284
+#: src/input/mpegts/mpegts_network.c:296
 msgid "Don't use the provider's channel numbers."
 msgstr ""
 
@@ -2805,7 +2809,7 @@ msgstr ""
 msgid "EIT processing (default)"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:312
+#: src/input/mpegts/mpegts_network.c:324
 msgid "EIT time offset"
 msgstr ""
 
@@ -3235,11 +3239,11 @@ msgstr ""
 msgid "Encrypted service"
 msgstr ""
 
-#: src/wizard.c:454
+#: src/wizard.c:455
 msgid "Enter a non-admin user password."
 msgstr ""
 
-#: src/wizard.c:445
+#: src/wizard.c:446
 msgid "Enter a non-admin user username."
 msgstr ""
 
@@ -3628,7 +3632,7 @@ msgstr ""
 msgid "Fine arts"
 msgstr ""
 
-#: src/wizard.c:1196 src/dvr/dvr_db.c:662
+#: src/wizard.c:1198 src/dvr/dvr_db.c:662
 msgid "Finished"
 msgstr ""
 
@@ -3810,11 +3814,11 @@ msgstr ""
 msgid "Format string/Pathname specification"
 msgstr ""
 
-#: src/wizard.c:1029
+#: src/wizard.c:1031
 msgid "Found muxes"
 msgstr ""
 
-#: src/wizard.c:1038
+#: src/wizard.c:1040
 msgid "Found services"
 msgstr ""
 
@@ -4201,7 +4205,7 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: src/wizard.c:820
+#: src/wizard.c:822
 msgid "ID of the network."
 msgstr ""
 
@@ -4349,7 +4353,7 @@ msgstr ""
 msgid "Idle scan"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:256
+#: src/input/mpegts/mpegts_network.c:268
 msgid "Idle scan muxes"
 msgstr ""
 
@@ -4397,7 +4401,7 @@ msgid ""
 "change due to added information."
 msgstr ""
 
-#: src/service_mapper.c:625
+#: src/service_mapper.c:636
 msgid ""
 "If merge same name is enabled then merge services with the same name into "
 "one channel but using fuzzy logic such as ignoring whitespace, case and some "
@@ -4479,7 +4483,7 @@ msgstr ""
 msgid "Ignore descriptor 5"
 msgstr ""
 
-#: src/service_mapper.c:610
+#: src/service_mapper.c:621
 msgid "Ignore encryption flag, include encrypted services anyway."
 msgstr ""
 
@@ -4503,7 +4507,7 @@ msgstr ""
 msgid "Ignore path components"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:283
+#: src/input/mpegts/mpegts_network.c:295
 msgid "Ignore provider's channel numbers"
 msgstr ""
 
@@ -4593,6 +4597,13 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:289
 msgid "Initial scan"
+msgstr ""
+
+#: src/input/mpegts/mpegts_network.c:244
+msgid ""
+"Initial value of the channel option \"Automatically map EPG source\" for "
+"channels created from this network. Changing this setting does not affect "
+"existing channels."
 msgstr ""
 
 #: src/input.c:29
@@ -5238,11 +5249,11 @@ msgstr ""
 msgid "Manufacturer's product name."
 msgstr ""
 
-#: src/wizard.c:1113
+#: src/wizard.c:1115
 msgid "Map all services"
 msgstr ""
 
-#: src/service_mapper.c:609 src/bouquet.c:952
+#: src/service_mapper.c:620 src/bouquet.c:952
 msgid "Map encrypted services"
 msgstr ""
 
@@ -5399,11 +5410,11 @@ msgstr ""
 msgid "Memory Information"
 msgstr ""
 
-#: src/service_mapper.c:617 src/bouquet.c:957
+#: src/service_mapper.c:628 src/bouquet.c:957
 msgid "Merge same name"
 msgstr ""
 
-#: src/service_mapper.c:618
+#: src/service_mapper.c:629
 msgid "Merge services with the same name into one channel."
 msgstr ""
 
@@ -5649,7 +5660,7 @@ msgid ""
 "channels EPG info."
 msgstr ""
 
-#: src/wizard.c:812 src/input/mpegts/mpegts_network.c:200
+#: src/wizard.c:814 src/input/mpegts/mpegts_network.c:200
 msgid "Name of the network."
 msgstr ""
 
@@ -5661,7 +5672,7 @@ msgstr ""
 msgid "Name of the tag."
 msgstr ""
 
-#: src/wizard.c:569 src/wizard.c:577
+#: src/wizard.c:571 src/wizard.c:579
 msgid "Name of the tuner."
 msgstr ""
 
@@ -5685,13 +5696,13 @@ msgstr ""
 msgid "Nature"
 msgstr ""
 
-#: src/wizard.c:787 src/wizard.c:811 src/input/mpegts/mpegts_mux.c:569
+#: src/wizard.c:789 src/wizard.c:813 src/input/mpegts/mpegts_mux.c:569
 #: src/input/mpegts/mpegts_service.c:146
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:206
 msgid "Network"
 msgstr ""
 
-#: src/wizard.c:561
+#: src/wizard.c:563
 msgid "Network "
 msgstr ""
 
@@ -5785,7 +5796,7 @@ msgstr ""
 msgid "Network settings"
 msgstr ""
 
-#: src/wizard.c:584 src/input/mpegts/satip/satip_frontend.c:373
+#: src/wizard.c:586 src/input/mpegts/satip/satip_frontend.c:373
 #: src/input/mpegts/satip/satip_frontend.c:578
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:241
 msgid "Network type"
@@ -6000,7 +6011,7 @@ msgid ""
 "the programme is actually watched."
 msgstr ""
 
-#: src/wizard.c:1030
+#: src/wizard.c:1032
 msgid "Number of muxes found."
 msgstr ""
 
@@ -6412,7 +6423,7 @@ msgstr ""
 msgid "Passthrough Muxer SI Tables"
 msgstr ""
 
-#: src/access.c:2315 src/wizard.c:453 src/descrambler/cclient.c:1387
+#: src/access.c:2315 src/wizard.c:454 src/descrambler/cclient.c:1387
 msgid "Password"
 msgstr ""
 
@@ -6623,7 +6634,7 @@ msgstr ""
 msgid "Power up time (ms) (10-500)"
 msgstr ""
 
-#: src/wizard.c:801 src/input/mpegts/mpegts_network_dvb.c:247
+#: src/wizard.c:803 src/input/mpegts/mpegts_network_dvb.c:247
 #: src/input/mpegts/mpegts_network_dvb.c:270
 #: src/input/mpegts/mpegts_network_dvb.c:293
 #: src/input/mpegts/mpegts_network_dvb.c:326
@@ -6648,7 +6659,7 @@ msgstr ""
 msgid "Pre-school children's programs"
 msgstr ""
 
-#: src/wizard.c:966
+#: src/wizard.c:968
 msgid "Predefined Muxes"
 msgstr ""
 
@@ -6789,7 +6800,7 @@ msgstr ""
 msgid "Program unique ID (from grabber), such as MV101010101.0000"
 msgstr ""
 
-#: src/wizard.c:780
+#: src/wizard.c:782
 msgid "Progress"
 msgstr ""
 
@@ -7322,7 +7333,7 @@ msgstr ""
 msgid "SAT>IP Server SI Tables"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:293
+#: src/input/mpegts/mpegts_network.c:305
 msgid "SAT>IP source number"
 msgstr ""
 
@@ -7498,7 +7509,7 @@ msgstr ""
 msgid "Scan grace period (seconds)"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:345
+#: src/input/mpegts/mpegts_network.c:357
 msgid "Scan queue length"
 msgstr ""
 
@@ -7514,7 +7525,7 @@ msgstr ""
 msgid "Scanfile"
 msgstr ""
 
-#: src/wizard.c:1051
+#: src/wizard.c:1053
 msgid "Scanning"
 msgstr ""
 
@@ -7627,7 +7638,7 @@ msgid ""
 "Description."
 msgstr ""
 
-#: src/wizard.c:585
+#: src/wizard.c:587
 msgid "Select an available network type for this tuner."
 msgstr ""
 
@@ -7710,7 +7721,7 @@ msgstr ""
 msgid "Select the quality for constant quality mode [0-63]."
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:313
+#: src/input/mpegts/mpegts_network.c:325
 msgid "Select the time offset for EIT events."
 msgstr ""
 
@@ -7733,7 +7744,7 @@ msgid ""
 "built-in webserver."
 msgstr ""
 
-#: src/service_mapper.c:589
+#: src/service_mapper.c:600
 msgid "Select/Selected services to map."
 msgstr ""
 
@@ -7842,11 +7853,11 @@ msgstr ""
 msgid "Service Mapper"
 msgstr ""
 
-#: src/wizard.c:1143
+#: src/wizard.c:1145
 msgid "Service Mapping"
 msgstr ""
 
-#: src/service_mapper.c:578
+#: src/service_mapper.c:589
 msgid "Service Mapping (Map services to channels)"
 msgstr ""
 
@@ -7895,7 +7906,7 @@ msgid ""
 "the stream."
 msgstr ""
 
-#: src/channels.c:556 src/service_mapper.c:588 src/bouquet.c:1312
+#: src/channels.c:556 src/service_mapper.c:599 src/bouquet.c:1312
 #: src/bouquet.c:1330 src/input/mpegts/mpegts_mux.c:658
 msgid "Services"
 msgstr ""
@@ -8069,14 +8080,14 @@ msgstr ""
 msgid "Skip initial bytes"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:245
+#: src/input/mpegts/mpegts_network.c:257
 msgid ""
 "Skip scanning known muxes when Tvheadend starts. If \"startup scan\" is "
 "allowed and new muxes are found then they will still be scanned. See Help "
 "for more details."
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:244
+#: src/input/mpegts/mpegts_network.c:256
 msgid "Skip startup scan"
 msgstr ""
 
@@ -8140,7 +8151,7 @@ msgid ""
 "my_key_from_website'. These can be specified here. See Help for full details."
 msgstr ""
 
-#: src/service_mapper.c:638
+#: src/service_mapper.c:649
 msgid ""
 "Some broadcasters distinguish channels by appending descriptors such as "
 "'HD'. This option strips those so 'Channel 4 HD' would be named 'Channel 4'. "
@@ -8877,7 +8888,7 @@ msgstr ""
 msgid "The SAT>IP server's universally unique identifier."
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:294
+#: src/input/mpegts/mpegts_network.c:306
 msgid "The SAT>IP source number."
 msgstr ""
 
@@ -8986,7 +8997,7 @@ msgstr ""
 msgid "The channel's name or callsign as set by the cable provider."
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:303
+#: src/input/mpegts/mpegts_network.c:315
 msgid "The character encoding for this network (e.g. UTF-8)."
 msgstr ""
 
@@ -9489,7 +9500,7 @@ msgstr ""
 msgid "The number of days cookies set by Tvheadend should expire."
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:346
+#: src/input/mpegts/mpegts_network.c:358
 msgid "The number of muxes left to scan on this network."
 msgstr ""
 
@@ -9862,7 +9873,7 @@ msgstr ""
 msgid "Tidy channel name (e.g., stripping HD/UHD suffix)"
 msgstr ""
 
-#: src/service_mapper.c:637
+#: src/service_mapper.c:648
 msgid "Tidy the channel name such as removing trailing HD text"
 msgstr ""
 
@@ -10007,19 +10018,19 @@ msgstr ""
 msgid "Tooltips"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:338
+#: src/input/mpegts/mpegts_network.c:350
 msgid "Total number of mapped channels on this network."
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:322
+#: src/input/mpegts/mpegts_network.c:334
 msgid "Total number of muxes found on this network."
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:330
+#: src/input/mpegts/mpegts_network.c:342
 msgid "Total number of services found on this network."
 msgstr ""
 
-#: src/wizard.c:1039
+#: src/wizard.c:1041
 msgid "Total number of services found."
 msgstr ""
 
@@ -10133,11 +10144,11 @@ msgstr ""
 msgid "Tune the encoding to a specific scenario."
 msgstr ""
 
-#: src/wizard.c:568
+#: src/wizard.c:570
 msgid "Tuner"
 msgstr ""
 
-#: src/wizard.c:671
+#: src/wizard.c:673
 msgid "Tuner and Network"
 msgstr ""
 
@@ -10197,7 +10208,7 @@ msgstr ""
 msgid "UPnP Protocol"
 msgstr ""
 
-#: src/tvhlog.c:98 src/wizard.c:827 src/dvr/dvr_db.c:4962
+#: src/tvhlog.c:98 src/wizard.c:829 src/dvr/dvr_db.c:4962
 #: src/input/mpegts/iptv/iptv.c:952 src/input/mpegts/iptv/iptv_mux.c:130
 msgid "URL"
 msgstr ""
@@ -10206,7 +10217,7 @@ msgstr ""
 msgid "URL for comparison"
 msgstr ""
 
-#: src/wizard.c:828
+#: src/wizard.c:830
 msgid "URL of the M3U playlist."
 msgstr ""
 
@@ -10647,7 +10658,7 @@ msgstr ""
 msgid "Use default configuration"
 msgstr ""
 
-#: src/service_mapper.c:624 src/bouquet.c:962
+#: src/service_mapper.c:635 src/bouquet.c:962
 msgid "Use fuzzy mapping if merging same name"
 msgstr ""
 
@@ -10667,7 +10678,7 @@ msgstr ""
 msgid "Use original"
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:274
+#: src/input/mpegts/mpegts_network.c:286
 msgid "Use service IDs as channel numbers"
 msgstr ""
 
@@ -10675,7 +10686,7 @@ msgstr ""
 msgid "Use tag internally (don't expose to clients)."
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:275
+#: src/input/mpegts/mpegts_network.c:287
 msgid "Use the provider's service IDs as channel numbers."
 msgstr ""
 
@@ -10731,7 +10742,7 @@ msgstr ""
 msgid "User request"
 msgstr ""
 
-#: src/access.c:1760 src/access.c:2307 src/wizard.c:444
+#: src/access.c:1760 src/access.c:2307 src/wizard.c:445
 #: src/descrambler/cclient.c:1378
 msgid "Username"
 msgstr ""
@@ -10977,7 +10988,7 @@ msgid ""
 "use a default."
 msgstr ""
 
-#: src/input/mpegts/mpegts_network.c:257
+#: src/input/mpegts/mpegts_network.c:269
 msgid ""
 "When nothing else is happening Tvheadend will continuously rotate among all "
 "muxes and tune to them to verify that they are still working when the inputs "
@@ -11060,7 +11071,7 @@ msgid ""
 "this may reduce the amount of rewind time."
 msgstr ""
 
-#: src/access.c:2015 src/access.c:2361 src/input/mpegts/mpegts_network.c:353
+#: src/access.c:2015 src/access.c:2361 src/input/mpegts/mpegts_network.c:365
 msgid "Wizard"
 msgstr ""
 
