@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-22 03:11+0000\n"
+"POT-Creation-Date: 2026-08-03 03:13+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
 "Last-Translator: jiezhao li, 2026\n"
 "Language-Team: Chinese Simplified (https://app.transifex.com/tvheadend/teams/43381/zh-Hans/)\n"
@@ -34,15 +34,15 @@ msgid ""
 "https://tvheadend.org\n"
 msgstr "更多信息请访问 Tvheadend 网站：https://tvheadend.org"
 
-#: src/input/mpegts/mpegts_network.c:337
+#: src/input/mpegts/mpegts_network.c:349
 msgid "# Mapped channels"
 msgstr "已匹配频道"
 
-#: src/input/mpegts/mpegts_network.c:321
+#: src/input/mpegts/mpegts_network.c:333
 msgid "# Muxes"
 msgstr "# 频段"
 
-#: src/input/mpegts/mpegts_network.c:329
+#: src/input/mpegts/mpegts_network.c:341
 msgid "# Services"
 msgstr "# 服务"
 
@@ -534,7 +534,7 @@ msgstr "访问"
 msgid "Access (ACL)"
 msgstr "访问控制 (ACL)"
 
-#: src/wizard.c:467
+#: src/wizard.c:469
 msgid "Access Control"
 msgstr "访问控制"
 
@@ -598,7 +598,7 @@ msgid ""
 "Additional command line options when fetching artwork for new recordings."
 msgstr "为新录像获取节目图片时的额外命令行选项。"
 
-#: src/epggrab/channel.c:825
+#: src/epggrab/channel.c:848
 msgid "Additional service names found in EPG data."
 msgstr "在 EPG 数据中找到的额外服务名称。"
 
@@ -788,7 +788,7 @@ msgstr "允许的网络"
 msgid "Allowed networks"
 msgstr "允许的网络"
 
-#: src/epggrab/module/xmltv.c:1422
+#: src/epggrab/module/xmltv.c:1429
 msgid "Alter programme description to include detailed information"
 msgstr "修改节目描述以包括更详细的信息。"
 
@@ -937,7 +937,7 @@ msgstr "音频类型"
 msgid "Audioes muxer"
 msgstr "音频复用器"
 
-#: src/webui/webui.c:190
+#: src/webui/webui.c:215
 msgid "Authenticated user"
 msgstr "认证用户"
 
@@ -987,6 +987,10 @@ msgstr "自动检测"
 msgid "Auto-Map to channels"
 msgstr "自动映射到频道"
 
+#: src/input/mpegts/mpegts_network.c:243
+msgid "Auto-map EPG source on new channels"
+msgstr ""
+
 #: src/service.c:180
 msgid "Automatic checking"
 msgstr "自动检测"
@@ -1023,7 +1027,7 @@ msgstr ""
 msgid "Automatically map EPG source"
 msgstr "自动映射 EPG 来源"
 
-#: src/wizard.c:1114
+#: src/wizard.c:1116
 msgid "Automatically map all available services to channels."
 msgstr "自动将所有可用服务映射到频道。"
 
@@ -1407,7 +1411,7 @@ msgstr "分类"
 msgid "Category "
 msgstr "分类"
 
-#: src/epggrab/module/xmltv.c:1444
+#: src/epggrab/module/xmltv.c:1451
 msgid "Category Code XPath"
 msgstr "分类代码 XPath"
 
@@ -1434,7 +1438,7 @@ msgstr "频道图标"
 msgid "Channel icon URL."
 msgstr "频道图标 URL。"
 
-#: src/epggrab/channel.c:843
+#: src/epggrab/channel.c:866
 msgid "Channel icon as defined in EPG data."
 msgstr "EPG 数据中定义的频道图标。"
 
@@ -1478,7 +1482,7 @@ msgstr "找不到频道"
 msgid "Channel number"
 msgstr "频道号码"
 
-#: src/epggrab/channel.c:835
+#: src/epggrab/channel.c:858
 msgid "Channel number as defined in EPG data."
 msgstr "EPG 数据中定义的频道号。"
 
@@ -1490,7 +1494,7 @@ msgstr "频道号偏移量"
 msgid "Channel number range"
 msgstr "频道号范围"
 
-#: src/epggrab/module/xmltv.c:1406
+#: src/epggrab/module/xmltv.c:1413
 msgid "Channel numbers (heuristic)"
 msgstr "频道号（启发式）"
 
@@ -1522,11 +1526,11 @@ msgstr "允许/禁止用户访问的频道标签。"
 msgid "Channel to use/used for the recording."
 msgstr "录制所使用的频道。"
 
-#: src/epggrab/channel.c:873
+#: src/epggrab/channel.c:896
 msgid "Channel update options"
 msgstr "频道更新选项"
 
-#: src/epggrab/channel.c:851
+#: src/epggrab/channel.c:874
 msgid "Channels"
 msgstr "频道"
 
@@ -1542,7 +1546,7 @@ msgstr "频道 / EPG - 频道标签"
 msgid "Channels / EPG - Channels"
 msgstr "频道 / EPG - 频道"
 
-#: src/epggrab/channel.c:743
+#: src/epggrab/channel.c:766
 msgid "Channels / EPG - EPG Grabber Channels"
 msgstr "频道 / EPG - EPG 采集器频道"
 
@@ -1554,11 +1558,11 @@ msgstr "频道 / EPG - EPG 采集器配置"
 msgid "Channels / EPG - EPG Grabber Modules"
 msgstr "频道 / EPG - EPG 采集器模块"
 
-#: src/epggrab/channel.c:852
+#: src/epggrab/channel.c:875
 msgid "Channels EPG data is used by."
 msgstr "使用此 EPG 数据的频道。"
 
-#: src/dvr/dvr_config.c:1228 src/input/mpegts/mpegts_network.c:302
+#: src/dvr/dvr_config.c:1228 src/input/mpegts/mpegts_network.c:314
 #: src/input/mpegts/mpegts_mux.c:647 src/input/mpegts/mpegts_service.c:278
 msgid "Character set"
 msgstr "字符集"
@@ -1573,7 +1577,7 @@ msgstr "Windows 文件名中不支持的字符（例如用于 SMB/CIFS 共享）
 msgid "Charset"
 msgstr "字符集"
 
-#: src/service_mapper.c:598
+#: src/service_mapper.c:609
 msgid "Check availability"
 msgstr "检查可用性"
 
@@ -1583,7 +1587,7 @@ msgid ""
 " field will change to Missing In PAT/SDT."
 msgstr "检查服务是否存在。如果该服务不再播出，该字段将变为“在 PAT/SDT 中缺失”。"
 
-#: src/service_mapper.c:599
+#: src/service_mapper.c:610
 msgid ""
 "Check services for availability. If enabled, services that are not currently"
 " broadcasting (or can't be decrypted) will be ignored. Leave disabled if you"
@@ -1711,7 +1715,7 @@ msgstr "用于通过外部命令移动卫星天线的命令。"
 #: src/access.c:2008 src/access.c:2354 src/access.c:2493 src/channels.c:1843
 #: src/esfilter.c:703 src/esfilter.c:799 src/esfilter.c:895 src/esfilter.c:990
 #: src/esfilter.c:1098 src/esfilter.c:1181 src/profile.c:344
-#: src/bouquet.c:1338 src/epggrab/channel.c:885 src/dvr/dvr_db.c:5011
+#: src/bouquet.c:1338 src/epggrab/channel.c:908 src/dvr/dvr_db.c:5011
 #: src/dvr/dvr_autorec.c:1487 src/dvr/dvr_timerec.c:679
 #: src/dvr/dvr_config.c:1170 src/descrambler/caclient.c:319
 msgid "Comment"
@@ -1805,7 +1809,7 @@ msgstr "配置-流"
 msgid "Config-Users"
 msgstr "配置-用户"
 
-#: src/tvhlog.c:103 src/profile.c:2100 src/epggrab/channel.c:752
+#: src/tvhlog.c:103 src/profile.c:2100 src/epggrab/channel.c:775
 msgid "Configuration"
 msgstr "设置"
 
@@ -1950,7 +1954,7 @@ msgstr "国家"
 msgid "Country received via OTA EPG."
 msgstr "通过空中 EPG 接收的国家。"
 
-#: src/service_mapper.c:649
+#: src/service_mapper.c:660
 msgid "Create SDTV/HDTV/Radio tags."
 msgstr "创建 SDTV/HDTV/Radio 标签。"
 
@@ -1979,15 +1983,15 @@ msgid ""
 " be ISO standard YYYY-MM-DD."
 msgstr "在录像系统路径中每天创建一个新目录。仅在录制内容时才会创建文件夹。目录格式采用 ISO 标准的 YYYY-MM-DD。"
 
-#: src/service_mapper.c:657
+#: src/service_mapper.c:668
 msgid "Create a provider name tag."
 msgstr "创建一个供应商的名称标签"
 
-#: src/wizard.c:1132
+#: src/wizard.c:1134
 msgid "Create and associate a network tag to created channels."
 msgstr "创建并关联一个网络标签到创建的频道。"
 
-#: src/wizard.c:1123
+#: src/wizard.c:1125
 msgid "Create and associate a provider tag to created channels."
 msgstr "创建并关联一个供应商标签到创建的频道。"
 
@@ -2011,23 +2015,23 @@ msgstr "使用这些权限创建目录。"
 msgid "Create files using these permissions."
 msgstr "使用这些权限创建文件。"
 
-#: src/service_mapper.c:664 src/bouquet.c:1040
+#: src/service_mapper.c:675 src/bouquet.c:1040
 msgid "Create network name tags"
 msgstr "创建网络名称标签"
 
-#: src/service_mapper.c:665
+#: src/service_mapper.c:676
 msgid "Create network name tags (set by provider)."
 msgstr "创建网络名称标签（由供应商设定的）。"
 
-#: src/wizard.c:1131
+#: src/wizard.c:1133
 msgid "Create network tags"
 msgstr "创建网络标签"
 
-#: src/service_mapper.c:656 src/bouquet.c:1035
+#: src/service_mapper.c:667 src/bouquet.c:1035
 msgid "Create provider name tags"
 msgstr "创建供应商名称标签"
 
-#: src/wizard.c:1122
+#: src/wizard.c:1124
 msgid "Create provider tags"
 msgstr "创建供应商标签"
 
@@ -2051,7 +2055,7 @@ msgid ""
 "possible)."
 msgstr "使用支持元数据的容器在录像中创建标签（如果可能）。"
 
-#: src/service_mapper.c:648 src/bouquet.c:1030
+#: src/service_mapper.c:659 src/bouquet.c:1030
 msgid "Create type-based tags"
 msgstr "创建基于类型的标签"
 
@@ -2396,7 +2400,7 @@ msgstr "失败录像的数据错误阈值（0=关闭）"
 msgid "Data errors"
 msgstr "数据错误"
 
-#: src/epggrab/channel.c:790
+#: src/epggrab/channel.c:813
 msgid "Data path (if applicable)."
 msgstr "数据路径（如可用）。"
 
@@ -2416,7 +2420,7 @@ msgstr "数据启动超时（秒）（0 = 默认）"
 msgid "Data timeout (sec) (0=infinite)"
 msgstr "数据超时（秒）（0 = 无限制）"
 
-#: src/epggrab/channel.c:799
+#: src/epggrab/channel.c:822
 msgid "Date the EPG data was last updated (not set for OTA grabbers)."
 msgstr "EPG 数据上次更新日期（空中抓取器不设置）。"
 
@@ -2493,7 +2497,7 @@ msgstr "默认语言"
 msgid "Default language."
 msgstr "默认语言。"
 
-#: src/http.c:708
+#: src/http.c:709
 msgid "Default login"
 msgstr "默认登录"
 
@@ -2702,7 +2706,7 @@ msgstr "禁用特定于设备/固件的修补"
 msgid "Disable syslog (all messages)"
 msgstr "禁用 syslog（所有消息）"
 
-#: src/channels.c:399 src/profile.c:2339 src/epggrab/module/xmltv.c:1484
+#: src/channels.c:399 src/profile.c:2339 src/epggrab/module/xmltv.c:1491
 msgid "Disabled"
 msgstr "禁用"
 
@@ -2798,7 +2802,7 @@ msgstr "不要在录制失败时重新计划。"
 msgid "Don't reschedule"
 msgstr "不重新计划"
 
-#: src/input/mpegts/mpegts_network.c:284
+#: src/input/mpegts/mpegts_network.c:296
 msgid "Don't use the provider's channel numbers."
 msgstr "不使用来自供应商的频道号。"
 
@@ -2834,7 +2838,7 @@ msgstr "EIT 处理"
 msgid "EIT processing (default)"
 msgstr "EIT 处理（默认）"
 
-#: src/input/mpegts/mpegts_network.c:312
+#: src/input/mpegts/mpegts_network.c:324
 msgid "EIT time offset"
 msgstr "EIT 时间偏移量"
 
@@ -2846,11 +2850,11 @@ msgstr "EMM 设置"
 msgid "EPG"
 msgstr "EPG"
 
-#: src/epggrab/module/xmltv.c:1596
+#: src/epggrab/module/xmltv.c:1603
 msgid "EPG - External XMLTV EPG Grabber"
 msgstr "EPG - 外置 XMLTV EPG 采集器"
 
-#: src/epggrab/module/xmltv.c:1494
+#: src/epggrab/module/xmltv.c:1501
 msgid "EPG - Internal XMLTV EPG Grabber"
 msgstr "EPG - 内置 XMLTV EPG 采集器"
 
@@ -2882,7 +2886,7 @@ msgstr "EPG 设置"
 msgid "EPG behaviour"
 msgstr "EPG 行为"
 
-#: src/epggrab/channel.c:809
+#: src/epggrab/channel.c:832
 msgid "EPG data ID."
 msgstr "EPG 数据 ID。"
 
@@ -3134,7 +3138,7 @@ msgstr "启用/禁用时移。"
 msgid "Enable/Disable web interface mouse-over tooltips."
 msgstr "启用/禁用 Web 界面鼠标悬停工具提示。"
 
-#: src/epggrab/channel.c:762
+#: src/epggrab/channel.c:785
 msgid "Enable/disable EPG data for the entry."
 msgstr "启用/禁用该条目的 EPG 数据。"
 
@@ -3245,7 +3249,7 @@ msgstr "启用/禁用调谐器/适配器。"
 #: src/access.c:1752 src/access.c:2299 src/access.c:2476 src/channels.c:400
 #: src/channels.c:421 src/channels.c:1775 src/service.c:172
 #: src/imagecache.c:90 src/esfilter.c:609 src/profile.c:324 src/bouquet.c:1212
-#: src/ratinglabels.c:634 src/epggrab/module.c:171 src/epggrab/channel.c:761
+#: src/ratinglabels.c:634 src/epggrab/module.c:171 src/epggrab/channel.c:784
 #: src/dvr/dvr_db.c:4496 src/dvr/dvr_autorec.c:1144 src/dvr/dvr_timerec.c:536
 #: src/dvr/dvr_config.c:966 src/descrambler/caclient.c:302
 #: src/input/mpegts/mpegts_input.c:239 src/input/mpegts/mpegts_network.c:191
@@ -3269,11 +3273,11 @@ msgstr "已加密"
 msgid "Encrypted service"
 msgstr "加密服务"
 
-#: src/wizard.c:454
+#: src/wizard.c:455
 msgid "Enter a non-admin user password."
 msgstr "输入非管理员用户密码。"
 
-#: src/wizard.c:445
+#: src/wizard.c:446
 msgid "Enter a non-admin user username."
 msgstr "输入非管理员用户用户名。"
 
@@ -3359,11 +3363,11 @@ msgstr "剧集图像。"
 msgid "Episode number/ID."
 msgstr "剧集编号/ID。"
 
-#: src/epggrab/module/xmltv.c:1463
+#: src/epggrab/module/xmltv.c:1470
 msgid "EpisodeLink XPath"
 msgstr "EpisodeLink XPath"
 
-#: src/epggrab/module/xmltv.c:1475
+#: src/epggrab/module/xmltv.c:1482
 msgid "EpisodeLink XPath fallback"
 msgstr "EpisodeLink XPath 回退"
 
@@ -3664,7 +3668,7 @@ msgstr "过滤"
 msgid "Fine arts"
 msgstr "美术"
 
-#: src/wizard.c:1196 src/dvr/dvr_db.c:662
+#: src/wizard.c:1198 src/dvr/dvr_db.c:662
 msgid "Finished"
 msgstr "已完成"
 
@@ -3680,7 +3684,7 @@ msgstr "首次命中"
 msgid "First scan"
 msgstr "第一个 扫描"
 
-#: src/epggrab/module/xmltv.c:1485
+#: src/epggrab/module/xmltv.c:1492
 msgid "First word"
 msgstr "首词"
 
@@ -3848,11 +3852,11 @@ msgstr "格式 for xmltv 输出"
 msgid "Format string/Pathname specification"
 msgstr "格式字符串/路径名规范"
 
-#: src/wizard.c:1029
+#: src/wizard.c:1031
 msgid "Found muxes"
 msgstr "发现的复用器"
 
-#: src/wizard.c:1038
+#: src/wizard.c:1040
 msgid "Found services"
 msgstr "发现的服务"
 
@@ -3886,7 +3890,7 @@ msgstr "自由格式字段，在此输入任意内容。"
 msgid "Free-form text field, enter whatever you like here."
 msgstr "自由格式文本字段，在此输入任意内容。"
 
-#: src/bouquet.c:1339 src/epggrab/channel.c:886 src/descrambler/caclient.c:320
+#: src/bouquet.c:1339 src/epggrab/channel.c:909 src/descrambler/caclient.c:320
 msgid "Free-form text field, enter whatever you like."
 msgstr "自由格式文本字段，输入任意内容。"
 
@@ -3988,8 +3992,8 @@ msgstr "收集代码的时序统计"
 
 #: src/tvhlog.c:835 src/epggrab.c:367 src/profile.c:296 src/profile.c:1344
 #: src/profile.c:1590 src/profile.c:1825 src/profile.c:2502
-#: src/satip/server.c:653 src/epggrab/module/xmltv.c:1497
-#: src/epggrab/module/xmltv.c:1599 src/dvr/dvr_config.c:925
+#: src/satip/server.c:653 src/epggrab/module/xmltv.c:1504
+#: src/epggrab/module/xmltv.c:1606 src/dvr/dvr_config.c:925
 #: src/descrambler/caclient.c:276 src/transcoding/codec/profile_class.c:232
 #: src/descrambler/cclient.c:1357 src/descrambler/dvbcam.c:848
 msgid "General Settings"
@@ -4253,11 +4257,11 @@ msgstr ""
 "How to handle duplicate 录像. The 'Use 录像 配置' 值 (the 默认) inherits the 设置 from "
 "the assigned 录像 配置"
 
-#: src/epggrab/channel.c:808
+#: src/epggrab/channel.c:831
 msgid "ID"
 msgstr "ID"
 
-#: src/wizard.c:820
+#: src/wizard.c:822
 msgid "ID of the network."
 msgstr "ID of the 网络."
 
@@ -4374,7 +4378,7 @@ msgstr "ISDB-T 复用"
 msgid "ISI (Stream ID)"
 msgstr "ISI (流 ID)"
 
-#: src/ratinglabels.c:687 src/epggrab/channel.c:664 src/epggrab/channel.c:842
+#: src/ratinglabels.c:687 src/epggrab/channel.c:687 src/epggrab/channel.c:865
 msgid "Icon"
 msgstr "图标"
 
@@ -4411,11 +4415,11 @@ msgstr "空闲"
 msgid "Idle scan"
 msgstr "空闲扫描"
 
-#: src/input/mpegts/mpegts_network.c:256
+#: src/input/mpegts/mpegts_network.c:268
 msgid "Idle scan muxes"
 msgstr "Idle 扫描 复用器"
 
-#: src/epggrab/module/xmltv.c:1472
+#: src/epggrab/module/xmltv.c:1479
 msgid ""
 "If a SeriesLink XPath is not found, use the standard TVH method for creating"
 " a SeriesLink."
@@ -4429,7 +4433,7 @@ msgstr ""
 "If a completed 录像 has this many or more 数据 errors, mark it as failed. Set to"
 " 0 to 禁用 this 检查."
 
-#: src/epggrab/module/xmltv.c:1477
+#: src/epggrab/module/xmltv.c:1484
 msgid ""
 "If an EpisodeLink XPath is not found, use the standard TVH method for "
 "creating an EpisodeLink."
@@ -4449,7 +4453,7 @@ msgstr ""
 "If both a picon and a 频道-specific (e.g. channelname.jpg) 图标 are defined, "
 "prefer the picon."
 
-#: src/epggrab/module/xmltv.c:1424
+#: src/epggrab/module/xmltv.c:1431
 msgid ""
 "If enabled then this will alter the programme descriptions to include "
 "information about actors, keywords and categories (if available from the "
@@ -4471,7 +4475,7 @@ msgstr ""
 "CPU). You should not 启用 this if you use 'duplicate detect if different 描述' "
 "since the descriptions will 更改 due to added 信息."
 
-#: src/service_mapper.c:625
+#: src/service_mapper.c:636
 msgid ""
 "If merge same name is enabled then merge services with the same name into "
 "one channel but using fuzzy logic such as ignoring whitespace, case and some"
@@ -4579,7 +4583,7 @@ msgstr "忽略 HTTP arguments"
 msgid "Ignore descriptor 5"
 msgstr "忽略 descriptor 5"
 
-#: src/service_mapper.c:610
+#: src/service_mapper.c:621
 msgid "Ignore encryption flag, include encrypted services anyway."
 msgstr "忽略 encryption 标志, 包含 encrypted 服务 anyway."
 
@@ -4606,7 +4610,7 @@ msgstr ""
 msgid "Ignore path components"
 msgstr "忽略 路径 components"
 
-#: src/input/mpegts/mpegts_network.c:283
+#: src/input/mpegts/mpegts_network.c:295
 msgid "Ignore provider's channel numbers"
 msgstr "忽略 provider's 频道 编号"
 
@@ -4705,6 +4709,13 @@ msgstr "信息"
 #: src/input/mpegts/mpegts_input.c:289
 msgid "Initial scan"
 msgstr "初始扫描"
+
+#: src/input/mpegts/mpegts_network.c:244
+msgid ""
+"Initial value of the channel option \"Automatically map EPG source\" for "
+"channels created from this network. Changing this setting does not affect "
+"existing channels."
+msgstr ""
 
 #: src/input.c:29
 msgid "Input base"
@@ -5183,15 +5194,15 @@ msgstr "登录 username."
 msgid "Login/Logout"
 msgstr "登录/退出"
 
-#: src/webui/comet.c:392
+#: src/webui/comet.c:407
 msgid "Loglevel debug: disabled"
 msgstr "Loglevel 调试: 已禁用"
 
-#: src/webui/comet.c:390
+#: src/webui/comet.c:405
 msgid "Loglevel debug: enabled"
 msgstr "Loglevel 调试: 已启用"
 
-#: src/webui/webui.c:180
+#: src/webui/webui.c:205
 msgid "Logout"
 msgstr "退出登录"
 
@@ -5355,11 +5366,11 @@ msgstr "Manufacturer's product 信息 页面 for the 设备."
 msgid "Manufacturer's product name."
 msgstr "Manufacturer's product 名称."
 
-#: src/wizard.c:1113
+#: src/wizard.c:1115
 msgid "Map all services"
 msgstr "映射所有服务"
 
-#: src/service_mapper.c:609 src/bouquet.c:952
+#: src/service_mapper.c:620 src/bouquet.c:952
 msgid "Map encrypted services"
 msgstr "映射加密服务"
 
@@ -5520,11 +5531,11 @@ msgstr "情节剧"
 msgid "Memory Information"
 msgstr "Memory 信息"
 
-#: src/service_mapper.c:617 src/bouquet.c:957
+#: src/service_mapper.c:628 src/bouquet.c:957
 msgid "Merge same name"
 msgstr "合并同名"
 
-#: src/service_mapper.c:618
+#: src/service_mapper.c:629
 msgid "Merge services with the same name into one channel."
 msgstr "Merge 服务 with the same 名称 into one 频道."
 
@@ -5604,15 +5615,15 @@ msgstr "型号编号"
 msgid "Modulation"
 msgstr "调制方式"
 
-#: src/epggrab/channel.c:780
+#: src/epggrab/channel.c:803
 msgid "Module"
 msgstr "模块"
 
-#: src/epggrab/channel.c:770
+#: src/epggrab/channel.c:793
 msgid "Module ID"
 msgstr "模块 ID"
 
-#: src/epggrab/channel.c:771
+#: src/epggrab/channel.c:794
 msgid "Module ID used to grab EPG data."
 msgstr "Module ID used to grab EPG 数据."
 
@@ -5733,8 +5744,8 @@ msgid "NVENC"
 msgstr "NVENC"
 
 #: src/channels.c:439 src/channels.c:1791 src/bouquet.c:1268
-#: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:674
-#: src/epggrab/channel.c:816 src/dvr/dvr_autorec.c:1152
+#: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:697
+#: src/epggrab/channel.c:839 src/dvr/dvr_autorec.c:1152
 #: src/dvr/dvr_timerec.c:544 src/input/mpegts/mpegts_input.c:272
 #: src/input/mpegts/mpegts_mux.c:585
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1553
@@ -5767,7 +5778,7 @@ msgstr "名称 of the 客户端."
 msgid "Name of the entry."
 msgstr "名称 of the 条目."
 
-#: src/epggrab/channel.c:781
+#: src/epggrab/channel.c:804
 msgid "Name of the module used to grab EPG data."
 msgstr "名称 of the module used to grab EPG 数据."
 
@@ -5777,7 +5788,7 @@ msgid ""
 "channels EPG info."
 msgstr "名称 of the module, 抓取器 or 频道 that should be used to 更新 this 频道 EPG 信息."
 
-#: src/wizard.c:812 src/input/mpegts/mpegts_network.c:200
+#: src/wizard.c:814 src/input/mpegts/mpegts_network.c:200
 msgid "Name of the network."
 msgstr "名称 of the 网络."
 
@@ -5789,7 +5800,7 @@ msgstr "名称 of the 配置方案."
 msgid "Name of the tag."
 msgstr "名称 of the 标签."
 
-#: src/wizard.c:569 src/wizard.c:577
+#: src/wizard.c:571 src/wizard.c:579
 msgid "Name of the tuner."
 msgstr "名称 of the 调谐器."
 
@@ -5801,7 +5812,7 @@ msgstr "名称 of the 调谐器/适配器."
 msgid "Name."
 msgstr "名称."
 
-#: src/epggrab/channel.c:824
+#: src/epggrab/channel.c:847
 msgid "Names"
 msgstr "名称"
 
@@ -5813,13 +5824,13 @@ msgstr "自然科学"
 msgid "Nature"
 msgstr "自然"
 
-#: src/wizard.c:787 src/wizard.c:811 src/input/mpegts/mpegts_mux.c:569
+#: src/wizard.c:789 src/wizard.c:813 src/input/mpegts/mpegts_mux.c:569
 #: src/input/mpegts/mpegts_service.c:146
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:206
 msgid "Network"
 msgstr "网络"
 
-#: src/wizard.c:561
+#: src/wizard.c:563
 msgid "Network "
 msgstr "网络 "
 
@@ -5913,7 +5924,7 @@ msgstr "网络前缀"
 msgid "Network settings"
 msgstr "网络 设置"
 
-#: src/wizard.c:584 src/input/mpegts/satip/satip_frontend.c:373
+#: src/wizard.c:586 src/input/mpegts/satip/satip_frontend.c:373
 #: src/input/mpegts/satip/satip_frontend.c:578
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:241
 msgid "Network type"
@@ -5938,7 +5949,7 @@ msgstr "新/首映"
 msgid "New / premiere / unknown"
 msgstr "新建 / premiere / unknown"
 
-#: src/http.c:711
+#: src/http.c:712
 msgid "New login"
 msgstr "新建 登录"
 
@@ -6090,7 +6101,7 @@ msgstr "未设置 (none or 频道 配置)"
 msgid "Not set (use channel or DVR configuration)"
 msgstr "未设置 (use 频道 or 录像 配置)"
 
-#: src/channels.c:451 src/epggrab/channel.c:669 src/epggrab/channel.c:834
+#: src/channels.c:451 src/epggrab/channel.c:692 src/epggrab/channel.c:857
 msgid "Number"
 msgstr "编号"
 
@@ -6135,7 +6146,7 @@ msgstr ""
 "playback which means the 录像 will be marked as played when the 客户端 has cached"
 " the 数据, which may be before the end of the 节目 is actually watched."
 
-#: src/wizard.c:1030
+#: src/wizard.c:1032
 msgid "Number of muxes found."
 msgstr "编号 of 复用器 found."
 
@@ -6223,7 +6234,7 @@ msgstr "空中 (OTA) 类型转换"
 msgid "OTA (Over-the-air) Grabber Settings"
 msgstr "OTA (Over-the-air) 抓取器 设置"
 
-#: src/epggrab/module/xmltv.c:1413
+#: src/epggrab/module/xmltv.c:1420
 msgid ""
 "Obtain list of credits (actors, etc.), keywords and extra information from "
 "the xml tags (if available). Some xmltv providers supply a list of actors "
@@ -6277,7 +6288,7 @@ msgstr "On 文件 removal"
 msgid "On-demand (no first rewind)"
 msgstr "On-demand (no 第一个 rewind)"
 
-#: src/epggrab/channel.c:862
+#: src/epggrab/channel.c:885
 msgid "Once per auto channel"
 msgstr "Once per auto 频道"
 
@@ -6299,7 +6310,7 @@ msgstr ""
 "request. 注意, because there is no buffer on the 第一个 request rewinding is not "
 "possible at that point."
 
-#: src/webui/comet.c:388
+#: src/webui/comet.c:403
 msgid "Only admin can watch the realtime log."
 msgstr "Only admin can watch the realtime 日志."
 
@@ -6311,7 +6322,7 @@ msgstr ""
 "Only 允许 用户 with this 标签 (or those with no 标签 at all) set in 访问 配置 to use the"
 " 标签."
 
-#: src/epggrab/module/xmltv.c:1486
+#: src/epggrab/module/xmltv.c:1493
 msgid "Only digits"
 msgstr "仅数字"
 
@@ -6333,7 +6344,7 @@ msgstr ""
 msgid "Only use specified DVB adapters (comma-separated, -1 = none)"
 msgstr "Only use specified DVB 适配器 (comma-separated, -1 = none)"
 
-#: src/epggrab/channel.c:863
+#: src/epggrab/channel.c:886
 msgid ""
 "Only use this EPG data once when automatically determining what EPG data to "
 "set for a channel."
@@ -6357,7 +6368,7 @@ msgstr "歌剧"
 msgid "Options to use/used when mapping - see Help for details."
 msgstr "选项 to use/used when mapping - see 帮助 for 详情."
 
-#: src/epggrab/channel.c:874
+#: src/epggrab/channel.c:897
 msgid "Options used when updating channels."
 msgstr "选项 used when updating 频道."
 
@@ -6580,7 +6591,7 @@ msgstr "Pass-thru 复用器"
 msgid "Passthrough Muxer SI Tables"
 msgstr "透传复用器 SI 表"
 
-#: src/access.c:2315 src/wizard.c:453 src/descrambler/cclient.c:1387
+#: src/access.c:2315 src/wizard.c:454 src/descrambler/cclient.c:1387
 msgid "Password"
 msgstr "密码"
 
@@ -6592,7 +6603,7 @@ msgstr "密码 for the 条目."
 msgid "Password2"
 msgstr "确认密码"
 
-#: src/epggrab/module.c:201 src/epggrab/module.c:228 src/epggrab/channel.c:789
+#: src/epggrab/module.c:201 src/epggrab/module.c:228 src/epggrab/channel.c:812
 msgid "Path"
 msgstr "路径"
 
@@ -6714,7 +6725,7 @@ msgstr "像素格式"
 msgid "Plain (insecure)"
 msgstr "明文（不安全）"
 
-#: src/webui/webui.c:193
+#: src/webui/webui.c:218
 #, c-format
 msgid ""
 "Please, follow %s link and cancel the next authorization to correctly clear "
@@ -6804,7 +6815,7 @@ msgstr "省电"
 msgid "Power up time (ms) (10-500)"
 msgstr "Power up 时间 (ms) (10-500)"
 
-#: src/wizard.c:801 src/input/mpegts/mpegts_network_dvb.c:247
+#: src/wizard.c:803 src/input/mpegts/mpegts_network_dvb.c:247
 #: src/input/mpegts/mpegts_network_dvb.c:270
 #: src/input/mpegts/mpegts_network_dvb.c:293
 #: src/input/mpegts/mpegts_network_dvb.c:326
@@ -6829,7 +6840,7 @@ msgstr "Pre-录像 padding"
 msgid "Pre-school children's programs"
 msgstr "学前儿童节目"
 
-#: src/wizard.c:966
+#: src/wizard.c:968
 msgid "Predefined Muxes"
 msgstr "Predefined 复用器"
 
@@ -6980,7 +6991,7 @@ msgstr "节目 unique ID (from 抓取器)"
 msgid "Program unique ID (from grabber), such as MV101010101.0000"
 msgstr "节目 unique ID (from 抓取器), such as MV101010101.0000"
 
-#: src/wizard.c:780
+#: src/wizard.c:782
 msgid "Progress"
 msgstr "进度"
 
@@ -7328,7 +7339,7 @@ msgstr "Restrict \"PID=all\""
 msgid "Restrict connections to this type."
 msgstr "Restrict 连接 to this 类型."
 
-#: src/webui/comet.c:308
+#: src/webui/comet.c:323
 msgid "Restricted log mode (no administrator)"
 msgstr "Restricted 日志 模式 (no administrator)"
 
@@ -7536,7 +7547,7 @@ msgstr "SAT>IP 服务端"
 msgid "SAT>IP Server SI Tables"
 msgstr "SAT>IP 服务端 SI 表"
 
-#: src/input/mpegts/mpegts_network.c:293
+#: src/input/mpegts/mpegts_network.c:305
 msgid "SAT>IP source number"
 msgstr "SAT>IP source 编号"
 
@@ -7714,7 +7725,7 @@ msgstr "扫描 after creation"
 msgid "Scan grace period (seconds)"
 msgstr "扫描 grace period (seconds)"
 
-#: src/input/mpegts/mpegts_network.c:345
+#: src/input/mpegts/mpegts_network.c:357
 msgid "Scan queue length"
 msgstr "扫描 queue length"
 
@@ -7730,7 +7741,7 @@ msgstr "扫描状态"
 msgid "Scanfile"
 msgstr "扫描文件"
 
-#: src/wizard.c:1051
+#: src/wizard.c:1053
 msgid "Scanning"
 msgstr "扫描"
 
@@ -7801,7 +7812,7 @@ msgstr "抓取标题"
 msgid "Scrape behaviour"
 msgstr "抓取行为"
 
-#: src/epggrab/module/xmltv.c:1411
+#: src/epggrab/module/xmltv.c:1418
 msgid "Scrape credits and extra information"
 msgstr "Scrape credits and extra 信息"
 
@@ -7848,7 +7859,7 @@ msgstr ""
 "in 描述; Append to 描述; Prepend to 描述. If the 描述 is empty, 保存, append and "
 "prepend will replace the 描述."
 
-#: src/wizard.c:585
+#: src/wizard.c:587
 msgid "Select an available network type for this tuner."
 msgstr "选择 an 可用 网络 类型 for this 调谐器."
 
@@ -7948,7 +7959,7 @@ msgstr "选择 the 质量 for constant 质量 模式 [0-51]."
 msgid "Select the quality for constant quality mode [0-63]."
 msgstr "选择 the 质量 for constant 质量 模式 [0-63]."
 
-#: src/input/mpegts/mpegts_network.c:313
+#: src/input/mpegts/mpegts_network.c:325
 msgid "Select the time offset for EIT events."
 msgstr "选择 the 时间 offset for EIT 事件."
 
@@ -7973,7 +7984,7 @@ msgstr ""
 "选择 whether or not to 启用 caching. 注意, even with this 已禁用 you can still "
 "specify local (文件://) 图标 and these will be served by the built-in webserver."
 
-#: src/service_mapper.c:589
+#: src/service_mapper.c:600
 msgid "Select/Selected services to map."
 msgstr "选择/已选中 服务 to map."
 
@@ -8029,11 +8040,11 @@ msgstr "系列 链接"
 msgid "Series link ID."
 msgstr "系列 链接 ID."
 
-#: src/epggrab/module/xmltv.c:1456
+#: src/epggrab/module/xmltv.c:1463
 msgid "SeriesLink XPath"
 msgstr "SeriesLink XPath"
 
-#: src/epggrab/module/xmltv.c:1470
+#: src/epggrab/module/xmltv.c:1477
 msgid "SeriesLink XPath fallback"
 msgstr "SeriesLink XPath 回退"
 
@@ -8086,11 +8097,11 @@ msgstr "服务 ID"
 msgid "Service Mapper"
 msgstr "服务映射器"
 
-#: src/wizard.c:1143
+#: src/wizard.c:1145
 msgid "Service Mapping"
 msgstr "服务 Mapping"
 
-#: src/service_mapper.c:578
+#: src/service_mapper.c:589
 msgid "Service Mapping (Map services to channels)"
 msgstr "服务 Mapping (Map 服务 to 频道)"
 
@@ -8111,7 +8122,7 @@ msgstr "服务限制"
 msgid "Service name"
 msgstr "服务 名称"
 
-#: src/epggrab/channel.c:817
+#: src/epggrab/channel.c:840
 msgid "Service name found in EPG data."
 msgstr "服务 名称 found in EPG 数据."
 
@@ -8141,7 +8152,7 @@ msgid ""
 " the stream."
 msgstr "服务 类型 override. This 值 will override the 服务 类型 provided by the 流."
 
-#: src/channels.c:556 src/service_mapper.c:588 src/bouquet.c:1312
+#: src/channels.c:556 src/service_mapper.c:599 src/bouquet.c:1312
 #: src/bouquet.c:1330 src/input/mpegts/mpegts_mux.c:658
 msgid "Services"
 msgstr "服务列表"
@@ -8320,7 +8331,7 @@ msgstr "跳过广告"
 msgid "Skip initial bytes"
 msgstr "跳过初始字节"
 
-#: src/input/mpegts/mpegts_network.c:245
+#: src/input/mpegts/mpegts_network.c:257
 msgid ""
 "Skip scanning known muxes when Tvheadend starts. If \"startup scan\" is "
 "allowed and new muxes are found then they will still be scanned. See Help "
@@ -8329,7 +8340,7 @@ msgstr ""
 "Skip 扫描 known 复用器 when Tvheadend starts. If \"startup 扫描\" is allowed and 新建"
 " 复用器 are found then they will still be scanned. See 帮助 for more 详情."
 
-#: src/input/mpegts/mpegts_network.c:244
+#: src/input/mpegts/mpegts_network.c:256
 msgid "Skip startup scan"
 msgstr "Skip startup 扫描"
 
@@ -8400,7 +8411,7 @@ msgstr ""
 "Some artwork providers require additional arguments such as '--tmdb-key "
 "my_key_from_website'. These can be specified here. See 帮助 for full 详情."
 
-#: src/service_mapper.c:638
+#: src/service_mapper.c:649
 msgid ""
 "Some broadcasters distinguish channels by appending descriptors such as "
 "'HD'. This option strips those so 'Channel 4 HD' would be named 'Channel 4'."
@@ -8411,7 +8422,7 @@ msgstr ""
 " 选项 strips those so '频道 4 HD' would be named '频道 4'. 注意 that xmltv 设置 may "
 "try and match by 频道 名称 so changing a 频道 名称 may require manual xmltv mapping."
 
-#: src/epggrab/module/xmltv.c:1436
+#: src/epggrab/module/xmltv.c:1443
 msgid ""
 "Some xmltv providers supply multiple category tags, however mapping to "
 "genres is imprecise and many categories have no genre mapping at all. Some "
@@ -9181,7 +9192,7 @@ msgstr "The SAT>IP 服务器's 名称."
 msgid "The SAT>IP server's universally unique identifier."
 msgstr "The SAT>IP 服务器's universally unique identifier."
 
-#: src/input/mpegts/mpegts_network.c:294
+#: src/input/mpegts/mpegts_network.c:306
 msgid "The SAT>IP source number."
 msgstr "The SAT>IP source 编号."
 
@@ -9209,7 +9220,7 @@ msgstr ""
 msgid "The URL to the playlist."
 msgstr "播放列表的 URL。"
 
-#: src/epggrab/module/xmltv.c:1458
+#: src/epggrab/module/xmltv.c:1465
 msgid ""
 "The XPath-like expression used to extract a SeriesLink identifier from the "
 "XMLTV data.  This ID is used to identify multiple occurrences of the same "
@@ -9219,7 +9230,7 @@ msgstr ""
 "xmltv 数据.  This ID is used to identify multiple occurrences of the same 系列."
 "  Root node = '节目'."
 
-#: src/epggrab/module/xmltv.c:1451
+#: src/epggrab/module/xmltv.c:1458
 msgid ""
 "The XPath-like expression used to extract a unique event identifier from the"
 " XMLTV data.  This ID is used to match existing EPG events so that they can "
@@ -9229,7 +9240,7 @@ msgstr ""
 "xmltv 数据.  This ID is used to match 现有 EPG 事件 so that they can be updated "
 "rather than replaced. Root node = '节目'."
 
-#: src/epggrab/module/xmltv.c:1465
+#: src/epggrab/module/xmltv.c:1472
 msgid ""
 "The XPath-like expression used to extract an EpisodeLink identifier from the"
 " XMLTV data.  This ID is used to identify multiple occurrences of the same "
@@ -9239,7 +9250,7 @@ msgstr ""
 " xmltv 数据.  This ID is used to identify multiple occurrences of the same 剧集."
 "  Root node = '节目'."
 
-#: src/epggrab/module/xmltv.c:1446
+#: src/epggrab/module/xmltv.c:1453
 msgid ""
 "The XPath-like expression used to extract the category ETSI code from the "
 "XMLTV data. Root node = 'category'."
@@ -9316,7 +9327,7 @@ msgstr "The 频道 this 服务 is mapped to."
 msgid "The channel's name or callsign as set by the cable provider."
 msgstr "The 频道's 名称 or callsign as set by the 有线 provider."
 
-#: src/input/mpegts/mpegts_network.c:303
+#: src/input/mpegts/mpegts_network.c:315
 msgid "The character encoding for this network (e.g. UTF-8)."
 msgstr "The character 编码 for this 网络 (e.g. UTF-8)."
 
@@ -9874,7 +9885,7 @@ msgstr ""
 msgid "The number of days cookies set by Tvheadend should expire."
 msgstr "The 编号 of days cookies set by Tvheadend should expire."
 
-#: src/input/mpegts/mpegts_network.c:346
+#: src/input/mpegts/mpegts_network.c:358
 msgid "The number of muxes left to scan on this network."
 msgstr "The 编号 of 复用器 left to 扫描 on this 网络."
 
@@ -10297,7 +10308,7 @@ msgstr "票据过期（秒）"
 msgid "Tidy channel name (e.g., stripping HD/UHD suffix)"
 msgstr "Tidy 频道 名称 (e.g., stripping HD/UHD suffix)"
 
-#: src/service_mapper.c:637
+#: src/service_mapper.c:648
 msgid "Tidy the channel name such as removing trailing HD text"
 msgstr "Tidy the 频道 名称 such as removing trailing HD 文本"
 
@@ -10442,19 +10453,19 @@ msgstr "Too many 数据 errors"
 msgid "Tooltips"
 msgstr "工具提示"
 
-#: src/input/mpegts/mpegts_network.c:338
+#: src/input/mpegts/mpegts_network.c:350
 msgid "Total number of mapped channels on this network."
 msgstr "Total 编号 of mapped 频道 on this 网络."
 
-#: src/input/mpegts/mpegts_network.c:322
+#: src/input/mpegts/mpegts_network.c:334
 msgid "Total number of muxes found on this network."
 msgstr "Total 编号 of 复用器 found on this 网络."
 
-#: src/input/mpegts/mpegts_network.c:330
+#: src/input/mpegts/mpegts_network.c:342
 msgid "Total number of services found on this network."
 msgstr "Total 编号 of 服务 found on this 网络."
 
-#: src/wizard.c:1039
+#: src/wizard.c:1041
 msgid "Total number of services found."
 msgstr "Total 编号 of 服务 found."
 
@@ -10546,7 +10557,7 @@ msgstr "传输 流 ID"
 msgid "Try re-scheduling recording if more errors than (0=off)"
 msgstr "Try re-scheduling 录像 if more errors than (0=off)"
 
-#: src/epggrab/module/xmltv.c:1408
+#: src/epggrab/module/xmltv.c:1415
 msgid ""
 "Try to obtain channel numbers from the display-name xml tag. If the first "
 "word is number, it is used as the channel number."
@@ -10576,11 +10587,11 @@ msgstr "Tune the 编码 params (cf. x264 --fullhelp)."
 msgid "Tune the encoding to a specific scenario."
 msgstr "Tune the 编码 to a specific scenario."
 
-#: src/wizard.c:568
+#: src/wizard.c:570
 msgid "Tuner"
 msgstr "调谐器"
 
-#: src/wizard.c:671
+#: src/wizard.c:673
 msgid "Tuner and Network"
 msgstr "调谐器 and 网络"
 
@@ -10640,7 +10651,7 @@ msgstr "UHD：超高清"
 msgid "UPnP Protocol"
 msgstr "UPnP 协议"
 
-#: src/tvhlog.c:98 src/wizard.c:827 src/dvr/dvr_db.c:4962
+#: src/tvhlog.c:98 src/wizard.c:829 src/dvr/dvr_db.c:4962
 #: src/input/mpegts/iptv/iptv.c:952 src/input/mpegts/iptv/iptv_mux.c:130
 msgid "URL"
 msgstr "URL"
@@ -10649,7 +10660,7 @@ msgstr "URL"
 msgid "URL for comparison"
 msgstr "用于比较的 URL"
 
-#: src/wizard.c:828
+#: src/wizard.c:830
 msgid "URL of the M3U playlist."
 msgstr "M3U 播放列表的 URL。"
 
@@ -10878,7 +10889,7 @@ msgstr "单缆类型"
 msgid "Unimportant"
 msgstr "不重要"
 
-#: src/epggrab/module/xmltv.c:1449
+#: src/epggrab/module/xmltv.c:1456
 msgid "Unique Event ID XPath"
 msgstr "Unique 事件 ID XPath"
 
@@ -10964,7 +10975,7 @@ msgstr "更新 时间"
 msgid "Update tolerance (ms)"
 msgstr "更新 tolerance (ms)"
 
-#: src/epggrab/channel.c:798
+#: src/epggrab/channel.c:821
 msgid "Updated"
 msgstr "已更新"
 
@@ -11107,7 +11118,7 @@ msgstr ""
 "Use a pre-defined 列表 of ISDB-T 复用器. 注意: these lists can sometimes be "
 "outdated and may cause 扫描 to take longer than usual."
 
-#: src/epggrab/module/xmltv.c:1434
+#: src/epggrab/module/xmltv.c:1441
 msgid "Use category instead of genre"
 msgstr "使用分类而不是类型"
 
@@ -11115,7 +11126,7 @@ msgstr "使用分类而不是类型"
 msgid "Use default configuration"
 msgstr "Use 默认 配置"
 
-#: src/service_mapper.c:624 src/bouquet.c:962
+#: src/service_mapper.c:635 src/bouquet.c:962
 msgid "Use fuzzy mapping if merging same name"
 msgstr "Use fuzzy mapping if merging same 名称"
 
@@ -11135,7 +11146,7 @@ msgstr "Use only this 服务 ID, 过滤 out others."
 msgid "Use original"
 msgstr "使用原始"
 
-#: src/input/mpegts/mpegts_network.c:274
+#: src/input/mpegts/mpegts_network.c:286
 msgid "Use service IDs as channel numbers"
 msgstr "Use 服务 IDs as 频道 编号"
 
@@ -11143,7 +11154,7 @@ msgstr "Use 服务 IDs as 频道 编号"
 msgid "Use tag internally (don't expose to clients)."
 msgstr "Use 标签 internally (don't expose to clients)."
 
-#: src/input/mpegts/mpegts_network.c:275
+#: src/input/mpegts/mpegts_network.c:287
 msgid "Use the provider's service IDs as channel numbers."
 msgstr "Use the provider's 服务 IDs as 频道 编号."
 
@@ -11199,7 +11210,7 @@ msgstr "用户 登录"
 msgid "User request"
 msgstr "用户请求"
 
-#: src/access.c:1760 src/access.c:2307 src/wizard.c:444
+#: src/access.c:1760 src/access.c:2307 src/wizard.c:445
 #: src/descrambler/cclient.c:1378
 msgid "Username"
 msgstr "用户名"
@@ -11473,7 +11484,7 @@ msgstr ""
 "model 编号 that we send to clients.  Some clients may require a specific model"
 " 编号 to work.  Leave blank for Tvheadend to use a 默认."
 
-#: src/input/mpegts/mpegts_network.c:257
+#: src/input/mpegts/mpegts_network.c:269
 msgid ""
 "When nothing else is happening Tvheadend will continuously rotate among all "
 "muxes and tune to them to verify that they are still working when the inputs"
@@ -11582,7 +11593,7 @@ msgstr ""
 "oldest segment in the buffer instead of replacing it completely. 注意, this "
 "may reduce the amount of rewind 时间."
 
-#: src/access.c:2015 src/access.c:2361 src/input/mpegts/mpegts_network.c:353
+#: src/access.c:2015 src/access.c:2361 src/input/mpegts/mpegts_network.c:365
 msgid "Wizard"
 msgstr "向导"
 
@@ -11635,7 +11646,7 @@ msgstr "XMLTV EPG 导入"
 msgid "XMLTV output format"
 msgstr "XMLTV 输出格式"
 
-#: src/epggrab/module/xmltv.c:1501 src/epggrab/module/xmltv.c:1603
+#: src/epggrab/module/xmltv.c:1508 src/epggrab/module/xmltv.c:1610
 msgid "XPath Settings"
 msgstr "XPath 设置"
 
@@ -11740,7 +11751,7 @@ msgstr "libx265"
 msgid "libx26x"
 msgstr "libx26x"
 
-#: src/webui/webui.c:198
+#: src/webui/webui.c:223
 msgid "logout"
 msgstr "退出登录"
 
@@ -11813,7 +11824,7 @@ msgstr "psnr"
 msgid "realtime"
 msgstr "实时"
 
-#: src/webui/webui.c:209
+#: src/webui/webui.c:234
 msgid "return"
 msgstr "返回"
 
